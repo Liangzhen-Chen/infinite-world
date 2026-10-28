@@ -14,7 +14,7 @@ import {consent as nativeConsent} from './action-consent.mjs';
 // overdue step, scene card and ledger see them. A loan left unpaid past its
 // grace period is a default: the pledge is forfeited, a legal case opens under
 // the code where it was signed, and a `breach` world event reaches standing.
-import {changeItems}from'./items.mjs';
+import {changeItems,transferItems}from'./items.mjs';
 import {purse,vault,partyAccount,mirrorPartyCoins,escrow as escrowAccount,moveCoins}from'./money.mjs';
 import {declareLedgerWriter}from'./ledger.mjs';
 import {bag,store,pledged,vaultGoods,moveStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
@@ -29,9 +29,9 @@ import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinan
 import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 import {currencyExchange,currencyRow,currencyTradePrice} from './currency.mjs';
-import {claimCopper} from './tender.mjs';
+import {claimCopper,contractFreeze,copperToUnits,resourceItem} from './tender.mjs';
 import {claimUnit} from './claim-unit.mjs';
-import {holdGoods} from './goods-escrow.mjs';
+import {holdGoods,releaseGoods} from './goods-escrow.mjs';
 import {interestAmount} from './obligation-calendar.mjs';
 import {valuation} from './valuation.mjs';
 
@@ -158,8 +158,20 @@ export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,c
     if(collateral)pledge(d,engine,pledgeKey,collateral.item,collateral.quantity,debtor);
     if(!toPlayer&&!escrowTo)throw preconditionFailure('借款本金须有去处');
     if(frozen){
-        if(bank||toPlayer)throw preconditionFailure('按法定单位冻结的借款只用于合同托管，且由出借人本人付出');
-        holdGoods(d,engine,{contract:frozen.escrowContract,payer:lender,resource:frozen.resource,amount:principal,writer:'credit',eventId});
+        if(frozen.escrowContract){
+            if(bank||toPlayer)throw preconditionFailure('按法定单位冻结的借款只用于合同托管，且由出借人本人付出');
+            holdGoods(d,engine,{contract:frozen.escrowContract,payer:lender,resource:frozen.resource,amount:principal,writer:'credit',eventId});
+        }else{
+            // W8-B: a counting house or private lender hands the frozen units over in kind, from the vault or the lender's own bag.
+            if(!toPlayer)throw preconditionFailure('按法定单位冻结的借款须直接交到借款人手里');
+            const item=resourceItem(engine,frozen.resource);
+            if(bank){
+                const row=bankRow(d,bank);
+                if((row.goods[item]??0)<principal)throw preconditionFailure(`${bank.name}没有足够的${nameOf(engine,item)}可放：需要${principal}`);
+                changeItems(d,engine,debtor,item,principal,{books:{account:vaultGoods(engine,bank.id,item),writer:'credit',eventId}});
+                row.goods[item]-=principal;holdingSet(d,engine,rec(bank.id),row,'credit');
+            }else transferItems(d,engine,lender,debtor,item,principal,null,{eventId});
+        }
     }else{
     moveCoins(d,{from:bank?vault(bank.id):purse(engine,lender),to:toPlayer?partyAccount(engine,d.get('state'),debtor):escrowTo,amount:principal,writer:'credit',eventId});
     if(bank){const row=bankRow(d,bank);row.coins-=principal;holdingSet(d,engine,rec(bank.id),row,'credit');}
@@ -170,13 +182,25 @@ export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,c
     // Old records without this clause retain the package's accelerate route.
     const succession=kind==='loan'?loanSuccessionTerms(d,engine):null;
     const terms={debtor,creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null,
-        terms:{...succession,rateTerms:{per,calendar},...(consentSource?{consent:consentSource}:{})}};
+        terms:{...succession,rateTerms:{per,calendar},...(frozen?{referenceCopper:frozen.referenceCopper}:{}),...(consentSource?{consent:consentSource}:{})}};
     const row={category:'debt',kind,name:purpose??`向${bank?.name??nameOf(engine,lender)}借款`,...terms,...(bank?{bank:bank.id,keeper}:{}),installments,
         amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location:d.get('state','location'),source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms),
         ...(frozen?{resource:frozen.resource,resourceName:frozen.resourceName,referenceCopper:frozen.referenceCopper}:{})};
     holdingSet(d,engine,rec(id),row,'credit');
     openObligation(d,engine,{...row,id:`finance:${id}`,legacyRecord:id,actor,...(actedAs?{actedAs}:{})},`${eventId}:claim`);
-    return {debt:id,principal,interest,amount:row.amount,monthlyInterest:rate,per,deadline:row.deadline,...(pledgeKey?{pledge:pledgeKey}:{}),...(frozen?{resource:frozen.resource,resourceName:frozen.resourceName}:{})};
+    return {debt:id,principal,interest,amount:row.amount,monthlyInterest:rate,per,deadline:row.deadline,...(pledgeKey?{pledge:pledgeKey}:{}),...(frozen?{resource:frozen.resource,resourceName:frozen.resourceName,referenceCopper:frozen.referenceCopper}:{})};
+}
+// W8-B: the whole loan principal is frozen in the signing place's tender unit (null in a coin_river place, or for a debtor with no bag).
+// `copper` is the bill the parties quoted in reference copper; limits and rates are judged on it, the units are what is lent and owed.
+// The resource comes from the same contractFreeze path, but the lender never lends more than the quoted bill: the principal rounds DOWN to
+// whole units (a pawn advance or a bank limit is a ceiling), and a bill worth less than one unit is refused instead of lent as a whole one.
+export function loanFreeze(d,engine,{copper,debtor='player',location=d.get('state','location')}){
+    if(debtor!=='player'&&!String(debtor).startsWith('npc_'))return null;
+    const bill=int(copper,1,1e7,'借款本金'),fz=contractFreeze(d,engine,{location,coppers:{principal:bill}});
+    if(!fz)return null;
+    const units=copperToUnits(d,engine,{resource:fz.resource,copper:bill,location,up:false});
+    if(units<1)throw preconditionFailure(`按今日兑换率，${bill}铜折不足一${fz.resourceName}，放不出更小的单位`);
+    return {...fz,amounts:{principal:units}};
 }
 export const isCreditDebt=row=>row?.category==='debt'&&CREDIT_KINDS.has(row.kind);
 // Repayment through the ordinary trade repay call; the creditor or the bank's keeper must be present.
@@ -207,7 +231,7 @@ function defaultDebt(d,engine,id,row){
     const minute=(row.installmentOverdueAt??row.deadline)+allowance.minutes,bank=row.bank?bankById(engine,row.bank,d.get('state')):null;
     let next={...row};
     const forfeited=row.pledgeRecord?releasePledge(d,engine,row.pledgeRecord,row.creditor,bank):null;
-    if(forfeited){const covered=Math.min(forfeited.value,next.amount-next.paid);next.paid+=covered;if(next.paid===next.amount)Object.assign(next,{status:'已还清',paidAt:minute,settledBy:'pledge'});}
+    if(forfeited){const value=row.resource&&row.resource!=='coin_river'?copperToUnits(d,engine,{resource:row.resource,copper:forfeited.value,location:row.location,up:false}):forfeited.value,covered=Math.min(value,next.amount-next.paid);next.paid+=covered;if(next.paid===next.amount)Object.assign(next,{status:'已还清',paidAt:minute,settledBy:'pledge'});}
     const remaining=next.amount-next.paid;
     const legalCase=remaining>0?registerCreditDefault(d,engine,{debt:id,row:next,value:copperLeft(d,engine,next,remaining),minute}):null;
     next.defaulted={minute,remaining,grace:allowance,pledge:forfeited?{item:forfeited.item,quantity:forfeited.quantity,value:forfeited.value}:null,case:legalCase};
@@ -219,16 +243,19 @@ function defaultDebt(d,engine,id,row){
 function settlePartnership(d,engine,id,row,{minute,eventId}){
     row=contractTerms(row,minute);
     const shop=d.get(...rec(row.business)),net=businessReport(d,engine,shop).profit.net,profit=net-row.baselineNet;
-    const payout=Math.max(0,row.stake+Math.floor(profit*row.share/100));
+    const shareCopper=Math.floor(profit*row.share/100),frozen=row.resource&&row.resource!=='coin_river',unitsOf=(copper,up)=>copperToUnits(d,engine,{resource:row.resource,copper,location:row.location,up});
+    // W8-B: a stake frozen in a tender unit is returned in that unit; the profit share (reference copper) converts at today's rate and the rounding stays with the partner who is owed.
+    const payout=Math.max(0,row.stake+(frozen?(shareCopper>=0?unitsOf(shareCopper,true):-unitsOf(-shareCopper,false)):shareCopper));
     let debt=null;
     if(payout>0){
         debt=`debt_partner_${eventId}`;
         holdingSet(d,engine,rec(debt),{category:'debt',kind:'partnership',name:`${nameOf(engine,row.partner)}合伙退股与分成`,debtor:'player',creditor:row.partner,amount:payout,paid:0,principal:payout,interest:0,
-            createdAt:minute,deadline:minute+rules(engine).partnership.payoutDays*1440,status:'待偿还',location:row.location,contract:id,source:eventId},'credit');
+            createdAt:minute,deadline:minute+rules(engine).partnership.payoutDays*1440,status:'待偿还',location:row.location,contract:id,source:eventId,
+            ...(frozen?{resource:row.resource,resourceName:row.resourceName,referenceCopper:{stake:row.referenceCopper?.stake,share:shareCopper}}:{})},'credit');
         adoptLegacyObligation(d,engine,debt);
     }
     const next={...row,status:'已结算',settledAt:minute,profit,payout,debt};holdingSet(d,engine,rec(id),next,'credit');
-    d.say(`与${nameOf(engine,row.partner)}的合伙结算：期间盈亏${profit}铜，应付退股与分成${payout}铜`);
+    d.say(`与${nameOf(engine,row.partner)}的合伙结算：期间盈亏${profit}铜，应付退股与分成${payout}${claimUnit(row)}`);
     return next;
 }
 
@@ -267,10 +294,10 @@ export async function creditTrade(d,args,eventId,terms){
             counterpart(d,engine,lender,{consent:agreement.allowed,minutes:5});
         }
         const installments=args.quantity&&!args.item?int(args.quantity,1,days,'分期期数'):1;
-        const loan=openLoan(d,engine,{lender,bank,keeper,principal:args.coins,days,collateral,eventId,installments,consentSource:agreement?.source});
+        const fz=loanFreeze(d,engine,{copper:args.coins,location:bank?.location}),loan=openLoan(d,engine,{lender,bank,keeper,principal:fz?fz.amounts.principal:args.coins,days,collateral,eventId,installments,consentSource:agreement?.source,...(fz?{frozen:{resource:fz.resource,resourceName:fz.resourceName,referenceCopper:args.coins}}:{})});
         if(args.quantity&&!args.item){const count=int(args.quantity,1,days,'分期期数'),row=d.get(...rec(loan.debt));holdingSet(d,engine,rec(loan.debt),{...row,installments:count,nextInstallment:1},'credit');}
         engine.advance(d,5,eventId);
-        d.say(`向${bank?.name??nameOf(engine,lender)}借${loan.principal}铜，${loan.per==='day'?'日息':'月息'}${loan.monthlyInterest*100}%，${days}天后还本息${loan.amount}铜`);
+        d.say(`向${bank?.name??nameOf(engine,lender)}借${loan.principal}${claimUnit(loan)}，${loan.per==='day'?'日息':'月息'}${loan.monthlyInterest*100}%，${days}天后还本息${loan.amount}${claimUnit(loan)}`);
         return {lender:bank?.id??lender,...loan};
     }
     if(['deposit','withdraw','exchange'].includes(op)){
@@ -334,22 +361,24 @@ export async function creditTrade(d,args,eventId,terms){
     if(op==='work'){
         const minutes=int(args.minutes??240,30,480,'工时'),employer=counterpart(d,engine,args.seller,{consent:args.consent,minutes});
         const [low,high]=engine.rules.economy.wageCopperPerHalfDay,min=Math.max(1,Math.ceil(low*minutes/240)),max=Math.max(1,Math.ceil(high*minutes/240));
-        const wage=int(args.coins??min,min,max,'工钱'),boss=engine.actor(d,employer);
-        if(boss.coins<wage)throw preconditionFailure('雇主现钱不足以支付工钱');
+        const wage=int(args.coins??min,min,max,'工钱'),boss=engine.actor(d,employer),fz=contractFreeze(d,engine,{location:d.get('state','location'),coppers:{wage}});
+        if(!fz&&boss.coins<wage)throw preconditionFailure('雇主现钱不足以支付工钱');
         const skills=engine.byId.get(employer)?.skills,skill=(Array.isArray(skills)?skills:Object.keys(skills??{})).find(s=>String(s).startsWith('skill_'))??null;
         const id=`contract_work_${eventId}`,location=d.get('state','location');if(d.get(...rec(id)))throw preconditionFailure('雇佣契约编号已存在');
-        moveCoins(d,{from:purse(engine,employer),to:escrowAccount(id),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],boss.coins-wage);
-        const terms={parties:['player',employer],minutes,wage,skill,location};
-        holdingSet(d,engine,rec(id),{category:'contract',kind:'employment',name:`受雇于${nameOf(engine,employer)}`,...terms,escrow:wage,status:'履行中',createdAt:d.get('state','minute'),source:eventId,signedTerms:structuredClone(terms)},'credit');
+        // W8-B: in a tender-unit place the wage is frozen as whole units of that resource, held in kind in the contract's goods escrow.
+        if(fz)holdGoods(d,engine,{contract:id,payer:employer,resource:fz.resource,amount:fz.amounts.wage,writer:'credit',eventId});
+        else{moveCoins(d,{from:purse(engine,employer),to:escrowAccount(id),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],boss.coins-wage);}
+        const pay=fz?fz.amounts.wage:wage,unit=fz?fz.resourceName:'铜',terms={parties:['player',employer],minutes,wage:pay,skill,location,...(fz?{resource:fz.resource,resourceName:fz.resourceName,referenceCopper:{wage}}:{})};
+        holdingSet(d,engine,rec(id),{category:'contract',kind:'employment',name:`受雇于${nameOf(engine,employer)}`,...terms,escrow:pay,status:'履行中',createdAt:d.get('state','minute'),source:eventId,signedTerms:structuredClone(terms)},'credit');
         advanceWithNpcParticipants(d,engine,minutes,eventId,[employer]);
         const finished=d.get('state','location')===location&&d.get('state','player','status')==='正常';
         const row=d.get(...rec(id));
-        if(!finished){moveCoins(d,{from:escrowAccount(id),to:purse(engine,employer),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],engine.actor(d,employer).coins+wage);holdingSet(d,engine,rec(id),{...row,escrow:0,status:'中止',endedAt:d.get('state','minute')},'credit');return {contract:id,employer,status:'中止'};}
-        moveCoins(d,{from:escrowAccount(id),to:purse(engine,'player'),amount:wage,writer:'credit',eventId});d.set(['state','player','coins'],d.get('state','player','coins')+wage);
-        holdingSet(d,engine,rec(id),{...row,escrow:0,paid:wage,status:'已完成',endedAt:d.get('state','minute')},'credit');
+        if(!finished){if(fz)releaseGoods(d,engine,{contract:id,to:employer,resource:fz.resource,amount:pay,writer:'credit',eventId});else{moveCoins(d,{from:escrowAccount(id),to:purse(engine,employer),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],engine.actor(d,employer).coins+wage);}holdingSet(d,engine,rec(id),{...row,escrow:0,status:'中止',endedAt:d.get('state','minute')},'credit');return {contract:id,employer,status:'中止'};}
+        if(fz)releaseGoods(d,engine,{contract:id,to:'player',resource:fz.resource,amount:pay,writer:'credit',eventId});else{moveCoins(d,{from:escrowAccount(id),to:purse(engine,'player'),amount:wage,writer:'credit',eventId});d.set(['state','player','coins'],d.get('state','player','coins')+wage);}
+        holdingSet(d,engine,rec(id),{...row,escrow:0,paid:pay,status:'已完成',endedAt:d.get('state','minute')},'credit');
         const practiced=skill&&d.get('state','skills',skill)?engine.practice(d,{skill,gain:Math.max(1,Math.floor(minutes/80)),target:`受雇:${employer}`},eventId):null;
-        d.say(`为${nameOf(engine,employer)}做工${minutes}分钟，得工钱${wage}铜`);
-        return {contract:id,employer,minutes,wage,status:'已完成',skill,skillGain:practiced?.gain??0};
+        d.say(`为${nameOf(engine,employer)}做工${minutes}分钟，得工钱${pay}${unit}`);
+        return {contract:id,employer,minutes,wage:pay,...(fz?{resource:fz.resource,resourceName:fz.resourceName}:{}),status:'已完成',skill,skillGain:practiced?.gain??0};
     }
     if(op==='partner'){
         if(args.contract){
@@ -357,22 +386,25 @@ export async function creditTrade(d,args,eventId,terms){
             if(row?.category!=='contract'||row.kind!=='partnership'||row.status!=='有效')throw preconditionFailure('需要有效的合伙契约编号');
             counterpart(d,engine,row.partner,{consent:args.consent,minutes:5});
             const settled=settlePartnership(d,engine,row.id,row,{minute:d.get('state','minute'),eventId});
-            const paid=settled.debt&&d.get('state','player','coins')>=settled.payout?repayCredit(d,engine,{seller:row.partner,debt:settled.debt},eventId):null;
+            const frozenPay=settled.resource&&settled.resource!=='coin_river',paid=settled.debt&&(frozenPay?engine.quantity(d,'player',resourceItem(engine,settled.resource)):d.get('state','player','coins'))>=settled.payout?repayCredit(d,engine,{seller:row.partner,debt:settled.debt},eventId):null;
             if(!paid)engine.advance(d,5,eventId);
-            return {contract:row.id,status:settled.status,profit:settled.profit,payout:settled.payout,debt:settled.debt,paid:Boolean(paid)};
+            return {contract:row.id,status:settled.status,profit:settled.profit,payout:settled.payout,debt:settled.debt,paid:Boolean(paid),...(frozenPay?{resource:settled.resource,resourceName:settled.resourceName}:{})};
         }
         const shop=d.get(...rec(args.business));
         if(shop?.category!=='business'||shop.owner!=='player'||!['筹备','营业'].includes(shop.status))throw preconditionFailure('合伙需要本人正在经营的店铺编号');
         if(shop.location!==d.get('state','location'))throw preconditionFailure('须在铺面当面订立合伙');
         const partner=counterpart(d,engine,args.seller,{consent:args.consent,minutes:5}),p=rules(engine).partnership;
-        const stake=int(args.coins,1,engine.actor(d,partner).coins,'合伙出资'),share=int(args.quantity,p.minimumShare,p.maximumShare,'分成百分比'),days=int(args.days??30,1,p.maximumDays,'合伙天数');
+        const fz=Number.isSafeInteger(args.coins)&&args.coins>=1&&args.coins<=1e7?contractFreeze(d,engine,{location:shop.location,coppers:{stake:args.coins}}):null;
+        const stake=fz?fz.amounts.stake:int(args.coins,1,engine.actor(d,partner).coins,'合伙出资'),share=int(args.quantity,p.minimumShare,p.maximumShare,'分成百分比'),days=int(args.days??30,1,p.maximumDays,'合伙天数');
         const id=`contract_partner_${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('合伙契约编号已存在');
         const now=d.get('state','minute'),baselineNet=businessReport(d,engine,shop).profit.net;
-        moveCoins(d,{from:purse(engine,partner),to:purse(engine,'player'),amount:stake,writer:'credit',eventId});d.set([...engine.actorPath(partner),'coins'],engine.actor(d,partner).coins-stake);d.set(['state','player','coins'],d.get('state','player','coins')+stake);
-        const terms={parties:['player',partner],partner,business:shop.id,stake,share,deadline:now+days*1440};
+        // W8-B: in a tender-unit place the partner hands over the frozen units from his own bag.
+        if(fz)transferItems(d,engine,partner,'player',resourceItem(engine,fz.resource),stake,null,{eventId});
+        else{moveCoins(d,{from:purse(engine,partner),to:purse(engine,'player'),amount:stake,writer:'credit',eventId});d.set([...engine.actorPath(partner),'coins'],engine.actor(d,partner).coins-stake);d.set(['state','player','coins'],d.get('state','player','coins')+stake);}
+        const terms={parties:['player',partner],partner,business:shop.id,stake,share,deadline:now+days*1440,...(fz?{resource:fz.resource,resourceName:fz.resourceName,referenceCopper:{stake:args.coins}}:{})};
         holdingSet(d,engine,rec(id),{category:'contract',kind:'partnership',version:2,name:`与${nameOf(engine,partner)}合伙经营`,...terms,baselineNet,location:shop.location,status:'有效',createdAt:now,source:eventId,signedTerms:structuredClone(terms)},'credit');
-        engine.advance(d,5,eventId);d.say(`${nameOf(engine,partner)}出资${stake}铜入伙，期满按${share}%分成并退股`);
-        return {contract:id,partner,business:shop.id,stake,share,deadline:terms.deadline};
+        engine.advance(d,5,eventId);d.say(`${nameOf(engine,partner)}出资${stake}${fz?fz.resourceName:'铜'}入伙，期满按${share}%分成并退股`);
+        return {contract:id,partner,business:shop.id,stake,share,deadline:terms.deadline,...(fz?{resource:fz.resource,resourceName:fz.resourceName}:{})};
     }
     throw preconditionFailure('未知契约操作');
 }
