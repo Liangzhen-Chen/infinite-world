@@ -7,7 +7,7 @@ import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
 import {facilityView,facilityRouteStates,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {personTeaching,personCertified} from './entity-view.mjs';
 import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
-import { applyPatches, canonical, canonicalEqual, PatchCursor } from './storage.mjs';
+import { applyPatches, canonical, canonicalEqual, diffPatches, PatchCursor } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
@@ -158,7 +158,9 @@ class Draft {
     // could reach it (release); then it holds a copy, exactly as set would.
     adopt(path, value) {
         if (!Array.isArray(path) || path.length !== 3 || path[0] !== 'state' || path[1] !== 'records' || typeof path[2] !== 'string') return this.set(path, value);
+        if(['__proto__','constructor','prototype'].includes(path[2]))return this.set(path,value);
         value=this.numberEvent(path,value);
+        if(canonicalEqual(this.peek(...path),value))return;
         const patch = { op: 'set', path, value },stockWrite=advanceHook('prepareStockWrite')?.(this,this.engine,path);
         this.cursor.apply(patch, false); this.adopted.set(path[2], value); this.patches.push(patch);
         stockWrite?.();
@@ -448,7 +450,14 @@ export class WorldEngine {
         const result={ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)};
         if(legacyContext)primitiveActionRuntime().completeLegacy(session,books.document,d,{...legacyContext,result,persist:Boolean(options.legacyAction)});
-        return {patches:finishLedger(d.patches,books.opening),result};
+        // Clock steps still execute and publish their causal world events in
+        // order. Only the transaction's durable state delta is retained; the
+        // intermediate copies of records/accounts are not separate events.
+        // NPC rows already have one final patch per person (compactNpcPatches).
+        // Retain that contract: splitting their many changed fields is larger.
+        const npcPatch=p=>p.path[0]==='state'&&p.path[1]==='npcs';
+        const patches=tool==='time'?[...diffPatches(books.document,d.document).filter(p=>!npcPatch(p)),...d.patches.filter(npcPatch)]:d.patches;
+        return {patches:finishLedger(patches,books.opening),result};
     }
     primitiveDraft(document){return new Draft(document,this);}
     primitiveNormalizeCall(tool,args){return resolveToolCall(tool,args);}

@@ -133,6 +133,27 @@ export function applyPatches(document, patches) {
     }
     return next;
 }
+
+// A transaction publishes its net facts, not its internal working copies.
+// Arrays stay atomic (indices and holes must not change shape); new objects
+// likewise stay whole so empty containers survive JSON and replay.
+export function diffPatches(before, after) {
+    const patches = [];
+    const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+    const visit = (a, b, path) => {
+        if (a === b) return;
+        if (object(a) && object(b) && path.length < 12) {
+            for (const key of Object.keys(a)) if (!Object.hasOwn(b, key)) patches.push({op:'delete',path:[...path,key]});
+            for (const key of Object.keys(b)) {
+                const next = [...path,key];
+                if (!Object.hasOwn(a, key)) patches.push({op:'set',path:next,value:b[key]});
+                else visit(a[key],b[key],next);
+            }
+        } else if (!canonicalEqual(a,b)) patches.push({op:'set',path,value:b});
+    };
+    visit(before,after,[]);
+    return patches;
+}
 // P2: a value is superseded when a later patch sets or deletes exactly the same path
 // and nothing in between writes inside it. Such a value is never read, written
 // through or returned, so applyPatches places it without copying; the result

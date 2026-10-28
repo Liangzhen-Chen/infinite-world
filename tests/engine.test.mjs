@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import fc from 'fast-check';
 import { loadWorld } from '../tools/load-world.mjs';
 import { WorldEngine, xpRequired } from '../server-plugin/engine.mjs';
-import { applyPatches } from '../server-plugin/storage.mjs';
+import { applyPatches, canonicalEqual } from '../server-plugin/storage.mjs';
 import {planAgricultureMigration} from '../server-plugin/agriculture-migration.mjs';
 import {planWildlifeMigration} from '../server-plugin/wildlife-migration.mjs';
 import {planFarmPestsMigration} from '../server-plugin/farm-pests-migration.mjs';
@@ -20,6 +20,27 @@ const run=async(document,tool,args,eventId='test')=>{
     const output=await engine.reduce(document,{tool,args,eventId});
     return {document:applyPatches(document,output.patches),result:output.result};
 };
+test('物理过程相同事实不重复写入，后一真实分钟的变化仍记录且不改原文档',async()=>{
+    const initial=engine.createCharacter(seed,{},'adopt-equal-records');
+    const document=(await run(initial,'world_time',{minutes:1},'first-minute')).document;
+    const rows=Object.entries(document.state.records).filter(([,row])=>row.category==='physical_feature');
+    assert.ok(rows.length);
+    const original=structuredClone(document),draft=engine.primitiveDraft(document);
+    for(const [id,row]of rows)draft.adopt(['state','records',id],structuredClone(row));
+    // N copies of the same facts = zero changes; a later minute's changed fact = one write.
+    assert.deepEqual(draft.patches,[]);assert.deepEqual(draft.document,document);
+    // A no-op still rejects the same unsafe keys as the ordinary patch cursor.
+    for(const key of ['__proto__','constructor','prototype'])assert.throws(()=>draft.adopt(['state','records',key],draft.peek('state','records',key)),/不安全路径/);
+    assert.deepEqual(draft.patches,[]);
+    const next=(await run(document,'world_time',{minutes:1},'next-minute')).document;
+    const changed=rows.find(([id,row])=>!canonicalEqual(row,next.state.records[id]));
+    assert.ok(changed);
+    const id=changed[0],value=next.state.records[id];
+    draft.adopt(['state','records',id],structuredClone(value));
+    assert.equal(draft.patches.length,1);
+    assert.deepEqual(applyPatches(document,draft.patches).state.records[id],value);
+    assert.deepEqual(document,original);
+});
 test('编号迁移：原始人物财物与熟练度保留，名字用于显示',()=>{
     const c=fresh();assert.equal(c.state.player.coins,180);assert.equal(c.state.inventory.item_ration.quantity,3);
     assert.equal(c.state.npcs.npc_hw_linsui.name,'林穗');assert.equal(c.state.skills.skill_light.proficiency,10);
