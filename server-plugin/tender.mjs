@@ -11,7 +11,9 @@ import {decimalFraction,fraction} from './obligation-calendar.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {transferItems,changeItems} from './items.mjs';
 import {vaultGoods} from './stock.mjs';
-import {holdingSet} from './holdings.mjs';
+import {holdingSet,declareHoldingWriter} from './holdings.mjs';
+// W8-B: a counting house's vault record (bank goods) is written here on the paying caller's behalf.
+declareHoldingWriter('tender',{kinds:[]});
 import {partyAccount,moveCoins,mirrorPartyCoins} from './money.mjs';
 
 export const REFERENCE='coin_river';
@@ -135,7 +137,7 @@ const bankBase=(e,id)=>e.rules.economy?.credit?.banks?.find(b=>b.id===id);
 export const isBank=(e,s,id)=>s.records?.[id]?.category==='bank'||Boolean(bankBase(e,id));
 const bankRowOf=(d,e,id)=>structuredClone(d.get('state','records',id)??(base=>({category:'bank',id,name:base.name,location:base.location,coins:base.reserveCopper??0,goods:{...base.reserveCoins??{}},accounts:{}}))(bankBase(e,id)));
 // payer's bag -> the bank's vault
-export function bankTakeGoods(d,e,{payer,bank,item,amount,eventId=null,writer='contracts'}){
+export function bankTakeGoods(d,e,{payer,bank,item,amount,eventId=null,writer='tender'}){
  const row=bankRowOf(d,e,bank);
  changeItems(d,e,payer,item,-amount,{books:{account:vaultGoods(e,bank,item),writer,eventId}});
  row.goods[item]=(row.goods[item]??0)+amount;holdingSet(d,e,['state','records',bank],row,writer,eventId);
