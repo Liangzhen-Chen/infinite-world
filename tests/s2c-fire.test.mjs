@@ -21,6 +21,8 @@ import {advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
 import {fixture as faithFixture,draft as faithDraft,SEAT,T,HOST} from './helpers/faith.mjs';
 
 import {fireScene as fixture} from './probes/run-001/e06.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
+import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 
 test('E06-1 真实风向、间距、石材与雨水对照',()=>{
  const {engine,d,forge,warehouse,ignite,w}=fixture();ignite();advanceFacilityFire(d,engine,{after:660});
@@ -91,9 +93,14 @@ test('E06-5 失火事实与证人经法院判决赔偿；无过失、无证据�
  const origin='unattended_furnace:court:600';d.set(['state','records',origin],{category:'unattended_furnace',responsible:offender,building:forge,burning:true,attendants:[],witnesses:[officer],minute:600});
  const playerBefore=d.get('state','player','coins'),before=d.get('state','npcs',offender,'coins');
  damageFacility(d,engine,warehouse,25,{cause:'火灾',sourceEvent:'negligence',minute:660,fireOrigin:origin});
+ // 立案时（烧毁的粮已扣、建筑已受损）当地的供需与环境系数：
+ const supply=marketSupply(d,engine,'item_oats',warehouse),scarcity=Math.max(0.5,Math.min(3,supply.demand/Math.max(1,supply.supply))),regional=regionalTradeBase(d,engine,'item_oats',warehouse);
  const row=Object.values(d.get('state','records')).find(r=>r.category==='legal_case'&&r.offense==='negligent_fire');assert.ok(row);
  const code=legalCodeAt(engine,warehouse,d.get('state')),judge=code.judges[0];
- const judgment=adjudicateLegalCase(d,engine,row,code,judge,'fire:judgment');assert.equal(judgment.convicted,true);assert.equal(judgment.judgment.compensation,1500*engine.byId.get('item_oats').basePrice);
+ const judgment=adjudicateLegalCase(d,engine,row,code,judge,'fire:judgment');assert.equal(judgment.convicted,true); // W8-A：赔偿额读市场估值。手算——烧毁燕麦 1500 份：基价 3 × 环境系数（regionalTradeBase，此处 0.9）× 稀缺（= clamp(需求/供给, 0.5, 3)，取该处当下的供需）× 1500；
+ // 仓库损毁 25%：月租 35×4=140 文，按月息中值 (0.01+0.08)/2=0.045 资本化 = 3111（取整），受损前完整价值 × 25% = 777（取整）。旧：1500×3=4500，建筑项恒为 0。
+ assert.equal(judgment.judgment.compensation,Math.floor(1500*regional*scarcity)+Math.floor(Math.floor(140/0.045)*25/100));
+
  d.set(['state','location'],code.court);d.set(['state','npcs',officer,'location'],code.court);d.set(['state','npcs',officer,'activity'],'执勤');
  const paid=lawAction.call(engine,d,{operation:'pay',case:row.id,authority:officer},'fire:payment');assert.equal(paid.remaining,0);assert.equal(d.get('state','player','coins')-playerBefore,paid.recovered);assert.equal(before-d.get('state','npcs',offender,'coins'),paid.recovered);
  const again=lawAction.call(engine,d,{operation:'pay',case:row.id,authority:officer},'fire:payment:repeat');assert.equal(again.recovered,0);

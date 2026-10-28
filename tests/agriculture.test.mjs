@@ -66,8 +66,9 @@ test('跨季长等待与每日结算的库存、粮种和全部农业账一致',
 test('粮仓买卖、交粮和留种转移真实谷物与铜钱，并保留种粮原到期日',async()=>{
     const{c,run}=setup();atCounter(c);const coins=c.state.player.coins,treasury=c.state.settlements.loc_hw.treasury;
     let out=await run(c,'world_farm',{operation:'buy',quantity:2},'buy'),doc=out.document;
-    assert.equal(doc.state.inventory.item_oats.quantity,2);assert.equal(doc.state.player.coins,coins-6);
-    assert.equal(doc.state.settlements.loc_hw.treasury,treasury+6);assert.equal(doc.state.settlements.loc_hw.food,7998);conservation(doc);
+    // W8-A：粮仓售价读当地市场估值，不再是目录价×数量。手算：燕麦基价 3；河湾村仓存 8000 远超需求，稀缺取下限 0.5；2 份 = 2×3×0.5 = 3 文（旧：6 文）。
+    assert.equal(doc.state.inventory.item_oats.quantity,2);assert.equal(doc.state.player.coins,coins-3);
+    assert.equal(doc.state.settlements.loc_hw.treasury,treasury+3);assert.equal(doc.state.settlements.loc_hw.food,7998);conservation(doc);
     doc=(await run(doc,'world_farm',{operation:'donate',quantity:1},'donate')).document;
     assert.equal(doc.state.inventory.item_oats.quantity,1);assert.equal(record(doc).ledger.donated,1);conservation(doc);
     const oldExpiry=record(doc).batches[0].expiresDay;

@@ -24,3 +24,14 @@ export function holdingValuation(d,e,h){
     }
     return {value:null,unvaluable:'这种持有是使用权或身份，没有可派生的估值依据'};
 }
+// 物品现值（整数；没有估值依据时为 null）。“罚没/赔偿/案值/税基/礼物值多少”一律走这里，
+// 不再读目录基价当现价：同一件东西在不同地点、不同供需下值不同（市场估值投影，见 finance-assets 的 goods 角色）。
+// holder 是物品持有人（品质随实际单件）；location 缺省为当前所在地。
+export function goodsWorth(d,e,{item,quantity=1,location,holder=null,apart=false}){
+    return valuation(d,e,{role:'goods',item,quantity,location,holder,apart}).value;
+}
+// 事件推导只有状态快照、没有事务草稿时，用它造一个只读读取器（估值只读）。
+export function stateReader(state){
+    const document={state,randomSeed:state.randomSeed};
+    return {document,get:(...p)=>p.reduce((x,k)=>x?.[k],document),peek:(...p)=>p.reduce((x,k)=>x?.[k],document)};
+}

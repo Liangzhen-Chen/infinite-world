@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {nationAt,currentDomains,containsDomain} from './noble-state.mjs';
 import {placeSettlement,settlementGovernment} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
@@ -74,7 +75,8 @@ export function collectRouteTariffs(d,e,route,eventId){
             const def=e.byId.get(item),quantity=bagStock(d,e,{point:'tax.tariff',id:'player',item,legacy:()=>typeof row==='number'?row:row.quantity??0});
             if(!def||!itemTraits(def).tags.some(t=>rules.cargoTags.includes(t)))continue;
             const hidden=shipments.filter(r=>r.item===item).reduce((n,r)=>n+r.quantity,0);
-            value+=Math.max(0,quantity-hidden-rules.personalAllowance)*(def.basePrice??0);
+            // 关税税基：免税额之外的货物，按入境地当前市场估值（goods 角色）；无从估价者不计税基。
+            value+=goodsWorth(d,e,{item,quantity:Math.max(0,quantity-hidden-rules.personalAllowance),location:edge.to,holder:'player',apart:true})??0;
         }
         const tax=assessTradeTax(d,e,{seller:'player',cost:value,location:edge.to,sourceEvent:`${eventId}:${edgeId}`,kind:'tariff'});
         holdingSet(d,null,['state','records',key],{category:'tariff_passage',edge:edgeId,...tax,value,minute:d.get('state','minute'),sourceEvent:eventId},'finance-tax');

@@ -285,6 +285,8 @@ export function businessReport(d,engine,shop){
     const contracts=Object.values(d.get('state','records')??{}).filter(row=>row.category==='contract'&&row.version===1&&row.business===shop.id);
     const closing=shop.closing??counterAssets(d.get('state')),cashSources=[{source:shop.source,kind:'期初',amount:shop.opening.coins},...receipts.filter(r=>r.coins).map(r=>({source:r.source,receipt:r.id,amount:r.coins,tool:r.tool,operation:r.operation}))];
     const goods={},lots=new Map();let stockCostOfSales=0;
+    // 成本批次：期初库存和非交易入库没有成交记录可查，成本只能取目录基准价作“无记录时的参照”（历史成本，不随现价回改）；
+    // 有成交记录的入库用实付价。这里是账面成本核算，不是现价/估值，故不走估值角色。
     for(const [item,quantity]of Object.entries(shop.opening.goods))lots.set(item,[{quantity,price:engine.byId.get(item)?.basePrice??0}]);
     for(const receipt of receipts)for(const [item,delta]of Object.entries(receipt.goods)){
         if(!goods[item])goods[item]={opening:shop.opening.goods[item]??0,sources:[]};

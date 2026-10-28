@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {pruneRecords} from './record-cleanup.mjs';
 import {reject} from './action-rejection.mjs';
 import {facilityRuntime} from './facility-state.mjs';
@@ -157,6 +158,6 @@ export function applyDialogue(d,engine,args,eventId){
  else if(action==='leave')detail='回头见。';
  else if(action!=='greet')throw preconditionFailure('未知对话动作');
  return {...save(d,npc,eventId,action,decision,line(engine,view,action,decision,detail),communicates?.interpreter?{actedAs:communicates.interpreter}:{}),
-  ...(cost?{cost}:{}),...(gift?{gift,socialEvent:{verb:'gift',target:npc,value:engine.byId.get(gift.item).basePrice??0,tags:['dialogue','gift']}}:{})};
+  ...(cost?{cost}:{}),...(gift?{gift,socialEvent:{verb:'gift',target:npc,value:goodsWorth(d,engine,{item:gift.item,quantity:1,holder:'player'})??0,tags:['dialogue','gift']}}:{})};
 }
 export {npcDecision,subjectiveView};

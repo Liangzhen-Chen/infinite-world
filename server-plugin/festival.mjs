@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -49,7 +50,7 @@ function planOrdinaryFestival(d,engine,args,eventId){
  }
  let decision=null;
  if(host!=='player'){
-  const coins=riddles.reduce((sum,p)=>sum+(engine.byId.get(p.reward.item)?.basePrice??0),0);
+  const coins=riddles.reduce((sum,p)=>sum+(goodsWorth(d,engine,{item:p.reward.item,quantity:1,holder:host})??0),0);
   decision=npcDecision(subjectiveView(engine,d.document,host),{kind:'festival',from:'player',reward:fee,cost:{coins,minutes:endsAt-due}});
   if(decision.outcome!=='agree')throw preconditionFailure(`主办者尚未同意：${decision.reason}`);
  }
@@ -314,8 +315,8 @@ export function festivalAction(d,args,eventId){
  }
  let decision=null;
  if(args.consent!==true&&args.operation==='festival_authorize'&&who!=='player'){
-  const items=row.resources.filter(n=>n.owner===who).reduce((sum,n)=>sum+n.quantity*(this.byId.get(n.item)?.basePrice??0),0);
-  const prizes=who===row.host?(f.runtime.riddles??[]).reduce((sum,p)=>sum+p.reward.quantity*(this.byId.get(p.reward.item)?.basePrice??0),0):0;
+  const items=row.resources.filter(n=>n.owner===who).reduce((sum,n)=>sum+(goodsWorth(d,this,{item:n.item,quantity:n.quantity,holder:who})??0),0);
+  const prizes=who===row.host?(f.runtime.riddles??[]).reduce((sum,p)=>sum+(goodsWorth(d,this,{item:p.reward.item,quantity:p.reward.quantity,holder:who})??0),0):0;
   decision=npcDecision(subjectiveView(this,d.document,who),{kind:'festival',from:'player',cost:{coins:(who===row.host?row.cost:0)+items+prizes,minutes:f.runtime.durationMinutes}});
   if(decision.outcome!=='agree')throw preconditionFailure(`节庆当事人未同意：${decision.reason}`);
  }else if(args.consent!==true)throw preconditionFailure('需要本人明确同意，不为未到场者代答');

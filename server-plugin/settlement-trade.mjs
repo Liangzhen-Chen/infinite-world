@@ -85,6 +85,7 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
 // Inputs retained by the unified market: physical transport, season, hazard,
 // magic and water conditions. Supply/demand is calculated once by market.mjs.
 export function regionalTradeBase(d,engine,item,location,minute=d.get('state','minute')){
+ // 区域价公式的输入：目录基准价是规则定义的起点，乘环境/运输/季节后才成为区域基准（现价由 marketQuote 再乘供需）。
  const base=engine.byId.get(item).basePrice,r=engine.rules.settlementTrade,sid=region(engine,location);
  const environment=hazardPriceFactor(engine,d.get('state'),item,location,minute)*magicPriceFactor(engine,d.get('state'),item,location)*forestWaterPriceFactor(engine,d.get('state'),item,location,d);
  if(!r||item!==r.item||!sid)return base*environment;

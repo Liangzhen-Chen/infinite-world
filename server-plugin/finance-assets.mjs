@@ -6,14 +6,15 @@ import {counterpart} from './credit.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {adoptLegacyObligation} from './obligation-runtime.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
-import {registerValuer} from './valuation.mjs';
+import {registerValuer,goodsWorth,stateReader} from './valuation.mjs';
+import {installEventWorth} from './world-events.mjs';
 import {explainDerived} from './derived.mjs';
 import {workshopFund,coinRead,partyAccount,dedicatedCoinAccount,counterCash,payFromCounter} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement} from './entity-view.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
 import {facilityView} from './facility-state.mjs';
-import {marketQuote} from './market.mjs';
+import {marketQuote,supplyApart} from './market.mjs';
 import {currencyRow,currencyTradePrice,currencyAccepted,currencyValue} from './currency.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
 import {laborTrade,withAbsenceBreach} from './labor-market.mjs';
@@ -82,38 +83,44 @@ export function netAssets(d,e,id){
 }
 // ---- 估值角色的登记（valuation.mjs）--------------------------------------------------------------
 // 物品：市场估值投影（基准 × 稀缺 × 品质，不含商家价差与立场），按给定地点；货币按当地汇率。
-function goodsValuation(d,e,{item,quantity=1,location=d.get('state','location'),holder='player'}){
+// apart：估值时不把持有人自己的这批货算进当地供给（入境关税估价用）。
+function goodsValuation(d,e,{item,quantity=1,location=d.get('state','location'),holder='player',apart=false}){
     const def=e.byId.get(item);
     if(!def)return {value:null,unvaluable:'不是已登记的物品'};
     const currency=currencyRow(e,item);
     if(currency)return {value:currencyTradePrice(d,e,{currency:item,quantity,location}).totalCoins,basis:'currency'};
     if(!def.basePrice)return {value:null,unvaluable:'没有估值基准'};
-    const projection=marketQuote(d,e,{item,location,seller:holder,quantity,base:regionalTradeBase(d,e,item,location)});
+    const projection=marketQuote(d,e,{item,location,seller:holder,quantity,base:regionalTradeBase(d,e,item,location),...(apart?{supply:supplyApart(d,e,{item,location,owner:holder})}:{})});
     return {value:quantity*projection.explanation.value.value,basis:'market-value'};
 }
 registerValuer('goods',goodsValuation);
+installEventWorth((e,state,{item,quantity,location})=>goodsWorth(stateReader(state),e,{item,quantity,location,holder:null}));
 // 股份：发行方净资产 × 持股比例。
 registerValuer('share',(d,e,{issuer,fraction})=>{
     try{return {value:netAssets(d,e,issuer)*fraction,basis:'net-assets'};}
     catch{return {value:null,unvaluable:'发行方账目不可查，无法估计股份价值'};}
 });
 // 地产：市场租金按资本回报率资本化（月租 ÷ 月息带中值），再乘完好度，经 economy:landValue 修正。
-registerValuer('property',(d,e,{subject,fraction=1})=>{
+registerValuer('property',(d,e,{subject,fraction=1,condition})=>{
     const state=d.get('state'),place=base(e,state,subject);
     if(!place||!(state.buildings?.[subject]||place.purpose))return {value:null,unvaluable:'没有租金或用途可资本化'};
     const kind=/田|耕|农地/.test(place.purpose??place.name)?'field':/铺|店|商|工坊/.test(place.purpose??place.name)?'commercial':'home';
     const [low,high]=e.rules.economy.loanMonthlyInterest,monthly=e.rules.economy.rentalCopperPerWeek*4*(kind==='commercial'?2:1);
-    const condition=Math.max(0,Math.min(100,state.buildings?.[subject]?.condition??100))/100;
-    const baseValue=monthly/((low+high)/2)*condition;
+    // condition 可显式给出（如估“受损前的完整价值”）；缺省按现状完好度。
+    const intact=Math.max(0,Math.min(100,condition??state.buildings?.[subject]?.condition??100))/100;
+    const baseValue=monthly/((low+high)/2)*intact;
     return {value:explainDerived(e,d.document??{state},'economy:landValue',subject,{kind:'land',base:baseValue}).value*fraction,basis:'capitalized-rent'};
 });
 export function operatingProfit(d,e,issuer){
     const recorded=d.get(...rec(`finance_profit:${issuer}`))?.net??0;
     const ledger=groupAccountView(e,d.get('state'),issuer)?.ledger??d.get(...rec(`organization:${issuer}`),'ledger')??[];
+    // 成本批次的基准价：期初存货与无成交记录的出入库没有历史成本可查，取目录基准价作“无记录时的参照”；
+    // 有成交记录的批次用实付价摊入。这是历史成本核算，不是现价/估值（现价走 goods 估值角色），故保留。
     const lots=new Map(Object.entries(e.world.factions?.find(f=>f.id===issuer)?.resources?.items??{}).map(([id,quantity])=>[id,[{quantity,price:e.byId.get(id)?.basePrice??0}]])),events=new Map();let net=recorded;
     for(const l of ledger){
         if(l.kind==='商税'){net+=l.coins??0;continue;}
-        if(l.kind==='stage_cost'){net+=(l.coins??0)+Object.entries(l.items??{}).reduce((v,[id,q])=>v+q*(e.byId.get(id)?.basePrice??0),0);continue;}
+        // 阶段耗用物资的价值是耗用当时冻结在账上的 itemWorth（faction-clock 写入），历史成本不随现价重算。
+        if(l.kind==='stage_cost'){net+=(l.coins??0)-(l.itemWorth??0);continue;}
         if(l.kind!=='trade')continue;
         const key=l.sourceEvent,event=events.get(key)??{coins:0,items:{}};event.coins+=l.coins??0;
         for(const [id,q]of Object.entries(l.items??{}))event.items[id]=(event.items[id]??0)+q;
@@ -121,6 +128,7 @@ export function operatingProfit(d,e,issuer){
     }
     for(const event of events.values()){
         const acquired=Object.entries(event.items).filter(([,q])=>q>0),sold=Object.entries(event.items).filter(([,q])=>q<0);
+        // 一笔换入多种物品的实付款，按目录基准价的相对比重摊到各物品上（摊派权重，不是估价）。
         if(acquired.length){const value=acquired.reduce((n,[id,q])=>n+q*(e.byId.get(id)?.basePrice??0),0);for(const [id,quantity]of acquired){const stock=lots.get(id)??[];stock.push({quantity,price:-event.coins*(e.byId.get(id)?.basePrice??0)/Math.max(1,value)});lots.set(id,stock);}}
         if(!sold.length)continue;
         let basis=0;

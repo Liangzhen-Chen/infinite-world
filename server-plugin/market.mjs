@@ -151,6 +151,7 @@ export function forwardSupply(d,engine,item,location){
     // Use the shared item valuation with current stock/demand and actual grade.
     const stock=stockSupply(d,engine,definition.id,row.terms?.performance?.location),scarcity=clamp(stock.demand/Math.max(1,stock.supply),engine.rules.economy.priceFactorLimits.region);
     const quality=marketGrade(engine,document,definition.id,{seller:row.debtor,instances:record?.instances??[pledge.subject],quantity:units});
+    // 保留目录基准价：这里正是估值投影的基准输入（再乘稀缺与品质）；若走 goods 估值会经 marketSupply→forwardSupply 回到本函数，循环取数。
     securedValue+=itemValue(engine,document,definition.id,definition.basePrice,scarcity,quality).value*units/claimants;
    }
   }
@@ -224,6 +225,11 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
 // The supply a quote reads. Callers pricing several quantities of one item in a row (no writes in between)
 // compute it once and pass it back as `supply`; the value is identical to what marketQuote derives itself.
 export function quoteSupply(d,engine,{item,location,business=null}){return marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]});}
+// 不含某持有人自己那批货的供给：海关估入境货值时，货物自身不压低入境地的价格。
+export function supplyApart(d,engine,{item,location,owner}){
+ const all=quoteSupply(d,engine,{item,location}),own=all.rows.filter(r=>r.owner===owner).reduce((n,r)=>n+r.available,0);
+ return {...all,supply:all.supply-own,rows:all.rows.filter(r=>r.owner!==owner)};
+}
 export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=1,business=null,base=engine.byId.get(item)?.basePrice,relation=1,instances=null,minute=stateOf(d).minute,observer=null,view=null,supply:given=null}){
  const document=d.document??{state:stateOf(d)},state=document.state,r=rulesOf(engine),side=business?(business.keeper===seller?'sell':'buy'):seller==='player'?'buy':'sell';
  const supply=given??quoteSupply(d,engine,{item,location,business});

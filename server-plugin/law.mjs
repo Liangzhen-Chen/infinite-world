@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth,valuation} from './valuation.mjs';
 import {recordStandingEvidence} from './npc-state.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {assertVocationAction} from './employment-state.mjs';
@@ -387,7 +388,7 @@ export function registerStolenPurchase(d,engine,{buyer,seller,item,instances,eve
  const witnesses=Object.entries(d.get('state','npcs')??{}).filter(([id,n])=>id!==buyer&&id!==seller&&n.location===location&&awake(n,d,id)).map(([id])=>id);
  return units.map((unit,index)=>{
   const origin=d.get('state','itemInstances',unit,'stolenOrigin');
-  const incident=registerIncident(d,engine,{offender:buyer,victim:origin.victim,offense:'receiving_stolen',value:engine.byId.get(item).basePrice,
+  const incident=registerIncident(d,engine,{offender:buyer,victim:origin.victim,offense:'receiving_stolen',value:goodsWorth(d,engine,{item,quantity:1,location,holder:buyer})??0,
    stolen:{item,quantity:1,unit},witnesses,eventId:`${eventId}:receiving:${index}`,location,code});
   holdingSet(d,null,['state','itemInstances',unit,'legalClaims'],[...d.get('state','itemInstances',unit,'legalClaims')??[],{case:incident,victim:origin.victim,minute:d.get('state','minute')}],'law');
   return incident;
@@ -402,7 +403,9 @@ export function registerFireDamage(d,engine,{building,damage,grain,origin,eventI
  const code=legalCodeAt(engine,building,d.get('state'))??legalCodeAt(engine,base?.parent,d.get('state'));
  if(!code||!codePenalty(engine,code,'negligent_fire'))return null;
  const id=`legal_case:${eventId}`;if(d.get(...path(id)))return id;
- const value=grain*(engine.byId.get(engine.rules.agriculture?.grainItem??'item_oats')?.basePrice??0)+Math.floor((base?.basePrice??0)*damage/100);
+ // 案值：烧毁的粮按当地市场估值；建筑损伤按“受损前完整价值（租金资本化）× 损伤百分比”，不读目录基价。
+ const grainItem=engine.rules.agriculture?.grainItem??'item_oats',intact=valuation(d,engine,{role:'property',subject:building,condition:100}).value??0;
+ const value=(grain?goodsWorth(d,engine,{item:grainItem,quantity:grain,location:building,holder:null})??0:0)+Math.floor(intact*damage/100);
  if(!value)return null;
  registerIncident(d,engine,{victim,offender:fact.responsible,offense:'negligent_fire',value,witnesses:fact.witnesses??[],eventId,minute,location:building,code,relationshipApplied:true});
  const row=d.get(...path(id));holdingSet(d,null,path(id),{...row,fireOrigin:origin,building,evidence:[...row.evidence,{kind:'fire_fact',record:origin,damage:`facility_damage:${eventId.replace(/^facility_damage:/,'')}`} ]},'law');
@@ -479,7 +482,7 @@ export function crimeAction(d,args,eventId){
             if(!held?.instances?.includes(args.instance)||unit?.owner!==victim||unit.item!==item||unit.status!=='持有')throw preconditionFailure('此单件不属于目标实际库存');
         }
         if((this.byId.get(item).weight??0)>this.rules.law.maximumTheftWeightKg)throw preconditionFailure('物品过重，不能用这一扒取动作');
-        value=this.byId.get(item).basePrice;
+        value=goodsWorth(d,this,{item,quantity:1,holder:victim})??0;
     }else{if(args.instance)throw preconditionFailure('钱币不能指定物品单件编号');amount=integer(args.coins,1,this.rules.law.maximumTheftCoins,'偷取铜币');if(actor.coins<amount)throw preconditionFailure('目标没有这么多钱');value=amount;}
     const result=this.check(d,{attribute:'敏捷',difficulty:15},eventId),witnesses=[];
 

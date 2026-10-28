@@ -1,5 +1,6 @@
 // L1 composition of primitive transactions with the existing resource and
 // obligation protocols. Only native callers supply frames and runtime options.
+import {goodsWorth} from './valuation.mjs';
 import {createActionPrimitiveFrame,authority,validMandateScope,mandateParent} from './action-authority.mjs';
 import {canAct,legacyCanAct,legacyActionFamily,movementCapacityTarget} from './action-capacity.mjs';
 import {commitPrimitives,commitPrimitiveConsequences,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime,createPrimitiveFrame,recordResourceCosts} from './primitives.mjs';
@@ -387,7 +388,10 @@ function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{d
    if(!permission.allowed&&from!=='player'&&d.get('state','npcs',from)){
     // A declaration asks the other party; it cannot supply their answer. A2
     // receives only that NPC's subjective projection and a native request.
-    const transferred=effects.filter(e=>e.op==='transfer'),money=transferred.filter(e=>parseAccount(e.from).owner===from).reduce((n,e)=>n+e.qty*(parseAccount(e.from).resource===LEDGER_COIN?1:engine.byId.get(parseAccount(e.from).resource)?.basePrice??0),0),reward=transferred.filter(e=>parseAccount(e.to).owner===from).reduce((n,e)=>n+e.qty*(parseAccount(e.to).resource===LEDGER_COIN?1:engine.byId.get(parseAccount(e.to).resource)?.basePrice??0),0);
+    const transferred=effects.filter(e=>e.op==='transfer'),
+     // 对方付出/收到的价值：币按面值，物品按当前所在地的市场估值（goods 角色），不读目录基价；无从估价者计 0。
+     worthOf=(account,qty)=>{const resource=parseAccount(account).resource;return resource===LEDGER_COIN?qty:(goodsWorth(d,engine,{item:resource,quantity:qty,holder:from})??0);},
+     money=transferred.filter(e=>parseAccount(e.from).owner===from).reduce((n,e)=>n+worthOf(e.from,e.qty),0),reward=transferred.filter(e=>parseAccount(e.to).owner===from).reduce((n,e)=>n+worthOf(e.to,e.qty),0);
     const library=createRXLibrary(engine,d.document,{observer:actor,context:primitiveContext(engine,d.document)}),decision=library.functions.npcDecision(from,{kind:scope,purpose:action.id,cost:{minutes:duration,coins:money},reward});
     receipt.decisions??=[];receipt.decisions.push({from,scope,...decision});
     if(decision.outcome==='agree'){
