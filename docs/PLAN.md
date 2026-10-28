@@ -958,7 +958,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [x] S5-P1 推进性能回退：t-s5p1 8c80a22a → s5a 5977299e（报价供给在数量搜索中只读一次；日照/节日日期/义务日期记忆化；节日历按输入引用缓存；悬赏/合同/仪式/NPC 犯罪/周贸易/局部位置改走分类记录索引）。金快照与 numeric-digest 逐字节不变；主会话复测 perf-gate 三对 0.960/0.977/1.006 中位 0.977（修前 1.111）；受影响 47 文件 466 项（FIELDS_INDEX_CHECK=1）全过。未处理：facilityRouteStates 约 0.5 秒。
 - [x] W8-0 收口余项摸底 → logs/sessions/s5w8-survey.md（S5-10 四项、测试 todo 归 S5 11 行+陈旧 4 行+无归属约 29 条、登记表 7 行、PLAN 遗留 7 条、可玩版本缺通关脚本、两套复跑均为确定性脚本 0 模型调用）
 - [ ] W8-A 价格调用迁移（36 处直读 basePrice → 市场投影/估值角色）：F:/dnd-wt/W8A，Sonnet
-- [ ] W8-B 钱庄贷款/典当/替工工钱按法定单位 + 037 赎当回执债权人：F:/dnd-wt/W8B，Sonnet
+- [x] W8-B 钱庄贷款/典当/替工工钱/合伙按法定单位 + 037 赎当回执债权人：t-w8b-credit 0186e84d → s5a 5c8c6e32（本金按今日兑换率向下取整，折不足一单位拒绝，防押低值换整券套利；券从钱庄库或出借人行囊实物交付；利息上取整；替工工钱实物托管；合伙退股按券、分成折算偏向被欠方；037 回执加 creditor/creditorName；coin_river 不变，金快照与 numeric-digest 不变；新测 9 条）。遗留：labor-market NPC 雇佣体系（按分钟计薪、柜台、担保、欠薪）仍按铜→W8-E 评估归属；钱庄须有券才放券，发行行按准备金发券未做→登记货币发行（S7 经济/货币）；tender.mjs bankRowOf 与 credit/money 银行默认行三处重复（层级所限）
 - [ ] W8-C 负重（attr.carry 派生、入囊检查、搭手）+ D32⑤/D09④：F:/dnd-wt/W8C，Sonnet
 - [ ] W8-D 服务排队通用化 + 威慑 + 运价发车表：F:/dnd-wt/W8D，Sonnet
 - [ ] W8-E 收口（最后）：陈旧 todo 转正、无归属 todo 定归属、三流程通关脚本、14 类非整数评估、登记题复跑（a3-score/probe-score）、金快照统一审核重生成一次、C.10 九条、land.sh
