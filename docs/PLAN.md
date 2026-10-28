@@ -960,7 +960,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [ ] W8-A 价格调用迁移（36 处直读 basePrice → 市场投影/估值角色）：F:/dnd-wt/W8A，Sonnet
 - [x] W8-B 钱庄贷款/典当/替工工钱/合伙按法定单位 + 037 赎当回执债权人：t-w8b-credit 0186e84d → s5a 5c8c6e32（本金按今日兑换率向下取整，折不足一单位拒绝，防押低值换整券套利；券从钱庄库或出借人行囊实物交付；利息上取整；替工工钱实物托管；合伙退股按券、分成折算偏向被欠方；037 回执加 creditor/creditorName；coin_river 不变，金快照与 numeric-digest 不变；新测 9 条）。遗留：labor-market NPC 雇佣体系（按分钟计薪、柜台、担保、欠薪）仍按铜→W8-E 评估归属；钱庄须有券才放券，发行行按准备金发券未做→登记货币发行（S7 经济/货币）；tender.mjs bankRowOf 与 credit/money 银行默认行三处重复（层级所限）
 - [ ] W8-C 负重（attr.carry 派生、入囊检查、搭手）+ D32⑤/D09④：F:/dnd-wt/W8C，Sonnet
-- [ ] W8-D 服务排队通用化 + 威慑 + 运价发车表：F:/dnd-wt/W8D，Sonnet
+- [x] W8-D 服务排队通用化 + 威慑 + 运价发车表：t-w8d-service 4d0dc204 → s5a 1a684e19（service:capacity 由技能阶/助手/设施派生，参数标待标定并注出处；急者先、同级先到先得，回执写位次与预计时刻；医、学满员排队自动补入，讼师/匠人取号到时再来；partyDeterrence 读战力/装备/护送义务/护旗标签；车船规格与发车班次入 transport 表，按附录 A 460 驿站辰初发、车行午初截件；货损估值走 valuation goods、药材成本走市场报价；金快照 0 变化，numeric-digest 不变，新测 14 条）。主会话补 50f24f07：排队中的修理 NPC 记为排队而非修整未成功（加反证断言）。遗留→W8-E：容量题集仅 4 类远未到 B18.5 ≥20 题；D26④ 车行并车与逐日行程；post.mjs:21 估算出发按整点；transport.mjs:521 forward 机会成本仍 basePrice 需"基准估值"角色
 - [ ] W8-E 收口（最后）：陈旧 todo 转正、无归属 todo 定归属、三流程通关脚本、14 类非整数评估、登记题复跑（a3-score/probe-score）、金快照统一审核重生成一次、C.10 九条、land.sh
 - [x] W8a A3 中归 S5 的待办：t-s5w8a 64007a9e → s5a 9cfb34cf（柜台开户、具名存单、当物、维持债权、组合装载与重放转正式用例；S4 部分保留 todo 并改准归属；pass 17/42/15，todo 2/4/15）。遗留：037 当物赎回回执缺债权人（core:trade.redeem 需补 creditor），W4 合入后由主会话补
 - [ ] W8 接线与收口（阶段门九条）；含把 a3 中“归 S5”的 todo（独立柜台账户、具名纸本存单，约 13 条）改成真实动作前提的正式用例
