@@ -8121,7 +8121,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/festival.mjs:267"
+    "dispatch": "server-plugin/festival.mjs:282"
    }
   },
   {
@@ -8225,7 +8225,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/festival.mjs:238"
+    "dispatch": "server-plugin/festival.mjs:253"
    }
   },
   {
@@ -8329,7 +8329,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/festival.mjs:301"
+    "dispatch": "server-plugin/festival.mjs:316"
    }
   },
   {
@@ -8433,7 +8433,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/festival.mjs:315"
+    "dispatch": "server-plugin/festival.mjs:330"
    }
   },
   {
@@ -8537,7 +8537,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/festival.mjs:290"
+    "dispatch": "server-plugin/festival.mjs:305"
    }
   },
   {
