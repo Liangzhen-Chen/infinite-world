@@ -28,7 +28,7 @@ import {marketQuote} from './market.mjs';
 import {obligationView as dueObligation} from './obligation-state.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 import {obligationTransaction} from './transition.mjs';
-import {serviceUrgency,orderServices,displaceable,waitingInOrder,queuePosition,serviceCapacity} from './service-queue.mjs';
+import {serviceUrgency,orderServices,displaceable,waitingInOrder,queuePosition,serviceCapacityView,nextServiceOrder} from './service-queue.mjs';
 const DAY=1440,rec=id=>['state','records',id],actor=(s,id)=>id==='player'?s.player:s.npcs?.[id];
 const present=(s,id)=>id==='player'?s.location:s.npcs?.[id]?.location;
 const capable=(e,s,id)=>actor(s,id)&&!isPhysicallyDead(e,s,id)&&!['濒死','昏迷'].includes(actor(s,id).status);
@@ -85,15 +85,18 @@ function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity
   if(medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id&&r.start<end&&r.end>at).length>=site.capacity)continue;
   if(patient!=='player'&&(educationReservation(e,s,patient,at-travel,30+travel)||employmentReservation(s,patient,at-travel,30+travel)||medicineReservation(s,patient,at-travel,30+travel)||e.npcAutonomyBusy?.(s,patient,at)))continue;
   // 医师每日接诊数受槽 service:capacity 约束（技能阶 × 药童 × 医馆完好度）；满了顺延到下一个有名额的时段。
-  const doctor=site.doctors.find(who=>who!==patient&&dayLoad(s,who,day)<serviceCapacity(e,d,{provider:who,service:'medicine',proficiency:medicalSkill(e,s,who),helpers:site.assistants.length,factor:site.factor})&&(house?available(e,s,who,at-travel,end+travel,site.seat):available(e,s,who,at,end,site.seat)));if(!doctor)continue;
-  const assistants=house?[]:site.assistants.filter(who=>available(e,s,who,at,end,site.seat)).slice(0,1);
+  const helpers=house?[]:site.assistants.filter(who=>available(e,s,who,at,end,site.seat));
+  const capacityOf=who=>serviceCapacityView(e,d,{provider:who,service:'medicine',proficiency:medicalSkill(e,s,who),helpers:helpers.length,factor:site.factor});
+  const doctor=site.doctors.find(who=>who!==patient&&dayLoad(s,who,day)<capacityOf(who).capacity&&(house?available(e,s,who,at-travel,end+travel,site.seat):available(e,s,who,at,end,site.seat)));if(!doctor)continue;
+  const assistants=helpers.slice(0,1);
   const fee=Math.max(1,Math.ceil((e.rules.economy.wageCopperPerHalfDay?.[0]??10)/2))+Math.round(herbValue(d,e,site,doctor)*(1+medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id).length/Math.max(1,site.capacity)));
-  chosen={doctor,assistants,start:at,end,fee};break;
+  chosen={doctor,assistants,start:at,end,fee,capacitySource:capacityOf(doctor)};break;
  }
  if(!chosen)throw preconditionFailure('医师七日内没有可用排期');
  const fund=charity?fundAt(s,site.seat):null,temple=charity&&!fund?templeSponsor(e,s,site.seat,chosen.fee):null;
  if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw preconditionFailure('诊费不足，可求赊欠或义诊');
- const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,urgency,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
+ const prior=s.records?.[`medicine:${id}`];
+ const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,urgency,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:prior?.createdAt??now,arrivalOrder:prior?.arrivalOrder??nextServiceOrder(medicineRows(s))};
  // 回执写明位次与预计受理时刻：排在它前面（紧迫度更高或同级先到）的未开始诊疗数 + 1。
  row.position=queuePosition([...medicineRows(d.get('state')),row],row,{same:r=>r.clinic===site.id,now});row.etaAt=row.start;
  holdingSet(d,null,rec(row.id),row,'medicine');return row;
@@ -196,7 +199,7 @@ export function advanceMedicine(d,e,{before,after}){
   try{obligationTransaction(d,()=>{
    holdingSet(d,null,rec(queued.id),{...queued,status:'重排'},'medicine');
    const visit=book(d,e,{patient:queued.patient,clinic:queued.clinic,source:queued.source,credit:queued.credit,charity:Boolean(queued.charity),consent:true},queued.id.slice('medicine:'.length));
-   holdingSet(d,null,rec(queued.id),{...visit,createdAt:queued.createdAt},'medicine');
+   holdingSet(d,null,rec(queued.id),{...visit,createdAt:queued.createdAt,arrivalOrder:queued.arrivalOrder},'medicine');
   });}catch(error){if(!/排期|预约|路线|赴诊|诊费|医馆|疾病|创伤/.test(error.message))throw error;}
  }
  for(const r of medicineRows(d.get('state')))if(r.status==='预约'){

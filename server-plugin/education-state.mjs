@@ -150,7 +150,7 @@ function educationCatalog(e,s){
  })();worldCache.created.set(created,catalog);return catalog;
 }
 
-export const educationRows=s=>recordsWhere(s.records,'category','education_course').filter(r=>r.status==='开课');
+export const educationRows=s=>recordsWhere(s.records,'category','education_course').filter(r=>r.status==='开课'&&(r.until??Infinity)>s.minute);
 export const knowledgeProficiency=(e,s,id,skill)=>{
  const b=s.created?.[id]??e.byId.get(id),v=id==='player'?s.skills?.[skill]:s.npcs?.[id]?.skills?.[skill]??b?.proficiencies?.[skill]??b?.skills?.[skill];
  return typeof v==='number'?v:v?.proficiency??0;
