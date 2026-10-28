@@ -20,7 +20,7 @@ function loadAccounts(ctx,setup){
   requireShape(row.purpose==='inventory'&&ctx.actor(owner)&&ctx.engine.world.items.some(i=>i.id===row.resource),'unsupported resource/account purpose or actor');
   ctx.native(item,d=>{
    const old=ctx.engine.quantity(d,owner,row.resource);
-   if(row.balanceMode!=='ensure_existing')changeItems(d,ctx.engine,owner,row.resource,row.balance-old,{books:BOOKED});
+   if(row.balanceMode!=='ensure_existing')changeItems(d,ctx.engine,owner,row.resource,row.balance-old,{books:BOOKED,carryExempt:true});
    d.set(['ledger'],openLedger(ctx.engine,d.document));
   });
  });

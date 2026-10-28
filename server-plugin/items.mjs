@@ -51,8 +51,15 @@ export function useTool(d,engine,requiresUse,selected=undefined){
  });
 }
 // S1b: books = 对方账户（stock.bookStock）；成对写入中已记过账的一边传 BOOKED。
-export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=null,books}={}){
+export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=null,books,carryExempt=false}={}){
     if(!Number.isSafeInteger(delta))throw preconditionFailure('物品数量变化无效');
+    // The one gate for everything entering the player's pack (buying, gifts, gathering, crafting output, pickups).
+    // Exempt: a signed contract's goods coming back (escrow release, pledge return) and callers passing carryExempt
+    // (a public project's material refund): what the player happens to be carrying must not block those.
+    if(owner==='player'&&delta>0&&!carryExempt&&!/\|(escrow|pledge)$/.test(books?.account??'')){
+        const held=d.get(...engine.bagPath(owner),item);
+        assertCanCarry(d,engine,owner,delta*((typeof held==='object'?held?.weight:undefined)??engine.byId.get(item)?.weight??0),`${engine.byId.get(item)?.name??'物品'}×${delta}共`);
+    }
     const current=engine.quantity(d,owner,item),amount=current+delta;
     if(amount<0)throw preconditionFailure(`${engine.byId.get(owner)?.name??'你'}缺少${engine.byId.get(item)?.name}`);
     const path=[...engine.bagPath(owner),item],existing=d.get(...path),definition=engine.byId.get(item);

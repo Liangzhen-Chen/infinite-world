@@ -1,8 +1,10 @@
-// Safe carry load (数值方案 §2.4 attr.carry): a body-derived limit, never stored.
-// base = table.base + table.perStrength * strength; the 'body:carry' derived slot
-// may add temporary modifiers on top, but never past the table's own ceiling
-// (bounds.base[1] + bounds.perStrength[1] * strength). Helpers (companions,
-// hired hands, a ridden mount) share a load only when it exceeds the body's own limit.
+// Safe carry load: a body-derived limit, never stored. One rule only: the same
+// rules.json combat.character carryBase + carryPerStrength * strength that
+// combat.derivedStats(carryKg) and transport use. The 'body:carry' derived slot may add
+// temporary modifiers on top, but never past carryBase + 4 * strength, where 4 is the
+// upper bound of attributes.json attr.carry perStrength (its own base 20 is a pending
+// calibration and is deliberately not read: live rules keep one value).
+// Helpers (companions, hired hands, a ridden mount) share a load only when it exceeds the body's own limit.
 import attributeBalance from '../world/rules/tables/balance/attributes.json' with {type:'json'};
 import {derived} from './derived.mjs';
 import {currentEmployment} from './employment-state.mjs';
@@ -10,16 +12,16 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {reject} from './action-rejection.mjs';
 
 const EPS=1e-9,DOWN=['濒死','昏迷','失能','死亡'];
-const table=engine=>(engine.world.balance?.attributes??attributeBalance).params.find(r=>r.id==='attr.carry');
+const table=()=>attributeBalance.params.find(r=>r.id==='attr.carry');
 const round=n=>Math.round(n*1000)/1000;
 function strengthOf(engine,state,actor){
  const row=actor==='player'?state.player:state.npcs?.[actor],base=state.created?.[actor]??engine.byId.get(actor);
  return row?.attributes?.力量??base?.attributes?.力量??attributeBalance.params.find(r=>r.id==='attr.initial').value.base;
 }
 export function safeCarryKg(d,engine,actor='player'){
- const {value,bounds}=table(engine),strength=strengthOf(engine,d.get('state'),actor);
- const base=value.base+value.perStrength*strength,ceiling=bounds.base[1]+bounds.perStrength[1]*strength;
- return Math.min(ceiling,Math.max(0,derived(engine,d.document,'body:carry',actor,{base})));
+ const c=engine.rules.combat.character,strength=strengthOf(engine,d.get('state'),actor);
+ const base=Math.max(1,c.carryBase+c.carryPerStrength*strength),ceiling=c.carryBase+table().bounds.perStrength[1]*strength;
+ return Math.min(Math.max(base,ceiling),Math.max(0,derived(engine,d.document,'body:carry',actor,{base})));
 }
 export function carriedKg(d,engine,actor='player'){
  let kg=0;

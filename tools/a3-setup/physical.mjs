@@ -5,6 +5,7 @@ import {declareHoldingWriter,holdingSet,createEntity,setLocation,openHolding,ali
 import {trackTransferUnit,changeItems,writePhysicalItem,equipPhysicalItem,bindPurse,writeLiquidContents,registerPhysicalStock,bindContainerWater} from '../../server-plugin/items.mjs';
 import {BOOKED} from '../../server-plugin/stock.mjs';
 import {bodyRule,writeBodyNeed} from '../../server-plugin/primitives-body.mjs';
+import {safeCarryKg,carriedKg} from '../../server-plugin/carry.mjs';
 import {derivedStats,monsterStats} from '../../server-plugin/combat.mjs';
 import {npcAgeAt} from '../../server-plugin/npc-state.mjs';
 import {environmentFeatures,writeEnvironmentPremise,localSightClear,localPlayerPoint} from '../../server-plugin/environment.mjs';
@@ -86,7 +87,7 @@ function instance(ctx,row,item){
    // Without same_stock the declaration itself supplies one original item.
    // Reuse existing stock when present; otherwise initialize that one unit
    // through the native item writer. The final opening books count it once.
-   if(!binding&&ctx.engine.quantity(d,holder,row.item)<1)ctx.engine.itemDelta(d,holder,row.item,1,BOOKED);
+   if(!binding&&ctx.engine.quantity(d,holder,row.item)<1)ctx.engine.itemDelta(d,holder,row.item,1,BOOKED,{carryExempt:true});
    nativeId=trackTransferUnit(d,ctx.engine,holder,row.item,`${writer}:${row.id}`);
    if(Object.values(ctx.bindings).includes(nativeId))throw Error('same_stock unit already bound to another instance');
    const unit=d.get('state','itemInstances',nativeId),max=unit.maxDurability;
@@ -431,7 +432,19 @@ function bodies(ctx,setup){
     if(value!==awake)missing(ctx,name,'保留死亡、能力与睡眠原因的意识初态设置','01 §1.2；06 §6.3');
    }else if(field==='safeCarryKg'){
     if(!finite(value)){ctx.unmet(name,'expected a nonnegative carry capacity');continue;}
-    if(stats(ctx,actor).carryKg!==value)missing(ctx,name,'安全负重上限覆盖（原生上限从力量派生）','01 §1.2；A §A.15.7');
+    // The cap itself is derived from strength and cannot be overridden. The premise "this much more can be
+    // carried" is met with real pack items: spare = derived safe load - carried weight, reduced by actual
+    // ballast (stone 3, wood 2, ration 0.2, bait 0.01 kg) when the pack is lighter than the premise needs.
+    if(actor!=='player'){ctx.unmet(name,'only the player has a carried pack');continue;}
+    ctx.native(name,d=>{
+     const units=Math.round((safeCarryKg(d,ctx.engine)-carriedKg(d,ctx.engine)-value)*100);
+     if(units<0)throw Error('已背的重量使剩余负重低于前提值，不能凭空减轻');
+     let rest=units;
+     for(const [item,hundredths] of [['item_stone',300],['item_wood',200],['item_ration',20],['item_fishing_bait',1]]){
+      const n=Math.floor(rest/hundredths);if(n){ctx.engine.itemDelta(d,'player',item,n,BOOKED,{carryExempt:true});rest-=n*hundredths;}
+     }
+     if(rest)throw Error('无法用目录物品凑出该剩余负重');
+    });
    }else missing(ctx,name,`${field} 身体初态`,'01 §1.2；A §A.15.7');
   }
  }

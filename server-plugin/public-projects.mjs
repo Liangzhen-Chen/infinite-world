@@ -104,7 +104,7 @@ function finish(d,engine,p,status,minute,eventId){
         const used=k=>Math.floor(p[k]*p.public.minutesDone/p.public.requiredMinutes),back={wood:p.wood-used('wood'),stone:p.stone-used('stone')};
         const s=d.get('state','settlements',p.settlement);
         settleWorks(d,engine,p,{returned:back,to:p.public.payer?{party:p.public.payer}:{settlement:p.settlement},writer:'public-projects',eventId:`${p.id}:works`});
-        if(p.public.payer){for(const [item,n]of [['item_wood',back.wood],['item_stone',back.stone]])if(n)changeItems(d,engine,'player',item,n,{books:STOCK_BOOKED});}
+        if(p.public.payer){for(const [item,n]of [['item_wood',back.wood],['item_stone',back.stone]])if(n)changeItems(d,engine,'player',item,n,{books:STOCK_BOOKED,carryExempt:true});}
         else{d.set(['state','settlements',p.settlement,'wood'],s.wood+back.wood);if(back.stone)d.set(['state','settlements',p.settlement,'stone'],(s.stone??0)+back.stone);}
         next.returned={...back,copper:escrow};
     }
