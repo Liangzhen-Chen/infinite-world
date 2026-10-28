@@ -44,3 +44,24 @@ export function totalCopper(document){
   +Object.values(s.quests??{}).reduce((n,q)=>n+(q.escrow??0),0);
 }
 export const qty=v=>typeof v==='number'?v:v?.quantity??0;
+
+// Start through the public character-creation endpoint, without importing a
+// prepared state. Existing legacy-fixture sessions above retain their behavior.
+export async function characterUiSession(t,{character={},world,seed}={}){
+ const server=await createPlaytestServer({world,seed,consistencyEnabled:false});
+ t.after(()=>server.close());
+ const {reference}=await server.api('create',{character});
+ const campaignId=reference.campaignId;let counter=0;
+ const read=async()=>(await server.api('read',{campaignId})).document;
+ const menu=async(target=null)=>server.api('actions',{campaignId,...(target?{target}:{})});
+ async function choose(action,slots={},{target=null,search=false,eventId=`character-ui-${++counter}`}={}){
+  const here=await menu(target),row=here.actions.find(a=>a.id===action||a.id===`core:${action}`);
+  if(!row&&!search)throw Error(`菜单没有 ${action}（${target??'此处'}）`);
+  const view=await server.api('read',{campaignId});
+  try{
+   const out=await server.api('execute',{campaignId,tool:'world_act',args:{action:row?.id??action,slots:{...row?.fill,...slots}},eventId,anchor:null,expectedSequence:view.reference.sequence});
+   return {ok:true,lines:out.narration?.lines??[],applied:out.narration?.applied??[],result:out.result,eventId};
+  }catch(error){return {ok:false,error:error.message,status:error.httpStatus};}
+ }
+ return {server,campaignId,read,menu,choose};
+}
