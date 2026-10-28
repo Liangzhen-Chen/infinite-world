@@ -1,6 +1,32 @@
-// Shared physical environment view; mutations remain in environment.mjs.
+// Shared physical environment views and parcel cultivation facts.
 import {aliveHoldings,locationOf} from './holdings.mjs';
 import {physicalLocation} from './items.mjs';
+import statuses from '../world/ontology/statuses.json' with {type:'json'};
+export function playerWeatherExposure(state){
+ const row=state.records?.['weather_exposure:player'];if(!row?.wet)return [];
+ const status=statuses.entries.find(r=>r.id==='wet');
+ return [{id:status.id,name:status.label,sourceEvent:row.sourceEvent,asOf:row.asOf}];
+}
+// One cultivation fact for a registered parcel, used by hand work and earth
+// magic. Store square metres rationally (one mu need not be an integer m²).
+export const cultivationRule=engine=>engine.world.primitiveTables?.yields?.params?.find(r=>r.id==='field.cultivation')?.value;
+export function recordTillage(d,engine,subject,{location,numerator,denominator=1,sourceEvent,season}){
+ const policy=cultivationRule(engine);if(!policy)return null;
+ let n=BigInt(numerator),q=BigInt(denominator),a=n,b=q;
+ if(n<0n||q<=0n)throw Error('Invalid cultivated area');
+ while(b){const r=a%b;a=b;b=r;}n/=a;q/=a;
+ const previous=d.get('state','records',`cultivation:${subject}`);
+ if(previous?.season===season&&BigInt(previous.tilledAreaM2.numerator)*q>n*BigInt(previous.tilledAreaM2.denominator)){
+  n=BigInt(previous.tilledAreaM2.numerator);q=BigInt(previous.tilledAreaM2.denominator);
+ }
+ const fact={category:'cultivation',subject,location,[policy.fact]:{numerator:String(n),denominator:String(q)},sourceEvent,minute:d.get('state','minute'),...(season!==undefined?{season}:{})};
+ d.set(['state','records',`cultivation:${subject}`],fact);return fact;
+}
+export function tillageArea(state,subject,season){
+ const fact=state.records?.[`cultivation:${subject}`];
+ if(!fact||season!==undefined&&fact.season!==season)return null;
+ return Number(fact.tilledAreaM2.numerator)/Number(fact.tilledAreaM2.denominator);
+}
 const key=id=>`physical_feature:${id}`;
 // A feature record belongs to its row by id; a carried container's record keeps the place it was
 // filled, so only fixed features must also match location (their place comes from holdings).

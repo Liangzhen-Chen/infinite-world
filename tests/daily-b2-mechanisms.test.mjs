@@ -11,7 +11,12 @@ test.todo('D07 问路 ①②③④⑤——引擎没有“向人打听地点”�
 
 // ---- D10 打工日结、D11 月结工钱（受雇，A2 / S3）----
 test.todo('D10 打工日结 ①–④——受雇须对方答应：world_act 列出但拒绝（“需要对方答应”，a1-daily-probes 的 D10 测试守着这条）；缺 NPC 决策规则骨架（A2）与 employed_by + wage 义务按日 30 文清偿（S3 义务统一：雇主账户转出）；体力下降缺 S1 body');
-test.todo('D10 打工日结 ⑤李员外的地里“已锄”进度增加——劳力只进产量派生，没有田地“已锄/耕作进度”事实（S1 田地作为资源点；S5 作物生长）');
+test('D10⑤ 自家真实锄播推进耕作面积，留有劳动来源',async t=>{
+ const {ui}=await privateField(t),sow=await ui.choose('farm.private_sow',{areaMu:2},{search:true,eventId:'d10-tillage'});assert.ok(sow.ok,sow.error);
+ // 2 亩 = 2 × 10000 / 15 = 4000/3 平方米；锄播 0.5 工日/亩 × 2 = 480 分钟。
+ const fact=(await ui.read()).state.records['cultivation:private-farm:loc_hw_fields'];
+ assert.deepEqual(fact.tilledAreaM2,{numerator:'4000',denominator:'3'});assert.equal(fact.sourceEvent,'d10-tillage');assert.equal(sow.result.laborMinutes,480);
+});
 test.todo('D11 月结工钱 ①–⑤——引擎只有按工时日结的受雇（labor-market），没有月薪雇佣：缺 wage 义务 per: anchor（每月初一）与 accruedTo 闭式（附录 A §A.15 期间与折算：八月满勤 → 600，钱柜 2000→1400，同一个月不领两次）、雇佣关系 settle 后继续有效（S3 义务统一）');
 
 // ---- D12 春播、D13 秋收、D14 采草药（农事与采集，S1 / S5）----
@@ -69,7 +74,20 @@ test('D14 A3 two hours of local herb work transfer stock and train deterministic
  assert.equal(after.state.skills.skill_life_9_core.proficiency-before.state.skills.skill_life_9_core.proficiency,3);
  assert.equal(after.state.skills.skill_life_9_core.practiceCarry,.4);conserved(before,after,'D14',new WorldEngine(world));
 });
-test.todo('D14 S5: distinct herb species (plantain / honeysuckle), seasonal density and replenishment remain separate; A3 time, finite stock transfer and work learning now execute above');
+test('D14 S5 草药分种读取独立季节密度，并分别累计不足一份的采集量',async t=>{
+ const ui=await uiSession(t,{mutate:scene('loc_hw_northwood',monthDayMinute(3,10,9,0),s=>{s.skills.skill_life_9_core={proficiency:10,breakthroughs:[],daily:{}};})});
+ assert.ok((await ui.choose('site.enter',{}, {search:true})).ok);
+ const before=await primed(ui);
+ for(const target of ['nw_plantain','nw_honeysuckle']){const r=await ui.choose('site.gather_session',{target,minutes:120},{search:true});assert.ok(r.ok,r.error);}
+ const after=await ui.read(),site=after.state.records['site:loc_hw_northwood'];
+ // 20份/480分钟：春季车前密度1，120分钟=5份；金银花密度1/2，=2份余1/2。
+ assert.equal(held(after.state.inventory,'item_plantain')-held(before.state.inventory,'item_plantain'),5);
+ assert.equal(held(after.state.inventory,'item_honeysuckle')-held(before.state.inventory,'item_honeysuckle'),2);
+ assert.equal(site.remaining.nw_plantain,15);assert.equal(site.remaining.nw_honeysuckle,18);assert.equal(site.remaining.nw_herb,20);
+ const next=await ui.choose('site.gather_session',{target:'nw_honeysuckle',minutes:120},{search:true});assert.ok(next.ok,next.error);
+ assert.equal(next.result.quantity,3,'前次余半份+本次两份半=3份，且不借用车前的余数');
+ conserved(before,await ui.read(),'D14 S5',new WorldEngine(baseWorld));
+});
 
 // ---- D18 修理装备（服务，S3）----
 test('D18.2 public smith repair quotes 25 and a maximum before charging, restores the same sword to that maximum',async t=>{

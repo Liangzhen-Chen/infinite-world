@@ -39,7 +39,13 @@ test('D09 下雨天赶路：雨天走同一段路比晴天慢（雨速系数）�
  assert.deepEqual(wet.after.state.player.coins,wet.before.state.player.coins,'路上没有花费');
 });
 test.todo('D09 ③体力消耗比晴天多——引擎没有玩家体力（只有生命）：缺 body.stamina 闭式消耗（S1 vital 原语；A3 move 的 cost.body 读 body.json drainPerHour.travel 与雨天修正项）');
-test.todo('D09 ④出现“淋湿”状态——引擎没有暴露状态：缺 core 反应规则 weather_exposure 与状态 wet（S5 修正槽与反应；附录 A §A.18 暴露状态行）');
+test('D09④ 冒雨等待产生可追溯的淋湿状态与回执',async t=>{
+ const ui=await uiSession(t,{mutate:scene(VILLAGE,monthDayMinute(6,20,7,0),(s,doc)=>{doc.randomSeed='daily-b2-d09-98';})});
+ // 已有 D09 种子在此日为雨；户外无遮蔽，真实经过一分钟即 wet。
+ const out=await ui.choose('time',{minutes:1});assert.ok(out.ok,out.error);
+ const exposure=(await ui.read()).state.records['weather_exposure:player'];
+ assert.equal(exposure.wet,true);assert.equal(exposure.sourceEvent,out.eventId);assert.equal(out.result.weatherExposure.name,'淋湿');
+});
 
 // ---- D22 打听消息 / D38 听传闻：传闻种子按讲述者登记，听传闻是受校验的交谈（world_remember），固定 10 分钟 ----
 const rumorWorld=(extra=[])=>variant(w=>{

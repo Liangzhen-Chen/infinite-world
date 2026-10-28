@@ -784,7 +784,7 @@ export class WorldEngine {
         if(d.get('state','records','mind_rest_activity'))holdingRemove(d,null,['state','records','mind_rest_activity'],'engine');
         if(args.activity==='睡眠'||args.activity==='休息') {
             const p=d.get('state','player');if(p.status==='正常'){
-                d.set(['state','player','hp'],Math.min(p.maxHp,p.hp+Math.floor(minutes/30)));
+                d.set(['state','player','hp'],advanceHook('restHealth')(d,this,minutes));
                 d.set(['state','player','mp'],Math.min(p.maxMp,p.mp+Math.floor(minutes/30)));
             }
         }

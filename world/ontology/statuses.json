@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schemas/ontology.schema.json",
+  "kind": "tags",
+  "namespace": "core",
+  "version": 1,
+  "note": "附录 A §A.18 暴露状态；沿用现有标签词汇形状，产生与消退由 weather_exposure 结算。",
+  "entries": [
+    {"id":"wet","label":"淋湿","family":"exposure","source":"design","note":"附录 A §A.18；core 反应 weather_exposure"}
+  ]
+}
