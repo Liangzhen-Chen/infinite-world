@@ -316,9 +316,11 @@ export function assetTrade(d,e,args,id){
         const use=profile?'field':/铺|店|商|工坊/.test(place?.purpose??place?.name)?'commercial':'home';
         const days=int(args.days??30,1,360,'租赁天数'),anchor=e.rules.economy.rentalCopperPerWeek*4*(use==='commercial'?2:1);
         const rent=int(args.coins??anchor,Math.ceil(anchor*.8),Math.ceil(anchor*1.5),'每月租金'),initial=Math.ceil(rent*Math.min(days,30)/30);
-        let paid=initial,rentDueAt,agreement,deferredRefusal;
+        let paid=initial,rentDueAt,agreement,deferredRefusal,deferredConditions;
         if(args.deadline!==undefined){
             const due=int(args.deadline,now+1,now+days*DAY-1,'约定交租时刻');
+            const prepayment=int(args.deposit??0,0,initial,'当场先付租金');
+            if(financeBalance(d,e,'player')<prepayment)throw preconditionFailure('付不起约定的先付租金，请先筹钱或降低先付额');
             // Only the landlord's known repayments and outstanding personal
             // claims inform credit capacity; never inspect the tenant's purse.
             const view=subjectiveView(e,d.document,signatory),known=view.self.obligations.filter(o=>o.debtor==='player');
@@ -326,26 +328,33 @@ export function assetTrade(d,e,args,id){
             // Count the same whole rental periods as rentDue, including the
             // final partial period; a short deferral still exposes the first bill.
             const exposure=Math.ceil(rent*Math.min(days,Math.ceil((due-now)/MONTH)*30)/30);
-            const risk=Math.max(0,exposure-Math.max(0,repaid-owed))/Math.max(1,exposure);
-            agreement=requestContractConsent(d,e,{from:signatory,scope:'rent',subject,terms:{amount:rent,days,location:subject,prepayment:0,deadline:due},cost:{value:anchor*Math.min(days,30)/30,risk},reward:initial,eventId:id});
-            if(agreement.allowed){paid=0;rentDueAt=due;}else deferredRefusal=agreement.reason;
+            const risk=Math.max(0,exposure-prepayment-Math.max(0,repaid-owed))/Math.max(1,exposure);
+            // Conditional acceptance follows dialogue: actual advance payment
+            // is reward with prepaid=true. The promised rent covers the base
+            // value; any underpriced portion and unpaid exposure still cost.
+            const value=anchor*Math.min(days,30)/30;
+            agreement=requestContractConsent(d,e,{from:signatory,scope:'rent',subject,terms:{amount:rent,days,location:subject,prepayment,deadline:due},cost:{value:prepayment?Math.max(0,value-initial):value,risk},reward:prepayment||initial,prepaid:prepayment>0,eventId:id});
+            if(agreement.allowed){paid=prepayment;rentDueAt=due;}else {
+                deferredRefusal=agreement.reason;deferredConditions=agreement.conditions;
+                if(prepayment)throw preconditionFailure(`出租人尚未同意本次先付方案：${deferredRefusal}${deferredConditions?.prepay!==undefined?`（conditions.prepay=${deferredConditions.prepay}，为本次先付${prepayment}文提案上还需追加的差额）`:''}；可调整 deposit 合计额再谈，或另行选择现付`);
+            }
         }
         if(rentDueAt===undefined){
-            if(financeBalance(d,e,'player')<paid)throw preconditionFailure(`${deferredRefusal?`出租人未接受延期交租：${deferredRefusal}；只能现付。`:''}付不起首期租金，可缩短租期或先筹钱`);
+            if(financeBalance(d,e,'player')<paid)throw preconditionFailure(`${deferredRefusal?`出租人未接受延期交租：${deferredRefusal}${deferredConditions?.prepay!==undefined?`（conditions.prepay=${deferredConditions.prepay}，可用 deposit 先付再谈）`:''}；只能现付。`:''}付不起首期租金，可缩短租期或先筹钱`);
             agreement=requestContractConsent(d,e,{from:signatory,scope:'rent',subject,terms:{amount:rent,days,location:subject,prepayment:paid},cost:{value:anchor*Math.min(days,30)/30},reward:paid,eventId:id});
         }
         if(!agreement.allowed)throw preconditionFailure(`出租人未同意本次租约：${agreement.reason}；可稍后重新商议`);
         if(paid)financeTransfer(d,e,'player',owner,paid,id);
         const key=`asset_lease:${id}`,row={category:'contract',kind:'asset_lease',id:key,subject,tenant:'player',owner,use,settlement:placeSettlement(e,state,subject).value,
-            monthlyRent:rent,paid,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id,signatory,consentEvent:agreement.source,...(rentDueAt!==undefined?{rentDueAt}:{})};
+            monthlyRent:rent,paid,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id,signatory,consentEvent:agreement.source,...(rentDueAt!==undefined?{rentDueAt,...(paid?{prepayment:paid}:{})}:{})};
         row.clauses=leaseClauses(row);holdingSet(d,e,rec(key),row,'finance-assets');
         let debt;
-        if(rentDueAt!==undefined){
+        if(rentDueAt!==undefined&&initial>paid){
             debt=`debt_rent:${key}:${now}`;
-            openClaim(d,e,debt,{category:'debt',kind:'rent',debtor:'player',creditor:owner,amount:initial,paid:0,status:'待偿还',createdAt:now,dueAt:rentDueAt,deadline:rentDueAt+e.rules.economy.credit.loan.defaultGraceMinutes,source:id,contract:key,location});
+            openClaim(d,e,debt,{category:'debt',kind:'rent',debtor:'player',creditor:owner,amount:initial-paid,paid:0,status:'待偿还',createdAt:now,dueAt:rentDueAt,deadline:rentDueAt+e.rules.economy.credit.loan.defaultGraceMinutes,source:id,contract:key,location});
         }
         return {contract:key,subject,owner,signatory,tenant:'player',rent,paid,deadline:row.deadline,consent:agreement.source,
-            ...(rentDueAt!==undefined?{rentDueAt,debt}:{}),...(deferredRefusal?{deferredRefusal,notePayment:`延期未获同意：${deferredRefusal}；已改为现付。`}:{}),
+            ...(rentDueAt!==undefined?{rentDueAt,debt}:{}),...(deferredRefusal?{deferredRefusal,conditions:deferredConditions,notePayment:`延期未获同意：${deferredRefusal}；已改为现付。`}:{}),
             ...(use==='field'?{note:'租期内作物归承租人，须在到期前收走；到期后未收作物留田归田主。'}:{})};
     }
     if(op==='rent_out'){

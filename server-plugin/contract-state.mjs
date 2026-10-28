@@ -34,6 +34,7 @@ export function contractState(row,minute){
 export function leaseClauses(row){
  return {starts:row.starts??row.createdAt,expires:row.expires??row.deadline,monthlyRent:row.monthlyRent,
   ...(row.rentDueAt!==undefined?{rentDueAt:row.rentDueAt}:{}),
+  ...(row.prepayment!==undefined?{prepayment:row.prepayment}:{}),
   usability:{minimumCondition:25,reducedBelow:60,reducedFactor:0.5},...row.clauses};
 }
 export function leaseState(engine,state,row,minute=state.minute){

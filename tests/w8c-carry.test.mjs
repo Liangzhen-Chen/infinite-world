@@ -18,7 +18,10 @@ const WEAVING='bld_hw_weaving',SULAN='npc_hw_sulan',WUSHUO='npc_hw_wushuo',CLOTH
 // 夹具：一匹窄幅麻布按 5 公斤计（世界副本改重量，与其他日常测试改标价同一做法）；玩家空手，钱足够，苏岚备货 40 匹。
 const bolt=world=>{item(world,CLOTH).weight=5;};
 async function open(t,{patch=()=>{},fill=()=>{}}={}){
- const world=variant(w=>{bolt(w);patch(w);});
+ // This isolated carrying fixture stocks 40 bolts. Give that same quantity
+ // real market depth so the new depth gate does not mask the weight gate;
+ // all over-capacity, exact-capacity and unchanged-money assertions remain.
+ const world=variant(w=>{bolt(w);w.marketRules.retailFloor=40;patch(w);});
  const ui=await uiSession(t,{world,mutate:scene(WEAVING,monthDayMinute(6,8,9,30),s=>{
   s.player.coins=5000;s.inventory={};s.npcs[SULAN].inventory[CLOTH]=stack(40,{weight:5});fill(s);
  })});

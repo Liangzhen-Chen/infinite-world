@@ -995,6 +995,8 @@
           "powerSources": {
             "public_property": "公产使用与出租；05:129、05 §5.7.3：聚落行为经首领或相关职位的现任持有人执行，财产仍归聚落。"
           },
+          "seatPowers": ["public_property"],
+          "seatPowersSource": "05 §5.7.3：首领职位持有人执行聚落行为；本项随席位保留，不受行政等级覆盖。",
           "keeps": {
             "formerHead": "原头人仍按本村法典审理财物案、在登记柜台办户籍"
           },

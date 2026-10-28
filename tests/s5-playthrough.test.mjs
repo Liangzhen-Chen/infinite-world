@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
-import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
+import {npcAvailability} from '../server-plugin/npc-schedule.mjs';
 import {carryLoad} from '../server-plugin/carry.mjs';
 import {characterUiSession,qty} from './helpers/ui-script.mjs';
 import {conservation,reconcile} from './helpers/ledger-audit.mjs';
@@ -31,14 +31,23 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  assert.deepEqual(opening.state.skills,{});
  let current=opening;const committedClicks=new Set();
  async function step(action,slots={},options={}){
-  const before=current,out=await ui.choose(action,slots,options);
+  let before=current,out=await ui.choose(action,slots,options);
+  // A player cannot harvest in rain/snow. Observe the actual refusal, prove
+  // atomicity, then spend a real day before trying again; no future weather
+  // lookup, world edit or skipped labor. Other errors still fail immediately.
+  while(action==='farm.private_harvest'&&!out.ok&&out.error==='当前雨雪不宜进行田间工作'){
+   assert.deepEqual(await ui.read(),before,'weather refusal does not harvest or move any money/stock');
+   await step('time',{until:{dayOffset:1,hour:11}});
+   before=current;out=await ui.choose(action,slots,options);
+  }
+  return acceptedStep(action,slots,before,out);
+ }
+ async function acceptedStep(action,slots,before,out){
   assert.ok(out.ok,`${action}: ${out.error??''} (cash ${before.state.player.coins})`);
   assert.equal(out.result.ok,true,`${action}: native result`);
-  // Site entry persists presence without an activity receipt; verify that
-  // native result instead. Timed and financial clicks retain receipt checks.
-  if(action==='site.enter')assert.equal(out.result.entered,true);
-  else if(action==='site.gather_session')assert.equal(out.result.actionScope.minutes,slots.minutes);
-  else if(action==='farm.buy')assert.equal(out.result.quantity,slots.quantity);
+  // Legacy farm and settlement actions expose their native effects;
+  // timed and financial clicks retain the committed-receipt checks.
+  if(action==='farm.buy')assert.equal(out.result.quantity,slots.quantity);
   else if(action==='farm.private_sow')assert.equal(out.result.farm.status,'growing');
   else if(action==='farm.private_harvest')assert.ok(Number.isSafeInteger(out.result.harvested)&&out.result.harvested>0);
   else if(action==='promise.settle')assert.equal(out.result.transferred,slots.coins);
@@ -108,36 +117,24 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
   rent={before:rentBefore,after:current,result:proposal.result};
  }else{
   assert.match(proposal.error,/出租人未接受延期交租.*付不起首期租金/);
-  assert.deepEqual(await ui.read(),rentBefore,'refused credit and unaffordable cash leave no debt or lease');
-  // Respect the refusal: raise actual cash from finite unowned herbs.
-  for(const resource of ['nw_herb','nw_plantain','nw_honeysuckle']){
-   if(current.state.player.coins>=140)break;
-   await step('time',{until:{dayOffset:1,hour:6}});
-   await step('move',{destination:'loc_hw_northwood'},{target:'loc_hw_northwood'});
-   await step('site.enter',{}, {search:true});
-   const gathered=await step('site.gather_session',{target:resource,minutes:480});
-   assert.ok(gathered.result.quantity>0);
-   let left=gathered.result.quantity;
-   for(const buyer of ['npc_hw_duanyan','npc_hw_ayan','npc_hw_taozhi','npc_hw_linsui']){
-    if(!left)break;
-    for(let closed=0;!scheduleAt(engine,buyer,current.state.minute,current.state)?.services?.includes('trade')&&closed<3;closed++)await step('time',{until:{dayOffset:1,hour:13}});
-    const place=current.state.npcs[buyer].location;
-    await step('move',{destination:place},{target:place});
-    const count=Math.min(left,5),sold=await step('trade.sell_to',{item:gathered.result.item,quantity:count},{target:buyer});
-    assert.equal(sold.after.state.player.coins-sold.before.state.player.coins,sold.result.cost);left-=count;
-   }
-   assert.equal(left,0);
-  }
-  assert.ok(current.state.player.coins>=140,`chief refused deferred rent and real cash is still insufficient: ${current.state.player.coins}; ${proposal.error}`);
-  await step('time',{until:{dayOffset:1,hour:9}});
-  await step('move',{destination:'bld_hw_council'},{target:'bld_hw_council'});
-  rent=await step('trade.rent_in',{location:'loc_hw_fields',days:240});
+  assert.deepEqual(await ui.read(),rentBefore,'conditional proposal leaves no debt or lease');
+  const condition=/conditions\.prepay=(\d+)/.exec(proposal.error);
+  assert.ok(condition,'chief returns the native advance-payment condition');
+  const advance=Number(condition[1]);
+  // Existing chief decision: 140 rent opportunity + 10 risk - 140 reward.
+  assert.equal(advance,10);
+  assert.ok(current.state.player.coins>=advance,'actual purse must fund the requested advance');
+  rent=await step('trade.rent_in',{location:'loc_hw_fields',days:240,deadline:current.state.minute+210*1440,deposit:advance});
+  assert.equal(rent.result.paid,advance);
+  assert.equal(rent.after.state.obligations[rent.result.debt].amount,140-advance);
  }
  // Existing monthly rent 35*4=140; deferred credit never forgives later months.
  assert.equal(rent.result.rent,140);assert.equal(rent.result.owner,'loc_hw');
- assert.equal(rent.result.paid,rent.result.rentDueAt===undefined?140:0);
+ assert.equal(rent.result.paid,rent.result.rentDueAt===undefined?140:10);
  assert.equal(rent.before.state.player.coins-rent.after.state.player.coins,rent.result.paid);
  assert.equal(rent.after.state.settlements.loc_hw.treasury-rent.before.state.settlements.loc_hw.treasury,rent.result.paid);
+ const springDay=world.rules.agriculture.crop.sowDays[0],today=Math.floor(current.state.minute/1440)%360;
+ if(today<springDay)await step('time',{until:{dayOffset:springDay-today,hour:9}});
  await step('move',{destination:'loc_hw_fields'},{target:'loc_hw_fields'});
  const planted=await step('farm.private_sow',{areaMu:1,item:'item_oats'},{search:true});
  // Native acreage is whole mu: 1/15 ha, 100/15 area units, ceil(120/15)=8 seed.
@@ -162,14 +159,37 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
   harvested+=cut.result.harvested;trips++;
   assert.equal(cut.result.remaining,ripe.yield-harvested);
   assert.equal(cut.result.laborMinutes,Math.ceil(480*cut.result.harvested/ripe.yield));
-  await step('move',{destination:'bld_hw_qingdeng'},{target:'bld_hw_qingdeng'});
-  const count=cut.result.harvested;
-  const offer=facilityRuntime().currentTradeQuote(engine,current,{seller:'player',buyer:'npc_hw_linsui',item:'item_oats',quantity:count});
-  const sold=await step('trade.sell_to',{item:'item_oats',quantity:count},{target:'npc_hw_linsui'});
-  assert.equal(sold.result.cost,Math.trunc(offer.exactTotal),'round the actual full quote once');
-  assert.equal(sold.after.state.player.coins-sold.before.state.player.coins,sold.result.cost);
-  assert.equal(qty(sold.before.state.inventory.item_oats)-qty(sold.after.state.inventory.item_oats),count);
-  cropSale+=sold.result.cost;
+  // After half a year the inn can be closed by real wear. Attend the
+  // existing outdoor market instead of repairing or reviving its building.
+  const day=Math.floor(current.state.minute/1440),calendar=world.rules.calendar;
+  let offset=0;
+  while(!calendar.marketDays.includes((day+offset)%calendar.daysPerMonth+1)||!offset&&current.state.minute%1440>=11*60)offset++;
+  await step('time',{until:{dayOffset:offset,hour:11}});
+  await step('move',{destination:'loc_hw'},{target:'loc_hw'});
+  let left=cut.result.harvested;
+  while(left){
+   // Use the registered five-portion retail floor, not a fabricated buyer
+   // purse or increased market depth. Each sale has its own real quote.
+   const count=Math.min(left,5);
+   const buyers=Object.keys(current.state.npcs).filter(id=>current.state.npcs[id].location===current.state.location&&npcAvailability(engine,current.state,id).services?.includes('trade'));
+   assert.ok(buyers.length,'outdoor market must actually have a present, available trading service');
+   let sold,offer;const refusals=[];
+   for(const buyer of buyers){
+    offer=facilityRuntime().currentTradeQuote(engine,current,{seller:'player',buyer,item:'item_oats',quantity:count});
+    const before=current,attempt=await ui.choose('trade.sell_to',{item:'item_oats',quantity:count},{target:buyer});
+    if(!attempt.ok){
+     assert.match(attempt.error,/买方余额不足|市场今天没有那么多可成交深度|此刻不提供交易|剩余服务时间不足/);
+     assert.deepEqual(await ui.read(),before,'a refused real market offer transfers no money or grain');
+     refusals.push(buyer+': '+attempt.error);continue;
+    }
+    sold=await acceptedStep('trade.sell_to',{item:'item_oats',quantity:count},before,attempt);break;
+   }
+   assert.ok(sold,`all actual market buyers refused ${count} portions: ${refusals.join('; ')}`);
+   assert.equal(sold.result.cost,Math.trunc(offer.exactTotal),'round the actual full quote once');
+   assert.equal(sold.after.state.player.coins-sold.before.state.player.coins,sold.result.cost);
+   assert.equal(qty(sold.before.state.inventory.item_oats)-qty(sold.after.state.inventory.item_oats),count);
+   cropSale+=sold.result.cost;left-=count;
+  }
  }
  assert.ok(trips>1,'carrying capacity requires real separate trips');
  assert.equal(current.state.records[farmId].harvestedQty,ripe.yield);
@@ -183,8 +203,12 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
   const owed=claims.reduce((n,o)=>n+o.amount-o.paid,0);
   // Deferral preserves every accrued month: initial 140 plus 140 for each
   // monthly boundary before the end of the 240-day lease, never a rent waiver.
-  assert.equal(claims.reduce((n,o)=>n+o.amount,0),140*(1+Math.floor((current.state.minute-rent.after.state.records[rent.result.contract].createdAt)/(30*1440))));
-  assert.ok(current.state.player.coins>=owed,'actual crop proceeds must cover the signed rent; no bank deposit of fictitious net profit');
+  const billedTotal=140*(1+Math.floor((current.state.minute-rent.after.state.records[rent.result.contract].createdAt)/(30*1440)));
+  const paidSoFar=current.state.records[rent.result.contract].paid;
+  // At/after the agreed date, rentDue may collect the current period when
+  // the tenant is at this public counter. Count actual payments exactly once.
+  assert.equal(owed,billedTotal-paidSoFar,'all accrued rent is either really paid or still owed');
+  assert.ok(current.state.player.coins>=owed,`actual crop proceeds must cover the signed rent; cash=${current.state.player.coins}, owed=${owed}, billed=${billedTotal}, paid=${paidSoFar}, cropSale=${cropSale}, harvested=${harvested}, trips=${trips}; no bank deposit of fictitious net profit`);
   for(const claim of claims){
    const amount=claim.amount-claim.paid,paid=await step('promise.settle',{obligation:claim.id,coins:amount},{search:true});
    assert.equal(paid.after.state.obligations[claim.id].paid,claim.amount);

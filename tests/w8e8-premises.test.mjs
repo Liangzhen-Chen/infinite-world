@@ -8,7 +8,7 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {reconcile,conservation} from './helpers/ledger-audit.mjs';
 import {leaseState} from '../server-plugin/contract-state.mjs';
 import {characterUiSession} from './helpers/ui-script.mjs';
-import {personOffices} from '../server-plugin/entity-view.mjs';
+import {personOffices,settlementGovernment} from '../server-plugin/entity-view.mjs';
 
 const location='bld_hw_mill',item='item_wood';
 async function councilSession(t,seed){
@@ -84,6 +84,42 @@ test('秋后交不免月租，到期不交沿现有违约规则立案',async t=>
  const after=await ui.read();assert.ok(after.state.records[out.result.debt].defaulted?.case);
  assert.equal(after.state.records[after.state.records[out.result.debt].defaulted.case].offense,'debt_default');
 });
+test('延期租约先付部分真实入公库，余款形成义务且不得超付',async t=>{
+ const ui=await councilSession(t,'w8e8-rent-partial'),before=await ui.read(),due=before.state.minute+6*DAY;
+ const excessive=await ui.choose('trade.rent_in',{location:'loc_hw_fields',days:7,deadline:due,deposit:34});
+ assert.equal(excessive.ok,false);assert.deepEqual(await ui.read(),before);
+ // ceil(140*7/30)=33; ten paid now, twenty-three owed at the agreed date.
+ const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',days:7,deadline:due,deposit:10});
+ assert.equal(out.ok,true,out.error);assert.equal(out.result.paid,10);
+ const after=await ui.read(),claim=after.state.obligations[out.result.debt];
+ assert.equal(before.state.player.coins-after.state.player.coins,10);
+ assert.equal(after.state.settlements.loc_hw.treasury-before.state.settlements.loc_hw.treasury,10);
+ assert.equal(after.state.npcs.npc_hw_chenbai.coins,before.state.npcs.npc_hw_chenbai.coins);
+ assert.equal(claim.amount,23);assert.equal(claim.paid,0);assert.equal(claim.dueAt,due);
+ assert.equal(after.state.records[out.result.contract].clauses.prepayment,10);
+ const consent=after.state.consentEvents.find(c=>c.id===out.result.consent);
+ assert.equal(consent.terms.prepayment,10);assert.equal(consent.terms.deadline,due);
+ const auditEngine=new (await import('../server-plugin/engine.mjs')).WorldEngine(await (await import('../tools/load-world.mjs')).loadWorld());
+ balanced({e:auditEngine,doc:after},before);
+});
+
+test('首领席位职权从数据列表读取，行政等级覆盖后仍保留',()=>{
+ const f=fixture({at:'bld_hw_council'}),def=f.e.rules.governance.authority.offices.office_village_head;
+ def.seatPowers=[...def.seatPowers,'test_seat_power'];
+ f.doc.state.records['governance_office:seat-test']={category:'governance_office',office:'office_village_head',holder:'npc_hw_chenbai',settlement:'loc_hw',status:'在任',since:0};
+ f.doc.state.records['settlement_rank:loc_hw']={category:'settlement_rank',level:'镇',since:0};
+ assert.ok(personOffices(f.e,f.doc.state,'npc_hw_chenbai',{settlement:'loc_hw',power:'test_seat_power'}).length);
+ assert.ok(settlementGovernment(f.e,f.doc.state,'loc_hw').powers.value.includes('test_seat_power'));
+ delete def.seatPowers;
+ assert.equal(personOffices(f.e,f.doc.state,'npc_hw_chenbai',{settlement:'loc_hw',power:'test_seat_power'}).length,0);
+});
+
+test('不足以覆盖条件的先付不能强制成交或超出报价扣全额',async()=>{
+ const f=fixture({at:inn,coins:3000}),before=structuredClone(f.doc);
+ await assert.rejects(f.act({operation:'rent_in',location:inn,days:30,deadline:f.doc.state.minute+20*DAY,deposit:1},'partial-insufficient'),/conditions.prepay=/);
+ assert.deepEqual(f.doc,before,'even a rich purse cannot supply agreement to switch the partial offer into full cash');
+});
+
 test('集体田由首领职位现任者当面决定，租金只入聚落公库',async t=>{
  const ui=await characterUiSession(t,{seed:'w8e8-public-property'});
  const walk=await ui.choose('move',{destination:'loc_hw_fields'},{target:'loc_hw_fields'});assert.equal(walk.ok,true,walk.error);
