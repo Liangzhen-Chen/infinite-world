@@ -26,6 +26,8 @@ import {preservedSpoilage}from'./magic-economy.mjs';
 import {agriculturalEmployment} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
+import {recordTillage,tillageArea,cultivationRule} from './environment-state.mjs';
+const hectareM2=engine=>cultivationRule(engine)?.squareMetresPerHectare??10000;
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
@@ -184,6 +186,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     let capacity=r.tools.condition>0?Math.floor(fieldWorkers*p.areaPerWorkerDay*r.tools.condition/100):0;
     const sowable=day%360>=engine.rules.agriculture.crop.sowDays[0]&&day%360<=engine.rules.agriculture.crop.sowDays[1]&&weather?.kind!=='storm'&&weather?.kind!=='snow';
     const planted=sowable?sow(r,engine,p,day,capacity):{units:0,seed:0};capacity-=planted.units;
+    if(planted.units)recordTillage(d,engine,p.fieldId,{location:p.fieldLocation,numerator:r.field.sownUnits*hectareM2(engine),denominator:engine.rules.agriculture.crop.areaUnitsPerHa,season:r.field.sownYear,sourceEvent:`day_${day}`});
     const pestDamage=damageFarmCrops(d,engine,r,id,day);
     for(const row of r.field.cohorts){
         if(row.ready)continue;
@@ -193,7 +196,8 @@ export function advanceAgriculture(d,engine,id,source,day){
     for(const row of r.field.cohorts){
         if(!row.ready&&row.grownDays>=engine.rules.agriculture.crop.growthDays){
             row.ready=true;row.readyDay=day;row.expiresDay=day+p.normalStorageDays;
-            row.grownFood=Math.floor(derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:row.areaUnits*engine.rules.agriculture.crop.yieldPerHa/engine.rules.agriculture.crop.areaUnitsPerHa*row.qualitySum/Math.max(1,row.qualityDays)}));
+            const tilled=tillageArea(d.get('state'),p.fieldId,Math.floor(row.sownDay/360)),area=r.field.sownUnits*hectareM2(engine)/engine.rules.agriculture.crop.areaUnitsPerHa;
+            row.grownFood=Math.floor(derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:row.areaUnits*engine.rules.agriculture.crop.yieldPerHa/engine.rules.agriculture.crop.areaUnitsPerHa*row.qualitySum/Math.max(1,row.qualityDays)*(tilled===null?1:Math.min(1,tilled/area))}));
             note(r,{in:fieldAccount(engine,p.fieldLocation),qty:row.grownFood,from:REGROWTH('crop'),lot:cropLot(`public:${row.id}`,day,row.expiresDay)});
         }
         if(row.ready&&day>=row.expiresDay){
@@ -381,7 +385,13 @@ export function agricultureAction(d,args,eventId){
     if(['husbandry_collect','husbandry_inspect'].includes(args.operation))return husbandryAction.call(this,d,args,eventId);
     const operation=args.operation??'inspect',id=args.settlement?this.resolve(args.settlement,'loc'):this.rules.agriculture?.settlements.find(p=>[p.settlement,p.counter,p.fieldLocation].includes(d.get('state','location')))?.settlement,p=profile(this,id);
     if(!p)throw preconditionFailure('这里尚未登记农田及粮仓规则');
-    if(operation.startsWith('private_'))return privateFarmAction(d,this,p,args,eventId);
+    if(operation.startsWith('private_')){
+        const result=privateFarmAction(d,this,p,args,eventId);
+        if(operation==='private_sow'&&result.farm){
+            const tillage=recordTillage(d,this,result.farm.id,{location:result.farm.location,numerator:result.farm.areaMu*hectareM2(this),denominator:domainRules(this).privateField.muPerHectare,season:Math.floor(result.farm.sownDay/360),sourceEvent:eventId});if(tillage)result.tillage=tillage;
+        }
+        return result;
+    }
     if(operation==='settle_trade')return settleVillageTrade(d,this,p,args,eventId);
     if(operation==='inspect'){
         if(![p.settlement,p.counter,p.fieldLocation].includes(d.get('state','location')))throw preconditionFailure('不能隔空观察异地农事');
@@ -456,6 +466,9 @@ export function agricultureAction(d,args,eventId){
     if(['storm','snow'].includes(nowWeather?.kind)||latest.tools.condition<=0)return{success:false,effectFailed:'工作完成前天气或农具条件已不合适'};
     if(operation==='sow'&&(nowDay%360<this.rules.agriculture.crop.sowDays[0]||nowDay%360>this.rules.agriculture.crop.sowDays[1]))return{success:false,effectFailed:'工作完成时已错过播种窗口，种粮未投入'};
     const result=operation==='sow'?sow(latest,this,p,nowDay,cap):harvest(latest,stock,this,p,nowDay,cap,eventId,granaryCapacity(this,d.get('state'),p.settlement,latest.granary.capacity));
+    if(operation==='sow'&&result.units){
+        const tillage=recordTillage(d,this,p.fieldId,{location:p.fieldLocation,numerator:latest.field.sownUnits*hectareM2(this),denominator:this.rules.agriculture.crop.areaUnitsPerHa,season:latest.field.sownYear,sourceEvent:eventId});if(tillage)result.tillage=tillage;
+    }
     balanced(latest,stock);commit(d,this,id,latest,eventId);d.set(path(id),latest);d.set(['state','settlements',id],stock);
     if(known&&(result.units??0)>0)this.practice(d,{skill,gain:3,target:p.fieldId},eventId);
     return{success:(result.units??0)>0,...result,field:p.fieldId,note:'这是公共田的志愿工作；产物进入公共粮仓，不自动送入玩家行囊'};
@@ -543,7 +556,8 @@ function advancePrivateFarms(d,engine,settlement,day){
                 if((weather?.temperatureC??10)>=crop.minimumTemperatureC){farm.grownDays++;farm.qualityDays++;farm.qualitySum+=(weather?.cropMultiplier??1)*farmWaterFactor(engine,d.get('state'),settlement,at);}
                 if(farm.grownDays>=crop.growthDays){
                     farm.status='ready';farm.readyDay=at;farm.expiresDay=at+p.normalStorageDays;
-                    farm.yield=Math.floor(derived(engine,d.document,'economy:yield',farm.location,{holder:farm.owner,base:privateCropYieldBase(engine,farm)}));
+                    const tilled=tillageArea(d.get('state'),farm.id,Math.floor(farm.sownDay/360)),area=farm.areaMu*hectareM2(engine)/domainRules(engine).privateField.muPerHectare;
+                    farm.yield=Math.floor(derived(engine,d.document,'economy:yield',farm.location,{holder:farm.owner,base:privateCropYieldBase(engine,farm)*(tilled===null?1:Math.min(1,tilled/area))}));
                     const account=fieldAccount(engine,farm.location,farm.crop),resource=account.split('|')[1];
                     moveStock(d,{from:`src:regrowth|${resource}|private_crop`,to:account,amount:farm.yield,writer:'agriculture',eventId:`${farm.seedEvent}:ripe:${at}`,lot:cropLot(`private:${farm.seedEvent}`,at,farm.expiresDay)});
                 }

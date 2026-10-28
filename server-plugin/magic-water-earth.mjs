@@ -7,6 +7,8 @@ import {areaTargetFacts}from'./magic-area.mjs';
 import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {assertLiquidWater}from'./interactions.mjs';
 import {hypot} from './det-math.mjs';
+import {recordTillage,tillageArea} from './environment-state.mjs';
+import {fixedUnits,FIXED_SCALE} from './rx.mjs';
 
 // Fixed consumer bounds. Candidates do not publish new formal world content.
 export const waterEarthMechanisms=Object.freeze({
@@ -152,13 +154,17 @@ export function applyWaterEarthMagic(d,p,id){
  if(op==='survey_earth')return{target:p.target,observation:{strata:clone(s.strata.filter(x=>x.depthMeters<=power)),errorMeters:s.echoErrorMeters},scope:'近处空隙回声；误差由实际岩层决定'};
  if(op==='ore')return{target:p.target,observation:{bands:clone(s.oreBands.filter(x=>x.depthMeters<=power))},extracted:0};
  if(op==='structural_sense')return{target:p.target,observation:{loadKg:s.loadKg,capacityKg:s.capacityKg,overloadKg:Math.max(0,s.loadKg-s.capacityKg),integrity:s.integrity},repaired:0};
- if(op==='till'){s.compactionPercent=Math.max(0,s.compactionPercent-40);s.worked=true;s.tilledAreaM2=s.areaM2;}
+ if(op==='till'){
+  s.compactionPercent=Math.max(0,s.compactionPercent-40);s.worked=true;
+  const tillage=recordTillage(d,this,p.row.growth?.field??p.target,{location:p.location,numerator:fixedUnits(s.areaM2),denominator:FIXED_SCALE,sourceEvent:id,season:Math.floor(now/(360*1440))});
+  if(tillage)delete s.tilledAreaM2;else s.tilledAreaM2=s.areaM2;
+ }
  if(op==='level_ground'){s.reliefCm=0;s.leveledAreaM2=s.areaM2;}
  if(op==='fracture'){
   s.crackMm+=power;s.integrity=Math.max(0,s.integrity-power);
   for(const other of p.neighbors){const n=waterEarthState(d,other);n.integrity=Math.max(0,n.integrity-power);n.vibrationDamage=(n.vibrationDamage??0)+power;store(d,other,n);}
  }
- if(['till','level_ground','fracture'].includes(op)){store(d,p.row,s);return{target:p.target,...s,...(p.neighbors?{affectedStructures:p.neighbors.map(r=>r.id)}:{})};}
+ if(['till','level_ground','fracture'].includes(op)){store(d,p.row,s);const tilled=op==='till'?tillageArea(d.get('state'),p.row.growth?.field??p.target):null;return{target:p.target,...s,...(tilled!==null?{tilledAreaM2:tilled}:{}),...(p.neighbors?{affectedStructures:p.neighbors.map(r=>r.id)}:{})};}
  const e={kind:'water_earth',operation:op,target:p.target,power,location:p.location,started:now,expires:now+p.catalog.duration,source:id};
  if(p.source&&['bind_water','veil_water'].includes(op)){e.medium=p.source.id;e.held=reserveWater(d,p.source,power);e.point=clone(p.row?.position??areaTargetFacts(d,this,p.target,p.location).point);}
  if(op==='mud_seal'){

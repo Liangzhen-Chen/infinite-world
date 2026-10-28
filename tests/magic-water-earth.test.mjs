@@ -147,7 +147,11 @@ test('水帘阻断正常施法视线并削弱传声，水声暴露位置，过�
 test('探土只读质地，松土接回潮调用而不排石播种，平地保留体积根系管道',async()=>{
  const s=fixture();await refuse(s,'sense_soil','feature_pool',/耕土/);const read=await cast(s,'sense_soil','feature_soil');assert.equal(read.observation.texture,'loam');assert.equal(read.observation.owner,undefined);
  await refuse(s,'soil_water','feature_soil',/处理土壤/);set(s,'feature_soil',{frozen:true});await refuse(s,'till','feature_soil',/冻结/);set(s,'feature_soil',{frozen:false});
- await cast(s,'till','feature_soil');assert.equal(state(s,'feature_soil').worked,true);assert.equal(state(s,'feature_soil').compactionPercent,40);assert.equal(state(s,'feature_soil').stones,5);
+ const tilled=await cast(s,'till','feature_soil');assert.equal(state(s,'feature_soil').worked,true);assert.equal(state(s,'feature_soil').compactionPercent,40);assert.equal(state(s,'feature_soil').stones,5);
+ // The real spell works 4 m². Its progress shares the hand-work fact shape;
+ // the physical feature retains compaction, not a second stored area counter.
+ assert.equal(tilled.tilledAreaM2,4);assert.deepEqual(s.doc.state.records['cultivation:feature_soil'].tilledAreaM2,{numerator:'4',denominator:'1'});
+ assert.equal(state(s,'feature_soil').tilledAreaM2,undefined);
  const wet=await cast(s,'soil_water','feature_soil');assert.equal(wet.movedMl,10000);assert.ok(state(s,'feature_soil').waterMl>0);
  set(s,'feature_soil',{areaM2:5});await refuse(s,'level_ground','feature_soil',/面积/);set(s,'feature_soil',{areaM2:4});await cast(s,'level_ground','feature_soil');
  const soil=state(s,'feature_soil');assert.equal(soil.reliefCm,0);assert.equal(soil.soilVolumeLitres,400);assert.deepEqual(soil.roots,['root_a']);assert.deepEqual(soil.pipes,['pipe_a']);

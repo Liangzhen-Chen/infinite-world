@@ -81,7 +81,12 @@ test('D32.2 public medical service delivers three daily dressings from the actua
  const pre=await ui.read();await replayed(ui,pre);const retry=await ui.choose('settlement.medicine_seek',{},{search:true,eventId:'seek-d32'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),pre);
  const repeat=await ui.choose('settlement.medicine_seek',{},{search:true});assert.equal(repeat.ok,false);assert.deepEqual(await ui.read(),pre);
 });
-test.todo('D32 ⑤生命“几天逐步回升”的速率——引擎睡眠/休息每 30 分钟 +1 生命（engine.time），伤愈时钟 health.json wound:light 的病程未被消费：缺 health:recoveryRate 闭式（S5 health.json；缺省值见表）');
+test('D32⑤ 诊疗后的轻伤按病程与康复槽闭式逐夜恢复',async t=>{
+ const {ui}=await treatmentD32(t),doc=await ui.read();
+ // 轻伤 5 天 × 医疗愈合时间 0.6 = 3 天；两个八小时夜晚合计 2/3 日，
+ // 缺失生命 20，floor(20 - 20 × (1 - 1/3)^(2/3)) = 4，而非固定 +32。
+ assert.equal(doc.state.player.hp,64);assert.equal(doc.state.player.medical.recovery.restMinutes,960);
+});
 
 // ---- D36 加入组织 ----
 const ORG='org_d36',LEADER='npc_hw_luowei',orgRow=()=>({category:'organization',id:ORG,source:'created',name:'柳溪猎户会',kind:'行会',seat:'loc_hw',founder:LEADER,foundedAt:0,leader:LEADER,

@@ -59,6 +59,16 @@ function putSite(d,engine,place,row,{to=null,eventId=null}={}){
 // the same place whose current trait (burning/wet/frozen/hot) clears it.
 const clone=value=>structuredClone(value);
 const DAY=1440,ELEMENT_STATES=['burning','wet','frozen','hot'];
+const herbDensity=(engine,resource,season)=>resource?.gather?.density
+    ?(engine.world.primitiveTables?.yields??engine.world.balance.yields).params.find(p=>p.id===resource.gather.density)?.value?.[season]
+    :1;
+// Calendar quarters are the rule calendar's three 30-day months. Integrate
+// only at season boundaries, retaining each resource's own stock/carry anchor.
+function seasonalSpans(engine,from,to){
+    const spans=[];
+    for(let at=from;at<to;){const end=Math.min(to,(Math.floor(at/(90*DAY))+1)*90*DAY);spans.push({from:at,to:end,season:engine.calendar(at).season});at=end;}
+    return spans;
+}
 const siteKey=id=>`site:${id}`;
 const discoveryKey=(site,clue)=>`site_discovery:${site}:${clue}`;
 const observationKey=(site,mechanism)=>`site_observation:${site}:${mechanism}`;
@@ -141,6 +151,8 @@ export function validateSites(world,{edition=false}={}){
             if(kind==='resources'){
                 ownership(ownerOf(place,row));
                 if(row.gather&&(!world.skills.some(s=>s.id===row.gather.skill)||row.gather.yield!=='gather:herb'||!Array.isArray(row.gather.seasons)||!row.gather.seasons.length||row.gather.seasons.some(s=>!Number.isInteger(s)||s<0||s>3)))fail(`${row.id}持续采集须有有效技能、产量表和季节`);
+                if(row.gather?.density){const values=(world.primitiveTables?.yields??world.balance?.yields)?.params.find(p=>p.id===row.gather.density)?.value;
+                    if(!Array.isArray(values)||values.length!==4||values.some(v=>!Number.isFinite(v)||v<0||v>1))fail(`${row.id}须引用四季密度表`);}
                 if(!world.items.some(x=>x.id===row.item)||!Number.isSafeInteger(row.quantity)||row.quantity<0||row.quantity>100000)fail(`${row.id}有限库存无效`);
             }
             if(kind==='clues'&&(typeof row.text!=='string'||!row.text.trim()))fail(`${row.id}缺少发现正文`);
@@ -203,8 +215,9 @@ function settle(place,row,minute,engine,document){
         if(mark===undefined){row.changes[c.id]=minute;continue;}
         if(c.kind==='regrow'){
             if(minute<=mark)continue;
-            row.remaining[c.resource]=logisticStock(row,c.id,{reserve:row.remaining[c.resource]??0,capacity:c.max,
-                rate:derived(engine,document,'economy:yield',place.id,{base:c.quantity/(c.max*c.everyDays)}),from:mark,to:minute});
+            const resource=place.site.resources.find(r=>r.id===c.resource);
+            for(const span of seasonalSpans(engine,mark,minute))row.remaining[c.resource]=logisticStock(row,c.id,{reserve:row.remaining[c.resource]??0,capacity:c.max,
+                rate:derived(engine,document,'economy:yield',place.id,{base:c.quantity/(c.max*c.everyDays)*herbDensity(engine,resource,span.season)}),from:span.from,to:span.to});
             row.changes[c.id]=minute;
         }else{const n=Math.floor((minute-mark)/period);if(n<1)continue;row.changes[c.id]=mark+n*period;const m=row.mechanisms[c.mechanism];
             if(m?.status==='已解除'&&minute-m.minute>=period)row.mechanisms[c.mechanism]={status:'未解除',rearmed:true,minute:m.minute+period,sourceEvent:m.sourceEvent};
@@ -380,7 +393,9 @@ export function siteAction(d,args,eventId){
             const day=this.world.primitiveTables?.['action-costs']?.params.find(r=>r.id==='workday.minutes')?.value;
             if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw preconditionFailure('采集产量与工日未登记');
             if(row.remaining[target.id]<1)throw preconditionFailure('资源存量不足');
-            quantity=Math.min(row.remaining[target.id],accrueStock(row,`gather:${target.id}`,derived(this,d.document,'economy:yield',place.id,{holder:'player',base:yields}),minutes,day));
+            quantity=0;
+            for(const span of seasonalSpans(this,d.get('state','minute'),d.get('state','minute')+minutes))quantity+=accrueStock(row,`gather:${target.id}`,derived(this,d.document,'economy:yield',place.id,{holder:'player',base:yields*herbDensity(this,target,span.season)}),span.to-span.from,day);
+            quantity=Math.min(row.remaining[target.id],quantity);
             assertActionTime(d,this,minutes);
         }
         if(!Number.isSafeInteger(quantity)||quantity<(timed?0:1)||quantity>100000)throw preconditionFailure('采集数量须为正整数；计时劳动可累计不足一份的产量');

@@ -97,6 +97,7 @@ function effectLines(engine,before,after,effects,templates,counterparties=new Se
   else if(e.op==='time')lines.push(fill(t.time,{duration:durationText(e.minutes,templates),clock:clockText(e.minute)}));
   else if(e.op==='vital')lines.push(e.holder==='player'?fill(t[`${e.need}${e.delta>0?'Up':'Down'}`],{amount:Math.abs(e.delta)}):fill(t[`other${e.need==='hp'?'Hp':'Mp'}${e.delta>0?'Up':'Down'}`],{holder:nameOf(engine,s,e.holder),amount:Math.abs(e.delta)}));
   else if(e.op==='status')lines.push(e.holder==='player'?fill(t.status,{to:e.to}):fill(e.to==='死亡'?t.otherDead:t.otherStatus,{holder:nameOf(engine,s,e.holder),to:e.to}));
+   else if(e.op==='exposure'&&e.status==='wet')lines.push(e.to?'雨水打湿了衣物，你已淋湿。':'衣物已经干燥，淋湿状态消退。');
   else if(e.op==='xp')lines.push(fill(e.delta>0?t.xpUp:t.xpDown,{amount:Math.abs(e.delta)}));
   else if(e.op==='level')lines.push(fill(e.to>e.from?t.levelUp:t.levelDown,{level:e.to}));
   else if(e.op==='durability')lines.push(fill(t.durability,{item:nameOf(engine,s,e.item),from:e.from,to:e.to}));

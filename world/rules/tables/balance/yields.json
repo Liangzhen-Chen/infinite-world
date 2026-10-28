@@ -3,6 +3,9 @@
   "title": "收入与工钱、典型产量（数值方案 §2.6）",
   "note": "收入表八行原值来自开发指南 3.13（用户决定③：不收窄），口径为“工作日日收入中位数”；年工作日与典型产量为待标定占位。",
   "params": [
+    {"id":"herb.plantain.seasonDensity","value":[1,1,0.5,0],"bounds":{"*":[0,1]},"basis":"calibrate","source":"日常题 D14 草药分种；北林边原采集季节春夏秋；分季比例暂无定值，W8-E3 待标定占位","playDecision":false,"calibration":"pending","unit":"× 采集率与再生率","note":"车前：春夏全密度、秋半密度、冬休眠；独立物种参数，calibrate-pending。基础采集率沿用 gather:herb。"},
+    {"id":"herb.honeysuckle.seasonDensity","value":[0.5,1,0,0],"bounds":{"*":[0,1]},"basis":"calibrate","source":"日常题 D14 金银花分种；分季比例暂无定值，W8-E3 待标定占位","playDecision":false,"calibration":"pending","unit":"× 采集率与再生率","note":"金银花：春半密度、夏全密度、秋冬休眠；独立物种参数，calibrate-pending。基础采集率沿用 gather:herb。"},
+    {"id":"field.cultivation","value":{"fact":"tilledAreaM2","squareMetresPerHectare":10000},"bounds":{"squareMetresPerHectare":[10000,10000]},"basis":"hard","source":"05 §5.5 田地事实作为产量基础输入；公制面积单位换算 1 ha = 10000 m²；W8-E3","playDecision":false,"calibration":"fixed","closed":true,"unit":"m²/ha","note":"统一耕作面积事实的单位声明，随表归档；旧表缺此声明时保持原写法，不回填新事实。不是可标定的产量奖励。"},
     {"id":"ceiling.factor","value":2,"bounds":[1.5,3],"basis":"calibrate","source":"数值方案 §2.6；06 §6.7；B04.4","playDecision":false,"calibration":"pending","unit":"× 表值上限","note":"期望值天花板 = 收入表该阶上限 × 系数；NUM-W9"}
   ],
   "rows": [
