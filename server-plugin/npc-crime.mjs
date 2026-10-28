@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {recordsWhere,recordEntriesWhere} from './storage.mjs';
 // U7 needs choose a bounded offscreen act. All acts use the ordinary legal case ledger.
 import {purse,fund as fundAccount,moveCoins,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -23,7 +24,7 @@ declareHoldingWriter('npc-crime',{kinds:['guest_of','wanted'],entities:['case']}
 const DAY=1440,path=id=>['state','records',id];
 const alive=(e,s,id,n)=>n&&!isPhysicallyDead(e,s,id)&&!['濒死','昏迷'].includes(n.status);
 const awake=(e,s,id,n)=>alive(e,s,id,n)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|熟睡|睡觉/.test(n.activity??'');
-const cases=state=>Object.values(state.records??{}).filter(r=>r.category==='legal_case'&&r.npcCrime);
+const cases=state=>recordsWhere(state.records,'category','legal_case').filter(r=>r.npcCrime);
 const available=(e,s,id)=>awake(e,s,id,s.npcs[id])&&npcAgeAt(e,s,id)>=18&&!personConstraint(e,s,id);
 function cargoAt(e,s,id){
  const n=s.npcs[id],cp=e.rules.smuggling?.checkpoints?.find(c=>c.location===n.location);if(!cp)return null;
@@ -126,7 +127,7 @@ export function advanceNpcJustice(d,e,after){
    if(evaluation.score<evaluation.threshold){if(row.status!=='证据不足')holdingSet(d,null,path(row.id),{...row,status:'证据不足'},'npc-crime');continue;}
    if(offender.location!==code.court){if(!wantedOfCase(d.get('state'),row.id)&&after-row.reportedAt>=e.rules.law.wanted.appearanceMinutes)issueWanted(d,e,row,WANTED_REASONS.unappeared,after);continue;}
    adjudicateLegalCase(d,e,row,code,judge,`${row.sourceEvent}:hearing`,presentWitnesses(d.get('state'),code.court));row=d.get(...path(row.id));
-   for(const[key,hold]of Object.entries(d.get('state','records')))if(hold.category==='legal_detention'&&hold.case===row.id&&hold.status==='生效'){
+   for(const[key,hold]of recordEntriesWhere(d.get('state','records'),'category','legal_detention'))if(hold.case===row.id&&hold.status==='生效'){
     const shops=businessSnapshot(e,d.get('state'));
     holdingSet(d,null,path(key),{...hold,status:'已结束',ended:after},'npc-crime');
     entityTransition(d,e,{id:`${key}:release`,verb:'release',actor:judge,target:row.offender,minute:after,location:hold.location,visibility:row.private?'private':row.visibility??hold.visibility??'public',summary:`${e.byId.get(row.offender)?.name??row.offender}审结后解除待审拘留`});

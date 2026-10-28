@@ -75,6 +75,7 @@ const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
 const scheduleReservations=Symbol('schedule reservations');
 const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge'];
+const scheduleIgnored=new Set(scheduleIgnoredCategories);
 // Attendance and settlement progress do not change the agreed routine or
 // course. Keep comparing all other fields, including legacy terms, clauses,
 // amendments, status, deadlines and termination/substitution facts.
@@ -100,7 +101,7 @@ export function sameScheduleInputs(a,b){
   for(const job of recordsWhere(b.records,'kind','workshop'))if(job.serviceObligation&&a.obligations?.[job.serviceObligation]!==b.obligations?.[job.serviceObligation])return false;
  }
  if(a.records===b.records)return true;
- const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnoredCategories.includes(r.category)),scheduleIgnoredCategories);
+ const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnored.has(r.category)),scheduleIgnoredCategories);
  const x=rows(a),y=rows(b);
  return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&sameScheduleRecord(row,y[i][1]));
 }
@@ -128,7 +129,7 @@ function sameCourseInputs(e,a,b){
 function courseCacheUntil(s){
  let until=(Math.floor(s.minute/DAY)+1)*DAY;
  for(const r of Object.values(s.records??{})){
-  if(scheduleIgnoredCategories.includes(r.category))continue;
+  if(scheduleIgnored.has(r.category))continue;
   for(const k of ['minute','createdAt','since','starts','until','expires','deadline'])if(Number.isSafeInteger(r[k])&&r[k]>s.minute)until=Math.min(until,r[k]);
   for(const a of r.amendments??[])if(a.minute>s.minute)until=Math.min(until,a.minute);
  }

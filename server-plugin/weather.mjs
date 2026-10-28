@@ -64,7 +64,15 @@ function dailySequence(rules, seed, region, year) {
     cache.set(fingerprint, rows); if (cache.size > 64) cache.delete(cache.keys().next().value);
     return rows;
 }
+// Pure in (latitude, dayOfYear): the fixed-point trigonometry is computed once per pair, callers get a fresh copy.
+const daylightMemo = new Map();
 export function daylightAt(latitude, dayOfYear) {
+    const key = `${latitude}:${dayOfYear}`;
+    let row = daylightMemo.get(key);
+    if (!row) { row = daylightCompute(latitude, dayOfYear); if (daylightMemo.size > 4096) daylightMemo.clear(); daylightMemo.set(key, row); }
+    return { ...row };
+}
+function daylightCompute(latitude, dayOfYear) {
     const radians = Math.PI / 180, declination = 23.44 * radians * sin(2*Math.PI*(dayOfYear-0)/360);
     const angle = acos(clamp(-tan(latitude*radians)*tan(declination),-1,1));
     const durationMinutes = Math.round(angle*1440/Math.PI);

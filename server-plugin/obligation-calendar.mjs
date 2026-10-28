@@ -19,9 +19,18 @@ function monthsOf(calendar,year){
     if(months.some(m=>!Number.isSafeInteger(m.days)||m.days<1))throw Error('Invalid obligation calendar month');
     return months;
 }
+// The date of a day is a pure function of (calendar, day index); only the offset within the day varies by minute.
+const dateMemo=new WeakMap();
 export function obligationDate(minute,calendar){
     calendar=obligationCalendar(calendar);
     if(!Number.isSafeInteger(minute)||minute<(calendar.epochMinute??0))throw Error('Invalid obligation calendar minute');
+    const epoch=calendar.epochMinute??0,dayIndex=Math.floor((minute-epoch)/DAY);
+    let byDay=dateMemo.get(calendar);if(!byDay){byDay=new Map();dateMemo.set(calendar,byDay);}
+    let row=byDay.get(dayIndex);
+    if(!row){row=computeObligationDate(epoch+dayIndex*DAY,calendar);if(byDay.size>4096)byDay.clear();byDay.set(dayIndex,row);}
+    return {...row,offset:(minute-epoch)%DAY};
+}
+function computeObligationDate(minute,calendar){
     let days=Math.floor((minute-(calendar.epochMinute??0))/DAY),year=1,start=calendar.epochMinute??0;
     for(;;year++){
         const months=monthsOf(calendar,year),length=months.reduce((n,m)=>n+m.days,0);

@@ -91,11 +91,17 @@ export function localFestivalCalendar(engine){
   ...f,id:`custom:${p.id}:${i}`,settlement:p.id,source:`world/geo/settlements.json#${p.id}/calendar/${i}`,kind:'local-custom'
  })));
 }
+// The native-calendar date search is a pure function of (calendar, year, month, day, start offset): remembered per key.
+const whenMemo=new Map();
 const when=(f,year,engine)=>{
  if(!engine?.calendarId)return ((year-1)*360+(f.month-1)*30+f.day-1)*DAY+(f.runtime?.startMinute??720);
- const offset=f.runtime?.startMinute??720;
- try{return minuteForCalendarDate(engine,{calendar:engine.calendarId,year,month:f.month,day:f.day,hour:Math.floor(offset/60),minute:offset%60});}
- catch{return null;} // A short month does not invent a missing festival date.
+ const offset=f.runtime?.startMinute??720,key=`${engine.calendarId}|${year}|${f.month}|${f.day}|${offset}`;
+ if(whenMemo.has(key))return whenMemo.get(key);
+ let value;
+ try{value=minuteForCalendarDate(engine,{calendar:engine.calendarId,year,month:f.month,day:f.day,hour:Math.floor(offset/60),minute:offset%60});}
+ catch{value=null;} // A short month does not invent a missing festival date.
+ if(whenMemo.size>8192)whenMemo.clear();
+ whenMemo.set(key,value);return value;
 };
 const occurrence=(f,year)=>`festival:${f.id}:${year}`;
 // Published runtime contract: active, host, kind (market/ritual), startMinute,
@@ -151,7 +157,16 @@ function generatedHost(engine,f){
  if(f.runtime?.status!=='awaiting_host')return null;
  return engine.world.npcs.find(n=>n.generated==='remote'&&n.remoteRole==='festival_host'&&n.festivalHost===f.id&&n.location===f.venue?.location)?.id??null;
 }
+// The calendar is derived only from the world's fixed tables and engine.byId. Remote generation replaces
+// those arrays (new identities), so the cached rows are valid exactly while every input identity is unchanged.
+const calendarMemo=new WeakMap();
 export function festivalCalendar(engine){
+ const w=engine.world,inputs=[w,w.festivals,w.npcs,w.residents,w.settlementProfiles,w.locations,engine.byId];
+ const hit=calendarMemo.get(engine);
+ if(hit&&hit.inputs.every((x,i)=>x===inputs[i]))return hit.rows;
+ const rows=deriveFestivalCalendar(engine);calendarMemo.set(engine,{inputs,rows});return rows;
+}
+function deriveFestivalCalendar(engine){
  // A festival outside this world edition (editionFestival) is never held.
  const hosted=(engine.world.festivals??[]).filter(f=>editionFestival(engine.world,f)).map(f=>{if(f.runtime?.status==='active')return f;const host=generatedHost(engine,f);return host?{...f,runtime:{...f.runtime,status:'active',host}}:null;}).filter(Boolean);
  const official=hosted.map(f=>({...f,

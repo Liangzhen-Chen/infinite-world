@@ -221,9 +221,12 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
  const ordinary=grade(typeof bag[item]==='object'?bag[item]:null);
  return (units.reduce((n,u)=>n+grade(u),0)+Math.max(0,count-units.length)*ordinary)/count;
 }
-export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=1,business=null,base=engine.byId.get(item)?.basePrice,relation=1,instances=null,minute=stateOf(d).minute,observer=null,view=null}){
+// The supply a quote reads. Callers pricing several quantities of one item in a row (no writes in between)
+// compute it once and pass it back as `supply`; the value is identical to what marketQuote derives itself.
+export function quoteSupply(d,engine,{item,location,business=null}){return marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]});}
+export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=1,business=null,base=engine.byId.get(item)?.basePrice,relation=1,instances=null,minute=stateOf(d).minute,observer=null,view=null,supply:given=null}){
  const document=d.document??{state:stateOf(d)},state=document.state,r=rulesOf(engine),side=business?(business.keeper===seller?'sell':'buy'):seller==='player'?'buy':'sell';
- const supply=marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]});
+ const supply=given??quoteSupply(d,engine,{item,location,business});
  const day=Math.floor(minute/DAY),deals=marketDeals(state).filter(row=>row.day===day&&row.place===supply.place&&row.goods===supply.goods);
  const net=deals.reduce((n,row)=>n+(row.side==='sell'?row.quantity:-row.quantity),0),opening=Math.max(1,supply.supply+net);
  const scarcity=clamp(supply.demand/Math.max(1,supply.supply),engine.rules.economy.priceFactorLimits.region);
