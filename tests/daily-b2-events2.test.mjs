@@ -171,5 +171,5 @@ test('D40 离开几天再回来 ①②④⑤：离开期间世界照常走（时
  assert.deepEqual(after.state.inventory,before.state.inventory,'④玩家的物品不变');assert.equal(after.state.player.coins,before.state.player.coins,'④铜钱不变');
  for(const id of [LINSUI,CHEN,XU,ZHENG])assert.ok(Math.abs(standing(baseEngine,after.state,id,'player')-regard(id))<=2,`⑤${id} 好感无故不大变`);
 });
-test.todo('D40 ①玩家家里的鸡照常下蛋、鸡窝里有积攒的蛋——引擎没有家禽产出（src:husbandry 闭式产出）：缺 yields.json 家禽行消费（S5 生态与再生；产蛋缺省值已补入 balance/yields.json）');
+// D40① 正式覆盖见 tests/s5-06.test.mjs：真实饲喂、两日积蛋、收集及余额归零。
 test.todo('D40 ③不同 NPC 回忆喜事的说法一致（日期都是九月初三）——引擎传闻没有 tell 版本与失真表的日期行：缺 distortion 的 date 行 p = 0（S6 失真表 core 行；附录 A §A.18 失真表行）');

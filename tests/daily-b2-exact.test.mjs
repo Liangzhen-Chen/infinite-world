@@ -34,7 +34,7 @@ test('D02 卖兽皮：基准6文、供需0.5、收购价差0.6，五张共9文�
  assert.equal(held(after.state.npcs[LINSUI].inventory,'item_rawhide')-held(before.state.npcs[LINSUI].inventory,'item_rawhide'),5,'④库存 +5');
  conserved(before,after,'D02',new WorldEngine(world));
 });
-test.todo('D02 ⑤按收购价（6 文）而非零售价计算——引擎同一件货买卖同价（一个 basePrice，没有收购/零售价差），无法区分“按零售价多给”这一易错；缺 side 参数的市场投影（S5：settlePrice(side: buy | sell)，spread.buy）');
+// D02⑤ 正式覆盖：真实卖货按收购价结算，手算 6×0.5×0.6×5=9 文。
 
 // F026: the tavern keeper's only income examined by the lodging tests is the room fee, so every other resident is penniless (nobody walks in
 // at noon and buys; walk-in customers have their own tests in s5-w4-economy).
