@@ -142,7 +142,7 @@
       ]
     },
     {
-      "input": "我向公共粮仓柜台按粮仓账购买十份带壳燕麦，一份半公斤，现付三十铜；买的是这种谷物，不能换成别的商品。请核对实际入袋数量。",
+      "input": "我向公共粮仓柜台按粮仓账购买十份带壳燕麦，一份半公斤，现付五十铜；买的是这种谷物，不能换成别的商品。请核对实际入袋数量。",
       "assertions": [
         {
           "kind": "equals",
@@ -157,12 +157,12 @@
         {
           "kind": "delta",
           "path": "state.player.coins",
-          "value": -30
+          "value": -50
         },
         {
           "kind": "delta",
           "path": "state.settlements.loc_hw.treasury",
-          "value": 30
+          "value": 50
         },
         {
           "kind": "delta",
