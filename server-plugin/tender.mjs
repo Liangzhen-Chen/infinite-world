@@ -9,7 +9,9 @@ import {marketQuote} from './market.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {decimalFraction,fraction} from './obligation-calendar.mjs';
 import {preconditionFailure} from './precondition.mjs';
-import {transferItems} from './items.mjs';
+import {transferItems,changeItems} from './items.mjs';
+import {vaultGoods} from './stock.mjs';
+import {holdingSet} from './holdings.mjs';
 import {partyAccount,moveCoins,mirrorPartyCoins} from './money.mjs';
 
 export const REFERENCE='coin_river';
@@ -65,7 +67,8 @@ export function payInKind(d,e,{payer,payee,plan,eventId,writer='contracts'}){
   moveCoins(d,{from,to,amount:plan.amount,writer,eventId});mirrorPartyCoins(d,e,payer,-plan.amount,eventId,writer);mirrorPartyCoins(d,e,payee,plan.amount,eventId,writer);
  }else{
   if(e.quantity(d,payer,plan.item)<plan.amount)throw preconditionFailure(`${e.byId.get(plan.item)?.name??plan.resource}不足：需要${plan.amount}`);
-  transferItems(d,e,payer,payee,plan.item,plan.amount,null,{eventId});
+  if(isBank(e,d.get('state'),payee))bankTakeGoods(d,e,{payer,bank:payee,item:plan.item,amount:plan.amount,eventId,writer});
+  else transferItems(d,e,payer,payee,plan.item,plan.amount,null,{eventId});
  }
  return {resource:plan.resource,amount:plan.amount,...(plan.resource===REFERENCE?{}:{name:resourceName(e,plan.resource)})};
 }
@@ -124,5 +127,21 @@ export function turnoverReference(d,e,{place,location=d.get('state','location'),
   return fraction(acc.numerator*part.denominator+part.numerator*acc.denominator,acc.denominator*part.denominator);
  },fraction(0n,1n));
  return encode(sum);
+}
+// ---- W8-B 钱庄收放实物 -------------------------------------------------------------
+// A counting house keeps its coin items in its own vault (bank record goods + the vault stock account), not in anybody's bag.
+// A loan frozen in a tender-unit resource is paid out of and repaid into that vault in kind.
+const bankBase=(e,id)=>e.rules.economy?.credit?.banks?.find(b=>b.id===id);
+export const isBank=(e,s,id)=>s.records?.[id]?.category==='bank'||Boolean(bankBase(e,id));
+const bankRowOf=(d,e,id)=>structuredClone(d.get('state','records',id)??(base=>({category:'bank',id,name:base.name,location:base.location,coins:base.reserveCopper??0,goods:{...base.reserveCoins??{}},accounts:{}}))(bankBase(e,id)));
+// payer's bag -> the bank's vault
+export function bankTakeGoods(d,e,{payer,bank,item,amount,eventId=null,writer='contracts'}){
+ const row=bankRowOf(d,e,bank);
+ changeItems(d,e,payer,item,-amount,{books:{account:vaultGoods(e,bank,item),writer,eventId}});
+ row.goods[item]=(row.goods[item]??0)+amount;holdingSet(d,e,['state','records',bank],row,writer,eventId);
+}
+// Whole `resource` units worth `copper` reference copper at `location` now; up = the creditor's side rounds up, otherwise down.
+export function copperToUnits(d,e,{resource,copper,location=d.get('state','location'),up=true}){
+ return divide(copper,resourceValue(d,e,{resource,location}),up);
 }
 export const resourceName=(e,resource)=>e.byId.get(resourceItem(e,resource))?.name??resource;

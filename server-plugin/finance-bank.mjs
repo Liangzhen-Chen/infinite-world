@@ -5,7 +5,8 @@ import {settleObligation,openObligation,amendObligation,adoptLegacyObligation,du
 import {obligationTransaction} from './transition.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 // F1: contract facts are persisted; prices, services and creditworthiness are views.
-import {bankRow,openBank,bankById,counterpart,pledge,releasePledge,openLoan,repayCredit,loanSuccessionTerms,collateralValue} from './credit.mjs';
+import {bankRow,openBank,bankById,counterpart,pledge,releasePledge,openLoan,repayCredit,loanSuccessionTerms,collateralValue,loanFreeze} from './credit.mjs';
+import {claimCopper,copperToUnits} from './tender.mjs';
 import {placeSettlement,settlementGovernment,groupRepresentative,personConstraint,personBusiness,personOccupation,personAge} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
@@ -116,7 +117,7 @@ export function bankCredit(e,state,b,minute=state.minute){
     const reserve=Number(reserved)/Number(ratio.denominator)+issueReserve;
     const loanable=Math.max(0,cash-Number((reserved+ratio.denominator-1n)/ratio.denominator)-issueReserve);
     const demand=obligationRows(state).filter(o=>o.kind==='loan'&&o.creditor===b.id&&o.createdAt>minute-MONTH&&o.createdAt<=minute)
-        .reduce((sum,o)=>sum+(o.principal??o.terms?.principal??o.amount),0);
+        .reduce((sum,o)=>sum+(o.resource&&o.resource!=='coin_river'?(o.terms?.referenceCopper??0):(o.principal??o.terms?.principal??o.amount)),0);
     return {cash,liabilities,reserveRatio,reserve,loanable,demand};
 }
 export function interestRate(e,state,b,{borrower='player',principal=0,minute=state.minute,document={state}}={}){
@@ -263,7 +264,8 @@ export function pawnForActor(d,e,{actor,owner=actor,representative=actor,actedAs
         e.assertNpcObligationAction(d,[actor,keeper],{minutes:5});e.assertNpcAutonomyAction(state,[actor,keeper],{minutes:5});
         item=e.resolve(item,'item');quantity=financeInt(quantity,1,100000,'典当数量');
         const maximum=Math.floor(collateralValue(d,e,item,quantity,b.location,owner)*cfg(e).pawn.advanceRatio),principal=financeInt(coins??maximum,1,maximum,'典当金额');
-        const loan=openLoan(d,e,{lender:keeper,bank:{...b,collateralRatio:1,loanMaximumCopper:Math.min(b.loanMaximumCopper,maximum)},keeper,principal,days,collateral:{item,quantity},eventId,kind:'pawn',debtor:owner,actor,actedAs});
+        const fz=loanFreeze(d,e,{copper:principal,debtor:owner,location:b.location});
+        const loan=openLoan(d,e,{lender:keeper,bank:{...b,collateralRatio:1,loanMaximumCopper:Math.min(b.loanMaximumCopper,maximum)},keeper,principal:fz?fz.amounts.principal:principal,days,collateral:{item,quantity},eventId,kind:'pawn',debtor:owner,actor,actedAs,...(fz?{frozen:{resource:fz.resource,resourceName:fz.resourceName,referenceCopper:principal}}:{})});
         const row=d.get(...financePath(loan.debt));holdingSet(d,e,financePath(loan.debt),{...row,kind:'pawn',auctionAt:row.deadline+cfg(e).pawn.graceDays*DAY},'finance-bank');
         return {...loan,contract:loan.debt,owner,actor,bank:b.id};
     });
@@ -290,7 +292,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
             amendments:[...row.amendments??[],{days,interest,minute:now}]};
         counterpart(d,e,seller,{consent:true});
         const changes={deadline:next.deadline,amount:next.amount,interest:next.interest,installments:1};
-        const agreement=requestContractConsent(d,e,{from:seller,scope:'amend',subject:row.obligation??key,terms:changes,cost:{coins:interest},reward:interest,eventId:id,until:now+5});
+        const agreement=requestContractConsent(d,e,{from:seller,scope:'amend',subject:row.obligation??key,terms:changes,cost:{coins:row.resource&&row.resource!=='coin_river'?claimCopper(d,e,{resource:row.resource,amount:interest,paid:0}):interest},reward:row.resource&&row.resource!=='coin_river'?claimCopper(d,e,{resource:row.resource,amount:interest,paid:0}):interest,eventId:id,until:now+5});
         counterpart(d,e,seller,{consent:agreement.allowed});
         next.amendments.at(-1).consentEvent=agreement.source;
         if(row.obligation)amendObligation(d,e,{id:row.obligation,actor:'player',changes},`${id}:extend`);
@@ -363,28 +365,33 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
     if(op==='pawn'){
         const item=e.resolve(args.item,'item'),quantity=financeInt(args.quantity??1,1,100000,'典当数量'),value=collateralValue(d,e,item,quantity,b.location);
         const maximum=Math.floor(value*cfg(e).pawn.advanceRatio),amount=financeInt(args.coins??maximum,1,maximum,'典当金额');
-        const loan=openLoan(d,e,{lender:keeper,bank:{...b,collateralRatio:1,loanMaximumCopper:Math.min(b.loanMaximumCopper,maximum)},keeper,principal:amount,days:args.days??30,collateral:{item,quantity},eventId:id,kind:'pawn'});
+        // W8-B: in a tender-unit place the advance is frozen as whole units of that resource (limits are judged on the reference bill).
+        const fz=loanFreeze(d,e,{copper:amount,location:b.location});
+        const loan=openLoan(d,e,{lender:keeper,bank:{...b,collateralRatio:1,loanMaximumCopper:Math.min(b.loanMaximumCopper,maximum)},keeper,principal:fz?fz.amounts.principal:amount,days:args.days??30,collateral:{item,quantity},eventId:id,kind:'pawn',...(fz?{frozen:{resource:fz.resource,resourceName:fz.resourceName,referenceCopper:amount}}:{})});
         const debt=d.get(...financePath(loan.debt));holdingSet(d,e,financePath(loan.debt),{...debt,kind:'pawn',auctionAt:debt.deadline+cfg(e).pawn.graceDays*DAY},'finance-bank');
         return {...loan,contract:loan.debt};
     }
     if(op==='redeem'){
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status==='流当'||pawnDeadline(debt,e,now,d.get('state'))<=now)throw preconditionFailure('当票不存在或已经流当');
         // The receipt names the pawnshop that took the money back, as every other counter operation names its bank.
-        return {...repayCredit(d,e,{seller:keeper,debt:args.contract},id),bank:b.id};
+        // 037: the receipt also names the creditor (the pawnshop's own principal id and name) and carries the frozen unit when the ticket is in one.
+        return {...repayCredit(d,e,{seller:keeper,debt:args.contract,payCurrency:args.payCurrency},id),bank:b.id,creditor:debt.creditor,creditorName:b.name};
     }
     if(op==='auction'){
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status!=='流当')throw preconditionFailure('当物尚不可拍卖');
         if(debt.auction||d.get(...financePath(debt.pledgeRecord),'status')!=='质押中')throw preconditionFailure('当物已经拍卖处置，不能再次出售或交付；余欠请按普通还款清偿');
         const p=d.get(...financePath(debt.pledgeRecord)),price=financeInt(args.coins,p.value,Math.max(p.value,1e9),'拍卖价');
         const buyer=counterpart(d,e,args.buyer,{consent:args.consent});if(financeBalance(d,e,buyer)<price)throw preconditionFailure('买方资金不足');
-        const toBank=Math.min(price,debt.amount-debt.paid),surplus=Math.max(0,price-(debt.amount-debt.paid)),state=d.get('state');
+        // A ticket frozen in a tender unit is sold off against its value in reference copper today; the units the price covers are cleared (rounded down, so the shop is never short-changed).
+        const unitDebt=debt.resource&&debt.resource!=='coin_river',left=debt.amount-debt.paid,owed=unitDebt?claimCopper(d,e,{resource:debt.resource,amount:left,paid:0}):left;
+        const toBank=Math.min(price,owed),surplus=Math.max(0,price-owed),state=d.get('state');
         moveCoins(d,{from:partyAccount(e,state,buyer),to:vault(b.id),amount:toBank,writer:'finance-bank',eventId:id});
         moveCoins(d,{from:partyAccount(e,state,buyer),to:partyAccount(e,state,debt.debtor),amount:surplus,writer:'finance-bank',eventId:id});
         financeChange(d,e,buyer,-price,id,BOOKED);row.coins+=toBank;holdingSet(d,e,financePath(b.id),row,'finance-bank');
         if(surplus)financeChange(d,e,debt.debtor,surplus,id,BOOKED);
         releasePledge(d,e,debt.pledgeRecord,buyer);
         holdingSet(d,e,financePath(debt.pledgeRecord),{...d.get(...financePath(debt.pledgeRecord)),status:'已拍卖',holder:buyer},'finance-bank');
-        const paid=Math.min(debt.amount,debt.paid+price);holdingSet(d,e,financePath(args.contract),{...debt,paid,status:paid===debt.amount?'已还清':'逾期',auction:{buyer,price,surplus,source:id}},'finance-bank');
+        const paid=unitDebt?(price>=owed?debt.amount:debt.paid+copperToUnits(d,e,{resource:debt.resource,copper:price,up:false})):Math.min(debt.amount,debt.paid+price);holdingSet(d,e,financePath(args.contract),{...debt,paid,status:paid===debt.amount?'已还清':'逾期',auction:{buyer,price,surplus,source:id}},'finance-bank');
         return {contract:args.contract,buyer,price,surplus};
     }
     if(op==='report_lost')return reportDepositLost(d,e,{bank:b,keeper,claim:args.debt,eventId:id});
