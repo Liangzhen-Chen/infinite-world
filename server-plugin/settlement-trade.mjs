@@ -1,4 +1,4 @@
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,recordEntriesWhere} from './storage.mjs';
 import {marketQuote} from './market.mjs';
 import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -258,7 +258,7 @@ export function advanceSettlementTrade(d,engine,minute){
     const r=engine.rules.settlementTrade,state=d.get('state');
     if(!r.lanes.some(l=>managed(state,l.seller)&&managed(state,l.buyer))&&!orders(state).some(o=>o.transport?.nextAt))return;
     assertRules(engine);
-    for(const [key,o]of Object.entries(state.records??{}))if(o.category==='settlement_trade'&&key!==`settlement-trade:${o.id}`)throw Error('周贸易记录编号不守恒，拒绝重复结算');
+    for(const [key,o]of recordEntriesWhere(state.records,'category','settlement_trade'))if(key!==`settlement-trade:${o.id}`)throw Error('周贸易记录编号不守恒，拒绝重复结算');
     for(const old of orders(state)){
         assertOrder(old);
         if(!old.transport||old.transport.phase==='home')continue;

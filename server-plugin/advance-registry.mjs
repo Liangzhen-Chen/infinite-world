@@ -464,7 +464,7 @@ const systems=[
  {id:'festival',order:1600,active:e=>festivalCalendar(e).length>0,nextMinute:(e,d,now)=>nextFestivalMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceFestivals(d,e,after)},
  {id:'local_actor_positions',order:1700,nextMinute:(e,d,now)=>nextRecordDeadline(d.get('state'),now,['local_position'],['expires']),advance(e,d,{after}){
-    for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
+    for(const[key,row]of recordEntriesWhere(d.get('state','records'),'category','local_position'))if(key.startsWith('local_actor_position:')){
         const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
         if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||!isEffective(e,d,row.subject)||row.expires<=after)holdingRemove(d,null,['state','records',key],'advance-registry');
     }
