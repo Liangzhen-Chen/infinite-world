@@ -26,7 +26,7 @@ import {preservedSpoilage}from'./magic-economy.mjs';
 import {agriculturalEmployment} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
-import {recordTillage,tillageArea,cultivationRule} from './environment-state.mjs';
+import {recordTillage,tillageArea,cultivationRule,areaM2} from './environment-state.mjs';
 const hectareM2=engine=>cultivationRule(engine)?.squareMetresPerHectare??10000;
 import {carryRoomKg,safeCarryKg,carriedKg,carryHelpers} from './carry.mjs';
 import {reject} from './action-rejection.mjs';
@@ -200,7 +200,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     for(const row of r.field.cohorts){
         if(!row.ready&&row.grownDays>=engine.rules.agriculture.crop.growthDays){
             row.ready=true;row.readyDay=day;row.expiresDay=day+p.normalStorageDays;
-            const tilled=tillageArea(d.get('state'),p.fieldId,Math.floor(row.sownDay/360)),area=r.field.sownUnits*hectareM2(engine)/engine.rules.agriculture.crop.areaUnitsPerHa;
+            const tilled=tillageArea(d.get('state'),p.fieldId,Math.floor(row.sownDay/360)),area=areaM2(r.field.sownUnits*hectareM2(engine),engine.rules.agriculture.crop.areaUnitsPerHa);
             row.grownFood=Math.floor(derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:row.areaUnits*engine.rules.agriculture.crop.yieldPerHa/engine.rules.agriculture.crop.areaUnitsPerHa*row.qualitySum/Math.max(1,row.qualityDays)*(tilled===null?1:Math.min(1,tilled/area))}));
             note(r,{in:fieldAccount(engine,p.fieldLocation),qty:row.grownFood,from:REGROWTH('crop'),lot:cropLot(`public:${row.id}`,day,row.expiresDay)});
         }
@@ -581,7 +581,7 @@ function advancePrivateFarms(d,engine,settlement,day){
                 if((weather?.temperatureC??10)>=crop.minimumTemperatureC){farm.grownDays++;farm.qualityDays++;farm.qualitySum+=(weather?.cropMultiplier??1)*farmWaterFactor(engine,d.get('state'),settlement,at);}
                 if(farm.grownDays>=crop.growthDays){
                     farm.status='ready';farm.readyDay=at;farm.expiresDay=at+p.normalStorageDays;
-                    const tilled=tillageArea(d.get('state'),farm.id,Math.floor(farm.sownDay/360)),area=farm.areaMu*hectareM2(engine)/domainRules(engine).privateField.muPerHectare;
+                    const tilled=tillageArea(d.get('state'),farm.id,Math.floor(farm.sownDay/360)),area=areaM2(farm.areaMu*hectareM2(engine),domainRules(engine).privateField.muPerHectare);
                     farm.yield=Math.floor(derived(engine,d.document,'economy:yield',farm.location,{holder:farm.owner,base:privateCropYieldBase(engine,farm)*(tilled===null?1:Math.min(1,tilled/area))}));
                     const account=fieldAccount(engine,farm.location,farm.crop),resource=account.split('|')[1];
                     moveStock(d,{from:`src:regrowth|${resource}|private_crop`,to:account,amount:farm.yield,writer:'agriculture',eventId:`${farm.seedEvent}:ripe:${at}`,lot:cropLot(`private:${farm.seedEvent}`,at,farm.expiresDay)});
