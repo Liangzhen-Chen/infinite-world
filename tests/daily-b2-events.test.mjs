@@ -22,7 +22,9 @@ test('D25 送信 ③④⑤：信在途不瞬间到，送达前收信人不知道
  const before=await ui.read(),sent=await legacy(ui,'world_trade',{operation:'post',contract:CART,buyer:YANZHE,item:LETTER,location:'loc_bs'},'post-d25');
  const mid=await ui.read(),post=mid.state.records[sent.result.id];
  assert.equal(post.status,'in-transit','③信处于在途状态');assert.equal(post.from,'player');assert.equal(post.to,YANZHE);
- const postage=before.state.player.coins-mid.state.player.coins;assert.ok(postage>=1);assert.equal(mid.state.npcs[ZHENG].coins-before.state.npcs[ZHENG].coins,postage,'邮资付给承运人');
+ const postage=before.state.player.coins-mid.state.player.coins;assert.ok(postage>=1);// W8D：驿传费读 transport.json post.feePerLi（0.4 文/里）：河湾村→白石镇 24 km = 48 里 × 0.4 = 19.2 → 20 文；承运人收入照常抽商税 floor(20 × bps / 10000)，所以承运人净得 = 邮资 − 商税（旧口径邮资 1 文时税为 0，两式一致）。
+ const tax=Object.entries(mid.state.records).find(([k,r])=>k.startsWith('trade_tax:')&&r.payer===ZHENG)?.[1];assert.equal(tax?.amount,Math.floor(postage*tax.bps/10000),'商税 = floor(邮资 × bps / 10000)');
+ assert.equal(postage,Math.ceil(48*0.4),'邮资 = ceil(48 里 × 0.4)');assert.equal(mid.state.npcs[ZHENG].coins-before.state.npcs[ZHENG].coins,postage-(tax?.amount??0),'邮资付给承运人（扣商税）');
  const heard=s=>(s.state.npcs[YANZHE].memoryStream??[]).filter(m=>m.channel==='post');
  assert.equal(heard(mid).length,0,'④送达前收信人不知道信的内容');
  await ui.choose('time',{minutes:60});
@@ -32,9 +34,24 @@ test('D25 送信 ③④⑤：信在途不瞬间到，送达前收信人不知道
  assert.ok(delivered.deliveredAt>=mid.state.minute+60,'③信不是瞬间送到');assert.ok(delivered.deliveredAt<=sent.result.estimatedArrivalAt);
  assert.equal(heard(after).length,1);assert.equal(heard(after)[0].content,LETTER,'⑤送达后收信人记下信中内容');assert.equal(heard(after)[0].heardFrom,'player');
 });
-test.todo('D25 ①邮资 8 文（铜钱 50→42，驿站 +8）——引擎邮资按 里程 × 重量 × 费率 公式（1 文），不读驿传价表：缺 carriers.json 驿传价/发车表消费（S5 运力与运费；缺省值已补入 transport.json）');
 test.todo('D25 ②背包里的信 −1——引擎信是一条记忆文本（post.payload），不是背包物品：缺“信件物品 + 代表它的义务”（S3 票据 = 义务 + 代表物品；S6 文书）');
-test.todo('D25 ③五月初四送达——引擎载件马车当天约 8 小时到（本例送达 16:00），题面驿站“明日送到”由发车表决定：缺 carriers.json departures（辰初发、当日截件午初后次日发）的消费（S5）');
+test('D25 ①③ 送信：邮资读 transport.json post.feePerLi 按里程计，驿站班次读 departure:post（辰初发，次日送到）',async t=>{
+ // W8D：原 todo 兑现。夹具同上；河湾村→白石镇 route_hw_bs 24 km = 48 里。
+ const CART='transport_asset:d25_cart',LETTER='老友，初六我去白石镇，请留一壶酒。';
+ const ui=await uiSession(t,{mutate:scene('loc_hw',monthDayMinute(5,3,8,0),s=>{
+  s.player.coins=50;Object.assign(s.npcs[ZHENG],{location:'loc_hw',activity:'营业',status:'正常'});
+  s.records[CART]={category:'transport_asset',id:CART,kind:'cart',owner:ZHENG,location:'loc_hw',durability:100,maxDurability:100,animal:null};
+ })});
+ const before=await ui.read(),sent=await legacy(ui,'world_trade',{operation:'post',contract:CART,buyer:YANZHE,item:LETTER,location:'loc_bs'},'post-d25b');
+ const mid=await ui.read(),post=mid.state.records[sent.result.id],trip=mid.state.records[post.shipment];
+ // ①邮资 = ceil(48 里 × 0.4 文/里) = ceil(19.2) = 20（题面 20 里 8 文是同一费率：0.4 × 20 = 8）；寄信人少 20，承运人收到 20 扣商税。
+ assert.equal(before.state.player.coins-mid.state.player.coins,20,'①寄信人付 20 文');assert.equal(trip.freight,20,'①运单运价 20');
+ // ③辰时（08:00）寄出，已过今日辰初（07:00）班次 → 次日五月初四辰初（07:00）发车，不是当天出发。
+ assert.equal(trip.departAt,monthDayMinute(5,4,7,0),'③次日辰初发车');
+ await ui.choose('time',{minutes:sent.result.estimatedArrivalAt-mid.state.minute});
+ const after=await ui.read(),delivered=after.state.records[post.id];
+ assert.ok(delivered.deliveredAt>=trip.departAt,'③送达不早于发车');assert.equal(baseEngine.calendar(delivered.deliveredAt).text.match(/\d+日/)[0],'4日','③五月初四送达（题面“明日送到”）');
+});
 
 // ---- D26 托运货物 ----
 test('D26 托运货物 ②③④⑤：托运 2 石（5→3），在途不在仓库也不在粮行，次日到达标为玩家所有待取，提取到手 2 石、数量不变；运费付给车行',async t=>{
@@ -63,5 +80,20 @@ test('D26 托运货物 ②③④⑤：托运 2 石（5→3），在途不在仓�
  assert.deepEqual(end.state.records[booked.id].deliveredCargo.map(c=>c.quantity),[2]);assert.equal(end.state.records[booked.id].status,'delivered');
  assert.ok(collected.ok);
 });
-test.todo('D26 ①运费 30 文（铜钱 100→70，车行 +30）——引擎运费按 里程 × 重量 × 费率 公式（本例 1 文），不读运费表：缺 transport.json 运输成本比/carriers 价表的消费（S5 运力；缺省值已补入表）');
-test.todo('D26 ④到达钟点“九月十六午时前后”——引擎马车日行 8 小时、夜不行车，次日上午到（本例 09:20）；与午时有约 2 小时差距：缺 carriers.json 发车表与 transport.json 车速（S5）');
+test('D26 ① 托运运费读 transport.json carrier:cart 费率：运费 = ceil(里程 km × 计费重量 kg × 费率 × (1 + 路风险))',async t=>{
+ // W8D：运价表接入。题面“2 石 × 20 里 = 30 文”按石计价与引擎按重量计价口径不同，保持重量计价（数值与原硬编码一致），只验证费率来自表。
+ const CART='transport_asset:d26b_cart';
+ const mk=world=>uiSession(t,{world,mutate:scene('loc_hw',monthDayMinute(9,15,8,0),s=>{
+  s.player.coins=1000;s.inventory.item_oats=stack(40,{weight:0.5});Object.assign(s.npcs[ZHENG],{location:'loc_hw',activity:'营业',status:'正常'});
+  s.records[CART]={category:'transport_asset',id:CART,kind:'cart',owner:ZHENG,location:'loc_hw',durability:100,maxDurability:100,animal:null};
+ })});
+ const slots={operation:'transport',contract:CART,location:'loc_bs',item:'item_oats',quantity:40,task:'quote'};
+ const base=(await legacy(await mk(),'world_trade',slots,'quote-d26b')).result;
+ // 40 份 × 0.5 kg = 20 kg；route_hw_bs 24 km、路风险 1、容量系数 20：24 × 20 × 0.012 × 20 × (1 + 1) = 230.4 → 231。
+ assert.equal(base.capacityFactor,20,'无驮畜的手拉车只能载 30 kg（10 + 力量 10 × 2），容量系数 = 600 / 30 = 20');assert.equal(base.passages[0].risk,1);
+ assert.equal(base.freight,231);
+ const doubled=variant(w=>{const tb=structuredClone(baseWorld.balance.transport);tb.rows.find(r=>r.key==='carrier:cart').rate=0.024;w.balance={...baseWorld.balance,transport:tb};});
+ const dbl=(await legacy(await mk(doubled),'world_trade',slots,'quote-d26b2')).result;
+ assert.equal(dbl.freight,461,'费率翻倍：24 × 20 × 0.024 × 20 × 2 = 460.8 → 461');
+});
+test.todo('D26 ④到达钟点“九月十六午时前后”——W8D 起车行发车读 departure:cart（午初前整点随到随发），车速仍是 rules.travel.cartKmh；本例 08:00 发车、次日 09:20 到仍与题面约 2 小时差距：缺车行并车/等客（batching.waitDays）与逐日行程对齐钟点的消费（S5）');

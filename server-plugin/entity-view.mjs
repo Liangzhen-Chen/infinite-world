@@ -526,6 +526,9 @@ export function placeView(engine,state,id){
     const facility=facilityView(engine,state,id);
     if(facility)for(const field of ['condition','material','status','services','capacity','workstations'])view[field]=fact(facility[field],'current construction + condition',false);
     view.serviceCapacity=fact(facility?Object.fromEntries(facility.services.map(s=>[s,facility.capacity])):facilityServices(engine,state,id),'current facilities + condition');
+    // 该地各项服务眼下排队等候的人数（讲堂座位、诊疗等），来自实际登记的排队号。
+    const waiting={};for(const r of recordsWhere(state.records,'category','service_ticket'))if(r.provider===id&&r.status==='排队')waiting[r.service]=(waiting[r.service]??0)+1;
+    view.serviceQueue=fact(waiting,'state.records service_ticket');
     return view;
 }
 export function populationView(engine,state,habitat,species){

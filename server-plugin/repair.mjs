@@ -11,6 +11,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {facilityView} from './facility-state.mjs';
+import {serviceCapacity,deskRequest,deskServed,queueReceipt} from './service-queue.mjs';
 declareHoldingWriter('repair',{kinds:[],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};
@@ -49,7 +50,12 @@ export function repair(d,args,eventId){
         this.assertNpcService(d,maker,'trade',args.quote?0:plan.minutes);
         const restored=Math.min(newMaximum,before.durability+restore);
         const quote={item,instance:instance??null,maker,fee:spec.fee,minutes:plan.minutes,before,after:{durability:restored,maxDurability:newMaximum}};
-        if(args.quote)return{quote};
+        // 匠人日接活数受槽 service:capacity 约束（手艺阶 × 工坊完好度）；满了排队而不是拒绝。急用（耐久已不足四分之一）优先。
+        const desk={service:'craft',provider:maker,requester:'player',subject:instance??item,urgency:before.durability*4<=before.maxDurability?2:1,
+            capacity:serviceCapacity(this,d,{provider:maker,service:'craft',proficiency:knowledgeProficiency(this,d.get('state'),maker,plan.skill),factor:facility?.factor??1})};
+        const place=deskRequest(d,this,desk,{write:!args.quote});
+        if(args.quote)return place.admitted?{quote}:{quote,queue:queueReceipt(place)};
+        if(!place.admitted)return{operation:'repair',item,instance:instance??null,success:false,before,after:before,...queueReceipt(place),maker,quote,note:`匠人今日活计已满（日容量${desk.capacity}）：已登记排队号，排第${place.position}位，预计${this.calendar(place.eta).text}可受理；届时再来，不收费、不耗时`};
         if(d.get('state','player','coins')<spec.fee)throw preconditionFailure('修理费不足');
         const target=instance??trackSingleItem(d,this,'player',item,eventId);
         moveCoins(d,{from:purse(null,'player'),to:purse(null,maker),amount:spec.fee,writer:'repair',eventId});
@@ -61,7 +67,7 @@ export function repair(d,args,eventId){
         holdingSet(d,null,['state','itemInstances',target,'durability'],restored,'repair');holdingSet(d,null,['state','itemInstances',target,'maxDurability'],newMaximum,'repair');
         if(quantity===1){d.set([...this.bagPath('player'),item,'durability'],restored);d.set([...this.bagPath('player'),item,'maxDurability'],newMaximum);}
         const result={operation:'repair',success:true,item,instance:target,maker,quote,before,after:quote.after,spent:{feePaid:spec.fee,minutes:plan.minutes,materials:[],toolWear:[]}};
-        d.set(['state','records',`repaired_${eventId}`],{category:'repair',...result,minute:d.get('state','minute')});return result;
+        d.set(['state','records',`repaired_${eventId}`],{category:'repair',...result,minute:d.get('state','minute')});deskServed(d,{...desk,eventId});return result;
     }
     const skillName=this.byId.get(plan.skill)?.name??plan.skill;
     if(!d.get('state','skills',plan.skill))throw preconditionFailure(`尚未掌握维修所需技能：${skillName}（${plan.skill}）；工序 ${plan.id} 要求熟练度至少${plan.minimumProficiency}。请先通过学习掌握该技能；协助者不能替代本人掌握技能的前提`);

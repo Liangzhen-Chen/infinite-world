@@ -24,13 +24,15 @@ import {counterpart} from './credit.mjs';
 import {applyEffects} from './effects.mjs';
 import {personOffices} from './entity-view.mjs';
 import {registerEarnedClaim,settleClaim,claimLimitation} from './obligation-claims.mjs';
+import {marketQuote} from './market.mjs';
 import {obligationView as dueObligation} from './obligation-state.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 import {obligationTransaction} from './transition.mjs';
-import {serviceUrgency,orderServices} from './service-queue.mjs';
+import {serviceUrgency,orderServices,displaceable,waitingInOrder,queuePosition,serviceCapacity} from './service-queue.mjs';
 const DAY=1440,rec=id=>['state','records',id],actor=(s,id)=>id==='player'?s.player:s.npcs?.[id];
 const present=(s,id)=>id==='player'?s.location:s.npcs?.[id]?.location;
 const capable=(e,s,id)=>actor(s,id)&&!isPhysicallyDead(e,s,id)&&!['濒死','昏迷'].includes(actor(s,id).status);
+const dayLoad=(s,doctor,day)=>medicineRows(s).filter(r=>r.doctor===doctor&&['预约','已诊'].includes(r.status)&&Math.floor(r.start/DAY)===day).length;
 const pending=(s,id)=>medicineRows(s).some(r=>r.patient===id&&['预约','排队'].includes(r.status));
 function windows(e,s,id,minute){
  const routine=npcSchedule(e,s,id,minute);if(!routine)return [];
@@ -49,6 +51,12 @@ function templeSponsor(e,s,location,fee){
  const sid=placeSettlement(e,s,location).value;
  return temples(e).find(t=>placeSettlement(e,s,t.seat).value===sid&&(groupAccountView(e,s,t.id)?.coins??0)>=fee&&(groupAccountView(e,s,t.id)?.items?.item_herb??0)>0);
 }
+// 诊费里的药材成本取草药在医馆所在地的市场估值（市场报价投影的 value，不含商家价差与立场），不读目录基价。
+function herbValue(d,e,site,holder){
+ const value=marketQuote(d,e,{item:'item_herb',location:site.seat,seller:holder}).explanation.value.value;
+ if(!Number.isFinite(value))throw preconditionFailure('草药无法估值');
+ return value;
+}
 function book(d,e,args,id){return obligationTransaction(d,()=>bookVisit(d,e,args,id));}
 export {book as bookMedicine};
 function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity=false,consent=false,only=()=>true},id){
@@ -66,8 +74,9 @@ function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity
  const urgency=serviceUrgency(conditions),displaced=[];
  // A new acute patient may take an unstarted lower-priority appointment.
  // The displaced patient remains in the queue with their original arrival.
- for(const visit of orderServices(medicineRows(s)).reverse())if(visit.clinic===site.id&&visit.status==='预约'&&visit.depart>now&&(visit.urgency??serviceUrgency(medicalConditions(s,visit.patient)))<urgency){
-  holdingSet(d,null,rec(visit.id),{...visit,status:'排队',urgency:visit.urgency??serviceUrgency(medicalConditions(s,visit.patient)),queuedAt:now},'medicine');displaced.push(visit);
+ const urgencyOf=v=>v.urgency??serviceUrgency(medicalConditions(s,v.patient));
+ for(const visit of displaceable(medicineRows(s),{urgency,now,same:v=>v.clinic===site.id,urgencyOf})){
+  holdingSet(d,null,rec(visit.id),{...visit,status:'排队',urgency:urgencyOf(visit),queuedAt:now},'medicine');displaced.push(visit);
  }
  s=d.get('state');
  let chosen=null;
@@ -75,15 +84,18 @@ function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity
   const end=at+30;
   if(medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id&&r.start<end&&r.end>at).length>=site.capacity)continue;
   if(patient!=='player'&&(educationReservation(e,s,patient,at-travel,30+travel)||employmentReservation(s,patient,at-travel,30+travel)||medicineReservation(s,patient,at-travel,30+travel)||e.npcAutonomyBusy?.(s,patient,at)))continue;
-  const doctor=site.doctors.find(who=>who!==patient&&(house?available(e,s,who,at-travel,end+travel,site.seat):available(e,s,who,at,end,site.seat)));if(!doctor)continue;
+  // 医师每日接诊数受槽 service:capacity 约束（技能阶 × 药童 × 医馆完好度）；满了顺延到下一个有名额的时段。
+  const doctor=site.doctors.find(who=>who!==patient&&dayLoad(s,who,day)<serviceCapacity(e,d,{provider:who,service:'medicine',proficiency:medicalSkill(e,s,who),helpers:site.assistants.length,factor:site.factor})&&(house?available(e,s,who,at-travel,end+travel,site.seat):available(e,s,who,at,end,site.seat)));if(!doctor)continue;
   const assistants=house?[]:site.assistants.filter(who=>available(e,s,who,at,end,site.seat)).slice(0,1);
-  const fee=Math.max(1,Math.ceil((e.rules.economy.wageCopperPerHalfDay?.[0]??10)/2))+Math.round((e.byId.get('item_herb')?.basePrice??3)*(1+medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id).length/Math.max(1,site.capacity)));
+  const fee=Math.max(1,Math.ceil((e.rules.economy.wageCopperPerHalfDay?.[0]??10)/2))+Math.round(herbValue(d,e,site,doctor)*(1+medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===site.id).length/Math.max(1,site.capacity)));
   chosen={doctor,assistants,start:at,end,fee};break;
  }
  if(!chosen)throw preconditionFailure('医师七日内没有可用排期');
  const fund=charity?fundAt(s,site.seat):null,temple=charity&&!fund?templeSponsor(e,s,site.seat,chosen.fee):null;
  if(financeBalance(d,e,patient)<chosen.fee&&!credit&&!fund&&!temple)throw preconditionFailure('诊费不足，可求赊欠或义诊');
  const row={id:`medicine:${id}`,category:'medicine_visit',patient,clinic:site.id,location:place,houseCall:house,owner:site.owner??chosen.doctor,...chosen,urgency,depart:chosen.start-travel,travel,from:present(s,patient),source,conditions:conditions.map(c=>({kind:c.kind,id:c.id})),credit,charity:fund?.id??temple?.id??null,consent:true,status:'预约',createdAt:now};
+ // 回执写明位次与预计受理时刻：排在它前面（紧迫度更高或同级先到）的未开始诊疗数 + 1。
+ row.position=queuePosition([...medicineRows(d.get('state')),row],row,{same:r=>r.clinic===site.id,now});row.etaAt=row.start;
  holdingSet(d,null,rec(row.id),row,'medicine');return row;
 }
 function stockSource(d,e,r){
@@ -178,7 +190,7 @@ export function prepareMedicine(d,e,{before,after}){
 export function advanceMedicine(d,e,{before,after}){
 
  if(after<=before)return;
- for(const queued of orderServices(medicineRows(d.get('state')).filter(r=>r.status==='排队'))){
+ for(const queued of waitingInOrder(medicineRows(d.get('state')))){
   // Retry only on real advance boundaries. Failed scheduling leaves the same
   // queue fact, rather than rewriting a daily delay cursor.
   try{obligationTransaction(d,()=>{
