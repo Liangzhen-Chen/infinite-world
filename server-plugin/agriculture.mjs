@@ -528,7 +528,7 @@ function privateFarmAction(d,engine,p,args,eventId){
     if(!work())return{success:false,effectFailed:'工作完成前已失去私田履行条件'};
     const latest=d.get('state','records',id);
     if(latest.status!=='ready')return{success:false,note:'收割完成前作物已腐烂，未取得粮物'};
-    engine.itemDelta(d,'player',item,latest.yield,{account:fieldAccount(engine,location,latest.crop),pick:[`private:${latest.seedEvent}`],writer:'agriculture',eventId});
+    engine.itemDelta(d,'player',item,latest.yield,{account:fieldAccount(engine,location,latest.crop),pick:[`private:${latest.seedEvent}`],writer:'agriculture',eventId},{carryExempt:true}); // W8C: a season's whole yield arrives at once and there is no staging/partial harvest yet; refusing it would make farming impossible (follow-up: granary/partial harvest)
     d.set(['state','records',id],{...latest,status:'harvested',harvestedAt:d.get('state','minute'),harvestEvent:eventId});
     return{harvested:latest.yield,item,location,laborMinutes,elapsed:d.get('state','minute')-started};
 }

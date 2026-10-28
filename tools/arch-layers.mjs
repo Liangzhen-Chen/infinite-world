@@ -47,6 +47,8 @@ put(['deterrence'],'L1');
 // S5-F/F2 legal-tender pricing and goods escrow sit beside currency and money; W5 deterministic math and the claim-unit label are leaves every layer may read.
 put(['tender','goods-escrow'],'L1');
 put(['det-math','claim-unit'],'L0');
+// W8C: body-derived safe carry load (attr.carry), read by item transfers.
+put(['carry'],'L1');
 // Time-slot resolution and request programs belong to the shared action ontology.
 put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','primitive-accounts','legacy-primitives','faith-catalog','weather','hazard-calendar','environment-state','map-state','rx-library','action-authority-sources','action-router','action-limits','open-actions','action-rite','mark-actions','mark-reactions','action-costs','action-time','routing-programs','body-needs'],'L1');
 

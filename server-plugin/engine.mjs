@@ -597,8 +597,8 @@ export class WorldEngine {
     actorPath(id) { return actorPath(this.world,id); }
     bagPath(id) { if(/^(estate_|liq_)/.test(id))return ['state','records',`protocol_assets:${id}`,'inventory']; return id==='player' ? ['state','inventory'] : [...this.actorPath(id),'inventory']; }
     quantity(d,id,item) { const value=d.get(...this.bagPath(id),item); return typeof value==='number'?value:value?.quantity ?? 0; }
-    itemDelta(d,id,item,delta,books) {
-        return changeItems(d,this,id,item,delta,{books});
+    itemDelta(d,id,item,delta,books,options={}) {
+        return changeItems(d,this,id,item,delta,{books,...options});
     }
     async trade(d,args,id) {
         if(args.operation==='transport')return transportAction(d,this,args,id);

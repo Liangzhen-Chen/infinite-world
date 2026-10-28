@@ -9,6 +9,7 @@ import {accountKey} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
 import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
 import {transferWaterState} from './water-volume.mjs';
+import {assertCanCarry} from './carry.mjs';
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 // Harvested portions are minted only from an already conserved physical water
 // transfer. The feature volume and liquid_binding remain their authority.
@@ -50,8 +51,15 @@ export function useTool(d,engine,requiresUse,selected=undefined){
  });
 }
 // S1b: books = 对方账户（stock.bookStock）；成对写入中已记过账的一边传 BOOKED。
-export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=null,books}={}){
+export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=null,books,carryExempt=false}={}){
     if(!Number.isSafeInteger(delta))throw preconditionFailure('物品数量变化无效');
+    // The one gate for everything entering the player's pack (buying, gifts, gathering, crafting output, pickups).
+    // Exempt: a signed contract's goods coming back (escrow release, pledge return) and callers passing carryExempt
+    // (a public project's material refund): what the player happens to be carrying must not block those.
+    if(owner==='player'&&delta>0&&!carryExempt&&!/\|(escrow|pledge)$/.test(books?.account??'')){
+        const held=d.get(...engine.bagPath(owner),item);
+        assertCanCarry(d,engine,owner,delta*((typeof held==='object'?held?.weight:undefined)??engine.byId.get(item)?.weight??0),`${engine.byId.get(item)?.name??'物品'}×${delta}共`);
+    }
     const current=engine.quantity(d,owner,item),amount=current+delta;
     if(amount<0)throw preconditionFailure(`${engine.byId.get(owner)?.name??'你'}缺少${engine.byId.get(item)?.name}`);
     const path=[...engine.bagPath(owner),item],existing=d.get(...path),definition=engine.byId.get(item);
@@ -83,6 +91,8 @@ export function validateItemTransfer(d,engine,from,to,item,quantity,selection=nu
     if(from===to)throw preconditionFailure('物品转移双方不能相同');
     if(selection!==null&&!Array.isArray(selection))throw preconditionFailure('单件选择必须为编号列表');
     const held=d.get(...engine.bagPath(from),item),units=typeof held==='object'?held.instances??[]:[];
+    // Whatever enters the player's pack counts against the body's safe load (carry.mjs); refused before any payment moves.
+    if(to==='player')assertCanCarry(d,engine,'player',quantity*((typeof held==='object'?held.weight:undefined)??engine.byId.get(item)?.weight??0),`${engine.byId.get(item)?.name??'物品'}×${quantity}共`);
     if(selection&&selection.some(unit=>!units.includes(unit)))throw preconditionFailure('没有选中的单件');
     if(selection&&new Set(selection).size!==selection.length)throw preconditionFailure('单件编号重复');
     if(selection&&selection.length>quantity)throw preconditionFailure('单件数超过转移数量');

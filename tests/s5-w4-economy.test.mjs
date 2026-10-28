@@ -23,7 +23,9 @@ const move=(f,destination,id)=>f.act({destination},id,'world_move');
 // ---------------------------------------------------------------- F048
 test('F048 分红：收付双方不在场时不凭空转账，形成到期应付；当面追收后结清且保留“分红”子类型',async()=>{
     const f=fixture(),total=cash(f.doc);
-    f.doc=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','npcs',host,'inventory'],value:{}}]}).document;
+    // W8C 负重：共用夹具给玩家 100 份木料（200 公斤）与燕麦（50 公斤），买回面包会超出安全负重 40 公斤；
+    // 本用例只用面包，故把行囊收窄为面包（100×0.15 = 15 公斤，卖出 16 再买回 10 后仍在上限内）。
+    f.doc=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','npcs',host,'inventory'],value:{}},{path:['state','inventory'],value:{item_bread:{quantity:100}}}]}).document;
     const acquired=await f.act({buyer:host,seller:'player',item:'item_bread',quantity:16,unitPrice:1},'stock');assert.equal(acquired.cost,16);
     const own=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'invest');
     const sale=await f.act({seller:host,item:'item_bread',quantity:10,unitPrice:2},'sale');assert.equal(sale.cost,20);
