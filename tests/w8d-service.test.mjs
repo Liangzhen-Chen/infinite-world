@@ -166,6 +166,9 @@ test('匠人日容量用尽：第二件活计排队不收费不耗时，次日�
  assert.equal(second.result.queued,true);assert.equal(second.result.position,1);assert.equal(second.result.eta,(day+1)*DAY+480);
  assert.equal(queued.state.player.coins,mid.state.player.coins);assert.equal(queued.state.minute,mid.state.minute);assert.equal(queued.state.itemInstances['sword-b'].durability,50);
  assert.equal(queued.state.records[second.result.ticket].status,'排队');
+ // The smith remembers a queued job as waiting in line, never as a failed repair.
+ const recall=(queued.state.npcs[SMITH].memoryStream??[]).filter(m=>m.kind==='repair').map(m=>m.content);
+ assert.ok(recall.some(c=>c.includes('活计已满，排在第1位')),recall.join(' / '));assert.ok(!recall.some(c=>c.includes('未成功')),recall.join(' / '));
  // 次日 08:00 再来：名额已重置，受理并完成修整，排队号转为已受理。
  await ui.choose('time',{minutes:(day+1)*DAY+480-queued.state.minute});
  const third=await ui.choose('craft.repair',{item:SWORD,instance:'sword-b',maker:SMITH},{search:true,eventId:'w8d-repair-b2'});assert.ok(third.ok,third.error);

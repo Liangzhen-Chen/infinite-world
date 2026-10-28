@@ -102,7 +102,9 @@ export function recordNpcMemories(d,engine,before,events,...rest){
         const recipe=engine.byId.get(detail.recipe);
         if(recipe)add('craft',`${name('player')}尝试${recipe.name}，${detail.success?`制成${name(recipe.output.item)}${recipe.output.quantity}件`:'没有得到成品'}，花费${detail.spent.minutes}分钟`,['player'],{salience:3});
     }else if(verb==='repair'){
-        add('repair',`${name('player')}修整${name(detail.item)}，${detail.success?'完成':'未成功'}，耐久从${detail.before.durability}变为${detail.after.durability}`,['player'],{salience:3});
+        // A full workbench queues the job (W8-D): that is a waiting ticket, not a failed repair.
+        if(detail.queued)add('repair',`${name('player')}请匠人修整${name(detail.item)}，活计已满，排在第${detail.position}位`,['player'],{salience:2});
+        else add('repair',`${name('player')}修整${name(detail.item)}，${detail.success?'完成':'未成功'}，耐久从${detail.before.durability}变为${detail.after.durability}`,['player'],{salience:3});
     }else if(verb==='cast'||verb==='help'&&event.tags.includes('magic')){
         const spell=engine.byId.get(detail.spell??resolve(args.spell));
         if(spell)add('cast',`${name('player')}施放${spell.name}，${detail.success?'施法成功':'施法失败'}`,['player',resolve(args.target)],{salience:3});
