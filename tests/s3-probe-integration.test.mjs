@@ -41,7 +41,10 @@ test('R2-N1 义务子项：真实签署保存签约法域，钱款不能冒充�
  const f=fixture();f.doc.ledger=openLedger(f.e,f.doc);const d=f.draft();
  const opened=openObligation(d,f.e,{id:'forward-grain',kind:'forward',debtor:'player',creditor:host,actor:'player',subject:'item_oats',resource:'item_oats',amount:10,deadline:600+30*DAY},'forward-sign');
  const row=obligationView(d.get('state'),opened.id).row;assert.equal(row.terms.signingPlace,f.doc.state.location);assert.ok(row.terms.signingLawVersion);
- const before=structuredClone(d.document);assert.throws(()=>settleObligation(d,f.e,{id:opened.id,amount:10},'fake-grain'),/Non-monetary/);assert.deepEqual(d.document,before);assert.deepEqual(auditLedger(d.get('ledger')),[]);
+ // S5-F2 (15 §15.3): a non-coin claim settles in kind. The 10 oats owed move as real oats from the player to the creditor; not one copper moves, so money cannot stand in for the grain.
+ const oats=[f.e.quantity(d,'player','item_oats'),f.e.quantity(d,host,'item_oats')],coins=[d.get('state','player','coins'),d.get('state','npcs',host,'coins')];assert.ok(oats[0]>=10);
+ const paid=settleObligation(d,f.e,{id:opened.id,amount:10},'fake-grain');assert.deepEqual(paid.payment.paidWith,{resource:'item_oats',amount:10,name:'带壳燕麦'});assert.equal(paid.remaining,0);
+ assert.deepEqual([f.e.quantity(d,'player','item_oats'),f.e.quantity(d,host,'item_oats')],[oats[0]-10,oats[1]+10]);assert.deepEqual([d.get('state','player','coins'),d.get('state','npcs',host,'coins')],coins);assert.deepEqual(auditLedger(d.get('ledger')),[]);
  t.diagnostic('仅覆盖签署快照与禁止凭空交粮；预付、短交、展期、继承及司法闭环未完成。');
 });
 test('R3-E15 义务子项：拘留不冻结分期，真实同城第三人代付不取得债务主体权利',async t=>{

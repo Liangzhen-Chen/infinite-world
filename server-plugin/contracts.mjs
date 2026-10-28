@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
-import {REFERENCE,claimCopper,resourceName,repaymentPlan,payInKind} from './tender.mjs';
+import {REFERENCE,claimCopper,resourceName,repaymentPlan,payInKind,paymentPlan,contractFreeze,contractTerms as tenderTerms} from './tender.mjs';
+import {reject} from './action-rejection.mjs';
 import {releaseGoods} from './goods-escrow.mjs';
 import {claimUnit} from './claim-unit.mjs';
 import {relationView} from './npc-state.mjs';
@@ -97,6 +98,27 @@ export function releaseBusinessLease(d,engine,row,{status='已终止',reason,sou
     row=refundContractEscrow(d,{...row,escrow:row.escrow-used,paid:row.paid+used});
     return finishBusinessContract(d,row,{status,reason,by:reason?'player':undefined,source});
 }
+// S5-F/F2 (15 §15.3): the legal-tender side of engine-dispatched trade and lodging lives here, so the
+// L0 dispatcher reaches tender pricing only through the economy pack it already calls for charges.
+// Lodging: where the legal tender is not coin_river the room fee freezes as that resource in whole units
+// (same contractTerms path as a credit sale); a cash payer must already hold the bill in the chosen currency.
+export function lodgingFee(d,engine,{location,cost,buyer,payment='cash',payCurrency}){
+    const freeze=contractFreeze(d,engine,{location,coppers:{cost}});if(!freeze)return null;
+    const fee={resource:freeze.resource,amount:freeze.amounts.cost};
+    if(payment==='cash'){const pay=repaymentPlan(d,engine,{resource:fee.resource,quantity:fee.amount,payWith:payCurrency});if((pay.resource===REFERENCE?engine.actor(d,buyer).coins:engine.quantity(d,buyer,pay.item))<pay.amount)reject('E-ACTION-PRECONDITION',`房钱不足：需要${pay.amount}${pay.resource===REFERENCE?'铜':resourceName(engine,pay.resource)}（房钱按${freeze.resourceName}计，可用 payCurrency 改用别的币）`);}
+    return {fee,name:freeze.resourceName};
+}
+// Goods: a buyer may hand over a named resource instead of reference coins; the bill is converted at today's rate.
+export function tradeInKindPlan(d,engine,{buyer,payment='cash',payCurrency,copper,location}){
+    if(payCurrency===undefined||payCurrency===REFERENCE)return null;
+    if(buyer!=='player'||payment!=='cash')reject('E-ACTION-PRECONDITION','只有玩家现付时可指定付款币种');
+    const plan=paymentPlan(d,engine,{resource:payCurrency,copper,location});
+    if(engine.quantity(d,buyer,plan.item)<plan.amount)reject('E-ACTION-PRECONDITION',`买方${engine.byId.get(plan.item)?.name??plan.resource}不足：需要${plan.amount}`);
+    return plan;
+}
+export const payTradeInKind=(d,engine,{buyer,seller,plan,eventId})=>({paidWith:payInKind(d,engine,{payer:buyer,payee:seller,plan,eventId})});
+// A credit sale freezes its terms in the place's tender unit: the claim is that resource and quantity (null in a coin_river place).
+export const creditSaleTerms=(d,engine,{location,copper})=>tenderTerms(d,engine,{location,copper});
 export function validateTradeCharge(d,engine,{buyer,seller,cost,payment='cash',creditMinutes,description,terms=null},eventId){
     if(buyer===seller||!Number.isSafeInteger(cost)||cost<0)throw preconditionFailure('交易当事人或金额无效');
     if(payment==='cash'){

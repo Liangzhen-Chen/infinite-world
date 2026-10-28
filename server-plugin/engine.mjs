@@ -78,8 +78,7 @@ import './boss-cognition.mjs';// world-event subscriber (registers itself)
 import {adjustStanding,standing} from './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
-import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
-import {REFERENCE,paymentPlan,payInKind,contractTerms,contractFreeze,repaymentPlan,resourceName}from'./tender.mjs';
+import {chargeTrade,validateTradeCharge,repayDebt,lodgingFee,tradeInKindPlan,payTradeInKind,creditSaleTerms}from'./contracts.mjs';
 import {openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation} from './obligation-protocol.mjs';
 import {claimEnforceable} from './obligation-protocol.mjs';
 import {fileClosedObligation,advanceProcedure} from './obligation-protocol.mjs';
@@ -630,22 +629,21 @@ export class WorldEngine {
             const quoteResource=primitiveActionRuntime()?.registry(this).actions.find(a=>a.call?.tool==='world_trade'&&a.call.fixed?.service===args.service)?.signature?.quoteResource;
             const agreed=quoteResource?agreedTradeQuote(d.get('state'),{buyer,seller,item:quoteResource,quantity:days}):null;
             const cost=agreed?.totalCoins??(days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight));
-            // S5-F2: where the legal tender is not coin_river the room fee freezes as that resource in whole units (same contractTerms path as a credit sale); another currency converts at payment time.
-            const freeze=contractFreeze(d,this,{location:playerLocation,coppers:{cost}}),fee=freeze?{resource:freeze.resource,amount:freeze.amounts.cost}:null;
-            if(fee&&(args.payment??'cash')==='cash'){const pay=repaymentPlan(d,this,{resource:fee.resource,quantity:fee.amount,payWith:args.payCurrency});if((pay.resource===REFERENCE?this.actor(d,buyer).coins:this.quantity(d,buyer,pay.item))<pay.amount)reject('E-ACTION-PRECONDITION',`房钱不足：需要${pay.amount}${pay.resource===REFERENCE?'铜':resourceName(this,pay.resource)}（房钱按${freeze.resourceName}计，可用 payCurrency 改用别的币）`);}
-            else if(!fee&&(args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','房钱不足');
+            // S5-F2: outside coin_river the room fee freezes in the legal-tender unit (contracts.mjs lodgingFee); another currency converts at payment time.
+            const lodging=lodgingFee(d,this,{location:playerLocation,cost,buyer,payment:args.payment,payCurrency:args.payCurrency}),fee=lodging?.fee??null,feeName=lodging?.name;
+            if(!fee&&(args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','房钱不足');
             const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`,...(fee?{terms:fee,payCurrency:args.payCurrency}:{})},id);
             const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room===place.id&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
             assertLodgingCapacity(this,d.document,place.id,starts,starts+days*1440);
             const bed=selectLodgingBed(this,d.document,place.id,starts,starts+days*1440);
             const contract=`contract_room_${id}`,access=grantLodgingAccess(d,this,place,seller,{starts,expires:starts+days*1440,eventId:id});
             holdingSet(d,null,['state','records',contract],{category:'contract',name:`${place.name}住宿`,parties:['player',seller],room:place.id,...(bed?{bed}:{}),
-                starts,expires:starts+days*1440,paid:payment.debt?0:(fee?fee.amount:cost),...(fee?{resource:fee.resource,resourceName:freeze.resourceName,cost:fee.amount,referenceCopper:cost}:{}),...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',
-                content:payment.debt?`${host}同意赊账${fee?fee.amount+freeze.resourceName:cost+'铜'}，允许旅人住${days}天。`:`${host}收到${fee?fee.amount+freeze.resourceName:cost+'铜'}，允许旅人住${days}天。`},'engine');
+                starts,expires:starts+days*1440,paid:payment.debt?0:(fee?fee.amount:cost),...(fee?{resource:fee.resource,resourceName:feeName,cost:fee.amount,referenceCopper:cost}:{}),...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',
+                content:payment.debt?`${host}同意赊账${fee?fee.amount+feeName:cost+'铜'}，允许旅人住${days}天。`:`${host}收到${fee?fee.amount+feeName:cost+'铜'}，允许旅人住${days}天。`},'engine');
             consumeAgreedQuote(d,agreed,id);
             // The notice names what actually changed hands (paid in another currency: that currency), not a copper figure the bill was never in.
-            const shown=payment.paidWith?`${payment.paidWith.amount}${payment.paidWith.name??'铜'}`:fee?`${fee.amount}${freeze.resourceName}`:`${cost}铜`;
-            this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${shown}`);return {contract,cost:fee?fee.amount:cost,days,...(fee?{resource:fee.resource,resourceName:freeze.resourceName,referenceCopper:cost}:{}),...payment};
+            const shown=payment.paidWith?`${payment.paidWith.amount}${payment.paidWith.name??'铜'}`:fee?`${fee.amount}${feeName}`:`${cost}铜`;
+            this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${shown}`);return {contract,cost:fee?fee.amount:cost,days,...(fee?{resource:fee.resource,resourceName:feeName,referenceCopper:cost}:{}),...payment};
         }
         if(!args.item)reject('E-ACTION-PRECONDITION','缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         const item=this.resolve(args.item,'item');
@@ -669,20 +667,17 @@ export class WorldEngine {
         const exactTotal=quote.retail&&args.unitPrice!==undefined&&!quote.agreed?price*quantity:quote.exactTotal*bargainFactor;
         const cost=quote.agreed?quote.totalCoins:Math.trunc(exactTotal);
         if(this.quantity(d,seller,item)<quantity) reject('E-ACTION-PRECONDITION',`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
-        // S5-F: a buyer may hand over a named resource instead of reference coins; the bill is converted at today's rate.
-        const inKind=args.payCurrency!==undefined&&args.payCurrency!==REFERENCE;
-        if(inKind&&(buyer!=='player'||(args.payment??'cash')!=='cash'))reject('E-ACTION-PRECONDITION','只有玩家现付时可指定付款币种');
-        const plan=inKind?paymentPlan(d,this,{resource:args.payCurrency,copper:cost,location:playerLocation}):null;
-        if(plan&&this.quantity(d,buyer,plan.item)<plan.amount)reject('E-ACTION-PRECONDITION',`买方${this.byId.get(plan.item)?.name??plan.resource}不足：需要${plan.amount}`);
+        // S5-F: a buyer may hand over a named resource instead of reference coins (contracts.mjs tradeInKindPlan, today's rate).
+        const plan=tradeInKindPlan(d,this,{buyer,payment:args.payment,payCurrency:args.payCurrency,copper:cost,location:playerLocation});
         if(!plan&&(args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','买方余额不足');
         if(!quote.agreed)assertMarketDepth(d,this,quote);
         if(!plan)validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
         // A credit sale freezes its terms in the place's tender unit (15 §15.3): the claim is that resource and quantity.
-        const terms=args.payment==='credit'&&buyer==='player'?contractTerms(d,this,{location:playerLocation,copper:cost}):null;
+        const terms=args.payment==='credit'&&buyer==='player'?creditSaleTerms(d,this,{location:playerLocation,copper:cost}):null;
         validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
         let payment,moved,tax,rejected,receivingCases=[];
         const execute=()=>{
-        payment=plan?{paidWith:payInKind(d,this,{payer:buyer,payee:seller,plan,eventId:id})}:chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`,terms,referenceCopper:cost},id);
+        payment=plan?payTradeInKind(d,this,{buyer,seller,plan,eventId:id}):chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`,terms,referenceCopper:cost},id);
         moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null,{disposition:true,documentSource:true,eventId:id,authorityContext:primitiveActionRuntime()?.context?.(this,d.document)});
         receivingCases=registerStolenPurchase(d,this,{buyer,seller,item,instances:moved.instances,eventId:id,location:playerLocation});
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
@@ -698,7 +693,7 @@ export class WorldEngine {
             this.advance(d,0,id);
             if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
         }else execute();
-        this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${plan?`${plan.amount}${payment.paidWith.name??'铜'}`:terms?`${terms.amount}${resourceName(this,terms.resource)}`:`${cost}铜`}`);
+        this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${plan?`${plan.amount}${payment.paidWith.name??'铜'}`:terms?`${terms.amount}${payment.resourceName}`:`${cost}铜`}`);
         return {buyer,seller,item,quantity,cost,...(!quote.agreed?{pricing:marketExplanation(quote,{bargainFactor,totalCoins:cost,unitPrice:args.unitPrice??quote.listPrice,exactTotal})}:{}),...(quantity<requestedQuantity?{requestedQuantity,partial:true}:{}),instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...(plan||terms?{tender:quote.tender}:{}),...payment};
     }
     advance(d,minutes,id) {

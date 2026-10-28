@@ -8,6 +8,7 @@ import {effectKinds,assertEffect,applyEffect,applyEffects,registerEffect,hookedE
 import {applyClockEffect} from '../server-plugin/world-clock.mjs';
 import {assertFactionClockRules} from '../server-plugin/faction-clock.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
+import {toRational} from '../server-plugin/det-math.mjs';
 import {wildlifeStirFactor} from '../server-plugin/wildlife.mjs';
 import {npcRumors} from '../server-plugin/npc-rumors.mjs';
 import {standing} from '../server-plugin/standing.mjs';
@@ -52,7 +53,8 @@ test('对照：原有报价效果算法不变；同存档推进同样天数，�
  const {engine,doc}=quiet();
  const d=draft(structuredClone(doc)),context={settlement:'loc_bs_yupo',faction:'faction_saltboat',minute:doc.state.minute,sourceEvent:'probe'};
  const effect={kind:'regional_quote',item:engine.rules.settlementTrade.item};
- assert.deepEqual(applyClockEffect(d,engine,effect,context),{applied:true,...effect,price:regionalTradePrice(draft(structuredClone(doc)),engine,effect.item,context.settlement,context.minute)});
+ // W5 (E.1 §6): the quote algorithm is unchanged; the stored price is that same quote as an exact rational over 10^6 (det-math toRational), never a float.
+ assert.deepEqual(applyClockEffect(d,engine,effect,context),{applied:true,...effect,price:toRational(regionalTradePrice(draft(structuredClone(doc)),engine,effect.item,context.settlement,context.minute))});
  const days=30*DAY-doc.state.minute%DAY;
  const withTable=await wait(engine,doc,days);
  const bare=quiet(w=>{delete w.rules.effectTable;});

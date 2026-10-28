@@ -220,6 +220,8 @@ export function accrueDepositClaim(state,e,claim,at,{quote,rate,capacity,frozen}
 // cursor advances and accrued interest joins the claim). Rate is the quote at
 // that moment; it never rewrites earlier intervals.
 export function settleDepositInterest(d,e,b,claimIds,at=d.get('state','minute')){
+    // No claim to settle (e.g. a withdrawal before any deposit): nothing accrues, and the bank may not have a record yet.
+    if(!claimIds.length)return 0;
     const state=d.get('state'),bank=state.records[b.id];
     const quote=interestRate(e,state,b,{borrower:null,minute:at,document:d.document}),rate=depositRate(e,state,b,at,d.document);
     const issueReserve=(e.world.currencyRules?.currencies??[]).filter(c=>c.money.issuer===b.id&&c.money.backedBy).reduce((n,c)=>n+currencyReserve(e,state,c.resource).required,0);

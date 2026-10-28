@@ -7,6 +7,9 @@
  "entries": [
   {"id":"annotation","family":"event","source":"code"},
   {"id":"document","family":"event","source":"code"},
+  {"id":"lost","family":"event","source":"code"},
+  {"id":"quit_job","family":"event","source":"code"},
+  {"id":"wage_low_quit","family":"event","source":"code"},
   {"id":"institution","family":"event","source":"code"},
   {"id":"legal_decision","family":"event","source":"code"},
   {"id":"judgment","family":"event","source":"code"},
