@@ -112,7 +112,7 @@ test('D27 存钱 + D28 取钱（含利息）：存 1000（1200→200，账户 10
  assert.equal(after.state.player.coins-pre.state.player.coins,1015,'D28②身上铜钱 +1015');assert.equal(account(after),0,'D28③账户余额归零');assert.equal(vault(pre)-vault(after),1015,'D28④钱庄库银 −1015');
  conserved(pre,after,'D28',new WorldEngine(world));
 });
-test.todo('D27 ③玩家获得存单/凭据一份；D28 ⑤存单收回/作废、无单不能取——引擎存款只记在钱庄账户上（accounts.player），没有存单物品，取款不要求出示：缺“票据 = 义务 + 代表物品”（S3）');
+// D27③/D28⑤ 正式覆盖见 tests/s5-03.test.mjs：具名存单原件、部分支取及存档后续取款。
 test('D27.5 public deposit consumes 15 minutes and rejected overdraft rolls back',async t=>{
  const ui=await uiSession(t,{mutate:scene('bld_hw_post',monthDayMinute(3,1,9,30),s=>{s.player.coins=1200;})});
  const before=await primed(ui),r=await ui.choose('trade.deposit',{coins:1000});assert.ok(r.ok,r.error);const after=await ui.read();

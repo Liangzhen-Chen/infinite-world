@@ -134,7 +134,7 @@ test('D35.2 true riddle answer transfers one host-stock lantern, preserves two b
 });
 test.todo('D35 ③节庆只在八月十五当晚出现，次日恢复平常——引擎有按历法日期运行的节庆（festival-runtime.test.mjs），但没有中秋灯会与摊位的节庆数据（C1 内容接入；摊位随节庆开闭属 S4 营业时间 schedule 表）');
 test.todo('D35 ④好感可小幅上升——引擎无参节庆的立场事件（S6 立场事件权重表 event-weights 增 attend_festival 行后读表）');
-test.todo('D35 lantern-festival end-to-end content remains: festival_watch now consumes a real held event endsAt (A3 integration covered), while the specific eighth-month fifteenth lantern event and award data are still absent');
+test.todo('D35 lantern-festival end-to-end content remains: festival_watch now consumes a real held event endsAt (A3 integration covered), while the specific eighth-month fifteenth lantern event and award data are still absent (C1 content integration; event schedule in S4)');
 
 async function cookFish(t){
  // 鲫鱼汤→清煮鱼汤配方（鱼 1 水 2 盐 1 柴 1）；柴→干木刨屑；秋季九月初三酉时；玩家有鱼 2、盐 3、柴 3、水 2。
