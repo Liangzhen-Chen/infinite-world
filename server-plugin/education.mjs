@@ -19,6 +19,8 @@ import {npcServices} from './npc-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
+import {recordsWhere} from './storage.mjs';
+import {serviceCapacity,waitingInOrder} from './service-queue.mjs';
 declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by','certified','resides','devotee_of'],entities:['office']});
 const DAY=1440,path=id=>['state','records',id];
 const capable=(s,id)=>id==='player'||s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status)&&!s.npcs[id].caring&&!s.npcs[id].levy;
@@ -101,7 +103,28 @@ export function nextEducationMinute(e,d,now){
   const w=courseWindow(c,day*DAY);if(w)for(const at of [w.start,w.end])if(at>now)next=Math.min(next,at);
  }return next;
 }
+// 预计座位空出：同场所、同时段的已定停课日里最早的一个；没有定期停课的班（常设学堂）无从预计，返回 null。
+function seatEta(e,s,location,start,end){
+ const ends=educationCourses(e,s).filter(c=>c.location===location&&c.start<end&&c.end>start&&Number.isFinite(c.until)&&c.until>s.minute).map(c=>c.until);
+ return ends.length?Math.min(...ends):null;
+}
+// 座位一空出，排队者按（紧迫度、登记先后）补入对应课程；已离开、受限或与别的课冲突者跳过，排队号保留。
+function promoteWaitlist(d,e){
+ const waiting=recordsWhere(d.get('state','records'),'category','service_ticket').filter(t=>t.service==='teach'&&t.status==='排队');if(!waiting.length)return;
+ const added=new Map();
+ for(const t of waitingInOrder(waiting)){
+  const s=d.get('state'),c=s.records?.[t.subject];
+  if(!c||c.status!=='开课'){holdingSet(d,null,path(t.id),{...t,status:'已取消',endedAt:s.minute},'education');continue;}
+  const view=facilityView(e,s,c.location);if(!view||view.factor===0)continue;
+  const seats=serviceCapacity(e,d,{provider:c.location,service:'teach',seats:view.capacity,factor:1});
+  const occupied=educationCourses(e,s).filter(x=>x.location===c.location&&x.start<c.end&&x.end>c.start).reduce((n,x)=>n+x.students.length+(x.cohort?.roster.length??0),0)+(added.get(c.location)??0);
+  if(occupied>=seats||!capable(s,t.requester)||personConstraint(e,s,t.requester)||educationReservation(e,s,t.requester,Math.floor(s.minute/DAY)*DAY+c.start,c.end-c.start))continue;
+  holdingSet(d,null,path(c.id),{...s.records[c.id],students:[...s.records[c.id].students,t.requester]},'education');
+  holdingSet(d,null,path(t.id),{...t,status:'已受理',servedAt:s.minute},'education');added.set(c.location,(added.get(c.location)??0)+1);
+ }
+}
 export function advanceEducation(d,e,{before,after,beforeState}){
+ promoteWaitlist(d,e);
  for(const c of educationCourses(e,d.get('state'))){
   const state=d.get('state'),w=courseWindow(c,before);if(!w)continue;
   const start=Math.max(before,w.start),end=Math.min(after,w.end);if(end<=start)continue;
@@ -168,10 +191,11 @@ export function educationAction(d,args,id){
   if(teacher&&!teaching(e,s,teacher,entity))throw preconditionFailure('先生没有实际掌握所授内容');
   if(students.includes(teacher))throw preconditionFailure('先生不能同时作自己的学生');
   if(book){if(students.length!==1)throw preconditionFailure('一本书同时只能供一位读者学习');studyBook(d,e,students[0],args.source,entity);}
-  const location=s.location,view=facilityView(e,s,location);if(!book&&(!view||view.capacity<students.length||view.factor===0))throw preconditionFailure('场所没有足够的可用教学容量');
+  const location=s.location,view=facilityView(e,s,location);if(!book&&(!view||view.capacity<1||view.factor===0))throw preconditionFailure('场所没有可用教学容量');
   const start=int(args.start??480,0,1439,'每日开课时刻'),minutes=int(args.minutes??e.rules.npcGrowth.teach.minutes,30,480,'课时'),end=start+minutes;if(end>1440)throw preconditionFailure('每日课程不能跨午夜');
   const occupied=educationCourses(e,s).filter(c=>c.location===location&&c.start<end&&c.end>start).reduce((n,c)=>n+c.students.length,0);
-  if(!book&&occupied+students.length>view.capacity)throw preconditionFailure('同期课程占用后教学容量不足');
+  // 座位满员不拒绝：能坐下的先入班，其余按报名先后（同紧迫度先到先得）登记排队号，空出座位时自动补入。
+  const seats=book?students.length:Math.max(0,serviceCapacity(e,d,{provider:location,service:'teach',seats:view.capacity,factor:1})-occupied),seated=students.slice(0,seats),waiting=students.slice(seats);
   const since=s.minute,until=since+int(args.days??30,1,360,'开课天数')*DAY;
   for(const who of [...students,...teacher?[teacher]:[]]){
    if(educationReservation(e,s,who,Math.floor(since/DAY)*DAY+start,minutes))throw preconditionFailure('已有重叠课程');
@@ -189,8 +213,13 @@ export function educationAction(d,args,id){
    if(financeBalance(d,e,org)<Math.ceil(wage*minutes/480))throw preconditionFailure('学馆不足以支付首课工钱，请先资助');
    holdingSet(d,null,path(contract),{category:'contract',kind:'workshop',education:1,id:contract,owner:org,worker:teacher,location,wage,workMinutes:minutes,task:'授业',starts:since,createdAt:since,deadline:until,status:'有效',paid:0,workedMinutes:0,source:id},'education');
   }
-  const row={category:'education_course',id:course,org,name:args.name??b.name,schoolKind:args.schoolKind??'私塾',teacher,source:args.source,book,entity,location,students,start,end,since,until,status:'开课',founder:'player',contract};
-  holdingSet(d,null,path(course),row,'education');return {course,...row};
+  const row={category:'education_course',id:course,org,name:args.name??b.name,schoolKind:args.schoolKind??'私塾',teacher,source:args.source,book,entity,location,students:seated,start,end,since,until,status:'开课',founder:'player',contract};
+  holdingSet(d,null,path(course),row,'education');
+  const waitlist=waiting.map((student,i)=>{
+   const ticket={category:'service_ticket',id:`service_ticket:teach:${course}:${String(i).padStart(3,'0')}:${student}`,service:'teach',provider:location,requester:student,subject:course,urgency:1,createdAt:since,status:'排队',position:i+1,eta:seatEta(e,s,location,start,end),capacity:seats+occupied};
+   holdingSet(d,null,path(ticket.id),ticket,'education');return {student,ticket:ticket.id,position:ticket.position,eta:ticket.eta};
+  });
+  return {course,...row,...(waitlist.length?{queued:true,waitlist,note:`学堂此时段座位已满：${seated.length}人入班，${waitlist.length}人排队，座位空出时按先后补入`}:{})};
  }
  throw preconditionFailure('未知授业操作；合法 operation：school_inspect、book_give、school_fund、school_close、school_open、book_study；普通师授、单次读书或研究成果学习不填 operation；entity 填学习内容编号或登记名称，source 填导师、书本或研究项目编号；自己学习省略 student 或填 player');
 }

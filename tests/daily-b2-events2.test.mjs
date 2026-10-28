@@ -44,7 +44,9 @@ async function treatmentD32(t){
  // 医师林大夫→陶芝（药草院）；诊金加药 30 文=半个日薪 24 + 药价 6（世界副本：初级日工钱 48，药 6）；秋季九月十九辰时；玩家 70 文，生命 60/80，咬伤。
  const CLINIC='bld_hw_herbs',DOCTOR='npc_hw_taozhi';
  const world=variant(w=>{
-  w.rules.economy.wageCopperPerHalfDay=[48,96];setPrice(w,'item_herb',6);
+  // W8D：诊费里的药材成本读草药在医馆所在地的市场估值（不再读目录基价）。河湾村本地草药估值 = 目录基价 × 0.5，
+  // 要让题面「药价 6」成立，目录基价设 12：诊费 = 24 + round(12 × 0.5) = 30。
+  w.rules.economy.wageCopperPerHalfDay=[48,96];setPrice(w,'item_herb',12);
   const d=w.npcs.find(n=>n.id===DOCTOR);d.schedule={default:[{start:0,end:1440,location:CLINIC,activity:'坐诊配药'}]};d.proficiencies={...d.proficiencies,[MEDICAL_SKILL]:1500};
  });
  const bite={bloodMl:4500,pain:3,wounds:[{id:'bite',simple:true,depthMm:2,areaCm2:5,bleedingMlPerMinute:1,contamination:10,infectionRisk:20,toxinUg:0,foreignBody:false,closed:false}],symptoms:[]};

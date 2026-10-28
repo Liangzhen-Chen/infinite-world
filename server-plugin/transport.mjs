@@ -30,10 +30,25 @@ import {declareHoldingWriter,holdingSet,aliveHoldings,holdingsView,ensureHolding
 import {derived} from './derived.mjs';
 import {refundContractEscrow} from './contracts.mjs';
 import {marketQuote} from './market.mjs';
+import {partyDeterrence} from './deterrence.mjs';
+import {valuation} from './valuation.mjs';
+import transportBalance from '../world/rules/tables/balance/transport.json' with {type:'json'};
 declareHoldingWriter('transport',{kinds:['owns','tamed_by'],locations:true});
 
 const DAY=1440,clone=x=>structuredClone(x),path=id=>['state','records',id];
-const SPECS=Object.freeze({cart:{mode:'cart',kg:600,m3:3,seats:4,wood:20,metal:2,rate:0.012},boat:{mode:'boat',kg:2400,m3:12,seats:12,wood:60,metal:4,rate:0.008},pack:{mode:'walk',kg:80,m3:0.5,seats:0,wood:0,metal:0,rate:0.02}});
+// 车船规格与发车班次读 balance/transport.json 的 carrier:* / departure:* 行（原硬编码 SPECS 数值搬入，不变）。
+const tableOf=e=>e.world.balance?.transport??transportBalance;
+const tableRow=(e,key)=>tableOf(e).rows.find(r=>r.key===key);
+const specOf=(e,kind)=>tableRow(e,`carrier:${kind}`);
+const tableParam=(e,id)=>tableOf(e).params.find(p=>p.id===id).value;
+// 下一班发车：驿站（信件：无货无客）每日固定钟点，过点次日；车行/船行整点随到随发，过截件钟点次日起发。
+export function carrierDeparture(e,selector,now){
+ const row=tableRow(e,`departure:${selector}`),day=now-now%DAY,at=now%DAY;
+ if(row.at!==undefined)return at<=row.at?day+row.at:day+DAY+row.at;
+ return at<row.cutoff?Math.ceil(now/60)*60:day+DAY+row.resume;
+}
+// 信件 = 没有货、没有客、也没有护送的一趟（驿传）；这样的运单没有别的用途。
+const isLetter=(cargo,passengers,escort)=>!cargo.length&&!passengers.length&&!escort;
 const int=(n,min,label)=>{if(!Number.isSafeInteger(n)||n<min)throw preconditionFailure(`${label}无效`);return n;};
 const all=s=>Object.values(s.records??{});
 const unfinished=s=>(s.records?.['transport:active']?.ids??[]).map(id=>s.records[id]).filter(Boolean);
@@ -80,7 +95,7 @@ function draftAnimals(e,document,asset){
 export function transportAssetView(e,document,id){
  const s=document.state;
  const a=s.records?.[assetKey(id)]??openingTransportAssets.find(a=>a.id===assetKey(id)&&e.byId.has(a.owner)&&e.byId.has(a.location));if(a?.category!=='transport_asset')return null;
- const spec=SPECS[a.kind];let factor=a.destroyedAt!==undefined||a.durability<25?0:a.durability<60?0.5:1,location=a.location;
+ const spec=specOf(e,a.kind);let factor=a.destroyedAt!==undefined||a.durability<25?0:a.durability<60?0.5:1,location=a.location;
  if(a.kind==='pack'){
   const c=s.creatures?.[a.animal],rule=e.byId.get(c?.species)?.tamingRule;
   if(!c||c.owner!==a.owner||c.hp<c.maxHp/2||['死亡','昏迷'].includes(c.status)||c.mind?.awakened||c.care?.fatigue>=e.rules.petCare.maximumRideFatigue||c.care?.sickness||c.care?.hunger>=e.rules.petCare.hungryThreshold||s.player.mount===a.animal)factor=0;
@@ -101,7 +116,7 @@ export function createTransportAsset(d,e,{owner='player',kind='cart',animal,id},
 }
 function createTransportAssetInner(d,e,{owner,kind,animal,id},eventId){
  ensureHoldings(d,e);
- const spec=SPECS[kind];if(!spec)throw preconditionFailure('承运资产类型无效');
+ const spec=specOf(e,kind);if(!spec)throw preconditionFailure('承运资产类型无效');
  const s=d.get('state'),key=assetKey(id??eventId),location=actorLocation(s,owner)??actorLocation(s,operator(e,s,owner));
  if(!location||d.get(...path(key)))throw preconditionFailure('资产地点或编号无效');
  if(kind==='pack'){
@@ -123,7 +138,7 @@ export function transportServices(e,document,location){
  return assets(e,s).map(a=>transportAssetView(e,document,a.id)).filter(a=>a.factor&&a.capacityKg>0&&!a.busy&&a.location===location).flatMap(a=>{
   const driver=operator(e,s,a.holder),group=groupView(e,s,a.holder);
   if(!available(e,s,driver)||actorLocation(s,driver)!==location||!(group||/商|车|船|驿|运输|脚夫/.test(personOccupation(e,s,driver).value??'')))return [];
-  const now=s.minute,depart=Math.ceil(now/60)*60;
+  const now=s.minute,depart=carrierDeparture(e,'cart',now);
   return [{asset:a.id,carrier:a.holder,driver,kind:a.kind,mode:a.mode,capacityKg:a.capacityKg,capacityM3:a.capacityM3,seats:a.seats,nextDeparture:depart,intervalMinutes:60}];
  });
 }
@@ -132,28 +147,32 @@ function dimensions(e,cargo,passengers){
  for(const c of cargo){int(c.quantity,1,'托运数量');const def=e.byId.get(c.item);if(!def||!(def.weight>=0))throw preconditionFailure('托运物品未登记重量');kg+=c.quantity*def.weight;m3+=c.quantity*(def.volumeM3??def.weight/250);}
  return {kg,m3};
 }
-export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='player',escort=null,departAt=d.get('state','minute')}){
+export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='player',escort=null,departAt:requested=d.get('state','minute')}){
  const s=d.get('state'),a=transportAssetView(e,d.document,asset);if(!a||!a.factor||!a.capacityKg||a.busy||a.location!==from)throw preconditionFailure('没有同地可用运力');
+ const letter=isLetter(cargo,passengers,escort),departAt=carrierDeparture(e,letter?'post':'cart',requested);
  const load=dimensions(e,cargo,passengers);if(load.kg>a.capacityKg||load.m3>a.capacityM3||passengers.length>a.seats)throw preconditionFailure('货舱重量、体积或座位容量不足');
  const prior=e.airDraft;e.airDraft=d;let route;try{route=e.route(from,to,a.mode,departAt,d.document.randomSeed);}finally{e.airDraft=prior;}
  const edges=route.edges.map(id=>e.world.routes.find(r=>r.id===id)),distanceKm=edges.reduce((n,r)=>n+r.lengthKm,0);
- const billableKg=Math.max(load.kg,load.m3*250,1),capacityFactor=Math.max(1,SPECS[a.kind].kg/a.capacityKg);
+ const billableKg=Math.max(load.kg,load.m3*250,1),capacityFactor=Math.max(1,specOf(e,a.kind).kg/a.capacityKg);
  let at=from;const passages=edges.map(r=>{
   const destination=r.from===at?r.to:r.from;at=destination;
   const guards=new Set((r.guards??[]).filter(id=>available(e,s,id)&&[r.from,r.to].includes(actorLocation(s,id))));
-  if(escort&&available(e,s,escort)&&actorLocation(s,escort)===from)guards.add(escort);
-  const deterrence=derived(e,d.document,'combat:deterrence',a.id,{target:r.id,base:guards.size/(guards.size+1)});
+  const bonded=escort&&available(e,s,escort)&&actorLocation(s,escort)===from;
+  if(bonded)guards.add(escort);
+  // 战力、装备、护送义务与车队标签进同一个队伍威慑 base；槽修正项随后叠加。
+  const party=partyDeterrence(e,d,{guards:[...guards],bonded:bonded?[escort]:[],tags:[...a.tags,...a.marks??[]]});
+  const deterrence=derived(e,d.document,'combat:deterrence',a.id,{target:r.id,base:party.base});
   const risk=derived(e,d.document,'transport:risk',a.id,{target:r.id,base:Math.max(0,Number(r.risk)||0)*(1-deterrence)});
   const tax=tradeTax(e,s,destination,'tariff');
   const cargoValue=Math.trunc(cargo.reduce((v,c)=>v+c.quantity*marketQuote(d,e,{item:c.item,location:destination,seller:owner,instances:c.instances}).explanation.value.value,0));
-  return {edge:r.id,destination,treasury:tax.settlement,toll:r.toll,risk,deterrence,cargoValue,tariff:(r.toll||r.guards?.length)?Math.floor(cargoValue*tax.bps/10000):0,freight:r.lengthKm*billableKg*SPECS[a.kind].rate*capacityFactor*(1+risk)};
+  return {edge:r.id,destination,treasury:tax.settlement,toll:r.toll,risk,deterrence,cargoValue,tariff:(r.toll||r.guards?.length)?Math.floor(cargoValue*tax.bps/10000):0,freight:letter?r.lengthKm*tableParam(e,'unit.liPerKm')*tableParam(e,'post.feePerLi'):r.lengthKm*billableKg*specOf(e,a.kind).rate*capacityFactor*(1+risk)};
  });
  const risk=distanceKm?passages.reduce((sum,p,i)=>sum+p.risk*edges[i].lengthKm,0)/distanceKm:0;
  const freight=Math.max(1,Math.ceil(passages.reduce((sum,p)=>sum+p.freight,0)));
  const tariff=passages.reduce((n,p)=>n+p.tariff,0);
  return {asset:a.id,mode:a.mode,from,to,departAt,estimatedArrivalAt:departAt+route.minutes,route,passages,load,distanceKm,risk,capacityFactor,freight,tariff,toll:route.cost,total:freight+tariff+route.cost};
 }
-// F010：模拟范围外的来货（店铺外路补货）不再免费入库——按挑夫背货的运价（SPECS.pack）、沿途关口通行费与进口关税，
+// F010：模拟范围外的来货（店铺外路补货）不再免费入库——按挑夫背货的运价（balance/transport.json carrier:pack）、沿途关口通行费与进口关税，
 // 由收货人实际支付。与 quoteTransport 同一套口径：运价按路程×计费重量×费率，关税按到岸聚落的 tariff 税率与货值。
 export function porterCharges(d,e,{from,to,cargo,owner,minute=d.get('state','minute')}){
  const s=d.get('state'),route=e.route(from,to,'walk',minute,d.document.randomSeed),load=dimensions(e,cargo,[]);
@@ -161,7 +180,7 @@ export function porterCharges(d,e,{from,to,cargo,owner,minute=d.get('state','min
  let at=from,freight=0,tariff=0;
  for(const r of edges){
   const destination=r.from===at?r.to:r.from;at=destination;
-  freight+=r.lengthKm*billableKg*SPECS.pack.rate;
+  freight+=r.lengthKm*billableKg*specOf(e,'pack').rate;
   if(r.toll||r.guards?.length){
    const rate=tradeTax(e,s,destination,'tariff'),value=cargo.reduce((v,c)=>v+c.quantity*marketQuote(d,e,{item:c.item,location:destination,seller:owner}).explanation.value.value,0);
    tariff+=Math.floor(Math.trunc(value)*rate.bps/10000);
@@ -202,10 +221,11 @@ function bookTransportInner(d,e,args,eventId){
  const externalValid=external?.category==='settlement_trade'&&external.seller===owner&&external.status==='in-transit'&&cargo.length===1&&cargo[0].item===external.item&&cargo[0].quantity===external.quantity;
  const a=transportAssetView(e,d.document,asset),service=transportServices(e,d.document,from).find(x=>x.asset===a?.id);
  if(!service)throw preconditionFailure('承运人当前不能提供班次');
- const departAt=args.departAt??service.nextDeparture;int(departAt,now,'发车时间');
+ const departAt=args.departAt??(isLetter(cargo,passengers,escort)?carrierDeparture(e,'post',now):service.nextDeparture);int(departAt,now,'发车时间');
  if(departAt%service.intervalMinutes!==0)throw preconditionFailure('不在承运班次时间');
  if(!forwarding&&!externalValid&&from!==actorLocation(s,owner))throw preconditionFailure('发货人须在装货地点');
  const q=quoteTransport(d,e,{asset:a.id,from,to,cargo,passengers,owner,escort,departAt}),id=`transport:${eventId}`;
+ if(q.departAt!==departAt)throw preconditionFailure('不在承运班次时间');
  if(!q.route.edges.length)throw preconditionFailure('发货与目的地须为不同地点');
  if(d.get(...path(id)))throw preconditionFailure('运单编号已存在');
  const lease=all(s).find(r=>r.category==='transport_lease'&&r.asset===a.id&&r.ends>now);if(lease&&lease.ends<q.estimatedArrivalAt)throw preconditionFailure('租约不能覆盖承运全程');
@@ -430,7 +450,10 @@ function recordCargoLoss(d,e,shipment,{item,quantity,actor,cause,key},eventId){
   const s=d.get('state');
   int(quantity,1,'损失数量');const old=d.get(...path(shipment)),row=clone(old),cargo=row.cargo.find(c=>c.item===item);
   if(!cargo||cargo.quantity<quantity)throw preconditionFailure('货损超过实际承运数量');
-  const value=quantity*(e.byId.get(item)?.basePrice??0);int(value,0,'货损价值');
+  // 货损按货物此刻在所在地的估值（市场估值投影，不含商家价差），不是目录基价；没有估值依据的货物不能静默记 0。
+  const priced=valuation(d,e,{role:'goods',item,quantity,location:transportPosition(e,s,old).location??old.from,holder:old.owner});
+  if(priced.value===null)throw preconditionFailure(`货物无法估值：${priced.unvaluable}`);
+  const value=priced.value;int(value,0,'货损价值');
   bookStock(d,e,freight(e,shipment,item),-quantity,{flow:'sink:destroy',purpose:'cargo_loss',writer:'transport',eventId});
   const units=(cargo.instances??[]).splice(0,quantity);
   for(const unit of units)holdingSet(d,e,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),status:'损毁',destroyedAt:s.minute,container:shipment},'transport');

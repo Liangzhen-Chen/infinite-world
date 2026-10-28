@@ -203,15 +203,17 @@ test('two published road legs expose tariff, risk, deterrence and draft-capacity
  assert.equal(transportAssetView(f.engine,f.document,f.asset).capacityKg,60);
  assert.deepEqual(plain.route.edges,['route_hw_bs','route_w5_white_quarry']);
  assert.equal(plain.capacityFactor,10);assert.equal(plain.load.kg,50);
- // One available escort: deterrence1/(1+1)=.5; each native risk1*(1-.5)=.5.
- // ceil(29.3*50*.012*10*1.5)=264; without deterrence ceil(...*2)=352.
- assert.equal(protectedQuote.passages[0].deterrence,0.5);assert.equal(protectedQuote.risk,0.5);
- assert.equal(protectedQuote.freight,264);assert.equal(plain.freight,352);
+ // W8D: one available escort bound by the escort obligation. The guard is a level-3 unarmed resident = the reference guard, so weight 1;
+ // the obligation bonus makes S = 1*(1+0.25) = 1.25 (balance/combat.json deterrence.party.bondedBonus), deterrence = 1.25/2.25 = 5/9
+ // (was 1/(1+1)=.5 before the party input carried power/obligation); each native risk1*(1-5/9)=4/9.
+ // ceil(29.3*50*.012*10*(1+4/9))=ceil(253.93)=254; without deterrence ceil(...*2)=352.
+ assert.ok(Math.abs(protectedQuote.passages[0].deterrence-5/9)<1e-12);assert.ok(Math.abs(protectedQuote.risk-4/9)<1e-12);
+ assert.equal(protectedQuote.freight,254);assert.equal(plain.freight,352);
  // Grain supply at Baishi clamps scarcity to.5:100*(3*.5)=150 copper.
  // Kingdom tariff800bps + town100bps=900; floor(150*.09)=13 at each gate.
  assert.deepEqual(protectedQuote.passages.map(p=>p.cargoValue),[150,150]);
  assert.deepEqual(protectedQuote.passages.map(p=>p.tariff),[13,13]);
- assert.equal(protectedQuote.tariff,26);assert.equal(protectedQuote.toll,7);assert.equal(protectedQuote.total,297);
+ assert.equal(protectedQuote.tariff,26);assert.equal(protectedQuote.toll,7);assert.equal(protectedQuote.total,287);
  const full=carrierScene(20); // min(600,20*30)=600, surcharge1.
  assert.equal(carriageQuote(full).freight,36); // ceil(29.3*50*.012*2).
  // Existing published routes use risk0..2 as a freight premium, not a

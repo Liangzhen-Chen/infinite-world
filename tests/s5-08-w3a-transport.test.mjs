@@ -8,6 +8,10 @@ import {dueObligation} from '../server-plugin/obligation-runtime.mjs';
 import {freight as freightAccount} from '../server-plugin/stock.mjs';
 import {escrow as escrowAccount} from '../server-plugin/money.mjs';
 import {openHoldings} from '../server-plugin/holdings.mjs';
+import {valuation} from '../server-plugin/valuation.mjs';
+// W8D：货损价值读估值角色 goods（货物所在地的市场估值，不含商家价差），不再读目录基价 basePrice。旧断言 3 份×3 铜=9、100 份×3 铜=300 是基价口径，
+// 改为同一估值角色在装货地 loc_hw 对货主 player 的取值（本世界 3 份燕麦 14 铜、100 份 479 铜）。
+const worth=(d,e,quantity)=>valuation(d,e,{role:'goods',item:'item_oats',quantity,location:'loc_hw',holder:'player'}).value;
 import {recordEntityDeath} from '../server-plugin/npc-life.mjs';
 
 // D05 §5.1 / S5-08 W3a: the cart is pulled by 20 real bulls (600 kg), so capacity surcharge is 1.
@@ -24,20 +28,21 @@ test('intercepted cargo: partial loss owes cargo value once, recovered shipment 
  const trip=bookTransport(d,e,{asset:vehicle,to:'loc_bs',recipient:RECIPIENT,cargo:[{item:'item_oats',quantity:10}]},'consign');
  transportIncident(d,e,{shipment:trip.id,actor:SECOND},'raid');
  assert.equal(d.get('state','records',trip.id,'status'),'intercepted');
- // 3 oats lost at basePrice 3 copper: 3*3=9. A repeated report of the same event is the same loss.
+ // 3 oats lost, valued by the goods valuation role at the shipment's position (14 copper here). A repeated report of the same event is the same loss.
+ const lost=worth(d,e,3);assert.equal(lost,14);
  const loss=damageTransportCargo(d,e,{shipment:trip.id,item:'item_oats',quantity:3,actor:DRIVER},'wet');
- assert.equal(loss.amount,9);assert.deepEqual(damageTransportCargo(d,e,{shipment:trip.id,item:'item_oats',quantity:3,actor:DRIVER},'wet'),loss);
+ assert.equal(loss.amount,lost);assert.deepEqual(damageTransportCargo(d,e,{shipment:trip.id,item:'item_oats',quantity:3,actor:DRIVER},'wet'),loss);
  transportIncident(d,e,{shipment:trip.id,recover:true,consent:true,actor:'player'},'retrieve');
  const row=finish(d,e,trip.id);
  assert.deepEqual(row.deliveredCargo.map(c=>c.quantity),[7]);assert.equal(e.quantity(d,RECIPIENT,'item_oats'),57);
  // Failure is shown to the recipient and the owner, and the delivery never claims the full ten.
  assert.equal(heard(d,RECIPIENT).length,1);assert.match(heard(d,RECIPIENT)[0].content,/短少/);
  assert.ok(Object.values(d.get('memories')).some(m=>m.channel==='transport'&&/短少/.test(m.content)));
- // One 9-copper debt; the carrier pays it once and cannot be made to pay twice.
- assert.equal(dueObligation(d.get('state'),`${loss.id}:claim`).owed,9);
+ // One 14-copper debt; the carrier pays it once and cannot be made to pay twice.
+ assert.equal(dueObligation(d.get('state'),`${loss.id}:claim`).owed,lost);
  // Payment needs the debtor physically with the creditor: the owner walks to the destination.
  d.set(['state','location'],'loc_bs');
- compensateTransportLoss(d,e,{loss:loss.id,amount:9,payer:DRIVER},'pay-loss');
+ compensateTransportLoss(d,e,{loss:loss.id,amount:lost,payer:DRIVER},'pay-loss');
  assert.equal(dueObligation(d.get('state'),`${loss.id}:claim`).owed,0);
  assert.throws(()=>compensateTransportLoss(d,e,{loss:loss.id,amount:1,payer:DRIVER},'pay-twice'));
  assert.deepEqual(auditLedger(d.get('ledger')),[]);
@@ -52,6 +57,7 @@ test('destroyed carrier: cargo is written off, carrier owes cargo value and frei
  assert.equal(trip.freight,8);
  const escrowKey=escrowAccount(trip.escortQuest),paid=d.get('ledger','accounts',escrowKey)??0;
  const playerBefore=d.get('state','player','coins');
+ const cargoWorth=worth(d,e,100);assert.equal(cargoWorth,479);
  destroyTransportAsset(d,e,{asset:vehicle},'cart-burns');
  // Destruction itself keeps the cargo on the wreck: nothing is settled until the clock runs.
  assert.equal(d.get('state','records',trip.id,'status'),'wrecked');assert.equal(d.get('state','records',trip.id,'settledAt'),undefined);
@@ -60,8 +66,8 @@ test('destroyed carrier: cargo is written off, carrier owes cargo value and frei
  d.set(['state','minute'],at);advanceTransport(d,e,at);
  const row=d.get('state','records',trip.id);
  assert.equal(row.settledAt,at);assert.deepEqual(row.cargo,[]);assert.equal(d.get('ledger','accounts',freightAccount(e,trip.id,'item_oats'))??0,0);
- // 100 oats * basePrice 3 = 300 owed by the carrier, plus the 8 copper freight back.
- assert.equal(dueObligation(d.get('state'),`${row.losses[0]}:claim`).owed,300);
+ // 100 oats valued 479 owed by the carrier, plus the 8 copper freight back.
+ assert.equal(dueObligation(d.get('state'),`${row.losses[0]}:claim`).owed,cargoWorth);
  assert.equal(dueObligation(d.get('state'),row.freightRefund).owed,8);
  const refunded=d.get('state','records',trip.escortQuest);
  assert.equal(refunded.escrow??0,0);assert.equal(d.get('ledger','accounts',escrowKey)??0,0);
