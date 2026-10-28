@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
-import {npcAvailability} from '../server-plugin/npc-schedule.mjs';
+import {npcAvailability,scheduleAt} from '../server-plugin/npc-schedule.mjs';
 import {carryLoad} from '../server-plugin/carry.mjs';
 import {characterUiSession,qty} from './helpers/ui-script.mjs';
 import {conservation,reconcile} from './helpers/ledger-audit.mjs';
@@ -79,7 +79,7 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  assert.ok(sale.result.pricing.spread<buy.result.pricing.spread);
 
  const item='item_tanned_leather';
- const quote=facilityRuntime().currentTradeQuote(engine,current,{seller:TRADER,item,quantity:1});
+ const quote=facilityRuntime().currentTradeQuote(engine.scoped(current),current,{seller:TRADER,item,quantity:1});
  const offered=Math.ceil(quote.listPrice*world.rules.economy.priceFactorLimits.bargain[0]);
  const deal=await step('trade.trade',{seller:TRADER,item,quantity:1,unitPrice:offered},{target:TRADER,search:true});
  assert.ok(offered<quote.listPrice,'price reduced within the existing bargaining interval');
@@ -100,7 +100,7 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  await step('time',{until:{dayOffset:1,hour:9}});
  await step('move',{destination:'bld_hw_forge'},{target:'bld_hw_forge'});
  for(const item of ['item_mining_pick','item_sickle']){
-  const quote=facilityRuntime().currentTradeQuote(engine,current,{seller:'npc_hw_duanyan',item,quantity:1});
+  const quote=facilityRuntime().currentTradeQuote(engine.scoped(current),current,{seller:'npc_hw_duanyan',item,quantity:1});
   const bought=await step('trade.buy',{item,quantity:1},{target:'npc_hw_duanyan'});
   assert.equal(bought.result.cost,Math.trunc(quote.exactTotal));
   assert.equal(qty(bought.after.state.inventory[item])-qty(bought.before.state.inventory[item]),1);
@@ -159,37 +159,68 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
   harvested+=cut.result.harvested;trips++;
   assert.equal(cut.result.remaining,ripe.yield-harvested);
   assert.equal(cut.result.laborMinutes,Math.ceil(480*cut.result.harvested/ripe.yield));
-  // After half a year the inn can be closed by real wear. Attend the
-  // existing outdoor market instead of repairing or reviving its building.
-  const day=Math.floor(current.state.minute/1440),calendar=world.rules.calendar;
-  let offset=0;
-  while(!calendar.marketDays.includes((day+offset)%calendar.daysPerMonth+1)||!offset&&current.state.minute%1440>=11*60)offset++;
-  await step('time',{until:{dayOffset:offset,hour:11}});
-  await step('move',{destination:'loc_hw'},{target:'loc_hw'});
+  // No public loose-grain purchase rule exists. Follow the registered
+  // merchant to Baishi using the campaign's actual small/large-month calendar,
+  // not the obsolete fixed-30-day market calculation.
+  const walk=await step('move',{destination:'loc_bs'},{target:'loc_bs'});
+  assert.equal(walk.after.state.location,'loc_bs','the grain is actually carried to Baishi');
+  assert.equal(walk.after.state.minute-walk.before.state.minute,walk.result.receipt.cost.time);
   let left=cut.result.harvested;
-  while(left){
-   // Use the registered five-portion retail floor, not a fabricated buyer
-   // purse or increased market depth. Each sale has its own real quote.
-   const count=Math.min(left,5);
-   const buyers=Object.keys(current.state.npcs).filter(id=>current.state.npcs[id].location===current.state.location&&npcAvailability(engine,current.state,id).services?.includes('trade'));
-   assert.ok(buyers.length,'outdoor market must actually have a present, available trading service');
-   let sold,offer;const refusals=[];
-   for(const buyer of buyers){
-    offer=facilityRuntime().currentTradeQuote(engine,current,{seller:'player',buyer,item:'item_oats',quantity:count});
-    const before=current,attempt=await ui.choose('trade.sell_to',{item:'item_oats',quantity:count},{target:buyer});
-    if(!attempt.ok){
-     assert.match(attempt.error,/买方余额不足|市场今天没有那么多可成交深度|此刻不提供交易|剩余服务时间不足/);
-     assert.deepEqual(await ui.read(),before,'a refused real market offer transfers no money or grain');
-     refusals.push(buyer+': '+attempt.error);continue;
+  // First try Yan Zhe's actual shop. The Baishi-only route left 17 portions
+  // unsold after exhausting the selected market/bakery/store purses. Return
+  // on real roads to existing local food consumers; no NPC is moved or funded.
+  const localBuyers={loc_bs:TRADER,loc_hw_dock:'npc_hw_zhengshuisheng',loc_hw_orchard:'npc_hw_meiling',loc_hw_northwood:'npc_hw_wushuo'};
+  for(const venue of Object.keys(localBuyers)){
+   if(!left)break;
+   if(current.state.location!==venue)await step('move',{destination:venue},{target:venue});
+   const known=[...new Set([localBuyers[venue],...Object.keys(current.state.npcs).filter(id=>current.state.npcs[id].location===venue)])];
+   while(left){
+    const scoped=engine.scoped(current),now=current.state.minute;
+    const buyers=known.filter(id=>current.state.npcs[id].location===venue&&npcAvailability(scoped,current.state,id).services?.includes('trade')&&(npcAvailability(scoped,current.state,id).until??Infinity)>=now+5);
+    if(!buyers.length){
+     let next=Infinity;
+     for(const id of known){
+      if(['患病','昏迷','濒死','死亡'].includes(current.state.npcs[id].status))continue;
+      for(let cursor=now;cursor<now+31*1440;){
+       const slot=scheduleAt(scoped,id,cursor,current.state);if(!slot)break;
+       if(cursor>now&&slot.location===venue&&slot.services.includes('trade')&&slot.until-cursor>=5){next=Math.min(next,cursor);break;}
+       cursor=slot.until;
+      }
+     }
+     assert.ok(Number.isFinite(next),`no real forthcoming buyer at ${venue}`);
+     await step('time',{minutes:next-now});continue;
     }
-    sold=await acceptedStep('trade.sell_to',{item:'item_oats',quantity:count},before,attempt);break;
+    let sold,offer,count,depthBlocked=false;const refusals=[];
+    for(const buyer of buyers){
+     for(count=Math.min(left,5);count>0;count--){
+      offer=facilityRuntime().currentTradeQuote(engine.scoped(current),current,{seller:'player',buyer,item:'item_oats',quantity:count});
+      const before=current,attempt=await ui.choose('trade.sell_to',{item:'item_oats',quantity:count},{target:buyer});
+      if(!attempt.ok){
+       assert.match(attempt.error,/买方余额不足|市场今天没有那么多可成交深度|此刻不提供交易|剩余服务时间不足/);
+       assert.deepEqual(await ui.read(),before,'a refused real offer transfers no money or grain');
+       depthBlocked ||= /可成交深度/.test(attempt.error);
+       refusals.push(buyer+': '+attempt.error);continue;
+      }
+      sold=await acceptedStep('trade.sell_to',{item:'item_oats',quantity:count},before,attempt);break;
+     }
+     if(sold)break;
+    }
+    if(!sold){
+     if(depthBlocked){await step('time',{until:{dayOffset:1,hour:9}});continue;}
+     assert.ok(refusals.every(x=>/买方余额不足/.test(x)),refusals.join('; '));
+     break;
+    }
+    // Ordinary Baishi: 3 * scarcity 3 * bid .6 * regard 1.00105 * 5
+    // = 27.02835 => 27 copper, whenever those observed inputs hold.
+    if(offer.explanation.base===3&&offer.explanation.scarcity===3&&offer.explanation.quality===1&&offer.explanation.depth===1&&offer.explanation.spread===0.6&&count===5&&offer.explanation.relation===1.00105)assert.equal(Math.trunc(offer.exactTotal),27);
+    assert.equal(sold.result.cost,Math.trunc(offer.exactTotal),'round the actual full quote once');
+    assert.equal(sold.after.state.player.coins-sold.before.state.player.coins,sold.result.cost);
+    assert.equal(sold.before.state.npcs[offer.buyer].coins-sold.after.state.npcs[offer.buyer].coins,sold.result.cost);
+    assert.equal(qty(sold.before.state.inventory.item_oats)-qty(sold.after.state.inventory.item_oats),count);
+    cropSale+=sold.result.cost;left-=count;
    }
-   assert.ok(sold,`all actual market buyers refused ${count} portions: ${refusals.join('; ')}`);
-   assert.equal(sold.result.cost,Math.trunc(offer.exactTotal),'round the actual full quote once');
-   assert.equal(sold.after.state.player.coins-sold.before.state.player.coins,sold.result.cost);
-   assert.equal(qty(sold.before.state.inventory.item_oats)-qty(sold.after.state.inventory.item_oats),count);
-   cropSale+=sold.result.cost;left-=count;
   }
+  assert.equal(left,0,`all actually carried grain must find solvent, present buyers before the next cut; harvested=${harvested}, trips=${trips}, cash=${current.state.player.coins}, cropSale=${cropSale}, location=${current.state.location}, minute=${current.state.minute}`);
  }
  assert.ok(trips>1,'carrying capacity requires real separate trips');
  assert.equal(current.state.records[farmId].harvestedQty,ripe.yield);
@@ -280,7 +311,10 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  // index.mjs stores world_act aliases as their native calls for compatibility.
  // Match every durable event to an actual successful public click instead of
  // incorrectly requiring the stored tool name to remain world_act.
- assert.equal(bundle.events.length,committedClicks.size,'one durable event per successful click; no injected setup events');
+ // The host splits a long public time click into <=30-day native events
+ // (observed character-ui-17#1..#6); count source clicks, not time segments.
+ const recordedClicks=new Set(bundle.events.map(event=>event.input.eventId.replace(/#\d+$/,'')));
+ assert.equal(recordedClicks.size,committedClicks.size,'every successful click is durably recorded; no injected setup events');
  assert.ok(bundle.events.every(event=>committedClicks.has(event.input.eventId.replace(/#\d+$/,''))),'all recorded events originate in public menu/tool clicks');
  const {reference}=await ui.server.api('import',{bundle});
  const loaded=await ui.server.api('read',{campaignId:reference.campaignId});

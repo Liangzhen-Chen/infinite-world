@@ -500,6 +500,12 @@ export function settlementGovernment(engine,state,id){
     // expired or removed successor leaves a vacancy rather than restoring a predecessor.
     const active=row?.status==='在任'&&(row.until??Infinity)>(state.minute??0)&&eligible(row.holder)&&!priorOffice(state,row.holder,current?.[0],row);
     const office=engine.rules.governance?.authority?.offices?.[row?.office];
+    // Catalog governance stores a head's identity, not an office id. The
+    // authority catalog has one chief-seat definition, office_village_head;
+    // rankedOffice supplies its administrative-level title and powers. This
+    // matches personOffices' founding catalog rows (05 §5.7.3); appointments
+    // instead read their own recorded office definition.
+    const foundingOffice=engine.rules.governance?.authority?.offices?.office_village_head;
     let head=fact(row?active?actorId(engine.world,row.holder):null:eligible(originalHead)&&!priorOffice(state,originalHead,null,null)?actorId(engine.world,originalHead):null,
         current?`state.records.${current[0]}`:g?.head?`catalog.${id}.details.governance.head`:ag?.manager?`rules.agriculture.${id}.manager`:generated?.source??`catalog.${id}.details.governance.head`,Boolean(current));
     if(!current&&!originalHead){
@@ -509,7 +515,7 @@ export function settlementGovernment(engine,state,id){
     const seat=row?.workplace??g?.meetingPlace??ag?.counter??baseOf(engine,state,remote?.holder)?.location??id;
     const seatSource=row?.workplace?`state.records.${current[0]}.workplace`:g?.meetingPlace?`catalog.${id}.details.governance.meetingPlace`:ag?.counter?`rules.agriculture.${id}.counter`:generated?.source??`catalog.${id}`;
     return {head,
-        powers:fact([...new Set([...(active?office?.powers??[]:head.value?g?.permissions?.head??[]:[]),...(head.value?(active?office:engine.rules.governance?.authority?.offices?.office_village_head)?.seatPowers??[]:[])])],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions + rules.governance.authority.offices`,Boolean(current)),
+        powers:fact([...new Set([...(active?office?.powers??[]:head.value?g?.permissions?.head??[]:[]),...(head.value?(active?office:foundingOffice)?.seatPowers??[]:[])])],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions + rules.governance.authority.offices`,Boolean(current)),
         appointment:fact(row??g?.appointment,current?`state.records.${current[0]}`:`catalog.${id}.details.governance.appointment`,Boolean(current)),
         enforcers:fact((g?.enforcers??[]).filter(eligible),`catalog.${id}.details.governance + legal dismissals`),
         seat:fact(seat,seatSource,Boolean(row?.workplace)),source:fact(row?.source??g?.appointment?.source??generated?.source??head.source,head.source,Boolean(current))};
