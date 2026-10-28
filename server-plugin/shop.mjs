@@ -20,7 +20,7 @@ const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const r
 import {digest,recordsWhere,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
 import {installFacilityRuntime} from './facility-state.mjs';
-import {marketQuote,recordMarketDeal,goodsClass,registerShopShelves} from './market.mjs';
+import {marketQuote,quoteSupply,recordMarketDeal,goodsClass,registerShopShelves} from './market.mjs';
 import {currencyRow,currencyTradePrice} from './currency.mjs';
 import {tenderQuote} from './tender.mjs';
 export {assertMarketDepth,marketQuote,marketExplanation} from './market.mjs';
@@ -281,7 +281,14 @@ function restockRow(d,engine,shop,row,minute,ctx={}){
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(want<=0)return null;
     const from=row.source==='route'?row.from:shop.settlement;
-    const quote=quantity=>marketQuote(d,engine,{item:row.item,location:shop.settlement,minute,seller:from,buyer:shop.keeper,quantity,business:{keeper:from,markup:1},base:regionalTradeBase(d,engine,row.item,shop.settlement,minute)});
+    // Supply and base are read once per call site below; they do not change between the quotes of one binary search.
+    let supplyMemo=null,baseMemo=null;
+    const quote=quantity=>{
+        const business={keeper:from,markup:1};
+        supplyMemo??=quoteSupply(d,engine,{item:row.item,location:shop.settlement,business});
+        baseMemo??=regionalTradeBase(d,engine,row.item,shop.settlement,minute);
+        return marketQuote(d,engine,{item:row.item,location:shop.settlement,minute,seller:from,buyer:shop.keeper,quantity,business,base:baseMemo,supply:supplyMemo});
+    };
     // F010：本地产出与外路来货都在模拟范围外，不能免费入库——店主按市场估值向来源聚落付货款，外路另付挑夫运费、关口通行费与进口关税；
     // 回执写明来源（origin）和费用构成。聚落库存补货是真实上游，从聚落库存转入。
     const imported=row.source!=='settlement';

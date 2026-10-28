@@ -8,7 +8,7 @@ import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refu
 import {contractFreeze,claimCopper,REFERENCE} from './tender.mjs';
 import {holdGoods,releaseGoods} from './goods-escrow.mjs';
 import {claimUnit} from './claim-unit.mjs';
-import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,recordMarketDeal,customerPurseShare,customerReachMinutes,assertMarketDepth,reserveShortfall} from './market.mjs';
+import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,quoteSupply,recordMarketDeal,customerPurseShare,customerReachMinutes,assertMarketDepth,reserveShortfall} from './market.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
@@ -526,9 +526,12 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             const want=wants(d,engine,id,item,gaps);if(!want.quantity)continue;
             const available=saleableStock(d,engine,shop.keeper,item,{business:true}).available;
             let quantity=Math.min(want.quantity,available),quote=null;
-            const base=()=>regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);
+            // No write happens inside this descent: supply and base are read once for all quantities tried.
+            const business={keeper:shop.keeper,markup:shop.markup};let supply=null,baseValue=null;
             for(;quantity>0;quantity--){
-                const q=marketQuote(d,engine,{seller:shop.keeper,buyer:id,item,quantity,location:shop.location,minute:t,base:base(),business:{keeper:shop.keeper,markup:shop.markup}});
+                supply??=quoteSupply(d,engine,{item,location:shop.location,business});
+                baseValue??=regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);
+                const q=marketQuote(d,engine,{seller:shop.keeper,buyer:id,item,quantity,location:shop.location,minute:t,base:baseValue,business,supply});
                 if(q.totalCoins>=1&&q.totalCoins<=cap){quote=q;break;}
             }
             if(!quote)continue;// 买不起哪怕一份：不上门
