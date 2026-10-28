@@ -119,6 +119,9 @@ async function farm(t,replacement){
  const world=variant(w=>{
   delete w.rules.weather;w.rules.agriculture.crop.growthDays=2;w.rules.agriculture.crop.sowDays=[0,359];
   w.rules.agriculture.settlements.find(x=>x.settlement==='loc_hw').farmWorkers=0;
+  // W8-E1 负重：2 亩整季 300 份 = 150 公斤背不动（此前靠收割豁免）。本用例考查的是替代工具，不是负重：用已安装的
+  // economy:yield 修正 ×0.1（同 s5-05）让整季 30 份 = 15 公斤 ≤ 两种工具组下的余力（≥25 公斤），一趟收完，工时仍为整块田 960 分钟。
+  w.derived.modifiers.push({id:'a3-domain-field-yield',pack:'core',target:'economy:yield',stage:'mul',value:0.1,when:"subject == 'loc_hw_fields'"});
   if(replacement){w.items.find(x=>x.id==='item_staff').tags=['soil_work'];w.items.find(x=>x.id==='item_kitchen_knife').tags=['harvest'];}
  });
  const sowTool=replacement?'item_staff':'item_hoe',harvestTool=replacement?'item_kitchen_knife':'item_sickle';

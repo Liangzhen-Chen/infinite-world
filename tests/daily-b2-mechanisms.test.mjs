@@ -39,16 +39,19 @@ test('D12.3/.5 public sow: two mu use four seed units and 480 labor minutes, wea
  const broken=await uiSession(t,{world:badWorld,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8,0),s=>{s.buildings.loc_hw_fields={owner:'player',condition:100};s.inventory.item_wheat_seed=stack(20);s.inventory.item_hoe={...tool(),durability:0};})});
  const b=await primed(broken),bad=await broken.choose('farm.private_sow',{areaMu:2},{search:true});assert.equal(bad.ok,false);assert.deepEqual(await broken.read(),b);
 });
-test('D13.3/.4 public harvest: 960 labor minutes over one to two days, sickle wear, real stock source and no second harvest',async t=>{
+test('D13.3/.4 public harvest: first trip takes what the pack holds (50 of 300) for its 160-minute share of 960, sickle wear, real stock source; a full pack cannot harvest again',async t=>{
  const {ui,world}=await privateField(t),opening=await primed(ui),sow=await ui.choose('farm.private_sow',{areaMu:2},{search:true});assert.ok(sow.ok,sow.error);
  const grow=await ui.choose('time',{minutes:3*1440});assert.ok(grow.ok,grow.error);const before=await ui.read();assert.equal(before.state.records['private-farm:loc_hw_fields'].status,'ready');
  const forged=await ui.choose('farm.private_harvest',{areaMu:1},{search:true});assert.equal(forged.ok,false);assert.deepEqual(await ui.read(),before);
  const r=await ui.choose('farm.private_harvest',{},{search:true,eventId:'d13-harvest'});assert.ok(r.ok,r.error);const after=await ui.read(),elapsed=after.state.minute-before.state.minute;
- assert.equal(r.result.laborMinutes,960);assert.ok(elapsed>=1440&&elapsed<=2880,`elapsed ${elapsed}`);assert.equal(elapsed,r.result.elapsed);
- assert.equal(after.state.records['private-farm:loc_hw_fields'].status,'harvested');assert.ok(r.result.harvested>0);assert.equal(held(after.state.inventory,'item_wheat_grain')-held(before.state.inventory,'item_wheat_grain'),r.result.harvested);
+ // W8-E1 负重：整季 300 份 = 150 公斤一次进囊原靠 carryExempt；现只收背得动的。身上 = 新角色 2.6 + 麦种 16×0.1 + 锄 0.2 + 镰 0.2 = 4.6 公斤，
+ // 余 30 − 4.6 = 25.4 → floor(25.4/0.5) = 50 份，田里剩 250；工时按收下的份额：1 工日/亩 × 2 亩 × 480 × 50/300 = 160 分钟（当天做完，不跨夜）。
+ assert.equal(r.result.harvested,50);assert.equal(r.result.remaining,250);assert.equal(r.result.reason,'背不动');
+ assert.equal(r.result.laborMinutes,160);assert.equal(elapsed,160);assert.equal(elapsed,r.result.elapsed);
+ assert.equal(after.state.records['private-farm:loc_hw_fields'].status,'ready');assert.equal(after.state.records['private-farm:loc_hw_fields'].harvestedQty,50);assert.equal(held(after.state.inventory,'item_wheat_grain')-held(before.state.inventory,'item_wheat_grain'),r.result.harvested);
  // yields.json declares jin/mu/season, not kg. Retain the exact original
  // two-mu band (200–600 jin), converting the native food portions explicitly.
- const jin=r.result.harvested*world.items.find(i=>i.id==='item_wheat_grain').weight/.5;assert.ok(jin>=200&&jin<=600);
+ const jin=after.state.records['private-farm:loc_hw_fields'].yield*world.items.find(i=>i.id==='item_wheat_grain').weight/.5;assert.ok(jin>=200&&jin<=600);
  // D05 §5.5: harvest transfers the mature field stock; it cannot mint grain.
  const field='loc_hw_fields|item_wheat_grain|crop';
  assert.equal(before.ledger.accounts[field]-after.ledger.accounts[field],r.result.harvested);

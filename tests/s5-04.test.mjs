@@ -119,7 +119,9 @@ test('signed-wage: a native new contract uses corrections; existing terms stay f
  const worker='npc_hw_ayan',mill='bld_hw_mill';
  const make=multiplier=>new WorldEngine({...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'wage-market',pack:'business',target:'economy:wage',stage:'mul',value:multiplier}]}});
  const engine=make(1.5),initial=engine.createCharacter(seed,{},'signed-wage');
- const prepared=applyIntentSetup(engine,initial,{minute:600,location:mill,coins:10000,inventory:{item_wood:100,item_whittling_knife:1},present:[worker],abilitiesByActor:{[worker]:{skills:{skill_life_6_core:1500}}},facts:[{path:['state','buildings'],value:{...initial.state.buildings,[mill]:{owner:'player',condition:100}}}]});
+ // W8-E1 负重：原带木料 100 份 = 200 公斤，班次产出的木楔入囊被拒。本用例考查工钱（按到岗分钟），不看产量：
+ // 玩家自有工坊的材料目前只从行囊取，带背得动的 13 份 = 26 公斤（+ 刻刀 0.2 + 随身 2.6 = 28.8 ≤ 30）。
+ const prepared=applyIntentSetup(engine,initial,{minute:600,location:mill,coins:10000,inventory:{item_wood:13,item_whittling_knife:1},present:[worker],abilitiesByActor:{[worker]:{skills:{skill_life_6_core:1500}}},facts:[{path:['state','buildings'],value:{...initial.state.buildings,[mill]:{owner:'player',condition:100}}}]});
  assert.deepEqual(prepared.setupUnmet,[]);
  const out=await engine.reduce(prepared.document,{tool:'world_trade',args:{operation:'workshop',seller:worker,consent:true,item:'recipe_wooden_pegs',days:3},eventId:'signed-wage'});
  const document=applyPatches(prepared.document,out.patches),row=document.state.records[out.result.contract];

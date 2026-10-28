@@ -51,14 +51,30 @@ export function carryHelpers(d,engine){
  }
  return out;
 }
+// Kilograms the player (with helpers who are present) can still take on: the same sum assertCanCarry admits.
+export function carryRoomKg(d,engine,actor='player'){
+ if(actor!=='player')return Infinity;
+ return Math.max(0,safeCarryKg(d,engine,actor)+carryHelpers(d,engine).reduce((sum,h)=>sum+h.kg,0)-carriedKg(d,engine,actor));
+}
+// Per-unit weight of an item as held in that pack (a stack may carry its own weight), else the catalog weight.
+export function packItemKg(d,engine,owner,item){
+ const held=d.get(...engine.bagPath(owner),item);
+ return (held&&typeof held==='object'?held.weight:undefined)??engine.byId.get(item)?.weight??0;
+}
+// Kilograms by which adding addKg to the player's pack would exceed own safe load plus present helpers; 0 when it fits.
+export function carryOverKg(d,engine,actor,addKg){
+ if(actor!=='player'||!(addKg>EPS))return 0;
+ const after=carriedKg(d,engine,actor)+addKg,own=safeCarryKg(d,engine,actor);
+ if(after<=own+EPS)return 0;
+ const over=after-own-carryHelpers(d,engine).reduce((sum,h)=>sum+h.kg,0);
+ return over>EPS?round(over):0;
+}
 // Throws a rejection with the shortfall; a no-op for anyone but the player and for loads that fit.
 export function assertCanCarry(d,engine,actor,addKg,label=''){
- if(actor!=='player'||!(addKg>EPS))return;
+ const over=carryOverKg(d,engine,actor,addKg);
+ if(!over)return;
  const own=safeCarryKg(d,engine,actor),load=carriedKg(d,engine,actor),after=load+addKg;
- if(after<=own+EPS)return;
- const helpers=carryHelpers(d,engine),shared=helpers.reduce((sum,h)=>sum+h.kg,0);
- if(after<=own+shared+EPS)return;
- const over=round(after-own-shared);
+ const shared=carryHelpers(d,engine).reduce((sum,h)=>sum+h.kg,0);
  reject('E-ACTION-PRECONDITION',`拿不动：${label}${round(addKg)}公斤，加上身上已有的${round(load)}公斤共${round(after)}公斤，超出你的安全负重${round(own)}公斤${shared>0?`（同行搭手另可分担${round(shared)}公斤）`:''}，还差${over}公斤`,{
   missing:[`还差${over}公斤的承载力`],
   repair:['先放下或存放一些随身物品','请同行同伴或雇工搭手（须在身边且自己还有余力）','借坐骑驮运'],

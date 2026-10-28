@@ -133,3 +133,82 @@ test('A3V2-048 前提可由真实行囊满足：原题 setup 无 unmet，剩余�
  // 力量 10 → 30 公斤；剩余 = 30 - 已背 = 3。
  assert.equal(view.safeKg,30);assert.equal(view.spareKg,3);
 });
+
+// W8-E1 私田分批收割：背得动多少收多少，余下留在田地账户（原批次、原到期日），之后再收或到期腐烂。
+// 前提全用真实动作：新角色(力量10) + 前提行囊 4 份麦种、锄、镰 → 春天真实播种 2 亩 → 生长期只把积温推到差一天（同 s5-05）→ 真实时钟成熟。
+const FARM='private-farm:loc_hw_fields',CROP='loc_hw_fields|item_wheat_grain|crop';
+const farmWorld=await loadWorld(),farmSeed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+async function act(engine,document,tool,args,eventId){const out=await engine.reduce(document,{tool,args,eventId});return {document:applyPatches(document,out.patches),result:out.result};}
+async function ripeField(facts=[],modifier=1){
+ const {applyIntentSetup}=await import('../tools/a3-score.mjs');
+ const w=structuredClone(farmWorld);
+ // 已安装的产量修正（同 s5-05 的 economy:yield 用例），不新增内容或接口。
+ if(modifier!==1)w.derived.modifiers.push({id:'w8e1-field-yield',pack:'core',target:'economy:yield',stage:'mul',value:modifier,when:"subject == 'loc_hw_fields'"});
+ const engine=new WorldEngine(w),initial=engine.createCharacter(farmSeed,{},'w8e1-farm');
+ const setup=(document,s)=>{const out=applyIntentSetup(engine,document,s);assert.deepEqual(out.setupUnmet,[]);return out.document;};
+ let document=setup(initial,{location:'loc_hw_fields',inventory:{item_wheat_seed:4,item_hoe:1,item_sickle:1},facts:[
+  {path:['state','buildings'],value:{...initial.state.buildings,loc_hw_fields:{...initial.state.buildings.loc_hw_fields,owner:'player',condition:100}}},...facts(initial)]});
+ document=(await act(engine,document,'world_time',{minutes:6*1440},'spring')).document;
+ document=(await act(engine,document,'world_farm',{operation:'private_sow',areaMu:2,item:'item_wheat_seed'},'plant')).document;
+ const old=document.state.records[FARM],days=farmWorld.rules.agriculture.crop.growthDays-1;
+ document=setup(document,{facts:[{path:['state','records',FARM],value:{...old,grownDays:days,qualityDays:days,qualitySum:days}}]});
+ document=(await act(engine,document,'world_time',{minutes:2*1440},'ripen')).document;
+ assert.equal(document.state.records[FARM].status,'ready');
+ return {engine,document,setup};
+}
+const noFacts=()=>[];
+const {reconcile}=await import('./helpers/ledger-audit.mjs');
+
+test('私田分批收割：力量10背30公斤，已背4.6公斤，每份麦0.5公斤 → 收50份、田里剩250份，工时按收下的份额折算；满载再收被拒并给办法',async()=>{
+ const {engine,document:ripe}=await ripeField(noFacts);
+ // 手算：本存档种子下生长期天气不减产，2 亩 × 150 斤/亩 × 0.5 公斤/斤 ÷ 0.5 公斤/份 = 300 份（s5-05 同一路径，那里种子不同有一天减产得 299）。身上 = 新角色 2.6（干粮3×0.2+木杖1+包袱0.5+衣0.5）+ 锄1.5 + 镰0.5 = 4.6 公斤（麦种 4 份已全部播下）。
+ // 余力 30 − 4.6 = 25.4 → floor(25.4 / 0.5) = 50 份；剩 300 − 50 = 250 份。
+ // 工时：收割 1 工日/亩 × 2 亩 × 480 分钟 × 50/300 = 160 分钟。
+ assert.equal(ripe.state.records[FARM].yield,300);assert.equal(carryLoad(engine,ripe).carriedKg,4.6);
+ const out=await act(engine,ripe,'world_farm',{operation:'private_harvest'},'trip-1'),after=out.document,farm=after.state.records[FARM];
+ assert.equal(out.result.harvested,50);assert.equal(out.result.remaining,250);assert.equal(out.result.fieldStatus,'部分收割');assert.equal(out.result.reason,'背不动');
+ assert.match(out.result.note,/收下50份/);assert.match(out.result.note,/还剩250份/);assert.match(out.result.note,/搭手/);assert.match(out.result.note,/多跑几趟/);
+ assert.equal(out.result.laborMinutes,160);
+ assert.equal(farm.status,'ready','田里还有成熟作物，仍可再收');assert.equal(farm.harvestedQty,50);assert.equal(farm.expiresDay,ripe.state.records[FARM].expiresDay,'余下的到期日不变');
+ assert.equal(after.ledger.accounts[CROP],250);assert.equal(held(after.state.inventory,'item_wheat_grain'),50);
+ assert.ok(after.ledger.lots[CROP].every(l=>l.id.startsWith('private:')),'余下的仍是原私田批次');
+ assert.deepEqual(reconcile(engine,after).mismatches,[]);
+ // 满载：身上 4.6 + 25 = 29.6 公斤，余 0.4 < 0.5，一份也装不下 → 拒绝，零写入，回执给办法。
+ await assert.rejects(act(engine,after,'world_farm',{operation:'private_harvest'},'trip-full'),e=>/拿不动/.test(e.message)&&/还剩250份/.test(e.message)&&/连一份也装不下/.test(e.message));
+});
+
+test('分批收割后余下的到期照常腐烂：只腐烂田里剩下的 250 份，不重复扣已收的 50 份',async()=>{
+ const f=await ripeField(noFacts);
+ let document=(await act(f.engine,f.document,'world_farm',{operation:'private_harvest'},'trip-1')).document;
+ const old=document.state.records[FARM];assert.equal(old.harvestedQty,50);
+ // 到期日不是考查对象：把已成熟、部分收割的这一批设成今天到期（同 s5-05 腐烂用例）。
+ document=f.setup(document,{facts:[{path:['state','records',FARM],value:{...old,expiresDay:Math.floor(document.state.minute/1440)}}]});
+ const before=document,out=(await act(f.engine,before,'world_time',{minutes:1440},'decay')).document;
+ assert.equal(out.state.records[FARM].status,'rotted');assert.equal(out.ledger.accounts[CROP],0);
+ assert.equal((out.ledger.flows['sink:decay|item_wheat_grain|unharvested']??0)-(before.ledger.flows['sink:decay|item_wheat_grain|unharvested']??0),250);
+ assert.equal(held(out.state.inventory,'item_wheat_grain'),50,'已收进行囊的不受田间腐烂影响');
+ assert.deepEqual(reconcile(f.engine,out).mismatches,[]);
+});
+
+test('同伴到场搭手可多收：吴朔空手力量10余力30 → 第二趟收60份，剩190份',async()=>{
+ const f=await ripeField(noFacts);
+ let document=(await act(f.engine,f.document,'world_farm',{operation:'private_harvest'},'trip-1')).document;
+ // 吴朔作为同行同伴来到田里、空手：分担 30 公斤 → 余力 0.4 + 30 = 30.4 → floor(30.4/0.5) = 60 份；剩 250 − 60 = 190。
+ // 工时 960 × 60/300 = 192 分钟。
+ const npc=document.state.npcs[WUSHUO];
+ document=f.setup(document,{facts:[{path:['state','player','companions'],value:[WUSHUO]},{path:['state','npcs',WUSHUO],value:{...npc,location:'loc_hw_fields',inventory:{}}}]});
+ assert.equal(carryLoad(f.engine,document).helperKg,30);
+ const two=await act(f.engine,document,'world_farm',{operation:'private_harvest'},'trip-2');
+ assert.equal(two.result.harvested,60);assert.equal(two.result.remaining,190);assert.equal(two.result.laborMinutes,192);
+ assert.equal(two.document.state.records[FARM].harvestedQty,110);assert.equal(two.document.ledger.accounts[CROP],190);
+});
+
+test('背得动整季收成时一趟收完：产量修正 ×0.1 → 30 份 15 公斤 ≤ 余力 25.4，状态 harvested，工时为整块田 960 分钟',async()=>{
+ // 手算：300 × 0.1 = 30 份 × 0.5 = 15 公斤 ≤ 25.4；工时 1 工日/亩 × 2 亩 × 480 × 30/30 = 960。
+ const f=await ripeField(noFacts,0.1);assert.equal(f.document.state.records[FARM].yield,30);
+ const out=await act(f.engine,f.document,'world_farm',{operation:'private_harvest'},'whole');
+ assert.equal(out.result.harvested,30);assert.equal(out.result.remaining,0);assert.equal(out.result.fieldStatus,'已收完');assert.equal(out.result.reason,undefined);
+ assert.equal(out.result.laborMinutes,960);
+ assert.equal(out.document.state.records[FARM].status,'harvested');assert.equal(out.document.ledger.accounts[CROP]??0,0);
+ await assert.rejects(act(f.engine,out.document,'world_farm',{operation:'private_harvest'},'again'),/成熟/);
+});

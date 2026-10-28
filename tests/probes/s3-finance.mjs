@@ -5,6 +5,9 @@ import {once} from './harness.mjs';
 
 export const annualLoanScenario=once(async()=>{
  const f=fixture({coins:30000});
+ // W8-E1 负重：通用夹具行囊 265 公斤（木料 200 + 燕麦 50 + 面包 15）超安全负重 30 公斤，买面包入囊被拒。
+ // 本情境只向店家买 10 份面包，行囊原有货物都不用：只留面包 100 份 = 15 公斤。
+ f.doc.state.inventory={item_bread:{quantity:100}};
  // The host has 500 copper but the annual quote charges 507 in interest.
  // Pay for actual stock first so the live NPC decision can accept the terms.
  await f.act({seller:host,item:'item_bread',quantity:10},'annual-probe-buy-bread');

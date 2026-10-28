@@ -9,7 +9,7 @@ import {accountKey} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
 import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
 import {transferWaterState} from './water-volume.mjs';
-import {assertCanCarry} from './carry.mjs';
+import {assertCanCarry,packItemKg} from './carry.mjs';
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 // Harvested portions are minted only from an already conserved physical water
 // transfer. The feature volume and liquid_binding remain their authority.
@@ -57,8 +57,7 @@ export function changeItems(d,engine,owner,item,delta,{preserve=false,selection=
     // Exempt: a signed contract's goods coming back (escrow release, pledge return) and callers passing carryExempt
     // (a public project's material refund): what the player happens to be carrying must not block those.
     if(owner==='player'&&delta>0&&!carryExempt&&!/\|(escrow|pledge)$/.test(books?.account??'')){
-        const held=d.get(...engine.bagPath(owner),item);
-        assertCanCarry(d,engine,owner,delta*((typeof held==='object'?held?.weight:undefined)??engine.byId.get(item)?.weight??0),`${engine.byId.get(item)?.name??'物品'}×${delta}共`);
+        assertCanCarry(d,engine,owner,delta*packItemKg(d,engine,owner,item),`${engine.byId.get(item)?.name??'物品'}×${delta}共`);
     }
     const current=engine.quantity(d,owner,item),amount=current+delta;
     if(amount<0)throw preconditionFailure(`${engine.byId.get(owner)?.name??'你'}缺少${engine.byId.get(item)?.name}`);

@@ -22,6 +22,9 @@ const profit=f=>{const d=f.draft(),n=operatingProfit(d,f.e,host);d.done();return
 
 test('商号入股实际转资，按真实成交扣成本和税后利润分红，资本注入不算收入，股份可部分转让',async()=>{
     const f=fixture(),total=cash(f.doc);
+    // W8-E1 负重：夹具行囊原 265 公斤（木料 200 + 燕麦 50 + 面包 15），买回面包被拒。本用例只用玩家的面包（卖 16、买回 12），
+    // 保留面包 100 份 = 15 公斤，木料与燕麦不用、不带。
+    f.doc.state.inventory={item_bread:{quantity:100}};
     // 15 §15.2: the old 3-copper offer exceeds today's 1-copper market
     // range. Profit is still tested strictly positive, with real acquisition
     // cost: opening stock is an unrelated premise; buy twelve originals at

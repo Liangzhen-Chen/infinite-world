@@ -26,6 +26,8 @@ import {preservedSpoilage}from'./magic-economy.mjs';
 import {agriculturalEmployment} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
+import {carryRoomKg,safeCarryKg,carriedKg,carryHelpers} from './carry.mjs';
+import {reject} from './action-rejection.mjs';
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
@@ -34,10 +36,12 @@ const awake=n=>n&&!['濒死','睡眠','昏迷'].includes(n.status)&&!['睡觉','
 const profile=(engine,id)=>engine.rules.agriculture?.settlements.find(p=>p.settlement===id);
 const fieldAccount=(engine,id,item=engine.rules.agriculture.grainItem)=>cropAccount(engine,id,item);
 const cropLot=(id,day,expiresDay)=>({id,day,expiresDay,kind:'crop'});
+// A ripe private crop may be taken in several trips (W8-E1): harvestedQty counts what has left the field.
+const privateRemaining=farm=>farm.yield-(farm.harvestedQty??0);
 const remainingCrop=c=>c.grownFood-Math.floor(c.harvestedUnits*c.grownFood/c.areaUnits);
 registerLegacyStock('agriculture-fields',(engine,state,add)=>{
     for(const row of Object.values(state.records??{})){
-        if(row.category==='private_farm'&&row.status==='ready')add(fieldAccount(engine,row.location,row.crop),row.yield,[{...cropLot(`private:${row.seedEvent}`,row.readyDay,row.expiresDay),qty:row.yield}]);
+        if(row.category==='private_farm'&&row.status==='ready'){const qty=privateRemaining(row);add(fieldAccount(engine,row.location,row.crop),qty,[{...cropLot(`private:${row.seedEvent}`,row.readyDay,row.expiresDay),qty}]);}
         if(row.category==='agriculture')for(const c of row.field.cohorts)if(c.ready){const qty=remainingCrop(c);add(fieldAccount(engine,profile(engine,row.settlement).fieldLocation),qty,[{...cropLot(`public:${c.id}`,c.readyDay,c.expiresDay),qty}]);}
     }
 });
@@ -481,7 +485,10 @@ function privateFarmAction(d,engine,p,args,eventId){
     const fieldRule=domainRules(engine).privateField;
     const tool=useTool(d,engine,args.operation==='private_sow'?fieldRule?.sowRequiresUse:fieldRule?.harvestRequiresUse,Object.hasOwn(args,'tool')?args.tool:args.means?.tools?.[0]);
     if(!labor||!Number.isSafeInteger(workday)||!fieldRule||!tool)throw preconditionFailure('私田劳动数值未登记');
-    const laborMinutes=Math.ceil(areaMu*(args.operation==='private_sow'?labor.laborSow:labor.laborHarvest)*workday);
+    // Harvest takes only what the player and present helpers can carry (carry.mjs); the rest stays in the
+    // field account under its own lot and expiry. Labor is the same per-mu figure, on the share actually cut.
+    const plan=args.operation==='private_harvest'?harvestPlan(d,engine,old,item):null;
+    const laborMinutes=Math.ceil(areaMu*(args.operation==='private_sow'?labor.laborSow:labor.laborHarvest)*workday*(plan?plan.take:1)/(plan?old.yield:1));
     const started=d.get('state','minute');
     const work=()=>{
         const weather=weatherAt(engine,d.document.randomSeed,location,d.get('state','minute'));
@@ -528,9 +535,27 @@ function privateFarmAction(d,engine,p,args,eventId){
     if(!work())return{success:false,effectFailed:'工作完成前已失去私田履行条件'};
     const latest=d.get('state','records',id);
     if(latest.status!=='ready')return{success:false,note:'收割完成前作物已腐烂，未取得粮物'};
-    engine.itemDelta(d,'player',item,latest.yield,{account:fieldAccount(engine,location,latest.crop),pick:[`private:${latest.seedEvent}`],writer:'agriculture',eventId},{carryExempt:true}); // W8C: a season's whole yield arrives at once and there is no staging/partial harvest yet; refusing it would make farming impossible (follow-up: granary/partial harvest)
-    d.set(['state','records',id],{...latest,status:'harvested',harvestedAt:d.get('state','minute'),harvestEvent:eventId});
-    return{harvested:latest.yield,item,location,laborMinutes,elapsed:d.get('state','minute')-started};
+    const take=Math.min(plan.take,privateRemaining(latest));
+    engine.itemDelta(d,'player',item,take,{account:fieldAccount(engine,location,latest.crop),pick:[`private:${latest.seedEvent}`],writer:'agriculture',eventId});
+    const harvestedQty=(latest.harvestedQty??0)+take,remaining=latest.yield-harvestedQty;
+    d.set(['state','records',id],{...latest,status:remaining>0?'ready':'harvested',harvestedQty,harvestedAt:d.get('state','minute'),harvestEvent:eventId});
+    const out={harvested:take,remaining,fieldStatus:remaining>0?'部分收割':'已收完',item,location,laborMinutes,elapsed:d.get('state','minute')-started};
+    if(remaining>0)Object.assign(out,{reason:'背不动',note:`收下${take}份${engine.byId.get(item)?.name??''}（${round3(take*plan.unitKg)}公斤），田里还剩${remaining}份；再多就背不动了。可先放下或存放随身物品、请同伴或雇工搭手、借坐骑驮运，或多跑几趟回来再收；第${latest.expiresDay}日起未收的会腐烂`});
+    return out;
+}
+const round3=n=>Math.round(n*1000)/1000;
+// How many portions of a ripe private crop fit in the pack now; none at all is a rejection with alternatives.
+function harvestPlan(d,engine,farm,item){
+    const remaining=privateRemaining(farm),unitKg=engine.byId.get(item)?.weight??0;
+    const fits=unitKg>0?Math.floor((carryRoomKg(d,engine)+1e-9)/unitKg):remaining,take=Math.min(remaining,fits);
+    if(take<1){
+        const own=safeCarryKg(d,engine),load=carriedKg(d,engine),shared=carryHelpers(d,engine).reduce((sum,h)=>sum+h.kg,0);
+        reject('E-ACTION-PRECONDITION',`拿不动：田里还剩${remaining}份${engine.byId.get(item)?.name??'作物'}（每份${round3(unitKg)}公斤），你身上已有${round3(load)}公斤，安全负重${round3(own)}公斤${shared>0?`（同行搭手另可分担${round3(shared)}公斤）`:''}，连一份也装不下`,{
+            missing:[`至少${round3(unitKg)}公斤的空余承载力`],
+            repair:['先放下或存放一些随身物品再来收','请同行同伴或雇工搭手（须在身边且自己还有余力）','借坐骑驮运',`作物仍留在田里，第${farm.expiresDay}日起未收的会腐烂`],
+        });
+    }
+    return{take,unitKg};
 }
 function advancePrivateFarms(d,engine,settlement,day){
     const p=profile(engine,settlement),crop=engine.rules.agriculture.crop,item=engine.rules.agriculture.grainItem;
@@ -550,7 +575,7 @@ function advancePrivateFarms(d,engine,settlement,day){
             }
             if(farm.status==='ready'&&at>=farm.expiresDay){
                 const account=fieldAccount(engine,farm.location,farm.crop),resource=account.split('|')[1],eventId=`${farm.seedEvent}:rot:${at}`;
-                moveStock(d,{from:account,to:`sink:decay|${resource}|unharvested`,amount:farm.yield,pick:[`private:${farm.seedEvent}`],writer:'agriculture',eventId});
+                moveStock(d,{from:account,to:`sink:decay|${resource}|unharvested`,amount:privateRemaining(farm),pick:[`private:${farm.seedEvent}`],writer:'agriculture',eventId});
                 farm.status='rotted';farm.rottedDay=at;break;
             }
         }
