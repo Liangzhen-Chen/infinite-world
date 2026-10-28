@@ -1,4 +1,6 @@
 import {laborValue} from './market.mjs';
+import {installPhase1MarketQuote} from './compat/v2-phase1-engine.mjs';
+installPhase1MarketQuote(marketQuote);
 import {preconditionFailure} from './precondition.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {leaseClauses,leaseState,contractTerms,snapshotContractTerms} from './contract-state.mjs';

@@ -78,7 +78,10 @@ export function electionAction(d,args,id){
             observer=here(d,this,args.authority);if(targets.includes(observer))throw preconditionFailure('须另有被赠礼说法误导的在场人');
         }
         advanceWithNpcParticipants(d,this,30,id,[...targets,...observer?[observer]:[]]);
-        const check=this.check(d,{attribute:'魅力',difficulty:15},id),gain=action==='gift'?Math.min(10,2+Math.floor((goodsWorth(d,this,{item:gift,quantity:1,holder:'player'})??0)/5)):action==='buy_votes'?Math.min(20,Math.floor(coins/2)):check.success?6:-2;
+        const giftValue=gift?goodsWorth(d,this,{item:gift,quantity:1,holder:'player'}):undefined;
+        const unknown=gift&&giftValue===null?{value:null,unvaluable:'对方无法估值',valuationNote:'无从估价：对方无法估值，不计价值，只计心意。'}:{};
+        if(unknown.unvaluable)d.say(unknown.valuationNote);
+        const check=this.check(d,{attribute:'魅力',difficulty:15},id),gain=action==='gift'?(giftValue===null?2:Math.min(10,2+Math.floor(giftValue/5))):action==='buy_votes'?Math.min(20,Math.floor(coins/2)):check.success?6:-2;
         if(gift)transferItems(d,this,'player',targets[0],gift,1);
         const frauds=[...row.frauds];let disqualified=row.disqualified??false;
         if(coins){
@@ -93,7 +96,7 @@ export function electionAction(d,args,id){
             id:`campaign:${id}:${voter}`,kind:'campaign',sourceEvent:id,minute:d.get('state','minute'),location:d.get('state','location'),participants:['player',voter],sourceType:'亲历',
             content:args.content??(gift?'参选人当面送了礼物。':'参选人私下送钱求票。'),campaignSuccess:gain>0,...(coins?{private:true}:{})}]);
         holdingSet(d,null,path(row.id),{...row,frauds,disqualified,campaigns:[...row.campaigns,{action,targets,day:Math.floor(now/1440),content:args.content??null,gift,coins,check:check.success,sourceEvent:id}]},'elections');
-        return {election:row.id,targets,gain,success:check.success,spent:{minutes:30,item:gift,coins},worldEvent:{verb:'gift',target:targets[0],value:Math.max(0,gain),witnesses:targets,tags:['election',action]}};
+        return {election:row.id,targets,gain,success:check.success,...unknown,spent:{minutes:30,item:gift,coins},worldEvent:{verb:'gift',target:targets[0],value:Math.max(0,gain),...unknown,witnesses:targets,tags:['election',action]}};
     }
     if(args.operation!=='election_finish')throw preconditionFailure('未知竞选操作');
     if(now<row.due)throw preconditionFailure('尚未到投票日');

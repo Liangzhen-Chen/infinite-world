@@ -1,4 +1,4 @@
-import {laborValue} from './market.mjs';
+import {laborValue,marketQuote} from './market.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {recordsWhere} from './storage.mjs';
 
@@ -282,12 +282,12 @@ function settleShift(d,e,row,at){
         const supplier=d.get('state','npcs',row.supplier),business=personBusiness(e,s,row.supplier);
         let trip;
         try{trip=supplier?.location===row.location?0:e.route(row.location,supplier?.location,'walk',start,d.document.randomSeed).minutes*2;}catch{trip=Infinity;}
-        const price=e.byId.get(row.item)?.basePrice??0;
+        const price=marketQuote(d,e,{item:row.item,location:supplier?.location,seller:row.supplier,buyer:row.owner}).listPrice;
         // S1c: 供货人的库存与雇主现款读账户。
         const stock=supplier?bagStock(d,e,{point:'labor.stock',id:row.supplier,item:row.item,legacy:()=>{const held=supplier.inventory?.[row.item];return typeof held==='number'?held:held?.quantity??0;}}):0;
         quantity=Math.min(needed,stock,Math.floor((minutes-trip)/5),price?Math.floor(coinRead(d,{point:'labor.cash',account:partyAccount(e,d.get('state'),row.owner),legacy:()=>financeBalance(d,e,row.owner)})/price):0);
         if(!business?.open.value||quantity<=0||!Number.isFinite(trip)||trip>120){writeJob(d,e,{...row,status:'罢工',nextWork:at+DAY,reason:'补货来源或实际路程不可用'});return null;}
-        minutes=trip+quantity*5;const cost=price*quantity;
+        minutes=trip+quantity*5;const cost=marketQuote(d,e,{item:row.item,location:supplier.location,seller:row.supplier,buyer:row.owner,quantity}).totalCoins;
         financeTransfer(d,e,row.owner,row.supplier,cost,`${row.id}:${at}:stock`);transferItems(d,e,row.supplier,row.owner,row.item,quantity);
         production={supplier:row.supplier,item:row.item,quantity,cost,travelMinutes:trip};
     }else if(row.project){

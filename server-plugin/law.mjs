@@ -154,10 +154,12 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
 
     const row={category:suspicion?'legal_suspicion':'legal_case',...(suspicion?{private:true,visibility:'private',filingVersion:FILING_VERSION}:{}),id,law:code.id,...incidentNorms(d,engine,{offender,location,minute:now,offense,code}),
         procedureVersion:1,settlement:code.settlement??null,faction:code.faction??null,sourceEvent:eventId,witnesses:[...witnesses],offender,victim,offense,value,stolen,
+        ...(value===null?{unvaluable:'无法核定案值',valuationNote:'无从估价：无法核定案值，仅适用基础罚则，不加案值倍数；赔偿待核定。'}:{}),
         location,minute:now,status:officer?'已报案':'未报案',reported:Boolean(officer),evidence,
         ...(officer?{receiver:officer,reportedAt:now}:{})};
     if(officer)row.evidence=row.evidence.map(entry=>({...entry,testified:entry.witness===officer}));
     holdingSet(d,null,path(id),row,'law');
+    if(value===null)d.say?.(row.valuationNote);
     for(const witness of witnesses){
         if(!suspicion)knowledge(d,witness,id,now);
         if(!relationshipApplied&&witness===victim){
@@ -226,6 +228,7 @@ function submitFiling(d,engine,args,eventId){
 }
 function filingSubmissionResult(row){return {request:row.id,case:row.case,submitted:true,reported:true,accepted:null,convicted:false,filingSubmission:structuredClone(row),worldEvent:{verb:'claim',actor:row.actor,target:row.receiver,payload:row.payload,tags:['legal_request'],visibility:'private',participants:[row.actor,row.receiver]}};}
 function recordedFilingDecision(d,result,request,{fee=0,law=null,witnesses=[]}={}){
+ if(result.accepted&&d.get(...path(result.case),'value')===null){result={...result,unvaluable:'无法核定案值',valuationNote:'无从估价：无法核定案值，仅适用基础罚则，不加案值倍数；赔偿待核定。'};d.say(result.valuationNote);}
  return {...result,filingDecision:{version:FILING_VERSION,request:structuredClone(d.get(...path(request.id))),
   case:result.accepted?structuredClone(d.get(...path(result.case))):null,fee,law,witnesses,minute:d.get('state','minute'),result:structuredClone(result)}};
 }
@@ -299,6 +302,7 @@ function decideFiling(d,engine,args,eventId){
    ?{normSnapshot:structuredClone(prior.normSnapshot)}:incidentNorms(d,engine,{...a,code});
  const row=existing?{...prior,evidence:[...prior.evidence,...request.submittedEvidence],witnesses:[...new Set([...prior.witnesses??[],...witnesses])]}:
    {category:'legal_case',id:request.case,procedureVersion:1,filingVersion:FILING_VERSION,law:code.id,...a,...norms,
+   ...(a.value===null?{unvaluable:'无法核定案值',valuationNote:'无从估价：无法核定案值，仅适用基础罚则，不加案值倍数；赔偿待核定。'}:{}),
    settlement:code.settlement??null,faction:code.faction??null,sourceEvent:request.incident,reported:true,status:'已报案',stage:'pending',court:code.court,parties:[a.offender,a.victim].filter(Boolean),evidence:request.submittedEvidence,witnesses,receiver:args.authority,handlerOffice:office.id,reportedAt:s.minute,filingFee:fee,
    ...(prior?.npcCrime?{npcCrime:{...prior.npcCrime,statementsReceived:true},nextHearing:s.minute+code.hearingMinutes}:{})};
  if(prior?.category==='legal_suspicion')holdingSet(d,engine,path(`legal_suspicion:${request.incident}`),{...prior,id:`legal_suspicion:${request.incident}`},'law');
@@ -388,7 +392,7 @@ export function registerStolenPurchase(d,engine,{buyer,seller,item,instances,eve
  const witnesses=Object.entries(d.get('state','npcs')??{}).filter(([id,n])=>id!==buyer&&id!==seller&&n.location===location&&awake(n,d,id)).map(([id])=>id);
  return units.map((unit,index)=>{
   const origin=d.get('state','itemInstances',unit,'stolenOrigin');
-  const incident=registerIncident(d,engine,{offender:buyer,victim:origin.victim,offense:'receiving_stolen',value:goodsWorth(d,engine,{item,quantity:1,location,holder:buyer})??0,
+  const incident=registerIncident(d,engine,{offender:buyer,victim:origin.victim,offense:'receiving_stolen',value:goodsWorth(d,engine,{item,quantity:1,location,holder:buyer}),
    stolen:{item,quantity:1,unit},witnesses,eventId:`${eventId}:receiving:${index}`,location,code});
   holdingSet(d,null,['state','itemInstances',unit,'legalClaims'],[...d.get('state','itemInstances',unit,'legalClaims')??[],{case:incident,victim:origin.victim,minute:d.get('state','minute')}],'law');
   return incident;
@@ -404,9 +408,10 @@ export function registerFireDamage(d,engine,{building,damage,grain,origin,eventI
  if(!code||!codePenalty(engine,code,'negligent_fire'))return null;
  const id=`legal_case:${eventId}`;if(d.get(...path(id)))return id;
  // 案值：烧毁的粮按当地市场估值；建筑损伤按“受损前完整价值（租金资本化）× 损伤百分比”，不读目录基价。
- const grainItem=engine.rules.agriculture?.grainItem??'item_oats',intact=valuation(d,engine,{role:'property',subject:building,condition:100}).value??0;
- const value=(grain?goodsWorth(d,engine,{item:grainItem,quantity:grain,location:building,holder:null})??0:0)+Math.floor(intact*damage/100);
- if(!value)return null;
+ const grainItem=engine.rules.agriculture?.grainItem??'item_oats',intact=damage?valuation(d,engine,{role:'property',subject:building,condition:100}).value:0;
+ const grainValue=grain?goodsWorth(d,engine,{item:grainItem,quantity:grain,location:building,holder:null}):0;
+ const value=intact===null||grainValue===null?null:grainValue+Math.floor(intact*damage/100);
+ if(value===0)return null;
  registerIncident(d,engine,{victim,offender:fact.responsible,offense:'negligent_fire',value,witnesses:fact.witnesses??[],eventId,minute,location:building,code,relationshipApplied:true});
  const row=d.get(...path(id));holdingSet(d,null,path(id),{...row,fireOrigin:origin,building,evidence:[...row.evidence,{kind:'fire_fact',record:origin,damage:`facility_damage:${eventId.replace(/^facility_damage:/,'')}`} ]},'law');
  return id;
@@ -482,7 +487,7 @@ export function crimeAction(d,args,eventId){
             if(!held?.instances?.includes(args.instance)||unit?.owner!==victim||unit.item!==item||unit.status!=='持有')throw preconditionFailure('此单件不属于目标实际库存');
         }
         if((this.byId.get(item).weight??0)>this.rules.law.maximumTheftWeightKg)throw preconditionFailure('物品过重，不能用这一扒取动作');
-        value=goodsWorth(d,this,{item,quantity:1,holder:victim})??0;
+        value=goodsWorth(d,this,{item,quantity:1,holder:victim});
     }else{if(args.instance)throw preconditionFailure('钱币不能指定物品单件编号');amount=integer(args.coins,1,this.rules.law.maximumTheftCoins,'偷取铜币');if(actor.coins<amount)throw preconditionFailure('目标没有这么多钱');value=amount;}
     const result=this.check(d,{attribute:'敏捷',difficulty:15},eventId),witnesses=[];
 
@@ -515,7 +520,7 @@ export function crimeAction(d,args,eventId){
     }
     const incident=registerIncident(d,this,{victim,offense:success?'theft':'theft_attempt',value:success?value:0,stolen,witnesses,eventId,perception,optional:true});
     if(success)recordDisciplineBreach(d,this,'theft',eventId);
-    return{target:victim,case:incident,suspicion:incident,...result,checkSuccess:result.success,success,stolen,witnesses,...(perception?{perception}:{}),
+    return{target:victim,case:incident,suspicion:incident,...result,checkSuccess:result.success,success,stolen,witnesses,...(success&&value===null?{value:null,unvaluable:'无法核定案值',valuationNote:'无从估价：无法核定案值'}:{}),...(perception?{perception}:{}),
         actionScope:{kind:'theft',reported:d.get(...path(incident),'reported'),
             note:'仅已列目击者知情，异地执法人员尚不自动知道。失败无财物转移；还未审判、缴罚款或监禁。'}};
 }
@@ -583,13 +588,14 @@ export function advanceLaw(d,after,engine,recordIds){
 function localObservers(d){return Object.entries(d.get('state','npcs')??{}).filter(([id,npc])=>awake(npc,d,id)&&npc.location===d.get('state','location')).map(([id])=>id);}
 
 export function caseLoss(d,engine,row){
-    if(!row.victim)return null;
+    if(!row.victim||row.value===null&&row.lossAmount==null)return null;
     const source=row.lossSource??row.sourceEvent??row.id,id=row.loss??`loss:${source}`;
     return registerLoss(d,engine,{id,victim:row.victim,amount:row.lossAmount??row.value,source});
 }
 function deposit(d,engine,row,{fine=0,compensate=true}={}){
     const unit=row.stolen?.unit,record=unit?d.get('state','itemInstances',unit):null;
     const returnUnit=Boolean(compensate&&record?.owner==='player'&&record.status==='持有'&&d.get('state','inventory',record.item,'instances')?.includes(unit));
+    if(compensate&&row.value===null&&!returnUnit)throw preconditionFailure('无从估价：无法核定案值，赔偿待核定；不能按零元结清，可先处理罚则或返还原物。');
     const loss=compensate?caseLoss(d,engine,row):null;
     const compensation=compensate?returnUnit?0:loss?.remaining??row.value:0,total=fine+compensation;
     if(d.get('state','player','coins')<total)throw preconditionFailure('余额不足支付罚款和赔偿；可以选择劳役或服刑处理罚款，赔偿债务仍保留');
@@ -724,10 +730,12 @@ export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]
         }
         const penalty=modern&&row.normSnapshot?row.normSnapshot.penalty:casePenalty(row.normSnapshot,offensePenalty(engine,code,row.offense),row.value);if(!penalty)throw preconditionFailure('本案罪名没有判罚规则');
         if(!['maximumSentenceMinutes','communityMinutesPerCopper','prisonMinutesPerCopper'].every(k=>Number.isFinite(code[k])))throw preconditionFailure('适用法典未规定完整刑罚换算');
-        const baseFine=penalty.baseFine+Math.ceil(row.value*penalty.valueMultiplier),advocate=representationEffect(d,engine,row),fine=baseFine-Math.floor(baseFine*(advocate?.discount??0));
+        const unvaluable=row.value===null;
+        const baseFine=penalty.baseFine+(unvaluable?0:Math.ceil(row.value*penalty.valueMultiplier)),advocate=representationEffect(d,engine,row),fine=baseFine-Math.floor(baseFine*(advocate?.discount??0));
         const loss=row.victim&&!row.debt?caseLoss(d,engine,row):null;
         let judgment={...(modern?{sourceEvent:eventId,authoritySource:judge==='player'?'player_office':'npc_judicial_rules',evidence:scored}:{}),...(advocate?{advocate}:{}),judge,minute:d.get('state','minute'),fine,compensation:row.debt?obligationView(d.get('state'),row.debt)?.owed??row.value:loss?.remaining??0,evidenceScore:score,
             communityMinutes:Math.min(code.maximumSentenceMinutes,fine*code.communityMinutesPerCopper),prisonMinutes:Math.min(code.maximumSentenceMinutes,penalty.detentionMinutes??fine*code.prisonMinutesPerCopper)};
+        if(unvaluable)judgment={...judgment,compensation:null,unvaluable:'无法核定案值',valuationNote:'无从估价：无法核定案值，仅适用基础罚则，不加案值倍数；赔偿待核定。'};
         if(row.normSnapshot?.sentencing){const old=row.normSnapshot.sentencing;
             if(old.maximumSentenceMinutes!==undefined){judgment.communityMinutes=Math.min(judgment.communityMinutes,old.maximumSentenceMinutes);judgment.prisonMinutes=Math.min(judgment.prisonMinutes,old.maximumSentenceMinutes);}
             if(old.communityMinutesPerCopper!==undefined)judgment.communityMinutes=Math.min(judgment.communityMinutes,fine*old.communityMinutesPerCopper);
@@ -742,6 +750,7 @@ export function adjudicateLegalCase(d,engine,row,code,judge,eventId,observers=[]
             entityTransition(d,engine,{id:`${lockKey}:release`,verb:'release',actor:judge,target:subject,location:code.court,visibility:row.private?'private':row.visibility??'public',summary:`${personName(engine,d.get('state'),subject).value??subject}审结后解除待审羁押`});
         }
         const victim={id:row.victim,name:engine.byId.get(row.victim)?.name??row.victim};
+        if(unvaluable)return {case:row.id,convicted:true,victim,judgment,unvaluable:judgment.unvaluable,fineCalculation:{base:penalty.baseFine,value:null,multiplier:null,total:fine},factSummary:`无从估价：无法核定案值，仅按基础罚则${penalty.baseFine}铜，不加案值倍数；实罚${fine}铜，赔偿待核定。当前没有付款，也没有开始服役。`};
         return{case:row.id,convicted:true,victim,judgment,fineCalculation:{base:penalty.baseFine,value:row.value,multiplier:penalty.valueMultiplier,total:fine},
             factSummary:`受害人为${victim.name??'公共法益'}。罚款基额=${penalty.baseFine}铜+${row.value}铜×${penalty.valueMultiplier}=${baseFine}铜${advocate?`，代理量罚减免${baseFine-fine}铜`:' ' }；实罚${fine}铜，赔偿${judgment.compensation}铜另付。社区服役${judgment.communityMinutes}分钟，监禁${judgment.prisonMinutes}分钟。当前没有付款，也没有开始服役。`,
             note:'已裁判，尚未支付或开始服役；选择由玩家明确决定'};
