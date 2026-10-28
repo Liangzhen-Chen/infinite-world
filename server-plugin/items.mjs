@@ -459,3 +459,54 @@ export function validatePhysicalAction(d,engine,tool,args){
   });
  }
 }
+
+import {premisesStockKey,premisesStock,premisesInventory} from './stock.mjs';
+// Storage does not transfer legal ownership. Instance locations follow the goods.
+export function changePremisesItems(d,engine,owner,location,item,delta,{books,instances=null,properties=null}={}){
+ const key=premisesStockKey(owner,location),row=d.get('state','records',key)??{category:'premises_stock',owner,location,inventory:{}};
+ const old=row.inventory[item],quantity=(typeof old==='number'?old:old?.quantity??0)+delta;
+ if(!Number.isSafeInteger(delta)||quantity<0)throw preconditionFailure('工坊实际库存不足');
+ const units=old?.instances??[],removed=delta<0?units.slice(0,-delta):[];
+ const definition=engine.byId.get(item),next={...(typeof old==='object'?old:properties??{quality:definition.quality,durability:definition.durability,weight:definition.weight}),quantity,instances:delta<0?units.filter(id=>!removed.includes(id)):[...units,...instances??[]]};
+ const inventory={...row.inventory};if(quantity)inventory[item]=next;else delete inventory[item];
+ bookStock(d,engine,premisesStock(engine,owner,location,item),delta,books);
+ holdingSet(d,engine,['state','records',key],{...row,inventory},'items');
+ for(const id of removed){holdingSet(d,engine,['state','itemInstances',id],{...d.get('state','itemInstances',id),owner:null,status:'已消耗',consumedAt:d.get('state','minute')},'items');clearLocation(d,{entity:id,writer:'items'});}
+ return removed;
+}
+export function transferPremisesItems(d,engine,owner,location,item,quantity,direction,eventId){
+ count(quantity);if(!quantity||!['deposit','withdraw'].includes(direction))throw preconditionFailure('须指定正整数存取数量');
+ const account=premisesStock(engine,owner,location,item),books={account,writer:'items',eventId};
+ if(direction==='deposit'){
+  const properties=d.get(...engine.bagPath(owner),item);
+  const moved=changeItems(d,engine,owner,item,-quantity,{preserve:true,books});
+  changePremisesItems(d,engine,owner,location,item,quantity,{books:BOOKED,instances:moved.instances,properties:typeof properties==='object'?properties:null});
+  for(const id of moved.instances)setLocation(d,{entity:id,at:location,mode:'place',writer:'items',engine});
+ }else{
+  const held=premisesInventory(d.get('state'),owner,location)[item],available=typeof held==='number'?held:held?.quantity??0;
+  if(available<quantity)throw preconditionFailure('工坊实际库存不足');
+  const ids=(held?.instances??[]).slice(0,quantity);
+  if(owner==='player')assertCanCarry(d,engine,owner,quantity*(held?.weight??engine.byId.get(item)?.weight??0),'工坊取货');
+  const key=premisesStockKey(owner,location),row=d.get('state','records',key),inventory={...row.inventory};
+  if(available===quantity)delete inventory[item];else inventory[item]={...held,quantity:available-quantity,instances:(held?.instances??[]).filter(id=>!ids.includes(id))};
+  const existing=d.get(...engine.bagPath(owner),item);
+  changeItems(d,engine,owner,item,quantity,{books});
+  if(!existing&&typeof held==='object')d.set([...engine.bagPath(owner),item],{...held,quantity,instances:[]});
+  holdingSet(d,engine,['state','records',key],{...row,inventory},'items');
+  const path=[...engine.bagPath(owner),item,'instances'];d.set(path,[...d.get(...path)??[],...ids]);
+  for(const id of ids)setLocation(d,{entity:id,at:owner,mode:'carried',writer:'items',engine});
+ }
+ return {item,quantity,direction,location,inventory:premisesInventory(d.get('state'),owner,location)};
+}
+export function producePremisesItems(d,engine,owner,location,item,quantity,{eventId,recipe,workmanship,maker,books}){
+ count(quantity);if(quantity>200)throw preconditionFailure('单次制造产物超过处理上限，应拆分工序');
+ const definition=engine.byId.get(item),ids=[];
+ for(let index=0;index<quantity;index++){
+  const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
+  if(d.get('state','itemInstances',id))throw preconditionFailure('此次制造的单件编号已经存在，不能重复制造');
+  const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
+  holdingSet(d,engine,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:engine.byId.get(maker)?.name??maker,recipe,source:eventId,minute:d.get('state','minute'),quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'items');
+  setLocation(d,{entity:id,at:location,mode:'place',writer:'items',engine});ids.push(id);
+ }
+ changePremisesItems(d,engine,owner,location,item,quantity,{books,instances:ids});return ids;
+}

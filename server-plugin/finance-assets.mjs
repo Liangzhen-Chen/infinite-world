@@ -3,6 +3,9 @@ import {preconditionFailure} from './precondition.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {leaseClauses,leaseState,contractTerms,snapshotContractTerms} from './contract-state.mjs';
 import {counterpart} from './credit.mjs';
+import {requestContractConsent} from './action-consent.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {currentControllers} from './action-authority.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {adoptLegacyObligation} from './obligation-runtime.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
@@ -11,7 +14,7 @@ import {installEventWorth} from './world-events.mjs';
 import {explainDerived} from './derived.mjs';
 import {workshopFund,coinRead,partyAccount,dedicatedCoinAccount,counterCash,payFromCounter} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
-import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement} from './entity-view.mjs';
+import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement,settlementGovernment} from './entity-view.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
 import {facilityView} from './facility-state.mjs';
 import {marketQuote,supplyApart} from './market.mjs';
@@ -19,8 +22,8 @@ import {currencyRow,currencyTradePrice,currencyAccepted,currencyValue} from './c
 import {regionalTradeBase} from './settlement-trade.mjs';
 import {laborTrade,withAbsenceBreach} from './labor-market.mjs';
 import {standing} from './standing.mjs';
-import {changeItems,produceItems,heldUnit,wearItem} from './items.mjs';
-import {store,bag,bookStock,craftInput,craftOutput,recordCraft,priceRead,bagStock} from './stock.mjs';
+import {changeItems,produceItems,heldUnit,wearItem,changePremisesItems,producePremisesItems,transferPremisesItems} from './items.mjs';
+import {store,bag,bookStock,craftInput,craftOutput,recordCraft,priceRead,bagStock,premisesInventory} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 // S1b: 受雇制作（组织或个人库存）是 src:craft 制造守恒对：配方投入进 sink:consume，产出来自 src:craft。
 declareLedgerWriter('finance-assets',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
@@ -34,10 +37,14 @@ import {ASSET_OPERATIONS} from './finance-operations.mjs';
 export {ASSET_OPERATIONS};
 const all=d=>Object.values(d.get('state','records')??{}),base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
 const alive=(s,id)=>s.npcs?.[id]&&!['死亡','濒死','昏迷','患病'].includes(s.npcs[id].status);
-function ownsWorkshop(state,id,owner='player'){return state.buildings?.[id]?.owner===owner||state.buildings?.[id]?.owners?.[owner]>0||allState(state).some(r=>r.kind==='lease'&&r.subject===id&&r.parties?.[0]===owner&&r.status==='有效'&&r.deadline>state.minute);}
+function ownsWorkshop(state,id,owner='player',engine){
+    const leases=allState(state).filter(r=>r.kind==='asset_lease'&&r.subject===id&&engine&&leaseState(engine,state,r).active);
+    if(leases.some(r=>contractTerms(r,state.minute).tenant!==owner))return false;
+    return state.buildings?.[id]?.owner===owner||state.buildings?.[id]?.owners?.[owner]>0||leases.some(r=>contractTerms(r,state.minute).tenant===owner&&leaseState(engine,state,r).factor>0)||allState(state).some(r=>r.kind==='lease'&&r.subject===id&&r.parties?.[0]===owner&&r.status==='有效'&&r.deadline>state.minute);
+}
 function ownedPlace(d,e,args,allowLease=false){
     const id=e.resolve(args.location??d.get('state','location')),place=base(e,d.get('state'),id),asset=d.get('state','buildings',id);
-    if(id!==d.get('state','location')||!place||!(allowLease?ownsWorkshop(d.get('state'),id):asset?.owner==='player')||asset?.condition<=0)throw preconditionFailure('须在本人合法持有且完好的房屋、田地或铺面签约');
+    if(id!==d.get('state','location')||!place||!(allowLease?ownsWorkshop(d.get('state'),id,'player',e):asset?.owner==='player')||asset?.condition<=0)throw preconditionFailure('须在本人合法持有且完好的房屋、田地或铺面签约');
     return {id,place,asset};
 }
 export function rentalNeed(e,state,tenant,subject){
@@ -203,6 +210,7 @@ export function changeEmploymentStock(d,e,owner,item,delta,eventId,books){
 // Shared F1 production: validate the complete batch before consuming anything.
 export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}={}){
     const s=d.get('state'),recipe=base(e,s,row.recipe),owner=row.owner??'player';
+    const premises=owner==='player'&&ownsWorkshop(s,row.location,owner,e),inventory=premises?premisesInventory(s,owner,row.location):null;
     if(!recipe?.materials?.length||!recipe.output)return {reason:'配方已不可用'};
     const skill=workerSkill(e,s,row.worker,recipe),facility=facilityView(e,s,row.location);
     if(skill<(recipe.minimumProficiency??0))return {reason:'当前技能不足'};
@@ -210,7 +218,7 @@ export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}=
     const toolsOwner=employmentAccount(d,e,owner)||s.records?.[`protocol_assets:${owner}`]?row.worker:owner;
     let batches=Math.min(50,Math.floor(minutes/recipe.minutes*(1+skill/3000)),Math.floor(200/recipe.output.quantity),maximum);
     for(const p of recipe.byproducts??[])batches=Math.min(batches,Math.floor(200/p.amount));
-    for(const m of recipe.materials)batches=Math.min(batches,Math.floor(employmentStock(d,e,owner,m.item)/m.amount));
+    for(const m of recipe.materials){const held=inventory?.[m.item];const stock=premises?(typeof held==='number'?held:held?.quantity??0):employmentStock(d,e,owner,m.item);batches=Math.min(batches,Math.floor(stock/m.amount));}
     for(const tool of recipe.tools??[]){const held=heldUnit(d,e,toolsOwner,tool);if(!held||(held.durability??e.byId.get(tool)?.durability)<=0)return {reason:'缺少完好工具'};batches=Math.min(batches,Math.floor((held.durability??e.byId.get(tool)?.durability)/Math.max(1,recipe.toolWear??1)));}
     const place=base(e,s,row.location),station=recipe.workstation?(facility?.workstations??place?.workstations)?.find(st=>st.kind===recipe.workstation):null;
     if(recipe.location&&recipe.location!==row.location||recipe.workstation&&(!station||station.access!=='public'&&station.owner!==owner))return {reason:'工作台使用权已失效'};
@@ -218,25 +226,34 @@ export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}=
     const fee=station?.owner===owner?0:(station?.fee??0)*batches;
     if(financeBalance(d,e,owner)<fee)return {reason:'工作台费用不足'};
     const quality=skill>=2100?'杰作':skill>=1500?'优秀':skill>=900?'精良':skill>=300?'普通':'粗糙';
-    return {recipe,owner,toolsOwner,skill,batches,fee,station,quality};
+    return {recipe,owner,toolsOwner,skill,batches,fee,station,quality,premises};
 }
 export function settleEmploymentProduction(d,e,row,at,plan){
-    const {recipe,owner,toolsOwner,skill,batches,fee,station,quality}=plan,eventId=`${row.id}:${at}`;
+    const {recipe,owner,toolsOwner,skill,batches,fee,station,quality,premises}=plan,eventId=`${row.id}:${at}`;
     if(fee){if(station.owner)financeTransfer(d,e,owner,station.owner,fee,`${eventId}:station`);else{financeChange(d,e,owner,-fee,`${eventId}:station`,{account:workshopFund(station.id),writer:'finance-bank',eventId});d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}}
-    for(const m of recipe.materials)changeEmploymentStock(d,e,owner,m.item,-m.amount*batches,eventId,craftInput('finance-assets',eventId));
+    for(const m of recipe.materials){if(premises)changePremisesItems(d,e,owner,row.location,m.item,-m.amount*batches,{books:craftInput('finance-assets',eventId)});else changeEmploymentStock(d,e,owner,m.item,-m.amount*batches,eventId,craftInput('finance-assets',eventId));}
     for(const tool of recipe.tools??[])wearItem(d,e,toolsOwner,tool,(recipe.toolWear??1)*batches);
     const instances=[],products=[recipe.output,...(recipe.byproducts??[]).map(p=>({item:p.item,quantity:p.amount}))];
     for(const p of products){
-        if(employmentAccount(d,e,owner)||d.get('state','records',`protocol_assets:${owner}`))changeEmploymentStock(d,e,owner,p.item,p.quantity*batches,eventId,craftOutput('finance-assets',eventId));
+        if(premises)instances.push(...producePremisesItems(d,e,owner,row.location,p.item,p.quantity*batches,{eventId,recipe:recipe.id,workmanship:quality,maker:row.worker,books:craftOutput('finance-assets',eventId)}));
+        else if(employmentAccount(d,e,owner)||d.get('state','records',`protocol_assets:${owner}`))changeEmploymentStock(d,e,owner,p.item,p.quantity*batches,eventId,craftOutput('finance-assets',eventId));
         else instances.push(...produceItems(d,e,p.item,p.quantity*batches,{eventId,recipe:recipe.id,workmanship:quality,owner,maker:row.worker,books:craftOutput('finance-assets',eventId)}));
     }
     recordCraft(d,{recipe:recipe.id,batches,inputs:Object.fromEntries(recipe.materials.map(m=>[m.item,m.amount*batches])),outputs:Object.fromEntries(products.map(p=>[p.item,p.quantity*batches])),writer:'finance-assets',eventId});
     return {minute:at,fee,batches,quality,skill,instances,quantity:recipe.output.quantity*batches};
 }
 function fairWage(e,s,worker,recipe){return laborValue(e,{state:s},{worker,observer:'player',proficiency:workerSkill(e,s,worker,recipe)}).daily;}
+export function workshopStorage(d,e,args,eventId){
+    const {id:location,place}=ownedPlace(d,e,args,true);
+    if(!place.workstations?.length)throw preconditionFailure('这里没有登记工坊工作台');
+    if(args.direction==='inspect')return {location,inventory:premisesInventory(d.get('state'),'player',location)};
+    const item=e.resolve(args.item,'item');
+    return transferPremisesItems(d,e,'player',location,item,args.quantity,args.direction,eventId);
+}
 export function assetTrade(d,e,args,id){
     if(args.operation?.startsWith('labor_'))return laborTrade(d,e,args,id);
     const op=args.operation,state=d.get('state'),now=state.minute,location=state.location;
+    if(op==='workshop_stock')return workshopStorage(d,e,{...args,direction:args.mode??'inspect'},id);
     if(op==='dismiss'&&state.records?.[args.contract]?.kind==='asset_lease')return terminateAssetLease(d,e,{contract:args.contract,actor:'player'},id);
     if(op==='asset_inspect'){
         const subject=args.location?e.resolve(args.location):location;
@@ -271,6 +288,63 @@ export function assetTrade(d,e,args,id){
         const part=share/row.share,transferred=snapshotContractTerms({...row,clauses:undefined,amendments:[],id:`equity:${id}`,holder:buyer,share,stake:Math.floor(row.stake*part),distributed:Math.floor(row.distributed*part),source:id,liability:row.liability?{...row.liability,holder:buyer,contribution:Math.floor(row.stake*part),consentEvent:id,signedAt:now}:undefined});
         holdingSet(d,e,rec(row.id),{...row,share:row.share-share,stake:row.stake-transferred.stake,distributed:row.distributed-transferred.distributed,...(share===row.share?{endedAt:now}:{}),amendments:[...row.amendments??[],{minute:now,share:row.share-share,stake:row.stake-transferred.stake}],status:share===row.share?'已转让':'有效'},'finance-assets');holdingSet(d,e,rec(transferred.id),transferred,'finance-assets');
         return {contract:transferred.id,buyer,share,cost};
+    }
+    if(op==='rent_in'){
+        const subject=e.resolve(args.location??location),place=base(e,state,subject),profile=e.rules.agriculture?.settlements.find(p=>p.fieldLocation===subject);
+        const feature=profile&&place?.features?.find(f=>f.growth?.field===profile.fieldId);
+        const nativeTitle=Object.values(d.document.holdings?.rows??{}).some(r=>r.kind==='owns'&&r.subject===subject);
+        const title=Object.hasOwn(state.buildings?.[subject]??{},'owner')||nativeTitle?subject:feature?.id??subject;
+        const owners=currentControllers({engine:e,document:d.document},title,{ownerOnly:true,principals:true});
+        if(owners.length!==1||owners[0]==='player')throw preconditionFailure('须有唯一的他人登记持有人才能租入；可请持有人先核清产权');
+        const owner=owners[0],collective=Boolean(state.settlements?.[owner]);
+        let signatory=owner,government;
+        if(collective){
+            government=settlementGovernment(e,state,owner);
+            const office=government.head.value&&personOffices(e,state,government.head.value,{settlement:owner,power:'public_property'})[0];
+            if(!office)throw preconditionFailure('集体田地当前没有具备批地、公产管理职权的在任者；登记或主持会议不能代替授权，请待合法任职或授权后再来');
+            signatory=office.value.holder;
+        }
+        if(location!==subject&&(!collective||location!==government.seat.value))throw preconditionFailure('租入须到资产所在地，集体田也可到该聚落议事登记处当面办理');
+        if(state.npcs?.[signatory]?.location!==location)throw preconditionFailure('持有人或有权在任者不在场，不能代其出租；请等其到场或前往其合法办理地点');
+        // Presence/capacity is checked separately from the NPC's decision below;
+        // the caller's consent flag never supplies the landlord's agreement.
+        counterpart(d,e,signatory,{consent:true});
+        if(state.buildings?.[subject]?.condition<=0)throw preconditionFailure('资产已毁损，不能出租');
+        if(all(d).some(r=>r.kind==='asset_lease'&&contractTerms(r,now).subject===subject&&leaseState(e,state,r,now).active))throw preconditionFailure('资产已有有效租约，不能重复出租');
+        const use=profile?'field':/铺|店|商|工坊/.test(place?.purpose??place?.name)?'commercial':'home';
+        const days=int(args.days??30,1,360,'租赁天数'),anchor=e.rules.economy.rentalCopperPerWeek*4*(use==='commercial'?2:1);
+        const rent=int(args.coins??anchor,Math.ceil(anchor*.8),Math.ceil(anchor*1.5),'每月租金'),initial=Math.ceil(rent*Math.min(days,30)/30);
+        let paid=initial,rentDueAt,agreement,deferredRefusal;
+        if(args.deadline!==undefined){
+            const due=int(args.deadline,now+1,now+days*DAY-1,'约定交租时刻');
+            // Only the landlord's known repayments and outstanding personal
+            // claims inform credit capacity; never inspect the tenant's purse.
+            const view=subjectiveView(e,d.document,signatory),known=view.self.obligations.filter(o=>o.debtor==='player');
+            const repaid=known.reduce((n,o)=>n+(o.paid??0),0),owed=known.reduce((n,o)=>n+Math.max(0,(o.amount??0)-(o.paid??0)),0);
+            // Count the same whole rental periods as rentDue, including the
+            // final partial period; a short deferral still exposes the first bill.
+            const exposure=Math.ceil(rent*Math.min(days,Math.ceil((due-now)/MONTH)*30)/30);
+            const risk=Math.max(0,exposure-Math.max(0,repaid-owed))/Math.max(1,exposure);
+            agreement=requestContractConsent(d,e,{from:signatory,scope:'rent',subject,terms:{amount:rent,days,location:subject,prepayment:0,deadline:due},cost:{value:anchor*Math.min(days,30)/30,risk},reward:initial,eventId:id});
+            if(agreement.allowed){paid=0;rentDueAt=due;}else deferredRefusal=agreement.reason;
+        }
+        if(rentDueAt===undefined){
+            if(financeBalance(d,e,'player')<paid)throw preconditionFailure(`${deferredRefusal?`出租人未接受延期交租：${deferredRefusal}；只能现付。`:''}付不起首期租金，可缩短租期或先筹钱`);
+            agreement=requestContractConsent(d,e,{from:signatory,scope:'rent',subject,terms:{amount:rent,days,location:subject,prepayment:paid},cost:{value:anchor*Math.min(days,30)/30},reward:paid,eventId:id});
+        }
+        if(!agreement.allowed)throw preconditionFailure(`出租人未同意本次租约：${agreement.reason}；可稍后重新商议`);
+        if(paid)financeTransfer(d,e,'player',owner,paid,id);
+        const key=`asset_lease:${id}`,row={category:'contract',kind:'asset_lease',id:key,subject,tenant:'player',owner,use,settlement:placeSettlement(e,state,subject).value,
+            monthlyRent:rent,paid,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id,signatory,consentEvent:agreement.source,...(rentDueAt!==undefined?{rentDueAt}:{})};
+        row.clauses=leaseClauses(row);holdingSet(d,e,rec(key),row,'finance-assets');
+        let debt;
+        if(rentDueAt!==undefined){
+            debt=`debt_rent:${key}:${now}`;
+            openClaim(d,e,debt,{category:'debt',kind:'rent',debtor:'player',creditor:owner,amount:initial,paid:0,status:'待偿还',createdAt:now,dueAt:rentDueAt,deadline:rentDueAt+e.rules.economy.credit.loan.defaultGraceMinutes,source:id,contract:key,location});
+        }
+        return {contract:key,subject,owner,signatory,tenant:'player',rent,paid,deadline:row.deadline,consent:agreement.source,
+            ...(rentDueAt!==undefined?{rentDueAt,debt}:{}),...(deferredRefusal?{deferredRefusal,notePayment:`延期未获同意：${deferredRefusal}；已改为现付。`}:{}),
+            ...(use==='field'?{note:'租期内作物归承租人，须在到期前收走；到期后未收作物留田归田主。'}:{})};
     }
     if(op==='rent_out'){
         const {id:subject}=ownedPlace(d,e,args),tenant=counterpart(d,e,args.seller,{consent:args.consent}),need=rentalNeed(e,state,tenant,subject);
@@ -322,14 +396,15 @@ function rentDue(d,e,row,at){
     const terms=leaseState(e,d.get('state'),row,at),owner=contractTerms(row,at).owner??'player',state=d.get('state');
     const key=`debt_rent:${row.id}:${at}`,amount=Math.ceil(terms.monthlyRent*Math.min(MONTH,terms.clauses.expires-at)/MONTH);
     // §15.1.1：房客与业主不在同处时租金不凭空转账，形成到期应付，等当面、代收或寄汇清偿。
-    const present=settlementPresent(e,state,payerAt(e,state,row.tenant),owner),paid=present?Math.min(amount,financeBalance(d,e,row.tenant)):0;
+    const deferred=terms.clauses.rentDueAt!==undefined&&at<terms.clauses.rentDueAt;
+    const present=settlementPresent(e,state,payerAt(e,state,row.tenant),owner),paid=!deferred&&present?Math.min(amount,financeBalance(d,e,row.tenant)):0;
     if(paid)financeTransfer(d,e,row.tenant,owner,paid,key);
     if(paid<amount){
-        const debt={category:'debt',kind:'rent',debtor:row.tenant,creditor:owner,amount,paid,status:'待偿还',createdAt:at,deadline:at+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location,...(present?{}:{unpresented:true})};holdingSet(d,e,rec(key),debt,'finance-assets');
+        const debt={category:'debt',kind:'rent',debtor:row.tenant,creditor:owner,amount,paid,status:'待偿还',createdAt:at,deadline:(deferred?terms.clauses.rentDueAt:at)+e.rules.economy.credit.loan.defaultGraceMinutes,source:row.source,contract:row.id,location:row.location,...(deferred?{dueAt:terms.clauses.rentDueAt}:present?{}:{unpresented:true})};holdingSet(d,e,rec(key),debt,'finance-assets');
         adoptLegacyObligation(d,e,key);
     }
     holdingSet(d,e,rec(row.id),{...row,paid:row.paid+paid,nextRent:at+MONTH},'finance-assets');
-    financeEvent(d,e,{id:key,actor:row.tenant,target:'player',value:paid,minute:at,location:row.location,tags:['rent']});
+    financeEvent(d,e,{id:key,actor:row.tenant,target:owner,value:paid,minute:at,location:row.location,tags:['rent']});
 }
 function workshopShift(d,e,row,at){
     row=contractTerms(row,at);const owner=row.owner??'player';
@@ -346,7 +421,7 @@ function workshopShift(d,e,row,at){
     if(!minutes){holdingSet(d,e,rec(row.id),{...withAbsenceBreach(row,{at,start}),nextWork:at+DAY,reason:'没有实际到岗工时'},'finance-assets');return;}
     try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540,kind:'employment'});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}
     catch(error){if(!/冲突|自主工作/.test(error.message))throw error;return end('罢工','本班与已有义务冲突');}
-    if(!ownsWorkshop(s,row.location,owner)||s.buildings?.[row.location]?.condition<=0)return end('罢工','工坊产权或状态不再可用');
+    if(!ownsWorkshop(s,row.location,owner,e)||s.buildings?.[row.location]?.condition<=0)return end('罢工','工坊产权或状态不再可用');
     if(row.wage<wage&&row.raiseRequestedAt)return end('罢工','加薪要求尚未解决');
     // Day wage pro rata to the minutes worked; the cumulative units make the rounding exact (never more than the wage per day).
     const units=row.wageUnits??0,total=units+row.wage*minutes,earned=Math.ceil(total/480)-Math.ceil(units/480);
@@ -370,7 +445,13 @@ export function advanceFinanceAssets(d,e,minute,recordIds){
         if(initial.kind==='asset_lease'&&leaseState(e,d.get('state'),initial,leaseClauses(initial).starts).active){
             const expires=leaseClauses(initial).expires;
             for(let at=initial.nextRent;at<=minute&&at<expires;at+=MONTH)rentDue(d,e,d.get(...rec(initial.id)),at);
-            if(minute>=expires)changeLegacyHoldings(d,e,{holder:initial.tenant,source:`contract:${initial.id}`,reason:'expired',eventId:`${initial.id}:expired`},()=>holdingSet(d,e,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:expires},'finance-assets'));
+            if(minute>=expires){
+                // Uncollected crops stay on the land for its registered owner;
+                // ending a lease changes title, not physical stock or its lot.
+                const farmKey=`private-farm:${initial.subject}`,farm=d.get(...rec(farmKey));
+                if(farm?.lease===initial.id&&['growing','ready'].includes(farm.status))d.set(rec(farmKey),{...farm,owner:initial.owner});
+                changeLegacyHoldings(d,e,{holder:initial.tenant,source:`contract:${initial.id}`,reason:'expired',eventId:`${initial.id}:expired`},()=>holdingSet(d,e,rec(initial.id),{...d.get(...rec(initial.id)),status:'已到期',endedAt:expires},'finance-assets'));
+            }
         }
         if(initial.kind==='workshop'&&!initial.laborMarket&&['有效','要求加薪','罢工'].includes(initial.status)){
             for(let at=initial.nextWork;at<=minute&&at<contractTerms(initial,at).deadline;at+=DAY){const row=contractTerms(d.get(...rec(initial.id)),at);if(row.endedAt!==undefined||row.resolvedAt!==undefined||!['有效','要求加薪','罢工'].includes(row.status))break;workshopShift(d,e,row,at);}

@@ -106,7 +106,13 @@ test('产地约束：本地产出须在本聚落，到货须来自产地且路�
     assert.equal(qty(f.doc,host,'item_ration'),2);assert.equal(f.doc.state.npcs[host].coins,coins-4);assert.equal(f.doc.state.settlements[town].treasury,treasury+3);
     const iron=ledger(f.doc,'shop_hw_forge').entries.find(e=>e.item==='item_iron');
     assert.deepEqual([iron.source,iron.added,iron.paidCopper],['settlement',3,3*ironPrice],'聚落只放出保留量以上的铁料，按实际材料行情支付');assert.equal(f.doc.state.settlements.loc_hw.iron,2);
-    assert.equal(f.doc.state.npcs[smith].coins,smithCoins-3*ironPrice);assert.equal(qty(f.doc,smith,'item_iron'),3);
+    // W8-E8's approved rural-tool shelf also buys one sickle here: baseline10
+    // * upper scarcity2 * neutral other factors * markup1 = 20 copper.
+    // Preserve the original purse/source guarantee, including this real bill.
+    const sickle=ledger(f.doc,'shop_hw_forge').entries.find(e=>e.item==='item_sickle');
+    assert.deepEqual([sickle.source,sickle.added,sickle.paidCopper],['local',1,20]);
+    assert.equal(qty(f.doc,smith,'item_sickle'),1);
+    assert.equal(f.doc.state.npcs[smith].coins,smithCoins-3*ironPrice-20);assert.equal(qty(f.doc,smith,'item_iron'),3);
     assert.equal(cash(f.doc),total-1,'铜钱守恒：仅挑夫运费 1 铜经 sink:export 离开模拟经济（口径见上），其余每文都有对手方');
 
     // No producing settlement in this campaign: nothing arrives, the refusal is on the ledger.

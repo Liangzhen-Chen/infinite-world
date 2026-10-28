@@ -53,7 +53,7 @@ function officeFact(engine,state,key,row,override=true){
     const head=row.office==='office_village_head';
     const foundingName=!override&&!state.records?.[`settlement_rank:${row.settlement}`]?baseOf(engine,state,row.holder)?.occupation:null;
     return fact({...row,name:foundingName??ranked.name,monthlyQuotaD:ranked.monthlyQuotaD??0,monthlyBudgetCopper:override?ranked.monthlyBudgetCopper??0:0,
-        taxBps:override?ranked.taxBps??null:null,powers:override?[...ranked.powers??[],...(head?['chair','register']:[])]:['quest_publish','chair','register'],workplace:row.workplace??gov.seat.value,
+        taxBps:override?ranked.taxBps??null:null,powers:override?[...ranked.powers??[],...(head?['chair','register']:[])]:['quest_publish','chair','register',...(def.powers??[]).filter(p=>p==='public_property')],workplace:row.workplace??gov.seat.value,
         monthlySalaryCopper:engine.rules.governance?.salaries?.monthlyCopper?.[row.office]?.[adminLevel(engine,state,row.settlement)?.level??'村']??0},
         `${override?`state.records.${key}`:gov.head.source} + rules.governance.authority.offices.${row.office} + promotion + rules.governance.salaries`,override);
 }
@@ -509,7 +509,7 @@ export function settlementGovernment(engine,state,id){
     const seat=row?.workplace??g?.meetingPlace??ag?.counter??baseOf(engine,state,remote?.holder)?.location??id;
     const seatSource=row?.workplace?`state.records.${current[0]}.workplace`:g?.meetingPlace?`catalog.${id}.details.governance.meetingPlace`:ag?.counter?`rules.agriculture.${id}.counter`:generated?.source??`catalog.${id}`;
     return {head,
-        powers:fact(active?office?.powers??[]:head.value?g?.permissions?.head??[]:[],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions`,Boolean(current)),
+        powers:fact([...(active?office?.powers??[]:head.value?g?.permissions?.head??[]:[]),...(!active&&head.value?(engine.rules.governance?.authority?.offices?.office_village_head?.powers??[]).filter(p=>p==='public_property'):[])],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions + rules.governance.authority.offices`,Boolean(current)),
         appointment:fact(row??g?.appointment,current?`state.records.${current[0]}`:`catalog.${id}.details.governance.appointment`,Boolean(current)),
         enforcers:fact((g?.enforcers??[]).filter(eligible),`catalog.${id}.details.governance + legal dismissals`),
         seat:fact(seat,seatSource,Boolean(row?.workplace)),source:fact(row?.source??g?.appointment?.source??generated?.source??head.source,head.source,Boolean(current))};

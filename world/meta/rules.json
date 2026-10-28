@@ -989,8 +989,12 @@
             "quest_publish",
             "housing",
             "tax",
-            "steward"
+            "steward",
+            "public_property"
           ],
+          "powerSources": {
+            "public_property": "公产使用与出租；05:129、05 §5.7.3：聚落行为经首领或相关职位的现任持有人执行，财产仍归聚落。"
+          },
           "keeps": {
             "formerHead": "原头人仍按本村法典审理财物案、在登记柜台办户籍"
           },
@@ -1902,6 +1906,13 @@
               "source": "local",
               "amount": 1,
               "maximum": 2
+            },
+            {
+              "item": "item_sickle",
+              "source": "local",
+              "amount": 1,
+              "maximum": 2,
+              "basis": "W8-E8：乡村铁匠铺常备农具；铁镰已在目录（审批管线）"
             },
             {
               "item": "item_steel_arming_sword",

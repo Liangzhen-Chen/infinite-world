@@ -30,6 +30,7 @@ import {recordTillage,tillageArea,cultivationRule} from './environment-state.mjs
 const hectareM2=engine=>cultivationRule(engine)?.squareMetresPerHectare??10000;
 import {carryRoomKg,safeCarryKg,carriedKg,carryHelpers} from './carry.mjs';
 import {reject} from './action-rejection.mjs';
+import {leaseState,contractTerms} from './contract-state.mjs';
 
 const key=id=>`agriculture:${id}`,path=id=>['state','records',key(id)];
 const clone=value=>structuredClone(value);
@@ -483,12 +484,17 @@ installFacilityRuntime({damageStoredGrain});
 // never harvest them. Ownership is read at the action, not granted by sowing.
 function privateFarmAction(d,engine,p,args,eventId){
     const location=args.location??p.fieldLocation,asset=d.get('state','buildings',location),id=`private-farm:${location}`;
-    if(location!==p.fieldLocation||d.get('state','location')!==location||asset?.owner!=='player'||asset.condition<=0)throw preconditionFailure('须在本人合法持有且完好的登记田地操作');
-    if(Object.values(d.get('state','records')??{}).some(r=>r.kind==='asset_lease'&&r.subject===location&&r.tenant!=='player'&&r.status==='有效'&&r.deadline>d.get('state','minute')))throw preconditionFailure('田地已有他人的有效租赁使用权，不能重复占用');
+    const leases=()=>Object.values(d.get('state','records')??{}).filter(r=>r.kind==='asset_lease'&&contractTerms(r,d.get('state','minute')).subject===location&&leaseState(engine,d.get('state'),r).active);
+    const tenantLease=leases().find(r=>contractTerms(r,d.get('state','minute')).tenant==='player');
+    const mayFarm=()=>d.get('state','buildings',location)?.owner==='player'||leases().some(r=>contractTerms(r,d.get('state','minute')).tenant==='player'&&leaseState(engine,d.get('state'),r).factor>0);
+    const leaseNote=tenantLease?`租期内作物归承租人，须在租约到期（第${Math.floor(leaseState(engine,d.get('state'),tenantLease).clauses.expires/1440)}日）前收走；到期后未收作物留田随田主。`:undefined;
+    if(location!==p.fieldLocation||d.get('state','location')!==location||!mayFarm()||asset?.condition<=0)throw preconditionFailure('须在本人合法持有且完好的登记田地操作（本人持有或有效承租）');
+    if(leases().some(r=>contractTerms(r,d.get('state','minute')).tenant!=='player'))throw preconditionFailure('田地已有他人的有效租赁使用权，不能重复占用');
     const old=d.get('state','records',id),day=Math.floor(d.get('state','minute')/1440),crop=engine.rules.agriculture.crop;
     const crops=domainRules(engine).privateField.crops,seedItem=args.operation==='private_sow'?(args.item?engine.resolve(args.item,'item'):crops[0].seed):old?.seedItem;
     const binding=crops.find(c=>c.seed===seedItem),item=old?.crop??binding?.product;
-    if(args.operation==='private_inspect')return{farm:old??null};
+    if(old?.lease&&tenantLease&&old.lease!==tenantLease.id&&args.operation==='private_harvest')throw preconditionFailure('前一租期未收的作物已留田归田主');
+    if(args.operation==='private_inspect')return{farm:old??null,...(leaseNote?{leaseNote}:{})};
     if(!['private_sow','private_harvest'].includes(args.operation))throw preconditionFailure('未知私田操作');
     if(args.operation==='private_harvest'&&old?.status!=='ready')throw preconditionFailure('没有可收割的成熟作物');
     const areaMu=args.operation==='private_sow'?args.areaMu:old?.areaMu;
@@ -514,7 +520,7 @@ function privateFarmAction(d,engine,p,args,eventId){
         if(tool)wearItem(d,engine,'player',tool,1);
         const current=d.get('state','buildings',location);
         const endWeather=weatherAt(engine,d.document.randomSeed,location,d.get('state','minute'));
-        return d.get('state','player','status')==='正常'&&d.get('state','location')===location&&current?.owner==='player'&&current.condition>0&&!['storm','snow'].includes(endWeather?.kind);
+        return d.get('state','player','status')==='正常'&&d.get('state','location')===location&&mayFarm()&&(current?.condition??100)>0&&!['storm','snow'].includes(endWeather?.kind);
     };
     if(args.operation==='private_sow'){
         if(!binding)throw preconditionFailure('This seed has no registered crop');
@@ -541,7 +547,8 @@ function privateFarmAction(d,engine,p,args,eventId){
         }
         engine.itemDelta(d,'player',seedItem,-seed,{flow:'sink:consume',purpose:'private_sow',writer:'agriculture',eventId});
         const farm={category:'private_farm',id,location,settlement:p.settlement,owner:'player',crop:binding.product,seedItem,areaUnits,areaMu,capacityUnits:old?.capacityUnits??old?.areaUnits??areaUnits,seed,seedEvent:eventId,sownDay:completedDay,lastDay:completedDay-1,grownDays:0,qualitySum:0,qualityDays:0,status:'growing'};
-        d.set(['state','records',id],farm);return{farm,laborMinutes,elapsed:d.get('state','minute')-started};
+        if(tenantLease)farm.lease=tenantLease.id;
+        d.set(['state','records',id],farm);return{farm,laborMinutes,elapsed:d.get('state','minute')-started,...(leaseNote?{leaseNote}:{})};
     }
     if(args.operation!=='private_harvest')throw preconditionFailure('未知私田操作');
     if(old?.status!=='ready')throw preconditionFailure('没有可收割的成熟作物');
@@ -554,6 +561,7 @@ function privateFarmAction(d,engine,p,args,eventId){
     d.set(['state','records',id],{...latest,status:remaining>0?'ready':'harvested',harvestedQty,harvestedAt:d.get('state','minute'),harvestEvent:eventId});
     const out={harvested:take,remaining,fieldStatus:remaining>0?'部分收割':'已收完',item,location,laborMinutes,elapsed:d.get('state','minute')-started};
     if(remaining>0)Object.assign(out,{reason:'背不动',note:`收下${take}份${engine.byId.get(item)?.name??''}（${round3(take*plan.unitKg)}公斤），田里还剩${remaining}份；再多就背不动了。可先放下或存放随身物品、请同伴或雇工搭手、借坐骑驮运，或多跑几趟回来再收；第${latest.expiresDay}日起未收的会腐烂`});
+    if(leaseNote)out.leaseNote=leaseNote;
     return out;
 }
 const round3=n=>Math.round(n*1000)/1000;

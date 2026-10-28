@@ -2,7 +2,7 @@
 import {facilityView} from './facility-state.mjs';
 
 const fields=['parties','owner','worker','employer','tenant','holder','issuer','partner','subject','room','location','kind','quantity','cost','wage','workMinutes','minutes','recipe','task','share','stake','baselineNet','baselineProfit','unitPrice','targetQuantity','demandSource','supplier','item','project','farm','monthlyRent','starts','createdAt','deadline','expires','onHolderGone','onEmployerGone','onWorkerGone','actedAs','inName','signingPlace','signingLaw','signingLawVersion','calendar','days','grace','exclusive','autoSettle','limitation','accrual'];
-fields.push('liability');
+fields.push('liability','rentDueAt');
 const signingFacts=new Set(['actedAs','inName','signingPlace','signingMinute','signingLaw','signingLawVersion','liability']);
 export const contractSigningFacts=terms=>Object.fromEntries([...signingFacts].filter(k=>terms[k]!==undefined).map(k=>[k,structuredClone(terms[k])]));
 export function snapshotContractTerms(row){
@@ -33,6 +33,7 @@ export function contractState(row,minute){
 
 export function leaseClauses(row){
  return {starts:row.starts??row.createdAt,expires:row.expires??row.deadline,monthlyRent:row.monthlyRent,
+  ...(row.rentDueAt!==undefined?{rentDueAt:row.rentDueAt}:{}),
   usability:{minimumCondition:25,reducedBelow:60,reducedFactor:0.5},...row.clauses};
 }
 export function leaseState(engine,state,row,minute=state.minute){
@@ -42,6 +43,7 @@ export function leaseState(engine,state,row,minute=state.minute){
  const legacyEnded=!row.clauses&&['已终止','已到期','已取消'].includes(row.status);
  const active=row.endedAt===undefined&&row.resolvedAt===undefined&&!legacyEnded&&minute>=terms.starts&&minute<terms.expires;
  const rule=terms.usability;
- const factor=!active||!facility||facility.burning||facility.condition<rule.minimumCondition?0:facility.condition<rule.reducedBelow?rule.reducedFactor:1;
+ // Land rent is not discounted by a building-condition projection (05 §5.1).
+ const factor=!active?0:terms.use==='field'?1:!facility||facility.burning||facility.condition<rule.minimumCondition?0:facility.condition<rule.reducedBelow?rule.reducedFactor:1;
  return {active,factor,status:!active?'ended':factor===0?'suspended':factor===1?'effective':'reduced',monthlyRent:terms.monthlyRent*factor,clauses:terms};
 }
