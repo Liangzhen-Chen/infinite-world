@@ -1,4 +1,6 @@
 import {laborValue} from './market.mjs';
+import {installPhase1MarketQuote} from './compat/v2-phase1-engine.mjs';
+installPhase1MarketQuote(marketQuote);
 import {preconditionFailure} from './precondition.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {leaseClauses,leaseState,contractTerms,snapshotContractTerms} from './contract-state.mjs';
@@ -90,7 +92,7 @@ export function netAssets(d,e,id){
 }
 // ---- 估值角色的登记（valuation.mjs）--------------------------------------------------------------
 // 物品：市场估值投影（基准 × 稀缺 × 品质，不含商家价差与立场），按给定地点；货币按当地汇率。
-// apart：估值时不把持有人自己的这批货算进当地供给（入境关税估价用）。
+// 估价对象自己的行囊不构成给自己的市场供给；apart 保留旧调用契约，估值统一排除 holder。
 function goodsValuation(d,e,{item,quantity=1,location=d.get('state','location'),holder='player',apart=false}){
     const def=e.byId.get(item);
     if(!def)return {value:null,unvaluable:'不是已登记的物品'};
@@ -98,7 +100,7 @@ function goodsValuation(d,e,{item,quantity=1,location=d.get('state','location'),
     if(currency)return {value:currencyTradePrice(d,e,{currency:item,quantity,location}).totalCoins,basis:'currency'};
     if(!def.basePrice)return {value:null,unvaluable:'没有估值基准'};
     if(!(quantity>0))return {value:0,basis:'market-value'};
-    const projection=marketQuote(d,e,{item,location,seller:holder,quantity,base:regionalTradeBase(d,e,item,location),...(apart?{supply:supplyApart(d,e,{item,location,owner:holder})}:{})});
+    const projection=marketQuote(d,e,{item,location,seller:holder,quantity,base:regionalTradeBase(d,e,item,location),supply:supplyApart(d,e,{item,location,owner:holder})});
     return {value:quantity*projection.explanation.value.value,basis:'market-value'};
 }
 registerValuer('goods',goodsValuation);

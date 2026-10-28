@@ -18,7 +18,7 @@ export function sendPost(d,e,{from,to,memoryId,legs,sealed=true,receipt=true},ev
  const memory=from==='player'?{id:`letter:${eventId}`,sourceEvent:eventId,kind:'letter',minute:s.minute,content:memoryId,sourceType:'亲历',participants:['player'],private:true,permittedRecipients:[to]}:memoryFor(e,s,from,memoryId,s.minute);if(!permitted(memory,to))throw preconditionFailure('这条私密记忆未许可收件人');
  if(!Array.isArray(legs)||!legs.length||legs.at(-1).to!==recipient.location)throw preconditionFailure('驿传接力须有通往收件地址的真实各段');
  let location=sender.location,at=s.minute,postage=0;
- for(const leg of legs){const quote=quoteTransport(d,e,{asset:leg.asset,from:location,to:leg.to,departAt:Math.ceil(at/60)*60});location=leg.to;at=quote.estimatedArrivalAt;postage+=quote.total;}
+ for(const leg of legs){const quote=quoteTransport(d,e,{asset:leg.asset,from:location,to:leg.to,departAt:at});location=leg.to;at=quote.estimatedArrivalAt;postage+=quote.total;}
  if(financeBalance(d,e,from)<postage*(receipt?2:1))throw preconditionFailure('邮资不足以覆盖接力与回执');
  const id=`post:${eventId}`;if(d.get(...path(id)))throw preconditionFailure('信件编号已存在');
  const row={category:'post',id,from,to,memoryId,payload:clone(memory),sealed,sealBroken:false,receiptRequested:receipt,origin:sender.location,destination:recipient.location,legs:clone(legs),legIndex:0,chain:[],createdAt:s.minute,status:'in-transit'};

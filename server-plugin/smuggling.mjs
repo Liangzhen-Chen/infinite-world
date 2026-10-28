@@ -85,7 +85,7 @@ export function inspectSmuggling(d,engine,route,eventId){
             let seizure=null;
             if(!passed){
                 transferItems(d,engine,'player',guard,row.item,row.quantity);
-                incident=registerIncident(d,engine,{victim:guard,offense:'smuggling',value:goodsWorth(d,engine,{item:row.item,quantity:row.quantity,location:cp.location,holder:'player'})??0,witnesses:guards,eventId:tag,location:cp.location,optional:true})??incident;
+                incident=registerIncident(d,engine,{victim:guard,offense:'smuggling',value:goodsWorth(d,engine,{item:row.item,quantity:row.quantity,location:cp.location,holder:'player'}),witnesses:guards,eventId:tag,location:cp.location,optional:true})??incident;
                 seizure={custodian:guard,item:row.item,quantity:row.quantity,case:incident};
             }
             const latest=d.get(...path(row.id));

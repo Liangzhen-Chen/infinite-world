@@ -1,7 +1,7 @@
 // Read-only market projections. Only completed trades are persisted, never quotes.
 import {bagStock,priceRead,settlementStock,granary,pledged,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
-import {placeSettlement,personHousehold} from './entity-view.mjs';
+import {placeSettlement,personHousehold,personBusinesses} from './entity-view.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
@@ -174,13 +174,21 @@ export function saleableStock(d,engine,owner,item,{business=false}={}){
 }
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
+ let personalDemand=0;
  const items=engine.world.items.filter(i=>goodsClass(engine,i.id)===goods);
  const owners=new Set(businessOwners);
  for(const store of engine.rules.economy?.shops?.stores??[])owners.add(store.keeper);
  for(const npc of engine.world.npcs)if(npc.shopType||(npc.services??[]).includes('trade'))owners.add(npc.id);
+ // 15 §15.2：本地可售存量来自市场经营者，不是每个人“可以被买走”的行囊。
+ // 当前转业/承租后开张的商家也属于供给，不能只认目录里的原店主。
+ // 通用 serviceCatalog.trade 只允许人对人交易，不等于开店；经营类型才是营业身份。
+ for(const [id,business]of personBusinesses(engine,state))if(business?.open.value&&business.shopType.value)owners.add(id);
  for(const id of ['player',...Object.keys(state.npcs??{}),...Object.keys(state.creatures??{})]){
   if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
-  for(const it of items){const row=saleableStock(d,engine,id,it.id,{business:owners.has(id)});if(row.stock)rows.push(row);}
+  for(const it of items){const row=saleableStock(d,engine,id,it.id,{business:owners.has(id)});if(!row.stock)continue;
+   if(owners.has(id))rows.push(row);
+   else personalDemand+=row.retained+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
+  }
  }
  const profile=engine.rules.agriculture?.settlements.find(p=>p.settlement===place),settlement=state.settlements?.[place];
  for(const it of items){
@@ -196,9 +204,9 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const supply=rows.reduce((n,r)=>n+r.available,0);
  // Shelf ceilings and household retention are actual demand inputs.
  // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店；居民口粮需求是每位持有人（含户内成员）的储备目标，
- // 已在上面 rows 的 retained 里逐户计入，聚落粮仓另计全村储备——这里不再把同一口粮需求按商品类重复计入。
+ // 已在上面 rows.retained 与 personalDemand 中逐户计入，聚落粮仓另计全村储备——这里不再重复计入口粮需求。
  const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+r.maximum+(r.reserve??0),0);
- const demand=Math.max(shelf,rows.reduce((n,r)=>n+r.retained+r.committed,0),1);
+ const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained+r.committed,0),1);
  return {place,goods,supply,demand,rows};
 }
 export function marketSupply(d,engine,item,location,options={}){

@@ -2,6 +2,9 @@ import { createHash } from 'node:crypto';
 import { applyPatches, canonical } from '../storage.mjs';
 import { EntityResolver, validateMemory } from '../retrieval.mjs';
 import {activities}from'./v2-phase1-activities.mjs';
+// 与内核的其他领域运行时一样，由价格领域安装唯一报价实现，兼容层不反向依赖玩法。
+let marketQuote;
+export function installPhase1MarketQuote(fn){marketQuote=fn;}
 const clone = value => structuredClone(value);
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) throw new Error(`${label}必须在${min}到${max}之间`);
@@ -104,7 +107,10 @@ export class WorldEngine {
         const quantity=number(args.quantity,1,100000,'数量'), catalog=this.byId.get(item);
         const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
         const existing=d.get('state','quotes',quoteKey);
-        const price=existing ?? number(args.unitPrice ?? catalog.basePrice,Math.ceil(catalog.basePrice*0.8),Math.ceil(catalog.basePrice*1.5),'单价');
+        if(!marketQuote)throw new Error('尚未安装市场报价，无法估价');
+        const quote=marketQuote(d,this,{item,location:playerLocation,seller,buyer,quantity});
+        const [low,high]=this.rules.economy.priceFactorLimits.bargain;
+        const price=existing ?? (args.unitPrice===undefined?quote.listPrice:number(args.unitPrice,Math.ceil(quote.listPrice*low),Math.ceil(quote.listPrice*high),'单价'));
         const cost=quantity*price;
         if(this.quantity(d,seller,item)<quantity) throw new Error(`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         if(this.actor(d,buyer).coins<cost) throw new Error('买方余额不足');

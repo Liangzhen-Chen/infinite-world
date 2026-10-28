@@ -125,6 +125,7 @@ function baseEventWeight(e){
     if(e.verb==='harm'&&e.tags.includes('hostile'))return -(10+Math.min(20,e.harm??0));
     if(e.verb==='steal'&&e.witnesses?.length)return -10;
     if(e.verb==='gift'&&e.value>0)return Math.min(15,3+Math.floor(e.value/10));
+    if(e.verb==='gift'&&e.value===null&&e.unvaluable)return 3; // 只计既有赠礼规则的心意基额，不加价值项。
     if(e.verb==='help'&&e.value>0)return Math.min(10,2+Math.floor(e.value/5));
     if(e.verb==='deceive'&&e.tags.includes('exposed'))return -8;
     if(e.verb==='breach')return -(5+Math.min(15,Math.floor((e.value??0)/10)));

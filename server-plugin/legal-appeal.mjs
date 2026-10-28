@@ -230,10 +230,11 @@ export function trialAction(d,e,row,code,args,eventId,{penalty,submitDocument,ad
  const scored=trialEvidenceScore(row,code,{advocate:representationEffect(d,e,row)});
  if(op==='decide_case'&&args.convicted&&scored.score<scored.threshold)fail('已提交证据低于本罪定罪阈值，不能定罪');
  const convicted=op==='decide_case'?args.convicted:scored.score>=scored.threshold;
- const p=row.normSnapshot?row.normSnapshot.penalty:penalty;if(convicted&&(!p||!Number.isFinite(row.value)))fail('行为时罪名、刑罚或案值缺失，不能猜测判罚');
- const fine=convicted?p.baseFine+Math.ceil(row.value*p.valueMultiplier):0;
+ const p=row.normSnapshot?row.normSnapshot.penalty:penalty,unvaluable=row.value===null;if(convicted&&(!p||!unvaluable&&!Number.isFinite(row.value)))fail('行为时罪名、刑罚或案值缺失，不能猜测判罚');
+ const fine=convicted?p.baseFine+(unvaluable?0:Math.ceil(row.value*p.valueMultiplier)):0;
  const judgment={...(review?row.judgment:{}),judge,sourceEvent:eventId,minute:d.get('state','minute'),fine,evidenceScore:scored.score,evidence:scored,convicted,
-  authoritySource:judge==='player'?'player_office':'npc_judicial_rules',substantiveLaw:structuredClone(row.normSnapshot),procedure:structuredClone(code.procedure??{})};
+  authoritySource:judge==='player'?'player_office':'npc_judicial_rules',substantiveLaw:structuredClone(row.normSnapshot),procedure:structuredClone(code.procedure??{}),
+  ...(unvaluable?{compensation:null,unvaluable:'无法核定案值',valuationNote:'无从估价：无法核定案值，仅适用基础罚则，不加案值倍数；赔偿待核定。'}:{})};
  let next={...row,status:convicted?'已裁定':'证据不足',stage:convicted?'judged':'closed',judgment,...(!review?{finePaid:0,fineDischarged:!convicted,appeal:null}:{}),
   ...(!review&&Number.isSafeInteger(code.procedure?.appealWindowMinutes)?{appealDeadline:d.get('state','minute')+code.procedure.appealWindowMinutes}:{})};
  let transfer,waived=false;
@@ -248,7 +249,8 @@ export function trialAction(d,e,row,code,args,eventId,{penalty,submitDocument,ad
  if(!review)next=ensureFine(d,e,next,code,judge,eventId);
  const notification=!review&&convicted?'conviction':review&&!convicted?'overturned':null;
  if(notification){put(d,e,next);notify?.(next,notification);next=d.get(...path(row.id));}
- return complete(d,e,next,{case:row.id,convicted,judgment:next.judgment,...(review?{upheld:next.appeal.outcome==='upheld',appeal:next.appeal}:{}),...(transfer?{refund:transfer.amount}:{}),
+ if(unvaluable)d.say(judgment.valuationNote);
+ return complete(d,e,next,{case:row.id,convicted,judgment:next.judgment,...(unvaluable?{unvaluable:judgment.unvaluable,factSummary:judgment.valuationNote}:{}),...(review?{upheld:next.appeal.outcome==='upheld',appeal:next.appeal}:{}),...(transfer?{refund:transfer.amount}:{}),
   worldEvent:{verb:'judgment',actor:judge,target:row.offender,case:row.id,visibility:row.private?'private':'public',tags:['law','judgment'],payload:{case:row.id,convicted,fine,evidenceScore:scored.score}}},eventId,
   {minutes,authority:judge,...(notification?{notification}:{}),...(waived?{waived:true}:{}),...(transfer?{transfer:{...transfer,signedAmount:-transfer.amount}}:{})});
 }

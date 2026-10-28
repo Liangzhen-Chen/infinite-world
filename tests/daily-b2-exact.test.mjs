@@ -23,18 +23,18 @@ test('D01 买馒头：基准4文、市场零售2文，100文买3个剩94文，�
  conserved(before,after,'D01',new WorldEngine(world));
 });
 
-test('D02 卖兽皮：基准6文、供需0.5、收购价差0.6，五张共9文，玩家20→29、钱柜300→291',async t=>{
+test('D02 卖兽皮：基准6文、公开供给稀缺1、收购价差0.6，五张共18文，玩家20→38、钱柜300→282',async t=>{
  // 兔皮→生皮（item_rawhide）6 文；杂货铺赵四→林穗，钱柜 300；秋季九月十二午时；玩家 20 文。
  const world=variant(w=>{setPrice(w,'item_rawhide',6);openShop(w,LINSUI,INN,7*HOUR,19*HOUR);});
  const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(9,12,12,0),s=>{s.player.coins=20;s.inventory.item_rawhide=stack(5,{weight:0.5});s.npcs[LINSUI].coins=300;})});
- // S5-02: base6 * scarcity.5 * buy spread.6 * depth/grade/standing1 * 5 = 9 copper.
+ // 15 §15.2：待卖的5张皮还在私人行囊，公开S=0、D=1，稀缺1；6×1×收购价差.6×5=18。
  const before=await primed(ui),r=await ui.choose('trade.sell_to',{item:'item_rawhide',quantity:5},{target:LINSUI});assert.ok(r.ok,r.error);const after=await ui.read();
- assert.equal(after.state.player.coins,29,'①20→29');assert.equal(held(after.state.inventory,'item_rawhide'),0,'②兔皮 5→0');
- assert.equal(after.state.npcs[LINSUI].coins,291,'③钱柜 300→291（确实从钱柜扣）');
+ assert.equal(after.state.player.coins,38,'①20→38');assert.equal(held(after.state.inventory,'item_rawhide'),0,'②兔皮 5→0');
+ assert.equal(after.state.npcs[LINSUI].coins,282,'③钱柜 300→282（确实从钱柜扣）');
  assert.equal(held(after.state.npcs[LINSUI].inventory,'item_rawhide')-held(before.state.npcs[LINSUI].inventory,'item_rawhide'),5,'④库存 +5');
  conserved(before,after,'D02',new WorldEngine(world));
 });
-// D02⑤ 正式覆盖：真实卖货按收购价结算，手算 6×0.5×0.6×5=9 文。
+// D02⑤ 正式覆盖：真实卖货按收购价结算，手算 6×1×0.6×5=18 文。
 
 // F026: the tavern keeper's only income examined by the lodging tests is the room fee, so every other resident is penniless (nobody walks in
 // at noon and buys; walk-in customers have their own tests in s5-w4-economy).

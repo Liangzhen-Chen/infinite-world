@@ -44,6 +44,7 @@ const tableParam=(e,id)=>tableOf(e).params.find(p=>p.id===id).value;
 // 下一班发车：驿站（信件：无货无客）每日固定钟点，过点次日；车行/船行整点随到随发，过截件钟点次日起发。
 export function carrierDeparture(e,selector,now){
  const row=tableRow(e,`departure:${selector}`),day=now-now%DAY,at=now%DAY;
+ if(!row)return now;
  if(row.at!==undefined)return at<=row.at?day+row.at:day+DAY+row.at;
  return at<row.cutoff?Math.ceil(now/60)*60:day+DAY+row.resume;
 }
@@ -222,7 +223,6 @@ function bookTransportInner(d,e,args,eventId){
  const a=transportAssetView(e,d.document,asset),service=transportServices(e,d.document,from).find(x=>x.asset===a?.id);
  if(!service)throw preconditionFailure('承运人当前不能提供班次');
  const departAt=args.departAt??(isLetter(cargo,passengers,escort)?carrierDeparture(e,'post',now):service.nextDeparture);int(departAt,now,'发车时间');
- if(departAt%service.intervalMinutes!==0)throw preconditionFailure('不在承运班次时间');
  if(!forwarding&&!externalValid&&from!==actorLocation(s,owner))throw preconditionFailure('发货人须在装货地点');
  const q=quoteTransport(d,e,{asset:a.id,from,to,cargo,passengers,owner,escort,departAt}),id=`transport:${eventId}`;
  if(q.departAt!==departAt)throw preconditionFailure('不在承运班次时间');
@@ -522,7 +522,9 @@ export function transportAction(d,e,args,eventId){
   // What delivering owned goods really costs the debtor is the spot value he gives up, but a
   // regional scarcity premium above the goods' derived baseline is not a cash cost to him
   // (and a glut below it lowers the cost): the opportunity value is the lesser of the two.
-  const opportunity=Math.min(value,derived(e,d.document,'economy:value',item,{kind:'item',holder:debtor,base:e.byId.get(item).basePrice})*args.quantity);
+  const baseline=valuation(d,e,{role:'baseline',item,quantity:args.quantity,holder:debtor});
+  if(baseline.value===null)throw preconditionFailure(`无从估价：${baseline.unvaluable}`);
+  const opportunity=Math.min(value,baseline.value);
   const agreement=requestContractConsent(d,e,{from:party,scope:'forward',purpose:'player',subject:item,terms,cost:selling?{coins:terms.prepayment}:{value:opportunity},reward:selling?value:terms.prepayment,eventId});
   counterpart(d,e,party,{consent:agreement.allowed,minutes:0});
   return openGoodsObligation(d,e,{kind:'forward',debtor,creditor,...terms,terms:{consent:agreement.source}},eventId);
