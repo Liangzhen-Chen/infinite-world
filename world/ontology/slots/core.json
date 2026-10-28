@@ -33,6 +33,7 @@
     {"id":"hydrology:split","stages":["add","mul","max","min","clamp"],"bounds":[0,1],"stageBounds":{"add":[-1,1],"mul":[0,3],"max":[0,1],"min":[0,1]},"relative":false},
     {"id":"weather:temperature","stages":["add","min","max","clamp"],"bounds":[-40,50],"stageBounds":{"add":[-15,15]},"relative":false},
     {"id":"body:drain","bounds":[0.25,4],"relative":true},
+    {"id":"body:carry","stages":["add","mul","clamp"],"bounds":[0.5,2],"relative":true},
     {"id":"body:recover","bounds":[0.25,4],"relative":true},
     {"id":"health:infectionRate","stages":["add","mul","min","clamp"],"bounds":[0,1],"stageBounds":{"add":[0,1],"mul":[0,3]},"relative":false},
     {"id":"ecology:predation","stages":["add","mul","min","max","clamp"],"bounds":[0,10],"stageBounds":{"add":[-10,10],"mul":[0,3]},"relative":false},

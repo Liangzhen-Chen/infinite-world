@@ -27,7 +27,8 @@ function fixture(world=formal,randomSeed='t159-content'){
  const engine=new WorldEngine(world);let document=engine.createCharacter(seed,{},randomSeed);
  document=applyPatches(document,planBossMigration(document,world.rules,world.bosses,world));
  Object.assign(document.state.player,{coins:1000,hp:500,maxHp:500});
- for(const item of ['item_salt','item_oats','item_ration','item_fish'])document.state.inventory[item]={quantity:40};
+ // W8C 负重：四样各 40 份共 40.8 公斤，已超出安全负重 40 公斤；燕麦（0.5 公斤/份）减为 20 份，合计 30.8 公斤，仍远多于各用例换出的数量。
+ for(const item of ['item_salt','item_oats','item_ration','item_fish'])document.state.inventory[item]={quantity:item==='item_oats'?20:40};
  const run=async(doc,tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});return{document:applyPatches(doc,out.patches),result:out.result};};
  return{world,engine,document,run};
 }

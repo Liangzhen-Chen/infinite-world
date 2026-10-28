@@ -9,6 +9,7 @@ import {accountKey} from './ledger.mjs';
 import {partyAccount} from './money.mjs';
 import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
 import {transferWaterState} from './water-volume.mjs';
+import {assertCanCarry} from './carry.mjs';
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 // Harvested portions are minted only from an already conserved physical water
 // transfer. The feature volume and liquid_binding remain their authority.
@@ -83,6 +84,8 @@ export function validateItemTransfer(d,engine,from,to,item,quantity,selection=nu
     if(from===to)throw preconditionFailure('物品转移双方不能相同');
     if(selection!==null&&!Array.isArray(selection))throw preconditionFailure('单件选择必须为编号列表');
     const held=d.get(...engine.bagPath(from),item),units=typeof held==='object'?held.instances??[]:[];
+    // Whatever enters the player's pack counts against the body's safe load (carry.mjs); refused before any payment moves.
+    if(to==='player')assertCanCarry(d,engine,'player',quantity*((typeof held==='object'?held.weight:undefined)??engine.byId.get(item)?.weight??0),`${engine.byId.get(item)?.name??'物品'}×${quantity}共`);
     if(selection&&selection.some(unit=>!units.includes(unit)))throw preconditionFailure('没有选中的单件');
     if(selection&&new Set(selection).size!==selection.length)throw preconditionFailure('单件编号重复');
     if(selection&&selection.length>quantity)throw preconditionFailure('单件数超过转移数量');
