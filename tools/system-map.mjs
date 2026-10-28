@@ -225,8 +225,8 @@ await imp('server-plugin/engine.mjs');
 // Include its subscriber for the map without installing that runtime's executor.
 await imp('server-plugin/mark-reactions.mjs');
 const registeredSubscribers=WE.worldEventSubscribers();
-// Both delegating arrow callbacks and inline method callbacks are valid registrations.
-const subscriberCalls=new Map(SERVER.flatMap(f=>[...src(f).matchAll(/registerWorldEventSubscriber\(\{id:'([\w-]+)',order:([\d.]+),on(?:\s*:\s*[^=]*=>\s*([A-Za-z_$][\w$]*)\(|\s*\([^)]*\)\s*\{)/g)].map(m=>[m[1],{file:f,order:Number(m[2]),fn:m[3]??'on'}])));
+// Both delegating arrow callbacks and inline method callbacks are valid registrations; string options (priorityClass, packId) may precede on.
+const subscriberCalls=new Map(SERVER.flatMap(f=>[...src(f).matchAll(/registerWorldEventSubscriber\(\{id:'([\w-]+)',order:([\d.]+)(?:,\w+:'[\w-]*')*,on(?:\s*:\s*[^=]*=>\s*([A-Za-z_$][\w$]*)\(|\s*\([^)]*\)\s*\{)/g)].map(m=>[m[1],{file:f,order:Number(m[2]),fn:m[3]??'on'}])));
 const verbLiterals=uniq(CODE.flatMap(f=>[...src(f).matchAll(/\bverb\s*:\s*'(\w+)'/g)].map(m=>m[1])));
 // Tool → verbs derived in deriveWorldEvents (one `tool==='x'` branch each); other tools use their own name.
 const toolVerbs={};
