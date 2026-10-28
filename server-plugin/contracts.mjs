@@ -20,7 +20,7 @@ import {assertSettlementPresent} from './obligation-presence.mjs';
 import {adoptLegacyObligation,settleObligation} from './obligation-runtime.mjs';
 declareHoldingWriter('contracts',{kinds:['employed_by','leases','lodges','operates']});
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
-import {canonical}from'./storage.mjs';
+import {canonical,recordEntriesWhere}from'./storage.mjs';
 const signedTerms=row=>Object.fromEntries(['parties','subject','quantity','deadline','cost','kind'].map(k=>[k,row[k]??null]));
 const contractPath=id=>['state','records',id];
 export function magicContractTrace(d,id){
@@ -31,7 +31,7 @@ export function magicContractTrace(d,id){
  return{parties:row.parties,changes,enforcement:row.enforcement};
 }
 export function advanceShadowContracts(d,before,after){
- for(const [id,row]of Object.entries(d.get('state','records')??{})){
+ for(const [id,row]of recordEntriesWhere(d.get('state','records'),'category','contract')){
   const e=row.category==='contract'&&row.enforcement;
   if(!e?.active||e.channel!=='shadow')continue;
   if(!row.parties?.includes(e.target)||!Number.isFinite(e.power)||e.power<=0||!Number.isFinite(e.stressPerMinute)||e.stressPerMinute<=0||!Number.isFinite(e.remaining)||e.remaining<0||!Number.isSafeInteger(e.started)||!Number.isSafeInteger(e.expires))throw Error('暗影契约执行状态损坏');

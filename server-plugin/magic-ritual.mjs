@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {recordEntriesWhere} from './storage.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {placed as placedStock,moveStock} from './stock.mjs';
@@ -354,7 +355,7 @@ export function ritualProtectionValid(d,e,now=d.get('state','minute')){
 }
 export function advanceRituals(d,engine,after){
  // Contracts already run on each normal clock interval.
- for(const[id,r]of Object.entries(d.get('state','records')??{})){
+ for(const[id,r]of recordEntriesWhere(d.get('state','records'),'category','realm_invitation')){
   if(r.category!=='realm_invitation'||r.status!=='已接受')continue;
   const consent=d.get('state','records',r.authorization);
   if(after<r.expires&&consent?.category==='authorization'&&consent.action==='realm_visit'&&consent.subject===r.subject&&consent.grantor===r.subject&&consent.grantee==='player'&&!consent.revoked&&Number.isSafeInteger(consent.expires)&&consent.expires>after)continue;
