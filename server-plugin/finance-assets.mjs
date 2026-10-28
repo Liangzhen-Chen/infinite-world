@@ -90,6 +90,7 @@ function goodsValuation(d,e,{item,quantity=1,location=d.get('state','location'),
     const currency=currencyRow(e,item);
     if(currency)return {value:currencyTradePrice(d,e,{currency:item,quantity,location}).totalCoins,basis:'currency'};
     if(!def.basePrice)return {value:null,unvaluable:'没有估值基准'};
+    if(!(quantity>0))return {value:0,basis:'market-value'};
     const projection=marketQuote(d,e,{item,location,seller:holder,quantity,base:regionalTradeBase(d,e,item,location),...(apart?{supply:supplyApart(d,e,{item,location,owner:holder})}:{})});
     return {value:quantity*projection.explanation.value.value,basis:'market-value'};
 }

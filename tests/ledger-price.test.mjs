@@ -51,26 +51,25 @@ const SURVEY={
     // S5-01 / 15 §15.2: this is the primitive baseline/correction slot,
     // not another inventory-priced consumer. Market callers read the books.
     'derived.mjs':'economy:value 缺省基准取主体 basePrice 事实；只计算上下文基准与修正项，不自行读取库存或现款，供需由市场调用方经已登记账户读取',
-    // A3 daily22: these are valuations of declared gifts/prizes, not price
-    // formulas driven by stock. Keep the exhaustive module/reader checks below.
-    'dialogue.mjs':'赠礼事件标值取目录基价，物品仍经真实转移核验，不以估值读取库存或现款',
-    'festival.mjs':'NPC授权成本取登记物资和奖品数量乘目录基价；数量来自节庆条款，不读库存或现款计算价格',
-    'primitives-runtime.mjs':'NPC同意的成本和报酬估值取拟转移数量乘目录基价；支付能力另由真实转移事务核验，不以库存或现款定价',
+    // W8-A：dialogue / festival / primitives-runtime 的礼物、奖品、同意成本估值已改走估值角色（valuation.mjs 的 goods 市场估值投影），
+    // 不再含价格字样，按本测试的规则从归类表删除。
     'manufacturing.mjs':'配方投入重置成本经 regionalTradePrice 统一估值，不自行读取库存',
     // S5-02: obsolete regionalMaterialSupply has no callers and is removed;
     // the regional wrapper delegates inventory pricing to registered market.
-    'settlement-trade.mjs':'区域价只转调 market 已登记账户读取；保留路线/环境输入，不另读存量定价','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-tax.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
+    'settlement-trade.mjs':'区域价只转调 market 已登记账户读取；保留路线/环境输入，不另读存量定价','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
     'labor-market.mjs':'read','smuggling.mjs':'read','business.mjs':'read','npc-autonomy.mjs':'read',
     // S5 W4 F007/F058：押品、典当物、遗产与责任上限不再自己拿目录基价乘数量，统一经估值角色（valuation.mjs）取市场估值投影；
     // credit / transition / finance-bank 因此不再含价格字样，按本测试的规则从归类表删除。
     'bounty.mjs':'贿赂价码 = 涉案金额 × 廉洁度 × 立场，不读存量',
-    'law.mjs':'偷窃涉案值取物品基价或参数金额，不读存量',
-    'npc-crime.mjs':'涉案值取物品基价','extraction.mjs':'采得物价值取物品基价','boss-negotiation.mjs':'谈判礼物估值取参数数量 × 基价',
-    'world-events.mjs':'事件价值取承诺数量 × 基价','elections.mjs':'赠礼拉票取礼物基价','transport.mjs':'关税与运费按托运单上的货物数量，不读库存（单据在 transport:* 账户）',
+    // W8-A：案值、采得物价值、关税税基、事件价值、赠礼拉票改走估值角色（goods 市场估值 / property 租金资本化），law / npc-crime / extraction / world-events / elections / finance-tax 不再读目录基价。
+    // law.mjs 仍含 bribePrice 字样（贿赂价码，本表原有口径）。
+    'law.mjs':'贿赂价码取涉案金额；案值走估值角色，不读目录基价',
+    'boss-negotiation.mjs':'首领谈判按物品本身的目录价值衡量交换（巢穴无市场，非现价），保留',
+    'transport.mjs':'关税与运费按托运单上的货物数量，不读库存（单据在 transport:* 账户）',
     'hazard-calendar.mjs':'灾害价格系数读时钟记录','magic-economy.mjs':'法术减价系数读月度记录','settlement-profile.mjs':'价格系数说明文字','war-diplomacy.mjs':'战时价格系数取规则常量',
     'medicine.mjs':'诊费 = 工钱参照 + 草药基价 × 预约占用率，不读存量',
     'water-cycle.mjs':'水价读水体水量，水不是账户资源（S5 生态）','wildlife.mjs':'野味价格读生灵种群数，种群账户化属 S5（R24 在改 wildlife）',
-    'agriculture.mjs':'粮仓售粮 buy 属农业实现（R27 在改 agriculture），未动',
+    'agriculture.mjs':'含 PriceFactor 字样（农业价格系数）；粮仓售粮 buy 已改走估值角色',
     'engine.mjs':'成交闸门 engine.quantity 与余额检查在 L0 引擎，L0 不能引用 L1 账户（会新增向上违例）；报价由 settlement-trade 与 shop 提供',
     'effects.mjs':'时钟效果转调 regionalTradePrice','stock.mjs':'价格输入读取接口本身（PRICE_POINTS）',
     // S5-01 / 15 §15.2: this is the primitive baseline/correction slot,
