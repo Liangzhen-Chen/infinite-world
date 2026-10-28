@@ -32,7 +32,9 @@ export async function defineBatchTests(batch,{balanceFile,tiers}){
   const engine=new WorldEngine(w),fresh=engine.createCharacter(legacy,{},b.id),doc=applyPatches(fresh,planRuleStateMigration(fresh,w.rules));
   // Resident bosses keep their schedules; 21:40 is inside every resident's lair hours.
   doc.state.minute=1300;doc.state.location=b.lair;doc.state.player.hp=10000;doc.state.player.maxHp=10000;
-  for(const id of [...new Set([...(b.negotiation?.accepts??[]),'item_ration'])])doc.state.inventory[id]={quantity:100,quality:'木',durability:100,weight:.2};
+  // W8-E1 负重：原每种 100 份 × 0.2 = 20 公斤，两三种即 40–60 公斤超安全负重 30 公斤，战利品入囊被拒。
+  // 交涉只献 10 份，带每种 20 份（4 公斤）足够，三种合计 12 公斤 + 随身 2 公斤左右。
+  for(const id of [...new Set([...(b.negotiation?.accepts??[]),'item_ration'])])doc.state.inventory[id]={quantity:20,quality:'木',durability:100,weight:.2};
   let n=0;const run=async(d,tool,args,id=`${batch}-${++n}`)=>{const out=await engine.reduce(d,{tool,args,eventId:id});return {doc:applyPatches(d,out.patches),result:out.result};};
   const enter=d=>run(d,'world_field',{operation:'lair_approach',lair:b.residence.id});
   return {engine,doc,run,enter};

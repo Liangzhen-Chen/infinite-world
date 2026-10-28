@@ -23,11 +23,14 @@ function flatWorld(calendar='legacy:30-day',edit){
  b.rateTerms={per:'anchor',calendar,base:0.04,minRate:0.04,maxRate:0.04};b.depositSpread=0.5;
  edit?.(w);return w;
 }
-function fixture(w=flatWorld(),{coins=3000}={}){
+// W8-E1 负重：木料 100（200 公斤，借款抵押）+ 面包 100（15 公斤，典当）+ 羊皮纸 3 是各用例的前提，合计 215 公斤超安全负重 30 公斤；
+// 只兑换钱币、券的用例（W1-5、W1-6）不带抵押品，空囊（随身 2.6 公斤 + 羊皮纸）到柜面，否则兑到的东西进不了行囊。
+const COUNTER_ONLY={item_parchment:3};
+function fixture(w=flatWorld(),{coins=3000,inventory={item_wood:100,item_bread:100,item_parchment:3}}={}){
  // The counter staff and the buyer are always on duty at the counter: availability is a premise here.
  for(const n of w.npcs.filter(n=>[keeper,host].includes(n.id)))n.schedule={default:[{start:0,end:1440,location:post,activity:'休息',services:['trade']}]};
  const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'s503-w1');
- const prepared=applyIntentSetup(engine,initial,{minute:600,location:post,present:[keeper,host],coins,inventory:{item_wood:100,item_bread:100,item_parchment:3},abilitiesByActor:{player:{skills:{skill_literacy:500}}}});
+ const prepared=applyIntentSetup(engine,initial,{minute:600,location:post,present:[keeper,host],coins,inventory,abilitiesByActor:{player:{skills:{skill_literacy:500}}}});
  assert.deepEqual(prepared.setupUnmet,[]);
  const f={engine,document:prepared.document,
   async act(args,id){const out=await engine.reduce(f.document,{tool:'world_trade',args:{seller:keeper,...args},eventId:id});f.document=applyPatches(f.document,out.patches);return out.result;},
@@ -116,7 +119,7 @@ test('W1-4 deposit then withdraw at once loses exactly the one-copper counter fe
 });
 
 test('W1-5 issuing then redeeming the same notes at the same counter always loses the spread',async()=>{
- const f=fixture(),before=f.coins();
+ const f=fixture(flatWorld(),{inventory:COUNTER_ONLY}),before=f.coins();
  // Issue 10 notes of face 100: pay ceil(10 x 100 x 1.03) = 1030.  Redeem 10: floor(10 x 100 x 0.97) = 970.
  const issued=await f.exchange({item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'w1-note-issue');
  assert.equal(issued.paid,1030);
@@ -125,7 +128,7 @@ test('W1-5 issuing then redeeming the same notes at the same counter always lose
 });
 
 test('W1-6 buying then selling the same coins loses the counter spread both ways',async()=>{
- const f=fixture(),before=f.coins();
+ const f=fixture(flatWorld(),{inventory:COUNTER_ONLY}),before=f.coins();
  // 40 civic coins at fineness 0.9: buy ceil(40 x 0.9 x 1.03) = ceil(37.08) = 38; sell floor(40 x 0.9 x 0.97) = floor(34.92) = 34.
  const bought=await f.exchange({item:'item_coin_civic',quantity:40,buyer:'player'},'w1-coin-buy');assert.equal(bought.paid,38);
  const sold=await f.exchange({item:'item_coin_civic',quantity:40},'w1-coin-sell');assert.equal(sold.received,34);

@@ -17,10 +17,13 @@ import {openLoan} from '../server-plugin/credit.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const keeper='npc_hw_shendu',post='bld_hw_post',bankId='bank_hw_post';
-function fixture(w=world){
+// W8-E1 负重：木料 100 份 = 200 公斤是借款抵押品的前提，只有抵押用例用得到；不抵押的用例空囊（随身 2.6 公斤）到柜面，
+// 否则开局即超安全负重 30 公斤，兑到的钱币、券与面包都进不了行囊。
+const NO_COLLATERAL={};
+function fixture(w=world,inventory={item_wood:100}){
  const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'s503-credit');
  // Opening cash, collateral and the business window are not examined here.
- const prepared=applyIntentSetup(engine,initial,{minute:600,location:post,coins:3000,inventory:{item_wood:100}});
+ const prepared=applyIntentSetup(engine,initial,{minute:600,location:post,coins:3000,inventory});
  assert.deepEqual(prepared.setupUnmet,[]);let document=prepared.document;
  return {engine,get document(){return document;},replace(d){document=d;},bank:engine.rules.economy.credit.banks[0],
   async act(args,id){const out=await engine.reduce(document,{tool:'world_trade',args:{seller:keeper,...args},eventId:id});document=applyPatches(document,out.patches);return out.result;}};
@@ -32,7 +35,7 @@ async function exchange(f,slots,id){
 }
 
 test('metal content exchange and backed credit use the native counter with independent integer anchors',async()=>{
- const f=fixture(),before=f.document.state.player.coins;
+ const f=fixture(world,NO_COLLATERAL),before=f.document.state.player.coins;
  // Same copper and5g weight; civic fineness.9 => .9 river/coin.
  // ceil(10*.9*1.03)=10 paid; floor(10*.9*.97)=8 returned.
  const bought=await exchange(f,{item:'item_coin_civic',quantity:10,buyer:'player'},'currency-metal-buy');
@@ -54,18 +57,18 @@ test('metal content exchange and backed credit use the native counter with indep
  // Exact settlement matters when the bill is an integer: no fee and ten
  // copper coins at4.5g/5g must cost exactly9, never ceil(9+floating noise)=10.
  const noFeeWorld=structuredClone(world);noFeeWorld.rules.economy.credit.banks[0].exchangeFeeRate=0;
- const noFee=fixture(noFeeWorld),exact=await exchange(noFee,{item:'item_coin_civic',quantity:10,buyer:'player'},'currency-exact-nine');
+ const noFee=fixture(noFeeWorld,NO_COLLATERAL),exact=await exchange(noFee,{item:'item_coin_civic',quantity:10,buyer:'player'},'currency-exact-nine');
  assert.equal(exact.paid,9);assert.equal(noFee.document.state.player.coins,2991);clean(noFee);
  // The registered S5-01 coin-credit slot is a real price input. An author
  // factor.5 gives market value50, but D15 §15.3 backedBy promises100:
  // new issuance costs ceil(2*100*1.03)=206 regardless of market credit.
  const discountedWorld=structuredClone(world);discountedWorld.derived.modifiers.push({id:'note-credit-half',pack:'credit',target:'economy:coinCredit',stage:'mul',value:0.5,when:"subject == 'item_banknote_hw'"});
- const discounted=fixture(discountedWorld),lower=await exchange(discounted,{item:'item_banknote_hw',quantity:2,buyer:'player',mode:'issue'},'currency-credit-factor');
+ const discounted=fixture(discountedWorld,NO_COLLATERAL),lower=await exchange(discounted,{item:'item_banknote_hw',quantity:2,buyer:'player',mode:'issue'},'currency-credit-factor');
  assert.equal(lower.paid,206);assert.equal(lower.pricing.from.explanation.credit.value,0.5);assert.equal(lower.pricing.from.value/lower.pricing.from.explanation.peg,0.5);clean(discounted);
 });
 
 test('real goods turnover and native issuance explain dilution; unaffordable issuance is atomic',async t=>{
- const f=fixture(),host='npc_hw_linsui';
+ const f=fixture(world,NO_COLLATERAL),host='npc_hw_linsui';
  // Shelf stock, host cash and travel are outside the examined currency rule.
  const setup=applyIntentSetup(f.engine,f.document,{location:'bld_hw_qingdeng',facts:[
   {path:['state','npcs',host,'inventory'],value:{item_bread:{quantity:100,quality:'木'}}},
@@ -120,7 +123,7 @@ test('real goods turnover and native issuance explain dilution; unaffordable iss
 test('face issuance and redemption remain possible at zero market confidence and never earn cash',async()=>{
  for(const fee of [0,0.03]){
   const w=structuredClone(world);w.rules.economy.credit.banks[0].exchangeFeeRate=fee;
-  const f=fixture(w);
+  const f=fixture(w,NO_COLLATERAL);
   await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'zero-market-opening');
   await f.act({operation:'deposit',coins:1001},'zero-market-deposit');
   // A depleted vault has cash1000 and owes deposits1000: note confidence0.
@@ -175,7 +178,7 @@ test('NPC pawn rate follows the owner default history rather than the player his
 });
 
 test('note backing excludes deposit liabilities but face redemption uses actual cash',async()=>{
- const f=fixture();await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'backing-issue');
+ const f=fixture(world,NO_COLLATERAL);await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'backing-issue');
  await f.act({operation:'deposit',coins:1001},'backing-deposit');
  const setup=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records',bankId,'coins'],value:1100}]});assert.deepEqual(setup.setupUnmet,[]);f.replace(setup.document);
  // Vault1100 less deposits1000 leaves100 for notes1000: ratio.1,
@@ -200,12 +203,13 @@ test('automatic withdrawal bypasses unavailable originals but explicit claims st
 });
 
 test('issued note reserves protect lending but redeem until actual cash is exhausted, then replenish',async()=>{
- const f=fixture();await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'liquidity-issue');
+ // W8-E1 负重：本用例只借 1 文以检验备付金保护，抵押 5 份木料 = 10 公斤就够（估值 5×4×抵押率 .5 = 10 文 ≥ 1），不必背 100 份 200 公斤。
+ const f=fixture(world,{item_wood:5});await exchange(f,{item:'item_banknote_hw',quantity:10,buyer:'player',mode:'issue'},'liquidity-issue');
  // Vault depletion is unrelated to the redemption mechanism. Issued10 at
  // face100 and reserve.2 protect200; none of that200 may be lent away.
  const setup=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records',bankId,'coins'],value:200}]});assert.deepEqual(setup.setupUnmet,[]);f.replace(setup.document);
  assert.equal(bankCredit(f.engine,f.document.state,f.bank).reserve,200);assert.equal(bankCredit(f.engine,f.document.state,f.bank).loanable,0);
- let before=structuredClone(f.document);await assert.rejects(f.act({operation:'borrow',coins:1,days:10,item:'item_wood',quantity:100},'issue-reserve-loan'));assert.deepEqual(f.document,before);
+ let before=structuredClone(f.document);await assert.rejects(f.act({operation:'borrow',coins:1,days:10,item:'item_wood',quantity:5},'issue-reserve-loan'),/至多能借出0铜/);assert.deepEqual(f.document,before);
  // Each note actually pays100 less fee3=97: 200-97-97=6.
  assert.equal((await exchange(f,{item:'item_banknote_hw',quantity:1,mode:'redeem'},'liquidity-redeem-1')).received,97);
  assert.equal((await exchange(f,{item:'item_banknote_hw',quantity:1,mode:'redeem'},'liquidity-redeem-2')).received,97);

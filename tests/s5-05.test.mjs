@@ -66,18 +66,22 @@ test('未播种无私田产量；真实播种按同一份种子与面积换算�
  assert.deepEqual(planted.document,snapshot);
 });
 
-test('成熟入田地账户；收割只转移存量，同一批不能重复采收',async()=>{
+test('成熟入田地账户；收割只转移存量，背不动的留在田里，满载不能再收',async()=>{
  const f=await ripe(),before=f.document,yielded=before.state.records[id].yield;
  // 2 mu × 150 jin/mu × .5 kg/jin ÷ .5 kg/portion × (179 + .9)/180
  // = 299.8333... portions (day 6 is clear, cropMultiplier .9); floor = 299.
  assert.equal(yielded,299);assert.equal(before.ledger.accounts[account],299);
+ // W8-E1 负重：原夹具一次收 299 份 = 149.5 公斤（此前靠 carryExempt）；现按背得动的收。
+ // 身上 = 新角色 2.6 + 麦种 16×0.5 + 燕麦 20×0.5 + 锄 1.5 + 镰 0.5 = 22.6 公斤，余 30 − 22.6 = 7.4 → floor(7.4/0.5) = 14 份，田里剩 285。
  const out=await run(f.engine,before,'world_farm',{operation:'private_harvest'},'harvest');
- assert.equal(out.result.harvested,yielded);assert.equal(out.document.ledger.accounts[account],0);
- assert.equal((out.document.state.inventory.item_wheat_grain?.quantity??0)-(before.state.inventory.item_wheat_grain?.quantity??0),yielded);
+ assert.equal(out.result.harvested,14);assert.equal(out.result.remaining,285);assert.equal(out.document.ledger.accounts[account],285);
+ assert.equal(out.document.state.records[id].status,'ready');assert.equal(out.document.state.records[id].harvestedQty,14);
+ assert.equal((out.document.state.inventory.item_wheat_grain?.quantity??0)-(before.state.inventory.item_wheat_grain?.quantity??0),14);
  assert.equal(out.document.ledger.flows['src:regrowth|item_wheat_grain|private_crop'],before.ledger.flows['src:regrowth|item_wheat_grain|private_crop']);
  assert.deepEqual(reconcile(f.engine,out.document).mismatches,[]);
  const snapshot=structuredClone(out.document);
- await assert.rejects(run(f.engine,out.document,'world_farm',{operation:'private_harvest'},'again'),/成熟/);
+ // 满载（余 0.4 公斤 < 一份 0.5）：再收被拒、零写入；收完后再收的"没有成熟作物"拒绝见 w8c-carry 一趟收完用例。
+ await assert.rejects(run(f.engine,out.document,'world_farm',{operation:'private_harvest'},'again'),/拿不动/);
  assert.deepEqual(out.document,snapshot);
 });
 
@@ -111,10 +115,12 @@ test('同一田地的公私批次共用账户，私田收割不挪用公共作�
  // Private oats: (2/15 ha)*1700*179.9/180 = 226.54 -> 226.
  // Same field/crop account: 2446 + 226 = 2672 portions.
  assert.equal(publicYield,2446);assert.equal(privateYield,226);assert.equal(before.ledger.accounts[account],2672);
+ // W8-E1 负重：身上 = 2.6 + 麦种 20×0.5 + 余燕麦 4×0.5 + 锄 1.5 + 镰 0.5 = 16.6 公斤，余 13.4 → floor(13.4/0.5) = 26 份；私田剩 226 − 26 = 200。
  const out=await run(f.engine,before,'world_farm',{operation:'private_harvest'},'private-only');
- assert.equal(out.result.harvested,privateYield);assert.equal(out.document.ledger.accounts[account],publicYield);
- assert.ok(out.document.ledger.lots[account].every(l=>l.id.startsWith('public:')));
- assert.equal(out.document.ledger.lots[account].reduce((n,l)=>n+l.qty,0),publicYield);
+ assert.equal(out.result.harvested,26);assert.equal(out.document.ledger.accounts[account],publicYield+200);
+ const lots=out.document.ledger.lots[account];
+ assert.equal(lots.filter(l=>l.id.startsWith('public:')).reduce((n,l)=>n+l.qty,0),publicYield,'公共批次一份未动');
+ assert.equal(lots.filter(l=>!l.id.startsWith('public:')).reduce((n,l)=>n+l.qty,0),200,'只从私田批次取');
  const audit=reconcile(f.engine,out.document);assert.deepEqual(audit.mismatches,[]);assert.deepEqual(audit.lots,[]);assert.deepEqual(audit.drift,[]);
 });
 
@@ -125,8 +131,10 @@ test('economy:yield 修正作用于真实成熟入账，收割不会再乘一次
  // 300 × 179.9/180 = 299.8333...; floor after ×2 is 599, not 299×2.
  assert.equal(normal.document.state.records[id].yield,299);
  assert.equal(boost.document.state.records[id].yield,599);
+ assert.equal(boost.document.ledger.accounts[account],599,'修正后的产量一次入账');
+ // 收割只转移已入账的存量：收下的 + 田里剩的 = 599，不再乘修正（背得动的份数同上 14）。
  const out=await run(boost.engine,boost.document,'world_farm',{operation:'private_harvest'},'boost-harvest');
- assert.equal(out.result.harvested,boost.document.ledger.accounts[account]);
+ assert.equal(out.result.harvested,14);assert.equal(out.result.harvested+out.result.remaining,599);assert.equal(out.document.ledger.accounts[account],585);
 });
 
 test('30次逐日与一次30日推进：作物、库存及再生总量完全一致',async()=>{

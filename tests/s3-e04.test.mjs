@@ -10,6 +10,8 @@ test('E04-2: actual extraction, strike, stock-driven prices, purchases and craft
 test('E04-3: upper court, stolen provenance, receiving case and witnessed report',stolenScenario);
 test('E04-3: recovered ore can be purchased and resold without reviving the old offense',async()=>{
  const f=fixture(),item='item_iron_ore',unit='unit_e04_recovered';
+ // W8-E1 负重：通用夹具行囊 265 公斤（木料 200 + 燕麦 50 + 面包 15）超安全负重 30 公斤，买 1 份矿石入囊被拒；本用例不用这些货，空囊。
+ f.doc.state.inventory={};
  f.doc.state.npcs[host].inventory[item]={quantity:1,instances:[unit]};
  f.doc.state.itemInstances??={};
  f.doc.state.itemInstances[unit]={id:unit,item,owner:host,status:'持有',stolenOrigin:{event:'old-dig',victim:clerk,recoveredAt:0,recoveryEvent:'old-claim'}};

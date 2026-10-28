@@ -5,7 +5,7 @@ import {declareHoldingWriter,holdingSet,createEntity,setLocation,openHolding,ali
 import {trackTransferUnit,changeItems,writePhysicalItem,equipPhysicalItem,bindPurse,writeLiquidContents,registerPhysicalStock,bindContainerWater} from '../../server-plugin/items.mjs';
 import {BOOKED} from '../../server-plugin/stock.mjs';
 import {bodyRule,writeBodyNeed} from '../../server-plugin/primitives-body.mjs';
-import {safeCarryKg,carriedKg} from '../../server-plugin/carry.mjs';
+import {safeCarryKg,carriedKg,carryOverKg,packItemKg} from '../../server-plugin/carry.mjs';
 import {derivedStats,monsterStats} from '../../server-plugin/combat.mjs';
 import {npcAgeAt} from '../../server-plugin/npc-state.mjs';
 import {environmentFeatures,writeEnvironmentPremise,localSightClear,localPlayerPoint} from '../../server-plugin/environment.mjs';
@@ -87,7 +87,12 @@ function instance(ctx,row,item){
    // Without same_stock the declaration itself supplies one original item.
    // Reuse existing stock when present; otherwise initialize that one unit
    // through the native item writer. The final opening books count it once.
-   if(!binding&&ctx.engine.quantity(d,holder,row.item)<1)ctx.engine.itemDelta(d,holder,row.item,1,BOOKED,{carryExempt:true});
+   // The one original enters the holder's pack under the play carry rule (01 §1.2): too heavy is unmet, never exempt.
+   if(!binding&&ctx.engine.quantity(d,holder,row.item)<1){
+    const over=carryOverKg(d,ctx.engine,holder,packItemKg(d,ctx.engine,holder,row.item));
+    if(over)throw Error(`前提行囊超出安全负重${over}公斤，01 §1.2`);
+    ctx.engine.itemDelta(d,holder,row.item,1,BOOKED);
+   }
    nativeId=trackTransferUnit(d,ctx.engine,holder,row.item,`${writer}:${row.id}`);
    if(Object.values(ctx.bindings).includes(nativeId))throw Error('same_stock unit already bound to another instance');
    const unit=d.get('state','itemInstances',nativeId),max=unit.maxDurability;

@@ -38,7 +38,8 @@ export async function materialScenario(){
  const opening=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','npcs',host,'inventory'],value:{...f.doc.state.npcs[host].inventory,[item]:{quantity:4}}}]});
  assert.deepEqual(opening.setupUnmet,[]);f.doc=opening.document;
  f.doc.state.settlements.loc_hw.iron=0;
- f.doc.state.inventory.item_charcoal={quantity:20};
+ // W8-E1 负重：通用夹具行囊的面包 15 + 木料 200 + 燕麦 50 公斤本情境不用（打铁只用铁、木炭与锤钳），去掉，只带木炭 20 份 = 5 公斤与下面的工具。
+ f.doc.state.inventory={item_charcoal:{quantity:20}};
  const smith='npc_hw_duanyan';
  f.doc.state.npcs[smith]={...f.doc.state.npcs[host],inventory:{},location,status:'正常'};
  for(const tool of recipe.tools)f.doc.state.inventory[tool]={quantity:1,durability:100};
@@ -99,6 +100,8 @@ export async function materialScenario(){
 }
 export async function stolenScenario(){
  const location='site_ms_ll_adit',f=fixture({at:location}),county='county_xichui_huancheng';
+ // W8-E1 负重：通用夹具行囊 265 公斤（木料 200 + 燕麦 50 + 面包 15）超安全负重 30 公斤，买 1 份赃矿入囊被拒；本情境不用这些货，空囊前往矿口。
+ f.doc.state.inventory={};
  const skeleton=generateCounty(f.w,county,'e04-court');
  f.doc.state.remote??={};f.doc.state.remote[county]={county,skeleton,profiles:{}};
  for(const n of skeleton.people)f.doc.state.npcs[n.id]={status:'正常',location:n.location,activity:'办公',occupation:n.occupation,coins:1000,inventory:{}};

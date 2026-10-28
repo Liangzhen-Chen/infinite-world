@@ -3,6 +3,7 @@ import {rows,keys,text,integer,requireShape,known,eventSource,gap} from './insti
 import {accountKey,openLedger} from '../../server-plugin/ledger.mjs';
 import {changeItems} from '../../server-plugin/items.mjs';
 import {BOOKED} from '../../server-plugin/stock.mjs';
+import {carryOverKg,packItemKg} from '../../server-plugin/carry.mjs';
 
 // Opening inventory counts are plain item quantities. A coin_river balance, a case,
 // an obligation or a document is a claim somebody holds: it exists only because a
@@ -20,7 +21,10 @@ function loadAccounts(ctx,setup){
   requireShape(row.purpose==='inventory'&&ctx.actor(owner)&&ctx.engine.world.items.some(i=>i.id===row.resource),'unsupported resource/account purpose or actor');
   ctx.native(item,d=>{
    const old=ctx.engine.quantity(d,owner,row.resource);
-   if(row.balanceMode!=='ensure_existing')changeItems(d,ctx.engine,owner,row.resource,row.balance-old,{books:BOOKED,carryExempt:true});
+   // A premise pack is held to the same carry rule as play (01 §1.2): too heavy is unmet, never exempt.
+   const over=carryOverKg(d,ctx.engine,owner,(row.balance-old)*packItemKg(d,ctx.engine,owner,row.resource));
+   if(over&&row.balanceMode!=='ensure_existing')throw Error(`前提行囊超出安全负重${over}公斤，01 §1.2`);
+   if(row.balanceMode!=='ensure_existing')changeItems(d,ctx.engine,owner,row.resource,row.balance-old,{books:BOOKED});
    d.set(['ledger'],openLedger(ctx.engine,d.document));
   });
  });

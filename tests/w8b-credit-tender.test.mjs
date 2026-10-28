@@ -28,9 +28,12 @@ function build({tender=true,hostAt=post}={}){
  npc.creditPolicy={limitCopper:100,maximumMinutes:1440,minimumTrust:0};
  return w;
 }
-function fixture(options={}){
+// W8-E1 负重：面包 100（15 公斤，典当品）+ 木料 100（200 公斤，借款抵押）合计 215 公斤，超安全负重 30 公斤，券一入囊就被拒。
+// 抵押品只带给真要用的用例：典当用例只带面包，不借不当的用例空囊（随身 2.6 公斤）。
+const PAWN_ONLY={item_bread:100},NO_GOODS={};
+function fixture(options={},inventory={item_bread:100,item_wood:100}){
  const engine=new WorldEngine(build(options)),initial=engine.createCharacter(seed,{},'w8b');
- const prepared=applyIntentSetup(engine,initial,{minute:600,location:post,coins:3000,inventory:{item_bread:100,item_wood:100}});assert.deepEqual(prepared.setupUnmet,[]);
+ const prepared=applyIntentSetup(engine,initial,{minute:600,location:post,coins:3000,inventory});assert.deepEqual(prepared.setupUnmet,[]);
  const f={engine,document:prepared.document,
   async act(tool,args,id){const out=await engine.reduce(f.document,{tool,args,eventId:id});f.document=applyPatches(f.document,out.patches);return out.result;},
   trade:(args,id)=>f.act('world_trade',{seller:keeper,...args},id),
@@ -86,8 +89,10 @@ test('W8B-2 兑换率变了：债的本金与本息不变；换铜还款按还�
 
 test('W8B-3 按券还款：原数交回钱庄备付金，部分还款也按券',async()=>{
  const f=fixture();
+ // W8-E1 负重：先抵押木料借款（200 公斤离开行囊），再兑 3 张券；原顺序先兑券时行囊 215 公斤，券进不了囊。
+ const loan=await borrow(f,'b3-borrow');
  await f.issue(3,'b3-issue');                              // 玩家需要比 10 张多的券才还得起利息
- const loan=await borrow(f,'b3-borrow'),before=f.notes('player'),vault=f.bankNotes();
+ const before=f.notes('player'),vault=f.bankNotes();
  const part=await f.trade({payment:'repay',debt:loan.debt,coins:4},'b3-part');
  assert.deepEqual([part.repaid,part.status],[4,'待偿还']);
  assert.deepEqual([before-f.notes('player'),f.bankNotes()-vault],[4,4]);
@@ -99,7 +104,7 @@ test('W8B-3 按券还款：原数交回钱庄备付金，部分还款也按券',
 });
 
 test('W8B-4 典当与赎当同一单位；赎当回执写明债权人（037）',async()=>{
- const f=fixture();
+ const f=fixture({},PAWN_ONLY);
  await f.issue(3,'b4-issue');
  const notes=f.notes('player');
  // 面包 ×100，估值每个 1 文 = 100 文；垫款比 .5 → 50 文 ÷ 10 文/张 = 5 张。
@@ -119,7 +124,7 @@ test('W8B-4 典当与赎当同一单位；赎当回执写明债权人（037）',
 });
 
 test('W8B-5 赎当可换铜：按赎当时兑换（无成交 10 文/张）向上取整；流当拍卖按当日价值折抵，余款退还',async()=>{
- const f=fixture();
+ const f=fixture({},PAWN_ONLY);
  const a=await f.trade({operation:'pawn',item:'item_bread',quantity:100,days:1},'b5-pawn-a');
  // 无成交时 1 张 = 10 文：本息 amount 张 × 10 文，没有零头。
  const owe=f.document.state.records[a.contract].amount,coins=f.coins();
@@ -169,7 +174,7 @@ test('W8B-7 替工工钱按券付：报酬冻结为券进合同托管，做完�
 });
 
 test('W8B-8 合伙出资与分红：出资 100 文 = 10 张券，退股与分成同为券',async()=>{
- const f=fixture({hostAt:shop});
+ const f=fixture({hostAt:shop},NO_GOODS);
  // 先在铺面租铺（真实动作，租金也冻结为券），再订合伙。
  await f.issue(30,'b8-issue');
  f.at(shop,f.hostFacts({[NOTE_ITEM]:{quantity:30,quality:'木'}},shop));
