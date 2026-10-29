@@ -1,13 +1,12 @@
 // Read-only market projections. Only completed trades are persisted, never quotes.
 import {bagStock,priceRead,settlementStock,granary,pledged,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
-import {placeSettlement,personHousehold,personBusinesses} from './entity-view.mjs';
+import {placeSettlement,personBusinesses} from './entity-view.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
-import {digest} from './storage.mjs';
-import {bodyRule} from './primitives-body.mjs';
+import {householdResources,householdCommitments} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow} from './det-math.mjs';
 
@@ -50,47 +49,10 @@ function personalReserves(d,engine,owner){return reserveAllocation(d,engine,owne
 // 一户人按储备天数需要的口粮、饮水中，目前行囊里的存粮没能覆盖的缺口（营养单位）：居民自己的真实采购需求。
 export function reserveShortfall(d,engine,owner){return reserveAllocation(d,engine,owner).shortfall;}
 function reserveAllocation(d,engine,owner){
- const state=stateOf(d),reserved=new Map(),shortfall={};
- // One shared allocation across the current household's actual bags. A shop
- // keeper's shelf is also the family's food; each portion is retained once.
- const members=personHousehold(engine,state,owner).value?.members??[owner];
- const foods=members.flatMap(holder=>Object.entries(inventoryOf(state,holder)).map(([id,held])=>({holder,id,key:`${holder}:${id}`,held,definition:engine.byId.get(id)}))).filter(row=>row.definition?.nutrition).sort((a,b)=>(a.definition.shelfLifeDays??Infinity)-(b.definition.shelfLifeDays??Infinity)||a.id.localeCompare(b.id)||a.holder.localeCompare(b.holder));
- for(const need of ['satiety','hydration']){
-  const body=bodyRule(engine,need);
-  const base=body.drainPerHour.light*24*rulesOf(engine).personalReserveDays;
-  let remaining=members.reduce((sum,id)=>sum+explainDerived(engine,d.document??{state},'body:drain',id,{base}).value,0);
-  for(const row of foods)remaining-=(reserved.get(row.key)??0)*(row.definition.nutrition[need]??0);
-  for(const row of foods){
-   const gain=row.definition.nutrition[need]??0;if(gain<=0||remaining<=0)continue;
-   const stock=bagStock(d,engine,{point:'region.material',id:row.holder,item:row.id,legacy:()=>quantity(row.held)}),prior=reserved.get(row.key)??0;
-   const count=Math.min(Math.max(0,stock-prior),Math.ceil(remaining/gain));
-   reserved.set(row.key,prior+count);remaining-=count*gain;
-  }
-  shortfall[need]=Math.max(0,remaining);
- }
- return {shortfall,reserved:new Map(foods.filter(row=>row.holder===owner).map(row=>[row.id,reserved.get(row.key)??0]))};
+ const budget=householdResources(d,engine,owner);
+ return {shortfall:budget.procurementShortfall,reserved:new Map(budget.rows.filter(r=>r.holder===owner).map(r=>[r.item,r.retained]))};
 }
-
-// Canonical obligations and their records projections are counted once.
-function commitments(state,owner,item){
- let held=0;const represented=new Set();
- for(const row of obligationRows(state)){
-  if(obligationClosed(row))continue;
-  if(row.legacyRecord)represented.add(row.legacyRecord);
-  if((row.debtor??row.promisor)===owner&&(row.resource??row.item??row.subject)===item)held+=Math.max(0,(row.amount??row.quantity??0)-(row.paid??row.fulfilled??0));
- }
- for(const [key,row]of Object.entries(state.records??{})){
-  if(represented.has(key)||row.obligation&&state.obligations?.[row.obligation])continue;
-  if(row.category==='contract'&&row.kind==='procurement'&&row.parties?.[1]===owner&&row.subject===item&&!obligationClosed(row))held+=Math.max(0,row.quantity-(row.fulfilled??0));
-  // The source/receipt gate for agreed prices is owned by shop; a reservation
-  // here does not authorize payment or override that gate.
-  if(row.category==='agreed_quote'&&row.direction==='sell_to_player'&&row.actor===owner&&row.resource===item&&row.at<=state.minute&&state.minute<row.expires&&!state.records[`${key}:used`]&&state.records[`${key}:source`]?.digest===digest(row)){
-   const source=state.records[`world_event:${row.sourceEvent?.replace(/^world_event:/,'')}`],p=source?.payload;
-   if(source?.verb==='quoted'&&source.actor===row.actor&&source.minute===row.at&&p?.to===row.to&&p.resource===row.resource&&p.quantity===row.quantity&&p.totalCoins===row.totalCoins)held+=row.quantity;
-  }
- }
- return held;
-}
+const commitments=householdCommitments;
 // D15 §15.6: reliability is a projection of actual performances, never a
 // reputation counter written when a quote happens to be read.
 export function forwardReliability(d,engine,debtor){
@@ -117,7 +79,7 @@ export function forwardSupply(d,engine,item,location){
   // All destinations share one stock budget, including promises outside this market.
   const promised=forwards.filter(r=>r.debtor===row.debtor&&r.resource===resource).reduce((sum,r)=>sum+Math.max(0,r.amount-(r.paid??0)),0);
   const otherCommitments=Math.max(0,commitments(state,row.debtor,resource)-promised);
-  const retained=engine.byId.get(resource)?.nutrition?personalReserves(d,engine,row.debtor).get(resource)??0:0;
+  const retained=personalReserves(d,engine,row.debtor).get(resource)??0;
   const production=Object.values(state.records??{}).filter(f=>f.category==='private_farm'&&f.owner===row.debtor&&f.crop===resource&&['growing','ready'].includes(f.status)).reduce((sum,farm)=>{
    const title=state.buildings?.[farm.location];
    if(title?.owner!==row.debtor||title.condition<=0||Object.values(state.records??{}).some(r=>r.kind==='asset_lease'&&r.subject===farm.location&&r.tenant!==row.debtor&&r.status==='有效'&&r.deadline>state.minute))return sum;
@@ -162,16 +124,14 @@ export function forwardSupply(d,engine,item,location){
  }
  return {expected:rows.reduce((sum,row)=>sum+row.expected,0),rows};
 }
-export function saleableStock(d,engine,owner,item,{business=false}={}){
- const state=stateOf(d),catalog=engine.byId.get(item),bag=inventoryOf(state,owner),raw=quantity(bag[item]);
- const stock=bagStock(d,engine,{point:'region.material',id:owner,item,legacy:()=>raw});
- if(!stock)return {owner,item,stock:0,retained:0,committed:0,available:0};
- // Native work tasks reserve the recipe tools while the actor is using them.
- const inUse=Object.values(state.npcAutonomy?.tasks??{}).some(task=>task.npc===owner&&task.status==='进行中'&&(engine.world.recipes.find(r=>r.id===task.action?.recipe)?.tools??[]).includes(item))?1:0;
- const reserve=catalog.nutrition?personalReserves(d,engine,owner).get(item)??0:0;
- const committed=commitments(state,owner,item),retained=Math.max(inUse,reserve);
- return {owner,item,stock,retained,committed,available:Math.max(0,stock-retained-committed)};
+function budgetStock(budget,owner,item){
+ const row=budget.rows.find(r=>r.holder===owner&&r.item===item);
+ return row?{owner,item,stock:row.stock,retained:row.retained,committed:row.committed,available:row.available}:{owner,item,stock:0,retained:0,committed:0,available:0};
 }
+export function saleableStock(d,engine,owner,item,{business=false}={}){
+ return budgetStock(householdResources(d,engine,owner),owner,item);
+}
+
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  let personalDemand=0;
@@ -185,7 +145,10 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  for(const [id,business]of personBusinesses(engine,state))if(business?.open.value&&business.shopType.value)owners.add(id);
  for(const id of ['player',...Object.keys(state.npcs??{}),...Object.keys(state.creatures??{})]){
   if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
-  for(const it of items){const row=saleableStock(d,engine,id,it.id,{business:owners.has(id)});if(!row.stock)continue;
+  // One read-only household allocation serves all items in this quote. No
+  // writes occur in the loop; repeated allocation cannot change the budget.
+  const budget=householdResources(d,engine,id);
+  for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;
    if(owners.has(id))rows.push(row);
    else personalDemand+=row.retained+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
   }

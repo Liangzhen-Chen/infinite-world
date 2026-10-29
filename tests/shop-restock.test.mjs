@@ -49,11 +49,14 @@ test('发布规则自洽；面包基准进入市场投影',async()=>{
 
 test('周期补货：按店家周期在午夜补到上限，不会无限出售；来源与付款入账',async()=>{
     const f=fixture(),total=cash(f.doc);
-    // S5-02: two household members *2.5 satiety/h *24 /30 =4
-    // retained portions. Only two of the original six may leave the shelf.
+    // K02: two residents need120 satiety/day; their cash and real daily
+    // delivery cover food after midnight. At minute600, physical retention
+    // is ceil(120*840/1440/30)=3 of the unchanged six loaves.
     await f.act('world_trade',{seller:host,item:'item_bread',quantity:2},'buy-bread');
     assert.equal(qty(f.doc,host,'item_bread'),4);
-    await assert.rejects(f.act('world_trade',{seller:host,item:'item_bread',quantity:1},'too-many'),/库存不足/);
+    // Four remain, three bridge delivery; another two exceed the one
+    // saleable loaf. Initial stock, source and payment assertions stay intact.
+    await assert.rejects(f.act('world_trade',{seller:host,item:'item_bread',quantity:2},'too-many'),/库存不足/);
     f.doc.state.location=forge;
     await f.act('world_trade',{seller:smith,item:'item_kitchen_knife',quantity:2},'buy-knife');
     assert.equal(qty(f.doc,smith,'item_kitchen_knife'),0);

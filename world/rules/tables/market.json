@@ -18,6 +18,14 @@
   },
   "qualityStep": 1.25,
   "personalReserveDays": 1,
+  "householdBuffer": {
+    "source": "P initial bounded mixture: 5% spendthrift, 90% ordinary, 5% thrifty; cycles 0/1/2, not historical estimates",
+    "profiles": [
+      {"id": "spendthrift", "through": 1, "cycles": 0},
+      {"id": "ordinary", "through": 19, "cycles": 1},
+      {"id": "thrifty", "through": 20, "cycles": 2}
+    ]
+  },
   "water": {
     "saltMgPerLitre": 1000,
     "toxinUgPerLitre": 1,
