@@ -15617,7 +15617,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 82,
     "symbol": "activities.environment",
-    "dispatch": "server-plugin/environment.mjs:392"
+    "dispatch": "server-plugin/environment.mjs:395"
    }
   },
   {
@@ -15680,7 +15680,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 82,
     "symbol": "activities.environment",
-    "dispatch": "server-plugin/environment.mjs:398"
+    "dispatch": "server-plugin/environment.mjs:401"
    }
   },
   {
@@ -15743,7 +15743,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 82,
     "symbol": "activities.environment",
-    "dispatch": "server-plugin/environment.mjs:403"
+    "dispatch": "server-plugin/environment.mjs:406"
    }
   },
   {
@@ -15806,7 +15806,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 82,
     "symbol": "activities.environment",
-    "dispatch": "server-plugin/environment.mjs:408"
+    "dispatch": "server-plugin/environment.mjs:411"
    }
   },
   {
@@ -16246,7 +16246,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 65,
     "symbol": "activities.lair",
-    "dispatch": "server-plugin/environment.mjs:408"
+    "dispatch": "server-plugin/environment.mjs:411"
    }
   },
   {
