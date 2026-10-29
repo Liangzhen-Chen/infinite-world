@@ -194,7 +194,8 @@ const householdSourceReads=new WeakMap();
 function nextFoodService(engine,state,shop,minute){
  for(let at=minute;at<minute+31*DAY;){
   const slot=facilityRuntime().scheduleAt?.(engine,shop.keeper,at,state);
-  if(!slot)return null;
+  // A keeper without any authored schedule keeps the legacy always-open service.
+  if(!slot)return at===minute?{minute:at,location:shop.location}:null;
   if(slot.location===shop.location&&slot.services?.includes('trade'))return {minute:at,location:slot.location};
   at=slot.until;
  }
@@ -216,7 +217,9 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   let travel=0;
   if(location!==shop.location){try{travel=engine.route(location,shop.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
-  const opening=nextFoodService(engine,state,shop,now+travel);
+  // Buying from another keeper needs their trading hours. One's own restock
+  // reaches the shelf on the delivery cycle regardless of one's own hours.
+  const opening=shop.keeper===owner?{minute:now+travel,location:shop.location}:nextFoodService(engine,state,shop,now+travel);
   if(!opening||opening.location!==shop.location)continue;
   const ledger=state.records?.[`shop:${shop.id}`];
   let physical=null;
