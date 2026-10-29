@@ -89,11 +89,16 @@ test('租房需求来自当前住房，租约进入住户与作息视图；离�
     f.tick(600+90*DAY);assert.equal(f.doc.state.records[r.contract].status,'已到期');assert.equal(personHousehold(f.e,f.doc.state,worker).value.homeLocation,oldHome);
 });
 test('田地与铺面租客随当前职业和经营需求派生，无产权或不匹配需求不能出租',async()=>{
+    // W8-E8: a renamed mill has no area/yield facts. Keep the occupation/title
+    // assertions on the real registered field, with a one-mu lease (1700/15
+    // portions/year * local grain quote *3/10 /12), not invented mill output.
+    const field='loc_hw_fields',farm=fixture({at:field}),landTotal=cash(farm.doc);
+    farm.doc.state.buildings[field]={owner:'player',condition:100};farm.doc.state.npcs[worker].occupation='农夫';
+    assert.equal(rentalNeed(farm.e,farm.doc.state,worker,field)?.kind,'field');
+    const land=await farm.act({operation:'rent_out',seller:worker,location:field,quantity:1,consent:true},'field');assert.equal(farm.doc.state.records[land.contract].use,'field');
+    assert.equal(farm.doc.state.records[land.contract].rentBasis.areaMu,1);assert.equal(cash(farm.doc),landTotal);
     const f=fixture({at:mill}),p=f.e.byId.get(mill);f.doc.state.buildings[mill]={owner:'player',condition:100};const total=cash(f.doc);
-    p.purpose='田地';f.doc.state.npcs[worker].occupation='农夫';
-    assert.equal(rentalNeed(f.e,f.doc.state,worker,mill)?.kind,'field');
-    const land=await f.act({operation:'rent_out',seller:worker,location:mill,consent:true},'field');assert.equal(f.doc.state.records[land.contract].use,'field');
-    f.doc.state.records[land.contract].status='已到期';p.purpose='铺面';assert.equal(rentalNeed(f.e,f.doc.state,host,mill)?.kind,'commercial');
+    p.purpose='铺面';assert.equal(rentalNeed(f.e,f.doc.state,host,mill)?.kind,'commercial');
     const shop=await f.act({operation:'rent_out',seller:host,location:mill,consent:true},'shop');assert.equal(personBusiness(f.e,f.doc.state,host).location.value,mill);
     f.doc.state.buildings[mill].owner=host;await assert.rejects(f.act({operation:'rent_out',seller:clerk,location:mill,consent:true},'no-title'),/合法持有/);
     assert.equal(cash(f.doc),total);assert.ok(shop.contract);

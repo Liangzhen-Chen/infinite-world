@@ -491,7 +491,8 @@ function privateFarmAction(d,engine,p,args,eventId){
     if(location!==p.fieldLocation||d.get('state','location')!==location||!mayFarm()||asset?.condition<=0)throw preconditionFailure('须在本人合法持有且完好的登记田地操作（本人持有或有效承租）');
     if(leases().some(r=>contractTerms(r,d.get('state','minute')).tenant!=='player'))throw preconditionFailure('田地已有他人的有效租赁使用权，不能重复占用');
     const old=d.get('state','records',id),day=Math.floor(d.get('state','minute')/1440),crop=engine.rules.agriculture.crop;
-    const crops=domainRules(engine).privateField.crops,seedItem=args.operation==='private_sow'?(args.item?engine.resolve(args.item,'item'):crops[0].seed):old?.seedItem;
+    const signedField=tenantLease&&contractTerms(tenantLease,d.get('state','minute')).rentBasis;
+    const crops=domainRules(engine).privateField.crops,seedItem=args.operation==='private_sow'?(args.item?engine.resolve(args.item,'item'):signedField?.seedItem??crops[0].seed):old?.seedItem;
     const binding=crops.find(c=>c.seed===seedItem),item=old?.crop??binding?.product;
     if(old?.lease&&tenantLease&&old.lease!==tenantLease.id&&args.operation==='private_harvest')throw preconditionFailure('前一租期未收的作物已留田归田主');
     if(args.operation==='private_inspect')return{farm:old??null,...(leaseNote?{leaseNote}:{})};
@@ -499,6 +500,7 @@ function privateFarmAction(d,engine,p,args,eventId){
     if(args.operation==='private_harvest'&&old?.status!=='ready')throw preconditionFailure('没有可收割的成熟作物');
     const areaMu=args.operation==='private_sow'?args.areaMu:old?.areaMu;
     int(areaMu,1,10000);
+    if(signedField&&(areaMu>signedField.areaMu||seedItem!==signedField.seedItem))throw preconditionFailure('播种面积或作物超出已签田租条款，请按约播种或先重新商议租约');
     const labor=engine.world.primitiveTables?.yields?.rows?.find(r=>r.selector==='field:wheat'&&r.laborSow!==undefined);
     const workday=engine.world.primitiveTables?.['action-costs']?.params?.find(r=>r.id==='workday.minutes')?.value;
     const fieldRule=domainRules(engine).privateField;

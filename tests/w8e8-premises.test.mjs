@@ -1,14 +1,53 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {fixture,worker,host,inn,post,DAY} from './helpers/finance.mjs';
-import {workshopStorage} from '../server-plugin/finance-assets.mjs';
+import {fieldRentBasis,workshopStorage} from '../server-plugin/finance-assets.mjs';
 import {premisesInventory,premisesStock} from '../server-plugin/stock.mjs';
 import {withLedger} from '../server-plugin/ledger.mjs';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {reconcile,conservation} from './helpers/ledger-audit.mjs';
-import {leaseState} from '../server-plugin/contract-state.mjs';
+import {leaseState,contractTerms} from '../server-plugin/contract-state.mjs';
 import {characterUiSession} from './helpers/ui-script.mjs';
 import {personOffices,settlementGovernment} from '../server-plugin/entity-view.mjs';
+import {marketQuote} from '../server-plugin/market.mjs';
+import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
+import marketRules from '../world/rules/tables/market.json' with {type:'json'};
+
+test('田租按实际亩数、作物年产量与当地报价派生，不沿用房租',()=>{
+ const f=fixture(),d=f.draft(),subject='loc_hw_fields';
+ const oats=marketQuote(d,f.e,{item:'item_oats',location:subject,quantity:1,base:regionalTradeBase(d,f.e,'item_oats',subject)}).listPrice;
+ // One annual 5..25 sowing window; 180 days cannot fit another crop there.
+ // 1 mu = 1/15 ha; oats 1700 portions/ha, customary rent3/10, twelve months.
+ const one=fieldRentBasis(d,f.e,subject,{areaMu:1});
+ assert.deepEqual(one,{areaMu:1,seedItem:'item_oats',crop:'item_oats',annualSeasons:1,monthlyAnchor:Math.ceil(1700/15*oats*3/10/12)});
+ assert.equal(fieldRentBasis(d,f.e,subject,{areaMu:2}).monthlyAnchor,Math.ceil(2*1700/15*oats*3/10/12));
+ // The registered 1400 hundredths of a hectare really are210 mu, not one.
+ assert.equal(fieldRentBasis(d,f.e,subject).areaMu,210);
+ assert.equal(fieldRentBasis(d,f.e,subject).monthlyAnchor,Math.ceil(210*1700/15*oats*3/10/12));
+ const wheatPrice=marketQuote(d,f.e,{item:'item_wheat_grain',location:subject,quantity:1,base:regionalTradeBase(d,f.e,'item_wheat_grain',subject)}).listPrice;
+ const wheat=fieldRentBasis(d,f.e,subject,{areaMu:1,seedItem:'item_wheat_seed'});
+ // The existing field:wheat table says150 jin/mu, .5 kg/jin, catalogue portion weight.
+ assert.equal(wheat.monthlyAnchor,Math.ceil(150*.5/f.e.byId.get('item_wheat_grain').weight*wheatPrice*3/10/12));
+ assert.equal(wheat.crop,'item_wheat_grain');
+ assert.throws(()=>fieldRentBasis(d,f.e,subject,{areaMu:211}),/租入亩数/);
+ assert.throws(()=>fieldRentBasis(d,f.e,subject,{areaMu:1,seedItem:'item_wood'}),/作物的产量规则/);
+ // Same crop yield function: a doubled published yield doubles the unrounded rent.
+ f.e.rules.agriculture.crop.yieldPerHa*=2;
+ assert.equal(fieldRentBasis(d,f.e,subject,{areaMu:1}).monthlyAnchor,Math.ceil(2*1700/15*oats*3/10/12));
+});
+
+test('惯例租率由可耕面积与家户篮子反推，落入NUM-W10佃户带',()=>{
+ const f=fixture(),share=f.e.rules.agriculture.fieldRent.customaryShare;
+ // Two adults,21 sowing days each, half a workday/mu:84 mu; one season.
+ // Three mouths,360 days;8 oats seed/mu;140/month housing;two suits/year;
+ // communal fuel1 log/40 people/day. Calibration local quotes: oats5.069784173,
+ // clothes8, wood2. At3/10 the ratio is1.15173; at grain3 it is1.09804.
+ const area=2*21/.5,price=5.069784172661871,gross=area*1700/15*price,income=gross*marketRules.spread.buy;
+ const necessary=(3*360+area*8)*price+140*12+3*2*8+3/40*360*2;
+ assert.deepEqual(share,{numerator:3,denominator:10});assert.equal(marketRules.spread.buy,.6);
+ const ratio=income/(necessary+gross*share.numerator/share.denominator);
+ assert.ok(ratio>=1.05&&ratio<=1.25);assert.ok(Math.abs(ratio-1.15173)<.0001);
+});
 
 const location='bld_hw_mill',item='item_wood';
 async function councilSession(t,seed){
@@ -19,26 +58,31 @@ async function councilSession(t,seed){
 }
 test('陌生承租人的延期报价可被拒绝，回执说明现付且不留下延期债',async t=>{
  const ui=await councilSession(t,'w8e8-rent-cash-fallback'),before=await ui.read();
- const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',days:7,deadline:before.state.minute+6*DAY});
+ const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:1,days:7,deadline:before.state.minute+6*DAY});
  assert.equal(out.ok,true,out.error);assert.ok(out.result.deferredRefusal);
  assert.match(out.result.notePayment,/改为现付/);
- // Same unchanged seven-day tariff: ceil(140*7/30)=33, not free credit.
- assert.equal(out.result.paid,33);assert.equal(out.result.rentDueAt,undefined);
- const after=await ui.read();assert.equal(before.state.player.coins-after.state.player.coins,33);
+ // Derived one-mu anchor15: ceil(15*7/30)=4, not free credit.
+ assert.equal(out.result.paid,4);assert.equal(out.result.rentDueAt,undefined);
+ const after=await ui.read();assert.equal(before.state.player.coins-after.state.player.coins,4);
  assert.equal(after.state.records[out.result.contract].clauses.rentDueAt,undefined);
  assert.equal(Object.values(after.state.obligations).filter(o=>o.contract===out.result.contract).length,0);
 });
 test('首领真实接受延期报价后形成应付，菜单清偿只进公库',async t=>{
  const ui=await councilSession(t,'w8e8-rent-deferred'),before=await ui.read(),due=before.state.minute+6*DAY;
- // An allowed higher monthly quote compensates credit risk; no trust edits.
+ // Ten mu at the derived local anchor: 210 remains within .8..1.5 and covers risk.
  // Seven days at 210/month: ceil(210*7/30)=49 owed, zero cash at signing.
- const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',coins:210,days:7,deadline:due});
+ const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:10,coins:210,days:7,deadline:due});
  assert.equal(out.ok,true,out.error);assert.equal(out.result.paid,0);assert.equal(out.result.rentDueAt,due);
  const signed=await ui.read(),claim=signed.state.obligations[out.result.debt];
  assert.equal(claim.amount,49);assert.equal(claim.paid,0);assert.equal(claim.creditor,'loc_hw');
  assert.equal(signed.state.player.coins,before.state.player.coins);
  assert.equal(signed.state.settlements.loc_hw.treasury,before.state.settlements.loc_hw.treasury);
  assert.equal(signed.state.records[out.result.contract].clauses.rentDueAt,due);
+ const signedRow=structuredClone(signed.state.records[out.result.contract]);
+ assert.equal(signedRow.clauses.rentBasis.areaMu,10);
+ assert.ok(210>=Math.ceil(signedRow.rentBasis.monthlyAnchor*.8)&&210<=Math.ceil(signedRow.rentBasis.monthlyAnchor*1.5));
+ signedRow.rentBasis.areaMu=200;signedRow.rentBasis.monthlyAnchor=999;
+ assert.equal(contractTerms(signedRow).rentBasis.areaMu,10,'signed acres cannot be changed by editing a projection');
  // Existing obligation settlement locates this public treasury at loc_hw.
  const counter=await ui.choose('move',{destination:'loc_hw'},{target:'loc_hw'});assert.equal(counter.ok,true,counter.error);
  const paid=await ui.choose('promise.settle',{obligation:out.result.debt},{search:true});assert.equal(paid.ok,true,paid.error);
@@ -56,7 +100,15 @@ test('首领真实接受延期报价后形成应付，菜单清偿只进公库',
  // The crop window starts at absolute day index5 (calendar day6).
  const spring=await ui.choose('time',{until:{dayOffset:4,hour:9}});assert.equal(spring.ok,true,spring.error);
  move=await ui.choose('move',{destination:'loc_hw_fields'},{target:'loc_hw_fields'});assert.equal(move.ok,true,move.error);
- const planted=await ui.choose('farm.private_sow',{areaMu:1,item:'item_oats'},{search:true});assert.equal(planted.ok,true,planted.error);
+ const beforeOverplant=await ui.read();
+ const overplant=await ui.choose('farm.private_sow',{areaMu:11,item:'item_oats'},{search:true});
+ assert.equal(overplant.ok,false);assert.match(overplant.error,/超出已签田租条款/);
+ assert.deepEqual(await ui.read(),beforeOverplant,'a ten-mu lease cannot authorize eleven mu or consume any seed');
+ const wrongCrop=await ui.choose('farm.private_sow',{areaMu:1,item:'item_wheat_seed'},{search:true});
+ assert.equal(wrongCrop.ok,false);assert.match(wrongCrop.error,/超出已签田租条款/);
+ assert.deepEqual(await ui.read(),beforeOverplant,'signed crop terms are not silently repriced after agreement');
+ // Omitted seed follows the signed oat crop instead of the owner-only wheat default.
+ const planted=await ui.choose('farm.private_sow',{areaMu:1},{search:true});assert.equal(planted.ok,true,planted.error);
  // Native acreage accepts whole mu: 1/15 ha, with ceil(120/15)=8 seed.
  assert.equal(planted.result.farm.areaUnits,100/15);assert.equal(planted.result.farm.seed,8);
  assert.equal(planted.result.farm.owner,'player');assert.equal(planted.result.farm.lease,out.result.contract);
@@ -70,7 +122,7 @@ test('首领真实接受延期报价后形成应付，菜单清偿只进公库',
 });
 test('秋后交不免月租，到期不交沿现有违约规则立案',async t=>{
  const ui=await councilSession(t,'w8e8-rent-deferred-default'),before=await ui.read(),due=before.state.minute+35*DAY;
- const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',coins:210,days:40,deadline:due});
+ const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:10,coins:210,days:40,deadline:due});
  assert.equal(out.ok,true,out.error);assert.equal(out.result.paid,0);
  const wait=await ui.choose('time',{minutes:31*DAY});assert.equal(wait.ok,true,wait.error);
  const accrued=await ui.read(),claims=Object.values(accrued.state.obligations).filter(o=>o.contract===out.result.contract);
@@ -86,10 +138,10 @@ test('秋后交不免月租，到期不交沿现有违约规则立案',async t=>
 });
 test('延期租约先付部分真实入公库，余款形成义务且不得超付',async t=>{
  const ui=await councilSession(t,'w8e8-rent-partial'),before=await ui.read(),due=before.state.minute+6*DAY;
- const excessive=await ui.choose('trade.rent_in',{location:'loc_hw_fields',days:7,deadline:due,deposit:34});
+ const excessive=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:8,coins:140,days:7,deadline:due,deposit:34});
  assert.equal(excessive.ok,false);assert.deepEqual(await ui.read(),before);
- // ceil(140*7/30)=33; ten paid now, twenty-three owed at the agreed date.
- const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',days:7,deadline:due,deposit:10});
+ // Eight mu: offered140 is within the local derived range; ceil(140*7/30)=33, less ten paid leaves23.
+ const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:8,coins:140,days:7,deadline:due,deposit:10});
  assert.equal(out.ok,true,out.error);assert.equal(out.result.paid,10);
  const after=await ui.read(),claim=after.state.obligations[out.result.debt];
  assert.equal(before.state.player.coins-after.state.player.coins,10);
@@ -123,7 +175,7 @@ test('不足以覆盖条件的先付不能强制成交或超出报价扣全额',
 test('集体田由首领职位现任者当面决定，租金只入聚落公库',async t=>{
  const ui=await characterUiSession(t,{seed:'w8e8-public-property'});
  const walk=await ui.choose('move',{destination:'loc_hw_fields'},{target:'loc_hw_fields'});assert.equal(walk.ok,true,walk.error);
- const absent=await ui.read(),refused=await ui.choose('trade.rent_in',{location:'loc_hw_fields',days:7});
+ const absent=await ui.read(),refused=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:1,days:7});
  assert.equal(refused.ok,false);assert.match(refused.error,/不在场/);
  assert.deepEqual(await ui.read(),absent,'absent chief cannot consent or take payment');
  for(const [action,slots,target] of [['time',{until:{dayOffset:1,hour:9}},null],['move',{destination:'bld_hw_council'},'bld_hw_council']]){
@@ -132,12 +184,12 @@ test('集体田由首领职位现任者当面决定，租金只入聚落公库',
  const before=await ui.read(),e=new (await import('../server-plugin/engine.mjs')).WorldEngine(await (await import('../tools/load-world.mjs')).loadWorld());
  const office=personOffices(e,before.state,'npc_hw_chenbai',{settlement:'loc_hw',power:'public_property'})[0];
  assert.ok(office,'05:129 and §5.7.3 grant the chief class authority, not a personal title');
- const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',days:7});assert.equal(out.ok,true,out.error);
+ const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:1,days:7});assert.equal(out.ok,true,out.error);
  const after=await ui.read();
  assert.equal(out.result.owner,'loc_hw');assert.equal(out.result.signatory,'npc_hw_chenbai');
- assert.equal(out.result.rent,140);assert.equal(out.result.paid,33); // ceil(35*4*7/30).
- assert.equal(before.state.player.coins-after.state.player.coins,33);
- assert.equal(after.state.settlements.loc_hw.treasury-before.state.settlements.loc_hw.treasury,33);
+ assert.equal(out.result.rent,15);assert.equal(out.result.paid,4); // ceil(15*7/30).
+ assert.equal(before.state.player.coins-after.state.player.coins,4);
+ assert.equal(after.state.settlements.loc_hw.treasury-before.state.settlements.loc_hw.treasury,4);
  assert.equal(after.state.npcs.npc_hw_chenbai.coins,before.state.npcs.npc_hw_chenbai.coins);
  assert.equal(after.state.consentEvents.find(r=>r.id===out.result.consent).from,'npc_hw_chenbai');
  assert.deepEqual(conservation(e,before,after),[]);assert.deepEqual(reconcile(e,after).mismatches,[]);
