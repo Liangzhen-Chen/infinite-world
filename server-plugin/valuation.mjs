@@ -28,8 +28,9 @@ export function holdingValuation(d,e,h){
     if(h.kind==='share')return valuation(d,e,{role:'share',issuer:h.subject,fraction:part});
     if(h.kind==='owns'){
         if(e.byId?.get(h.subject)?.id?.startsWith('item_'))return valuation(d,e,{role:'goods',item:h.subject,quantity:1,holder:h.holder});
-        return valuation(d,e,{role:'property',subject:h.subject,fraction:part});
+        return valuation(d,e,{role:'property',subject:h.subject,fraction:part,right:'owns',holder:h.holder});
     }
+    if(h.kind==='leases')return valuation(d,e,{role:'property',subject:h.subject,fraction:part,right:'leases',holder:h.holder,contract:h.terms?.contract});
     return {value:null,unvaluable:'这种持有是使用权或身份，没有可派生的估值依据'};
 }
 // 物品现值（整数；没有估值依据时为 null）。“罚没/赔偿/案值/税基/礼物值多少”一律走这里，

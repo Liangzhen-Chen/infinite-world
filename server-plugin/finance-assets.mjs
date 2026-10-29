@@ -15,6 +15,7 @@ import {settlementPresent} from './obligation-presence.mjs';
 import {registerValuer,goodsWorth,stateReader} from './valuation.mjs';
 import {installEventWorth} from './world-events.mjs';
 import {explainDerived} from './derived.mjs';
+import {toRational,fromRational} from './det-math.mjs';
 import {workshopFund,coinRead,partyAccount,dedicatedCoinAccount,counterCash,payFromCounter} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement,settlementGovernment} from './entity-view.mjs';
@@ -41,20 +42,38 @@ const DAY=1440,MONTH=30*DAY;
 // 5..25 sowing window allow one season, not two consecutive spring sowings.
 export function fieldRentBasis(d,e,subject,{areaMu,seedItem}={}){
     const p=e.rules.agriculture?.settlements.find(p=>p.fieldLocation===subject),rule=domainRules(e).privateField,crop=e.rules.agriculture?.crop;
-    if(!p||!rule||!crop)throw preconditionFailure('田地没有可派生产量的登记农事规则');
+    if(!p||!rule||!crop)throw preconditionFailure('缺依据：田地没有可派生产量的登记农事规则');
+    if(!(p.areaUnits>0&&crop.areaUnitsPerHa>0&&rule.muPerHectare>0&&crop.growthDays>0)||!crop.sowDays)throw preconditionFailure('缺依据：田地面积或生长周期不明');
     const fullArea=p.areaUnits/crop.areaUnitsPerHa*rule.muPerHectare;
     areaMu=areaMu===undefined?fullArea:int(areaMu,1,Math.floor(fullArea),'租入亩数');
     const binding=rule.crops.find(c=>c.seed===(seedItem??e.rules.agriculture.grainItem));
-    if(!binding)throw preconditionFailure('田地没有该作物的产量规则');
+    if(!binding)throw preconditionFailure('缺依据：田地没有该作物的产量规则');
+    if(!e.byId.get(binding.product))throw preconditionFailure('缺依据：作物产物没有登记');
     const yearDays=e.rules.calendar.daysPerMonth*e.rules.calendar.monthsPerYear;
     const annualSeasons=Math.min(Math.floor(yearDays/crop.growthDays),1+Math.floor((crop.sowDays[1]-crop.sowDays[0])/crop.growthDays));
-    const annualYield=privateCropYieldBase(e,{areaMu,seedItem:binding.seed,crop:binding.product,qualitySum:1,qualityDays:1})*annualSeasons;
-    const share=e.rules.agriculture.fieldRent.customaryShare;
-    const price=marketQuote(d,e,{item:binding.product,location:subject,quantity:1,base:regionalTradeBase(d,e,binding.product,subject)}).listPrice;
+    const yieldSource=binding.yieldSelector==='field:wheat'?'primitiveTables.yields.field:wheat':'rules.agriculture.crop.yieldPerHa';
+    const yieldBase=privateCropYieldBase(e,{areaMu,seedItem:binding.seed,crop:binding.product,qualitySum:1,qualityDays:1})*annualSeasons;
+    if(!Number.isFinite(yieldBase)||yieldBase<0||!Number.isFinite(annualSeasons)||annualSeasons<=0)throw preconditionFailure('缺依据：田地产量不明');
+    const annualYield=explainDerived(e,d.document,'economy:yield',subject,{base:yieldBase}).value;
+    const share=e.rules.agriculture.fieldRent?.customaryShare;
+    if(!Number.isSafeInteger(share?.numerator)||!(share.denominator>0))throw preconditionFailure('缺依据：地方惯例份额不明');
+    if(!(e.byId.get(binding.product)?.basePrice>0))throw preconditionFailure('缺依据：作物没有可知报价');
+    const quote=marketQuote(d,e,{item:binding.product,location:subject,quantity:1,base:regionalTradeBase(d,e,binding.product,subject)}),price=quote.listPrice;
+    if(!Number.isFinite(price)||price<=0||!Number.isFinite(annualYield)||annualYield<0)throw preconditionFailure('缺依据：作物报价或产量不明');
     const monthlyAnchor=Math.max(1,Math.ceil(annualYield*price*share.numerator/share.denominator/e.rules.calendar.monthsPerYear));
-    return {areaMu,seedItem:binding.seed,crop:binding.product,annualSeasons,monthlyAnchor};
+    const minute=d.get('state','minute');
+    return {areaMu,seedItem:binding.seed,crop:binding.product,annualSeasons,monthlyAnchor,
+        annualYield:toRational(annualYield),annualRevenue:toRational(annualYield*price),
+        yieldBasis:{minute,source:yieldSource,subject,projection:'economy:yield',base:toRational(yieldBase)},
+        quoteBasis:{minute,source:'marketQuote',location:subject,item:binding.product,unitPrice:toRational(price),
+            regionalBase:toRational(quote.explanation.base),scarcity:toRational(quote.explanation.scarcity),quality:toRational(quote.explanation.quality),depth:toRational(quote.explanation.depth)},
+        share:{...share},shareSource:'rules.agriculture.fieldRent.customaryShare',shareCalibration:'待标定惯例'};
 }
 const buildingRentAnchor=(e,use)=>e.rules.economy.rentalCopperPerWeek*4*(use==='commercial'?2:1);
+// The land's return excludes the cultivator's seed/labor return. Old signing
+// snapshots predate annualRevenue/share, but retain their frozen rent anchor.
+const fieldMonthlyIncome=(e,basis)=>basis.annualRevenue&&basis.share?
+    fromRational(basis.annualRevenue)*basis.share.numerator/basis.share.denominator/e.rules.calendar.monthsPerYear:basis.monthlyAnchor;
 import {ASSET_OPERATIONS} from './finance-operations.mjs';
 export {ASSET_OPERATIONS};
 const all=d=>Object.values(d.get('state','records')??{}),base=(e,s,id)=>s.created?.[id]??e.byId.get(id);
@@ -130,16 +149,42 @@ registerValuer('share',(d,e,{issuer,fraction})=>{
     try{return {value:netAssets(d,e,issuer)*fraction,basis:'net-assets'};}
     catch{return {value:null,unvaluable:'发行方账目不可查，无法估计股份价值'};}
 });
-// 地产：市场租金按资本回报率资本化（月租 ÷ 月息带中值），再乘完好度，经 economy:landValue 修正。
-registerValuer('property',(d,e,{subject,fraction=1,condition})=>{
+// 土地只资本化地租份额；租约仅改变剩余期间的收租权，到期后收益仍归业主。
+// 建筑保留服务租金与完好度口径；两者都经 economy:landValue 修正。
+registerValuer('property',(d,e,{subject,fraction=1,condition,right='owns',holder,contract})=>{
     const state=d.get('state'),place=base(e,state,subject);
-    if(!place||!(state.buildings?.[subject]||place.purpose))return {value:null,unvaluable:'没有租金或用途可资本化'};
-    const kind=/田|耕|农地/.test(place.purpose??place.name)?'field':/铺|店|商|工坊/.test(place.purpose??place.name)?'commercial':'home';
-    const [low,high]=e.rules.economy.loanMonthlyInterest,monthly=e.rules.economy.rentalCopperPerWeek*4*(kind==='commercial'?2:1);
+    const field=e.rules.agriculture?.settlements.some(p=>p.fieldLocation===subject);
+    if(!place||!(field||state.buildings?.[subject]||place.purpose))return {value:null,unvaluable:'没有租金或用途可资本化'};
+    const kind=field||/田|耕|农地/.test(place.purpose??place.name)?'field':/铺|店|商|工坊/.test(place.purpose??place.name)?'commercial':'home';
+    const [low,high]=e.rules.economy.loanMonthlyInterest;
+    let monthly=buildingRentAnchor(e,kind),rentBasis,leaseAdjustment=0;
+    const leases=kind==='field'?allState(state).filter(r=>r.kind==='asset_lease'&&r.subject===subject&&leaseState(e,state,r).active).map(r=>contractTerms(r,state.minute)):[];
+    if(right==='leases'){
+        const lease=leases.find(r=>r.id===contract&&r.tenant===holder);
+        if(!lease||kind!=='field')return {value:null,unvaluable:'没有可估计的有效田地使用权收益'};
+        if(!lease.rentBasis)return {value:null,unvaluable:'缺依据：租约没有签约时的市场地租依据'};
+        // A lease transfers only its signed rent advantage, never labor income
+        // or a new windfall from querying today's crop quotation.
+        const marketRent=fieldMonthlyIncome(e,lease.rentBasis);
+        return {value:Math.max(0,marketRent-lease.monthlyRent)*(lease.deadline-state.minute)/MONTH*fraction,basis:'lease-rent-advantage',rentBasis:lease.rentBasis};
+    }
+    if(kind==='field'){
+        try{rentBasis=fieldRentBasis(d,e,subject);}catch(error){return {value:null,unvaluable:error.message};}
+        monthly=fieldMonthlyIncome(e,rentBasis);
+    }
+    for(const lease of leases){
+        // Replace the leased acreage's market ground rent with actual rent
+        // only until expiry. Capitalizing that temporary discount forever
+        // would erase the owner's reversion and break the rights split.
+        const marketRent=monthly*(lease.rentBasis?.areaMu??rentBasis.areaMu)/rentBasis.areaMu;
+        // Allocate the whole remaining-period difference once in copper;
+        // rounding each side separately would lose one at fractional months.
+        leaseAdjustment+=Math.trunc((leaseState(e,state,lease).monthlyRent-marketRent)*(lease.deadline-state.minute)/MONTH);
+    }
     // condition 可显式给出（如估“受损前的完整价值”）；缺省按现状完好度。
-    const intact=Math.max(0,Math.min(100,condition??state.buildings?.[subject]?.condition??100))/100;
-    const baseValue=monthly/((low+high)/2)*intact;
-    return {value:explainDerived(e,d.document??{state},'economy:landValue',subject,{kind:'land',base:baseValue}).value*fraction,basis:'capitalized-rent'};
+    const intact=kind==='field'?1:Math.max(0,Math.min(100,condition??state.buildings?.[subject]?.condition??100))/100;
+    const baseValue=monthly/((low+high)/2)*intact+leaseAdjustment;
+    return {value:explainDerived(e,d.document??{state},'economy:landValue',subject,{kind:'land',base:baseValue}).value*fraction,basis:kind==='field'?'capitalized-field-income':'capitalized-rent',...(rentBasis?{rentBasis}:{})};
 });
 export function operatingProfit(d,e,issuer){
     const recorded=d.get(...rec(`finance_profit:${issuer}`))?.net??0;
@@ -336,8 +381,8 @@ export function assetTrade(d,e,args,id){
         const use=profile?'field':/铺|店|商|工坊/.test(place?.purpose??place?.name)?'commercial':'home';
         const rentBasis=use==='field'?fieldRentBasis(d,e,subject,{areaMu:args.quantity,seedItem:args.item?e.resolve(args.item,'item'):undefined}):undefined;
         const days=int(args.days??30,1,360,'租赁天数'),anchor=rentBasis?.monthlyAnchor??buildingRentAnchor(e,use);
-        const rent=int(args.coins??anchor,Math.ceil(anchor*.8),Math.ceil(anchor*1.5),'每月租金'),initial=Math.ceil(rent*Math.min(days,30)/30);
-        let paid=initial,rentDueAt,agreement,deferredRefusal,deferredConditions;
+        const rent=int(args.coins??anchor,1,Number.MAX_SAFE_INTEGER,'每月租金'),initial=Math.ceil(rent*Math.min(days,30)/30);
+        let paid=initial,rentDueAt,agreement;
         if(args.deadline!==undefined){
             const due=int(args.deadline,now+1,now+days*DAY-1,'约定交租时刻');
             const prepayment=int(args.deposit??0,0,initial,'当场先付租金');
@@ -356,26 +401,27 @@ export function assetTrade(d,e,args,id){
             const value=anchor*Math.min(days,30)/30;
             agreement=requestContractConsent(d,e,{from:signatory,scope:'rent',subject,terms:{amount:rent,days,location:subject,prepayment,deadline:due,...(rentBasis?{quantity:rentBasis.areaMu,item:rentBasis.seedItem}:{})},cost:{value:prepayment?Math.max(0,value-initial):value,risk},reward:prepayment||initial,prepaid:prepayment>0,eventId:id});
             if(agreement.allowed){paid=prepayment;rentDueAt=due;}else {
-                deferredRefusal=agreement.reason;deferredConditions=agreement.conditions;
-                if(prepayment)throw preconditionFailure(`出租人未接受本次先付方案：${deferredRefusal}${deferredConditions?.prepay!==undefined?`（conditions.prepay=${deferredConditions.prepay}，为本次先付${prepayment}文提案上还需追加的差额）`:''}；可调整 deposit 合计额再谈，或另行选择现付`);
+                const deferredRefusal=agreement.reason,deferredConditions=agreement.conditions;
+                throw preconditionFailure(`出租人未接受本次${prepayment?'先付方案':'延期交租'}：${deferredRefusal}${deferredConditions?.prepay!==undefined?`（conditions.prepay=${deferredConditions.prepay}，为本次先付${prepayment}文提案上还需追加的差额）`:''}；可调整 deposit 合计额再谈，或另行选择现付（不传 deadline）`);
             }
         }
+        else if(args.deposit!==undefined)throw preconditionFailure('部分先付须同时约定交租时刻 deadline');
         if(rentDueAt===undefined){
-            if(financeBalance(d,e,'player')<paid)throw preconditionFailure(`${deferredRefusal?`出租人未接受延期交租：${deferredRefusal}${deferredConditions?.prepay!==undefined?`（conditions.prepay=${deferredConditions.prepay}，可用 deposit 先付再谈）`:''}；只能现付。`:''}付不起首期租金，可缩短租期或先筹钱`);
+            if(financeBalance(d,e,'player')<paid)throw preconditionFailure('付不起首期租金，可缩短租期或先筹钱');
             agreement=requestContractConsent(d,e,{from:signatory,scope:'rent',subject,terms:{amount:rent,days,location:subject,prepayment:paid,...(rentBasis?{quantity:rentBasis.areaMu,item:rentBasis.seedItem}:{})},cost:{value:anchor*Math.min(days,30)/30},reward:paid,eventId:id});
         }
         if(!agreement.allowed)throw preconditionFailure(`出租人未同意本次租约：${agreement.reason}；可稍后重新商议`);
         if(paid)financeTransfer(d,e,'player',owner,paid,id);
         const key=`asset_lease:${id}`,row={category:'contract',kind:'asset_lease',id:key,subject,tenant:'player',owner,use,settlement:placeSettlement(e,state,subject).value,
             monthlyRent:rent,paid,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id,signatory,consentEvent:agreement.source,...(rentBasis?{rentBasis}:{}),...(rentDueAt!==undefined?{rentDueAt,...(paid?{prepayment:paid}:{})}:{})};
-        row.clauses=leaseClauses(row);holdingSet(d,e,rec(key),row,'finance-assets');
+        row.clauses=leaseClauses(row);if(use==='field')row.clauses.unharvestedCrops='到期后未收作物留田归田主';holdingSet(d,e,rec(key),row,'finance-assets');
         let debt;
         if(rentDueAt!==undefined&&initial>paid){
             debt=`debt_rent:${key}:${now}`;
             openClaim(d,e,debt,{category:'debt',kind:'rent',debtor:'player',creditor:owner,amount:initial-paid,paid:0,status:'待偿还',createdAt:now,dueAt:rentDueAt,deadline:rentDueAt+e.rules.economy.credit.loan.defaultGraceMinutes,source:id,contract:key,location});
         }
         return {contract:key,subject,owner,signatory,tenant:'player',rent,paid,deadline:row.deadline,consent:agreement.source,...(rentBasis?{rentBasis}:{}),
-            ...(rentDueAt!==undefined?{rentDueAt,debt}:{}),...(deferredRefusal?{deferredRefusal,conditions:deferredConditions,notePayment:`延期未获同意：${deferredRefusal}；已改为现付。`}:{}),
+            ...(rentDueAt!==undefined?{rentDueAt,debt}:{}),
             ...(use==='field'?{note:'租期内作物归承租人，须在到期前收走；到期后未收作物留田归田主。'}:{})};
     }
     if(op==='rent_out'){
@@ -383,11 +429,24 @@ export function assetTrade(d,e,args,id){
         if(!need)throw preconditionFailure('对方当前没有对应住房或经营租赁需求');
         if(all(d).some(r=>r.kind==='asset_lease'&&r.subject===subject&&r.status==='有效'&&leaseState(e,state,r,now).active))throw preconditionFailure('资产已出租');
         const rentBasis=need.kind==='field'?fieldRentBasis(d,e,subject,{areaMu:args.quantity,seedItem:args.item?e.resolve(args.item,'item'):undefined}):undefined;
-        const days=int(args.days??30,1,360,'租赁天数'),anchor=rentBasis?.monthlyAnchor??buildingRentAnchor(e,need.kind),rent=int(args.coins??anchor,Math.ceil(anchor*.8),Math.ceil(anchor*1.5),'每月租金');
-        const initial=Math.ceil(rent*Math.min(days,30)/30);financeTransfer(d,e,tenant,'player',initial,id);
+        const days=int(args.days??30,1,360,'租赁天数'),anchor=rentBasis?.monthlyAnchor??buildingRentAnchor(e,need.kind),rent=int(args.coins??anchor,1,Number.MAX_SAFE_INTEGER,'每月租金');
+        const initial=Math.ceil(rent*Math.min(days,30)/30);
+        const rentDueAt=args.deadline===undefined?undefined:int(args.deadline,now+1,now+days*DAY-1,'约定交租时刻');
+        if(rentDueAt===undefined&&args.deposit!==undefined)throw preconditionFailure('部分先付须同时约定交租时刻 deadline');
+        const paid=rentDueAt===undefined?initial:int(args.deposit??0,0,initial,'当场先付租金');
+        const agreement=requestContractConsent(d,e,{from:tenant,scope:'rent',subject,
+            terms:{amount:rent,days,location:subject,prepayment:paid,...(rentDueAt!==undefined?{deadline:rentDueAt}:{}),...(rentBasis?{quantity:rentBasis.areaMu,item:rentBasis.seedItem}:{})},
+            cost:{coins:paid,value:initial-paid},reward:anchor*Math.min(days,30)/30,eventId:id});
+        if(!agreement.allowed)throw preconditionFailure(`承租人未同意本次租约：${agreement.reason}；可调整租金或付款安排再谈`);
+        if(paid)financeTransfer(d,e,tenant,'player',paid,id);
         const key=`asset_lease:${id}`,row={category:'contract',kind:'asset_lease',id:key,subject,tenant,owner:'player',use:need.kind,settlement:need.settlement,oldHome:need.oldHome,
-            monthlyRent:rent,paid:initial,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id,...(rentBasis?{rentBasis}:{})};row.clauses=leaseClauses(row);holdingSet(d,e,rec(key),row,'finance-assets');
-        return {contract:key,tenant,rent,paid:initial,need};
+            monthlyRent:rent,paid,status:'有效',createdAt:now,deadline:now+days*DAY,nextRent:now+MONTH,location,source:id,consentEvent:agreement.source,...(rentBasis?{rentBasis}:{}),...(rentDueAt!==undefined?{rentDueAt,prepayment:paid}:{})};row.clauses=leaseClauses(row);if(need.kind==='field')row.clauses.unharvestedCrops='到期后未收作物留田归田主';holdingSet(d,e,rec(key),row,'finance-assets');
+        let debt;
+        if(rentDueAt!==undefined&&initial>paid){
+            debt=`debt_rent:${key}:${now}`;
+            openClaim(d,e,debt,{category:'debt',kind:'rent',debtor:tenant,creditor:'player',amount:initial-paid,paid:0,status:'待偿还',createdAt:now,dueAt:rentDueAt,deadline:rentDueAt+e.rules.economy.credit.loan.defaultGraceMinutes,source:id,contract:key,location});
+        }
+        return {contract:key,tenant,rent,paid,need,consent:agreement.source,...(rentBasis?{rentBasis}:{}),...(rentDueAt!==undefined?{rentDueAt,debt}:{}),...(need.kind==='field'?{note:row.clauses.unharvestedCrops}:{})};
     }
     if(op==='workshop'){
         const {id:subject,place}=ownedPlace(d,e,args,true),worker=counterpart(d,e,args.seller,{consent:args.consent}),recipe=e.byId.get(e.resolve(args.item,'recipe'));
