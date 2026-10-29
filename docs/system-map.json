@@ -18,14 +18,14 @@
  "counts": {
   "layers": 6,
   "systems": 49,
-  "modules": 318,
+  "modules": 319,
   "advance": 62,
   "tools": 27,
   "verbs": 62,
   "subscribers": 14,
   "interactionRules": 25,
   "effectKinds": 24,
-  "links": 723
+  "links": 724
  },
  "layers": [
   {
@@ -283,7 +283,7 @@
     "server-plugin/post.mjs",
     "server-plugin/deterrence.mjs"
    ],
-   "lines": 724,
+   "lines": 760,
    "stateWrites": [
     "location",
     "npcs",
@@ -1329,7 +1329,7 @@
     "server-plugin/population-health.mjs",
     "server-plugin/currency.mjs"
    ],
-   "lines": 1028,
+   "lines": 1125,
    "stateWrites": [
     "player",
     "settlements"
@@ -1528,7 +1528,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 4533,
+   "lines": 4540,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -1926,7 +1926,7 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1814,
+   "lines": 1829,
    "stateWrites": [
     "crafted",
     "creatures",
@@ -2288,6 +2288,7 @@
    "dir": null,
    "modules": [
     "server-plugin/market.mjs",
+    "server-plugin/household-budget.mjs",
     "server-plugin/valuation.mjs",
     "server-plugin/tender.mjs",
     "server-plugin/claim-unit.mjs",
@@ -2313,7 +2314,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 5827,
+   "lines": 6256,
    "stateWrites": [
     "crafted",
     "npcs",
@@ -2518,7 +2519,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 6008,
+   "lines": 6076,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -2580,6 +2581,7 @@
     "agriculture",
     "books",
     "calendar",
+    "economy",
     "elections",
     "facilities",
     "forestWater",
@@ -2607,6 +2609,7 @@
     "locations",
     "monsters",
     "npcs",
+    "recipes",
     "regions",
     "residents",
     "routes",
@@ -5820,7 +5823,8 @@
     "action-costs.mjs",
     "action-rejection.mjs",
     "precondition.mjs",
-    "primitives-body.mjs"
+    "primitives-body.mjs",
+    "rx.mjs"
    ]
   },
   {
@@ -6882,6 +6886,7 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
+    "carry.mjs",
     "claim-unit.mjs",
     "contracts.mjs",
     "credit.mjs",
@@ -7073,6 +7078,14 @@
   },
   {
    "from": "sim_society",
+   "to": "kernel_engine",
+   "kind": "call",
+   "labels": [
+    "scheduler.mjs"
+   ]
+  },
+  {
+   "from": "sim_society",
    "to": "kernel_storage",
    "kind": "call",
    "labels": [
@@ -7112,10 +7125,12 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
+    "carry.mjs",
     "employment-state.mjs",
     "finance-tax.mjs",
     "items.mjs",
     "labor-market.mjs",
+    "market.mjs",
     "valuation.mjs",
     "workstation-services.mjs"
    ]
@@ -7266,6 +7281,7 @@
    "to": "sim_economy",
    "kind": "call",
    "labels": [
+    "carry.mjs",
     "contracts.mjs",
     "credit.mjs",
     "finance-bank.mjs",
@@ -14395,6 +14411,7 @@
     "server-plugin/boss-negotiation.mjs",
     "server-plugin/bosses.mjs",
     "server-plugin/bounty.mjs",
+    "server-plugin/building-maintenance.mjs",
     "server-plugin/business.mjs",
     "server-plugin/career-metrics.mjs",
     "server-plugin/carry.mjs",
@@ -14443,6 +14460,7 @@
     "server-plugin/high-nobility.mjs",
     "server-plugin/holding-sources.mjs",
     "server-plugin/holdings.mjs",
+    "server-plugin/household-budget.mjs",
     "server-plugin/husbandry.mjs",
     "server-plugin/items.mjs",
     "server-plugin/labor-market.mjs",
@@ -14801,6 +14819,7 @@
    "server-plugin/world-clock.mjs"
   ],
   "facilities": [
+   "server-plugin/building-maintenance.mjs",
    "server-plugin/facility-state.mjs"
   ],
   "forestWater": [
@@ -14831,6 +14850,7 @@
    "server-plugin/ui-personal.mjs"
   ],
   "calendar": [
+   "server-plugin/building-maintenance.mjs",
    "server-plugin/compat/v2-phase1-engine.mjs",
    "server-plugin/engine.mjs",
    "server-plugin/facility-state.mjs",
@@ -14956,6 +14976,7 @@
   "economy": [
    "server-plugin/action-router.mjs",
    "server-plugin/bounty.mjs",
+   "server-plugin/building-maintenance.mjs",
    "server-plugin/business.mjs",
    "server-plugin/compat/v2-phase1-engine.mjs",
    "server-plugin/credit.mjs",
@@ -14967,6 +14988,7 @@
    "server-plugin/finance-tax.mjs",
    "server-plugin/forest-water.mjs",
    "server-plugin/holding-sources.mjs",
+   "server-plugin/household-budget.mjs",
    "server-plugin/law.mjs",
    "server-plugin/ledger.mjs",
    "server-plugin/market.mjs",
@@ -15044,6 +15066,7 @@
    "server-plugin/forest-water.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/holding-sources.mjs",
+   "server-plugin/household-budget.mjs",
    "server-plugin/labor-market.mjs",
    "server-plugin/law.mjs",
    "server-plugin/location-access.mjs",
@@ -16323,6 +16346,7 @@
       "server-plugin/action-text.mjs",
       "server-plugin/advance-layers.mjs",
       "server-plugin/bosses.mjs",
+      "server-plugin/building-maintenance.mjs",
       "server-plugin/career-metrics.mjs",
       "server-plugin/catalog.mjs",
       "server-plugin/civic.mjs",
@@ -16452,6 +16476,7 @@
      "modules": [
       "server-plugin/action-affordances.mjs",
       "server-plugin/action-authority.mjs",
+      "server-plugin/building-maintenance.mjs",
       "server-plugin/education-state.mjs",
       "server-plugin/entity-view.mjs",
       "server-plugin/facility-state.mjs",
@@ -16487,6 +16512,7 @@
       "server-plugin/action-affordances.mjs",
       "server-plugin/action-authority.mjs",
       "server-plugin/body-needs.mjs",
+      "server-plugin/building-maintenance.mjs",
       "server-plugin/contracts.mjs",
       "server-plugin/credit.mjs",
       "server-plugin/engine.mjs",
@@ -17159,6 +17185,7 @@
       "server-plugin/family-politics.mjs",
       "server-plugin/family-state.mjs",
       "server-plugin/holding-sources.mjs",
+      "server-plugin/household-budget.mjs",
       "server-plugin/npc-life.mjs",
       "server-plugin/npc-state.mjs",
       "server-plugin/population-service.mjs",
@@ -17171,6 +17198,7 @@
       "base_holdings",
       "base_standing",
       "sim_character",
+      "sim_economy",
       "sim_environment",
       "sim_npc",
       "sim_society",
@@ -17218,6 +17246,7 @@
       "server-plugin/hazard-calendar.mjs",
       "server-plugin/high-nobility.mjs",
       "server-plugin/holding-sources.mjs",
+      "server-plugin/household-budget.mjs",
       "server-plugin/labor-market.mjs",
       "server-plugin/law-codes.mjs",
       "server-plugin/law.mjs",
@@ -17644,6 +17673,7 @@
       "server-plugin/finance-assets.mjs",
       "server-plugin/market.mjs",
       "server-plugin/settlement-trade.mjs",
+      "server-plugin/shop.mjs",
       "server-plugin/valuation.mjs"
      ],
      "systems": [
@@ -17659,8 +17689,8 @@
      "modules": [
       "server-plugin/agriculture.mjs",
       "server-plugin/extraction.mjs",
-      "server-plugin/husbandry.mjs",
-      "server-plugin/market.mjs"
+      "server-plugin/household-budget.mjs",
+      "server-plugin/husbandry.mjs"
      ],
      "systems": [
       "sim_agriculture",
@@ -17885,6 +17915,7 @@
      "pattern": "\\.workstation\\b",
      "modules": [
       "server-plugin/action-affordances.mjs",
+      "server-plugin/building-maintenance.mjs",
       "server-plugin/education-state.mjs",
       "server-plugin/finance-assets.mjs",
       "server-plugin/labor-market.mjs",
@@ -17899,6 +17930,7 @@
       "sim_character",
       "sim_economy",
       "sim_npc",
+      "sim_society",
       "ui_actions"
      ]
     },
@@ -17981,6 +18013,7 @@
     "sim_character",
     "sim_economy",
     "sim_npc",
+    "sim_society",
     "sim_wildlife",
     "sim_works",
     "ui_actions",
@@ -18815,7 +18848,7 @@
   "orphanModules": [
    {
     "module": "server-plugin/building-maintenance.mjs",
-    "usedByTests": false,
+    "usedByTests": true,
     "usedByTools": false
    },
    {
@@ -18920,7 +18953,6 @@
     "file": "world/meta/items.json",
     "fields": [
      "acquisition",
-     "calibration",
      "inspection",
      "seasonality"
     ]
@@ -20159,25 +20191,36 @@
    "imports": [
     "server-plugin/action-authority.mjs",
     "server-plugin/autonomy-candidates.mjs",
+    "server-plugin/carry.mjs",
     "server-plugin/facility-state.mjs",
     "server-plugin/items.mjs",
     "server-plugin/ledger.mjs",
+    "server-plugin/market.mjs",
     "server-plugin/precondition.mjs",
+    "server-plugin/scheduler.mjs",
     "server-plugin/stock.mjs",
-    "server-plugin/valuation.mjs"
+    "server-plugin/valuation.mjs",
+    "server-plugin/weather.mjs"
    ],
    "stateWrites": [
+    "npcs",
     "projects"
    ],
    "stateReads": [
-    "npcs"
+    "minute"
    ],
    "recordWrites": [],
    "recordReads": [],
-   "rules": [],
-   "world": [],
+   "rules": [
+    "calendar",
+    "economy",
+    "facilities"
+   ],
+   "world": [
+    "recipes"
+   ],
    "worldDirs": [],
-   "lines": 82
+   "lines": 150
   },
   "server-plugin/business.mjs": {
    "system": "sim_economy",
@@ -22149,6 +22192,7 @@
     "server-plugin/credit.mjs",
     "server-plugin/currency.mjs",
     "server-plugin/derived.mjs",
+    "server-plugin/det-math.mjs",
     "server-plugin/domain-rules.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/facility-state.mjs",
@@ -22200,7 +22244,7 @@
     "factions"
    ],
    "worldDirs": [],
-   "lines": 498
+   "lines": 557
   },
   "server-plugin/finance-bank.mjs": {
    "system": "sim_economy",
@@ -22677,6 +22721,44 @@
    "worldDirs": [],
    "lines": 401
   },
+  "server-plugin/household-budget.mjs": {
+   "system": "sim_economy",
+   "imports": [
+    "server-plugin/contract-state.mjs",
+    "server-plugin/derived.mjs",
+    "server-plugin/domain-rules.mjs",
+    "server-plugin/employment-state.mjs",
+    "server-plugin/entity-view.mjs",
+    "server-plugin/money.mjs",
+    "server-plugin/obligation-state.mjs",
+    "server-plugin/primitives-body.mjs",
+    "server-plugin/rx.mjs",
+    "server-plugin/stock.mjs",
+    "server-plugin/storage.mjs",
+    "server-plugin/subjective-view.mjs"
+   ],
+   "stateWrites": [],
+   "stateReads": [
+    "minute",
+    "npcAutonomy",
+    "obligations",
+    "records"
+   ],
+   "recordWrites": [],
+   "recordReads": [
+    "remote-stock",
+    "world_event"
+   ],
+   "rules": [
+    "agriculture",
+    "economy"
+   ],
+   "world": [
+    "recipes"
+   ],
+   "worldDirs": [],
+   "lines": 312
+  },
   "server-plugin/husbandry.mjs": {
    "system": "sim_wildlife",
    "imports": [
@@ -22702,7 +22784,7 @@
     "monsters"
    ],
    "worldDirs": [],
-   "lines": 89
+   "lines": 104
   },
   "server-plugin/identity.mjs": {
    "system": "base_holdings",
@@ -24163,10 +24245,9 @@
     "server-plugin/domain-rules.mjs",
     "server-plugin/entity-view.mjs",
     "server-plugin/holdings.mjs",
+    "server-plugin/household-budget.mjs",
     "server-plugin/obligation-state.mjs",
-    "server-plugin/primitives-body.mjs",
     "server-plugin/stock.mjs",
-    "server-plugin/storage.mjs",
     "world/rules/tables/balance/economy.json"
    ],
    "stateWrites": [
@@ -24177,7 +24258,6 @@
     "inventory",
     "location",
     "minute",
-    "npcAutonomy",
     "npcs",
     "obligations",
     "player",
@@ -24189,8 +24269,7 @@
    "recordReads": [
     "agriculture",
     "goods",
-    "remote-stock",
-    "world_event"
+    "remote-stock"
    ],
    "rules": [
     "agriculture",
@@ -24199,13 +24278,12 @@
    ],
    "world": [
     "items",
-    "npcs",
-    "recipes"
+    "npcs"
    ],
    "worldDirs": [
     "rules"
    ],
-   "lines": 342
+   "lines": 305
   },
   "server-plugin/medicine-state.mjs": {
    "system": "sim_npc",
@@ -24945,6 +25023,7 @@
   "server-plugin/npc-obligations.mjs": {
    "system": "sim_npc",
    "imports": [
+    "server-plugin/carry.mjs",
     "server-plugin/education-state.mjs",
     "server-plugin/employment-state.mjs",
     "server-plugin/entity-view.mjs",
@@ -24978,7 +25057,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 225
+   "lines": 232
   },
   "server-plugin/npc-planning-service.mjs": {
    "system": "sim_npc",
@@ -25596,7 +25675,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 49
+   "lines": 146
   },
   "server-plugin/population-service.mjs": {
    "system": "sim_npc",
@@ -27068,6 +27147,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/facility-state.mjs",
     "server-plugin/finance-bank.mjs",
+    "server-plugin/household-budget.mjs",
     "server-plugin/ledger.mjs",
     "server-plugin/lifecycle-state.mjs",
     "server-plugin/market.mjs",
@@ -27101,6 +27181,7 @@
    ],
    "recordReads": [
     "agriculture",
+    "shop",
     "world_event"
    ],
    "rules": [
@@ -27115,7 +27196,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 428
+   "lines": 522
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",
@@ -27624,6 +27705,7 @@
    "system": "sim_transport",
    "imports": [
     "server-plugin/action-consent.mjs",
+    "server-plugin/carry.mjs",
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
     "server-plugin/derived.mjs",
@@ -27687,7 +27769,7 @@
     "design",
     "rules"
    ],
-   "lines": 551
+   "lines": 587
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",
@@ -27905,7 +27987,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 46
+   "lines": 47
   },
   "server-plugin/war-diplomacy.mjs": {
    "system": "sim_military",
