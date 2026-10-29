@@ -70,7 +70,10 @@ registerWorldEventSubscriber({id:'weather_exposure',order:5,priorityClass:'core'
   const until=Math.min(end,(Math.floor(at/1440)+1)*1440),w=weatherAt(engine,d.document.randomSeed,location,at);
   const precipitation=w&&['rain','storm'].includes(w.kind)?derived(engine,{...d.document,state:{...before,minute:at}},'weather:precipitation',location,{base:engine.rules.forestWater?.water.rainShare[w.kind]??0}):0;
   const rain=!sheltered&&w&&(travel||!w.indoors)&&precipitation>0;
-  if(rain){row.wet=true;row.shelteredMinutes=0;row.clearMinutes=0;row.since??=at;row.sourceEvent=context.eventId;}
+  // Provenance is the clock fact (this place's weather on this day), not the
+  // outer call id: one long advance and its daily split must store the same
+  // state and event sequence (14 I31). The receipt still names the call.
+  if(rain){row.wet=true;row.shelteredMinutes=0;row.clearMinutes=0;row.since??=at;row.sourceEvent=`weather:${location}:${Math.floor(at/1440)}`;}
   else if(row.wet){
    row.shelteredMinutes=sheltered?row.shelteredMinutes+until-at:0;
    row.clearMinutes=w?.kind==='clear'?row.clearMinutes+until-at:0;
@@ -80,7 +83,7 @@ registerWorldEventSubscriber({id:'weather_exposure',order:5,priorityClass:'core'
   at=until;
  }
  if(row.wet||wasWet){row.asOf=end;d.set(['state','records',key],row);
-  context.detail.weatherExposure={status:row.wet?'wet':null,name:row.wet?playerWeatherExposure(d.get('state'))[0].name:'已干燥',sourceEvent:row.sourceEvent,asOf:end};}
+  context.detail.weatherExposure={status:row.wet?'wet':null,name:row.wet?playerWeatherExposure(d.get('state'))[0].name:'已干燥',sourceEvent:row.sourceEvent,eventId:context.eventId,asOf:end};}
 }});
 // Native restoration of a catalog object's current placement and state. The
 // source is retained as provenance; restoring it does not replay the event.

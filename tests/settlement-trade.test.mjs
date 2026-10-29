@@ -72,6 +72,11 @@ test('NPC公仓购买真实驮队服务，货批与预付款仍由原账只结�
 
 test('正常world_time周发货→逐路在途→到货税款；双方现金、粮批和玩家合同保持真实',async()=>{
     const {engine,doc}=setup(),cash=snapshotCash(doc),privateAssets=structuredClone({player:doc.state.player.coins,inventory:doc.state.inventory,npcs:Object.fromEntries(Object.entries(doc.state.npcs).map(([id,n])=>[id,{coins:n.coins,inventory:n.inventory}]))});
+    // W8-E8 (c930d578): the forge stocks one sickle on day 1 (next: day 8).
+    // Catalog base 10 * shelf demand 2 / max(1, available 0) = 20 copper;
+    // all other factors are 1. The keeper pays the local treasury, not a buyer.
+    privateAssets.npcs.npc_hw_duanyan.coins-=20;
+    privateAssets.npcs.npc_hw_duanyan.inventory.item_sickle={quality:'木',durability:100,weight:0.5,quantity:1};
     const before=structuredClone(doc),first=await wait(engine,doc,DEPART);assert.deepEqual(doc,before);
     let c=first.doc;assert.equal(snapshotCash(c),cash);conservation(c);
     for(const lane of lanes){
@@ -251,7 +256,11 @@ test('旧档沿正常world_time不生成四村公仓、现金或周订单',async
     const cash=publicCash(old);
     const c=(await wait(engine,old,DEPART+DAY)).doc;
     for(const lane of lanes){assert.equal(c.state.settlements[lane.seller],undefined);assert.equal(c.state.records[key(lane)],undefined);}
-    assert.equal(c.state.records['settlement-trade:clock'],undefined);assert.equal(publicCash(c),cash);
+    // W8-E8 (c930d578): days 1 and 8 each add one sickle (ceiling 2).
+    // Base 10 * demand 2 / max(1, supply 0 then 1) = 20 each; other factors 1.
+    // The keeper's 40 copper goes to the existing local treasury; quest escrow
+    // remains public money, and no managed village or weekly order is created.
+    assert.equal(c.state.records['settlement-trade:clock'],undefined);assert.equal(publicCash(c),cash+40);
 });
 test('错误实际批次与篡改税账拒绝，reduce不修改传入存档',async()=>{
     for(const tamper of ['batch','fiscal']){
