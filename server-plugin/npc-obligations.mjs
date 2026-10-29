@@ -12,6 +12,7 @@ import {personConstraint,personConstraints,personSimulation}from'./entity-view.m
 import {employmentReservation} from './employment-state.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
+import {safeCarryKg,packItemKg} from './carry.mjs';
 declareHoldingWriter('npc-obligations',{kinds:['resides','devotee_of','certified']});
 
 const live=o=>o?.reservationVersion===1&&['待履行','进行中'].includes(o.status);
@@ -119,6 +120,12 @@ function createNpcDelivery(d,engine,args,eventId){
  const item=engine.resolve(args.item,'item'),quantity=integer(args.quantity,1,100000,'货物数量');
  if(engine.quantity(d,promisor,item)<quantity)throw preconditionFailure('承诺者当前缺少约定货物');
  const from=locationOf(state,promisor),route=from===location?{minutes:0,cost:0,edges:[]}:engine.route(from,location,'walk',start,d.document.randomSeed);
+ // Remote delivery is a walking courier, bounded by the same strength rule as
+ // combat.derivedStats. On-site handover does not occupy a remote route.
+ if(from!==location){
+  const weight=packItemKg(d,engine,promisor,item),capacity=safeCarryKg(d,engine,promisor);
+  if(!(weight>=0)||quantity*weight>capacity)throw preconditionFailure('送货数量超过送货者实际步行载重，须另约运具或分批');
+ }
  if(start+route.minutes>deadline)throw preconditionFailure('剩余时间不足以按真实路线送货');
  if(engine.actor(d,promisor).coins<route.cost)throw preconditionFailure('送货路费不足');
  assertCourierRouteAccess(engine,promisor,from,location,route);
