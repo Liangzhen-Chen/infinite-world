@@ -83,7 +83,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/building-maintenance.mjs:45"
+    "dispatch": "server-plugin/building-maintenance.mjs:103"
    }
   },
   {
@@ -2108,7 +2108,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:280"
+    "dispatch": "server-plugin/finance-assets.mjs:325"
    }
   },
   {
@@ -2183,7 +2183,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:286"
+    "dispatch": "server-plugin/finance-assets.mjs:331"
    }
   },
   {
@@ -2258,7 +2258,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:201"
+    "dispatch": "server-plugin/finance-assets.mjs:246"
    }
   },
   {
@@ -2333,7 +2333,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:300"
+    "dispatch": "server-plugin/finance-assets.mjs:345"
    }
   },
   {
@@ -2408,7 +2408,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:381"
+    "dispatch": "server-plugin/finance-assets.mjs:427"
    }
   },
   {
@@ -2558,7 +2558,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:410"
+    "dispatch": "server-plugin/finance-assets.mjs:469"
    }
   },
   {
@@ -2708,7 +2708,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:314"
+    "dispatch": "server-plugin/finance-assets.mjs:359"
    }
   },
   {
@@ -2783,7 +2783,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:278"
+    "dispatch": "server-plugin/finance-assets.mjs:323"
    }
   },
   {
