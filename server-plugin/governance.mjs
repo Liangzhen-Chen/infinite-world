@@ -590,9 +590,9 @@ export function publicSpent(state,settlement,month){
     return Object.values(state.records??{}).filter(r=>r.category==='governance_spend'&&r.settlement===settlement&&r.month===month).reduce((n,r)=>n+r.copper,0);
 }
 // S1a: books = 账本对方账户（工程或委托托管）。
-export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEvent,books}){
+export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEvent,books,actor='player'}){
     if(!Number.isSafeInteger(copper)||copper<0)throw preconditionFailure('公款数额无效');
-    const state=d.get('state'),offices=playerOffices(state,{settlement,power},engine);
+    const state=d.get('state'),offices=actor==='player'?playerOffices(state,{settlement,power},engine):personOffices(engine,state,actor,{settlement,power}).map(e=>e.value);
     if(!offices.length)throw preconditionFailure('没有在任官职授予此项公款权限');
     const cap=Math.max(...offices.map(o=>o.monthlyBudgetCopper)),month=questQuotaMonth(engine,state),used=publicSpent(state,settlement,month);
     if(used+copper>cap)throw preconditionFailure(`本月公款额度不足（已用${used}/${cap}铜）`);
@@ -603,15 +603,15 @@ export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEven
     if(d.get(...path(id)))throw preconditionFailure('公款支出编号已占用');
     bookSide(d,treasuryAccount(settlement),-copper,books);
     d.set(['state','settlements',settlement,'treasury'],treasury-copper);
-    const row={category:'governance_spend',id,settlement,holder:'player',office:offices[0].office,month,copper,purpose,minute:state.minute,sourceEvent};
+    const row={category:'governance_spend',id,settlement,holder:actor,office:offices[0].office,month,copper,purpose,minute:state.minute,sourceEvent};
     holdingSet(d,null,path(id),row,'governance');return row;
 }
 // Money returned to the treasury (refund, unused wages) nets against the month it was drawn in.
-export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent,books}){
+export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent,books,actor='player'}){
     const id=`governance_spend:${sourceEvent}`;
     if(!copper||d.get(...path(id)))return d.get(...path(id))??null;
     bookSide(d,treasuryAccount(settlement),copper,books);
     d.set(['state','settlements',settlement,'treasury'],d.get('state','settlements',settlement,'treasury')+copper);
-    const row={category:'governance_spend',id,settlement,holder:'player',month,copper:-copper,purpose,minute:d.get('state','minute'),sourceEvent};
+    const row={category:'governance_spend',id,settlement,holder:actor,month,copper:-copper,purpose,minute:d.get('state','minute'),sourceEvent};
     holdingSet(d,null,path(id),row,'governance');return row;
 }
