@@ -108,7 +108,7 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     const hold=state&&personConstraint(engine,state,id,minute,constraints)?.value;
     if(hold)return {default:[{start:0,end:1440,location:hold.location,activity:'依法拘留',services:[]}]};
     const own=state?.npcs?.[id],base=engine.byId.get(id)?.schedule??own?.routine,care=own?.caring;
-    if(care&&base)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
+    if(care)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
     // U12: a levied villager serves at the army's camp until released.
     if(own?.levy)return {default:[{start:0,end:1440,location:own.levy.location,activity:'服役',services:[]}]};
     const employed=state&&personEmployment(engine,state,id,minute,constraints)?.value;
@@ -117,6 +117,22 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
         const home=npcHousehold(engine,state,id,constraints)?.homeLocation??engine.byId.get(id)?.home?.location??job.location;
         const slot=(start,end,location,activity)=>({start,end,location,activity,services:[]});
         const activity=job.task??'受雇工坊生产',work=job.workMinutes??480,end=480+work+60;
+        const time=householdWorkTime(engine,state,id,minute,{commuteMinutes:job.commuteMinutes??0,workMinutes:work,constraints});
+        if(time.reservedMinutes||time.commuteMinutes||work!==480){
+            const slots=[slot(0,480,home,'睡眠与休息'),slot(480,1020,job.location,activity),slot(1020,1440,home,'家务与休息')];
+            const overlay=row=>{
+                const next=slots.flatMap(s=>s.end<=row.start||s.start>=row.end?[s]:[
+                    ...(s.start<row.start?[{...s,end:row.start}]:[]),
+                    {...row,start:Math.max(s.start,row.start),end:Math.min(s.end,row.end)},
+                    ...(s.end>row.end?[{...s,start:row.end}]:[])]);
+                slots.splice(0,slots.length,...next);
+            };
+            overlay(slot(720,780,job.location,'午间休息'));
+            for(const row of time.reserved)overlay(row);
+            for(const row of time.commute)overlay(slot(row.start,row.end,row.returning?home:job.location,'通勤'));
+            for(const row of time.unused)overlay(slot(row.start,row.end,home,'家务与休息'));
+            return {default:slots,restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
+        }
         return {default:[slot(0,480,home,'睡眠与休息'),slot(480,720,job.location,activity),slot(720,780,job.location,'午间休息'),slot(780,end+1,job.location,activity),slot(end+1,1440,home,'家务与休息')],
             restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
     }
@@ -146,6 +162,46 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     const prior=lease.use==='home'?lease.oldHome:engine.byId.get(id)?.workplace?.location;
     const remap=value=>Array.isArray(value)?value.map(remap):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,k==='location'&&v===prior?lease.subject:remap(v)])):value;
     return remap(schedule);
+}
+// The household keeps its real routine when a job is considered or signed.
+// This is a read-only allocation; employment-state remains the only attendance book.
+export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMinutes=0,workMinutes=480,constraints=null}={}){
+ const own=state.npcs?.[id],person=state.created?.[id]??engine.byId.get(id),calendar=engine.calendar(minute);
+ const routine=personRoutine(engine,state,id,constraints)??own?.residence?.schedule??own?.vocation?.schedule??person?.schedule??own?.routine;
+ const variant=calendar.market?'market':routine?.restDays?.includes(calendar.day)?'rest':'default';
+ const seasonal=routine?.seasonal?.[String(calendar.season)];
+ const slots=seasonal?.[variant]??routine?.[variant]??seasonal?.default??routine?.default??[];
+ const household=npcHousehold(engine,state,id,constraints),home=household?.homeLocation??person?.home?.location??own?.location;
+ // An unassigned gravely ill dependent cannot be left with an invented substitute.
+ const attending=(member,illness)=>{
+  const n=state.npcs?.[member];
+  return member!==illness.patient&&n?.caring?.illness===illness.id&&n.location===n.caring.location&&!n.scheduleTravel&&!n.cognitionTravel&&!n.levy&&!['患病','濒死','昏迷'].includes(n.status)&&isEffective(engine,state,member)&&!personConstraint(engine,state,member,minute,constraints);
+ };
+ const unattended=Object.values(state.family?.illnesses??{}).some(r=>r.status==='患病中'&&r.severity==='重'&&r.patient!==id&&household?.members.includes(r.patient)&&r.since<=minute&&minute<r.endsAt&&!household.members.some(m=>attending(m,r)));
+ const fullCare=own?.caring||unattended;
+ const duties=fullCare?[{start:480,end:1020,location:own?.caring?.location??home,activity:'照护病人',services:[]}]:slots.filter(s=>/农事|农户|田间|耕|种田|种地|播种|收割|务农|照护|照料|照顾|赶集|赶圩/.test(s.activity??''));
+ const day=Math.floor(minute/1440)*1440;
+ for(const o of Object.values(state.obligations??{}))if(o.reservationVersion===1&&['待履行','进行中'].includes(o.status)&&(o.deliveryVersion===1?o.promisor===id:[o.promisor,o.promisee].includes(id))&&!(o.type==='等候'&&o.promisee===id&&o.attendance?.[id]>0)){
+  const start=Math.max(0,(o.departures?.[id]??o.start)-day),end=Math.min(1440,o.deadline-day);
+  if(start<end)duties.push({start,end,location:o.location,activity:'已约定事务',services:[]});
+ }
+ const reserved=[],free=[];
+ for(const [lo,hi]of [[480,720],[780,1020]]){
+  let cursor=lo;
+  for(const row of duties.filter(r=>r.start<hi&&lo<r.end).sort((a,b)=>a.start-b.start)){
+   const start=Math.max(cursor,row.start,lo),end=Math.min(hi,row.end);
+   if(start>cursor)free.push({start:cursor,end:start});
+   if(end>start){reserved.push({...row,start,end});cursor=end;}
+  }
+  if(cursor<hi)free.push({start:cursor,end:hi});
+ }
+ const reservedMinutes=reserved.reduce((n,r)=>n+r.end-r.start,0),commute=[];
+ let inbound=Math.max(0,Math.ceil(commuteMinutes)),outbound=inbound;
+ for(const r of free){const used=Math.min(r.end-r.start,inbound);if(used){commute.push({start:r.start,end:r.start+used,returning:false});r.start+=used;inbound-=used;}}
+ for(const r of [...free].reverse()){const used=Math.min(r.end-r.start,outbound);if(used){commute.push({start:r.end-used,end:r.end,returning:true});r.end-=used;outbound-=used;}}
+ let left=Math.max(0,Math.floor(workMinutes));const unused=[],work=[];
+ for(const r of free){const minutes=Math.min(left,r.end-r.start);if(minutes)work.push({start:r.start,end:r.start+minutes});if(r.end>r.start+minutes)unused.push({start:r.start+minutes,end:r.end});left-=minutes;}
+ return {availableMinutes:480,reservedMinutes,reserved,commute,commuteMinutes:commute.reduce((n,r)=>n+r.end-r.start,0),work,unused,workMinutes:work.reduce((n,r)=>n+r.end-r.start,0),unattended};
 }
 // A pass over many people may hand in the shared index (entity-view.mjs
 // personConstraints) instead of rescanning every record per person.
