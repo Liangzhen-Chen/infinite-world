@@ -50,7 +50,7 @@ export function agreedLoan(context,borrower,creditor,{principal,days,interest,su
 
 // Native contract requests use current NPC facts, never a caller's answer.
 // Callers supply derived costs and exact terms after checking presence/capacity.
-export function requestContractConsent(d,engine,{from,to='player',scope,subject,purpose=subject,terms,cost,reward=0,eventId,until=d.get('state','minute')}){
+export function requestContractConsent(d,engine,{from,to='player',scope,subject,purpose=subject,terms,cost,reward=0,prepaid=false,eventId,until=d.get('state','minute')}){
  const context={engine,document:d.document};
  const permission=consent(context,from,to,scope,{subject,purpose,terms,until,onRefusal:'abort'});
  if(permission.allowed)return permission;
@@ -58,8 +58,8 @@ export function requestContractConsent(d,engine,{from,to='player',scope,subject,
  if(!conversationLanguage(view,engine,d))return permission;
  // Rescheduling this contract is not a competing new obligation.
  if(scope==='amend')view.self.obligations=view.self.obligations.filter(row=>row.id!==subject);
- const decision=npcDecision(view,{kind:scope,from:to,cost,reward});
- if(decision.outcome!=='agree')return {...permission,reason:decision.reason};
+ const decision=npcDecision(view,{kind:scope,from:to,cost,reward,...(prepaid?{prepaid:true}:{})});
+ if(decision.outcome!=='agree')return {...permission,reason:decision.reason,conditions:decision.conditions};
  const id=`${eventId}:consent`,payload={scope,subject,purpose:[purpose],terms,until:until+1};
  applyConsentEvent(d,context,{actor:from,eventId:id,verb:'consent_given',to,payload});
  // The append-only native consent row is the agreement's saved provenance.

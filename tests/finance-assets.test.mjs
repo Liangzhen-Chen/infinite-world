@@ -13,6 +13,9 @@ import {applyIntentSetup} from '../tools/a3-score.mjs';
 const mill='bld_hw_mill',recipe='recipe_wooden_pegs';
 function workshopFixture(){
     const f=fixture({at:mill});f.doc.state.buildings[mill]={owner:'player',condition:100};
+    // W8-E8: same 100 wood, stored rather than carried; wage/yield anchors unchanged.
+    f.doc.state.records['premises_stock:player:'+mill]={category:'premises_stock',owner:'player',location:mill,inventory:{item_wood:f.doc.state.inventory.item_wood}};
+    delete f.doc.state.inventory.item_wood;delete f.doc.state.inventory.item_oats;
     f.doc.state.inventory.item_whittling_knife={quantity:1,durability:80};return f;
 }
 // F083: a workshop shift is paid and produced only for the minutes the worker really spent at the workshop, so shifts are driven
@@ -86,27 +89,32 @@ test('租房需求来自当前住房，租约进入住户与作息视图；离�
     f.tick(600+90*DAY);assert.equal(f.doc.state.records[r.contract].status,'已到期');assert.equal(personHousehold(f.e,f.doc.state,worker).value.homeLocation,oldHome);
 });
 test('田地与铺面租客随当前职业和经营需求派生，无产权或不匹配需求不能出租',async()=>{
+    // W8-E8: a renamed mill has no area/yield facts. Keep the occupation/title
+    // assertions on the real registered field, with a one-mu lease (1700/15
+    // portions/year * local grain quote *3/10 /12), not invented mill output.
+    const field='loc_hw_fields',farm=fixture({at:field}),landTotal=cash(farm.doc);
+    farm.doc.state.buildings[field]={owner:'player',condition:100};farm.doc.state.npcs[worker].occupation='农夫';
+    assert.equal(rentalNeed(farm.e,farm.doc.state,worker,field)?.kind,'field');
+    const land=await farm.act({operation:'rent_out',seller:worker,location:field,quantity:1,consent:true},'field');assert.equal(farm.doc.state.records[land.contract].use,'field');
+    assert.equal(farm.doc.state.records[land.contract].rentBasis.areaMu,1);assert.equal(cash(farm.doc),landTotal);
     const f=fixture({at:mill}),p=f.e.byId.get(mill);f.doc.state.buildings[mill]={owner:'player',condition:100};const total=cash(f.doc);
-    p.purpose='田地';f.doc.state.npcs[worker].occupation='农夫';
-    assert.equal(rentalNeed(f.e,f.doc.state,worker,mill)?.kind,'field');
-    const land=await f.act({operation:'rent_out',seller:worker,location:mill,consent:true},'field');assert.equal(f.doc.state.records[land.contract].use,'field');
-    f.doc.state.records[land.contract].status='已到期';p.purpose='铺面';assert.equal(rentalNeed(f.e,f.doc.state,host,mill)?.kind,'commercial');
+    p.purpose='铺面';assert.equal(rentalNeed(f.e,f.doc.state,host,mill)?.kind,'commercial');
     const shop=await f.act({operation:'rent_out',seller:host,location:mill,consent:true},'shop');assert.equal(personBusiness(f.e,f.doc.state,host).location.value,mill);
     f.doc.state.buildings[mill].owner=host;await assert.rejects(f.act({operation:'rent_out',seller:clerk,location:mill,consent:true},'no-title'),/合法持有/);
     assert.equal(cash(f.doc),total);assert.ok(shop.contract);
 });
 test('工坊实际支付工钱和台费、消耗材料工具，技能派生产量品质并保留制造者；重放不复制',async()=>{
-    const f=workshopFixture(),total=cash(f.doc),wood=f.doc.state.inventory.item_wood.quantity;
+    const f=workshopFixture(),total=cash(f.doc),wood=f.doc.state.records['premises_stock:player:'+mill].inventory.item_wood.quantity;
     const job=await f.act({operation:'workshop',seller:worker,item:recipe,coins:100,days:10,consent:true},'hire');
     let row=f.doc.state.records[job.contract];assert.ok(npcSchedule(f.e,f.doc.state,worker,row.starts).default.some(s=>s.location===mill&&/生产/.test(s.activity)));
-    await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];const shift=row.shifts[0];assert.ok(shift.batches>0);assert.equal(f.doc.state.inventory.item_wood.quantity,wood-shift.batches);
+    await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];const shift=row.shifts[0];assert.ok(shift.batches>0);assert.equal(f.doc.state.records['premises_stock:player:'+mill].inventory.item_wood.quantity,wood-shift.batches);
     // Day wage 100 pro rata: the minutes at work are 480 minus the walk from home to the mill (road table), paid ceil(100*m/480).
     const m=480-f.e.route(f.e.byId.get(worker).home.location,mill,'walk',row.starts,f.doc.randomSeed).minutes;
     assert.equal(shift.minutes,m);assert.equal(f.doc.state.npcs[worker].coins,500+Math.ceil(100*m/480));assert.equal(cash(f.doc),total);
-    assert.equal(f.doc.state.inventory.item_wooden_peg.quantity,shift.batches*4);assert.ok(shift.instances.every(id=>f.doc.state.itemInstances[id].maker===worker));
+    assert.equal(f.doc.state.records['premises_stock:player:'+mill].inventory.item_wooden_peg.quantity,shift.batches*4);assert.ok(shift.instances.every(id=>f.doc.state.itemInstances[id].maker===worker));
     const snapshot=structuredClone(f.doc);f.tick(f.doc.state.minute);assert.deepEqual(f.doc,snapshot);
     f.doc.state.npcs[worker].proficiencies={skill_life_6_core:2200};await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];assert.equal(row.shifts.at(-1).quality,'杰作');assert.ok(row.shifts.at(-1).batches>shift.batches);assert.equal(cash(f.doc),total);
-    delete f.doc.state.inventory.item_wood;const paid=row.paid;await elapse(f,row.nextWork);assert.equal(f.doc.state.records[job.contract].status,'罢工');assert.equal(f.doc.state.records[job.contract].paid,paid);
+    delete f.doc.state.records['premises_stock:player:'+mill].inventory.item_wood;const paid=row.paid;await elapse(f,row.nextWork);assert.equal(f.doc.state.records[job.contract].status,'罢工');assert.equal(f.doc.state.records[job.contract].paid,paid);
 });
 test('低薪要求加薪、拒绝后罢工辞工；加薪须当面同意；拘押与负立场停止生产',async()=>{
     const f=workshopFixture(),job=await f.act({operation:'workshop',seller:worker,item:recipe,coins:1,days:10,consent:true},'cheap'),total=cash(f.doc);
@@ -121,11 +129,11 @@ test('低薪要求加薪、拒绝后罢工辞工；加薪须当面同意；拘�
 });
 test('world_time真实离屏推进完成工坊班次，受雇者不会同时经营原店，工资材料与输出一致',async()=>{
     const f=workshopFixture(),job=await f.act({operation:'workshop',seller:worker,item:recipe,coins:100,days:10,consent:true},'offline');
-    const before=cash(f.doc),row=f.doc.state.records[job.contract],wood=f.doc.state.inventory.item_wood.quantity;
+    const before=cash(f.doc),row=f.doc.state.records[job.contract],wood=f.doc.state.records['premises_stock:player:'+mill].inventory.item_wood.quantity;
     await f.act({minutes:row.nextWork-f.doc.state.minute},'elapsed','world_time');
     const after=f.doc.state.records[job.contract];assert.equal(after.shifts.length,1);
     // Pro rata: 100 a day for the m minutes actually at the mill (480 less the walk from home), ceil(100*m/480).
-    const m=480-f.e.route(f.e.byId.get(worker).home.location,mill,'walk',row.starts,f.doc.randomSeed).minutes;assert.equal(after.attendance[String(Math.floor(row.starts/DAY))],m);assert.equal(after.paid,Math.ceil(100*m/480));assert.equal(f.doc.state.inventory.item_wood.quantity,wood-after.shifts[0].batches);
+    const m=480-f.e.route(f.e.byId.get(worker).home.location,mill,'walk',row.starts,f.doc.randomSeed).minutes;assert.equal(after.attendance[String(Math.floor(row.starts/DAY))],m);assert.equal(after.paid,Math.ceil(100*m/480));assert.equal(f.doc.state.records['premises_stock:player:'+mill].inventory.item_wood.quantity,wood-after.shifts[0].batches);
     assert.equal(cash(f.doc),before);assert.equal(personBusiness(f.e,f.doc.state,worker).open.value,false);
 });
 test('F083 玩家雇的工坊工人：迟到两小时按实到分钟结薪和产出，整天缺勤不付不产',async()=>{
@@ -145,10 +153,10 @@ test('F083 玩家雇的工坊工人：迟到两小时按实到分钟结薪和产
     const skill=row.shifts[1].skill;assert.equal(row.shifts[1].batches,Math.floor(360/20*(1+skill/3000)));
     // 第3日整天缺勤（人在远路上，次日清晨才到）：没有到岗分钟 => 不付工钱、不产出，合同照常有效，只记原因。
     await elapse(f,(D1+2)*DAY);Object.assign(f.doc.state.npcs[worker],{location:null,activity:'赶路',scheduleTravel:{from:home,to:mill,depart:(D1+2)*DAY,arrive:(D1+3)*DAY+10,edges:[]}});
-    const before={paid:row.paid,produced:row.produced,shifts:row.shifts.length,wood:f.doc.state.inventory.item_wood.quantity};
+    const before={paid:row.paid,produced:row.produced,shifts:row.shifts.length,wood:f.doc.state.records['premises_stock:player:'+mill].inventory.item_wood.quantity};
     await elapse(f,row.nextWork);row=f.doc.state.records[job.contract];
     assert.equal(row.paid,before.paid);assert.equal(row.produced,before.produced);assert.equal(row.shifts.length,before.shifts);
-    assert.equal(f.doc.state.inventory.item_wood.quantity,before.wood);assert.equal(row.status,'有效');assert.equal(row.reason,'没有实际到岗工时');
+    assert.equal(f.doc.state.records['premises_stock:player:'+mill].inventory.item_wood.quantity,before.wood);assert.equal(row.status,'有效');assert.equal(row.reason,'没有实际到岗工时');
     // S5 W2b/W4：没有一分钟实际到岗的工作日是工人的缺勤，记一次缺勤违约（与 labor-market 同一 withAbsenceBreach），前两日没有。
     assert.deepEqual(row.breaches.map(b=>[b.kind,b.by,b.day]),[['缺勤',worker,D1+2]]);
 });

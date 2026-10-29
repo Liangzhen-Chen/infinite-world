@@ -301,3 +301,13 @@ export function moveFishPopulation(d,engine,species,from,to,amount,eventId=null)
  const source=fishPopulationAccount(engine,from,species);if(!source||!amount)return 0;
  return moveStock(d,{from:source,to:fishPopulationAccount(engine,to,species),amount,writer:'extraction',eventId});
 }
+
+// Stored goods remain the tenant's property; their physical place is the premises.
+export const premisesStockKey=(owner,location)=>`premises_stock:${owner}:${location}`;
+export const premisesStock=(engine,owner,location,item)=>accountKey(owner,res(engine,item),`stored:${location}`);
+export function premisesInventory(state,owner,location){return state.records?.[premisesStockKey(owner,location)]?.inventory??{};}
+registerLegacyStock('premises',(engine,state,add)=>{
+ for(const row of Object.values(state.records??{}))if(row.category==='premises_stock'){
+  for(const [item,value] of Object.entries(row.inventory??{}))add(premisesStock(engine,row.owner,row.location,item),qty(value));
+ }
+});

@@ -1,5 +1,14 @@
 {
   "version": "engine-rules-3",
+  "facilities": {
+    "wear": {
+      "referenceLifeYears": 5,
+      "material": {"wood": 3, "stone": 1},
+      "weather": {"rain": 1, "storm": 4},
+      "occupied": 1,
+      "source": "W8-E8：07 §7.3 按天气与使用累计损耗。建筑寿命无现成定值；保守借用数值方案 §2.11 / balance/crafting durability.lifeYears 的普通耐用品五年基准，不声称文档规定建筑五年。保留旧木石3:1及天气/使用相对权重；干燥空置木建筑每日损耗100/(5×360)，占用加1/3，暴雨加4/3；满状态木建筑180天最坏损耗floor(180×100×8/(3×5×360))=26，不能一季自然毁灭。灾害直接损伤不缩放。"
+    }
+  },
   "forestWater": {
     "version": 1,
     "forest": {
@@ -989,8 +998,14 @@
             "quest_publish",
             "housing",
             "tax",
-            "steward"
+            "steward",
+            "public_property"
           ],
+          "powerSources": {
+            "public_property": "公产使用与出租；05:129、05 §5.7.3：聚落行为经首领或相关职位的现任持有人执行，财产仍归聚落。"
+          },
+          "seatPowers": ["public_property"],
+          "seatPowersSource": "05 §5.7.3：首领职位持有人执行聚落行为；本项随席位保留，不受行政等级覆盖。",
           "keeps": {
             "formerHead": "原头人仍按本村法典审理财物案、在登记柜台办户籍"
           },
@@ -1902,6 +1917,13 @@
               "source": "local",
               "amount": 1,
               "maximum": 2
+            },
+            {
+              "item": "item_sickle",
+              "source": "local",
+              "amount": 1,
+              "maximum": 2,
+              "basis": "W8-E8：乡村铁匠铺常备农具；铁镰已在目录（审批管线）"
             },
             {
               "item": "item_steel_arming_sword",
@@ -5512,6 +5534,10 @@
   },
   "agriculture": {
     "version": 1,
+    "fieldRent": {
+      "customaryShare": {"numerator": 3, "denominator": 10},
+      "source": "W8-E8；数值方案 §1.4 NUM-W10、§2.6 field:wheat；现有 world/rules/tables/market.json spread.buy=0.6。未见已有佃租率。现金篮子假定全产出售出、再购入口粮与种粮：三口之家、两名劳力，21日播种窗×2÷0.5工日/亩=84亩（播收126工日，低于两人500工日/年）；180日作物在5..25单播种窗每年一季。燕麦1700/15份/亩，当地春季市场估值5.069784173文，年估值48264.345文；农户收购实收按0.6为28958.607文，不能把估值当现金收入。口粮3×360×估值、种粮84×ceil(120/15)×估值、住房35×4×12、布衣3×2×8、共用燃料3/40×360×2，必要支出10664.262文。目标中点1.15反推惯例租率0.6/1.15−10664.262/48264.345=0.30078，取3/10；28958.607/(10664.262+48264.345×3/10)=1.15173，落1.05–1.25。粮价3文时17136/(7038+8568)=1.09804。旧13/20漏计收购价差，已纠正；该算例为正常质量1的现金标定篮子，不宣称长期浸泡达标。"
+    },
     "foodUnitKg": 0.5,
     "grainItem": "item_oats",
     "farmingSkill": "skill_life_0_core",

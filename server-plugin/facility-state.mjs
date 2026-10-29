@@ -21,6 +21,12 @@ export function facilityRepairMaterials(view){
  return {wood:view.material==='stone'?units:2*units,stone:view.material==='stone'?2*units:units,work:units};
 }
 export const isFacility=p=>p?.type==='bld'||p?.id?.startsWith('bld_');
+// Integer remainder; old saves used ten wear units per condition point.
+export function facilityWearScale(engine){
+ const rule=engine.rules.facilities?.wear;
+ return rule?{rule,denominator:rule.material.wood*rule.referenceLifeYears*engine.rules.calendar.daysPerMonth*engine.rules.calendar.monthsPerYear,numerator:100}:{rule:null,denominator:10,numerator:1};
+}
+export function facilityWearRemainder(row,denominator){return Math.floor((row.wearUnits??0)*denominator/(row.wearDenominator??10));}
 export function facilityKind(base){
  if(base.facilityType)return base.facilityType;
  const purpose=`${base.purpose??''} ${base.name??''}`;
@@ -35,7 +41,7 @@ export function facilityView(engine,state,id,holder='player'){
  const row=state.buildings?.[id]??{},authoredKind=isFacility(base)?facilityKind(base):'workstation_site',kind=authoredKind==='public'&&engine.rules.training?.institutions?.some(r=>r.institution===id)?'school':authoredKind,spec=FACILITY_TYPES[kind]??FACILITY_TYPES.public;
  const material=row.material??base.material??(base.tags?.includes('stone')?'stone':'wood');
  const regional=base.generated==='remote'?state.records?.[`facility_region:${base.region}`]:null;
- const condition=row.condition??Math.max(0,100-Math.floor((regional?.wear?.[material]??0)/10)),burning=Boolean(row.burning),factor=burning||condition<25?0:condition<60?0.5:1;
+ const condition=row.condition??Math.max(0,100-Math.floor((regional?.wear?.[material]??0)/(regional?.wearDenominator??10))),burning=Boolean(row.burning),factor=burning||condition<25?0:condition<60?0.5:1;
  const units=1+(row.expansions??0),capacity=Math.floor((base.lodging?.rooms??base.capacity??spec.capacity)*units*factor);
  const services=factor?[...new Set([...(base.services??[]),...spec.services])]:[];
  return {kind,material,condition,burning,factor,status:factor===0?'停用':factor<1?'降级':'可用',services,capacity,

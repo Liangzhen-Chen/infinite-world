@@ -27,7 +27,7 @@ const PACKS={
  remote:['remote-generation','population','population-service'],
  medicine:['medicine'/* * RW-06 日常诊疗 */],
  quests:['quest-board','quest-sources','quest-wildlife'/* * 委托 */],
- facilities:['facilities'/* * 03 §3.4 设施包（火灾） */],
+ facilities:['facilities','building-maintenance'/* * 03 §3.4 设施包（火灾、业主修缮） */],
 };
 const L3=['scene-card','prompt-scope','chronicle','state-notices','return-summary','consistency-review','consistency-service','consistency-evidence','consistency-outcome',
  'standing','reputation','reputation-registry','reputation-catalog','public-opinion','ui-affairs','ui-history','ui-map','ui-messages','ui-overview','ui-personal',

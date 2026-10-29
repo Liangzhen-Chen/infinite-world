@@ -252,7 +252,9 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
     }
     const action=candidateAction(engine,selected);
     const checked=validateAction(d,engine,id,action,{at:start,presence});
-    const actorPresence={npcs:{[id]:presenceOf(actor)}};
+    // Native daily purchases need the same two-party presence snapshot as
+    // frozen NPC plans; otherwise settlement rejects every real seller.
+    const actorPresence={npcs:Object.fromEntries([id,action.seller].filter(Boolean).map(who=>[who,presenceOf(presence.npcs[who])]))};
     startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true,...(!candidate.legacy?{candidate:candidate.id,decision:candidate.decision}:{} )},checked);
     if((candidate.horizon??1)<=1&&queued.some(c=>c.id===candidate.id))d.remove(['state','autonomyCandidates',candidate.id]);break;
    }catch{/* Missing resources or occupied time is a skipped action, never success. */}}
