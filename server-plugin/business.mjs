@@ -25,6 +25,12 @@ import {currentShops} from './shop.mjs';
 import {placeSettlement,personConstraint,personSimulation} from './entity-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {isEffective} from './lifecycle-state.mjs';
+import {householdBudget} from './household-budget.mjs';
+import {stateReader,valuation} from './valuation.mjs';
+import {rollDice} from './scheduler.mjs';
+import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
+import {recordsWhere,recordsMemo} from './storage.mjs';
+import {toRational,fromRational} from './det-math.mjs';
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
 const path=id=>['state','records',id];
@@ -32,8 +38,9 @@ const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw pr
 const live=shop=>['筹备','营业'].includes(shop.status);
 const awake=n=>n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel;
 const quantities=bag=>Object.fromEntries(Object.entries(bag??{}).map(([item,row])=>[item,typeof row==='number'?row:row.quantity??0]));
+const markupOf=shop=>typeof shop.markup==='number'?shop.markup:shop.markup?fromRational(shop.markup):1;
 const assets=state=>({coins:state.player.coins,goods:quantities(state.inventory)});
-const counterAssets=state=>({...assets(state),coins:dedicatedCoinAccount(state,'player','counter')?.coins??0});
+const counterAssets=(state,business)=>{const row=dedicatedCoinAccount(state,'player','counter');return {...assets(state),coins:row&&(!business||row.business===business)?row.coins:0};};
 function counterFor(d,shop,{spend=false}={}){
     const row=dedicatedCoinAccount(d.get('state'),shop.owner,'counter');
     if(!row||row.business!==shop.id)throw preconditionFailure('须先为本店开户并调拨柜台资金');
@@ -178,6 +185,7 @@ export async function businessTrade(d,args,eventId){
         return {business:shop.id,contract:row.id,cost:owed,escrow:owed,status:row.status,...(unit?{resource:unit.resource,resourceName:unit.resourceName,referenceCopper:cost}:{}),...(loan?{debt:loan.debt,loanAmount:loan.amount,loanDeadline:loan.deadline}:{})};
     }
     if(operation==='sell'){
+        if(shop.suspended)throw preconditionFailure('店铺暂闭，须先恢复营业');
         if(shop.status!=='营业')throw preconditionFailure('店铺未营业');
         if(args.payment&&args.payment!=='cash')throw preconditionFailure('顾客须用现有现金成交，不能自动赊购');
         const buyer=party(d,this,args.buyer,{consent:args.consent,minutes:5});
@@ -253,9 +261,9 @@ export async function businessTrade(d,args,eventId){
 
 // Receipts describe actual tool patches. All balances remain in player/NPC/escrow state.
 export function recordBusinessReceipt(d,before,{tool,args,eventId,detail}){
-    const shops=Object.values(d.get('state','records')??{}).filter(row=>row.category==='business'&&(live(row)||live(before.records?.[row.id]??{})||row.source===eventId));
+    const shops=Object.values(d.get('state','records')??{}).filter(row=>row.category==='business'&&row.owner==='player'&&(live(row)||live(before.records?.[row.id]??{})||row.source===eventId));
     if(!shops.length)return;
-    const start=counterAssets(before),end=counterAssets(d.get('state')),goods={};
+    const start=counterAssets(before,shops[0].id),end=counterAssets(d.get('state'),shops[0].id),goods={};
     for(const item of new Set([...Object.keys(start.goods),...Object.keys(end.goods)])){
         const delta=(end.goods[item]??0)-(start.goods[item]??0);if(delta)goods[item]=delta;
     }
@@ -283,7 +291,7 @@ export function recordBusinessReceipt(d,before,{tool,args,eventId,detail}){
 export function businessReport(d,engine,shop){
     const receipts=Object.values(d.get('state','records')??{}).filter(row=>row.category==='business_receipt'&&row.businesses.includes(shop.id));
     const contracts=Object.values(d.get('state','records')??{}).filter(row=>row.category==='contract'&&row.version===1&&row.business===shop.id);
-    const closing=shop.closing??counterAssets(d.get('state')),cashSources=[{source:shop.source,kind:'期初',amount:shop.opening.coins},...receipts.filter(r=>r.coins).map(r=>({source:r.source,receipt:r.id,amount:r.coins,tool:r.tool,operation:r.operation}))];
+    const closing=shop.closing??counterAssets(d.get('state'),shop.id),cashSources=[{source:shop.source,kind:'期初',amount:shop.opening.coins},...receipts.filter(r=>r.coins).map(r=>({source:r.source,receipt:r.id,amount:r.coins,tool:r.tool,operation:r.operation}))];
     const goods={},lots=new Map();let stockCostOfSales=0;
     // 成本批次：期初库存和非交易入库没有成交记录可查，成本只能取目录基准价作“无记录时的参照”（历史成本，不随现价回改）；
     // 有成交记录的入库用实付价。这里是账面成本核算，不是现价/估值，故不走估值角色。
@@ -315,7 +323,7 @@ export function businessReport(d,engine,shop){
     const saleEvents=new Set([...sales,...walkIns].map(r=>r.source)),taxes=Object.values(d.get('state','records')??{}).filter(r=>r.category==='trade_tax'&&r.payer==='player'&&saleEvents.has(r.sourceEvent)).reduce((n,r)=>n+r.amount,0);
     const state=d.get('state'),claimIds=new Set(contracts.flatMap(c=>[c.debt,c.loan]).filter(Boolean)),debts=obligationRows(state).filter(r=>claimIds.has(r.id)||claimIds.has(r.legacyRecord))
         .map(r=>({id:r.legacyRecord??r.id,amount:obligationView(state,r).owed,status:state.records?.[r.legacyRecord]?.status??r.status,...(r.resource&&r.resource!==REFERENCE?{resource:r.resource}:{})}));
-    return {business:shop.id,status:shop.status,period:{from:shop.createdAt,to:shop.endedAt??d.get('state','minute')},
+    return {business:shop.id,status:shop.status,suspended:Boolean(shop.suspended),lifecycle:businessLifecycle(engine,d.document,shop),period:{from:shop.createdAt,to:shop.endedAt??d.get('state','minute')},
         cash:{opening:shop.opening.coins,closing:closing.coins,net:closing.coins-shop.opening.coins,capital,sources:cashSources,reconciled:cashSources.reduce((sum,r)=>sum+r.amount,0)===closing.coins},goods,
         profit:{revenue,stockCostOfSales,rent,wages,taxes,net:revenue-stockCostOfSales-rent-wages-taxes,method:'已成交收入减先进先出销货成本、整期租金、已付工钱与实缴税；未售库存为资产，期初旧货按目录基价估值'},
         escrow:contracts.filter(r=>r.escrow).map(r=>({contract:r.id,amount:r.escrow,source:r.source,...(r.resource&&r.resource!==REFERENCE?{resource:r.resource}:{})})),debts,
@@ -334,6 +342,83 @@ export function draftMinutes(engine,state,owner){
         if(labor)minutes+=Math.floor(herd.count*labor.factor*labor.hoursPerDay*60);
     }
     return minutes;
+}
+// Signed receipts and payments are a timeline, never today's spendable cash.
+export function cashFlowWindow({cash,from,until,receipts=[],payments=[]}){
+    const incoming=receipts.filter(r=>r.at>=from&&r.at<=until),outgoing=payments.filter(r=>r.at>=from&&r.at<=until);
+    const times=[...new Set([...incoming,...outgoing].map(r=>r.at))].sort((a,b)=>a-b);
+    let balance=cash,shortfall=Math.max(0,-cash);
+    const timeline=times.map(at=>{balance+=incoming.filter(r=>r.at===at).reduce((n,r)=>n+r.amount,0)-outgoing.filter(r=>r.at===at).reduce((n,r)=>n+r.amount,0);shortfall=Math.max(shortfall,-balance);return {at,balance,shortfall:Math.max(0,-balance)};});
+    return {cash,timeline,shortfall,closing:balance};
+}
+// Only future avoidable costs belong in the operating comparison. Outstanding
+// rent/wages/loans remain cash obligations even when the business is suspended.
+export function operatingOptions({revenue,variableCost,switchCost=0,reopenCost=switchCost,suspended=false,cashFlow,attachmentPermille=0,noisePermille=0,terminal=false,evidenceSufficient=true,resumeAllowed=true}){
+    const incremental=revenue-variableCost;
+    const utility=incremental+Math.trunc((Math.abs(incremental)+switchCost)*attachmentPermille/1000)+Math.trunc(revenue*noisePermille/1000);
+    const options=[{kind:suspended?'resume':'continue',incremental,utility:utility-(suspended?reopenCost:0),cashShortfall:cashFlow.shortfall,requiresFunding:cashFlow.shortfall>0,available:!suspended||resumeAllowed},
+        {kind:'suspend',incremental:suspended?0:-switchCost,utility:suspended?0:-switchCost,outstandingCashShortfall:cashFlow.shortfall},
+        {kind:'exit',incremental:-switchCost,utility:-switchCost,outstandingCashShortfall:cashFlow.shortfall}];
+    if(terminal)return {incremental,cashFlow,options:[],preferred:null};
+    const feasible=options.filter(o=>!o.requiresFunding&&o.available!==false);
+    const preferred=!evidenceSufficient&&cashFlow.shortfall===0?(suspended?'suspend':'continue'):[...feasible].sort((a,b)=>b.utility-a.utility)[0].kind;
+    return {incremental,cashFlow,options,preferred};
+}
+const businessPlanDays=e=>e.rules.businessLifecycle?.horizonDays??e.rules.calendar.daysPerMonth;
+function nextBusinessResume(e,state,shop,at){
+    const period=businessPlanDays(e)*1440,periodEnd=(Math.floor(at/period)+1)*period;
+    const native=currentShops(e,state).find(r=>r.id===shop.id||r.keeper===shop.owner&&r.location===shop.location);
+    const cycle=(native?.cycleDays??e.world.marketRules.personalReserveDays)*1440,phase=(native?.firstDay??0)*1440;
+    const nextRestock=phase+(Math.floor((at-phase)/cycle)+1)*cycle;
+    return Math.max(periodEnd,nextRestock);
+}
+const resumeDeadline=(e,state,shop)=>shop.resumeNotBefore??nextBusinessResume(e,state,shop,shop.suspendedAt??shop.createdAt??0);
+export function businessLifecycle(engine,document,shop){
+    const state=document.state,view=subjectiveView(engine,document,shop.owner),read=stateReader(state);
+    const rule=engine.rules.businessLifecycle,days=businessPlanDays(engine),from=state.minute,periodMinutes=days*1440,until=from+periodMinutes;
+    const periodFrom=Math.floor(from/periodMinutes)*periodMinutes,historyFrom=Math.max(from-periodMinutes,shop.createdAt??0),observedMinutes=Math.max(0,from-historyFrom),evidenceSufficient=observedMinutes>=periodMinutes;
+    const budget=householdBudget(read,engine,shop.owner,{view});
+    const counter=dedicatedCoinAccount(state,shop.owner,'counter');
+    const cash=counter?.business===shop.id?counter.coins:shop.owner==='player'?0:budget.cash;
+    const sales=recordsWhere(state.records,'category','business_receipt').filter(r=>r.businesses?.includes(shop.id)&&r.trade?.seller===shop.owner&&r.minute<=from&&r.minute>historyFrom);
+    const sold={};if(!shop.native)for(const r of sales)sold[r.trade.item]=(sold[r.trade.item]??0)+r.trade.quantity;
+    // Native shops already keep their actual visits, payments and quantities.
+    // Reuse that history without creating synthetic invoices on a preview.
+    if(shop.native)for(const row of recordsWhere(state.records,'category','customer_flow')){
+        if(row.shop!==shop.id||row.minute>from||row.minute<=historyFrom)continue;
+        for(const visit of row.visits)if(visit.outcome==='bought')sold[visit.item]=(sold[visit.item]??0)+visit.quantity;
+    }
+    const projected=[];let revenue=0,variableCost=0;
+    for(const [item,n]of Object.entries(sold)){
+        const expectedQuantity=observedMinutes?Math.floor(n*periodMinutes/observedMinutes):0;
+        const quantity=Math.min(expectedQuantity,quantities(view.self.inventory)[item]??0);if(!quantity)continue;
+        const sale=subjectiveMarketQuote(engine,document,view,{item,seller:shop.owner,quantity,business:{keeper:shop.owner,markup:markupOf(shop)}});
+        const replacement=subjectiveMarketQuote(engine,document,view,{item,buyer:shop.owner,quantity});
+        // Current recoverable stock is an opportunity cost, not its sunk invoice.
+        const tax=Math.floor(sale.totalCoins*tradeTax(engine,state,shop.location).bps/10000);
+        revenue+=sale.totalCoins;variableCost+=replacement.totalCoins+tax;
+        projected.push({item,quantity,observedQuantity:n,expectedQuantity,revenue:sale.totalCoins,variableCost:replacement.totalCoins+tax,tax,knownFrom:sale.knownFrom});
+    }
+    const receipts=budget.future.filter(r=>r.resource===REFERENCE&&r.reliable),payments=budget.payments.filter(r=>r.resource===REFERENCE);
+    const cashFlow=cashFlowWindow({cash,from,until,receipts,payments});
+    const closeMinutes=engine.world.openActionRules.generic.transferMinutes,openMinutes=closeMinutes;
+    const labor=laborValue(engine,document,{worker:shop.owner,observer:shop.owner}).daily;
+    const closeCost=Math.ceil(labor*closeMinutes/480),reopenCost=Math.ceil(labor*openMinutes/480),switchCost=closeCost+reopenCost;
+    const npc=state.npcs?.[shop.owner],preference=npc?.businessAttachmentPermille??(rollDice(document.randomSeed,'business:tail',shop.owner,0,0,1000)<=(rule?.stubbornPermille??0)?rule.tailAttachmentPermille*(rollDice(document.randomSeed,'business:tail-sign',shop.owner,0,0,2)===1?-1:1):
+        rollDice(document.randomSeed,'business:attachment',shop.owner,0,0,(rule?.attachmentMaxPermille??0)+1)-1);
+    const noise=rollDice(document.randomSeed,'business:choice',`${shop.owner}:${shop.id}`,periodFrom,0,2*(rule?.noisePermille??0)+1)-1-(rule?.noisePermille??0);
+    const resumeNotBefore=shop.suspended?resumeDeadline(engine,state,shop):null;
+    const comparison=operatingOptions({revenue,variableCost,switchCost,reopenCost,suspended:shop.suspended,cashFlow,attachmentPermille:shop.owner==='player'?0:preference,noisePermille:shop.owner==='player'?0:noise,terminal:!live(shop),evidenceSufficient,resumeAllowed:resumeNotBefore===null||from>=resumeNotBefore});
+    if(shop.owner==='player')for(const option of comparison.options){
+        if(option.kind==='continue')continue;
+        option.action=option.kind==='resume'?'core:settlement.business_open':'core:settlement.business_close';
+        option.slots={business:shop.id,...(option.kind==='resume'?{}:{choice:option.kind})};
+    }
+    const property=valuation(read,engine,{role:'property',subject:shop.location,right:'leases',holder:shop.owner,contract:shop.lease});
+    return {...comparison,horizon:{from,until,days,periodFrom,periodUntil:periodFrom+periodMinutes},history:{from:historyFrom,until:from,observedMinutes,requiredMinutes:periodMinutes,sufficient:evidenceSufficient,note:evidenceSufficient?'完整计划期观察':'依据不足：按已观察时长折算，正常情况下维持现状'},resumeNotBefore,conversion:{closeMinutes,openMinutes,closeCost,reopenCost,switchCost},projected,revenue,variableCost,switchCost,attachmentPermille:preference,noisePermille:noise,ownerCash:budget.cash,
+        funding:cashFlow.shortfall?[{kind:'fund_counter',action:'business:fund_counter',available:budget.cash,required:cashFlow.shortfall},{kind:'loan',action:'core:trade.borrow',required:cashFlow.shortfall,requires:'真实出借人同意并交付；不自动授信'}]:[],
+        propertyValue:property,transfer:{action:'core:settlement.business_close',slots:{business:shop.id,choice:'transfer'},requiredSlots:['member','coins'],requires:'产权人实际在场、同意并付款；全部现有库存随经营权转移',cashAvailable:0},
+        note:'历史租金、已付报酬与旧进货账面亏损不重复扣除；未清义务不会因暂闭或退出消失。'};
 }
 export function businessOptions(engine,document,owner){
     const view=subjectiveView(engine,document,owner),s=document.state,inventory=quantities(view.self.inventory);
@@ -359,8 +444,50 @@ export function businessOptions(engine,document,owner){
         if(wage<=cash)options.push({kind:'hire',worker:worker.id,wage,requiredMinutes:requiredMinutes-capacity});
     }
     if(capacityKnown&&capacity>requiredMinutes)for(const job of jobs)options.push({kind:'dismiss',contract:job.id,worker:job.worker,excessMinutes:capacity-requiredMinutes});
-    return {observer:owner,location:view.self.location,counterCash:cash,options};
+    const lifecycle=managedShops(engine,s).filter(r=>r.owner===owner).map(shop=>({business:shop.id,...businessLifecycle(engine,document,shop)}));
+    return {observer:owner,location:view.self.location,counterCash:cash,options,lifecycle};
 }
+
+// A native shop is already a legal operating business. Its first real state
+// change materializes the same identity, never a second stock or money balance.
+function managedShops(e,state){
+    return recordsMemo(state,managedShops,()=>{
+        const rows=recordsWhere(state.records,'category','business'),ids=new Set(rows.map(r=>r.id));
+        return [...rows,...currentShops(e,state).filter(s=>!ids.has(s.id)&&!rows.some(r=>r.owner===s.keeper&&r.location===s.location)).map(s=>({id:s.id,category:'business',native:true,owner:s.keeper,location:s.location,status:'营业',markup:s.markup,openedAt:0}))];
+    });
+}
+registerAutonomyProvider('business_lifecycle',{
+    relevant:(e,state,who)=>managedShops(e,state).some(r=>r.owner===who&&live(r)),
+    candidates(e,view,document){
+        return managedShops(e,document.state).filter(r=>r.owner===view.observer&&live(r)&&r.location===view.self.location).flatMap(shop=>{
+            const w=businessLifecycle(e,document,shop),best=w.options.find(o=>o.kind===w.preferred);
+            const current=w.options.find(o=>o.kind===(shop.suspended?'suspend':'continue'));
+            if(!best||best.utility<=current.utility||best.kind==='continue'||best.kind==='exit')return [];
+            if(best.kind==='resume'&&(!awake(document.state.npcs[shop.owner])||!Object.values(quantities(view.self.inventory)).some(n=>n>0)))return [];
+            return [{id:`business:${shop.id}:${best.kind}`,kind:'business_lifecycle',legacy:{kind:'business_lifecycle',business:shop.id,choice:best.kind},cost:{},needSatisfaction:100,utility:best.utility-current.utility}];
+        });
+    }
+});
+registerAutonomyKind('business_lifecycle',{
+    minutes:e=>e.world.openActionRules.generic.transferMinutes,
+    validate(d,e,who,action,{at=d.get('state','minute'),actor}={}){
+        const raw=d.get('state'),state={...raw,minute:at,npcs:actor?{...raw.npcs,[who]:actor}:raw.npcs},shop=managedShops(e,state).find(r=>r.id===action.business);
+        if(!shop||shop.owner!==who||!live(shop)||shop.location!==state.npcs?.[who]?.location||!awake(state.npcs[who]))throw preconditionFailure('经营者不在可管理的商铺内');
+        if(!['suspend','resume'].includes(action.choice)||Boolean(shop.suspended)===(action.choice==='suspend'))throw preconditionFailure('经营状态已经变化');
+        const premise=state.buildings?.[shop.location],lease=contractTerms(state.records?.[shop.lease]??{},state.minute);
+        const native=shop.native&&currentShops(e,state).some(r=>r.id===shop.id&&r.keeper===who&&r.location===shop.location);
+        if(premise?.condition<=0||premise?.burning||(!native&&premise?.owner!==who&&(lease.status!=='有效'||lease.deadline<=state.minute)))throw preconditionFailure('经营者没有可用的合法场地');
+        if(action.choice==='resume'&&(!Object.values(quantities(state.npcs[who].inventory)).some(n=>n>0)||!scheduleAt(e,who,state.minute,state)?.services?.includes('trade')))throw preconditionFailure('恢复经营须有库存和实际服务窗口');
+        if(action.choice==='resume'&&at<resumeDeadline(e,state,shop))throw preconditionFailure('尚在最短暂停期内，须等下一计划期和补货周期再恢复');
+    },
+    execute(d,e,who,action,{actionId}){
+        const state={...d.get('state'),minute:d.get('state','minute')},shop=managedShops(e,state).find(r=>r.id===action.business),w=businessLifecycle(e,{...d.document,state},shop);
+        if(d.get('state','npcs',who,'businessAttachmentPermille')===undefined)d.set(['state','npcs',who,'businessAttachmentPermille'],w.attachmentPermille);
+        const markup=markupOf(shop);
+        holdingSet(d,null,path(shop.id),{...shop,markup:Number.isInteger(markup)?markup:toRational(markup),suspended:action.choice==='suspend',...(action.choice==='resume'?{openedAt:state.minute}:{suspendedAt:state.minute,resumeNotBefore:nextBusinessResume(e,state,shop,state.minute)}),lifecycleSource:actionId},'business',actionId);
+        return {summary:`经营者${action.choice==='suspend'?'暂闭':'恢复'}商铺${shop.id}；未清义务保留。`};
+    }
+});
 
 // 05 §5.1: a counter is funded by a real transfer, never by an opening balance snapshot.
 function counterAction(d,e,args,eventId){
@@ -378,7 +505,13 @@ function counterAction(d,e,args,eventId){
     if(source!==shop.source||lease.source!==source||lease.business!==shop.id||lease.parties?.[0]!==owner)throw preconditionFailure('Invalid counter opening source');
     if((args.purpose??'counter')!=='counter')throw preconditionFailure('Invalid counter purpose');
     const amount=int(args.coins??0,0,1e9,'开户资金');
-    if(dedicatedCoinAccount(d.get('state'),owner,'counter'))throw preconditionFailure('Counter already exists');
+    const previous=dedicatedCoinAccount(d.get('state'),owner,'counter');
+    if(previous){
+        const old=d.get(...path(previous.business));
+        if(!old||live(old))throw preconditionFailure('Counter already exists');
+        if(previous.coins!==0||(d.get('ledger','accounts',previous.account)??0)!==0)throw preconditionFailure('须先在旧柜台实际提清资金，才能为新店开户');
+        if(aliveHoldings(d,{kind:'frozen',subject:previous.account}).length)throw preconditionFailure('旧柜台资金账户已冻结，不能重新开户');
+    }
     if(d.get('state','player','coins')<amount)throw preconditionFailure('Insufficient counter opening funds');
     const account=`${owner}|coin_river|counter`;
     holdingSet(d,e,path(dedicatedCoinKey(owner,'counter')),{category:'money_account',owner,purpose:'counter',account,coins:0,seat:shop.location,business:shop.id,sourceEvent:source,openedBy:eventId},'business',eventId);
@@ -396,10 +529,55 @@ export function businessAction(d,args,eventId){
     }else localBusiness(d,shop.id);
     if(args.operation==='business_open'){
         leaseFor(d,shop);
+        const building=d.get('state','buildings',shop.location);
+        if(building?.condition<=0||building?.burning)throw preconditionFailure('铺面已不可用，须先修缮');
+        if(!awake(d.get('state','player')))throw preconditionFailure('店主须清醒且能实际营业');
+        counterFor(d,shop);
         if(!Object.values(quantities(d.get('state','inventory'))).some(q=>q>0))throw preconditionFailure('须有现有库存才能开店');
-        holdingSet(d,null,path(shop.id),{...shop,status:'营业',openedAt:d.get('state','minute')},'business');return {business:shop.id,status:'营业'};
+        if(shop.status==='营业'&&!shop.suspended)throw preconditionFailure('店铺已经营业');
+        if(shop.suspended&&d.get('state','minute')<resumeDeadline(this,d.get('state'),shop))throw preconditionFailure('尚在最短暂停期内，须等下一计划期和补货周期再恢复');
+        holdingSet(d,null,path(shop.id),{...shop,status:'营业',suspended:false,openedAt:d.get('state','minute')},'business');
+        if(shop.suspended)this.advance(d,this.world.openActionRules.generic.transferMinutes,eventId);
+        return {business:shop.id,status:d.get(...path(shop.id)).status};
     }
     if(!['business_close','business_bankrupt'].includes(args.operation))throw preconditionFailure('未知店铺操作');
+    if(args.operation==='business_close'&&args.choice==='suspend'){
+        leaseFor(d,shop);
+        if(shop.suspended)throw preconditionFailure('店铺已经暂闭');
+        holdingSet(d,null,path(shop.id),{...shop,suspended:true,suspendedAt:d.get('state','minute'),resumeNotBefore:nextBusinessResume(this,d.get('state'),shop,d.get('state','minute')),suspendSource:eventId},'business');
+        this.advance(d,this.world.openActionRules.generic.transferMinutes,eventId);
+        return {business:shop.id,status:d.get(...path(shop.id)).status,suspended:true,inventoryRetained:true,note:'暂闭保留经营权、租约、合同与未清义务；恢复须重新满足营业条件'};
+    }
+    if(args.operation==='business_close'&&args.choice==='transfer'){
+        leaseFor(d,shop);
+        if(!args.member)throw preconditionFailure('转让需要实际买方，不能将资产估值自动变成现钱');
+        // The buyer's decision below supplies consent. A caller-filled boolean
+        // cannot substitute for that decision through the action gateway.
+        const buyer=party(d,this,args.member,{consent:true,minutes:5});
+        if(d.get('state','buildings',shop.location)?.owner!==buyer)throw preconditionFailure('本次转让须由铺面产权人接手；其他买方须先另行取得合法场地');
+        const cost=int(args.coins,1,1e9,'转让价款');
+        if(this.actor(d,buyer).coins<cost)throw preconditionFailure('买方现钱不足，资产估值不能自动变现');
+        const stock=quantities(d.get('state','inventory'));
+        let value=0;for(const [item,quantity]of Object.entries(stock)){
+            const q=valuation(d,this,{role:'goods',holder:'player',location:shop.location,item,quantity});
+            if(q.value!==null)value+=q.value;
+        }
+        const decision=npcDecision(subjectiveView(this,d.document,buyer),{kind:'purchase',from:'player',cost:{coins:cost},reward:value,needSatisfaction:0});
+        if(decision.outcome!=='agree')throw preconditionFailure(`买方未接受转让：${decision.reason}`);
+        // Terminate the old lease and contracts normally; outstanding personal
+        // debts do not move to the buyer. Cash and all shared stock move once.
+        const nextId=`business_${eventId}`;
+        if(d.get(...path(nextId)))throw preconditionFailure('接手经营编号已存在');
+        endShop(d,this,shop,'已转让',eventId,'店主转让经营');
+        moveCoins(d,{from:purse(this,buyer),to:purse(this,'player'),amount:cost,writer:'business',eventId});
+        mirrorPartyCoins(d,this,buyer,-cost,eventId,'business');mirrorPartyCoins(d,this,'player',cost,eventId,'business');
+        for(const [item,quantity]of Object.entries(stock))if(quantity>0)transferItems(d,this,'player',buyer,item,quantity);
+        holdingSet(d,null,path(nextId),{id:nextId,category:'business',owner:buyer,location:shop.location,status:'营业',openedAt:d.get('state','minute'),createdAt:d.get('state','minute'),source:eventId,predecessor:shop.id,opening:{coins:0,goods:stock}},'business',eventId);
+        holdingSet(d,null,path(shop.id),{...d.get(...path(shop.id)),successor:nextId,transferPrice:cost},'business',eventId);
+        this.advance(d,5,eventId);
+        return {business:shop.id,status:'已转让',successor:nextId,buyer,cost,inventoryRetained:false,goods:stock};
+    }
+    if(args.choice!==undefined&&!['exit','suspend','transfer'].includes(args.choice))throw preconditionFailure('经营选择须为 suspend、transfer 或 exit');
     const bankrupt=args.operation==='business_bankrupt';
     if(bankrupt){
         const contracts=Object.values(d.get('state','records')??{}).filter(r=>r.category==='contract'&&r.business===shop.id);
@@ -410,6 +588,7 @@ export function businessAction(d,args,eventId){
         if(debt<=(dedicatedCoinAccount(d.get('state'),'player','counter')?.coins??0)+refundable)throw preconditionFailure('现有现金和托管款足以偿债，不符合现金破产条件');
     }
     endShop(d,this,shop,bankrupt?'破产':'停业',eventId,bankrupt?'无力用现金偿还现有欠款，欠款保留':'店主主动停业');
+    if(args.choice==='exit')this.advance(d,this.world.openActionRules.generic.transferMinutes,eventId);
     if(bankrupt)entityTransition(d,this,{id:`${eventId}:business-breach`,verb:'breach',actor:shop.id,location:shop.location,visibility:'public',witnesses:presentWitnesses(d.get('state'),shop.location),participants:[shop.owner],tags:['business'],summary:`${shop.id}无力偿还经营欠款，宣告破产；债务保留`});
     return {business:shop.id,status:bankrupt?'破产':'停业',inventoryRetained:true,note:'剩余实物保留，未偿欠款仍在原债务记录中。'};
 }
@@ -428,12 +607,22 @@ const flowKey=(shop,day)=>['state','records',`customer_flow:${shop}:${day}`];
 function openShops(d,engine,t){
     const state=d.get('state'),out=[];
     for(const shop of Object.values(state.records??{})){
-        if(shop.category!=='business'||shop.owner!=='player'||shop.status!=='营业'||(shop.openedAt??Infinity)>t||shop.location!==state.location)continue;
+        if(shop.category!=='business'||shop.suspended||shop.status!=='营业'||(shop.openedAt??Infinity)>t)continue;
+        if(state.buildings?.[shop.location]?.condition<=0||state.buildings?.[shop.location]?.burning)continue;
+        if(shop.owner!=='player'){
+            const npc=state.npcs?.[shop.owner],slot=npc&&scheduleAt(engine,shop.owner,t,state);
+            const native=shop.native&&currentShops(engine,state).find(r=>r.id===shop.id&&r.keeper===shop.owner&&r.location===shop.location);
+            if((!native&&state.buildings?.[shop.location]?.owner!==shop.owner)||!npc||!isEffective(engine,state,shop.owner)||['死亡','濒死','昏迷','患病'].includes(npc.status)||slot?.location!==shop.location||!slot.services?.includes('trade'))continue;
+            out.push({kind:'npc',id:shop.id,keeper:shop.owner,location:shop.location,settlement:placeSettlement(engine,state,shop.location).value,markup:markupOf(shop),goods:native?native.restock.map(r=>r.item):Object.keys(quantities(npc.inventory))});continue;
+        }
+        if(shop.location!==state.location)continue;
         const lease=contractTerms(state.records?.[shop.lease]??{},t),counter=dedicatedCoinAccount(state,'player','counter');
         if(lease?.kind!=='lease'||lease.status!=='有效'||lease.deadline<=t||!counter||counter.business!==shop.id||counter.seat!==shop.location)continue;
         out.push({kind:'player',id:shop.id,keeper:'player',location:shop.location,settlement:placeSettlement(engine,state,shop.location).value,markup:shop.markup??1,counter});
     }
     for(const shop of currentShops(engine,state)){
+        if(recordsWhere(state.records,'category','business').some(row=>row.owner===shop.keeper&&row.location===shop.location))continue;
+        if(out.some(row=>row.keeper===shop.keeper&&row.location===shop.location))continue;
         const keeper=state.npcs?.[shop.keeper],slot=keeper&&scheduleAt(engine,shop.keeper,t,state);
         if(!keeper||!isEffective(engine,state,shop.keeper)||['死亡','濒死','昏迷','患病'].includes(keeper.status)||!slot||slot.location!==shop.location||!slot.services?.includes('trade'))continue;
         out.push({kind:'npc',id:shop.id,keeper:shop.keeper,location:shop.location,settlement:shop.settlement,markup:shop.markup??1,goods:shop.restock.map(r=>r.item)});
@@ -495,6 +684,9 @@ function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
         // 与手动成交同口径的经营回执：现金、实物与成交，供店铺报表对账。
         holdingSet(d,null,path(`business_receipt_${eventId}`),{id:`business_receipt_${eventId}`,category:'business_receipt',businesses:[shop.id],source:eventId,tool:'customer_flow',operation:'customer_sale',minute:t,
             coins:cost,goods:{[item]:-quantity},contracts:[],counterparties:[{actor:buyer,coins:-cost,goods:{[item]:quantity}}],trade:{buyer,seller:'player',item,quantity,cost}},'business');
+    }else if(d.get(...path(shop.id))?.category==='business'){
+        holdingSet(d,null,path(`business_receipt_${eventId}`),{id:`business_receipt_${eventId}`,category:'business_receipt',businesses:[shop.id],source:eventId,tool:'customer_flow',operation:'customer_sale',minute:t,
+            coins:cost,goods:{[item]:-quantity},contracts:[],counterparties:[{actor:buyer,coins:-cost,goods:{[item]:quantity}}],trade:{buyer,seller:shop.keeper,item,quantity,cost}},'business');
     }
     return {cost,tax};
 }

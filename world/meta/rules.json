@@ -1,5 +1,13 @@
 {
   "version": "engine-rules-3",
+  "businessLifecycle": {
+    "horizonDays": 30,
+    "attachmentMaxPermille": 500,
+    "stubbornPermille": 50,
+    "tailAttachmentPermille": 10000,
+    "noisePermille": 250,
+    "source": "K05 / AS02、05 §5.1.2/§5.7、14 §14.5.1：经营计划期默认取当前 calendar.daysPerMonth=30天，不用一日生活储备期预测长期经营；历史窗口同长，不足按实际观察时长折算并标依据不足，正常情况下维持现状。开、关各用 generic.transferMinutes 计一次真实工时，恢复只计尚未发生的开张工时；无额外已知采购工序时不虚构备货时间。最早恢复不得早于下一计划期边界和下一既有补货周期。P待标定：一般经营依恋0–500‰、固执尾部50‰及正负权重10000‰、整期收入噪声±250‰。人格按主体固定种子恢复，噪声按主体/经营/计划期键固定，期内不重抽；差异与噪声参数置零可关闭。玩家只见经济比较，不替玩家抽签决定。"
+  },
   "facilities": {
     "maintenance": {
       "delayMaxPermille": 500,
