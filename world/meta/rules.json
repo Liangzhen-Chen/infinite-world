@@ -1,6 +1,13 @@
 {
   "version": "engine-rules-3",
   "facilities": {
+    "maintenance": {
+      "delayMaxPermille": 500,
+      "stubbornPermille": 50,
+      "stubbornDelayPermille": 10000,
+      "noisePermille": 250,
+      "source": "K03 / 05 §5.1.2、§5.7、14 §14.5.1：按本地已知服务价格/容量及当前天气损耗率，在一个历月窗口内比较完工后的可避免服务损失与材料、剩余工时机会成本。窗口默认 calendar.daysPerMonth；不凭空计收入。P待标定：一般拖延成本权重0–500‰、固执尾部概率50‰/额外成本权重10000‰，单日决定收益噪声±250‰；人格按主体固定种子分配，真正开工修缮时保存，决定按主体/建筑/日键重放。零参数可关闭差异与噪声。"
+    },
     "wear": {
       "referenceLifeYears": 5,
       "material": {"wood": 3, "stone": 1},
