@@ -63,7 +63,7 @@ export function advanceSeasonalMigration(d,engine,day){
         moveFishPopulation(d,engine,route.species,home.location,`migration:${id}`,unseen,id);
         const health=takePopulation(p,unseen);p.emigrated+=unseen;d.set(ecology(route.from),source);
         for(const id of travellers){holdingSet(d,null,['state','creatures',id,'location'],null,'seasonal-migration');holdingSet(d,null,['state','creatures',id,'migration'],`${route.id}:${now}`,'seasonal-migration');}
-        m.transit.push({id,route:route.id,species:route.species,from:route.from,to:route.to,departDay:now,arriveDay:now+route.travelDays,count:unseen,...(health.I||health.R?{health}:{}),actors:travellers});
+        m.transit.push({id,route:route.id,species:route.species,from:route.from,to:route.to,departDay:now,arriveDay:now+route.travelDays,count:unseen,...(health.I||health.R||health.disease||health.diseaseRemainders?{health}:{}),actors:travellers});
         m.departed+=amount;d.set(migrationPath(),m);
     }
     m.lastDay=day;d.set(migrationPath(),m);

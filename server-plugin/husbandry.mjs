@@ -21,9 +21,24 @@ registerLegacyStock('husbandry',(_e,state,add)=>{
 export function advanceHusbandry(d,e,day){
  if(!e.world.monsters.some(s=>s.husbandry))return;
  ensureHoldings(d,e);
- for(const old of Object.values(d.get('state','records')??{}).filter(r=>r.category==='husbandry')){
-  if(old.lastDay!==day-1)throw Error('家畜日结不连续');
-  const row=structuredClone(old),p=profile(e,row.species);if(!p)throw Error('家畜物种养殖参数缺失');
+ const rows=Object.values(d.get('state','records')??{}).filter(r=>r.category==='husbandry').map(r=>structuredClone(r)).sort((a,b)=>a.id.localeCompare(b.id,'en'));
+ const groups=new Map();
+ for(const row of rows){
+  if(row.lastDay!==day-1)throw Error('家畜日结不连续');
+  if(!profile(e,row.species))throw Error('家畜物种养殖参数缺失');
+  const species=e.byId.get(row.species),key=JSON.stringify([row.location,row.species,row.disease??species.ecology?.disease??null]);
+  if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);
+ }
+ // No pen/isolation model exists here: co-located herds of one species share
+ // contact space regardless of ownership or how many account rows store them.
+ const deaths=new Map();
+ for(const group of groups.values()){
+  const opening=group.map(row=>row.count);
+  advancePopulationDisease(d,e,group,group.map(row=>row.id),e.byId.get(group[0].species),group.reduce((n,row)=>n+row.capacity,0));
+  group.forEach((row,i)=>deaths.set(row.id,opening[i]-row.count));
+ }
+ for(const row of rows){
+  const p=profile(e,row.species);
   // A genuine title transfer changes who must supply feed. Synchronize the
   // source projection with the native owns edge before settling this day.
   const owners=aliveHoldings(d,{kind:'owns',subject:row.id});
@@ -35,7 +50,7 @@ export function advanceHusbandry(d,e,day){
    batch.quantity=0;
   }
   row.batches=row.batches.filter(b=>b.quantity);
-  const died=advancePopulationDisease(d,e,row,row.id,e.byId.get(row.species),row.capacity),heads=row.count;
+  const died=deaths.get(row.id),heads=row.count;
   moveStock(d,{from:animals(row),to:`sink:death|${resource(row.species)}|herd`,amount:died,writer:'husbandry',eventId});
   const feed=Math.ceil(derived(e,d.document,'husbandry:feed',row.id,{base:heads*p.feed.perHead,target:row.species}));
   const available=row.owner?e.quantity(d,row.owner,p.feed.item):0;

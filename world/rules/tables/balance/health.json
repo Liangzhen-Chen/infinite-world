@@ -1,6 +1,7 @@
 {
   "schema": "balance/health@1",
   "title": "医疗病程（数值方案 §2.17）",
+  "note": "动物群体接触口径：密度依赖，β=R0/病程（日⁻¹），感染=S×min(1,β×同群日初I/K)；K采用有效栖地承载量或同地点同物种圈养容量之和作为接触空间代理（待标定），满容量全易感时R0为名义再生数，同群拆账不重置K；恢复=1/病程，病死日率=病死率/病程，先死后恢复；R在此简化动物SIR中为持续免疫，免疫失效另属RW/S6，人类家户传播不使用此式。",
   "params": [
     {"id":"intervention.isolation","value":{"infectMul":0.7,"recoverMul":1},"bounds":{"infectMul":[0.5,1],"recoverMul":[1,2]},"basis":"calibrate","source":"数值方案 §2.17（方案只给界，初值为占位）","playDecision":false,"calibration":"pending","note":"隔离：对感染率 mul ∈ [0.5, 1]、对康复率 mul ∈ [1, 2]"},
     {"id":"intervention.cleanWater","value":{"infectMul":0.7,"recoverMul":1},"bounds":{"infectMul":[0.5,1],"recoverMul":[1,2]},"basis":"calibrate","source":"数值方案 §2.17（方案只给界，初值为占位）","playDecision":false,"calibration":"pending","note":"净水：同上"},
