@@ -32,6 +32,7 @@ import {refundContractEscrow} from './contracts.mjs';
 import {marketQuote} from './market.mjs';
 import {partyDeterrence} from './deterrence.mjs';
 import {valuation} from './valuation.mjs';
+import {carryOverKg} from './carry.mjs';
 import transportBalance from '../world/rules/tables/balance/transport.json' with {type:'json'};
 declareHoldingWriter('transport',{kinds:['owns','tamed_by'],locations:true});
 
@@ -46,7 +47,8 @@ export function carrierDeparture(e,selector,now){
  const row=tableRow(e,`departure:${selector}`),day=now-now%DAY,at=now%DAY;
  if(!row)return now;
  if(row.at!==undefined)return at<=row.at?day+row.at:day+DAY+row.at;
- return at<row.cutoff?Math.ceil(now/60)*60:day+DAY+row.resume;
+ const departure=Math.max(row.resume,Math.ceil(at/60)*60);
+ return departure<row.cutoff?day+departure:day+DAY+row.resume;
 }
 // 信件 = 没有货、没有客、也没有护送的一趟（驿传）；这样的运单没有别的用途。
 const isLetter=(cargo,passengers,escort)=>!cargo.length&&!passengers.length&&!escort;
@@ -54,6 +56,9 @@ const int=(n,min,label)=>{if(!Number.isSafeInteger(n)||n<min)throw preconditionF
 const all=s=>Object.values(s.records??{});
 const unfinished=s=>(s.records?.['transport:active']?.ids??[]).map(id=>s.records[id]).filter(Boolean);
 const live=s=>unfinished(s).filter(r=>['booked','moving','delayed'].includes(r.status));
+// A consignment reserves the whole vehicle until arrival (no split-load agreement).
+// Interception stops its clock, not its claim on the vehicle, driver or draft animals.
+const occupied=s=>unfinished(s).filter(r=>['booked','moving','delayed','intercepted'].includes(r.status));
 function index(d,id,add=true,key='transport:active'){const ids=d.get(...path(key),'ids')??[];holdingSet(d,null,path(key),{category:'transport_index',ids:add?[...new Set([...ids,id])]:ids.filter(x=>x!==id)},'transport');}
 // Wrecked shipments leave the live index at once but stay here until their cargo, freight and escort accounts are settled.
 const pendingWrecks=s=>(s.records?.['transport:wrecked']?.ids??[]).map(id=>s.records[id]).filter(r=>r?.status==='wrecked'&&r.settledAt===undefined);
@@ -63,7 +68,7 @@ const assets=(e,s)=>[...new Map([...openingTransportAssets.filter(a=>e.byId.has(
 function available(e,s,id){const n=s.npcs?.[id];return n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel&&!e.npcAutonomyBusy(s,id,s.minute)&&!personConstraint(e,s,id)&&(personAge(e,s,id).value??0)>=18;}
 function operator(e,s,owner){return s.npcs?.[owner]?owner:groupRepresentative(e,s,owner);}
 function draftAnimals(e,document,asset){
- const s=document.state,view=holdingsView(document),reserved=new Set(live(s).filter(r=>r.asset!==asset.id).flatMap(r=>r.draftSources??[]));
+ const s=document.state,view=holdingsView(document),reserved=new Set(occupied(s).filter(r=>r.asset!==asset.id).flatMap(r=>r.draftSources??[]));
  const owned=new Set(['owns','tamed_by'].flatMap(kind=>aliveHoldings(view,{kind,holder:asset.owner}).map(r=>r.subject)));
  const sources=[];let hasDraftAnimal=false;
  for(const id of owned){
@@ -85,7 +90,7 @@ function draftAnimals(e,document,asset){
  // pulls it, bounded by the driver's own carrying strength (combat.derivedStats).
  if(!hasDraftAnimal&&!asset.animal){
   const puller=asset.owner==='player'?'player':operator(e,s,asset.owner);
-  if(puller&&(puller==='player'||live(s).some(r=>r.asset===asset.id&&r.driver===puller)||available(e,s,puller))&&!live(s).some(r=>r.asset!==asset.id&&r.driver===puller)){
+  if(puller&&(puller==='player'||occupied(s).some(r=>r.asset===asset.id&&r.driver===puller)||available(e,s,puller))&&!occupied(s).some(r=>r.asset!==asset.id&&r.driver===puller)){
    // Same carrying rule as combat.derivedStats (carryBase + strength * carryPerStrength); not imported across packs.
    const attributes=puller==='player'?s.player?.attributes:(s.npcs?.[puller]?.attributes??e.byId.get(puller)?.attributes),c=e.rules.combat.character;
    sources.push({id:puller,kg:Math.max(1,c.carryBase+(attributes?.力量??10)*c.carryPerStrength)});
@@ -108,8 +113,8 @@ export function transportAssetView(e,document,id){
  const kg=(a.kind==='cart'?Math.min(spec.kg,draftKg):spec.kg)*factor*capacityFactor;
  const ratio=kg/spec.kg;
  const lease=all(s).find(r=>r.category==='transport_lease'&&r.asset===a.id&&r.starts<=s.minute&&r.ends>s.minute);
- const busy=unfinished(s).find(r=>r.asset===a.id);
- return {...a,location,holder:lease?.tenant??a.owner,capacityKg:kg,capacityM3:spec.m3*ratio,seats:Math.floor(spec.seats*ratio),draftSources:draft.map(r=>r.id),mode:spec.mode,factor,busy:busy?.id??null,
+ const busy=occupied(s).find(r=>r.asset===a.id);
+ return {...a,location,holder:busy?.carrier??lease?.tenant??a.owner,capacityKg:kg,capacityM3:spec.m3*ratio,seats:Math.floor(spec.seats*ratio),draftSources:draft.map(r=>r.id),mode:spec.mode,factor,busy:busy?.id??null,
   tags:['item','transport',a.kind,a.kind==='pack'?'flesh':'wood',...(factor===0?['broken']:[])]};
 }
 export function createTransportAsset(d,e,{owner='player',kind='cart',animal,id},eventId){
@@ -294,6 +299,10 @@ function setPosition(d,e,row,location){
 }
 export function nextTransportMinute(state,now){return Math.min(pendingWrecks(state).length?now+1:Infinity,...live(state).map(r=>r.transport.nextAt).filter(at=>at>now));}
 export function advanceTransport(d,e,minute){
+ if(!pendingWrecks(d.get('state')).length&&!live(d.get('state')).some(r=>r.transport.nextAt<=minute))return;
+ return obligationTransaction(d,()=>advanceTransportInner(d,e,minute));
+}
+function advanceTransportInner(d,e,minute){
  for(const wreck of pendingWrecks(d.get('state')))settleWreckedShipment(d,e,wreck.id,minute);
  for(const old of live(d.get('state'))){const row=clone(old),t=row.transport;
   if(t.nextAt>minute)continue;
@@ -307,10 +316,13 @@ export function advanceTransport(d,e,minute){
    if(waypoint){row.history.push({minute,location:t.location,kind:'waypoint'});const wear=Math.max(1,Math.ceil(t.segment.distanceKm/20));holdingSet(d,null,[...path(row.asset),'durability'],Math.max(0,asset.durability-wear),'transport');}}
   if(t.edgeIndex>=t.edges.length){
    row.status='delivered';row.arrivedAt=minute;t.nextAt=null;t.segment=null;index(d,row.id,false);
-   const handover=!row.cargo.length||actorLocation(d.get('state'),row.recipient)===t.location;
+   const present=row.passengers.includes(row.recipient)||actorLocation(d.get('state'),row.recipient)===t.location;
+   const handover=!row.cargo.length||present&&carryOverKg(d,e,row.recipient,dimensions(e,row.cargo,[]).kg)===0;
    if(handover){for(const c of row.cargo)moveGoods(d,e,row.recipient,c.item,c.quantity,{instances:c.instances,trip:row.id});row.deliveredCargo=clone(row.cargo);row.cargo=[];}
    row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,e,row,t.location);
-   if(!handover){row.status='arrived';row.cargoLocation=t.location;}
+   if(!handover){row.status='arrived';row.cargoLocation=t.location;
+    for(const c of row.cargo)for(const unit of c.instances??[])holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),container:t.location},'transport');
+   }
    if(row.escortQuest)finishEscort(d,e,row,minute,t.location,'已完成');
    if(row.losses?.length)notifyShipment(d,e,row,`运单${row.id}到货短少：途中已有${row.losses.length}笔货损，实收货物少于托运数量。`,minute,t.location);
    publishTransitionEvent(d,e,{id:`${row.id}:arrival`,verb:'trade',actor:row.carrier,target:row.recipient,location:t.location,minute,tags:['transport'],witnesses:[]});
@@ -430,8 +442,30 @@ export function transportPosition(e,s,row){
  return {location:moving&&elapsed>0?null:t.location,route:edge?.id??null,from:t.location,to:segment?.destination??null,remainingKm:remaining};
 }
 export function collectTransport(d,e,id,actor='player'){
+ return obligationTransaction(d,()=>collectTransportInner(d,e,id,actor));
+}
+function collectTransportInner(d,e,id,actor){
  const old=d.get(...path(id));if(old?.category!=='transport'||old.status!=='arrived'||old.recipient!==actor||actorLocation(d.get('state'),actor)!==old.to)throw preconditionFailure('收货人须亲到到货地点提取实际货物');
  const row=clone(old);for(const c of row.cargo)moveGoods(d,e,actor,c.item,c.quantity,{instances:c.instances,trip:id});row.deliveredCargo=clone(row.cargo);row.cargo=[];row.status='delivered';row.collectedAt=d.get('state','minute');holdingSet(d,null,path(id),row,'transport');return row;
+}
+// Only a not-yet-departed consignment can be unloaded at origin. Cancellation
+// needs the present carrier's agreement; paid route tolls/taxes remain paid.
+export function cancelTransport(d,e,{shipment,actor='player'},eventId){
+ return obligationTransaction(d,()=>{
+  const old=d.get(...path(shipment)),s=d.get('state');
+  if(old?.status==='cancelled'&&old.cancelEvent===eventId&&old.cancelledBy===actor)return clone(old);
+  if(!eventId||old?.category!=='transport'||old.status!=='booked'||s.minute>=old.departAt||old.externalOrder||old.owner!==actor||actorLocation(s,actor)!==old.from||actorLocation(s,old.driver)!==old.from)throw preconditionFailure('须货主与现场承运人同意，在发车前取消未出发运单');
+  const agreement=requestContractConsent(d,e,{from:old.driver,to:actor,scope:'amend',purpose:old.id,subject:old.id,terms:{quantity:0,fee:old.freight,location:old.from},cost:{coins:old.freight},eventId});
+  if(!agreement.allowed)throw preconditionFailure('承运人未同意本次取消和运费退款');
+  const row=clone(old);
+  for(const c of row.cargo)moveGoods(d,e,row.owner,c.item,c.quantity,{instances:c.instances,trip:row.id});
+  if(row.freight&&row.carrier!==row.owner)financeTransfer(d,e,row.carrier,row.owner,row.freight,eventId);
+  row.returnedCargo=clone(row.cargo);row.cargo=[];row.status='cancelled';row.cancelledAt=s.minute;row.cancelledBy=actor;row.cancelEvent=eventId;row.cancelConsent=agreement.source;row.transport.nextAt=null;
+  if(row.escortQuest)finishEscort(d,e,row,s.minute,row.from,'失败');
+  for(const who of [row.driver,...row.passengers,...row.escort?[row.escort]:[]])if(who!=='player'&&d.get('state','npcs',who,'cognitionTravel')?.transport===row.id)d.remove(['state','npcs',who,'cognitionTravel']);
+  row.history.push({minute:s.minute,location:row.from,kind:'cancelled'});
+  holdingSet(d,null,path(row.id),row,'transport');index(d,row.id,false);return clone(row);
+ });
 }
 // A loss consumes the actual freight first. Its compensation and any legal
 // recovery share C's loss id, so restitution cannot pay the same loss twice.
@@ -458,6 +492,7 @@ function recordCargoLoss(d,e,shipment,{item,quantity,actor,cause,key},eventId){
   const units=(cargo.instances??[]).splice(0,quantity);
   for(const unit of units)holdingSet(d,e,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),status:'损毁',destroyedAt:s.minute,container:shipment},'transport');
   cargo.quantity-=quantity;row.cargo=row.cargo.filter(c=>c.quantity>0);row.losses=[...row.losses??[],key];
+  row.load=dimensions(e,row.cargo,row.passengers);
   holdingSet(d,e,path(row.id),row,'transport');
   holdingSet(d,e,path(`${key}:facts`),{category:'transport_loss_facts',shipment,item,quantity,actor,cause,minute:s.minute},'transport');
   const loss=registerLoss(d,e,{id:key,victim:row.owner,amount:value,source:shipment});
@@ -507,6 +542,7 @@ export function historicalTransportDocument(d,e,{id,actor='player'}){
 }
 export function transportAction(d,e,args,eventId){
  const task=args.task??'quote',asset=args.contract;
+ if(task==='cancel')return cancelTransport(d,e,{shipment:args.business??asset},eventId);
  if(task==='forward_cancel')return cancelGoodsObligation(d,e,{id:args.business??asset,actor:'player'},eventId);
  if(task==='inspect'&&institutionOriginal(e,d.document,asset)?.document?.kind==='transport_claim'){
   if(args.actor!==undefined&&args.actor!=='player')throw Error('Transport inspection requires its player customer');

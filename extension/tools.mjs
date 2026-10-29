@@ -74,7 +74,7 @@ transport.operation.enum.push('rent_in','workshop_stock');
 festivalParameters.operation.enum.push('duel_challenge','duel_answer','duel_yield','election_start','election_campaign','election_finish','election_expose','mining_permit');
 transport.operation.description='trade/business/bank/asset/transport/post';
 transport.operation.enum.push('transport','post');
-transport.task.enum.push('destroy','register','book','trace','lease','repair','intercept','recover','open','lose','collect');
+transport.task.enum.push('destroy','register','book','trace','lease','repair','intercept','recover','open','lose','collect','cancel');
 transport.service.enum.push('passage');
 transport.escort=str;
 transport.authorization=str;
