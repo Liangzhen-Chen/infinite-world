@@ -52,16 +52,19 @@ test('材质进入K1，日常使用和天气损耗按日结算；汛期与K6灾�
  const {engine,d,add,w}=fixture(),wood=add('bld_test_wood'),stone=add('bld_test_stone',{material:'stone',position:[30,0]});
  assert.ok(traitsOf(engine,d.get('state'),wood).tags.includes('flammable'));
  assert.ok(!traitsOf(engine,d.get('state'),stone).tags.includes('flammable'));
- d.set(['state','location'],wood);advanceFacilities(d,engine,{before:0,after:10*DAY});
+ // W8-E8: five-year base => 5400 weighted hundredths/condition point.
+ // 54 dry occupied wood days: 54*4*100/5400=4; stone:54*100/5400=1.
+ d.set(['state','location'],wood);advanceFacilities(d,engine,{before:0,after:54*DAY});
  assert.equal(facilityView(engine,d.get('state'),wood).condition,96);
  assert.equal(facilityView(engine,d.get('state'),stone).condition,99);
- const before=structuredClone(d.get('state','buildings'));advanceFacilities(d,engine,{before:0,after:10*DAY});assert.deepEqual(d.get('state','buildings'),before);
- applyEffect(d,engine,{kind:'flood',locations:[site],minutes:DAY},{minute:10*DAY,sourceEvent:'flood'},'world');
+ const before=structuredClone(d.get('state','buildings'));advanceFacilities(d,engine,{before:0,after:54*DAY});assert.deepEqual(d.get('state','buildings'),before);
+ applyEffect(d,engine,{kind:'flood',locations:[site],minutes:DAY},{minute:54*DAY,sourceEvent:'flood'},'world');
  assert.equal(facilityView(engine,d.get('state'),wood).condition,76);
- applyEffect(d,engine,{kind:'flood',locations:[site],minutes:DAY},{minute:10*DAY,sourceEvent:'flood'},'world');assert.equal(facilityView(engine,d.get('state'),wood).condition,76);
- applyEffect(d,engine,{kind:'facility',action:'damage',locations:[site],amount:20},{minute:11*DAY,sourceEvent:'disaster'},'world');assert.equal(facilityView(engine,d.get('state'),wood).status,'降级');
+ applyEffect(d,engine,{kind:'flood',locations:[site],minutes:DAY},{minute:54*DAY,sourceEvent:'flood'},'world');assert.equal(facilityView(engine,d.get('state'),wood).condition,76);
+ applyEffect(d,engine,{kind:'facility',action:'damage',locations:[site],amount:20},{minute:55*DAY,sourceEvent:'disaster'},'world');assert.equal(facilityView(engine,d.get('state'),wood).status,'降级');
  w.rules.weather=structuredClone(world.rules.weather);w.rules.weather.regions=[{...w.rules.weather.regions[0],locations:[site],indoor:[]}];w.rules.weather.seasonalWeights=w.rules.weather.seasonalWeights.map(()=>[0,0,0,1,0,0]);
- const storm=add('bld_test_storm');advanceFacilities(d,engine,{before:10*DAY,after:20*DAY});assert.equal(facilityView(engine,d.get('state'),storm).condition,93);
+ // Same seven-point weather assertion, over54 days at (wood3+storm4).
+ const storm=add('bld_test_storm');advanceFacilities(d,engine,{before:54*DAY,after:108*DAY});assert.equal(facilityView(engine,d.get('state'),storm).condition,93);
 });
 
 test('用途阈值即时派生；受损住宅不能进入，燃烧工坊立即停止工作台服务',()=>{
@@ -182,8 +185,10 @@ test('U12战役掠村损坏当地建筑；与战役账共用来源事件，不�
 test('远方骨架设施按县统计磨损，到访后物化当前耐久，随后修缮不受旧统计重复扣减',()=>{
  const {engine,d,w,add}=fixture(),plan=advanceLayerPlan(engine,d.get('state')),county=[...plan.layers].find(([,layer])=>layer==='statistics')[0];
  const id=add('bld_remote_wear',{generated:'remote',region:county});w.locations.push(d.get('state','created',id));
- advanceFacilities(d,engine,{before:0,after:30*DAY});assert.equal(d.get('state','buildings',id),undefined);assert.equal(facilityView(engine,d.get('state'),id).condition,91);
- d.set(['state','location'],id);advanceFacilities(d,engine,{before:30*DAY,after:31*DAY});assert.equal(d.get('state','buildings',id,'condition'),91);
+ // New rate: floor(30*3*100/5400)=1; visiting keeps the3600-unit remainder.
+ advanceFacilities(d,engine,{before:0,after:30*DAY});assert.equal(d.get('state','buildings',id),undefined);assert.equal(facilityView(engine,d.get('state'),id).condition,99);
+ d.set(['state','location'],id);advanceFacilities(d,engine,{before:30*DAY,after:31*DAY});assert.equal(d.get('state','buildings',id,'condition'),99);
+ assert.equal(d.get('state','buildings',id,'wearUnits'),4000);
  completeFacilityProject(d,engine,{id:'remote_repair',building:id,projectWork:'repair'},31*DAY);assert.equal(facilityView(engine,d.get('state'),id).condition,100);
 });
 

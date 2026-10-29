@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fixture,worker,host,inn,post,DAY} from './helpers/finance.mjs';
+import {fixture,worker,host,inn,post,DAY,world} from './helpers/finance.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import {nextBankWindow} from './helpers/bank-window.mjs';
 import {fieldRentBasis,workshopStorage} from '../server-plugin/finance-assets.mjs';
 import {premisesInventory,premisesStock} from '../server-plugin/stock.mjs';
 import {withLedger} from '../server-plugin/ledger.mjs';
@@ -285,4 +287,22 @@ test('租入不能替缺席持有人或拒绝报价的持有人代填同意',asy
  // opportunity cost. A caller's consent:true cannot supply the owner's answer.
  await assert.rejects(cheap.act({operation:'rent_in',location:inn,days:30,coins:112,consent:true},'under-offer'),/出租人未同意/);
  assert.deepEqual(cheap.doc,opening);
+});
+
+test('钱庄等候读取镇长真实到达，不跳过整段公署班次',async t=>{
+ const ui=await characterUiSession(t,{seed:'w8e8-counter-arrival'}),e=new WorldEngine(structuredClone(world));
+ let out=await ui.choose('move',{destination:'loc_bs'},{target:'loc_bs'});assert.equal(out.ok,true,out.error);
+ out=await ui.choose('time',{until:{dayOffset:1,hour:8}});assert.equal(out.ok,true,out.error);
+ const before=await ui.read(),keeper='npc_bs_townhead',venue='bld_bs_office',trip=before.state.npcs[keeper].scheduleTravel;
+ // Fixed real fog:ceil(.25/4*60*1.1)+ceil(.03535533905932639/4*60)=5+1=6.
+ // The diagnosed S5 dry commute takes5; neither case waits until noon.
+ assert.equal(trip.to,venue);assert.equal(trip.depart,before.state.minute);
+ assert.equal(trip.arrive-before.state.minute,6);
+ assert.equal(nextBankWindow(e.scoped(before),before,keeper,venue),before.state.minute+6);
+ out=await ui.choose('move',{destination:venue},{target:venue});assert.equal(out.ok,true,out.error);
+ const arrived=await ui.read();assert.equal(arrived.state.minute-before.state.minute,6);
+ assert.equal(arrived.state.npcs[keeper].location,venue);assert.equal(arrived.state.npcs[keeper].scheduleTravel,undefined);
+ assert.equal(nextBankWindow(e.scoped(arrived),arrived,keeper,venue),arrived.state.minute);
+ out=await ui.choose('trade.deposit',{coins:6});assert.equal(out.ok,true,out.error);
+ assert.equal(out.result.deposited,5);assert.equal(out.result.fee,1);
 });

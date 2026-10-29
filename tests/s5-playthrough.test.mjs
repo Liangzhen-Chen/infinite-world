@@ -12,6 +12,7 @@ import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {derivedBankAt} from '../server-plugin/finance-bank.mjs';
 import {settlementGovernment} from '../server-plugin/entity-view.mjs';
 import {characterUiSession,qty} from './helpers/ui-script.mjs';
+import {nextBankWindow} from './helpers/bank-window.mjs';
 import {conservation,reconcile} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
@@ -294,18 +295,7 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  // workplace and the current government's seat. No new banker or office.
  const seats=[...new Set(['bld_hw_post','loc_bs',settlementGovernment(engine.scoped(current),current.state,'loc_bs').seat.value].filter(Boolean))];
  function bankWindow(keeper,venue){
-  const scoped=engine.scoped(current),now=current.state.minute,n=current.state.npcs[keeper];
-  if(!n||['\u60a3\u75c5','\u660f\u8ff7','\u6fd2\u6b7b','\u6b7b\u4ea1'].includes(n.status))return Infinity;
-  // Bank authority comes from its registered keeper. Like native counterpart,
-  // an office counter may take deposits while its holder is doing office work;
-  // it does not need a merchant's trade service in that slot.
-  for(let cursor=now;cursor<now+31*1440;){
-   const slot=scheduleAt(scoped,keeper,cursor,current.state);if(!slot)break;
-   const present=cursor>now||n.location===venue&&!n.scheduleTravel&&!n.cognitionTravel&&!/\u7761\u7720|\u7761\u89c9|\u719f\u7761/.test(n.activity??'');
-   if(present&&slot.location===venue&&!/\u7761\u7720|\u7761\u89c9|\u719f\u7761/.test(slot.activity??'')&&slot.until-cursor>=5)return cursor;
-   if(slot.until<=cursor)break;cursor=slot.until;
-  }
-  return Infinity;
+   return nextBankWindow(engine.scoped(current),current,keeper,venue);
  }
  for(const venue of seats){
   const bank=derivedBankAt(engine.scoped(current),current.state,venue);if(!bank)continue;
