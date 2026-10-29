@@ -44,7 +44,9 @@ test('D09④ 冒雨等待产生可追溯的淋湿状态与回执',async t=>{
  // 已有 D09 种子在此日为雨；户外无遮蔽，真实经过一分钟即 wet。
  const out=await ui.choose('time',{minutes:1});assert.ok(out.ok,out.error);
  const exposure=(await ui.read()).state.records['weather_exposure:player'];
- assert.equal(exposure.wet,true);assert.equal(exposure.sourceEvent,out.eventId);assert.equal(out.result.weatherExposure.name,'淋湿');
+ // Traceable to the clock fact that wet the player: the rain at this place on this
+ // day (14 I31: split and long advances share it); the receipt names the call.
+ assert.equal(exposure.wet,true);assert.equal(exposure.sourceEvent,`weather:${VILLAGE}:${Math.floor(monthDayMinute(6,20,7,0)/1440)}`);assert.equal(out.result.weatherExposure.eventId,out.eventId);assert.equal(out.result.weatherExposure.name,'淋湿');
 });
 
 // ---- D22 打听消息 / D38 听传闻：传闻种子按讲述者登记，听传闻是受校验的交谈（world_remember），固定 10 分钟 ----
