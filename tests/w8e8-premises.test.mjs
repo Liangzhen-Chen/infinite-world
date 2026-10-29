@@ -21,7 +21,10 @@ test('田租按实际亩数、作物年产量与当地报价派生，不沿用�
  // One annual 5..25 sowing window; 180 days cannot fit another crop there.
  // 1 mu = 1/15 ha; oats 1700 portions/ha, customary rent3/10, twelve months.
  const one=fieldRentBasis(d,f.e,subject,{areaMu:1});
- assert.deepEqual(one,{areaMu:1,seedItem:'item_oats',crop:'item_oats',annualSeasons:1,monthlyAnchor:Math.ceil(1700/15*oats*3/10/12)});
+ // K01 / 05 §5.1.1 expands the signing basis: retain every former field
+ // assertion, and require the newly saved provenance as well.
+ assert.deepEqual(Object.fromEntries(['areaMu','seedItem','crop','annualSeasons','monthlyAnchor'].map(k=>[k,one[k]])),{areaMu:1,seedItem:'item_oats',crop:'item_oats',annualSeasons:1,monthlyAnchor:Math.ceil(1700/15*oats*3/10/12)});
+ assert.equal(one.quoteBasis.source,'marketQuote');assert.equal(one.yieldBasis.minute,f.doc.state.minute);
  assert.equal(fieldRentBasis(d,f.e,subject,{areaMu:2}).monthlyAnchor,Math.ceil(2*1700/15*oats*3/10/12));
  // The registered 1400 hundredths of a hectare really are210 mu, not one.
  assert.equal(fieldRentBasis(d,f.e,subject).areaMu,210);
@@ -58,11 +61,15 @@ async function councilSession(t,seed){
  const move=await ui.choose('move',{destination:'bld_hw_council'},{target:'bld_hw_council'});assert.equal(move.ok,true,move.error);
  return ui;
 }
-test('陌生承租人的延期报价可被拒绝，回执说明现付且不留下延期债',async t=>{
+test('陌生承租人的延期报价被拒后须另选现付，才扣钱且不留下延期债',async t=>{
  const ui=await councilSession(t,'w8e8-rent-cash-fallback'),before=await ui.read();
- const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:1,days:7,deadline:before.state.minute+6*DAY});
- assert.equal(out.ok,true,out.error);assert.ok(out.result.deferredRefusal);
- assert.match(out.result.notePayment,/改为现付/);
+ // 05 §5.1.1 forbids an automatic switch to cash. Preserve the original
+ // four-copper payment and no-debt guarantees after a real second choice.
+ const refused=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:1,days:7,deadline:before.state.minute+6*DAY});
+ assert.equal(refused.ok,false);assert.match(refused.error,/另行选择现付/);
+ assert.deepEqual(await ui.read(),before);
+ const out=await ui.choose('trade.rent_in',{location:'loc_hw_fields',quantity:1,days:7});
+ assert.equal(out.ok,true,out.error);
  // Derived one-mu anchor15: ceil(15*7/30)=4, not free credit.
  assert.equal(out.result.paid,4);assert.equal(out.result.rentDueAt,undefined);
  const after=await ui.read();assert.equal(before.state.player.coins-after.state.player.coins,4);
