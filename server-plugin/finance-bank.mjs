@@ -6,7 +6,7 @@ import {obligationTransaction} from './transition.mjs';
 import {settlementPresent} from './obligation-presence.mjs';
 // F1: contract facts are persisted; prices, services and creditworthiness are views.
 import {bankRow,openBank,bankById,counterpart,pledge,releasePledge,openLoan,repayCredit,loanSuccessionTerms,collateralValue,loanFreeze} from './credit.mjs';
-import {claimCopper,copperToUnits} from './tender.mjs';
+import {claimCopper,copperToUnits,resourceItem,resourceValue} from './tender.mjs';
 import {placeSettlement,settlementGovernment,groupRepresentative,personConstraint,personBusiness,personOccupation,personAge} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
@@ -14,7 +14,7 @@ import {standing} from './standing.mjs';
 import {explainDerived} from './derived.mjs';
 import {decimalFraction,interestAmount,addAccrual,fraction,obligationCalendar,accrualFraction} from './obligation-calendar.mjs';
 import creditBalance from '../world/rules/tables/balance/credit.json' with {type:'json'};
-import {currencyReserve} from './currency.mjs';
+import {currencyReserve,currencyRow} from './currency.mjs';
 import {bankLiabilities} from './finance-liabilities.mjs';
 import {registerCreditDefault,settleCreditCase} from './law.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
@@ -30,6 +30,11 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {canAct} from './action-capacity.mjs';
 import {consent as nativeConsent,agreedLoan,requestContractConsent} from './action-consent.mjs';
 import {authority} from './action-authority.mjs';
+import {householdBudget} from './household-budget.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {subjectiveMarketQuote} from './market.mjs';
+import {rollDice} from './scheduler.mjs';
+import {fixedUnits,fixedInteger,FIXED_SCALE} from './rx.mjs';
 declareHoldingWriter('finance-bank',{kinds:['pledged','member_of','holds_office'],entities:['office']});
 export {BANK_OPERATIONS};
 export const financePath=id=>['state','records',id];
@@ -103,7 +108,8 @@ export function derivedBankById(e,state,id){
     const sid=id.slice(5),site=bankSite(e,state,sid,state.location)??bankSite(e,state,sid);
     return site?derivedBankAt(e,state,site.location):null;
 }
-const creditParameter=(e,id)=>(e.world.balance?.credit??creditBalance).params.find(row=>row.id===id).value;
+const creditParameter=(e,id)=>((e.world.balance?.credit?.params??[]).find(row=>row.id===id)??creditBalance.params.find(row=>row.id===id)).value;
+export const seasonalTermLimit=e=>creditParameter(e,'seasonal.maximumDays');
 // D15 §15.5: balances are facts; reserves, loanable cash and rates are views.
 export function bankCredit(e,state,b,minute=state.minute){
     const row=state.records?.[b.id],cash=row?.coins??b.reserveCopper??0;
@@ -159,13 +165,19 @@ export function borrowerTerms(d,e,borrower,principal,days){
     const defaults=debts.filter(r=>r.defaulted).length,repaid=debts.filter(r=>r.status==='已还清').length;
     const regard=standing(e,state,borrower,'player'),intellect=n?.intelligence?.level??base?.intelligence?.level??1;
     if(regard<c.loan.refuseBelow||defaults>repaid+1)throw preconditionFailure('对方信用或立场不足以订立新借贷');
-    const cash=financeBalance(d,e,borrower),{income,expense}=borrowerCashFlow(e,state,borrower);
+    const cash=financeBalance(d,e,borrower),{income,expense}=borrowerCashFlow(e,state,borrower,state.minute,{document:d.document});
     const credit=clamp(50+regard/2+repaid*10-defaults*30+intellect*2+(income-expense)/Math.max(1,principal)*10,0,100);
     const [lo,hi]=e.rules.economy.loanMonthlyInterest,rate=Math.round((hi-(hi-lo)*credit/100)*10000)/10000;
     financeInt(days,1,Math.max(360,c.loan.maximumDays),'借期天数');
     return {rate,interest:Math.ceil(principal*rate*days/30),credit,cash,income,expense};
 }
-export function borrowerCashFlow(e,state,id,minute=state.minute){
+export function borrowerCashFlow(e,state,id,minute=state.minute,{observer=id,document={state}}={}){
+    // Financial statements are versions received by this lender, never a
+    // pointer into another household's purse or somebody else's loan book.
+    if(observer!==id){
+        const view=subjectiveView(e,document,observer),fact=view.knowledge.facts[`credit:budget:${id}`];
+        return {income:0,expense:0,cash:0,future:[],payments:[],known:false,...(fact?.value??{}),source:fact?.source??null};
+    }
     const since=minute-MONTH,rows=Object.values(state.records??{});let income=0,expense=0;
     for(const r of rows){
         if(r.category==='office_salary'&&r.holder===id)income+=(r.payments??[]).filter(p=>p.minute>=since&&p.minute<=minute).reduce((n,p)=>n+p.copper,0);
@@ -175,7 +187,96 @@ export function borrowerCashFlow(e,state,id,minute=state.minute){
     }
     const account=groupAccountView(e,state,id);
     for(const l of account?.ledger??[])if(l.kind==='trade'&&l.minute>=since&&l.minute<=minute){if(l.coins>0)income+=l.coins;else expense-=l.coins;}
-    return {income:Math.ceil(income/30),expense:Math.max(account?0:e.rules.economy.rentalCopperPerNight,Math.ceil(expense/30))};
+    if(account)return {income:Math.ceil(income/30),expense:Math.ceil(expense/30),known:true,at:minute,cash:account.coins,future:[],payments:[]};
+    if(id!=='player'&&!state.npcs?.[id]&&!state.creatures?.[id])return {income:Math.ceil(income/30),expense:Math.max(e.rules.economy.rentalCopperPerNight,Math.ceil(expense/30)),known:false,cash:0,future:[],payments:[]};
+    // K02 supplies dated receipts and senior payments. Kernel access here is
+    // limited to the owner's own future sources; no family purse is disclosed.
+    const ownView=subjectiveView(e,{...document,state},id),here=ownView.self.location;
+    // Owning a distant crop/job does not reveal its current yield or whether
+    // an absent employer has changed the work schedule. Only observed current
+    // production joins the owner's signed financial receipts and payments.
+    const records=Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>
+        !(r.category==='private_farm'&&r.owner===id&&r.location!==here)&&
+        !(r.kind==='workshop'&&r.worker===id&&(!ownView.observable.people.some(p=>p.id===r.owner)||r.location&&r.location!==here))));
+    const planningDocument={...document,state:{...state,records}},read=(...p)=>p.reduce((v,k)=>v?.[k],planningDocument);
+    const reader={document:planningDocument,get:read,peek:read},budget=householdBudget(reader,e,id,{kernel:true}),view=subjectiveView(e,planningDocument,id);
+    const project=(r,up=false)=>{
+        if(r.resource==='coin_river')return {copper:r.amount};
+        const currency=currencyRow(e,r.resource),item=resourceItem(e,r.resource);
+        if(currency){
+            const remembered=view.knowledge.facts[`market:${here}:${item}`]?.value?.unitPrice;
+            if(Number.isFinite(remembered)&&remembered>=0)return {copper:fixedInteger(BigInt(r.amount)*fixedUnits(remembered)+(up?FIXED_SCALE-1n:0n)),quoteSource:'remembered_exchange'};
+            const counter=derivedBankAt(e,state,here);
+            if(counter&&!blocked(e,state,counter,minute)&&view.observable.people.some(p=>counter.keepers.includes(p.id))&&
+                (currency.money.metal!=='none'||currency.money.issuer===counter.id)){
+                const rate=resourceValue(reader,e,{resource:r.resource,location:here}),n=BigInt(r.amount)*rate.numerator;
+                return {copper:Number((n+(up?rate.denominator-1n:0n))/rate.denominator),quoteSource:`counter:${counter.id}:${minute}`};
+            }
+            // A note's catalogue base is paper material, never its money value.
+            return {copper:0,quoteSource:'unknown_exchange_quote'};
+        }
+        const quote=subjectiveMarketQuote(e,document,view,{item,seller:id,buyer:null,quantity:1});
+        return {copper:Math.max(0,fixedInteger(BigInt(r.amount)*fixedUnits(quote.listPrice)+(up?FIXED_SCALE-1n:0n))),quoteSource:quote.knownFrom};
+    };
+    const financialAmount=r=>{
+        const claim=obligationRow(state,r.id);
+        return claim?.debtor?Math.min(r.amount,obligationView(state,claim).owed):r.amount;
+    };
+    const future=budget.future.map(({day,...r})=>({...r,amount:financialAmount(r)})).filter(r=>r.amount>0).map(r=>({...r,...project(r)}));
+    const payments=budget.payments.map(({day,...r})=>({...r,amount:financialAmount(r)})).filter(r=>r.amount>0).map(r=>({...r,...project(r,true)}));
+    return {income:Math.ceil(income/30),expense:Math.max(account?0:e.rules.economy.rentalCopperPerNight,Math.ceil(expense/30)),
+        known:true,at:minute,cash:budget.cash,future,payments};
+}
+
+// The borrower makes a real loan request in person and discloses this plan.
+// A preview never calls this writer. Later truth changes do not rewrite it.
+export function discloseCreditPlan(d,e,borrower,lender,eventId){
+    const state=d.get('state'),from=borrower==='player'?state.location:state.npcs?.[borrower]?.location,to=lender==='player'?state.location:state.npcs?.[lender]?.location;
+    if(!from||from!==to)throw preconditionFailure('授信资料须由借款人实际到场告知');
+    const value=borrowerCashFlow(e,state,borrower,state.minute,{document:d.document});
+    const key=`credit:disclosure:${eventId}`;
+    d.set(['state','records',key],{id:key,category:'knowledge',observer:lender,subject:lender,participants:[borrower,lender],
+        proposition:`credit:budget:${borrower}`,value,minute:state.minute,sourceType:'告知',sourceEvent:eventId});
+    return value;
+}
+
+// Principal recovery is a quantity/term decision made before interest pricing.
+// Collateral is an alternative recovery route, not cash added to the purse.
+export function seasonalCredit(d,e,{borrower,lender,bank=null,principal,days,collateral=0,unsecured=0}){
+    const state=d.get('state'),observer=lender??bank?.keepers?.[0];
+    const flow=borrowerCashFlow(e,state,borrower,state.minute,{observer,document:d.document});
+    const deadline=state.minute+days*DAY;
+    const ownClaims=obligationRows(state).filter(o=>o.debtor===borrower&&o.creditor===(bank?.id??lender)&&!obligationView(state,o).closed);
+    const claimValue=o=>{
+        const owed=obligationView(state,o).owed;if(!o.resource||o.resource==='coin_river')return owed;
+        const reference=o.terms?.referenceCopper??o.referenceCopper,units=o.principal??o.terms?.principal;
+        // Own signed reference bill, not an unseen issuer's current reserves.
+        return Number.isSafeInteger(reference)&&units>0?Number((BigInt(owed)*BigInt(reference)+BigInt(units)-1n)/BigInt(units)):null;
+    };
+    const unknownExposure=ownClaims.some(o=>claimValue(o)===null),exposure=ownClaims.reduce((n,o)=>n+(claimValue(o)??0),0);
+    const payments=new Map((flow.payments??[]).filter(r=>r.at<=deadline).map(r=>[r.id,r.copper??(r.resource==='coin_river'?r.amount:0)]));
+    let unknownPrior=(flow.payments??[]).some(r=>r.at<=deadline&&r.amount>0&&r.quoteSource==='unknown_exchange_quote');
+    // Disclosed obligations and this lender's own claims must not be counted twice.
+    for(const o of ownClaims)if(o.deadline<=deadline&&!payments.has(o.id)&&!payments.has(o.legacyRecord)){
+        const value=claimValue(o);if(value===null)unknownPrior=true;else payments.set(o.id,value);
+    }
+    const prior=[...payments.values()].reduce((a,b)=>a+b,0);
+    const receipts=(flow.future??[]).filter(r=>r.at<=deadline&&r.at>=state.minute),future=receipts.reduce((n,r)=>n+(r.copper??(r.resource==='coin_river'?r.amount:0)),0);
+    const param=id=>creditParameter(e,id);
+    const traits=subjectiveView(e,d.document,observer).self.traits;
+    const aversion=Math.max(1,Math.round((traits.riskAversion??1)*1000));
+    const haircut=param('seasonal.harvestRecoveryPermille'),noiseRange=param('seasonal.noisePermille');
+    // One decision key per planning window: reading/previewing cannot reroll it.
+    const window=Math.floor(state.minute/(param('seasonal.decisionDays')*DAY));
+    const noise=rollDice(d.document.randomSeed,'credit:choice',`${observer}:${borrower}`,window,0,noiseRange*2+1)-1-noiseRange;
+    const expected=receipts.reduce((n,r)=>n+Math.floor((r.copper??(r.resource==='coin_river'?r.amount:0))*(r.reliable?1000:clamp(Math.floor(haircut*1000/aversion)+noise,0,1000))/1000),0);
+    const recoverable=Math.floor(collateral*param('seasonal.collateralRecoveryPermille')/1000);
+    const net=unknownPrior?0:Math.max(0,(flow.cash??0)+expected-prior);
+    const capacity=flow.known?Math.max(net,recoverable):Math.max(recoverable,unknownExposure?0:unsecured-exposure);
+    const next=(flow.future??[]).find(r=>r.at>deadline);
+    return {known:flow.known,source:flow.source??null,deadline,cash:flow.cash??0,future,expected,prior,unknownPrior,exposure,recoverable,capacity,
+        repaymentDays:Math.max(0,...(flow.future??[]).filter(r=>r.copper>0).map(r=>Math.ceil((r.at-state.minute)/DAY))),
+        nextRepaymentAt:next?.at??null,reason:capacity>=principal?null:next?'还款来源晚于借据到期日':'已知还款来源扣除在先债权及可回收抵押后不足'};
 }
 // F049 (D15 §15.5, 附录 A.15.6): interest accrues over the actual balance
 // intervals. The balance only changes by settlement events recorded on the
@@ -476,14 +577,19 @@ export function advanceBankFinance(d,e,minute,recordIds){
             if(original.status!=='流当')holdingSet(d,e,financePath(id),{...original,status:'流当'},'finance-bank');
             continue;
         }
-        if(original.category==='debt'&&original.kind==='player_loan'&&original.status!=='已还清'){
+        if(original.category==='debt'&&(original.kind==='player_loan'||original.kind==='loan'&&original.householdFunding&&d.get('state','npcs',original.debtor))&&original.status!=='已还清'){
+            const claim=obligationRow(d.get('state'),id);
+            if(claim&&obligationView(d.get('state'),claim,minute).owed===0)continue;
             let row=original;
             const span=row.deadline-row.createdAt,count=row.installments??1;
             // Scheduled installments, not a daily retry cursor. Failed payments
             // retain the debt and can be collected at a later real encounter.
             for(let at=row.nextPayment;at<=minute&&at<=row.deadline&&row.status!=='已还清';){
                 const actor=d.get('state','npcs',row.debtor),unable=actor&&(isPhysicallyDead(e,d,row.debtor)||['濒死','昏迷'].includes(actor.status)||personConstraint(e,d.get('state'),row.debtor,at));
-                const cash=financeBalance(d,e,row.debtor),expense=borrowerCashFlow(e,d.get('state'),row.debtor,at).expense;
+                const resource=row.resource&&row.resource!=='coin_river'?row.resource:null;
+                const cash=resource?e.quantity(d,row.debtor,resourceItem(e,resource)):financeBalance(d,e,row.debtor);
+                const copperExpense=borrowerCashFlow(e,d.get('state'),row.debtor,at,{document:d.document}).expense;
+                const expense=resource?copperToUnits(d,e,{resource,copper:copperExpense,location:row.location,up:true}):copperExpense;
                 const elapsed=Math.floor((at-row.createdAt)/((row.deadline-row.createdAt)/row.installments));
                 const completed=Math.min(row.installments,Math.max(1,elapsed)),target=Math.ceil(row.amount*completed/row.installments);
                 const representative=groupAccountView(e,d.get('state'),row.debtor)?groupRepresentative(e,d.get('state'),row.debtor):row.debtor;
