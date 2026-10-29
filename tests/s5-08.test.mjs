@@ -71,10 +71,10 @@ test('the real market quote consumes expected deliveries, with independent coppe
  // No expected stock: 230*60/40=345 copper, never an unsupported discount.
  assert.equal(quote(unproven).totalCoins,345);
  const trained=scene();history(trained);sign(trained,'sixty',{quantity:60,prepayment:6900});
- // The four delivered swords remain at this market in the player's bag.
- // Current S=(96-60)+4=40, expected60*reliability1*paid1=60.
- // D60 / effective S100=.6; 230*.6=138 copper.
- assert.equal(expectation(trained).expected,60);assert.equal(quote(trained).totalCoins,138);
+ // The four delivered swords remain in the player's bag, but private inventory is demand, not market supply (market.mjs:182-190,204-210).
+ // The quote therefore uses the revised local supply projection; the independent expected-delivery quantity remains 60.
+ // Existing commerce supply96, demand60: 230×60/96=143.75，完整报价截为143铜（market.mjs:241-286）。旧私人物品计入供给时S100，230×60/100=138。
+ assert.equal(expectation(trained).expected,60);assert.equal(quote(trained).totalCoins,143);
 });
 
 test('the prepayment threshold is authored through the existing derived registry',()=>{
@@ -209,11 +209,11 @@ test('two published road legs expose tariff, risk, deterrence and draft-capacity
  // ceil(29.3*50*.012*10*(1+4/9))=ceil(253.93)=254; without deterrence ceil(...*2)=352.
  assert.ok(Math.abs(protectedQuote.passages[0].deterrence-5/9)<1e-12);assert.ok(Math.abs(protectedQuote.risk-4/9)<1e-12);
  assert.equal(protectedQuote.freight,254);assert.equal(plain.freight,352);
- // Grain supply at Baishi clamps scarcity to.5:100*(3*.5)=150 copper.
- // Kingdom tariff800bps + town100bps=900; floor(150*.09)=13 at each gate.
- assert.deepEqual(protectedQuote.passages.map(p=>p.cargoValue),[150,150]);
- assert.deepEqual(protectedQuote.passages.map(p=>p.tariff),[13,13]);
- assert.equal(protectedQuote.tariff,26);assert.equal(protectedQuote.toll,7);assert.equal(protectedQuote.total,287);
+ // The receiver's 10,000-oat private bag is not market supply (market.mjs:182-190); quarry market supply=0, retained demand=1,000, so scarcity clamps at3.
+ // 100 oats × base3 × scarcity3=900 copper per passage (transport.mjs:172-174); tax remains kingdom800bps+town100bps=900bps, floor(900*.09)=81 each.
+ assert.deepEqual(protectedQuote.passages.map(p=>p.cargoValue),[900,900]);
+ assert.deepEqual(protectedQuote.passages.map(p=>p.tariff),[81,81]);
+ assert.equal(protectedQuote.tariff,162);assert.equal(protectedQuote.toll,7);assert.equal(protectedQuote.total,423);
  const full=carrierScene(20); // min(600,20*30)=600, surcharge1.
  assert.equal(carriageQuote(full).freight,36); // ceil(29.3*50*.012*2).
  // Existing published routes use risk0..2 as a freight premium, not a
@@ -249,9 +249,9 @@ test('a current closure rejects or reroutes without charging the rejected trip',
 test('fare and goods remain in real carrier/freight accounts and survive a native save',async t=>{
  const f=carrierScene(),before=structuredClone(f.document),cash=cashTotal(before);
  const trip=f.mutate(d=>bookTransport(d,f.engine,{asset:f.asset,to:quarry,cargo},'s508-book'));
- // Freight352, tariff26 and toll7 cost385. Carrier receives352 and pays
+ // Freight352, two tariffs of81 and toll7 cost521. Carrier receives352 and pays
  // home commercial tax floor(352*.05)=17, retaining335 in the actual purse.
- assert.equal(before.state.player.coins-f.document.state.player.coins,385);
+ assert.equal(before.state.player.coins-f.document.state.player.coins,521);
  assert.equal(f.document.state.npcs[driver].coins-before.state.npcs[driver].coins,335);
  assert.equal(f.document.ledger.accounts[`${trip.id}|item_oats|freight`],100);
  assert.equal(cashTotal(f.document),cash);assert.deepEqual(auditLedger(f.document.ledger),[]);

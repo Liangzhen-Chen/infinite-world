@@ -9,8 +9,10 @@ import {freight as freightAccount} from '../server-plugin/stock.mjs';
 import {escrow as escrowAccount} from '../server-plugin/money.mjs';
 import {openHoldings} from '../server-plugin/holdings.mjs';
 import {valuation} from '../server-plugin/valuation.mjs';
-// W8D：货损价值读估值角色 goods（货物所在地的市场估值，不含商家价差），不再读目录基价 basePrice。旧断言 3 份×3 铜=9、100 份×3 铜=300 是基价口径，
-// 改为同一估值角色在装货地 loc_hw 对货主 player 的取值（本世界 3 份燕麦 14 铜、100 份 479 铜）。
+// W8D：货损价值读估值角色 goods（货物所在地的市场估值，不含商家价差），不再读目录基价 basePrice。
+// 15 §15.2（market.mjs:182-190,204-210）排除私人行囊供给、保留其需求；finance-assets.mjs:95-99 估值排除估价对象行囊。
+// 本世界 loc_hw：旧报价单价4.79，100×4.79=479；现供给2,830、需求5,220、区域基准2.7，100×2.7×(5,220/2,830)=498.02，整额498。
+// 手算链见 market.mjs:182-210,241-248 与 settlement-trade.mjs:87-99；估值入口 finance-assets.mjs:95-99。
 const worth=(d,e,quantity)=>valuation(d,e,{role:'goods',item:'item_oats',quantity,location:'loc_hw',holder:'player'}).value;
 import {recordEntityDeath} from '../server-plugin/npc-life.mjs';
 
@@ -57,7 +59,7 @@ test('destroyed carrier: cargo is written off, carrier owes cargo value and frei
  assert.equal(trip.freight,8);
  const escrowKey=escrowAccount(trip.escortQuest),paid=d.get('ledger','accounts',escrowKey)??0;
  const playerBefore=d.get('state','player','coins');
- const cargoWorth=worth(d,e,100);assert.equal(cargoWorth,479);
+ const cargoWorth=worth(d,e,100);assert.equal(cargoWorth,498);
  destroyTransportAsset(d,e,{asset:vehicle},'cart-burns');
  // Destruction itself keeps the cargo on the wreck: nothing is settled until the clock runs.
  assert.equal(d.get('state','records',trip.id,'status'),'wrecked');assert.equal(d.get('state','records',trip.id,'settledAt'),undefined);
@@ -66,7 +68,7 @@ test('destroyed carrier: cargo is written off, carrier owes cargo value and frei
  d.set(['state','minute'],at);advanceTransport(d,e,at);
  const row=d.get('state','records',trip.id);
  assert.equal(row.settledAt,at);assert.deepEqual(row.cargo,[]);assert.equal(d.get('ledger','accounts',freightAccount(e,trip.id,'item_oats'))??0,0);
- // 100 oats valued 479 owed by the carrier, plus the 8 copper freight back.
+ // 100 oats valued 498 by the current goods projection owed by the carrier, plus the 8 copper freight back.
  assert.equal(dueObligation(d.get('state'),`${row.losses[0]}:claim`).owed,cargoWorth);
  assert.equal(dueObligation(d.get('state'),row.freightRefund).owed,8);
  const refunded=d.get('state','records',trip.escortQuest);
