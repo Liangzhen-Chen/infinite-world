@@ -13,6 +13,7 @@ import {tradeQuote} from '../server-plugin/shop.mjs';
 import {netAssets} from '../server-plugin/finance-assets.mjs';
 import {npcPlanFingerprint} from '../server-plugin/npc-autonomy.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
+import {householdResources} from '../server-plugin/household-budget.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const host='npc_hw_linsui',bread='item_bread',inn='bld_hw_qingdeng';
@@ -34,12 +35,13 @@ test('current stock net assets share market value and S5-01 corrections, not his
   {path:['state','npcs',host,'inventory'],value:{[bread]:{quantity:10,quality:world.items.find(i=>i.id===bread).quality}}},
   {path:['state','npcs',host,'coins'],value:200}
  ]});assert.deepEqual(prepared.setupUnmet,[]);f.replace(prepared.document);
- // 15 §15.2：普通人的行囊不再供给市场。D=14，店主10份扣家户保留4份，S=6；
- // 稀缺14/6，面包价值2×14/6=14/3，净资产=现钱200+10×14/3。
- assert.equal(netAssets(f.read(),f.engine,host),200+10*(14/3));
- // 注册修正按四位定点向零：14/3→4.6666，再加1=5.6666；历史成本仍不参与现价。
+ // K02: minute600 -> daily delivery1440 leaves120*840/1440=70
+ // satiety physical, ceil(70/30)=3 bread. Cash200 funds the later50.
+ // D14, S10-3=7, price2*14/7=4; cost history remains irrelevant.
+ assert.equal(netAssets(f.read(),f.engine,host),200+10*4);
+ // Registered correction still changes current value:4+1=5.
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'asset-value',pack:'market',target:'economy:value',stage:'add',value:1}]}};
- assert.equal(netAssets(f.read(),new WorldEngine(w),host),200+10*5.6666);
+ assert.equal(netAssets(f.read(),new WorldEngine(w),host),200+10*5);
 });
 
 test('independent bulk anchor integrates the actual neutral supply curve',async()=>{
@@ -146,17 +148,20 @@ test('retention and signed procurement commitments are subtracted once; goods cl
  const business=saleableStock(f.read(),f.engine,host,bread,{business:true});
  // Authored household house_hw_01 has Lin Sui and A Yan. The unrelated
  // second bag is empty. Body light satiety 2.5/h *24h *1day *2 people
- // =120; bread nutrition30 means four retained. Twelve-4-(4-1)=5.
- assert.equal(business.stock,12);assert.equal(business.retained,4);assert.equal(business.committed,3);assert.equal(business.available,5);
+ // =120. K02: current cash funds50 after the real daily delivery1440;
+ // physical70/30 rounds up to3. Twelve-3-(4-1)=6; one promise count.
+ assert.equal(business.stock,12);assert.equal(business.retained,3);assert.equal(business.committed,3);assert.equal(business.available,6);
  const personal=saleableStock(f.read(),f.engine,host,bread);
- assert.equal(personal.retained,4);assert.equal(personal.available,5);
- const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===5));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available,0));
+ assert.equal(personal.retained,3);assert.equal(personal.available,6);
+ const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===6));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available,0));
  const before=structuredClone(f.document);
- // 公开供给只剩店主可售5份，6份已先超过市场深度下限5；按真实校验顺序拒绝，
- // 上面的保留/承诺数量断言和下面的整档无写入断言不变。
+ // Public supply6 still has maxShare*.3 below retailFloor5; quantity6
+ // is rejected by the existing depth gate before any physical transfer.
  await assert.rejects(f.act({seller:host,item:bread,quantity:6},'household-cannot-sell-promises'),/市场今天没有那么多可成交深度/);
  assert.deepEqual(f.document,before,'retained or promised food cannot fund a partial transaction');
- // Same twelve portions split across two bags still retain four, not eight.
+ // Split bags allocate the four-meal baseline once, not twice. It now sits
+ // in A Yan's bag: Lin Sui's cash cannot release another holder's reserve
+ // before an actual food/money transfer.
  const split=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','npcs',host,'inventory',bread],value:6},{path:['state','npcs','npc_hw_ayan','inventory'],value:{[bread]:6}}]});assert.deepEqual(split.setupUnmet,[]);f.replace(split.document);
  const pair=[host,'npc_hw_ayan'].map(id=>saleableStock(f.read(),f.engine,id,bread,{business:true}));
  assert.equal(pair.reduce((n,r)=>n+r.retained,0),4);assert.equal(pair.reduce((n,r)=>n+r.available,0),5);
@@ -166,10 +171,13 @@ test('retention and signed procurement commitments are subtracted once; goods cl
  assert.ok(splitSupply.rows.every(r=>r.owner!=='npc_hw_ayan'));
  assert.equal(splitSupply.demand,supply.demand);
  // Registered body:drain multiplier2 doubles each member's 60/day need:
- // 2 people *120 /30 =8 portions, leaving12-8-3=1 saleable.
+ // 2 people *120 /30 =8 in the physical-only baseline. A Yan holds6;
+ // Lin Sui can fund his own2 at delivery, leaving6 physical and3 saleable.
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'household-needs',pack:'market',target:'body:drain',stage:'mul',value:2}]}};
  const corrected=new WorldEngine(w),adjusted=[host,'npc_hw_ayan'].map(id=>saleableStock(f.read(),corrected,id,bread));
- assert.equal(adjusted.reduce((n,r)=>n+r.retained,0),8);assert.equal(adjusted.reduce((n,r)=>n+r.available,0),1);
+ assert.equal(adjusted.reduce((n,r)=>n+r.retained,0),6);assert.equal(adjusted.reduce((n,r)=>n+r.available,0),3);
+ const physical=householdResources(f.read(),corrected,host,{marketSubstitution:false});
+ assert.equal(physical.rows.reduce((n,r)=>n+r.retained,0),8);assert.equal(physical.rows.reduce((n,r)=>n+r.available,0),1);
 });
 
 test('native NPC autonomous purchase pays the independent market anchor and records real depth without a quote cache',async()=>{

@@ -7,6 +7,7 @@ import {advanceCustomerFlow} from './business.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {employmentActive} from './employment-state.mjs';
+import {householdResources,registerHouseholdFoodSources} from './household-budget.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {settlementStock,priceRead,bagStock} from './stock.mjs';
 // S1b 补货：本地产出与外路到货来自模拟范围外（src:import，按货价付给来源聚落公账）；聚落库存补货从聚落库存转入店主行囊。
@@ -14,14 +15,14 @@ declareLedgerWriter('shop',{sources:{'src:import':{'*':100000}},sinks:['sink:exp
 import {isReputationSettlement}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
-import {personBusinesses,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
+import {personBusinesses,personHousehold,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
-import {installFacilityRuntime} from './facility-state.mjs';
-import {marketQuote,quoteSupply,recordMarketDeal,goodsClass,registerShopShelves} from './market.mjs';
+import {facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
+import {marketQuote,subjectiveMarketQuote,quoteSupply,recordMarketDeal,goodsClass,registerShopShelves,customerReachMinutes} from './market.mjs';
 import {currencyRow,currencyTradePrice} from './currency.mjs';
 import {tenderQuote} from './tender.mjs';
 export {assertMarketDepth,marketQuote,marketExplanation} from './market.mjs';
@@ -186,6 +187,99 @@ export function currentShops(engine,state){
     return out;
 }
 export const shopOfKeeper=(engine,keeper,state=null)=>(state?currentShops(engine,state):shopStores(engine.world)).find(s=>s.keeper===keeper)??null;
+// Household planning uses a conservative local quote, not a recursive quote
+// over the very reserves it is deciding. Maximum scarcity and price impact
+// bound the native retail formula; execution always obtains a fresh quote.
+const householdSourceReads=new WeakMap();
+function nextFoodService(engine,state,shop,minute){
+ for(let at=minute;at<minute+31*DAY;){
+  const slot=facilityRuntime().scheduleAt?.(engine,shop.keeper,at,state);
+  if(!slot)return null;
+  if(slot.location===shop.location&&slot.services?.includes('trade'))return {minute:at,location:slot.location};
+  at=slot.until;
+ }
+ return null;
+}
+registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
+ const state=d.get('state'),now=state.minute,location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
+ const members=personHousehold(engine,state,owner).value?.members??[owner];
+ // Only cursor revisions are cacheable; plain read adapters may expose a
+ // mutable test/import document and deliberately take the uncached path.
+ let read=Number.isInteger(d.cursor?.revision)?householdSourceReads.get(d):null;
+ if(!read||read.revision!==d.cursor?.revision){
+  read={revision:d.cursor?.revision,shops:currentShops(engine,state),physical:new Map()};
+  if(Number.isInteger(d.cursor?.revision))householdSourceReads.set(d,read);
+ }
+ const out=[];
+ for(const shop of read.shops){
+  if(shop.settlement!==place||shop.keeper!==owner&&members.includes(shop.keeper)||view&&shop.keeper!==owner)continue;
+  let travel=0;
+  if(location!==shop.location){try{travel=engine.route(location,shop.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
+  if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
+  const opening=nextFoodService(engine,state,shop,now+travel);
+  if(!opening||opening.location!==shop.location)continue;
+  const ledger=state.records?.[`shop:${shop.id}`];
+  let physical=null;
+  for(const row of shop.restock){
+   if(!(engine.byId.get(row.item)?.nutrition?.satiety>0))continue;
+   const own=shop.keeper===owner;
+   if(!own){
+    physical??=read.physical.get(shop.keeper);
+    if(!physical){physical=householdResources(d,engine,shop.keeper,{marketSubstitution:false});read.physical.set(shop.keeper,physical);}
+    const stock=physical.rows.find(r=>r.holder===shop.keeper&&r.item===row.item)?.available??0;
+    if(!stock)continue;
+    const at=Math.max(opening.minute,now+travel);
+    const base=regionalTradeBase(d,engine,row.item,shop.settlement,now);
+    const quote=marketQuote(d,engine,{item:row.item,location:shop.location,seller:shop.keeper,buyer:owner,business:shop,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place:shop.settlement,goods:goodsClass(engine,row.item),supply:0,demand:1}});
+    out.push({source:shop.id,seller:shop.keeper,item:row.item,at,quantity:stock,unitPrice:Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact))),priceBasis:'local-retail-ceiling'});
+    continue;
+   }
+   // Own shelves cannot be bought from oneself. Only the next paid upstream
+   // delivery, with its actual cycle and source, can replace retained meals.
+   const last=ledger?.entries?.filter(e=>e.item===row.item).at(-1);
+   if(last&&last.added===0&&last.reason)continue;
+   let day=Math.max(Math.floor(now/DAY)+1,shop.firstDay);
+   day+=((shop.cycleDays-(day-shop.firstDay)%shop.cycleDays)%shop.cycleDays);
+   const at=day*DAY;
+   if(row.source==='route'){
+    try{engine.route(row.from,shop.settlement,'walk',at,d.document.randomSeed);}catch{continue;}
+   }
+   let quantity=Math.min(row.amount,row.maximum);
+   if(row.source==='settlement'){
+    if(view||row.stock==='food'&&managed(d,shop.settlement))continue;
+    quantity=Math.min(quantity,Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,shop.settlement,row.stock),legacy:()=>state.settlements?.[shop.settlement]?.[row.stock]??0})-(row.reserve??0)));
+   }
+   // An observed complete upstream bill includes freight and duties. With no
+   // such bill, only local production has a known bounded delivery price.
+   if(row.source==='route'&&!last?.added)continue;
+   const base=view?engine.byId.get(row.item).basePrice:regionalTradeBase(d,engine,row.item,shop.settlement,now);
+   const args={item:row.item,location:shop.location,seller:shop.settlement,buyer:owner,business:{keeper:shop.settlement,markup:1},base,supply:{place:shop.settlement,goods:goodsClass(engine,row.item),supply:0,demand:1}};
+   const quote=view?subjectiveMarketQuote(engine,d.document,view,args):marketQuote(d,engine,args);
+   const unitPrice=Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact)),last?.added?Math.ceil(last.paidCopper/last.added):0);
+   // Repeating a route would require a new route check; repeating a public
+   // stock purchase would count the same finite upstream goods twice. Only
+   // the domain's regular local-production channel repeats in this forecast.
+   out.push({source:shop.id,seller:shop.settlement,item:row.item,at,cycleDays:row.source==='local'?shop.cycleDays:null,quantity,unitPrice,priceBasis:last?.added?'observed-upstream-ceiling':'local-upstream-ceiling'});
+  }
+ }
+ // A subjective planner may use a received, still-valid offer, not another
+ // family's current bag or money. A mere belief or catalogue prior is no offer.
+ if(view)for(const fact of Object.values(view.knowledge.facts)){
+  const q=fact.value;
+  if(fact.kind==='belief'||!q||!Number.isSafeInteger(q.quantity)||q.quantity<=0||!(q.unitPrice>0)||!Number.isFinite(q.at)||!Number.isFinite(q.expires)||q.at>q.expires||q.expires<now||members.includes(q.seller))continue;
+  const shop=shopStores(engine.world).find(s=>s.keeper===q.seller&&s.settlement===place&&s.restock.some(r=>r.item===q.item));
+  if(!shop||!(engine.byId.get(q.item)?.nutrition?.satiety>0))continue;
+  // The received offer carries its pickup window; do not query the seller's
+  // private current schedule, stock or status to silently correct that offer.
+  const pickup=q.location??shop.location??engine.byId.get(shop.keeper)?.workplace?.location??engine.byId.get(shop.keeper)?.location;
+  let travel=0;
+  if(location!==pickup){try{travel=engine.route(location,pickup,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
+  const at=Math.max(now+travel,q.at);
+  if(!Number.isFinite(travel)||travel>customerReachMinutes(engine)||at>q.expires)continue;
+  out.push({source:fact.source??shop.id,seller:q.seller,item:q.item,at,quantity:q.quantity,unitPrice:q.unitPrice,priceBasis:'received-offer',expires:q.expires});
+ }
+ return out;
+});
 // The settlement an item is produced in: walk its origin up the location tree.
 export function originSettlement(world,item,rules=world.rules.economy?.shops){
     const c=catalog(world,rules);if(c.origins.has(item))return c.origins.get(item);
