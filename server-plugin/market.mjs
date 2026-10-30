@@ -1,5 +1,5 @@
 // Read-only market projections. Only completed trades are persisted, never quotes.
-import {bagStock,priceRead,settlementStock,granary,pledged,crop as cropAccount} from './stock.mjs';
+import {bagStock,priceRead,settlementStock,granary,pledged,freight,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
 import {placeSettlement,personBusinesses} from './entity-view.mjs';
 import {explainDerived} from './derived.mjs';
@@ -8,7 +8,7 @@ import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {householdResources,householdCommitments} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
-import {ln,pow} from './det-math.mjs';
+import {ln,pow,fromRational,toRational} from './det-math.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
 // （商店成交、书籍出版的读者、店铺客流共用；不在代码里写字面）。
@@ -119,8 +119,10 @@ export function forwardSupply(d,engine,item,location){
   }
   const unitValue=consideration/row.amount;
   const secured=unitValue>0?Math.min(backed,securedValue/unitValue):0;
-  const expected=paidRatio>=threshold&&state.minute>=history.blockedUntil?Math.min(backed,Math.max(backed*history.reliability,secured))*paidRatio:0;
-  rows.push({id:row.id,debtor:row.debtor,item,remaining,production,capacity:backed,paidRatio,secured,reliability:history.reliability,expected});
+  const horizon=rulesOf(engine).forward.timeDiscountMinutes??rulesOf(engine).forward.quarterMinutes;
+  const timeDiscount=horizon/(horizon+Math.max(0,row.deadline-state.minute));
+  const expected=paidRatio>=threshold&&state.minute>=history.blockedUntil?Math.min(backed,Math.max(backed*history.reliability,secured))*paidRatio*timeDiscount:0;
+  rows.push({id:row.id,debtor:row.debtor,item,remaining,production,capacity:backed,paidRatio,secured,reliability:history.reliability,timeDiscount,expected});
  }
  return {expected:rows.reduce((sum,row)=>sum+row.expected,0),rows};
 }
@@ -175,8 +177,24 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
 export function marketSupply(d,engine,item,location,options={}){
  const current=stockSupply(d,engine,item,location,options);
  const forward=engine.world.items.filter(it=>goodsClass(engine,it.id)===current.goods).map(it=>forwardSupply(d,engine,it.id,location));
- const expected=forward.reduce((sum,row)=>sum+row.expected,0);
- return {...current,supply:current.supply+expected,expected,forwards:forward.flatMap(row=>row.rows)};
+ const state=stateOf(d),horizon=rulesOf(engine).forward.timeDiscountMinutes??rulesOf(engine).forward.quarterMinutes,consignments=[];
+ for(const row of Object.values(state.records??{})){
+  if(row.category!=='transport'||!['booked','moving','delayed','arrived'].includes(row.status)||settlementOf(engine,state,row.to)!==current.place)continue;
+  // K12 debits the goods and prepays carriage at booking. Only the remaining
+  // physical freight account backs this secured expectation, never a quote.
+  const allocated=new Map();
+  for(const cargo of row.cargo??[]){
+   if(goodsClass(engine,cargo.item)!==current.goods)continue;
+   const held=priceRead(d,{point:'region.material',account:freight(engine,row.id,cargo.item),legacy:()=>row.cargo.filter(c=>c.item===cargo.item).reduce((n,c)=>n+c.quantity,0)});
+   const capacity=Math.min(cargo.quantity,Math.max(0,held-(allocated.get(cargo.item)??0)));allocated.set(cargo.item,(allocated.get(cargo.item)??0)+capacity);
+   const at=row.status==='arrived'?state.minute:Math.max(row.estimatedArrivalAt,row.transport?.nextAt??0);
+   const timeDiscount=horizon/(horizon+Math.max(0,at-state.minute));
+   consignments.push({id:row.id,item:cargo.item,capacity,secured:capacity,paidRatio:1,reliability:0,timeDiscount,expected:capacity*timeDiscount});
+  }
+ }
+ const expected=forward.reduce((sum,row)=>sum+row.expected,0)+consignments.reduce((n,r)=>n+r.expected,0);
+ // 15 §15.2: backed, discounted promises affect prices, not spot delivery.
+ return {...current,spotSupply:current.supply,supply:current.supply+expected,expected,forwards:forward.flatMap(row=>row.rows),consignments};
 }
 export function marketGrade(engine,document,item,{seller,instances=null,quantity:count=1}={}){
  const state=document.state,catalog=engine.byId.get(item),r=rulesOf(engine),order=engine.rules.equipment.qualities;
@@ -199,7 +217,7 @@ export function quoteSupply(d,engine,{item,location,business=null}){return marke
 // 不含某持有人自己那批货的供给：海关估入境货值时，货物自身不压低入境地的价格。
 export function supplyApart(d,engine,{item,location,owner}){
  const all=quoteSupply(d,engine,{item,location}),own=all.rows.filter(r=>r.owner===owner).reduce((n,r)=>n+r.available,0);
- return {...all,supply:all.supply-own,rows:all.rows.filter(r=>r.owner!==owner)};
+ return {...all,supply:all.supply-own,spotSupply:(all.spotSupply??all.supply)-own,rows:all.rows.filter(r=>r.owner!==owner)};
 }
 // Integrate the same clamped demand/supply curve for a trade or a liquidation.
 function scarcityIntegral(supply,limits,a,b){
@@ -234,14 +252,15 @@ export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=
  const document=d.document??{state:stateOf(d)},state=document.state,r=rulesOf(engine),side=business?(business.keeper===seller?'sell':'buy'):seller==='player'?'buy':'sell';
  const supply=given??quoteSupply(d,engine,{item,location,business});
  const day=Math.floor(minute/DAY),deals=marketDeals(state).filter(row=>row.day===day&&row.place===supply.place&&row.goods===supply.goods);
- const net=deals.reduce((n,row)=>n+(row.side==='sell'?row.quantity:-row.quantity),0),opening=Math.max(1,supply.supply+net);
+ const spotSupply=supply.spotSupply??supply.supply;
+ const net=deals.reduce((n,row)=>n+(row.side==='sell'?row.quantity:-row.quantity),0),opening=Math.max(1,spotSupply+net);
  const scarcity=clamp(supply.demand/Math.max(1,supply.supply),engine.rules.economy.priceFactorLimits.region);
  const depth=Math.max(0,1+r.depthImpact*net/opening),quality=marketGrade(engine,document,item,{seller,instances,quantity:count});
  const value=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality,observer,view});
  const spread=business?(side==='sell'?clamp(business.markup,engine.rules.economy.priceFactorLimits.shop):r.spread.buy):1;
  const price=explainDerived(engine,document,'economy:price',item,{base:value.value*depth*spread*relation,observer,view});
  // 15 §15.2: peer trade has no business stock curve and always uses retail value.
- const retail=!business||count<=Math.max(r.retailFloor,supply.supply*r.retailShare);
+ const retail=!business||count<=Math.max(r.retailFloor,spotSupply*r.retailShare);
  // Integrate the clamped demand/supply curve analytically. Quality, correction
  // and spread are fixed for this lot; stock changes along the executed quantity.
  const limits=engine.rules.economy.priceFactorLimits.region;
@@ -269,7 +288,8 @@ export function assertMarketDepth(d,engine,quote,{agreed=false}={}){
  const r=rulesOf(engine),state=stateOf(d),deals=marketDeals(state).filter(row=>row.day===quote.day&&row.goods===quote.goods&&(quote.business?row.business===quote.business:row.seller===quote.seller&&row.buyer===quote.buyer));
  const used=deals.reduce((n,row)=>n+row.quantity,0);
  // 15 §15.2：商号另有渠道日限额；人对人没有商号存量，不能把私人持货排除供给后再按零存量限购。
- if(!quote.retail&&quote.quantity>Math.max(r.retailFloor,quote.supply*r.maxShare)||quote.business&&used+quote.quantity>Math.max(r.retailFloor,quote.opening*r.dailyShare))reject('E-ACTION-PRECONDITION','市场今天没有那么多可成交深度');
+ // K08: executable lot depth reads physical spot stock, never discounted forwards.
+ if(!quote.retail&&quote.quantity>Math.max(r.retailFloor,(quote.spotSupply??quote.supply)*r.maxShare)||quote.business&&used+quote.quantity>Math.max(r.retailFloor,quote.opening*r.dailyShare))reject('E-ACTION-PRECONDITION','市场今天没有那么多可成交深度');
  const available=saleableStock(d,engine,quote.seller,quote.item,{business:quote.side==='sell'}).available;
  if(quote.quantity>available)reject('E-ACTION-PRECONDITION','对方库存不足：扣除自用和已承诺存量后不够出售');
 }
@@ -306,16 +326,28 @@ export function laborValue(engine,document,{worker='player',observer=null,profic
 // stock and remembered trades. Unknown bags, granaries and market depth are
 // absent from this projection; execution still rechecks the actual market.
 export function subjectiveMarketQuote(engine,document,view,args){
- const observer=view.observer,location=view.self.location;
- const known=marketDeals(document.state).filter(r=>[r.seller,r.buyer].includes(observer)&&r.minute<=view.minute);
- const remembered=view.knowledge.facts[`market:${location}:${args.item}`];
+ const observer=view.observer,location=args.location??view.self.location,place=settlementOf(engine,document.state,location);
+ const known=marketDeals(document.state).filter(r=>[r.seller,r.buyer].includes(observer)&&r.minute<=view.minute&&r.place===place);
+ const fact=view.knowledge.facts[`market:${location}:${args.item}`];
+ const remembered=fact&&!(fact.value?.expires<view.minute)?fact:null;
  const last=known.filter(r=>r.item===args.item).sort((a,b)=>b.minute-a.minute).at(0);
- const price=remembered?.value?.unitPrice??(last?last.totalCoins/last.quantity:engine.byId.get(args.item)?.basePrice);
+ const stored=remembered?.value?.unitPrice,rate=stored!=null?(typeof stored==='number'?toRational(stored):stored):(last?{numerator:last.totalCoins,denominator:last.quantity}:null),observed=rate?fromRational(rate):undefined,hasPrice=Number.isFinite(observed)&&observed>=0;
+ const price=hasPrice?observed:engine.byId.get(args.item)?.basePrice;
+ const local=place===settlementOf(engine,document.state,view.self.location);
+ if(!local&&!hasPrice)return null;
  const body=observer==='player'?document.state.player:document.state.npcs[observer];
- const state={...document.state,minute:view.minute,location,inventory:observer==='player'?view.self.inventory:{},player:observer==='player'?body:{coins:0},npcs:{},creatures:{},settlements:{},records:Object.fromEntries(known.map((r,i)=>[`market-trade:known:${i}`,r]))};
- for(const p of view.observable.people)state.npcs[p.id]={...p,location,coins:0,inventory:{}};
- if(observer!=='player')state.npcs[observer]={...body,location,inventory:view.self.inventory};
- const projected={state},reader={document:projected,get:(...p)=>p.reduce((x,k)=>x?.[k],projected)};
+ const state={...document.state,minute:view.minute,location:view.self.location,inventory:observer==='player'?view.self.inventory:{},player:observer==='player'?body:{coins:0},npcs:{},creatures:{},settlements:{},obligations:Object.fromEntries(view.self.obligations.map(o=>[o.id,o])),records:Object.fromEntries(known.map((r,i)=>[`market-trade:known:${i}`,r]))};
+ if(location===view.self.location)for(const p of view.observable.people)state.npcs[p.id]={...p,location,coins:0,inventory:{}};
+ if(observer!=='player')state.npcs[observer]={...body,location:view.self.location,inventory:view.self.inventory};
+ const projected={randomSeed:document.randomSeed,state},reader={document:projected,get:(...p)=>p.reduce((x,k)=>x?.[k],projected)};
  const quote=marketQuote(reader,engine,{...args,location,base:price,observer,view});
- return {...quote,knownFrom:remembered?.source??last?.eventId??'catalog_prior',estimate:true};
+ if(hasPrice){
+  // An observed unit price already includes that market's scarcity, grade
+  // and spread. Unknown current shelves cannot multiply it a second time.
+  const count=toRational(quote.quantity),numerator=BigInt(rate.numerator)*BigInt(count.numerator),denominator=BigInt(rate.denominator)*BigInt(count.denominator),totalCoins=Number(numerator/denominator),exact=Number(numerator)/Number(denominator);
+  const explanation={...quote.explanation,base:price,scarcity:1,quality:1,depth:1,spread:1,relation:1,curve:quote.quantity,
+   value:{base:price,value:price,contributions:[]},price:{base:price,value:price,contributions:[]},rounding:totalCoins-exact};
+  return {...quote,listPrice:price,totalCoins,exactTotal:exact,explanation,knownFrom:stored!=null?remembered.source:last.eventId,estimate:true};
+ }
+ return {...quote,knownFrom:'catalog_prior',estimate:true};
 }

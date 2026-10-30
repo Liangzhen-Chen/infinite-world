@@ -4,6 +4,8 @@
   "forward": {
     "source": "D15 §15.6：预付门槛、违约禁入与取消权重的初始标定；可靠度由履约记录派生",
     "paidThreshold": 0.5,
+    "timeDiscountMinutes": 129600,
+    "timeDiscountSource": "15 §15.2/§15.6: H/(H+minutes to delivery); H=90 days is an initial calibration",
     "cancellationWeight": 1,
     "defaultQuarters": 1,
     "quarterMinutes": 129600
@@ -18,6 +20,10 @@
   },
   "qualityStep": 1.25,
   "personalReserveDays": 1,
+  "customerChoice": {
+    "source": "05 §5.7 / 14 §14.5.1: seeded purchase noise, initial calibration; zero disables noise",
+    "noisePermille": 100
+  },
   "householdBuffer": {
     "source": "P initial bounded mixture: 5% spendthrift, 90% ordinary, 5% thrifty; cycles 0/1/2, not historical estimates",
     "profiles": [

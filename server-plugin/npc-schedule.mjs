@@ -9,7 +9,7 @@ import {facilityView,facilityRuntime,installFacilityRuntime} from './facility-st
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {mindSleepUntil}from'./magic-mind-space.mjs';
 import {festivalScheduleAt}from'./festival.mjs';
-import {npcSchedule}from'./npc-state.mjs';
+import {npcSchedule,marketScheduleAt,marketTimeWindows,householdWorkTime}from'./npc-state.mjs';
 import {personConstraint,personConstraints}from'./entity-view.mjs';
 import {WEATHER_SEQUENCES}from'./weather.mjs';
 import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
@@ -99,6 +99,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const hold=state&&personConstraint(engine,state,npcId,minute,constraints)?.value;
     if(hold?.category==='transition')return null;
     if(hold)return{location:hold.location,activity:'依法拘留',services:[],until:Math.min(hold.expires??Infinity,(Math.floor(minute/1440)+1)*1440)};
+    const market=marketScheduleAt(state,npcId,minute);if(market)return market;
     const lesson=state&&educationSlot(engine,state,npcId,minute);
     if(lesson&&!state.npcs[npcId]?.levy&&!state.npcs[npcId]?.caring)return lesson;
     const schedule=npcSchedule(engine,state,npcId,minute,constraints);if(!schedule){
@@ -125,7 +126,9 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     const current=festivalScheduleAt(engine,state,npcId,minute,{...slot,until,variant},constraints);
     // education.teaching uses the recipe's minimumProficiency as its threshold.
     const recipes=workstationRecipes(engine,state,npcId,current);
-    return recipes.length?{...current,services:[...new Set([...(current.services??[]),...recipes.map(r=>r.id),'teach'])]}:current;
+    const upcoming=marketTimeWindows(state,npcId).filter(r=>r.start>minute).map(r=>r.start);
+    const result=recipes.length?{...current,services:[...new Set([...(current.services??[]),...recipes.map(r=>r.id),'teach'])]}:current;
+    return upcoming.length?{...result,until:Math.min(result.until,...upcoming)}:result;
 }
 
 const incapacitated=npc=>['濒死','昏迷','患病'].includes(npc.status);
@@ -285,6 +288,15 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         while(cursor<=after){
             if(!isEffective(engine,d,npcId)||incapacitated(npc)){activity(npc.status);break;}
             if(d.get('state','player','companions')?.includes(npcId)){activity('同行');break;}
+            const market=marketScheduleAt(peekState(d),npcId,cursor);
+            if(market){
+                if(market.travel&&npc.location===market.travel.from)facilityRuntime().recordFurnaceDeparture(d,engine,npcId,npc.location,cursor);
+                npc.location=market.location;activity(market.activity);
+                if(market.travel)npc.scheduleTravel=market.travel;else delete npc.scheduleTravel;
+                if(market.until>after)break;
+                if(market.travel)npc.location=market.travel.to;
+                delete npc.scheduleTravel;cursor=market.until;continue;
+            }
             const trip=npc.scheduleTravel;
             if(trip){
                 if(trip.arrive>after)break;
@@ -315,7 +327,17 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
                 activity(slot.activity);
                 engine.educationAttendance?.get(npcId)?.push({start:cursor,end:Math.min(after,slot.until),location:npc.location});
                 const job=jobs.get(npcId);
-                if(!regional&&job&&!job.education&&slot.activity===(job.task??'受雇工坊生产'))recordEmploymentAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
+                if(!regional&&job&&!job.education&&slot.activity===(job.task??'受雇工坊生产')){
+                    const day=Math.floor(cursor/1440)*1440;
+                    const shopping=marketTimeWindows(peekState(d),npcId).some(r=>r.start<day+1440&&day<r.end);
+                    if(shopping){
+                        // Actual movement already removes commuting attendance.
+                        // Intersect household/market windows without charging a
+                        // second planned commute or changing unrelated shifts.
+                        const time=householdWorkTime(engine,peekState(d),npcId,cursor,{constraints});
+                        for(const span of time.work)recordEmploymentAttendance(d,npcId,Math.max(cursor,day+span.start),Math.min(after,slot.until,day+span.end),npc.location);
+                    }else recordEmploymentAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
+                }
                 else if(!regional&&crews.has(npcId)&&slot.activity===PROJECT_ACTIVITY)recordProjectAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
             }
             if(slot.until>after)break;

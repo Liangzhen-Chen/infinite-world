@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {fixture,cash,clerk,host,worker,post,DAY} from './helpers/finance.mjs';
-import {operatingProfit,rentalNeed} from '../server-plugin/finance-assets.mjs';
+import {operatingProfit,rentalNeed,recordFinanceSale} from '../server-plugin/finance-assets.mjs';
 import {financeTransfer} from '../server-plugin/finance-bank.mjs';
 import {tradeTax,assessTradeTax,collectRouteTariffs} from '../server-plugin/finance-tax.mjs';
 import {personHousehold,homeResidents,personBusiness} from '../server-plugin/entity-view.mjs';
@@ -43,6 +43,42 @@ test('抵押角色按整批清算估值，小额保留零售价值，私人持�
     assert.deepEqual([timber.supply,timber.demand],[28,1]);
     assert.equal(valuation(d,f.e,{role:'collateral',item:'item_wood',location:post,holder:'player',quantity:100}).value,200);
     assert.equal(JSON.stringify(d.document),snapshot,'报价不得写档或处置抵押物');
+});
+
+test('FIFO retains 40/27 cost through partial cash and credit sales without per-sale rounding',()=>{
+    const f=fixture(),d=f.draft(),item='item_bread';
+    // Delivered 27 portions cost40; the buyer inventory is post-delivery.
+    d.set(['state','npcs',host,'inventory'],{[item]:{quantity:27}});
+    recordFinanceSale(d,f.e,{buyer:host,seller:'player',item,quantity:27,cost:40,eventId:'fraction-buy'});
+    assert.deepEqual(d.get('state','records',`finance_profit:${host}`).lots[item],[{quantity:27,price:{numerator:40,denominator:27}}]);
+    const sell=(quantity,cost,eventId,extra={})=>recordFinanceSale(d,f.e,{buyer:'player',seller:host,item,quantity,cost,eventId,...extra});
+    assert.deepEqual(sell(1,2,'fraction-one'),{numerator:40,denominator:27});
+    // 2-40/27=14/27: reporting floor0, remainder survives.
+    assert.equal(operatingProfit(d,f.e,host),0);
+    assert.deepEqual(sell(1,2,'fraction-two'),{numerator:40,denominator:27});
+    assert.equal(operatingProfit(d,f.e,host),1); // floor(28/27), not floor(14/27)*2.
+    const basis=sell(25,50,'fraction-credit',{paid:false});
+    assert.deepEqual(basis,{numerator:1000,denominator:27});
+    assert.equal(operatingProfit(d,f.e,host),1);
+    assert.deepEqual(d.get('state','records',`finance_profit:${host}`).lots[item],[]);
+    sell(25,50,'fraction-repaid',{settledBasis:structuredClone(basis)});
+    // Total bills54 minus exact acquired40 =14, no second stock debit.
+    assert.equal(operatingProfit(d,f.e,host),14);
+    const row=d.get('state','records',`finance_profit:${host}`);
+    assert.equal(row.netExact,14);assert.equal(row.net,14);
+    assert.equal(row.entries.length,3);assert.deepEqual(row.lots[item],[]);
+});
+
+test('credit cost fractions survive JSON beyond the safe integer range without changing the profit floor',()=>{
+    const f=fixture(),d=f.draft(),basis={numerator:'9007199254740993',denominator:'9007199254740992'};
+    // Exact cost1+1/2^53, revenue2: profit is below1 and reports0.
+    // A Number conversion rounds the cost to1 and incorrectly reports1.
+    const paid=recordFinanceSale(d,f.e,{buyer:'player',seller:host,item:'item_bread',quantity:1,cost:2,settledBasis:basis,eventId:'large-exact-basis'});
+    assert.deepEqual(paid,basis);assert.equal(operatingProfit(d,f.e,host),0);
+    const row=JSON.parse(JSON.stringify(d.get('state','records',`finance_profit:${host}`)));
+    d.set(['state','records',`finance_profit:${host}`],row);
+    assert.deepEqual(row.entries[0].cost,basis);assert.equal(row.net,0);
+    assert.equal(operatingProfit(d,f.e,host),0);
 });
 
 test('商号入股实际转资，按真实成交扣成本和税后利润分红，资本注入不算收入，股份可部分转让',async()=>{

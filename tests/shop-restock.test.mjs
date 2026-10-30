@@ -7,6 +7,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {validateShopRules,qualityAllowed,originSettlement,tradeQuote} from '../server-plugin/shop.mjs';
 import {regionalTradePrice,regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
+import {porterCharges} from '../server-plugin/transport.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,inn='bld_hw_qingdeng',forge='bld_hw_forge',town='loc_bs';
@@ -106,14 +107,15 @@ test('产地约束：本地产出须在本聚落，到货须来自产地且路�
     const ironPrice=Math.ceil(regionalTradePrice({get:(...p)=>p.reduce((v,k)=>v?.[k],f.doc)},f.engine,'item_iron','loc_hw',DAY));
     await f.act('world_time',{minutes:DAY},'day1');
     const row=ledger(f.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_ration');
-    // S5-02: ration baseline3 * clamped scarcity .5 * all other
-    // factors1 *two =3, truncated once. Source/cash guarantees remain.
-    // F010: the route arrival is outside the simulation but no longer free. Hand anchor: goods 3 (above), porter freight =
-    // route_hw_bs 24 km × billable max(2×0.2kg, 1kg)=1kg × pack rate 0.02 = 0.48 → ceil 1 copper (15 §15.1.1 / SPECS.pack);
-    // no toll or guard on the edge, so no duty. Freight leaves the simulated economy through the declared sink:export.
-    assert.deepEqual([row.source,row.from,row.added,row.paidCopper],['route',town,2,4]);
-    assert.deepEqual(row.cost,{goods:3,freight:1,duties:0});assert.deepEqual(row.origin,{kind:'import',from:town,reason:'外路来货（模拟范围外）'});
-    assert.equal(qty(f.doc,host,'item_ration'),2);assert.equal(f.doc.state.npcs[host].coins,coins-4);assert.equal(f.doc.state.settlements[town].treasury,treasury+3);
+    // K08 / 05 section5.1.4 replaces instant offscreen route imports:
+    // without a real holder or shipment, added0 and paid0. Retain the
+    // source/cash/freight assertions: the porter quote still costs1, but a
+    // quote cannot deliver2 portions or charge that coin.
+    assert.deepEqual([row.source,row.added,row.paidCopper],['route',0,0]);
+    const read={document:f.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],f.doc)};
+    const freight=porterCharges(read,f.engine,{from:town,to:'loc_hw',cargo:[{item:'item_ration',quantity:2}],owner:host,minute:DAY});
+    assert.deepEqual([freight.freight,freight.duties],[1,0]);
+    assert.equal(qty(f.doc,host,'item_ration'),0);assert.equal(f.doc.state.npcs[host].coins,coins);assert.equal(f.doc.state.settlements[town].treasury,treasury);
     const iron=ledger(f.doc,'shop_hw_forge').entries.find(e=>e.item==='item_iron');
     assert.deepEqual([iron.source,iron.added,iron.paidCopper],['settlement',3,3*ironPrice],'聚落只放出保留量以上的铁料，按实际材料行情支付');assert.equal(f.doc.state.settlements.loc_hw.iron,2);
     // W8-E8's approved rural-tool shelf also buys one sickle here: baseline10
@@ -123,14 +125,14 @@ test('产地约束：本地产出须在本聚落，到货须来自产地且路�
     assert.deepEqual([sickle.source,sickle.added,sickle.paidCopper],['local',1,20]);
     assert.equal(qty(f.doc,smith,'item_sickle'),1);
     assert.equal(f.doc.state.npcs[smith].coins,smithCoins-3*ironPrice-20);assert.equal(qty(f.doc,smith,'item_iron'),3);
-    assert.equal(cash(f.doc),total-1,'铜钱守恒：仅挑夫运费 1 铜经 sink:export 离开模拟经济（口径见上），其余每文都有对手方');
+    assert.equal(cash(f.doc),total,'K08: no actual shipment, no freight payment; all local purchases still conserve cash');
 
     // No producing settlement in this campaign: nothing arrives, the refusal is on the ledger.
     const g=fixture({withTown:false});
     await g.act('world_trade',{seller:host,item:'item_ration',quantity:4},'buy-ration');
     await g.act('world_time',{minutes:DAY},'day1');
     assert.equal(qty(g.doc,host,'item_ration'),0);
-    assert.equal(ledger(g.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_ration').reason,'来源聚落不在战役账中');
+    assert.match(ledger(g.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_ration').reason,/\u6ca1\u6709\u5df2\u5230\u573a/); // K08: no real goods even if a source treasury exists.
 });
 
 test('高品质渠道：银器只在镇以上或铁匠渠道补货，金器须城以上或相应渠道',()=>{

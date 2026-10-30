@@ -16,6 +16,7 @@ import {registerValuer,goodsWorth,stateReader} from './valuation.mjs';
 import {installEventWorth} from './world-events.mjs';
 import {explainDerived} from './derived.mjs';
 import {toRational,fromRational} from './det-math.mjs';
+import {fraction,decimalFraction,addAccrual} from './obligation-calendar.mjs';
 import {workshopFund,coinRead,partyAccount,dedicatedCoinAccount,counterCash,payFromCounter} from './money.mjs';
 import {financePath as rec,financeInt as int,financeBalance,financeChange,financeTransfer,financeEvent} from './finance-bank.mjs';
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement,settlementGovernment} from './entity-view.mjs';
@@ -190,16 +191,27 @@ registerValuer('property',(d,e,{subject,fraction=1,condition,right='owns',holder
     const baseValue=monthly/((low+high)/2)*intact+leaseAdjustment;
     return {value:explainDerived(e,d.document??{state},'economy:landValue',subject,{kind:'land',base:baseValue}).value*fraction,basis:kind==='field'?'capitalized-field-income':'capitalized-rent',...(rentBasis?{rentBasis}:{})};
 });
+// Historical costs retain exact fractions through FIFO and credit settlement.
+// Numbers remain readable for existing whole-cost records; no BigInt is saved.
+const costFraction=value=>typeof value==='number'
+    ?value<0?fraction(-decimalFraction(-value).numerator,decimalFraction(-value).denominator):decimalFraction(value)
+    :fraction(BigInt(value.numerator),BigInt(value.denominator));
+const costTimes=(value,count)=>{const a=costFraction(value),b=costFraction(count);return fraction(a.numerator*b.numerator,a.denominator*b.denominator);};
+// Match currency's integer-string encoding when a reduced fraction exceeds
+// the safe Number range; converting it to a double would change truncation.
+const costInteger=n=>n>=-9007199254740991n&&n<=9007199254740991n?Number(n):String(n);
+const savedCost=value=>{const r=costFraction(value),numerator=costInteger(r.numerator);return r.denominator===1n&&typeof numerator==='number'?numerator:{numerator,denominator:costInteger(r.denominator)};};
+const floorCost=value=>{const r=costFraction(value),q=r.numerator/r.denominator;return Number(q-(r.numerator<0n&&r.numerator%r.denominator?1n:0n));};
 export function operatingProfit(d,e,issuer){
-    const recorded=d.get(...rec(`finance_profit:${issuer}`))?.net??0;
+    const recorded=d.get(...rec(`finance_profit:${issuer}`));
     const ledger=groupAccountView(e,d.get('state'),issuer)?.ledger??d.get(...rec(`organization:${issuer}`),'ledger')??[];
     // 成本批次的基准价：期初存货与无成交记录的出入库没有历史成本可查，取目录基准价作“无记录时的参照”；
     // 有成交记录的批次用实付价摊入。这是历史成本核算，不是现价/估值（现价走 goods 估值角色），故保留。
-    const lots=new Map(Object.entries(e.world.factions?.find(f=>f.id===issuer)?.resources?.items??{}).map(([id,quantity])=>[id,[{quantity,price:e.byId.get(id)?.basePrice??0}]])),events=new Map();let net=recorded;
+    const lots=new Map(Object.entries(e.world.factions?.find(f=>f.id===issuer)?.resources?.items??{}).map(([id,quantity])=>[id,[{quantity,price:e.byId.get(id)?.basePrice??0}]])),events=new Map();let net=costFraction(recorded?.netExact??recorded?.net??0);
     for(const l of ledger){
-        if(l.kind==='商税'){net+=l.coins??0;continue;}
+        if(l.kind==='商税'){net=addAccrual(net,costFraction(l.coins??0));continue;}
         // 阶段耗用物资的价值是耗用当时冻结在账上的 itemWorth（faction-clock 写入），历史成本不随现价重算。
-        if(l.kind==='stage_cost'){net+=(l.coins??0)-(l.itemWorth??0);continue;}
+        if(l.kind==='stage_cost'){net=addAccrual(addAccrual(net,costFraction(l.coins??0)),costFraction(l.itemWorth??0),-1n);continue;}
         if(l.kind!=='trade')continue;
         const key=l.sourceEvent,event=events.get(key)??{coins:0,items:{}};event.coins+=l.coins??0;
         for(const [id,q]of Object.entries(l.items??{}))event.items[id]=(event.items[id]??0)+q;
@@ -208,30 +220,31 @@ export function operatingProfit(d,e,issuer){
     for(const event of events.values()){
         const acquired=Object.entries(event.items).filter(([,q])=>q>0),sold=Object.entries(event.items).filter(([,q])=>q<0);
         // 一笔换入多种物品的实付款，按目录基准价的相对比重摊到各物品上（摊派权重，不是估价）。
-        if(acquired.length){const value=acquired.reduce((n,[id,q])=>n+q*(e.byId.get(id)?.basePrice??0),0);for(const [id,quantity]of acquired){const stock=lots.get(id)??[];stock.push({quantity,price:-event.coins*(e.byId.get(id)?.basePrice??0)/Math.max(1,value)});lots.set(id,stock);}}
+        if(acquired.length){const value=acquired.reduce((n,[id,q])=>n+q*(e.byId.get(id)?.basePrice??0),0);for(const [id,quantity]of acquired){const stock=lots.get(id)??[];stock.push({quantity,price:savedCost(fraction(BigInt(-event.coins)*BigInt(e.byId.get(id)?.basePrice??0),BigInt(Math.max(1,value))))});lots.set(id,stock);}}
         if(!sold.length)continue;
-        let basis=0;
-        for(const [id,q]of sold){const stock=lots.get(id)??[];let remaining=-q;while(remaining&&stock.length){const n=Math.min(remaining,stock[0].quantity);basis+=n*stock[0].price;stock[0].quantity-=n;remaining-=n;if(!stock[0].quantity)stock.shift();}basis+=remaining*(e.byId.get(id)?.basePrice??0);lots.set(id,stock);}
-        net+=event.coins-basis;
+        let basis=costFraction(0);
+        for(const [id,q]of sold){const stock=lots.get(id)??[];let remaining=-q;while(remaining&&stock.length){const n=Math.min(remaining,stock[0].quantity);basis=addAccrual(basis,costTimes(stock[0].price,n));stock[0].quantity-=n;remaining-=n;if(!stock[0].quantity)stock.shift();}basis=addAccrual(basis,costTimes(e.byId.get(id)?.basePrice??0,remaining));lots.set(id,stock);}
+        net=addAccrual(addAccrual(net,costFraction(event.coins)),basis,-1n);
     }
-    return Math.floor(net);
+    return floorCost(net);
 }
 // Real deliveries consume inventory basis once. Credit sales recognize income
 // when the existing debt is repaid; purchases retain their actual lot prices.
 export function recordFinanceSale(d,e,{buyer,seller,item,quantity,cost,tax=0,eventId,paid=true,settledBasis}){
     if(settledBasis===undefined&&buyer!=='player'&&d.get('state','npcs',buyer)){
         const key=`finance_profit:${buyer}`,old=d.get(...rec(key))??{category:'finance_profit',issuer:buyer,net:0,lots:{},entries:[]};
-        const opening=bagStock(d,e,{point:'assets.basis',id:buyer,item,legacy:()=>e.quantity(d,buyer,item)})-quantity,prior=old.lots[item]??(opening>0?[{quantity:opening,price:e.byId.get(item)?.basePrice??0}]:[]);
-        holdingSet(d,e,rec(key),{...old,lots:{...old.lots,[item]:[...prior,{quantity,price:cost/quantity}]}},'finance-assets');
+        const opening=bagStock(d,e,{point:'assets.basis',id:buyer,item,legacy:()=>e.quantity(d,buyer,item)})-quantity,prior=(old.lots[item]??(opening>0?[{quantity:opening,price:e.byId.get(item)?.basePrice??0}]:[])).map(row=>({...row,price:savedCost(row.price)}));
+        const c=costFraction(cost),q=costFraction(quantity),price=savedCost(fraction(c.numerator*q.denominator,c.denominator*q.numerator));
+        holdingSet(d,e,rec(key),{...old,lots:{...old.lots,[item]:[...prior,{quantity,price}]}},'finance-assets');
     }
     if(seller==='player'||!d.get('state','npcs',seller))return;
-    const key=`finance_profit:${seller}`,old=d.get(...rec(key))??{category:'finance_profit',issuer:seller,net:0,lots:{},entries:[]},lots=structuredClone(old.lots[item]??[]);
-    let remaining=settledBasis===undefined?quantity:0,basis=settledBasis??0;while(remaining&&lots.length){const n=Math.min(remaining,lots[0].quantity);basis+=n*lots[0].price;remaining-=n;lots[0].quantity-=n;if(!lots[0].quantity)lots.shift();}
-    basis+=remaining*(e.byId.get(item)?.basePrice??0);
-    if(!paid){holdingSet(d,e,rec(key),{...old,lots:{...old.lots,[item]:lots}},'finance-assets');return basis;}
-    const profit=Math.floor(cost-basis-tax);
-    holdingSet(d,e,rec(key),{...old,net:old.net+profit,lots:{...old.lots,[item]:lots},entries:[...old.entries,{sourceEvent:eventId,minute:d.get('state','minute'),revenue:cost,cost:basis,tax,profit}]},'finance-assets');
-    return basis;
+    const key=`finance_profit:${seller}`,old=d.get(...rec(key))??{category:'finance_profit',issuer:seller,net:0,lots:{},entries:[]},lots=(old.lots[item]??[]).map(row=>({...row,price:savedCost(row.price)}));
+    let remaining=settledBasis===undefined?quantity:0,basis=costFraction(settledBasis??0);while(remaining&&lots.length){const n=Math.min(remaining,lots[0].quantity);basis=addAccrual(basis,costTimes(lots[0].price,n));remaining-=n;lots[0].quantity-=n;if(!lots[0].quantity)lots.shift();}
+    basis=addAccrual(basis,costTimes(e.byId.get(item)?.basePrice??0,remaining));
+    if(!paid){holdingSet(d,e,rec(key),{...old,lots:{...old.lots,[item]:lots}},'finance-assets');return savedCost(basis);}
+    const profit=addAccrual(costFraction(cost-tax),basis,-1n),net=addAccrual(costFraction(old.netExact??old.net),profit);
+    holdingSet(d,e,rec(key),{...old,net:floorCost(net),netExact:savedCost(net),lots:{...old.lots,[item]:lots},entries:[...old.entries,{sourceEvent:eventId,minute:d.get('state','minute'),revenue:cost,cost:savedCost(basis),tax,profit:savedCost(profit)}]},'finance-assets');
+    return savedCost(basis);
 }
 // §15.1.1 价值有位置：收付双方（组织以现任代表为位置）同在一处才当面交付；不在场时，能付的款形成到期应付（真实债务），
 // 由通用清偿运行时按在场、代收、汇票或承运结算，不凭空转账。

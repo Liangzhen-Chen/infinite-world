@@ -139,14 +139,18 @@ test('合法出租与明确同意、实际清醒在场、整段雇工空档和�
 
 test('NPC 顾客只花已有钱且一天消费有限；卖空、赊购和重复交货无副作用',async()=>{
     const f=fixture({inventory:{item_bread:{quantity:30}}});
-    // S5-02: bread baseline2 * scarcity floor.5 =1 per portion. Native
-    // daily spending is one quarter of actual opening cash:40/4=10.
-    // The original ten-portion purchase exhausts it; the repeat must refuse.
-    const prepared=applyIntentSetup(f.engine,f.doc,{facts:[{path:['state','npcs',customer,'coins'],value:40}]});assert.deepEqual(prepared.setupUnmet,[]);f.doc=prepared.document;
+    // K08 / K02: ordinary three-person household needs180 satiety, bread30
+    // gives6 portions. Cash10 minus the known rent4 buys6 at1 copper,
+    // retaining4. This exceeds the removed quarter-purse cap2; even a
+    // subsequent one-portion private purchase cannot spend the rent reserve.
+    f.w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];
+    const prepared=applyIntentSetup(f.engine,f.doc,{facts:[{path:['state','npcs',customer,'coins'],value:10}]});assert.deepEqual(prepared.setupUnmet,[]);f.doc=prepared.document;
+    f.doc.state.obligations['customer-rent']={id:'customer-rent',kind:'rent',debtor:customer,creditor:landlord,resource:'coin_river',amount:4,paid:0,status:'pending',deadline:1440};
     const lease=await f.lease(),shop=lease.business;await f.manage('open',shop);
-    const sell={operation:'sell',business:shop,seller:'player',buyer:customer,consent:true,item:'item_bread',quantity:10};
-    const first=await f.act('world_trade',sell,'first-sale');assert.equal(first.cost,10);const before=structuredClone(f.doc);
-    await assert.rejects(f.act('world_trade',sell,'excess-sale'),/当日店铺消费上限/);assert.deepEqual(f.doc,before);
+    const sell={operation:'sell',business:shop,seller:'player',buyer:customer,consent:true,item:'item_bread',quantity:6};
+    const first=await f.act('world_trade',sell,'first-sale');assert.equal(first.cost,6);assert.equal(f.doc.state.npcs[customer].coins,4);const before=structuredClone(f.doc);
+    await assert.rejects(f.act('world_trade',sell,'excess-sale'),/家庭当前采购预算不足/);assert.deepEqual(f.doc,before);
+    await assert.rejects(f.act('world_trade',{...sell,quantity:1},'reserved-cash'),/家庭当前采购预算不足/);assert.deepEqual(f.doc,before);
     await assert.rejects(f.act('world_trade',{...sell,quantity:1,payment:'credit'},'credit-sale'),/现有现金/);
     await assert.rejects(f.act('world_trade',{...sell,quantity:100},'sold-out'),/现有库存不足/);
     const order=await procurement(f,shop,'order-once');await fulfill(f,shop,order.contract,'deliver-once');const once=structuredClone(f.doc);
@@ -201,7 +205,6 @@ test('正式世界的新角色沿真实路线采购和携货雇工，使用原�
     await act('world_act',{action:'business:open_counter',slots:{business:lease.business,coins:Math.max(0,c.state.player.coins-20)}},'real-counter');
     const order=await act('world_trade',{operation:'procure',business:lease.business,seller:landlord,consent:true,item:'item_bread',quantity:2},'real-procure');
     await act('world_trade',{operation:'fulfill',business:lease.business,seller:landlord,contract:order.contract},'real-deliver');
-    await act('world_settlement',{operation:'business_open',business:lease.business},'real-open');
     const travelled=await act('world_move',{destination:'bld_hw_herbs'},'real-carry');assert.ok(travelled.minutes>0);
     const counterBefore=dedicatedCoinAccount(c.state,'player','counter').coins,purseBefore=c.state.player.coins;
     const hire=await act('world_trade',{operation:'hire',business:lease.business,seller:'npc_hw_fanrong',consent:true,task:'stocktake',item:'item_bread',quantity:2,minutes:30},'real-hire');
@@ -213,6 +216,10 @@ test('正式世界的新角色沿真实路线采购和携货雇工，使用原�
     assert.equal(worked.audit.quantity,2);assert.equal(worked.audit.finish-worked.audit.start,30);
     await act('world_move',{destination:place},'real-return');
     await act('world_time',{until:{dayOffset:0,hour:18,minute:20}},'real-customer-arrive');
+    // K08 settles real noon customers before this evening service. Keep the
+    // two audit portions in preparation until the separately tested manual
+    // sale window, rather than assuming no one can buy them during the day.
+    await act('world_settlement',{operation:'business_open',business:lease.business},'real-open');
     const beforeCustomerCoins=c.state.npcs[customer].coins,beforeCustomerStock=amount(c,customer,'item_bread');
     const sold=await act('world_trade',{operation:'sell',business:lease.business,seller:'player',buyer:customer,consent:true,item:'item_bread',quantity:1},'real-sale');
     assert.equal(c.state.npcs[customer].coins,beforeCustomerCoins-sold.cost);assert.equal(amount(c,customer,'item_bread'),beforeCustomerStock+1);

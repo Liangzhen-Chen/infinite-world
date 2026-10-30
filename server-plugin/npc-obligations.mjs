@@ -10,6 +10,7 @@ import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personConstraint,personConstraints,personSimulation}from'./entity-view.mjs';
 import {employmentReservation} from './employment-state.mjs';
+import {marketTimeWindows,marketScheduleAt} from './npc-state.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {safeCarryKg,packItemKg} from './carry.mjs';
@@ -39,6 +40,7 @@ export function npcObligationAt(state,id,minute=state.minute){
  return liveNpcReservations(state).find(o=>reservedActors(o).includes(id)&&!released(o,id)&&(o.departures[id]??o.start)<=minute&&minute<o.deadline)??null;
 }
 export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','minute'),minutes=0,location,kind='action'}={}){
+ for(const actor of actors)if(marketTimeWindows(d.get('state'),actor).some(r=>r.start<start+Math.max(1,minutes)&&start<r.end))throw preconditionFailure('与实际赶集路程或服务时段冲突');
  const finish=start+minutes;
  if(kind!=='medicine'&&kind!=='employment')for(const actor of actors)if(medicineReservation(d.get('state'),actor,start,minutes))throw preconditionFailure('与诊疗预约冲突');
  if(kind!=='education')for(const actor of actors)if(educationReservation(engine,d.get('state'),actor,start,minutes,{automatic:kind==='autonomy'}))throw preconditionFailure('与已登记授业课时冲突');
@@ -162,6 +164,15 @@ function simulateNpc(d,engine,id,before,after,bookings,beforeState){
   if(heldUntil>t){add(Math.min(after,heldUntil),capable(npc));if(t>=after)break;continue;}
   if(!capable(npc)){npc.activity=npc.status;add(after,false);break;}
   if(d.get('state','player','companions')?.includes(id)){npc.activity='同行';add(after,false);break;}
+  const market=marketScheduleAt(d.get('state'),id,t);
+  if(market){
+   npc.location=market.location;npc.activity=market.activity;
+   if(market.travel)npc.scheduleTravel=market.travel;else delete npc.scheduleTravel;
+   const end=Math.min(after,market.until);add(end,false);
+   if(end<market.until)break;
+   if(market.travel)npc.location=market.travel.to;
+   delete npc.scheduleTravel;if(t>=after)break;continue;
+  }
   if(npc.scheduleTravel){const trip=npc.scheduleTravel;
    if(trip.arrive>after){add(after,false);break;}
    add(Math.max(t,trip.arrive),false);npc.location=trip.to;delete npc.scheduleTravel;continue;

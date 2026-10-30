@@ -10,7 +10,7 @@ import {withLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {openGoodsObligation,performGoodsObligation,cancelGoodsObligation} from '../server-plugin/obligation-conditional.mjs';
 import {closeObligation} from '../server-plugin/obligation-runtime.mjs';
-import {marketQuote,forwardSupply,forwardReliability} from '../server-plugin/market.mjs';
+import {marketQuote,forwardSupply,forwardReliability,assertMarketDepth} from '../server-plugin/market.mjs';
 import {trackTransferUnit} from '../server-plugin/items.mjs';
 import {ensureHoldings,openHolding,holdingsView,located,aliveHoldings} from '../server-plugin/holdings.mjs';
 import {createTransportAsset,transportAssetView,quoteTransport,bookTransport,advanceTransport,nextTransportMinute,transportPosition} from '../server-plugin/transport.mjs';
@@ -37,6 +37,8 @@ function history(f){sign(f,'history',{quantity:4,prepayment:460});f.mutate(d=>pe
 const expectation=f=>forwardSupply(f.read(),f.engine,item,location);
 const reliability=f=>forwardReliability(f.read(),f.engine,seller);
 const quote=f=>marketQuote(f.read(),f.engine,{item,location,seller,buyer:'player'});
+// Independent K08 anchor: H=90 days, default deadline2000, current minute600.
+const discounted=(units,delay=1400)=>units*(129600/(129600+delay));
 
 test('no history and no pledge cannot discount spot prices; prepayment really moves',()=>{
  const f=scene(),before=quote(f),cash=f.document.state.player.coins,recipient=f.document.state.npcs[seller].coins;
@@ -55,11 +57,11 @@ test('actual performance establishes reliability; paid proportion and threshold 
  // Signed unit value115, ten units cost1150, 575/1150=.5.
  // One completed performance =>1; min(10,stock96)*1*.5=5.
  assert.equal(f.document.state.obligations.half.terms.forward.consideration,1150);
- assert.equal(reliability(f).reliability,1);assert.equal(expectation(f).expected,5);
+ assert.equal(reliability(f).reliability,1);assert.equal(expectation(f).expected,discounted(5));
  sign(f,'quarter',{prepayment:288});
  // 288/1150 < authored .5 threshold: this second promise contributes0.
  assert.equal(expectation(f).rows.find(r=>r.id==='quarter').expected,0);
- sign(f,'full');assert.equal(expectation(f).rows.find(r=>r.id==='full').expected,10);
+ sign(f,'full');assert.equal(expectation(f).rows.find(r=>r.id==='full').expected,discounted(10));
  const before=structuredClone(f.document),read=f.read();
  forwardSupply(read,f.engine,item,location);marketQuote(read,f.engine,{item,location,seller,buyer:'player'});
  assert.deepEqual(read.document,before);assert.deepEqual(read.patches,[]);assert.deepEqual(f.document,before);
@@ -72,9 +74,26 @@ test('the real market quote consumes expected deliveries, with independent coppe
  assert.equal(quote(unproven).totalCoins,345);
  const trained=scene();history(trained);sign(trained,'sixty',{quantity:60,prepayment:6900});
  // The four delivered swords remain in the player's bag, but private inventory is demand, not market supply (market.mjs:182-190,204-210).
- // The quote therefore uses the revised local supply projection; the independent expected-delivery quantity remains 60.
- // Existing commerce supply96, demand60: 230×60/96=143.75，完整报价截为143铜（market.mjs:241-286）。旧私人物品计入供给时S100，230×60/100=138。
- assert.equal(expectation(trained).expected,60);assert.equal(quote(trained).totalCoins,143);
+ // The price includes the actual36 plus the discounted, backed promise60.
+ // The previous143 anchor used undiscounted effective stock96; the timed projection below gives144.
+ // K08 adds the missing time discount: 60*129600/131000 expected;
+ // effective stock36+that expectation; floor(230*60/effective stock)=144.
+ // The original name/forward-price semantics remain; expected goods do not
+ // enter the actual36 portions of executable market depth.
+ assert.equal(expectation(trained).expected,discounted(60));assert.equal(quote(trained).totalCoins,144);
+ const q=quote(trained);assert.equal(q.spotSupply,36);assert.equal(q.supply,36+discounted(60));
+ const bulk=marketQuote(trained.read(),trained.engine,{item,location,seller,buyer:'player',quantity:20,business:{keeper:seller,markup:1}});
+ // Actual depth floor(36*.3) cannot be expanded by the expected59.36.
+ assert.throws(()=>assertMarketDepth(trained.read(),trained.engine,bulk),/深度/);
+ assert.doesNotThrow(()=>assertMarketDepth(trained.read(),trained.engine,bulk,{agreed:true}));
+});
+
+test('delivery time discounts expected stock without discounting physical depth',()=>{
+ const near=scene(),far=scene();history(near);history(far);
+ sign(near,'near',{deadline:600+129600});sign(far,'far',{deadline:600+2*129600});
+ // One fully prepaid reliable lot10: 90-day weight1/2, 180-day weight1/3.
+ assert.equal(expectation(near).expected,5);assert.equal(expectation(far).expected,10*(1/3));
+ assert.equal(quote(near).spotSupply,86);assert.equal(quote(far).spotSupply,86);
 });
 
 test('the prepayment threshold is authored through the existing derived registry',()=>{
@@ -82,7 +101,7 @@ test('the prepayment threshold is authored through the existing derived registry
  sign(f,'quarter-eight',{quantity:8,prepayment:230});
  // Consideration8*115=920; paid230/920=.25 meets .5*.5=.25.
  // min(promised8,stock96)*reliability1*paid.25 = 2.
- assert.equal(expectation(f).expected,2);
+ assert.equal(expectation(f).expected,discounted(2));
 });
 
 test('a physical pledged original backs only its actual value, shared across claims',()=>{
@@ -93,11 +112,11 @@ test('a physical pledged original backs only its actual value, shared across cla
  });
  // The original's market value is230*.5=115, the forward signed115/unit.
  // No performance history: min(promised10,pledged115/115)=1 expected unit.
- assert.equal(reliability(f).reliability,0);assert.equal(expectation(f).expected,1);
+ assert.equal(reliability(f).reliability,0);assert.equal(expectation(f).expected,discounted(1));
  sign(f,'shared');
  f.mutate(d=>openHolding(d,{kind:'pledged',holder:'shared',subject:original,writer:'obligation-runtime',eventId:'share-pledge',engine:f.engine}));
  // Two live claims share115: each has57.5 of backing, so each expects.5.
- assert.deepEqual(expectation(f).rows.map(r=>r.expected),[0.5,0.5]);assert.equal(expectation(f).expected,1);
+ assert.deepEqual(expectation(f).rows.map(r=>r.expected),[discounted(0.5),discounted(0.5)]);assert.equal(expectation(f).expected,discounted(1));
  sign(f,'default',{deadline:601});
  // Clock value is a premise here; native partitioned advancement is tested below.
  const later=applyIntentSetup(f.engine,f.document,{minute:602});assert.deepEqual(later.setupUnmet,[]);f.replace(later.document);
@@ -113,7 +132,7 @@ test('cancellation is nonperformance and its weight uses the derived slot',()=>{
  // One success / (one success + one cancellation * weight3) = .25;
  // ten fully prepaid units * .25 = 2.5 expected units (D15 §15.6).
  assert.equal(reliability(f).reliability,0.25);
- assert.equal(expectation(f).expected,2.5);
+ assert.equal(expectation(f).expected,discounted(2.5));
  assert.equal(expectation(f).rows.length,1);
 });
 
@@ -125,7 +144,7 @@ test('default zeros all not-yet-due forwards for one quarter; partitioning time 
  assert.equal(reliability(f).blockedUntil,130201); // 601+90*1440.
  f.replace(at(130202));
  // After the ban, one success / (one success + one default)=.5.
- assert.equal(reliability(f).reliability,0.5);assert.equal(expectation(f).expected,5);
+ assert.equal(reliability(f).reliability,0.5);assert.equal(expectation(f).expected,discounted(5,300000-130202));
  const large=expectation(f),small=applyIntentSetup(f.engine,at(70000),{minute:130202});
  assert.deepEqual(small.setupUnmet,[]);f.replace(small.document);assert.deepEqual(expectation(f),large);
 });
@@ -135,7 +154,7 @@ test('several promises share actual inventory once, rather than duplicating capa
  // After delivering four, debtor stock96. The first promise backs80;
  // the second can back16, even though it promises another80.
  const rows=expectation(f).rows;assert.equal(rows[0].capacity,80);assert.equal(rows[1].capacity,16);
- assert.equal(expectation(f).expected,96);
+ assert.equal(expectation(f).expected,discounted(80)+discounted(16));
 });
 
 test('failed performance writes nothing and forward projections survive native storage',async t=>{
@@ -317,12 +336,12 @@ test('actual sown acreage bounds forward production before and after the native 
  // 2mu *150jin/mu *.5kg/jin /.5kg/portion *179/179 =300.
  // There are no harvested portions; promise500 is capped at real crop300.
  assert.equal(project().rows.find(r=>r.id==='crop-forward').production,300);
- assert.equal(project().rows.find(r=>r.id==='crop-forward').expected,300);
+ assert.equal(project().rows.find(r=>r.id==='crop-forward').expected,discounted(300,3*1440));
  assert.equal(forwardSupply(early,e,'item_wheat_grain','loc_hw_fields').rows.find(r=>r.id==='too-early').expected,0);
  await act('world_time',{minutes:2*1440},'ripen-real-crop');
  // The last clear-weather growth tick contributes.9: floor(300*179.9/180)=299.
  assert.equal(document.state.records[id].yield,299);
- assert.equal(project().expected,299);assert.equal(document.ledger.accounts['loc_hw_fields|item_wheat_grain|crop'],299);
+ assert.equal(project().expected,discounted(299,1440));assert.equal(document.ledger.accounts['loc_hw_fields|item_wheat_grain|crop'],299);
  assert.deepEqual(auditLedger(document.ledger),[]);
 });
 
