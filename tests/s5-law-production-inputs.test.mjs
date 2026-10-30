@@ -8,6 +8,8 @@ import {fieldRentBasis} from '../server-plugin/finance-assets.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {withLedger,finishLedger} from '../server-plugin/ledger.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
+import {agriculturalWorkforce} from '../server-plugin/npc-state.mjs';
+import {laborOffers} from '../server-plugin/labor-market.mjs';
 
 const settlement='loc_hw',field='loc_hw_fields',key='agriculture:loc_hw',farmKey=`private-farm:${field}`;
 function setup({population=2,seedStock=100,workers=1,tools=2}={}){
@@ -32,6 +34,30 @@ function job(f,{minutes=480,local=true,farm=true}={}){
  const starts=6*DAY+480;
  f.doc.state.records.work={id:'work',kind:'workshop',category:'contract',laborMarket:1,worker,owner:host,location:field,settlement:local?settlement:'loc_bs',...(farm?{farm:settlement}:{}),starts,createdAt:0,deadline:8*DAY,status:'有效',attendance:{6:minutes},shifts:[{start:starts,minute:6*DAY+1020,minutes}]};
 }
+test('缺工预测与日结复用田间分钟，照料、通勤、赶集和实际出勤只扣一次',()=>{
+ const f=setup({population:1});
+ // 旧口径：1人×480=480分钟，预测1工日、无缺口。
+ // 新口径：480−照料60−赶集60−通勤(30×2)−已出勤120=180分钟=3/8工日。
+ // 尚需1−3/8=5/8工日，整班招工1人；日结floor(20×3/8)=7单位。
+ job(f,{farm:false,minutes:120});f.doc.state.records.work.commuteMinutes=30;
+ f.doc.state.obligations.care={id:'care',reservationVersion:1,type:'会面',promisor:worker,promisee:host,status:'待履行',start:6*DAY+480,deadline:6*DAY+540,departures:{[worker]:6*DAY+480},location:'bld_hw_post',content:'照料家人'};
+ f.doc.state.records.trip={category:'market_trip',actor:worker,keeper:host,to:'bld_hw_post',departAt:6*DAY+540,returnAt:6*DAY+600};
+ f.doc.state.npcs[worker].occupation='农夫';
+ const before=structuredClone(f.doc),farm=f.doc.state.records[key];
+ assert.equal(agriculturalWorkforce(f.e,f.doc.state,f.p,farm,6).fieldMinutes,180);
+ const offers=laborOffers(f.e,f.doc.state).filter(o=>o.farm===settlement);
+ assert.deepEqual(offers.map(o=>[o.owner,o.task]),[[worker,'农忙播种']]);
+ assert.deepEqual(f.doc,before,'预测只读，不提前出勤或消耗资源');
+ const report=day(f).lastReport;
+ assert.deepEqual(report.workers.field,{numerator:375000,denominator:1000000});assert.equal(report.planted,7);
+ // 已出勤的农雇工回到本田：扣出后补回同一480分钟，不能再招第二份同一劳力。
+ const hired=setup({population:1});job(hired,{minutes:480});
+ hired.doc.state.npcs[worker].occupation='农夫';
+ assert.equal(agriculturalWorkforce(hired.e,hired.doc.state,hired.p,hired.doc.state.records[key],6).fieldMinutes,480);
+ assert.deepEqual(laborOffers(hired.e,hired.doc.state).filter(o=>o.farm===settlement),[]);
+ assert.equal(day(hired).lastReport.planted,20);
+});
+
 async function act(f,args,id){
  const out=await f.e.reduce(f.doc,{tool:'world_farm',args,eventId:id});f.doc=applyPatches(f.doc,out.patches);return out.result;
 }

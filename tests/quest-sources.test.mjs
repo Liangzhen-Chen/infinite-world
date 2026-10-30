@@ -9,6 +9,7 @@ import {standing} from '../server-plugin/standing.mjs';
 import {advanceRegistry} from '../server-plugin/advance-registry.mjs';
 import {sceneCard} from '../server-plugin/scene-card.mjs';
 import {npcRumors} from '../server-plugin/npc-rumors.mjs';
+import {reconcile} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const board='loc_hw',owner='npc_hw_linsui',witness='npc_hw_ayan',clerk='npc_hw_chenbai';
@@ -28,7 +29,7 @@ function setup(mutate=()=>{}){
 const generated=c=>Object.values(c.state.quests).filter(q=>q.source);
 // W8-E8 restocking transfers private money to the source settlement (sickle:
 // 1 * base 10 * scarcity 2 = 20). Public purses belong in conservation totals.
-const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,x)=>n+(x.coins??0),0)+Object.values(c.state.settlements).reduce((n,s)=>n+(s.treasury??0),0)+Object.values(c.state.quests).reduce((n,q)=>n+q.escrow,0);
+const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,x)=>n+(x.coins??0),0)+Object.values(c.state.settlements).reduce((n,s)=>n+(s.treasury??0),0)+Object.values(c.state.quests).reduce((n,q)=>n+q.escrow,0)+Object.values(c.state.records).filter(r=>r.category==='money_account').reduce((n,r)=>n+r.coins,0);
 
 test('生成器登记：三种来源都以生成器登记，推进注册表在势力时钟之后跑',()=>{
  // U11 族群觉醒以第四个生成器登记，排在世界事件与效果表之间。
@@ -45,7 +46,8 @@ test('NPC按短缺出任务：报酬从本人钱里托管，告示带来源，�
  assert.equal(generated(next).length,1);
  assert.equal(q.publisher,owner);assert.equal(q.source.generator,'npc_needs');assert.equal(q.source.need,'repair');assert.equal(q.location,board);
  assert.deepEqual(q.objective,{type:'deliver',item:'item_wood',quantity:6,location:board});
- assert.equal(q.escrow,50);assert.equal(next.state.npcs[owner].coins,document.state.npcs[owner].coins-50);assert.equal(money(next),money(document));
+ // K08 正午原生店成交18铜，午夜补回6面包×1+4燕饼×1.5=12铜；净入6后托管50。
+ assert.equal(q.escrow,50);assert.equal(next.state.npcs[owner].coins,document.state.npcs[owner].coins+6-50);assert.equal(money(next),money(document));
  assert.match(q.sourceLabel,/林穗的私人求助/);
  const seen=next.state.npcs[witness].memoryStream.find(m=>m.id===`${q.id}:posted`);
  assert.ok(seen?.eventRumor&&seen.rumor.startsWith('rumor_event:'));assert.match(seen.content,/私人求助/);
@@ -61,7 +63,8 @@ test('NPC按短缺出任务：报酬从本人钱里托管，告示带来源，�
 test('出不起就不出：手头一半余钱不够等级下限时不发布、不扣钱',async()=>{
  const {document,midnight}=setup();document.state.buildings.bld_hw_qingdeng.condition=20;document.state.npcs[owner].coins=30;
  const next=await midnight(document);
- assert.equal(generated(next).length,0);assert.equal(next.state.npcs[owner].coins,30);
+ // 同一正午收入18−补货12=6；余钱36的一半18仍低于D级下限20，不扣任务钱。
+ assert.equal(generated(next).length,0);assert.equal(next.state.npcs[owner].coins,36);
 });
 
 test('数量节流：每日上限、每人按灵智等级上限，守常者只为迫在眉睫的缺口出单',async()=>{
@@ -83,8 +86,8 @@ test('数量节流：每日上限、每人按灵智等级上限，守常者只�
 
 test('灾害事件任务：疫病求医、汛期修堤从公账托管，冬荒运粮动用后低于留底则不出，C级折10个D',async()=>{
  const {document,midnight,engine}=setup(w=>{w.rules.questSources.npcNeeds=[];});
- // Explicit tight budget: 510 + sickle proceeds 20 - epidemic 150 - levee 80
- // = reserve 300. After epidemic, famine 200 would cross the reserve.
+ // K08预算：510 + 铁镰20 + 食品补货12 − 疫病150 − 修堤80 = 312。
+ // 疫病后再拨饥荒200会降至192，低于留底300，故不能发布。
  document.state.settlements.loc_hw.treasury=510;
  Object.assign(document.state.records,{
   'hazard-famine:loc_hw':{category:'hazard_famine',settlement:board,since:540,until:540+60*DAY,sourceEvent:'hazard:famine:test'},
@@ -97,7 +100,9 @@ test('灾害事件任务：疫病求医、汛期修堤从公账托管，冬荒�
  assert.equal(flood.location,board,'受淹地点向上找到公告栏');assert.match(flood.content,/修堤/);assert.match(flood.sourceLabel,/汛情/);
  assert.ok(!qs.some(q=>q.source.cause==='hazard-famine:loc_hw'),'动用后低于公账留底则不出');
  assert.equal(next.state.records['shop:shop_hw_forge'].entries.find(e=>e.item==='item_sickle').paidCopper,20);
- assert.equal(next.state.settlements.loc_hw.treasury,before+20-epidemic.reward-flood.reward);
+ // K08：铁镰20不变；正午售出的6面包、4燕饼在午夜补货，再入公库6+6=12。
+ assert.deepEqual(next.state.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.added).map(e=>[e.item,e.added,e.paidCopper]),[['item_bread',6,6],['item_oat_flatbread',4,6]]);
+ assert.equal(next.state.settlements.loc_hw.treasury,before+20+12-epidemic.reward-flood.reward);
  assert.ok(next.state.settlements.loc_hw.treasury>=engine.rules.governance.authority.treasury.reserveCopper);
  for(const q of qs){const [lo,hi]=rewardRange(engine,q.grade);assert.ok(q.reward>=lo&&q.reward<=hi);}
  assert.equal(generated(await midnight(next)).length,qs.length,'同一事件不重复出单');
@@ -121,7 +126,7 @@ test('等级折算与报酬区间：1S=10A=100B=1000C=10000D；区间外的数�
 });
 
 test('过期没人接的任务撤下：人物托管退回本人，公账托管退回公账',async()=>{
- const {document,midnight,wait}=setup();document.state.buildings.bld_hw_qingdeng.condition=20;
+ const {engine,document,midnight,wait}=setup();document.state.buildings.bld_hw_qingdeng.condition=20;
  document.state.records['hazard-flood:loc_hw_dock']={category:'hazard_flood',location:'loc_hw_dock',since:540,until:540+3*DAY,soaked:[],sourceEvent:'l'};
  const coins=document.state.npcs[owner].coins,treasury=document.state.settlements.loc_hw.treasury;
  const posted=await midnight(document),npcQuest=generated(posted).find(q=>q.publisher===owner),floodQuest=generated(posted).find(q=>q.source.generator==='world_events');
@@ -131,9 +136,23 @@ test('过期没人接的任务撤下：人物托管退回本人，公账托管�
  // Two weekly forge cycles (days 1 and 8) buy one sickle each, then the
  // ceiling of two stops replenishment: 2 * (10 * scarcity 2) = 40 received.
  assert.deepEqual(done.state.records['shop:shop_hw_forge'].entries.filter(e=>e.item==='item_sickle').map(e=>[e.day,e.added,e.paidCopper]),[[1,1,20],[8,1,20]]);
- assert.equal(done.state.settlements.loc_hw.treasury,treasury+40);
+ // K08：真实客流耗去货架，客店补货共162铜；铁镰仍两轮40。逐日严格锚点保留补货数量和整单取整。
+ const innEntries=done.state.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.added);
+ assert.deepEqual(innEntries.map(e=>[e.day,e.item,e.added,e.paidCopper]),[
+  [1,'item_bread',6,6],[1,'item_oat_flatbread',4,6],[2,'item_bread',6,8],[2,'item_oat_flatbread',4,6],
+  [3,'item_bread',6,10],[3,'item_oat_flatbread',4,8],[4,'item_bread',6,12],[4,'item_oat_flatbread',4,10],
+  [5,'item_bread',6,15],[5,'item_oat_flatbread',4,12],[6,'item_bread',6,17],[6,'item_oat_flatbread',4,14],
+  [7,'item_bread',4,10],[10,'item_bread',6,17],[10,'item_oat_flatbread',2,7],[11,'item_bread',2,4]
+ ]);
+ assert.equal(done.state.settlements.loc_hw.treasury,treasury+40+162);
  const reposts=generated(done).filter(q=>q.publisher===owner&&q.id!==npcQuest.id&&['公开','进行中'].includes(q.status));
- assert.equal(done.state.npcs[owner].coins,coins-reposts.reduce((n,q)=>n+q.escrow,0));
+ const sales=Object.values(done.state.records).filter(r=>r.category==='customer_flow'&&r.keeper===owner).flatMap(r=>r.visits).reduce((n,v)=>n+(v.paid??0),0);
+ assert.equal(sales,145);assert.equal(innEntries.reduce((n,e)=>n+e.paidCopper,0),162);
+ // K08后续成交先存营业柜台：145−其中首日直接收的钱袋18=127，柜台注资61−补货162+127=26。
+ const counter=Object.values(done.state.records).find(r=>r.category==='money_account'&&r.owner===owner&&r.purpose==='counter');
+ assert.equal(counter.coins,26);
+ assert.equal(done.state.npcs[owner].coins,coins+145-162-26-reposts.reduce((n,q)=>n+q.escrow,0));
+ assert.deepEqual(reconcile(engine,done),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
 test('势力委托：时钟阶段经效果表出委托，势力公库托管；完成后改阶段并影响立场',async()=>{

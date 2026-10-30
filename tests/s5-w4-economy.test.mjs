@@ -210,9 +210,9 @@ test('F075 研究法术：阶段不得低于原型（不能低阶价登记高阶
 });
 
 // ---------------------------------------------------------------- F026 客流
-async function openShop({coins={},bread={}}={}){
+async function openShop({coins={},bread={},campaignSeed='w4-flow'}={}){
     const landlord='npc_hw_linsui',place='bld_hw_qingdeng';
-    const engine=new WorldEngine(structuredClone(world)),initial=engine.createCharacter(seed,{},'w4-flow');
+    const engine=new WorldEngine(structuredClone(world)),initial=engine.createCharacter(seed,{},campaignSeed);
     // 非考查前提：居民的钱袋与存粮。其余居民身无分文，只有下面点名的人有钱。
     const facts=Object.keys(initial.state.npcs).filter(id=>id!==landlord).map(id=>({path:['state','npcs',id,'coins'],value:coins[id]??0}));
     for(const [id,quantity] of Object.entries(bread))facts.push({path:['state','npcs',id,'inventory'],value:{item_bread:{quantity,quality:'木'}}});
@@ -232,29 +232,51 @@ const waitPastMidnight=async(f,id)=>{const m=f.document.state.minute,minutes=DAY
 test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得着的居民上门；人数与成交按钱袋和缺口手算',async()=>{
     const A='npc_hw_xuling',B='npc_hw_wushuo',C='npc_hw_anhuai',D='npc_hw_yanzhe',E='npc_hw_taozhi';
     // A 钱袋 40、一口之家、手边没粮：会来。B 钱袋 40 但已备下两个面包（一口之家一天的饱食 60 = 2 × 30）：无需求。
-    // C 身无分文。D 钱袋 200 但住在白石镇，不在本聚落。E 只有 3 铜：每日上限 ⌊3 × 0.25⌋ = 0，一份也买不起。
+    // C身无分文，D住在白石不在本聚落；E只有3铜，按K02缺口预算而非旧钱袋比例消费。
     const f=await openShop({coins:{[A]:40,[B]:40,[D]:200,[E]:3},bread:{[B]:2}});
     const before=structuredClone(f.document),account=()=>Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
     assert.equal(account().coins,100);
     await waitPastMidnight(f,'w4-day');
     const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===f.business);
-    assert.equal(flow.length,1);
-    // 手算：A 一口之家，每人每小时饱食耗 2.5 → 一天 60，储备天数 1 → 缺口 60；口粮与面包饱食都是 30 → 要 2 份。
-    // 货架按行囊顺序先摆口粮：口粮基价 3 × 稀缺下限 0.5 = 1.5 铜一份，两份零售整单只取整一次 trunc(3.0) = 3 铜；
-    // A 每日上限 ⌊40 × 0.25⌋ = 10 ≥ 3。买到口粮后缺口补齐，不再买面包。
-    assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),[[A,'item_ration',2,3,'bought']]);
-    assert.equal(flow[0].visits[0].tax,0,'3 铜的成交，商税按不到三分之一的税率向下取整为 0');
-    assert.equal(f.document.state.npcs[A].coins,37);assert.equal(account().coins,103);
-    assert.equal(f.document.state.inventory.item_ration.quantity,1);assert.equal(f.document.state.inventory.item_bread.quantity,5);
-    const bought=f.document.state.npcs[A].inventory.item_ration;assert.equal(typeof bought==='number'?bought:bought.quantity,2);
+    // K08 正午按种子决定商店先后；本种子原生客店先服务，玩家此日没有重复需求客流。
+    assert.equal(flow.length,0);
+    // 一人每日需求：2.5×24=60饱食；面包每份30，所以A采购2份。
+    // A仍缺60饱食，买2面包×1=2铜；E的K02家户缓冲也有缺口，3铜不再被旧钱袋1/4截成0：
+    // 先买2面包2铜，再买1燕饼，整单trunc(1×1.5)=1铜。原生店补货前只有6面包/4燕饼可售。
+    const native=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow');
+    assert.deepEqual(native.map(r=>[r.shop,r.day,r.minute]),[['shop_hw_qingdeng',0,720]]);
+    assert.deepEqual(native[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),[[A,'item_bread',2,2,'bought'],[E,'item_bread',2,2,'bought'],[E,'item_oat_flatbread',1,1,'bought']]);
+    assert.deepEqual(native[0].visits.map(v=>v.tax),[0,0,0]);
+    assert.equal(f.document.state.npcs[A].coins,38);assert.equal(f.document.state.npcs[E].coins,0);assert.equal(account().coins,100);
+    assert.equal(f.document.state.inventory.item_ration.quantity,3);assert.equal(f.document.state.inventory.item_bread.quantity,5);
+    const bought=f.document.state.npcs[A].inventory.item_bread;assert.equal(typeof bought==='number'?bought:bought.quantity,2);
     // 不来的人：钱袋与存粮原样。
-    for(const id of [B,C,D,E])assert.equal(f.document.state.npcs[id].coins,before.state.npcs[id].coins,id);
-    // 成交走与手动成交相同的账：经营回执、对账无漂移、报表收入 2 铜且现金对得上。
+    for(const id of [B,C,D])assert.equal(f.document.state.npcs[id].coins,before.state.npcs[id].coins,id);
+    // 玩家无成交：柜台、库存、营业回执和报表必须共同保持零收入，账本仍守恒。
     const receipt=Object.values(f.document.state.records).find(r=>r.category==='business_receipt'&&r.operation==='customer_sale');
-    assert.deepEqual([receipt.coins,receipt.goods],[3,{item_ration:-2}]);
+    assert.equal(receipt,undefined,'需求已在原生店满足，玩家不能重复记收入或扣库存');
     assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
     const report=await f.act('core:settlement.business_report',{business:f.business},'w4-report');
-    assert.equal(report.profit.revenue,3);assert.equal(report.cash.reconciled,true,JSON.stringify(report.cash));
+    assert.equal(report.profit.revenue,0);assert.equal(report.cash.reconciled,true,JSON.stringify(report.cash));
+});
+
+test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执和报表',async()=>{
+    // 覆盖原有玩家自动成交保证；不改世界或货架。该固定种子下玩家/原生店排序骰值为
+    // 3175393251 < 3453520749，玩家先服务；上一例保留原种子的原生店先服务分支。
+    const A='npc_hw_xuling',f=await openShop({coins:{[A]:40},campaignSeed:'w4-player-flow'});
+    await waitPastMidnight(f,'w4-player-day');
+    const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===f.business);
+    // 一人60饱食÷口粮30=2份；2×基价3×稀缺0.5=3铜，总额取整一次。
+    assert.equal(flow.length,1);
+    assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.tax,v.outcome]),[[A,'item_ration',2,3,0,'bought']]);
+    const account=Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
+    assert.equal(account.coins,103);assert.equal(f.document.state.npcs[A].coins,37);
+    assert.equal(f.document.state.inventory.item_ration.quantity,1);assert.equal(f.document.state.inventory.item_bread.quantity,5);
+    const receipt=Object.values(f.document.state.records).find(r=>r.category==='business_receipt'&&r.operation==='customer_sale');
+    assert.deepEqual([receipt.coins,receipt.goods],[3,{item_ration:-2}]);
+    const report=await f.act('core:settlement.business_report',{business:f.business},'w4-player-report');
+    assert.equal(report.profit.revenue,3);assert.equal(report.cash.reconciled,true);
+    assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
 test('F026 客流：居民自己决定买不买——正忙的人（决策返回稍后）这一天不买',async()=>{

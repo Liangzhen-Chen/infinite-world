@@ -209,9 +209,10 @@ test('subjective-options: only own counter and remembered market inputs affect c
  const records={...f.document.state.records,market_belief:{category:'knowledge',observer:'player',kind:'belief',proposition:`market:${place}:item_bread`,value:{unitPrice:4},sourceEvent:'market-belief',minute:f.document.state.minute}};
  const known=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records'],value:records}]});assert.deepEqual(known.setupUnmet,[]);f.document=known.document;
  const changed=await f.act('business:options',{business:f.business},'options-belief');
- // 自用保留扣尽5份面包，可售0；主观供需钳制3。目录2×3=6，记忆4×3=12。
+ // 无观察时按目录先验估价；收到的市价已经包含供需。
  const price=rows=>rows.options.find(r=>r.kind==='price'&&r.item==='item_bread');
- assert.equal(price(first).unitPrice,6);assert.equal(price(changed).unitPrice,12);assert.equal(price(changed).knownFrom,'market-belief');
+ // K08：无观察时仍以目录2×主观稀缺3=6估价；已知市价4已含稀缺，不能再乘3。
+ assert.equal(price(first).unitPrice,6);assert.equal(price(changed).unitPrice,4);assert.equal(price(changed).knownFrom,'market-belief');
  clean(f);
 });
 
@@ -330,27 +331,30 @@ test('real attendance: wage and progress follow the minutes actually at work (2 
  // 签约是阿燕自己经 npcDecision 做的决定，留有来源；签约工价是第0阶日薪 (20+40)/2 = 30。
  assert.equal(f.row.workerConsent.by,f.worker);assert.equal(f.row.workerConsent.via,'npc-decision');assert.equal(f.row.workerConsent.outcome,'agree');
  assert.equal(f.row.wage,30);assert.equal(f.row.starts,1920);
- // 第1日：他从家走到磨坊（路网分钟），到岗 = 480 - 通勤。日薪30按分钟折算：ceil(30×m/480)。
+ // 首日往返各5分钟，到岗470分钟；ceil(30×470/480)=30铜。
  await f.time(1440,'day1');
  const home=engine0(f).byId.get(f.worker).home.location,m1=rec().attendance['1'];
- assert.equal(m1,480-f.engine.route(home,f.mill,'walk',1920,f.document.randomSeed).minutes);
+ // K04/K08 同一工时预算扣往返：路网单程5分钟，480−2×5=470；旧475漏返程。
+ assert.equal(m1,480-2*f.engine.route(home,f.mill,'walk',1920,f.document.randomSeed).minutes);
  assert.equal(rec().workedMinutes,m1);assert.equal(rec().paid,Math.ceil(30*m1/480));assert.equal(rec().paid,30);
- // 第2日 08:00 才上路，10:00 到岗（已在途的行程是前提）：上午 120 + 下午 240 = 360 分钟，迟到两小时。
+ // ?2?????120?????120+240???5=355???
  const midnight=2*1440;
  const walking=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','npcs',f.worker],value:{...f.document.state.npcs[f.worker],location:null,activity:'赶路',scheduleTravel:{from:home,to:f.mill,depart:midnight+480,arrive:midnight+600,edges:[]}}}]});
  assert.deepEqual(walking.setupUnmet,[]);f.document=walking.document;
  await f.time(1440,'day2');
- assert.equal(rec().attendance['2'],360);
- // 累计分钟 m1+360 的工钱 = ceil(30×(m1+360)/480)，第2日增量为差；没有一天按整日480付。
- assert.equal(rec().workedMinutes,m1+360);assert.equal(rec().paid,Math.ceil(30*(m1+360)/480));
+ // 迟到后的120+240分钟仍须扣返程5分钟：355；去程120已由实际在途状态扣除。
+ const m2=360-f.engine.route(f.mill,home,'walk',midnight+1020,f.document.randomSeed).minutes;
+ assert.equal(rec().attendance['2'],m2);assert.equal(m2,355);
+ // ??470+355=825?????ceil(30?825/480)=52???????60???
+ assert.equal(rec().workedMinutes,m1+m2);assert.equal(rec().paid,Math.ceil(30*(m1+m2)/480));
  // 第3日整天缺勤：没有任何到岗分钟，没有工资、没有进度，合同照常有效。
  f.document.state.npcs[f.worker].status='患病';
  const sick={paid:rec().paid,worked:rec().workedMinutes,remaining:f.document.state.projects.proj_x.remainingWork};
  await f.time(1440,'day3');
  assert.equal(rec().attendance['3'],undefined);assert.equal(rec().paid,sick.paid);assert.equal(rec().workedMinutes,sick.worked);
  assert.equal(f.document.state.projects.proj_x.remainingWork,sick.remaining);
- // 工程进度只按到岗分钟：开工10个工日，剩余 = 10 - (m1+360)/480。
- assert.ok(Math.abs(sick.remaining-(10-(m1+360)/480))<1e-9);
+ // ??????825???10?825/480=8.28125??????????????
+ assert.ok(Math.abs(sick.remaining-(10-(m1+m2)/480))<1e-9);
  clean(f);
 });
 const engine0=f=>f.engine;

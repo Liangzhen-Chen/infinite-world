@@ -30,7 +30,7 @@ import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {householdLaborBudget} from './household-budget.mjs';
-import {householdWorkTime} from './npc-state.mjs';
+import {householdWorkTime,agriculturalWorkforce} from './npc-state.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
@@ -126,11 +126,9 @@ export function laborOffers(e,s,minute=s.minute){
         const farm=s.records?.[`agriculture:${p.settlement}`];if(farm?.mode!=='managed')continue;
         const harvest=farm.field.cohorts.some(c=>c.ready),sow=crop&&day>=crop.sowDays[0]&&day<=crop.sowDays[1]&&farm.field.seedBank>0&&farm.field.cohorts.reduce((n,c)=>n+c.areaUnits,0)<p.areaUnits&&!(farm.field.sownYear===Math.floor(minute/(360*DAY))&&farm.field.sownUnits>=p.areaUnits);
         if(!harvest&&!sow)continue;
-        const normal=Math.floor(s.settlements[p.settlement].population*p.workerFraction),available=Math.max(0,normal-(s.records[`levy:${p.settlement}`]?.count??0)),share=normal?available/normal:1;
-        const processing=Math.min(p.processingWorkers,available),fresh=Math.min(Math.floor(p.freshWorkers*share),available-processing);
-        const current=Math.min(Math.floor(p.farmWorkers*share),farm.tools.capacity,available-processing-fresh);
+        const current=agriculturalWorkforce(e,s,p,farm,Math.floor(minute/DAY)).fieldMinutes/480;
         const work=harvest?farm.field.cohorts.filter(c=>c.ready).reduce((n,c)=>n+c.areaUnits-c.harvestedUnits,0):Math.max(0,p.areaUnits-farm.field.cohorts.reduce((n,c)=>n+c.areaUnits,0));
-        const required=Math.min(p.farmWorkers,farm.tools.capacity,Math.ceil(work/Math.max(1,p.areaPerWorkerDay*farm.tools.condition/100))),vacancies=Math.max(0,required-current);
+        const required=Math.min(p.farmWorkers,farm.tools.capacity,Math.ceil(work/Math.max(1,p.areaPerWorkerDay*farm.tools.condition/100))),vacancies=Math.ceil(Math.max(0,required-current));
         if(!vacancies)continue;
         // Current farming households employ for their share of the common field.
         const farmers=[...new Set((e.world.households??[]).filter(h=>h.settlement===p.settlement).flatMap(h=>h.members).filter(id=>able(s,id)&&/农|耕|佃/.test(s.npcs[id]?.occupation??base(e,s,id)?.occupation??'')))].sort();
