@@ -18,8 +18,8 @@ const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',AYAN='npc_hw_ayan';
 const CLINIC='bld_hw_herbs',DOCTOR='npc_hw_taozhi';
 const clinicSession=async t=>{
  const world=variant(w=>{
-  // W8D：诊费里的药材成本读草药在医馆所在地的市场估值（不再读目录基价）。河湾村本地草药估值 = 目录基价 × 0.5，
-  // 要让「药价 6」成立，目录基价设 12：诊费 = 工钱半日 48/2 + round(12 × 0.5 × (1 + 0)) = 24 + 6 = 30。
+  // W8D：诊费的药材成本读当地市场估值；E6后医师私人存药不计公开供给。
+  // 沿用本例目录基准12与工钱48：S0、D1，诊费48/2+round(12×1)=36。
   w.rules.economy.wageCopperPerHalfDay=[48,96];setPrice(w,'item_herb',12);
   const d=w.npcs.find(n=>n.id===DOCTOR);d.schedule={default:[{start:0,end:1440,location:CLINIC,activity:'坐诊配药'}]};d.proficiencies={...d.proficiencies,[MEDICAL_SKILL]:1500};
  });
@@ -33,14 +33,15 @@ const clinicSession=async t=>{
 test('本人同意：病人本人求医经 world_act 成功（同意由“被作用方就是自己”派生，不收调用方的），诊金照付、事件存旧调用',async t=>{
  const ui=await clinicSession(t),before=await primed(ui);
  const seek=await ui.choose('settlement.medicine_seek',{},{search:true});assert.ok(seek.ok,seek.error);
- assert.equal(seek.result.fee,30);assert.equal(seek.result.doctor,DOCTOR);
+ // 医师私有5份草药不供给公共市场：S0、D1，草药基准12×1=12；半日工钱48/2=24，合计36。
+ assert.equal(seek.result.fee,36);assert.equal(seek.result.doctor,DOCTOR);
  const bundle=await ui.server.api('export',{campaignId:ui.campaignId}),event=bundle.events.at(-1);
  assert.equal(event.input.tool,'world_settlement');assert.equal(event.input.args.operation,'medicine_seek');assert.equal(event.input.args.consent,true,'旧调用里的同意是派生出来的');
  const accepted=await ui.choose('settlement.medicine_seek',{consent:true},{search:true,eventId:'seek-own-true'});
  assert.equal(accepted.ok,false,'已有一笔诊疗在排，重复求医由引擎自己拒绝，而不是被同意规则挡掉');assert.doesNotMatch(accepted.error,/需要对方答应/);
  await ui.choose('time',{minutes:seek.result.end-(await ui.read()).state.minute});
  const treated=await ui.read();
- assert.equal(before.state.player.coins-treated.state.player.coins,30);assert.equal(treated.state.npcs[DOCTOR].coins-before.state.npcs[DOCTOR].coins,30);
+ assert.equal(before.state.player.coins-treated.state.player.coins,36);assert.equal(treated.state.npcs[DOCTOR].coins-before.state.npcs[DOCTOR].coins,36);
  assert.equal(held(before.state.npcs[DOCTOR].inventory,'item_herb')-held(treated.state.npcs[DOCTOR].inventory,'item_herb'),1);
 });
 

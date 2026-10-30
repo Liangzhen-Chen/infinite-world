@@ -238,8 +238,8 @@ test('运费读表：车的费率改成两倍，同一批货的运费翻倍（12
 });
 test('发车表：车行/船行整点随到随发、午初（660）后次日辰初（420）起发；驿站每日辰初发',()=>{
  const {e}=transportFixture();
- // 车行：10:00（600）整点即发；11:40（700）过了截件 → 次日 07:00 = 1440 + 420 = 1860；次日凌晨 01:00（1500）仍在截件前 → 当时整点。
- assert.equal(carrierDeparture(e,'cart',600),600);assert.equal(carrierDeparture(e,'cart',700),1860);assert.equal(carrierDeparture(e,'cart',1500),1500);
+ // 车行：10:00（600）整点即发；11:40（700）过午初截件，次日 07:00 = 1860；次日 01:00（1500）仍须等该日辰初 = 1860。
+ assert.equal(carrierDeparture(e,'cart',600),600);assert.equal(carrierDeparture(e,'cart',700),1860);assert.equal(carrierDeparture(e,'cart',1500),1860);
  // 驿站：05:00（300）→ 当日 07:00（420）；正好 07:00 即发；08:00（480）错过 → 次日 1860。
  assert.equal(carrierDeparture(e,'post',300),420);assert.equal(carrierDeparture(e,'post',420),420);assert.equal(carrierDeparture(e,'post',480),1860);
 });

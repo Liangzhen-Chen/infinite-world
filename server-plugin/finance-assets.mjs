@@ -21,7 +21,7 @@ import {financePath as rec,financeInt as int,financeBalance,financeChange,financ
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement,settlementGovernment} from './entity-view.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
 import {facilityView} from './facility-state.mjs';
-import {marketQuote,supplyApart} from './market.mjs';
+import {marketQuote,supplyApart,liquidationValue} from './market.mjs';
 import {currencyRow,currencyTradePrice,currencyAccepted,currencyValue} from './currency.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
 import {laborTrade,withAbsenceBreach} from './labor-market.mjs';
@@ -132,17 +132,21 @@ export function netAssets(d,e,id){
 // ---- 估值角色的登记（valuation.mjs）--------------------------------------------------------------
 // 物品：市场估值投影（基准 × 稀缺 × 品质，不含商家价差与立场），按给定地点；货币按当地汇率。
 // 估价对象自己的行囊不构成给自己的市场供给；apart 保留旧调用契约，估值统一排除 holder。
-function goodsValuation(d,e,{item,quantity=1,location=d.get('state','location'),holder='player',apart=false}){
+function goodsValuation(d,e,{item,quantity=1,location=d.get('state','location'),holder='player',apart=false,liquidation=false}){
     const def=e.byId.get(item);
     if(!def)return {value:null,unvaluable:'不是已登记的物品'};
     const currency=currencyRow(e,item);
     if(currency)return {value:currencyTradePrice(d,e,{currency:item,quantity,location}).totalCoins,basis:'currency'};
     if(!def.basePrice)return {value:null,unvaluable:'没有估值基准'};
     if(!(quantity>0))return {value:0,basis:'market-value'};
-    const projection=marketQuote(d,e,{item,location,seller:holder,quantity,base:regionalTradeBase(d,e,item,location),supply:supplyApart(d,e,{item,location,owner:holder})});
+    const base=regionalTradeBase(d,e,item,location),supply=supplyApart(d,e,{item,location,owner:holder});
+    if(liquidation)return {value:liquidationValue(d,e,{item,quantity,location,holder,base,supply}),basis:'market-liquidation'};
+    const projection=marketQuote(d,e,{item,location,seller:holder,quantity,base,supply});
     return {value:quantity*projection.explanation.value.value,basis:'market-value'};
 }
 registerValuer('goods',goodsValuation);
+// 抵押/质押按整批清算可回收值放款；少量沿用零售估值。
+registerValuer('collateral',(d,e,asset)=>goodsValuation(d,e,{...asset,liquidation:true}));
 installEventWorth((e,state,{item,quantity,location})=>goodsWorth(stateReader(state),e,{item,quantity,location,holder:null}));
 // 股份：发行方净资产 × 持股比例。
 registerValuer('share',(d,e,{issuer,fraction})=>{

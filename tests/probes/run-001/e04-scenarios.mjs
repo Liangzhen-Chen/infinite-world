@@ -82,10 +82,13 @@ export async function materialScenario(){
  const forkBuy=await f.e.reduce(working.document,{tool:'world_trade',args:{seller:host,item:'item_iron_ore',quantity:smelt.materials.find(m=>m.item==='item_iron_ore').amount},eventId:'e04-working-ore'});
  const forkSmelt=await f.e.reduce(applyPatches(working.document,forkBuy.patches),{tool:'world_craft',args:{recipe:smelt.id},eventId:'e04-working-smelt'});
  assert.equal(forkSmelt.result.success,true);
- const fork=applyPatches(applyPatches(working.document,forkBuy.patches),forkSmelt.patches),forkRead={document:fork,get:(...p)=>p.reduce((v,k)=>v?.[k],fork)};
+ const smelted=applyPatches(applyPatches(working.document,forkBuy.patches),forkSmelt.patches);
+ // 私人新炼的铁尚未上市场；继续生产分支须真实售给商户，才增加公开供给。
+ const forkSale=await f.e.reduce(smelted,{tool:'world_trade',args:{seller:'player',buyer:host,item,quantity:1},eventId:'e04-working-sell'});
+ const fork=applyPatches(smelted,forkSale.patches),forkRead={document:fork,get:(...p)=>p.reduce((v,k)=>v?.[k],fork)};
  const workingPrice=regionalTradePrice(forkRead,f.e,item,location);d=f.draft();
  const high=regionalTradePrice(d,f.e,item,location),after=recipeInputCost(d,f.e,recipe);
- assert.ok(high>low);assert.ok(high>workingPrice,'同样消耗下，继续生产的供给与价格须优于停工分支');assert.ok(after.copper>before.copper);d.done();
+ assert.ok(high>low);assert.ok(high>workingPrice,'同样消耗下，继续生产的供给与价格须优于停工分支');assert.ok(after.copper>before.copper,JSON.stringify({before,after,low,high,workingPrice}));d.done();
  const second=await f.act({seller:host,item,quantity:1},'e04-second-iron');
  assert.equal(second.pricing.scarcity,3,'10/3 clamps at the published upper bound3');
  assert.ok(second.cost>first.cost,'同日成交必须读取新账户供给');

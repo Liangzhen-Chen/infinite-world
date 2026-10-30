@@ -23,15 +23,18 @@ const move=(f,destination,id)=>f.act({destination},id,'world_move');
 // ---------------------------------------------------------------- F048
 test('F048 分红：收付双方不在场时不凭空转账，形成到期应付；当面追收后结清且保留“分红”子类型',async()=>{
     const f=fixture(),total=cash(f.doc);
-    // W8C 负重：共用夹具给玩家 100 份木料（200 公斤）与燕麦（50 公斤），买回面包会超出安全负重 40 公斤；
-    // 本用例只用面包，故把行囊收窄为面包（100×0.15 = 15 公斤，卖出 16 再买回 10 后仍在上限内）。
-    f.doc=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','npcs',host,'inventory'],value:{}},{path:['state','inventory'],value:{item_bread:{quantity:100}}}]}).document;
-    const acquired=await f.act({buyer:host,seller:'player',item:'item_bread',quantity:16,unitPrice:1},'stock');assert.equal(acquired.cost,16);
+    // 不增添玩家或商户存货：只把夹具原有100木料收窄到可背的13份（26kg），去掉本例不用的食品。
+    // 店主原无木料成本批次，真实收购后再转售，保留FIFO与分红断言。
+    f.doc=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','inventory'],value:{item_wood:{quantity:13}}}]}).document;
+    // 公共木料S28、D1，稀缺下限.5；报价4×.5×.6=1.2，议价带[.9,1.1]的整数边界均ceil为2，5份实付10铜。
+    const acquired=await f.act({buyer:host,seller:'player',item:'item_wood',quantity:5,unitPrice:2},'stock');assert.equal(acquired.cost,10);
     const own=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'invest');
-    const sale=await f.act({seller:host,item:'item_bread',quantity:10,unitPrice:2},'sale');assert.equal(sale.cost,20);
+    // 收购后S33、net=-5、opening28，深度1−.2×5/28；报价4×.5×深度×.99895≈1.9265，整数上界ceil(报价×1.1)=3。
+    // 按合法单价3零售原来的5份，实收15铜；日成交10≤开市28。
+    const sale=await f.act({seller:host,item:'item_wood',quantity:5,unitPrice:3},'sale');assert.equal(sale.cost,15);
     const tax=f.doc.state.records['trade_tax:sale:commercial']?.amount??0;
-    // 手算：收入 20，先进先出销货成本 10（十份取自以 1 铜买入的十六份），再减商税；分红 = ⌊利润 × 20% ⌋。
-    const due=Math.floor((20-10-tax)*20/100);assert.ok(due>=1);
+    // 收入15、FIFO成本10，减实际商税；分红floor((15−10−税)×20%)。
+    const due=Math.floor((15-10-tax)*20/100);assert.ok(due>=1);
     await move(f,mill,'away');
     const playerBefore=f.doc.state.player.coins,hostBefore=f.doc.state.npcs[host].coins;
     f.tick(f.doc.state.records[own.contract].nextDividend);
@@ -73,14 +76,14 @@ test('F048 租金：房客与业主不在同处时不转账，形成应付且不
 });
 
 // ---------------------------------------------------------------- F007 / F058
-test('F007 典当按估值角色：十份面包按当地估值（稀缺下限 0.5）而非目录基价，预支率 50%',async()=>{
+test('F007 典当按整批清算估值而非目录基价，预支率 50%',async()=>{
     const f=fixture();await f.act({operation:'deposit',seller:clerk,coins:10},'dep');
     const p=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,days:1},'pawn');
-    // 手算：面包基价 2 铜 × 河湾粮食类稀缺系数下限 0.5 × 品质 1 = 1 铜/份；十份 10 铜；典当预支率 0.5 → 5 铜。
+    // S=20、D=18，10>零售阈值5：清算值floor(2×18×ln(30/20))=14；预支floor(14×.5)=7。
     // （目录基价口径会得到 2 × 10 × 0.5 = 10 铜。）
     assert.equal(f.e.rules.economy.credit.pawn.advanceRatio,0.5);
-    assert.equal(p.principal,5);
-    assert.equal(f.doc.state.records[p.contract].pledgeRecord&&f.doc.state.records[f.doc.state.records[p.contract].pledgeRecord].value,10,'押品值 = 估值');
+    assert.equal(p.principal,7);
+    assert.equal(f.doc.state.records[p.contract].pledgeRecord&&f.doc.state.records[f.doc.state.records[p.contract].pledgeRecord].value,14,'押品值 = 清算估值');
 });
 
 // ---------------------------------------------------------------- F085

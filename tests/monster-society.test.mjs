@@ -65,8 +65,8 @@ test('进入公共住区后看到按作息接待的成员，同一库存用于�
  assert.equal(talk.result.source,person);
  const coins=d.state.npcs[person].coins,playerCoins=d.state.player.coins;
  const trade=await f.run(d,'world_trade',{seller:bossId,item:'item_ration',quantity:1},'buy');d=trade.document;
- // S5-02：干粮基准3×供需下限0.5×首笔深度/品质/立场/加成1=1.5，整单截断1铜。
- assert.equal(trade.result.cost,1);
+ // E6排除私人行囊后公开S2、货架需求D14；clamp(14/2)=3，基准3×3×首笔其他因子1=9铜。
+ assert.equal(trade.result.cost,9);
  assert.equal(d.state.npcs[person].inventory.item_ration.quantity,1);assert.ok(d.state.npcs[person].coins>coins);assert.ok(d.state.player.coins<playerCoins);
  const agreement=await negotiate(f,d,{offer:[{item:'item_ration',quantity:1}]});d=agreement.document;
  assert.equal(agreement.result.accepted,true);assert.equal(f.engine.quantity({get:(...p)=>p.reduce((v,k)=>v?.[k],d)},person,'item_ration'),2);

@@ -201,6 +201,35 @@ export function supplyApart(d,engine,{item,location,owner}){
  const all=quoteSupply(d,engine,{item,location}),own=all.rows.filter(r=>r.owner===owner).reduce((n,r)=>n+r.available,0);
  return {...all,supply:all.supply-own,rows:all.rows.filter(r=>r.owner!==owner)};
 }
+// Integrate the same clamped demand/supply curve for a trade or a liquidation.
+function scarcityIntegral(supply,limits,a,b){
+ if(b<=a)return 0;const D=supply.demand,low=D/limits[1],high=D/limits[0];let sum=0;
+ const left=Math.min(b,low);if(left>a)sum+=(left-a)*limits[1];
+ const x=Math.max(a,low),y=Math.min(b,high);if(y>x)sum+=D*ln(y/x);
+ const right=Math.max(a,high);if(b>right)sum+=(b-right)*limits[0];return sum;
+}
+function integrateMarginal(marginal,count){
+ const simpson=(a,b,fa,fm,fb)=>(b-a)*(fa+4*fm+fb)/6;
+ const integrate=(a,b,fa,fm,fb,whole,tolerance,left)=>{
+  const m=(a+b)/2,l=marginal((a+m)/2),r=marginal((m+b)/2);
+  const first=simpson(a,m,fa,l,fm),second=simpson(m,b,fm,r,fb),delta=first+second-whole;
+  if(!left||Math.abs(delta)<=15*tolerance)return first+second+delta/15;
+  return integrate(a,m,fa,l,fm,first,tolerance/2,left-1)+integrate(m,b,fm,r,fb,second,tolerance/2,left-1);
+ };
+ const fa=marginal(0),fm=marginal(count/2),fb=marginal(count);
+ return integrate(0,count,fa,fm,fb,simpson(0,count,fa,fm,fb),1e-7,16);
+}
+// Collateral is valued by selling the lot into this market: each unit adds to
+// public supply. Small retail lots retain unit value; no shop spread/day price.
+export function liquidationValue(d,engine,{item,location,holder,quantity:count,base,supply}){
+ const document=d.document??{state:stateOf(d)},r=rulesOf(engine),limits=engine.rules.economy.priceFactorLimits.region;
+ const quality=marketGrade(engine,document,item,{seller:holder,quantity:count});
+ const scarcity=clamp(supply.demand/Math.max(1,supply.supply),limits);
+ const projection=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality});
+ if(count<=Math.max(r.retailFloor,supply.supply*r.retailShare))return count*projection.value;
+ if(!projection.contributions.length)return base*quality*scarcityIntegral(supply,limits,supply.supply,supply.supply+count);
+ return integrateMarginal(x=>explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*quality*clamp(supply.demand/Math.max(Number.EPSILON,supply.supply+x),limits)}).value,count);
+}
 export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=1,business=null,base=engine.byId.get(item)?.basePrice,relation=1,instances=null,minute=stateOf(d).minute,observer=null,view=null,supply:given=null}){
  const document=d.document??{state:stateOf(d)},state=document.state,r=rulesOf(engine),side=business?(business.keeper===seller?'sell':'buy'):seller==='player'?'buy':'sell';
  const supply=given??quoteSupply(d,engine,{item,location,business});
@@ -216,12 +245,7 @@ export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=
  // Integrate the clamped demand/supply curve analytically. Quality, correction
  // and spread are fixed for this lot; stock changes along the executed quantity.
  const limits=engine.rules.economy.priceFactorLimits.region;
- const integral=(a,b)=>{
-  if(b<=a)return 0;const D=supply.demand,low=D/limits[1],high=D/limits[0];let sum=0;
-  const left=Math.min(b,low);if(left>a)sum+=(left-a)*limits[1];
-  const x=Math.max(a,low),y=Math.min(b,high);if(y>x)sum+=D*ln(y/x);
-  const right=Math.max(a,high);if(b>right)sum+=(b-right)*limits[0];return sum;
- };
+ const integral=(a,b)=>scarcityIntegral(supply,limits,a,b);
  const curve=retail?count*scarcity:side==='sell'?integral(Math.max(0,supply.supply-count),supply.supply):integral(supply.supply,supply.supply+count);
  let exactTotal=price.value*(retail?count:curve/scarcity);
  if(!retail&&(value.contributions.length||price.contributions.length)){
@@ -233,15 +257,7 @@ export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=
    const v=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcityAt*quality,observer,view});
    return explainDerived(engine,document,'economy:price',item,{base:v.value*depth*spread*relation,observer,view}).value;
   };
-  const simpson=(a,b,fa,fm,fb)=>(b-a)*(fa+4*fm+fb)/6;
-  const integrate=(a,b,fa,fm,fb,whole,tolerance,left)=>{
-   const m=(a+b)/2,l=marginal((a+m)/2),r=marginal((m+b)/2);
-   const first=simpson(a,m,fa,l,fm),second=simpson(m,b,fm,r,fb),delta=first+second-whole;
-   if(!left||Math.abs(delta)<=15*tolerance)return first+second+delta/15;
-   return integrate(a,m,fa,l,fm,first,tolerance/2,left-1)+integrate(m,b,fm,r,fb,second,tolerance/2,left-1);
-  };
-  const fa=marginal(0),fm=marginal(count/2),fb=marginal(count);
-  exactTotal=integrate(0,count,fa,fm,fb,simpson(0,count,fa,fm,fb),1e-7,16);
+  exactTotal=integrateMarginal(marginal,count);
  }
  // 15 §15.2 / 14 §14.6: truncate the complete bill once, never each unit.
  const totalCoins=Math.trunc(exactTotal);
@@ -252,7 +268,8 @@ export function assertMarketDepth(d,engine,quote,{agreed=false}={}){
  if(agreed)return;
  const r=rulesOf(engine),state=stateOf(d),deals=marketDeals(state).filter(row=>row.day===quote.day&&row.goods===quote.goods&&(quote.business?row.business===quote.business:row.seller===quote.seller&&row.buyer===quote.buyer));
  const used=deals.reduce((n,row)=>n+row.quantity,0);
- if(!quote.retail&&quote.quantity>Math.max(r.retailFloor,quote.supply*r.maxShare)||used+quote.quantity>Math.max(r.retailFloor,quote.opening*r.dailyShare))reject('E-ACTION-PRECONDITION','市场今天没有那么多可成交深度');
+ // 15 §15.2：商号另有渠道日限额；人对人没有商号存量，不能把私人持货排除供给后再按零存量限购。
+ if(!quote.retail&&quote.quantity>Math.max(r.retailFloor,quote.supply*r.maxShare)||quote.business&&used+quote.quantity>Math.max(r.retailFloor,quote.opening*r.dailyShare))reject('E-ACTION-PRECONDITION','市场今天没有那么多可成交深度');
  const available=saleableStock(d,engine,quote.seller,quote.item,{business:quote.side==='sell'}).available;
  if(quote.quantity>available)reject('E-ACTION-PRECONDITION','对方库存不足：扣除自用和已承诺存量后不够出售');
 }
