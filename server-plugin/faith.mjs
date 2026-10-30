@@ -388,8 +388,10 @@ const offeringKey=(who,day)=>`faith_offering:${who}:${day}`;
 // Only a building is a place one visits to worship: a church whose seat is a whole settlement has no hall to stand in.
 const visited=(e,state,who,location)=>temples(e).find(t=>t.seat===location&&/^(bld|site)_/.test(t.seat)&&t.teacher!==who&&faithOf(e,state,who).value?.temple===t.id);
 const customaryOffering=(e,document,who,t)=>Math.floor(derived(e,document,'faith:offering',who,{base:e.rules.faith.ordinaryRite.coins,target:t.id}));
+const offeringRelevant=(e,state,id,presence)=>Boolean(e.rules.faith?.ordinaryRite)&&/^(bld|site)_/.test(presence.location)&&temples(e).some(t=>t.seat===presence.location);
 registerAutonomyProvider('faith_offering',{
- relevant:(e,state,id,presence)=>Boolean(e.rules.faith?.ordinaryRite)&&/^(bld|site)_/.test(presence.location)&&temples(e).some(t=>t.seat===presence.location),
+ relevant:offeringRelevant,
+ candidateRelevant:(e,document,id,presence)=>offeringRelevant(e,document.state,id,presence),
  candidates(e,view,document){
   const state=document.state,who=view.observer,t=e.rules.faith?.ordinaryRite?visited(e,state,who,view.self.location):null;
   if(!t||npcAgeAt(e,state,who,view.minute)<(e.rules.npcLife?.adultAge??18))return [];

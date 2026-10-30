@@ -317,12 +317,12 @@ export function purchasingPower(d,engine,location,coins=1){
 }
 
 // New terms use the common S5-01 valuation slot. Signed contracts keep their amount.
-export function laborValue(engine,document,{worker='player',observer=null,proficiency=0}={}){
+export function laborValue(engine,document,{worker='player',observer=null,proficiency=0,view=null}={}){
  // D15 §15.2: a skill stage is 300 proficiency. The midpoint of its
  // authored daily-income range is the neutral typical-day valuation.
  const table=engine.rules.economy.dailyIncomeBySkillStage;
  const [low,high]=table[Math.min(table.length-1,Math.floor(proficiency/300))];
- const quote=explainDerived(engine,document,'economy:wage',worker,{base:(low+high)/2,observer});
+ const quote=explainDerived(engine,document,'economy:wage',worker,{base:(low+high)/2,observer,view});
  return {...quote,daily:Math.max(1,Math.ceil(quote.value))};
 }
 

@@ -13,6 +13,10 @@ const inn='bld_hw_qingdeng',post='bld_hw_post',home='bld_hw_riverhome',court='bl
 const host='npc_hw_linsui',clerk='npc_hw_shendu',mage='npc_hw_xuling',worker='npc_hw_ayan',judge='npc_hw_chenbai',officer='npc_hw_gucen';
 const placeOf={[host]:inn,[clerk]:post,[mage]:home,[worker]:inn,[judge]:court,[officer]:court};
 const DAY=1440;
+// 05 §5.1.4: the noon retail consumer can buy real goods while a credit
+// contract is advancing. These independently recorded purchases are separate
+// from the wage/partnership transfer; keep exact balance equations for both.
+const retailSpent=(doc,id)=>Object.values(doc.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(v=>v.npc===id&&v.outcome==='bought').reduce((n,v)=>n+v.paid+(v.travel?.paid??0),0);
 function fixture({at=inn,coins=300}={}){
     const w=structuredClone(world),engine=new WorldEngine(w);
     let doc=engine.initialFromLegacy(seed,'credit');
@@ -130,18 +134,18 @@ test('登记客房或空屋的旅店民房都能租，房钱沿用原锚点，�
 });
 
 test('受雇打工：雇主托管工钱，做满工时后结算并涨雇主营生技能',async()=>{
-    const f=fixture(),skill='skill_life_6_core';
+    const f=fixture(),skill='skill_life_6_core',shoppingBefore=retailSpent(f.doc,worker);
     f.doc.state.skills[skill]={proficiency:10,grade:'初级1等',breakthroughs:[],daily:{}};
     await assert.rejects(f.act('world_trade',{operation:'work',seller:worker,consent:true,minutes:240,coins:999},'greedy'),/工钱/);
     const job=await f.act('world_trade',{operation:'work',seller:worker,consent:true,minutes:240},'job');
     assert.equal(job.wage,world.rules.economy.wageCopperPerHalfDay[0]);assert.equal(f.doc.state.player.coins,300+job.wage);
-    assert.equal(f.doc.state.npcs[worker].coins,200-job.wage);assert.equal(f.doc.state.records[job.contract].status,'已完成');
+    assert.equal(f.doc.state.npcs[worker].coins,200-job.wage-(retailSpent(f.doc,worker)-shoppingBefore));assert.equal(f.doc.state.records[job.contract].status,'已完成');
     assert.equal(job.skill,skill);assert.ok(job.skillGain>0);assert.equal(f.doc.state.skills[skill].proficiency,10+job.skillGain);
     assert.equal(f.doc.state.minute,600+240);
 });
 
 test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还清后结束；赊购货款改为向供货人借款',async()=>{
-    const f=fixture(),total=cash(f.doc);
+    const f=fixture(),total=cash(f.doc),shoppingBefore=retailSpent(f.doc,worker);
     const lease=await f.act('world_trade',{operation:'lease',seller:host,consent:true,days:5},'lease');
     const part=await f.act('world_trade',{operation:'partner',business:lease.business,seller:worker,consent:true,coins:30,quantity:50,days:1},'partner');
     assert.equal(f.doc.state.npcs[worker].coins,170);
@@ -155,7 +159,7 @@ test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还�
     assert.equal(f.doc.state.npcs[worker].coins,partnerCoins+owed.amount);
     // U17 may escrow the partner's private plea for an ill housemate during the day.
     const personalEscrow=Object.values(f.doc.state.quests).filter(q=>q.personal&&q.publisher===worker).reduce((n,q)=>n+(q.escrow??0),0);
-    assert.equal(f.doc.state.npcs[worker].coins+personalEscrow,200);assert.equal(cash(f.doc),total);
+    assert.equal(f.doc.state.npcs[worker].coins+personalEscrow+(retailSpent(f.doc,worker)-shoppingBefore),200);assert.equal(cash(f.doc),total);
     f.doc.state.npcs[host].status='正常';// a day of npc life may have made her ill; the procurement below needs her awake
     // D05 §5.1: even loan-funded procurement has a separate counter destination
     // for cancellation; zero opening capital preserves this loan's cash premise.

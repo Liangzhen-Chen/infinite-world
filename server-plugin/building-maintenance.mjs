@@ -26,6 +26,18 @@ const key=(who,building)=>`owner_repair:${who}:${building}`;
 function owns(engine,document,who,building){return currentControllers({engine,document},building,{ownerOnly:true,principals:true}).includes(who);}
 function pending(state,who,building){return Object.values(state.projects??{}).find(p=>p.type==='业主修缮'&&p.creator===who&&p.building===building&&p.status==='施工中')??null;}
 function materials(view){const m=facilityRepairMaterials(view);return {wood:m.wood,stone:m.stone,requiredMinutes:m.work*480};}
+// Even the worst registered weather cannot cross the full-service threshold
+// within this horizon. Both paths then have factorUnits=2 on every compared
+// day: avoidedLoss=0. Materials, purchase quotes and labor are nonnegative,
+// so neither repair nor procurement can have positive utility. This is only
+// an empty-candidate proof; other providers still run whenever one is relevant.
+function noServiceLoss(e,state,building,view){
+ const {rule,denominator,numerator}=facilityWearScale(e);
+ const horizon=e.rules.facilities.maintenance.horizonDays??e.rules.calendar.daysPerMonth;
+ const wear=((rule?.material[view.material]??(view.material==='stone'?1:3))+(rule?.occupied??1)+Math.max(0,...Object.values(rule?.weather??{})))*numerator;
+ const remainder=facilityWearRemainder(state.buildings?.[building]??{},denominator);
+ return view.condition>=60&&wear>=0&&view.condition-Math.floor((remainder+Math.max(0,horizon-1)*wear)/denominator)>=60;
+}
 const items=p=>[['item_wood',p.wood],['item_stone',p.stone]];
 function wanted(engine,document,who,building){
  const view=facilityView(engine,document.state,building);
@@ -58,13 +70,13 @@ function serviceDaily(e,document,building,intact){
  }
  return daily||Math.ceil(e.rules.economy.rentalCopperPerWeek/7);
 }
-export function maintenanceOptions(e,document,who,building){
+export function maintenanceOptions(e,document,who,building,{view=null}={}){
  const w=wanted(e,document,who,building);if(!w)return null;
- return compareMaintenance(e,document,who,building,w);
+ return compareMaintenance(e,document,who,building,w,{view});
 }
 // Public proposals use the same condition, weather, material and preference
 // comparison. The existing public project supplies its wage and workday.
-function compareMaintenance(e,document,who,building,w,{laborDaily=null,shiftMinutes=MINUTES,materialHolder=who}={}){
+function compareMaintenance(e,document,who,building,w,{laborDaily=null,shiftMinutes=MINUTES,materialHolder=who,view=null}={}){
  const state=document.state,rule=e.rules.facilities.maintenance,read=stateReader(state);
  const remaining=w.required.requiredMinutes-(w.project?.minutesDone??0);
  const intact=facilityView(e,{...state,buildings:{...state.buildings,[building]:{...state.buildings?.[building],condition:100}}},building);
@@ -89,7 +101,7 @@ function compareMaintenance(e,document,who,building,w,{laborDaily=null,shiftMinu
  const materialCost=w.project?0:items(w.required).reduce((sum,[item,quantity])=>{
   const value=goodsWorth(read,e,{item,quantity,holder:materialHolder,location:building});return value===null?NaN:sum+value;
  },0);
- const laborCost=Math.ceil((laborDaily??laborValue(e,document,{worker:who,observer:who}).daily)*remaining/480);
+ const laborCost=Math.ceil((laborDaily??laborValue(e,document,{worker:who,observer:who,view}).daily)*remaining/480);
  const cost=materialCost+laborCost,delayPermille=delayPreference(e,document,who);
  const noisePermille=rollDice(document.randomSeed,'maintenance:choice',`${who}:${building}`,Math.floor(state.minute/1440)*1440,0,2*rule.noisePermille+1)-1-rule.noisePermille;
  const net=avoidedLoss-cost,utility=net-Math.floor(cost*delayPermille/1000)+Math.trunc(avoidedLoss*noisePermille/1000);
@@ -108,6 +120,7 @@ function publicProposal(e,document,who,building){
  // Physical inspection supplies damage knowledge. Holding public office does
  // not reveal every building in the jurisdiction, or make its manager owner.
  if(document.state.npcs[who]?.location!==building)return null;
+ const physical=facilityView(e,document.state,building);if(physical&&noServiceLoss(e,document.state,building,physical))return null;
  const w=publicMaintenanceOptions(e,document,who,building);if(!w||!Number.isFinite(w.cost)||w.options[0].utility<=0)return null;
  const state=document.state,read={document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)},s=state.settlements[w.settlement];
  const bill=w.laborCost,cap=w.office.monthlyBudgetCopper;
@@ -127,6 +140,7 @@ function publicProposal(e,document,who,building){
 }
 registerAutonomyProvider('public_maintenance',{
  relevant:(e,state,id,presence)=>{const v=facilityView(e,state,presence.location);return Boolean(v&&!v.burning&&v.condition>0&&v.condition<100);},
+ candidateRelevant:(e,document,id,presence)=>{const state=document.state,building=presence.location,v=facilityView(e,state,building);return Boolean(v&&!v.burning&&v.condition>0&&v.condition<100&&!noServiceLoss(e,state,building,v)&&facilityRuntime().publicMaintenanceInputs?.(e,document,id,building));},
  candidates(e,view,document){
   const who=view.observer,building=view.self.location,p=publicProposal(e,document,who,building);if(!p)return [];
   const w=p.w;
@@ -146,11 +160,14 @@ registerAutonomyKind('public_maintenance',{
  }
 });
 registerAutonomyProvider('building_maintenance',{
- // Relevance is only a cheap damage check. Ownership is checked against the
- // full document below, including native titles that override catalog owners.
+ // Use the same projected document as candidates, including current native
+ // title overrides and the actor's daily presence, never catalog ownership.
  relevant:(e,state,id,presence)=>{const v=facilityView(e,state,presence.location);return Boolean(v&&!v.burning&&v.condition>0&&(v.condition<100||pending(state,id,presence.location)));},
+ candidateRelevant:(e,document,id,presence)=>{const state=document.state,building=presence.location,v=facilityView(e,state,building);return Boolean(v&&!v.burning&&v.condition>0&&(v.condition<100||pending(state,id,building))&&!noServiceLoss(e,state,building,v)&&owns(e,document,id,building));},
  candidates(e,view,document){
-  const who=view.observer,building=view.self.location,w=maintenanceOptions(e,document,who,building);if(!w)return [];
+  const who=view.observer,building=view.self.location,physical=facilityView(e,document.state,building);
+  if(physical&&noServiceLoss(e,document.state,building,physical))return [];
+  const w=maintenanceOptions(e,document,who,building,{view});if(!w)return [];
   const read=stateReader(document.state),minutes=Math.min(MINUTES,w.remaining);
   if(!Number.isFinite(w.cost))return [];
   const reward=Math.floor(w.avoidedLoss*minutes/w.remaining),utility=w.options[0].utility;

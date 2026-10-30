@@ -17,7 +17,14 @@ const providers=new Map(),kinds=new Map();
 export function registerAutonomyProvider(id,provider){providers.set(id,provider);}
 export function registerAutonomyKind(kind,spec){kinds.set(kind,spec);}
 export const autonomyKind=kind=>kinds.get(kind)??null;
-export const autonomyRelevant=(engine,state,id,presence)=>[...providers.values()].some(p=>p.relevant(engine,state,id,presence));
+export function autonomyRelevant(engine,state,id,presence,projectDocument){
+ const rows=[...providers.values()];
+ if(!rows.some(p=>p.relevant(engine,state,id,presence)))return false;
+ // Preserve the old shared OR gate. A provider without an explicit necessary
+ // candidate condition may still contribute when another provider opens it.
+ if(!projectDocument)return true;
+ return rows.some(p=>!p.candidateRelevant||p.candidateRelevant(engine,projectDocument(),id,presence));
+}
 export function autonomyCandidates(engine,view,{fallback=[] ,scheduled=[],document=null}={}){
  const coefficients=consumerCoefficients(view,'autonomy'),decisionCoefficients=consumerCoefficients(view,'decision');
  const derivedRows=document?[...providers.values()].flatMap(p=>p.candidates(engine,view,document)):[];

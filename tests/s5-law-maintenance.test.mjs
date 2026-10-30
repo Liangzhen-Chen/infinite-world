@@ -4,7 +4,7 @@ import {fixture,host,inn,post,DAY,world} from './helpers/finance.mjs';
 import {maintenanceOptions} from '../server-plugin/building-maintenance.mjs';
 import {facilityView} from '../server-plugin/facility-state.mjs';
 import {advanceFacilities} from '../server-plugin/facilities.mjs';
-import {autonomyCandidates,autonomyKind} from '../server-plugin/autonomy-candidates.mjs';
+import {autonomyCandidates,autonomyKind,registerAutonomyProvider} from '../server-plugin/autonomy-candidates.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {advanceNpcAutonomy,npcAutonomyBusy} from '../server-plugin/npc-autonomy.mjs';
 import {withLedger} from '../server-plugin/ledger.mjs';
@@ -29,6 +29,63 @@ function work(f,day){
  const task=npcAutonomyBusy(d.get('state'),host,at);
  d.set(['state','minute'],at+240);advanceNpcAutonomy(d,f.e,at,at+240,`finish:${day}`);d.done();return task;
 }
+
+test('精确预筛与强制完整候选逐字节相同，保留降级边界、余数和在建修缮',()=>{
+ // At90 even worst weather cannot reach60 in14 days: loss0, no action.
+ // At60/59 and remainder5300/5400 the full comparison remains necessary;
+ // condition59 repairs still take four240-minute shifts (960 total).
+ let force=false;
+ registerAutonomyProvider('maintenance-full-evaluation-reference',{
+  relevant:()=>force,candidateRelevant:()=>force,candidates:()=>[]
+ });
+ try{
+  for(const condition of [100,90,61,60,59,25,24]){
+   const optimized=scenario({condition}),reference=scenario({condition});
+   for(const f of [optimized,reference])Object.assign(f.doc.state.buildings[inn],{wearUnits:5300,wearDenominator:5400});
+   for(let day=0;day<4;day++){
+    force=false;work(optimized,day);
+    force=true;work(reference,day);
+    assert.equal(JSON.stringify(optimized.doc),JSON.stringify(reference.doc));
+   }
+  }
+ }finally{force=false;}
+});
+
+test('历史在场不同于结算状态时保留原粗筛，仍收集其他provider候选',()=>{
+ // Full-service condition90 cannot justify repair. A healthy on-site owner
+ // with attachment-10000 can nevertheless suspend the native business;
+ // the later sick state must not hide that earlier competitor's proposal.
+ // validateAction still rejects real work by the currently sick owner.
+ let force=false,calls=0;
+ registerAutonomyProvider('historical-full-evaluation-reference',{
+  relevant:()=>force,candidateRelevant:()=>force,candidates:(e,view)=>{if(view.observer===host)calls++;return [];}
+ });
+ try{
+  const run=full=>{
+   force=full;calls=0;const f=scenario({condition:90}),before=30*DAY,after=31*DAY;
+   f.doc.state.minute=before;f.doc.state.npcs[host].businessAttachmentPermille=-10000;
+   const beforeState=structuredClone(f.doc.state),d=f.draft();
+   d.set(['state','minute'],after);d.set(['state','npcs',host,'status'],'患病');
+   advanceNpcAutonomy(d,f.e,before,after,'historical',{beforeState});d.done();return {document:f.doc,calls};
+  };
+  const optimized=run(false),reference=run(true);
+  assert.equal(JSON.stringify(optimized),JSON.stringify(reference));
+  assert.equal(optimized.calls,1);
+ }finally{force=false;}
+});
+
+test('未声明精确必要条件的provider保留跨provider竞争机会',()=>{
+ // Damage opens the old shared gate even when that provider cannot act.
+ // An extension without candidateRelevant must still get its candidates call.
+ let calls=0;
+ registerAutonomyProvider('unfiltered-extension',{relevant:()=>false,candidates:(e,view)=>{if(view.observer===host)calls++;return [];}});
+ try{
+  const f=scenario({condition:90});work(f,0);assert.equal(calls,1);
+  assert.equal(f.doc.state.buildings[inn].condition,90);
+ }finally{
+  registerAutonomyProvider('unfiltered-extension',{relevant:()=>false,candidateRelevant:()=>false,candidates:()=>[]});
+ }
+});
 
 test('零噪声成本7、避免损失10，真实候选选择修；成本12选择暂缓',()=>{
  // 2 rooms × 1/night × half-capacity loss × (14−4 daily shifts)=10.

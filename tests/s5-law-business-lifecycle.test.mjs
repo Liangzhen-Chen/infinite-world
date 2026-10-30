@@ -5,14 +5,54 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches,PatchCursor} from '../server-plugin/storage.mjs';
 import {cashFlowWindow,operatingOptions,businessLifecycle,advanceCustomerFlow} from '../server-plugin/business.mjs';
-import {autonomyCandidates,autonomyKind} from '../server-plugin/autonomy-candidates.mjs';
+import {autonomyCandidates,autonomyKind,registerAutonomyProvider} from '../server-plugin/autonomy-candidates.mjs';
+import {advanceNpcAutonomy} from '../server-plugin/npc-autonomy.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {currentShops} from '../server-plugin/shop.mjs';
+import {laborValue} from '../server-plugin/market.mjs';
 import {withLedger} from '../server-plugin/ledger.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const landlord='npc_hw_linsui',place='bld_hw_qingdeng';
+test('经营精确预筛对照完整候选：观察期、无销量、固执尾部及到期付款保持一致',()=>{
+ // No sales gives R=V=0: ordinary/attachment=-1000 keeps operating;
+ // attachment=-10000 can still suspend after a full observation period.
+ // A signed unpaid rent also prevents the no-cash-deficit shortcut.
+ let force=false,calls=0;
+ registerAutonomyProvider('business-full-evaluation-reference',{
+  relevant:()=>force,candidateRelevant:()=>force,candidates:(e,view)=>{if(view.observer===landlord)calls++;return [];}
+ });
+ try{
+  for(const [days,attachment,debt]of [[0,0,false],[30,0,false],[30,-1000,false],[30,-10000,false],[30,0,true]]){
+   const f=fixture(),doc=f.doc,shop=currentShops(f.e,doc.state).find(s=>s.keeper===landlord);assert.ok(shop);
+   doc.state.location='loc_hw';doc.state.minute=days*1440+600;
+   doc.state.npcs[landlord].businessAttachmentPermille=attachment;
+   if(debt){
+    const creditor='npc_hw_luowei';
+    doc.state.npcs[creditor]={...f.e.initialFromLegacy(seed,'business-lifecycle').state.npcs[creditor],location:place,activity:'休息',status:'正常',goals:{},memoryStream:[]};
+    doc.state.obligations.rent={id:'rent',kind:'rent',debtor:landlord,creditor,resource:'coin_river',amount:1000,paid:0,deadline:doc.state.minute-1,status:'待履行'};
+    // Both parties are on site, so this signed1000 payment is known;
+    // owner's100 cash leaves an actual900 deficit in the subjective window.
+    const report=businessLifecycle(f.e,doc,{...shop,owner:landlord,native:true,status:'营业'});
+    assert.equal(report.cashFlow.shortfall,900);assert.equal(report.preferred,'suspend');
+    assert.equal(report.options.find(o=>o.kind==='continue').requiresFunding,true);
+   }
+   const run=full=>{
+    force=full;calls=0;const cursor=new PatchCursor(structuredClone(doc));
+    const d={get document(){return cursor.root;},get:(...p)=>cursor.expose(p.reduce((v,k)=>v?.[k],cursor.root)),set:(path,value)=>cursor.apply({op:'set',path,value}),remove:path=>cursor.apply({op:'delete',path})};
+    advanceNpcAutonomy(d,f.e,doc.state.minute,doc.state.minute,'compare',{beforeState:doc.state});return {document:cursor.root,calls};
+   };
+   const optimized=run(false),reference=run(true);
+   assert.equal(JSON.stringify(optimized.document),JSON.stringify(reference.document));
+   if(attachment===-10000)assert.ok(Object.values(optimized.document.state.npcAutonomy?.tasks??{}).some(t=>t.action.kind==='business_lifecycle'&&t.action.choice==='suspend'));
+   // The candidate's existing best.utility>current.utility gate may still
+   // reject cash-driven suspension. This optimization must preserve that
+   // behavior while evaluating overdue payments (credit relevance is false).
+   if(debt){assert.equal(optimized.calls,1);assert.equal(reference.calls,1);}
+  }
+ }finally{force=false;}
+});
 function fixture({coins=200,credit=false}={}){
  const w=structuredClone(world),e=new WorldEngine(w);let doc=e.initialFromLegacy(seed,'business-lifecycle');
  doc.state.minute=600;doc.state.location=place;doc.state.player.coins=coins;doc.state.inventory={item_bread:{quantity:2}};
@@ -131,6 +171,11 @@ test('原生店铺也由真实店主暂闭并恢复；物化沿用同一店号�
  f.doc.state.minute=f.w.rules.businessLifecycle.horizonDays*1440;
  f.doc.state.npcs[landlord].businessAttachmentPermille=-10000;
  const before=structuredClone(f.doc),view=subjectiveView(f.e,f.doc,landlord);
+ // Reusing this exact observer/document projection must preserve every report
+ // field, including knowledge, cash-flow obligations and seeded preferences.
+ const managed={...native,owner:landlord,native:true,status:'营业'};
+ assert.deepEqual(businessLifecycle(f.e,f.doc,managed,{view}),businessLifecycle(f.e,f.doc,managed));
+ assert.deepEqual(laborValue(f.e,f.doc,{worker:landlord,observer:landlord,view}),laborValue(f.e,f.doc,{worker:landlord,observer:landlord}));
  const candidate=autonomyCandidates(f.e,view,{document:f.doc}).find(c=>c.kind==='business_lifecycle'&&c.legacy.business===native.id);assert.ok(candidate);
  const cursor=new PatchCursor(f.doc),d={get document(){return cursor.root;},get:(...p)=>cursor.expose(p.reduce((v,k)=>v?.[k],cursor.root)),set:(path,value)=>cursor.apply({op:'set',path,value})},spec=autonomyKind('business_lifecycle');
  spec.validate(d,f.e,landlord,candidate.legacy);spec.execute(d,f.e,landlord,candidate.legacy,{actionId:'native-pause'});
