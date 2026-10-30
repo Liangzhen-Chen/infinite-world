@@ -99,6 +99,17 @@ const DAY=1440,SOURCES=['local','settlement','route'],LEDGER_ROWS=40;
 const integer=(v,min=0)=>Number.isSafeInteger(v)&&v>=min;
 const clamp=(v,[a,b])=>Math.max(a,Math.min(b,v));
 export const shopRules=engine=>engine.rules.economy?.shops??null;
+// Later stock additions have their own source row; keep the reviewed store
+// catalogue intact, and use the combined shelves for quotes and replenishment.
+const registeredStores=rules=>(rules.stores??[]).map(store=>{
+    const additions=rules.additionalRestock?.[store.id];if(!additions)return store;
+    const restock=[...store.restock];
+    for(const {after,...row} of additions){
+        const index=after===undefined?restock.length:restock.findIndex(r=>r.item===after)+1;
+        restock.splice(index,0,row);
+    }
+    return {...store,restock};
+});
 
 const catalogs=new WeakMap();
 function catalog(world,rules){
@@ -141,7 +152,7 @@ export function derivedShops(world,rules=world.rules.economy?.shops){
 // Every shop that restocks and quotes: hand-registered stores, then derived ones.
 export function shopStores(world){
     const rules=world.rules.economy?.shops;if(!rules)return[];
-    return [...rules.stores??[],...derivedShops(world,rules).filter(s=>s.trades&&s.restock.length)];
+    return [...registeredStores(rules),...derivedShops(world,rules).filter(s=>s.trades&&s.restock.length)];
 }
 // 某聚落全部商铺的货架条目（登记的店 + 按人物派生的店），按世界定义缓存；市场需求读它（market.mjs 的 F026）。
 const shelfIndex=new WeakMap();
@@ -160,7 +171,7 @@ export function currentShops(engine,state){
     // One legal index for the whole pass; people who can never be open are skipped (entity-view.mjs personBusinesses).
     const businesses=personBusinesses(engine,state,(rules.stores??[]).map(s=>s.keeper));
     const projected=[...businesses].map(([id,b])=>b?{...engine.byId.get(id),shopType:b.shopType.value,settlement:b.settlement.value,workplace:{location:b.location.value},services:b.open.value?['trade']:[],serviceCatalog:[]}:null).filter(Boolean);
-    const stores=[...rules.stores??[],...derivedShops({...engine.world,npcs:projected},rules).filter(s=>s.trades&&s.restock.length)],used=new Set(),out=[];
+    const stores=[...registeredStores(rules),...derivedShops({...engine.world,npcs:projected},rules).filter(s=>s.trades&&s.restock.length)],used=new Set(),out=[];
     for(const store of stores){
         let business=businesses.get(store.keeper);
         const original=engine.byId.get(store.keeper),location=original?.workplace?.location??original?.location;
@@ -318,13 +329,18 @@ export function validateShopRules(world,{stock=true}={}){
     for(const [name,t]of Object.entries(r.types??{}))
         if(!Array.isArray(t?.channels)||!t.channels.length||!(t.markup>=shopLow&&t.markup<=shopHigh)||!integer(t.cycleDays,1)||!integer(t.firstDay))errors.push(`店铺类型${name}无效`);
     if(errors.length)return errors;
+    for(const [id,rows] of Object.entries(r.additionalRestock??{})){
+        const store=r.stores.find(s=>s.id===id);
+        if(!store||!Array.isArray(rows)||rows.some(row=>row.after!==undefined&&!store.restock.some(r=>r.item===row.after)))errors.push(`商店增补货架无效：${id}`);
+    }
+    if(errors.length)return errors;
     const derived=derivedShops(world,r);
     for(const s of derived){
         if(!Object.hasOwn(r.types??{},s.shopType))errors.push(`人物${s.keeper}的店铺类型${s.shopType}未登记`);
         else if(!s.trades)errors.push(`人物${s.keeper}登记了店铺类型却没有交易服务`);
     }
     if(errors.length)return errors;
-    for(const s of [...r.stores,...derived]){
+    for(const s of [...registeredStores(r),...derived]){
         const keeper=npc(s.keeper),bad=m=>errors.push(`商店${s.id??'?'}：${m}`);
         if(!s.id||ids.has(s.id))bad('编号缺失或重复');ids.add(s.id);
         if(!keeper||keepers.has(s.keeper))bad('店主缺失或重复登记');keepers.add(s.keeper);

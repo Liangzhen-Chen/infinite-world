@@ -37,6 +37,13 @@ const cash=doc=>doc.state.player.coins+Object.keys(placeOf).reduce((n,id)=>n+doc
 
 test('发布规则自洽；面包基准进入市场投影',async()=>{
     assert.deepEqual(validateShopRules(world),[]);
+    // Later rows use the same stock checks: no unknown store or duplicate item.
+    const unknown=structuredClone(world);unknown.rules.economy.shops.additionalRestock.missing=[];
+    assert.match(validateShopRules(unknown).join(),/商店增补货架无效：missing/);
+    const duplicate=structuredClone(world);duplicate.rules.economy.shops.additionalRestock.shop_hw_forge.push({...duplicate.rules.economy.shops.additionalRestock.shop_hw_forge[0]});
+    assert.match(validateShopRules(duplicate).join(),/补货条目无效：item_sickle/);
+    const misplaced=structuredClone(world);misplaced.rules.economy.shops.additionalRestock.shop_hw_forge[0].after='missing';
+    assert.match(validateShopRules(misplaced).join(),/商店增补货架无效：shop_hw_forge/);
     const f=fixture();
     const expected=projected(f,host,'item_bread');
     const r=await f.act('world_trade',{seller:host,item:'item_bread',quantity:1},'bread');
@@ -202,7 +209,11 @@ test('K10：有交易服务并登记店铺类型的人物自动成为店铺；�
     const {shopStores,derivedShops}=await import('../server-plugin/shop.mjs');
     // Published world: no person declares a shop type, so the shop list is exactly the three registered stores.
     assert.deepEqual(derivedShops(world),[]);
-    assert.deepEqual(shopStores(world),rules.stores);
+    // W8-E8 adds one independent shelf, leaving all reviewed store fields and
+    // rows unchanged. The runtime catalogue must contain exactly that addition.
+    const registered=structuredClone(rules.stores);
+    registered.find(s=>s.id==='shop_hw_forge').restock.splice(3,0,{item:'item_sickle',source:'local',amount:1,maximum:2,basis:'W8-E8：乡村铁匠铺常备农具；铁镰已在目录（审批管线）'});
+    assert.deepEqual(shopStores(world),registered);
     assert.deepEqual(rules.stores.map(s=>s.id),['shop_hw_qingdeng','shop_hw_forge','shop_bs_yanzhe']);
     const miller='npc_hw_ayan',mill='bld_hw_mill';
     const edit=w=>{const n=w.npcs.find(x=>x.id===miller);n.shopType='merchant';n.inventory={...n.inventory,item_iron_nail:6};};
@@ -213,7 +224,7 @@ test('K10：有交易服务并登记店铺类型的人物自动成为店铺；�
     assert.deepEqual(shop.restock.find(r=>r.item==='item_iron_nail'),{item:'item_iron_nail',source:'local',amount:3,maximum:6});
     assert.ok(shop.restock.every(r=>r.source==='local'&&originSettlement(w,r.item)==='loc_hw'));
     assert.deepEqual(validateShopRules(w),[]);
-    assert.deepEqual(shopStores(w).slice(0,3),rules.stores);
+    assert.deepEqual(shopStores(w).slice(0,3),registered);
     // Validation: unknown type, or a shop type without a trade service.
     const unknown=structuredClone(w);unknown.npcs.find(x=>x.id===miller).shopType='bakery';
     assert.match(validateShopRules(unknown).join(),/店铺类型bakery未登记/);

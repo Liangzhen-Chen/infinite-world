@@ -5,6 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {lawView} from '../server-plugin/law.mjs';
+import {shopStores} from '../server-plugin/shop.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,victim='npc_hw_linsui',guard='npc_hw_gucen',judge='npc_hw_chenbai',hunter='npc_hw_wushuo',ypGuard='npc_yp_renbo',ypOfficer='npc_yp_lisha';
@@ -19,6 +20,14 @@ function fixture({randomSeed}={}){
     const engine=new WorldEngine(w);let doc=engine.createCharacter(seed,{},'bounty-test');
     if(randomSeed)doc.randomSeed=randomSeed;
     doc.state.minute=600;doc.state.location='loc_bs';doc.state.player.coins=500;
+    // This quiet legal fixture needs no imports. W8-E8 adds an initially empty
+    // sickle shelf (one costs 10 * scarcity 2 = 20); start all registered shelves
+    // full so unrelated stock purchases cannot leave the legal cash perimeter.
+    // The unchanged equality below still catches every lost bounty/refund coin.
+    for(const shop of shopStores(w))for(const row of shop.restock){
+        const bag=doc.state.npcs[shop.keeper].inventory,old=bag[row.item];
+        bag[row.item]=typeof old==='object'?{...old,quantity:row.maximum}:row.maximum;
+    }
     for(const id of Object.keys(doc.state.npcs))doc.state.npcs[id]={...doc.state.npcs[id],location:'loc_capital',activity:'休息',status:'正常'};
     const place=(id,location,activity='当值')=>{doc.state.npcs[id]={...doc.state.npcs[id],location,activity,status:'正常',coins:doc.state.npcs[id].coins??0};};
     place(victim,'bld_hw_qingdeng','营业');doc.state.npcs[victim].coins=200;
