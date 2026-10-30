@@ -24,7 +24,7 @@ import {releaseGoods} from './goods-escrow.mjs';
 import {pledged} from './stock.mjs';
 import {consent as nativeConsent} from './action-consent.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
-import {contractSigningFacts} from './contract-state.mjs';
+import {contractSigningFacts,contractTerms,receiveLeaseGrain} from './contract-state.mjs';
 
 registerAdvanceHook('obligationSigningFacts',(before,after)=>Object.fromEntries(Object.entries(after.state.obligations??{})
     .filter(([id])=>!before.state.obligations?.[id]).map(([id,row])=>[id,contractSigningFacts(row.terms??{})])));
@@ -330,10 +330,19 @@ function settleResourceClaim(d,e,{row,args,s,eventId,authorize,payer,actor,claim
     if(actor!==payer&&!settlementPresent(e,s,actor,payer))throw Error('Payment representative must be at the assets');
     if(!amount||amount>view.owed)throw Error('Payment exceeds outstanding claim');
     if(payer!==row.debtor)throw Error('Only the debtor settles a resource claim');
-    if(!settlementPresent(e,s,payer,creditor))throw Error('Settlement requires physical presence or delivered remittance');
+    const publicRent=row.kind==='rent'&&s.settlements?.[creditor];
+    if(!publicRent&&!settlementPresent(e,s,payer,creditor))throw Error('Settlement requires physical presence or delivered remittance');
     if(e.obligationClaimEnforceable&&!e.obligationClaimEnforceable(d,row,s.minute))throw Error('Claim is not enforceable under current procedure');
-    const plan=repaymentPlan(d,e,{resource:claimResource,quantity:amount,payWith:args.payWith,location:settlementLocation(e,s,payer)});
-    const paidWith=payInKind(d,e,{payer,payee:creditor,plan,eventId,writer:W}),remaining=view.owed-amount;
+    let paidWith;
+    if(publicRent){
+        const lease=s.records?.[row.contract],terms=contractTerms(lease??{},s.minute);
+        if(lease?.kind!=='asset_lease'||terms.owner!==creditor||terms.tenant!==payer||terms.tenancy?.rentPayment!=='kind'||terms.rentBasis?.crop!==claimResource)throw Error('Public grain rent requires its signed lease');
+        paidWith=receiveLeaseGrain(d,e,{owner:creditor,payer,resource:claimResource,amount,eventId,payWith:args.payWith});
+    }else{
+        const plan=repaymentPlan(d,e,{resource:claimResource,quantity:amount,payWith:args.payWith,location:settlementLocation(e,s,payer)});
+        paidWith=payInKind(d,e,{payer,payee:creditor,plan,eventId,writer:W});
+    }
+    const remaining=view.owed-amount;
     write(d,e,{...row,paid:(row.paid??0)+amount,...(row.remaining!==undefined?{remaining}:{}),status:remaining?'pending':'settled',...(remaining?{}:{settledAt:s.minute}),
         events:[...row.events??[],{eventId,minute:s.minute,payer,actor,transferred:amount,paidWith}]});
     return {id,transferred:amount,remaining,evidence:eventId,payment:{payer,actor,debtor:row.debtor,creditor,location:settlementLocation(e,s,actor),paidWith}};

@@ -148,6 +148,17 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
   // and manufacture batches to their native programs. Check the complete slot
   // shapes, retaining rejection of every unlisted addition to a static alias.
   const catalogAdditions={
+   // K07 / 05 §5.1.1: exact tenancy clauses belong to the dynamic catalogue.
+   ...Object.fromEntries(['rent_in','rent_out'].map(op=>[`core:trade.${op}`,[
+    {name:'rentMode',kind:'choice',options:['fixed','share']},
+    {name:'outputBasis',kind:'choice',options:['gross','net']},
+    {name:'rentPayment',kind:'choice',options:['cash','kind']},
+    {name:'shareNumerator',kind:'quantity'},{name:'shareDenominator',kind:'quantity'},
+    {name:'inputPayer',kind:'choice',options:['tenant','owner','shared']},
+    {name:'ownerInputNumerator',kind:'quantity'},{name:'ownerInputDenominator',kind:'quantity'},
+    {name:'unharvestedCrops',kind:'choice',options:['tenant','owner']},{name:'rentAdvance',kind:'quantity'},
+    {name:'farmOperator',kind:'choice',options:['tenant','owner']}
+   ]])),
    // S4: sponsorship belongs to org_join's catalog form; keep the static prompt budget.
    'core:settlement.org_join':[{name:'feePayer',kind:'choice',options:['player']}],
    // a3qy: disarm declares an item tool slot; undeclared additions still fail below.

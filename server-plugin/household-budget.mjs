@@ -10,7 +10,7 @@ import {digest,recordsMemo,recordsWhere,stateMemo,PatchCursor} from './storage.m
 import {compileRX,evaluateRX,fixedUnits,fixedInteger,FIXED_SCALE} from './rx.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {employmentActive} from './employment-state.mjs';
-import {contractTerms,leaseState} from './contract-state.mjs';
+import {contractTerms,leaseState,tenancyRentAmount} from './contract-state.mjs';
 import {householdWorkTime} from './npc-state.mjs';
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
@@ -135,7 +135,7 @@ function seedNeeds(engine,state,holders){
   // A growing crop has already consumed seed. Only a signed next sowing or
   // harvested field still used by its owner asks for a new sowing allocation.
   const owner=r.kind==='asset_lease'?r.tenant:r.owner;
-  if(!holders.includes(owner)||!(r.areaMu>0)||!r.seedItem)continue;
+  if(!(r.areaMu>0)||!r.seedItem)continue;
   if(r.kind==='asset_lease'){
    if(!leaseState(engine,state,record).active||r.use!=='field')continue;
    // A leased field can be only partly sown. The actual harvested crop's
@@ -146,9 +146,14 @@ function seedNeeds(engine,state,holders){
   const n=binding.yieldSelector==='field:wheat'
    ?Math.ceil(r.areaMu*engine.world.primitiveTables.yields.rows.find(y=>y.key==='field:wheat/seed').seedPerUnit.qty*field.kgPerJin/engine.byId.get(r.seedItem).weight)
    :Math.ceil(r.areaMu*engine.rules.agriculture.crop.seedPerHa/field.muPerHectare);
-  const key=`${owner}:${r.seedItem}`;
-  // Lease and farm records can refer to the same field; retain it once.
-  const location=r.subject??r.location,old=needs.get(key)??new Map();old.set(location,n);needs.set(key,old);
+  const location=r.subject??r.location,lease=r.kind==='asset_lease'?record:recordsWhere(state.records,'kind','asset_lease').find(l=>l.subject===location&&contractTerms(l,state.minute).tenant===owner&&leaseState(engine,state,l).active);
+  const signed=lease&&contractTerms(lease,state.minute),t=signed?.tenancy;
+  const ownerSeed=t?.inputPayer==='owner'?n:t?.inputPayer==='shared'?Math.ceil(n*t.ownerInputNumerator/t.ownerInputDenominator):0;
+  for(const [payer,amount]of [[owner,n-ownerSeed],[signed?.owner,ownerSeed]])if(amount&&holders.includes(payer)){
+   const key=`${payer}:${r.seedItem}`;
+   // Lease and farm records can refer to the same field; retain each payer once.
+   const old=needs.get(key)??new Map();old.set(location,amount);needs.set(key,old);
+  }
  }
  return new Map([...needs].map(([key,fields])=>[key,[...fields.values()].reduce((a,b)=>a+b,0)]));
 }
@@ -268,25 +273,41 @@ function buildFutureSources(d,engine,owner,view){
   if(creditor(r)===owner)future.push(entry);
   if(debtor(r)===owner)payments.push(entry);
  }
- if(!view)for(const r of recordsMemo(s.records,futureRecords,()=>{
+ for(const r of recordsMemo(s.records,futureRecords,()=>{
   const owners=new Map();
   for(const r of Object.values(s.records??{})){
    if(r.kind!=='workshop'&&r.category!=='private_farm')continue;
-   const ids=new Set([...(r.kind==='workshop'?[r.worker]:[]),...(r.category==='private_farm'?[r.owner]:[])]);
+   const lease=r.lease&&s.records?.[r.lease],terms=lease&&contractTerms(lease,s.minute);
+   const ids=new Set([...(r.kind==='workshop'?[r.worker]:[]),...(r.category==='private_farm'?[r.owner,...(terms?.tenancy?.rentMode==='share'?[terms.owner]:[])]:[])]);
    for(const id of ids){const rows=owners.get(id)??[];rows.push(r);owners.set(id,rows);}
   }
   return owners;
  }).get(owner)??[]){
+  // Own signed terms are known; a remote farm's current condition is not.
+  if(view&&(r.kind==='workshop'||view.self.location!==r.location||!r.lease||contractTerms(s.records?.[r.lease]??{}).tenancy?.rentMode!=='share'))continue;
   if(r.kind==='workshop'&&r.worker===owner){
    const job=contractTerms(r,s.minute);
    if(employmentActive(job,s)&&job.status!=='罢工'&&job.nextWork>s.minute&&job.nextWork<job.deadline&&job.wage>0)
     future.push({id:job.id,resource:COIN,amount:job.wage,at:job.nextWork,day:job.nextWork/DAY,source:'employment',reliable:true});
   }
-  if(r.category!=='private_farm'||r.owner!==owner||!['growing','ready'].includes(r.status))continue;
+  if(r.category!=='private_farm'||!['growing','ready'].includes(r.status))continue;
+  const lease=r.lease&&s.records?.[r.lease],terms=lease&&contractTerms(lease,s.minute),t=terms?.tenancy;
+  const tenant=r.owner===owner,landlord=t?.rentMode==='share'&&terms.owner===owner;
+  if(!tenant&&!landlord)continue;
   const at=s.minute+Math.max(0,engine.rules.agriculture.crop.growthDays-r.grownDays)*DAY;
-  if(!fieldAccess(engine,s,owner,r.location,at)||s.buildings?.[r.location]?.condition<=0)continue;
-  const amount=r.status==='ready'?priceRead(d,{point:'region.material',account:cropAccount(engine,r.location,r.crop),lots:{id:`private:${r.seedEvent}`,after:Math.floor(s.minute/DAY)},legacy:()=>Math.max(0,r.yield-(r.harvestedQty??0))}):Math.floor(explainDerived(engine,d.document??{state:s},'economy:yield',r.location,{holder:owner,base:privateCropYieldBase(engine,r)}).value);
-  future.push({id:r.id,resource:r.crop,amount,at,day:at/DAY,source:'harvest',reliable:false});
+  if(!(fieldAccess(engine,s,r.owner,r.location,at)||t?.unharvestedCrops==='tenant'||r.cropDisposition?.policy==='tenant')||s.buildings?.[r.location]?.condition<=0)continue;
+  const base=privateCropYieldBase(engine,r);
+  const amount=r.status==='ready'?priceRead(d,{point:'region.material',account:cropAccount(engine,r.location,r.crop),lots:{id:`private:${r.seedEvent}`,after:Math.floor(s.minute/DAY)},legacy:()=>Math.max(0,r.yield-(r.harvestedQty??0))}):Math.floor(view?base:explainDerived(engine,d.document??{state:s},'economy:yield',r.location,{holder:r.owner,base}).value);
+  let disposable=amount;
+  if(t?.rentMode==='share'&&terms.tenant===r.owner){
+   const past=(lease.harvests??[]).filter(h=>h.seedEvent===r.seedEvent).at(-1)?.assessed??0;
+   const predicted=(lease.shareAssessed??0)+tenancyRentAmount(t,(r.harvestedQty??0)+amount,r.inputs??[])-past,advance=terms.prepayment??0;
+   const owed=Math.max(0,predicted-advance)-Math.max(0,(lease.shareAssessed??0)-advance);
+   if(landlord){if(owed)future.push({id:lease.id,resource:t.rentPayment==='kind'?r.crop:COIN,amount:owed,at:Math.max(at,terms.rentDueAt??at),day:Math.max(at,terms.rentDueAt??at)/DAY,source:'harvest-rent',reliable:false});continue;}
+   if(t.rentPayment==='kind')disposable=Math.max(0,amount-owed);
+   else if(owed)payments.push({id:lease.id,resource:COIN,amount:owed,at:Math.max(at,terms.rentDueAt??at),day:Math.max(at,terms.rentDueAt??at)/DAY,source:'harvest-rent',reliable:false});
+  }
+  future.push({id:r.id,resource:r.crop,amount:disposable,at,day:at/DAY,source:'harvest',reliable:false});
  }
  return {future:future.sort((a,b)=>a.at-b.at),payments:payments.sort((a,b)=>a.at-b.at)};
 }
