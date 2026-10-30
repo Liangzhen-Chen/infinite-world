@@ -527,10 +527,11 @@ function privateFarmAction(d,engine,p,args,eventId){
     const signedField=cultivatingLease&&contractTerms(cultivatingLease,d.get('state','minute')).rentBasis;
     const crops=domainRules(engine).privateField.crops,seedItem=args.operation==='private_sow'?(args.item?engine.resolve(args.item,'item'):signedField?.seedItem??crops[0].seed):old?.seedItem;
     const binding=crops.find(c=>c.seed===seedItem),item=old?.crop??binding?.product;
-    if(args.operation==='private_harvest'&&old?.owner!==cultivator)throw preconditionFailure('未取得这批作物的收割权，须由作物权利人同意');
     if(args.operation==='private_inspect')return{farm:old??null,...(leaseNote?{leaseNote}:{})};
     if(!['private_sow','private_harvest'].includes(args.operation))throw preconditionFailure('未知私田操作');
     if(args.operation==='private_harvest'&&old?.status!=='ready')throw preconditionFailure('没有可收割的成熟作物');
+    // A right to harvest is checked against an existing ripe batch; an empty field has none to claim.
+    if(args.operation==='private_harvest'&&old?.owner!==cultivator)throw preconditionFailure('未取得这批作物的收割权，须由作物权利人同意');
     const areaMu=args.operation==='private_sow'?args.areaMu:old?.areaMu;
     int(areaMu,1,10000);
     if(signedField&&(areaMu>signedField.areaMu||seedItem!==signedField.seedItem))throw preconditionFailure('播种面积或作物超出已签田租条款，请按约播种或先重新商议租约');
