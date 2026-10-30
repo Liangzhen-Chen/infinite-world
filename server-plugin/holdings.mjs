@@ -7,6 +7,7 @@
 // 存放：文档根的 holdings 分区（与 state、ledger 并列），state 的读者、人口压缩与提示卡都不读它。
 // 迁移期（绞杀式）旧字段照写、读仍走旧字段；L1 适配器（holding-sources.mjs）在每个旧写入点同时写入，
 // 对账测试断言两者逐条相等。本模块不 import 任何 L1 以上模块：种类、模板解析与开账函数都由 L1 登记进来。
+import {recordIndexActive} from './storage.mjs';
 export const HOLDINGS_VERSION=1;
 const read=(d,...p)=>typeof d.peek==='function'?d.peek(...p):d.get(...p);
 export const holdingsActive=d=>read(d,'holdings','version')===HOLDINGS_VERSION;
@@ -109,26 +110,29 @@ const concludedOf=(kind,variant)=>{const k=kinds.get(kind);return Boolean(varian
 
 // ---- 存活持有的索引（每个草稿一份，按 seq 失效；本模块是唯一写者） ------------------------
 const indexes=new WeakMap();
-export const invalidateHoldings=d=>indexes.delete(d);
+// Sharing across readers is safe only in the cursor-protected advance scope.
+// Plain import/fixture readers may edit their document between new readers.
+const indexKey=d=>recordIndexActive()?read(d,'holdings')??d:d;
+export const invalidateHoldings=d=>{indexes.delete(d);indexes.delete(read(d,'holdings'));};
 function index(d){
-    const seq=read(d,'holdings','seq')??0,cached=indexes.get(d);
+    const seq=read(d,'holdings','seq')??0,key=indexKey(d),cached=indexes.get(key);
     if(cached&&cached.seq===seq)return cached;
-    const idx={seq,bySubject:new Map(),byHolder:new Map(),bySource:new Map(),entities:new Map(),locations:new Map()};
+    const idx={seq,bySubject:new Map(),bySubjectOnly:new Map(),byHolder:new Map(),bySource:new Map(),entities:new Map(),locations:new Map()};
     for(const row of Object.values(read(d,'holdings','rows')??{}))if(row.until===undefined)addIndex(idx,row);
     for(const e of Object.values(read(d,'holdings','entities')??{}))if(e.goneAt===undefined&&e.source)push(idx.entities,e.source,e.id);
     for(const [entity,l] of Object.entries(read(d,'holdings','locations')??{}))if(l.source)push(idx.locations,l.source,entity);
-    indexes.set(d,idx);return idx;
+    indexes.set(key,idx);return idx;
 }
 const push=(m,k,id)=>{let s=m.get(k);if(!s)m.set(k,s=new Set());s.add(id);};
 const pull=(m,k,id)=>{const s=m.get(k);if(s){s.delete(id);if(!s.size)m.delete(k);}};
-function addIndex(idx,row){push(idx.bySubject,`${row.kind}|${row.subject}`,row.id);push(idx.byHolder,row.holder,row.id);if(row.source)push(idx.bySource,row.source,row.id);}
-function dropIndex(idx,row){pull(idx.bySubject,`${row.kind}|${row.subject}`,row.id);pull(idx.byHolder,row.holder,row.id);if(row.source)pull(idx.bySource,row.source,row.id);}
-function bump(d,idx){const seq=(read(d,'holdings','seq')??0)+1;d.set(['holdings','seq'],seq);idx.seq=seq;indexes.set(d,idx);return seq;}
+function addIndex(idx,row){push(idx.bySubject,`${row.kind}|${row.subject}`,row.id);push(idx.bySubjectOnly,row.subject,row.id);push(idx.byHolder,row.holder,row.id);if(row.source)push(idx.bySource,row.source,row.id);}
+function dropIndex(idx,row){pull(idx.bySubject,`${row.kind}|${row.subject}`,row.id);pull(idx.bySubjectOnly,row.subject,row.id);pull(idx.byHolder,row.holder,row.id);if(row.source)pull(idx.bySource,row.source,row.id);}
+function bump(d,idx){const seq=(read(d,'holdings','seq')??0)+1;d.set(['holdings','seq'],seq);idx.seq=seq;indexes.set(indexKey(d),idx);return seq;}
 const rowOf=(d,id)=>read(d,'holdings','rows',id)??null;
 export function aliveHoldings(d,{kind,holder,subject,source}={}){
     if(!holdingsActive(d))return [];
     const idx=index(d);
-    const ids=source!==undefined?idx.bySource.get(source):subject!==undefined&&kind?idx.bySubject.get(`${kind}|${subject}`):holder!==undefined?idx.byHolder.get(holder):null;
+    const ids=source!==undefined?idx.bySource.get(source):subject!==undefined?(kind?idx.bySubject.get(`${kind}|${subject}`):idx.bySubjectOnly.get(subject)):holder!==undefined?idx.byHolder.get(holder):null;
     const list=ids?[...ids].map(id=>rowOf(d,id)):ids===undefined?[]:Object.values(read(d,'holdings','rows')??{}).filter(r=>r.until===undefined);
     return list.filter(r=>r&&(!kind||r.kind===kind)&&(holder===undefined||r.holder===holder)&&(subject===undefined||r.subject===subject)&&(source===undefined||r.source===source))
         .sort((a,b)=>Number(a.id.slice(1))-Number(b.id.slice(1)));

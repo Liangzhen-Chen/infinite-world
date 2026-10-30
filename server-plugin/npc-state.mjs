@@ -2,7 +2,7 @@ import {vocabulary} from './domain-rules.mjs';
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
 import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment,personBusiness} from './entity-view.mjs';
-import {recordsWhere,digest,persistable,cloneData,canonicalEqual} from './storage.mjs';
+import {recordsWhere,recordsMemo,stateMemo,digest,persistable,cloneData,canonicalEqual} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {projectAssignment,PROJECT_ACTIVITY,agriculturalEmployment} from './employment-state.mjs';
@@ -14,7 +14,15 @@ const appointmentKey=id=>`service_appointment:${id}`;
 // One physical purchase trip is shared by scheduling, conflicts and household
 // work budgets. Service windows reserve the keeper only while serving.
 export function marketTimeWindows(state,id){
- return recordsWhere(state?.records,'category','market_trip').flatMap(row=>row.actor===id
+ const trips=recordsWhere(state?.records,'category','market_trip');
+ const participants=recordsMemo(state?.records,marketTimeWindows,()=>{
+  const out=new Map();
+  for(const row of trips)for(const id of new Set([row.actor,row.keeper])){
+   const rows=out.get(id)??[];rows.push(row);out.set(id,rows);
+  }
+  return out;
+ });
+ return (participants.get(id)??[]).flatMap(row=>row.actor===id
   ?[{...row,start:row.departAt,end:row.returnAt}]
   :row.keeper===id?(row.serviceWindows??[]).map(s=>({...row,start:s.start,end:s.end,serving:true})):[]);
 }
@@ -183,7 +191,11 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
 }
 // The household keeps its real routine when a job is considered or signed.
 // This is a read-only allocation; employment-state remains the only attendance book.
+const workTimeMemo=Symbol('household work time'),tradingPlaceMemo=Symbol('trading place');
 export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMinutes=0,workMinutes=480,constraints=null}={}){
+ return stateMemo(state,engine,[workTimeMemo,id,minute,commuteMinutes,workMinutes,constraints],()=>readHouseholdWorkTime(engine,state,id,minute,{commuteMinutes,workMinutes,constraints}));
+}
+function readHouseholdWorkTime(engine,state,id,minute,{commuteMinutes,workMinutes,constraints}){
  const own=state.npcs?.[id],person=state.created?.[id]??engine.byId.get(id),calendar=engine.calendar(minute);
  const routine=personRoutine(engine,state,id,constraints)??own?.residence?.schedule??own?.vocation?.schedule??person?.schedule??own?.routine;
  const variant=calendar.market?'market':routine?.restDays?.includes(calendar.day)?'rest':'default';
@@ -191,19 +203,19 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  const slots=seasonal?.[variant]??routine?.[variant]??seasonal?.default??routine?.default??[];
  const household=npcHousehold(engine,state,id,constraints),home=household?.homeLocation??person?.home?.location??own?.location;
  const members=new Set([id,household?.id,...household?.members??[]].filter(Boolean));
- const records=Object.values(state.records??{}),fields=new Set((engine.rules.agriculture?.settlements??[]).map(r=>r.fieldLocation));
- const leases=records.filter(r=>r.kind==='asset_lease'&&leaseState(engine,state,r,minute).active).map(r=>contractTerms(r,minute));
+ const fields=new Set((engine.rules.agriculture?.settlements??[]).map(r=>r.fieldLocation));
+ const leases=recordsWhere(state.records,'kind','asset_lease').filter(r=>leaseState(engine,state,r,minute).active).map(r=>contractTerms(r,minute));
  const householdField=location=>{
   if(!fields.has(location))return false;
   const rented=leases.filter(r=>r.subject===location);
   if(rented.length)return rented.some(r=>members.has(r.tenant));
   const asset=state.buildings?.[location],base=state.created?.[location]??engine.byId.get(location);
   const owners=asset?.owners&&Object.keys(asset.owners).length?Object.entries(asset.owners).filter(([,share])=>share>0).map(([holder])=>holder):[asset?.owner??base?.owner];
-  return owners.some(holder=>members.has(holder))||records.some(r=>r.category==='private_farm'&&r.location===location&&members.has(r.owner)&&['growing','ready'].includes(r.status));
+  return owners.some(holder=>members.has(holder))||recordsWhere(state.records,'category','private_farm').some(r=>r.location===location&&members.has(r.owner)&&['growing','ready'].includes(r.status));
  };
  const marketVariant=calendar.market&&Array.isArray(seasonal?.market??routine?.market);
  const atState=minute===state.minute?state:{...state,minute};
- const tradesAt=location=>{
+ const tradesAt=location=>stateMemo(state,engine,[tradingPlaceMemo,location,minute,constraints],()=>{
   const facility=facilityView(engine,state,location);
   if(facility?.factor===0)return false;
   if((facility?.services??(state.created?.[location]??engine.byId.get(location))?.services??[]).includes('trade'))return true;
@@ -218,7 +230,7 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
    const business=personBusiness(engine,atState,trader,constraints);
    return business?.open.value&&business.location.value===location;
   });
- };
+ });
  // An unassigned gravely ill dependent cannot be left with an invented substitute.
  const attending=(member,illness)=>{
   const n=state.npcs?.[member];
@@ -233,7 +245,7 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  const day=Math.floor(minute/1440)*1440;
  // K08's real trip reserves the traveller for both journeys and shopping;
  // its keeper is reserved only for the actual service windows.
- for(const trip of records.filter(r=>r.category==='market_trip')){
+ for(const trip of recordsWhere(state.records,'category','market_trip')){
   const windows=trip.actor===id?[{start:trip.departAt,end:trip.returnAt}]:trip.keeper===id?trip.serviceWindows??[]:[];
   for(const window of windows){
    const start=Math.max(0,window.start-day),end=Math.min(1440,window.end-day);

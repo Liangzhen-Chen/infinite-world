@@ -7,8 +7,9 @@ import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdBudget,householdResources,householdBufferTarget,householdOptions} from '../server-plugin/household-budget.mjs';
 import {saleableStock,reserveShortfall} from '../server-plugin/market.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
-import {applyPatches} from '../server-plugin/storage.mjs';
-import {settlementStock} from '../server-plugin/stock.mjs';
+import {applyPatches,PatchCursor,withRecordIndex} from '../server-plugin/storage.mjs';
+import {settlementStock,bag} from '../server-plugin/stock.mjs';
+import {stateReader} from '../server-plugin/valuation.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const owner='npc_hw_linsui',other='npc_hw_duanyan',item='item_bread',DAY=1440;
@@ -30,6 +31,34 @@ function fixture({members=[owner],shared=true}={}){
  const d={get document(){return document;},get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
  return {engine,d,sync,replace(next){document=next;},get state(){return document.state;}};
 }
+
+test('cursor budgets keep horizons, ledger revisions, documents and mutable observer evidence separate',()=>{
+ const f=fixture();f.sync();
+ const cursor=new PatchCursor(f.d.document),d={cursor,get document(){return cursor.expose(cursor.root);},get:(...p)=>cursor.expose(p.reduce((v,k)=>v?.[k],cursor.root)),peek:(...p)=>p.reduce((v,k)=>v?.[k],cursor.root)};
+ const query=options=>householdResources(d,f.engine,owner,{marketSubstitution:false,...options}).rows.find(r=>r.item===item);
+ // One bread supplies one unit: 20 - 10 for one day = 10 available;
+ // the same 20 breads cover two days with none available for sale.
+ withRecordIndex(()=>{
+  assert.equal(query({days:1}).available,10);assert.equal(query({days:2}).available,0);
+  assert.equal(query({days:1}).available,10);
+  const snapshot=householdBudget(d,f.engine,owner,{kernel:true}),saved=JSON.stringify(snapshot);
+  cursor.apply({op:'set',path:['ledger','accounts',bag(f.engine,owner,item)],value:30});
+  assert.equal(query({days:1}).stock,30);assert.equal(query({days:1}).available,20);
+  assert.equal(JSON.stringify(snapshot),saved,'read-only budget results must not retain mutable draft subtrees');
+  cursor.apply({op:'set',path:['state','obligations','promise'],value:{id:'promise',kind:'forward',debtor:owner,creditor:other,resource:item,amount:3,status:'pending',deadline:DAY}});
+  assert.equal(query({days:1}).available,17);
+  // The valuation adapter deliberately has no ledger. Its legacy stock is 20,
+  // even while the cursor-backed book reads 30; neither memo may replace it.
+  const raw=()=>householdResources(stateReader(d.get('state')),f.engine,owner,{days:1,marketSubstitution:false}).rows.find(r=>r.item===item);
+  assert.equal(raw().stock,20);assert.equal(raw().stock,20);
+  cursor.apply({op:'set',path:['state','npcs',owner,'inventory',item],value:25});
+  assert.equal(raw().stock,25);assert.equal(query({days:1}).stock,30);
+  const view=subjectiveView(f.engine,d.document,owner),account=bag(f.engine,owner,item);
+  view.self.accounts[account].balance=15;assert.equal(query({days:1,view}).stock,15);
+  view.self.accounts[account].balance=17;assert.equal(query({days:1,view}).stock,17);
+  assert.equal(householdResources(f.d,f.engine,owner,{days:1,marketSubstitution:false}).rows.find(r=>r.item===item).stock,20);
+ });
+});
 
 test('one edible/sowable stock is allocated once: 20 - food10 - seed4 - promise3 = saleable3',()=>{
  const f=fixture(),w=f.engine.world,seed=w.domainRules.privateField.crops[0];

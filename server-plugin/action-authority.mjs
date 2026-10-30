@@ -9,7 +9,7 @@ import {parseAccount} from './ledger.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {actionEntity,actionReader,capacity,canAct} from './action-capacity.mjs';
 import {createPrimitiveFrame} from './primitives.mjs';
-import {digest} from './storage.mjs';
+import {digest,recordsMemo} from './storage.mjs';
 import {reject} from './primitive-policy.mjs';
 
 declareHoldingWriter('action-authority',{kinds:[]});
@@ -23,6 +23,7 @@ function controllerCapacity(context,id){
 }
 // Native title/operation holdings override catalog ownership. Custody and
 // merely being present never confer issuing authority.
+const controllerHistory=Symbol('title and operation history by subject');
 export function currentControllers(context,subject,{ownerOnly=false,principals=false}={}){
  const d=actionReader(context.document),kinds=ownerOnly?['owns']:['operates','owns'];
  const held=aliveHoldings(d,{subject}).filter(h=>kinds.includes(h.kind)&&effective(d,h.id));
@@ -36,15 +37,24 @@ export function currentControllers(context,subject,{ownerOnly=false,principals=f
   const head=e&&settlementGovernment(e,s,id).head.value,leader=e&&groupView(e,s,id)?.leader.value;
   return [...new Set([head,leader].filter(Boolean))];
  }))];
- const feature=e?.world.locations.flatMap(p=>(p.features??[]).map(f=>({...f,location:p.id}))).find(f=>f.id===subject);
- const station=e?.world.locations.flatMap(p=>p.workstations??[]).find(f=>f.id===subject);
- const catalog={...e?.byId.get(subject)??feature??station,...s.created?.[subject],...context.document.holdings?.entities?.[subject]?.facts};
+ let base=e?.byId.get(subject);
+ if(base==null&&e){
+  for(const p of e.world.locations){const f=p.features?.find(f=>f.id===subject);if(f){base={...f,location:p.id};break;}}
+  if(base==null)for(const p of e.world.locations){const station=p.workstations?.find(f=>f.id===subject);if(station){base=station;break;}}
+ }
+ const catalog={...base,...s.created?.[subject],...context.document.holdings?.entities?.[subject]?.facts};
  const building=s.buildings?.[subject];
  const override=building&&Object.hasOwn(building,'owner');
  if(operators.length)return representatives(operators.map(h=>h.holder));
  if(held.length&&(ownerOnly||held.some(h=>h.holder!==catalog?.owner)))return representatives(held.map(h=>h.holder));
  // A terminated native title/management grant cannot revive catalog rights.
- if(!held.length&&Object.values(context.document.holdings?.rows??{}).some(h=>kinds.includes(h.kind)&&h.subject===subject))return [];
+ if(!held.length&&kinds.some(kind=>recordsMemo(context.document.holdings?.rows,controllerHistory,()=>{
+  const subjects=new Map();
+  for(const h of Object.values(context.document.holdings?.rows??{})){
+   const kinds=subjects.get(h.subject)??new Set();kinds.add(h.kind);subjects.set(h.subject,kinds);
+  }
+  return subjects;
+ }).get(subject)?.has(kind)))return [];
  if(override)return typeof building.owner==='string'?representatives([building.owner]):[];
  if(!ownerOnly){
   const manager=catalog?.site?.manager??catalog?.lodging?.host;

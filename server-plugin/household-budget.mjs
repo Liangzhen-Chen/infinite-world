@@ -6,7 +6,7 @@ import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {bodyRule} from './primitives-body.mjs';
 import {explainDerived} from './derived.mjs';
 import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
-import {digest,recordsMemo} from './storage.mjs';
+import {digest,recordsMemo,recordsWhere,stateMemo,PatchCursor} from './storage.mjs';
 import {compileRX,evaluateRX,fixedUnits,fixedInteger,FIXED_SCALE} from './rx.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {employmentActive} from './employment-state.mjs';
@@ -24,6 +24,27 @@ const inventory=(s,id)=>{
 const unpaid=r=>Math.max(0,(r.amount??r.quantity??r.coins??0)-(r.paid??r.fulfilled??0));
 const debtor=r=>r.debtor??r.promisor,creditor=r=>r.creditor??r.promisee;
 const budgetAccounts=Symbol('household inventory account owners');
+const seedRecords=Symbol('household seed records'),futureRecords=Symbol('household future records');
+const commitmentMemo=Symbol('household commitments');
+const promisedRecords=Symbol('household legacy promises');
+const budgetReads=new WeakMap();
+const budgetValue=Symbol('budget value'),resourceMemo=Symbol('household resources');
+// Kernel reads share work only while this exact draft revision is unchanged.
+// Subjective views stay uncached: their observer and evidence are independent inputs.
+function budgetRead(d,engine,key,build){
+ const inputs=Array.isArray(key)?key:[key];
+ if(!(d.cursor instanceof PatchCursor)||d.document!==d.cursor.root)return d.memo?d.memo(engine,[budgetValue,...inputs],build):build();
+ let cache=budgetReads.get(d.cursor);
+ if(!cache||cache.cursor!==d.cursor||cache.revision!==d.cursor.revision||cache.engine!==engine){
+  cache={cursor:d.cursor,revision:d.cursor.revision,engine,values:new Map()};budgetReads.set(d.cursor,cache);
+ }
+ let values=cache.values;
+ for(const input of inputs){
+  let next=values.get(input);if(!next)values.set(input,next=new Map());values=next;
+ }
+ if(!values.has(budgetValue))values.set(budgetValue,build());
+ return values.get(budgetValue);
+}
 // The shop domain supplies public opening/replenishment facts and bounded
 // local quotes. Keeping the resolver here avoids an economy import cycle.
 let foodSources=()=>[];
@@ -51,7 +72,7 @@ function bagEntries(d,engine,state,holder,view){
  return [...items].map(item=>[item,held.get(item)??0]);
 }
 function fieldAccess(engine,state,owner,location,at=state.minute){
- const leases=Object.values(state.records??{}).filter(r=>r.kind==='asset_lease'&&r.subject===location&&leaseState(engine,state,r,at).active);
+ const leases=recordsWhere(state.records,'kind','asset_lease').filter(r=>r.subject===location&&leaseState(engine,state,r,at).active);
  return !leases.some(r=>contractTerms(r,at).tenant!==owner)&&(state.buildings?.[location]?.owner===owner||leases.some(r=>contractTerms(r,at).tenant===owner));
 }
 
@@ -108,7 +129,7 @@ function family(d,engine,owner){
 function seedNeeds(engine,state,holders){
  const needs=new Map(),field=domainRules(engine).privateField;
  if(!field)return needs;
- for(const record of Object.values(state.records??{})){
+ for(const record of recordsMemo(state.records,seedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='asset_lease'||r.category==='private_farm'))){
   const terms=record.kind==='asset_lease'?contractTerms(record,state.minute):record;
   const r={...terms,...(record.kind==='asset_lease'?terms.rentBasis:{})};
   // A growing crop has already consumed seed. Only a signed next sowing or
@@ -119,7 +140,7 @@ function seedNeeds(engine,state,holders){
    if(!leaseState(engine,state,record).active||r.use!=='field')continue;
    // A leased field can be only partly sown. The actual harvested crop's
    // area is the next-cycle basis; the lease's capacity is not a second plan.
-   if(Object.values(state.records??{}).some(f=>f.category==='private_farm'&&f.location===r.subject&&(['growing','ready'].includes(f.status)||f.status==='harvested'&&f.owner===owner)))continue;
+   if(recordsWhere(state.records,'category','private_farm').some(f=>f.location===r.subject&&(['growing','ready'].includes(f.status)||f.status==='harvested'&&f.owner===owner)))continue;
   }else if(r.category!=='private_farm'||r.status!=='harvested'||!fieldAccess(engine,state,owner,r.location))continue;
   const binding=field.crops.find(c=>c.seed===r.seedItem);if(!binding)continue;
   const n=binding.yieldSelector==='field:wheat'
@@ -147,14 +168,18 @@ function allocateMeals(rows,needs){
 }
 
 export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true}={}){
+ const read=()=>readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution});
+ return view?read():budgetRead(d,engine,[resourceMemo,owner,days,risk,commonRisk,marketSubstitution],read);
+}
+function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution}){
  const state=d.get('state'),f=family(d,engine,owner),subjective=Boolean(view);
  if(view&&view.observer!==owner)throw Error('Household budget observer mismatch');
  // Knowing the household's mouths does not grant access to their private
  // bags. Subjective needs use known derived facts, with the public body base
  // when another member's private modifiers are unknown.
  const holders=subjective?[owner]:f.holders,members=f.shared?f.members:[owner];
- const seeds=subjective?new Map():seedNeeds(engine,state,holders);
- const promises=subjective?view.self.obligations??[]:[...obligationRows(state),...Object.values(state.records??{}).filter(r=>r.kind==='procurement'||r.category==='agreed_quote')];
+ const seeds=subjective?new Map():stateMemo(state,engine,[seedRecords,JSON.stringify(holders)],()=>seedNeeds(engine,state,holders));
+ const promises=subjective?view.self.obligations??[]:[...obligationRows(state),...recordsMemo(state.records,promisedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='procurement'||r.category==='agreed_quote'))];
  const rows=holders.flatMap(holder=>{
   const entries=new Map(bagEntries(d,engine,state,holder,view));
   for(const key of seeds.keys())if(key.startsWith(`${holder}:`))entries.set(key.slice(holder.length+1),entries.get(key.slice(holder.length+1)));
@@ -168,7 +193,7 @@ export function householdResources(d,engine,owner,{days=null,view=null,risk=0,co
   return {holder,item,key,definition,stock,food:0,seed:0,seedTarget:0,committed:0,inUse:0};
   });
  }).sort((a,b)=>(a.definition?.shelfLifeDays??Infinity)-(b.definition?.shelfLifeDays??Infinity)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder));
- const commitments=subjective?null:commitmentAllocation(state);
+ const commitments=subjective?null:stateMemo(state,engine,[commitmentMemo],()=>commitmentAllocation(state));
  for(const r of rows){
   r.committed=subjective?(view.self.obligations??[]).filter(o=>!obligationClosed(o)&&debtor(o)===owner&&(o.resource??o.item??o.subject)===r.item).reduce((n,o)=>n+unpaid(o),0):commitments.get(r.key)??0;
   r.seedTarget=seeds.get(r.key)??0;
@@ -231,6 +256,9 @@ export function householdResources(d,engine,owner,{days=null,view=null,risk=0,co
 }
 
 function futureSources(d,engine,owner,view){
+ return view?buildFutureSources(d,engine,owner,view):budgetRead(d,engine,`future:${owner}`,()=>buildFutureSources(d,engine,owner,null));
+}
+function buildFutureSources(d,engine,owner,view){
  const s=d.get('state'),rows=view?view.self.obligations??[]:obligationRows(s),future=[],payments=[];
  for(const r of rows){
   if(obligationClosed(r)||!Number.isFinite(r.deadline))continue;
@@ -240,7 +268,15 @@ function futureSources(d,engine,owner,view){
   if(creditor(r)===owner)future.push(entry);
   if(debtor(r)===owner)payments.push(entry);
  }
- if(!view)for(const r of Object.values(s.records??{})){
+ if(!view)for(const r of recordsMemo(s.records,futureRecords,()=>{
+  const owners=new Map();
+  for(const r of Object.values(s.records??{})){
+   if(r.kind!=='workshop'&&r.category!=='private_farm')continue;
+   const ids=new Set([...(r.kind==='workshop'?[r.worker]:[]),...(r.category==='private_farm'?[r.owner]:[])]);
+   for(const id of ids){const rows=owners.get(id)??[];rows.push(r);owners.set(id,rows);}
+  }
+  return owners;
+ }).get(owner)??[]){
   if(r.kind==='workshop'&&r.worker===owner){
    const job=contractTerms(r,s.minute);
    if(employmentActive(job,s)&&job.status!=='罢工'&&job.nextWork>s.minute&&job.nextWork<job.deadline&&job.wage>0)

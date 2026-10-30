@@ -3,6 +3,7 @@
 // 本模块只是登记表和分派：各领域登记自己的估值依据（物品走市场估值投影，股份走组织净资产，地产走租金资本化），
 // 找不到依据的如实返回 unvaluable，由调用方明确处理——绝不静默当作 0。
 import {explainDerived} from './derived.mjs';
+import {stateMemo} from './storage.mjs';
 const valuers=new Map();
 // 脱离当地供需的物品基准估值，复用 economy:value 自身的基准与修正。
 // 不乘市场稀缺、货架深度或交易价差，也不再次应用该槽。
@@ -16,7 +17,7 @@ export function registerValuer(role,fn){valuers.set(role,fn);}
 // | 'share' {issuer,fraction} | 'property' {subject,fraction}
 // 返回 {value:整数,basis} 或 {value:null,unvaluable:原因}
 // 估值只读：事务草稿若提供 peek（不复制整棵状态），读取走 peek。
-const reader=d=>typeof d.peek==='function'?{document:d.document,get:(...p)=>d.peek(...p),peek:(...p)=>d.peek(...p)}:d;
+const reader=d=>typeof d.peek==='function'?{document:d.document,cursor:d.cursor,memo:d.memo,get:(...p)=>d.peek(...p),peek:(...p)=>d.peek(...p)}:d;
 export function valuation(d,e,asset){
     const fn=valuers.get(asset.role);
     if(!fn)return {value:null,unvaluable:`没有登记「${asset.role}」的估值依据`};
@@ -43,5 +44,6 @@ export function goodsWorth(d,e,{item,quantity=1,location,holder=null,apart=false
 // 事件推导只有状态快照、没有事务草稿时，用它造一个只读读取器（估值只读）。
 export function stateReader(state){
     const document={state,randomSeed:state.randomSeed};
-    return {document,get:(...p)=>p.reduce((x,k)=>x?.[k],document),peek:(...p)=>p.reduce((x,k)=>x?.[k],document)};
+    return {document,get:(...p)=>p.reduce((x,k)=>x?.[k],document),peek:(...p)=>p.reduce((x,k)=>x?.[k],document),
+        memo:(scope,inputs,build)=>stateMemo(state,scope,[stateReader,document.randomSeed,...inputs],build)};
 }

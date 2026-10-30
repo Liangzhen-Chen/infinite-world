@@ -1,10 +1,11 @@
 // Every field is {value, source, override}. Source names the authoritative
 // catalog/state path; override marks an explicit campaign or authored override.
-// These projections never persist or cache results. They grant no capabilities.
+// These projections never persist results. Advance-only memos are invalidated
+// by cursor writes; the projections grant no capabilities.
 import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
 import {currentEmployment,employmentActive} from './employment-state.mjs';
-import {recordsWhere,recordEntriesWhere,recordsMemo,cloneData} from './storage.mjs';
+import {recordsWhere,recordEntriesWhere,recordsMemo,stateMemo,cloneData} from './storage.mjs';
 import {organizationState,memberOrganizations,organizationOffices} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
@@ -72,8 +73,8 @@ export function personOffices(engine,state,requested,{settlement=null,power=null
         }
         const entry=officeFact(engine,state,key,row);if(entry)out.push(entry);
     }
-    for(const [key,row] of records(state)){
-        if(row.category!=='housing_steward'||row.steward!==id||row.revoked||row.expires<=(state.minute??0)||row.createdAt>(state.minute??0))continue;
+    for(const [key,row] of recordEntriesWhere(state.records,'category','housing_steward')){
+        if(row.steward!==id||row.revoked||row.expires<=(state.minute??0)||row.createdAt>(state.minute??0))continue;
         out.push(officeFact(engine,state,key,{...row,office:'office_village_steward',holder:id,status:'在任',since:row.createdAt,until:row.expires,workplace:row.hall}));
     }
     const settlements=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement),...Object.values(state.remote??{}).flatMap(r=>(r.skeleton?.offices??[]).map(o=>o.settlement))]);
@@ -225,12 +226,13 @@ export function personQuestRights(engine,state,id,{cultural=false}={}){
 // A changed job gets a fresh baseline; promises are overlaid by npc-schedule.
 // No old schedule is copied into an appointment or a vocation record.
 export function personRoutine(engine,state,id,constraints=null){
+    const shared=constraints??personConstraints(engine,state);
     const actor=state.npcs?.[id],base=baseOf(engine,state,id);
-    const rows=constraints?.offices??officeRows(state),ownRows=rows.some(([,r])=>r.holder===id);
+    const rows=shared.offices??officeRows(state),ownRows=rows.some(([,r])=>r.holder===id);
     const displaced=(engine.world.settlementProfiles??[]).some(p=>p.details?.governance?.head===id&&settlementHead(engine,state,p.id).value!==id);
     const removed=constraints?.dismissals?constraints.dismissals.has(id):dismissed(state,id);
-    const delegated=(constraints?.stewards??Object.values(state.records??{}).filter(r=>r.category==='housing_steward')).some(r=>r.steward===id);
-    const orgRow=(constraints?.organizations??Object.values(state.records??{}).filter(r=>r.category==='organization')).find(r=>r.members?.[id]&&r.members[id].position!=='成员'&&!r.removed?.[id]);
+    const delegated=(shared.stewards??recordsWhere(state.records,'category','housing_steward')).some(r=>r.steward===id);
+    const orgRow=(shared.organizations??recordsWhere(state.records,'category','organization')).find(r=>r.members?.[id]&&r.members[id].position!=='成员'&&!r.removed?.[id]);
     if(!actor?.vocation&&!ownRows&&!displaced&&!removed&&!orgRow&&!delegated)return null;
     const career=personCareer(engine,state,id).value;
     const offices=personOffices(engine,state,id).filter(e=>e.override),office=offices.sort((a,b)=>(b.value.since??0)-(a.value.since??0))[0]?.value;
@@ -430,7 +432,11 @@ export function personBody(engine,state,requested){
         form:fact(actor?.form?.until>(state.minute??0)?actor.form:null,`${path.join('.')}.form`,Boolean(actor?.form)),
         boss:fact(boss,`catalog.${boss?.id}`),status:fact(actor?.status,`${path.join('.')}.status`,Boolean(actor))};
 }
+const placeSettlementMemo=Symbol('place settlement'),personBusinessMemo=Symbol('person business');
 export function placeSettlement(engine,state,location){
+    return stateMemo(state,engine,[placeSettlementMemo,location],()=>readPlaceSettlement(engine,state,location));
+}
+function readPlaceSettlement(engine,state,location){
     const seen=new Set(),ids=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...Object.keys(state.settlements??{})]);
     while(location&&!seen.has(location)){if(ids.has(location))return fact(location,'current place ancestry');seen.add(location);location=(state.created?.[location]??engine.byId.get(location))?.parent;}
     return fact(null,'current place ancestry');
@@ -438,8 +444,13 @@ export function placeSettlement(engine,state,location){
 // A read-only pass over many people (shop derivation) hands in one legal index
 // (personConstraints) instead of rebuilding it per person.
 export function personBusiness(engine,state,id,constraints=null){
+    return stateMemo(state,engine,[personBusinessMemo,id,constraints],()=>readPersonBusiness(engine,state,id,constraints));
+}
+function readPersonBusiness(engine,state,id,constraints){
     const base=baseOf(engine,state,id),actor=state.npcs?.[id]??state.creatures?.[id];if(!base)return null;
-    const vocation=actor?.vocation,rule=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id),schedule=npcSchedule(engine,state,id,undefined,constraints)??actor?.residence?.schedule;
+    // Only a changed livelihood/home reads trading slots. Authored businesses
+    // take both their service and workplace straight from the catalogue.
+    const vocation=actor?.vocation,rule=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id),schedule=vocation||actor?.residence||actor?.workplace?npcSchedule(engine,state,id,undefined,constraints)??actor?.residence?.schedule:null;
     const slots=Object.values(schedule??{}).filter(Array.isArray).flat().filter(s=>s.services?.includes('trade'));
     const changed=Boolean(vocation||actor?.residence||actor?.workplace),trades=vocation?npcServices(engine,state,id).includes('trade')||slots.length>0:
         (base.services??[]).includes('trade')||(base.serviceCatalog??[]).some(s=>s.kind==='trade');
@@ -456,7 +467,11 @@ export function personBusiness(engine,state,id,constraints=null){
 // index. Someone with neither a trading catalogue nor a changed livelihood
 // (vocation) can never be open, so the pass skips them: the same result as
 // computing their view, without the per-person record scans.
+const personBusinessesMemo=Symbol('person businesses');
 export function personBusinesses(engine,state,keepers=[]){
+    return stateMemo(state,engine,[personBusinessesMemo,JSON.stringify(keepers)],()=>readPersonBusinesses(engine,state,keepers));
+}
+function readPersonBusinesses(engine,state,keepers){
     const constraints=personConstraints(engine,state),out=new Map(),always=new Set(keepers);
     for(const id of new Set([...engine.world.npcs.map(n=>n.id),...Object.keys(state.npcs??{}),...keepers])){
         const base=baseOf(engine,state,id);if(!base)continue;

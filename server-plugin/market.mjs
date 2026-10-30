@@ -6,6 +6,7 @@ import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
+import {recordsMemo} from './storage.mjs';
 import {householdResources,householdCommitments} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
@@ -36,6 +37,9 @@ const inventoryOf=(state,id)=>{
  return id==='player'?state.inventory:mark?.folded?state.records[`remote-stock:${mark.settlement}`].members[id].inventory:actor?.inventory??{};
 };
 function marketDeals(state){
+ return recordsMemo(state.records,marketDeals,()=>readMarketDeals(state));
+}
+function readMarketDeals(state){
  const rows=[];
  for(const [key,row]of Object.entries(state.records??{})){
   if(!key.startsWith('market-trade:')&&row.category!=='market_trade')continue;
