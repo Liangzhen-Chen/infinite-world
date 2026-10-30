@@ -1155,7 +1155,8 @@
           "loc_bs_yupo",
           "loc_bs_weiting",
           "loc_bs_liquan",
-          "loc_bs_sangban"
+          "loc_bs_sangban",
+          "loc_hw"
         ],
         "account": "各村公账",
         "income": [

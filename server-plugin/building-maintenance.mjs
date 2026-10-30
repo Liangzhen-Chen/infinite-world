@@ -119,7 +119,7 @@ export function publicMaintenanceOptions(e,document,who,building){
 function publicProposal(e,document,who,building){
  // Physical inspection supplies damage knowledge. Holding public office does
  // not reveal every building in the jurisdiction, or make its manager owner.
- if(document.state.npcs[who]?.location!==building)return null;
+ if(!knownPublicBuildings(document.state,who).includes(building))return null;
  const physical=facilityView(e,document.state,building);if(physical&&noServiceLoss(e,document.state,building,physical))return null;
  const w=publicMaintenanceOptions(e,document,who,building);if(!w||!Number.isFinite(w.cost)||w.options[0].utility<=0)return null;
  const state=document.state,read={document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)},s=state.settlements[w.settlement];
@@ -130,7 +130,7 @@ function publicProposal(e,document,who,building){
  const crewKey=id=>clockDiceKey(document.randomSeed,'public_maintenance:crew',`${who}:${building}:${id}`,Math.floor(state.minute/1440)*1440);
  const worker=subjectiveView(e,document,who).observable.people.map(p=>p.id).sort((a,b)=>crewKey(a).localeCompare(crewKey(b))||a.localeCompare(b)).find(id=>{
   const n=state.npcs[id];
-  if(id===who||n.location!==building||n.scheduleTravel||n.cognitionTravel||['濒死','昏迷','患病'].includes(n.status)||/睡眠|睡觉|熟睡/.test(n.activity??'')||
+  if(id===who||n.location!==state.npcs[who]?.location||n.scheduleTravel||n.cognitionTravel||['濒死','昏迷','患病'].includes(n.status)||/睡眠|睡觉|熟睡/.test(n.activity??'')||
      !isEffective(e,state,id)||currentEmployment(state,id)||projectAssignment(state,id)||npcHousehold(e,state,id)?.settlement!==w.settlement||(npcAgeAt(e,state,id)??0)<18)return false;
   return facilityRuntime().publicProjectWorkerDecision(e,document,id,{actor:who,location:facilityDefinition(e,state,building).parent,wage:w.wage})?.outcome==='agree';
  });
@@ -139,14 +139,34 @@ function publicProposal(e,document,who,building){
   wood:w.required.wood,stone:w.required.stone,workers:[worker],funding:'public'}};
 }
 registerAutonomyProvider('public_maintenance',{
- relevant:(e,state,id,presence)=>{const v=facilityView(e,state,presence.location);return Boolean(v&&!v.burning&&v.condition>0&&v.condition<100);},
- candidateRelevant:(e,document,id,presence)=>{const state=document.state,building=presence.location,v=facilityView(e,state,building);return Boolean(v&&!v.burning&&v.condition>0&&v.condition<100&&!noServiceLoss(e,state,building,v)&&facilityRuntime().publicMaintenanceInputs?.(e,document,id,building));},
+ relevant:(e,state,id,presence)=>knownPublicBuildings(state,id,presence.location).some(b=>{const v=facilityView(e,state,b);return v&&!v.burning&&v.condition>0&&v.condition<100;}),
+ candidateRelevant:(e,document,id,presence)=>knownPublicBuildings(document.state,id,presence.location).some(building=>{const state=document.state,v=facilityView(e,state,building);return Boolean(v&&!v.burning&&v.condition>0&&v.condition<100&&!noServiceLoss(e,state,building,v)&&facilityRuntime().publicMaintenanceInputs?.(e,document,id,building));}),
  candidates(e,view,document){
-  const who=view.observer,building=view.self.location,p=publicProposal(e,document,who,building);if(!p)return [];
+  const who=view.observer;
+  return knownPublicBuildings(document.state,who).flatMap(building=>{
+  const p=publicProposal(e,document,who,building);if(!p)return [];
   const w=p.w;
   return [{id:`public_maintenance:${who}:${building}`,kind:'public_maintenance',legacy:{kind:'public_maintenance',building},
    cost:{value:w.cost+Math.floor(w.cost*w.delayPermille/1000)},needSatisfaction:Math.max(0,w.avoidedLoss+Math.trunc(w.avoidedLoss*w.noisePermille/1000)),utility:w.options[0].utility}];
+  });
  }
+});
+function knownPublicBuildings(state,who,location=state.npcs[who]?.location){
+ return [...new Set([location,...(state.npcs[who]?.memoryStream??[]).filter(m=>m.kind==='facility_maintenance'&&m.minute<=state.minute).flatMap(m=>m.entities??[])].filter(Boolean))];
+}
+registerAutonomyProvider('report_maintenance',{
+ relevant:(e,state,id,presence)=>{const b=facilityDefinition(e,state,presence.location),v=facilityView(e,state,presence.location);return (b?.site?.manager??b?.lodging?.host)===id&&v?.condition>0&&v.condition<60;},
+ candidateRelevant:(e,document,id,presence)=>Boolean(facilityRuntime().publicMaintenanceReport?.(e,document,id,presence.location)),
+ candidates(e,view,document){
+  const building=view.self.location,report=facilityRuntime().publicMaintenanceReport?.(e,document,view.observer,building);
+  const quote=report&&publicMaintenanceOptions(e,document,report.officer,building);
+  return quote?[{id:`report_maintenance:${view.observer}:${building}`,kind:'report_maintenance',legacy:{kind:'report_maintenance',building},cost:{minutes:30},needSatisfaction:quote.avoidedLoss,utility:quote.net}]:[];
+ }
+});
+registerAutonomyKind('report_maintenance',{
+ minutes:()=>30,
+ validate(d,e,who,action){if(!facilityRuntime().publicMaintenanceReport?.(e,d.document,who,action.building))throw preconditionFailure('没有可报知的现场失修');},
+ execute(d,e,who,action,{actionId}){const report=facilityRuntime().reportPublicMaintenance(d,e,who,action.building,actionId);return {summary:'按亲见失修情况向在任负责人报知。',report,spent:{minutes:30}};}
 });
 registerAutonomyKind('public_maintenance',{
  minutes:()=>30,

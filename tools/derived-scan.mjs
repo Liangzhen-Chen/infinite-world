@@ -74,7 +74,17 @@ export function scanAuthored(files,fields){
  const hits=[],names=new Set(fields.filter(f=>f.scope==='all').map(f=>f.field));
  for(const abs of files){
   let json;try{json=JSON.parse(fs.readFileSync(abs,'utf8'));}catch{continue;}
-  const counts=new Map(),seen=node=>{if(Array.isArray(node))node.forEach(seen);else if(node&&typeof node==='object')for(const [k,v]of Object.entries(node)){if(names.has(k))counts.set(k,(counts.get(k)??0)+1);seen(v);}};
+  const counts=new Map(),seen=(node,segments=[])=>{
+   if(Array.isArray(node))node.forEach((value,index)=>seen(value,[...segments,index]));
+   else if(node&&typeof node==='object')for(const [k,v]of Object.entries(node)){
+    // world.schema settlementProfile.publicMaintenance is an authored office
+    // charter, the source of powers rather than a person's derived powers.
+    // Keep the ban for every other object/path and every runtime write.
+    const charterPower=k==='powers'&&rel(abs)==='world/geo/settlements.json'&&segments.length===2&&segments[1]==='publicMaintenance'&&node.budgetFrom==='ranked_office'&&typeof node.source==='string';
+    if(names.has(k)&&!charterPower)counts.set(k,(counts.get(k)??0)+1);
+    seen(v,[...segments,k]);
+   }
+  };
   seen(json);
   for(const [field,n]of counts)for(let i=0;i<n;i++)hits.push({kind:'authored',file:rel(abs),field});
  }

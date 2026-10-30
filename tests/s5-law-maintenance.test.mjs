@@ -195,7 +195,9 @@ test('无私人产权的学堂驿站、仅经营者、火灾与冲突工程不�
  // Management or public service is not private title:0 authorized
  // owner-maintenance options, regardless of the actor's materials.
  const f=scenario();
- const school=f.w.locations.find(p=>facilityView(f.e,f.doc.state,p.id)?.kind==='school'&&!p.owner);
+ // K10b published the native village school as communal property. This
+ // test excludes private title, not all title; keep testing the real school.
+ const school=f.w.locations.find(p=>facilityView(f.e,f.doc.state,p.id)?.kind==='school'&&p.owner==='loc_hw');
  assert.ok(school);
  for(const building of [post,school.id]){f.doc.state.buildings[building]={condition:59};assert.equal(maintenanceOptions(f.e,f.doc,host,building),null);}
  f.doc.state.buildings[inn].owner='loc_hw';assert.equal(options(f),null);

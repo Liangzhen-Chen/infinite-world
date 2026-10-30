@@ -8114,6 +8114,16 @@
     "settlementProfile": {
       "type": "object",
       "properties": {
+        "publicMaintenance": {
+          "type": "object",
+          "properties": {
+            "budgetFrom": {"const": "ranked_office"},
+            "powers": {"type": "array", "items": {"const": "public_project"}, "minItems": 1, "uniqueItems": true},
+            "source": {"type": "string", "minLength": 1}
+          },
+          "required": ["budgetFrom", "powers", "source"],
+          "additionalProperties": false
+        },
         "id": {
           "type": "string",
           "minLength": 1
