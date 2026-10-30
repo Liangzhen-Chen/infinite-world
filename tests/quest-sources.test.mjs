@@ -26,7 +26,9 @@ function setup(mutate=()=>{}){
  return {w,engine,document,run,wait,midnight};
 }
 const generated=c=>Object.values(c.state.quests).filter(q=>q.source);
-const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,x)=>n+(x.coins??0),0)+Object.values(c.state.quests).reduce((n,q)=>n+q.escrow,0);
+// W8-E8 restocking transfers private money to the source settlement (sickle:
+// 1 * base 10 * scarcity 2 = 20). Public purses belong in conservation totals.
+const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,x)=>n+(x.coins??0),0)+Object.values(c.state.settlements).reduce((n,s)=>n+(s.treasury??0),0)+Object.values(c.state.quests).reduce((n,q)=>n+q.escrow,0);
 
 test('生成器登记：三种来源都以生成器登记，推进注册表在势力时钟之后跑',()=>{
  // U11 族群觉醒以第四个生成器登记，排在世界事件与效果表之间。
@@ -81,6 +83,9 @@ test('数量节流：每日上限、每人按灵智等级上限，守常者只�
 
 test('灾害事件任务：疫病求医、汛期修堤从公账托管，冬荒运粮动用后低于留底则不出，C级折10个D',async()=>{
  const {document,midnight,engine}=setup(w=>{w.rules.questSources.npcNeeds=[];});
+ // Explicit tight budget: 510 + sickle proceeds 20 - epidemic 150 - levee 80
+ // = reserve 300. After epidemic, famine 200 would cross the reserve.
+ document.state.settlements.loc_hw.treasury=510;
  Object.assign(document.state.records,{
   'hazard-famine:loc_hw':{category:'hazard_famine',settlement:board,since:540,until:540+60*DAY,sourceEvent:'hazard:famine:test'},
   'hazard-flood:loc_hw_dock':{category:'hazard_flood',location:'loc_hw_dock',since:540,until:540+5*DAY,soaked:[],sourceEvent:'hazard:flood:test'},
@@ -91,7 +96,8 @@ test('灾害事件任务：疫病求医、汛期修堤从公账托管，冬荒�
  assert.equal(epidemic.grade,'C');assert.equal(epidemic.unitsD,10);assert.equal(epidemic.publisher,clerk);assert.equal(epidemic.fundedBy.treasury,board);assert.match(epidemic.content,/药草/);
  assert.equal(flood.location,board,'受淹地点向上找到公告栏');assert.match(flood.content,/修堤/);assert.match(flood.sourceLabel,/汛情/);
  assert.ok(!qs.some(q=>q.source.cause==='hazard-famine:loc_hw'),'动用后低于公账留底则不出');
- assert.equal(next.state.settlements.loc_hw.treasury,before-epidemic.reward-flood.reward);
+ assert.equal(next.state.records['shop:shop_hw_forge'].entries.find(e=>e.item==='item_sickle').paidCopper,20);
+ assert.equal(next.state.settlements.loc_hw.treasury,before+20-epidemic.reward-flood.reward);
  assert.ok(next.state.settlements.loc_hw.treasury>=engine.rules.governance.authority.treasury.reserveCopper);
  for(const q of qs){const [lo,hi]=rewardRange(engine,q.grade);assert.ok(q.reward>=lo&&q.reward<=hi);}
  assert.equal(generated(await midnight(next)).length,qs.length,'同一事件不重复出单');
@@ -122,7 +128,10 @@ test('过期没人接的任务撤下：人物托管退回本人，公账托管�
  assert.ok(npcQuest&&floodQuest);
  const done=await wait(posted,10*DAY,'expire');
  for(const q of [npcQuest,floodQuest]){const row=done.state.quests[q.id];assert.equal(row.status,'超期');assert.equal(row.escrow,0);assert.equal(row.refund,q.reward);}
- assert.equal(done.state.settlements.loc_hw.treasury,treasury);
+ // Two weekly forge cycles (days 1 and 8) buy one sickle each, then the
+ // ceiling of two stops replenishment: 2 * (10 * scarcity 2) = 40 received.
+ assert.deepEqual(done.state.records['shop:shop_hw_forge'].entries.filter(e=>e.item==='item_sickle').map(e=>[e.day,e.added,e.paidCopper]),[[1,1,20],[8,1,20]]);
+ assert.equal(done.state.settlements.loc_hw.treasury,treasury+40);
  const reposts=generated(done).filter(q=>q.publisher===owner&&q.id!==npcQuest.id&&['公开','进行中'].includes(q.status));
  assert.equal(done.state.npcs[owner].coins,coins-reposts.reduce((n,q)=>n+q.escrow,0));
 });

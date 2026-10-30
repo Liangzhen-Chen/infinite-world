@@ -1869,6 +1869,18 @@
           "firstDay": 1
         }
       },
+      "additionalRestock": {
+        "shop_hw_forge": [
+          {
+            "after": "item_mining_pick",
+            "item": "item_sickle",
+            "source": "local",
+            "amount": 1,
+            "maximum": 2,
+            "basis": "W8-E8：乡村铁匠铺常备农具；铁镰已在目录（审批管线）"
+          }
+        ]
+      },
       "stores": [
         {
           "id": "shop_hw_qingdeng",
@@ -1932,13 +1944,6 @@
               "source": "local",
               "amount": 1,
               "maximum": 2
-            },
-            {
-              "item": "item_sickle",
-              "source": "local",
-              "amount": 1,
-              "maximum": 2,
-              "basis": "W8-E8：乡村铁匠铺常备农具；铁镰已在目录（审批管线）"
             },
             {
               "item": "item_steel_arming_sword",
