@@ -26,6 +26,9 @@ function land({out=false}={}){
  return f;
 }
 function grant(f,from,terms,id){
+ // K07 / 05 §5.1.1: the exception still needs exact consent; amount-only
+ // legacy permission cannot also grant disposal of the tenant's future crop.
+ terms={rentMode:'fixed',inputPayer:'tenant',unharvestedCrops:'owner',farmOperator:'tenant',...terms};
  const d=f.e.primitiveDraft(f.doc);
  applyConsentEvent(d,{engine:f.e,document:d.document},{actor:from,eventId:id,verb:'consent_given',to:'player',payload:{scope:'rent',subject:field,purpose:[field],terms,until:f.doc.state.minute+10}});
  f.doc=applyPatches(f.doc,d.patches);

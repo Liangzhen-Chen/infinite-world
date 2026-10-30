@@ -30,11 +30,24 @@ export function consentIndex(events){
  return {pair:(from,to)=>(index.pairs.get(`${from}\u0000${to}`)??[]).map(i=>events[i]),from:from=>(index.froms.get(from)??[]).map(i=>events[i]),byId:id=>index.ids.get(id)};
 }
 const termKeys=new Set(['fee','minutes','principal','days','interest','totalCoins','purpose','spell','waterBatch','role','amount','allowed','saleAllowed','price','atMinute','item','quantity','prepayment','deadline','location','installments']);
+const tenancyEnums={rentMode:['fixed','share'],outputBasis:['gross','net'],netInputs:['consumed-seed'],rentPayment:['cash','kind'],inputPayer:['tenant','owner','shared'],unharvestedCrops:['tenant','owner'],farmOperator:['tenant','owner']};
+const tenancyNumbers=['shareNumerator','shareDenominator','ownerInputNumerator','ownerInputDenominator','cropPriceNumerator','cropPriceDenominator','seedPriceNumerator','seedPriceDenominator'];
+const tenancyRatios=[['shareNumerator','shareDenominator'],['ownerInputNumerator','ownerInputDenominator'],['cropPriceNumerator','cropPriceDenominator'],['seedPriceNumerator','seedPriceDenominator']];
+for(const key of [...Object.keys(tenancyEnums),...tenancyNumbers])termKeys.add(key);
 export function validConsentTerms(terms){
  if(!terms||typeof terms!=='object'||Array.isArray(terms)||Object.keys(terms).some(k=>!termKeys.has(k)))return false;
- return Object.entries(terms).every(([k,v])=>['purpose','spell','waterBatch','role','item','location'].includes(k)?typeof v==='string'&&v.length>0&&v.length<=120:k==='allowed'?Array.isArray(v)&&v.length>0&&v.every(x=>typeof x==='string'&&x.length>0):k==='saleAllowed'?typeof v==='boolean':Number.isSafeInteger(v)&&v>=0);
+ return Object.entries(terms).every(([k,v])=>tenancyEnums[k]?tenancyEnums[k].includes(v):['purpose','spell','waterBatch','role','item','location'].includes(k)?typeof v==='string'&&v.length>0&&v.length<=120:k==='allowed'?Array.isArray(v)&&v.length>0&&v.every(x=>typeof x==='string'&&x.length>0):k==='saleAllowed'?typeof v==='boolean':Number.isSafeInteger(v)&&v>=0&&(!k.endsWith('Denominator')||v>0));
 }
-const termsMatch=(required,actual)=>Object.entries(required??{}).every(([k,v])=>Array.isArray(v)?Array.isArray(actual?.[k])&&v.length===actual[k].length&&v.every((x,i)=>x===actual[k][i]):actual?.[k]===v);
+function sameTerm(a,b,key){
+ const pair=tenancyRatios.find(p=>p.includes(key));
+ if(!pair)return a?.[key]===b?.[key];
+ const [n,d]=pair;
+ return pair.every(k=>Number.isSafeInteger(a?.[k])&&a[k]>=0&&Number.isSafeInteger(b?.[k])&&b[k]>=0)&&a[d]>0&&b[d]>0&&BigInt(a[n])*BigInt(b[d])===BigInt(b[n])*BigInt(a[d]);
+}
+const termsMatch=(required,actual)=>Object.entries(required??{}).every(([k,v])=>Array.isArray(v)?Array.isArray(actual?.[k])&&v.length===actual[k].length&&v.every((x,i)=>x===actual[k][i]):sameTerm(required,actual,k))&&
+ // An earlier amount-only agreement grants neither a different rent system
+ // nor a disposal right over the tenant's future crop or input investment.
+ [...Object.keys(tenancyEnums),...tenancyNumbers].every(k=>actual?.[k]===undefined||sameTerm(required,actual,k));
 
 // A legacy lending call has principal/days slots but no interest slot. Read an
 // actual borrower's offer, never a proposal's claim that the borrower agreed.
@@ -51,8 +64,17 @@ export function agreedLoan(context,borrower,creditor,{principal,days,interest,su
 // Native contract requests use current NPC facts, never a caller's answer.
 // Callers supply derived costs and exact terms after checking presence/capacity.
 export function requestContractConsent(d,engine,{from,to='player',scope,subject,purpose=subject,terms,cost,reward=0,prepaid=false,eventId,until=d.get('state','minute')}){
- const context={engine,document:d.document};
- const permission=consent(context,from,to,scope,{subject,purpose,terms,until,onRefusal:'abort'});
+ const exactTenancy=scope==='rent'&&terms?.rentMode!==undefined;
+ const context=()=>{
+  const document=d.document;
+  if(!exactTenancy)return {engine,document};
+  // A broad historical rent grant is not consent to new economic/disposal
+  // clauses. Keep revocations and only grants that bind these exact terms.
+  const matches=row=>row.terms&&validConsentTerms(row.terms)&&termsMatch(row.terms,terms);
+  return {engine,document,consentEvents:(document.state.consentEvents??[]).filter(row=>row.type==='consent_revoked'||matches(row)),
+   authorizationRecords:Object.entries(document.state.records??{}).filter(([,row])=>row.category==='authorization'&&matches(row))};
+ };
+ const permission=consent(context(),from,to,scope,{subject,purpose,terms,until,onRefusal:'abort'});
  if(permission.allowed)return permission;
  const view=subjectiveView(engine,d.document,from);
  if(!conversationLanguage(view,engine,d))return permission;
@@ -61,9 +83,9 @@ export function requestContractConsent(d,engine,{from,to='player',scope,subject,
  const decision=npcDecision(view,{kind:scope,from:to,cost,reward,...(prepaid?{prepaid:true}:{})});
  if(decision.outcome!=='agree')return {...permission,reason:decision.reason,conditions:decision.conditions};
  const id=`${eventId}:consent`,payload={scope,subject,purpose:[purpose],terms,until:until+1};
- applyConsentEvent(d,context,{actor:from,eventId:id,verb:'consent_given',to,payload});
+ applyConsentEvent(d,context(),{actor:from,eventId:id,verb:'consent_given',to,payload});
  // The append-only native consent row is the agreement's saved provenance.
- return consent({...context,document:d.document},from,to,scope,{subject,purpose,terms,until,onRefusal:'abort'});
+ return consent(context(),from,to,scope,{subject,purpose,terms,until,onRefusal:'abort'});
 }
 
 // The legacy learning handler has already derived the registered subject,
