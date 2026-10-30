@@ -25,7 +25,7 @@ import {standing}from'./standing.mjs';
 import {registerCreditDefault,settleCreditCase}from'./law.mjs';
 import {businessReport}from'./business.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
-import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim,interestRate,settleDepositInterest} from './finance-bank.mjs';
+import {derivedBankAt,derivedBankById,BANK_OPERATIONS,bankTrade,advanceBankFinance,settleFinancialClaim,interestRate,settleDepositInterest,seasonalCredit,discloseCreditPlan,borrowerCashFlow,seasonalTermLimit} from './finance-bank.mjs';
 import {ASSET_OPERATIONS,assetTrade,advanceFinanceAssets}from'./finance-assets.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath}from'./group-account.mjs';
 import {currencyExchange,currencyRow,currencyTradePrice} from './currency.mjs';
@@ -34,6 +34,14 @@ import {claimUnit} from './claim-unit.mjs';
 import {holdGoods,releaseGoods} from './goods-escrow.mjs';
 import {interestAmount} from './obligation-calendar.mjs';
 import {valuation} from './valuation.mjs';
+import {householdBudget,householdOptions} from './household-budget.mjs';
+import {subjectiveView,personLanguages} from './subjective-view.mjs';
+import {applyConsentEvent} from './action-consent.mjs';
+import {npcDecision} from './npc-decision.mjs';
+import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
+import {rollDice} from './scheduler.mjs';
+import {subjectiveMarketQuote} from './market.mjs';
+import {fixedUnits,fixedInteger,FIXED_SCALE} from './rx.mjs';
 
 export {CREDIT_OPERATIONS} from './finance-operations.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -86,7 +94,7 @@ const coinage=(engine,item)=>(rules(engine).coinages??[]).find(c=>c.item===item)
 
 // ---- pledges ---------------------------------------------------------------
 export function pledge(d,engine,key,item,quantity,owner='player'){
-    const signedValue=valueOf(d,engine,item,quantity);
+    const signedValue=valueOf(d,engine,item,quantity,d.get('state','location'),owner);
     if(groupAccountView(engine,d.get('state'),owner)){
         const account=ensureGroupAccount(d,engine,owner);if((account.items[item]??0)<quantity)throw preconditionFailure('组织公库没有足够抵押实物');
         moveStock(d,{from:store(engine,owner,item),to:pledged(engine,key,item),amount:quantity,writer:'credit',eventId:key});
@@ -133,12 +141,21 @@ export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue,b
         if(regard<c.loan.refuseBelow)throw preconditionFailure(`${nameOf(engine,lender)}不信任你，不肯借钱`);
         if(regard<c.loan.collateralBelow&&collateralValue<principal)throw preconditionFailure(`${nameOf(engine,lender)}与你交情不足，须有足值抵押才肯借`);
         rate=Math.round((high-(high-low)*Math.max(0,Math.min(100,regard))/100)*10000)/10000;
-        maximumDays=c.loan.maximumDays;limit=Math.floor(engine.actor(d,lender).coins*c.loan.lenderCashShare);
+        maximumDays=c.loan.maximumDays;
+        const cash=engine.actor(d,lender).coins,until=d.get('state','minute')+days*1440;
+        const reserved=obligationRows(d.get('state')).filter(o=>o.debtor===lender&&o.deadline<=until&&!obligationView(d.get('state'),o).closed)
+            .reduce((n,o)=>n+claimCopper(d,engine,{...o,amount:obligationView(d.get('state'),o).owed,paid:0}),0);
+        limit=Math.min(Math.floor(cash*c.loan.lenderCashShare),Math.max(0,cash-reserved));
     }
     if(!bank&&(rate<low||rate>high))throw preconditionFailure('利率超出世界登记的月息范围');
+    const assessment=seasonalCredit(d,engine,{borrower,lender,bank,principal,days,collateral:collateralValue,unsecured:limit});
+    // The ordinary short loan band is extended only as far as a disclosed
+    // seasonal receipt, within the separate seasonal product's term ceiling.
+    if(assessment.known)maximumDays=Math.max(maximumDays,Math.min(seasonalTermLimit(engine),assessment.repaymentDays));
     int(days,1,maximumDays,'借期天数');
     if(principal>limit)throw preconditionFailure(`对方此刻至多能借出${Math.max(0,limit)}铜`);
-    const now=d.get('state','minute');return {rate,per,calendar,interest:interestAmount({principal,rate,per,calendar,from:now,to:now+days*1440})};
+    if(principal>assessment.capacity)throw preconditionFailure(`${assessment.reason}；本次可支持${assessment.capacity}铜${assessment.nextRepaymentAt?`，下次还款来源在第${Math.ceil(assessment.nextRepaymentAt/1440)}日`:''}`);
+    const now=d.get('state','minute');return {rate,per,calendar,interest:interestAmount({principal,rate,per,calendar,from:now,to:now+days*1440}),assessment};
 }
 // Creates the debt; the principal goes to the player or into a contract's escrow.
 // S1a: escrowTo = 本金不给玩家时转入的托管账户（合同托管）。
@@ -148,9 +165,10 @@ export function loanSuccessionTerms(d,engine){
 // S5-F2: `frozen` = {resource,resourceName,referenceCopper,escrowContract} makes the principal that many units of a tender-unit
 // resource, handed over by the lender in kind into the contract's goods escrow; rate/limit are judged on the reference bill and interest
 // is whole units of the same resource.
-export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs,consentSource,frozen=null}){
+export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,collateral=null,eventId,purpose,toPlayer=true,escrowTo=null,installments=1,kind='loan',debtor='player',actor=debtor,actedAs,consentSource,frozen=null,householdFunding=false}){
     principal=int(principal,1,1e7,'借款本金');
-    const collateralValue=collateral?valueOf(d,engine,collateral.item,collateral.quantity):0;
+    const location=debtor==='player'?d.get('state','location'):engine.actor(d,debtor)?.location??d.get('state','location');
+    const collateralValue=collateral?valueOf(d,engine,collateral.item,collateral.quantity,location,debtor):0;
     const quoted=loanTerms(d,engine,{lender,bank,principal:frozen?frozen.referenceCopper:principal,days,collateralValue,borrower:debtor});
     const {rate,per,calendar}=quoted,interest=frozen?interestAmount({principal,rate,per,calendar,from:d.get('state','minute'),to:d.get('state','minute')+days*1440}):quoted.interest;
     const id=`debt_loan_${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('借据编号已存在');
@@ -184,7 +202,8 @@ export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,c
     const terms={debtor,creditor:bank?.id??lender,principal,interest,monthlyInterest:rate,days,deadline:now+days*1440,pledge:collateral?{...collateral,value:collateralValue}:null,
         terms:{...succession,rateTerms:{per,calendar},...(frozen?{referenceCopper:frozen.referenceCopper}:{}),...(consentSource?{consent:consentSource}:{})}};
     const row={category:'debt',kind,name:purpose??`向${bank?.name??nameOf(engine,lender)}借款`,...terms,...(bank?{bank:bank.id,keeper}:{}),installments,
-        amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location:d.get('state','location'),source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms),
+        ...(householdFunding?{householdFunding:true,nextPayment:now+days*1440}:{}),
+        amount:principal+interest,paid:0,createdAt:now,status:'待偿还',location,source:eventId,pledgeRecord:pledgeKey,signedTerms:structuredClone(terms),
         ...(frozen?{resource:frozen.resource,resourceName:frozen.resourceName,referenceCopper:frozen.referenceCopper}:{})};
     holdingSet(d,engine,rec(id),row,'credit');
     openObligation(d,engine,{...row,id:`finance:${id}`,legacyRecord:id,actor,...(actedAs?{actedAs}:{})},`${eventId}:claim`);
@@ -202,6 +221,111 @@ export function loanFreeze(d,engine,{copper,debtor='player',location=d.get('stat
     if(units<1)throw preconditionFailure(`按今日兑换率，${bill}铜折不足一${fz.resourceName}，放不出更小的单位`);
     return {...fz,amounts:{principal:units}};
 }
+
+// K02's conditional raise option has an actual autonomy consumer. Looking for
+// a lender reveals neither that person's cash nor an agreement to lend it.
+export function householdFundingCandidates(engine,view,document){
+    if(!fundingRelevant(engine,document.state,view.observer))return [];
+    const owner=view.observer,reader={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+    const budget=householdBudget(reader,engine,owner,{view});
+    let required=Math.max(budget.cashShortfall,budget.plannedCashShortfall);
+    if(!required){
+        if(!Object.values(budget.resources.shortfall).some(n=>n>0))return [];
+        const held=new Set(budget.resources.rows.filter(r=>r.consumable).map(r=>r.item));
+        const known=new Set(held),prefix=`market:${view.self.location}:`;
+        for(const key of Object.keys(view.knowledge.facts))if(key.startsWith(prefix))known.add(key.slice(prefix.length));
+        for(const deal of recordsWhere(document.state.records,'category','market_trade'))if([deal.seller,deal.buyer].includes(owner))known.add(deal.item);
+        const foods=[...known].map(id=>engine.byId.get(id)).filter(item=>item?.nutrition)
+            .map(item=>({item,quote:subjectiveMarketQuote(engine,document,view,{item:item.id,seller:owner,buyer:null,quantity:1})}));
+        for(const need of ['satiety','hydration']){
+            const missing=budget.resources.shortfall[need];if(!missing)continue;
+            const choices=foods.filter(r=>r.item.nutrition[need]>0).map(r=>{
+                const q=r.item.nutrition[need];
+                return fixedInteger(BigInt(Math.ceil(missing/q))*fixedUnits(r.quote.listPrice)+FIXED_SCALE-1n);
+            }).filter(n=>n>0);
+            // A missing owned food row is not evidence of an obtainable food
+            // channel. K08 supplies shopping; this path finances known bills.
+            if(choices.length)required=Math.max(required,Math.min(...choices)-budget.cash);
+        }
+    }
+    if(!Number.isSafeInteger(required)||required<=0)return [];
+    const flow=borrowerCashFlow(engine,document.state,owner,view.minute,{document});
+    let receipts=0;
+    const next=flow.future.find(r=>{if(r.at<=view.minute)return false;receipts+=r.copper??0;return receipts>=required;});
+    if(!next)return [];
+    const days=Math.max(1,Math.ceil((next.at-view.minute)/1440));
+    if(days>seasonalTermLimit(engine))return [];
+    return view.observable.people.filter(p=>p.id!==owner&&awake(p)).flatMap(p=>{
+        const offer={id:`credit:request:${owner}:${p.id}`,at:view.minute+5,amount:required};
+        const option=householdOptions(budget,{quantity:required,fundingOffer:offer}).find(r=>r.operation==='raise');
+        if(!option.feasible)return [];
+        return [{id:offer.id,kind:'household_credit',legacy:{kind:'household_credit',seller:p.id,principal:required,days},
+            cost:{minutes:5},needSatisfaction:100,
+            utility:required+(view.self.relations[p.id]?.trust??0)+rollDice(document.randomSeed,'credit:request-priority',`${owner}:${p.id}`,Math.floor(view.minute/1440),0,1000)/1000,
+            fundingOffer:offer,conditional:true}];
+    });
+}
+
+const fundingRelevant=(e,state,id)=>Boolean(creditRules(e)&&(
+    Object.values(state.obligations??{}).some(r=>[r.debtor,r.creditor].includes(id)&&r.deadline>=state.minute&&r.deadline<=state.minute+seasonalTermLimit(e)*1440&&!obligationView(state,r).closed)||
+    recordsWhere(state.records,'category','private_farm').some(r=>r.owner===id&&['growing','ready'].includes(r.status))||
+    recordsWhere(state.records,'kind','workshop').some(r=>r.worker===id&&r.deadline>state.minute)));
+registerAutonomyProvider('household_credit',{
+    relevant:fundingRelevant,
+    candidates:(e,view,document)=>creditRules(e)?householdFundingCandidates(e,view,document):[]
+});
+function fundingParties(d,e,borrower,lender,{start=d.get('state','minute')}={}){
+    const state=d.get('state'),a=state.npcs?.[borrower],b=state.npcs?.[lender];
+    if(!awake(a)||!awake(b)||a.location!==b.location||personConstraint(e,state,borrower)||personConstraint(e,state,lender)||
+        (personAge(e,state,borrower).value??0)<18||(personAge(e,state,lender).value??0)<18)throw preconditionFailure('筹措双方须清醒成年、可行动且实际在场');
+    if(!personLanguages(e,state,borrower).some(l=>personLanguages(e,state,lender).includes(l)))throw preconditionFailure('筹措双方须能沟通条款');
+    e.assertNpcObligationAction(d,[borrower,lender],{start,minutes:5});
+    const now=start;
+    for(const who of [borrower,lender])for(let at=now;at<now+5;){
+        const slot=scheduleAt(e,who,at,state);
+        if(!slot||slot.location!==a.location||/睡眠|睡觉|熟睡|赶路/.test(slot.activity))throw preconditionFailure('筹措双方没有可用签约窗口');
+        at=slot.until;
+    }
+}
+// The existing player-facing contract helper checks the player's language.
+// Here both real NPCs have already passed fundingParties' mutual language
+// check; use the same decision library and native consent writer for this pair.
+function fundingConsent(d,e,{from,to,terms,cost,reward,eventId}){
+    const now=d.get('state','minute'),context={engine:e,document:d.document};
+    const request={subject:to,purpose:to,terms,until:now,onRefusal:'abort'};
+    const existing=nativeConsent(context,from,to,'loan',request);if(existing.allowed)return existing;
+    const decision=npcDecision(subjectiveView(e,d.document,from),{kind:'loan',from:to,cost,reward});
+    if(decision.outcome!=='agree')return {...existing,reason:decision.reason};
+    applyConsentEvent(d,context,{actor:from,eventId,verb:'consent_given',to,payload:{scope:'loan',subject:to,purpose:[to],terms,until:now+1}});
+    return nativeConsent({engine:e,document:d.document},from,to,'loan',request);
+}
+registerAutonomyKind('household_credit',{
+    minutes:()=>5,
+    validate(d,e,who,action,{at=d.get('state','minute')}={}){
+        fundingParties(d,e,who,action.seller,{start:at});
+        const document={...d.document,state:{...d.get('state'),minute:at}},view=subjectiveView(e,document,who);
+        if(!householdFundingCandidates(e,view,document).some(c=>c.legacy.seller===action.seller&&c.legacy.principal===action.principal&&c.legacy.days===action.days))throw preconditionFailure('家户筹措缺口或还款时点已经变化');
+    },
+    execute(d,e,who,action,{actionId,start=d.get('state','minute')}){
+        fundingParties(d,e,who,action.seller,{start});
+        discloseCreditPlan(d,e,who,action.seller,actionId);
+        const quote=loanTerms(d,e,{lender:action.seller,borrower:who,principal:action.principal,days:action.days,collateralValue:0});
+        const now=d.get('state','minute'),location=d.get('state','npcs',who,'location');
+        const fz=loanFreeze(d,e,{copper:action.principal,debtor:who,location}),principal=fz?fz.amounts.principal:action.principal;
+        const interest=fz?interestAmount({principal,rate:quote.rate,per:quote.per,calendar:quote.calendar,from:now,to:now+action.days*1440}):quote.interest;
+        const copper=amount=>fz?claimCopper(d,e,{resource:fz.resource,amount,paid:0},location):amount;
+        const terms={principal,days:action.days,interest,...(fz?{item:resourceItem(e,fz.resource),quantity:principal}:{})};
+        const lender=fundingConsent(d,e,{from:action.seller,to:who,terms,
+            cost:{coins:fz?0:principal,value:fz?copper(principal):0,minutes:5},reward:copper(principal)+copper(interest),eventId:`${actionId}:lender`});
+        if(!lender.allowed)throw preconditionFailure('出借人未同意本次筹措条款');
+        const borrower=fundingConsent(d,e,{from:who,to:action.seller,terms,
+            cost:{coins:0,value:copper(interest),minutes:5},reward:copper(principal),eventId:`${actionId}:borrower`});
+        if(!borrower.allowed)throw preconditionFailure('借款人未同意本次筹措条款');
+        const loan=openLoan(d,e,{lender:action.seller,debtor:who,principal,days:action.days,eventId:actionId,
+            consentSource:lender.source,householdFunding:true,...(fz?{frozen:{resource:fz.resource,resourceName:fz.resourceName,referenceCopper:action.principal}}:{})});
+        return {summary:`家户筹措已经由出借人交付${loan.principal}，形成真实借据。`,spent:{}};
+    }
+});
 export const isCreditDebt=row=>row?.category==='debt'&&CREDIT_KINDS.has(row.kind);
 // Repayment through the ordinary trade repay call; the creditor or the bank's keeper must be present.
 export function repayCredit(d,engine,{seller,debt:id,coins:partial,payCurrency},eventId){
@@ -289,6 +413,12 @@ export async function creditTrade(d,args,eventId,terms){
         let bank=null,keeper=null,agreement=null;
         if(bankHere?.keepers.includes(lender)){({b:bank,keeper}=openBank(d,engine,lender));}
         else{
+            counterpart(d,engine,lender,{consent:true,minutes:5});
+        }
+        // A real request communicates the plan before the first seasonal quote.
+        // This check is presence only; the exact loan still needs consent below.
+        discloseCreditPlan(d,engine,'player',lender,eventId);
+        if(!bank){
             const quoted=loanTerms(d,engine,{lender,principal:args.coins,days,collateralValue:collateral?valueOf(d,engine,collateral.item,collateral.quantity):0});
             agreement=nativeConsent({engine,document:d.document},lender,'player','loan',{purpose:'player',subject:'player',terms:{principal:args.coins,days,interest:quoted.interest},until:d.get('state','minute')+5,onRefusal:'abort'});
             counterpart(d,engine,lender,{consent:agreement.allowed,minutes:5});

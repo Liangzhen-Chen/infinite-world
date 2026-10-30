@@ -11,9 +11,11 @@ import {compileRX,evaluateRX,fixedUnits,fixedInteger,FIXED_SCALE} from './rx.mjs
 import {subjectiveView} from './subjective-view.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {contractTerms,leaseState} from './contract-state.mjs';
+import {householdWorkTime} from './npc-state.mjs';
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
 const preferenceRoll=compileRX('roll("thrift")');
+const laborPreferenceRoll=compileRX('roll("reservation")'),laborNoiseRoll=compileRX('roll("choice")');
 const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id];
 const inventory=(s,id)=>{
  const a=actor(s,id),m=a?.materialized;
@@ -308,4 +310,36 @@ export function householdMarginalBudget(budget,{operation,item,quantity=1,unitPr
 }
 export function householdOptions(budget,{item,quantity=1,unitPrice=0,totalCoins=null,fundingOffer=null}={}){
  return ['consume','sell','retain','buy','raise'].map(operation=>householdMarginalBudget(budget,{operation,item,quantity,unitPrice,totalCoins,fundingOffer}));
+}
+
+// Cash, meals and the household's retained time remain separate facts. A meal
+// offer is only a possible benefit here; settlement still transfers real stock.
+export function householdLaborBudget(d,engine,owner,{minute=d.get('state','minute'),wage=0,workMinutes=480,commuteMinutes=0,travelCost=0,outsideWage=0,meals=[],employer=null,seed=d.document?.randomSeed,decisionKey='employment',kernel=false,view=null}={}){
+ const state=d.get('state'),time=householdWorkTime(engine,state,owner,minute,{workMinutes,commuteMinutes});
+ const config=engine.world.primitiveTables?.yields?.params?.find(r=>r.id==='labor.choice')?.value;
+ const draw=(expression,rule,date,object=owner)=>evaluateRX(expression,{}, {rollKey:{seed,pack:'household',rule,object,date}});
+ const preference=draw(laborPreferenceRoll,'persistent-reservation',0);
+ const percent=config?config.reservationLowPercent+Math.floor((config.reservationHighPercent-config.reservationLowPercent)*(preference-1)/19):100;
+ const noise=config?Math.trunc((draw(laborNoiseRoll,'labor-choice',minute,`${owner}:${decisionKey}`)*2-21)*config.noisePercent/19):0;
+ if(!kernel)view??=subjectiveView(engine,d.document??{state},owner);
+ const resources=householdResources(d,engine,owner,{days:1,marketSubstitution:false,view});
+ const foodMissing=resources.procurementShortfall.satiety>0;
+ const food=[],allocated=new Map();let remaining=resources.procurementShortfall.satiety;
+ for(const meal of meals){
+  const nutrition=engine.byId.get(meal.item)?.nutrition?.satiety??0;
+  if(!employer||nutrition<=0||!Number.isSafeInteger(meal.quantity)||meal.quantity<=0)continue;
+  // Advertised meals are a promise, not knowledge of the employer's purse or
+  // pantry. The kernel checks and transfers the actual stock at settlement.
+  const stock=kernel?bagStock(d,engine,{point:'labor.stock',id:employer,item:meal.item,legacy:()=>qty(inventory(state,employer)[meal.item])}):meal.quantity;
+  const quantity=Math.min(Math.floor(meal.quantity*time.workMinutes/480),Math.max(0,stock-(allocated.get(meal.item)??0)),Math.ceil(Math.max(0,remaining)/nutrition));
+  if(!quantity)continue;
+  const unitPrice=engine.byId.get(meal.item)?.basePrice??0;
+  allocated.set(meal.item,(allocated.get(meal.item)??0)+quantity);
+  food.push({item:meal.item,quantity,nutrition:quantity*nutrition,value:quantity*unitPrice});remaining-=quantity*nutrition;
+ }
+ const cash=Math.ceil(wage*time.workMinutes/480),foodValue=food.reduce((n,r)=>n+r.value,0);
+ const alternative=Math.ceil(outsideWage*time.workMinutes/480),commuteCost=Math.ceil(outsideWage*time.commuteMinutes/480)+travelCost;
+ const reservation=Math.ceil(alternative*percent/100)+commuteCost;
+ const noiseValue=Math.trunc(Math.max(alternative,cash)*noise/100);
+ return {time,cash,food,foodValue,foodMissing,alternative,commuteCost,reservation,preferencePercent:percent,noisePercent:noise,noiseValue,net:cash+foodValue-reservation+noiseValue,feasible:time.workMinutes>0&&!time.unattended};
 }

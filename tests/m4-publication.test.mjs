@@ -18,7 +18,8 @@ async function succeed(run,d,tool,args,prefix){for(let i=0;i<60;i++){const resul
 
 test('M4隔离发布校验30条审查与来源，重复发布零写入，篡改正文先拒绝',async t=>{
  const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-m4-publish-'));t.after(async()=>{const target=path.resolve(root);assert.ok(target.startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(target,{recursive:true,force:true});});
- for(const folder of['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // E3 resource density references require the same archived rule tables/programs.
+ for(const folder of['meta','people','geo','lore','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  for(const[file,value]of Object.entries({'meta/spells.json':source.spells,'meta/skills.json':source.skills,'meta/items.json':source.items,'meta/bosses.json':source.bosses,'meta/rules.json':source.rules,'meta/professions.json':source.professions,'people/baseline.json':source.npcs}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  await fs.mkdir(path.join(root,'drafts'),{recursive:true});await fs.cp(path.resolve('world/drafts/m4-batch2'),path.join(root,'drafts/m4-batch2'),{recursive:true});
  const before=await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),preview=await publishM4Batch2({root});assert.equal(preview.published,false);assert.equal(preview.changed.length,7);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),before);

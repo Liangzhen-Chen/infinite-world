@@ -1,11 +1,13 @@
 import {vocabulary} from './domain-rules.mjs';
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
-import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
+import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment,personBusiness} from './entity-view.mjs';
 import {recordsWhere,digest,persistable,cloneData,canonicalEqual} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {projectAssignment,PROJECT_ACTIVITY} from './employment-state.mjs';
+import {contractTerms,leaseState} from './contract-state.mjs';
+import {facilityView} from './facility-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 
 const appointmentKey=id=>`service_appointment:${id}`;
@@ -124,7 +126,7 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     const hold=state&&personConstraint(engine,state,id,minute,constraints)?.value;
     if(hold)return {default:[{start:0,end:1440,location:hold.location,activity:'依法拘留',services:[]}]};
     const own=state?.npcs?.[id],base=engine.byId.get(id)?.schedule??own?.routine,care=own?.caring;
-    if(care&&base)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
+    if(care)return {default:[{start:0,end:1440,location:care.location,activity:'照护病人',services:[]}]};
     // U12: a levied villager serves at the army's camp until released.
     if(own?.levy)return {default:[{start:0,end:1440,location:own.levy.location,activity:'服役',services:[]}]};
     const employed=state&&personEmployment(engine,state,id,minute,constraints)?.value;
@@ -133,6 +135,22 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
         const home=npcHousehold(engine,state,id,constraints)?.homeLocation??engine.byId.get(id)?.home?.location??job.location;
         const slot=(start,end,location,activity)=>({start,end,location,activity,services:[]});
         const activity=job.task??'受雇工坊生产',work=job.workMinutes??480,end=480+work+60;
+        const time=householdWorkTime(engine,state,id,minute,{commuteMinutes:job.commuteMinutes??0,workMinutes:work,constraints});
+        if(time.reservedMinutes||time.commuteMinutes||work!==480){
+            const slots=[slot(0,480,home,'睡眠与休息'),slot(480,1020,job.location,activity),slot(1020,1440,home,'家务与休息')];
+            const overlay=row=>{
+                const next=slots.flatMap(s=>s.end<=row.start||s.start>=row.end?[s]:[
+                    ...(s.start<row.start?[{...s,end:row.start}]:[]),
+                    {...row,start:Math.max(s.start,row.start),end:Math.min(s.end,row.end)},
+                    ...(s.end>row.end?[{...s,start:row.end}]:[])]);
+                slots.splice(0,slots.length,...next);
+            };
+            overlay(slot(720,780,job.location,'午间休息'));
+            for(const row of time.reserved)overlay(row);
+            for(const row of time.commute)overlay(slot(row.start,row.end,row.returning?home:job.location,'通勤'));
+            for(const row of time.unused)overlay(slot(row.start,row.end,home,'家务与休息'));
+            return {default:slots,restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
+        }
         return {default:[slot(0,480,home,'睡眠与休息'),slot(480,720,job.location,activity),slot(720,780,job.location,'午间休息'),slot(780,end+1,job.location,activity),slot(end+1,1440,home,'家务与休息')],
             restDays:base?.restDays??[],rest:[slot(0,1440,home,'休息')]};
     }
@@ -163,7 +181,8 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     const remap=value=>Array.isArray(value)?value.map(remap):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,k==='location'&&v===prior?lease.subject:remap(v)])):value;
     return remap(schedule);
 }
-// K04 read-only household time interface; market trips share its work windows.
+// The household keeps its real routine when a job is considered or signed.
+// This is a read-only allocation; employment-state remains the only attendance book.
 export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMinutes=0,workMinutes=480,constraints=null}={}){
  const own=state.npcs?.[id],person=state.created?.[id]??engine.byId.get(id),calendar=engine.calendar(minute);
  const routine=personRoutine(engine,state,id,constraints)??own?.residence?.schedule??own?.vocation?.schedule??person?.schedule??own?.routine;
@@ -171,6 +190,35 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  const seasonal=routine?.seasonal?.[String(calendar.season)];
  const slots=seasonal?.[variant]??routine?.[variant]??seasonal?.default??routine?.default??[];
  const household=npcHousehold(engine,state,id,constraints),home=household?.homeLocation??person?.home?.location??own?.location;
+ const members=new Set([id,household?.id,...household?.members??[]].filter(Boolean));
+ const records=Object.values(state.records??{}),fields=new Set((engine.rules.agriculture?.settlements??[]).map(r=>r.fieldLocation));
+ const leases=records.filter(r=>r.kind==='asset_lease'&&leaseState(engine,state,r,minute).active).map(r=>contractTerms(r,minute));
+ const householdField=location=>{
+  if(!fields.has(location))return false;
+  const rented=leases.filter(r=>r.subject===location);
+  if(rented.length)return rented.some(r=>members.has(r.tenant));
+  const asset=state.buildings?.[location],base=state.created?.[location]??engine.byId.get(location);
+  const owners=asset?.owners&&Object.keys(asset.owners).length?Object.entries(asset.owners).filter(([,share])=>share>0).map(([holder])=>holder):[asset?.owner??base?.owner];
+  return owners.some(holder=>members.has(holder))||records.some(r=>r.category==='private_farm'&&r.location===location&&members.has(r.owner)&&['growing','ready'].includes(r.status));
+ };
+ const marketVariant=calendar.market&&Array.isArray(seasonal?.market??routine?.market);
+ const atState=minute===state.minute?state:{...state,minute};
+ const tradesAt=location=>{
+  const facility=facilityView(engine,state,location);
+  if(facility?.factor===0)return false;
+  if((facility?.services??(state.created?.[location]??engine.byId.get(location))?.services??[]).includes('trade'))return true;
+  // personBusiness is the L1 source also consumed by currentShops. An employed
+  // keeper cannot offer trade; skip it before reading its employment schedule
+  // so this household allocation never recursively allocates another job.
+  return [...new Set([...engine.world.npcs.map(n=>n.id),...Object.keys(state.npcs??{})])].some(trader=>{
+   const n=state.created?.[trader]??state.family?.people?.[trader]??engine.byId.get(trader);
+   if(!n||!(n.services??[]).includes('trade')&&!(n.serviceCatalog??[]).some(s=>s.kind==='trade')&&!state.npcs?.[trader]?.vocation)return false;
+   const job=personEmployment(engine,atState,trader,minute,constraints)?.value;
+   if(job&&job.status!=='罢工'&&Math.floor(job.starts/1440)<=Math.floor(minute/1440))return false;
+   const business=personBusiness(engine,atState,trader,constraints);
+   return business?.open.value&&business.location.value===location;
+  });
+ };
  // An unassigned gravely ill dependent cannot be left with an invented substitute.
  const attending=(member,illness)=>{
   const n=state.npcs?.[member];
@@ -178,15 +226,16 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  };
  const unattended=Object.values(state.family?.illnesses??{}).some(r=>r.status==='患病中'&&r.severity==='重'&&r.patient!==id&&household?.members.includes(r.patient)&&r.since<=minute&&minute<r.endsAt&&!household.members.some(m=>attending(m,r)));
  const fullCare=own?.caring||unattended;
- let duties=fullCare?[{start:480,end:1020,location:own?.caring?.location??home,activity:'照护病人',services:[]}]:slots.filter(s=>/农事|农户|田间|耕|种田|种地|播种|收割|务农|照护|照料|照顾|赶集|赶圩/.test(s.activity??''));
+ const duties=fullCare?[{start:480,end:1020,location:own?.caring?.location??home,activity:'照护病人',services:[]}]:slots.flatMap(({start,end,location,services})=>{
+  if(householdField(location))return [{start,end,location,services,activity:'农事'}];
+  return marketVariant&&tradesAt(location)?[{start,end,location,services,activity:'集市行程'}]:[];
+ });
  const day=Math.floor(minute/1440)*1440;
- for(const trip of marketTimeWindows(state,id))if(trip.start<day+1440&&day<trip.end){
-  const row={start:Math.max(0,trip.start-day),end:Math.min(1440,trip.end-day),location:trip.to,activity:'赶集',services:[]};
-  // The actual trip replaces that part of the routine, including own farm
-  // production. A union count alone would leave those minutes labelled farm.
-  duties=duties.flatMap(r=>r.end<=row.start||r.start>=row.end?[r]:[
-   ...(r.start<row.start?[{...r,end:row.start}]:[]),...(r.end>row.end?[{...r,start:row.end}]:[])]);
-  duties.push(row);
+ // K08's real trip reserves the traveller for both journeys and shopping;
+ // its keeper is reserved only for the actual service windows.
+ for(const trip of records.filter(r=>r.category==='market_trip')){
+  const windows=trip.actor===id?[{start:trip.departAt,end:trip.returnAt}]:trip.keeper===id?trip.serviceWindows??[]:[];
+  for(const window of windows){const start=Math.max(0,window.start-day),end=Math.min(1440,window.end-day);if(start<end)duties.push({start,end,location:trip.to,activity:'集市行程',services:[]});}
  }
  for(const o of Object.values(state.obligations??{}))if(o.reservationVersion===1&&['待履行','进行中'].includes(o.status)&&(o.deliveryVersion===1?o.promisor===id:[o.promisor,o.promisee].includes(id))&&!(o.type==='等候'&&o.promisee===id&&o.attendance?.[id]>0)){
   const start=Math.max(0,(o.departures?.[id]??o.start)-day),end=Math.min(1440,o.deadline-day);
@@ -210,7 +259,8 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  for(const r of free){const minutes=Math.min(left,r.end-r.start);if(minutes)work.push({start:r.start,end:r.start+minutes});if(r.end>r.start+minutes)unused.push({start:r.start+minutes,end:r.end});left-=minutes;}
  return {availableMinutes:480,reservedMinutes,reserved,commute,commuteMinutes:commute.reduce((n,r)=>n+r.end-r.start,0),work,unused,workMinutes:work.reduce((n,r)=>n+r.end-r.start,0),unattended};
 }
-// A pass over many people may share the personConstraints index.
+// A pass over many people may hand in the shared index (entity-view.mjs
+// personConstraints) instead of rescanning every record per person.
 export const activeRental=(state,id,minute=state?.minute,constraints=null)=>(constraints?.leases?constraints.leases.get(id)??[]:recordsWhere(state?.records,'kind','asset_lease')).find(r=>r.kind==='asset_lease'&&r.tenant===id&&r.status==='有效'&&r.createdAt<=minute&&minute<r.deadline);
 export function npcServices(engine,state,id){
     if(state&&personConstraint(engine,state,id))return [];

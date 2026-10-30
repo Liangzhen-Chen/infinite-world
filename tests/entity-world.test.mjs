@@ -45,7 +45,11 @@ test('迁店后补货产地、付款和新报价读取当前工作地；历史�
  assert.equal(ledger.settlement,'loc_bs');assert.equal(row.from,'loc_hw');assert.ok(row.added>0);
  assert.equal(d.get('state','npcs',host,'coins'),cash-row.paidCopper);
  // F010: the route arrival also pays porters (sink:export), so the source treasury gets the goods price only and the keeper pays goods + freight + duties.
- assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+row.cost.goods);assert.equal(row.paidCopper,row.cost.goods+row.cost.freight+row.cost.duties);
+ // W8-E8 also restocks the forge: one sickle * base 10 * scarcity 2 = 20
+ // into the same source treasury. Keep the route and local receipts distinct.
+ const sickle=d.get('state','records','shop:shop_hw_forge').entries.find(e=>e.item==='item_sickle');
+ assert.equal(sickle.added,1);assert.equal(sickle.paidCopper,20);
+ assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+row.cost.goods+20);assert.equal(row.paidCopper,row.cost.goods+row.cost.freight+row.cost.duties);
  const history=structuredClone(d.get('state','records'));
  const moved=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999});
  // Updated baseline input999 *plentiful supply.5 *neutral grade/regard/

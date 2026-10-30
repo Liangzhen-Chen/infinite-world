@@ -29,6 +29,8 @@ import {registerEarnedClaim,settleClaim,claimDue,claimLimitation} from './obliga
 import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {householdLaborBudget} from './household-budget.mjs';
+import {householdWorkTime} from './npc-state.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
@@ -138,14 +140,13 @@ export function laborOffers(e,s,minute=s.minute){
 }
 function personBusinessLocation(e,s,id){return s.npcs[id]?.workplace?.location??base(e,s,id)?.workplace?.location??s.npcs[id]?.location;}
 
-export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={}){
+export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false,seed='labor',decisionKey=offer.id,document=null}={}){
     const n=s.npcs[id],b=base(e,s,id);
     if(!s.npcs[offer.owner]&&groupRepresentative(e,s,offer.owner)===id)return null;
     if(!able(s,id)||id===offer.owner||id===offer.supplier||personConstraint(e,s,id,minute)||n.levy||n.caring||n.scheduleTravel||n.cognitionTravel||s.player.companions?.includes(id)||personOffices(e,s,id).length||(personAge(e,s,id)?.value??0)<18)return null;
     const old=currentEmployment(s,id,minute);
     if(old&&!changing)return null;
     if(old&&old.owner===offer.owner)return null;
-    if(old&&offer.wage<=old.wage*WAGE_HURDLE&&old.status!=='罢工')return null;
     if(offer.medicalSkill&&medicalSkill(e,s,id)<offer.medicalSkill)return null;
     if(offer.task==='矿脉开采'&&!e.quantity({get:(...p)=>p.slice(1).reduce((o,k)=>o?.[k],s)},id,e.rules.extraction.mining.tool))return null;
     const skill=offer.recipe?workerSkill(e,s,id,e.byId.get(offer.recipe)):0,r=offer.recipe&&e.byId.get(offer.recipe);
@@ -153,14 +154,24 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false}={
     if(r&&(!knows||skill<(r.minimumProficiency??0)))return null;
     const regard=standing(e,s,id,offer.owner);if(regard<=-40)return null;
     const needs=npcNeedGoals(s,id).filter(g=>g.progress!==100&&/money|food|钱|款|粮|口粮|活计/.test(`${g.need??g.kind??''} ${g.content??''}`));
-    const low=(b?.wealth?.cashRange?.[0]??b?.coins??wage(e,s,id,id)),food=Object.entries(n.inventory??{}).reduce((v,[item,q])=>v+(/bread|oat|ration|food/.test(item)?typeof q==='number'?q:q.quantity??0:0),0);
-    if(!needs.length&&(n.coins??0)>=low/2&&food>0&&!changing)return null;
+    const low=(b?.wealth?.cashRange?.[0]??b?.coins??wage(e,s,id,id));
     const settlement=personHousehold(e,s,id).value?.settlement??placeSettlement(e,s,n.location).value;
     if(settlement!==placeSettlement(e,s,offer.location).value)return null;
-    let travel=0;
-    if(n.location!==offer.location){try{const route=e.route(n.location,offer.location,'walk',minute,e.laborSeed??'labor');travel=route.minutes;if((route.cost??0)>(n.coins??0))return null;}catch{return null;}}
+    let travel=0,travelCost=0;
+    if(n.location!==offer.location){try{const route=e.route(n.location,offer.location,'walk',minute,seed);travel=route.minutes;travelCost=(route.cost??0)*2;if(travelCost>(n.coins??0))return null;}catch{return null;}}
     if(travel>60||!Number.isFinite(travel)||minute+travel>Math.floor(minute/DAY)*DAY+480&&minute%DAY<480)return null;
-    return {worker:id,need:needs.map(g=>g.id),skill,regard,travel,score:needs.length*100+(food===0?80:0)+skill/30+regard+offer.wage-travel};
+    const source=document??{state:s,randomSeed:seed},d={document:source,get:(...p)=>p.reduce((o,k)=>o?.[k],source)};
+    const budget=householdLaborBudget(d,e,id,{minute,wage:offer.wage,workMinutes:offer.workMinutes??480,commuteMinutes:travel,travelCost,outsideWage:Math.max(wage(e,s,id,id),old?.wage??0),meals:offer.meals??[],employer:offer.owner,decisionKey});
+    if(!budget.feasible)return null;
+    if(old&&old.status!=='罢工'){
+        const previous=householdLaborBudget(d,e,id,{minute,wage:old.wage,workMinutes:old.workMinutes??480,commuteMinutes:old.commuteMinutes??0,meals:old.meals??[],employer:old.owner,decisionKey:`${old.id}:retained`});
+        if(budget.cash+budget.foodValue<=(previous.cash+previous.foodValue)*WAGE_HURDLE)return null;
+    }
+    if(!needs.length&&(n.coins??0)>=low/2&&!budget.foodMissing&&!changing)return null;
+    // Candidate feasibility and signed exclusivity are never randomized.
+    const today=Math.floor(minute/DAY)*DAY+480,first=today>minute?today:today+DAY;
+    try{e.assertNpcObligationAction(d,[id],{start:first,minutes:540,kind:'employment'});}catch{return null;}
+    return {worker:id,need:needs.map(g=>g.id),skill,regard,travel,budget,score:needs.length*100+(budget.foodMissing?80:0)+skill/30+regard+budget.net};
 }
 // G0 §1: a hire (or a move to a better paid employer) is the worker's own decision, made through npcDecision on the
 // worker's own subjective view; nothing a caller or the employer writes can stand in for it. The view is taken at the
@@ -170,7 +181,10 @@ function workerView(d,e,worker,at){
     return subjectiveView(e,{...d.document,state:{...s,minute:day+600,npcs:{...s.npcs,[worker]:{...n,activity:'日常起居',status:n.status??'正常'}}}},worker);
 }
 function hireDecision(d,e,app,offer,at,old){
-    return npcDecision(workerView(d,e,app.worker,at),{kind:'employment',from:offer.owner,cost:{minutes:app.travel*2},reward:offer.wage-(old?.wage??0),needSatisfaction:app.need.length?100:0,tags:old?['quit_job']:[]});
+    const budget=app.budget;
+    const decision=npcDecision(workerView(d,e,app.worker,at),{kind:'employment',from:offer.owner,cost:{value:budget.reservation+Math.max(0,-budget.noiseValue)},reward:budget.cash+budget.foodValue+Math.max(0,budget.noiseValue),needSatisfaction:app.need.length?100:0,tags:old?['quit_job']:[]});
+    decision.labor=budget;
+    return decision;
 }
 // 05 §5.1: a worker whose signed wage has fallen clearly behind the local derived wage (market drift, never the caller)
 // decides for himself whether to quit; the decision and the wages are recorded on the contract.
@@ -198,7 +212,7 @@ function sign(d,e,offer,app,at,source,decision=null){
     const old=currentEmployment(d.get('state'),app.worker,at);
     if(old){changeLegacyHoldings(d,e,{holder:old.worker,source:`contract:${old.id}`,eventId:source},()=>holdingSet(d,null,rec(old.id),{...old,status:'已辞工',endedAt:at,reason:'转赴新雇主',successor:`workshop:${source}`},'labor-market'));refundGuarantee(d,e,d.get(...rec(old.id)));}
     const starts=Math.floor(at/DAY)*DAY+480,first=starts>at?starts:starts+DAY,key=`workshop:${source}`;
-    const terms={owner:offer.owner,worker:app.worker,recipe:offer.recipe??null,task:offer.task??'受雇工坊生产',location:offer.location,wage:offer.wage,workMinutes:480,deadline:offer.deadline};
+    const terms={owner:offer.owner,worker:app.worker,recipe:offer.recipe??null,task:offer.task??'受雇工坊生产',location:offer.location,wage:offer.wage,workMinutes:offer.workMinutes??480,deadline:offer.deadline,...(offer.meals?.length?{meals:structuredClone(offer.meals)}:{})};
     const row={category:'contract',kind:'workshop',laborMarket:1,id:key,...terms,parties:[app.worker,offer.owner],signedTerms:structuredClone(terms),
         offer:offer.id,demandSource:offer.source,item:offer.item??null,targetQuantity:offer.quantity,project:offer.project??null,farm:offer.farm??null,supplier:offer.supplier??null,reason:offer.reason,
         starts:first,nextWork:first+540,createdAt:at,status:'有效',paid:0,produced:0,workedMinutes:0,attendance:{},shifts:[],source,commuteMinutes:app.travel,
@@ -217,7 +231,13 @@ function conflict(d,e,row,start){
     if(!row.domainSteward&&!ownerCanHire(e,s,row.owner))return '雇主不能履约';
     const finish=start+540;
     for(const p of Object.values(s.projects??{}))if(p.status==='施工中'&&p.public?.workers?.includes(row.worker))return '已有公款工程排班';
-    try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540,kind:'employment'});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}catch(error){return error.message;}
+    const time=householdWorkTime(e,s,row.worker,start,{commuteMinutes:row.commuteMinutes??0,workMinutes:row.workMinutes??480}),day=Math.floor(start/DAY)*DAY;
+    try{
+        // Household reservations already remove their real windows. Check the
+        // remaining work, so a short care appointment cannot erase a whole shift.
+        for(const window of time.work)e.assertNpcObligationAction(d,[row.worker],{start:day+window.start,minutes:window.end-window.start,kind:'employment'});
+        e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});
+    }catch(error){return error.message;}
     if(occupied({...s,records:Object.fromEntries(Object.entries(s.records).filter(([id])=>id!==row.id))},row.worker,start,finish))return '已有雇佣排班';
     return null;
 }
@@ -303,8 +323,14 @@ function settleShift(d,e,row,at){
         }
     }
     const pay=settleEmploymentPay(d,e,row,at,minutes);
+    const meals=[];
+    for(const meal of row.meals??[]){
+        if(!(e.byId.get(meal.item)?.nutrition?.satiety>0)||!Number.isSafeInteger(meal.quantity)||meal.quantity<=0)continue;
+        const stock=employmentStock(d,e,row.owner,meal.item),quantity=Math.min(stock,Math.floor(meal.quantity*minutes/480));
+        if(quantity>0){transferItems(d,e,row.owner,row.worker,meal.item,quantity);meals.push({item:meal.item,quantity});}
+    }
     const current=d.get(...rec(row.id)),done=(row.recipe||row.supplier)&&row.produced+quantity>=row.targetQuantity;
-    const shift={minute:at,start,minutes,...pay,...(production?{production}:{})};
+    const shift={minute:at,start,minutes,...pay,...(meals.length?{meals}:{}),...(production?{production}:{})};
     writeJob(d,e,{...current,nextWork:at+DAY,paid:row.paid+pay.paid,produced:row.produced+quantity,workedMinutes:row.workedMinutes+minutes,
         status:pay.arrears?'罢工':done?'已完成':'有效',...(pay.arrears?{stoppedAt:at,reason:'欠薪停工'}:{}),...(done&&!pay.arrears?{endedAt:at}:{}),shifts:[...row.shifts,shift]});
     if(row.domainSteward&&!pay.arrears)settleStewardRequests(d,e,d.get(...rec(row.id)),`${row.id}:${at}`);
@@ -346,8 +372,8 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
             const start=day*DAY+480;
             if(start<row.starts||start>=row.deadline||row.status==='罢工'||conflict(d,e,row,Math.max(before,start)))continue;
             if(base(e,d.get('state'),row.worker)?.schedule?.restDays?.includes(e.calendar(start).day))continue;
-            const lo=Math.max(before,start+(row.commuteMinutes??0)),hi=Math.min(after,day*DAY+1020);
-            recordEmploymentAttendance(d,row.worker,lo,hi,row.location);
+            const time=householdWorkTime(e,d.get('state'),row.worker,start,{commuteMinutes:row.commuteMinutes??0,workMinutes:row.workMinutes??480});
+            for(const window of time.work)recordEmploymentAttendance(d,row.worker,Math.max(before,day*DAY+window.start),Math.min(after,day*DAY+window.end),row.location);
         }
         row=contractTerms(d.get(...rec(row.id)),after);
         if(statistical&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY))&&after<row.deadline)continue;
@@ -377,7 +403,7 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
     for(const offer of offers){
         if(layer(e,d.get('state'),offer.location,plan)==='statistics'&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY)))continue;
         const s=d.get('state'),pool=pools.get(placeSettlement(e,s,offer.location).value)??[];
-        const apps=pool.map(worker=>laborApplication(e,s,worker,offer,{minute:after,changing:Boolean(currentEmployment(s,worker,after))})).filter(Boolean).sort((a,b)=>b.score-a.score||a.worker.localeCompare(b.worker));
+        const apps=pool.map(worker=>laborApplication(e,s,worker,offer,{minute:after,changing:Boolean(currentEmployment(s,worker,after)),seed:d.document.randomSeed,document:d.document})).filter(Boolean).sort((a,b)=>b.score-a.score||a.worker.localeCompare(b.worker));
         for(const app of apps){
             const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;
             const decision=hireDecision(d,e,app,offer,after,old);
@@ -434,10 +460,11 @@ export function laborTrade(d,e,args,id){
         if(!offer)throw preconditionFailure('新雇主当前没有真实用工缺口');
         if(args.coins!==undefined)offer.wage=financeInt(args.coins,offer.wage,1e6,'新日薪');
         if(financeBalance(d,e,offer.owner)<offer.wage)throw preconditionFailure('新雇主现钱不足以接受所议日薪');
-        const app=laborApplication(e,s,row.worker,offer,{minute:now,changing:true});if(!app)throw preconditionFailure('工匠不接受新雇主或工钱');
+        const app=laborApplication(e,s,row.worker,offer,{minute:now,changing:true,seed:d.document.randomSeed,decisionKey:`${offer.id}:${id}`,document:d.document});if(!app)throw preconditionFailure('工匠不接受新雇主或工钱');
         const rep=s.npcs[offer.owner]?offer.owner:groupRepresentative(e,s,offer.owner);
         if(!rep||s.npcs[rep]?.location!==s.location||!able(s,rep))throw preconditionFailure('新雇主或当前代表须在场同意');
-        const fresh=sign(d,e,offer,app,now,id);return {contract:fresh.id,previous:row.id};
+        const decision=hireDecision(d,e,app,offer,now,row);if(decision.outcome!=='agree')throw preconditionFailure('工匠不接受新雇主或工钱');
+        const fresh=sign(d,e,offer,app,now,id,decision);return {contract:fresh.id,previous:row.id};
     }
     throw preconditionFailure('未知用工操作');
 }

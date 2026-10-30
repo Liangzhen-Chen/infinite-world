@@ -1,6 +1,6 @@
 {
   "id": "patch_loc_hw_northwood_site",
-  "fingerprint": "fcac1292a5fb454f4427581f43eda5f7e1a9392799a3b056884e9940c4ecc3b1",
+  "fingerprint": "7e3accfd039379cacabba5af24444a93035518318455bb2fe67230d6df15ac54",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -28,6 +28,65 @@
                 2
               ]
             }
+          },
+          {
+            "id": "nw_plantain",
+            "name": "林缘车前",
+            "item": "item_plantain",
+            "quantity": 20,
+            "minutes": 120,
+            "gather": {
+              "yield": "gather:herb",
+              "skill": "skill_life_9_core",
+              "seasons": [
+                0,
+                1,
+                2
+              ],
+              "density": "herb.plantain.seasonDensity"
+            },
+            "calibration": "pending",
+            "source": "D14 分种；库存和工时沿用 nw_herb，calibrate-pending"
+          },
+          {
+            "id": "nw_honeysuckle",
+            "name": "林缘金银花",
+            "item": "item_honeysuckle",
+            "quantity": 20,
+            "minutes": 120,
+            "gather": {
+              "yield": "gather:herb",
+              "skill": "skill_life_9_core",
+              "seasons": [
+                0,
+                1
+              ],
+              "density": "herb.honeysuckle.seasonDensity"
+            },
+            "calibration": "pending",
+            "source": "D14 分种；库存和工时沿用 nw_herb，calibrate-pending"
+          }
+        ],
+        "changes": [
+          {
+            "id": "nw_plantain_regrow",
+            "kind": "regrow",
+            "resource": "nw_plantain",
+            "quantity": 1,
+            "everyDays": 20,
+            "max": 20,
+            "calibration": "pending",
+            "source": "D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"
+          },
+          {
+            "id": "nw_honeysuckle_regrow",
+            "kind": "regrow",
+            "resource": "nw_honeysuckle",
+            "quantity": 1,
+            "everyDays": 20,
+            "max": 20,
+            "calibration": "pending",
+            "source": "D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"
           }
         ],
         "truths": []
@@ -41,17 +100,17 @@
   "warnings": [],
   "feedback": null,
   "frozenCandidate": {
-    "entryHash": "db482c692f6fe24edf073de6c6483ccbe3cefc69a9d9c1670919dd7e9c056b58",
-    "draftHash": "a66359c99ce7d096af74c45ec50cab4712240de167d1bf49560f3e9c741f7b36"
+    "entryHash": "539392bbe8591da3e2ab336d99b14a178caf1c419a61a53bed95c6f7d205a2d3",
+    "draftHash": "154f1ab4255877815a3b505ddd5291f2d2261b2144b1a23bcc637d7eb57e23a5"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "49ac7ddc-1f57-4621-b528-5d7bf988bab1",
-      "file": "budget-responses/49ac7ddc-1f57-4621-b528-5d7bf988bab1.json",
-      "requestHash": "e452c1e1450980dca3d08702e733f4a0890c34ecf01eab377aaec1612f8264a2",
-      "responseHash": "4d1c6db24387df57ce730da7ff2de2cfb88f073fa42bdafa13172f1db81b4aba"
+      "requestId": "1be7f626-62bf-4c21-b0a4-1d298dd869f3",
+      "file": "budget-responses/1be7f626-62bf-4c21-b0a4-1d298dd869f3.json",
+      "requestHash": "1fd3c1fb705a18849aef3e16bcf3a57a3fed86a0190dd02ccee276b9ed729bfa",
+      "responseHash": "8005e1a0825c1b7a900fd5fec3df2333ba6a342cc3f9489e1aabbc61d2dc32d9"
     }
   ],
   "measurements": [
@@ -60,19 +119,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 707,
+        "prompt_tokens": 1497,
         "completion_tokens": 7,
-        "total_tokens": 714,
+        "total_tokens": 1504,
         "prompt_tokens_details": {
           "cached_tokens": 128
         },
         "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 579
+        "prompt_cache_miss_tokens": 1369
       },
-      "costUpperYuan": 0.00121912,
-      "cumulativeUpperYuan": 0.10816176000000002,
-      "latencyMs": 996.648000000001,
-      "timestamp": "2026-10-22T10:38:06.785Z"
+      "costUpperYuan": 0.00279912,
+      "cumulativeUpperYuan": 0.14543472,
+      "latencyMs": 830.4175999999998,
+      "timestamp": "2026-10-30T04:09:18.663Z"
     }
   ]
 }

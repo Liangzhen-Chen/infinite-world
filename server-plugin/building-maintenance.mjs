@@ -10,9 +10,15 @@ import {BOOKED,holdWorks,settleWorks} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {laborValue} from './market.mjs';
-import {rollDice} from './scheduler.mjs';
+import {rollDice,clockDiceKey} from './scheduler.mjs';
 import {weatherAt} from './weather.mjs';
 import {safeCarryKg,carriedKg,packItemKg} from './carry.mjs';
+import {coinRead,treasury} from './money.mjs';
+import {priceRead,settlementStock} from './stock.mjs';
+import {currentEmployment,projectAssignment} from './employment-state.mjs';
+import {npcHousehold,npcAgeAt} from './npc-state.mjs';
+import {isEffective} from './lifecycle-state.mjs';
+import {subjectiveView} from './subjective-view.mjs';
 
 declareLedgerWriter('building-maintenance',{sinks:['sink:consume']});
 const writer='building-maintenance',MINUTES=240;
@@ -54,6 +60,11 @@ function serviceDaily(e,document,building,intact){
 }
 export function maintenanceOptions(e,document,who,building){
  const w=wanted(e,document,who,building);if(!w)return null;
+ return compareMaintenance(e,document,who,building,w);
+}
+// Public proposals use the same condition, weather, material and preference
+// comparison. The existing public project supplies its wage and workday.
+function compareMaintenance(e,document,who,building,w,{laborDaily=null,shiftMinutes=MINUTES,materialHolder=who}={}){
  const state=document.state,rule=e.rules.facilities.maintenance,read=stateReader(state);
  const remaining=w.required.requiredMinutes-(w.project?.minutesDone??0);
  const intact=facilityView(e,{...state,buildings:{...state.buildings,[building]:{...state.buildings?.[building],condition:100}}},building);
@@ -64,7 +75,7 @@ export function maintenanceOptions(e,document,who,building){
  const remainder=facilityWearRemainder(state.buildings?.[building]??{},denominator);
  // npc-autonomy offers this action once per day, one MINUTES-sized shift.
  // Labor cost counts worked minutes; elapsed days must count actual shifts.
- const horizon=rule.horizonDays??e.rules.calendar.daysPerMonth,completionDays=Math.ceil(remaining/MINUTES);
+ const horizon=rule.horizonDays??e.rules.calendar.daysPerMonth,completionDays=Math.ceil(remaining/shiftMinutes);
  let avoidedLoss=0,lossUnits=0;
  const factorUnits=condition=>condition<25?0:condition<60?1:2;
  // Compare equal future days. Before completion the two options provide the
@@ -76,15 +87,64 @@ export function maintenanceOptions(e,document,who,building){
  }
  avoidedLoss=Math.floor(daily*lossUnits/2);
  const materialCost=w.project?0:items(w.required).reduce((sum,[item,quantity])=>{
-  const value=goodsWorth(read,e,{item,quantity,holder:who,location:building});return value===null?NaN:sum+value;
+  const value=goodsWorth(read,e,{item,quantity,holder:materialHolder,location:building});return value===null?NaN:sum+value;
  },0);
- const laborCost=Math.ceil(laborValue(e,document,{worker:who,observer:who}).daily*remaining/480);
+ const laborCost=Math.ceil((laborDaily??laborValue(e,document,{worker:who,observer:who}).daily)*remaining/480);
  const cost=materialCost+laborCost,delayPermille=delayPreference(e,document,who);
  const noisePermille=rollDice(document.randomSeed,'maintenance:choice',`${who}:${building}`,Math.floor(state.minute/1440)*1440,0,2*rule.noisePermille+1)-1-rule.noisePermille;
  const net=avoidedLoss-cost,utility=net-Math.floor(cost*delayPermille/1000)+Math.trunc(avoidedLoss*noisePermille/1000);
  return {...w,remaining,daily,dailyWear,denominator,horizon,completionDays,avoidedLoss,materialCost,laborCost,cost,net,delayPermille,noisePermille,
   options:[{kind:'repair_building',utility},{kind:'defer_maintenance',utility:0}]};
 }
+export function publicMaintenanceOptions(e,document,who,building){
+ const state=document.state,view=facilityView(e,state,building);
+ if(!view||view.burning||view.condition<=0||view.condition>=100||Object.values(state.projects??{}).some(p=>p.building===building&&p.status==='施工中'))return null;
+ const inputs=facilityRuntime().publicMaintenanceInputs?.(e,document,who,building);if(!inputs)return null;
+ const {office,wage}=inputs;
+ const w=compareMaintenance(e,document,who,building,{view,project:null,required:materials(view)},{laborDaily:wage,shiftMinutes:480,materialHolder:office.settlement});
+ return {...w,...inputs,settlement:office.settlement,options:[{kind:'public_maintenance',utility:w.options[0].utility},w.options[1]]};
+}
+function publicProposal(e,document,who,building){
+ // Physical inspection supplies damage knowledge. Holding public office does
+ // not reveal every building in the jurisdiction, or make its manager owner.
+ if(document.state.npcs[who]?.location!==building)return null;
+ const w=publicMaintenanceOptions(e,document,who,building);if(!w||!Number.isFinite(w.cost)||w.options[0].utility<=0)return null;
+ const state=document.state,read={document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)},s=state.settlements[w.settlement];
+ const bill=w.laborCost,cap=w.office.monthlyBudgetCopper;
+ if(!s||!Number.isSafeInteger(cap)||w.used+bill>cap||
+    coinRead(read,{point:'public.treasury',account:treasury(w.settlement),legacy:()=>s.treasury})-bill<w.reserve||
+    [['wood',w.required.wood],['stone',w.required.stone]].some(([material,n])=>priceRead(read,{point:'projects.supply',account:settlementStock(e,w.settlement,material),legacy:()=>s[material]??0})<n))return null;
+ const crewKey=id=>clockDiceKey(document.randomSeed,'public_maintenance:crew',`${who}:${building}:${id}`,Math.floor(state.minute/1440)*1440);
+ const worker=subjectiveView(e,document,who).observable.people.map(p=>p.id).sort((a,b)=>crewKey(a).localeCompare(crewKey(b))||a.localeCompare(b)).find(id=>{
+  const n=state.npcs[id];
+  if(id===who||n.location!==building||n.scheduleTravel||n.cognitionTravel||['濒死','昏迷','患病'].includes(n.status)||/睡眠|睡觉|熟睡/.test(n.activity??'')||
+     !isEffective(e,state,id)||currentEmployment(state,id)||projectAssignment(state,id)||npcHousehold(e,state,id)?.settlement!==w.settlement||(npcAgeAt(e,state,id)??0)<18)return false;
+  return facilityRuntime().publicProjectWorkerDecision(e,document,id,{actor:who,location:facilityDefinition(e,state,building).parent,wage:w.wage})?.outcome==='agree';
+ });
+ if(!worker)return null;
+ return {w,args:{name:`修缮${facilityDefinition(e,state,building).name}`,projectWork:'repair',building,days:w.completionDays,
+  wood:w.required.wood,stone:w.required.stone,workers:[worker],funding:'public'}};
+}
+registerAutonomyProvider('public_maintenance',{
+ relevant:(e,state,id,presence)=>{const v=facilityView(e,state,presence.location);return Boolean(v&&!v.burning&&v.condition>0&&v.condition<100);},
+ candidates(e,view,document){
+  const who=view.observer,building=view.self.location,p=publicProposal(e,document,who,building);if(!p)return [];
+  const w=p.w;
+  return [{id:`public_maintenance:${who}:${building}`,kind:'public_maintenance',legacy:{kind:'public_maintenance',building},
+   cost:{value:w.cost+Math.floor(w.cost*w.delayPermille/1000)},needSatisfaction:Math.max(0,w.avoidedLoss+Math.trunc(w.avoidedLoss*w.noisePermille/1000)),utility:w.options[0].utility}];
+ }
+});
+registerAutonomyKind('public_maintenance',{
+ minutes:()=>30,
+ validate(d,e,who,action){if(!publicProposal(e,d.document,who,action.building))throw preconditionFailure('公共维修缺少现任权限、预算、材料或同意做工的人');},
+ execute(d,e,who,action,{actionId}){
+  const proposal=publicProposal(e,d.document,who,action.building);
+  if(!proposal)throw preconditionFailure('公共维修前提已改变');
+  const result=facilityRuntime().startPublicProject(d,e,proposal.args,actionId,proposal.w.settlement,{actor:who});
+  rememberPreference(d,e,who);
+  return {summary:`按现任职权发起${proposal.args.name}，材料与工钱进入公共工程。`,project:result.project,spent:{minutes:30}};
+ }
+});
 registerAutonomyProvider('building_maintenance',{
  // Relevance is only a cheap damage check. Ownership is checked against the
  // full document below, including native titles that override catalog owners.
