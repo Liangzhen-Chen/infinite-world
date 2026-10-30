@@ -23,8 +23,7 @@ export {harvestSettlementWood,advanceForestWater,settleFuel,forestWaterPriceFact
 export {farmWaterFactor}from'./water-cycle.mjs';
 import {farmWaterFactor}from'./water-cycle.mjs';
 import {preservedSpoilage}from'./magic-economy.mjs';
-import {agriculturalEmployment} from './employment-state.mjs';
-import {householdWorkTime,npcHousehold,npcAgeAt} from './npc-state.mjs';
+import {agriculturalWorkforce} from './npc-state.mjs';
 import {toRational} from './det-math.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
@@ -176,31 +175,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     if(r.lastDay!==day-1)throw Error('农事日结顺序不连续，拒绝重复或补算过往收成');
     const weather=weatherAt(engine,d.document.randomSeed,p.fieldLocation,day*1440+720),season=engine.calendar(day*1440).season;
     // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
-    const state=d.get('state'),hired=agriculturalEmployment(state,id,day);
-    // Locally hired farm hands are already part of the population, not new
-    // people. Attendance is the sole source of hired minutes (K04).
-    let localWorked=0;const commuters=new Map();
-    for(const [,raw]of recordEntriesWhere(state.records,'kind','workshop'))if(raw.laborMarket===1){
-        const job=contractTerms(raw,day*1440+480);
-        const shift=job.shifts?.find(r=>!r.aggregate&&Math.floor(r.start/1440)===day);
-        const minutes=job.attendance?.[String(day)]??shift?.minutes??0;
-        if(job.settlement===id)localWorked+=minutes/480;
-        if(job.settlement===id&&minutes>0)commuters.set(job.worker,job);
-    }
-    // Household duties share the same finite day as village production. Own
-    // field windows remain agricultural time; care, appointments and market
-    // journeys do not. K04 has already removed these windows from attendance.
-    let householdMinutes=0;
-    for(const [member,own]of Object.entries(state.npcs??{})){
-        if(!(npcAgeAt(engine,state,member,day*1440+480)>=18)||own.levy||!isEffective(engine,state,member)||npcHousehold(engine,state,member)?.settlement!==id)continue;
-        const job=commuters.get(member),time=householdWorkTime(engine,state,member,day*1440+480,{commuteMinutes:job?.commuteMinutes??0,workMinutes:job?.workMinutes??480});
-        householdMinutes+=time.commuteMinutes+time.reserved.filter(r=>r.activity!=='农事').reduce((n,r)=>n+r.end-r.start,0);
-    }
-    const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(state.records[`levy:${id}`]?.count??0)-localWorked-householdMinutes/480);
-    // Meals are prepared first: levy or hired-out shifts take workers from fields, fresh gathering and wood, never rounding the granary's cooks down.
-    const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(p.processingWorkers,availableWorkers);
-    const freshWorkers=Math.min(p.freshWorkers*laborShare,Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(p.farmWorkers*laborShare+hired.hired,r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers)+hired.hired);
-    const ownFieldWorkers=Math.max(0,fieldWorkers-hired.hired);
+    const state=d.get('state'),{availableWorkers,processing,freshWorkers,fieldWorkers,ownFieldWorkers}=agriculturalWorkforce(engine,state,p,r,day,s.population);
     const fresh=accrueStock(r,'fresh',derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:freshWorkers?p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers:0}));
     if(day%30===29){
         r.granary.condition=Math.max(0,r.granary.condition-1);

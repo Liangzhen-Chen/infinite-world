@@ -5,7 +5,7 @@ import {personConstraint,personConstraints,personCareer,personRoutine,personLawR
 import {recordsWhere,digest,persistable,cloneData,canonicalEqual} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {projectAssignment,PROJECT_ACTIVITY} from './employment-state.mjs';
+import {projectAssignment,PROJECT_ACTIVITY,agriculturalEmployment} from './employment-state.mjs';
 import {contractTerms,leaseState} from './contract-state.mjs';
 import {facilityView} from './facility-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
@@ -268,6 +268,29 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  let left=Math.max(0,Math.floor(workMinutes));const unused=[],work=[];
  for(const r of free){const minutes=Math.min(left,r.end-r.start);if(minutes)work.push({start:r.start,end:r.start+minutes});if(r.end>r.start+minutes)unused.push({start:r.start+minutes,end:r.end});left-=minutes;}
  return {availableMinutes:480,reservedMinutes,reserved,commute,commuteMinutes:commute.reduce((n,r)=>n+r.end-r.start,0),work,unused,workMinutes:work.reduce((n,r)=>n+r.end-r.start,0),unattended};
+}
+// Shared household/attendance allocation for village output and labor demand.
+export function agriculturalWorkforce(engine,state,p,farm,day,population=state.settlements[p.settlement].population){
+ const id=p.settlement,hired=agriculturalEmployment(state,id,day);
+ let localWorked=0;const commuters=new Map();
+ for(const raw of recordsWhere(state.records,'kind','workshop'))if(raw.laborMarket===1){
+  const job=contractTerms(raw,day*1440+480),shift=job.shifts?.find(r=>!r.aggregate&&Math.floor(r.start/1440)===day);
+  const minutes=job.attendance?.[String(day)]??shift?.minutes??0;
+  if(job.settlement===id)localWorked+=minutes/480;
+  if(job.settlement===id&&minutes>0)commuters.set(job.worker,job);
+ }
+ // Farm duties stay in the field budget; care, trips and already attended
+ // employment consume the same finite day in both vacancies and daily output.
+ let householdMinutes=0;
+ for(const [member,own]of Object.entries(state.npcs??{})){
+  if(!(npcAgeAt(engine,state,member,day*1440+480)>=18)||own.levy||!isEffective(engine,state,member)||npcHousehold(engine,state,member)?.settlement!==id)continue;
+  const job=commuters.get(member),time=householdWorkTime(engine,state,member,day*1440+480,{commuteMinutes:job?.commuteMinutes??0,workMinutes:job?.workMinutes??480});
+  householdMinutes+=time.commuteMinutes+time.reserved.filter(r=>r.activity!=='农事').reduce((n,r)=>n+r.end-r.start,0);
+ }
+ const normalWorkers=Math.floor(population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(state.records[`levy:${id}`]?.count??0)-localWorked-householdMinutes/480);
+ const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(p.processingWorkers,availableWorkers);
+ const freshWorkers=Math.min(p.freshWorkers*laborShare,Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(p.farmWorkers*laborShare+hired.hired,farm.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers)+hired.hired);
+ return {availableWorkers,processing,freshWorkers,fieldWorkers,ownFieldWorkers:Math.max(0,fieldWorkers-hired.hired),fieldMinutes:fieldWorkers*480};
 }
 // A pass over many people may hand in the shared index (entity-view.mjs
 // personConstraints) instead of rescanning every record per person.

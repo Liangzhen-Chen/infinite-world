@@ -39,17 +39,20 @@ test('迁店后补货产地、付款和新报价读取当前工作地；历史�
  const shop=currentShops(engine,d.get('state')).find(s=>s.keeper===host);
  assert.equal(shop.settlement,'loc_bs');assert.equal(shop.location,'loc_bs');
  assert.equal(shop.restock.find(r=>r.item==='item_bread').source,'route');
+ assert.equal(shop.restock.find(r=>r.item==='item_bread').from,'loc_hw','迁店后的来源产地仍须正确派生，未到货不改变来源');
  const cash=d.get('state','npcs',host,'coins'),treasury=d.get('state','settlements','loc_hw','treasury');
  advanceShops(d,engine,600,DAY);
  const ledger=d.get('state','records','shop:shop_hw_qingdeng'),row=ledger.entries.find(e=>e.item==='item_bread');
- assert.equal(ledger.settlement,'loc_bs');assert.equal(row.from,'loc_hw');assert.ok(row.added>0);
+ // K08/K12：迁店把本地面包改为远途来源，但没有到场持货人/到站运单，不能按日期生成现货。
+ assert.equal(ledger.settlement,'loc_bs');assert.equal(row.source,'route');assert.equal(row.added,0);assert.equal(row.paidCopper,0);assert.deepEqual(row.shipments,[]);
+ assert.equal(row.from,undefined);assert.equal(shelf(d,host,'item_bread'),0);
  assert.equal(d.get('state','npcs',host,'coins'),cash-row.paidCopper);
- // F010: the route arrival also pays porters (sink:export), so the source treasury gets the goods price only and the keeper pays goods + freight + duties.
+ // K08没有远途现货或运费流；铁镰的真实本地补货款仍独立入公库。
  // W8-E8 also restocks the forge: one sickle * base 10 * scarcity 2 = 20
  // into the same source treasury. Keep the route and local receipts distinct.
  const sickle=d.get('state','records','shop:shop_hw_forge').entries.find(e=>e.item==='item_sickle');
  assert.equal(sickle.added,1);assert.equal(sickle.paidCopper,20);
- assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+row.cost.goods+20);assert.equal(row.paidCopper,row.cost.goods+row.cost.freight+row.cost.duties);
+ assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+20);assert.equal(row.cost,undefined);
  const history=structuredClone(d.get('state','records'));
  const moved=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999});
  // Updated baseline input999 *plentiful supply.5 *neutral grade/regard/
