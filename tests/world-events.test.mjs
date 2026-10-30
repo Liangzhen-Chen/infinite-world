@@ -141,7 +141,9 @@ test('K10：订阅者由各模块自行登记，按原结算顺序执行，可�
  // S2c protocol subscribers settle before social reactions; organization succession and governance vacancy follow their source order.
  // S4 perception also registers the mark observation consumer. Keep exact
  // membership/order, including every pre-existing subscriber.
- assert.deepEqual(worldEventSubscribers().map(s=>s.id),['transition_hooks','monster_society','npc_relations','npc_memory','spirit_grudges','boss_cognition','organization_succession','standing','faith_experience','open-mark-observation','npc_intelligence','governance_vacancy']);
+ // E3 registers weather_exposure at order 5: after transition_hooks (0),
+ // before monster_society (10). Preserve every existing subscriber and order.
+ assert.deepEqual(worldEventSubscribers().map(s=>s.id),['transition_hooks','weather_exposure','monster_society','npc_relations','npc_memory','spirit_grudges','boss_cognition','organization_succession','standing','faith_experience','open-mark-observation','npc_intelligence','governance_vacancy']);
  assert.throws(()=>registerWorldEventSubscriber({id:'standing',order:1,on(){}}),/重复登记/);
  assert.throws(()=>registerWorldEventSubscriber({id:'k10_bad',order:1}),/须有/);
  const seen=[],first=registerWorldEventSubscriber({id:'k10_first',order:-1,on:(d,e,events)=>seen.push(['first',events.length])});

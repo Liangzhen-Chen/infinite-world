@@ -51,7 +51,8 @@ test('W5名称与正文都查屏蔽，文化不得靠重复谚语充数',async()
 test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌夹具',async t=>{
  const temp=await fs.mkdtemp(path.join(tmpRoot(),'w5-optional-'));
  t.after(()=>fs.rm(temp,{recursive:true,force:true}));
- for(const folder of ['meta','people','geo'])await fs.cp(new URL(`../world/${folder}`,import.meta.url),path.join(temp,folder),{recursive:true});
+ // This fixture omits lore, but E3 resources still need their density tables.
+ for(const folder of ['meta','people','geo','rules'])await fs.cp(new URL(`../world/${folder}`,import.meta.url),path.join(temp,folder),{recursive:true});
  // These sites depend on the later lore and societies absent from this fixture.
  let beforeSites=await loadWorld(temp);
  for(const n of [3,2,1]){

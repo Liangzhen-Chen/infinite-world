@@ -149,7 +149,8 @@ test('T162 world_upgrade 加入两地，旧账与野生身体不补发；发布�
  const {publishMonsterSociety3,batchIds}=await import('../tools/publish-monster-society-3.mjs');assert.deepEqual((await publishMonsterSociety3()).changed,[]);
  // A first publication must remain reloadable with D1's separate biome catalog and K8 derivation.
  const root=await fs.mkdtemp(path.join(tmpRoot(),'t162-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- for(const folder of ['geo','meta','people','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // Re-publishing E3 resources must retain the referenced density tables/programs.
+ for(const folder of ['geo','meta','people','lore','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  const mine=batchIds();for(const[file]of FILES){const target=path.join(root,file),rows=JSON.parse(await fs.readFile(target,'utf8'));await fs.writeFile(target,JSON.stringify(rows.filter(r=>!mine.has(r.id))));}
  const rf=path.join(root,'meta/rules.json'),rawRules=JSON.parse(await fs.readFile(rf,'utf8'));rawRules.wildlifeAwakening.society.homes=rawRules.wildlifeAwakening.society.homes.filter(x=>x!==HX);rawRules.wildlifeAwakening.spiritLands=rawRules.wildlifeAwakening.spiritLands.filter(x=>x.location!==hx.garden);await fs.writeFile(rf,JSON.stringify(rawRules));
  await publishMonsterSociety3({root,publish:true,batch});const reload=await loadWorld(root);assert.deepEqual(validateWorld(reload,{stage:'release'}).errors,[]);
