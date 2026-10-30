@@ -1,6 +1,6 @@
 {
   "index": 2,
-  "fingerprint": "a5120dfba4826d718356d5d5f38247a9345a9dd92108b9861446b21f77c26c8b",
+  "fingerprint": "0022d11e579fb214afdbe7adc7d96b227bddca027da045e8bed00ca663b12ffd",
   "count": 12,
   "passed": 12,
   "ids": [
@@ -22,16 +22,16 @@
   "pending": [],
   "flagged": [],
   "sample": [
-    "patch_loc_hw_gate_notices",
-    "office_exam_life_19",
+    "office_exam_life_21",
+    "patch_loc_hw_northwood_site",
+    "patch_bld_hw_school_site",
     "office_exam_life_22",
-    "office_exam_life_3",
-    "office_exam_life_0"
+    "office_exam_life_3"
   ],
   "l4": {
     "approved": true,
-    "reader": "Claude (A3 收口修复 D 路)",
-    "readAt": "2026-10-22",
+    "reader": "Claude (S5 主会话，FXE3/APR 补审)",
+    "readAt": "2026-10-30",
     "notes": [
       {
         "id": "office_exam_life_0",
@@ -51,7 +51,7 @@
       },
       {
         "id": "patch_loc_hw_northwood_site",
-        "note": "补读：北林边药草采集点(item_herb 20株/120分钟，园艺技能，春夏秋)。物品与技能在目录中存在；该点是全世界唯一带gather字段的资源。20株与120分钟的取值与日常题D14/A3V2-202题面一致，世界文本没有独立来源——按软问题记录并交主会话裁决，不构成与已发布事实的矛盾。"
+        "note": "复审（W8-E3 分种未经审批写入）：新增林缘车前 nw_plantain（春夏秋）、林缘金银花 nw_honeysuckle（春夏），库存20、采集120分钟、技能 skill_life_9_core、密度引用 yields 表 herb.*.seasonDensity，及各自每20日再生1、上限20；均标 calibrate-pending，季节与密度表一致，无新增设施或身份；L2 通过。"
       },
       {
         "id": "patch_loc_hw_gate_notices",
@@ -64,10 +64,14 @@
       {
         "id": "patch_bld_hw_school_site",
         "note": "补读：小学堂site.manager=npc_hw_luqing；陆青为村中教师，workplace即bld_hw_school，学堂内features均登记在其名下。无硬事实问题。"
+      },
+      {
+        "id": "office_exam_life_21",
+        "note": "抽读：在任 npc_a3_exam_life_21，席位 bld_bs_inn，仅 certify（profession_life_21）；来源引垄行会；一致。"
       }
     ]
   },
-  "costUpperYuan": 0.11189112000000001,
+  "costUpperYuan": 0.14543472,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

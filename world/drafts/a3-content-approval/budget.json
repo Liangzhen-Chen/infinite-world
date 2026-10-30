@@ -1,12 +1,12 @@
 {
-  "spentYuan": 0.13146712,
+  "spentYuan": 0.14543472,
   "reservedYuan": 0,
   "waveLimitYuan": 1,
   "note": "A3 收口修复补审：只补已写入世界文件的条目的 L1/L2/L4 回执；总上限 1 元。",
   "cards": {
     "A3FIX": {
       "limitYuan": 1,
-      "spentYuan": 0.13146712,
+      "spentYuan": 0.14543472,
       "reservedYuan": 0,
       "maxRequests": 104
     }
@@ -1866,6 +1866,198 @@
         "cumulativeUpperYuan": 0.13146712,
         "latencyMs": 859.5529000000006,
         "timestamp": "2026-10-23T09:35:22.683Z"
+      }
+    },
+    "ad7904e3-fb2a-47dc-bb92-cb4f6a1483f8": {
+      "card": "A3FIX",
+      "label": "content-a3-content-approval-office_exam_life_4-review0",
+      "requestHash": "12086eed15bec1b969c4b6faa709626e814c616ac6601bbb0f30489c4f4d4a0b",
+      "reservedYuan": 0.017698,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/ad7904e3-fb2a-47dc-bb92-cb4f6a1483f8.json",
+        "requestHash": "12086eed15bec1b969c4b6faa709626e814c616ac6601bbb0f30489c4f4d4a0b",
+        "responseHash": "8c2ec2e68902f5bb0c558c09e3ac72024f4bf4804c7f8780beccee58beb79a6c"
+      },
+      "costUpperYuan": 0.002308,
+      "measurement": {
+        "label": "content-a3-content-approval-office_exam_life_4-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1126,
+          "completion_tokens": 7,
+          "total_tokens": 1133,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1126
+        },
+        "costUpperYuan": 0.002308,
+        "cumulativeUpperYuan": 0.13377512,
+        "latencyMs": 985.9996999999998,
+        "timestamp": "2026-10-30T04:09:14.645Z"
+      }
+    },
+    "10313135-098c-4189-8028-90f4759e4d24": {
+      "card": "A3FIX",
+      "label": "content-a3-content-approval-office_exam_life_5-review0",
+      "requestHash": "ebeeefea92f93c5747e3e3094e8623a97035e1e98eefd1b0531768f488499c26",
+      "reservedYuan": 0.01768,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/10313135-098c-4189-8028-90f4759e4d24.json",
+        "requestHash": "ebeeefea92f93c5747e3e3094e8623a97035e1e98eefd1b0531768f488499c26",
+        "responseHash": "5df1c047d1f0fb180585db1939814a0cd91987ca3a1149d4cecadf6edcc82c52"
+      },
+      "costUpperYuan": 0.0020491199999999998,
+      "measurement": {
+        "label": "content-a3-content-approval-office_exam_life_5-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1122,
+          "completion_tokens": 7,
+          "total_tokens": 1129,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 994
+        },
+        "costUpperYuan": 0.0020491199999999998,
+        "cumulativeUpperYuan": 0.13582423999999998,
+        "latencyMs": 963.0454999999997,
+        "timestamp": "2026-10-30T04:09:15.629Z"
+      }
+    },
+    "3d28bca8-ac29-4371-99c6-dee47d900248": {
+      "card": "A3FIX",
+      "label": "content-a3-content-approval-office_exam_life_6-review0",
+      "requestHash": "e4e378167f351c452b056c88b24c13c78801e0d24ff11a579326b26e8778c026",
+      "reservedYuan": 0.018778,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3d28bca8-ac29-4371-99c6-dee47d900248.json",
+        "requestHash": "e4e378167f351c452b056c88b24c13c78801e0d24ff11a579326b26e8778c026",
+        "responseHash": "1cb8ae7b61ad5509e0f1efcd55a551f9a829c4f55e82e378dd426f8818694dad"
+      },
+      "costUpperYuan": 0.00233912,
+      "measurement": {
+        "label": "content-a3-content-approval-office_exam_life_6-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1267,
+          "completion_tokens": 7,
+          "total_tokens": 1274,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 1139
+        },
+        "costUpperYuan": 0.00233912,
+        "cumulativeUpperYuan": 0.13816335999999999,
+        "latencyMs": 638.4651000000003,
+        "timestamp": "2026-10-30T04:09:16.286Z"
+      }
+    },
+    "68ab403a-b94a-4310-ba6c-5a508b9188ea": {
+      "card": "A3FIX",
+      "label": "content-a3-content-approval-office_exam_life_7-review0",
+      "requestHash": "705383f035600bfe583d5d9702727175222839f8569ffe4898e95097c7bb0442",
+      "reservedYuan": 0.018714,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/68ab403a-b94a-4310-ba6c-5a508b9188ea.json",
+        "requestHash": "705383f035600bfe583d5d9702727175222839f8569ffe4898e95097c7bb0442",
+        "responseHash": "f03a8a16f79ff0cc629eddd2e536465891b07bea65a4047ec4e438936a5b5051"
+      },
+      "costUpperYuan": 0.0023171199999999998,
+      "measurement": {
+        "label": "content-a3-content-approval-office_exam_life_7-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1256,
+          "completion_tokens": 7,
+          "total_tokens": 1263,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 1128
+        },
+        "costUpperYuan": 0.0023171199999999998,
+        "cumulativeUpperYuan": 0.14048048,
+        "latencyMs": 834.7851,
+        "timestamp": "2026-10-30T04:09:17.145Z"
+      }
+    },
+    "0f244fba-39ca-4e68-b000-4ff7bb4272a4": {
+      "card": "A3FIX",
+      "label": "content-a3-content-approval-office_exam_life_20-review0",
+      "requestHash": "bf5573d96bf7cbe8e2264317f4e120e2f0d148ac21c471691388c571351c6a7c",
+      "reservedYuan": 0.018162,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0f244fba-39ca-4e68-b000-4ff7bb4272a4.json",
+        "requestHash": "bf5573d96bf7cbe8e2264317f4e120e2f0d148ac21c471691388c571351c6a7c",
+        "responseHash": "7dbab2d2d6f3947ebb70acf5e8eb26cf9075e96f635302cc1967033ddd622687"
+      },
+      "costUpperYuan": 0.00215512,
+      "measurement": {
+        "label": "content-a3-content-approval-office_exam_life_20-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1175,
+          "completion_tokens": 7,
+          "total_tokens": 1182,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 1047
+        },
+        "costUpperYuan": 0.00215512,
+        "cumulativeUpperYuan": 0.1426356,
+        "latencyMs": 650.2377999999999,
+        "timestamp": "2026-10-30T04:09:17.813Z"
+      }
+    },
+    "1be7f626-62bf-4c21-b0a4-1d298dd869f3": {
+      "card": "A3FIX",
+      "label": "content-a3-content-approval-patch_loc_hw_northwood_site-review0",
+      "requestHash": "1fd3c1fb705a18849aef3e16bcf3a57a3fed86a0190dd02ccee276b9ed729bfa",
+      "reservedYuan": 0.020144,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1be7f626-62bf-4c21-b0a4-1d298dd869f3.json",
+        "requestHash": "1fd3c1fb705a18849aef3e16bcf3a57a3fed86a0190dd02ccee276b9ed729bfa",
+        "responseHash": "8005e1a0825c1b7a900fd5fec3df2333ba6a342cc3f9489e1aabbc61d2dc32d9"
+      },
+      "costUpperYuan": 0.00279912,
+      "measurement": {
+        "label": "content-a3-content-approval-patch_loc_hw_northwood_site-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1497,
+          "completion_tokens": 7,
+          "total_tokens": 1504,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 1369
+        },
+        "costUpperYuan": 0.00279912,
+        "cumulativeUpperYuan": 0.14543472,
+        "latencyMs": 830.4175999999998,
+        "timestamp": "2026-10-30T04:09:18.663Z"
       }
     }
   },
