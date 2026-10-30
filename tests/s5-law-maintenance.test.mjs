@@ -7,7 +7,7 @@ import {advanceFacilities} from '../server-plugin/facilities.mjs';
 import {autonomyCandidates,autonomyKind,registerAutonomyProvider} from '../server-plugin/autonomy-candidates.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {advanceNpcAutonomy,npcAutonomyBusy} from '../server-plugin/npc-autonomy.mjs';
-import {withLedger} from '../server-plugin/ledger.mjs';
+import {withLedger,openLedger} from '../server-plugin/ledger.mjs';
 import {conservation,reconcile} from './helpers/ledger-audit.mjs';
 import {weatherAt} from '../server-plugin/weather.mjs';
 
@@ -241,7 +241,10 @@ test('采购受本人预算、实际卖家与身体负重限制，买料不会�
  f.e.byId.get('item_stone').basePrice=2;
  f.doc.state.npcs[host].inventory.item_stone.quantity=0;
  f.doc.state.npcs[seller].inventory.item_stone={quantity:2};
- const buys=()=>candidates(f).filter(c=>c.id.startsWith('repair_material:'));
+ // Procurement now checks saleable ledger stock, including commitments.
+ // Each fixture mutation must reopen its opening books before that query;
+ // keep the original budget, seller-presence and carry assertions intact.
+ const buys=()=>{f.doc.ledger=openLedger(f.e,f.doc);return candidates(f).filter(c=>c.id.startsWith('repair_material:'));};
  assert.equal(buys().length,1);
  f.doc.state.npcs[host].coins=0;assert.equal(buys().length,0);
  f.doc.state.npcs[host].coins=500;f.e.byId.get('item_stone').weight=10000;assert.equal(buys().length,0);

@@ -72,7 +72,7 @@ test('缺料或本人底线拒绝时不自动修好，不把掌柜视为驿站�
  Object.assign(f.doc.state.npcs[host].inventory,{item_wood:{quantity:20},item_stone:{quantity:20}});
  work(f,0);assert.equal(facilityView(f.e,f.doc.state,post).condition,10);
 });
-test('缺料的业主只向同地真实卖家采购，钱从本人钱袋支付且库存守恒',()=>{
+test('缺料的业主向可知真实卖家采购，钱从本人钱袋支付且库存守恒',()=>{
  const f=repairFixture({materials:false}),seller='npc_hw_ayan';
  f.doc.state.npcs[host].inventory.item_wood={quantity:4};
  f.doc.state.npcs[seller].inventory.item_stone={quantity:2};
@@ -81,11 +81,13 @@ test('缺料的业主只向同地真实卖家采购，钱从本人钱袋支付�
  const projected=subjectiveView(f.e,d.document,host),candidate=autonomyCandidates(f.e,projected,{document:d.document}).find(c=>c.id.startsWith('repair_material:'));
  assert.ok(candidate,'the existing on-site trader really has the requested material');
  assert.equal(candidate.decision.outcome,'agree');
- const {item,quantity}=candidate.legacy;
+ // K14 represents even an on-site purchase as a basket with a real service
+ // window. Preserve the original quote, payment and conservation assertions.
+ const {item,quantity}=candidate.legacy.inputs[0];
  const quote=facilityRuntime().currentTradeQuote(f.e,d.document,{buyer:host,seller,item,quantity,location:inn});
  advanceNpcAutonomy(d,f.e,600,600,'buy-material',{beforeState:d.get('state')});
- const task=npcAutonomyBusy(d.get('state'),host,600);assert.equal(task.action.kind,'trade');
- assert.equal(task.action.seller,seller);
+ const task=d.get('state','npcAutonomy','tasks',`npc_daily_0_${host}`);assert.equal(task.action.kind,'procure_inputs');
+ assert.equal(task.action.supplier,seller);
  d.set(['state','minute'],605);advanceNpcAutonomy(d,f.e,600,605,'paid-material');d.done();
  assert.equal(f.doc.state.npcs[host].coins,before.state.npcs[host].coins-quote.totalCoins);
  assert.equal(f.doc.state.npcs[seller].coins,before.state.npcs[seller].coins+quote.totalCoins);

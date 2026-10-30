@@ -58,14 +58,25 @@ function tradeQuote(d,engine,buyer,action,location){
  const quote=facilityRuntime().currentTradeQuote(engine,document,{buyer,seller:action.seller,item:action.item,quantity:action.quantity,location});
  return {...quote,price:quote.listPrice,cost:quote.totalCoins};
 }
-export function npcAutonomyBusy(state,id,minute=state.minute){return Object.values(state.npcAutonomy?.tasks??{}).find(t=>t.status==='进行中'&&[t.npc,t.action.seller].includes(id)&&t.start<=minute&&minute<t.finish)??null;}
+// A moving task is occupied through market_trip, which must keep advancing
+// its body. Only stationary work freezes ordinary schedule settlement.
+export function npcAutonomyBusy(state,id,minute=state.minute){return Object.values(state.npcAutonomy?.tasks??{}).find(t=>!t.itinerary&&t.status==='进行中'&&[t.npc,t.action.seller].includes(id)&&t.start<=minute&&minute<t.finish)??null;}
 export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes=0}={}){
  for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw preconditionFailure('人物正在完成已经开始的自主工作');
 }
-function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false}={}){
+function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false,taskId}={}){
  const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1));let furnace,work;
  if(!full(engine,id)||!awake(engine,presence,id,actor)||personConstraint(engine,state,id,at)||state.player.companions?.includes(id))throw preconditionFailure('人物不具备独立行动条件');
  if(isPhysicallyDead(engine,state,id)||['濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw preconditionFailure('人物当前无法完成工作');
+ // Moving procurement uses the shared market itinerary rather than a fixed
+ // workplace window. The registered kind owns both route and service checks.
+ if(autonomyKind(action.kind)?.itinerary){
+  if(!safe(minutes)||minutes>480)throw preconditionFailure('行动耗时未登记或超过单日上限');
+  const spent=state.npcs[id].autonomy?.minutesByDay?.[String(Math.floor(at/DAY))]??0;
+  if(spent+minutes>Math.max(240,intelligenceOf(engine,state,id).dailyMinutes))throw preconditionFailure('每日自主工作时间已用尽');
+  autonomyKind(action.kind).validate(d,engine,id,action,{at,presence,actor,ignoreTask,taskId});
+  return {minutes,location:action.to};
+ }
  if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(engine,state,who,state.npcs[who])||personConstraint(engine,state,who,at)||state.npcs[who].location!==presence.npcs[who]?.location)throw preconditionFailure('工作完成时人物已离开或不能继续行动');
  if(!safe(minutes)||minutes>480)throw preconditionFailure('行动耗时未登记或超过单日上限');
  if(!ignoreTask)assertNpcAutonomyAction(state,[id,action.seller].filter(Boolean),{start:at,minutes});
@@ -110,7 +121,9 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
 // R25: a person whose state has no current activity yet (e.g. a fresh save before the first
 // schedule step) has no activity key; never write activity:undefined into the save.
 function presenceOf(n){return {location:n.location,...(n.activity===undefined?{}:{activity:n.activity}),status:n.status??'正常'};}
-function startTask(d,task,checked){
+function startTask(d,task,checked,engine){
+ if(autonomyKind(task.action.kind)?.itinerary)task.itinerary=true;
+ autonomyKind(task.action.kind)?.start?.(d,engine,task.npc,task.action,{actionId:task.id});
  if(checked.furnace){commit(d,checked.work);task.furnace={...checked.furnace,checkedUntil:task.start};}
  d.set(['state','npcAutonomy','tasks',task.id],task);
 }
@@ -150,7 +163,7 @@ function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
  changeItems(d,engine,id,item,quantity,{books:craftOutput('npc-autonomy',actionId)});d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
 }
 function executeAction(target,engine,id,action,{at,presence,actionId,start,ignoreTask=false,furnace}){
- const d=draft(target.document,at),checked=validateAction(d,engine,id,action,{at:start,presence,ignoreTask}),base=engine.byId.get(id),minutes=checked.minutes;
+ const d=draft(target.document,at),checked=validateAction(d,engine,id,action,{at:start,presence,ignoreTask,taskId:actionId}),base=engine.byId.get(id),minutes=checked.minutes;
  let outcome={success:true},summary,spent={minutes},produced=[];
  if(action.kind==='audit_inventory'){
   const inventory=Object.fromEntries(Object.keys(d.get('state','npcs',id,'inventory')??{}).sort().map(item=>[item,engine.quantity(d,id,item)]));
@@ -191,8 +204,8 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
  d.set(['state','npcs',id,'autonomy','minutesByDay',day],(autonomy.minutesByDay?.[day]??0)+minutes);
  const record={id:actionId,npc:id,kind:action.kind,action:clone(action),start,minute:at,location:checked.location,summary,outcome,spent,produced};
  d.set(['state','npcAutonomy','actions',actionId],record);
- const participants=action.seller?[id,action.seller]:[id];
- for(const whom of participants)d.set(['state','npcs',whom,'memoryStream'],[...d.get('state','npcs',whom,'memoryStream')??[],{id:actionId,sourceEvent:actionId,kind:action.kind==='trade'?'trade':'autonomy',minute:at,location:checked.location,participants,content:`${base.name}${summary}`,sourceType:'亲历',salience:3,emotion:outcome.success?'踏实':'失望'}]);
+ const counterparty=action.seller??action.supplier,participants=counterparty?[id,counterparty]:[id];
+ for(const whom of participants)d.set(['state','npcs',whom,'memoryStream'],[...d.get('state','npcs',whom,'memoryStream')??[],{id:actionId,sourceEvent:actionId,kind:action.kind==='trade'||action.kind==='procure_inputs'?'trade':'autonomy',minute:at,location:checked.location,participants,content:`${base.name}${summary}`,sourceType:'亲历',salience:3,emotion:outcome.success?'踏实':'失望'}]);
  d.set(['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'自主行动',source:actionId,minute:at,content:summary}]);commit(target,d);return record;
 }
 
@@ -209,14 +222,25 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
      if(complete&&d.get('state','autonomyCandidates',task.candidate))d.remove(['state','autonomyCandidates',task.candidate]);
     }
     results.push(row);};
-   if(d.scheduler&&task.action.kind==='trade'){
+   const contest=autonomyKind(task.action.kind)?.contest;
+   if(d.scheduler&&contest){
+    if(!d.contestPool.some(p=>p.id===task.id)){
+     validateAction(d,engine,task.npc,task.action,{at:task.start,presence:task.presence,ignoreTask:true,taskId:task.id});
+     submitContest(d,{id:task.id,...contest(d,engine,task.npc,task.action),ruleId:'npc_autonomy:trade',objectId:task.npc,execute,reject:reason=>{
+      d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],reason);
+      if(d.get('state','npcs',task.npc,'plan','candidate')===task.candidate)d.set(['state','npcs',task.npc,'plan'],null);
+     }});
+    }
+   }else if(d.scheduler&&task.action.kind==='trade'){
     if(!d.contestPool.some(p=>p.id===task.id)){
      validateAction(d,engine,task.npc,task.action,{at:task.start,presence:task.presence,ignoreTask:true});
      const {price}=tradeQuote(d,engine,task.npc,task.action,d.get('state','npcs',task.npc,'location'));
      submitContest(d,{id:task.id,target:`goods:${task.action.seller}:${task.action.item}`,targetKind:'goods',ruleId:'npc_autonomy:trade',objectId:task.npc,bid:price,quantity:task.action.quantity,capacity:engine.quantity(d,task.action.seller,task.action.item),execute,reject:reason=>{d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],reason);}});
     }
    }else execute();}
-  catch(error){d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],error.message);}
+  catch(error){d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],error.message);
+   if(task.candidate&&d.get('state','npcs',task.npc,'plan','candidate')===task.candidate)d.set(['state','npcs',task.npc,'plan'],null);
+  }
  }};settle();
  if(!beforeState)return results;
  for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
@@ -240,26 +264,43 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length)&&!autonomyRelevant(engine,d.get('state'),id,actor,projectDocument))continue;
    projectDocument();
    const view=subjectiveView(engine,projected,id);
-   const candidates=autonomyCandidates(engine,view,{document:projected,scheduled:queued,fallback:choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i}))});
+   const procurement=facilityRuntime().inputProcurement?.(engine,projected,view,choices);
+   for(const row of procurement?.constraints??[]){
+    const key=`input_constraint:${id}:${row.purpose}`;
+    d.set(['state','records',key],{category:'input_constraint',npc:id,minute:start,...row});
+   }
+   let candidates=autonomyCandidates(engine,view,{document:projected,scheduled:queued,fallback:[...choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i})),...(procurement?.candidates??[])]});
+   candidates=facilityRuntime().continueInputPlan?.(view,candidates)??candidates;
    if(currentPlan&&currentPlan.status!=='completed'&&!candidates.some(c=>c.id===currentPlan.candidate)){
     d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'原先的主观前提或收益已不成立',basis:currentPlan.basis});
    }
-   for(const candidate of candidates){try{
-    let selected=candidate;
+   for(const candidate of candidates){let action;try{
+    let selected=candidate,planToStart=null;
     if((candidate.horizon??1)>1){
      let plan=d.get('state','npcs',id,'plan');
-     if(!plan){plan=planFromCandidate(view,candidate);d.set(['state','npcs',id,'plan'],plan);}
+     if(!plan||plan.status==='completed'||plan.candidate!==candidate.id)plan=planFromCandidate(view,candidate);
      if(plan.deadline<start){d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'期限已过',basis:candidate.decision.trace});continue;}
-     const step=plan.steps.find(s=>!s.done);if(!step)continue;selected={...candidate,...step};
+     const step=plan.steps.find(s=>!s.done);if(!step)continue;selected={...candidate,...step};planToStart=plan;
     }
-    const action=candidateAction(engine,selected);
+    action=candidateAction(engine,selected);
     const checked=validateAction(d,engine,id,action,{at:start,presence});
     // Native daily purchases need the same two-party presence snapshot as
     // frozen NPC plans; otherwise settlement rejects every real seller.
     const actorPresence={npcs:Object.fromEntries([id,action.seller].filter(Boolean).map(who=>[who,presenceOf(presence.npcs[who])]))};
-    startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true,...(!candidate.legacy?{candidate:candidate.id,decision:candidate.decision}:{} )},checked);
+    startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true,...(!candidate.legacy?{candidate:candidate.id,decision:candidate.decision}:(candidate.horizon??1)>1?{candidate:candidate.id}:{} )},checked,engine);
+    // Procurement's saved explanation is its actual integer cost/noise and
+    // knowledge basis, not a duplicate of transient derived personality math.
+    if(planToStart&&autonomyKind(action.kind)?.itinerary)planToStart={...planToStart,basis:[{stage:'input_procurement',basis:{knownFrom:action.knownFrom,...action.basis}}]};
+    if(planToStart)d.set(['state','npcs',id,'plan'],planToStart);
     if((candidate.horizon??1)<=1&&queued.some(c=>c.id===candidate.id))d.remove(['state','autonomyCandidates',candidate.id]);break;
-   }catch{/* Missing resources or occupied time is a skipped action, never success. */}}
+   }catch(error){
+    // Keep the actual unmet input and failure, without freezing an unstarted
+    // itinerary into tomorrow's plan or reporting a successful transaction.
+    if(autonomyKind(action?.kind)?.itinerary){
+     d.set(['state','records',`input_constraint:${id}:${action.purpose}`],{category:'input_constraint',npc:id,minute:start,purpose:action.purpose,missing:action.inputs,blocked:['feasibility'],reason:error.message});
+     if(d.get('state','npcs',id,'plan','candidate')===candidate.id)d.set(['state','npcs',id,'plan'],null);
+    }
+   }}
   }
   settle();
  }
@@ -297,7 +338,7 @@ export function applyNpcPlan(d,engine,input,eventId){
    if(action.kind==='share'){const detail=shareNpcMemory(d,engine,{from:proposal.npc,to:action.to,memoryId:action.memoryId,channel:action.channel,eventId:id});results.push({id,status:detail.delivered?'已完成':'进行中',detail});continue;}
    const checked=validateAction(d,engine,proposal.npc,action),start=d.get('state','minute');
    const task={id,npc:proposal.npc,action:clone(action),start,finish:start+checked.minutes,presence:{npcs:Object.fromEntries([proposal.npc,action.seller].filter(Boolean).map(who=>{const n=d.get('state','npcs',who);return [who,presenceOf(n)];}))},status:'进行中',planEvent:eventId};
-   startTask(d,task,checked);results.push({id,status:'进行中',finish:task.finish});
+   startTask(d,task,checked,engine);results.push({id,status:'进行中',finish:task.finish});
   }catch(error){results.push({id,status:'拒绝',reason:error.message});}
  }}
  return {proposed:results.length,results};
