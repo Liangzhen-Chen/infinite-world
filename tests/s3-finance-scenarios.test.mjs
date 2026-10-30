@@ -29,18 +29,23 @@ test('E12-2: 一年十二期仅在真实期点尝试；远方不扣款，失败�
 
 test('E18/E3: 规范工资债与旧投影只减一次股值，到期债权先于股东分红',async()=>{
     const f=fixture();
-    // Keep the debt-counting anchor on actual non-food stock. A new known wage
-    // obligation changes K02 food retention and hence the current bread quote;
-    // that separate price change must not be mistaken for duplicate debt.
-    f.doc.state.npcs[host].inventory={item_wood:{quantity:20}};
     const equity=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'equity');
     f.doc.state.records[`finance_profit:${host}`]={category:'finance_profit',issuer:host,net:1000};
     const at=f.doc.state.records[equity.contract].nextDividend;
     let d=f.draft();const before=netAssets(d,f.e,host);d.done();
     const amount=f.doc.state.npcs[host].coins;
-    assert.ok(before-amount>1); // Positive stock value exposes a second subtraction.
+    // Bread base 2, physical supply 20, no backed forwards: effective supply 20.
+    // K02 household buffers give demand 2+4+4+4+4=18; the keeper retains 0
+    // with local market access. Stock value = 20*2*18/20=36.
+    assert.equal(amount,634);assert.equal(before,634+36);
     f.doc.state.records.wages={category:'debt',kind:'wage',debtor:host,creditor:worker,amount,paid:0,createdAt:600,deadline:at,status:'待偿还'};
-    d=f.draft();adoptLegacyObligation(d,f.e,'wages');assert.equal(netAssets(d,f.e,host),Math.max(1,before-amount));d.done();
+    // The known wage extends the creditor's income horizon: his bread reserve
+    // rises 4->20. The keeper's market budget cannot release another holder's
+    // food. Demand = 2+4+20+4+4=34; supply stays 20; stock value = 68.
+    // Assets = cash634 + 20*2*34/20 - wage634 = 68, both before/after adoption.
+    // A duplicated canonical+legacy liability would instead hit the floor of 1.
+    d=f.draft();assert.equal(netAssets(d,f.e,host),68);
+    adoptLegacyObligation(d,f.e,'wages');assert.equal(netAssets(d,f.e,host),68);d.done();
     const total=cash(f.doc);f.tick(at);
     assert.equal(f.doc.state.records[equity.contract].distributed,0);assert.equal(dueObligation(f.doc.state,'wages').owed,amount);assert.equal(cash(f.doc),total);
 });

@@ -14,7 +14,15 @@ const DAY=1440,DEPART=7*DAY+540,lanes=world.rules.settlementTrade.lanes;
 const key=(lane,day=7)=>`settlement-trade:${lane.id}:${day}`;
 const farm=(doc,id)=>doc.state.records[`agriculture:${id}`];
 function setup({source=world,realNpcs=false}={}){
-    const w=structuredClone(source);if(!realNpcs)for(const n of w.npcs){delete n.schedule;delete n.tier;}
+    const w=structuredClone(source);
+    if(!realNpcs){
+        for(const n of w.npcs){delete n.schedule;delete n.tier;}
+        // This fixture isolates public-granary trade. K04 structural hiring
+        // remains active without schedule/tier: omit unrelated mineral veins
+        // too, so mine wages/breach events cannot change its private-assets
+        // or partition anchors. The realNpcs scenario keeps the full world.
+        for(const place of w.locations)place.minerals=[];
+    }
     const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'trade-test');
     return {world:w,engine,doc};
 }

@@ -226,7 +226,7 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  };
  const unattended=Object.values(state.family?.illnesses??{}).some(r=>r.status==='患病中'&&r.severity==='重'&&r.patient!==id&&household?.members.includes(r.patient)&&r.since<=minute&&minute<r.endsAt&&!household.members.some(m=>attending(m,r)));
  const fullCare=own?.caring||unattended;
- const duties=fullCare?[{start:480,end:1020,location:own?.caring?.location??home,activity:'照护病人',services:[]}]:slots.flatMap(({start,end,location,services})=>{
+ let duties=fullCare?[{start:480,end:1020,location:own?.caring?.location??home,activity:'照护病人',services:[]}]:slots.flatMap(({start,end,location,services})=>{
   if(householdField(location))return [{start,end,location,services,activity:'农事'}];
   return marketVariant&&tradesAt(location)?[{start,end,location,services,activity:'集市行程'}]:[];
  });
@@ -235,7 +235,17 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  // its keeper is reserved only for the actual service windows.
  for(const trip of records.filter(r=>r.category==='market_trip')){
   const windows=trip.actor===id?[{start:trip.departAt,end:trip.returnAt}]:trip.keeper===id?trip.serviceWindows??[]:[];
-  for(const window of windows){const start=Math.max(0,window.start-day),end=Math.min(1440,window.end-day);if(start<end)duties.push({start,end,location:trip.to,activity:'集市行程',services:[]});}
+  for(const window of windows){
+   const start=Math.max(0,window.start-day),end=Math.min(1440,window.end-day);
+   if(start>=end)continue;
+   // A completed trip replaces overlapping planned duty; a field slot must
+   // not swallow its receipt and still count those minutes as farm work.
+   duties=duties.flatMap(row=>row.end<=start||row.start>=end?[row]:[
+    ...(row.start<start?[{...row,end:start}]:[]),
+    ...(row.end>end?[{...row,start:end}]:[])
+   ]);
+   duties.push({start,end,location:trip.to,activity:'集市行程',services:[]});
+  }
  }
  for(const o of Object.values(state.obligations??{}))if(o.reservationVersion===1&&['待履行','进行中'].includes(o.status)&&(o.deliveryVersion===1?o.promisor===id:[o.promisor,o.promisee].includes(id))&&!(o.type==='等候'&&o.promisee===id&&o.attendance?.[id]>0)){
   const start=Math.max(0,(o.departures?.[id]??o.start)-day),end=Math.min(1440,o.deadline-day);

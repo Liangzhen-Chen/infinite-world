@@ -137,17 +137,19 @@ test('market trips retain K04 care and levy guarantees; releasing the duty resto
 });
 
 test('shopping replaces the overlapping own-farm production minutes, not just the total reserved-time label',()=>{
- const f=fixture({food:true}),home='loc_hw';
+ const f=fixture({food:true}),home=f.e.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').fieldLocation;
+ // K04 derives farm time from registered field rights, never the activity name.
+ f.doc.state.buildings[home]={...f.doc.state.buildings[home],owner:buyer};
  f.doc.state.minute=720;f.doc.state.npcs[buyer].coins=100;f.doc.state.npcs[buyer].location=home;
  f.doc.state.npcs[owner].inventory={[item]:100};
- f.w.npcs.find(n=>n.id===buyer).schedule.default[0]={start:0,end:1440,location:home,activity:'农事',services:[]};
+ f.w.npcs.find(n=>n.id===buyer).schedule.default[0]={start:0,end:1440,location:home,activity:'arbitrary activity label',services:[]};
  f.w.routes=[{id:'farm-market-trip',from:home,to:place,modes:['walk'],lengthKm:2,terrainMultiplier:1,toll:2,closedSeasons:[]}];
  const d=f.sync(),minutes=(time,activity)=>time.reserved.filter(r=>r.activity===activity).reduce((n,r)=>n+r.end-r.start,0);
  assert.equal(minutes(householdWorkTime(f.e,d.get('state'),buyer,720),'农事'),480);
  advanceCustomerFlow(d,f.e,719,720);
  const time=householdWorkTime(f.e,d.get('state'),buyer,720);
  // Two30-minute routes and service5 occupy the lunch hour plus five farm minutes.
- assert.equal(minutes(time,'农事'),475);assert.equal(minutes(time,'赶集'),5);
+ assert.equal(minutes(time,'农事'),475);assert.equal(minutes(time,'集市行程'),5);
  assert.equal(time.reservedMinutes,480);assert.equal(time.workMinutes,0);
 });
 
