@@ -62,6 +62,8 @@ test('native loader reads extension fact and modifier files; package order is ir
  const root=await fs.mkdtemp(path.join(tmpRoot(),'s501c-loader-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  for(const name of ['meta','people','geo','lore'])await fs.cp(new URL(`../world/${name}`,import.meta.url),path.join(root,name),{recursive:true});
  await fs.mkdir(path.join(root,'ontology'),{recursive:true});await fs.mkdir(path.join(root,'rules'),{recursive:true});
+ // W8-E3 site resources reference density rows in the archived balance tables.
+ await fs.cp(new URL('../world/rules/tables',import.meta.url),path.join(root,'rules','tables'),{recursive:true});
  await fs.writeFile(path.join(root,'ontology','facts.json'),JSON.stringify({entries:[extension,{...extension,kind:'item'}]}));
  const rows=[{id:'same',pack:'a',target:'decision:riskWeight',stage:'mul',value:1.25},{id:'same',pack:'b',target:'decision:riskWeight',stage:'mul',value:1.5},{id:'read-item',pack:'alchemy',target:'new:fact-reader',stage:'mul',value:"1 + fact(subject, 'alchemy:rank') / 10",bounds:[1,2]}];
  const results=[];
