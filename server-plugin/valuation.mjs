@@ -12,7 +12,8 @@ registerValuer('baseline',(d,e,{item,quantity=1,holder=null})=>{
     return {value:projection.value*quantity,basis:'derived-baseline'};
 });
 export function registerValuer(role,fn){valuers.set(role,fn);}
-// asset.role：'goods' {item,quantity,location,holder} | 'share' {issuer,fraction} | 'property' {subject,fraction}
+// asset.role：'goods' 零售估值 / 'collateral' 整批清算 {item,quantity,location,holder}
+// | 'share' {issuer,fraction} | 'property' {subject,fraction}
 // 返回 {value:整数,basis} 或 {value:null,unvaluable:原因}
 // 估值只读：事务草稿若提供 peek（不复制整棵状态），读取走 peek。
 const reader=d=>typeof d.peek==='function'?{document:d.document,get:(...p)=>d.peek(...p),peek:(...p)=>d.peek(...p)}:d;

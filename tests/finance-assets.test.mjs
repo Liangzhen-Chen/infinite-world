@@ -10,6 +10,9 @@ import {groupAccountView,ensureGroupAccount} from '../server-plugin/group-accoun
 import {applyEffect} from '../server-plugin/effects.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
+import {valuation} from '../server-plugin/valuation.mjs';
+import {supplyApart} from '../server-plugin/market.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
 const mill='bld_hw_mill',recipe='recipe_wooden_pegs';
 function workshopFixture(){
     const f=fixture({at:mill});f.doc.state.buildings[mill]={owner:'player',condition:100};
@@ -22,6 +25,25 @@ function workshopFixture(){
 // by the real clock (the worker's schedule walks them from home to the mill) rather than by a pinned position at 17:00.
 const elapse=(f,to)=>f.act({minutes:to-f.doc.state.minute},`elapse_${to}`,'world_time');
 const profit=f=>{const d=f.draft(),n=operatingProfit(d,f.e,host);d.done();return n;};
+
+test('抵押角色按整批清算估值，小额保留零售价值，私人持货不成为公共供给',()=>{
+    const f=fixture(),d=f.draft(),snapshot=JSON.stringify(f.doc);
+    const asset={item:'item_bread',location:post,holder:'player'},supply=supplyApart(d,f.e,{...asset,owner:'player'});
+    assert.deepEqual([supply.supply,supply.demand],[20,18]);
+    // q5 <= retailFloor5：5×2×18/20=9；q10整批清算：floor(2×18×ln(30/20))=14，低于零售18。
+    assert.equal(valuation(d,f.e,{role:'collateral',...asset,quantity:5}).value,9);
+    assert.equal(valuation(d,f.e,{role:'goods',...asset,quantity:5}).value,9);
+    assert.equal(valuation(d,f.e,{role:'collateral',...asset,quantity:10}).value,14);
+    assert.equal(valuation(d,f.e,{role:'goods',...asset,quantity:10}).value,18);
+    // 估值加法修正逐件生效：floor(36×ln(1.5)+10×1)=24，不能只给整批加1。
+    const premium=new WorldEngine({...f.w,derived:{...f.w.derived,modifiers:[...f.w.derived.modifiers,{id:'collateral-add',pack:'business',target:'economy:value',stage:'add',value:1}]}});
+    assert.equal(valuation(d,premium,{role:'collateral',...asset,quantity:10}).value,24);
+    // 木料S28、D1：沿28→128整段在稀缺下限.5，基准4×.5×100=200。
+    const timber=supplyApart(d,f.e,{item:'item_wood',location:post,owner:'player'});
+    assert.deepEqual([timber.supply,timber.demand],[28,1]);
+    assert.equal(valuation(d,f.e,{role:'collateral',item:'item_wood',location:post,holder:'player',quantity:100}).value,200);
+    assert.equal(JSON.stringify(d.document),snapshot,'报价不得写档或处置抵押物');
+});
 
 test('商号入股实际转资，按真实成交扣成本和税后利润分红，资本注入不算收入，股份可部分转让',async()=>{
     const f=fixture(),total=cash(f.doc);

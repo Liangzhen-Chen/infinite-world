@@ -8,7 +8,7 @@ import {applyPatches,CampaignStorage,digest} from '../server-plugin/storage.mjs'
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import path from 'node:path';
 import {FIXED_SCALE} from '../server-plugin/rx.mjs';
-import {marketQuote,marketSupply,saleableStock,marketGrade,purchasingPower} from '../server-plugin/market.mjs';
+import {marketQuote,marketSupply,saleableStock,marketGrade,purchasingPower,assertMarketDepth} from '../server-plugin/market.mjs';
 import {tradeQuote} from '../server-plugin/shop.mjs';
 import {netAssets} from '../server-plugin/finance-assets.mjs';
 import {npcPlanFingerprint} from '../server-plugin/npc-autonomy.mjs';
@@ -29,6 +29,17 @@ function fixture(setup={},w=world){
   async act(args,id){const out=await engine.reduce(document,{tool:'world_trade',args,eventId:id});document=applyPatches(document,out.patches);return out;}};
 }
 const quote=f=>tradeQuote(f.read(),f.engine,{buyer:'player',seller:host,item:bread,quantity:1,location:inn,base:()=>f.engine.byId.get(bread).basePrice});
+
+test('人对人零售不占用不存在的商号日深度，仍检查实际可售库存',()=>{
+ const seller='npc_hw_ayan',item='item_s2_talc',f=fixture();
+ const setup=applyIntentSetup(f.engine,f.document,{present:[seller],facts:[{path:['state','npcs',seller,'inventory'],value:{...f.document.state.npcs[seller].inventory,[item]:{quantity:10}}}]});
+ assert.deepEqual(setup.setupUnmet,[]);f.replace(setup.document);
+ // 私人10份滑石不进入公开供给；q6>retailFloor5仍是无商号的零售，不能被零公开存量的日限额5拒绝。
+ const args={seller,buyer:'player',item,location:inn},q=marketQuote(f.read(),f.engine,{...args,quantity:6});
+ assert.deepEqual([q.business,q.supply,q.retail],[null,0,true]);
+ assert.doesNotThrow(()=>assertMarketDepth(f.read(),f.engine,q));
+ assert.throws(()=>assertMarketDepth(f.read(),f.engine,marketQuote(f.read(),f.engine,{...args,quantity:11})),/库存不足/);
+});
 
 test('current stock net assets share market value and S5-01 corrections, not historical cost',()=>{
  const f=fixture(),prepared=applyIntentSetup(f.engine,f.document,{facts:[

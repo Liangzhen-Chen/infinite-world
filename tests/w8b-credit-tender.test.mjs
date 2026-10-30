@@ -107,11 +107,11 @@ test('W8B-4 典当与赎当同一单位；赎当回执写明债权人（037）',
  const f=fixture({},PAWN_ONLY);
  await f.issue(3,'b4-issue');
  const notes=f.notes('player');
- // 面包 ×100，估值每个 1 文 = 100 文；垫款比 .5 → 50 文 ÷ 10 文/张 = 5 张。
+ // S=0、D=14：清算floor(2×[14+14×ln(6)+(100−28)×.5])=150文；预支75文，floor(75/10)=7张券。
  const pawn=await f.trade({operation:'pawn',item:'item_bread',quantity:100,days:1},'b4-pawn');
- assert.deepEqual([pawn.principal,pawn.resource,pawn.referenceCopper],[5,NOTE,50]);assert.equal(f.notes('player')-notes,5);
- const debt=f.document.state.records[pawn.contract];assert.deepEqual([debt.kind,debt.resource,debt.principal],['pawn',NOTE,5]);
- assert.equal(debt.amount,5+Math.ceil(5*pawn.monthlyInterest));
+ assert.deepEqual([pawn.principal,pawn.resource,pawn.referenceCopper],[7,NOTE,75]);assert.equal(f.notes('player')-notes,7);
+ const debt=f.document.state.records[pawn.contract];assert.deepEqual([debt.kind,debt.resource,debt.principal],['pawn',NOTE,7]);
+ assert.equal(debt.amount,7+Math.ceil(7*pawn.monthlyInterest/30)); // 一日借期，月息折日息。
  const vault=f.bankNotes();
  const redeem=await f.trade({operation:'redeem',contract:pawn.contract},'b4-redeem');
  // 037：回执写明当铺/钱庄主体 id 与名称，且仍带 bank、债号、状态、取回的当物。
@@ -130,17 +130,17 @@ test('W8B-5 赎当可换铜：按赎当时兑换（无成交 10 文/张）向上
  const owe=f.document.state.records[a.contract].amount,coins=f.coins();
  await f.trade({operation:'redeem',contract:a.contract,payCurrency:'coin_river'},'b5-redeem-a');
  assert.equal(coins-f.coins(),owe*10);
- // 再典当一次，过了赎当期不赎：流当。拍卖价 100 文，债 = amount 张 = amount×10 文，余下退给原主。
+ // 签约清算值150文是拍卖下限；以150文成交，按10文/张清偿债务，余额退回。
  const b=await f.trade({operation:'pawn',item:'item_bread',quantity:100,days:1},'b5-pawn-b');
  const row=f.document.state.records[b.contract],units=row.amount;
  await f.act('world_time',{minutes:1440*5},'b5-wait');
  f.at(post,f.hostFacts());
  const bankCoins=f.bankCoins(),ownerCoins=f.coins(),hostCoins=f.document.state.npcs[host].coins;
- const sold=await f.trade({operation:'auction',buyer:host,contract:b.contract,coins:100,consent:true},'b5-auction');
- assert.equal(sold.surplus,100-units*10);
+ const sold=await f.trade({operation:'auction',buyer:host,contract:b.contract,coins:150,consent:true},'b5-auction');
+ assert.equal(sold.surplus,150-units*10);
  assert.equal(f.bankCoins()-bankCoins,units*10);        // 钱庄按债的铜价值收到拍卖款
- assert.equal(f.coins()-ownerCoins,100-units*10);       // 余款退给原主
- assert.equal(hostCoins-f.document.state.npcs[host].coins,100);
+ assert.equal(f.coins()-ownerCoins,150-units*10);       // 余款退给原主
+ assert.equal(hostCoins-f.document.state.npcs[host].coins,150);
  const after=f.document.state.records[b.contract];assert.deepEqual([after.paid,after.status,after.resource],[units,'已还清',NOTE]);
  clean(f);
 });
@@ -206,9 +206,10 @@ test('W8B-9 法定单位是 coin_river 的地方（默认世界）：钱庄借�
  assert.ok(loan.messages.some(m=>m.includes('借100铜')&&m.includes(`还本息${loan.amount}铜`)));
  await f.trade({payment:'repay',debt:loan.debt},'b9-repay');
  assert.equal(f.coins(),coins-loan.interest);
- // 典当：面包 ×100 → 垫款 50 文；赎当回执同样写明债权人，其余字段与以前一致，没有资源字段。
+ // 同上清算floor(2×[14+14×ln(6)+36])=150铜；预支50%=75铜。
  const pawn=await f.trade({operation:'pawn',item:'item_bread',quantity:100,days:1},'b9-pawn');
- assert.deepEqual([pawn.principal,pawn.interest],[50,Math.ceil(50*pawn.monthlyInterest)]);assert.ok(!('resource'in pawn));
+ // 一日借期按月息折算1/30：ceil(75×月息/30)=1铜。
+ assert.deepEqual([pawn.principal,pawn.interest],[75,Math.ceil(75*pawn.monthlyInterest/30)]);assert.ok(!('resource'in pawn));
  const redeem=await f.trade({operation:'redeem',contract:pawn.contract},'b9-redeem');
  assert.deepEqual([redeem.debt,redeem.repaid,redeem.status,redeem.bank,redeem.creditor,redeem.creditorName],[pawn.contract,pawn.amount,'已还清',BANK,BANK,'小驿站汇兑柜']);
  assert.ok(!('resource'in redeem));

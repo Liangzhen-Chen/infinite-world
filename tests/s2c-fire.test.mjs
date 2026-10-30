@@ -36,15 +36,15 @@ test('E06-1 真实风向、间距、石材与雨水对照',()=>{
 test('E06-2 仓损逐批进 sink，保护种粮与别仓，未签约报价立即重派生',()=>{
  const {engine,d,warehouse}=fixture(),before=d.get('state','settlements','loc_hw','food'),seed=structuredClone(d.get('state','records','agriculture:loc_hw','field'));
  const price=regionalTradePrice(d,engine,'item_oats','loc_hw',600);
- // S5-02：粮基准3×春季0.9×5220/(8000-5220+8+4)，其余因子1。
- assert.equal(price,5.0479942693409745);
+ // E6排除私人12份粮食：S=8000−5220=2780，D5220；3×春季.9×5220/2780=5.069784172661871。
+ assert.equal(price,5.069784172661871);
  damageFacility(d,engine,warehouse,75,{cause:'火灾',sourceEvent:'grain',minute:660});
  assert.equal(d.get('state','settlements','loc_hw','food'),before-4500);
  assert.equal(d.get('ledger','flows','sink:destroy|item_oats|fire'),4500);
  assert.deepEqual(d.get('state','records','agriculture:loc_hw','field'),seed);
  assert.equal(d.get('state','records','agriculture:loc_hw','batches').find(b=>b.id==='safe_grain').amount,2000);
  damageFacility(d,engine,warehouse,75,{cause:'火灾',sourceEvent:'grain',minute:660});assert.equal(d.get('ledger','flows','sink:destroy|item_oats|fire'),4500);
- // 未签约的读价不是承诺；失火后公粮3500全属保留，供给仅12，供需封顶3。
+ // 未签约的读价不是承诺；失火后公粮3500全属保留，公开供给0，供需封顶3。
  // 新价3×0.9×3=8.1，同日立即反映，次日没有成交压力仍为8.1。
  assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',700),8.100000000000001);
  assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',DAY+600),8.100000000000001);
@@ -155,5 +155,6 @@ test('拘押死亡、逃脱与到期关闭持有，未服刑罚与赔偿保留',
 test('E06 长等待与逐小时火势、库存、协议一致；磨损归零进入毁灭协议',()=>{
  const a=fixture(),b=fixture();a.ignite();b.ignite();advanceFacilityFire(a.d,a.engine,{after:840});for(const after of [660,720,780,840])advanceFacilityFire(b.d,b.engine,{after});
  assert.deepEqual(a.d.get('state','buildings'),b.d.get('state','buildings'));assert.deepEqual(a.d.get('state','records','agriculture:loc_hw'),b.d.get('state','records','agriculture:loc_hw'));assert.deepEqual(a.d.get('ledger'),b.d.get('ledger'));
- const id=a.place('bld_worn',100,100);a.d.set(['state','buildings',id],{condition:1,wearUnits:9});advanceFacilities(a.d,a.engine,{before:0,after:DAY});assert.equal(isGone(a.engine,a.d,id),true);
+ // 现有仓库的磨损分母为5400；用真实建筑并置于归零前一个磨损单位，保留毁灭协议断言。
+ const id=a.place(a.warehouse,100,100);a.d.set(['state','buildings',id],{condition:1,wearUnits:5399,wearDenominator:5400});advanceFacilities(a.d,a.engine,{before:0,after:DAY});assert.equal(isGone(a.engine,a.d,id),true);
 });

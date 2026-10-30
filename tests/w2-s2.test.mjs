@@ -66,10 +66,9 @@ async function routeSession(route){
  }
  const buy=async(item,quantity)=>{
   const t=await run(doc,'world_trade',{seller:teacher,item,quantity});
-  // S5-02 §15.2：前面的真实采购使导师对玩家的立场折价小于1。
-  // 火绒基准1×供需0.5×此前实际采购形成的立场(<1)×2份，整单截断为0。
-  // 火绒改成精确0；同类草药的当日深度已随前两笔上升，仍保留其他采购须付款和全部材料消耗断言。
-  if(item==='item_s2_tinder')assert.equal(t.result.cost,0,item);else assert.ok(t.result.cost>0,item);
+  // E6后导师私有火绒不算公开供给：S0、D1，稀缺因子1；先前真实采购使立场因子.99895。
+  // 两份的零售额trunc(1×1×1×.99895×2)=1铜，其他采购仍须付款，材料消耗断言保持。
+  if(item==='item_s2_tinder')assert.equal(t.result.cost,1,item);else assert.ok(t.result.cost>0,item);
   doc=t.doc;
  };
  if(route==='道'){
@@ -244,7 +243,8 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const zero=structuredClone(world);zero.npcs.find(n=>n.id==='npc_hw_luqing').inventory[books[0].id]=0;zero.npcs.find(n=>n.id===DAN).inventory.item_charcoal=0;assert.deepEqual(mergeS2Publication(zero,publication).npcs,zero.npcs);
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS2Publication(conflict,publication),/冲突/);
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s2-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // 隔离世界保留地点依赖的四季采集密度规则及法域绑定，和S4发布夹具一致；不改发布内容或断言。
+ for(const folder of ['meta','people','geo','lore','law','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s2'),path.join(root,'drafts/w2-s2'),{recursive:true});
  const key={'meta/spells.json':'spells','meta/skills.json':'skills','meta/items.json':'items','meta/recipes.json':'recipes','people/baseline.json':'npcs','geo/locations.json':'locations'};
  for(const f of publishedFiles)await fs.writeFile(path.join(root,f),JSON.stringify(before[key[f]]));

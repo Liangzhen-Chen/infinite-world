@@ -92,14 +92,15 @@ test('S5F-3 实物计价：以羊毛付款，数量是整数斤，守恒',async(
  const f=fixture();
  f.atShop();
  const s=applyIntentSetup(f.engine,f.document,{location:shop,inventory:{item_wool:40}});assert.deepEqual(s.setupUnmet,[]);f.document=s.document;
- // 河湾的羊毛估值：目录基价 5 x 稀缺度下限 .5 = 2.5 文/斤（与面包 2 x .5 = 1 同一口径）。面包 25 文 → ceil(25/2.5)=10 斤（整除）。
+ // 私人羊毛不计公开供给：供给0、需求1，5×clamp(1/max(1,0))=5文/斤；ceil(25/5)=5斤。
  const r=await f.trade({item:'item_bread',quantity:25,payCurrency:'item_wool'},'f3-wool');
- assert.deepEqual(r.paidWith,{resource:'item_wool',amount:10,name:'洗净羊毛束'});
- assert.equal(f.document.state.inventory.item_wool.quantity,30);assert.equal(f.document.state.npcs[host].inventory.item_wool.quantity,10);
+ assert.deepEqual(r.paidWith,{resource:'item_wool',amount:5,name:'洗净羊毛束'});
+ assert.equal(f.document.state.inventory.item_wool.quantity,35);assert.equal(f.document.state.npcs[host].inventory.item_wool.quantity,5);
  assert.equal(f.document.state.player.coins,3000);
- // 23 个面包 = 23 文 → ceil(23/2.5)=ceil(9.2)=10 斤，多出的 0.8 斤价值留给对方，不找零（羊毛不可拆成小数）。
- const r2=await f.trade({item:'item_bread',quantity:23,payCurrency:'item_wool'},'f3-wool-2');
- assert.equal(r2.paidWith.amount,10);assert.ok(Number.isInteger(r2.paidWith.amount));
+ // 首笔后公开供给72，单笔上限floor(72×.3)=21。开市97、净卖25，深度1+.2×25/97；
+ // 21×(1+.2×25/97)=22.082…，整单22文；商家已有5斤羊毛，羊毛价5×.5=2.5，ceil(22/2.5)=9斤。
+ const r2=await f.trade({item:'item_bread',quantity:21,payCurrency:'item_wool'},'f3-wool-2');
+ assert.equal(r2.paidWith.amount,9);assert.ok(Number.isInteger(r2.paidWith.amount));
  clean(f);
 });
 

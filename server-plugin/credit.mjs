@@ -54,9 +54,9 @@ const awake=n=>projectionLiving(n)&&!['濒死','昏迷','患病'].includes(n.sta
 export const creditRules=engine=>engine.rules.economy?.credit??null;
 function rules(engine){const c=creditRules(engine);if(!c)throw preconditionFailure('此世界尚未登记借贷与钱庄规则');return c;}
 const nameOf=(engine,id)=>engine.byId.get(id)?.name??id;
-// F007：押品、典当物的价值走估值角色（市场估值投影），不是目录基价也不是成交价；没有估值依据的物品不能作押。
+// 押品、典当物按整批逐件清算的市场估值放款；没有估值依据的物品不能作押。
 const valueOf=(d,engine,item,quantity,location=d.get('state','location'),holder='player')=>{
-    const r=valuation(d,engine,{role:'goods',item,quantity,location,holder});
+    const r=valuation(d,engine,{role:'collateral',item,quantity,location,holder});
     if(r.value===null)throw preconditionFailure(`${nameOf(engine,item)}没有可派生的估值依据，不能作押：${r.unvaluable}`);
     return r.value;
 };
