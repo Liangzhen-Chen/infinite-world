@@ -19,7 +19,7 @@ import {changeHolding} from '../server-plugin/transition.mjs';
 import {currentControllers} from '../server-plugin/action-authority.mjs';
 import {escrow} from '../server-plugin/money.mjs';
 import {conservation,reconcile} from './helpers/ledger-audit.mjs';
-import {applyCandidate,entries as approvalEntries,validateDraft,draftFor} from '../world/design/k10b-public-maintenance-approval.mjs';
+import {isPublished,entries as approvalEntries,validateDraft,draftFor} from '../world/design/k10b-public-maintenance-approval.mjs';
 import {personOffices} from '../server-plugin/entity-view.mjs';
 import {publicMaintenanceReport,reportPublicMaintenance} from '../server-plugin/public-projects.mjs';
 import {advanceNpcCognition} from '../server-plugin/npc-cognition.mjs';
@@ -27,7 +27,7 @@ import {advanceNpcCognition} from '../server-plugin/npc-cognition.mjs';
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const nativeChief='npc_hw_chenbai',nativeWorker='npc_hw_zhengshuisheng';
 function nativeScenario(building){
- const w=applyCandidate(world),e=new WorldEngine(w);let doc=e.createCharacter(seed,{},'native-public-maintenance');
+ const w=structuredClone(world),e=new WorldEngine(w);let doc=e.createCharacter(seed,{},'native-public-maintenance');
  delete w.rules.weather;
  Object.assign(w.rules.facilities.maintenance,{horizonDays:90,delayMaxPermille:0,stubbornPermille:0,noisePermille:0});
  const base=e.byId.get(building),manager=base.site?.manager??base.lodging.host;
@@ -53,11 +53,17 @@ function deliverReport(f){
  return sent;
 }
 
-test('K10b frozen proposal uses existing L1 gate and leaves published titles unchanged',()=>{
- // Seven independently reviewed field changes; zero runtime application.
+test('K10b published titles match the frozen approved seven-entry edition',()=>{
+ // Publication supersedes the former ownerless premise; no second overlay.
  assert.equal(approvalEntries.length,7);
  for(const entry of approvalEntries)assert.deepEqual(validateDraft(draftFor(entry),entry),[]);
- for(const id of ['bld_hw_school','bld_hw_post'])assert.equal(world.locations.find(b=>b.id===id).owner,undefined);
+ assert.equal(isPublished(world),true);
+ assert.equal(world.locations.find(b=>b.id==='bld_hw_school').owner,'loc_hw');
+ assert.equal(world.locations.find(b=>b.id==='bld_hw_post').owner,'faction_bs_government');
+ const incomplete=structuredClone(world);delete incomplete.locations.find(b=>b.id==='bld_hw_school').owner;
+ assert.equal(isPublished(incomplete),false,'partial publication must retain the before/approval gate');
+ assert.equal(approvalEntries.find(e=>e.id==='bld_hw_school-owner').before,undefined,'pre-publication evidence stays frozen');
+ for(const id of ['npc_hw_luqing','npc_hw_shendu'])assert.equal(world.npcs.find(n=>n.id===id).relationships.filter(r=>r.with===nativeChief&&r.type==='公事报修').length,1);
 });
 
 test('K10b founding maintenance cap derives from ranked office and requires fiscal scope',()=>{
@@ -109,7 +115,7 @@ test('K10b absent/sleeping manager, missing channel, revoked delegation and reso
 });
 
 test('K10b native school and post remain repairable after a season with public resources',async()=>{
- // Native place/people/routes; approved-candidate world only.90 days >2
+ // Native place/people/routes in the published world.90 days >2
  // actual480-minute shifts plus travel. No project or attendance is inserted.
  for(const building of ['bld_hw_school','bld_hw_post']){
   const f=nativeScenario(building);
@@ -201,10 +207,10 @@ test('公共责任来自现任职权和集体产权；管事、私人业主和�
  });
  assert.equal(options(f),null);
  const expired=scenario();expired.doc.state.minute=180*DAY;assert.equal(options(expired),null);
- // Native ownerless school/post remain an explicit serial content contact,
- // not a license to turn their teacher or cashier into a property owner.
- for(const id of ['bld_hw_school','bld_hw_post']){
-  assert.deepEqual(currentControllers({engine:f.e,document:f.doc},id,{ownerOnly:true,principals:true}),[]);
+ // Published public titles still confer no property or spending rights on
+ // the teacher/cashier, who only manage and report defects.
+ for(const [id,owner] of [['bld_hw_school','loc_hw'],['bld_hw_post','faction_bs_government']]){
+  assert.deepEqual(currentControllers({engine:f.e,document:f.doc},id,{ownerOnly:true,principals:true}),[owner]);
   assert.equal(publicMaintenanceResponsibility(f.e,f.doc,'npc_hw_shendu',id),null);
  }
 });

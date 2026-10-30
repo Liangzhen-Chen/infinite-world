@@ -338,7 +338,13 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
                         for(const span of time.work)recordEmploymentAttendance(d,npcId,Math.max(cursor,day+span.start),Math.min(after,slot.until,day+span.end),npc.location);
                     }else recordEmploymentAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
                 }
-                else if(!regional&&crews.has(npcId)&&slot.activity===PROJECT_ACTIVITY)recordProjectAttendance(d,npcId,cursor,Math.min(after,slot.until),npc.location);
+                else if(!regional&&crews.has(npcId)&&slot.activity===PROJECT_ACTIVITY){
+                    // Phase-2 workshop settlement can already have moved this
+                    // actor to an arrival at `after`. Re-entering the schedule
+                    // must not credit the preceding journey as public labour.
+                    const arrived=beforeState?.npcs?.[npcId]?.scheduleTravel?.arrive??cursor;
+                    recordProjectAttendance(d,npcId,Math.max(cursor,arrived),Math.min(after,slot.until),npc.location);
+                }
             }
             if(slot.until>after)break;
             const next=facilityRuntime().hasUnattendedFurnace(engine,npcId)?scheduleAt(engine,npcId,slot.until,peekState(d),constraints):null;

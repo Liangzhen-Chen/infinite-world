@@ -3,9 +3,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildGraph,compareBaseline as compareGraph,readBaseline as graphBaseline} from '../tools/import-graph.mjs';
-import {scan,compareBaseline as compareScan} from '../tools/derived-scan.mjs';
+import {scan,scanAuthored,scanWritePoints,compareBaseline as compareScan} from '../tools/derived-scan.mjs';
 import {assignedFiles} from '../tools/arch-layers.mjs';
 import fs from 'node:fs';
+import path from 'node:path';
+import {tmpRoot} from '../tools/tmp-root.mjs';
+
+test('维护章程是职权来源；其他作者对象及人物存档仍不能保存派生powers',()=>{
+ const fields=[{field:'powers',scope:'all'}];
+ assert.deepEqual(scanAuthored([path.resolve('world/geo/settlements.json')],fields),[]);
+ const dir=fs.mkdtempSync(path.join(tmpRoot(),'charter-scan-')),data=path.join(dir,'private.json'),code=path.join(dir,'private.mjs');
+ try{
+  fs.writeFileSync(data,JSON.stringify({powers:['public_project'],publicMaintenance:{budgetFrom:'ranked_office',source:'test',powers:['public_project']}}));
+  assert.equal(scanAuthored([data],fields).length,2,'unrelated authored objects retain the ban');
+  fs.writeFileSync(code,"d.set(['state','npcs',id,'powers'],['public_project']);");
+  assert.equal(scanWritePoints([code],fields).length,1,'runtime powers remain derived');
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
 
 test('import 图：每个模块都已标层，没有新增的向上依赖或包间 import',()=>{
  const g=buildGraph();

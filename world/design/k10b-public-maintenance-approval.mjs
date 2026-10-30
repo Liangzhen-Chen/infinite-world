@@ -12,7 +12,7 @@ const locations=await read('world/geo/locations.json'),people=await read('world/
 const proposal=(target,file,field,before,after,basis)=>({id:`${target}-${field.replaceAll('.','-')}`,target,file,field,before,after,basis,
  boundary:'新增待审世界事实，不能从管理人、抄记职业或现实惯例推定产权。不增钱物、不改个人资产、私信与教学器具产权；沿用现有工程、月限额、公库留底、材料与实际工资结算。'});
 const gov=settlements.find(r=>r.id==='loc_hw').publicMaintenance;
-export const entries=[
+const proposedEntries=[
  proposal('bld_hw_school','world/geo/locations.json','owner',locations.find(r=>r.id==='bld_hw_school').owner,'loc_hw',[
   'world/geo/locations.json:830-840：学堂在河湾，site.manager=陆青，仅证明管理；没有产权。',
   'world/people/baseline.json:8993 起：陆青为村中教师；notes只证明教学、晚间抄书换收入。',
@@ -32,6 +32,12 @@ export const entries=[
   `world/people/baseline.json#${id}：既有工作地点及职业；目前没有对陈柏的报修关系。新增公事联络渠道，不虚构友谊或信任加分。`,
   '05 §5.4 主观认知/转述通道：消息须有讲者、收件人与实际运输时间。']);})
 ];
+// Once reviewed, the pre-publication evidence is immutable. Reading live
+// relationships here after publication would append the approved channel twice
+// and change the review fingerprint of the original seven entries.
+let frozen;
+try{frozen=await read(`${root}/candidate.json`);assert.equal(frozen.revision,revision);}catch(error){if(error.code!=='ENOENT')throw error;}
+export const entries=frozen?.entries??proposedEntries;
 export const draftFor=e=>({id:e.id,field:e.field,value:e.after});
 export const contextFor=e=>({sourceFacts:e.basis,before:e.before??null,boundary:e.boundary,ownershipStatus:'候选产权与授权均未发布；既有资料没有确切设立者。'});
 export function applyCandidate(world){
@@ -47,13 +53,28 @@ export function applyCandidate(world){
 export function validateDraft(d,e){
  try{assert.deepEqual(d,draftFor(e));assert.ok(e.basis.length);assert.ok(e.boundary);return [];}catch(error){return [error.message];}
 }
+export function isPublished(world){
+ return entries.every(e=>{
+  const row=e.file.includes('locations')?world.locations.find(r=>r.id===e.target):e.file.includes('baseline')?world.npcs.find(r=>r.id===e.target):e.file.includes('settlements')?world.settlementProfiles.find(r=>r.id===e.target):world.rules;
+  const actual=e.field.split('.').reduce((value,part)=>value?.[part],row);
+  try{assert.deepEqual(actual,e.after);return true;}catch{return false;}
+ });
+}
 export async function run(args=process.argv.slice(2)){
+ const {loadWorld}=await import('../../tools/load-world.mjs');
+ const world=await loadWorld();
+ if(isPublished(world)){
+  const approved=await readApprovedContent(`${root}/review`,entries,{revision,contextFor});
+  assert.equal(approved.length,entries.length);
+  for(const entry of entries)assert.deepEqual(approved.find(row=>row.id===entry.id),draftFor(entry));
+  console.log(JSON.stringify({published:true,verified:approved.length,skipped:'already published; frozen L2/L4 receipts verified',modelCalls:0}));
+  return;
+ }
  if(args.includes('--prepare')||args.includes('--l1')){
   // Reuse the project's world/schema/domain L1; do not substitute a new
   // manifest validator for actual consumers of the proposed world facts.
-  const {loadWorld}=await import('../../tools/load-world.mjs');
   const {validateWorld}=await import('../../tools/validate-world.mjs');
-  const world=await loadWorld(),baseline=validateWorld(world),candidate=validateWorld(applyCandidate(world));
+  const baseline=validateWorld(world),candidate=validateWorld(applyCandidate(world));
   const errors=candidate.errors.filter(e=>!baseline.errors.includes(e));
   assert.deepEqual(errors,[],'候选新增 L1 错误');
   await fs.mkdir(root,{recursive:true});
