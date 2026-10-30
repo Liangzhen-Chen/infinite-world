@@ -186,8 +186,12 @@ test('离屏会费按推进注册表结算：按期扣缴入库，欠费三期�
     const s=setup();let {c,id}=await withMembers(s);
     c=(await s.org(c,{operation:'org_propose',org:id,action:'charter',coins:10},'dues')).document;
     const start=organization(s.engine,c.state,id);assert.equal(start.nextDues,c.state.minute+DUES_PERIOD);
-    c.state.npcs[B].coins=0;const coins=c.state.player.coins,treasury=start.treasury;
-    const one=(await s.run(c,'world_time',{minutes:DUES_PERIOD},'month')).document;
+    // 05 §5.1 / §5.7: a member can earn during a real month. The arrears
+    // anchor is an empty purse when dues fall due, not a promise of no income
+    // for thirty days. Keep the full elapsed month and every fee/expulsion check.
+    c=(await s.run(c,'world_time',{minutes:DUES_PERIOD-1},'before_month')).document;
+    c.state.npcs[B].coins=0;const coins=c.state.player.coins,treasury=organization(s.engine,c.state,id).treasury;
+    const one=(await s.run(c,'world_time',{minutes:1},'month')).document;
     const v=organization(s.engine,one.state,id);
     assert.equal(one.state.player.coins,coins-10);assert.equal(v.treasury,treasury+20,'玩家与林岁缴费');
     assert.equal(v.members[B].arrears,1);assert.ok(v.ledger.some(l=>l.kind==='欠费'&&l.party===B));

@@ -7,7 +7,7 @@ import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
 import {facilityView,facilityRouteStates,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {personTeaching,personCertified} from './entity-view.mjs';
 import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
-import { applyPatches, canonical, canonicalEqual, diffPatches, PatchCursor } from './storage.mjs';
+import { applyPatches, canonical, canonicalEqual, diffPatches, PatchCursor, withRecordIndex } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
 import {assertLocationAccess,homePermission}from'./location-access.mjs';
 import {activities}from'./activities.mjs';
@@ -715,7 +715,7 @@ export class WorldEngine {
         this.weatherSequences=new Map();this.advanceGraphs=new Map();this.runtimeHabitats=[];
         this.advanceHouseholds=beginHouseholdReads(this);
         this.advanceFeatures=this.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
-        try{const result=withScheduleCache(this,d,()=>this.advanceElapsed(d,minutes,id));primitiveActionRuntime()?.settleRites?.(d,this);return result;}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
+        try{const result=withScheduleCache(this,d,()=>d.cursor instanceof PatchCursor?withRecordIndex(()=>this.advanceElapsed(d,minutes,id)):this.advanceElapsed(d,minutes,id));primitiveActionRuntime()?.settleRites?.(d,this);return result;}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
     }
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');

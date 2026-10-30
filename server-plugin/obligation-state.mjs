@@ -1,6 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {registerObligationProtocol} from './obligation-protocol.mjs';
 import {aliveHoldings,entityRow} from './holdings.mjs';
+import {recordEntriesWhere} from './storage.mjs';
 // Shared L1 obligation arithmetic. Arithmetic queries do not mutate or inspect
 // an actor's location, consciousness, confinement or lifecycle procedure (I29).
 import {accrualFraction,addAccrual,fraction,interestAmount} from './obligation-calendar.mjs';
@@ -38,7 +39,7 @@ export function obligationRow(state,id){
 export function obligationRows(state){
     const rows=new Map(Object.entries(state.obligations??{}));
     const projections=new Set([...rows.values()].map(o=>o.legacyRecord).filter(Boolean));
-    for(const [id,row]of Object.entries(state.records??{}))if(row.category==='debt'&&!rows.has(row.obligation??id)&&!projections.has(id))rows.set(id,{...row,id});
+    for(const [id,row]of recordEntriesWhere(state.records,'category','debt'))if(!rows.has(row.obligation??id)&&!projections.has(id))rows.set(id,{...row,id});
     return [...rows.values()];
 }
 // Shared labor valuation input. Consumers supply the current proficiency and

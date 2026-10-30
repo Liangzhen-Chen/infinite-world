@@ -4,9 +4,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {applyPatches} from '../server-plugin/storage.mjs';
+import {applyPatches,withRecordIndex} from '../server-plugin/storage.mjs';
 import {emptyHoldings,openHolding,closeHolding,transferHolding,rescaleHolding,aliveHoldings,holdingRow,createEntity,updateEntity,endEntity,entityRow,
-    setLocation,clearLocation,located,locationOf,declareHoldingWriter,registerHoldingKind,auditHoldings,ensureHoldings,HoldingRejected,holdingKind,holdingKindIds} from '../server-plugin/holdings.mjs';
+    setLocation,clearLocation,located,locationOf,declareHoldingWriter,registerHoldingKind,auditHoldings,ensureHoldings,HoldingRejected,holdingKind,holdingKindIds,holdingsView} from '../server-plugin/holdings.mjs';
 import {validateHoldingKinds,confined,effective,pinnedBy} from '../server-plugin/holding-kinds.mjs';
 import '../server-plugin/holding-sources.mjs';
 
@@ -22,6 +22,33 @@ declareHoldingWriter('holdings-test',{kinds:['*'],entities:['*'],locations:true}
 declareHoldingWriter('holdings-narrow',{kinds:['member_of']});
 const W={writer:'holdings-test',engine};
 const rejects=(fn,code)=>assert.throws(fn,e=>e instanceof HoldingRejected&&e.code===code,code);
+
+test('holdings indexes share readers but isolate retained snapshots and equal-seq forks',()=>withRecordIndex(()=>{
+    const d=fresh(),id=openHolding(d,{...W,kind:'owns',holder:'npc_a',subject:'item_box',terms:{share:1}});
+    const before=d.document,reader=holdingsView(before),fork=draft(before);
+    // A owns the box at seq 1. Two branches independently transfer it
+    // to B/C; changing either branch must leave the retained seq-1 title intact.
+    assert.deepEqual(aliveHoldings(reader,{subject:'item_box'}).map(r=>r.id),[id]);
+    assert.deepEqual(aliveHoldings({get:(...p)=>p.reduce((v,k)=>v?.[k],before)},{subject:'item_box'}).map(r=>r.id),[id]);
+    transferHolding(d,{...W,id,holder:'npc_b'});
+    transferHolding(fork,{...W,id,holder:'npc_c'});
+    assert.equal(d.document.holdings.seq,fork.document.holdings.seq);
+    assert.deepEqual(aliveHoldings(reader,{subject:'item_box'}).map(r=>r.holder),['npc_a']);
+    assert.deepEqual(aliveHoldings(d,{subject:'item_box'}).map(r=>r.holder),['npc_b']);
+    assert.deepEqual(aliveHoldings(fork,{subject:'item_box'}).map(r=>r.holder),['npc_c']);
+    assert.deepEqual(aliveHoldings(d,{kind:'owns',subject:'item_box'}),aliveHoldings(d,{subject:'item_box'}));
+}));
+
+test('plain mutable fixture readers do not inherit another readers earlier index',()=>{
+    const d=fresh(),id=openHolding(d,{...W,kind:'owns',holder:'npc_a',subject:'item_box',terms:{share:1}}),document=d.document;
+    const reader=()=>({get:(...p)=>p.reduce((v,k)=>v?.[k],document)});
+    assert.equal(aliveHoldings(reader(),{subject:'item_ring'}).length,0);
+    // Like native-title fixtures and import adapters, this unprotected reader
+    // sees a plain mutable document. Sharing by holdings identity would retain
+    // the empty result even for a new reader after this new title is supplied.
+    document.holdings.rows.h900={...document.holdings.rows[id],id:'h900',subject:'item_ring'};
+    assert.deepEqual(aliveHoldings(reader(),{subject:'item_ring'}).map(r=>r.id),['h900']);
+});
 
 test('注册表：v10 持有种类全部登记，四条必填钩子齐全，13 章七种与设计列出的种类都在',()=>{
     const ids=holdingKindIds();

@@ -8,6 +8,7 @@ import {groupAccountView} from './group-account.mjs';
 import {temples,templeById} from './faith-catalog.mjs';
 import {familyGroup,natalFamily} from './family-state.mjs';
 import {isEffective,isGone} from './lifecycle-state.mjs';
+import {recordsWhere} from './storage.mjs';
 const LEADER={王国:'国王',行会:'会长',帮派:'帮主',商号:'掌柜',教会:'主祭',会社:'会长',家户:'家长'};
 const ELDER='长老',MEMBER='成员',key=id=>`organization:${id}`;
 const living=(engine,state,id)=>{
@@ -83,7 +84,7 @@ export function organizationState(engine,state,id){
 export function organizationIds(engine,state){
     return [...new Set([...(engine.world.factions??[]).map(f=>f.id),...reputationFactions(engine).map(f=>f.id),...(engine.world.households??[]).map(h=>h.id),
         ...(engine.world.locations??[]).filter(l=>l.monsterSociety&&!engine.world.factions?.some(f=>f.contactAnchor===l.id)).map(l=>l.id),
-        ...temples(engine).map(t=>t.id),...educationSites(engine,state).map(t=>t.id),...medicineSites(engine,state).map(t=>t.id),...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])];
+        ...temples(engine).map(t=>t.id),...educationSites(engine,state).map(t=>t.id),...medicineSites(engine,state).map(t=>t.id),...recordsWhere(state.records,'category','organization').map(r=>r.id)])];
 }
 // S2a：组织里“存下的”会籍与首领（作者数据 + 本局记录），不按生死与家户年龄派生——
 // 持有适配器（holding-sources.mjs）的开账、双写与对账只读它。家户、学堂、医馆的成员是派生的，不在此列；
@@ -104,7 +105,7 @@ export function storedOrganization(engine,state,id){
 export function storedOrganizationIds(engine,state){
     return [...new Set([...(engine.world.factions??[]).map(f=>f.id),...reputationFactions(engine).map(f=>f.id),
         ...(engine.world.locations??[]).filter(l=>l.monsterSociety&&!engine.world.factions?.some(f=>f.contactAnchor===l.id)).map(l=>l.id),
-        ...temples(engine).map(t=>t.id),...Object.values(state.records??{}).filter(r=>r.category==='organization').map(r=>r.id)])].sort();
+        ...temples(engine).map(t=>t.id),...recordsWhere(state.records,'category','organization').map(r=>r.id)])].sort();
 }
 export function memberOrganizations(engine,state,member){
     member=actorId(engine.world,member);

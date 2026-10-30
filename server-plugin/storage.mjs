@@ -246,6 +246,26 @@ function updateRecordGroups(cache, records, id, previous, fields) {
 }
 const NO_ROWS = Object.freeze([]);
 let recordIndexDepth = 0;
+let stateMemos = new WeakMap();
+const memoValue = Symbol('state memo value');
+// State-only projections also have plain read adapters as callers. Keep their
+// cache inside one indexed advance, scoped by engine and every explicit input.
+// Any cursor state write invalidates the mutable root before it can be reused.
+export function stateMemo(state, scope, inputs, build) {
+    if (!recordIndexDepth || !state) return build();
+    let scopes = stateMemos.get(state);
+    if (!scopes) stateMemos.set(state, scopes = new Map());
+    let cache = scopes.get(scope);
+    if (!cache) scopes.set(scope, cache = new Map());
+    for (const input of inputs) {
+        let next = cache.get(input);
+        if (!next) cache.set(input, next = new Map());
+        cache = next;
+    }
+    if (!cache.has(memoValue)) cache.set(memoValue, build());
+    else if (indexCheck && !memoEqual(cache.get(memoValue), build())) stale('state memo');
+    return cache.get(memoValue);
+}
 export const recordIndexActive = () => recordIndexDepth > 0;
 let indexCheck = process.env.FIELDS_INDEX_CHECK === '1';
 export const recordIndexCheck = { hits: 0, memoHits: 0, violations: [] };
@@ -297,8 +317,9 @@ export function canonicalEqual(a, b) {
     return true;
 }
 export function withRecordIndex(task) {
+    if (!recordIndexDepth) stateMemos = new WeakMap();
     recordIndexDepth++;
-    try { return task(); } finally { recordIndexDepth--; }
+    try { return task(); } finally { if (!--recordIndexDepth) stateMemos = new WeakMap(); }
 }
 function recordGroups(records, field, entries, value) {
     if (!INDEXED.has(field)) throw new Error(`records index field ${field}`);
@@ -382,7 +403,7 @@ export class PatchCursor {
     // chain: the own copies along the last written path. While none of them
     // has escaped since and each still hangs where it did, they are still
     // writable, so consecutive writes below them skip the mark lookups.
-    reset(document) { this.onPatch?.({op:'reset',path:[]});this.root = document; this.marks = new WeakMap(); this.ownedChildren = new WeakMap(); this.chain = null; this.revision=(this.revision??-1)+1; }
+    reset(document) { this.onPatch?.({op:'reset',path:[]});stateMemos.delete(this.root?.state);stateMemos.delete(document?.state);this.root = document; this.marks = new WeakMap(); this.ownedChildren = new WeakMap(); this.chain = null; this.revision=(this.revision??-1)+1; }
     // Only this cursor's own copies are ever written in place, so only they need marking.
     expose(value) {
         if (value && typeof value === 'object' && this.marks.get(value) === 1) {
@@ -428,6 +449,7 @@ export class PatchCursor {
         const previousRow = indexedRecords?.[path[2]];
         const previousFields = recordCache ? {kind:previousRow?.kind, category:previousRow?.category} : null;
         if (path[0] === 'state') {
+            stateMemos.delete(root.state);
             if (indexedRecords) recordIndexes.delete(indexedRecords);
             else if (path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
             else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);

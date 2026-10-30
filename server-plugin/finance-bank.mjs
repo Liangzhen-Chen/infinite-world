@@ -235,8 +235,8 @@ export function discloseCreditPlan(d,e,borrower,lender,eventId){
     if(!from||from!==to)throw preconditionFailure('授信资料须由借款人实际到场告知');
     const value=borrowerCashFlow(e,state,borrower,state.minute,{document:d.document});
     const key=`credit:disclosure:${eventId}`;
-    d.set(['state','records',key],{id:key,category:'knowledge',observer:lender,subject:lender,participants:[borrower,lender],
-        proposition:`credit:budget:${borrower}`,value,minute:state.minute,sourceType:'告知',sourceEvent:eventId});
+    holdingSet(d,e,['state','records',key],{id:key,category:'knowledge',observer:lender,subject:lender,participants:[borrower,lender],
+        proposition:`credit:budget:${borrower}`,value,minute:state.minute,sourceType:'告知',sourceEvent:eventId},'finance-bank');
     return value;
 }
 

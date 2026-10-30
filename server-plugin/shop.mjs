@@ -21,7 +21,7 @@ import {personBusinesses,personHousehold,personSimulation,placeSettlement,settle
 import {actorPath} from './npc-state.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
-import {digest,recordsWhere,persistable} from './storage.mjs';
+import {digest,recordsWhere,stateMemo,PatchCursor,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
 import {facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {marketQuote,subjectiveMarketQuote,quoteSupply,recordMarketDeal,goodsClass,registerShopShelves,customerReachMinutes,saleableStock} from './market.mjs';
@@ -170,7 +170,11 @@ registerShopShelves((engine,place)=>{
     }
     return index.rows.get(place)??[];
 });
+const currentShopsMemo=Symbol('current shops');
 export function currentShops(engine,state){
+    return stateMemo(state,engine,[currentShopsMemo],()=>readCurrentShops(engine,state));
+}
+function readCurrentShops(engine,state){
     const rules=shopRules(engine);if(!rules)return[];
     // One legal index for the whole pass; people who can never be open are skipped (entity-view.mjs personBusinesses).
     const businesses=personBusinesses(engine,state,(rules.stores??[]).map(s=>s.keeper));
@@ -221,10 +225,11 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const members=personHousehold(engine,state,owner).value?.members??[owner];
  // Only cursor revisions are cacheable; plain read adapters may expose a
  // mutable test/import document and deliberately take the uncached path.
- let read=Number.isInteger(d.cursor?.revision)?householdSourceReads.get(d):null;
- if(!read||read.revision!==d.cursor?.revision){
-  read={revision:d.cursor?.revision,shops:currentShops(engine,state),physical:new Map()};
-  if(Number.isInteger(d.cursor?.revision))householdSourceReads.set(d,read);
+ const cursor=d.cursor instanceof PatchCursor&&d.document===d.cursor.root?d.cursor:null;
+ let read=cursor?householdSourceReads.get(cursor):null;
+ if(!read||read.revision!==cursor?.revision||read.engine!==engine){
+  read={revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map()};
+  if(cursor)householdSourceReads.set(cursor,read);
  }
  const out=[];
  for(const shop of read.shops){

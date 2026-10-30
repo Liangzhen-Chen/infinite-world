@@ -22,7 +22,7 @@ import {changeLegacyHoldings} from './transition.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {presentWitnesses} from './world-events.mjs';
 import {currentShops} from './shop.mjs';
-import {placeSettlement,personConstraint,personSimulation} from './entity-view.mjs';
+import {placeSettlement,personConstraint,personSimulation,personBusiness,personConstraints} from './entity-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {householdBudget,householdOptions} from './household-budget.mjs';
@@ -456,9 +456,28 @@ function managedShops(e,state){
         return [...rows,...currentShops(e,state).filter(s=>!ids.has(s.id)&&!rows.some(r=>r.owner===s.keeper&&r.location===s.location)).map(s=>({id:s.id,category:'business',native:true,owner:s.keeper,location:s.location,status:'营业',markup:s.markup,openedAt:0}))];
     });
 }
+function hasManagedShops(e,state,who){
+    if(recordsWhere(state.records,'category','business').some(r=>r.owner===who&&live(r)))return true;
+    // A native shop's owner must be an open personBusiness. The same
+    // catalogue/vocation gate used by personBusinesses rules out a person
+    // with no possible trading service before deriving every shop in town.
+    const base=state.created?.[who]??state.family?.people?.[who]??e.byId.get(who),actor=state.npcs?.[who]??state.creatures?.[who];
+    if(!base||!actor||!actor.vocation&&!(base.services??[]).includes('trade')&&!(base.serviceCatalog??[]).some(s=>s.kind==='trade'))return false;
+    const business=personBusiness(e,state,who,personConstraints(e,state));if(!business?.open.value)return false;
+    // Being available for person-to-person trade alone does not create a
+    // native shop. Untyped traders can only keep or succeed a registered store;
+    // derivedShops requires a string shopType.
+    if(typeof business.shopType.value!=='string'&&!(e.rules.economy?.shops?.stores??[]).some(store=>{
+        if(store.keeper===who)return true;
+        const original=e.byId.get(store.keeper),location=original?.workplace?.location??original?.location;
+        return business.location.value===location&&(business.shopType.value===(store.shopType??original?.shopType)||store.channels.includes(business.shopType.value));
+    }))return false;
+    return managedShops(e,state).some(r=>r.owner===who&&live(r));
+}
 registerAutonomyProvider('business_lifecycle',{
-    relevant:(e,state,who)=>managedShops(e,state).some(r=>r.owner===who&&live(r)),
+    relevant:hasManagedShops,
     candidates(e,view,document){
+        if(!hasManagedShops(e,document.state,view.observer))return [];
         return managedShops(e,document.state).filter(r=>r.owner===view.observer&&live(r)&&r.location===view.self.location).flatMap(shop=>{
             const w=businessLifecycle(e,document,shop),best=w.options.find(o=>o.kind===w.preferred);
             const current=w.options.find(o=>o.kind===(shop.suspended?'suspend':'continue'));
