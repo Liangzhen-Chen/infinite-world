@@ -383,7 +383,16 @@
           "item": "item_plantain",
           "quantity": 20,
           "minutes": 120,
-          "gather": {"yield":"gather:herb","skill":"skill_life_9_core","seasons":[0,1,2],"density":"herb.plantain.seasonDensity"},
+          "gather": {
+            "yield": "gather:herb",
+            "skill": "skill_life_9_core",
+            "seasons": [
+              0,
+              1,
+              2
+            ],
+            "density": "herb.plantain.seasonDensity"
+          },
           "calibration": "pending",
           "source": "D14 分种；库存和工时沿用 nw_herb，calibrate-pending"
         },
@@ -393,14 +402,40 @@
           "item": "item_honeysuckle",
           "quantity": 20,
           "minutes": 120,
-          "gather": {"yield":"gather:herb","skill":"skill_life_9_core","seasons":[0,1],"density":"herb.honeysuckle.seasonDensity"},
+          "gather": {
+            "yield": "gather:herb",
+            "skill": "skill_life_9_core",
+            "seasons": [
+              0,
+              1
+            ],
+            "density": "herb.honeysuckle.seasonDensity"
+          },
           "calibration": "pending",
           "source": "D14 分种；库存和工时沿用 nw_herb，calibrate-pending"
         }
       ],
       "changes": [
-        {"id":"nw_plantain_regrow","kind":"regrow","resource":"nw_plantain","quantity":1,"everyDays":20,"max":20,"calibration":"pending","source":"D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"},
-        {"id":"nw_honeysuckle_regrow","kind":"regrow","resource":"nw_honeysuckle","quantity":1,"everyDays":20,"max":20,"calibration":"pending","source":"D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"}
+        {
+          "id": "nw_plantain_regrow",
+          "kind": "regrow",
+          "resource": "nw_plantain",
+          "quantity": 1,
+          "everyDays": 20,
+          "max": 20,
+          "calibration": "pending",
+          "source": "D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"
+        },
+        {
+          "id": "nw_honeysuckle_regrow",
+          "kind": "regrow",
+          "resource": "nw_honeysuckle",
+          "quantity": 1,
+          "everyDays": 20,
+          "max": 20,
+          "calibration": "pending",
+          "source": "D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"
+        }
       ],
       "truths": []
     }
@@ -1172,7 +1207,8 @@
         },
         "careProcess": "food"
       }
-    ]
+    ],
+    "owner": "loc_hw"
   },
   {
     "id": "loc_hw_apiary",
@@ -1245,6 +1281,12 @@
       "host": "npc_hw_shendu",
       "kind": "客房",
       "rooms": 1
+    },
+    "owner": "faction_bs_government",
+    "publicMaintenance": {
+      "owner": "faction_bs_government",
+      "settlement": "loc_hw",
+      "source": "K10b public postal building maintenance delegation"
     }
   },
   {
