@@ -23,7 +23,8 @@ test('完整档首次发布也同步具体特征，不改既有原档冻结或�
 });
 test('同一发布器特征模式通过完整审核，重复不写，后续M4服务与库存不会倒退',async t=>{
  const dir=await fs.mkdtemp(path.join(tmpRoot(),'fields-traits-'));t.after(async()=>{assert.ok(path.resolve(dir).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(dir,{recursive:true,force:true});});
- for(const sub of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',sub),path.join(dir,sub),{recursive:true});const file=path.join(dir,'people/baseline.json');
+ // Keep E3 resource definitions and their archived density parameters together.
+ for(const sub of ['meta','people','geo','lore','rules'])await fs.cp(path.resolve('world',sub),path.join(dir,sub),{recursive:true});const file=path.join(dir,'people/baseline.json');
  const before=world.npcs.map(n=>targets.includes(n.id)?{...n,traits:['原档待扩充']}:n);before.find(n=>n.id==='npc_hw_xuling').coins=27;const merchant=before.find(n=>n.id==='npc_hw_luqing'),book=Object.keys(merchant.inventory).find(id=>id.startsWith('item_book_m4_'));assert.ok(book);merchant.inventory[book]=0;await fs.writeFile(file,JSON.stringify(before));
  const first=await publishNpcProfiles({worldRoot:dir,root,write:true,traitsOnly:true});assert.equal(first.written,true);const current=JSON.parse(await fs.readFile(file,'utf8'));
  for(const n of current){const original=before.find(p=>p.id===n.id),{traits,...rest}=n,{traits:old,...oldRest}=original;assert.deepEqual(rest,oldRest);}

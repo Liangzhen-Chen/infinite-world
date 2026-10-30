@@ -41,7 +41,8 @@ test('真实正式世界prepare保留四项教学、17人特征和钱物，直�
 
 test('隔离世界预演不写，首次写入后重发零变动，运行字段与17人traits完全保留',async t=>{
  const dir=await sourceCopy(t);
- for(const sub of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',sub),path.join(dir,sub),{recursive:true});
+ // Keep E3 resource definitions and their archived density parameters together.
+ for(const sub of ['meta','people','geo','lore','rules'])await fs.cp(path.resolve('world',sub),path.join(dir,sub),{recursive:true});
  // 冻结的深度前人物（含严哲）早于白石镇整合，隔离世界须同样回到白石镇整合前。
  await writePreBaishiWorld(dir,formal);
  const npcs=structuredClone(world.npcs.filter(preBaishiNpc));
