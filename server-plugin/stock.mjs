@@ -252,7 +252,6 @@ export const PRICE_POINTS=Object.freeze({
     'npc.cash':'npc-autonomy：买方现钱（自治交易的报价是否付得起）',
     'smuggling.cash':'smuggling：买方现钱（按报价能否付清货款）',
     'smuggling.stock':'smuggling：玩家行囊里的货（交付数量）',
-    'business.cash':'business：顾客现钱（店铺当日消费上限的口径）',
     'salary.treasury':'office-salary：聚落公库（官职月俸按公库余额付多少）',
     'public.treasury':'governance.spendPublic：聚落公库（公款支出的留底）',
     'projects.stock':'public-projects：玩家自备工程材料（按工钱参照立项）',

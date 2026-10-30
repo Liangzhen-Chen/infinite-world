@@ -10,6 +10,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {regionalTradePrice,armySupplyQuote} from '../server-plugin/settlement-trade.mjs';
+import {quoteSupply} from '../server-plugin/market.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
 import {PRICE_POINTS,probePriceReads,setPriceReadMode,priceRead} from '../server-plugin/stock.mjs';
@@ -43,6 +44,12 @@ const SRC=new URL('../server-plugin/',import.meta.url);
 const sources=Object.fromEntries(readdirSync(SRC).filter(f=>f.endsWith('.mjs')).map(f=>[f,readFileSync(new URL(f,SRC),'utf8')]));
 // 含价格、报价、估值字样的模块的归类。read = 价格输入已读账户；其余是“不读存量或货币量”的原因。
 const SURVEY={
+    // K04: household budgets read inventory and cash via registered points;
+    // meal offers use the catalog base as an opportunity-cost anchor.
+    'household-budget.mjs':'read',
+    // W8-E6: baseline valuation only checks the catalog base, then delegates
+    // to economy:value; current goods prices still use the market projection.
+    'valuation.mjs':'基准估值只校验目录基价并转交 economy:value，不读取存量；goods 估值由市场账户投影提供',
     // S5-02: unified projection reads actual holder and settlement accounts.
     'market.mjs':'read',
     // S5-03 / 15 §15.3: currency supply is read directly from ledger.accounts;
@@ -57,17 +64,21 @@ const SURVEY={
     // S5-02: obsolete regionalMaterialSupply has no callers and is removed;
     // the regional wrapper delegates inventory pricing to registered market.
     'settlement-trade.mjs':'区域价只转调 market 已登记账户读取；保留路线/环境输入，不另读存量定价','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
-    'labor-market.mjs':'read','smuggling.mjs':'read','business.mjs':'read','npc-autonomy.mjs':'read',
+    'smuggling.mjs':'read',
+    // K08 delegates customer cash to household budgets (assets.cash); market
+    // quotes likewise use the registered projection rather than a local read.
+    'business.mjs':'顾客现金经家户预算已登记账户读取；报价转交市场投影','npc-autonomy.mjs':'read',
     // S5 W4 F007/F058：押品、典当物、遗产与责任上限不再自己拿目录基价乘数量，统一经估值角色（valuation.mjs）取市场估值投影；
     // credit / transition / finance-bank 因此不再含价格字样，按本测试的规则从归类表删除。
+    // W8-D/W8-E6: medicine, transport and labor-market likewise delegate to
+    // market/baseline valuation and no longer contain PRICE_WORDS. The point
+    // scan still checks labor.stock/labor.cash at their actual read sites.
     'bounty.mjs':'贿赂价码 = 涉案金额 × 廉洁度 × 立场，不读存量',
     // W8-A：案值、采得物价值、关税税基、事件价值、赠礼拉票改走估值角色（goods 市场估值 / property 租金资本化），law / npc-crime / extraction / world-events / elections / finance-tax 不再读目录基价。
     // law.mjs 仍含 bribePrice 字样（贿赂价码，本表原有口径）。
     'law.mjs':'贿赂价码取涉案金额；案值走估值角色，不读目录基价',
     'boss-negotiation.mjs':'首领谈判按物品本身的目录价值衡量交换（巢穴无市场，非现价），保留',
-    'transport.mjs':'关税与运费按托运单上的货物数量，不读库存（单据在 transport:* 账户）',
     'hazard-calendar.mjs':'灾害价格系数读时钟记录','magic-economy.mjs':'法术减价系数读月度记录','settlement-profile.mjs':'价格系数说明文字','war-diplomacy.mjs':'战时价格系数取规则常量',
-    'medicine.mjs':'诊费 = 工钱参照 + 草药基价 × 预约占用率，不读存量',
     'water-cycle.mjs':'水价读水体水量，水不是账户资源（S5 生态）','wildlife.mjs':'野味价格读生灵种群数，种群账户化属 S5（R24 在改 wildlife）',
     'agriculture.mjs':'含 PriceFactor 字样（农业价格系数）；粮仓售粮 buy 已改走估值角色',
     'engine.mjs':'成交闸门 engine.quantity 与余额检查在 L0 引擎，L0 不能引用 L1 账户（会新增向上违例）；报价由 settlement-trade 与 shop 提供',
@@ -180,7 +191,15 @@ test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推�
     assert.ok(c.doc.ledger,'第一次归约开账');
     assertSurface(c,'交易之后');
     await step(c,'world_trade',{seller:'player',buyer:host,item:'item_bread',quantity:1},'sell-bread');// 玩家卖给店主：成交前库存进成本基准
-    await step(c,'world_trade',{seller:host,item:'item_ration',quantity:40},'buy-ration');
+    // W8-E6 excludes private packs from public supply. Deliver the same forty
+    // portions in the largest legal spot lots: max(retailFloor, floor(S*0.3)).
+    // Unlike all-five-portion lots, this retains real one-coin tax assessment
+    // instead of rounding every small bill's tax to zero. Every lot is dual.
+    for(let left=40,lot=0;left>0;lot++){
+        const supply=quoteSupply(draft(c.doc),c.engine,{item:'item_ration',location:inn}),rules=c.engine.world.marketRules;
+        const quantity=Math.min(left,Math.max(rules.retailFloor,Math.floor((supply.spotSupply??supply.supply)*rules.maxShare)));
+        await step(c,'world_trade',{seller:host,item:'item_ration',quantity},`buy-ration:${lot}`);left-=quantity;
+    }
     assert.ok(Object.values(c.doc.state.records).some(r=>r.category==='trade_tax'&&r.amount>0),'商税照常收取');
     // A3CR (3def293f), 产品原则二.4：借款须有出借人对实际报价条款
     // 的真实同意，调用者 consent:true 不再能代答。复用原生同意夹具，
@@ -353,6 +372,11 @@ test('定点：公共工程读村公库与公仓材料（公款）、玩家现�
 test('定点：组织股份估值读发行方现款与库存；成本基准读买方成交前的库存',async()=>{
     const run=async()=>{
         const f=financeFixture(),issuer=f.w.factions[0],buyer=f.w.factions[1],rep=issuer.leader;
+        // W8-C pack intake: the generic fixture carries 265 kg (wood 200,
+        // oats 50, bread 15), so buying bread cannot reach the cost-basis read.
+        // Only bread is used here: retain its original 100 portions (15 kg),
+        // leaving room for the same three-portion purchase in both read modes.
+        f.doc.state.inventory={item_bread:{quantity:100}};
         delete f.e.byId.get(rep).schedule;f.doc.state.npcs[rep]={coins:50,status:'正常',location:'bld_hw_post',activity:'营业',memoryStream:[]};
         issuer.resources.items??={};issuer.resources.items.item_wood=20;
         const setup=f.draft();ensureGroupAccount(setup,f.e,buyer.id);setup.done();
@@ -388,8 +412,7 @@ test('探针汇总：开账之后每个价格输入点的新旧读数逐点相�
     assert.deepEqual(probe.mismatches,[],'新旧读数分叉');
     const covered=Object.keys(PRICE_POINTS).filter(p=>(probe.open[p]??0)>0),missing=Object.keys(PRICE_POINTS).filter(p=>!covered.includes(p));
     if(process.env.PRICE_DEBUG)console.log(JSON.stringify({hits:probe.hits,open:probe.open,missing}));
-    // 铺面经营的顾客预算要先租铺面开张，夹具太重，由 tests/business-contracts.test.mjs 在探针预加载下逐点核对（4 次读取，0 分叉）。
-    const ELSEWHERE=new Set(['business.cash']);
-    for(const p of ELSEWHERE)assert.ok(Object.hasOwn(PRICE_POINTS,p));
-    assert.deepEqual(missing.filter(p=>!ELSEWHERE.has(p)),[],`这些价格输入点在推演中没有被开账读到：${missing}`);
+    // K08 replaced the standalone business.cash read with household budgets'
+    // assets.cash. Every remaining registered point must be exercised here.
+    assert.deepEqual(missing,[],`这些价格输入点在推演中没有被开账读到：${missing}`);
 });

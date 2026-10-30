@@ -61,6 +61,10 @@ export const businessMembershipScenario=once(async()=>{
  const found=await f.act({type:'org',name:'商号会籍验收行会',data:{notes:'失信商号可议决除名',occupation:'行会'}},'guild','world_create'),id=found.organization;
  const lease=await f.act({operation:'lease',seller:host,consent:true,days:30,payment:'credit',creditMinutes:60*DAY},'shop-lease');
  const shop=lease.business;let d;
+ // K05 requires the S5-W2 shop counter before opening. Open it through the native
+ // action with zero capital: this scenario later spends the owner's entire
+ // purse to cause insolvency, and must not leave a second funded balance.
+ await f.act({operation:'business_counter_open',business:shop,coins:0},'shop-counter',orgTool);
  await f.act({operation:'business_open',business:shop},'shop-open',orgTool);
  await f.act({operation:'org_propose',org:id,action:'charter',cost:7,coins:3,consent:false},'charter',orgTool);
  const before=f.doc.state.player.coins;
