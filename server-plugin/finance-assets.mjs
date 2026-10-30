@@ -50,7 +50,9 @@ export function fieldRentBasis(d,e,subject,{areaMu,seedItem}={}){
     if(!binding)throw preconditionFailure('缺依据：田地没有该作物的产量规则');
     if(!e.byId.get(binding.product))throw preconditionFailure('缺依据：作物产物没有登记');
     const yearDays=e.rules.calendar.daysPerMonth*e.rules.calendar.monthsPerYear;
-    const annualSeasons=Math.min(Math.floor(yearDays/crop.growthDays),1+Math.floor((crop.sowDays[1]-crop.sowDays[0])/crop.growthDays));
+    // Registered acreage is available once per agricultural year (sownUnits),
+    // even when a shortened growth period fits several times in sowDays.
+    const annualSeasons=Math.min(1,Math.floor(yearDays/crop.growthDays),1+Math.floor((crop.sowDays[1]-crop.sowDays[0])/crop.growthDays));
     const yieldSource=binding.yieldSelector==='field:wheat'?'primitiveTables.yields.field:wheat':'rules.agriculture.crop.yieldPerHa';
     const yieldBase=privateCropYieldBase(e,{areaMu,seedItem:binding.seed,crop:binding.product,qualitySum:1,qualityDays:1})*annualSeasons;
     if(!Number.isFinite(yieldBase)||yieldBase<0||!Number.isFinite(annualSeasons)||annualSeasons<=0)throw preconditionFailure('缺依据：田地产量不明');
