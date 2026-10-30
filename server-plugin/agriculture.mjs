@@ -24,6 +24,8 @@ export {farmWaterFactor}from'./water-cycle.mjs';
 import {farmWaterFactor}from'./water-cycle.mjs';
 import {preservedSpoilage}from'./magic-economy.mjs';
 import {agriculturalEmployment} from './employment-state.mjs';
+import {householdWorkTime,npcHousehold,npcAgeAt} from './npc-state.mjs';
+import {toRational} from './det-math.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
 import {recordTillage,tillageArea,cultivationRule,areaM2} from './environment-state.mjs';
@@ -174,15 +176,35 @@ export function advanceAgriculture(d,engine,id,source,day){
     if(r.lastDay!==day-1)throw Error('农事日结顺序不连续，拒绝重复或补算过往收成');
     const weather=weatherAt(engine,d.document.randomSeed,p.fieldLocation,day*1440+720),season=engine.calendar(day*1440).season;
     // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
-    const hired=agriculturalEmployment(d.get('state'),id,day);
-    const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(d.get('state','records',`levy:${id}`)?.count??0)-hired.unavailable);
+    const state=d.get('state'),hired=agriculturalEmployment(state,id,day);
+    // Locally hired farm hands are already part of the population, not new
+    // people. Attendance is the sole source of hired minutes (K04).
+    let localWorked=0;const commuters=new Map();
+    for(const [,raw]of recordEntriesWhere(state.records,'kind','workshop'))if(raw.laborMarket===1){
+        const job=contractTerms(raw,day*1440+480);
+        const shift=job.shifts?.find(r=>!r.aggregate&&Math.floor(r.start/1440)===day);
+        const minutes=job.attendance?.[String(day)]??shift?.minutes??0;
+        if(job.settlement===id)localWorked+=minutes/480;
+        if(job.settlement===id&&minutes>0)commuters.set(job.worker,job);
+    }
+    // Household duties share the same finite day as village production. Own
+    // field windows remain agricultural time; care, appointments and market
+    // journeys do not. K04 has already removed these windows from attendance.
+    let householdMinutes=0;
+    for(const [member,own]of Object.entries(state.npcs??{})){
+        if(!(npcAgeAt(engine,state,member,day*1440+480)>=18)||own.levy||!isEffective(engine,state,member)||npcHousehold(engine,state,member)?.settlement!==id)continue;
+        const job=commuters.get(member),time=householdWorkTime(engine,state,member,day*1440+480,{commuteMinutes:job?.commuteMinutes??0,workMinutes:job?.workMinutes??480});
+        householdMinutes+=time.commuteMinutes+time.reserved.filter(r=>r.activity!=='农事').reduce((n,r)=>n+r.end-r.start,0);
+    }
+    const normalWorkers=Math.floor(s.population*p.workerFraction),availableWorkers=Math.max(0,normalWorkers-(state.records[`levy:${id}`]?.count??0)-localWorked-householdMinutes/480);
     // Meals are prepared first: levy or hired-out shifts take workers from fields, fresh gathering and wood, never rounding the granary's cooks down.
     const laborShare=normalWorkers?availableWorkers/normalWorkers:1,processing=Math.min(p.processingWorkers,availableWorkers);
-    const freshWorkers=Math.min(Math.floor(p.freshWorkers*laborShare),Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(Math.floor(p.farmWorkers*laborShare+hired.hired),r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers));
-    const fresh=accrueStock(r,'fresh',derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers}));
+    const freshWorkers=Math.min(p.freshWorkers*laborShare,Math.max(0,availableWorkers-processing)),fieldWorkers=Math.min(p.farmWorkers*laborShare+hired.hired,r.tools.capacity,Math.max(0,availableWorkers-processing-freshWorkers)+hired.hired);
+    const ownFieldWorkers=Math.max(0,fieldWorkers-hired.hired);
+    const fresh=accrueStock(r,'fresh',derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:freshWorkers?p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers:0}));
     if(day%30===29){
         r.granary.condition=Math.max(0,r.granary.condition-1);
-        const maintenanceWorkers=availableWorkers-processing-freshWorkers-fieldWorkers;
+        const maintenanceWorkers=availableWorkers-processing-freshWorkers-ownFieldWorkers;
         const repair=(stock,n)=>{s[stock]-=n;moveStock(d,{from:settlementStock(engine,id,stock),to:`sink:consume|${settlementStock(engine,id,stock).split('|')[1]}|repair`,amount:n,writer:'agriculture',eventId:`day_${day}`});};
         if(r.granary.condition<=70&&maintenanceWorkers>0&&s.wood>=p.repairWood){repair('wood',p.repairWood);r.granary.condition=Math.min(100,r.granary.condition+p.repairCondition);}
         if(r.tools.condition<50&&maintenanceWorkers>0&&s.wood>=p.repairWood&&s.iron>=p.repairIron){repair('wood',p.repairWood);repair('iron',p.repairIron);r.tools.condition=Math.min(100,r.tools.condition+p.repairCondition);}
@@ -220,8 +242,9 @@ export function advanceAgriculture(d,engine,id,source,day){
     const grainEaten=takeFood(r,s,Math.min(mouths-freshEaten,Math.floor(processing*p.processingPerWorker)),'grain',MEAL);
     const eaten=freshEaten+grainEaten;r.ledger.eaten+=eaten;
     const missingMeals=mouths-eaten;r.lastDay=day;
-    const woodWorkers=Math.min(2,Math.max(0,availableWorkers-processing-freshWorkers-fieldWorkers)),woodProduced=harvestSettlementWood(d,engine,id,Math.floor(s.woodPerDay*woodWorkers/2),(day+1)*1440);
-    r.lastReport={day,workers:{available:availableWorkers,processing,fresh:freshWorkers,field:fieldWorkers,wood:woodWorkers},fresh,wood:woodProduced,planted:planted.units,seedSpent:planted.seed,harvest:result.grain,seedReserved:result.reserved,stored:result.stored,freshEaten,grainEaten,eaten,missingMeals,
+    const woodWorkers=Math.min(2,Math.max(0,availableWorkers-processing-freshWorkers-ownFieldWorkers)),woodProduced=harvestSettlementWood(d,engine,id,Math.floor(s.woodPerDay*woodWorkers/2),(day+1)*1440);
+    const workers=Object.fromEntries(Object.entries({available:availableWorkers,processing,fresh:freshWorkers,field:fieldWorkers,wood:woodWorkers}).map(([k,n])=>[k,Number.isInteger(n)?n:toRational(n)]));
+    r.lastReport={day,workers,fresh,wood:woodProduced,planted:planted.units,seedSpent:planted.seed,harvest:result.grain,seedReserved:result.reserved,stored:result.stored,freshEaten,grainEaten,eaten,missingMeals,
         ...(pestDamage?{harvestLostToPests:result.pestLost??0,pestDamageAddedMaxPercent:pestDamage.maximumAddedPercent}:{})};
     balanced(r,s);commit(d,engine,id,r,`day_${day}`);d.set(path(id),r);return{settlement:s,missingMeals,woodProduced};
 }
@@ -461,7 +484,10 @@ export function agricultureAction(d,args,eventId){
     if(operation==='sow'&&(day%360<this.rules.agriculture.crop.sowDays[0]||day%360>this.rules.agriculture.crop.sowDays[1]))throw preconditionFailure('不在本作物播种窗口');
     if(operation==='sow'&&r.field.seedBank<=0)throw preconditionFailure('没有实际种粮');
     if(operation==='harvest'&&!r.field.cohorts.some(c=>c.ready))throw preconditionFailure('作物尚未成熟，不能把未来收成取出来');
-    const cap=Math.max(1,Math.floor(p.areaPerWorkerDay*r.tools.condition/100/4));
+    const workday=this.world.primitiveTables?.['action-costs']?.params?.find(r=>r.id==='workday.minutes')?.value;
+    if(!Number.isSafeInteger(workday)||workday<=0)throw preconditionFailure('田间劳动的工日分钟数未登记');
+    const cap=Math.floor(p.areaPerWorkerDay*r.tools.condition/100*this.rules.agriculture.workMinutes/workday);
+    if(cap<1)throw preconditionFailure('农具状况不足以完成一单位田间工作，须先修理');
     const skill=this.rules.agriculture.farmingSkill,known=d.get('state','skills',skill),outcome=this.check(d,{attribute:'体质',...(known?{skill}:{}),difficulty:10},eventId);
     this.advance(d,this.rules.agriculture.workMinutes,eventId);
     const latest=clone(d.get(...path(id))),stock=clone(d.get('state','settlements',id)),nowDay=Math.floor(d.get('state','minute')/1440);
@@ -515,6 +541,8 @@ function privateFarmAction(d,engine,p,args,eventId){
         const weather=weatherAt(engine,d.document.randomSeed,location,d.get('state','minute'));
         if(['storm','snow'].includes(weather?.kind))throw preconditionFailure('当前雨雪不宜进行田间工作');
         for(let remaining=laborMinutes;remaining>0;){
+            const workingWeather=weatherAt(engine,d.document.randomSeed,location,d.get('state','minute'));
+            if(['storm','snow'].includes(workingWeather?.kind))return false;
             const minutes=Math.min(remaining,workday);
             engine.advance(d,minutes,`${eventId}:work:${remaining}`);remaining-=minutes;
             if(remaining>0)engine.advance(d,1440-workday,`${eventId}:overnight:${remaining}`);
@@ -540,6 +568,7 @@ function privateFarmAction(d,engine,p,args,eventId){
         if(!work())return{success:false,effectFailed:'工作完成前已失去私田履行条件'};
         const completedDay=Math.floor(d.get('state','minute')/1440);
         if(completedDay%360<crop.sowDays[0]||completedDay%360>crop.sowDays[1])return{success:false,note:'工作完成时已错过播种窗口，种粮未投入'};
+        if(engine.quantity(d,'player',seedItem)<seed)return{success:false,effectFailed:'工作完成前实际种粮已不足，未播种'};
         if(!old){
             const publicFarm=clone(d.get(...path(p.settlement)));
             if(areaUnits>available(publicFarm.field,completedDay))return{success:false,effectFailed:'工作完成前公共田的空闲面积已被使用'};
