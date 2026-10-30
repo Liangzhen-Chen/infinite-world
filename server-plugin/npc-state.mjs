@@ -1,11 +1,13 @@
 import {vocabulary} from './domain-rules.mjs';
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
-import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment} from './entity-view.mjs';
+import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment,personBusiness} from './entity-view.mjs';
 import {recordsWhere,digest,persistable,cloneData,canonicalEqual} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {projectAssignment,PROJECT_ACTIVITY} from './employment-state.mjs';
+import {contractTerms,leaseState} from './contract-state.mjs';
+import {facilityView} from './facility-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 
 const appointmentKey=id=>`service_appointment:${id}`;
@@ -172,6 +174,35 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  const seasonal=routine?.seasonal?.[String(calendar.season)];
  const slots=seasonal?.[variant]??routine?.[variant]??seasonal?.default??routine?.default??[];
  const household=npcHousehold(engine,state,id,constraints),home=household?.homeLocation??person?.home?.location??own?.location;
+ const members=new Set([id,household?.id,...household?.members??[]].filter(Boolean));
+ const records=Object.values(state.records??{}),fields=new Set((engine.rules.agriculture?.settlements??[]).map(r=>r.fieldLocation));
+ const leases=records.filter(r=>r.kind==='asset_lease'&&leaseState(engine,state,r,minute).active).map(r=>contractTerms(r,minute));
+ const householdField=location=>{
+  if(!fields.has(location))return false;
+  const rented=leases.filter(r=>r.subject===location);
+  if(rented.length)return rented.some(r=>members.has(r.tenant));
+  const asset=state.buildings?.[location],base=state.created?.[location]??engine.byId.get(location);
+  const owners=asset?.owners&&Object.keys(asset.owners).length?Object.entries(asset.owners).filter(([,share])=>share>0).map(([holder])=>holder):[asset?.owner??base?.owner];
+  return owners.some(holder=>members.has(holder))||records.some(r=>r.category==='private_farm'&&r.location===location&&members.has(r.owner)&&['growing','ready'].includes(r.status));
+ };
+ const marketVariant=calendar.market&&Array.isArray(seasonal?.market??routine?.market);
+ const atState=minute===state.minute?state:{...state,minute};
+ const tradesAt=location=>{
+  const facility=facilityView(engine,state,location);
+  if(facility?.factor===0)return false;
+  if((facility?.services??(state.created?.[location]??engine.byId.get(location))?.services??[]).includes('trade'))return true;
+  // personBusiness is the L1 source also consumed by currentShops. An employed
+  // keeper cannot offer trade; skip it before reading its employment schedule
+  // so this household allocation never recursively allocates another job.
+  return [...new Set([...engine.world.npcs.map(n=>n.id),...Object.keys(state.npcs??{})])].some(trader=>{
+   const n=state.created?.[trader]??state.family?.people?.[trader]??engine.byId.get(trader);
+   if(!n||!(n.services??[]).includes('trade')&&!(n.serviceCatalog??[]).some(s=>s.kind==='trade')&&!state.npcs?.[trader]?.vocation)return false;
+   const job=personEmployment(engine,atState,trader,minute,constraints)?.value;
+   if(job&&job.status!=='罢工'&&Math.floor(job.starts/1440)<=Math.floor(minute/1440))return false;
+   const business=personBusiness(engine,atState,trader,constraints);
+   return business?.open.value&&business.location.value===location;
+  });
+ };
  // An unassigned gravely ill dependent cannot be left with an invented substitute.
  const attending=(member,illness)=>{
   const n=state.npcs?.[member];
@@ -179,8 +210,17 @@ export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMi
  };
  const unattended=Object.values(state.family?.illnesses??{}).some(r=>r.status==='患病中'&&r.severity==='重'&&r.patient!==id&&household?.members.includes(r.patient)&&r.since<=minute&&minute<r.endsAt&&!household.members.some(m=>attending(m,r)));
  const fullCare=own?.caring||unattended;
- const duties=fullCare?[{start:480,end:1020,location:own?.caring?.location??home,activity:'照护病人',services:[]}]:slots.filter(s=>/农事|农户|田间|耕|种田|种地|播种|收割|务农|照护|照料|照顾|赶集|赶圩/.test(s.activity??''));
+ const duties=fullCare?[{start:480,end:1020,location:own?.caring?.location??home,activity:'照护病人',services:[]}]:slots.flatMap(({start,end,location,services})=>{
+  if(householdField(location))return [{start,end,location,services,activity:'农事'}];
+  return marketVariant&&tradesAt(location)?[{start,end,location,services,activity:'集市行程'}]:[];
+ });
  const day=Math.floor(minute/1440)*1440;
+ // K08's real trip reserves the traveller for both journeys and shopping;
+ // its keeper is reserved only for the actual service windows.
+ for(const trip of records.filter(r=>r.category==='market_trip')){
+  const windows=trip.actor===id?[{start:trip.departAt,end:trip.returnAt}]:trip.keeper===id?trip.serviceWindows??[]:[];
+  for(const window of windows){const start=Math.max(0,window.start-day),end=Math.min(1440,window.end-day);if(start<end)duties.push({start,end,location:trip.to,activity:'集市行程',services:[]});}
+ }
  for(const o of Object.values(state.obligations??{}))if(o.reservationVersion===1&&['待履行','进行中'].includes(o.status)&&(o.deliveryVersion===1?o.promisor===id:[o.promisor,o.promisee].includes(id))&&!(o.type==='等候'&&o.promisee===id&&o.attendance?.[id]>0)){
   const start=Math.max(0,(o.departures?.[id]??o.start)-day),end=Math.min(1440,o.deadline-day);
   if(start<end)duties.push({start,end,location:o.location,activity:'已约定事务',services:[]});

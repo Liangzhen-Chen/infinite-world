@@ -231,7 +231,13 @@ function conflict(d,e,row,start){
     if(!row.domainSteward&&!ownerCanHire(e,s,row.owner))return '雇主不能履约';
     const finish=start+540;
     for(const p of Object.values(s.projects??{}))if(p.status==='施工中'&&p.public?.workers?.includes(row.worker))return '已有公款工程排班';
-    try{e.assertNpcObligationAction(d,[row.worker],{start,minutes:540,kind:'employment'});e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});}catch(error){return error.message;}
+    const time=householdWorkTime(e,s,row.worker,start,{commuteMinutes:row.commuteMinutes??0,workMinutes:row.workMinutes??480}),day=Math.floor(start/DAY)*DAY;
+    try{
+        // Household reservations already remove their real windows. Check the
+        // remaining work, so a short care appointment cannot erase a whole shift.
+        for(const window of time.work)e.assertNpcObligationAction(d,[row.worker],{start:day+window.start,minutes:window.end-window.start,kind:'employment'});
+        e.assertNpcAutonomyAction(s,[row.worker],{start,minutes:540});
+    }catch(error){return error.message;}
     if(occupied({...s,records:Object.fromEntries(Object.entries(s.records).filter(([id])=>id!==row.id))},row.worker,start,finish))return '已有雇佣排班';
     return null;
 }

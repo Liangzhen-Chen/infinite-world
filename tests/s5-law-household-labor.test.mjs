@@ -8,6 +8,7 @@ import {advanceNpcSchedules,scheduleAt} from '../server-plugin/npc-schedule.mjs'
 import {contractIllness} from '../server-plugin/npc-life.mjs';
 import {agriculturalEmployment} from '../server-plugin/employment-state.mjs';
 import {placeSettlement} from '../server-plugin/entity-view.mjs';
+import {mineEmployment} from '../server-plugin/extraction.mjs';
 
 const home='bld_hw_post',site='bld_hw_mill',jobId='workshop:household';
 const slot=(start,end,activity,location=home)=>({start,end,activity,location,services:[]});
@@ -16,7 +17,13 @@ function setup({duties=true,commute=30,statistical=false,meals=[]}={}){
  f.doc.state.npcs[worker].location=home;f.doc.state.npcs[worker].coins=100;
  f.doc.state.npcs[host].coins=5000;
  f.w.households.find(h=>h.members.includes(worker)).homeLocation=home;
- f.e.byId.get(worker).schedule={default:duties?[slot(0,480,'睡眠'),slot(480,660,'农事'),slot(660,720,'照料家人'),slot(720,780,'午饭'),slot(780,1020,'日常起居'),slot(1020,1440,'休息')]:[slot(0,1440,'休息')]};
+ const field=f.e.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').fieldLocation;
+ // 农事必须有登记田权；60分钟照料以真实预约保留，不靠作息文字猜。
+ if(duties){
+  f.doc.state.buildings[field]={...f.doc.state.buildings[field],owner:worker};
+  f.doc.state.obligations.care_time={id:'care_time',reservationVersion:1,type:'会面',promisor:worker,promisee:clerk,status:'待履行',start:660,deadline:720,departures:{[worker]:660},location:home,content:'照料家人'};
+ }
+ f.e.byId.get(worker).schedule={default:duties?[slot(0,480,'睡眠'),slot(480,660,'农事',field),slot(660,720,'照料家人'),slot(720,780,'午饭'),slot(780,1020,'日常起居'),slot(1020,1440,'休息')]:[slot(0,1440,'休息')]};
  f.e.route=()=>({minutes:commute,cost:0,edges:[]});
  f.doc.state.projects.project={id:'project',type:'工程',creator:host,location:site,settlement:'loc_hw',remainingWork:2,remainingDays:2,status:'施工中'};
  const terms={owner:host,worker,location:site,wage:960,workMinutes:480,task:'工程施工',deadline:7*DAY,meals};
@@ -42,12 +49,83 @@ function childHousehold(f,location=home){
  return child.id;
 }
 
+test('家庭义务只看结构事实：任意改写全部活动名，时间预算和出勤工资不变',()=>{
+ // 480−登记自家田180−照料约定60−往返60=180分钟，180×2=360铜。
+ const f=setup(),before=householdWorkTime(f.e,f.doc.state,worker,480,{commuteMinutes:30});
+ assert.equal(before.reservedMinutes,240);assert.equal(before.workMinutes,180);
+ for(const s of f.e.byId.get(worker).schedule.default)s.activity='任意字符串 XYZ 123';
+ assert.deepEqual(householdWorkTime(f.e,f.doc.state,worker,480,{commuteMinutes:30}),before);
+ const row=advance(f,1020);assert.equal(row.attendance[0],180);assert.equal(row.workedMinutes,180);assert.equal(row.paid,360);
+});
+
+test('登记自家田保留180分钟；别人田和未登记场所无田权不能按文字占农时',()=>{
+ // 同一180分钟时段，有本户田权时可雇180；无权利时可雇360（只扣照料60、通勤60）。
+ const f=setup(),s=f.e.byId.get(worker).schedule.default[1],field=s.location;
+ const house=f.w.households.find(h=>h.members.includes(worker)),outsider=f.w.npcs.find(n=>!house.members.includes(n.id)&&n.id!==clerk).id;
+ const budget=()=>householdWorkTime(f.e,f.doc.state,worker,480,{commuteMinutes:30});
+ assert.equal(budget().workMinutes,180);
+ f.doc.state.buildings[field].owner=outsider;assert.equal(budget().reservedMinutes,60);assert.equal(budget().workMinutes,360);
+ const relative=house.members.find(member=>member!==worker);assert.ok(relative);
+ f.doc.state.buildings[field]={owners:{[relative]:0.5,[outsider]:0.5}};assert.equal(budget().workMinutes,180);
+ s.location=site;f.doc.state.buildings[site]={owner:worker};assert.equal(budget().workMinutes,360);
+});
+
+test('K01有效田租和本户农事账户都能派生农时，终止租约与别户账户不授予农时',()=>{
+ // 仍以180农事+60照料+60通勤计180可雇分钟；失去有效权利后恢复360分钟。
+ const f=setup(),field=f.e.byId.get(worker).schedule.default[1].location;
+ const house=f.w.households.find(h=>h.members.includes(worker)),outsider=f.w.npcs.find(n=>!house.members.includes(n.id)).id;
+ f.doc.state.buildings[field].owner=outsider;
+ const lease={id:'field-rent',category:'contract',kind:'asset_lease',owner:outsider,tenant:worker,subject:field,use:'field',starts:0,deadline:DAY,status:'已到期',monthlyRent:100,
+  clauses:{kind:'asset_lease',owner:outsider,tenant:worker,subject:field,use:'field',starts:0,expires:DAY,monthlyRent:100,initialStatus:'有效',rentBasis:{areaMu:1}}};
+ f.doc.state.records[lease.id]=lease;
+ const budget=()=>householdWorkTime(f.e,f.doc.state,worker,480,{commuteMinutes:30});
+ assert.equal(budget().workMinutes,180,'签约区间有效，不读可过时的状态文字');
+ lease.endedAt=480;assert.equal(budget().workMinutes,360);
+ delete f.doc.state.records[lease.id];
+ const farm={category:'private_farm',location:field,owner:worker,crop:f.e.rules.agriculture.grainItem,areaUnits:1,status:'growing'};
+ f.doc.state.records.farm=farm;assert.equal(budget().workMinutes,180);
+ farm.owner=outsider;assert.equal(budget().workMinutes,360);
+});
+
+test('赶集按集日选中的market变体和地点交易事实保留，不以活动文字或普通日作息推断',()=>{
+ // 仅登记的180分钟集市时段占用：480−180=300；没有变体/非集日/场所停用均为480。
+ const f=setup({duties:false,commute:0}),market='bld_hw_grain_annex',routine=f.e.byId.get(worker).schedule;
+ const day=Array.from({length:30},(_,i)=>i).find(i=>f.e.calendar(i*DAY+480).market),at=day*DAY+480;
+ const normal=Array.from({length:30},(_,i)=>i).find(i=>!f.e.calendar(i*DAY+480).market)*DAY+480;
+ f.e.byId.get(market).services=['trade'];
+ routine.default=[slot(0,480,'休息'),slot(480,660,'赶集',market),slot(660,1440,'休息')];
+ assert.equal(householdWorkTime(f.e,f.doc.state,worker,at).workMinutes,480);
+ routine.market=structuredClone(routine.default);
+ const before=householdWorkTime(f.e,f.doc.state,worker,at);assert.equal(before.reservedMinutes,180);assert.equal(before.workMinutes,300);
+ for(const s of routine.market)s.activity='不表示任何职业的新说法';
+ assert.deepEqual(householdWorkTime(f.e,f.doc.state,worker,at),before);
+ assert.equal(householdWorkTime(f.e,f.doc.state,worker,normal).workMinutes,480);
+ f.doc.state.buildings[market]={burning:true};assert.equal(householdWorkTime(f.e,f.doc.state,worker,at).workMinutes,480);
+ // 同一现有人物转入本局名册后，交易服务仍从其真实工位派生，不能只扫描静态职业目录。
+ delete f.doc.state.buildings[market];f.e.byId.get(market).services=[];
+ f.doc.state.created[host]={...structuredClone(f.e.byId.get(host)),workplace:{location:market}};
+ f.w.npcs=f.w.npcs.filter(n=>n.id!==host);
+ assert.equal(householdWorkTime(f.e,f.doc.state,worker,at).workMinutes,300);
+});
+
+test('K08真实market_trip占往返全程，店主只占实际服务窗口，重叠承诺不重复扣时',()=>{
+ // 旅人450→630与可用窗口480→720交150分钟，剩330；店主服务510→600占90，剩390。
+ const f=setup({duties:false,commute:0});
+ f.doc.state.records.trip={id:'trip',category:'market_trip',actor:worker,keeper:host,from:home,to:site,departAt:450,arriveAt:510,finishAt:600,returnAt:630,serviceWindows:[{start:510,end:600}]};
+ f.doc.state.obligations.overlap={id:'overlap',reservationVersion:1,type:'会面',promisor:worker,promisee:clerk,status:'待履行',start:480,deadline:540,location:site};
+ assert.equal(householdWorkTime(f.e,f.doc.state,worker,480).reservedMinutes,150);
+ assert.equal(householdWorkTime(f.e,f.doc.state,worker,480).workMinutes,330);
+ assert.equal(householdWorkTime(f.e,f.doc.state,host,480).workMinutes,390);
+ assert.equal(householdWorkTime(f.e,f.doc.state,worker,DAY+480).workMinutes,480);
+});
+
 test('480分钟扣农事180、照料60、往返60，真实出勤180、每分钟2铜实付360',()=>{
  const f=setup(),before=cash(f.doc),employer=f.doc.state.npcs[host].coins;
  const time=householdWorkTime(f.e,f.doc.state,worker,480,{commuteMinutes:30});
  assert.equal(time.reservedMinutes,240);assert.equal(time.commuteMinutes,60);assert.equal(time.workMinutes,180);
  assert.equal(scheduleAt(f.e,worker,600,f.doc.state).activity,'农事');
- assert.equal(scheduleAt(f.e,worker,690,f.doc.state).activity,'照料家人');
+ assert.equal(scheduleAt(f.e,worker,690,f.doc.state).activity,'已约定事务');
+ assert.equal(scheduleAt(f.e,worker,690,f.doc.state).location,home);
  assert.equal(scheduleAt(f.e,worker,800,f.doc.state).activity,'通勤');
  assert.equal(scheduleAt(f.e,worker,900,f.doc.state).activity,'工程施工');
  const row=advance(f,1020);
@@ -172,10 +250,23 @@ test('mine commute: 已实做的采矿不能因返家后才结算而丢失工资
  f.doc.state.minute=480;
  const terms={owner,worker,location:p.id,wage:960,workMinutes:480,task:'矿脉开采',deadline:7*DAY};
  f.doc.state.records.job={id:'job',category:'contract',kind:'workshop',laborMarket:1,...terms,signedTerms:structuredClone(terms),item:spec.item,settlement,starts:480,nextWork:1020,createdAt:0,status:'有效',commuteMinutes:2,attendance:{},shifts:[],workedMinutes:0,paid:0,produced:0};
+ // 没到岗、以及只站在矿上却没有作业出勤，均不能把480分钟口头申报当作工时。
+ const unworked=structuredClone(f.doc),unworkedDraft=f.draft();
+ assert.equal(mineEmployment(unworkedDraft,f.e,f.doc.state.records.job,1020,480),null);
+ assert.deepEqual(unworkedDraft.document,unworked);
+ f.doc.state.npcs[worker].location=p.id;
+ const presentButIdle=structuredClone(f.doc),idleDraft=f.draft();
+ assert.equal(mineEmployment(idleDraft,f.e,f.doc.state.records.job,1020,480),null);
+ assert.deepEqual(idleDraft.document,presentButIdle);f.doc.state.npcs[worker].location=home;
  const before=f.doc.state.npcs[owner].inventory[spec.item]?.quantity??0;
  const d=f.draft();d.set(['state','minute'],1020);advanceNpcSchedules(d,f.e,480,1020);advanceLaborMarket(d,f.e,{before:480,after:1020,id:'mining-commute'});d.done();
  const row=f.doc.state.records.job;
  assert.equal(row.attendance[0],476);assert.equal(f.doc.state.npcs[worker].location,home);
  assert.equal(row.workedMinutes,420);assert.equal(row.paid,840);assert.equal(row.produced,1);
  assert.equal(f.doc.state.npcs[owner].inventory[spec.item].quantity,before+1);
+ const paid=structuredClone(f.doc),replay=f.draft();
+ assert.equal(mineEmployment(replay,f.e,row,1020,476).minutesSpent,420);
+ assert.deepEqual(replay.document,paid);
+ assert.equal(mineEmployment(replay,f.e,{...row,location:home},1021,476),null);
+ assert.deepEqual(replay.document,paid);
 });

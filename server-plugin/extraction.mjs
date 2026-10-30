@@ -1,8 +1,9 @@
 import {preconditionFailure} from './precondition.mjs';
 import {goodsWorth} from './valuation.mjs';
 import {locationTraits,creatureTraits,traitsOf} from './traits.mjs';
-import {populationView,personConstraint} from './entity-view.mjs';
+import {populationView} from './entity-view.mjs';
 import {npcEntryCheck} from './checks.mjs';
+import {contractTerms} from './contract-state.mjs';
 import {heldUnit,wearItem,produceItems,changeItems} from './items.mjs';
 import {registerIncident} from './law.mjs';
 import {miningJurisdiction} from './law-codes.mjs';
@@ -153,25 +154,32 @@ export function mine(d,args,id){
 // Autonomous labor calls this only after measured attendance. No second clock
 // advance is introduced inside a scheduler settlement.
 export function mineEmployment(d,e,row,at,minutes){
-    const current=d.get('state','records',row.id),n=d.get('state','npcs',row.worker);
+    const current=d.get('state','records',row.id),job=current&&contractTerms(current,at);
+    // Attendance was measured at this contract's worksite while the worker
+    // could work. Returning home or becoming unavailable afterwards does not
+    // erase it; the current actor location is not a second attendance test.
+    if(job?.kind!=='workshop'||job.worker!==row.worker||job.owner!==row.owner||job.location!==row.location||job.item!==row.item||job.task!=='矿脉开采')return null;
     const receipt=`mining_work:${row.id}:${at}`,old=d.get(...path(receipt));
     if(old){if(old.minutes!==minutes)throw preconditionFailure('同次采矿工时事实不一致');return old.result;}
-    const attendance=current?.attendance?.[String(Math.floor((at-540)/1440))]??0;
-    if(current?.worker!==row.worker||current.owner!==row.owner||current.task!=='矿脉开采'||current.endedAt!==undefined||current.status==='罢工'||minutes>attendance||n?.location!==row.location||n.status!=='正常'||personConstraint(e,d.get('state'),row.worker)||n.scheduleTravel||n.cognitionTravel)return null;
+    const attendance=job.attendance?.[String(Math.floor((at-540)/1440))]??0;
+    if(job.endedAt!==undefined||job.status==='罢工'||!d.get('state','npcs',job.worker)||!Number.isFinite(minutes)||minutes<0||!Number.isFinite(attendance)||minutes>attendance)return null;
     if(minutes<e.rules.extraction.mining.minutes)return null;
     const unit=e.rules.extraction.mining.minutes,attempts=[];
     for(let i=0;i<Math.floor(minutes/unit);i++){
         const vein=d.get(...path(`mineral:${row.location}:${row.item}`));
         const tool=heldUnit(d,e,row.worker,e.rules.extraction.mining.tool);
         if(i&&(vein?.reserve===0||(tool?.durability??0)<=0))break;
-        attempts.push(mineActor.call(e,d,{item:row.item,employment:current},`${row.id}:mine:${at}:${i}`,row.worker,false));
+        attempts.push(mineActor.call(e,d,{item:job.item,employment:job},`${row.id}:mine:${at}:${i}`,job.worker,false,{location:job.location,minute:at}));
     }
     const last=attempts.at(-1),quantity=attempts.reduce((n,r)=>n+r.obtained.reduce((v,x)=>v+x.quantity,0),0);
     const result={...last,success:quantity>0,obtained:quantity?[{item:row.item,quantity}]:[],cases:attempts.map(r=>r.case).filter(Boolean),minutesSpent:attempts.length*unit,attempts};
     holdingSet(d,e,path(receipt),{category:'mining_work',contract:row.id,minute:at,minutes,result},'extraction');return result;
 }
-function mineActor(d,args,id,actor,advance){
-    const location=actor==='player'?d.get('state','location'):d.get('state','npcs',actor,'location'),place=d.get('state','created',location)??this.byId.get(location),rules=this.rules.extraction.mining;
+function mineActor(d,args,id,actor,advance,attended=null){
+    // Only mineEmployment supplies this validated worksite/shift context.
+    // Player actions still use their current physical position; no position
+    // is rewritten during deferred employment settlement.
+    const location=attended?.location??(actor==='player'?d.get('state','location'):d.get('state','npcs',actor,'location')),place=d.get('state','created',location)??this.byId.get(location),rules=this.rules.extraction.mining;
     const tags=locationTraits(place).tags;
     const deposits=place.minerals??rules.locations?.[location]??rules.terrain.find(r=>tags.includes(r.tag))?.minerals;
     if(!deposits?.length)throw preconditionFailure('这里没有可开采矿脉');
@@ -184,7 +192,7 @@ function mineActor(d,args,id,actor,advance){
     if(!row.reserve)throw preconditionFailure('矿脉已枯竭或尚未恢复');
     const owner=spec.owner??place.owner,permit=args.authorization&&d.get(...path(args.authorization));
     const job=args.employment;
-    const licensed=owner===actor||job?.owner===owner&&job.worker===actor&&job.location===location&&job.endedAt===undefined&&job.deadline>now||permit?.category==='authorization'&&permit.action==='mining'&&permit.grantee===actor&&permit.grantor===owner&&permit.location===location&&!permit.revoked&&permit.expires>now;
+    const licensed=owner===actor||job?.owner===owner&&job.worker===actor&&job.location===location&&job.endedAt===undefined&&job.deadline>(attended?.minute??now)||permit?.category==='authorization'&&permit.action==='mining'&&permit.grantee===actor&&permit.grantor===owner&&permit.location===location&&!permit.revoked&&permit.expires>now;
     // Read before acting: a place whose ruling code or council custom is missing refuses the dig outright.
     const jurisdiction=owner&&!licensed?miningJurisdiction(this,d.get('state'),location):null;
     // An hour's digging is seen by whoever was there when it began as well as whoever is there at the end.
@@ -192,7 +200,7 @@ function mineActor(d,args,id,actor,advance){
     const atStart=present();
     const check=actor==='player'?this.check(d,{attribute:rules.check.attribute,skill:rules.check.skill,difficulty:rules.difficulty,tools:[rules.tool]},id):npcEntryCheck(d,this,actor,{attribute:rules.check.attribute,skill:rules.check.skill,difficulty:rules.difficulty},id);
     wearItem(d,this,actor,rules.tool,rules.wear);if(advance)this.advance(d,rules.minutes,id);
-    const success=check.success&&(actor==='player'?able(d)&&d.get('state','location')===location:d.get('state','npcs',actor,'status')==='正常'&&d.get('state','npcs',actor,'location')===location);
+    const success=check.success&&(attended!==null|| (actor==='player'?able(d)&&d.get('state','location')===location:d.get('state','npcs',actor,'status')==='正常'&&d.get('state','npcs',actor,'location')===location));
     const vein=reserveAccount(this,key,item);
     if(!d.get(...path(key)))moveStock(d,{from:`src:genesis|${vein.split('|')[1]}|mineral`,to:vein,amount:old.reserve,writer:'extraction',eventId:id});
     // Native clock settlement may have updated this deposit during the dig.
