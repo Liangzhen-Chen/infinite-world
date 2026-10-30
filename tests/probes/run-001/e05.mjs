@@ -67,7 +67,10 @@ export default [
  assert.equal(d.get('state','records',trip.id,'status'),'arrived');assert.equal(e.quantity(d,'player','item_oats'),0);
  d.set(['state','location'],'loc_bs');collectTransport(d,e,trip.id);assert.equal(e.quantity(d,'player','item_oats'),7);
  const owner=d.get('state','player','coins'),carrier=d.get('state','npcs',DRIVER,'coins');
- assert.equal(loss.amount,3*e.byId.get('item_oats').basePrice);assert.ok(loss.amount>1);
+ // W8-D / 15 §15.2: loss uses local market value, not the catalog base.
+ // Spring base=3*0.9=2.7; spot S=(8000-5220)+50=2830, D=5220,
+ // quality/corrections=1: floor(3*2.7*5220/2830)=14 copper.
+ assert.equal(loss.amount,14);assert.ok(loss.amount>1);
  const part=Math.floor(loss.amount/2),paid=compensateTransportLoss(d,e,{loss:loss.id,amount:part,payer:DRIVER},'compensate');assert.equal(paid.transferred,part);assert.equal(lossView(d.get('state'),loss.id).remaining,loss.amount-part);assert.equal(dueObligation(d.get('state'),`${loss.id}:claim`).owed,loss.amount-part);
  compensateTransportLoss(d,e,{loss:loss.id,amount:loss.amount-part,payer:DRIVER},'compensate-rest');
  assert.equal(d.get('state','player','coins'),owner+loss.amount);
