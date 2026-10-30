@@ -272,6 +272,7 @@ const fundingRelevant=(e,state,id)=>Boolean(creditRules(e)&&(
     recordsWhere(state.records,'kind','workshop').some(r=>r.worker===id&&r.deadline>state.minute)));
 registerAutonomyProvider('household_credit',{
     relevant:fundingRelevant,
+    candidateRelevant:(e,document,id)=>fundingRelevant(e,document.state,id),
     candidates:(e,view,document)=>creditRules(e)?householdFundingCandidates(e,view,document):[]
 });
 function fundingParties(d,e,borrower,lender,{start=d.get('state','minute')}={}){

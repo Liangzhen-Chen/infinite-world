@@ -373,8 +373,33 @@ function nextBusinessResume(e,state,shop,at){
     return Math.max(periodEnd,nextRestock);
 }
 const resumeDeadline=(e,state,shop)=>shop.resumeNotBefore??nextBusinessResume(e,state,shop,shop.suspendedAt??shop.createdAt??0);
-export function businessLifecycle(engine,document,shop){
-    const state=document.state,view=subjectiveView(engine,document,shop.owner),read=stateReader(state);
+function businessPreference(engine,document,owner){
+    const rule=engine.rules.businessLifecycle;
+    return document.state.npcs?.[owner]?.businessAttachmentPermille??(rollDice(document.randomSeed,'business:tail',owner,0,0,1000)<=(rule?.stubbornPermille??0)?rule.tailAttachmentPermille*(rollDice(document.randomSeed,'business:tail-sign',owner,0,0,2)===1?-1:1):
+        rollDice(document.randomSeed,'business:attachment',owner,0,0,(rule?.attachmentMaxPermille??0)+1)-1);
+}
+// Exact empty-candidate cases from operatingOptions, using a superset of the
+// observer's payable obligations. No receipts can create a cash deficit.
+// Otherwise defer to the full subjective budget and comparison as before.
+function businessMayChange(e,document,shop){
+    const state=document.state,from=state.minute,period=businessPlanDays(e)*1440;
+    if(shop.suspended)return from>=resumeDeadline(e,state,shop);
+    const counter=dedicatedCoinAccount(state,shop.owner,'counter');
+    const cash=counter?.business===shop.id?counter.coins:document.ledger?.accounts?.[purse(e,shop.owner)]??state.npcs?.[shop.owner]?.coins??0;
+    if(!(cash>=0)||Object.values(state.obligations??{}).some(r=>(r.debtor??r.promisor)===shop.owner&&Number.isFinite(r.deadline)))return true;
+    const historyFrom=Math.max(from-period,shop.createdAt??0);
+    // Insufficient evidence + no cash shortfall always preserves the status quo.
+    if(from-historyFrom<period)return false;
+    // With no observed sales R=V=0. For attachment >= -1000permille,
+    // trunc(switchCost*attachment/1000) >= -switchCost (the suspend utility).
+    // Stable option ordering keeps 'continue' even on equality. Tail owners
+    // below this bound still get the complete comparison every day.
+    if(businessPreference(e,document,shop.owner)<-1000)return true;
+    if(shop.native)return recordsWhere(state.records,'category','customer_flow').some(r=>r.shop===shop.id&&r.minute<=from&&r.minute>historyFrom&&r.visits.some(v=>v.outcome==='bought'));
+    return recordsWhere(state.records,'category','business_receipt').some(r=>r.businesses?.includes(shop.id)&&r.trade?.seller===shop.owner&&r.minute<=from&&r.minute>historyFrom);
+}
+export function businessLifecycle(engine,document,shop,{view=subjectiveView(engine,document,shop.owner)}={}){
+    const state=document.state,read=stateReader(state);
     const rule=engine.rules.businessLifecycle,days=businessPlanDays(engine),from=state.minute,periodMinutes=days*1440,until=from+periodMinutes;
     const periodFrom=Math.floor(from/periodMinutes)*periodMinutes,historyFrom=Math.max(from-periodMinutes,shop.createdAt??0),observedMinutes=Math.max(0,from-historyFrom),evidenceSufficient=observedMinutes>=periodMinutes;
     const budget=householdBudget(read,engine,shop.owner,{view});
@@ -402,10 +427,9 @@ export function businessLifecycle(engine,document,shop){
     const receipts=budget.future.filter(r=>r.resource===REFERENCE&&r.reliable),payments=budget.payments.filter(r=>r.resource===REFERENCE);
     const cashFlow=cashFlowWindow({cash,from,until,receipts,payments});
     const closeMinutes=engine.world.openActionRules.generic.transferMinutes,openMinutes=closeMinutes;
-    const labor=laborValue(engine,document,{worker:shop.owner,observer:shop.owner}).daily;
+    const labor=laborValue(engine,document,{worker:shop.owner,observer:shop.owner,view}).daily;
     const closeCost=Math.ceil(labor*closeMinutes/480),reopenCost=Math.ceil(labor*openMinutes/480),switchCost=closeCost+reopenCost;
-    const npc=state.npcs?.[shop.owner],preference=npc?.businessAttachmentPermille??(rollDice(document.randomSeed,'business:tail',shop.owner,0,0,1000)<=(rule?.stubbornPermille??0)?rule.tailAttachmentPermille*(rollDice(document.randomSeed,'business:tail-sign',shop.owner,0,0,2)===1?-1:1):
-        rollDice(document.randomSeed,'business:attachment',shop.owner,0,0,(rule?.attachmentMaxPermille??0)+1)-1);
+    const preference=businessPreference(engine,document,shop.owner);
     const noise=rollDice(document.randomSeed,'business:choice',`${shop.owner}:${shop.id}`,periodFrom,0,2*(rule?.noisePermille??0)+1)-1-(rule?.noisePermille??0);
     const resumeNotBefore=shop.suspended?resumeDeadline(engine,state,shop):null;
     const comparison=operatingOptions({revenue,variableCost,switchCost,reopenCost,suspended:shop.suspended,cashFlow,attachmentPermille:shop.owner==='player'?0:preference,noisePermille:shop.owner==='player'?0:noise,terminal:!live(shop),evidenceSufficient,resumeAllowed:resumeNotBefore===null||from>=resumeNotBefore});
@@ -444,7 +468,7 @@ export function businessOptions(engine,document,owner){
         if(wage<=cash)options.push({kind:'hire',worker:worker.id,wage,requiredMinutes:requiredMinutes-capacity});
     }
     if(capacityKnown&&capacity>requiredMinutes)for(const job of jobs)options.push({kind:'dismiss',contract:job.id,worker:job.worker,excessMinutes:capacity-requiredMinutes});
-    const lifecycle=managedShops(engine,s).filter(r=>r.owner===owner).map(shop=>({business:shop.id,...businessLifecycle(engine,document,shop)}));
+    const lifecycle=managedShops(engine,s).filter(r=>r.owner===owner).map(shop=>({business:shop.id,...businessLifecycle(engine,document,shop,{view})}));
     return {observer:owner,location:view.self.location,counterCash:cash,options,lifecycle};
 }
 
@@ -476,10 +500,15 @@ function hasManagedShops(e,state,who){
 }
 registerAutonomyProvider('business_lifecycle',{
     relevant:hasManagedShops,
+    candidateRelevant(e,document,who,presence){
+        if(!hasManagedShops(e,document.state,who))return false;
+        return managedShops(e,document.state).some(r=>r.owner===who&&live(r)&&r.location===presence.location&&businessMayChange(e,document,r));
+    },
     candidates(e,view,document){
         if(!hasManagedShops(e,document.state,view.observer))return [];
         return managedShops(e,document.state).filter(r=>r.owner===view.observer&&live(r)&&r.location===view.self.location).flatMap(shop=>{
-            const w=businessLifecycle(e,document,shop),best=w.options.find(o=>o.kind===w.preferred);
+            if(!businessMayChange(e,document,shop))return [];
+            const w=businessLifecycle(e,document,shop,{view}),best=w.options.find(o=>o.kind===w.preferred);
             const current=w.options.find(o=>o.kind===(shop.suspended?'suspend':'continue'));
             if(!best||best.utility<=current.utility||best.kind==='continue'||best.kind==='exit')return [];
             if(best.kind==='resume'&&(!awake(document.state.npcs[shop.owner])||!Object.values(quantities(view.self.inventory)).some(n=>n>0)))return [];
@@ -746,6 +775,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
                 engine.assertNpcObligationAction(d,[shop.keeper],{start:serviceAt,minutes:serviceMinutes,location:shop.location,kind:'trade'});
             }catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
             // Recompute the current household budget after every real purchase.
+            const want=wants(d,engine,id,item,gaps);if(!want.quantity)continue;
             const projected={...d.document,state:{...d.get('state'),minute:t,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),location:slot.location,activity:slot.activity}}}};
             const view=subjectiveView(engine,projected,id),read={document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
             const budget=householdBudget(read,engine,id,{view});
@@ -756,7 +786,6 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             const cap=Math.max(0,floor-tripCost-(engine.byId.get(item)?.nutrition?0:budget.resources.market.spent));
             if(cap<1)break;
             gaps.set(id,budget.resources.procurementShortfall);
-            const want=wants(d,engine,id,item,gaps);if(!want.quantity)continue;
             const available=saleableStock(d,engine,shop.keeper,item,{business:true}).available;
             let quantity=Math.min(want.quantity,available),quote=null;
             // No write happens inside this descent: supply and base are read once for all quantities tried.

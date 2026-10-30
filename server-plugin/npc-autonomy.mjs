@@ -235,8 +235,10 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    const currentPlan=d.get('state','npcs',id,'plan');
    // An empty candidate set cannot decide or abandon a plan. Avoid building
    // the full subjective projection for every resident with nothing to do.
-   if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length)&&!autonomyRelevant(engine,d.get('state'),id,actor))continue;
-   const projected={...d.document,state:{...d.get('state'),minute:start,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),...presenceOf(actor)}}}};
+   let projected;
+   const projectDocument=()=>projected??=({...d.document,state:{...d.get('state'),minute:start,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),...presenceOf(actor)}}}});
+   if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length)&&!autonomyRelevant(engine,d.get('state'),id,actor,projectDocument))continue;
+   projectDocument();
    const view=subjectiveView(engine,projected,id);
    const candidates=autonomyCandidates(engine,view,{document:projected,scheduled:queued,fallback:choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i}))});
    if(currentPlan&&currentPlan.status!=='completed'&&!candidates.some(c=>c.id===currentPlan.candidate)){
