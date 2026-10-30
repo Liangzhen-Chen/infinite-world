@@ -294,8 +294,12 @@ export function assertMarketDepth(d,engine,quote,{agreed=false}={}){
  // 15 §15.2：商号另有渠道日限额；人对人没有商号存量，不能把私人持货排除供给后再按零存量限购。
  // K08: executable lot depth reads physical spot stock, never discounted forwards.
  if(!quote.retail&&quote.quantity>Math.max(r.retailFloor,(quote.spotSupply??quote.supply)*r.maxShare)||quote.business&&used+quote.quantity>Math.max(r.retailFloor,quote.opening*r.dailyShare))reject('E-ACTION-PRECONDITION','市场今天没有那么多可成交深度');
- const available=saleableStock(d,engine,quote.seller,quote.item,{business:quote.side==='sell'}).available;
- if(quote.quantity>available)reject('E-ACTION-PRECONDITION','对方库存不足：扣除自用和已承诺存量后不够出售');
+ const stock=saleableStock(d,engine,quote.seller,quote.item,{business:quote.side==='sell'});
+ // Household food retention models an NPC's own judgement (05 §5.1.3); it is
+ // never a hard limit on what the player chooses to sell. Only goods already
+ // promised to someone else are excluded from the player's saleable stock.
+ const available=quote.seller==='player'?Math.max(0,stock.stock-stock.committed):stock.available;
+ if(quote.quantity>available)reject('E-ACTION-PRECONDITION',quote.seller==='player'?'你的可售数量不足：已经答应交给别人的存量不能再卖':'对方库存不足：扣除自用和已承诺存量后不够出售');
 }
 // settled (S5-F): the resource and amount a deal was actually settled in, when not the reference coin.
 export function recordMarketDeal(d,quote,totalCoins,quantity,eventId,settled=null){
