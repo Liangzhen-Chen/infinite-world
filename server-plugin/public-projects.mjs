@@ -16,7 +16,7 @@ import {playerOffices,spendPublic,refundPublic,authorityOf,publicSpent} from './
 import {milestone} from './progression.mjs';
 import {npcHousehold,npcAgeAt} from './npc-life.mjs';
 import {changeItems} from './items.mjs';
-import {prepareFacilityProject,within as facilityWithin,installFacilityRuntime} from './facility-state.mjs';
+import {prepareFacilityProject,within as facilityWithin,installFacilityRuntime,facilityRuntime,facilityDefinition,facilityView} from './facility-state.mjs';
 import {completeFacilityProject} from './facilities.mjs';
 import {currentEmployment,projectAssignment,projectAssignmentId} from './employment-state.mjs';
 import {registerEarnedClaim} from './obligation-claims.mjs';
@@ -41,11 +41,35 @@ const awake=n=>able(n)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|�
 export const isPublicProject=p=>p?.type==='工程'&&Boolean(p.public);
 // A manager is not an owner or a budget holder. Read the current collective
 // title and the current office separately, including native title overrides.
-export function publicMaintenanceResponsibility(engine,document,actor,building){
+export function publicMaintenanceResponsibility(engine,document,actor,building,{settlement=null}={}){
     const owners=currentControllers({engine,document},building,{ownerOnly:true,principals:true});
-    if(!owners.some(id=>document.state.settlements?.[id]))return null;
-    return personOffices(engine,document.state,actor,{power:'public_project'}).map(e=>e.value)
-        .find(o=>owners.includes(o.settlement)&&facilityWithin(engine,document.state,building,o.settlement))??null;
+    const charter=facilityDefinition(engine,document.state,building)?.publicMaintenance;
+    return personOffices(engine,document.state,actor,{power:'public_project',settlement}).map(e=>e.value)
+        .find(o=>(owners.includes(o.settlement)||charter?.settlement===o.settlement&&owners.includes(charter.owner))&&facilityWithin(engine,document.state,building,o.settlement))??null;
+}
+// A manager discovers damage only while present and able to act. The ordinary
+// message channel enforces relationship, disclosure, occupation and travel.
+export function publicMaintenanceReport(engine,document,actor,building){
+    const state=document.state,base=facilityDefinition(engine,state,building),n=state.npcs[actor],view=facilityView(engine,state,building);
+    const manager=base?.site?.manager??base?.lodging?.host;
+    if(manager!==actor||!isEffective(engine,state,actor)||!awake(n)||n.location!==building||personConstraint(engine,state,actor)||!view||view.condition<=0||view.condition>=60||view.burning)return null;
+    const officer=(engine.byId.get(actor)?.relationships??[]).map(r=>r.with).find(id=>state.npcs[id]&&publicMaintenanceResponsibility(engine,document,id,building));
+    if(!officer)return null;
+    const memoryId=`maintenance_report:${building}:${Math.floor(state.minute/DAY)}:${actor}`;
+    if(n.memoryStream?.some(m=>m.id===memoryId))return null;
+    const report={officer,memory:{id:memoryId,kind:'facility_maintenance',sourceEvent:memoryId,minute:state.minute,location:building,entities:[building],participants:[actor],sourceType:'亲历',salience:3,content:`${base.name}失修，现场完好度${view.condition}，请有权者核办维修。`}};
+    // Quote the real channel on a disposable draft: failed travel/consent must
+    // neither start a reporting task nor leave a purported delivered memory.
+    const preview=engine.primitiveDraft(document);
+    preview.set(['state','npcs',actor,'memoryStream'],[...n.memoryStream??[],report.memory]);
+    try{facilityRuntime().shareMaintenanceMemory(preview,engine,{from:actor,to:officer,memoryId,channel:state.npcs[officer].location===building?'conversation':'carry',eventId:memoryId});}
+    catch(error){if(error.code?.startsWith('E-'))return null;throw error;}
+    return report;
+}
+export function reportPublicMaintenance(d,engine,actor,building,eventId){
+    const report=publicMaintenanceReport(engine,d.document,actor,building);if(!report)throw preconditionFailure('没有现场发现或可报知的在任负责人');
+    d.set(['state','npcs',actor,'memoryStream'],[...d.get('state','npcs',actor,'memoryStream')??[],report.memory]);
+    return facilityRuntime().shareMaintenanceMemory(d,engine,{from:actor,to:report.officer,memoryId:report.memory.id,channel:d.get('state','npcs',report.officer,'location')===building?'conversation':'carry',eventId});
 }
 export function publicMaintenanceInputs(engine,document,actor,building){
     const office=publicMaintenanceResponsibility(engine,document,actor,building);if(!office)return null;
@@ -65,7 +89,7 @@ export function publicProjectWorkerDecision(engine,document,worker,{actor,locati
 }
 // Existing L1 facility runtime is the pack boundary: facilities do not import
 // governance or the economy pack to dispatch a public repair.
-installFacilityRuntime({publicMaintenanceInputs,publicProjectWorkerDecision,startPublicProject});
+installFacilityRuntime({publicMaintenanceInputs,publicProjectWorkerDecision,startPublicProject,publicMaintenanceReport,reportPublicMaintenance});
 export function startPublicProject(d,engine,args,eventId,settlement,{actor='player'}={}){
     if(args.funding!==undefined&&!['private','public'].includes(args.funding))throw preconditionFailure('工程出资须为private或public');
     const state=d.get('state'),privateFunding=args.funding==='private',offices=actor==='player'?playerOffices(state,{settlement,power:'public_project'},engine):personOffices(engine,state,actor,{settlement,power:'public_project'}).map(e=>e.value);
@@ -76,7 +100,7 @@ export function startPublicProject(d,engine,args,eventId,settlement,{actor='play
     const plan=prepareFacilityProject(engine,state,args,settlement),location=plan.location;
     if(privateFunding&&!plan.building&&plan.facilityType==='house')throw preconditionFailure('私人住宅新建须使用本人宅基批文');
     const owner=plan.building?(state.buildings?.[plan.building]?.owner??state.created?.[plan.building]?.owner??engine.byId.get(plan.building)?.owner):null;
-    if(plan.building&&(privateFunding?owner!=='player':!currentControllers({engine,document:d.document},plan.building,{ownerOnly:true,principals:true}).includes(settlement)))throw preconditionFailure('工程出资方没有该建筑的修缮扩建权');
+    if(plan.building&&(privateFunding?owner!=='player':!publicMaintenanceResponsibility(engine,d.document,actor,plan.building,{settlement})))throw preconditionFailure('工程出资方没有该建筑的修缮扩建权');
     if(privateFunding&&!plan.building&&(state.created?.[location]??engine.byId.get(location))?.owner!=='player')throw preconditionFailure('私人新建须有本人名下场地；住宅使用宅基批文');
     if(!facilityWithin(engine,state,location,settlement))throw preconditionFailure('工程地点不在本村');
     const beneficiaries=args.beneficiaries??[settlement];

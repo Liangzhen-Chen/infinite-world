@@ -15,6 +15,8 @@ import {npcRumorSeeds,rumorChainView} from './npc-rumors.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {transportServices,quoteTransport} from './transport.mjs';
 import {sendPost} from './post.mjs';
+import {installFacilityRuntime} from './facility-state.mjs';
+installFacilityRuntime({shareMaintenanceMemory:shareNpcMemory});
 
 const DAY=1440,clone=value=>cloneData(value); // P2: same result as structuredClone, faster
 const awake=(engine,state,id,n)=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');

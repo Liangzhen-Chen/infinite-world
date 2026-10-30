@@ -52,11 +52,15 @@ function officeFact(engine,state,key,row,override=true){
     if(!def)return fact({...row,powers:[],monthlyQuotaD:0,monthlyBudgetCopper:0,monthlySalaryCopper:0},`state.records.${key}`,true);
     const ranked=upperOffice(engine,state,row,rankedOffice(engine,state,row.settlement,def)),gov=settlementGovernment(engine,state,row.settlement);
     const head=row.office==='office_village_head';
+    const maintenance=head?engine.world.settlementProfiles?.find(p=>p.id===row.settlement)?.publicMaintenance:null;
+    // A founding identity alone grants no budget. An authored charter may
+    // reference the existing ranked office cap; the treasury is checked on spend.
+    const maintenanceCharter=maintenance?.budgetFrom==='ranked_office'&&maintenance?.powers?.includes('public_project')&&engine.rules.governance.authority.treasury.settlements?.includes(row.settlement);
     const foundingName=!override&&!state.records?.[`settlement_rank:${row.settlement}`]?baseOf(engine,state,row.holder)?.occupation:null;
-    return fact({...row,name:foundingName??ranked.name,monthlyQuotaD:ranked.monthlyQuotaD??0,monthlyBudgetCopper:override?ranked.monthlyBudgetCopper??0:0,
-        taxBps:override?ranked.taxBps??null:null,powers:[...new Set([...(override?[...ranked.powers??[],...(head?['chair','register']:[])]:['quest_publish','chair','register']),...def.seatPowers??[]])],workplace:row.workplace??gov.seat.value,
+    return fact({...row,name:foundingName??ranked.name,monthlyQuotaD:ranked.monthlyQuotaD??0,monthlyBudgetCopper:override||maintenanceCharter?ranked.monthlyBudgetCopper??0:0,
+        taxBps:override?ranked.taxBps??null:null,powers:[...new Set([...(override?[...ranked.powers??[],...(head?['chair','register']:[])]:['quest_publish','chair','register']),...(maintenanceCharter?['public_project']:[]),...def.seatPowers??[]])],workplace:row.workplace??gov.seat.value,
         monthlySalaryCopper:engine.rules.governance?.salaries?.monthlyCopper?.[row.office]?.[adminLevel(engine,state,row.settlement)?.level??'村']??0},
-        `${override?`state.records.${key}`:gov.head.source} + rules.governance.authority.offices.${row.office} + promotion + rules.governance.salaries`,override);
+        `${override?`state.records.${key}`:gov.head.source} + rules.governance.authority.offices.${row.office} + promotion + rules.governance.salaries${maintenanceCharter?` + catalog.${row.settlement}.publicMaintenance + rules.governance.authority.treasury`:''}`,override);
 }
 // Appointment records hold facts. Names, quotas, powers and pay are read from
 // the office definition at the settlement's current administrative level.

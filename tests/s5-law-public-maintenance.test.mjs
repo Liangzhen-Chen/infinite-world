@@ -19,8 +19,129 @@ import {changeHolding} from '../server-plugin/transition.mjs';
 import {currentControllers} from '../server-plugin/action-authority.mjs';
 import {escrow} from '../server-plugin/money.mjs';
 import {conservation,reconcile} from './helpers/ledger-audit.mjs';
+import {applyCandidate,entries as approvalEntries,validateDraft,draftFor} from '../world/design/k10b-public-maintenance-approval.mjs';
+import {personOffices} from '../server-plugin/entity-view.mjs';
+import {publicMaintenanceReport,reportPublicMaintenance} from '../server-plugin/public-projects.mjs';
+import {advanceNpcCognition} from '../server-plugin/npc-cognition.mjs';
 
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
+const nativeChief='npc_hw_chenbai',nativeWorker='npc_hw_zhengshuisheng';
+function nativeScenario(building){
+ const w=applyCandidate(world),e=new WorldEngine(w);let doc=e.createCharacter(seed,{},'native-public-maintenance');
+ delete w.rules.weather;
+ Object.assign(w.rules.facilities.maintenance,{horizonDays:90,delayMaxPermille:0,stubbornPermille:0,noisePermille:0});
+ const base=e.byId.get(building),manager=base.site?.manager??base.lodging.host;
+ doc.state.minute=600;doc.state.location='loc_bs';
+ for(const [id,location] of [[nativeChief,'bld_hw_council'],[nativeWorker,'bld_hw_council'],[manager,building]]){
+  Object.assign(doc.state.npcs[id],{location,status:'正常',activity:'工作',goals:{}});
+  w.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location,activity:'工作',services:[]}]};
+ }
+ doc.state.npcs=Object.fromEntries([nativeChief,nativeWorker,manager].map(id=>[id,doc.state.npcs[id]]));
+ doc.state.npcs[nativeWorker].coins=0;
+ doc.state.buildings[building]={...doc.state.buildings[building],condition:59};
+ Object.assign(doc.state.settlements.loc_hw,{treasury:1000,wood:100,stone:100});
+ doc=withLedger(e,{...doc,ledger:undefined}).document;
+ return {e,w,building,manager,get doc(){return doc;},set doc(v){doc=v;},mutate(fn){const d=e.primitiveDraft(doc),r=fn(d);doc=applyPatches(doc,d.patches);return r;}};
+}
+const nativeCandidates=f=>autonomyCandidates(f.e,subjectiveView(f.e,f.doc,nativeChief),{document:f.doc}).filter(c=>c.kind==='public_maintenance'&&c.legacy.building===f.building);
+function deliverReport(f){
+ const sent=f.mutate(d=>reportPublicMaintenance(d,f.e,f.manager,f.building,'native-report'));
+ if(!sent.delivered){
+  assert.ok(Number.isSafeInteger(sent.arrive));
+  f.mutate(d=>{const before=d.get('state','minute');d.set(['state','minute'],sent.arrive);advanceNpcCognition(d,f.e,before,sent.arrive,'report-arrival');});
+ }
+ return sent;
+}
+
+test('K10b frozen proposal uses existing L1 gate and leaves published titles unchanged',()=>{
+ // Seven independently reviewed field changes; zero runtime application.
+ assert.equal(approvalEntries.length,7);
+ for(const entry of approvalEntries)assert.deepEqual(validateDraft(draftFor(entry),entry),[]);
+ for(const id of ['bld_hw_school','bld_hw_post'])assert.equal(world.locations.find(b=>b.id===id).owner,undefined);
+});
+
+test('K10b founding maintenance cap derives from ranked office and requires fiscal scope',()=>{
+ // Existing ranked head cap (2000 at village rank), not the chief's purse.
+ const f=nativeScenario('bld_hw_school'),office=()=>personOffices(f.e,f.doc.state,nativeChief,{power:'public_project'})[0]?.value;
+ assert.equal(office().monthlyBudgetCopper,f.w.rules.governance.authority.offices.office_village_head.monthlyBudgetCopper);
+ f.w.rules.governance.authority.offices.office_village_head.monthlyBudgetCopper=73;
+ assert.equal(office().monthlyBudgetCopper,73);
+ f.w.rules.governance.authority.treasury.settlements=f.w.rules.governance.authority.treasury.settlements.filter(id=>id!=='loc_hw');
+ assert.equal(office(),undefined);
+});
+
+test('K10b school and post managers report via real travel; officials have no remote omniscience',()=>{
+ // Manager at facility, chief at council: 0 proposals before delivery, 1
+ // after walking the actual route. condition59 =>2 units: wood4/stone2,
+ // 960 minutes and24*2=48 copper; manager gains no ownership or office.
+ for(const building of ['bld_hw_school','bld_hw_post']){
+  const f=nativeScenario(building),before=structuredClone(f.doc);
+  assert.equal(nativeCandidates(f).length,0);
+  assert.ok(publicMaintenanceReport(f.e,f.doc,f.manager,building));assert.deepEqual(f.doc,before);
+  const sent=f.mutate(d=>reportPublicMaintenance(d,f.e,f.manager,building,'travel-report'));
+  assert.equal(sent.delivered,false);assert.ok(sent.arrive>before.state.minute);
+  assert.equal(nativeCandidates(f).length,0);
+  f.mutate(d=>{d.set(['state','minute'],sent.arrive);advanceNpcCognition(d,f.e,before.state.minute,sent.arrive,'arrive');});
+  assert.equal(nativeCandidates(f).length,1);
+  const quote=publicMaintenanceOptions(f.e,f.doc,nativeChief,building);
+  assert.equal(quote.required.wood,4);assert.equal(quote.required.stone,2);assert.equal(quote.laborCost,48);
+  assert.equal(publicMaintenanceResponsibility(f.e,f.doc,f.manager,building),null);
+  assert.equal(currentControllers({engine:f.e,document:f.doc},building,{ownerOnly:true,principals:true}).includes(f.manager),false);
+  assert.ok(f.doc.state.npcs[nativeChief].memoryStream.some(m=>m.kind==='facility_maintenance'&&m.heardFrom===f.manager&&m.entities.includes(building)));
+  assert.deepEqual(conservation(f.e,before,f.doc),[]);assert.deepEqual(reconcile(f.e,f.doc).mismatches,[]);
+ }
+});
+
+test('K10b absent/sleeping manager, missing channel, revoked delegation and resource shortages do not authorize repairs',()=>{
+ // 48 wage bill above reserve300 => treasury347 is short by1; wood3
+ // is short by1. Neither a rich chief nor a building manager can fill it.
+ for(const building of ['bld_hw_school','bld_hw_post']){
+  for(const change of [f=>{f.doc.state.npcs[f.manager].location='loc_bs';},f=>{f.doc.state.npcs[f.manager].activity='睡眠';},f=>{f.w.npcs.find(n=>n.id===f.manager).relationships=[];}]){
+   const f=nativeScenario(building);change(f);assert.equal(publicMaintenanceReport(f.e,f.doc,f.manager,building),null);
+  }
+  for(const change of [f=>{f.doc.state.settlements.loc_hw.treasury=347;},f=>{f.doc.state.settlements.loc_hw.wood=3;}]){
+   const f=nativeScenario(building);deliverReport(f);change(f);f.doc=withLedger(f.e,{...f.doc,ledger:undefined}).document;
+   const before=structuredClone(f.doc);assert.equal(nativeCandidates(f).length,0);assert.deepEqual(f.doc,before);
+  }
+ }
+ const f=nativeScenario('bld_hw_post');delete f.e.byId.get(f.building).publicMaintenance;
+ assert.equal(publicMaintenanceResponsibility(f.e,f.doc,nativeChief,f.building),null);
+});
+
+test('K10b native school and post remain repairable after a season with public resources',async()=>{
+ // Native place/people/routes; approved-candidate world only.90 days >2
+ // actual480-minute shifts plus travel. No project or attendance is inserted.
+ for(const building of ['bld_hw_school','bld_hw_post']){
+  const f=nativeScenario(building);
+  for(let month=0;month<3;month++){
+   const out=await f.e.reduce(f.doc,{tool:'world_time',args:{minutes:30*DAY},eventId:`native-season:${building}:${month}`});f.doc=applyPatches(f.doc,out.patches);
+  }
+  const repairs=Object.values(f.doc.state.projects).filter(p=>p.building===building&&p.creator===nativeChief&&p.projectWork==='repair');
+  assert.ok(repairs.some(p=>p.status==='已完成'),`${building}: native manager report must lead to completed public work`);
+  assert.ok(facilityView(f.e,f.doc.state,building).factor>0);
+  assert.ok(repairs.every(p=>p.public.minutesDone<=p.public.requiredMinutes));
+  assert.deepEqual(reconcile(f.e,f.doc).mismatches,[]);
+ }
+});
+
+test('K10b season with no monthly allowance or no public materials defers native facilities',async()=>{
+ // A zero existing-office cap permits0 copper commitments; zero wood cannot
+ // fund the minimum2 wood per repair unit. The calendar does not heal either.
+ for(const [building,shortage] of [['bld_hw_school','budget'],['bld_hw_post','wood']]){
+  const f=nativeScenario(building);
+  if(shortage==='budget')f.w.rules.governance.authority.offices.office_village_head.monthlyBudgetCopper=0;
+  else f.doc.state.settlements.loc_hw.wood=0;
+  f.doc=withLedger(f.e,{...f.doc,ledger:undefined}).document;
+  for(let month=0;month<3;month++){
+   const out=await f.e.reduce(f.doc,{tool:'world_time',args:{minutes:30*DAY},eventId:`scarce-season:${building}:${month}`});f.doc=applyPatches(f.doc,out.patches);
+  }
+  assert.equal(Object.values(f.doc.state.projects).filter(p=>p.creator===nativeChief&&p.building===building&&p.projectWork==='repair').length,0);
+  assert.equal(nativeCandidates(f).length,0);
+  assert.ok(facilityView(f.e,f.doc.state,building).condition<59);
+  assert.ok(f.doc.state.npcs[nativeChief].memoryStream.some(m=>m.kind==='facility_maintenance'));
+  assert.deepEqual(reconcile(f.e,f.doc).mismatches,[]);
+ }
+});
 const settlement='loc_bs_yupo',building='bld_yp_hall';
 const village=world.settlementProfiles.find(p=>p.id===settlement),official=village.details.governance.head;
 const worker=village.details.governance.coordinators.find(id=>id!==official);
@@ -65,6 +186,10 @@ test('公共责任来自现任职权和集体产权；管事、私人业主和�
  // One valid office + one public title => one responsibility. Removing either
  // gives zero; managing a building alone confers zero public spending powers.
  const f=scenario();assert.equal(publicMaintenanceResponsibility(f.e,f.doc,official,building).id,officeId);
+ // A repair mandate is tied to its funding account, not every office the
+ // same person holds. The town contains this village but has no such title.
+ f.mutate(d=>appointOfficeRecord(d,f.e,{...f.doc.state.records[officeId],id:'town-office',settlement:'loc_bs'},'town-office'));
+ assert.equal(publicMaintenanceResponsibility(f.e,f.doc,official,building,{settlement:'loc_bs'}),null);
  assert.equal(maintenanceOptions(f.e,f.doc,official,building),null);
  assert.throws(()=>f.mutate(d=>spendPublic(d,f.e,{settlement,copper:1,power:'public_project',purpose:'越权',sourceEvent:'unauthorized',actor:worker})),/权限/);
  const before=structuredClone(f.doc);assert.ok(options(f));assert.deepEqual(f.doc,before);
