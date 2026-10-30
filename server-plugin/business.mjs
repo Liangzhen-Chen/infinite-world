@@ -1,14 +1,14 @@
 import {preconditionFailure} from './precondition.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
-import {purse,escrow as escrowAccount,moveCoins,coinRead,dedicatedCoinAccount,dedicatedCoinKey,spendCounterCoins,mirrorPartyCoins} from './money.mjs';
+import {purse,escrow as escrowAccount,moveCoins,coinRead,dedicatedCoinAccount,dedicatedCoinKey,spendCounterCoins,mirrorPartyCoins,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
 import {contractFreeze,claimCopper,REFERENCE} from './tender.mjs';
 import {holdGoods,releaseGoods} from './goods-escrow.mjs';
 import {claimUnit} from './claim-unit.mjs';
-import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,quoteSupply,recordMarketDeal,customerPurseShare,customerReachMinutes,assertMarketDepth,reserveShortfall} from './market.mjs';
+import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,quoteSupply,recordMarketDeal,customerReachMinutes,assertMarketDepth} from './market.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
@@ -25,9 +25,11 @@ import {currentShops} from './shop.mjs';
 import {placeSettlement,personConstraint,personSimulation} from './entity-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {householdBudget} from './household-budget.mjs';
+import {householdBudget,householdOptions} from './household-budget.mjs';
 import {stateReader,valuation} from './valuation.mjs';
 import {rollDice} from './scheduler.mjs';
+import {actionCostRule} from './action-costs.mjs';
+import {householdWorkTime} from './npc-state.mjs';
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {toRational,fromRational} from './det-math.mjs';
@@ -192,11 +194,9 @@ export async function businessTrade(d,args,eventId){
         const item=this.resolve(args.item,'item'),quantity=int(args.quantity,1,100000,'售出数量');
         if(this.quantity(d,'player',item)<quantity)throw preconditionFailure('店铺现有库存不足');
         const q=quote(d,this,'player',buyer,item,quantity,args.unitPrice,shop),cost=q.cost;
-        const day=Math.floor(d.get('state','minute')/1440);
-        const purchases=Object.values(d.get('state','records')??{}).filter(row=>row.kind==='sale'&&row.parties?.[1]===buyer&&Math.floor(row.createdAt/1440)===day);
-        const capacity=purchases[0]?.customerBudget??Math.floor(coinRead(d,{point:'business.cash',account:purse(this,buyer),legacy:()=>this.actor(d,buyer).coins})*customerPurseShare(this));
-        const spent=purchases.reduce((sum,row)=>sum+row.cost,0);
-        if(spent+cost>capacity)throw preconditionFailure(`顾客当日店铺消费上限${capacity}铜，不无限消费`);
+        const budget=householdBudget(d,this,buyer);
+        const capacity=Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance))-(this.byId.get(item)?.nutrition?0:budget.resources.market.spent));
+        if(cost>capacity||!householdOptions(budget,{item,quantity,totalCoins:cost}).find(o=>o.operation==='buy').feasible)throw preconditionFailure(`顾客家庭当前采购预算不足：可付${capacity}铜`);
         const incomeBefore=this.actor(d,buyer).coins;
         const counter=counterFor(d,shop);
         if(this.actor(d,buyer).coins<cost)throw preconditionFailure('买方余额不足');
@@ -595,7 +595,7 @@ export function businessAction(d,args,eventId){
 
 // F026 客流（营业商铺迎居民上门，属经营域）：商铺营业时，附近真实居民按自己的需求、钱袋与路程决定要不要上门买。
 // 不刷出凭空顾客：上门的是 state.npcs 里的居民，要的是他们自己缺的东西（口粮储备缺口、本行当缺的工具），
-// 付的是他们自己钱袋里的钱（当日上限 = 钱袋 × shop.customerPurseShare），走到店要在 shop.customerReachMinutes 内；
+// Purchases use the household budget and actual round-trip reach.
 // 买不买由 NPC 决策路径（npc-decision）当场判定，成交走与手动交易相同的报价、商税、账本与成交记录。
 // 没有需求、没钱、太远、或决策不愿意的人不会出现在成交里（只有真正上门又没买的才留下“未购”记录）。
 const DAY=1440,NOON=720;// 客流：每日正午
@@ -612,20 +612,21 @@ function openShops(d,engine,t){
         if(shop.owner!=='player'){
             const npc=state.npcs?.[shop.owner],slot=npc&&scheduleAt(engine,shop.owner,t,state);
             const native=shop.native&&currentShops(engine,state).find(r=>r.id===shop.id&&r.keeper===shop.owner&&r.location===shop.location);
-            if((!native&&state.buildings?.[shop.location]?.owner!==shop.owner)||!npc||!isEffective(engine,state,shop.owner)||['死亡','濒死','昏迷','患病'].includes(npc.status)||slot?.location!==shop.location||!slot.services?.includes('trade'))continue;
-            out.push({kind:'npc',id:shop.id,keeper:shop.owner,location:shop.location,settlement:placeSettlement(engine,state,shop.location).value,markup:markupOf(shop),goods:native?native.restock.map(r=>r.item):Object.keys(quantities(npc.inventory))});continue;
+            const location=native?slot?.location:shop.location;
+            if((!native&&state.buildings?.[shop.location]?.owner!==shop.owner)||!npc||!isEffective(engine,state,shop.owner)||['死亡','濒死','昏迷','患病'].includes(npc.status)||slot?.location!==location||npc.scheduleTravel||npc.cognitionTravel||!slot.services?.includes('trade'))continue;
+            out.push({kind:'npc',id:shop.id,keeper:shop.owner,location,until:slot.until,settlement:placeSettlement(engine,state,location).value,markup:markupOf(shop),goods:native?native.restock.map(r=>r.item):Object.keys(quantities(npc.inventory))});continue;
         }
         if(shop.location!==state.location)continue;
         const lease=contractTerms(state.records?.[shop.lease]??{},t),counter=dedicatedCoinAccount(state,'player','counter');
         if(lease?.kind!=='lease'||lease.status!=='有效'||lease.deadline<=t||!counter||counter.business!==shop.id||counter.seat!==shop.location)continue;
-        out.push({kind:'player',id:shop.id,keeper:'player',location:shop.location,settlement:placeSettlement(engine,state,shop.location).value,markup:shop.markup??1,counter});
+        out.push({kind:'player',id:shop.id,keeper:'player',location:shop.location,until:lease.deadline,settlement:placeSettlement(engine,state,shop.location).value,markup:shop.markup??1,counter});
     }
     for(const shop of currentShops(engine,state)){
         if(recordsWhere(state.records,'category','business').some(row=>row.owner===shop.keeper&&row.location===shop.location))continue;
         if(out.some(row=>row.keeper===shop.keeper&&row.location===shop.location))continue;
         const keeper=state.npcs?.[shop.keeper],slot=keeper&&scheduleAt(engine,shop.keeper,t,state);
-        if(!keeper||!isEffective(engine,state,shop.keeper)||['死亡','濒死','昏迷','患病'].includes(keeper.status)||!slot||slot.location!==shop.location||!slot.services?.includes('trade'))continue;
-        out.push({kind:'npc',id:shop.id,keeper:shop.keeper,location:shop.location,settlement:shop.settlement,markup:shop.markup??1,goods:shop.restock.map(r=>r.item)});
+        if(!keeper||!isEffective(engine,state,shop.keeper)||['死亡','濒死','昏迷','患病'].includes(keeper.status)||!slot||keeper.scheduleTravel||keeper.cognitionTravel||!slot.services?.includes('trade'))continue;
+        out.push({kind:'npc',id:shop.id,keeper:shop.keeper,location:slot.location,until:slot.until,settlement:placeSettlement(engine,state,slot.location).value,markup:shop.markup??1,goods:shop.restock.map(r=>r.item)});
     }
     return out.sort((a,b)=>a.id.localeCompare(b.id));
 }
@@ -637,7 +638,7 @@ const shelfOf=(d,engine,shop)=>shop.kind==='player'
 function wants(d,engine,id,item,gaps){
     const def=engine.byId.get(item),state=d.get('state'),out={quantity:0,severity:0};
     if(def?.nutrition){
-        if(!gaps.has(id))gaps.set(id,reserveShortfall(d,engine,id));
+        if(!gaps.has(id))gaps.set(id,householdBudget(d,engine,id).resources.procurementShortfall);
         const gap=gaps.get(id);
         for(const need of ['satiety','hydration']){
             const gain=def.nutrition[need]??0;if(gain<=0||!(gap[need]>0))continue;
@@ -650,14 +651,10 @@ function wants(d,engine,id,item,gaps){
     return out;
 }
 function walkMinutes(engine,from,to,t,seed,cache){
-    if(from===to)return 0;
-    const key=`${from}|${to}`;if(cache.has(key))return cache.get(key);
-    let minutes;try{minutes=engine.route(from,to,'walk',t,seed).movingMinutes;}catch{minutes=Infinity;}
-    cache.set(key,minutes);return minutes;
-}
-// 当日已在各店花掉的钱：顾客一天的总上限按“当日起始钱袋”算，起始钱袋 = 现钱 + 当日已花。
-function spentToday(state,id,day){
-    return Object.values(state.records??{}).filter(r=>r.category==='customer_flow'&&r.day===day).flatMap(r=>r.visits).filter(v=>v.npc===id).reduce((n,v)=>n+(v.paid??0),0);
+    if(from===to)return {minutes:0,coins:0};
+    const key=`${from}|${to}|${t}`;if(cache.has(key))return cache.get(key);
+    let trip;try{const route=engine.route(from,to,'walk',t,seed);trip={minutes:route.minutes,coins:route.cost??0,edges:route.edges??[]};}catch{trip={minutes:Infinity,coins:0,edges:[]};}
+    cache.set(key,trip);return trip;
 }
 
 function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
@@ -699,6 +696,7 @@ function walkIns(d,engine,t){
         // 只有有独立生活记录的完整人物自己上门；背景居民的吃用并在聚落账里（粮仓、周贸易），不单独采买。
         if(!npc||!personSimulation(engine,{},id).value||(npc.coins??0)<1||['死亡','濒死','昏迷','患病'].includes(npc.status)||state.player.companions?.includes(id))continue;// 路上与否按正午的作息算（slot），不看结算时刻的临时移动状态，使等待的切分不影响客流
         if((engine.byId.get(id)?.age??engine.rules.npcLife.adultAge)<engine.rules.npcLife.adultAge)continue;
+        if(npc.scheduleTravel||npc.cognitionTravel||npc.caring||npc.levy||householdWorkTime(engine,state,id,t).unattended)continue;
         const slot=scheduleAt(engine,id,t,state);
         if(!slot||SLEEPING.test(slot.activity??'')||personConstraint(engine,state,id,t)||engine.npcObligationAt(state,id,t))continue;
         out.push({id,slot,settlement:placeSettlement(engine,state,slot.location).value});
@@ -707,16 +705,38 @@ function walkIns(d,engine,t){
 }
 
 function serve(d,engine,shop,t,residents,gaps,routes){
-    const state=d.get('state'),day=Math.floor(t/DAY),share=customerPurseShare(engine),reach=customerReachMinutes(engine),seed=d.document.randomSeed;
+    const state=d.get('state'),day=Math.floor(t/DAY),reach=customerReachMinutes(engine),seed=d.document.randomSeed;
+    if(d.get(...flowKey(shop.id,day)))return;
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
+    const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
     const visits=[];
     for(const {id,slot,settlement} of residents){
-        if(id===shop.keeper||settlement!==shop.settlement||walkMinutes(engine,slot.location,shop.location,t,seed,routes)>reach)continue;
+        const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
+        const outbound=walkMinutes(engine,slot.location,shop.location,departAt,seed,routes);
+        if(id===shop.keeper||settlement!==shop.settlement||outbound.minutes>reach)continue;
+        const inbound=walkMinutes(engine,shop.location,slot.location,departAt+outbound.minutes,seed,routes);
+        const travelCoins=outbound.coins+inbound.coins;
+        let travelled=false,atShop=departAt+outbound.minutes,tripRecord=null;
         for(const item of shelf){
-            // 当日上限：起始钱袋（现钱 + 当日已花）× 比例，减去已花；现钱不够的人不上门。
-            const coins=d.get('state','npcs',id,'coins'),spent=spentToday(d.get('state'),id,day)+visits.filter(v=>v.npc===id).reduce((n,v)=>n+(v.paid??0),0);
-            const cap=Math.min(coins,Math.floor((coins+spent)*share)-spent);
+            const serviceAt=Math.max(atShop,routes.get(`shop-free:${shop.id}`)??t),finishAt=serviceAt+serviceMinutes,returnAt=finishAt+inbound.minutes;
+            if(returnAt>(slot.until??(day+1)*DAY)||finishAt>(shop.until??(day+1)*DAY))break;
+            const duration=returnAt-(travelled?atShop:departAt);
+            try{
+                engine.assertNpcAutonomyAction(state,[id,shop.keeper],{start:departAt,minutes:returnAt-departAt});
+                engine.assertNpcObligationAction(d,[id],{start:departAt,minutes:returnAt-departAt,location:slot.location,kind:'trade'});
+                engine.assertNpcObligationAction(d,[shop.keeper],{start:serviceAt,minutes:serviceMinutes,location:shop.location,kind:'trade'});
+            }catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
+            // Recompute the current household budget after every real purchase.
+            const projected={...d.document,state:{...d.get('state'),minute:t,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),location:slot.location,activity:slot.activity}}}};
+            const view=subjectiveView(engine,projected,id),read={document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
+            const budget=householdBudget(read,engine,id,{view});
+            // Food buys replace the buffer with provisions. Other purchases
+            // also leave the planned food money and known obligations intact.
+            const floor=Math.min(budget.cash,...budget.timeline.map(r=>r.balance));
+            const tripCost=travelled?0:travelCoins;
+            const cap=Math.max(0,floor-tripCost-(engine.byId.get(item)?.nutrition?0:budget.resources.market.spent));
             if(cap<1)break;
+            gaps.set(id,budget.resources.procurementShortfall);
             const want=wants(d,engine,id,item,gaps);if(!want.quantity)continue;
             const available=saleableStock(d,engine,shop.keeper,item,{business:true}).available;
             let quantity=Math.min(want.quantity,available),quote=null;
@@ -726,32 +746,51 @@ function serve(d,engine,shop,t,residents,gaps,routes){
                 supply??=quoteSupply(d,engine,{item,location:shop.location,business});
                 baseValue??=regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);
                 const q=marketQuote(d,engine,{seller:shop.keeper,buyer:id,item,quantity,location:shop.location,minute:t,base:baseValue,business,supply});
-                if(q.totalCoins>=1&&q.totalCoins<=cap){quote=q;break;}
+                const option=householdOptions(budget,{item,quantity,totalCoins:q.totalCoins+tripCost}).find(o=>o.operation==='buy');
+                if(q.totalCoins>=1&&q.totalCoins<=cap&&option.feasible){
+                    try{assertMarketDepth(d,engine,q);}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
+                    quote=q;break;
+                }
             }
             if(!quote)continue;// 买不起哪怕一份：不上门
-            // 决策按居民正午的实际处境判断（此刻结算时他们多半已睡下）：位置与活动取作息在正午的安排。
-            const projected={...d.document,state:{...d.get('state'),minute:t,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),location:slot.location,activity:slot.activity}}}};
-            const decision=npcDecision(subjectiveView(engine,projected,id),{kind:'purchase',from:shop.keeper,cost:{coins:quote.totalCoins},reward:Math.floor(quote.explanation.value.value*quantity),needSatisfaction:want.severity});
+            // The decision uses the same noon facts as its stock and cash budget.
+            const estimate=subjectiveMarketQuote(engine,projected,view,{item,seller:shop.keeper,buyer:id,quantity});
+            const noise=engine.world.marketRules.customerChoice?.noisePermille??0;
+            const draw=rollDice(seed,'market:purchase',`${id}:${shop.id}:${item}`,t,0,2*noise+1)-1-noise;
+            // A payable without an appointment reserves money in the budget,
+            // not every minute before its deadline in the service-conflict gate.
+            const decisionView={...view,self:{...view.self,obligations:view.self.obligations.filter(o=>o.resource!==REFERENCE||o.start!==undefined||o.terms?.service)}};
+            const decision=npcDecision(decisionView,{kind:'purchase',from:shop.keeper,cost:{coins:quote.totalCoins+tripCost,minutes:duration},reward:Math.floor(estimate.explanation.value.value*quantity),needSatisfaction:Math.trunc(want.severity*(1000+draw)/1000)});
             if(decision.outcome!=='agree'){visits.push({npc:id,item,quantity,quoted:quote.totalCoins,outcome:decision.outcome,reason:decision.reason});if(decision.outcome==='defer')break;continue;}
-            try{assertMarketDepth(d,engine,quote);}catch(error){visits.push({npc:id,item,quantity,quoted:quote.totalCoins,outcome:'out_of_depth',reason:error.message});continue;}
             const eventId=`customer:${shop.id}:${t}:${id}:${item}`;
+            if(tripCost){moveCoins(d,{from:purse(engine,id),to:sink('export','travel'),amount:tripCost,writer:'shop',eventId:`${eventId}:travel`});mirrorPartyCoins(d,engine,id,-tripCost,eventId,'shop');}
             const result=sell(d,engine,shop,id,item,quantity,t,quote,eventId);
             gaps.delete(id);// 买到了东西，户里的储备缺口要重算
-            visits.push({npc:id,item,quantity,paid:result.cost,tax:result.tax,outcome:'bought',sourceEvent:eventId});
+            visits.push({npc:id,item,quantity,paid:result.cost,tax:result.tax,outcome:'bought',sourceEvent:eventId,travel:{from:slot.location,to:shop.location,departAt,arriveAt:departAt+outbound.minutes,serviceAt,finishAt,returnAt,paid:tripCost},budget:{cash:budget.cash,maximum:cap,until:budget.until}});
+            travelled=true;atShop=finishAt;
+            routes.set(`customer-free:${id}`,returnAt);routes.set(`shop-free:${shop.id}`,finishAt);
+            const key=`market_trip:${shop.id}:${t}:${id}`;
+            tripRecord={id:key,category:'market_trip',actor:id,keeper:shop.keeper,from:slot.location,to:shop.location,
+                departAt,arriveAt:departAt+outbound.minutes,finishAt,returnAt,outboundEdges:outbound.edges??[],inboundEdges:inbound.edges??[],
+                serviceWindows:[...tripRecord?.serviceWindows??[],{start:serviceAt,end:finishAt}],paid:travelCoins,sourceEvent:eventId};
         }
+        // One visit may buy several needed goods. Commit its full interval
+        // after the basket, so an actor never conflicts with their own visit.
+        if(tripRecord)holdingSet(d,null,path(tripRecord.id),tripRecord,'business');
     }
     if(visits.length)holdingSet(d,null,flowKey(shop.id,day),{category:'customer_flow',shop:shop.id,keeper:shop.keeper,day,minute:t,visits},'business');
 }
 
-// 每日打烊结算：跨过午夜时，为刚过去的那一天的正午迎客（店主当日全程在铺内，才算“营业”）。
-// 居民的去向按作息在正午的位置算，不依赖结算时他们在哪里。
+// Settle consumers at the actual noon boundary, before afternoon events.
+// The registry splits time here; no midnight reconstruction of budgets.
 export function advanceCustomerFlow(d,engine,before,after){
-    for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++){
-        const t=(day-1)*DAY+NOON;
+    for(let day=Math.floor((before-NOON)/DAY)+1;day<=Math.floor((after-NOON)/DAY);day++){
+        const t=day*DAY+NOON;
         if(t<0)continue;
-        const shops=openShops(d,engine,t);
+        const order=(purpose,id)=>rollDice(d.document.randomSeed,`market:${purpose}`,id,t,0,4294967296);
+        const shops=openShops(d,engine,t).sort((a,b)=>order('shop-order',a.id)-order('shop-order',b.id)||a.id.localeCompare(b.id));
         if(!shops.length)continue;
-        const residents=walkIns(d,engine,t),gaps=new Map(),routes=new Map();
+        const residents=walkIns(d,engine,t).sort((a,b)=>order('customer-order',a.id)-order('customer-order',b.id)||a.id.localeCompare(b.id)),gaps=new Map(),routes=new Map();
         for(const shop of shops)serve(d,engine,shop,t,residents,gaps,routes);
     }
 }

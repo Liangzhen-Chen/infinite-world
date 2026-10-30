@@ -28,11 +28,17 @@ test('E12-2: 一年十二期仅在真实期点尝试；远方不扣款，失败�
 });
 
 test('E18/E3: 规范工资债与旧投影只减一次股值，到期债权先于股东分红',async()=>{
-    const f=fixture(),equity=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'equity');
+    const f=fixture();
+    // Keep the debt-counting anchor on actual non-food stock. A new known wage
+    // obligation changes K02 food retention and hence the current bread quote;
+    // that separate price change must not be mistaken for duplicate debt.
+    f.doc.state.npcs[host].inventory={item_wood:{quantity:20}};
+    const equity=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'equity');
     f.doc.state.records[`finance_profit:${host}`]={category:'finance_profit',issuer:host,net:1000};
     const at=f.doc.state.records[equity.contract].nextDividend;
     let d=f.draft();const before=netAssets(d,f.e,host);d.done();
     const amount=f.doc.state.npcs[host].coins;
+    assert.ok(before-amount>1); // Positive stock value exposes a second subtraction.
     f.doc.state.records.wages={category:'debt',kind:'wage',debtor:host,creditor:worker,amount,paid:0,createdAt:600,deadline:at,status:'待偿还'};
     d=f.draft();adoptLegacyObligation(d,f.e,'wages');assert.equal(netAssets(d,f.e,host),Math.max(1,before-amount));d.done();
     const total=cash(f.doc);f.tick(at);

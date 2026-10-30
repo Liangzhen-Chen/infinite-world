@@ -9,6 +9,22 @@ import {projectAssignment,PROJECT_ACTIVITY} from './employment-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 
 const appointmentKey=id=>`service_appointment:${id}`;
+// One physical purchase trip is shared by scheduling, conflicts and household
+// work budgets. Service windows reserve the keeper only while serving.
+export function marketTimeWindows(state,id){
+ return recordsWhere(state?.records,'category','market_trip').flatMap(row=>row.actor===id
+  ?[{...row,start:row.departAt,end:row.returnAt}]
+  :row.keeper===id?(row.serviceWindows??[]).map(s=>({...row,start:s.start,end:s.end,serving:true})):[]);
+}
+export function marketScheduleAt(state,id,minute){
+ const row=marketTimeWindows(state,id).find(r=>r.start<=minute&&minute<r.end);
+ if(!row)return null;
+ if(row.serving)return {location:row.to,activity:'接待顾客',services:[],until:row.end,marketTrip:row.id};
+ const outbound=minute<row.arriveAt,inbound=minute>=row.finishAt;
+ const travel=outbound?{from:row.from,to:row.to,depart:row.departAt,arrive:row.arriveAt,edges:row.outboundEdges??[]}
+  :inbound?{from:row.to,to:row.from,depart:row.finishAt,arrive:row.returnAt,edges:row.inboundEdges??[]}:null;
+ return {location:travel?null:row.to,activity:travel?'赶集途中':'赶集采购',services:[],until:travel?.arrive??row.finishAt,marketTrip:row.id,travel};
+}
 // The one relation read model. Legacy scalars seed NPC -> player relations
 // until a ledger row exists; they are never a second live value.
 export function relationView(engine,state,from,to){
@@ -147,8 +163,54 @@ function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
     const remap=value=>Array.isArray(value)?value.map(remap):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,k==='location'&&v===prior?lease.subject:remap(v)])):value;
     return remap(schedule);
 }
-// A pass over many people may hand in the shared index (entity-view.mjs
-// personConstraints) instead of rescanning every record per person.
+// K04 read-only household time interface; market trips share its work windows.
+export function householdWorkTime(engine,state,id,minute=state.minute,{commuteMinutes=0,workMinutes=480,constraints=null}={}){
+ const own=state.npcs?.[id],person=state.created?.[id]??engine.byId.get(id),calendar=engine.calendar(minute);
+ const routine=personRoutine(engine,state,id,constraints)??own?.residence?.schedule??own?.vocation?.schedule??person?.schedule??own?.routine;
+ const variant=calendar.market?'market':routine?.restDays?.includes(calendar.day)?'rest':'default';
+ const seasonal=routine?.seasonal?.[String(calendar.season)];
+ const slots=seasonal?.[variant]??routine?.[variant]??seasonal?.default??routine?.default??[];
+ const household=npcHousehold(engine,state,id,constraints),home=household?.homeLocation??person?.home?.location??own?.location;
+ // An unassigned gravely ill dependent cannot be left with an invented substitute.
+ const attending=(member,illness)=>{
+  const n=state.npcs?.[member];
+  return member!==illness.patient&&n?.caring?.illness===illness.id&&n.location===n.caring.location&&!n.scheduleTravel&&!n.cognitionTravel&&!n.levy&&!['患病','濒死','昏迷'].includes(n.status)&&isEffective(engine,state,member)&&!personConstraint(engine,state,member,minute,constraints);
+ };
+ const unattended=Object.values(state.family?.illnesses??{}).some(r=>r.status==='患病中'&&r.severity==='重'&&r.patient!==id&&household?.members.includes(r.patient)&&r.since<=minute&&minute<r.endsAt&&!household.members.some(m=>attending(m,r)));
+ const fullCare=own?.caring||unattended;
+ let duties=fullCare?[{start:480,end:1020,location:own?.caring?.location??home,activity:'照护病人',services:[]}]:slots.filter(s=>/农事|农户|田间|耕|种田|种地|播种|收割|务农|照护|照料|照顾|赶集|赶圩/.test(s.activity??''));
+ const day=Math.floor(minute/1440)*1440;
+ for(const trip of marketTimeWindows(state,id))if(trip.start<day+1440&&day<trip.end){
+  const row={start:Math.max(0,trip.start-day),end:Math.min(1440,trip.end-day),location:trip.to,activity:'赶集',services:[]};
+  // The actual trip replaces that part of the routine, including own farm
+  // production. A union count alone would leave those minutes labelled farm.
+  duties=duties.flatMap(r=>r.end<=row.start||r.start>=row.end?[r]:[
+   ...(r.start<row.start?[{...r,end:row.start}]:[]),...(r.end>row.end?[{...r,start:row.end}]:[])]);
+  duties.push(row);
+ }
+ for(const o of Object.values(state.obligations??{}))if(o.reservationVersion===1&&['待履行','进行中'].includes(o.status)&&(o.deliveryVersion===1?o.promisor===id:[o.promisor,o.promisee].includes(id))&&!(o.type==='等候'&&o.promisee===id&&o.attendance?.[id]>0)){
+  const start=Math.max(0,(o.departures?.[id]??o.start)-day),end=Math.min(1440,o.deadline-day);
+  if(start<end)duties.push({start,end,location:o.location,activity:'已约定事务',services:[]});
+ }
+ const reserved=[],free=[];
+ for(const [lo,hi]of [[480,720],[780,1020]]){
+  let cursor=lo;
+  for(const row of duties.filter(r=>r.start<hi&&lo<r.end).sort((a,b)=>a.start-b.start)){
+   const start=Math.max(cursor,row.start,lo),end=Math.min(hi,row.end);
+   if(start>cursor)free.push({start:cursor,end:start});
+   if(end>start){reserved.push({...row,start,end});cursor=end;}
+  }
+  if(cursor<hi)free.push({start:cursor,end:hi});
+ }
+ const reservedMinutes=reserved.reduce((n,r)=>n+r.end-r.start,0),commute=[];
+ let inbound=Math.max(0,Math.ceil(commuteMinutes)),outbound=inbound;
+ for(const r of free){const used=Math.min(r.end-r.start,inbound);if(used){commute.push({start:r.start,end:r.start+used,returning:false});r.start+=used;inbound-=used;}}
+ for(const r of [...free].reverse()){const used=Math.min(r.end-r.start,outbound);if(used){commute.push({start:r.end-used,end:r.end,returning:true});r.end-=used;outbound-=used;}}
+ let left=Math.max(0,Math.floor(workMinutes));const unused=[],work=[];
+ for(const r of free){const minutes=Math.min(left,r.end-r.start);if(minutes)work.push({start:r.start,end:r.start+minutes});if(r.end>r.start+minutes)unused.push({start:r.start+minutes,end:r.end});left-=minutes;}
+ return {availableMinutes:480,reservedMinutes,reserved,commute,commuteMinutes:commute.reduce((n,r)=>n+r.end-r.start,0),work,unused,workMinutes:work.reduce((n,r)=>n+r.end-r.start,0),unattended};
+}
+// A pass over many people may share the personConstraints index.
 export const activeRental=(state,id,minute=state?.minute,constraints=null)=>(constraints?.leases?constraints.leases.get(id)??[]:recordsWhere(state?.records,'kind','asset_lease')).find(r=>r.kind==='asset_lease'&&r.tenant===id&&r.status==='有效'&&r.createdAt<=minute&&minute<r.deadline);
 export function npcServices(engine,state,id){
     if(state&&personConstraint(engine,state,id))return [];
