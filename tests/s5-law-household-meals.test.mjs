@@ -80,10 +80,15 @@ test('two mouths need120; public ration60 plus two breads30 feeds them without c
 
 test('cities without public grain record real missing meals; food closes only the deficit it can feed',()=>{
  for(const bread of [0,2,4]){
-  const f=fixture({bread});f.e.advance(f.d,DAY,`city:${bread}`);
+  const f=fixture({bread}),publicBefore=['unmetMeals','starvation'].map(k=>f.d.get('state','settlements','loc_hw',k));
+  f.e.advance(f.d,DAY,`city:${bread}`);
   // Hand anchor:120 -30*bread, each missing daily meal=60 satiety.
   const r=meals(f.d)[0];assert.equal(r.shortfall.satiety,120-30*bread);
-  assert.equal(r.missingMeals,2-bread/2);assert.equal(f.d.get('state','settlements','loc_hw','unmetMeals'),2-bread/2);
+  assert.equal(r.missingMeals,2-bread/2);
+  // D1 / 4c972af1: no public granary means no settlement ration tally.
+  // The real 120-30*bread shortfall remains on the household receipt above;
+  // it must not create public starvation or count the city's abstract mouths.
+  assert.deepEqual(['unmetMeals','starvation'].map(k=>f.d.get('state','settlements','loc_hw',k)),publicBefore);
   assert.equal(f.d.get('state','settlements','loc_hw','food'),0);assertLedger(f.d.get('ledger'));
  }
 });

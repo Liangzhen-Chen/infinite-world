@@ -203,14 +203,29 @@ test('议题经势力时钟推进：裂炉营通过改贡则粮按工落到工�
   d=(await c.gov(d,{operation:'governance_close',proposal:key,authority:P.yayue},'close')).document;
   assert.equal(d.state.records[key].status,passed?'通过':'否决');
   const before={cuozhen:qty(d,P.cuozhen,'item_ration'),yayue:qty(d,P.yayue,'item_ration')};
+  // K15: due faction effects distribute before daily meals at the same
+  // midnight. Observe actual itemDelta transfers, not a final balance which
+  // already includes consumption; keep the original four-day advance.
+  const changes=[],itemDelta=f.engine.itemDelta;
+  f.engine.itemDelta=function(d,id,item,amount,books,...rest){
+   const result=itemDelta.call(this,d,id,item,amount,books,...rest);
+   if(item==='item_ration'&&[P.cuozhen,P.yayue].includes(id))changes.push({id,amount,writer:books.writer,quantity:this.quantity(d,id,item)});
+   return result;
+  };
   d=(await f.run(d,'world_time',{minutes:4*DAY},'wait')).document;
   const clock=d.state.records['faction-clock:clock_ms_lielu'],assets=d.state.records['faction-assets:faction_ms_lielu'],issue=d.state.records[`society_issue:${LL}:tribute`];
   assert.equal(clock.phase,3);assert.equal(issue.status,'照议定落实一期');assert.equal(issue.decidedBy,key);
-  return{d,before,assets,issue};
+  return{d,before,changes,assets,issue};
  };
  const yes=await outcome(true),no=await outcome(false);
  assert.equal(yes.issue.outcome,'改贡为按件贸易');assert.equal(no.issue.outcome,'照旧纳贡换通行');
- assert.equal(qty(yes.d,P.cuozhen,'item_ration'),yes.before.cuozhen+6);assert.equal(qty(no.d,P.yayue,'item_ration'),no.before.yayue+6);
+ assert.deepEqual(yes.changes.filter(r=>r.writer==='monster-society'),[{id:P.cuozhen,amount:6,writer:'monster-society',quantity:yes.before.cuozhen+6}]);
+ assert.deepEqual(no.changes.filter(r=>r.writer==='monster-society'),[{id:P.yayue,amount:6,writer:'monster-society',quantity:no.before.yayue+6}]);
+ // Five mouths need 5*60=300 satiety; six rations give 6*30=180.
+ // All six belong to the recipient after distribution and are eaten at the
+ // same midnight. The public-account checks below still prove its full debit.
+ for(const [out,id]of [[yes,P.cuozhen],[no,P.yayue]])assert.deepEqual(out.changes.filter(r=>r.writer==='npc-life'),[{id,amount:-6,writer:'npc-life',quantity:0}]);
+ assert.equal(qty(yes.d,P.cuozhen,'item_ration'),0);assert.equal(qty(no.d,P.yayue,'item_ration'),0);
  assert.equal(yes.assets.items.item_iron,6);assert.equal(no.assets.items.item_iron,10);
  assert.equal(yes.assets.items.item_ration,24-2-6);assert.equal(yes.assets.items.item_stone,40-4-6);
  assert.equal(yes.d.state.records[`stance:loc_bs_liquan:${LL}`]?.stance,'中立');assert.equal(no.d.state.records[`stance:loc_bs_liquan:${LL}`],undefined);

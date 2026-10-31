@@ -68,8 +68,21 @@ test('T162 两地议题闭合后实际扣公账并分物，公开检索不泄私
   assert.equal(s.doc.state.records[key].status,st.id===HX?'通过':'否决');
   const before=s.doc.state.npcs[st.id===HX?P.xianpu:P.shenge].inventory;
   const item=st.id===HX?'item_ration':'item_flax_cord',was=typeof before[item]==='number'?before[item]:before[item]?.quantity??0;
+  // K15: the due faction effect pays before daily meals at the same midnight.
+  // Capture actual inventory writes so the original +4/+2 delivery guarantee
+  // remains checked even when the food is eaten within this four-day wait.
+  const recipient=st.id===HX?P.xianpu:P.shenge,changes=[],itemDelta=s.engine.itemDelta;
+  s.engine.itemDelta=function(d,id,changed,amount,books,...rest){
+   const result=itemDelta.call(this,d,id,changed,amount,books,...rest);
+   if(id===recipient&&changed===item)changes.push({amount,writer:books.writer,quantity:this.quantity(d,id,item)});
+   return result;
+  };
   await s.call('world_time',{minutes:4*DAY});
-  assert.equal(qty(s.doc,st.id===HX?P.xianpu:P.shenge,item),was+(st.id===HX?4:2));
+  assert.deepEqual(changes.filter(r=>r.writer==='monster-society'),[{amount:st.id===HX?4:2,writer:'monster-society',quantity:was+(st.id===HX?4:2)}]);
+  // HX: three mouths need 3*60=180, four rations supply 4*30=120,
+  // so all four private portions are eaten. GS's cord is not food.
+  assert.equal(qty(s.doc,st.id===HX?P.xianpu:P.shenge,item),st.id===HX?0:was+2);
+  assert.deepEqual(changes.filter(r=>r.writer==='npc-life'),st.id===HX?[{amount:-4,writer:'npc-life',quantity:0}]:[]);
   const account=s.doc.state.records[`faction-assets:${o.id}`];assert.ok(account);
   assert.ok(account.items[item]<o.items[item]);
   s.locate(st.id,s.doc.state.minute);const inspect=await s.call('world_settlement',{settlement:st.id,operation:'governance_inspect'});assert.equal(inspect.organization.privateGoal,undefined);
