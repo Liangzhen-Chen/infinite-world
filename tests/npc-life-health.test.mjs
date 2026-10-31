@@ -14,7 +14,9 @@ const elder='npc_hw_zhongxiu',carer='npc_hw_baihui',other='npc_hw_jiaoyou',frien
 const house='house_hw_20',home=source.households.find(h=>h.id===house).homeLocation;
 const day=(location,activity='闲坐',services=[])=>({default:[{start:0,end:1440,location,activity,services}]});
 const work={default:[{start:0,end:480,location:home,activity:'睡眠',services:[]},{start:480,end:1080,location:'loc_hw_fields',activity:'下田',services:['trade']},{start:1080,end:1440,location:home,activity:'歇息',services:[]}]};
-const item=source.items[0].id,elderAge=npcAgeAt(new WorldEngine(source),{npcs:{}},elder,firstNight);
+// K15: an inheritance anchor must survive ordinary meals. Use an existing
+// non-food object; food bought before death is reconciled with actual eating.
+const item=source.items.find(i=>!i.nutrition).id,elderAge=npcAgeAt(new WorldEngine(source),{npcs:{}},elder,firstNight);
 
 // Only people of the elder's age (72 that winter) fall ill in these fixtures, always gravely; the real
 // parameters are checked separately.
@@ -90,6 +92,12 @@ test('旧伤和其他失能状态不被疾病重置',async()=>{
 
 test('病故后约定终止不追责，遗产整体交给同户成年继承人，人口账减一，病中照护释放',async()=>{
  const s=fixture({fatality:1});
+ const eaten={},itemDelta=s.engine.itemDelta.bind(s.engine);
+ s.engine.itemDelta=(d,owner,food,delta,books,options)=>{
+  const result=itemDelta(d,owner,food,delta,books,options);
+  if(owner===elder&&books?.writer==='npc-life'&&books.purpose==='meal'){assert.ok(delta<0);eaten[food]=(eaten[food]??0)-delta;}
+  return result;
+ };
  Object.assign(npc(s,elder),{coins:37,inventory:{[item]:3}});
  // F026: the carer's purse is examined to the copper (inheritance +37 only), so nobody has money to walk into the tavern and buy food meanwhile.
  for(const [id,n] of Object.entries(s.doc.state.npcs))if(id!==elder)n.coins=0;
@@ -106,9 +114,11 @@ test('病故后约定终止不追责，遗产整体交给同户成年继承人�
  // purchase is on the shops' day-books, so: carer's purse + carer's purchases = carer's start + (elder's 37 - elder's purchases).
  const spentBy=id=>Object.values(s.doc.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(v=>v.npc===id).reduce((n,v)=>n+(v.paid??0),0);
  assert.equal(npc(s,carer).coins+spentBy(carer),carerCoins+37-spentBy(elder));assert.equal(npc(s,elder).coins,0);
- assert.equal(s.engine.quantity({get:(...p)=>p.reduce((x,k)=>x?.[k],s.doc)},carer,item),3);// The estate holds the 3 portions the elder owned plus exactly what the elder bought in shops before dying (F026 day-books).
+ assert.equal(s.engine.quantity({get:(...p)=>p.reduce((x,k)=>x?.[k],s.doc)},carer,item),3);// Three durable objects really reach the heir; meals cannot erase this anchor.
  const bought={};for(const v of Object.values(s.doc.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(v=>v.npc===elder&&v.outcome==='bought'))bought[v.item]=(bought[v.item]??0)+v.quantity;
  const expectedItems={[item]:3};for(const [k,n] of Object.entries(bought))expectedItems[k]=(expectedItems[k]??0)+n;
+ // Exact residual inheritance: opening objects + actual buys - actual meals.
+ for(const [k,n] of Object.entries(eaten)){expectedItems[k]-=n;assert.ok(expectedItems[k]>=0);if(!expectedItems[k])delete expectedItems[k];}
  assert.deepEqual(settledDeath.estate.items,expectedItems);
  assert.deepEqual(death.population,{before:population,after:population-1});assert.equal(s.doc.state.settlements.loc_hw.population,population-1);
  const o=s.doc.state.obligations.obl_after;

@@ -49,6 +49,7 @@ registerAdvanceHook('sameNpcScheduleInputs',sameNpcScheduleInputs);
 function invalidateSchedule(cache,{path,value,op}){
     if(path[0]!=='state'){if(!path.length)cache.people.clear();return;}
     if(['minute','scheduler','npcObligationClock'].includes(path[1]))return;
+    if(path[1]==='family'&&['meals','mealDays'].includes(path[2]))return;
     if(path[1]==='npcs'&&path.length>=3){if(!ignoredNpcScheduleFields.has(path[3]))cache.people.delete(path[2]);return;}
     if(path[1]==='records'&&path.length>=3){
         const old=cache.draft.cursor.root.state.records?.[path[2]];

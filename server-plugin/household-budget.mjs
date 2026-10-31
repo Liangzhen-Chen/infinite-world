@@ -12,6 +12,8 @@ import {subjectiveView} from './subjective-view.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {contractTerms,leaseState,tenancyRentAmount} from './contract-state.mjs';
 import {householdWorkTime} from './npc-state.mjs';
+import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {physicalItem} from './items.mjs';
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
 const preferenceRoll=compileRX('roll("thrift")');
@@ -26,6 +28,9 @@ const debtor=r=>r.debtor??r.promisor,creditor=r=>r.creditor??r.promisee;
 const budgetAccounts=Symbol('household inventory account owners');
 const seedRecords=Symbol('household seed records'),futureRecords=Symbol('household future records');
 const commitmentMemo=Symbol('household commitments');
+const seedInputs=[{path:['records'],kinds:['asset_lease']},{path:['records'],categories:['private_farm']},['minute'],['buildings'],['created']];
+const seedRecordInputs={kinds:['asset_lease'],categories:['private_farm']};
+const commitmentInputs=[['records'],['obligations'],['minute']];
 const promisedRecords=Symbol('household legacy promises');
 const budgetReads=new WeakMap();
 const budgetValue=Symbol('budget value'),resourceMemo=Symbol('household resources');
@@ -129,7 +134,7 @@ function family(d,engine,owner){
 function seedNeeds(engine,state,holders){
  const needs=new Map(),field=domainRules(engine).privateField;
  if(!field)return needs;
- for(const record of recordsMemo(state.records,seedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='asset_lease'||r.category==='private_farm'))){
+ for(const record of recordsMemo(state.records,seedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='asset_lease'||r.category==='private_farm'),seedRecordInputs)){
   const terms=record.kind==='asset_lease'?contractTerms(record,state.minute):record;
   const r={...terms,...(record.kind==='asset_lease'?terms.rentBasis:{})};
   // A growing crop has already consumed seed. Only a signed next sowing or
@@ -172,6 +177,33 @@ function allocateMeals(rows,needs){
  return shortfall;
 }
 
+// Public agriculture has already consumed standard daily portions, whose
+// satiety follows the body table's base day. Personal drain modifiers change
+// need, never the nutrition in that same ration. Private food fills the gap.
+export function householdMealPlan(d,engine,owner,{publicShare=0}={}){
+ const state=d.get('state'),f=family(d,engine,owner);
+ const members=f.members.filter(id=>id!=='player'&&!isPhysicallyDead(engine,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded);
+ const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((sum,id)=>sum+explainDerived(engine,d.document,'body:drain',id,{base:bodyRule(engine,need).drainPerHour.light*24}).value,0)]));
+ const publicNutrition={satiety:bodyRule(engine,'satiety').drainPerHour.light*24*members.length*Math.max(0,Math.min(1,publicShare)),hydration:0};
+ const seeds=stateMemo(state,engine,[seedRecords,JSON.stringify(members)],()=>seedNeeds(engine,state,members),seedInputs);
+ const commitments=stateMemo(state,engine,[commitmentMemo],()=>commitmentAllocation(state),commitmentInputs);
+ // Meals need physical food, seeds and promises, not a quote/income horizon
+ // or a scan of everyone's production tasks for every inventory row.
+ const rows=members.flatMap(holder=>bagEntries(d,engine,state,holder,null).flatMap(([item,held])=>{
+  const definition=engine.byId.get(item);if(!definition?.nutrition)return [];
+  const stock=bagStock(d,engine,{point:'region.material',id:holder,item,legacy:()=>qty(held)}),key=`${holder}:${item}`;
+  const committed=commitments.get(key)??0,seed=Math.min(Math.max(0,stock-committed),seeds.get(key)??0);
+  return [{holder,item,definition,stock,committed,seed,food:0}];
+ })).sort((a,b)=>(a.definition?.shelfLifeDays??Infinity)-(b.definition?.shelfLifeDays??Infinity)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder)).map(r=>{
+  const held=d.get(...engine.bagPath(r.holder),r.item),units=held?.instances??[];
+  const safe=id=>{const f=physicalItem(d,engine,id);return f.contaminated!==true&&f.toxic!==true&&f.condition!==0;};
+  const selection=units.filter(safe),loose=safe(r.item)?Math.max(0,r.stock-units.length):0;
+  return {...r,definition:engine.byId.get(r.item),stock:Math.min(r.stock,loose+selection.length),selection,food:0};
+ });
+ const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(needs).map(n=>[n,needs[n]-publicNutrition[n]])));
+ return {household:f.household,members,needs,publicNutrition,shortfall,rows:rows.filter(r=>r.food>0).map(({definition,...r})=>({...r,selection:r.selection.slice(0,r.food)}))};
+}
+
 export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true}={}){
  const read=()=>readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution});
  return view?read():budgetRead(d,engine,[resourceMemo,owner,days,risk,commonRisk,marketSubstitution],read);
@@ -183,7 +215,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  // bags. Subjective needs use known derived facts, with the public body base
  // when another member's private modifiers are unknown.
  const holders=subjective?[owner]:f.holders,members=f.shared?f.members:[owner];
- const seeds=subjective?new Map():stateMemo(state,engine,[seedRecords,JSON.stringify(holders)],()=>seedNeeds(engine,state,holders));
+ const seeds=subjective?new Map():stateMemo(state,engine,[seedRecords,JSON.stringify(holders)],()=>seedNeeds(engine,state,holders),seedInputs);
  const promises=subjective?view.self.obligations??[]:[...obligationRows(state),...recordsMemo(state.records,promisedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='procurement'||r.category==='agreed_quote'))];
  const rows=holders.flatMap(holder=>{
   const entries=new Map(bagEntries(d,engine,state,holder,view));
@@ -198,7 +230,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   return {holder,item,key,definition,stock,food:0,seed:0,seedTarget:0,committed:0,inUse:0};
   });
  }).sort((a,b)=>(a.definition?.shelfLifeDays??Infinity)-(b.definition?.shelfLifeDays??Infinity)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder));
- const commitments=subjective?null:stateMemo(state,engine,[commitmentMemo],()=>commitmentAllocation(state));
+ const commitments=subjective?null:stateMemo(state,engine,[commitmentMemo],()=>commitmentAllocation(state),commitmentInputs);
  for(const r of rows){
   r.committed=subjective?(view.self.obligations??[]).filter(o=>!obligationClosed(o)&&debtor(o)===owner&&(o.resource??o.item??o.subject)===r.item).reduce((n,o)=>n+unpaid(o),0):commitments.get(r.key)??0;
   r.seedTarget=seeds.get(r.key)??0;

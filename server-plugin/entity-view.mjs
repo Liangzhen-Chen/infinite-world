@@ -437,8 +437,9 @@ export function personBody(engine,state,requested){
         boss:fact(boss,`catalog.${boss?.id}`),status:fact(actor?.status,`${path.join('.')}.status`,Boolean(actor))};
 }
 const placeSettlementMemo=Symbol('place settlement'),personBusinessMemo=Symbol('person business');
+const placeSettlementInputs=[['created'],['settlements']];
 export function placeSettlement(engine,state,location){
-    return stateMemo(state,engine,[placeSettlementMemo,location],()=>readPlaceSettlement(engine,state,location));
+    return stateMemo(state,engine,[placeSettlementMemo,location],()=>readPlaceSettlement(engine,state,location),placeSettlementInputs);
 }
 function readPlaceSettlement(engine,state,location){
     const seen=new Set(),ids=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...Object.keys(state.settlements??{})]);

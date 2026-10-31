@@ -1,19 +1,22 @@
 import {preconditionFailure} from './precondition.mjs';
-import {recordsWhere,recordsMemo} from './storage.mjs';
+import {recordsWhere,recordsMemo,stateMemo} from './storage.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {obligationView} from './obligation-state.mjs';
 // Contracts are facts. Current employment and occupied time are read-only views.
 export const employmentActive=(r,state=null)=>r?.kind==='workshop'&&r.endedAt===undefined&&r.resolvedAt===undefined&&(!r.serviceObligation||!state||obligationView(state,r.serviceObligation)?.closed===false)&&(!!r.clauses||['有效','要求加薪','罢工'].includes(r.status));
+const employmentInputs=[{path:['records'],kinds:['workshop']},['minute']];
 export function currentEmployment(state,id,minute=state?.minute??0){
-    const workers=recordsMemo(state?.records,`employment terms:${minute}`,()=>{
+    // The state scope survives unrelated cursor writes. Keep the records-only
+    // view too: several projected states at one minute share the same records.
+    const workers=stateMemo(state,currentEmployment,[minute],()=>recordsMemo(state?.records,`employment terms:${minute}`,()=>{
         const workers=new Map();
         for(const row of recordsWhere(state?.records,'kind','workshop')){
             const r=contractTerms(row,minute),rows=workers.get(r.worker)??[];
             rows.push(r);workers.set(r.worker,rows);
         }
         return workers;
-    });
+    }),employmentInputs);
     return (workers.get(id)??[]).find(r=>employmentActive(r,state)&&r.createdAt<=minute&&minute<r.deadline)??null;
 }
 export function employmentReservation(state,id,start,minutes=0,restDays=[]){

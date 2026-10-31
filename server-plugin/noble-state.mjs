@@ -7,15 +7,15 @@ import {recordsWhere} from './storage.mjs';
 
 export const nobleRules=e=>e.rules.governance?.sovereignty;
 export const highTitle=t=>['男爵','子爵','伯爵','侯爵','公爵'].includes(t?.title)&&['受封','停俸'].includes(t.status);
-export const titlesOf=(s,who)=>Object.values(s.records??{}).filter(r=>r.category==='title'&&r.holder===who&&r.status!=='已除爵');
+export const titlesOf=(s,who)=>recordsWhere(s.records,'category','title').filter(r=>r.holder===who&&r.status!=='已除爵');
 // The authored county lord keeps the outline's title until an explicit successor or dismissal.
 export function nobleLords(e,s){
- const out=Object.values(s.records??{}).filter(highTitle),seen=new Set(out.map(t=>t.holder));
+ const out=recordsWhere(s.records,'category','title').filter(highTitle),seen=new Set(out.map(t=>t.holder));
  for(const [county,record]of Object.entries(s.remote??{})){
   const region=e.world.regions?.find(c=>c.id===county),title=['男爵','子爵','伯爵','侯爵','公爵'].find(t=>region?.ruler?.title?.includes(t));if(!title)continue;
   const row=record.skeleton?.offices?.find(o=>o.level==='郡'&&o.source==='outline'),person=record.skeleton?.people?.find(p=>p.id===row?.holder);
   if(!person||seen.has(person.id)||!s.npcs?.[person.id]||!isEffective(e,s,person.id))continue;
-  if(Object.values(s.records??{}).some(t=>t.category==='title'&&t.holder===person.id&&t.status==='已除爵'))continue;
+  if(recordsWhere(s.records,'category','title').some(t=>t.holder===person.id&&t.status==='已除爵'))continue;
   if(s.records?.[`territory:${county}`]&&s.records[`territory:${county}`].ruler!==person.id)continue;
   out.push({category:'title',holder:person.id,title,status:'受封',fief:county,domains:[county],source:`T142:${county}.ruler + current county office`});seen.add(person.id);
  }

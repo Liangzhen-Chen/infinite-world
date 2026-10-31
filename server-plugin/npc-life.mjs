@@ -1,7 +1,7 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('npc-life',{sinks:['sink:export']});
+declareLedgerWriter('npc-life',{sinks:['sink:export','sink:consume']});
 import {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
@@ -13,7 +13,10 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // Authored people and their static past are never rewritten; changes live in
 // state.family plus ordinary memories, which then spread only through the
 // existing NPC conversation and message channels.
-import {digest} from './storage.mjs';
+import {digest,stateMemo,canonicalEqual} from './storage.mjs';
+import {householdMealPlan} from './household-budget.mjs';
+import {placeSettlement} from './entity-view.mjs';
+import {toRational} from './det-math.mjs';
 import {transition} from './transition.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {derived} from './derived.mjs';
@@ -38,6 +41,53 @@ import {pow} from './det-math.mjs';
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
+const mealHouseholds=Symbol('daily meal households');
+const mealMember=(engine,state,id)=>id!=='player'&&!isPhysicallyDead(engine,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded;
+// Plan all households against one revision so inventory/commitment indexes
+// are shared. Writes then consume each physical bag once, through itemDelta.
+export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
+ const state=d.get('state'),groups=stateMemo(state,engine,[mealHouseholds],()=>{
+  const groups=new Map();
+  for(const id of Object.keys(state.npcs??{}).sort()){
+   if(!mealMember(engine,state,id))continue;
+   const h=personHousehold(engine,state,id).value,key=h?.id??id;
+   if(!groups.has(key))groups.set(key,{owner:id,key,registered:Boolean(h),mouths:h?.members.filter(member=>mealMember(engine,state,member)).length??0,settlement:h?.settlement??placeSettlement(engine,state,state.npcs[id].location).value});
+  }
+  return [...groups.values()];
+ });
+ // Public population portions cover registered residents, not an extra
+ // portion for each unregistered visitor present. A stale aggregate count
+ // also cannot distribute more portions than agriculture actually consumed.
+ const represented=new Map();
+ for(const g of groups)if(g.registered)represented.set(g.settlement,(represented.get(g.settlement)??0)+g.mouths);
+ for(const [sid,ration]of publicMeals){ration.mouths=Math.max(ration.mouths,represented.get(sid)??0);ration.missing=ration.mouths-ration.eaten;}
+ const plans=[];
+ for(const group of groups){
+  const key=group.key,previous=d.get('state','family','meals',key);
+  if(Math.max(d.get('state','family','mealDays',group.settlement??'unregistered')??-1,previous?.day??-1)>=day)continue;
+  const ration=publicMeals.get(group.settlement),share=group.registered&&ration?.mouths>0?ration.eaten/ration.mouths:0;
+  const plan=householdMealPlan(d,engine,group.owner,{publicShare:share});
+  if(plan.members.length)plans.push({...group,key,previous,share,...plan});
+ }
+ const adjustments=new Map();
+ const saved=v=>Number.isInteger(v)?v:toRational(v);
+ const nutrients=values=>Object.fromEntries(Object.entries(values).map(([k,v])=>[k,saved(v)]));
+ for(const p of plans){
+  const consumed=[];
+  for(const row of p.rows){
+   engine.itemDelta(d,row.holder,row.item,-row.food,{flow:'sink:consume',purpose:'meal',writer:'npc-life',eventId:`household-meal:${day}:${p.household??p.owner}`},{selection:row.selection});
+   consumed.push({holder:row.holder,item:row.item,quantity:row.food});
+  }
+  const missing=p.needs.satiety>0?p.members.length*p.shortfall.satiety/p.needs.satiety:0;
+  if(p.registered){const adjustment=adjustments.get(p.settlement)??0;adjustments.set(p.settlement,adjustment+missing-p.members.length*(1-p.share));}
+  const record={household:p.household,owner:p.owner,settlement:p.settlement,members:p.members,
+   needs:nutrients(p.needs),publicNutrition:nutrients(p.publicNutrition),consumed,shortfall:nutrients(p.shortfall),missingMeals:saved(missing),
+   unmetMealDays:(p.previous?.unmetMealDays??0)+(missing>0?1:0)};
+  if(!canonicalEqual(p.previous,record))d.set(['state','family','meals',p.key],record);
+ }
+ for(const settlement of new Set(plans.map(p=>p.settlement??'unregistered')))d.set(['state','family','mealDays',settlement],day);
+ return adjustments;
+}
 const rules=engine=>engine.rules.npcLife;
 const key=(...parts)=>digest(parts).slice(0,16);
 const pairKey=(a,b)=>[a,b].sort().join('|');

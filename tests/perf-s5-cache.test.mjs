@@ -1,12 +1,68 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {PatchCursor,withRecordIndex,setRecordIndexCheck,stateMemo} from '../server-plugin/storage.mjs';
+import {PatchCursor,withRecordIndex,setRecordIndexCheck,stateMemo,recordsMemo,recordIndexCheck} from '../server-plugin/storage.mjs';
 import {currentEmployment} from '../server-plugin/employment-state.mjs';
 import {snapshotContractTerms} from '../server-plugin/contract-state.mjs';
 import {obligationRows} from '../server-plugin/obligation-state.mjs';
 import {personRoutine} from '../server-plugin/entity-view.mjs';
 
 const document=()=>({state:{minute:0,records:{job:snapshotContractTerms({id:'job',category:'contract',kind:'workshop',worker:'a',createdAt:0,starts:0,deadline:100,wage:10,status:'有效',amendments:[{minute:20,wage:20}]})},obligations:{}}});
+
+test('positive record dependencies preserve unrelated writes and include legacy kinds under any category',()=>{
+ const d=new PatchCursor({state:{records:{job:{category:'contract',kind:'workshop',wage:10},rock:{category:'physical_feature',value:1}}}}),key={},deps={kinds:['workshop']};
+ withRecordIndex(()=>{
+  const read=()=>{const records=d.expose(d.root.state.records);return recordsMemo(records,key,()=>Object.values(records).filter(r=>r.kind==='workshop'),deps);};
+  const first=read();d.apply({op:'set',path:['state','records','rock','value'],value:2});assert.equal(read(),first);
+  d.apply({op:'set',path:['state','records','legacy'],value:{category:'legacy-job',kind:'workshop',wage:20}});assert.equal(read().reduce((n,r)=>n+r.wage,0),30);
+  d.apply({op:'set',path:['state','records','legacy','kind'],value:'other'});assert.equal(read().reduce((n,r)=>n+r.wage,0),10);
+  d.apply({op:'delete',path:['state','records','job']});assert.deepEqual(read(),[]);
+ });
+});
+
+test('record projections retain ignored progress only; changed terms, removal and reclassification invalidate',()=>{
+ const d=new PatchCursor({state:{records:{job:{category:'contract',kind:'workshop',wage:10,workedMinutes:0}}}}),key={};
+ const fields=[{category:'contract',kind:'workshop',fields:['workedMinutes']}];
+ withRecordIndex(()=>{
+  const read=()=>{const records=d.expose(d.root.state.records);return recordsMemo(records,key,()=>Object.values(records).filter(r=>r.category==='contract').map(({workedMinutes,...terms})=>terms),{ignoreFields:fields});};
+  const first=read(),snapshot=d.root.state.records;d.apply({op:'set',path:['state','records','job','workedMinutes'],value:60});assert.equal(read(),first);
+  // Both projections are still valid: the exposed source was copied, not
+  // mutated. Discarding its memo would force a full old-record scan.
+  assert.equal(recordsMemo(snapshot,key,()=>Object.values(snapshot).map(({workedMinutes,...terms})=>terms)),first);
+  d.apply({op:'set',path:['state','records','job'],value:{category:'contract',kind:'workshop',wage:10,workedMinutes:120}});assert.equal(read(),first);
+  d.apply({op:'set',path:['state','records','job','wage'],value:20});assert.equal(read()[0].wage,20);
+  d.apply({op:'set',path:['state','records','job','category'],value:'knowledge'});assert.deepEqual(read(),[]);
+  d.apply({op:'delete',path:['state','records','job']});assert.deepEqual(read(),[]);
+ });
+});
+
+test('scoped state memos survive unrelated writes but invalidate subtree replacement, categories and resets',()=>{
+ const d=new PatchCursor({state:{records:{job:{category:'contract',wage:10},rock:{category:'physical_feature',wage:1}},family:{},npcs:{a:{coins:5}}}}),scope={};
+ const deps=[{path:['records'],categories:['contract']},['npcs','a','coins']];
+ const query=(state=d.root.state,observer='a')=>stateMemo(state,scope,['wages',observer],()=>({wages:Object.values(state.records).filter(r=>r.category==='contract').reduce((n,r)=>n+r.wage,0),coins:state.npcs.a.coins,observer}),deps);
+ withRecordIndex(()=>{
+  const first=query();assert.equal(first.wages,10);
+  d.apply({op:'set',path:['state','family','meals','home'],value:{missingMeals:0}});
+  assert.equal(query(),first);assert.equal(query(d.root.state,'b').observer,'b');
+  d.apply({op:'set',path:['state','records','rock','wage'],value:9});assert.equal(query(),first);
+  const snapshot=d.expose(d.root.state);
+  d.apply({op:'set',path:['state','npcs','a','coins'],value:7});
+  assert.equal(query().coins,7);assert.equal(query(snapshot).coins,5);
+  d.apply({op:'set',path:['state','records','rock','category'],value:'contract'});assert.equal(query().wages,19);
+  d.apply({op:'delete',path:['state','records','job']});assert.equal(query().wages,9);
+  d.apply({op:'set',path:['state','records'],value:{next:{category:'contract',wage:20}}});assert.equal(query().wages,20);
+  d.reset({state:{records:{next:{category:'contract',wage:30}},npcs:{a:{coins:1}}}});assert.equal(query().wages,30);
+ });
+});
+
+test('scoped memo checking still detects a writer that bypasses the cursor',()=>{
+ const state={npcs:{a:{coins:5}}},deps=[['npcs']],scope={},before=recordIndexCheck.violations.length;
+ setRecordIndexCheck(true);
+ try{withRecordIndex(()=>{
+  const query=()=>stateMemo(state,scope,['coins'],()=>({coins:state.npcs.a.coins}),deps);
+  query();state.npcs.a.coins=6;
+  assert.throws(query,/state memo/);assert.equal(recordIndexCheck.violations.length,before+1);
+ });}finally{recordIndexCheck.violations.splice(before);setRecordIndexCheck(process.env.FIELDS_INDEX_CHECK==='1');}
+});
 
 test('routine indexing preserves a revoked dismissal on the default read path',()=>{
  const base={id:'a',schedule:{default:[]}},engine={world:{factions:[],settlementProfiles:[],npcs:[base]},byId:new Map([['a',base]]),rules:{}};
@@ -44,6 +100,9 @@ test('employment memo keeps exact minute, amendments, obligation closure and doc
  try{withRecordIndex(()=>{
   assert.equal(currentEmployment(a.root.state,'a',19).wage,10);
   assert.equal(currentEmployment(a.root.state,'a',20).wage,20);
+  const employed=currentEmployment(a.root.state,'a',20);
+  a.apply({op:'set',path:['state','records','rock'],value:{category:'physical_feature'}});
+  assert.equal(currentEmployment(a.root.state,'a',20),employed);
   assert.equal(currentEmployment(a.root.state,'a',20).wage,20);
   assert.equal(currentEmployment(a.root.state,'a',19).wage,10);
   a.apply({op:'set',path:['state','records','job','amendments','0','wage'],value:30});
