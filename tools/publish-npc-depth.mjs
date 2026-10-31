@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import {replayFirstSourceEvidence,validateSourceEvidence,compactReviewRequest} from './npc-depth-source-evidence.mjs';
 import {randomUUID} from 'node:crypto';
 import {reopenAuthorizationVersion} from './content-budget.mjs';
+import {readPublishedNpcAmendments,applyPublishedNpcAmendments} from './npc-publication-sources.mjs';
 import {validateNpcDepth,validateNpcProfiles,legacyTraitsAuditIds} from './npc-profile-validation.mjs';
 export const batchContract='npc-depth-batch-v1';
 export const publishDepthHelp='publish-npc-depth --manifest <候选目录/manifest.json> [--publish]\n批量：--batch-manifest <world内JSON> [--publish]，清单含contract:npc-depth-batch-v1、worldRoot、sourceHash(hashContent(loadWorld))、expectedIds、manifests(完整卡相对world路径)。\n默认只预演；--publish 校验冻结原档、失败路径、L1/L2/L4和哈希后写 world/people/baseline.json。';
@@ -25,7 +26,8 @@ export async function prepareNpcDepth({manifest,worldRoot,world:snapshot}={}){
  if(incremental){const prepared=await prepareDepthRevision({design,root,worldRoot:target,controlledRevision:path.resolve(root,incremental.planFile),authorizationHash:incremental.authorizationHash,authoredBackground:incremental.backgroundFile?path.resolve(root,incremental.backgroundFile):undefined,sourceCheckoutEvidence:incremental.sourceCheckoutEvidence?path.resolve(root,incremental.sourceCheckoutEvidence.file):undefined,reopenAuthorization:incremental.reopenAuthorization?path.resolve(root,incremental.reopenAuthorization.file):undefined,cardId:(await read(path.resolve(root,incremental.planFile))).cardId});entries=prepared.entries;foundation=prepared.foundation;incremental={...incremental,prepared};}
  let residence=null;const yan=entries.find(e=>e.id==='npc_hw_yanzhe'),currentYan=world.npcs.find(n=>n.id===yan?.id);
  if(yan&&currentYan.householdId!==yan.before.householdId){const sourceRoot=path.join(target,'drafts/w1/baishi-skeleton'),{b}=await approvedBaishi(world,{sourceRoot});const original=await read(path.join(sourceRoot,'original-contacts.json'));const fields=n=>({settlement:n.settlement,householdId:n.householdId,household:n.household,homeLocation:n.home.location});assert.deepEqual(fields(currentYan),fields(b.yan),'白石镇已审住户与当前人物不符');residence={id:yan.id,before:fields(original.yan),after:fields(b.yan)};}
- for(const entry of entries){const current=world.npcs.find(n=>n.id===entry.id);assert.ok(current,`正式人物缺失 ${entry.id}`);mergeEntry(current,entry,patchDraft(entry),residence);}
+ const amendments=await readPublishedNpcAmendments({world,worldRoot:target});
+ for(const entry of entries){const current=world.npcs.find(n=>n.id===entry.id);assert.ok(current,`正式人物缺失 ${entry.id}`);mergeEntry(current,entry,patchDraft(entry),residence,amendments);}
  assert.equal(hashContent(foundation),plan.foundationHash,'发布清单骨架指纹已过期');assert.equal(hashContent(await read(path.join(root,'foundation.json'))),hashContent(foundation),'冻结骨架或引用事实已改变');
  if(!incremental)assert.deepEqual(await read(path.join(root,'candidate.json')),entries.map(patchDraft),'冻结候选已篡改');
  const reviewContext=e=>incremental?.prepared.contexts.get(e.id)??contextFor(e,reference);
@@ -47,7 +49,7 @@ export async function prepareNpcDepth({manifest,worldRoot,world:snapshot}={}){
   assert.deepEqual(extraL4.backgrounds.map(n=>JSON.stringify([n.eventId,n.sourceHash])).sort(),sources.map(s=>JSON.stringify([s.event.id,s.sourceHash])).sort(),'出处L4缺审、重复或多余来源');
  }
  for(const entry of entries){const context=reviewContext(entry);if(context.authoredBackground||context.controlledRevision){const record=await read(path.join(root,entry.id+'.json'));const issues=checkIncrementalReview(record.review,entry,context);assert.ok(!issues.some(c=>c.severity==='hard'),'出处或候选L2存在硬错');const note=extraL4.candidates.find(n=>n.id===entry.id);assert.equal(note?.draftHash,hashContent(record.draft),'新L4候选hash已过期');assert.equal(note?.reviewHash,hashContent(record.review),'新L4审核hash已过期');assert.equal(note?.entryHash,hashContent(entry),'新L4 entry hash不符');assert.ok(note.note?.trim(),'缺新L4阅读');assert.deepEqual([...(note.reviewedPaths??[])].sort(),entry.patches.map(p=>p.path).sort(),'新L4漏审叶子');if(context.authoredBackground)for(const event of context.authoredBackground.events){const sourceNote=extraL4.backgrounds.find(n=>n.eventId===event.id&&n.sourceHash===context.authoredBackground.sourceHash);assert.equal(sourceNote?.sourceHash,context.authoredBackground.sourceHash,'缺出处L4');assert.equal(sourceNote?.eventHash,hashContent(entry.authoredBackground.events.find(e=>e.id===event.id)),'出处L4事件hash已过期');assert.ok(sourceNote.note?.trim(),'缺出处L4阅读');assert.deepEqual([...(sourceNote.reviewedRiskPaths??[])].sort(),event.risks.map(r=>`${r.id}.${r.field}`).sort(),'出处L4漏审风险');}if(context.controlledRevision){assert.equal(record.incremental?.authorizationHash,context.controlledRevision.authorizationHash,'缺受控修订凭证');assert.equal(record.reviewRecovery?.status,'passed-L1-L2','缺新L2');assert.equal(record.reviewRecovery.requestHash,hashContent(record.reviewRecovery.request),'新L2请求hash不符');assert.equal(hashContent(record.reviewRecovery.prior),record.incremental.originalRecordHash,'旧record证据改变');}}const draft=drafts.find(d=>d.id===entry.id),check=validateDraft(draft,entry);assert.deepEqual(check.errors,[],'L1修订失败');}
- return {target,world,reference,entries,drafts,residence,manifestHash:hashContent(plan)};
+ return {target,world,reference,entries,drafts,residence,amendments,manifestHash:hashContent(plan)};
 }
 async function replayStoredDepthEvidence({root,worldRoot,entries,world,foundation,revision,contextFor,records}){
  const registry=await read(path.join(root,'first-source-evidence.json')).catch(e=>{if(e.code==='ENOENT')return null;throw e;});
@@ -86,15 +88,15 @@ function differences(a,b,field=''){
  if(a&&b&&typeof a==='object'&&typeof b==='object')return [...new Set([...Object.keys(a),...Object.keys(b)])].flatMap(k=>differences(a[k],b[k],Array.isArray(b)?`${field}[${k}]`:field?`${field}.${k}`:k));
  return [{path:field,before:a??null,after:b??null}];
 }
-function mergeEntry(current,entry,draft,residence){
- if(residence?.id===current.id){const residential=(person,fields)=>{const out={...person,home:{...person.home,location:fields.homeLocation}};for(const key of ['settlement','householdId','household']){if(fields[key]===undefined)delete out[key];else out[key]=structuredClone(fields[key]);}return out;};return residential(mergeEntry(residential(current,residence.before),entry,draft),residence.after);}
+function mergeEntry(current,entry,draft,residence,amendments=[]){
+ if(residence?.id===current.id){const residential=(person,fields)=>{const out={...person,home:{...person.home,location:fields.homeLocation}};for(const key of ['settlement','householdId','household']){if(fields[key]===undefined)delete out[key];else out[key]=structuredClone(fields[key]);}return out;};return residential(mergeEntry(residential(current,residence.before),entry,draft,undefined,amendments),residence.after);}
  // A later memory tail is preserved; every frozen field must still match.
  const scrub=n=>{const out=structuredClone(n);delete out.coins;delete out.inventory;delete out.memorySeeds;return out;};
- const candidates=[applyDepthDraft(entry.before,draft),entry.before];
+ const candidates=[applyDepthDraft(entry.before,draft),entry.before].map(n=>applyPublishedNpcAmendments(n,amendments));
  const frozen=candidates.find(n=>hashContent(scrub(n))===hashContent(scrub(current))&&hashContent(current.memorySeeds?.slice(0,n.memorySeeds?.length))===hashContent(n.memorySeeds));
  if(!frozen){const conflicts=candidates.map(n=>differences(n,{...current,coins:n.coins,inventory:n.inventory,memorySeeds:current.memorySeeds.slice(0,n.memorySeeds.length)})).sort((a,b)=>a.length-b.length);throw Error(`人物补丁冲突或原档已过期 ${current.id}/${conflicts[0][0]?.path??'memorySeeds'}`);}
  const tail=current.memorySeeds.slice(frozen.memorySeeds.length);
- const patched=applyDepthDraft(entry.before,draft);
+ const patched=applyPublishedNpcAmendments(applyDepthDraft(entry.before,draft),amendments);
  // Applying to the frozen before avoids overwriting later memories at append indices.
  return {...patched,coins:current.coins,inventory:structuredClone(current.inventory),memorySeeds:[...patched.memorySeeds,...tail]};
 }
@@ -147,7 +149,7 @@ async function preparedPublication({batchManifest,manifest,worldRoot}={}){
  // All cards are checked against one original snapshot, then evaluated together.
  const frozenWorld={...world,npcs:world.npcs.map(n=>entries.find(e=>e.id===n.id)?.before??n)};
  validatePatchResults(entries,frozenWorld);
- const next=world.npcs.map(n=>selected.has(n.id)?mergeEntry(n,entries.find(e=>e.id===n.id),drafts.get(n.id),cards.find(c=>c.entries.some(e=>e.id===n.id))?.residence):n);
+ const next=world.npcs.map(n=>{if(!selected.has(n.id))return n;const card=cards.find(c=>c.entries.some(e=>e.id===n.id));return mergeEntry(n,entries.find(e=>e.id===n.id),drafts.get(n.id),card.residence,card.amendments);});
  assert.deepEqual(validateNpcProfiles({...world,npcs:next}),[],'人物补丁引用或跨人结构约束失败');
  const changes=next.flatMap(n=>differences(world.npcs.find(p=>p.id===n.id),n).map(change=>({id:n.id,...change})));
  const changed=changes.length?['people/baseline.json']:[];
