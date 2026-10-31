@@ -80,6 +80,20 @@ test('NPC公仓购买真实驮队服务，货批与预付款仍由原账只结�
 
 test('正常world_time周发货→逐路在途→到货税款；双方现金、粮批和玩家合同保持真实',async()=>{
     const {engine,doc}=setup(),cash=snapshotCash(doc),privateAssets=structuredClone({player:doc.state.player.coins,inventory:doc.state.inventory,npcs:Object.fromEntries(Object.entries(doc.state.npcs).map(([id,n])=>[id,{coins:n.coins,inventory:n.inventory}]))});
+    // K15: daily household meals legitimately consume private food during the
+    // week. Adjust the original exact snapshot ONLY for successful meal writes;
+    // public trade must still leave every other private item and coin untouched.
+    const itemDelta=engine.itemDelta.bind(engine);
+    engine.itemDelta=(d,owner,item,delta,books,options)=>{
+        const result=itemDelta(d,owner,item,delta,books,options);
+        if(books?.writer==='npc-life'&&books.purpose==='meal'){
+            assert.ok(delta<0);const inventory=privateAssets.npcs[owner].inventory,old=inventory[item];
+            const quantity=(typeof old==='number'?old:old?.quantity??0)+delta;assert.ok(quantity>=0);
+            if(!quantity)delete inventory[item];
+            else{const def=engine.byId.get(item);inventory[item]={...(typeof old==='object'?old:{quality:def.quality,durability:def.durability,weight:def.weight}),quantity};}
+        }
+        return result;
+    };
     // W8-E8 (c930d578): the forge stocks one sickle on day 1 (next: day 8).
     // Catalog base 10 * shelf demand 2 / max(1, available 0) = 20 copper;
     // all other factors are 1. The keeper pays the local treasury, not a buyer.

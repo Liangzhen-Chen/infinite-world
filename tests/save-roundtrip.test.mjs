@@ -13,6 +13,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {CampaignStorage,applyPatches,digest} from '../server-plugin/storage.mjs';
 import {npcPlanFingerprint} from '../server-plugin/npc-autonomy.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
+import {bodyRule} from '../server-plugin/primitives-body.mjs';
 
 const DAY=1440,INN='bld_hw_qingdeng',POST='bld_hw_post',LANDLORD='npc_hw_linsui',WORKER='npc_hw_ayan',CLERK='npc_hw_shendu',SEED='r25-roundtrip-seed';
 // The hired hand rests at the inn all day so the hire has a free window; everyone else keeps the real schedules.
@@ -46,7 +47,11 @@ async function createCampaign(server){
  s.minute=600;s.location=INN;s.player.coins=800;s.inventory.item_coin_coast={quantity:2,quality:'铜',durability:100,weight:0.005};
  s.npcs[WORKER].location=INN;s.npcs[WORKER].activity='休息';
  // The innkeeper gets vinegar, water, shavings and her pot and knife for a few warm drinks of her own, so autonomy keeps running on later days.
- for(const item of ['item_fruit_vinegar','item_water','item_wood_shavings','item_cooking_pot','item_kitchen_knife']){const row=s.npcs[LANDLORD].inventory[item];s.npcs[LANDLORD].inventory[item]=typeof row==='number'?row+4:{quality:'木',durability:100,weight:0.2,...row,quantity:(row?.quantity??0)+4};}
+ // K15: two household members need 2*3*24=144 hydration/day; water gives
+ // 25, so reserve ceil(144/25)=6 per midnight, three midnights before save.
+ // Keep the existing four crafting portions as well: 3*6+4=22 added water.
+ const waterReserve=3*Math.ceil(2*bodyRule(engine,'hydration').drainPerHour.light*24/engine.byId.get('item_water').nutrition.hydration);
+ for(const item of ['item_fruit_vinegar','item_water','item_wood_shavings','item_cooking_pot','item_kitchen_knife']){const row=s.npcs[LANDLORD].inventory[item],added=4+(item==='item_water'?waterReserve:0);s.npcs[LANDLORD].inventory[item]=typeof row==='number'?row+added:{quality:'木',durability:100,weight:0.2,...row,quantity:(row?.quantity??0)+added};}
  // D05 §5.1 / S5-02: the roundtrip tests persistence, not food scarcity;
  // declare opening stock sufficient for both household reserves and orders.
  const supplied=applyIntentSetup(engine,initial,{facts:[{path:['state','npcs',LANDLORD,'inventory'],value:{...s.npcs[LANDLORD].inventory,item_bread:{quantity:40}}}]});assert.deepEqual(supplied.setupUnmet,[]);initial=supplied.document;

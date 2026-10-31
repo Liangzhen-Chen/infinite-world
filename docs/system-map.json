@@ -25,7 +25,7 @@
   "subscribers": 14,
   "interactionRules": 25,
   "effectKinds": 24,
-  "links": 728
+  "links": 730
  },
  "layers": [
   {
@@ -877,7 +877,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1880,
+   "lines": 1930,
    "stateWrites": [
     "checks",
     "crafted",
@@ -1027,7 +1027,7 @@
     "server-plugin/world-events.mjs",
     "server-plugin/entity-transitions.mjs"
    ],
-   "lines": 313,
+   "lines": 320,
    "stateWrites": [],
    "stateReads": [
     "created",
@@ -1063,7 +1063,7 @@
     "server-plugin/entity-view.mjs",
     "server-plugin/derived.mjs"
    ],
-   "lines": 1024,
+   "lines": 1025,
    "stateWrites": [],
    "stateReads": [
     "careers",
@@ -1241,7 +1241,7 @@
     "server-plugin/advance-layers.mjs",
     "server-plugin/advance-hooks.mjs"
    ],
-   "lines": 642,
+   "lines": 653,
    "stateWrites": [
     "effects",
     "obligations",
@@ -1260,6 +1260,7 @@
    "recordWrites": [],
    "recordReads": [
     "agriculture",
+    "levy",
     "local_actor_position",
     "transition"
    ],
@@ -1311,7 +1312,9 @@
    "recordReads": [],
    "rules": [],
    "world": [],
-   "advance": [],
+   "advance": [
+    "daily"
+   ],
    "subscribes": [],
    "effects": [
     "regional_quote"
@@ -1531,7 +1534,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 4781,
+   "lines": 4845,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -1613,6 +1616,7 @@
    "advance": [
     "medicine_booking",
     "npc_obligations",
+    "daily",
     "npc_cognition",
     "npc_autonomy",
     "medicine",
@@ -1699,7 +1703,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 1824,
+   "lines": 1839,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -2319,7 +2323,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 7234,
+   "lines": 7272,
    "stateWrites": [
     "crafted",
     "npcs",
@@ -2526,7 +2530,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 6423,
+   "lines": 6443,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -3358,6 +3362,14 @@
   },
   {
    "from": "base_advance",
+   "to": "base_numeric",
+   "kind": "advance",
+   "labels": [
+    "daily"
+   ]
+  },
+  {
+   "from": "base_advance",
    "to": "base_standing",
    "kind": "advance",
    "labels": [
@@ -3500,6 +3512,7 @@
    "to": "sim_npc",
    "kind": "advance",
    "labels": [
+    "daily",
     "deliveries",
     "medicine",
     "medicine_booking",
@@ -3581,6 +3594,14 @@
    "kind": "call",
    "labels": [
     "ledger.mjs"
+   ]
+  },
+  {
+   "from": "base_advance",
+   "to": "base_numeric",
+   "kind": "call",
+   "labels": [
+    "det-math.mjs"
    ]
   },
   {
@@ -6934,6 +6955,7 @@
     "credit.mjs",
     "employment-state.mjs",
     "finance-bank.mjs",
+    "household-budget.mjs",
     "items.mjs",
     "labor-market.mjs",
     "manufacturing.mjs",
@@ -10134,14 +10156,17 @@
     "server-plugin/advance-hooks.mjs",
     "server-plugin/agriculture.mjs",
     "server-plugin/bosses.mjs",
+    "server-plugin/det-math.mjs",
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/magic-economy.mjs",
+    "server-plugin/npc-life.mjs",
     "server-plugin/pets.mjs",
     "server-plugin/weather.mjs",
     "server-plugin/wildlife.mjs"
    ],
    "inline": false,
    "partitions": [
+    "records",
     "settlements"
    ]
   },
@@ -11076,8 +11101,7 @@
    "breach": [
     "server-plugin/business.mjs",
     "server-plugin/law.mjs",
-    "server-plugin/military.mjs",
-    "server-plugin/world-events.mjs"
+    "server-plugin/military.mjs"
    ],
    "cast": [
     "server-plugin/world-events.mjs"
@@ -19814,6 +19838,7 @@
     "server-plugin/bounty.mjs",
     "server-plugin/contracts.mjs",
     "server-plugin/credit.mjs",
+    "server-plugin/det-math.mjs",
     "server-plugin/education.mjs",
     "server-plugin/effects.mjs",
     "server-plugin/entity-view.mjs",
@@ -19888,6 +19913,7 @@
    "recordWrites": [],
    "recordReads": [
     "agriculture",
+    "levy",
     "local_actor_position",
     "transition"
    ],
@@ -19905,7 +19931,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 564
+   "lines": 575
   },
   "server-plugin/agriculture-migration.mjs": {
    "system": "kernel_storage",
@@ -21289,7 +21315,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 303
+   "lines": 318
   },
   "server-plugin/education.mjs": {
    "system": "sim_character",
@@ -21465,7 +21491,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 96
+   "lines": 99
   },
   "server-plugin/engine.mjs": {
    "system": "kernel_engine",
@@ -21701,7 +21727,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 574
+   "lines": 575
   },
   "server-plugin/environment-state.mjs": {
    "system": "sim_environment",
@@ -21924,7 +21950,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 175
+   "lines": 181
   },
   "server-plugin/faction-clock.mjs": {
    "system": "sim_clock",
@@ -22640,7 +22666,7 @@
    "worldDirs": [
     "lore"
    ],
-   "lines": 618
+   "lines": 624
   },
   "server-plugin/group-account.mjs": {
    "system": "sim_society",
@@ -22861,6 +22887,8 @@
     "server-plugin/domain-rules.mjs",
     "server-plugin/employment-state.mjs",
     "server-plugin/entity-view.mjs",
+    "server-plugin/items.mjs",
+    "server-plugin/lifecycle-state.mjs",
     "server-plugin/money.mjs",
     "server-plugin/npc-state.mjs",
     "server-plugin/obligation-state.mjs",
@@ -22874,6 +22902,7 @@
    "stateReads": [
     "minute",
     "npcAutonomy",
+    "npcs",
     "obligations",
     "records"
    ],
@@ -22890,7 +22919,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 403
+   "lines": 435
   },
   "server-plugin/husbandry.mjs": {
    "system": "sim_wildlife",
@@ -23080,12 +23109,14 @@
     "server-plugin/storage.mjs",
     "server-plugin/subjective-view.mjs",
     "server-plugin/transition.mjs",
-    "server-plugin/workstation-services.mjs"
+    "server-plugin/workstation-services.mjs",
+    "server-plugin/world-events.mjs"
    ],
    "stateWrites": [
     "projects"
    ],
    "stateReads": [
+    "location",
     "npcs",
     "records"
    ],
@@ -23107,7 +23138,7 @@
     "recipes"
    ],
    "worldDirs": [],
-   "lines": 469
+   "lines": 472
   },
   "server-plugin/law-codes.mjs": {
    "system": "sim_law",
@@ -24923,7 +24954,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 186
+   "lines": 191
   },
   "server-plugin/npc-crime.mjs": {
    "system": "sim_law",
@@ -25073,6 +25104,7 @@
     "server-plugin/hazard-calendar.mjs",
     "server-plugin/holding-sources.mjs",
     "server-plugin/holdings.mjs",
+    "server-plugin/household-budget.mjs",
     "server-plugin/ledger.mjs",
     "server-plugin/lifecycle-state.mjs",
     "server-plugin/money.mjs",
@@ -25088,6 +25120,7 @@
     "world/rules/tables/balance/population.json"
    ],
    "stateWrites": [
+    "family",
     "npcs",
     "obligations",
     "player",
@@ -25096,7 +25129,6 @@
    "stateReads": [
     "created",
     "creatures",
-    "family",
     "location",
     "minute",
     "records"
@@ -25120,7 +25152,7 @@
    "worldDirs": [
     "rules"
    ],
-   "lines": 903
+   "lines": 953
   },
   "server-plugin/npc-memory.mjs": {
    "system": "sim_npc",
@@ -25318,7 +25350,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 399
+   "lines": 400
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -25362,7 +25394,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 390
+   "lines": 398
   },
   "server-plugin/obligation-calendar.mjs": {
    "system": "base_holdings",
@@ -26493,7 +26525,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 367
+   "lines": 369
   },
   "server-plugin/quest-board.mjs": {
    "system": "sim_society",
@@ -27579,7 +27611,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 736
+   "lines": 786
   },
   "server-plugin/subjective-view.mjs": {
    "system": "base_npc_decision",
@@ -27712,7 +27744,7 @@
     "regions"
    ],
    "worldDirs": [],
-   "lines": 228
+   "lines": 234
   },
   "server-plugin/training.mjs": {
    "system": "sim_character",
@@ -28636,7 +28668,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 287
+   "lines": 294
   },
   "server-plugin/world-registry.mjs": {
    "system": "kernel_storage",

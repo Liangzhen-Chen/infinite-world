@@ -1,5 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
-import {recordsMemo,recordsWhere,recordEntriesWhere} from './storage.mjs';
+import {recordsMemo,recordsWhere,recordEntriesWhere,stateMemo} from './storage.mjs';
 import {aliveHoldings,holdingsView,holdingSet,declareHoldingWriter} from './holdings.mjs';
 declareHoldingWriter('facility-state');
 import {workstationFee} from './workstation-services.mjs';
@@ -112,7 +112,13 @@ export function within(engine,state,id,location){
 }
 // Existing routes stay authoritative for topology. Building a bridge or road
 // binds its physical condition/capacity to that edge, including all planners.
+// Route factor/capacity read physical condition only. Fees, bookings and the
+// current minute affect workstation quotes, not these two route quantities.
+const routeStateInputs=[['buildings'],['created'],{path:['records'],categories:['facility_region']}];
 export function facilityRouteStates(engine,state){
+ return stateMemo(state,engine,[facilityRouteStates],()=>readFacilityRouteStates(engine,state),routeStateInputs);
+}
+function readFacilityRouteStates(engine,state){
  const out=new Map();if(!state)return out;
  const rebuilt=recordsMemo(state.created,rebuildCatalog,()=>Object.values(state.created??{}).filter(b=>b.rebuiltFrom));
  const replaced=new Set(rebuilt.filter(b=>state.buildings?.[b.id]).map(b=>b.rebuiltFrom));

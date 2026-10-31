@@ -78,14 +78,21 @@ function obligationGifts(engine,before,after){
     return rows;
 }
 
-// Credit contracts (loan, partnership) that went into default during this call:
+// Clock producers and the legacy call-level adapter use the same default:
 // the debtor breached against the creditor (the bank's keeper for a bank).
+export function creditBreachEvent(id,row,location){
+    return {verb:'breach',actor:row.debtor,target:row.keeper??row.creditor,value:row.defaulted.remaining,location:row.location??location,minute:row.defaulted.minute,
+        witnesses:[],tags:['contract','breach','debt',row.kind],source:{debt:id},...(row.defaulted.case?{case:row.defaulted.case}:{}),key:`debt:${id}:breach`};
+}
 function creditBreaches(before,after){
     const rows=[];
     for(const [id,r]of Object.entries(after.records??{})){
         if(r.category!=='debt'||!r.defaulted||before.records?.[id]?.defaulted)continue;
-        rows.push({verb:'breach',actor:r.debtor,target:r.keeper??r.creditor,value:r.defaulted.remaining,location:r.location??after.location,minute:r.defaulted.minute,
-            witnesses:[],tags:['contract','breach','debt',r.kind],source:{debt:id},...(r.defaulted.case?{case:r.defaulted.case}:{}),key:`debt:${id}:breach`});
+        const event=creditBreachEvent(id,r,after.location);
+        // Clock producers publish at the default tick. Keep the legacy
+        // before/after adapter only for debts without that settled event.
+        if(after.records[`world_event:${event.key}`]?.category==='world_event')continue;
+        rows.push(event);
     }
     return rows;
 }

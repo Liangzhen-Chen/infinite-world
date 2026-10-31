@@ -327,7 +327,9 @@ const housingDue=state=>[...recordsWhere(state.records,'category','housing_appli
 export function nextHousingMinute(state,now){return Math.min(Infinity,...housingDue(state).filter(m=>m>now));}
 export function advanceHousing(d,engine,{after}){
     for(let guard=0;guard<10000;guard++){
-        const rows=Object.values(d.get('state','records')??{}).filter(r=>r.category==='housing_application'&&r.status==='待管事办理'&&r.due<=after||r.category==='housing_permit'&&r.status!=='已收回'&&r.rentDue<=after)
+        const records=d.get('state','records')??{},due=r=>r.category==='housing_application'&&r.status==='待管事办理'&&r.due<=after||r.category==='housing_permit'&&r.status!=='已收回'&&r.rentDue<=after;
+        const candidates=[...recordsWhere(records,'category','housing_application'),...recordsWhere(records,'category','housing_permit')].filter(due);
+        const rows=(candidates.length>1?Object.values(records).filter(due):candidates)
             .sort((a,b)=>(a.due??a.rentDue)-(b.due??b.rentDue)||a.id.localeCompare(b.id));
         if(!rows.length)return;
         const r=rows[0];

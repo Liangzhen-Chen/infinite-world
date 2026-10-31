@@ -567,12 +567,18 @@ function review(d,engine,row,at){
     else holdingSet(d,null,path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]},'governance');
 }
 const dueAt=r=>r.category==='governance_application'?r.due:Math.min(r.nextReview,r.until);
-const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任');
+const scheduled=(state,after)=>{
+ const eligible=r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任';
+ const due=r=>eligible(r)&&dueAt(r)<=after;
+ const candidates=[...recordsWhere(state.records,'category','governance_application'),...recordsWhere(state.records,'category','governance_office')].filter(due);
+ // Multiple due rows retain the original enumeration order before stable sorting.
+ return candidates.length>1?Object.values(state.records??{}).filter(due):candidates;
+};
 export function nextOfficeMinute(state,now){return Math.min(Infinity,...[...recordsWhere(state.records,'category','governance_application'),...recordsWhere(state.records,'category','governance_office')].filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任').map(dueAt).filter(m=>m>now),...recordsWhere(state.records,'category','governance_vacancy').filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due>now).map(r=>r.due));}
 export function advanceOffices(d,engine,{after}){
     consumeOfficeVacancies(d,engine,after);
     for(;;){
-        const rows=scheduled(d.get('state')).filter(r=>dueAt(r)<=after).sort((a,b)=>dueAt(a)-dueAt(b)||a.id.localeCompare(b.id));
+        const rows=scheduled(d.get('state'),after).sort((a,b)=>dueAt(a)-dueAt(b)||a.id.localeCompare(b.id));
         if(!rows.length){consumeOfficeVacancies(d,engine,after);return;}
         const r=rows[0];
         if(r.category==='governance_application')decide(d,engine,r,r.due);else review(d,engine,r,dueAt(r));

@@ -64,7 +64,10 @@ test('native noon boundary settles before afternoon income and stock; a daytime 
   f.e.advance(d,DAY-780,`midnight:${late}`);
   assert.equal(d.get('state','npcs',owner,'location'),home);
   assert.deepEqual(visits(d).filter(v=>v.outcome==='bought'),noon);
-  assert.equal(f.e.quantity(d,buyer,item)>0,!late);
+  // K15: the midnight meal can consume the noon purchase. Preserve the
+  // original timing/ownership assertion by counting stock plus actual meals.
+  const eaten=Object.values(d.get('state','family','meals')??{}).flatMap(r=>r.consumed).filter(r=>r.holder===buyer&&r.item===item).reduce((n,r)=>n+r.quantity,0);
+  assert.equal(f.e.quantity(d,buyer,item)+eaten>0,!late);
  }
 });
 

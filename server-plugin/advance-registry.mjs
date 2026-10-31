@@ -39,7 +39,8 @@ import {advanceBosses}from'./bosses.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
 import {advanceNpcAutonomy,nextNpcAutonomyMinute,catchUpFurnaces}from'./npc-autonomy.mjs';
 import {magicEffect}from'./magic-effects.mjs';
-import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
+import {advanceNpcLife,nextNpcLifeMinute,advanceHouseholdMeals}from'./npc-life.mjs';
+import {toRational} from './det-math.mjs';
 import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects,effectTable}from'./effects.mjs';
@@ -388,16 +389,26 @@ const systems=[
       advanceForestWater(d,e,day);
       advanceHook('advanceMineralStocks')?.(d,e,(day+1)*1440);
       advanceHook('advanceSiteStocks')?.(d,e,(day+1)*1440);
+      const publicMeals=new Map();
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
-        if(source.granary===false)continue;// public money only, no public granary (D1 town ledger)
+        if(source.granary===false)continue;// public money only, no public granary (D1 town ledger): no daily settlement ration; residents' households still eat their own stock
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
         const production=farming?0:accrueFoodProduction(e,d,s,sid,cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
         const missing=farming?.missingMeals??Math.max(0,s.population-available);
-        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,s.population),day);s.food=Math.max(0,available-s.population);}s.unmetMeals=(s.unmetMeals??0)+missing;
-        s.starvation=missing ? (s.starvation??0)+1 : Math.max(0,(s.starvation??0)-1);
-        if(s.starvation>=7){s.population=Math.max(0,s.population-1);s.starvation=0;d.say(`${s.name}发生饥荒死亡`);}
+        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,s.population),day);s.food=Math.max(0,available-s.population);}
+        const mouths=farming?Math.max(0,s.population-(d.get('state','records',`levy:${sid}`)?.count??0)):s.population;
+        publicMeals.set(sid,{mouths,eaten:mouths-missing,missing});
         const wood=farming?.woodProduced??harvestSettlementWood(d,e,sid,s.woodPerDay??0,(day+1)*1440);
         settleFuel(d,e,sid,s,wood,day);d.set(['state','settlements',sid],s);
+      }
+      const adjustments=advanceHouseholdMeals(d,e,day,publicMeals);
+      for(const [sid,ration] of publicMeals){
+        const s=clone(d.get('state','settlements',sid)),amount=toRational(ration.missing+(adjustments.get(sid)??0));
+        const missing=Math.max(0,Math.ceil(amount.numerator/amount.denominator));
+        s.unmetMeals=(s.unmetMeals??0)+missing;
+        s.starvation=missing?(s.starvation??0)+1:Math.max(0,(s.starvation??0)-1);
+        if(s.starvation>=7){s.population=Math.max(0,s.population-1);s.starvation=0;d.say(`${s.name}发生饥荒死亡`);}
+        d.set(['state','settlements',sid],s);
       }
       advancePets(d,e,(day+1)*1440);
       advanceWildlife(d,e,day);displaceForestWildlife(d,e,day);advanceBosses(d,e,day);

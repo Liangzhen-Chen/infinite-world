@@ -2516,7 +2516,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/advance-registry.mjs:189"
+    "dispatch": "server-plugin/advance-registry.mjs:190"
    }
   },
   {
@@ -3048,7 +3048,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:429"
+    "dispatch": "server-plugin/labor-market.mjs:432"
    }
   },
   {
@@ -3124,7 +3124,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:432"
+    "dispatch": "server-plugin/labor-market.mjs:435"
    }
   },
   {
@@ -3200,7 +3200,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:438"
+    "dispatch": "server-plugin/labor-market.mjs:441"
    }
   },
   {
@@ -3276,7 +3276,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 612,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:455"
+    "dispatch": "server-plugin/labor-market.mjs:458"
    }
   },
   {
@@ -18327,7 +18327,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 79,
     "symbol": "activities.law",
-    "dispatch": "server-plugin/employment-state.mjs:91"
+    "dispatch": "server-plugin/employment-state.mjs:94"
    }
   }
  ]

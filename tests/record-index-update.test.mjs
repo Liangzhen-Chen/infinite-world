@@ -3,6 +3,24 @@ import assert from 'node:assert/strict';
 import {PatchCursor,recordsWhere,recordEntriesWhere,recordsMemo,withRecordIndex,setRecordIndexCheck} from '../server-plugin/storage.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
 
+test('lazy buckets added after an unrelated write remain local to each record snapshot',()=>{
+    for(const entries of [false,true])for(const oldFirst of [false,true])withRecordIndex(()=>{
+        const cursor=new PatchCursor({state:{records:{contract:{category:'contract',n:1},stone:{category:'physical_feature',n:1}}}});
+        const read=(records,category)=>entries?recordEntriesWhere(records,'category',category):recordsWhere(records,'category',category);
+        const old=cursor.expose(cursor.root.state.records);
+        read(old,'contract');const contracts=read(old,'contract');
+        cursor.apply({op:'set',path:['state','records','stone','n'],value:2});
+        const current=cursor.expose(cursor.root.state.records);
+        const value=records=>{const rows=read(records,'physical_feature');return entries?rows[0][1].n:rows[0].n;};
+        // The first lookup fills a previously absent bucket. Its rows must
+        // not leak into the other version, whichever version is queried first.
+        if(oldFirst){assert.equal(value(old),1);assert.equal(value(current),2);}
+        else{assert.equal(value(current),2);assert.equal(value(old),1);}
+        assert.equal(read(old,'contract'),contracts);assert.equal(read(current,'contract'),contracts);
+        assert.equal(value(old),1);assert.equal(value(current),2);
+    });
+});
+
 test('cursor updates classification buckets without retaining derived memos',()=>{
     setRecordIndexCheck(true);
     try { withRecordIndex(()=>{

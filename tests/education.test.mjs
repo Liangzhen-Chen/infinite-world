@@ -5,11 +5,26 @@ import {educationStatistics,educationCourses} from '../server-plugin/education-s
 import {organizationState} from '../server-plugin/organization-state.mjs';
 import {personCertified} from '../server-plugin/entity-view.mjs';
 import {fixture,run,open,world,seed} from './fixtures/education.mjs';
-import {applyPatches} from '../server-plugin/storage.mjs';
+import {applyPatches,PatchCursor,withRecordIndex} from '../server-plugin/storage.mjs';
 import {scaleFixture,fixtureDraft} from '../tools/scale-bench.mjs';
 import {advanceLayerPlan} from '../server-plugin/advance-layers.mjs';
 import {settlePopulationLayers,rosterLifeState} from '../server-plugin/population.mjs';
 import {cohortRoster,expandedEducation} from '../server-plugin/education-cohorts.mjs';
+
+test('meal receipts and bag consumption preserve courses; lost teacher literacy still removes school teaching',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc);
+ withRecordIndex(()=>{
+  const read=()=>educationCourses(f.e,cursor.expose(cursor.root.state));
+  const before=read();assert.ok(before.some(c=>c.school&&c.teacher===f.teacher));
+  // Meal metadata and an empty bread bag have no effect on literacy teaching.
+  cursor.apply({op:'set',path:['state','family','meals','home'],value:{missingMeals:0}});
+  cursor.apply({op:'set',path:['state','family','mealDays','loc_hw'],value:0});
+  assert.equal(read(),before);
+  cursor.apply({op:'set',path:['state','npcs',f.teacher,'inventory'],value:{}});assert.equal(read(),before);
+  cursor.apply({op:'set',path:['state','npcs',f.teacher,'skills','skill_literacy'],value:0});
+  const changed=read();assert.ok(changed.every(c=>!c.school||c.teacher!==f.teacher));
+ });
+});
 test('开班、组织、公库雇师按实际课时离屏结算；技能与识字率从当前居民派生',async()=>{
  const f=fixture(),o=await open(f,{coins:100,wage:48});assert.equal(organizationState(f.e,f.doc.state,o.org).seat,'bld_hw_school');
  const money=f.doc.state.npcs[f.teacher].coins,treasury=organizationState(f.e,f.doc.state,o.org).treasury;

@@ -1,6 +1,6 @@
 import {temples} from './faith-catalog.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {recordsWhere,recordsMemo,recordIndexActive,canonicalEqual} from './storage.mjs';
+import {recordsWhere,recordsMemo,recordIndexActive,canonicalEqual,recordIndexCheck} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
@@ -80,6 +80,9 @@ const scheduleIgnored=new Set(scheduleIgnoredCategories);
 // course. Keep comparing all other fields, including legacy terms, clauses,
 // amendments, status, deadlines and termination/substitution facts.
 const workshopProgressFields=new Set(['attendance','attendanceThrough','shifts','workedMinutes','aggregateMinutes','paid','produced','nextWork']);
+const ignoredScheduleFields=[{category:'contract',kind:'workshop',fields:[...workshopProgressFields]}];
+const scheduleRecordDependencies={ignoreCategories:scheduleIgnoredCategories,ignoreFields:ignoredScheduleFields};
+const scheduleRecordInput=r=>r.category==='contract'&&r.kind==='workshop'?Object.fromEntries(Object.entries(r).filter(([key])=>!workshopProgressFields.has(key))):r;
 function sameScheduleRecord(a,b){
  if(a===b)return true;
  if(a?.category!=='contract'||b?.category!=='contract'||a.kind!=='workshop'||b.kind!=='workshop')return false;
@@ -92,7 +95,14 @@ const reservationInputs=s=>recordsMemo(s.obligations,scheduleReservations,()=>['
 // recipes; changed employment still invalidates through its contract record.
 export function sameScheduleInputs(a,b){
  if(a&&a===b)return true;
- if(Object.keys(a).length!==Object.keys(b).length||Object.keys(a).some(k=>!['minute','scheduler','records','obligations','npcObligationClock','npcCognition'].includes(k)&&a[k]!==b[k]))return false;
+ if(Object.keys(a).filter(k=>k!=='family').length!==Object.keys(b).filter(k=>k!=='family').length||Object.keys(a).some(k=>!['minute','scheduler','records','obligations','npcObligationClock','npcCognition','family'].includes(k)&&a[k]!==b[k]))return false;
+ // Meal receipts and their settlement watermark never change a routine or
+ // course. Household membership, illnesses, births and all other family facts do.
+ if(a.family!==b.family){
+  const relevant=f=>Object.keys(f??{}).filter(k=>k!=='meals'&&k!=='mealDays');
+  const x=relevant(a.family),y=relevant(b.family);
+  if(x.length!==y.length||x.some(k=>a.family[k]!==b.family?.[k]))return false;
+ }
  if(a.obligations!==b.obligations){
   const x=reservationInputs(a),y=reservationInputs(b);
   if(x.length!==y.length||x.some((r,i)=>r!==y[i]))return false;
@@ -101,7 +111,7 @@ export function sameScheduleInputs(a,b){
   for(const job of recordsWhere(b.records,'kind','workshop'))if(job.serviceObligation&&a.obligations?.[job.serviceObligation]!==b.obligations?.[job.serviceObligation])return false;
  }
  if(a.records===b.records)return true;
- const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnored.has(r.category)),scheduleIgnoredCategories);
+ const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnored.has(r.category)).map(([id,r])=>[id,scheduleRecordInput(r)]),scheduleRecordDependencies);
  const x=rows(a),y=rows(b);
  return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&sameScheduleRecord(row,y[i][1]));
 }
@@ -110,7 +120,7 @@ registerAdvanceHook('sameScheduleInputs',sameScheduleInputs);
 // skills or legal state. Those remain live inputs to every course derivation.
 const emptyCreated=Object.freeze({});
 const advanceCourses=new WeakMap();
-const courseUnchangedNpcFields=new Set(['activity','coins','scheduleTravel','cognitionTravel','cognition','memoryStream','developments','growth']);
+const courseUnchangedNpcFields=new Set(['activity','coins','inventory','scheduleTravel','cognitionTravel','cognition','memoryStream','developments','growth']);
 function sameCourseInputs(e,a,b){
  if(a&&a===b)return true;
  if(!sameScheduleInputs({...a,npcs:b.npcs},b))return false;
@@ -180,7 +190,12 @@ export function educationCourses(e,s){
  if(e.educationCourseContext)return e.educationCourseContext;
  if(recordIndexActive()){
   const previous=advanceCourses.get(e);
-  if(previous&&s.minute>=previous.state.minute&&s.minute<previous.until&&sameCourseInputs(e,previous.state,s)){previous.state=s;return previous.courses;}
+  if(previous&&s.minute>=previous.state.minute&&s.minute<previous.until&&sameCourseInputs(e,previous.state,s)){
+   if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(previous.courses,deriveEducationCourses(e,s))){
+    recordIndexCheck.violations.push('education courses');throw Error('education course cache mismatch');
+   }
+   previous.state=s;return previous.courses;
+  }
   const courses=deriveEducationCourses(e,s);advanceCourses.set(e,{state:s,courses,until:courseCacheUntil(s)});return courses;
  }
  const memo=e.educationCourseMemo;if(!memo||!s||typeof s!=='object')return deriveEducationCourses(e,s);
