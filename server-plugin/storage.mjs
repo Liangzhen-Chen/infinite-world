@@ -211,6 +211,7 @@ function updateRecordGroups(cache, records, id, previous, fields, path) {
         if (!hit.groups) { next.set(name, {groups:null}); continue; }
         const oldKey = fields[field], newKey = row?.[field];
         if (exists && row === previous && oldKey === newKey) {next.set(name,hit);continue;}
+        if (!hit.groups.has(oldKey) && !hit.groups.has(newKey)) {next.set(name,{groups:hit.groups});continue;}
         const groups = new Map(hit.groups);
         if (previous !== undefined && groups.has(oldKey)) {
             const rows = groups.get(oldKey) ?? NO_ROWS;
@@ -362,7 +363,9 @@ function recordGroups(records, field, entries, value) {
     const hit = cache.get(name);
     if (hit?.groups?.has(value)) return hit.groups;
     if (!hit) { cache.set(name, { groups: null }); return null; }
-    const groups = hit.groups ?? new Map(), rows=[];
+    // Versions may share completed buckets. Extending a lazy classification
+    // must replace this version's map, never fill a bucket in an old snapshot.
+    const groups = new Map(hit.groups ?? []), rows=[];
     for (const entry of Object.entries(records)) {
         if(entry[1]?.[field]===value)rows.push(entries ? entry : entry[1]);
     }
