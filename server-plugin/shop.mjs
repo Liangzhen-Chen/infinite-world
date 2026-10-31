@@ -411,7 +411,14 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
     }
     if(entry.added)return {...entry,reason:'实际到站提货；货款和运费沿原交易与运单结算'};
     if(receiveOnly||want<=0)return null;
-    const view=ctx.view=keeperView(d,engine,shop.keeper,minute);
+    // All rows of one counter share the same observation until a real write.
+    // The cursor revision invalidates it after a purchase or shipment receipt.
+    const revision=d.cursor?.revision;
+    if(!ctx.onSite||!Number.isSafeInteger(revision)||ctx.viewRevision!==revision||!ctx.view){
+        ctx.view=ctx.onSite?subjectiveView(engine,d.document,shop.keeper):keeperView(d,engine,shop.keeper,minute);
+        ctx.viewRevision=revision;
+    }
+    const view=ctx.view;
     // A received offer is not omniscient access to distant inventory. This
     // consumer can buy only after its holder has actually brought it here.
     const offers=Object.values(view.knowledge.facts).filter(f=>f.kind!=='belief').map(f=>{
@@ -529,10 +536,15 @@ function repriceShop(d,engine,shop,minute,entries,ctx){
     d.set(['state','records',`shop_pricing:${shop.keeper}`],pricingRecord({category:'shop_pricing',shop:shop.id,keeper:shop.keeper,markup,previous:shop.markup,standard,minute,
         sourceEvent:`shop:${shop.id}:${minute}`,basis:{paidCopper:paid,referenceCopper:reference},decision:{outcome:decision.outcome,trace:decision.trace}}));
 }
-function restockShop(d,engine,shop,minute,{receiveOnly=false}={}){
+function restockShop(d,engine,shop,minute,{receiveOnly=false,onSite=false}={}){
     const keeper=d.get('state','npcs',shop.keeper)??d.get('state','creatures',shop.keeper);
     if(!isEffective(engine,d,shop.keeper)||!keeper||['濒死'].includes(keeper.status))return;
-    const ctx={},entries=shop.restock.map(row=>receiveOnly?(row.source==='route'?receivedRouteStock(d,engine,shop,row,minute,0,ctx,{receiveOnly:true}):null):restockRow(d,engine,shop,row,minute,ctx)).filter(Boolean);
+    const ctx={onSite},entries=shop.restock.map(row=>{
+        if(!receiveOnly)return restockRow(d,engine,shop,row,minute,ctx);
+        if(row.source!=='route')return null;
+        if(onSite)return restockRow(d,engine,shop,row,minute,ctx);
+        return receivedRouteStock(d,engine,shop,row,minute,0,ctx,{receiveOnly:true});
+    }).filter(entry=>entry&&(!onSite||entry.added>0));
     // The wages of the hands he already employs are backed from the counter for the days until his next cycle.
     if(!receiveOnly&&d.get('state','npcs',shop.keeper)){
         const bill=recordsWhere(d.get('state','records'),'kind','workshop').filter(r=>r.laborMarket===1&&r.owner===shop.keeper&&employmentActive(r)).reduce((n,r)=>n+r.wage,0);
@@ -548,10 +560,11 @@ function restockShop(d,engine,shop,minute,{receiveOnly=false}={}){
 // a cycle day; each boundary inside (before,after] is settled once, in order.
 export function advanceShops(d,engine,before,after){
     // At noon a physically present recipient may collect already-arrived K12
-    // goods before offering them. Receipt is distinct from the restock cycle.
+    // goods or buy a known on-site lot before serving customers. Neither a
+    // cycle date nor a quoted distant shipment creates physical stock.
     if(Math.floor((before-720)/DAY)<Math.floor((after-720)/DAY)){
         const minute=Math.floor((after-720)/DAY)*DAY+720;
-        for(const shop of currentShops(engine,d.get('state')))restockShop(d,engine,shop,minute,{receiveOnly:true});
+        for(const shop of currentShops(engine,d.get('state')))restockShop(d,engine,shop,minute,{receiveOnly:true,onSite:true});
     }
     // Consumers settle at noon; dated restocking remains at midnight.
     advanceCustomerFlow(d,engine,before,after);

@@ -2082,7 +2082,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 2630,
+   "lines": 2658,
    "stateWrites": [
     "npcs",
     "records",
@@ -2319,7 +2319,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 7221,
+   "lines": 7234,
    "stateWrites": [
     "crafted",
     "npcs",
@@ -14917,6 +14917,7 @@
    "server-plugin/engine.mjs",
    "server-plugin/facility-state.mjs",
    "server-plugin/finance-assets.mjs",
+   "server-plugin/remote-generation.mjs",
    "server-plugin/weather.mjs"
   ],
   "death": [
@@ -17744,6 +17745,7 @@
       "server-plugin/finance-assets.mjs",
       "server-plugin/household-budget.mjs",
       "server-plugin/market.mjs",
+      "server-plugin/remote-generation.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
       "server-plugin/valuation.mjs"
@@ -17751,7 +17753,8 @@
      "systems": [
       "base_standing",
       "sim_boss",
-      "sim_economy"
+      "sim_economy",
+      "sim_environment"
      ]
     },
     {
@@ -19060,8 +19063,7 @@
     "content": "faction",
     "file": "world/lore/factions.json",
     "fields": [
-     "descriptionVisibility",
-     "offers"
+     "descriptionVisibility"
     ]
    },
    {
@@ -26707,6 +26709,7 @@
     "ecology"
    ],
    "rules": [
+    "calendar",
     "economy",
     "equipment",
     "governance",
@@ -26733,7 +26736,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 878
+   "lines": 906
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
@@ -27350,7 +27353,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 615
+   "lines": 628
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",

@@ -199,6 +199,23 @@ test('无人带货时补货周期不凭空进口、不扣钱；未到场报价�
  assert.match(d.get('state','records',`shop:${f.shop.id}`).entries[0].reason,/没有已到场/);
 });
 
+test('正午接货复用在场报价；实际睡眠、缺席或未收到报价的掌柜不会被代为唤醒采购',()=>{
+ for(const unavailable of [null,'sleep','absent','unknown']){
+  const f=fixture();f.doc.state.minute=DAY+720;
+  f.doc.state.npcs[seller].inventory={[item]:7};
+  f.doc.state.npcs[owner].memoryStream=unavailable==='unknown'?[]:[{id:'noon-offer',minute:0,kind:'knowledge',value:{seller,item,quantity:2,unitPrice:1,at:0,expires:10*DAY,location:place}}];
+  if(unavailable==='sleep')f.doc.state.npcs[owner].activity='睡眠';
+  if(unavailable==='absent')f.doc.state.npcs[owner].location='loc_bs';
+  const d=f.sync();advanceShops(d,f.e,DAY+719,DAY+720);
+  // 手算：有效报价2份×1铜，7→5、0→2、100→98；其余三种均无交易。
+  const bought=unavailable?0:2;
+  assert.equal(f.e.quantity(d,owner,item),bought);
+  assert.equal(f.e.quantity(d,seller,item),7-bought);
+  assert.equal(d.get('state','npcs',owner,'coins'),100-bought);
+  assert.equal(d.get('state','npcs',seller,'coins'),bought);
+ }
+});
+
 test('到场行商的有效报价沿真实钱货交易补货；不能重复吃同一报价额度',()=>{
  const f=fixture();
  f.doc.state.npcs[seller].inventory={[item]:7};

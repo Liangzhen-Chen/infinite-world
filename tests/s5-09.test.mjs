@@ -170,7 +170,9 @@ test('first arrival borrows private stock once; repeated entry preserves money, 
  // Their actual stock is 4+3+5 + 3+4+6 + 2+2+2+6 = 37 units.
  assert.equal(ids.reduce((n,id)=>n+first.document.state.npcs[id].coins,0),925);
  assert.equal(ids.reduce((n,id)=>n+Object.values(first.document.state.npcs[id].inventory).reduce((s,v)=>s+(v.quantity??v),0),0),37);
- assert.equal(record.skeleton.census.rostered,2132);
+ // The six settlements have 3+2+2+0+1+1 road-stocked shops, one supplier each:
+ // 2132 existing residents + 9 physical suppliers = 2141; pending quotas stay unchanged.
+ assert.equal(record.skeleton.census.rostered,2141);
  for(const id of ids)assert.deepEqual(first.document.state.npcs[id].materialized,{county,settlement:sid});
  const aggregate=first.document.state.records[`remote-stock:${sid}`];
  assert.equal(aggregate.coins,0);assert.ok(Object.values(aggregate.inventory).every(n=>n===0));
@@ -185,7 +187,7 @@ test('first arrival borrows private stock once; repeated entry preserves money, 
   }
  }
  assert.deepEqual(Object.fromEntries(Object.entries(doc.ledger.flows).filter(([key])=>key.startsWith('src:genesis|')&&key.endsWith('|remote'))),genesis);
- assert.equal(doc.state.remote[county].skeleton.census.rostered,2132);
+ assert.equal(doc.state.remote[county].skeleton.census.rostered,2141);
  assert.equal(ids.reduce((n,id)=>n+doc.state.npcs[id].coins,0),925);
  assert.equal(ids.reduce((n,id)=>n+Object.values(doc.state.npcs[id].inventory).reduce((s,v)=>s+(v.quantity??v),0),0),37);
  books(engine.scoped(doc),doc);
@@ -231,7 +233,7 @@ test('three native county round trips merge actual ownership shares without a se
   assert.deepEqual(conservation(f.engine.scoped(back.document),doc,back.document),[]);doc=back.document;
   assert.equal(doc.state.npcs[keeper].materialized.folded,undefined);
   assert.deepEqual(doc.state.records[stockKey].members,{});assert.equal(doc.state.records[stockKey].coins,0);
-  assert.equal(doc.state.remote.county_hanlu_tongji.skeleton.census.rostered,2132);
+  assert.equal(doc.state.remote.county_hanlu_tongji.skeleton.census.rostered,2141);
   assert.deepEqual(remoteGenesis(doc),genesis);books(f.engine.scoped(doc),doc);
  }
 });
@@ -247,12 +249,20 @@ test('a keeper that a memory refers to stays individual on departure; unreferenc
  assert.equal(doc.state.npcs[keeper].materialized.folded,undefined);
  assert.equal(doc.state.npcs[keeper].coins,kept);assert.equal(row.members[keeper],undefined);
  assert.equal(doc.state.npcs[other].materialized.folded,true);assert.equal(doc.state.npcs[other].coins,0);
- assert.equal(row.members[other].coins,268);
+ // At day 2 noon the merchant buys 3 flax cords at10, 4 candles at4 and
+ // 6 wool yarn at3: 30+16+18=64 copper, no freight/duty for an on-site lot.
+ // Its opening268 becomes204; the supplier owns the same64, even while folded.
+ const otherKept=268-64,supplier=doc.state.remote.county_hanlu_tongji.skeleton.people.find(p=>p.consignment?.keeper===other).id;
+ assert.equal(paidBy(doc,other),64);
+ assert.equal(row.members[other].coins,otherKept);
+ assert.equal(row.members[supplier].coins,64);
+ assert.deepEqual(row.members[supplier].inventory,{});
  assert.equal(doc.ledger.accounts[`${keeper}|coin_river|purse`],kept);
  assert.equal(doc.ledger.accounts['loc_far_tongji|coin_river|aggregate'],row.coins);
  books(f.engine.scoped(doc),doc);
  const back=await act(f.engine,doc,'world_move',{destination:'loc_far_tongji'},'s509-memory-back');
- assert.equal(back.document.state.npcs[keeper].coins,kept);assert.equal(back.document.state.npcs[other].coins,268);
+ assert.equal(back.document.state.npcs[keeper].coins,kept);assert.equal(back.document.state.npcs[other].coins,otherKept);
+ assert.equal(back.document.state.npcs[supplier].coins,64);assert.deepEqual(back.document.state.npcs[supplier].inventory,{});
  assert.deepEqual(back.document.state.records[stockKey].members,{});books(f.engine.scoped(back.document),back.document);
 });
 
@@ -300,6 +310,18 @@ test('three statistics downgrades restore the same roster, purse and stock on pr
  let doc=(await act(f.engine,f.document,'world_move',{destination:district},'expand-district')).document;
  const roster=Object.values(doc.state.created).filter(p=>p.generated==='population'&&p.home?.district===district);
  assert.ok(roster.length>0);
+ // Every materialized county actor, including all nine suppliers, retains its
+ // exact purse and bag in either representation; no travel clock crosses noon.
+ const ownership=Object.fromEntries(Object.entries(doc.state.npcs).filter(([,n])=>n.materialized?.county===county).map(([id,n])=>[id,{coins:n.coins,inventory:structuredClone(n.inventory)}]));
+ const profiles=structuredClone(doc.state.remote[county].skeleton.profiles);
+ const exactOwnership=state=>{
+  for(const [id,share] of Object.entries(ownership)){
+   const n=state.npcs[id],actual=n.materialized.folded?state.records[`remote-stock:${n.materialized.settlement}`].members[id]:n;
+   assert.deepEqual({coins:actual.coins,inventory:actual.inventory},share,`exact ownership: ${id}`);
+  }
+  assert.deepEqual(state.remote[county].skeleton.profiles,profiles);
+ };
+ assert.equal(Object.keys(ownership).filter(id=>doc.state.remote[county].skeleton.people.find(p=>p.id===id)?.remoteRole==='supplier').length,9);
  for(let i=0;i<3;i++){
   // Inter-province travel history is not examined here (the separate test
   // above walks actual routes). Declare only location; the production action
@@ -309,16 +331,17 @@ test('three statistics downgrades restore the same roster, purse and stock on pr
   doc=(await act(f.engine,doc,'world_time',{minutes:1},`lower:${i}`)).document;
   assert.equal(doc.state.population[sid].districts[district].compacted,true);
   assert.equal(doc.state.records[stockKey].members[keeper].coins,372);
-  // Native seat census: 1173 pending +15 registered =1188. Expanded and
+  exactOwnership(doc.state);
+  // Native seat census: 1173 pending +15 existing registered +3 suppliers =1191. Expanded and
   // compacted residents are counted once in the same pending quota1173.
   assert.equal(doc.state.population[sid].remaining.population+Object.values(doc.state.population[sid].districts).reduce((n,d)=>n+d.people,0),1173);
-  assert.equal(doc.state.remote[county].skeleton.profiles[0].population,1188);
+  assert.equal(doc.state.remote[county].skeleton.profiles[0].population,1191);
   doc=premise(f.engine.scoped(doc),doc,{location:district});
   doc=(await act(f.engine,doc,'world_time',{minutes:1},`raise:${i}`)).document;
   assert.equal(doc.state.population[sid].districts[district].compacted,undefined);
   assert.deepEqual(Object.values(doc.state.created).filter(p=>p.generated==='population'&&p.home?.district===district),roster);
   assert.equal(doc.state.npcs[keeper].coins,372);assert.equal(doc.state.npcs[keeper].inventory.item_barley_pea_stew,4);
-  assert.deepEqual(doc.state.records[stockKey].members,{});books(f.engine.scoped(doc),doc);
+  assert.deepEqual(doc.state.records[stockKey].members,{});exactOwnership(doc.state);books(f.engine.scoped(doc),doc);
  }
 });
 

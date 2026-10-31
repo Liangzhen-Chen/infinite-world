@@ -101,6 +101,15 @@ test('自动接入：派生商店与补货、交易事件、声望与立场传�
     let doc=engine.createCharacter(seed,{},'t143-systems');doc.state.location='loc_bs';
     doc=await walk(doc,['loc_far_tongji'],'s');
     const sk=doc.state.remote[TONGJI].skeleton,shop=sk.settlements[0].shops[0];
+    // K08：开局有限货源是同地行商的真实行囊，不是到集日刷库存。
+    // 手算：每种货的掌柜开架 amount + 行商(maximum-amount) = maximum。
+    const keeper=sk.people.find(p=>p.id===shop.keeper),supplier=sk.people.find(p=>p.consignment?.keeper===shop.keeper);
+    assert.ok(supplier&&doc.state.npcs[supplier.id]);
+    assert.equal(doc.state.npcs[supplier.id].location,shop.location);
+    for(const row of keeper.shopRestock){
+        assert.equal(keeper.inventory[row.item]+supplier.inventory[row.item],row.maximum);
+        assert.equal(supplier.consignment.origins[row.item],row.from);
+    }
     let overlay=engine.scoped(doc);
     // K10 shop derivation picks the keeper up by shopType; no hand registration.
     const store=shopStores(overlay.world).find(s=>s.keeper===shop.keeper);
@@ -122,6 +131,10 @@ test('自动接入：派生商店与补货、交易事件、声望与立场传�
     r=await engine.reduce(doc,{tool:'world_time',args:{minutes:1440*2},eventId:'s-days'});doc=applyPatches(doc,r.patches);
     const ledger=doc.state.records[`shop:${store.id}`];
     assert.ok(ledger.entries.some(e=>e.source==='route'&&e.from&&e.added>0),JSON.stringify(ledger.entries));
+    for(const row of keeper.shopRestock){
+        const delivered=ledger.entries.filter(e=>e.item===row.item&&e.from===supplier.id).reduce((n,e)=>n+e.added,0);
+        assert.ok(delivered<=supplier.inventory[row.item]);
+    }
     // K4 standing: what is done to a member reaches the generated settlement.
     overlay=engine.scoped(doc);
     assert.ok(collectivesOf(overlay,doc.state,shop.keeper).some(c=>c.holder===sk.seat));
