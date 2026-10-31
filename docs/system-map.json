@@ -877,7 +877,7 @@
     "server-plugin/compat/v2-phase1-engine.mjs",
     "server-plugin/legacy/core.js"
    ],
-   "lines": 1927,
+   "lines": 1930,
    "stateWrites": [
     "checks",
     "crafted",
@@ -1534,7 +1534,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 4840,
+   "lines": 4845,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -2530,7 +2530,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 6437,
+   "lines": 6443,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -21945,7 +21945,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 175
+   "lines": 181
   },
   "server-plugin/faction-clock.mjs": {
    "system": "sim_clock",
@@ -24949,7 +24949,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 186
+   "lines": 191
   },
   "server-plugin/npc-crime.mjs": {
    "system": "sim_law",
@@ -27605,7 +27605,7 @@
    "rules": [],
    "world": [],
    "worldDirs": [],
-   "lines": 783
+   "lines": 786
   },
   "server-plugin/subjective-view.mjs": {
    "system": "base_npc_decision",
