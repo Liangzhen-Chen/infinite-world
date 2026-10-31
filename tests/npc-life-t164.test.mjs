@@ -200,7 +200,8 @@ test('名册家人在照护、离世、迁居需要时进入状态：配偶照�
  d.engine.rules.npcLife.health.bands=structuredClone(quiet.bands);
  // 依 04 §4.4 遗产分配在阶段期限后
  await wait(d,4*DAY,'estate-phases');
- assert.equal(family(d).deaths[death.id].estate.heir,husband);assert.equal(npc(d,husband).coins,40);
+ // 手算：死亡时 estate 收到 40，程序完整分给邵禾；FXM 共用田间分钟后，他依实际农忙播种缺工雇工，合同日薪 30 铜，通勤后实做 432/480 分钟，工资 ceil(30×432/480)=27，故查账时余额为 40−27=13。
+ assert.equal(family(d).deaths[death.id].estate.heir,husband);assert.equal(family(d).deaths[death.id].estate.coins,40);assert.equal(family(d).deaths[death.id].estate.allocations[0].coins,40);assert.equal(npc(d,husband).coins,13);
  for(const id of ['npc_hw_shaoyun','npc_hw_shaoyu'])assert.equal(npc(d,id)?.life?.kind,'roster',id);
  // A mother leaving for a living takes her young child; the full adult spouse decides alone.
  const parent='npc_hw_shijin',kid='npc_hw_luoxing';
