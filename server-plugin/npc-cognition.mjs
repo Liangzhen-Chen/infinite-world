@@ -114,10 +114,15 @@ export function settleNpcReflection(d,engine,npcId,now){
  const guarded=Object.values(effects??{}).some(e=>e.kind==='mind_space'&&e.operation==='memory_guard'&&e.target===npcId);
  if(!guarded&&prior?.old===old&&prior.stream===stream&&now>=prior.minute&&now<prior.until)return;
  const cacheable=scope&&!guarded&&!stream.some(row=>row.participants?.includes('player'));
- const next=clone(old);next.blurred??={};next.reflections??=[];
+ // Most clock ticks neither blur a memory nor add a reflection. Delay the
+ // copy until a real change; old cognition and the evidence stream stay read-only.
+ let next=old;
+ const edit=()=>{if(next===old)next=clone(old);return next;};
+ if(next.blurred==null)edit().blurred={};
+ if(next.reflections==null)edit().reflections=[];
  for(const memory of stream){
   const ttl=({1:7,2:30,3:90})[memory.salience];if(!ttl||now<memoryBlurMinute(d,npcId,memory,ttl,now)||next.blurred[memory.id])continue;
-  next.blurred[memory.id]={minute:memory.minute+ttl*DAY,content:`记得${memory.kind==='trade'?'曾有财物往来':memory.kind==='learn'?'曾有学习经历':'曾发生过一件事'}，细节已经模糊。`};
+  edit().blurred[memory.id]={minute:memory.minute+ttl*DAY,content:`记得${memory.kind==='trade'?'曾有财物往来':memory.kind==='learn'?'曾有学习经历':'曾发生过一件事'}，细节已经模糊。`};
  }
  const player=stream.filter(row=>row.participants?.includes('player')&&row.minute<=now&&['亲历','目击','约定核对'].includes(row.sourceType));
  const payments=player.filter(row=>['trade','debt'].includes(row.kind)&&(row.payer===undefined||row.payer==='player')&&/支付|偿还/.test(row.content)),breaches=player.filter(row=>/违约|逾期|偷取/.test(row.content));
@@ -126,9 +131,9 @@ export function settleNpcReflection(d,engine,npcId,now){
   const state=d.get('state'),unpaid=obligationRows(state).filter(r=>r.debtor==='player'&&r.creditor===npcId&&obligationView(state,r,now).overdueCount>0).map(r=>[r.id,r]);
   const caution=Boolean(bad||unpaid.length),evidence=[...new Set([...(bad?[...payments.slice(-3),bad]:payments.slice(-3)).map(row=>row.id),...unpaid.map(([id])=>id)])];
   const reflection={id:`reflection_${key(npcId,evidence)}`,minute:Math.max(bad?.minute??0,latest.minute,...unpaid.map(([,r])=>r.overdueAt??r.deadline)),about:'player',content:caution?'近期付款没有抹去失信经历或未清欠款，我仍怀疑他能否按约付清。':'几次付款都实际发生，我对他按约结款比较放心。',sourceType:'反思',certainty:'个人判断，可被新证据推翻',evidence};
-  if(!next.reflections.some(row=>row.id===reflection.id))next.reflections.push(reflection);
+  if(!next.reflections.some(row=>row.id===reflection.id))edit().reflections.push(reflection);
  }
- if(JSON.stringify(old)!==JSON.stringify(next))d.set(['state','npcs',npcId,'cognition'],next);
+ if(next!==old&&JSON.stringify(old)!==JSON.stringify(next))d.set(['state','npcs',npcId,'cognition'],next);
  if(cacheable){
   const current=typeof d.peek==='function'?d.peek('state','npcs',npcId):d.get('state','npcs',npcId);
   let until=Infinity;

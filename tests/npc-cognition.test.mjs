@@ -7,6 +7,21 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {shareNpcMemory,advanceNpcCognition,settleNpcReflection,npcCognitionView,nextNpcCognitionMinute} from '../server-plugin/npc-cognition.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const from='npc_hw_linsui',to='npc_hw_hezhou',third='npc_hw_ayan';
+test('复盘无变化不写补丁，七天遗忘边界只写一次且不改变旧认知或证据',async()=>{
+ // Hand anchor: minute500 + seven days ×1440 =10580. At10579 no
+ // cognition write is due; at10580 exactly one projection is added.
+ const {engine,d}=await setup(),memory=fact('deadline',{salience:1,participants:[from,third]});
+ d.set(['state','npcs',from,'memoryStream'],[memory]);
+ d.set(['state','npcs',from,'cognition'],{blurred:{},reflections:[]});
+ const old=d.document,saved=structuredClone(old),start=d.patches.length,deadline=500+7*1440;
+ settleNpcReflection(d,engine,from,deadline-1);
+ assert.equal(d.patches.length,start);assert.deepEqual(d.document,saved);
+ settleNpcReflection(d,engine,from,deadline);
+ assert.equal(d.patches.length,start+1);
+ assert.equal(d.get('state','npcs',from,'cognition','blurred','deadline','minute'),deadline);
+ assert.deepEqual(old,saved);assert.deepEqual(d.get('state','npcs',from,'memoryStream'),[memory]);
+ settleNpcReflection(d,engine,from,deadline+1);assert.equal(d.patches.length,start+1);
+});
 function draft(document){return {document,patches:[],get(...p){return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){const patch={op:'set',path,value};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);},remove(path){const patch={op:'delete',path};this.document=applyPatches(this.document,[patch]);this.patches.push(patch);}};}
 const fact=(id='seen',extra={})=>({id,sourceEvent:id,kind:'trade',minute:500,location:'bld_hw_qingdeng',participants:['player',from],content:'旅人支付12铜购买面包4份。',sourceType:'亲历',salience:3,emotion:'平静',...extra});
 async function setup(){const world=await loadWorld(),engine=new WorldEngine(world),doc=engine.initialFromLegacy(seed,'cognition-test');doc.state.minute=600;

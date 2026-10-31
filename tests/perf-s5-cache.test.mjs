@@ -5,6 +5,7 @@ import {currentEmployment} from '../server-plugin/employment-state.mjs';
 import {snapshotContractTerms} from '../server-plugin/contract-state.mjs';
 import {obligationRows} from '../server-plugin/obligation-state.mjs';
 import {personRoutine} from '../server-plugin/entity-view.mjs';
+import {facilityRouteStates} from '../server-plugin/facility-state.mjs';
 
 const document=()=>({state:{minute:0,records:{job:snapshotContractTerms({id:'job',category:'contract',kind:'workshop',worker:'a',createdAt:0,starts:0,deadline:100,wage:10,status:'有效',amendments:[{minute:20,wage:20}]})},obligations:{}}});
 
@@ -125,5 +126,28 @@ test('debt bucket preserves canonical projection suppression, order and writes',
   assert.deepEqual(obligationRows(cursor.root.state).map(r=>r.amount),[5,7]);
   cursor.apply({op:'set',path:['state','records','legacy','amount'],value:9});
   assert.deepEqual(obligationRows(cursor.root.state).map(r=>r.amount),[5,9]);
+ });
+});
+
+test('route projections survive clock/account writes and invalidate physical changes and rebuilds',()=>{
+ // Hand anchors: bridge capacity20 × factor1/.5 =20/10; remote
+ // condition100-floor(800/10)=20 is below25, so factor/capacity are0.
+ const bases=[{id:'bld_bridge',type:'bld',facilityType:'bridge',route:'road'},
+  {id:'bld_remote',type:'bld',facilityType:'road',route:'remote',generated:'remote',region:'r'}];
+ const engine={byId:new Map(bases.map(b=>[b.id,b])),rules:{}},d=new PatchCursor({state:{minute:0,created:{},records:{},buildings:{bld_bridge:{condition:100},bld_remote:{}}}});
+ const read=()=>facilityRouteStates(engine,d.root.state);
+ withRecordIndex(()=>{
+  const first=read();assert.deepEqual(first.get('road'),{factor:1,capacity:20});
+  d.apply({op:'set',path:['state','minute'],value:1440});assert.equal(read(),first);
+  d.apply({op:'set',path:['ledger','accounts','a|coin_river|purse'],value:10});assert.equal(read(),first);
+  d.apply({op:'set',path:['state','records','trade'],value:{category:'market_trade'}});assert.equal(read(),first);
+  d.apply({op:'set',path:['state','buildings','bld_bridge','condition'],value:50});
+  assert.deepEqual(read().get('road'),{factor:0.5,capacity:10});assert.equal(first.get('road').factor,1);
+  d.apply({op:'set',path:['state','records','facility_region:r'],value:{category:'facility_region',wear:{wood:800},wearDenominator:10}});
+  assert.deepEqual(read().get('remote'),{factor:0,capacity:0});
+  d.apply({op:'set',path:['state','created','bld_new'],value:{id:'bld_new',type:'bld',facilityType:'bridge',route:'road',rebuiltFrom:'bld_bridge'}});
+  d.apply({op:'set',path:['state','buildings','bld_new'],value:{condition:100}});
+  assert.deepEqual(read().get('road'),{factor:1,capacity:20});
+  d.apply({op:'set',path:['state','buildings'],value:{}});assert.equal(read().size,0);
  });
 });
