@@ -31,6 +31,7 @@ import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {householdLaborBudget} from './household-budget.mjs';
 import {householdWorkTime,agriculturalWorkforce} from './npc-state.mjs';
+import {creditBreachEvent,publishTransitionEvent} from './world-events.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
 
 const DAY=1440,rec=id=>['state','records',id],rows=s=>Object.values(s.records??{});
@@ -343,6 +344,8 @@ export function settleArrears(d,e,row,minute){
         const due=dueObligation(d.get('state'),debt.id,minute).owed;
         const legalCase=registerCreditDefault(d,e,{debt:debt.id,row:debt,value:due,minute});
         holdingSet(d,null,rec(debt.id),{...debt,status:'逾期',defaulted:{case:legalCase,minute,remaining:due}},'labor-market');
+        const event=creditBreachEvent(debt.id,d.get(...rec(debt.id)),d.get('state','location'));
+        publishTransitionEvent(d,e,{id:event.key,...event});
     }
     if(minute>=earliest+2*DAY&&employmentActive(row)){
         writeJob(d,e,{...row,status:'已辞工',endedAt:earliest+2*DAY,reason:'欠薪投诉后离职'});
