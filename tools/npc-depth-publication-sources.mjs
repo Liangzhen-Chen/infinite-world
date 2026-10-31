@@ -4,6 +4,7 @@ import path from 'node:path';
 import {hashContent} from './content-pipeline.mjs';
 import {prepareNpcDepthBatch,prepareNpcDepth,publishNpcDepth} from './publish-npc-depth.mjs';
 import {applyDepthDraft} from './npc-depth-content.mjs';
+import {applyPublishedNpcAmendments} from './npc-publication-sources.mjs';
 
 const receipts=new WeakMap();
 const same=(a,b)=>hashContent(a??null)===hashContent(b??null);
@@ -24,7 +25,7 @@ export async function readPublishedNpcDepth({world,worldRoot=path.resolve('world
  for(const relative of manifests){
   const card=await prepareNpcDepth({manifest:path.join(root,relative),worldRoot:root,world});
   for(const entry of card.entries){
-   const after=applyDepthDraft(entry.before,card.drafts.find(d=>d.id===entry.id)),current=world.npcs.find(n=>n.id===entry.id);
+   const after=applyPublishedNpcAmendments(applyDepthDraft(entry.before,card.drafts.find(d=>d.id===entry.id)),card.amendments),current=world.npcs.find(n=>n.id===entry.id);
    if(card.residence?.id===entry.id){const fields=card.residence.after;for(const key of ['settlement','householdId','household'])after[key]=structuredClone(fields[key]);after.home.location=fields.homeLocation;}
    assert.ok(same(stable(current),stable(after))&&same(current.memorySeeds.slice(0,after.memorySeeds.length),after.memorySeeds),`已发布深度补丁与当前世界不符:${entry.id}`);
    revisions.set(entry.id,{before:structuredClone(entry.before),after});
