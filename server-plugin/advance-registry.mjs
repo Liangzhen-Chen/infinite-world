@@ -391,7 +391,7 @@ const systems=[
       advanceHook('advanceSiteStocks')?.(d,e,(day+1)*1440);
       const publicMeals=new Map();
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
-        if(source.granary===false){publicMeals.set(sid,{mouths:source.population,eaten:0,missing:source.population});continue;}
+        if(source.granary===false)continue;// public money only, no public granary (D1 town ledger): no daily settlement ration; residents' households still eat their own stock
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
         const production=farming?0:accrueFoodProduction(e,d,s,sid,cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
         const missing=farming?.missingMeals??Math.max(0,s.population-available);
