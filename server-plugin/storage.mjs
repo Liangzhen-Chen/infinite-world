@@ -202,7 +202,7 @@ const recordIndexes = new WeakMap();
 const memoIgnores = Symbol('memo ignored categories');
 // Carry only classification buckets across a cursor write. Derived memos may
 // depend on any field and must be rebuilt; unrelated buckets retain identity.
-function updateRecordGroups(cache, records, id, previous, fields) {
+function updateRecordGroups(cache, records, id, previous, fields, path) {
     if (!cache) return;
     const next = new Map(), row = records[id], exists = Object.hasOwn(records, id);
     for (const field of INDEXED) for (const entries of [false, true]) {
@@ -236,9 +236,20 @@ function updateRecordGroups(cache, records, id, previous, fields) {
         next.set(name, {groups});
     }
     const ignores = cache.get(memoIgnores), retained = new Map();
-    if (ignores) for (const [key, categories] of ignores) {
-        if ((previous === undefined || categories.includes(fields.category)) && (!exists || categories.includes(row?.category))) {
-            next.set(key, cache.get(key));retained.set(key, categories);
+    if (ignores) for (const [key, dependencies] of ignores) {
+        const {categories,recordFields,includedCategories,includedKinds}=dependencies;
+        const irrelevantCategories=(previous === undefined || categories.includes(fields.category)) && (!exists || categories.includes(row?.category));
+        const reads=(category,kind)=>includedCategories?.includes(category)||includedKinds?.includes(kind);
+        const irrelevantSelection=(includedCategories||includedKinds)&&
+            (previous===undefined||!reads(fields.category,fields.kind))&&(!exists||!reads(row?.category,row?.kind));
+        const irrelevantFields=previous!==undefined&&exists&&recordFields.some(rule=>{
+            if(fields.category!==rule.category||row?.category!==rule.category||fields.kind!==rule.kind||row?.kind!==rule.kind)return false;
+            if(path.length>3)return rule.fields.includes(path[3]);
+            const keys=Object.keys(previous).filter(k=>!rule.fields.includes(k));
+            return keys.length===Object.keys(row).filter(k=>!rule.fields.includes(k)).length&&keys.every(k=>Object.hasOwn(row,k)&&canonicalEqual(previous[k],row[k]));
+        });
+        if (irrelevantCategories||irrelevantSelection||irrelevantFields) {
+            next.set(key, cache.get(key));retained.set(key, dependencies);
         }
     }
     if (retained.size) next.set(memoIgnores, retained);
@@ -250,11 +261,16 @@ let stateMemos = new WeakMap();
 const memoValue = Symbol('state memo value');
 // State-only projections also have plain read adapters as callers. Keep their
 // cache inside one indexed advance, scoped by engine and every explicit input.
-// Any cursor state write invalidates the mutable root before it can be reused.
-export function stateMemo(state, scope, inputs, build) {
+// Dependencies are state-relative paths; omitted means the whole state. A
+// record dependency may declare {path:['records'],categories:[...]} or kinds.
+// Explicit
+// query inputs remain in the key. Only unaffected groups survive cursor writes.
+export function stateMemo(state, scope, inputs, build, dependencies = null) {
     if (!recordIndexDepth || !state) return build();
-    let scopes = stateMemos.get(state);
-    if (!scopes) stateMemos.set(state, scopes = new Map());
+    let groups = stateMemos.get(state);
+    if (!groups) stateMemos.set(state, groups = new Map());
+    let scopes = groups.get(dependencies);
+    if (!scopes) groups.set(dependencies, scopes = new Map());
     let cache = scopes.get(scope);
     if (!cache) scopes.set(scope, cache = new Map());
     for (const input of inputs) {
@@ -265,6 +281,23 @@ export function stateMemo(state, scope, inputs, build) {
     if (!cache.has(memoValue)) cache.set(memoValue, build());
     else if (indexCheck && !memoEqual(cache.get(memoValue), build())) stale('state memo');
     return cache.get(memoValue);
+}
+function carryStateMemos(state, path, previousCategory, nextCategory, previousKind, nextKind) {
+    const groups=stateMemos.get(state);
+    if(!groups)return null;
+    const retained=new Map(), changed=path.slice(1);
+    for(const [dependencies,cache]of groups){
+        if(!dependencies)continue;
+        const affected=dependencies.some(dependency=>{
+            const keys=Array.isArray(dependency)?dependency:dependency.path;
+            const length=Math.min(keys.length,changed.length);
+            for(let i=0;i<length;i++)if(keys[i]!==changed[i])return false;
+            if((!dependency.categories&&!dependency.kinds)||changed.length<=keys.length)return true;
+            return dependency.categories?dependency.categories.includes(previousCategory)||dependency.categories.includes(nextCategory):dependency.kinds.includes(previousKind)||dependency.kinds.includes(nextKind);
+        });
+        if(!affected)retained.set(dependencies,cache);
+    }
+    return retained;
 }
 export const recordIndexActive = () => recordIndexDepth > 0;
 let indexCheck = process.env.FIELDS_INDEX_CHECK === '1';
@@ -338,9 +371,12 @@ function recordGroups(records, field, entries, value) {
     return groups;
 }
 // A value derived from the rows of this records object alone (and a key object such as the
-// world), built once while the index is on. Read-only. ignoreCategories is an
-// explicit dependency declaration: build must not read any of those rows.
-export function recordsMemo(records, key, build, ignoreCategories = null) {
+// world), built once while the index is on. Read-only. An array is the legacy
+// ignored-category declaration. Options can declare categories/kinds read by
+// the build (their union), or ignoreCategories/ignoreFields it never reads.
+// ignoreFields requires a projection excluding those fields;
+// terms, category/kind changes, insertions and deletions still invalidate it.
+export function recordsMemo(records, key, build, dependencies = null) {
     if (!recordIndexDepth || !records || typeof records !== 'object') return build();
     let cache = recordIndexes.get(records);
     if (!cache) { cache = new Map(); recordIndexes.set(records, cache); }
@@ -354,10 +390,11 @@ export function recordsMemo(records, key, build, ignoreCategories = null) {
     }
     const value = build();
     cache.set(key, value);
-    if (ignoreCategories) {
+    if (dependencies) {
         let ignores=cache.get(memoIgnores);
         if (!ignores) cache.set(memoIgnores, ignores=new Map());
-        ignores.set(key, ignoreCategories);
+        const options=Array.isArray(dependencies)?{ignoreCategories:dependencies}:dependencies;
+        ignores.set(key, {categories:options.ignoreCategories??[],recordFields:options.ignoreFields??[],includedCategories:options.categories,includedKinds:options.kinds});
     }
     return value;
 }
@@ -431,7 +468,7 @@ export class PatchCursor {
     }
     // clone=false only for a value the caller knows a later patch replaces.
     apply(patch, clone = true) {
-        const root = this.root, path = patch.path;
+        const root = this.root, path = patch.path, previousState=root?.state;
         if (!root || typeof root !== 'object') throw new Error('补丁路径无法解析');
         if ((patch.op !== 'set' && patch.op !== 'delete') || !Array.isArray(path) || !path.length || path.length > 12) throw new Error('补丁格式无效');
         if (path.some(key => typeof key !== 'string' || unsafe.has(key))) throw new Error('补丁含不安全路径');
@@ -448,10 +485,13 @@ export class PatchCursor {
         const recordCache = indexedRecords && recordIndexes.get(indexedRecords);
         const previousRow = indexedRecords?.[path[2]];
         const previousFields = recordCache ? {kind:previousRow?.kind, category:previousRow?.category} : null;
+        const previousCategory=path[1]==='records'?previousRow?.category:undefined;
+        const previousKind=path[1]==='records'?previousRow?.kind:undefined;
+        const nextCategory=path.length===3?(patch.op==='delete'?undefined:patch.value?.category):path[3]==='category'?(patch.op==='delete'?undefined:patch.value):previousCategory;
+        const nextKind=path.length===3?(patch.op==='delete'?undefined:patch.value?.kind):path[3]==='kind'?(patch.op==='delete'?undefined:patch.value):previousKind;
+        const retainedMemos=path[0]==='state'?carryStateMemos(root.state,path,previousCategory,nextCategory,previousKind,nextKind):null;
         if (path[0] === 'state') {
-            stateMemos.delete(root.state);
-            if (indexedRecords) recordIndexes.delete(indexedRecords);
-            else if (path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
+            if (!indexedRecords && path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
             else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);
         }
         if (recordIndexDepth && path[0] === 'ledger' && path[1] === 'accounts') recordIndexes.delete(root.ledger?.accounts);
@@ -483,7 +523,14 @@ export class PatchCursor {
         this.ownedChildren.get(target)?.delete(key);
         this.chain = { nodes, keys: path.slice(0, last) };
         this.revision++;
-        if (recordCache) updateRecordGroups(recordCache, this.root.state[path[1]], path[2], previousRow, previousFields);
+        // An exposed old subtree is immutable: its indexes/memos remain valid.
+        // Invalidate only an object actually mutated in place, then install the
+        // unaffected groups on the new root. Comparisons of old/new snapshots
+        // otherwise rebuild the same old record scan after every cursor write.
+        if(path[0]==='state'&&this.root.state===previousState)stateMemos.delete(previousState);
+        if(indexedRecords&&this.root.state[path[1]]===indexedRecords)recordIndexes.delete(indexedRecords);
+        if(retainedMemos?.size)stateMemos.set(this.root.state,retainedMemos);
+        if (recordCache) updateRecordGroups(recordCache, this.root.state[path[1]], path[2], previousRow, previousFields,path);
         return this.root;
     }
 }

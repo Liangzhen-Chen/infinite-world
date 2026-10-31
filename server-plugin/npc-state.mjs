@@ -11,17 +11,18 @@ import {facilityView} from './facility-state.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 
 const appointmentKey=id=>`service_appointment:${id}`;
+const marketTripInputs={categories:['market_trip']};
+const appointmentInputs={categories:['service_appointment']},appointmentActors=Symbol('service appointment actors');
 // One physical purchase trip is shared by scheduling, conflicts and household
 // work budgets. Service windows reserve the keeper only while serving.
 export function marketTimeWindows(state,id){
- const trips=recordsWhere(state?.records,'category','market_trip');
  const participants=recordsMemo(state?.records,marketTimeWindows,()=>{
   const out=new Map();
-  for(const row of trips)for(const id of new Set([row.actor,row.keeper])){
+  for(const row of recordsWhere(state?.records,'category','market_trip'))for(const id of new Set([row.actor,row.keeper])){
    const rows=out.get(id)??[];rows.push(row);out.set(id,rows);
   }
   return out;
- });
+ },marketTripInputs);
  return (participants.get(id)??[]).flatMap(row=>row.actor===id
   ?[{...row,start:row.departAt,end:row.returnAt}]
   :row.keeper===id?(row.serviceWindows??[]).map(s=>({...row,start:s.start,end:s.end,serving:true})):[]);
@@ -61,7 +62,14 @@ export function bookServiceAppointment(d,engine,row,{actor=row.actor}={}){
  return value;
 }
 export function serviceAppointments(state,actor){
- return recordsWhere(state?.records,'category','service_appointment').filter(r=>{
+ const participants=recordsMemo(state?.records,appointmentActors,()=>{
+  const out=new Map();
+  for(const row of recordsWhere(state?.records,'category','service_appointment')){
+   const rows=out.get(row.actor)??[];rows.push(row);out.set(row.actor,rows);
+  }
+  return out;
+ },appointmentInputs);
+ return (participants.get(actor)??[]).filter(r=>{
   const source=worldEvent(state,r.sourceEvent);
   return r.actor===actor&&state.records[`${appointmentKey(r.id)}:source`]?.digest===digest(r)&&source?.verb==='appointment_agreed'&&source.actor===actor&&r.services.includes(source.payload?.service);
  });
