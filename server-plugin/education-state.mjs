@@ -1,10 +1,10 @@
 import {temples} from './faith-catalog.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {recordsWhere,recordsMemo,recordIndexActive,canonicalEqual,recordIndexCheck} from './storage.mjs';
+import {recordsWhere,recordsMemo,stateMemo,recordIndexActive,canonicalEqual,recordIndexCheck} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
-import {npcSchedule,npcAgeAt} from './npc-state.mjs';
+import {npcSchedule,npcAgeAt,serviceAppointmentSources} from './npc-state.mjs';
 import {personConstraints} from './entity-view.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
 import {cohortSeats,expandedEducation} from './education-cohorts.mjs';
@@ -74,17 +74,31 @@ export function settleDemonstrations(d,e){
 const DAY=1440;
 const scheduleRecords=Symbol('schedule records');
 const scheduleReservations=Symbol('schedule reservations');
-const scheduleIgnoredCategories=['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge'];
-const scheduleIgnored=new Set(scheduleIgnoredCategories);
+// Union of the records actually read by routines, household work, courses,
+// legal holds, facilities, appointments and workstation capabilities.
+export const scheduleRecordDependencies={categories:['governance_office','organization','housing_steward','legal_dismissal','festival','legal_detention','legal_custody','legal_case','transition','war_disruption','title','notable','settlement_rank','market_trip','private_farm','project_assignment','education_course','education_demonstration','education_cohort','service_appointment','service_appointment_receipt','facility_region','subsistence_plan','water_cycle','physical_feature','physical_item'],kinds:['workshop','asset_lease']};
+export const isScheduleRecord=r=>Boolean(r&&(r.category!=='physical_feature'||r.state?.waterMl!==undefined)&&(scheduleRecordDependencies.categories.includes(r.category)||scheduleRecordDependencies.kinds.includes(r.kind)));
+export const isScheduleEvent=r=>r?.category==='world_event'&&r.verb==='appointment_agreed';
 // Attendance and settlement progress do not change the agreed routine or
 // course. Keep comparing all other fields, including legacy terms, clauses,
 // amendments, status, deadlines and termination/substitution facts.
 const workshopProgressFields=new Set(['attendance','attendanceThrough','shifts','workedMinutes','aggregateMinutes','paid','produced','nextWork']);
 const ignoredScheduleFields=[{category:'contract',kind:'workshop',fields:[...workshopProgressFields]}];
-const scheduleRecordDependencies={ignoreCategories:scheduleIgnoredCategories,ignoreFields:ignoredScheduleFields};
-const scheduleRecordInput=r=>r.category==='contract'&&r.kind==='workshop'?Object.fromEntries(Object.entries(r).filter(([key])=>!workshopProgressFields.has(key))):r;
+scheduleRecordDependencies.ignoreFields=ignoredScheduleFields;
+const waterRecord=r=>r?.category==='water_cycle'||r?.category==='physical_feature'&&r.state?.waterMl!==undefined;
+function scheduleRecordInput(r){
+ if(waterRecord(r)){
+  const w=r.water??r.state;
+  // Schedule duties depend on potability/availability, not the amount of
+  // safe water still in the river. Actual intake reads live volume at meals.
+  return {category:r.category,location:r.location,waterScheduleFacts:[w.waterMl>0,w.frozenUntil??0,w.pathogenRisk??0,(w.toxinUg??0)/Math.max(1,w.waterMl),(w.saltMg??0)/Math.max(1,w.waterMl)],drinking:Object.entries(r.drinking??{}).map(([id,row])=>[id,row.day,row.takenMl>0])};
+ }
+ return r?.category==='contract'&&r.kind==='workshop'?Object.fromEntries(Object.entries(r).filter(([key])=>!workshopProgressFields.has(key))):r;
+}
+export const sameScheduleRecordInputs=(a,b)=>sameScheduleRecord(scheduleRecordInput(a),scheduleRecordInput(b));
 function sameScheduleRecord(a,b){
  if(a===b)return true;
+ if(a?.waterScheduleFacts&&b?.waterScheduleFacts)return canonicalEqual(a,b);
  if(a?.category!=='contract'||b?.category!=='contract'||a.kind!=='workshop'||b.kind!=='workshop')return false;
  const keys=Object.keys(a).filter(k=>!workshopProgressFields.has(k));
  return keys.length===Object.keys(b).filter(k=>!workshopProgressFields.has(k)).length&&keys.every(k=>Object.hasOwn(b,k)&&canonicalEqual(a[k],b[k]));
@@ -95,9 +109,12 @@ const reservationInputs=s=>recordsMemo(s.obligations,scheduleReservations,()=>['
 // recipes; changed employment still invalidates through its contract record.
 export function sameScheduleInputs(a,b){
  if(a&&a===b)return true;
+ // Air-route resistance is physical-feature state. Avoid retaining a course
+ // projection across record writes while those live route wind effects exist.
+ if(a.records!==b.records&&[...Object.values(a.effects??{}),...Object.values(b.effects??{})].some(effect=>effect.kind==='air'&&effect.operation==='area_wind'&&effect.route))return false;
  if(Object.keys(a).filter(k=>k!=='family').length!==Object.keys(b).filter(k=>k!=='family').length||Object.keys(a).some(k=>!['minute','scheduler','records','obligations','npcObligationClock','npcCognition','family'].includes(k)&&a[k]!==b[k]))return false;
- // Meal receipts and their settlement watermark never change a routine or
- // course. Household membership, illnesses, births and all other family facts do.
+ // Source choice reads current finite stocks, never yesterday's failed stop.
+ // Meal receipts themselves do not change anybody's allocation.
  if(a.family!==b.family){
   const relevant=f=>Object.keys(f??{}).filter(k=>k!=='meals'&&k!=='mealDays');
   const x=relevant(a.family),y=relevant(b.family);
@@ -111,7 +128,9 @@ export function sameScheduleInputs(a,b){
   for(const job of recordsWhere(b.records,'kind','workshop'))if(job.serviceObligation&&a.obligations?.[job.serviceObligation]!==b.obligations?.[job.serviceObligation])return false;
  }
  if(a.records===b.records)return true;
- const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>!scheduleIgnored.has(r.category)).map(([id,r])=>[id,scheduleRecordInput(r)]),scheduleRecordDependencies);
+ const ax=serviceAppointmentSources(a),bx=serviceAppointmentSources(b);
+ if(ax.length!==bx.length||ax.some((event,i)=>!canonicalEqual(event,bx[i])))return false;
+ const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>isScheduleRecord(r)).map(([id,r])=>[id,scheduleRecordInput(r)]),scheduleRecordDependencies);
  const x=rows(a),y=rows(b);
  return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&sameScheduleRecord(row,y[i][1]));
 }
@@ -120,13 +139,50 @@ registerAdvanceHook('sameScheduleInputs',sameScheduleInputs);
 // skills or legal state. Those remain live inputs to every course derivation.
 const emptyCreated=Object.freeze({});
 const advanceCourses=new WeakMap();
-const courseUnchangedNpcFields=new Set(['activity','coins','inventory','scheduleTravel','cognitionTravel','cognition','memoryStream','developments','growth']);
-function sameCourseInputs(e,a,b){
+// Risk-age accumulation is a mortality input. Course ages come from
+// npcAgeAt (catalog/family birth), never this per-clock floating accumulator.
+const courseUnchangedNpcFields=new Set(['aging','activity','coins','inventory','scheduleTravel','cognitionTravel','cognition','memoryStream','developments','growth']);
+const coursePupilAges=Symbol('course pupil ages'),courseAgeDependencies=[
+ ['created','npc_*','birth'],['created','npc_*','age'],['created','npc_*','id'],
+ ['family','people','*','birth'],['family','people','*','age'],['family','people','*','id']
+];
+const courseTeacherKey=Symbol('course teacher eligibility'),courseTeacherDependencies=[
+ ['npcs','*','skills','skill_literacy'],['created','npc_*','skills','skill_literacy'],['created','npc_*','proficiencies','skill_literacy']
+];
+const courseMasterKey=Symbol('course master edges'),courseMasterDependencies=[['npcs','*','relationships','*','type']];
+const courseBooksKey=Symbol('course book owners'),courseBookDependencies=[['itemInstances']];
+function coursePupils(e,s,minute=s.minute){
+ return stateMemo(s,e,[coursePupilAges,Math.floor(minute/DAY)],()=>new Set(educationCatalog(e,s).people.filter(p=>{
+  const age=npcAgeAt(e,s,p.id,minute);return age>=(e.rules.education?.minimumAge??6)&&age<=(e.rules.education?.maximumAge??17);
+ }).map(p=>p.id)),courseAgeDependencies);
+}
+function courseTeachers(e,s){
+ return stateMemo(s,e,[courseTeacherKey],()=>{const ids=Object.keys(s.npcs??{});return {ids,teachers:new Set(ids.filter(id=>knowledgeProficiency(e,s,id,'skill_literacy')>100))};},courseTeacherDependencies);
+}
+function courseMasters(e,s){
+ return stateMemo(s,e,[courseMasterKey],()=>new Map(Object.entries(s.npcs??{}).flatMap(([id,n])=>{
+  const teacher=Object.entries(n.relationships??{}).find(([,r])=>r.type==='师父')?.[0]??e.byId.get(id)?.relationships?.find(r=>r.type==='师父')?.with;
+  return teacher?[[id,teacher]]:[];
+ })),courseMasterDependencies);
+}
+const sameSet=(a,b)=>a===b||a.size===b.size&&[...a].every(v=>b.has(v));
+const sameEdges=(a,b)=>a===b||a.size===b.size&&[...a].every(([id,to])=>to===b.get(id));
+function sameCourseInputs(e,a,b,minute){
  if(a&&a===b)return true;
- if(!sameScheduleInputs({...a,npcs:b.npcs},b))return false;
- const ids=Object.keys(a.npcs??{});if(ids.length!==Object.keys(b.npcs??{}).length)return false;
- for(const id of ids){
+ if(!canonicalEqual(courseEnvironment(e,a),courseEnvironment(e,b)))return false;
+ if(a.npcs===b.npcs)return true;
+ const oldTeachers=courseTeachers(e,a),teachers=courseTeachers(e,b);
+ if(oldTeachers!==teachers&&(oldTeachers.ids.length!==teachers.ids.length||oldTeachers.ids.some((id,i)=>id!==teachers.ids[i])||!sameSet(oldTeachers.teachers,teachers.teachers)))return false;
+ // Routines are read only for teachers. Pupils, carried books and actual
+ // apprenticeship edges supply the other people-dependent course inputs.
+ // Household errands are frozen in subsistence_plan, not sibling inventories.
+ const books=stateMemo(b,e,[courseBooksKey],()=>new Set(Object.values(b.itemInstances??{}).filter(u=>u.book?.teaches?.length).map(u=>u.owner)),courseBookDependencies);
+ const pupils=coursePupils(e,b,minute);
+ const masters=courseMasters(e,b);if(!sameEdges(courseMasters(e,a),masters))return false;
+ const related=new Set([...teachers.teachers,...pupils,...books,...masters.keys(),...masters.values()]);
+ for(const id of related){
   const x=a.npcs[id],y=b.npcs[id];if(x===y)continue;if(!y)return false;
+  if(!x)return false;
   const keys=Object.keys(x);if(keys.length!==Object.keys(y).length){
    // Optional movement/cognition fields may appear or disappear as a trip ends.
    if(keys.filter(k=>!courseUnchangedNpcFields.has(k)).length!==Object.keys(y).filter(k=>!courseUnchangedNpcFields.has(k)).length)return false;
@@ -136,10 +192,30 @@ function sameCourseInputs(e,a,b){
  }
  return true;
 }
+const courseEnvironmentKey=Symbol('education course environment');
+// Course derivation reads frozen subsistence duties, not today's source
+// volume or pollution. Actual water/forage intake still reads live resources.
+// Keep the broader schedule dependency set for physical travel consumers.
+const courseRecordDependencies={categories:['governance_office','organization','housing_steward','legal_dismissal','festival','legal_detention','legal_custody','legal_case','transition','war_disruption','title','notable','settlement_rank','market_trip','private_farm','project_assignment','education_course','education_demonstration','education_cohort','service_appointment','service_appointment_receipt','facility_region','subsistence_plan','physical_item'],kinds:['workshop','asset_lease'],ignoreFields:ignoredScheduleFields};
+const isCourseRecord=r=>Boolean(r&&(courseRecordDependencies.categories.includes(r.category)||courseRecordDependencies.kinds.includes(r.kind)));
+const courseEnvironmentDependencies=[
+ {path:['records'],categories:[...courseRecordDependencies.categories,'world_event']},
+ {path:['records'],kinds:scheduleRecordDependencies.kinds},
+ ['obligations'],['created'],['population'],['remote'],['location'],['buildings'],['effects'],['itemInstances'],['settlements'],
+ ['family','households'],['family','people'],['family','illnesses'],['player','companions']
+];
+function courseEnvironment(e,s){
+ return stateMemo(s,e,[courseEnvironmentKey],()=>({
+  records:recordsMemo(s.records,courseEnvironmentKey,()=>Object.entries(s.records??{}).filter(([,r])=>isCourseRecord(r)).map(([id,r])=>[id,scheduleRecordInput(r)]),courseRecordDependencies),
+  obligations:reservationInputs(s),employmentObligations:recordsWhere(s.records,'kind','workshop').filter(r=>r.serviceObligation).map(r=>s.obligations?.[r.serviceObligation]),services:serviceAppointmentSources(s),created:s.created,population:s.population,remote:s.remote,location:s.location,
+  buildings:s.buildings,effects:s.effects,itemInstances:s.itemInstances,settlements:s.settlements,
+  households:s.family?.households,people:s.family?.people,illnesses:s.family?.illnesses,companions:s.player?.companions,
+ }),courseEnvironmentDependencies);
+}
 function courseCacheUntil(s){
  let until=(Math.floor(s.minute/DAY)+1)*DAY;
  for(const r of Object.values(s.records??{})){
-  if(scheduleIgnored.has(r.category))continue;
+  if(!isScheduleRecord(r))continue;
   for(const k of ['minute','createdAt','since','starts','until','expires','deadline'])if(Number.isSafeInteger(r[k])&&r[k]>s.minute)until=Math.min(until,r[k]);
   for(const a of r.amendments??[])if(a.minute>s.minute)until=Math.min(until,a.minute);
  }
@@ -186,23 +262,24 @@ function settlement(e,s,id){
 }
 // A read-only pass over one fixed state (engine.scene) may set e.educationCourseMemo
 // (WeakMap state→courses): the same state object derives the same courses.
-export function educationCourses(e,s){
+export function educationCourses(e,s,minute=s.minute){
  if(e.educationCourseContext)return e.educationCourseContext;
  if(recordIndexActive()){
   const previous=advanceCourses.get(e);
-  if(previous&&s.minute>=previous.state.minute&&s.minute<previous.until&&sameCourseInputs(e,previous.state,s)){
-   if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(previous.courses,deriveEducationCourses(e,s))){
+  if(previous&&minute>=previous.minute&&minute<previous.until&&sameCourseInputs(e,previous.state,s,minute)){
+   if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(previous.courses,deriveEducationCourses(e,s,minute))){
     recordIndexCheck.violations.push('education courses');throw Error('education course cache mismatch');
    }
-   previous.state=s;return previous.courses;
+   previous.state=s;previous.minute=minute;return previous.courses;
   }
-  const courses=deriveEducationCourses(e,s);advanceCourses.set(e,{state:s,courses,until:courseCacheUntil(s)});return courses;
+  const courses=deriveEducationCourses(e,s,minute);advanceCourses.set(e,{state:s,minute,courses,until:courseCacheUntil(minute===s.minute?s:{...s,minute})});return courses;
  }
- const memo=e.educationCourseMemo;if(!memo||!s||typeof s!=='object')return deriveEducationCourses(e,s);
+ const memo=e.educationCourseMemo;if(minute!==s.minute||!memo||!s||typeof s!=='object')return deriveEducationCourses(e,s,minute);
  let hit=memo.get(s);if(!hit){hit=deriveEducationCourses(e,s);memo.set(s,hit);}
  return hit;
 }
-function deriveEducationCourses(e,s){
+function deriveEducationCourses(e,input,minute=input.minute){
+ const s=minute===input.minute?input:{...input,minute};
 
  const rows=educationRows(s),out=[...rows];
  // Derive classes from the teacher's current work, not just the authored
@@ -214,7 +291,7 @@ function deriveEducationCourses(e,s){
  // one legal index (personConstraints) serves every routine read, and each
  // person's settlement, age and literacy are read once for the whole derivation.
  const constraints=personConstraints(e,s),calendar=e.calendar(s.minute);
- const teachers=Object.keys(s.npcs??{}).filter(id=>knowledgeProficiency(e,s,id,'skill_literacy')>100).sort();
+ const teachers=[...courseTeachers(e,input).teachers].sort();
  const routines=new Map(teachers.map(id=>[id,npcSchedule(e,s,id,undefined,constraints)]));
  const jobs=recordsWhere(s.records,'category','contract').map(r=>contractTerms(r,s.minute)).filter(r=>employmentActive(r,s)&&r.status!=='罢工'&&r.starts<=s.minute&&r.deadline>s.minute&&/授业|先生|教学/.test(r.task??''));
  const memo=(f)=>{const m=new Map();return id=>{if(!m.has(id))m.set(id,f(id));return m.get(id);};};
@@ -222,9 +299,9 @@ function deriveEducationCourses(e,s){
  // Each school used to rescan the entire expanded population for every
  // teacher and slot. Group the same ordered candidates once per derivation.
  const pupilsByTown=new Map();
+ const pupils=coursePupils(e,input,minute);
  for(const p of people){
-  const age=npcAgeAt(e,s,p.id);
-  if((age??0)<(e.rules.education?.minimumAge??6)||(age??99)>(e.rules.education?.maximumAge??17)||isPhysicallyDead(e,s,p.id))continue;
+  if(!pupils.has(p.id)||isPhysicallyDead(e,s,p.id))continue;
   const town=homeOf(p.id);if(!pupilsByTown.has(town))pupilsByTown.set(town,[]);
   pupilsByTown.get(town).push(p);
  }
@@ -262,10 +339,9 @@ function deriveEducationCourses(e,s){
  }
  // The apprenticeship relationship supplies the obligation; the master's
  // current residence supplies the destination after migration or study travel.
- for(const [student,n]of Object.entries(s.npcs??{})){
+ for(const [student,teacher]of courseMasters(e,input)){
   if(out.some(c=>c.students.includes(student)))continue;
-  const rel=Object.entries(n.relationships??{}).find(([,r])=>r.type==='师父'),base=e.byId.get(student);
-  const teacher=rel?.[0]??base?.relationships?.find(r=>r.type==='师父')?.with,master=s.npcs?.[teacher];if(!master)continue;
+  const master=s.npcs?.[teacher];if(!master)continue;
   const entity=Object.keys(master.recipes??{}).sort().find(k=>!knowsKnowledge(e,s,student,k));if(!entity)continue;
   const home=master.residence?.home??e.byId.get(teacher)?.home?.location??master.location;
   if(settlement(e,s,student)!==settlement(e,s,teacher))continue;

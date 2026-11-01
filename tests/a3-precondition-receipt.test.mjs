@@ -19,6 +19,9 @@ import {commitNpcCrime} from '../server-plugin/npc-crime.mjs';
 import {nativeDefenceRow,nativeLegalRequestRow} from './helpers/trial-actions.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+// Legal request/receipt fixtures pin the original on-duty authority; unrelated
+// water/forage errands do not change those explicit action premises.
+delete world.rules.householdSubsistence;
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r5.json','utf8'));
 const nativeCorpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const ids=[15,17,18,25,27,28,32,34,39,43,51,52,53,55,56,58,63,64,68,69,71,95,96,97];

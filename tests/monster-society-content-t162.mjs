@@ -17,6 +17,7 @@ import {FILES,mergeMonsterSociety3,withoutMonsterSociety3} from '../tools/publis
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadPromptBundle} from '../tools/build-card.mjs';
+import {scheduleAt,assertNpcService} from '../server-plugin/npc-schedule.mjs';
 const {HX,GS,hx,gs,P}=ids,DAY=1440,batch=buildBatch(),formal=await loadWorld();
 const world=mergeMonsterSociety3(formal,batch),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const qty=(doc,id,item)=>{const x=id==='player'?doc.state.inventory[item]:doc.state.npcs[id].inventory[item];return typeof x==='number'?x:x?.quantity??0;};
@@ -27,7 +28,22 @@ function session(w=world,seed='t162'){
  const call=async(tool,args,key)=>{for(let i=0;i<(key?80:1);i++){const eventId=`t162_${++serial}`,out=await engine.reduce(doc,{tool,args,eventId}).catch(e=>{e.message+=` @${tool} ${JSON.stringify(args)} t=${doc.state.minute}`;throw e;});if(!key||out.result[key]){doc=applyPatches(doc,out.patches);return out.result;}}throw Error(`检定无成功：${tool}`);};
  const next=async(minute=510)=>{let t=(Math.floor(doc.state.minute/DAY)+1)*DAY+minute;while([10,20,30].includes(engine.calendar(t).day))t+=DAY;await call('world_time',{minutes:t-doc.state.minute});};
  const locate=(location,minute=600)=>{skipTo(engine,doc,minute);doc.state.location=location;for(const n of w.npcs){const slot=n.schedule?.default.find(s=>s.start<=minute%DAY&&minute%DAY<s.end);if(slot)Object.assign(doc.state.npcs[n.id],{location:slot.location,activity:slot.activity});}};
- return{engine,call,next,locate,get doc(){return doc;},set doc(d){doc=d;}};
+ const present=async(teacher,institution,minutes,service='teach')=>{
+  if(doc.state.location!==institution)await call('world_move',{destination:institution});
+  // Walk and wait through the real household chores and the teacher's travel;
+  // a timetable quote alone does not place a travelling person in the temple.
+  for(let i=0;i<100;i++){
+   const active=engine.scoped(doc);
+   try{assertNpcService(active.primitiveDraft(doc),active,teacher,service,minutes);if(doc.state.npcs[teacher].location===institution)return;}catch(e){if(e.code!=='E-ACTION-PRECONDITION'&&!/不在|服务|作息|赶路|接待|时间|授课|教|忙|清醒/.test(e.message))throw e;}
+   const now=doc.state.minute,n=doc.state.npcs[teacher],slot=scheduleAt(active,teacher,now,doc.state);
+   let at=slot?.until??(Math.floor(now/DAY)+1)*DAY;
+   if(n.scheduleTravel?.arrive>now)at=Math.min(at,n.scheduleTravel.arrive);
+   else if(slot?.location===institution&&slot.services.includes(service)&&slot.until-now>=minutes&&n.location!==institution)at=now+1;
+   await call('world_time',{minutes:Math.max(1,at-now)});
+  }
+  throw Error('导师在真实日程中没有足够的接待窗口');
+ };
+ return{engine,call,next,locate,present,get doc(){return doc;},set doc(d){doc=d;}};
 }
 
 test('T162 正式发布、人口深度、四种精怪本相与旧物种隔离',async()=>{
@@ -92,13 +108,17 @@ test('T162 两地议题闭合后实际扣公账并分物，公开检索不泄私
 test('T162 正式取得路线：导师入门认证、药草、听息立意、逐日修习、借形与自愿定居',async t=>{
  const s=session(),institution='bld_bs_reed_dao',teacher='npc_bs_077_1',role=world.professions.find(p=>p.id==='profession_taoist'),entry=world.rules.training.institutions.find(e=>e.institution===institution&&e.teacher===teacher);
  s.locate('loc_bs',510);await s.call('world_move',{destination:institution});
+ await s.present(teacher,institution,entry.initiationMinutes);
  await s.call('world_profession',{operation:'initiate',profession:role.id,teacher,institution});
+ await s.present(teacher,institution,world.skills.find(x=>x.id===role.entry.skill).learnMinutes??120);
  await s.call('world_learn',{entity:role.entry.skill,source:teacher,kind:'skill'},'success');
  while(s.doc.state.skills[role.entry.skill].proficiency<240){await s.call('world_practice',{skill:role.entry.skill,gain:100,target:'每日基础动作'});if(s.doc.state.skills[role.entry.skill].proficiency<240)await s.next();}
- await s.next();await s.call('world_profession',{operation:'certify',profession:role.id,teacher},'certified');await s.next();
+ await s.next();await s.present(teacher,institution,role.entry.minutes??120);await s.call('world_profession',{operation:'certify',profession:role.id,teacher},'certified');await s.next();
+ await s.present(teacher,institution,entry.ritualMinutes);
  const grant=await s.call('world_profession',{operation:'ritual_officiate',profession:role.id,teacher,institution,deity:entry.deity,minutes:10080});assert.ok(grant.permit);
  await s.call('world_move',{destination:hx.garden});
  if(s.doc.state.minute%DAY>900)await s.next(600);
+ await s.present(P.xianpu,hx.garden,5,'trade');
  const herbs=await s.call('world_trade',{seller:P.xianpu,item:'item_herb',quantity:12});assert.ok(herbs.cost>0);
  await s.call('world_move',{destination:'loc_hw_northwood'});
  let night=Math.floor(s.doc.state.minute/DAY)*DAY+1200;if(night<s.doc.state.minute)night+=DAY;await s.call('world_time',{minutes:night-s.doc.state.minute});
@@ -119,6 +139,7 @@ test('T162 正式取得路线：导师入门认证、药草、听息立意、逐
  let borrowPermit=grant.permit;
  if(s.doc.state.records[borrowPermit].expires<=s.doc.state.minute+120){
   await s.call('world_move',{destination:institution});await s.next();
+  await s.present(teacher,institution,entry.ritualMinutes);
   borrowPermit=(await s.call('world_profession',{operation:'ritual_officiate',profession:role.id,teacher,institution,deity:entry.deity,minutes:10080})).permit;
  }
  const acquired=await s.call('world_wildlife',{operation:'borrow_form',target,permit:borrowPermit});assert.equal(acquired.acquired,true);

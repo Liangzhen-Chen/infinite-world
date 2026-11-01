@@ -17,7 +17,21 @@ import {addPopulation,populationHealth} from './population-health.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {obligationClosed} from './obligation-protocol.mjs';
 import {hypot,cos,sin} from './det-math.mjs';
+import {registerSubsistenceResources} from './household-subsistence.mjs';
 declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','resident_of','household_member','kin','devotee_of','certified','member_of'],entities:['office','wreck'],locations:true});
+
+// Read-only outline projection. Advancing time never opens a county ledger,
+// residents or ecology. Only already represented places can supply real stock.
+const sourceSkeletons=new WeakMap();
+registerSubsistenceResources({remoteSkeleton(engine,state,home,seed){
+ const county=remoteCountyOf(engine.world,home);
+ if(!county||state.remote?.[county])return null;
+ const base=engine.remoteBase?.world??engine.world;
+ let rows=sourceSkeletons.get(base);if(!rows){rows=new Map();sourceSkeletons.set(base,rows);}
+ const key=`${county}:${seed}`;
+ if(!rows.has(key))rows.set(key,generateCounty(base,county,seed));
+ return rows.get(key);
+}});
 
 // Private aggregate stock is distinct from the settlement's public treasury.
 // Money already enumerates money_account rows; items use the same owner here.

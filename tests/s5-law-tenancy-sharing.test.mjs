@@ -18,6 +18,10 @@ import {granary} from '../server-plugin/stock.mjs';
 const field='loc_hw_fields',farmId=`private-farm:${field}`,item='item_oats';
 async function setup({out=false,collective=false,mode='share',basis='gross',payment='cash',deposit=0,days=10,dueDays=1,expiry='tenant',input='tenant',operator=out?'owner':'tenant'}={}){
  const w=structuredClone(world);
+ // The parties below are explicitly placed on the field for the whole day.
+ // Isolate that fixed attendance premise from source trips begun while the
+ // spring fixture advances; real harvesting, shares and ledger checks remain.
+ delete w.rules.householdSubsistence;
  Object.assign(w.rules.forestWater.water,{droughtYieldFloor:1,maximumCropPollutionLoss:0});
  w.rules.weather.seasonalWeights=w.rules.weather.seasonalWeights.map(()=>[1,0,0,0,0,0]);w.rules.weather.states.clear.crop=1;
  for(const r of w.rules.weather.regions)r.temperatures=[20,20,20,20];

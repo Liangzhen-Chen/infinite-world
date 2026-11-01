@@ -13211,5 +13211,24 @@
       "quantity": 3,
       "days": 3
     }
+  },
+  "householdSubsistence": {
+    "source": "K16 最小觅食模型，待标定；栖地面积限定存量，季节限定再生，不代替市场收入",
+    "foodItem": "item_wild_food",
+    "minimumAge": 12,
+    "waterMinutes": 15,
+    "nearWaterRoundTripMinutes": 30,
+    "nearWaterSource": "K16：近水步行往返至多半小时，连同15分钟汲水计入每日家务工时；沿用步行速度，阈值待标定。超过阈值的真实行程进入日程。",
+    "forageMinutes": 10,
+    "portionsPerKm2": 2000,
+    "dailyRegrowthPercent": 5,
+    "maximumSaltMgPerMl": 1,
+    "forageTypes": {
+      "forest": 1,
+      "open": 1,
+      "wetland": 1,
+      "rock": 0.25,
+      "ruin": 0.25
+    }
   }
 }

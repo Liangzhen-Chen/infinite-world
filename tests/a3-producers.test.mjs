@@ -10,7 +10,11 @@ import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {reconcile,conservation} from './helpers/ledger-audit.mjs';
 
-const engine=new WorldEngine(await loadWorld());
+// Private report fixtures explicitly place the issuer and unrelated witnesses.
+// Keep that presence while native receipt actions elapse, isolating errands;
+// source/full-world tests retain the household mechanism.
+const reportWorld=await loadWorld();delete reportWorld.rules.householdSubsistence;
+const engine=new WorldEngine(reportWorld);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const venue='bld_hw_council',host='npc_hw_chenbai',issuer='npc_hw_linsui';
 const input=(action,slots,eventId)=>({tool:'world_act',args:{action,slots},eventId});

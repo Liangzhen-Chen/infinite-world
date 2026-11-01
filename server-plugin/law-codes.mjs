@@ -6,19 +6,31 @@ import {standing} from './standing.mjs';
 import {personOffices,personCareer,settlementHead} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
 import {normStack,normCode} from './norm-stack.mjs';
+import {recordsWhere} from './storage.mjs';
 
 export const legalTemplate=(world,county)=>world.rules.law?.templates?.find(t=>t.polity===(county.ruler.polity.startsWith('王国')?'王国':county.ruler.polity)&&(!t.province||t.province===county.province));
 export const legalStaffing=level=>level==='村'?1:level==='镇'?2:3;
 const places=world=>new Map(world.locations.map(l=>[l.id,l]));
 function settlementOf(world,id){const byId=places(world),seen=new Set();for(let at=id;at&&!seen.has(at);at=byId.get(at)?.parent){seen.add(at);if(world.settlementProfiles?.some(s=>s.id===at))return at;}return id;}
+const authorityCatalogs=new WeakMap();
+function authorityCatalog(world){
+ let catalog=authorityCatalogs.get(world);
+ if(!catalog){
+  const people=[...world.npcs,...world.residents??[]],officials=new Map();
+  for(const person of people)if(person.generated==='remote'&&person.remoteRole==='official'){const rows=officials.get(person.settlement)??[];rows.push(person);officials.set(person.settlement,rows);}
+  catalog={officials,engine:{world,rules:world.rules,byId:new Map([...people,...world.locations].map(n=>[n.id,n]))}};authorityCatalogs.set(world,catalog);
+ }
+ return catalog;
+}
 function authorities(world,state,settlement,kind){
- const engine={world,rules:world.rules,byId:new Map([...world.npcs,...world.residents??[],...world.locations].map(n=>[n.id,n]))};
- const office=Object.values(state?.records??{}).filter(r=>r.category==='governance_office'&&r.settlement===settlement);
+ // Generated counties increase the catalog, not the number of catalog edits.
+ // Authority/status/office facts below are still read from the current state.
+ const {engine,officials}=authorityCatalog(world);
+ const office=recordsWhere(state?.records,'category','governance_office').filter(r=>r.settlement===settlement);
  const current=office.filter(r=>personOffices(engine,state,r.holder,{settlement,power:kind}).length).map(r=>r.holder);
  const head=settlementHead(engine,state,settlement).value;
  if(kind==='judge'&&head)current.push(head);
- const pool=[...world.npcs,...world.residents??[]];
- const generated=pool.filter(n=>n.generated==='remote'&&n.settlement===settlement&&n.remoteRole==='official'&&
+ const generated=(officials.get(settlement)??[]).filter(n=>
   (!n.judicialRole||kind==='judge'&&n.judicialRole!=='officer'||kind==='officer'&&n.judicialRole==='officer')&&
   personCareer(engine,state,n.id).value.occupation===n.occupation&&(!n.office||head===n.id)).map(n=>n.id);
  return [...new Set([...current,...generated])].filter(id=>!state?.records?.[`legal_dismissal:${id}`]&&isEffective(engine,state,id)&&state?.npcs?.[id]?.status!=='濒死');

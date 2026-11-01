@@ -6,7 +6,9 @@ import path from 'node:path';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches,CampaignStorage}from'../server-plugin/storage.mjs';
-import {npcContext}from'../server-plugin/npc-memory.mjs';
+import {npcContext,recordNpcMemories}from'../server-plugin/npc-memory.mjs';
+import {advanceContracts}from'../server-plugin/contracts.mjs';
+import {permitted}from'../server-plugin/npc-cognition.mjs';
 import {readStateSection}from'../extension/state-read.mjs';
 import {planWorldUpgrade}from'../server-plugin/world-upgrade.mjs';
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -14,6 +16,10 @@ const merchant='npc_hw_linsui',witness='npc_hw_hezhou',teacher='npc_hw_luqing';
 const slot=(start,end,location,activity='营业')=>({start,end,location,activity,services:['trade','teach']});
 async function setup(){
     const world=await loadWorld();
+    // These observation fixtures pin local shifts and uninterrupted presence.
+    // Source journeys are covered by the formal schedule/source suites; keep
+    // this controlled scene focused on provenance, sleep and privacy.
+    delete world.rules.householdSubsistence;
     // The reviewed profile is required even while publication is being prepared.
     const candidate=JSON.parse(await fs.readFile('world/drafts/m2-people/candidate.json','utf8'));
     world.npcs=world.npcs.map(n=>({...candidate.npcs.find(x=>x.id===n.id),...n,tier:'full'}));
@@ -30,6 +36,24 @@ async function setup(){
     return{world,engine,document,run};
 }
 const stream=(document,id)=>document.state.npcs[id].memoryStream??[];
+
+test('debt deadline notice precedes later conversations and is not appended twice by an enclosing wait',async()=>{
+ const {engine,document}=await setup(),id='debt_boundary',d=engine.primitiveDraft(document);
+ d.set(['state','records',id],{category:'debt',debtor:teacher,creditor:merchant,amount:28,paid:0,deadline:600,status:'待偿还'});
+ const before=structuredClone(d.document.state);
+ d.set(['state','minute'],600);advanceContracts(d,engine,600,[id]);
+ const notice=stream(d.document,merchant).find(m=>m.id===`debt_${id}:逾期`);
+ //Deadline600 gives both parties one immediate28-coin notice, before the
+ //outer wait ends at615; the remote bystander learns no private debt.
+ assert.ok(notice);assert.equal(notice.minute,600);assert.equal(notice.sourceEvent,id);
+ assert.equal(notice.sourceType,'约定核对');assert.match(notice.content,/欠款28铜现为逾期/);
+ assert.equal(stream(d.document,teacher).filter(m=>m.id===notice.id).length,1);
+ assert.equal(permitted(notice,witness),false);assert.ok(!stream(d.document,witness).some(m=>m.id===notice.id));
+ d.set(['state','minute'],615);
+ recordNpcMemories(d,engine,before,'time',{minutes:75},{minutes:75},'wait-debt-boundary');
+ assert.equal(stream(d.document,merchant).filter(m=>m.id===notice.id).length,1);
+ assert.equal(stream(d.document,teacher).filter(m=>m.id===notice.id).length,1);
+});
 
 test('共享背景保留本人村务往来和对方公开职务，不读取对方秘密',async()=>{
     const {world,engine,document}=await setup(),other=world.npcs.find(n=>n.id==='npc_hw_chenbai');

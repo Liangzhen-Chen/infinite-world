@@ -41,7 +41,7 @@ put(L0,'L0');put([...L1,'combat-state'],'L1');for(const [pack,names]of Object.en
 put(['water-volume','documents','population-health','finance-liabilities'],'L1');
 put(['action-constructor'],'L1');
 export const PACK_NAMES=Object.keys(PACKS);
-put(['currency','market','household-budget','perception','norm-stack','place-layout','derived','derived-consumers'],'L1');
+put(['currency','market','household-budget','household-subsistence','perception','norm-stack','place-layout','derived','derived-consumers'],'L1');
 // W8D 队伍威慑（承运报价与遭遇/劫掠候选共读）。
 put(['deterrence'],'L1');
 // S5-F/F2 legal-tender pricing and goods escrow sit beside currency and money; W5 deterministic math and the claim-unit label are leaves every layer may read.

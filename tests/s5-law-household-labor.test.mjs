@@ -14,6 +14,10 @@ const home='bld_hw_post',site='bld_hw_mill',jobId='workshop:household';
 const slot=(start,end,activity,location=home)=>({start,end,activity,location,services:[]});
 function setup({duties=true,commute=30,statistical=false,meals=[]}={}){
  const f=fixture({at:site});f.doc.state.minute=480;
+ // These hand anchors enumerate farm/care/market/commute minutes only.
+ // External source errands are isolated here and exercised with real shared
+ // labour in s5-law-water-source / s5-law-subsistence instead.
+ delete f.e.rules.householdSubsistence;
  f.doc.state.npcs[worker].location=home;f.doc.state.npcs[worker].coins=100;
  f.doc.state.npcs[host].coins=5000;
  f.w.households.find(h=>h.members.includes(worker)).homeLocation=home;
@@ -238,6 +242,8 @@ test('mine commute: 已实做的采矿不能因返家后才结算而丢失工资
  // 480−往返4=476到场分钟；每次采矿60分钟，可实作7次=420分钟，日薪960应付840。
  // 使用已有矿点、矿主、工具与 finance 固定种子：7次实际采掘应有1份矿石入矿主库存。
  const f=fixture(),mine=f.w.locations.flatMap(p=>(p.minerals??f.e.rules.extraction.mining.locations?.[p.id]??[]).map(spec=>({p,spec}))).find(({p,spec})=>f.e.byId.get(spec.owner??p.owner)?.id?.startsWith('npc_'));
+ // Preserve the stated 480-4=476 commute-only mining anchor.
+ delete f.e.rules.householdSubsistence;
  const {p,spec}=mine,owner=spec.owner??p.owner,settlement=placeSettlement(f.e,f.doc.state,p.id).value;
  const home=f.w.locations.find(l=>l.id!==p.id&&placeSettlement(f.e,f.doc.state,l.id).value===settlement).id;
  const house=f.w.households.find(h=>h.members.includes(worker));house.homeLocation=home;house.settlement=settlement;

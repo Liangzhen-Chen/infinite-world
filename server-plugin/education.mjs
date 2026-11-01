@@ -20,6 +20,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
 import {recordsWhere} from './storage.mjs';
+import {advanceHook} from './advance-hooks.mjs';
 import {serviceCapacity,serviceCapacityView,waitingInOrder,nextServiceOrder,queuePosition} from './service-queue.mjs';
 declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by','certified','resides','devotee_of'],entities:['office']});
 const DAY=1440,path=id=>['state','records',id];
@@ -35,7 +36,7 @@ export function prepareEducation(d,e,{before,after}){
  // The heap read an immutable draft snapshot. Reuse only when no simulation
  // input changed in phase 2; the clock/cursor writes alone do not change courses.
  const same=prepared?.minute===before&&sameScheduleInputs(prepared.state,state);
- e.educationCourseContext=(same?prepared.courses:educationCourses(e,{...state,minute:before})).filter(c=>!c.school||!e.npcScheduleReservations?.has(c.teacher));
+ e.educationCourseContext=(same?prepared.courses:educationCourses(e,state,before)).filter(c=>!c.school||!e.npcScheduleReservations?.has(c.teacher));
  for(const c of e.educationCourseContext)for(const id of [c.teacher,...c.students].filter(Boolean)){
   // Admission happens at an actual opening bell, never during an unrelated
   // zero-time action or in the middle of an already running class.
@@ -44,7 +45,7 @@ export function prepareEducation(d,e,{before,after}){
    const n=rosterLifeState(e,d.get('state'),id,opening,'自动入学',{minor:true});
    if(n)holdingSet(d,null,['state','npcs',id],n,'education');
   }
-  e.educationAttendance.set(id,[]);
+  e.educationAttendance.set(id,advanceHook('subsistenceScheduleAttendance')?.(d,id,before,after)??[]);
  }
 }
 function present(d,e,id){const s=d.get('state');if(!able(s,id)||location(s,id)!==s.location||personConstraint(e,s,id))throw preconditionFailure('参与者须清醒在场且不受拘留');}

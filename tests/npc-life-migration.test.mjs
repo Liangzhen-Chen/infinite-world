@@ -20,6 +20,9 @@ const tie=(a,b,type='旧友')=>({with:b,type,trust:60,affection:50});
 
 function fixture({migration={},prep=()=>{},hostTie=true}={}){
  const world=structuredClone(source),find=id=>world.npcs.find(n=>n.id===id),life=world.rules.npcLife;
+ // These migration fixtures hold possessions and the authored workday fixed.
+ // Daily fetching/foraging is exercised with migration inputs in the K16 law tests.
+ delete world.rules.householdSubsistence;
  life.health={...life.health,bands:[{fromAge:0,illnessPerYear:0,graveShare:0,suddenDeathPerYear:0}]};
  const m=life.migration;
  // Strangers taking people in is covered in npc-life-t164; these cases keep to kin and friends.

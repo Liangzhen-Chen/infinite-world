@@ -274,7 +274,12 @@ export function personRelationships(engine,state,id){
         'catalog.relationships + current actor relationships + state.family.marriages + state.careers',Boolean(state.family?.marriages||actor?.relationships));
 }
 
+const householdViewMemo=Symbol('household view');
+const householdViewInputs=[['family','households'],['created'],['minute'],{path:['records'],kinds:['asset_lease']}];
 function householdView(engine,state,id){
+    return stateMemo(state,engine,[householdViewMemo,id],()=>readHouseholdView(engine,state,id),householdViewInputs);
+}
+function readHouseholdView(engine,state,id){
     const h=npcHousehold(engine,state,id);
     const changed=Object.values(state.family?.households??{}).some(r=>r.members?.includes(id)||r.left?.includes(id));
     const generated=state.created?.[id]?.householdId===h?.id;
@@ -318,9 +323,10 @@ export function personSimulation(engine,state,id){
 }
 // A caller may build this index for a single read-only movement pass. It is
 // never retained on engine/state, so later legal writes are read immediately.
+export const personConstraintRecordDependencies={categories:['governance_office','organization','housing_steward','legal_dismissal','festival','legal_detention','legal_custody','legal_case'],kinds:['workshop','asset_lease']};
 export function personConstraints(engine,state){
     // Only categories this projection reads invalidate its derived constraints.
-    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge']);
+    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),personConstraintRecordDependencies);
 }
 function buildPersonConstraints(engine,state){
     const out=new Map();

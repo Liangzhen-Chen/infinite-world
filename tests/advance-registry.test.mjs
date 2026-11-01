@@ -81,7 +81,11 @@ test('新注册的系统会参与下一事件时刻计算并按order推进',asyn
   advance:(engine,d,{before,after})=>calls.push([before,after,d.get('state','minute')])});
  try{
   assert.equal(advanceRegistry.at(-1).id,'test_probe');
-  const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
+  const w=structuredClone(world);
+  // This probe isolates its 600-minute clock and midnight clock. Household
+  // source errands are real schedules, just like the NPC schedules removed below.
+  delete w.rules.householdSubsistence;
+  for(const n of w.npcs){delete n.schedule;delete n.tier;}
   const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'advance-probe'),start=doc.state.minute;
   await engine.reduce(doc,{tool:'world_time',args:{minutes:1500},eventId:'probe'});
   assert.ok(calls.length>=3,'一次长时间推进被新系统切成多段');

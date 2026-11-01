@@ -13806,7 +13806,27 @@
     "owner": "loc_bs",
     "rooms": [],
     "inventory": {},
-    "description": "河埠街是白石镇的码头与船户街区。清晨缆绳擦过石桩，岸边常有湿木气味。街面可通行，入户先在门前招呼。"
+    "description": "河埠街是白石镇的码头与船户街区。清晨缆绳擦过石桩，岸边常有湿木气味。街面可通行，入户先在门前招呼。",
+    "features": [
+      {
+        "id": "feature_bs_river",
+        "name": "河埠街的河水",
+        "aliases": [],
+        "owner": "loc_bs_hebu",
+        "access": "public",
+        "position": [0, 0],
+        "kind": "water",
+        "state": {
+          "capacityMl": 500000000,
+          "waterMl": 400000000,
+          "saltMg": 0,
+          "toxinUg": 0,
+          "turbidity": 0,
+          "pathogenRisk": 0,
+          "odor": "原水"
+        }
+      }
+    ]
   },
   {
     "id": "loc_bs_zhanxi",

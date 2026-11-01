@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {withLedger,accountKey,auditLedger,parseAccount} from '../server-plugin/ledger.mjs';
+import {withLedger,openLedger,accountKey,auditLedger,parseAccount} from '../server-plugin/ledger.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {prepareOpenAction,executeRoutedOpenAction} from '../server-plugin/open-actions.mjs';
 import {assertActionRejected} from './helpers/action-refusal.mjs';
@@ -45,7 +45,9 @@ test('A3 open: preview is read-only; confirmation rechecks native balance',async
  const f=fixture(),before=structuredClone(f.document),input={args:f.args,eventId:'a3-b-preview'};
  const preview=await executeRoutedOpenAction(f.engine,f.document,input,f.native,{preview:true});
  assert.equal(preview.receipt.status,'preview');assert.deepEqual(f.document,before);
- f.document.ledger.accounts[f.from]=0;
+ // Keep this edited opening purse and its genesis book consistent. The
+ // actual confirmation must still reject the same zero balance without writes.
+ f.document.state.player.coins=0;f.document.ledger=openLedger(f.engine,f.document);
  // A3 refusal contract: keep the same balance code and require zero effects.
  await assertActionRejected(executeRoutedOpenAction(f.engine,f.document,input,f.native),undefined,'E-TRANSFER-BALANCE');
 });
@@ -75,6 +77,9 @@ test('A3 open: native routing executes an actual registered transfer without inj
 
 test('A3 open: routed leave_mark uses the real mark adapter and native costs',async()=>{
  const engine=new WorldEngine(structuredClone(world));
+ // This zero-resource-cost anchor compares the entire ledger; unrelated
+ // household source preparation/remote opening is outside its premise.
+ delete engine.rules.householdSubsistence;
  Object.assign(engine.world,{openActionRules:JSON.parse(await fs.readFile('world/rules/tables/open-actions.json','utf8')),openTagging:JSON.parse(await fs.readFile('world/rules/open-tagging.json','utf8')),openReactions:JSON.parse(await fs.readFile('world/rules/open-reactions.json','utf8'))});
  const document=withLedger(engine,engine.createCharacter(seed,{},'a3-routed-mark')).document;
  const args={intent:'留下痕迹',effects:[{op:'create',kind:'mark',facts:{intent:'留下一个提醒路人的记号',form:'刻痕'},tags:['mark:warning']}]},before=structuredClone(document);

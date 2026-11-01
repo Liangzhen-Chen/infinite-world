@@ -13,12 +13,27 @@ import {npcLifeNews}from'./npc-life.mjs';
 import {memoryGuardUntil,mindSleepUntil}from'./magic-mind-space.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personSimulation}from'./entity-view.mjs';
+import {registerAdvanceHook}from'./advance-hooks.mjs';
 
 export function memoryBlurMinute(d,npcId,memory,ttl,now){
  return Math.max(memory.minute+ttl*1440,memoryGuardUntil(d,npcId,memory.id,now));
 }
 
 const full=(engine,id)=>personSimulation(engine,{},id).value;
+// Deadline knowledge belongs to the deadline, before later conversations.
+// Waiting until the enclosing player command ends makes one long wait hear
+// different news than daily waits. Keep the legacy notice ID/content/privacy
+// so the outer action subscriber can recognize and reuse the same fact.
+function recordDebtOverdue(d,engine,id,debt){
+ const state=d.get('state'),memoryId=`debt_${id}:逾期`,participants=[...new Set([debt.debtor,debt.creditor].filter(Boolean))];
+ const name=id=>id==='player'?state.player.name:engine.byId.get(id)?.name??id;
+ for(const npcId of participants){
+  const npc=state.npcs?.[npcId];if(!npc||!full(engine,npcId)||npc.memoryStream?.some(m=>m.id===memoryId))continue;
+  d.set(['state','npcs',npcId,'memoryStream'],[...npc.memoryStream??[],{id:memoryId,sourceEvent:id,kind:'debt',minute:debt.overdueAt,location:null,participants,
+   content:`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}${claimUnit(debt)}现为${debt.status}`,sourceType:'约定核对',salience:4,emotion:'失望'}]);
+ }
+}
+registerAdvanceHook('recordNpcDebtOverdue',recordDebtOverdue);
 const awake=(state,id,npc)=>npc&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷','患病'].includes(npc.status)&&!/(睡眠|熟睡|睡觉)/.test(npc.activity??'');
 const present=(state,location=state.location)=>Object.entries(state.npcs).filter(([id,npc])=>npc.location===location&&awake(state,id,npc)).map(([id])=>id);
 function witnessedThroughout(engine,before,after,id){

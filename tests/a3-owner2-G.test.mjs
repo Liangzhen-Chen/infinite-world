@@ -19,7 +19,11 @@ import {reconcile} from './helpers/ledger-audit.mjs';
 import {documentScene,documentCall} from './helpers/document-actions.mjs';
 import {documentAction} from '../server-plugin/documents.mjs';
 
-const world=await loadWorld(),engine=new WorldEngine(world);
+// This authority/private-document fixture fixes the on-duty recipient and
+// bystanders while its native actions advance time. Household errands belong
+// to the separate source/full-world tests; all duty/privacy assertions remain.
+const world=await loadWorld();delete world.rules.householdSubsistence;
+const engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner2-g');
 const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r12.json',import.meta.url),'utf8'));

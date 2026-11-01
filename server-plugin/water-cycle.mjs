@@ -1,9 +1,10 @@
 // Basin water shares physical_feature state with spells and manual transfers.
-import {locationHabitatTypes} from './wildlife-habitats.mjs';
+import {locationHabitatTypes,speciesHabitatTypes} from './wildlife-habitats.mjs';
 import {weatherAt} from './weather.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {derived} from './derived.mjs';
 import {hypot} from './det-math.mjs';
+import {registerSubsistenceResources} from './household-subsistence.mjs';
 
 const DAY=1440,clone=v=>structuredClone(v),record=id=>['state','records',`water-cycle:${id}`];
 const level=(l,r)=>l.elevationMeters??(/山|岭|崖|高地/.test(l.terrain??'')?r.highland:/丘|坡/.test(l.terrain??'')?r.hill:/谷|河|滩|沼/.test(l.terrain??'')?r.lowland:r.plain);
@@ -111,7 +112,19 @@ function receive(w,part){
  w.waterMl=total;
 }
 export function basinForLocation(engine,location,basins=waterBasins(engine)){
- for(const id of ancestor(engine,location)){const b=basins.find(b=>b.location===id);if(b)return b;}
+ const chain=ancestor(engine,location);
+ for(const id of chain){const b=basins.find(b=>b.location===id);if(b)return b;}
+ // A town's river access may be catalogued in one of its public districts.
+ // A neighbouring village has its own scope and cannot supply the town by
+ // ancestry alone. Prefer the main water body to a small incidental pool.
+ const scope=engine.byId.get(location)?.scope;
+ if(engine.rules.householdSubsistence){const scoped=basins.find(b=>b.location===scope);if(scoped)return scoped;}
+ if(engine.rules.householdSubsistence)for(const id of chain){
+  if(id!==(scope??location))continue;
+  const local=basins.filter(b=>b.feature?.access==='public'&&engine.byId.get(b.location)?.scope===id&&ancestor(engine,b.location).includes(id))
+   .sort((a,b)=>b.capacity-a.capacity||a.id.localeCompare(b.id));
+  if(local.length)return local[0];
+ }
  return null;
 }
 export function waterExposure(engine,state,settlement){
@@ -127,6 +140,16 @@ export function waterResourceFactor(engine,state,location){
  const b=basinForLocation(engine,location,waterBasins(engine,state));if(!b)return 1;
  const w=basinState(engine,state,b),r=engine.rules.forestWater.water;
  return Math.min(r.maximumPriceFactor,Math.max(1,(b.feature?w.capacityMl:b.capacity)*r.initialShare/Math.max(1,w.waterMl)));
+}
+// Direct household use outside the already-withdrawn settlement cohort.
+// Keep the same physical volume and basin conservation ledger as irrigation.
+export function takeHouseholdWater(d,engine,basin,requiredMl,day){
+ const old=d.get(...record(basin.id)),w=clone(basinState(engine,d.get('state'),basin));
+ const part=withdraw(w,requiredMl);
+ const ledger=old?{...old}: {initial:w.waterMl+part.waterMl,rain:0,inflow:0,outflow:0,consumed:0,evaporated:0,overflow:0,externalDelta:0,day:day-1,farms:{},drinking:{}};
+ delete ledger.water;delete ledger.category;delete ledger.location;
+ ledger.consumed+=part.waterMl;ledger.householdMl=(ledger.householdMl??0)+part.waterMl;
+ store(d,basin,w,ledger);return part.waterMl;
 }
 export function advanceWaterCycle(d,engine,day){
  const rules=engine.rules.forestWater?.water;if(!rules)return;
@@ -195,3 +218,5 @@ export function advanceWaterCycle(d,engine,day){
   }
  }
 }
+
+registerSubsistenceResources({waterBasins,basinForLocation,basinState,waterResourceFactor,takeHouseholdWater,locationHabitatTypes,speciesHabitatTypes});

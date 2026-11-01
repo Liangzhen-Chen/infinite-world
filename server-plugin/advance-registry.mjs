@@ -81,6 +81,7 @@ const sameScheduleInputs=(...args)=>{const hook=advanceHook('sameScheduleInputs'
 const sameNpcScheduleInputs=(...args)=>{const hook=advanceHook('sameNpcScheduleInputs');return hook?hook(...args):false;};
 const facilityRuntime=()=>{const hook=advanceHook('facilityRuntime');return hook?hook():{hasUnattendedFurnace:()=>true,recordFurnaceDeparture:()=>{}};};
 const withScheduleCache=(engine,d,task)=>{const hook=advanceHook('withScheduleCache');return hook?hook(engine,d,task):task();};
+const prepareHouseholdSubsistence=(d,e,day)=>advanceHook('prepareHouseholdSubsistence')?.(d,e,day);
 export const advanceRegistry=[];
 export function registerAdvance(system){
     if(!system||typeof system.id!=='string'||!Number.isFinite(system.order)||typeof system.advance!=='function')throw new Error('推进系统需要 id、order 和 advance');
@@ -91,6 +92,7 @@ export function registerAdvance(system){
 }
 // Next interval boundary: end of span, next midnight, or the earliest registered event.
 export function nextAdvanceMinute(engine,d,now,end){
+    prepareHouseholdSubsistence(d,engine,Math.floor(now/1440));
     let next=Math.min(end,(Math.floor(now/1440)+1)*1440);
     for(const system of advanceRegistry)if(system.nextMinute)next=Math.min(next,system.nextMinute(engine,d,now));
     return next;
@@ -108,6 +110,7 @@ export function catchUpLocal(engine,d,after){
     advanceHook('restoreRemoteAccounts')?.(d,engine);
     const before=d.get('state','scheduler','localUntil')??d.scheduler.lastSettled;
     if(after<=before)return;
+    const scheduleBefore=d.get('state');
     // Roots can draw from a leaking source. Preserve minute order for that
     // shared resource; independent processes retain their existing batch loop.
     const roots=Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='care'&&x.operation==='roots'&&x.expires>before);
@@ -131,6 +134,7 @@ export function catchUpLocal(engine,d,after){
     // These consumers have already restored temperature/returned reserved
     // water. Locally shortened lifetimes must not leave stale active effects.
     for(const [id,effect]of Object.entries(d.get('state','effects')??{}))if(['care','water_earth'].includes(effect.kind)&&effect.expires<=after)d.remove(['state','effects',id]);
+    advanceHook('catchUpSubsistenceSchedules')?.(d,engine,before,after,{...scheduleBefore,minute:before});
     d.set(['state','scheduler','localUntil'],after);
 }
 // S2b：推进路径接线开关（schedulerWired）。开启后同刻调度器按 §14.2 阶段与排序键重排推进系统，
@@ -160,6 +164,7 @@ function scheduleOverrides(engine,constraints){
     return ids;
 }
 function buildScheduleHeap(engine,d,now,end){
+    prepareHouseholdSubsistence(d,engine,Math.floor(now/1440));
     const heap=new ScheduleHeap();
     const state=d.get('state'),previous=engine.educationCourseContext,prepared=d.scheduleEducation;
     engine.educationCourseContext=educationCourses(engine,state);
@@ -199,7 +204,7 @@ function buildScheduleHeap(engine,d,now,end){
     for(const [id,npc]of Object.entries(state.npcs??{})){
         npcOrder.set(id,npcOrder.size);
         if(constraints.has(id)||facilityRuntime().hasUnattendedFurnace(engine,id))pending.add(id);
-        due(npc.scheduleTravel?.arrive,['npc_obligations'],id);due(npc.cognitionTravel?.arrive,['npc_cognition']);
+        if(!npc.scheduleTravel?.subsistence)due(npc.scheduleTravel?.arrive,['npc_obligations'],id);due(npc.cognitionTravel?.arrive,['npc_cognition']);
         // The existing layer adapter settles eligible fixed-location skeletons
         // daily or on promotion. They do not own individual slot clocks.
         const group=regional?.persons.get(id);
@@ -219,7 +224,7 @@ function buildScheduleHeap(engine,d,now,end){
                 if(!canonicalEqual(slot,fresh))throw Error(`schedule heap cache mismatch: ${id} at ${now}: ${JSON.stringify({cached:slot,fresh})}`);
             }
             slots.set(id,slot);
-            due(slot?.until,['npc_obligations','education'],id);
+            due(slot?.boundaryUntil??slot?.until,['npc_obligations','education'],id);
             if(slot&&(npc.location!==slot.location||npc.activity!==slot.activity))pending.add(id);
             // A clock tick at the end of a slot is too late to start a trip
             // for the slot already in progress. Wake once at the first
@@ -316,6 +321,8 @@ function runAdvanceSystems(engine,d,ctx){
             if(errors.length)throw new Error(`刻末账本断言失败：${errors.join('; ')}`);
             stampDriftReport(d);// 漂移只上报不拒绝（S6 入口再拒绝）
         }
+        if(d.get('state','scheduler','subsistence')?.until<=ctx.after)d.remove(['state','scheduler','subsistence']);
+        if(ctx.days>0)prepareHouseholdSubsistence(d,engine,Math.floor(ctx.after/1440));
     }finally{delete d.reactionTick;engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }
 
