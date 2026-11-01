@@ -221,7 +221,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     const woodWorkers=Math.min(2,Math.max(0,availableWorkers-processing-freshWorkers-ownFieldWorkers)),woodProduced=harvestSettlementWood(d,engine,id,Math.floor(s.woodPerDay*woodWorkers/2),(day+1)*1440);
     const workers=Object.fromEntries(Object.entries({available:availableWorkers,processing,fresh:freshWorkers,field:fieldWorkers,wood:woodWorkers}).map(([k,n])=>[k,Number.isInteger(n)?n:toRational(n)]));
     r.lastReport={day,workers,fresh,wood:woodProduced,planted:planted.units,seedSpent:planted.seed,harvest:result.grain,seedReserved:result.reserved,stored:result.stored,freshEaten,grainEaten,eaten,missingMeals,
-        ...(pestDamage?{harvestLostToPests:result.pestLost??0,pestDamageAddedMaxPercent:pestDamage.maximumAddedPercent}:{})};
+        ...(pestDamage?{harvestLostToPests:result.pestLost??0,pestDamageAddedMaxPercent:Number.isInteger(pestDamage.maximumAddedPercent)?pestDamage.maximumAddedPercent:toRational(pestDamage.maximumAddedPercent)}:{})};
     balanced(r,s);commit(d,engine,id,r,`day_${day}`);d.set(path(id),r);return{settlement:s,missingMeals,woodProduced};
 }
 // U12: an army quartermaster draws grain above the winter reserve (the same
