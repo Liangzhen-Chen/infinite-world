@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：现有引擎缺机制、整题无法结算的题。每条 todo 写明缺的机制与迁移阶段（docs/架构设计/10-现状映射与迁移路线.md §10.4）。
 // 参数表里这些题要的缺省值已补入 world/rules/tables/balance/（见 daily-b2-tables.test.mjs 的表级验证）；等机制落地后把 todo 改成可执行测试。
 import test from 'node:test';

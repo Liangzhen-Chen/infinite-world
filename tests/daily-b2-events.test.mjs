@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04/CT07（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：送信、托运、普通打斗、求医、入会、过关卡、离开几天再回来。
 // 夹具与口径同 daily-b2-trade.test.mjs；寄信/托运/求医界面动作暂不可达的（A1 对 consent 槽一律拒绝），走同一条 /execute 通道的旧工具。
 import test from 'node:test';
@@ -96,4 +97,4 @@ test('D26 ① 托运运费读 transport.json carrier:cart 费率：运费 = ceil
  const dbl=(await legacy(await mk(doubled),'world_trade',slots,'quote-d26b2')).result;
  assert.equal(dbl.freight,461,'费率翻倍：24 × 20 × 0.024 × 20 × 2 = 460.8 → 461');
 });
-test.todo('D26 ④到达钟点“九月十六午时前后”——W8D 起车行发车读 departure:cart（午初前整点随到随发），车速仍是 rules.travel.cartKmh；本例 08:00 发车、次日 09:20 到仍与题面约 2 小时差距：缺车行并车/等客（batching.waitDays）与逐日行程对齐钟点的消费（S5）');
+test.todo('D26 ④到达钟点“九月十六午时前后”——W8D 起车行发车读 departure:cart（午初前整点随到随发），车速仍是 rules.travel.cartKmh；本例 08:00 发车、次日 09:20 到仍与题面约 2 小时差距：缺车行并车/等客（batching.waitDays）与逐日行程对齐钟点的消费（S5；登记：docs/A3-后续阶段登记.md S5CT CT07）');
