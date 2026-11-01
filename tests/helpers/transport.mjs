@@ -28,3 +28,9 @@ export function asset(d,e,owner=DRIVER,kind='cart',id='cart'){
  return createTransportAsset(d,e,{owner,kind,id},`build:${id}`).id;
 }
 export function finish(d,e,id){for(let i=0;i<100;i++){const row=d.get('state','records',id);if(row.status==='delivered')return row;const at=nextTransportMinute(d.get('state'),d.get('state','minute'));assert.ok(Number.isFinite(at));d.set(['state','minute'],at);advanceTransport(d,e,at);}throw Error('未抵达');}
+export function depart(d,e,id){
+ const row=d.get('state','records',id);
+ if(row.status!=='booked')return row;
+ d.set(['state','minute'],row.departAt);advanceTransport(d,e,row.departAt);
+ return d.get('state','records',id);
+}

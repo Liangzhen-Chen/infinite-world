@@ -5,6 +5,7 @@ import {sapient} from './wildlife-awakening.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {takePopulation} from './population-health.mjs';
 import {derived} from './derived.mjs';
+import {territoryCapacityFactor} from './ecology-dynamics.mjs';
 const path=h=>['state','records',`ecology:${h}`],alive=(d,id,a)=>a&&!isPhysicallyDead(null,d.get('state'),id)&&a.hp>0;
 const profiles=e=>e.rules.wildlife?.farmPests?.fields??[];
 export function farmPestProfile(engine,settlement){return profiles(engine).find(p=>p.settlement===settlement);}
@@ -45,9 +46,15 @@ function exposureFractions(intervals,hours,day,notBefore){
 }
 export function damageFarmCrops(d,e,r,settlement,day){
     const p=farmPestProfile(e,settlement);if(!p)return null;
+    const habitat=e.rules.wildlife.habitats.find(h=>h.id===p.habitat),habitatShare=territoryCapacityFactor(d,e,habitat);
     const intervals=r.field.pestProtection??[];let daily=0;
     for(const pest of p.pests){
-        const pressure=Math.min(1,Math.max(0,(count(d,e,pest.species,p.habitat)-pest.toleranceCount)/(pest.fullDamageCount-pest.toleranceCount)));
+        // The authored thresholds describe density in the full habitat. A
+        // territorial occupant compresses that space as well as its capacity;
+        // comparing the remaining animals with full-habitat counts would make
+        // pests harmless whenever the reduced capacity falls below tolerance.
+        const animals=count(d,e,pest.species,p.habitat),density=animals?animals/habitatShare:0;
+        const pressure=Math.min(1,Math.max(0,(density-pest.toleranceCount)/(pest.fullDamageCount-pest.toleranceCount)));
         const coverage=exposureFractions(intervals,e.byId.get(pest.species).wildlife.activeHours,day,r.field.pestInitializedMinute);
         daily+=pest.dailyDamageBps*pressure*(coverage.active-coverage.protected*p.guardReductionBps/10000);
     }

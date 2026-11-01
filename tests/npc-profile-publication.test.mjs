@@ -73,7 +73,7 @@ test('真实32人深度来源保留新notes/opinions及后来的钱物和记忆�
  person.memorySeeds.push({id:'later_private_t11b',event:'雨后在厨房核对桌边的旧木板。',knownBy:[person.id],salience:3,reliability:'亲历'});
  const teaching=await readPublishedNpcIncrements({world:current}),depth=await readPublishedNpcDepth({world:current});
  const merged=mergeNpcProfiles(current.npcs,candidate,baseline,teaching,depth);
- for(const n of merged){const old=current.npcs.find(row=>row.id===n.id);for(const key of [...protectedNpcFields,'traits','memorySeeds','notes','opinions'])assert.deepEqual(n[key],old[key],`${n.id}.${key}`);}
+ for(const n of merged){const old=current.npcs.find(row=>row.id===n.id);for(const key of [...protectedNpcFields,'traits','memorySeeds','notes','opinions','relationships'])assert.deepEqual(n[key],old[key],`${n.id}.${key}`);}
  assert.deepEqual(merged,current.npcs);
  const replayDepth=await readPublishedNpcDepth({world:{...current,npcs:merged}});
  assert.deepEqual(mergeNpcProfiles(merged,candidate,baseline,teaching,replayDepth),merged);
@@ -82,6 +82,17 @@ test('真实32人深度来源保留新notes/opinions及后来的钱物和记忆�
  const changed=structuredClone(current);changed.npcs.find(n=>n.id===person.id).opinions.neighbors[0].view+='未经审核的新结论';
  assert.throws(()=>mergeNpcProfiles(changed.npcs,candidate,baseline,teaching,depth),/凭证与当前世界不符/);
  await assert.rejects(readPublishedNpcDepth({world:changed}),/人物补丁冲突|当前世界不符/);
+ // K10b approves 3 -> 4 relations; trust 0 -> 1 and count 4 -> 5 are unreviewed.
+ for(const id of ['npc_hw_luqing','npc_hw_shendu']){
+  const drift=structuredClone(current);drift.npcs.find(n=>n.id===id).relationships[3].trust++;
+  await assert.rejects(readPublishedNpcDepth({world:drift}),/人物补丁冲突|当前世界不符/);
+ }
+ const extra=structuredClone(current);extra.npcs.find(n=>n.id==='npc_hw_luqing').relationships.push({with:'npc_hw_gucen',type:'未经审批',trust:0,affection:0,note:'未审关系'});
+ await assert.rejects(readPublishedNpcDepth({world:extra}),/人物补丁冲突|当前世界不符/);
+ // Match K10b's existing isPublished gate: all seven rows must be published,
+ // including the school title that makes the repair channel a public one.
+ const partial=structuredClone(current);delete partial.locations.find(n=>n.id==='bld_hw_school').owner;
+ await assert.rejects(readPublishedNpcDepth({world:partial}),/后续审批与当前世界不符/);
 });
 
 test('深度来源缺失、manifest漂移或撤销L4不能用旧出版凭证放行',async t=>{
@@ -91,11 +102,25 @@ test('深度来源缺失、manifest漂移或撤销L4不能用旧出版凭证放�
  await fs.symlink(path.resolve('tools'),path.join(temp,'tools'),'junction');
  for(const folder of ['meta','people','geo','lore','design'])await fs.cp(path.resolve('world',folder),path.join(worldRoot,folder),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w1/existing-depth'),path.join(worldRoot,'drafts/w1/existing-depth'),{recursive:true});
+ // This current edition also depends on the subsequent approved K10b relations.
+ await fs.cp(path.resolve('world/drafts/k10b-public-maintenance'),path.join(worldRoot,'drafts/k10b-public-maintenance'),{recursive:true});
  for(const directory of ['baishi-skeleton'])await fs.cp(path.resolve('world/drafts/w1',directory),path.join(worldRoot,'drafts/w1',directory),{recursive:true});
  const batchFile=path.join(worldRoot,'drafts/w1/depth-publication.json');await fs.copyFile(path.resolve('world/drafts/w1/depth-publication.json'),batchFile);
  const files=[['drafts/w1/depth-publication.json',v=>v.worldRoot='..',/世界根/],['drafts/w1/depth-publication.json',v=>v.expectedIds.pop(),/预期人物集合/],['drafts/w1/existing-depth/first-review/manifest.json',v=>v.foundationHash='bad',/骨架指纹/],['drafts/w1/existing-depth/first-review/batch-0.json',v=>v.l4.approved=false,/L4/]];
  for(const [relative,mutate,pattern]of files){const file=path.join(worldRoot,relative),raw=await fs.readFile(file,'utf8'),value=JSON.parse(raw);mutate(value);await fs.writeFile(file,JSON.stringify(value));await assert.rejects(readPublishedNpcDepth({world,worldRoot}),pattern);await fs.writeFile(file,raw);}
  assert.ok(await readPublishedNpcDepth({world,worldRoot}));
+ const approvalFile=path.join(worldRoot,'drafts/k10b-public-maintenance/candidate.json'),approvalRaw=await fs.readFile(approvalFile,'utf8'),approval=JSON.parse(approvalRaw);
+ approval.entries.find(e=>e.target==='npc_hw_luqing').before[0].trust++;
+ await fs.writeFile(approvalFile,JSON.stringify(approval));await assert.rejects(readPublishedNpcDepth({world,worldRoot}),/骨架或引用事实/);await fs.writeFile(approvalFile,approvalRaw);
+ const l4File=path.join(worldRoot,'drafts/k10b-public-maintenance/review/batch-2.json'),l4Raw=await fs.readFile(l4File,'utf8'),l4=JSON.parse(l4Raw);l4.l4.approved=false;
+ await fs.writeFile(l4File,JSON.stringify(l4));await assert.rejects(readPublishedNpcDepth({world,worldRoot}),/L4/);
+ // A historical edition still on both reviewed before values does not depend
+ // on an unpublished/revoked later proposal.
+ const before=structuredClone(world),baselineFile=path.join(worldRoot,'people/baseline.json'),baselineRaw=await fs.readFile(baselineFile,'utf8');
+ for(const e of JSON.parse(approvalRaw).entries.filter(e=>e.file==='world/people/baseline.json'))before.npcs.find(n=>n.id===e.target)[e.field]=e.before;
+ await fs.writeFile(baselineFile,JSON.stringify(before.npcs));assert.ok(await readPublishedNpcDepth({world:before,worldRoot}));await fs.writeFile(baselineFile,baselineRaw);
+ await fs.writeFile(l4File,l4Raw);
+ await fs.rename(approvalFile,approvalFile+'.missing');await assert.rejects(readPublishedNpcDepth({world,worldRoot}),/人物补丁冲突/);await fs.rename(approvalFile+'.missing',approvalFile);
 });
 
 test('32人深度版本沿现有world_upgrade更新隔离文档，状态、现金、售空库存和个人记忆不回退',async()=>{

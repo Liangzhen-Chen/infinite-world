@@ -2,7 +2,7 @@
  "title": "无限原野系统地图",
  "card": "K9",
  "generatedFrom": {
-  "commit": "refs/heads/t-s5integ",
+  "commit": "refs/heads/s5a",
   "method": "运行时导出（注册表、规则表、工具定义、效果表、立场传导表）+ 静态正则扫描（import 图、函数体标识符、state 分区与 records 前缀、rules/world 读取）。静态扫描是近似：经 engine.byId、helper 间接或动态拼接路径的访问不计入。"
  },
  "scanMethods": {
@@ -283,7 +283,7 @@
     "server-plugin/post.mjs",
     "server-plugin/deterrence.mjs"
    ],
-   "lines": 760,
+   "lines": 850,
    "stateWrites": [
     "location",
     "npcs",
@@ -753,7 +753,7 @@
     "server-plugin/archived-reducer.mjs",
     "server-plugin/scheduler.mjs"
    ],
-   "lines": 1866,
+   "lines": 1920,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -1935,7 +1935,7 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1829,
+   "lines": 1836,
    "stateWrites": [
     "crafted",
     "creatures",
@@ -2086,7 +2086,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 2630,
+   "lines": 2674,
    "stateWrites": [
     "npcs",
     "records",
@@ -2323,7 +2323,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 7259,
+   "lines": 7280,
    "stateWrites": [
     "crafted",
     "npcs",
@@ -14350,6 +14350,7 @@
     "tools/catalogue-order.mjs",
     "tools/derived-scan.mjs",
     "tools/load-world.mjs",
+    "tools/npc-publication-sources.mjs",
     "tools/prepare-economy-catalog.mjs",
     "tools/prepare-water-environment.mjs",
     "tools/prepare-wildlife-catalog.mjs",
@@ -14664,6 +14665,7 @@
     "tools/monster-society-2-content.mjs",
     "tools/monster-society-3-content.mjs",
     "tools/monster-society-content.mjs",
+    "tools/npc-publication-sources.mjs",
     "tools/ontology.mjs",
     "tools/playtests.mjs",
     "tools/prepare-agriculture-rules.mjs",
@@ -14816,6 +14818,7 @@
     "tools/load-world.mjs",
     "tools/m2-people-publish.mjs",
     "tools/npc-depth.mjs",
+    "tools/npc-publication-sources.mjs",
     "tools/prepare-economy-supply.mjs",
     "tools/publish-m4-batch2.mjs",
     "tools/publish-monster-society-2.mjs",
@@ -14938,6 +14941,7 @@
    "server-plugin/engine.mjs",
    "server-plugin/facility-state.mjs",
    "server-plugin/finance-assets.mjs",
+   "server-plugin/remote-generation.mjs",
    "server-plugin/weather.mjs"
   ],
   "death": [
@@ -14973,6 +14977,7 @@
    "server-plugin/primitives-movement.mjs",
    "server-plugin/settlement-trade.mjs",
    "server-plugin/transport-route.mjs",
+   "server-plugin/transport.mjs",
    "server-plugin/weather.mjs"
   ],
   "equipment": [
@@ -17765,6 +17770,7 @@
       "server-plugin/finance-assets.mjs",
       "server-plugin/household-budget.mjs",
       "server-plugin/market.mjs",
+      "server-plugin/remote-generation.mjs",
       "server-plugin/settlement-trade.mjs",
       "server-plugin/shop.mjs",
       "server-plugin/valuation.mjs"
@@ -17772,7 +17778,8 @@
      "systems": [
       "base_standing",
       "sim_boss",
-      "sim_economy"
+      "sim_economy",
+      "sim_environment"
      ]
     },
     {
@@ -18330,6 +18337,7 @@
       "server-plugin/scheduler.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
+      "server-plugin/transport.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/war-diplomacy.mjs",
       "server-plugin/wildlife-awakening.mjs",
@@ -18344,6 +18352,7 @@
       "sim_military",
       "sim_npc",
       "sim_society",
+      "sim_transport",
       "sim_wildlife",
       "ui_actions",
       "ui_host"
@@ -18396,6 +18405,7 @@
     "sim_military",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife",
     "ui_actions",
     "ui_client",
@@ -19081,8 +19091,7 @@
     "content": "faction",
     "file": "world/lore/factions.json",
     "fields": [
-     "descriptionVisibility",
-     "offers"
+     "descriptionVisibility"
     ]
    },
    {
@@ -21641,7 +21650,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 1209
+   "lines": 1263
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -22249,6 +22258,7 @@
    "imports": [
     "server-plugin/combat.mjs",
     "server-plugin/derived.mjs",
+    "server-plugin/ecology-dynamics.mjs",
     "server-plugin/lifecycle-state.mjs",
     "server-plugin/population-health.mjs",
     "server-plugin/wildlife-awakening.mjs",
@@ -22272,7 +22282,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 89
+   "lines": 96
   },
   "server-plugin/festival.mjs": {
    "system": "sim_clock",
@@ -26736,6 +26746,7 @@
     "ecology"
    ],
    "rules": [
+    "calendar",
     "economy",
     "equipment",
     "governance",
@@ -26762,7 +26773,7 @@
    "worldDirs": [
     "geo"
    ],
-   "lines": 878
+   "lines": 906
   },
   "server-plugin/repair.mjs": {
    "system": "sim_economy",
@@ -27379,7 +27390,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 615
+   "lines": 636
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",
@@ -27882,7 +27893,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 29
+   "lines": 31
   },
   "server-plugin/transport.mjs": {
    "system": "sim_transport",
@@ -27942,7 +27953,8 @@
    "rules": [
     "combat",
     "petCare",
-    "quests"
+    "quests",
+    "travel"
    ],
    "world": [
     "routes",
@@ -27952,7 +27964,7 @@
     "design",
     "rules"
    ],
-   "lines": 587
+   "lines": 675
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",
@@ -28302,7 +28314,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 186
+   "lines": 202
   },
   "server-plugin/wildlife-awakening.mjs": {
    "system": "sim_wildlife",

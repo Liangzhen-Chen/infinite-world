@@ -25,16 +25,53 @@ function tick(d,e){const at=nextTransportMinute(d.get('state'),d.get('state','mi
 function arrive(d,e,id){for(let i=0;i<100;i++){const row=d.get('state','records',id);if(['arrived','delivered'].includes(row.status))return row;tick(d,e);}assert.fail('shipment did not arrive');}
 const book=(d,e,vehicle,event='first',extra={})=>bookTransport(d,e,{asset:vehicle,to:'loc_bs',cargo:[{item:'item_oats',quantity:24}],...extra},event);
 
-test('20 kg / 12 kg committed: a second 9 kg cannot reuse the vehicle; quotation is read-only',()=>{
+test('20 kg / 12 kg committed: another 9 kg is rejected, public action books 1 kg on the shared departure; quotation is read-only',async()=>{
  const {e,d,vehicle}=setup(),before=structuredClone(d.document);
  const quote=quoteTransport(d,e,{asset:vehicle,from:'loc_hw',to:'loc_bs',cargo:[{item:'item_oats',quantity:24}]});
  assert.equal(quote.load.kg,12);assert.deepEqual(d.document,before);
  const trip=book(d,e,vehicle),reserved=structuredClone(d.document);
  assert.equal(trip.load.kg,12);assert.equal(transportAssetView(e,d.document,vehicle).busy,trip.id);
- // No split-load agreement exists: the entire vehicle stays reserved, even for 1 kg.
- for(const quantity of [18,2])assert.throws(()=>book(d,e,vehicle,`second:${quantity}`,{cargo:[{item:'item_oats',quantity}]}));
+ // CT07明确新增并载：12+9>20仍须整笔拒绝；12+1=13可在同程未发车班次内分单保管。
+ assert.throws(()=>book(d,e,vehicle,'second:18',{cargo:[{item:'item_oats',quantity:18}]}));
  assert.deepEqual(d.document,reserved);assert.equal(e.quantity(d,'player','item_oats'),76);
+ const out=await e.reduce(d.document,{tool:'world_act',args:{action:'core:trade.transport',slots:{seller:DRIVER,task:'book',contract:vehicle,location:'loc_bs',item:'item_oats',quantity:2}},eventId:'second:2'});
+ assert.equal(out.result.ok,true,JSON.stringify(out.result));d.document=applyPatches(d.document,out.patches);
+ const shared=Object.values(d.get('state','records')).find(r=>r.category==='transport'&&r.id!==trip.id);assert.ok(shared);
+ assert.equal(shared.batch,trip.batch);assert.equal(e.quantity(d,'player','item_oats'),74);
+ assert.equal(transportServices(e,d.document,'loc_hw')[0].capacityKg,7,'20 - 12 - 1 = 7 kg 尚可并载');
+ assert.equal(d.get('ledger','accounts',freight(e,shared.id,'item_oats')),2);
  assert.equal(d.get('ledger','accounts',freight(e,trip.id,'item_oats')),24);assert.deepEqual(auditLedger(d.get('ledger')),[]);
+});
+
+test('CT07 取消并载单释放实载，余单恢复等候截止，钱货与承运人预约保持一致',()=>{
+ const {e,d,vehicle}=setup(),first=book(d,e,vehicle),second=book(d,e,vehicle,'fill',{cargo:[{item:'item_oats',quantity:16}]});
+ // 12kg+8kg=20kg，09:50凑满则10:00发；取消8kg后余12kg，恢复次日10:00截止。
+ assert.equal(d.get('state','records',first.id,'departAt'),600);assert.equal(second.departAt,600);
+ applyConsentEvent(d,{engine:e,document:d.document},{actor:DRIVER,eventId:'cancel-fill-consent',verb:'consent_given',to:'player',payload:{scope:'amend',subject:second.id,purpose:[second.id],terms:{quantity:0,fee:second.freight,location:second.from},until:600}});
+ cancelTransport(d,e,{shipment:second.id},'cancel-fill');
+ assert.equal(e.quantity(d,'player','item_oats'),76);
+ assert.equal(d.get('ledger','accounts',freight(e,second.id,'item_oats')),0);
+ assert.equal(d.get('ledger','accounts',freight(e,first.id,'item_oats')),24);
+ assert.equal(d.get('state','records',first.id,'departAt'),2040);
+ assert.equal(d.get('state','npcs',DRIVER,'cognitionTravel','transport'),first.id);
+ assert.equal(transportServices(e,d.document,'loc_hw')[0].capacityKg,8);
+ assert.deepEqual(auditLedger(d.get('ledger')),[]);
+});
+
+test('CT07 拦截与恢复作用于实际同车车次，分单货损不复制其他货物',()=>{
+ const {e,d,vehicle}=setup(),first=book(d,e,vehicle),second=book(d,e,vehicle,'fill',{cargo:[{item:'item_oats',quantity:16}]});
+ // 两单24+16=40份，重20kg；第一单损失2份后，待取总量应为22+16=38份。
+ tick(d,e);transportIncident(d,e,{shipment:first.id,actor:SECOND},'batch-raid');
+ assert.equal(d.get('state','records',first.id,'status'),'intercepted');assert.equal(d.get('state','records',second.id,'status'),'intercepted');
+ assert.equal(nextTransportMinute(d.get('state'),600),Infinity);
+ damageTransportCargo(d,e,{shipment:first.id,item:'item_oats',quantity:2,actor:DRIVER},'batch-loss');
+ assert.equal(d.get('ledger','accounts',freight(e,second.id,'item_oats')),16);
+ transportIncident(d,e,{shipment:first.id,recover:true,consent:true,actor:'player'},'batch-recover');
+ const one=arrive(d,e,first.id),two=d.get('state','records',second.id);
+ assert.equal(one.arrivedAt,two.arrivedAt);assert.equal(one.status,'arrived');assert.equal(two.status,'arrived');
+ assert.equal(one.cargo[0].quantity,22);assert.equal(two.cargo[0].quantity,16);
+ assert.equal(e.quantity(d,'player','item_oats'),60);assert.equal(transportAssetView(e,d.document,vehicle).busy,null);
+ assert.deepEqual(auditLedger(d.get('ledger')),[]);
 });
 
 test('arrival releases occupancy while absent recipient goods remain in freight until local collection',()=>{
@@ -144,10 +181,14 @@ test('a present recipient who cannot carry the load leaves it at arrival; failed
 });
 
 test('route delay past lease expiry keeps the carrier reservation until arrival',()=>{
- const {e,d,w,vehicle}=setup();leaseTransportAsset(d,e,{asset:vehicle,tenant:SECOND,minutes:1000,coins:1},'lease');
+ const short=setup();leaseTransportAsset(short.d,short.e,{asset:short.vehicle,tenant:SECOND,minutes:1000,coins:1},'short-lease');
+ // 报价2280晚于租约590+1000=1590，须在扣托运费/移货前拒绝，不能沿用忽略等客的到期判定。
+ const before=structuredClone(short.d.document);assert.throws(()=>book(short.d,short.e,short.vehicle),/租约/);assert.deepEqual(short.d.document,before);
+ // CT07：租期须先覆盖包含等客的报价；1800分钟覆盖初始到达2280，再由真实封路拖过到期。
+ const {e,d,w,vehicle}=setup();leaseTransportAsset(d,e,{asset:vehicle,tenant:SECOND,minutes:1800,coins:1},'lease');
  const trip=book(d,e,vehicle);assert.equal(trip.carrier,SECOND);
- // Anchor: lease ends at 590 + 1000 = 1590; a shared road closure lasts past it.
- w.routes[0].closedSeasons=[0,1,2,3];while(d.get('state','minute')<=1590)tick(d,e);
+ // Anchor: lease ends at 590 + 1800 = 2390; a shared road closure lasts past it.
+ w.routes[0].closedSeasons=[0,1,2,3];while(d.get('state','minute')<=2390)tick(d,e);
  assert.equal(transportAssetView(e,d.document,vehicle).holder,SECOND);assert.equal(transportAssetView(e,d.document,vehicle).busy,trip.id);
  w.routes[0].closedSeasons=[];arrive(d,e,trip.id);
  assert.equal(transportAssetView(e,d.document,vehicle).holder,DRIVER);assert.equal(transportAssetView(e,d.document,vehicle).busy,null);assert.deepEqual(auditLedger(d.get('ledger')),[]);

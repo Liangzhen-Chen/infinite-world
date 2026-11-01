@@ -66,6 +66,8 @@ test('旧测试世界没有lore目录时仍能读取，不要求新内容倒灌�
  for(const key of ['residents','households','settlementProfiles'])old[key]=[];
  // U9固定商店按聚落档案登记，晚于聚落档案；没有聚落档案的旧世界也没有这些商店。
  old.rules.economy.shops.stores=[];
+ // FXE8's restock overlay is keyed by those later stores; this edition has none.
+ old.rules.economy.shops.additionalRestock={};
  delete old.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
  delete old.rules.hazardClock;// U3/D1为后来的聚居地配置灾害，早于lore的世界没有这些时钟。
  delete old.rules.questSources;// U17/D1公告栏主事人依赖已投影掉的聚居地完整档。

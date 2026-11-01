@@ -411,7 +411,14 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
     }
     if(entry.added)return {...entry,reason:'实际到站提货；货款和运费沿原交易与运单结算'};
     if(receiveOnly||want<=0)return null;
-    const view=ctx.view=keeperView(d,engine,shop.keeper,minute);
+    // All rows of one counter share the same observation until a real write.
+    // The cursor revision invalidates it after a purchase or shipment receipt.
+    const revision=d.cursor?.revision;
+    if(!ctx.onSite||!Number.isSafeInteger(revision)||ctx.viewRevision!==revision||!ctx.view){
+        ctx.view=ctx.onSite?subjectiveView(engine,d.document,shop.keeper):keeperView(d,engine,shop.keeper,minute);
+        ctx.viewRevision=revision;
+    }
+    const view=ctx.view;
     // A received offer is not omniscient access to distant inventory. This
     // consumer can buy only after its holder has actually brought it here.
     const offers=Object.values(view.knowledge.facts).filter(f=>f.kind!=='belief').map(f=>{
@@ -426,31 +433,39 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
         if(maximum<=0)continue;
         const bill=n=>Number(BigInt(rate.numerator)*BigInt(n)/BigInt(rate.denominator));
         const budget=householdBudget(d,engine,shop.keeper,{view});
-        const cap=Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance)));
+        const cap=counterCash(d,shop.keeper)+Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance)));
         let low=0,high=maximum;while(low<high){const mid=Math.ceil((low+high)/2);if(bill(mid)<=cap)low=mid;else high=mid-1;}
         const quantity=low,cost=bill(quantity);
-        if(!quantity||!householdOptions(budget,{item:row.item,quantity,totalCoins:cost}).find(o=>o.operation==='buy').feasible)continue;
+        // Counter capital is already assigned to the business; only the extra
+        // purse funding competes with the household's reserved cash.
+        if(!quantity||!householdOptions(budget,{item:row.item,quantity,totalCoins:Math.max(0,cost-counterCash(d,shop.keeper))}).find(o=>o.operation==='buy').feasible)continue;
         const sale=subjectiveMarketQuote(engine,d.document,view,{item:row.item,seller:shop.keeper,quantity,business:shop});
         // The on-site offer is the landed bill, including any freight/storage
         // its holder passes on. Existing household/land/shop rent remains in
         // the cash budget; it is not a new marginal cost of this particular lot.
         const revenue=sale.totalCoins,net=revenue-cost;
         const tradingView=v=>({...v,self:{...v.self,obligations:v.self.obligations.filter(o=>o.resource!=='coin_river'||o.start!==undefined||o.terms?.service)}});
-        const verdict=npcDecision(tradingView(view),{kind:'restock',from:q.seller,cost:{coins:cost},reward:revenue});
+        const verdict=npcDecision(tradingView(view),{kind:'restock',from:q.seller,cost:{value:cost},reward:revenue});
         const sellerView=subjectiveView(engine,d.document,q.seller),consent=npcDecision(tradingView(sellerView),{kind:'sell',from:shop.keeper,cost:{value:cost},reward:cost});
         if(verdict.outcome!=='agree'||consent.outcome!=='agree')return {...entry,reason:'持货人与店主未同时同意',decision:verdict.outcome,sellerDecision:consent.outcome,expectedNet:net};
         const eventId=`shop:${shop.id}:${minute}:${row.item}:offer`;
+        const referenceCopper=Math.round(regionalTradeBase(d,engine,row.item,shop.settlement,minute)*quantity);
+        const funded=cost>counterCash(d,shop.keeper)?fundCounter(d,engine,{shop,minute,target:cost,eventId:`${eventId}:fund`,ctx}):null;
+        if(funded&&counterCash(d,shop.keeper)<cost)return {...entry,reason:'店主不愿或不能向柜台注资',decision:funded.decision?.outcome};
         obligationTransaction(d,()=>{
             transferItems(d,engine,q.seller,shop.keeper,row.item,quantity,null,{disposition:true,eventId});
-            moveCoins(d,{from:purse(engine,shop.keeper),to:purse(engine,q.seller),amount:cost,writer:'shop',eventId});
-            mirrorPartyCoins(d,engine,shop.keeper,-cost,eventId,'shop');mirrorPartyCoins(d,engine,q.seller,cost,eventId,'shop');
+            const counter=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account,payer=counter??purse(engine,shop.keeper);
+            moveCoins(d,{from:payer,to:purse(engine,q.seller),amount:cost,writer:'shop',eventId});
+            // Without a counter account the keeper's own purse pays, and its mirrored coins move too.
+            if(!counter)mirrorPartyCoins(d,engine,shop.keeper,-cost,eventId,'shop');
+            mirrorPartyCoins(d,engine,q.seller,cost,eventId,'shop');
             const quote=marketQuote(d,engine,{item:row.item,location:shop.location,seller:q.seller,buyer:shop.keeper,quantity});
             recordMarketDeal(d,quote,cost,quantity,eventId);
             const tax=taxableSale(engine,d.get('state'),q.seller,row.item)?assessTradeTax(d,engine,{seller:q.seller,cost,location:shop.location,sourceEvent:eventId}).amount:0;
             recordFinanceSale(d,engine,{buyer:shop.keeper,seller:q.seller,item:row.item,quantity,cost,tax,eventId});
             d.set(['state','records',offerKey],{category:'shop_offer_used',offer:source,seller:q.seller,buyer:shop.keeper,item:row.item,quantity:used+quantity,sourceEvent:eventId});
         });
-        return {...entry,added:quantity,paidCopper:cost,from:q.seller,offer:source,expectedNet:net,cost:{goods:cost,freight:0,duties:0},reason:'持货人已到场并按本人收到的报价成交'};
+        return {...entry,added:quantity,paidCopper:cost,referenceCopper,from:q.seller,offer:source,expectedNet:net,cost:{goods:cost,freight:0,duties:0},reason:'持货人已到场并按本人收到的报价成交'};
     }
     return {...entry,reason:'没有已到场的持货人或可领取运单；集日不生成现货'};
 }
@@ -529,16 +544,21 @@ function repriceShop(d,engine,shop,minute,entries,ctx){
     d.set(['state','records',`shop_pricing:${shop.keeper}`],pricingRecord({category:'shop_pricing',shop:shop.id,keeper:shop.keeper,markup,previous:shop.markup,standard,minute,
         sourceEvent:`shop:${shop.id}:${minute}`,basis:{paidCopper:paid,referenceCopper:reference},decision:{outcome:decision.outcome,trace:decision.trace}}));
 }
-function restockShop(d,engine,shop,minute,{receiveOnly=false}={}){
+function restockShop(d,engine,shop,minute,{receiveOnly=false,onSite=false}={}){
     const keeper=d.get('state','npcs',shop.keeper)??d.get('state','creatures',shop.keeper);
     if(!isEffective(engine,d,shop.keeper)||!keeper||['濒死'].includes(keeper.status))return;
-    const ctx={},entries=shop.restock.map(row=>receiveOnly?(row.source==='route'?receivedRouteStock(d,engine,shop,row,minute,0,ctx,{receiveOnly:true}):null):restockRow(d,engine,shop,row,minute,ctx)).filter(Boolean);
+    const ctx={onSite},entries=shop.restock.map(row=>{
+        if(!receiveOnly)return restockRow(d,engine,shop,row,minute,ctx);
+        if(row.source!=='route')return null;
+        if(onSite)return restockRow(d,engine,shop,row,minute,ctx);
+        return receivedRouteStock(d,engine,shop,row,minute,0,ctx,{receiveOnly:true});
+    }).filter(entry=>entry&&(!onSite||entry.added>0));
     // The wages of the hands he already employs are backed from the counter for the days until his next cycle.
     if(!receiveOnly&&d.get('state','npcs',shop.keeper)){
         const bill=recordsWhere(d.get('state','records'),'kind','workshop').filter(r=>r.laborMarket===1&&r.owner===shop.keeper&&employmentActive(r)).reduce((n,r)=>n+r.wage,0);
         if(bill)fundCounter(d,engine,{shop,minute,target:bill*Math.min(7,shop.cycleDays),eventId:`shop:${shop.id}:${minute}:wages`,ctx});
-        repriceShop(d,engine,shop,minute,entries,ctx);
     }
+    if(!receiveOnly||onSite)repriceShop(d,engine,shop,minute,entries,ctx);
     if(!entries.length)return;
     const key=`shop:${shop.id}`,old=d.get('state','records',key);
     if(old&&old.category!=='shop_ledger')throw Error('商店账编号冲突，拒绝覆盖');
@@ -548,10 +568,11 @@ function restockShop(d,engine,shop,minute,{receiveOnly=false}={}){
 // a cycle day; each boundary inside (before,after] is settled once, in order.
 export function advanceShops(d,engine,before,after){
     // At noon a physically present recipient may collect already-arrived K12
-    // goods before offering them. Receipt is distinct from the restock cycle.
+    // goods or buy a known on-site lot before serving customers. Neither a
+    // cycle date nor a quoted distant shipment creates physical stock.
     if(Math.floor((before-720)/DAY)<Math.floor((after-720)/DAY)){
         const minute=Math.floor((after-720)/DAY)*DAY+720;
-        for(const shop of currentShops(engine,d.get('state')))restockShop(d,engine,shop,minute,{receiveOnly:true});
+        for(const shop of currentShops(engine,d.get('state')))restockShop(d,engine,shop,minute,{receiveOnly:true,onSite:true});
     }
     // Consumers settle at noon; dated restocking remains at midnight.
     advanceCustomerFlow(d,engine,before,after);

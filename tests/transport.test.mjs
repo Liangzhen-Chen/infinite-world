@@ -5,8 +5,9 @@ import {createTransportAsset,transportAssetView,transportServices,quoteTransport
 import {traitsOf} from '../server-plugin/traits.mjs';
 import {applyInteraction} from '../server-plugin/interactions.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
+import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 
-import {fixture,asset,finish,DRIVER,SECOND,RECIPIENT} from './helpers/transport.mjs';
+import {fixture,asset,finish,depart,DRIVER,SECOND,SENDER,RECIPIENT} from './helpers/transport.mjs';
 // D05 §5.1 / S3: native setup opens the ledger. Include contract escrow as well
 // as purses/treasuries, so moving an escort deposit cannot masquerade as a loss.
 const cash=d=>d.get('ledger')?Object.entries(d.get('ledger','accounts')).filter(([key])=>key.split('|')[1]==='coin_river').reduce((sum,[,amount])=>sum+amount,0):d.get('state','player','coins')+Object.values(d.get('state','npcs')).reduce((n,p)=>n+(p.coins??0),0)+Object.values(d.get('state','settlements')).reduce((n,s)=>n+(s.treasury??0),0)+Object.values(d.get('state','quests')).reduce((n,q)=>n+(q.escrow??0),0);
@@ -44,7 +45,8 @@ test('真实乘客受座位容量限制，逐节点定位；桥断、季节与�
 });
 test('护送使用现有委托托管，护送者存活时不能跳过守卫劫货，抵达只支付一次',()=>{
  const {e,d}=fixture(),id=asset(d,e),total=cash(d),trip=bookTransport(d,e,{asset:id,to:'loc_bs',escort:SECOND},'escort');
- assert.ok(trip.escortQuest);assert.equal(cash(d),total);assert.throws(()=>transportIncident(d,e,{shipment:trip.id},'raid'),/护送者/);
+ // CT07：未满载先等客，须实际发车后再验证途中护送保护，断言意图不变。
+ assert.ok(trip.escortQuest);assert.equal(cash(d),total);depart(d,e,trip.id);assert.throws(()=>transportIncident(d,e,{shipment:trip.id},'raid'),/护送者/);
  finish(d,e,trip.id);const q=d.get('state','quests',trip.escortQuest);assert.equal(q.status,'已完成');assert.equal(q.escrow,0);assert.equal(cash(d),total);
 });
 test('现有工具可下承运单、推进并重放，不增加工具数',async()=>{
@@ -52,7 +54,9 @@ test('现有工具可下承运单、推进并重放，不增加工具数',async(
  const result=await e.reduce(before,event);const got=applyPatches(before,result.patches);assert.ok(Object.values(got.state.records).some(r=>r.category==='transport'));
  assert.deepEqual((await e.reduce(before,event)).patches,result.patches);assert.equal(toolDefinitions().length,27);
  assert.match(e.scene(got),/乘车船/);assert.throws(()=>e.move({...d,document:got},{destination:'loc_bs'},'jump'),/承运班次/);
- const waited=await e.reduce(got,{tool:'world_time',args:{minutes:600},eventId:'travel'});assert.equal(applyPatches(got,waited.patches).state.location,'loc_bs');
+ // CT07：包含等客和夜宿的真实报价钟点，仍验证公开工具推进至实际目的地。
+ const trip=Object.values(got.state.records).find(r=>r.category==='transport');
+ const waited=await e.reduce(got,{tool:'world_time',args:{minutes:trip.estimatedArrivalAt-got.state.minute},eventId:'travel'});assert.equal(applyPatches(got,waited.patches).state.location,'loc_bs');
 });
 test('货物到站保管须本人现场提取，单件耐久与归属往返不复制',()=>{
  const {e,d}=fixture(),id=asset(d,e),unit='unit:freight';d.set(['state','inventory','item_staff'],{quantity:1,instances:[unit]});d.set(['state','itemInstances',unit],{id:unit,item:'item_staff',owner:'player',status:'持有',durability:37});
@@ -75,6 +79,55 @@ test('驮队绑定真实动物，容量读物种，疲劳、失主和已骑乘�
  d.set(['state','creatures',animal,'care'],{version:1,fatigue:0,hunger:0});d.set(['state','player','mount'],animal);assert.equal(transportAssetView(e,d.document,a.id).capacityKg,0);d.remove(['state','player','mount']);
  d.set(['state','creatures',animal,'owner'],SECOND);assert.equal(transportAssetView(e,d.document,a.id).capacityKg,0);
 });
+test('CT07 日行钟点：等客一日，24 km 分日行走，报价、调度与实际到达同刻',()=>{
+ const {e,d}=fixture(),id=asset(d,e);
+ d.set(['state','npcs',SECOND,'location'],'loc_bs');
+ // 手算：首日10:00订车，未满载等一日，次日10:00发；24/3=8小时。
+ // 日行07–15：先行5小时、夜宿16小时、再行3小时，第三日10:00到。
+ const q=quoteTransport(d,e,{asset:id,from:'loc_hw',to:'loc_yp_path',passengers:['player']});
+ assert.equal(q.departAt,1440+600);assert.equal(q.estimatedArrivalAt,2*1440+600);
+ const trip=bookTransport(d,e,{asset:id,to:'loc_yp_path',passengers:['player']},'clock');
+ assert.equal(trip.status,'booked');assert.equal(nextTransportMinute(d.get('state'),600),q.departAt);
+ for(let i=0;i<10&&d.get('state','records',trip.id,'transport','segment')?.kind!=='rest';i++){
+  const at=nextTransportMinute(d.get('state'),d.get('state','minute'));assert.ok(Number.isFinite(at),'到站前必须出现夜宿节点');d.set(['state','minute'],at);advanceTransport(d,e,at);
+ }
+ assert.equal(d.get('state','records',trip.id,'transport','segment','kind'),'rest');
+ assert.equal(transportTrace(e,d.get('state'),trip.id).position.location,null,'夜宿在路段上，不虚报上一个村镇');
+ assert.equal(transportTrace(e,d.get('state'),trip.id).position.remainingKm,9);
+ assert.throws(()=>transportIncident(d,e,{shipment:trip.id,actor:SECOND},'remote-camp'),/实际所在路段端点/);
+ const got=finish(d,e,trip.id);
+ assert.equal(got.departedAt,q.departAt);assert.equal(got.arrivedAt,q.estimatedArrivalAt);
+ assert.equal(got.transport.movingMinutes,480);
+ assert.ok(got.history.some(r=>r.kind==='overnight'&&r.minute===1440+900));
+ assert.equal(d.get('state','location'),'loc_yp_path');
+});
+
+test('CT07 两笔实载凑满提前发车，各单保管及权限独立，车体只磨损一次',()=>{
+ const {e,d}=fixture(),id=createTransportAsset(d,e,{owner:DRIVER,kind:'cart',id:'batch'},'build-batch').id;
+ d.set(['state','inventory','item_oats'],{quantity:30});d.set(['state','npcs',RECIPIENT,'location'],'loc_bs');
+ d.document.ledger=openLedger(e,d.document);
+ // 手拉车容量10+力量10×2=30kg；两位发货人各订30份×0.5kg=15kg，合计100%。
+ const first=bookTransport(d,e,{asset:id,to:'loc_bs',recipient:RECIPIENT,cargo:[{item:'item_oats',quantity:30}]},'batch-a');
+ assert.equal(first.departAt,2040);assert.equal(transportServices(e,d.document,'loc_hw')[0].capacityKg,15);
+ assert.equal(transportServices(e,d.document,'loc_hw')[0].nextDeparture,2040);
+ const before=structuredClone(d.document);
+ assert.throws(()=>quoteTransport(d,e,{asset:id,from:'loc_hw',to:'loc_yp_path',cargo:[{item:'item_oats',quantity:1}]}),/同程/);
+ assert.throws(()=>bookTransport(d,e,{asset:id,owner:SENDER,to:'loc_bs',cargo:[{item:'item_oats',quantity:31}]},'overload'),/容量/);
+ assert.deepEqual(d.document,before);
+ const q=quoteTransport(d,e,{asset:id,from:'loc_hw',to:'loc_bs',owner:SENDER,cargo:[{item:'item_oats',quantity:30}]});
+ const second=bookTransport(d,e,{asset:id,owner:SENDER,recipient:RECIPIENT,to:'loc_bs',cargo:[{item:'item_oats',quantity:30}]},'batch-b');
+ assert.equal(second.batch,first.batch);assert.equal(second.departAt,600);assert.equal(q.estimatedArrivalAt,840);
+ assert.equal(d.get('state','records',first.id,'departAt'),600);
+ assert.throws(()=>transportTrace(e,d.get('state'),first.id,SENDER),/身份/);
+ assert.deepEqual(transportServices(e,d.document,'loc_hw'),[]);
+ const got=finish(d,e,second.id),prior=d.get('state','records',first.id);
+ assert.equal(got.arrivedAt,840);assert.equal(prior.arrivedAt,840);
+ assert.equal(e.quantity(d,RECIPIENT,'item_oats'),110);assert.equal(e.quantity(d,SENDER,'item_oats'),20);
+ assert.equal(transportAssetView(e,d.document,id).durability,99,'同一12km行程磨损一次');
+ assert.equal(transportAssetView(e,d.document,id).busy,null);
+ assert.deepEqual(auditLedger(d.get('ledger')),[]);
+});
+
 test('运费商税、关税和过路费进入实际公账，报价与支付一致',()=>{
  const {e,d,w}=fixture(),id=asset(d,e);w.routes[0].toll=7;d.set(['state','inventory','item_wood'],{quantity:20});const q=quoteTransport(d,e,{asset:id,from:'loc_hw',to:'loc_bs',cargo:[{item:'item_wood',quantity:20}]}),before=cash(d),player=d.get('state','player','coins');
  const trip=bookTransport(d,e,{asset:id,to:'loc_bs',cargo:[{item:'item_wood',quantity:20}]},'tax');assert.equal(cash(d),before);assert.equal(player-d.get('state','player','coins'),q.total);assert.equal(trip.toll,7);assert.ok(Object.values(d.get('state','records')).some(r=>r.category==='trade_tax'&&r.kind==='tariff'));

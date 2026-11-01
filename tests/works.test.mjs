@@ -6,6 +6,7 @@ import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches}from'../server-plugin/storage.mjs';
 import {mapView}from'../server-plugin/ui-map.mjs';
 import {toolDefinitions}from'../extension/tools.mjs';
+import {marketTimeWindows}from'../server-plugin/npc-state.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const world=await loadWorld(),engine=new WorldEngine(world);
 const run=async(c,tool,args,eventId='test')=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result};};
@@ -93,6 +94,8 @@ test('表演：在场观众按演出成色打赏，收入取自观众钱袋；�
 
 test('测绘：只画亲历地点与路线，持图者地图上可见图上地点；地图可出售转手',async()=>{
     const c=fresh('loc_hw');c.state.skills.skill_life_11_core=skill(300);
+    // 在首次开账前设置买方的初始钱袋；后续等待和成交均走真实账本。
+    audience(c,['npc_hw_chenbai']);c.state.npcs.npc_hw_chenbai.coins=200;
     c.state.discoveries={loc_hw:{minute:0,source:'亲历'},loc_hw_dock:{minute:0,source:'亲历'}};
     const drawn=await until(c,'world_research',{operation:'survey',name:'河湾渡口图'},row=>row.result.success,'survey');
     assert.ok(drawn.result.locations.includes('loc_hw_dock'));assert.ok(!drawn.result.locations.includes('loc_hw_northwood'));
@@ -105,7 +108,13 @@ test('测绘：只画亲历地点与路线，持图者地图上可见图上地�
     assert.equal(mapView(engine,lost).locations.find(row=>row.id==='loc_hw_dock'),undefined);
     // Sold through the existing trade entry.
     const trading=structuredClone(world);trading.npcs.find(n=>n.id==='npc_hw_chenbai').schedule={default:[{start:0,end:1440,location:'loc_hw',activity:'营业',services:['trade']}]};
-    const market=new WorldEngine(trading),shop=audience(structuredClone(drawn.document),['npc_hw_chenbai']);shop.state.npcs.npc_hw_chenbai.coins=200;shop.state.npcs.npc_hw_chenbai.activity='营业';
+    const market=new WorldEngine(trading);
+    const visiting=structuredClone(drawn.document);
+    // K08：测绘跨过正午，陈白可能已经出门采购；等真实往返结束才卖图。
+    const end=Math.max(drawn.document.state.minute,...marketTimeWindows(drawn.document.state,'npc_hw_chenbai').map(r=>r.end));
+    // 还须从采购出发地按新营业作息走回柜台，给足一小时的本地步行窗口。
+    const waited=await market.reduce(visiting,{tool:'world_time',args:{minutes:Math.max(1,end-drawn.document.state.minute)+60},eventId:'survey-prelude'});
+    const shop=applyPatches(visiting,waited.patches);
     const sold=await (async()=>{const out=await market.reduce(shop,{tool:'world_trade',args:{operation:'trade',buyer:'npc_hw_chenbai',seller:'player',item:'item_work_map',quantity:1},eventId:'sell'});return{document:applyPatches(shop,out.patches),result:out.result};})();
     assert.equal(sold.document.state.itemInstances[drawn.result.instance].owner,'npc_hw_chenbai');
     assert.ok(sold.document.state.player.coins>drawn.document.state.player.coins);
@@ -141,7 +150,9 @@ test('作品系统复用 world_research，不新增工具',()=>{
 });
 
 test('F014 出版需求来自真实读者：同一读者不重复买；再版无新读者则售0；名望与贡献只记一次；钱来自读者钱袋而非凭空',async()=>{
-    const c=fresh();
+    // K08：先让真实午间客流结算，再建立读者钱袋夹具。12:30写240分钟，
+    // 首版17:30赶在陆青18点出门前；三版共到19:30，不跨次日正午。
+    const {document:c}=await run(fresh(),'world_time',{until:{dayOffset:0,hour:12,minute:30}},'readers-prelude');
     // 读者夹具：卢清（已识字450）有200铜；陈白、林穗识字300，陈白50铜、林穗只有20铜（买不起：20÷4=5铜 < 书价）。
     for(const id of['npc_hw_chenbai','npc_hw_linsui']){c.state.npcs[id].skills={...c.state.npcs[id].skills,skill_literacy:skill(300)};Object.assign(c.state.npcs[id],{location:'bld_hw_school',status:'正常'});}
     c.state.npcs.npc_hw_luqing.coins=200;c.state.npcs.npc_hw_chenbai.coins=50;c.state.npcs.npc_hw_linsui.coins=20;

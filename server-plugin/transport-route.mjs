@@ -6,7 +6,9 @@ const DAY=1440;
 // Both public grain caravans and hired carriers consume the same route state.
 export function transportSegment(engine,state,seed,t,mode,minute){
  const edge=engine.world.routes.find(e=>e.id===t.edges[t.edgeIndex]),budget=engine.rules.travel.dailyTravelMinutes;
- if(mode!=='boat'&&t.movingMinutes>0&&t.movingMinutes%budget===0&&t.restedBudgets<t.movingMinutes/budget)
+ const window=t.travelWindow,at=minute%DAY;
+ if(window&&(at<window.start||at>=window.end))return {kind:'rest',minutes:at<window.start?window.start-at:DAY-at+window.start,reason:'夜宿，次日日行时段续行'};
+ if(!window&&mode!=='boat'&&t.movingMinutes>0&&t.movingMinutes%budget===0&&t.restedBudgets<t.movingMinutes/budget)
   return {kind:'rest',minutes:DAY-budget};
  const condition=edge?weatherTravel(engine,seed,{...edge,from:t.location},mode,minute):null;
  const facility=facilityRouteStates(engine,state).get(edge?.id);
@@ -15,7 +17,7 @@ export function transportSegment(engine,state,seed,t,mode,minute){
  const base=mode==='cart'?engine.rules.travel.cartKmh:engine.rules.travel.walkKmh*(mode==='horse'?engine.rules.travel.horseMultiplier:1);
  const speed=(edge.speedKmh??base)*(edge.terrainMultiplier??1)*(facility?1.25*facility.factor:1),rate=speed/(condition?.multiplier??1)/60;
  const remaining=t.remainingKm??edge.lengthKm;
- const duration=Math.min(DAY-minute%DAY,mode==='boat'?Infinity:budget-t.movingMinutes%budget,Math.max(1,Math.ceil(remaining/rate)));
+ const duration=Math.min(DAY-minute%DAY,window?window.end-at:mode==='boat'?Infinity:budget-t.movingMinutes%budget,Math.max(1,Math.ceil(remaining/rate)));
  return {kind:'move',minutes:duration,distanceKm:Math.min(remaining,duration*rate),destination:edge.from===t.location?edge.to:edge.from};
 }
 export function stepTransport(engine,t,segment){

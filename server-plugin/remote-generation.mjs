@@ -576,6 +576,24 @@ export function generateCounty(world,countyId,campaignSeed){
         const p=profiles[0];p.residentIds.push(row.id);p.registeredPopulation++;p.registeredHouseholdCount++;p.population++;p.householdCount++;settlements[0].population++;
     }
     if(people.some(p=>p.remoteRole==='festival_host'))profiles[0].facts=[`${seat.name}按种子登记${profiles[0].population}名、${profiles[0].householdCount}户；具名${profiles[0].registeredPopulation}名（含纲要人物与节日主办），其余${profiles[0].pendingPopulation}名${profiles[0].pendingHouseholdCount}户在到访住区时才生成，不计入完整档。`];
+    // A generated shop's road channel needs a finite physical upstream too.
+    // These are founding consignments already brought to the counter, just as
+    // the keeper's opening shelf is founding stock. No later date creates more.
+    // Append after the original draws so existing people/places keep their seed.
+    for(const settlement of settlements)for(const shop of settlement.shops){
+        const keeper=people.find(p=>p.id===shop.keeper),rows=keeper.shopRestock;
+        if(!rows.length)continue;
+        const supplier=person({name:nameFor(keeper.culture,keeper.species,clanFor(keeper.culture,keeper.species)),
+            age:keeper.age,sex:keeper.sex,culture:keeper.culture,...(keeper.species?{species:keeper.species}:{}),
+            settlement:settlement.id,location:shop.location,occupation:'行商',remoteRole:'supplier',
+            coins:0,inventory:Object.fromEntries(rows.map(r=>[r.item,r.maximum-r.amount])),
+            schedule:shopSchedule(shop.location,'merchant'),services:['trade'],
+            consignment:{keeper:keeper.id,origins:Object.fromEntries(rows.map(r=>[r.item,r.from]))}});
+        const profile=profiles.find(p=>p.id===settlement.id);
+        profile.residentIds.push(supplier.id);profile.registeredPopulation++;profile.registeredHouseholdCount++;
+        profile.population++;profile.householdCount++;settlement.population++;
+        profile.facts=[`${settlement.name}按种子登记${profile.population}名、${profile.householdCount}户；具名${profile.registeredPopulation}名（含到场行商），其余${profile.pendingPopulation}名${profile.pendingHouseholdCount}户在到访住区时才生成，不计入完整档。`];
+    }
     jurisdiction[countyId]={level:'郡',superior:province.id};
     const rostered=profiles.reduce((n,p)=>n+p.population,0);
     const {hazards,ledgers}=remoteHazards(county,seat,settlements,routes,profiles);
@@ -762,6 +780,16 @@ export function unfoldRemoteAt(d,engine,location){
         d.set(['state','records',key],row);
         holdingSet(d,null,['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation,materialized:{county,settlement:p.settlement}},'remote-generation');
     }
+    // The on-site holder tells this counter its landed asking price and finite
+    // lot. The ordinary K08 consumer still checks presence, stock, both parties'
+    // decisions and household reserves; this memory never credits the shelf.
+    for(const p of skeleton.people)if(p.consignment){
+        const keeper=p.consignment.keeper,at=d.get('state','minute'),key=['state','npcs',keeper,'memoryStream'];
+        const offers=Object.entries(p.inventory).map(([item,quantity])=>({id:`consignment:${p.id}:${item}`,minute:at,kind:'knowledge',
+            value:{seller:p.id,item,quantity,unitPrice:base.items.find(i=>i.id===item).basePrice,
+                at,expires:at+base.rules.calendar.daysPerMonth*1440,location:p.location,from:p.consignment.origins[item]}}));
+        d.set(key,[...d.get(...key)??[],...offers]);
+    }
     syncHoldingSource(d,engine,'office',{writer:'remote-generation'});
     return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,habitats:fresh.map(h=>h.id),
         rostered:skeleton.census.rostered};
@@ -770,7 +798,7 @@ export function unfoldRemoteAt(d,engine,location){
 // ---------------------------------------------------------------- overlay world
 const PROFILE_KEYS=['personality','voice','background','currentConcern','goals','fears','knowledge','relationships','visibleFeature','notes'];
 // Skeletons generated before D1 (no hazards field) keep their officials as roster entries.
-const active=(p,skeleton)=>p.remoteRole==='keeper'||Boolean(skeleton.hazards)&&['official','festival_host','advocate'].includes(p.remoteRole);
+const active=(p,skeleton)=>['keeper','supplier'].includes(p.remoteRole)||Boolean(skeleton.hazards)&&['official','festival_host','advocate'].includes(p.remoteRole);
 export function remoteKey(state){
     const remote=state?.remote??{};
     return [...Object.keys(remote).sort().map(k=>`${k}:${remote[k].hash}:${remote[k].revision}`),
