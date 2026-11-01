@@ -283,7 +283,7 @@
     "server-plugin/post.mjs",
     "server-plugin/deterrence.mjs"
    ],
-   "lines": 760,
+   "lines": 850,
    "stateWrites": [
     "location",
     "npcs",
@@ -14977,6 +14977,7 @@
    "server-plugin/primitives-movement.mjs",
    "server-plugin/settlement-trade.mjs",
    "server-plugin/transport-route.mjs",
+   "server-plugin/transport.mjs",
    "server-plugin/weather.mjs"
   ],
   "equipment": [
@@ -18336,6 +18337,7 @@
       "server-plugin/scheduler.mjs",
       "server-plugin/seasonal-hazards.mjs",
       "server-plugin/settlement-trade.mjs",
+      "server-plugin/transport.mjs",
       "server-plugin/tribal-awakening.mjs",
       "server-plugin/war-diplomacy.mjs",
       "server-plugin/wildlife-awakening.mjs",
@@ -18350,6 +18352,7 @@
       "sim_military",
       "sim_npc",
       "sim_society",
+      "sim_transport",
       "sim_wildlife",
       "ui_actions",
       "ui_host"
@@ -18402,6 +18405,7 @@
     "sim_military",
     "sim_npc",
     "sim_society",
+    "sim_transport",
     "sim_wildlife",
     "ui_actions",
     "ui_client",
@@ -27888,7 +27892,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 29
+   "lines": 31
   },
   "server-plugin/transport.mjs": {
    "system": "sim_transport",
@@ -27948,7 +27952,8 @@
    "rules": [
     "combat",
     "petCare",
-    "quests"
+    "quests",
+    "travel"
    ],
    "world": [
     "routes",
@@ -27958,7 +27963,7 @@
     "design",
     "rules"
    ],
-   "lines": 587
+   "lines": 675
   },
   "server-plugin/tribal-awakening.mjs": {
    "system": "sim_society",

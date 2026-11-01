@@ -55,7 +55,7 @@ test('D25 ①③ 送信：邮资读 transport.json post.feePerLi 按里程计，
 });
 
 // ---- D26 托运货物 ----
-test('D26 托运货物 ②③④⑤：托运 2 石（5→3），在途不在仓库也不在粮行，次日到达标为玩家所有待取，提取到手 2 石、数量不变；运费付给车行',async t=>{
+test('D26 托运货物 ②③④⑤：托运 2 石（5→3），在途不在仓库也不在粮行，到站标为玩家所有待取，提取到手 2 石、数量不变；运费付给车行',async t=>{
  // 车行→郑水生的马车；2 石麦子→带壳燕麦 2 份；粮行→白石镇严辙；秋季九月十五辰时；玩家 100 文，仓库（行囊）有 5。
  const CART='transport_asset:d26_cart';
  const ui=await uiSession(t,{mutate:scene('loc_hw',monthDayMinute(9,15,8,0),s=>{
@@ -73,7 +73,8 @@ test('D26 托运货物 ②③④⑤：托运 2 石（5→3），在途不在仓�
  await ui.choose('time',{minutes:booked.estimatedArrivalAt-inTransit.state.minute+1});
  const arrived=await ui.read(),row=arrived.state.records[booked.id];
  assert.equal(row.status,'arrived','④到货标为待取（收货人是玩家，人不在到货地）');assert.equal(row.recipient,'player');assert.equal(row.owner,'player');
- assert.equal(baseEngine.calendar(row.arrivedAt).text.match(/\d+日/)[0],'16日','④九月十六到达');
+ // CT07：08:01订车，09:00起算等客一日；16日09:00发，日行07–15，17日09:00到。
+ assert.equal(row.arrivedAt,monthDayMinute(9,17,9),'④真实等客与夜宿后九月十七巳初到达');
  assert.equal(held(arrived.state.inventory,'item_oats'),3,'待取期间仍不在仓库里');assert.equal(held(arrived.state.npcs[YANZHE].inventory,'item_oats'),held(before.state.npcs[YANZHE].inventory,'item_oats'),'待取期间不在粮行的货架上');
  const walk=await ui.choose('move',{destination:'loc_bs'},{target:'loc_bs'});assert.ok(walk.ok,walk.error);
  const collected=await legacy(ui,'world_trade',{operation:'transport',task:'collect',business:booked.id},'collect-d26');
@@ -97,4 +98,30 @@ test('D26 ① 托运运费读 transport.json carrier:cart 费率：运费 = ceil
  const dbl=(await legacy(await mk(doubled),'world_trade',slots,'quote-d26b2')).result;
  assert.equal(dbl.freight,461,'费率翻倍：24 × 20 × 0.024 × 20 × 2 = 460.8 → 461');
 });
-test.todo('D26 ④到达钟点“九月十六午时前后”——W8D 起车行发车读 departure:cart（午初前整点随到随发），车速仍是 rules.travel.cartKmh；本例 08:00 发车、次日 09:20 到仍与题面约 2 小时差距：缺车行并车/等客（batching.waitDays）与逐日行程对齐钟点的消费（S5；登记：docs/A3-后续阶段登记.md S5CT CT07）');
+test('D26 ④ 实际订车→等客→发车→夜宿→到站→取货，24km按规则于九月十七09:00到',async t=>{
+ const CART='transport_asset:d26_clock';
+ const ui=await uiSession(t,{mutate:scene('loc_hw',monthDayMinute(9,15,8),s=>{
+  s.player.coins=100;s.inventory.item_oats=stack(5,{weight:0.5});Object.assign(s.npcs[ZHENG],{location:'loc_hw',activity:'营业',status:'正常'});
+  s.records[CART]={category:'transport_asset',id:CART,kind:'cart',owner:ZHENG,location:'loc_hw',durability:100,maxDurability:100,animal:null};
+ })});
+ await primed(ui);
+ const slots={operation:'transport',contract:CART,location:'loc_bs',item:'item_oats',quantity:2};
+ const quote=(await legacy(ui,'world_trade',{...slots,task:'quote'},'quote-clock')).result;
+ // 手算：15日08:01已过08点，首可用班次09:00；1kg未满30kg，等一日到16日09:00。
+ // 固定种子两日均晴、官道倍率1，24km÷3km/h=8小时；09–15行18km，夜宿16h，07–09行6km。
+ const departure=monthDayMinute(9,16,9),night=monthDayMinute(9,16,15),arrival=monthDayMinute(9,17,9);
+ assert.equal(quote.distanceKm,24);assert.equal(quote.departAt,departure);assert.equal(quote.estimatedArrivalAt,arrival);
+ const booked=(await legacy(ui,'world_trade',{...slots,task:'book'},'book-clock')).result;
+ assert.equal(booked.departAt,departure);assert.equal(booked.estimatedArrivalAt,arrival);assert.equal(booked.status,'booked');
+ const row=async()=>(await ui.read()).state.records[booked.id];
+ await ui.choose('time',{minutes:departure-(await ui.read()).state.minute-1});assert.equal((await row()).status,'booked');
+ await ui.choose('time',{minutes:1});assert.equal((await row()).departedAt,departure);assert.equal((await row()).status,'moving');
+ await ui.choose('time',{minutes:night-(await ui.read()).state.minute});
+ assert.equal((await row()).transport.segment.kind,'rest');assert.equal((await row()).transport.remainingKm,6);
+ await ui.choose('time',{minutes:arrival-(await ui.read()).state.minute-1});assert.equal((await row()).arrivedAt,undefined);
+ await ui.choose('time',{minutes:1});assert.equal((await row()).arrivedAt,arrival);assert.equal((await row()).status,'arrived');
+ assert.equal(held((await ui.read()).state.inventory,'item_oats'),3);
+ const walk=await ui.choose('move',{destination:'loc_bs'},{target:'loc_bs'});assert.ok(walk.ok,walk.error);
+ await legacy(ui,'world_trade',{operation:'transport',task:'collect',business:booked.id},'collect-clock');
+ assert.equal((await row()).status,'delivered');assert.equal(held((await ui.read()).state.inventory,'item_oats'),5);
+});

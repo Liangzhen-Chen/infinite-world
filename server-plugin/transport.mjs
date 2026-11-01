@@ -56,9 +56,39 @@ const int=(n,min,label)=>{if(!Number.isSafeInteger(n)||n<min)throw preconditionF
 const all=s=>Object.values(s.records??{});
 const unfinished=s=>(s.records?.['transport:active']?.ids??[]).map(id=>s.records[id]).filter(Boolean);
 const live=s=>unfinished(s).filter(r=>['booked','moving','delayed'].includes(r.status));
-// A consignment reserves the whole vehicle until arrival (no split-load agreement).
-// Interception stops its clock, not its claim on the vehicle, driver or draft animals.
+// Booked cart consignments may share a departure; moving/intercepted loads keep
+// their reservation until arrival. Cargo and payment accounts remain per order.
 const occupied=s=>unfinished(s).filter(r=>['booked','moving','delayed','intercepted'].includes(r.status));
+const batchOf=(s,row)=>row.batch?occupied(s).filter(r=>r.batch===row.batch):[row];
+const batchLoad=rows=>rows.reduce((n,r)=>({kg:n.kg+r.load.kg,m3:n.m3+r.load.m3,seats:n.seats+r.passengers.length}),{kg:0,m3:0,seats:0});
+function joiningBatch(s,a,from,to,letter){
+ const rows=occupied(s).filter(r=>r.asset===a.id);
+ if(!rows.length)return [];
+ if(letter||a.kind!=='cart'||rows.some(r=>r.status!=='booked'||!r.batch||r.from!==from||r.to!==to))throw preconditionFailure('没有同地同程、尚未发车的可并载车次');
+ return rows;
+}
+function tripClock(e,s,a,{from,to,load,passengers,letter,requested}){
+ const rows=joiningBatch(s,a,from,to,letter),rules=e.rules.travel.carriers?.cart;
+ const batched=a.kind==='cart'&&!letter&&rules;
+ if(!batched)return {departAt:carrierDeparture(e,letter?'post':'cart',requested),rows,travelWindow:null};
+ const booked=batchLoad(rows),kg=booked.kg+load.kg,m3=booked.m3+load.m3,seats=booked.seats+passengers.length;
+ const filled=Math.max(kg/a.capacityKg,m3/a.capacityM3,a.seats?seats/a.seats:0)*1000>=rules.batching.minLoadPermille;
+ const closes=rows[0]?.batchClosesAt??carrierDeparture(e,'cart',s.minute)+Math.ceil(rules.batching.waitDays*DAY);
+ const departAt=carrierDeparture(e,'cart',Math.max(requested,...rows.map(r=>r.batchNotBefore??r.createdAt),filled?s.minute:closes));
+ const start=tableRow(e,'departure:cart').resume;
+ return {departAt,rows,batch:rows[0]?.batch??null,batchClosesAt:closes,travelWindow:rules.dailyJourney.nightTravel?null:{start,end:start+e.rules.travel.dailyTravelMinutes}};
+}
+const initialJourney=(edges,from,departAt,travelWindow)=>({edges,edgeIndex:0,location:from,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:departAt,segment:null,...travelWindow?{travelWindow}:{} });
+// Quote and execution use the same segments, including weather and overnight
+// stops. The planning bound is the existing weather route planner's 1000 steps.
+function arrivalMinute(e,s,seed,edges,from,mode,departAt,travelWindow){
+ const t=initialJourney(edges,from,departAt,travelWindow);let minute=departAt;
+ for(let steps=0;steps<1000;steps++){
+  if(t.edgeIndex>=edges.length)return minute;
+  const segment=transportSegment(e,s,seed,t,mode,minute);minute+=segment.minutes;stepTransport(e,t,segment);
+ }
+ throw preconditionFailure('承运行程超过路线规划步数限制');
+}
 function index(d,id,add=true,key='transport:active'){const ids=d.get(...path(key),'ids')??[];holdingSet(d,null,path(key),{category:'transport_index',ids:add?[...new Set([...ids,id])]:ids.filter(x=>x!==id)},'transport');}
 // Wrecked shipments leave the live index at once but stay here until their cargo, freight and escort accounts are settled.
 const pendingWrecks=s=>(s.records?.['transport:wrecked']?.ids??[]).map(id=>s.records[id]).filter(r=>r?.status==='wrecked'&&r.settledAt===undefined);
@@ -66,6 +96,11 @@ const assetKey=id=>id.startsWith('transport_asset:')?id:`transport_asset:${id}`;
 const actorLocation=(s,id)=>id==='player'?s.location:s.npcs?.[id]?.location;
 const assets=(e,s)=>[...new Map([...openingTransportAssets.filter(a=>e.byId.has(a.owner)&&e.byId.has(a.location)),...all(s).filter(a=>a.category==='transport_asset')].map(a=>[a.id,a])).values()];
 function available(e,s,id){const n=s.npcs?.[id];return n&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'')&&!n.scheduleTravel&&!n.cognitionTravel&&!e.npcAutonomyBusy(s,id,s.minute)&&!personConstraint(e,s,id)&&(personAge(e,s,id).value??0)>=18;}
+function availableForBatch(e,s,id,rows){
+ const n=s.npcs?.[id];
+ if(rows.some(r=>r.driver===id&&r.id===n?.cognitionTravel?.transport))return available(e,{...s,npcs:{...s.npcs,[id]:{...n,cognitionTravel:null}}},id);
+ return available(e,s,id);
+}
 function operator(e,s,owner){return s.npcs?.[owner]?owner:groupRepresentative(e,s,owner);}
 function draftAnimals(e,document,asset){
  const s=document.state,view=holdingsView(document),reserved=new Set(occupied(s).filter(r=>r.asset!==asset.id).flatMap(r=>r.draftSources??[]));
@@ -141,11 +176,14 @@ function createTransportAssetInner(d,e,{owner,kind,animal,id},eventId){
 }
 export function transportServices(e,document,location){
  const s=document.state;
- return assets(e,s).map(a=>transportAssetView(e,document,a.id)).filter(a=>a.factor&&a.capacityKg>0&&!a.busy&&a.location===location).flatMap(a=>{
+ return assets(e,s).map(a=>transportAssetView(e,document,a.id)).filter(a=>a.factor&&a.capacityKg>0&&a.location===location).flatMap(a=>{
+  const rows=occupied(s).filter(r=>r.asset===a.id);
+  if(rows.length&&(a.kind!=='cart'||rows.some(r=>r.status!=='booked'||!r.batch)))return [];
   const driver=operator(e,s,a.holder),group=groupView(e,s,a.holder);
-  if(!available(e,s,driver)||actorLocation(s,driver)!==location||!(group||/商|车|船|驿|运输|脚夫/.test(personOccupation(e,s,driver).value??'')))return [];
-  const now=s.minute,depart=carrierDeparture(e,'cart',now);
-  return [{asset:a.id,carrier:a.holder,driver,kind:a.kind,mode:a.mode,capacityKg:a.capacityKg,capacityM3:a.capacityM3,seats:a.seats,nextDeparture:depart,intervalMinutes:60}];
+  if(!availableForBatch(e,s,driver,rows)||actorLocation(s,driver)!==location||!(group||/商|车|船|驿|运输|脚夫/.test(personOccupation(e,s,driver).value??'')))return [];
+  const used=batchLoad(rows);if(used.kg>=a.capacityKg||used.m3>=a.capacityM3||a.seats&&used.seats>=a.seats)return [];
+  const now=s.minute,depart=rows[0]?.departAt??carrierDeparture(e,'cart',now);
+  return [{asset:a.id,carrier:a.holder,driver,kind:a.kind,mode:a.mode,capacityKg:a.capacityKg-used.kg,capacityM3:a.capacityM3-used.m3,seats:a.seats-used.seats,nextDeparture:depart,intervalMinutes:60}];
  });
 }
 function dimensions(e,cargo,passengers){
@@ -154,10 +192,11 @@ function dimensions(e,cargo,passengers){
  return {kg,m3};
 }
 export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='player',escort=null,departAt:requested=d.get('state','minute')}){
- const s=d.get('state'),a=transportAssetView(e,d.document,asset);if(!a||!a.factor||!a.capacityKg||a.busy||a.location!==from)throw preconditionFailure('没有同地可用运力');
- const letter=isLetter(cargo,passengers,escort),departAt=carrierDeparture(e,letter?'post':'cart',requested);
- const load=dimensions(e,cargo,passengers);if(load.kg>a.capacityKg||load.m3>a.capacityM3||passengers.length>a.seats)throw preconditionFailure('货舱重量、体积或座位容量不足');
+ const s=d.get('state'),a=transportAssetView(e,d.document,asset);if(!a||!a.factor||!a.capacityKg||a.location!==from)throw preconditionFailure('没有同地可用运力');
+ const letter=isLetter(cargo,passengers,escort),load=dimensions(e,cargo,passengers),clock=tripClock(e,s,a,{from,to,load,passengers,letter,requested}),{departAt}=clock;
+ const used=batchLoad(clock.rows);if(load.kg+used.kg>a.capacityKg||load.m3+used.m3>a.capacityM3||passengers.length+used.seats>a.seats)throw preconditionFailure('货舱重量、体积或座位容量不足');
  const prior=e.airDraft;e.airDraft=d;let route;try{route=e.route(from,to,a.mode,departAt,d.document.randomSeed);}finally{e.airDraft=prior;}
+ if(clock.rows.length&&(route.edges.length!==clock.rows[0].transport.edges.length||route.edges.some((id,i)=>id!==clock.rows[0].transport.edges[i])))throw preconditionFailure('原车次路线已变化，不能并入不同路线');
  const edges=route.edges.map(id=>e.world.routes.find(r=>r.id===id)),distanceKm=edges.reduce((n,r)=>n+r.lengthKm,0);
  const billableKg=Math.max(load.kg,load.m3*250,1),capacityFactor=Math.max(1,specOf(e,a.kind).kg/a.capacityKg);
  let at=from;const passages=edges.map(r=>{
@@ -171,12 +210,13 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='
   const risk=derived(e,d.document,'transport:risk',a.id,{target:r.id,base:Math.max(0,Number(r.risk)||0)*(1-deterrence)});
   const tax=tradeTax(e,s,destination,'tariff');
   const cargoValue=Math.trunc(cargo.reduce((v,c)=>v+c.quantity*marketQuote(d,e,{item:c.item,location:destination,seller:owner,instances:c.instances}).explanation.value.value,0));
-  return {edge:r.id,destination,treasury:tax.settlement,toll:r.toll,risk,deterrence,cargoValue,tariff:(r.toll||r.guards?.length)?Math.floor(cargoValue*tax.bps/10000):0,freight:letter?r.lengthKm*tableParam(e,'unit.liPerKm')*tableParam(e,'post.feePerLi'):r.lengthKm*billableKg*specOf(e,a.kind).rate*capacityFactor*(1+risk)};
+  return {edge:r.id,destination,treasury:tax.settlement,toll:clock.rows.length?0:r.toll,risk,deterrence,cargoValue,tariff:(r.toll||r.guards?.length)?Math.floor(cargoValue*tax.bps/10000):0,freight:letter?r.lengthKm*tableParam(e,'unit.liPerKm')*tableParam(e,'post.feePerLi'):r.lengthKm*billableKg*specOf(e,a.kind).rate*capacityFactor*(1+risk)};
  });
  const risk=distanceKm?passages.reduce((sum,p,i)=>sum+p.risk*edges[i].lengthKm,0)/distanceKm:0;
  const freight=Math.max(1,Math.ceil(passages.reduce((sum,p)=>sum+p.freight,0)));
  const tariff=passages.reduce((n,p)=>n+p.tariff,0);
- return {asset:a.id,mode:a.mode,from,to,departAt,estimatedArrivalAt:departAt+route.minutes,route,passages,load,distanceKm,risk,capacityFactor,freight,tariff,toll:route.cost,total:freight+tariff+route.cost};
+ const estimatedArrivalAt=arrivalMinute(e,s,d.document.randomSeed,route.edges,from,a.mode,departAt,clock.travelWindow),toll=passages.reduce((n,p)=>n+p.toll,0);
+ return {asset:a.id,mode:a.mode,from,to,departAt,estimatedArrivalAt,route:{...route,minutes:estimatedArrivalAt-departAt},passages,load,distanceKm,risk,capacityFactor,freight,tariff,toll,total:freight+tariff+toll,...clock.batchClosesAt!==undefined?{batch:clock.batch,batchClosesAt:clock.batchClosesAt,travelWindow:clock.travelWindow}:{} };
 }
 // F010：模拟范围外的来货（店铺外路补货）不再免费入库——按挑夫背货的运价（balance/transport.json carrier:pack）、沿途关口通行费与进口关税，
 // 由收货人实际支付。与 quoteTransport 同一套口径：运价按路程×计费重量×费率，关税按到岸聚落的 tariff 税率与货值。
@@ -227,18 +267,20 @@ function bookTransportInner(d,e,args,eventId){
  const externalValid=external?.category==='settlement_trade'&&external.seller===owner&&external.status==='in-transit'&&cargo.length===1&&cargo[0].item===external.item&&cargo[0].quantity===external.quantity;
  const a=transportAssetView(e,d.document,asset),service=transportServices(e,d.document,from).find(x=>x.asset===a?.id);
  if(!service)throw preconditionFailure('承运人当前不能提供班次');
- const departAt=args.departAt??(isLetter(cargo,passengers,escort)?carrierDeparture(e,'post',now):service.nextDeparture);int(departAt,now,'发车时间');
+ if(args.departAt!==undefined)int(args.departAt,now,'发车时间');
  if(!forwarding&&!externalValid&&from!==actorLocation(s,owner))throw preconditionFailure('发货人须在装货地点');
- const q=quoteTransport(d,e,{asset:a.id,from,to,cargo,passengers,owner,escort,departAt}),id=`transport:${eventId}`;
- if(q.departAt!==departAt)throw preconditionFailure('不在承运班次时间');
+ const q=quoteTransport(d,e,{asset:a.id,from,to,cargo,passengers,owner,escort,departAt:args.departAt}),id=`transport:${eventId}`,departAt=q.departAt;
+ if(args.departAt!==undefined&&q.departAt!==args.departAt)throw preconditionFailure('不在承运班次时间');
+ const joining=q.batch?occupied(s).filter(r=>r.batch===q.batch):[];
  if(!q.route.edges.length)throw preconditionFailure('发货与目的地须为不同地点');
  if(d.get(...path(id)))throw preconditionFailure('运单编号已存在');
  const lease=all(s).find(r=>r.category==='transport_lease'&&r.asset===a.id&&r.ends>now);if(lease&&lease.ends<q.estimatedArrivalAt)throw preconditionFailure('租约不能覆盖承运全程');
  const actors=[service.driver,...passengers,...escort?[escort]:[]];if(new Set(actors).size!==actors.length)throw preconditionFailure('乘客或护送人员重复');
  for(const actor of actors){
   if(actor==='player'){if(s.location!==from)throw preconditionFailure('乘客不在发车地点');}
-  else if(!available(e,s,actor)||actorLocation(s,actor)!==from||s.player.companions?.includes(actor))throw preconditionFailure('承运人员或乘客不可行动或不在场');
+  else if(!availableForBatch(e,s,actor,actor===service.driver?joining:[])||actorLocation(s,actor)!==from||s.player.companions?.includes(actor))throw preconditionFailure('承运人员或乘客不可行动或不在场');
  }
+ if(joining.some(r=>[...r.passengers,...r.escort?[r.escort]:[]].some(actor=>actors.includes(actor))))throw preconditionFailure('乘客或护送人员已在本车次登记');
  for(const actor of actors)assertWaterEarthMovement(d,actor);
  e.assertNpcAutonomyAction(s,actors,{start:now,minutes:q.estimatedArrivalAt-now});
  assertNpcObligationAction(d,e,actors,{start:now,minutes:q.estimatedArrivalAt-now,location:to,kind:'move'});
@@ -252,7 +294,9 @@ function bookTransportInner(d,e,args,eventId){
  for(const p of q.passages)if(p.toll&&(!p.treasury||!groupAccountView(e,s,p.treasury)&&!e.world.settlementProfiles?.some(r=>r.id===p.treasury)))throw preconditionFailure('收费路段没有已登记的收款公账');
  const row={category:'transport',id,asset:a.id,cargoLocation:a.id,carrier:service.carrier,driver:service.driver,owner,recipient,from,to,mode:q.mode,status:'booked',createdAt:now,departAt,estimatedArrivalAt:q.estimatedArrivalAt,
   freight:q.freight,tariff:q.tariff,toll:q.toll,routeCost:q.total,cargo:[],load:q.load,draftSources:a.draftSources,passengers:clone(passengers),escort,escortEscrow:escortFee,receiptOf,externalOrder:externalValid?args.externalOrder:null,
-  transport:{edges:q.route.edges,edgeIndex:0,location:from,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:departAt,segment:null},history:[{minute:now,location:from,kind:'booked'}]};
+  ...args.authorization!==undefined?{authorization:args.authorization}:{},
+  ...q.batchClosesAt!==undefined?{batch:q.batch??id,batchClosesAt:q.batchClosesAt,batchNotBefore:args.departAt??now}:{},
+  transport:initialJourney(q.route.edges,from,departAt,q.travelWindow),history:[{minute:now,location:from,kind:'booked'}]};
  if(!d.get(...path(a.id)))holdingSet(d,null,path(a.id),Object.fromEntries(Object.entries(a).filter(([k])=>!['holder','capacityKg','capacityM3','seats','draftSources','mode','factor','busy','tags'].includes(k))),'transport');
  if(!externalValid)for(const c of cargo){const moved=moveGoods(d,e,owner,c.item,c.quantity,{take:true,trip:id});const units=moved.instances??[];row.cargo.push({...c,instances:units});for(const unit of units)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),owner:id,status:'托运'},'transport');}
  financeTransfer(d,e,owner,service.carrier,q.freight+q.toll,eventId);assessTradeTax(d,e,{seller:service.carrier,cost:q.freight,location:from,sourceEvent:eventId});
@@ -279,10 +323,37 @@ function bookTransportInner(d,e,args,eventId){
   d.set(['state','quests',quest.id],{...quest,status:'进行中',taker:escort,transport:id,...(Boolean(row.escortWage)?{escrow:0}:{} )});
  }
  for(const actor of actors)if(actor!=='player')d.set(['state','npcs',actor,'cognitionTravel'],{transport:id,from,to,depart:departAt,arrive:q.estimatedArrivalAt});
- if(departAt===now){const t=row.transport;t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,now);t.segmentStartedAt=now;t.nextAt=now+t.segment.minutes;row.status=t.segment.kind==='wait'?'delayed':'moving';
-  if(a.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',a.animal,'care');if(care)holdingSet(d,null,['state','creatures',a.animal,'care'],{...care,busyUntil:t.nextAt},'transport');}
+ holdingSet(d,null,path(id),row,'transport');index(d,id);
+ if(row.batch)retimeBatch(d,e,[...joining,row],departAt,q.estimatedArrivalAt);
+ else if(departAt===now){startLeg(d,e,row,now);holdingSet(d,null,path(id),row,'transport');}
+ return clone(d.get(...path(id)));
+}
+function startLeg(d,e,row,minute){
+ const t=row.transport;
+ t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,minute);t.segmentStartedAt=minute;t.nextAt=minute+t.segment.minutes;
+ if(row.departedAt===undefined&&t.movingMinutes===0&&t.segment.kind==='move'){row.departedAt=minute;row.history.push({minute,location:t.location,kind:'departed'});}
+ row.status=t.segment.kind==='wait'?'delayed':'moving';row.reason=t.segment.reason??null;
+ const animal=d.get(...path(row.asset),'animal'),care=animal&&d.get('state','creatures',animal,'care');
+ if(care&&t.segment.kind==='move')holdingSet(d,null,['state','creatures',animal,'care'],{...care,busyUntil:t.nextAt},'transport');
+}
+function retimeBatch(d,e,rows,departAt,estimatedArrivalAt){
+ const now=d.get('state','minute'),actors=[...new Set(rows.flatMap(r=>[r.driver,...r.passengers,...r.escort?[r.escort]:[]]))];
+ e.assertNpcAutonomyAction(d.get('state'),actors,{start:now,minutes:estimatedArrivalAt-now});
+ assertNpcObligationAction(d,e,actors,{start:now,minutes:estimatedArrivalAt-now,location:rows[0].to,kind:'move'});
+ const lease=all(d.get('state')).find(r=>r.category==='transport_lease'&&r.asset===rows[0].asset&&r.ends>now);
+ if(lease&&lease.ends<estimatedArrivalAt)throw preconditionFailure('租约不能覆盖并载承运全程');
+ for(const row of rows)if(row.passengers.includes('player')){
+  let at=row.from;
+  for(const id of row.transport.edges){const edge=e.world.routes.find(r=>r.id===id);at=edge.from===at?edge.to:edge.from;assertLocationAccess(d,e,at,{authorization:row.authorization,arrivalMinute:estimatedArrivalAt,companions:row.passengers.filter(p=>p!=='player')});}
  }
- holdingSet(d,null,path(id),row,'transport');index(d,id);return clone(row);
+ for(const old of rows){
+  const row=clone(old);row.departAt=departAt;row.estimatedArrivalAt=estimatedArrivalAt;row.transport.nextAt=departAt;
+  for(const actor of [row.driver,...row.passengers,...row.escort?[row.escort]:[]])if(actor!=='player')d.set(['state','npcs',actor,'cognitionTravel'],{transport:row.id,from:row.from,to:row.to,depart:departAt,arrive:estimatedArrivalAt});
+  if(departAt===now)startLeg(d,e,row,now);
+  holdingSet(d,null,path(row.id),row,'transport');
+  const order=row.externalOrder&&d.get(...path(row.externalOrder));
+  if(order)holdingSet(d,null,path(row.externalOrder),{...order,estimatedArrivalAt},'transport');
+ }
 }
 function setPosition(d,e,row,location){
  holdingSet(d,null,[...path(row.asset),'location'],location,'transport');
@@ -304,19 +375,21 @@ export function advanceTransport(d,e,minute){
 }
 function advanceTransportInner(d,e,minute){
  for(const wreck of pendingWrecks(d.get('state')))settleWreckedShipment(d,e,wreck.id,minute);
- for(const old of live(d.get('state'))){const row=clone(old),t=row.transport;
+ const pending=live(d.get('state')),vehicles=new Map(pending.map(r=>[r.asset,transportAssetView(e,d.document,r.asset)])),loads=new Map(pending.map(r=>[r.id,batchLoad(batchOf(d.get('state'),r))])),worn=new Set();
+ for(const old of pending){const row=clone(old),t=row.transport;
   if(t.nextAt>minute)continue;
   if(t.nextAt<minute)throw Error('承运时钟越过未处理节点');
-  const asset=transportAssetView(e,d.document,row.asset);
-  if(!asset?.factor||!asset.capacityKg||row.load.kg>asset.capacityKg||row.load.m3>asset.capacityM3||!d.get('state','npcs',row.driver)||['死亡','昏迷','濒死','患病'].includes(d.get('state','npcs',row.driver,'status'))||personConstraint(e,d.get('state'),row.driver)){
+  const asset=vehicles.get(row.asset),load=loads.get(row.id),vehicle=row.batch??row.id;
+  if(!asset?.factor||!asset.capacityKg||load.kg>asset.capacityKg||load.m3>asset.capacityM3||!d.get('state','npcs',row.driver)||['死亡','昏迷','濒死','患病'].includes(d.get('state','npcs',row.driver,'status'))||personConstraint(e,d.get('state'),row.driver)){
    row.status='delayed';t.nextAt=minute+DAY;row.reason='车船损坏、驮畜失能或承运人无法行动';holdingSet(d,null,path(row.id),row,'transport');continue;
   }
   if(t.segment){const waypoint=stepTransport(e,t,t.segment);
-   if(asset.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',asset.animal,'care');if(care)holdingSet(d,null,['state','creatures',asset.animal,'care'],{...care,fatigue:Math.min(100,care.fatigue+Math.ceil(t.segment.minutes/30)*e.rules.petCare.travelFatiguePer30Minutes)},'transport');}
-   if(waypoint){row.history.push({minute,location:t.location,kind:'waypoint'});const wear=Math.max(1,Math.ceil(t.segment.distanceKm/20));holdingSet(d,null,[...path(row.asset),'durability'],Math.max(0,asset.durability-wear),'transport');}}
+   if(asset.animal&&t.segment.kind==='move'&&!worn.has(vehicle)){const care=d.get('state','creatures',asset.animal,'care');if(care)holdingSet(d,null,['state','creatures',asset.animal,'care'],{...care,fatigue:Math.min(100,care.fatigue+Math.ceil(t.segment.minutes/30)*e.rules.petCare.travelFatiguePer30Minutes)},'transport');}
+   if(waypoint){row.history.push({minute,location:t.location,kind:'waypoint'});if(!worn.has(vehicle)){const wear=Math.max(1,Math.ceil(t.segment.distanceKm/20));holdingSet(d,null,[...path(row.asset),'durability'],Math.max(0,asset.durability-wear),'transport');}}
+   worn.add(vehicle);}
   if(t.edgeIndex>=t.edges.length){
    row.status='delivered';row.arrivedAt=minute;t.nextAt=null;t.segment=null;index(d,row.id,false);
-   const present=row.passengers.includes(row.recipient)||actorLocation(d.get('state'),row.recipient)===t.location;
+   const present=pending.some(r=>(r.batch??r.id)===vehicle&&r.passengers.includes(row.recipient))||actorLocation(d.get('state'),row.recipient)===t.location;
    const handover=!row.cargo.length||present&&carryOverKg(d,e,row.recipient,dimensions(e,row.cargo,[]).kg)===0;
    if(handover){for(const c of row.cargo)moveGoods(d,e,row.recipient,c.item,c.quantity,{instances:c.instances,trip:row.id});row.deliveredCargo=clone(row.cargo);row.cargo=[];}
    row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,e,row,t.location);
@@ -327,10 +400,8 @@ function advanceTransportInner(d,e,minute){
    if(row.losses?.length)notifyShipment(d,e,row,`运单${row.id}到货短少：途中已有${row.losses.length}笔货损，实收货物少于托运数量。`,minute,t.location);
    publishTransitionEvent(d,e,{id:`${row.id}:arrival`,verb:'trade',actor:row.carrier,target:row.recipient,location:t.location,minute,tags:['transport'],witnesses:[]});
   }else{
-   t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,minute);t.segmentStartedAt=minute;t.nextAt=minute+t.segment.minutes;
-   if(asset.animal&&t.segment.kind==='move'){const care=d.get('state','creatures',asset.animal,'care');if(care)holdingSet(d,null,['state','creatures',asset.animal,'care'],{...care,busyUntil:t.nextAt},'transport');}
-   row.status=t.segment.kind==='wait'?'delayed':'moving';row.reason=t.segment.reason??null;
-   if(t.segment.kind==='wait')row.history.push({minute,location:t.location,kind:'blocked',edge:t.edges[t.edgeIndex]});
+   startLeg(d,e,row,minute);
+   if(t.segment.kind==='wait'||t.segment.kind==='rest')row.history.push({minute,location:t.location,kind:t.segment.kind==='rest'?'overnight':'blocked',edge:t.edges[t.edgeIndex]});
    // Between endpoints the route id and remaining distance, not a false town address, locate the shipment.
    setPosition(d,e,row,t.location);
   }
@@ -422,13 +493,22 @@ function settleEscort(d,e,row,q,minute){
  });
 }
 export function transportIncident(d,e,{shipment,actor='player',recover=false,consent=false},eventId){
+ return obligationTransaction(d,()=>transportIncidentInner(d,e,{shipment,actor,recover,consent},eventId));
+}
+function transportIncidentInner(d,e,{shipment,actor,recover,consent},eventId){
  const old=d.get(...path(shipment));if(old?.category!=='transport'||!['moving','delayed','intercepted'].includes(old.status))throw preconditionFailure('运单不在可追查的途中');
- const row=clone(old),s=d.get('state'),position=transportPosition(e,s,row);
- if(!row.passengers.includes(actor)&&actor!==row.driver&&(position.location===null||actorLocation(s,actor)!==position.location))throw preconditionFailure('须到运单实际所在路段端点');
- if(recover){if(row.status!=='intercepted'||![row.owner,row.carrier].includes(actor)||row.custodian!==actor&&!(consent&&actorLocation(s,row.custodian)===actorLocation(s,actor)))throw preconditionFailure('须先从实际扣货者取回货物');row.status='delayed';row.transport.nextAt=s.minute+1;row.custodian=null;row.transport.segment=null;}
- else{if(row.escort&&!['死亡','昏迷','濒死'].includes(s.npcs?.[row.escort]?.status)&&!personConstraint(e,s,row.escort))throw preconditionFailure('护送者仍在守卫，须先处理护送者');row.status='intercepted';row.custodian=actor;row.transport.nextAt=null;}
- row.history.push({minute:s.minute,location:row.transport.location,kind:recover?'recovered':'intercepted',actor});holdingSet(d,null,path(row.id),row,'transport');
- publishTransitionEvent(d,e,{id:`${eventId}:transport`,verb:recover?'trade':'theft',actor,target:row.owner,location:row.transport.location,minute:s.minute,tags:['transport'],witnesses:[]});return row;
+ const s=d.get('state'),members=batchOf(s,old),position=transportPosition(e,s,old);
+ if(!members.some(r=>r.passengers.includes(actor)||actor===r.driver)&&(position.location===null||actorLocation(s,actor)!==position.location))throw preconditionFailure('须到运单实际所在路段端点');
+ if(recover){if(old.status!=='intercepted'||![old.owner,old.carrier].includes(actor)||old.custodian!==actor&&!(consent&&actorLocation(s,old.custodian)===actorLocation(s,actor)))throw preconditionFailure('须先从实际扣货者取回货物');}
+ else if(members.some(r=>r.escort&&!['死亡','昏迷','濒死'].includes(s.npcs?.[r.escort]?.status)&&!personConstraint(e,s,r.escort)))throw preconditionFailure('护送者仍在守卫，须先处理护送者');
+ for(const prior of members){
+  const row=clone(prior);
+  if(recover){row.status='delayed';row.transport.nextAt=s.minute+1;row.custodian=null;row.transport.segment=null;}
+  else{row.status='intercepted';row.custodian=actor;row.transport.nextAt=null;}
+  row.history.push({minute:s.minute,location:row.transport.location,kind:recover?'recovered':'intercepted',actor});holdingSet(d,null,path(row.id),row,'transport');
+  publishTransitionEvent(d,e,{id:`${eventId}:transport:${row.id}`,verb:recover?'trade':'theft',actor,target:row.owner,location:row.transport.location,minute:s.minute,tags:['transport'],witnesses:[]});
+ }
+ return clone(d.get(...path(old.id)));
 }
 export function transportTrace(e,s,id,viewer='player'){
  const r=s.records?.[id];if(r?.category!=='transport')throw preconditionFailure('运单不存在');
@@ -439,7 +519,8 @@ export function transportPosition(e,s,row){
  const t=row.transport,edge=e.world.routes.find(r=>r.id===t.edges[t.edgeIndex]),segment=t.segment;
  const moving=row.status==='moving'&&segment?.kind==='move',elapsed=moving?Math.max(0,Math.min(segment.minutes,s.minute-(t.segmentStartedAt??s.minute))):0;
  const remaining=edge?Math.max(0,(t.remainingKm??edge.lengthKm)-(moving?segment.distanceKm*elapsed/segment.minutes:0)):0;
- return {location:moving&&elapsed>0?null:t.location,route:edge?.id??null,from:t.location,to:segment?.destination??null,remainingKm:remaining};
+ const inRoute=edge&&((t.remainingKm??edge.lengthKm)<edge.lengthKm-1e-9||moving&&elapsed>0);
+ return {location:inRoute?null:t.location,route:edge?.id??null,from:t.location,to:segment?.destination??null,remainingKm:remaining};
 }
 export function collectTransport(d,e,id,actor='player'){
  return obligationTransaction(d,()=>collectTransportInner(d,e,id,actor));
@@ -464,7 +545,14 @@ export function cancelTransport(d,e,{shipment,actor='player'},eventId){
   if(row.escortQuest)finishEscort(d,e,row,s.minute,row.from,'失败');
   for(const who of [row.driver,...row.passengers,...row.escort?[row.escort]:[]])if(who!=='player'&&d.get('state','npcs',who,'cognitionTravel')?.transport===row.id)d.remove(['state','npcs',who,'cognitionTravel']);
   row.history.push({minute:s.minute,location:row.from,kind:'cancelled'});
-  holdingSet(d,null,path(row.id),row,'transport');index(d,row.id,false);return clone(row);
+  holdingSet(d,null,path(row.id),row,'transport');index(d,row.id,false);
+  const remaining=occupied(d.get('state')).filter(r=>row.batch&&r.batch===row.batch);
+  if(remaining.length){
+   const a=transportAssetView(e,d.document,row.asset),clock=tripClock(e,d.get('state'),a,{from:row.from,to:row.to,load:{kg:0,m3:0},passengers:[],letter:false,requested:s.minute});
+   const arrival=arrivalMinute(e,d.get('state'),d.document.randomSeed,remaining[0].transport.edges,row.from,row.mode,clock.departAt,clock.travelWindow);
+   retimeBatch(d,e,remaining,clock.departAt,arrival);
+  }
+  return clone(row);
  });
 }
 // A loss consumes the actual freight first. Its compensation and any legal

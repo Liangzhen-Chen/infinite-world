@@ -15,6 +15,7 @@ import {trackTransferUnit} from '../server-plugin/items.mjs';
 import {ensureHoldings,openHolding,holdingsView,located,aliveHoldings} from '../server-plugin/holdings.mjs';
 import {createTransportAsset,transportAssetView,quoteTransport,bookTransport,advanceTransport,nextTransportMinute,transportPosition} from '../server-plugin/transport.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute} from '../server-plugin/settlement-trade.mjs';
+import {flowDelta} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const seller='npc_hw_duanyan',item='item_steel_arming_sword',location='bld_hw_forge';
@@ -274,12 +275,18 @@ test('fare and goods remain in real carrier/freight accounts and survive a nativ
  assert.equal(f.document.state.npcs[driver].coins-before.state.npcs[driver].coins,335);
  assert.equal(f.document.ledger.accounts[`${trip.id}|item_oats|freight`],100);
  assert.equal(cashTotal(f.document),cash);assert.deepEqual(auditLedger(f.document.ledger),[]);
- const out=await f.act('world_time',{minutes:10},'s508-midway');assert.equal(out.result.ok,true);
+ // CT07：先经真实时钟等客至发车，再走10分钟；仍验证途中位置和钱货/存档，不把等待误作赶路。
+ const out=await f.act('world_time',{minutes:trip.departAt-f.document.state.minute+10},'s508-midway');assert.equal(out.result.ok,true);
  const current=f.document.state.records[trip.id],position=transportPosition(f.engine,f.document.state,current);
  assert.equal(position.location,null);assert.equal(position.route,'route_hw_bs');
  // No anonymous in-transit money balance is invented; the paid purse belongs
  // to the driver currently travelling with this physical shipment.
- assert.equal(current.carrier,driver);assert.equal(current.driver,driver);assert.equal(cashTotal(f.document),cash);
+ assert.equal(current.carrier,driver);assert.equal(current.driver,driver);
+ // 等客跨日后，既有NPC出行发生本夹具的3文关卡费用（travel汇）。
+ // 独立锚点：只允许这3文已登记汇流出，总额=原总额-3；不允许运输凭空丢钱或新造在途现金。
+ assert.deepEqual(flowDelta(before,f.document,'coin_river'),{sources:0,sinks:3,byFlow:{'sink:export|coin_river|travel':3}});
+ assert.equal(cashTotal(f.document),cash-3);
+ assert.equal(f.document.ledger.accounts[`${trip.id}|item_oats|freight`],100);
  const root=await fs.mkdtemp(path.join(tmpRoot(),'s508-carriage-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  const reducer=(document,input)=>f.engine.reduce(document,input),store=new CampaignStorage(root,{reducer});
  await store.create({id:'carriage',worldVersion:world.version,document:f.document});
