@@ -2323,7 +2323,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 7272,
+   "lines": 7280,
    "stateWrites": [
     "crafted",
     "npcs",
@@ -27385,7 +27385,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 628
+   "lines": 636
   },
   "server-plugin/sites.mjs": {
    "system": "sim_environment",

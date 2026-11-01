@@ -20,7 +20,7 @@ const time=async(f,minutes,id,engine=f.engine)=>{const out=await engine.reduce(f
 // 工程用工按到岗分钟计工计钱，没有配方批次限制，便于手算。
 async function hired({counter=0,engine=new WorldEngine(world)}={}){
  const initial=engine.createCharacter(seed,{},'s504b'),worker='npc_hw_ayan';
- // W4 F026 起居民会在正午上门买货；本组考查的是工钱来源，其余居民设为无钱，没人上门买林穗的货（上门客流另有 s5-w4-economy 测试，与 W4 其他店铺测试同一做法）。
+ // Other residents start penniless; subsequent income can fund real purchases, which are accounted for separately below.
  const penniless=Object.keys(initial.state.npcs).filter(id=>id!==owner&&id!==worker).map(id=>({path:['state','npcs',id,'coins'],value:0}));
  const prepared=applyIntentSetup(engine,initial,{minute:600,location:mill,present:[owner,worker],facts:[...penniless,
   {path:['state','projects'],value:{...initial.state.projects,proj_x:{id:'proj_x',type:'工程',name:'磨坊加固',status:'施工中',creator:owner,settlement:'loc_hw',location:mill,remainingDays:10,remainingWork:10,days:10}}},
@@ -57,11 +57,15 @@ test('wage counter: when the counter runs short the shortfall is wage debt even 
  write(f,d=>payFromCounter(d,f.engine,{owner,to:'npc_hw_shendu',amount:25,writer:'business',eventId:'supplier-bill'}));
  await time(f,f.row.nextWork-f.document.state.minute,'shift1');
  const earned=Math.ceil(30*f.minutes/480);assert.ok(earned>5);
- // 柜台5铜全付，其余成为工钱债权（债权额=应得，已付5）；个人钱袋的4970铜一分不动。
+ // Counter pays 5; the remaining earned wages become a claim. The sales receipt below accounts for separate purse income.
  assert.equal(rec(f).paid,5);assert.equal(dedicatedCoinAccount(f.document.state,owner,'counter').coins,0);
  const debt=Object.values(f.document.state.records).find(r=>r.kind==='wage'&&r.contract===f.row.id);
  assert.ok(debt);assert.equal(debt.amount,earned);assert.equal(debt.paid,5);
- assert.equal(f.document.state.npcs[owner].coins,4970);assert.equal(rec(f).status,'罢工');
+ // K08: the supplier's 25 copper funds a noon purchase of four breads:
+ // 2 * .5 * 4 = 4. The owner's purse is 4970 + 4; none pays the wage debt.
+ const sale=Object.values(f.document.state.records).find(r=>r.category==='customer_flow'&&r.keeper===owner).visits.find(v=>v.npc==='npc_hw_shendu'&&v.outcome==='bought');
+ assert.deepEqual([sale.item,sale.quantity,sale.paid],['item_bread',4,4]);
+ assert.equal(f.document.state.npcs[owner].coins,4974);assert.equal(rec(f).status,'罢工');
  // 欠薪不清，雇员据此离职并立案（既有欠薪投诉路径）。
  await time(f,3*DAY,'complaint');
  assert.equal(rec(f).status,'已辞工');assert.ok(f.document.state.records[debt.id].defaulted.case);clean(f);
@@ -104,15 +108,19 @@ test('low wage: a red line against quitting is the worker own; no caller can qui
 const DAY0=1440;
 async function week(){
  // 前提（非考查对象）：几位店主终日营业；严辙的黏土、林穗的干粮货架空了；阿燕缺钱求活计，会做咸酪，林穗备好料具。
- const w=structuredClone(world),placeOf={npc_hw_linsui:'bld_hw_qingdeng',npc_hw_duanyan:'bld_hw_forge',npc_hw_yanzhe:'loc_bs'};
+ const w=structuredClone(world),placeOf={npc_hw_linsui:'bld_hw_qingdeng',npc_hw_duanyan:'bld_hw_forge',npc_hw_yanzhe:'loc_bs',npc_hw_shendu:'loc_bs',npc_hw_luowei:'bld_hw_qingdeng'};
  for(const n of w.npcs.filter(n=>placeOf[n.id])){delete n.tier;n.schedule={default:[{start:0,end:1440,location:placeOf[n.id],activity:'营业',services:['trade']}]};}
  const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'s504b-shops'),L=initial.state.npcs.npc_hw_linsui,Y=initial.state.npcs.npc_hw_yanzhe,A=initial.state.npcs.npc_hw_ayan;
- // W4 F026 起居民会在正午上门买货；本组考查店主自己的进货、调价、用工，其余居民设为无钱，没人上门买（上门客流另有 s5-w4-economy 测试）。
+ // Other residents start penniless; subsequent income can fund real purchases, which are accounted for separately below.
  const penniless=Object.keys(initial.state.npcs).filter(id=>!placeOf[id]&&id!=='npc_hw_ayan').map(id=>({path:['state','npcs',id,'coins'],value:0}));
+ const offer=(seller,item,quantity,unitPrice,location)=>[{id:`landed:${item}`,minute:600,kind:'knowledge',value:{seller,item,quantity,unitPrice,at:600,expires:8*DAY,location}}];
  const prepared=applyIntentSetup(engine,initial,{minute:600,location:'bld_hw_qingdeng',abilitiesByActor:{npc_hw_ayan:{skills:{skill_life_3_core:300},recipes:['recipe_w3_salted_curd']}},facts:[...penniless,
-  {path:['state','npcs','npc_hw_yanzhe'],value:{...Y,inventory:{...Y.inventory,item_clay:0}}},
-  {path:['state','npcs','npc_hw_linsui'],value:{...L,inventory:{...L.inventory,item_ration:0,item_fresh_curd:{quantity:10},item_salt:{quantity:10},item_cooking_pot:{quantity:1,durability:100},item_kitchen_knife:{quantity:1,durability:100}}}},
-  {path:['state','npcs','npc_hw_ayan'],value:{...A,coins:0,inventory:{item_cooking_pot:{quantity:1,durability:100},item_kitchen_knife:{quantity:1,durability:100}},goals:{short:[{id:'need-job',kind:'money',content:'需要工钱',progress:0}]}}}
+  {path:['state','npcs','npc_hw_yanzhe'],value:{...Y,memoryStream:offer('npc_hw_shendu','item_clay',2,4,'loc_bs'),inventory:{...Y.inventory,item_clay:0}}},
+  {path:['state','npcs','npc_hw_linsui'],value:{...L,memoryStream:offer('npc_hw_luowei','item_ration',4,{numerator:3,denominator:2},'bld_hw_qingdeng'),inventory:{...L.inventory,item_ration:0,item_fresh_curd:{quantity:10},item_salt:{quantity:10},item_cooking_pot:{quantity:1,durability:100},item_kitchen_knife:{quantity:1,durability:100}}}},
+  {path:['state','npcs','npc_hw_ayan'],value:{...A,coins:0,inventory:{item_cooking_pot:{quantity:1,durability:100},item_kitchen_knife:{quantity:1,durability:100}},goals:{short:[{id:'need-job',kind:'money',content:'需要工钱',progress:0}]}}},
+  // K08: finite stock already carried here by existing people, with landed
+  // asking prices known to the keepers; the cycle creates no road cargo.
+  ...[['npc_hw_shendu','loc_bs','item_clay',2],['npc_hw_luowei','bld_hw_qingdeng','item_ration',20]].map(([seller,location,item,quantity])=>({path:['state','npcs',seller],value:{...initial.state.npcs[seller],location,coins:0,inventory:{[item]:{quantity}},goals:{}}}))
  ]});
  assert.deepEqual(prepared.setupUnmet,[]);
  const f={engine,document:prepared.document,start:structuredClone(prepared.document)};
@@ -123,35 +131,36 @@ const counterOf=(f,id)=>dedicatedCoinAccount(f.document.state,id,'counter');
 
 test('npc shopkeepers: within a week each stocks up, reprices and hires by his own decision, paid from his counter',async()=>{
  const f=await week(),s0=f.start.state,s=f.document.state;
- // 进货：严辙的黏土route货，第1日午夜补2份。基价3×2=6参照价；该聚落次序下货款18（价格系数封顶3：3×6）。
- // W4 F010：外路来货另付挑夫运费 = route_hw_bs 24km × 计费重 max(2×1kg,1kg)=2kg × 0.02 = 0.96 → 1；无关卡，无关税。实付 18+1=19。
- const buy=s.records['shop:shop_bs_yanzhe'].entries.find(e=>e.item==='item_clay'&&e.day===1);
- assert.deepEqual([buy.added,buy.referenceCopper,buy.paidCopper],[2,6,19]);assert.deepEqual(buy.cost,{goods:18,freight:1,duties:0});
- // 钱从严辙的钱袋经他的柜台付出：钱袋200-19=181，柜台付清归0；货款18进河湾公库，运费1经 sink:export 离开模拟经济。
- assert.equal(s.npcs.npc_hw_yanzhe.coins,s0.npcs.npc_hw_yanzhe.coins-19);assert.equal(counterOf(f,'npc_hw_yanzhe').coins,0);
+ // K08: the noon of day 0 buys the two clay units physically on site.
+ // Landed quote 4 * 2 = 8, reference 3 * 2 = 6; no second freight bill.
+ const buy=s.records['shop:shop_bs_yanzhe'].entries.find(e=>e.item==='item_clay'&&e.day===0);
+ assert.deepEqual([buy.added,buy.referenceCopper,buy.paidCopper],[2,6,8]);assert.deepEqual(buy.cost,{goods:8,freight:0,duties:0});
+ assert.equal(buy.from,'npc_hw_shendu');
+ assert.equal(s.npcs.npc_hw_yanzhe.coins,s0.npcs.npc_hw_yanzhe.coins-8);assert.equal(counterOf(f,'npc_hw_yanzhe').coins,0);
  assert.equal(s.npcs.npc_hw_yanzhe.inventory.item_clay.quantity,2);
- // 调价：实付是参照价的 19/6≈3.17 倍，按本行加成1.2成本加成≈3.8，被店铺加成上限1.4封顶（价格系数上限 shop [1,1.4]）。
+ // 1.2 * 8/6 = 1.6, capped at the published shop limit 1.4.
  const pricing=s.records['shop_pricing:npc_hw_yanzhe'];
- // 世界价格既有有理数格式：1.2=1200000/1000000，1.4=1400000/1000000。
- // 倍率/成本/决定的原有数值断言保留，同时要求改价回执不把小数写入存档。
- assert.deepEqual([pricing.previous,pricing.markup,pricing.standard,pricing.basis.paidCopper,pricing.basis.referenceCopper,pricing.decision.outcome],[{numerator:1200000,denominator:1000000},{numerator:1400000,denominator:1000000},{numerator:1200000,denominator:1000000},19,6,'agree']);
- assert.equal(currentShops(f.engine,s).find(shop=>shop.keeper==='npc_hw_yanzhe').markup,1.4,'新有理数存档读回同一倍率');
+ assert.deepEqual([pricing.previous,pricing.markup,pricing.standard,pricing.basis.paidCopper,pricing.basis.referenceCopper,pricing.decision.outcome],[{numerator:1200000,denominator:1000000},{numerator:1400000,denominator:1000000},{numerator:1200000,denominator:1000000},8,6,'agree']);
+ assert.equal(currentShops(f.engine,s).find(shop=>shop.keeper==='npc_hw_yanzhe').markup,1.4);
  const legacyPricing=structuredClone(s);legacyPricing.records['shop_pricing:npc_hw_yanzhe'].markup=1.2;
- assert.equal(currentShops(f.engine,legacyPricing).find(shop=>shop.keeper==='npc_hw_yanzhe').markup,1.2,'旧数字倍率仍可读取');
- // 林穗的干粮：2份货款3（参照价6的一半）；W4 F010 外路另付运费 route_hw_bs 24km × 计费重 max(2×0.2kg,1kg)=1kg × 0.02 = 0.48 → 1，实付4。
- // 4/6×1 低于下限1，加成不变，没有调价记录。
- const ration=s.records['shop:shop_hw_qingdeng'].entries.find(e=>e.item==='item_ration'&&e.day===1);
- assert.deepEqual([ration.added,ration.referenceCopper,ration.paidCopper],[2,6,4]);assert.deepEqual(ration.cost,{goods:3,freight:1,duties:0});assert.equal(s.records['shop_pricing:npc_hw_linsui'],undefined);
- // 用工：阿燕应聘咸酪活计，日薪30；林穗先自己把30（=日薪×周期1日）从钱袋注入柜台，才有人可雇。
+ assert.equal(currentShops(f.engine,legacyPricing).find(shop=>shop.keeper==='npc_hw_yanzhe').markup,1.2);
+ // Two landed ration units at 3/2 cost exactly 3 copper; 3/6 < 1,
+ // so Linsui retains markup 1. The four-unit offer is exhausted after day 1.
+ const ration=s.records['shop:shop_hw_qingdeng'].entries.find(e=>e.item==='item_ration'&&e.day===0);
+ assert.deepEqual([ration.added,ration.referenceCopper,ration.paidCopper],[2,6,3]);assert.deepEqual(ration.cost,{goods:3,freight:0,duties:0});assert.equal(s.records['shop_pricing:npc_hw_linsui'],undefined);
+ assert.equal(s.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.item==='item_ration').reduce((n,e)=>n+e.added,0),4);
  const job=Object.values(s.records).find(r=>r.laborMarket===1&&r.owner==='npc_hw_linsui'&&r.worker==='npc_hw_ayan');
  assert.ok(job);assert.equal(job.wage,30);assert.equal(job.workerConsent.via,'npc-decision');
- // 首班工时：咸酪45分钟÷(1+300/3000)=40.9→41分钟；工钱 ceil(30×41/480)=3，出自柜台，不出自林穗钱袋。
+ // 45/(1+300/3000) -> 41 minutes; ceil(30*41/480) = 3.
  assert.equal(job.shifts[0].minutes,41);assert.equal(job.shifts[0].paid,3);
- // 柜台：注资30 -（第2日补货又付4，货架补到上限4后不再进货）-（首班工钱3）= 23。
- const later=s.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.item==='item_ration'&&e.day>=2).reduce((n,e)=>n+e.paidCopper,0);
- assert.equal(job.paid,3);assert.equal(counterOf(f,'npc_hw_linsui').coins,30-later-job.paid);assert.equal(later,4);assert.equal(counterOf(f,'npc_hw_linsui').coins,23);
- // 林穗钱袋只出过第1日的进货款4与30注资（第2日进货款与工钱都从柜台走）：不含任何工钱。
- assert.equal(s.npcs.npc_hw_linsui.coins,s0.npcs.npc_hw_linsui.coins-4-30);
+ // After day-0 funding of 3, capital of 30 funds wages and later purchases:
+ // day-1 ration 3 + day-3 bread 3. Ayan spends her wage on three breads
+ // on day 2, returning 3 to this counter. 30 - 6 - 3 + 3 = 24.
+ const later=s.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.day>=1).reduce((n,e)=>n+e.paidCopper,0);
+ const sale=Object.values(s.records).find(r=>r.category==='customer_flow'&&r.keeper==='npc_hw_linsui').visits.find(v=>v.npc==='npc_hw_ayan'&&v.outcome==='bought');
+ assert.deepEqual([sale.item,sale.quantity,sale.paid],['item_bread',3,3]);
+ assert.equal(job.paid,3);assert.equal(later,6);assert.equal(counterOf(f,'npc_hw_linsui').coins,30-later-job.paid+sale.paid);assert.equal(counterOf(f,'npc_hw_linsui').coins,24);
+ assert.equal(s.npcs.npc_hw_linsui.coins,s0.npcs.npc_hw_linsui.coins-3-30);
  clean(f);
 });
 
