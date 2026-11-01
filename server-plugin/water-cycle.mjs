@@ -5,16 +5,26 @@ import {entityTransition} from './entity-transitions.mjs';
 import {derived} from './derived.mjs';
 import {hypot} from './det-math.mjs';
 import {registerSubsistenceResources} from './household-subsistence.mjs';
+import {stateMemo} from './storage.mjs';
 
 const DAY=1440,clone=v=>structuredClone(v),record=id=>['state','records',`water-cycle:${id}`];
 const level=(l,r)=>l.elevationMeters??(/山|岭|崖|高地/.test(l.terrain??'')?r.highland:/丘|坡/.test(l.terrain??'')?r.hill:/谷|河|滩|沼/.test(l.terrain??'')?r.lowland:r.plain);
+const basinGeography=new WeakMap(),producerMemo=Symbol('water basin producers');
+const producerInputs=[['settlements','*','granary'],['settlements','*','foodPerDay']];
 export function waterBasins(engine,state={}){
  const r=engine.rules.forestWater?.water;if(!r)return[];
+ const producers=stateMemo(state,engine,[producerMemo],()=>Object.entries(state.settlements??{}).filter(([,s])=>s.granary!==false&&s.foodPerDay>0).map(([id])=>id)
+  .sort((a,b)=>ancestor(engine,a).length-ancestor(engine,b).length||a.localeCompare(b)),producerInputs);
+ let index=basinGeography.get(engine);
+ if(!index||index.locations!==engine.world.locations||index.routes!==engine.world.routes||index.rules!==r||index.farms!==engine.rules.agriculture?.settlements){
+  index={locations:engine.world.locations,routes:engine.world.routes,rules:r,farms:engine.rules.agriculture?.settlements,variants:new Map()};basinGeography.set(engine,index);
+ }
+ const key=JSON.stringify(producers);if(index.variants.has(key))return index.variants.get(key);
  const riverEnds=new Set(engine.world.routes.filter(e=>e.modes?.includes('boat')).flatMap(e=>[e.from,e.to]));
  const rows=[];
  for(const l of engine.world.locations){
   const features=(l.features??[]).filter(f=>f.kind==='water');
-  for(const f of features)rows.push({id:f.id,location:l.id,feature:f,capacity:f.state.capacityMl,elevation:level(l,r.terrainElevationMeters)});
+  for(const f of features)rows.push({id:f.id,location:l.id,feature:f,get capacity(){return f.state.capacityMl;},elevation:level(l,r.terrainElevationMeters)});
   const farm=engine.rules.agriculture?.settlements.find(p=>p.settlement===l.id);
   if(!features.length&&(farm||riverEnds.has(l.id)||locationHabitatTypes(l).includes('wetland')&&!l.owner&&!l.access&&!l.rooms?.length)){
    rows.push({id:`basin:${l.id}`,location:l.id,capacity:r.capacityMl,elevation:level(l,r.terrainElevationMeters)});
@@ -23,12 +33,10 @@ export function waterBasins(engine,state={}){
  // P3 food-producing statistical settlements also use a finite basin. A child
  // with an existing ancestor source shares it instead of creating more water.
  const covered=new Set(rows.map(b=>b.location));
- const producers=Object.entries(state.settlements??{}).filter(([,s])=>s.granary!==false&&s.foodPerDay>0).map(([id])=>id)
-  .sort((a,b)=>ancestor(engine,a).length-ancestor(engine,b).length||a.localeCompare(b));
  for(const id of producers){const l=engine.byId.get(id);if(!l||ancestor(engine,id).some(id=>covered.has(id)))continue;
   rows.push({id:`basin:${id}`,location:id,capacity:r.capacityMl,elevation:level(l,r.terrainElevationMeters)});covered.add(id);
  }
- return rows;
+ index.variants.set(key,rows);return rows;
 }
 function ancestor(engine,location){const out=[];while(location&&!out.includes(location)){out.push(location);location=engine.byId.get(location)?.parent;}return out;}
 function basinWeather(engine,seed,location,minute){
@@ -111,7 +119,13 @@ function receive(w,part){
  for(const k of ['saltMg','toxinUg'])w[k]=(w[k]??0)+(part[k]??0);
  w.waterMl=total;
 }
+const basinLocations=new WeakMap();
 export function basinForLocation(engine,location,basins=waterBasins(engine)){
+ let index=basinLocations.get(basins);if(!index)basinLocations.set(basins,index=new Map());
+ if(index.has(location))return index.get(location);
+ const result=findBasinForLocation(engine,location,basins);index.set(location,result);return result;
+}
+function findBasinForLocation(engine,location,basins){
  const chain=ancestor(engine,location);
  for(const id of chain){const b=basins.find(b=>b.location===id);if(b)return b;}
  // A town's river access may be catalogued in one of its public districts.
@@ -136,10 +150,17 @@ export function farmWaterFactor(engine,state,settlement,day){
  const b=basinForLocation(engine,settlement,waterBasins(engine,state)),row=b&&state.records?.[`water-cycle:${b.id}`];
  return row?.day===day?row.farms?.[settlement]?.factor??1:1;
 }
+const resourceFactors=new WeakMap();
 export function waterResourceFactor(engine,state,location){
  const b=basinForLocation(engine,location,waterBasins(engine,state));if(!b)return 1;
  const w=basinState(engine,state,b),r=engine.rules.forestWater.water;
- return Math.min(r.maximumPriceFactor,Math.max(1,(b.feature?w.capacityMl:b.capacity)*r.initialShare/Math.max(1,w.waterMl)));
+ let index=resourceFactors.get(engine);if(!index)resourceFactors.set(engine,index=new Map());
+ const day=Math.floor((state.minute??0)/DAY),capacity=b.feature?w.capacityMl:b.capacity,prior=index.get(location);
+ if(prior&&prior.day===day&&prior.water===w.waterMl&&prior.capacity===capacity&&prior.initialShare===r.initialShare&&prior.maximum===r.maximumPriceFactor)return prior.factor;
+ const factor=Math.min(r.maximumPriceFactor,Math.max(1,capacity*r.initialShare/Math.max(1,w.waterMl)));
+ // One read per location/day while its physical inputs stay equal. An actual
+ // withdrawal or spell changes those inputs and must be observable immediately.
+ index.set(location,{day,water:w.waterMl,capacity,initialShare:r.initialShare,maximum:r.maximumPriceFactor,factor});return factor;
 }
 // Direct household use outside the already-withdrawn settlement cohort.
 // Keep the same physical volume and basin conservation ledger as irrigation.
@@ -153,26 +174,28 @@ export function takeHouseholdWater(d,engine,basin,requiredMl,day){
 }
 export function advanceWaterCycle(d,engine,day){
  const rules=engine.rules.forestWater?.water;if(!rules)return;
- const basins=waterBasins(engine,d.get('state')),{edges,order}=waterConnections(engine,basins),rows=new Map();
+ const basins=waterBasins(engine,d.get('state')).map(b=>b.feature?{...b,capacity:basinState(engine,d.get('state'),b).capacityMl}:b),{edges,order}=waterConnections(engine,basins),rows=new Map();
  const rains=Object.values(d.get('state','records')??{}).filter(r=>r.category==='faith_rain'&&r.since<(day+1)*DAY&&r.expires>day*DAY);
  for(const b of basins){
   const old=d.get(...record(b.id));if(old?.day>=day){if(old.day===day)continue;throw Error('流域日结时间倒退');}
   if(old&&old.category!=='water_cycle')throw Error('流域账登记键冲突');
   const w=clone(basinState(engine,d.get('state'),b));
-  if(b.feature)b.capacity=w.capacityMl;
-  if(!Number.isSafeInteger(b.capacity)||b.capacity<=0||!Number.isSafeInteger(w.waterMl)||w.waterMl<0||w.waterMl+(w.reservedWaterMl??0)>b.capacity)throw Error('流域实际水量越界');
+  // The shared geography is immutable; a physical spell may change today's
+  // capacity without changing that geographic catalogue.
+  const capacity=b.feature?w.capacityMl:b.capacity;
+  if(!Number.isSafeInteger(capacity)||capacity<=0||!Number.isSafeInteger(w.waterMl)||w.waterMl<0||w.waterMl+(w.reservedWaterMl??0)>capacity)throw Error('流域实际水量越界');
   // Existing spells can add/remove water between days. Observe the actual change
   // separately from rainfall, so it cannot be reported as natural regeneration.
   const external=w.waterMl-(old?.water.waterMl??w.waterMl),weather=basinWeather(engine,d.document.randomSeed,b.location,day*DAY+720);
-  const rain=Math.floor(b.capacity*precipitationShare(engine,d.document,b.location,weather,day,rains).share);
+  const rain=Math.floor(capacity*precipitationShare(engine,d.document,b.location,weather,day,rains).share);
   receive(w,{waterMl:rain});
   const ledger={initial:old?.initial??w.waterMl-rain,rain:(old?.rain??0)+rain,inflow:old?.inflow??0,outflow:old?.outflow??0,consumed:old?.consumed??0,evaporated:old?.evaporated??0,overflow:old?.overflow??0,externalDelta:(old?.externalDelta??0)+external,day,farms:{},drinking:{}};
   const downstream=edges.filter(e=>e.from===b.id),shares=waterShares(engine,d.document,b,w,downstream);
-  rows.set(b.id,{b,w,ledger,old,weather,shares});
+  rows.set(b.id,{b:{...b,capacity},w,ledger,old,weather,shares});
  }
  // Consumers withdraw before outflow; upstream use therefore reduces downstream supply.
- for(const b of order){
-  const row=rows.get(b.id);if(!row)continue;const {w,ledger,old,weather}=row;
+ for(const source of order){
+  const row=rows.get(source.id);if(!row)continue;const {b,w,ledger,old,weather}=row;
   const settlements=Object.entries(d.get('state','settlements')??{}).filter(([id])=>basinForLocation(engine,id,basins)?.id===b.id);
   for(const [id,s] of settlements){
    const frozen=(w.frozenUntil??0)>(day+1)*DAY;

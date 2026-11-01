@@ -28,9 +28,9 @@ registerLegacyStock('household-subsistence',(e,state,add)=>{
 const geography=new WeakMap();
 function sources(e,state){
  let hit=geography.get(e);
- const locations=e.world.locations,routes=e.world.routes,settlements=JSON.stringify(Object.entries(state.settlements??{}).map(([id,row])=>[id,row.granary,row.foodPerDay>0]));
- if(hit?.locations===locations&&hit.routes===routes&&hit.settlements===settlements)return hit;
- const r=config(e),water=ecology.waterBasins(e,state),forests=new Set(ecology.forestSites?.(e).map(s=>s.location)??[]);
+ const locations=e.world.locations,routes=e.world.routes,water=ecology.waterBasins(e,state);
+ if(hit?.locations===locations&&hit.routes===routes&&hit.water===water)return hit;
+ const r=config(e),forests=new Set(ecology.forestSites?.(e).map(s=>s.location)??[]);
  // Animal ranges are only one projection of the geography. Public natural
  // terrain can yield plants even when no registered animal species lives there.
  const habitats=new Map((e.rules.wildlife?.habitats??[]).map(h=>[h.location,h]));
@@ -49,7 +49,7 @@ function sources(e,state){
   const area=place.areaKm2??e.rules.habitatDerivation?.referenceAreaKm2;
   return [{location:place.id,capacity:Math.floor(area*r.portionsPerKm2*fertility),minutesPerPortion:Math.ceil(r.forageMinutes/fertility)}];
  }).filter(s=>s.capacity>0);
- hit={locations,routes,settlements,water,waterById:new Map(water.map(row=>[row.id,row])),food,distances:new Map()};geography.set(e,hit);return hit;
+ hit={locations,routes,water,waterById:new Map(water.map(row=>[row.id,row])),food,distances:new Map()};geography.set(e,hit);return hit;
 }
 // The engine route resolver owns weather, closed roads, local rooms and tolls.
 // Only the bounded candidate ordering is retained across reads; live route
@@ -71,7 +71,14 @@ function waterSignature(e,state,day,memoState=state){
  return stateMemo(memoState,e,[waterSignatureMemo,day],()=>JSON.stringify(sources(e,state).water.map(source=>[source.id,Boolean(usableWater(e,state,source,day))])),waterSignatureInputs);
 }
 const waterJourneyInputs=[['buildings'],['created'],['settlements'],['effects'],['remote'],{path:['records'],categories:['facility_region','war_disruption']}];
-function journey(e,state,home,kind,minute,portions=0,avoid=null,memoState=state){
+function journey(e,state,home,kind,minute,portions=0,avoid=null,memoState=state,context=null){
+ if(context){
+  const key=`${home}|${kind}`;
+  if(kind==='water'&&context.waterJourneys.has(home))return context.waterJourneys.get(home);
+  if(!context.geography.has(key))context.geography.set(key,sourceGeography(e,state,home,kind,minute));
+  const result=readJourney(e,state,home,kind,minute,portions,avoid,memoState,context.geography.get(key),context);
+  if(kind==='water')context.waterJourneys.set(home,result);return result;
+ }
  if(Object.values(state.effects??{}).some(effect=>effect.kind==='air'&&effect.operation==='area_wind'&&effect.route))return readJourney(e,state,home,kind,minute,portions,avoid);
  const day=Math.floor(minute/DAY),waterKey=kind==='water'?waterSignature(e,state,day,memoState):null;
  const geography=kind==='food'?sourceGeography(e,state,home,kind,minute):null;
@@ -111,18 +118,19 @@ function sourceGeography(e,state,home,kind,minute){
  // Finite stock is read below, after this pure projection, on every re-choice.
  let candidates=sourceCandidates.get(distances);if(!candidates)sourceCandidates.set(distances,candidates=new Map());
  const candidateKey=`${kind}|${skeleton?.county??''}|${r.maximumJourneyMinutes??e.rules.travel.dailyTravelMinutes}|${e.rules.travel.walkKmh}`;
- if(!candidates.has(candidateKey))candidates.set(candidateKey,list.filter(s=>distances.has(s.location)&&2*distances.get(s.location)*60/e.rules.travel.walkKmh<=(r.maximumJourneyMinutes??e.rules.travel.dailyTravelMinutes)).map(s=>({...s,distance:distances.get(s.location)})));
+ if(!candidates.has(candidateKey))candidates.set(candidateKey,list.filter(s=>distances.has(s.location)&&2*distances.get(s.location)*60/e.rules.travel.walkKmh<=(r.maximumJourneyMinutes??e.rules.travel.dailyTravelMinutes)).map(s=>({...s,distance:distances.get(s.location)})).sort((a,b)=>a.distance-b.distance||a.location.localeCompare(b.location)));
  return {index,distanceKey,candidates:candidates.get(candidateKey)};
 }
 function sourceAccessible(e,state,source){
  const place=e.byId.get(source.location),property=state.buildings?.[source.location];
  return !place?.access?.requiresConsent&&(source.feature?.access==='public'||!(place?.owner||place?.site?.owner||property?.owner||Object.values(property?.owners??{}).some(share=>share>0)));
 }
-function readJourney(e,state,home,kind,minute,portions,avoid,memoState=state,geography=null){
+function readJourney(e,state,home,kind,minute,portions,avoid,memoState=state,geography=null,context=null){
  const day=Math.floor(minute/DAY),seed=seedOf(e),r=config(e);
  const {index,distanceKey,candidates}=geography??sourceGeography(e,state,home,kind,minute);
  const points=candidates.map(s=>{
-  const distance=s.distance,remaining=kind==='food'?forageStock(e,state,s,day).reserve:0,quantity=Math.min(portions,remaining);
+  if(kind==='food'&&context&&!context.stocks.has(s.location))context.stocks.set(s.location,forageStock(e,state,s,day));
+  const distance=s.distance,remaining=kind==='food'?(context?.stocks.get(s.location)??forageStock(e,state,s,day)).reserve:0,quantity=Math.min(portions,remaining);
   const effort=2*distance*60/e.rules.travel.walkKmh+quantity*(s.minutesPerPortion??0);
   // Per-portion efficiency includes the real shared journey. Comparing only
   // harvest time sends a hungry lone worker across the county for one extra
@@ -136,7 +144,7 @@ function readJourney(e,state,home,kind,minute,portions,avoid,memoState=state,geo
  let best=null;
  for(const source of points){
   if(!sourceAccessible(e,state,source))continue;
-  if(kind==='water'&&!usableWater(e,state,source,day))continue;
+  if(kind==='water'&&!(context?context.water.get(source.id):usableWater(e,state,source,day)))continue;
   try{
    // Match route()'s integer-minute legs. Fractional boundaries can round
    // back to the query minute when added to an absolute calendar minute.
@@ -148,8 +156,10 @@ function readJourney(e,state,home,kind,minute,portions,avoid,memoState=state,geo
     const outbound=home===source.location?{minutes:0,cost:0,edges:[]}:e.route(home,source.location,'walk',day*DAY+480,seed);
     return {outbound,inbound:home===source.location?outbound:e.route(source.location,home,'walk',day*DAY+480+outbound.minutes,seed)};
    };
-   const wind=Object.values(state.effects??{}).some(effect=>effect.kind==='air'&&effect.operation==='area_wind'&&effect.route);
-   const {outbound,inbound}=wind?pair():stateMemo(memoState,e,[routePairMemo,index,distanceKey,source.location,day,seed],pair,routePairInputs);
+   const wind=!context&&Object.values(state.effects??{}).some(effect=>effect.kind==='air'&&effect.operation==='area_wind'&&effect.route);
+   const pairKey=`${distanceKey}|${source.location}`;
+   if(context&&!context.pairs.has(pairKey))context.pairs.set(pairKey,pair());
+   const {outbound,inbound}=context?context.pairs.get(pairKey):wind?pair():stateMemo(memoState,e,[routePairMemo,index,distanceKey,source.location,day,seed],pair,routePairInputs);
    if(outbound.cost||inbound.cost||outbound.minutes+inbound.minutes>(r.maximumJourneyMinutes??e.rules.travel.dailyTravelMinutes))continue;
    const minutes=outbound.minutes+inbound.minutes;
    best={...source,home,travelMinutes:minutes,outboundMinutes:outbound.minutes,outboundEdges:outbound.edges??[],inboundEdges:inbound.edges??[]};break;
@@ -196,13 +206,13 @@ function mealDeficit(e,state,owner,settlement,members){
  const d={document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)};
  return householdMealPlan(d,e,owner,{publicShare});
 }
-export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoState=state,mealOverride=null){
+export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoState=state,mealOverride=null,context=null){
  if(!config(e))return null;
  const h=personHousehold(e,state,owner).value,person=e.byId.get(owner),home=h?.homeLocation??person?.home?.location??person?.location??state.npcs?.[owner]?.location;
  const members=(h?.members??[owner]).filter(id=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded);
  const day=Math.floor(minute/DAY),r=config(e),settlement=h?.settlement??placeSettlement(e,state,home).value;
  const meal=mealOverride??mealDeficit(e,state,owner,settlement,members),portions=Math.ceil(meal.shortfall.satiety/(e.byId.get(r.foodItem)?.nutrition?.satiety??1));
- const water=meal.needs.hydration>0?journey(e,state,home,'water',minute,0,null,memoState):null;
+ const water=meal.needs.hydration>0?journey(e,state,home,'water',minute,0,null,memoState,context):null;
  if(!portions&&!water)return {worker:null,home,members,water:null,food:null,foodTrips:[],duties:[],chores:[]};
  const preference=id=>evaluateRX(workerPreference,{}, {rollKey:{seed:seedOf(e),pack:'household',rule:'subsistence-worker',object:`${h?.id??owner}:${id}`,date:0}});
  const opportunity=id=>{
@@ -230,7 +240,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  const publicSource=resident&&publicStore&&publicStore.granary!==false&&((publicStore.food??0)>0||(publicStore.foodPerDay??0)>0||e.rules.agriculture?.settlements.some(s=>s.settlement===settlement));
  // Unvisited registered societies have no opened public ledger. Absence of
  // a ledger is not an imaginary public meal; visitors likewise have no share.
- const food=portions?journey(e,state,home,'food',minute,portions,null,memoState):null;
+ const food=portions?journey(e,state,home,'food',minute,portions,null,memoState,context):null;
  const waterMinutes=water?water.travelMinutes+r.waterMinutes:0;
  const foodMinutes=food?food.travelMinutes+portions*food.minutesPerPortion:0;
  // Signed appointments and real market journeys outrank daily work. Split
@@ -365,11 +375,15 @@ export function householdSubsistenceGroups(e,state){
 export function prepareHouseholdSubsistence(d,e,day=Math.floor(d.get('state','minute')/DAY)){
  if(!config(e)||d.get('state','family','subsistence')?.[0]===day)return;
  const state=d.get('state'),morning={...state,minute:day*DAY+480,records:{...state.records}},rows=new Map(),people={};
+ // One immutable morning water/geography projection and one explicit finite
+ // food ledger serve all settlements. Reservations below update that ledger;
+ // no process-local decision survives this call or a save/reload boundary.
+ const index=sources(e,morning),context={water:new Map(index.water.map(source=>[source.id,usableWater(e,morning,source,day)])),stocks:new Map(),geography:new Map(),waterJourneys:new Map(),pairs:new Map()};
  for(const g of householdSubsistenceGroups(e,morning)){
   const sid=g.settlement??'unregistered';let row=rows.get(sid);
   if(!row){row={category:'subsistence_plan',day,households:{},workers:{}};rows.set(sid,row);}
   for(const id of personHousehold(e,morning,g.owner).value?.members??[g.owner])people[id]=[sid,g.key];
-  const p=householdSubsistencePlan(e,morning,g.owner,morning.minute,morning);
+  const p=householdSubsistencePlan(e,morning,g.owner,morning.minute,morning,null,context);
   if(!p){row.households[g.key]=null;continue;}
   const compact=source=>source&&Object.fromEntries(['id','location','home','near','capacity','minutesPerPortion','worker','minutes','travelMinutes','outboundEdges','inboundEdges'].filter(key=>source[key]!==undefined).map(key=>[key,source[key]]));
   row.households[g.key]={water:compact(p.water),foodTrips:p.foodTrips.map(compact),...(p.sourceStatus?{sourceStatus:p.sourceStatus,sourceCounty:p.sourceCounty}:{})};
@@ -378,6 +392,7 @@ export function prepareHouseholdSubsistence(d,e,day=Math.floor(d.get('state','mi
   for(const source of p.foodTrips){
    const stock=forageStock(e,morning,source,day),quantity=Math.floor((source.minutes-source.travelMinutes)/source.minutesPerPortion);
    morning.records[stockKey(source.location)]={...(stock.row??morning.records[stockKey(source.location)]),reserve:Math.max(0,stock.reserve-quantity),updatedDay:day};
+   context.stocks.set(source.location,{reserve:morning.records[stockKey(source.location)].reserve});
   }
   for(const [kind,duties] of [['duties',p.duties],['chores',p.chores]])for(const duty of duties){
    const worker=row.workers[duty.worker]??={duties:[],chores:[]};worker[kind].push(duty);
