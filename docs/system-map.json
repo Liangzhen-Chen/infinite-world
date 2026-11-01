@@ -1935,7 +1935,7 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1829,
+   "lines": 1836,
    "stateWrites": [
     "crafted",
     "creatures",
@@ -22258,6 +22258,7 @@
    "imports": [
     "server-plugin/combat.mjs",
     "server-plugin/derived.mjs",
+    "server-plugin/ecology-dynamics.mjs",
     "server-plugin/lifecycle-state.mjs",
     "server-plugin/population-health.mjs",
     "server-plugin/wildlife-awakening.mjs",
@@ -22281,7 +22282,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 89
+   "lines": 96
   },
   "server-plugin/festival.mjs": {
    "system": "sim_clock",
