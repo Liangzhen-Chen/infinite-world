@@ -27,7 +27,6 @@ export const ALLOWED=[
  [/^records\.forest\.(growthAnchors\.[a-z]+\.(reserve|rate)|ancient\.growthAnchor\.rate)$/,DERIVED+' (logistic growth anchor uses det exp)'],
  [/^records\.ecology\.growthAnchors\.[a-z]+\.rate$/,BASIC+' (annual growth rate / 360)'],
  [/^records\.agriculture\.(tools\.condition|field\.cohorts\.\*\.qualitySum)$/,BASIC+' (tool wear and crop quality accumulators)'],
- [/^records\.finance_profit\.lots\.\*\.\*\.price$/,'unit cost of a stock lot (price ratio); rational migration deferred, not transcendental'],
 ];
 const collapse=p=>p.split('.').map(s=>/^\d+$/.test(s)||/^(npc_|item_|loc_)/.test(s)?'*':s.replace(/:.*$/,'')).join('.');
 function scan(state){
