@@ -107,6 +107,8 @@ declareHoldingWriter('engine',{kinds:['*'],entities:['*'],locations:true});
 for(const verb of PRIMITIVE_EVENT_VERBS)SOCIAL_VERBS.add(verb);
 declareLedgerWriter('engine',{sinks:['sink:export','sink:consume']});
 const clone = value => structuredClone(value);
+const ROUTE_PLACES = Symbol('route places');
+const ROUTE_CACHE_CHECK = process.env.FIELDS_INDEX_CHECK === '1';
 // Native read projection shared by dialogue, routing and evidence. No draft
 // writer is exposed, and the normal quote uses the same environmental inputs.
 installFacilityRuntime({currentTradeQuote(engine,document,args){
@@ -801,16 +803,17 @@ export class WorldEngine {
     }
     route(from,to,mode,minute,seed='default-campaign',weatherCache=null,graphCache=null) {
         // A facility completed by a public project stands inside its site: reach the site, then step in.
-        const built=id=>this.world.locations.some(l=>l.id===id)?null:this.byId?.get(id)?.builtProject?this.byId.get(id).parent:null;
+        graphCache=graphCache??this.advanceGraphs??null;
+        let places=graphCache?.get(ROUTE_PLACES);
+        if(graphCache&&!places){places=new Set(this.world.locations.map(l=>l.id));graphCache.set(ROUTE_PLACES,places);}
+        const built=id=>(places?places.has(id):this.world.locations.some(l=>l.id===id))?null:this.byId?.get(id)?.builtProject?this.byId.get(id).parent:null;
         if(built(to)||built(from)){
             const r=this.route(built(from)??from,built(to)??to,mode,minute,seed,weatherCache,graphCache),step=(built(to)?2:0)+(built(from)?2:0);
             r.minutes+=step;r.movingMinutes+=step;return r;
         }
-        const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]);
         const season=this.calendar(minute).season,key=`${mode}:${season}`;
         // Callers may reuse topology only within one synchronous schedule
-        // advance; weather and per-person departure times are never cached here.
-        graphCache=graphCache??this.advanceGraphs??null;
+        // advance. Physical search results below also key every live input.
         let graph=graphCache?.get(key);
         if(!graph){
             const order=new Map(this.world.locations.map((place,index)=>[place.id,index])),adjacent=new Map();
@@ -820,46 +823,97 @@ export class WorldEngine {
             }
             graph={order,adjacent,oriented:new Map()};graphCache?.set(key,graph);
         }
-        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map(),airState=typeof this.airDraft?.peek==='function'?this.airDraft.peek('state'):this.airDraft?.get('state'),closedRoutes=warClosedRoutes(airState,minute),facilities=facilityRouteStates(this,airState); // R31: read-only look, so the draft is not made to recopy state and npcs on its next write
-        // P2: each edge as seen from one end, built once per topology (read-only).
-        const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
-        // P2: a binary heap of discovered nodes ordered by (distance, world
-        // location order). Equal distances retain the original world-location
-        // order, including its chosen path and toll total; an entry whose node
-        // has since been settled or improved is skipped.
-        const heap=[],before=(a,b)=>a[0]<b[0]||a[0]===b[0]&&a[1]<b[1];
-        const push=node=>{
-            const entry=[distances.get(node),order.get(node),node];let i=heap.push(entry)-1;
-            while(i>0){const parent=(i-1)>>1;if(!before(entry,heap[parent]))break;heap[i]=heap[parent];i=parent;}heap[i]=entry;
-        };
-        const pop=()=>{
-            const top=heap[0],last=heap.pop();if(!heap.length)return top;
-            let i=0;for(;;){const l=2*i+1,r=l+1;let next=i,best=last;
-                if(l<heap.length&&before(heap[l],best)){next=l;best=heap[l];}
-                if(r<heap.length&&before(heap[r],best)){next=r;}
-                if(next===i)break;heap[i]=heap[next];i=next;}
-            heap[i]=last;return top;
-        };
-        if(order.has(from))push(from);
-        while(heap.length){
-            const [nearest,,current]=pop();
-            if(settled.has(current)||nearest!==distances.get(current))continue;
-            settled.add(current);if(current===to)break;
-            for(const edge of adjacent.get(current)??[]){
-                if(closedRoutes.has(edge.id))continue;
-                if(facilities.get(edge.id)?.factor===0)continue;
-                const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
-                const speed=(edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1))*(facilities.has(edge.id)?1.25*facilities.get(edge.id).factor:1);
-                const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
-                if(this.rules.weather&&!travel)continue;
-                const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
-                if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);push(next);}
+        const {order,adjacent}=graph,oriented=graph.oriented??new Map(),airState=typeof this.airDraft?.peek==='function'?this.airDraft.peek('state'):this.airDraft?.get('state'),closedRoutes=warClosedRoutes(airState,minute),facilities=facilityRouteStates(this,airState); // R31: read-only look, so the draft is not made to recopy state and npcs on its next write
+        // Cache only the physical search, within the existing fixed-topology
+        // scope. Departure minute and seed retain cross-day weather/hazard
+        // boundaries; closures and facility factors retain live state changes.
+        // One source search serves all destinations. Air effects and per-action
+        // checkpoints are projected afresh below.
+        let factors=null;
+        if(graphCache){
+            graph.facilitySignatures??=new WeakMap();
+            factors=graph.facilitySignatures.get(facilities);
+            if(factors===undefined){
+                factors=JSON.stringify([...facilities].map(([id,row])=>[id,row.factor]).sort(([a],[b])=>a<b?-1:a>b?1:0));
+                graph.facilitySignatures.set(facilities,factors);
             }
         }
-        if(!distances.has(to))reject('E-ACTION-PRECONDITION','没有当前季节可通行的路线，不能瞬移');
-        const edges=[],segments=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);segments.unshift({id:step.edge.id,from:step.node,to:cursor,minutes:movingTimes.get(cursor)-movingTimes.get(step.node),elapsed:distances.get(cursor),moving:movingTimes.get(cursor),cost:costs.get(cursor)});cursor=step.node;}
-        const moving=movingTimes.get(to),daysRest=this.rules.weather||mode==='boat'?0:Math.floor((moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
-        const result={minutes:distances.get(to)+daysRest,movingMinutes:moving,cost:costs.get(to),edges};
+        // Advancing to another departure instant discards the old frontier:
+        // retaining hundreds of historical searches only adds GC pressure.
+        if(graphCache&&(graph.departure!==minute||graph.seed!==seed||graph.calendar!==this.calendarId)){
+            graph.searches=new Map();graph.departure=minute;graph.seed=seed;graph.calendar=this.calendarId;
+        }
+        const searchKey=graphCache?JSON.stringify([from,[...closedRoutes].sort(),factors]):null;
+        const search=prior=>{
+            const tree=prior??{settled:new Set(),distances:new Map([[from,0]]),movingTimes:new Map([[from,0]]),previous:new Map(),costs:new Map([[from,0]]),heap:[],pending:null};
+            const {settled,distances,movingTimes,previous,costs,heap}=tree;
+            // P2: each edge as seen from one end, built once per topology (read-only).
+            const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
+            // P2: a binary heap of discovered nodes ordered by (distance, world
+            // location order). Equal distances retain the original world-location
+            // order, including its chosen path and toll total; an entry whose node
+            // has since been settled or improved is skipped.
+            const before=(a,b)=>a[0]<b[0]||a[0]===b[0]&&a[1]<b[1];
+            const push=node=>{
+                const entry=[distances.get(node),order.get(node),node];let i=heap.push(entry)-1;
+                while(i>0){const parent=(i-1)>>1;if(!before(entry,heap[parent]))break;heap[i]=heap[parent];i=parent;}heap[i]=entry;
+            };
+            const pop=()=>{
+                const top=heap[0],last=heap.pop();if(!heap.length)return top;
+                let i=0;for(;;){const l=2*i+1,r=l+1;let next=i,best=last;
+                    if(l<heap.length&&before(heap[l],best)){next=l;best=heap[l];}
+                    if(r<heap.length&&before(heap[r],best)){next=r;}
+                    if(next===i)break;heap[i]=heap[next];i=next;}
+                heap[i]=last;return top;
+            };
+            if(!prior&&order.has(from))push(from);
+            while((heap.length||tree.pending!==null)&&!settled.has(to)){
+                let current=tree.pending;tree.pending=null;
+                if(current===null){
+                    const [nearest,,node]=pop();current=node;
+                    if(settled.has(current)||nearest!==distances.get(current))continue;
+                    settled.add(current);
+                    // Stop before inspecting the destination's outgoing edges,
+                    // exactly as an uncached query does. Expand it only if a
+                    // later destination needs this frontier to continue.
+                    if(current===to){tree.pending=current;break;}
+                }
+                for(const edge of adjacent.get(current)??[]){
+                    if(closedRoutes.has(edge.id))continue;
+                    if(facilities.get(edge.id)?.factor===0)continue;
+                    const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
+                    const speed=(edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1))*(facilities.has(edge.id)?1.25*facilities.get(edge.id).factor:1);
+                    const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
+                    if(this.rules.weather&&!travel)continue;
+                    const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
+                    if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);push(next);}
+                }
+            }
+            return tree;
+        };
+        let plan=graph.searches?.get(searchKey);
+        const hit=!!plan;
+        if(plan&&!plan.settled.has(to)){
+            try{search(plan);}catch(error){graph.searches.delete(searchKey);throw error;}
+        }
+        else if(!plan){
+            plan=search();
+            if(graphCache){
+                graph.searches??=new Map();
+                if(graph.searches.size>=512)graph.searches.clear();
+                graph.searches.set(searchKey,plan);
+            }
+        }
+        const project=tree=>{
+            const {distances,movingTimes,previous,costs}=tree;
+            if(!distances.has(to))reject('E-ACTION-PRECONDITION','没有当前季节可通行的路线，不能瞬移');
+            const edges=[],segments=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);segments.unshift({id:step.edge.id,from:step.node,to:cursor,minutes:movingTimes.get(cursor)-movingTimes.get(step.node),elapsed:distances.get(cursor),moving:movingTimes.get(cursor),cost:costs.get(cursor)});cursor=step.node;}
+            const moving=movingTimes.get(to),daysRest=this.rules.weather||mode==='boat'?0:Math.floor((moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
+            const result={minutes:distances.get(to)+daysRest,movingMinutes:moving,cost:costs.get(to),edges};
+            return {result,segments};
+        };
+        const {result,segments}=project(plan),edges=result.edges;
+        if(hit&&ROUTE_CACHE_CHECK&&!canonicalEqual({result,segments},project(search())))throw Error('route search cache mismatch');
         const adjusted=this.airDraft?adjustAirTravel(this.airDraft,this,result,mode,{minute,from,segments,sail:this.npcObligationAction?.tool==='move'}):result;
         if(this.npcObligationAction?.tool==='move')Object.defineProperty(adjusted,'checkpoints',{value:segments.map((segment,index)=>{
             const rest=this.rules.weather||mode==='boat'?0:Math.floor((segment.moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
