@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04/CT05（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：A1 已有关系型测试的日常题，按题面数值再落一遍精确断言（世界副本改价、改作息、改路程，开局存档写场景）。
 // A1 的 a1-daily-probes.test.mjs 保持不动；这里只补它没有断言到的题面数值。引擎做不到的条目写 test.todo，注明缺的机制与阶段。
 import test from 'node:test';
@@ -39,14 +40,24 @@ test('D02 卖兽皮：基准6文、公开供给稀缺1、收购价差0.6，五�
 // F026: the tavern keeper's only income examined by the lodging tests is the room fee, so every other resident is penniless (nobody walks in
 // at noon and buys; walk-in customers have their own tests in s5-w4-economy).
 const penniless=s=>{for(const [id,npc] of Object.entries(s.npcs))if(id!==LINSUI)npc.coins=0;};
+function lodgingReceipts(before,bed,after){
+ // The room transfer is +40 at booking. Overnight the household eats 3 loaves;
+ // the daily shelf buys 3 replacements at 2 base copper × .5 scarcity = 1 each,
+ // so the keeper's final purse delta is 40 - 3 = 37, not another room charge.
+ assert.equal(bed.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,40,'订房时店主收到完整 40 文');
+ const midnight=Math.floor(after.state.minute/DAY)*DAY;
+ const restock=after.state.records['shop:shop_hw_qingdeng'].entries.filter(r=>r.minute===midnight&&r.added>0);
+ assert.deepEqual(restock.map(r=>[r.item,r.source,r.added,r.paidCopper,r.cost]),[['item_bread','local',3,3,{goods:3,freight:0,duties:0}]],'午夜只补回三份馒头，实付 3 文');
+ assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,37,'40 文房费减 3 文真实补货');
+}
 test('D04 住店一晚 ①②③：单间 40 文/晚，120→80，客栈钱柜 +40，只扣一晚，睡到次日卯时（约 9 小时），随身物品不变',async t=>{
  // 来福客栈单间 40 文→青灯酒馆客房改价 40；秋季九月二十戌时；玩家 120 文。
  const world=variant(w=>{const l=w.locations.find(x=>x.id===INN);l.lodging={...l.lodging,nightlyCopper:40};});
  const start=monthDayMinute(9,20,20,0),ui=await uiSession(t,{world,mutate:scene(INN,start,s=>{s.player.coins=120;s.player.hp=5;penniless(s);})});
- const before=await primed(ui),rent=await ui.choose('trade.lodge',{days:1});assert.ok(rent.ok,rent.error);
+ const before=await primed(ui),rent=await ui.choose('trade.lodge',{days:1});assert.ok(rent.ok,rent.error);const bed=await ui.read();
  const woke=await ui.choose('time.sleep',{until:{dayOffset:1,hour:5}});assert.ok(woke.ok,woke.error);const after=await ui.read();
  assert.equal(before.state.player.coins,120);assert.equal(after.state.player.coins,80,'①120→80（只扣一晚）');
- assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,40,'②客栈钱柜 +40');
+ lodgingReceipts(before,bed,after);
  assert.equal(after.state.minute-start,9*HOUR,'③约 9 小时，到次日卯时');assert.match(baseEngine.calendar(after.state.minute).text,/雁月 21日 05:00/);
  assert.deepEqual(after.state.inventory,before.state.inventory,'随身物品不凭空消失');
  conserved(before,after,'D04',new WorldEngine(world));
@@ -56,7 +67,7 @@ test('D04.4 public paid lodging sleeps a full 540 minutes and recovers capped st
  const ui=await uiSession(t,{world,mutate:scene(INN,start,s=>{s.player.coins=120;penniless(s);s.player.body={stamina:{value:30,asOf:start,activity:'rest'},satiety:{value:100,asOf:start,activity:'rest'}};})});
  const before=await primed(ui),room=await ui.choose('trade.lodge',{days:1});assert.ok(room.ok,room.error);assert.equal(room.result.cost,40);
  const bed=await ui.read(),sleep=await ui.choose('time.sleep',{until:{dayOffset:1,hour:5,minute:11}});assert.ok(sleep.ok,sleep.error);const after=await ui.read();
- assert.equal(after.state.minute-bed.state.minute,540);assert.equal(sleep.result.cost.sleep.minutes,540);assert.equal(sleep.result.cost.sleep.coveredMinutes,540);assert.equal(after.state.player.body.stamina.value,100);assert.equal(after.state.player.coins,80);assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,40);assert.deepEqual(after.state.inventory,before.state.inventory);conserved(before,after,'D04.4',new WorldEngine(world));
+ assert.equal(after.state.minute-bed.state.minute,540);assert.equal(sleep.result.cost.sleep.minutes,540);assert.equal(sleep.result.cost.sleep.coveredMinutes,540);assert.equal(after.state.player.body.stamina.value,100);assert.equal(after.state.player.coins,80);lodgingReceipts(before,bed,after);assert.deepEqual(after.state.inventory,before.state.inventory);conserved(before,after,'D04.4',new WorldEngine(world));
 });
 test.todo('D04 ⑤该单间当晚被占用，其他住客不能再订同一间——引擎客房只有“间数”(rooms: 3)，无住客占位，NPC 不入住：缺 lodges 持有与 capacity 派生（S2 持有）');
 
@@ -71,7 +82,7 @@ test('D06 赶路：20 里、10 里/时辰，卯时出发约 4 小时后到巳时
  assert.equal(after.state.player.coins,before.state.player.coins);assert.deepEqual(after.state.inventory,before.state.inventory,'④钱物不变');
  assert.ok(Object.keys(after.state.npcs).some(id=>after.state.npcs[id].location!==before.state.npcs[id]?.location||after.state.npcs[id].activity!==before.state.npcs[id]?.activity),'⑤出发村照常运转，没有冻结');
 });
-test.todo('D06 ③体力下降（步行 4 小时，未降到 0）——引擎没有体力：缺 body.stamina（S1 vital；A3 move 的 cost.body 读 body.json drainPerHour.travel 5/小时 → 100→80）');
+test.todo('D06 ③体力下降（步行4小时，100→80）——body.stamina 表与原语已实现，仍缺 core:move 跨地点赶路的 travel 身体消费（A3 move 消费；登记：docs/A3-后续阶段登记.md S5CT）');
 
 test('D19 拜师学技能 ①②⑤：学费 100（150→50）给师傅 +100，学会后配方入册，师傅好感不降',async t=>{
  // 猎户老韩教设陷阱→木匠阿砚教削制木楔（recipe_wooden_pegs，世界副本把学费改为 100）；春季三月二十辰时；玩家 150 文。

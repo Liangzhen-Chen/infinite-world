@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT01（保留原阶段边界）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {assertActionRejected} from './helpers/action-refusal.mjs';
@@ -125,7 +126,7 @@ async function filingPremises(n){
  }
  return {row,document,setupUnmet:[]};
 }
-for(const n of legalRequests)([51,52,53,55,58].includes(n)?test:test.todo)(`A3 native legal ${n}: original premises submit only a request in routed and direct calls`,async()=>{
+for(const n of legalRequests)([51,52,53,55,58].includes(n)?test:test.todo)(`A3 native legal ${n}: original premises submit only a request in routed and direct calls${n===56?'〔归 S4：机构案件与货损原件前提；登记 docs/A3-后续阶段登记.md S5CT CT01〕':''}`,async()=>{
  // 05 §5.2.7: current native premises submit requests; the original r5 inputs
  // above still lack those premises and retain every atomic-refusal assertion.
  // 05 5.2.7: 052 submits an actual sourced original after judgment; 058 addresses the actual filing officer.

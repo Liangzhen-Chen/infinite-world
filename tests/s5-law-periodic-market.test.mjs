@@ -10,7 +10,7 @@ import {marketSupply,subjectiveMarketQuote,assertMarketDepth} from '../server-pl
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {scheduleAt,advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
 import {marketTimeWindows,householdWorkTime} from '../server-plugin/npc-state.mjs';
-import {moveCoins,purse,mirrorPartyCoins} from '../server-plugin/money.mjs';
+import {moveCoins,purse,mirrorPartyCoins,depositCounter,dedicatedCoinAccount} from '../server-plugin/money.mjs';
 import {transferItems} from '../server-plugin/items.mjs';
 import {bookTransport,advanceTransport,nextTransportMinute} from '../server-plugin/transport.mjs';
 import {fixture as transportFixture,asset,DRIVER} from './helpers/transport.mjs';
@@ -253,6 +253,23 @@ test('到场有理单价3/2，两份整单付3铜，不能逐份截断或拒绝�
  assert.equal(d.get('state','npcs',owner,'coins'),97);assert.equal(d.get('state','npcs',seller,'coins'),3);
 });
 
+test('on-site restock spends existing counter capital even with an empty owner purse',()=>{
+ const f=fixture();f.doc.state.npcs[seller].inventory={[item]:7};
+ f.doc.state.npcs[owner].memoryStream=[{id:'counter-offer',minute:0,kind:'knowledge',value:{seller,item,quantity:2,unitPrice:{numerator:3,denominator:2},at:0,expires:10*DAY,location:place}}];
+ const d=f.sync();
+ depositCounter(d,f.e,{owner,seat:place,business:f.shop.id,amount:100,eventId:'counter-capital'});
+ advanceShops(d,f.e,0,DAY);
+ // 100 purse -> counter; two units * 3/2 = 3. Purse stays 0,
+ // counter 97, seller 3, stock 2/5. The existing capital is not funded twice.
+ assert.equal(d.get('state','npcs',owner,'coins'),0);
+ assert.equal(dedicatedCoinAccount(d.get('state'),owner,'counter').coins,97);
+ assert.equal(d.get('ledger','accounts',`${owner}|coin_river|counter`),97);
+ assert.equal(d.get('state','npcs',seller,'coins'),3);
+ assert.equal(f.e.quantity(d,owner,item),2);assert.equal(f.e.quantity(d,seller,item),5);
+ const row=d.get('state','records',`shop:${f.shop.id}`).entries[0];
+ assert.deepEqual([row.paidCopper,row.referenceCopper,row.cost],[3,6,{goods:3,freight:0,duties:0}]);
+});
+
 test('现金1可买有理单价3/2的一份，不因买不起原定两份而整批拒绝',()=>{
  const f=fixture();f.doc.state.npcs[owner].coins=1;f.doc.state.npcs[seller].inventory={[item]:7};
  f.doc.state.npcs[owner].memoryStream=[{id:'partial-offer',minute:0,kind:'knowledge',value:{seller,item,quantity:2,unitPrice:{numerator:3,denominator:2},at:0,expires:10*DAY,location:place}}];
@@ -276,6 +293,10 @@ test('本人观察到12铜、到场含运储报价9，净预期3；家庭既有�
  assert.deepEqual([row.added,row.paidCopper,row.expectedNet],[1,9,3]);
  assert.equal(d.get('state','npcs',owner,'coins'),91);assert.equal(d.get('state','obligations','storage','paid'),0);
  assert.deepEqual(d.get('state','records',`finance_profit:${owner}`).lots[item],[{quantity:1,price:9}]);
+ // A day-0 noon purchase must reprice immediately too: 1 * 9/3
+ // reaches the shop ceiling 1.4, using the same reference as cycle buys.
+ assert.equal(row.referenceCopper,3);
+ assert.deepEqual(d.get('state','records',`shop_pricing:${owner}`).markup,{numerator:1400000,denominator:1000000});
 });
 
 test('顾客按十份口粮缺口采购，保留已知付款，不按钱袋固定比例花钱',()=>{

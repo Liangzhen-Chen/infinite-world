@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04/CT05（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：赶路天气、传闻、任务、入会、过卡、战斗、诊疗、短离屏。
 // 夹具与口径同 daily-b2-trade.test.mjs：题面数值落到世界副本/开局存档，断言来自题面；做不到的条目写 test.todo 并注明缺的机制与阶段。
 import test from 'node:test';
@@ -38,7 +39,7 @@ test('D09 下雨天赶路：雨天走同一段路比晴天慢（雨速系数）�
  assert.equal(weatherAt(baseEngine,SEED9,TOWN,depart).kind,wet.arrival.result.weather.kind,'⑤同一天同一区域，出门前与到达后读到同一天气');
  assert.deepEqual(wet.after.state.player.coins,wet.before.state.player.coins,'路上没有花费');
 });
-test.todo('D09 ③体力消耗比晴天多——引擎没有玩家体力（只有生命）：缺 body.stamina 闭式消耗（S1 vital 原语；A3 move 的 cost.body 读 body.json drainPerHour.travel 与雨天修正项）');
+test.todo('D09 ③体力消耗比晴天多——body.stamina 表与原语已实现，但 core:move 的跨地点赶路未接 travel 身体消费，432分钟实测损失0；仍缺雨晴体力对照（A3 move 消费；登记：docs/A3-后续阶段登记.md S5CT）');
 test('D09④ 冒雨等待产生可追溯的淋湿状态与回执',async t=>{
  const ui=await uiSession(t,{mutate:scene(VILLAGE,monthDayMinute(6,20,7,0),(s,doc)=>{doc.randomSeed='daily-b2-d09-98';})});
  // 已有 D09 种子在此日为雨；户外无遮蔽，真实经过一分钟即 wet。

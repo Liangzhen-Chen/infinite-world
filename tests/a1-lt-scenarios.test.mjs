@@ -56,10 +56,12 @@ test('L3 同一天再买同一件东西，成交深度真实上升且总额一�
  // retained portions; only the non-examined opening shelf is declared.
  const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].inventory.item_bread={quantity:8};})});
  const a=await ui.choose('trade.buy',{item:'item_bread',quantity:1},{target:LINSUI});
- await ui.choose('time',{minutes:120});
+ // K08 settles real customer service windows at noon. Repeat before that
+ // queue: 10:05 + 60 = 11:05, still the same day and the same market depth.
+ const waited=await ui.choose('time',{minutes:60});assert.ok(waited.ok,waited.error);
  const b=await ui.choose('trade.buy',{item:'item_bread',quantity:2},{target:LINSUI});
  // S5-02 / 15 §15.2 replaces the daily lock with current market depth.
- assert.ok(a.ok&&b.ok);assert.ok(b.result.pricing.depth>a.result.pricing.depth);
+ assert.ok(a.ok,a.error);assert.ok(b.ok,b.error);assert.ok(b.result.pricing.depth>a.result.pricing.depth);
  // Opening saleable food exceeds28, demand14 → floor .5. All remaining factors
  // are 1 on the first purchase: published bread 2 × .5 = 1 copper.
  assert.equal(a.result.cost,1);
