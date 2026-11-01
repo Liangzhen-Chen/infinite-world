@@ -1,4 +1,15 @@
 import {preconditionFailure} from './precondition.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+registerAdvanceHook('foodSupplyDrawGranary',drawFoodSupplyGranary);
+function drawFoodSupplyGranary(d,engine,id,quantity,options){
+    if(profile(engine,id))return drawGranary(d,engine,id,quantity,{...options,purpose:'food-supply'});
+    // Generated stores already hold real stock, without managed crop cohorts.
+    const s=d.get('state','settlements',id),reserve=options.minimumReserve;
+    if(!s||s.granary===false||!Number.isSafeInteger(reserve)||reserve<0)return 0;
+    const taken=Math.min(quantity,Math.max(0,s.food-reserve));
+    if(taken){moveStock(d,{from:granaryAccount(engine,id),to:options.to.account,amount:taken,writer:'agriculture',eventId:options.eventId});d.set(['state','settlements',id,'food'],s.food-taken);}
+    return taken;
+}
 import {goodsWorth} from './valuation.mjs';
 import {husbandryAction} from './husbandry.mjs';
 import {wearItem,useTool} from './items.mjs';
@@ -234,7 +245,7 @@ export function bookLegacyFood(d,engine,sid,produced,eaten,day){
     moveStock(d,{from:g,to:`sink:consume|${resource}|meal`,amount:eaten,writer:'agriculture',eventId});
 }
 // S1b: to = 粮的去处（军队的军粮账户；掠夺而无本方队伍接收时为 sink:destroy）。
-export function drawGranary(d,engine,id,quantity,{raid=false,to,eventId=null}={}){
+export function drawGranary(d,engine,id,quantity,{raid=false,to,eventId=null,purpose='army'}={}){
     const p=profile(engine,id),s0=d.get('state','settlements',id);if(!p||!s0||!(quantity>0))return 0;
     to??={unbooked:true};// 未给去向的直接调用（测试夹具）记未入账漂移
     const original=d.get(...path(id));
@@ -243,7 +254,8 @@ export function drawGranary(d,engine,id,quantity,{raid=false,to,eventId=null}={}
     const stock=r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0),available=raid?stock:Math.max(0,stock-s.population*p.reserveDays);
     const taken=takeGrain(r,s,Math.min(quantity,available),false,to);if(!taken)return 0;
     // Leaves the granary like a sale (the conservation outflow); armyDrawn/raided break it down.
-    r.ledger.sold+=taken;r.ledger[raid?'raided':'armyDrawn']=(r.ledger[raid?'raided':'armyDrawn']??0)+taken;
+    const kind=raid?'raided':purpose==='food-supply'?'retailSold':'armyDrawn';
+    r.ledger.sold+=taken;r.ledger[kind]=(r.ledger[kind]??0)+taken;
     balanced(r,s);commit(d,engine,id,r,eventId);d.set(path(id),r);d.set(['state','settlements',id],s);return taken;
 }
 

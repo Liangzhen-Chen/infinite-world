@@ -1,4 +1,8 @@
 {
+  "foodSupply": {
+    "version": 1,
+    "source": "TFB：产地真实余粮、实地探价、运输与到柜成交；食品柜台现有重量周转派生原粮货架，不生成现货。"
+  },
   "version": "engine-rules-3",
   "businessLifecycle": {
     "horizonDays": 30,

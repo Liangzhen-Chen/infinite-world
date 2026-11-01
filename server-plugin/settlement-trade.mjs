@@ -22,7 +22,7 @@ const clone=value=>structuredClone(value);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const profile=(engine,id)=>engine.rules.agriculture?.settlements.find(p=>p.settlement===id);
 const cargo=row=>row.batches.reduce((n,b)=>n+b.amount,0);
-const orders=state=>recordsWhere(state.records,'category','settlement_trade');
+const orders=state=>recordsWhere(state.records,'category','settlement_trade').filter(o=>!o.foodSupply);
 const integer=(v,min=0)=>Number.isSafeInteger(v)&&v>=min;
 
 export function validateSettlementTradeRules(world){
@@ -100,7 +100,7 @@ function spareWorkers(state,engine,sid){
     const available=Math.max(0,Math.floor(s.population*p.workerFraction)-(state.records?.[`levy:${sid}`]?.count??0));// U12 levy
     const spare=Math.max(0,available-p.processingWorkers-p.freshWorkers-p.farmWorkers-2);
     // An order carried by a hired carrier sends no village workers anywhere.
-    const busy=orders(state).filter(o=>o.seller===sid&&o.transport&&o.transport.phase!=='home'&&!o.carriage).reduce((n,o)=>n+o.workers,0);
+    const busy=recordsWhere(state.records,'category','settlement_trade').filter(o=>o.seller===sid&&o.transport&&o.transport.phase!=='home'&&!o.carriage).reduce((n,o)=>n+o.workers,0);
     return Math.max(0,Math.min(r.workersMaximum,spare)-busy);
 }
 function entry(o,phase,minute,detail={}){o.entries.push({phase,minute,...detail});}
@@ -259,7 +259,7 @@ export function advanceSettlementTrade(d,engine,minute){
     const r=engine.rules.settlementTrade,state=d.get('state');
     if(!r.lanes.some(l=>managed(state,l.seller)&&managed(state,l.buyer))&&!orders(state).some(o=>o.transport?.nextAt))return;
     assertRules(engine);
-    for(const [key,o]of recordEntriesWhere(state.records,'category','settlement_trade'))if(key!==`settlement-trade:${o.id}`)throw Error('周贸易记录编号不守恒，拒绝重复结算');
+    for(const [key,o]of recordEntriesWhere(state.records,'category','settlement_trade'))if(!o.foodSupply&&key!==`settlement-trade:${o.id}`)throw Error('周贸易记录编号不守恒，拒绝重复结算');
     for(const old of orders(state)){
         assertOrder(old);
         if(!old.transport||old.transport.phase==='home')continue;
