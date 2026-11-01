@@ -212,16 +212,18 @@ test('three native county round trips merge actual ownership shares without a se
   assert.equal(doc.state.npcs[keeper].coins,0);assert.deepEqual(doc.state.npcs[keeper].inventory,{});
   assert.equal(doc.ledger.accounts['loc_far_tongji|coin_river|aggregate'],row.coins);
   if(i===0){
-   // Opening keepers372+268+285 and hosts84+154 =1163. Day3's real route receipts charged42+4+8=54 for the goods alone.
-   // F010: restocking is no longer free for local production and route freight/duty is paid too, so what the shops paid out
-   // is read from their own restock ledgers (goods + freight + duties, every copper named) and the aggregate is the
-   // opening 1163 less exactly that. The tavern keeps 372 less its own payments; shelves4+4=8,3+3=6,5+5=10 (24 units).
+   // FIXK08: opening purses 372+268+285+84+154=1163. The finite
+   // on-site suppliers start at zero and remain owners in this same pool.
+   // Shop payments 75+64+174=313 are internal transfers, not exports.
    const ledgers=Object.values(doc.state.records).filter(r=>r.category==='shop_ledger'&&(r.keeper in row.members)),paid=ledgers.reduce((n,l)=>n+l.entries.reduce((m,e)=>m+e.paidCopper,0),0);
    const tavernPaid=ledgers.filter(l=>l.keeper===keeper).reduce((n,l)=>n+l.entries.reduce((m,e)=>m+e.paidCopper,0),0);
-   assert.ok(paid>=54);
-   assert.equal(row.coins+paid,1163);assert.equal(row.members[keeper].coins,372-tavernPaid);
+   assert.equal(paid,313);assert.equal(tavernPaid,75);assert.equal(row.coins,1163);
+   assert.equal(row.members[keeper].coins,372-tavernPaid);
+   for(const [id,coins]of Object.entries({npc_rg_hanlu_tongji_02:204,npc_rg_hanlu_tongji_03:111,npc_rg_hanlu_tongji_37:75,npc_rg_hanlu_tongji_38:64,npc_rg_hanlu_tongji_39:174}))assert.equal(row.members[id].coins,coins,id);
    assert.equal(row.members[keeper].inventory.item_barley_pea_stew.quantity,8);
-   assert.equal(row.members[keeper].inventory.item_milk.quantity,6);
+   // Milk lasts one day. Both founding lots (3+3) expire before this
+   // departure; there is no date-generated replacement to buy.
+   assert.equal(row.members[keeper].inventory.item_milk,undefined);
    assert.equal(row.members[keeper].inventory.item_ration.quantity,10);
    const before=structuredClone(doc),scope=f.engine.scoped(doc),d=scope.primitiveDraft(doc);
    assert.equal(coinRead(d,{point:'assets.cash',account:`${keeper}|coin_river|purse`,legacy:()=>doc.state.npcs[keeper].coins}),row.members[keeper].coins);
