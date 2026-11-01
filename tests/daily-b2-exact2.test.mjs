@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：续 daily-b2-exact.test.mjs——天黑、钓鱼、制作、存取钱、睡觉、宠物、存读档。
 import test from 'node:test';
 import assert from 'node:assert/strict';

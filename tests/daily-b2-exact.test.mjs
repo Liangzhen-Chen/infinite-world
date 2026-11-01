@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04/CT05（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：A1 已有关系型测试的日常题，按题面数值再落一遍精确断言（世界副本改价、改作息、改路程，开局存档写场景）。
 // A1 的 a1-daily-probes.test.mjs 保持不动；这里只补它没有断言到的题面数值。引擎做不到的条目写 test.todo，注明缺的机制与阶段。
 import test from 'node:test';
@@ -71,7 +72,7 @@ test('D06 赶路：20 里、10 里/时辰，卯时出发约 4 小时后到巳时
  assert.equal(after.state.player.coins,before.state.player.coins);assert.deepEqual(after.state.inventory,before.state.inventory,'④钱物不变');
  assert.ok(Object.keys(after.state.npcs).some(id=>after.state.npcs[id].location!==before.state.npcs[id]?.location||after.state.npcs[id].activity!==before.state.npcs[id]?.activity),'⑤出发村照常运转，没有冻结');
 });
-test.todo('D06 ③体力下降（步行 4 小时，未降到 0）——引擎没有体力：缺 body.stamina（S1 vital；A3 move 的 cost.body 读 body.json drainPerHour.travel 5/小时 → 100→80）');
+test.todo('D06 ③体力下降（步行4小时，100→80）——body.stamina 表与原语已实现，仍缺 core:move 跨地点赶路的 travel 身体消费（A3 move 消费；登记：docs/A3-后续阶段登记.md S5CT）');
 
 test('D19 拜师学技能 ①②⑤：学费 100（150→50）给师傅 +100，学会后配方入册，师傅好感不降',async t=>{
  // 猎户老韩教设陷阱→木匠阿砚教削制木楔（recipe_wooden_pegs，世界副本把学费改为 100）；春季三月二十辰时；玩家 150 文。

@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：普通打斗、求医、入会、过关卡、离开几天再回来。
 // 夹具与口径同 daily-b2-trade.test.mjs；求医经 world_act（A1b：本人同意由动作派生）。
 import test from 'node:test';

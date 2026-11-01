@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：买卖类。把题面数值落成世界副本与开局存档，经界面动作（world_act）结算，断言题面的精确预期。
 // 不能由现有引擎结算的条目不在此断言，写成 test.todo，注明缺的机制与迁移阶段；清单见 docs/probes/daily/executable-status.md。
 import test from 'node:test';
