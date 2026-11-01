@@ -83,6 +83,8 @@ function daylightCompute(latitude, dayOfYear) {
 // re-hashing the whole weather rule set for every edge. Keyed by the rules
 // object, seed, region and year, so it returns exactly what dailySequence does.
 export const WEATHER_SEQUENCES = Symbol('weather sequences');
+const WEATHER_LOCATIONS = Symbol('weather locations');
+const WEATHER_CACHE_CHECK = process.env.FIELDS_INDEX_CHECK === '1';
 const nested = (map, key) => { let next = map.get(key); if (!next) { next = new Map(); map.set(key, next); } return next; };
 function cachedSequence(memo, rules, seed, region, year) {
     if (!memo) return dailySequence(rules,seed,region,year);
@@ -92,10 +94,24 @@ function cachedSequence(memo, rules, seed, region, year) {
 }
 export function weatherAt(engine, seed, location, minute, sequenceCache = null, calendar=engine.calendarId??'legacy:30-day') {
     validMinute(minute);
-    const rules = engine.rules.weather, region = rules?.regions.find(row => row.locations.includes(location));
-    if (!region) return null;
-    const day = Math.floor(minute/1440),date=calendarDateAt(engine,minute,calendar),year=date.year-1,dayOfYear=(date.month-1)*30+date.day-1;
+    const rules = engine.rules.weather;
     const memo = sequenceCache ? nested(sequenceCache, WEATHER_SEQUENCES) : engine.weatherSequences ?? null;
+    // The same rules are fixed for the existing sequence-cache lifetime.
+    // First region wins, just like find, including overlapping legacy regions.
+    let locations = rules && memo ? nested(memo, WEATHER_LOCATIONS).get(rules) : null;
+    if (rules && memo && !locations) {
+        locations = new Map();
+        for (const row of rules.regions) for (const id of row.locations) if (!locations.has(id)) locations.set(id, row);
+        nested(memo, WEATHER_LOCATIONS).set(rules, locations);
+    }
+    const region = locations ? locations.get(location) : rules?.regions.find(row => row.locations.includes(location));
+    if (locations && WEATHER_CACHE_CHECK && region !== rules.regions.find(row => row.locations.includes(location))) throw Error('weather location cache mismatch');
+    if (!region) return null;
+    const day = Math.floor(minute/1440);
+    // The legacy display date is exactly a 360-day year; weather only needs
+    // these two integers, not the formatted date/market/clock projection.
+    const date=calendar==='legacy:30-day'?null:calendarDateAt(engine,minute,calendar);
+    const year=date?date.year-1:Math.floor(day/360),dayOfYear=date?(date.month-1)*30+date.day-1:day%360;
     const row = cachedSequence(memo,rules,seed,region,year)[dayOfYear], light = daylightAt(region.latitude,dayOfYear);
     const indoors = region.indoor.includes(location), effect = rules.states[row.kind];
     const clock=value=>`${String(Math.floor(value/60)).padStart(2,'0')}:${String(value%60).padStart(2,'0')}`;

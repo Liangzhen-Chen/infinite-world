@@ -753,7 +753,7 @@
     "server-plugin/archived-reducer.mjs",
     "server-plugin/scheduler.mjs"
    ],
-   "lines": 1866,
+   "lines": 1920,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -2086,7 +2086,7 @@
     "server-plugin/regions.mjs",
     "server-plugin/remote-generation.mjs"
    ],
-   "lines": 2658,
+   "lines": 2674,
    "stateWrites": [
     "npcs",
     "records",
@@ -21650,7 +21650,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 1209
+   "lines": 1263
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -28314,7 +28314,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 186
+   "lines": 202
   },
   "server-plugin/wildlife-awakening.mjs": {
    "system": "sim_wildlife",
