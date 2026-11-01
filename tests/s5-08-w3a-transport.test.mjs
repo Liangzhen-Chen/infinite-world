@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fixture,asset,finish,DRIVER,SECOND,SENDER,RECIPIENT} from './helpers/transport.mjs';
+import {fixture,asset,finish,depart,DRIVER,SECOND,SENDER,RECIPIENT} from './helpers/transport.mjs';
 import {bookTransport,nextTransportMinute,advanceTransport,transportIncident,damageTransportCargo,compensateTransportLoss,destroyTransportAsset,transportAssetView,quoteTransport} from '../server-plugin/transport.mjs';
 import {sendPost,advancePost,nextPostMinute} from '../server-plugin/post.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
@@ -28,7 +28,8 @@ const heard=(d,who)=>(d.get('state','npcs',who,'memoryStream')??[]).filter(m=>m.
 test('intercepted cargo: partial loss owes cargo value once, recovered shipment arrives short and the recipient is told',()=>{
  const {e,d,vehicle}=setup();d.set(['state','inventory','item_oats'],{quantity:10});
  const trip=bookTransport(d,e,{asset:vehicle,to:'loc_bs',recipient:RECIPIENT,cargo:[{item:'item_oats',quantity:10}]},'consign');
- transportIncident(d,e,{shipment:trip.id,actor:SECOND},'raid');
+ // CT07：先经真实运输推进发车，再验证途中拦截与赔偿，不绕过等客。
+ depart(d,e,trip.id);transportIncident(d,e,{shipment:trip.id,actor:SECOND},'raid');
  assert.equal(d.get('state','records',trip.id,'status'),'intercepted');
  // 3 oats lost, valued by the goods valuation role at the shipment's position (14 copper here). A repeated report of the same event is the same loss.
  const lost=worth(d,e,3);assert.equal(lost,14);

@@ -243,13 +243,14 @@ test('发车表：车行/船行整点随到随发、午初（660）后次日辰�
  // 驿站：05:00（300）→ 当日 07:00（420）；正好 07:00 即发；08:00（480）错过 → 次日 1860。
  assert.equal(carrierDeparture(e,'post',300),420);assert.equal(carrierDeparture(e,'post',420),420);assert.equal(carrierDeparture(e,'post',480),1860);
 });
-test('信件（无货无客无护送）按驿传费 post.feePerLi 计里程、按驿站班次发；货运不受影响',()=>{
+test('信件（无货无客无护送）按驿传费 post.feePerLi 计里程、按驿站班次发；货运仍按重量计价',()=>{
  const f=lane({risk:1});
  // 12 km = 24 里 × 0.4 文/里 = 9.6 → 10；不乘风险附加（驿传是公价）。起点 10:00（600）→ 驿站次日辰初 1860。
  const letter=quoteTransport(f.d,f.e,{asset:f.id,from:'loc_hw',to:'loc_bs'});
  assert.equal(letter.freight,10);assert.equal(letter.departAt,1860);assert.equal(letter.estimatedArrivalAt,1860+letter.route.minutes);
  // 同一路线运货仍按重量：10 份燕麦 5 kg → 12 × 5 × 0.012 × (1 + 风险)，风险 = 1 − 0 = 1 → 1.44 → 2。
- const cargo=quoteOf(f);assert.equal(cargo.departAt,600);assert.equal(cargo.freight,2);
+ // CT07：未满载货运从10:00班次等客一日，次日10:00发；运价断言仍为2文。
+ const cargo=quoteOf(f);assert.equal(cargo.departAt,2040);assert.equal(cargo.freight,2);
  // 书信下单后运单的发车时刻就是驿站班次，提前到站的班次被拒。
  const trip=bookTransport(f.d,f.e,{asset:f.id,to:'loc_bs',recipient:RECIPIENT},'letter-trip');
  assert.equal(trip.departAt,1860);assert.equal(trip.status,'booked');

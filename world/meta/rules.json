@@ -240,7 +240,14 @@
     "walkKmh": 4,
     "horseMultiplier": 1.8,
     "cartKmh": 3,
-    "dailyTravelMinutes": 480
+    "dailyTravelMinutes": 480,
+    "carriers": {
+      "cart": {
+        "batching": {"waitDays": 1, "minLoadPermille": 1000},
+        "dailyJourney": {"nightTravel": false},
+        "source": "CT07：满载按当前有效重量/体积/座位任一容量100%判定；最长等客一日为车行集中收货、并载后发车的P待标定缺省，非历史实测值，不按D26到达钟点倒推。日行从balance/transport.json的departure:cart.resume（07:00）开始，沿用travel.dailyTravelMinutes=480的八小时行程预算，故15:00停宿，次日07:00续行；车速仍读现有cartKmh及路况、天气。驿传与非车辆不套用本车行并载规则。"
+      }
+    }
   },
   "equipment": {
     "qualities": [
