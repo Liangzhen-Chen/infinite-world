@@ -437,7 +437,7 @@ export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}=
     const s=d.get('state'),recipe=base(e,s,row.recipe),owner=row.owner??'player';
     const premises=owner==='player'&&ownsWorkshop(s,row.location,owner,e),inventory=premises?premisesInventory(s,owner,row.location):null;
     if(!recipe?.materials?.length||!recipe.output)return {reason:'配方已不可用'};
-    const skill=workerSkill(e,s,row.worker,recipe),facility=facilityView(e,s,row.location);
+    const skill=workerSkill(e,s,row.worker,recipe),facility=facilityView(e,s,row.location,owner);
     if(skill<(recipe.minimumProficiency??0))return {reason:'当前技能不足'};
     if(facility?.factor===0||s.buildings?.[row.location]?.condition<=0)return {reason:'工坊已停用'};
     const toolsOwner=employmentAccount(d,e,owner)||s.records?.[`protocol_assets:${owner}`]?row.worker:owner;
@@ -445,7 +445,7 @@ export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}=
     for(const p of recipe.byproducts??[])batches=Math.min(batches,Math.floor(200/p.amount));
     for(const m of recipe.materials){const held=inventory?.[m.item];const stock=premises?(typeof held==='number'?held:held?.quantity??0):employmentStock(d,e,owner,m.item);batches=Math.min(batches,Math.floor(stock/m.amount));}
     for(const tool of recipe.tools??[]){const held=heldUnit(d,e,toolsOwner,tool);if(!held||employmentStock(d,e,toolsOwner,tool)<=0||(held.durability??e.byId.get(tool)?.durability)<=0)return {reason:'缺少完好工具'};batches=Math.min(batches,Math.floor((held.durability??e.byId.get(tool)?.durability)/Math.max(1,recipe.toolWear??1)));}
-    const place=base(e,s,row.location),station=recipe.workstation?(facility?.workstations??place?.workstations)?.find(st=>st.kind===recipe.workstation):null;
+    const place=base(e,s,row.location),station=recipe.workstation?(facility?.workstations??place?.workstations)?.find(st=>st.kind===recipe.workstation&&(st.access==='public'||st.owner===owner)):null;
     if(recipe.location&&recipe.location!==row.location||recipe.workstation&&(!station||station.access!=='public'&&station.owner!==owner))return {reason:'工作台使用权已失效'};
     if(!batches)return {reason:'缺少可用材料或工时'};
     const fee=station?.owner===owner?0:(station?.fee??0)*batches;

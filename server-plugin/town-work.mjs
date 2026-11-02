@@ -8,7 +8,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {personConstraint,placeSettlement} from './entity-view.mjs';
 import {currentShops} from './shop.mjs';
 import {recordsWhere} from './storage.mjs';
-import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {currentWorkstationRecipes,workstationRecipes} from './workstation-services.mjs';
 
 const DAY=1440,key=id=>`town-work:${id}`;
 const read=(state,id)=>statisticalFoodAccount(state,id)?.labor??state.records?.[key(id)];
@@ -59,7 +59,11 @@ export function produceTownWork(d,e,{worker,recipe,location,minutes=480,maximum=
  if(previous)return previous.production;
  const definition=e.byId.get(recipe),own=group??state.npcs?.[worker];
  if(!definition)return {reason:'配方已不存在'};
- if(definition.learningRequired&&!definition.teachers?.includes(worker)&&!own?.recipes?.[recipe]&&!currentWorkstationRecipes(e,state,worker).some(r=>r.id===recipe))return {reason:'尚未学会配方'};
+ // Statistical attendance is represented by this batch's production site,
+ // rather than a fictitious NPC schedule. Apply the same workstation skill
+ // gate as a named resident's real production slot.
+ const capabilities=group?workstationRecipes(e,state,worker,{location,production:true}):currentWorkstationRecipes(e,state,worker);
+ if(definition.learningRequired&&!definition.teachers?.includes(worker)&&!own?.recipes?.[recipe]&&!capabilities.some(r=>r.id===recipe))return {reason:'尚未学会配方'};
  let commuteMinutes=0;
  if(!group&&own?.location!==location){
   try{commuteMinutes=e.route(own?.location,location,'walk',minute,d.document.randomSeed).minutes;}catch{return {reason:'无法到达工位'};}

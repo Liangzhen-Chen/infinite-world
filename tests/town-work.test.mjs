@@ -9,6 +9,8 @@ import {transferItems} from '../server-plugin/items.mjs';
 import {recordFinanceSale,employmentProductionPlan} from '../server-plugin/finance-assets.mjs';
 import {incomeFixture,SID} from './helpers/town-income.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
+import {counterCash,payFromCounter} from '../server-plugin/money.mjs';
+import {purchaseStatisticalInputs} from '../server-plugin/business.mjs';
 
 const mill='bld_hw_mill',recipe='recipe_wooden_pegs',item='item_wooden_peg';
 function workshop(){
@@ -46,6 +48,20 @@ test('真实买空货架才有补货需求；缺料、缺工具、缺钱不会�
  assert.equal(laborOffers(f.e,f.doc.state).some(o=>o.item===item),false);
 });
 
+test('补货招工选择有权使用且付得起的工位；无可用工位就不招工',async()=>{
+ const f=workshop();await f.act({seller:host,item,quantity:4},'site-demand');
+ assert.equal(laborOffers(f.e,f.doc.state).find(o=>o.item===item)?.location,mill);
+ const stations=f.w.locations.flatMap(p=>p.workstations??[]).filter(s=>s.kind==='woodworking');
+ for(const station of stations){station.access='private';station.owner=worker;}
+ assert.equal(laborOffers(f.e,f.doc.state).some(o=>o.item===item),false);
+ const station=f.e.byId.get(mill).workstations.find(s=>s.kind==='woodworking');
+ station.access='public';station.fee=10000;
+ // 1000 cash cannot cover a 10000 fee and a positive daily wage.
+ assert.equal(laborOffers(f.e,f.doc.state).some(o=>o.item===item),false);
+ station.owner=host;station.access='private';
+ assert.equal(laborOffers(f.e,f.doc.state).find(o=>o.item===item)?.location,mill);
+});
+
 test('拒工保留本人选择；真实招工签约、到岗后才付工钱，欠薪是债权',async()=>{
  const f=workshop();await f.act({seller:host,item,quantity:4},'demand');
  const offer=laborOffers(f.e,f.doc.state).find(o=>o.item===item);
@@ -56,10 +72,13 @@ test('拒工保留本人选择；真实招工签约、到岗后才付工钱，�
  assert.ok(job);assert.equal(job.workerConsent.via,'npc-decision');assert.equal(job.paid,0);
  await f.act({minutes:Math.max(1,job.nextWork-f.doc.state.minute)},'attend','world_time');
  const worked=f.doc.state.records[job.id];assert.ok(worked.workedMinutes>0);assert.ok(worked.paid>0);
- const d=f.draft(),row={id:'unpaid-real-work',owner:host,worker,wage:480,escrow:0};
+ // The contract comes from real signing and attendance (wage 30/min, 17 min already paid). Another 480 min = 14400 units = 30 coins earned.
+ const d=f.draft(),row=structuredClone(f.doc.state.records[job.id]);
  // Emptying the payer after the work was earned cannot turn a claim into cash.
  const cash=f.doc.state.npcs[host].coins;if(cash)financeTransfer(d,f.e,host,'player',cash,'withdraw');
- const money=d.get('state','npcs',worker,'coins'),pay=settleEmploymentPay(d,f.e,row,d.get('state','minute'),30);d.done();
+ // A business pays wages from its counter too, so the sales proceeds are emptied as well.
+ const till=counterCash(d,host);if(till)payFromCounter(d,f.e,{owner:host,to:'player',amount:till,writer:'labor-market',eventId:'empty-counter'});
+ const money=d.get('state','npcs',worker,'coins'),pay=settleEmploymentPay(d,f.e,row,d.get("state","minute")+1,480);d.done();
  assert.equal(pay.paid,0);assert.equal(pay.arrears,30);assert.equal(f.doc.state.npcs[worker].coins,money);
  assert.ok(Object.values(f.doc.state.records).some(r=>r.kind==='wage'&&r.contract===row.id));
 });
@@ -95,35 +114,35 @@ test('生产、服务、做饭共用日预算；跨日只释放新一天，重�
  assert.throws(()=>recordTownWork(d,f.e,{worker:host,minute:at,minutes:1,kind:'service',source:'past'}),/回头/);d.done();
 });
 
-test('统计组用相同材料、工具与工位生产；售前不增现金、不把营业额当工资',async()=>{
- const opening=workshop(),world=structuredClone(opening.w);
- const merchant=world.npcs.find(n=>n.id===host);merchant.inventory=structuredClone(opening.doc.state.npcs[host].inventory);merchant.coins=1000;merchant.location=mill;
- const f=await incomeFixture(world),e=f.engine;
- await f.act({tool:'world_move',args:{destination:mill},eventId:'arrive-for-inputs'});
- await f.act({tool:'world_trade',args:{seller:host,item:'item_wood',quantity:1},eventId:'buy-material'});
- await f.act({tool:'world_trade',args:{seller:host,item:'item_whittling_knife',quantity:1},eventId:'buy-tool'});
+test('统计组用相同材料、工具与工位生产；正式世界缺货源与工位时不采购、不生产、钱不变',async()=>{
+ // Official world only. Neither a loc_bs shop sells wood/whittling knife
+ // (only household wood in a few homes, no knife anywhere in the settlement)
+ // nor does loc_bs have a woodworking station (the only one is bld_hw_mill in
+ // loc_hw). So hand-computed expectation: no purchase, no batch, coins unchanged.
+ // Missing content for I3 / the content pipeline: loc_bs wood+knife supply and a loc_bs workstation.
+ const f=await incomeFixture(),e=f.engine;
  const d=e.primitiveDraft(f.document);
- const groups=ensureStatisticalFoodAccounts(d,e),group=groups.find(r=>r.workCapacity>0),scoped=statisticalFoodEngine(e,d.get('state'));
- // The inputs were purchased above. Assignment and sale below use the same
- // native stock/finance writers as I3's counter/market callers.
- const knife='item_whittling_knife';
- const inputs=[['item_wood',1],[knife,1]];
- for(const [item,n]of inputs)transferItems(d,scoped,'player',group.owner,item,n);
- const place=e.byId.get(SID),old=place.workstations;
- place.workstations=[...old??[],{id:'town-work-test-bench',kind:'woodworking',access:'public',owner:group.owner,fee:0}];
- const coins=d.get('state','records',group.owner,'coins');
+ const groups=ensureStatisticalFoodAccounts(d,e),group=groups.find(r=>r.workCapacity>0);
+ const coins=d.get('state','records',group.owner,'coins'),used=d.get('state','records',group.owner,'labor','usedMinutes');
+ assert.deepEqual(purchaseStatisticalInputs(d,e,{buyer:group.owner,items:{item_wood:1,item_whittling_knife:1},source:'own-peg-inputs'}),[]);
  const made=produceTownWork(d,e,{worker:group.owner,recipe,location:SID,minutes:60,maximum:1,source:'statistical-self'});
- assert.equal(made.batches,1,JSON.stringify(made));assert.equal(d.get('state','records',group.owner,'coins'),coins);
- assert.equal(scoped.quantity(d,group.owner,item),made.quantity);
- const wage=d.get('state','records',group.owner,'labor','earned');
- financeTransfer(d,scoped,host,group.owner,4,'native-sale');transferItems(d,scoped,group.owner,host,item,1);
- recordFinanceSale(d,scoped,{buyer:host,seller:group.owner,item,quantity:1,cost:4,eventId:'native-sale'});
- assert.equal(d.get('state','records',group.owner,'coins'),coins+4);
- assert.equal(d.get('state','records',group.owner,'labor','earned'),wage);
- assert.equal(d.get('state','records',`finance_profit:${group.owner}`,'entries')[0].revenue,4);
- // Missing prerequisites are checked identically; no synthetic service wage.
- const other=groups.find(r=>r.owner!==group.owner&&r.workCapacity>0);
- assert.ok(produceTownWork(d,e,{worker:other.owner,recipe,location:SID,minutes:60,source:'empty-group'}).reason);
- assert.equal(d.get('state','records',other.owner,'labor','earned'),0);
- assert.deepEqual(auditLedger(d.document.ledger),[]);place.workstations=old;
+ assert.ok(made.reason,JSON.stringify(made));assert.ok(!made.batches);
+ assert.equal(d.get('state','records',group.owner,'coins'),coins);assert.equal(d.get('state','records',group.owner,'labor','usedMinutes'),used);
+ assert.equal(d.get('state','records',group.owner,'labor','earned'),0);
+ assert.deepEqual(auditLedger(d.document.ledger),[]);
+});
+
+test('统计组投入采购走真实开张的店，但不写当日顾客流的“已服务”标记',async()=>{
+ // Official shop_bs_yanzhe (loc_bs) lists item_clay_cup. Hand check: one cup is bought for the shelf price; the group's coins fall by that
+ // amount plus travel, the cup is in its stock, and serve()'s per-day key customer_flow:<shop>:<day> stays unwritten so that day's customers still come.
+ const f=await incomeFixture(),e=f.engine,d=e.primitiveDraft(f.document);
+ const group=ensureStatisticalFoodAccounts(d,e).find(r=>r.workCapacity>0),scoped=statisticalFoodEngine(e,d.get('state'));
+ const minute=Math.floor(d.get('state','minute')/DAY)*DAY+14*60,coins=d.get('state','records',group.owner,'coins');
+ const visits=purchaseStatisticalInputs(d,e,{buyer:group.owner,items:{item_clay_cup:1},minute,source:'mechanism'});
+ assert.equal(visits.length,1);assert.equal(visits[0].item,'item_clay_cup');
+ assert.ok(d.get('state','records',group.owner,'coins')<coins);assert.equal(scoped.quantity(d,group.owner,'item_clay_cup'),1);
+ const day=Math.floor(minute/DAY);
+ assert.equal(d.get('state','records',`customer_flow:shop_bs_yanzhe:${day}`),undefined);
+ assert.equal(d.get('state','records',`customer_flow:shop_bs_yanzhe:${day}:inputs:mechanism`).visits.length,1);
+ assert.deepEqual(auditLedger(d.document.ledger),[]);
 });

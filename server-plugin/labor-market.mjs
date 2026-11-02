@@ -1,6 +1,7 @@
 import {laborValue,marketQuote} from './market.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {recordsWhere} from './storage.mjs';
+import {facilityView} from './facility-state.mjs';
 
 import {settleStewardRequests} from './high-nobility.mjs';
 import {currentDomains,containsDomain} from './noble-state.mjs';
@@ -31,6 +32,7 @@ import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {householdLaborBudget,ensureStatisticalFoodAccounts,statisticalFoodAccount,statisticalFoodEngine,statisticalFoodPopulation} from './household-budget.mjs';
 import {townWorkMinutes,recordTownWork,produceTownWork,townProductionDemand} from './town-work.mjs';
+import {purchaseStatisticalInputs} from './business.mjs';
 import {householdWorkTime,agriculturalWorkforce} from './npc-state.mjs';
 import {creditBreachEvent,publishTransitionEvent} from './world-events.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
@@ -68,7 +70,7 @@ function recipeFor(e,s,owner,item){
 export function laborOffers(e,s,minute=s.minute){
     // Offers already taken by a live contract, read once for the whole listing.
     const taken=new Set(rows(s).filter(c=>employmentActive(c)&&c.deadline>minute).map(c=>c.offer));
-    const out=[],add=r=>{
+    const sites=new Map(),out=[],add=r=>{
         if(r.owner==='player'||!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
         const id=`labor:${r.source}:${r.recipe??r.task}`;
         if(taken.has(id))return;
@@ -77,6 +79,26 @@ export function laborOffers(e,s,minute=s.minute){
         // A business that keeps a counter pays its hands from it, after the keeper (at signing) puts in what the counter lacks from his purse: counter and purse together back a vacancy.
         const account=groupAccountView(e,s,r.owner),counter=dedicatedCoinAccount(s,r.owner,'counter'),own=account?.coins??s.records?.[`organization:${r.owner}`]?.treasury??s.npcs[r.owner]?.coins??0,balance=counter?counter.coins+own:own;
         if(balance<d.wage)return;
+        if(r.recipe){
+            const recipe=base(e,s,r.recipe),key=`${r.owner}:${r.recipe}:${r.location}`;
+            if(!sites.has(key)){
+                const settlement=placeSettlement(e,s,r.location).value;
+                const candidates=[r.location,...e.world.locations.map(p=>p.id),...Object.keys(s.created??{})];
+                const site=[...new Set(candidates)].find(location=>{
+                    if(recipe.location&&recipe.location!==location||placeSettlement(e,s,location).value!==settlement)return false;
+                    const view=facilityView(e,s,location,r.owner);
+                    if(view?.factor===0||s.buildings?.[location]?.condition<=0)return false;
+                    if(!recipe.workstation)return true;
+                    return view?.workstations.some(st=>{
+                        const fee=st.owner===r.owner?0:st.fee??0;
+                        return st.kind===recipe.workstation&&(st.access==='public'||st.owner===r.owner)&&own>=fee&&balance>=d.wage+fee;
+                    });
+                });
+                sites.set(key,site??null);
+            }
+            d.location=sites.get(key);
+            if(!d.location)return;
+        }
         out.push(d);
     };
     for(const order of rows(s))if(order.category==='contract'&&['procurement','order'].includes(order.kind)&&['待履行','履行中','有效'].includes(order.status)&&order.deadline>minute){
@@ -340,6 +362,12 @@ function advanceStatisticalLabor(d,e,before,after){
   }
   for(const demand of selfDemand.get(account.owner)??[]){
    for(const recipe of e.world.recipes.filter(r=>r.output?.item===demand.item).sort((a,b)=>a.id.localeCompare(b.id))){
+    const order=d.get('state','records',demand.source);
+    if((order?.createdAt??0)>workMinute)continue;
+    const batches=Math.ceil(demand.quantity/recipe.output.quantity),items=Object.fromEntries((recipe.materials??[]).map(m=>[m.item,m.amount*batches]));
+    for(const tool of recipe.tools??[])items[tool]=Math.max(1,items[tool]??0);
+    purchaseStatisticalInputs(d,e,{buyer:account.owner,items,minute:workMinute,source:`inputs:${demand.source}:${day}`});
+    remaining=townWorkMinutes(e,d.get('state'),account.owner,workMinute);
     const made=produceTownWork(d,e,{worker:account.owner,recipe:recipe.id,location:demand.location,minutes:Math.min(480,remaining),maximum:Math.ceil(demand.quantity/recipe.output.quantity),minute:workMinute,source:`self:${demand.source}:${after}`});
     if(made.quantity){remaining=townWorkMinutes(e,d.get('state'),account.owner,workMinute);break;}
    }
