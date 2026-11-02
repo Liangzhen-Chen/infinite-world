@@ -160,7 +160,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:111"
+    "dispatch": "server-plugin/business.mjs:113"
    }
   },
   {
@@ -236,7 +236,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:145"
+    "dispatch": "server-plugin/business.mjs:147"
    }
   },
   {
@@ -312,7 +312,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:145"
+    "dispatch": "server-plugin/business.mjs:147"
    }
   },
   {
@@ -464,7 +464,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:140"
+    "dispatch": "server-plugin/business.mjs:142"
    }
   },
   {
@@ -540,7 +540,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:216"
+    "dispatch": "server-plugin/business.mjs:218"
    }
   },
   {
@@ -1300,7 +1300,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:450"
+    "dispatch": "server-plugin/finance-bank.mjs:456"
    }
   },
   {
@@ -1452,7 +1452,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:376"
+    "dispatch": "server-plugin/finance-bank.mjs:382"
    }
   },
   {
@@ -1528,7 +1528,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:402"
+    "dispatch": "server-plugin/finance-bank.mjs:408"
    }
   },
   {
@@ -1680,7 +1680,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:466"
+    "dispatch": "server-plugin/finance-bank.mjs:472"
    }
   },
   {
@@ -1832,7 +1832,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:481"
+    "dispatch": "server-plugin/finance-bank.mjs:487"
    }
   },
   {
@@ -1984,7 +1984,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:515"
+    "dispatch": "server-plugin/finance-bank.mjs:521"
    }
   },
   {
@@ -2060,7 +2060,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-bank.mjs:498"
+    "dispatch": "server-plugin/finance-bank.mjs:504"
    }
   },
   {
@@ -2516,7 +2516,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/advance-registry.mjs:190"
+    "dispatch": "server-plugin/advance-registry.mjs:195"
    }
   },
   {
@@ -3048,7 +3048,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:432"
+    "dispatch": "server-plugin/labor-market.mjs:474"
    }
   },
   {
@@ -3124,7 +3124,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:435"
+    "dispatch": "server-plugin/labor-market.mjs:477"
    }
   },
   {
@@ -3200,7 +3200,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:441"
+    "dispatch": "server-plugin/labor-market.mjs:483"
    }
   },
   {
@@ -3276,7 +3276,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:458"
+    "dispatch": "server-plugin/labor-market.mjs:500"
    }
   },
   {
@@ -4258,7 +4258,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:578"
+    "dispatch": "server-plugin/business.mjs:580"
    }
   },
   {
@@ -4362,7 +4362,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:592"
+    "dispatch": "server-plugin/business.mjs:594"
    }
   },
   {
@@ -4466,7 +4466,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:575"
+    "dispatch": "server-plugin/business.mjs:577"
    }
   },
   {
@@ -4570,7 +4570,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:574"
+    "dispatch": "server-plugin/business.mjs:576"
    }
   },
   {
@@ -7378,7 +7378,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/education.mjs:189"
+    "dispatch": "server-plugin/education.mjs:190"
    }
   },
   {
@@ -7482,7 +7482,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/education.mjs:180"
+    "dispatch": "server-plugin/education.mjs:181"
    }
   },
   {
@@ -7586,7 +7586,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/education.mjs:174"
+    "dispatch": "server-plugin/education.mjs:175"
    }
   },
   {
@@ -7690,7 +7690,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/education.mjs:185"
+    "dispatch": "server-plugin/education.mjs:186"
    }
   },
   {
@@ -17956,7 +17956,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 79,
     "symbol": "activities.law",
-    "dispatch": "server-plugin/business.mjs:216"
+    "dispatch": "server-plugin/business.mjs:218"
    }
   },
   {

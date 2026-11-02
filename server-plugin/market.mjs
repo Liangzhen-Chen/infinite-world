@@ -7,7 +7,7 @@ import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from '
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {recordsMemo} from './storage.mjs';
-import {householdResources,householdCommitments} from './household-budget.mjs';
+import {householdResources,householdCommitments,statisticalFoodNeed} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 
@@ -25,6 +25,18 @@ const clamp=(v,limits)=>Math.max(limits[0],Math.min(limits[1],v));
 const stateOf=d=>d.get('state');
 const rulesOf=engine=>engine.world.marketRules;
 const itemValue=(engine,document,item,base,scarcity,quality)=>explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality});
+const foodYields=new WeakMap();
+function foodSatiety(engine,item){
+ let cache=foodYields.get(engine.world);if(!cache){cache=new Map();foodYields.set(engine.world,cache);}
+ if(cache.has(item))return cache.get(item);
+ const nutrition=(id,seen=new Set())=>{
+  const direct=engine.byId.get(id)?.nutrition?.satiety;if(direct>0)return direct;
+  if(seen.has(id))return 0;const next=new Set([...seen,id]);
+  return Math.max(0,...engine.world.recipes.filter(r=>r.materials?.some(m=>m.item===id)&&r.output?.item)
+   .map(r=>nutrition(r.output.item,next)*r.output.quantity/r.materials.find(m=>m.item===id).amount));
+ };
+ const value=nutrition(item);cache.set(item,value);return value;
+}
 export function goodsClass(engine,item){
  const row=engine.byId.get(item),tags=row?.tags??[];
  const category=Object.entries(rulesOf(engine).goodsTags).find(([tag])=>tags.includes(tag))?.[1];
@@ -167,7 +179,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   const stock=stockName==='food'
    ?priceRead(d,{point:'region.grain',account:granary(engine,place),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0})
    :priceRead(d,{point:'region.material',account:settlementStock(engine,place,stockName),legacy:()=>settlement[stockName]??0});
-  const retained=stockName==='food'?(settlement.population??0)*(profile?.reserveDays??1):0;
+  const retained=stockName==='food'&&settlement.granary!==false?(settlement.population??0)*(profile?.reserveDays??1):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,retained,committed,available:Math.max(0,stock-retained-committed)});
  }
  const supply=rows.reduce((n,r)=>n+r.available,0);
@@ -175,8 +187,14 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店；居民口粮需求是每位持有人（含户内成员）的储备目标，
  // 已在上面 rows.retained 与 personalDemand 中逐户计入，聚落粮仓另计全村储备——这里不再重复计入口粮需求。
  const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+r.maximum+(r.reserve??0),0);
- const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained+r.committed,0),1);
- return {place,goods,supply,demand,rows};
+ // Back-propagate edible output through the existing recipes (grain -> flour
+ // -> bread). This is a demand conversion, never produced or available stock.
+ const food=goods==='goods:food'||(engine.byId.get(item)?.tags??[]).includes('food');
+ const satiety=food?statisticalFoodNeed(engine,state,place,d):0;
+ const gain=satiety>0?foodSatiety(engine,item):0;
+ const statisticalDemand=gain>0?Math.ceil(satiety/gain):0;
+ const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained+r.committed,0)+statisticalDemand,1);
+ return {place,goods,supply,demand,statisticalDemand,rows};
 }
 export function marketSupply(d,engine,item,location,options={}){
  const current=stockSupply(d,engine,item,location,options);

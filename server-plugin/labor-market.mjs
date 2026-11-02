@@ -8,7 +8,7 @@ import {personOffices,personConstraint,personHousehold,placeSettlement,personAge
 import {currentEmployment,employmentActive,recordEmploymentAttendance} from './employment-state.mjs';
 import {workerSkill,employmentStock,employmentProductionPlan,settleEmploymentProduction} from './finance-assets.mjs';
 import {financeBalance,financeTransfer,financeChange,financeEvent,financeInt} from './finance-bank.mjs';
-import {escrow as escrowAccount,coinRead,partyAccount,dedicatedCoinAccount,counterCash,payFromCounter,booksOpen} from './money.mjs';
+import {escrow as escrowAccount,coinRead,partyAccount,dedicatedCoinAccount,counterCash,payFromCounter,booksOpen,moveCoins,purse,BOOKED} from './money.mjs';
 import {bagStock} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('labor-market');
@@ -29,7 +29,7 @@ import {registerEarnedClaim,settleClaim,claimDue,claimLimitation} from './obliga
 import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
-import {householdLaborBudget} from './household-budget.mjs';
+import {householdLaborBudget,ensureStatisticalFoodAccounts,statisticalFoodAccount,statisticalFoodEngine,statisticalFoodPopulation} from './household-budget.mjs';
 import {householdWorkTime,agriculturalWorkforce} from './npc-state.mjs';
 import {creditBreachEvent,publishTransitionEvent} from './world-events.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
@@ -245,25 +245,66 @@ export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
 
     row=contractTerms(row,at);
     if(!Number.isSafeInteger(minutes)||minutes<0||!Number.isSafeInteger(row.wage)||row.wage<0)throw preconditionFailure('工资与实际工时须为非负整数');
-    const key=`employment_pay:${row.id}:${at}`,previous=d.get(...rec(key));
+    const statistical=statisticalFoodAccount(d.get('state'),row.worker),payDay=Math.floor(at/DAY);
+    const key=`employment_pay:${row.id}:${at}`,previous=statistical?(statistical.labor.payDay===payDay?statistical.labor.receipts?.[key]:null):d.get(...rec(key));
     if(previous){if(previous.minutes!==minutes||previous.wage!==row.wage)throw preconditionFailure('同次工时结算事实不一致');return previous.result;}
+    if(statistical&&payDay<(statistical.labor.payDay??-1))throw preconditionFailure('Statistical wages cannot settle a past day');
     const current=d.get(...rec(row.id))??row,units=current.wageUnits??0,total=units+row.wage*minutes;
     if(!Number.isSafeInteger(total))throw Error('累计工钱超出整数范围');
     // A business that keeps a counter pays from it and from nothing else: what the counter cannot cover is wage debt,
     // however much the owner carries personally. Owners without a counter pay from their own funds as before.
     const counter=dedicatedCoinAccount(d.get('state'),row.owner,'counter');
     const earned=Math.ceil(total/480)-Math.ceil(units/480),available=counter?counterCash(d,row.owner):financeBalance(d,e,row.owner),cash=Math.min(earned,available),eventId=`${row.id}:${at}`;
-    if(cash&&counter)payFromCounter(d,e,{owner:row.owner,to:row.worker,amount:cash,writer:'labor-market',eventId});
+    if(cash&&counter&&statistical){moveCoins(d,{from:counter.account,to:purse(e,row.worker),amount:cash,writer:'labor-market',eventId});financeChange(d,e,row.worker,cash,eventId,BOOKED);}
+    else if(cash&&counter)payFromCounter(d,e,{owner:row.owner,to:row.worker,amount:cash,writer:'labor-market',eventId});
     else if(cash)financeTransfer(d,e,row.owner,row.worker,cash,eventId);
     const guaranteed=Math.min(earned-cash,row.escrow??0);
     if(guaranteed){financeChange(d,e,row.worker,guaranteed,eventId,{account:escrowAccount(row.id),writer:'labor-market',eventId});writeJob(d,e,{...d.get(...rec(row.id)),escrow:row.escrow-guaranteed});}
     const paid=cash+guaranteed;
     if(paid<earned){const id=`debt_wage:${row.id}:${at}`;registerEarnedClaim(d,e,{id,kind:'wage',debtor:row.owner,creditor:row.worker,amount:earned,paid,
         createdAt:at,deadline:at+DAY,location:row.location,source:row.source,contract:row.id});}
-    writeJob(d,e,{...d.get(...rec(row.id)),wageUnits:total});
     const result={earned,paid,arrears:earned-paid};
-    holdingSet(d,e,rec(key),{id:key,category:'employment_pay',contract:row.id,minutes,wage:row.wage,result},'labor-market');
+    const receipt={id:key,category:'employment_pay',contract:row.id,minutes,wage:row.wage,result};
+    if(statistical){
+        if(d.get(...rec(row.id)))writeJob(d,e,{...d.get(...rec(row.id)),wageUnits:total});
+        d.set(['state','records',row.worker,'labor'],{...statistical.labor,wageUnits:statistical.labor.wageUnits+row.wage*minutes,
+        minutes:statistical.labor.minutes+minutes,earned:statistical.labor.earned+earned,paid:statistical.labor.paid+paid,
+        payDay,receipts:{...(statistical.labor.payDay===payDay?statistical.labor.receipts:{}),[key]:receipt}});
+    }
+    else{writeJob(d,e,{...d.get(...rec(row.id)),wageUnits:total});holdingSet(d,e,rec(key),receipt,'labor-market');}
     return result;
+}
+
+// Statistical workers take only an existing, untaken production offer. Actual
+// materials, tools, premises, output and payment use the named-worker routines.
+// No occupation is an income source and no employer treasury is replenished.
+function advanceStatisticalLabor(d,e,before,after){
+ if(Math.floor(before/DAY)===Math.floor(after/DAY))return;
+ const offers=laborOffers(e,d.get('state'),after);
+ for(const account of ensureStatisticalFoodAccounts(d,e)){
+  const day=Math.floor(after/DAY)-1,population=statisticalFoodPopulation(e,d.get('state'),account.settlement);
+  if(account.labor.day>=day||!population)continue;
+  const profile=e.world.settlementProfiles.find(p=>p.id===account.settlement);
+  let workers=Object.entries(profile.pendingAgeStructure??{}).filter(([k])=>k!=='children').reduce((n,[,v])=>n+v,0);
+  for(const house of Object.values(d.get('state','family','households')??{}))if(house.statisticalFoodShare&&house.settlement===account.settlement)
+   for(const id of house.members)if((d.get('state','created',id)?.age??0)>=e.rules.npcLife.adultAge)workers--;
+  let remaining=Math.max(0,Math.min(workers,population))*480;
+  const scoped=statisticalFoodEngine(e,d.get('state'));
+  for(const offer of offers){
+   if(remaining<=0)break;
+   if(!offer.recipe||placeSettlement(e,d.get('state'),offer.location).value!==account.settlement)continue;
+   const row={...offer,id:`statistical-work:${account.settlement}:${offer.id}:${after}`,worker:account.owner,wage:offer.wage,escrow:0};
+   const maximum=Math.floor(offer.quantity/(e.byId.get(offer.recipe)?.output?.quantity??1));
+   const plan=employmentProductionPlan(d,scoped,row,{minutes:Math.min(480,remaining),maximum});
+   if(plan.reason||!plan.batches)continue;
+   const minutes=Math.min(480,Math.ceil(plan.batches*plan.recipe.minutes/(1+plan.skill/3000)));
+   const counter=dedicatedCoinAccount(d.get('state'),offer.owner,'counter');
+   if((counter?counterCash(d,offer.owner):financeBalance(d,e,offer.owner))-plan.fee<Math.ceil(offer.wage*minutes/480))continue;
+   settleEmploymentProduction(d,scoped,row,after,plan);
+   settleEmploymentPay(d,scoped,row,after,minutes);remaining-=minutes;
+  }
+  d.set(['state','records',account.owner,'labor','day'],day);
+ }
 }
 // A working day with no minute really spent at the job is the worker's absence: a breach on the contract, not a silent skip.
 // Exported so every employment path records it the same way.
@@ -355,6 +396,7 @@ export function settleArrears(d,e,row,minute){
 }
 function refundGuarantee(d,e,row){if(row.escrow>0){financeChange(d,e,'player',row.escrow,`${row.id}:refund`,{account:escrowAccount(row.id),writer:'labor-market'});writeJob(d,e,{...row,escrow:0});}}
 export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
+    advanceStatisticalLabor(d,e,before,after);
 
     const contracts=recordsWhere(d.get('state','records'),'kind','workshop').filter(r=>r.laborMarket===1);
     if(!contracts.length&&Math.floor(before/DAY)===Math.floor(after/DAY))return;

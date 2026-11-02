@@ -14,10 +14,11 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // state.family plus ordinary memories, which then spread only through the
 // existing NPC conversation and message channels.
 import {digest,stateMemo,canonicalEqual} from './storage.mjs';
-import {householdMealPlan,householdMealWithSources} from './household-budget.mjs';
+import {householdMealPlan,householdMealWithSources,ensureStatisticalFoodAccounts,statisticalFoodEngine,statisticalFoodPopulation,statisticalFoodStocks,materializeStatisticalFood} from './household-budget.mjs';
 import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups} from './household-subsistence.mjs';
 import {placeSettlement} from './entity-view.mjs';
-import {toRational} from './det-math.mjs';
+import {toRational,fromRational} from './det-math.mjs';
+import {bodyRule} from './primitives-body.mjs';
 import {transition} from './transition.mjs';
 import {clockRoll} from './world-clock.mjs';
 import {derived} from './derived.mjs';
@@ -44,6 +45,7 @@ declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resi
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
 // Plan all meals against the same revision, then consume physical holdings.
 export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
+ for(const id of Object.keys(d.get('state','npcs')??{}))materializeStatisticalFood(d,engine,id);
  const groups=householdSubsistenceGroups(engine,d.get('state'));
  // Public population portions cover registered residents, not an extra
  // portion for each unregistered visitor present. A stale aggregate count
@@ -85,6 +87,27 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
   if(!canonicalEqual(p.previous,record))d.set(['state','family','meals',p.key],record);
  }
  for(const settlement of new Set(plans.map(p=>p.settlement??'unregistered')))d.set(['state','family','mealDays',settlement],day);
+ // One receipt and watermark per settlement, independent of pending households.
+ const read=n=>typeof n==='number'?n:fromRational(n);
+ for(const account of ensureStatisticalFoodAccounts(d,engine)){
+  const population=statisticalFoodPopulation(engine,d.get('state'),account.settlement);
+  if(account.mealDay>=day||!population)continue;
+  const sid=account.settlement,ration=publicMeals.get(sid),share=ration?.mouths>0?Math.max(0,Math.min(1,ration.eaten/ration.mouths)):0;
+  const base=bodyRule(engine,'satiety').drainPerHour.light*24,needs=population*base;
+  let missing=needs*(1-share),consumed=0;
+  const scoped=statisticalFoodEngine(engine,d.get('state'));
+  for(const {item,gain,quantity,selection}of statisticalFoodStocks(d,scoped,account).sort((a,b)=>a.item.localeCompare(b.item))){
+   if(!(gain>0)||missing<=0)continue;
+   const amount=Math.min(quantity,scoped.quantity(d,account.owner,item),Math.ceil(missing/gain));
+   if(amount){scoped.itemDelta(d,account.owner,item,-amount,{flow:'sink:consume',purpose:'meal',writer:'npc-life',eventId:`statistical-meal:${sid}:${day}`},{selection:selection.slice(0,amount)});
+    const eaten=Math.min(missing,amount*gain);consumed+=eaten;missing-=eaten;}
+  }
+  d.set(['state','records',account.owner],{...d.get('state','records',account.owner),mealDay:day,
+   demandSatiety:saved(read(account.demandSatiety)+needs),missingSatiety:saved(read(account.missingSatiety)+missing),
+   consumedSatiety:saved(read(account.consumedSatiety)+consumed),shortfall:saved(missing)});
+  if(ration&&consumed>0)adjustments.set(sid,(adjustments.get(sid)??0)-consumed/base);
+  else if(!ration&&missing>0)d.set(['state','settlements',sid,'unmetMeals'],(d.get('state','settlements',sid,'unmetMeals')??0)+Math.ceil(missing/base));
+ }
  return adjustments;
 }
 const rules=engine=>engine.rules.npcLife;

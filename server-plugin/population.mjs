@@ -8,6 +8,7 @@ import {expandedEducation} from './education-cohorts.mjs';
 import {isDeepStrictEqual} from 'node:util';
 import {advanceLayerPlan} from './advance-layers.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {materializeStatisticalFood,observeStatisticalFoodAdmissions} from './household-budget.mjs';
 declareHoldingWriter('population',{kinds:['owns','resides','resident_of','devotee_of','certified']});
 
 // On-demand population for seeded settlements and lairs. The roster of a
@@ -437,6 +438,7 @@ export function acceptPopulationProfile(d,engine,input){
     // A profile adds description; family life may already have admitted this actor.
     if(!d.get('state','npcs',person))holdingSet(d,null,['state','npcs',person],{...initialNpcState({...full,coins:0,inventory:{}}),occupation:full.occupation,
         routine:lifeRoutine(full.home.location??full.home.district,{minor:full.flags.minor,occupation:full.occupation})},'population');
+    materializeStatisticalFood(d,engine,person);
     return {person,status:'full',name:full.name};
 }
 
@@ -461,6 +463,7 @@ export function profileBrief(document,person){
 export function rosterLifeState(engine,state,id,minute,reason,{minor=false}={}){
     const entity=engine.byId.get(id);
     if(!entity||entity.tier!=='roster'||state.npcs?.[id]||!entity.householdId)return null;
+    if(entity.generated==='population')observeStatisticalFoodAdmissions();
     const house=householdDefinition(engine,state,entity.householdId);
     const home=house?.homeLocation??entity.home?.location;if(!home)return null;
     const learned=entity.generated==='population'?expandedEducation(engine,state,entity.settlement).get(id):null;

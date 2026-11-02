@@ -25,7 +25,9 @@ import {currentShops} from './shop.mjs';
 import {placeSettlement,personConstraint,personSimulation,personBusiness,personConstraints} from './entity-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {householdBudget,householdOptions} from './household-budget.mjs';
+import {householdBudget,householdOptions,ensureStatisticalFoodAccounts,statisticalFoodAccount,statisticalFoodEngine,statisticalFoodId,statisticalFoodNeed,statisticalFoodPopulation} from './household-budget.mjs';
+import {financeChange} from './finance-bank.mjs';
+import {BOOKED} from './money.mjs';
 import {stateReader,valuation} from './valuation.mjs';
 import {rollDice} from './scheduler.mjs';
 import {actionCostRule} from './action-costs.mjs';
@@ -707,11 +709,14 @@ function walkMinutes(engine,from,to,t,seed,cache){
 
 function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
     const state=d.get('state'),cost=quote.totalCoins;
+    const statistical=statisticalFoodAccount(state,buyer);
+    if(statistical)engine=statisticalFoodEngine(engine,state);
+    const debit=()=>statistical?financeChange(d,engine,buyer,-cost,eventId,BOOKED):mirrorPartyCoins(d,engine,buyer,-cost,eventId,'business');
     let tax=0;
     if(shop.kind==='player'){
         const counter=shop.counter;
         moveCoins(d,{from:purse(engine,buyer),to:counter.account,amount:cost,writer:'business',eventId});
-        mirrorPartyCoins(d,engine,buyer,-cost,eventId,'business');
+        debit();
         // 商税先由柜台划到店主钱袋，再由店主缴纳（与手动成交相同）。
         const due=Math.floor(cost*tradeTax(engine,state,shop.location).bps/10000);
         if(due){moveCoins(d,{from:counter.account,to:purse(engine,'player'),amount:due,writer:'business',eventId});mirrorPartyCoins(d,engine,'player',due,eventId,'business');}
@@ -719,10 +724,13 @@ function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
         transferItems(d,engine,'player',buyer,item,quantity);
     }else{
         moveCoins(d,{from:purse(engine,buyer),to:purse(engine,shop.keeper),amount:cost,writer:'shop',eventId});
-        mirrorPartyCoins(d,engine,buyer,-cost,eventId,'shop');mirrorPartyCoins(d,engine,shop.keeper,cost,eventId,'shop');
+        debit();mirrorPartyCoins(d,engine,shop.keeper,cost,eventId,'shop');
         transferItems(d,engine,shop.keeper,buyer,item,quantity);
         tax=taxableSale(engine,d.get('state'),shop.keeper,item)?assessTradeTax(d,engine,{seller:shop.keeper,cost,location:shop.location,sourceEvent:eventId}).amount:0;
     }
+    // The catalogue remains the source of item weight. Statistical accounts
+    // persist integer stock and unit identities, not fractional weight copies.
+    if(statistical)d.remove(['state','records',buyer,'inventory',item,'weight']);
     recordFinanceSale(d,engine,{buyer,seller:shop.keeper,item,quantity,cost,tax,eventId});
     recordMarketDeal(d,quote,cost,quantity,eventId);
     if(shop.kind==='player'){
@@ -758,6 +766,38 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
     const visits=[];
+    const statistical=statisticalFoodAccount(d.get('state'),statisticalFoodId(shop.settlement));
+    if(statistical&&statisticalFoodPopulation(engine,state,shop.settlement)>0&&statistical.coins>0){
+        const outbound=walkMinutes(engine,shop.settlement,shop.location,t,seed,routes),inbound=walkMinutes(engine,shop.location,shop.settlement,t,seed,routes);
+        let at=t+outbound.minutes,travelPaid=false;
+        const travelCost=outbound.coins+inbound.coins;
+        for(const item of shelf){
+            const gain=engine.byId.get(item)?.nutrition?.satiety??0;
+            if(!(gain>0)||outbound.minutes>reach||!Number.isFinite(inbound.minutes))continue;
+            const finishAt=Math.max(at,routes.get(`shop-free:${shop.id}`)??t)+serviceMinutes;
+            if(finishAt>shop.until||finishAt+inbound.minutes>(day+1)*DAY)break;
+            try{engine.assertNpcObligationAction(d,[shop.keeper],{start:finishAt-serviceMinutes,minutes:serviceMinutes,location:shop.location,kind:'trade'});}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
+            const needed=Math.ceil(statisticalFoodNeed(engine,d.get('state'),shop.settlement,d)/gain);
+            let quantity=Math.min(needed,saleableStock(d,engine,shop.keeper,item).available),quote=null;
+            const supply=quoteSupply(d,engine,{item,location:shop.location,business:shop});
+            const base=regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);
+            // The same finite shelf, current bill and depth gate as a named
+            // customer. A failed quote never creates food or withdraws cash.
+            for(;quantity>0;quantity--){
+                const q=marketQuote(d,engine,{seller:shop.keeper,buyer:statistical.owner,item,quantity,location:shop.location,minute:t,base,business:shop,supply});
+                if(q.totalCoins<1||q.totalCoins>d.get('state','records',statistical.owner,'coins')-(travelPaid?0:travelCost))continue;
+                try{assertMarketDepth(d,engine,q);}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
+                quote=q;break;
+            }
+            if(!quote)continue;
+            const eventId=`customer:${shop.id}:${t}:${statistical.owner}:${item}`;
+            if(!travelPaid&&travelCost){moveCoins(d,{from:purse(engine,statistical.owner),to:sink('export','travel'),amount:travelCost,writer:'shop',eventId:`${eventId}:travel`});financeChange(d,engine,statistical.owner,-travelCost,eventId,BOOKED);}
+            travelPaid=true;
+            const result=sell(d,engine,shop,statistical.owner,item,quantity,t,quote,eventId);
+            visits.push({npc:statistical.owner,item,quantity,paid:result.cost,tax:result.tax,outcome:'bought',sourceEvent:eventId});
+            at=finishAt;routes.set(`shop-free:${shop.id}`,finishAt);
+        }
+    }
     for(const {id,slot,settlement} of residents){
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
         const outbound=walkMinutes(engine,slot.location,shop.location,departAt,seed,routes);
@@ -835,6 +875,7 @@ export function advanceCustomerFlow(d,engine,before,after){
     for(let day=Math.floor((before-NOON)/DAY)+1;day<=Math.floor((after-NOON)/DAY);day++){
         const t=day*DAY+NOON;
         if(t<0)continue;
+        ensureStatisticalFoodAccounts(d,engine);
         const order=(purpose,id)=>rollDice(d.document.randomSeed,`market:${purpose}`,id,t,0,4294967296);
         const shops=openShops(d,engine,t).sort((a,b)=>order('shop-order',a.id)-order('shop-order',b.id)||a.id.localeCompare(b.id));
         if(!shops.length)continue;

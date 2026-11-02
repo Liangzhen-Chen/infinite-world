@@ -21,6 +21,7 @@ import {publishTransitionEvent} from './world-events.mjs';
 import {changeItems} from './items.mjs';
 import {partyAccount,moveCoins,bookSide,BOOKED,vault,source,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
+import {statisticalFoodAccount} from './household-budget.mjs';
 declareLedgerWriter('finance-bank');
 
 import {BANK_OPERATIONS} from './finance-operations.mjs';
@@ -43,6 +44,7 @@ export const financeInt=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||
 const cfg=e=>e.rules.economy.credit;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export function financeBalance(d,e,id){
+    const statistical=statisticalFoodAccount(d.get('state'),id);if(statistical)return statistical.coins;
     const group=groupAccountView(e,d.get('state'),id);
     if(group)return group.coins;
     const org=d.get(...financePath(`organization:${id}`));
@@ -54,6 +56,10 @@ export function financeBalance(d,e,id){
 export function financeChange(d,e,id,delta,sourceEvent,books){
     if(!Number.isSafeInteger(delta))throw Error('资金变化无效');
     const balance=financeBalance(d,e,id)+delta;if(!Number.isSafeInteger(balance)||balance<0)throw preconditionFailure('当事人资金不足');
+    if(statisticalFoodAccount(d.get('state'),id)){
+        bookSide(d,partyAccount(e,d.get('state'),id),delta,books);
+        d.set(['state','records',id,'coins'],balance);return balance;
+    }
     if(groupAccountView(e,d.get('state'),id))return changeGroupCoins(d,e,id,delta,{kind:'金融契约',sourceEvent,minute:d.get('state','minute')},books);
     bookSide(d,partyAccount(e,d.get('state'),id),delta,books);
     const estate=d.get('state','records',`protocol_assets:${id}`);if(estate){holdingSet(d,e,['state','records',`protocol_assets:${id}`,'coins'],balance,'finance-bank');return balance;}

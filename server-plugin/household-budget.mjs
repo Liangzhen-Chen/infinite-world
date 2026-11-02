@@ -1,6 +1,6 @@
-// Read-only household budgets. A target is a preference, never a transfer.
-import {bagStock,bag,priceRead,itemResource,crop as cropAccount} from './stock.mjs';
-import {coinRead,purse,COIN} from './money.mjs';
+// Household budgets and statistical private accounts. A target never transfers assets.
+import {bagStock,bag,priceRead,itemResource,crop as cropAccount,registerLegacyStock,granary} from './stock.mjs';
+import {coinRead,purse,COIN,moveCoins} from './money.mjs';
 import {personHousehold} from './entity-view.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {bodyRule} from './primitives-body.mjs';
@@ -11,11 +11,135 @@ import {compileRX,evaluateRX,fixedUnits,fixedInteger,FIXED_SCALE} from './rx.mjs
 import {subjectiveView} from './subjective-view.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {contractTerms,leaseState,tenancyRentAmount} from './contract-state.mjs';
-import {householdWorkTime} from './npc-state.mjs';
-import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {physicalItem} from './items.mjs';
+import {householdWorkTime,householdDefinition} from './npc-state.mjs';
+import {isPhysicallyDead,isGone} from './lifecycle-state.mjs';
+import {physicalItem,transferItems} from './items.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
+import {registerEntityResolver,registerHoldingObserver} from './holdings.mjs';
+import {entityTemplates} from './holding-sources.mjs';
+declareLedgerWriter('household-budget');
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
+
+// TOWNFOOD design §2: unexpanded residents own private, not public, assets.
+// The body's existing person/light day is their statistical body equivalent;
+// no new child/age discount or daily-income entitlement is introduced.
+export const statisticalFoodId=sid=>`food-demand:${sid}`;
+export function statisticalFoodAccount(state,id){
+ const row=state?.records?.[id];
+ return row?.category==='money_account'&&row.statisticalPopulation===true&&id===statisticalFoodId(row.settlement)
+  &&row.owner===id&&row.account===purse(null,id)?row:null;
+}
+// Extend the existing canonical resolver, rather than manufacturing an NPC
+// or organization just to own these balances. A cohort is an obligation-capable
+// collective only while its actual seeded settlement/account is registered.
+function foodEntityTemplates(d,id,engine){
+ if(!engine)return null;
+ const state=typeof d.peek==='function'?d.peek('state'):d.get('state'),row=statisticalFoodAccount(state,id);
+ if(row&&state.settlements?.[row.settlement]&&!isGone(engine,d.document??state,row.settlement)
+  &&engine.world.settlementProfiles?.some(p=>p.id===row.settlement&&p.registrationMode==='seeded-on-demand')
+  &&entityTemplates(engine,state,row.settlement)?.includes('collective'))return ['collective'];
+ return entityTemplates(engine,state,id);
+}
+registerEntityResolver(foodEntityTemplates);
+// Education, family life and conscription admit roster people through the
+// existing holding writer. Transfer at that admission, before another reader
+// can count both the named household and its statistical share.
+let priorFoodObserver=null;
+function foodHoldingObserver(d,engine,path,writer,eventId){
+ priorFoodObserver?.(d,engine,path,writer,eventId);
+ engine??=d.engine;
+ if(engine&&path.length===3&&path[0]==='state'&&path[1]==='npcs')materializeStatisticalFood(d,engine,path[2]);
+}
+export function observeStatisticalFoodAdmissions(){
+ const previous=registerHoldingObserver(foodHoldingObserver);
+ if(previous!==foodHoldingObserver)priorFoodObserver=previous;
+}
+observeStatisticalFoodAdmissions();
+export function statisticalFoodPopulation(engine,state,sid){
+ const profile=engine.world.settlementProfiles?.find(p=>p.id===sid);
+ if(profile?.registrationMode!=='seeded-on-demand')return 0;
+ // A district roster is still statistics. Transfer only when a household
+ // acquires a campaign actor (conversation, education, family or enlistment).
+ const expanded=Object.values(state.family?.households??{}).filter(h=>h.settlement===sid&&h.statisticalFoodShare).reduce((n,h)=>n+h.statisticalFoodShare,0);
+ return Math.max(0,profile.pendingPopulation-expanded);
+}
+export function ensureStatisticalFoodAccounts(d,engine,{sync=true}={}){
+ // The canonical sources are also loaded through cyclic legacy adapters.
+ // Reinstall the composed resolver after module initialization on first use.
+ registerEntityResolver(foodEntityTemplates);
+ observeStatisticalFoodAdmissions();
+ const out=[];
+ for(const p of engine.world.settlementProfiles??[]){
+  if(p.registrationMode!=='seeded-on-demand'||!d.get('state','settlements',p.id))continue;
+  const id=statisticalFoodId(p.id);let row=statisticalFoodAccount(d.get('state'),id);
+  if(!row){
+   const population=statisticalFoodPopulation(engine,d.get('state'),p.id);if(!population)continue;
+   row={category:'money_account',statisticalPopulation:true,owner:id,settlement:p.id,account:purse(null,id),purpose:'purse',
+    coins:0,inventory:{},mealDay:-1,demandSatiety:0,missingSatiety:0,consumedSatiety:0,
+    labor:{day:-1,minutes:0,earned:0,paid:0,wageUnits:0}};
+   d.set(['state','records',id],row);
+  }
+  out.push(row);
+ }
+ // Old saves may already contain an admitted roster person. The same transfer
+ // also repairs that legitimate first-use case, without a second daily meal.
+ if(sync)for(const id of Object.keys(d.get('state','npcs')??{}))materializeStatisticalFood(d,engine,id);
+ return out.map(row=>statisticalFoodAccount(d.get('state'),row.owner));
+}
+// Adapt storage only. transferItems/changeItems still validate and book the
+// exact same physical units; ordinary people retain their original paths.
+export function statisticalFoodEngine(engine,state){
+ const scoped=Object.create(engine);
+ scoped.bagPath=id=>statisticalFoodAccount(state,id)?['state','records',id,'inventory']:engine.bagPath(id);
+ scoped.quantity=(d,id,item)=>statisticalFoodAccount(d.get('state'),id)
+  ?bagStock(d,engine,{point:'region.material',id,item,legacy:()=>qty(d.get('state','records',id,'inventory',item))})
+  :engine.quantity(d,id,item);
+ return scoped;
+}
+export function materializeStatisticalFood(d,engine,owner){
+ const state=d.get('state'),entity=state.created?.[owner]??engine.byId.get(owner);
+ if(entity?.generated!=='population'||!state.npcs?.[owner])return;
+ const house=householdDefinition(engine,state,entity.householdId);
+ if(!house||state.family?.households?.[house.id]?.statisticalFoodShare)return;
+ ensureStatisticalFoodAccounts(d,engine,{sync:false});
+ const id=statisticalFoodId(house.settlement),row=statisticalFoodAccount(d.get('state'),id);if(!row)return;
+ const count=house.members.length,population=statisticalFoodPopulation(engine,d.get('state'),house.settlement);
+ if(count>population)throw Error('Statistical population share exceeds remaining population');
+ const portion=quantity=>Number(BigInt(quantity)*BigInt(count)/BigInt(population));
+ const coins=portion(row.coins),scoped=statisticalFoodEngine(engine,d.get('state'));
+ if(coins){moveCoins(d,{from:row.account,to:purse(engine,owner),amount:coins,writer:'household-budget',eventId:`materialize:${house.id}`});
+  d.set(['state','records',id,'coins'],row.coins-coins);d.set([...engine.actorPath(owner),'coins'],(state.npcs[owner].coins??0)+coins);}
+ for(const [item,value]of Object.entries(row.inventory)){
+  const amount=portion(qty(value));if(amount)transferItems(d,scoped,id,owner,item,amount);
+ }
+ d.set(['state','family','households',house.id],{...house,...state.family?.households?.[house.id],statisticalFoodShare:count});
+}
+registerLegacyStock('statistical-food',(engine,state,add)=>{
+ for(const row of Object.values(state.records??{}))if(row.statisticalPopulation&&row.category==='money_account')
+  for(const [item,value]of Object.entries(row.inventory??{}))add(bag(engine,row.owner,item),qty(value));
+});
+export function statisticalFoodStocks(d,engine,row){
+ const safe=id=>{const item=physicalItem(d,engine,id);return item.contaminated!==true&&item.toxic!==true&&item.condition!==0;};
+ return Object.entries(row?.inventory??{}).map(([item,value])=>{
+  const units=value?.instances??[],selection=units.filter(safe),loose=safe(item)?Math.max(0,qty(value)-units.length):0;
+  return {item,quantity:loose+selection.length,selection,gain:engine.byId.get(item)?.nutrition?.satiety??0};
+ });
+}
+export function statisticalFoodNeed(engine,state,sid,d=null){
+ const row=statisticalFoodAccount(state,statisticalFoodId(sid)),population=statisticalFoodPopulation(engine,state,sid);
+ if(!population)return 0;
+ let daily=population*bodyRule(engine,'satiety').drainPerHour.light*24;
+ const read=d??{get:(...p)=>p[0]==='state'?p.slice(1).reduce((v,k)=>v?.[k],state):undefined};
+ const settlement=state.settlements?.[sid];
+ if(settlement?.granary!==false&&settlement?.population>0){
+  const day=Math.floor(state.minute/DAY),farm=state.records?.[`agriculture:${sid}`];
+  const stock=priceRead(read,{point:'region.grain',account:granary(engine,sid),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0});
+  daily*=1-Math.min(1,stock/settlement.population);
+ }
+ const held=statisticalFoodStocks(read,statisticalFoodEngine(engine,state),row).reduce((n,r)=>n+r.quantity*r.gain,0);
+ return Math.max(0,daily-held);
+}
 const mealCandidates=Symbol('physical meal candidates');
 const preferenceRoll=compileRX('roll("thrift")');
 const laborPreferenceRoll=compileRX('roll("reservation")'),laborNoiseRoll=compileRX('roll("choice")');

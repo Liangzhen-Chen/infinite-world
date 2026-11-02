@@ -6,6 +6,9 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {statisticalFoodId} from '../server-plugin/household-budget.mjs';
+import {bodyRule} from '../server-plugin/primitives-body.mjs';
+import {fromRational} from '../server-plugin/det-math.mjs';
 import {applyEffects} from '../server-plugin/effects.mjs';
 import {validateHazardRules,assertHazardRules} from '../server-plugin/seasonal-hazards.mjs';
 import {assertQuestSources} from '../server-plugin/quest-sources.mjs';
@@ -65,7 +68,12 @@ test('白石镇公账只记钱，不进每日口粮结算；公事委托从公�
  // F010: shopkeepers pay the settlement treasury for what they restock from it (shop day-books name each payment).
  const restocked=doc=>Object.values(doc.state.records).filter(r=>r.category==='shop_ledger').flatMap(l=>l.entries).filter(e=>e.from==='loc_bs').reduce((n,e)=>n+(e.cost?.goods??0),0);
  const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:3*1440},eventId:'wait-1'});doc=applyPatches(doc,out.patches);
- assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)+restocked(doc)});
+ // TOWNFOOD §2: no public granary still means no public food flows. The
+ // existing unmetMeals indicator now counts the private statistical cohort.
+ // Keep the entire public-ledger assertion, including every old stock field.
+ const cohort=doc.state.records[statisticalFoodId('loc_bs')],deficit=typeof cohort.missingSatiety==='number'?cohort.missingSatiety:fromRational(cohort.missingSatiety);
+ const missing=Math.ceil(deficit/(bodyRule(engine,'satiety').drainPerHour.light*24));
+ assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)+restocked(doc),unmetMeals:(before.unmetMeals??0)+missing});
  doc.state.records['hazard-flood:loc_bs_hebu']={category:'hazard_flood',location:'loc_bs_hebu',since:doc.state.minute,until:doc.state.minute+1440*4,soaked:[],sourceEvent:'test-flood'};
  const next=applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:1440},eventId:'wait-2'})).patches);
  const q=Object.values(next.state.quests).find(q=>q.source?.cause==='hazard-flood:loc_bs_hebu');
