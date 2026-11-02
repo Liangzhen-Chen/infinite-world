@@ -2136,7 +2136,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:480"
+    "dispatch": "server-plugin/finance-assets.mjs:483"
    }
   },
   {
@@ -2212,7 +2212,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:486"
+    "dispatch": "server-plugin/finance-assets.mjs:489"
    }
   },
   {
@@ -2288,7 +2288,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:401"
+    "dispatch": "server-plugin/finance-assets.mjs:404"
    }
   },
   {
@@ -2364,7 +2364,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:500"
+    "dispatch": "server-plugin/finance-assets.mjs:503"
    }
   },
   {
@@ -2440,7 +2440,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:584"
+    "dispatch": "server-plugin/finance-assets.mjs:587"
    }
   },
   {
@@ -2592,7 +2592,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:631"
+    "dispatch": "server-plugin/finance-assets.mjs:634"
    }
   },
   {
@@ -2744,7 +2744,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:514"
+    "dispatch": "server-plugin/finance-assets.mjs:517"
    }
   },
   {
@@ -2820,7 +2820,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/finance-assets.mjs:478"
+    "dispatch": "server-plugin/finance-assets.mjs:481"
    }
   },
   {
@@ -3048,7 +3048,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:473"
+    "dispatch": "server-plugin/labor-market.mjs:515"
    }
   },
   {
@@ -3124,7 +3124,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:476"
+    "dispatch": "server-plugin/labor-market.mjs:518"
    }
   },
   {
@@ -3200,7 +3200,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:482"
+    "dispatch": "server-plugin/labor-market.mjs:524"
    }
   },
   {
@@ -3276,7 +3276,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 617,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:499"
+    "dispatch": "server-plugin/labor-market.mjs:541"
    }
   },
   {

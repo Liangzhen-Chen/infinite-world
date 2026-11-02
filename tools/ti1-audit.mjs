@@ -19,7 +19,11 @@ for(let repeat=0;repeat<repeats;repeat++){
  }
  const ms=performance.now()-start,number=v=>typeof v==='number'?v:fromRational(v);
  const groups=Object.values(doc.state.records).filter(r=>r.statisticalPopulation&&r.settlement==='loc_bs').map(r=>({id:r.owner,group:r.group??'town-pool',units:r.beneficiaryUnits??694,coins:r.coins,inventory:r.inventory,
-  missingSatiety:number(r.missingSatiety),consumedSatiety:number(r.consumedSatiety),demandSatiety:number(r.demandSatiety),earned:r.labor.earned,paid:r.labor.paid}));
+  missingSatiety:number(r.missingSatiety),consumedSatiety:number(r.consumedSatiety),demandSatiety:number(r.demandSatiety),earned:r.labor.earned,paid:r.labor.paid,
+  workMinutes:r.labor.sources?Object.values(r.labor.sources).reduce((n,v)=>n+v,0):r.labor.minutes,
+  workSources:r.labor.sources??{employment:r.labor.minutes,service:0,self:0,cooking:0},
+  incomeSources:r.labor.incomeSources??{employment:{earned:r.labor.earned,paid:r.labor.paid},service:{earned:0,paid:0}},
+  salesRevenue:(doc.state.records[`finance_profit:${r.owner}`]?.entries??[]).reduce((n,s)=>n+s.revenue,0)}));
  const visits=Object.values(doc.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits??[]).filter(r=>r.npc?.startsWith('food-demand:loc_bs')&&r.outcome==='bought');
  const dayNeed=groups.reduce((n,r)=>n+r.demandSatiety,0)/(days*694);
  for(const group of groups){group.missingMeals=group.missingSatiety/dayNeed;const bought=visits.filter(r=>r.npc===group.id);group.purchases=bought.reduce((n,r)=>n+r.quantity,0);group.purchaseCoins=bought.reduce((n,r)=>n+r.paid,0);}

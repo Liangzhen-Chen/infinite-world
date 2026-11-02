@@ -17,7 +17,7 @@ import {physicalItem,transferItems} from './items.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {registerEntityResolver,registerHoldingObserver} from './holdings.mjs';
 import {entityTemplates} from './holding-sources.mjs';
-import {townGroupId,townGroupDefinitions,newTownGroup,townShareAmount,transferTownClaims,settleTownGroup,allocateTownAssets} from './town-income.mjs';
+import {townGroupId,townGroupDefinitions,newTownGroup,townShareAmount,transferTownClaims,settleTownGroup,allocateTownAssets,townLaborMinutes} from './town-income.mjs';
 declareLedgerWriter('household-budget');
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
@@ -143,12 +143,53 @@ export function materializeStatisticalFood(d,engine,owner){
  const used=allocateTownAssets(row.labor.minutes,Object.entries(row.shares).map(([id,s])=>({id,weight:s.workCapacity})),`${id}:labor`)[house.id]??0;
  const shares={...row.shares};delete shares[house.id];
  const work=row.shares[house.id].workCapacity;
+ const sources={},leftSources={};
+ for(const [kind,minutes]of Object.entries(row.labor.sources??{})){
+  const taken=allocateTownAssets(minutes,Object.entries(row.shares).map(([id,s])=>({id,weight:s.workCapacity})),`${id}:source:${kind}`)[house.id]??0;
+  sources[kind]=taken;leftSources[kind]=minutes-taken;
+ }
+ const incomeSources={},leftIncomeSources={};
+ for(const [kind,values]of Object.entries(row.labor.incomeSources??{})){
+  const taken={earned:0,paid:0};incomeSources[kind]=taken;leftIncomeSources[kind]={...values};
+ }
+ for(const [field,total]of row.labor.incomeSources?[['earned',earned],['paid',paid]]:[]){
+  const allocated=allocateTownAssets(total,Object.entries(row.labor.incomeSources??{}).map(([id,r])=>({id,weight:r[field]})),`${house.id}:income:${field}`);
+  for(const kind of Object.keys(incomeSources)){incomeSources[kind][field]=allocated[kind];leftIncomeSources[kind][field]-=allocated[kind];}
+ }
+ // I2: admission transfers today's spent time too. Historical earnings alone
+ // cannot prevent the admitted household from working the same day twice.
+ let workBook={};
+ if(row.labor.workDay!==undefined){
+  const weights=Object.entries(row.shares).map(([id,s])=>({id,weight:s.workCapacity}));
+  const receipts={},remaining={};
+  const spent=allocateTownAssets(row.labor.usedMinutes??0,weights,`${id}:work`)[house.id]??0;
+  const sourceShares=allocateTownAssets(spent,Object.entries(row.labor.workReceipts??{}).map(([source,r])=>({id:source,weight:r.minutes})),`${house.id}:work`);
+  for(const [source,r]of Object.entries(row.labor.workReceipts??{})){
+   const taken=sourceShares[source]??0;
+   if(taken)receipts[source]={...r,minutes:taken};
+   remaining[source]={...r,minutes:r.minutes-taken};
+  }
+  workBook={workReceipts:remaining,usedMinutes:(row.labor.usedMinutes??0)-spent};
+  const members=house.members.map(id=>({id,weight:townLaborMinutes(engine,d.get('state','created',id)??engine.byId.get(id),d.get('state','npcs',id)??{})}));
+  const memberMinutes=allocateTownAssets(spent,members,`${house.id}:work`);
+  const personalBooks=Object.fromEntries(members.map(m=>[m.id,{}]));
+  const capacity={...memberMinutes};
+  for(const [source,r]of Object.entries(receipts)){
+   const split=allocateTownAssets(r.minutes,members.map(m=>({id:m.id,weight:capacity[m.id]})),`${house.id}:work:${source}`);
+   for(const member of members){const minutes=split[member.id];capacity[member.id]-=minutes;if(minutes)personalBooks[member.id][source]={...r,minutes};}
+  }
+  for(const member of members){
+   const personal=personalBooks[member.id];
+   const usedMinutes=Object.values(personal).reduce((n,r)=>n+r.minutes,0);
+   if(usedMinutes)d.set(['state','records',`town-work:${member.id}`],{category:'town_work',owner:member.id,workDay:row.labor.workDay,usedMinutes,workReceipts:personal});
+  }
+ }
  d.set(['state','records',id,'shares'],shares);
  d.set(['state','records',id,'beneficiaryUnits'],row.beneficiaryUnits-count);d.set(['state','records',id,'workCapacity'],row.workCapacity-work);
- d.set(['state','records',id,'labor'],{...row.labor,minutes:row.labor.minutes-used,earned:row.labor.earned-earned,paid:row.labor.paid-paid,wageUnits:row.labor.wageUnits-portion(row.labor.wageUnits)});
+ d.set(['state','records',id,'labor'],{...row.labor,...workBook,...(row.labor.sources?{sources:leftSources}:{}),...(row.labor.incomeSources?{incomeSources:leftIncomeSources}:{}),minutes:row.labor.minutes-used,earned:row.labor.earned-earned,paid:row.labor.paid-paid,wageUnits:row.labor.wageUnits-portion(row.labor.wageUnits)});
  d.set(['state','records',id,'indexBasis'],{earned:row.labor.earned-earned,paid:row.labor.paid-paid});
  d.set(['state','family','households',house.id],{...house,...state.family?.households?.[house.id],statisticalFoodShare:count,
-  statisticalGroup:id,equity:{units:count,claims,settledAt:state.minute,earned,paid,incomeIndex:row.incomeIndex,labor:{day:row.labor.day,minutes:used,capacity:work}}});
+  statisticalGroup:id,equity:{units:count,claims,settledAt:state.minute,earned,paid,incomeIndex:row.incomeIndex,...(row.labor.incomeSources?{incomeSources}:{}),labor:{day:row.labor.day,minutes:used,capacity:work,...(row.labor.sources?{sources}:{})}}});
  settleTownGroup(d,engine,id);
 }
 registerLegacyStock('statistical-food',(engine,state,add)=>{
