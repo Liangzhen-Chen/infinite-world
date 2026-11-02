@@ -1,4 +1,5 @@
 import {laborValue} from './market.mjs';
+import {statisticalFoodAccount,statisticalFoodEngine} from './household-budget.mjs';
 import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
 import {installPhase1MarketQuote} from './compat/v2-phase1-engine.mjs';
 installPhase1MarketQuote(marketQuote);
@@ -369,13 +370,15 @@ export function operatingProfit(d,e,issuer){
 // Real deliveries consume inventory basis once. Credit sales recognize income
 // when the existing debt is repaid; purchases retain their actual lot prices.
 export function recordFinanceSale(d,e,{buyer,seller,item,quantity,cost,tax=0,eventId,paid=true,settledBasis}){
-    if(settledBasis===undefined&&buyer!=='player'&&d.get('state','npcs',buyer)){
+    const state=d.get('state');
+    if(statisticalFoodAccount(state,buyer)||statisticalFoodAccount(state,seller))e=statisticalFoodEngine(e,state);
+    if(settledBasis===undefined&&buyer!=='player'&&(d.get('state','npcs',buyer)||statisticalFoodAccount(d.get('state'),buyer))){
         const key=`finance_profit:${buyer}`,old=d.get(...rec(key))??{category:'finance_profit',issuer:buyer,net:0,lots:{},entries:[]};
         const opening=bagStock(d,e,{point:'assets.basis',id:buyer,item,legacy:()=>e.quantity(d,buyer,item)})-quantity,prior=(old.lots[item]??(opening>0?[{quantity:opening,price:e.byId.get(item)?.basePrice??0}]:[])).map(row=>({...row,price:savedCost(row.price)}));
         const c=costFraction(cost),q=costFraction(quantity),price=savedCost(fraction(c.numerator*q.denominator,c.denominator*q.numerator));
         holdingSet(d,e,rec(key),{...old,lots:{...old.lots,[item]:[...prior,{quantity,price}]}},'finance-assets');
     }
-    if(seller==='player'||!d.get('state','npcs',seller))return;
+    if(seller==='player'||!d.get('state','npcs',seller)&&!statisticalFoodAccount(d.get('state'),seller))return;
     const key=`finance_profit:${seller}`,old=d.get(...rec(key))??{category:'finance_profit',issuer:seller,net:0,lots:{},entries:[]},lots=(old.lots[item]??[]).map(row=>({...row,price:savedCost(row.price)}));
     let remaining=settledBasis===undefined?quantity:0,basis=costFraction(settledBasis??0);while(remaining&&lots.length){const n=Math.min(remaining,lots[0].quantity);basis=addAccrual(basis,costTimes(lots[0].price,n));remaining-=n;lots[0].quantity-=n;if(!lots[0].quantity)lots.shift();}
     basis=addAccrual(basis,costTimes(e.byId.get(item)?.basePrice??0,remaining));
@@ -411,7 +414,7 @@ function payDividend(d,e,row,at){
     if(paid)financeEvent(d,e,{id:key,actor:row.issuer,target:row.holder,value:paid,minute:at,location:row.location,tags:['dividend']});
     return next;
 }
-export function workerSkill(e,s,id,recipe){const n=s.npcs[id],p=base(e,s,id);return Math.max(n?.proficiencies?.[recipe.skill]??0,p?.proficiencies?.[recipe.skill]??0,n?.skills?.[recipe.skill]?.proficiency??0);}
+export function workerSkill(e,s,id,recipe){const n=s.npcs[id]??s.records?.[id],p=base(e,s,id);return Math.max(n?.proficiencies?.[recipe.skill]??0,p?.proficiencies?.[recipe.skill]??0,n?.skills?.[recipe.skill]?.proficiency??0);}
 function employmentAccount(d,e,owner){const g=groupAccountView(e,d.get('state'),owner);if(g)return g;const r=d.get(...rec(`organization:${owner}`));return r?.category==='organization'?r:null;}
 export function employmentStock(d,e,owner,item){const estate=d.get('state','records',`protocol_assets:${owner}`);if(estate){const v=estate.inventory?.[item];return typeof v==='number'?v:v?.quantity??0;}const g=employmentAccount(d,e,owner);return g?g.items?.[item]??0:e.quantity(d,owner,item);}
 export function changeEmploymentStock(d,e,owner,item,delta,eventId,books){
@@ -434,15 +437,15 @@ export function employmentProductionPlan(d,e,row,{minutes=480,maximum=Infinity}=
     const s=d.get('state'),recipe=base(e,s,row.recipe),owner=row.owner??'player';
     const premises=owner==='player'&&ownsWorkshop(s,row.location,owner,e),inventory=premises?premisesInventory(s,owner,row.location):null;
     if(!recipe?.materials?.length||!recipe.output)return {reason:'配方已不可用'};
-    const skill=workerSkill(e,s,row.worker,recipe),facility=facilityView(e,s,row.location);
+    const skill=workerSkill(e,s,row.worker,recipe),facility=facilityView(e,s,row.location,owner);
     if(skill<(recipe.minimumProficiency??0))return {reason:'当前技能不足'};
     if(facility?.factor===0||s.buildings?.[row.location]?.condition<=0)return {reason:'工坊已停用'};
     const toolsOwner=employmentAccount(d,e,owner)||s.records?.[`protocol_assets:${owner}`]?row.worker:owner;
     let batches=Math.min(50,Math.floor(minutes/recipe.minutes*(1+skill/3000)),Math.floor(200/recipe.output.quantity),maximum);
     for(const p of recipe.byproducts??[])batches=Math.min(batches,Math.floor(200/p.amount));
     for(const m of recipe.materials){const held=inventory?.[m.item];const stock=premises?(typeof held==='number'?held:held?.quantity??0):employmentStock(d,e,owner,m.item);batches=Math.min(batches,Math.floor(stock/m.amount));}
-    for(const tool of recipe.tools??[]){const held=heldUnit(d,e,toolsOwner,tool);if(!held||(held.durability??e.byId.get(tool)?.durability)<=0)return {reason:'缺少完好工具'};batches=Math.min(batches,Math.floor((held.durability??e.byId.get(tool)?.durability)/Math.max(1,recipe.toolWear??1)));}
-    const place=base(e,s,row.location),station=recipe.workstation?(facility?.workstations??place?.workstations)?.find(st=>st.kind===recipe.workstation):null;
+    for(const tool of recipe.tools??[]){const held=heldUnit(d,e,toolsOwner,tool);if(!held||employmentStock(d,e,toolsOwner,tool)<=0||(held.durability??e.byId.get(tool)?.durability)<=0)return {reason:'缺少完好工具'};batches=Math.min(batches,Math.floor((held.durability??e.byId.get(tool)?.durability)/Math.max(1,recipe.toolWear??1)));}
+    const place=base(e,s,row.location),station=recipe.workstation?(facility?.workstations??place?.workstations)?.find(st=>st.kind===recipe.workstation&&(st.access==='public'||st.owner===owner)):null;
     if(recipe.location&&recipe.location!==row.location||recipe.workstation&&(!station||station.access!=='public'&&station.owner!==owner))return {reason:'工作台使用权已失效'};
     if(!batches)return {reason:'缺少可用材料或工时'};
     const fee=station?.owner===owner?0:(station?.fee??0)*batches;

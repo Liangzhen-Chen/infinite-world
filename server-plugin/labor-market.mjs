@@ -1,6 +1,7 @@
 import {laborValue,marketQuote} from './market.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {recordsWhere} from './storage.mjs';
+import {facilityView} from './facility-state.mjs';
 
 import {settleStewardRequests} from './high-nobility.mjs';
 import {currentDomains,containsDomain} from './noble-state.mjs';
@@ -30,7 +31,8 @@ import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {householdLaborBudget,ensureStatisticalFoodAccounts,statisticalFoodAccount,statisticalFoodEngine,statisticalFoodPopulation} from './household-budget.mjs';
-import {statisticalLaborMinutes} from './town-income.mjs';
+import {townWorkMinutes,recordTownWork,produceTownWork,townProductionDemand} from './town-work.mjs';
+import {purchaseStatisticalInputs} from './business.mjs';
 import {householdWorkTime,agriculturalWorkforce} from './npc-state.mjs';
 import {creditBreachEvent,publishTransitionEvent} from './world-events.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
@@ -68,7 +70,7 @@ function recipeFor(e,s,owner,item){
 export function laborOffers(e,s,minute=s.minute){
     // Offers already taken by a live contract, read once for the whole listing.
     const taken=new Set(rows(s).filter(c=>employmentActive(c)&&c.deadline>minute).map(c=>c.offer));
-    const out=[],add=r=>{
+    const sites=new Map(),out=[],add=r=>{
         if(r.owner==='player'||!ownerCanHire(e,s,r.owner)||!r.location||r.quantity<=0)return;
         const id=`labor:${r.source}:${r.recipe??r.task}`;
         if(taken.has(id))return;
@@ -77,6 +79,26 @@ export function laborOffers(e,s,minute=s.minute){
         // A business that keeps a counter pays its hands from it, after the keeper (at signing) puts in what the counter lacks from his purse: counter and purse together back a vacancy.
         const account=groupAccountView(e,s,r.owner),counter=dedicatedCoinAccount(s,r.owner,'counter'),own=account?.coins??s.records?.[`organization:${r.owner}`]?.treasury??s.npcs[r.owner]?.coins??0,balance=counter?counter.coins+own:own;
         if(balance<d.wage)return;
+        if(r.recipe){
+            const recipe=base(e,s,r.recipe),key=`${r.owner}:${r.recipe}:${r.location}`;
+            if(!sites.has(key)){
+                const settlement=placeSettlement(e,s,r.location).value;
+                const candidates=[r.location,...e.world.locations.map(p=>p.id),...Object.keys(s.created??{})];
+                const site=[...new Set(candidates)].find(location=>{
+                    if(recipe.location&&recipe.location!==location||placeSettlement(e,s,location).value!==settlement)return false;
+                    const view=facilityView(e,s,location,r.owner);
+                    if(view?.factor===0||s.buildings?.[location]?.condition<=0)return false;
+                    if(!recipe.workstation)return true;
+                    return view?.workstations.some(st=>{
+                        const fee=st.owner===r.owner?0:st.fee??0;
+                        return st.kind===recipe.workstation&&(st.access==='public'||st.owner===r.owner)&&own>=fee&&balance>=d.wage+fee;
+                    });
+                });
+                sites.set(key,site??null);
+            }
+            d.location=sites.get(key);
+            if(!d.location)return;
+        }
         out.push(d);
     };
     for(const order of rows(s))if(order.category==='contract'&&['procurement','order'].includes(order.kind)&&['待履行','履行中','有效'].includes(order.status)&&order.deadline>minute){
@@ -246,10 +268,14 @@ export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
 
     row=contractTerms(row,at);
     if(!Number.isSafeInteger(minutes)||minutes<0||!Number.isSafeInteger(row.wage)||row.wage<0)throw preconditionFailure('工资与实际工时须为非负整数');
-    const statistical=statisticalFoodAccount(d.get('state'),row.worker),payDay=Math.floor(at/DAY);
+    let statistical=statisticalFoodAccount(d.get('state'),row.worker);const payDay=Math.floor(at/DAY);
     const key=`employment_pay:${row.id}:${at}`,previous=statistical?(statistical.labor.payDay===payDay?statistical.labor.receipts?.[key]:null):d.get(...rec(key));
     if(previous){if(previous.minutes!==minutes||previous.wage!==row.wage)throw preconditionFailure('同次工时结算事实不一致');return previous.result;}
     if(statistical&&payDay<(statistical.labor.payDay??-1))throw preconditionFailure('Statistical wages cannot settle a past day');
+    if(statistical){
+        recordTownWork(d,e,{worker:row.worker,minute:row.workMinute??at,minutes,kind:row.project||row.supplier?'service':'employment',source:key});
+        statistical=statisticalFoodAccount(d.get('state'),row.worker);
+    }
     const current=d.get(...rec(row.id))??row,units=current.wageUnits??0,total=units+row.wage*minutes;
     if(!Number.isSafeInteger(total))throw Error('累计工钱超出整数范围');
     // A business that keeps a counter pays from it and from nothing else: what the counter cannot cover is wage debt,
@@ -268,8 +294,10 @@ export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
     const receipt={id:key,category:'employment_pay',contract:row.id,minutes,wage:row.wage,result};
     if(statistical){
         if(d.get(...rec(row.id)))writeJob(d,e,{...d.get(...rec(row.id)),wageUnits:total});
+        const kind=row.project||row.supplier?'service':'employment',sources=statistical.labor.incomeSources??{},prior=sources[kind]??{earned:0,paid:0};
         d.set(['state','records',row.worker,'labor'],{...statistical.labor,wageUnits:statistical.labor.wageUnits+row.wage*minutes,
         minutes:statistical.labor.minutes+minutes,earned:statistical.labor.earned+earned,paid:statistical.labor.paid+paid,
+        incomeSources:{...sources,[kind]:{earned:prior.earned+earned,paid:prior.paid+paid}},
         payDay,receipts:{...(statistical.labor.payDay===payDay?statistical.labor.receipts:{}),[key]:receipt}});
     }
     else{writeJob(d,e,{...d.get(...rec(row.id)),wageUnits:total});holdingSet(d,e,rec(key),receipt,'labor-market');}
@@ -281,26 +309,68 @@ export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
 // No occupation is an income source and no employer treasury is replenished.
 function advanceStatisticalLabor(d,e,before,after){
  if(Math.floor(before/DAY)===Math.floor(after/DAY))return;
+ const offers=laborOffers(e,d.get('state'),after);
+ const selfDemand=new Map();
+ for(const demand of townProductionDemand(e,d.get('state'),after)){const pool=selfDemand.get(demand.owner)??[];pool.push(demand);selfDemand.set(demand.owner,pool);}
+ const bySettlement=new Map(),journeys=new Map();
+ for(const offer of offers){const sid=placeSettlement(e,d.get('state'),offer.location).value;const pool=bySettlement.get(sid)??[];pool.push(offer);bySettlement.set(sid,pool);}
  for(const account of ensureStatisticalFoodAccounts(d,e)){
   const day=Math.floor(after/DAY)-1,population=statisticalFoodPopulation(e,d.get('state'),account.settlement);
   if(account.labor.day>=day||!population)continue;
-  let workers=statisticalLaborMinutes(e,d.get('state'),account)/480;
-  let remaining=Math.max(0,Math.min(workers,population))*480;
+  const workMinute=day*DAY+1020;
+  let remaining=townWorkMinutes(e,d.get('state'),account.owner,workMinute);
   const scoped=statisticalFoodEngine(e,d.get('state'));
   // Groups share the existing finite offers. A prior group's delivery may
   // already have filled the shelf; do not reuse its stale vacancy quantity.
-  for(const offer of laborOffers(e,d.get('state'),after)){
+  for(const offer of bySettlement.get(account.settlement)??[]){
    if(remaining<=0)break;
-   if(!offer.recipe||placeSettlement(e,d.get('state'),offer.location).value!==account.settlement)continue;
-   const row={...offer,id:`statistical-work:${account.owner}:${offer.id}:${after}`,worker:account.owner,wage:offer.wage,escrow:0};
-   const maximum=Math.floor(offer.quantity/(e.byId.get(offer.recipe)?.output?.quantity??1));
-   const plan=employmentProductionPlan(d,scoped,row,{minutes:Math.min(480,remaining),maximum});
+   if(!offer.recipe&&!offer.project)continue;
+   const tripKey=`${account.settlement}:${offer.location}`;
+   if(!journeys.has(tripKey)){
+    let trip=0;
+    if(account.settlement!==offer.location){try{const route=e.route(account.settlement,offer.location,'walk',workMinute,d.document.randomSeed);trip=route.cost?Infinity:route.minutes*2;}catch{trip=Infinity;}}
+    journeys.set(tripKey,trip);
+   }
+   const commute=journeys.get(tripKey),available=Math.min(480,remaining)-commute;
+   if(commute>120||available<=0)continue;
+   const row={...offer,id:`statistical-work:${account.owner}:${offer.id}:${after}`,worker:account.owner,wage:offer.wage,escrow:0,workMinute};
+   if(offer.project){
+    const project=d.get('state','projects',offer.project);
+    if(project?.status!=='施工中')continue;
+    const minutes=Math.min(available,Math.ceil((project.remainingWork??project.remainingDays)*480));
+    if(minutes<=0)continue;
+    if(commute)recordTownWork(d,e,{worker:account.owner,minute:workMinute,minutes:commute,kind:'commute',source:`${row.id}:commute`});
+    const left=Math.max(0,(project.remainingWork??project.remainingDays)-minutes/480);
+    d.set(['state','projects',project.id],{...project,laborMarket:1,remainingWork:left,remainingDays:Math.ceil(left),laborMinutes:(project.laborMinutes??0)+minutes});
+    settleEmploymentPay(d,scoped,row,after,minutes);remaining-=minutes+commute;
+    continue;
+   }
+   // Another group may already have filled this finite order/shelf.
+   const held=employmentStock(d,scoped,offer.owner,offer.item);
+   const source=d.get('state','records',offer.source);
+   const shelf=currentShops(e,d.get('state')).find(shop=>shop.keeper===offer.owner)?.restock.find(stock=>stock.item===offer.item);
+   const needed=source?source.quantity-(source.fulfilled??0)-held:offer.source.startsWith('shop:')?(shelf?.maximum??0)-held:offer.quantity-held;
+   const maximum=Math.ceil(Math.max(0,needed)/(e.byId.get(offer.recipe)?.output?.quantity??1));
+   const plan=employmentProductionPlan(d,scoped,row,{minutes:available,maximum});
    if(plan.reason||!plan.batches)continue;
    const minutes=Math.min(480,Math.ceil(plan.batches*plan.recipe.minutes/(1+plan.skill/3000)));
    const counter=dedicatedCoinAccount(d.get('state'),offer.owner,'counter');
    if((counter?counterCash(d,offer.owner):financeBalance(d,e,offer.owner))-plan.fee<Math.ceil(offer.wage*minutes/480))continue;
+   if(commute)recordTownWork(d,e,{worker:account.owner,minute:workMinute,minutes:commute,kind:'commute',source:`${row.id}:commute`});
    settleEmploymentProduction(d,scoped,row,after,plan);
-   settleEmploymentPay(d,scoped,row,after,minutes);remaining-=minutes;
+   settleEmploymentPay(d,scoped,row,after,minutes);remaining-=minutes+commute;
+  }
+  for(const demand of selfDemand.get(account.owner)??[]){
+   for(const recipe of e.world.recipes.filter(r=>r.output?.item===demand.item).sort((a,b)=>a.id.localeCompare(b.id))){
+    const order=d.get('state','records',demand.source);
+    if((order?.createdAt??0)>workMinute)continue;
+    const batches=Math.ceil(demand.quantity/recipe.output.quantity),items=Object.fromEntries((recipe.materials??[]).map(m=>[m.item,m.amount*batches]));
+    for(const tool of recipe.tools??[])items[tool]=Math.max(1,items[tool]??0);
+    purchaseStatisticalInputs(d,e,{buyer:account.owner,items,minute:workMinute,source:`inputs:${demand.source}:${day}`});
+    remaining=townWorkMinutes(e,d.get('state'),account.owner,workMinute);
+    const made=produceTownWork(d,e,{worker:account.owner,recipe:recipe.id,location:demand.location,minutes:Math.min(480,remaining),maximum:Math.ceil(demand.quantity/recipe.output.quantity),minute:workMinute,source:`self:${demand.source}:${after}`});
+    if(made.quantity){remaining=townWorkMinutes(e,d.get('state'),account.owner,workMinute);break;}
+   }
   }
   d.set(['state','records',account.owner,'labor','day'],day);
  }

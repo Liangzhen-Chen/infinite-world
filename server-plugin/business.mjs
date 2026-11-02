@@ -32,6 +32,7 @@ import {stateReader,valuation} from './valuation.mjs';
 import {rollDice} from './scheduler.mjs';
 import {actionCostRule} from './action-costs.mjs';
 import {householdWorkTime} from './npc-state.mjs';
+import {townWorkMinutes,recordTownWork} from './town-work.mjs';
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {toRational,fromRational} from './det-math.mjs';
@@ -760,43 +761,72 @@ function walkIns(d,engine,t){
     return out;
 }
 
-function serve(d,engine,shop,t,residents,gaps,routes){
+function serveStatistical(d,engine,shop,t,routes,{buyer=null,items=null,source=null}={}){
     const state=d.get('state'),day=Math.floor(t/DAY),reach=customerReachMinutes(engine),seed=d.document.randomSeed;
-    if(d.get(...flowKey(shop.id,day)))return;
-    const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
+    const shelf=shelfOf(d,engine,shop);if(!shelf.length)return [];
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
     const visits=[];
-    for(const statistical of statisticalFoodGroups(engine,d.get('state'),shop.settlement).filter(row=>row.beneficiaryUnits>0&&row.coins>0)){
+    for(const statistical of statisticalFoodGroups(engine,d.get('state'),shop.settlement).filter(row=>row.beneficiaryUnits>0&&row.coins>0&&(!buyer||row.owner===buyer))){
+        const scoped=statisticalFoodEngine(engine,d.get('state'));
         const outbound=walkMinutes(engine,shop.settlement,shop.location,t,seed,routes),inbound=walkMinutes(engine,shop.location,shop.settlement,t,seed,routes);
         let at=t+outbound.minutes,travelPaid=false;
         const travelCost=outbound.coins+inbound.coins;
         for(const item of shelf){
             const gain=engine.byId.get(item)?.nutrition?.satiety??0;
-            if(!(gain>0)||outbound.minutes>reach||!Number.isFinite(inbound.minutes))continue;
+            if((items?!(items[item]>0):!(gain>0))||outbound.minutes>reach||!Number.isFinite(inbound.minutes))continue;
+            const eventId=source?`customer:${source}:${shop.id}:${statistical.owner}:${item}`:`customer:${shop.id}:${t}:${statistical.owner}:${item}`;
+            if(source&&recordsWhere(d.get('state','records'),'category','customer_flow').some(r=>r.visits.some(v=>v.sourceEvent===eventId)))continue;
+            const minutes=serviceMinutes+(travelPaid?0:outbound.minutes+inbound.minutes);
+            if(items&&minutes>townWorkMinutes(engine,d.get('state'),statistical.owner,t))continue;
             const finishAt=Math.max(at,routes.get(`shop-free:${shop.id}`)??t)+serviceMinutes;
             if(finishAt>shop.until||finishAt+inbound.minutes>(day+1)*DAY)break;
             try{engine.assertNpcObligationAction(d,[shop.keeper],{start:finishAt-serviceMinutes,minutes:serviceMinutes,location:shop.location,kind:'trade'});}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
-            const needed=Math.ceil(statisticalFoodNeed(engine,d.get('state'),shop.settlement,d,d.get('state','records',statistical.owner))/gain);
-            let quantity=Math.min(needed,saleableStock(d,engine,shop.keeper,item).available),quote=null;
+            const needed=items?Math.max(0,items[item]-scoped.quantity(d,statistical.owner,item)):Math.ceil(statisticalFoodNeed(engine,d.get('state'),shop.settlement,d,d.get('state','records',statistical.owner))/gain);
+            let quantity=Math.min(needed,saleableStock(d,scoped,shop.keeper,item).available),quote=null;
             const supply=quoteSupply(d,engine,{item,location:shop.location,business:shop});
             const base=regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);
             // The same finite shelf, current bill and depth gate as a named
             // customer. A failed quote never creates food or withdraws cash.
             for(;quantity>0;quantity--){
-                const q=marketQuote(d,engine,{seller:shop.keeper,buyer:statistical.owner,item,quantity,location:shop.location,minute:t,base,business:shop,supply});
+                const q=marketQuote(d,scoped,{seller:shop.keeper,buyer:statistical.owner,item,quantity,location:shop.location,minute:t,base,business:shop,supply});
                 if(q.totalCoins<1||q.totalCoins>d.get('state','records',statistical.owner,'coins')-(travelPaid?0:travelCost))continue;
                 try{assertMarketDepth(d,engine,q);}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
                 quote=q;break;
             }
             if(!quote)continue;
-            const eventId=`customer:${shop.id}:${t}:${statistical.owner}:${item}`;
+            if(items)recordTownWork(d,engine,{worker:statistical.owner,minute:t,minutes,kind:'commute',source:eventId});
             if(!travelPaid&&travelCost){moveCoins(d,{from:purse(engine,statistical.owner),to:sink('export','travel'),amount:travelCost,writer:'shop',eventId:`${eventId}:travel`});financeChange(d,engine,statistical.owner,-travelCost,eventId,BOOKED);}
             travelPaid=true;
-            const result=sell(d,engine,shop,statistical.owner,item,quantity,t,quote,eventId);
+            const result=sell(d,scoped,shop,statistical.owner,item,quantity,t,quote,eventId);
             visits.push({npc:statistical.owner,item,quantity,paid:result.cost,tax:result.tax,outcome:'bought',sourceEvent:eventId});
             at=finishAt;routes.set(`shop-free:${shop.id}`,finishAt);
         }
     }
+    return visits;
+}
+
+// Production inputs use precisely the same open shop, route, shelf, quotation
+// and settlement as statistical food customers. No fictitious person location.
+export function purchaseStatisticalInputs(d,engine,{buyer,items,minute=d.get('state','minute'),source}){
+    if(!source||!statisticalFoodAccount(d.get('state'),buyer))throw preconditionFailure('采购需要统计组和真实需求来源');
+    const routes=new Map(),visits=[];
+    for(const shop of openShops(d,engine,minute)){
+        const bought=serveStatistical(d,engine,shop,minute,routes,{buyer,items,source});
+        if(!bought.length)continue;
+        // Own record: serve()'s once-per-day guard looks only at the ordinary flowKey, so input buying never cancels that day's customers.
+        const key=[...flowKey(shop.id,Math.floor(minute/DAY)).slice(0,2),`${flowKey(shop.id,Math.floor(minute/DAY))[2]}:inputs:${source}`],old=d.get(...key);
+        holdingSet(d,null,key,{...old,category:'customer_flow',shop:shop.id,keeper:shop.keeper,day:Math.floor(minute/DAY),minute,visits:[...old?.visits??[],...bought]},'business');
+        visits.push(...bought);
+    }
+    return visits;
+}
+
+function serve(d,engine,shop,t,residents,gaps,routes){
+    const state=d.get('state'),day=Math.floor(t/DAY),reach=customerReachMinutes(engine),seed=d.document.randomSeed;
+    if(d.get(...flowKey(shop.id,day)))return;
+    const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
+    const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
+    const visits=serveStatistical(d,engine,shop,t,routes);
     for(const {id,slot,settlement} of residents){
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
         const outbound=walkMinutes(engine,slot.location,shop.location,departAt,seed,routes);
