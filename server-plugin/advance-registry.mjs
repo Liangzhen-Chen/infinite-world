@@ -418,6 +418,7 @@ const systems=[
         d.set(['state','settlements',sid],s);
       }
       advancePets(d,e,(day+1)*1440);
+      advanceHook('advanceFoodSupply')?.(d,e,(day+1)*1440,{plan:false});
       advanceWildlife(d,e,day);displaceForestWildlife(d,e,day);advanceBosses(d,e,day);
     }
  }},
@@ -426,6 +427,7 @@ const systems=[
  {id:'settlement_trade',order:800,active:e=>!!e.rules.settlementTrade,nextMinute:(e,d,now)=>nextSettlementTradeMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
  {id:'transport',order:790,nextMinute:(e,d,now)=>nextTransportMinute(d.get('state'),now),active:(e,d,now)=>nextTransportMinute(d.get('state'),now)!==Infinity,advance:(e,d,{after})=>advanceTransport(d,e,after)},
+ {id:'food_supply',order:810,active:e=>!!e.rules.foodSupply,nextMinute:(e,d,now)=>advanceHook('nextFoodSupplyMinute')?.(d.get('state'),now)??Infinity,advance:(e,d,{after})=>advanceHook('advanceFoodSupply')?.(d,e,after,{plan:after%1440===600,onReturn:true})},
  {id:'post',order:820,nextMinute:(e,d,now)=>nextPostMinute(d.get('state'),now),advance:(e,d,{after})=>advancePost(d,e,after)},
  {id:'shop_restock',order:850,nextMinute:nextShopMinute,advance:(e,d,{before,after})=>{
     // Consumers need noon facts; restocking keeps the midnight boundary.

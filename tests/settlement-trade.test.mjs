@@ -60,6 +60,20 @@ function setGrain(doc,id,quantity,{expiresDay=210}={}){
     r.ledger.openingFood=quantity;r.ledger.freshProduced=0;r.ledger.eaten=0;r.ledger.spoiled=0;r.ledger.overflow=0;
 }
 function tradeState(doc){return {settlements:doc.state.settlements,records:doc.state.records,quotes:doc.state.quotes};}
+function accountFoodSupplyPurchases(engine,initial,final,expected){
+    // TFB adds actual counter purchases to the existing exact private-assets
+    // anchor. Reconstruct only their goods, bills and earmarked counter cash;
+    // every other private item and coin must still match the old expectation.
+    const totals=new Map(),add=(shop,quantity,cost)=>{const v=totals.get(shop)??{quantity:0,cost:0};v.quantity+=quantity;v.cost+=cost;totals.set(shop,v);};
+    for(const s of Object.values(final.state.records).filter(r=>r.category==='food_supply_stats'))for(const [shop,v]of Object.entries(s.destinations??{}))add(shop,v.arrived,v.paidCopper);
+    for(const o of Object.values(final.state.records).filter(r=>r.foodSupply&&r.transport.phase!=='home'))add(o.shop,o.deliveredFood,(o.paidCopper??0)+o.escrowCopper);
+    for(const shop of engine.rules.economy.shops.stores){
+        const p=expected.npcs[shop.keeper],total=totals.get(shop.id)??{quantity:0,cost:0};
+        const counter=doc=>Object.values(doc.state.records).filter(r=>r.category==='money_account'&&r.owner===shop.keeper&&r.purpose==='counter').reduce((n,r)=>n+r.coins,0);
+        p.coins-=total.cost+counter(final)-counter(initial);
+        if(total.quantity){const item=engine.rules.agriculture.grainItem,old=p.inventory[item],def=engine.byId.get(item);p.inventory[item]={...(typeof old==='object'?old:{quality:def.quality,durability:def.durability,weight:def.weight}),quantity:(typeof old==='number'?old:old?.quantity??0)+total.quantity};}
+    }
+}
 
 test('规则只使用现有四村、原税章与道路，正式配置和设计一致，非法来源拒绝',()=>{
     assert.deepEqual(world.rules.settlementTrade,settlementTradeRules);
@@ -72,7 +86,11 @@ test('NPC公仓购买真实驮队服务，货批与预付款仍由原账只结�
     const {engine,doc,world:w}=setup(),lane=lanes[0],carrier='npc_hw_zhengshuisheng',origin=w.rules.agriculture.settlements.find(p=>p.settlement===lane.seller).counter;
     Object.assign(doc.state.npcs[carrier],{location:origin,activity:'营业',status:'正常',coins:1000});
     doc.state.creatures??={};doc.state.creatures.transport_bull={species:'monster_slate_horn_bull',owner:carrier,location:origin,hp:40,maxHp:40,status:'正常'};
-    const d=draft(doc);createTransportAsset(d,engine,{owner:carrier,kind:'pack',animal:'transport_bull'},'grain-pack');
+    // TFB may legitimately book an idle public carrier before the weekly
+    // contract. Introduce this test's real service one minute before pickup,
+    // retaining every original freight, custody and conservation assertion.
+    const prepared=(await wait(engine,doc,DEPART-1,'before-carrier')).doc;
+    const d=draft(prepared);createTransportAsset(d,engine,{owner:carrier,kind:'pack',animal:'transport_bull'},'grain-pack');
     const cash=snapshotCash(d.document),first=await wait(engine,d.document,DEPART),order=first.doc.state.records[key(lane)];assert.ok(order.carriage);
     const shipment=first.doc.state.records[order.carriage];assert.equal(shipment.externalOrder,key(lane));assert.deepEqual(shipment.cargo,[]);assert.equal(snapshotCash(first.doc),cash);conservation(first.doc);
     const arrived=(await wait(engine,first.doc,shipment.estimatedArrivalAt+DAY)).doc,o=arrived.state.records[key(lane)];assert.equal(o.status,'delivered');assert.equal(o.deliveredFood,o.quantity);assert.equal(o.escrowCopper,0);assert.equal(arrived.state.records[order.carriage].status,'delivered');assert.equal(snapshotCash(arrived),cash);conservation(arrived);
@@ -114,6 +132,7 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
         assert.equal(f.salesGrossCopper,f.salesNetCopper+f.taxReceiptsCopper);assert.ok(f.entries.some(e=>e.phase==='recognized'&&e.other===lane.buyer));
         const batches=farm(c,lane.buyer).batches.filter(b=>b.id.startsWith(o.id));assert.equal(batches.reduce((n,b)=>n+b.amount,0),40);assert.ok(batches.every(b=>b.expiresDay===210));
     }
+    accountFoodSupplyPurchases(engine,doc,c,privateAssets);
     assert.deepEqual({player:c.state.player.coins,inventory:c.state.inventory,npcs:Object.fromEntries(Object.entries(c.state.npcs).map(([id,n])=>[id,{coins:n.coins,inventory:n.inventory}]))},privateAssets);
     assert.deepEqual(applyPatches(first.doc,first.out.patches),first.doc);
 });

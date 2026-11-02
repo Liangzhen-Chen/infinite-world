@@ -1,4 +1,5 @@
 import {vocabulary} from './domain-rules.mjs';
+import './food-supply.mjs';
 import {toRational,fromRational} from './det-math.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {purse,treasury as treasuryAccount,moveCoins,coinRead,sink,dedicatedCoinAccount,counterCash,depositCounter,booksOpen,mirrorPartyCoins} from './money.mjs';
@@ -11,7 +12,7 @@ import {npcDecision} from './npc-decision.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {householdResources,householdBudget,householdOptions,registerHouseholdFoodSources} from './household-budget.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {settlementStock,priceRead,bagStock} from './stock.mjs';
+import {settlementStock,priceRead,bagStock,cargo} from './stock.mjs';
 // S1b 补货：本地产出与外路到货来自模拟范围外（src:import，按货价付给来源聚落公账）；聚落库存补货从聚落库存转入店主行囊。
 declareLedgerWriter('shop',{sources:{'src:import':{'*':100000}},sinks:['sink:export']});
 import {isReputationSettlement}from'./reputation-registry.mjs';
@@ -25,7 +26,7 @@ import {digest,recordsWhere,stateMemo,PatchCursor,persistable} from './storage.m
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
 import {facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {marketQuote,subjectiveMarketQuote,quoteSupply,recordMarketDeal,goodsClass,registerShopShelves,customerReachMinutes,saleableStock} from './market.mjs';
-import {assessTradeTax,taxableSale} from './finance-tax.mjs';
+import {assessTradeTax,taxableSale,tradeTax} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
 import {currencyRow,currencyTradePrice} from './currency.mjs';
 import {tenderQuote} from './tender.mjs';
@@ -158,6 +159,56 @@ export function shopStores(world){
     const rules=world.rules.economy?.shops;if(!rules)return[];
     return [...registeredStores(rules),...derivedShops(world,rules).filter(s=>s.trades&&s.restock.length)];
 }
+const foodShelfCatalogs=new WeakMap();
+function grainFoodEquivalent(world,item){
+    const items=new Map(world.items.map(i=>[i.id,i])),memo=new Map();
+    const food=(id,seen=new Set())=>{
+        const direct=items.get(id)?.nutrition?.satiety??0;if(direct>0)return direct;
+        if(seen.has(id))return 0;if(memo.has(id))return memo.get(id);
+        const next=new Set([...seen,id]);let best=0;
+        for(const r of world.recipes??[]){
+            const input=r.materials?.find(m=>m.item===id);if(!input||!r.output)continue;
+            // Do not attribute another food/grain ingredient's calories to this
+            // grain. Water, salt and fuel are complementary inputs, not food.
+            if(r.materials.some(m=>m.item!==id&&((items.get(m.item)?.nutrition?.satiety??0)>0||items.get(m.item)?.tags?.includes('grain'))))continue;
+            best=Math.max(best,food(r.output.item,next)*r.output.quantity/input.amount);
+        }
+        memo.set(id,best);return best;
+    };
+    return food(item);
+}
+function foodShelfCatalog(world){
+    let value=foodShelfCatalogs.get(world);if(value?.npcs===world.npcs&&value.profiles===world.settlementProfiles)return value;
+    const c=catalog(world,world.rules.economy.shops),residents=new Map(),peers=new Map(),registered=new Map();
+    for(const h of world.households??[]){
+        if(!c.places.has(h.settlement))continue;
+        const members=registered.get(h.settlement)??new Set();for(const id of h.members)members.add(id);registered.set(h.settlement,members);
+    }
+    for(const n of world.npcs){
+        let at=n.settlement??(typeof n.home==='string'?n.home:n.home?.location??n.home?.district)??n.location,seen=new Set();
+        while(typeof at==='string'&&!seen.has(at)){if(c.places.has(at)){residents.set(at,(residents.get(at)??0)+1);break;}seen.add(at);at=c.locations.get(at)?.parent;}
+    }
+    for(const [place,members]of registered)residents.set(place,members.size);
+    for(const s of [...registeredStores(world.rules.economy.shops),...derivedShops(world)])if(s.restock.some(r=>c.itemById.get(r.item)?.tags?.includes('food')))peers.set(s.settlement,(peers.get(s.settlement)??0)+1);
+    const satiety=world.primitiveTables?.body?.rows.find(r=>r.selector==='person'&&r.need==='satiety'),grain=grainFoodEquivalent(world,world.rules.agriculture?.grainItem);
+    const dailyGrain=grain>0?(satiety?.drainPerHour.light??0)*24/grain:0;
+    value={npcs:world.npcs,profiles:world.settlementProfiles,residents,peers,dailyGrain};foodShelfCatalogs.set(world,value);return value;
+}
+function foodSupplyShelf(world,shop){
+    if(!world.rules.foodSupply)return shop;
+    const item=world.items.find(i=>i.id===world.rules.agriculture?.grainItem);
+    if(!item||shop.restock.some(r=>r.item===item.id))return shop;
+    const food=shop.restock.filter(r=>world.items.find(i=>i.id===r.item)?.tags?.includes('food'));
+    if(!food.length||!(item.weight>0))return shop;
+    // Existing registered residents supply interval demand. The unmaterialized
+    // population remainder belongs to TFA and is deliberately absent here.
+    const counts=foodShelfCatalog(world),residents=counts.residents.get(shop.settlement)??0,peers=counts.peers.get(shop.settlement)??0;
+    // Recipe yield is a demand forecast, never credited nutrition or an
+    // executed craft. TFC still owns actual knowledge, tools and processing.
+    if(!(counts.dailyGrain>0))return shop;
+    const amount=Math.max(1,Math.ceil(residents*counts.dailyGrain*shop.cycleDays/Math.max(1,peers))),maximum=amount;
+    return {...shop,restock:[...shop.restock,{item:item.id,source:'route',physicalSupply:true,amount,maximum}]};
+}
 // 某聚落全部商铺的货架条目（登记的店 + 按人物派生的店），按世界定义缓存；市场需求读它（market.mjs 的 F026）。
 const shelfIndex=new WeakMap();
 registerShopShelves((engine,place)=>{
@@ -165,7 +216,7 @@ registerShopShelves((engine,place)=>{
     let index=shelfIndex.get(rules);
     if(!index||index.npcs!==engine.world.npcs){
         const rows=new Map();
-        for(const store of shopStores(engine.world))rows.set(store.settlement,[...rows.get(store.settlement)??[],...(store.restock??[])]);
+        for(const store of shopStores(engine.world).map(s=>foodSupplyShelf(engine.world,s)))rows.set(store.settlement,[...rows.get(store.settlement)??[],...(store.restock??[])]);
         shelfIndex.set(rules,index={npcs:engine.world.npcs,rows});
     }
     return index.rows.get(place)??[];
@@ -196,7 +247,8 @@ function readCurrentShops(engine,state){
         if(pricing?.category==='shop_pricing'&&pricing.shop===shop.id){shop.baseMarkup=shop.markup;shop.markup=typeof pricing.markup==='number'?pricing.markup:fromRational(pricing.markup);}
         const rows=engine.byId.get(keeper)?.shopRestock??store.restock;
         const population=settlementPopulationCount(engine,state,settlement).value;
-        shop.restock=rows.map(row=>{
+        shop.restock=foodSupplyShelf(engine.world,{...shop,restock:rows}).restock.map(row=>{
+            if(row.physicalSupply)return {...row};
             if(row.source==='settlement')return {...row};
             const from=originSettlement(engine.world,row.item,rules);
             return from?{...row,source:from===settlement?'local':'route',...(from!==settlement?{from}:{})}:row;
@@ -397,6 +449,43 @@ export function fundCounter(d,engine,{shop,minute,target,eventId,ctx={}}){
     depositCounter(d,engine,{owner:shop.keeper,seat:shop.location??shop.settlement,business:shop.id,amount,eventId,writer:'shop'});
     return {deposited:amount,decision};
 }
+export function foodSupplyNeed(d,engine,shop,item){
+    const row=shop.restock.find(r=>r.item===item);if(!row)return 0;
+    const pending=recordsWhere(d.get('state','records'),'category','settlement_trade').filter(o=>o.foodSupply&&o.buyer===shop.keeper&&o.item===item&&o.status==='in-transit').reduce((n,o)=>n+o.batches.reduce((sum,b)=>sum+b.amount,0),0);
+    return Math.max(0,Math.min(row.amount,row.maximum)-shelf(engine,d,shop.keeper,item)-pending);
+}
+// A real visitor observes a bid at this counter and carries its value home.
+export function foodSupplyBid(d,engine,shop,item,minute){
+    if(d.get('state','npcs',shop.keeper,'location')!==shop.location||!isEffective(engine,d.get('state'),shop.keeper))return null;
+    const quantity=foodSupplyNeed(d,engine,shop,item);if(!quantity)return null;
+    const base=regionalTradeBase(d,engine,item,shop.settlement,minute);
+    const quote=marketQuote(d,engine,{item,location:shop.location,seller:shop.settlement,buyer:shop.keeper,quantity:1,base,business:{keeper:shop.settlement,markup:1}});
+    const unitPrice=Math.max(1,Math.floor(quote.listPrice));
+    const sale=marketQuote(d,engine,{item,location:shop.location,seller:shop.keeper,quantity:1,base,business:shop});
+    if(keeperChoice(d,engine,shop,minute,{}, {kind:'restock',cost:{value:quantity*unitPrice},reward:Math.floor(sale.listPrice*quantity)}).outcome!=='agree')return null;
+    const budget=householdBudget(d,engine,shop.keeper,{view:keeperView(d,engine,shop.keeper,minute)});
+    const cap=counterCash(d,shop.keeper)+Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance)));
+    const target=Math.min(quantity,Math.floor(cap/unitPrice))*unitPrice;if(!target)return null;
+    fundCounter(d,engine,{shop,minute,target,eventId:`food-bid:${shop.id}:${item}:${minute}`});
+    const affordable=Math.min(quantity,Math.floor(counterCash(d,shop.keeper)/unitPrice));if(!affordable)return null;
+    return {buyer:shop.keeper,item,location:shop.location,quantity:affordable,unitPrice,taxBps:tradeTax(engine,d.get('state'),shop.location).bps,at:minute,expires:minute+shop.cycleDays*DAY};
+}
+// The existing counter/market/tax path settles a locked bill after delivery.
+export function receiveFoodSupply(d,engine,shop,order,quantity,minute){
+    if(d.get('state','npcs',shop.keeper,'location')!==order.to||!isEffective(engine,d.get('state'),shop.keeper))return null;
+    if(!quantity)return {quantity:0,cost:0,tax:0};
+    const eventId=`${order.id}:sale`,cost=quantity*order.unitPrice;
+    if(cost>order.escrowCopper)throw Error('Food supply bill exceeds its locked cash');
+    engine.itemDelta(d,shop.keeper,order.item,quantity,{account:cargo(engine,order.id,order.item),writer:'shop',eventId});
+    moveCoins(d,{from:`${order.id}|coin_river|escrow`,to:order.public?treasuryAccount(order.seller):purse(engine,order.seller),amount:cost,writer:'shop',eventId});
+    if(order.public)d.set(['state','settlements',order.seller,'treasury'],d.get('state','settlements',order.seller,'treasury')+cost);
+    else mirrorPartyCoins(d,engine,order.seller,cost,eventId,'shop');
+    const quote=marketQuote(d,engine,{item:order.item,location:shop.location,seller:order.seller,buyer:shop.keeper,quantity});
+    recordMarketDeal(d,quote,cost,quantity,eventId);
+    const assessed=taxableSale(engine,d.get('state'),order.seller,order.item)?assessTradeTax(d,engine,{seller:order.seller,cost,location:shop.location,sourceEvent:eventId}):{amount:0,bps:0},tax=assessed.amount;
+    recordFinanceSale(d,engine,{buyer:shop.keeper,seller:order.seller,item:order.item,quantity,cost,tax,eventId});
+    return {quantity,cost,tax,taxBps:assessed.bps};
+}
 // One restock row at one boundary. Returns the ledger entry, or null when the
 // shelf was already full (nothing to record).
 function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false}={}){
@@ -472,7 +561,12 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
 function restockRow(d,engine,shop,row,minute,ctx={}){
     // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
-    if(row.source==='route')return receivedRouteStock(d,engine,shop,row,minute,Math.max(0,want),ctx);
+    if(row.source==='route'){
+        const receipt=receivedRouteStock(d,engine,shop,row,minute,Math.max(0,want),ctx);
+        // The derived grain shelf has no calendar supply. An empty daily
+        // check creates no new receipt/history; actual deliveries still do.
+        return row.physicalSupply&&receipt?.added===0?null:receipt;
+    }
     if(want<=0)return null;
     const from=shop.settlement;
     // Supply and base are read once per call site below; they do not change between the quotes of one binary search.

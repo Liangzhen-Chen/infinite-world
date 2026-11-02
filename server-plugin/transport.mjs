@@ -1,4 +1,12 @@
 import {preconditionFailure} from './precondition.mjs';
+// A shop can install its adapter while this module's imports are still being
+// evaluated. Lazy initialization preserves that registration across the cycle.
+var externalCargoAdapters;
+// External grain ledgers retain their batches while K12 owns the vehicle,
+// incidents and compensation. The adapter supplies only the actual cargo.
+export function installExternalTransportCargo(category,adapter){(externalCargoAdapters??=new Map()).set(category,adapter);}
+const externalCargoAdapter=order=>externalCargoAdapters?.get(order?.foodSupply?'food_supply':order?.category);
+const externalCargo=(d,e,row)=>{const order=row.externalOrder&&d.get(...path(row.externalOrder));return externalCargoAdapter(order)?.read(d,e,order)??[];};
 import {requestContractConsent} from './action-consent.mjs';
 import {counterpart} from './credit.mjs';
 import {vocabulary} from './domain-rules.mjs';
@@ -30,6 +38,8 @@ import {declareHoldingWriter,holdingSet,aliveHoldings,holdingsView,ensureHolding
 import {derived} from './derived.mjs';
 import {refundContractEscrow} from './contracts.mjs';
 import {marketQuote} from './market.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
 import {partyDeterrence} from './deterrence.mjs';
 import {valuation} from './valuation.mjs';
 import {carryOverKg} from './carry.mjs';
@@ -180,10 +190,11 @@ export function transportServices(e,document,location){
   const rows=occupied(s).filter(r=>r.asset===a.id);
   if(rows.length&&(a.kind!=='cart'||rows.some(r=>r.status!=='booked'||!r.batch)))return [];
   const driver=operator(e,s,a.holder),group=groupView(e,s,a.holder);
-  if(!availableForBatch(e,s,driver,rows)||actorLocation(s,driver)!==location||!(group||/商|车|船|驿|运输|脚夫/.test(personOccupation(e,s,driver).value??'')))return [];
+  if(!availableForBatch(e,s,driver,rows)||actorLocation(s,driver)!==location)return [];
+  const commercial=Boolean(group||/商|车|船|驿|运输|脚夫/.test(personOccupation(e,s,driver).value??''));
   const used=batchLoad(rows);if(used.kg>=a.capacityKg||used.m3>=a.capacityM3||a.seats&&used.seats>=a.seats)return [];
   const now=s.minute,depart=rows[0]?.departAt??carrierDeparture(e,'cart',now);
-  return [{asset:a.id,carrier:a.holder,driver,kind:a.kind,mode:a.mode,capacityKg:a.capacityKg-used.kg,capacityM3:a.capacityM3-used.m3,seats:a.seats-used.seats,nextDeparture:depart,intervalMinutes:60}];
+  return [{asset:a.id,carrier:a.holder,driver,commercial,kind:a.kind,mode:a.mode,capacityKg:a.capacityKg-used.kg,capacityM3:a.capacityM3-used.m3,seats:a.seats-used.seats,nextDeparture:depart,intervalMinutes:60}];
  });
 }
 function dimensions(e,cargo,passengers){
@@ -213,7 +224,17 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='
   return {edge:r.id,destination,treasury:tax.settlement,toll:clock.rows.length?0:r.toll,risk,deterrence,cargoValue,tariff:(r.toll||r.guards?.length)?Math.floor(cargoValue*tax.bps/10000):0,freight:letter?r.lengthKm*tableParam(e,'unit.liPerKm')*tableParam(e,'post.feePerLi'):r.lengthKm*billableKg*specOf(e,a.kind).rate*capacityFactor*(1+risk)};
  });
  const risk=distanceKm?passages.reduce((sum,p,i)=>sum+p.risk*edges[i].lengthKm,0)/distanceKm:0;
- const freight=Math.max(1,Math.ceil(passages.reduce((sum,p)=>sum+p.freight,0)));
+ let freight=Math.max(1,Math.ceil(passages.reduce((sum,p)=>sum+p.freight,0)));
+ const service=transportServices(e,d.document,from).find(s=>s.asset===a.id);
+ if(service&&!service.commercial){
+  // Owning a usable vehicle is sufficient to offer work; a household is not
+  // conscripted by changing its occupation to "carrier". Its operator quotes
+  // compensation for actual travel labour, not overnight calendar time.
+  const view=subjectiveView(e,d.document,service.driver),request={kind:'transport',from:owner,cost:{minutes:clock.rows.length?0:route.movingMinutes??route.minutes},reward:freight};
+  let choice=npcDecision(view,request);
+  if(choice.outcome==='conditional'&&choice.conditions?.prepay){freight+=choice.conditions.prepay;choice=npcDecision(view,{...request,reward:freight});}
+  if(choice.outcome!=='agree')throw preconditionFailure('资产经营者不同意本次承运');
+ }
  const tariff=passages.reduce((n,p)=>n+p.tariff,0);
  const estimatedArrivalAt=arrivalMinute(e,s,d.document.randomSeed,route.edges,from,a.mode,departAt,clock.travelWindow),toll=passages.reduce((n,p)=>n+p.toll,0);
  return {asset:a.id,mode:a.mode,from,to,departAt,estimatedArrivalAt,route:{...route,minutes:estimatedArrivalAt-departAt},passages,load,distanceKm,risk,capacityFactor,freight,tariff,toll,total:freight+tariff+toll,...clock.batchClosesAt!==undefined?{batch:clock.batch,batchClosesAt:clock.batchClosesAt,travelWindow:clock.travelWindow}:{} };
@@ -264,7 +285,7 @@ function bookTransportInner(d,e,args,eventId){
  const postal=args.post&&s.records?.[args.post],previous=postal&&s.records?.[postal.shipment];
  const forwarding=postal?.category==='post'&&postal.from===owner&&previous?.status==='delivered'&&previous.to===from;
  const external=args.externalOrder&&s.records?.[args.externalOrder];
- const externalValid=external?.category==='settlement_trade'&&external.seller===owner&&external.status==='in-transit'&&cargo.length===1&&cargo[0].item===external.item&&cargo[0].quantity===external.quantity;
+ const externalValid=['settlement_trade','food_supply'].includes(external?.category)&&external.seller===owner&&external.status==='in-transit'&&cargo.length===1&&cargo[0].item===external.item&&cargo[0].quantity===external.quantity;
  const a=transportAssetView(e,d.document,asset),service=transportServices(e,d.document,from).find(x=>x.asset===a?.id);
  if(!service)throw preconditionFailure('承运人当前不能提供班次');
  if(args.departAt!==undefined)int(args.departAt,now,'发车时间');
@@ -390,7 +411,8 @@ function advanceTransportInner(d,e,minute){
   if(t.edgeIndex>=t.edges.length){
    row.status='delivered';row.arrivedAt=minute;t.nextAt=null;t.segment=null;index(d,row.id,false);
    const present=pending.some(r=>(r.batch??r.id)===vehicle&&r.passengers.includes(row.recipient))||actorLocation(d.get('state'),row.recipient)===t.location;
-   const handover=!row.cargo.length||present&&carryOverKg(d,e,row.recipient,dimensions(e,row.cargo,[]).kg)===0;
+   const supplyOrder=row.externalOrder&&d.get(...path(row.externalOrder))?.foodSupply&&externalCargo(d,e,row).length>0;
+   const handover=!supplyOrder&&(!row.cargo.length||present&&carryOverKg(d,e,row.recipient,dimensions(e,row.cargo,[]).kg)===0);
    if(handover){for(const c of row.cargo)moveGoods(d,e,row.recipient,c.item,c.quantity,{instances:c.instances,trip:row.id});row.deliveredCargo=clone(row.cargo);row.cargo=[];}
    row.history.push({minute,location:t.location,kind:'delivered'});setPosition(d,e,row,t.location);
    if(!handover){row.status='arrived';row.cargoLocation=t.location;
@@ -450,7 +472,7 @@ export function settleWreckedShipment(d,e,id,minute=d.get('state','minute')){
   const old=d.get(...path(id));
   if(old?.category!=='transport'||old.status!=='wrecked'||old.settledAt!==undefined)return old;
   const base=`${id}:wreck`;
-  for(const c of clone(old.cargo))recordCargoLoss(d,e,id,{item:c.item,quantity:c.quantity,actor:old.carrier,cause:vocabulary(e,'law','cargoClaimKind'),key:`transport_loss:${id}:${base}:${c.item}`},`${base}:${c.item}`);
+   for(const c of [...clone(old.cargo),...externalCargo(d,e,old)])recordCargoLoss(d,e,id,{item:c.item,quantity:c.quantity,actor:old.carrier,cause:vocabulary(e,'law','cargoClaimKind'),key:`transport_loss:${id}:${base}:${c.item}`},`${base}:${c.item}`);
   let row=clone(d.get(...path(id)));
   if(row.freight>0&&row.carrier!==row.owner&&ledgerActive(d)){
    registerEarnedClaim(d,e,{id:`${id}:freight-refund`,kind:'compensation',debtor:row.carrier,creditor:row.owner,amount:row.freight,createdAt:minute,deadline:minute,source:id});
@@ -570,17 +592,18 @@ export function damageTransportCargo(d,e,{shipment,item,quantity,actor='player',
 }
 function recordCargoLoss(d,e,shipment,{item,quantity,actor,cause,key},eventId){
   const s=d.get('state');
-  int(quantity,1,'损失数量');const old=d.get(...path(shipment)),row=clone(old),cargo=row.cargo.find(c=>c.item===item);
+   int(quantity,1,'损失数量');const old=d.get(...path(shipment)),row=clone(old),external=row.externalOrder&&d.get(...path(row.externalOrder)),adapter=externalCargoAdapter(external),cargo=[...row.cargo,...externalCargo(d,e,row)].find(c=>c.item===item);
   if(!cargo||cargo.quantity<quantity)throw preconditionFailure('货损超过实际承运数量');
   // 货损按货物此刻在所在地的估值（市场估值投影，不含商家价差），不是目录基价；没有估值依据的货物不能静默记 0。
   const priced=valuation(d,e,{role:'goods',item,quantity,location:transportPosition(e,s,old).location??old.from,holder:old.owner});
   if(priced.value===null)throw preconditionFailure(`货物无法估值：${priced.unvaluable}`);
   const value=priced.value;int(value,0,'货损价值');
-  bookStock(d,e,freight(e,shipment,item),-quantity,{flow:'sink:destroy',purpose:'cargo_loss',writer:'transport',eventId});
+   if(adapter)adapter.damage(d,e,external,item,quantity,eventId);
+   else bookStock(d,e,freight(e,shipment,item),-quantity,{flow:'sink:destroy',purpose:'cargo_loss',writer:'transport',eventId});
   const units=(cargo.instances??[]).splice(0,quantity);
   for(const unit of units)holdingSet(d,e,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),status:'损毁',destroyedAt:s.minute,container:shipment},'transport');
   cargo.quantity-=quantity;row.cargo=row.cargo.filter(c=>c.quantity>0);row.losses=[...row.losses??[],key];
-  row.load=dimensions(e,row.cargo,row.passengers);
+   row.load=dimensions(e,[...row.cargo,...externalCargo(d,e,row)],row.passengers);
   holdingSet(d,e,path(row.id),row,'transport');
   holdingSet(d,e,path(`${key}:facts`),{category:'transport_loss_facts',shipment,item,quantity,actor,cause,minute:s.minute},'transport');
   const loss=registerLoss(d,e,{id:key,victim:row.owner,amount:value,source:shipment});

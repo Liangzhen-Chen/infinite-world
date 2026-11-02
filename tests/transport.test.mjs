@@ -18,7 +18,12 @@ test('车船制造消费实物，容量和班次随当前损耗、职业及租�
  assert.equal(transportAssetView(e,d.document,id).capacityKg,600);assert.equal(transportServices(e,d.document,'loc_hw').length,1);assert.deepEqual(d.document,before);
  d.set(['state','records',id,'durability'],40);assert.equal(transportAssetView(e,d.document,id).capacityKg,300);
  d.set(['state','records',id,'durability'],10);assert.equal(transportServices(e,d.document,'loc_hw').length,0);
- d.set(['state','records',id,'durability'],100);w.npcs.find(n=>n.id===DRIVER).occupation='农人';assert.equal(transportServices(e,d.document,'loc_hw').length,0);
+ d.set(['state','records',id,'durability'],100);w.npcs.find(n=>n.id===DRIVER).occupation='农人';
+ // TFB: a household's real vehicle remains hireable without relabelling its
+ // occupation. Quotes now include its consent and paid travel labour.
+ assert.equal(transportServices(e,d.document,'loc_hw').length,1);assert.equal(transportServices(e,d.document,'loc_hw')[0].commercial,false);
+ const householdQuote=quoteTransport(d,e,{asset:id,from:'loc_hw',to:'loc_bs',cargo:[{item:'item_oats',quantity:1}]});assert.ok(householdQuote.freight>1);
+ w.npcs.find(n=>n.id===DRIVER).redLines=['transport'];assert.throws(()=>quoteTransport(d,e,{asset:id,from:'loc_hw',to:'loc_bs',cargo:[{item:'item_oats',quantity:1}]}),/不同意/);delete w.npcs.find(n=>n.id===DRIVER).redLines;
  assert.ok(traitsOf(e,d.document,id).tags.includes('wood'));
  applyInteraction(d,e,{agent:'fire',target:id});assert.equal(d.get('state','records',id,'durability'),75);
  const total=cash(d);leaseTransportAsset(d,e,{asset:id,tenant:SECOND,minutes:1000,coins:20},'lease');assert.equal(cash(d),total);assert.equal(transportAssetView(e,d.document,id).holder,SECOND);
