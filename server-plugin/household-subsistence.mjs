@@ -13,6 +13,8 @@ import {reserve,moveStock,registerLegacyStock,accrueStock} from './stock.mjs';
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 
 const DAY=1440,config=e=>e.rules.householdSubsistence;
+// The household's two work windows, shared with agriculture/employment.
+const WORK_WINDOWS=[[480,720],[780,1020]];
 const workerPreference=compileRX('roll("subsistence-worker")');
 const seedOf=e=>e.scheduleReadCache?.seed??e.physicalDocument?.randomSeed??e.airDraft?.peek?.('randomSeed')??'default-campaign';
 // Ecology supplies physical source readers/withdrawal; this shared household
@@ -317,14 +319,17 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  const physicalRuns=[];
   // The first advance of a sparse/imported campaign may start after dawn.
   // It cannot invent a departure before the campaign's actual current time.
-  // A work slot still running at that time is available from that minute on.
-  for(const span of physical.map(s=>s.start<notBefore&&s.end>notBefore?{...s,start:notBefore}:s).filter(s=>s.start>=notBefore)){
+  // Nobody abandons an activity midway: a departure waits for an authored
+  // edge. Before the work day opens nothing has begun yet, so a slot that
+  // started before dawn is available from the plan's minute.
+  const opens=WORK_WINDOWS[0][0];
+  for(const span of physical.map(s=>s.start<notBefore&&notBefore<=opens&&s.end>notBefore?{...s,start:notBefore}:s).filter(s=>s.start>=notBefore)){
   const prior=physicalRuns.at(-1)?.at(-1);
    if(prior&&!physicalBlocked.some(b=>b.start<span.start&&b.end>prior.end))physicalRuns.at(-1).push(span);
   else physicalRuns.push([span]);
  }
  workerSlots.set(worker,physicalRuns);
-  const free=[];for(const [begin,hi]of [[480,720],[780,1020]]){
+  const free=[];for(const [begin,hi]of WORK_WINDOWS){
    const lo=Math.max(begin,notBefore);if(lo>=hi)continue;
   let at=lo;for(const b of blocked.filter(b=>b.start<hi&&b.end>lo).sort((a,b)=>a.start-b.start)){if(b.start>at)free.push({start:at,end:Math.min(hi,b.start)});at=Math.max(at,b.end);}if(at<hi)free.push({start:at,end:hi});
  }return [worker,free];}));
