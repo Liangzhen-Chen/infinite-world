@@ -1,0 +1,20 @@
+{
+  "cashHoldingMonths": 1,
+  "basis": "calibrate",
+  "calibration": "pending",
+  "source": "TI1b：P待标定暂定默认值，一个月名义劳动收入的现金持有量；不是史料测得的一月，更不按30日生存倒推。参照CT07，区分史料依据与游戏缺省。",
+  "history": [
+    {"title": "Nuno Palma (2018), Reconstruction of money supply over the long run: the case of England, 1270–1870", "url": "https://doi.org/10.1111/ehr.12534", "supports": "历史货币量可以用名义收入和流通速度的假定间接估计；不支持本规则一月的具体数值。"},
+    {"title": "Nick Mayhew (1995), Population, money supply, and the velocity of circulation in England, 1300–1700", "url": "https://doi.org/10.1111/j.1468-0289.1995.tb01417.x", "supports": "货币存量与收入流量须区分，现金持有期随货币化程度变化。"}
+  ],
+  "formula": "M = floor(sum(annual available labor minutes) / 480 * median(unskilled daily wage) * cashHoldingMonths / calendar.monthsPerYear)",
+  "livelihoodProcesses": [
+    {"livelihood":"船具修补","process":"recipe_wooden_pegs","basis":"船具木接头修补所需的最基本木楔周期，工具和材料读配方，不按职业名赋钱。"},
+    {"livelihood":"麦饼烘制","process":"recipe_bake_flatbread","basis":"已有燕麦薄饼配方的一炉，非按职业推定销售收入。"},
+    {"livelihood":"陶坯制作","process":"recipe_fire_cup","basis":"已有最基本陶杯的一窑工具与用料；不是整年产量。"},
+    {"livelihood":"衣物缝补","process":"repair_clothes_seam","basis":"已有补缝规则的一次修补。"},
+    {"livelihood":"铁件修补","process":"recipe_forge_nails","basis":"已有最基本铁钉周期，作为小铁件经营资本的替代估计；不推定高阶技艺。"}
+  ],
+  "capitalBasis": "生计关联配方仅选择最基本一周期；所需工具按物品basePrice，材料按配方用量×basePrice。设施按FACILITY_TYPES.workshop既有木8、石4、工3日与物价/日工价估重置值；同户同类设施只计一次，不转移现有公共建筑产权。无手艺劳力户最低权重1；有资本户权重=max(1,经营资本文值)，按正资本分位分档。同户同工具只计一次，不重复发放已存在器具。",
+  "grainBasis": "无登记农地的granary:false住户按稳定populationSeed、householdId在0至一个最大集期间隔口粮份数闭区间均匀取整数。用耐放item_ration而非需加工生粮；既有可食库存计入上限，原物不删除。历史购买已结清，不从期初现钱再扣一次。"
+}

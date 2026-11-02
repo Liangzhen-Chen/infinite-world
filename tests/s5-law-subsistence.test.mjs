@@ -24,6 +24,9 @@ function fixture({capacity=2000,separate=false,owned=false,location=home,settlem
  w.locations.find(l=>l.id===location).areaKm2=1;
  if(owned)w.locations.find(l=>l.id===location).owner='player';
  w.households=separate?[{id:'forage-a',members:[A],settlement,homeLocation:location},{id:'forage-b',members:[B],settlement,homeLocation:location}]:[{id:'forage',members:[A,B],settlement,homeLocation:location}];
+ // TI1b: these explicitly enumerated arithmetic households replace the
+ // formal town register; they do not inherit the removed 300-house estate.
+ w.townIncome.settlements=[];
  // Work is assigned only at existing routine edges, not an invented08:00
  // boundary inside a single all-day fixture slot.
  for(const n of w.npcs){delete n.tier;n.schedule={default:[[0,480],[480,720],[720,780],[780,1020],[1020,1440]].map(([start,end])=>({start,end,location,activity:start===720?'午饭':start===0||start===1020?'睡眠':'日常起居',services:[]}))};}

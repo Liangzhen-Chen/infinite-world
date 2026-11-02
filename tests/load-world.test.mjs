@@ -7,8 +7,12 @@ import {makeTempDir} from '../tools/tmp-root.mjs';
 
 test('the formal loader archives sourced opening inputs and preserves their unresolved nulls',async()=>{
  const world=await loadWorld(),file=JSON.parse(await fs.readFile('world/economy/town-income.json','utf8'));
- assert.deepEqual(world.townIncome,file);assert.equal(world.townIncome.settlements[0].money.value,null);
- assert.ok(world.townIncome.settlements[0].unresolved.includes('money.value'));
+ // TI1b derives M from the formal inputs; only genuinely unknown lease terms
+ // remain null. Loading must preserve both sourced values and unknowns.
+ assert.deepEqual(world.townIncome,file);assert.equal(world.townIncome.settlements[0].money.value,390639);
+ assert.equal(world.townIncome.settlements[0].leases.value,null);
+ assert.ok(world.townIncome.settlements[0].unresolved.includes('leases.amount/term'));
+ assert.deepEqual(world.rules.townIncome,JSON.parse(await fs.readFile('world/rules/town-income.json','utf8')));
 });
 test('the loader rejects unsourced or fractional copper and allows an edition with no opening file',async t=>{
  const root=makeTempDir('income-world-',t);await fs.cp('world',root,{recursive:true});

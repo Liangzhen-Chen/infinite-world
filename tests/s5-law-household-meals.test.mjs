@@ -24,6 +24,9 @@ function fixture({publicFood=0,granaryEnabled=false,bread=2,shared=true,market=f
  // K16 also feeds registered roster-only homes: retaining unrelated catalog
  // households would silently add their mouths to this two-person hand anchor.
  w.households=[];
+ // TI1b: this two-mouth river edition excludes Baishi households, so it
+ // must also exclude their finite opening estate. No meal assertion changes.
+ w.townIncome.settlements=w.townIncome.settlements.filter(r=>r.settlement==='loc_hw');
  for(const [i,group]of (shared?[members]:members.map(id=>[id])).entries())w.households.push({id:`meal-house-${i}`,members:group,settlement:'loc_hw',homeLocation:home});
  // The seller exists in campaign state only in the market/guest editions.
  // An absent seller must not add a third registered mouth to public ration math.

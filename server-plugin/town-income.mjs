@@ -117,7 +117,21 @@ export function initializeTownIncome(engine,document){
    else target.coins=(target.coins??0)+n;
   };
   for(const h of homes){credit(h,null,distributed[h.id]);if(h.pending)s.records[groups.get(h.group)].shares[h.id].openingCoins=distributed[h.id];}
+  // TI1b: historical market purchases belong to each household, not to an
+  // asset-weighted town grain pool. Existing bags were paid for already.
+  const authored=new Map((facts?.households??[]).map(h=>[h.household,h]));
+  const purchases=new Map();
+  for(const h of homes)for(const lot of authored.get(h.id)?.inventory??[]){
+   const n=lot.quantity.value;if(n==null)continue;
+   credit(h,lot.item,n);
+   purchases.set(lot.item,(purchases.get(lot.item)??0)+n);
+   if(h.pending){const share=s.records[groups.get(h.group)].shares[h.id];share.openingInventory={...share.openingInventory,[lot.item]:(share.openingInventory?.[lot.item]??0)+n};}
+  }
   const inventory=[],grainTotals=new Map();
+  for(const [item,purchased]of purchases){
+   const existing=homes.reduce((n,h)=>n+h.members.reduce((m,p)=>m+quantity(p.inventory?.[item]),0),0);
+   inventory.push({item,existing,total:existing+purchased,source:'household historical market purchases'});
+  }
   for(const lot of facts?.grain??[]){const n=townGrainBalance(lot),old=grainTotals.get(lot.item)??0;grainTotals.set(lot.item,n===null||old===null?null:old+n);}
   for(const [item,total]of grainTotals){
    if(total===null)continue;

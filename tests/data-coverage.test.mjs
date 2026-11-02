@@ -67,15 +67,21 @@ test('白石镇公账只记钱，不进每日口粮结算；公事委托从公�
  const spent=doc=>Object.values(doc.state.quests).filter(q=>q.fundedBy?.treasury==='loc_bs').reduce((sum,q)=>sum+q.escrow+(q.rewardPaid??0),0);
  // F010: shopkeepers pay the settlement treasury for what they restock from it (shop day-books name each payment).
  const restocked=doc=>Object.values(doc.state.records).filter(r=>r.category==='shop_ledger').flatMap(l=>l.entries).filter(e=>e.from==='loc_bs').reduce((n,e)=>n+(e.cost?.goods??0),0);
- const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:3*1440},eventId:'wait-1'});doc=applyPatches(doc,out.patches);
+ // TI1b: an odd ration creates a half-day deficit. The public integer
+ // indicator rounds each independent cohort/day, not the final town sum.
+ const read=n=>typeof n==='number'?n:fromRational(n),base=bodyRule(engine,'satiety').drainPerHour.light*24;
+ let missing=0;
+ for(let day=0;day<3;day++){
+  const prior=new Map(statisticalFoodGroups(engine,doc.state,'loc_bs').map(r=>[r.owner,read(r.missingSatiety)]));
+  const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:1440},eventId:`wait-1-${day}`});doc=applyPatches(doc,out.patches);
+  missing+=statisticalFoodGroups(engine,doc.state,'loc_bs').reduce((n,r)=>n+Math.ceil((read(r.missingSatiety)-prior.get(r.owner))/base),0);
+ }
  // TOWNFOOD §2: no public granary still means no public food flows. The
  // existing unmetMeals indicator now counts the private statistical cohort.
  // Keep the entire public-ledger assertion, including every old stock field.
  // I1 §3: all private groups contribute; retain the exact public-stock and
  // total unmet-meal assertion instead of checking only the first group.
- const deficit=statisticalFoodGroups(engine,doc.state,'loc_bs').reduce((n,cohort)=>n+(typeof cohort.missingSatiety==='number'?cohort.missingSatiety:fromRational(cohort.missingSatiety)),0);
- const missing=Math.ceil(deficit/(bodyRule(engine,'satiety').drainPerHour.light*24));
- assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)+restocked(doc),unmetMeals:(before.unmetMeals??0)+missing});
+ assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)+restocked(doc),...(missing?{unmetMeals:(before.unmetMeals??0)+missing}:{})});
  doc.state.records['hazard-flood:loc_bs_hebu']={category:'hazard_flood',location:'loc_bs_hebu',since:doc.state.minute,until:doc.state.minute+1440*4,soaked:[],sourceEvent:'test-flood'};
  const next=applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:1440},eventId:'wait-2'})).patches);
  const q=Object.values(next.state.quests).find(q=>q.source?.cause==='hazard-flood:loc_bs_hebu');

@@ -16,6 +16,9 @@ const A='npc_hw_luowei',B='npc_hw_duanyan',DAY=1440;
 export function fixture({source=true,stock=20,granary=true}={}){
  const w=structuredClone(world);
  w.households=[{id:'water-house',members:[A,B],homeLocation:'loc_hw',settlement:'loc_hw'}];
+ // TI1b: this two-person river edition excludes the formal Baishi estate
+ // together with its households; all finite-source assertions stay intact.
+ w.townIncome.settlements=[];
  // Preserve existing work/housework edges for the aligned real journeys.
  for(const n of w.npcs){delete n.tier;n.schedule={default:[[0,480],[480,720],[720,780],[780,1020],[1020,1440]].map(([start,end])=>({start,end,location:'loc_hw',activity:start===720?'午饭':start===0||start===1020?'睡眠':'日常起居',services:[]}))};}
  if(!source)delete w.rules.forestWater;

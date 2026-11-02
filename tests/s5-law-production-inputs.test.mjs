@@ -23,6 +23,9 @@ function setup({population=2,seedStock=100,workers=1,tools=2}={}){
  Object.assign(w.rules.agriculture.crop,{seedPerHa:4,areaUnitsPerHa:100,growthDays:10,yieldPerHa:400});
  // Keep just an existing adult's household, with no invented population/person.
  w.households=w.households.filter(h=>h.members.includes(worker));w.households[0].members=[worker];
+ // TI1b: the one-household river edition has no Baishi beneficiaries; its
+ // opening register must cover this edition, not the removed town estate.
+ w.townIncome.settlements=w.townIncome.settlements.filter(r=>r.settlement===settlement);
  const e=new WorldEngine(w),doc=e.createCharacter(seed,{},'production-inputs');
  doc.state.minute=6*DAY+480;doc.state.settlements[settlement].population=population;
  doc.state.records[key].lastDay=5;
