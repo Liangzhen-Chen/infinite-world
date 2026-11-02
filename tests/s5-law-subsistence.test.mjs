@@ -7,7 +7,7 @@ import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {advanceHouseholdMeals} from '../server-plugin/npc-life.mjs';
 import {householdSubsistencePlan,prepareHouseholdSubsistence} from '../server-plugin/household-subsistence.mjs';
 import {withScheduleCache,scheduleAt,nextNpcService} from '../server-plugin/npc-schedule.mjs';
-import {householdWorkTime} from '../server-plugin/npc-state.mjs';
+import {householdWorkTime,npcSchedule,subsistenceScheduleAt} from '../server-plugin/npc-state.mjs';
 import {personHousehold} from '../server-plugin/entity-view.mjs';
 import {assertSiteHarvest} from '../server-plugin/sites.mjs';
 import {assertTransitionInvariants} from '../server-plugin/transition.mjs';
@@ -34,6 +34,30 @@ function fixture({capacity=2000,separate=false,owned=false,location=home,settlem
  doc.state.minute=0;doc.ledger=openLedger(e,doc);return {e,doc,d:e.primitiveDraft(doc)};
 }
 const meals=f=>Object.values(f.d.get('state','family','meals'));
+
+test('repeated routine overlays retain exact boundaries and respond to live worker illness',()=>{
+ const f=fixture();delete f.e.rules.forestWater;
+ prepareHouseholdSubsistence(f.d,f.e,0);
+ const workers=f.d.get('state','records','subsistence-plan:loc_hw','workers');
+ const worker=Object.keys(workers).find(id=>workers[id].duties.length),duty=workers[worker].duties[0];
+ // Two mouths need8 portions ×10 minutes: an80-minute basket inside the
+ // authored480–720 shift. Reusing its projection must retain the560 return.
+ assert.equal(workers[worker].duties.reduce((sum,row)=>sum+row.end-row.start,0),80);
+ assert.deepEqual([duty.start,duty.end],[480,560]);
+ const expected=npcSchedule(f.e,f.d.get('state'),worker,480);
+ withScheduleCache(f.e,f.d,()=>{
+  for(const minute of [0,480,duty.end,1020]){
+   assert.deepEqual(npcSchedule(f.e,f.d.get('state'),worker,minute),expected);
+   const active=subsistenceScheduleAt(f.e,f.d.get('state'),worker,minute);
+   assert.equal(Boolean(active),duty.start<=minute&&minute<duty.end);
+  }
+  f.d.set(['state','npcs',worker,'status'],'患病');
+  assert.equal(subsistenceScheduleAt(f.e,f.d.get('state'),worker,duty.start),null);
+  assert.deepEqual(npcSchedule(f.e,f.d.get('state'),worker,480),f.e.byId.get(worker).schedule);
+  f.d.set(['state','npcs',worker,'status'],'正常');
+  assert.deepEqual(npcSchedule(f.e,f.d.get('state'),worker,480),expected);
+ });
+});
 
 test('one settlement record freezes all household plans through depletion and save reload',()=>{
  const f=fixture({separate:true});delete f.e.rules.forestWater;

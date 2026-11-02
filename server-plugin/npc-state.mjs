@@ -18,7 +18,7 @@ export function lifeRoutine(home,{minor=false,occupation=''}={}){
 }
 export function registerSubsistenceDuties(resolve,chores=()=>[]){subsistenceDuties=resolve;subsistenceChores=chores;}
 export function subsistenceScheduleAt(engine,state,id,minute){
- const offset=minute%1440,rows=subsistenceDuties(engine,state,id,minute),row=rows.find(r=>r.start<=offset&&offset<r.end);
+ const offset=minute%1440,rows=subsistenceDuties(engine,state,id,minute,true),row=rows.find(r=>r.start<=offset&&offset<r.end);
  if(row)return {...row,until:minute-offset+row.end,boundaryUntil:minute-offset+(row.boundaryEnd??row.end)};
  return null;
 }
@@ -118,12 +118,18 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
  let base=baseNpcSchedule(engine,state,id,minute,constraints);
  const duties=state&&subsistence?subsistenceDuties(engine,state,id,minute):[];
  if(base&&duties.length){
-  const overlay=slots=>duties.reduce((rows,duty)=>rows.flatMap(s=>s.end<=duty.start||s.start>=duty.end?[s]:[
-   ...(s.start<duty.start?[{...s,end:duty.start}]:[]),{...duty,start:Math.max(s.start,duty.start),end:Math.min(s.end,duty.end)},...(s.end>duty.end?[{...s,start:duty.end}]:[])
-  ]),slots);
-  base={...base,default:overlay(base.default??[])};
-  for(const key of ['market','rest'])if(base[key])base[key]=overlay(base[key]);
-  if(base.seasonal)base.seasonal=Object.fromEntries(Object.entries(base.seasonal).map(([key,v])=>[key,Object.fromEntries(Object.entries(v).map(([variant,slots])=>[variant,Array.isArray(slots)?overlay(slots):slots]))]));
+   // Both inputs are immutable within this elapsed-time action. Availability
+   // above is still checked against live custody/illness before using a duty.
+   const cache=engine.scheduleReadCache;
+   const overlays=cache?(cache.subsistenceRoutines??=new WeakMap()):null;
+   const prior=overlays?.get(base);
+   if(prior?.duties===duties){
+    if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(prior.schedule,overlaySubsistence(base,duties)))throw Error(`subsistence routine cache mismatch: ${id}`);
+    base=prior.schedule;
+   }else{
+    const schedule=overlaySubsistence(base,duties);
+    overlays?.set(base,{duties,schedule});base=schedule;
+   }
  }
  if(!state||personConstraint(engine,state,id,minute,constraints)||state.npcs?.[id]?.caring||state.npcs?.[id]?.levy)return base;
  const day=Math.floor(minute/1440)*1440,appointments=serviceAppointments(state,id).filter(r=>r.start<day+1440&&day<r.end);
@@ -165,6 +171,15 @@ export function npcSchedule(engine,state,id,minute=state?.minute,constraints=nul
  for(const key of ['market','rest'])if(base?.[key])schedule[key]=overlay(base[key]);
  if(base?.seasonal)schedule.seasonal=Object.fromEntries(Object.entries(base.seasonal).map(([key,value])=>[key,Object.fromEntries(Object.entries(value).map(([variant,slots])=>[variant,Array.isArray(slots)?overlay(slots):slots]))]));
  overlays?.set(base,{day,location,appointments,schedule});
+ return schedule;
+}
+function overlaySubsistence(base,duties){
+ const overlay=slots=>duties.reduce((rows,duty)=>rows.flatMap(s=>s.end<=duty.start||s.start>=duty.end?[s]:[
+  ...(s.start<duty.start?[{...s,end:duty.start}]:[]),{...duty,start:Math.max(s.start,duty.start),end:Math.min(s.end,duty.end)},...(s.end>duty.end?[{...s,start:duty.end}]:[])
+ ]),slots);
+ const schedule={...base,default:overlay(base.default??[])};
+ for(const key of ['market','rest'])if(base[key])schedule[key]=overlay(base[key]);
+ if(base.seasonal)schedule.seasonal=Object.fromEntries(Object.entries(base.seasonal).map(([key,v])=>[key,Object.fromEntries(Object.entries(v).map(([variant,slots])=>[variant,Array.isArray(slots)?overlay(slots):slots]))]));
  return schedule;
 }
 function baseNpcSchedule(engine,state,id,minute=state?.minute,constraints=null){
