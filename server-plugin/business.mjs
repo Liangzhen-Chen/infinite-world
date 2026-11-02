@@ -35,6 +35,10 @@ import {householdWorkTime} from './npc-state.mjs';
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {toRational,fromRational} from './det-math.mjs';
+import {periodicFoodStalls,foodProducerSurplus} from './food-supply.mjs';
+import {advanceHook} from './advance-hooks.mjs';
+const householdFoodConversion=(...args)=>advanceHook('householdFoodConversion')?.(...args);
+const householdFoodDemand=(...args)=>advanceHook('householdFoodDemand')?.(...args)??0;
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
 const path=id=>['state','records',id];
@@ -678,6 +682,11 @@ function openShops(d,engine,t){
         if(!keeper||!isEffective(engine,state,shop.keeper)||['死亡','濒死','昏迷','患病'].includes(keeper.status)||!slot||keeper.scheduleTravel||keeper.cognitionTravel||!slot.services?.includes('trade'))continue;
         out.push({kind:'npc',id:shop.id,keeper:shop.keeper,location:slot.location,until:slot.until,settlement:placeSettlement(engine,state,slot.location).value,markup:shop.markup??1,goods:shop.restock.map(r=>r.item)});
     }
+    for(const stall of periodicFoodStalls(d,engine,t,{scheduleAt})){
+        const existing=out.find(s=>s.keeper===stall.keeper&&s.location===stall.location);
+        if(existing){existing.producer=stall.producer;existing.goods=[...new Set([...existing.goods,...stall.goods])];}
+        else out.push(stall);
+    }
     return out.sort((a,b)=>a.id.localeCompare(b.id));
 }
 const shelfOf=(d,engine,shop)=>shop.kind==='player'
@@ -692,10 +701,12 @@ function wants(d,engine,id,item,gaps){
         const gap=gaps.get(id);
         for(const need of ['satiety','hydration']){
             const gain=def.nutrition[need]??0;if(gain<=0||!(gap[need]>0))continue;
-            const units=Math.ceil(gap[need]/gain);
+            const deficit=need==='satiety'?householdFoodDemand(d,engine,id,state.minute,gap[need]):gap[need];
+            const units=Math.ceil(deficit/gain);
             if(units>out.quantity){out.quantity=units;out.severity=100;}
         }
     }
+    if(!def?.nutrition){const plan=householdFoodConversion(d,engine,id,item);if(plan){out.quantity=Math.min(plan.maximum,Math.ceil(householdFoodDemand(d,engine,id)/plan.gainPerUnit));out.severity=100;}}
     const trade=engine.world.recipes.filter(r=>r.tools?.includes(item)&&(r.teachers?.includes(id)||state.npcs[id]?.recipes?.[r.id]));
     if(trade.length&&(!engine.quantity(d,id,item)||(state.npcs[id]?.inventory?.[item]?.durability??1)<=0)&&out.quantity<1){out.quantity=1;out.severity=60;}
     return out;
@@ -766,18 +777,31 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
     const visits=[];
+    const available=item=>Math.min(saleableStock(d,engine,shop.keeper,item,{business:true}).available,shop.producer?.item===item?foodProducerSurplus(d,engine,shop.producer,t):Infinity);
+    // Compare the current delivered quote plus real processing opportunity.
+    // Only this reachable shelf is known during a visit; missing goods are
+    // not hypothetical cheaper alternatives.
+    const basket=id=>{
+      const choices=shelf.map(item=>({item,plan:householdFoodConversion(d,engine,id,item,t)}));
+      if(!choices.some(r=>r.plan))return shelf;
+      return choices.map(({item,plan})=>{
+        const gain=engine.byId.get(item)?.nutrition?.satiety??plan?.gainPerUnit??0;
+        let price=Infinity;try{price=marketQuote(d,engine,{seller:shop.keeper,buyer:id,item,quantity:1,location:shop.location,minute:t,business:shop}).totalCoins;}catch{}
+        return {item,price:gain>0?(price+(plan?.extraPerUnit??0))/gain:Infinity};
+      }).sort((a,b)=>a.price-b.price||a.item.localeCompare(b.item)).map(r=>r.item);
+    };
     for(const statistical of statisticalFoodGroups(engine,d.get('state'),shop.settlement).filter(row=>row.beneficiaryUnits>0&&row.coins>0)){
         const outbound=walkMinutes(engine,shop.settlement,shop.location,t,seed,routes),inbound=walkMinutes(engine,shop.location,shop.settlement,t,seed,routes);
         let at=t+outbound.minutes,travelPaid=false;
         const travelCost=outbound.coins+inbound.coins;
-        for(const item of shelf){
-            const gain=engine.byId.get(item)?.nutrition?.satiety??0;
+        for(const item of basket(statistical.owner)){
+            const plan=householdFoodConversion(d,engine,statistical.owner,item,t),gain=engine.byId.get(item)?.nutrition?.satiety??plan?.gainPerUnit??0;
             if(!(gain>0)||outbound.minutes>reach||!Number.isFinite(inbound.minutes))continue;
             const finishAt=Math.max(at,routes.get(`shop-free:${shop.id}`)??t)+serviceMinutes;
             if(finishAt>shop.until||finishAt+inbound.minutes>(day+1)*DAY)break;
             try{engine.assertNpcObligationAction(d,[shop.keeper],{start:finishAt-serviceMinutes,minutes:serviceMinutes,location:shop.location,kind:'trade'});}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
-            const needed=Math.ceil(statisticalFoodNeed(engine,d.get('state'),shop.settlement,d,d.get('state','records',statistical.owner))/gain);
-            let quantity=Math.min(needed,saleableStock(d,engine,shop.keeper,item).available),quote=null;
+            const needed=Math.ceil(householdFoodDemand(d,engine,statistical.owner,t)/gain);
+            let quantity=Math.min(needed,available(item),plan?.maximum??Infinity),quote=null;
             const supply=quoteSupply(d,engine,{item,location:shop.location,business:shop});
             const base=regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);
             // The same finite shelf, current bill and depth gate as a named
@@ -804,7 +828,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
         const inbound=walkMinutes(engine,shop.location,slot.location,departAt+outbound.minutes,seed,routes);
         const travelCoins=outbound.coins+inbound.coins;
         let travelled=false,atShop=departAt+outbound.minutes,tripRecord=null;
-        for(const item of shelf){
+        for(const item of basket(id)){
             const serviceAt=Math.max(atShop,routes.get(`shop-free:${shop.id}`)??t),finishAt=serviceAt+serviceMinutes,returnAt=finishAt+inbound.minutes;
             if(returnAt>(slot.until??(day+1)*DAY)||finishAt>(shop.until??(day+1)*DAY))break;
             const duration=returnAt-(travelled?atShop:departAt);
@@ -822,11 +846,11 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             // also leave the planned food money and known obligations intact.
             const floor=Math.min(budget.cash,...budget.timeline.map(r=>r.balance));
             const tripCost=travelled?0:travelCoins;
-            const cap=Math.max(0,floor-tripCost-(engine.byId.get(item)?.nutrition?0:budget.resources.market.spent));
+            const conversion=householdFoodConversion(d,engine,id,item,t);
+            const cap=Math.max(0,floor-tripCost-(engine.byId.get(item)?.nutrition||conversion?0:budget.resources.market.spent));
             if(cap<1)break;
             gaps.set(id,budget.resources.procurementShortfall);
-            const available=saleableStock(d,engine,shop.keeper,item,{business:true}).available;
-            let quantity=Math.min(want.quantity,available),quote=null;
+            let quantity=Math.min(want.quantity,available(item)),quote=null;
             // No write happens inside this descent: supply and base are read once for all quantities tried.
             const business={keeper:shop.keeper,markup:shop.markup};let supply=null,baseValue=null;
             for(;quantity>0;quantity--){
@@ -834,7 +858,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
                 baseValue??=regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);
                 const q=marketQuote(d,engine,{seller:shop.keeper,buyer:id,item,quantity,location:shop.location,minute:t,base:baseValue,business,supply});
                 const option=householdOptions(budget,{item,quantity,totalCoins:q.totalCoins+tripCost}).find(o=>o.operation==='buy');
-                if(q.totalCoins>=1&&q.totalCoins<=cap&&option.feasible){
+                if(q.totalCoins>=1&&q.totalCoins<=cap&&(conversion||option.feasible)){
                     try{assertMarketDepth(d,engine,q);}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
                     quote=q;break;
                 }
@@ -865,7 +889,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
         // after the basket, so an actor never conflicts with their own visit.
         if(tripRecord)holdingSet(d,null,path(tripRecord.id),tripRecord,'business');
     }
-    if(visits.length)holdingSet(d,null,flowKey(shop.id,day),{category:'customer_flow',shop:shop.id,keeper:shop.keeper,day,minute:t,visits},'business');
+    if(visits.length)holdingSet(d,null,flowKey(shop.id,day),{category:'customer_flow',shop:shop.id,keeper:shop.keeper,day,minute:t,visits,...(shop.producer?{foodProducer:shop.producer.seller}:{})},'business');
 }
 
 // Settle consumers at the actual noon boundary, before afternoon events.
@@ -880,5 +904,6 @@ export function advanceCustomerFlow(d,engine,before,after){
         if(!shops.length)continue;
         const residents=walkIns(d,engine,t).sort((a,b)=>order('customer-order',a.id)-order('customer-order',b.id)||a.id.localeCompare(b.id)),gaps=new Map(),routes=new Map();
         for(const shop of shops)serve(d,engine,shop,t,residents,gaps,routes);
+        advanceHook('planHouseholdFood')?.(d,engine,t);
     }
 }

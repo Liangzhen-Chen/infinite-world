@@ -6,6 +6,7 @@ import {syncObligationClaims} from './transition.mjs';
 import attributeBalance from '../world/rules/tables/balance/attributes.json' with {type:'json'};
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {fraction,addAccrual} from './obligation-calendar.mjs';
+import {householdUtensils} from './household-crafts.mjs';
 
 registerAdvanceHook('townIncomeGenesis',initializeTownIncome);
 
@@ -103,10 +104,16 @@ export function initializeTownIncome(engine,document){
     townOpeningPerson:p.id,coins:p.coins??0,inventory:structuredClone(p.inventory??{})};
   const existing=homes.reduce((n,h)=>n+h.members.reduce((n,p)=>n+(s.npcs[p.id]?.coins??p.coins??0),0),0);
   // Public money is part of finite regional M, but is never private income.
+  // 家常规律: utensils are opening wealth inside the same total M, not extra money.
+  // A household that already holds a tool keeps it and is not issued another (same rule as TI1b capital).
+  const held=(h,item)=>h.members.some(p=>quantity(s.npcs[p.id]?.inventory?.[item]??p.inventory?.[item])>0);
+  const issued=new Map(homes.map(h=>[h.id,householdUtensils(engine.world).filter(u=>!held(h,u.item))])),utensilValue=[...issued.values()].reduce((n,list)=>n+list.reduce((m,u)=>m+u.quantity*u.unitPrice,0),0);
+  // With a registered M the utensils are paid out of it; otherwise they are opening stock of the world edition, recorded below, and no cash is touched.
+  const fromM=total_=>total_!==null&&total_!==undefined,utensilCash=()=>fromM(facts?.money?.value)?utensilValue:0;
   const reserved=s.settlements[sid].treasury??0,total=facts?.money?.value,weights=homes.map(h=>({id:h.id,weight:h.weight}));
-  if(total!==null&&total!==undefined&&total<existing+reserved)throw Error('Opening money is less than existing private and public cash');
+  if(total!==null&&total!==undefined&&total<existing+reserved+utensilCash())throw Error('Opening money is less than existing private and public cash');
   if(total>existing+reserved&&homes.some(h=>!h.weightKnown))throw Error('Opening money requires sourced weights for every household');
-  const distributed=total===null||total===undefined?Object.fromEntries(homes.map(h=>[h.id,0])):allocateTownAssets(total-existing-reserved,weights,profile.populationSeed??sid);
+  const distributed=total===null||total===undefined?Object.fromEntries(homes.map(h=>[h.id,0])):allocateTownAssets(total-existing-reserved-utensilCash(),weights,profile.populationSeed??sid);
   const credit=(h,item,n)=>{
    if(!n)return;
    const reserve=h.id;
@@ -127,6 +134,11 @@ export function initializeTownIncome(engine,document){
    purchases.set(lot.item,(purchases.get(lot.item)??0)+n);
    if(h.pending){const share=s.records[groups.get(h.group)].shares[h.id];share.openingInventory={...share.openingInventory,[lot.item]:(share.openingInventory?.[lot.item]??0)+n};}
   }
+  for(const h of homes)for(const u of issued.get(h.id)){
+   credit(h,u.item,u.quantity);
+   purchases.set(u.item,(purchases.get(u.item)??0)+u.quantity);
+   if(h.pending){const share=s.records[groups.get(h.group)].shares[h.id];share.openingInventory={...share.openingInventory,[u.item]:(share.openingInventory?.[u.item]??0)+u.quantity};}
+  }
   const inventory=[],grainTotals=new Map();
   for(const [item,purchased]of purchases){
    const existing=homes.reduce((n,h)=>n+h.members.reduce((m,p)=>m+quantity(p.inventory?.[item]),0),0);
@@ -141,7 +153,7 @@ export function initializeTownIncome(engine,document){
    for(const h of homes){credit(h,item,portions[h.id]);if(h.pending){const share=s.records[groups.get(h.group)].shares[h.id];share.openingInventory={...share.openingInventory,[item]:portions[h.id]};}}
    inventory.push({item,existing:existingStock,total});
   }
-  openings.push({settlement:sid,existingCoins:existing,reservedCoins:reserved,registeredMoney:total??null,distributedCoins:Object.values(distributed).reduce((n,v)=>n+v,0),inventory});
+  openings.push({settlement:sid,utensilValue,utensilCount:[...issued.values()].reduce((n,list)=>n+list.reduce((m,u)=>m+u.quantity,0),0),utensilSource:fromM(total)?'paid from registered M':'opening stock of the world edition',existingCoins:existing,reservedCoins:reserved,registeredMoney:total??null,distributedCoins:Object.values(distributed).reduce((n,v)=>n+v,0),inventory});
  }
  s.records['town-income:genesis']={category:'town_income',source:'src:genesis',minute:s.minute,openings};return doc;
 }

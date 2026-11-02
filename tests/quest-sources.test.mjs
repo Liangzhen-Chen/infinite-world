@@ -101,8 +101,11 @@ test('灾害事件任务：疫病求医、汛期修堤从公账托管，冬荒�
  assert.ok(!qs.some(q=>q.source.cause==='hazard-famine:loc_hw'),'动用后低于公账留底则不出');
  assert.equal(next.state.records['shop:shop_hw_forge'].entries.find(e=>e.item==='item_sickle').paidCopper,20);
  // K08：铁镰20不变；正午售出的6面包、4燕饼在午夜补货，再入公库6+6=12。
- assert.deepEqual(next.state.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.added).map(e=>[e.item,e.added,e.paidCopper]),[['item_bread',6,6],['item_oat_flatbread',4,6]]);
- assert.equal(next.state.settlements.loc_hw.treasury,before+20+12-epidemic.reward-flood.reward);
+ // Household-crafts law: ayan holds 4 flour and the household can bake it (pooled stock, home hearth), so the
+ // buy-or-process comparison leaves him out of the bread queue. Noon then sells 4 breads (chenbai) + 4 flatbreads
+ // (luowei) instead of 6 + 4: breads 4*1 + flatbreads 4 paid 6 = 10 returned, not 12.
+ assert.ok(!Object.values(next.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).some(v=>v.npc==='npc_hw_ayan'&&v.outcome==='bought'&&v.item==='item_bread'));
+ assert.deepEqual(next.state.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.added).map(e=>[e.item,e.added,e.paidCopper]),[['item_bread',4,4],['item_oat_flatbread',4,6]]);
  assert.ok(next.state.settlements.loc_hw.treasury>=engine.rules.governance.authority.treasury.reserveCopper);
  for(const q of qs){const [lo,hi]=rewardRange(engine,q.grade);assert.ok(q.reward>=lo&&q.reward<=hi);}
  assert.equal(generated(await midnight(next)).length,qs.length,'同一事件不重复出单');

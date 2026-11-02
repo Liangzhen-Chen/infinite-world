@@ -21,7 +21,7 @@ const PACKS={
   'bosses','boss-abilities','boss-cognition','boss-negotiation','creature-nature','environment','monster-society','tribal-awakening','sites','forest-water','water-cycle'/* RW-04 林水 */],
  magic:['magic','magic-air','magic-area','magic-care','magic-consent','magic-context','magic-growth','magic-light','magic-marks','magic-message','magic-mind-space','magic-movement','magic-object','magic-ritual','magic-status','magic-targeting','magic-water-earth','spell-research','summons'],
  character:['combat','revival','professions','career-metrics','hidden-passives','training','local-exams','learning','education','education-cohorts'],
-  npc:['dialogue','daily-actions','npc-autonomy','npc-planning-service','npc-schedule','npc-memory','npc-cognition','npc-relations','npc-intelligence','npc-growth','npc-obligations','npc-rumors','lies'],
+  npc:['dialogue','daily-actions','npc-autonomy','household-food','npc-planning-service','npc-schedule','npc-memory','npc-cognition','npc-relations','npc-intelligence','npc-growth','npc-obligations','npc-rumors','lies'],
  military:['military','war-diplomacy'],
  companion:['pets'],
  remote:['remote-generation','population','population-service'],
@@ -41,7 +41,7 @@ put(L0,'L0');put([...L1,'combat-state'],'L1');for(const [pack,names]of Object.en
 put(['water-volume','documents','population-health','finance-liabilities'],'L1');
 put(['action-constructor'],'L1');
 export const PACK_NAMES=Object.keys(PACKS);
-put(['currency','market','household-budget','household-subsistence','town-income','perception','norm-stack','place-layout','derived','derived-consumers'],'L1');
+put(['currency','market','household-budget','household-subsistence','town-income','household-crafts','perception','norm-stack','place-layout','derived','derived-consumers'],'L1');
 // W8D 队伍威慑（承运报价与遭遇/劫掠候选共读）。
 put(['deterrence'],'L1');
 // S5-F/F2 legal-tender pricing and goods escrow sit beside currency and money; W5 deterministic math and the claim-unit label are leaves every layer may read.
