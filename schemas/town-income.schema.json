@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "basis", "settlements"],
+  "properties": {
+    "version": {"const": 1},
+    "basis": {"type": "string", "minLength": 1},
+    "settlements": {"type": "array", "items": {"$ref": "#/$defs/settlement"}}
+  },
+  "$defs": {
+    "fact": {
+      "type": "object", "additionalProperties": false, "required": ["value", "basis"],
+      "properties": {"value": {"type": ["number", "null"], "minimum": 0}, "basis": {"type": "string", "minLength": 1}}
+    },
+    "integerFact": {"allOf": [{"$ref": "#/$defs/fact"}, {"properties": {"value": {"type": ["integer", "null"], "maximum": 9007199254740991}}}]},
+    "settlement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["settlement", "money", "assetClasses", "households", "land", "leases", "grain", "inventoryBatches", "tools", "operatingCapital", "unresolved"],
+      "properties": {
+        "settlement": {"type": "string", "minLength": 1},
+        "money": {"$ref": "#/$defs/integerFact"},
+        "assetClasses": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "weight"], "properties": {"id": {"type": "string", "minLength": 1}, "weight": {"$ref": "#/$defs/integerFact"}}}},
+        "households": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["household", "livelihood", "assetClass", "basis"], "properties": {"household": {"type": "string"}, "livelihood": {"type": "string"}, "assetClass": {"type": "string"}, "basis": {"type": "string", "minLength": 1}, "weight": {"$ref": "#/$defs/integerFact"}}}},
+        "land": {"$ref": "#/$defs/fact"}, "leases": {"$ref": "#/$defs/fact"},
+        "inventoryBatches": {"$ref": "#/$defs/fact"}, "tools": {"$ref": "#/$defs/fact"}, "operatingCapital": {"$ref": "#/$defs/fact"},
+        "grain": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["item", "area", "historicalYield", "seasonFactor", "seed", "eaten", "rentTax", "loss"], "properties": {"item": {"type": "string"}, "area": {"$ref": "#/$defs/fact"}, "historicalYield": {"$ref": "#/$defs/fact"}, "seasonFactor": {"$ref": "#/$defs/fact"}, "seed": {"$ref": "#/$defs/integerFact"}, "eaten": {"$ref": "#/$defs/integerFact"}, "rentTax": {"$ref": "#/$defs/integerFact"}, "loss": {"$ref": "#/$defs/integerFact"}}}},
+        "unresolved": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

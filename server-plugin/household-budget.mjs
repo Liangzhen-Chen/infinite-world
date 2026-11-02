@@ -17,6 +17,7 @@ import {physicalItem,transferItems} from './items.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {registerEntityResolver,registerHoldingObserver} from './holdings.mjs';
 import {entityTemplates} from './holding-sources.mjs';
+import {townGroupId,townGroupDefinitions,newTownGroup,townShareAmount,transferTownClaims,settleTownGroup,allocateTownAssets} from './town-income.mjs';
 declareLedgerWriter('household-budget');
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
@@ -24,10 +25,10 @@ const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
 // TOWNFOOD design §2: unexpanded residents own private, not public, assets.
 // The body's existing person/light day is their statistical body equivalent;
 // no new child/age discount or daily-income entitlement is introduced.
-export const statisticalFoodId=sid=>`food-demand:${sid}`;
+export const statisticalFoodId=townGroupId;
 export function statisticalFoodAccount(state,id){
  const row=state?.records?.[id];
- return row?.category==='money_account'&&row.statisticalPopulation===true&&id===statisticalFoodId(row.settlement)
+ return row?.category==='money_account'&&row.statisticalPopulation===true&&(id===statisticalFoodId(row.settlement)||id.startsWith(`${statisticalFoodId(row.settlement)}:`))
   &&row.owner===id&&row.account===purse(null,id)?row:null;
 }
 // Extend the existing canonical resolver, rather than manufacturing an NPC
@@ -56,13 +57,18 @@ export function observeStatisticalFoodAdmissions(){
  if(previous!==foodHoldingObserver)priorFoodObserver=previous;
 }
 observeStatisticalFoodAdmissions();
-export function statisticalFoodPopulation(engine,state,sid){
+export function statisticalFoodPopulation(engine,state,sid,group=null){
+ if(group)return group.beneficiaryUnits??0;
  const profile=engine.world.settlementProfiles?.find(p=>p.id===sid);
  if(profile?.registrationMode!=='seeded-on-demand')return 0;
  // A district roster is still statistics. Transfer only when a household
  // acquires a campaign actor (conversation, education, family or enlistment).
- const expanded=Object.values(state.family?.households??{}).filter(h=>h.settlement===sid&&h.statisticalFoodShare).reduce((n,h)=>n+h.statisticalFoodShare,0);
- return Math.max(0,profile.pendingPopulation-expanded);
+ const rows=statisticalFoodGroups(engine,state,sid);
+ if(rows.length)return rows.reduce((n,r)=>n+r.beneficiaryUnits,0);
+ return profile.pendingPopulation;
+}
+export function statisticalFoodGroups(engine,state,sid){
+ return townGroupDefinitions(engine,sid).map(g=>statisticalFoodAccount(state,g.id)).filter(Boolean);
 }
 export function ensureStatisticalFoodAccounts(d,engine,{sync=true}={}){
  // The canonical sources are also loaded through cyclic legacy adapters.
@@ -72,15 +78,11 @@ export function ensureStatisticalFoodAccounts(d,engine,{sync=true}={}){
  const out=[];
  for(const p of engine.world.settlementProfiles??[]){
   if(p.registrationMode!=='seeded-on-demand'||!d.get('state','settlements',p.id))continue;
-  const id=statisticalFoodId(p.id);let row=statisticalFoodAccount(d.get('state'),id);
-  if(!row){
-   const population=statisticalFoodPopulation(engine,d.get('state'),p.id);if(!population)continue;
-   row={category:'money_account',statisticalPopulation:true,owner:id,settlement:p.id,account:purse(null,id),purpose:'purse',
-    coins:0,inventory:{},mealDay:-1,demandSatiety:0,missingSatiety:0,consumedSatiety:0,
-    labor:{day:-1,minutes:0,earned:0,paid:0,wageUnits:0}};
-   d.set(['state','records',id],row);
+  for(const definition of townGroupDefinitions(engine,p.id)){
+   let row=statisticalFoodAccount(d.get('state'),definition.id);
+   if(!row){row=newTownGroup(engine,p.id,definition,d.get('state','minute'));d.set(['state','records',definition.id],row);}
+   out.push(row);
   }
-  out.push(row);
  }
  // Old saves may already contain an admitted roster person. The same transfer
  // also repairs that legitimate first-use case, without a second daily meal.
@@ -91,32 +93,66 @@ export function ensureStatisticalFoodAccounts(d,engine,{sync=true}={}){
 // exact same physical units; ordinary people retain their original paths.
 export function statisticalFoodEngine(engine,state){
  const scoped=Object.create(engine);
- scoped.bagPath=id=>statisticalFoodAccount(state,id)?['state','records',id,'inventory']:engine.bagPath(id);
- scoped.quantity=(d,id,item)=>statisticalFoodAccount(d.get('state'),id)
-  ?bagStock(d,engine,{point:'region.material',id,item,legacy:()=>qty(d.get('state','records',id,'inventory',item))})
+ const storage=(s,id)=>{
+  if(statisticalFoodAccount(s,id)||s.records?.[id]?.townOpeningHousehold)return id;
+  const key=`town-opening:${id}`;return !s.npcs?.[id]&&s.records?.[key]?.townOpeningPerson?key:null;
+ };
+ scoped.bagPath=id=>storage(state,id)?['state','records',storage(state,id),'inventory']:engine.bagPath(id);
+ scoped.quantity=(d,id,item)=>storage(d.get('state'),id)
+  ?bagStock(d,engine,{point:'region.material',id,item,legacy:()=>qty(d.get('state','records',storage(d.get('state'),id),'inventory',item))})
   :engine.quantity(d,id,item);
  return scoped;
 }
 export function materializeStatisticalFood(d,engine,owner){
  const state=d.get('state'),entity=state.created?.[owner]??engine.byId.get(owner);
- if(entity?.generated!=='population'||!state.npcs?.[owner])return;
+ if(!state.npcs?.[owner])return;
+ const personal=state.records?.[`town-opening:${owner}`];
+ if(personal?.townOpeningPerson&&(personal.coins||Object.keys(personal.inventory).length)){
+  // Same legal owner and the same purse/bag ledger accounts: only the
+  // unopened roster projection moves into its now-present campaign actor.
+  if(personal.coins)d.set([...engine.actorPath(owner),'coins'],(state.npcs[owner].coins??0)+personal.coins);
+  for(const [item,value]of Object.entries(personal.inventory)){
+   const old=d.get(...engine.bagPath(owner),item),inventory={...(typeof value==='object'?value:{}),...(typeof old==='object'?old:{}),quantity:qty(old)+qty(value)};
+   d.set([...engine.bagPath(owner),item],inventory);
+  }
+  d.set(['state','records',`town-opening:${owner}`],{...personal,coins:0,inventory:{}});
+ }
+ const opening=state.records?.[entity?.householdId];
+ if(opening?.members.includes(owner)){
+  const scoped=statisticalFoodEngine(engine,state),amount=opening.coins;
+  if(amount){moveCoins(d,{from:opening.account,to:purse(engine,owner),amount,writer:'household-budget',eventId:`materialize:${opening.townOpeningHousehold}`});d.set(['state','records',opening.owner,'coins'],0);d.set([...engine.actorPath(owner),'coins'],(d.get(...engine.actorPath(owner),'coins')??0)+amount);}
+  for(const [item,value]of Object.entries(opening.inventory))if(qty(value))transferItems(d,scoped,opening.owner,owner,item,qty(value));
+  d.set(['state','records',opening.owner,'members'],[]);
+ }
+ if(entity?.generated!=='population')return;
  const house=householdDefinition(engine,state,entity.householdId);
  if(!house||state.family?.households?.[house.id]?.statisticalFoodShare)return;
  ensureStatisticalFoodAccounts(d,engine,{sync:false});
- const id=statisticalFoodId(house.settlement),row=statisticalFoodAccount(d.get('state'),id);if(!row)return;
- const count=house.members.length,population=statisticalFoodPopulation(engine,d.get('state'),house.settlement);
+ const found=statisticalFoodGroups(engine,d.get('state'),house.settlement).find(r=>r.shares?.[house.id]);if(!found)return;
+ const id=found.owner,row=settleTownGroup(d,engine,id);
+ const count=house.members.length,population=row.beneficiaryUnits;
  if(count>population)throw Error('Statistical population share exceeds remaining population');
- const portion=quantity=>Number(BigInt(quantity)*BigInt(count)/BigInt(population));
- const coins=portion(row.coins),scoped=statisticalFoodEngine(engine,d.get('state'));
+ const portion=quantity=>townShareAmount(row,house.id,quantity,id);
+ const coins=townShareAmount(row,house.id,row.coins,id,'coins'),scoped=statisticalFoodEngine(engine,d.get('state'));
  if(coins){moveCoins(d,{from:row.account,to:purse(engine,owner),amount:coins,writer:'household-budget',eventId:`materialize:${house.id}`});
-  d.set(['state','records',id,'coins'],row.coins-coins);d.set([...engine.actorPath(owner),'coins'],(state.npcs[owner].coins??0)+coins);}
+  d.set(['state','records',id,'coins'],row.coins-coins);d.set([...engine.actorPath(owner),'coins'],(d.get(...engine.actorPath(owner),'coins')??0)+coins);}
  for(const [item,value]of Object.entries(row.inventory)){
-  const amount=portion(qty(value));if(amount)transferItems(d,scoped,id,owner,item,amount);
+  const amount=townShareAmount(row,house.id,qty(value),id,item);if(amount)transferItems(d,scoped,id,owner,item,amount);
  }
- d.set(['state','family','households',house.id],{...house,...state.family?.households?.[house.id],statisticalFoodShare:count});
+ const claims=transferTownClaims(d,engine,row,house.id,owner),earned=portion(row.labor.earned),paid=portion(row.labor.paid);
+ const used=allocateTownAssets(row.labor.minutes,Object.entries(row.shares).map(([id,s])=>({id,weight:s.workCapacity})),`${id}:labor`)[house.id]??0;
+ const shares={...row.shares};delete shares[house.id];
+ const work=row.shares[house.id].workCapacity;
+ d.set(['state','records',id,'shares'],shares);
+ d.set(['state','records',id,'beneficiaryUnits'],row.beneficiaryUnits-count);d.set(['state','records',id,'workCapacity'],row.workCapacity-work);
+ d.set(['state','records',id,'labor'],{...row.labor,minutes:row.labor.minutes-used,earned:row.labor.earned-earned,paid:row.labor.paid-paid,wageUnits:row.labor.wageUnits-portion(row.labor.wageUnits)});
+ d.set(['state','records',id,'indexBasis'],{earned:row.labor.earned-earned,paid:row.labor.paid-paid});
+ d.set(['state','family','households',house.id],{...house,...state.family?.households?.[house.id],statisticalFoodShare:count,
+  statisticalGroup:id,equity:{units:count,claims,settledAt:state.minute,earned,paid,incomeIndex:row.incomeIndex,labor:{day:row.labor.day,minutes:used,capacity:work}}});
+ settleTownGroup(d,engine,id);
 }
 registerLegacyStock('statistical-food',(engine,state,add)=>{
- for(const row of Object.values(state.records??{}))if(row.statisticalPopulation&&row.category==='money_account')
+ for(const row of Object.values(state.records??{}))if((row.statisticalPopulation||row.townOpeningHousehold||row.townOpeningPerson)&&row.category==='money_account')
   for(const [item,value]of Object.entries(row.inventory??{}))add(bag(engine,row.owner,item),qty(value));
 });
 export function statisticalFoodStocks(d,engine,row){
@@ -126,8 +162,9 @@ export function statisticalFoodStocks(d,engine,row){
   return {item,quantity:loose+selection.length,selection,gain:engine.byId.get(item)?.nutrition?.satiety??0};
  });
 }
-export function statisticalFoodNeed(engine,state,sid,d=null){
- const row=statisticalFoodAccount(state,statisticalFoodId(sid)),population=statisticalFoodPopulation(engine,state,sid);
+export function statisticalFoodNeed(engine,state,sid,d=null,group=null){
+ if(!group)return statisticalFoodGroups(engine,state,sid).reduce((n,row)=>n+statisticalFoodNeed(engine,state,sid,d,row),0);
+ const row=group,population=row.beneficiaryUnits;
  if(!population)return 0;
  let daily=population*bodyRule(engine,'satiety').drainPerHour.light*24;
  const read=d??{get:(...p)=>p[0]==='state'?p.slice(1).reduce((v,k)=>v?.[k],state):undefined};
@@ -146,7 +183,7 @@ const laborPreferenceRoll=compileRX('roll("reservation")'),laborNoiseRoll=compil
 const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id];
 const inventory=(s,id)=>{
  const a=actor(s,id),m=a?.materialized;
- return id==='player'?s.inventory??{}:m?.folded?s.records?.[`remote-stock:${m.settlement}`]?.members?.[id]?.inventory??{}:a?.inventory??{};
+ return id==='player'?s.inventory??{}:m?.folded?s.records?.[`remote-stock:${m.settlement}`]?.members?.[id]?.inventory??{}:a?.inventory??s.records?.[`town-opening:${id}`]?.inventory??{};
 };
 const unpaid=r=>Math.max(0,(r.amount??r.quantity??r.coins??0)-(r.paid??r.fulfilled??0));
 const debtor=r=>r.debtor??r.promisor,creditor=r=>r.creditor??r.promisee;

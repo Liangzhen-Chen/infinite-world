@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "basis": "TOWNINC 设计 §2/3：只登记可核对的期初事实；版本号不是经济参数。",
+  "settlements": [
+    {
+      "settlement": "loc_bs",
+      "money": {"value": null, "basis": "world/geo/settlements.json loc_bs.residentIds 对应 baseline.json 的100名现钱持有人合计2351文；meta/rules.json questSources.ledgers 的白石公库12000文亦先计入总盘并保留公有。额外区域钱量未登记，不从口粮倒推。"},
+      "assetClasses": [],
+      "households": [],
+      "land": {"value": null, "basis": "world/people/households.json 的居住tenure不是农地所有权或租约；白石未登记分户耕地面积。"},
+      "leases": {"value": null, "basis": "居住和职业不能证明耕地、铺面或经营资本的租约。尚无可核对的白石期初租约。"},
+      "grain": [{
+        "item": "item_oats",
+        "area": {"value": null, "basis": "白石镇未登记分户农地面积。"},
+        "historicalYield": {"value": null, "basis": "world/meta/rules.json agriculture 的未来生产率不能替代本镇上季实际单产。"},
+        "seasonFactor": {"value": null, "basis": "未登记上季年景。"},
+        "seed": {"value": null, "basis": "未登记上季留种。"},
+        "eaten": {"value": null, "basis": "未登记收获至开局的食用量。"},
+        "rentTax": {"value": null, "basis": "未登记上季实物租税实交量。"},
+        "loss": {"value": null, "basis": "未登记上季至开局的实损；未来损耗率不是历史实损。"}
+      }],
+      "inventoryBatches": {"value": null, "basis": "baseline.json 已有 inventory 保留并入总盘；没有上季入库日期、保质期和批次，不伪造批次。"},
+      "tools": {"value": null, "basis": "baseline.json 个人 inventory 中已有工具保留；职业、日程不证明额外工具产权。"},
+      "operatingCapital": {"value": null, "basis": "尚无分户资本或资产档登记，故不把职业名称当作资产权重。"},
+      "unresolved": ["money.value", "assetClasses（档位及权重依据）", "households（生计、资产档和权利人）", "land", "leases", "grain（上季实收和扣除）", "inventoryBatches", "tools", "operatingCapital"]
+    }
+  ]
+}

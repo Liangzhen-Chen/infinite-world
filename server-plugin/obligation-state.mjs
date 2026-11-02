@@ -66,7 +66,12 @@ export function obligationAccrued(row,minute){
         current={...current,...a,...a.accrual};
     }
     total=addAccrual(total,addAccrual(cumulative(until,current),cumulative(at,current),-1n));
-    return Number(total.numerator/total.denominator)-(row.accrualSettled??0);
+    let accrued=Number(total.numerator/total.denominator);
+    // I1: a statistical beneficiary keeps its part of future accrual. Apply
+    // complementary integer slices to the original curve, not two new loans.
+    const slices=[];for(let a=row.accrualAllocation;a;a=a.previous)slices.unshift(a);
+    for(const a of slices){const taken=Number(BigInt(accrued)*BigInt(a.units)/BigInt(a.total));accrued=a.taken?taken:accrued-taken;}
+    return accrued-(row.accrualSettled??0);
 }
 export function obligationView(state,id,minute=state.minute??0,options={}){
     const row=typeof id==='object'?id:obligationRow(state,id);if(!row)return null;

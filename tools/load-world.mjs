@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import Ajv from 'ajv';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {registerIntentMenu} from '../server-plugin/action-constructor.mjs';
 registerIntentMenu(worldActions);
@@ -43,6 +44,12 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     }
     const [residents,households,settlementProfiles,regions]=await Promise.all([optional('people/residents.json'),optional('people/households.json'),optional('geo/settlements.json'),optional('geo/regions.json')]);
     const careers=await optional('meta/careers.json');
+    const townIncome=await optional('economy/town-income.json');
+    if(!Array.isArray(townIncome)){
+        const schema=JSON.parse(await fs.readFile(new URL('../schemas/town-income.schema.json',import.meta.url),'utf8'));
+        const validate=new Ajv({allErrors:true,strict:false}).compile(schema);
+        if(!validate(townIncome))throw Error(`town-income: ${JSON.stringify(validate.errors)}`);
+    }
     const faith=await optional('lore/faith.json');if(!Array.isArray(faith))rules.faith=faith;
     const sovereignty=await optional('lore/sovereignty.json');if(!Array.isArray(sovereignty))rules.governance.sovereignty=sovereignty;
     const familyLaw=await optional('lore/family-law.json');if(!Array.isArray(familyLaw))rules.law.family=familyLaw;
@@ -73,6 +80,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
+    if(!Array.isArray(townIncome))world.townIncome=townIncome;
     const normErrors=validateNormBindings(world);if(normErrors.length)throw Error(normErrors.join('; '));
     if(autonomyCandidates.length)world.autonomy={candidates:autonomyCandidates};
     // Dialogue templates are pinned with the campaign world, including wording

@@ -15,6 +15,7 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // existing NPC conversation and message channels.
 import {digest,stateMemo,canonicalEqual} from './storage.mjs';
 import {householdMealPlan,householdMealWithSources,ensureStatisticalFoodAccounts,statisticalFoodEngine,statisticalFoodPopulation,statisticalFoodStocks,materializeStatisticalFood} from './household-budget.mjs';
+import {settleTownGroup} from './town-income.mjs';
 import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups} from './household-subsistence.mjs';
 import {placeSettlement} from './entity-view.mjs';
 import {toRational,fromRational} from './det-math.mjs';
@@ -73,7 +74,7 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
  for(const p of plans){
   const consumed=[];
   for(const row of p.rows){
-   engine.itemDelta(d,row.holder,row.item,-row.food,{flow:'sink:consume',purpose:'meal',writer:'npc-life',eventId:`household-meal:${day}:${p.household??p.owner}`},{selection:row.selection});
+   statisticalFoodEngine(engine,d.get('state')).itemDelta(d,row.holder,row.item,-row.food,{flow:'sink:consume',purpose:'meal',writer:'npc-life',eventId:`household-meal:${day}:${p.household??p.owner}`},{selection:row.selection});
    consumed.push({holder:row.holder,item:row.item,quantity:row.food});
   }
   const missing=p.needs.satiety>0?p.members.length*p.shortfall.satiety/p.needs.satiety:0;
@@ -89,8 +90,9 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
  for(const settlement of new Set(plans.map(p=>p.settlement??'unregistered')))d.set(['state','family','mealDays',settlement],day);
  // One receipt and watermark per settlement, independent of pending households.
  const read=n=>typeof n==='number'?n:fromRational(n);
- for(const account of ensureStatisticalFoodAccounts(d,engine)){
-  const population=statisticalFoodPopulation(engine,d.get('state'),account.settlement);
+ for(const initial of ensureStatisticalFoodAccounts(d,engine)){
+  const account=settleTownGroup(d,engine,initial.owner);
+  const population=statisticalFoodPopulation(engine,d.get('state'),account.settlement,account);
   if(account.mealDay>=day||!population)continue;
   const sid=account.settlement,ration=publicMeals.get(sid),share=ration?.mouths>0?Math.max(0,Math.min(1,ration.eaten/ration.mouths)):0;
   const base=bodyRule(engine,'satiety').drainPerHour.light*24,needs=population*base;
@@ -102,9 +104,10 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
    if(amount){scoped.itemDelta(d,account.owner,item,-amount,{flow:'sink:consume',purpose:'meal',writer:'npc-life',eventId:`statistical-meal:${sid}:${day}`},{selection:selection.slice(0,amount)});
     const eaten=Math.min(missing,amount*gain);consumed+=eaten;missing-=eaten;}
   }
-  d.set(['state','records',account.owner],{...d.get('state','records',account.owner),mealDay:day,
+  const receipt={mealDay:day,
    demandSatiety:saved(read(account.demandSatiety)+needs),missingSatiety:saved(read(account.missingSatiety)+missing),
-   consumedSatiety:saved(read(account.consumedSatiety)+consumed),shortfall:saved(missing)});
+   consumedSatiety:saved(read(account.consumedSatiety)+consumed),shortfall:saved(missing)};
+  for(const [key,value]of Object.entries(receipt))d.set(['state','records',account.owner,key],value);
   if(ration&&consumed>0)adjustments.set(sid,(adjustments.get(sid)??0)-consumed/base);
   else if(!ration&&missing>0)d.set(['state','settlements',sid,'unmetMeals'],(d.get('state','settlements',sid,'unmetMeals')??0)+Math.ceil(missing/base));
  }

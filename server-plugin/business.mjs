@@ -25,7 +25,7 @@ import {currentShops} from './shop.mjs';
 import {placeSettlement,personConstraint,personSimulation,personBusiness,personConstraints} from './entity-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {householdBudget,householdOptions,ensureStatisticalFoodAccounts,statisticalFoodAccount,statisticalFoodEngine,statisticalFoodId,statisticalFoodNeed,statisticalFoodPopulation} from './household-budget.mjs';
+import {householdBudget,householdOptions,ensureStatisticalFoodAccounts,statisticalFoodAccount,statisticalFoodEngine,statisticalFoodGroups,statisticalFoodNeed,statisticalFoodPopulation} from './household-budget.mjs';
 import {financeChange} from './finance-bank.mjs';
 import {BOOKED} from './money.mjs';
 import {stateReader,valuation} from './valuation.mjs';
@@ -766,8 +766,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
     const visits=[];
-    const statistical=statisticalFoodAccount(d.get('state'),statisticalFoodId(shop.settlement));
-    if(statistical&&statisticalFoodPopulation(engine,state,shop.settlement)>0&&statistical.coins>0){
+    for(const statistical of statisticalFoodGroups(engine,d.get('state'),shop.settlement).filter(row=>row.beneficiaryUnits>0&&row.coins>0)){
         const outbound=walkMinutes(engine,shop.settlement,shop.location,t,seed,routes),inbound=walkMinutes(engine,shop.location,shop.settlement,t,seed,routes);
         let at=t+outbound.minutes,travelPaid=false;
         const travelCost=outbound.coins+inbound.coins;
@@ -777,7 +776,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             const finishAt=Math.max(at,routes.get(`shop-free:${shop.id}`)??t)+serviceMinutes;
             if(finishAt>shop.until||finishAt+inbound.minutes>(day+1)*DAY)break;
             try{engine.assertNpcObligationAction(d,[shop.keeper],{start:finishAt-serviceMinutes,minutes:serviceMinutes,location:shop.location,kind:'trade'});}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
-            const needed=Math.ceil(statisticalFoodNeed(engine,d.get('state'),shop.settlement,d)/gain);
+            const needed=Math.ceil(statisticalFoodNeed(engine,d.get('state'),shop.settlement,d,d.get('state','records',statistical.owner))/gain);
             let quantity=Math.min(needed,saleableStock(d,engine,shop.keeper,item).available),quote=null;
             const supply=quoteSupply(d,engine,{item,location:shop.location,business:shop});
             const base=regionalTradeBase(d,engine,item,shop.location,t)*wildlifePriceFactor(engine,d.document,item,shop.location);

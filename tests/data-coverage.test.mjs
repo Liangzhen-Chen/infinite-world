@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {statisticalFoodId} from '../server-plugin/household-budget.mjs';
+import {statisticalFoodGroups} from '../server-plugin/household-budget.mjs';
 import {bodyRule} from '../server-plugin/primitives-body.mjs';
 import {fromRational} from '../server-plugin/det-math.mjs';
 import {applyEffects} from '../server-plugin/effects.mjs';
@@ -71,7 +71,9 @@ test('白石镇公账只记钱，不进每日口粮结算；公事委托从公�
  // TOWNFOOD §2: no public granary still means no public food flows. The
  // existing unmetMeals indicator now counts the private statistical cohort.
  // Keep the entire public-ledger assertion, including every old stock field.
- const cohort=doc.state.records[statisticalFoodId('loc_bs')],deficit=typeof cohort.missingSatiety==='number'?cohort.missingSatiety:fromRational(cohort.missingSatiety);
+ // I1 §3: all private groups contribute; retain the exact public-stock and
+ // total unmet-meal assertion instead of checking only the first group.
+ const deficit=statisticalFoodGroups(engine,doc.state,'loc_bs').reduce((n,cohort)=>n+(typeof cohort.missingSatiety==='number'?cohort.missingSatiety:fromRational(cohort.missingSatiety)),0);
  const missing=Math.ceil(deficit/(bodyRule(engine,'satiety').drainPerHour.light*24));
  assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)+restocked(doc),unmetMeals:(before.unmetMeals??0)+missing});
  doc.state.records['hazard-flood:loc_bs_hebu']={category:'hazard_flood',location:'loc_bs_hebu',since:doc.state.minute,until:doc.state.minute+1440*4,soaked:[],sourceEvent:'test-flood'};

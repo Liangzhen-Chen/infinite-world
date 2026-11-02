@@ -30,6 +30,7 @@ import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {householdLaborBudget,ensureStatisticalFoodAccounts,statisticalFoodAccount,statisticalFoodEngine,statisticalFoodPopulation} from './household-budget.mjs';
+import {statisticalLaborMinutes} from './town-income.mjs';
 import {householdWorkTime,agriculturalWorkforce} from './npc-state.mjs';
 import {creditBreachEvent,publishTransitionEvent} from './world-events.mjs';
 declareHoldingWriter('labor-market',{kinds:['employed_by']});
@@ -280,20 +281,18 @@ export function settleEmploymentPay(d,e,row,at,minutes,{earnedOverride}={}){
 // No occupation is an income source and no employer treasury is replenished.
 function advanceStatisticalLabor(d,e,before,after){
  if(Math.floor(before/DAY)===Math.floor(after/DAY))return;
- const offers=laborOffers(e,d.get('state'),after);
  for(const account of ensureStatisticalFoodAccounts(d,e)){
   const day=Math.floor(after/DAY)-1,population=statisticalFoodPopulation(e,d.get('state'),account.settlement);
   if(account.labor.day>=day||!population)continue;
-  const profile=e.world.settlementProfiles.find(p=>p.id===account.settlement);
-  let workers=Object.entries(profile.pendingAgeStructure??{}).filter(([k])=>k!=='children').reduce((n,[,v])=>n+v,0);
-  for(const house of Object.values(d.get('state','family','households')??{}))if(house.statisticalFoodShare&&house.settlement===account.settlement)
-   for(const id of house.members)if((d.get('state','created',id)?.age??0)>=e.rules.npcLife.adultAge)workers--;
+  let workers=statisticalLaborMinutes(e,d.get('state'),account)/480;
   let remaining=Math.max(0,Math.min(workers,population))*480;
   const scoped=statisticalFoodEngine(e,d.get('state'));
-  for(const offer of offers){
+  // Groups share the existing finite offers. A prior group's delivery may
+  // already have filled the shelf; do not reuse its stale vacancy quantity.
+  for(const offer of laborOffers(e,d.get('state'),after)){
    if(remaining<=0)break;
    if(!offer.recipe||placeSettlement(e,d.get('state'),offer.location).value!==account.settlement)continue;
-   const row={...offer,id:`statistical-work:${account.settlement}:${offer.id}:${after}`,worker:account.owner,wage:offer.wage,escrow:0};
+   const row={...offer,id:`statistical-work:${account.owner}:${offer.id}:${after}`,worker:account.owner,wage:offer.wage,escrow:0};
    const maximum=Math.floor(offer.quantity/(e.byId.get(offer.recipe)?.output?.quantity??1));
    const plan=employmentProductionPlan(d,scoped,row,{minutes:Math.min(480,remaining),maximum});
    if(plan.reason||!plan.batches)continue;

@@ -9,6 +9,14 @@ import {isDeepStrictEqual} from 'node:util';
 import {advanceLayerPlan} from './advance-layers.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {materializeStatisticalFood,observeStatisticalFoodAdmissions} from './household-budget.mjs';
+import {registerTownPopulationHomes} from './town-income.mjs';
+
+registerTownPopulationHomes((engine,sid)=>{
+ const profile=engine.world.settlementProfiles?.find(p=>p.id===sid);
+ if(profile?.registrationMode!=='seeded-on-demand'||!profile.pendingPopulation)return [];
+ const template=populationTemplate(engine.world,sid);
+ return template?populationPlan(template,populationBasis(engine.world,sid)).households:[];
+});
 declareHoldingWriter('population',{kinds:['owns','resides','resident_of','devotee_of','certified']});
 
 // On-demand population for seeded settlements and lairs. The roster of a

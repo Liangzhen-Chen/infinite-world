@@ -287,7 +287,10 @@ export class WorldEngine {
                 buildings:{bld_hw_qingdeng:{owner:'npc_hw_linsui',condition:70}},projects:{},effects:{},obligations:{},quests:{},quotes:{},created:{},weather:{},turns:{},checks:{},learning:{},recipes:{}}};
         return prepare?initializeR1(document,this.world):document;
     }
-    createCharacter(legacy,options,seed){return initializeR1(openSettlementLedgers(this,initializeAgriculture(this,createCharacter.call(this,legacy,options,seed))),this.world);}
+    createCharacter(legacy,options,seed){
+        const document=openSettlementLedgers(this,initializeAgriculture(this,createCharacter.call(this,legacy,options,seed)));
+        return initializeR1(advanceHook('townIncomeGenesis')?.(this,document)??document,this.world);
+    }
     calendar(minute) {
         if(this.calendarId)return calendarDateAt(this,minute,this.calendarId);
         number(minute,0,Number.MAX_SAFE_INTEGER,'分钟');
