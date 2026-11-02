@@ -19,7 +19,9 @@ const stack=quantity=>({quantity,quality:'木',durability:100,weight:.2});
 function fixture(){
  const world=structuredClone(original);
  for(const n of world.npcs){n.tier='fixture';delete n.schedule;}
- for(const key of ['weather','settlementTrade','worldClock','hazardClock','factionClock'])delete world.rules[key];
+ // Like the removed NPC schedules, household errands must not displace the
+ // explicitly placed speakers in these isolated action-cost anchors.
+ for(const key of ['weather','settlementTrade','worldClock','hazardClock','factionClock','householdSubsistence'])delete world.rules[key];
  for(const f of world.factions)delete f.clock;
  const seller=world.npcs.find(n=>n.id===SELLER);
  seller.schedule={default:[{start:0,end:1440,location:INN,activity:'营业',services:['trade']}]};

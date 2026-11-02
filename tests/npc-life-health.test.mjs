@@ -20,8 +20,9 @@ const item=source.items.find(i=>!i.nutrition).id,elderAge=npcAgeAt(new WorldEngi
 
 // Only people of the elder's age (72 that winter) fall ill in these fixtures, always gravely; the real
 // parameters are checked separately.
-function fixture({fatality=0,graveDays=[5,5],health={}}={}){
+function fixture({fatality=0,graveDays=[5,5],health={},subsistence=true}={}){
  const world=structuredClone(source),find=id=>world.npcs.find(n=>n.id===id),h=world.rules.npcLife.health;
+ if(!subsistence)delete world.rules.householdSubsistence;
  world.rules.npcLife.health={...h,bands:[{fromAge:0,illnessPerYear:0,graveShare:0,suddenDeathPerYear:0},{fromAge:elderAge,illnessPerYear:360,graveShare:1,suddenDeathPerYear:0},{fromAge:elderAge+1,illnessPerYear:0,graveShare:0,suddenDeathPerYear:0}],
   graveDays,graveFatality:{cared:fatality,alone:fatality},...health};
  for(const id of [elder,other,friend])find(id).schedule=day(home);
@@ -132,7 +133,10 @@ test('病故后约定终止不追责，遗产整体交给同户成年继承人�
 });
 
 test('病讯和死讯只经亲历、同户在场与日常交谈传开，玩家和远方生人不会凭空得知',async()=>{
- const s=fixture({fatality:1});
+ // This provenance scene pins the friend at home for daily conversations.
+ // Isolate errands only here; cross-year/reload and the formal whole-world
+ // quarter below keep real subsistence, illness, care and every assertion.
+ const s=fixture({fatality:1,subsistence:false});
  await until(s,firstNight+60,'a');
  const ill=npcIllness(s.doc.state,elder);
  assert.equal(knows(s,elder,ill.id).sourceType,'亲历');

@@ -14,8 +14,9 @@ const house='house_hw_20',home=source.households.find(h=>h.id===house).homeLocat
 const day=(location,activity='闲坐')=>({default:[{start:0,end:1440,location,activity,services:[]}]});
 
 // Quick family rules on a cloned world; the real parameters are checked separately.
-function fixture({rules={},ties=70}={}){
+function fixture({rules={},ties=70,subsistence=true}={}){
  const world=structuredClone(source),find=id=>world.npcs.find(n=>n.id===id);
+ if(!subsistence)delete world.rules.householdSubsistence;
  const life=world.rules.npcLife;
  world.rules.npcLife={...life,courtship:{...life.courtship,days:2,marriageChancePerDay:1},birth:{...life.birth,conceptionChancePerDay:1,gestationDays:3},...rules};
  for(const id of [man,woman,sister,friend,minor])find(id).schedule=day(home);
@@ -105,7 +106,9 @@ test('未成年人一律不进入恋爱或婚姻流程，关系账也拒绝写�
 });
 
 test('婚讯与出生只经亲历、同户在场与人物日常交谈传开，远方生人和玩家不会凭空得知',async()=>{
- const s=fixture();await wait(s,8*DAY);
+ // This case fixes co-presence to test the news/privacy boundary. The strict
+ // long/short/reload case below keeps the complete subsistence law active.
+ const s=fixture({subsistence:false});await wait(s,8*DAY);
  const [b]=ours(family(s).births),[m]=marriages(s);
  assert.equal(knows(s,sister,b.id)?.sourceType,'目击');
  assert.equal(knows(s,away,b.id),undefined,'同户但不在场者当时不知');

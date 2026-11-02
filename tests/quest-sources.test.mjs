@@ -33,7 +33,7 @@ const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,x)=>n+
 
 test('生成器登记：三种来源都以生成器登记，推进注册表在势力时钟之后跑',()=>{
  // U11 族群觉醒以第四个生成器登记，排在世界事件与效果表之间。
- assert.deepEqual(questGenerators().map(g=>g.id),['npc_needs','world_events','tribal_awakening','village_wildlife','effect_table']);
+ assert.deepEqual(questGenerators().map(g=>g.id),['npc_needs','world_events','tribal_awakening','village_wildlife','effect_table']);
  assert.throws(()=>registerQuestGenerator({id:'npc_needs',order:1}),/重复/);
  const order=id=>advanceRegistry.find(s=>s.id===id).order;
  assert.ok(order('quest_sources')>order('faction_clock')&&order('quest_sources')>order('hazard_clock'));
@@ -169,30 +169,39 @@ test('过期没人接的任务撤下：人物托管退回本人，公账托管�
  // brings two breads from Ayan, and on day9 Ayan brings two from Duanyan.
  // Thus day9 shelf=4+2-4+2=4; day10 shelf=4+2-6+2=2. These are
  // person-to-person transfers, distinct from the shop's local imports above.
+ // K16: Ayan now fetches the household's water at the inn (1005-1020), so
+ // thirst no longer drinks Linsui's 4 milk; it stays a retained food share and
+ // every D above gains 4 (d1..11: 18,28,36,42,50,56,60,60,62,60,54; S unchanged).
+ // Wholesale bread d2..6: floor(.286202*D)=8,10,12,14,16; d7:floor(120*ln(49/43))=15;
+ // d11:floor(108*ln(48/42))=14. Flatbread d1..6: floor(12*max(.5,D/51))=6,6,8,9,11,13;
+ // d10:floor(12*60/49)=14. Bread d8/d9/d10: floor(4*60/53,4*62/51,8*60/45)=4,4,10.
  const innEntries=done.state.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.added);
  assert.deepEqual(innEntries.map(e=>[e.day,e.item,e.added,e.paidCopper]),[
-  [1,'item_bread',6,6],[1,'item_oat_flatbread',4,6],[2,'item_bread',6,6],[2,'item_oat_flatbread',4,6],
-  [3,'item_bread',6,9],[3,'item_oat_flatbread',4,7],[4,'item_bread',6,10],[4,'item_oat_flatbread',4,8],
-  [5,'item_bread',6,13],[5,'item_oat_flatbread',4,10],[6,'item_bread',6,14],[6,'item_oat_flatbread',4,12],
-  [7,'item_bread',6,14],[8,'item_bread',2,4],[9,'item_bread',2,4],
-  [10,'item_bread',4,9],[10,'item_oat_flatbread',4,13],[11,'item_bread',6,13]
+  [1,'item_bread',6,6],[1,'item_oat_flatbread',4,6],[2,'item_bread',6,8],[2,'item_oat_flatbread',4,6],
+  [3,'item_bread',6,10],[3,'item_oat_flatbread',4,8],[4,'item_bread',6,12],[4,'item_oat_flatbread',4,9],
+  [5,'item_bread',6,14],[5,'item_oat_flatbread',4,11],[6,'item_bread',6,16],[6,'item_oat_flatbread',4,13],
+  [7,'item_bread',6,15],[8,'item_bread',2,4],[9,'item_bread',2,4],
+  [10,'item_bread',4,10],[10,'item_oat_flatbread',4,14],[11,'item_bread',6,14]
  ]);
- assert.equal(done.state.settlements.loc_hw.treasury,treasury+40+164);
+ // Local imports paid to the source purse: 6+6+8+6+10+8+12+9+14+11+16+13+15+4+4+10+14+14=180.
+ assert.equal(done.state.settlements.loc_hw.treasury,treasury+40+180);
  const reposts=generated(done).filter(q=>q.publisher===owner&&q.id!==npcQuest.id&&['公开','进行中'].includes(q.status));
  const sales=Object.values(done.state.records).filter(r=>r.category==='customer_flow'&&r.keeper===owner).flatMap(r=>r.visits).reduce((n,v)=>n+(v.paid??0),0);
- // Daily sales:18+12+13+15+19+22+12+4+8+15+13=151.
- // Restock:12+12+16+18+23+26+14+4+4+22+13=164.
- assert.equal(sales,151);assert.equal(innEntries.reduce((n,e)=>n+e.paidCopper,0),164);
+ // Pre-K16 daily sales:18+12+13+15+19+22+12+4+8+15+13=151.
+ // K16: the same 32 visits, items and quantities; only retail bills after the
+ // first-day 18 rise with D+4 (floor(base*q*max(.5,D/S))): 151 -> 166.
+ // Restock:12+14+18+21+25+29+15+4+4+24+14=180.
+ assert.equal(sales,166);assert.equal(innEntries.reduce((n,e)=>n+e.paidCopper,0),180);
  const counter=Object.values(done.state.records).find(r=>r.category==='money_account'&&r.owner===owner&&r.purpose==='counter');
  // First-day18 enters the purse before the counter opens; subsequent sales
- // bring 151-18=133 to the counter. Two real hired restock shifts also pay
- // goods4+5 and wages ceil(30*12/480)+ceil(30*22/480)=1+2: total12.
- // Counter funding34 + sales133 - restock164 - wages3=0; the purse
- // separately pays the goods9. Total personal funding/spending is43.
+ // bring 166-18=148 to the counter. Two real hired restock shifts also pay
+ // goods5+5 (K16: Wu's day-8 quote also reads D=60, 4 -> 5) and wages ceil(30*12/480)+ceil(30*22/480)=1+2: total13.
+ // Counter funding35 + sales148 - restock180 - wages3=0; the purse
+ // separately pays the goods10. Total personal funding/spending is45.
  const hired=Object.values(done.state.records).filter(r=>r.kind==='workshop'&&r.owner===owner&&r.demandSource==='shop:shop_hw_qingdeng:item_bread');
- assert.deepEqual(hired.map(r=>[r.worker,r.produced,r.workedMinutes,r.paid,r.shifts[0].production.cost]),[['npc_hw_wushuo',2,12,1,4],[witness,2,22,2,5]]);
+ assert.deepEqual(hired.map(r=>[r.worker,r.produced,r.workedMinutes,r.paid,r.shifts[0].production.cost]),[['npc_hw_wushuo',2,12,1,5],[witness,2,22,2,5]]);
  assert.equal(counter.coins,0);
- assert.equal(done.state.npcs[owner].coins,coins+151-164-12-reposts.reduce((n,q)=>n+q.escrow,0));
+ assert.equal(done.state.npcs[owner].coins,coins+166-180-13-reposts.reduce((n,q)=>n+q.escrow,0));
  assert.deepEqual(reconcile(engine,done),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 

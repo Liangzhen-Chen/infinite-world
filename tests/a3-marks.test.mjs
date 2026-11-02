@@ -14,6 +14,9 @@ const world=await loadWorld(),seed=await json('tests/fixtures/legacy/seed.json')
 const rules=await json('world/rules/tables/open-actions.json'),tagging=await json('world/rules/open-tagging.json'),reactions=await json('world/rules/open-reactions.json');
 function setup(){
  const engine=new WorldEngine(structuredClone(world));
+ // The fixture places a particular awake observer beside the author. Keep
+ // this reaction test independent of the new household errand timetable.
+ delete engine.rules.householdSubsistence;
  Object.assign(engine.world,{openActionRules:structuredClone(rules),openTagging:structuredClone(tagging),openReactions:structuredClone(reactions)});
  const document=withLedger(engine,engine.createCharacter(seed,{},'a3-mark')).document;
  const observer=Object.values(document.state.npcs).find(n=>n.location&&n.status!=='死亡'&&n.status!=='濒死'&&!n.scheduleTravel&&!n.cognitionTravel);

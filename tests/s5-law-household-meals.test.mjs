@@ -16,10 +16,18 @@ const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixture
 const A='npc_hw_luowei',B='npc_hw_duanyan',seller='npc_hw_linsui',item='item_bread',home='bld_hw_qingdeng',DAY=1440;
 function fixture({publicFood=0,granaryEnabled=false,bread=2,shared=true,market=false,drainMultiplier=1,guest=false,population=2}={}){
  const w=structuredClone(world),members=[A,B];
+ // This fixture isolates ration/private-bag arithmetic with no external
+ // commons or water service. K16 source/finite-stock tests cover those paths.
+ delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
- w.households=w.households.map(h=>({...h,members:h.members.filter(id=>![...members,seller].includes(id))})).filter(h=>h.members.length);
+ // The fixture contains only the two examined mouths (and optional seller).
+ // K16 also feeds registered roster-only homes: retaining unrelated catalog
+ // households would silently add their mouths to this two-person hand anchor.
+ w.households=[];
  for(const [i,group]of (shared?[members]:members.map(id=>[id])).entries())w.households.push({id:`meal-house-${i}`,members:group,settlement:'loc_hw',homeLocation:home});
- if(!guest)w.households.push({id:'meal-seller',members:[seller],settlement:'loc_hw',homeLocation:home});
+ // The seller exists in campaign state only in the market/guest editions.
+ // An absent seller must not add a third registered mouth to public ration math.
+ if(market&&!guest)w.households.push({id:'meal-seller',members:[seller],settlement:'loc_hw',homeLocation:home});
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
  w.items.find(i=>i.id===item).nutrition={satiety:30};
  if(drainMultiplier!==1)w.derived.modifiers.push({id:'meal-drain-premise',pack:'core',target:'body:drain',stage:'mul',value:drainMultiplier});

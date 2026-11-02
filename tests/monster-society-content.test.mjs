@@ -12,6 +12,7 @@ import {planBossMigration} from '../server-plugin/boss-migration.mjs';
 import {planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {validateMonsterSocieties} from '../server-plugin/monster-society.mjs';
 import {populationTemplate,populationBasis} from '../server-plugin/population.mjs';
+import {householdMealPlan} from '../server-plugin/household-budget.mjs';
 import {buildBatch,ids,people,settlements,places,households} from '../world/design/monster-society-1.mjs';
 import {FILES,withoutMonsterSociety} from '../tools/publish-monster-society.mjs';
 
@@ -29,12 +30,27 @@ function fixture(world=formal){
  return{world,engine,document,run};
 }
 // Put the player and every named body where their schedule places them at `minute`.
+function provisionDutyHouseholds(f,actors){
+ // Security/council cases require adults on their posted duty, rather than
+ // absent to fill an unprovisioned household. Supply exactly one real day
+ // of the existing ration before dawn planning (e.g.5*60/30=10 portions).
+ // No availability, access, detection or governance assertion is changed.
+ const seen=new Set(),food=f.engine.byId.get('item_ration').nutrition.satiety;
+ for(const id of actors){const plan=householdMealPlan(f.engine.primitiveDraft(f.document),f.engine,id),key=plan.household?.id??plan.household??id;if(seen.has(key))continue;seen.add(key);const old=f.document.state.npcs[id].inventory.item_ration;f.document.state.npcs[id].inventory.item_ration={quantity:Math.max(typeof old==='number'?old:old?.quantity??0,Math.ceil(plan.needs.satiety/food))};}
+}
 async function at(f,doc,location,minute){
  const d=structuredClone(doc);d.state.minute=minute;
  for(const n of f.world.npcs.filter(n=>n.society)){const slot=n.schedule.default.find(s=>s.start<=minute%DAY&&minute%DAY<s.end);Object.assign(d.state.npcs[n.id],{location:slot.location,activity:slot.activity});}
  const parent=f.world.locations.find(l=>l.id===location).parent;d.state.location=parent&&f.world.locations.some(l=>l.id===parent)?parent:location;
  if(d.state.location===location)return d;
- return(await f.run(d,'world_move',{destination:location},`go_${location}_${minute}`)).document;
+ const arrived=(await f.run(d,'world_move',{destination:location},`go_${location}_${minute}`)).document;
+ // This helper installs an authored presence snapshot, not a subsistence
+ // journey. Finish the player's walk first, then install those bodies and
+ // its local watermark together, so a later read cannot replay old travel
+ // over the snapshot. Production travel and all access assertions stay real.
+ for(const n of f.world.npcs.filter(n=>n.society)){const slot=n.schedule.default.find(s=>s.start<=arrived.state.minute%DAY&&arrived.state.minute%DAY<s.end);Object.assign(arrived.state.npcs[n.id],{location:slot.location,activity:slot.activity});delete arrived.state.npcs[n.id].scheduleTravel;}
+ arrived.state.scheduler??={};arrived.state.scheduler.localUntil=arrived.state.minute;delete arrived.state.scheduler.subsistence;
+ return arrived;
 }
 
 test('正式目录已发布本批，且与设计骨架逐条一致；发布构建零错',()=>{
@@ -149,17 +165,19 @@ test('潜入：仓窟与收夹洞登记为可潜入，成功后能读到线索�
   assert.equal(out.result.covert,true);
   const read=await f.run(out.document,'world_field',{operation:'site_investigate',target:clue},'read');assert.equal(read.result.discovered,true);
  }
- const f=fixture();let d=await at(f,f.document,tj.store,2*60);d.state.player.attributes.敏捷=1;
+ const f=fixture();provisionDutyHouseholds(f,[P.yantai]);let d=await at(f,f.document,tj.store,2*60);d.state.player.attributes.敏捷=1;
  let out;for(const id of ['a','b','c','d']){out=await f.run(d,'world_field',{operation:'site_infiltrate'},`loud_${id}`);if(out.result.detected)break;}
  assert.equal(out.result.detected,true);assert.equal(out.result.watcher,P.yantai);
  assert.equal(out.document.state.records[`stance:${TJ}:player`].stance,'敌对');
 });
 
 test('内部立场可在议事处提出并由首领闭合',async()=>{
- const f=fixture();let d=await at(f,f.document,tj.hearth,30);
+ const f=fixture();provisionDutyHouseholds(f,[P.yanzhen,P.dingying,P.liya]);let d=await at(f,f.document,tj.hearth,30);
  const grant=await f.run(d,'world_promise',{operation:'grant_access',promisor:P.yanzhen,location:tj.council,content:'进议事窟旁听夜议',minutes:60},'grant');
  d=(await f.run(grant.document,'world_move',{destination:tj.council,authorization:grant.result.authorization},'enter_council')).document;
  d.state.minute=70;for(const id of [P.yanzhen,P.dingying,P.liya])Object.assign(d.state.npcs[id],{location:tj.council,activity:'议事窟夜议'});
+ // Manually seating the meeting also installs its settled local snapshot.
+ d.state.scheduler??={};d.state.scheduler.localUntil=70;delete d.state.scheduler.subsistence;
  const gov=(args,id)=>f.run(d,'world_settlement',{settlement:TJ,...args},id);
  d=(await gov({operation:'governance_propose',issue:'grain_pact'},'propose')).document;
  const key=`society_motion:${TJ}:grain_pact`;

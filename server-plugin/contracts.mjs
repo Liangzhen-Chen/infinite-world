@@ -18,6 +18,7 @@ import {contractTerms,partyInProcedure,snapshotContractTerms} from './contract-s
 import {debtDue,currentGrace} from './obligation-state.mjs';
 import {assertSettlementPresent} from './obligation-presence.mjs';
 import {adoptLegacyObligation,settleObligation} from './obligation-runtime.mjs';
+import {advanceHook} from './advance-hooks.mjs';
 declareHoldingWriter('contracts',{kinds:['employed_by','leases','lodges','operates']});
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
 import {canonical,recordEntriesWhere}from'./storage.mjs';
@@ -207,6 +208,7 @@ export function advanceContracts(d,engine,minute,recordIds){
         if(row.category==='debt'&&!partyInProcedure(d.get('state'),row.debtor)&&row.status==='待偿还'&&debtDue(row,minute,{allowance}).overdue){
             const due=debtDue(row,minute,{allowance});
             holdingSet(d,null,['state','records',id],{...row,status:'逾期',overdueAt:due.deadline,graceBasis:due.grace},'contracts');
+            advanceHook('recordNpcDebtOverdue')?.(d,engine,id,d.get('state','records',id));
             if(row.debtor==='player'&&d.get('state','npcs',row.creditor)&&engine.byId.get(row.creditor)?.tier!=='full')engine.relation(d,{npc:row.creditor,eventType:'违约',sourceEvent:id},id);
             d.say(`欠${engine.byId.get(row.creditor)?.name??'商家'}的${row.amount-row.paid}${claimUnit(row)}已到期，尚未偿还`);
         }

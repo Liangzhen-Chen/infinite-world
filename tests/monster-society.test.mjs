@@ -11,6 +11,7 @@ import {planBossMigration}from'../server-plugin/boss-migration.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {readBossCognition}from'../server-plugin/boss-cognition.mjs';
 import {validateSites}from'../server-plugin/sites.mjs';
+import {quoteSupply}from'../server-plugin/market.mjs';
 
 const baseline=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const person='npc_hw_linsui',market='site_ms_market',council='site_ms_council',home='bld_hw_qingdeng',bossId='boss_ms_leader',lairKey='lair:lair_ms_market';
@@ -19,7 +20,7 @@ function fixture(){
  Object.assign(boss,{id:bossId,name:'测试非人首领',aliases:[],actor:person,lair:market,minions:[],cognition:{goal:'avoid_conflict',territory:[market]},negotiation:{stock:[{item:'item_ration',quantity:100}],accepts:['item_ration']},
   residence:{id:'lair_ms_market',name:'测试社会首领驻地',location:market}});
  world.bosses.push(boss);
- // S5-02: household120 satiety retains four existing stew portions, leaving both examined rations for trade.
+ // S5-02: the existing stew covers household retention, leaving both examined rations for trade.
  Object.assign(npc,{species:boss.monster,society:'loc_hw',settlement:'loc_hw',location:market,coins:37,inventory:{item_ration:2,item_mutton_turnip_stew:4}});
  const slots=[{start:0,end:720,location:market,activity:'摊位接待',services:['trade']},{start:720,end:1440,location:home,activity:'睡眠',services:[]}];
  npc.schedule={default:slots,market:slots,rest:slots,restDays:[],seasonal:{}};
@@ -64,9 +65,12 @@ test('进入公共住区后看到按作息接待的成员，同一库存用于�
  const talk=await f.run(d,'world_remember',{subject:'player',source:person,key:f.rumor.id,rumor:f.rumor.id,content:f.rumor.claim},'talk');d=talk.document;
  assert.equal(talk.result.source,person);
  const coins=d.state.npcs[person].coins,playerCoins=d.state.player.coins;
+ const supply=quoteSupply(f.engine.primitiveDraft(d),f.engine.scoped(d),{item:'item_ration',location:d.state.location});
+ assert.equal(supply.supply,4);assert.equal(supply.demand,14);
  const trade=await f.run(d,'world_trade',{seller:bossId,item:'item_ration',quantity:1},'buy');d=trade.document;
- // E6排除私人行囊后公开S2、货架需求D14；clamp(14/2)=3，基准3×3×首笔其他因子1=9铜。
- assert.equal(trade.result.cost,9);
+ // K16 r3 当前留存投影：口粮2−留存0，加炖菜4−留存2，公开S=4。
+ // D14/S4=3.5，经地区上限3截断；基价3×3=9铜，其他首笔因子均1。
+ assert.equal(trade.result.pricing.scarcity,3);assert.equal(trade.result.cost,9);
  assert.equal(d.state.npcs[person].inventory.item_ration.quantity,1);assert.ok(d.state.npcs[person].coins>coins);assert.ok(d.state.player.coins<playerCoins);
  const agreement=await negotiate(f,d,{offer:[{item:'item_ration',quantity:1}]});d=agreement.document;
  assert.equal(agreement.result.accepted,true);assert.equal(f.engine.quantity({get:(...p)=>p.reduce((v,k)=>v?.[k],d)},person,'item_ration'),2);

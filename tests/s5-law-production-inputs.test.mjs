@@ -14,6 +14,10 @@ import {laborOffers} from '../server-plugin/labor-market.mjs';
 const settlement='loc_hw',field='loc_hw_fields',key='agriculture:loc_hw',farmKey=`private-farm:${field}`;
 function setup({population=2,seedStock=100,workers=1,tools=2}={}){
  const w=structuredClone(world);delete w.rules.weather;
+ // These hand anchors enumerate care, market travel, commuting and paid
+ // attendance against the full 480-minute day. Isolate those debits from
+ // daily source errands; K16 tests assert the latter consume shared work.
+ delete w.rules.householdSubsistence;
  const p=w.rules.agriculture.settlements.find(r=>r.settlement===settlement);
  Object.assign(p,{areaUnits:100,initialSeed:seedStock,workerFraction:1,farmWorkers:workers,processingWorkers:0,freshWorkers:0,areaPerWorkerDay:20,toolCapacity:tools,toolCondition:100});
  Object.assign(w.rules.agriculture.crop,{seedPerHa:4,areaUnitsPerHa:100,growthDays:10,yieldPerHa:400});

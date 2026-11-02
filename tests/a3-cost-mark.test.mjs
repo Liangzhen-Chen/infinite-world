@@ -114,7 +114,12 @@ test('A3 mark: declarations cannot fake consumption, authors, locations or numer
 test('A3 mark: confirmation rechecks capability, inventory and place restrictions after preview',async()=>{
  const changes=[
   document=>{document.state.player.status='昏迷';},
-  document=>{document.state.inventory.item_charcoal.quantity=0;document.ledger.accounts[accountKey('player','item_charcoal','inventory')]=0;},
+  (document,engine)=>{
+   document.state.inventory.item_charcoal.quantity=0;
+   // This edited opening-stock premise must retain a balanced genesis book.
+   // Confirmation still has zero charcoal and must reject without any writes.
+   document.ledger=openLedger(engine,document);
+  },
   (document,engine)=>{engine.byId.get(document.state.location).primitiveLimits={create:false};}
  ];
  for(const change of changes){

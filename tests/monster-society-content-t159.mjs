@@ -38,7 +38,12 @@ async function at(f,doc,location,minute){
  for(const n of f.world.npcs.filter(n=>n.society)){const slot=n.schedule.default.find(s=>s.start<=minute%DAY&&minute%DAY<s.end);Object.assign(d.state.npcs[n.id],{location:slot.location,activity:slot.activity});}
  const parent=f.world.locations.find(l=>l.id===location).parent;d.state.location=parent&&f.world.locations.some(l=>l.id===parent)?parent:location;
  if(d.state.location===location)return d;
- return(await f.run(d,'world_move',{destination:location},`go_${location}_${minute}`)).document;
+ const arrived=(await f.run(d,'world_move',{destination:location},`go_${location}_${minute}`)).document;
+ // Install this authored presence fixture after the player's real walk;
+ // keep its physical bodies and local settlement watermark in agreement.
+ for(const n of f.world.npcs.filter(n=>n.society)){const slot=n.schedule.default.find(s=>s.start<=arrived.state.minute%DAY&&arrived.state.minute%DAY<s.end);Object.assign(arrived.state.npcs[n.id],{location:slot.location,activity:slot.activity});delete arrived.state.npcs[n.id].scheduleTravel;}
+ arrived.state.scheduler??={};arrived.state.scheduler.localUntil=arrived.state.minute;delete arrived.state.scheduler.subsistence;
+ return arrived;
 }
 // Let real time pass to the next given minute of day, then walk there.
 async function goTo(f,d,location,minuteOfDay,id){
@@ -53,6 +58,7 @@ async function council(f,{grantAt,authority,meeting,minute,present,settlement}){
  const grant=await f.run(d,'world_promise',{operation:'grant_access',promisor:authority,location:meeting,content:'进议事处旁听议事',minutes:120},`grant_${meeting}`);
  d=(await f.run(grant.document,'world_move',{destination:meeting,authorization:grant.result.authorization},`enter_${meeting}`)).document;
  d.state.minute=minute;for(const id of present)Object.assign(d.state.npcs[id],{location:meeting,activity:'议事'});
+ d.state.scheduler??={};d.state.scheduler.localUntil=minute;delete d.state.scheduler.subsistence;
  const gov=async(doc,args,id)=>(await f.run(doc,'world_settlement',{settlement,...args},id));
  return{d,gov};
 }

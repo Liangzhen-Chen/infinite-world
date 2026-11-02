@@ -264,6 +264,8 @@ const memoValue = Symbol('state memo value');
 // cache inside one indexed advance, scoped by engine and every explicit input.
 // Dependencies are state-relative paths; omitted means the whole state. A
 // record dependency may declare {path:['records'],categories:[...]} or kinds.
+// A trailing * selects map keys (e.g. npc_* or *); descendant selectors also
+// track entry membership and compare those descendants on parent replacement.
 // Explicit
 // query inputs remain in the key. Only unaffected groups survive cursor writes.
 export function stateMemo(state, scope, inputs, build, dependencies = null) {
@@ -283,7 +285,20 @@ export function stateMemo(state, scope, inputs, build, dependencies = null) {
     else if (indexCheck && !memoEqual(cache.get(memoValue), build())) stale('state memo');
     return cache.get(memoValue);
 }
-function carryStateMemos(state, path, previousCategory, nextCategory, previousKind, nextKind) {
+const memoPathMatch=(selector,key)=>selector===key||typeof selector==='string'&&selector.endsWith('*')&&key.startsWith(selector.slice(0,-1));
+// Selected descendants can stay equal when a caller replaces their parent
+// object (e.g. a skill bag or a relationship's trust, but not its type).
+function sameMemoSelection(a,b,keys,at){
+    if(a===b)return true;
+    if(at===keys.length)return false;
+    const key=keys[at];
+    if(typeof key==='string'&&key.endsWith('*')){
+        const x=Object.keys(a??{}).filter(k=>memoPathMatch(key,k)),y=Object.keys(b??{}).filter(k=>memoPathMatch(key,k));
+        return x.length===y.length&&x.every((k,i)=>k===y[i]&&sameMemoSelection(a[k],b[k],keys,at+1));
+    }
+    return sameMemoSelection(a?.[key],b?.[key],keys,at+1);
+}
+function carryStateMemos(state, path, previousCategory, nextCategory, previousKind, nextKind, patch) {
     const groups=stateMemos.get(state);
     if(!groups)return null;
     const retained=new Map(), changed=path.slice(1);
@@ -292,7 +307,14 @@ function carryStateMemos(state, path, previousCategory, nextCategory, previousKi
         const affected=dependencies.some(dependency=>{
             const keys=Array.isArray(dependency)?dependency:dependency.path;
             const length=Math.min(keys.length,changed.length);
-            for(let i=0;i<length;i++)if(keys[i]!==changed[i])return false;
+            for(let i=0;i<length;i++)if(!memoPathMatch(keys[i],changed[i]))return false;
+            if(changed.length<keys.length){
+                const before=changed.reduce((v,k)=>v?.[k],state),after=patch.op==='delete'?undefined:patch.value;
+                // Adding/removing a selected map entry changes membership,
+                // even when both old and new selected leaf values are absent.
+                const entry=keys[changed.length-1];
+                if(!(typeof entry==='string'&&entry.endsWith('*')&&(before===undefined)!==(after===undefined))&&sameMemoSelection(before,after,keys,changed.length))return false;
+            }
             if((!dependency.categories&&!dependency.kinds)||changed.length<=keys.length)return true;
             return dependency.categories?dependency.categories.includes(previousCategory)||dependency.categories.includes(nextCategory):dependency.kinds.includes(previousKind)||dependency.kinds.includes(nextKind);
         });
@@ -492,7 +514,7 @@ export class PatchCursor {
         const previousKind=path[1]==='records'?previousRow?.kind:undefined;
         const nextCategory=path.length===3?(patch.op==='delete'?undefined:patch.value?.category):path[3]==='category'?(patch.op==='delete'?undefined:patch.value):previousCategory;
         const nextKind=path.length===3?(patch.op==='delete'?undefined:patch.value?.kind):path[3]==='kind'?(patch.op==='delete'?undefined:patch.value):previousKind;
-        const retainedMemos=path[0]==='state'?carryStateMemos(root.state,path,previousCategory,nextCategory,previousKind,nextKind):null;
+        const retainedMemos=path[0]==='state'?carryStateMemos(root.state,path,previousCategory,nextCategory,previousKind,nextKind,patch):null;
         if (path[0] === 'state') {
             if (!indexedRecords && path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
             else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);

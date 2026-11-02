@@ -230,8 +230,8 @@ test('推进系统阶段归序键：未声明 phase 的系统保持原 order（�
 const world = await loadWorld();
 const LEGACY = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
 const DAY = 1440;
-const freshDoc = seed => {
-    const engine = new WorldEngine(structuredClone(world));
+const freshDoc = (seed,edition=world) => {
+    const engine = new WorldEngine(structuredClone(edition));
     const doc = engine.createCharacter(LEGACY, {}, seed);
     doc.state.scheduler = { wireAdvance: true };
     return { engine, doc };
@@ -253,15 +253,18 @@ const seqEvents = doc => {
 };
 
 test('local continuous objects catch up without adding a scheduled tick',async()=>{
-    const initial=freshDoc('i31-local');
+    // This case isolates continuous catch-up with no scheduled tick in540..577.
+    // K16 chores create real boundaries there; the other I31 cases retain them.
+    const localWorld=structuredClone(world);delete localWorld.rules.householdSubsistence;
+    const initial=freshDoc('i31-local',localWorld);
     const before=initial.doc.state.minute;
     const short=await step(initial,1);
     assert.equal(short.state.scheduler.lastSettled,before);
     assert.equal(short.state.scheduler.localUntil,before+1);
     const food=short.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0];
     assert.ok(food.spoiledGrams>0,'food decays even when the span has no scheduled tick');
-    const split=await step({engine:new WorldEngine(structuredClone(world)),doc:JSON.parse(JSON.stringify(short))},36);
-    const whole=await step(freshDoc('i31-local'),37);
+    const split=await step({engine:new WorldEngine(structuredClone(localWorld)),doc:JSON.parse(JSON.stringify(short))},36);
+    const whole=await step(freshDoc('i31-local',localWorld),37);
     assert.deepEqual(split.state,whole.state);
     assert.deepEqual(seqEvents(split),seqEvents(whole));
 });

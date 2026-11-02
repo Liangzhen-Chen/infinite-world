@@ -4,7 +4,40 @@ import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import fc from 'fast-check';
-import { CampaignStorage, applyPatches, diffPatches, digest } from '../server-plugin/storage.mjs';
+import { CampaignStorage, applyPatches, diffPatches, digest, PatchCursor, withRecordIndex, stateMemo } from '../server-plugin/storage.mjs';
+
+test('stateMemo selected descendants retain unrelated parent edits and invalidate actual values and membership',()=>{
+    const d=new PatchCursor({state:{npcs:{a:{skills:{literacy:100,sword:1},relationships:{b:{type:'teacher',trust:1}}}}}}),scope={};
+    const deps=[['npcs','*','skills','literacy'],['npcs','*','relationships','*','type']];
+    const read=()=>stateMemo(d.root.state,scope,['selected'],()=>Object.entries(d.root.state.npcs).map(([id,n])=>[id,n.skills?.literacy,Object.entries(n.relationships??{}).map(([to,r])=>[to,r.type])]),deps);
+    const set=(path,value)=>d.apply({op:'set',path:['state',...path],value});
+    withRecordIndex(()=>{
+        const first=read(); // One actor, literacy100, one teacher edge.
+        set(['npcs','a','skills'],{literacy:100,sword:2});assert.equal(read(),first);
+        set(['npcs','a','relationships','b'],{type:'teacher',trust:2});assert.equal(read(),first);
+        set(['npcs','a','location'],'elsewhere');assert.equal(read(),first);
+        set(['npcs','a','skills','literacy'],101);const second=read();assert.notEqual(second,first);assert.equal(second[0][1],101);
+        set(['npcs','a','relationships','b','type'],'friend');const third=read();assert.notEqual(third,second);assert.equal(third[0][2][0][1],'friend');
+        set(['npcs','c'],{});const fourth=read();assert.equal(fourth.length,2);assert.notEqual(fourth,third);
+        d.apply({op:'delete',path:['state','npcs','c']});assert.equal(read().length,1);
+        set(['npcs'],{a:{skills:{literacy:101,sword:9},relationships:{b:{type:'friend',trust:9}}}});const retained=read();
+        set(['npcs'],{a:{skills:{literacy:101},relationships:{b:{type:'friend'}}}});assert.equal(read(),retained);
+    });
+});
+
+test('stateMemo prefix selection follows only person births, including whole catalog replacement',()=>{
+    const d=new PatchCursor({state:{created:{npc_a:{birth:1},item_a:{value:1}},family:{people:{}}}}),scope={};
+    const deps=[['created','npc_*','birth'],['family','people','*','birth']];
+    const read=()=>stateMemo(d.root.state,scope,['births'],()=>[Object.entries(d.root.state.created).filter(([id])=>id.startsWith('npc_')).map(([id,n])=>[id,n.birth]),Object.entries(d.root.state.family.people).map(([id,n])=>[id,n.birth])],deps);
+    withRecordIndex(()=>{
+        const first=read();
+        d.apply({op:'set',path:['state','created','item_a','value'],value:2});assert.equal(read(),first);
+        d.apply({op:'set',path:['state','created'],value:{npc_a:{birth:1,extra:2},item_b:{}}});assert.equal(read(),first);
+        d.apply({op:'set',path:['state','created','npc_a','birth'],value:2});const second=read();assert.notEqual(second,first);assert.equal(second[0][0][1],2);
+        d.apply({op:'set',path:['state','created','npc_b'],value:{}});assert.equal(read()[0].length,2);
+        d.apply({op:'set',path:['state','family','people','npc_a'],value:{birth:3}});assert.deepEqual(read()[1],[['npc_a',3]]);
+    });
+});
 
 const fixture = async t => {
     const directory = await fs.mkdtemp(path.join(tmpRoot(), 'infinite-fields-test-'));

@@ -4,10 +4,75 @@ import {PatchCursor,withRecordIndex,setRecordIndexCheck,stateMemo,recordsMemo,re
 import {currentEmployment} from '../server-plugin/employment-state.mjs';
 import {snapshotContractTerms} from '../server-plugin/contract-state.mjs';
 import {obligationRows} from '../server-plugin/obligation-state.mjs';
-import {personRoutine} from '../server-plugin/entity-view.mjs';
+import {personRoutine,personConstraints} from '../server-plugin/entity-view.mjs';
+import {sameScheduleInputs,educationCourses,knowledgeProficiency} from '../server-plugin/education-state.mjs';
 import {facilityRouteStates} from '../server-plugin/facility-state.mjs';
+import {sameNpcScheduleInputs} from '../server-plugin/npc-schedule.mjs';
+import {npcHousehold,householdMembers} from '../server-plugin/npc-state.mjs';
+import {personHousehold} from '../server-plugin/entity-view.mjs';
 
 const document=()=>({state:{minute:0,records:{job:snapshotContractTerms({id:'job',category:'contract',kind:'workshop',worker:'a',createdAt:0,starts:0,deadline:100,wage:10,status:'有效',amendments:[{minute:20,wage:20}]})},obligations:{}}});
+
+test('household membership memo follows entry, departure, created households and lease expiry',()=>{
+ const engine={world:{households:[{id:'h',members:['a','b'],homeLocation:'home',settlement:'town'}]},byId:new Map()};
+ const cursor=new PatchCursor({state:{minute:0,records:{},created:{},family:{households:{},meals:{}}}});
+ const set=(path,value)=>cursor.apply({op:'set',path:['state',...path],value});
+ withRecordIndex(()=>{
+  assert.deepEqual(householdMembers(engine,cursor.root.state,'h'),['a','b']);
+  householdMembers(engine,cursor.root.state,'h').reverse();
+  set(['family','meals','h'],{shortfall:{satiety:0}});
+  assert.deepEqual(npcHousehold(engine,cursor.root.state,'a').members,['a','b']);
+  set(['family','households','h'],{left:['b'],members:['c']});
+  assert.deepEqual(personHousehold(engine,cursor.root.state,'a').value.members,['a','c']);
+  assert.equal(npcHousehold(engine,cursor.root.state,'b'),null);
+  set(['created','d'],{id:'d',generated:'population',householdId:'new',settlement:'town',home:{location:'new-home'}});
+  assert.deepEqual(npcHousehold(engine,cursor.root.state,'d').members,['d']);
+  set(['records','rent'],{id:'rent',kind:'asset_lease',tenant:'a',status:'有效',createdAt:0,deadline:10,use:'home',settlement:'town',subject:'rented'});
+  assert.equal(personHousehold(engine,cursor.root.state,'a').value.homeLocation,'rented');
+  set(['minute'],10);
+  assert.equal(personHousehold(engine,cursor.root.state,'a').value.homeLocation,'home');
+ });
+});
+
+test('course household memo follows changed membership and ignores unrelated bags',async()=>{
+ const {fixture}=await import('./fixtures/education.mjs');
+ const f=fixture(),cursor=new PatchCursor(f.doc),set=(path,value)=>cursor.apply({op:'set',path:['state',...path],value});
+ withRecordIndex(()=>{
+  const read=()=>educationCourses(f.e,cursor.expose(cursor.root.state));
+  const initial=read();assert.ok(initial.some(c=>c.school&&c.teacher===f.teacher));
+  const unrelated=Object.keys(cursor.root.state.npcs).find(id=>id!==f.teacher&&(npcHousehold(f.e,cursor.root.state,id)?.members??[id]).every(member=>knowledgeProficiency(f.e,cursor.root.state,member,'skill_literacy')<=100));
+  assert.ok(unrelated);
+  // A non-teaching household consuming one bread unit changes zero classes.
+  set(['npcs',unrelated,'inventory'],{item_water:1});assert.equal(read(),initial);
+  const house=npcHousehold(f.e,cursor.root.state,f.teacher),old=npcHousehold(f.e,cursor.root.state,unrelated);
+  assert.ok(house);
+  if(old)set(['family','households',old.id],{...cursor.root.state.family?.households?.[old.id],left:[...(cursor.root.state.family?.households?.[old.id]?.left??[]),unrelated]});
+  set(['family','households',house.id],{...cursor.root.state.family?.households?.[house.id],members:[...(cursor.root.state.family?.households?.[house.id]?.members??[]),unrelated]});
+  const joined=read();
+  set(['npcs',unrelated,'inventory'],{item_water:2});
+  // Membership must refresh before the next inventory comparison. FIELDS
+  // recomputes the remembered peer index here as well as the final courses.
+  assert.deepEqual(read(),joined);
+  set(['npcs',f.teacher,'skills','skill_literacy'],0);
+  assert.ok(read().every(c=>!c.school||c.teacher!==f.teacher));
+ });
+});
+
+test('frozen household decisions keep healthy peers reusable while the ill actor refreshes',()=>{
+ // R5 moves cross-person allocation to persisted morning plans. Personal
+ // illness/travel must still invalidate the affected actor's own routine.
+ const a={worker:{status:'healthy'},sibling:{status:'healthy',coins:10}};
+ const ordinary={...a,sibling:{...a.sibling,coins:9}};
+ assert.equal(sameNpcScheduleInputs(a.worker,ordinary.worker),true);
+ assert.equal(sameNpcScheduleInputs(a.sibling,ordinary.sibling),true);
+ const ill={...ordinary,sibling:{...ordinary.sibling,status:'ill'}};
+ assert.equal(sameNpcScheduleInputs(ordinary.worker,ill.worker),true);
+ assert.equal(sameNpcScheduleInputs(ordinary.sibling,ill.sibling),false);
+ for(const subsistence of [false,true]){
+  const booked={...a.sibling,scheduleTravel:{depart:1,arrive:40,subsistence}};
+  assert.equal(sameNpcScheduleInputs(a.sibling,booked),false);
+ }
+});
 
 test('positive record dependencies preserve unrelated writes and include legacy kinds under any category',()=>{
  const d=new PatchCursor({state:{records:{job:{category:'contract',kind:'workshop',wage:10},rock:{category:'physical_feature',value:1}}}}),key={},deps={kinds:['workshop']};
@@ -149,5 +214,77 @@ test('route projections survive clock/account writes and invalidate physical cha
   d.apply({op:'set',path:['state','buildings','bld_new'],value:{condition:100}});
   assert.deepEqual(read().get('road'),{factor:1,capacity:20});
   d.apply({op:'set',path:['state','buildings'],value:{}});assert.equal(read().size,0);
+ });
+});
+
+
+test('constraint dependencies retain new unrelated records and invalidate case subjects and legacy kinds',()=>{
+ const a={id:'a'},b={id:'b'},engine={world:{factions:[]},byId:new Map([['a',a],['b',b]])};
+ const cursor=new PatchCursor({state:{minute:0,records:{case:{category:'legal_case',offender:'a'},hold:{category:'legal_custody',case:'case',status:'生效'}}}});
+ withRecordIndex(()=>{
+  const read=()=>personConstraints(engine,cursor.expose(cursor.root.state)),first=read();
+  assert.equal(first.get('a').length,1);
+  cursor.apply({op:'set',path:['state','records','forage'],value:{category:'household_forage',reserve:20}});
+  assert.equal(read(),first);
+  cursor.apply({op:'set',path:['state','records','case','offender'],value:'b'});
+  assert.equal(read().has('a'),false);assert.equal(read().get('b').length,1);
+  cursor.apply({op:'set',path:['state','records','lease'],value:{category:'legacy',kind:'asset_lease',tenant:'a',status:'有效'}});
+  assert.equal(read().leases.get('a').length,1);
+  cursor.apply({op:'set',path:['state','records','lease','kind'],value:'other'});
+  assert.equal(read().leases.has('a'),false);
+ });
+});
+
+
+test('schedule inputs follow frozen plans while execution reads live forage stock',()=>{
+ const base={minute:0,npcs:{},records:{},obligations:{},family:{meals:{home:{shortfall:{satiety:0}}}}};
+ const ordinary={...base,family:{meals:{home:{shortfall:{satiety:0},sources:[{kind:'forage',location:'wood',quantity:8,maximumHarvest:8}]}}}};
+ assert.equal(sameScheduleInputs(base,ordinary),true);
+ const empty={...base,family:{meals:{home:{shortfall:{satiety:60},sources:[{kind:'forage',location:'wood',quantity:4,maximumHarvest:8}]}}}};
+ // R3 source choice no longer reads yesterday's receipt: either meal shape
+ // is irrelevant until the physical source stock itself changes.
+ assert.equal(sameScheduleInputs(ordinary,empty),true);
+ const same={...empty,family:{meals:{home:{shortfall:{satiety:90},sources:[{kind:'forage',location:'wood',quantity:2,maximumHarvest:8}]}}}};
+ assert.equal(sameScheduleInputs(empty,same),true);
+ const other={...empty,family:{meals:{home:{shortfall:{satiety:60},sources:[{kind:'forage',location:'river',quantity:4,maximumHarvest:8}]}}}};
+ assert.equal(sameScheduleInputs(empty,other),true);
+ const stocked={...base,records:{forage:{category:'household_forage',location:'wood',reserve:8}}};
+ const exhausted={...stocked,records:{forage:{...stocked.records.forage,reserve:0}}};
+ // R5:8 real portions becoming0 changes execution, never the morning plan.
+ assert.equal(sameScheduleInputs(stocked,exhausted),true);
+ const planned={...stocked,records:{...stocked.records,plan:{category:'subsistence_plan',day:0,households:{home:{foodTrips:[]}}}}};
+ const tomorrow={...planned,records:{...planned.records,plan:{...planned.records.plan,day:1}}};
+ assert.equal(sameScheduleInputs(stocked,planned),false);
+ assert.equal(sameScheduleInputs(planned,tomorrow),false);
+});
+
+test('schedule water dependencies follow availability and potability rather than harmless volume changes',()=>{
+ const water={waterMl:10000,frozenUntil:0,pathogenRisk:0,toxinUg:0,saltMg:0};
+ const base={minute:0,npcs:{},records:{river:{category:'water_cycle',location:'river',water}},obligations:{},family:{}};
+ const less={...base,records:{river:{...base.records.river,water:{...water,waterMl:9000},consumed:1000}}};
+ //Both quantities are positive and potable: no work/schedule input changed.
+ assert.equal(sameScheduleInputs(base,less),true);
+ const empty={...base,records:{river:{...base.records.river,water:{...water,waterMl:0}}}};
+ assert.equal(sameScheduleInputs(base,empty),false);
+ const polluted={...base,records:{river:{...base.records.river,water:{...water,pathogenRisk:99}}}};
+ assert.equal(sameScheduleInputs(base,polluted),false);
+ const frozen={...base,records:{river:{...base.records.river,water:{...water,frozenUntil:14400}}}};
+ assert.equal(sameScheduleInputs(base,frozen),false);
+});
+
+
+test('routine projection retains unrelated knowledge/history but follows the appointment original',()=>{
+ const cursor=new PatchCursor({state:{minute:0,npcs:{},family:{},effects:{},records:{
+  appointment:{category:'service_appointment',actor:'a',sourceEvent:'meeting'},
+  'world_event:meeting':{id:'meeting',category:'world_event',verb:'appointment_agreed',actor:'a',payload:{service:'teach'}}
+ },obligations:{}}});
+ withRecordIndex(()=>{
+  const before=cursor.expose(cursor.root.state);
+  cursor.apply({op:'set',path:['state','records','learning'],value:{category:'knowledge',actor:'a'}});
+  cursor.apply({op:'set',path:['state','records','history'],value:{category:'world_event',id:'history',verb:'arrived'}});
+  assert.equal(sameScheduleInputs(before,cursor.root.state),true);
+  const previous=cursor.expose(cursor.root.state);
+  cursor.apply({op:'set',path:['state','records','world_event:meeting','actor'],value:'b'});
+  assert.equal(sameScheduleInputs(previous,cursor.root.state),false);
  });
 });

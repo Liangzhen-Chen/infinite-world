@@ -3,20 +3,20 @@ import {reject} from './action-rejection.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-schedule',{sinks:['sink:export']});
-import {educationSlot,educationCourses,personCourses,courseWindow,sameScheduleInputs} from './education-state.mjs';
+import {educationSlot,educationCourses,personCourses,courseWindow,sameScheduleInputs,sameScheduleRecordInputs,isScheduleRecord,isScheduleEvent} from './education-state.mjs';
 import {facilityView,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 // Routine movement is recorded in the same event as elapsed world time.
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {mindSleepUntil}from'./magic-mind-space.mjs';
 import {festivalScheduleAt}from'./festival.mjs';
-import {npcSchedule,marketScheduleAt,marketTimeWindows,householdWorkTime}from'./npc-state.mjs';
-import {personConstraint,personConstraints}from'./entity-view.mjs';
+import {npcSchedule,marketScheduleAt,marketTimeWindows,householdWorkTime,subsistenceScheduleAt}from'./npc-state.mjs';
+import {personConstraint,personConstraints,personHousehold}from'./entity-view.mjs';
 import {WEATHER_SEQUENCES}from'./weather.mjs';
 import {remoteScheduleBatch,regionProgressKey}from'./advance-layers.mjs';
 import {recordEmploymentAttendance,recordProjectAttendance,employmentActive,PROJECT_ACTIVITY} from './employment-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {workstationRecipes} from './workstation-services.mjs';
-import {recordsWhere,canonicalEqual,PatchCursor} from './storage.mjs';
+import {recordsWhere,canonicalEqual,PatchCursor,applyPatches} from './storage.mjs';
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('npc-schedule',{kinds:[]});
@@ -26,7 +26,7 @@ export function withScheduleCache(engine,d,task){
     const previous=engine.scheduleReadCache,own=Object.hasOwn(engine,'scheduleReadCache');
     if(previous?.draft===d)return task();
     const cursor=d.cursor,observer=cursor?.onPatch;
-    const cache=cursor instanceof PatchCursor?{draft:d,people:new Map(),snapshots:new WeakMap()}:null;
+    const cache=cursor instanceof PatchCursor?{draft:d,engine,seed:cursor.root.randomSeed,people:new Map(),snapshots:new WeakMap()}:null;
     engine.scheduleReadCache=cache;
     if(cache)cursor.onPatch=patch=>{observer?.(patch);invalidateSchedule(cache,patch);};
     try{return task();}finally{
@@ -34,10 +34,11 @@ export function withScheduleCache(engine,d,task){
         if(own)engine.scheduleReadCache=previous;else delete engine.scheduleReadCache;
     }
 }
+registerAdvanceHook('festivalScheduleAt',festivalScheduleAt);
 registerAdvanceHook('withScheduleCache',withScheduleCache);
 // Perception writes evidence rows; actual learning still changes NPC skills or
 // recipes, and bookings, employment, custody and transitions remain inputs.
-const ignoredScheduleRecords=new Set(['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge']);
+// Included record dependencies are shared with the course/routine projection.
 const ignoredNpcScheduleFields=new Set(['memoryStream','developments','growth','cognition','coins','trust','affection']);
 export function sameNpcScheduleInputs(a,b){
     if(a===b)return true;if(!a||!b)return false;
@@ -49,12 +50,20 @@ registerAdvanceHook('sameNpcScheduleInputs',sameNpcScheduleInputs);
 function invalidateSchedule(cache,{path,value,op}){
     if(path[0]!=='state'){if(!path.length)cache.people.clear();return;}
     if(['minute','scheduler','npcObligationClock'].includes(path[1]))return;
-    if(path[1]==='family'&&['meals','mealDays'].includes(path[2]))return;
-    if(path[1]==='npcs'&&path.length>=3){if(!ignoredNpcScheduleFields.has(path[3]))cache.people.delete(path[2]);return;}
+    if(path[1]==='family'&&path[2]==='mealDays')return;
+    if(path[1]==='family'&&path[2]==='meals')return;
+    if(path[1]==='npcs'&&path.length>=3){
+        if(!ignoredNpcScheduleFields.has(path[3])){cache.people.delete(path[2]);}
+        return;
+    }
     if(path[1]==='records'&&path.length>=3){
         const old=cache.draft.cursor.root.state.records?.[path[2]];
-        const category=path.length===3?value?.category:path[3]==='category'?value:old?.category;
-        if((!old||ignoredScheduleRecords.has(old.category))&&(op==='delete'&&path.length===3||ignoredScheduleRecords.has(category)))return;
+        if(old?.category==='water_cycle'||old?.category==='physical_feature'){
+            const next=path.length===3?(op==='delete'?undefined:value):applyPatches(old,[{op,path:path.slice(3),...(op==='delete'?{}:{value})}]);
+            if(sameScheduleRecordInputs(old,next))return;
+        }
+        const next=path.length===3?value:{...old,...(['category','kind','verb'].includes(path[3])?{[path[3]]:value}:{})};
+        if(!isScheduleRecord(old)&&!isScheduleRecord(next)&&!isScheduleEvent(old)&&!isScheduleEvent(next))return;
     }
     if(path[1]==='obligations'&&path.length>=3){
         const state=cache.draft.cursor.root.state,old=state.obligations?.[path[2]];
@@ -65,7 +74,7 @@ function invalidateSchedule(cache,{path,value,op}){
 }
 const sameCourses=(a,b)=>a===b||a?.length===b?.length&&a?.every((c,i)=>c===b[i]);
 function cachedSchedule(engine,npcId,minute,state,constraints,read){
-    const cache=engine.scheduleReadCache;if(!cache||!state)return read();
+    const cache=engine.scheduleReadCache;if(!cache||!state||Object.values(state.effects??{}).some(effect=>effect.kind==='air'&&effect.operation==='area_wind'&&effect.route))return read();
     let people=cache.people;
     if(state!==cache.draft.cursor.root.state){
         people=cache.snapshots.get(state);
@@ -89,7 +98,7 @@ export function scheduleAt(engine,npcId,minute,state,constraints=null){
     const previous=engine.educationCourseContext;
     if(!previous&&engine.educationScheduleCourses&&state){
         const day=Math.floor(minute/1440);let courses=engine.educationScheduleCourses.get(day);
-        if(!courses){courses=educationCourses(engine,{...state,minute});engine.educationScheduleCourses.set(day,courses);}
+        if(!courses){courses=educationCourses(engine,state,minute);engine.educationScheduleCourses.set(day,courses);}
         engine.educationCourseContext=courses;
     }else if(!previous&&engine.scheduleReadCache&&state)engine.educationCourseContext=educationCourses(engine,state);
     try{return cachedSchedule(engine,npcId,minute,state,constraints,()=>scheduledSlot(engine,npcId,minute,state,constraints));}finally{engine.educationCourseContext=previous;}
@@ -101,6 +110,7 @@ function scheduledSlot(engine,npcId,minute,state,constraints=null){
     if(hold?.category==='transition')return null;
     if(hold)return{location:hold.location,activity:'依法拘留',services:[],until:Math.min(hold.expires??Infinity,(Math.floor(minute/1440)+1)*1440)};
     const market=marketScheduleAt(state,npcId,minute);if(market)return market;
+    const subsistence=state&&subsistenceScheduleAt(engine,state,npcId,minute);if(subsistence)return subsistence;
     const lesson=state&&educationSlot(engine,state,npcId,minute);
     if(lesson&&!state.npcs[npcId]?.levy&&!state.npcs[npcId]?.caring)return lesson;
     const schedule=npcSchedule(engine,state,npcId,minute,constraints);if(!schedule){
@@ -194,12 +204,12 @@ export function assertNpcService(d,engine,npcId,service,minutes){
 // P2: a read-only look at the current state for the lookups below, which use
 // it only before this NPC's writes; it does not make the draft recopy state.
 const peekState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
-export function advanceNpcSchedules(d,engine,before,after,{promote=false,beforeState=null}={}){
+export function advanceNpcSchedules(d,engine,before,after,{promote=false,beforeState=null,actors=null,local=false}={}){
     advanceHook('restoreRemoteAccounts')?.(d,engine);
     const previous=engine.educationScheduleCourses;engine.educationScheduleCourses??=new Map();
-    try{return withScheduleCache(engine,d,()=>settleSchedules(d,engine,before,after,{promote,beforeState}));}finally{engine.educationScheduleCourses=previous;}
+    try{return withScheduleCache(engine,d,()=>settleSchedules(d,engine,before,after,{promote,beforeState,actors,local}));}finally{engine.educationScheduleCourses=previous;}
 }
-function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}={}){
+function settleSchedules(d,engine,before,after,{promote=false,beforeState=null,actors=null,local=false}={}){
     if(after<=before&&!promote)return;
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
@@ -209,8 +219,8 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     const prepared=d.scheduleEducation,state=peekState(d),courses=engine.educationCourseContext;
     const reuse=prepared?.minute===before&&sameScheduleInputs(prepared.state,state)&&courses?.length===prepared.courses.length&&courses.every((c,i)=>c===prepared.courses[i]);
     const batch=Object.keys(d.get('state','remote')??{}).length?remoteScheduleBatch(engine,peekState(d),before,after,{promote}):null;
-    let candidates;
-    if(!promote&&prepared?.minute===before&&d.advanceSchedule?.minute===after&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records,obligations:state.obligations},state)){
+    let candidates=actors?[...actors].filter(id=>state.npcs[id]):undefined;
+    if(!actors&&!promote&&prepared?.minute===before&&d.advanceSchedule?.minute===after&&sameScheduleInputs({...prepared.state,npcs:state.npcs,records:state.records,obligations:state.obligations},state)){
         const due=new Set([...d.advanceSchedule.npcs,...prepared.pending??[],...jobs.keys(),...crews.keys(),...engine.educationAttendance?.keys()??[],...state.player.companions??[]]);
         // Distant fixed-location actors have no individual heap entries;
         // include them when their regional clock is due.
@@ -226,13 +236,14 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
             }
             if(p[0]==='state'&&['records','obligations'].includes(p[1])){
                 if(p.length<3){replaced=true;break;}
+                if(p[1]==='records'&&sameScheduleRecordInputs(prepared.state.records?.[p[2]],state.records?.[p[2]]))continue;
                 if(p[1]==='records'&&p[2].startsWith('transition:')){due.add(p[2].slice(11));continue;}
                 for(const row of [prepared.state[p[1]]?.[p[2]],state[p[1]]?.[p[2]]]){
                     if(!row)continue;
                     if(p[1]==='obligations'){
                         if(row.reservationVersion===1){due.add(row.promisor);due.add(row.promisee);}
                         for(const job of jobs.values())if(job.serviceObligation===p[2])due.add(job.worker);
-                    }else if(!ignoredScheduleRecords.has(row.category)){
+                    }else if(isScheduleRecord(row)||isScheduleEvent(row)){
                         if(row.kind==='workshop'||row.category==='project_assignment')due.add(row.worker);
                         else if(['legal_detention','legal_custody'].includes(row.category))due.add(row.subject??state.records?.[row.case]?.offender);
                         else if(row.category!=='education_course'){replaced=true;break;}
@@ -267,6 +278,8 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         if(engine.npcScheduleReservations?.has(npcId))continue;
         if(engine.medicineParticipants?.has(npcId))continue;
         if(d.get('state','npcs',npcId,'cognitionTravel')||engine.npcAutonomyBusy?.(peekState(d),npcId,before))continue;
+        const caught=peekState(d).scheduler?.subsistence;
+        if(!local&&caught?.until>=after&&caught.actors.includes(npcId))continue;
         const current=peekState(d).npcs[npcId],slot=reuse&&prepared.state.npcs[npcId]===current?prepared.slots?.get(npcId):null;
         if(current.scheduleTravel?.arrive>after&&!incapacitated(current)&&!state.player.companions?.includes(npcId))continue;
         // The heap already read this exact actor and all schedule inputs. A
@@ -277,6 +290,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
             continue;
         }
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];
+        let subsistenceResume=npc.scheduleTravel?.subsistenceUntil??0;
         const activity=value=>{npc.activity=value;};
         const since=regional?.before??before;
         // The snapshot records the actor's actual presence when a binding was
@@ -289,8 +303,9 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
         while(cursor<=after){
             if(!isEffective(engine,d,npcId)||incapacitated(npc)){activity(npc.status);break;}
             if(d.get('state','player','companions')?.includes(npcId)){activity('同行');break;}
-            const market=marketScheduleAt(peekState(d),npcId,cursor);
+            const market=marketScheduleAt(peekState(d),npcId,cursor)??subsistenceScheduleAt(engine,peekState(d),npcId,cursor);
             if(market){
+                if(market.subsistence||market.travel?.subsistence)subsistenceResume=Math.max(subsistenceResume,market.boundaryUntil??market.until);
                 if(market.travel&&npc.location===market.travel.from)facilityRuntime().recordFurnaceDeparture(d,engine,npcId,npc.location,cursor);
                 npc.location=market.location;activity(market.activity);
                 if(market.travel)npc.scheduleTravel=market.travel;else delete npc.scheduleTravel;
@@ -321,7 +336,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
                     facilityRuntime().recordFurnaceDeparture(d,engine,npcId,npc.location,cursor);
                     moveCoins(d,{from:purse(null,npcId),to:sink('export','travel'),amount:route.cost,writer:'npc-schedule',eventId:null});
                     npc.coins-=route.cost;
-                    npc.scheduleTravel={from:npc.location,to:slot.location,depart:cursor,arrive:cursor+route.minutes,edges:route.edges};
+                    npc.scheduleTravel={from:npc.location,to:slot.location,depart:cursor,arrive:cursor+route.minutes,edges:route.edges,...(cursor<subsistenceResume?{subsistence:true,subsistenceUntil:subsistenceResume}: {})};
                     npc.location=null;activity('赶路');continue;
                 }
             }else{
@@ -361,6 +376,40 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null}=
     }
     if(batch)for(const g of batch.groups.values())if(g.due&&g.people.length&&d.get('state','records',regionProgressKey(g.county),'scheduleThrough')!==after)holdingSet(d,null,['state','records',regionProgressKey(g.county)],{category:'advance_region',county:g.county,scheduleThrough:after},'npc-schedule');
 }
+
+// Internal journey phases do not own global clock ticks. Use the existing
+// local cursor to make their bodies current at reads; carry classroom
+// presence to the next education tick rather than teaching twice or losing it.
+registerAdvanceHook('catchUpSubsistenceSchedules',(d,e,before,after,beforeState)=>{
+ const state=peekState(d),from=d.scheduler.lastSettled??before;
+ // Only a journey touching this pending global-clock interval needs local
+ // catch-up. Tomorrow's/morning's assignment cannot move a body tonight.
+ const ids=advanceHook('householdSubsistenceActors')?.(e,state,from,after)??[];
+ if(!ids.length)return;
+ const previousCourses=e.educationCourseContext,previousAttendance=e.educationAttendance;
+ const courses=previousCourses??educationCourses(e,state,before);
+ const students=new Set(courses.flatMap(c=>[c.teacher,...c.students]).filter(Boolean));
+ const attendance=new Map(ids.filter(id=>students.has(id)).map(id=>[id,[]]));
+ const prior=state.scheduler?.subsistence;
+ const saved=prior?.from===from?prior.attendance:{};
+ e.educationCourseContext=courses;e.educationAttendance=attendance;
+ try{advanceNpcSchedules(d,e,before,after,{beforeState,actors:new Set(ids),local:true});}
+ finally{
+  if(previousCourses===undefined)delete e.educationCourseContext;else e.educationCourseContext=previousCourses;
+  if(previousAttendance===undefined)delete e.educationAttendance;else e.educationAttendance=previousAttendance;
+ }
+ const merged={...saved};
+ for(const [id,rows]of attendance){
+  const spans=[...(saved?.[id]??[]),...rows].map(r=>({...r})).sort((a,b)=>a.start-b.start||a.end-b.end),out=[];
+  for(const row of spans){const last=out.at(-1);if(last&&last.location===row.location&&row.start<=last.end)last.end=Math.max(last.end,row.end);else out.push(row);}
+  if(out.length)merged[id]=out;
+ }
+ d.set(['state','scheduler','subsistence'],{from,until:after,actors:ids,attendance:merged});
+});
+registerAdvanceHook('subsistenceScheduleAttendance',(d,id,before,after)=>{
+ const row=d.get('state','scheduler','subsistence');
+ return row?.from===before&&row.until>=after?[...(row.attendance[id]??[])]:[];
+});
 
 export function advanceWithNpcParticipants(d,engine,minutes,eventId,participants){
     const previous=engine.npcScheduleReservations;

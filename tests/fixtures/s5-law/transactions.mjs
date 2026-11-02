@@ -14,6 +14,9 @@ import {withLedger} from '../../../server-plugin/ledger.mjs';
 const DAY=1440,field='loc_hw_fields',tenant='player',owner='npc_hw_ayan',buyer='npc_hw_linsui',item='item_oats';
 export async function leaseCycle({poor=false,mode='share'}={}){
  const w=await loadWorld();
+ // This controlled harvest anchor fixes both parties on the field all day.
+ // Source errands are outside that premise; the annual world remains unaltered.
+ delete w.rules.householdSubsistence;
  // Independent anchor: one mu, 1500/15=100 output; ten seeds; a 2-day
  // crop makes a small whole-cycle fixture, never the annual baseline.
  Object.assign(w.rules.forestWater.water,{droughtYieldFloor:1,maximumCropPollutionLoss:0});

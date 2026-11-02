@@ -1,7 +1,8 @@
 import {preconditionFailure} from './precondition.mjs';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
-import {initialNpcState,householdDefinition} from './npc-state.mjs';
+import {initialNpcState,householdDefinition,lifeRoutine} from './npc-state.mjs';
+export {lifeRoutine} from './npc-state.mjs';
 import {composeName,acceptRemoteProfile,settleRemoteWildlife,settleRemoteAccounts} from './remote-generation.mjs';
 import {expandedEducation} from './education-cohorts.mjs';
 import {isDeepStrictEqual} from 'node:util';
@@ -457,10 +458,6 @@ export function profileBrief(document,person){
 // and they keep a plain home routine. A roster person has no authored view of
 // others, so their first view of each housemate or relative is the one that
 // person registered towards them.
-export function lifeRoutine(home,{minor=false,occupation=''}={}){
-    const day=minor?'在家中玩耍，由家人照看':`在家操持家务${occupation?`（${occupation}）`:''}`;
-    return {default:[{start:0,end:360,location:home,activity:'睡眠',services:[]},{start:360,end:1260,location:home,activity:day,services:[]},{start:1260,end:1440,location:home,activity:'睡眠',services:[]}]};
-}
 export function rosterLifeState(engine,state,id,minute,reason,{minor=false}={}){
     const entity=engine.byId.get(id);
     if(!entity||entity.tier!=='roster'||state.npcs?.[id]||!entity.householdId)return null;

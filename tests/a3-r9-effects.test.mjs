@@ -10,7 +10,13 @@ import {auditLedger} from '../server-plugin/ledger.mjs';
 import {executeIntent,scoreRows,signatureMatches} from '../tools/a3-score.mjs';
 import {charteredWorld} from './helpers/charter-world.mjs';
 
-const world=await loadWorld(),engine=new WorldEngine(world);
+const world=await loadWorld();
+// The corpus explicitly places its tutor/permit issuer for each lesson and
+// prelude. Keep that controlled presence while testing routes, signatures,
+// failure branches and constructors; real household errands stay covered by
+// the full-world month, water/subsistence and T162 mechanism regressions.
+delete world.rules.householdSubsistence;
+const engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.createCharacter(seed,{},'a3-r9');
 const rows=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));

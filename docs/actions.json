@@ -2516,7 +2516,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 614,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/advance-registry.mjs:190"
+    "dispatch": "server-plugin/advance-registry.mjs:195"
    }
   },
   {
@@ -7378,7 +7378,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/education.mjs:189"
+    "dispatch": "server-plugin/education.mjs:190"
    }
   },
   {
@@ -7482,7 +7482,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/education.mjs:180"
+    "dispatch": "server-plugin/education.mjs:181"
    }
   },
   {
@@ -7586,7 +7586,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/education.mjs:174"
+    "dispatch": "server-plugin/education.mjs:175"
    }
   },
   {
@@ -7690,7 +7690,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/education.mjs:185"
+    "dispatch": "server-plugin/education.mjs:186"
    }
   },
   {

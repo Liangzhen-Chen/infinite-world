@@ -16,6 +16,7 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {physicalItem} from './items.mjs';
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
+const mealCandidates=Symbol('physical meal candidates');
 const preferenceRoll=compileRX('roll("thrift")');
 const laborPreferenceRoll=compileRX('roll("reservation")'),laborNoiseRoll=compileRX('roll("choice")');
 const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id];
@@ -30,7 +31,11 @@ const seedRecords=Symbol('household seed records'),futureRecords=Symbol('househo
 const commitmentMemo=Symbol('household commitments');
 const seedInputs=[{path:['records'],kinds:['asset_lease']},{path:['records'],categories:['private_farm']},['minute'],['buildings'],['created']];
 const seedRecordInputs={kinds:['asset_lease'],categories:['private_farm']};
-const commitmentInputs=[['records'],['obligations'],['minute']];
+// Claims, their quote receipts and source events are the only record inputs.
+// Daily household/ecology receipts cannot change a promised inventory unit.
+const commitmentRecordInputs={categories:['debt','contract','agreed_quote','agreed_quote_used','agreed_quote_receipt','world_event']};
+const commitmentRows=Symbol('household commitment rows');
+const commitmentInputs=[{path:['records'],categories:commitmentRecordInputs.categories},['obligations'],['minute']];
 const promisedRecords=Symbol('household legacy promises');
 const budgetReads=new WeakMap();
 const budgetValue=Symbol('budget value'),resourceMemo=Symbol('household resources');
@@ -89,7 +94,7 @@ function commitmentAllocation(state){
   if(r.legacyRecord)represented.add(r.legacyRecord);
   if(!obligationClosed(r))add(debtor(r),r.resource??r.item??r.subject,unpaid(r));
  }
- for(const [key,r]of Object.entries(state.records??{})){
+ for(const [key,r]of recordsMemo(state.records,commitmentRows,()=>Object.entries(state.records??{}).filter(([,r])=>r.category==='contract'&&r.kind==='procurement'||r.category==='agreed_quote'),{categories:['contract','agreed_quote']})){
   if(represented.has(key)||r.obligation&&state.obligations?.[r.obligation])continue;
   if(r.category==='contract'&&r.kind==='procurement'&&!obligationClosed(r))add(r.parties?.[1],r.subject,unpaid(r));
   // Keep the existing agreed-price receipt/source gate; a quote is not money.
@@ -180,7 +185,7 @@ function allocateMeals(rows,needs){
 // Public agriculture has already consumed standard daily portions, whose
 // satiety follows the body table's base day. Personal drain modifiers change
 // need, never the nutrition in that same ration. Private food fills the gap.
-export function householdMealPlan(d,engine,owner,{publicShare=0}={}){
+export function householdMealPlan(d,engine,owner,{publicShare=0,sourceNutrition={}}={}){
  const state=d.get('state'),f=family(d,engine,owner);
  const members=f.members.filter(id=>id!=='player'&&!isPhysicallyDead(engine,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded);
  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((sum,id)=>sum+explainDerived(engine,d.document,'body:drain',id,{base:bodyRule(engine,need).drainPerHour.light*24}).value,0)]));
@@ -200,8 +205,16 @@ export function householdMealPlan(d,engine,owner,{publicShare=0}={}){
   const selection=units.filter(safe),loose=safe(r.item)?Math.max(0,r.stock-units.length):0;
   return {...r,definition:engine.byId.get(r.item),stock:Math.min(r.stock,loose+selection.length),selection,food:0};
  });
- const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(needs).map(n=>[n,needs[n]-publicNutrition[n]])));
- return {household:f.household,members,needs,publicNutrition,shortfall,rows:rows.filter(r=>r.food>0).map(({definition,...r})=>({...r,selection:r.selection.slice(0,r.food)}))};
+ return householdMealWithSources({household:f.household,members,needs,publicNutrition,[mealCandidates]:rows},sourceNutrition);
+}
+
+// Midnight reads every household's physical bags against one revision. Source
+// withdrawals do not alter those bags, so changing the supplied nutrition can
+// reuse the same safe units/seeds/promises without rebuilding ledger indexes.
+export function householdMealWithSources(plan,sourceNutrition={}){
+ const rows=plan[mealCandidates].map(r=>({...r,food:0}));
+ const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(plan.needs).map(n=>[n,plan.needs[n]-plan.publicNutrition[n]-(sourceNutrition[n]??0)])));
+ return {...plan,shortfall,rows:rows.filter(r=>r.food>0).map(({definition,...r})=>({...r,selection:r.selection.slice(0,r.food)}))};
 }
 
 export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true}={}){

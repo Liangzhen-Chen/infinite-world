@@ -24,7 +24,10 @@ import {documentScene} from './helpers/document-actions.mjs';
 import {appointedClaimClerk,officeCall} from './helpers/office-actions.mjs';
 import {charteredWorld} from './helpers/charter-world.mjs';
 // 05 §5.3: corpus offices must be charter offices; the shipped world has none yet (see helper).
-const engine=new WorldEngine(charteredWorld(await loadWorld()));
+// The office-appointment fixture requires its named authority on duty after
+// the review wait; isolate household errands, retaining real office schedules.
+const officeWorld=charteredWorld(await loadWorld());delete officeWorld.rules.householdSubsistence;
+const engine=new WorldEngine(officeWorld);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner-ding');
 const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
@@ -300,7 +303,10 @@ test.todo('Q: existing stages, judgment, appeal period and defendant persist wit
 
 test('Q: case handler is derived from the present office holding, not a copied incumbent',async()=>{
  // S4-06/05 5.3: replacement and removal are actual appointment actions.
- const f=await nativeTrial(),id=f.case,npc=trialPeople.handler;
+ // This independent trial fixture also keeps the appointing authority on
+ // duty through the review wait, matching the office-world isolation above.
+ const trialWorld=await loadWorld();delete trialWorld.rules.householdSubsistence;
+ const f=await nativeTrial({world:trialWorld}),id=f.case,npc=trialPeople.handler;
  trialScene(f,'bld_bs_watch',[npc]);
  assert.equal(currentCaseHandler(f.engine,f.document,id,npc),true);assert.deepEqual(caseProcedureView(f.engine,f.document,id).handler,[npc]);
  const office=f.document.state.records[id].handlerOffice;

@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {applyPatches,canonical} from '../server-plugin/storage.mjs';
+import {applyPatches,canonical,withRecordIndex,PatchCursor} from '../server-plugin/storage.mjs';
 import {forestSites,forestView,harvestForest,harvestSettlementWood,settleFuel,advanceForestWater,forestHabitatCapacity,displaceForestWildlife} from '../server-plugin/forest-water.mjs';
-import {waterBasins,waterConnections,advanceWaterCycle,farmWaterFactor,waterExposure} from '../server-plugin/water-cycle.mjs';
+import {waterBasins,waterConnections,advanceWaterCycle,farmWaterFactor,waterExposure,waterResourceFactor} from '../server-plugin/water-cycle.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {advanceHazardClocks} from '../server-plugin/seasonal-hazards.mjs';
 import {advanceAgriculture} from '../server-plugin/agriculture.mjs';
@@ -40,6 +40,26 @@ function river({use=0,pollution=0,rain=0}={}){
  return x;
 }
 const feature=(d,id)=>d.get('state','records',`physical_feature:${id}`)?.state;
+
+test('流域目录随真实产粮名册变化，日内水量改变仍立即影响资源系数',()=>withRecordIndex(()=>{
+ const location={id:'loc_water_producer',terrain:'平地'},engine={world:{locations:[location],routes:[]},byId:new Map([[location.id,location]]),rules:{forestWater:{water:source.rules.forestWater.water},agriculture:{settlements:[]}}};
+ const cursor=new PatchCursor({state:{settlements:{[location.id]:{granary:false,foodPerDay:1}},records:{}}});
+ const read=()=>cursor.expose(cursor.root.state),set=(path,value)=>{cursor.apply({op:'set',path:['state',...path],value});return read();};
+ let state=read();
+ assert.deepEqual(waterBasins(engine,state),[]);
+ state=set(['settlements',location.id,'food'],100);assert.deepEqual(waterBasins(engine,state),[]);
+ state=set(['settlements',location.id,'granary'],true);
+ const basin=waterBasins(engine,state)[0];assert.equal(basin.id,`basin:${location.id}`);
+ const opening=Math.floor(basin.capacity*engine.rules.forestWater.water.initialShare);
+ state=set(['records',`water-cycle:${basin.id}`],{category:'water_cycle',water:{waterMl:opening}});
+ assert.equal(waterResourceFactor(engine,state,location.id),1);
+ // Hand anchor: withdrawing half the real opening water doubles scarcity,
+ // even within the same day; no daily cache may hide this physical change.
+ state=set(['records',`water-cycle:${basin.id}`,'water','waterMl'],opening/2);
+ assert.equal(waterResourceFactor(engine,state,location.id),2);
+ state=set(['settlements',location.id,'foodPerDay'],0);
+ assert.deepEqual(waterBasins(engine,state),[]);
+}));
 function assertWaterLedger(d){
  for(const r of Object.values(d.get('state','records')).filter(r=>r.category==='water_cycle')){
   assert.ok(Math.abs(r.initial+r.rain+r.inflow+r.externalDelta-r.outflow-r.consumed-r.evaporated-r.overflow-r.water.waterMl)<0.001,r.location);
