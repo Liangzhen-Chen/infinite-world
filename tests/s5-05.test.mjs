@@ -114,7 +114,12 @@ test('同一田地的公私批次共用账户，私田收割不挪用公共作�
  // Public: 144 area units × 1700/100 × 179.9/180 = 2446.64 -> 2446.
  // Private oats: (2/15 ha)*1700*179.9/180 = 226.54 -> 226.
  // Same field/crop account: 2446 + 226 = 2672 portions.
- assert.equal(publicYield,2446);assert.equal(privateYield,226);assert.equal(before.ledger.accounts[account],2672);
+ // K16: field hands now also fetch the household's water, so the real spring
+ // sowing covers 139 rather than 144 area units; the yield follows the area
+ // actually sown (139 x 17 x 179.9/180 = 2361.6 -> 2361), not a fixed constant.
+ const sownArea=before.state.records[key].field.cohorts.reduce((n,c)=>n+c.areaUnits,0);
+ assert.ok(sownArea>0&&sownArea<=144);
+ assert.equal(publicYield,Math.floor(sownArea*1700/100*179.9/180));assert.equal(privateYield,226);assert.equal(before.ledger.accounts[account],publicYield+226);
  // W8-E1 负重：身上 = 2.6 + 麦种 20×0.5 + 余燕麦 4×0.5 + 锄 1.5 + 镰 0.5 = 16.6 公斤，余 13.4 → floor(13.4/0.5) = 26 份；私田剩 226 − 26 = 200。
  const out=await run(f.engine,before,'world_farm',{operation:'private_harvest'},'private-only');
  assert.equal(out.result.harvested,26);assert.equal(out.document.ledger.accounts[account],publicYield+200);

@@ -1592,7 +1592,7 @@
     "server-plugin/population-service.mjs",
     "server-plugin/settlement-profile.mjs"
    ],
-   "lines": 5493,
+   "lines": 5596,
    "stateWrites": [
     "autonomyCandidates",
     "dialogues",
@@ -1651,6 +1651,7 @@
     "economy",
     "equipment",
     "forestWater",
+    "governance",
     "habitatDerivation",
     "hazardClock",
     "householdSubsistence",
@@ -1666,6 +1667,7 @@
    "world": [
     "bosses",
     "factionPeople",
+    "festivals",
     "households",
     "locations",
     "monsters",
@@ -2000,7 +2002,7 @@
     "server-plugin/forest-water.mjs",
     "server-plugin/water-cycle.mjs"
    ],
-   "lines": 1890,
+   "lines": 1896,
    "stateWrites": [
     "crafted",
     "creatures",
@@ -14710,6 +14712,7 @@
     "server-plugin/governance.mjs",
     "server-plugin/group-account.mjs",
     "server-plugin/holding-sources.mjs",
+    "server-plugin/household-subsistence.mjs",
     "server-plugin/law-codes.mjs",
     "server-plugin/local-exams.mjs",
     "server-plugin/military.mjs",
@@ -15369,10 +15372,12 @@
    "server-plugin/entity-view.mjs",
    "server-plugin/governance.mjs",
    "server-plugin/high-nobility.mjs",
+   "server-plugin/household-subsistence.mjs",
    "server-plugin/local-exams.mjs",
    "server-plugin/nation-founding.mjs",
    "server-plugin/noble-state.mjs",
    "server-plugin/notables.mjs",
+   "server-plugin/npc-state.mjs",
    "server-plugin/office-salary.mjs",
    "server-plugin/promotion-view.mjs",
    "server-plugin/promotion.mjs",
@@ -15402,6 +15407,7 @@
    "server-plugin/market.mjs",
    "server-plugin/medicine.mjs",
    "server-plugin/money.mjs",
+   "server-plugin/npc-state.mjs",
    "server-plugin/obligation-presence.mjs",
    "server-plugin/obligation-runtime.mjs",
    "server-plugin/obligation-state.mjs",
@@ -15442,6 +15448,7 @@
    "server-plugin/family-diplomacy.mjs",
    "server-plugin/family-state.mjs",
    "server-plugin/governance.mjs",
+   "server-plugin/household-subsistence.mjs",
    "server-plugin/law-codes.mjs",
    "server-plugin/law.mjs",
    "server-plugin/legal-representation.mjs",
@@ -17093,6 +17100,7 @@
       "server-plugin/agriculture.mjs",
       "server-plugin/facilities.mjs",
       "server-plugin/festival.mjs",
+      "server-plugin/npc-state.mjs",
       "server-plugin/remote-generation.mjs",
       "server-plugin/training.mjs"
      ],
@@ -17101,6 +17109,7 @@
       "sim_character",
       "sim_clock",
       "sim_environment",
+      "sim_npc",
       "sim_society"
      ]
     },
@@ -17455,6 +17464,7 @@
       "server-plugin/family-state.mjs",
       "server-plugin/governance.mjs",
       "server-plugin/holding-sources.mjs",
+      "server-plugin/household-subsistence.mjs",
       "server-plugin/law-codes.mjs",
       "server-plugin/law.mjs",
       "server-plugin/legal-appeal.mjs",
@@ -23520,20 +23530,23 @@
    "rules": [
     "agriculture",
     "forestWater",
+    "governance",
     "habitatDerivation",
     "householdSubsistence",
+    "law",
     "npcLife",
     "travel",
     "wildlife"
    ],
    "world": [
+    "festivals",
     "households",
     "locations",
     "monsters",
     "routes"
    ],
    "worldDirs": [],
-   "lines": 500
+   "lines": 575
   },
   "server-plugin/husbandry.mjs": {
    "system": "sim_wildlife",
@@ -25977,7 +25990,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 445
+   "lines": 449
   },
   "server-plugin/npc-state.mjs": {
    "system": "sim_npc",
@@ -26012,6 +26025,8 @@
    ],
    "rules": [
     "agriculture",
+    "economy",
+    "governance",
     "law"
    ],
    "world": [
@@ -26021,7 +26036,7 @@
     "npcs"
    ],
    "worldDirs": [],
-   "lines": 442
+   "lines": 466
   },
   "server-plugin/obligation-calendar.mjs": {
    "system": "base_holdings",
@@ -28972,7 +28987,7 @@
     "routes"
    ],
    "worldDirs": [],
-   "lines": 246
+   "lines": 252
   },
   "server-plugin/water-volume.mjs": {
    "system": "sim_environment",

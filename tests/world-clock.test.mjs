@@ -46,11 +46,13 @@ test('真实周贸易到货后推进阶段并消费区域报价，不把常量�
  // 环境基准=3×春季0.9×(1+线路公里数×0.01)×实际运输风险；单价不取整。
  // 独立金额字面量；历史观察不充当当前报价缓存。
  // W5: persisted quote anchors are integer micro-copper numerators over 1_000_000 (old float -> round(float*1e6); max change 5e-7 copper).
+ // K16: farm hands also fetch household water, so real sowing/seed use shifts a few
+ // granary portions (yupo day 14: S=17291-7200 instead of 17300-7200). Check: 2389429*10100/10091 = 2391560.
  const anchors={
-  loc_bs_yupo:[2361258,2389429],
-  loc_bs_weiting:[2468532,2624286],
-  loc_bs_liquan:[2528549,2510586],
-  loc_bs_sangban:[2345123,2479240],
+  loc_bs_yupo:[2362384,2391560],
+  loc_bs_weiting:[2469312,2625990],
+  loc_bs_liquan:[2528940,2511590],
+  loc_bs_sangban:[2345444,2479939],
  };
  let c=(await wait(doc,14*DAY-doc.state.minute)).doc;
  assert.deepEqual(doc,before);
@@ -65,7 +67,7 @@ test('真实周贸易到货后推进阶段并消费区域报价，不把常量�
  }
  assert.equal(worldClockScene(engine,c),'');
  const counter=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_bs_yupo').counter;
- const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/\u6bcf\u4efd2\.3894288282429006\u94dc/);
+ const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/\u6bcf\u4efd2\.391559921242027\u94dc/);
  assert.ok(Object.values(c.state.records).some(r=>r.category==='settlement_trade'&&r.status==='delivered'));
  assert.equal(c.state.player.coins,doc.state.player.coins);assert.deepEqual(c.state.created,doc.state.created);
  const beforeNpcs=Object.keys(doc.state.npcs);assert.deepEqual(Object.keys(c.state.npcs),beforeNpcs);

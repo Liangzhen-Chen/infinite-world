@@ -8,6 +8,7 @@ import {registerSubsistenceResources} from './household-subsistence.mjs';
 import {stateMemo} from './storage.mjs';
 
 const DAY=1440,clone=v=>structuredClone(v),record=id=>['state','records',`water-cycle:${id}`];
+const initialWater=(r,capacity)=>({capacityMl:capacity,waterMl:Math.floor(capacity*r.initialShare),saltMg:0,toxinUg:0,turbidity:0,pathogenRisk:0,odor:'原水'});
 const level=(l,r)=>l.elevationMeters??(/山|岭|崖|高地/.test(l.terrain??'')?r.highland:/丘|坡/.test(l.terrain??'')?r.hill:/谷|河|滩|沼/.test(l.terrain??'')?r.lowland:r.plain);
 const basinGeography=new WeakMap(),producerMemo=Symbol('water basin producers');
 const producerInputs=[['settlements','*','granary'],['settlements','*','foodPerDay']];
@@ -26,8 +27,13 @@ export function waterBasins(engine,state={}){
   const features=(l.features??[]).filter(f=>f.kind==='water');
   for(const f of features)rows.push({id:f.id,location:l.id,feature:f,get capacity(){return f.state.capacityMl;},elevation:level(l,r.terrainElevationMeters)});
   const farm=engine.rules.agriculture?.settlements.find(p=>p.settlement===l.id);
-  if(!features.length&&(farm||riverEnds.has(l.id)||locationHabitatTypes(l).includes('wetland')&&!l.owner&&!l.access&&!l.rooms?.length)){
-   rows.push({id:`basin:${l.id}`,location:l.id,capacity:r.capacityMl,elevation:level(l,r.terrainElevationMeters)});
+  // A published public dock is a physical waterside use even when its route
+  // is on foot. Derive its basin without adding fields to reviewed places.
+  const publicDock=/码头|渡口/.test(l.purpose??'')&&!l.access&&!l.rooms?.length&&(!l.owner||ancestor(engine,l.id).includes(l.owner));
+  if(!features.length&&(farm||riverEnds.has(l.id)||publicDock||locationHabitatTypes(l).includes('wetland')&&!l.owner&&!l.access&&!l.rooms?.length)){
+   const id=`basin:${l.id}`;
+   rows.push({id,location:l.id,capacity:r.capacityMl,elevation:level(l,r.terrainElevationMeters),
+    ...(publicDock?{feature:{id,kind:'water',access:'public',state:initialWater(r,r.capacityMl)}}:{})});
   }
  }
  // P3 food-producing statistical settlements also use a finite basin. A child
@@ -101,7 +107,7 @@ function waterShares(engine,document,basin,water,edges){
 export function basinState(engine,state,basin){
  const physical=state.records?.[`physical_feature:${basin.id}`];
  if(basin.feature&&physical&&(physical.category!=='physical_feature'||physical.id!==basin.id))throw Error('流域环境登记键冲突');
- return basin.feature?(state.records?.[`physical_feature:${basin.id}`]?.state??basin.feature.state):state.records?.[`water-cycle:${basin.id}`]?.water??{capacityMl:basin.capacity,waterMl:Math.floor(basin.capacity*engine.rules.forestWater.water.initialShare),saltMg:0,toxinUg:0,turbidity:0,pathogenRisk:0,odor:'原水'};
+ return basin.feature?(state.records?.[`physical_feature:${basin.id}`]?.state??basin.feature.state):state.records?.[`water-cycle:${basin.id}`]?.water??initialWater(engine.rules.forestWater.water,basin.capacity);
 }
 function store(d,b,water,ledger){
  if(b.feature)d.set(['state','records',`physical_feature:${b.id}`],{id:b.id,category:'physical_feature',location:b.location,state:water});

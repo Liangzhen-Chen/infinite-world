@@ -200,12 +200,13 @@ test('名册家人在照护、离世、迁居需要时进入状态：配偶照�
  d.engine.rules.npcLife.health.bands=structuredClone(quiet.bands);
  // 依 04 §4.4 遗产分配在阶段期限后
  await wait(d,4*DAY,'estate-phases');
- // K16 R5：晨间计划当天固定。雇工取水25分钟、觅食268分钟，
- // 再扣通勤往返48分钟：480−25−268−48=139，工资ceil(30×139/480)=9。
- // 遗产40完整分给邵禾，实付雇工9后余额31，继承与工时断言均保留。
+ // K16 R11：雇工（npc_a3_apprentice_uncle）当日的家户觅食要走268分钟，而受雇工时与通勤是
+ // 他在岗的实际时段，觅食不再挤占（r10 physicalBlocked）；家门口取水25分钟没有出行，仍从工时扣。
+ // 工时：480−取水25−通勤往返48=407，工资ceil(30×407/480)=26。
+ // 遗产40完整分给邵禾，实付雇工26后余额14。上工日岗外时段不足268分钟，当天不安排觅食（不凭空补）。
  const job=Object.values(d.doc.state.records).find(r=>r.kind==='workshop'&&r.owner===husband&&r.farm==='loc_hw');
- assert.equal(job.workedMinutes,139);assert.equal(job.paid,9);
- assert.equal(family(d).deaths[death.id].estate.heir,husband);assert.equal(family(d).deaths[death.id].estate.coins,40);assert.equal(family(d).deaths[death.id].estate.allocations[0].coins,40);assert.equal(npc(d,husband).coins,31);
+ assert.equal(job.workedMinutes,407);assert.equal(job.paid,26);
+ assert.equal(family(d).deaths[death.id].estate.heir,husband);assert.equal(family(d).deaths[death.id].estate.coins,40);assert.equal(family(d).deaths[death.id].estate.allocations[0].coins,40);assert.equal(npc(d,husband).coins,14);
  for(const id of ['npc_hw_shaoyun','npc_hw_shaoyu'])assert.equal(npc(d,id)?.life?.kind,'roster',id);
  // A mother leaving for a living takes her young child; the full adult spouse decides alone.
  const parent='npc_hw_shijin',kid='npc_hw_luoxing';

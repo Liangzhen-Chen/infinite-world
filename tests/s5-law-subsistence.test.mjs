@@ -7,11 +7,12 @@ import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {advanceHouseholdMeals} from '../server-plugin/npc-life.mjs';
 import {householdSubsistencePlan,prepareHouseholdSubsistence} from '../server-plugin/household-subsistence.mjs';
 import {withScheduleCache,scheduleAt,nextNpcService} from '../server-plugin/npc-schedule.mjs';
-import {householdWorkTime} from '../server-plugin/npc-state.mjs';
+import {householdWorkTime,npcSchedule,subsistenceScheduleAt,bookServiceAppointment} from '../server-plugin/npc-state.mjs';
 import {personHousehold} from '../server-plugin/entity-view.mjs';
 import {assertSiteHarvest} from '../server-plugin/sites.mjs';
 import {assertTransitionInvariants} from '../server-plugin/transition.mjs';
 import {applyPatches,withRecordIndex,setRecordIndexCheck} from '../server-plugin/storage.mjs';
+import {advanceHook} from '../server-plugin/advance-hooks.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',home='loc_hw_northwood';
 function fixture({capacity=2000,separate=false,owned=false,location=home,settlement='loc_hw',food=0,fullClock=false}={}){
@@ -37,6 +38,104 @@ function fixture({capacity=2000,separate=false,owned=false,location=home,settlem
  doc.state.minute=0;doc.ledger=openLedger(e,doc);return {e,doc,d:e.primitiveDraft(doc)};
 }
 const meals=f=>Object.values(f.d.get('state','family','meals'));
+
+test('native office hours without service flags cannot be replaced by a household forage trip',()=>{
+ const e=new WorldEngine(structuredClone(world)),doc=e.createCharacter(legacy,{},'k16-office-duty'),d=e.primitiveDraft(doc),id='npc_bs_townhead';
+ const routine=npcSchedule(e,d.get('state'),id,480,null,false);
+ // The native mayor has two240-minute office shifts with empty services.
+ // His60-minute outward commute cannot contain the203-minute food journey.
+ assert.equal(routine.default.filter(s=>s.location==='bld_bs_office').reduce((n,s)=>n+s.end-s.start,0),480);
+ assert.ok(routine.default.filter(s=>s.location==='bld_bs_office').every(s=>!s.services.length));
+ prepareHouseholdSubsistence(d,e,0);
+ const plan=d.get('state','records','subsistence-plan:loc_bs');
+ assert.deepEqual(plan.households[id].foodTrips,[]);
+ assert.equal(subsistenceScheduleAt(e,d.get('state'),id,600),null);
+ assert.equal(scheduleAt(e,id,600,d.get('state')).location,'bld_bs_office');
+});
+
+test('a sparse incumbent keeps the post reception hours free of household subsistence work',()=>{
+ const e=new WorldEngine(structuredClone(world)),id='npc_bs_townhead';delete e.byId.get(id).schedule;
+ const doc=e.createCharacter(legacy,{},'k16-sparse-office'),d=e.primitiveDraft(doc);
+ // With no authored routine the planner falls back to a home day; the
+ // published reception windows are still the holder's, so no duty lands there.
+ assert.ok(!npcSchedule(e,d.get('state'),id,600,null,false));
+ prepareHouseholdSubsistence(d,e,0);
+ const plan=d.get('state','records','subsistence-plan:loc_bs');
+ assert.equal(subsistenceScheduleAt(e,d.get('state'),id,600),null);
+ assert.deepEqual((plan.workers?.[id]?.duties??[]).filter(row=>row.start<1020&&row.end>480),[]);
+});
+
+test('an initial afternoon plan cannot fabricate an earlier morning departure',()=>{
+ const f=fixture();delete f.e.rules.forestWater;f.d.set(['state','minute'],600);
+ prepareHouseholdSubsistence(f.d,f.e,0);
+ const row=f.d.get('state','records','subsistence-plan:loc_hw'),p=row.households.forage;
+ // Eight local portions need80 minutes. The480 edge is past and nobody
+ // abandons a running slot; the next authored work edge is780, so the real
+ // basket runs780..860, not480..560 and not from the plan minute600.
+ const duties=row.workers[p.foodTrips[0].worker].duties;
+ assert.equal(duties[0].start,780);assert.equal(duties.at(-1).end,860);
+ assert.ok(duties.every(d=>d.start>=600));
+ assert.equal(subsistenceScheduleAt(f.e,f.d.get('state'),p.foodTrips[0].worker,600),null);
+});
+
+test('local catch-up only recruits journeys touching the pending global clock interval',()=>{
+ const f=fixture();delete f.e.rules.forestWater;prepareHouseholdSubsistence(f.d,f.e,0);
+ const state=f.d.get('state'),worker=Object.keys(state.records['subsistence-plan:loc_hw'].workers).find(id=>state.records['subsistence-plan:loc_hw'].workers[id].duties.length);
+ const actors=advanceHook('householdSubsistenceActors');
+ // The80-minute480..560 basket cannot move a body during0..5. It remains
+ // part of the whole480..600 pending interval so the global tick cannot count twice.
+ assert.deepEqual(actors(f.e,state,0,5),[]);
+ assert.deepEqual(actors(f.e,state,480,500),[worker]);
+ assert.deepEqual(actors(f.e,state,480,600),[worker]);
+ assert.deepEqual(actors(f.e,state,600,620),[]);
+});
+
+test('signed service appointments reserve physical work even when the base routine has no services',()=>{
+ const f=fixture();delete f.e.rules.forestWater;
+ for(const actor of [A,B]){
+  const sourceEvent=`world_event:appointment:${actor}`;
+  f.d.set(['state','records',sourceEvent],{id:`appointment:${actor}`,category:'world_event',verb:'appointment_agreed',actor,minute:0,payload:{service:'teach'}});
+  bookServiceAppointment(f.d,f.e,{id:`lesson:${actor}`,actor,sourceEvent,location:home,start:480,end:1020,services:['teach']});
+ }
+ // Two mouths need120 satiety; both480-minute work allowances are already
+ // committed to the lesson, so harvesting remains zero rather than double booked.
+ const p=householdSubsistencePlan(f.e,f.d.get('state'),A,480);
+ assert.deepEqual(p.foodTrips,[]);assert.deepEqual(p.duties,[]);
+ advanceHouseholdMeals(f.d,f.e,0);assert.equal(meals(f)[0].shortfall.satiety,120);
+});
+
+test('a market keeper reserves the signed customer windows as well as the travelling customer',()=>{
+ const f=fixture();delete f.e.rules.forestWater;
+ for(const keeper of [A,B])f.d.set(['state','records',`market:${keeper}`],{category:'market_trip',actor:'player',keeper,departAt:0,returnAt:1440,serviceWindows:[{start:480,end:720},{start:780,end:1020}]});
+ // Both keepers have480 actual serving minutes. The household cannot also
+ // credit the80-minute local forage basket to either of those same minutes.
+ const p=householdSubsistencePlan(f.e,f.d.get('state'),A,480);
+ assert.deepEqual(p.foodTrips,[]);assert.deepEqual(p.duties,[]);
+});
+
+test('repeated routine overlays retain exact boundaries and respond to live worker illness',()=>{
+ const f=fixture();delete f.e.rules.forestWater;
+ prepareHouseholdSubsistence(f.d,f.e,0);
+ const workers=f.d.get('state','records','subsistence-plan:loc_hw','workers');
+ const worker=Object.keys(workers).find(id=>workers[id].duties.length),duty=workers[worker].duties[0];
+ // Two mouths need8 portions ×10 minutes: an80-minute basket inside the
+ // authored480–720 shift. Reusing its projection must retain the560 return.
+ assert.equal(workers[worker].duties.reduce((sum,row)=>sum+row.end-row.start,0),80);
+ assert.deepEqual([duty.start,duty.end],[480,560]);
+ const expected=npcSchedule(f.e,f.d.get('state'),worker,480);
+ withScheduleCache(f.e,f.d,()=>{
+  for(const minute of [0,480,duty.end,1020]){
+   assert.deepEqual(npcSchedule(f.e,f.d.get('state'),worker,minute),expected);
+   const active=subsistenceScheduleAt(f.e,f.d.get('state'),worker,minute);
+   assert.equal(Boolean(active),duty.start<=minute&&minute<duty.end);
+  }
+  f.d.set(['state','npcs',worker,'status'],'患病');
+  assert.equal(subsistenceScheduleAt(f.e,f.d.get('state'),worker,duty.start),null);
+  assert.deepEqual(npcSchedule(f.e,f.d.get('state'),worker,480),f.e.byId.get(worker).schedule);
+  f.d.set(['state','npcs',worker,'status'],'正常');
+  assert.deepEqual(npcSchedule(f.e,f.d.get('state'),worker,480),expected);
+ });
+});
 
 test('one settlement record freezes all household plans through depletion and save reload',()=>{
  const f=fixture({separate:true});delete f.e.rules.forestWater;

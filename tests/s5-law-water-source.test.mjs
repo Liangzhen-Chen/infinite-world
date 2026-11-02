@@ -30,6 +30,17 @@ export function fixture({source=true,stock=20,granary=true}={}){
 }
 const receipt=f=>f.d.get('state','family','meals','water-house');
 
+test('a public dock derives a finite basin from its published use without rewriting reviewed locations',()=>{
+ const e=new WorldEngine(structuredClone(world)),dock=e.byId.get('loc_bs_hebu'),before=structuredClone(dock);
+ assert.equal(dock.purpose,'码头与船户');assert.equal(dock.features,undefined);
+ const source=waterBasins(e,{}).find(b=>b.location===dock.id);
+ // The existing water table supplies500000000ml capacity at an80% initial
+ // share. A derived dock basin has the same400000000ml, not an infinite tap.
+ assert.equal(source.id,`basin:${dock.id}`);assert.equal(source.capacity,500000000);
+ assert.equal(basinState(e,{},source).waterMl,400000000);
+ assert.deepEqual(dock,before);
+});
+
 test('a road closed after morning cancels the near-water execution without replacing the plan',()=>{
  const f=fixture({stock:0});delete f.e.rules.weather;f.e.airDraft=f.d;
  f.e.world.households[0].homeLocation='loc_hw_northwood';
