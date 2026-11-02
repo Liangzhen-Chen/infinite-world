@@ -45,6 +45,8 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const [residents,households,settlementProfiles,regions]=await Promise.all([optional('people/residents.json'),optional('people/households.json'),optional('geo/settlements.json'),optional('geo/regions.json')]);
     const careers=await optional('meta/careers.json');
     const townIncome=await optional('economy/town-income.json');
+    const townIncomePolicy=await optional('rules/town-income.json');
+    if(!Array.isArray(townIncomePolicy))rules.townIncome=townIncomePolicy;
     if(!Array.isArray(townIncome)){
         const schema=JSON.parse(await fs.readFile(new URL('../schemas/town-income.schema.json',import.meta.url),'utf8'));
         const validate=new Ajv({allErrors:true,strict:false}).compile(schema);

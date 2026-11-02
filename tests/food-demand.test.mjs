@@ -38,9 +38,11 @@ test('1000 = 306 + 694: real time settles private demand groups and real missing
  const beforeFood=f.doc.state.settlements[SID].food??0;
  const output=await f.act({tool:'world_time',args:{minutes:DAY},eventId:'demand-day'});
  const row=summary(f);assert.equal(statisticalFoodPopulation(f.e,f.doc.state,SID),694);assert.equal(row.demandSatiety,694*base);
- assert.ok(row.missingSatiety>0);assert.equal(row.demandSatiety,row.missingSatiety+row.consumedSatiety);
+ // TI1b: sourced opening food covers the first day. The same deficit assertion
+ // is retained below, after real time consumes the finite opening.
+ assert.equal(row.missingSatiety,0);assert.ok(row.consumedSatiety>0);assert.equal(row.demandSatiety,row.missingSatiety+row.consumedSatiety);
  assert.equal(f.doc.state.settlements[SID].food??0,beforeFood);
- assert.ok(f.doc.state.settlements[SID].unmetMeals>=Math.ceil(row.missingSatiety/base));
+ assert.ok((f.doc.state.settlements[SID].unmetMeals??0)>=Math.ceil(row.missingSatiety/base));
  const read=f.e.primitiveDraft(f.doc),supply=marketSupply(read,f.e,'item_bread',SID);
  assert.equal(supply.statisticalDemand,Math.ceil(statisticalFoodNeed(f.e,f.doc.state,SID)/f.e.byId.get('item_bread').nutrition.satiety));
  assert.ok(supply.demand>=supply.statisticalDemand);
@@ -50,7 +52,7 @@ test('1000 = 306 + 694: real time settles private demand groups and real missing
  const perGrain=mill.output.quantity/mill.materials.find(m=>m.item==='item_oats').amount
   *bake.output.quantity/bake.materials.find(m=>m.item==='item_oat_flour').amount*f.e.byId.get(bake.output.item).nutrition.satiety;
  const grain=marketSupply(read,f.e,'item_oats',SID);
- assert.equal(grain.goods,'goods:grain');assert.equal(grain.statisticalDemand,Math.ceil(694*base/perGrain));
+ assert.equal(grain.goods,'goods:grain');assert.equal(grain.statisticalDemand,Math.ceil(statisticalFoodNeed(f.e,f.doc.state,SID)/perGrain));
  const publicStockItem=f.e.rules.economy.shops.stockItems.food,publicRow=marketSupply(read,f.e,publicStockItem,SID).rows.find(r=>r.owner===SID&&r.item===publicStockItem);
  assert.ok(publicRow);assert.equal(publicRow.retained,0,'a town without a granary does not demand a phantom public reserve');
  const writes=output.patches.filter(p=>p.path?.[0]==='state'&&p.path?.[1]==='records'&&String(p.path?.[2]).startsWith('food-demand:'));
@@ -60,7 +62,7 @@ test('1000 = 306 + 694: real time settles private demand groups and real missing
 
 test('district roster remains statistical; accepted household profile transfers population and real cash once',async()=>{
  const f=await start();await f.act({tool:'world_time',args:{minutes:DAY},eventId:'before-materialize'});
- await f.act({tool:'world_move',args:{destination:'loc_bs_hebu'},eventId:'visit-district'});
+ await f.act({tool:'world_move',args:{destination:'loc_bs_luxiang'},eventId:'visit-district'});
  assert.equal(statisticalFoodPopulation(f.e,f.doc.state,SID),694);
  const person=Object.values(f.doc.state.created).find(p=>p.generated==='population'&&p.settlement===SID&&p.age>=18&&account(f).shares[p.householdId]);
  assert.ok(person);assert.equal(f.doc.state.npcs[person.id],undefined);
@@ -68,7 +70,7 @@ test('district roster remains statistical; accepted household profile transfers 
  // fixture edit to the statistical demand, population, cash or inventory.
  const draft=f.e.primitiveDraft(f.doc),paid=Math.min(37,f.doc.state.player.coins);
  assert.ok(paid>0);financeTransfer(draft,f.e,'player',ID,paid,'food-test-payment');f.replace(draft.document);
- const original=account(f).coins,ownerBefore=f.doc.state.npcs[person.id]?.coins??0,expected=townShareAmount(account(f),person.householdId,original,ID);
+ const original=account(f).coins,ownerBefore=f.doc.state.npcs[person.id]?.coins??0,expected=townShareAmount(account(f),person.householdId,original,ID,'coins');
  await f.act({type:'population_profile',person:person.id,profile:profile(person)});
  const house=f.doc.state.family.households[person.householdId],row=account(f);
  const remaining=statisticalFoodPopulation(f.e,f.doc.state,SID);assert.equal(remaining+house.members.length,694);
@@ -79,20 +81,25 @@ test('district roster remains statistical; accepted household profile transfers 
  assert.equal(statisticalFoodPopulation(f.e,f.doc.state,SID),remaining);assert.deepEqual(auditLedger(f.doc.ledger),[]);assertTransitionInvariants(f.e.primitiveDraft(f.doc),f.e);
 });
 
-test('unfunded demand is not food: repeated real days retain actual deficits without per-household statistical writes',async()=>{
- const f=await start();await f.act({tool:'world_time',args:{minutes:DAY},eventId:'empty-one'});
+test('finite opening food is not income: after depletion repeated real days retain deficits without per-household statistical writes',async()=>{
+ const f=await start();
+ // TI1b: retain the original two genuinely hungry days rather than letting
+ // missingSatiety>=0 pass while the newly registered opening still feeds us.
+ await f.act({tool:'world_time',args:{minutes:12*DAY},eventId:'empty-opening-exhausted'});
+ const openingDemand=account(f).demandSatiety;
+ await f.act({tool:'world_time',args:{minutes:DAY},eventId:'empty-one'});
  const first=account(f),prefix=Object.keys(f.doc.state.records).filter(k=>k.startsWith('food-demand:'));
  const r=await f.act({tool:'world_time',args:{minutes:DAY},eventId:'empty-two'});
- assert.ok(account(f).missingSatiety>=first.missingSatiety);assert.equal(account(f).demandSatiety,2*first.demandSatiety);
+ assert.ok(first.missingSatiety>0);assert.ok(account(f).missingSatiety>first.missingSatiety);assert.equal(account(f).demandSatiety-openingDemand,2*(first.demandSatiety-openingDemand));
  assert.deepEqual(Object.keys(f.doc.state.records).filter(k=>k.startsWith('food-demand:')),prefix);
- assert.ok(r.patches.filter(p=>String(p.path?.[2]).startsWith('food-demand:')).every(p=>p.path[1]==='records'));
+ assert.ok(r.patches.filter(p=>p.path?.[0]==='state'&&String(p.path?.[2]).startsWith('food-demand:')).every(p=>p.path[1]==='records'));
  assert.deepEqual(auditLedger(f.doc.ledger),[]);
 });
 
 test('real school admission transfers a roster household before the next meal or market read',async()=>{
  // A finite authored school and a real teacher; the generated household and
  // admission are created exclusively by move/time/school_open actions.
- const authored=structuredClone(world),district='loc_bs_hebu',teacher='npc_hw_luqing';
+ const authored=structuredClone(world),district='loc_bs_luxiang',teacher='npc_hw_luqing';
  Object.assign(authored.locations.find(p=>p.id===district),{type:'bld',facilityType:'school',capacity:1000,owner:'player'});
  authored.npcs.find(p=>p.id===teacher).schedule={default:[{start:0,end:1440,location:district,activity:'trade',services:['trade']}]};
  const f=await start(authored);await f.act({tool:'world_time',args:{minutes:DAY},eventId:'school-before'});
@@ -101,7 +108,7 @@ test('real school admission transfers a roster household before the next meal or
  assert.ok(person);assert.equal(statisticalFoodPopulation(f.e,f.doc.state,SID),694);
  const draft=f.e.primitiveDraft(f.doc),cash=Math.min(37,f.doc.state.player.coins);assert.ok(cash>0);
  financeTransfer(draft,f.e,'player',ID,cash,'school-funded-share');f.replace(draft.document);
- const before=account(f).coins,minute=f.doc.state.minute,expected=townShareAmount(account(f),person.householdId,account(f).coins,ID);
+ const before=account(f).coins,minute=f.doc.state.minute,expected=townShareAmount(account(f),person.householdId,account(f).coins,ID,'coins');
  await f.act({tool:'world_settlement',args:{operation:'school_open',plot:'skill_literacy',authority:teacher,beneficiaries:[person.id],due:900,minutes:30,days:1,consent:true},eventId:'school-admit'});
  assert.ok(f.doc.state.npcs[person.id]);assert.equal(f.doc.state.minute,minute);
  const count=person.household.length+1;
@@ -120,8 +127,10 @@ test('a funded statistical buyer uses a real open counter and consumes private f
  seller.inventory.item_bread=1000;seller.coins=100000;
  authored.rules.economy.shops.stores.find(s=>s.keeper===seller.id).restock.push({item:'item_bread',source:'route',from:'loc_hw',amount:2,maximum:1000});
  seller.schedule={default:[{start:0,end:1440,location:SID,activity:'trade',services:['trade']}]};
- const f=await start(authored);await f.act({tool:'world_time',args:{minutes:DAY},eventId:'counter-first'});
- await f.act({tool:'world_move',args:{destination:'loc_bs_hebu'},eventId:'counter-district'});
+ // TI1b: purchasing is tested only once the formally owned opening food is
+ // exhausted by actual days, never by deleting food from a group.
+ const f=await start(authored);await f.act({tool:'world_time',args:{minutes:4*DAY},eventId:'counter-first'});
+ await f.act({tool:'world_move',args:{destination:'loc_bs_luxiang'},eventId:'counter-district'});
  const d=f.e.primitiveDraft(f.doc),cash=Math.min(50000,f.doc.state.npcs[seller.id].coins);assert.ok(cash>0);
  financeTransfer(d,f.e,seller.id,ID,cash,'counter-payment');f.replace(d.document);
  const publicFood=f.doc.state.settlements[SID].food??0,prior=account(f).consumedSatiety;
@@ -141,6 +150,9 @@ test('a funded statistical buyer uses a real open counter and consumes private f
  assert.equal(f.doc.state.npcs[person.id].coins+account(f).coins,coins);
  await f.act({tool:'world_time',args:{minutes:DAY-f.doc.state.minute%DAY},eventId:'counter-eat'});
  assert.ok(account(f).consumedSatiety>prior);assert.equal(f.doc.state.settlements[SID].food??0,publicFood);
+ // TI1b: the actual capital and opening food now cover the early days. Keep
+ // the original real-shortage check after exhausting that finite supply.
+ await f.act({tool:'world_time',args:{minutes:12*DAY},eventId:'counter-finite-stock-exhausted'});
  assert.ok(account(f).missingSatiety>0);assert.deepEqual(auditLedger(f.doc.ledger),[]);assertTransitionInvariants(f.e.primitiveDraft(f.doc),f.e);
 });
 
@@ -150,10 +162,11 @@ test('statistical wages require an actual open production job, materials, tools 
  seller.schedule={default:[{start:0,end:1440,location:SID,activity:'trade',services:['trade']}]};
  authored.locations.find(l=>l.id===SID).workstations=[{id:'food-test-bench',kind:'woodworking',owner:seller.id,fee:0,access:'public'}];
  authored.rules.economy.shops.stores.find(s=>s.keeper===seller.id).restock.push({item:'item_wooden_peg',source:'route',from:'loc_hw',amount:1,maximum:4});
- const f=await start(authored);await f.act({tool:'world_time',args:{minutes:DAY},eventId:'actual-work'});
+ const f=await start(authored),openingCash=account(f).coins;await f.act({tool:'world_time',args:{minutes:DAY},eventId:'actual-work'});
  const row=account(f),held=f.doc.state.npcs[seller.id].inventory;
  assert.ok(row.labor.minutes>0);assert.ok(row.labor.earned>0);assert.equal(row.labor.earned,row.labor.paid);
- assert.equal(row.coins,row.labor.paid);assert.ok((typeof held.item_wood==='number'?held.item_wood:held.item_wood.quantity)<10);
+ // TI1b: earnings add to capital, never replace it.
+ assert.equal(row.coins,openingCash+row.labor.paid);assert.ok((typeof held.item_wood==='number'?held.item_wood:held.item_wood.quantity)<10);
  assert.ok((typeof held.item_wooden_peg==='number'?held.item_wooden_peg:held.item_wooden_peg?.quantity)>0);
  assert.ok((typeof held.item_wooden_peg==='number'?held.item_wooden_peg:held.item_wooden_peg.quantity)<=4,'all groups share the one finite four-peg production offer');
  assert.deepEqual(auditLedger(f.doc.ledger),[]);assertTransitionInvariants(f.e.primitiveDraft(f.doc),f.e);
@@ -165,9 +178,12 @@ test('a real public-ration day already includes statistical mouths; no-food coho
  const authored=structuredClone(world),opening=authored.rules.questSources.ledgers.find(r=>r.settlement===SID).opening;
  Object.assign(opening,{granary:true,food:0,foodPerDay:0,woodPerDay:0});
  const f=await start(authored);await f.act({tool:'world_time',args:{minutes:DAY},eventId:'public-empty'});
- assert.equal(summary(f).missingSatiety,694*bodyRule(f.e,'satiety').drainPerHour.light*24);
- assert.equal(summary(f).consumedSatiety,0);assert.equal(f.doc.state.settlements[SID].food,0);
- const missing=f.doc.state.settlements[SID].unmetMeals;
+ const base=bodyRule(f.e,'satiety').drainPerHour.light*24;
+ // TI1b: private opening meals now reduce the public shortage. Put those
+ // actual meals back when checking that the 694 mouths were counted once.
+ assert.equal(summary(f).missingSatiety+summary(f).consumedSatiety,694*base);
+ assert.ok(summary(f).consumedSatiety>0);assert.equal(f.doc.state.settlements[SID].food,0);
+ const missing=f.doc.state.settlements[SID].unmetMeals+summary(f).consumedSatiety/base;
  assert.ok(missing>=694&&missing<=1000,`the 694 statistical mouths are part of the town's 1000 rations: ${missing}`);
  assert.deepEqual(auditLedger(f.doc.ledger),[]);
 });

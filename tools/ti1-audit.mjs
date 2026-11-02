@@ -13,12 +13,14 @@ const legacy=JSON.parse(await fs.readFile(new URL('../tests/fixtures/legacy/seed
 const runs=[];console.log(JSON.stringify({pid:process.pid,root,days,repeats}));
 for(let repeat=0;repeat<repeats;repeat++){
  const engine=new WorldEngine(structuredClone(world));let doc=engine.createCharacter(legacy,{},'ti1-month');
+ const opening=new Map(Object.values(doc.state.records).filter(r=>r.statisticalPopulation&&r.settlement==='loc_bs').map(r=>[r.owner,{coins:r.coins,inventory:structuredClone(r.inventory)}]));
  const start=performance.now();
  for(let day=0;day<days;day++){
   const result=await engine.reduce(doc,{tool:'world_time',args:{minutes:1440},eventId:`ti1-day-${day}`});doc=applyPatches(doc,result.patches);
  }
  const ms=performance.now()-start,number=v=>typeof v==='number'?v:fromRational(v);
  const groups=Object.values(doc.state.records).filter(r=>r.statisticalPopulation&&r.settlement==='loc_bs').map(r=>({id:r.owner,group:r.group??'town-pool',units:r.beneficiaryUnits??694,coins:r.coins,inventory:r.inventory,
+  openingCoins:opening.get(r.owner)?.coins??0,openingInventory:opening.get(r.owner)?.inventory??{},
   missingSatiety:number(r.missingSatiety),consumedSatiety:number(r.consumedSatiety),demandSatiety:number(r.demandSatiety),earned:r.labor.earned,paid:r.labor.paid,
   workMinutes:r.labor.sources?Object.values(r.labor.sources).reduce((n,v)=>n+v,0):r.labor.minutes,
   workSources:r.labor.sources??{employment:r.labor.minutes,service:0,self:0,cooking:0},
