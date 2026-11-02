@@ -1,6 +1,6 @@
 // Daily self-provisioning: bounded journeys, shared work time, finite stocks.
-import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement} from './entity-view.mjs';
-import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine} from './npc-state.mjs';
+import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities} from './entity-view.mjs';
+import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
@@ -224,6 +224,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  const h=personHousehold(e,state,owner).value,person=e.byId.get(owner),home=h?.homeLocation??person?.home?.location??person?.location??state.npcs?.[owner]?.location;
  const members=(h?.members??[owner]).filter(id=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded);
  const day=Math.floor(minute/DAY),r=config(e),settlement=h?.settlement??placeSettlement(e,state,home).value;
+  const notBefore=context?.notBefore??(Math.floor(state.minute/DAY)===day?state.minute%DAY:0);
  const meal=mealOverride??mealDeficit(e,state,owner,settlement,members),portions=Math.ceil(meal.shortfall.satiety/(e.byId.get(r.foodItem)?.nutrition?.satiety??1));
  const water=meal.needs.hydration>0?journey(e,state,home,'water',minute,0,null,memoState,context):null;
  if(!portions&&!water)return {worker:null,home,members,water:null,food:null,foodTrips:[],duties:[],chores:[]};
@@ -262,31 +263,62 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  const blocked=[];
   for(const o of context?(context.reservations.get(worker)??[]):Object.values(state.obligations??{}))if(o.reservationVersion===1&&!['已取消','取消','void','cancelled'].includes(o.status)&&[o.promisor,o.promisee].includes(worker))blocked.push({start:(o.departures?.[worker]??o.start)-day*DAY,end:(o.fulfilledAt??o.deadline)-day*DAY});
  for(const trip of [state.npcs[worker]?.scheduleTravel,state.npcs[worker]?.cognitionTravel])if(trip&&!trip.subsistence)blocked.push({start:trip.depart-day*DAY,end:trip.arrive-day*DAY});
-  for(const trip of context?(context.marketTrips.get(worker)??[]):recordsWhere(state.records,'category','market_trip'))if(trip.actor===worker)blocked.push({start:trip.departAt-day*DAY,end:trip.returnAt-day*DAY});
+  for(const trip of context?(context.marketTrips.get(worker)??[]):recordsWhere(state.records,'category','market_trip')){
+   const windows=trip.actor===worker?[{start:trip.departAt,end:trip.returnAt}]:trip.keeper===worker?trip.serviceWindows??[]:[];
+   for(const w of windows)blocked.push({start:w.start-day*DAY,end:w.end-day*DAY});
+  }
  if(blocked.some(b=>b.start<780&&b.end>720))lunchBlocked.add(worker);
-  const routine=npcSchedule(e,state,worker,day*DAY+480,null,false)??lifeRoutine(home,{occupation:e.byId.get(worker)?.occupation}),calendar=context?.calendar??e.calendar(day*DAY+480),variant=calendar.market?'market':routine?.restDays?.includes(calendar.day)?'rest':'default',season=routine?.seasonal?.[String(calendar.season)];
+  const authored=npcSchedule(e,state,worker,day*DAY+480,null,false),routine=authored??lifeRoutine(home,{occupation:e.byId.get(worker)?.occupation}),calendar=context?.calendar??e.calendar(day*DAY+480),variant=calendar.market?'market':routine?.restDays?.includes(calendar.day)?'rest':'default',season=routine?.seasonal?.[String(calendar.season)];
  const slots=season?.[variant]??routine?.[variant]??season?.default??routine?.default??[];
- const physical=[];
+  const physicalBlocked=[...blocked];
+  // A public counter, a teacher's lesson or an agreed reception is already
+  // somebody else's time. Opportunity cost chooses between available adults;
+  // it does not give the cheapest adult permission to abandon a real shift.
+  // An independent stall can close for its own household errand; its trade
+  // availability already follows the resulting physical absence. A staffed
+  // reception/lesson is not an interchangeable household work slot.
+  for(const slot of slots)if(slot.services?.some(service=>service!=='trade'))physicalBlocked.push({start:slot.start,end:slot.end});
+  for(const office of context?(context.offices.get(worker)??[]):npcServicePosts(e,state).filter(o=>o.holder===worker)){
+   const hours=office.receptionHours??[e.rules.governance?.officeHours??[480,1020]];
+   // A holder with no authored routine (sparse imported save) would otherwise
+   // fall back to an idle home day; the post's reception hours are still theirs.
+   if(!authored&&variant!=='rest')for(const [start,end]of hours)physicalBlocked.push({start,end});
+   else for(const [start,end]of hours)for(const slot of slots){
+    const from=Math.max(start,slot.start),to=Math.min(end,slot.end);
+    if(slot.location===office.seat&&from<to)physicalBlocked.push({start:from,end:to});
+   }
+  }
+  const lawActor=context?context.lawActors.has(worker):(e.rules.law?.codes??[]).some(code=>lawAuthorities(e,state,code).includes(worker));
+  if(lawActor&&variant!=='rest'){const [start,end]=e.rules.governance?.officeHours??[480,1020];physicalBlocked.push({start,end});}
+  const job=personEmployment(e,state,worker,day*DAY+480)?.value;
+  if(job&&!job.education&&['有效','要求加薪'].includes(job.status)&&Math.floor(job.starts/DAY)<=day&&variant!=='rest'){
+   const time=householdWorkTime(e,state,worker,day*DAY+480,{commuteMinutes:job.commuteMinutes??0,workMinutes:job.workMinutes??480,subsistence:false});
+   physicalBlocked.push(...time.work,...time.commute);
+  }
+  const physical=[];
  // A day off cancels paid work, not the household's need for food. The
  // authored all-day rest slot can contain household work; an explicit sleep
  // or meal slot still cannot. Keep its existing edges rather than inventing
  // a morning departure inside it.
  for(const slot of slots.filter(s=>!/睡|吃饭|用餐|早饭|午饭|晚饭/.test(s.activity??'')&&(variant==='rest'||!/歇息|休息/.test(s.activity??'')))){
   let at=slot.start;
-  for(const b of blocked.filter(b=>b.start<slot.end&&b.end>slot.start).sort((a,b)=>a.start-b.start)){
+   for(const b of physicalBlocked.filter(b=>b.start<slot.end&&b.end>slot.start).sort((a,b)=>a.start-b.start)){
    if(b.start>at)physical.push({start:at,end:Math.min(slot.end,b.start),boundaryEnd:Math.min(slot.end,b.start)});
    at=Math.max(at,b.end);
   }
   if(at<slot.end)physical.push({start:at,end:slot.end,boundaryEnd:slot.end});
  }
  const physicalRuns=[];
- for(const span of physical){
+  // The first advance of a sparse/imported campaign may start after dawn.
+  // It cannot invent a departure before the campaign's actual current time.
+  for(const span of physical.filter(s=>s.start>=notBefore)){
   const prior=physicalRuns.at(-1)?.at(-1);
-  if(prior&&!blocked.some(b=>b.start<span.start&&b.end>prior.end))physicalRuns.at(-1).push(span);
+   if(prior&&!physicalBlocked.some(b=>b.start<span.start&&b.end>prior.end))physicalRuns.at(-1).push(span);
   else physicalRuns.push([span]);
  }
  workerSlots.set(worker,physicalRuns);
- const free=[];for(const [lo,hi]of [[480,720],[780,1020]]){
+  const free=[];for(const [begin,hi]of [[480,720],[780,1020]]){
+   const lo=Math.max(begin,notBefore);if(lo>=hi)continue;
   let at=lo;for(const b of blocked.filter(b=>b.start<hi&&b.end>lo).sort((a,b)=>a.start-b.start)){if(b.start>at)free.push({start:at,end:Math.min(hi,b.start)});at=Math.max(at,b.end);}if(at<hi)free.push({start:at,end:hi});
  }return [worker,free];}));
  const duties=[],chores=[];
@@ -392,12 +424,15 @@ export function prepareHouseholdSubsistence(d,e,day=Math.floor(d.get('state','mi
  // food ledger serve all settlements. Reservations below update that ledger;
  // no process-local decision survives this call or a save/reload boundary.
  const index=sources(e,morning),calendar=e.calendar(morning.minute),closed=warClosedRoutes(morning,morning.minute),facilities=facilityRouteStates(e,morning);
- const reservations=new Map(),marketTrips=new Map();
+  const reservations=new Map(),marketTrips=new Map(),offices=new Map();
+  for(const office of npcServicePosts(e,morning))if(office.holder){const rows=offices.get(office.holder)??[];rows.push(office);offices.set(office.holder,rows);}
  for(const o of Object.values(morning.obligations??{}))if(o.reservationVersion===1&&!['已取消','取消','void','cancelled'].includes(o.status))for(const id of new Set([o.promisor,o.promisee])){
   const rows=reservations.get(id)??[];rows.push(o);reservations.set(id,rows);
  }
- for(const trip of recordsWhere(morning.records,'category','market_trip')){const rows=marketTrips.get(trip.actor)??[];rows.push(trip);marketTrips.set(trip.actor,rows);}
- const context={index,calendar,closed,facilities,seed:seedOf(e),skeletons:new Map(),reservations,marketTrips,
+  for(const trip of recordsWhere(morning.records,'category','market_trip'))for(const id of new Set([trip.actor,trip.keeper].filter(Boolean))){const rows=marketTrips.get(id)??[];rows.push(trip);marketTrips.set(id,rows);}
+  const context={index,calendar,closed,facilities,seed:seedOf(e),skeletons:new Map(),reservations,marketTrips,offices,
+   notBefore:Math.floor(state.minute/DAY)===day?state.minute%DAY:0,
+   lawActors:new Set((e.rules.law?.codes??[]).flatMap(code=>lawAuthorities(e,morning,code))),
   geographySignature:`${calendar.season}|${[...closed].sort().join(',')}|${facilitySignature(index,facilities)}`,
   carePatients:new Set(Object.values(morning.family?.illnesses??{}).filter(row=>row.status==='患病中'&&row.severity==='重'&&row.since<=morning.minute&&morning.minute<row.endsAt).map(row=>row.patient)),
   water:new Map(index.water.map(source=>[source.id,usableWater(e,morning,source,day)])),stocks:new Map(),geography:new Map(),waterJourneys:new Map(),pairs:new Map()};
@@ -428,18 +463,21 @@ export function prepareHouseholdSubsistence(d,e,day=Math.floor(d.get('state','mi
 }
 registerAdvanceHook('prepareHouseholdSubsistence',prepareHouseholdSubsistence);
 const scheduleActorsMemo=Symbol('household schedule actors');
-registerAdvanceHook('householdSubsistenceActors',(e,state,minute)=>{
+registerAdvanceHook('householdSubsistenceActors',(e,state,minute,until=minute)=>{
  const days=recordsMemo(state.records,scheduleActorsMemo,()=>{
   const out=new Map();
   for(const row of recordsWhere(state.records,'category','subsistence_plan')){
-   const ids=out.get(row.day)??new Set();
-   for(const [id,worker]of Object.entries(row.workers))if(worker.duties.length)ids.add(id);
+    const ids=out.get(row.day)??new Map();
+    for(const [id,worker]of Object.entries(row.workers))if(worker.duties.length)ids.set(id,worker.duties);
    out.set(row.day,ids);
   }
   return out;
  },{categories:['subsistence_plan']});
- const ids=days.get(Math.floor(minute/DAY));
- return ids?Object.keys(state.npcs).filter(id=>ids.has(id)&&!state.npcs[id].materialized?.folded):[];
+  const active=new Set();
+  for(const [day,people]of days)if(day*DAY<=until&&(day+1)*DAY>=minute)for(const [id,duties]of people){
+   if(duties.some(row=>day*DAY+row.start<=until&&day*DAY+row.end>=minute))active.add(id);
+  }
+  return Object.keys(state.npcs).filter(id=>active.has(id)&&!state.npcs[id].materialized?.folded);
 });
 function planRecord(state,id,minute){
  const entry=state.family?.subsistence?.[1]?.[id];if(!entry)return null;

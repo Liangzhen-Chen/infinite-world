@@ -1,7 +1,7 @@
 import {vocabulary} from './domain-rules.mjs';
 // Only active catalog people are instantiated. Faction rosters and profile
 // prose never become money, inventory or private knowledge in a campaign.
-import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment,personBusiness} from './entity-view.mjs';
+import {personConstraint,personConstraints,personCareer,personRoutine,personLawRoles,personEmployment,personBusiness,institutionOffices} from './entity-view.mjs';
 import {recordsWhere,recordsMemo,stateMemo,digest,persistable,cloneData,canonicalEqual} from './storage.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {isEffective} from './lifecycle-state.mjs';
@@ -17,6 +17,15 @@ export function lifeRoutine(home,{minor=false,occupation=''}={}){
     return {default:[{start:0,end:360,location:home,activity:'睡眠',services:[]},{start:360,end:1260,location:home,activity:day,services:[]},{start:1260,end:1440,location:home,activity:'睡眠',services:[]}]};
 }
 export function registerSubsistenceDuties(resolve,chores=()=>[]){subsistenceDuties=resolve;subsistenceChores=chores;}
+// Published counters are staffed posts even when their routine advertises
+// only trade. Keep these native consumers distinct from an independent stall.
+export function npcServicePosts(engine,state){
+ const posts=institutionOffices(engine,state);
+ const add=(holder,seat)=>posts.push({holder,seat,receptionHours:[engine.byId.get(seat)?.openHours??engine.rules.governance?.officeHours??[480,1020]]});
+ for(const p of engine.rules.agriculture?.settlements??[])if(p.manager&&p.counter)add(p.manager,p.counter);
+ for(const b of engine.rules.economy?.credit?.banks??[])for(const id of b.keepers??[])add(id,b.location);
+ return posts;
+}
 export function subsistenceScheduleAt(engine,state,id,minute){
  const offset=minute%1440,rows=subsistenceDuties(engine,state,id,minute,true),row=rows.find(r=>r.start<=offset&&offset<r.end);
  if(row)return {...row,until:minute-offset+row.end,boundaryUntil:minute-offset+(row.boundaryEnd??row.end)};

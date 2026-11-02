@@ -26,7 +26,7 @@ export function withScheduleCache(engine,d,task){
     const previous=engine.scheduleReadCache,own=Object.hasOwn(engine,'scheduleReadCache');
     if(previous?.draft===d)return task();
     const cursor=d.cursor,observer=cursor?.onPatch;
-    const cache=cursor instanceof PatchCursor?{draft:d,engine,seed:d.peek('randomSeed'),people:new Map(),snapshots:new WeakMap()}:null;
+    const cache=cursor instanceof PatchCursor?{draft:d,engine,seed:cursor.root.randomSeed,people:new Map(),snapshots:new WeakMap()}:null;
     engine.scheduleReadCache=cache;
     if(cache)cursor.onPatch=patch=>{observer?.(patch);invalidateSchedule(cache,patch);};
     try{return task();}finally{
@@ -380,13 +380,16 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null,a
 // local cursor to make their bodies current at reads; carry classroom
 // presence to the next education tick rather than teaching twice or losing it.
 registerAdvanceHook('catchUpSubsistenceSchedules',(d,e,before,after,beforeState)=>{
- const state=peekState(d),ids=advanceHook('householdSubsistenceActors')?.(e,state,before)??[];
+ const state=peekState(d),from=d.scheduler.lastSettled??before;
+ // Only a journey touching this pending global-clock interval needs local
+ // catch-up. Tomorrow's/morning's assignment cannot move a body tonight.
+ const ids=advanceHook('householdSubsistenceActors')?.(e,state,from,after)??[];
  if(!ids.length)return;
  const previousCourses=e.educationCourseContext,previousAttendance=e.educationAttendance;
  const courses=previousCourses??educationCourses(e,state,before);
  const students=new Set(courses.flatMap(c=>[c.teacher,...c.students]).filter(Boolean));
  const attendance=new Map(ids.filter(id=>students.has(id)).map(id=>[id,[]]));
- const from=d.scheduler.lastSettled??before,prior=state.scheduler?.subsistence;
+ const prior=state.scheduler?.subsistence;
  const saved=prior?.from===from?prior.attendance:{};
  e.educationCourseContext=courses;e.educationAttendance=attendance;
  try{advanceNpcSchedules(d,e,before,after,{beforeState,actors:new Set(ids),local:true});}
