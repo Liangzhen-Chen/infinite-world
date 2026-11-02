@@ -34,6 +34,7 @@ export function withScheduleCache(engine,d,task){
         if(own)engine.scheduleReadCache=previous;else delete engine.scheduleReadCache;
     }
 }
+registerAdvanceHook('festivalScheduleAt',festivalScheduleAt);
 registerAdvanceHook('withScheduleCache',withScheduleCache);
 // Perception writes evidence rows; actual learning still changes NPC skills or
 // recipes, and bookings, employment, custody and transitions remain inputs.

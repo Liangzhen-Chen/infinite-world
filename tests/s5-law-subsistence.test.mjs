@@ -66,12 +66,13 @@ test('an initial afternoon plan cannot fabricate an earlier morning departure',(
  const f=fixture();delete f.e.rules.forestWater;f.d.set(['state','minute'],600);
  prepareHouseholdSubsistence(f.d,f.e,0);
  const row=f.d.get('state','records','subsistence-plan:loc_hw'),p=row.households.forage;
- // Eight local portions need80 minutes. The480 edge is past; the next
- // authored work edge is780, so the real basket runs780..860, not480..560.
+ // Eight local portions need80 minutes. The work slot that opened at480 is
+ // still running at600, so it is available from the plan's actual minute on:
+ // the real basket runs600..680, never480..560 before the campaign existed.
  const duties=row.workers[p.foodTrips[0].worker].duties;
- assert.equal(duties[0].start,780);assert.equal(duties.at(-1).end,860);
+ assert.equal(duties[0].start,600);assert.equal(duties.at(-1).end,680);
  assert.ok(duties.every(d=>d.start>=600));
- assert.equal(subsistenceScheduleAt(f.e,f.d.get('state'),p.foodTrips[0].worker,600),null);
+ assert.equal(subsistenceScheduleAt(f.e,f.d.get('state'),p.foodTrips[0].worker,599),null);
 });
 
 test('local catch-up only recruits journeys touching the pending global clock interval',()=>{

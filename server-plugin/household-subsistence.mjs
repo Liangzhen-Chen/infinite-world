@@ -10,7 +10,7 @@ import {warClosedRoutes} from './hazard-calendar.mjs';
 import {facilityRouteStates} from './facility-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {reserve,moveStock,registerLegacyStock,accrueStock} from './stock.mjs';
-import {registerAdvanceHook} from './advance-hooks.mjs';
+import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 
 const DAY=1440,config=e=>e.rules.householdSubsistence;
 const workerPreference=compileRX('roll("subsistence-worker")');
@@ -278,6 +278,12 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
   // availability already follows the resulting physical absence. A staffed
   // reception/lesson is not an interchangeable household work slot.
   for(const slot of slots)if(slot.services?.some(service=>service!=='trade'))physicalBlocked.push({start:slot.start,end:slot.end});
+  // A festival host's ceremony relocates the work slot that contains it
+  // (festival.mjs owns that rule); the relocated slot is a staffed duty too.
+  if(e.world.festivals?.some(f=>f.runtime?.status==='active'&&f.runtime.host===worker&&f.runtime.hostDuty))for(const slot of slots){
+   const duty=advanceHook('festivalScheduleAt')?.(e,state,worker,day*DAY+slot.start,{...slot,until:day*DAY+slot.end,variant},{festivals:[]});
+   if(duty?.variant==='festival-duty')physicalBlocked.push({start:slot.start,end:slot.end});
+  }
   for(const office of context?(context.offices.get(worker)??[]):npcServicePosts(e,state).filter(o=>o.holder===worker)){
    const hours=office.receptionHours??[e.rules.governance?.officeHours??[480,1020]];
    // A holder with no authored routine (sparse imported save) would otherwise
@@ -311,7 +317,8 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  const physicalRuns=[];
   // The first advance of a sparse/imported campaign may start after dawn.
   // It cannot invent a departure before the campaign's actual current time.
-  for(const span of physical.filter(s=>s.start>=notBefore)){
+  // A work slot still running at that time is available from that minute on.
+  for(const span of physical.map(s=>s.start<notBefore&&s.end>notBefore?{...s,start:notBefore}:s).filter(s=>s.start>=notBefore)){
   const prior=physicalRuns.at(-1)?.at(-1);
    if(prior&&!physicalBlocked.some(b=>b.start<span.start&&b.end>prior.end))physicalRuns.at(-1).push(span);
   else physicalRuns.push([span]);
