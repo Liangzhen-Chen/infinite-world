@@ -1,0 +1,29 @@
+{
+  "status": "暂定默认值",
+  "basis": "calibrate",
+  "calibration": "pending",
+  "source": "家常规律：前工业时代家户靠家中传习做日常饮食，不靠拜师；难度阈值、熟练度每年增量与上限是P待标定的游戏缺省，不是史料测得值。炊具与灶只按家户已登记的住处和家常配方推出，不按人名、地点特判。",
+  "history": [
+    {"title": "Ruth Goodman (2013), How to Be a Victorian / Tudor Monastery Farm 系列", "url": "https://www.bbc.co.uk/programmes/b00vq9sp", "supports": "前工业家户的日常烹饪由家内成员传习，灶与基本炊具属家户常备；不支持本规则的具体难度阈值。"},
+    {"title": "Jan de Vries (2008), The Industrious Revolution", "url": "https://doi.org/10.1017/CBO9780511818899", "supports": "家户生产自用食物与市场购买并行，家务技艺在家内传承；不支持本规则的数值。"}
+  ],
+  "recipeConditions": {
+    "skillPrefix": "skill_life_",
+    "maxDifficulty": 10,
+    "basis": "生活类技能、难度不超过阈值，且产物本身有营养(satiety>0)或是某个有营养产物配方的直接材料；配方集合从配方表派生，不手写清单。"
+  },
+  "proficiency": {
+    "perAdultYear": 5,
+    "maximum": 100,
+    "basis": "成年后每年增量×年数，封顶低于uncertifiedMaximumProficiency；不给满级，既有真实练习记录照常累积，取两者较大者。"
+  },
+  "hearth": {
+    "kind": "cooking",
+    "fee": 0,
+    "basis": "每个登记家户的homeLocation派生一个归该户成员使用、不收费的cooking工位；已有cooking工位的地点不重复派生。磨粉需要woodworking(磨坊)，不派生。"
+  },
+  "utensils": {
+    "quantityPerHousehold": 1,
+    "basis": "开局每户对其家用配方(无工位要求或工位为hearth.kind)所需的每种工具各持有1件，价值读物价表basePrice，并计入期初总盘：同额从可分配现金中扣除，不额外造钱。"
+  }
+}

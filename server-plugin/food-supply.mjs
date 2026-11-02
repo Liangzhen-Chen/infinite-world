@@ -19,7 +19,7 @@ import {defineHoldingSource,syncHoldings} from './holding-sources.mjs';
 import {holdingSet,holdingRemove,declareHoldingWriter} from './holdings.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
 import {toRational,fromRational} from './det-math.mjs';
-import {settlementGovernment} from './entity-view.mjs';
+import {settlementGovernment,placeSettlement} from './entity-view.mjs';
 
 declareLedgerWriter('food-supply',{sinks:['sink:decay','sink:destroy']});
 declareHoldingWriter('food-supply',{kinds:[],locations:true});
@@ -116,6 +116,29 @@ function surplus(d,e,p,day){
  const contract=p.profile.tradeContract,committed=(contract&&!s.records[`village-trade:${contract.id}`]?contract.quantity:0)+householdCommitments(s,p.seller,p.item);
  return Math.max(0,stock-reserve-seedShortfall-committed);
 }
+// C uses the identical seed/claims/next-harvest reserve as counter supply.
+// A villager must actually follow a market-day trade slot; this exposes no
+// remote inventory and does not create a second consignment or grain account.
+export function periodicFoodStalls(d,e,minute,{scheduleAt}={}){
+ if(!scheduleAt)return [];
+ if(!e.calendar(minute).market)return [];
+ const state=d.get('state'),out=[],privateSources=producers(d,e).filter(p=>!p.public),villages=new Set((e.rules.agriculture?.settlements??[]).map(p=>p.settlement));
+ // A village household may own stored grain without having a currently sown
+ // private plot. Its next-harvest gap still uses the same conservative rule.
+ for(const h of e.world.households??[])if(villages.has(h.settlement))for(const id of h.members){
+  if(!state.npcs?.[id]||!isEffective(e,state,id)||privateSources.some(p=>p.seller===id))continue;
+  const item=e.rules.agriculture.grainItem;if(e.quantity(d,id,item)>0)privateSources.push({seller:id,manager:id,settlement:h.settlement,from:state.npcs[id].location,public:false,item});
+ }
+ for(const p of privateSources){
+  const n=state.npcs[p.seller],slot=scheduleAt(e,p.seller,minute,state);
+  if(!slot?.services?.includes('trade')||n.location!==slot.location||n.scheduleTravel||n.cognitionTravel)continue;
+  // Also return a zero-surplus household to constrain an existing native
+  // stall. Omitting it would let the native storefront sell its last ration.
+  out.push({kind:'npc',id:`village-market:${p.seller}`,keeper:p.seller,location:slot.location,until:slot.until,settlement:placeSettlement(e,state,slot.location).value,markup:1,goods:[p.item],producer:p});
+ }
+ return out;
+}
+export function foodProducerSurplus(d,e,producer,minute){return surplus(d,e,producer,Math.floor(minute/DAY));}
 function quotes(d,e,p,minute){
  const view=subjectiveView(e,d.document,p.manager),known=Object.values(view.knowledge.facts).filter(f=>f.kind!=='belief').map(f=>f.value);
  if(p.public)known.push(...d.get(...key(statsKey(p.settlement)))?.quotes??[]);

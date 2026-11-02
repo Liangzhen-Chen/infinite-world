@@ -23,8 +23,12 @@ function privateTotals(f){
 }
 test('formal new opening preserves all existing 2351 copper and private bags, adding only the sourced regional remainder',async()=>{
  const f=await incomeFixture(),s=f.document.state,opening=s.records['town-income:genesis'].openings.find(r=>r.settlement===SID);
- assert.equal(opening.existingCoins,2351);assert.equal(opening.registeredMoney,390639);assert.equal(opening.distributedCoins,390639-2351-12000);
- assert.equal(privateTotals(f).coins,390639-12000);
+ assert.equal(opening.existingCoins,2351);assert.equal(opening.registeredMoney,390639);// Household-crafts law: every home gets pot 14 + knife 10 + spoon 8 unless a member already holds that tool; the value stays inside the same M.
+ const tools={item_cooking_pot:14,item_kitchen_knife:10,item_wood_spoon:8},holders=h=>Object.keys(tools).filter(i=>!h.members.some(p=>amount((p.inventory??{})[i])>0));
+ const owed=townHouseholds(f.engine,SID).map(h=>holders(h)),utensilValue=owed.reduce((n,list)=>n+list.reduce((m,i)=>m+tools[i],0),0);
+ assert.equal(300,owed.length);assert.equal(utensilValue,9600,'300 homes x 32; no Baishi household already holds any of the three tools');
+ assert.equal(opening.utensilValue,utensilValue);assert.equal(opening.distributedCoins,390639-2351-12000-utensilValue);
+ assert.equal(privateTotals(f).coins,390639-12000-utensilValue);
  // TI1b: retain the exact original-property assertions, adding only each
  // owner's independently allocated money and registered purchased rations.
  const homes=townHouseholds(f.engine,SID),facts=f.engine.world.townIncome.settlements.find(r=>r.settlement===SID);
@@ -33,6 +37,8 @@ test('formal new opening preserves all existing 2351 copper and private bags, ad
   const home=homes.find(h=>h.owner===p.id),inventory=structuredClone(p.inventory??{});
   assert.equal(s.npcs[p.id].coins,(p.coins??0)+(home?allocated[home.id]:0));
   for(const lot of facts.households.find(h=>h.household===home?.id)?.inventory??[])if(lot.quantity.value){const old=inventory[lot.item];inventory[lot.item]={...(typeof old==='object'?old:{}),quantity:amount(old)+lot.quantity.value};}
+  const registered=s.records['town-income:genesis'].openings.flatMap(r=>townHouseholds(f.engine,r.settlement)).find(h=>!h.pending&&h.owner===p.id);
+  if(registered)for(const item of holders(registered)){const old=inventory[item];inventory[item]={...(typeof old==='object'?old:{}),quantity:amount(old)+1};}
   assert.deepEqual(s.npcs[p.id].inventory,inventory);
  }
  assert.equal(initializeTownIncome(f.engine,f.document),f.document,'the opening cannot run twice');
@@ -42,12 +48,13 @@ test('formal new opening preserves all existing 2351 copper and private bags, ad
 });
 test('capital weights distribute every integer remainder; historical grain includes existing stock and never overwrites private property',async()=>{
  const f=await incomeFixture(),world=f.engine.world,facts=world.townIncome.settlements.find(r=>r.settlement===SID);
- assert.deepEqual(privateTotals(f),{coins:facts.money.value-f.document.state.settlements[SID].treasury,grain:facts.households.reduce((n,h)=>n+h.inventory.filter(r=>r.item==='item_ration').reduce((m,r)=>m+r.quantity.value,0),0)});
+ const utensils=f.document.state.records['town-income:genesis'].openings.find(r=>r.settlement===SID).utensilValue;
+ assert.deepEqual(privateTotals(f),{coins:facts.money.value-f.document.state.settlements[SID].treasury-utensils,grain:facts.households.reduce((n,h)=>n+h.inventory.filter(r=>r.item==='item_ration').reduce((m,r)=>m+r.quantity.value,0),0)});
  for(const p of world.npcs){assert.ok(f.document.state.npcs[p.id].coins>=(p.coins??0));for(const [item,v]of Object.entries(p.inventory??{}))assert.ok(amount(f.document.state.npcs[p.id].inventory[item])>=amount(v));}
  const groups=statisticalFoodGroups(f.engine,f.document.state,SID);
  // TI1b: even labor households receive the minimum positive weight; wealth is not wages.
  assert.ok(groups.some(r=>r.assetClass==='labor'&&r.coins>0));assert.ok(groups.some(r=>r.assetClass==='large'&&r.coins>0));
- const homes=townHouseholds(f.engine,SID),expected=allocateTownAssets(facts.money.value-2351-12000,homes.map(h=>({id:h.id,weight:h.weight})),f.engine.world.settlementProfiles.find(p=>p.id===SID).populationSeed);
+ const homes=townHouseholds(f.engine,SID),expected=allocateTownAssets(facts.money.value-2351-12000-utensils,homes.map(h=>({id:h.id,weight:h.weight})),f.engine.world.settlementProfiles.find(p=>p.id===SID).populationSeed);
  for(const group of groups)for(const house of Object.keys(group.shares))assert.equal(townShareAmount(group,house,group.coins,group.owner,'coins'),expected[house],'each pending household retains its exact opening weight and remainder');
  for(const group of groups)for(const house of Object.keys(group.shares))assert.equal(townShareAmount(group,house,amount(group.inventory.item_ration),group.owner,'item_ration'),facts.households.find(h=>h.household===house).inventory[0].quantity.value,'food belongs to its original buyer, not the capital-weighted town pool');
  const first=allocateTownAssets(7,[{id:'a',weight:1},{id:'b',weight:1},{id:'c',weight:1}],'remainders');

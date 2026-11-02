@@ -47,6 +47,8 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const townIncome=await optional('economy/town-income.json');
     const townIncomePolicy=await optional('rules/town-income.json');
     if(!Array.isArray(townIncomePolicy))rules.townIncome=townIncomePolicy;
+    const householdCrafts=await optional('rules/household-crafts.json');
+    if(!Array.isArray(householdCrafts))rules.householdCrafts=householdCrafts;
     if(!Array.isArray(townIncome)){
         const schema=JSON.parse(await fs.readFile(new URL('../schemas/town-income.schema.json',import.meta.url),'utf8'));
         const validate=new Ajv({allErrors:true,strict:false}).compile(schema);

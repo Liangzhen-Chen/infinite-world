@@ -176,6 +176,8 @@ test('W8B-7 替工工钱按券付：报酬冻结为券进合同托管，做完�
 test('W8B-8 合伙出资与分红：出资 100 文 = 10 张券，退股与分成同为券',async()=>{
  const f=fixture({hostAt:shop},NO_GOODS);
  // 先在铺面租铺（真实动作，租金也冻结为券），再订合伙。
+ // With home utensils (household-crafts law) the host's own daily plan now includes a short procurement trip at minute 600 (back by 620); let it finish so the scripted lease is not made mid-trip.
+ await f.act('world_time',{minutes:25},'b8-trip');
  await f.issue(30,'b8-issue');
  f.at(shop,f.hostFacts({[NOTE_ITEM]:{quantity:30,quality:'木'}},shop));
  const lease=await f.act('world_trade',{seller:host,operation:'lease',consent:true,days:1,deposit:0},'b8-lease'),biz=lease.business;
