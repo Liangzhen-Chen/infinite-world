@@ -101,10 +101,11 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
     // K15: daily household meals legitimately consume private food during the
     // week. Adjust the original exact snapshot ONLY for successful meal writes;
     // public trade must still leave every other private item and coin untouched.
-    const itemDelta=engine.itemDelta.bind(engine);
-    engine.itemDelta=(d,owner,item,delta,books,options)=>{
-        const result=itemDelta(d,owner,item,delta,books,options);
-        if(books?.writer==='npc-life'&&books.purpose==='meal'){
+    const itemDelta=engine.itemDelta;
+    engine.itemDelta=function(d,owner,item,delta,books,options){
+        // The scoped statistical engine reaches here with its own storage; only campaign actors are in this snapshot.
+        const result=itemDelta.call(this,d,owner,item,delta,books,options);
+        if(books?.writer==='npc-life'&&books.purpose==='meal'&&privateAssets.npcs[owner]){
             assert.ok(delta<0);const inventory=privateAssets.npcs[owner].inventory,old=inventory[item];
             const quantity=(typeof old==='number'?old:old?.quantity??0)+delta;assert.ok(quantity>=0);
             if(!quantity)delete inventory[item];
@@ -176,6 +177,8 @@ test('足额粮不足、现金不足、仓容不足和空余劳力为零分别�
         // Change actual capacity/cash immediately before the weekly consumer.
         if(scenario==='grain')setGrain(prepared,seller,prepared.state.settlements[seller].population*90);
         if(scenario==='capacity')farm(prepared,buyer).granary.capacity=prepared.state.settlements[buyer].food+farm(prepared,buyer).field.seedBank;
+        // Town customers' trade tax (TFB) refills the buyer's treasury during the week; empty it again at the consumer.
+        if(scenario==='cash')prepared.state.settlements[buyer].treasury=0;
         if(scenario==='partial')prepared.state.settlements[buyer].treasury=11;
         const cash=snapshotCash(prepared),c=(await wait(engine,prepared,DEPART)).doc,o=c.state.records[key(lane)];
         assert.equal(snapshotCash(c),cash);conservation(c);

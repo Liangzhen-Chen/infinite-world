@@ -27,7 +27,9 @@ export async function prepareDeployment(destination=path.join(root,'dist','engin
     destination=path.resolve(destination);
     const sources=['tools/load-world.mjs','tools/npc-autonomy-planner.mjs','tools/deepseek-client.mjs','tools/narrative-claims.mjs','prompt/constitution.md','prompt/style.md',
         // balance-tables.mjs 用 fs 读（非 import），import 图补不到。
-        'schemas/balance-table.schema.json','schemas/balance-targets.schema.json'];
+        'schemas/balance-table.schema.json','schemas/balance-targets.schema.json',
+        // load-world.mjs reads the town-income schema with fs at start-up, as well.
+        'schemas/town-income.schema.json'];
     async function copyDirectory(relative){
         for(const name of await fs.readdir(path.join(root,relative))){
             if(relative==='world'&&name==='drafts')continue;

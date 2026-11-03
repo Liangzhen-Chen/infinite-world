@@ -55,9 +55,9 @@ test('迁店后补货产地、付款和新报价读取当前工作地；历史�
  assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+20);assert.equal(row.cost,undefined);
  const history=structuredClone(d.get('state','records'));
  const moved=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999});
- // Updated baseline input999 *plentiful supply.5 *neutral grade/regard/
- // spread/depth/corrections1 *one =499.5, truncate once to499.
- assert.equal(moved.totalCoins,499);assert.equal(moved.settlement,'loc_bs');
+ // Updated baseline input999 *scarcity3 *neutral grade/regard/spread/depth/corrections1 *one =2997.
+ // TFA town demand: loc_bs (population 1000) asks 132 food portions against 43 on reachable shelves, ratio 3.07, clamped to the scarcity ceiling 3 (was .5 before town demand counted).
+ assert.equal(moved.totalCoins,2997);assert.equal(moved.settlement,'loc_bs');
  assert.notDeepEqual(moved,quote);assert.deepEqual(quote,oldQuote);
  assert.deepEqual(d.get('state','records'),history,'requoting cannot rewrite restock or transaction history');
  d.set(['state','minute'],DAY+600);

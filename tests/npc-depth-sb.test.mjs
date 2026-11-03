@@ -50,7 +50,7 @@ test('冻结原档首次预演不写入，正式发布闭合15事件30人且仅�
  const worldRoot=path.join(temp,'world');
  // A3 archives actions and ontology in loadWorld; the isolated edition must carry both for the unchanged full-world equality check.
  // S5-06: ecology is an authored input of this edition; retain full-world equality.
- for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology','ecology','economy'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(root,path.join(worldRoot,'drafts/w1/sb-depth'),{recursive:true});
  const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
  const manifest=path.join(worldRoot,'drafts/w1/sb-depth/first-review/manifest.json'),before=await fs.readFile(baseline);

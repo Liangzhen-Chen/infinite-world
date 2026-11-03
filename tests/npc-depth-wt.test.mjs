@@ -46,7 +46,7 @@ test('冻结原档首次预演不写入，正式发布闭合7事件30人且仅�
  // S4 norm bindings are part of the current edition, even when only people change.
  // S5-06: ecology is an approved source of this edition; include it in the
  // isolated publication fixture and retain the complete-world equality below.
- for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology','ecology','economy'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
  const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
  const manifest=path.join(worldRoot,'drafts/w1/wt-depth/sourced/manifest.json'),before=await fs.readFile(baseline);

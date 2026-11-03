@@ -28,7 +28,8 @@ function tenderWorld(){
 }
 function fixture(){
  const engine=new WorldEngine(tenderWorld()),initial=engine.createCharacter(seed,{},'s5f-tender');
- const prepared=applyIntentSetup(engine,initial,{minute:600,location:post,coins:3000,inventory:{}});assert.deepEqual(prepared.setupUnmet,[]);
+ // Household crafts (C) let Linsui plan a procurement errand in the 10:00 daily pass; the fixture opens one minute after it so the host is at his counter.
+ const prepared=applyIntentSetup(engine,initial,{minute:601,location:post,coins:3000,inventory:{}});assert.deepEqual(prepared.setupUnmet,[]);
  const f={engine,document:prepared.document,
   async act(tool,args,id){const out=await engine.reduce(f.document,{tool,args,eventId:id});f.document=applyPatches(f.document,out.patches);return out.result;},
   trade:(args,id)=>f.act('world_trade',{seller:host,...args},id),

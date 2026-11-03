@@ -93,9 +93,10 @@ test('旧伤和其他失能状态不被疾病重置',async()=>{
 
 test('病故后约定终止不追责，遗产整体交给同户成年继承人，人口账减一，病中照护释放',async()=>{
  const s=fixture({fatality:1});
- const eaten={},itemDelta=s.engine.itemDelta.bind(s.engine);
- s.engine.itemDelta=(d,owner,food,delta,books,options)=>{
-  const result=itemDelta(d,owner,food,delta,books,options);
+ const eaten={},itemDelta=s.engine.itemDelta;
+ // Keep the caller's engine: the statistical meal path calls this through its scoped engine.
+ s.engine.itemDelta=function(d,owner,food,delta,books,options){
+  const result=itemDelta.call(this,d,owner,food,delta,books,options);
   if(owner===elder&&books?.writer==='npc-life'&&books.purpose==='meal'){assert.ok(delta<0);eaten[food]=(eaten[food]??0)-delta;}
   return result;
  };

@@ -144,6 +144,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
 export function authoredRules(rules){
     const out={...rules};
     delete out.faith;delete out.factionRelations;delete out.bargaining;
+    delete out.townIncome;delete out.householdCrafts;// own files: rules/town-income.json, rules/household-crafts.json
     if(out.wildlife?.habitats?.some(h=>h.derived))out.wildlife={...out.wildlife,habitats:out.wildlife.habitats.filter(h=>!h.derived)};
     if(out.governance?.sovereignty!==undefined){out.governance={...out.governance};delete out.governance.sovereignty;}
     if(out.law?.family!==undefined){out.law={...out.law};delete out.law.family;}

@@ -81,12 +81,16 @@ test('白石镇公账只记钱，不进每日口粮结算；公事委托从公�
  // Keep the entire public-ledger assertion, including every old stock field.
  // I1 §3: all private groups contribute; retain the exact public-stock and
  // total unmet-meal assertion instead of checking only the first group.
- assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)+restocked(doc),...(missing?{unmetMeals:(before.unmetMeals??0)+missing}:{})});
+ // TFB: town food sold to the statistical households pays commercial tax into the public purse, each receipt on the treasury ledger.
+ const taxes=doc=>(doc.state.settlements.loc_bs.treasuryLedger??[]).reduce((n,r)=>n+r.coins,0);
+ assert.ok((doc.state.settlements.loc_bs.treasuryLedger??[]).every(r=>r.kind==='商税'&&r.taxKind==='commercial'&&r.sourceEvent.startsWith('food-supply:')));
+ const ledger=doc.state.settlements.loc_bs.treasuryLedger;
+ assert.deepEqual(doc.state.settlements.loc_bs,{...before,treasury:before.treasury-spent(doc)+restocked(doc)+taxes(doc),...(ledger?{treasuryLedger:ledger}:{}),...(missing?{unmetMeals:(before.unmetMeals??0)+missing}:{})});
  doc.state.records['hazard-flood:loc_bs_hebu']={category:'hazard_flood',location:'loc_bs_hebu',since:doc.state.minute,until:doc.state.minute+1440*4,soaked:[],sourceEvent:'test-flood'};
  const next=applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:1440},eventId:'wait-2'})).patches);
  const q=Object.values(next.state.quests).find(q=>q.source?.cause==='hazard-flood:loc_bs_hebu');
  assert.ok(q);assert.equal(q.location,'loc_bs');assert.equal(q.publisher,'npc_bs_031_1');assert.equal(q.fundedBy.treasury,'loc_bs');
- assert.equal(next.state.settlements.loc_bs.treasury,before.treasury-spent(next)+restocked(next));
+ assert.equal(next.state.settlements.loc_bs.treasury,before.treasury-spent(next)+restocked(next)+taxes(next));
 });
 
 test('势力委托：至少15个势力时钟阶段挂了委托，且能按阶段实际张贴',()=>{

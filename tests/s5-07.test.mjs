@@ -20,6 +20,8 @@ import {verifyPublished as verifyRainPublished} from '../world/design/s507-rain-
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const upstream='basin:loc_hw',downstream='basin:loc_yandu',pool='feature_hw_pool';
 const edge=to=>`${upstream}:${to}`;
+// Only loc_hw drinks; every other settlement stays registered (its town food accounts need the row) with nobody to drink.
+const settlementsFor=(rows,use)=>Object.fromEntries(Object.entries(rows).map(([id,row])=>[id,{...row,population:id==='loc_hw'?use/100:0}]));
 function scene({use=0,dirty=false,modifiers=[],declared=true}={}){
  const w=structuredClone(world);
  // Rain, evaporation and farm demand are not the subjects of these river
@@ -36,7 +38,7 @@ function scene({use=0,dirty=false,modifiers=[],declared=true}={}){
  }
  // Explicit environmental premises use the same setup loader as native intent
  // scenarios; no synthetic locations, species, draft or runtime are installed.
- const out=applyIntentSetup(engine,initial,{minute:0,facts:[{path:['state','records'],value:records},{path:['state','settlements'],value:use?{loc_hw:{population:use/100}}:{}}]});
+ const out=applyIntentSetup(engine,initial,{minute:0,facts:[{path:['state','records'],value:records},{path:['state','settlements'],value:settlementsFor(initial.state.settlements,use)}]});
  assert.deepEqual(out.setupUnmet,[]);
  return {engine,document:out.document};
 }

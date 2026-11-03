@@ -145,8 +145,10 @@ test('uncashed bills and subsequent clearing protect the same reserve exactly on
  // reserve100*.2=20, loanable1582. Never count the beneficiary claim twice.
  let credit=bankCredit(f.engine,f.document.state,f.bank);
  assert.equal(credit.cash,1602);assert.equal(credit.liabilities,100);assert.equal(credit.reserve,20);assert.equal(credit.loanable,1582);
- const scene=applyIntentSetup(f.engine,f.document,{minute:600,location:destination.location,present:[destination.keepers[0],'npc_hw_ayan']});assert.deepEqual(scene.setupUnmet,[]);f.replace(scene.document);
+ const scene=applyIntentSetup(f.engine,f.document,{minute:600,location:destination.location,present:[destination.keepers[0]]});assert.deepEqual(scene.setupUnmet,[]);f.replace(scene.document);
  await f.act({operation:'deposit',seller:destination.keepers[0],coins:201},'reserve-bill-fund');
+ // Ayan is employed (I2): away from his post at working hours he walks to it, so he is placed at the counter only for the cashing.
+ const payee=applyIntentSetup(f.engine,f.document,{location:destination.location,present:[destination.keepers[0],'npc_hw_ayan']});assert.deepEqual(payee.setupUnmet,[]);f.replace(payee.document);
  await f.act({operation:'cash_bill',seller:destination.keepers[0],contract:remit.contract},'reserve-bill-cash');
  credit=bankCredit(f.engine,f.document.state,f.bank);
  // Cashed bill0 + unpaid interbank clearing100 = unchanged liability100.
