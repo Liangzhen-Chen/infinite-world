@@ -25,10 +25,18 @@ const clamp=(v,limits)=>Math.max(limits[0],Math.min(limits[1],v));
 const stateOf=d=>d.get('state');
 const rulesOf=engine=>engine.world.marketRules;
 const itemValue=(engine,document,item,base,scarcity,quality)=>explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality});
+// A pure function of the catalog row and the goods-tag table; remembered per row
+// object and revalidated against both inputs, so no live state can go stale.
+const goodsClasses=new WeakMap();
 export function goodsClass(engine,item){
- const row=engine.byId.get(item),tags=row?.tags??[];
- const category=Object.entries(rulesOf(engine).goodsTags).find(([tag])=>tags.includes(tag))?.[1];
- return tags.find(t=>t.startsWith('goods:'))??`goods:${category??(row?.nutrition?.satiety>0?'food':item)}`;
+ const row=engine.byId.get(item),table=rulesOf(engine).goodsTags;
+ const hit=row&&typeof row==='object'?goodsClasses.get(row):null;
+ if(hit&&hit.table===table&&hit.tags===row.tags&&hit.count===row.tags?.length&&hit.item===item&&hit.satiety===row.nutrition?.satiety)return hit.value;
+ const tags=row?.tags??[];
+ const category=Object.entries(table).find(([tag])=>tags.includes(tag))?.[1];
+ const value=tags.find(t=>t.startsWith('goods:'))??`goods:${category??(row?.nutrition?.satiety>0?'food':item)}`;
+ if(row&&typeof row==='object')goodsClasses.set(row,{table,tags:row.tags,count:row.tags?.length,item,satiety:row.nutrition?.satiety,value});
+ return value;
 }
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs?.[id]?.location??state.creatures?.[id]?.location;
 const settlementOf=(engine,state,location)=>placeSettlement(engine,state,location).value??location;

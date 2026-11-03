@@ -753,7 +753,7 @@
     "server-plugin/archived-reducer.mjs",
     "server-plugin/scheduler.mjs"
    ],
-   "lines": 1920,
+   "lines": 1928,
    "stateWrites": [
     "combatDisengaged",
     "discoveries",
@@ -1713,7 +1713,7 @@
     "server-plugin/checks.mjs",
     "server-plugin/revival.mjs"
    ],
-   "lines": 1916,
+   "lines": 1917,
    "stateWrites": [
     "careerCooldowns",
     "careerFunds",
@@ -2334,7 +2334,7 @@
     "server-plugin/extraction.mjs",
     "server-plugin/smuggling.mjs"
    ],
-   "lines": 7295,
+   "lines": 7303,
    "stateWrites": [
     "crafted",
     "npcs",
@@ -2541,7 +2541,7 @@
     "server-plugin/tribal-awakening.mjs",
     "server-plugin/elections.mjs"
    ],
-   "lines": 6443,
+   "lines": 6464,
    "stateWrites": [
     "npcs",
     "obligations",
@@ -2872,7 +2872,7 @@
     "server-plugin/npc-crime.mjs",
     "server-plugin/bounty.mjs"
    ],
-   "lines": 2120,
+   "lines": 2128,
    "stateWrites": [
     "location",
     "npcs",
@@ -21389,7 +21389,7 @@
     "skills"
    ],
    "worldDirs": [],
-   "lines": 394
+   "lines": 395
   },
   "server-plugin/education.mjs": {
    "system": "sim_character",
@@ -21721,7 +21721,7 @@
     "spells"
    ],
    "worldDirs": [],
-   "lines": 1263
+   "lines": 1271
   },
   "server-plugin/entity-transitions.mjs": {
    "system": "base_events",
@@ -23307,7 +23307,7 @@
     "settlementProfiles"
    ],
    "worldDirs": [],
-   "lines": 175
+   "lines": 183
   },
   "server-plugin/law.mjs": {
    "system": "sim_law",
@@ -24580,7 +24580,7 @@
    "worldDirs": [
     "rules"
    ],
-   "lines": 362
+   "lines": 370
   },
   "server-plugin/medicine-state.mjs": {
    "system": "sim_npc",
@@ -24933,7 +24933,7 @@
     "rules"
    ],
    "worldDirs": [],
-   "lines": 168
+   "lines": 189
   },
   "server-plugin/notables.mjs": {
    "system": "sim_society",
