@@ -5,13 +5,25 @@ import {nationAt} from './noble-state.mjs';
 import {memberOrganizations} from './organization-state.mjs';
 import {digest} from './storage.mjs';
 
-const read=(object,path)=>path.split('.').reduce((value,key)=>value?.[key],object);
+const pathKeys=new Map();
+const read=(object,path)=>{let keys=pathKeys.get(path);if(!keys){keys=path.split('.');pathKeys.set(path,keys);}let value=object;for(const key of keys)value=value?.[key];return value;};
 const active=(row,minute)=>(row.effectiveFrom??-Infinity)<=minute&&(row.effectiveUntil??Infinity)>minute;
 const inherited=value=>value===undefined||value==='inherit';
-const clone=value=>value===undefined?undefined:structuredClone(value);
+const clone=value=>value===undefined?undefined:value===null||typeof value!=='object'?value:structuredClone(value);
+// Static location indexes, one per immutable locations array of a loaded world.
+const placeIndexes=new WeakMap();
+function placeIndex(world){
+ const list=world.locations??[];let index=placeIndexes.get(list);
+ if(!index||index.size!==list.length){
+  const last=new Map(),first=new Map();
+  for(const p of list){last.set(p.id,p);if(!first.has(p.id))first.set(p.id,p);}
+  index={size:list.length,last,first};placeIndexes.set(list,index);
+ }
+ return index;
+}
 
 export function placeChain(engine,state,location){
- const places=new Map((engine.world.locations??[]).map(p=>[p.id,p]));
+ const places=placeIndex(engine.world).last;
  const out=[],seen=new Set();
  for(let at=location;at;at=(state.created?.[at]??places.get(at))?.parent){
   if(seen.has(at))throw Error(`E-NORM-PARENT: ${at}`);
@@ -27,7 +39,7 @@ function bindingRows(world){
 }
 function slotAt(world,place,slot,minute){
  const rows=bindingRows(world).filter(b=>b.place===place&&(b.slot??'place.lawCode')===slot&&active(b,minute));
- const native=world.locations?.find(p=>p.id===place)?.[slot.split('.')[1]];
+ const native=placeIndex(world).first.get(place)?.[slot.split('.')[1]];
  if(native!==undefined)rows.push({place,slot,value:native,source:`location:${place}`});
  if(rows.length>1){
   // A repeated declaration is still a conflict: pack installation must resolve
@@ -74,13 +86,13 @@ export function placeCulture(engine,state,location,minute=state.minute??0){
 
 // The optional codes argument is the current law-codes view, including courts
 // generated for expanded counties. This avoids a dependency back on law-codes.
-export function normStack(engine,state,actor,location,minute=state.minute??0,{codes=engine.rules.law?.codes??[]}={}){
+export function normStack(engine,state,actor,location,minute=state.minute??0,{codes=engine.rules.law?.codes??[],versions=true}={}){
  location??=actor&&actor!=='player'?(state.npcs?.[actor]?.location??state.created?.[actor]?.location??engine.byId.get(actor)?.location):state.location;
  const chain=placeChain(engine,state,location),rows=[],seen=new Set();
  const append=(code,layer,place,source,binding=true)=>{
   if(!code||!active(code,minute)||seen.has(`${layer}:${code.id}`))return;
   seen.add(`${layer}:${code.id}`);
-  rows.push({layer,place,source:source??code.id,version:code.version??`sha256:${digest(code)}`,effectiveFrom:code.effectiveFrom??null,code,binding});
+  rows.push({layer,place,source:source??code.id,version:versions?code.version??`sha256:${digest(code)}`:undefined,effectiveFrom:code.effectiveFrom??null,code,binding});
  };
  for(const at of chain){
   const binding=slotAt(engine.world,at,'place.lawCode',minute);
@@ -126,26 +138,35 @@ export function normClause(stack,path,{layer=null}={}){
  return {value:undefined,source:null,version:null,layer:null,denied};
 }
 
+function mergeClauses(stack,target,path){
+ const candidates=stack.map(r=>read(r.code,path)).filter(v=>v&&typeof v==='object'&&!Array.isArray(v));
+ const keys=[...new Set(candidates.flatMap(v=>Object.keys(v)))];
+ for(const key of keys){
+  const next=path?`${path}.${key}`:key,choice=normClause(stack,next);
+  if(choice.value&&typeof choice.value==='object'&&!Array.isArray(choice.value)){
+   target[key]={};mergeClauses(stack,target[key],next);
+  }else if(choice.value!==undefined)target[key]=choice.value;
+ }
+}
+
 export function normCode(stack){
  const first=stack[0]?.code;if(!first)return null;
  const result={...first};
- const merge=(target,path)=>{
-  const candidates=stack.map(r=>read(r.code,path)).filter(v=>v&&typeof v==='object'&&!Array.isArray(v));
-  const keys=[...new Set(candidates.flatMap(v=>Object.keys(v)))];
-  for(const key of keys){
-   const next=path?`${path}.${key}`:key,choice=normClause(stack,next);
-   if(choice.value&&typeof choice.value==='object'&&!Array.isArray(choice.value)){
-    target[key]={};merge(target[key],next);
-   }else if(choice.value!==undefined)target[key]=choice.value;
-  }
- };
  // Authority and coverage remain facts of the selected court. They must not be
  // inherited from a sovereign template that has no local executor.
- for(const key of ['penalties','civil','authorization','stances','recognition']){const value={};merge(value,key);if(Object.keys(value).length)result[key]=value;}
+ for(const key of ['penalties','civil','authorization','stances','recognition']){const value={};mergeClauses(stack,value,key);if(Object.keys(value).length)result[key]=value;}
  for(const key of ['evidenceRequired','reportMinutes','searchMinutes','hearingMinutes','communityMinutesPerCopper','prisonMinutesPerCopper','maximumSentenceMinutes','appeal','procedure','procedureCosts']){
   const choice=normClause(stack,key);if(choice.value!==undefined)result[key]=choice.value;
  }
  return result;
+}
+
+// The own `civil` property of normCode(stack) as [value], or null when absent:
+// the merge of each top-level field is independent of the others.
+export function normCivil(stack){
+ const first=stack[0]?.code;if(!first)return null;
+ const value={};mergeClauses(stack,value,'civil');
+ return Object.keys(value).length?[value]:Object.hasOwn(first,'civil')?[first.civil]:null;
 }
 
 export function normSnapshot(stack,offense){

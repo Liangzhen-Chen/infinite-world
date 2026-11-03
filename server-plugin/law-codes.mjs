@@ -5,7 +5,7 @@ import {regionOf} from './regions.mjs';
 import {standing} from './standing.mjs';
 import {personOffices,personCareer,settlementHead} from './entity-view.mjs';
 import {adminLevel} from './promotion-view.mjs';
-import {normStack,normCode} from './norm-stack.mjs';
+import {normStack,normCode,normCivil} from './norm-stack.mjs';
 import {recordsWhere} from './storage.mjs';
 
 export const legalTemplate=(world,county)=>world.rules.law?.templates?.find(t=>t.polity===(county.ruler.polity.startsWith('王国')?'王国':county.ruler.polity)&&(!t.province||t.province===county.province));
@@ -36,6 +36,14 @@ function authorities(world,state,settlement,kind){
  return [...new Set([...current,...generated])].filter(id=>!state?.records?.[`legal_dismissal:${id}`]&&isEffective(engine,state,id)&&state?.npcs?.[id]?.status!=='濒死');
 }
 const geometry=new WeakMap();
+// legalCodeAt(...)?.civil, without assembling the rest of the merged code.
+export function legalCivilAt(engine,location,state={}){
+ const executor=executableCodeAt(engine,location,state);if(!executor)return undefined;
+ const norms=normStack(engine,state,null,location,state.minute??0,{codes:legalCodes(engine.world,state),versions:false});
+ if(!norms[0]?.code)return executor.civil;
+ const own=normCivil(norms);
+ return own?own[0]:executor.civil;
+}
 export function legalCodes(world,state={}){
  const original=world.rules.law?.codes??[];
  if(!world.rules.law?.templates?.length||!world.remoteCounties?.length)return nationLegalCodes(world,state,original);

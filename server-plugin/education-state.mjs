@@ -77,7 +77,8 @@ const scheduleReservations=Symbol('schedule reservations');
 // Union of the records actually read by routines, household work, courses,
 // legal holds, facilities, appointments and workstation capabilities.
 export const scheduleRecordDependencies={categories:['governance_office','organization','housing_steward','legal_dismissal','festival','legal_detention','legal_custody','legal_case','transition','war_disruption','title','notable','settlement_rank','market_trip','private_farm','project_assignment','education_course','education_demonstration','education_cohort','service_appointment','service_appointment_receipt','facility_region','subsistence_plan','water_cycle','physical_feature','physical_item'],kinds:['workshop','asset_lease']};
-export const isScheduleRecord=r=>Boolean(r&&(r.category!=='physical_feature'||r.state?.waterMl!==undefined)&&(scheduleRecordDependencies.categories.includes(r.category)||scheduleRecordDependencies.kinds.includes(r.kind)));
+const scheduleCategorySet=new Set(scheduleRecordDependencies.categories),scheduleKindSet=new Set(scheduleRecordDependencies.kinds);
+export const isScheduleRecord=r=>Boolean(r&&(r.category!=='physical_feature'||r.state?.waterMl!==undefined)&&(scheduleCategorySet.has(r.category)||scheduleKindSet.has(r.kind)));
 export const isScheduleEvent=r=>r?.category==='world_event'&&r.verb==='appointment_agreed';
 // Attendance and settlement progress do not change the agreed routine or
 // course. Keep comparing all other fields, including legacy terms, clauses,
@@ -130,7 +131,7 @@ export function sameScheduleInputs(a,b){
  if(a.records===b.records)return true;
  const ax=serviceAppointmentSources(a),bx=serviceAppointmentSources(b);
  if(ax.length!==bx.length||ax.some((event,i)=>!canonicalEqual(event,bx[i])))return false;
- const rows=s=>recordsMemo(s.records,scheduleRecords,()=>Object.entries(s.records??{}).filter(([,r])=>isScheduleRecord(r)).map(([id,r])=>[id,scheduleRecordInput(r)]),scheduleRecordDependencies);
+ const rows=s=>recordsMemo(s.records,scheduleRecords,()=>{const out=[],all=s.records??{};for(const id of Object.keys(all)){const r=all[id];if(isScheduleRecord(r))out.push([id,scheduleRecordInput(r)]);}return out;},scheduleRecordDependencies);
  const x=rows(a),y=rows(b);
  return x===y||x.length===y.length&&x.every(([id,row],i)=>id===y[i][0]&&sameScheduleRecord(row,y[i][1]));
 }

@@ -13,7 +13,7 @@ import {obligationRow,obligationRows,obligationView} from './obligation-state.mj
 import {settlementPresent,settlementLocation} from './obligation-presence.mjs';
 import {publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
-import {legalCodeAt,legalCodeById} from './law-codes.mjs';
+import {legalCodeAt,legalCodeById,legalCivilAt} from './law-codes.mjs';
 import {groupView,lawAuthorities,personConstraint} from './entity-view.mjs';
 import {identities} from './identity.mjs';
 import {npcAgeAt} from './npc-state.mjs';
@@ -479,4 +479,4 @@ export function receiveObligationCollection(d,e,{id,actor,...facts},eventId){
 export {obligationView as dueObligation,obligationRows,syncObligationClaims};
 
 registerObligationProtocol({openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation:obligationView,automaticObligationItems});
-registerObligationCivilGrace((engine,state,row,minute)=>legalCodeAt(engine,row.location??state.location,{...state,minute})?.civil?.grace??null);
+registerObligationCivilGrace((engine,state,row,minute)=>legalCivilAt(engine,row.location??state.location,{...state,minute})?.grace??null);

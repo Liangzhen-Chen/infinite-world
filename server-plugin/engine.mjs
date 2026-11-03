@@ -108,6 +108,8 @@ for(const verb of PRIMITIVE_EVENT_VERBS)SOCIAL_VERBS.add(verb);
 declareLedgerWriter('engine',{sinks:['sink:export','sink:consume']});
 const clone = value => structuredClone(value);
 const ROUTE_PLACES = Symbol('route places');
+// Departure instants whose route searches are kept (oldest dropped first).
+const ROUTE_FRONTIERS = 8;
 const ROUTE_CACHE_CHECK = process.env.FIELDS_INDEX_CHECK === '1';
 // Native read projection shared by dialogue, routing and evidence. No draft
 // writer is exposed, and the normal quote uses the same environmental inputs.
@@ -841,10 +843,16 @@ export class WorldEngine {
                 graph.facilitySignatures.set(facilities,factors);
             }
         }
-        // Advancing to another departure instant discards the old frontier:
-        // retaining hundreds of historical searches only adds GC pressure.
-        if(graphCache&&(graph.departure!==minute||graph.seed!==seed||graph.calendar!==this.calendarId)){
-            graph.searches=new Map();graph.departure=minute;graph.seed=seed;graph.calendar=this.calendarId;
+        // Each departure instant keeps its own frontier (a few recent ones), so a
+        // return leg at another minute does not discard the outbound searches.
+        if(graphCache){
+            const frontier=`${minute}|${seed}|${this.calendarId}`;
+            let searches=(graph.frontiers??=new Map()).get(frontier);
+            if(!searches){
+                if(graph.frontiers.size>=ROUTE_FRONTIERS)graph.frontiers.delete(graph.frontiers.keys().next().value);
+                graph.frontiers.set(frontier,searches=new Map());
+            }
+            graph.searches=searches;
         }
         const searchKey=graphCache?JSON.stringify([from,[...closedRoutes].sort(),factors]):null;
         const search=prior=>{
