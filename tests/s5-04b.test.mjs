@@ -136,7 +136,12 @@ test('npc shopkeepers: within a week each stocks up, reprices and hires by his o
  const buy=s.records['shop:shop_bs_yanzhe'].entries.find(e=>e.item==='item_clay'&&e.day===0);
  assert.deepEqual([buy.added,buy.referenceCopper,buy.paidCopper],[2,6,8]);assert.deepEqual(buy.cost,{goods:8,freight:0,duties:0});
  assert.equal(buy.from,'npc_hw_shendu');
- assert.equal(s.npcs.npc_hw_yanzhe.coins,s0.npcs.npc_hw_yanzhe.coins-8);assert.equal(counterOf(f,'npc_hw_yanzhe').coins,0);
+ // TFB food supply: from his counter he also pays the four villages for the oats they carry him (completed trips' paidCopper in the village stats, plus orders still travelling at quantity x unit price less refunds),
+ // which his bid sizes to his means minus the ordinary restock outlay (shop.mjs restockOutlay). So purse = start - 8 clay - grain paid.
+ const grainPaid=Object.values(s.records).filter(r=>r.category==='food_supply_stats').reduce((n,r)=>n+(r.destinations?.shop_bs_yanzhe?.paidCopper??0),0)
+  +Object.values(s.records).filter(r=>r.foodSupply&&!r.scout&&r.buyer==='npc_hw_yanzhe').reduce((n,r)=>n+r.quantity*r.unitPrice-r.refundCopper,0);
+ assert.ok(grainPaid>0);
+ assert.equal(s.npcs.npc_hw_yanzhe.coins,s0.npcs.npc_hw_yanzhe.coins-8-grainPaid);assert.equal(counterOf(f,'npc_hw_yanzhe').coins,0);
  assert.equal(s.npcs.npc_hw_yanzhe.inventory.item_clay.quantity,2);
  // 1.2 * 8/6 = 1.6, capped at the published shop limit 1.4.
  const pricing=s.records['shop_pricing:npc_hw_yanzhe'];

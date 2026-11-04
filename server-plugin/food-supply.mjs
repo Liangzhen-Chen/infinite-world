@@ -5,7 +5,7 @@ import {declareLedgerWriter,balance} from './ledger.mjs';
 import {cargo,moveStock} from './stock.mjs';
 import {treasury,purse,escrow,moveCoins,counterCash,dedicatedCoinAccount} from './money.mjs';
 import {currentShops,foodSupplyBid,receiveFoodSupply,foodSupplyNeed} from './shop.mjs';
-import {transportServices,quoteTransport,bookTransport,collectTransport,settleWreckedShipment,installExternalTransportCargo} from './transport.mjs';
+import {transportServices,quoteTransport,bookTransport,collectTransport,settleWreckedShipment,installExternalTransportCargo,moveCarriage} from './transport.mjs';
 import {transportSegment,stepTransport} from './transport-route.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
@@ -290,12 +290,18 @@ function arrive(d,e,o,minute){
  }
  return true;
 }
-function home(d,o,minute){
+function home(d,o,minute,e){
  o.transport.phase='home';o.transport.nextAt=null;o.homeAt=minute;
  if(o.scout){
   const k=statsKey(o.settlement),s=structuredClone(d.get(...key(k))??{category:'food_supply_stats',settlement:o.settlement,quotes:[]});
   if(o.observedQuote)s.quotes=[...s.quotes.filter(q=>q.buyer!==o.buyer||q.item!==o.item),o.observedQuote];
   d.set(key(k),s);o.status='observed';
+ }
+ if(o.carriageReturn){
+  const driver=d.get('state','records',o.carriage,'driver');
+  moveCarriage(d,e,o.carriage,o.from);
+  if(d.get('state','npcs',driver,'cognitionTravel')?.transport===o.id)holdingRemove(d,null,['state','npcs',driver,'cognitionTravel'],'food-supply');
+  d.set(['state','npcs',driver,'activity'],'抵达');
  }
  if(o.personCarrier&&d.get('state','npcs',o.manager,'cognitionTravel')?.transport===o.id)holdingRemove(d,null,['state','npcs',o.manager,'cognitionTravel'],'food-supply');
  const k=statsKey(o.settlement),stats=structuredClone(d.get(...key(k))??{category:'food_supply_stats',settlement:o.settlement,quotes:[]});
@@ -316,19 +322,26 @@ export function advanceFoodSupply(d,e,minute=d.get('state','minute'),{plan=true,
   const o=moving(old),t=o.transport;spoil(d,e,o,minute);
   if(!o.scout&&!amount(o)&&o.escrowCopper){refundBill(d,o);o.status=o.lostFood?'lost':'spoiled';}
   if(JSON.stringify(stored(o))!==JSON.stringify(old))persist(d,o);
-  if(o.carriage){
+  if(o.carriage&&!o.carriageReturn){
    const trip=d.get('state','records',o.carriage);
    if(trip?.status==='wrecked'){settleWreckedShipment(d,e,trip.id,minute);Object.assign(o,structuredClone(d.get(...key(o.id))));spoil(d,e,o,minute,true);o.status='lost';
-    refundBill(d,o);home(d,o,minute);
+    refundBill(d,o);home(d,o,minute,e);
    }else if(['arrived','delivered'].includes(trip?.status)){
-    if(arrive(d,e,o,minute))home(d,o,minute);else t.nextAt=(Math.floor(minute/720)+1)*720;
+    if(arrive(d,e,o,minute)){
+     // The hired driver brings the vehicle and its animal back to where it was hired; the order is not home until both are.
+     const driver=trip.driver;
+     if(driver&&d.get('state','npcs',driver)&&t.edges.length){
+      o.carriageReturn=true;t.phase='returning';t.edges=[...t.edges].reverse();t.edgeIndex=0;t.remainingKm=null;schedule(d,e,o,minute);
+      holdingSet(d,e,['state','npcs',driver,'cognitionTravel'],{transport:o.id,from:o.to,to:o.from,depart:minute,arrive:minute+(t.nextAt-minute)*t.edges.length},'food-supply');
+     }else home(d,o,minute,e);
+    }else t.nextAt=(Math.floor(minute/720)+1)*720;
    }
   }else if(t.nextAt<=minute){
-   if(t.segment){const reached=stepTransport(e,t,t.segment);t.segment=null;if(reached&&o.personCarrier)holdingSet(d,e,['state','npcs',o.manager,'location'],t.location,'food-supply');}
+   if(t.segment){const reached=stepTransport(e,t,t.segment);t.segment=null;if(reached&&o.personCarrier)holdingSet(d,e,['state','npcs',o.manager,'location'],t.location,'food-supply');if(reached&&o.carriageReturn)moveCarriage(d,e,o.carriage,t.location);}
    if(t.edgeIndex===t.edges.length){
     if(t.phase==='outbound'){
      if(arrive(d,e,o,minute)){t.phase='returning';t.edges=[...t.edges].reverse();t.edgeIndex=0;t.remainingKm=null;schedule(d,e,o,minute);}else t.nextAt=(Math.floor(minute/720)+1)*720;
-    }else home(d,o,minute);
+    }else home(d,o,minute,e);
    }else schedule(d,e,o,minute);
   }
   if(JSON.stringify(stored(o))!==JSON.stringify(old))persist(d,o);

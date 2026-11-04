@@ -658,18 +658,31 @@ const quantities1=v=>typeof v==='number'?v:v?.quantity??0;
 const SLEEPING=/睡眠|睡觉|熟睡/;
 const flowKey=(shop,day)=>['state','records',`customer_flow:${shop}:${day}`];
 
+// A shop is open on a day when its keeper trades at it that day. The day's retail flow is settled at the noon boundary, but a keeper
+// at lunch in that very minute has not closed: customers come when the counter reopens (the first trade slot later the same day).
+function tradeWindow(engine,id,t,state){
+    const slot=scheduleAt(engine,id,t,state);
+    if(!slot||slot.services?.includes('trade'))return slot&&{slot,from:t};
+    for(let at=slot.until,end=(Math.floor(t/DAY)+1)*DAY;at<end;){
+        const next=scheduleAt(engine,id,at,state);if(!next)return null;
+        if(next.services?.includes('trade'))return {slot:next,from:at};
+        at=next.until;
+    }
+    return null;
+}
+
 // 本次营业的商铺：玩家已开张的店（店主在场、租约有效、柜台在铺内），以及作息里此刻接待交易的商铺。
-function openShops(d,engine,t){
+export function openShops(d,engine,t){
     const state=d.get('state'),out=[];
     for(const shop of Object.values(state.records??{})){
         if(shop.category!=='business'||shop.suspended||shop.status!=='营业'||(shop.openedAt??Infinity)>t)continue;
         if(state.buildings?.[shop.location]?.condition<=0||state.buildings?.[shop.location]?.burning)continue;
         if(shop.owner!=='player'){
-            const npc=state.npcs?.[shop.owner],slot=npc&&scheduleAt(engine,shop.owner,t,state);
+            const npc=state.npcs?.[shop.owner],window=npc&&tradeWindow(engine,shop.owner,t,state),slot=window?.slot;
             const native=shop.native&&currentShops(engine,state).find(r=>r.id===shop.id&&r.keeper===shop.owner&&r.location===shop.location);
             const location=native?slot?.location:shop.location;
             if((!native&&state.buildings?.[shop.location]?.owner!==shop.owner)||!npc||!isEffective(engine,state,shop.owner)||['死亡','濒死','昏迷','患病'].includes(npc.status)||slot?.location!==location||npc.scheduleTravel||npc.cognitionTravel||!slot.services?.includes('trade'))continue;
-            out.push({kind:'npc',id:shop.id,keeper:shop.owner,location,until:slot.until,settlement:placeSettlement(engine,state,location).value,markup:markupOf(shop),goods:native?native.restock.map(r=>r.item):Object.keys(quantities(npc.inventory))});continue;
+            out.push({kind:'npc',id:shop.id,keeper:shop.owner,location,from:window.from,until:slot.until,settlement:placeSettlement(engine,state,location).value,markup:markupOf(shop),goods:native?native.restock.map(r=>r.item):Object.keys(quantities(npc.inventory))});continue;
         }
         if(shop.location!==state.location)continue;
         const lease=contractTerms(state.records?.[shop.lease]??{},t),counter=dedicatedCoinAccount(state,'player','counter');
@@ -679,9 +692,9 @@ function openShops(d,engine,t){
     for(const shop of currentShops(engine,state)){
         if(recordsWhere(state.records,'category','business').some(row=>row.owner===shop.keeper&&row.location===shop.location))continue;
         if(out.some(row=>row.keeper===shop.keeper&&row.location===shop.location))continue;
-        const keeper=state.npcs?.[shop.keeper],slot=keeper&&scheduleAt(engine,shop.keeper,t,state);
+        const keeper=state.npcs?.[shop.keeper],window=keeper&&tradeWindow(engine,shop.keeper,t,state),slot=window?.slot;
         if(!keeper||!isEffective(engine,state,shop.keeper)||['死亡','濒死','昏迷','患病'].includes(keeper.status)||!slot||keeper.scheduleTravel||keeper.cognitionTravel||!slot.services?.includes('trade'))continue;
-        out.push({kind:'npc',id:shop.id,keeper:shop.keeper,location:slot.location,until:slot.until,settlement:placeSettlement(engine,state,slot.location).value,markup:shop.markup??1,goods:shop.restock.map(r=>r.item)});
+        out.push({kind:'npc',id:shop.id,keeper:shop.keeper,location:slot.location,from:window.from,until:slot.until,settlement:placeSettlement(engine,state,slot.location).value,markup:shop.markup??1,goods:shop.restock.map(r=>r.item)});
     }
     for(const stall of periodicFoodStalls(d,engine,t,{scheduleAt})){
         const existing=out.find(s=>s.keeper===stall.keeper&&s.location===stall.location);
@@ -806,7 +819,7 @@ function serveStatistical(d,engine,shop,t,routes,{buyer=null,items=null,source=n
             if(source&&recordsWhere(d.get('state','records'),'category','customer_flow').some(r=>r.visits.some(v=>v.sourceEvent===eventId)))continue;
             const minutes=serviceMinutes+(travelPaid?0:outbound.minutes+inbound.minutes);
             if(items&&minutes>townWorkMinutes(engine,d.get('state'),statistical.owner,t))continue;
-            const finishAt=Math.max(at,routes.get(`shop-free:${shop.id}`)??t)+serviceMinutes;
+            const finishAt=Math.max(at,routes.get(`shop-free:${shop.id}`)??t,shop.from??0)+serviceMinutes;
             if(finishAt>shop.until||finishAt+inbound.minutes>(day+1)*DAY)break;
             try{engine.assertNpcObligationAction(d,[shop.keeper],{start:finishAt-serviceMinutes,minutes:serviceMinutes,location:shop.location,kind:'trade'});}catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
             const needed=items?Math.max(0,items[item]-scoped.quantity(d,statistical.owner,item)):Math.ceil(householdFoodDemand(d,engine,statistical.owner,t)/gain);
@@ -937,8 +950,13 @@ export function advanceCustomerFlow(d,engine,before,after){
         const order=(purpose,id)=>rollDice(d.document.randomSeed,`market:${purpose}`,id,t,0,4294967296);
         const shops=openShops(d,engine,t).sort((a,b)=>order('shop-order',a.id)-order('shop-order',b.id)||a.id.localeCompare(b.id));
         if(!shops.length)continue;
-        const residents=walkIns(d,engine,t).sort((a,b)=>order('customer-order',a.id)-order('customer-order',b.id)||a.id.localeCompare(b.id)),gaps=new Map(),routes=new Map();
-        for(const shop of shops)serve(d,engine,shop,t,residents,gaps,routes);
+        // Each shop is served when its counter is open that day; walk-ins are read from the schedule at that moment.
+        const gaps=new Map(),routes=new Map(),byTime=new Map();
+        const residentsAt=at=>{
+            if(!byTime.has(at))byTime.set(at,walkIns(d,engine,at).sort((a,b)=>order('customer-order',a.id)-order('customer-order',b.id)||a.id.localeCompare(b.id)));
+            return byTime.get(at);
+        };
+        for(const shop of shops){const at=Math.max(t,shop.from??t);serve(d,engine,shop,at,residentsAt(at),gaps,routes);}
         advanceHook('planHouseholdFood')?.(d,engine,t);
     }
 }

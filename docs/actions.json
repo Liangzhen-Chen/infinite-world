@@ -388,7 +388,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 619,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/transport.mjs:680"
+    "dispatch": "server-plugin/transport.mjs:685"
    }
   },
   {

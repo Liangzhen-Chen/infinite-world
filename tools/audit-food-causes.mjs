@@ -11,10 +11,11 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {householdBudget,statisticalFoodGroups,statisticalFoodNeed} from '../server-plugin/household-budget.mjs';
 import {householdFoodDemand,householdFoodConversion} from '../server-plugin/household-food.mjs';
 import {currentShops} from '../server-plugin/shop.mjs';
+import {openShops} from '../server-plugin/business.mjs';
 import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
 import {isEffective} from '../server-plugin/lifecycle-state.mjs';
 import {placeSettlement} from '../server-plugin/entity-view.mjs';
-import {periodicFoodStalls,foodProducerSurplus} from '../server-plugin/food-supply.mjs';
+import {foodProducerSurplus} from '../server-plugin/food-supply.mjs';
 import {marketQuote,quoteSupply,saleableStock,customerReachMinutes} from '../server-plugin/market.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
@@ -51,10 +52,13 @@ export function verdict(f){
  const need=f.best?.cost??f.refCost;
  if(f.supply<f.demand)return {cause:'harvest',reason:'saleable food within a day (shelves + producer surplus) is less than the town demand',clue:[['food-supply.mjs','function surplus(']]};
  if(f.perCapitaCash<need){
-  const roster=!f.group&&f.simulated===false;
-  return {cause:'poverty',reason:`cash per person is less than the cheapest person-day of food${f.best?' within reach':' (none on sale; catalogue price)'}${roster?' [roster-only household: no purse or stock in state]':''}`,
-   clue:roster?[['npc-life.mjs','export function advanceHouseholdMeals','a household of unexpanded members is planned with no holdings']]:[['household-budget.mjs','export function householdBudget(']]};
+  return {cause:'poverty',reason:`cash per person is less than the cheapest person-day of food${f.best?' within reach':' (none on sale; catalogue price)'}`,
+   clue:[['household-budget.mjs','export function householdBudget(']]};
  }
+ // A household of unexpanded members keeps its opening money and stock parked in its own opening record; no member is a
+ // campaign actor, so nobody walks to a counter for it (walkIns) and the meal plan does not read the record either.
+ if(!f.group&&f.simulated===false)return {cause:'chain',reason:'roster-only household: it holds money in its opening record but no member is a campaign actor, so nobody buys food for it',
+  clue:[['business.mjs','function walkIns(d,engine,t)','only simulated full persons walk in'],['household-budget.mjs','function family(d,engine,owner)','meal plan reads member bags only, not the opening record']]};
  if(!f.best){
   const own=f.townShops??{total:0,open:0};
   const why=!own.total?'no food shop is registered in the own settlement':!own.open?'the own settlement\'s shop is not trading in it at noon (closed, or its keeper trades elsewhere)':'the own settlement\'s open shop has nothing edible on its shelf';
@@ -77,15 +81,17 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
  globalThis.__LEDGER_TRACE__=[];
  const grain=e.rules.agriculture.grainItem,seed=doc.randomSeed;
  const baseMeal=bodyRule(e,'satiety').drainPerHour.light*24,reach=customerReachMinutes(e),dayTrip=dayTripMinutes??e.rules.travel.dailyTravelMinutes;
- const townHomes=new Map(world.households.filter(h=>h.settlement===sid).map(h=>[h.id,h]));
+ // Every settlement that keeps a household roster or has an unexpanded population (statistical groups), from the world data.
+ const sids=[...new Set([...world.households.map(h=>h.settlement),...(world.settlementProfiles??[]).filter(p=>p.registrationMode==='seeded-on-demand').map(p=>p.id)])].sort();
+ const homesOf=new Map(sids.map(sid=>[sid,new Map(world.households.filter(h=>h.settlement===sid).map(h=>[h.id,h]))]));
  const gain=item=>e.byId.get(item)?.nutrition?.satiety??0;
  const refCost=Math.min(...world.items.filter(i=>gain(i.id)>0&&i.basePrice>0).map(i=>Math.ceil(baseMeal/gain(i.id))*i.basePrice));
  const start={minute:doc.state.minute,money:legacyMoney(e,doc.state),stock:legacyStock(e,doc.state).balances};
  const advance=async(to,id)=>{const out=await e.reduce(doc,{tool:'world_time',args:{minutes:to-doc.state.minute},eventId:id});doc=applyPatches(doc,out.patches);};
 
- const daily=[],tally={},incidents=[],chainRows=[],chainSpread=[],spreadDays=new Set(),stalls=[];// stalls = producer chain-break rows
- for(const c of CAUSES)tally[c]={incidents:0,meals:0,people:0,households:new Set(),reasons:{}};
- const total={named:{incidents:0,meals:0},statistical:{incidents:0,meals:0}};
+ const daily=[],incidents=[],chainRows=[],chainSpread=[],spreadDays=new Set(),stalls=[];// stalls = producer chain-break rows
+ const tally=Object.fromEntries(sids.map(sid=>[sid,Object.fromEntries(CAUSES.map(c=>[c,{incidents:0,meals:0,people:0,households:new Set(),reasons:{}}]))]));
+ const total=Object.fromEntries(sids.map(sid=>[sid,{named:{incidents:0,meals:0},statistical:{incidents:0,meals:0}}]));
  const prevUnmet=new Map(),prevMissing=new Map(),dispatchSeen=new Map(),dispatchCount=new Map(),idleDays=new Map();
  const routeMemo=new Map();
  const route=(from,to,minute)=>{
@@ -100,25 +106,22 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
   const P=doc,rd=reader(P),ps=P.state;
   const day=Math.floor(noon/DAY);
 
-  // ---- shops open at noon, their food shelf and the price of one person-day of it ----
+  // ---- shops open at noon (the engine's own opening rule), their food shelf and the price of one person-day of it ----
   const shopRows=[];
   const slots=new Map();
   const slotOf=id=>{if(!slots.has(id))slots.set(id,scheduleAt(e,id,noon,ps)??null);return slots.get(id);};
-  const openKeeper=(keeper)=>{
-   const n=ps.npcs?.[keeper],slot=n&&slotOf(keeper);
-   return Boolean(n&&isEffective(e,ps,keeper)&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&slot?.services?.includes('trade')&&!n.scheduleTravel&&!n.cognitionTravel&&!ps.buildings?.[slot.location]?.burning&&(ps.buildings?.[slot.location]?.condition??1)>0);
-  };
-  const shops=[...currentShops(e,ps).map(s=>({id:s.id,keeper:s.keeper,markup:s.markup??1,goods:s.restock.map(r=>r.item),settlement:s.settlement,fixed:s.location})),
-   ...periodicFoodStalls(rd,e,noon,{scheduleAt}).map(s=>({id:s.id,keeper:s.keeper,markup:s.markup??1,goods:s.goods,settlement:s.settlement,producer:s.producer}))];
+  const registered=currentShops(e,ps),opened=openShops(rd,e,noon);
+  const shops=[...registered.map(s=>({id:s.id,keeper:s.keeper,markup:s.markup??1,settlement:s.settlement,fixed:s.location,goods:s.restock.map(r=>r.item),open:opened.find(o=>o.id===s.id)})),
+   ...opened.filter(o=>!registered.some(s=>s.id===o.id)).map(o=>({id:o.id,keeper:o.keeper,markup:o.markup??1,settlement:o.settlement,goods:o.goods,open:o}))];
   for(const shop of shops){
-   const open=openKeeper(shop.keeper),slot=slotOf(shop.keeper),location=open?slot.location:(shop.fixed??ps.npcs?.[shop.keeper]?.location);
+   const o=shop.open,open=Boolean(o),location=o?.location??shop.fixed??ps.npcs?.[shop.keeper]?.location;
    const items=[];
-   if(open)for(const item of [...new Set(shop.goods)]){
-    const stock=saleableStock(rd,e,shop.keeper,item,{business:true}).available,cap=shop.producer?.item===item?foodProducerSurplus(rd,e,shop.producer,noon):Infinity,avail=Math.min(stock,cap);
+   if(open)for(const item of [...new Set(o.goods)]){
+    const stock=saleableStock(rd,e,shop.keeper,item,{business:true}).available,cap=o.producer?.item===item?foodProducerSurplus(rd,e,o.producer,noon):Infinity,avail=Math.min(stock,cap);
     const edible=gain(item)>0;
     if(avail>0&&(edible||item===grain||e.world.recipes.some(r=>r.materials.some(m=>m.item===item))))items.push({item,avail,edible});
    }
-   shopRows.push({id:shop.id,keeper:shop.keeper,markup:shop.markup,registered:shop.settlement,settlement:open?placeSettlement(e,ps,location).value:shop.settlement,location,open,until:open?slot.until:null,items,producer:Boolean(shop.producer)});
+   shopRows.push({id:shop.id,keeper:shop.keeper,markup:o?.markup??shop.markup,registered:shop.settlement,settlement:open?o.settlement:shop.settlement,location,open,until:o?.until??null,items,producer:Boolean(o?.producer)});
   }
   const chainGain=(item,seen=new Set())=>{let best=0;for(const r of world.recipes)if(!seen.has(r.id)){const m=r.materials.find(x=>x.item===item);if(!m)continue;const out=gain(r.output.item)>0?gain(r.output.item)*r.output.quantity/m.amount:chainGain(r.output.item,new Set([...seen,r.id]))*r.output.quantity/m.amount;best=Math.max(best,out);}return best;};
   const convGain=(owner,item)=>{if(!owner)return 0;try{return householdFoodConversion(rd,e,owner,item,noon)?.gainPerUnit??0;}catch{return 0;}};
@@ -137,43 +140,53 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
    return quoteMemo.get(key);
   };
 
-  // ---- producer-side chain: surplus, an open road to the town, a buyer with money, and cargo shipped TO the town ----
-  const shopPlace=new Map(currentShops(e,ps).map(s=>[s.id,s.settlement]));
-  const cargoOrders=Object.values(ps.records??{}).filter(r=>r.category==='settlement_trade'&&r.foodSupply&&!r.scout&&shopPlace.get(r.shop)===sid);
-  const townShopRows=shopRows.filter(s=>s.registered===sid);
-  const buyerCash=statisticalFoodGroups(e,ps,sid).reduce((n,g)=>n+(g.coins??0),0)+townShopRows.reduce((n,s)=>n+counterCash(rd,s.keeper),0);
-  const producerRows=[];
-  for(const p of e.rules.agriculture?.settlements??[]){
-   const rec=ps.records?.[`agriculture:${p.settlement}`];
-   if(rec?.mode!=='managed'||!ps.settlements?.[p.settlement]||!ps.npcs?.[p.manager]||!isEffective(e,ps,p.manager))continue;
-   const desc={seller:p.settlement,manager:p.manager,settlement:p.settlement,from:p.counter,public:true,profile:p,item:grain};
-   const surplus=foodProducerSurplus(rd,e,desc,noon);
-   const toTown=route(p.counter,sid,noon),back=route(sid,p.counter,noon);
-   const seen=dispatchSeen.get(p.settlement)??new Set();
-   for(const o of cargoOrders)if(o.seller===p.settlement)seen.add(o.id);dispatchSeen.set(p.settlement,seen);
-   const done=Object.entries(ps.records?.[`food-supply-stats:${p.settlement}`]?.destinations??{}).filter(([shop])=>shopPlace.get(shop)===sid).reduce((n,[,d])=>n+d.shipments,0);
-   const roadOpen=Boolean(toTown&&back&&!toTown.cost&&!back.cost);
-   producerRows.push({settlement:p.settlement,surplus,roadOpen,buyerCash,dispatched:Math.max(seen.size,done),tripMinutes:toTown?toTown.minutes+(back?.minutes??0):null});
+  // ---- producer-side chain, per settlement: surplus, an open road to it, a buyer with money, and cargo shipped TO it ----
+  const shopPlace=new Map(registered.map(s=>[s.id,s.settlement]));
+  const grainGain=chainGain(grain);
+  const pre={},chainIdle=new Map();
+  for(const sid of sids){
+   const cargoOrders=Object.values(ps.records??{}).filter(r=>r.category==='settlement_trade'&&r.foodSupply&&!r.scout&&shopPlace.get(r.shop)===sid);
+   const townShopRows=shopRows.filter(s=>s.registered===sid);
+   const buyerCash=statisticalFoodGroups(e,ps,sid).reduce((n,g)=>n+(g.coins??0),0)+townShopRows.reduce((n,s)=>n+counterCash(rd,s.keeper),0);
+   const producerRows=[];
+   for(const p of e.rules.agriculture?.settlements??[]){
+    const rec=ps.records?.[`agriculture:${p.settlement}`];
+    if(rec?.mode!=='managed'||!ps.settlements?.[p.settlement]||!ps.npcs?.[p.manager]||!isEffective(e,ps,p.manager))continue;
+    const desc={seller:p.settlement,manager:p.manager,settlement:p.settlement,from:p.counter,public:true,profile:p,item:grain};
+    const surplus=foodProducerSurplus(rd,e,desc,noon);
+    const own=p.settlement===sid,toTown=own?{minutes:0,cost:0}:route(p.counter,sid,noon),back=own?{minutes:0,cost:0}:route(sid,p.counter,noon);
+    const ck=`${sid}|${p.settlement}`,seen=dispatchSeen.get(ck)??new Set();
+    for(const o of cargoOrders)if(o.seller===p.settlement)seen.add(o.id);dispatchSeen.set(ck,seen);
+    const done=Object.entries(ps.records?.[`food-supply-stats:${p.settlement}`]?.destinations??{}).filter(([shop])=>shopPlace.get(shop)===sid).reduce((n,[,d])=>n+d.shipments,0);
+    const roadOpen=Boolean(toTown&&back&&!toTown.cost&&!back.cost);
+    producerRows.push({settlement:p.settlement,own,surplus,roadOpen,buyerCash,dispatched:Math.max(seen.size,done),tripMinutes:toTown?toTown.minutes+(back?.minutes??0):null});
+   }
+   // "Zero transport" = the cumulative count of cargo orders to the settlement did not grow, day after day.
+   const chainOpenToday=new Map();
+   for(const row of producerRows){
+    const key=`${sid}|${row.settlement}`,last=dispatchCount.get(key);
+    const moved=last!==undefined&&row.dispatched>last;dispatchCount.set(key,row.dispatched);
+    const can=!row.own&&row.surplus>0&&row.roadOpen&&row.buyerCash>0;
+    const idle=can&&!moved?(idleDays.get(key)??0)+1:0;idleDays.set(key,idle);
+    chainOpenToday.set(row.settlement,idle);
+    if(idle>=7)stalls.push({day,sid,settlement:row.settlement,idleDays:idle,surplus:row.surplus,buyerCash:row.buyerCash,tripMinutes:row.tripMinutes});
+   }
+   pre[sid]={townShopRows,producerRows,chainOpenToday};
   }
-  // "Zero transport" = the cumulative count of cargo orders to the town did not grow, day after day.
-  const chainOpenToday=new Map();
-  for(const row of producerRows){
-   const key=row.settlement,last=dispatchCount.get(key);
-   const moved=last!==undefined&&row.dispatched>last;dispatchCount.set(key,row.dispatched);
-   const can=row.surplus>0&&row.roadOpen&&row.buyerCash>0;
-   const idle=can&&!moved?(idleDays.get(key)??0)+1:0;idleDays.set(key,idle);
-   chainOpenToday.set(key,idle);
-   if(idle>=7)stalls.push({day,settlement:key,idleDays:idle,surplus:row.surplus,buyerCash:row.buyerCash,tripMinutes:row.tripMinutes});
-  }
-  const stalledProducers=[...chainOpenToday].filter(([,n])=>n>=7).map(([k])=>k).sort();
 
   // ---- run the rest of the day (noon customers, afternoon, midnight meal) ----
   const next=Math.floor((day+1)*DAY)+540;
   await advance(next,`audit:post:${j}`);
   const E=doc,es=E.state;
-  // ---- today's demand of the whole town and the food within a day's walk of it ----
+  const visitsOf=(shopId)=>es.records?.[`customer_flow:${shopId}:${day}`]?.visits??[];
+  const boughtAt=(shop,item)=>[...Object.values(es.records??{})].filter(r=>r.category==='customer_flow'&&r.shop===shop&&r.day===day).flatMap(r=>r.visits).filter(v=>v.outcome==='bought'&&v.item===item).reduce((n,v)=>n+v.quantity,0);
+  const dailyRow={day,settlements:{},producers:[...new Map(Object.values(pre).flatMap(x=>x.producerRows).map(r=>[r.settlement,{settlement:r.settlement,surplus:r.surplus}])).values()]};
+
+  for(const sid of sids){
+  const {townShopRows,producerRows,chainOpenToday}=pre[sid];
+  // ---- today's demand of the whole settlement and the food within a day's walk of it ----
   const hungryNamed=[];
-  for(const [hid,h] of townHomes){
+  for(const [hid,h] of homesOf.get(sid)){
    // A household whose members have no simulated state owns no purse and no stock: its need is last meal's need.
    const meal=ps.family?.meals?.[hid]??Object.values(ps.family?.meals??{}).find(m=>m.household===hid);
    const owner=meal?.owner??h.members.find(m=>ps.npcs?.[m])??h.members[0];
@@ -195,8 +208,8 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
    }
    return out;
   };
-  // Supply is counted once per shop and item for the town (every household can reach the same ones from the
-  // same settlement, within the engine route function); the first entity's reach stands for the town.
+  // Supply is counted once per shop and item for the settlement (every household can reach the same ones from the
+  // same settlement, within the engine route function); the first entity's reach stands for the settlement.
   const townReach=entities.length?reachable(entities[0]):[];
   let townSupplySatiety=0;
   for(const r of townReach)for(const it of r.shop.items){
@@ -205,12 +218,9 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
   }
   const shelfSatiety=townSupplySatiety;
   // Public granaries within a day's round trip: their surplus beyond reserve is sellable grain (turned to satiety by the recipe chain).
-  const grainGain=chainGain(grain);let granarySatiety=0;
+  let granarySatiety=0;
   for(const row of producerRows)if(row.surplus>0&&row.tripMinutes!==null&&row.tripMinutes<=dayTrip)granarySatiety+=row.surplus*grainGain;
   townSupplySatiety+=granarySatiety;
-
-  const visitsOf=(shopId)=>es.records?.[`customer_flow:${shopId}:${day}`]?.visits??[];
-  const boughtAt=(shop,item)=>[...Object.values(es.records??{})].filter(r=>r.category==='customer_flow'&&r.shop===shop&&r.day===day).flatMap(r=>r.visits).filter(v=>v.outcome==='bought'&&v.item===item).reduce((n,v)=>n+v.quantity,0);
 
   // ---- missed meals of this day ----
   const missed=[];
@@ -225,9 +235,9 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
    }
   }
   for(const {en,meals,people} of missed){
-   total[en.kind].incidents++;total[en.kind].meals+=meals;
+   total[sid][en.kind].incidents++;total[sid][en.kind].meals+=meals;
    const where=homeLocation(en),reach1=reachable(en);
-   const cash=en.group?(en.group.coins??0):en.simulated?householdBudget(rd,e,en.owner).cash:en.members.reduce((n,m)=>n+(ps.npcs?.[m]?.coins??0),0);
+   const cash=en.group?(en.group.coins??0):en.simulated?householdBudget(rd,e,en.owner).cash:(ps.records?.[en.hid]?.townOpeningHousehold?ps.records[en.hid].coins??0:0)+en.members.reduce((n,m)=>n+(ps.npcs?.[m]?.coins??0)+(ps.records?.[`town-opening:${m}`]?.coins??0),0);
    const unitsCash=en.group?cash/Math.max(1,en.group.beneficiaryUnits):cash/Math.max(1,en.members.length);
    // cheapest listed food, priced for one person-day of satiety through the engine quote
    let best=null;
@@ -244,20 +254,22 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
    const soldOut=Boolean(best&&best.reach.engineServes&&boughtAt(best.shop.id,best.item)>0&&boughtAt(best.shop.id,best.item)>=best.avail);
    const v=verdict({supply:townSupplySatiety,demand:townDemand,best:best&&{cost:best.cost,sameSettlement:best.reach.sameSettlement},perCapitaCash:unitsCash,cash,soldOut,declined:declined&&(declined.reason??declined.outcome),servedShops:mine.length,group:Boolean(en.group),simulated:en.simulated,refCost,townShops:{total:townShopRows.length,open:townShopRows.filter(s=>s.open&&s.settlement===sid).length}});
    const cause=v.cause,reason=v.reason,clue=(await Promise.all(v.clue.map(([f,n,note])=>srcLine(f,n).then(l=>note?`${l} (${note.replace('$sid',sid)})`:l)))).join('; ');
-   const t=tally[cause];t.incidents++;t.meals+=meals;t.reasons[reason]=(t.reasons[reason]??0)+1;
+   const t=tally[sid][cause];t.incidents++;t.meals+=meals;t.reasons[reason]=(t.reasons[reason]??0)+1;
    if(!t.households.has(en.hid)){t.households.add(en.hid);t.people+=people;}
-   const spread=cause==='chain'&&en.kind==='statistical'&&!spreadDays.has(day)&&chainSpread.length<10;
+   const spread=cause==='chain'&&en.kind==='statistical'&&!spreadDays.has(`${sid}|${day}`)&&chainSpread.length<10;
    if(cause==='chain'&&(chainRows.length<20||spread)){
-    const row={household:en.hid,day,location:where,
+    const row={settlement:sid,household:en.hid,day,location:where,
      nearbyGranaries:granariesNear.map(r=>({settlement:r.settlement,surplusOats:r.surplus,roundTripMinutes:r.tripMinutes,idleDays:chainOpenToday.get(r.settlement)??0})),townShops:townShopRows.map(s=>({shop:s.id,openInTown:s.open&&s.settlement===sid,keeperNoonSettlement:s.settlement,keeperNoonLocation:s.location,tradeUntilMinute:s.until,keeper:s.keeper,keeperNoonActivity:slotOf(s.keeper)?.activity??null,stock:s.items.map(i=>`${i.item}:${i.avail}`)})),shopsElsewhereOpen:shopRows.filter(s=>s.open&&s.settlement!==sid).map(s=>({shop:s.id,settlement:s.settlement,stock:s.items.map(i=>`${i.item}:${i.avail}`)})),shopsNearby:reach1.map(r=>({shop:r.shop.id,settlement:r.shop.settlement,roundTripMinutes:r.out+r.back,engineServes:r.engineServes,stock:r.shop.items.map(i=>`${i.item}:${i.avail}`)})),
-     longestProducerIdleDays:idleMax,stockNote:`town supply satiety ${round(townSupplySatiety)} vs demand ${round(townDemand)}`,cash:round(cash),cheapestPersonDay:best?{shop:best.shop.id,item:best.item,coins:best.cost}:null,
+     longestProducerIdleDays:idleMax,stockNote:`settlement supply satiety ${round(townSupplySatiety)} vs demand ${round(townDemand)}`,cash:round(cash),cheapestPersonDay:best?{shop:best.shop.id,item:best.item,coins:best.cost}:null,
      missingMeals:round(meals),reason,clue};
     if(chainRows.length<20)chainRows.push(row);
-    if(spread){spreadDays.add(day);chainSpread.push(row);}
+    if(spread){spreadDays.add(`${sid}|${day}`);chainSpread.push(row);}
    }
-   if(incidents.length<400)incidents.push({day,household:en.hid,cause,meals:round(meals),reason});
+   if(incidents.length<400)incidents.push({day,settlement:sid,household:en.hid,cause,meals:round(meals),reason});
   }
-  daily.push({day,townDemand:round(townDemand),shelfSatiety:round(shelfSatiety),granarySatiety:round(granarySatiety),missedNamed:round(missed.filter(m=>m.en.kind==='named').reduce((n,m)=>n+m.meals,0)),missedStatistical:round(missed.filter(m=>m.en.kind==='statistical').reduce((n,m)=>n+m.meals,0)),producers:producerRows.map(r=>({settlement:r.settlement,surplus:r.surplus,roadOpen:r.roadOpen,tripMinutes:r.tripMinutes,dispatched:r.dispatched}))});
+  dailyRow.settlements[sid]={townDemand:round(townDemand),shelfSatiety:round(shelfSatiety),granarySatiety:round(granarySatiety),missedNamed:round(missed.filter(m=>m.en.kind==='named').reduce((n,m)=>n+m.meals,0)),missedStatistical:round(missed.filter(m=>m.en.kind==='statistical').reduce((n,m)=>n+m.meals,0))};
+  }
+  daily.push(dailyRow);
   progress(j,doc.state.minute);
  }
 
@@ -313,11 +325,17 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
   for(const f of found){const text=await fs.readFile(new URL(`../server-plugin/${f}`,import.meta.url),'utf8');const at=text.split('\n').findIndex(l=>l.includes(`declareLedgerWriter('${w}'`));if(at>=0){writerFiles[w]=`server-plugin/${f}:${at+1}`;break;}}
  }
 
- const attribution={};
- for(const c of CAUSES)attribution[c]={incidents:tally[c].incidents,meals:round(tally[c].meals),households:tally[c].households.size,people:tally[c].people,reasons:tally[c].reasons};
- return {days,start:start.minute,end:end.minute,
-  totals:{named:{incidents:total.named.incidents,meals:round(total.named.meals)},statistical:{incidents:total.statistical.incidents,meals:round(total.statistical.meals)}},
-  attribution,daily,chainBreakFirst20:chainRows,chainBreakStatisticalSpread:chainSpread,producerStalls:{rows:stalls.length,first:stalls.slice(0,10),last:stalls.slice(-3)},
+ const section=(t)=>Object.fromEntries(CAUSES.map(c=>[c,{incidents:t[c].incidents,meals:round(t[c].meals),households:t[c].households.size,people:t[c].people,reasons:t[c].reasons}]));
+ const bySettlement=Object.fromEntries(sids.map(sid=>[sid,{...section(tally[sid]),named:{incidents:total[sid].named.incidents,meals:round(total[sid].named.meals)},statistical:{incidents:total[sid].statistical.incidents,meals:round(total[sid].statistical.meals)}}]));
+ const attribution=Object.fromEntries(CAUSES.map(c=>{
+  const rows=sids.map(sid=>tally[sid][c]),reasons={};
+  for(const r of rows)for(const [k,n] of Object.entries(r.reasons))reasons[k]=(reasons[k]??0)+n;
+  return [c,{incidents:rows.reduce((n,r)=>n+r.incidents,0),meals:round(rows.reduce((n,r)=>n+r.meals,0)),households:rows.reduce((n,r)=>n+r.households.size,0),people:rows.reduce((n,r)=>n+r.people,0),reasons}];
+ }));
+ const tot=(k)=>({incidents:sids.reduce((n,s)=>n+total[s][k].incidents,0),meals:round(sids.reduce((n,s)=>n+total[s][k].meals,0))});
+ return {days,start:start.minute,end:end.minute,settlements:sids,
+  totals:{named:tot('named'),statistical:tot('statistical')},
+  attribution,bySettlement,daily,chainBreakFirst20:chainRows,chainBreakStatisticalSpread:chainSpread,producerStalls:{rows:stalls.length,first:stalls.slice(0,10),last:stalls.slice(-3)},
   conservation:{money:moneyRows,food:{rows:foodRows,total:foodTotal},ledger:{audit:auditLedger(ledger),drift:driftCounts(doc),transfers:ledger?.transfers??0},mismatches:{count:mismatches.length,first:mismatches.slice(0,20)},
    writerFlows:writerRows,writerFiles},
   incidentsSample:incidents.slice(0,40)};

@@ -50,7 +50,10 @@ test('候选目录的书本学习和铁件制造确实执行，缺锤不扣料�
  for(let n=0;n<100;n++){const result=await engine.reduce(c,{tool:'world_craft',args:{recipe:'recipe_forge_nails'},eventId:`nails_${n}`});if(result.result.success){made={document:applyPatches(c,result.patches),result:result.result};break;}}
  assert.ok(made);assert.equal(made.document.state.inventory.item_iron_nail.quantity,40);assert.equal(made.result.instances.length,40);assert.equal(made.result.spent.feePaid,4);
  assert.equal(made.document.state.player.coins,c.state.player.coins-4);assert.equal(made.document.state.inventory.item_iron,undefined);assert.equal(made.document.state.inventory.item_charcoal,undefined);
- assert.equal(made.document.state.minute,c.state.minute+80);assert.equal(made.document.state.npcs.npc_hw_duanyan.coins,c.state.npcs.npc_hw_duanyan.coins+4);
+ assert.equal(made.document.state.minute,c.state.minute+80);
+ // Duanyan earns the 4 workshop fee, plus 10 from the noon customer flow that these 80 minutes cross: the forge reopens at 13:00 after
+ // the keeper's lunch, and Linsui (whose trade needs a kitchen knife she lacks) buys one at its list price 10 (item base price 10 x forge markup 1).
+ assert.equal(made.document.state.npcs.npc_hw_duanyan.coins,c.state.npcs.npc_hw_duanyan.coins+4+10);
 });
 test('旧草稿的新事实校验会失败，人工评分不足或哈希改变也拒绝，不重写原输出',async()=>{
  const world=await loadWorld(),bones=economyFoundation(world);

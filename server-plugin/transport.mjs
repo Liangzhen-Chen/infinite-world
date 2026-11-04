@@ -376,6 +376,11 @@ function retimeBatch(d,e,rows,departAt,estimatedArrivalAt){
   if(order)holdingSet(d,null,path(row.externalOrder),{...order,estimatedArrivalAt},'transport');
  }
 }
+// A hired carriage's driver and vehicle (with its animal) are somewhere on a return leg: move them together, leaving the shipment and its status alone.
+export function moveCarriage(d,e,id,location){
+ const row=d.get(...path(id));if(!row)return;
+ setPosition(d,e,{...row,status:'moving',passengers:[],escort:null},location);
+}
 function setPosition(d,e,row,location){
  holdingSet(d,null,[...path(row.asset),'location'],location,'transport');
  const animal=d.get(...path(row.asset),'animal');if(animal){holdingSet(d,null,['state','creatures',animal,'location'],location,'transport');setLocation(d,{entity:animal,at:location,mode:'place',writer:'transport',engine:e});}

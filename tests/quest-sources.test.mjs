@@ -46,8 +46,9 @@ test('NPC按短缺出任务：报酬从本人钱里托管，告示带来源，�
  assert.equal(generated(next).length,1);
  assert.equal(q.publisher,owner);assert.equal(q.source.generator,'npc_needs');assert.equal(q.source.need,'repair');assert.equal(q.location,board);
  assert.deepEqual(q.objective,{type:'deliver',item:'item_wood',quantity:6,location:board});
- // K08 正午原生店成交18铜，午夜补回6面包×1+4燕饼×1.5=12铜；净入6后托管50。
- assert.equal(q.escrow,50);assert.equal(next.state.npcs[owner].coins,document.state.npcs[owner].coins+6-50);assert.equal(money(next),money(document));
+ // K08 正午原生店成交18铜，午夜补回6面包×1+4燕饼×1.5=12铜；净入6。铁匠铺午饭后13:00开门，林穗缺厨刀（她配方的用具，wants() 缺工具规则）
+ // 按铺价买一把：item_kitchen_knife basePrice 10 × 铁匠铺加价 1 = 10铜。净入6-10后托管50。
+ assert.equal(q.escrow,50);assert.equal(next.state.npcs[owner].coins,document.state.npcs[owner].coins+6-10-50);assert.equal(money(next),money(document));
  assert.match(q.sourceLabel,/林穗的私人求助/);
  const seen=next.state.npcs[witness].memoryStream.find(m=>m.id===`${q.id}:posted`);
  assert.ok(seen?.eventRumor&&seen.rumor.startsWith('rumor_event:'));assert.match(seen.content,/私人求助/);
@@ -63,8 +64,9 @@ test('NPC按短缺出任务：报酬从本人钱里托管，告示带来源，�
 test('出不起就不出：手头一半余钱不够等级下限时不发布、不扣钱',async()=>{
  const {document,midnight}=setup();document.state.buildings.bld_hw_qingdeng.condition=20;document.state.npcs[owner].coins=30;
  const next=await midnight(document);
- // 同一正午收入18−补货12=6；余钱36的一半18仍低于D级下限20，不扣任务钱。
- assert.equal(generated(next).length,0);assert.equal(next.state.npcs[owner].coins,36);
+ // 同一正午收入18−补货12=6，再在13:00铁匠铺开门后买一把厨刀10铜（item_kitchen_knife basePrice 10 × 加价 1）：30+6-10=26；
+ // 余钱26的一半13仍低于D级下限20，不扣任务钱。
+ assert.equal(generated(next).length,0);assert.equal(next.state.npcs[owner].coins,26);
 });
 
 test('数量节流：每日上限、每人按灵智等级上限，守常者只为迫在眉睫的缺口出单',async()=>{
@@ -187,7 +189,8 @@ test('过期没人接的任务撤下：人物托管退回本人，公账托管�
   [10,'item_bread',4,10],[10,'item_oat_flatbread',4,14],[11,'item_bread',6,14]
  ]);
  // Local imports paid to the source purse: 6+6+8+6+10+8+12+9+14+11+16+13+15+4+4+10+14+14=180.
- assert.equal(done.state.settlements.loc_hw.treasury,treasury+40+180);
+ // 加上林穗第一天从铁匠铺买走的那把厨刀（货架1件）：铁匠铺补回1件，按本地进货价10铜付给来源钱袋（treasury），共10铜。
+ assert.equal(done.state.settlements.loc_hw.treasury,treasury+40+180+10);
  const reposts=generated(done).filter(q=>q.publisher===owner&&q.id!==npcQuest.id&&['公开','进行中'].includes(q.status));
  const sales=Object.values(done.state.records).filter(r=>r.category==='customer_flow'&&r.keeper===owner).flatMap(r=>r.visits).reduce((n,v)=>n+(v.paid??0),0);
  // Pre-K16 daily sales:18+12+13+15+19+22+12+4+8+15+13=151.
@@ -204,7 +207,8 @@ test('过期没人接的任务撤下：人物托管退回本人，公账托管�
  const hired=Object.values(done.state.records).filter(r=>r.kind==='workshop'&&r.owner===owner&&r.demandSource==='shop:shop_hw_qingdeng:item_bread');
  assert.deepEqual(hired.map(r=>[r.worker,r.produced,r.workedMinutes,r.paid,r.shifts[0].production.cost]),[['npc_hw_wushuo',2,12,1,5],[witness,2,22,2,5]]);
  assert.equal(counter.coins,0);
- assert.equal(done.state.npcs[owner].coins,coins+166-180-13-reposts.reduce((n,q)=>n+q.escrow,0));
+ // Her one purchase at the forge on day 1 (kitchen knife, 10) is a further personal spending.
+ assert.equal(done.state.npcs[owner].coins,coins+166-180-13-10-reposts.reduce((n,q)=>n+q.escrow,0));
  assert.deepEqual(reconcile(engine,done),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 

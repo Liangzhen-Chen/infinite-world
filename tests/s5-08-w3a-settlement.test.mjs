@@ -39,8 +39,11 @@ test('hired carriage: freight reaches the carrier and the village ledger, and no
  // Yupo road 10 km (risk 1) -> 21.33, Weiting road 11.40 km (risk 1) -> 24.32, two hall approaches 0.24 each: 46.14 -> 47.
  assert.equal(trip.freight,freightBy(f.engine,trip.transport.edges));assert.equal(trip.freight,47);
  assert.equal(trip.tariff+trip.toll,0);
- // The carrier keeps freight minus 5% home commercial tax floor(freight*.05); coin was 1000 before.
- assert.equal(f.document.state.npcs[carrier].coins,1000+trip.freight-Math.floor(trip.freight*0.05));
+ // The carrier keeps freight minus 5% home commercial tax floor(freight*.05); coin was 1000 before. Since the hired driver now brings his bull back
+ // to the counter, he is also hired for the earlier food-supply grain trips (id food-supply:*): each of them pays the same freight minus floor(5%).
+ const net=t=>t.freight-Math.floor(t.freight*0.05),earlier=Object.values(f.document.state.records).filter(r=>r.category==='transport'&&r.carrier===carrier&&r.id!==trip.id);
+ assert.ok(earlier.length>0&&earlier.every(r=>r.externalOrder?.startsWith('food-supply:')));
+ assert.equal(f.document.state.npcs[carrier].coins,1000+net(trip)+earlier.reduce((n,r)=>n+net(r),0));
  // The seller village's ledger shows the freight as a dated expense against this order.
  const expense=fiscal(f.document,lane.seller).entries.find(e=>e.phase==='freight'&&e.contract===o.id);
  assert.deepEqual([expense.copper,expense.freightCopper,expense.other],[-trip.freight,trip.freight,carrier]);assert.equal(o.carriageCostCopper,trip.freight);

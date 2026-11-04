@@ -455,6 +455,17 @@ export function foodSupplyNeed(d,engine,shop,item){
     return Math.max(0,Math.min(row.amount,row.maximum)-shelf(engine,d,shop.keeper,item)-pending);
 }
 // A real visitor observes a bid at this counter and carries its value home.
+// What restockRow would pay out of the counter for the shop's ordinary (local or settlement-stock) rows if it restocked now.
+function restockOutlay(d,engine,shop,minute){
+    const market=marketFactor(engine,d.get('state'),shop.settlement);let total=0;
+    for(const row of shop.restock){
+        if(row.physicalSupply||row.source==='route')continue;
+        const want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));if(want<=0)continue;
+        const business={keeper:shop.settlement,markup:1};
+        try{total+=marketQuote(d,engine,{item:row.item,location:shop.settlement,minute,seller:shop.settlement,buyer:shop.keeper,quantity:want,business,base:regionalTradeBase(d,engine,row.item,shop.settlement,minute),supply:quoteSupply(d,engine,{item:row.item,location:shop.settlement,business})}).totalCoins;}catch{}
+    }
+    return total;
+}
 export function foodSupplyBid(d,engine,shop,item,minute){
     if(d.get('state','npcs',shop.keeper,'location')!==shop.location||!isEffective(engine,d.get('state'),shop.keeper))return null;
     const quantity=foodSupplyNeed(d,engine,shop,item);if(!quantity)return null;
@@ -464,7 +475,8 @@ export function foodSupplyBid(d,engine,shop,item,minute){
     const sale=marketQuote(d,engine,{item,location:shop.location,seller:shop.keeper,quantity:1,base,business:shop});
     if(keeperChoice(d,engine,shop,minute,{}, {kind:'restock',cost:{value:quantity*unitPrice},reward:Math.floor(sale.listPrice*quantity)}).outcome!=='agree')return null;
     const budget=householdBudget(d,engine,shop.keeper,{view:keeperView(d,engine,shop.keeper,minute)});
-    const cap=counterCash(d,shop.keeper)+Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance)));
+    // A keeper keeps working capital for the rest of his shelf: what the ordinary restock of his other rows would lay out this cycle.
+    const cap=Math.max(0,counterCash(d,shop.keeper)+Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance)))-restockOutlay(d,engine,shop,minute));
     const target=Math.min(quantity,Math.floor(cap/unitPrice))*unitPrice;if(!target)return null;
     fundCounter(d,engine,{shop,minute,target,eventId:`food-bid:${shop.id}:${item}:${minute}`});
     const affordable=Math.min(quantity,Math.floor(counterCash(d,shop.keeper)/unitPrice));if(!affordable)return null;
