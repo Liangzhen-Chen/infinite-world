@@ -63,7 +63,7 @@ export function marketScheduleAt(state,id,minute){
  const outbound=minute<row.arriveAt,inbound=minute>=row.finishAt;
  const travel=outbound?{from:row.from,to:row.to,depart:row.departAt,arrive:row.arriveAt,edges:row.outboundEdges??[]}
   :inbound?{from:row.to,to:row.from,depart:row.finishAt,arrive:row.returnAt,edges:row.inboundEdges??[]}:null;
- return {location:travel?null:row.to,activity:travel?'赶集途中':'赶集采购',services:[],until:travel?.arrive??row.finishAt,marketTrip:row.id,travel};
+ return {location:travel?null:row.to,activity:travel?(row.travelActivity??'赶集途中'):(row.activity??'赶集采购'),services:[],until:travel?.arrive??row.finishAt,marketTrip:row.id,travel};
 }
 // The one relation read model. Legacy scalars seed NPC -> player relations
 // until a ledger row exists; they are never a second live value.
