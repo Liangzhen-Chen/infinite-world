@@ -1,5 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
-import {isEffective,isPhysicallyDead,aliveHoldings} from './holdings.mjs';
+import {isEffective,isPhysicallyDead} from './holdings.mjs';
+import {unlicensedProperty} from './action-authority.mjs';
+import {noteOffense} from './offense-notes.mjs';
 import {advanceHook} from './advance-hooks.mjs';
 import {declareLedgerWriter,transfer,accountKey,LEDGER_COIN} from './ledger.mjs';
 declareLedgerWriter('activities',{sinks:['sink:export']});
@@ -86,11 +88,7 @@ export const activities={
         // A herd is struck one head at a time: its owner first leads one animal
         // out of the herd stock (individuation), then fights that individual.
         const herd=typeof args.target==='string'&&d.get('holdings','entities',args.target)?.kind==='population'?d.get('state','records',`husbandry:${args.target}`):null;
-        if(herd){
-            const owners=aliveHoldings(d,{kind:'owns',subject:herd.id}).map(h=>h.holder);
-            if(!owners.includes(attacker))throw preconditionFailure(`${herd.name}是${owners.map(o=>this.byId.get(o)?.name??o).join('、')||'别人'}的，你没有处分别人牲畜的权利`);
-            if(herd.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
-        }
+        if(herd&&herd.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
         const individuate=(...a)=>{const fn=advanceHook('individuateHerd');if(!fn)throw preconditionFailure('畜牧未启用，不能从畜群中牵出个体');return fn(...a);};
         const target=herd?individuate(d,this,{population:herd.id,count:1,eventId:`${id}:individuate`})[0]:resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??(isNpc?target:npc?.species??target)),isBoss=Boolean(npc?.boss);
         const duel=isNpc?activeDuel(d,this,target,attacker):null,nonlethal=duel?.rule==='touch';
@@ -101,7 +99,9 @@ export const activities={
         // else's beast is refused as theirs.
         const creatureDefinition=!isNpc&&(this.world.monsters.some(row=>row.id===base?.id)||this.world.bosses?.some(row=>row.id===base?.id)||d.get('state','created',target)&&Number.isInteger(base?.template));
         if(!isNpc&&!(npc&&creatureDefinition))throw preconditionFailure('这个实体不是交锋对象');
-        if(!isNpc&&npc.owner&&npc.owner!==attacker)throw preconditionFailure(`${npc.name??base?.name??'这只动物'}是${this.byId.get(npc.owner)?.name??d.get('state','npcs',npc.owner,'name')??npc.owner}的，你没有处分别人牲畜的权利`);
+        // Striking another's beast or a head led out of another's herd is the
+        // same blow; the primitive layer's property judgment names the breach (K6).
+        const breach=!isNpc?unlicensedProperty({engine:this,document:d.document},attacker,'vital',target):null;
         if(!npc||npc.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
         if(isPhysicallyDead(this,d,target))throw preconditionFailure('对手已经死亡');
         const encounter=encounterForExchange(d,this,attacker,target);
@@ -190,6 +190,7 @@ export const activities={
             if(d.get('state','records',`local_actor_position:${target}`))d.remove(['state','records',`local_actor_position:${target}`]);
         }
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
+        if(breach&&(damage>0||!remaining))noteOffense(d,breach);
         const lair=!remaining?defeatBoss(d,this,target,id):null;
         // Title is read as it stood when the blow fell: death closes the tamed_by
         // projection, but an owned beast never yields wild XP (K7).

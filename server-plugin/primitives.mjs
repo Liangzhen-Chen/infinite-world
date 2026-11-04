@@ -1,4 +1,5 @@
 import {transfer,balance,parseAccount,isSource,isSink,declareLedgerWriter} from './ledger.mjs';
+import {noteOffense} from './offense-notes.mjs';
 import {updateEntity,declareHoldingWriter,ENTITY_KINDS,openHolding,closeHolding,transferHolding,rescaleHolding,holdingRow,holdingKind,runHoldingProtocol} from './holdings.mjs';
 import {PrimitiveRejected,validatePrimitive,writableFact,reject} from './primitive-policy.mjs';
 import {beginReactionTick,drainWorldReactions,publishTransitionEvent,presentWitnesses,SOCIAL_VERBS} from './world-events.mjs';
@@ -88,6 +89,9 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    const tags=[...capability.tags??[]];let actedAs=null,result;
    const requireAuthority=(op,target,options)=>{
     const a=policy.authority(d.document,frame.actor,op,target,options);if(!a?.allowed)reject('E-AUTHORITY',a?.reason??'没有动用权限');
+    // K6: an act allowed only as a breach of another's title is noted here and
+    // committed as an offense with this act (see below).
+    if(a.breach)noteOffense(d,{...a.breach,actor:frame.actor});
     tags.push(...a.tags??[]);actedAs=a.actedAs;
     if(actedAs?.kind==='resolution'){
      resolutions.add(actedAs.id);
@@ -132,7 +136,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     if(!kind)reject('E-HOLDING-KIND','Unknown holding kind');
     if(effect.op==='holding.open'&&effect.terms!==undefined&&effect.terms!==null&&(typeof effect.terms!=='object'||Array.isArray(effect.terms)||Object.keys(effect.terms).some(field=>!kind.terms?.includes(field))))reject('E-HOLDING-TERMS','Holding terms must be declared by the holding kind');
     const subject=row?.subject??effect.subject;
-    requireAuthority(effect.op,subject,{holding:row,kind:kind.id,variant:effect.variant,holder:effect.holder,reason:effect.reason,shares:effect.shares,disposition:effect.op==='holding.transfer'||kind.id==='pledged'});
+    requireAuthority(effect.op,subject,{effect,holding:row,kind:kind.id,variant:effect.variant,holder:effect.holder,reason:effect.reason,shares:effect.shares,disposition:effect.op==='holding.transfer'||kind.id==='pledged'});
     const base={writer:'primitives',eventId:frame.eventId,engine:policy.engine};
     const mutate=(op,args,native)=>{
      const value=policy.engine?runHoldingProtocol(d,policy.engine,{...base,...args,op,eventId:`${frame.eventId}:${index}`}):native(d,{...base,...args});
@@ -217,6 +221,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    const target=child.target??(party&&!isSink(party)?party:null)??(child.op==='learn'?child.result?.teacher:null)??child.entity??null;
    publishTransitionEvent(d,policy.engine,{id:child.id,parent:frame.eventId,verb,actor:frame.actor,target,minute:d.get('state','minute'),location,visibility,witnesses,tags:child.tags,primitive:child.op,result:child.result,...(child.op==='emit'?{payload:child.payload??{}}:{})});
   }
+  for(const offense of policy.engine.primitiveCommitOffenses?.(d,frame.eventId)??[])receipt.consequences.push({type:'offense',...offense});
   if(!deferReactions)drainWorldReactions(d);
   const interruptions=actionRuntime?.settleRites?.(d,policy.engine)??[];
   for(const plan of interruptions){

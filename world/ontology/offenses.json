@@ -62,7 +62,7 @@
    "source": "template",
    "act": "cast",
    "against": {
-    "school": "精神"
+    "permit": "mental_magic"
    }
   },
   {

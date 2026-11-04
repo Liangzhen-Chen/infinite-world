@@ -9,7 +9,8 @@ import {personTeaching,personCertified} from './entity-view.mjs';
 import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
 import { applyPatches, canonical, canonicalEqual, diffPatches, PatchCursor, withRecordIndex } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
-import {assertLocationAccess,homePermission}from'./location-access.mjs';
+import {assertLocationAccess,unlicensedEntry,homePermission}from'./location-access.mjs';
+import {noteOffense} from './offense-notes.mjs';
 import {activities}from'./activities.mjs';
 import {actorId,actorPath}from'./npc-state.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
@@ -384,8 +385,10 @@ export class WorldEngine {
         const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe',site:'inspect'};
         const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);
         if(noTimeTurn||(readOperations[tool]&&(args.operation??readOperations[tool])===readOperations[tool])){
-            const detail=await this.scoped(document)[tool](d,args,id);
-            return {patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,notices:[]}};
+            const session=this.scoped(document),detail=await session[tool](d,args,id);
+            // An inspection that turns into an act (opening someone's door) commits its breach too (K6).
+            const offenses=commitOffenses(d,session,id);
+            return {patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(offenses.length?{offenses}:{}),minute:d.get('state','minute'),messages:d.messages,notices:[]}};
         }
         if(document.releaseVersion!==1){
             if(!options.replay)throw new Error('此战役尚未完成 R1 初始化，请先在副本上显式迁移');
@@ -974,7 +977,8 @@ export class WorldEngine {
         for(const edgeId of route.edges){const edge=this.world.routes.find(r=>r.id===edgeId);assertMindSpacePath(d,this,edge.from,[0,0],[0,0],{destination:edge.to,eventId:id,signal:true});}
         assertFireTravel(d,this,route);
         const entered=new Set(route.edges.flatMap(edgeId=>{const edge=this.world.routes.find(row=>row.id===edgeId);return[edge.from,edge.to];}));entered.delete(old);
-        for(const place of entered)assertLocationAccess(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});
+        // K6: walking into a home without its residents' consent happens; it is trespass.
+        for(const place of entered){const entry=unlicensedEntry(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});if(entry)noteOffense(d,{act:'enter',victim:entry.victim,subject:{id:place,kind:'dwelling'},actor:'player'});}
         assertNpcObligationAction(d,this,['player',...d.get('state','player','companions')??[]],{minutes:route.minutes,location:destination,kind:'move'});
         if(this.rules.petCare)preparePetTravel(d,this,args.mode??'walk',route.movingMinutes);
         if(d.get('state','player','coins')<route.cost)reject('E-ACTION-PRECONDITION','路费不足');

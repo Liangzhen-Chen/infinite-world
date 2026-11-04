@@ -1,5 +1,5 @@
 import {readFileSync} from 'node:fs';
-import {takeNotedOffenses} from './offense-notes.mjs';
+import {takeNotedOffenses,noteOffense} from './offense-notes.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {goodsWorth,valuation} from './valuation.mjs';
 import {recordStandingEvidence} from './npc-state.mjs';
@@ -751,18 +751,22 @@ function surrender(d,engine,args,eventId,row){
 }
 // A bounty-holder seizes a wanted person in reach of the notice; then escorts them (as a companion) to the court.
 function captureFugitive(d,engine,row,eventId){
-    const state=d.get('state'),w=wantedOfCase(state,row.id);if(!w)throw preconditionFailure('此人没有生效的通缉，不能擅自拘人');
-    const quest=state.quests?.[w.quest];if(quest?.taker!=='player'||quest.status!=='进行中')throw preconditionFailure('须先在告示处接下这份赏金（world_quest accept）');
-    if(w.captive)throw preconditionFailure('此人已在押解中');
-    if(!wantedReachedAt(engine,w,state.location,state.minute,state))throw preconditionFailure('此地不在通缉范围或文书未到，不能擅自拘人');
+    // K6: seizing a person is a bodily contest; the notice, the accepted bounty
+    // and its reach make it lawful, they do not make it possible. Without them
+    // the seizure still happens and is unlawful detention.
+    const state=d.get('state'),w=wantedOfCase(state,row.id);
+    if(w?.captive)throw preconditionFailure('此人已在押解中');
+    const quest=w?state.quests?.[w.quest]:null;
+    const lawful=Boolean(w)&&quest?.taker==='player'&&quest.status==='进行中'&&wantedReachedAt(engine,w,state.location,state.minute,state);
     const target=present(d,engine,row.offender,true);
-    if(w.evadedAt!==undefined&&state.minute-w.evadedAt<60)throw preconditionFailure('逃犯刚甩脱你，需过一阵再找机会');
+    if(w?.evadedAt!==undefined&&state.minute-w.evadedAt<60)throw preconditionFailure('逃犯刚甩脱你，需过一阵再找机会');
     const result=engine.check(d,{attribute:'力量',opponent:{npc:target,attribute:'敏捷'}},eventId);
     engine.advance(d,engine.rules.law.actionMinutes,eventId);
-    const actor=d.get('state','npcs',target),cur=d.get(...path(w.id)),captured=result.success&&alive(actor,d,target)&&actor.location===d.get('state','location');
-    if(captured){holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions')??[],target])],'law');holdingSet(d,null,path(w.id),{...cur,captive:{by:'player',minute:d.get('state','minute')}},'law');}
-    else holdingSet(d,null,path(w.id),{...cur,evadedAt:d.get('state','minute')},'law');
-    return{case:row.id,target,captured,check:result,note:captured?'已拿下，随你同行押解；到发布法院用world_quest complete交付':'对方挣脱了，一小时后才有机会再试'};
+    const actor=d.get('state','npcs',target),cur=w?d.get(...path(w.id)):null,captured=result.success&&alive(actor,d,target)&&actor.location===d.get('state','location');
+    if(captured){holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions')??[],target])],'law');if(cur&&lawful)holdingSet(d,null,path(w.id),{...cur,captive:{by:'player',minute:d.get('state','minute')}},'law');}
+    else if(cur)holdingSet(d,null,path(w.id),{...cur,evadedAt:d.get('state','minute')},'law');
+    if(captured&&!lawful)noteOffense(d,{act:'detain',victim:target,subject:{id:target,kind:'person'},actor:'player'});
+    return{case:row.id,target,captured,lawful,check:result,note:captured?lawful?'已拿下，随你同行押解；到发布法院用world_quest complete交付':'已拿下，但没有生效且送达此地的通缉与赏金，这是非法拘禁':'对方挣脱了，一小时后才有机会再试'};
 }
 
 // Player and NPC defendants share evidence and sentencing; the caller supplies the court witnesses.
@@ -940,7 +944,7 @@ export function lawAction(d,args,eventId){
         }
     }
     if(row.offender!=='player'&&!creditorClaim){
-        if(operation!=='arrest')throw preconditionFailure('此案被告是他人；你只能接下赏金后缉拿交付');
+        if(operation!=='arrest')throw preconditionFailure('此案被告是他人，你不是当事人；能做的是缉拿（arrest）');
         return captureFugitive(d,this,row,eventId);
     }
     if(operation==='hire_advocate')return hireAdvocate(d,this,row,args,eventId);

@@ -24,6 +24,43 @@ function controllerCapacity(context,id){
 // Native title/operation holdings override catalog ownership. Custody and
 // merely being present never confer issuing authority.
 const controllerHistory=Symbol('title and operation history by subject');
+// Current owners of an entity: owns holdings (incl. herds), then native
+// owner facts; a creature's or a registered unit's owner field is the same title.
+export function propertyOwners(context,subject){
+ const owners=currentControllers(context,subject,{ownerOnly:true,principals:true});
+ const s=context.document.state,row=s.creatures?.[subject]??s.itemInstances?.[subject];
+ return owners.length?owners:typeof row?.owner==='string'?[row.owner]:[];
+}
+const PHYSICAL_ACT=Object.freeze({transfer:'take',move:'take',destroy:'destroy',vital:'destroy',transition:'destroy','fact.set':'use'});
+// K6 legality is a consequence: the one primitive-layer judgment of acting on
+// someone else's property. When the act is physically open to the actor and
+// only the owner's licence is missing, it returns the breach (act, victim,
+// what was taken) instead of a refusal; the act happens and the norm stack
+// names the offense. A person's or a beast's purse, pack and body, a herd and
+// an owned thing are property; an institution's books (treasury, office,
+// organization) keep their constitutive authority and are not covered here.
+export function unlicensedProperty(context,actor,op,target,{effect=null,kind=null,variant=null,holder=null}={}){
+ const s=context.document.state,person=id=>id==='player'||Boolean(s.npcs?.[id]||s.creatures?.[id]);
+ // Holding a person against their will is the same bodily act with or without
+ // a warrant; without one it is unlawful detention.
+ if(op==='holding.open'&&kind==='guest_of'&&(variant??effect?.variant??effect?.terms?.mode)==='detained'&&typeof holder==='string'&&holder!==actor&&s.npcs?.[holder])return {act:'detain',victim:holder,subject:{id:holder,kind:'person'},actor};
+ const act=PHYSICAL_ACT[op];if(!act||typeof target!=='string')return null;
+ let subject=target,victims,stolen=null;
+ if(target.includes('|')){
+  let account;try{account=parseAccount(target);}catch{return null;}
+  subject=account.owner;
+  const herd=context.document.holdings?.entities?.[subject]?.kind==='population';
+  victims=herd?propertyOwners(context,subject):person(subject)?[subject]:[];
+  const qty=effect?.qty??1;
+  stolen=account.resource==='coin'||/^coin/.test(account.resource)?{coins:qty}:{item:account.resource,quantity:qty};
+ }else{
+  victims=propertyOwners(context,subject);
+  const unit=s.itemInstances?.[subject];if(unit&&act==='take')stolen={item:unit.item,quantity:1,unit:subject};
+ }
+ victims=victims.filter(id=>id!==actor);
+ if(!victims.length||propertyOwners(context,subject).includes(actor))return null;
+ return {act,victim:victims[0],subject:{id:subject,kind:s.creatures?.[subject]?'creature':s.itemInstances?.[subject]?'item':context.document.holdings?.entities?.[subject]?.kind??'thing'},stolen,actor};
+}
 export function currentControllers(context,subject,{ownerOnly=false,principals=false}={}){
  const d=actionReader(context.document),kinds=ownerOnly?['owns']:['operates','owns'];
  const held=aliveHoldings(d,{subject}).filter(h=>kinds.includes(h.kind)&&effective(d,h.id));
@@ -253,6 +290,13 @@ export function createActionPrimitiveFrame(context,{actor,eventId,source,mirrorT
    // losing capacity during prepare. validate above still gates the initiative.
    return !permission.allowed&&consequence?.(document,effect)===true?{allowed:true,tags:[]}:permission;
   },
-  authority:(document,id,op,target,options)=>authority(withDocument(document),id,op,target,options),
+  // A missing owner's licence on a physical act is a consequence, not a
+  // refusal (K6): the frame allows it and hands the breach to the caller.
+  authority:(document,id,op,target,options)=>{
+   const granted=authority(withDocument(document),id,op,target,options);
+   if(granted.allowed)return granted;
+   const breach=unlicensedProperty(withDocument(document),id,op,target,options);
+   return breach?{allowed:true,sources:[],tags:['unlicensed'],actedAs:null,breach}:granted;
+  },
   location:(document,id)=>located(actionReader(document),id,x=>x==='player'?document.state?.location:actionEntity(withDocument(document),x)?.location??context.engine?.byId?.get(x)?.location??null)});
 }
