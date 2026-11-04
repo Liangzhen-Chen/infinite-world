@@ -84,12 +84,12 @@ test('怪物生命整数化兼容照料；驯兽不反击也不给野外经验',
     const{engine,c,run}=setup();for(let level=0;level<=200;level++)for(const tier of [0,1])assert.ok(Number.isInteger(monsterStats({level,template:2,bossTier:tier},engine.rules).maxHp));
     assert.equal(monsterStats({level:1,template:0},engine.rules).attacks,0);
     c.state.location='loc_hw_northwood';const out=await track(run,c);const id=out.result.found.id;out.document.state.creatures[id].owner='player';out.document.state.creatures[id].hp=1;
-    // Rule since 4fd56cb9 (old-npc, tests/old-npc.test.mjs:27): an owned creature is not an exchange target (activities.mjs combat precondition),
-    // so a tamed beast can neither counter-attack nor yield wild XP; the earlier kill loop on an owned animal is no longer a legal action.
+    // K7 owner's disposition (设计稿 §9 第 6 条, restoring the pre-58e8d709 direction): the owner may kill its own
+    // beast; it dies and leaves a carcass, but an owned animal never yields wild XP.
+    // Combat boundary fixture gives the player high HP; not a normal levelling demonstration.
     out.document.state.player.level=30;out.document.state.player.hp=500;out.document.state.player.maxHp=500;
-    const doc=out.document,before=structuredClone(doc.state);
-    await assert.rejects(run(doc,'world_combat',{target:id},'kill_owned'),/不是交锋对象/);
-    assert.deepEqual(doc.state,before);assert.equal(doc.state.player.xp,before.player.xp);assert.equal(doc.state.creatures[id].status,before.creatures[id].status);
+    let doc=out.document;for(let i=0;i<40&&doc.state.creatures[id].status!=='死亡';i++)doc=(await run(doc,'world_combat',{target:id},`kill_owned${i}`)).document;
+    assert.equal(doc.state.player.xp,c.state.player.xp);assert.equal(doc.state.creatures[id].status,'死亡');assert.ok(doc.state.creatures[id].corpse);
 });
 test('击杀不自动掉进背包；取材需要刀水，已处理或腐坏尸体不能刷',async()=>{
     const{c,run}=setup();c.state.location='loc_hw_northwood';const out=await track(run,c);const id=out.result.found.id;let doc=out.document;

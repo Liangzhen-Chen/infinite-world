@@ -62,14 +62,18 @@ test('A3-fix3 displacement: a structured teleport move is refused (E-OPEN-MOVE) 
 });
 
 // ---- 3. combat opponent identity is the creature record, not an id prefix ----
-test('A3-fix3 combat: an unowned creature record of a catalogued monster is an opponent whatever its id; an owned one is not',async()=>{
+test('A3-fix3 combat: a creature record of a catalogued monster is an opponent whatever its id; its owner may strike it, others are refused as not theirs',async()=>{
  const row=rowFor(169),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
  const id=row.proposal.means.opponent;assert.ok(!/^(monster_|boss_)/.test(id));
  const preview=receiptOf(await engine.previewAction(document,{tool:'world_propose',eventId:'fix3-combat',args:row.proposal}));
  assert.equal(preview.status,'preview');assert.equal(preview.routed,'core:combat');
+ // K7 (设计稿 §9 第 3 条): the owner's own beast is a lawful target of its owner.
  const owned=structuredClone(document);owned.state.creatures[id].owner='player';
- const refused=receiptOf(await engine.previewAction(owned,{tool:'world_propose',eventId:'fix3-combat-owned',args:row.proposal}));
- assert.equal(refused.status,'rejected');assert.match(refused.reason,/不是交锋对象/);
+ const own=receiptOf(await engine.previewAction(owned,{tool:'world_propose',eventId:'fix3-combat-owned',args:row.proposal}));
+ assert.equal(own.status,'preview');assert.equal(own.routed,'core:combat');
+ const theirs=structuredClone(document);theirs.state.creatures[id].owner='npc_hw_linsui';
+ const refused=receiptOf(await engine.previewAction(theirs,{tool:'world_propose',eventId:'fix3-combat-theirs',args:row.proposal}));
+ assert.equal(refused.status,'rejected');assert.match(refused.reason,/没有处分别人/);
 });
 
 // ---- 5. internal invariants are faults, business preconditions are refusals ----
