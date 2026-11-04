@@ -6,6 +6,7 @@
 //
 // Exit shapes installed on the loaded species object:
 //   s.husbandry.yields.alive = [{item, perHeadDay, collectMinutes, from}]
+//   s.husbandry.yields.carcass = [{item, amount, collectMinutes}]  (per dead head)
 //   s.drops                  = [{item, amount}]   (carcass, read by wildlife)
 // A species without bodyMassKg keeps its authored drops and has no alive yield.
 
@@ -70,8 +71,10 @@ function carcassDrops(world,s){
 export function installHusbandryTraits(world){
  for(const s of world.monsters){
   if(!s.husbandry)continue;
-  s.husbandry.yields={alive:aliveYields(world,s)};
-  const drops=carcassDrops(world,s);if(drops)s.drops=drops;
+  const drops=carcassDrops(world,s),minutes=param(world,'husbandry.traits')?.collectMinutesPerKg?.carcass;
+  // Herd deaths dress into the same carcass parts; taking them costs time by weight.
+  s.husbandry.yields={alive:aliveYields(world,s),carcass:(drops??[]).map(d=>({...d,collectMinutes:Math.max(1,Math.round(world.items.find(i=>i.id===d.item).weight*minutes))}))};
+  if(drops)s.drops=drops;
  }
  return world;
 }

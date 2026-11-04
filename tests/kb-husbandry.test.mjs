@@ -75,9 +75,14 @@ test('cut feed: fewer births and products, hunger then starvation; restored feed
  document=await wait(engine,document,1440*6,'cut');
  const cut=rec(document);
  assert.equal(cut.born,fed.born,'no births without feed');
- assert.ok(!cut.batches.some(b=>b.day>cutDay),'no eggs without feed');
+ assert.ok(!cut.batches.some(b=>b.item==='item_pheasant_egg'&&b.day>cutDay),'no eggs without feed');
  assert.ok(cut.hungerHeadDays>0&&cut.starvationDeaths>0&&cut.count<fed.count);
  assert.ok(flow(document,/^sink:death\|population_monster_oat_pheasant\|starvation/)===cut.starvationDeaths);
+ // The starved birds are bodies dressed into carcass parts, left in the herd store for the player.
+ const meat=byId(engine.world,'monster_oat_pheasant').drops.find(d=>tagged(engine.world,d.item,'meat'));
+ assert.ok(cut.carcasses>=cut.starvationDeaths);
+ assert.ok(cut.carcasses>(fed.carcasses??0));
+ assert.equal(flow(document,new RegExp(`^src:husbandry\\|${meat.item}\\|carcass`)),meat.amount*(cut.carcasses-(fed.carcasses??0)));
  document=premise(engine,document,{inventory:{item_oats:400}});
  document=await wait(engine,document,1440*8,'restored');
  assert.ok(rec(document).count>cut.count&&rec(document).born>cut.born);assert.equal(rec(document).hungryDays,0);
@@ -109,7 +114,10 @@ test('an NPC herder grazes the commons and culls the surplus of a full pen into 
  assert.ok(flow(document,/^sink:consume\|item_pasture_forage\|husbandry_grazing/)>0);
  assert.ok(flow(document,/^src:regrowth\|item_pasture_forage/)>=flow(document,/^sink:consume\|item_pasture_forage/));
  const meat=byId(engine.world,'monster_oat_pheasant').drops.find(d=>tagged(engine.world,d.item,'meat'));
- assert.equal(flow(document,new RegExp(`^src:husbandry\\|${meat.item}\\|`)),meat.amount*row.culled);
+ // Every dead pheasant (culled here, or aged/sick in either flock) is dressed into the owner's bag.
+ const birds=document.state.records['husbandry:population_hw_home21_pheasants'];
+ assert.ok(row.carcasses>=row.culled);
+ assert.equal(flow(document,new RegExp(`^src:husbandry\\|${meat.item}\\|`)),meat.amount*(row.carcasses+(birds.carcasses??0)));
  assert.equal(flow(document,/^sink:death\|population_monster_oat_pheasant\|cull/),row.culled);
  assert.equal(flow(document,/^src:import\|item_pasture_forage/),0);
  assert.deepEqual(reconcile(engine,document).mismatches,[]);
@@ -134,4 +142,25 @@ test('slaughtering an owned head (K7 individuation) leaves a body-derived carcas
  assert.ok(goat.drops.some(d=>tagged(engine.world,d.item,'meat'))&&goat.drops.some(d=>tagged(engine.world,d.item,'hide')));
  assert.equal(skinned.ledger.accounts['population_kb_player|population_monster_bent_horn_goat|population'],5);
  assert.deepEqual(reconcile(engine,skinned).mismatches,[]);
+});
+
+test('herd animals die of age by lifespan (authored, else from body mass); every death is dressed by the same carcass law and collectable',async()=>{
+ const bird=byId(world,'monster_oat_pheasant');
+ assert.equal(byId(world,'monster_bent_horn_goat').husbandry.lifespanYears,undefined);
+ const w=structuredClone(world);byId(w,'monster_oat_pheasant').husbandry.lifespanYears=0.1;
+ w.ecology.herds.push({id:'population_kb_player',name:'试验雉群',owner:'player',location:'loc_hw',species:'monster_oat_pheasant',count:400,capacity:3000});
+ const engine=new WorldEngine(w);
+ let document=premise(engine,engine.createCharacter(seed,{},'kb-aged'),{minute:1200,location:'loc_hw',inventory:{item_oats:100}});
+ document=await wait(engine,document,240+1440*3,'aged');
+ const row=rec(document);
+ // 400 head over a 36-day life: about 11 a day.
+ assert.ok(row.naturalDeaths>=30&&row.carcasses===row.naturalDeaths);
+ assert.ok(flow(document,/^sink:death\|population_monster_oat_pheasant\|natural/)>=row.naturalDeaths);
+ for(const part of bird.husbandry.yields.carcass)assert.equal(flow(document,new RegExp(`^src:husbandry\\|${part.item}\\|carcass`)),part.amount*row.carcasses);
+ const feather=bird.husbandry.yields.carcass.find(p=>tagged(world,p.item,'feather'));
+ const got=await engine.reduce(document,{tool:'world_farm',args:{operation:'husbandry_collect',target:'population_kb_player',item:feather.item,quantity:2},eventId:'take-feathers'});
+ assert.equal(got.result.success,true);
+ const after=applyPatches(document,got.patches);
+ assert.equal(after.state.inventory[feather.item].quantity,2);
+ assert.deepEqual(reconcile(engine,after).mismatches,[]);
 });
