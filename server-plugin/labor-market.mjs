@@ -28,6 +28,7 @@ import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {registerEarnedClaim,settleClaim,claimDue,claimLimitation} from './obligation-claims.mjs';
 import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
+import {laborCategories} from './npc-labor.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
 import {householdLaborBudget} from './household-budget.mjs';
 import {householdWorkTime,agriculturalWorkforce} from './npc-state.mjs';
@@ -132,7 +133,7 @@ export function laborOffers(e,s,minute=s.minute){
         const required=Math.min(p.farmWorkers,farm.tools.capacity,Math.ceil(work/Math.max(1,p.areaPerWorkerDay*farm.tools.condition/100))),vacancies=Math.ceil(Math.max(0,required-current));
         if(!vacancies)continue;
         // Current farming households employ for their share of the common field.
-        const farmers=[...new Set((e.world.households??[]).filter(h=>h.settlement===p.settlement).flatMap(h=>h.members).filter(id=>able(s,id)&&/农|耕|佃/.test(s.npcs[id]?.occupation??base(e,s,id)?.occupation??'')))].sort();
+        const farmers=[...new Set((e.world.households??[]).filter(h=>h.settlement===p.settlement).flatMap(h=>h.members).filter(id=>able(s,id)&&laborCategories(e,s,id).includes('farm')))].sort();
         for(const owner of farmers.slice(0,vacancies))add({owner,location:p.fieldLocation,task:harvest?'农忙收割':'农忙播种',farm:p.settlement,quantity:p.areaUnits,source:`farm:${p.settlement}:${owner}`,reason:harvest?'作物已熟':'当季播种'});
     }
     return out.sort((a,b)=>a.id.localeCompare(b.id));

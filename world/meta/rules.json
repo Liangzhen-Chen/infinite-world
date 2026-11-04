@@ -8014,6 +8014,10 @@
     "uncertifiedMaximumProficiency": 1200,
     "qualificationRule": "同用当前职业及师承资格解析。NPC 非认证实作上限仍为1200，玩家未认证职业核心有效上限仍为299；个人技能历史不因改业删除。"
   },
+  "npcLabor": {
+    "tripMinutes": 240,
+    "saleMinutes": 10
+  },
   "npcLife": {
     "adultAge": 18,
     "kinTypes": [

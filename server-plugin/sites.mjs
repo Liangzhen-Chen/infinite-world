@@ -289,7 +289,7 @@ function watchers(d,engine,place){
 }
 function infiltrate(d,engine,place,eventId){
     const plan=place.site.infiltration;
-    if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径；可以直接进入，未获许可进入即构成侵入');
+    if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径，只能直接进入（进别人的地方会被记为侵入）');
     if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
     if(d.get('state','player','companions')?.length)throw preconditionFailure('潜入不能带同行者');
     unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
@@ -337,6 +337,48 @@ export function siteView(engine,document){
     return view;
 }
 
+// 计时采集（resource.gather）的产量：产量表每工日的份数乘季节密度，按实际工时累计。玩家与 NPC 劳动同一折算。
+function gatherRates(engine,target){
+    const yields=(engine.world.primitiveTables?.yields??engine.world.balance?.yields)?.rows.find(r=>r.selector===target.gather.yield)?.perUnit?.qty;
+    const day=engine.world.primitiveTables?.['action-costs']?.params.find(r=>r.id==='workday.minutes')?.value;
+    if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw preconditionFailure('采集产量与工日未登记');
+    return {yields,day};
+}
+function timedYield(engine,document,place,row,target,{holder,from,minutes,channel}){
+    const {yields,day}=gatherRates(engine,target);let quantity=0;
+    for(const span of seasonalSpans(engine,from,from+minutes))quantity+=accrueStock(row,channel,derived(engine,document,'economy:yield',place.id,{holder,base:yields*herbDensity(engine,target,span.season)}),span.to-span.from,day);
+    return quantity;
+}
+const inSeason=(engine,target,from,to)=>!target.gather||target.gather.seasons.includes(engine.calendar(from).season)&&target.gather.seasons.includes(engine.calendar(to).season);
+// K3：据点资源向住在附近的劳动者开放的同一条规律。一趟劳动行程走得到的据点是劳动者的本地据点，
+// 本地人认得它、知道门道，所以发现前提与机关只挡外来者（玩家入口不变）。物权与许可照常：
+// 无主、本人或本人聚落所有的是合法采集；其余的照样发生，按 K6 记盗采（与玩家同一罪名入口）。
+const lawfulFor=(place,r,holder,settlement)=>{const owner=ownerOf(place,r);return (!owner||owner===holder||owner===settlement)&&(!place.access?.requiresConsent||owner===holder);};
+export function siteResources(engine,state,{holder,settlement=null}){
+    const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+    return engine.world.locations.filter(p=>p.site?.resources?.length).flatMap(place=>{
+        const row=ledger(d,place,engine);
+        return place.site.resources.map(r=>{
+            let minutesPerUnit=r.minutes;
+            if(r.gather){const {yields,day}=gatherRates(engine,r),rate=yields*herbDensity(engine,r,engine.calendar(state.minute).season);minutesPerUnit=inSeason(engine,r,state.minute,state.minute)&&rate>0?Math.ceil(day/rate):null;}
+            return {site:place.id,resource:r.id,item:r.item,minutesPerUnit,remaining:row.remaining[r.id]??0,lawful:lawfulFor(place,r,holder,settlement)};
+        });
+    });
+}
+// 劳动结束时结算：按在场工时折算产量（不超过存量与所求），经据点账转入 to，返回实际取得的份数。
+export function siteTake(d,engine,siteId,resourceId,{minutes,quantity=Infinity,holder,settlement=null,to,eventId}){
+    const place=engine.byId.get(siteId),target=place?.site?.resources?.find(r=>r.id===resourceId);
+    if(!target||!Number.isSafeInteger(minutes)||minutes<1)throw preconditionFailure('没有这个据点资源或工时无效');
+    const now=d.get('state','minute'),row=ledger(d,place,engine);
+    let n=target.gather?(inSeason(engine,target,now-minutes,now)?timedYield(engine,d.document,place,row,target,{holder,from:now-minutes,minutes,channel:`gather:${target.id}:${holder}`}):0):Math.floor(minutes/target.minutes);
+    n=Math.max(0,Math.min(n,quantity,row.remaining[target.id]??0));
+    const wood=n>0&&forestBacked(engine,place,target);
+    if(wood&&harvestForest(d,engine,place.id,n,now,{to,eventId})!==n)throw preconditionFailure('林木存量不足');
+    row.remaining[target.id]-=n;putSite(d,engine,place,row,{eventId,to:wood||!n?null:{account:to,taken:{[target.id]:n}}});
+    const owner=ownerOf(place,target);
+    if(!lawfulFor(place,target,holder,settlement)&&owner)registerOffense(d,engine,{actor:holder,act:'gather',subject:{id:target.id,kind:'resource'},victim:owner,eventId,stolen:n?{item:target.item,quantity:n}:null});
+    return n;
+}
 export function siteAction(d,args,eventId){
  const {pending,breach}=noteBreaches();
  const result=siteOperation.call(this,d,args,eventId,breach);
@@ -428,12 +470,9 @@ function siteOperation(d,args,eventId,breach){
             if(!Number.isSafeInteger(minutes)||minutes<rule.durationMin||minutes>rule.durationMax)throw preconditionFailure('采集时长须在30至480分钟之间');
             if(args.quantity!==undefined)throw preconditionFailure('持续采集产量由实际工时与资源存量决定');
             if(!target.gather.seasons.includes(this.calendar(d.get('state','minute')).season)||!target.gather.seasons.includes(this.calendar(d.get('state','minute')+minutes).season))throw preconditionFailure('当前季节没有可采的药草');
-            const yields=(this.world.primitiveTables?.yields??this.world.balance?.yields)?.rows.find(r=>r.selector===target.gather.yield)?.perUnit?.qty;
-            const day=this.world.primitiveTables?.['action-costs']?.params.find(r=>r.id==='workday.minutes')?.value;
-            if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw preconditionFailure('采集产量与工日未登记');
+            gatherRates(this,target);
             if(row.remaining[target.id]<1)throw preconditionFailure('资源存量不足');
-            quantity=0;
-            for(const span of seasonalSpans(this,d.get('state','minute'),d.get('state','minute')+minutes))quantity+=accrueStock(row,`gather:${target.id}`,derived(this,d.document,'economy:yield',place.id,{holder:'player',base:yields*herbDensity(this,target,span.season)}),span.to-span.from,day);
+            quantity=timedYield(this,d.document,place,row,target,{holder:'player',from:d.get('state','minute'),minutes,channel:`gather:${target.id}`});
             quantity=Math.min(row.remaining[target.id],quantity);
             assertActionTime(d,this,minutes);
         }
@@ -513,6 +552,7 @@ export function woodcut(d,args,id){
  access();
  const taken=check.success&&d.get('state','player','status')==='正常'&&d.get('state','location')===location?harvestForest(d,this,location,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId:id}):0;
  if(taken)this.itemDelta(d,'player','item_wood',taken,STOCK_BOOKED);
- return commitBreaches(d,this,pending,{success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
-  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}},id,taken?{item:'item_wood',quantity:taken}:null);
+ const result={success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
+  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
+ return commitBreaches(d,this,pending,result,id,result.obtained[0]??null);
 }

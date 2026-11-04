@@ -60,10 +60,13 @@ export function marketScheduleAt(state,id,minute){
  const row=marketTimeWindows(state,id).find(r=>r.start<=minute&&minute<r.end);
  if(!row)return null;
  if(row.serving)return {location:row.to,activity:'接待顾客',services:[],until:row.end,marketTrip:row.id};
+ // A multi-day labor trip carries its own day-by-day slots (walking legs, work, nights away).
+ const seg=row.segments?.find(s=>s.start<=minute&&minute<s.end);
+ if(seg)return {location:seg.travel?null:seg.location,activity:seg.activity,services:[],until:seg.end,marketTrip:row.id,travel:seg.travel?{...seg.travel,depart:seg.start,arrive:seg.end}:null};
  const outbound=minute<row.arriveAt,inbound=minute>=row.finishAt;
  const travel=outbound?{from:row.from,to:row.to,depart:row.departAt,arrive:row.arriveAt,edges:row.outboundEdges??[]}
   :inbound?{from:row.to,to:row.from,depart:row.finishAt,arrive:row.returnAt,edges:row.inboundEdges??[]}:null;
- return {location:travel?null:row.to,activity:travel?'赶集途中':'赶集采购',services:[],until:travel?.arrive??row.finishAt,marketTrip:row.id,travel};
+ return {location:travel?null:row.to,activity:travel?(row.travelActivity??'赶集途中'):(row.activity??'赶集采购'),services:[],until:travel?.arrive??row.finishAt,marketTrip:row.id,travel};
 }
 // The one relation read model. Legacy scalars seed NPC -> player relations
 // until a ledger row exists; they are never a second live value.
