@@ -5,7 +5,9 @@ import {heldUnit,wearItem} from './items.mjs';
 import {digest,recordsWhere} from './storage.mjs';
 import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity,learnFromWork} from './action-costs.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
-import {assertLocationAccess} from './location-access.mjs';
+import {unlicensedEntry} from './location-access.mjs';
+import {registerOffense} from './law.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {actorPath} from './npc-state.mjs';
 import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDetected,infiltrationSucceeded,societyAt} from './monster-society.mjs';
 import {traitsOf} from './traits.mjs';
@@ -190,7 +192,7 @@ export function siteKnowledge(world,document){
         }));
 }
 
-function assertOccupants(d,engine,place,authorization){
+function assertOccupants(d,engine,place,authorization,breach){
     const s=place.site,ids=new Set(s.occupants??[]);
     for(const boss of engine.world.bosses??[])if(boss.residence?.location===place.id){
         const occupant=d.get('state','records',`lair:${boss.residence.id}`)?.occupant?.actor;
@@ -202,7 +204,10 @@ function assertOccupants(d,engine,place,authorization){
         if(actor.location!==place.id||!living(engine,d,id,actor))continue;
         if(isNpc&&place.access?.mode==='public')continue;
         const managed=s.manager&&ownerOf(place)&&allowed(d.document,place,ownerOf(place),authorization);
-        if(!isNpc||!managed&&!allowed(d.document,place,id,authorization))throw preconditionFailure('占据者仍在场，需取得许可或实际解决占据关系');
+        // A creature holding its lair bars the way bodily; a person standing in
+        // their place does not, and walking past them is entering unlicensed (K6).
+        if(!isNpc)throw preconditionFailure('占据者仍守在这里挡住去路，须先实际解决占据关系（驱离、击败或谈妥）');
+        if(!managed&&!allowed(d.document,place,id,authorization))breach('enter',id,{id:place.id,kind:'site'});
     }
 }
 
@@ -240,15 +245,37 @@ registerAdvanceHook('advanceSiteStocks',(d,engine,minute)=>{
 const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw preconditionFailure('机关尚未解除');};
 const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.id&&d.get('state','records','site_presence')?.actor==='player';
 const covert=(d,place)=>inside(d,place)&&d.get('state','records','site_presence').covert===true;
-export function assertSiteHarvest(d,engine,place,args){
+// K6: the owner's licence decides whether an act is lawful, not whether it can
+// happen. A missing licence is noted as a breach (act, owner) and committed as
+// an offense once the act has actually taken place (commitBreaches).
+function noteBreaches(){
+ const pending=new Map();
+ // One act on one thing is one offense; its first unlicensing holder is the victim.
+ const breach=(act,owner,subject)=>{const key=`${act}:${subject?.id}`;if(owner&&owner!=='player'&&!pending.has(key))pending.set(key,{act,owner,subject});};
+ breach.any=()=>pending.size>0;
+ return {pending,breach};
+}
+function commitBreaches(d,engine,pending,result,eventId,taken=null){
+ if(!pending.size||result?.duplicate)return result;
+ const offenses=[...pending.values()].map(b=>{
+  const stolen=b.act==='gather'&&taken?.quantity>0?taken:null;
+  return registerOffense(d,engine,{act:b.act,subject:b.subject,victim:b.owner,eventId,value:stolen?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity,holder:b.owner})??0:0,stolen});
+ });
+ return {...result,offenses};
+}
+function entryBreach(d,engine,place,authorizations,breach){
+ if(!['private','council'].includes(place.access?.mode)||!place.access.requiresConsent)return;
+ const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
+ const entry=unlicensedEntry(d,engine,place.id,{authorization,companions:d.get('state','player','companions')??[]});
+ if(entry)breach('enter',entry.victim,{id:place.id,kind:'dwelling'});
+}
+export function assertSiteHarvest(d,engine,place,args,breach=noteBreaches().breach){
  const authorizations=[args.authorization,...args.authorizations??[]];
  assertSocietyEntry(d,engine,place);
- if(['private','council'].includes(place.access?.mode)&&place.access.requiresConsent){
-  const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
-  assertLocationAccess(d,engine,place.id,{authorization,companions:d.get('state','player','companions')??[]});
- }
- if(!allowed(d.document,place,ownerOf(place),authorizations,'enter')||!allowed(d.document,place,ownerOf(place),authorizations,'gather'))throw preconditionFailure('采伐需所有者的采集许可');
- assertOccupants(d,engine,place,authorizations);
+ entryBreach(d,engine,place,authorizations,breach);
+ if(!allowed(d.document,place,ownerOf(place),authorizations,'enter'))breach('enter',ownerOf(place),{id:place.id,kind:'site'});
+ if(!allowed(d.document,place,ownerOf(place),authorizations,'gather'))breach('gather',ownerOf(place),{id:place.id,kind:'site'});
+ assertOccupants(d,engine,place,authorizations,breach);
  // 06 §6.3 existence-and-presence: an action needs the actor at the target's node, which woodcut
  // already requires. A separate site-menu visit is not part of that rule; property, occupants and
  // every entrance mechanism still gate harvesting here and after elapsed time.
@@ -262,7 +289,7 @@ function watchers(d,engine,place){
 }
 function infiltrate(d,engine,place,eventId){
     const plan=place.site.infiltration;
-    if(!plan)throw preconditionFailure('这里不是登记可潜入的据点；私宅与其他据点仍须许可');
+    if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径；可以直接进入，未获许可进入即构成侵入');
     if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
     if(d.get('state','player','companions')?.length)throw preconditionFailure('潜入不能带同行者');
     unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
@@ -277,9 +304,14 @@ function infiltrate(d,engine,place,eventId){
         return{...siteView(engine,d.document),covert:true,detected:false,check,minutes:plan.minutes};
     }
     if(!watcher)return{entered:false,detected:false,check,minutes:plan.minutes,note:'未能找到潜入路径，无人察觉'};
+    return{entered:false,check,minutes:plan.minutes,...caught(d,engine,place,watcher,eventId,plan.damage??0)};
+}
+// A society's watcher who sees an intruder responds by its stance: expulsion
+// (a real walk out) or a fight. Shared by covert and open unlicensed entry.
+function caught(d,engine,place,watcher,eventId,harm=0){
     const outcome=infiltrationDetected(d,engine,place,watcher,eventId);let damage=0;
     if(outcome.response==='交锋'){
-        damage=consumeMagicProtection(d,'player',plan.damage??0,'physical').damage;
+        damage=consumeMagicProtection(d,'player',harm,'physical').damage;
         if(damage)engine.health(d,{delta:-damage},eventId);
     }
     let expelled=null;
@@ -288,7 +320,7 @@ function infiltrate(d,engine,place,eventId){
         const action=engine.npcObligationAction;engine.npcObligationAction={tool:'move',args:{destination:place.parent}};
         try{expelled=engine.move(d,{destination:place.parent},eventId).destination;}finally{engine.npcObligationAction=action;}
     }
-    return{entered:false,detected:true,watcher,check,...outcome,damage,expelled,minutes:plan.minutes};
+    return{detected:true,watcher,...outcome,damage,expelled};
 }
 
 export function siteView(engine,document){
@@ -306,6 +338,11 @@ export function siteView(engine,document){
 }
 
 export function siteAction(d,args,eventId){
+ const {pending,breach}=noteBreaches();
+ const result=siteOperation.call(this,d,args,eventId,breach);
+ return commitBreaches(d,this,pending,result,eventId,result?.item&&Number.isSafeInteger(result.quantity)?{item:result.item,quantity:result.quantity}:null);
+}
+function siteOperation(d,args,eventId,breach){
  initialKnowledgeAction(d,this,'site',args);
     const receiptKey=`gather-session:${eventId}`,identity=digest(args),prior=args.operation==='gather'?d.get('state','records',receiptKey):null;
     if(prior){if(prior.identity!==identity)throw preconditionFailure('同一事件编号不能更换采集参数');return {...prior.result,duplicate:true};}
@@ -320,12 +357,10 @@ export function siteAction(d,args,eventId){
     const assertAccess=()=>{
         if(operation==='investigate'&&covert(d,place))return;
         assertSocietyEntry(d,this,place);
-        if(['private','council'].includes(place.access?.mode)&&place.access.requiresConsent){
-            const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
-            assertLocationAccess(d,this,place.id,{authorization,companions:d.get('state','player','companions')??[]});
-        }
-        if(!(place.access?.mode==='public'&&['enter','investigate'].includes(operation))&&!allowed(d.document,place,ownerOf(place),authorizations,operation==='disarm'?'disarm':'enter'))throw preconditionFailure('据点物权要求所有者的有效许可');
-        assertOccupants(d,this,place,authorizations);
+        entryBreach(d,this,place,authorizations,breach);
+        if(!(place.access?.mode==='public'&&['enter','investigate'].includes(operation))&&!allowed(d.document,place,ownerOf(place),authorizations,'enter'))breach('enter',ownerOf(place),{id:place.id,kind:'site'});
+        if(operation==='disarm'&&!allowed(d.document,place,ownerOf(place),authorizations,'disarm'))breach('destroy',ownerOf(place),{id:place.id,kind:'mechanism'});
+        assertOccupants(d,this,place,authorizations,breach);
     };
     const advance=minutes=>{this.advance(d,minutes,eventId);assertAccess();
         // The clock may have regenerated this opened site during the work.
@@ -338,6 +373,10 @@ export function siteAction(d,args,eventId){
     if(operation==='enter'){
         unblocked(row,s.entryMechanisms??[]);
         putSite(d,this,place,row,{eventId});
+        // Walking openly into a society's ground unlicensed is seen at once by
+        // its watcher, who answers as it would a detected infiltration (K6).
+        const watcher=breach.any()&&societyAt(this,place.id)?watchers(d,this,place)[0]:null;
+        if(watcher)return{entered:true,...caught(d,this,place,watcher,eventId,s.infiltration?.damage??0)};
         holdingSet(d,null,['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',minute:d.get('state','minute'),sourceEvent:eventId},'sites');
         return{...siteView(this,d.document),truths:siteKnowledge(this.world,d.document).filter(t=>t.site===place.id)};
     }
@@ -380,7 +419,7 @@ export function siteAction(d,args,eventId){
     unblocked(row,target.mechanisms??[]);
     if(operation==='gather'){
         if(!(target.requires??[]).every(id=>discovered(d.document,place.id,id)))throw preconditionFailure('尚未实际发现这个资源');
-        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw preconditionFailure('资源另有物权，入内许可不能转让财物');
+        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))breach('gather',ownerOf(place,target),{id:target.id,kind:'resource'});
         const timed=Boolean(target.gather)||args.minutes!==undefined,rule=timed?actionCostRule(this,'gather.*'):null;
         let minutes=target.minutes,quantity=args.quantity??1;
         if(timed){
@@ -403,7 +442,7 @@ export function siteAction(d,args,eventId){
         const span=timed?beginActionActivity(d,this,rule.activity):null;
         advance(minutes);
         if(timed&&(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常'))throw preconditionFailure('采集完成前已离开或失去行动能力');
-        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw preconditionFailure('资源许可已到期');
+        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))breach('gather',ownerOf(place,target),{id:target.id,kind:'resource'});
         const wood=target.item==='item_wood'&&forestView(this,d.get('state'),place.id);
         if(wood&&harvestForest(d,this,place.id,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId})!==quantity)throw preconditionFailure('林木存量不足');
         row.remaining[target.id]-=quantity;putSite(d,this,place,row,{eventId,to:wood?null:{account:bag(this,'player',target.item),taken:{[target.id]:quantity}}});
@@ -463,8 +502,10 @@ export function woodcut(d,args,id){
  if(!forest||!rules)throw preconditionFailure('此地没有可采林木');
  const quantity=args.quantity??1;if(!Number.isSafeInteger(quantity)||quantity<1||quantity>rules.maximumCut)throw preconditionFailure('单次采伐量越界');
  const place=this.byId.get(location);
- // A new harvesting entry cannot bypass a site's property or consent boundary.
- const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args);else if(place.owner&&place.owner!=='player')throw preconditionFailure('采伐需所有者的采集许可');};
+ // A new harvesting entry passes the same property boundary as a site: cutting
+ // another's wood happens and is committed as an offense (K6).
+ const {pending,breach}=noteBreaches();
+ const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args,breach);else if(place.owner&&place.owner!=='player')breach('gather',place.owner,{id:place.id,kind:'woodland'});};
  access();
  usableTool(d,this,rules.tool);
  const check=this.check(d,{attribute:'力量',difficulty:rules.difficulty,tools:[rules.tool]},id);
@@ -472,6 +513,6 @@ export function woodcut(d,args,id){
  access();
  const taken=check.success&&d.get('state','player','status')==='正常'&&d.get('state','location')===location?harvestForest(d,this,location,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId:id}):0;
  if(taken)this.itemDelta(d,'player','item_wood',taken,STOCK_BOOKED);
- return {success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
-  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
+ return commitBreaches(d,this,pending,{success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
+  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}},id,taken?{item:'item_wood',quantity:taken}:null);
 }

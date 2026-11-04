@@ -8,19 +8,29 @@ import {sitePermission}from'./sites.mjs';
 import {personAge,personSimulation,personConstraint,homeResidents}from'./entity-view.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('location-access',{kinds:['permit']});
-// Existing authorization records govern entry; the route alone is not consent.
-export function assertLocationAccess(d,engine,destination,{authorization,actor='player',companions=[],arrivalMinute=d.get('state','minute')}={}){
+// Existing authorization records govern lawful entry; the route alone is not
+// consent. K6: a closed door is physical, a missing consent is not; the entry
+// still happens and unlicensedEntry names whose home was entered (trespass).
+export function unlicensedEntry(d,engine,destination,{authorization,actor='player',companions=[],arrivalMinute=d.get('state','minute')}={}){
  if(facilityView(engine,d.get('state'),destination)?.factor===0)throw preconditionFailure('建筑已停用，不能居住或进入服务区');
  const place=engine.byId.get(destination),access=place?.access;
- if(!['private','council'].includes(access?.mode)||access.requiresConsent!==true)return;
+ if(!['private','council'].includes(access?.mode)||access.requiresConsent!==true)return null;
  const permissions=authorization?[d.get('state','records',authorization)]:actor==='player'?[]:Object.values(d.get('state','records')??{});
  const residents=new Set(access.mode==='council'?[access.authority]:homeResidents(engine,d.get('state'),destination).value);
- if(actor!=='player'&&residents.has(actor)&&companions.every(id=>residents.has(id)))return;
+ if(actor!=='player'&&residents.has(actor)&&companions.every(id=>residents.has(id)))return null;
  const allowed=permissions.some(permission=>permission?.category==='authorization'&&permission.subject===destination&&(permission.action===(access.mode==='council'?'enter_council':'enter_home')||place.site&&permission.action==='site_use'&&permission.operations?.includes('enter'))
   &&permission.grantee===actor&&residents.has(permission.grantor)&&(personAge(engine,d.get('state'),permission.grantor,arrivalMinute).value??0)>=18
   &&permission.revoked!==true&&Number.isSafeInteger(permission.expires)&&permission.expires>arrivalMinute
   &&companions.every(id=>residents.has(id)||permission.guests?.includes(id)));
- if(!allowed)throw preconditionFailure(`进入${place.name}需要成年住户给本人及同行者的有效许可；许可须覆盖抵达时刻，未进入或扣除路费`);
+ if(allowed)return null;
+ const adults=[...residents].filter(id=>(personAge(engine,d.get('state'),id,arrivalMinute).value??18)>=18);
+ return {place:destination,name:place.name,victim:adults[0]??[...residents][0]??null,residents:[...residents]};
+}
+// A traveller who will not trespass (NPC routing, carriers) still treats the
+// missing consent as a reason to stay out: that is their own choice.
+export function assertLocationAccess(d,engine,destination,options={}){
+ const entry=unlicensedEntry(d,engine,destination,options);
+ if(entry)throw preconditionFailure(`进入${entry.name}需要成年住户给本人及同行者的有效许可；许可须覆盖抵达时刻，未进入或扣除路费`);
 }
 
 // Register the host's NPC decision using the existing authorization ledger.

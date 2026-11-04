@@ -76,9 +76,12 @@ export async function walkSites({sites,engine,fresh}){
   for(const clue of p.clues)await retry('investigate',{target:clue.id},`${s.id}-clue-${clue.id}`,r=>r.discovered===true);
   assert.equal(siteKnowledge(engine.world,c).filter(t=>t.site===s.id).length,p.truths.length,`${s.id} 凑齐线索才解锁真相`);
   for(const res of p.resources){
-   // A resource whose owner is an organisation with no manager on the spot cannot be taken.
+   // K6: a resource whose owner is an organisation with no manager on the spot
+   // can still be taken; taking it is illegal harvest against that owner (C-b, D1).
    const owner=Object.hasOwn(res,'owner')?res.owner:p.owner;
-   if(owner&&!owner.startsWith('npc_')&&!(owner===p.owner&&p.manager)){await assert.rejects(act('gather',{target:res.id},`${s.id}-deny-${res.id}`),/物权/,`${s.id}.${res.id} 物权另属且无人可签发`);continue;}
+   if(owner&&!owner.startsWith('npc_')&&!(owner===p.owner&&p.manager)){
+    const t=await act('gather',{target:res.id},`${s.id}-deny-${res.id}`);
+    assert.ok(Number.isSafeInteger(t.result.quantity)&&t.result.offenses?.some(o=>o.offense==='illegal_harvest'&&o.victim===owner&&t.document.state.records[o.record]?.offender==='player'),`${s.id}.${res.id} 物权另属：拿取发生并命中盗采`);continue;}
    const before=engine.quantity({get:(...k)=>k.reduce((v,x)=>v?.[x],c)},'player',res.item);
    const r=await act('gather',{target:res.id,quantity:res.quantity},`${s.id}-take-${res.id}`);c=r.document;
    assert.equal(r.result.remaining,0);assert.equal(engine.quantity({get:(...k)=>k.reduce((v,x)=>v?.[x],c)},'player',res.item),before+res.quantity);
