@@ -4,7 +4,8 @@
   "params": [
     {"id":"penalty.stolenMultiple","value":2,"bounds":[1,3],"basis":"calibrate","source":"数值方案 §2.19；§1.8（方案标【知/标】，待复核）","playDecision":false,"calibration":"pending","note":"赔偿 = 赃值 × 2（“倍备”）；法典数据，本行给 bounds"},
     {"id":"penalty.labourDaysPerValue","value":3,"bounds":[1,6],"basis":"calibrate","source":"数值方案 §2.19；§1.8","playDecision":false,"calibration":"pending","note":"劳役日数 = 赃值 ÷ 初级日工钱 × 3；按收入折算，不累退"},
-    {"id":"crime.disasterMult","value":2,"bounds":[1.5,3],"basis":"calibrate","source":"数值方案 §2.19；§1.8","playDecision":false,"calibration":"pending","note":"灾年财产犯罪 ×2；由需求与绝望派生，本行是检验带"}
+    {"id":"crime.disasterMult","value":2,"bounds":[1.5,3],"basis":"calibrate","source":"数值方案 §2.19；§1.8","playDecision":false,"calibration":"pending","note":"灾年财产犯罪 ×2；由需求与绝望派生，本行是检验带"},
+    {"id":"offense.reaction","value":{"finePerTrust":5,"minimum":1,"maximum":40,"bystanderShare":0.4},"bounds":{"finePerTrust":[2,20],"minimum":[1,5],"maximum":[20,80],"bystanderShare":[0.1,0.8]},"basis":"calibrate","source":"K6 合法性是后果：反应随罪行轻重","playDecision":false,"calibration":"pending","note":"失主当场的信任下降 = 本罪（或比附的上位罪）罚金 ÷ finePerTrust，取 [minimum,maximum]；罚金 = 基础罚金 + 案值 × 倍数；无可适用罚则时按案值；旁人按 bystanderShare 折算、至少 minimum"}
   ],
   "rows": [
     {"key":"polity:imperial_core","polityType":"imperial_core","name":"郡县制帝国·腹地（户籍、保甲、驿传完备）","homicidePer100k":[5,15],"propertyPer1000":[10,25],"reportRate":[0.4,0.7],"convictionRate":[0.3,0.6],"bounds":{"homicidePer100k.0":[2.5,10],"homicidePer100k.1":[7.5,30],"propertyPer1000.0":[5,20],"propertyPer1000.1":[12.5,50],"reportRate.0":[0.2,0.8],"reportRate.1":[0.35,1],"convictionRate.0":[0.15,0.6],"convictionRate.1":[0.3,1]},"basis":"play","source":"数值方案 §2.19；§1.8（方案标【知，定参前复核】）","playDecision":true,"calibration":"pending","decisionRef":"docs/待用户确认.md 2026-10-16 数值平衡玩法决定⑦","note":"郡县制帝国·腹地（户籍、保甲、驿传完备）：目标区间（凶杀每 10 万人·年；财产犯罪实际发生每千人·年；报案率；报案后定罪率）。界 ×[0.5, 2]"},

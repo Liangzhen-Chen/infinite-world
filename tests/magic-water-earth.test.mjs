@@ -64,6 +64,9 @@ async function refuse(s,op,target,pattern,extra={}){
  const before=structuredClone(s.doc);
  await assert.rejects(s.engine.reduce(s.doc,{tool:'world_cast',args:{spell:spell(s,op).id,target,...extra},eventId:`refuse-${op}`}),pattern);assert.deepEqual(s.doc,before);
 }
+// K6: an act that lacked only a licence happens; the norm stack names the offense under the act's own event.
+const k6Offended=(doc,out,eventId,offense)=>{const after=applyPatches(doc,out.patches),all=[...out.result.offenses??[],...(out.result.receipt?.consequences??[]).filter(c=>c.type==="offense")],o=all.find(o=>o.offense===offense);assert.ok(o,`${eventId} 应命中${offense}：${JSON.stringify(all)}`);assert.equal(after.state.records[o.record].sourceEvent,eventId);assert.equal(after.state.records[o.record].offender,'player');return {after,result:out.result,offense:o};};
+async function k6Cast(s,op,target,offense,extra={}){const eventId=`unlicensed-${op}`,out=await s.engine.reduce(s.doc,{tool:'world_cast',args:{spell:spell(s,op).id,target,...extra},eventId});return k6Offended(s.doc,out,eventId,offense);}
 async function refuseTool(s,tool,args,pattern){const before=structuredClone(s.doc);await assert.rejects(s.engine.reduce(s.doc,{tool,args,eventId:'refuse-tool'}),pattern);assert.deepEqual(s.doc,before);}
 function contact(s,target,point=[0,0]){
  const d={...reader(s),set:(p,value)=>{let n=s.doc;for(const k of p.slice(0,-1))n=n[k]??={};n[p.at(-1)]=structuredClone(value);}};
@@ -100,7 +103,7 @@ test('止漏超压当场破裂，完成前压力改变不会错误创建密封',
  const s=fixture();await cast(s,'seal','feature_cup');set(s,'feature_cup',{pressureKpa:30});const ml=state(s,'feature_cup').waterMl;await wait(s,1);assert.equal(state(s,'feature_cup').waterMl,ml-100);assert.equal(Object.values(s.doc.state.effects).some(e=>e.operation==='seal'),false);
  const t=fixture();row(t,'feature_cup').owner='npc_owner';row(t,'feature_cup').access='consent';t.doc.state.records.permit={category:'authorization',subject:'feature_cup',grantor:'npc_owner',action:'environment_use',expires:t.doc.state.minute+1};
  const original=t.doc;let found=false;
- for(let i=0;i<100;i++){const out=await t.engine.reduce(original,{tool:'world_cast',args:{spell:spell(t,'seal').id,target:'feature_cup',authorization:'permit'},eventId:`completion-${i}`});if(out.result.checkSuccess){assert.match(out.result.effectFailed,/授权/);assert.equal(out.result.success,false);assert.equal(out.result.effect,undefined);found=true;break;}}
+ for(let i=0;i<100;i++){const out=await t.engine.reduce(original,{tool:'world_cast',args:{spell:spell(t,'seal').id,target:'feature_cup',authorization:'permit'},eventId:`completion-${i}`});if(out.result.checkSuccess){/* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：许可在完工前到期，施法照样完成，命中擅用 */assert.equal(out.result.effectFailed,undefined);k6Offended(original,out,`completion-${i}`,'unauthorized_use');found=true;break;}}
  assert.ok(found);
 });
 test('泥封消耗已有黏土，检查维持低压缝口，到期和漏检恢复泄漏',async()=>{
@@ -177,7 +180,7 @@ test('堤岸临时减轻冲刷，土量进入实际沉积处，到期恢复原�
 });
 test('扩裂要求已有裂隙，震动伤及真实邻接结构，权限在修改前检查',async()=>{
  const s=fixture();set(s,'feature_rock',{crackMm:0});await refuse(s,'fracture','feature_rock',/裂隙/);set(s,'feature_rock',{crackMm:1});
- row(s,'feature_wall').owner='npc_owner';await refuse(s,'fracture','feature_rock',/授权/);row(s,'feature_wall').owner='player';
+ row(s,'feature_wall').owner='npc_owner';/* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：波及他人墙体照样施放，命中擅用 */await k6Cast(s,'fracture','feature_rock','unauthorized_use');row(s,'feature_wall').owner='player';
  await cast(s,'fracture','feature_rock');assert.equal(state(s,'feature_rock').crackMm,6);assert.equal(state(s,'feature_rock').integrity,195);assert.equal(state(s,'feature_wall').vibrationDamage,5);
  const saved=await sameAfterExpiry(s,3);assert.equal(state(saved,'feature_rock').crackMm,6);assert.equal(state(saved,'feature_wall').vibrationDamage,5);
 });
@@ -201,7 +204,7 @@ test('石弹消耗真实小石，正常活体伤害和实体命中都有持久�
  const aimed=await cast(f,'damage_earth',npc,{source:'feature_stones'});assert.equal(f.doc.state.records[aimed.projectile].target,npc);
 });
 test('私有对象撤销授权、远处或遮挡对象拒绝，水资源预留防止容器超装',async()=>{
- const s=fixture();row(s,'feature_soil').owner='npc_owner';await refuse(s,'till','feature_soil',/授权/);s.doc.state.records.permit={category:'authorization',subject:'feature_soil',action:'environment_use',grantor:'npc_owner',expires:s.doc.state.minute+100,revoked:true};await refuse(s,'till','feature_soil',/授权/,{authorization:'permit'});
+ const s=fixture();row(s,'feature_soil').owner='npc_owner';/* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：翻他人土地照样施放，命中擅用 */await k6Cast(s,'till','feature_soil','unauthorized_use');s.doc.state.records.permit={category:'authorization',subject:'feature_soil',action:'environment_use',grantor:'npc_owner',expires:s.doc.state.minute+100,revoked:true};/* 撤销的许可同样只是后果 */await k6Cast(s,'till','feature_soil','unauthorized_use',{authorization:'permit'});
  row(s,'feature_pool').position=[30,0];await refuse(s,'bind_water','player',/距离/,{source:'feature_pool'});
  const t=fixture();row(t,'feature_pool').kind='container';set(t,'feature_pool',{capacityMl:20000});await cast(t,'bind_water','player',{source:'feature_pool'});await refuse(t,'condense','feature_pool',/容器已满|湿度/);const saved=await sameAfterExpiry(t,3);assert.equal(state(saved,'feature_pool').waterMl,20000);
 });

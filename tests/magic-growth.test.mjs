@@ -80,15 +80,14 @@ test('unplanted, missing water/nutrient state, absent materials and exact consen
  for(const [edit,pattern] of [
   [d=>{farm(d).field.cohorts=[];},/种粮/],
   [d=>{farm(d).field.cohorts[0].seedSpent=0;},/种粮/],
-  [d=>{delete d.state.records.permit;},/同意/],
-  [d=>{d.state.records.permit.subject='another_field';},/同意/],
-  [d=>{d.state.records.permit.revoked=true;},/同意/],
   [d=>{delete d.state.npcs[f.p.manager];},/履约/],
-  [d=>{d.state.records.permit.expires=d.state.minute;},/同意/],
   [d=>{d.state.records['physical_feature:feature_growth']={id:'feature_growth',category:'physical_feature',location:f.p.fieldLocation,state:{waterMl:1,capacityMl:100}};},/营养/],
   [d=>{d.state.records['physical_feature:feature_growth']={id:'feature_growth',category:'physical_feature',location:f.p.fieldLocation,state:{waterMl:0,capacityMl:100,nutrientMg:100}};},/资源/],
   [d=>{d.state.location='loc_hw';},/距离/],
  ]){const doc=structuredClone(f.sown);edit(doc);const before=structuredClone(doc);await assert.rejects(f.cast(doc,'reject'),pattern);assert.deepEqual(doc,before);}
+ // K6 依据（审查 C-b，卡"许可是后果"）：田主同意缺失、不对田、撤销或过期时施放照样生效，命中擅用他人之物，罪名记在本次施法事件上。
+ for(const [label,lapse] of [['expired',d=>{d.state.records.permit.expires=d.state.minute;}],['missing',d=>{delete d.state.records.permit;}],['other-field',d=>{d.state.records.permit.subject='another_field';}],['revoked',d=>{d.state.records.permit.revoked=true;}]]){const doc=structuredClone(f.sown);lapse(doc);let hit,hid;for(let i=0;i<20&&!hit;i++){const r=await f.cast(doc,`k6-${label}-${i}`);if(r.result.success){hit=r;hid=`k6-${label}-${i}`;}}
+  assert.ok(hit,'过期同意下施放应能成功');const o=hit.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o);assert.equal(hit.document.state.records[o.record].sourceEvent,hid);}
  f.world.spells.find(s=>s.id===catalog.id).materials=[{item:'item_oats',amount:1}];
  await assert.rejects(f.cast(f.sown,'material'),/缺少材料/);
 });

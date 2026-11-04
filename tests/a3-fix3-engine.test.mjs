@@ -62,7 +62,7 @@ test('A3-fix3 displacement: a structured teleport move is refused (E-OPEN-MOVE) 
 });
 
 // ---- 3. combat opponent identity is the creature record, not an id prefix ----
-test('A3-fix3 combat: a creature record of a catalogued monster is an opponent whatever its id; its owner may strike it, others are refused as not theirs',async()=>{
+test('A3-fix3 combat: a creature record of a catalogued monster is an opponent whatever its id; its owner may strike it, and a beast owned by someone else is struck the same way (K6: the offense is the consequence)',async()=>{
  const row=rowFor(169),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
  const id=row.proposal.means.opponent;assert.ok(!/^(monster_|boss_)/.test(id));
  const preview=receiptOf(await engine.previewAction(document,{tool:'world_propose',eventId:'fix3-combat',args:row.proposal}));
@@ -72,8 +72,9 @@ test('A3-fix3 combat: a creature record of a catalogued monster is an opponent w
  const own=receiptOf(await engine.previewAction(owned,{tool:'world_propose',eventId:'fix3-combat-owned',args:row.proposal}));
  assert.equal(own.status,'preview');assert.equal(own.routed,'core:combat');
  const theirs=structuredClone(document);theirs.state.creatures[id].owner='npc_hw_linsui';
- const refused=receiptOf(await engine.previewAction(theirs,{tool:'world_propose',eventId:'fix3-combat-theirs',args:row.proposal}));
- assert.equal(refused.status,'rejected');assert.match(refused.reason,/没有处分别人/);
+ // K6 依据（审查 C-a/C-b，K7 E 组由 K6 取代）：别人的牲畜挨的是同一下，照样路由到交锋；擅毁在提交时由规范栈命名（见 old-npc 测试）。
+ const struck=receiptOf(await engine.previewAction(theirs,{tool:'world_propose',eventId:'fix3-combat-theirs',args:row.proposal}));
+ assert.equal(struck.status,'preview');assert.equal(struck.routed,'core:combat');
 });
 
 // ---- 5. internal invariants are faults, business preconditions are refusals ----

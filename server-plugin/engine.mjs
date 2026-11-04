@@ -9,7 +9,8 @@ import {personTeaching,personCertified} from './entity-view.mjs';
 import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
 import { applyPatches, canonical, canonicalEqual, diffPatches, PatchCursor, withRecordIndex } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
-import {assertLocationAccess,homePermission}from'./location-access.mjs';
+import {assertLocationAccess,unlicensedEntry,homePermission}from'./location-access.mjs';
+import {noteOffense} from './offense-notes.mjs';
 import {activities}from'./activities.mjs';
 import {actorId,actorPath}from'./npc-state.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
@@ -40,7 +41,7 @@ import {changeItems,transferItems,validateItemTransfer,validatePhysicalAction,ph
 import {environmentCatalog,environmentFeatures,localPlayerPoint,physicalSiteAction,recordLocalContact}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
-import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
+import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody,commitOffenses}from'./law.mjs';
 import {localWeather,weatherEdge,calendarDateAt}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
@@ -384,8 +385,10 @@ export class WorldEngine {
         const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe',site:'inspect'};
         const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);
         if(noTimeTurn||(readOperations[tool]&&(args.operation??readOperations[tool])===readOperations[tool])){
-            const detail=await this.scoped(document)[tool](d,args,id);
-            return {patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,notices:[]}};
+            const session=this.scoped(document),detail=await session[tool](d,args,id);
+            // An inspection that turns into an act (opening someone's door) commits its breach too (K6).
+            const offenses=commitOffenses(d,session,id);
+            return {patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(offenses.length?{offenses}:{}),minute:d.get('state','minute'),messages:d.messages,notices:[]}};
         }
         if(document.releaseVersion!==1){
             if(!options.replay)throw new Error('此战役尚未完成 R1 初始化，请先在副本上显式迁移');
@@ -415,6 +418,10 @@ export class WorldEngine {
         const detail = executeRoutingProgram(d,session,tool,callArgs,id)??physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
         if(bookedWorkstation&&Number.isSafeInteger(args.batches)&&detail.batches!==undefined){detail.requestedBatches=args.batches;detail.clipped=args.batches-detail.batches;}
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
+        // K6: what the act did without licence is now a settled fact; the norm
+        // stack names the offenses under this act's own event id.
+        const offenses=commitOffenses(d,session,id);
+        if(offenses.length&&detail&&typeof detail==='object')detail.offenses=[...detail.offenses??[],...offenses];
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
         // 返场：记下离开各地的时间，久别回来时汇总当地变化。
@@ -464,6 +471,8 @@ export class WorldEngine {
         return {patches:finishLedger(patches,books.opening),result};
     }
     primitiveDraft(document){return new Draft(document,this);}
+    primitiveCommitOffenses(d,eventId){return commitOffenses(d,this,eventId);}
+    primitiveRecordContact(d,target,eventId){return recordLocalContact(d,this,target,eventId);}
     primitiveNormalizeCall(tool,args){return resolveToolCall(tool,args);}
     primitiveLegacyRestriction(document,tool,args){
         // Read-only probe: the copy-on-write draft never mutates the original, so no clone.
@@ -561,11 +570,15 @@ export class WorldEngine {
         // transaction, including the opposed path absent in the legacy adapter.
         const catalog={id:source,effectSpec:{kind:'damage',power:1,damageType:'physical'},duration:0};
         const location=actor==='player'?d.get('state','location'):d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
-        const prepared=prepareMagic.call(this,d,catalog,{target},{source:actor,location});
+        // A body made in this same transaction (a head led out of a herd) is not
+        // in the catalogue the action started with; read it from the draft.
+        const made=!this.byId.get(target)&&d.get('state','created',target),byId=this.byId;
+        const self=made?Object.create(this,{byId:{value:{get:k=>k===target?{...made,id:target}:byId.get(k),has:k=>k===target||byId.has(k)}}}):this;
+        const prepared=prepareMagic.call(self,d,catalog,{target},{source:actor,location});
         delete prepared.completionArgs;
         prepared.spec={...spec};
         prepared.catalog={id:source,duration};
-        return applyMagic.call(this,d,prepared,eventId);
+        return applyMagic.call(self,d,prepared,eventId);
     }
     primitiveAdjustStanding(d,holder,target,delta,context){return adjustStanding(d,this,holder,target,delta,context);}
     primitiveValidateScheduledAction(d,{action,rule,slots},actor){return primitiveActionRuntime().validateScheduled(this,d.document,{action,rule,slots},actor);}
@@ -969,7 +982,8 @@ export class WorldEngine {
         for(const edgeId of route.edges){const edge=this.world.routes.find(r=>r.id===edgeId);assertMindSpacePath(d,this,edge.from,[0,0],[0,0],{destination:edge.to,eventId:id,signal:true});}
         assertFireTravel(d,this,route);
         const entered=new Set(route.edges.flatMap(edgeId=>{const edge=this.world.routes.find(row=>row.id===edgeId);return[edge.from,edge.to];}));entered.delete(old);
-        for(const place of entered)assertLocationAccess(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});
+        // K6: walking into a home without its residents' consent happens; it is trespass.
+        for(const place of entered){const entry=unlicensedEntry(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});if(entry)noteOffense(d,{act:'enter',victim:entry.victim,subject:{id:place,kind:'dwelling'},actor:'player'});}
         assertNpcObligationAction(d,this,['player',...d.get('state','player','companions')??[]],{minutes:route.minutes,location:destination,kind:'move'});
         if(this.rules.petCare)preparePetTravel(d,this,args.mode??'walk',route.movingMinutes);
         if(d.get('state','player','coins')<route.cost)reject('E-ACTION-PRECONDITION','路费不足');

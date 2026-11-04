@@ -140,7 +140,8 @@ function createNpcDelivery(d,engine,args,eventId){
 }
 function assertCourierAccess(engine,id,location){
  const access=engine.byId.get(location)?.access;
- if(access?.mode==='private'&&access.requiresConsent&&!access.residents?.includes(id))throw preconditionFailure('送货者不能擅入他人私宅，请约在公共地点交付');
+ // The deliverer's own choice: they will not walk into someone else's home.
+ if(access?.mode==='private'&&access.requiresConsent&&!access.residents?.includes(id))throw preconditionFailure('送货者不愿擅入他人私宅，请约在公共地点交付');
 }
 export function assertCourierRouteAccess(engine,id,from,to,route){
  assertCourierAccess(engine,id,to);

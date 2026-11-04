@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {cloneData} from './storage.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
@@ -49,7 +50,7 @@ function permission(d,row,args,until,action='environment_use'){
   const r=d.get('state','records',id);
   return r?.category==='authorization'&&r.action===action&&r.subject===row.id&&r.grantor===row.owner&&r.grantee==='player'&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>until;
  });
- if(!id)throw preconditionFailure('对象需要有效所有者许可');return id;
+ if(!id)return noteUnlicensedUse(d,row);return id;
 }
 function access(d,engine,row,c,args,until,read=false){
  const from=localPlayerPoint(d);

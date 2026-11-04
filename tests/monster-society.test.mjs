@@ -214,7 +214,9 @@ test('通行朝贡只覆盖首领辖区与库存，按期交付守约改善态�
  assert.equal(view.result.occupant.cognition.society.stance,'戒备');assert.equal(view.result.occupant.cognition.society.agreements[0].id,key);
  const inStore=await f.run(await at(f,d,store),'world_field',{operation:'site_enter'},'enter_store');
  assert.equal(inStore.result.entered,true,'朝贡通行覆盖首领辖区的仓窟');
- await assert.rejects(f.run(inStore.document,'world_field',{operation:'site_gather',target:'grain'},'take'),/许可|物权|发现/);
+ // K6 依据：通行许可不含采集；粮已发现、就在眼前，拿取发生，再命中盗采（审查 C-b sites.mjs:250、D1）。
+ const took=await f.run(inStore.document,'world_field',{operation:'site_gather',target:'grain'},'take');
+ assert.equal(took.result.quantity,1);assert.ok(took.result.offenses.some(o=>o.offense==='illegal_harvest'&&took.document.state.records[o.record]?.offender==='player'));
  d=await at(f,inStore.document,market);
  const kept=await pact(f,d,{contract:key},'pay_1');d=kept.document;
  assert.equal(kept.result.kept,true);assert.equal(stance(f,d,seatId),'中立');assert.equal(d.state.records[key].nextDue,null);
@@ -238,17 +240,26 @@ test('背约：逾期未交朝贡记为玩家背约，态度转敌对，成员�
  await assert.rejects(f.run(d,'world_field',{operation:'site_enter'},'enter'),/敌对/);
 });
 
-test('未被发现的潜入耗时并实际检定，只开放调查；未登记据点与私宅不能潜入',async()=>{
+test('未被发现的潜入耗时并实际检定；未获许可明着进入被守卫当场发现并驱逐；没有潜入路径的私宅只能直接进入',async()=>{
  const f=society();let d=await at(f,f.document,store);
- await assert.rejects(f.run(d,'world_field',{operation:'site_enter'},'plain'),/占据者|许可/);
+ // K6 依据：守卫挡住的是许可不是身体（审查 C-b sites.mjs:327、D1 monster-society:251）；明着进去确实发生，
+ // 守卫当场看见，按族群态度作出被发现潜入的反应（驱逐、转敌对），同时记侵入。
+ const plain=await f.run(d,'world_field',{operation:'site_enter'},'plain');
+ assert.equal(plain.result.entered,true);assert.equal(plain.result.detected,true);assert.equal(plain.result.watcher,guardId);
+ assert.equal(plain.result.response,'驱逐');assert.equal(plain.document.state.location,seatId);
+ assert.equal(receipts(plain.document,'infiltration_detected')[0].sourceEvent,'plain');
+ assert.ok(plain.result.offenses.some(o=>o.offense==='trespass'&&plain.document.state.records[o.record].sourceEvent==='plain'));
  d.state.player.attributes=Object.fromEntries(f.engine.rules.attributes.map(k=>[k,1000]));
  let out;for(const id of ['quiet_a','quiet_b','quiet_c','quiet_d']){out=await sneak(f,d,id);if(out.result.covert)break;}
  assert.equal(out.result.covert,true);assert.equal(out.result.detected,false);assert.equal(out.result.check.opponent.npc,guardId);
  assert.equal(out.document.state.minute,d.state.minute+30);assert.equal(stance(f,out.document,seatId),undefined);
  assert.equal(receipts(out.document,'infiltration')[0].detected,false);
  const clue=await f.run(out.document,'world_field',{operation:'site_investigate',target:'ledger'},'read_ledger');assert.equal(clue.result.discovered,true);
- await assert.rejects(f.run(clue.document,'world_field',{operation:'site_gather',target:'grain'},'steal'),/许可|物权/);
- const home=await at(f,f.document,market);await assert.rejects(sneak(f,home,'not_registered'),/登记可潜入/);
+ // 潜入后拿粮：拿取发生，命中盗采（同上依据）。
+ const stolen=await f.run(clue.document,'world_field',{operation:'site_gather',target:'grain'},'steal');
+ assert.equal(stolen.result.quantity,1);assert.ok(stolen.result.offenses.some(o=>o.offense==='illegal_harvest'));
+ // 没有登记隐蔽路径的地方，拒绝理由是物理的（无路可潜），并指明直接进入的后果。
+ const home=await at(f,f.document,market);await assert.rejects(sneak(f,home,'not_registered'),/没有可供隐蔽潜入的路径/);
  const bad=structuredClone(f.world);Object.assign(bad.locations.find(l=>l.id===council).site,{infiltration:{minutes:10,check:{attribute:'敏捷',difficulty:15}}});
  assert.match(validateSites(bad).join(),/私宅与议事区不能登记为可潜入/);
  const loose=structuredClone(f.world);loose.locations.find(l=>l.id===seatId).monsterSociety.neighbors.loc_hw='友好';assert.match(validateSites(loose).join(),/初始态度无效/);

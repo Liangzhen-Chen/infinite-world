@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordEntriesWhere} from './storage.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
@@ -169,7 +170,10 @@ export function prepareRitual(d,c,args,{completion=false}={}){
  if(op==='lure'){
   p.id=resolveCreature(this,d,args.target);const a=d.get('state','creatures',p.id),base=this.byId.get(a?.species);
   const f=areaTargetFacts(d,this,p.id,location,p.origin);
- if(!awake(d,p.id,a)||a.owner||!base?.wildlife||divine(this,a)||a.behavior?.phototaxis!==true||a.behavior?.hostile!==false||!f?.lineOfSight||distance(f.point,p.origin)>c.rangeMeters)throw preconditionFailure('只能引导实际近处、无主且趋光的温顺动物');
+ // A beast's owner is a matter of title, not of light (K7/K6): one's own beast
+  // is led like any other; another's is led too, as an unlicensed use.
+  if(!awake(d,p.id,a)||!base?.wildlife||divine(this,a)||a.behavior?.phototaxis!==true||a.behavior?.hostile!==false||!f?.lineOfSight||distance(f.point,p.origin)>c.rangeMeters)throw preconditionFailure('只能引导实际近处、趋光的温顺动物');
+  noteUnlicensedUse(d,{id:p.id,owner:a.owner},{kind:'creature'});
   p.actor=a;return p;
  }
  if(['reassign','coordinate'].includes(op)){

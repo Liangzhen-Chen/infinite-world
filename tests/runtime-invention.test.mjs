@@ -99,7 +99,7 @@ test('新配方仅登记规则；学会后使用原制造链扣真实材料、�
     assert.deepEqual((await run(learned.document,'world_craft',{recipe:'试制木楔法'},out.id)).document,made);
 });
 
-test('自创配方失败仍扣费耗时并按比例回收；缺料、坏工具、缺工作台或许可均不改变账本',async()=>{
+test('自创配方失败仍扣费耗时并按比例回收；缺料、坏工具、缺工作台均不改变账本；缺工作台许可照做并命中擅用',async()=>{
     const created=await register(await researched(),'recipe');
     const learned=await observed(created.document,'world_learn',{entity:created.result.entity,source:'research_study'},true,'recipe_learn');
     const out=await observed(learned.document,'world_craft',{recipe:created.result.entity},false,'failure'),c=out.document;
@@ -118,7 +118,8 @@ test('自创配方失败仍扣费耗时并按比例回收；缺料、坏工具�
     }
     const privateWorld=structuredClone(world),station=privateWorld.locations.find(row=>row.id==='bld_hw_mill').workstations.find(row=>row.kind===data().workstation);
     station.access='consent';
-    await assert.rejects(new WorldEngine(privateWorld).reduce(learned.document,{tool:'world_craft',args:{recipe:created.result.entity},eventId:'no_permit'}),/使用许可/);
+    // K6 依据（审查 C-b manufacturing:86、D1 本文件:121）：没有工作台许可照样能做，命中擅用他人之物。
+    {const out=await new WorldEngine(privateWorld).reduce(learned.document,{tool:'world_craft',args:{recipe:created.result.entity},eventId:'no_permit'});const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,'命中擅用他人之物');assert.equal(o.victim,'loc_hw');}
 });
 
 test('未完成研究、过高阶段、无关知识、空耗材、未知产物和非法工序在登记时拒绝；不能直接造物或覆盖规则',async()=>{

@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -44,7 +45,7 @@ function waterSite(d,engine,target,authorization){
  const position=d.get('state','records','local_player_position');const point=position?.location===row.location?position.point:[0,0];
  if(!Number.isFinite(state.waterMl)||state.waterMl<2000||!Array.isArray(row.position)||row.position.length!==2||row.position.some(x=>!Number.isFinite(x))||!Array.isArray(point)||point.some(x=>!Number.isFinite(x))||hypot(point[0]-row.position[0],point[1]-row.position[1])>1)throw preconditionFailure('水中守卫须接触至少两升现有水体');
  if(row.owner!=='player'&&row.access!=='public'){
-  const a=d.get('state','records',authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))throw preconditionFailure('水体所有者未授权');
+  const a=d.get('state','records',authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))noteUnlicensedUse(d,row);
  }
  return{waterFeature:row.id,initialWaterMl:state.waterMl,waterPoint:[...row.position]};
 }

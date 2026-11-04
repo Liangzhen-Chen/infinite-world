@@ -5,6 +5,7 @@ import {advanceHusbandry} from './husbandry.mjs';
 import {creatureTraits} from './traits.mjs';
 import {derived} from './derived.mjs';
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse,noteOffense} from './offense-notes.mjs';
 import {isPhysicallyDead,isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
 import {forestHabitatCapacity,forestView,nearbyResourceLocations} from './forest-water.mjs';
@@ -282,7 +283,9 @@ export function wildlifeAction(d,args,eventId){
     const operation=args.operation??'observe';
     if(awakeningOperations.includes(operation))return awakeningAction.call(this,d,args,eventId,resolveCreature(this,d,args.target));
     const habitat=this.rules.wildlife.habitats.find(h=>h.location===d.get('state','location'));
-    if(!habitat)throw preconditionFailure('这里没有登记可接触的野外栖地');
+    // Butchering needs a carcass at hand, not a wild habitat: a beast killed in
+    // a yard is cut up there. Wild encounters and their XP stay with habitats.
+    if(!habitat&&operation!=='gather')throw preconditionFailure('这里没有登记可接触的野外栖地');
     if(operation==='observe')return{habitat:habitat.name,animals:Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===habitat.location).map(([id,a])=>({id,name:a.name,status:a.status,hp:a.hp,owner:a.owner??null,...mindOf(this,d,id,a),
         ...(a.corpse?{corpse:{status:a.corpse.status,expires:a.corpse.expires,hasMaterials:a.corpse.items.length>0}}:{})})),traces:wildlifeEncounterView(d.document).filter(r=>r.kind==='trace'),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='track'){
@@ -303,17 +306,19 @@ export function wildlifeAction(d,args,eventId){
     }
     if(operation!=='gather')throw preconditionFailure('未知野外操作');
     const target=resolveCreature(this,d,args.target),actor=d.get('state','creatures',target),s=this.byId.get(actor?.species),corpse=actor?.corpse;
-    if(!actor||actor.location!==habitat.location||!isPhysicallyDead(this,d,target)||!corpse)throw preconditionFailure('没有这里已死亡且可验证的尸体');
+    const here=d.get('state','location');
+    if(!actor||actor.location!==here||!isPhysicallyDead(this,d,target)||!corpse)throw preconditionFailure('没有这里已死亡且可验证的尸体');
     if(corpse.status!=='未取材'||corpse.expires<=d.get('state','minute'))throw preconditionFailure('尸体已处理或已经腐坏');
-    if(actor.owner&&actor.owner!=='player')throw preconditionFailure('动物归其他所有者，不能擅自取材');
+    // Butchering another's carcass takes what is theirs (K6); noted once the parts are in hand.
     const recipe=s.wildlife.gather;if(!corpse.items.length)throw preconditionFailure('这个物种没有登记可加工材料');
     if(recipe.tool&&(!this.quantity(d,'player',recipe.tool)||heldUnit(d,this,'player',recipe.tool).durability<=0))throw preconditionFailure('需要实际完好的取材刀具');
     for(const m of recipe.consumes)if(this.quantity(d,'player',m.item)<m.amount)throw preconditionFailure('取材实际耗材不足');
     for(const m of recipe.consumes)this.itemDelta(d,'player',m.item,-m.amount,{flow:'sink:consume',purpose:'butcher',writer:'wildlife',eventId});
     const known=d.get('state','skills','skill_life_1_core'),check=this.check(d,{attribute:'敏捷',...(known?{skill:'skill_life_1_core'}:{}),difficulty:10},eventId);
     if(recipe.tool)wearItem(d,this,'player',recipe.tool,1);this.advance(d,recipe.minutes,eventId);
-    const current=d.get('state','creatures',target,'corpse'),success=check.success&&current.status==='未取材'&&current.expires>d.get('state','minute')&&d.get('state','player','status')==='正常'&&d.get('state','location')===habitat.location;
+    const current=d.get('state','creatures',target,'corpse'),success=check.success&&current.status==='未取材'&&current.expires>d.get('state','minute')&&d.get('state','player','status')==='正常'&&d.get('state','location')===here;
     holdingSet(d,null,['state','creatures',target,'corpse'],{...current,status:success?'已取材':'已损坏',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId},'wildlife');
     if(success)for(const drop of current.items)this.itemDelta(d,'player',drop.item,drop.amount,{flow:'src:harvest',purpose:'butcher',writer:'wildlife',eventId});
+    if(actor.owner&&actor.owner!=='player')for(const drop of success?current.items:[{}])noteOffense(d,{act:'take',victim:actor.owner,subject:{id:target,kind:'carcass'},actor:'player',...(drop.item?{stolen:{item:drop.item,quantity:drop.amount}}:{})});
     return{success,obtained:success?current.items:[],spent:{minutes:recipe.minutes,materials:recipe.consumes,tool:recipe.tool,toolWear:recipe.tool?1:0},note:'失败仍耗时耗材；仅obtained实际进入行囊，尸体不可反复刷取'};
 }

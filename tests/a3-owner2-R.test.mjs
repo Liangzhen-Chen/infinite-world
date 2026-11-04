@@ -94,15 +94,15 @@ test('R1: capped practice binds the actual skill without a breakthrough, defense
  // by id prefix (a historical restriction left to the executor's owner); an opponent is now the unowned
  // creature record of a catalogued monster, whatever its id (01 世界本体: ids are permanent labels, the kind
  // is the record's; 12 §本地 id: a prefix is only the initial judgement). K7 (设计稿 §9 第 4 条): its owner may
- // strike it; someone else's creature is refused as theirs.
+ // strike it. K6 依据（审查 C-a/C-b、K7 E 组由 K6 取代）：别人的牲畜也是同一下交锋，照样路由到交锋，后果是擅毁罪名。
  const accepted=await engine.previewAction(document,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance'});
  assert.equal(accepted.receipt.routed,'core:combat');assert.equal(accepted.receipt.status,'preview');
  const owned=structuredClone(document);owned.state.creatures.a3v2_169_boar.owner='player';
  const own=await engine.previewAction(owned,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance-owned'});
  assert.equal(own.receipt.routed,'core:combat');assert.equal(own.receipt.status,'preview');
  const theirs=structuredClone(document);theirs.state.creatures.a3v2_169_boar.owner='npc_hw_linsui';
- const refused=await engine.previewAction(theirs,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance-theirs'});
- assert.equal(refused.receipt.status,'rejected');assert.match(refused.receipt.reason,/没有处分别人/);
+ const struck=await engine.previewAction(theirs,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance-theirs'});
+ assert.equal(struck.receipt.routed,'core:combat');assert.equal(struck.receipt.status,'preview');
 });
 
 test('R2: leaving and unavailable participants keep the original native safeguards',async()=>{

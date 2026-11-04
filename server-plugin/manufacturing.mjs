@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {reject} from './action-rejection.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
@@ -83,7 +84,7 @@ export function workstation(d,engine,recipe,args){
     if(facilityView(engine,d.get('state'),location)?.factor===0)throw preconditionFailure('工坊已损毁或停用');
     if(station.access!=='public'){
         const permission=d.get('state','records',args.authorization);
-        if(!permission||permission.category!=='authorization'||permission.subject!==station.id||permission.action!=='workshop_use'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))throw preconditionFailure('工作台需要有效使用许可');
+        if(!permission||permission.category!=='authorization'||permission.subject!==station.id||permission.action!=='workshop_use'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))noteUnlicensedUse(d,station,{kind:'workstation'});
     }
     const fee=integer(station.fee??0,0,100000,'工坊使用费');
     if(d.get('state','player','coins')<fee)reject('E-ACTION-FUNDS','工坊使用费不足',{missing:['需要足额工坊使用费'],repair:['补足工坊使用费后重试']});

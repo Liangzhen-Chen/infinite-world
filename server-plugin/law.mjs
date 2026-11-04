@@ -1,3 +1,6 @@
+import {readFileSync} from 'node:fs';
+import {takeNotedOffenses,noteOffense} from './offense-notes.mjs';
+import lawBalance from '../world/rules/tables/balance/law.json' with {type:'json'};
 import {preconditionFailure} from './precondition.mjs';
 import {goodsWorth,valuation} from './valuation.mjs';
 import {recordStandingEvidence} from './npc-state.mjs';
@@ -81,13 +84,30 @@ export function submitCaseDocument(d,engine,{case:caseId,document:id,actor='play
 const alive=(actor,d,id)=>actor&&isEffective(null,d,id)&&actor.status!=='濒死';
 const awake=(actor,d,id)=>alive(actor,d,id)&&!['睡眠','熟睡'].includes(actor.activity);
 const codeFor=legalCodeAt;
+// K6 legality is a consequence: offenses are derived from the behaviour class
+// (act) and the attributes of what it acts on (against), never from item or
+// place ids. A code without its own clause sentences by the broader offense.
+const reactionTable=engine=>(engine.world.balance?.law??lawBalance).params.find(p=>p.id==='offense.reaction').value;
+const OFFENSES=JSON.parse(readFileSync(new URL('../world/ontology/offenses.json',import.meta.url),'utf8')).entries;
+const broaderOf=offense=>OFFENSES.find(o=>o.id===offense)?.broader?.replace(/^offense:/,'')??null;
+const offenseChain=offense=>{const out=[];for(let at=offense;at&&!out.includes(at);at=broaderOf(at))out.push(at);return out;};
+export function offenseOf(act,subject={}){
+ const fits=OFFENSES.filter(o=>o.act===act&&Object.entries(o.against??{}).every(([k,v])=>subject?.[k]===v));
+ return fits.sort((a,b)=>Object.keys(b.against??{}).length-Object.keys(a.against??{}).length)[0]??null;
+}
 function offensePenalty(engine,code,offense){
+ for(const at of offenseChain(offense)){const value=ownPenalty(engine,code,at);if(value)return value;if(value===null&&code?.penalties?.[at]===null)return null;}
+ return undefined;
+}
+function ownPenalty(engine,code,offense){
  if(code?.penalties?.[offense]===null)return null;
  return codePenalty(engine,code,offense)??engine.rules.law.spellConsent?.penalties?.[offense]??engine.rules.law.bribery?.penalties?.[offense]??engine.rules.law.activityPenalties?.[offense]??(offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[offense];
 }
 function incidentNorms(d,engine,{offender='player',location,minute,offense,code}){
  if(engine.rules.law?.normStackVersion!==1)return {};
- const snapshot=normSnapshot(normStack(engine,d.get('state'),offender,location,minute,{codes:legalCodes(engine.world,d.get('state'))}),offense);
+ const stack=normStack(engine,d.get('state'),offender,location,minute,{codes:legalCodes(engine.world,d.get('state'))});
+ let snapshot=normSnapshot(stack,offense);
+ for(const broader of offenseChain(offense).slice(1)){if(snapshot.source!==null)break;const analogy=normSnapshot(stack,broader);if(analogy.source!==null)snapshot={...analogy,offense,analogy:broader};}
  // Older domain-specific statutes are still published inputs. Pin those too;
  // never turn a missing offense into a fabricated default penalty.
  if(snapshot.source===null){snapshot.penalty=structuredClone(offensePenalty(engine,code,offense)??null);if(snapshot.penalty)snapshot.source=`legacy-statute:${offense}`;}
@@ -140,9 +160,9 @@ function knowledge(d,npc,id,minute){
     const prior=d.get('state','npcs',npc,'legalKnowledge')??[];
     if(!prior.some(row=>row.case===id))d.set(['state','npcs',npc,'legalKnowledge'],[...prior,{case:id,minute,source:'亲见或在场受理'}]);
 }
-export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute'),code:given=null,perception=null}){
+export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,caseKey=eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute'),code:given=null,perception=null}){
     const code=given??codeFor(engine,location,d.get('state'));if(!code&&optional)return null;if(!code)reject('E-ACTION-LAW','当地尚未登记可执行法典，无执行权限',{missing:['当地需要已登记的可执行法典与执行权限'],repair:['前往有适用法典的法域，取得执行权限后办理']});
-    const id=`legal_case:${eventId}`;unique(d,id);
+    const id=`legal_case:${caseKey}`;unique(d,id);
     if(location===d.get('state','location')&&minute===d.get('state','minute')){
         const snapshot=perception??eventPerception(engine,d.document,{actor:offender,target:victim,location,volume:0});
         if(snapshot.sourceZone)witnesses=witnesses.filter(id=>snapshot.versions[id]?.identified);
@@ -170,6 +190,46 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
         }
     }
     return id;
+}
+// K6: a physically possible act that lacked the owner's or the authority's
+// licence has already happened; the norm stack names the offense (offenseOf)
+// and the ordinary incident pipeline carries the consequences: the case and
+// its reporting, wanted notices, and the victim's standing when they saw it.
+export function registerOffense(d,engine,{actor='player',act,subject={},victim=null,value,stolen=null,eventId,location}){
+ const row=offenseOf(act,subject);if(!row)throw Error(`E-OFFENSE-ACT 未登记构成罪名的行为类别：${act}`);
+ const s=d.get('state');location??=actor==='player'?s.location:s.npcs?.[actor]?.location??s.location;
+ // The case value is what the victim lost, valued as goods where it is goods.
+ value??=stolen?.item&&engine.byId.get(stolen.item)?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity??1,holder:victim})??0:stolen?.coins??0;
+ const witnesses=Object.entries(s.npcs??{}).filter(([id,npc])=>id!==actor&&awake(npc,d,id)&&npc.location===location).map(([id])=>id);
+ const key=`${eventId}:offense:${act}:${subject.id??'-'}:${victim??'-'}`;
+ const caseId=registerIncident(d,engine,{victim,offender:actor,offense:row.id,value,stolen,witnesses,eventId,caseKey:key,location,optional:true,relationshipApplied:true});
+ const seen=caseId?d.get(...path(caseId)).witnesses:witnesses;
+ // The case's own id is unique per act; cause ties it back to the act's event.
+ if(caseId)holdingSet(d,null,path(caseId),{...d.get(...path(caseId)),offenseRecord:`offense:${key}`},'law');
+ // The offense is a fact under the applicable norms even where no court can
+ // execute them yet; the case, when there is one, carries the procedure.
+ const stack=normStack(engine,s,actor,location,s.minute,{codes:legalCodes(engine.world,s)}),law=normSnapshot(stack,row.id);
+ // How grave the wrong is: the fine its own (or the analogous broader)
+ // statute sets for this value, or the value itself where no statute speaks.
+ const code=codeFor(engine,location,s),penalty=offenseChain(row.id).map(at=>normSnapshot(stack,at).penalty??(code?ownPenalty(engine,code,at):null)).find(Boolean);
+ const fine=penalty?(penalty.baseFine??0)+Math.ceil((value??0)*(penalty.valueMultiplier??0)):value??0;
+ const tune=reactionTable(engine),loss=Math.min(tune.maximum,Math.max(tune.minimum,Math.round(fine/tune.finePerTrust)));
+ const witnessed=Math.max(tune.minimum,Math.round(loss*tune.bystanderShare));
+ const record=`offense:${key}`;unique(d,record);
+ holdingSet(d,null,path(record),{category:'offense',id:record,offense:row.id,act,subject:structuredClone(subject),offender:actor,victim,value,stolen,location,minute:s.minute,witnesses:[...seen],case:caseId,law:law.source,fine,sourceEvent:eventId},'law');
+ // A victim who saw it reacts at once, court or no court.
+ if(victim&&seen.includes(victim)&&s.npcs?.[victim]){
+  recordStandingEvidence(d,engine,{key:`offense:${key}`,sourceEvent:eventId,eventType:'欺骗',from:victim,to:actor,minute:s.minute,delta:{trust:-loss}});
+  d.set(['state','npcs',victim,'developments'],[...d.get('state','npcs',victim,'developments')??[],{type:'发现财物侵犯',source:eventId,minute:s.minute}]);
+ }
+ // Bystanders who saw the wrong think a little less of the one who did it.
+ for(const witness of seen)if(witness!==victim&&s.npcs?.[witness])recordStandingEvidence(d,engine,{key:`offense:${key}:${witness}`,sourceEvent:eventId,eventType:'目睹犯禁',from:witness,to:actor,minute:s.minute,delta:{trust:-witnessed}});
+ d.say?.(`此举构成${row.label}${caseId?'，已立案待查':'，当地没有可执行的法典'}${witnesses.length?`；在场${witnesses.length}人看见`:''}`);
+ return {offense:row.id,label:row.label,record,case:caseId,witnesses:[...seen],victim,gravity:{fine,trust:loss}};
+}
+// Breaches noted on this transaction (offense-notes.mjs) become offenses now.
+export function commitOffenses(d,engine,eventId){
+ return takeNotedOffenses(d).map(b=>registerOffense(d,engine,{...b,eventId}));
 }
 // A request has a recipient and verifiable premises, but does not decide a case.
 function submitFiling(d,engine,args,eventId){
@@ -699,18 +759,22 @@ function surrender(d,engine,args,eventId,row){
 }
 // A bounty-holder seizes a wanted person in reach of the notice; then escorts them (as a companion) to the court.
 function captureFugitive(d,engine,row,eventId){
-    const state=d.get('state'),w=wantedOfCase(state,row.id);if(!w)throw preconditionFailure('此人没有生效的通缉，不能擅自拘人');
-    const quest=state.quests?.[w.quest];if(quest?.taker!=='player'||quest.status!=='进行中')throw preconditionFailure('须先在告示处接下这份赏金（world_quest accept）');
-    if(w.captive)throw preconditionFailure('此人已在押解中');
-    if(!wantedReachedAt(engine,w,state.location,state.minute,state))throw preconditionFailure('此地不在通缉范围或文书未到，不能擅自拘人');
+    // K6: seizing a person is a bodily contest; the notice, the accepted bounty
+    // and its reach make it lawful, they do not make it possible. Without them
+    // the seizure still happens and is unlawful detention.
+    const state=d.get('state'),w=wantedOfCase(state,row.id);
+    if(w?.captive)throw preconditionFailure('此人已在押解中');
+    const quest=w?state.quests?.[w.quest]:null;
+    const lawful=Boolean(w)&&quest?.taker==='player'&&quest.status==='进行中'&&wantedReachedAt(engine,w,state.location,state.minute,state);
     const target=present(d,engine,row.offender,true);
-    if(w.evadedAt!==undefined&&state.minute-w.evadedAt<60)throw preconditionFailure('逃犯刚甩脱你，需过一阵再找机会');
+    if(w?.evadedAt!==undefined&&state.minute-w.evadedAt<60)throw preconditionFailure('逃犯刚甩脱你，需过一阵再找机会');
     const result=engine.check(d,{attribute:'力量',opponent:{npc:target,attribute:'敏捷'}},eventId);
     engine.advance(d,engine.rules.law.actionMinutes,eventId);
-    const actor=d.get('state','npcs',target),cur=d.get(...path(w.id)),captured=result.success&&alive(actor,d,target)&&actor.location===d.get('state','location');
-    if(captured){holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions')??[],target])],'law');holdingSet(d,null,path(w.id),{...cur,captive:{by:'player',minute:d.get('state','minute')}},'law');}
-    else holdingSet(d,null,path(w.id),{...cur,evadedAt:d.get('state','minute')},'law');
-    return{case:row.id,target,captured,check:result,note:captured?'已拿下，随你同行押解；到发布法院用world_quest complete交付':'对方挣脱了，一小时后才有机会再试'};
+    const actor=d.get('state','npcs',target),cur=w?d.get(...path(w.id)):null,captured=result.success&&alive(actor,d,target)&&actor.location===d.get('state','location');
+    if(captured){holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions')??[],target])],'law');if(cur&&lawful)holdingSet(d,null,path(w.id),{...cur,captive:{by:'player',minute:d.get('state','minute')}},'law');}
+    else if(cur)holdingSet(d,null,path(w.id),{...cur,evadedAt:d.get('state','minute')},'law');
+    if(captured&&!lawful)noteOffense(d,{act:'detain',victim:target,subject:{id:target,kind:'person'},actor:'player'});
+    return{case:row.id,target,captured,lawful,check:result,note:captured?lawful?'已拿下，随你同行押解；到发布法院用world_quest complete交付':'已拿下，但没有生效且送达此地的通缉与赏金，这是非法拘禁':'对方挣脱了，一小时后才有机会再试'};
 }
 
 // Player and NPC defendants share evidence and sentencing; the caller supplies the court witnesses.
@@ -888,7 +952,7 @@ export function lawAction(d,args,eventId){
         }
     }
     if(row.offender!=='player'&&!creditorClaim){
-        if(operation!=='arrest')throw preconditionFailure('此案被告是他人；你只能接下赏金后缉拿交付');
+        if(operation!=='arrest')throw preconditionFailure('此案被告是他人，你不是当事人；能做的是缉拿（arrest）');
         return captureFugitive(d,this,row,eventId);
     }
     if(operation==='hire_advocate')return hireAdvocate(d,this,row,args,eventId);

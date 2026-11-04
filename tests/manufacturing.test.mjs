@@ -31,7 +31,8 @@ test('制造先校验配方知识、技能、真实工具、工作台与许可�
         c=>c.state.location='bld_hw_qingdeng',c=>c.state.buildings.bld_hw_mill={condition:0},c=>c.state.player.coins=1,
     ]){const c=structuredClone(document);alter(c);const before=structuredClone(c);await assert.rejects(run(c,'world_craft',{recipe:'recipe_wooden_pegs'},'bad'));assert.deepEqual(c,before);}
     world.locations.find(row=>row.id==='bld_hw_mill').workstations[0].access='consent';
-    const engine=new WorldEngine(world);await assert.rejects(engine.reduce(document,{tool:'world_craft',args:{recipe:'recipe_wooden_pegs'},eventId:'no-license'}),/使用许可/);
+    // K6 依据（审查 C-b manufacturing:86、D1 本文件:34）：工作台使用许可决定合法与否；没有许可照样能做，命中擅用他人之物。
+    const engine=new WorldEngine(world),out=await engine.reduce(document,{tool:'world_craft',args:{recipe:'recipe_wooden_pegs'},eventId:'no-license'});const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,'命中擅用他人之物');assert.equal(o.victim,'loc_hw');
 });
 test('成功制造真实扣料、工坊费和工具耐久，副产品入库，每件有稳定编号及署名',async()=>{
     const{document,run}=await setup();const out=await degree(run,document,{recipe:'recipe_wooden_pegs'},'成功');

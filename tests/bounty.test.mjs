@@ -163,7 +163,10 @@ test('贿赂：价码按廉洁度与立场，出价不足拒收并记行贿未�
     await assert.rejects(base.act('world_law',{operation:'report',case:'legal_case:t_pending',authority:guard,reporter:victim},'dismissed'),/撤职/);
     // Player bounty: accept, wait for the notice to be posted here, seize, escort, hand in at the court.
     await base.act('world_quest',{operation:'accept',quest:w.quest},'take');
-    await assert.rejects(base.act('world_law',{operation:'arrest',case:exposed.corruptionCase},'too_soon'),/文书未到/);
+    // K6 依据（审查 C-c law.mjs:705、D1 本文件:166）：文书未到时拿人仍是一场真实的身体较量；拿下了就是非法拘禁，不进押解。
+    {const before=base.doc;let early;for(let i=0;i<30&&!early?.captured;i++){base.doc=before;early=await base.act('world_law',{operation:'arrest',case:exposed.corruptionCase},`too_soon_${i}`);}
+     assert.equal(early.captured,true);assert.equal(early.lawful,false);assert.ok(early.offenses?.some(o=>o.offense==='unlawful_detention'&&o.victim===guard));
+     assert.equal(base.doc.state.records[exposed.wanted].captive,undefined);base.doc=before;}
     await base.act('world_time',{minutes:61},'posted');
     let seized=false;
     for(let i=0;i<30&&!seized;i++){
