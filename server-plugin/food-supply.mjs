@@ -4,7 +4,7 @@ import {recordsWhere} from './storage.mjs';
 import {declareLedgerWriter,balance} from './ledger.mjs';
 import {cargo,moveStock} from './stock.mjs';
 import {treasury,purse,escrow,moveCoins,counterCash,dedicatedCoinAccount} from './money.mjs';
-import {currentShops,foodSupplyBid,receiveFoodSupply,foodSupplyNeed} from './shop.mjs';
+import {currentShops,foodSupplyBid,receiveFoodSupply,foodSupplyNeed,grainSatietyPerUnit} from './shop.mjs';
 import {transportServices,quoteTransport,bookTransport,collectTransport,settleWreckedShipment,installExternalTransportCargo,moveCarriage} from './transport.mjs';
 import {transportSegment,stepTransport} from './transport-route.mjs';
 import {subjectiveView} from './subjective-view.mjs';
@@ -14,7 +14,7 @@ import {saleableStock} from './market.mjs';
 import {safeCarryKg,carriedKg} from './carry.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {rollDice} from './scheduler.mjs';
-import {householdResources,householdCommitments} from './household-budget.mjs';
+import {householdResources,householdCommitments,statisticalFoodGroups,statisticalFoodNeed} from './household-budget.mjs';
 import {defineHoldingSource,syncHoldings} from './holding-sources.mjs';
 import {holdingSet,holdingRemove,declareHoldingWriter} from './holdings.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
@@ -137,6 +137,56 @@ export function periodicFoodStalls(d,e,minute,{scheduleAt}={}){
   out.push({kind:'npc',id:`village-market:${p.seller}`,keeper:p.seller,location:slot.location,until:slot.until,settlement:placeSettlement(e,state,slot.location).value,markup:1,goods:[p.item],producer:p});
  }
  return out;
+}
+// A village with grain beyond its own reserve sends its head to a settlement within a day's walk that has hungry buyers with
+// money and too little grain on its shelves. He draws the grain from the granary into his own bag, walks there, keeps a counter
+// for an afternoon (settlementTrade.stallMinutes) and walks home; his market_trip record is his timetable, and business.mjs
+// openShops lists the counter while it stands. The grain is the village's, so business.mjs sell() pays the takings to its
+// treasury; what stays unsold stays in his bag and counts as grain already carried the next day.
+export function planGranaryStalls(d,e,minute){
+ const rule=e.rules.settlementTrade;if(!e.rules.foodSupply||!(rule?.stallMinutes>0))return;
+ const state=d.get('state'),day=Math.floor(minute/DAY),grain=e.rules.agriculture.grainItem,unit=e.byId.get(grain)?.weight,grainSatiety=grainSatietyPerUnit(e.world);
+ if(!(unit>0)||!(grainSatiety>0))return;
+ const todays=()=>recordsWhere(d.get('state','records'),'category','market_trip').filter(r=>r.stall&&Math.floor(r.departAt/DAY)===day);
+ const dayTrip=e.rules.travel.dailyTravelMinutes,sellers=producers(d,e).filter(p=>p.public);
+ index(e).paths.clear();
+ for(const sid of Object.keys(state.settlements??{}).sort()){
+  // What the settlement's batch buyers with money still lack today (their own stock and public ration already counted), as grain.
+  let need=0;
+  for(const g of statisticalFoodGroups(e,state,sid))if(g.coins>0)need+=statisticalFoodNeed(e,state,sid,d,g);
+  need=Math.ceil(need/grainSatiety);
+  if(!need)continue;
+  for(const shop of currentShops(e,state))if(shop.settlement===sid)need-=e.quantity(d,shop.keeper,grain);
+  for(const t of todays())if(t.stall.to===sid)need-=t.stall.quantity;
+  const reach=[];
+  for(const p of sellers){
+   const n=state.npcs?.[p.manager];
+   if(p.settlement===sid||!n||typeof n.location!=='string'||!isEffective(e,state,p.manager)||n.scheduleTravel||n.cognitionTravel||['死亡','濒死','昏迷','患病'].includes(n.status))continue;
+   if(todays().some(t=>t.actor===p.manager))continue;
+   const there=route(d,e,n.location,sid,minute),back=route(d,e,sid,n.location,minute);
+   if(!there?.edges.length||!back?.edges.length||there.cost||back.cost||there.minutes+back.minutes>dayTrip)continue;
+   reach.push({p,n,there,back});
+  }
+  reach.sort((a,b)=>a.there.minutes-b.there.minutes||a.p.seller.localeCompare(b.p.seller));
+  for(const {p,n,there,back} of reach){
+   if(need<=0)break;
+   const held=e.quantity(d,p.manager,grain),room=Math.floor(Math.max(0,safeCarryKg(d,e,p.manager)-carriedKg(d,e,p.manager))/unit);
+   const load=Math.max(0,Math.min(room,surplus(d,e,p,day),need-held));
+   if(held+load<1)continue;
+   const arriveAt=minute+there.minutes,end=(day+1)*DAY-back.minutes,finishAt=Math.min(arriveAt+rule.stallMinutes,end),returnAt=finishAt+back.minutes;
+   if(finishAt<=arriveAt)continue;
+   try{e.assertNpcAutonomyAction(state,[p.manager],{start:minute,minutes:returnAt-minute});e.assertNpcObligationAction(d,[p.manager],{start:minute,minutes:returnAt-minute,location:sid,kind:'move'});}catch(error){if(error.code!=='E-ACTION-PRECONDITION')throw error;continue;}
+   const id=`market_trip:stall:${p.seller}:${sid}:${minute}`;
+   if(load){
+    const drawn=advanceHook('foodSupplyDrawGranary')?.(d,e,p.seller,load,{to:{account:cargo(e,id,grain)},eventId:id,minimumReserve:p.legacy?state.settlements[p.seller].population*p.profile.reserveDays:undefined});
+    if(drawn!==load)throw Error('Granary stall load changed at pickup');
+    e.itemDelta(d,p.manager,grain,load,{account:cargo(e,id,grain),writer:'food-supply',eventId:id});
+   }
+   holdingSet(d,null,key(id),{id,category:'market_trip',actor:p.manager,from:n.location,to:sid,departAt:minute,arriveAt,finishAt,returnAt,outboundEdges:there.edges,inboundEdges:back.edges,paid:0,
+    stall:{seller:p.seller,to:sid,item:grain,quantity:held+load}},'food-supply');
+   need-=held+load;
+  }
+ }
 }
 export function foodProducerSurplus(d,e,producer,minute){return surplus(d,e,producer,Math.floor(minute/DAY));}
 function quotes(d,e,p,minute){
@@ -357,6 +407,7 @@ export function advanceFoodSupply(d,e,minute=d.get('state','minute'),{plan=true,
    // snapshot after deletion; explicitly clear this source's projection too.
    syncHoldings(d,e,'food-supply',o.id,{writer:'food-supply'});
   }
+  if(plan)planGranaryStalls(d,e,minute);
   for(const producer of producers(d,e).filter(p=>plan||returned.has(p.seller))){
    // Each iteration consumes actual stock, cash, workers or one vehicle's
    // remaining batch room. No daily seller lock limits independent vehicles.

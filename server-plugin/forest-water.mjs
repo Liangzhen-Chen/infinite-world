@@ -13,7 +13,7 @@ import {registerAdvanceHook} from './advance-hooks.mjs';
 import {reserve as reserveAccount,settlementStock,granary as granaryAccount,moveStock,bookStock,priceRead,moveFishPopulation,logisticStock} from './stock.mjs';
 import {exp} from './det-math.mjs';
 import {registerSubsistenceResources} from './household-subsistence.mjs';
-registerSubsistenceResources({forestSites});
+registerSubsistenceResources({forestSites,forestView,harvestForest});
 // S1b: 林木存量是资源点账户 forest:<地点>|item_wood|reserve：首次触及时按世界数据（site.capacity）经 src:genesis 开户，
 // 生长来自 src:regrowth，采伐转入聚落木料或采伐者行囊；聚落烧柴进 sink:consume。没有林木规则时聚落日产木料来自 src:regrowth。
 declareLedgerWriter('forest-water',{sources:{'src:genesis':{item_wood:10000000},'src:regrowth':{item_wood:10000000}},sinks:['sink:consume']});

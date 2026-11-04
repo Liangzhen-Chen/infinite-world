@@ -1,12 +1,13 @@
-// S5 closing audit AUDIT1 (I3d: chain breaks told apart): (1) attribute every missed meal of the town (named households,
-// roster households and statistical groups) to harvest / poverty / allocation / chain-break / no-seller / no-goods from the
-// world state of that noon, (2) reconcile coins and food against the ledger flows.
-//  chain      - a break the world's own rules should not have left: nobody buys for the household (nobuyer), food is on sale
-//               within a day but the customer rule does not serve it (unreachable), or everything exists and nothing was bought;
-//  noseller   - a real result: no open shop with food within a day's travel (the keeper is away and nobody keeps the shop, or
-//               there is no food shop at all);
-//  nogoods    - a shop is open within reach but nothing on its shelf can be eaten as it stands or cooked at home (I3c). Read-only: it drives the real engine
-// day by day and changes no rule, no save field. Output is deterministic (no clock values in it).
+// S5 closing audit AUDIT1: attribute every missed meal of the town (named households, roster households and statistical
+// groups) to exactly one of the four causes of the S5 checklist, from the world state of that noon, and reconcile coins and
+// food against the ledger flows. Only four classes exist; the bracketed tag at the start of a reason is a sub-label of it.
+//  harvest    - everything saleable within a day of travel (shelves + producer surplus) is less than the town's demand;
+//  poverty    - the household's cash per person cannot buy the cheapest person-day of food it could reach;
+//  allocation - food and cash exist, but the shelf was bought out first or the customer's own decision refused;
+//  chain      - the rest: food is saleable within a day and the household has the money, yet it did not eat. Sub-labels:
+//               [nobuyer] [unreachable] [no-purchase] [nogoods] [noseller] (keeper away / too far / no shop) and the raw-grain
+//               labels (the household cannot turn grain into food). Read-only: it drives the real engine day by day and
+//               changes no rule, no save field. Output is deterministic (no clock values in it).
 // Usage: node tools/audit-food-causes.mjs [days=30] [outFile]
 import fs from 'node:fs/promises';
 import {performance} from 'node:perf_hooks';
@@ -14,13 +15,15 @@ import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {householdBudget,statisticalFoodGroups,statisticalFoodNeed,rosterReserve} from '../server-plugin/household-budget.mjs';
-import {householdFoodDemand,householdFoodConversion} from '../server-plugin/household-food.mjs';
+import * as householdFood from '../server-plugin/household-food.mjs';
+const {householdFoodDemand,householdFoodConversion}=householdFood;
 import {currentShops,shopStores} from '../server-plugin/shop.mjs';
 import {openShops} from '../server-plugin/business.mjs';
 import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
 import {isEffective} from '../server-plugin/lifecycle-state.mjs';
 import {placeSettlement} from '../server-plugin/entity-view.mjs';
 import {foodProducerSurplus} from '../server-plugin/food-supply.mjs';
+import * as subsistence from '../server-plugin/household-subsistence.mjs';
 import {marketQuote,quoteSupply,saleableStock,customerReachMinutes} from '../server-plugin/market.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
@@ -30,7 +33,7 @@ import {legacyMoney} from '../server-plugin/money.mjs';
 import {legacyStock} from '../server-plugin/stock.mjs';
 import {auditLedger,driftCounts,parseAccount} from '../server-plugin/ledger.mjs';
 
-const DAY=1440,NOON=720,CAUSES=['harvest','poverty','allocation','chain','noseller','nogoods'];
+const DAY=1440,NOON=720,CAUSES=['harvest','poverty','allocation','chain'];
 const sid='loc_bs';
 const num=v=>typeof v==='number'?v:Number(v?.numerator??0)/Number(v?.denominator??1);
 const reader=doc=>({document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)});
@@ -46,7 +49,7 @@ async function srcLine(file,needle){
 }
 
 // The verdict for one missed meal, from facts read at that noon. Order matters and is the card's:
-//  harvest    - everything saleable within a day's walk (shelves + producer surplus) is less than the town's demand;
+//  harvest    - everything saleable within a day of walking (shelves + producer surplus) is less than the town's demand;
 //  poverty    - the household's cash per person cannot buy the cheapest person-day of food (the cheapest one on a
 //               reachable shelf, or the catalogue's cheapest when nothing is on sale), so it could not eat even if the chain worked;
 //  nogoods    - a shop is open within reach but nothing on its shelf is food the household can use (I3c's cooking chain);
@@ -54,7 +57,7 @@ async function srcLine(file,needle){
 //  allocation - food and cash both exist, but the shelf was bought out first or the customer's own decision refused;
 //  chain      - nobody buys for the household (nobuyer), or food is on sale yet the rule does not serve it (unreachable),
 //               or shop open, stock, cash, and still no purchase.
-// facts: {supply,demand,best:{cost,sameSettlement}|null,refCost,perCapitaCash,cash,soldOut,declined,servedShops,group,simulated,
+// facts: {rawUnusable,rawWhy,supply,demand,best:{cost,sameSettlement}|null,refCost,perCapitaCash,cash,soldOut,declined,servedShops,group,simulated,
 //         buyer,nearOpen,closedNear,registered}
 export function verdict(f){
  const need=f.best?.cost??f.refCost;
@@ -66,11 +69,15 @@ export function verdict(f){
  // A roster household keeps its money and stock in its opening record; it is a batch buyer only while that record is a live reserve.
  if(!f.group&&f.simulated===false&&!f.buyer)return {cause:'chain',reason:'[nobuyer] roster-only household holds money in its opening record but is not a buyer in the shops',
   clue:[['business.mjs','function foodBuyers(d,engine,shop)'],['household-budget.mjs','export function rosterReserves(']]};
+ // I3c: raw grain that is on a reachable shelf (or is the only grain there) but that this household cannot turn into food
+ // (no recipe, no fetchable water/fuel, no utensil): separated from "nothing edible on the shelf" so it can be counted to zero.
+ if(!f.best&&f.rawUnusable)return {cause:'chain',reason:f.rawWhy==='labour'?'raw grain is on sale and the home recipe route exists (water, fuel, hearth, utensils), but this household has less free time in the afternoon window than one batch takes: its adults are on paid shifts':`raw grain is on sale within reach, but this household cannot make it edible: ${f.rawWhy}`,
+  clue:[['household-food.mjs','export function householdFoodConversion(','the household chain from raw grain to food']]};
  if(!f.best){
-  if(f.nearOpen>0)return {cause:'nogoods',reason:'[nogoods] a shop is open within reach but nothing on its shelf can be eaten as it stands or cooked at home',
+  if(f.nearOpen>0)return {cause:'chain',reason:'[nogoods] a shop is open within reach but nothing on its shelf can be eaten as it stands or cooked at home',
    clue:[['shop.mjs','export function receiveFoodSupply','shelf stocked only by deliveries']]};
   const why=f.closedNear>0?'[keeper-away] shop(s) within a day are not trading at noon: the keeper is away and no household member or hired hand keeps the counter':f.registered>0?'[too-far] every shop is more than a day of travel there and back':'[no-shop] no shop is registered';
-  return {cause:'noseller',reason:`no open shop with food within a day's travel: ${why}`,
+  return {cause:'chain',reason:`[noseller] no open shop with food within a day's travel: ${why}`,
    clue:[['business.mjs','function shopKept(d,engine,keeper,t)','a keeper without a trade slot leaves the shop open only if a household member or hired hand is at the same place'],['business.mjs','const keeper=state.npcs?.[shop.keeper],window=keeper&&tradeWindow(engine,shop.keeper,t,state)','the shop opens only where its keeper stands with a trade slot']]};
  }
  if(f.soldOut)return {cause:'allocation',reason:'shelf was bought out before this household',clue:[['business.mjs','let quantity=Math.min(want.quantity,available(item)),quote=null;']]};
@@ -97,6 +104,9 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
  const start={minute:doc.state.minute,money:legacyMoney(e,doc.state),stock:legacyStock(e,doc.state).balances};
  const advance=async(to,id)=>{const out=await e.reduce(doc,{tool:'world_time',args:{minutes:to-doc.state.minute},eventId:id});doc=applyPatches(doc,out.patches);};
 
+ const rawGrainSample=[];
+ // the shortest cooking step that takes the raw grain straight to a food item: a household with less free time than this cannot run a batch
+ const grainCook=Math.min(...world.recipes.filter(r=>r.materials.some(m=>m.item===grain)&&gain(r.output.item)>0).map(r=>r.minutes),Infinity);
  const daily=[],incidents=[],chainIncidents=[],chainRows=[],chainSpread=[],spreadDays=new Set(),stalls=[];// stalls = producer chain-break rows
  const tally=Object.fromEntries(sids.map(sid=>[sid,Object.fromEntries(CAUSES.map(c=>[c,{incidents:0,meals:0,people:0,households:new Set(),reasons:{}}]))]));
  const total=Object.fromEntries(sids.map(sid=>[sid,{named:{incidents:0,meals:0},statistical:{incidents:0,meals:0}}]));
@@ -192,7 +202,7 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
 
   for(const sid of sids){
   const {townShopRows,producerRows,chainOpenToday}=pre[sid];
-  // ---- today's demand of the whole settlement and the food within a day's walk of it ----
+  // ---- today's demand of the whole settlement and the food within a day of walking of it ----
   const hungryNamed=[];
   for(const [hid,h] of homesOf.get(sid)){
    // A household whose members have no simulated state owns no purse and no stock: its need is last meal's need.
@@ -267,12 +277,21 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
    const soldOut=Boolean(best&&best.reach.engineServes&&boughtAt(best.shop.id,best.item)>0&&boughtAt(best.shop.id,best.item)>=best.avail);
    // Food stores of the world edition that are not trading at this noon (keeper away on the road or elsewhere, nobody keeping the counter).
    const closedNear=foodStores.filter(st=>!openIds.has(st.id)&&withinTrip(where,st.settlement)).length;
-   const v=verdict({supply:townSupplySatiety,demand:townDemand,best:best&&{cost:best.cost,sameSettlement:best.reach.sameSettlement},perCapitaCash:unitsCash,cash,soldOut,declined:declined&&(declined.reason??declined.outcome),servedShops:mine.length,group:Boolean(en.group),simulated:en.simulated,refCost,
+   const rawUnusable=(en.simulated||en.group)&&reach1.some(r=>r.shop.items.some(it=>!it.edible&&chainGain(it.item)>0&&!(convGain(en.owner,it.item)>0)));
+   // Which input of the home chain is missing: read from the same journey functions the cook uses.
+   let rawWhy=null;
+   if(rawUnusable&&!best){
+    // Older engines have no home provisioning at all: then the home chain simply has no route from raw grain.
+    const journey=subsistence.householdSourceJourney,cookHome=en.group?sid:en.home,wj=journey?.(e,ps,cookHome,'water',noon,0),fj=journey?.(e,ps,cookHome,'fuel',noon,1);
+    rawWhy=!journey?'no home recipe route from raw grain (no water/fuel provisioning, the only chain needs a mill, salt and shavings)':!wj?'no usable water source within a day of walking':!fj?'no forest with wood within a day of walking (fuel)':!en.group&&en.simulated&&householdFood.freeMinutes(rd,e,en.owner,Math.floor(noon/DAY)*DAY+780)<grainCook?'labour':'water and fuel are reachable, but a utensil, the hearth or the afternoon window does not allow a batch';
+   }
+   const v=verdict({rawUnusable,rawWhy,supply:townSupplySatiety,demand:townDemand,best:best&&{cost:best.cost,sameSettlement:best.reach.sameSettlement},perCapitaCash:unitsCash,cash,soldOut,declined:declined&&(declined.reason??declined.outcome),servedShops:mine.length,group:Boolean(en.group),simulated:en.simulated,refCost,
     buyer:Boolean(en.group||en.simulated||rosterReserve(ps,en.hid)),nearOpen:reachAll.length,closedNear,registered:foodStores.length});
+   if(rawWhy&&rawGrainSample.length<12)rawGrainSample.push({day,settlement:sid,household:en.hid,kind:en.kind,owner:en.owner,simulated:en.simulated,home:en.group?sid:en.home,reason:rawWhy});
    const cause=v.cause,reason=v.reason,clue=(await Promise.all(v.clue.map(([f,n,note])=>srcLine(f,n).then(l=>note?`${l} (${note.replace('$sid',sid)})`:l)))).join('; ');
    const t=tally[sid][cause];t.incidents++;t.meals+=meals;t.reasons[reason]=(t.reasons[reason]??0)+1;
    if(!t.households.has(en.hid)){t.households.add(en.hid);t.people+=people;}
-   const broken=['chain','noseller','nogoods'].includes(cause);
+   const broken=cause==='chain';
    const spread=broken&&en.kind==='statistical'&&!spreadDays.has(`${sid}|${day}`)&&chainSpread.length<10;
    if(broken&&(chainRows.length<20||spread)){
     const row={settlement:sid,household:en.hid,day,location:where,
@@ -353,7 +372,7 @@ export async function runAudit({days=30,progress=()=>{},dayTripMinutes=null}={})
  const tot=(k)=>({incidents:sids.reduce((n,s)=>n+total[s][k].incidents,0),meals:round(sids.reduce((n,s)=>n+total[s][k].meals,0))});
  return {days,start:start.minute,end:end.minute,settlements:sids,
   totals:{named:tot('named'),statistical:tot('statistical')},
-  attribution,bySettlement,daily,chainBreakFirst20:chainRows,chainBreakStatisticalSpread:chainSpread,producerStalls:{rows:stalls.length,first:stalls.slice(0,10),last:stalls.slice(-3)},
+  attribution,bySettlement,daily,chainBreakFirst20:chainRows,chainBreakStatisticalSpread:chainSpread,rawGrainSample,producerStalls:{rows:stalls.length,first:stalls.slice(0,10),last:stalls.slice(-3)},
   conservation:{money:moneyRows,food:{rows:foodRows,total:foodTotal},ledger:{audit:auditLedger(ledger),drift:driftCounts(doc),transfers:ledger?.transfers??0},mismatches:{count:mismatches.length,first:mismatches.slice(0,20)},
    writerFlows:writerRows,writerFiles},
   chainIncidents,incidentsSample:incidents.slice(0,40)};

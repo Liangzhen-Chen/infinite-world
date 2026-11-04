@@ -243,7 +243,18 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
 }
 // The supply a quote reads. Callers pricing several quantities of one item in a row (no writes in between)
 // compute it once and pass it back as `supply`; the value is identical to what marketQuote derives itself.
-export function quoteSupply(d,engine,{item,location,business=null}){return marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]});}
+// A draft's patch list grows with every write, so within one stretch of reads (the quotes of many buyers at one counter, none of
+// whom buys) the supply of (item, place, keeper) is the same value: it is derived once and handed back until the next write.
+const supplyReads=new WeakMap();
+export function quoteSupply(d,engine,{item,location,business=null}){
+ const owners=business?[business.keeper]:[];
+ if(!Array.isArray(d.patches))return marketSupply(d,engine,item,location,{businessOwners:owners});
+ let c=supplyReads.get(d);
+ if(!c||c.patches!==d.patches||c.length!==d.patches.length||c.engine!==engine)supplyReads.set(d,c={patches:d.patches,length:d.patches.length,engine,rows:new Map()});
+ const key=`${item}|${location}|${owners.join()}`;
+ if(!c.rows.has(key))c.rows.set(key,marketSupply(d,engine,item,location,{businessOwners:owners}));
+ return c.rows.get(key);
+}
 // 不含某持有人自己那批货的供给：海关估入境货值时，货物自身不压低入境地的价格。
 export function supplyApart(d,engine,{item,location,owner}){
  const all=quoteSupply(d,engine,{item,location}),own=all.rows.filter(r=>r.owner===owner).reduce((n,r)=>n+r.available,0);

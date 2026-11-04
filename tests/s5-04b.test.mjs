@@ -141,7 +141,11 @@ test('npc shopkeepers: within a week each stocks up, reprices and hires by his o
  const grainPaid=Object.values(s.records).filter(r=>r.category==='food_supply_stats').reduce((n,r)=>n+(r.destinations?.shop_bs_yanzhe?.paidCopper??0),0)
   +Object.values(s.records).filter(r=>r.foodSupply&&!r.scout&&r.buyer==='npc_hw_yanzhe').reduce((n,r)=>n+r.quantity*r.unitPrice-r.refundCopper,0);
  assert.ok(grainPaid>0);
- assert.equal(s.npcs.npc_hw_yanzhe.coins,s0.npcs.npc_hw_yanzhe.coins-8-grainPaid);assert.equal(counterOf(f,'npc_hw_yanzhe').coins,0);
+ // I3c: the Baishi cohorts now buy that shop's oats to cook at home (recipe_boil_oat_gruel), so his purse also holds what he
+ // took at the counter: Sum(paid - tax) over his bought customer visits (hand count of this run: paid 3395 - tax 192 = 3203).
+ const takings=Object.values(s.records).filter(r=>r.category==='customer_flow'&&r.keeper==='npc_hw_yanzhe').flatMap(r=>r.visits??[]).filter(v=>v.outcome==='bought').reduce((n,v)=>n+v.paid-(v.tax??0),0);
+ assert.ok(takings>0);
+ assert.equal(s.npcs.npc_hw_yanzhe.coins,s0.npcs.npc_hw_yanzhe.coins-8-grainPaid+takings);assert.equal(counterOf(f,'npc_hw_yanzhe').coins,0);
  assert.equal(s.npcs.npc_hw_yanzhe.inventory.item_clay.quantity,2);
  // 1.2 * 8/6 = 1.6, capped at the published shop limit 1.4.
  const pricing=s.records['shop_pricing:npc_hw_yanzhe'];

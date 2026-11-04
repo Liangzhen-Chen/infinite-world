@@ -40,7 +40,8 @@ export function npcObligationAt(state,id,minute=state.minute){
  return liveNpcReservations(state).find(o=>reservedActors(o).includes(id)&&!released(o,id)&&(o.departures[id]??o.start)<=minute&&minute<o.deadline)??null;
 }
 export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','minute'),minutes=0,location,kind='action'}={}){
- for(const actor of actors)if(marketTimeWindows(d.get('state'),actor).some(r=>r.start<start+Math.max(1,minutes)&&start<r.end))throw preconditionFailure('与实际赶集路程或服务时段冲突');
+ for(const actor of actors)// The keeper of a village grain counter is on his own market trip, and serving at that counter inside his stay is what the trip is for.
+ if(marketTimeWindows(d.get('state'),actor).some(r=>r.start<start+Math.max(1,minutes)&&start<r.end&&!(r.stall&&kind==='trade'&&location===r.to&&r.arriveAt<=start&&start+minutes<=r.finishAt)))throw preconditionFailure('与实际赶集路程或服务时段冲突');
  const finish=start+minutes;
  if(kind!=='medicine'&&kind!=='employment')for(const actor of actors)if(medicineReservation(d.get('state'),actor,start,minutes))throw preconditionFailure('与诊疗预约冲突');
  if(kind!=='education')for(const actor of actors)if(educationReservation(engine,d.get('state'),actor,start,minutes,{automatic:kind==='autonomy'}))throw preconditionFailure('与已登记授业课时冲突');

@@ -26,9 +26,9 @@ test('home recipes are exactly the table-derived set: life skill, difficulty <= 
  const {w}=await formal(),rule=w.rules.householdCrafts.recipeConditions;
  const edible=new Set(w.items.filter(i=>i.nutrition?.satiety>0).map(i=>i.id)),inputs=new Set(w.recipes.filter(r=>edible.has(r.output.item)).flatMap(r=>r.materials.map(m=>m.item)));
  const expected=w.recipes.filter(r=>r.skill.startsWith(rule.skillPrefix)&&r.difficulty<=rule.maxDifficulty&&(edible.has(r.output.item)||inputs.has(r.output.item))).map(r=>r.id).sort();
- // hand count over world/meta/recipes.json: mill_oats, bake_flatbread, fish_broth
+ // hand count over world/meta/recipes.json: mill_oats, bake_flatbread, fish_broth, boil_oat_gruel (I3c: skill_life_3_core, difficulty 10, output item_oat_gruel is edible)
  assert.deepEqual(homeCraftRecipes(w).map(r=>r.id).sort(),expected);
- assert.equal(expected.length,3);
+ assert.equal(expected.length,4);
  assert.ok(w.recipes.filter(r=>r.difficulty>rule.maxDifficulty).every(r=>!expected.includes(r.id)));
 });
 
@@ -78,12 +78,20 @@ test('opening utensils: one of each per household inside the same total M; the c
  assert.deepEqual(auditLedger(on.doc.ledger),[]);
 });
 
-test('formal-world raw grain: the home chain needs a mill, which Baishi homes lack, so oats cannot be converted there',async()=>{
- const {e,doc}=await formal(),group=statisticalFoodGroups(e,doc.state,SID)[3];
- // recipe_mill_oats needs a woodworking station; homes only gain the cooking hearth
- assert.equal(householdFoodConversion(draftOf(doc),e,group.owner,'item_oats'),null);
+test('formal-world raw grain: a Baishi cohort turns oats into gruel at home (water and wood fetched, minutes charged); no mill needed',async()=>{
+ const {e,doc}=await formal(),group=statisticalFoodGroups(e,doc.state,SID)[3],at=DAY+780;
+ const plan=householdFoodConversion(draftOf(doc),e,group.owner,'item_oats',at);
+ // 1 oats (0.5 kg) + 3 water + 1 wood -> 4 bowls x satiety 30 = 120, the same 4 x 30 per grain unit as the flatbread chain
+ assert.deepEqual(plan.chain,['recipe_boil_oat_gruel']);assert.equal(plan.raw,1);assert.equal(plan.gain,120);
+ assert.deepEqual(plan.provided.sort(),['item_water','item_wood']);
+ // minutes per batch = 60 cooking + the fetch share; the cohort holds no water or wood, so both are fetched
+ assert.equal(plan.minutes,60+plan.prep);assert.ok(plan.prep>0);
+ // controls: the whole law switched off, or only the provisions removed (then no water/wood exists in the bag)
  const off=await formal({law:false});
  assert.equal(householdFoodConversion(draftOf(off.doc),off.e,statisticalFoodGroups(off.e,off.doc.state,SID)[3].owner,'item_oats'),null);
+ const w=await loadWorld();delete w.rules.householdCrafts.provisions;
+ const e2=new WorldEngine(w),d2=e2.createCharacter(structuredClone(legacy),{},SEED);
+ assert.equal(householdFoodConversion(draftOf(d2),e2,statisticalFoodGroups(e2,d2.state,SID)[3].owner,'item_oats',at),null);
 });
 
 // Ablation controls only: the forage law and the public granary are switched off
@@ -105,6 +113,8 @@ const run=async(e,start,days)=>{let doc=start;const meals=[];
  return {doc,meals};
 };
 const jobsOf=doc=>Object.values(doc.state.records).filter(r=>r.category==='household_processing').sort((a,b)=>a.start-b.start);
+// Other homes (the villages' cooks) boil the oats they hold; the two cases below ask only about this household.
+const homeJobs=doc=>jobsOf(doc).filter(j=>HOME.includes(j.owner));
 const held=(e,doc,item)=>HOME.reduce((n,id)=>n+e.quantity({get:(...p)=>p.reduce((v,k)=>v?.[k],doc)},id,item),0);
 
 test('hw household bakes from housemates pooled stock: flour in one bag, salt, water, pot in another; every batch follows its real die',async()=>{
@@ -112,7 +122,7 @@ test('hw household bakes from housemates pooled stock: flour in one bag, salt, w
  // Hand count: ayan carries the 4 flour and the kindling; linsui carries pot, salt and water.
  assert.equal(e.quantity(draftOf(start),'npc_hw_linsui','item_oat_flour'),0);
  assert.equal(e.quantity(draftOf(start),'npc_hw_ayan','item_oat_flour'),4);
- const {doc,meals}=await run(e,start,3),jobs=jobsOf(doc);
+ const {doc,meals}=await run(e,start,3),jobs=homeJobs(doc);
  assert.ok(jobs.length>0&&jobs.every(j=>j.recipe==='recipe_bake_flatbread'&&j.owner==='npc_hw_linsui'));
  // materials are spent on success and failure alike, nothing is topped up
  assert.equal(held(e,doc,'item_oat_flour'),4-jobs.reduce((n,j)=>n+j.batches,0));
@@ -125,16 +135,43 @@ test('hw household bakes from housemates pooled stock: flour in one bag, salt, w
  assert.ok(meals.some(m=>m.consumed.some(c=>c.item==='item_oat_flatbread')),'baked food reaches the table');
  assert.deepEqual(auditLedger(doc.ledger),[]);
  // same clock, same result
- const again=await run(e,start,3);assert.deepEqual(jobsOf(again.doc),jobs);
+ const again=await run(e,start,3);assert.deepEqual(homeJobs(again.doc),jobs);
 });
 
 test('no pot anywhere in the household: no batch is started, the flour stays and the deficit stays',async()=>{
  const {e,doc:start}=await ablated({dropPot:true});
  const {doc,meals}=await run(e,start,3);
- assert.equal(jobsOf(doc).length,0);
+ assert.equal(homeJobs(doc).length,0);
  assert.equal(held(e,doc,'item_oat_flour'),4);
  assert.ok(meals.some(m=>m.shortfall.satiety>0));
  assert.deepEqual(auditLedger(doc.ledger),[]);
+});
+
+test('hw household boils its raw oats into gruel: water leaves the basin ledger, wood the forest ledger, the fetch minutes are charged, the books close',async()=>{
+ const {e,doc:start}=await ablated(),cook='npc_hw_xuling';
+ // premise (control, like the ablation above): the household holds raw oats, as it would after buying at the shop
+ start.state.npcs[cook].inventory.item_oats={quantity:3,quality:'木',durability:100,weight:0.5};
+ const {doc}=await run(e,start,3),jobs=jobsOf(doc).filter(j=>j.recipe==='recipe_boil_oat_gruel');
+ assert.ok(jobs.length>0&&jobs.some(j=>j.owner===cook));
+ for(const j of jobs){
+  assert.equal(j.status,j.outcome.success?'done':'failed');
+  assert.ok(j.finish-j.start>60,'the job is 60 cooking minutes plus the cook own errands');
+  assert.equal(j.outputs?.item_oat_gruel??0,j.outcome.success?4*j.batches:0,'4 bowls per batch on success, nothing on a failed die');
+ }
+ // hand count: each batch draws 3 water portions (750 ml; item_water 0.25 kg) as a harvest, and 1 wood (the village
+ // crews cut the same forest, so wood is read against a twin run in which the household holds no oats)
+ // The villages' cooks boil the oats they hold in both runs; the twin differs by this household's oats alone, so every
+ // quantity below is read as the difference between the two runs.
+ const twin=ablated(),twinRun=await run((await twin).e,(await twin).doc,3),twinJobs=jobsOf(twinRun.doc).filter(j=>j.recipe==='recipe_boil_oat_gruel');
+ assert.equal(twinJobs.filter(j=>j.owner===cook).length,0);
+ const sum=(js,f=()=>true)=>js.filter(f).reduce((n,j)=>n+j.batches,0),batches=sum(jobs)-sum(twinJobs),cut=d=>Object.values(d.state.records).filter(r=>r.category==='forest').reduce((n,r)=>n+r.harvested,0);
+ assert.equal(cut(doc)-cut(twinRun.doc),batches);
+ assert.equal((doc.ledger.flows['src:harvest|item_water|draw_water']??0)-(twinRun.doc.ledger.flows['src:harvest|item_water|draw_water']??0),3*batches);
+ // what was cooked is still in a bag or was eaten at the table (the sink books the meal), nothing else
+ const bowls=(e2,d)=>Object.keys(d.state.npcs).reduce((n,id)=>n+e2.quantity(draftOf(d),id,'item_oat_gruel'),0)+(d.ledger.flows['sink:consume|item_oat_gruel|meal']??0);
+ assert.equal(bowls(e,doc)-bowls((await twin).e,twinRun.doc),4*(sum(jobs,j=>j.status==='done')-sum(twinJobs,j=>j.status==='done')));
+ assert.deepEqual(auditLedger(doc.ledger),[]);
+ const again=await run(e,start,3);assert.deepEqual(jobsOf(again.doc),jobsOf(doc));
 });
 
 test('statistical cohorts: bags hold only rations and utensils, so no raw or ingredient exists to process (verified premise)',async()=>{

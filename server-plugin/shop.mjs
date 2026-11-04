@@ -194,6 +194,8 @@ function foodShelfCatalog(world){
     const dailyGrain=grain>0?(satiety?.drainPerHour.light??0)*24/grain:0;
     value={npcs:world.npcs,profiles:world.settlementProfiles,residents,peers,dailyGrain};foodShelfCatalogs.set(world,value);return value;
 }
+// Satiety one unit of the grain item gives once the recipe chain has made it into food.
+export const grainSatietyPerUnit=world=>grainFoodEquivalent(world,world.rules.agriculture?.grainItem);
 function foodSupplyShelf(world,shop){
     if(!world.rules.foodSupply)return shop;
     const item=world.items.find(i=>i.id===world.rules.agriculture?.grainItem);

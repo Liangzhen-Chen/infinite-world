@@ -1,7 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
-import {purse,escrow as escrowAccount,moveCoins,coinRead,dedicatedCoinAccount,dedicatedCoinKey,spendCounterCoins,mirrorPartyCoins,sink} from './money.mjs';
+import {purse,treasury as treasuryAccount,escrow as escrowAccount,moveCoins,coinRead,dedicatedCoinAccount,dedicatedCoinKey,spendCounterCoins,mirrorPartyCoins,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
@@ -724,6 +724,12 @@ export function openShops(d,engine,t){
         if(existing){existing.producer=stall.producer;existing.goods=[...new Set([...existing.goods,...stall.goods])];}
         else out.push(stall);
     }
+    // A village head's grain counter (food-supply.mjs planGranaryStalls): open from his arrival to the end of his stay, that day only.
+    for(const trip of recordsWhere(state.records,'category','market_trip')){
+        const npc=trip.stall&&Math.floor(trip.departAt/DAY)===Math.floor(t/DAY)&&t<trip.finishAt&&state.npcs?.[trip.actor];
+        if(!npc||!isEffective(engine,state,trip.actor)||['死亡','濒死','昏迷','患病'].includes(npc.status))continue;
+        out.push({kind:'npc',id:`grain-stall:${trip.stall.seller}`,keeper:trip.actor,location:trip.to,from:trip.arriveAt,until:trip.finishAt,settlement:placeSettlement(engine,state,trip.to).value,markup:1,goods:[trip.stall.item],consigned:trip.stall.seller});
+    }
     return out.sort((a,b)=>a.id.localeCompare(b.id));
 }
 const shelfOf=(d,engine,shop)=>shop.kind==='player'
@@ -778,15 +784,18 @@ function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
         tax=assessTradeTax(d,engine,{seller:'player',cost,location:shop.location,sourceEvent:eventId}).amount;
         transferItems(d,engine,'player',buyer,item,quantity);
     }else{
-        moveCoins(d,{from:purse(engine,buyer),to:purse(engine,shop.keeper),amount:cost,writer:'shop',eventId});
-        debit();mirrorPartyCoins(d,engine,shop.keeper,cost,eventId,'shop');
+        // A village head's grain counter sells the village's grain: the takings and the tax are the settlement's, as in a granary sale.
+        const seller=shop.consigned??shop.keeper;
+        moveCoins(d,{from:purse(engine,buyer),to:shop.consigned?treasuryAccount(seller):purse(engine,shop.keeper),amount:cost,writer:'shop',eventId});
+        debit();
+        if(shop.consigned)d.set(['state','settlements',seller,'treasury'],d.get('state','settlements',seller,'treasury')+cost);else mirrorPartyCoins(d,engine,shop.keeper,cost,eventId,'shop');
         transferItems(d,engine,shop.keeper,buyer,item,quantity);
-        tax=taxableSale(engine,d.get('state'),shop.keeper,item)?assessTradeTax(d,engine,{seller:shop.keeper,cost,location:shop.location,sourceEvent:eventId}).amount:0;
+        tax=taxableSale(engine,d.get('state'),seller,item)?assessTradeTax(d,engine,{seller,cost,location:shop.location,sourceEvent:eventId}).amount:0;
     }
     // The catalogue remains the source of item weight. Statistical accounts
     // persist integer stock and unit identities, not fractional weight copies.
     if(statistical)d.remove(['state','records',buyer,'inventory',item,'weight']);
-    recordFinanceSale(d,engine,{buyer,seller:shop.keeper,item,quantity,cost,tax,eventId});
+    recordFinanceSale(d,engine,{buyer,seller:shop.consigned??shop.keeper,item,quantity,cost,tax,eventId});
     recordMarketDeal(d,quote,cost,quantity,eventId);
     if(shop.kind==='player'){
         // 与手动成交同口径的经营回执：现金、实物与成交，供店铺报表对账。
@@ -826,8 +835,10 @@ function shelfBasket(d,engine,quoteEngine,shop,shelf,id,t){
     if(!choices.some(r=>r.plan))return shelf;
     return choices.map(({item,plan})=>{
         const gain=engine.byId.get(item)?.nutrition?.satiety??plan?.gainPerUnit??0;
+        // Goods that give no satiety rank last whatever they cost: they are not quoted.
+        if(!(gain>0))return {item,price:Infinity};
         let price=Infinity;try{price=marketQuote(d,quoteEngine,{seller:shop.keeper,buyer:id,item,quantity:1,location:shop.location,minute:t,business:shop}).totalCoins;}catch{}
-        return {item,price:gain>0?(price+(plan?.extraPerUnit??0))/gain:Infinity};
+        return {item,price:(price+(plan?.extraPerUnit??0))/gain};
     }).sort((a,b)=>a.price-b.price||a.item.localeCompare(b.item)).map(r=>r.item);
 }
 
@@ -850,6 +861,8 @@ function serveStatistical(d,engine,shop,t,routes,{buyer=null,items=null,source=n
         const scoped=statisticalFoodEngine(engine,d.get('state')),origin=statistical.home??statistical.settlement;
         const outbound=walkMinutes(engine,origin,shop.location,t,seed,routes),inbound=walkMinutes(engine,shop.location,origin,t,seed,routes);
         if(!reaches(engine,outbound,inbound,statistical.settlement===shop.settlement))continue;
+        // A buyer with no need today wants zero of every item below (needed = ceil(need / gain)): it prices and buys nothing.
+        if(!items&&!((statistical.reserve?rosterReserveNeed(d,engine,statistical.owner):householdFoodDemand(d,engine,statistical.owner,t))>0))continue;
         let at=t+outbound.minutes,travelPaid=false;
         const travelCost=outbound.coins+inbound.coins;
         // Finished goods compare by basket (quote plus processing opportunity); input purchases name their own items.

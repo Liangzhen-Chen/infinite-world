@@ -6226,6 +6226,7 @@
     "firstDay": 7,
     "dispatchMinute": 540,
     "item": "item_oats",
+    "stallMinutes": 360,
     "unitKg": 0.5,
     "targetDays": 240,
     "workersMaximum": 2,
