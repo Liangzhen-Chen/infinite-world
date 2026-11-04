@@ -513,6 +513,7 @@ export function woodcut(d,args,id){
  access();
  const taken=check.success&&d.get('state','player','status')==='正常'&&d.get('state','location')===location?harvestForest(d,this,location,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId:id}):0;
  if(taken)this.itemDelta(d,'player','item_wood',taken,STOCK_BOOKED);
- return commitBreaches(d,this,pending,{success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
-  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}},id,taken?{item:'item_wood',quantity:taken}:null);
+ const result={success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
+  reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
+ return commitBreaches(d,this,pending,result,id,result.obtained[0]??null);
 }
