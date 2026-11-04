@@ -9,19 +9,71 @@ import {digest} from './storage.mjs';
 import {spiritStateFor} from './creature-nature.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {produceItems} from './items.mjs';
+import {isPhysicallyDead} from './holdings.mjs';
 
-declareLedgerWriter('husbandry',{sources:{'src:birth':{'*':100000},'src:husbandry':{'*':100000}},sinks:['sink:consume','sink:decay','sink:death','sink:individuated']});
+declareLedgerWriter('husbandry',{sources:{'src:birth':{'*':100000},'src:husbandry':{'*':100000},'src:genesis':{'*':Infinity},'src:regrowth':{'*':Infinity}},sinks:['sink:consume','sink:decay','sink:death','sink:individuated']});
 declareHoldingWriter('husbandry',{kinds:['owns'],entities:['population','creature'],locations:true});
 const path=id=>['state','records',`husbandry:${id}`];
 const resource=species=>`population_${species}`;
 const animals=row=>accountKey(row.id,resource(row.species),'population');
 const produce=(row,item)=>accountKey(row.id,item,'yield');
 const profile=(e,species)=>e.byId.get(species)?.husbandry;
-registerLegacyStock('husbandry',(_e,state,add)=>{
+const table=(e,id)=>e.world.primitiveTables?.yields?.params?.find(p=>p.id===id)?.value;
+const pastureKey=settlement=>['state','records',`husbandry_pasture:${settlement}`];
+const pastureAccount=(row,item)=>accountKey(row.location,item,'pasture');
+registerLegacyStock('husbandry',(e,state,add)=>{
  for(const row of Object.values(state.records??{}).filter(r=>r.category==='husbandry')){
   add(animals(row),row.count);for(const [item,n]of Object.entries(row.produce??{}))add(produce(row,item),n);
  }
+ const forage=table(e,'husbandry.pasture')?.item;
+ for(const row of Object.values(state.records??{}).filter(r=>r.category==='husbandry_pasture'))add(pastureAccount(row,forage),row.reserve);
 });
+// An NPC owner tends the herd as daily household work: herding it out to
+// graze and deciding to cull. The player's own herd waits for the player.
+const tendedBy=(d,e,row)=>row.owner&&row.owner!=='player'&&d.get('state','npcs',row.owner)&&!isPhysicallyDead(e,d,row.owner)?row.owner:null;
+const grazes=s=>/草|杂/.test(String(s.diet??''));
+// Settlement commons: area x commons share x standing biomass. Grass grows
+// back each day by season; what exceeds the standing stock withers.
+function pasture(d,e,location,day,eventId){
+ const r=table(e,'husbandry.pasture');if(!r)return null;
+ const place=e.byId.get(location),settlement=place?.scope??location,key=pastureKey(settlement);
+ let row=structuredClone(d.get(...key)??null);
+ if(!row){
+  const area=e.byId.get(settlement)?.areaKm2??e.rules.habitatDerivation?.referenceAreaKm2;
+  const capacity=Math.floor((area??0)*r.commonsShare*r.standingKgPerKm2/e.byId.get(r.item).weight);
+  if(!capacity)return null;
+  row={category:'husbandry_pasture',location:settlement,capacity,reserve:capacity,grown:0,grazed:0,withered:0,updatedDay:day};
+  moveStock(d,{from:`src:genesis|${r.item}|opening`,to:pastureAccount(row,r.item),amount:capacity,writer:'husbandry',eventId});
+ }
+ for(let at=row.updatedDay;at<day;at++){
+  const recovery=e.rules.wildlife?.seasonRecovery?.[e.calendar((at+1)*1440).season]??1;
+  const grown=accrueStock(row,'growth',row.capacity*r.dailyGrowthFraction*recovery);
+  const withered=Math.max(0,row.reserve+grown-row.capacity);
+  row.reserve+=grown-withered;row.grown+=grown;row.withered+=withered;
+  moveStock(d,{from:`src:regrowth|${r.item}|pasture`,to:pastureAccount(row,r.item),amount:grown,writer:'husbandry',eventId});
+  moveStock(d,{from:pastureAccount(row,r.item),to:`sink:decay|${r.item}|pasture`,amount:withered,writer:'husbandry',eventId});
+ }
+ row.updatedDay=day;d.set(key,row);return {row,key,r};
+}
+function graze(d,e,row,s,heads,day,eventId){
+ const mass=s.husbandry.bodyMassKg??s.bodyMassKg;
+ if(!heads||!grazes(s)||!(mass>0)||!tendedBy(d,e,row))return 0;
+ const p=pasture(d,e,row.location,day,eventId);if(!p)return 0;
+ const need=Math.ceil(heads*mass*p.r.intakePerBodyKg/e.byId.get(p.r.item).weight),eaten=Math.min(need,p.row.reserve);
+ if(eaten){
+  p.row.reserve-=eaten;p.row.grazed+=eaten;d.set(p.key,p.row);
+  moveStock(d,{from:pastureAccount(p.row,p.r.item),to:`sink:consume|${p.r.item}|husbandry_grazing`,amount:eaten,writer:'husbandry',eventId});
+ }
+ return eaten/need;
+}
+// Slaughter by the owner: the head leave the herd account and the species'
+// body-derived carcass (s.drops, husbandry-traits) enters the owner's bag.
+function cull(d,e,row,s,n,eventId){
+ if(!n)return;
+ takePopulation(row,n);row.culled=(row.culled??0)+n;
+ moveStock(d,{from:animals(row),to:`sink:death|${resource(row.species)}|cull`,amount:n,writer:'husbandry',eventId});
+ for(const drop of s.drops??[])e.itemDelta(d,row.owner,drop.item,drop.amount*n,{flow:'src:husbandry',purpose:'husbandry_cull',writer:'husbandry',eventId});
+}
 export function advanceHusbandry(d,e,day){
  if(!e.world.monsters.some(s=>s.husbandry))return;
  ensureHoldings(d,e);
@@ -56,21 +108,39 @@ export function advanceHusbandry(d,e,day){
   row.batches=row.batches.filter(b=>b.quantity);
   const died=deaths.get(row.id),heads=row.count;
   moveStock(d,{from:animals(row),to:`sink:death|${resource(row.species)}|herd`,amount:died,writer:'husbandry',eventId});
+  const species=e.byId.get(row.species),keeper=tendedBy(d,e,row);
   const feed=Math.ceil(derived(e,d.document,'husbandry:feed',row.id,{base:heads*p.feed.perHead,target:row.species}));
-  const available=row.owner?e.quantity(d,row.owner,p.feed.item):0;
-  // Feed transfers use the ordinary owner inventory adapter, never a
-  // second stock. Unfed populations do not mint births or live products.
-  const fed=feed===0||available>=feed;
-  if(fed&&feed){
-   e.itemDelta(d,row.owner,p.feed.item,-feed,{flow:'sink:consume',purpose:'husbandry_feed',writer:'husbandry',eventId});
-  }
-  if(fed){
-   const expected=heads>=2?derived(e,d.document,'population:birthRate',row.id,{base:heads*p.birthPerHeadDay,target:row.species}):0;
-   const born=Math.min(Math.max(0,row.capacity-heads),accrueStock(row,'birth',expected));
+  // Grazing on the commons replaces the same share of stored feed; the rest
+  // comes from the owner's real inventory (crops, gathered or bought feed).
+  const grazed=graze(d,e,row,species,heads,day,eventId),stored=Math.ceil(feed*(1-grazed));
+  const taken=Math.min(stored,row.owner?e.quantity(d,row.owner,p.feed.item):0);
+  if(taken)e.itemDelta(d,row.owner,p.feed.item,-taken,{flow:'sink:consume',purpose:'husbandry_feed',writer:'husbandry',eventId});
+  // Fed share scales births and live products; unfed head go hungry.
+  const fed=!heads||feed===0?1:Math.min(1,grazed+taken/feed);
+  row.fed=fed;
+  if(fed<1){
+   const hunger=table(e,'husbandry.starvation'),cullRule=table(e,'husbandry.cull');
+   row.hungryDays=(row.hungryDays??0)+1;row.hungerHeadDays=(row.hungerHeadDays??0)+Math.ceil(heads*(1-fed));
+   // A tending NPC owner culls the head it cannot feed rather than watch them starve.
+   if(keeper&&cullRule)cull(d,e,row,species,Math.min(row.count,Math.floor(heads*(1-fed)*cullRule.feedShortfall)),eventId);
+   if(hunger&&row.hungryDays>hunger.graceDays&&row.count){
+    const starved=Math.min(row.count,accrueStock(row,'starvation',row.count*(1-fed)*hunger.deathFractionPerDay));
+    if(starved){takePopulation(row,starved);row.starvationDeaths=(row.starvationDeaths??0)+starved;
+     moveStock(d,{from:animals(row),to:`sink:death|${resource(row.species)}|starvation`,amount:starved,writer:'husbandry',eventId});}
+   }
+  }else row.hungryDays=0;
+  if(fed>0){
+   const alive=row.count;
+   const expected=alive>=2?derived(e,d.document,'population:birthRate',row.id,{base:alive*p.birthPerHeadDay*fed,target:row.species}):0;
+   const accrued=accrueStock(row,'birth',expected),penFull=keeper?table(e,'husbandry.cull')?.penFull??0:0;
+   // A full pen does not grow. A tending owner keeps the young and culls the
+   // surplus; an untended full pen simply raises none.
+   const born=penFull?accrued:Math.min(Math.max(0,row.capacity-alive),accrued);
    addPopulation(row,{S:born,I:0,R:0});row.born+=born;
    moveStock(d,{from:`src:birth|${resource(row.species)}|herd`,to:animals(row),amount:born,writer:'husbandry',eventId});
+   if(row.count>row.capacity)cull(d,e,row,species,Math.min(row.count-row.capacity,Math.ceil((row.count-row.capacity)*penFull)),eventId);
    for(const yieldRow of p.yields.alive){
-    const quantity=accrueStock(row,`yield:${yieldRow.item}`,derived(e,d.document,'economy:yield',row.id,{base:heads*yieldRow.perHeadDay,holder:row.owner,target:yieldRow.item}));
+    const quantity=accrueStock(row,`yield:${yieldRow.item}`,derived(e,d.document,'economy:yield',row.id,{base:alive*yieldRow.perHeadDay*fed,holder:row.owner,target:yieldRow.item}));
     row.produce[yieldRow.item]=(row.produce[yieldRow.item]??0)+quantity;
     if(quantity){const days=e.byId.get(yieldRow.item).shelfLifeDays;
      row.batches.push({item:yieldRow.item,quantity,day:day+1,expiresDay:days===null||days===undefined?null:day+1+days});
