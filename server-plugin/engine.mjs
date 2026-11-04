@@ -472,6 +472,7 @@ export class WorldEngine {
     }
     primitiveDraft(document){return new Draft(document,this);}
     primitiveCommitOffenses(d,eventId){return commitOffenses(d,this,eventId);}
+    primitiveRecordContact(d,target,eventId){return recordLocalContact(d,this,target,eventId);}
     primitiveNormalizeCall(tool,args){return resolveToolCall(tool,args);}
     primitiveLegacyRestriction(document,tool,args){
         // Read-only probe: the copy-on-write draft never mutates the original, so no clone.
@@ -569,11 +570,15 @@ export class WorldEngine {
         // transaction, including the opposed path absent in the legacy adapter.
         const catalog={id:source,effectSpec:{kind:'damage',power:1,damageType:'physical'},duration:0};
         const location=actor==='player'?d.get('state','location'):d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
-        const prepared=prepareMagic.call(this,d,catalog,{target},{source:actor,location});
+        // A body made in this same transaction (a head led out of a herd) is not
+        // in the catalogue the action started with; read it from the draft.
+        const made=!this.byId.get(target)&&d.get('state','created',target),byId=this.byId;
+        const self=made?Object.create(this,{byId:{value:{get:k=>k===target?{...made,id:target}:byId.get(k),has:k=>k===target||byId.has(k)}}}):this;
+        const prepared=prepareMagic.call(self,d,catalog,{target},{source:actor,location});
         delete prepared.completionArgs;
         prepared.spec={...spec};
         prepared.catalog={id:source,duration};
-        return applyMagic.call(this,d,prepared,eventId);
+        return applyMagic.call(self,d,prepared,eventId);
     }
     primitiveAdjustStanding(d,holder,target,delta,context){return adjustStanding(d,this,holder,target,delta,context);}
     primitiveValidateScheduledAction(d,{action,rule,slots},actor){return primitiveActionRuntime().validateScheduled(this,d.document,{action,rule,slots},actor);}

@@ -4,6 +4,23 @@ import {createEntity,setLocation,openHolding,closeHolding,aliveHoldings,declareH
 import {physicalLocation,changeItems,trackTransferUnit} from './items.mjs';
 import {placed} from './stock.mjs';
 import {advanceHook} from './advance-hooks.mjs';
+import {unlicensedProperty} from './action-authority.mjs';
+import {noteOffense} from './offense-notes.mjs';
+// A lethal or harming blow aimed at a herd lands on one head: the herd stock
+// adapter first leads it out (01 §1.6 sink:individuated), then the blow falls
+// on that living body. The one path for proposals and for combat.
+export function headOf(d,engine,target,eventId,actor='player'){
+ if(d.get('holdings','entities',target)?.kind!=='population')return target;
+ const individuate=advanceHook('individuateHerd');if(!individuate)reject('E-PRIMITIVE-CONNECTOR','畜牧未启用，不能从畜群中牵出个体');
+ const herd=d.get('state','records',`husbandry:${target}`);if(!herd)reject('E-VITAL-TARGET','这里没有该家畜种群');
+ if(herd.location!==currentLocation(d,actor))reject('E-PRIMITIVE-REACH','畜群不在眼前');
+ // A head already led out and still standing here takes the next blow.
+ const out=Object.entries(d.get('state','creatures')??{}).find(([id,row])=>row.herd===target&&row.location===herd.location&&!isPhysicallyDead(engine,d,id)&&row.hp>0)?.[0];
+ const id=out??individuate(d,engine,{population:target,count:1,eventId:`${eventId}:individuate`})[0];
+ // The head is led out to hand: it stands within reach of the one leading it.
+ if(actor==='player')engine.primitiveRecordContact?.(d,id,eventId);
+ return id;
+}
 import {transition,executeProtocolPrimitive,applyProtocolJudgment} from './transition.mjs';
 import {consent} from './action-consent.mjs';
 import {capacity,canAct,actionEntity} from './action-capacity.mjs';
@@ -135,7 +152,10 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
   }finally{engine.npcObligationAction=old;}
  }
  if(effect.op==='vital'||effect.op==='status'){
-  const target=effect.target,path=pathOf(d,target);
+  const target=effect.op==='vital'&&effect.delta<0?headOf(d,engine,effect.target,child,actor):effect.target,path=pathOf(d,target);
+  // Harming another's beast is the same blow; the title breach is the consequence (K6).
+  const breach=effect.op==='vital'&&effect.delta<0?unlicensedProperty({engine,document:d.document},actor,'vital',target):null;
+  if(breach)noteOffense(d,breach);
   if(!path||isPhysicallyDead(engine,d,target)||isGone(engine,d,target))reject('E-VITAL-TARGET','The target is not a living body');
   const bound=limits[effect.op];if(!bound)reject('E-PRIMITIVE-BOUND','A native effect bound is required');
   const location=reach(d,engine,actor,target,bound.rangeMeters??1.5),local=placeLimit(engine,d,location,effect.op);

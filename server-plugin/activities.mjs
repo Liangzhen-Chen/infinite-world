@@ -2,6 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {isEffective,isPhysicallyDead} from './holdings.mjs';
 import {unlicensedProperty} from './action-authority.mjs';
 import {noteOffense} from './offense-notes.mjs';
+import {headOf} from './primitives-effects.mjs';
 import {advanceHook} from './advance-hooks.mjs';
 import {declareLedgerWriter,transfer,accountKey,LEDGER_COIN} from './ledger.mjs';
 declareLedgerWriter('activities',{sinks:['sink:export']});
@@ -89,8 +90,7 @@ export const activities={
         // out of the herd stock (individuation), then fights that individual.
         const herd=typeof args.target==='string'&&d.get('holdings','entities',args.target)?.kind==='population'?d.get('state','records',`husbandry:${args.target}`):null;
         if(herd&&herd.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
-        const individuate=(...a)=>{const fn=advanceHook('individuateHerd');if(!fn)throw preconditionFailure('畜牧未启用，不能从畜群中牵出个体');return fn(...a);};
-        const target=herd?individuate(d,this,{population:herd.id,count:1,eventId:`${id}:individuate`})[0]:resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??(isNpc?target:npc?.species??target)),isBoss=Boolean(npc?.boss);
+        const target=herd?headOf(d,this,herd.id,id,attacker):resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??(isNpc?target:npc?.species??target)),isBoss=Boolean(npc?.boss);
         const duel=isNpc?activeDuel(d,this,target,attacker):null,nonlethal=duel?.rule==='touch';
         if(attacker!=='player'&&(!duel||!isEffective(this,d,attacker)||d.get(...attackerPath,'location')!==d.get('state','location')))throw preconditionFailure('NPC 交锋须为本人已接受且见证人在场的约斗');
         // Catalog identities and campaign-created monster templates both need a
