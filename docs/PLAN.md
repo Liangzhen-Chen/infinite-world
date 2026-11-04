@@ -1066,3 +1066,6 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [ ] 独立验收 7 份（Opus）：B 畜牧、C 初加工、D 职业劳动、E 分销、F 物品属性、G 设施、K6 合法性。
 - [ ] 实现卡：K6（接在 K7 线上，基于 t-k7-owner）、B、C、D、E、F、G、H（K8 参数复核，只写文档）。按测绘表定开哪些、怎么串行。
 - 规矩：拆小步提交；本机只跑单文件快测和 ≤3 天冒烟；长测交李白；不挂过夜等待循环。
+- [x] H 遗留参数复核：t-h-params@e8d3b5ba，文档已进 master（256 条：应读 133、删 23、保留 2、拿不准 98）。
+- [ ] 跟进 1：F 合入后，把 extraction.mjs 的钓饵改成按类别匹配。extraction 归 D 线，等 F 的 items.json 标签和 item-class.mjs 就位后做；连带 s5-05、s5-06、s5-w4-economy、a3-world-approval 四个共享测试读 rule.bait.item 的地方。
+- [ ] 跟进 2：k8-guard 改两处：从加载后的派生结果读畜牧产出（B 合入后）；tools/load-world.mjs 的读取算作消费者（H 发现 narrative、writable 两处误报）。
