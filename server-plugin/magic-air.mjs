@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
@@ -34,7 +35,7 @@ function access(d,engine,row,args,range,readOnly=false,acoustic=false){
  if(readOnly||row.owner==='player'||row.access==='public')return;
  const ids=[args.authorization,...args.authorizations??[]];
  const allowed=ids.some(id=>{const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));});
- if(!allowed)throw preconditionFailure('空气对象需要有效所有者授权');
+ if(!allowed)noteUnlicensedUse(d,row);
 }
 export function validateAirCatalog(c){
  const s=c.effectSpec,m=airMechanisms[s?.operation];

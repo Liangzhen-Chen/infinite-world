@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {facilityRuntime,isFacility} from './facility-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
@@ -34,7 +35,7 @@ function permission(d,engine,row,args){
  const ids=[args.authorization,...args.authorizations??[]];
  if(!ids.some(id=>{
   const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!isPhysicallyDead(engine,d,row.owner)&&d.get('state','npcs',row.owner,'status')!=='濒死');
- }))throw preconditionFailure('光学对象需要有效所有者授权');
+ }))noteUnlicensedUse(d,row);
 }
 function access(d,engine,row,args,range,read=false){
  if(distance(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw preconditionFailure('光学对象超过实际距离或视线被遮挡');
@@ -223,7 +224,7 @@ export function prepareOptics(d,c,args){
  if(['focus_light','reflect','shadow_measure'].includes(op)){
   p.source=source(d,this,args.source,location);
   if(p.source.row)access(d,this,p.source.row,args,c.rangeMeters,op==='shadow_measure');
-  else if(op!=='shadow_measure'&&d.get('state','effects',p.source.id,'owner')!=='player')throw preconditionFailure('光源需要所有者授权');
+  else if(op!=='shadow_measure')noteUnlicensedUse(d,{id:p.source.id,owner:d.get('state','effects',p.source.id,'owner')},{kind:'light'});
   if(!localSightClear(d,this,location,p.source.point,p.point))throw preconditionFailure('已有光源到表面的光路被遮挡');
   if(['focus_light','reflect'].includes(op)&&active(d).some(([,e])=>e.medium===p.source.id&&['focus_light','reflect'].includes(e.operation)))throw preconditionFailure('光源已有分光，不能重复放大');
  }

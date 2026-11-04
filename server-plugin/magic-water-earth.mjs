@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
@@ -42,7 +43,7 @@ function access(d,engine,row,args,range,read=false){
  const allowed=[args.authorization,...args.authorizations??[]].some(id=>{
   const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!isPhysicallyDead(engine,d,row.owner)&&d.get('state','npcs',row.owner,'status')!=='濒死');
  });
- if(!allowed)throw preconditionFailure('水土对象需要有效所有者授权');
+ if(!allowed)noteUnlicensedUse(d,row);
 }
 const active=(d,op,minute=d.get('state','minute'))=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='water_earth'&&e.operation===op&&e.started<=minute&&e.expires>minute);
 const strongest=(d,op,target,minute)=>active(d,op,minute).filter(([,e])=>e.target===target).reduce((n,[,e])=>Math.max(n,e.power),0);

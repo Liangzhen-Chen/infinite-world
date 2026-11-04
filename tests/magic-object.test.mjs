@@ -5,6 +5,7 @@ import {initialThermalState,advanceThermalState,validateThermalState,validateObj
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {takeNotedOffenses} from '../server-plugin/offense-notes.mjs';
 const model={heatCapacityJPerC:1000,maximumC:1000,ambientC:20,passiveExchangeJPerMinute:50,burnMgPerMinute:1000,fuelJPerMg:20,efficiencyPermille:900,ashPermille:50,ignitionMaximumMg:5000,ignitable:true,dryable:true,fuels:[{item:'item_charcoal',milligramsPerUnit:100000}]};
 function draft(document){return{document,get:(...p)=>p.reduce((v,k)=>v?.[k],document),set:(p,value)=>{let o=document;for(const k of p.slice(0,-1))o=o[k]??={};o[p.at(-1)]=structuredClone(value);}};}
 function setup({privateFeature=false,moistureMg=0,temperatureC=20}={}){
@@ -36,10 +37,14 @@ test('加热有热量和温度上限，冷却保留输出热量，干燥同时�
  const dry=cast(d,engine,spell('dry',5000,{limitC:20}));assert.equal(dry.evaporatedMg,1000);assert.equal(dry.heatUsedJ,3000);assert.equal(thermal(d).moistureMg,1000);assert.equal(thermal(d).evaporatedMg,1000);assert.throws(()=>cast(d,engine,spell('dry',5000)),/热量/);
  cast(d,engine,spell('heat',5000,{limitC:38}));const cool=cast(d,engine,spell('cool',2000,{limitC:22}));assert.equal(cool.temperatureC,23);assert.equal(cool.heatRemovedJ,2000);validateThermalState(thermal(d),model);
 });
-test('私有热对象需确切授权，测温须真实接触，完工前许可失效不会生效',()=>{
- const {d,engine,row}=setup({privateFeature:true});assert.throws(()=>cast(d,engine,spell('heat',100,{limitC:38})),/授权/);
+test('私有热对象无授权或完工前许可失效照样加热并记下擅用，测温须真实接触',()=>{
+ // K6 依据（审查 C-b，卡"许可是后果"）：他人炉子无授权照样加热；违背许可的那一处记在本次事务上，由引擎提交为罪名。
+ {const p=setup({privateFeature:true});cast(p.d,p.engine,spell('heat',100,{limitC:38}));assert.ok(thermal(p.d));assert.deepEqual(takeNotedOffenses(p.d).map(b=>[b.act,b.victim,b.subject.id]),[['use','npc_owner',p.row.id]]);}
+ const {d,engine,row}=setup({privateFeature:true});
  d.set(['state','records','permit'],{category:'authorization',subject:row.id,action:'environment_use',grantor:'npc_owner',expires:1});const args={target:row.id,authorization:'permit'},prepared=prepareObjectMagic.call(engine,d,spell('heat',100,{limitC:38}),args);
- d.set(['state','minute'],1);const out=applyObjectMagic.call(engine,d,prepared,'late');assert.match(out.effectFailed,/授权/);assert.equal(thermal(d),undefined);
+ {const p=setup({privateFeature:true});p.d.set(['state','records','permit'],{category:'authorization',subject:p.row.id,action:'environment_use',grantor:'npc_owner',expires:1});const late=prepareObjectMagic.call(p.engine,p.d,spell('heat',100,{limitC:38}),{target:p.row.id,authorization:'permit'});
+  p.d.set(['state','minute'],1);takeNotedOffenses(p.d);const out=applyObjectMagic.call(p.engine,p.d,late,'late');assert.equal(out.effectFailed,undefined);assert.ok(thermal(p.d));assert.deepEqual(takeNotedOffenses(p.d).map(b=>b.act),['use']);}
+ assert.equal(thermal(d),undefined);
  d.set(['state','records','permit','expires'],10);row.position=[.1,0];assert.throws(()=>cast(d,engine,spell('sense_heat',1),'sense',args),/接触/);row.position=[0,0];assert.equal(cast(d,engine,spell('sense_heat',1),'sense',args).temperatureC,20);assert.equal(thermal(d),undefined);
 });
 test('真实燃料入炉按目录质量扣库存，坏单位和不适用物料不能添入',()=>{

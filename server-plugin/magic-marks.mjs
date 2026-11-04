@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures}from'./environment.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
@@ -24,7 +25,7 @@ function targetOf(d,engine,target,args){
  const pos=d.get('state','records','local_player_position'),point=pos?.location===row.location?pos.point:[0,0];
  if(hypot(point[0]-row.position[0],point[1]-row.position[1])>(args.rangeMeters??3))throw preconditionFailure('刻记目标超过实际射程');
  if(row.owner!=='player'&&row.access!=='public'){
-  const a=d.get('state','records',args.authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))throw preconditionFailure('刻记目标需要所有者授权');
+  const a=d.get('state','records',args.authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))noteUnlicensedUse(d,row);
  }
  return{target,definition:row,state:d.get('state','records',`physical_feature:${row.id}`)?.state??row.state,location:row.location};
 }

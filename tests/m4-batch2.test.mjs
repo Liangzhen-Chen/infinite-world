@@ -89,16 +89,18 @@ test('条件状态改变真实战斗修正，闭眼不吃眩光且一次出手�
  assert.equal(magicStatusStats(d,'player',{illumination:'lit',raining:false,moving:false}).evasion,.06);assert.equal(magicStatusStats(d,'player',{illumination:'lit',raining:true,moving:false}).evasion,.03);
  applyMagicStatus(d,{target:'player',status:'nightvision',power:3,duration:5,source:'test'},'night');assert.equal(magicStatusStats(d,'player',{illumination:'dark'}).nightVision,0);assert.equal(magicStatusStats(d,'player',{illumination:'dim'}).nightVision,.06);
 });
-test('真实自愿精神施法分别验证行政许可与目标同意，未解析的他人距离不能由工具参数伪造',async()=>{
+test('真实自愿精神施法：缺行政许可照样施放并定罪，目标同意仍单独验证，未解析的他人距离不能由工具参数伪造',async()=>{
  const{document,engine,cast,run}=setup();document.state.effects.fear={kind:'status',target:'player',status:'fear',power:2,expires:document.state.minute+100};
- await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'player'},'no-permit'),/许可/);
+ // K6 依据（审查 C-d、D4 1457de49 恢复的反例）：无证精神施法是犯罪，不是做不到；施放发生并命中擅施心术。
+ {const unlicensed=await run(document,'world_cast',{spell:'spell_mind_01',target:'player'},'no-permit');assert.ok(unlicensed.document.state.player.mp<document.state.player.mp);
+  const o=unlicensed.result.offenses?.find(o=>o.offense==='mental_magic');assert.ok(o);assert.equal(unlicensed.document.state.records[o.record].sourceEvent,'no-permit');}
  document.state.records.permit={category:'authorization',action:'mental_magic',subject:'player',grantor:'npc_hw_gucen',location:document.state.location,expires:document.state.minute+60};
  const c=await cast(document,'spell_mind_01',{permit:'permit'},'calm');assert.equal(c.document.state.effects.fear.power,1);assert.equal(c.document.state.player.mp,document.state.player.mp-1);
  document.state.npcs.npc_hw_linsui.location=document.state.location;
  await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',permit:'permit',distanceMeters:0,lineOfSight:true},'fake'),/目标超过法术实际射程/);
  engine.magicTargetFacts=()=>({distanceMeters:1,lineOfSight:true});await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',permit:'permit'},'no-consent'),/本人/);
  document.state.records.consent={category:'authorization',action:'mental_magic',subject:'npc_hw_linsui',grantor:'npc_hw_linsui',grantee:'player',expires:document.state.minute+60};
- await assert.rejects(run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',authorization:'consent'},'no-permit'),/许可/);
+ /* K6 依据（审查 C-d）：有本人同意、缺行政许可，施放发生并命中擅施心术 */{const r=await run(document,'world_cast',{spell:'spell_mind_01',target:'林穗',authorization:'consent'},'no-permit-other');const o=r.result.offenses?.find(o=>o.offense==='mental_magic');assert.ok(o);assert.equal(r.document.state.records[o.record].sourceEvent,'no-permit-other');}
  // This case isolates consent; movement during casting is covered by magic-primitives.
  delete engine.byId.get('npc_hw_linsui').schedule;
  document.state.npcs.npc_hw_linsui.activity='待客';document.state.effects.nfear={kind:'status',target:'npc_hw_linsui',status:'fear',power:2,expires:document.state.minute+100};

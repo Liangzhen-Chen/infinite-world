@@ -45,6 +45,9 @@ async function fixture({companions=true}={}){
  return{world,engine,doc,run,cast,grant,contact,prepared};
 }
 async function denied(s,doc,args,pattern){const before=structuredClone(doc);await assert.rejects(s.engine.reduce(doc,{tool:'world_cast',args,eventId:'denied'}),pattern);assert.deepEqual(doc,before);}
+// K6: an act that lacked only a licence happens; the norm stack names the offense under the act's own event.
+const k6Offended=(doc,out,eventId,offense)=>{const after=applyPatches(doc,out.patches),all=[...out.result.offenses??[],...(out.result.receipt?.consequences??[]).filter(c=>c.type==="offense")],o=all.find(o=>o.offense===offense);assert.ok(o,`${eventId} 应命中${offense}：${JSON.stringify(all)}`);assert.equal(after.state.records[o.record].sourceEvent,eventId);assert.equal(after.state.records[o.record].offender,'player');return {after,result:out.result,offense:o};};
+async function k6Move(s,doc,args,offense,eventId){const out=await s.engine.reduce(doc,{tool:'world_cast',args,eventId});return k6Offended(doc,out,eventId,offense);}
 test('锚纹辨识仅记录实地可见真实锚点；未知与自报坐标拒绝',async()=>{
  const s=await fixture(),r=await s.cast(s.doc,'anchor_sense',source),record=r.doc.state.records[`known_anchor:${source}`];
  assert.equal(record.owner,owner);assert.equal(record.location,from);assert.equal(record.sourceEvent,r.id);assert.equal(record.permission,undefined);
@@ -67,14 +70,14 @@ test('双锚传送消费有效许可和真实材料，同行坐标一致且保�
 test('许可撤销、过期、他人签发与无同行授权均原子拒绝',async()=>{
  const s=await fixture(),p=await s.prepared();
  const revoked=await s.run(p.doc,'world_promise',{operation:'revoke_access',promisor:owner,authorization:p.permits[0]},'revoke');
- await denied(s,revoked.doc,p.args,/有效许可/);
- for(const edit of [d=>d.state.records[p.permits[1]].expires=d.state.minute+1,d=>d.state.records[p.permits[1]].grantor='npc_hw_hezhou',d=>d.state.records[p.permits[1]].guests=[]]){const d=structuredClone(p.doc);edit(d);await denied(s,d,p.args,/有效许可/);}
+ /* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：锚点许可撤销照样传送，命中擅入 */await k6Move(s,revoked.doc,p.args,'trespass','k6-revoked');
+ for(const edit of [d=>d.state.records[p.permits[1]].expires=d.state.minute+1,d=>d.state.records[p.permits[1]].grantor='npc_hw_hezhou',d=>d.state.records[p.permits[1]].guests=[]]){const d=structuredClone(p.doc);edit(d);await k6Move(s,d,p.args,'trespass',`k6-edit-${p.permits.length}-${Object.keys(d.state.records).length}`);}
  await assert.rejects(s.grant(p.doc,destination),/实际在场/);
 });
 test('私宅另需进入许可，司法羁押和空间封锁拒绝且不扣钱物',async()=>{
  const s=await fixture(),p=await s.prepared();
  s.world.locations.find(l=>l.id===to).access={mode:'private',requiresConsent:true,residents:[owner]};
- await denied(s,p.doc,p.args,/有效许可/);
+ /* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：未获住户许可传送进私宅照样抵达，命中擅入私宅 */{const r=await k6Move(s,p.doc,p.args,'trespass','k6-home');assert.equal(r.after.state.location,to);}
  const home=structuredClone(p.doc);home.state.records.home={category:'authorization',action:'enter_home',subject:to,grantor:owner,grantee:'player',guests:[owner],revoked:false,expires:home.state.minute+100};
  const r=await s.cast(home,'teleport',destination,{authorizations:p.permits,authorization:'home'});assert.equal(r.doc.state.location,to);
  const legal=structuredClone(home);legal.state.records.custody={category:'legal_custody',status:'生效',location:from,expires:legal.state.minute+60};await denied(s,legal,{...p.args,authorization:'home'},/羁押/);
@@ -94,7 +97,7 @@ test('短距折步在可见合法地形落地，墙体、未知落脚点和私�
  const s=await fixture({companions:false}),r=await s.cast(s.doc,'blink',landing);assert.equal(r.doc.state.location,from);assert.deepEqual(r.doc.state.records.local_player_position.point,[4,0]);assert.equal(r.result.metres,4);
  const place=s.world.locations.find(l=>l.id===from),row=place.features.find(r=>r.id===landing);
  row.state.blinkLanding=false;await denied(s,s.doc,{spell:'spell_move_blink',target:landing},/可用地形/);row.state.blinkLanding=true;
- row.access='private';await denied(s,s.doc,{spell:'spell_move_blink',target:landing},/所有者有效许可/);row.access='public';
+ row.access='private';/* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：落在他人私有落脚点照样短移，命中擅入 */await k6Move(s,s.doc,{spell:'spell_move_blink',target:landing},'trespass','k6-blink');row.access='public';
  place.features.push({id:'feature_wall',position:[2,0],state:{blocksMovement:true,blockRadiusMeters:.5}});await denied(s,s.doc,{spell:'spell_move_blink',target:landing},/墙体/);
 });
 test('季节天气路线不可用与同行约定冲突保留路线边界',async()=>{

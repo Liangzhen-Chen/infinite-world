@@ -63,6 +63,9 @@ async function cast(s,op,target,extra={}){
 }
 async function refuse(s,tool,args,pattern){const before=structuredClone(s.doc);await assert.rejects(s.engine.reduce(s.doc,{tool,args,eventId:'refuse'}),pattern);assert.deepEqual(s.doc,before);}
 const refuseCast=(s,op,target,pattern,extra={})=>refuse(s,'world_cast',{spell:spell(s,op).id,target,...extra},pattern);
+// K6: an act that lacked only a licence happens; the norm stack names the offense under the act's own event.
+const k6Offended=(doc,out,eventId,offense)=>{const after=applyPatches(doc,out.patches),all=[...out.result.offenses??[],...(out.result.receipt?.consequences??[]).filter(c=>c.type==="offense")],o=all.find(o=>o.offense===offense);assert.ok(o,`${eventId} 应命中${offense}：${JSON.stringify(all)}`);assert.equal(after.state.records[o.record].sourceEvent,eventId);assert.equal(after.state.records[o.record].offender,'player');return {after,result:out.result,offense:o};};
+async function k6Cast(s,op,target,offense,extra={},eventId=`unlicensed-${op}`){const out=await s.engine.reduce(s.doc,{tool:'world_cast',args:{spell:spell(s,op).id,target,...extra},eventId});return k6Offended(s.doc,out,eventId,offense);}
 const wait=(s,minutes)=>run(s,'world_time',{minutes});
 const inspect=async(s,target)=>{const out=await run(s,'world_environment',{operation:'inspect',target});return out.light??out;};
 function contact(s,target,point=[0,0]){
@@ -113,13 +116,13 @@ test('聚光从现有光源取光，只增强有限表面，既不升温也不�
  set(s,'feature_lamp',{covered:true});assert.equal(lux(s,[2,0]),.2);
  await wait(s,31);assert.equal(Object.values(s.doc.state.effects).some(e=>e.operation==='focus_light'),false);
 });
-test('聚光拒绝无光源、超距、实体遮挡与撤销授权，失败不扣材料魔力',async()=>{
+test('聚光拒绝无光源、超距、实体遮挡，失败不扣材料魔力；无授权或授权撤销照样聚光并命中擅用',async()=>{
  const s=fixture();await refuseCast(s,'focus_light','feature_surface',/真实光学/,{source:'feature_missing'});
  set(s,'feature_lamp',{lit:false});await refuseCast(s,'focus_light','feature_surface',/熄灭/,{source:'feature_lamp'});set(s,'feature_lamp',{lit:true});
  s.rows.find(r=>r.id==='feature_lamp').owner=npc;
- await refuseCast(s,'focus_light','feature_surface',/授权/,{source:'feature_lamp'});
+ /* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：他人灯源无授权照样聚光，命中擅用 */await k6Cast(s,'focus_light','feature_surface','unauthorized_use',{source:'feature_lamp'},'k6-no-permit');
  s.doc.state.records.optic_permit={category:'authorization',subject:'feature_lamp',action:'environment_use',grantor:npc,expires:s.doc.state.minute+30,revoked:true};
- await refuseCast(s,'focus_light','feature_surface',/授权/,{source:'feature_lamp',authorization:'optic_permit'});
+ await k6Cast(s,'focus_light','feature_surface','unauthorized_use',{source:'feature_lamp',authorization:'optic_permit'},'k6-revoked');
  s.doc.state.records.optic_permit.revoked=false;await cast(s,'focus_light','feature_surface',{source:'feature_lamp',authorization:'optic_permit'});
 });
 test('反照限定真实反射率和指定观察方向，遮住光源即失去反光',async()=>{
@@ -185,7 +188,7 @@ test('私密效果只遮小缝，正常开门动作恢复视线，不能替代�
  await run(s,'world_environment',{operation:'inspect',text:'开门',target:'feature_slit'});assert.equal(localSightClear(reader(s),s.engine,s.location,[0,0],[2,0]),true);
  await refuseCast(s,'privacy','feature_slit',/闭合/);
  await run(s,'world_environment',{operation:'inspect',text:'关门',target:'feature_slit'});assert.equal(localSightClear(reader(s),s.engine,s.location,[0,0],[2,0]),false);
- s.rows.find(r=>r.id==='feature_slit').owner=npc;await refuse(s,'world_environment',{operation:'inspect',text:'开门',target:'feature_slit'},/授权/);
+ s.rows.find(r=>r.id==='feature_slit').owner=npc;/* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：开别人的门照样开，命中擅用 */{const out=await s.engine.reduce(s.doc,{tool:'world_environment',args:{operation:'inspect',text:'开门',target:'feature_slit'},eventId:'k6-door'});k6Offended(s.doc,out,'k6-door','unauthorized_use');}
 });
 test('阴影束缚接普通接近、跨地移动和逃跑，强光解除且不永久改变位置',async()=>{
  const s=fixture();set(s,'feature_lamp',{lit:false});contact(s,npc);await cast(s,'bind_shadow','player');

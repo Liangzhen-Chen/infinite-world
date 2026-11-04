@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
@@ -47,7 +48,7 @@ function featureAccess(d,engine,row,args,range,read=false){
  if(!ids.some(id=>{
   const r=d.get('state','records',id);
   return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&r.grantee==='player'&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));
- }))throw preconditionFailure('照护对象需要所有者有效授权');
+ }))noteUnlicensedUse(d,row);
 }
 function medical(d,target){
  const m=clone(d.get(...actorPath(target),'medical'));

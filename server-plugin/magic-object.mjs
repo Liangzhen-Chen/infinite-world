@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {reject} from './action-rejection.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -180,7 +181,7 @@ function access(d,row,args,range){
  if(row.owner==='player'||row.access==='public')return;
  if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw preconditionFailure('环境授权编号列表无效');
  const p=[args.authorization,...args.authorizations??[]].map(id=>d.get('state','records',id)).find(p=>p?.subject===row.id);
- if(!p||p.category!=='authorization'||p.subject!==row.id||p.action!=='environment_use'||p.grantor!==row.owner||p.revoked||p.expires!==undefined&&p.expires<=d.get('state','minute'))throw preconditionFailure('物件需要有效所有者授权');
+ if(!p||p.category!=='authorization'||p.subject!==row.id||p.action!=='environment_use'||p.grantor!==row.owner||p.revoked||p.expires!==undefined&&p.expires<=d.get('state','minute'))return noteUnlicensedUse(d,row);
  if(row.owner?.startsWith('npc_')&&(!isEffective(null,d,row.owner)||d.get('state','npcs',row.owner,'status')==='濒死'))throw preconditionFailure('物件所有者无法继续履约');
 }
 export function inspectObjectProcess(d,engine,target,args={}){const row=locate(engine,target,d.get('state','location'));access(d,row,args,3);const state=read(d,row),s=state.thermal;return{target:row.id,temperatureC:s.energyJ/row.thermalModel.heatCapacityJPerC,burning:s.burning,fuelMg:s.fuelMg,burnedFuelMg:s.burnedFuelMg,moistureMg:s.moistureMg,energyJ:s.energyJ};}
@@ -286,7 +287,9 @@ export function prepareThermalWorkstation(d,engine,station,minutes,{location=d.g
 export function prepareNpcFurnace(d,engine,station,minutes,npc,reserved=new Map()){
  const location=d.get('state','npcs',npc,'location'),requirement=station?.thermalRequirement;if(!requirement)return null;
  const row=locate(engine,requirement.feature,location);
- if(row.location!==location||row.owner!==npc&&row.access!=='public')throw preconditionFailure('人物没有同地热源的使用权限');
+ if(row.location!==location)throw preconditionFailure('人物身边没有这处热源');
+ // A working person's own choice: they do not take over another's hearth.
+ if(row.owner!==npc&&row.access!=='public')throw preconditionFailure('这人不会擅用别人家的热源');
  advanceMagicObjects(d,engine,d.get('state','minute'));
  const state=read(d,row),s=state.thermal,m=row.thermalModel;store(d,row,state);
  const options={location};
