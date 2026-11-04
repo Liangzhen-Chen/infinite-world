@@ -21,20 +21,10 @@
           "perHead": 0.25
         },
         "birthPerHeadDay": 0.0006944444444444445,
-        "yields": {
-          "alive": [
-            {
-              "item": "item_goat_milk",
-              "perHeadDay": 0.25,
-              "collectMinutes": 5
-            },
-            {
-              "item": "item_raw_goat_hair",
-              "perHeadDay": 0.002777777777777778,
-              "collectMinutes": 10
-            }
-          ]
-        },
+        "taxon": "goat",
+        "bodyMassKg": 40,
+        "coat": "hair",
+        "lactation": 0.001875,
         "labor": {
           "factor": 0.25,
           "hoursPerDay": 6
@@ -63,15 +53,10 @@
           "perHead": 0.05
         },
         "birthPerHeadDay": 0.002777777777777778,
-        "yields": {
-          "alive": [
-            {
-              "item": "item_pheasant_egg",
-              "perHeadDay": 0.25,
-              "collectMinutes": 2
-            }
-          ]
-        }
+        "taxon": "pheasant",
+        "bodyMassKg": 1.25,
+        "coat": "feather",
+        "layingIntervalDays": 4
       }
     },
     {
