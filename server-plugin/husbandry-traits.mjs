@@ -31,7 +31,11 @@ export function animalProductItem(world,s,from,part){
  return top[0].i;
 }
 const bodyMass=s=>s.husbandry?.bodyMassKg??s.bodyMassKg;
-export function yearDays(world){const c=world.rules?.calendar;return c?.daysPerMonth&&c?.monthsPerYear?c.daysPerMonth*c.monthsPerYear:360;}
+export function yearDays(world){
+ const c=world.rules?.calendar;
+ if(!Number.isSafeInteger(c?.daysPerMonth)||!Number.isSafeInteger(c?.monthsPerYear))throw Error('历法缺 daysPerMonth/monthsPerYear，不能折算年产毛量');
+ return c.daysPerMonth*c.monthsPerYear;
+}
 
 // Alive products per head and day, in item units, from body mass and the
 // species' own physiology. Feed and births scale them at settlement time.
