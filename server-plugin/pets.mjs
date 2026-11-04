@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse,noteOffense} from './offense-notes.mjs';
 import {isPhysicallyDead,isLiving,bodyLiving} from './lifecycle-state.mjs';
 import {petTrustGain} from './hidden-passives.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -41,7 +42,9 @@ function animal(d, engine, name, { owned = false, owner = 'player', location = d
     if (!Number.isSafeInteger(actor.hp)||!Number.isSafeInteger(actor.maxHp)||actor.maxHp<1||actor.hp>actor.maxHp||!Number.isSafeInteger(actor.level)||actor.level<0||actor.level>200)throw Error('动物健康或等级记录无效');
     if (actor.location !== location) throw preconditionFailure('动物不在场');
     if (isPhysicallyDead(engine,d,id) || actor.hp <= 0) throw preconditionFailure('动物已经死亡，照料不能复活');
-    if (actor.owner && actor.owner !== owner) throw preconditionFailure('动物已有其他所有者，不能擅自操作');
+    // Handling another's beast happens and is a breach of their title (K6);
+    // only a pet's own keeper may use it as a registered pet (owned).
+    if (actor.owner && actor.owner !== owner && !owned) noteUnlicensedUse(d, { id, owner: actor.owner }, { kind: 'creature', actor: owner });
     if (sapient(actor)) throw preconditionFailure('它已立意，不再是可驯养或使唤的动物；须以world_wildlife结缘取得同意');
     const pet = d.get('state', 'pets', id);
     if (owned && (actor.owner !== owner || pet?.petFormat !== 1 || !active(pet))) throw preconditionFailure('这不是仍归你所有的宠物');
@@ -141,7 +144,8 @@ function stillPresent(d, engine, row) {
     if (isPhysicallyDead(engine,d,row.id) || actor.hp <= 0) return '照料结束前动物死亡，未生效';
     if (actor.location !== d.get('state', 'location')) return '动物已不在场，未生效';
     if (row.ownedRequired && (actor.owner !== 'player' || !active(d.get('state', 'pets', row.id)))) return '结束前宠物归属已解除，未生效';
-    if (actor.owner && actor.owner !== 'player') return '结束前归属已改变，未生效';
+    // A change of hands during the work voids it; another's title held from the start does not (K6).
+    if ((actor.owner ?? null) !== (row.actor.owner ?? null) && actor.owner !== 'player') return '结束前归属已改变，未生效';
     return null;
 }
 
@@ -220,6 +224,9 @@ export function petAction(d, args, eventId) {
         if (result.success && !failed && !expired) {
             if (operation === 'contact') latest.bond = clamp(latest.bond + petTrustGain(this,d.get('state'),id,rules.contactTrust));
             else {
+                // Taming away another's beast is taking it (K6): it follows you, the
+                // offense keeps the old owner's claim on record.
+                if (actor.owner && actor.owner !== 'player') noteOffense(d, { act: 'take', victim: actor.owner, subject: { id, kind: 'creature' }, actor: 'player' });
                 holdingSet(d,null,['state', 'creatures', id, 'owner'], 'player','pets');
                 d.set(['state', 'pets', id], { petFormat: 1, creature: id, category: rule.category, status: '活跃', following: true, acquired: d.get('state', 'minute'), source: eventId });
             }

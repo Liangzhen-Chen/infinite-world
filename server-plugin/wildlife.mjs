@@ -5,6 +5,7 @@ import {advanceHusbandry} from './husbandry.mjs';
 import {creatureTraits} from './traits.mjs';
 import {derived} from './derived.mjs';
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse,noteOffense} from './offense-notes.mjs';
 import {isPhysicallyDead,isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
 import {forestHabitatCapacity,forestView,nearbyResourceLocations} from './forest-water.mjs';
@@ -305,7 +306,7 @@ export function wildlifeAction(d,args,eventId){
     const target=resolveCreature(this,d,args.target),actor=d.get('state','creatures',target),s=this.byId.get(actor?.species),corpse=actor?.corpse;
     if(!actor||actor.location!==habitat.location||!isPhysicallyDead(this,d,target)||!corpse)throw preconditionFailure('没有这里已死亡且可验证的尸体');
     if(corpse.status!=='未取材'||corpse.expires<=d.get('state','minute'))throw preconditionFailure('尸体已处理或已经腐坏');
-    if(actor.owner&&actor.owner!=='player')throw preconditionFailure('动物归其他所有者，不能擅自取材');
+    // Butchering another's carcass takes what is theirs (K6); noted once the parts are in hand.
     const recipe=s.wildlife.gather;if(!corpse.items.length)throw preconditionFailure('这个物种没有登记可加工材料');
     if(recipe.tool&&(!this.quantity(d,'player',recipe.tool)||heldUnit(d,this,'player',recipe.tool).durability<=0))throw preconditionFailure('需要实际完好的取材刀具');
     for(const m of recipe.consumes)if(this.quantity(d,'player',m.item)<m.amount)throw preconditionFailure('取材实际耗材不足');
@@ -315,5 +316,6 @@ export function wildlifeAction(d,args,eventId){
     const current=d.get('state','creatures',target,'corpse'),success=check.success&&current.status==='未取材'&&current.expires>d.get('state','minute')&&d.get('state','player','status')==='正常'&&d.get('state','location')===habitat.location;
     holdingSet(d,null,['state','creatures',target,'corpse'],{...current,status:success?'已取材':'已损坏',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId},'wildlife');
     if(success)for(const drop of current.items)this.itemDelta(d,'player',drop.item,drop.amount,{flow:'src:harvest',purpose:'butcher',writer:'wildlife',eventId});
+    if(actor.owner&&actor.owner!=='player')for(const drop of success?current.items:[{}])noteOffense(d,{act:'take',victim:actor.owner,subject:{id:target,kind:'carcass'},actor:'player',...(drop.item?{stolen:{item:drop.item,quantity:drop.amount}}:{})});
     return{success,obtained:success?current.items:[],spent:{minutes:recipe.minutes,materials:recipe.consumes,tool:recipe.tool,toolWear:recipe.tool?1:0},note:'失败仍耗时耗材；仅obtained实际进入行囊，尸体不可反复刷取'};
 }

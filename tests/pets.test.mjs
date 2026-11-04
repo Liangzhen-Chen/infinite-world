@@ -68,13 +68,16 @@ test('驯养用实际食物和多日接触，未达到信任不能登记，失�
     assert.equal(good.document.state.pets[id].category, 'support'); assert.equal(good.document.state.creatures[id].owner, 'player');
     assert.equal(good.document.state.pets[id].hp, undefined); assert.equal(Object.keys(good.document.state.creatures).length, 1);
     await assert.rejects(run(good.document, 'world_pet', { operation: 'tame', target: id }, 'duplicate_tame'), /已经/);
+    // K6 依据（审查 C-b pets:44、D1）：驯走他人的动物照样发生；它跟了你，原主的追索记为盗窃，记在本次驯服事件上。
+    const theirs = structuredClone(c); theirs.state.creatures[id].owner = 'npc_hw_linsui';
+    const taken = await sample(run, theirs, { operation: 'tame', target: id }, true); assert.equal(taken.document.state.creatures[id].owner, 'player');
+    const stolen = taken.result.offenses?.find(o => o.offense === 'theft'); assert.ok(stolen); assert.equal(stolen.victim, 'npc_hw_linsui'); assert.equal(taken.document.state.records[stolen.record].sourceEvent, taken.eventId);
 });
 
-test('他人归属、缺技能、级差和已满名额阻止驯服，元素召唤师不能带战斗宠物', async () => {
+test('缺技能、级差和已满名额阻止驯服，元素召唤师不能带战斗宠物；驯走他人的动物照样发生并命中盗窃', async () => {
     const { engine, document, id, run } = await setup('combat');
     document.state.creatures[id].care = careFixture(document.state.minute);
     const cases = [
-        [c => c.state.creatures[id].owner = 'npc_hw_linsui', /所有者/],
         [c => c.state.skills.skill_life_15_core.proficiency = 0, /技能/],
         [c => c.state.player.level = 0, /等级/],
         [c => c.state.professions.combat = 'profession_summoner', /职业/],

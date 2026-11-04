@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse,noteOffense} from './offense-notes.mjs';
 import {bodyLiving} from './lifecycle-state.mjs';
 import {openObligation} from './obligation-runtime.mjs';
 import {createHash} from 'node:crypto';
@@ -173,7 +174,7 @@ export function awakeningAction(d,args,eventId,target){
     if(!awakeningEligible(this,actor))throw preconditionFailure('需要存活的普通野兽个体');
     if(actor.location!==d.get('state','location'))throw preconditionFailure('动物不在场');
     if(d.get('state','player','status')!=='正常')throw preconditionFailure('你此时无法行动');
-    if(actor.owner&&actor.owner!=='player')throw preconditionFailure('动物归其他所有者，不能擅自施为');
+    if(actor.owner&&actor.owner!=='player')noteUnlicensedUse(d,{id:target,owner:actor.owner},{kind:'creature'});
     const present=()=>{const a=d.get('state','creatures',target);return alive(a)&&a.location===d.get('state','location')&&d.get('state','player','status')==='正常';};
     if(op==='pact'){
         if(!sapient(actor))throw preconditionFailure('尚未立意，不能以同意结缘；驯养仍走宠物照料');
