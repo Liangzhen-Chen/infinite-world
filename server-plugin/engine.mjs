@@ -40,7 +40,7 @@ import {changeItems,transferItems,validateItemTransfer,validatePhysicalAction,ph
 import {environmentCatalog,environmentFeatures,localPlayerPoint,physicalSiteAction,recordLocalContact}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
-import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
+import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody,commitOffenses}from'./law.mjs';
 import {localWeather,weatherEdge,calendarDateAt}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
@@ -415,6 +415,10 @@ export class WorldEngine {
         const detail = executeRoutingProgram(d,session,tool,callArgs,id)??physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
         if(bookedWorkstation&&Number.isSafeInteger(args.batches)&&detail.batches!==undefined){detail.requestedBatches=args.batches;detail.clipped=args.batches-detail.batches;}
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
+        // K6: what the act did without licence is now a settled fact; the norm
+        // stack names the offenses under this act's own event id.
+        const offenses=commitOffenses(d,session,id);
+        if(offenses.length&&detail&&typeof detail==='object')detail.offenses=[...detail.offenses??[],...offenses];
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
         // 返场：记下离开各地的时间，久别回来时汇总当地变化。
@@ -464,6 +468,7 @@ export class WorldEngine {
         return {patches:finishLedger(patches,books.opening),result};
     }
     primitiveDraft(document){return new Draft(document,this);}
+    primitiveCommitOffenses(d,eventId){return commitOffenses(d,this,eventId);}
     primitiveNormalizeCall(tool,args){return resolveToolCall(tool,args);}
     primitiveLegacyRestriction(document,tool,args){
         // Read-only probe: the copy-on-write draft never mutates the original, so no clone.
