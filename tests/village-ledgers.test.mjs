@@ -5,6 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {approvedProfiles} from '../tools/w1-village-profiles-content.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {legacyMoney} from '../server-plugin/money.mjs';
 import {advanceAgriculture,agricultureView} from '../server-plugin/agriculture.mjs';
 import {planAgricultureMigration} from '../server-plugin/agriculture-migration.mjs';
 import {planWorldUpgrade,compatibleWorld} from '../server-plugin/world-upgrade.mjs';
@@ -26,7 +27,8 @@ function conservation(doc,id){
  assert.equal(l.openingFood+l.openingSeed+l.freshProduced+l.harvested+l.donated+l.seedDonated,s.food+r.field.seedBank+l.eaten+l.spoiled+l.overflow+l.seedSpent+l.sold);
  assert.ok(s.food+r.field.seedBank<=r.granary.capacity);
 }
-function totalCash(doc){return doc.state.player.coins+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0);}
+// A keeper who opens a counter moves purse coins into a counter money_account (business.mjs openShop); coins are conserved, so count every account the money ledger knows, not only purses and treasuries.
+function totalCash(doc,engine){let n=0;for(const v of legacyMoney(engine,doc.state).values())n+=v;return n;}
 function at(doc,p){doc.state.location=p.counter;doc.state.minute=540;doc.state.npcs[p.manager].location=p.counter;doc.state.npcs[p.manager].status='正常';doc.state.npcs[p.manager].activity='办公';}
 function tradeArgs(p,phase='pickup'){return{operation:'farm_settle_trade',contract:p.tradeContract.id,phase,authority:p.manager};}
 test('四村年粮守恒，产量单位与周期有来源，期初不冒充期末',()=>{
@@ -40,10 +42,10 @@ test('四村年粮守恒，产量单位与周期有来源，期初不冒充期�
 test('四村粮约经过真实路线两端交割；在途预款和税款分开，粮钱双方守恒且重放幂等',async()=>{
  for(const p of configs){
   const{engine,doc,run}=setup(),buyer=configs.find(row=>row.settlement===p.tradeContract.buyer);at(doc,p);
-  const startCash=totalCash(doc),playerCash=doc.state.player.coins,sourceFood=doc.state.settlements[p.settlement].food,buyerFood=doc.state.settlements[buyer.settlement].food;
+  const startCash=totalCash(doc,engine),playerCash=doc.state.player.coins,sourceFood=doc.state.settlements[p.settlement].food,buyerFood=doc.state.settlements[buyer.settlement].food;
   const before=structuredClone(doc),pickup=await run(doc,tradeArgs(p),'pickup');assert.deepEqual(doc,before);
   assert.deepEqual(await run(doc,tradeArgs(p),'pickup'),pickup);
-  let c=pickup.document;assert.equal(totalCash(c),startCash);assert.equal(c.state.settlements[p.settlement].food,sourceFood-20);assert.equal(c.state.inventory.item_oats.quantity,20);
+  let c=pickup.document;assert.equal(totalCash(c,engine),startCash);assert.equal(c.state.settlements[p.settlement].food,sourceFood-20);assert.equal(c.state.inventory.item_oats.quantity,20);
   const key=`village-trade:${p.tradeContract.id}`,fiscalKey=`village-fiscal:${p.settlement}`;
   assert.equal(c.state.records[key].status,'in-transit');assert.equal(c.state.records[key].paidCopper,0);assert.equal(c.state.records[key].prepaidCopper,60);assert.equal(c.state.records[key].taxCopper,0);assert.equal(c.state.records[fiscalKey].salesGrossCopper,0);assert.equal(c.state.records[fiscalKey].taxReceiptsCopper,0);
   assert.deepEqual((await run(c,tradeArgs(p),'pickup-again')).document,c);assert.deepEqual(applyPatches(c,pickup.patches),c);
@@ -51,7 +53,7 @@ test('四村粮约经过真实路线两端交割；在途预款和税款分开�
   for(const destination of [p.settlement,'loc_bs',buyer.settlement,buyer.counter])c=(await run(c,{destination},`walk-${destination}`,'world_move')).document;
   c.state.npcs[buyer.manager].location=buyer.counter;c.state.npcs[buyer.manager].status='正常';c.state.npcs[buyer.manager].activity='办公';
   const delivered=await run(c,{...tradeArgs(p,'deliver'),authority:buyer.manager},'deliver');c=delivered.document;
-  assert.equal(totalCash(c),startCash);assert.equal(c.state.player.coins,playerCash);assert.equal(c.state.settlements[buyer.settlement].food,buyerFood+20);assert.equal(c.state.inventory.item_oats?.quantity??0,0);
+  assert.equal(totalCash(c,engine),startCash);assert.equal(c.state.player.coins,playerCash);assert.equal(c.state.settlements[buyer.settlement].food,buyerFood+20);assert.equal(c.state.inventory.item_oats?.quantity??0,0);
   assert.equal(c.state.records[key].status,'delivered');assert.equal(c.state.records[key].paidCopper,60);assert.equal(c.state.records[key].receivedCopper,60);assert.equal(c.state.records[key].prepaidCopper,0);assert.equal(c.state.records[key].taxCopper,3);
   assert.equal(c.state.records[fiscalKey].advanceCopper,0);assert.equal(c.state.records[fiscalKey].salesNetCopper+c.state.records[fiscalKey].taxReceiptsCopper,c.state.records[fiscalKey].salesGrossCopper);
   assert.equal(c.state.records[`village-fiscal:${buyer.settlement}`].purchasesCopper,60);assert.equal(c.state.records[fiscalKey].exportedFood,c.state.records[`village-fiscal:${buyer.settlement}`].importedFood);

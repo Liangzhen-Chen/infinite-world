@@ -9,6 +9,7 @@ import {init} from '../server-plugin/index.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {modelToolCall,toolDefinitions} from '../extension/tools.mjs';
 import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
+import {marketTimeWindows} from '../server-plugin/npc-state.mjs';
 
 const world=await loadWorld();
 const qty=value=>typeof value==='number'?value:value?.quantity??0;
@@ -79,6 +80,16 @@ async function session(t,id){
         assert.deepEqual(await read(),before,'前置拒绝不得改变钱物、时间或事件状态');
         return response.body.error;
     }
+    // Card C sends shopkeepers' customers (e.g. Linsui buying at the mill at 10:00) to the teacher, so he can be serving a real customer. The engine then refuses
+    // the lesson with the real reason (npc-obligations.mjs assertNpcObligationAction: his market service window overlaps) and changes nothing; like a player,
+    // wait until the window ends (a real world_time action, outside the scripted lesson turn) and ask again. `lesson` is the longest lesson this script asks for.
+    async function waitUntilTeacherFree(name,entity,lesson=60){
+        const teacher=world.npcs.find(n=>n.name===name).id,windows=()=>marketTimeWindows(document.state,teacher).filter(w=>w.end>document.state.minute&&w.start<document.state.minute+lesson).sort((a,b)=>a.start-b.start);
+        for(let w=windows()[0];w;w=windows()[0]){
+            if(w.start<=document.state.minute)await reject('world_learn',{entity,source:name},/赶集路程或服务时段冲突/);
+            await call('world_time',{minutes:w.end-document.state.minute,activity:'等待'});
+        }
+    }
     async function turn(index,act=async()=>[],extraMinutes=0){
         const before=document,calls=await act();
         await call('world_turn',{startMinute:before.state.minute,extraMinutes,
@@ -95,7 +106,7 @@ async function session(t,id){
         assert.deepEqual(await read(),before);assert.equal(providerCalls,0);
     }
     t.after(()=>t.diagnostic(JSON.stringify({scope:'隔离公共HTTP前置，模型0；不代表真实提示栈验收',id,trace,lessons,repairs,providerCalls})));
-    return{scenario,call,reject,turn,roundTrip,request,campaignId,lessons,repairs,get document(){return document;}};
+    return{scenario,call,reject,turn,waitUntilTeacherFree,roundTrip,request,campaignId,lessons,repairs,get document(){return document;}};
 }
 
 test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repair路由结算，前置拒绝无钱物时间变化',async t=>{
@@ -108,11 +119,11 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     assert.equal(bought.before.state.player.coins-bought.after.state.player.coins,
         bought.after.state.npcs.npc_hw_ayan.coins-bought.before.state.npcs.npc_hw_ayan.coins);
     await s.turn(2,async()=>[await s.call('world_learn',{entity:'木匠基础手艺',source:'阿砚'})]);
-    for(const index of[3,4,5])await s.turn(index,async()=>{
-        if(!s.document.state.skills.skill_life_6_core)return[await s.call('world_learn',{entity:'skill_life_6_core',source:'阿砚'})];
-        if(!s.document.state.recipes.recipe_wooden_pegs)return[await s.call('world_learn',{entity:'recipe_wooden_pegs',source:'阿砚'})];
-        return[];
-    });
+    for(const index of[3,4,5]){
+        const entity=!s.document.state.skills.skill_life_6_core?'skill_life_6_core':!s.document.state.recipes.recipe_wooden_pegs?'recipe_wooden_pegs':null;
+        if(entity)await s.waitUntilTeacherFree('阿砚',entity);
+        await s.turn(index,async()=>entity?[await s.call('world_learn',{entity,source:'阿砚'})]:[]);
+    }
     assert.ok(s.document.state.skills.skill_life_6_core);assert.ok(s.document.state.recipes.recipe_wooden_pegs);
     const made=await s.turn(6,async()=>[await s.call('world_craft',{operation:'manufacture',recipe:'削制榫用木楔'})]);
     assert.equal(made.after.state.inventory.item_whittling_knife.durability,79);

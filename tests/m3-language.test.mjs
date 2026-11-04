@@ -6,6 +6,7 @@ import {loadPromptBundle} from '../tools/build-card.mjs';
 import {reviewPlaytest} from '../tools/playtest-review.mjs';
 import {languageChecks,summarizeLanguageAcceptance} from '../tools/playtest-language.mjs';
 import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
+import {marketTimeWindows} from '../server-plugin/npc-state.mjs';
 import {consistencyReviewRequest} from '../server-plugin/consistency-review.mjs';
 
 const scenario=JSON.parse(await fs.readFile(new URL('./playtests/m3_language.json',import.meta.url),'utf8'));
@@ -16,7 +17,7 @@ const response=value=>({choices:[{finish_reason:'stop',message:{content:JSON.str
 // This client supplies no provider measurement or real narrative score. It
 // tests the official HTTP paths and assertions, including actual learning.
 async function offlineRun(t){
-    const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
+    const server=await createPlaytestServer({consistencyEnabled:false,seed:'m3-language'});t.after(()=>server.close());
     const client={async generate({messages},label){
         const index=Number(label.split('-')[2]),step=scenario.turns[index];
         const last=messages.findLastIndex(m=>m.role==='user'),receipts=messages.slice(last+1).filter(m=>m.role==='tool');
@@ -28,6 +29,13 @@ async function offlineRun(t){
             else if([2,4].includes(index))call={tool:'world_time',args:{minutes:5,activity:'等待'}};
             else call=step.assertions.find(a=>a.kind==='calls');
         }
+        // Card C: on the day the player reaches the mill, a shopkeeper's customer is being served by Ayan (service window 45245-45255). The engine refuses the lesson with the
+        // real reason and changes nothing; the model, like a player, waits until the window ends and asks again.
+        else if(index===15&&receipts.length===1&&receipts[0].content.includes('赶集路程或服务时段冲突')){
+            const view=await server.api('read',{campaignId}),window=marketTimeWindows(view.document.state,'npc_hw_ayan').find(w=>w.end>view.document.state.minute);
+            call={tool:'world_time',args:{minutes:window.end-view.document.state.minute,activity:'等待'}};
+        }
+        else if(index===15&&receipts.length===2)call=step.assertions.find(a=>a.kind==='calls');
         if(call)return {choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:label,type:'function',function:{name:call.tool,arguments:JSON.stringify(call.args)}}]}}]};
         let content='你停在原处。';
         if(index===4)content='<q who="npc_hw_linsui">先把吃住照顾好。</q>';
@@ -68,7 +76,8 @@ test('18轮完整提示与真实HTTP：时间换算、整月等待、问价不�
     }
     assert.equal(result.turns[7].minute,1260);assert.equal(result.turns[9].minute,1380);
     assert.equal(result.turns[11].minute-result.turns[10].minute,43200);
-    assert.equal(result.turns[15].minute-result.turns[14].minute,30);
+    // 10 minutes waiting for Ayan's customer window (45255 - 45245) + the 30-minute lesson.
+    assert.equal(result.turns[15].minute-result.turns[14].minute,10+30);
     assert.equal(result.turns[15].player.coins,176);
     assert.equal(result.finalDocument.state.inventory.item_wooden_peg,undefined);
     const exported=await server.api('export',{campaignId});

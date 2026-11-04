@@ -95,6 +95,10 @@ test('季节与天气改变真实粮食入库，长等待与分日结算守恒',
         const production=Math.floor(accrued)-issued;issued+=production;
         expected+=production-c.state.settlements.loc_hw.population;
     }
+    // TFA food-supply law (food-supply.mjs, drawn through agriculture.mjs drawFoodSupplyGranary): loc_hw sells granary grain to a counter in loc_bs.
+    // Every unit leaves loc_hw.food and is booked as a food-supply market_trade sale, so expected = production - population*days - sum(those sale quantities).
+    const sold=Object.values(split.state.records).filter(r=>r?.category==='market_trade'&&r.seller==='loc_hw'&&String(r.eventId).startsWith('food-supply:')).reduce((n,r)=>n+r.quantity,0);
+    assert.ok(sold>0);expected-=sold;
     assert.deepEqual(long.state.settlements,split.state.settlements);
     assert.equal(long.state.settlements.loc_hw.food,expected);
     assert.ok(cropProduction(engine,c.randomSeed,'loc_hw',270*1440,100)<cropProduction(engine,c.randomSeed,'loc_hw',180*1440,100));

@@ -136,7 +136,12 @@ test('npc shopkeepers: within a week each stocks up, reprices and hires by his o
  const buy=s.records['shop:shop_bs_yanzhe'].entries.find(e=>e.item==='item_clay'&&e.day===0);
  assert.deepEqual([buy.added,buy.referenceCopper,buy.paidCopper],[2,6,8]);assert.deepEqual(buy.cost,{goods:8,freight:0,duties:0});
  assert.equal(buy.from,'npc_hw_shendu');
- assert.equal(s.npcs.npc_hw_yanzhe.coins,s0.npcs.npc_hw_yanzhe.coins-8);assert.equal(counterOf(f,'npc_hw_yanzhe').coins,0);
+ // TFB food-supply law (shop.mjs foodSupplyBid/fundCounter, food-supply.mjs): within the week he also decides to fund his counter and buy oats from the four villages' granaries.
+ // Everything that left his purse beyond the 8 for clay went to those deliveries (counter ends empty, nothing still in transit):
+ // 1080 (yupo 120x9) + 720 (weiting 80x9) + 252 (liquan 28x9) + 360 (sangban 40x9) = 2412; purse 2422 - 8 - 2412 = 2.
+ const supplyPaid=Object.values(s.records).filter(r=>r?.category==='food_supply_stats').reduce((n,r)=>n+(r.destinations?.shop_bs_yanzhe?.paidCopper??0)-(r.destinations?.shop_bs_yanzhe?.refundCopper??0),0);
+ assert.equal(supplyPaid,2412);assert.ok(!Object.values(s.records).some(r=>r?.foodSupply&&r.status==='in-transit'));
+ assert.equal(s.npcs.npc_hw_yanzhe.coins,s0.npcs.npc_hw_yanzhe.coins-8-supplyPaid);assert.equal(counterOf(f,'npc_hw_yanzhe').coins,0);
  assert.equal(s.npcs.npc_hw_yanzhe.inventory.item_clay.quantity,2);
  // 1.2 * 8/6 = 1.6, capped at the published shop limit 1.4.
  const pricing=s.records['shop_pricing:npc_hw_yanzhe'];

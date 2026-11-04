@@ -48,11 +48,14 @@ test('真实周贸易到货后推进阶段并消费区域报价，不把常量�
  // W5: persisted quote anchors are integer micro-copper numerators over 1_000_000 (old float -> round(float*1e6); max change 5e-7 copper).
  // K16: farm hands also fetch household water, so real sowing/seed use shifts a few
  // granary portions (yupo day 14: S=17291-7200 instead of 17300-7200). Check: 2389429*10100/10091 = 2391560.
+ // TFA food-supply law: before each observation the public granary also sold grain to the keeper's counter in loc_bs (food-supply market_trade sales, food-supply.mjs / agriculture.mjs drawFoodSupplyGranary),
+ // 80 at yupo (40+40), 40 at weiting, 80 at liquan (40+40), 69 at sangban (40+29), all within the first week, so every S above drops by that amount (D unchanged), e.g. yupo day 7:
+ // 3.443174013650245*7200/(10494-80) = 2.380531, day 14: 3.3518376618407357*7200/(10091-80) = 2.410671; same exact 1:1 subtraction holds for all eight (S reconstructed from the old anchors differs by exactly the sold amount).
  const anchors={
-  loc_bs_yupo:[2362384,2391560],
-  loc_bs_weiting:[2469312,2625990],
-  loc_bs_liquan:[2528940,2511590],
-  loc_bs_sangban:[2345444,2479939],
+  loc_bs_yupo:[2380531,2410671],
+  loc_bs_weiting:[2477143,2634545],
+  loc_bs_liquan:[2544677,2527757],
+  loc_bs_sangban:[2356566,2492068],
  };
  let c=(await wait(doc,14*DAY-doc.state.minute)).doc;
  assert.deepEqual(doc,before);
@@ -67,7 +70,7 @@ test('真实周贸易到货后推进阶段并消费区域报价，不把常量�
  }
  assert.equal(worldClockScene(engine,c),'');
  const counter=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_bs_yupo').counter;
- const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/\u6bcf\u4efd2\.391559921242027\u94dc/);
+ const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/\u6bcf\u4efd2\.410671378009519\u94dc/);
  assert.ok(Object.values(c.state.records).some(r=>r.category==='settlement_trade'&&r.status==='delivered'));
  assert.equal(c.state.player.coins,doc.state.player.coins);assert.deepEqual(c.state.created,doc.state.created);
  const beforeNpcs=Object.keys(doc.state.npcs);assert.deepEqual(Object.keys(c.state.npcs),beforeNpcs);

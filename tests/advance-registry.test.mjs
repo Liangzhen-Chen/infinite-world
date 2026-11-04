@@ -74,11 +74,17 @@ test('注册表按order排序、编号唯一，并覆盖原有推进系统',()=>
  for(const id of ['npc_obligations','contracts','summons','law','daily','agriculture_expiry','settlement_trade','npc_cognition','npc_autonomy','npc_life','world_clock','faction_clock','society_news','festival','magic_area','wildlife_encounter'])assert.ok(ids.includes(id),id);
 });
 test('新注册的系统会参与下一事件时刻计算并按order推进',async()=>{
- const calls=[],foodBoundaries=new Set();
+ const calls=[],foodBoundaries=new Set(),travelBoundaries=new Set();
  const unregister=registerAdvance({id:'test_probe',order:1e9,
   active:()=>true,
   nextMinute:(engine,d,now)=>{const next=advanceRegistry.find(s=>s.id==='food_supply')?.nextMinute(engine,d,now);if(Number.isFinite(next))foodBoundaries.add(next);return Math.floor(now/600)*600+600;},
-  advance:(engine,d,{before,after})=>calls.push([before,after,d.get('state','minute')])});
+  advance:(engine,d,{before,after})=>{
+   calls.push([before,after,d.get('state','minute')]);
+   // TI2 employment: a hired resident walks home from his shop at midnight (e.g. npc_ms_ll_cuozhen leaves site_ms_ll_shop at 1440 and arrives at 1443). The
+   // schedule heap treats a person's real travel arrival as an interval boundary (advance-registry.mjs buildScheduleHeap due(npc.scheduleTravel.arrive)),
+   // so record the arrivals actually present in the state when this probe runs.
+   for(const n of Object.values(d.get('state','npcs')))for(const at of [n.scheduleTravel?.arrive,n.cognitionTravel?.arrive])if(Number.isSafeInteger(at))travelBoundaries.add(at);
+  }});
  try{
   assert.equal(advanceRegistry.at(-1).id,'test_probe');
   const w=structuredClone(world);
@@ -95,7 +101,7 @@ test('新注册的系统会参与下一事件时刻计算并按order推进',asyn
    // TFB introduces real scout/porter waypoints (e.g. minute604). Accept only
    // deadlines observed from that system before advancement; retain the
    // original continuity, exact target and registered-probe assertions.
-   assert.ok(after%600===0||after===start+1500||after%DAY===0||foodBoundaries.has(after),`${after}落在事件边界`);
+   assert.ok(after%600===0||after===start+1500||after%DAY===0||foodBoundaries.has(after)||travelBoundaries.has(after),`${after}落在事件边界`);
   }
  }finally{unregister();}
  assert.ok(!advanceRegistry.some(s=>s.id==='test_probe'));

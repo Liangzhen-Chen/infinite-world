@@ -15,6 +15,9 @@ import {homePermission,assertLocationAccess} from '../server-plugin/location-acc
 import {advanceLaw} from '../server-plugin/law.mjs';
 import {unfoldPopulationAt,profileBrief,rosterLifeState} from '../server-plugin/population.mjs';
 import {npcPlanningContext} from '../server-plugin/npc-autonomy.mjs';
+import {statisticalFoodGroups} from '../server-plugin/household-budget.mjs';
+import {townShareAmount} from '../server-plugin/town-income.mjs';
+import {householdDefinition} from '../server-plugin/npc-state.mjs';
 import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -130,9 +133,15 @@ test('名册先继承后补档保留完整 actor；full 状态立即获得成长
  const death=d.get('state','family','deaths',initialDeath.id);assert.equal(death.estate.heir,person.id);
  assert.equal(personHousehold(session,d.get('state'),person.id).value.id,person.householdId);
  const actor=structuredClone(d.get('state','npcs',person.id));assert.equal(actor.coins,24);assert.equal(personSimulation(session,d.get('state'),person.id).value,false);
+ // TI1: admitting a statistical resident as a campaign actor also moves that person's household share of the group's opening coins and goods (household-budget.mjs materializeStatisticalFood).
+ // Expected = inherited + townShareAmount(group row, household), read from the statistics row before admission.
+ const house=householdDefinition(session,d.get('state'),person.householdId),group=statisticalFoodGroups(session,d.get('state'),house.settlement).find(r=>r.shares?.[house.id]),qty=v=>typeof v==='number'?v:v?.quantity??0;
+ const shareCoins=townShareAmount(group,house.id,group.coins,group.owner,'coins'),shareItems=Object.fromEntries(Object.entries(group.inventory).map(([item,v])=>[item,townShareAmount(group,house.id,qty(v),group.owner,item)]));
  const out=await e.reduce(d.document,{type:'population_profile',person:person.id,profile:profile(profileBrief(d.document,person.id))});
- const accepted=applyPatches(d.document,out.patches),full=e.scoped(accepted);
- assert.deepEqual(accepted.state.npcs[person.id],actor);assert.equal(accepted.state.created[person.id].tier,'roster');assert.equal(personSimulation(full,accepted.state,person.id).value,true);
+ const accepted=applyPatches(d.document,out.patches),full=e.scoped(accepted),now=accepted.state.npcs[person.id];
+ assert.deepEqual({...now,coins:actor.coins,inventory:actor.inventory},actor);assert.equal(now.coins,actor.coins+shareCoins);
+ for(const item of new Set([...Object.keys(actor.inventory??{}),...Object.keys(shareItems)]))assert.equal(qty(now.inventory?.[item]),qty(actor.inventory?.[item])+(shareItems[item]??0),item);
+ assert.equal(accepted.state.created[person.id].tier,'roster');assert.equal(personSimulation(full,accepted.state,person.id).value,true);
  // Rank the newly complete resident into the finite planning context.
  accepted.state.npcs[person.id].trust=1000;
  assert.ok(npcPlanningContext(full,accepted).people.some(p=>p.id===person.id));

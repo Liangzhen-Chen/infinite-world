@@ -566,8 +566,8 @@
         },
         {
           "kind": "elapsed",
-          "min": 30,
-          "max": 30
+          "min": 40,
+          "max": 40
         },
         {
           "kind": "delta",

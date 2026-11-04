@@ -147,9 +147,12 @@ test('物价波动：接周贸易区域报价与商店报价的季节系数，�
  // S5-02：报价不存档；灾害/季节仍为派生组成，不能再读取已删除的报价真相。
  assert.equal(quote,undefined);assert.equal(hazardPriceFactor(engine,peak.state,'item_oats','loc_bs_yupo'),1.3);
  assert.equal(engine.rules.settlementTrade.seasonFactors[engine.calendar(peak.state.minute).season],engine.rules.settlementTrade.seasonFactors[0]);assert.ok(price>=1);
- // TFA design section 2: the 694 pending residents eat 2 rations a day (1388) against 36 on sale, so
- // supply/demand reaches the regional cap 3. Base 3 x hazard 1.3 x scarcity 3, not rounded for display.
- const demand=read=>{const market=marketSupply(read,engine,'item_ration','loc_bs');assert.deepEqual([market.demand,market.statisticalDemand,market.supply],[1388,1388,36]);};
+ // Re-derived after TI1b/TI2/C (market.mjs marketSupply): demand = max(shelf, personalDemand + retained + committed + statisticalDemand, 1) = 191 + 4 = 195 (shelf 4).
+ // personalDemand 191 is the food reserve of private holders (the keeper's household, TFB/C household law). statisticalDemand fell from 1388 to 4: TI1b
+ // (town-income genesis) gives the 694 pending residents their own opening rations (about 2.6k across the eight groups), so
+ // statisticalFoodNeed = sum(max(0, 694 * light drain * 24 - held satiety)) = 120 satiety -> ceil(120 / ration satiety) = 4 rations.
+ // supply 36 stays. 195/36 still reaches the regional cap 3: base 3 x hazard 1.3 x scarcity 3, not rounded for display.
+ const demand=(read,expected=[195,4,36])=>{const market=marketSupply(read,engine,'item_ration','loc_bs');assert.deepEqual([market.demand,market.statisticalDemand,market.supply],expected);};
  demand(d);assert.equal(regionalTradePrice(d,engine,'item_ration','loc_bs'),11.700000000000001);
  // A shop's day quote starts from the same figure.
  const calm=setup('hazard-price');
@@ -159,7 +162,9 @@ test('物价波动：接周贸易区域报价与商店报价的季节系数，�
  assert.deepEqual(rec(eased,'hazard-clock:price:loc_bs').history.map(h=>h.stage),['peak','ease']);
  assert.equal(hazardPriceFactor(engine,eased.state,'item_ration','loc_bs'),1);
  // Hazard eases to 1; the residents still eat: base 3 x scarcity 3 = 9.
- demand(draft(eased));assert.equal(regionalTradePrice(draft(eased),engine,'item_ration','loc_bs'),9);
+ // By day 4 the residents have eaten all 2651 opening rations (held 0), so statisticalDemand returns to the TFA value: 41640 satiety (694 x 60/day) / 30 per ration = 1388;
+ // demand 1478 = 1388 + 90 (private holders' reserve) with supply 36.
+ demand(draft(eased),[1478,1388,36]);assert.equal(regionalTradePrice(draft(eased),engine,'item_ration','loc_bs'),9);
 });
 
 test('疫病：有病名与途径，户间、沿路线传播；医师、隔离、净水、祭祀按规则减传播',async()=>{
