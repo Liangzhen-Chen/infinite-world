@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs';
+import {takeNotedOffenses} from './offense-notes.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {goodsWorth,valuation} from './valuation.mjs';
 import {recordStandingEvidence} from './npc-state.mjs';
@@ -81,13 +83,29 @@ export function submitCaseDocument(d,engine,{case:caseId,document:id,actor='play
 const alive=(actor,d,id)=>actor&&isEffective(null,d,id)&&actor.status!=='濒死';
 const awake=(actor,d,id)=>alive(actor,d,id)&&!['睡眠','熟睡'].includes(actor.activity);
 const codeFor=legalCodeAt;
+// K6 legality is a consequence: offenses are derived from the behaviour class
+// (act) and the attributes of what it acts on (against), never from item or
+// place ids. A code without its own clause sentences by the broader offense.
+const OFFENSES=JSON.parse(readFileSync(new URL('../world/ontology/offenses.json',import.meta.url),'utf8')).entries;
+const broaderOf=offense=>OFFENSES.find(o=>o.id===offense)?.broader?.replace(/^offense:/,'')??null;
+const offenseChain=offense=>{const out=[];for(let at=offense;at&&!out.includes(at);at=broaderOf(at))out.push(at);return out;};
+export function offenseOf(act,subject={}){
+ const fits=OFFENSES.filter(o=>o.act===act&&Object.entries(o.against??{}).every(([k,v])=>subject?.[k]===v));
+ return fits.sort((a,b)=>Object.keys(b.against??{}).length-Object.keys(a.against??{}).length)[0]??null;
+}
 function offensePenalty(engine,code,offense){
+ for(const at of offenseChain(offense)){const value=ownPenalty(engine,code,at);if(value)return value;if(value===null&&code?.penalties?.[at]===null)return null;}
+ return undefined;
+}
+function ownPenalty(engine,code,offense){
  if(code?.penalties?.[offense]===null)return null;
  return codePenalty(engine,code,offense)??engine.rules.law.spellConsent?.penalties?.[offense]??engine.rules.law.bribery?.penalties?.[offense]??engine.rules.law.activityPenalties?.[offense]??(offense==='debt_default'?engine.rules.economy?.credit?.loan?.defaultPenalty:undefined)??engine.rules.magicEconomy?.penalties?.[offense];
 }
 function incidentNorms(d,engine,{offender='player',location,minute,offense,code}){
  if(engine.rules.law?.normStackVersion!==1)return {};
- const snapshot=normSnapshot(normStack(engine,d.get('state'),offender,location,minute,{codes:legalCodes(engine.world,d.get('state'))}),offense);
+ const stack=normStack(engine,d.get('state'),offender,location,minute,{codes:legalCodes(engine.world,d.get('state'))});
+ let snapshot=normSnapshot(stack,offense);
+ for(const broader of offenseChain(offense).slice(1)){if(snapshot.source!==null)break;const analogy=normSnapshot(stack,broader);if(analogy.source!==null)snapshot={...analogy,offense,analogy:broader};}
  // Older domain-specific statutes are still published inputs. Pin those too;
  // never turn a missing offense into a fabricated default penalty.
  if(snapshot.source===null){snapshot.penalty=structuredClone(offensePenalty(engine,code,offense)??null);if(snapshot.penalty)snapshot.source=`legacy-statute:${offense}`;}
@@ -140,9 +158,9 @@ function knowledge(d,npc,id,minute){
     const prior=d.get('state','npcs',npc,'legalKnowledge')??[];
     if(!prior.some(row=>row.case===id))d.set(['state','npcs',npc,'legalKnowledge'],[...prior,{case:id,minute,source:'亲见或在场受理'}]);
 }
-export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute'),code:given=null,perception=null}){
+export function registerIncident(d,engine,{victim,offender='player',offense,value=0,stolen=null,witnesses,eventId,caseKey=eventId,relationshipApplied=false,location=d.get('state','location'),optional=false,minute=d.get('state','minute'),code:given=null,perception=null}){
     const code=given??codeFor(engine,location,d.get('state'));if(!code&&optional)return null;if(!code)reject('E-ACTION-LAW','当地尚未登记可执行法典，无执行权限',{missing:['当地需要已登记的可执行法典与执行权限'],repair:['前往有适用法典的法域，取得执行权限后办理']});
-    const id=`legal_case:${eventId}`;unique(d,id);
+    const id=`legal_case:${caseKey}`;unique(d,id);
     if(location===d.get('state','location')&&minute===d.get('state','minute')){
         const snapshot=perception??eventPerception(engine,d.document,{actor:offender,target:victim,location,volume:0});
         if(snapshot.sourceZone)witnesses=witnesses.filter(id=>snapshot.versions[id]?.identified);
@@ -170,6 +188,40 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
         }
     }
     return id;
+}
+// K6: a physically possible act that lacked the owner's or the authority's
+// licence has already happened; the norm stack names the offense (offenseOf)
+// and the ordinary incident pipeline carries the consequences: the case and
+// its reporting, wanted notices, and the victim's standing when they saw it.
+export function registerOffense(d,engine,{actor='player',act,subject={},victim=null,value,stolen=null,eventId,location}){
+ const row=offenseOf(act,subject);if(!row)throw Error(`E-OFFENSE-ACT 未登记构成罪名的行为类别：${act}`);
+ const s=d.get('state');location??=actor==='player'?s.location:s.npcs?.[actor]?.location??s.location;
+ // The case value is what the victim lost, valued as goods where it is goods.
+ value??=stolen?.item&&engine.byId.get(stolen.item)?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity??1,holder:victim})??0:stolen?.coins??0;
+ const witnesses=Object.entries(s.npcs??{}).filter(([id,npc])=>id!==actor&&awake(npc,d,id)&&npc.location===location).map(([id])=>id);
+ const key=`${eventId}:offense:${act}:${subject.id??'-'}:${victim??'-'}`;
+ const caseId=registerIncident(d,engine,{victim,offender:actor,offense:row.id,value,stolen,witnesses,eventId,caseKey:key,location,optional:true,relationshipApplied:true});
+ const seen=caseId?d.get(...path(caseId)).witnesses:witnesses;
+ // The case's own id is unique per act; cause ties it back to the act's event.
+ if(caseId)holdingSet(d,null,path(caseId),{...d.get(...path(caseId)),offenseRecord:`offense:${key}`},'law');
+ // The offense is a fact under the applicable norms even where no court can
+ // execute them yet; the case, when there is one, carries the procedure.
+ const law=normSnapshot(normStack(engine,s,actor,location,s.minute,{codes:legalCodes(engine.world,s)}),row.id);
+ const record=`offense:${key}`;unique(d,record);
+ holdingSet(d,null,path(record),{category:'offense',id:record,offense:row.id,act,subject:structuredClone(subject),offender:actor,victim,value,stolen,location,minute:s.minute,witnesses:[...seen],case:caseId,law:law.source,sourceEvent:eventId},'law');
+ // A victim who saw it reacts at once, court or no court.
+ if(victim&&seen.includes(victim)&&s.npcs?.[victim]){
+  recordStandingEvidence(d,engine,{key:`offense:${key}`,sourceEvent:eventId,eventType:'欺骗',from:victim,to:actor,minute:s.minute,delta:{trust:-5}});
+  d.set(['state','npcs',victim,'developments'],[...d.get('state','npcs',victim,'developments')??[],{type:'发现财物侵犯',source:eventId,minute:s.minute}]);
+ }
+ // Bystanders who saw the wrong think a little less of the one who did it.
+ for(const witness of seen)if(witness!==victim&&s.npcs?.[witness])recordStandingEvidence(d,engine,{key:`offense:${key}:${witness}`,sourceEvent:eventId,eventType:'目睹犯禁',from:witness,to:actor,minute:s.minute,delta:{trust:-2}});
+ d.say?.(`此举构成${row.label}${caseId?'，已立案待查':'，当地没有可执行的法典'}${witnesses.length?`；在场${witnesses.length}人看见`:''}`);
+ return {offense:row.id,label:row.label,record,case:caseId,witnesses:[...seen],victim};
+}
+// Breaches noted on this transaction (offense-notes.mjs) become offenses now.
+export function commitOffenses(d,engine,eventId){
+ return takeNotedOffenses(d).map(b=>registerOffense(d,engine,{...b,eventId}));
 }
 // A request has a recipient and verifiable premises, but does not decide a case.
 function submitFiling(d,engine,args,eventId){
