@@ -11,7 +11,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {produceItems} from './items.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 
-declareLedgerWriter('husbandry',{sources:{'src:birth':{'*':100000},'src:husbandry':{'*':100000},'src:genesis':{'*':Infinity},'src:regrowth':{'*':Infinity}},sinks:['sink:consume','sink:decay','sink:death','sink:individuated']});
+declareLedgerWriter('husbandry',{sources:{'src:birth':{'*':100000},'src:husbandry':{'*':100000},'src:genesis':{'item_pasture_forage':Infinity},'src:regrowth':{'item_pasture_forage':Infinity}},sinks:['sink:consume','sink:decay','sink:death','sink:individuated']});
 declareHoldingWriter('husbandry',{kinds:['owns'],entities:['population','creature'],locations:true});
 const path=id=>['state','records',`husbandry:${id}`];
 const resource=species=>`population_${species}`;
