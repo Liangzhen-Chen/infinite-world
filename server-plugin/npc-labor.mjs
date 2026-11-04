@@ -6,6 +6,9 @@
 // 每一项劳动由本人主观视图上的 npcDecision 决定（收益即这趟劳动的真实货值或货款，作为满足需要的量），
 // 是否值得去由真实报价与工时价值比较得出（按需求排班）。
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
+import {registerAdvance} from './advance-registry.mjs';
+import {recordsWhere} from './storage.mjs';
+import {bodyRule} from './primitives-body.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {npcAgeAt,householdWorkTime} from './npc-state.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
@@ -35,8 +38,8 @@ function config(e){
  if(!Number.isSafeInteger(c?.tripMinutes)||c.tripMinutes<1||!Number.isSafeInteger(c?.saleMinutes)||c.saleMinutes<1)throw Error('rules.npcLabor 须登记 tripMinutes 与 saleMinutes（正整数分钟）');
  return c;
 }
-// 一天里交给自主劳动的整段工时上限，与 npc-autonomy 的每日自主工时同一口径。
-const tripLimit=e=>config(e).tripMinutes;
+// 每天投入劳动（走路与作业）的工时上限；整趟可以跨几天，按这个上限逐日排，其余时间在外歇宿。
+const dailyLabor=e=>config(e).tripMinutes;
 
 // ---- 职业 → 劳动类别 ----
 export function npcProfessions(e,state,id){
@@ -86,17 +89,54 @@ function keeperQuote(e,document,{seller,keeper,location,item,quantity}){
  const d=reader(document),business=shopOfKeeper(e,keeper,document.state);
  return marketQuote(d,e,{item,location,seller,buyer:keeper,quantity,business:{...business,keeper}});
 }
-// 一次往返的劳动行程：出发、到达、在场工作、返回，全部按真实路线与作息核对。
-function itinerary(e,document,who,to,work,at){
- const from=document.state.npcs[who].location,out=route(e,document,from,to,at);if(!out)return null;
- const arriveAt=at+out.minutes,finishAt=arriveAt+work,back=route(e,document,to,from,finishAt);if(!back)return null;
- const returnAt=finishAt+back.minutes;
- if(returnAt-at>tripLimit(e)||work<=0)return null;
- return {from,to,departAt:at,arriveAt,finishAt,returnAt,travelCoins:(out.cost??0)+(back.cost??0),outboundEdges:out.edges??[],inboundEdges:back.edges??[]};
+// 路线逐段：每条路段的分钟数按路段长度分摊整条路线的真实耗时（耗时与路费以引擎路线为准）。
+function legs(e,from,path){
+ const rows=(path.edges??[]).map(id=>e.world.routes.find(r=>r.id===id)),total=rows.reduce((n,r)=>n+(r?.lengthKm??0),0);
+ let here=from,spent=0;
+ return rows.map((row,i)=>{
+  const next=row.from===here?row.to:row.from,minutes=i===rows.length-1?path.minutes-spent:Math.round(path.minutes*(total?(row.lengthKm??0)/total:1/rows.length));
+  spent+=minutes;const leg={edge:row.id,from:here,to:next,minutes};here=next;return leg;
+ });
 }
-function carryRoom(e,document,who,item){
- const d=reader(document),kg=packItemKg(d,e,who,item);
- return kg>0?Math.max(0,Math.floor((safeCarryKg(d,e,who)-carriedKg(d,e,who))/kg)):Infinity;
+// 一次往返的劳动行程，可以跨日：每天从出发的钟点起，走路与作业合计不超过每日劳动工时，其余时间在当地歇宿。
+// 结果是逐段的作息槽（segments），整趟写成一条 market_trip，人物按它出门、过夜、作业、回家。
+function itinerary(e,document,who,to,work,at){
+ const from=document.state.npcs[who].location,out=route(e,document,from,to,at);if(!out||!(work>0))return null;
+ const daily=dailyLabor(e),hour=at%DAY,segments=[];let t=at,used=0,here=from;
+ const rest=()=>{const until=Math.floor(t/DAY)*DAY+DAY+hour;segments.push({start:t,end:until,location:here,activity:'在外歇宿',rest:true});t=until;used=0;};
+ const walk=path=>{
+  let chunk=null;
+  for(const leg of legs(e,here,path)){
+   if(used>0&&used+leg.minutes>daily){if(chunk)segments.push(chunk);chunk=null;rest();}
+   chunk??={start:t,end:t,activity:'劳动途中',travel:{from:here,to:here,edges:[]}};
+   t+=leg.minutes;used+=leg.minutes;here=leg.to;chunk.end=t;chunk.travel.to=here;chunk.travel.edges.push(leg.edge);
+  }
+  if(chunk)segments.push(chunk);
+ };
+ walk(out);const arriveAt=t;
+ for(let left=work;left>0;){if(used>=daily)rest();const w=Math.min(left,daily-used);segments.push({start:t,end:t+w,location:to,work:true});t+=w;used+=w;left-=w;}
+ const finishAt=t,back=route(e,document,to,from,finishAt);if(!back)return null;
+ walk(back);
+ const nights=segments.filter(s=>s.rest).length,activeMinutes=segments.filter(s=>!s.rest).reduce((n,s)=>n+s.end-s.start,0);
+ return {from,to,departAt:at,arriveAt,finishAt,returnAt:t,firstDayEnd:segments.find(s=>s.rest)?.start??t,nights,activeMinutes,work,
+  travelCoins:(out.cost??0)+(back.cost??0),outboundEdges:out.edges??[],inboundEdges:back.edges??[],segments};
+}
+// 在外过夜的口粮：家户自给的那种粮，按身体每日饱腹消耗折份。它是成本，也占负重，所以一趟能走多远由负重与储粮派生。
+// 世界没有登记自给口粮时，在外过夜就无从备粮：当天往返之外的行程不成立。
+function rations(e,nights){
+ if(!nights)return {item:null,quantity:0};
+ const food=e.byId.get(e.rules.householdSubsistence?.foodItem);if(!food?.nutrition?.satiety)return null;
+ const perDay=Math.ceil(bodyRule(e,'satiety').drainPerHour.light*24/food.nutrition.satiety);
+ return {item:food.id,quantity:nights*perDay};
+}
+function tripCost(e,document,who,view,trip,home){
+ const food=rations(e,trip.nights),read=stateReader(document.state);if(!food)return null;
+ const meals=food.quantity?goodsWorth(read,e,{item:food.item,quantity:food.quantity,holder:who,location:home})??Infinity:0;
+ return {coins:trip.travelCoins,value:laborCost(e,document,who,view,trip.activeMinutes)+meals};
+}
+function carryRoom(e,document,who,item,food=null){
+ const d=reader(document),kg=packItemKg(d,e,who,item),load=food?.quantity?food.quantity*packItemKg(d,e,who,food.item):0;
+ return kg>0?Math.max(0,Math.floor((safeCarryKg(d,e,who)-carriedKg(d,e,who)-load)/kg)):Infinity;
 }
 function laborCost(e,document,who,view,minutes){return Math.ceil(laborValue(e,document,{worker:who,observer:who,view}).daily*minutes/480);}
 
@@ -104,38 +144,40 @@ export function laborCandidates(e,view,document){
  const state=document.state,who=view.observer,labor=laborCategories(e,state,who),at=view.minute,out=[];
  if(!labor.length||!adult(e,state,who,at))return out;
  const read=stateReader(state),home=view.self.location,day=Math.floor(at/DAY);
- // 采集与伐木：可取的量按工时与负重定，值不值得去看本地真实估值（稀缺越高越值得）。
- const probes=new Map();
+ // 采集与伐木：作业量按据点存量与负重定（口粮也占负重），值不值得去看货值与总工时、路费、口粮的比较。
+ if(activeTrip(state,who,at))return out;
  for(const s of naturalSources(e,state,who,labor)){
-  const room=carryRoom(e,document,who,s.item);
-  if(!probes.has(s.location))probes.set(s.location,itinerary(e,document,who,s.location,s.minutesPerUnit,at));
-  const probe=probes.get(s.location);if(!probe)continue;
-  const work=Math.min(tripLimit(e)-(probe.returnAt-probe.finishAt)-(probe.arriveAt-at),s.minutesPerUnit*Math.min(s.available,room));
-  const quantity=Math.floor(work/s.minutesPerUnit);if(quantity<1)continue;
-  const trip=itinerary(e,document,who,s.location,quantity*s.minutesPerUnit,at);if(!trip)continue;
+  let quantity=Math.min(s.available,carryRoom(e,document,who,s.item));if(!(quantity>=1))continue;
+  let trip=itinerary(e,document,who,s.location,quantity*s.minutesPerUnit,at);if(!trip)continue;
+  // 口粮占的负重可能挤掉几份货：按带上口粮后的负重重算一次。
+  const food=rations(e,trip.nights);if(!food)continue;
+  const room=carryRoom(e,document,who,s.item,food);
+  if(room<quantity){quantity=room;if(quantity<1)continue;trip=itinerary(e,document,who,s.location,quantity*s.minutesPerUnit,at);if(!trip)continue;}
   const worth=goodsWorth(read,e,{item:s.item,quantity,holder:who,location:home});if(!Number.isFinite(worth))continue;
-  const minutes=trip.returnAt-at,cost=laborCost(e,document,who,view,minutes)+trip.travelCoins,utility=worth-cost;
-  if(utility<=0)continue;
+  const cost=tripCost(e,document,who,view,trip,home);if(!cost)continue;
+  const utility=worth-cost.coins-cost.value;
+  if(!(utility>0))continue;
   out.push({id:`labor:${who}:${day}:${s.source}`,kind:'labor',legacy:{kind:'labor_work',labor:s.labor,item:s.item,quantity,source:s.source,resource:s.resource,tool:s.tool,minutesPerUnit:s.minutesPerUnit,...trip},
-   cost:{coins:trip.travelCoins,minutes},reward:worth,needSatisfaction:worth,utility});
+   cost:{coins:cost.coins,value:cost.value,minutes:trip.activeMinutes},reward:worth,needSatisfaction:worth,utility});
  }
  // 出售与运输：本人可售的存货卖给有铺面的收货人；跨聚落的就是运输。
  // 自己有铺面的人在本铺零售（已有的店铺规律），不再把铺货送去别家。
- if((labor.includes('sell')||labor.includes('carry'))&&!shopOfKeeper(e,who,state)){
+ if((labor.includes('sell')||labor.includes('carry'))&&!shopOfKeeper(e,who,state)&&!activeTrip(state,who,at)){
   const settlement=homeSettlement(e,state,who),inventory=state.npcs[who]?.inventory??{};
   for(const item of Object.keys(inventory).sort()){
    const available=saleableStock(read,e,who,item).available;if(!(available>0)||!e.byId.get(item)?.basePrice)continue;
    for(const b of buyers(e,state,who,item)){
     const remote=placeSettlement(e,state,b.location).value!==settlement;
     if(remote?!labor.includes('carry'):!labor.includes('sell'))continue;
-    const trip=itinerary(e,document,who,b.location,config(e).saleMinutes,at);if(!trip)continue;
+    const trip=itinerary(e,document,who,b.location,config(e).saleMinutes,at);if(!trip||!rations(e,trip.nights))continue;
     let quote;try{quote=keeperQuote(e,document,{seller:who,keeper:b.keeper,location:b.location,item,quantity:available});}catch{continue;}
     if(!(quote.totalCoins>0)||quote.totalCoins>(state.npcs[b.keeper]?.coins??0))continue;
     // 可售存货（saleableStock 已扣除本人与家户的自留）是待售的货，值不值得送去卖看货款能否抵过工时与路费。
-    const minutes=trip.returnAt-at,cost=laborCost(e,document,who,view,minutes)+trip.travelCoins,utility=quote.totalCoins-cost;
-    if(utility<=0)continue;
+    const cost=tripCost(e,document,who,view,trip,home);if(!cost)continue;
+    const utility=quote.totalCoins-cost.coins-cost.value;
+    if(!(utility>0))continue;
     out.push({id:`labor:${who}:${day}:sale:${item}:${b.keeper}`,kind:'labor',legacy:{kind:'labor_sale',labor:remote?'carry':'sell',item,quantity:available,keeper:b.keeper,...trip},
-     cost:{coins:trip.travelCoins,minutes},reward:quote.totalCoins,needSatisfaction:quote.totalCoins,utility});
+     cost:{coins:cost.coins,value:cost.value,minutes:trip.activeMinutes},reward:quote.totalCoins,needSatisfaction:quote.totalCoins,utility});
    }
   }
  }
@@ -157,77 +199,103 @@ registerAutonomyProvider('npc_labor',{
  candidates:laborCandidates
 });
 
-// ---- 劳动行程：作息槽是一条 market_trip 记录，人物按它出门、在场、回家 ----
+// ---- 劳动行程：作息槽是一条 market_trip 记录（逐段 segments），人物按它出门、在外歇宿、作业、回家 ----
 const tripKey=task=>`market_trip:labor:${task}`;
 const ACTIVITY={gather:'外出采集',fell:'进山伐木',sell:'送货出售',carry:'运货出售'};
+const clone=v=>structuredClone(v);
+// 出门在外的人不另起劳动；家户劳动与作息由 market_trip 的整段窗口扣除（household-subsistence、npc-schedule 读它）。
+function activeTrip(state,who,at){return recordsWhere(state.records,'category','market_trip').some(r=>r.actor===who&&r.labor&&r.departAt<=at&&at<r.returnAt);}
 function validateTrip(d,e,who,a,{at,ignoreTask=false,taskId}={}){
  const state=d.get('state'),n=state.npcs[who],trip=ignoreTask?state.records[tripKey(taskId)]:null;
- if(!Number.isSafeInteger(a.quantity)||a.quantity<1||!e.byId.get(a.item)||a.departAt!==at&&!ignoreTask||a.returnAt-a.departAt>tripLimit(e)||a.finishAt<a.arriveAt)throw preconditionFailure('劳动行程或数量无效');
+ if(!Number.isSafeInteger(a.quantity)||a.quantity<1||!e.byId.get(a.item)||a.departAt!==at&&!ignoreTask||!(a.departAt<=a.arriveAt&&a.arriveAt<=a.finishAt&&a.finishAt<=a.returnAt)||!Array.isArray(a.segments))throw preconditionFailure('劳动行程或数量无效');
  if(!laborCategories(e,state,who).includes(a.labor))throw preconditionFailure('本人的职业不做这项劳动');
  if(!ignoreTask){
   if(n.location!==a.from||n.scheduleTravel||n.cognitionTravel||n.caring||n.levy)throw preconditionFailure('劳动者不在出发地点');
   if(householdWorkTime(e,state,who,at).unattended)throw preconditionFailure('家中无人照看，不能出门劳动');
-  const fresh=itinerary(e,d.document,who,a.to,a.finishAt-a.arriveAt,at);
+  if(activeTrip(state,who,at))throw preconditionFailure('人还在外劳动');
+  const fresh=itinerary(e,d.document,who,a.to,a.work,at);
   if(!fresh||fresh.arriveAt!==a.arriveAt||fresh.returnAt!==a.returnAt||fresh.travelCoins!==a.travelCoins)throw preconditionFailure('真实路线已改变');
-  for(let cursor=at;cursor<a.returnAt;){const s=scheduleAt(e,who,cursor,state);if(!s||s.location!==a.from||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(s.activity??''))throw preconditionFailure('没有完整的劳动空档');cursor=s.until;}
+  // 出发当天的空档要完整；之后各天由这趟行程占用，作息与家户劳动随之扣除。
+  for(let cursor=at;cursor<a.firstDayEnd;){const s=scheduleAt(e,who,cursor,state);if(!s||s.location!==a.from||/睡眠|睡觉|熟睡|赶路|前往|返回/.test(s.activity??''))throw preconditionFailure('没有完整的劳动空档');cursor=s.until;}
   e.assertNpcAutonomyAction(state,[who],{start:at,minutes:a.returnAt-at});
   e.assertNpcObligationAction(d,[who],{start:at,minutes:a.returnAt-at,location:a.from,kind:'autonomy'});
   if(a.travelCoins>(n.coins??0))throw preconditionFailure('路费不足');
- }else if(!trip||trip.actor!==who||state.minute<a.finishAt||!(n.location===a.to||n.location===null&&n.scheduleTravel?.from===a.to))throw preconditionFailure('劳动者没有实际到场');
+ }else if(!trip||trip.actor!==who)throw preconditionFailure('劳动行程已不存在');
 }
 function startTrip(d,e,who,a,{actionId}){
- const id=tripKey(actionId);
+ const id=tripKey(actionId),activity=ACTIVITY[a.labor]??'外出劳动';
  d.set(['state','records',id],{id,category:'market_trip',actor:who,from:a.from,to:a.to,departAt:a.departAt,arriveAt:a.arriveAt,finishAt:a.finishAt,returnAt:a.returnAt,
-  outboundEdges:a.outboundEdges,inboundEdges:a.inboundEdges,paid:a.travelCoins,sourceEvent:actionId,purpose:`labor:${a.labor}`,labor:a.labor,activity:ACTIVITY[a.labor]??'外出劳动',travelActivity:'劳动途中'});
+  outboundEdges:a.outboundEdges,inboundEdges:a.inboundEdges,paid:a.travelCoins,sourceEvent:actionId,purpose:`labor:${a.labor}`,labor:a.labor,activity,travelActivity:'劳动途中',
+  segments:a.segments.map(s=>s.work?{...s,activity}:s),action:clone(a)});
  if(a.travelCoins){moveCoins(d,{from:purse(e,who),to:sink('export','travel'),amount:a.travelCoins,writer,eventId:actionId});mirrorPartyCoins(d,e,who,-a.travelCoins,actionId,writer);}
 }
 // 劳动记录：谁、做了哪类劳动、在哪、产出或卖出了什么、卖给谁、得了多少钱。
 function laborRecord(d,actionId,row){holdingSet(d,null,['state','records',`labor:${actionId}`],{category:'labor',sourceEvent:actionId,...row},writer,actionId);}
+const departure=(e,a)=>({summary:`动身去${e.byId.get(a.to)?.name??a.to}${ACTIVITY[a.labor]??'劳动'}${a.nights?`，预计在外${a.nights}夜`:''}。`,spent:{minutes:a.firstDayEnd-a.departAt,coins:a.travelCoins}});
+const usableTool=(d,e,who,tool)=>!tool||e.quantity(d,who,tool)>0&&(heldUnit(d,e,who,tool)?.durability??e.byId.get(tool)?.durability??0)>0;
 
 registerAutonomyKind('labor_work',{
  itinerary:true,
- minutes:(e,a)=>a.finishAt-a.departAt,
+ minutes:(e,a)=>a.firstDayEnd-a.departAt,
  validate(d,e,who,a,o){
   validateTrip(d,e,who,a,o);
-  if(a.tool&&(e.quantity(d,who,a.tool)<1||(heldUnit(d,e,who,a.tool)?.durability??e.byId.get(a.tool)?.durability??0)<=0))throw preconditionFailure('没有完好的实际工具');
+  if(!usableTool(d,e,who,a.tool))throw preconditionFailure('没有完好的实际工具');
  },
  start:startTrip,
- execute(d,e,who,a,{actionId,at}){
-  const to=bag(e,who,a.item),room=carryRoom(e,d.document,who,a.item),want=Math.min(a.quantity,room);
-  let taken=0;
-  if(a.labor==='gather'){const [,site]=a.source.split(':');taken=siteTake(d,e,site,a.resource,{quantity:want,minutes:a.finishAt-a.arriveAt,holder:who,settlement:homeSettlement(e,d.get('state'),who),to,eventId:actionId});}
-  else if(a.labor==='fell'){taken=harvestForest(d,e,a.to,want,at,{to,eventId:actionId});if(a.tool)wearItem(d,e,who,a.tool,e.rules.forestWater.forest.wear);}
-  if(taken)changeItems(d,e,who,a.item,taken,{books:BOOKED});
-  laborRecord(d,actionId,{npc:who,labor:a.labor,location:a.to,minute:at,source:a.source,produced:taken?[{item:a.item,quantity:taken}]:[],success:taken>0});
-  if(!taken)throw preconditionFailure('到场后没有可取的资源');
-  return {summary:`去${e.byId.get(a.to)?.name??a.to}${ACTIVITY[a.labor]??'劳动'}，得${e.byId.get(a.item)?.name??a.item}${taken}份。`,spent:{minutes:a.finishAt-a.departAt,coins:a.travelCoins}};
- }
+ execute:(d,e,who,a)=>departure(e,a)
 });
-
 registerAutonomyKind('labor_sale',{
  itinerary:true,
- minutes:(e,a)=>a.finishAt-a.departAt,
+ minutes:(e,a)=>a.firstDayEnd-a.departAt,
  validate(d,e,who,a,o){
   validateTrip(d,e,who,a,o);
   const keeper=d.get('state','npcs',a.keeper);
   if(!keeper||!isEffective(e,d.get('state'),a.keeper)||['死亡','濒死','昏迷','患病'].includes(keeper.status))throw preconditionFailure('收货人不能接待');
-  for(let cursor=a.arriveAt;cursor<a.finishAt;){const s=scheduleAt(e,a.keeper,cursor,d.get('state'));if(!s||s.location!==a.to||!s.services?.includes('trade'))throw preconditionFailure('收货人没有接待窗口');cursor=s.until;}
+  if(!o.ignoreTask)for(let cursor=a.arriveAt;cursor<a.finishAt;){const s=scheduleAt(e,a.keeper,cursor,d.get('state'));if(!s||s.location!==a.to||!s.services?.includes('trade'))throw preconditionFailure('收货人没有接待窗口');cursor=s.until;}
  },
  start:startTrip,
- execute(d,e,who,a,{actionId,at}){
-  const state=d.get('state'),keeper=state.npcs[a.keeper];
-  if(!keeper||keeper.location!==a.to||keeper.scheduleTravel||keeper.cognitionTravel)throw preconditionFailure('收货人实际不在铺里');
-  const read=reader(d.document),quantity=Math.min(a.quantity,saleableStock(read,e,who,a.item).available);
-  if(quantity<1)throw preconditionFailure('可售存货已经没有了');
-  const quote=keeperQuote(e,d.document,{seller:who,keeper:a.keeper,location:a.to,item:a.item,quantity});
-  if(!(quote.totalCoins>0)||quote.totalCoins>(keeper.coins??0))throw preconditionFailure('收货人付不起货款');
-  const resale=goodsWorth(read,e,{item:a.item,quantity,holder:a.keeper,location:a.to});
-  if(npcDecision(subjectiveView(e,d.document,a.keeper),{kind:'buy',from:who,cost:{coins:quote.totalCoins},reward:resale??0}).outcome!=='agree')throw preconditionFailure('收货人不愿按这个价收');
-  transferItems(d,e,who,a.keeper,a.item,quantity);
-  moveCoins(d,{from:purse(e,a.keeper),to:purse(e,who),amount:quote.totalCoins,writer,eventId:actionId});
-  mirrorPartyCoins(d,e,a.keeper,-quote.totalCoins,actionId,writer);mirrorPartyCoins(d,e,who,quote.totalCoins,actionId,writer);
-  recordMarketDeal(d,quote,quote.totalCoins,quantity,actionId);
-  laborRecord(d,actionId,{npc:who,labor:a.labor,side:'sell',buyer:a.keeper,from:a.from,to:a.to,location:a.to,minute:at,goods:[{item:a.item,quantity}],totalCoins:quote.totalCoins,success:true});
-  return {summary:`把${e.byId.get(a.item)?.name??a.item}${quantity}份${a.labor==='carry'?'运到':'送到'}${e.byId.get(a.to)?.name??a.to}，卖给${e.byId.get(a.keeper)?.name??a.keeper}，得${quote.totalCoins}铜。`,spent:{minutes:a.finishAt-a.departAt,coins:a.travelCoins}};
+ execute:(d,e,who,a)=>departure(e,a)
+});
+
+// ---- 作业结束那一刻结算：人确实在作业地，才按实际取得或成交入账 ----
+function present(d,e,who,a){
+ const n=d.get('state','npcs',who);
+ return Boolean(n)&&isEffective(e,d.get('state'),who)&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&(n.location===a.to||n.location===null&&n.scheduleTravel?.from===a.to);
+}
+function settleWork(d,e,who,a,id,at){
+ const to=bag(e,who,a.item),want=Math.min(a.quantity,carryRoom(e,d.document,who,a.item));
+ let taken=0,reason=null;
+ if(!present(d,e,who,a))reason='劳动者没有实际到场';
+ else if(!usableTool(d,e,who,a.tool))reason='没有完好的实际工具';
+ else if(a.labor==='gather'){const [,site]=a.source.split(':');taken=siteTake(d,e,site,a.resource,{quantity:want,minutes:a.work,holder:who,settlement:homeSettlement(e,d.get('state'),who),to,eventId:id});}
+ else if(a.labor==='fell'){taken=harvestForest(d,e,a.to,want,at,{to,eventId:id});if(a.tool)wearItem(d,e,who,a.tool,e.rules.forestWater.forest.wear);}
+ if(taken)changeItems(d,e,who,a.item,taken,{books:BOOKED});
+ laborRecord(d,id,{npc:who,labor:a.labor,location:a.to,minute:at,source:a.source,produced:taken?[{item:a.item,quantity:taken}]:[],success:taken>0,nights:a.nights,...(taken?{}:{reason:reason??'到场后没有可取的资源'})});
+}
+function settleSale(d,e,who,a,id,at){
+ const fail=reason=>laborRecord(d,id,{npc:who,labor:a.labor,from:a.from,to:a.to,location:a.to,minute:at,goods:[],success:false,reason,nights:a.nights});
+ const state=d.get('state'),keeper=state.npcs[a.keeper];
+ if(!present(d,e,who,a))return fail('劳动者没有实际到场');
+ if(!keeper||keeper.location!==a.to||keeper.scheduleTravel||keeper.cognitionTravel)return fail('收货人实际不在铺里');
+ const read=reader(d.document),quantity=Math.min(a.quantity,saleableStock(read,e,who,a.item).available);
+ if(quantity<1)return fail('可售存货已经没有了');
+ const quote=keeperQuote(e,d.document,{seller:who,keeper:a.keeper,location:a.to,item:a.item,quantity});
+ if(!(quote.totalCoins>0)||quote.totalCoins>(keeper.coins??0))return fail('收货人付不起货款');
+ const resale=goodsWorth(read,e,{item:a.item,quantity,holder:a.keeper,location:a.to});
+ if(npcDecision(subjectiveView(e,d.document,a.keeper),{kind:'buy',from:who,cost:{coins:quote.totalCoins},reward:resale??0}).outcome!=='agree')return fail('收货人不愿按这个价收');
+ transferItems(d,e,who,a.keeper,a.item,quantity);
+ moveCoins(d,{from:purse(e,a.keeper),to:purse(e,who),amount:quote.totalCoins,writer,eventId:id});
+ mirrorPartyCoins(d,e,a.keeper,-quote.totalCoins,id,writer);mirrorPartyCoins(d,e,who,quote.totalCoins,id,writer);
+ recordMarketDeal(d,quote,quote.totalCoins,quantity,id);
+ laborRecord(d,id,{npc:who,labor:a.labor,side:'sell',buyer:a.keeper,from:a.from,to:a.to,location:a.to,minute:at,goods:[{item:a.item,quantity}],totalCoins:quote.totalCoins,success:true,nights:a.nights});
+}
+const pendingTrips=state=>recordsWhere(state.records,'category','market_trip').filter(r=>r.labor&&r.action&&r.settledAt===undefined);
+registerAdvance({id:'npc_labor',order:1105,
+ nextMinute:(e,d,now)=>Math.min(Infinity,...pendingTrips(d.get('state')).map(r=>r.finishAt).filter(m=>m>now)),
+ advance(e,d,{after}){
+  for(const trip of pendingTrips(d.get('state')).filter(r=>r.finishAt<=after).sort((a,b)=>a.finishAt-b.finishAt||a.id.localeCompare(b.id))){
+   (trip.action.kind==='labor_sale'?settleSale:settleWork)(d,e,trip.actor,trip.action,trip.sourceEvent,trip.finishAt);
+   d.set(['state','records',trip.id,'settledAt'],trip.finishAt);
+  }
  }
 });
