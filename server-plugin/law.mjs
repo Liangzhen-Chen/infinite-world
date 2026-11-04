@@ -1,5 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {takeNotedOffenses,noteOffense} from './offense-notes.mjs';
+import lawBalance from '../world/rules/tables/balance/law.json' with {type:'json'};
 import {preconditionFailure} from './precondition.mjs';
 import {goodsWorth,valuation} from './valuation.mjs';
 import {recordStandingEvidence} from './npc-state.mjs';
@@ -86,6 +87,7 @@ const codeFor=legalCodeAt;
 // K6 legality is a consequence: offenses are derived from the behaviour class
 // (act) and the attributes of what it acts on (against), never from item or
 // place ids. A code without its own clause sentences by the broader offense.
+const reactionTable=engine=>(engine.world.balance?.law??lawBalance).params.find(p=>p.id==='offense.reaction').value;
 const OFFENSES=JSON.parse(readFileSync(new URL('../world/ontology/offenses.json',import.meta.url),'utf8')).entries;
 const broaderOf=offense=>OFFENSES.find(o=>o.id===offense)?.broader?.replace(/^offense:/,'')??null;
 const offenseChain=offense=>{const out=[];for(let at=offense;at&&!out.includes(at);at=broaderOf(at))out.push(at);return out;};
@@ -206,18 +208,24 @@ export function registerOffense(d,engine,{actor='player',act,subject={},victim=n
  if(caseId)holdingSet(d,null,path(caseId),{...d.get(...path(caseId)),offenseRecord:`offense:${key}`},'law');
  // The offense is a fact under the applicable norms even where no court can
  // execute them yet; the case, when there is one, carries the procedure.
- const law=normSnapshot(normStack(engine,s,actor,location,s.minute,{codes:legalCodes(engine.world,s)}),row.id);
+ const stack=normStack(engine,s,actor,location,s.minute,{codes:legalCodes(engine.world,s)}),law=normSnapshot(stack,row.id);
+ // How grave the wrong is: the fine its own (or the analogous broader)
+ // statute sets for this value, or the value itself where no statute speaks.
+ const code=codeFor(engine,location,s),penalty=offenseChain(row.id).map(at=>normSnapshot(stack,at).penalty??(code?ownPenalty(engine,code,at):null)).find(Boolean);
+ const fine=penalty?(penalty.baseFine??0)+Math.ceil((value??0)*(penalty.valueMultiplier??0)):value??0;
+ const tune=reactionTable(engine),loss=Math.min(tune.maximum,Math.max(tune.minimum,Math.round(fine/tune.finePerTrust)));
+ const witnessed=Math.max(tune.minimum,Math.round(loss*tune.bystanderShare));
  const record=`offense:${key}`;unique(d,record);
- holdingSet(d,null,path(record),{category:'offense',id:record,offense:row.id,act,subject:structuredClone(subject),offender:actor,victim,value,stolen,location,minute:s.minute,witnesses:[...seen],case:caseId,law:law.source,sourceEvent:eventId},'law');
+ holdingSet(d,null,path(record),{category:'offense',id:record,offense:row.id,act,subject:structuredClone(subject),offender:actor,victim,value,stolen,location,minute:s.minute,witnesses:[...seen],case:caseId,law:law.source,fine,sourceEvent:eventId},'law');
  // A victim who saw it reacts at once, court or no court.
  if(victim&&seen.includes(victim)&&s.npcs?.[victim]){
-  recordStandingEvidence(d,engine,{key:`offense:${key}`,sourceEvent:eventId,eventType:'欺骗',from:victim,to:actor,minute:s.minute,delta:{trust:-5}});
+  recordStandingEvidence(d,engine,{key:`offense:${key}`,sourceEvent:eventId,eventType:'欺骗',from:victim,to:actor,minute:s.minute,delta:{trust:-loss}});
   d.set(['state','npcs',victim,'developments'],[...d.get('state','npcs',victim,'developments')??[],{type:'发现财物侵犯',source:eventId,minute:s.minute}]);
  }
  // Bystanders who saw the wrong think a little less of the one who did it.
- for(const witness of seen)if(witness!==victim&&s.npcs?.[witness])recordStandingEvidence(d,engine,{key:`offense:${key}:${witness}`,sourceEvent:eventId,eventType:'目睹犯禁',from:witness,to:actor,minute:s.minute,delta:{trust:-2}});
+ for(const witness of seen)if(witness!==victim&&s.npcs?.[witness])recordStandingEvidence(d,engine,{key:`offense:${key}:${witness}`,sourceEvent:eventId,eventType:'目睹犯禁',from:witness,to:actor,minute:s.minute,delta:{trust:-witnessed}});
  d.say?.(`此举构成${row.label}${caseId?'，已立案待查':'，当地没有可执行的法典'}${witnesses.length?`；在场${witnesses.length}人看见`:''}`);
- return {offense:row.id,label:row.label,record,case:caseId,witnesses:[...seen],victim};
+ return {offense:row.id,label:row.label,record,case:caseId,witnesses:[...seen],victim,gravity:{fine,trust:loss}};
 }
 // Breaches noted on this transaction (offense-notes.mjs) become offenses now.
 export function commitOffenses(d,engine,eventId){

@@ -59,3 +59,22 @@ test('物理上做不到的仍然拒绝，理由是物理的：数量不够',asy
  assert.ok(out.error||out.result?.receipt?.status==='rejected');
  assert.doesNotMatch(reason,/许可|授权|所有者|别人的|权利/);
 });
+
+test('反应随罪行轻重派生：同一失主，贵重之物引起的信任下降大于廉价之物，系数来自数据表',async()=>{
+ const take=async item=>{
+  const g=game(world,`k6-gravity-${item}`);await call(g,'world_move',{destination:'bld_hw_qingdeng'});
+  Object.assign(g.doc.state.npcs.npc_hw_linsui,{location:'bld_hw_qingdeng',activity:'看店'});
+  const bag=g.doc.state.npcs.npc_hw_linsui.inventory;bag[item]=typeof bag[item]==='object'?{...bag[item],quantity:Math.max(1,bag[item].quantity??0)}:Math.max(1,bag[item]??0);
+  const {eventId,result}=await call(g,'world_propose',{intent:'当面拿走林穗的东西',effects:[{op:'transfer',from:account('npc_hw_linsui',item),to:account('player',item),qty:1}]});
+  assert.equal(result.receipt?.status,'committed',JSON.stringify(result.receipt?.reason));
+  const o=result.receipt.consequences.find(c=>c.type==='offense');
+  const e=Object.values(g.doc.state.relationEvidence).find(e=>e.sourceEvent===eventId&&e.from==='npc_hw_linsui');
+  return {fine:o.gravity.fine,trust:-e.delta.trust,record:g.doc.state.records[o.record]};
+ };
+ const priced=world.items.filter(i=>i.basePrice>0&&(i.weight??0)<=1).sort((a,b)=>a.basePrice-b.basePrice);
+ const cheap=await take(priced[0].id),dear=await take(priced.at(-1).id);
+ assert.ok(dear.fine>cheap.fine,`${dear.fine}>${cheap.fine}`);assert.ok(dear.trust>cheap.trust,`${dear.trust}>${cheap.trust}`);
+ assert.equal(dear.record.fine,dear.fine);
+ const tune=world.balance.law.params.find(p=>p.id==='offense.reaction').value;
+ for(const r of [cheap,dear])assert.equal(r.trust,Math.min(tune.maximum,Math.max(tune.minimum,Math.round(r.fine/tune.finePerTrust))));
+});
