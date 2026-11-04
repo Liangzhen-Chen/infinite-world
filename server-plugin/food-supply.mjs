@@ -1,6 +1,6 @@
 // Producer-to-counter supply. Quotes are carried home by a real, timed scouting
 // trip; distant stock and prices never enter a producer's subjective decision.
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,cloneData} from './storage.mjs';
 import {declareLedgerWriter,balance} from './ledger.mjs';
 import {cargo,moveStock} from './stock.mjs';
 import {treasury,purse,escrow,moveCoins,counterCash,dedicatedCoinAccount} from './money.mjs';
@@ -37,7 +37,7 @@ defineHoldingSource('food-supply',{
 installExternalTransportCargo('food_supply',{
  read:(_d,_e,o)=>amount(o)?[{item:o.item,quantity:amount(o)}]:[],
  damage(d,e,old,item,quantity,eventId){
-  const o=structuredClone(old);if(item!==o.item||quantity>amount(o))throw Error('Food supply damage exceeds real cargo');
+  const o=cloneData(old);if(item!==o.item||quantity>amount(o))throw Error('Food supply damage exceeds real cargo');
   let left=quantity;
   for(const b of o.batches){const used=Math.min(left,b.amount);if(used)moveStock(d,{from:cargo(e,o.id,item),to:`sink:destroy|${cargo(e,o.id,item).split('|')[1]}|cargo_loss`,amount:used,writer:'food-supply',eventId,pick:[String(b.id)]});b.amount-=used;left-=used;}
   o.batches=o.batches.filter(b=>b.amount);o.lostFood+=quantity;persist(d,o);
@@ -206,13 +206,13 @@ function planProducers(d,e,minute,production){
  return plans;
 }
 function stored(o){
- const value=structuredClone(o),t=value.transport;
+ const value=cloneData(o),t=value.transport;
  value.unitPriceCopper=value.unitPrice;
  for(const [object,field]of [[t,'remainingKm'],[t?.segment,'distanceKm']])if(object&&typeof object[field]==='number'&&!Number.isSafeInteger(object[field]))object[field]=toRational(object[field]);
  return value;
 }
 function moving(o){
- const value=structuredClone(o),t=value.transport;
+ const value=cloneData(o),t=value.transport;
  for(const [object,field]of [[t,'remainingKm'],[t?.segment,'distanceKm']])if(object?.[field]?.numerator!==undefined)object[field]=fromRational(object[field]);
  return value;
 }
@@ -241,7 +241,7 @@ function dispatch(d,e,p,minute){
   // Re-plan against live stock, money and capacity immediately before locking.
   if(surplus(d,e,p,Math.floor(minute/DAY))<p.quantity||counterCash(d,p.shop.keeper)<p.quantity*p.q.unitPrice||demand(d,e,p.shop,p.item)<p.quantity)return;
   const privateStock=!p.public?d.get(...e.bagPath(p.seller),p.item):null;
-  o.batches=p.legacy?[{id:'stock',amount:p.quantity,harvestDay:null,expiresDay:null,kind:null}]:p.public?structuredClone(d.get('state','records',`agriculture:${p.seller}`,'batches')).filter(b=>b.kind==='grain'&&b.expiresDay>Math.floor(minute/DAY)): [{id,amount:p.quantity,harvestDay:privateStock?.harvestDay??null,expiresDay:privateStock?.expiresDay??null,kind:'grain'}];
+  o.batches=p.legacy?[{id:'stock',amount:p.quantity,harvestDay:null,expiresDay:null,kind:null}]:p.public?cloneData(d.get('state','records',`agriculture:${p.seller}`,'batches')).filter(b=>b.kind==='grain'&&b.expiresDay>Math.floor(minute/DAY)): [{id,amount:p.quantity,harvestDay:privateStock?.harvestDay??null,expiresDay:privateStock?.expiresDay??null,kind:'grain'}];
   let left=p.quantity;for(const b of o.batches){const n=Math.min(left,b.amount);b.amount=n;left-=n;}o.batches=o.batches.filter(b=>b.amount);
   persist(d,o);
   if(p.public){const draw=advanceHook('foodSupplyDrawGranary');if(!draw)throw Error('Agriculture supply adapter is not installed');const n=draw(d,e,p.seller,p.quantity,{to:{account:cargo(e,id,p.item)},eventId:id,minimumReserve:p.legacy?d.get('state','settlements',p.seller,'population')*p.profile.reserveDays:undefined});if(n!==p.quantity)throw Error('Food supply surplus changed at pickup');}
@@ -293,12 +293,12 @@ function arrive(d,e,o,minute){
 function home(d,o,minute){
  o.transport.phase='home';o.transport.nextAt=null;o.homeAt=minute;
  if(o.scout){
-  const k=statsKey(o.settlement),s=structuredClone(d.get(...key(k))??{category:'food_supply_stats',settlement:o.settlement,quotes:[]});
+  const k=statsKey(o.settlement),s=cloneData(d.get(...key(k))??{category:'food_supply_stats',settlement:o.settlement,quotes:[]});
   if(o.observedQuote)s.quotes=[...s.quotes.filter(q=>q.buyer!==o.buyer||q.item!==o.item),o.observedQuote];
   d.set(key(k),s);o.status='observed';
  }
  if(o.personCarrier&&d.get('state','npcs',o.manager,'cognitionTravel')?.transport===o.id)holdingRemove(d,null,['state','npcs',o.manager,'cognitionTravel'],'food-supply');
- const k=statsKey(o.settlement),stats=structuredClone(d.get(...key(k))??{category:'food_supply_stats',settlement:o.settlement,quotes:[]});
+ const k=statsKey(o.settlement),stats=cloneData(d.get(...key(k))??{category:'food_supply_stats',settlement:o.settlement,quotes:[]});
  const total=stats.destinations??={},dest=total[o.shop]??{arrived:0,spoiled:0,lost:0,paidCopper:0,refundCopper:0,shipments:0};
  if(!o.scout){dest.arrived+=o.deliveredFood;dest.spoiled+=o.spoiledFood;dest.lost+=o.lostFood;dest.paidCopper+=o.paidCopper??0;dest.refundCopper+=o.refundCopper??0;dest.shipments++;total[o.shop]=dest;stats.destinations=total;}
  stats.lastReturnAt=minute;d.set(key(k),stats);
@@ -318,7 +318,7 @@ export function advanceFoodSupply(d,e,minute=d.get('state','minute'),{plan=true,
   if(JSON.stringify(stored(o))!==JSON.stringify(old))persist(d,o);
   if(o.carriage){
    const trip=d.get('state','records',o.carriage);
-   if(trip?.status==='wrecked'){settleWreckedShipment(d,e,trip.id,minute);Object.assign(o,structuredClone(d.get(...key(o.id))));spoil(d,e,o,minute,true);o.status='lost';
+   if(trip?.status==='wrecked'){settleWreckedShipment(d,e,trip.id,minute);Object.assign(o,cloneData(d.get(...key(o.id))));spoil(d,e,o,minute,true);o.status='lost';
     refundBill(d,o);home(d,o,minute);
    }else if(['arrived','delivered'].includes(trip?.status)){
     if(arrive(d,e,o,minute))home(d,o,minute);else t.nextAt=(Math.floor(minute/720)+1)*720;

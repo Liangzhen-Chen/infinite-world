@@ -1,4 +1,4 @@
-import {recordsWhere,recordEntriesWhere} from './storage.mjs';
+import {recordsWhere,recordEntriesWhere,cloneData} from './storage.mjs';
 import {marketQuote} from './market.mjs';
 import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -18,7 +18,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('settlement-trade',{kinds:[],locations:true});
 
 const DAY=1440, CLOCK='settlement-trade:clock';
-const clone=value=>structuredClone(value);
+const clone=value=>cloneData(value);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const profile=(engine,id)=>engine.rules.agriculture?.settlements.find(p=>p.settlement===id);
 const cargo=row=>row.batches.reduce((n,b)=>n+b.amount,0);

@@ -1,7 +1,7 @@
 // A2 / I25. No cross-world cache: every projection belongs to this document.
 import {personCareer} from './entity-view.mjs';
 import {relationView} from './npc-state.mjs';
-import {recordsWhere,recordsMemo} from './storage.mjs';
+import {recordsWhere,recordsMemo,cloneData} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {languageId,isLanguage} from './domain-rules.mjs';
 import {registerDerivedViewResolver,derivedFactValues} from './derived.mjs';
@@ -28,7 +28,7 @@ export function canReadLanguage(e,s,id,language='lang:common'){
 const ownedAccounts=Symbol('subjective own accounts');
 const ownedHoldings=Symbol('subjective own holdings');
 
-const copy=x=>structuredClone(x);
+const copy=x=>cloneData(x);
 const active=o=>['待履行','进行中','在任','有效'].includes(o.status);
 const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id];
 const location=(s,id)=>id==='player'?s.location:actor(s,id)?.location;

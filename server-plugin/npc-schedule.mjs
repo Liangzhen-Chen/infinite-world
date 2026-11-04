@@ -26,7 +26,7 @@ export function withScheduleCache(engine,d,task){
     const previous=engine.scheduleReadCache,own=Object.hasOwn(engine,'scheduleReadCache');
     if(previous?.draft===d)return task();
     const cursor=d.cursor,observer=cursor?.onPatch;
-    const cache=cursor instanceof PatchCursor?{draft:d,engine,seed:cursor.root.randomSeed,people:new Map(),snapshots:new WeakMap()}:null;
+    const cache=cursor instanceof PatchCursor?{draft:d,engine,seed:cursor.root.randomSeed,check:process.env.FIELDS_INDEX_CHECK==='1',people:new Map(),snapshots:new WeakMap()}:null;
     engine.scheduleReadCache=cache;
     if(cache)cursor.onPatch=patch=>{observer?.(patch);invalidateSchedule(cache,patch);};
     try{return task();}finally{
@@ -88,7 +88,7 @@ function cachedSchedule(engine,npcId,minute,state,constraints,read){
     const key=`${state.minute}:${minute}`;
     if(person.minutes.has(key)){
         const hit=person.minutes.get(key);
-        if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(hit,read()))throw Error(`schedule cache mismatch: ${npcId} at ${minute}`);
+        if(cache.check&&!canonicalEqual(hit,read()))throw Error(`schedule cache mismatch: ${npcId} at ${minute}`);
         return hit;
     }
     const slot=read();person.minutes.set(key,slot);return slot;
@@ -211,6 +211,7 @@ export function advanceNpcSchedules(d,engine,before,after,{promote=false,beforeS
 }
 function settleSchedules(d,engine,before,after,{promote=false,beforeState=null,actors=null,local=false}={}){
     if(after<=before&&!promote)return;
+    const checkSlots=process.env.FIELDS_INDEX_CHECK==='1';
     const weatherCache=new Map(engine.weatherSequences?[[WEATHER_SEQUENCES,engine.weatherSequences]]:[]),graphCache=engine.advanceGraphs??new Map(); // One immutable world/seed and time advance only.
     const constraints=personConstraints(engine,peekState(d)),routes=new Map();
     const jobs=new Map(recordsWhere(peekState(d).records,'kind','workshop').filter(employmentActive).map(r=>[r.worker,r]));
@@ -286,7 +287,7 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null,a
         // stationary, unchanged slot has no work until its boundary. Teaching,
         // employment attendance, companions and furnaces retain the full path.
         if(!regional&&slot&&slot.until>after&&current.location===slot.location&&current.activity===slot.activity&&!current.scheduleTravel&&!incapacitated(current)&&!state.player.companions?.includes(npcId)&&!jobs.has(npcId)&&!crews.has(npcId)&&!engine.educationAttendance?.has(npcId)&&!facilityRuntime().hasUnattendedFurnace(engine,npcId)){
-            if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(slot,scheduleAt(engine,npcId,before,peekState(d),constraints)))throw Error(`schedule settlement cache mismatch: ${npcId} at ${before}`);
+            if(checkSlots&&!canonicalEqual(slot,scheduleAt(engine,npcId,before,peekState(d),constraints)))throw Error(`schedule settlement cache mismatch: ${npcId} at ${before}`);
             continue;
         }
         const original=d.get('state','npcs',npcId),npc={...original},path=['state','npcs',npcId];

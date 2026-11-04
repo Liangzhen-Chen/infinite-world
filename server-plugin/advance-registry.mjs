@@ -197,7 +197,7 @@ function buildScheduleHeap(engine,d,now,end){
     const constraints=personConstraints(engine,state);
     const overrides=scheduleOverrides(engine,constraints);
     d.scheduleEducation.overrides=overrides;d.scheduleEducation.festivals=constraints.festivals.length>0;
-    const slots=new Map(),pending=new Set(),npcOrder=new Map();
+    const slots=new Map(),pending=new Set(),npcOrder=new Map(),checkSlots=process.env.FIELDS_INDEX_CHECK==='1';
     Object.assign(d.scheduleEducation,{slots,pending,npcOrder});
     const schedulePlan=advanceLayerPlan(engine,state);
     const regional=Object.keys(state.remote??{}).length?remoteScheduleBatch(engine,state,now,end):null;
@@ -219,7 +219,7 @@ function buildScheduleHeap(engine,d,now,end){
             // authored start/end metadata still changes at the original edge.
             const priorValid=prior?.until>now&&(prior.end===undefined||Math.floor(now/1440)*1440+prior.end>now);
             const slot=priorValid?prior:engine.protocolScheduleAt(engine,id,now,state,constraints);
-            if(priorValid&&process.env.FIELDS_INDEX_CHECK==='1'){
+            if(priorValid&&checkSlots){
                 const fresh=engine.protocolScheduleAt(engine,id,now,state,constraints);
                 if(!canonicalEqual(slot,fresh))throw Error(`schedule heap cache mismatch: ${id} at ${now}: ${JSON.stringify({cached:slot,fresh})}`);
             }

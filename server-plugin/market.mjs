@@ -6,8 +6,8 @@ import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
-import {recordsMemo} from './storage.mjs';
-import {householdResources,householdCommitments,statisticalFoodNeed} from './household-budget.mjs';
+import {recordsMemo,stateMemo} from './storage.mjs';
+import {householdResources,householdCommitments,statisticalFoodNeed,budgetRead} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 
@@ -204,7 +204,15 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained+r.committed,0)+statisticalDemand,1);
  return {place,goods,supply,demand,statisticalDemand,rows};
 }
+// The supply of one item at one place is read many times between two writes (every customer, household and
+// shop in a settlement quotes the same goods). It depends only on the document, so it is shared under the
+// same rule as the household budget: per draft revision, or per frozen projection through its state memo.
+// Callers treat the result as read-only.
+const supplyMemo=Symbol('market supply');
 export function marketSupply(d,engine,item,location,options={}){
+ return budgetRead(d,engine,[supplyMemo,item,location,(options.businessOwners??[]).join('\n')],()=>readMarketSupply(d,engine,item,location,options));
+}
+function readMarketSupply(d,engine,item,location,options){
  const current=stockSupply(d,engine,item,location,options);
  const forward=engine.world.items.filter(it=>goodsClass(engine,it.id)===current.goods).map(it=>forwardSupply(d,engine,it.id,location));
  const state=stateOf(d),horizon=rulesOf(engine).forward.timeDiscountMinutes??rulesOf(engine).forward.quarterMinutes,consignments=[];
@@ -356,6 +364,25 @@ export function laborValue(engine,document,{worker='player',observer=null,profic
  return {...quote,daily:Math.max(1,Math.ceil(quote.value))};
 }
 
+// The projection one observer prices a place from is fixed by the document, the view and the place, so every
+// quote of that view at that place reads one frozen state. Its reader carries a state memo, which lets the
+// household and business reads inside a quote be shared by the other items priced from the same projection.
+const subjectiveProjections=new WeakMap();
+const subjectiveMemo=Symbol('subjective projection memo');
+function subjectiveReader(engine,document,view,location,known){
+ let entry=subjectiveProjections.get(view);
+ if(!entry||entry.engine!==engine||entry.state!==document.state||entry.seed!==document.randomSeed)subjectiveProjections.set(view,entry={engine,state:document.state,seed:document.randomSeed,places:new Map()});
+ let reader=entry.places.get(location);
+ if(reader)return reader;
+ const observer=view.observer,body=observer==='player'?document.state.player:document.state.npcs[observer];
+ const state={...document.state,minute:view.minute,location:view.self.location,inventory:observer==='player'?view.self.inventory:{},player:observer==='player'?body:{coins:0},npcs:{},creatures:{},settlements:{},obligations:Object.fromEntries(view.self.obligations.map(o=>[o.id,o])),records:Object.fromEntries(known.map((r,i)=>[`market-trade:known:${i}`,r]))};
+ if(location===view.self.location)for(const p of view.observable.people)state.npcs[p.id]={...p,location,coins:0,inventory:{}};
+ if(observer!=='player')state.npcs[observer]={...body,location:view.self.location,inventory:view.self.inventory};
+ const projected={randomSeed:document.randomSeed,state};
+ reader={document:projected,get:(...p)=>p.reduce((x,k)=>x?.[k],projected),memo:(scope,inputs,build)=>stateMemo(state,scope,[subjectiveMemo,...inputs],build)};
+ entry.places.set(location,reader);
+ return reader;
+}
 // Candidate estimates use the same quote formula over the observer's own
 // stock and remembered trades. Unknown bags, granaries and market depth are
 // absent from this projection; execution still rechecks the actual market.
@@ -369,12 +396,7 @@ export function subjectiveMarketQuote(engine,document,view,args){
  const price=hasPrice?observed:engine.byId.get(args.item)?.basePrice;
  const local=place===settlementOf(engine,document.state,view.self.location);
  if(!local&&!hasPrice)return null;
- const body=observer==='player'?document.state.player:document.state.npcs[observer];
- const state={...document.state,minute:view.minute,location:view.self.location,inventory:observer==='player'?view.self.inventory:{},player:observer==='player'?body:{coins:0},npcs:{},creatures:{},settlements:{},obligations:Object.fromEntries(view.self.obligations.map(o=>[o.id,o])),records:Object.fromEntries(known.map((r,i)=>[`market-trade:known:${i}`,r]))};
- if(location===view.self.location)for(const p of view.observable.people)state.npcs[p.id]={...p,location,coins:0,inventory:{}};
- if(observer!=='player')state.npcs[observer]={...body,location:view.self.location,inventory:view.self.inventory};
- const projected={randomSeed:document.randomSeed,state},reader={document:projected,get:(...p)=>p.reduce((x,k)=>x?.[k],projected)};
- const quote=marketQuote(reader,engine,{...args,location,base:price,observer,view});
+ const quote=marketQuote(subjectiveReader(engine,document,view,location,known),engine,{...args,location,base:price,observer,view});
  if(hasPrice){
   // An observed unit price already includes that market's scarcity, grade
   // and spread. Unknown current shelves cannot multiply it a second time.
