@@ -160,7 +160,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 619,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:118"
+    "dispatch": "server-plugin/business.mjs:119"
    }
   },
   {
@@ -236,7 +236,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 619,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:152"
+    "dispatch": "server-plugin/business.mjs:153"
    }
   },
   {
@@ -312,7 +312,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 619,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:152"
+    "dispatch": "server-plugin/business.mjs:153"
    }
   },
   {
@@ -464,7 +464,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 619,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:147"
+    "dispatch": "server-plugin/business.mjs:148"
    }
   },
   {
@@ -540,7 +540,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 619,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/business.mjs:223"
+    "dispatch": "server-plugin/business.mjs:224"
    }
   },
   {
@@ -4258,7 +4258,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:585"
+    "dispatch": "server-plugin/business.mjs:586"
    }
   },
   {
@@ -4362,7 +4362,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:599"
+    "dispatch": "server-plugin/business.mjs:600"
    }
   },
   {
@@ -4466,7 +4466,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:582"
+    "dispatch": "server-plugin/business.mjs:583"
    }
   },
   {
@@ -4570,7 +4570,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 225,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/business.mjs:581"
+    "dispatch": "server-plugin/business.mjs:582"
    }
   },
   {
@@ -17956,7 +17956,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 79,
     "symbol": "activities.law",
-    "dispatch": "server-plugin/business.mjs:223"
+    "dispatch": "server-plugin/business.mjs:224"
    }
   },
   {

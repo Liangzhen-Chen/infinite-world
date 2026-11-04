@@ -117,8 +117,10 @@ export function materializeStatisticalFood(d,engine,owner){
   }
   d.set(['state','records',`town-opening:${owner}`],{...personal,coins:0,inventory:{}});
  }
- const opening=state.records?.[entity?.householdId];
- if(opening?.members.includes(owner)){
+ const opening=state.records?.[entity?.householdId],adult=engine.rules.npcLife?.adultAge??0;
+ // A child brought into the simulation (school, family life) does not take over the household's purse and pantry: they
+ // stay in the opening record, which keeps buying and feeding the whole household until an adult member acts.
+ if(opening?.members.includes(owner)&&(entity?.age??adult)>=adult){
   const scoped=statisticalFoodEngine(engine,state),amount=opening.coins;
   if(amount){moveCoins(d,{from:opening.account,to:purse(engine,owner),amount,writer:'household-budget',eventId:`materialize:${opening.townOpeningHousehold}`});d.set(['state','records',opening.owner,'coins'],0);d.set([...engine.actorPath(owner),'coins'],(d.get(...engine.actorPath(owner),'coins')??0)+amount);}
   for(const [item,value]of Object.entries(opening.inventory))if(qty(value))transferItems(d,scoped,opening.owner,owner,item,qty(value));
@@ -203,25 +205,53 @@ export function statisticalFoodStocks(d,engine,row){
   return {item,quantity:loose+selection.length,selection,gain:engine.byId.get(item)?.nutrition?.satiety??0};
  });
 }
+// Share of a day's ration the settlement's public granary already covers (0 when it has none).
+function publicGranaryShare(engine,state,sid,d=null){
+ const read=d??{get:(...p)=>p[0]==='state'?p.slice(1).reduce((v,k)=>v?.[k],state):undefined};
+ const settlement=state.settlements?.[sid];
+ if(settlement?.granary===false||!(settlement?.population>0))return 0;
+ const day=Math.floor(state.minute/DAY),farm=state.records?.[`agriculture:${sid}`];
+ const stock=priceRead(read,{point:'region.grain',account:granary(engine,sid),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0});
+ return Math.min(1,stock/settlement.population);
+}
 export function statisticalFoodNeed(engine,state,sid,d=null,group=null){
  if(!group)return statisticalFoodGroups(engine,state,sid).reduce((n,row)=>n+statisticalFoodNeed(engine,state,sid,d,row),0);
  const row=group,population=row.beneficiaryUnits;
  if(!population)return 0;
- let daily=population*bodyRule(engine,'satiety').drainPerHour.light*24;
+ const daily=population*bodyRule(engine,'satiety').drainPerHour.light*24*(1-publicGranaryShare(engine,state,sid,d));
  const read=d??{get:(...p)=>p[0]==='state'?p.slice(1).reduce((v,k)=>v?.[k],state):undefined};
- const settlement=state.settlements?.[sid];
- if(settlement?.granary!==false&&settlement?.population>0){
-  const day=Math.floor(state.minute/DAY),farm=state.records?.[`agriculture:${sid}`];
-  const stock=priceRead(read,{point:'region.grain',account:granary(engine,sid),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0});
-  daily*=1-Math.min(1,stock/settlement.population);
- }
  const held=statisticalFoodStocks(read,statisticalFoodEngine(engine,state),row).reduce((n,r)=>n+r.quantity*r.gain,0);
  return Math.max(0,daily-held);
+}
+
+// A roster household none of whose members is a campaign actor keeps its opening money and stock in one record
+// (town-income.mjs). That record is the household's purse and pantry: the meal plan reads it, and it is a batch
+// buyer in the shops exactly like a statistical group. The first member to become an actor takes it over
+// (materializeStatisticalFood), after which the record is empty of members and this returns null.
+export function rosterReserve(state,id){
+ const row=id?state?.records?.[id]:null;
+ return row&&row.townOpeningHousehold===id&&row.owner===id&&row.members?.length&&row.category==='money_account'?row:null;
+}
+// The roster households that currently hold a reserve (of one settlement, or of all), in id order, in the shape of a statistical buyer.
+export function rosterReserves(engine,state,sid=null){
+ const out=[];
+ for(const row of recordsWhere(state.records,'category','money_account')){
+  const reserve=rosterReserve(state,row.owner);if(!reserve)continue;
+  const house=householdDefinition(engine,state,reserve.owner);
+  if(!house||sid&&house.settlement!==sid)continue;
+  out.push({owner:reserve.owner,settlement:house.settlement,home:house.homeLocation,coins:reserve.coins??0,beneficiaryUnits:reserve.members.filter(m=>!isPhysicallyDead(engine,state,m)).length,reserve:true});
+ }
+ return out.sort((a,b)=>a.owner<b.owner?-1:a.owner>b.owner?1:0);
+}
+// One day's satiety the reserve household still lacks after its public ration and its own pantry (the statistical-group horizon).
+export function rosterReserveNeed(d,engine,id){
+ const state=d.get('state'),house=householdDefinition(engine,state,id);
+ return householdMealPlan(d,engine,id,{publicShare:publicGranaryShare(engine,state,house?.settlement,d)}).shortfall.satiety;
 }
 const mealCandidates=Symbol('physical meal candidates');
 const preferenceRoll=compileRX('roll("thrift")');
 const laborPreferenceRoll=compileRX('roll("reservation")'),laborNoiseRoll=compileRX('roll("choice")');
-const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id];
+const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id]??rosterReserve(s,id)??undefined;
 const inventory=(s,id)=>{
  const a=actor(s,id),m=a?.materialized;
  return id==='player'?s.inventory??{}:m?.folded?s.records?.[`remote-stock:${m.settlement}`]?.members?.[id]?.inventory??{}:a?.inventory??s.records?.[`town-opening:${id}`]?.inventory??{};
@@ -330,12 +360,14 @@ export function householdBufferTarget(d,engine,owner,{incomeDays=0,risk=0,common
 }
 
 function family(d,engine,owner){
- const s=d.get('state'),h=personHousehold(engine,s,owner).value;
+ const s=d.get('state'),own=rosterReserve(s,owner),h=own?householdDefinition(engine,s,owner):personHousehold(engine,s,owner).value;
  // Family membership alone is never authority over another purse. Existing
  // registered households share meals; separate households at one address do
  // not become one budget merely by co-residence or kinship.
  const members=h?.members??[owner],shared=members.length>1;
- return {household:h?.id??null,members,holders:members,shared};
+ // The household's own opening record (rosterReserve) is its purse and pantry, not another person's.
+ const reserve=own?owner:rosterReserve(s,h?.id)?h.id:null;
+ return {household:h?.id??null,members,holders:reserve?[...members,reserve]:members,shared,reserve};
 }
 
 function seedNeeds(engine,state,holders){
@@ -396,13 +428,13 @@ export function householdMealPlan(d,engine,owner,{publicShare=0,sourceNutrition=
  const commitments=stateMemo(state,engine,[commitmentMemo],()=>commitmentAllocation(state),commitmentInputs);
  // Meals need physical food, seeds and promises, not a quote/income horizon
  // or a scan of everyone's production tasks for every inventory row.
- const rows=members.flatMap(holder=>bagEntries(d,engine,state,holder,null).flatMap(([item,held])=>{
+ const rows=(f.reserve?[...members,f.reserve]:members).flatMap(holder=>bagEntries(d,engine,state,holder,null).flatMap(([item,held])=>{
   const definition=engine.byId.get(item);if(!definition?.nutrition)return [];
   const stock=bagStock(d,engine,{point:'region.material',id:holder,item,legacy:()=>qty(held)}),key=`${holder}:${item}`;
   const committed=commitments.get(key)??0,seed=Math.min(Math.max(0,stock-committed),seeds.get(key)??0);
   return [{holder,item,definition,stock,committed,seed,food:0}];
  })).sort((a,b)=>(a.definition?.shelfLifeDays??Infinity)-(b.definition?.shelfLifeDays??Infinity)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder)).map(r=>{
-  const held=d.get(...engine.bagPath(r.holder),r.item),units=held?.instances??[];
+  const held=d.get(...(r.holder===f.reserve?['state','records',r.holder,'inventory']:engine.bagPath(r.holder)),r.item),units=held?.instances??[];
   const safe=id=>{const f=physicalItem(d,engine,id);return f.contaminated!==true&&f.toxic!==true&&f.condition!==0;};
   const selection=units.filter(safe),loose=safe(r.item)?Math.max(0,r.stock-units.length):0;
   return {...r,definition:engine.byId.get(r.item),stock:Math.min(r.stock,loose+selection.length),selection,food:0};
