@@ -16,7 +16,7 @@ import {laborValue,marketQuote,saleableStock,recordMarketDeal} from './market.mj
 import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
 import {bag,BOOKED,stockItem} from './stock.mjs';
 import {forestSites,forestView,harvestForest} from './forest-water.mjs';
-import * as sitesApi from './sites.mjs';
+import {siteResources,siteTake} from './sites.mjs';
 import {shopOfKeeper} from './shop.mjs';
 import {safeCarryKg,carriedKg,packItemKg} from './carry.mjs';
 import {purse,sink,moveCoins,mirrorPartyCoins} from './money.mjs';
@@ -61,16 +61,11 @@ const homeSettlement=(e,state,id)=>personHousehold(e,state,id).value?.settlement
 // 自然来源：每个来源给出地点、产物、每份工时与当前可取量；取用只经各自规律的账本入口。
 function naturalSources(e,state,id,labor){
  const rows=[];
- // 据点知识：一趟劳动行程走得到的据点是本地据点，本地人认得它、知道门道；发现前提与机关只挡外来者（玩家入口不变）。
- // 是否走得到由下面的行程核算决定，这里只看物权：无主、本人或本聚落所有，且不需另取许可。
+ // 据点：一趟劳动行程走得到的就是本地据点（行程核算在下面）；只去合法的，会被定罪的不去（sites.mjs 的同一条许可规律）。
  if(labor.includes('gather')){
   const settlement=homeSettlement(e,state,id);
-  for(const place of e.world.locations)for(const r of place.site?.resources??[]){
-   const owner=Object.hasOwn(r,'owner')?r.owner:place.site.owner??place.owner??null;
-   if(owner&&owner!==id&&owner!==settlement||place.access?.requiresConsent&&owner!==id)continue;
-   const remaining=state.records?.[`site:${place.id}`]?.remaining?.[r.id]??r.quantity;
-   if(remaining>0&&r.minutes>0)rows.push({labor:'gather',location:place.id,item:r.item,minutesPerUnit:r.minutes,available:remaining,source:`site:${place.id}:${r.id}`,resource:r.id});
-  }
+  for(const r of siteResources(e,state,{holder:id,settlement}))if(r.lawful&&r.remaining>0&&r.minutesPerUnit>0)
+   rows.push({labor:'gather',location:r.site,item:r.item,minutesPerUnit:r.minutesPerUnit,available:r.remaining,source:`site:${r.site}:${r.resource}`,resource:r.resource});
  }
  const forest=e.rules.forestWater?.forest;
  if(labor.includes('fell')&&forest&&e.quantity(stateReader(state),id,forest.tool)>0)
@@ -194,14 +189,13 @@ registerAutonomyKind('labor_work',{
  minutes:(e,a)=>a.finishAt-a.departAt,
  validate(d,e,who,a,o){
   validateTrip(d,e,who,a,o);
-  if(a.labor==='gather'&&typeof sitesApi.siteTake!=='function')throw preconditionFailure('据点采集入口未就绪');
   if(a.tool&&(e.quantity(d,who,a.tool)<1||(heldUnit(d,e,who,a.tool)?.durability??e.byId.get(a.tool)?.durability??0)<=0))throw preconditionFailure('没有完好的实际工具');
  },
  start:startTrip,
  execute(d,e,who,a,{actionId,at}){
   const to=bag(e,who,a.item),room=carryRoom(e,d.document,who,a.item),want=Math.min(a.quantity,room);
   let taken=0;
-  if(a.labor==='gather'){const [,site]=a.source.split(':');taken=sitesApi.siteTake(d,e,site,a.resource,{quantity:want,minutes:a.finishAt-a.arriveAt,holder:who,to,eventId:actionId});}
+  if(a.labor==='gather'){const [,site]=a.source.split(':');taken=siteTake(d,e,site,a.resource,{quantity:want,minutes:a.finishAt-a.arriveAt,holder:who,settlement:homeSettlement(e,d.get('state'),who),to,eventId:actionId});}
   else if(a.labor==='fell'){taken=harvestForest(d,e,a.to,want,at,{to,eventId:actionId});if(a.tool)wearItem(d,e,who,a.tool,e.rules.forestWater.forest.wear);}
   if(taken)changeItems(d,e,who,a.item,taken,{books:BOOKED});
   laborRecord(d,actionId,{npc:who,labor:a.labor,location:a.to,minute:at,source:a.source,produced:taken?[{item:a.item,quantity:taken}]:[],success:taken>0});
