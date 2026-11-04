@@ -247,6 +247,13 @@ function productionPaths(root, items, scans) {
     for (const s of (Array.isArray(species) ? species : species?.species) ?? []) {
         const ys = Object.values(s.husbandry?.yields ?? {}).flat();
         push('husbandry:' + s.id, ys, null, [s.husbandry?.feed].flat().filter(Boolean));
+        // 畜产物由物种属性派生时（物品以 animalProduct.from 指向某个生理属性），按数据契约推出产出：物种具备该属性且满足 when 即产
+        const h = s.husbandry;
+        if (!isObj(h)) continue;
+        const attr = from => from === 'laying' ? h.layingIntervalDays : from === 'carcass' ? h.bodyMassKg ?? s.bodyMassKg : h[from];
+        const fits = when => Object.entries(when ?? {}).every(([k, want]) => {const have = k === 'tags' ? s.tags ?? [] : [h[k]].flat(); return [want].flat().some(w => have.includes(w));});
+        const derived = items.filter(i => isObj(i.animalProduct) && ![undefined, null, 0, false].includes(attr(i.animalProduct.from)) && fits(i.animalProduct.when)).map(i => i.id);
+        push('husbandry-derived:' + s.id, derived, null, [h.feed?.item ?? h.feed].flat().filter(v => typeof v === 'string'));
     }
     // 引擎账本声明的再生/收获/制造来源（declareLedgerWriter 的 sources 里具体点名的物品），不限地点、无数据投入
     for (const {file, scan} of scans) {
