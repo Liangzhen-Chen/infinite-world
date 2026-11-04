@@ -3,7 +3,7 @@ import {parseAccount} from './ledger.mjs';
 import {reject} from './primitive-policy.mjs';
 import {effectSignature,actorKnowledge} from './action-router.mjs';
 import {actionReader} from './action-capacity.mjs';
-import {authority} from './action-authority.mjs';
+import {authority,currentControllers} from './action-authority.mjs';
 import {heldUnit} from './items.mjs';
 import {recordsWhere} from './storage.mjs';
 import {itemTraits,traitsOf} from './traits.mjs';
@@ -15,6 +15,14 @@ import {consent} from './action-consent.mjs';
 const MATERIAL_RESISTANCE=Object.freeze({paper:0,cloth:0,fiber:0,leather:1,earth:1,wood:2,bone:2,ceramic:3,stone:4,metal:5});
 // Same boundaries as standingWords: deeper hostility adds more resistance.
 const STANCE_RESISTANCE=Object.freeze([{max:-60,bonus:4},{max:-30,bonus:3},{max:-10,bonus:2},{max:9,bonus:1},{max:100,bonus:0}].map(Object.freeze));
+// Current owners of an entity: owns holdings (incl. herds), then native
+// owner facts; a creature's or a registered unit's owner field is the same title.
+export function propertyOwners(context,subject){
+ const owners=currentControllers(context,subject,{ownerOnly:true,principals:true});
+ const s=context.document.state,row=s.creatures?.[subject]??s.itemInstances?.[subject];
+ return owners.length?owners:typeof row?.owner==='string'?[row.owner]:[];
+}
+const nameOf=(engine,s,id)=>id==='player'?'你':s.npcs?.[id]?.name??engine.byId.get(id)?.name??id;
 const freeze=value=>{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
 
 function validateOpenDifficultyInput(proposal){
@@ -67,10 +75,44 @@ function targetDifficulty(engine,document,effect,actor){
  return {target:id??null,targetKind:kind,base:bases[effect.op]?.[kind]??(['vital','status','fact.set'].includes(effect.op)?physical:0),parts:opposed?parts.map(p=>({...p,counted:false,reason:`${p.reason}；沿用对抗的对手属性/技能与适应，不再计入固定抗性`})):parts,...(opposed?{opposed:true,scope}:{})};
 }
 
+// What a disposing effect acts on: the thing itself, a creature's body, the
+// subject of a holding, or the herd whose stock is debited.
+function disposedSubject(document,effect){
+ const s=document.state;
+ if(['destroy','fact.set'].includes(effect.op))return effect.entity;
+ if(effect.op==='move')return ['drop','place'].includes(effect.mode)?effect.entity:null;
+ if(effect.op==='vital')return effect.delta<0&&s.creatures?.[effect.target]?effect.target:null;
+ if(['holding.close','holding.transfer'].includes(effect.op))return document.holdings?.rows?.[effect.holding??effect.id]?.subject??null;
+ if(effect.op==='transfer'&&typeof effect.from==='string'&&effect.from.includes('|')){
+  // A malformed key is left to the account validator downstream.
+  let owner;try{owner=parseAccount(effect.from).owner;}catch{return null;}
+  // Only a herd's stock is disposed of as property here; other entity
+  // accounts (wells, shops, treasuries) keep their own transfer authority.
+  return document.holdings?.entities?.[owner]?.kind==='population'?owner:null;
+ }
+ return null;
+}
+const DISPOSING_OP={vital:'destroy',transfer:'transfer'};
+// Owner's power of disposition (K7). Returns true when the actor owns what the
+// effect disposes of; refuses someone else's property as theirs (not as an
+// unsupported effect) unless a real authority source covers it; otherwise null.
+export function refuseOthersProperty(engine,document,effect,actor){
+ const subject=disposedSubject(document,effect);
+ if(typeof subject!=='string'||subject===actor)return null;
+ // A catalogue id names the actor's own carried stack of that thing.
+ if(effect.op!=='transfer'&&!document.state.itemInstances?.[subject]&&engine.quantity(actionReader(document),actor,subject)>0)return true;
+ const owners=propertyOwners({engine,document},subject);
+ if(owners.includes(actor))return true;
+ if(!owners.length)return null;
+ const holding=document.holdings?.rows?.[effect.holding??effect.id];
+ if(authority({engine,document},actor,DISPOSING_OP[effect.op]??effect.op,effect.op==='transfer'?effect.from:subject,{holding,effect}).allowed)return null;
+ reject('E-AUTHORITY',`那是${owners.map(id=>nameOf(engine,document.state,id)).join('、')}的，你没有处分别人东西的权利`);
+}
+
 // Read-only source query for "inspect before proposing". This calls the same
 // resolver as execution; neither callers nor previews duplicate cap formulas.
 export function deriveOpenSourceLimits(engine,document,proposal,effect,{actor='player'}={}){
- const source=deriveOpenLimits(engine,document,proposal,null,{actor}).sourceFor(effect);
+ const source=deriveOpenLimits(engine,document,proposal,null,{actor,inspect:true}).sourceFor(effect);
  return source?freeze(structuredClone(source)):null;
 }
 const finite=(value,label)=>{if(!Number.isSafeInteger(value)||value<0)reject('E-OPEN-BOUND',`Missing native ${label}`);return value;};
@@ -91,7 +133,7 @@ export function limitOpenEffects(proposal,native){
  finite(usage.repeats,'repeat count');finite(usage.produced,'daily usage');
  let minutes=0,difficulty=0;
  for(const [index,original] of proposal.effects.entries()){
-  if(original.op==='create'&&original.kind!=='mark'&&!native.improvised?.(original)){
+  if(original.op==='create'&&original.kind!=='mark'&&!native.improvised?.(original)&&!native.individuated?.(original)){
    blocked.push({index,reason:'计量制造须使用已有配方；没有配方可留下无价值的痕迹',alternative:'recipe_or_mark'});continue;
   }
   const source=sourceFor(original,index);
@@ -207,7 +249,7 @@ export function openUsageEntry(prepared,receipt,minute){
 
 // A native source resolver for the present world. It does not grant new spell
 // kinds, theft, craft sources or arbitrary facts merely because a skill exists.
-export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player',routing}={}){
+export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player',routing,inspect=false}={}){
  const table=engine.world.openActionRules,caps=table?.sourceCaps,generic=table?.generic;
  if(!caps||!generic)reject('E-OPEN-DATA','缺少存档中的开放动作幅度表');
  const d=actionReader(document),s=document.state,body=actor==='player'?s.player:s.npcs?.[actor],knowledge=actorKnowledge(engine,document,actor);
@@ -244,7 +286,20 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
   }
   return consumed.length===totals.size&&consumed.every(e=>totals.get(parseAccount(e.from).resource)===e.qty);
  };
- const sourceFor=effect=>{
+ // Leading head out of one's own herd: transfer(herd → sink:individuated)
+ // paired with create(creature) of that species, never more than were led out.
+ const herdOf=effect=>{
+  if(effect.op!=='transfer'||typeof effect.to!=='string'||!effect.to.startsWith('sink:individuated|')||typeof effect.from!=='string')return null;
+  const owner=parseAccount(effect.from).owner,row=s.records?.[`husbandry:${owner}`];
+  return row&&propertyOwners({engine,document},owner).includes(actor)?row:null;
+ };
+ const individuated=effect=>{
+  if(effect.op!=='create'||effect.kind!=='creature')return false;
+  const led=(proposal.effects??[]).filter(e=>herdOf(e)?.species===effect.template).reduce((n,e)=>n+(Number.isSafeInteger(e.qty)?e.qty:0),0);
+  return led>0&&(proposal.effects??[]).filter(e=>e.op==='create'&&e.kind==='creature'&&e.template===effect.template).length<=led;
+ };
+ const nativeSource=effect=>{
+  if(individuated(effect))return {id:`herd:${actor}:${effect.template}`,stage:0,time:generic.transferMinutes,bounds:{}};
   if(effect.op==='schedule'&&effect.action==='open:question'&&Number.isSafeInteger(effect.at)&&effect.at>s.minute){
    engine.primitiveValidateScheduledAction(d,{action:effect.action,slots:effect.args??{}},actor);
    return {id:`schedule:${actor}`,stage:0,time:generic.speechMinutes,bounds:{}};
@@ -288,6 +343,18 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
   // cost and source checks until their registered programs provide the adapter.
   return null;
  };
+ // Owner's power of disposition (K7): the owner may destroy, abandon or hand
+ // over a thing or herd by default (killing uses the ordinary vital source).
+ const disposition=effect=>{
+  // A read-only inspection lists the means; the authority refusal is shown
+  // by the card's own permission check, and submission refuses it as theirs.
+  let own=null;
+  try{own=refuseOthersProperty(engine,document,effect,actor);}catch(error){if(!inspect||error?.code!=='E-AUTHORITY')throw error;}
+  if(!own)return null;
+  if(['vital','fact.set','transfer'].includes(effect.op)||effect.op==='move'&&effect.mode==='place')return null;
+  return {id:`owner:${actor}`,stage:0,time:effect.op.startsWith('holding.')||effect.op==='move'?generic.transferMinutes:generic.physicalMinutes,difficulty:0,bounds:{}};
+ };
+ const sourceFor=effect=>disposition(effect)??nativeSource(effect);
  const nearestAction=nearest&&engine.world.actionDefinitions?.actions?.find(a=>a.id===nearest.id),sameFamily=nearest?.signatureScore>0;
  // A duration slot is part of the registered program. Its default/picked
  // duration must remain a cost floor even when the proposal misses routing.
@@ -300,5 +367,5 @@ export function deriveOpenLimits(engine,document,proposal,nearest,{actor='player
   }
  }
  const signature=effectSignature(proposal.effects??[],routing??{});
- return {actor,sourceFor,improvised,targetDifficulty:effect=>targetDifficulty(engine,document,effect,actor),currentValue:e=>document.holdings?.entities?.[e.entity]?.facts?.[e.field],accountBalance:key=>document.ledger?.accounts?.[key]??0,usage:openUsage(document,signature,{actor}),nearestBounds,...(nearestCost!==undefined?{nearestCost}:{})};
+ return {actor,sourceFor,improvised,individuated,targetDifficulty:effect=>targetDifficulty(engine,document,effect,actor),currentValue:e=>document.holdings?.entities?.[e.entity]?.facts?.[e.field],accountBalance:key=>document.ledger?.accounts?.[key]??0,usage:openUsage(document,signature,{actor}),nearestBounds,...(nearestCost!==undefined?{nearestCost}:{})};
 }

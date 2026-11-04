@@ -5,7 +5,7 @@ import {beginReactionTick,drainWorldReactions,publishTransitionEvent,presentWitn
 import {submitContest} from './scheduler.mjs';
 import {isDomainRejection,refusalProjection} from './action-rejection.mjs';
 
-declareLedgerWriter('primitives',{sinks:['sink:consume']});
+declareLedgerWriter('primitives',{sinks:['sink:consume','sink:destroy']});
 // Static registration (load time only): every registered holding kind goes
 // through runHoldingProtocol after holdingKind()/authority checks, so the
 // writer covers all kinds by declaration rather than by execution history.
@@ -99,6 +99,11 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     // Only a native frame can install this interpreter. Its caller has already
     // validated the source-specific program (K2/K6/M4); JSON never selects it.
     result=policy.applyNative(d,effect,{frame,index});
+   }else if(effect.op==='transfer'&&parseAccount(effect.to).owner==='sink:individuated'){
+    // A herd's head become individuals only through its stock adapter (01 §1.6).
+    requireAuthority('transfer',effect.from,{effect});
+    if(!policy.executePrimitive)reject('E-PRIMITIVE-CONNECTOR','Missing population stock adapter');
+    result=policy.executePrimitive(d,effect,{frame,index,requireAuthority,tags});
    }else if(effect.op==='transfer'){
     const a=parseAccount(effect.from),b=parseAccount(effect.to),qty=effect.qty;
     for(const key of [effect.from,...(isSink(b.owner)?[]:[effect.to])])if(policy.accountExists?.(d.document,key)&&!Object.hasOwn(d.get('ledger','accounts')??{},key))d.set(['ledger','accounts',key],0);
@@ -109,7 +114,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     if(d.get('ledger','version')!==1)reject('E-TRANSFER-BOOKS','账本尚未开立');
     if(/^(escrow|collected)(:|$)/.test(a.purpose))reject('E-TRANSFER-PURPOSE','托管资金不能由普通转移提案动用');
     requireAuthority('transfer',effect.from,{effect});
-    if(isSink(b.owner)&&(a.owner!==frame.actor||b.owner!=='sink:consume'))reject('E-TRANSFER-SINK','本接点只允许消耗自己账户中的资源');
+    if(isSink(b.owner)&&(a.owner!==frame.actor||!['sink:consume','sink:destroy'].includes(b.owner)))reject('E-TRANSFER-SINK','本接点只允许消耗或毁掉自己账户中的资源');
     if(!isSink(b.owner)){
      const from=policy.location(d.document,a.owner),to=policy.location(d.document,b.owner);
      if(!from||policy.location(d.document,frame.actor)!==from)reject('E-TRANSFER-REACH','Actor must be physically present at the source');

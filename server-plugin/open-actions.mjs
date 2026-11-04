@@ -1,6 +1,6 @@
 // A3-B native service. The engine/HTTP composition root owns public dispatch.
 import {routeAction,createRoutingContext,resolveProposalEntities} from './action-router.mjs';
-import {limitOpenEffects,deriveOpenLimits} from './action-limits.mjs';
+import {limitOpenEffects,deriveOpenLimits,refuseOthersProperty} from './action-limits.mjs';
 import {primitiveRuntime,primitiveContext} from './primitives-runtime.mjs';
 import {canAct} from './action-capacity.mjs';
 import {authority} from './action-authority.mjs';
@@ -151,6 +151,10 @@ function prepareOpenPlan(engine,document,proposal,native){
  if(!proposal||typeof proposal.intent!=='string'||!proposal.intent.trim())reject('E-OPEN-INTENT','请说明你想做什么');
  for(const effect of proposal.effects??[]){
   if(effect.op==='fact.set')writableFactField(effect.field);
+  // Disposing of someone else's thing or herd is refused as theirs before any
+  // routing or reach (K7). Fact work and harm keep their registered programs'
+  // own consent checks (casting, combat).
+  if(!['fact.set','vital'].includes(effect.op))refuseOthersProperty(engine,document,effect,native?.routing?.actor??'player');
   if(effect.op==='create'&&effect.kind==='project'&&effect.tags?.includes('festival')){
    if(effect.template!=='interim'||!Array.isArray(effect.materials)||effect.materials.length||!effect.facts||Object.keys(effect.facts).some(k=>!['budget','author','location','name'].includes(k))||effect.facts.author!==undefined&&!['self','player'].includes(effect.facts.author))reject('E-PRIMITIVE-SOURCE','节庆构想仅登记本人的预算与拟征询地点，不能代填许可、参与者或投入材料');
   }
@@ -215,7 +219,9 @@ function prepareOpenPlan(engine,document,proposal,native){
  }
  // Only the unmatched primitive path consumes the proposal's accounts. A
  // registered program owns its own endpoints, consent, stock and cost checks.
- proposal={...proposal,effects:proposal.effects.map(effect=>resolvePrimitiveTransfer(engine,document,effect,{actor:native.routing.actor}))};
+ // A creature led out of a herd takes its facts from the species and herd.
+ const ledOut=effect=>effect.op==='create'&&effect.kind==='creature'&&effect.facts===undefined?{...effect,facts:{}}:effect;
+ proposal={...proposal,effects:proposal.effects.map(effect=>ledOut(resolvePrimitiveTransfer(engine,document,effect,{actor:native.routing.actor})))};
  for(const effect of proposal.effects??[]){
   if(effect.op==='move'&&effect.mode==='teleport')reject('E-OPEN-MOVE','普通搬动不能隔空取物，请先靠近或使用真实的传送来源');
   if(effect.op==='obligation.create'&&effect.obligationKind==='loan')reject('E-OPEN-OBLIGATION','借款须先取得真实同意并通过贷款或债务登记动作');

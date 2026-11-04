@@ -1,5 +1,5 @@
 import {advanceHook} from './advance-hooks.mjs';
-import {isPhysicallyDead} from './holdings.mjs';
+import {isPhysicallyDead,aliveHoldings} from './holdings.mjs';
 import {primitiveActionRuntime,PRIMITIVE_EVENT_VERBS} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
 import {reject} from './action-rejection.mjs';
@@ -400,7 +400,7 @@ export class WorldEngine {
         const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
         if(!['time','turn','revive','health'].includes(tool))assertMindAwake(d);
         if(tool==='combat'){
-            const target=session.resolve(args.target);
+            const target=d.get('holdings','entities',args.target)?.kind==='population'?args.target:session.resolve(args.target);
             for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
         }
         settleMagicAreas(d,session);
@@ -659,6 +659,16 @@ export class WorldEngine {
             this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${shown}`);return {contract,cost:fee?fee.amount:cost,days,...(fee?{resource:fee.resource,resourceName:feeName,referenceCopper:cost}:{}),...payment};
         }
         if(!args.item)reject('E-ACTION-PRECONDITION','缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
+        // Living stock (an animal, a herd, a species) is not catalogue goods.
+        // What is not yours is refused as someone else's (K7); your own animal
+        // has no livestock price source to be valued against yet.
+        const beast=typeof args.item==='string'?d.get('state','creatures',args.item):null,herd=typeof args.item==='string'&&d.get('holdings','entities',args.item)?.kind==='population'?d.get('state','records',`husbandry:${args.item}`):null,species=!beast&&!herd?this.world.monsters.find(m=>m.id===args.item):null;
+        if(seller==='player'&&(beast||herd||species)){
+            const owner=beast?beast.owner:herd?aliveHoldings(d,{kind:'owns',subject:herd.id})[0]?.holder:null,name=beast?.name??herd?.name??species.name;
+            const mine=beast||herd?owner==='player':Object.values(d.get('state','creatures')??{}).some(c=>c.species===species.id&&c.owner==='player'&&!(c.hp<=0));
+            if(!mine)reject('E-ACTION-PRECONDITION',owner?`${name}是${this.byId.get(owner)?.name??owner}的，不属于你的牲畜不能拿来卖`:`你名下没有${name}，不属于你的牲畜不能拿来卖`);
+            reject('E-ACTION-PRECONDITION',`${name}是活物，这里没有牲口行情可以作价`);
+        }
         const item=this.resolve(args.item,'item');
         let quantity=number(args.quantity,1,100000,'数量');const requestedQuantity=quantity,catalog=this.byId.get(item);
         // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
@@ -679,7 +689,7 @@ export class WorldEngine {
         // 761.9999999999999 just before the required total truncation.
         const exactTotal=quote.retail&&args.unitPrice!==undefined&&!quote.agreed?price*quantity:quote.exactTotal*bargainFactor;
         const cost=quote.agreed?quote.totalCoins:Math.trunc(exactTotal);
-        if(this.quantity(d,seller,item)<quantity) reject('E-ACTION-PRECONDITION',`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
+        if(this.quantity(d,seller,item)<quantity) reject('E-ACTION-PRECONDITION',seller==='player'?`你名下的${catalog.name}只有${this.quantity(d,seller,item)}，不属于你的东西不能拿来卖`:`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
         // S5-F: a buyer may hand over a named resource instead of reference coins (contracts.mjs tradeInKindPlan, today's rate).
         const plan=tradeInKindPlan(d,this,{buyer,payment:args.payment,payCurrency:args.payCurrency,copper:cost,location:playerLocation});
         if(!plan&&(args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','买方余额不足');

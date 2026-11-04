@@ -1,7 +1,9 @@
 // L1 runtime adapters. Limits are native derivations, never proposal fields.
 import {reject} from './primitive-policy.mjs';
-import {createEntity,setLocation,openHolding,declareHoldingWriter,templatesOf,isPhysicallyDead,isGone,holdingSet} from './holdings.mjs';
-import {physicalLocation} from './items.mjs';
+import {createEntity,setLocation,openHolding,closeHolding,aliveHoldings,declareHoldingWriter,templatesOf,isPhysicallyDead,isGone,holdingSet} from './holdings.mjs';
+import {physicalLocation,changeItems,trackTransferUnit} from './items.mjs';
+import {placed} from './stock.mjs';
+import {advanceHook} from './advance-hooks.mjs';
 import {transition,executeProtocolPrimitive,applyProtocolJudgment} from './transition.mjs';
 import {consent} from './action-consent.mjs';
 import {capacity,canAct,actionEntity} from './action-capacity.mjs';
@@ -48,8 +50,26 @@ function contested(d,engine,context,frame,target,scope,child,tags,{purpose=frame
  return {permission,check,failed:!check.success};
 }
 
+// Creatures a herd stock adapter led out in one frame; create(creature) in the
+// same proposal names them, it never makes a living body from nothing.
+const individuated=new WeakMap();
 export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthority,tags},context,limits={}){
  const child=`${frame.eventId}:${index}`,now=d.get('state','minute'),actor=frame.actor;
+ if(effect.op==='transfer'&&effect.to?.startsWith('sink:individuated|')){
+  const herd=d.get('state','records',`husbandry:${effect.from.split('|')[0]}`);
+  if(!herd)reject('E-TRANSFER-SINK','只有畜群的头数能牵出成为个体');
+  if(currentLocation(d,actor)!==herd.location)reject('E-PRIMITIVE-REACH','畜群不在眼前');
+  const individuateHerd=advanceHook('individuateHerd');if(!individuateHerd)reject('E-PRIMITIVE-CONNECTOR','畜牧未启用，不能从畜群中牵出个体');
+  const ids=individuateHerd(d,engine,{population:herd.id,count:integer(effect.qty,1,herd.count),eventId:child});
+  individuated.set(frame,[...individuated.get(frame)??[],...ids]);
+  return {population:herd.id,individuated:ids};
+ }
+ if(effect.op==='create'&&effect.kind==='creature'){
+  const pool=individuated.get(frame)??[],id=pool.find(id=>d.get('state','creatures',id)?.species===effect.template);
+  if(!id)reject('E-CREATE-CREATURE','活体不能凭空造出：须从自家畜群中牵出，或经繁育出生');
+  individuated.set(frame,pool.filter(row=>row!==id));
+  return {entity:id,individuated:true};
+ }
  if(effect.op==='time'){
   const minutes=integer(effect.minutes,0,limits.time??0,'E-TIME-BOUND');
   if(!limits.costManaged)beginBodyActivity(d,engine,actor,'rest');
@@ -58,7 +78,9 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
   return {elapsed:minutes,minute:d.get('state','minute')};
  }
  if(effect.op==='move'){
-  const entity=effect.entity??actor;
+  // Dropping "one of the X I carry" names a stack; it lets go of one unit of it.
+  const named=effect.entity??actor,stack=effect.mode==='drop'&&!d.get('state','itemInstances',named)&&engine.byId.get(named)&&engine.quantity(d,actor,named)>0;
+  const entity=stack?trackTransferUnit(d,engine,actor,named,child):named;
   if(effect.mount!==undefined&&entity==='player')reject('E-MOVE-MOUNT','Player boarding uses the existing pet mount action');
   if(entity!==actor){requireAuthority('move',entity);here(d,actor,entity);}
   if(typeof effect.to!=='string')reject('E-MOVE-DESTINATION','A registered destination is required');
@@ -68,6 +90,18 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
    placeLimit(engine,d,location,'move');
    setLocation(d,{entity,at:location,mode:'place',writer:'primitives',eventId:child,engine});
    return {entity,destination:location,mode:'place'};
+  }
+  if(effect.mode==='drop'){
+   // Abandonment (K7): the owner lets go of a carried unit where they stand.
+   // It leaves the pack for this place's placed stock and has no owner.
+   const unit=d.get('state','itemInstances',entity),location=currentLocation(d,actor);
+   if(!unit||unit.status!=='持有'||unit.owner!==actor||!location||effect.to!==location)reject('E-MOVE-DROP','只能在当前地点丢下本人携带的自有物件');
+   placeLimit(engine,d,location,'move');
+   changeItems(d,engine,actor,unit.item,-1,{preserve:true,selection:[entity],books:{account:placed(engine,location,unit.item),writer:'primitives',eventId:child}});
+   for(const row of aliveHoldings(d,{kind:'owns',subject:entity}))closeHolding(d,{id:row.id,reason:'released',writer:'primitives',eventId:child});
+   holdingSet(d,null,['state','itemInstances',entity],{...d.get('state','itemInstances',entity),owner:null,status:'落地',location,droppedAt:now,abandonedBy:actor},'primitives');
+   setLocation(d,{entity,at:location,mode:'place',writer:'primitives',eventId:child,engine});
+   return {entity,destination:location,mode:'drop',abandoned:true};
   }
   if(entity!=='player'){
    const permission=canAct({...context,document:d.document},entity,'move',{to:effect.to});
@@ -139,10 +173,14 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
   return {...result,...adjudication};
  }
  if(effect.op==='destroy'||effect.op==='transition'){
-  const entity=effect.entity,types=templatesOf(d,entity,engine)??[];
+  // Destroying "one of the X I carry" names a stack; it destroys one unit of it.
+  const stack=effect.op==='destroy'&&typeof effect.entity==='string'&&!d.get('state','itemInstances',effect.entity)&&engine.byId.get(effect.entity)&&engine.quantity(d,actor,effect.entity)>0;
+  const entity=stack?trackTransferUnit(d,engine,actor,effect.entity,child):effect.entity,types=templatesOf(d,entity,engine)??[];
   // A herd is a stock of living bodies, not one destructible manufactured
   // object. Its losses must settle the same population and resource accounts.
-  if(d.get('holdings','entities',entity,'kind')==='population')reject('E-POPULATION-ADAPTER','Population losses require their stock adapter');
+  // Its owner leads head out through the stock adapter (transfer → sink:individuated)
+  // and kills individuals; a living herd is never wiped out as an object.
+  if(d.get('holdings','entities',entity,'kind')==='population')reject('E-POPULATION-ADAPTER','活的畜群不能当器物毁掉：先从群里牵出个体，再逐只宰杀');
   if(effect.op==='transition'&&['declared','declaration_revoked','insolvency'].includes(effect.cause)){
    const expected=effect.cause==='declaration_revoked'?'restored':'gone';
    if(effect.kind!==expected)reject('E-TRANSITION-KIND',`Judicial ${effect.cause} requires kind ${expected}`);
@@ -162,6 +200,12 @@ export function executeRuntimeEffect(d,engine,effect,{frame,index,requireAuthori
    requireAuthority('destroy',entity);
    const location=currentLocation(d,entity),at=currentLocation(d,actor);
    if(location!==actor&&location!==at)reject('E-PRIMITIVE-REACH','The object is not present or carried');
+   // A registered unit in a pack leaves that pack's stock for the destruction sink.
+   const unit=d.get('state','itemInstances',entity);
+   if(unit?.status==='持有'&&unit.owner){
+    changeItems(d,engine,unit.owner,unit.item,-1,{preserve:true,selection:[entity],books:{flow:'sink:destroy',purpose:'destruction',writer:'primitives',eventId:child}});
+    holdingSet(d,null,['state','itemInstances',entity],{...d.get('state','itemInstances',entity),status:'已毁',destroyedAt:now},'primitives');
+   }
   }else if(basis==='dissolution'){
    if(!types.includes('collective'))reject('E-TRANSITION-KIND','Dissolution requires an organization');
    // Executing the organization's actual approved resolution is the source,

@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
-import {isEffective,isPhysicallyDead} from './holdings.mjs';
+import {isEffective,isPhysicallyDead,aliveHoldings} from './holdings.mjs';
+import {advanceHook} from './advance-hooks.mjs';
 import {declareLedgerWriter,transfer,accountKey,LEDGER_COIN} from './ledger.mjs';
 declareLedgerWriter('activities',{sinks:['sink:export']});
 import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
@@ -82,13 +83,25 @@ export const activities={
     environment(d,args,id){return interactEnvironment.call(this,d,args,id);},
     combat(d,args,id){
         const attacker=args.actor&&args.actor!=='player'?this.resolve(args.actor,'npc'):'player',attackerPath=attacker==='player'?['state','player']:['state','npcs',attacker];
-        const target=resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??(isNpc?target:npc?.species??target)),isBoss=Boolean(npc?.boss);
+        // A herd is struck one head at a time: its owner first leads one animal
+        // out of the herd stock (individuation), then fights that individual.
+        const herd=typeof args.target==='string'&&d.get('holdings','entities',args.target)?.kind==='population'?d.get('state','records',`husbandry:${args.target}`):null;
+        if(herd){
+            const owners=aliveHoldings(d,{kind:'owns',subject:herd.id}).map(h=>h.holder);
+            if(!owners.includes(attacker))throw preconditionFailure(`${herd.name}是${owners.map(o=>this.byId.get(o)?.name??o).join('、')||'别人'}的，你没有处分别人牲畜的权利`);
+            if(herd.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
+        }
+        const individuate=(...a)=>{const fn=advanceHook('individuateHerd');if(!fn)throw preconditionFailure('畜牧未启用，不能从畜群中牵出个体');return fn(...a);};
+        const target=herd?individuate(d,this,{population:herd.id,count:1,eventId:`${id}:individuate`})[0]:resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??(isNpc?target:npc?.species??target)),isBoss=Boolean(npc?.boss);
         const duel=isNpc?activeDuel(d,this,target,attacker):null,nonlethal=duel?.rule==='touch';
         if(attacker!=='player'&&(!duel||!isEffective(this,d,attacker)||d.get(...attackerPath,'location')!==d.get('state','location')))throw preconditionFailure('NPC 交锋须为本人已接受且见证人在场的约斗');
         // Catalog identities and campaign-created monster templates both need a
-        // present, unowned individual; an arbitrary entity row is not a creature.
+        // present individual; an arbitrary entity row is not a creature. The
+        // owner may kill an owned beast (K7, no wild XP: monsterReward); someone
+        // else's beast is refused as theirs.
         const creatureDefinition=!isNpc&&(this.world.monsters.some(row=>row.id===base?.id)||this.world.bosses?.some(row=>row.id===base?.id)||d.get('state','created',target)&&Number.isInteger(base?.template));
-        if(!isNpc&&!(npc&&!npc.owner&&creatureDefinition))throw preconditionFailure('这个实体不是交锋对象');
+        if(!isNpc&&!(npc&&creatureDefinition))throw preconditionFailure('这个实体不是交锋对象');
+        if(!isNpc&&npc.owner&&npc.owner!==attacker)throw preconditionFailure(`${npc.name??base?.name??'这只动物'}是${this.byId.get(npc.owner)?.name??d.get('state','npcs',npc.owner,'name')??npc.owner}的，你没有处分别人牲畜的权利`);
         if(!npc||npc.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
         if(isPhysicallyDead(this,d,target))throw preconditionFailure('对手已经死亡');
         const encounter=encounterForExchange(d,this,attacker,target);
@@ -178,7 +191,9 @@ export const activities={
         }
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
         const lair=!remaining?defeatBoss(d,this,target,id):null;
-        const experience=attacker==='player'&&!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
+        // Title is read as it stood when the blow fell: death closes the tamed_by
+        // projection, but an owned beast never yields wild XP (K7).
+        const experience=attacker==='player'&&!isNpc&&!remaining?(npc.owner?{experience:0,reason:'驯养动物不计野外战果'}:monsterReward(d,this,target,id)):{experience:0};
         const duelResult=duel&&(nonlethal&&(attack.hit||opponentTouched)||!remaining||attackerHp<=received||escaped)?finishDuel(d,this,duel,!remaining||nonlethal&&attack.hit?attacker:target,id,escaped?'脱离':nonlethal?'点到为止':'生死已分'):null;
         const incident=isNpc?recordViolence(d,this,{attacker,victim:target,damage,killed:!remaining,intent,eventId:id,duel}):null;
         if(duelResult)d.say(`决斗结束：${duelResult.reason}`);

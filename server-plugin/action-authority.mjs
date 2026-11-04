@@ -192,6 +192,10 @@ export function authority(context,actor,op,target,{disposition=false,consentScop
   else if(scoped(powers,op,subject))sources.push({kind:h.kind,id:h.id,subject:h.subject});
   else if(!legal&&h.subject===subject&&['holds_office','appointed','commands','operates'].includes(h.kind)&&Array.isArray(powers)&&powers.length)excess.push({kind:h.kind,id:h.id,subject:h.subject,version:digest(h),tags:['ultra_vires']});
  }
+ // A registered unit or living body records its owner natively when no owns
+ // holding was opened for it; that title confers the same disposition (K7).
+ const native=context.document.state?.itemInstances?.[subject]??context.document.state?.creatures?.[subject];
+ if(!legal&&native?.owner===actor&&!aliveHoldings(d,{kind:'owns',subject}).length&&['destroy','move','fact.set','transfer'].includes(op))sources.push({kind:'owner',id:subject});
  const mandates=currentMandates(context).filter(o=>o.debtor===actor);
  for(const m of mandates){
   const principalControls=subject===m.creditor||aliveHoldings(d,{holder:m.creditor,subject}).some(h=>h.kind==='owns'?effective(d,h.id):['operates','guardian_of'].includes(h.kind)&&usable(h));

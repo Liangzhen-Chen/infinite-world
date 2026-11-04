@@ -19,15 +19,19 @@ const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min
 // Repair is an action on an existing unit. No inventory output or new maker is created.
 export function repair(d,args,eventId){
     if(args.recipe!==undefined)throw preconditionFailure('维修不能同时提交制造配方');
-    const registered=args.instance?d.get('state','itemInstances',args.instance):null;
+    // An item slot may name the registered unit itself.
+    const named=!args.instance&&typeof args.item==='string'?d.get('state','itemInstances',args.item):null;
+    const registered=args.instance?d.get('state','itemInstances',args.instance):named;
     if(args.instance&&!registered)throw preconditionFailure('维修单件编号不存在；instance 只能取自所持物品的 instances 列表。若只有一件且没有单件编号，请省略 instance，仅传 item 物品名称或类型编号');
-    const item=args.item?this.resolve(args.item,'item'):registered?.item;
+    // Someone else's unit is refused as theirs (K7), not as a stock mismatch.
+    if(registered?.owner&&registered.owner!=='player')throw preconditionFailure(`这件${this.byId.get(registered.item)?.name??'物件'}归属${this.byId.get(registered.owner)?.name??d.get('state','npcs',registered.owner,'name')??registered.owner}，不是你的，你没有处分别人东西的权利`);
+    const item=named?named.item:args.item?this.resolve(args.item,'item'):registered?.item;
     if(!item)throw preconditionFailure('维修需要物品或单件编号');
     if(registered&&registered.item!==item)throw preconditionFailure('维修物品与单件编号不一致');
     const quantity=this.quantity(d,'player',item),held=d.get(...this.bagPath('player'),item),definition=this.byId.get(item);
     if(quantity<1)throw preconditionFailure('没有持有这件维修物品');
-    if(!args.instance&&quantity!==1)throw preconditionFailure('有多件同类物品，维修须明确单件编号');
-    const instance=args.instance??held?.instances?.[0],unit=instance?d.get('state','itemInstances',instance):null;
+    if(!args.instance&&!named&&quantity!==1)throw preconditionFailure('有多件同类物品，维修须明确单件编号');
+    const instance=args.instance??named?.id??held?.instances?.[0],unit=instance?d.get('state','itemInstances',instance):null;
     if(instance&&(!unit||unit.owner!=='player'||unit.item!==item||unit.status!=='持有'||!held?.instances?.includes(instance)))throw preconditionFailure('维修单件归属与库存不符');
     const plans=(this.rules.repairs??[]).filter(row=>row.item===item);
     const plan=args.repairPlan?plans.find(row=>row.id===args.repairPlan):plans.length===1?plans[0]:null;
