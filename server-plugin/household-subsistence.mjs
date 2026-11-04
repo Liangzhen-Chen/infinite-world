@@ -51,7 +51,9 @@ function sources(e,state){
   const area=place.areaKm2??e.rules.habitatDerivation?.referenceAreaKm2;
   return [{location:place.id,capacity:Math.floor(area*r.portionsPerKm2*fertility),minutesPerPortion:Math.ceil(r.forageMinutes/fertility)}];
  }).filter(s=>s.capacity>0);
- hit={locations,routes,water,waterById:new Map(water.map(row=>[row.id,row])),food,distances:new Map(),walking:new Map()};geography.set(e,hit);return hit;
+ // Fuel is gathered where the forest ledger has wood: one candidate per forest site (forest-water.mjs owns the stock).
+ const fuel=(ecology.forestSites?.(e)??[]).map(s=>({id:`fuel:${s.location}`,location:s.location}));
+ hit={locations,routes,water,waterById:new Map(water.map(row=>[row.id,row])),food,fuel,distances:new Map(),walking:new Map()};geography.set(e,hit);return hit;
 }
 // The engine route resolver owns weather, closed roads, local rooms and tolls.
 // Only the bounded candidate ordering is retained across reads; live route
@@ -131,7 +133,7 @@ function sourceGeography(e,state,home,kind,minute,context=null){
  const candidateKey=`${kind}|${skeleton?.county??''}|${r.maximumJourneyMinutes??e.rules.travel.dailyTravelMinutes}|${e.rules.travel.walkKmh}`;
  if(!candidates.has(candidateKey)){
   const represented=skeleton?new Set([skeleton.seat,...skeleton.locations.filter(l=>e.byId.has(l.id)).map(l=>l.id)]):null;
-  const list=(kind==='water'?index.water:index.food).filter(s=>!represented||represented.has(s.location));
+  const list=(kind==='water'?index.water:kind==='fuel'?index.fuel:index.food).filter(s=>!represented||represented.has(s.location));
   candidates.set(candidateKey,list.filter(s=>distances.has(s.location)&&2*distances.get(s.location)*60/e.rules.travel.walkKmh<=(r.maximumJourneyMinutes??e.rules.travel.dailyTravelMinutes)).map(s=>({...s,distance:distances.get(s.location)})).sort((a,b)=>a.distance-b.distance||a.location.localeCompare(b.location)));
  }
  return {index,distanceKey,candidates:candidates.get(candidateKey)};
@@ -160,6 +162,7 @@ function readJourney(e,state,home,kind,minute,portions,avoid,memoState=state,geo
  for(const source of points){
   if(!sourceAccessible(e,state,source))continue;
   if(kind==='water'&&!(context?context.water.get(source.id):usableWater(e,state,source,day)))continue;
+  if(kind==='fuel'){const reserve=ecology.forestView(e,state,source.location).reserve;if(!(reserve>=Math.max(1,portions)))continue;source.reserve=reserve;}
   try{
    // Match route()'s integer-minute legs. Fractional boundaries can round
    // back to the query minute when added to an absolute calendar minute.
@@ -181,6 +184,17 @@ function readJourney(e,state,home,kind,minute,portions,avoid,memoState=state,geo
   }catch(error){if(error.code!=='E-ACTION-PRECONDITION')throw error;}
  }
  return best;
+}
+// Errands a household cook makes for a home recipe (household-food.mjs): the same
+// route function and the same finite basin as the daily drinking trip, read fresh
+// at the moment of use. null = no reachable source, so that input does not exist here.
+export function householdSourceJourney(e,state,home,kind,minute,units=0){return config(e)&&e.rules.forestWater?readJourney(e,state,home,kind,minute,units):null;}
+// Wood leaves the forest's reserve account for the cook's bag account (ledgered by forest-water.mjs).
+export function cutHouseholdWood(d,e,location,units,minute,to,eventId){return ecology.harvestForest(d,e,location,units,minute,{to,eventId});}
+export function drawHouseholdWater(d,e,journey,millilitres,day){
+ const state=d.get('state'),basin=sources(e,state).waterById.get(journey.id);
+ if(!basin||!usableWater(e,state,basin,day)||ecology.basinState(e,state,basin).waterMl<millilitres)return 0;
+ return ecology.takeHouseholdWater(d,e,basin,millilitres,day);
 }
 function usableWater(e,state,source,day){
  const w=ecology.basinState(e,state,source),rules=e.rules.forestWater?.water,r=config(e);

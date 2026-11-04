@@ -81,8 +81,13 @@ test('district roster remains statistical; accepted household profile transfers 
  assert.equal(statisticalFoodPopulation(f.e,f.doc.state,SID),remaining);assert.deepEqual(auditLedger(f.doc.ledger),[]);assertTransitionInvariants(f.e.primitiveDraft(f.doc),f.e);
 });
 
+// I3c: raw oats are now food at home (recipe_boil_oat_gruel with water and wood fetched from the world's own sources).
+// The two tests below pin the retained-deficit and counter/materialization mechanics of the earlier regime, so they run in
+// the world with that one provision law removed (control); the home route itself is asserted by the next test and by
+// tests/s5-law-household-processing.test.mjs.
+const withoutHomeProvisions=()=>{const w=structuredClone(world);delete w.rules.householdCrafts.provisions;return w;};
 test('finite opening food is not income: after depletion repeated real days retain deficits without per-household statistical writes',async()=>{
- const f=await start();
+ const f=await start(withoutHomeProvisions());
  // TI1b: retain the original two genuinely hungry days rather than letting
  // missingSatiety>=0 pass while the newly registered opening still feeds us.
  await f.act({tool:'world_time',args:{minutes:12*DAY},eventId:'empty-opening-exhausted'});
@@ -94,6 +99,17 @@ test('finite opening food is not income: after depletion repeated real days reta
  assert.deepEqual(Object.keys(f.doc.state.records).filter(k=>k.startsWith('food-demand:')),prefix);
  assert.ok(r.patches.filter(p=>p.path?.[0]==='state'&&String(p.path?.[2]).startsWith('food-demand:')).every(p=>p.path[1]==='records'));
  assert.deepEqual(auditLedger(f.doc.ledger),[]);
+});
+
+test('with water and wood to fetch, the cohorts cook bought oats into gruel at home and fall behind less than without the route',async()=>{
+ const run=async authored=>{const f=await start(authored);await f.act({tool:'world_time',args:{minutes:14*DAY},eventId:'fourteen-days'});return f;};
+ const on=await run(world),off=await run(withoutHomeProvisions());
+ const gruel=f=>Object.values(f.doc.state.records).filter(r=>r.category==='household_processing'&&r.recipe==='recipe_boil_oat_gruel'&&r.owner.startsWith('food-demand:'));
+ assert.ok(gruel(on).some(j=>j.status==='done'),'a cohort cooks purchased oats into gruel');assert.equal(gruel(off).length,0);
+ // each done batch makes 4 bowls of satiety 30 (1 oats -> 4 x 30 = 120, as the flatbread chain); the cohorts' unmet meals end lower
+ assert.ok(summary(on).missingSatiety<summary(off).missingSatiety);
+ assert.ok(summary(on).consumedSatiety>summary(off).consumedSatiety);
+ assert.deepEqual(auditLedger(on.doc.ledger),[]);
 });
 
 test('real school admission transfers a roster household before the next meal or market read',async()=>{
@@ -121,7 +137,7 @@ test('real school admission transfers a roster household before the next meal or
 test('a funded statistical buyer uses a real open counter and consumes private food, not the public ledger',async()=>{
  // Authored supply premises; all demand and settlement dates still arise
  // through world_time. No statistical account fields are fixture-written.
- const authored=structuredClone(world),seller=authored.npcs.find(n=>n.id==='npc_hw_yanzhe');
+ const authored=withoutHomeProvisions(),seller=authored.npcs.find(n=>n.id==='npc_hw_yanzhe');
  // Hard cheese is a crafting ingredient in this world, with no nutrition.
  // Use the existing edible bread definition and an authored finite shelf.
  seller.inventory.item_bread=1000;seller.coins=100000;

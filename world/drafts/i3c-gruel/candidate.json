@@ -1,0 +1,73 @@
+{
+  "revision": "i3c-gruel-1",
+  "entries": [
+    {
+      "id": "item_oat_gruel",
+      "name": "燕麦粥",
+      "basePrice": 3,
+      "weight": 0.3,
+      "durability": 100,
+      "origin": "loc_hw_fields",
+      "shelfLifeDays": 1,
+      "tags": [
+        "food"
+      ],
+      "use": "整粒燕麦加清水在灶上煮出的稠粥，每碗三百克；须当日吃，隔夜易酸，不是可带的路粮。",
+      "quality": "木",
+      "aliases": [],
+      "scope": null,
+      "seasonality": "全年都能煮，原料是存粮、清水和柴火，没有现成存货",
+      "description": "农户用存粮里的整粒燕麦，加清水在厚底煮锅里煮出的稠粥。燕麦不脱壳磨粉，只在入锅前淘去浮尘，下锅后小火慢熬，木柴的火要稳，不能时旺时灭，一直熬到粒粒胀开、汤色发白发稠。一锅可盛四碗，每碗约三百克，没有盐也没有菜，味道淡，贵在饱腹，是家里粮缺时最省事的一顿。",
+      "inspection": "揭盖看粥面是否均匀稠厚，勺子立在中间不倒为熟；挑起一粒按开，里面不应有白硬芯。闻有燕麦的熟香，若有酸味或表面发黏起丝，说明放久了不能吃。",
+      "storage": "煮好趁热盛进陶碗，当日吃完；隔夜粥放在阴凉处也只能当天再煮开一次，发酸就倒掉。",
+      "nutrition": {
+        "satiety": 30
+      }
+    },
+    {
+      "id": "recipe_boil_oat_gruel",
+      "name": "煮燕麦粥",
+      "aliases": [],
+      "scope": null,
+      "skill": "skill_life_3_core",
+      "minimumProficiency": 0,
+      "minutes": 60,
+      "difficulty": 10,
+      "workstation": "cooking",
+      "process": "一份整粒燕麦淘去浮尘，和三份清水一起下厚底煮锅，灶里添一块木柴，小火煮约一个时辰，其间搅动防粘底；煮到粒粒胀开、汤稠为止，盛出四碗。不磨粉、不用盐，也不能写成发酵或烙制。",
+      "materials": [
+        {
+          "item": "item_oats",
+          "amount": 1
+        },
+        {
+          "item": "item_water",
+          "amount": 3
+        },
+        {
+          "item": "item_wood",
+          "amount": 1
+        }
+      ],
+      "tools": [
+        "item_cooking_pot"
+      ],
+      "output": {
+        "item": "item_oat_gruel",
+        "quantity": 4
+      },
+      "byproducts": [],
+      "learningRequired": true,
+      "learnFee": 4,
+      "learnMinutes": 120,
+      "teachers": [],
+      "toolWear": 1,
+      "failure": {
+        "recoverFraction": 0,
+        "injury": 0
+      },
+      "prerequisites": []
+    }
+  ],
+  "status": "published-without-L2-model-review"
+}

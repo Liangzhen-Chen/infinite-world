@@ -22,6 +22,10 @@
     "fee": 0,
     "basis": "每个登记家户的homeLocation派生一个归该户成员使用、不收费的cooking工位；已有cooking工位的地点不重复派生。磨粉需要woodworking(磨坊)，不派生。"
   },
+  "provisions": [
+    {"item": "item_water", "source": "water", "basis": "家常配方里家户手头没有的清水，由做饭的人自己去最近的可用水源取：路线与往返用步行路线函数，汲水时间同家户每日取水(householdSubsistence.waterMinutes)，水量从该流域账扣，不在户里凭空放水；附近没有水源就没有水。"},
+    {"item": "item_wood", "source": "fuel", "basis": "家常配方里家户手头没有的木料(柴)，由做饭的人自己去步行可达、存量足够的林地拾取：路线用步行路线函数；一趟背回的份数取一个成年人的安全负重(carry.mjs)除以木料单件重量，一趟的耗时为往返路线加上按林木规则(forestWater.forest.minutes、maximumCut)折算的拾取动作，平摊到这一趟所供的每一批上；木料从该林地的存量账转入家户行囊；没有可达的林地就没有柴。"}
+  ],
   "utensils": {
     "quantityPerHousehold": 1,
     "basis": "开局每户对其家用配方(无工位要求或工位为hearth.kind)所需的每种工具各持有1件，价值读物价表basePrice，并计入期初总盘：同额从可分配现金中扣除，不额外造钱。"
