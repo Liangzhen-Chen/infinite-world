@@ -41,11 +41,11 @@ log('P3 买空',JSON.stringify(buyout.picked??buyout.tried.slice(-1)));
 const worn=await wearOut(ctx,{D,world:T.world,M,waitDays:Math.min(DAYS,3)});
 log('P3 磨坏',worn.broke?worn.tool:'没磨坏',JSON.stringify(worn.runs.map(r=>({recipe:r.recipe,tool:r.tool,durability:r.durability.slice(-3)}))));
 // P4 准备：数据里"据点再生"的资源中，物品是制成品的那些（制成品 = 配方产物 ∪ 卡点名九类）。挑离出生地最近的一处，进去采空，再看浸泡里会不会长回来。
-const regrowRows=[];
+const regrowRows=[],openSite=id=>!(Object.values(T.world.locations).find(l=>l.id===id)?.site?.entryMechanisms??[]).length;
 for(const l of Object.values(T.world.locations))for(const ch of l.site?.changes??[])if(ch.kind==='regrow'){const r=(l.site.resources??[]).find(x=>x.id===ch.resource);if(r)regrowRows.push({location:l.id,resource:r.id,item:r.item,everyDays:ch.everyDays,max:ch.max,requires:r.requires??null,mechanisms:r.mechanisms??null,manufactured:M.has(r.item)});}
 const fakeRegrow=regrowRows.filter(r=>r.manufactured);
 const deplete={tried:[],picked:null};
-for(const r of [...fakeRegrow].filter(r=>!r.requires&&!r.mechanisms).sort((a,b)=>dist(T.world,ctx.doc.state.location,a.location)-dist(T.world,ctx.doc.state.location,b.location)).slice(0,3)){
+for(const r of [...fakeRegrow].filter(r=>!r.requires&&!r.mechanisms&&openSite(r.location)).sort((a,b)=>dist(T.world,ctx.doc.state.location,a.location)-dist(T.world,ctx.doc.state.location,b.location)).slice(0,3)){
   const m=await at(ctx,r.location),e=await act(ctx,'core:site.enter',{});
   const left=ctx.doc.state.records?.[`site:${r.location}`]?.remaining?.[r.resource];
   const g=await act(ctx,'core:site.gather',{target:r.resource,quantity:left??r.max??1});
@@ -56,7 +56,7 @@ for(const r of [...fakeRegrow].filter(r=>!r.requires&&!r.mechanisms).sort((a,b)=
 log('P4 采空', deplete.picked?`${deplete.picked.location}/${deplete.picked.resource}`:'无');
 // P4 前提：再生规律真的在跑。先用真实动作采一次带再生条目的自然物据点（再生周期不超过浸泡天数的优先，其次最近），浸泡后看它是否长回。
 const natSite={tried:[],picked:null};
-for(const r of regrowRows.filter(r=>!r.manufactured&&!r.requires&&!r.mechanisms).sort((a,b)=>((a.everyDays>DAYS)-(b.everyDays>DAYS))||(dist(T.world,ctx.doc.state.location,a.location)-dist(T.world,ctx.doc.state.location,b.location))).slice(0,3)){
+for(const r of regrowRows.filter(r=>!r.manufactured&&!r.requires&&!r.mechanisms&&openSite(r.location)).sort((a,b)=>((a.everyDays>DAYS)-(b.everyDays>DAYS))||(dist(T.world,ctx.doc.state.location,a.location)-dist(T.world,ctx.doc.state.location,b.location))).slice(0,3)){
   const m=await at(ctx,r.location),e=await act(ctx,'core:site.enter',{});
   const g=await act(ctx,'core:site.gather',{target:r.resource,quantity:Math.max(1,Math.min(r.max??1,3))});
   const after=ctx.doc.state.records?.[`site:${r.location}`]?.remaining?.[r.resource];
@@ -206,7 +206,11 @@ check('V0.变异载入','变异','变异副本只改数据即可载入，新材�
     if(l.status==='rejected')await act(c,'core:time',{minutes:120});}
   steps.push(`去工位 ${NEW.station}：${say(await at(c,NEW.station))}`);
   let made=0;
-  if(got>=2){const m=await act(c,'core:craft.manufacture',{recipe:NEW.recipe});steps.push(`制作 ${NEW.recipe}：${say(m)}`);made=pinv(c.doc,NEW.product);}
+  // 制作有检定，失败会耗掉材料：回据点再采、再做，最多 4 次。
+  for(let i=0;i<4&&!pinv(c.doc,NEW.product);i++){
+    if(pinv(c.doc,NEW.natural)<2){await at(c,NEW.site);await act(c,'core:site.enter',{});steps.push(`再采：${say(await act(c,'core:site.gather',{target:NEW.resource,quantity:2}))}`);await at(c,NEW.station);}
+    const m=await act(c,'core:craft.manufacture',{recipe:NEW.recipe});steps.push(`制作 ${NEW.recipe}：${say(m)}`);}
+  made=pinv(c.doc,NEW.product);
   const f=flowDiff(before,c.doc),bk=books(T2,c,before);
   const ok=got>=2&&made>0&&(f[`src:craft|${NEW.product}|craft`]??0)>0&&bk.ok;
   check('P5.玩家产出','P5 变异','新自然材料：玩家真实采到它，按新配方做出新产物（src:craft），账本守恒——不改代码',ok,{steps,gathered:got,made,naturalIn:realIn(f,NEW.natural,M2),craftIn:f[`src:craft|${NEW.product}|craft`]??0,books:bk});

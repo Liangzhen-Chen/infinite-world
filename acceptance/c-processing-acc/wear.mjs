@@ -33,7 +33,7 @@ export async function wearOut(c,{D,world,M,waitDays=3,maxRounds=40,maxActions=30
   }
   cands.sort((a,b)=>(b.natural-a.natural)||(a.batches-b.batches));
   const report={candidates:cands.slice(0,5).map(x=>({recipe:x.recipe.id,tool:x.target,batches:x.batches,naturalInputs:x.natural})),runs:[]};
-  for(const cand of cands.slice(0,2)){
+  for(const cand of cands.slice(0,4)){if(over())break;
     const r=cand.recipe,tool=cand.target,run={recipe:r.id,tool,steps:[],durability:[]};report.runs.push(run);
     // 工具
     for(const t of r.tools){if(pinv(c.doc,t)>0)continue;const h=Object.entries(c.doc.state.npcs).find(([,n])=>inv(n,t)>0);const b=await buyN(c,h[0],t,1);run.steps.push(`买工具 ${t}（${h[0]}）：${say(b)}`);}
@@ -41,7 +41,8 @@ export async function wearOut(c,{D,world,M,waitDays=3,maxRounds=40,maxActions=30
     // 学
     const teacher=r.teachers[0];
     for(let i=0;i<8;i++){const p=await act(c,'core:craft.manufacture',{recipe:r.id},{commit:false});if(!/尚未学会|技能/.test(p.reason??''))break;
-      const t=c.doc.state.npcs[teacher];if(t)await at(c,t.location);const l=await act(c,'core:learn',{kind:'recipe',entity:r.id,source:teacher,mode:'acquire'});run.steps.push(`学 ${r.id}：${say(l)}`);if(l.status==='rejected')await act(c,'core:time',{minutes:120});}
+      const t=c.doc.state.npcs[teacher];if(t)await at(c,t.location);const l=await act(c,'core:learn',{kind:'recipe',entity:r.id,source:teacher,mode:'acquire'});run.steps.push(`学 ${r.id}：${say(l)}`);if(l.status==='rejected'){if(/前置|资格|没有/.test(l.reason??''))break;await act(c,'core:time',{minutes:120});}}
+    if(/尚未学会|技能/.test((await act(c,'core:craft.manufacture',{recipe:r.id},{commit:false})).reason??'')){run.result='学不会';continue;}
     const station=Object.values(world.locations).find(l=>(l.workstations??[]).some(w=>w.kind===r.workstation))?.id;
     const startQty=toolState(c.doc,tool).qty;run.durability.push(toolState(c.doc,tool).durability);
     let waited=0;

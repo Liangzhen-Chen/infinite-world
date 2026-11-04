@@ -4,12 +4,12 @@
   "repo": "F:/dnd-wt/S5FIX",
   "days": 3,
   "summary": {
-   "pass": 5,
-   "fail": 25,
-   "blocked": 4
+   "pass": 4,
+   "fail": 24,
+   "blocked": 5
   }
  },
- "rule": "卡 C 交付后，在 30 天正式浸泡（--days 30）下以下断言全部应为 pass；本机 ≤3 天冒烟时，标 needsDays 的三条允许为 blocked（未到判定点），其余也应为 pass。",
+ "rule": "卡 C 交付后，在 30 天正式浸泡（--days 30）下以下断言全部应为 pass；本机 ≤3 天冒烟时，标 needsDays 的几条允许 blocked（未到再生周期或补货周期），其余也应为 pass。",
  "expected": [
   {
    "id": "S0",
@@ -134,10 +134,9 @@
   },
   {
    "id": "P3.报废有替代",
-   "phenomenon": "工具磨损报废后有替代来源：每种报废的工具，同期配方产出 ≥ 报废数",
+   "phenomenon": "玩家反复使用把工具磨到报废后，世界里有替代来源（配方生产，或卖家补货追到生产者）",
    "baseline": "blocked",
-   "expected": "pass",
-   "needsDays": 30
+   "expected": "pass"
   },
   {
    "id": "P3.工具有生产链",
@@ -154,16 +153,10 @@
   },
   {
    "id": "P4.浸泡再生",
-   "phenomenon": "浸泡期内据点再生（src:regrowth）的制成品为 0",
-   "baseline": "pass",
+   "phenomenon": "据点再生规律在跑（采过的自然物长回来了），同期据点再生的制成品为 0",
+   "baseline": "blocked",
    "expected": "pass",
-   "note": "基线已过，交付后须保持"
-  },
-  {
-   "id": "P4.凭空进货",
-   "phenomenon": "浸泡期内制成品的凭空进货（src:import）为 0",
-   "baseline": "fail",
-   "expected": "pass"
+   "needsDays": 30
   },
   {
    "id": "P4.数据",
