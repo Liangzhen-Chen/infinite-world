@@ -1,7 +1,7 @@
 // 职业驱动劳动（K3）：职业 → 劳动类别 → 当天的作息槽（一次真实往返的劳动行程）→ 产出、出售、运输。
 // 劳动类别只来自职业数据的 labor 属性（professions.json，或 careers.json 同名职业）；人物的职业是名册登记的职业编号，
 // 加上与职业名或别名完全一致的职业称谓。这里不认任何职业名、物品编号或地点编号。
-// 劳动的去处由世界状态派生：采集取据点的有限资源（sites.mjs 的据点账），伐木取林木存量（forest-water），
+// 劳动的去处由世界状态派生：采集取据点的有限资源（sites.mjs 的据点账），伐木取林木存量（forest-water，产物是聚落木料那一种存货），
 // 加工走已有的配方制造，出售与运输把本人可售的存货卖给有铺面的收货人，价格走已有的市场报价（稀缺随供给变化）。
 // 每一项劳动由本人主观视图上的 npcDecision 决定（收益即这趟劳动的真实货值或货款，作为满足需要的量），
 // 是否值得去由真实报价与工时价值比较得出（按需求排班）。
@@ -14,7 +14,7 @@ import {isEffective} from './lifecycle-state.mjs';
 import {stateReader,goodsWorth} from './valuation.mjs';
 import {laborValue,marketQuote,saleableStock,recordMarketDeal} from './market.mjs';
 import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
-import {bag,BOOKED} from './stock.mjs';
+import {bag,BOOKED,stockItem} from './stock.mjs';
 import {forestSites,forestView,harvestForest} from './forest-water.mjs';
 import * as sitesApi from './sites.mjs';
 import {shopOfKeeper} from './shop.mjs';
@@ -29,9 +29,14 @@ const DAY=1440,writer='npc-labor';
 declareLedgerWriter(writer,{sinks:['sink:export']});
 declareHoldingWriter(writer,{kinds:[]});
 const reader=document=>({document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)});
-const config=e=>e.rules.npcLabor??{};
+// 劳动的工时参数只来自 rules.npcLabor；缺了是数据错误，不用缺省值顶替。
+function config(e){
+ const c=e.rules.npcLabor;
+ if(!Number.isSafeInteger(c?.tripMinutes)||c.tripMinutes<1||!Number.isSafeInteger(c?.saleMinutes)||c.saleMinutes<1)throw Error('rules.npcLabor 须登记 tripMinutes 与 saleMinutes（正整数分钟）');
+ return c;
+}
 // 一天里交给自主劳动的整段工时上限，与 npc-autonomy 的每日自主工时同一口径。
-const tripLimit=e=>config(e).tripMinutes??240;
+const tripLimit=e=>config(e).tripMinutes;
 
 // ---- 职业 → 劳动类别 ----
 export function npcProfessions(e,state,id){
@@ -45,7 +50,7 @@ export function laborCategories(e,state,id){
  for(const p of npcProfessions(e,state,id))for(const c of p.labor??e.world.careers?.[p.id]?.labor??[])out.add(c);
  return [...out].sort();
 }
-const adult=(e,state,id,minute)=>(npcAgeAt(e,state,id,minute)??0)>=(e.rules.npcLife?.adultAge??18);
+const adult=(e,state,id,minute)=>(npcAgeAt(e,state,id,minute)??0)>=e.rules.npcLife.adultAge;
 
 // ---- 劳动的去处 ----
 function route(e,document,from,to,at){
@@ -56,15 +61,24 @@ const homeSettlement=(e,state,id)=>personHousehold(e,state,id).value?.settlement
 // 自然来源：每个来源给出地点、产物、每份工时与当前可取量；取用只经各自规律的账本入口。
 function naturalSources(e,state,id,labor){
  const rows=[];
- if(labor.includes('gather')&&typeof sitesApi.siteResources==='function')
-  for(const r of sitesApi.siteResources(e,state,{actor:id}))if(r.open&&r.remaining>0)rows.push({labor:'gather',location:r.site,item:r.item,minutesPerUnit:r.minutes,available:r.remaining,source:`site:${r.site}:${r.resource}`,resource:r.resource});
+ // 据点知识：一趟劳动行程走得到的据点是本地据点，本地人认得它、知道门道；发现前提与机关只挡外来者（玩家入口不变）。
+ // 是否走得到由下面的行程核算决定，这里只看物权：无主、本人或本聚落所有，且不需另取许可。
+ if(labor.includes('gather')){
+  const settlement=homeSettlement(e,state,id);
+  for(const place of e.world.locations)for(const r of place.site?.resources??[]){
+   const owner=Object.hasOwn(r,'owner')?r.owner:place.site.owner??place.owner??null;
+   if(owner&&owner!==id&&owner!==settlement||place.access?.requiresConsent&&owner!==id)continue;
+   const remaining=state.records?.[`site:${place.id}`]?.remaining?.[r.id]??r.quantity;
+   if(remaining>0&&r.minutes>0)rows.push({labor:'gather',location:place.id,item:r.item,minutesPerUnit:r.minutes,available:remaining,source:`site:${place.id}:${r.id}`,resource:r.id});
+  }
+ }
  const forest=e.rules.forestWater?.forest;
  if(labor.includes('fell')&&forest&&e.quantity(stateReader(state),id,forest.tool)>0)
   for(const s of forestSites(e)){
    const place=e.byId.get(s.location),owner=place?.site?.owner??place?.owner;
    if(owner&&owner!==id||place?.access?.requiresConsent||place?.site)continue;
    const reserve=forestView(e,state,s.location)?.reserve??0;
-   if(reserve>0)rows.push({labor:'fell',location:s.location,item:'item_wood',minutesPerUnit:forest.minutes,available:Math.min(reserve,forest.maximumCut),source:`forest:${s.location}`,tool:forest.tool});
+   if(reserve>0)rows.push({labor:'fell',location:s.location,item:stockItem(e,'wood'),minutesPerUnit:forest.minutes,available:Math.min(reserve,forest.maximumCut),source:`forest:${s.location}`,tool:forest.tool});
   }
  return rows;
 }
@@ -96,9 +110,11 @@ export function laborCandidates(e,view,document){
  if(!labor.length||!adult(e,state,who,at))return out;
  const read=stateReader(state),home=view.self.location,day=Math.floor(at/DAY);
  // 采集与伐木：可取的量按工时与负重定，值不值得去看本地真实估值（稀缺越高越值得）。
+ const probes=new Map();
  for(const s of naturalSources(e,state,who,labor)){
   const room=carryRoom(e,document,who,s.item);
-  const probe=itinerary(e,document,who,s.location,s.minutesPerUnit,at);if(!probe)continue;
+  if(!probes.has(s.location))probes.set(s.location,itinerary(e,document,who,s.location,s.minutesPerUnit,at));
+  const probe=probes.get(s.location);if(!probe)continue;
   const work=Math.min(tripLimit(e)-(probe.returnAt-probe.finishAt)-(probe.arriveAt-at),s.minutesPerUnit*Math.min(s.available,room));
   const quantity=Math.floor(work/s.minutesPerUnit);if(quantity<1)continue;
   const trip=itinerary(e,document,who,s.location,quantity*s.minutesPerUnit,at);if(!trip)continue;
@@ -117,7 +133,7 @@ export function laborCandidates(e,view,document){
    for(const b of buyers(e,state,who,item)){
     const remote=placeSettlement(e,state,b.location).value!==settlement;
     if(remote?!labor.includes('carry'):!labor.includes('sell'))continue;
-    const trip=itinerary(e,document,who,b.location,config(e).saleMinutes??10,at);if(!trip)continue;
+    const trip=itinerary(e,document,who,b.location,config(e).saleMinutes,at);if(!trip)continue;
     let quote;try{quote=keeperQuote(e,document,{seller:who,keeper:b.keeper,location:b.location,item,quantity:available});}catch{continue;}
     if(!(quote.totalCoins>0)||quote.totalCoins>(state.npcs[b.keeper]?.coins??0))continue;
     // 可售存货（saleableStock 已扣除本人与家户的自留）是待售的货，值不值得送去卖看货款能否抵过工时与路费。
@@ -186,7 +202,7 @@ registerAutonomyKind('labor_work',{
   const to=bag(e,who,a.item),room=carryRoom(e,d.document,who,a.item),want=Math.min(a.quantity,room);
   let taken=0;
   if(a.labor==='gather'){const [,site]=a.source.split(':');taken=sitesApi.siteTake(d,e,site,a.resource,{quantity:want,minutes:a.finishAt-a.arriveAt,holder:who,to,eventId:actionId});}
-  else if(a.labor==='fell'){taken=harvestForest(d,e,a.to,want,at,{to,eventId:actionId});if(a.tool)wearItem(d,e,who,a.tool,e.rules.forestWater.forest.wear??1);}
+  else if(a.labor==='fell'){taken=harvestForest(d,e,a.to,want,at,{to,eventId:actionId});if(a.tool)wearItem(d,e,who,a.tool,e.rules.forestWater.forest.wear);}
   if(taken)changeItems(d,e,who,a.item,taken,{books:BOOKED});
   laborRecord(d,actionId,{npc:who,labor:a.labor,location:a.to,minute:at,source:a.source,produced:taken?[{item:a.item,quantity:taken}]:[],success:taken>0});
   if(!taken)throw preconditionFailure('到场后没有可取的资源');
