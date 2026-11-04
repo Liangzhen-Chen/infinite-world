@@ -1069,3 +1069,4 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [x] H 遗留参数复核：t-h-params@e8d3b5ba，文档已进 master（256 条：应读 133、删 23、保留 2、拿不准 98）。
 - [ ] 跟进 1：F 合入后，把 extraction.mjs 的钓饵改成按类别匹配。extraction 归 D 线，等 F 的 items.json 标签和 item-class.mjs 就位后做；连带 s5-05、s5-06、s5-w4-economy、a3-world-approval 四个共享测试读 rule.bait.item 的地方。
 - [ ] 跟进 2：k8-guard 改两处：从加载后的派生结果读畜牧产出（B 合入后）；tools/load-world.mjs 的读取算作消费者（H 发现 narrative、writable 两处误报）。
+- [ ] 跟进 3（K6 遗留）：偷收公田。公共田的作物记在聚落的农事记录里，farm.private_harvest 只读私田，所以"收别人的或公家的田"缺一条从公共批次取物的路径。归 K6 类（先发生再定罪），K6 主线之后单独做（agriculture.mjs 已划给 K6 线）。
