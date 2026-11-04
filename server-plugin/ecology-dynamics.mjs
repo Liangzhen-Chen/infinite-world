@@ -3,6 +3,7 @@ import {accrueStock} from './stock.mjs';
 import {takePopulation} from './population-health.mjs';
 import {aliveHoldings} from './holdings.mjs';
 import {rangeSpec} from './wildlife-habitats.mjs';
+import {installHusbandryTraits} from './husbandry-traits.mjs';
 
 // Used by the normal loader and content previews; archived species retain the
 // merged definitions, rather than requiring a second runtime parameter table.
@@ -15,6 +16,8 @@ export function installEcologyDefinitions(world,config){
   for(const key of ['ecology','interactions','husbandry'])if(row[key]!==undefined)s[key]=structuredClone(row[key]);
  }
  world.ecology={herds:structuredClone(config.herds)};
+ // Products are derived from species attributes, then the derived shape is validated.
+ installHusbandryTraits(world);
  const errors=validateEcologyDefinitions(world);if(errors.length)throw Error(errors.join('; '));
  return world;
 }
@@ -26,7 +29,7 @@ export function validateEcologyDefinitions(world){
   for(const row of s.interactions??[])if(!species.has(row.with)&&![...species.values()].some(other=>other.tags?.includes(row.with)))errors.push(`生态相互作用引用无效：${s.id}`);
   if(s.ecology?.niche&&(Object.values(s.ecology.niche).some(n=>!Number.isFinite(n)||n<0)||!Object.values(s.ecology.niche).some(n=>n>0)))errors.push(`生态位系数无效：${s.id}`);
   const p=s.husbandry;if(!p)continue;
-  if(!items.has(p.feed?.item)||!Number.isFinite(p.feed?.perHead)||p.feed.perHead<=0||!Number.isFinite(p.birthPerHeadDay)||p.birthPerHeadDay<0||!Array.isArray(p.yields?.alive)||!p.yields.alive.length)errors.push(`家畜参数无效：${s.id}`);
+  if(!items.has(p.feed?.item)||!Number.isFinite(p.feed?.perHead)||p.feed.perHead<=0||!Number.isFinite(p.birthPerHeadDay)||p.birthPerHeadDay<0||!Array.isArray(p.yields?.alive))errors.push(`家畜参数无效：${s.id}`);
   const outputs=new Set();for(const y of p.yields?.alive??[]){if(outputs.has(y.item)||!items.has(y.item)||!Number.isFinite(y.perHeadDay)||y.perHeadDay<0||!Number.isSafeInteger(y.collectMinutes)||y.collectMinutes<1)errors.push(`活体产物参数无效：${s.id}`);outputs.add(y.item);}
  }
  const ids=new Set();for(const h of world.ecology?.herds??[]){
