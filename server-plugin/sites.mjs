@@ -289,7 +289,7 @@ function watchers(d,engine,place){
 }
 function infiltrate(d,engine,place,eventId){
     const plan=place.site.infiltration;
-    if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径；可以直接进入，未获许可进入即构成侵入');
+    if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径，只能直接进入（进别人的地方会被记为侵入）');
     if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
     if(d.get('state','player','companions')?.length)throw preconditionFailure('潜入不能带同行者');
     unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
