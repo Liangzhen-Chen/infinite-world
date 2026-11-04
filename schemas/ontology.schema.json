@@ -463,6 +463,14 @@
           "type": "string",
           "description": "上位词（12 §12.3.3）；包词汇必填"
         },
+        "act": {
+          "type": "string",
+          "description": "构成该罪的行为类别（K6）：take/destroy/gather/use/enter/cast/detain"
+        },
+        "against": {
+          "type": "object",
+          "description": "行为对象须具备的属性；越具体越优先（K6）"
+        },
         "aliases": {
           "type": "array",
           "items": {
