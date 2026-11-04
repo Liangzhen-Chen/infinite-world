@@ -369,9 +369,13 @@ export function laborValue(engine,document,{worker='player',observer=null,profic
 // household and business reads inside a quote be shared by the other items priced from the same projection.
 const subjectiveProjections=new WeakMap();
 const subjectiveMemo=Symbol('subjective projection memo');
-function subjectiveReader(engine,document,view,location,known){
+function subjectiveEntry(engine,document,view){
  let entry=subjectiveProjections.get(view);
- if(!entry||entry.engine!==engine||entry.state!==document.state||entry.seed!==document.randomSeed)subjectiveProjections.set(view,entry={engine,state:document.state,seed:document.randomSeed,places:new Map()});
+ if(!entry||entry.engine!==engine||entry.state!==document.state||entry.seed!==document.randomSeed)subjectiveProjections.set(view,entry={engine,state:document.state,seed:document.randomSeed,places:new Map(),quotes:new Map()});
+ return entry;
+}
+function subjectiveReader(engine,document,view,location,known){
+ const entry=subjectiveEntry(engine,document,view);
  let reader=entry.places.get(location);
  if(reader)return reader;
  const observer=view.observer,body=observer==='player'?document.state.player:document.state.npcs[observer];
@@ -386,7 +390,15 @@ function subjectiveReader(engine,document,view,location,known){
 // Candidate estimates use the same quote formula over the observer's own
 // stock and remembered trades. Unknown bags, granaries and market depth are
 // absent from this projection; execution still rechecks the actual market.
+// A quote is a function of the document, the view and its arguments; repeating the same call returns the same value.
 export function subjectiveMarketQuote(engine,document,view,args){
+ const entry=subjectiveEntry(engine,document,view);let key;try{key=JSON.stringify(args);}catch{return readSubjectiveMarketQuote(engine,document,view,args);}
+ if(entry.quotes.has(key))return entry.quotes.get(key);
+ const quote=readSubjectiveMarketQuote(engine,document,view,args);
+ entry.quotes.set(key,quote);
+ return quote;
+}
+function readSubjectiveMarketQuote(engine,document,view,args){
  const observer=view.observer,location=args.location??view.self.location,place=settlementOf(engine,document.state,location);
  const known=marketDeals(document.state).filter(r=>[r.seller,r.buyer].includes(observer)&&r.minute<=view.minute&&r.place===place);
  const fact=view.knowledge.facts[`market:${location}:${args.item}`];

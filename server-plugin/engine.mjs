@@ -142,6 +142,9 @@ class Draft {
     get document() { this.release(null); return this.cursor.expose(this.cursor.root); }
     set document(document) { this.cursor.reset(document); this.adopted.clear(); }
     get(...path) { if (this.adopted.size) this.release(path); let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return this.cursor.expose(object); }
+    // Like get, without letting the reference escape: adopted rows are released first, but the cursor keeps
+    // its copies writable. Only for a caller that reads and drops the reference before its next write.
+    look(...path) { if (this.adopted.size) this.release(path); let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return object; }
     // Only for a caller that reads, copies what it keeps and drops the reference before its next write.
     peek(...path) { let object = this.cursor.root; for (let i = 0; i < path.length; i++) object = object?.[path[i]]; return object; }
     numberEvent(path,value){

@@ -19,7 +19,7 @@ import {npcServices} from './npc-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
 import {changeLegacyHoldings} from './transition.mjs';
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,look} from './storage.mjs';
 import {advanceHook} from './advance-hooks.mjs';
 import {serviceCapacity,serviceCapacityView,waitingInOrder,nextServiceOrder,queuePosition} from './service-queue.mjs';
 declareHoldingWriter('education',{kinds:['member_of','holds_office','employed_by','certified','resides','devotee_of'],entities:['office']});
@@ -154,7 +154,7 @@ export function advanceEducation(d,e,{before,after,beforeState}){
    }
   }
   for(const student of c.students.slice(0,cap)){
-   const s=d.get('state');if(student==='player'||!capable(s,student)||personConstraint(e,s,student))continue;
+   const s=look(d,'state');if(student==='player'||!capable(s,student)||personConstraint(e,s,student))continue;
    const minutes=attendance(student).filter(a=>a.location===c.location).reduce((n,a)=>n+(teacher?attendance(teacher):[{start,end,location:c.location}]).filter(b=>b.location===c.location).reduce((m,b)=>m+Math.max(0,Math.min(end,a.end,b.end)-Math.max(start,a.start,b.start)),0),0);
    const dismissed=end===w.end;
    if(!minutes&&!(dismissed&&d.get(...path(`education_study:${c.id}:${student}`))?.attendedDay===Math.floor(w.start/DAY)))continue;

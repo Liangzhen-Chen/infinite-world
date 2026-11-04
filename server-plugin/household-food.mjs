@@ -9,7 +9,7 @@ import {heldUnit,changeItems,wearItem,transferItems} from './items.mjs';
 import {craftInput,craftOutput,recordCraft} from './stock.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,look} from './storage.mjs';
 import {statisticalLaborMinutes} from './town-income.mjs';
 import {validateAutonomyAction,executeAutonomyAction,craftOutcome,npcToolBonus} from './npc-autonomy.mjs';
 import {npcProficiency,npcWorkGrowth} from './npc-growth.mjs';
@@ -234,7 +234,7 @@ export function advanceHouseholdFood(d,e,before,after){
  if(!e.rules.householdSubsistence)return;
  if(after%DAY===600)planHouseholdFood(d,e,after);
  const completed=[];
- for(const j of jobs(d.get('state')).filter(j=>j.status==='working'&&j.finish<=after)){
+ for(const j of jobs(look(d,'state')).some(j=>j.status==='working'&&j.finish<=after)?jobs(d.get('state')).filter(j=>j.status==='working'&&j.finish<=after):[]){
   const key=j.id;
   // Remove only the live lock; its actual chore/labor debit stays for the day.
   d.set(['state','records',key,'status'],'settling');

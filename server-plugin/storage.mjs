@@ -322,6 +322,8 @@ function carryStateMemos(state, path, previousCategory, nextCategory, previousKi
     }
     return retained;
 }
+// get without escape for a draft that has look (see Draft.look); other readers fall back to get.
+export const look = (d, ...path) => typeof d.look === 'function' ? d.look(...path) : d.get(...path);
 export const recordIndexActive = () => recordIndexDepth > 0;
 let indexCheck = process.env.FIELDS_INDEX_CHECK === '1';
 export const recordIndexCheck = { hits: 0, memoHits: 0, violations: [] };
@@ -458,6 +460,19 @@ export function recordEntriesWhere(records, field, value) {
 // reference to them escapes (expose), so a long simulation does not recopy
 // the document root, state and records on every write. Every reference that
 // escaped, and everything below it, is copied before it would change.
+// {...value} for a plain data object. A large table (records, npcs) copies faster key by key than by spread;
+// order and values are the same, and a key that assignment would treat specially falls back to the spread.
+function copyTable(value) {
+    const keys = Object.keys(value), length = keys.length;
+    if (length < 64) return { ...value };
+    const copy = {};
+    for (let i = 0; i < length; i++) {
+        const key = keys[i];
+        if (key === '__proto__') return { ...value };
+        copy[key] = value[key];
+    }
+    return copy;
+}
 export class PatchCursor {
     constructor(document) { this.reset(document); }
     // marks: 1 = this cursor's own copy, writable in place; 2 = own copy whose
@@ -477,7 +492,7 @@ export class PatchCursor {
     take(value) {
         const mark = this.marks.get(value);
         if (mark === 1) return value;
-        const copy = Array.isArray(value) ? [...value] : { ...value };
+        const copy = Array.isArray(value) ? [...value] : copyTable(value);
         // An escaped copy's children are now reachable from the escaped original too.
         if (mark === 2) {
             this.chain = null;

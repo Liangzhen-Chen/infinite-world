@@ -64,7 +64,7 @@ import {advancePublicProjects,isPublicProject,advanceHouses,advanceHousing,nextH
 
 const clone=value=>structuredClone(value);
 import {personSimulation,personConstraint,personConstraints}from'./entity-view.mjs';
-import {PatchCursor,withRecordIndex,recordsMemo,recordsWhere,recordEntriesWhere,canonicalEqual}from'./storage.mjs';
+import {PatchCursor,look,withRecordIndex,recordsMemo,recordsWhere,recordEntriesWhere,canonicalEqual}from'./storage.mjs';
 import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layers.mjs';
 import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE,protocolDueItems,nextProtocolMinute}from'./scheduler.mjs';
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
@@ -140,12 +140,13 @@ export function catchUpLocal(engine,d,after){
 // S2b：推进路径接线开关（schedulerWired）。开启后同刻调度器按 §14.2 阶段与排序键重排推进系统，
 // 生产规则显式声明 phase/packId/ruleId；关闭时保持现有 order。
 function orderedSystems(d,ctx){
-    if(!schedulerWired(d.get('state')))return advanceRegistry;
+    if(!schedulerWired(look(d,'state')))return advanceRegistry;
+    const seed=typeof d.peek==='function'?d.peek('randomSeed'):d.document.randomSeed;
     return [...advanceRegistry].sort((a,b)=>{
         const phase=(a.phase??PHASE.clock)-(b.phase??PHASE.clock);
         if(phase)return phase;
         if(a.phase===PHASE.due)return compareDue(a,b)||a.id.localeCompare(b.id);
-        return compareClock(d.document.randomSeed,ctx.after)({...a,ruleId:a.ruleId??a.id},{...b,ruleId:b.ruleId??b.id});
+        return compareClock(seed,ctx.after)({...a,ruleId:a.ruleId??a.id},{...b,ruleId:b.ruleId??b.id});
     });
 }
 // 接线后的刻集由日程堆唯一确定（14 §14.2）：只有到期项与时钟规则的刻才存在，

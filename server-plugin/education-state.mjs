@@ -1,6 +1,6 @@
 import {temples} from './faith-catalog.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {recordsWhere,recordsMemo,stateMemo,recordIndexActive,canonicalEqual,recordIndexCheck} from './storage.mjs';
+import {look,recordsWhere,recordsMemo,stateMemo,recordIndexActive,canonicalEqual,recordIndexCheck} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
@@ -62,6 +62,8 @@ export function teachingAvailable(e,s,id,until=s.minute){
 }
 // Runtime settlement is the education module's own write, not an initial-campaign one.
 export function settleDemonstrations(d,e){
+ // Nothing to settle needs no snapshot of the state.
+ if(!recordsWhere(look(d,'state','records'),'category','education_demonstration').length)return;
  const s=d.get('state');
  for(const r of recordsWhere(s.records,'category','education_demonstration'))if(r.toMinute<=s.minute&&s.npcs?.[r.actor]?.activeDemonstration===r.id){
   const path=personPath(r.actor),activity=`演示：${e.byId.get(r.subject)?.name}`;

@@ -21,7 +21,7 @@ import {adoptLegacyObligation,settleObligation} from './obligation-runtime.mjs';
 import {advanceHook} from './advance-hooks.mjs';
 declareHoldingWriter('contracts',{kinds:['employed_by','leases','lodges','operates']});
 const debtRows=d=>Object.entries(d.get('state','records')??{}).filter(([,row])=>row.category==='debt');
-import {canonical,recordEntriesWhere}from'./storage.mjs';
+import {canonical,look,recordEntriesWhere}from'./storage.mjs';
 const signedTerms=row=>Object.fromEntries(['parties','subject','quantity','deadline','cost','kind'].map(k=>[k,row[k]??null]));
 const contractPath=id=>['state','records',id];
 export function magicContractTrace(d,id){
@@ -204,8 +204,8 @@ export function advanceContracts(d,engine,minute,recordIds){
         if(row.category==='contract'&&row.room&&row.status==='有效'&&row.expires<=minute){
             changeLegacyHoldings(d,engine,{holder:row.parties?.[0]??'player',subject:row.room,kinds:['lodges'],reason:'expired',eventId:`${id}:expired`},()=>holdingSet(d,null,['state','records',id],{...row,status:'已到期',endedAt:row.expires},'contracts'));d.say(`${row.name}已到期，需要退房或另行续住`);
         }
-        const allowance=row.category==='debt'&&row.status==='待偿还'?currentGrace(engine,d.get('state'),row,minute):null;
-        if(row.category==='debt'&&!partyInProcedure(d.get('state'),row.debtor)&&row.status==='待偿还'&&debtDue(row,minute,{allowance}).overdue){
+        const allowance=row.category==='debt'&&row.status==='待偿还'?currentGrace(engine,look(d,'state'),row,minute):null;
+        if(row.category==='debt'&&!partyInProcedure(look(d,'state'),row.debtor)&&row.status==='待偿还'&&debtDue(row,minute,{allowance}).overdue){
             const due=debtDue(row,minute,{allowance});
             holdingSet(d,null,['state','records',id],{...row,status:'逾期',overdueAt:due.deadline,graceBasis:due.grace},'contracts');
             advanceHook('recordNpcDebtOverdue')?.(d,engine,id,d.get('state','records',id));
