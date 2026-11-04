@@ -198,7 +198,9 @@ test('私宅据点仍须住户和同行许可；所有者可以在门外当面�
         s.owner='npc_hw_linsui';s.entryMechanisms=[];s.resources[0].requires=[];s.resources[0].mechanisms=[];
         world.locations.at(-1).access={mode:'private',requiresConsent:true,residents:['npc_hw_linsui']};
     });let c=f.fresh();
-    await assert.rejects(run(f.engine,c,'world_move',{destination:siteId},'no_consent'),/成年住户/);
+    // K6 依据（审查 C-b location-access:23）：住户许可决定合法与否，不决定能否走进去；进入发生，命中擅入私宅。
+    {const entered=await run(f.engine,c,'world_move',{destination:siteId},'no_consent');assert.equal(entered.document.state.location,siteId);
+     const o=entered.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o);assert.equal(o.victim,'npc_hw_linsui');assert.equal(entered.document.state.records[o.record].sourceEvent,'no_consent');}
     const grant=await run(f.engine,c,'world_promise',{operation:'grant_access',promisor:'林穗',location:siteId,type:'site_gather',content:'准许入内取粮'},'outside_permit');c=grant.document;
     const authorization=grant.result.authorization;
     c=(await run(f.engine,c,'world_move',{destination:siteId,authorization},'authorized_move')).document;
