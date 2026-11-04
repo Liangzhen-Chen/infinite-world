@@ -85,4 +85,4 @@ export function wildlifeFoundation(){
 export function withWildlife(world,monsters){const candidate=structuredClone(world),bones=wildlifeFoundation();
     const habitats=new Map((candidate.rules.wildlife?.habitats??[]).map(h=>[h.id,h]));for(const habitat of bones.rules.habitats)habitats.set(habitat.id,habitat);
     candidate.rules.wildlife={...bones.rules,habitats:[...habitats.values()]};
-    const updates=monsters??bones.monsters,catalog=new Map(candidate.monsters.map(row=>[row.id,row]));for(const row of updates)catalog.set(row.id,row);candidate.monsters=[...catalog.values()];return candidate;}
+    const updates=monsters??bones.monsters,catalog=new Map(candidate.monsters.map(row=>[row.id,row]));for(const row of updates){const kept=Object.fromEntries(['ecology','interactions','husbandry'].filter(k=>catalog.get(row.id)?.[k]!==undefined&&row[k]===undefined).map(k=>[k,catalog.get(row.id)[k]]));catalog.set(row.id,{...row,...kept});}candidate.monsters=[...catalog.values()];return candidate;}

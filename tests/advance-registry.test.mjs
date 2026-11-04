@@ -58,6 +58,10 @@ test('unrelated ticks skip midnight clocks and retain undeclared legacy work',as
 // contract wage (including clauses and signedTerms): old half-day12*2=24,
 // D15 §15.2 stage0 income midpoint (20+40)/2=30. No other state or messages
 // change. Refresh the complete hashes; retain both traces and every assertion.
+// S5FIX / household subsistence law: a slot spent entirely on the road to or from another settlement is not errand time
+// (household-subsistence.mjs, onRoad). Full scenario day 4 is a market day: the Baishi merchant npc_hw_yanzhe walks loc_bs->loc_hw
+// (route_hw_bs 360 min = the whole 300-660 slot) and no longer starts a forage trip inside it; only the final two full-scenario hashes change.
+// Refreshed with UPDATE_ADVANCE_GOLDEN; the paired traces and every hash check stay.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const SCENARIOS={
  full:{steps:[...days(3),['world_time',{minutes:17*60+13}],['world_time',{minutes:5*DAY}]]},

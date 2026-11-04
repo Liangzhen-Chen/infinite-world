@@ -308,7 +308,15 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  // authored all-day rest slot can contain household work; an explicit sleep
  // or meal slot still cannot. Keep its existing edges rather than inventing
  // a morning departure inside it.
- for(const slot of slots.filter(s=>!/睡|吃饭|用餐|早饭|午饭|晚饭/.test(s.activity??'')&&(variant==='rest'||!/歇息|休息/.test(s.activity??'')))){
+ // A slot spent entirely on the road to or from another settlement (a merchant walking to a distant market day) is not time
+ // free for a forage or water trip; slots that only start with a short walk (a hunter's shift in the next wood) keep their errand time.
+ const ordered=[...slots].sort((a,b)=>a.start-b.start),onRoad=new Set();
+ ordered.forEach((slot,i)=>{
+  const from=ordered.at(i-1)?.location,to=slot.location;
+  if(!from||!to||from===to||placeSettlement(e,state,from).value===placeSettlement(e,state,to).value)return;
+  try{if(e.route(from,to,'walk',day*DAY+480,seedOf(e)).minutes>=slot.end-slot.start)onRoad.add(slot);}catch{}
+ });
+ for(const slot of slots.filter(s=>!onRoad.has(s)&&!/睡|吃饭|用餐|早饭|午饭|晚饭/.test(s.activity??'')&&(variant==='rest'||!/歇息|休息/.test(s.activity??'')))){
   let at=slot.start;
    for(const b of physicalBlocked.filter(b=>b.start<slot.end&&b.end>slot.start).sort((a,b)=>a.start-b.start)){
    if(b.start>at)physical.push({start:at,end:Math.min(slot.end,b.start),boundaryEnd:Math.min(slot.end,b.start)});
