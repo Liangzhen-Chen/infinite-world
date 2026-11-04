@@ -2,12 +2,16 @@ import {derived} from './derived.mjs';
 import {accrueStock,registerLegacyStock,moveStock} from './stock.mjs';
 import {declareLedgerWriter,accountKey} from './ledger.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings,ensureHoldings} from './holdings.mjs';
-import {addPopulation,populationHealth,advancePopulationDisease} from './population-health.mjs';
+import {addPopulation,populationHealth,advancePopulationDisease,takePopulation} from './population-health.mjs';
+import {monsterStats} from './combat-state.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+import {digest} from './storage.mjs';
+import {spiritStateFor} from './creature-nature.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {produceItems} from './items.mjs';
 
-declareLedgerWriter('husbandry',{sources:{'src:birth':{'*':100000},'src:husbandry':{'*':100000}},sinks:['sink:consume','sink:decay','sink:death']});
-declareHoldingWriter('husbandry',{kinds:['owns'],entities:['population'],locations:true});
+declareLedgerWriter('husbandry',{sources:{'src:birth':{'*':100000},'src:husbandry':{'*':100000}},sinks:['sink:consume','sink:decay','sink:death','sink:individuated']});
+declareHoldingWriter('husbandry',{kinds:['owns'],entities:['population','creature'],locations:true});
 const path=id=>['state','records',`husbandry:${id}`];
 const resource=species=>`population_${species}`;
 const animals=row=>accountKey(row.id,resource(row.species),'population');
@@ -101,3 +105,33 @@ export function husbandryAction(d,args,eventId){
  holdingSet(d,this,path(id),next,'husbandry',eventId);
  return {success:true,target:id,obtained:[{item,quantity:amount,instances}],minutes:yieldRow.collectMinutes*amount};
 }
+
+// Population stock adapter (01 §1.6 sink:individuated): the only open writer of
+// a herd's count. In one transaction n head leave the herd account for
+// sink:individuated, the S/I/R subaccounts follow them, and n creatures of the
+// species stand where the herd is, owned by the herd's owner. Living bodies
+// then share every individual law (vital, death, carcass, gather).
+export function individuateHerd(d,engine,{population,count,eventId}){
+ ensureHoldings(d,engine);
+ const row=d.get(...path(population));
+ if(!row||row.category!=='husbandry')throw preconditionFailure('这里没有该家畜种群');
+ if(!Number.isSafeInteger(count)||count<1||count>row.count)throw preconditionFailure(`${row.name}只有${row.count}头`);
+ const next=structuredClone(row),taken=takePopulation(next,count),species=engine.byId.get(row.species);
+ if(!species)throw Error('家畜物种定义缺失');
+ moveStock(d,{from:animals(row),to:`sink:individuated|${resource(row.species)}|herd`,amount:count,writer:'husbandry',eventId});
+ holdingSet(d,engine,path(population),next,'husbandry',eventId);
+ const owners=aliveHoldings(d,{kind:'owns',subject:population}),owner=owners.length===1?owners[0].holder:row.owner??null;
+ const level=species.levelRange?.[0]??species.level??1,stats=monsterStats({level,template:species.template??2},engine.rules),ids=[];
+ // Infected head leave first only in proportion (takePopulation); mark them.
+ const sick=[...Array(taken.I).fill('I'),...Array(taken.R).fill('R')];
+ for(let i=0;i<count;i++){
+  // Same identity shape as a wild individual (wildlife.mjs createWildlifeInstance).
+  const hash=digest([d.document.randomSeed,eventId,population,i]).slice(0,16),id=`monster_instance_${hash}`,name=`${species.name}·${hash.slice(0,4)}`;
+  if(d.get('state','created',id)||d.get('state','creatures',id))throw Error('个体化编号重复');
+  holdingSet(d,null,['state','created',id],{id,name,aliases:[],monster:species.id,template:species.template,scope:row.location},'husbandry',eventId);
+  holdingSet(d,null,['state','creatures',id],{name,species:species.id,herd:population,location:row.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner,individuatedAt:d.get('state','minute'),...(sick[i]?{populationHealth:sick[i]}:{}),...spiritStateFor(species)},'husbandry',eventId);
+  ids.push(id);
+ }
+ return ids;
+}
+registerAdvanceHook('individuateHerd',individuateHerd);

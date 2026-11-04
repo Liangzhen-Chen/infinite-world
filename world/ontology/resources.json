@@ -210,6 +210,10 @@
    "label": "死亡（无人承接的遗留）"
   },
   {
+   "id": "sink:individuated",
+   "label": "个体化（种群一头成为生灵个体，与 src:aggregated 成对，01 §1.6）"
+  },
+  {
    "id": "sink:export",
    "label": "离开模拟范围（付给未模拟的承运人、行会、市场、兵丁等）"
   },

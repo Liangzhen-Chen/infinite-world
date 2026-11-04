@@ -19,6 +19,9 @@ export function resolvePrimitiveTransfer(engine,document,effect,{actor='player'}
  for(const field of ['from','to'])if(typeof effect[field]==='string'&&effect[field].includes('|')){
   try{explicit[field]=parseAccount(effect[field]);}catch(error){reject('E-TRANSFER-ACCOUNT',error.message);}
  }
+ // The individuation sink is one account family for every herd: a generic
+ // "population" sink resource takes the herd account's own species resource.
+ if(explicit.to?.owner==='sink:individuated'&&explicit.to.resource==='population'&&explicit.from?.resource?.startsWith('population_')){explicit.to={...explicit.to,resource:explicit.from.resource};effect={...effect,to:`sink:individuated|${explicit.from.resource}|${explicit.to.purpose}`};}
  let resource;
  try{resource=resourceKey(effect.resource===undefined?explicit.from?.resource??explicit.to?.resource:effect.resource==='coin'?LEDGER_COIN:itemResource(engine,effect.resource));}
  catch{reject('E-TRANSFER-RESOURCE','实体转移须指定有效资源，或由完整账户键提供资源');}

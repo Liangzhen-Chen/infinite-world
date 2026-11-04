@@ -256,7 +256,7 @@ export function resolveCreature(engine,d,name){
     return candidates.length===1?candidates[0][0]:engine.resolve(name);
 }
 export function recordWildlifeDeath(d,engine,target,eventId){
-    const actor=d.get('state','creatures',target);if(!actor?.ecology||actor.corpse)return null;
+    const actor=d.get('state','creatures',target);if(!(actor?.ecology||actor?.herd)||actor.corpse)return null;
     const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw Error('生态个体缺物种定义');
     recordCreatureResolution(d,engine,{target,outcome:'death',eventId,location:actor.location});
     const corpse={status:'未取材',killedBy:'player',source:eventId,expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
