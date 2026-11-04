@@ -1,0 +1,20 @@
+{
+  "card": "G 设施与工位派生（K5）",
+  "note": "K5 交付后应当为 pass 的断言（acceptance.json 里 group + phenomenon 精确匹配）。kinds 由 recipes 的 workstation 字段推出：cooking、pill_furnace、pottery、smithing、weaving、woodworking。G5 只在 --days N 时出现。pottery 在基线上 blocked，是因为陶艺入门配方的炭当天买不齐或缺师傅；K5 后若仍 blocked，要看卡在哪条规律（K1/K2 供货，或学艺路径）再判，不直接算 K5 不过。",
+  "mustPass": [
+    {"group":"G1","phenomenon":"<每个 kind>：世界里此类工位数 > 1"},
+    {"group":"G1","phenomenon":"<每个 kind>：工位数 = 具备该属性的建筑数"},
+    {"group":"G1","phenomenon":"<每个 kind>：实地走到一处名单外的工位做成"},
+    {"group":"G2","phenomenon":"借邻居的灶台做成饭"},
+    {"group":"G2","phenomenon":"未经主人同意用别人的工位：被拒，或发生后定擅用并有后果（不许无声成功）"},
+    {"group":"G2","phenomenon":"租下工坊后在那里做成"},
+    {"group":"G2","phenomenon":"付费使用工位（钱到主人手里，账本守恒）"},
+    {"group":"G3","phenomenon":"<每个 kind>：新建筑具备最小属性集就能做，去掉其中任何一项就不能"},
+    {"group":"G4","phenomenon":"<每个 kind>：师傅不集中在单一地点"},
+    {"group":"G4","phenomenon":"<每个 kind>：有工位且有合格手艺人的地点都有人教"},
+    {"group":"G5","phenomenon":"浸泡 N 天后烹饪工位数不减、账本守恒"}
+  ],
+  "minimumForCard": "cooking 的 G1×3、G3、G4×2 和 G2 全部 4 条必须 pass；其他 kind 的同名断言也应 pass，若因供货/学艺 blocked 须写明缺哪条规律。",
+  "baselinePassAlready": ["G2 租下工坊后在那里做成", "G2 付费使用工位（钱到主人手里，账本守恒）"],
+  "baselinePassReason": "基线已有 core:trade.rent_in 与青灯后厨收费 3 文；K5 不得把这两条做坏。"
+}

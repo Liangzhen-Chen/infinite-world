@@ -1,0 +1,227 @@
+{
+ "card": "C 通用初加工链（K1 初加工部分）",
+ "baseline": {
+  "repo": "F:/dnd-wt/S5FIX",
+  "days": 3,
+  "summary": {
+   "pass": 5,
+   "fail": 25,
+   "blocked": 4
+  }
+ },
+ "rule": "卡 C 交付后，在 30 天正式浸泡（--days 30）下以下断言全部应为 pass；本机 ≤3 天冒烟时，标 needsDays 的三条允许为 blocked（未到判定点），其余也应为 pass。",
+ "expected": [
+  {
+   "id": "S0",
+   "phenomenon": "浸泡真实推进完成，账本守恒（审计为空，逐资源 Δ总量 = 源 − 汇）",
+   "baseline": "pass",
+   "expected": "pass",
+   "note": "基线已过，交付后须保持"
+  },
+  {
+   "id": "P1.羊皮纸.产量",
+   "phenomenon": "羊皮纸：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.羊皮纸.可追溯",
+   "phenomenon": "羊皮纸：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.墨.产量",
+   "phenomenon": "墨：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.墨.可追溯",
+   "phenomenon": "墨：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.铁.产量",
+   "phenomenon": "铁：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.铁.可追溯",
+   "phenomenon": "铁：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.麻线.产量",
+   "phenomenon": "麻线：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.麻线.可追溯",
+   "phenomenon": "麻线：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.木板.产量",
+   "phenomenon": "木板：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.木板.可追溯",
+   "phenomenon": "木板：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.木炭.产量",
+   "phenomenon": "木炭：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.木炭.可追溯",
+   "phenomenon": "木炭：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.皮革.产量",
+   "phenomenon": "皮革：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.皮革.可追溯",
+   "phenomenon": "皮革：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.面粉.产量",
+   "phenomenon": "面粉：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.面粉.可追溯",
+   "phenomenon": "面粉：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.纸.产量",
+   "phenomenon": "纸：浸泡期内有真实产量（非开局、非进货、非据点再生的源流入 > 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P1.纸.可追溯",
+   "phenomenon": "纸：每一单位能追到\"配方 + 自然投入 + 劳动\"：有制作记录、做工者可认定、各级投入同期真实产出覆盖制作消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P3.配方产工具",
+   "phenomenon": "浸泡期内世界里有人按配方造出工具，且可追到配方 + 自然投入 + 劳动",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P3.报废有替代",
+   "phenomenon": "工具磨损报废后有替代来源：每种报废的工具，同期配方产出 ≥ 报废数",
+   "baseline": "blocked",
+   "expected": "pass",
+   "needsDays": 30
+  },
+  {
+   "id": "P3.工具有生产链",
+   "phenomenon": "（数据推导·K8 守门）配方用到的每种工具在世界里都有走得通的产出路径",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P3.补货追到生产者",
+   "phenomenon": "卖家补货能追到生产者：工具凭空进货为 0，卖家（非自造）补进的每种工具同期确有配方产出",
+   "baseline": "blocked",
+   "expected": "pass",
+   "needsDays": 30
+  },
+  {
+   "id": "P4.浸泡再生",
+   "phenomenon": "浸泡期内据点再生（src:regrowth）的制成品为 0",
+   "baseline": "pass",
+   "expected": "pass",
+   "note": "基线已过，交付后须保持"
+  },
+  {
+   "id": "P4.凭空进货",
+   "phenomenon": "浸泡期内制成品的凭空进货（src:import）为 0",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P4.数据",
+   "phenomenon": "（数据）据点再生条目里没有制成品",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P4.采空不复生",
+   "phenomenon": "采空据点的制成品后不会自行长回",
+   "baseline": "blocked",
+   "expected": "pass",
+   "needsDays": 30
+  },
+  {
+   "id": "P2.抄写路径",
+   "phenomenon": "世界里有\"照着原本、消耗纸墨、劳动抄出一本技能书\"的路径（用开局纸墨探路），账本守恒",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P2.真实纸墨再造",
+   "phenomenon": "玩家用世界里真实产出的羊皮纸和墨抄出一本技能书，账本守恒",
+   "baseline": "blocked",
+   "expected": "pass"
+  },
+  {
+   "id": "V0.变异载入",
+   "phenomenon": "变异副本只改数据即可载入，新材料、新配方、新据点资源都在世界里",
+   "baseline": "pass",
+   "expected": "pass",
+   "note": "基线已过，交付后须保持"
+  },
+  {
+   "id": "P5.玩家产出",
+   "phenomenon": "新自然材料：玩家真实采到它，按新配方做出新产物（src:craft），账本守恒——不改代码",
+   "baseline": "pass",
+   "expected": "pass",
+   "note": "基线已过，交付后须保持"
+  },
+  {
+   "id": "P5.NPC产出",
+   "phenomenon": "新自然材料：浸泡 3 天里有 NPC 自行采到它并按新配方真实产出新产物，可追溯——不改代码",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "S1",
+   "phenomenon": "变异浸泡账本守恒",
+   "baseline": "pass",
+   "expected": "pass",
+   "note": "基线已过，交付后须保持"
+  },
+  {
+   "id": "P6.检出",
+   "phenomenon": "删掉 item_iron 的自然投入 item_iron_ore 的世界来源后，能检出它失去产出路径（K8 守门报出，或产出追踪：原树有产量、变异树为 0）",
+   "baseline": "fail",
+   "expected": "pass"
+  }
+ ]
+}

@@ -1,0 +1,173 @@
+{
+ "card": "b-husbandry",
+ "baseline": "F:/dnd-wt/S5FIX t-s5fix@58e8d709",
+ "note": "卡 B 交付后，下列断言在 --days 30 下都应为 pass。phenomenon 文字中的天数随 --days 变化，按 group+顺序对照。",
+ "assertions": [
+  {
+   "group": "A 30天产出",
+   "phenomenon": "奶：3 天后世界总存量不为零，且最后 1 天仍有畜群新产出",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "A 30天产出",
+   "phenomenon": "毛：3 天后世界总存量不为零，且最后 1 天仍有畜群新产出",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "A 30天产出",
+   "phenomenon": "皮：3 天后世界总存量不为零，且最后 1 天仍有畜群新产出",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "A 30天产出",
+   "phenomenon": "蛋：3 天后世界总存量不为零，且最后 1 天仍有畜群新产出",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "A 30天产出",
+   "phenomenon": "奶毛皮蛋的新增量全部有真实产出来源（畜群产出为主），没有进货、再生或开局补货",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "A 30天产出",
+   "phenomenon": "3 天浸泡后账本审计为空、资源守恒",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "group": "E 饲料来源",
+   "phenomenon": "别人家的畜群（谢堇家的山羊群、谢堇家的雉群）在玩家不插手时有饲料：3 天里至少八成日子有喂养或放牧的消耗",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "E 饲料来源",
+   "phenomenon": "畜群吃掉的饲料都能追到真实来源（草场、作物、采集），同期真实产出不少于被吃掉的量，且没有进货",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "B 繁育受约束",
+   "phenomenon": "有饲料、有空栏：畜群繁育，头数增加",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "group": "B 繁育受约束",
+   "phenomenon": "断掉饲料：繁育下降（断料期出生数少于有料期）",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "group": "B 繁育受约束",
+   "phenomenon": "断掉饲料：出现饥饿或死亡（头数下降，或记录里饥饿/死亡计数上升）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "B 繁育受约束",
+   "phenomenon": "断掉饲料：活体产量下降",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "group": "B 繁育受约束",
+   "phenomenon": "栏圈满：有饲料也不再增长，头数不超过栏圈",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "group": "B 繁育受约束",
+   "phenomenon": "饲料恢复：头数回升（恢复期末头数高于断料期末）",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "group": "B 繁育受约束",
+   "phenomenon": "繁育实验后账本审计为空、资源守恒",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "group": "C 由属性派生",
+   "phenomenon": "只给属性、不写产物名单的新物种能进世界（加载不拒绝）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "C 由属性派生",
+   "phenomenon": "新的产乳兽类（雾鬃兽）照样产奶",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "C 由属性派生",
+   "phenomenon": "新的有毛被兽类（雾鬃兽）照样产毛",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "C 由属性派生",
+   "phenomenon": "新的产卵禽类（苇冠禽）照样产蛋",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "group": "C 由属性派生",
+   "phenomenon": "去掉属性的兽类（素雾兽）不产奶、不产毛",
+   "baseline": "blocked",
+   "expected": "pass"
+  },
+  {
+   "group": "C 由属性派生",
+   "phenomenon": "去掉属性的禽类（素苇禽）不产蛋",
+   "baseline": "blocked",
+   "expected": "pass"
+  },
+  {
+   "group": "C 由属性派生",
+   "phenomenon": "产量随饲料：同一群有料日产奶多于断料日",
+   "baseline": "blocked",
+   "expected": "pass"
+  },
+  {
+   "group": "C 由属性派生",
+   "phenomenon": "新物种的产物能用真实动作采到手",
+   "baseline": "blocked",
+   "expected": "pass"
+  },
+  {
+   "group": "D 宰杀自家畜群",
+   "phenomenon": "宰杀自家畜群里的一只：畜群少一只，留下尸体或产物",
+   "baseline": "blocked",
+   "expected": "pass",
+   "dependsOn": "K7 所有者处分权（卡 B 与 K7 都交付后应 pass；只交付卡 B 时可仍为 blocked，原因须是 K7）"
+  },
+  {
+   "group": "D 宰杀自家畜群",
+   "phenomenon": "没有掉落名单的新兽类宰后得到肉和皮（产出由属性派生）",
+   "baseline": "blocked",
+   "expected": "pass",
+   "dependsOn": "K7 所有者处分权（卡 B 与 K7 都交付后应 pass；只交付卡 B 时可仍为 blocked，原因须是 K7）"
+  },
+  {
+   "group": "D 宰杀自家畜群",
+   "phenomenon": "体型大的兽类宰后产出重于禽类（产量由体型派生）",
+   "baseline": "blocked",
+   "expected": "pass",
+   "dependsOn": "K7 所有者处分权（卡 B 与 K7 都交付后应 pass；只交付卡 B 时可仍为 blocked，原因须是 K7）"
+  },
+  {
+   "group": "D 宰杀自家畜群",
+   "phenomenon": "宰杀后种群账与头数一致，账本审计为空、资源守恒",
+   "baseline": "blocked",
+   "expected": "pass",
+   "dependsOn": "K7 所有者处分权（卡 B 与 K7 都交付后应 pass；只交付卡 B 时可仍为 blocked，原因须是 K7）"
+  }
+ ]
+}

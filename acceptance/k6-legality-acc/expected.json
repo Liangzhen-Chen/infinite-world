@@ -1,0 +1,572 @@
+{
+ "card": "K6 合法性是后果",
+ "baselineRepo": "F:/dnd-wt/S5FIX",
+ "baselineCommit": "58e8d709",
+ "generatedAt": "2026-11-04T22:08:28.846Z",
+ "summary": {
+  "pass": 57,
+  "blocked": 16,
+  "excluded": 2
+ },
+ "rule": "一、二、三、四、六组全部应 pass；覆盖面中基线\"被拒（社会许可）\"的点应 pass（发生+罪名）；取得路径或数据缺失导致 blocked 的点写明 missingLaw，不在 K6 期望内；待人判与构成性规则标 excluded。",
+ "expectations": [
+  {
+   "id": "1.1.发生",
+   "group": "一 拿别人的东西",
+   "phenomenon": "拿走林穗的面包：行为确实发生，物理后果落地",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.1.守恒",
+   "group": "一 拿别人的东西",
+   "phenomenon": "拿走林穗的面包：账本审计为空、资源守恒",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.1.罪名",
+   "group": "一 拿别人的东西",
+   "phenomenon": "拿走林穗的面包：规范栈命中罪名",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.1.后果",
+   "group": "一 拿别人的东西",
+   "phenomenon": "拿走林穗的面包：失主、旁人或官府有反应",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.2.发生",
+   "group": "一 拿别人的东西",
+   "phenomenon": "拿走铁匠的五个铜钱：行为确实发生，物理后果落地",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.2.守恒",
+   "group": "一 拿别人的东西",
+   "phenomenon": "拿走铁匠的五个铜钱：账本审计为空、资源守恒",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.2.罪名",
+   "group": "一 拿别人的东西",
+   "phenomenon": "拿走铁匠的五个铜钱：规范栈命中罪名",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.2.后果",
+   "group": "一 拿别人的东西",
+   "phenomenon": "拿走铁匠的五个铜钱：失主、旁人或官府有反应",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.3.发生",
+   "group": "一 拿别人的东西",
+   "phenomenon": "宰谢堇家的一只山羊：行为确实发生，物理后果落地",
+   "baseline": "fail",
+   "note": "依赖 K7 的\"从畜群牵出一只（个体化）\"原语路径；K6 只负责拆掉进私宅与他人畜群的许可闸门并定罪",
+   "expected": "pass"
+  },
+  {
+   "id": "1.3.守恒",
+   "group": "一 拿别人的东西",
+   "phenomenon": "宰谢堇家的一只山羊：账本审计为空、资源守恒",
+   "baseline": "fail",
+   "note": "依赖 K7 的\"从畜群牵出一只（个体化）\"原语路径；K6 只负责拆掉进私宅与他人畜群的许可闸门并定罪",
+   "expected": "pass"
+  },
+  {
+   "id": "1.3.罪名",
+   "group": "一 拿别人的东西",
+   "phenomenon": "宰谢堇家的一只山羊：规范栈命中罪名",
+   "baseline": "fail",
+   "note": "依赖 K7 的\"从畜群牵出一只（个体化）\"原语路径；K6 只负责拆掉进私宅与他人畜群的许可闸门并定罪",
+   "expected": "pass"
+  },
+  {
+   "id": "1.3.后果",
+   "group": "一 拿别人的东西",
+   "phenomenon": "宰谢堇家的一只山羊：失主、旁人或官府有反应",
+   "baseline": "fail",
+   "note": "依赖 K7 的\"从畜群牵出一只（个体化）\"原语路径；K6 只负责拆掉进私宅与他人畜群的许可闸门并定罪",
+   "expected": "pass"
+  },
+  {
+   "id": "1.4w",
+   "group": "一 拿别人的东西",
+   "phenomenon": "砍别人的树（他人所有的林木）",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "世界数据：没有他人所有、可伐的林木（不是 K6 规律缺口；\"砍别人的树\"由 1.4 采他人据点柴炭与 forest-water 测试里的私有林场形状代表）"
+  },
+  {
+   "id": "1.4.发生",
+   "group": "一 拿别人的东西",
+   "phenomenon": "砍/采任博烽台的台边存的木炭（带斧）：行为确实发生，物理后果落地",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.4.守恒",
+   "group": "一 拿别人的东西",
+   "phenomenon": "砍/采任博烽台的台边存的木炭（带斧）：账本审计为空、资源守恒",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.4.罪名",
+   "group": "一 拿别人的东西",
+   "phenomenon": "砍/采任博烽台的台边存的木炭（带斧）：规范栈命中罪名",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.4.后果",
+   "group": "一 拿别人的东西",
+   "phenomenon": "砍/采任博烽台的台边存的木炭（带斧）：失主、旁人或官府有反应",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "1.5.发生",
+   "group": "一 拿别人的东西",
+   "phenomenon": "私自收割村里公田的庄稼：行为确实发生，物理后果落地",
+   "baseline": "fail",
+   "note": "若交付后理由变为\"作物尚未成熟\"这类物理理由，这四条改判 blocked（季节前提），不算 K6 失败；届时应在成熟季复跑",
+   "expected": "pass"
+  },
+  {
+   "id": "1.5.守恒",
+   "group": "一 拿别人的东西",
+   "phenomenon": "私自收割村里公田的庄稼：账本审计为空、资源守恒",
+   "baseline": "fail",
+   "note": "若交付后理由变为\"作物尚未成熟\"这类物理理由，这四条改判 blocked（季节前提），不算 K6 失败；届时应在成熟季复跑",
+   "expected": "pass"
+  },
+  {
+   "id": "1.5.罪名",
+   "group": "一 拿别人的东西",
+   "phenomenon": "私自收割村里公田的庄稼：规范栈命中罪名",
+   "baseline": "fail",
+   "note": "若交付后理由变为\"作物尚未成熟\"这类物理理由，这四条改判 blocked（季节前提），不算 K6 失败；届时应在成熟季复跑",
+   "expected": "pass"
+  },
+  {
+   "id": "1.5.后果",
+   "group": "一 拿别人的东西",
+   "phenomenon": "私自收割村里公田的庄稼：失主、旁人或官府有反应",
+   "baseline": "fail",
+   "note": "若交付后理由变为\"作物尚未成熟\"这类物理理由，这四条改判 blocked（季节前提），不算 K6 失败；届时应在成熟季复跑",
+   "expected": "pass"
+  },
+  {
+   "id": "2.发生",
+   "group": "二 进私宅",
+   "phenomenon": "未经住户许可走进筛种院：确实进入",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "2.罪名",
+   "group": "二 进私宅",
+   "phenomenon": "进筛种院：记录侵入（擅入私宅一类罪名）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "2.后果",
+   "group": "二 进私宅",
+   "phenomenon": "进筛种院：住户有反应",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "3.发生",
+   "group": "三 无证施法",
+   "phenomenon": "对自己施放观心照（当地没有施法许可）：确实施放",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "3.罪名",
+   "group": "三 无证施法",
+   "phenomenon": "无证施法：记录无证施法一类罪名",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "4.发生",
+   "group": "四 无通缉拘人",
+   "phenomenon": "没有通缉也没接赏金，扣下林穗：确实拘住",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "4.罪名",
+   "group": "四 无通缉拘人",
+   "phenomenon": "扣下林穗：记录非法拘禁一类罪名",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "4.后果",
+   "group": "四 无通缉拘人",
+   "phenomenon": "扣下林穗：她本人、旁人或官府有反应",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "magic-air:37",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-air:37（C-b）「空气对象需要有效所有者授权」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "magic-care:50",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-care:50（C-b）「照护对象需要所有者有效授权」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：学习来源（spell_s3_herb_cool 都学不到：没有登记教师或教师不授课）"
+  },
+  {
+   "id": "magic-light:37",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-light:37（C-b）「光学对象需要有效所有者授权」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "magic-light:226",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-light:226（C-b）「光源需要所有者授权」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "magic-marks:27",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-marks:27（C-b）「刻记目标需要所有者授权」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "magic-mind-space:52",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-mind-space:52（C-b）「对象需要有效所有者许可」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "magic-movement:48",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-movement:48（C-b）「传送锚点需要所有者给本人及同行者的有效许可」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：学习来源（spell_s1_anchor_cross 都学不到：没有登记教师或教师不授课）"
+  },
+  {
+   "id": "magic-movement:101",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-movement:101（C-b）「短移落脚点需要所有者有效许可」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：学习来源（spell_s1_solo_step 都学不到：没有登记教师或教师不授课）"
+  },
+  {
+   "id": "magic-object:183",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-object:183（C-b）「物件需要有效所有者授权」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "magic-water-earth:45",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-water-earth:45（C-b）「水土对象需要有效所有者授权」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "summons:47",
+   "group": "五 覆盖面",
+   "phenomenon": "summons:47（C-b）「水体所有者未授权」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：学习来源（spell_summon_04 都学不到：没有登记教师或教师不授课）"
+  },
+  {
+   "id": "magic-growth:51",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-growth:51（C-b）「田块生长需要田主有效同意；公用访问不授权施法」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：学习来源（spell_s1_field_growth 都学不到：没有登记教师或教师不授课）"
+  },
+  {
+   "id": "pets:44",
+   "group": "五 覆盖面",
+   "phenomenon": "pets:44（C-b）「动物已有其他所有者，不能擅自操作」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：世界里没有别人名下的个体动物，畜群也不能作为该动作对象（取得路径属 K2/K1）"
+  },
+  {
+   "id": "wildlife-awakening:176",
+   "group": "五 覆盖面",
+   "phenomenon": "wildlife-awakening:176（C-b）「动物归其他所有者，不能擅自施为」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：世界里没有别人名下的个体动物，畜群也不能作为该动作对象（取得路径属 K2/K1）"
+  },
+  {
+   "id": "wildlife:308",
+   "group": "五 覆盖面",
+   "phenomenon": "wildlife:308（C-b）「动物归其他所有者，不能擅自取材」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：世界里没有别人名下的动物尸体（取得路径属 K7/K2）"
+  },
+  {
+   "id": "sites:250",
+   "group": "五 覆盖面",
+   "phenomenon": "sites:250（C-b）「采伐需所有者的采集许可」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "sites:467",
+   "group": "五 覆盖面",
+   "phenomenon": "sites:467（C-b）「采伐需所有者的采集许可」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "前提未成立：被拒理由不是社会许可，也没发生（此地没有可采林木）"
+  },
+  {
+   "id": "sites:327",
+   "group": "五 覆盖面",
+   "phenomenon": "sites:327（C-b）「据点物权要求所有者的有效许可」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "sites:265",
+   "group": "五 覆盖面",
+   "phenomenon": "sites:265（C-b）「这里不是登记可潜入的据点；私宅与其他据点仍须许可」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "location-access:23",
+   "group": "五 覆盖面",
+   "phenomenon": "location-access:23（C-b）「进入私宅需要成年住户给本人及同行者的有效许可」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "manufacturing:86",
+   "group": "五 覆盖面",
+   "phenomenon": "manufacturing:86（C-b）「工作台需要有效使用许可」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "缺：配方取得路径（玩家开局不会任何配方，不能复现工作台使用许可这一行）"
+  },
+  {
+   "id": "npc-obligations:143",
+   "group": "五 覆盖面",
+   "phenomenon": "npc-obligations:143（C-b）「（审计未摘消息）」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "审计只给了行号、没有消息；从公开动作目录找不到能确定命中这一行的玩家动作"
+  },
+  {
+   "id": "npc-autonomy:153",
+   "group": "五 覆盖面",
+   "phenomenon": "npc-autonomy:153（C-b）「人物没有热源的使用权限」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "NPC 自主推进使用热源的闸门，玩家动作没有直接入口"
+  },
+  {
+   "id": "magic-object:289",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-object:289（C-b）「人物没有同地热源的使用权限」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "NPC 侧热源准备（prepareNpcFurnace），玩家动作没有直接入口"
+  },
+  {
+   "id": "law:705",
+   "group": "五 覆盖面",
+   "phenomenon": "law:705（C-c）「没有生效的通缉就不能擅自拘人」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "law:702",
+   "group": "五 覆盖面",
+   "phenomenon": "law:702（C-c）「须先在告示处接下这份赏金（world_quest accept）」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "开局世界里没有生效的通缉；造一份通缉需要 NPC 犯案并被官府受理，属司法程序前提，本卡不造"
+  },
+  {
+   "id": "law:891",
+   "group": "五 覆盖面",
+   "phenomenon": "law:891（C-c）「此案被告是他人；你只能接下赏金后缉拿交付」",
+   "baseline": "blocked",
+   "expected": "blocked",
+   "missingLaw": "开局世界里没有他人为被告的案件；同上，属司法程序前提"
+  },
+  {
+   "id": "quest-board:144",
+   "group": "五 覆盖面",
+   "phenomenon": "quest-board:144（C-c）「未登记官职的私人任务只能发布D级，身份额度不足」",
+   "baseline": "blocked",
+   "expected": "excluded",
+   "note": "审计判\"待人判\"：发布委托的等级额度可能是制度构成性限制"
+  },
+  {
+   "id": "magic-targeting:37",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-targeting:37（C-d）「精神施法需要当地实际颁发且仍有效的许可」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "magic-movement:37",
+   "group": "五 覆盖面",
+   "phenomenon": "magic-movement:37（C-d）「锚点偏移，须先取得许可校准」",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "law:774-782",
+   "group": "五 覆盖面",
+   "phenomenon": "law:774-782（C-d）「施法许可只限当前法域…机构或当事人没有颁发此施法许可的权限」",
+   "baseline": "blocked",
+   "expected": "excluded",
+   "note": "这几行是\"谁能颁发许可\"的构成性规则（类 C-f），不是\"无证就不能施法\"；颁发本身需要对方的承认"
+  },
+  {
+   "id": "P1",
+   "group": "五b 物理不可行仍拒绝",
+   "phenomenon": "没带斧头去北林边砍树：拒绝，理由是没有工具",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "id": "P2",
+   "group": "五b 物理不可行仍拒绝",
+   "phenomenon": "把林穗的整间酒馆揣进行囊：拒绝，理由是搬不动/不可移动（不是所有权）",
+   "baseline": "fail",
+   "note": "基线回答是\"现有手段不能产生这种效果\"（既非所有权也非物理），K6 后应给出搬不动、不可移动之类的物理理由；若主会话认为这属 AUDIT3 动作入口，可移出",
+   "expected": "pass"
+  },
+  {
+   "id": "P3",
+   "group": "五b 物理不可行仍拒绝",
+   "phenomenon": "没学过的精神法术施在林穗身上：拒绝，理由是尚未学会（不是没有许可）",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "id": "P5",
+   "group": "五b 物理不可行仍拒绝",
+   "phenomenon": "从林穗柜上拿走 999 个面包（她只有几个）：拒绝，理由是数量不足（不是所有权）",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "P4",
+   "group": "五b 物理不可行仍拒绝",
+   "phenomenon": "把铁匠铺的炉膛搬回自己行囊：拒绝，理由是搬不动/固定（不是所有权）",
+   "baseline": "fail",
+   "note": "同 P2",
+   "expected": "pass"
+  },
+  {
+   "id": "6.0",
+   "group": "六 罪名派生通用",
+   "phenomenon": "变异副本里林穗名下真的有这支从没出现过的琥珀发簪",
+   "baseline": "pass",
+   "expected": "pass"
+  },
+  {
+   "id": "6.1.发生",
+   "group": "六 罪名派生通用",
+   "phenomenon": "拿走林穗的琥珀发簪（新物品）：行为确实发生，物理后果落地",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "6.1.守恒",
+   "group": "六 罪名派生通用",
+   "phenomenon": "拿走林穗的琥珀发簪（新物品）：账本审计为空、资源守恒",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "6.1.罪名",
+   "group": "六 罪名派生通用",
+   "phenomenon": "拿走林穗的琥珀发簪（新物品）：规范栈命中罪名",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "6.2",
+   "group": "六 罪名派生通用",
+   "phenomenon": "新物品构成的罪名就是盗窃（theft），与拿面包同名，按物品价值计",
+   "baseline": "fail",
+   "expected": "pass"
+  },
+  {
+   "id": "7.林穗的面包",
+   "group": "七 N 天内后续",
+   "phenomenon": "林穗的面包：--days N 天内出现后续（案件推进、通缉、追索或声望变化）",
+   "baseline": "blocked（行为没发生，\"7\" 一条）",
+   "expected": "pass",
+   "note": "动态生成：只有对应行为发生后才出现；本机 --days 1–3 冒烟，30 天正式跑在 Linux"
+  },
+  {
+   "id": "7.铁匠的钱",
+   "group": "七 N 天内后续",
+   "phenomenon": "铁匠的钱：--days N 天内出现后续（案件推进、通缉、追索或声望变化）",
+   "baseline": "blocked（行为没发生，\"7\" 一条）",
+   "expected": "pass",
+   "note": "动态生成：只有对应行为发生后才出现；本机 --days 1–3 冒烟，30 天正式跑在 Linux"
+  },
+  {
+   "id": "7.任博的林木",
+   "group": "七 N 天内后续",
+   "phenomenon": "任博的林木：--days N 天内出现后续（案件推进、通缉、追索或声望变化）",
+   "baseline": "blocked（行为没发生，\"7\" 一条）",
+   "expected": "pass",
+   "note": "动态生成：只有对应行为发生后才出现；本机 --days 1–3 冒烟，30 天正式跑在 Linux"
+  },
+  {
+   "id": "7.进私宅",
+   "group": "七 N 天内后续",
+   "phenomenon": "进私宅：--days N 天内出现后续（案件推进、通缉、追索或声望变化）",
+   "baseline": "blocked（行为没发生，\"7\" 一条）",
+   "expected": "pass",
+   "note": "动态生成：只有对应行为发生后才出现；本机 --days 1–3 冒烟，30 天正式跑在 Linux"
+  },
+  {
+   "id": "7.扣人",
+   "group": "七 N 天内后续",
+   "phenomenon": "扣人：--days N 天内出现后续（案件推进、通缉、追索或声望变化）",
+   "baseline": "blocked（行为没发生，\"7\" 一条）",
+   "expected": "pass",
+   "note": "动态生成：只有对应行为发生后才出现；本机 --days 1–3 冒烟，30 天正式跑在 Linux"
+  }
+ ]
+}

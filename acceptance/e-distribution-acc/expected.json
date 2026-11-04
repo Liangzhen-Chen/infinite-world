@@ -1,0 +1,30 @@
+{
+ "card": "E 分销与补货（K2）",
+ "baseline": "F:/dnd-wt/S5FIX t-s5fix@58e8d709",
+ "window": "30 天（--days 30）；本机冒烟只跑 3 天，窗口类断言在冒烟里必然不过，不作数",
+ "note": "卡 E 交付后（且上游卡 C 生产、卡 D 劳动已合入），下列断言都应为 pass。上游依赖的断言另标 dependsOn。",
+ "shouldPass": [
+  {"part":"main","id":"R1-sample","why":"前提：能真实买空 ≥5 个标签组的非燕麦货（基线已 pass，交付后应保持）"},
+  {"part":"main","id":"R2-restored","why":"买空的每一项 30 天内恢复上架"},
+  {"part":"main","id":"R3-traced","why":"恢复的每一项当步无 src:import，来源是本窗口内的产出者或其下游（含自产）","dependsOn":["C","D"]},
+  {"part":"main","id":"R4-carriage","why":"跨聚落进货都有真实承运（承运账户 cargo 或带路线的承运记录）"},
+  {"part":"main","id":"R5-natural","why":"顾客自然买空的持货人也都恢复且可追溯"},
+  {"part":"main","id":"R6-not-only-oats","why":"可追溯恢复的非燕麦物品 ≥5 种"},
+  {"part":"main","id":"M1-gap","why":"前提：出现 ≥25% 的聚落间价差（基线已因燕麦 pass，交付后应保持）"},
+  {"part":"main","id":"M2-merchant","why":"有 NPC 商人沿价差方向在低价地进货、到高价地出货"},
+  {"part":"main","id":"M3-narrows","why":"商人搬运过的物品与聚落对，窗口末价差小于出现时"},
+  {"part":"main","id":"S1-derived","why":"派生卖家 >0：非登记店主、无 shopType、向 ≥2 位买主出售、所售物由生产补进"},
+  {"part":"main","id":"S2-buy-from-derived","why":"玩家能真实向派生卖家买到货"},
+  {"part":"main","id":"T1-no-import-shop","why":"shop 物品 src:import 为 0"},
+  {"part":"main","id":"T2-no-import-quest-sources","why":"真实触发任务后 quest-sources 物品 src:import 为 0，且任务交付物来自真实持货人"},
+  {"part":"main","id":"T3-no-import-works","why":"真实触发著作动作后 works 物品 src:import 为 0（玩家要先学到识字或相关手艺）"},
+  {"part":"main","id":"T4-only-declared-boundary","why":"其他写入者也没有未声明的物品进货；基线 9 天里 military 进口军粮 1134 件，军粮算水龙头，应走粮食链；只有带理由、点名具体资源的图外供给声明可豁免"},
+  {"part":"main","id":"V1-audit-main","why":"账本审计为空"},
+  {"part":"main","id":"V2-conservation-main","why":"逐资源守恒、无漂移"},
+  {"part":"mut","id":"G1-novel-produced","why":"变异新物被按需求生产","dependsOn":["C","D"]},
+  {"part":"mut","id":"G2-novel-distributed","why":"变异新物到达产地以外的聚落"},
+  {"part":"mut","id":"G3-novel-no-tap","why":"变异新物无凭空进货、无开局存量"},
+  {"part":"mut","id":"V1-audit-mut","why":"变异副本账本审计为空"},
+  {"part":"mut","id":"V2-conservation-mut","why":"变异副本守恒"}
+ ]
+}

@@ -1,0 +1,171 @@
+{
+ "card": "d-labor",
+ "note": "卡 D 交付后全部 32 条都应为 pass（1.0 只在 --days 30 正式跑时可过）。baseline 列为 F:/dnd-wt/S5FIX@58e8d709 本机 --days 3 的结果，仅供对照。",
+ "expectPass": [
+  {
+   "id": "1.0",
+   "phenomenon": "连跑满 30 天（正式跑交 Linux；本机冒烟 ≤3 天时此条记 fail）",
+   "baseline": "fail"
+  },
+  {
+   "id": "1.item_salt",
+   "phenomenon": "出现真实的盐供应者，都是 NPC；货能追到他们的采集劳动事件（同一时段自然储量减少或真实产出源入账、本人或本聚落账户增加），劳动落在本人作息的工作时段",
+   "baseline": "fail"
+  },
+  {
+   "id": "1.item_wood",
+   "phenomenon": "出现真实的柴（木料）供应者，都是 NPC；货能追到他们的采集劳动事件（同一时段自然储量减少或真实产出源入账、本人或本聚落账户增加），劳动落在本人作息的工作时段",
+   "baseline": "fail"
+  },
+  {
+   "id": "1.item_herb",
+   "phenomenon": "出现真实的药草供应者，都是 NPC；货能追到他们的采集劳动事件（同一时段自然储量减少或真实产出源入账、本人或本聚落账户增加），劳动落在本人作息的工作时段",
+   "baseline": "fail"
+  },
+  {
+   "id": "1.item_clay",
+   "phenomenon": "出现真实的黏土供应者，都是 NPC；货能追到他们的采集劳动事件（同一时段自然储量减少或真实产出源入账、本人或本聚落账户增加），劳动落在本人作息的工作时段",
+   "baseline": "fail"
+  },
+  {
+   "id": "1.item_honey",
+   "phenomenon": "出现真实的蜂蜜供应者，都是 NPC；货能追到他们的采集劳动事件（同一时段自然储量减少或真实产出源入账、本人或本聚落账户增加），劳动落在本人作息的工作时段",
+   "baseline": "fail"
+  },
+  {
+   "id": "2a.item_salt",
+   "phenomenon": "盐：供应少时价格高——玩家真实买走 loc_hw 的大部分存货后，同一卖家报价上升",
+   "baseline": "pass",
+   "note": "基线已过：买空后涨价是现有市场深度规律，卡 D 不得破坏"
+  },
+  {
+   "id": "2b.item_salt",
+   "phenomenon": "盐：供应多时价格低——等 1 天，NPC 采集使 loc_hw 的在售存量回升，报价随之回落",
+   "baseline": "fail"
+  },
+  {
+   "id": "2a.item_wood",
+   "phenomenon": "柴（木料）：供应少时价格高——玩家真实买走 loc_bs 的大部分存货后，同一卖家报价上升",
+   "baseline": "pass",
+   "note": "基线已过：买空后涨价是现有市场深度规律，卡 D 不得破坏"
+  },
+  {
+   "id": "2b.item_wood",
+   "phenomenon": "柴（木料）：供应多时价格低——等 1 天，NPC 采集使 loc_bs 的在售存量回升，报价随之回落",
+   "baseline": "fail"
+  },
+  {
+   "id": "2a.item_herb",
+   "phenomenon": "药草：供应少时价格高——玩家真实买走 loc_ms_huixi 的大部分存货后，同一卖家报价上升",
+   "baseline": "pass",
+   "note": "基线已过：买空后涨价是现有市场深度规律，卡 D 不得破坏"
+  },
+  {
+   "id": "2b.item_herb",
+   "phenomenon": "药草：供应多时价格低——等 1 天，NPC 采集使 loc_ms_huixi 的在售存量回升，报价随之回落",
+   "baseline": "fail"
+  },
+  {
+   "id": "2a.item_clay",
+   "phenomenon": "黏土：供应少时价格高——玩家真实买走 loc_bs 的大部分存货后，同一卖家报价上升",
+   "baseline": "pass",
+   "note": "基线已过：买空后涨价是现有市场深度规律，卡 D 不得破坏"
+  },
+  {
+   "id": "2b.item_clay",
+   "phenomenon": "黏土：供应多时价格低——等 1 天，NPC 采集使 loc_bs 的在售存量回升，报价随之回落",
+   "baseline": "fail"
+  },
+  {
+   "id": "2a.item_honey",
+   "phenomenon": "蜂蜜：供应少时价格高——玩家真实买走 loc_hw 的大部分存货后，同一卖家报价上升",
+   "baseline": "pass",
+   "note": "基线已过：买空后涨价是现有市场深度规律，卡 D 不得破坏"
+  },
+  {
+   "id": "2b.item_honey",
+   "phenomenon": "蜂蜜：供应多时价格低——等 1 天，NPC 采集使 loc_hw 的在售存量回升，报价随之回落",
+   "baseline": "fail"
+  },
+  {
+   "id": "3.item_salt",
+   "phenomenon": "不调用玩家采集入口，盐不断链：每日世界存量（人、聚落、行会，不含玩家与自然储量）都 > 0，且最后三分之一时段仍有 NPC 采集补入",
+   "baseline": "fail"
+  },
+  {
+   "id": "3.item_wood",
+   "phenomenon": "不调用玩家采集入口，柴（木料）不断链：每日世界存量（人、聚落、行会，不含玩家与自然储量）都 > 0，且最后三分之一时段仍有 NPC 采集补入",
+   "baseline": "fail"
+  },
+  {
+   "id": "3.item_herb",
+   "phenomenon": "不调用玩家采集入口，药草不断链：每日世界存量（人、聚落、行会，不含玩家与自然储量）都 > 0，且最后三分之一时段仍有 NPC 采集补入",
+   "baseline": "fail"
+  },
+  {
+   "id": "3.item_clay",
+   "phenomenon": "不调用玩家采集入口，黏土不断链：每日世界存量（人、聚落、行会，不含玩家与自然储量）都 > 0，且最后三分之一时段仍有 NPC 采集补入",
+   "baseline": "fail"
+  },
+  {
+   "id": "3.item_honey",
+   "phenomenon": "不调用玩家采集入口，蜂蜜不断链：每日世界存量（人、聚落、行会，不含玩家与自然储量）都 > 0，且最后三分之一时段仍有 NPC 采集补入",
+   "baseline": "fail"
+  },
+  {
+   "id": "3.books",
+   "phenomenon": "主浸泡账本守恒：auditLedger 为空，逐资源 Δ总量 = 源 − 汇",
+   "baseline": "pass"
+  },
+  {
+   "id": "4.process",
+   "phenomenon": "加工（如木匠做板）：NPC 用能追到真实产出的投入做出成品",
+   "baseline": "fail"
+  },
+  {
+   "id": "4.sell",
+   "phenomenon": "出售（如商贩卖货）：NPC 把能追到真实产出的货卖给别人并收到钱",
+   "baseline": "fail"
+  },
+  {
+   "id": "4.carry",
+   "phenomenon": "运输（如脚夫运货）：NPC 把能追到真实产出的货从一地运到另一地",
+   "baseline": "fail"
+  },
+  {
+   "id": "5a",
+   "phenomenon": "新职业名只带劳动类别属性，就有人去做这件事",
+   "baseline": "blocked"
+  },
+  {
+   "id": "5b.gather",
+   "phenomenon": "职业名改成随机串后 gather 劳动不变",
+   "baseline": "blocked"
+  },
+  {
+   "id": "5b.process",
+   "phenomenon": "职业名改成随机串后 process 劳动不变",
+   "baseline": "blocked"
+  },
+  {
+   "id": "5b.sell",
+   "phenomenon": "职业名改成随机串后 sell 劳动不变",
+   "baseline": "blocked"
+  },
+  {
+   "id": "5b.carry",
+   "phenomenon": "职业名改成随机串后 carry 劳动不变",
+   "baseline": "blocked"
+  },
+  {
+   "id": "5b.new",
+   "phenomenon": "新职业改成随机串后照样有人去做",
+   "baseline": "blocked"
+  },
+  {
+   "id": "5.books",
+   "phenomenon": "变异副本浸泡账本守恒",
+   "baseline": "pass"
+  }
+ ]
+}
