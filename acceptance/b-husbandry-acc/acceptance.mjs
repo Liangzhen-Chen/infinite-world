@@ -43,7 +43,9 @@ const herdRec=(doc,id)=>doc.state.records[`husbandry:${id}`]??Object.values(doc.
 const herds=doc=>Object.values(doc.state.records).filter(r=>r.category==='husbandry');
 // 饲料流：汇流出且用途是喂养/放牧的（不看具体物品 id）。
 const FEED=/feed|fodder|graz|pasture|饲|牧/;
-const feedFlows=d=>Object.entries(d).filter(([k,v])=>{const {a,c}=parse(k);return a.startsWith('sink:')&&FEED.test(c??'')&&v>0;});
+// 只算"被吃掉"：汇的种类是消耗/啃食类，枯萎、腐坏、过期、死亡这类损耗不算（按 sink 种类判断，不看账户名）。
+const LOSS_SINK=/decay|spoil|rot|wither|expire|death|die|lost|loss|waste|disease/i;
+const feedFlows=d=>Object.entries(d).filter(([k,v])=>{const {a,c}=parse(k);return a.startsWith('sink:')&&!LOSS_SINK.test(a.slice(5))&&FEED.test(c??'')&&v>0;});
 // 饥饿/死亡信号：畜群记录里名字带饥饿、饿死、死亡的计数字段（病死不算），或头数下降。
 const STARVE=/starv|hunger|famine|饥|饿|death|dead|died/i;
 const starveSignal=(r0,r1)=>Object.keys(r1??{}).filter(k=>STARVE.test(k)&&!/disease/i.test(k)&&typeof r1[k]==='number'&&r1[k]>(r0?.[k]??0));
