@@ -132,6 +132,15 @@ function naturalSources(e,state,id,labor){
 }
 // 有铺面、按引擎报价收货的人；运输去别的聚落，出售只在本聚落。
 function buyers(e,state,who,item){
+ return allBuyers(e,state).filter(b=>b.keeper!==who);
+}
+// 同一状态里有铺面、按引擎报价收货的人只列一次（一次决策会给许多人、许多货找收货人）。
+const buyerReads=new WeakMap();
+function allBuyers(e,state){
+ const hit=buyerReads.get(state);if(hit)return hit;
+ const rows=readBuyers(e,state,null);buyerReads.set(state,rows);return rows;
+}
+function readBuyers(e,state,who){
  return e.world.npcs.filter(n=>n.id!==who&&(n.serviceCatalog??[]).some(s=>s.kind==='trade'&&s.price?.mode==='engineQuote')&&shopOfKeeper(e,n.id,state)&&state.npcs[n.id]&&isEffective(e,state,n.id))
   .flatMap(n=>{const at=state.npcs[n.id].workplace?.location??n.workplace?.location??(n.schedule?.default??[]).find(s=>s.services?.includes('trade'))?.location;return at?[{keeper:n.id,location:at}]:[];});
 }
@@ -329,22 +338,29 @@ export function laborCandidates(e,view,document){
    const available=saleableStock(read,e,who,item).available;if(!(available>0)||!e.byId.get(item)?.basePrice)continue;
    // 先按报价比一遍收货人：本地的都看；外地的只看报价最高、且高过本地最好报价的那一家（更差的去处不必排路线）。
    const capacity=Math.min(available,carryRoom(e,document,who,item));if(!(capacity>=1))continue;
-   const offers=[];
+   // 同一聚落里收货人的收购价是同一份市场报价（收购走买入价差，与哪一家无关），每个聚落只报一次价。
+   const offers=[],bySettlement=new Map();
    for(const b of buyers(e,state,who,item)){
-    const remote=placeSettlement(e,state,b.location).value!==settlement;
+    const sid=placeSettlement(e,state,b.location).value,remote=sid!==settlement;
     if(!remote&&own)continue;
-    const quote=remote?knownQuote(e,document,view,{seller:who,keeper:b.keeper,location:b.location,item,quantity:capacity}):tryQuote(()=>keeperQuote(e,marketDocument(document,who),{seller:who,keeper:b.keeper,location:b.location,item,quantity:capacity}));
+    if(!bySettlement.has(sid))bySettlement.set(sid,remote?knownQuote(e,document,view,{seller:who,keeper:b.keeper,location:b.location,item,quantity:capacity}):tryQuote(()=>keeperQuote(e,marketDocument(document,who),{seller:who,keeper:b.keeper,location:b.location,item,quantity:capacity})));
+    const quote=bySettlement.get(sid);
     // 货款连在铺里交货的工时都抵不过，就不必排路线。
     if(!quote||!(quote.totalCoins>laborCost(e,document,who,view,config(e).saleMinutes))||quote.totalCoins>(state.npcs[b.keeper]?.coins??0))continue;
-    offers.push({b,remote,quote});
+    offers.push({b,remote,quote,sid});
    }
    const bestLocal=Math.max(0,...offers.filter(o=>!o.remote).map(o=>o.quote.totalCoins));
    const bestRemote=offers.filter(o=>o.remote&&o.quote.totalCoins>bestLocal).sort((x,y)=>y.quote.totalCoins-x.quote.totalCoins||x.b.keeper.localeCompare(y.b.keeper))[0];
-   for(const {b,remote,quote:offer} of offers.filter(o=>!o.remote||o===bestRemote)){
+   // 同一聚落、同价的收货人里，排得出行程的第一家就是去处（按编号定序），不必给每一家各排一趟。
+   const placed=new Set();
+   for(const {b,remote,quote:offer,sid} of offers.filter(o=>!o.remote||o.sid===bestRemote?.sid).sort((x,y)=>x.b.keeper.localeCompare(y.b.keeper))){
+    if(placed.has(sid))continue;
     // 收货人货架上本就经营这件货的，只收到货架上限为止（卖不掉的不收）。
     const shelfRow=shopOfKeeper(e,b.keeper,state)?.restock?.find(r=>r.item===item),shelfRoom=shelfRow?Math.floor(shelfRow.maximum-e.quantity(read,b.keeper,item)):Infinity;
     let quantity=Math.min(capacity,shelfRoom),quote=offer;if(!(quantity>=1))continue;
     if(quantity<capacity){quote=remote?knownQuote(e,document,view,{seller:who,keeper:b.keeper,location:b.location,item,quantity}):tryQuote(()=>keeperQuote(e,marketDocument(document,who),{seller:who,keeper:b.keeper,location:b.location,item,quantity}));if(!quote)continue;}
+    // 下限先估：来回走路与交货的工时（行程的工时成本不会比这少）都抵不过货款，就不必排行程。
+    const there=route(e,document,state.npcs[who].location,b.location,at);if(!there||!(quote.totalCoins>laborCost(e,document,who,view,2*there.minutes+config(e).saleMinutes)+2*(there.cost??0)))continue;
     const trip=plannedTrip(e,document,who,[{location:b.location,work:config(e).saleMinutes,keeper:b.keeper}],at,{[item]:quantity},t=>receiving(e,state,b.keeper,t.stops[0]));if(!trip)continue;
     const food=rations(e,trip.nights);if(!food)continue;
     const room=carryRoom(e,document,who,item,food);
@@ -354,7 +370,7 @@ export function laborCandidates(e,view,document){
     const risk=carryRiskCost(document,e,{edges:trip.outboundEdges,cargo:[{item,quantity}],carrier:who});
     const utility=quote.totalCoins-cost.coins-cost.value-risk;
     if(!(utility>0))continue;
-    out.push({id:`labor:${who}:${day}:sale:${item}:${b.keeper}`,kind:'labor',legacy:{kind:'labor_sale',labor:remote?'carry':'sell',item,quantity,keeper:b.keeper,...trip},
+    placed.add(sid);out.push({id:`labor:${who}:${day}:sale:${item}:${b.keeper}`,kind:'labor',legacy:{kind:'labor_sale',labor:remote?'carry':'sell',item,quantity,keeper:b.keeper,...trip},
      cost:{coins:cost.coins,value:cost.value+risk,minutes:trip.activeMinutes},reward:quote.totalCoins,needSatisfaction:quote.totalCoins,utility});
    }
   }
@@ -396,7 +412,8 @@ function outletWorth(e,document,view,who,{item,quantity,home,at}){
  });
  let best=local;
  for(const o of outlets){
-  const quote=knownQuote(e,document,view,{seller:who,buyer:o.keeper,keeper:o.keeper,location:o.location,item,quantity});if(!quote)continue;
+  // 产出还没到手，按标准品级报价（seller 不带本人行囊），没见过行情的各人共用同一份公开估价。
+  const quote=knownQuote(e,document,view,{seller:null,buyer:o.keeper,keeper:o.keeper,location:o.location,item,quantity});if(!quote)continue;
   const gross=Math.min(state.npcs[o.keeper]?.coins??0,quote.totalCoins);if(!(gross>best))continue;
   best=Math.max(best,gross-2*(o.path.cost??0)-laborCost(e,document,who,view,2*o.path.minutes)-carryRiskCost(document,e,{edges:o.path.edges,cargo:[{item,quantity}],carrier:who}));
  }
@@ -459,6 +476,8 @@ function haulPlan(e,document,view,who,want,seller,home,at){
  const quantity=Math.min(want.quantity,seller.stock);
  // 估一眼：货到了值的钱连货款都抵不过，就不必排路线。
  const first=quantity>=1?buy(quantity):null;if(!first||!((value(quantity)??0)>first.totalCoins))return null;
+ // 下限先估：去货源地来回的工时与路费都抵不过差价，就不必排行程。
+ if(!((value(quantity)??0)-first.totalCoins>laborCost(e,document,who,view,2*seller.path.minutes)+2*(seller.path.cost??0)))return null;
  const stops=[{location:seller.location,work:config(e).saleMinutes,keeper:seller.keeper,acts:[{kind:'buy',keeper:seller.keeper,item}]},...want.keeper?[{location:want.location,work:config(e).saleMinutes,keeper:want.keeper,acts:[{kind:'sell',keeper:want.keeper,item}]}]:[]];
  const trip=plannedTrip(e,document,who,stops,at,{},t=>t.stops.every(stop=>receiving(e,state,stop.acts[0].keeper,stop)));if(!trip)return null;
  const food=rations(e,trip.nights);if(!food)return null;
@@ -575,7 +594,8 @@ function cachedQuote(state,key,read){
  if(!rows.has(key)){try{rows.set(key,{quote:read()});}catch(error){rows.set(key,{error});}}
  const row=rows.get(key);if(row.error)throw row.error;return row.quote;
 }
-function supplierQuote(e,document,args){return cachedQuote(document.state,`buy|${args.buyer}|${args.keeper}|${args.location}|${args.item}|${args.quantity}`,()=>freshSupplierQuote(e,document,args));}
+// 买方不进报价（无关系修正），同一时刻同一卖家同一货同一量各人共用一份报价。
+function supplierQuote(e,document,args){return cachedQuote(document.state,`buy|${args.keeper}|${args.location}|${args.item}|${args.quantity}`,()=>freshSupplierQuote(e,document,args));}
 function freshSupplierQuote(e,document,{buyer,keeper,location,item,quantity}){
  return marketQuote(reader(document),e,{item,location,seller:keeper,buyer,quantity,business:{...shopOfKeeper(e,keeper,document.state),keeper}});
 }
