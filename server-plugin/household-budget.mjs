@@ -304,14 +304,14 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  // consumer still needs the goods missing from its current physical bags.
  return {owner,household:f.household,members,scope:subjective?'subjective':'kernel',sharedMeals:f.shared,shortfall,procurementShortfall,market,
   seedShortfall:rows.reduce((n,r)=>n+r.seedTarget-r.seed,0),commitmentShortfall:rows.reduce((n,r)=>n+Math.max(0,r.committed-r.stock),0),rows:rows.map(({definition,key,...r})=>{
-  const retained=Math.max(r.inUse,r.keep??0,r.food+r.seed)+(r.upkeep??0);
+  const retained=Math.max(r.inUse,r.food+r.seed)+(r.upkeep??0);
   return {...r,consumable:Boolean(definition?.nutrition),retained,available:Math.max(0,r.stock-retained-r.committed)};
  })};
 }
 
 // 家户用度自留（K2，与 npc-life 的家户用度同一口径）：npc-life 每天从户里扣的消耗类（householdUsage 的燃料、调味按重量），
-// 按一户的日用量 × 一个交易周期（economy.tradeCycleDays）留在家里；在用的日用品（durable，每人每种一件，npc-life 按寿命磨损）
-// 也留一件。店主货架上待售的货（本店补货清单）不是家用，不留。读 saleableStock/householdResources 的地方都据此只卖余量。
+// 按一户的日用量 × 一个交易周期（economy.tradeCycleDays）留在家里。书、工具等耐用品（durable）不是按日消耗的，
+// 不按“日用量 × 周期”留；正在干活用着的工具由 inUse 留。店主货架上待售的货（本店补货清单）不是家用，不留。读 saleableStock/householdResources 的地方都据此只卖余量。
 // 用度定义只有 item-class.mjs 的 householdUsage 一份，这里按状态时刻读它。
 export function householdUsage(engine,state,members){return usageDefinition(engine,state.minute,members);}
 const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
@@ -331,7 +331,6 @@ function reserveUpkeep(engine,state,members,rows){
    if(take>0){r.upkeep=(r.upkeep??0)+take;grams-=take*itemGrams(engine,r.item);}
   }
  }
- for(const r of rows)if(state.npcs?.[r.holder]&&r.stock>0&&isItemClass(engine,r.item,'durable')&&!merchandise(r.holder).has(r.item))r.keep=1;
 }
 function futureSources(d,engine,owner,view){
  return view?buildFutureSources(d,engine,owner,view):budgetRead(d,engine,`future:${owner}`,()=>buildFutureSources(d,engine,owner,null));
