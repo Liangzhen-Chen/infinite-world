@@ -61,6 +61,13 @@ export function instanceClasses(engine,unit){
  return useClasses(engine,unit.item).filter(c=>!lost.has(c));
 }
 export const isInstanceClass=(engine,unit,cls)=>instanceClasses(engine,unit).includes(cls);
+// 单件实例缺掉的用途（实例记的 lostUses；旧实例没记的按手艺档推；不是单件或标准件为空）。用到实例的判断——当工具的检定加成、
+// 兵器战斗属性、按用途选工具、盛液——都读它：仿制的镰刀没有刃口，仿制的錾杆不给检定加成。
+export function unitLostUses(engine,unit){
+ if(Array.isArray(unit?.lostUses))return unit.lostUses;
+ return unit?.item&&unit.workmanship?lostUses(engine,unit.item,unit.workmanship):[];
+}
+export const unitLacks=(engine,unit,use)=>unitLostUses(engine,unit).includes(use);
 
 // 持有人行囊里某类物品，按 id 排序（稳定）。
 export function heldOfClass(d,engine,holder,cls){

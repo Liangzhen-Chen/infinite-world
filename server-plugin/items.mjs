@@ -10,8 +10,8 @@ import {partyAccount} from './money.mjs';
 import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {assertCanCarry,packItemKg} from './carry.mjs';
-import {workmanshipTier,lostUses} from './item-class.mjs';
-export {workmanshipTier};
+import {workmanshipTier,lostUses,unitLostUses,unitLacks} from './item-class.mjs';
+export {workmanshipTier,unitLacks};
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 // Harvested portions are minted only from an already conserved physical water
 // transfer. The feature volume and liquid_binding remain their authority.
@@ -43,7 +43,7 @@ export function useTool(d,engine,requiresUse,selected=undefined){
   if(engine.quantity(d,'player',item)<1)continue;
   const held=heldUnit(d,engine,'player',item),facts=physicalItem(d,engine,held?.instance??item);
   if(held?.instances?.length&&!held.instance&&held.instances.length>=engine.quantity(d,'player',item))continue;
-  const tags=held?.tags??facts.tags;
+  const tags=held?.tags?held.tags.filter(t=>!unitLacks(engine,held,t)):facts.tags;
   if(!Array.isArray(tags)){unknown=true;continue;}
   if(tags.includes(requiresUse)&&(held?.durability??facts.durability??0)>0&&(held?.condition??facts.condition)!==0)return item;
  }
@@ -209,6 +209,9 @@ export function physicalItem(d,engine,id){
  const stored=d.get('state','records',physicalKey(id));
  const facts={...base,...entity?.facts,...unit,...stored?.facts,...(stored?.aliases?{aliases:stored.aliases}:{}),...(stored?.name?{name:stored.name}:{})};
  if(unit?.maxDurability>0)facts.condition=100*unit.durability/unit.maxDurability;
+ // 卡 Q：低档单件缺掉的用途（lostUses）不再是它的事实：用途标签去掉，检定加成、战斗属性不具备。
+ const lost=unit?unitLostUses(engine,unit):[];
+ if(lost.length){if(Array.isArray(facts.tags))facts.tags=facts.tags.filter(t=>!lost.includes(t));for(const f of ['checkBonus','combat'])if(lost.includes(f))delete facts[f];}
  const held=unit?.owner&&unit.item?d.get(...engine.bagPath(unit.owner),unit.item):null;
  if(held?.quantity===1&&held.moisture!==undefined)facts.moisture=held.moisture;
  if(unit?.liquid){

@@ -21,7 +21,7 @@ import {applyPatches,digest,withLegacyUndefinedActivity} from './storage.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {npcPresenceAt,shareNpcMemory} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
-import {changeItems,transferItems,heldUnit,wearItem,workmanshipTier,lostField} from './items.mjs';
+import {changeItems,transferItems,heldUnit,wearItem,workmanshipTier,lostField,unitLacks} from './items.mjs';
 import {resolveMaterials} from './item-class.mjs';
 import {derivedStats} from './combat.mjs';
 import {recordMarketDeal,assertMarketDepth} from './market.mjs';
@@ -154,7 +154,7 @@ function npcToolBonus(d,engine,id,recipe){
  const attribute=recipe.attribute??engine.byId.get(recipe.skill)?.attribute??'智力';let sum=0;
  for(const item of recipe.tools??[]){const definition=engine.byId.get(item),held=heldUnit(d,engine,id,item),grade=engine.rules.equipment.qualities.indexOf(held?.quality??definition.quality);
   if(grade<0||(d.get('state','npcs',id,'level')??engine.byId.get(id).level??1)<engine.rules.equipment.requiredLevels[grade])throw preconditionFailure('人物等级不足以使用工具');
-  const spec=definition.checkBonus;if(spec&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(recipe.skill)))sum+=spec.bonus;
+  const spec=definition.checkBonus;if(spec&&!unitLacks(engine,{item,...held},'checkBonus')&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(recipe.skill)))sum+=spec.bonus;
  }return Math.min(engine.rules.check.maximumToolBonus??5,sum);
 }
 function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship,grade){

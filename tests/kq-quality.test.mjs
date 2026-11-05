@@ -10,7 +10,9 @@ import {applyPatches}from'../server-plugin/storage.mjs';
 import {auditLedger}from'../server-plugin/ledger.mjs';
 import {marketQuote}from'../server-plugin/market.mjs';
 import {stateReader}from'../server-plugin/valuation.mjs';
-import {checkDegree}from'../server-plugin/checks.mjs';
+import {checkDegree,toolBonuses}from'../server-plugin/checks.mjs';
+import {useTool,physicalItem}from'../server-plugin/items.mjs';
+import {actionReader}from'../server-plugin/action-capacity.mjs';
 import {craftOutcome,craftFailure}from'../server-plugin/manufacturing.mjs';
 import {instanceClasses,useClasses,craftingParam,workmanshipTier,lostUses}from'../server-plugin/item-class.mjs';
 
@@ -211,4 +213,16 @@ test('通用性：副本里新加一条从未出现的材料与配方（只给�
  giveUnit(engine,c,'item_kq_blade','unit_kq_nb_true',{workmanship:'普通',grade:1});giveUnit(engine,c,'item_kq_blade','unit_kq_nb_fake',{workmanship:'仿制',grade:0.35});
  const q=id=>marketQuote(stateReader(c.state),engine,{item:'item_kq_blade',location:'bld_hw_forge',seller:'player',buyer:Object.keys(c.state.npcs).sort()[0],instances:[id]}).exactTotal;
  assert.ok(q('unit_kq_nb_true')>q('unit_kq_nb_fake'));
+});
+
+test('缺掉的用途真的不具备：仿制镰刀不能当刃具、仿制陶轮不给检定加成；普通件照常（实例 lostUses 被用途判断读到）',async()=>{
+ const {engine,document}=await shared;
+ const holding=(item,workmanship)=>{const c=structuredClone(document);for(const t of Object.keys(c.state.inventory))if(t===item||engine.byId.get(t)?.tags?.includes('cut'))delete c.state.inventory[t];giveUnit(engine,c,item,`unit_kq_use_${item}`,{workmanship});
+  const u=c.state.itemInstances[`unit_kq_use_${item}`];if(workmanship==='仿制')u.lostUses=lostUses(engine,item,workmanship);return actionReader(c);};
+ assert.equal(useTool(holding('item_sickle','普通'),engine,'cut','item_sickle'),'item_sickle');
+ assert.throws(()=>useTool(holding('item_sickle','仿制'),engine,'cut','item_sickle'),/cut/);
+ assert.ok(!physicalItem(holding('item_sickle','仿制'),engine,'unit_kq_use_item_sickle').tags.includes('cut'));
+ const wheel=engine.byId.get('item_pottery_wheel'),skill=wheel.checkBonus.skills[0],attr=wheel.checkBonus.attributes?.[0]??'敏捷';
+ assert.equal(toolBonuses(holding('item_pottery_wheel','普通'),engine,['item_pottery_wheel'],attr,skill,'player',99).bonus,wheel.checkBonus.bonus);
+ assert.equal(toolBonuses(holding('item_pottery_wheel','仿制'),engine,['item_pottery_wheel'],attr,skill,'player',99).bonus,0);
 });
