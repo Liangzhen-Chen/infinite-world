@@ -315,6 +315,8 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
 // 用度定义只有 item-class.mjs 的 householdUsage 一份，这里按状态时刻读它。
 export function householdUsage(engine,state,members){return usageDefinition(engine,state.minute,members);}
 const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
+// 家户用度先用同类里最便宜的：有热值属性（heatValue）的燃料按 价格 ÷ 热值，否则按 价格 ÷ 克。数据里目前没有物品登记热值，都按克算。
+export function usageCost(engine,item){const it=engine.byId.get(item);return (it?.basePrice??0)/(it?.heatValue>0?it.heatValue:itemGrams(engine,item));}
 // 一户一日用掉这件货多少件（不属于消耗类的为 0）。
 export function householdDailyUse(engine,state,members,item){
  return householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).reduce((n,u)=>n+u.gramsPerDay,0)/itemGrams(engine,item);
@@ -324,7 +326,8 @@ function reserveUpkeep(engine,state,members,rows){
  const merchandise=holder=>{if(!stock.has(holder))stock.set(holder,new Set(registerMerchandiseResolver.fn?.(engine,state,holder)??[]));return stock.get(holder);};
  for(const u of householdUsage(engine,state,members)){
   let grams=u.gramsPerDay*cycle;
-  for(const r of rows){
+  // 家里留着用的是同类里最便宜的那些（usageCost，与 npc-life 实际先用的顺序同一个函数），贵的（如引火包）才是可出让的余货。
+  for(const r of [...rows].sort((a,b)=>usageCost(engine,a.item)-usageCost(engine,b.item)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder))){
    if(grams<=0)break;
    if(!isItemClass(engine,r.item,u.cls)||merchandise(r.holder).has(r.item))continue;
    const free=Math.max(0,r.stock-r.committed-r.food-r.seed-(r.upkeep??0)),take=Math.min(free,Math.ceil(grams/itemGrams(engine,r.item)));
