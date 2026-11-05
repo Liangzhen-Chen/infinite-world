@@ -474,8 +474,7 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
 // 店主的进货款出自柜台，柜台不够时由店主自己决定是否从钱袋注资；进不进看转卖所得能否抵过进价。
 function localRestock(d,engine,shop,row,minute,want,ctx){
     const entry={day:Math.floor(minute/DAY),minute,item:row.item,source:'local',wanted:want,added:0,paidCopper:0,shipments:[]};
-    const person=Boolean(d.get('state','npcs',shop.keeper))&&booksOpen(d);
-    if(!person)return {...entry,reason:'店主不是名册人物，无从向持货人进货'};
+    if(!d.get('state','npcs',shop.keeper))return {...entry,reason:'店主不是名册人物，无从向持货人进货'};
     const eventId=`shop:${shop.id}:${minute}:${row.item}:local`;
     ctx.view??=keeperView(d,engine,shop.keeper,minute);
     const view=ctx.view,budget=()=>{const b=householdBudget(d,engine,shop.keeper,{view});return counterCash(d,shop.keeper)+Math.max(0,Math.min(b.cash,...b.timeline.map(r=>r.balance)));};

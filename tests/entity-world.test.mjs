@@ -40,6 +40,9 @@ test('迁店后补货产地、付款和新报价读取当前工作地；历史�
  assert.equal(shop.settlement,'loc_bs');assert.equal(shop.location,'loc_bs');
  assert.equal(shop.restock.find(r=>r.item==='item_bread').source,'route');
  assert.equal(shop.restock.find(r=>r.item==='item_bread').from,'loc_hw','迁店后的来源产地仍须正确派生，未到货不改变来源');
+ // K2（卡 E）依据：铁匠铺的铁镰货架不再从模拟范围外进货，改向本聚落真实持货人进货；夹具安排一位村民手里有 3 把铁镰。
+ const holder='npc_hw_shendu';d.set(['state','npcs',holder,'inventory','item_sickle'],3);
+ const holderCoins=d.get('state','npcs',holder,'coins'),smithCoins=d.get('state','npcs','npc_hw_duanyan','coins');
  const cash=d.get('state','npcs',host,'coins'),treasury=d.get('state','settlements','loc_hw','treasury');
  advanceShops(d,engine,600,DAY);
  const ledger=d.get('state','records','shop:shop_hw_qingdeng'),row=ledger.entries.find(e=>e.item==='item_bread');
@@ -47,12 +50,17 @@ test('迁店后补货产地、付款和新报价读取当前工作地；历史�
  assert.equal(ledger.settlement,'loc_bs');assert.equal(row.source,'route');assert.equal(row.added,0);assert.equal(row.paidCopper,0);assert.deepEqual(row.shipments,[]);
  assert.equal(row.from,undefined);assert.equal(shelf(d,host,'item_bread'),0);
  assert.equal(d.get('state','npcs',host,'coins'),cash-row.paidCopper);
- // K08没有远途现货或运费流；铁镰的真实本地补货款仍独立入公库。
- // W8-E8 also restocks the forge: one sickle * base 10 * scarcity 2 = 20
- // into the same source treasury. Keep the route and local receipts distinct.
+ // K08没有远途现货或运费流；铁镰的真实本地补货单独记账。
+ // K2（卡 E）依据：原断言是铁镰 1 把、20 铜付进公库（模拟范围外进货）；现在货架补上的铁镰来自那位村民，
+ // 他的铁镰相应减少，货款进他的钱袋（扣去他自己缴的商税），公库只多出这笔商税。
  const sickle=d.get('state','records','shop:shop_hw_forge').entries.find(e=>e.item==='item_sickle');
- assert.equal(sickle.added,1);assert.equal(sickle.paidCopper,20);
- assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+20);assert.equal(row.cost,undefined);
+ const tax=Object.values(d.get('state','records')).filter(r=>r.category==='trade_tax'&&r.payer===holder).reduce((n,r)=>n+r.amount,0);
+ assert.equal(sickle.added,1);assert.ok(sickle.paidCopper>0);assert.deepEqual(sickle.from,[holder]);
+ assert.equal(shelf(d,'npc_hw_duanyan','item_sickle'),1);assert.equal(shelf(d,holder,'item_sickle'),2);
+ assert.equal(d.get('state','npcs',holder,'coins'),holderCoins+sickle.paidCopper-tax);
+ assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+tax);assert.equal(row.cost,undefined);
+ // 守恒：铁匠付出的正是村民收到的加商税（本夹具不开账本，按钱袋与公账核对）。
+ assert.equal(smithCoins-d.get('state','npcs','npc_hw_duanyan','coins'),sickle.paidCopper);
  const history=structuredClone(d.get('state','records'));
  const moved=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999});
  // Updated baseline input999 *plentiful supply.5 *neutral grade/regard/
@@ -80,7 +88,19 @@ test('迁居改业、拘押、死亡使原店停止补货；接手原工作地�
  const successor='npc_hw_ayan',base=engine.byId.get(successor);base.shopType='tavern';base.services=['trade'];base.workplace={location:inn};
  d.set(['state','npcs',successor,'inventory','item_bread'],0);
  const shop=currentShops(engine,d.get('state')).find(s=>s.id==='shop_hw_qingdeng');assert.equal(shop.keeper,successor);
+ // K2（卡 E）依据：接手人的面包货架向本聚落持货人进货（原先凭空补上）。先看反面：村里除了已故原店主没人有面包，补不上，回执说明原因。
+ const empty=structuredClone(d.document);
+ for(const [id,n]of Object.entries(empty.state.npcs))if(id!==host&&n.inventory?.item_bread)n.inventory.item_bread=0;
+ const none={...d,document:empty};advanceShops(none,engine,600,DAY);
+ assert.equal(shelf(none,successor,'item_bread'),0);
+ assert.match(none.get('state','records','shop:shop_hw_qingdeng').entries.find(e=>e.item==='item_bread'&&e.minute===DAY).reason,/没有人持有|余量/);
+ // 正面：一位村民手里有 8 个面包，接手人从他那里补上货架，他的面包减少，货款进他的钱袋。
+ const holder='npc_hw_shendu';d.set(['state','npcs',holder,'inventory','item_bread'],8);const holderCoins=d.get('state','npcs',holder,'coins');
  advanceShops(d,engine,600,DAY);assert.ok(shelf(d,successor,'item_bread')>0);assert.equal(shelf(d,host,'item_bread'),before);
+ const bread=d.get('state','records','shop:shop_hw_qingdeng').entries.find(e=>e.item==='item_bread'&&e.minute===DAY&&e.added);
+ const tax=Object.values(d.get('state','records')).filter(r=>r.category==='trade_tax'&&r.payer===holder).reduce((n,r)=>n+r.amount,0);
+ assert.deepEqual(bread.from,[holder]);assert.equal(shelf(d,holder,'item_bread'),8-bread.added);assert.equal(shelf(d,successor,'item_bread'),bread.added);
+ assert.equal(d.get('state','npcs',holder,'coins'),holderCoins+bread.paidCopper-tax);
 });
 
 test('树木居民与运行时改换物种从实际身体派生，借形到期与单件读取不写存档',()=>{
