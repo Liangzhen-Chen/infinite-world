@@ -32,6 +32,9 @@ import {facilityView} from './facility-state.mjs';
 import {npcProficiency} from './npc-growth.mjs';
 import {npcCraft} from './npc-autonomy.mjs';
 import {stationLicence,fixtureStations} from './workstation-services.mjs';
+import {prepareNpcFurnace,readObjectState,storeObjectState,advanceThermalState} from './magic-object.mjs';
+import {isItemClass} from './item-class.mjs';
+import {environmentFeatures} from './environment-state.mjs';
 
 const DAY=1440,writer='npc-labor';
 declareLedgerWriter(writer,{sinks:['sink:export']});
@@ -169,6 +172,7 @@ const SLEEP=/睡眠|睡觉|熟睡/,MOVING=/赶路|前往|返回/;
 // 一趟行程碰到本人的营业（作息里开着 trade 的时段）、受雇当班或在自己的工作处做活，就要放弃这段收入，计入行程成本：
 // 营业按本人近期七日真实成交的日均货款折到每分钟（没有成交记录时，按留在铺上的可售存货货值算作一天能卖出的上限；这趟带走去卖的货不算在内）；当班按受雇合同的工价折到每分钟。
 // 已有人按行程来本人这里取货（市场行程登记的接待窗口），那段时间不能走。授课只是可预约时不算占用。
+// 本人名下的炉火还烧着（照管中），行程不能把人带离它（leavesFire），这是硬约束而不是可折算的损失：火不离人。
 // 本人一天的营业分钟与铺上货值，同一状态里只读一次（一次决策会比较多个出发时刻与多条行程）。
 const shopReads=new WeakMap();
 function shopRead(e,state,who,day,key,read){
@@ -195,6 +199,7 @@ function dutyRate(e,document,who,day,place){
 function forgone(e,document,who,trip,taken={}){
  const state=document.state,day=Math.floor(trip.departAt/DAY)*DAY;let trade=0,work=0,duty=0;
  const job=personEmployment(e,state,who,trip.departAt)?.value,place=workplaceOf(e,state,who);
+ if(leavesFire(e,document,who,trip))return Infinity;
  // 行程里走路与作业的分钟（不含在外歇宿）：落在当班时段里的那部分，工时成本已按工价算进行程，不再重复记作放弃的活计。
  const active=(trip.segments??[]).filter(s=>!s.rest);
  const busy=(start,end)=>active.reduce((n,s)=>n+Math.max(0,Math.min(end,s.end)-Math.max(start,s.start)),0);
@@ -316,17 +321,59 @@ export function laborCandidates(e,view,document){
  if(labor.includes('process'))out.push(...processCandidates(e,view,document));
  return out;
 }
+// ---- 热工位：工位登记了 thermalRequirement，工序全程要照管炉火 ----
+// 与 NPC 就地照管炉火同一口径（magic-object.prepareNpcFurnace）：热源须是本人的或公开的；火只能续、不能凭空点着，
+// 到场时炉子得还烧着；整个工序缺的炉料由本人添，炉料是热源认的燃料（热账的燃料表，且属燃料类）。
+// 预测按同一份真实热账（advanceThermalState）逐分钟推：先推到到场，再添料推完工序，温度或燃烧不满足就不去；
+// 窑的器壁裂损按预测的应力增量折进期望成品（与结算 kilnWorkResult 同一公式）。
+function heatSource(e,location,station){const id=station?.thermalRequirement?.feature;return id?environmentFeatures(e).find(f=>f.id===id&&f.location===location&&f.thermalModel)??null:null;}
+// 本人名下的热源（按名册一次建表）。
+const heatOwners=new WeakMap();
+function ownHeat(e,who){
+ const key=e.advanceFeatures??e.world;let rows=heatOwners.get(key);
+ if(!rows){rows=new Map();for(const f of environmentFeatures(e))if(f.thermalModel&&f.owner){if(!rows.has(f.owner))rows.set(f.owner,[]);rows.get(f.owner).push(f);}heatOwners.set(key,rows);}
+ return rows.get(who)??[];
+}
+// 火没熄不离人：本人名下到出发时还烧着的热源（照管中的炉火）在哪，行程就不能把人带离那里。
+function leavesFire(e,document,who,trip){
+ for(const row of ownHeat(e,who)){
+  const t=heatNow(e,document,row);if(!t?.burning)continue;
+  let s;try{s=advanceThermalState(t,row.thermalModel,Math.max(t.lastMinute,trip.departAt),{effects:Object.values(document.state.effects??{}),target:row.id});}catch{continue;}
+  if(s.burning&&(trip.segments??[]).some(g=>g.travel||g.location!==row.location))return true;
+ }
+ return false;
+}
+const heatAllowed=(row,who)=>Boolean(row)&&(row.owner===who||row.access==='public');
+function heatNow(e,document,row){try{return readObjectState(reader(document),row).thermal??null;}catch{return null;}}
+// 到场时刻 arriveAt 起做 minutes 分钟：返回 {missingMg, fuels（可选的燃料及份数）, risk（裂损比例）}；炉火撑不到或温度不对返回 null。
+function furnaceForecast(e,document,who,location,station,{arriveAt,minutes}){
+ const row=heatSource(e,location,station),req=station.thermalRequirement;if(!heatAllowed(row,who))return null;
+ const m=row.thermalModel,now=heatNow(e,document,row);if(!now?.burning||now.moistureMg)return null;
+ const effects=Object.values(document.state.effects??{});let s;
+ try{s=advanceThermalState(now,m,Math.max(now.lastMinute,arriveAt),{effects,target:row.id});}catch{return null;}
+ if(!s.burning)return null;
+ const missing=Math.max(0,minutes*m.burnMgPerMinute+1-s.fuelMg);
+ const fuels=missing?m.fuels.filter(f=>isItemClass(e,f.item,'fuel')).map(f=>({item:f.item,quantity:Math.ceil(missing/f.milligramsPerUnit),milligrams:Math.ceil(missing/f.milligramsPerUnit)*f.milligramsPerUnit})).filter(f=>f.quantity>=1&&f.quantity<=100):[];
+ if(missing&&!fuels.length)return null;
+ const start={...s,fuelMg:s.fuelMg+(fuels[0]?.milligrams??0),fuelAddedMg:s.fuelAddedMg+(fuels[0]?.milligrams??0)},ok=t=>{const c=t.energyJ/m.heatCapacityJPerC;return c>=req.minimumC&&c<=req.maximumC&&(!req.burning||t.burning);};
+ if(!ok(start))return null;
+ let t=start;
+ try{for(let k=1;k<=minutes;k++){t=advanceThermalState(t,m,t.lastMinute+1,{effects,target:row.id});if(!ok(t))return null;}}catch{return null;}
+ const risk=m.kiln?Math.min(1000,(t.crackStressUnits-start.crackStressUnits)*m.kiln.crackPermillePerStress)/1000:0;
+ return {feature:row.id,missingMg:missing,fuels,risk,kiln:Boolean(m.kiln)};
+}
 // ---- 加工的生产行程 ----
 // 能做这道配方的地方：不要工位的就地做（配方指定了地点就去那里）；要工位的，是按工位现状（facilityView）可用的同类工位，
 // 和采集、采买一样只在本聚落里找（一趟行程走得到）。能不能用只看工位许可（stationLicence：产权、居住、租约、许可或收费），收费的照付工坊费。
-// 没有许可的工位，用了就是擅用（K6），这里不去。需要照管炉火的热工位不走这条行程。
+// 没有许可的工位，用了就是擅用（K6），这里不去。热工位另要热源是本人的或公开的、眼下还烧着（点不着冷炉）。
 function workPlaces(e,document,who,settlement,kinds){
  const state=document.state,out=[];
  for(const place of [...e.world.locations,...Object.values(state.created??{}).filter(p=>p?.id&&!e.byId.has(p.id))]){
   if(!fixtureStations(state.created?.[place.id]??place).some(s=>kinds.has(s.kind))||placeSettlement(e,state,place.id).value!==settlement)continue;
   const v=facilityView(e,state,place.id,who);if(!v?.workstations?.length)continue;
   for(const station of v.workstations){
-   if(station.thermalRequirement||!kinds.has(station.kind))continue;
+   if(!kinds.has(station.kind))continue;
+   if(station.thermalRequirement){const row=heatSource(e,place.id,station);if(!heatAllowed(row,who)||!heatNow(e,document,row)?.burning)continue;}
    const licence=stationLicence(e,document,station,who);
    if(!licence)continue;
    out.push({location:place.id,station,factor:v.factor||1,fee:licence.basis==='paid'?station.fee??0:0});
@@ -391,9 +438,11 @@ function processCandidates(e,view,document){
     batches=Math.min(batches,Math.floor((e.quantity(read,who,item)+most)/amount));
    }
    if(place.fee)batches=Math.min(batches,Math.floor((view.self.coins??0)/place.fee));
-   // 负重：每批的料与成品都要背得动（口粮在排出行程后再核）。
+   // 窑一次烧一窑：裂损按这一窑的应力算，一站只做一批。
+   if(heatSource(e,place.location,place.station)?.thermalModel.kiln)batches=Math.min(batches,1);
+   // 负重：每批的料与成品都要背得动（口粮在排出行程后再核）。就在本人所在处做的不用背。
    const d=reader(document),perBatch=r.output.quantity*packItemKg(d,e,who,r.output.item)+[...totals].reduce((n,[item,amount])=>n+amount*packItemKg(d,e,who,item),0);
-   if(perBatch>0)batches=Math.min(batches,Math.floor((safeCarryKg(d,e,who)-carriedKg(d,e,who))/perBatch));
+   if(perBatch>0&&place.location!==here)batches=Math.min(batches,Math.floor((safeCarryKg(d,e,who)-carriedKg(d,e,who))/perBatch));
    // 批数越多越摊得开路程，但量大时买价随稀缺上涨：从能做的最多批起，不成就减半再看。
    if(batches<1)continue;
    // 成品货值只在料取得到时才估（估价要读全市场的供给）。
@@ -432,26 +481,54 @@ function processPlan(e,document,view,r,place,batches,totals,settlement,local,uni
   if(!best)return null;
   acts.push(best);bought+=best.coins;tools+=Math.ceil(best.coins*toolShare(e,r,item,batches))-best.coins;
  }
- const minutes=Math.ceil(r.minutes/place.factor),gross=unit*batches,fee=place.fee*batches,spent=held+bought+tools+fee;
+ const minutes=Math.ceil(r.minutes/place.factor),fee=place.fee*batches;
+ // 热工位：按眼下出发先估一遍炉火（到场时刻在排出路线后再核），缺的炉料和别的投入一样从手上、采集或采买来。
+ let heat=null,fuel=null;
+ if(place.station?.thermalRequirement){
+  heat=furnaceForecast(e,document,who,place.location,place.station,{arriveAt:view.minute,minutes:minutes*batches});if(!heat)return null;
+  const pick=furnaceFuel(e,document,who,heat,totals,settlement,local,here,rank);if(pick===null)return null;
+  if(pick){fuel=pick;held+=pick.held;if(pick.act){acts.push(pick.act);bought+=pick.act.coins;}}
+ }
+ const gross=unit*batches*(1-(heat?.risk??0)),spent=held+bought+tools+fee;
  // 不算路程与口粮也不值得，就不去排行程。
  if(!(gross-spent-laborCost(e,document,who,view,minutes*batches+acts.reduce((n,a)=>n+a.work,0))>0)||bought+fee>(view.self.coins??0))return null;
  // 同一处的取得并成一站：同一个卖家的货一次买齐，同一处来源的一并采。
  const stops=new Map();
  for(const a of acts){const key=`${a.location}|${a.kind}|${a.keeper??''}`,row=stops.get(key)??{location:a.location,work:0,acts:[]};row.acts.push(a.act);row.work+=a.work;stops.set(key,row);}
  const list=[...stops.values()].map(s=>({...s,work:s.work||config(e).saleMinutes}));
- list.push({location:place.location,work:minutes*batches,acts:[{kind:'craft',recipe:r.id,batches,minutes,station:place.station?.id??null}]});
+ list.push({location:place.location,work:minutes*batches,acts:[{kind:'craft',recipe:r.id,batches,minutes,station:place.station?.id??null,...(heat?{heat:{feature:heat.feature,...(fuel?{fuel:{item:fuel.item,quantity:fuel.quantity}}:{})}}:{})}]});
  const open=t=>t.stops.every(stop=>stop.acts.every(act=>act.kind!=='buy'||receiving(e,state,act.keeper,stop)));
  const trip=plannedTrip(e,document,who,list,view.minute,{},open);if(!trip)return null;
+ // 按排出的到场时刻重核炉火：撑不到、温度不对，或要的炉料比备下的多，就不去。
+ if(heat){
+  const at=furnaceForecast(e,document,who,place.location,place.station,{arriveAt:trip.stops.at(-1).arriveAt,minutes:minutes*batches});
+  if(!at||at.missingMg>(fuel?.milligrams??0)||at.risk>heat.risk)return null;
+ }
  const food=rations(e,trip.nights);if(!food)return null;
- // 负重：带去的口粮，加上一路取得的投入与做成的成品，不超过安全负重。
+ // 负重：带去的口粮，加上一路取得的投入与做成的成品，不超过安全负重（整趟不出门就不用背）。
  const load=(food.quantity?food.quantity*packItemKg(d,e,who,food.item):0)+acts.reduce((n,a)=>n+a.act.quantity*packItemKg(d,e,who,a.act.item),0)+batches*r.output.quantity*packItemKg(d,e,who,r.output.item);
- if(carriedKg(d,e,who)+load>safeCarryKg(d,e,who))return null;
+ if(trip.segments.some(s=>s.travel)&&carriedKg(d,e,who)+load>safeCarryKg(d,e,who))return null;
  const cost=tripCost(e,document,who,view,trip,here);if(!cost)return null;
  const utility=gross-spent-cost.coins-cost.value;
  if(!(utility>0)||bought+fee+cost.coins>(view.self.coins??0))return null;
  return {id:`labor:${who}:${day}:process:${r.id}:${place.location}`,kind:'labor',
   legacy:{kind:'labor_process',labor:'process',recipe:r.id,batches,station:place.station?.id??null,coins:bought,fee,...trip},
   cost:{coins:cost.coins+bought+fee,value:cost.value+held+tools,minutes:trip.activeMinutes},reward:gross,needSatisfaction:gross,utility};
+}
+// 炉料：热源认的燃料里，先用手上够数的（扣掉这道配方要用的料），没有就按别的投入一样找最省的采集或采买。
+// 返回 undefined 表示不缺料，null 表示炉料取不到。
+function furnaceFuel(e,document,who,heat,totals,settlement,local,here,rank){
+ if(!heat.missingMg)return undefined;
+ const read=stateReader(marketState(document.state,who));
+ for(const f of heat.fuels)if(e.quantity(read,who,f.item)-(totals.get(f.item)??0)>=f.quantity)
+  return {...f,held:worth(e,document.state,{item:f.item,quantity:f.quantity,holder:who,location:here})??Infinity};
+ let best=null;
+ for(const f of heat.fuels){
+  const have=Math.max(0,e.quantity(read,who,f.item)-(totals.get(f.item)??0)),missing=f.quantity-have;
+  const option=supplies(e,document,who,f.item,missing,settlement,local).sort((a,b)=>rank(a)-rank(b)||a.location.localeCompare(b.location))[0];
+  if(option&&(!best||rank(option)<rank(best.act)))best={...f,act:option,held:have?worth(e,document.state,{item:f.item,quantity:have,holder:who,location:here})??Infinity:0};
+ }
+ return best;
 }
 function receiving(e,state,keeper,stop){
  for(let cursor=stop.arriveAt;cursor<stop.finishAt;){const s=scheduleAt(e,keeper,cursor,state);if(!s||s.location!==stop.location||!s.services?.includes('trade'))return false;cursor=s.until;}
@@ -547,7 +624,7 @@ registerAutonomyKind('labor_process',{
  start:startTrip,
  execute:(d,e,who,a)=>departure(e,a)
 });
-const stationAt=(e,document,who,location,id)=>facilityView(e,document.get('state'),location,who)?.workstations?.find(s=>s.id===id&&!s.thermalRequirement&&stationLicence(e,document,s,who))??null;
+const stationAt=(e,document,who,location,id)=>facilityView(e,document.get('state'),location,who)?.workstations?.find(s=>s.id===id&&(!s.thermalRequirement||heatAllowed(heatSource(e,location,s),who))&&stationLicence(e,document,s,who))??null;
 
 // ---- 每一站作业结束那一刻结算：人确实在作业地，才按实际取得、成交或制作入账 ----
 function present(d,e,who,at){
@@ -608,20 +685,21 @@ function settleBuy(d,e,who,a,stop,id,at,part){
  laborRecord(d,id,{npc:who,labor:a.labor,side:'buy',seller:keeper,location:stop.location,minute:at,goods:rows.map(r=>({item:r.item,quantity:r.quantity})),totalCoins:total,success:true,nights:a.nights},part);
 }
 // 制作一站：在获准的工位上逐批走原生的 NPC 制作结算（掷骰、工坊费、工具磨损、成品、制作账、熟练度）；料、工具或工坊费不够就停在那一批。
-function settleCraft(d,e,who,a,stop,id,at,part){
- const act=stop.acts[0],r=e.byId.get(act.recipe);
+function settleCraft(d,e,who,a,stop,id,at,part,trip,i){
+ const act=stop.acts[0],r=e.byId.get(act.recipe);let furnace=null;
  const before=new Map([r.output.item,...r.materials.map(m=>m.item),...(r.byproducts??[]).map(p=>p.item)].map(item=>[item,e.quantity(d,who,item)]));
  let reason=null,batches=0;
  const station=act.station?stationAt(e,d,who,stop.location,act.station):null,licence=station&&stationLicence(e,d,station,who);
  if(!present(d,e,who,stop.location))reason='劳动者没有实际到场';
  else if(act.station&&!station)reason='工位已不能用';
+ else if(act.heat&&!(furnace=furnaceAt(d,e,trip,i,stop,at)).plan)reason=furnace.reason;
  else for(;batches<act.batches;batches++){
   const totals=new Map();for(const m of r.materials)totals.set(m.item,(totals.get(m.item)??0)+m.amount);
   if([...totals].some(([item,n])=>e.quantity(d,who,item)<n)){reason='材料不够再做一批';break;}
   if((r.tools??[]).some(t=>!usableTool(d,e,who,t))){reason='没有完好的实际工具';break;}
   if(licence?.basis==='paid'&&(station.fee??0)>(d.get('state','npcs',who,'coins')??0)){reason='工坊费不够';break;}
   const start=stop.arriveAt+batches*act.minutes;
-  npcCraft(d,e,who,r.id,{start,at:start+act.minutes,actionId:`${id}${part}:${batches}`,location:stop.location,minutes:act.minutes});
+  npcCraft(d,e,who,r.id,{start,at:start+act.minutes,actionId:`${id}${part}:${batches}`,location:stop.location,minutes:act.minutes,...(furnace?{furnace:{plan:furnace.plan,fuel:batches?[]:furnace.fuel}}:{})});
  }
  const change=[...before].map(([item,n])=>({item,quantity:e.quantity(d,who,item)-n}));
  laborRecord(d,id,{npc:who,labor:a.labor,recipe:r.id,station:act.station,location:stop.location,minute:at,batches,
@@ -633,14 +711,48 @@ function settleStop(d,e,trip,i){
  if(a.kind==='labor_work')return settleWork(d,e,who,a,trip.sourceEvent,at);
  const id=trip.sourceEvent,part=`:${i}`,kind=stop.acts[0].kind;
  if(kind==='buy')return settleBuy(d,e,who,a,stop,id,at,part);
- if(kind==='craft')return settleCraft(d,e,who,a,stop,id,at,part);
+ if(kind==='craft')return settleCraft(d,e,who,a,stop,id,at,part,trip,i);
  stop.acts.forEach((act,j)=>settleWork(d,e,who,{...act,labor:act.kind,to:stop.location,work:act.quantity*act.minutesPerUnit,nights:a.nights},id,at,`${part}:${j}`));
+}
+// 热工位一站：到场那一刻照管炉火——同 NPC 就地照管炉火的 prepareNpcFurnace，热账推到到场、缺多少续多少（只从本人行囊里出，
+// 不动这道配方要用的料），工序的温度与燃烧按真实热账核过才开工；结果记在行程上。完工时热账推到完工，炉子已熄或温度出界就不出成品。
+// 把这一处热源的热账推到 minute（已经推过的不动）：与时钟推进 advanceMagicObjects 同一个逐分钟热过程。
+function settleHeat(d,e,row,minute){
+ const state=readObjectState(d,row);if(!state.thermal||state.thermal.lastMinute>=minute)return;
+ state.thermal=advanceThermalState(state.thermal,row.thermalModel,minute,{effects:Object.values(d.get('state','effects')??{}),target:row.id});storeObjectState(d,row,state);
+}
+const heatStop=stop=>stop?.acts?.[0]?.kind==='craft'&&stop.acts[0].heat;
+function lightFurnace(d,e,trip,i){
+ const a=trip.action,stop=a.stops[i],act=stop.acts[0],who=trip.actor,r=e.byId.get(act.recipe),key=['state','records',trip.id,'furnaces',String(i)];
+ if(d.get(...key))return;
+ const fail=reason=>d.set(key,{reason});
+ const station=stationAt(e,d,who,stop.location,act.station);
+ if(!present(d,e,who,stop.location))return fail('劳动者没有实际到场');
+ if(!station)return fail('工位已不能用');
+ settleHeat(d,e,heatSource(e,stop.location,station),stop.arriveAt);
+ const reserved=new Map();for(const m of r.materials)reserved.set(m.item,(reserved.get(m.item)??0)+m.amount*act.batches);for(const item of r.tools??[])reserved.set(item,(reserved.get(item)??0)+1);
+ const location=d.get('state','npcs',who,'location'),moved=location!==stop.location;
+ if(moved)d.set(['state','npcs',who,'location'],stop.location);
+ let prepared;
+ try{prepared=prepareNpcFurnace(d,e,station,act.minutes*act.batches,who,reserved);}
+ catch(error){if(moved)d.set(['state','npcs',who,'location'],location);return fail(error.message);}
+ if(moved)d.set(['state','npcs',who,'location'],location);
+ d.set(key,{plan:prepared.plan,fuel:prepared.fuel,minute:stop.arriveAt});
+}
+function furnaceAt(d,e,trip,i,stop,at){
+ const row=d.get('state','records',trip.id,'furnaces',String(i));if(!row?.plan)return {reason:row?.reason??'到场时没能照管上炉火'};
+ const station=stationAt(e,d,trip.actor,stop.location,stop.acts[0].station),req=station?.thermalRequirement;if(!req)return {reason:'工位已不能用'};
+ const source=heatSource(e,stop.location,station);if(source)settleHeat(d,e,source,at);
+ const t=source&&heatNow(e,d.document,source),c=t&&t.energyJ/source.thermalModel.heatCapacityJPerC;
+ if(!t||req.burning&&!t.burning||c<req.minimumC||c>req.maximumC)return {reason:'炉火中途熄灭或温度出界'};
+ return row;
 }
 const pendingTrips=state=>recordsWhere(state.records,'category','market_trip').filter(r=>r.labor&&r.action&&r.settledAt===undefined);
 const nextStop=trip=>trip.action.stops?.[trip.settledStops??0];
 registerAdvance({id:'npc_labor',order:1105,
- nextMinute:(e,d,now)=>Math.min(Infinity,...pendingTrips(d.get('state')).map(r=>nextStop(r)?.finishAt).filter(m=>m>now)),
+ nextMinute:(e,d,now)=>Math.min(Infinity,...pendingTrips(d.get('state')).flatMap(r=>{const s=nextStop(r);return [s?.finishAt,heatStop(s)&&!r.furnaces?.[String(r.settledStops??0)]?s.arriveAt:undefined];}).filter(m=>m>now)),
  advance(e,d,{after}){
+  for(const trip of pendingTrips(d.get('state'))){const i=trip.settledStops??0,s=trip.action.stops[i];if(heatStop(s)&&s.arriveAt<=after&&!trip.furnaces?.[String(i)])lightFurnace(d,e,trip,i);}
   for(const trip of pendingTrips(d.get('state')).filter(r=>nextStop(r)?.finishAt<=after).sort((a,b)=>nextStop(a).finishAt-nextStop(b).finishAt||a.id.localeCompare(b.id))){
    let i=trip.settledStops??0;
    for(;i<trip.action.stops.length&&trip.action.stops[i].finishAt<=after;i++)settleStop(d,e,trip,i);
