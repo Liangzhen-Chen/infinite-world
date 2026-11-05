@@ -7,6 +7,7 @@ import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {heldUnit,wearItem,trackSingleItem}from'./items.mjs';
 import {workstation}from'./manufacturing.mjs';
+import {stationLicence}from'./workstation-services.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
@@ -48,7 +49,7 @@ export function repair(d,args,eventId){
     if(plan.service){
         const maker=this.resolve(args.maker,'npc'),spec=plan.service;
         const facility=facilityView(this,d.get('state'),d.get('state','location'));
-        const station=(facility?.workstations??this.byId.get(d.get('state','location'))?.workstations)?.find(s=>s.kind===plan.workstation&&(s.owner===maker||s.access==='public'));
+        const station=facility?.workstations.find(s=>s.kind===plan.workstation&&stationLicence(this,d,s,maker));
         if(!station||facility?.factor===0)throw preconditionFailure('修理者没有此处可用的登记工坊');
         if(knowledgeProficiency(this,d.get('state'),maker,plan.skill)<plan.minimumProficiency)throw preconditionFailure('修理者没有所需技艺');
         this.assertNpcService(d,maker,'trade',args.quote?0:plan.minutes);

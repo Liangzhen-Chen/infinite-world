@@ -19,6 +19,7 @@ import {resolveInteraction,applyInteraction,assertLiquidWater} from './interacti
 import {isEffective,isLiving} from './lifecycle-state.mjs';
 import {facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {hypot} from './det-math.mjs';
+import {fixtureStations} from './workstation-services.mjs';
 const ops=new Set(['ignite','extinguish','heat','cool','dry','sense_heat','fuel','forge_heat','craft_heat']);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}无效`);return n;};
 const clone=x=>structuredClone(x),recordKey=id=>`physical_feature:${id}`;
@@ -61,7 +62,7 @@ export function validateObjectWorld(world){
    for(const f of row.thermalModel.fuels){const item=items.get(f.item);if(!item||Math.round(item.weight*1000000)!==f.milligramsPerUnit)throw Error('燃料物品引用或目录重量不符');}
   }catch(error){errors.push(`${row.id}: ${error.message}`);}
  }
- for(const location of world.locations)for(const station of location.workstations??[])if(station.thermalRequirement){
+ for(const location of world.locations)for(const station of fixtureStations(location))if(station.thermalRequirement){
   const r=station.thermalRequirement,f=features.get(r.feature);
   if(!f||f.location!==location.id)errors.push(`${station.id}: 热源引用不存在或不在工坊所在地`);
   if(r.minimumC>r.maximumC||f&&r.maximumC>f.thermalModel.maximumC)errors.push(`${station.id}: 工序温度界限不符`);

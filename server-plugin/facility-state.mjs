@@ -2,12 +2,12 @@ import {preconditionFailure} from './precondition.mjs';
 import {recordsMemo,recordsWhere,recordEntriesWhere,stateMemo} from './storage.mjs';
 import {aliveHoldings,holdingsView,holdingSet,declareHoldingWriter} from './holdings.mjs';
 declareHoldingWriter('facility-state');
-import {workstationFee} from './workstation-services.mjs';
+import {workstationFee,fixtureStations,placeWorkstations} from './workstation-services.mjs';
 // Facility projections import no runtime modules; domain callbacks are installed below.
 const rebuildCatalog=Symbol('facility rebuilds');
 export const FACILITY_TYPES=Object.freeze({
- house:{purpose:'住宅',services:['housing'],capacity:4,wood:8,stone:2,work:2},
- workshop:{purpose:'工坊',services:['craft'],capacity:2,wood:8,stone:4,work:3},
+ house:{purpose:'住宅',services:['housing'],capacity:4,wood:8,stone:2,work:2,fixtures:['hearth']},
+ workshop:{purpose:'工坊',services:['craft'],capacity:2,wood:8,stone:4,work:3,fixtures:['workbench']},
  bridge:{purpose:'桥梁',services:['travel'],capacity:20,wood:10,stone:4,work:3},
  road:{purpose:'道路',services:['travel'],capacity:40,wood:2,stone:8,work:3},
  clinic:{purpose:'医馆',services:['medicine'],capacity:4,wood:8,stone:4,work:3},
@@ -30,22 +30,24 @@ export function facilityWearRemainder(row,denominator){return Math.floor((row.we
 export function facilityKind(base){
  if(base.facilityType)return base.facilityType;
  const purpose=`${base.purpose??''} ${base.name??''}`;
- return /私宅|住宅|居住/.test(purpose)||base.lodging?'house':base.workstations?.length?'workshop':
-  /医馆|药铺|药草院/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':'public';
+ // Equipment fills in only an otherwise untyped place: a school or a home
+ // with a hearth stays a school or a home.
+ return /私宅|住宅|居住/.test(purpose)||base.lodging?'house':
+  /医馆|药铺|药草院/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':fixtureStations(base).length?'workshop':'public';
 }
 // `holder` is whose prepaid workstation bookings reduce the fees shown.
 export function facilityView(engine,state,id,holder='player'){
- const base=facilityDefinition(engine,state,id);if(!isFacility(base)&&!base?.workstations?.length)return null;
+ const base=facilityDefinition(engine,state,id);if(!isFacility(base)&&!fixtureStations(base).length)return null;
  // A place can host an authored station without itself becoming a building
  // that public-works/repair consumers may treat as a whole workshop.
- const row=state.buildings?.[id]??{},authoredKind=isFacility(base)?facilityKind(base):'workstation_site',kind=authoredKind==='public'&&engine.rules.training?.institutions?.some(r=>r.institution===id)?'school':authoredKind,spec=FACILITY_TYPES[kind]??FACILITY_TYPES.public;
+ const row=state.buildings?.[id]??{},authoredKind=isFacility(base)?facilityKind(base):'workstation_site',kind=(authoredKind==='public'||authoredKind==='workshop'&&!base.facilityType)&&engine.rules.training?.institutions?.some(r=>r.institution===id)?'school':authoredKind,spec=FACILITY_TYPES[kind]??FACILITY_TYPES.public;
  const material=row.material??base.material??(base.tags?.includes('stone')?'stone':'wood');
  const regional=base.generated==='remote'?state.records?.[`facility_region:${base.region}`]:null;
  const condition=row.condition??Math.max(0,100-Math.floor((regional?.wear?.[material]??0)/(regional?.wearDenominator??10))),burning=Boolean(row.burning),factor=burning||condition<25?0:condition<60?0.5:1;
  const units=1+(row.expansions??0),capacity=Math.floor((base.lodging?.rooms??base.capacity??spec.capacity)*units*factor);
  const services=factor?[...new Set([...(base.services??[]),...spec.services])]:[];
  return {kind,material,condition,burning,factor,status:factor===0?'停用':factor<1?'降级':'可用',services,capacity,
-  route:row.route??base.route,workstations:factor?(base.workstations??(kind==='workshop'?[{id:`${id}:woodworking`,kind:'woodworking',access:base.access?.mode==='public'?'public':'private',owner:row.owner??base.owner,fee:0}]:[])).map(station=>({...station,fee:workstationFee(engine,state,station,holder)})):[],units};
+  route:row.route??base.route,workstations:factor?placeWorkstations(engine,state,id).map(station=>({...station,fee:workstationFee(engine,state,station,holder)})):[],units};
 }
 
 // A bed is a physical allocation within a lodging facility, not a stored

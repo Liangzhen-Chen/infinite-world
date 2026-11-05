@@ -10,6 +10,7 @@ import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {actionEntity,actionReader,capacity,canAct} from './action-capacity.mjs';
 import {createPrimitiveFrame} from './primitives.mjs';
 import {digest,recordsMemo} from './storage.mjs';
+import {workstationDefinition} from './workstation-services.mjs';
 import {reject} from './primitive-policy.mjs';
 
 declareHoldingWriter('action-authority',{kinds:[]});
@@ -77,7 +78,7 @@ export function currentControllers(context,subject,{ownerOnly=false,principals=f
  let base=e?.byId.get(subject);
  if(base==null&&e){
   for(const p of e.world.locations){const f=p.features?.find(f=>f.id===subject);if(f){base={...f,location:p.id};break;}}
-  if(base==null)for(const p of e.world.locations){const station=p.workstations?.find(f=>f.id===subject);if(station){base=station;break;}}
+  if(base==null)base=workstationDefinition(e,s,subject)?.station??null;
  }
  const catalog={...base,...s.created?.[subject],...context.document.holdings?.entities?.[subject]?.facts};
  const building=s.buildings?.[subject];
