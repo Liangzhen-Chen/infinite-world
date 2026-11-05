@@ -18,6 +18,7 @@ import {recordArtWork}from'./works.mjs';
 import {facilityView}from'./facility-state.mjs';
 import {fixtureStations,stationLicence}from'./workstation-services.mjs';
 import {regionalTradePrice} from './settlement-trade.mjs';
+import {resolveMaterials} from './item-class.mjs';
 import {beginActionActivity,finishActionActivity} from './action-costs.mjs';
 // Replacement value of actual recipe inputs, shared with market quotations.
 // S5 adds labor valuation here; this never charges for already-owned materials.
@@ -109,7 +110,8 @@ export function manufacture(d,args,eventId){
         if(!d.get('state','skills',recipe.skill))throw preconditionFailure('尚未掌握该配方所需技能');
         if(recipe.location&&recipe.location!==d.get('state','location'))throw preconditionFailure('不在所需工坊');
         if(effectiveProficiency(d,this,recipe.skill)<recipe.minimumProficiency)throw preconditionFailure('技能不足以使用这个配方');
-        const materials=new Map();for(const row of recipe.materials)materials.set(row.item,(materials.get(row.item)??0)+row.amount);
+        // 材料按类别落到实际持有物（与单批同一条 resolveMaterials）：批数按第一批实际要用的物品算，各批再各自落实。
+        const materials=new Map();for(const row of resolveMaterials(d,this,'player',recipe.materials))materials.set(row.item,(materials.get(row.item)??0)+row.amount);
         const station=workstation(d,this,recipe,args),minutes=station?.workMinutes??recipe.minutes;
         let batches=Math.min(requested,Math.floor(43200/minutes));
         for(const [item,amount] of materials)batches=Math.min(batches,Math.floor(this.quantity(d,'player',item)/amount));
@@ -132,7 +134,7 @@ export function manufacture(d,args,eventId){
             ...(results.at(-1).cost?{cost:{time:results.reduce((n,row)=>n+row.spent.minutes,0),body:results.at(-1).cost.body}}:{}),
             ...(results.some(row=>row.experience!==undefined)?{experience:results.reduce((n,row)=>n+(row.experience??0),0)}:{}),
             produced:[...produced.values()],salvage:[...salvage].map(([item,amount])=>({item,amount})),instances:results.flatMap(row=>row.instances),
-            spent:{feePaid:results.reduce((n,row)=>n+row.spent.feePaid,0),minutes:results.reduce((n,row)=>n+row.spent.minutes,0),materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity:quantity*batches})),toolWear:results.flatMap(row=>row.spent.toolWear)},
+            spent:{feePaid:results.reduce((n,row)=>n+row.spent.feePaid,0),minutes:results.reduce((n,row)=>n+row.spent.minutes,0),materials:[...results.reduce((m,row)=>{for(const r of row.spent.materials)m.set(r.item,(m.get(r.item)??0)+r.quantity);return m;},new Map())].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear:results.flatMap(row=>row.spent.toolWear)},
             factSummary:`实际制作${batches}批（申请${requested}批）；${results.filter(row=>row.success).length}批成功，成品与副产品按各批检定真实入账。`};
     }
     const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
@@ -144,7 +146,9 @@ export function manufacture(d,args,eventId){
     const attribute=recipe.attribute??this.byId.get(recipe.skill).attribute??'智力',station=workstation(d,this,recipe,args),workMinutes=station?.workMinutes??recipe.minutes;
     // Check real required tools before spending material, rent or time.
     toolBonuses(d,this,recipe.tools??[],attribute,recipe.skill);
-    const materials=new Map();for(const row of recipe.materials)materials.set(row.item,(materials.get(row.item)??0)+integer(row.amount,1,100000,'材料数量'));
+    // 材料按类别（item-use-tags.substitutable，如燃料）落到实际持有的同类物品；检查、扣料、回收、记账都用落实后的物品。
+    const resolved=resolveMaterials(d,this,'player',recipe.materials);
+    const materials=new Map();for(const row of resolved)materials.set(row.item,(materials.get(row.item)??0)+integer(row.amount,1,100000,'材料数量'));
     for(const[item,amount]of materials)if(this.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${this.byId.get(item).name}`);
     if(recipe.tools?.some(item=>materials.has(item)))throw preconditionFailure('同一物品不能同时作为耗材与保留工具');
     const products=[{item:recipe.output.item,amount:recipe.output.quantity},...recipe.byproducts??[]];
@@ -155,7 +159,7 @@ export function manufacture(d,args,eventId){
     if(typeof recover!=='number'||recover<0||recover>1)throw preconditionFailure('失败回收率无效');
     const injury=integer(failure.injury??0,0,50,'失败伤害');
     const hpBefore=d.get('state','player','hp');
-    const inputCost=recipeInputCost(d,this,recipe);
+    const inputCost=recipeInputCost(d,this,{...recipe,materials:resolved});
     const outcome=this.check(d,{attribute,skill:recipe.skill,difficulty:recipe.difficulty,tools:recipe.tools??[],helpers:args.helpers??[]},eventId);
     for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount,craftInput('manufacturing',eventId));
     if(station?.fee){

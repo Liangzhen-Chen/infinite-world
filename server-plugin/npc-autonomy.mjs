@@ -22,6 +22,7 @@ import {scheduleAt} from './npc-schedule.mjs';
 import {npcPresenceAt,shareNpcMemory} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
 import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
+import {resolveMaterials} from './item-class.mjs';
 import {derivedStats} from './combat.mjs';
 import {recordMarketDeal,assertMarketDepth} from './market.mjs';
 import {advanceGovernance} from './governance.mjs';
@@ -93,7 +94,8 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(recipe.learningRequired&&!recipe.teachers?.includes(id)&&!state.npcs[id].recipes?.[recipe.id]&&!currentWorkstationRecipes(engine,{...state,minute:at,npcs:presence.npcs},id).some(r=>r.id===recipe.id))throw preconditionFailure('人物没有学会该配方');
   if(proficiency(engine,state,id,recipe.skill)<recipe.minimumProficiency)throw preconditionFailure('人物技能不足');
   if(recipe.location&&recipe.location!==actor.location)throw preconditionFailure('不在配方地点');
-  const totals=new Map();for(const m of recipe.materials)totals.set(m.item,(totals.get(m.item)??0)+m.amount);
+  // 材料按类别落到本人实际持有的同类物品（与玩家制作同一条 resolveMaterials）。
+  const totals=new Map();for(const m of resolveMaterials(d,engine,id,recipe.materials))totals.set(m.item,(totals.get(m.item)??0)+m.amount);
   for(const [item,amount] of totals)if(engine.quantity(d,id,item)<amount)throw preconditionFailure('实际制造材料不足');
   for(const item of recipe.tools??[]){if(recipe.materials.some(m=>m.item===item))throw preconditionFailure('工具不能同时消耗');if(engine.quantity(d,id,item)<1||(heldUnit(d,engine,id,item)?.durability??engine.byId.get(item)?.durability??0)<=0)throw preconditionFailure('没有完好的实际工具');}
   // A working person's own choice: they use a station they hold, rent, were
@@ -179,12 +181,13 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   const thermal=kilnWorkResult(d,furnace?.plan,outcome,r.output.quantity,actionId,{endStress:furnace?.endStress});if(thermal)outcome.thermal=thermal;
   const station=facilityView(engine,d.get('state'),location)?.workstations.find(s=>s.kind===r.workstation),fee=station&&stationLicence(engine,d,station,id)?.basis==='paid'?station.fee??0:0;
   if(fee){moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
-  spent.fee=fee;spent.materials=clone(r.materials);if(furnace)spent.fuel=clone(furnace.fuel);
-  for(const m of r.materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
-  const crafted={recipe:r.id,batches:1,inputs:Object.fromEntries(r.materials.map(m=>[m.item,m.amount])),outputs:{},writer:'npc-autonomy',eventId:actionId};
+  const materials=resolveMaterials(d,engine,id,r.materials).map(({item,amount})=>({item,amount}));
+  spent.fee=fee;spent.materials=clone(materials);if(furnace)spent.fuel=clone(furnace.fuel);
+  for(const m of materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
+  const crafted={recipe:r.id,batches:1,inputs:materials.reduce((o,m)=>({...o,[m.item]:(o[m.item]??0)+m.amount}),{}),outputs:{},writer:'npc-autonomy',eventId:actionId};
   for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}
   if(outcome.success){outcome.workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(skill>=2100?'杰作':skill>=1500?'优秀':'精良'):'普通';produced=[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship);crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
-  else{for(const m of r.materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered){changeItems(d,engine,id,m.item,recovered,{books:craftOutput('npc-autonomy',actionId)});crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+recovered;}}
+  else{for(const m of materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered){changeItems(d,engine,id,m.item,recovered,{books:craftOutput('npc-autonomy',actionId)});crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+recovered;}}
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }
   recordCraft(d,crafted);
