@@ -26,6 +26,8 @@ export async function openRepo(repo){
   const {conservation}=await import(R+'tests/helpers/ledger-audit.mjs');
   const trade=await import(R+'server-plugin/settlement-trade.mjs');
   const priceFn=trade.regionalTradePrice??trade.regionalTradeBase;
+  // 需求：引擎自己的需求函数（market.mjs 的 upkeepDemand：家户按用度类的日需）。调不到时为 null，第 1 条退回用人口。
+  let upkeepDemand=null;try{({upkeepDemand}=await import(R+'server-plugin/market.mjs'));}catch{}
   const world=await loadRuntimeWorld(path.join(repo,'world'));
   const seed=JSON.parse(fs.readFileSync(`${repo}/tests/fixtures/legacy/seed.json`,'utf8'));
   const T={repo,world,applyPatches,auditLedger,conservation,priceName:trade.regionalTradePrice?'regionalTradePrice':'regionalTradeBase'};
@@ -33,6 +35,9 @@ export async function openRepo(repo){
   T.price=(ctx,item,settlement)=>{const doc=ctx.doc,d={document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)};
     try{const v=priceFn(d,ctx.engine,item,settlement);return Number.isFinite(v)&&v>0?v:null;}catch{return null;}};
   Object.assign(T,geography(world));
+  T.demandName=typeof upkeepDemand==='function'?'market.upkeepDemand':null;
+  // 聚落 s 对物 item 的需求 = 归属 s 的各人 upkeepDemand 之和（函数只在户主身上计一次）。
+  T.demand=(ctx,item,s)=>{if(!T.demandName)return null;let n=0;for(const id of Object.keys(ctx.doc.state.npcs??{})){if(T.homeOf(id)!==s)continue;try{const v=upkeepDemand(ctx.doc.state,ctx.engine,id,item);if(v>0)n+=v;}catch{}}return n;};
   return T;
 }
 

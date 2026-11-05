@@ -3,7 +3,7 @@
 import * as L from './lib.mjs';
 
 const HOURS=[5,11,17,23];
-export async function soak(T,{days,tag,watch=[],perCat=2,every=5,maxExtra=10,catOf=null,forceItems=null}){
+export async function soak(T,{days,tag,watch=[],perCat=2,every=5,catOf=null,forceItems=null}){
   const ctx=T.newGame(`e2-${tag}`),t0=Date.now();
   // 账本在开局后的第一次结算才开出来：推进到账本有账户为止（最多一天）。
   await L.call(ctx,'world_time',{minutes:1});
@@ -15,18 +15,17 @@ export async function soak(T,{days,tag,watch=[],perCat=2,every=5,maxExtra=10,cat
   const priced=new Set(watch);
   for(const [k,v] of Object.entries(startDoc.ledger?.accounts??{})){if(v<=0)continue;const {owner,resource}=L.parse(k);if(itemIds.has(resource)&&sOfOwner(owner))priced.add(resource);}
   const items=[...priced];
-  // 读区域价很贵（引擎每次约 1 秒），只读一个样本：每个类别取开局人均存货在各聚落间最不均的 perCat 种，
-  // 加上窗口里出现跨聚落成交的物品（出现后才进样本，至多 maxExtra 种）。价格快照在第 0 天、每 every 天和最后一天读。
+  // 读区域价很贵（引擎每次约 1 秒），不逐日全读：在第 0 天、每 every 天和最后一天留下存档快照，跑完以后再在快照上补读。
+  // 读哪些物：每个类别取开局人均存货在各聚落间最不均的 perCat 种（抽样），再加上本局实际发生过跨聚落成交或搬运的全部物品（fillPrices 时传入）。
   const pc0={};for(const [k,v] of Object.entries(startDoc.ledger?.accounts??{})){if(v<=0||/escrow/.test(k))continue;const {owner,resource}=L.parse(k);if(!priced.has(resource))continue;const s=sOfOwner(owner);if(!s||!active.includes(s))continue;((pc0[resource]??={})[s]=(pc0[resource][s]??0)+v);}
   const imbalance=it=>{const v=active.map(s=>(pc0[it]?.[s]??0)/Math.max(1,T.population(s)??1));const m=L.mean(v);return m>0?L.sd(v)/m:0;};
   const byCat=new Map();for(const it of items){const c=catOf?catOf(it):'all';(byCat.get(c)??byCat.set(c,[]).get(c)).push(it);}
   const sample=new Set(watch);if(forceItems)for(const it of forceItems)sample.add(it);else for(const [,list] of byCat)for(const it of list.sort((a,b)=>imbalance(b)-imbalance(a)||a.localeCompare(b)).slice(0,perCat))sample.add(it);
-  const extra=new Set();
   // 各聚落存货：账本上归属该聚落的人、家户、聚落与建筑持有的合计（不含在途、托管、野外储量）。
   const stockBySettlement=doc=>{const m={};for(const [k,v] of Object.entries(doc.ledger?.accounts??{})){if(v<=0||/escrow/.test(k))continue;const {owner,resource}=L.parse(k);
     if(!priced.has(resource))continue;const s=sOfOwner(owner);if(!s)continue;((m[resource]??={})[s]=(m[resource][s]??0)+v);}return m;};
-  const readPrices=()=>{const row={};for(const item of [...sample,...extra]){const p={};for(const s of active){const v=T.price(ctx,item,s);if(v!=null)p[s]=v;}row[item]=p;}return row;};
-  const daily=[{day:0,minute:ctx.doc.state.minute,prices:readPrices(),stock:stockBySettlement(ctx.doc)}];
+  const snapDocs=new Map([[0,ctx.doc]]);
+  const daily=[{day:0,minute:ctx.doc.state.minute,prices:{},demand:{},stock:stockBySettlement(ctx.doc)}];
   // 记录存档：带聚落间路线 id 的记录（行程、运单、承运），按 key 留最后一版。
   const routeRe=new RegExp('"('+[...T.interRouteIds].map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')"');
   const archive=new Map(),seenRef=new Map();
@@ -61,20 +60,23 @@ export async function soak(T,{days,tag,watch=[],perCat=2,every=5,maxExtra=10,cat
       if(v?.category==='market_trade'){if(trades.has(k))continue;
         index??=(()=>{const ix=new Map();for(const [kk,vv] of Object.entries(prev.ledger?.accounts??{})){if(vv<=0||/escrow/.test(kk))continue;const {owner,resource}=L.parse(kk);const s=sOfOwner(owner);if(!s)continue;(ix.get(resource)??ix.set(resource,[]).get(resource)).push([owner,s,vv]);}return ix;})();
         const sBuyer=sOfOwner(v.buyer),local=(index.get(v.item)??[]).filter(([o,s])=>s===sBuyer&&o!==v.buyer&&o!==v.seller).reduce((n,[, ,q])=>n+q,0);
-        if(extra.size<maxExtra&&!sample.has(v.item)&&priced.has(v.item)){const a=sOfOwner(v.seller),b=sOfOwner(v.buyer),pl=T.settlementOf(v.place);if((a&&b&&a!==b)||(pl&&b&&pl!==b))extra.add(v.item);}
         trades.set(k,{...v,key:k,step,observedMinute:doc.state.minute,importInStep:imp.get(v.item)??0,localOtherBefore:local});continue;}
       if(seenRef.get(k)===v)continue;seenRef.set(k,v);
       const txt=JSON.stringify(v);if(routeRe.test(txt))archive.set(k,v);
     }
     prev=doc;
     if(doc.state.minute%L.DAY!==L.DAY-1)continue;
-    day++;const snap=day%every===0||doc.state.minute+L.DAY>=endMinute;
-    daily.push({day,minute:doc.state.minute,prices:snap?readPrices():null,stock:stockBySettlement(doc)});
+    day++;const snap=day%every===0||doc.state.minute+L.DAY>=endMinute;if(snap)snapDocs.set(day,doc);
+    daily.push({day,minute:doc.state.minute,prices:snap?{}:null,demand:snap?{}:null,stock:stockBySettlement(doc)});
     console.log(`[${tag}] day ${day}/${days} trades ${trades.size} trips/records ${archive.size} ${Math.round((Date.now()-t0)/1000)}s`);
   }
   const endDoc=ctx.doc;
   const audit=T.auditLedger(endDoc.ledger)??[],cons=T.conservation(ctx.engine,startDoc,endDoc)??[];
-  return {tag,repo:T.repo,priceFn:T.priceName,active,items,priceSample:[...sample],priceExtra:[...extra],daily,trades:[...trades.values()],archive:[...archive].map(([key,rec])=>({key,rec})),imports,
+  // 跑完后在快照上补读区域价与引擎的需求（只读，同一引擎）。
+  const fillPrices=list=>{const t=Date.now();let n=0;for(const row of daily){const doc=snapDocs.get(row.day);if(!doc||!row.prices)continue;const c={doc,engine:ctx.engine};
+      for(const item of list){if(row.prices[item])continue;const p={},q={};for(const s of active){const v=T.price(c,item,s);n++;if(v!=null)p[s]=v;q[s]=T.demand(c,item,s);}row.prices[item]=p;row.demand[item]=q;}}
+    console.log(`[${tag}] 补读区域价 ${n} 次 ${Math.round((Date.now()-t)/1000)}s`);};
+  return {tag,repo:T.repo,priceFn:T.priceName,demandFn:T.demandName,active,items,priceSample:[...sample],fillPrices,daily,trades:[...trades.values()],archive:[...archive].map(([key,rec])=>({key,rec})),imports,
     producers:Object.fromEntries([...producers].map(([i,m])=>[i,Object.fromEntries(m)])),cargo:[...cargo.values()],
     books:{audit:audit.slice(0,10),auditCount:audit.length,conservation:cons.slice(0,10),conservationCount:cons.length},
     startHolders:holdersOf(startDoc,watch),endHolders:holdersOf(endDoc,watch),seconds:Math.round((Date.now()-t0)/1000),ctx};

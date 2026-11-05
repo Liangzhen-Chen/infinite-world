@@ -9,7 +9,7 @@ import {BASE,MUT,OUT_DIR,openRepo} from './lib.mjs';
 
 const COPY_TOP=['package.json','schemas','server-plugin','tests','tools','world','extension','prompt'];
 const LINK_WORLD=new Set(['drafts']);// 大而只读的目录，junction 过去
-export const NEW={item:'item_acc_e2_ridge_jujube',resource:'acc_e2_ridge_jujube'};
+export const NEW={item:'item_acc_e2_ridge_jujube',resource:'acc_e2_ridge_jujube',crafted:'item_acc_e2_ash_mark',recipe:'recipe_acc_e2_ash_mark'};
 
 function copyTree(dir){
   const stamp=path.join(dir,'.base');
@@ -75,11 +75,15 @@ export function buildItem(active,gatherers=new Map()){
   const proto=[...sited].map(id=>I.get(id)).filter(i=>i&&(i.tags??[]).includes('food')&&!(i.tags??[]).some(t=>/drink|water|salt|mineral|grain/.test(t))&&!produced.has(i.id))
     .sort((a,b)=>(a.basePrice-b.basePrice)||a.id.localeCompare(b.id))[0];
   if(!proto)throw Error('找不到可采的食物样板');
-  // 产地：只与一个聚落有路线相连、且已有采集资源的野外采集点；先挑相连聚落里职业带 gather 的居民最多的，再挑人口最少的（需求在别处）。
+  // 产地：只与一个聚落有路线相连、且已有采集资源的野外采集点；先挑没有私主的、再挑没有入口机关的，再挑相连聚落里职业带 gather 的居民最多的，再挑人口最少的（需求在别处）。
   const pop=new Map(rd(dir,'world/geo/settlements.json').map(s=>[s.id,s.population]));
+  // 有入口机关（entryMechanisms）的采集点排后：机关有失败率，NPC 采集按"期望收获 × 成功率"比工时，会挡住新资源（证据见 README）。
+  const gated=l=>(l.site.entryMechanisms?.length?1:0);
+  // 有私主的采集点（site.owner）对别人不合法（sites.mjs:394 lawfulFor），NPC 不会去采，排最后。
+  const owned=l=>(l.site.owner||l.access?.requiresConsent?1:0);
   const sites=locs.filter(l=>l.site?.resources?.length&&!S.has(l.id)).map(l=>{
     const nb=new Set(routes.filter(r=>r.from===l.id||r.to===l.id).map(r=>r.from===l.id?r.to:r.from).filter(x=>S.has(x)));
-    return {l,nb:[...nb]};}).filter(x=>x.nb.length===1&&active.has(x.nb[0])).sort((a,b)=>((gatherers.get(b.nb[0])??0)-(gatherers.get(a.nb[0])??0))||(pop.get(a.nb[0])-pop.get(b.nb[0]))||a.l.id.localeCompare(b.l.id));
+    return {l,nb:[...nb]};}).filter(x=>x.nb.length===1&&active.has(x.nb[0])).sort((a,b)=>(owned(a.l)-owned(b.l))||(gated(a.l)-gated(b.l))||((gatherers.get(b.nb[0])??0)-(gatherers.get(a.nb[0])??0))||(pop.get(a.nb[0])-pop.get(b.nb[0]))||a.l.id.localeCompare(b.l.id));
   if(!sites.length)throw Error('找不到只连一个聚落的采集点');
   const {l:site,nb:[home]}=sites[0];
   items.push({...structuredClone(proto),id:NEW.item,name:'岭背酸枣',aliases:[],basePrice:Math.max(1,Math.round(proto.basePrice*1.5)),origin:site.id,
@@ -90,7 +94,32 @@ export function buildItem(active,gatherers=new Map()){
   s.resources.push({id:NEW.resource,name:'坡上酸枣丛',item:NEW.item,quantity:40,minutes:30});
   (s.changes??=[]).push({id:NEW.resource+'_regrow',kind:'regrow',resource:NEW.resource,quantity:4,everyDays:2,max:40});
   wr(dir,'world/meta/items.json',items);wr(dir,'world/geo/locations.json',locs);
-  return {dir,item:NEW.item,prototype:proto.id,site:site.id,producerSettlement:home,siteSettlementByParent:sOf(site.id)};
+  return {dir,item:NEW.item,prototype:proto.id,site:site.id,siteGated:!!site.site.entryMechanisms?.length,producerSettlement:home,siteSettlementByParent:sOf(site.id)};
+}
+
+// mut/craft：新物由现有材料经一条新配方做出。样板配方从数据推：带加工类（processing）、出生树里有职业能做这一类的现有 NPC
+// （职业 labor 含 process、processing 含该类）、材料都是现有物品、产物可交易，先取生产者分布的聚落最少的（需求在别处），再按"产物价 − 材料价"的毛利从高到低取第一条。
+// 新配方照抄样板的技能、工位、工具、材料、加工类、师傅，只把产物换成新物；新物照抄样板产物的属性，换 id、名字。开局没人持有。
+export function buildCraft(world,homeOf,active){
+  const dir=`${MUT}/craft`;copyTree(dir);
+  for(const f of ['world/meta/items.json','world/meta/recipes.json'])reset(dir,f);
+  const items=rd(dir,'world/meta/items.json'),recipes=rd(dir,'world/meta/recipes.json');
+  const I=new Map(items.map(i=>[i.id,i]));
+  const proc=new Map(world.professions.filter(p=>(p.labor??[]).includes('process')).map(p=>[p.id,p.processing??[]]));
+  const makers=kind=>world.npcs.filter(n=>(n.professions??[]).some(p=>(proc.get(p)??[]).includes(kind))&&active.has(homeOf(n.id)));
+  const spread=r=>new Set(makers(r.processing).map(n=>homeOf(n.id))).size;
+  const margin=r=>(I.get(r.output.item)?.basePrice??0)*(r.output.quantity??1)-r.materials.reduce((n,m)=>n+(I.get(m.item)?.basePrice??0)*m.amount,0);
+  const like=recipes.filter(r=>r.processing&&makers(r.processing).length&&r.materials.every(m=>I.has(m.item))&&(I.get(r.output.item)?.basePrice??0)>0)
+    .sort((a,b)=>(spread(a)-spread(b))||margin(b)-margin(a)||a.id.localeCompare(b.id))[0];
+  if(!like)throw Error('找不到有现成生产者的样板配方');
+  const out=I.get(like.output.item);
+  items.push({...structuredClone(out),id:NEW.crafted,name:'灰记'+out.name,aliases:[],acquisition:undefined,
+    description:'照'+out.name+'的做法另出的一样东西，上面留一道灰色烙痕作记号。',use:out.use});
+  recipes.push({...structuredClone(like),id:NEW.recipe,name:'做灰记'+out.name,aliases:[],output:{item:NEW.crafted,quantity:like.output.quantity??1},byproducts:[]});
+  wr(dir,'world/meta/items.json',items);wr(dir,'world/meta/recipes.json',recipes);
+  const m=makers(like.processing);
+  return {dir,item:NEW.crafted,recipe:NEW.recipe,template:like.id,templateOutput:like.output.item,processing:like.processing,margin:margin(like),
+    makers:m.map(n=>n.id),makerSettlements:[...new Set(m.map(n=>homeOf(n.id)))]};
 }
 
 export async function build(){
@@ -99,7 +128,7 @@ export async function build(){
   const T=await openRepo(BASE),active=new Set(Object.keys(T.newGame('mut-probe').doc.state.settlements??{}));
   const gp=new Set(T.world.professions.filter(p=>(p.labor??[]).includes('gather')).map(p=>p.id)),gatherers=new Map();
   for(const n of T.world.npcs)if((n.professions??[]).some(p=>gp.has(p))){const s=T.homeOf(n.id);if(s)gatherers.set(s,(gatherers.get(s)??0)+1);}
-  const info={base:BASE,active:[...active],gatherers:Object.fromEntries(gatherers),route:buildRoute(active),item:buildItem(active,gatherers)};
+  const info={base:BASE,active:[...active],gatherers:Object.fromEntries(gatherers),route:buildRoute(active),item:buildItem(active,gatherers),craft:buildCraft(T.world,T.homeOf,active)};
   fs.writeFileSync(path.join(OUT_DIR,'mutation.json'),JSON.stringify(info,null,1));
   return info;
 }
