@@ -21,7 +21,7 @@ import {marketFactor}from'./promotion.mjs';
 import {personBusinesses,personHousehold,personSimulation,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
-import {buyFromHolders,advanceDealers,localSpare} from './distribution.mjs';
+import {buyFromHolders,advanceDealers,localSpare,holderSpare} from './distribution.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,stateMemo,PatchCursor,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
@@ -221,7 +221,48 @@ function readCurrentShops(engine,state){
         }).filter(row=>qualityAllowed(engine.world,shop,row.item,rules,population));
         used.add(keeper);out.push(shop);
     }
+    // 卡 E2：手上有超出家户自留与自身经营用量的余货、而这货有人用的人，当天出摊卖这份余货（advanceStalls 每日派生、记在 stall:<人>）。
+    // 交易服务只是出摊的现成条件之一（上面的派生摊），不是门槛；登记店与 shopType 店优先。
+    const type=rules.types?.[rules.derivedType];
+    if(type)for(const row of recordsWhere(state.records,'category','stall')){
+        if(used.has(row.keeper)||!state.npcs?.[row.keeper])continue;
+        used.add(row.keeper);
+        out.push({id:`stall_${row.keeper.replace(/^npc_/,'')}`,name:engine.byId.get(row.keeper)?.name??row.keeper,keeper:row.keeper,settlement:row.settlement,location:row.location,
+            channels:[...type.channels],markup:type.markup,cycleDays:type.cycleDays,firstDay:type.firstDay,shopType:rules.derivedType,derived:true,stall:true,surplus:true,restock:structuredClone(row.restock)});
+    }
     return out;
+}
+// 每日出摊：余货 = 可售存货（已扣家户自留与承诺）再扣本人作为经营者平常要留的那份（distribution.holderSpare）；
+// 只算有人用得上的可交易货（inDemand）。摊卖的是自己的余货，不补货（row.own）。没有余货就收摊。
+// 本聚落谁手上有可出让的余货：聚落|货 → 持货人（在同一份状态上一次读完）。
+function spareHolders(d,engine){
+    const state=d.get('state'),out=new Map();
+    for(const id of Object.keys(state.npcs??{}).sort()){
+        const n=state.npcs[id],sid=placeSettlement(engine,state,n.location).value;if(!sid||!isEffective(engine,state,id))continue;
+        for(const item of Object.keys(n.inventory??{}))if(engine.quantity(d,id,item)>=1&&holderSpare(d,engine,id,item)>=1){const k=`${sid}|${item}`;out.set(k,[...out.get(k)??[],id]);}
+    }
+    return out;
+}
+function advanceStalls(d,engine,minute){
+    const state=d.get('state'),rules=shopRules(engine);if(!rules?.types?.[rules.derivedType])return;
+    const keepers=new Set(currentShops(engine,state).filter(s=>!s.surplus).map(s=>s.keeper)),day=Math.floor(minute/DAY),writes=[];
+    // 先在同一份状态上读完所有人的余货（只读，估值缓存跨人有效），再一次写入。
+    for(const id of Object.keys(state.npcs??{}).sort()){
+        const n=state.npcs[id],rows=[];
+        if(!keepers.has(id)&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷','患病'].includes(n.status)){
+            for(const item of Object.keys(n.inventory??{}).sort()){
+                const def=engine.byId.get(item);if(!def?.id?.startsWith('item_')||!(def.basePrice>0)||(def.tags??[]).includes('coin')||!inDemand(engine.world,item)||!(engine.quantity(d,id,item)>=1))continue;
+                const spare=holderSpare(d,engine,id,item);if(spare>=1)rows.push({item,source:'local',amount:spare,maximum:Math.max(spare,Math.floor(engine.quantity(d,id,item))),own:true});
+            }
+        }
+        const settlement=rows.length?placeSettlement(engine,state,n.location).value:null;
+        writes.push({id,row:rows.length&&settlement?{category:'stall',keeper:id,settlement,location:engine.byId.get(id)?.workplace?.location??n.home?.location??n.location,day,restock:rows}:null});
+    }
+    for(const {id,row} of writes){
+        const key=['state','records',`stall:${id}`],old=d.get(...key);
+        if(row){if(JSON.stringify(old?.restock)!==JSON.stringify(row.restock)||old?.location!==row.location)d.set(key,row);}
+        else if(old)d.remove(key);
+    }
 }
 export const shopOfKeeper=(engine,keeper,state=null)=>(state?currentShops(engine,state):shopStores(engine.world)).find(s=>s.keeper===keeper)??null;
 registerMerchandiseResolver((engine,state,who)=>(shopOfKeeper(engine,who,state)??shopOfKeeper(engine,who))?.restock?.map(r=>r.item)??[]);
@@ -253,8 +294,8 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const out=[];
  for(const shop of read.shops){
   if(shop.settlement!==place||shop.keeper!==owner&&members.includes(shop.keeper)||view&&shop.keeper!==owner)continue;
-  // 只有货架上有口粮的店才是口粮来源；没有口粮的店不必算路程。
-  if(!shop.restock.some(row=>engine.byId.get(row.item)?.nutrition?.satiety>0))continue;
+  // 只有货架上有口粮的店才是口粮来源；没有口粮的店不必算路程。只卖余货的摊没有营业时段、也不补货，不是可指望的口粮来源。
+  if(shop.surplus||!shop.restock.some(row=>engine.byId.get(row.item)?.nutrition?.satiety>0))continue;
   let travel=0;
   if(location!==shop.location){try{travel=engine.route(location,shop.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
@@ -514,10 +555,15 @@ function localRestock(d,engine,shop,row,minute,want,ctx){
         origin:{kind:'holders',from:shop.settlement},reason:'向本聚落持货人进货'};
 }
 function restockRow(d,engine,shop,row,minute,ctx={}){
+    // 出摊卖自己的余货，不进货。
+    if(row.own)return null;
     // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(row.source==='route')return receivedRouteStock(d,engine,shop,row,minute,Math.max(0,want),ctx);
     if(want<=0)return null;
+    // 当天午夜之前谁手上有可出让的余货（一次读完的快照）：本聚落没人有余货的，不必逐人去问（回执照写原因）。
+    if(row.source==='local'&&ctx.holders&&!(ctx.holders.get(`${shop.settlement}|${row.item}`)??[]).some(id=>id!==shop.keeper))
+        return {day:Math.floor(minute/DAY),minute,item:row.item,source:'local',wanted:want,added:0,paidCopper:0,shipments:[],reason:'本聚落没有人持有这件货的余量'};
     if(row.source==='local')return localRestock(d,engine,shop,row,minute,want,ctx);
     const from=shop.settlement;
     // Supply and base are read once per call site below; they do not change between the quotes of one binary search.
@@ -582,10 +628,10 @@ function repriceShop(d,engine,shop,minute,entries,ctx){
     d.set(['state','records',`shop_pricing:${shop.keeper}`],pricingRecord({category:'shop_pricing',shop:shop.id,keeper:shop.keeper,markup,previous:shop.markup,standard,minute,
         sourceEvent:`shop:${shop.id}:${minute}`,basis:{paidCopper:paid,referenceCopper:reference},decision:{outcome:decision.outcome,trace:decision.trace}}));
 }
-function restockShop(d,engine,shop,minute,{receiveOnly=false,onSite=false}={}){
+function restockShop(d,engine,shop,minute,{receiveOnly=false,onSite=false,holders=null}={}){
     const keeper=d.get('state','npcs',shop.keeper)??d.get('state','creatures',shop.keeper);
     if(!isEffective(engine,d,shop.keeper)||!keeper||['濒死'].includes(keeper.status))return;
-    const ctx={onSite},entries=shop.restock.map(row=>{
+    const ctx={onSite,holders},entries=shop.restock.map(row=>{
         if(!receiveOnly)return restockRow(d,engine,shop,row,minute,ctx);
         if(row.source!=='route')return null;
         if(onSite)return restockRow(d,engine,shop,row,minute,ctx);
@@ -617,7 +663,9 @@ export function advanceShops(d,engine,before,after){
     const stores=currentShops(engine,d.get('state'));if(!stores.length)return;
     assertRules(engine);
     for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++){
-        for(const shop of stores)restockShop(d,engine,shop,day*DAY,{receiveOnly:day<shop.firstDay||(day-shop.firstDay)%shop.cycleDays!==0});
+        advanceStalls(d,engine,day*DAY);
+        const holders=spareHolders(d,engine);
+        for(const shop of stores)restockShop(d,engine,shop,day*DAY,{receiveOnly:day<shop.firstDay||(day-shop.firstDay)%shop.cycleDays!==0,holders});
         // 没有铺面的经营者同一天午夜向本聚落持货人补进卖掉的货（店主由上面的周期补货负责）。
         advanceDealers(d,engine,day*DAY,{keepers:new Set(stores.map(s=>s.keeper))});
     }
