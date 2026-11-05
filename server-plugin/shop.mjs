@@ -21,7 +21,7 @@ import {marketFactor}from'./promotion.mjs';
 import {personBusinesses,personHousehold,personSimulation,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
-import {buyFromHolders,advanceDealers} from './distribution.mjs';
+import {buyFromHolders,advanceDealers,localSpare} from './distribution.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,stateMemo,PatchCursor,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
@@ -271,6 +271,8 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
     try{engine.route(row.from,shop.settlement,'walk',at,d.document.randomSeed);}catch{continue;}
    }
    let quantity=Math.min(row.amount,row.maximum);
+   // K2：本地货架要向本聚落持货人进货，下一次补货最多补得到他们眼下能出让的余量；没人有余量就不是可指望的口粮来源。
+   if(row.source==='local'){quantity=Math.min(quantity,localSpare(d,engine,{settlement:shop.settlement,item:row.item,buyer:shop.keeper}));if(quantity<1)continue;}
    if(row.source==='settlement'){
     if(view||row.stock==='food'&&managed(d,shop.settlement))continue;
     quantity=Math.min(quantity,Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,shop.settlement,row.stock),legacy:()=>state.settlements?.[shop.settlement]?.[row.stock]??0})-(row.reserve??0)));

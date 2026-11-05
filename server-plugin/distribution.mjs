@@ -50,6 +50,10 @@ function residentsOf(d,engine,settlement){
 function holdersIn(d,engine,settlement,item,buyer,residents=residentsOf(d,engine,settlement)){
  return residents.filter(id=>id!==buyer&&engine.quantity(d,id,item)>0);
 }
+// 本聚落持货人眼下能出让给 buyer 的这件货合计（店主盘算下一次本地补货能补多少时读它）。
+export function localSpare(d,engine,{settlement,item,buyer}){
+ return holdersIn(d,engine,settlement,item,buyer).reduce((n,id)=>n+spare(d,engine,id,item),0);
+}
 // 向本聚落真实持货人进货，至多 want 件。pay/budget 由调用方给出（店铺柜台或本人钱袋）。
 // 返回 {added,paidCopper,deals:[{seller,quantity,cost}],reason}。
 export function buyFromHolders(d,engine,{buyer,settlement,item,want,minute,eventPrefix,view=null,cash=null,pay=null,decide=null,residents=undefined}){

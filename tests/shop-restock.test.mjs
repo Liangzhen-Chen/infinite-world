@@ -64,12 +64,17 @@ test('周期补货：按店家周期在午夜向本聚落持货人补到上限�
     // 改为向本聚落真实持有这件货的人进货；没有持货人就补不上，回执写明原因。
     const holder='npc_hw_shendu';
     const f=fixture();
-    f.doc.state.npcs[holder].inventory={...f.doc.state.npcs[holder].inventory,item_bread:20};resyncBooks(f.engine,f.doc);
+    // 合入 F 后的依据：F 让果粥也成为口粮，店主家户先拿果粥、牛奶顶到下次进货，面包就不必自留，“不会无限出售”的前提消失。
+    // 夹具让面包是店主家里唯一的口粮（拿走果粥与牛奶），自留才落在面包上；断言语义不变：家户要留的那几个面包不卖。
+    for(const item of ['item_fruit_porridge','item_milk'])delete f.doc.state.npcs[host].inventory[item];resyncBooks(f.engine,f.doc);
     await f.act('world_trade',{seller:host,item:'item_bread',quantity:2},'buy-bread');
-    const total=everyone(f.doc)+boundary(f.doc);
     assert.equal(qty(f.doc,host,'item_bread'),4);
-    // Four remain, three bridge delivery; another two exceed the one saleable loaf.
-    await assert.rejects(f.act('world_trade',{seller:host,item:'item_bread',quantity:2},'too-many'),/库存不足/);
+    // Four remain; some bridge delivery, so all four exceed the saleable loaves.
+    // K2（卡 E）依据：店主家户只把“本聚落持货人眼下能出让的余量”算作下一次本地补货（shop.mjs 口粮来源）；
+    // 村里还没人有多余面包时，自家面包要留着顶到下次真实进货，所以多买被拒。持货人在这之后才出现。
+    await assert.rejects(f.act('world_trade',{seller:host,item:'item_bread',quantity:4},'too-many'),/库存不足/);
+    f.doc.state.npcs[holder].inventory={...f.doc.state.npcs[holder].inventory,item_bread:20};resyncBooks(f.engine,f.doc);
+    const total=everyone(f.doc)+boundary(f.doc);
     f.doc.state.location=forge;
     await f.act('world_trade',{seller:smith,item:'item_kitchen_knife',quantity:2},'buy-knife');
     assert.equal(qty(f.doc,smith,'item_kitchen_knife'),0);
