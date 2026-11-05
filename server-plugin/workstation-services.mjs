@@ -13,8 +13,9 @@ const generatedRecipeRows=Symbol('generated workstation recipes');
 // recipe workstation; a place carries `fixtures` ([{fixture,id?,fee?,
 // thermalRequirement?,owner?}] or bare fixture ids; owner only for equipment
 // owned apart from the building), and a constructed facility type
-// brings its standard fixtures (FACILITY_TYPES[type].fixtures). Owner, opening
-// and fee are read from the place, not from the station.
+// brings its standard fixtures (FACILITY_TYPES[type].fixtures). Owner and
+// opening are read from the place; a fee is the owner's posted price on the
+// fixture.
 const FIXTURES=new Map(JSON.parse(fs.readFileSync(new URL('../world/ontology/fixtures.json',import.meta.url),'utf8')).entries.map(row=>[row.id,row]));
 export const fixtureDefinition=id=>FIXTURES.get(id)??null;
 export const fixtureAffording=kind=>[...FIXTURES.values()].find(row=>row.affords===kind)?.id??null;
