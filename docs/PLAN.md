@@ -1082,3 +1082,5 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - magic-ritual.mjs:104 的 item_herb（K6 线）；
   - stock.mjs、settlement-trade.mjs、remote-generation.mjs 里"粮 = 燕麦"的 id 匹配（E）。
   F 已拿到 engine.mjs 的一行加载期派生。
+- [x] K6 第二轮：t-k6-legal@e9e9ad5b，已合入 t-int@682077eb。验收（1 天）54 / 3 / 21（pass / fail / blocked）。剩下的 2 条"后果"判为验收口径问题：没人看见、又没留痕迹的罪行，当场不该有反应。已让验收方改口径。
+- [ ] D2 加工劳动接通生产链：合并后的 C 验收是 11 / 19 / 3，NPC 一份加工品都没做出来，根因在 npc-labor.mjs:185-192，NPC 不会去取得投入，也不会去别处的工位。
