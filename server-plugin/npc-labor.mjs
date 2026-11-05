@@ -201,7 +201,11 @@ function forgone(e,document,who,trip,taken={}){
   const daily=sales.length?sales.reduce((n,r)=>n+r.totalCoins,0)/7:shelf();
   loss+=Math.ceil(daily*trade/Math.max(open,1));
  }
- if(work&&job)loss+=Math.ceil((job.wage??0)*work/Math.max(1,job.workMinutes??480));
+ // 当班的工钱按合同的日薪与每日工时折到每分钟；合同缺这两项是数据错误，不用缺省值顶替。
+ if(work&&job){
+  if(!Number.isSafeInteger(job.wage)||job.wage<0||!Number.isSafeInteger(job.workMinutes)||job.workMinutes<1)throw Error(`受雇合同 ${job.id} 须登记 wage 与 workMinutes（整数）`);
+  loss+=Math.ceil(job.wage*work/job.workMinutes);
+ }
  return loss;
 }
 // 可以出发的时刻：眼下，以及此后一天内本人作息里每段醒着、不在路上的空闲时段的开头（比如营业前的清晨、收铺之后）。出发地是那时本人所在的地方。
