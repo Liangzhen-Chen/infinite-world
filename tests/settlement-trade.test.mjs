@@ -36,7 +36,9 @@ function snapshotCash(doc){
     // NPC and village quest deposits remain part of these accounts while held in escrow.
     // S5-04 W2b: a shop keeper's operating counter (money_account) is still his money; the cash he sets aside there for wages and stock stays in the total (15 §15.1.1). The incense real visitors gave sits in the temple's account (faction_assets ledger rows 香火捐献) and is counted as money still in the world (S5-04 香火).
     const questEscrow=Object.values(doc.state.quests??{}).filter(q=>!q.fundedBy?.faction).reduce((n,q)=>n+(q.escrow??0),0);
-    return doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(doc.state.workshopFunds??{}).reduce((n,copper)=>n+copper,0)+Object.values(doc.state.records).filter(r=>r.category==='money_account').reduce((n,r)=>n+r.coins,0)+Object.values(doc.state.records).filter(r=>r.category==='faction_assets').flatMap(r=>r.ledger??[]).filter(l=>l.kind==='香火捐献').reduce((n,l)=>n+l.coins,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,o)=>n+o.escrowCopper,0)+questEscrow;
+    // K2（卡 E）依据：军队买口粮改为向产粮村粮仓买、付给村公账（原为付出模拟范围外），郡府公库的钱进了村公账，所以郡府公库也要算进来。
+    const polities=(world.rules.military?.polities??[]).reduce((n,p)=>n+(doc.state.records?.[`polity:${p.id}`]?.coins??p.treasuryCopper??0),0);
+    return polities+doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)+Object.values(doc.state.workshopFunds??{}).reduce((n,copper)=>n+copper,0)+Object.values(doc.state.records).filter(r=>r.category==='money_account').reduce((n,r)=>n+r.coins,0)+Object.values(doc.state.records).filter(r=>r.category==='faction_assets').flatMap(r=>r.ledger??[]).filter(l=>l.kind==='香火捐献').reduce((n,l)=>n+l.coins,0)+Object.values(doc.state.records).filter(r=>r.category==='settlement_trade').reduce((n,o)=>n+o.escrowCopper,0)+questEscrow;
 }
 function conservation(doc){
     for(const p of world.rules.agriculture.settlements.filter(p=>p.opening)){
@@ -94,13 +96,19 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
         }
         return result;
     };
-    // W8-E8 (c930d578): the forge stocks one sickle on day 1 (next: day 8).
-    // Catalog base 10 * shelf demand 2 / max(1, available 0) = 20 copper;
-    // all other factors are 1. The keeper pays the local treasury, not a buyer.
-    privateAssets.npcs.npc_hw_duanyan.coins-=20;
-    privateAssets.npcs.npc_hw_duanyan.inventory.item_sickle={quality:'木',durability:100,weight:0.5,quantity:1};
+    // W8-E8 (c930d578): the forge stocks one sickle on day 1 (next: day 8). K2（卡 E）依据：原先这把铁镰从模拟范围外进货、
+    // 20 铜付给公账；现在铁匠向本聚落真实持货人进货。夹具让一位村民手里有 2 把铁镰：铁匠得 1 把、付出货款，
+    // 村民少 1 把、收到货款减去他缴的商税；其余私人钱物照旧不动。
+    const holder='npc_hw_shendu',sickle={quality:'木',durability:100,weight:0.5};
+    doc.state.npcs[holder].inventory.item_sickle={...sickle,quantity:2};privateAssets.npcs[holder].inventory.item_sickle={...sickle,quantity:2};
     const before=structuredClone(doc),first=await wait(engine,doc,DEPART);assert.deepEqual(doc,before);
-    let c=first.doc;assert.equal(snapshotCash(c),cash);conservation(c);
+    let c=first.doc;
+    const bought=c.state.records['shop:shop_hw_forge'].entries.find(e=>e.item==='item_sickle'&&e.added);
+    const tax=Object.values(c.state.records).filter(r=>r.category==='trade_tax'&&r.payer===holder).reduce((n,r)=>n+r.amount,0);
+    assert.equal(bought.added,1);assert.deepEqual(bought.from,[holder]);assert.ok(bought.paidCopper>0);
+    privateAssets.npcs.npc_hw_duanyan.coins-=bought.paidCopper;
+    privateAssets.npcs.npc_hw_duanyan.inventory.item_sickle={...sickle,quantity:1};
+    privateAssets.npcs[holder].coins+=bought.paidCopper-tax;privateAssets.npcs[holder].inventory.item_sickle={...sickle,quantity:1};assert.equal(snapshotCash(c),cash);conservation(c);
     for(const lane of lanes){
         const o=c.state.records[key(lane)];assert.equal(o.status,'in-transit');assert.equal(o.quantity,40);assert.ok(o.estimatedArrivalAt>DEPART);assert.equal(o.escrowCopper,o.quantity*o.unitPriceCopper);assert.equal(o.paidCopper,0);
         const f=c.state.records[`village-fiscal:${lane.seller}`];assert.equal(f.taxReceiptsCopper,0);assert.equal(f.salesGrossCopper,0);
@@ -278,11 +286,10 @@ test('旧档沿正常world_time不生成四村公仓、现金或周订单',async
     const cash=publicCash(old);
     const c=(await wait(engine,old,DEPART+DAY)).doc;
     for(const lane of lanes){assert.equal(c.state.settlements[lane.seller],undefined);assert.equal(c.state.records[key(lane)],undefined);}
-    // W8-E8 (c930d578): days 1 and 8 each add one sickle (ceiling 2).
-    // Base 10 * demand 2 / max(1, supply 0 then 1) = 20 each; other factors 1.
-    // The keeper's 40 copper goes to the existing local treasury; quest escrow
-    // remains public money, and no managed village or weekly order is created.
-    assert.equal(c.state.records['settlement-trade:clock'],undefined);assert.equal(publicCash(c),cash+40);
+    // W8-E8 (c930d578) 的铁镰原先从模拟范围外进货、货款 40 进本地公账；K2（卡 E）依据：本地货架改向本聚落持货人进货，
+    // 货款进持货人钱袋，公账只收真实成交的商税。quest escrow remains public money, and no managed village or weekly order is created.
+    const taxes=Object.values(c.state.records).filter(r=>r.category==='trade_tax'&&r.settlement==='loc_hw').reduce((n,r)=>n+r.amount,0);
+    assert.equal(c.state.records['settlement-trade:clock'],undefined);assert.equal(publicCash(c),cash+taxes);
 });
 test('错误实际批次与篡改税账拒绝，reduce不修改传入存档',async()=>{
     for(const tamper of ['batch','fiscal']){
