@@ -638,7 +638,7 @@ function settleDiscoveries(d,engine,after){
   d.set(['state','npcs',finder,'developments'],[...d.get('state','npcs',finder,'developments')??[],{type:'发现财物侵犯',source:row.sourceEvent,minute:after}]);
   holdingSet(d,null,path(id),{...row,discoveredBy:finder,discoveredAt:after},'law');
  }
- holdingSet(d,null,path(DISCOVERY),{...index,ids:left},'law');
+ if(left.length!==index.ids.length)holdingSet(d,null,path(DISCOVERY),{...index,ids:left},'law');
 }
 export function advanceLaw(d,after,engine,recordIds){
     if(engine)settleDiscoveries(d,engine,after);
