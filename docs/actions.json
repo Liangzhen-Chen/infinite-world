@@ -3048,7 +3048,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 636,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:433"
+    "dispatch": "server-plugin/labor-market.mjs:438"
    }
   },
   {
@@ -3124,7 +3124,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 636,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:436"
+    "dispatch": "server-plugin/labor-market.mjs:441"
    }
   },
   {
@@ -3200,7 +3200,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 636,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:442"
+    "dispatch": "server-plugin/labor-market.mjs:447"
    }
   },
   {
@@ -3276,7 +3276,7 @@
     "file": "server-plugin/engine.mjs",
     "line": 636,
     "symbol": "WorldEngine.trade",
-    "dispatch": "server-plugin/labor-market.mjs:459"
+    "dispatch": "server-plugin/labor-market.mjs:464"
    }
   },
   {
@@ -13800,7 +13800,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 286,
     "symbol": "activities.quest",
-    "dispatch": "server-plugin/agriculture.mjs:423"
+    "dispatch": "server-plugin/agriculture.mjs:425"
    }
   },
   {
@@ -13984,7 +13984,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 76,
     "symbol": "activities.weather",
-    "dispatch": "server-plugin/agriculture.mjs:423"
+    "dispatch": "server-plugin/agriculture.mjs:425"
    }
   },
   {
@@ -14047,7 +14047,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:423"
+    "dispatch": "server-plugin/agriculture.mjs:425"
    }
   },
   {
@@ -14110,7 +14110,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:444"
+    "dispatch": "server-plugin/agriculture.mjs:446"
    }
   },
   {
@@ -14173,7 +14173,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:449"
+    "dispatch": "server-plugin/agriculture.mjs:451"
    }
   },
   {
@@ -14236,7 +14236,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:452"
+    "dispatch": "server-plugin/agriculture.mjs:463"
    }
   },
   {
@@ -14362,7 +14362,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:483"
+    "dispatch": "server-plugin/agriculture.mjs:494"
    }
   },
   {
@@ -14425,7 +14425,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:485"
+    "dispatch": "server-plugin/agriculture.mjs:496"
    }
   },
   {
@@ -14488,7 +14488,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:463"
+    "dispatch": "server-plugin/agriculture.mjs:474"
    }
   },
   {
@@ -14551,7 +14551,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:429"
+    "dispatch": "server-plugin/agriculture.mjs:431"
    }
   },
   {
@@ -14614,7 +14614,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/agriculture.mjs:422"
+    "dispatch": "server-plugin/agriculture.mjs:424"
    }
   },
   {
@@ -15558,7 +15558,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 86,
     "symbol": "activities.environment",
-    "dispatch": "server-plugin/agriculture.mjs:423"
+    "dispatch": "server-plugin/agriculture.mjs:425"
    }
   },
   {
@@ -16376,7 +16376,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 68,
     "symbol": "activities.site",
-    "dispatch": "server-plugin/agriculture.mjs:423"
+    "dispatch": "server-plugin/agriculture.mjs:425"
    }
   },
   {
@@ -16850,7 +16850,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 85,
     "symbol": "activities.pet",
-    "dispatch": "server-plugin/agriculture.mjs:423"
+    "dispatch": "server-plugin/agriculture.mjs:425"
    }
   },
   {
@@ -17279,7 +17279,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 84,
     "symbol": "activities.summon",
-    "dispatch": "server-plugin/agriculture.mjs:423"
+    "dispatch": "server-plugin/agriculture.mjs:425"
    }
   },
   {
@@ -17377,7 +17377,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 84,
     "symbol": "activities.summon",
-    "dispatch": "server-plugin/agriculture.mjs:463"
+    "dispatch": "server-plugin/agriculture.mjs:474"
    }
   },
   {
@@ -17483,7 +17483,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 83,
     "symbol": "activities.law",
-    "dispatch": "server-plugin/agriculture.mjs:423"
+    "dispatch": "server-plugin/agriculture.mjs:425"
    }
   },
   {
