@@ -30,15 +30,17 @@ export function facilityWearRemainder(row,denominator){return Math.floor((row.we
 export function facilityKind(base){
  if(base.facilityType)return base.facilityType;
  const purpose=`${base.purpose??''} ${base.name??''}`;
- return /私宅|住宅|居住/.test(purpose)||base.lodging?'house':fixtureStations(base).length?'workshop':
-  /医馆|药铺|药草院/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':'public';
+ // Equipment fills in only an otherwise untyped place: a school or a home
+ // with a hearth stays a school or a home.
+ return /私宅|住宅|居住/.test(purpose)||base.lodging?'house':
+  /医馆|药铺|药草院/.test(purpose)?'clinic':/学堂|学馆|私塾|书院|义学/.test(purpose)?'school':/仓廪|粮仓/.test(purpose)?'granary':/桥梁/.test(purpose)?'bridge':/道路/.test(purpose)?'road':fixtureStations(base).length?'workshop':'public';
 }
 // `holder` is whose prepaid workstation bookings reduce the fees shown.
 export function facilityView(engine,state,id,holder='player'){
  const base=facilityDefinition(engine,state,id);if(!isFacility(base)&&!fixtureStations(base).length)return null;
  // A place can host an authored station without itself becoming a building
  // that public-works/repair consumers may treat as a whole workshop.
- const row=state.buildings?.[id]??{},authoredKind=isFacility(base)?facilityKind(base):'workstation_site',kind=authoredKind==='public'&&engine.rules.training?.institutions?.some(r=>r.institution===id)?'school':authoredKind,spec=FACILITY_TYPES[kind]??FACILITY_TYPES.public;
+ const row=state.buildings?.[id]??{},authoredKind=isFacility(base)?facilityKind(base):'workstation_site',kind=(authoredKind==='public'||authoredKind==='workshop'&&!base.facilityType)&&engine.rules.training?.institutions?.some(r=>r.institution===id)?'school':authoredKind,spec=FACILITY_TYPES[kind]??FACILITY_TYPES.public;
  const material=row.material??base.material??(base.tags?.includes('stone')?'stone':'wood');
  const regional=base.generated==='remote'?state.records?.[`facility_region:${base.region}`]:null;
  const condition=row.condition??Math.max(0,100-Math.floor((regional?.wear?.[material]??0)/(regional?.wearDenominator??10))),burning=Boolean(row.burning),factor=burning||condition<25?0:condition<60?0.5:1;
