@@ -1,13 +1,15 @@
 // Read-only market projections. Only completed trades are persisted, never quotes.
 import {bagStock,priceRead,settlementStock,granary,pledged,freight,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
-import {placeSettlement,personBusinesses} from './entity-view.mjs';
+import {placeSettlement,personBusinesses,personHousehold} from './entity-view.mjs';
+import {isItemClass} from './item-class.mjs';
+import {householdUpkeepGap} from './npc-life.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {recordsMemo} from './storage.mjs';
-import {householdResources,householdCommitments} from './household-budget.mjs';
+import {householdResources,householdCommitments,householdUsage,householdDailyUse} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 
@@ -17,8 +19,9 @@ const balanceParam=(engine,id)=>(engine.world.balance?.economy??economyBalance).
 export const customerPurseShare=engine=>balanceParam(engine,'shop.customerPurseShare');
 export const customerReachMinutes=engine=>balanceParam(engine,'shop.customerReachMinutes');
 // 全部商铺（手工登记的与按人物派生的）在某聚落的货架条目：由 shop.mjs 登记，market 只读。
-let shopShelves=()=>null;
-export function registerShopShelves(fn){shopShelves=fn;}
+// Hoisted registry: shop.mjs registers while the module graph is still in a cycle (market -> household-budget -> ... -> finance-tax -> shop).
+export function registerShopShelves(fn){registerShopShelves.fn=fn;}
+const shopShelves=(...a)=>registerShopShelves.fn?.(...a)??null;
 const DAY=1440;
 const quantity=v=>typeof v==='number'?v:v?.quantity??0;
 const clamp=(v,limits)=>Math.max(limits[0],Math.min(limits[1],v));
@@ -146,6 +149,17 @@ export function saleableStock(d,engine,owner,item,{business=false}={}){
  return budgetStock(householdResources(d,engine,owner),owner,item);
 }
 
+// 家户日用（柴、盐）的短缺是采买需求，进本地需求、抬高稀缺价，也进顾客的采买意愿（business.wants）。
+// 读 npc-life 的 householdUpkeepGap（连续短缺日数）：缺了几天就想补回几天的用量（至多一个交易周期 economy.tradeCycleDays），
+// 按这件货的重量折成件数；每日用量与 npc-life 扣用的口径相同（balance/crafting household.*）。一户只算一次，记在户里编号最小的在世成员名下。
+export function upkeepDemand(state,engine,id,item){
+ const h=personHousehold(engine,state,id).value,members=(h?.members??[id]).filter(m=>state.npcs?.[m]).sort();
+ if(members[0]!==id)return 0;
+ const daily=householdDailyUse(engine,state,members,item);if(!(daily>0))return 0;
+ // householdUpkeepGap 按用度类给连续短缺日数（fuelShortDays、saltShortDays……）：这件货所属用度类的短缺日数取最长的。
+ const gap=householdUpkeepGap(state,h?.id??id),days=Math.min(Math.max(0,...householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).map(u=>gap[`${u.cls}ShortDays`]??0)),engine.rules.economy.tradeCycleDays??1);
+ return days>0?Math.ceil(daily*days):0;
+}
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  let personalDemand=0;
@@ -162,6 +176,8 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // One read-only household allocation serves all items in this quote. No
   // writes occur in the loop; repeated allocation cannot change the budget.
   const budget=householdResources(d,engine,id);
+  // 同一户的柴（盐）缺口按被报价的这件货折件数计一次，不按同类每种货重复计。
+  personalDemand+=upkeepDemand(state,engine,id,item);
   for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;
    if(owners.has(id))rows.push(row);
    else personalDemand+=row.retained+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
@@ -366,4 +382,17 @@ export function subjectiveMarketQuote(engine,document,view,args){
   return {...quote,listPrice:price,totalCoins,exactTotal:exact,explanation,knownFrom:stored!=null?remembered.source:last.eventId,estimate:true};
  }
  return {...quote,knownFrom:'catalog_prior',estimate:true};
+}
+// 活体行情（K2）：一头牲畜值多少，按它这一物种的身体与产出派生（husbandry-traits 装到物种上的 yields）：
+// 屠宰后的胴体各部分（肉、皮、骨……）按本地行情的现值，加上它活着一年的产出（奶、蛋、毛……）按本地行情的现值。
+// 没有登记体重、因而没有任何产出的物种，没有可作价的依据，返回 null。
+export function livestockValue(d,engine,{species,location,seller=null}){
+ const s=engine.byId.get(species),yields=s?.husbandry?.yields;
+ if(!yields||!(yields.carcass?.length||yields.alive?.length))return null;
+ const c=engine.rules.calendar,year=c.daysPerMonth*c.monthsPerYear;
+ const unit=item=>marketQuote(d,engine,{item,location,seller,quantity:1}).listPrice;
+ const carcass=(yields.carcass??[]).map(r=>({item:r.item,quantity:r.amount,value:r.amount*unit(r.item)}));
+ const products=(yields.alive??[]).map(r=>({item:r.item,quantity:r.perHeadDay*year,value:r.perHeadDay*year*unit(r.item)}));
+ const value=[...carcass,...products].reduce((n,r)=>n+r.value,0);
+ return {species,value,carcass,products,horizonDays:year};
 }

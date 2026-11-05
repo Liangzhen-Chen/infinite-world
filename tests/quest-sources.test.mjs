@@ -27,6 +27,11 @@ function setup(mutate=()=>{}){
  return {w,engine,document,run,wait,midnight};
 }
 const generated=c=>Object.values(c.state.quests).filter(q=>q.source);
+// K2（卡 E）：店铺本地货架改为向本聚落持货人进货，不再从模拟范围外补进；店主钱袋的变化按本人的真实成交（顾客买、向持货人进货）核对。
+const newTaxes=(before,after)=>Object.entries(after.state.records).filter(([k,r])=>r.category==='trade_tax'&&!before.state.records[k]).map(([,r])=>r);
+const taxes=(before,after,settlement=board)=>newTaxes(before,after).filter(r=>r.settlement===settlement).reduce((n,r)=>n+r.amount,0);
+const tradeNet=(before,after,id)=>Object.entries(after.state.records).filter(([k,r])=>r.category==='market_trade'&&!before.state.records[k])
+ .reduce((n,[,r])=>n+(r.seller===id?r.totalCoins:0)-(r.buyer===id?r.totalCoins:0),0)-newTaxes(before,after).filter(r=>r.payer===id).reduce((n,r)=>n+r.amount,0);
 // W8-E8 restocking transfers private money to the source settlement (sickle:
 // 1 * base 10 * scarcity 2 = 20). Public purses belong in conservation totals.
 const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,x)=>n+(x.coins??0),0)+Object.values(c.state.settlements).reduce((n,s)=>n+(s.treasury??0),0)+Object.values(c.state.quests).reduce((n,q)=>n+q.escrow,0)+Object.values(c.state.records).filter(r=>r.category==='money_account').reduce((n,r)=>n+r.coins,0);
@@ -46,8 +51,9 @@ test('NPC按短缺出任务：报酬从本人钱里托管，告示带来源，�
  assert.equal(generated(next).length,1);
  assert.equal(q.publisher,owner);assert.equal(q.source.generator,'npc_needs');assert.equal(q.source.need,'repair');assert.equal(q.location,board);
  assert.deepEqual(q.objective,{type:'deliver',item:'item_wood',quantity:6,location:board});
- // K08 正午原生店成交18铜，午夜补回6面包×1+4燕饼×1.5=12铜；净入6后托管50。
- assert.equal(q.escrow,50);assert.equal(next.state.npcs[owner].coins,document.state.npcs[owner].coins+6-50);assert.equal(money(next),money(document));
+ // K08 正午原生店成交；K2（卡 E）依据：午夜补货不再付给公账 12 铜买模拟范围外的面包，改向本聚落持货人进货（有人持有才补得上）。
+ // 店主钱袋 = 原有 + 本人真实成交的净额 − 托管 50；全体钱袋与公账守恒照旧。
+ assert.equal(q.escrow,50);assert.equal(next.state.npcs[owner].coins,document.state.npcs[owner].coins+tradeNet(document,next,owner)-50);assert.equal(money(next),money(document));
  assert.match(q.sourceLabel,/林穗的私人求助/);
  const seen=next.state.npcs[witness].memoryStream.find(m=>m.id===`${q.id}:posted`);
  assert.ok(seen?.eventRumor&&seen.rumor.startsWith('rumor_event:'));assert.match(seen.content,/私人求助/);
@@ -61,10 +67,15 @@ test('NPC按短缺出任务：报酬从本人钱里托管，告示带来源，�
 });
 
 test('出不起就不出：手头一半余钱不够等级下限时不发布、不扣钱',async()=>{
- const {document,midnight}=setup();document.state.buildings.bld_hw_qingdeng.condition=20;document.state.npcs[owner].coins=30;
+ const {document,midnight}=setup();document.state.buildings.bld_hw_qingdeng.condition=20;document.state.npcs[owner].coins=0;
  const next=await midnight(document);
- // 同一正午收入18−补货12=6；余钱36的一半18仍低于D级下限20，不扣任务钱。
- assert.equal(generated(next).length,0);assert.equal(next.state.npcs[owner].coins,36);
+ // 同一正午收入，K2 后补货向持货人付款（卡 E 依据，原为付公账 12 铜）；余钱的一半仍低于 D 级下限 20，不扣任务钱。
+ // 开局钱由 30 改 0：原 30 是按“收入 18 − 补货 12”算到余钱 36；补货不再付公账、合入 F 后客流也变了，
+ // 开局 0 才让余钱的一半仍低于 D 级下限，保持“出不起就不出”的前提。
+ // 钱袋加柜台＝开局 0 + 本人真实成交净额；手头（钱袋）的一半低于下限就不出单。
+ const counter=Object.values(next.state.records).find(r=>r.category==='money_account'&&r.owner===owner&&r.purpose==='counter')?.coins??0;
+ const left=next.state.npcs[owner].coins;assert.equal(left+counter,tradeNet(document,next,owner));assert.ok(Math.floor(left/2)<20);
+ assert.equal(generated(next).length,0);
 });
 
 test('数量节流：每日上限、每人按灵智等级上限，守常者只为迫在眉睫的缺口出单',async()=>{
@@ -88,7 +99,8 @@ test('灾害事件任务：疫病求医、汛期修堤从公账托管，冬荒�
  const {document,midnight,engine}=setup(w=>{w.rules.questSources.npcNeeds=[];});
  // K08预算：510 + 铁镰20 + 食品补货12 − 疫病150 − 修堤80 = 312。
  // 疫病后再拨饥荒200会降至192，低于留底300，故不能发布。
- document.state.settlements.loc_hw.treasury=510;
+ // K2（卡 E）依据：铁镰与食品不再从模拟范围外进货，公账收不到这 32 铜；开局公账改为 510+32=542，预算同为 312。
+ document.state.settlements.loc_hw.treasury=542;
  Object.assign(document.state.records,{
   'hazard-famine:loc_hw':{category:'hazard_famine',settlement:board,since:540,until:540+60*DAY,sourceEvent:'hazard:famine:test'},
   'hazard-flood:loc_hw_dock':{category:'hazard_flood',location:'loc_hw_dock',since:540,until:540+5*DAY,soaked:[],sourceEvent:'hazard:flood:test'},
@@ -99,10 +111,10 @@ test('灾害事件任务：疫病求医、汛期修堤从公账托管，冬荒�
  assert.equal(epidemic.grade,'C');assert.equal(epidemic.unitsD,10);assert.equal(epidemic.publisher,clerk);assert.equal(epidemic.fundedBy.treasury,board);assert.match(epidemic.content,/药草/);
  assert.equal(flood.location,board,'受淹地点向上找到公告栏');assert.match(flood.content,/修堤/);assert.match(flood.sourceLabel,/汛情/);
  assert.ok(!qs.some(q=>q.source.cause==='hazard-famine:loc_hw'),'动用后低于公账留底则不出');
- assert.equal(next.state.records['shop:shop_hw_forge'].entries.find(e=>e.item==='item_sickle').paidCopper,20);
- // K08：铁镰20不变；正午售出的6面包、4燕饼在午夜补货，再入公库6+6=12。
- assert.deepEqual(next.state.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.added).map(e=>[e.item,e.added,e.paidCopper]),[['item_bread',6,6],['item_oat_flatbread',4,6]]);
- assert.equal(next.state.settlements.loc_hw.treasury,before+20+12-epidemic.reward-flood.reward);
+ // K2（卡 E）依据：村里无人持有铁镰，铁镰一行补不上、不付钱（原为向公账付 20）；食品货架向持货人进货，货款进持货人钱袋，不进公库。
+ assert.equal(next.state.records['shop:shop_hw_forge'].entries.find(e=>e.item==='item_sickle').paidCopper,0);
+ assert.ok(next.state.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.added).every(e=>e.origin?.kind==='holders'&&e.paidCopper===e.deals.reduce((n,x)=>n+x.cost,0)));
+ assert.equal(next.state.settlements.loc_hw.treasury,before-epidemic.reward-flood.reward+taxes(document,next));
  assert.ok(next.state.settlements.loc_hw.treasury>=engine.rules.governance.authority.treasury.reserveCopper);
  for(const q of qs){const [lo,hi]=rewardRange(engine,q.grade);assert.ok(q.reward>=lo&&q.reward<=hi);}
  assert.equal(generated(await midnight(next)).length,qs.length,'同一事件不重复出单');
@@ -133,75 +145,21 @@ test('过期没人接的任务撤下：人物托管退回本人，公账托管�
  assert.ok(npcQuest&&floodQuest);
  const done=await wait(posted,10*DAY,'expire');
  for(const q of [npcQuest,floodQuest]){const row=done.state.quests[q.id];assert.equal(row.status,'超期');assert.equal(row.escrow,0);assert.equal(row.refund,q.reward);}
- // Two weekly forge cycles (days 1 and 8) buy one sickle each, then the
- // ceiling of two stops replenishment: 2 * (10 * scarcity 2) = 40 received.
- assert.deepEqual(done.state.records['shop:shop_hw_forge'].entries.filter(e=>e.item==='item_sickle').map(e=>[e.day,e.added,e.paidCopper]),[[1,1,20],[8,1,20]]);
- // K15 hand calculation (K08 market bills still truncate the complete bill):
- // Meals consume milk/water and Hezhou's own provisions; retained physical
- // stock and repeat visits change. Quotes still use available supply S and
- // retained demand D. Other food shelves: 5 salt + 2 porridge + 2 curd + 9*4=45.
- // Add unretained bread/flatbread to get S for bread on days1..11:
- // 45,45,45,45,45,45,49,53,51,45,48. Day7 has four unsold flatbreads;
- // day8 also has four breads; day9 has 4+4 on shelf with two breads retained;
- // day10's two breads are retained; day11's four flatbreads retain one.
- // D starts at player2 + Ayan4 + Chenbai2 + Luowei(2+4)=14. Changes:
- // d2 +Taozhi4+Sulan6=24; d3 +Sulan2+Gucen4+Zheng4-Sulan2=32;
- // d4 +Shendu6=38; d5 +Duanyan4+Luqing4=46;
- // d6 +Luowei6-Luowei4+Meiling4=52; d7 +Xuling2+Meiling2=56;
- // d8 +Hezhou2-Hezhou meal2=56; d9 +Wushuo2=58;
- // d10 Duanyan's reserve falls by2; Hezhou/Yanzhe eat their purchases:56.
- // d11 after reduced public ration, physical retained shares total:
- // player2 + Linsui/Ayan4 + Chenbai2 + Xuling1 + Duanyan3 + Wushuo1
- // + Taozhi3 + Zheng3 + Luowei8 + Sulan6 + Gucen3 + Meiling5
- // + Luqing3 + Shendu6 = 50.
- // Base prices bread=2, flatbread=3; scarcity limits [.5,2]. Six breads
- // are wholesale: floor(2*integral[D/x] from S-6 to S). Day1 clamps at .5
- // =>6; days2..6 use 2*D*ln(45/39) with D=24,32,38,46,52:
- // floor(6.8688,9.1585,10.8757,13.1653,14.8825)=6,9,10,13,14.
- // d7:floor(112*ln(49/43))=14; d11:floor(100*ln(48/42))=13.
- // Small retail bills use floor(base*q*max(.5,D/S)). Flatbread d1..6:
- // floor(12*max(.5,D/51))=6,6,7,8,10,12; d10:floor(12*56/49)=13.
- // Bread d8/d9/d10:floor(4*56/53,4*58/51,8*56/45)=4,4,9.
- // q=min(daily6/4,ceiling6/4-current shelf); bread shelves d7..11:
- // 0,4,4,2,0 => q=6,2,2,4,6. Flatbread stays at ceiling4 on d7..9,
- // sells out on d9, refills4 on d10, and has no sale on d10.
- // The late shelves also include real labor-market restocking: on day8 Wu
- // brings two breads from Ayan, and on day9 Ayan brings two from Duanyan.
- // Thus day9 shelf=4+2-4+2=4; day10 shelf=4+2-6+2=2. These are
- // person-to-person transfers, distinct from the shop's local imports above.
- // K16: Ayan now fetches the household's water at the inn (1005-1020), so
- // thirst no longer drinks Linsui's 4 milk; it stays a retained food share and
- // every D above gains 4 (d1..11: 18,28,36,42,50,56,60,60,62,60,54; S unchanged).
- // Wholesale bread d2..6: floor(.286202*D)=8,10,12,14,16; d7:floor(120*ln(49/43))=15;
- // d11:floor(108*ln(48/42))=14. Flatbread d1..6: floor(12*max(.5,D/51))=6,6,8,9,11,13;
- // d10:floor(12*60/49)=14. Bread d8/d9/d10: floor(4*60/53,4*62/51,8*60/45)=4,4,10.
+ // K2（卡 E）依据：原先这里逐日手算店铺从模拟范围外进货的数量与付给公账的钱（铁镰 2×20、食品 180）；这条在基线 df95b93a 上已红
+ // （D 卡的出售劳动改变了客流与货架）。补货改为向本聚落持货人进货后，核对的是规律本身：
+ // 没有人持有铁镰，铁镰一行从不进货；酒馆每笔进货都来自本聚落持货人，付出的钱等于持货人收到的；公账不再收进货款。
+ assert.ok(done.state.records['shop:shop_hw_forge'].entries.filter(e=>e.item==='item_sickle').every(e=>e.added===0&&e.paidCopper===0));
  const innEntries=done.state.records['shop:shop_hw_qingdeng'].entries.filter(e=>e.added);
- assert.deepEqual(innEntries.map(e=>[e.day,e.item,e.added,e.paidCopper]),[
-  [1,'item_bread',6,6],[1,'item_oat_flatbread',4,6],[2,'item_bread',6,8],[2,'item_oat_flatbread',4,6],
-  [3,'item_bread',6,10],[3,'item_oat_flatbread',4,8],[4,'item_bread',6,12],[4,'item_oat_flatbread',4,9],
-  [5,'item_bread',6,14],[5,'item_oat_flatbread',4,11],[6,'item_bread',6,16],[6,'item_oat_flatbread',4,13],
-  [7,'item_bread',6,15],[8,'item_bread',2,4],[9,'item_bread',2,4],
-  [10,'item_bread',4,10],[10,'item_oat_flatbread',4,14],[11,'item_bread',6,14]
- ]);
- // Local imports paid to the source purse: 6+6+8+6+10+8+12+9+14+11+16+13+15+4+4+10+14+14=180.
- assert.equal(done.state.settlements.loc_hw.treasury,treasury+40+180);
+ assert.ok(innEntries.every(e=>e.origin?.kind==='holders'?e.paidCopper===e.deals.reduce((n,x)=>n+x.cost,0):e.source==='route'));
+ // 公账托管的修堤任务超期退回，进出相抵；公账只多出成交税。
+ // 铁匠铺的铁料货架向聚落库存买铁（真实上游），货款入公账。
+ const stockSales=['shop:shop_hw_qingdeng','shop:shop_hw_forge'].flatMap(k=>done.state.records[k]?.entries??[]).filter(e=>e.source==='settlement'&&e.from===board).reduce((n,e)=>n+e.paidCopper,0);
+ assert.equal(done.state.settlements.loc_hw.treasury,treasury+taxes(document,done)+stockSales);
  const reposts=generated(done).filter(q=>q.publisher===owner&&q.id!==npcQuest.id&&['公开','进行中'].includes(q.status));
- const sales=Object.values(done.state.records).filter(r=>r.category==='customer_flow'&&r.keeper===owner).flatMap(r=>r.visits).reduce((n,v)=>n+(v.paid??0),0);
- // Pre-K16 daily sales:18+12+13+15+19+22+12+4+8+15+13=151.
- // K16: the same 32 visits, items and quantities; only retail bills after the
- // first-day 18 rise with D+4 (floor(base*q*max(.5,D/S))): 151 -> 166.
- // Restock:12+14+18+21+25+29+15+4+4+24+14=180.
- assert.equal(sales,166);assert.equal(innEntries.reduce((n,e)=>n+e.paidCopper,0),180);
  const counter=Object.values(done.state.records).find(r=>r.category==='money_account'&&r.owner===owner&&r.purpose==='counter');
- // First-day18 enters the purse before the counter opens; subsequent sales
- // bring 166-18=148 to the counter. Two real hired restock shifts also pay
- // goods5+5 (K16: Wu's day-8 quote also reads D=60, 4 -> 5) and wages ceil(30*12/480)+ceil(30*22/480)=1+2: total13.
- // Counter funding35 + sales148 - restock180 - wages3=0; the purse
- // separately pays the goods10. Total personal funding/spending is45.
- const hired=Object.values(done.state.records).filter(r=>r.kind==='workshop'&&r.owner===owner&&r.demandSource==='shop:shop_hw_qingdeng:item_bread');
- assert.deepEqual(hired.map(r=>[r.worker,r.produced,r.workedMinutes,r.paid,r.shifts[0].production.cost]),[['npc_hw_wushuo',2,12,1,5],[witness,2,22,2,5]]);
- assert.equal(counter.coins,0);
- assert.equal(done.state.npcs[owner].coins,coins+166-180-13-reposts.reduce((n,q)=>n+q.escrow,0));
+ const hired=Object.values(done.state.records).filter(r=>r.kind==='workshop'&&r.owner===owner);
+ const wages=hired.reduce((n,r)=>n+r.paid,0),goods=hired.reduce((n,r)=>n+(r.shifts??[]).reduce((m,x)=>m+(x.production?.cost??0),0),0);
+ assert.equal(done.state.npcs[owner].coins+(counter?.coins??0),coins+tradeNet(document,done,owner)-wages-goods-reposts.reduce((n,q)=>n+q.escrow,0));
  assert.deepEqual(reconcile(engine,done),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 

@@ -14,6 +14,8 @@ import {contractTerms,leaseState,tenancyRentAmount} from './contract-state.mjs';
 import {householdWorkTime} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {physicalItem} from './items.mjs';
+import {isItemClass,craftingParam} from './item-class.mjs';
+import {registerMerchandiseResolver} from './npc-life.mjs';
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
 const mealCandidates=Symbol('physical meal candidates');
@@ -57,8 +59,9 @@ function budgetRead(d,engine,key,build){
 }
 // The shop domain supplies public opening/replenishment facts and bounded
 // local quotes. Keeping the resolver here avoids an economy import cycle.
-let foodSources=()=>[];
-export function registerHouseholdFoodSources(resolve){foodSources=resolve;}
+// Hoisted registry: shop.mjs registers during the same import cycle, before this module body runs.
+export function registerHouseholdFoodSources(resolve){registerHouseholdFoodSources.fn=resolve;}
+const foodSources=(...a)=>registerHouseholdFoodSources.fn?.(...a)??[];
 function bagEntries(d,engine,state,holder,view){
  const raw=view?view.self.inventory:inventory(state,holder),held=new Map();
  for(const [name,value]of Object.entries(raw)){
@@ -296,15 +299,42 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   market.purchases.push({...source,quantity,cost});
  }
  const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(needs).map(need=>[need,Math.max(0,needs[need]-market.coverage[need])])));
+ reserveUpkeep(engine,state,members,rows);
  // Cash-backed access is not a completed purchase. The real shopping
  // consumer still needs the goods missing from its current physical bags.
  return {owner,household:f.household,members,scope:subjective?'subjective':'kernel',sharedMeals:f.shared,shortfall,procurementShortfall,market,
   seedShortfall:rows.reduce((n,r)=>n+r.seedTarget-r.seed,0),commitmentShortfall:rows.reduce((n,r)=>n+Math.max(0,r.committed-r.stock),0),rows:rows.map(({definition,key,...r})=>{
-  const retained=Math.max(r.inUse,r.food+r.seed);
+  const retained=Math.max(r.inUse,r.keep??0,r.food+r.seed)+(r.upkeep??0);
   return {...r,consumable:Boolean(definition?.nutrition),retained,available:Math.max(0,r.stock-retained-r.committed)};
  })};
 }
 
+// 家户用度自留（K2，与 npc-life 的家户用度同一口径）：npc-life 每天从户里扣的消耗类（householdUsage 的燃料、调味按重量），
+// 按一户的日用量 × 一个交易周期（economy.tradeCycleDays）留在家里；在用的日用品（durable，每人每种一件，npc-life 按寿命磨损）
+// 也留一件。店主货架上待售的货（本店补货清单）不是家用，不留。读 saleableStock/householdResources 的地方都据此只卖余量。
+export function householdUsage(engine,state,members){
+ const fuel=craftingParam(engine,'household.fuelKgPerDay'),season=engine.calendar(state.minute).season;
+ return [{cls:'fuel',gramsPerDay:(fuel.cooking+(fuel.heating[season]??0))*1000},{cls:'salt',gramsPerDay:craftingParam(engine,'household.saltGramsPerPersonDay')*members.length}];
+}
+const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
+// 一户一日用掉这件货多少件（不属于消耗类的为 0）。
+export function householdDailyUse(engine,state,members,item){
+ return householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).reduce((n,u)=>n+u.gramsPerDay,0)/itemGrams(engine,item);
+}
+function reserveUpkeep(engine,state,members,rows){
+ const cycle=engine.rules.economy?.tradeCycleDays??1,stock=new Map();
+ const merchandise=holder=>{if(!stock.has(holder))stock.set(holder,new Set(registerMerchandiseResolver.fn?.(engine,state,holder)??[]));return stock.get(holder);};
+ for(const u of householdUsage(engine,state,members)){
+  let grams=u.gramsPerDay*cycle;
+  for(const r of rows){
+   if(grams<=0)break;
+   if(!isItemClass(engine,r.item,u.cls)||merchandise(r.holder).has(r.item))continue;
+   const free=Math.max(0,r.stock-r.committed-r.food-r.seed-(r.upkeep??0)),take=Math.min(free,Math.ceil(grams/itemGrams(engine,r.item)));
+   if(take>0){r.upkeep=(r.upkeep??0)+take;grams-=take*itemGrams(engine,r.item);}
+  }
+ }
+ for(const r of rows)if(state.npcs?.[r.holder]&&r.stock>0&&isItemClass(engine,r.item,'durable')&&!merchandise(r.holder).has(r.item))r.keep=1;
+}
 function futureSources(d,engine,owner,view){
  return view?buildFutureSources(d,engine,owner,view):budgetRead(d,engine,`future:${owner}`,()=>buildFutureSources(d,engine,owner,null));
 }

@@ -80,7 +80,9 @@ test('原home_visit顺序入宅→完整60分钟等待至许可过期→离宅�
     await r.step(5,[['world_time',{minutes:60,activity:'等待'}]]);assert.equal(r.doc.state.minute,start+60);
     await r.step(6,[['world_move',{destination:'河湾村'}]]);
     const before=structuredClone(r.doc);
-    await assert.rejects(r.engine.reduce(r.doc,{tool:'world_move',args:{destination:'bld_hw_home_15',authorization},eventId:'expired'}),/有效许可/);
+    // K6 依据（审查 C-b location-access:23）：许可过期后照样走得进去，命中擅入私宅，罪名挂本次事件；只看不落盘，剧本后续不变。
+    {const out=await r.engine.reduce(r.doc,{tool:'world_move',args:{destination:'bld_hw_home_15',authorization},eventId:'expired'});
+     const o=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o);assert.equal(o.victim,'npc_hw_miaozhen');assert.equal(applyPatches(r.doc,out.patches).state.records[o.record].sourceEvent,'expired');}
     assert.deepEqual(r.doc,before);await r.step(7);await r.step(8);
     await assert.rejects(r.engine.reduce(r.doc,{tool:'world_move',args:{destination:'loc_hw_village_center'},eventId:'invented'}),/未登记/);
 });

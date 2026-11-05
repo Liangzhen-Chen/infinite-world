@@ -8,13 +8,19 @@ import {employmentReservation,currentEmployment} from './employment-state.mjs';
 import {financeBalance,financeTransfer,financeChange,financeInt} from './finance-bank.mjs';
 import {fund as fundAccount} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {store,moveStock} from './stock.mjs';
+import {store,moveStock,itemResource} from './stock.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('medicine',{kinds:['employed_by']});
 // S1b: 诊疗与防疫用掉的药材进 sink:consume。
 declareLedgerWriter('medicine',{sources:{'src:craft':{item_external_medicine:100000}},sinks:['sink:consume']});
 const HERB_USE=(purpose,eventId)=>({flow:'sink:consume',purpose,writer:'medicine',eventId});
 import {transferItems} from './items.mjs';
+import {isItemClass,pickHeldOfClass,pickStockOfClass,classItems} from './item-class.mjs';
+// K4: 药按类别（item-use-tags 的 medicine 类），不按"药草"那一件。
+const MEDICINE='medicine';
+const heldMedicine=(d,e,holder,amount=1)=>pickHeldOfClass(d,e,holder,MEDICINE,amount);
+// 没有实物在手时估价用的参照药材：本类里基价最低的一件（同价按 id）。
+const referenceMedicine=e=>classItems(e,MEDICINE).map(id=>e.byId.get(id)).filter(x=>x?.basePrice>0).sort((a,b)=>a.basePrice-b.basePrice||a.id.localeCompare(b.id))[0]?.id;
 import {clockRoll} from './world-clock.mjs';
 import {recoverIllness,contractIllness} from './npc-life.mjs';
 import {temples} from './faith-catalog.mjs';
@@ -49,11 +55,12 @@ const needsCare=(c,now)=>c.kind==='illness'?now-c.record.since>=SEEK_AFTER:c.rec
 function fundAt(s,location){return Object.values(s.records??{}).find(r=>r.category==='medicine_fund'&&r.location===location&&r.coins>0);}
 function templeSponsor(e,s,location,fee){
  const sid=placeSettlement(e,s,location).value;
- return temples(e).find(t=>placeSettlement(e,s,t.seat).value===sid&&(groupAccountView(e,s,t.id)?.coins??0)>=fee&&(groupAccountView(e,s,t.id)?.items?.item_herb??0)>0);
+ return temples(e).find(t=>placeSettlement(e,s,t.seat).value===sid&&(groupAccountView(e,s,t.id)?.coins??0)>=fee&&pickStockOfClass(e,groupAccountView(e,s,t.id)?.items,MEDICINE));
 }
 // 诊费里的药材成本取草药在医馆所在地的市场估值（市场报价投影的 value，不含商家价差与立场），不读目录基价。
 function herbValue(d,e,site,holder){
- const value=marketQuote(d,e,{item:'item_herb',location:site.seat,seller:holder}).explanation.value.value;
+ const item=heldMedicine(d,e,holder)??referenceMedicine(e);if(!item)throw preconditionFailure('世上没有登记的药材，无从估价');
+ const value=marketQuote(d,e,{item,location:site.seat,seller:holder}).explanation.value.value;
  if(!Number.isFinite(value))throw preconditionFailure('草药无法估值');
  return value;
 }
@@ -103,10 +110,10 @@ function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity
 }
 function stockSource(d,e,r){
  if(r.charity?.startsWith('medicine_fund:')){
-  const f=d.get(...rec(r.charity));if(f?.coins>=r.fee&&e.quantity(d,f.holder,'item_herb')>0)return {holder:f.holder,fund:f};
+  const f=d.get(...rec(r.charity)),item=f&&heldMedicine(d,e,f.holder);if(f?.coins>=r.fee&&item)return {holder:f.holder,fund:f,item};
  }
- if(r.charity){const a=groupAccountView(e,d.get('state'),r.charity);if(a?.coins>=r.fee&&(a.items.item_herb??0)>0)return {temple:r.charity};}
- for(const holder of [...new Set([r.patient,r.owner,r.doctor])])if(e.quantity(d,holder,'item_herb')>0)return {holder};
+ if(r.charity){const a=groupAccountView(e,d.get('state'),r.charity),item=pickStockOfClass(e,a?.items,MEDICINE);if(a?.coins>=r.fee&&item)return {temple:r.charity,item};}
+ for(const holder of [...new Set([r.patient,r.owner,r.doctor])]){const item=heldMedicine(d,e,holder);if(item)return {holder,item};}
  return null;
 }
 function pay(d,e,r,stock){
@@ -124,8 +131,9 @@ function finish(d,e,r){
  if(!site?.capacity||!site.doctors.includes(r.doctor)||!capable(e,s,r.patient)||personConstraint(e,s,r.doctor)||personConstraint(e,s,r.patient)||present(s,r.patient)!==r.location||present(s,r.doctor)!==r.location)return cancel('场所、人员或到诊条件变化');
  const stock=stockSource(d,e,r);if(!stock)return cancel('药材短缺');
  const payment=pay(d,e,r,stock);if(!payment)return cancel('诊费不足');
- if(stock.temple){const a=ensureGroupAccount(d,e,stock.temple);moveStock(d,{from:store(e,stock.temple,'item_herb'),to:'sink:consume|item_herb|treatment',amount:1,writer:'medicine',eventId:r.id});d.set(groupAccountPath(stock.temple),{...a,items:{...a.items,item_herb:a.items.item_herb-1},ledger:[...a.ledger,{kind:'义诊耗药',coins:0,items:{item_herb:-1},sourceEvent:r.id}]});}
- else e.itemDelta(d,stock.holder,'item_herb',-1,HERB_USE('treatment',r.id));
+ const herb=stock.item;
+ if(stock.temple){const a=ensureGroupAccount(d,e,stock.temple);moveStock(d,{from:store(e,stock.temple,herb),to:`sink:consume|${itemResource(e,herb)}|treatment`,amount:1,writer:'medicine',eventId:r.id});d.set(groupAccountPath(stock.temple),{...a,items:{...a.items,[herb]:a.items[herb]-1},ledger:[...a.ledger,{kind:'义诊耗药',coins:0,items:{[herb]:-1},sourceEvent:r.id}]});}
+ else e.itemDelta(d,stock.holder,herb,-1,HERB_USE('treatment',r.id));
  const score=Math.min(.95,.35+medicalSkill(e,s,r.doctor)/1500+(r.assistants.length?.05:0)),roll=clockRoll(d.document.randomSeed,`medicine-diagnosis:${r.id}`,r.start),correct=roll<score;
  const outcome=[];
  for(const c of medicalConditions(s,r.patient).filter(c=>r.conditions.some(x=>x.id===c.id&&x.kind===c.kind))){
@@ -151,10 +159,10 @@ function finish(d,e,r){
  let dispensed=null;
  if(takeHome&&correct&&r.conditions.some(c=>c.kind==='wound')){
   e.itemDelta(d,r.patient,takeHome.item,takeHome.quantity,{flow:'src:craft',purpose:'prescription',writer:'medicine',eventId:r.id});
-  dispensed={...takeHome,material:{item:'item_herb',quantity:1,from:stock.temple??stock.holder},patient:r.patient,source:r.id};
+  dispensed={...takeHome,material:{item:herb,quantity:1,from:stock.temple??stock.holder},patient:r.patient,source:r.id};
 
  }
- const row={...r,status:'已诊',endedAt:r.end,payment,wages,prescription:{item:'item_herb',quantity:1,identified:correct,consumedFrom:stock.temple??stock.holder,...(dispensed?{dispensed}:{})},diagnosis:{correct,skill:medicalSkill(e,s,r.doctor),roll},outcome,followUpAt:r.end+DAY};
+ const row={...r,status:'已诊',endedAt:r.end,payment,wages,prescription:{item:herb,quantity:1,identified:correct,consumedFrom:stock.temple??stock.holder,...(dispensed?{dispensed}:{})},diagnosis:{correct,skill:medicalSkill(e,s,r.doctor),roll},outcome,followUpAt:r.end+DAY};
  holdingSet(d,null,rec(r.id),row,'medicine');
 }
 export function nextMedicineMinute(e,d,now){
@@ -252,10 +260,15 @@ export function medicineAction(d,args,id){
   const coins=financeInt(args.budget??0,0,1e8,'义诊资助'),quantity=financeInt(args.quantity??args.wood??0,0,100000,'施药数量');if(!coins&&!quantity)throw preconditionFailure('须提供实际钱或药材');
   const key=`medicine_fund:${site.seat}`,old=d.get(...rec(key));
   // Escrow is counted here once and paid out only for an actual consultation.
+  // 施药收任何药性物品（medicine 类）；指名的东西不是药就拒收，不另找替代。
+  const named=quantity&&args.item!==undefined?e.resolve(args.item,'item'):null;
+  if(named&&!isItemClass(e,named,MEDICINE))throw preconditionFailure(`${e.byId.get(named)?.name??'这件东西'}不是药材，医馆不收作施药`);
+  const herb=quantity?named??heldMedicine(d,e,'player',quantity):null;
+  if(quantity&&!herb)throw preconditionFailure(`行囊里没有够${quantity}份的药材`);
   if(coins)financeChange(d,e,'player',-coins,id,{account:fundAccount(key),writer:'medicine',eventId:id});
   const holder=old?.holder??site.owner;if(!holder)throw preconditionFailure('医馆没有接收药材的经营者');
-  if(quantity)transferItems(d,e,'player',holder,'item_herb',quantity);
-  const row={id:key,category:'medicine_fund',location:site.seat,holder,coins:(old?.coins??0)+coins,spent:old?.spent??0,herbsDonated:(old?.herbsDonated??0)+quantity,donations:[...old?.donations??[],{source:id,coins,quantity,minute:s.minute}]};holdingSet(d,null,rec(key),row,'medicine');return row;
+  if(quantity)transferItems(d,e,'player',holder,herb,quantity);
+  const row={id:key,category:'medicine_fund',location:site.seat,holder,coins:(old?.coins??0)+coins,spent:old?.spent??0,herbsDonated:(old?.herbsDonated??0)+quantity,donations:[...old?.donations??[],{source:id,coins,quantity,...(herb?{item:herb}:{}),minute:s.minute}]};holdingSet(d,null,rec(key),row,'medicine');return row;
  }
  if(op==='medicine_hire'){
   // The clinic owner signs; doctor or helper role follows the worker's current skill.
@@ -274,11 +287,12 @@ export function medicineAction(d,args,id){
   const measure=args.choice??'treatment';if(!['treatment','quarantine'].includes(measure))throw preconditionFailure('医馆只能施治或隔离');
   const doctor=site.doctors.find(who=>present(s,who)===site.seat&&!personConstraint(e,s,who));if(!doctor)throw preconditionFailure('医馆眼下没有在场医师');
   const sick=Object.values(ep.households).filter(h=>h.settlement===settlement&&h.status==='发病').length,need=measure==='treatment'?Math.max(1,sick):0;
-  const holder=[site.owner,doctor,'player'].find(h=>h&&e.quantity(d,h,'item_herb')>=need);if(need&&!holder)throw preconditionFailure(`药材短缺，施治需${need}份`);
+  const holder=[site.owner,doctor,'player'].find(h=>h&&(!need||heldMedicine(d,e,h,need)));if(need&&!holder)throw preconditionFailure(`药材短缺，施治需${need}份`);
+  const herb=need?heldMedicine(d,e,holder,need):null;
   const clock=ep.id.slice(9,ep.id.lastIndexOf(':')),minutes=financeInt(args.days??7,1,90,'防疫天数')*DAY;
   const receipt=applyEffects(d,e,[{kind:'epidemic_measure',measure,minutes,settlement}],{settlement,minute:s.minute,sourceEvent:id,clock},'world');
   if(!receipt.applied)throw Error(receipt.reason??'防疫没有作用对象');
-  if(need)e.itemDelta(d,holder,'item_herb',-need,HERB_USE('epidemic',id));
+  if(need)e.itemDelta(d,holder,herb,-need,HERB_USE('epidemic',id));
   return {epidemic:ep.id,measure,doctor,herbs:need,consumedFrom:holder??null};
  }
  throw preconditionFailure('未知诊疗操作');

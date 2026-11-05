@@ -132,7 +132,7 @@ test('封焰阻止室内火势跨连接传播，真实耗魔且封闭通风，�
  await wait(s,2);assert.equal(thermal(s).fuelMg,0);await wait(s,35);assert.equal(s.doc.state.records['physical_feature:feature_room'].state.air.smokeMg,0);assert.equal(s.doc.state.records['physical_feature:feature_room'].state.air.oxygenMg,4000);
  const open=fixture();open.place.features.push(open.room);open.engine=new WorldEngine(open.world);await cast(open,'ignite','feature_hearth');await wait(open,1);assert.equal(thermal(open,'feature_outside').burning,true);assert.ok(open.doc.state.records['physical_feature:feature_room'].state.air.spreadCount>0);
  await rejectedCast(fixture(),'contain_fire','feature_hearth',/实际房间/);
- const privateRoom=fixture();privateRoom.room.owner='npc_owner';privateRoom.place.features.push(privateRoom.room);privateRoom.engine=new WorldEngine(privateRoom.world);await rejectedCast(privateRoom,'contain_fire','feature_room',/授权/);
+ const privateRoom=fixture();privateRoom.room.owner='npc_owner';privateRoom.place.features.push(privateRoom.room);privateRoom.engine=new WorldEngine(privateRoom.world);/* K6 依据（审查 C-b）：在别人的房间施封焰，所有者授权决定合法与否、不决定能否施放；施放发生，命中擅用他人之物 */{const r=await cast(privateRoom,'contain_fire','feature_room');const o=r.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,JSON.stringify(r.offenses));assert.equal(o.victim,'npc_owner');}
 });
 
 test('封焰维持魔力不足会立即开放通风和传播，重载无额外免费维持',async()=>{

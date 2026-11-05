@@ -7,6 +7,7 @@ import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches}from'../server-plugin/storage.mjs';
 import {facilityView}from'../server-plugin/facility-state.mjs';
 import {knowsKnowledge}from'../server-plugin/education-state.mjs';
+import {placeWorkstations,stationLicence}from'../server-plugin/workstation-services.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const NOVEL='bld_kg_novel_shed';
 // A building that never existed before; it carries only what each case gives it.
@@ -57,15 +58,17 @@ test('私宅的工作台：不经主人同意照样做成，记擅用，受害�
  assert.equal(applyPatches(document,out.patches).state.player.coins,coins,'私宅工位没有收费口径，不收钱');
  const visit=kit(engine),auth=permit(visit,'登门拜访');
  assert.ok(unlicensed(await craft(engine,visit,{authorization:auth})),'进屋拜访的许可不覆盖借用工作台');
+ const worded=kit(engine),text=permit(worded,'借工作台做点木活');
+ assert.ok(unlicensed(await craft(engine,worded,{authorization:text})),'用途文字说了借，许可里没写明设备，仍不算借用');
 });
 
-test('主人同意借用（许可用途点到这件设备）、住户自用：都是合法使用，不记擅用',async()=>{
+test('主人同意借用（许可写明借这件设备）、住户自用：都是合法使用，不记擅用',async()=>{
  const engine=new WorldEngine(worldWith(world,PRIVATE));
- const lent=kit(engine),auth=permit(lent,'借工作台做点木活');
+ const lent=kit(engine),auth=permit(lent,'借工作台做点木活',{fixtures:['workbench']});
  assert.equal(unlicensed(await craft(engine,lent,{authorization:auth})),undefined);
- const expired=kit(engine),old=permit(expired,'借工作台做点木活',{expires:expired.state.minute});
+ const expired=kit(engine),old=permit(expired,'借工作台做点木活',{fixtures:['workbench'],expires:expired.state.minute});
  assert.ok(unlicensed(await craft(engine,expired,{authorization:old})),'过期的许可不算');
- const stranger=kit(engine),forged=permit(stranger,'借工作台做点木活',{grantor:'npc_hw_linsui'});
+ const stranger=kit(engine),forged=permit(stranger,'借工作台做点木活',{fixtures:['workbench'],grantor:'npc_hw_linsui'});
  assert.ok(unlicensed(await craft(engine,stranger,{authorization:forged})),'不是住户给的许可不算');
  const own=new WorldEngine(worldWith(world,{...PRIVATE,access:{...PRIVATE.access,residents:['player']}}));
  assert.equal(unlicensed(await craft(own,kit(own))),undefined,'自家的工作台');
@@ -86,4 +89,27 @@ test('师傅跟着工位走：在有灶处住或做工、熟练度够的人会�
  assert.equal(knowsKnowledge(e1,s1,'npc_yp_zhusheng','recipe_cook_porridge'),true);
  assert.equal(knowsKnowledge(e0,s0,'npc_yp_zhusheng','recipe_cook_porridge'),false);
  assert.equal(knowsKnowledge(e1,s1,'player','recipe_cook_porridge'),false,'玩家仍须真实学会');
+});
+
+test('住户在场授予私宅许可时写明借用的设备：只能写这处实有的设备，记进许可',async()=>{
+ const engine=new WorldEngine(worldWith(world,{}));let document=kit(engine);const home='bld_hw_home_21',host='npc_hw_xiejin';
+ document.state.location='loc_hw';Object.assign(document.state.npcs[host],{location:'loc_hw',activity:'闲谈',status:'正常'});delete document.state.npcs[host].scheduleTravel;
+ const grant=fixtures=>engine.reduce(document,{tool:'world_promise',args:{operation:'grant_access',promisor:host,location:home,minutes:120,consent:true,content:'借灶做饭',fixtures},eventId:`grant-${fixtures.join('-')}`});
+ await assert.rejects(grant(['forge']),/实有的设备/);
+ const out=await grant(['hearth']);document=applyPatches(document,out.patches);
+ assert.deepEqual(document.state.records[out.result.authorization].fixtures,['hearth']);
+ const station=placeWorkstations(engine,document.state,home).find(s=>s.kind==='cooking');
+ assert.equal(stationLicence(engine,document,station,'player',{authorization:out.result.authorization})?.basis,'consent');
+ const plain=await engine.reduce(document,{tool:'world_promise',args:{operation:'grant_access',promisor:host,location:home,minutes:120,consent:true,content:'借灶做饭'},eventId:'grant-plain'});
+ assert.equal(stationLicence(engine,applyPatches(document,plain.patches),station,'player',{authorization:plain.result.authorization}),null,'没写明设备的进屋许可不借出灶');
+});
+
+test('在工位上的师傅当班时可授课，不限作息里的接待时段；离开工位就不教',async()=>{
+ const engine=new WorldEngine(world);let document=engine.createCharacter(seed,{},'kg-teach');
+ const wait=await engine.reduce(document,{tool:'world_time',args:{minutes:360},eventId:'kg-teach-wait'});document=applyPatches(document,wait.patches);
+ const master='npc_wt_wangpu',at=structuredClone(document);assert.equal(at.state.npcs[master].location,'bld_wt_yard','下午在修篓木台院劳动');
+ at.state.location='bld_wt_yard';
+ await engine.reduce(at,{tool:'world_learn',args:{kind:'recipe',entity:'recipe_wooden_pegs',source:master},eventId:'kg-teach'});
+ const away=structuredClone(document);away.state.npcs[master].location='bld_wt_home_02';away.state.location='bld_wt_home_02';
+ await assert.rejects(engine.reduce(away,{tool:'world_learn',args:{kind:'recipe',entity:'recipe_wooden_pegs',source:master},eventId:'kg-teach-away'}),/资格/);
 });

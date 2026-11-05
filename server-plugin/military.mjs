@@ -30,9 +30,9 @@ import {changeHolding} from './transition.mjs';
 import {aliveHoldings} from './holdings.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 declareHoldingWriter('military',{kinds:['member_of','holds_office','fief','employed_by','resides','devotee_of'],entities:['office']});
-// S1b 军粮：粮仓提粮由 agriculture.drawGranary 记入 army:<id>|item_oats|ration；买口粮来自模拟范围外（src:import），
+// S1b 军粮：粮仓提粮、买口粮都由 agriculture.drawGranary 从真实粮仓记入 army:<id>|item_oats|ration（买的向卖粮聚落付款），
 // 就地觅食来自 src:regrowth，吃掉的进 sink:consume。
-declareLedgerWriter('military',{sources:{'src:import':{coin_river:1000000,item_oats:1000000},'src:regrowth':{item_oats:1000000}},sinks:['sink:export','sink:consume']});
+declareLedgerWriter('military',{sources:{'src:import':{coin_river:1000000},'src:regrowth':{item_oats:1000000}},sinks:['sink:export','sink:consume']});
 
 const DAY=1440,clone=v=>structuredClone(v);
 export const ARMY_SUPPLY=Object.freeze(['granary','purchase','forage']);
@@ -278,6 +278,22 @@ export function loseSoldiers(d,engine,a,n,{at,reason,killed=false}){
 }
 
 // ---- 每周：补给、操练、士气、逃兵 ------------------------------------------------------
+// 卖粮给军队的是有粮仓的聚落：驻地自己有粮仓就是驻地，否则是从驻地出发路线可达、路程最短的产粮聚落（道路封闭的不算）；
+// 粮再从卖方运到队伍所在地，路不通就买不到（armySupplyQuote）。
+function armyFoodAccounts(d,engine,id){
+ const ration=armyRations(engine,id),owner=ration.split('|')[0];
+ return [ration,...Object.keys(d.get('ledger','accounts')??{}).filter(k=>{const [o,item,purpose]=k.split('|');return o===owner&&purpose==='store'&&engine.byId.get(item)?.nutrition?.satiety>0;}).sort()];
+}
+function grainSeller(d,engine,a,at){
+ const state=d.get('state'),granaries=(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement).filter(id=>state.settlements?.[id]);
+ if(granaries.includes(a.base))return a.base;
+ let best=null;
+ for(const id of granaries){
+  let minutes;try{minutes=engine.route(a.base,id,'walk',at,d.document.randomSeed).minutes;}catch{continue;}
+  if(!best||minutes<best.minutes||minutes===best.minutes&&id<best.id)best={id,minutes};
+ }
+ return best?.id??null;
+}
 function supplyWeek(d,engine,a,at,src,blocked){
  const m=rules(engine),state=d.get('state'),season=engine.calendar(at).season,famine=Boolean(famineAt(state,a.base,at));
  const eaters=armyStrength(a),daily=eaters*m.soldier.rationPerDay,need=daily*7;
@@ -290,13 +306,24 @@ function supplyWeek(d,engine,a,at,src,blocked){
    got=quote.closed?0:drawArmyRations(d,engine,a.base,quantity,{to:{account:armyRations(engine,a.id)},eventId:src});
    if(got&&a.party!==a.base){paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:{account:partyAccount(engine,d.get('state'),a.base),writer:'military',eventId:src}});partyCredit(d,engine,a.base,paid,{sourceEvent:`${src}:grain`,reason:`${a.name}提粮`,books:BOOKED});}
   }else if(a.supply==='purchase'){
-   const quote=armySupplyQuote(d,engine,a.base,a.location,at),price=Math.ceil(quote.price*(season===3?m.supply.winterPriceFactor:1)*(famine?2:1)),afford=quote.closed||famine?0:Math.floor(partyCoins(engine,state,a.party,d)/price);
-   got=Math.min(want,afford);if(got)paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:ration`,reason:`${a.name}买口粮`,books:{account:sink('export','army_ration'),writer:'military',eventId:src}});
-   if(got)moveStock(d,{from:`src:import|${armyRations(engine,a.id).split('|')[1]}|ration`,to:armyRations(engine,a.id),amount:got,writer:'military',eventId:src});
+   // 买口粮走粮食链：向产粮聚落的粮仓买它保留量以上的余粮，粮从粮仓真实出库，货款付给卖粮聚落公账。
+   const seller=grainSeller(d,engine,a,at);
+   if(seller){
+    const quote=armySupplyQuote(d,engine,seller,a.location,at),price=Math.ceil(quote.price*(season===3?m.supply.winterPriceFactor:1)*(famine?2:1)),afford=quote.closed||famine?0:Math.floor(partyCoins(engine,state,a.party,d)/price);
+    const quantity=Math.min(want,afford);
+    got=quantity?drawArmyRations(d,engine,seller,quantity,{to:{account:armyRations(engine,a.id)},eventId:src}):0;
+    if(got&&a.party!==seller){paid=partyPay(d,engine,a.party,got*price,{sourceEvent:`${src}:ration`,reason:`${a.name}买口粮`,books:{account:partyAccount(engine,d.get('state'),seller),writer:'military',eventId:src}});partyCredit(d,engine,seller,paid,{sourceEvent:`${src}:ration`,reason:`${a.name}买口粮`,books:BOOKED});}
+   }
   }else if(a.supply==='forage'&&!famine){got=Math.floor(want*(season===3?m.supply.winterForageBps:10000)/10000);moveStock(d,{from:`src:regrowth|${armyRations(engine,a.id).split('|')[1]}|forage`,to:armyRations(engine,a.id),amount:got,writer:'military',eventId:src});}
  }
  a.food+=got;const eaten=Math.min(a.food,need);a.food-=eaten;
- moveStock(d,{from:armyRations(engine,a.id),to:`sink:consume|${armyRations(engine,a.id).split('|')[1]}|ration`,amount:eaten,writer:'military',eventId:src});
+ // 吃的是队伍实际存着的口粮：先吃军粮账，再吃委托送来、存在队伍名下的其他食物（quest-sources 原样入账的干粮等）。
+ let left=eaten;
+ for(const account of armyFoodAccounts(d,engine,a.id)){
+  const take=Math.min(left,balance(d,account));if(!take)continue;
+  moveStock(d,{from:account,to:`sink:consume|${account.split('|')[1]}|ration`,amount:take,writer:'military',eventId:src});left-=take;if(!left)break;
+ }
+ if(left)moveStock(d,{from:armyRations(engine,a.id),to:`sink:consume|${armyRations(engine,a.id).split('|')[1]}|ration`,amount:left,writer:'military',eventId:src});
  return {got,paid,need,eaten,hungry:eaten<need,famine,blocked:Boolean(blocked)};
 }
 export function armyWeek(d,engine,a,at,src,{blocked=false}={}){
