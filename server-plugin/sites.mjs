@@ -17,6 +17,7 @@ import {declareLedgerWriter} from './ledger.mjs';
 import {reserve as reserveAccount,bag,moveStock,registerLegacyStock,accrueStock,logisticStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
 import {derived} from './derived.mjs';
+import {derivedStats} from './combat.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('sites',{kinds:['permit']});
 // S1b: 据点的有限资源是资源点账户 site:<据点>:<资源>|<物品>|reserve：首次建账按世界数据（resource.quantity）经 src:genesis 开户，
@@ -361,8 +362,24 @@ function timedYield(engine,document,place,row,target,{holder,from,minutes,channe
 }
 const inSeason=(engine,target,from,to)=>!target.gather||target.gather.seasons.includes(engine.calendar(from).season)&&target.gather.seasons.includes(engine.calendar(to).season);
 // K3：据点资源向住在附近的劳动者开放的同一条规律。一趟劳动行程走得到的据点是劳动者的本地据点，
-// 本地人认得它、知道门道，所以发现前提与机关只挡外来者（玩家入口不变）。物权与许可照常：
+// 本地人认得它、知道门道，所以发现前提只挡外来者（玩家入口不变）。机关是实物：锁、栅门对谁都起作用，
+// 劳动者要么具备条件真去解开（工具、材料、检定，工时计入行程），要么不去。物权与许可照常：
 // 无主、本人或本人聚落所有的是合法采集；其余的照样发生，按 K6 记盗采（与玩家同一罪名入口）。
+const gatesOf=(place,r)=>[...new Set([...(place.site.entryMechanisms??[]),...(r.mechanisms??[])])].map(id=>(place.site.mechanisms??[]).find(m=>m.id===id)).filter(Boolean);
+const gateScore=(engine,state,holder,attribute)=>state.npcs?.[holder]?.attributes?.[attribute]??engine.byId.get(holder)?.attributes?.[attribute]??10;
+// 一道未解除的机关对这个劳动者的条件：元素状态（燃烧、浸湿等）替代工具与检定；否则须持完好工具与足量材料，
+// 成功率按 d20 + 属性调整值 ≥ 难度。不具备条件（或怎么掷都过不了）返回 null。
+function gateTerms(engine,state,holder,m){
+    const d={document:{state},get:(...p)=>p.reduce((v,k)=>v?.[k],{state})};
+    const element=m.element&&traitsOf(engine,state,m.element.feature)?.tags.find(t=>m.element.tags.includes(t));
+    if(element)return {id:m.id,minutes:m.minutes,odds:1,element};
+    if(m.tool&&!(engine.quantity(d,holder,m.tool)>0&&(heldUnit(d,engine,holder,m.tool)?.durability??engine.byId.get(m.tool)?.durability??0)>0))return null;
+    const costs=new Map();for(const c of m.materials??[])costs.set(c.item,(costs.get(c.item)??0)+c.quantity);
+    for(const [item,quantity] of costs)if(engine.quantity(d,holder,item)<quantity)return null;
+    const modifier=Math.floor((gateScore(engine,state,holder,m.check.attribute)-10)/2),odds=Math.max(0,Math.min(20,21-(m.check.difficulty-modifier)))/20;
+    return odds>0?{id:m.id,minutes:m.minutes,odds,modifier,...(m.tool?{tool:m.tool}:{}),materials:[...costs].map(([item,quantity])=>({item,quantity}))}:null;
+}
+const openGates=(place,row,r)=>gatesOf(place,r).filter(m=>row.mechanisms[m.id]?.status!=='已解除');
 const lawfulFor=(place,r,holder,settlement)=>{const owner=ownerOf(place,r);return (!owner||owner===holder||owner===settlement)&&(!place.access?.requiresConsent||owner===holder);};
 export function siteResources(engine,state,{holder,settlement=null}){
     const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
@@ -371,15 +388,38 @@ export function siteResources(engine,state,{holder,settlement=null}){
         return place.site.resources.map(r=>{
             let minutesPerUnit=r.minutes;
             if(r.gather){const {yields,day}=gatherRates(engine,r),rate=yields*herbDensity(engine,r,engine.calendar(state.minute).season);minutesPerUnit=inSeason(engine,r,state.minute,state.minute)&&rate>0?Math.ceil(day/rate):null;}
-            return {site:place.id,resource:r.id,item:r.item,minutesPerUnit,remaining:row.remaining[r.id]??0,lawful:lawfulFor(place,r,holder,settlement)};
+            const gates=openGates(place,row,r).map(m=>gateTerms(engine,state,holder,m));
+            return {site:place.id,resource:r.id,item:r.item,minutesPerUnit,remaining:row.remaining[r.id]??0,lawful:lawfulFor(place,r,holder,settlement),
+                gates:gates.includes(null)?null:gates};
         });
     });
+}
+// 劳动者到场后先解开挡着这份资源的机关：消耗材料、按确定性的 d20 检定，失败照机关登记的伤害受伤。返回是否全部解开。
+export function siteUnlock(d,engine,siteId,resourceId,{holder,eventId}){
+    const place=engine.byId.get(siteId),target=place?.site?.resources?.find(r=>r.id===resourceId);
+    if(!target)throw preconditionFailure('没有这个据点资源');
+    const row=ledger(d,place,engine),state=d.get('state');let open=true;
+    for(const m of openGates(place,row,target)){
+        const terms=gateTerms(engine,state,holder,m);if(!terms){open=false;break;}
+        for(const c of terms.materials??[])engine.itemDelta(d,holder,c.item,-c.quantity,{flow:'sink:consume',purpose:'mechanism',writer:'sites',eventId});
+        const die=terms.element?null:parseInt(digest([d.document.randomSeed,eventId,m.id,'site-gate']).slice(0,8),16)%20+1,success=terms.element?true:die+terms.modifier>=m.check.difficulty;
+        row.mechanisms[m.id]={status:success?'已解除':'未解除',...(terms.element?{method:terms.element}:{die,total:die+terms.modifier}),actor:holder,sourceEvent:eventId,minute:d.get('state','minute')};
+        if(!success){
+            const n=state.npcs?.[holder],harm=m.failureDamage??0;
+            if(n&&harm>0){const max=n.maxHp??derivedStats({level:engine.byId.get(holder)?.level??1,attributes:engine.byId.get(holder)?.attributes,profession:Boolean(engine.byId.get(holder)?.combatProfession)},engine.rules).maxHp,hp=Math.max(0,(n.hp??max)-harm);
+                d.set(['state','npcs',holder,'maxHp'],max);d.set(['state','npcs',holder,'hp'],hp);if(!hp)d.set(['state','npcs',holder,'status'],'濒死');}
+            open=false;break;
+        }
+    }
+    putSite(d,engine,place,row,{eventId});
+    return open;
 }
 // 劳动结束时结算：按在场工时折算产量（不超过存量与所求），经据点账转入 to，返回实际取得的份数。
 export function siteTake(d,engine,siteId,resourceId,{minutes,quantity=Infinity,holder,settlement=null,to,eventId}){
     const place=engine.byId.get(siteId),target=place?.site?.resources?.find(r=>r.id===resourceId);
     if(!target||!Number.isSafeInteger(minutes)||minutes<1)throw preconditionFailure('没有这个据点资源或工时无效');
     const now=d.get('state','minute'),row=ledger(d,place,engine);
+    if(openGates(place,row,target).length)return 0;
     let n=target.gather?(inSeason(engine,target,now-minutes,now)?timedYield(engine,d.document,place,row,target,{holder,from:now-minutes,minutes,channel:`gather:${target.id}:${holder}`}):0):Math.floor(minutes/target.minutes);
     n=Math.max(0,Math.min(n,quantity,row.remaining[target.id]??0));
     const wood=n>0&&forestBacked(engine,place,target);
