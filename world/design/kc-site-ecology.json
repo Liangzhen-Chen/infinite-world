@@ -1,0 +1,438 @@
+{
+  "note": "卡 C 据点自然资源表（构建期，由 tools/kc-processing.mjs --write 读，写入 world/geo/locations.json 的 site.resources 与 site.changes）。据点类型（栖地）由地形派生：biomes.json 有登记的按群落标签，其余按 terrain。资源按物品分类，每类在各栖地的参数为 [储量, 每次长回量, 周期天数]，储量即再生上限。栖地不长这类东西的据点资源是遗留物（旧木料、积盐、残渣），不再生，储量保持作者原值。带 gather 的持续采集资源已有按季节密度的产量表，储量不改，只按表补上缺的再生（上限取原储量）。'*' 表示资源本身就是产地（例如野蜂窝），不看栖地。 native：每种栖地原生的东西，每个据点按自己的栖地补上（已有同物品的不重复补），储量与再生同样按 resources 表。数字待标定。",
+  "habitatOrder": [
+    "saltmarsh",
+    "wetland",
+    "woodland",
+    "alpine",
+    "underground",
+    "dryland",
+    "hill",
+    "plain"
+  ],
+  "biomeHabitats": {
+    "林": [
+      "woodland"
+    ],
+    "滩": [
+      "wetland"
+    ],
+    "苇": [
+      "wetland"
+    ],
+    "河": [
+      "wetland"
+    ],
+    "汀": [
+      "wetland"
+    ],
+    "泉": [
+      "wetland"
+    ]
+  },
+  "siteHabitats": {
+    "loc_wild_yp_north": [
+      "woodland",
+      "hill"
+    ],
+    "loc_wild_wt_mist": [
+      "wetland"
+    ]
+  },
+  "siteHabitatsNote": "地形只写了笼统的平地、丘陵、而地点用途写明是林子或苇滩的，按用途记栖地（老榆杂木林、苇根泥滩）。",
+  "terrainHabitats": {
+    "盐湿滩地": [
+      "saltmarsh",
+      "wetland"
+    ],
+    "湿地盐滩": [
+      "saltmarsh",
+      "wetland"
+    ],
+    "盐滩岩岸": [
+      "saltmarsh"
+    ],
+    "湿林盆地": [
+      "woodland",
+      "wetland"
+    ],
+    "泥炭湿地": [
+      "wetland"
+    ],
+    "湿地滩": [
+      "wetland"
+    ],
+    "河滩平地": [
+      "wetland"
+    ],
+    "林下泥坡": [
+      "woodland",
+      "wetland"
+    ],
+    "河滩泥沼": [
+      "wetland"
+    ],
+    "泥沼芦滩": [
+      "wetland"
+    ],
+    "丘陵河沟": [
+      "wetland",
+      "hill"
+    ],
+    "河岸岩石": [
+      "wetland"
+    ],
+    "阔叶林谷": [
+      "woodland"
+    ],
+    "高地针阔混交林": [
+      "woodland"
+    ],
+    "林下平地": [
+      "woodland"
+    ],
+    "林木丘陵": [
+      "woodland",
+      "hill"
+    ],
+    "山林坡地": [
+      "woodland",
+      "hill"
+    ],
+    "林下丘陵": [
+      "woodland",
+      "hill"
+    ],
+    "湿林林冠": [
+      "woodland"
+    ],
+    "林地丘陵草坡": [
+      "woodland",
+      "hill"
+    ],
+    "高地针阔混交林岩坳": [
+      "woodland"
+    ],
+    "冰蚀裂谷": [
+      "alpine"
+    ],
+    "高山粒雪台原": [
+      "alpine"
+    ],
+    "封闭高山岩坳": [
+      "alpine"
+    ],
+    "冰雪台地岩坳": [
+      "alpine"
+    ],
+    "断崖与高山灌丛": [
+      "alpine",
+      "hill"
+    ],
+    "砾石矿道": [
+      "underground"
+    ],
+    "地下砾土窑道": [
+      "underground"
+    ],
+    "沙丘与砾坡": [
+      "dryland"
+    ],
+    "干旱峡谷": [
+      "dryland"
+    ],
+    "干旱砾坡": [
+      "dryland"
+    ],
+    "干旱峡谷砾坡": [
+      "dryland"
+    ],
+    "旱草原": [
+      "dryland"
+    ],
+    "碎石丘陵": [
+      "hill"
+    ],
+    "玄岩台地": [
+      "hill"
+    ],
+    "丘陵": [
+      "hill"
+    ],
+    "岩坑丘陵": [
+      "hill"
+    ],
+    "山岗丘陵": [
+      "hill"
+    ],
+    "砾石丘陵": [
+      "hill"
+    ],
+    "丘陵沟壑": [
+      "hill"
+    ],
+    "砾石山地": [
+      "hill"
+    ],
+    "砾石山崖": [
+      "hill"
+    ],
+    "丘陵平地": [
+      "hill",
+      "plain"
+    ],
+    "平地丘陵": [
+      "hill",
+      "plain"
+    ],
+    "赤色褶皱山地": [
+      "hill"
+    ],
+    "平地": [
+      "plain"
+    ]
+  },
+  "resources": {
+    "item_salt": {
+      "saltmarsh": [
+        150,
+        15,
+        3
+      ]
+    },
+    "item_honey": {
+      "*": [
+        30,
+        5,
+        15
+      ]
+    },
+    "item_herb": {
+      "woodland": [
+        30,
+        3,
+        7
+      ],
+      "wetland": [
+        30,
+        3,
+        7
+      ],
+      "hill": [
+        20,
+        2,
+        10
+      ],
+      "plain": [
+        15,
+        2,
+        10
+      ],
+      "dryland": [
+        10,
+        1,
+        15
+      ],
+      "alpine": [
+        10,
+        1,
+        15
+      ]
+    },
+    "item_s2_fuling": {
+      "woodland": [
+        10,
+        1,
+        30
+      ]
+    },
+    "item_clay": {
+      "wetland": [
+        60,
+        5,
+        10
+      ],
+      "hill": [
+        40,
+        2,
+        15
+      ],
+      "underground": [
+        40,
+        2,
+        15
+      ]
+    },
+    "item_wood": {
+      "woodland": [
+        40,
+        4,
+        7
+      ]
+    },
+    "item_reed_bundle": {
+      "saltmarsh": [
+        60,
+        10,
+        10
+      ],
+      "wetland": [
+        60,
+        10,
+        10
+      ],
+      "woodland": [
+        20,
+        2,
+        15
+      ],
+      "dryland": [
+        15,
+        2,
+        15
+      ]
+    },
+    "item_resin": {
+      "woodland": [
+        15,
+        2,
+        10
+      ]
+    },
+    "item_tannin_bark": {
+      "woodland": [
+        15,
+        2,
+        10
+      ]
+    },
+    "item_willow_rod": {
+      "wetland": [
+        30,
+        4,
+        10
+      ],
+      "woodland": [
+        20,
+        2,
+        10
+      ]
+    },
+    "item_water": {
+      "alpine": [
+        20,
+        4,
+        3
+      ]
+    },
+    "item_iron_ore": {
+      "hill": [
+        30,
+        1,
+        15
+      ],
+      "underground": [
+        30,
+        1,
+        15
+      ]
+    },
+    "item_flax_stalk": {
+      "wetland": [
+        40,
+        5,
+        10
+      ]
+    },
+    "item_stone": {
+      "hill": [
+        30,
+        3,
+        10
+      ],
+      "underground": [
+        30,
+        3,
+        10
+      ],
+      "dryland": [
+        20,
+        2,
+        15
+      ]
+    }
+  },
+  "native": {
+    "saltmarsh": [
+      {
+        "item": "item_salt",
+        "name": "滩上结的盐壳",
+        "minutes": 20
+      },
+      {
+        "item": "item_reed_bundle",
+        "name": "滩边的芦苇",
+        "minutes": 15
+      }
+    ],
+    "wetland": [
+      {
+        "item": "item_reed_bundle",
+        "name": "水边的芦苇",
+        "minutes": 15
+      },
+      {
+        "item": "item_flax_stalk",
+        "name": "湿地野亚麻",
+        "minutes": 15
+      }
+    ],
+    "woodland": [
+      {
+        "item": "item_wood",
+        "name": "林下的枯枝倒木",
+        "minutes": 20
+      },
+      {
+        "item": "item_resin",
+        "name": "树干伤口渗出的树脂",
+        "minutes": 15
+      }
+    ],
+    "alpine": [
+      {
+        "item": "item_water",
+        "name": "背阴处的积雪",
+        "minutes": 10
+      }
+    ],
+    "underground": [
+      {
+        "item": "item_clay",
+        "name": "坑道壁上的黏土",
+        "minutes": 20
+      }
+    ],
+    "dryland": [
+      {
+        "item": "item_reed_bundle",
+        "name": "背风处的干草茎",
+        "minutes": 15
+      }
+    ],
+    "hill": [
+      {
+        "item": "item_stone",
+        "name": "坡上的碎石",
+        "minutes": 20
+      }
+    ],
+    "plain": [
+      {
+        "item": "item_herb",
+        "name": "路边的野草药",
+        "minutes": 20
+      }
+    ]
+  }
+}
