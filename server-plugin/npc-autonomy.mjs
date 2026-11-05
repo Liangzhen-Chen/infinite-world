@@ -91,8 +91,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(!goal||!auditGoal(goal)||goal.progress>=100)throw preconditionFailure('这项目标不能通过盘点本人库存直接完成');
  }else if(action.kind==='craft'){
   const recipe=engine.world.recipes.find(r=>r.id===action.recipe);if(!recipe)throw preconditionFailure('配方未登记');
-  if(recipe.learningRequired&&!recipe.teachers?.includes(id)&&!state.npcs[id].recipes?.[recipe.id]&&!currentWorkstationRecipes(engine,{...state,minute:at,npcs:presence.npcs},id).some(r=>r.id===recipe.id))throw preconditionFailure('人物没有学会该配方');
-  // 卡 Q：技能不足不拒绝，照做落低档（npcCraft 经 manufacturing.craftOutcome，与玩家同一条）。
+  // 卡 Q：技能不足、没学过配方都不拒绝，照做落低档（npcCraft 经 manufacturing.craftOutcome，与玩家同一条）。
   if(recipe.location&&recipe.location!==actor.location)throw preconditionFailure('不在配方地点');
   // 材料按类别落到本人实际持有的同类物品（与玩家制作同一条 resolveMaterials）。
   const totals=new Map();for(const m of resolveMaterials(d,engine,id,recipe.materials))totals.set(m.item,(totals.get(m.item)??0)+m.amount);
@@ -170,6 +169,8 @@ function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship,grade)
 // tool wear, products, ledger.crafts and skill growth. The caller has checked
 // the recipe, materials and station (validateAction) and keeps its own action
 // record and memories.
+// 人物是否学过这个配方：配方不需学、本人是传授者、学过，或所在工位的现行做法里有它。
+const knowsRecipe=(engine,state,id,r)=>!r.learningRequired||Boolean(r.teachers?.includes(id)||state.npcs?.[id]?.recipes?.[r.id]||currentWorkstationRecipes(engine,state,id).some(p=>p.id===r.id));
 export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnace,minutes}){
  const base=engine.byId.get(id),spent={minutes};let outcome,summary,produced=[];
  minutes??=Math.ceil(engine.byId.get(recipeId).minutes/(facilityView(engine,d.get('state'),location)?.factor||1));spent.minutes=minutes;
@@ -183,7 +184,7 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   if(fee){moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
   const materials=resolveMaterials(d,engine,id,r.materials).map(({item,amount})=>({item,amount}));
   // 卡 Q：品质链输入（扣料、磨损前读）与技能状况，和玩家制作同一组函数。
-  const raw=d.get('state','npcs',id,'skills',r.skill)??base.skills?.[r.skill]??base.proficiencies?.[r.skill],standing=craftStanding(raw!==undefined&&raw!==null,skill,r.minimumProficiency);
+  const raw=d.get('state','npcs',id,'skills',r.skill)??base.skills?.[r.skill]??base.proficiencies?.[r.skill],standing=craftStanding(raw!==undefined&&raw!==null,skill,r.minimumProficiency,knowsRecipe(engine,d.get('state'),id,r));
   const floor=materialFloor(d,engine,id,materials.map(m=>[m.item,m.amount])),toolsFactor=toolFactor(d,engine,id,r.tools),stationFactor=r.workstation?facilityView(engine,d.get('state'),location)?.factor??1:1;
   spent.fee=fee;spent.materials=clone(materials);if(furnace)spent.fuel=clone(furnace.fuel);
   for(const m of materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});

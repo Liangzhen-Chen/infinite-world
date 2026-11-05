@@ -123,9 +123,8 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,cra
     const here=d.get('state','location'),id=spiritStudent(d,args.maker)??args.maker,actor=presentSpirit(d,this,id,{label:'代工者'});
     if(!partner(actor))throw preconditionFailure('只有与你结缘的精怪会替你动手');
     const recipe=this.byId.get(this.resolve(args.recipe,'recipe')),c=actor.cultivation??{};
-    if(recipe.learningRequired&&!c.recipes?.[recipe.id])throw preconditionFailure('它尚未学会这个配方');
-    // 卡 Q：没修习该技能或熟练度不到门槛不拒绝，照做落低档。
-    const known=c.skills?.[recipe.skill]!==undefined,proficiency=c.skills?.[recipe.skill]??0,standing=craftStanding(known,proficiency,recipe.minimumProficiency);
+    // 卡 Q：没修习该技能、熟练度不到门槛或没学过配方都不拒绝，照做落低档。
+    const known=c.skills?.[recipe.skill]!==undefined,proficiency=c.skills?.[recipe.skill]??0,standing=craftStanding(known,proficiency,recipe.minimumProficiency,!recipe.learningRequired||Boolean(c.recipes?.[recipe.id]));
     if(recipe.location&&recipe.location!==here)throw preconditionFailure('不在所需工坊');
     const station=workstation(d,this,recipe,args);
     for(const item of recipe.tools??[])if(this.quantity(d,'player',item)<1||(heldUnit(d,this,'player',item)?.durability??this.byId.get(item).durability)<=0)throw preconditionFailure(`缺少完好的${this.byId.get(item).name}`);

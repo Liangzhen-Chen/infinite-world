@@ -27,10 +27,10 @@ export function recipeInputCost(d,engine,recipe,location=d.get('state','location
  return {materials,copper:materials.reduce((n,r)=>n+r.quantity*r.unitPrice,0)};
 }
 // —— 卡 Q：制作结果的共用规律（玩家、NPC、精怪同一条，参数在 balance/crafting） ——
-// 技能状况：没掌握所需技能 noSkill；掌握了但有效熟练度不到配方门槛 underProficient；否则 skilled。
-// 缺技能不再拒绝：照配方动手，成品落在低档（workmanship.shortfall 封顶）。
+// 技能状况：没掌握所需技能 noSkill；掌握了但有效熟练度不到配方门槛、或没学过这个配方（learningRequired 而未学会）underProficient；否则 skilled。
+// 缺技能、没学过配方都不再拒绝：照配方动手（看样学样），成品落在低档（workmanship.shortfall 封顶）。
 const FAILURE_LABEL={intact:'无损',wear:'损耗',ruin:'报废',partial:'只剩部分功能'};
-export const craftStanding=(hasSkill,proficiency,minimum)=>!hasSkill?'noSkill':proficiency<(minimum??0)?'underProficient':'skilled';
+export const craftStanding=(hasSkill,proficiency,minimum,knowsRecipe=true)=>!hasSkill?'noSkill':!knowsRecipe||proficiency<(minimum??0)?'underProficient':'skilled';
 const unitRoll=(seed,key)=>createHash('sha256').update(`${seed}:${key}`).digest().readUInt32LE(0)/2**32;
 // 成功时的手艺档：检定档与熟练度定档；技能不足时封顶，勉强成功再落一档（不低于最低档）。
 export function craftTier(engine,{standing,degree,proficiency}){
@@ -165,9 +165,7 @@ export function manufacture(d,args,eventId){
     if(args.batches!==undefined){
         const requested=integer(args.batches,1,100000,'制造批数');
         const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
-        // Preserve the native precondition order before quoting a workstation.
-        if(recipe.learningRequired&&!d.get('state','recipes',recipe.id))throw preconditionFailure('尚未学会这个配方');
-        // 卡 Q：缺技能、熟练度不够不拒绝（各批照做、落在低档）；只有物理上做不了的才拒绝。
+        // 卡 Q：缺技能、熟练度不够、没学过配方都不拒绝（各批照做、落在低档）；只有物理上做不了的才拒绝。
         if(recipe.location&&recipe.location!==d.get('state','location'))throw preconditionFailure('不在所需工坊');
         // 材料按类别落到实际持有物（与单批同一条 resolveMaterials）：批数按第一批实际要用的物品算，各批再各自落实。
         const materials=new Map();for(const row of resolveMaterials(d,this,'player',recipe.materials))materials.set(row.item,(materials.get(row.item)??0)+row.amount);
@@ -197,11 +195,10 @@ export function manufacture(d,args,eventId){
             factSummary:`实际制作${batches}批（申请${requested}批）；${results.filter(row=>row.success).length}批成功，成品与副产品按各批检定真实入账。`};
     }
     const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
-    if(recipe.learningRequired&&!d.get('state','recipes',recipe.id))throw preconditionFailure('尚未学会这个配方');
     if(recipe.location&&recipe.location!==d.get('state','location'))throw preconditionFailure('不在所需工坊');
-    // 卡 Q：没掌握技能或熟练度不到门槛照样动手，结果按技能状况落档（craftOutcome）。
+    // 卡 Q：没掌握技能、熟练度不到门槛或没学过配方都照样动手，结果按技能状况落档（craftOutcome）。
     const hasSkill=Boolean(d.get('state','skills',recipe.skill)),proficiency=hasSkill?effectiveProficiency(d,this,recipe.skill):0;
-    const standing=craftStanding(hasSkill,proficiency,recipe.minimumProficiency);
+    const standing=craftStanding(hasSkill,proficiency,recipe.minimumProficiency,!recipe.learningRequired||Boolean(d.get('state','recipes',recipe.id)));
     const attribute=recipe.attribute??this.byId.get(recipe.skill).attribute??'智力',station=workstation(d,this,recipe,args),workMinutes=station?.workMinutes??recipe.minutes;
     // Check real required tools before spending material, rent or time.
     toolBonuses(d,this,recipe.tools??[],attribute,recipe.skill);

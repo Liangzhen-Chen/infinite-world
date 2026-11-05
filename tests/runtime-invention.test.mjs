@@ -86,7 +86,8 @@ test('新配方仅登记规则；学会后使用原制造链扣真实材料、�
     const definition=catalogDefinition(engine,created.document,{entity:'试制木楔法',kind:'recipe'});
     assert.equal(definition.materials[0].item,'item_wood');assert.equal(definition.learningRequired,true);
     assert.ok(catalogDefinition(engine,created.document,{kind:'recipe'}).count>world.recipes.length);
-    await assert.rejects(run(created.document,'world_craft',{recipe:id},'unknown'),/尚未学会/);
+    // 卡 Q：登记了还没学的配方照做落低档（技能状况 underProficient），不再拒绝。
+    {const naive=await run(created.document,'world_craft',{recipe:id},'unknown');assert.equal(naive.result.standing,'underProficient');}
     const learned=await observed(created.document,'world_learn',{entity:id,kind:'recipe',source:'research_study'},true,'recipe_learn');
     const out=await observed(learned.document,'world_craft',{recipe:'试制木楔法'},true,'make'),made=out.document;
     assert.equal(made.state.inventory.item_wood.quantity,learned.document.state.inventory.item_wood.quantity-2);

@@ -84,7 +84,8 @@ test('真实教学和制作：按日修习，学会配方后由精怪代工，�
     c=(await s.run(c,'world_move',{destination:'loc_hw'},'m1')).doc;c=(await s.run(c,'world_move',{destination:'bld_hw_mill'},'m2')).doc;
     assert.equal(c.state.creatures[id].location,'bld_hw_mill');
     const unlearned=structuredClone(c);delete unlearned.state.creatures[id].cultivation.recipes[handle];
-    await assert.rejects(s.run(unlearned,'world_craft',{operation:'manufacture',recipe:handle,maker:id}),/尚未学会/);
+    // 卡 Q：没学过配方的精怪照做，落低档（技能状况 underProficient 或 noSkill），不再拒绝。
+    {const naive=await s.run(unlearned,'world_craft',{operation:'manufacture',recipe:handle,maker:id},'naive');assert.ok(['underProficient','noSkill'].includes(naive.result.standing));}
     const unbound=structuredClone(c);delete unbound.state.creatures[id].companion;
     await assert.rejects(s.run(unbound,'world_craft',{operation:'manufacture',recipe:handle,maker:id}),/结缘/);
     let made=null;
