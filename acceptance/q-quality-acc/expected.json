@@ -1,0 +1,336 @@
+{
+ "card": "Q 手艺档位与品质链",
+ "baseline": "F:/dnd-wt/INT",
+ "generatedFrom": "acceptance-baseline.json",
+ "note": "卡 Q 交付后每条都应为 pass。材料族与配方由被测树数据推出；若交付后某族因世界取得路径（买不到、采不到）变成 blocked，该族单条可暂缓，但 Q1*–Q5* 覆盖断言（≥3 族全过）必须 pass。",
+ "expected": {
+  "木.Q1a 外行动手不被拒、产出同一种物品": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "木.Q1b 外行产物手艺档为仿制或粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "木.Q1c 外行产物耐久明显低于真货（≤ 物品表耐久 × 0.8）": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "木.Q1d 外行产物部分用途缺失": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "木.Q1e 只有物理不可行才拒绝，理由是物理理由": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "木.Q2 三档逐档变好（手艺档、耐久、保留用途单调不减，熟练严格好于缺技能）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "木.Q3a 失败落在无损、损耗、报废、部分功能四类，每类都出现过": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "木.Q3b 失败频率与数据表参数大致相符": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "木.Q3c 失败消耗的材料账本守恒": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "木.Q4a 低品质原料：成品不超过原料品质下限": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "木.Q4b 换更好的工具，期望品质上升": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "木.Q4c 技能更高，期望品质上升（同工具同原料）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "木.Q5a 真货报价高于仿制、粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "木.Q7 账本审计为空": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "金属.Q1a 外行动手不被拒、产出同一种物品": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "金属.Q1b 外行产物手艺档为仿制或粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "金属.Q1c 外行产物耐久明显低于真货（≤ 物品表耐久 × 0.8）": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "金属.Q1d 外行产物部分用途缺失": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "金属.Q1e 只有物理不可行才拒绝，理由是物理理由": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "金属.Q2 三档逐档变好（手艺档、耐久、保留用途单调不减，熟练严格好于缺技能）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "金属.Q3a 失败落在无损、损耗、报废、部分功能四类，每类都出现过": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "金属.Q3b 失败频率与数据表参数大致相符": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "金属.Q3c 失败消耗的材料账本守恒": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "金属.Q4a 低品质原料：成品不超过原料品质下限": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "金属.Q4b 换更好的工具，期望品质上升": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "金属.Q4c 技能更高，期望品质上升（同工具同原料）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "金属.Q5a 真货报价高于仿制、粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "金属.Q5b 卖给 NPC 的成交价随实例品质变化": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "金属.Q7 账本审计为空": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "皮.Q1a 外行动手不被拒、产出同一种物品": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "皮.Q1b 外行产物手艺档为仿制或粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "皮.Q1c 外行产物耐久明显低于真货（≤ 物品表耐久 × 0.8）": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "皮.Q1d 外行产物部分用途缺失": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "皮.Q1e 只有物理不可行才拒绝，理由是物理理由": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "皮.Q2 三档逐档变好（手艺档、耐久、保留用途单调不减，熟练严格好于缺技能）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "皮.Q3a 失败落在无损、损耗、报废、部分功能四类，每类都出现过": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "皮.Q3b 失败频率与数据表参数大致相符": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "皮.Q3c 失败消耗的材料账本守恒": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "皮.Q4a 低品质原料：成品不超过原料品质下限": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "皮.Q4b 换更好的工具，期望品质上升": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "皮.Q4c 技能更高，期望品质上升（同工具同原料）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "皮.Q5a 真货报价高于仿制、粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "皮.Q7 账本审计为空": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "布.Q1a 外行动手不被拒、产出同一种物品": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "布.Q1b 外行产物手艺档为仿制或粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "布.Q1c 外行产物耐久明显低于真货（≤ 物品表耐久 × 0.8）": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "布.Q1d 外行产物部分用途缺失": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "布.Q1e 只有物理不可行才拒绝，理由是物理理由": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "布.Q2 三档逐档变好（手艺档、耐久、保留用途单调不减，熟练严格好于缺技能）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "布.Q3a 失败落在无损、损耗、报废、部分功能四类，每类都出现过": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "布.Q3b 失败频率与数据表参数大致相符": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "布.Q3c 失败消耗的材料账本守恒": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "布.Q4a 低品质原料：成品不超过原料品质下限": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "布.Q4b 换更好的工具，期望品质上升": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "布.Q4c 技能更高，期望品质上升（同工具同原料）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "布.Q5a 真货报价高于仿制、粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "布.Q5b 卖给 NPC 的成交价随实例品质变化": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "布.Q7 账本审计为空": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "Q0 数据推出的材料族不少于 3 个": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "Q1* 该组断言在至少 3 个材料族上全部成立": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "Q2* 该组断言在至少 3 个材料族上全部成立": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "Q3* 该组断言在至少 3 个材料族上全部成立": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "Q4* 该组断言在至少 3 个材料族上全部成立": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "Q5* 该组断言在至少 3 个材料族上全部成立": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "V新(布).Q1a 外行动手不被拒、产出同一种物品": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "V新(布).Q1b 外行产物手艺档为仿制或粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "V新(布).Q1c 外行产物耐久明显低于真货（≤ 物品表耐久 × 0.8）": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "V新(布).Q1d 外行产物部分用途缺失": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "V新(布).Q1e 只有物理不可行才拒绝，理由是物理理由": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "V新(布).Q2 三档逐档变好（手艺档、耐久、保留用途单调不减，熟练严格好于缺技能）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "V新(布).Q3a 失败落在无损、损耗、报废、部分功能四类，每类都出现过": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "V新(布).Q3b 失败频率与数据表参数大致相符": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "V新(布).Q3c 失败消耗的材料账本守恒": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "V新(布).Q4a 低品质原料：成品不超过原料品质下限": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "V新(布).Q4b 换更好的工具，期望品质上升": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "V新(布).Q4c 技能更高，期望品质上升（同工具同原料）": {
+   "expect": "pass",
+   "baseline": "fail"
+  },
+  "V新(布).Q5a 真货报价高于仿制、粗陋": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "V新(布).Q7 账本审计为空": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "V0 变异副本只改数据就能载入并跑通": {
+   "expect": "pass",
+   "baseline": "pass"
+  },
+  "木.Q5b 卖给 NPC 的成交价随实例品质变化": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "皮.Q5b 卖给 NPC 的成交价随实例品质变化": {
+   "expect": "pass",
+   "baseline": "blocked"
+  },
+  "V新(布).Q5b 卖给 NPC 的成交价随实例品质变化": {
+   "expect": "pass",
+   "baseline": "blocked"
+  }
+ }
+}
