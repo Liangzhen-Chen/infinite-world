@@ -28,7 +28,7 @@ import {recordMarketDeal,assertMarketDepth} from './market.mjs';
 import {advanceGovernance} from './governance.mjs';
 import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
 import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
-import {kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor} from './manufacturing.mjs';
+import {kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
@@ -185,7 +185,7 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   const materials=resolveMaterials(d,engine,id,r.materials).map(({item,amount})=>({item,amount}));
   // 卡 Q：品质链输入（扣料、磨损前读）与技能状况，和玩家制作同一组函数。
   const raw=d.get('state','npcs',id,'skills',r.skill)??base.skills?.[r.skill]??base.proficiencies?.[r.skill],standing=craftStanding(raw!==undefined&&raw!==null,skill,r.minimumProficiency,knowsRecipe(engine,d.get('state'),id,r));
-  const floor=materialFloor(d,engine,id,materials.map(m=>[m.item,m.amount])),toolsFactor=toolFactor(d,engine,id,r.tools),stationFactor=r.workstation?facilityView(engine,d.get('state'),location)?.factor??1:1;
+  const floor=materialFloor(d,engine,id,materials.map(m=>[m.item,m.amount])),floors=materialFloors(d,engine,id,materials.map(m=>[m.item,m.amount])),toolsFactor=toolFactor(d,engine,id,r.tools),stationFactor=r.workstation?facilityView(engine,d.get('state'),location)?.factor??1:1;
   spent.fee=fee;spent.materials=clone(materials);if(furnace)spent.fuel=clone(furnace.fuel);
   for(const m of materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
   const crafted={recipe:r.id,batches:1,inputs:materials.reduce((o,m)=>({...o,[m.item]:(o[m.item]??0)+m.amount}),{}),outputs:{},writer:'npc-autonomy',eventId:actionId};
@@ -193,7 +193,7 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   const result=craftOutcome(engine,{standing,degree,success:outcome.success,proficiency:skill,floor,tools:toolsFactor,station:stationFactor,recoverFraction:r.failure?.recoverFraction??0,seed:d.document.randomSeed,key:actionId});
   if(standing!=='skilled')outcome.standing=standing;if(result.failure)outcome.failure=result.failure;if(result.grade!==undefined)outcome.grade=result.grade;
   if(outcome.success||result.failure==='partial'){outcome.workmanship=result.tier;produced=outcome.success?[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]]:[{item:r.output.item,amount:r.output.quantity}];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship,result.grade);crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
-  else{for(const m of materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*result.recover);if(recovered){changeItems(d,engine,id,m.item,recovered,{books:craftOutput('npc-autonomy',actionId)});crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+recovered;}}
+  else{for(const m of returnMaterials(d,engine,id,materials.map(m=>[m.item,m.amount]),result,{floors,eventId:actionId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>changeItems(d,engine,id,item,n,{books:craftOutput('npc-autonomy',actionId)})}))crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+m.amount;
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }
   recordCraft(d,crafted);

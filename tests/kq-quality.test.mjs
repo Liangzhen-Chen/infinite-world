@@ -13,7 +13,7 @@ import {stateReader}from'../server-plugin/valuation.mjs';
 import {checkDegree,toolBonuses}from'../server-plugin/checks.mjs';
 import {useTool,physicalItem}from'../server-plugin/items.mjs';
 import {actionReader}from'../server-plugin/action-capacity.mjs';
-import {craftOutcome,craftFailure}from'../server-plugin/manufacturing.mjs';
+import {craftOutcome,craftFailure,materialFloor}from'../server-plugin/manufacturing.mjs';
 import {instanceClasses,useClasses,craftingParam,workmanshipTier,lostUses}from'../server-plugin/item-class.mjs';
 
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -63,7 +63,7 @@ function enumerate(engine,recipe,{standing,modifier,proficiency,tools=1,station=
 }
 
 test('外行与熟练度不足照做：同一物品 id、落仿制或粗陋、耐久与用途打折；失败分档回收、账本守恒；物理上做不了才拒绝（三族）',async()=>{
- const {world,engine,document}=await shared;
+ const {world,engine,document}=await shared;let wearSeen=0;
  for(const {family,recipe,location} of FAMILIES){
   const r=engine.byId.get(recipe),def=engine.byId.get(r.output.item);
   for(const [standing,prof] of Object.entries(STANDINGS)){
@@ -83,8 +83,16 @@ test('外行与熟练度不足照做：同一物品 id、落仿制或粗陋、�
     if(!x.result.failure)continue;
     const back=Object.fromEntries(x.result.salvage.map(s=>[s.item,s.amount]));
     for(const m of r.materials){
-     const want=x.result.failure==='intact'?m.amount:x.result.failure==='wear'?Math.floor(m.amount*(r.failure?.recoverFraction??0)):0;
+     // 无损原样全退；损耗按 rules.equipment.failureWear 退回（向上取整、至少一份）且品质降；报废按配方 recoverFraction 回收残料；部分功能不退。
+     const wearRule=world.rules.equipment.failureWear;
+     const want=x.result.failure==='intact'?m.amount:x.result.failure==='wear'?Math.min(m.amount,Math.max(1,Math.ceil(m.amount*wearRule.returnFraction))):x.result.failure==='ruin'?Math.floor(m.amount*(r.failure?.recoverFraction??0)):0;
      assert.equal(back[m.item]??0,want,`${family}/${x.result.failure} 回收 ${m.item}`);assert.equal(x.document.state.inventory[m.item]?.quantity??0,want);
+     if(x.result.failure==='wear'){
+      // 损耗退回的料品质比投入（标准件 1）低，记在单件 grade 上，下一次制作的投入下限读得到。
+      const units=(x.document.state.inventory[m.item].instances??[]).map(id=>x.document.state.itemInstances[id]);
+      assert.equal(units.length,want);assert.ok(units.every(u=>u.grade<1&&Math.abs(u.grade-wearRule.gradeFactor)<1e-9),`${family}/损耗 ${m.item} 退回品质 ${units.map(u=>u.grade)}`);
+      assert.ok(materialFloor(actionReader(x.document),engine,'player',[[m.item,want]])<1);wearSeen++;
+     }
     }
     if(x.result.failure==='partial'){assert.equal(x.result.workmanship,TIERS(world)[0]);assert.equal(x.document.state.itemInstances[x.result.instances[0]].item,r.output.item);}
    }
@@ -95,6 +103,7 @@ test('外行与熟练度不足照做：同一物品 id、落仿制或粗陋、�
    await assert.rejects(engine.reduce(c,{tool:'world_craft',args:{recipe},eventId:`kq_phys_${family}`}),reason,`${family}${label}`);
   }
  }
+ assert.ok(wearSeen>0,'三族三档的真实制作里至少出现一次损耗');
  // 用途缺失：仿制的刃具不再具备 cut 用途（镰刀标着 cut），普通的仍具备；制成时缺掉的用途记在实例上。
  assert.ok(useClasses(engine,'item_sickle').includes('cut'));
  assert.deepEqual(lostUses(engine,'item_sickle','仿制'),['cut']);

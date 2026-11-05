@@ -166,6 +166,23 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
     return ids;
 }
 
+// 卡 Q：制作失败（损耗）退回的料已经入库（数量已加），把其中 quantity 份登记为单件并记下降低后的品质 grade——
+// materialFloor 读投入品质的同一处。只登记身份与品质，不增减库存。
+export function markReturnedUnits(d,engine,owner,item,quantity,{eventId,grade}){
+    const held=d.get(...engine.bagPath(owner),item),units=typeof held==='object'?held.instances??[]:[],total=engine.quantity(d,owner,item);
+    if(total-units.length<quantity)throw Error('退回的料不足以登记单件');
+    const definition=engine.byId.get(item),properties=typeof held==='object'?held:{quantity:total,quality:definition.quality,durability:definition.durability,weight:definition.weight},ids=[];
+    for(let index=0;index<quantity;index++){
+        const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:returned:${owner}:${item}:${index}`).digest('hex').slice(0,24)}`;
+        if(d.get('state','itemInstances',id))throw Error('退回料单件编号冲突');
+        holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,origin:'制作失败退回的料，品质已降',
+            quality:properties.quality??definition.quality,durability:properties.durability??definition.durability,maxDurability:properties.maxDurability??definition.durability,grade},'items');
+        ids.push(id);
+    }
+    d.set([...engine.bagPath(owner),item],{...properties,quantity:total,instances:[...units,...ids]});
+    return ids;
+}
+
 export function trackSingleItem(d,engine,owner,item,eventId){
     const held=d.get(...engine.bagPath(owner),item);
     if(engine.quantity(d,owner,item)!==1)throw preconditionFailure('需要单件物品才能确定受术对象');

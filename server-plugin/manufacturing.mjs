@@ -9,7 +9,7 @@ import {craftInput,craftOutput,recordCraft} from './stock.mjs';
 declareLedgerWriter('manufacturing',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
-import {produceItems,wearItem,heldUnit,workmanshipTier}from'./items.mjs';
+import {produceItems,wearItem,heldUnit,workmanshipTier,markReturnedUnits}from'./items.mjs';
 import {milestone}from'./progression.mjs';
 import {prepareThermalWorkstation}from'./magic-object.mjs';
 import {createHash}from'node:crypto';
@@ -40,7 +40,8 @@ export function craftTier(engine,{standing,degree,proficiency}){
     const index=Math.min(names.indexOf(tier),cap);
     return names[degree==='勉强成功'?Math.max(0,index-1):index];
 }
-// 检定失败落到哪一类：intact 无损、wear 损耗、ruin 报废、partial 只剩部分功能；分布按检定档与技能状况取。
+// 检定失败落到哪一类：intact 无损（原样全退）、wear 损耗（退回但品质降，参数 rules.equipment.failureWear）、
+// ruin 报废（按配方 failure.recoverFraction 回收残料）、partial 只剩部分功能；分布按检定档与技能状况取。
 // 不在表里的失败（烧制裂损、工坊停用）返回 null，由调用方按物理原因处理。
 export function craftFailure(engine,{standing,degree,seed,key}){
     const weights=craftingParam(engine,'failure.outcomes')[degree]?.[standing];
@@ -81,11 +82,27 @@ export function craftOutcome(engine,{standing,degree,success,proficiency,floor,t
     }
     const failure=craftFailure(engine,{standing,degree,seed,key});
     if(!failure)return {failure:null,recover:recoverFraction};
-    const recover=failure==='intact'?1:failure==='wear'?recoverFraction:0;
-    if(failure!=='partial')return {failure,recover};
+    if(failure==='wear'){const {returnFraction,gradeFactor}=engine.rules.equipment.failureWear;return {failure,recover:returnFraction,gradeFactor};}
+    if(failure!=='partial')return {failure,recover:failure==='intact'?1:recoverFraction};
     const tier=workmanshipNames(engine)[0];
-    return {failure,recover,tier,grade:craftGrade(engine,{floor,tier,tools,station})};
+    return {failure,recover:0,tier,grade:craftGrade(engine,{floor,tier,tools,station})};
 }
+// 失败退回的材料（玩家、NPC、精怪同一条）：退回份数按 craftOutcome 的 recover（损耗向上取整、至少一份，其余向下取整），
+// 损耗退回的那几份登记为单件、品质 = 该材料投入品质 × gradeFactor（记在 materialFloor 读品质的单件 grade 上）。
+// give(item, n) 是调用方的入库写法；floors 是扣料前各材料的投入品质。烧制裂损不退。
+export function returnMaterials(d,engine,holder,materials,result,{floors,eventId,give,cracked=false}){
+    const back=[];if(cracked)return back;
+    for(const [item,amount] of materials){
+        const n=result.gradeFactor!==undefined?Math.min(amount,Math.max(1,Math.ceil(amount*result.recover))):Math.floor(amount*result.recover);
+        if(!n)continue;
+        give(item,n);
+        if(result.gradeFactor!==undefined)markReturnedUnits(d,engine,holder,item,n,{eventId,grade:Math.round((floors.get(item)??1)*result.gradeFactor*10000)/10000});
+        back.push({item,amount:n});
+    }
+    return back;
+}
+// 各材料扣料前的投入品质（逐种取 materialFloor）。
+export const materialFloors=(d,engine,holder,materials)=>new Map([...materials].map(([item,amount])=>[item,materialFloor(d,engine,holder,[[item,amount]])]));
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};
 export function registerRecipe(d,engine,data,project,maximumStage){
     if(!data||typeof data!=='object')throw preconditionFailure('配方数据无效');
@@ -161,7 +178,7 @@ export function workstation(d,engine,recipe,args){
     return{...station,fee,workMinutes,factor:facility.factor,...(thermalPlan?{thermalPlan}:{})};
 }
 export function manufacture(d,args,eventId){
-    if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor});
+    if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials});
     if(args.batches!==undefined){
         const requested=integer(args.batches,1,100000,'制造批数');
         const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
@@ -218,7 +235,7 @@ export function manufacture(d,args,eventId){
     const inputCost=recipeInputCost(d,this,{...recipe,materials:resolved});
     const outcome=this.check(d,{attribute,skill:recipe.skill,difficulty:recipe.difficulty,tools:recipe.tools??[],helpers:args.helpers??[]},eventId);
     // 品质链的三个输入，在扣料、磨损工具之前读：投入下限、工具乘子、工位乘子（设施完好 1、降级 0.5）。
-    const floor=materialFloor(d,this,'player',materials),tools=toolFactor(d,this,'player',recipe.tools),
+    const floor=materialFloor(d,this,'player',materials),floors=materialFloors(d,this,'player',materials),tools=toolFactor(d,this,'player',recipe.tools),
         stationFactor=station?.factor??1;
     for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount,craftInput('manufacturing',eventId));
     if(station?.fee){
@@ -250,7 +267,7 @@ export function manufacture(d,args,eventId){
     }else{
         // 卡 Q：失败有结构——无损全收回、损耗按配方回收、报废不回收、只剩部分功能得到最低档成品（投入耗尽）。
         if(partial.length){workmanship=result.tier;ids.push(...produceItems(d,this,partial[0].item,partial[0].amount,{eventId,recipe:recipe.id,workmanship,grade,books:craftOutput('manufacturing',eventId)}));}
-        else for(const[item,amount]of materials){const returned=thermal?.crackedQuantity?0:Math.floor(amount*result.recover);if(returned){this.itemDelta(d,'player',item,returned,craftOutput('manufacturing',eventId));salvage.push({item,amount:returned});}}
+        else salvage.push(...returnMaterials(d,this,'player',materials,result,{floors,eventId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>this.itemDelta(d,'player',item,n,craftOutput('manufacturing',eventId))}));
         if(outcome.degree==='大失败'&&injury)this.health(d,{delta:-injury},eventId);
         d.say(partial.length?`制造${outcome.degree}，只做出${partial[0].amount}件${workmanship}的${this.byId.get(partial[0].item).name}，部分用途不具备`:`制造${outcome.degree}${result.failure?`（${FAILURE_LABEL[result.failure]}）`:''}，耗时${workMinutes}分钟，回收${salvage.reduce((sum,row)=>sum+row.amount,0)}份材料`);
     }
