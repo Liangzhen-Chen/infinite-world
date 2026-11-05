@@ -1,0 +1,15 @@
+{
+  "spentYuan": 0,
+  "reservedYuan": 0,
+  "waveLimitYuan": 0.02,
+  "note": "P1 已审内容修订（4 条）：亮圳 11-05 批准，单卡上限 0.02 元。",
+  "cards": {
+    "P1": {
+      "limitYuan": 0.02,
+      "spentYuan": 0,
+      "reservedYuan": 0,
+      "maxRequests": 4
+    }
+  },
+  "requests": {}
+}
