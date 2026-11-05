@@ -367,3 +367,16 @@ export function subjectiveMarketQuote(engine,document,view,args){
  }
  return {...quote,knownFrom:'catalog_prior',estimate:true};
 }
+// 活体行情（K2）：一头牲畜值多少，按它这一物种的身体与产出派生（husbandry-traits 装到物种上的 yields）：
+// 屠宰后的胴体各部分（肉、皮、骨……）按本地行情的现值，加上它活着一年的产出（奶、蛋、毛……）按本地行情的现值。
+// 没有登记体重、因而没有任何产出的物种，没有可作价的依据，返回 null。
+export function livestockValue(d,engine,{species,location,seller=null}){
+ const s=engine.byId.get(species),yields=s?.husbandry?.yields;
+ if(!yields||!(yields.carcass?.length||yields.alive?.length))return null;
+ const c=engine.rules.calendar,year=c.daysPerMonth*c.monthsPerYear;
+ const unit=item=>marketQuote(d,engine,{item,location,seller,quantity:1}).listPrice;
+ const carcass=(yields.carcass??[]).map(r=>({item:r.item,quantity:r.amount,value:r.amount*unit(r.item)}));
+ const products=(yields.alive??[]).map(r=>({item:r.item,quantity:r.perHeadDay*year,value:r.perHeadDay*year*unit(r.item)}));
+ const value=[...carcass,...products].reduce((n,r)=>n+r.value,0);
+ return {species,value,carcass,products,horizonDays:year};
+}
