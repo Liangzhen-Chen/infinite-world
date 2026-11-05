@@ -40,7 +40,8 @@ import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
 import {pow} from './det-math.mjs';
 import {heldUnit,wearItem} from './items.mjs';
-import {isItemClass,pickHeldOfClass,craftingParam} from './item-class.mjs';
+import {isItemClass,pickHeldOfClass,heldOfClass,craftingParam} from './item-class.mjs';
+import {shopOfKeeper} from './shop.mjs';
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
@@ -68,12 +69,15 @@ function wearHeld(d,engine,who,day,items){
   if(rest>0&&typeof d.get(...path)==='object'&&!d.get(...path).instances?.length)d.set([...path,'durability'],max);
  }
 }
+// 店主货架上待售的货（本店补货清单里的物品）不是在用的日用品，也不是家里的柴盐：不磨损，家户炊事先用自家的，货架上的最后才动。
+const merchandise=(engine,state,who)=>new Set((shopOfKeeper(engine,who,state)??shopOfKeeper(engine,who))?.restock?.map(r=>r.item)??[]);
 export function advanceDurableWear(d,engine,day){
  if((d.get('state','family','wearDay')??-1)>=day)return;
  const state=d.get('state');
  for(const who of Object.keys(state.npcs??{}).sort()){
   if(isPhysicallyDead(engine,state,who))continue;
-  wearHeld(d,engine,who,day,Object.keys(d.get(...engine.bagPath(who))??{}).sort().filter(item=>isItemClass(engine,item,'durable')));
+  const stock=merchandise(engine,state,who);
+  wearHeld(d,engine,who,day,Object.keys(d.get(...engine.bagPath(who))??{}).sort().filter(item=>isItemClass(engine,item,'durable')&&!stock.has(item)));
  }
  // 玩家：随身衣物（apparel 类）穿着就磨；工具只在真实使用时磨（制作、采集各自的 toolWear）。
  wearHeld(d,engine,'player',day,Object.keys(d.get(...engine.bagPath('player'))??{}).sort().filter(item=>isItemClass(engine,item,'apparel')));
@@ -82,8 +86,10 @@ export function advanceDurableWear(d,engine,day){
 // 家户每日燃料与盐：从户里各人持有的同类物品按重量扣整份；不足一份的用量记成欠量，下一日累计；手里没有就记短缺日。
 function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId){
  let debt=debtG+needG,short=false;
+ const state=d.get('state'),stock=new Map(holders.map(h=>[h,merchandise(engine,state,h)]));
+ const own=h=>heldOfClass(d,engine,h,cls).find(r=>!stock.get(h).has(r.item))?.item;
  for(;;){
-  const pick=holders.map(h=>({h,item:pickHeldOfClass(d,engine,h,cls)})).find(r=>r.item);
+  const pick=holders.map(h=>({h,item:own(h)})).find(r=>r.item)??holders.map(h=>({h,item:pickHeldOfClass(d,engine,h,cls)})).find(r=>r.item);
   if(!pick){short=debt>0;debt=Math.min(debt,needG);break;}
   const unit=grams(engine,pick.item);if(debt<unit)break;
   engine.itemDelta(d,pick.h,pick.item,-1,{...UPKEEP,purpose:cls==='fuel'?'fuel':'seasoning',eventId});debt-=unit;
