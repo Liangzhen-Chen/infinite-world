@@ -1115,3 +1115,6 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 内容缺口（登记）：没有制皮匠，所以皮革、羊皮纸没人做；只有山羊、野雉两种畜；没有黑麦；手杖、干豌豆、面包、蚯蚓饵没有来源。
 - [ ] A1 决定（11-05 05:10）：loadWorld 分成两层，loadWorld() 返回原样的已审世界，loadRuntimeWorld() 才合并覆盖层并跑规律。审批工具读原样。覆盖层放在 world/meta/mechanics/。做不成规律的 (b) 类改动恢复原值，走审批管线（花钱前报价）：羊皮纸价格、recipe_smelt_iron 的 tools、铁砂更正（删掉按 id 的特判），以及由此连带少掉的 29 条抄书配方。
 - [ ] 转出：r06-bs-market 进私宅那条归 K6 口径；w2-reuse-learning 户内自留导致库存不足那条归 E 口径。等 A1 合入后再派。
+- [x] A1 已审内容隔离：已合入 t-int@89c603ad。8 个审批测试转绿；已审行恢复原样；覆盖层在 world/meta/mechanics/；加载分成 loadWorld（原样）和 loadRuntimeWorld（运行时）两层。
+- [ ] 收尾并行：A1（引擎不就地改写输入世界）、G（economy-content:41 和 w5-content 的工位主人派生）、E（w2-reuse-learning 和 w2-s2 的户内自留）、K6（r06-bs-market）、D2 第二轮（热工位）。
+- [ ] 走审批管线（花钱前报价）：羊皮纸基准价、recipe_smelt_iron 的工具、两处铁砂物品更正，以及由此连带的 29 条抄书配方。
