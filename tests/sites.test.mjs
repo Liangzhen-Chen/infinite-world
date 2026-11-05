@@ -307,3 +307,17 @@ test('元素解法、随时间再生与机关复位按实际状态与流逝时�
     const broken=structuredClone(f.world);broken.locations.at(-1).site.changes[0].max=5;assert.throws(()=>new WorldEngine(broken),/site:/);
     const missing=structuredClone(f.world);missing.locations.at(-1).site.mechanisms.at(-1).element.feature='feature_nowhere';assert.throws(()=>new WorldEngine(missing),/site:/);
 });
+
+test('K6 没人看见的盗采：物主回来发现财物少了，记一条亲历记忆，挂原事件号，不知道是谁',async()=>{
+    const f=fixture(s=>{s.owner='npc_hw_linsui';s.entryMechanisms=[];s.resources[0].requires=[];s.resources[0].mechanisms=[];});let c=await arrive(f);
+    c.state.npcs.npc_hw_linsui.location='loc_capital';
+    c=(await action(f.engine,c,'enter',{},'k6-quiet-enter')).document;
+    const took=await action(f.engine,c,'gather',{target:'bundle'},'k6-quiet-take');c=took.document;
+    const o=took.result.offenses.find(o=>o.offense==='illegal_harvest');assert.ok(o);assert.deepEqual(o.witnesses,[]);
+    assert.ok(c.state.records[o.record].discoverers.includes('npc_hw_linsui'));
+    assert.ok(!(c.state.npcs.npc_hw_linsui.memoryStream??[]).some(m=>m.sourceEvent==='k6-quiet-take'),'物主不在场时不知道');
+    Object.assign(c.state.npcs.npc_hw_linsui,{location:siteId,activity:'查看',status:'正常'});delete c.state.npcs.npc_hw_linsui.scheduleTravel;
+    c=(await run(f.engine,c,'world_time',{minutes:10},'k6-owner-back')).document;
+    const memory=(c.state.npcs.npc_hw_linsui.memoryStream??[]).find(m=>m.sourceEvent==='k6-quiet-take');
+    assert.ok(memory,'物主回来发现了');assert.deepEqual(memory.participants,['npc_hw_linsui']);assert.equal(c.state.records[o.record].discoveredBy,'npc_hw_linsui');
+});

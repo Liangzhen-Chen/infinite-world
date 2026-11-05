@@ -255,11 +255,13 @@ function noteBreaches(){
  breach.any=()=>pending.size>0;
  return {pending,breach};
 }
-function commitBreaches(d,engine,pending,result,eventId,taken=null){
+function commitBreaches(d,engine,pending,result,eventId,taken=null,place=null){
  if(!pending.size||result?.duplicate)return result;
+ // Whoever keeps the place notices later what nobody saw (law.mjs discovery).
+ const discoverers=place?.site?keepers(engine,d,place):undefined;
  const offenses=[...pending.values()].map(b=>{
   const stolen=b.act==='gather'&&taken?.quantity>0?taken:null;
-  return registerOffense(d,engine,{act:b.act,subject:b.subject,victim:b.owner,eventId,value:stolen?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity,holder:b.owner})??0:0,stolen});
+  return registerOffense(d,engine,{act:b.act,subject:b.subject,victim:b.owner,eventId,value:stolen?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity,holder:b.owner})??0:0,stolen,...(discoverers?{discoverers:[...new Set([b.owner,...discoverers])]}:{})});
  });
  return {...result,offenses};
 }
@@ -281,9 +283,14 @@ export function assertSiteHarvest(d,engine,place,args,breach=noteBreaches().brea
  // every entrance mechanism still gate harvesting here and after elapsed time.
  unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
 }
-function watchers(d,engine,place){
+// The adults who keep a site: its occupants, its society's members, its
+// manager and owner. Watchers are those of them awake on the spot.
+function keepers(engine,d,place){
     const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
-    return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(personAge(engine,d.get('state'),n.id).value??0)>=18).map(n=>n.id).sort().filter(id=>{
+    return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(personAge(engine,d.get('state'),n.id).value??0)>=18).map(n=>n.id).sort();
+}
+function watchers(d,engine,place){
+    return keepers(engine,d,place).filter(id=>{
         const a=d.get('state','npcs',id);return a?.location===place.id&&!isPhysicallyDead(engine,d,id)&&!['濒死','昏迷','患病'].includes(a.status)&&(a.hp===undefined||a.hp>0)&&!a.scheduleTravel&&!a.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(a.activity??'');
     });
 }
@@ -380,9 +387,9 @@ export function siteTake(d,engine,siteId,resourceId,{minutes,quantity=Infinity,h
     return n;
 }
 export function siteAction(d,args,eventId){
- const {pending,breach}=noteBreaches();
+ const {pending,breach}=noteBreaches(),place=this.byId.get(d.get('state','location'));
  const result=siteOperation.call(this,d,args,eventId,breach);
- return commitBreaches(d,this,pending,result,eventId,result?.item&&Number.isSafeInteger(result.quantity)?{item:result.item,quantity:result.quantity}:null);
+ return commitBreaches(d,this,pending,result,eventId,result?.item&&Number.isSafeInteger(result.quantity)?{item:result.item,quantity:result.quantity}:null,place);
 }
 function siteOperation(d,args,eventId,breach){
  initialKnowledgeAction(d,this,'site',args);
@@ -554,5 +561,5 @@ export function woodcut(d,args,id){
  if(taken)this.itemDelta(d,'player','item_wood',taken,STOCK_BOOKED);
  const result={success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
   reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
- return commitBreaches(d,this,pending,result,id,result.obtained[0]??null);
+ return commitBreaches(d,this,pending,result,id,result.obtained[0]??null,place);
 }

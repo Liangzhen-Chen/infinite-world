@@ -195,7 +195,7 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
 // licence has already happened; the norm stack names the offense (offenseOf)
 // and the ordinary incident pipeline carries the consequences: the case and
 // its reporting, wanted notices, and the victim's standing when they saw it.
-export function registerOffense(d,engine,{actor='player',act,subject={},victim=null,value,stolen=null,eventId,location}){
+export function registerOffense(d,engine,{actor='player',act,subject={},victim=null,value,stolen=null,eventId,location,discoverers}){
  const row=offenseOf(act,subject);if(!row)throw Error(`E-OFFENSE-ACT 未登记构成罪名的行为类别：${act}`);
  const s=d.get('state');location??=actor==='player'?s.location:s.npcs?.[actor]?.location??s.location;
  // The case value is what the victim lost, valued as goods where it is goods.
@@ -217,6 +217,17 @@ export function registerOffense(d,engine,{actor='player',act,subject={},victim=n
  const witnessed=Math.max(tune.minimum,Math.round(loss*tune.bystanderShare));
  const record=`offense:${key}`;unique(d,record);
  holdingSet(d,null,path(record),{category:'offense',id:record,offense:row.id,act,subject:structuredClone(subject),offender:actor,victim,value,stolen,location,minute:s.minute,witnesses:[...seen],case:caseId,law:law.source,fine,sourceEvent:eventId},'law');
+ // Those who keep the place and did not see it find out when they are next
+ // there (settleDiscoveries): the loss is noticed, the culprit is not known.
+ // Only an act that leaves something missing or broken can be noticed; an
+ // unseen entry that took nothing leaves no trace to find.
+ const traces=['take','gather','destroy'].includes(act);
+ const later=traces?[...new Set(discoverers??(s.npcs?.[victim]?[victim]:[]))].filter(id=>id!==actor&&!seen.includes(id)&&s.npcs?.[id]):[];
+ if(later.length){
+  holdingSet(d,null,path(record),{...d.get(...path(record)),discoverers:later},'law');
+  const index=d.get(...path(DISCOVERY))??{category:'offense_index',ids:[]};
+  holdingSet(d,null,path(DISCOVERY),{...index,ids:[...index.ids,record]},'law');
+ }
  // A victim who saw it reacts at once, court or no court.
  if(victim&&seen.includes(victim)&&s.npcs?.[victim]){
   recordStandingEvidence(d,engine,{key:`offense:${key}`,sourceEvent:eventId,eventType:'欺骗',from:victim,to:actor,minute:s.minute,delta:{trust:-loss}});
@@ -609,7 +620,26 @@ function custodyInterrupted(d,engine,lock){
     const subject=lock.subject??d.get(...path(lock.case),'offender')??'player';
     return isGone(engine,d,subject)?'death':(subject==='player'?d.get('state','location'):d.get('state','npcs',subject,'location'))!==lock.location?'escaped':null;
 }
+// Unwitnessed offenses wait for someone who keeps the place to come back and
+// notice: a first-hand memory of the loss, under the act's own event id.
+const DISCOVERY='offense_undiscovered';
+function settleDiscoveries(d,engine,after){
+ const index=d.get(...path(DISCOVERY));if(!index?.ids?.length)return;
+ const left=[];
+ for(const id of index.ids){
+  const row=d.get(...path(id));if(!row)continue;
+  const finder=row.discoverers.find(npc=>{const n=d.get('state','npcs',npc);return n&&awake(n,d,npc)&&n.location===row.location&&after>=row.minute;});
+  if(!finder){left.push(id);continue;}
+  const label=OFFENSES.find(o=>o.id===row.offense)?.label??row.offense,place=engine.byId.get(row.location)?.name??row.location;
+  d.set(['state','npcs',finder,'memoryStream'],[...d.get('state','npcs',finder,'memoryStream')??[],{id:`discovered:${id}`,sourceEvent:row.sourceEvent,kind:'law',private:true,minute:after,location:row.location,participants:[finder],
+   sourceType:'亲历',salience:3,emotion:'不安',content:`回到${place}，发现有人来过并${label}，不知是谁。`}]);
+  d.set(['state','npcs',finder,'developments'],[...d.get('state','npcs',finder,'developments')??[],{type:'发现财物侵犯',source:row.sourceEvent,minute:after}]);
+  holdingSet(d,null,path(id),{...row,discoveredBy:finder,discoveredAt:after},'law');
+ }
+ holdingSet(d,null,path(DISCOVERY),{...index,ids:left},'law');
+}
 export function advanceLaw(d,after,engine,recordIds){
+    if(engine)settleDiscoveries(d,engine,after);
     const rows=()=>recordIds?recordIds.map(id=>[id,d.get('state','records',id)]).filter(([,row])=>row):Object.entries(d.get('state','records')??{});
     for(const [id,hold] of rows())if(hold.category==='legal_detention'&&(!hold.status||hold.status==='生效')){
         const dead=isGone(engine,d,hold.subject);
