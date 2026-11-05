@@ -1,6 +1,7 @@
 import Ajv from'ajv';
 import {createHash}from'node:crypto';
 import {validateWorld}from'./validate-world.mjs';
+import {fixtureAffording}from'../server-plugin/workstation-services.mjs';
 import {economyFoundation}from'../world/design/economy-foundation.mjs';
 export const contentHash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const text=(minLength,maxLength)=>({type:'string',minLength,maxLength});
@@ -72,10 +73,13 @@ export function assembleEconomy(world,bones,lore){
     return[...existing.map(row=>byId.get(row.id)??row),...updated.filter(row=>!existing.some(old=>old.id===row.id))];};
  candidate.items=mergeById(candidate.items,additions);
  candidate.recipes=mergeById(candidate.recipes,structuredClone(bones.recipes));
+ // K5: a skeleton station is written as the equipment that affords it (with
+ // its id and posted fee); owner and opening derive from the place.
  for(const station of bones.workstations){const location=candidate.locations.find(row=>row.id===station.location);if(!location)throw new Error('工坊位置不在世界中');
-    const {location:ignored,...record}=station;location.workstations??=[];
-    const index=location.workstations.findIndex(row=>row.id===record.id);
-    if(index<0)location.workstations.push(record);else location.workstations[index]=record;
+    const fixture=fixtureAffording(station.kind);if(!fixture)throw new Error(`没有能承担${station.kind}的设备`);
+    const record={fixture,id:station.id,fee:station.fee};location.fixtures??=[];
+    const index=location.fixtures.findIndex(row=>row.id===record.id),same=location.fixtures.findIndex(row=>(row.fixture??row)===fixture);
+    if(index>=0)location.fixtures[index]={...location.fixtures[index],...record};else if(same>=0)location.fixtures[same]={...(typeof location.fixtures[same]==='string'?{}:location.fixtures[same]),...record};else location.fixtures.push(record);
  }
  const validation=validateWorld(candidate,{stage:'engine'});if(!validation.ok)throw new Error(validation.errors.join('\n'));
  return candidate;

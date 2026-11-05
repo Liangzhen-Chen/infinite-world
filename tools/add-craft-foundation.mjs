@@ -18,8 +18,9 @@ const newRecipes=[
         process:'从无裂纹木料留出装柄端，顺纹削出握持弧度。装柄端留少量余量，交给使用者与具体工具配合。'},
 ];
 for(const recipe of newRecipes)if(!recipes.some(row=>row.id===recipe.id))recipes.push(recipe);
-const bench=locations.find(row=>row.id==='bld_hw_mill');bench.workstations??=[];
-if(!bench.workstations.some(row=>row.id==='station_hw_mill_bench'))bench.workstations.push({id:'station_hw_mill_bench',kind:'woodworking',owner:'loc_hw',access:'public',fee:2});
+// K5: the mill's bench is equipment; its station (owner, opening) derives from the place.
+const bench=locations.find(row=>row.id==='bld_hw_mill');bench.fixtures??=[];
+if(!bench.fixtures.some(row=>row.id==='station_hw_mill_bench'))bench.fixtures.push({fixture:'workbench',id:'station_hw_mill_bench',fee:2});
 const apprentice=npcs.find(row=>row.id==='npc_hw_ayan');apprentice.age=19;
 apprentice.skills=Object.fromEntries((Array.isArray(apprentice.skills)?apprentice.skills.map(id=>[id,0]):Object.entries(apprentice.skills??{})));
 apprentice.skills.skill_life_6_core=Math.max(apprentice.skills.skill_life_6_core??0,120);

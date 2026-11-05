@@ -17,6 +17,7 @@ const generatedRecipeRows=Symbol('generated workstation recipes');
 // and fee are read from the place, not from the station.
 const FIXTURES=new Map(JSON.parse(fs.readFileSync(new URL('../world/ontology/fixtures.json',import.meta.url),'utf8')).entries.map(row=>[row.id,row]));
 export const fixtureDefinition=id=>FIXTURES.get(id)??null;
+export const fixtureAffording=kind=>[...FIXTURES.values()].find(row=>row.affords===kind)?.id??null;
 const fixtureEntry=row=>typeof row==='string'?{fixture:row}:row;
 const placeOf=(engine,state,id)=>state?.created?.[id]??engine.byId.get(id);
 // Stations from a place's own published or created facts (no campaign state).
