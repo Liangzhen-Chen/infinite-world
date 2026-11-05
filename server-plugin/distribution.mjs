@@ -23,7 +23,9 @@ declareHoldingWriter('distribution',{kinds:[]});
 
 const DAY=1440;
 const quantityOf=v=>typeof v==='number'?v:v?.quantity??0;
-const tradeable=(engine,item)=>{const it=engine.byId.get(item);return Boolean(it?.id?.startsWith('item_')&&it.basePrice>0&&!(it.tags??[]).includes('coin'));};
+// 可交易物：物品目录里有定价、不是钱币类的货（按目录与类别，不按编号前缀）。
+const catalogItems=new WeakMap();
+const tradeable=(engine,item)=>{let ids=catalogItems.get(engine.world.items);if(!ids)catalogItems.set(engine.world.items,ids=new Map(engine.world.items.map(i=>[i.id,i])));const it=ids.get(item);return Boolean(it&&it.basePrice>0&&!(it.tags??[]).includes('coin'));};
 const settlementOf=(engine,state,id)=>{const n=state.npcs?.[id];return n?placeSettlement(engine,state,n.location).value??null:null;};
 const usable=(engine,state,id)=>{const n=state.npcs?.[id];return Boolean(n&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(n.status));};
 // 午夜结算时双方都在睡觉；决定取本人当天醒着的上午十点的主观视图（与店主进货同一口径，shop.mjs keeperView）。

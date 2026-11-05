@@ -92,9 +92,12 @@ test('出摊不以交易服务为门槛：没有交易服务的村民，手上�
  const trades=n=>(n.services??[]).includes('trade')||(n.serviceCatalog??[]).some(s=>s.kind==='trade');
  const who=world.npcs.find(n=>!trades(n)&&!n.shopType&&doc.state.npcs[n.id]&&n.age>=18&&!(world.rules.economy.shops.stores??[]).some(s=>s.keeper===n.id))?.id;
  assert.ok(who);
- // 一大捆铁钉（配方用料，有人用）：远超这一户自用。
- doc.state.npcs[who].inventory.item_iron_nail=40;
- const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:DAY},eventId:'ke2-day'});doc=applyPatches(doc,out.patches);
+ // 一大捆铁钉（配方用料，有人用）：远超这一户自用。午夜前一刻才到手（白天挑去卖掉了就没有余货可摆）。
+ const {resyncBooks}=await import('./helpers/ledger-sync.mjs');
+ const eve=(Math.floor(doc.state.minute/DAY)+1)*DAY-30;
+ doc=applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:eve-doc.state.minute},eventId:'ke2-eve'})).patches);
+ doc.state.npcs[who].inventory.item_iron_nail=40;resyncBooks(engine,doc);
+ const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:60},eventId:'ke2-midnight'});doc=applyPatches(doc,out.patches);
  const stall=doc.state.records[`stall:${who}`];
  assert.ok(stall,'有余货就出摊');
  const row=stall.restock.find(r=>r.item==='item_iron_nail');assert.ok(row&&row.own&&row.amount>=1&&row.amount<=qty(doc.state.npcs[who].inventory.item_iron_nail));
