@@ -65,7 +65,8 @@ test('维修先检查实际损坏、持有、技能、工具、费用与工作�
     await assert.rejects(run(document,'world_craft',{operation:'repair',item:'旧木杖',repairPlan:'repair_fake'},'fake'),/工序/);
     await assert.rejects(run(document,'world_craft',{operation:'repair',item:'旧木杖',recipe:'recipe_tool_handle'},'mixed'),/制造配方/);
     await assert.rejects(run(document,'world_craft',{operation:'repair',item:'削木小刀'},'knife'),/没有可用维修/);
-    world.locations.find(row=>row.id==='bld_hw_mill').workstations[0].access='consent';
+    // K5：工位开放与否从设备推出——去掉主人公开的收费，磨坊的木作台就只供主人及其许可的人使用（原为手写 access='consent'）。
+    delete world.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(f=>f.fixture==='workbench').fee;
     // K6 依据（审查 C-b manufacturing:86、D1 本文件:69）：没有工作台许可照样能修，命中擅用他人之物。
     const privateEngine=new WorldEngine(world),out=await privateEngine.reduce(document,{tool:'world_craft',args:{operation:'repair',item:'旧木杖'},eventId:'private'});const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,'命中擅用他人之物');assert.equal(o.victim,'loc_hw');
     // 06 §6.7: registered clothing repair extends the catalog. Invalid requests

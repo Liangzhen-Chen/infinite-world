@@ -16,6 +16,7 @@ import {createHash}from'node:crypto';
 import {spiritManufacture}from'./wildlife-society.mjs';
 import {recordArtWork}from'./works.mjs';
 import {facilityView}from'./facility-state.mjs';
+import {fixtureStations,stationLicence}from'./workstation-services.mjs';
 import {regionalTradePrice} from './settlement-trade.mjs';
 import {beginActionActivity,finishActionActivity} from './action-costs.mjs';
 // Replacement value of actual recipe inputs, shared with market quotations.
@@ -58,7 +59,7 @@ export function registerRecipe(d,engine,data,project,maximumStage){
     const location=data.location?engine.resolve(data.location):null;
     if(location&&!engine.world.locations.some(row=>row.id===location))throw preconditionFailure('配方工坊地点未登记');
     if(data.workstation!==undefined&&(!data.workstation||typeof data.workstation!=='string'
-        ||!engine.world.locations.some(row=>(!location||row.id===location)&&row.workstations?.some(station=>station.kind===data.workstation))))throw preconditionFailure('配方缺少可用工作台');
+        ||![...engine.world.locations,...Object.values(d.get('state','created')??{})].some(row=>(!location||row.id===location)&&fixtureStations(row).some(station=>station.kind===data.workstation))))throw preconditionFailure('配方缺少可用工作台');
     return{skill,stage,minimumProficiency,materials:ingredients,output,tools,minutes,difficulty,toolWear,failure,byproducts,learningRequired:true,
         ...(location?{location}:{}),...(data.workstation?{workstation:data.workstation}:{})};
 }
@@ -78,20 +79,21 @@ export function kilnWorkResult(d,plan,outcome,quantity,eventId,{endStress}={}){
 }
 export function workstation(d,engine,recipe,args){
     if(!recipe.workstation)return null;
-    const location=d.get('state','location'),definition=engine.byId.get(location);
-    const station=(facilityView(engine,d.get('state'),location)?.workstations??definition?.workstations)?.find(row=>row.kind===recipe.workstation);
-    if(!station)throw preconditionFailure('当前位置没有所需工作台');
-    if(facilityView(engine,d.get('state'),location)?.factor===0)throw preconditionFailure('工坊已损毁或停用');
-    if(station.access!=='public'){
-        const permission=d.get('state','records',args.authorization);
-        if(!permission||permission.category!=='authorization'||permission.subject!==station.id||permission.action!=='workshop_use'||permission.expires!==undefined&&permission.expires<=d.get('state','minute'))noteUnlicensedUse(d,station,{kind:'workstation'});
-    }
-    const fee=integer(station.fee??0,0,100000,'工坊使用费');
+    const location=d.get('state','location'),facility=facilityView(engine,d.get('state'),location);
+    const station=facility?.workstations.find(row=>row.kind===recipe.workstation);
+    if(!station)throw preconditionFailure(facility?.factor===0&&fixtureStations(d.get('state','created',location)??engine.byId.get(location)).some(row=>row.kind===recipe.workstation)?'工坊已损毁或停用':'当前位置没有所需工作台');
+    // K5: title, a lease, the owner's consent or the posted fee license the use;
+    // knowing the recipe or having learned it from the owner does not. Without
+    // a licence the work still happens and is noted as unlicensed use (K6).
+    const licence=stationLicence(engine,d,station,'player',{authorization:args.authorization});
+    if(!licence)noteUnlicensedUse(d,station,{kind:'workstation'});
+    const fee=licence?.basis==='paid'?integer(station.fee??0,0,100000,'工坊使用费'):0;
     if(d.get('state','player','coins')<fee)reject('E-ACTION-FUNDS','工坊使用费不足',{missing:['需要足额工坊使用费'],repair:['补足工坊使用费后重试']});
-    if(station.owner?.startsWith('npc_')){
+    // A paid service is the owner's to perform; a loan or a lease asks nothing more of them.
+    if(licence?.basis==='paid'&&station.owner?.startsWith('npc_')){
         const owner=d.get('state','npcs',station.owner);if(!owner||isPhysicallyDead(engine,d,station.owner)||owner.status==='濒死')throw preconditionFailure('工坊主人无法履约');
     }
-    const workMinutes=Math.ceil(recipe.minutes/(facilityView(engine,d.get('state'),location)?.factor??1));
+    const workMinutes=Math.ceil(recipe.minutes/facility.factor);
     const thermalPlan=prepareThermalWorkstation(d,engine,station,workMinutes);
     return{...station,fee,workMinutes,...(thermalPlan?{thermalPlan}:{})};
 }

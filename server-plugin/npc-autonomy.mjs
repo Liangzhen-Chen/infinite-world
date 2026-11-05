@@ -10,7 +10,7 @@ let requestTokenizer;
 import {preconditionFailure} from './precondition.mjs';
 import {relationView} from './npc-relations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {currentWorkstationRecipes,stationLicence} from './workstation-services.mjs';
 import {purse,workshopFund,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
@@ -96,10 +96,12 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   const totals=new Map();for(const m of recipe.materials)totals.set(m.item,(totals.get(m.item)??0)+m.amount);
   for(const [item,amount] of totals)if(engine.quantity(d,id,item)<amount)throw preconditionFailure('实际制造材料不足');
   for(const item of recipe.tools??[]){if(recipe.materials.some(m=>m.item===item))throw preconditionFailure('工具不能同时消耗');if(engine.quantity(d,id,item)<1||(heldUnit(d,engine,id,item)?.durability??engine.byId.get(item)?.durability??0)<=0)throw preconditionFailure('没有完好的实际工具');}
-  const station=(facilityView(engine,state,actor.location)?.workstations??engine.byId.get(actor.location)?.workstations)?.find(s=>s.kind===recipe.workstation);
-  if(recipe.workstation&&!station||station&&station.access!=='public'&&station.owner!==id||facilityView(engine,state,actor.location)?.factor===0)throw preconditionFailure('没有可用且获准的工作台');
-  const fee=station?.owner===id?0:station?.fee??0;if(!safe(fee)||state.npcs[id].coins<fee)throw preconditionFailure('工坊费用不足');
-  if(station?.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||isPhysicallyDead(engine,state,station.owner)||state.npcs[station.owner].status==='濒死'))throw preconditionFailure('工坊收费人无法履约');
+  // A working person's own choice: they use a station they hold, rent, were
+  // lent or may pay for, and do not take over someone else's.
+  const station=facilityView(engine,state,actor.location)?.workstations.find(s=>s.kind===recipe.workstation),licence=station&&stationLicence(engine,d,station,id);
+  if(recipe.workstation&&(!station||!licence))throw preconditionFailure('没有可用且获准的工作台');
+  const fee=licence?.basis==='paid'?station.fee??0:0;if(!safe(fee)||state.npcs[id].coins<fee)throw preconditionFailure('工坊费用不足');
+  if(fee&&station.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||isPhysicallyDead(engine,state,station.owner)||state.npcs[station.owner].status==='濒死'))throw preconditionFailure('工坊收费人无法履约');
   npcToolBonus(d,engine,id,recipe);
   if(station?.thermalRequirement&&!ignoreTask){
    work=draft(d.document,at);work.set(['state','npcs',id,'location'],actor.location);
@@ -136,8 +138,8 @@ export function catchUpFurnaces(d,engine,after){
 function advanceFurnace(d,engine,task,until){
  const actor=d.get('state','npcs',task.npc),location=task.presence.npcs[task.npc].location;
  if(!awake(engine,d.get('state'),task.npc,actor)||personConstraint(engine,d.get('state'),task.npc,until)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw preconditionFailure('照管炉火的人物已离岗或失能');
- const recipe=engine.byId.get(task.action.recipe),station=engine.byId.get(location)?.workstations?.find(s=>s.kind===recipe.workstation);
- if(!station||station.access!=='public'&&station.owner!==task.npc||facilityView(engine,d.get('state'),location)?.factor===0)throw preconditionFailure('炉火工坊已不可用');
+ const recipe=engine.byId.get(task.action.recipe),station=facilityView(engine,d.get('state'),location)?.workstations.find(s=>s.kind===recipe.workstation);
+ if(!station||!stationLicence(engine,d,station,task.npc))throw preconditionFailure('炉火工坊已不可用');
  const work=draft(d.document,task.furnace.checkedUntil);
  const row=engine.byId.get(location)?.features?.find(f=>f.id===task.furnace.plan.feature);
  if(!row||row.owner!==task.npc&&row.access!=='public')throw preconditionFailure('人物没有热源的使用权限');
@@ -186,7 +188,7 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   const degree=die===1||total<=r.difficulty-10?'大失败':die===20||total>=r.difficulty+10?'大成功':total<r.difficulty?'失败':total<r.difficulty+5?'勉强成功':'成功';
   outcome={die,modifier,total,degree,difficulty:r.difficulty,success:['勉强成功','成功','大成功'].includes(degree)};
   const thermal=kilnWorkResult(d,furnace?.plan,outcome,r.output.quantity,actionId,{endStress:furnace?.endStress});if(thermal)outcome.thermal=thermal;
-  const station=engine.byId.get(checked.location)?.workstations?.find(s=>s.kind===r.workstation),fee=station?.owner===id?0:station?.fee??0;
+  const station=facilityView(engine,d.get('state'),checked.location)?.workstations.find(s=>s.kind===r.workstation),fee=station&&stationLicence(engine,d,station,id)?.basis==='paid'?station.fee??0:0;
   if(fee){moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
   spent.fee=fee;spent.materials=clone(r.materials);if(furnace)spent.fuel=clone(furnace.fuel);
   for(const m of r.materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
