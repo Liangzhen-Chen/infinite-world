@@ -2,15 +2,13 @@ import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {bag,settlementStock,armyRations,moveStock,BOOKED as BOOKED_STOCK} from './stock.mjs';
-// S1b: 委托交付的实物转入受领方（王都木料入聚落库存、军需入军粮）。交付物与受领账户不是同一物品时
-// （旧规则把任意交付物折作军粮），交付物在交割处消耗、受领方的增量来自模拟范围外——这是旧结算的折算，账本如实记两笔。
-declareLedgerWriter('quest-sources',{sources:{'src:import':{'*':100000}},sinks:['sink:consume']});
+import {bag,settlementStock,armyRations,store,moveStock,stockItem,BOOKED as BOOKED_STOCK} from './stock.mjs';
+// S1b: 委托交付的实物原样转入受领方：交付物与受领账户的物品相同就入那个账户（王都木料入聚落木料库存、军粮入军粮账），
+// 不同就入受领方名下该物的存货账户（store）。实物不折算成别的物品，也不从模拟范围外补进。
+declareLedgerWriter('quest-sources',{sinks:['sink:consume']});
 function deliverStock(d,engine,from,item,to,n,eventId){
- const src=bag(engine,from,item);
- if(src.split('|')[1]===to.split('|')[1])return moveStock(d,{from:src,to,amount:n,writer:'quest-sources',eventId});
- moveStock(d,{from:src,to:`sink:consume|${src.split('|')[1]}|supply`,amount:n,writer:'quest-sources',eventId});
- moveStock(d,{from:`src:import|${to.split('|')[1]}|supply`,to,amount:n,writer:'quest-sources',eventId});
+ const src=bag(engine,from,item),[owner,resource]=to.split('|');
+ moveStock(d,{from:src,to:src.split('|')[1]===resource?to:store(engine,owner,item),amount:n,writer:'quest-sources',eventId});
 }
 import {personSimulation,questPublisher,questBoards} from './entity-view.mjs';
 // U17 任务自动来源（指南3.10）。任务公告栏的来源除玩家与官员手发外，还有：
@@ -200,7 +198,7 @@ export function settleQuestOutcome(d,engine,q,minute){
   const n=q.objective.quantity,board=q.fundedBy.treasury;
   if(engine.quantity(d,q.publisher,q.objective.item)<n)throw preconditionFailure('王都委托未收到实际物资');
   engine.itemDelta(d,q.publisher,q.objective.item,-n,BOOKED_STOCK);deliverStock(d,engine,q.publisher,q.objective.item,settlementStock(engine,board,'wood'),n,`${q.id}:outcome`);
-  d.set(['state','settlements',board,'wood'],(d.get('state','settlements',board,'wood')??0)+n);
+  if(engine.resolve(q.objective.item,'item')===stockItem(engine,'wood'))d.set(['state','settlements',board,'wood'],(d.get('state','settlements',board,'wood')??0)+n);
   const result={category:'quest_outcome',quest:q.id,royal:true,settlement:board,supplied:n,minute};d.set(['state','records',`${q.id}:outcome`],result);return result;
  }
  // War commissions use the existing effect-table generator and its funded delivery.

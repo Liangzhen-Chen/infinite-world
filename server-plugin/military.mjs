@@ -280,6 +280,10 @@ export function loseSoldiers(d,engine,a,n,{at,reason,killed=false}){
 // ---- 每周：补给、操练、士气、逃兵 ------------------------------------------------------
 // 卖粮给军队的是有粮仓的聚落：驻地自己有粮仓就是驻地，否则是从驻地出发路线可达、路程最短的产粮聚落（道路封闭的不算）；
 // 粮再从卖方运到队伍所在地，路不通就买不到（armySupplyQuote）。
+function armyFoodAccounts(d,engine,id){
+ const ration=armyRations(engine,id),owner=ration.split('|')[0];
+ return [ration,...Object.keys(d.get('ledger','accounts')??{}).filter(k=>{const [o,item,purpose]=k.split('|');return o===owner&&purpose==='store'&&engine.byId.get(item)?.nutrition?.satiety>0;}).sort()];
+}
 function grainSeller(d,engine,a,at){
  const state=d.get('state'),granaries=(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement).filter(id=>state.settlements?.[id]);
  if(granaries.includes(a.base))return a.base;
@@ -313,7 +317,13 @@ function supplyWeek(d,engine,a,at,src,blocked){
   }else if(a.supply==='forage'&&!famine){got=Math.floor(want*(season===3?m.supply.winterForageBps:10000)/10000);moveStock(d,{from:`src:regrowth|${armyRations(engine,a.id).split('|')[1]}|forage`,to:armyRations(engine,a.id),amount:got,writer:'military',eventId:src});}
  }
  a.food+=got;const eaten=Math.min(a.food,need);a.food-=eaten;
- moveStock(d,{from:armyRations(engine,a.id),to:`sink:consume|${armyRations(engine,a.id).split('|')[1]}|ration`,amount:eaten,writer:'military',eventId:src});
+ // 吃的是队伍实际存着的口粮：先吃军粮账，再吃委托送来、存在队伍名下的其他食物（quest-sources 原样入账的干粮等）。
+ let left=eaten;
+ for(const account of armyFoodAccounts(d,engine,a.id)){
+  const take=Math.min(left,balance(d,account));if(!take)continue;
+  moveStock(d,{from:account,to:`sink:consume|${account.split('|')[1]}|ration`,amount:take,writer:'military',eventId:src});left-=take;if(!left)break;
+ }
+ if(left)moveStock(d,{from:armyRations(engine,a.id),to:`sink:consume|${armyRations(engine,a.id).split('|')[1]}|ration`,amount:left,writer:'military',eventId:src});
  return {got,paid,need,eaten,hungry:eaten<need,famine,blocked:Boolean(blocked)};
 }
 export function armyWeek(d,engine,a,at,src,{blocked=false}={}){
