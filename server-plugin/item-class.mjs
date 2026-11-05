@@ -60,6 +60,14 @@ export function resolveMaterials(d,engine,holder,materials){
  return out;
 }
 
+// 家户每日用度（唯一一份定义）：按类别、按重量。npc-life 每日照此从户里扣，household-budget 照此自留，market 照此补买。
+// 每行 {cls, purpose（账本用途）, gramsPerDay}；状态里的欠量与短缺日按 `${cls}DebtG`、`${cls}ShortDays` 记。
+export function householdUsage(engine,minute,members){
+ const fuel=craftingParam(engine,'household.fuelKgPerDay'),season=engine.calendar(minute).season;
+ return [{cls:'fuel',purpose:'fuel',gramsPerDay:(fuel.cooking+(fuel.heating[season]??0))*1000},
+  {cls:'salt',purpose:'seasoning',gramsPerDay:craftingParam(engine,'household.saltGramsPerPersonDay')*members.length}];
+}
+
 // —— 加载期派生营养与生熟 ——
 // 物品表写了 nutrition 的照用；没写的食物：有产出它的配方就按投入守恒派生，没有配方就按重量 × 类别密度。
 // 结果：可直接当一餐的食物写入 nutrition（消费方照旧读 nutrition）；全部食物写 nutrientContent（含生料）与 foodState。

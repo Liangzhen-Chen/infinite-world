@@ -40,7 +40,7 @@ import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
 import {pow} from './det-math.mjs';
 import {heldUnit,wearItem} from './items.mjs';
-import {isItemClass,pickHeldOfClass,heldOfClass,craftingParam} from './item-class.mjs';
+import {isItemClass,pickHeldOfClass,heldOfClass,craftingParam,householdUsage} from './item-class.mjs';
 // Shop restock lists reach npc-life through registration: importing shop.mjs here closes an import cycle (TDZ at load).
 export function registerMerchandiseResolver(fn){registerMerchandiseResolver.fn=fn;}
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
@@ -85,7 +85,7 @@ export function advanceDurableWear(d,engine,day){
  d.set(['state','family','wearDay'],day);
 }
 // 家户每日燃料与盐：从户里各人持有的同类物品按重量扣整份；不足一份的用量记成欠量，下一日累计；手里没有就记短缺日。
-function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId){
+function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId,purpose){
  let debt=debtG+needG,short=false;
  const state=d.get('state'),stock=new Map(holders.map(h=>[h,merchandise(engine,state,h)]));
  const own=h=>heldOfClass(d,engine,h,cls).find(r=>!stock.get(h).has(r.item))?.item;
@@ -93,21 +93,21 @@ function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId){
   const pick=holders.map(h=>({h,item:own(h)})).find(r=>r.item)??holders.map(h=>({h,item:pickHeldOfClass(d,engine,h,cls)})).find(r=>r.item);
   if(!pick){short=debt>0;debt=Math.min(debt,needG);break;}
   const unit=grams(engine,pick.item);if(debt<unit)break;
-  engine.itemDelta(d,pick.h,pick.item,-1,{...UPKEEP,purpose:cls==='fuel'?'fuel':'seasoning',eventId});debt-=unit;
+  engine.itemDelta(d,pick.h,pick.item,-1,{...UPKEEP,purpose,eventId});debt-=unit;
  }
  return {debt,short};
 }
 function householdUpkeep(d,engine,day,p){
  const state=d.get('state'),holders=[...new Set([p.owner,...p.members])].filter(id=>state.npcs?.[id]).sort();if(!holders.length)return;
- const fuelKg=craftingParam(engine,'household.fuelKgPerDay'),season=engine.calendar(day*DAY).season;
- const fuelNeed=Math.round((fuelKg.cooking+(fuelKg.heating[season]??0))*1000),saltNeed=Math.round(craftingParam(engine,'household.saltGramsPerPersonDay')*p.members.length);
- const key=['state','family','upkeep',p.key],old=d.get(...key)??{fuelDebtG:0,saltDebtG:0,fuelShortDays:0,saltShortDays:0},eventId=`household-upkeep:${day}:${p.household??p.owner}`;
- const fuel=consumeByWeight(d,engine,holders,'fuel',fuelNeed,old.fuelDebtG,eventId),salt=consumeByWeight(d,engine,holders,'salt',saltNeed,old.saltDebtG,eventId);
- const row={fuelDebtG:fuel.debt,saltDebtG:salt.debt,fuelShortDays:fuel.short?old.fuelShortDays+1:0,saltShortDays:salt.short?old.saltShortDays+1:0};
+ // 用度按 item-class 的 householdUsage（唯一一份定义）逐类扣：欠量、短缺日按 `${cls}DebtG`、`${cls}ShortDays` 记。
+ const usage=householdUsage(engine,day*DAY,p.members),key=['state','family','upkeep',p.key],eventId=`household-upkeep:${day}:${p.household??p.owner}`;
+ const zero=Object.fromEntries([...usage.map(u=>[`${u.cls}DebtG`,0]),...usage.map(u=>[`${u.cls}ShortDays`,0])]),old={...zero,...d.get(...key)};
+ const done=usage.map(u=>({u,...consumeByWeight(d,engine,holders,u.cls,Math.round(u.gramsPerDay),old[`${u.cls}DebtG`],eventId,u.purpose)}));
+ const row={...Object.fromEntries(done.map(r=>[`${r.u.cls}DebtG`,r.debt])),...Object.fromEntries(done.map(r=>[`${r.u.cls}ShortDays`,r.short?old[`${r.u.cls}ShortDays`]+1:0]))};
  if(!canonicalEqual(old,row))d.set(key,row);
 }
 // 户里缺燃料、缺盐的程度（连续短缺日数），供采买需求读取。
-export function householdUpkeepGap(state,key){const r=state.family?.upkeep?.[key];return {fuelShortDays:r?.fuelShortDays??0,saltShortDays:r?.saltShortDays??0};}
+export function householdUpkeepGap(state,key){const r=state.family?.upkeep?.[key]??{};return Object.fromEntries(Object.entries(r).filter(([k])=>k.endsWith('ShortDays')));}
 
 // Plan all meals against the same revision, then consume physical holdings.
 export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
