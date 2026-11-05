@@ -313,7 +313,7 @@ function workPlaces(e,document,who,settlement,kinds){
  }
  return out;
 }
-// 缺的投入从哪来：本地据点与林木自己去采（与采集劳动同一套来源与许可），或向本聚落有铺面的持货人按市场报价买。
+// 缺的投入从哪来：本人职业做得了采集的，去本地据点与林木自己采（与采集劳动同一套来源与许可）；或向本聚落有铺面的持货人按市场报价买。
 function supplies(e,document,who,item,quantity,settlement,local){
  const out=[];
  for(const s of local.natural)if(s.item===item&&s.available>=quantity)
@@ -325,10 +325,11 @@ function supplies(e,document,who,item,quantity,settlement,local){
  }
  return out;
 }
-// 本地能取得投入的地方，一次决策里只读一次：本聚落的据点与林木，本聚落有铺面的卖家（可售存货按卖家与物品记一次）。
+// 本地能取得投入的地方，一次决策里只读一次：本人职业做得了的采集（据点、林木），本聚落有铺面的卖家（可售存货按卖家与物品记一次）。
+// 不做采集的手艺人缺料就向持货人买，分工照职业。
 function localSupply(e,state,who,settlement){
  const read=stateReader(marketState(state,who)),seen=new Map();
- return {natural:naturalSources(e,state,who,['gather','fell']),keepers:buyers(e,state,who).filter(b=>placeSettlement(e,state,b.location).value===settlement),
+ return {natural:naturalSources(e,state,who,laborCategories(e,state,who)),keepers:buyers(e,state,who).filter(b=>placeSettlement(e,state,b.location).value===settlement),
   stock:(keeper,item)=>{const key=`${keeper}|${item}`;if(!seen.has(key))seen.set(key,saleableStock(read,e,keeper,item,{business:true}).available);return seen.get(key);}};
 }
 // 同一状态里同一买卖双方、同一货与数量的报价只算一次（多道配方常要同一种料）。
@@ -529,16 +530,16 @@ function present(d,e,who,at){
  const n=d.get('state','npcs',who);
  return Boolean(n)&&isEffective(e,d.get('state'),who)&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&(n.location===at||n.location===null&&n.scheduleTravel?.from===at);
 }
-// 加工行程里自己去采的一站，记作这趟加工（labor 是 process），取得方式记在 side。
+// 加工行程里自己去采的一站，按它本来的劳动类别（采集或伐木）记，与采集行程同一本账。
 function settleWork(d,e,who,a,id,at,part=''){
- const to=bag(e,who,a.item),want=Math.min(a.quantity,carryRoom(e,d.document,who,a.item)),how=a.method??a.labor,ev=id+part;
+ const to=bag(e,who,a.item),want=Math.min(a.quantity,carryRoom(e,d.document,who,a.item)),ev=id+part;
  let taken=0,reason=null;
  if(!present(d,e,who,a.to))reason='劳动者没有实际到场';
  else if(!usableTool(d,e,who,a.tool))reason='没有完好的实际工具';
- else if(how==='gather'){const [,site]=a.source.split(':');taken=siteTake(d,e,site,a.resource,{quantity:want,minutes:a.work,holder:who,settlement:homeSettlement(e,d.get('state'),who),to,eventId:ev});}
- else if(how==='fell'){taken=harvestForest(d,e,a.to,want,at,{to,eventId:ev});if(a.tool)wearItem(d,e,who,a.tool,e.rules.forestWater.forest.wear);}
+ else if(a.labor==='gather'){const [,site]=a.source.split(':');taken=siteTake(d,e,site,a.resource,{quantity:want,minutes:a.work,holder:who,settlement:homeSettlement(e,d.get('state'),who),to,eventId:ev});}
+ else if(a.labor==='fell'){taken=harvestForest(d,e,a.to,want,at,{to,eventId:ev});if(a.tool)wearItem(d,e,who,a.tool,e.rules.forestWater.forest.wear);}
  if(taken)changeItems(d,e,who,a.item,taken,{books:BOOKED});
- laborRecord(d,id,{npc:who,labor:a.labor,...(a.method?{side:a.method}:{}),location:a.to,minute:at,source:a.source,produced:taken?[{item:a.item,quantity:taken}]:[],success:taken>0,nights:a.nights,...(taken?{}:{reason:reason??'到场后没有可取的资源'})},part);
+ laborRecord(d,id,{npc:who,labor:a.labor,location:a.to,minute:at,source:a.source,produced:taken?[{item:a.item,quantity:taken}]:[],success:taken>0,nights:a.nights,...(taken?{}:{reason:reason??'到场后没有可取的资源'})},part);
 }
 function settleSale(d,e,who,a,id,at){
  const fail=reason=>laborRecord(d,id,{npc:who,labor:a.labor,from:a.from,to:a.to,location:a.to,minute:at,goods:[],success:false,reason,nights:a.nights});
@@ -605,7 +606,7 @@ function settleStop(d,e,trip,i){
  const id=trip.sourceEvent,part=`:${i}`,kind=stop.acts[0].kind;
  if(kind==='buy')return settleBuy(d,e,who,a,stop,id,at,part);
  if(kind==='craft')return settleCraft(d,e,who,a,stop,id,at,part);
- stop.acts.forEach((act,j)=>settleWork(d,e,who,{...act,labor:a.labor,method:act.kind,to:stop.location,work:act.quantity*act.minutesPerUnit,nights:a.nights},id,at,`${part}:${j}`));
+ stop.acts.forEach((act,j)=>settleWork(d,e,who,{...act,labor:act.kind,to:stop.location,work:act.quantity*act.minutesPerUnit,nights:a.nights},id,at,`${part}:${j}`));
 }
 const pendingTrips=state=>recordsWhere(state.records,'category','market_trip').filter(r=>r.labor&&r.action&&r.settledAt===undefined);
 const nextStop=trip=>trip.action.stops?.[trip.settledStops??0];
