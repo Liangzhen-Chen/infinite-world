@@ -86,10 +86,15 @@ test('粮仓买卖、交粮和留种转移真实谷物与铜钱，并保留种�
 });
 test('粮仓拒绝用谷物替代指定商品；正确物品可交易，历史事件仍可回放',async()=>{
     const{engine,c,run}=setup();atCounter(c);const before=structuredClone(c);
-    for(const operation of ['buy','donate','reserve_seed']){
+    for(const operation of ['buy','reserve_seed']){
         await assert.rejects(run(c,'world_field',{operation:`farm_${operation}`,quantity:1,item:'燕麦粉'},`wrong_${operation}`),/只办理带壳燕麦.*不能替换/);
         assert.deepEqual(c,before);
     }
+    // W1：公仓收任何谷物（grain 类，按重量折成本仓计量）。交粮指定燕麦粉不再按"替换商品"拒绝，而按实际持有判；非谷物仍拒收。
+    await assert.rejects(run(c,'world_field',{operation:'farm_donate',quantity:1,item:'燕麦粉'},'wrong_donate'),/行囊谷物不足/);
+    assert.deepEqual(c,before);
+    await assert.rejects(run(c,'world_field',{operation:'farm_donate',quantity:1,item:'item_salt'},'salt_donate'),/只收谷物/);
+    assert.deepEqual(c,before);
     const purchased=await run(c,'world_field',{operation:'farm_buy',quantity:1,item:'带壳燕麦'},'correct');
     assert.equal(purchased.document.state.inventory.item_oats.quantity,1);
     const historic=await engine.reduce(c,{tool:'world_field',args:{operation:'farm_buy',quantity:1,item:'燕麦粉'},eventId:'historic'},{replay:true});

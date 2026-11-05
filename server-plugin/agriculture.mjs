@@ -4,7 +4,8 @@ import {goodsWorth} from './valuation.mjs';
 import {husbandryAction} from './husbandry.mjs';
 import {wearItem,useTool} from './items.mjs';
 import {purse,treasury as treasuryAccount,moveCoins} from './money.mjs';
-import {BOOKED} from './stock.mjs';
+import {BOOKED,craftInput,craftOutput,recordCraft} from './stock.mjs';
+import {isItemClass,pickHeldOfClass} from './item-class.mjs';
 import {declareLedgerWriter,reviseLots} from './ledger.mjs';
 import {granary as granaryAccount,seedBank as seedAccount,settlementStock,bag,crop as cropAccount,registerLegacyStock,accrueStock,armyRations,transit as transitAccount,moveStock,bookStock} from './stock.mjs';
 import {derived} from './derived.mjs';
@@ -12,7 +13,8 @@ import {recordEntriesWhere} from './storage.mjs';
 // S1b: 农事是粮仓与种粮的唯一写入者：收成与农副产来自 src:regrowth（田地按积温生长，05 §5.5），
 // 吃掉的进 sink:consume，过期与月损进 sink:decay，仓满挤出与掠夺无主的进 sink:destroy；
 // 播种的种粮进 sink:consume；成熟时再生到田地账户，收获只转移已有作物。
-declareLedgerWriter('agriculture',{sources:{'src:regrowth':{'*':1000000}},sinks:['sink:consume','sink:decay','sink:destroy']});
+// 捐粮时别的谷物按重量折成本仓计量份数，是一对 sink:consume / src:craft（granary:intake）。
+declareLedgerWriter('agriculture',{sources:{'src:regrowth':{'*':1000000},'src:craft':{'*':1000000}},sinks:['sink:consume','sink:decay','sink:destroy']});
 import {granaryCapacity,installFacilityRuntime}from'./facility-state.mjs';
 import {legalCodeAt} from './law-codes.mjs';
 import {consumeGrowthDay,validateGrowthRules,validateGrowthWorld}from'./magic-growth.mjs';
@@ -440,15 +442,24 @@ export function agricultureAction(d,args,eventId){
         counter(d,this,p);
         const quantity=operation==='repair'?0:int(args.quantity);let accepted=0;
         const item=this.rules.agriculture.grainItem;
-        if(!this.replaying&&['buy','donate','reserve_seed'].includes(operation)&&args.item!==undefined&&this.resolve(args.item,'item')!==item)throw preconditionFailure(`粮仓此操作只办理${this.byId.get(item).name}，不能替换指定物品；其他商品请向实际商家交易`);
+        if(!this.replaying&&['buy','reserve_seed'].includes(operation)&&args.item!==undefined&&this.resolve(args.item,'item')!==item)throw preconditionFailure(`粮仓此操作只办理${this.byId.get(item).name}，不能替换指定物品；其他商品请向实际商家交易`);
         if(operation==='buy'){
             const reserve=s.population*p.reserveDays,available=Math.max(0,r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)-reserve),worth=quantity>0?goodsWorth(d,this,{item,quantity,location:p.settlement,holder:null}):0,cost=worth??0;
             if(worth===null)throw preconditionFailure('这批粮当地无从估价，粮仓不能定价出售');if(quantity>available)throw preconditionFailure('粮仓没有这份可售余粮，过冬储粮和种粮不出售');if(d.get('state','player','coins')<cost)throw preconditionFailure('买粮余额不足');
             const paid=takeGrain(r,s,quantity,false,{account:bag(this,'player',item)});if(paid!==quantity)throw preconditionFailure('粮仓实际库存不足');
             moveCoins(d,{from:purse(this,'player'),to:treasuryAccount(id),amount:cost,writer:'agriculture',eventId});this.itemDelta(d,'player',item,quantity,BOOKED);d.set(['state','player','coins'],d.get('state','player','coins')-cost);s.treasury+=cost;r.ledger.sold+=quantity;
         }else if(operation==='donate'){
-            if(this.quantity(d,'player',item)<quantity)throw preconditionFailure('行囊谷物不足');this.itemDelta(d,'player',item,-quantity,BOOKED);
-            accepted=addBatch(r,s,p,quantity,{id:`donation:${eventId}`,day:Math.floor(d.get('state','minute')/1440),source:'玩家实际交粮',capacity:granaryCapacity(this,d.get('state'),p.settlement,r.granary.capacity),expiresDay:Math.floor(d.get('state','minute')/1440)+this.byId.get(item).shelfLifeDays,from:{account:bag(this,'player',item)}});r.ledger.donated+=accepted;// F043：粮仓放不下的部分在交割处损毁，捐赠账与贡献只计实收
+            // 公仓收任何谷物（grain 类）：指定了哪件就交哪件，没指定按本仓计量谷物优先、再按 id 顺序取够数的一种。
+            const named=args.item!==undefined?this.resolve(args.item,'item'):null;
+            if(named&&!isItemClass(this,named,'grain'))throw preconditionFailure(`粮仓只收谷物，${this.byId.get(named).name}不是谷物；其他商品请向实际商家交易`);
+            const given=named?(this.quantity(d,'player',named)>=quantity?named:null):pickHeldOfClass(d,this,'player','grain',quantity,{prefer:item});
+            if(!given)throw preconditionFailure('行囊谷物不足');
+            // 粮仓以本仓计量谷物一份（foodUnitKg）记粮：别的谷物按重量折成份数，不满一份的零头随交割耗去。
+            const grams=id=>Math.round((this.byId.get(id).weight??0)*1000),units=given===item?quantity:Math.floor(quantity*grams(given)/grams(item));
+            if(units<1)throw preconditionFailure(`${quantity}份${this.byId.get(given).name}折不满粮仓一份计量`);
+            this.itemDelta(d,'player',given,-quantity,given===item?BOOKED:craftInput('agriculture',eventId));
+            accepted=addBatch(r,s,p,units,{id:`donation:${eventId}`,day:Math.floor(d.get('state','minute')/1440),source:'玩家实际交粮',capacity:granaryCapacity(this,d.get('state'),p.settlement,r.granary.capacity),expiresDay:Math.floor(d.get('state','minute')/1440)+this.byId.get(given).shelfLifeDays,from:given===item?{account:bag(this,'player',item)}:craftOutput('agriculture',eventId)});r.ledger.donated+=accepted;// F043：粮仓放不下的部分在交割处损毁，捐赠账与贡献只计实收
+            if(given!==item)recordCraft(d,{recipe:'granary:intake',inputs:{[given]:quantity},outputs:{[item]:accepted},writer:'agriculture',eventId});
         }else if(operation==='reserve_seed'){
             if(r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)<quantity)throw preconditionFailure('实际谷物不足，不能把蔬果或未来收成当种粮');
             const moved=takeGrain(r,s,quantity,true,{account:seedAccount(this,id)},b=>({id:seedLotId(b),kind:'seed'}));r.field.seedBank+=quantity;r.field.seedBatches.push(...moved.parts.map(({amount,harvestDay,expiresDay})=>({amount,harvestDay,expiresDay})));
