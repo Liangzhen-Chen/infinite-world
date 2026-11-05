@@ -17,7 +17,8 @@ async function setup(){
     document.state.inventory.item_whittling_knife={quantity:1,quality:'木',durability:80,weight:0.2};
     document.state.skills.skill_life_6_core={proficiency:120,daily:{},breakthroughs:[]};document.state.recipes.recipe_wooden_pegs={source:{type:'teacher',id:'npc_hw_ayan'}};
     const run=async(c,tool,args,id)=>{const out=await engine.reduce(c,{tool,args,eventId:id});return{document:applyPatches(c,out.patches),result:out.result};};
-    return{world,engine,document,run};
+    // A1：引擎在自己的运行时副本上工作；本文件构造后改配方、设备，改的是引擎的世界（断言不动）
+    return{world:engine.world,engine,document,run};
 }
 async function degree(run,c,args,wanted){
     for(let i=0;i<200;i++){const id=`manufacture_${i}`,out=await run(c,'world_craft',args,id);if(out.result.degree===wanted)return{...out,id};}
