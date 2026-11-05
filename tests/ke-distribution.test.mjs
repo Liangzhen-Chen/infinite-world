@@ -29,8 +29,10 @@ test('a sold-out dealer buys back his usual stock from a villager who holds it; 
  const deal=Object.values(doc.state.records).find(r=>r.category==='market_trade'&&r.buyer===dealer&&r.seller===holder&&r.item===item);
  assert.ok(deal&&deal.quantity===usual&&deal.totalCoins>0);
  // The holder's purse also moves for his own meals that day; the money trail is checked by the ledger reconciliation below.
- const rec=Object.values(doc.state.records).find(r=>r.category==='dealer_restock'&&r.dealer===dealer);
- assert.deepEqual(rec.rows.find(r=>r.item===item).deals,[{seller:holder,quantity:usual,cost:deal.totalCoins}]);
+ // 卡 E2 依据：提供交易又持货的猎户按持货派生为摊（不靠 shopType），补货改由摊的每日补货走同一条 buyFromHolders，
+ // 回执记在摊的账（shop:<摊>）而不是 dealer_restock；进货对象、数量与货款不变。
+ const rec=doc.state.records['shop:shop_hw_wushuo'];
+ assert.deepEqual(rec.entries.find(r=>r.item===item).deals,[{seller:holder,quantity:usual,cost:deal.totalCoins}]);
  assert.equal(Object.entries(doc.ledger.flows).filter(([k])=>k.startsWith(`src:import|${item}|`)).reduce((n,[,v])=>n+v,0),0);
  assert.deepEqual(reconcile(engine,doc).mismatches,[]);
 });

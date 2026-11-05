@@ -1664,6 +1664,8 @@
     "rentalCopperPerNight": 6,
     "rentalCopperPerWeek": 35,
     "tradeCycleDays": 7,
+    "seasonalTrait": "grain",
+    "seasonalTraitNote": "卡E2：区域价的季节因子（settlementTrade.seasonFactors）只作用于随收成周期涨落的那一类货；规律参数（类别名，不是物品编号），取周贸易标的所属类别 grain。",
     "credit": {
       "source": "U2 契约与信用：借贷月息沿用 loanMonthlyInterest，工钱沿用 wageCopperPerHalfDay，房钱沿用 rentalCopperPerNight/Week",
       "loan": {
@@ -1888,8 +1890,18 @@
           "markup": 1.2,
           "cycleDays": 7,
           "firstDay": 1
+        },
+        "stall": {
+          "channels": [
+            "stall"
+          ],
+          "markup": 1,
+          "cycleDays": 1,
+          "firstDay": 1,
+          "note": "卡E2 派生卖家（摆摊）：提供交易又持有有人用得上的货的人，不靠 shopType 字段就出摊。没有铺面，不加铺面加价（markup 1，按市价卖）；补货沿用没有铺面的经营者的规律——每天把卖掉的货补回平常的存货（cycleDays 1，distribution.advanceDealers 原口径）。规律参数，不是校准靶值。"
         }
       },
+      "derivedType": "stall",
       "additionalRestock": {
         "shop_hw_forge": [
           {

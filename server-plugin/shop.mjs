@@ -131,13 +131,21 @@ function catalog(world,rules){
 function settlementIds(world,rules){return catalog(world,rules).places;}
 const held=(npc,item)=>{const v=npc?.inventory?.[item];return typeof v==='number'?v:v?.quantity??0;};
 const trades=npc=>(npc.services??[]).includes('trade')||(npc.serviceCatalog??[]).some(s=>s?.kind==='trade');
-// Derived shops: a person who offers trade (services or serviceCatalog) and whose
-// `shopType` names a type in rules.economy.shops.types becomes a shop with that
-// type's channels, markup and cycle. Its settlement is found by walking up from
-// the person's settlement, workplace, home or location; its restock is the
-// person's `shopRestock` rows, or else each held item produced locally and
-// admitted by quality, restocked locally by half the shelf (at least 1) up to
-// what the person holds now. Hand-registered stores always win for their keeper.
+// Derived shops: a person who offers trade (services or serviceCatalog) becomes a shop. An authored
+// `shopType` naming a type in rules.economy.shops.types gives that type's channels, markup and cycle;
+// otherwise (卡 E2 派生卖家，不靠 shopType 字段) the holder sets up as rules.economy.shops.derivedType —
+// a stall — as long as he holds goods somebody uses (food, a recipe's material, or durable gear that wears out).
+// Its settlement is found by walking up from the person's settlement, workplace, home or location; its restock
+// is the person's `shopRestock` rows, or else each held item (an authored type keeps only locally produced ones)
+// admitted by quality, restocked by half the shelf (at least 1) up to what the person holds now.
+// Hand-registered stores always win for their keeper.
+const demandIndex=new WeakMap();
+function inDemand(world,item){
+    let used=demandIndex.get(world.recipes??world.items);
+    if(!used){used=new Set((world.recipes??[]).flatMap(r=>(r.materials??[]).map(m=>m.item)));demandIndex.set(world.recipes??world.items,used);}
+    const row=catalog(world,world.rules.economy?.shops).itemById.get(item);
+    return Boolean(row)&&(used.has(item)||row.nutrition?.satiety>0||row.durability>0);
+}
 export function derivedShops(world,rules=world.rules.economy?.shops){
     const types=rules?.types??{},keepers=new Set((rules?.stores??[]).map(s=>s.keeper));
     if(!rules||!Object.keys(types).length)return[];
@@ -145,12 +153,19 @@ export function derivedShops(world,rules=world.rules.economy?.shops){
     const settle=npc=>{for(let at of [npc.settlement,npc.workplace?.location,npc.home?.location??npc.home,npc.location]){const seen=new Set();
         while(typeof at==='string'&&!seen.has(at)){if(places.has(at))return at;seen.add(at);at=byId.get(at)?.parent;}}return null;};
     for(const npc of world.npcs){
-        if(typeof npc.shopType!=='string'||keepers.has(npc.id))continue;
-        const type=Object.hasOwn(types,npc.shopType)?types[npc.shopType]:null,settlement=settle(npc);
+        const authored=typeof npc.shopType==='string';
+        if(keepers.has(npc.id)||!authored&&!trades(npc))continue;
+        const shopType=authored?npc.shopType:rules.derivedType,type=Object.hasOwn(types,shopType)?types[shopType]:null,settlement=settle(npc);
         const shop={id:`shop_${npc.id.replace(/^npc_/,'')}`,name:byId.get(npc.workplace?.location)?.name??npc.occupation??npc.name,keeper:npc.id,settlement,
-            channels:[...type?.channels??[]],markup:type?.markup,cycleDays:type?.cycleDays,firstDay:type?.firstDay,shopType:npc.shopType,derived:true,trades:trades(npc),restock:[]};
+            channels:[...type?.channels??[]],markup:type?.markup,cycleDays:type?.cycleDays,firstDay:type?.firstDay,shopType,derived:true,...(authored?{}:{stall:true}),trades:trades(npc),restock:[]};
+        // A stall's goods made elsewhere restock along the route from where they are made (real shipments only, receivedRouteStock).
+        // 摆摊的人照旧把卖掉的货补回平常的存货（与没有铺面的经营者同一条：distribution.dealingStock），每个周期补满。
+        const row=item=>{const from=originSettlement(world,item,rules),base={item,amount:authored?Math.max(1,Math.ceil(held(npc,item)/2)):held(npc,item),maximum:held(npc,item)};
+            return from===settlement?{...base,source:'local'}:!authored&&from?{...base,source:'route',from}:null;};
         shop.restock=Array.isArray(npc.shopRestock)?structuredClone(npc.shopRestock):type&&settlement?Object.keys(npc.inventory??{}).filter(item=>held(npc,item)>0&&world.items.some(i=>i.id===item)
-            &&originSettlement(world,item,rules)===settlement&&qualityAllowed(world,shop,item,rules)).sort().map(item=>({item,source:'local',amount:Math.max(1,Math.ceil(held(npc,item)/2)),maximum:held(npc,item)})):[];
+            &&(authored||inDemand(world,item))&&qualityAllowed(world,shop,item,rules)).sort().map(row).filter(Boolean):[];
+        // 没有可卖的货（或没有人用得上），就不出摊。
+        if(!authored&&!shop.restock.length)continue;
         rows.push(shop);
     }
     return rows;
@@ -167,7 +182,8 @@ registerShopShelves((engine,place)=>{
     let index=shelfIndex.get(rules);
     if(!index||index.npcs!==engine.world.npcs){
         const rows=new Map();
-        for(const store of shopStores(engine.world))rows.set(store.settlement,[...rows.get(store.settlement)??[],...(store.restock??[])]);
+        // 摊的货架上限就是摊主手上平常的货，这份货已经算在本地可售供给里；它不是向外采购的需求，不重复计入（卡 E2）。
+        for(const store of shopStores(engine.world))if(!store.stall)rows.set(store.settlement,[...rows.get(store.settlement)??[],...(store.restock??[])]);
         shelfIndex.set(rules,index={npcs:engine.world.npcs,rows});
     }
     return index.rows.get(place)??[];
@@ -192,7 +208,7 @@ function readCurrentShops(engine,state){
         if(!settlement)continue;
         const changedType=type&&type!==(store.shopType??original?.shopType)&&!store.channels.includes(type),template=changedType?rules.types?.[type]:null;
         if(changedType&&!template)continue;
-        const shop={...store,...template,keeper,settlement,location:business.location.value,shopType:type,channels:template?.channels??store.channels};
+        const shop={...store,...template,keeper,settlement,location:business.location.value,shopType:type??store.shopType,channels:template?.channels??store.channels};
         // The keeper's own repricing (restockShop) stands in place of the type's standard markup while it is on record.
         const pricing=state.records?.[`shop_pricing:${keeper}`];
         if(pricing?.category==='shop_pricing'&&pricing.shop===shop.id){shop.baseMarkup=shop.markup;shop.markup=typeof pricing.markup==='number'?pricing.markup:fromRational(pricing.markup);}
@@ -237,6 +253,8 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const out=[];
  for(const shop of read.shops){
   if(shop.settlement!==place||shop.keeper!==owner&&members.includes(shop.keeper)||view&&shop.keeper!==owner)continue;
+  // 只有货架上有口粮的店才是口粮来源；没有口粮的店不必算路程。
+  if(!shop.restock.some(row=>engine.byId.get(row.item)?.nutrition?.satiety>0))continue;
   let travel=0;
   if(location!==shop.location){try{travel=engine.route(location,shop.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
