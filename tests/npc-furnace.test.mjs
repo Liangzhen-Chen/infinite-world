@@ -15,8 +15,9 @@ function fixture({fuel=2,initialFuel=1000,kiln=false,minutes=20}={}){
  base.schedule={default:[{start:0,end:1440,location,activity:'照管炉火',services:[]}]};base.goals={short:[],medium:[],long:[]};
  const thermalModel=kiln?{...model,wallOffsetsC:[-30,30],kiln:{safeGradientC:0,safeRiseCPerMinute:0,crackPermillePerStress:100}}:structuredClone(model);
  place.features=[{id:feature,name:'试验炉',kind:'object',owner:npc,access:'consent',position:[0,0],state:{},thermalModel,thermalInitial:{temperatureC:200,fuelMg:initialFuel}}];
- place.workstations=[{id:'station_furnace_test',kind:'test_furnace',access:'public',owner:'player',fee:2,thermalRequirement:{feature,minimumC:100,maximumC:1000,burning:true}}];
- world.recipes.push({id:recipeId,name:'试验烧制',skill:'skill_carpentry',minimumProficiency:0,difficulty:0,minutes,workstation:'test_furnace',materials:[{item:'item_clay',amount:1}],output:{item:'item_wooden_peg',quantity:4},tools:['item_whittling_knife'],toolWear:1,failure:{recoverFraction:1,injury:0},teachers:[npc]});
+ // K5：工位由设备属性派生——磨坊里搭一座窑（kiln→pottery），保留原编号、公开收费与热源绑定。
+ place.fixtures=[{fixture:'kiln',id:'station_furnace_test',fee:2,thermalRequirement:{feature,minimumC:100,maximumC:1000,burning:true}}];
+ world.recipes.push({id:recipeId,name:'试验烧制',skill:'skill_carpentry',minimumProficiency:0,difficulty:0,minutes,workstation:'pottery',materials:[{item:'item_clay',amount:1}],output:{item:'item_wooden_peg',quantity:4},tools:['item_whittling_knife'],toolWear:1,failure:{recoverFraction:1,injury:0},teachers:[npc]});
  const engine=new WorldEngine(world),doc=engine.initialFromLegacy(seed,'npc-furnace-test');doc.state.minute=600;doc.state.location='loc_capital';
  for(const actor of Object.values(doc.state.npcs))actor.activity??='日常活动';
  Object.assign(doc.state.npcs[npc],{location,activity:'照管炉火',status:'正常',coins:100,goals:base.goals,skills:{skill_carpentry:2100},inventory:{item_charcoal:{quantity:fuel},item_clay:{quantity:3},item_whittling_knife:{quantity:1,durability:50}}});
@@ -46,9 +47,9 @@ test('缺燃料、冷炉、温度不符或没有热源权限时拒绝，材料�
  for(const mode of ['fuel','cold','temperature','permission','location','building']){
   const s=fixture({fuel:mode==='fuel'?0:2});
   if(mode==='cold')thermal(s).burning=false;
-  if(mode==='temperature')s.world.locations.find(l=>l.id===location).workstations[0].thermalRequirement.minimumC=800;
+  if(mode==='temperature')s.world.locations.find(l=>l.id===location).fixtures[0].thermalRequirement.minimumC=800;
   if(mode==='permission')s.world.locations.find(l=>l.id===location).features[0].owner='player';
-  if(mode==='location')s.world.locations.find(l=>l.id===location).workstations[0].thermalRequirement.feature='feature_s1_hearth';
+  if(mode==='location')s.world.locations.find(l=>l.id===location).fixtures[0].thermalRequirement.feature='feature_s1_hearth';
   if(mode==='building')s.doc.state.buildings[location]={condition:0};
   const before=structuredClone(s.doc),row=await plan(s);assert.equal(row.status,'拒绝',mode);assert.deepEqual(s.doc.state.npcs,before.state.npcs);assert.deepEqual(s.doc.state.records,before.state.records);assert.equal(s.doc.state.npcAutonomy?.tasks,undefined);
  }

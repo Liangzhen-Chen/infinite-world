@@ -34,16 +34,14 @@ export function fixtureStations(place){
  }
  return out;
 }
-// Who holds the station: the owner of the physical heat source it is bound to,
-// else the building's current owner, its catalogue owner, the household living
-// there, or the settlement whose ground it is.
+// Who holds the station: the building's current owner, its catalogue owner,
+// the household living there, or the settlement whose ground it is. A bound
+// heat source keeps its own owner and consent (magic-object reads those).
 export function stationOwners(engine,state,station){
  const place=placeOf(engine,state,station.location);
- return place?ownersAt(place,engine.world.households,state,station):[];
+ return place?ownersAt(place,engine.world.households,state):[];
 }
-function ownersAt(place,worldHouseholds,state,station){
- const feature=station.thermalRequirement&&place.features?.find(f=>f.id===station.thermalRequirement.feature);
- if(typeof feature?.owner==='string')return [feature.owner];
+function ownersAt(place,worldHouseholds,state){
  const building=state?.buildings?.[place.id];
  if(building&&Object.hasOwn(building,'owner'))return typeof building.owner==='string'?[building.owner]:[];
  if(typeof place.owner==='string')return [place.owner];
@@ -64,7 +62,7 @@ export function materializeWorkstations(world){
   const stations=fixtureStations(place);
   delete place.workstations;if(!stations.length)continue;
   // Non-enumerable: the world's serialized form, hash and clones keep only the fixtures.
-  Object.defineProperty(place,'workstations',{value:stations.map(station=>({...station,owner:ownersAt(place,world.households,null,station)[0]??null})),enumerable:false,writable:true,configurable:true});
+  Object.defineProperty(place,'workstations',{value:stations.map(station=>({...station,owner:ownersAt(place,world.households,null)[0]??null})),enumerable:false,writable:true,configurable:true});
  }
  return world;
 }
