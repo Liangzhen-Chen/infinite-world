@@ -15,8 +15,10 @@ const skill=(proficiency)=>({proficiency,breakthroughs:[],daily:{}});
 function fresh(location='bld_hw_school'){
     const c=engine.initialFromLegacy({state:seed.state,memories:seed.memories},'works-test');
     c.state.location=location;c.state.player.coins=500;c.state.skills.skill_literacy=skill(300);
-    c.state.inventory.item_parchment={quantity:10,quality:'木',durability:100,weight:0.06};
-    c.state.inventory.item_soot_ink={quantity:5,quality:'木',durability:100,weight:0.1};
+    // E 卡：出版印书每册耗 1 纸 1 墨（works.mjs publish）。原有 10 纸 5 墨供写稿、抄书、测绘，另备 50 纸 50 墨供印书
+    // （本文件最多一册书稿印 20+10+20=50 册）。
+    c.state.inventory.item_parchment={quantity:60,quality:'木',durability:100,weight:0.06};
+    c.state.inventory.item_soot_ink={quantity:55,quality:'木',durability:100,weight:0.1};
     return c;
 }
 const audience=(c,ids=['npc_hw_luqing','npc_hw_linsui','npc_hw_chenbai'])=>{for(const id of ids){Object.assign(c.state.npcs[id],{location:c.state.location,status:'正常',activity:'闲坐'});c.state.npcs[id].coins=50;}return c;};
@@ -28,7 +30,7 @@ test('写作出版：署名书稿、印数售出收入、余册入囊；名望�
     const work=wrote.document.state.works[wrote.result.work];
     assert.equal(work.kind,'manuscript');assert.equal(work.author,'player');assert.equal(work.title,'河湾农事札记');
     assert.equal(wrote.document.state.itemInstances[work.instance].item,'item_work_manuscript');
-    assert.equal(wrote.document.state.inventory.item_parchment.quantity,9);
+    assert.equal(wrote.document.state.inventory.item_parchment.quantity,59);// 60 张写稿用 1 张（原为 10-1=9；纸多备 50 张供印书）
     const event=wrote.document.state.records[`world_event:${work.sourceEvent}`];
     assert.equal(event.verb,'author');assert.ok(event.tags.includes('write'));
     const coins=wrote.document.state.player.coins;

@@ -12,14 +12,15 @@ import {employmentActive} from './employment-state.mjs';
 import {householdResources,householdBudget,householdOptions,registerHouseholdFoodSources} from './household-budget.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {settlementStock,priceRead,bagStock} from './stock.mjs';
-// S1b 补货：本地产出与外路到货来自模拟范围外（src:import，按货价付给来源聚落公账）；聚落库存补货从聚落库存转入店主行囊。
-declareLedgerWriter('shop',{sources:{'src:import':{'*':100000}},sinks:['sink:export']});
+// S1b/K2 补货：本地货架向本聚落持货人进货（distribution.mjs），外路到货只收真实运单，聚落库存补货从聚落库存转入店主行囊；都不从模拟范围外补进。
+declareLedgerWriter('shop',{sinks:['sink:export']});
 import {isReputationSettlement}from'./reputation-registry.mjs';
 import {standing} from './standing.mjs';
 import {marketFactor}from'./promotion.mjs';
 import {personBusinesses,personHousehold,personSimulation,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
+import {buyFromHolders,advanceDealers} from './distribution.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,stateMemo,PatchCursor,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
@@ -469,11 +470,33 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
     }
     return {...entry,reason:'没有已到场的持货人或可领取运单；集日不生成现货'};
 }
+// 本地货架（K2 分销）：向本聚落真实持有这件货的人进货（distribution.buyFromHolders），不再从模拟范围外补进。
+// 店主的进货款出自柜台，柜台不够时由店主自己决定是否从钱袋注资；进不进看转卖所得能否抵过进价。
+function localRestock(d,engine,shop,row,minute,want,ctx){
+    const entry={day:Math.floor(minute/DAY),minute,item:row.item,source:'local',wanted:want,added:0,paidCopper:0,shipments:[]};
+    if(!d.get('state','npcs',shop.keeper))return {...entry,reason:'店主不是名册人物，无从向持货人进货'};
+    const eventId=`shop:${shop.id}:${minute}:${row.item}:local`;
+    ctx.view??=keeperView(d,engine,shop.keeper,minute);
+    const view=ctx.view,budget=()=>{const b=householdBudget(d,engine,shop.keeper,{view});return counterCash(d,shop.keeper)+Math.max(0,Math.min(b.cash,...b.timeline.map(r=>r.balance)));};
+    const pay=({to,amount,eventId:id})=>{
+        if(amount>counterCash(d,shop.keeper))fundCounter(d,engine,{shop,minute,target:amount,eventId:`${id}:fund`,ctx});
+        const counter=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account;
+        if(counter&&counterCash(d,shop.keeper)>=amount)moveCoins(d,{from:counter,to,amount,writer:'shop',eventId:id});
+        else{moveCoins(d,{from:purse(engine,shop.keeper),to,amount,writer:'shop',eventId:id});mirrorPartyCoins(d,engine,shop.keeper,-amount,id,'shop');}
+    };
+    const decide=({cost,resale,seller})=>keeperChoice(d,engine,shop,minute,ctx,{kind:'restock',from:seller,cost:{value:cost},reward:Math.max(resale,Math.ceil(cost*shop.markup))});
+    const r=buyFromHolders(d,engine,{buyer:shop.keeper,settlement:shop.settlement,item:row.item,want,minute,eventPrefix:eventId,view,cash:budget,pay,decide});
+    if(!r.added)return {...entry,reason:r.reason};
+    const referenceCopper=Math.round(regionalTradeBase(d,engine,row.item,shop.settlement,minute)*r.added);
+    return {...entry,added:r.added,paidCopper:r.paidCopper,referenceCopper,from:r.deals.map(x=>x.seller),deals:r.deals,cost:{goods:r.paidCopper,freight:0,duties:0},
+        origin:{kind:'holders',from:shop.settlement},reason:'向本聚落持货人进货'};
+}
 function restockRow(d,engine,shop,row,minute,ctx={}){
     // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(row.source==='route')return receivedRouteStock(d,engine,shop,row,minute,Math.max(0,want),ctx);
     if(want<=0)return null;
+    if(row.source==='local')return localRestock(d,engine,shop,row,minute,want,ctx);
     const from=shop.settlement;
     // Supply and base are read once per call site below; they do not change between the quotes of one binary search.
     let supplyMemo=null,baseMemo=null;
@@ -483,11 +506,9 @@ function restockRow(d,engine,shop,row,minute,ctx={}){
         baseMemo??=regionalTradeBase(d,engine,row.item,shop.settlement,minute);
         return marketQuote(d,engine,{item:row.item,location:shop.settlement,minute,seller:from,buyer:shop.keeper,quantity,business,base:baseMemo,supply:supplyMemo});
     };
-    // Cross-settlement supply is handled above through real holders and K12 deliveries.
-    // 回执写明来源（origin）和费用构成。聚落库存补货是真实上游，从聚落库存转入。
-    const imported=row.source!=='settlement';
-    const entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0,
-        origin:imported?{kind:'import',from,reason:'本地产出（模拟范围外）'}:{kind:'settlement_stock',from}};
+    // 剩下的只有聚落库存货架（route 与 local 在上面分流）：聚落库存是真实上游，从聚落库存转入。回执写明来源（origin）和费用构成。
+    if(row.source!=='settlement')throw Error(`未知补货来源：${row.source}`);
+    const entry={day:Math.floor(minute/DAY),minute,item:row.item,source:row.source,wanted:want,added:0,paidCopper:0,origin:{kind:'settlement_stock',from}};
     // A person keeper lays out stock money (goods, freight, duties) from the counter, funding it from his purse as needed; a creature keeper pays from his own coins.
     const keeperPath=actorPath(engine.world,shop.keeper),keeper=d.get(...keeperPath),person=Boolean(d.get('state','npcs',shop.keeper))&&booksOpen(d),afford=n=>{
         const own=coinRead(d,{point:'shop.cash',account:purse(engine,shop.keeper),legacy:()=>keeper.coins});
@@ -495,14 +516,11 @@ function restockRow(d,engine,shop,row,minute,ctx={}){
         const disposable=budget?Math.max(0,Math.min(own,...budget.timeline.map(r=>r.balance))):own,cash=person?disposable+counterCash(d,shop.keeper):own;
         let low=0,high=Math.floor(n);while(low<high){const mid=Math.ceil((low+high)/2);if(quote(mid).totalCoins<=cash)low=mid;else high=mid-1;}return low;
     };
-    let books={flow:'src:import',purpose:row.source==='local'?'local_supply':'route_supply',writer:'shop',eventId:`shop:${shop.id}:${minute}`};
+    const eventBase=`shop:${shop.id}:${minute}`,books={account:settlementStock(engine,from,row.stock),writer:'shop',eventId:eventBase};
     const s=structuredClone(d.get('state','settlements',from));
-    // 本地产出的卖方是本聚落的产户：聚落有公账时货款进公账；聚落还没有公账记录时（尚未展开的小镇）货款付给模拟范围外的产户（sink:export），
-    // Cross-settlement supply is handled above through real holders and K12 deliveries.
-    const outside=!s&&row.source==='local';
-    if(!outside&&(!s||!integer(s.treasury)))return{...entry,reason:'来源聚落不在战役账中'};
-    if(row.source==='settlement'&&row.stock==='food'&&managed(d,from))return{...entry,reason:'托管聚落粮仓只走周贸易账'};
-    const spare=row.source==='settlement'?Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,from,row.stock),legacy:()=>s[row.stock]??0})-row.reserve):want,quantity=afford(Math.min(want,spare));
+    if(!s||!integer(s.treasury))return{...entry,reason:'来源聚落不在战役账中'};
+    if(row.stock==='food'&&managed(d,from))return{...entry,reason:'托管聚落粮仓只走周贸易账'};
+    const spare=Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,from,row.stock),legacy:()=>s[row.stock]??0})-row.reserve),quantity=afford(Math.min(want,spare));
     if(!quantity)return{...entry,reason:spare?'店主现钱不足':'聚落库存已到保留量'};
     const purchase=quote(quantity),cost=purchase.totalCoins,total=cost;
     let payer=purse(engine,shop.keeper);
@@ -510,21 +528,19 @@ function restockRow(d,engine,shop,row,minute,ctx={}){
         // The buy is the keeper's own decision (cost-plus: everything he lays out, haul included, is passed on at his markup); stock that cannot sell back above its cost is not bought.
         const verdict=keeperChoice(d,engine,shop,minute,ctx,{kind:'restock',cost:{value:total},reward:Math.ceil(total*shop.markup)});
         if(verdict.outcome!=='agree')return{...entry,reason:`店主决定暂不进货：${verdict.reason}`,decision:verdict.outcome};
-        const funded=total>counterCash(d,shop.keeper)?fundCounter(d,engine,{shop,minute,target:total,eventId:`${books.eventId}:fund:${row.item}`,ctx}):null;
+        const funded=total>counterCash(d,shop.keeper)?fundCounter(d,engine,{shop,minute,target:total,eventId:`${eventBase}:fund:${row.item}`,ctx}):null;
         if(funded&&counterCash(d,shop.keeper)<total)return{...entry,reason:'店主不愿或不能向柜台注资',decision:funded.decision?.outcome};
         // A zero-cost lot needs no counter: none may be open yet, and nothing moves.
         payer=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account??payer;
     }
-    const pay=(to,amount,part)=>moveCoins(d,{from:payer,to,amount,writer:'shop',eventId:person?`${books.eventId}:${row.item}:${part}`:null});
-    if(row.source==='settlement'){s[row.stock]-=quantity;books={account:settlementStock(engine,from,row.stock),writer:'shop',eventId:books.eventId};}
-    if(outside)pay(sink('export','local_supply'),cost,'goods');
-    else{pay(treasuryAccount(from),cost,'goods');s.treasury+=cost;d.set(['state','settlements',from],s);}
+    const pay=(to,amount,part)=>moveCoins(d,{from:payer,to,amount,writer:'shop',eventId:person?`${eventBase}:${row.item}:${part}`:null});
+    s[row.stock]-=quantity;
+    pay(treasuryAccount(from),cost,'goods');s.treasury+=cost;d.set(['state','settlements',from],s);
     const paid=cost;
     if(!person)d.set([...keeperPath,'coins'],keeper.coins-paid);
     entry.added=quantity;entry.paidCopper=paid;entry.from=from;entry.cost={goods:cost,freight:0,duties:0};
     entry.referenceCopper=Math.round(regionalTradeBase(d,engine,row.item,shop.settlement,minute)*quantity);
-    // Cross-settlement supply is handled above through real holders and K12 deliveries.
-    if(row.source!=='local')recordMarketDeal(d,purchase,cost,quantity,`restock:${shop.id}:${row.item}:${minute}`);
+    recordMarketDeal(d,purchase,cost,quantity,`restock:${shop.id}:${row.item}:${minute}`);
     engine.itemDelta(d,shop.keeper,row.item,entry.added,books);
     return entry;
 }
@@ -578,8 +594,11 @@ export function advanceShops(d,engine,before,after){
     advanceCustomerFlow(d,engine,before,after);
     const stores=currentShops(engine,d.get('state'));if(!stores.length)return;
     assertRules(engine);
-    for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++)
+    for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++){
         for(const shop of stores)restockShop(d,engine,shop,day*DAY,{receiveOnly:day<shop.firstDay||(day-shop.firstDay)%shop.cycleDays!==0});
+        // 没有铺面的经营者同一天午夜向本聚落持货人补进卖掉的货（店主由上面的周期补货负责）。
+        advanceDealers(d,engine,day*DAY,{keepers:new Set(stores.map(s=>s.keeper))});
+    }
 }
 // Force a clock boundary before afternoon receipts or deliveries can enter
 // the noon consumer budget. Restocking keeps its own midnight boundary.

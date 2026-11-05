@@ -36,6 +36,10 @@ const projected=(f,seller,item,quantity=1)=>{const d={document:f.doc,get:(...p)=
 const cash=doc=>doc.state.player.coins+Object.keys(placeOf).reduce((n,id)=>n+doc.state.npcs[id].coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)
     +Object.values(doc.state.quests).filter(q=>doc.state.settlements[q.fundedBy?.treasury]||q.personal&&q.publisher in placeOf).reduce((n,q)=>n+(q.escrow??0),0);
 
+// All purses, treasuries and quest escrow; and the net coin that left the simulation (sinks minus sources) so far.
+const everyone=doc=>doc.state.player.coins+Object.values(doc.state.npcs).reduce((n,x)=>n+(x.coins??0),0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)
+    +Object.values(doc.state.quests).reduce((n,q)=>n+(q.escrow??0),0)+Object.entries(doc.ledger?.accounts??{}).filter(([k])=>/\|coin_river\|counter/.test(k)).reduce((n,[,v])=>n+v,0);
+const boundary=doc=>Object.entries(doc.ledger?.flows??{}).filter(([k])=>k.includes('|coin_river|')).reduce((n,[k,v])=>n+(k.startsWith('sink:')?v:k.startsWith('src:')?-v:0),0);
 test('发布规则自洽；面包基准进入市场投影',async()=>{
     assert.deepEqual(validateShopRules(world),[]);
     // Later rows use the same stock checks: no unknown store or duplicate item.
@@ -55,39 +59,39 @@ test('发布规则自洽；面包基准进入市场投影',async()=>{
     assert.equal(expected.explanation.baseline,2);assert.equal(r.cost,expected.totalCoins);
 });
 
-test('周期补货：按店家周期在午夜补到上限，不会无限出售；来源与付款入账',async()=>{
-    const f=fixture(),total=cash(f.doc);
-    // K02: two residents need120 satiety/day; their cash and real daily
-    // delivery cover food after midnight. At minute600, physical retention
-    // is ceil(120*840/1440/30)=3 of the unchanged six loaves.
+test('周期补货：按店家周期在午夜向本聚落持货人补到上限，不会无限出售；来源与付款入账',async()=>{
+    // K2（卡 E）依据：本地货架不再从模拟范围外补进（旧断言 origin import、付给公账的 2 铜已随水龙头取消），
+    // 改为向本聚落真实持有这件货的人进货；没有持货人就补不上，回执写明原因。
+    const holder='npc_hw_shendu';
+    const f=fixture();
+    f.doc.state.npcs[holder].inventory={...f.doc.state.npcs[holder].inventory,item_bread:20};resyncBooks(f.engine,f.doc);
     await f.act('world_trade',{seller:host,item:'item_bread',quantity:2},'buy-bread');
+    const total=everyone(f.doc)+boundary(f.doc);
     assert.equal(qty(f.doc,host,'item_bread'),4);
-    // Four remain, three bridge delivery; another two exceed the one
-    // saleable loaf. Initial stock, source and payment assertions stay intact.
+    // Four remain, three bridge delivery; another two exceed the one saleable loaf.
     await assert.rejects(f.act('world_trade',{seller:host,item:'item_bread',quantity:2},'too-many'),/库存不足/);
     f.doc.state.location=forge;
     await f.act('world_trade',{seller:smith,item:'item_kitchen_knife',quantity:2},'buy-knife');
     assert.equal(qty(f.doc,smith,'item_kitchen_knife'),0);
+    const holderCoins=f.doc.state.npcs[holder].coins;
     await f.act('world_time',{minutes:DAY},'day1');
-    // Tavern restocks daily from its own oven (6 per cycle, ceiling 6).
-    assert.equal(qty(f.doc,host,'item_bread'),6);
+    // Tavern restocks daily (6 per cycle, ceiling 6) by buying the missing loaves from the villager who holds bread
+    // (at least the two the player took; walk-in customers paid by D's labour sales may have taken more).
     const inn1=ledger(f.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_bread');
-    assert.deepEqual([inn1.source,inn1.added,inn1.day],['local',2,1]);
-    // F010: the tavern's local production is outside the simulation but no longer free. Hand anchor: bread 2 x scarcity floor .5 = 1 copper
-    // a loaf, two loaves = 2 copper paid by the keeper to the settlement treasury; no freight or duty for a local source, and the
-    // receipt names where the goods came from.
-    assert.deepEqual(inn1.cost,{goods:2,freight:0,duties:0});assert.equal(inn1.paidCopper,2);
-    assert.deepEqual(inn1.origin,{kind:'import',from:'loc_hw',reason:'本地产出（模拟范围外）'});
-    // Forge is weekly from day 1: one knife per cycle.
-    assert.equal(qty(f.doc,smith,'item_kitchen_knife'),1);
+    assert.equal(qty(f.doc,host,'item_bread'),6);assert.equal(qty(f.doc,holder,'item_bread'),20-inn1.added);
+    assert.deepEqual([inn1.source,inn1.day],['local',1]);assert.ok(inn1.added>=2);
+    assert.deepEqual(inn1.origin,{kind:'holders',from:'loc_hw'});assert.deepEqual(inn1.from,[holder]);
+    // The keeper's bill goes to the holder's purse: no freight or duty for a local source.
+    assert.ok(inn1.paidCopper>0);assert.equal(f.doc.state.npcs[holder].coins,holderCoins+inn1.paidCopper);
+    assert.deepEqual(inn1.cost,{goods:inn1.paidCopper,freight:0,duties:0});
+    // Nobody else in the village holds kitchen knives: the forge's weekly row stays empty, and says why.
+    assert.equal(qty(f.doc,smith,'item_kitchen_knife'),0);
+    assert.match(ledger(f.doc,'shop_hw_forge').entries.find(e=>e.item==='item_kitchen_knife').reason,/没有人持有/);
     await f.act('world_time',{minutes:DAY},'day2');
-    assert.equal(qty(f.doc,smith,'item_kitchen_knife'),1,'未到下个周期不补货');
     assert.equal(qty(f.doc,host,'item_bread'),6,'已满的货架不再增加');
-    await f.act('world_time',{minutes:6*DAY},'day8');
-    assert.equal(qty(f.doc,smith,'item_kitchen_knife'),2);
-    await f.act('world_time',{minutes:7*DAY},'day15');
-    assert.equal(qty(f.doc,smith,'item_kitchen_knife'),2,'补货不超过上限');
-    assert.equal(cash(f.doc),total,'进货付款只在店主与来源聚落之间转移');
+    // 进货款只在店主与持货人之间转移；其余流动是 D 卡劳动的真实成交（另有测试），这里只核对店主付出的正是持货人收到的。
+    assert.ok(ledger(f.doc,'shop_hw_qingdeng').entries.filter(e=>e.item==='item_bread').every(e=>e.paidCopper===(e.deals??[]).reduce((n,x)=>n+x.cost,0)));
+    assert.equal(everyone(f.doc)+boundary(f.doc),total,'钱只在当事人之间转移，出入模拟范围的只有记账的路费等');
 });
 
 test('产地约束：本地产出须在本聚落，到货须来自产地且路通，聚落库存守保留量并付款',async()=>{
@@ -100,6 +104,7 @@ test('产地约束：本地产出须在本聚落，到货须来自产地且路�
     // Route arrival from the town: the keeper pays the producing settlement.
     const f=fixture(),total=cash(f.doc);
     await f.act('world_trade',{seller:host,item:'item_ration',quantity:4},'buy-ration');
+    const everyoneAtStart=everyone(f.doc)+boundary(f.doc);
     const coins=f.doc.state.npcs[host].coins,treasury=f.doc.state.settlements[town].treasury;
     // Forge buys iron from the village stock down to its reserve.
     f.doc.state.settlements.loc_hw.iron=5;const smithCoins=f.doc.state.npcs[smith].coins;
@@ -115,17 +120,22 @@ test('产地约束：本地产出须在本聚落，到货须来自产地且路�
     const read={document:f.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],f.doc)};
     const freight=porterCharges(read,f.engine,{from:town,to:'loc_hw',cargo:[{item:'item_ration',quantity:2}],owner:host,minute:DAY});
     assert.deepEqual([freight.freight,freight.duties],[1,0]);
-    assert.equal(qty(f.doc,host,'item_ration'),0);assert.equal(f.doc.state.npcs[host].coins,coins);assert.equal(f.doc.state.settlements[town].treasury,treasury);
+    // K2（卡 E）依据：基线 df95b93a 上这条已红——D 卡的出售劳动让船夫、织工把货卖给酒馆店主（真实成交），店主钱袋不再不变。
+    // 断言改为：店主钱袋只按他本人的真实成交（D 的出售劳动卖给他、K2 经营者向他进货）变动，运单未到不付一文。
+    const deals=Object.values(f.doc.state.records).filter(r=>r.category==='market_trade'&&r.eventId!=='buy-ration');
+    const net=deals.filter(r=>r.seller===host).reduce((n,r)=>n+r.totalCoins,0)-deals.filter(r=>r.buyer===host).reduce((n,r)=>n+r.totalCoins,0);
+    assert.equal(qty(f.doc,host,'item_ration'),0);assert.equal(f.doc.state.npcs[host].coins,coins+net);assert.equal(f.doc.state.settlements[town].treasury,treasury);
     const iron=ledger(f.doc,'shop_hw_forge').entries.find(e=>e.item==='item_iron');
     assert.deepEqual([iron.source,iron.added,iron.paidCopper],['settlement',3,3*ironPrice],'聚落只放出保留量以上的铁料，按实际材料行情支付');assert.equal(f.doc.state.settlements.loc_hw.iron,2);
-    // W8-E8's approved rural-tool shelf also buys one sickle here: baseline10
-    // * upper scarcity2 * neutral other factors * markup1 = 20 copper.
-    // Preserve the original purse/source guarantee, including this real bill.
+    // W8-E8's rural-tool shelf: K2（卡 E）依据——镰刀不再从模拟范围外进货（旧断言 added1、付 20 铜随水龙头取消）；
+    // 村里没有人持有镰刀，这一行补不上、不付钱。铁料与钱袋断言照旧。
     const sickle=ledger(f.doc,'shop_hw_forge').entries.find(e=>e.item==='item_sickle');
-    assert.deepEqual([sickle.source,sickle.added,sickle.paidCopper],['local',1,20]);
-    assert.equal(qty(f.doc,smith,'item_sickle'),1);
-    assert.equal(f.doc.state.npcs[smith].coins,smithCoins-3*ironPrice-20);assert.equal(qty(f.doc,smith,'item_iron'),3);
-    assert.equal(cash(f.doc),total,'K08: no actual shipment, no freight payment; all local purchases still conserve cash');
+    assert.deepEqual([sickle.source,sickle.added,sickle.paidCopper],['local',0,0]);
+    assert.equal(qty(f.doc,smith,'item_sickle'),0);
+    assert.equal(f.doc.state.npcs[smith].coins,smithCoins-3*ironPrice);assert.equal(qty(f.doc,smith,'item_iron'),3);
+    // K2（卡 E）依据：D 的出售劳动与 K2 经营者进货让钱在店主与店外村民之间真实流动，三位店主之外的钱袋也要算进来；
+    // 改为全体钱袋与公账的守恒：变化只等于流出模拟范围的路费等（sink）减去流入（src）。
+    assert.equal(everyone(f.doc)+boundary(f.doc),everyoneAtStart,'K08: no actual shipment, no freight payment; all local purchases still conserve cash');
 
     // No producing settlement in this campaign: nothing arrives, the refusal is on the ledger.
     const g=fixture({withTown:false});
@@ -246,7 +256,11 @@ test('K10：有交易服务并登记店铺类型的人物自动成为店铺；�
     // S5-02: the derived shop remains the quote source without persisting it.
     assert.equal(expected.shop,'shop_hw_ayan');assert.equal(r.cost,expected.totalCoins);
     assert.equal(qty(f.doc,miller,'item_iron_nail'),2);
+    // K2（卡 E）依据：派生店的本地货架向本聚落持货人进货（旧断言的 3 枚来自模拟范围外）。铁匠的钉子是他自己平常的存货，
+    // 不出让；另有一位村民手上有 5 枚多余的钉子，磨坊照货架补 3 枚，都从他那里来。
+    const holder='npc_hw_shendu';f.doc.state.npcs[holder].inventory={...f.doc.state.npcs[holder].inventory,item_iron_nail:5};resyncBooks(f.engine,f.doc);
     await f.act('world_time',{minutes:DAY},'day1');
-    assert.equal(qty(f.doc,miller,'item_iron_nail'),5);
-    assert.equal(ledger(f.doc,'shop_hw_ayan').entries.find(e=>e.item==='item_iron_nail').added,3);
+    assert.equal(qty(f.doc,miller,'item_iron_nail'),5);assert.equal(qty(f.doc,holder,'item_iron_nail'),2);
+    const nails=ledger(f.doc,'shop_hw_ayan').entries.find(e=>e.item==='item_iron_nail');
+    assert.equal(nails.added,3);assert.deepEqual(nails.from,[holder]);
 });

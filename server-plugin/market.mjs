@@ -146,6 +146,9 @@ export function saleableStock(d,engine,owner,item,{business=false}={}){
  return budgetStock(householdResources(d,engine,owner),owner,item);
 }
 
+// 家户日用（柴、盐……）的欠量是采买需求，进本地需求、抬高稀缺价，也进顾客的采买意愿（business.wants）。
+// 接口位置：F 卡 npc-life 的 householdUpkeepGap(state,key) 合入 t-int 后在这里读它（按持有人的家户与物品折成件数）；在那之前为 0。
+export function upkeepDemand(state,engine,id,item){return 0;}
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  let personalDemand=0;
@@ -162,6 +165,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // One read-only household allocation serves all items in this quote. No
   // writes occur in the loop; repeated allocation cannot change the budget.
   const budget=householdResources(d,engine,id);
+  for(const it of items)personalDemand+=upkeepDemand(state,engine,id,it.id);
   for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;
    if(owners.has(id))rows.push(row);
    else personalDemand+=row.retained+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
@@ -366,4 +370,17 @@ export function subjectiveMarketQuote(engine,document,view,args){
   return {...quote,listPrice:price,totalCoins,exactTotal:exact,explanation,knownFrom:stored!=null?remembered.source:last.eventId,estimate:true};
  }
  return {...quote,knownFrom:'catalog_prior',estimate:true};
+}
+// 活体行情（K2）：一头牲畜值多少，按它这一物种的身体与产出派生（husbandry-traits 装到物种上的 yields）：
+// 屠宰后的胴体各部分（肉、皮、骨……）按本地行情的现值，加上它活着一年的产出（奶、蛋、毛……）按本地行情的现值。
+// 没有登记体重、因而没有任何产出的物种，没有可作价的依据，返回 null。
+export function livestockValue(d,engine,{species,location,seller=null}){
+ const s=engine.byId.get(species),yields=s?.husbandry?.yields;
+ if(!yields||!(yields.carcass?.length||yields.alive?.length))return null;
+ const c=engine.rules.calendar,year=c.daysPerMonth*c.monthsPerYear;
+ const unit=item=>marketQuote(d,engine,{item,location,seller,quantity:1}).listPrice;
+ const carcass=(yields.carcass??[]).map(r=>({item:r.item,quantity:r.amount,value:r.amount*unit(r.item)}));
+ const products=(yields.alive??[]).map(r=>({item:r.item,quantity:r.perHeadDay*year,value:r.perHeadDay*year*unit(r.item)}));
+ const value=[...carcass,...products].reduce((n,r)=>n+r.value,0);
+ return {species,value,carcass,products,horizonDays:year};
 }

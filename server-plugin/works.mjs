@@ -10,8 +10,8 @@ import {purse,purse as purseAccount,source,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft} from './stock.mjs';
 // S1b: 写作、抄书、测绘按作品规则（WORK_RULES，等同配方 works:<操作>）是 src:craft 制造守恒对：纸墨进 sink:consume，
-// 成品来自 src:craft；印坊代印留存的书来自模拟范围外（src:import，印刷费已付 sink:export）。
-declareLedgerWriter('works',{sources:{'src:import':{coin_river:200000,'*':10000},'src:craft':{'*':10000}},sinks:['sink:export','sink:consume']});
+// 成品来自 src:craft；出版印书同样按册耗纸墨、成书来自 src:craft（印刷费付印工手工，进 sink:export）。
+declareLedgerWriter('works',{sources:{'src:import':{coin_river:200000},'src:craft':{'*':10000}},sinks:['sink:export','sink:consume']});
 import {knowsKnowledge,knowledgeProficiency} from './education-state.mjs';
 import {digest}from'./storage.mjs';
 import {settlementAt}from'./reputation.mjs';
@@ -115,6 +115,9 @@ function publish(d,engine,args,id){
     const{location,settlement}=placeOf(d,engine);if(!settlement)throw preconditionFailure('出版需要在有印坊书肆的聚落');
     const coins=integer(args.coins,WORK_RULES.printCost,WORK_RULES.printCost*200,'印刷费'),printed=Math.floor(coins/WORK_RULES.printCost);
     if(d.get('state','player','coins')<coins)throw preconditionFailure('印刷费不足');
+    // 印书是真实制造：每册耗一张纸、一份墨，由著者备料交印坊（与抄书同料）；印刷费只付印工的手工。
+    const materials=[[WORK_RULES.paper,printed],[WORK_RULES.ink,printed]];
+    for(const[item,amount]of materials)if(engine.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${engine.byId.get(item)?.name??item}`);
     moveCoins(d,{from:purse(engine,'player'),to:sink('export','printing'),amount:coins,writer:'works',eventId:id});
     d.set(['state','player','coins'],d.get('state','player','coins')-coins);
     engine.advance(d,60,id);
@@ -136,7 +139,8 @@ function publish(d,engine,args,id){
         if(decision.outcome==='agree')buyers.push(npc);
     }
     const sold=buyers.length,income=sold*price;
-    const kept=printed-sold,instances=printed?produceItems(d,engine,WORK_RULES.book,printed,{eventId:id,workmanship:work.quality,books:{flow:'src:import',purpose:'printing',writer:'works',eventId:id}}):[];
+    if(printed)spend(d,engine,materials,id,'works:publish');
+    const kept=printed-sold,instances=printed?crafted(d,engine,WORK_RULES.book,printed,{eventId:id,workmanship:work.quality}):[];
     const sales=[];
     for(const [index,npc] of buyers.entries()){
         const unit=instances[index];
