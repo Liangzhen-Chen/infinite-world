@@ -88,11 +88,15 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
     const itemDelta=engine.itemDelta.bind(engine);
     engine.itemDelta=(d,owner,item,delta,books,options)=>{
         const result=itemDelta(d,owner,item,delta,books,options);
-        if(books?.writer==='npc-life'&&books.purpose==='meal'){
+        // 合入 F 后：家户烧柴、用盐、日用品损耗（npc-life 的 fuel/seasoning/wear）同样是真实消耗，与吃饭一并调整快照。
+        if(books?.writer==='npc-life'&&['meal','fuel','seasoning','wear'].includes(books.purpose)){
             assert.ok(delta<0);const inventory=privateAssets.npcs[owner].inventory,old=inventory[item];
             const quantity=(typeof old==='number'?old:old?.quantity??0)+delta;assert.ok(quantity>=0);
             if(!quantity)delete inventory[item];
-            else{const def=engine.byId.get(item);inventory[item]={...(typeof old==='object'?old:{quality:def.quality,durability:def.durability,weight:def.weight}),quantity};}
+            else if(books.purpose==='wear'){
+                // 损耗是用坏一件：剩下的件数照算，耐久等件况以实际写入为准（F 的 wear 记余件的实际耐久）。
+                const now=d.get('state','npcs',owner,'inventory',item);assert.equal(typeof now==='number'?now:now?.quantity,quantity);inventory[item]=structuredClone(now);
+            }else{const def=engine.byId.get(item);inventory[item]={...(typeof old==='object'?old:{quality:def.quality,durability:def.durability,weight:def.weight}),quantity};}
         }
         return result;
     };
@@ -121,6 +125,12 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
         assert.equal(o.status,'delivered');assert.equal(o.arrivedAt,o.estimatedArrivalAt);assert.equal(o.deliveredFood,40);assert.equal(o.escrowCopper,0);assert.equal(o.taxCopper,Math.floor(o.paidCopper*.05));
         assert.equal(f.salesGrossCopper,f.salesNetCopper+f.taxReceiptsCopper);assert.ok(f.entries.some(e=>e.phase==='recognized'&&e.other===lane.buyer));
         const batches=farm(c,lane.buyer).batches.filter(b=>b.id.startsWith(o.id));assert.equal(batches.reduce((n,b)=>n+b.amount,0),40);assert.ok(batches.every(b=>b.expiresDay===210));
+    }
+    // 合入 F 后：在用的日用品每天按寿命磨损耐久（npc-life wearHeld 经 items.wearItem，件数不变）。件数仍须一件不差，只把开始计耐久（数字换成带耐久的件况）与耐久下降按实际记入快照。
+    const qtyOf=v=>typeof v==='number'?v:v?.quantity??0,durOf=(v,item)=>typeof v==='number'?engine.byId.get(item).durability:v?.durability;
+    for(const [id,n]of Object.entries(c.state.npcs))for(const [item,v]of Object.entries(n.inventory??{})){
+        const want=privateAssets.npcs[id]?.inventory?.[item];
+        if(want!==undefined&&qtyOf(want)===qtyOf(v)&&typeof v==='object'&&durOf(v,item)<=durOf(want,item)&&!v.instances?.length)privateAssets.npcs[id].inventory[item]=structuredClone(v);
     }
     assert.deepEqual({player:c.state.player.coins,inventory:c.state.inventory,npcs:Object.fromEntries(Object.entries(c.state.npcs).map(([id,n])=>[id,{coins:n.coins,inventory:n.inventory}]))},privateAssets);
     assert.deepEqual(applyPatches(first.doc,first.out.patches),first.doc);
