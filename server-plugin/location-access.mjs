@@ -2,6 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {magicMessagePermission}from'./magic-message.mjs';
 import {facilityView}from'./facility-state.mjs';
+import {fixtureStations,fixtureDefinition}from'./workstation-services.mjs';
 import {spellConsentPermission}from'./magic-consent.mjs';
 import {environmentFeatures}from'./environment.mjs';
 import {sitePermission}from'./sites.mjs';
@@ -62,12 +63,16 @@ export function homePermission(d,engine,args,eventId){
  if(args.guests!==undefined&&(!Array.isArray(args.guests)||args.guests.length>8))throw preconditionFailure('获准同行者须为最多8人的名单');
  const guests=(args.guests??[]).map(name=>engine.resolve(name,'npc'));
  if(new Set(guests).size!==guests.length)throw preconditionFailure('获准同行者重复');
+ // K5: lending the home's equipment is part of the grant only when the
+ // resident names it (fixture kinds that are really in this place).
+ const fixtures=args.fixtures??[],present=fixtureStations(place).map(s=>s.fixture);
+ if(!Array.isArray(fixtures)||fixtures.length>8||new Set(fixtures).size!==fixtures.length||fixtures.some(f=>!present.includes(f)))throw preconditionFailure(`借用的设备须是这处私宅实有的设备${present.length?`（${present.map(f=>fixtureDefinition(f).label).join('、')}）`:'，这里没有可借的设备'}`);
  for(const id of guests){const guest=d.get('state','npcs',id);
   if(!guest||guest.location!==actor.location||!d.get('state','player','companions')?.includes(id))throw preconditionFailure('获准同行者必须是当前实际在场的同行人');
  }
  const authorization=`permission_${eventId}`;
  if(d.get('state','records',authorization))throw preconditionFailure('私宅许可编号已经存在');
- const permission={category:'authorization',action:council?'enter_council':'enter_home',subject:location,grantor,grantee:'player',guests,createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
+ const permission={category:'authorization',action:council?'enter_council':'enter_home',subject:location,grantor,grantee:'player',guests,...(fixtures.length?{fixtures}:{}),createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
  holdingSet(d,null,['state','records',authorization],permission,'location-access');d.say(`${base.name}同意你${guests.length?'和已登记同行者':''}进入${place.name}，许可至${engine.formatCalendar(permission.expires)}`);
  return{authorization,permission};
 }

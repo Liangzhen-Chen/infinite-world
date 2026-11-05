@@ -2,13 +2,13 @@
  "kind": "fixtures",
  "namespace": "core",
  "version": 1,
- "note": "K5 设施词汇：地点或建筑上的固定设备（location.fixtures[].fixture，或已建设施类型自带的设备）派生出工位。affords 是该设备能承担的配方工位类别（recipes[].workstation）。names 是这件设备与它的用途在中文里的叫法，只用来判断主人给的许可用途是否点到了这件设备（例如“借灶台做饭”点到灶），不用来判断某处有没有设备。工位的主人、开放与否、收费都从地点本身推出，见 server-plugin/workstation-services.mjs。",
+ "note": "K5 设施词汇：地点或建筑上的固定设备（location.fixtures[].fixture，或已建设施类型自带的设备）派生出工位。affords 是该设备能承担的配方工位类别（recipes[].workstation），label 是显示用的中文名。工位的主人、开放与否从地点推出，收费是设备上主人的报价；借用许可在授予时以 fixtures 写明借的是哪类设备。见 server-plugin/workstation-services.mjs。",
  "entries": [
-  {"id":"hearth","label":"灶","affords":"cooking","names":["灶","灶台","炉灶","灶间","厨房","后厨","做饭","烧饭","煮饭","下厨","烹饪","烹调"]},
-  {"id":"workbench","label":"木作台","affords":"woodworking","names":["木作台","木工台","工作台","木台","刨台","木作","木工","做木活"]},
-  {"id":"forge","label":"锻炉与铁砧","affords":"smithing","names":["锻炉","铁砧","打铁炉","炉膛","锻打","打铁","锻造"]},
-  {"id":"loom","label":"织机","affords":"weaving","names":["织机","织布机","梭架","织布","纺织","织造"]},
-  {"id":"kiln","label":"窑","affords":"pottery","names":["窑","陶窑","小窑","烧窑","制陶","烧陶"]},
-  {"id":"pill_furnace","label":"丹炉","affords":"pill_furnace","names":["丹炉","炼丹炉","丹房","炼丹","炼药"]}
+  {"id":"hearth","label":"灶","affords":"cooking"},
+  {"id":"workbench","label":"木作台","affords":"woodworking"},
+  {"id":"forge","label":"锻炉与铁砧","affords":"smithing"},
+  {"id":"loom","label":"织机","affords":"weaving"},
+  {"id":"kiln","label":"窑","affords":"pottery"},
+  {"id":"pill_furnace","label":"丹炉","affords":"pill_furnace"}
  ]
 }

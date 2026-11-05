@@ -81,11 +81,6 @@ export function workstationDefinition(engine,state,id){
  }
  return null;
 }
-// Does the consent's recorded purpose name this fixture or its use? Only a
-// purpose that names it covers it; a visit permit is not a hearth loan.
-function purposeNames(station,text){
- return typeof text==='string'&&(FIXTURES.get(station.fixture)?.names??[]).some(name=>text.includes(name));
-}
 // Lawful use of a station by `actor`. A learned recipe is no licence: only
 // title (owner, resident), a lease of the place, the owner's consent, or the
 // posted public fee. Returns {basis} or null (the use is then unlicensed).
@@ -98,7 +93,8 @@ export function stationLicence(engine,document,station,actor='player',{authoriza
  const grantors=new Set([...station.owners??[],...!station.ownedApart&&state?homeResidents(engine,state,station.location).value:[]]);
  const permits=authorization!==undefined?[state?.records?.[authorization]]:recordsWhere(state?.records,'category','authorization');
  const permit=permits.find(p=>p?.category==='authorization'&&p.grantee===actor&&grantors.has(p.grantor)&&p.revoked!==true&&p.endedAt===undefined&&(p.expires===undefined||p.expires>state.minute)&&
-  (p.action==='workshop_use'&&[station.id,station.location].includes(p.subject)||p.subject===station.location&&purposeNames(station,p.content)));
+  // The grant names the lent equipment (fixtures) or the station itself; a visit permit lends nothing.
+  (p.action==='workshop_use'&&[station.id,station.location].includes(p.subject)||p.subject===station.location&&p.fixtures?.includes(station.fixture)));
  if(permit)return {basis:'consent',permit};
  if(station.access==='public')return {basis:'paid'};
  return null;
