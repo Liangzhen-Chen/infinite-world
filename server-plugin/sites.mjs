@@ -261,7 +261,7 @@ function commitBreaches(d,engine,pending,result,eventId,taken=null,place=null){
  const discoverers=place?.site?keepers(engine,d,place):undefined;
  const offenses=[...pending.values()].map(b=>{
   const stolen=b.act==='gather'&&taken?.quantity>0?taken:null;
-  return registerOffense(d,engine,{act:b.act,subject:b.subject,victim:b.owner,eventId,value:stolen?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity,holder:b.owner})??0:0,stolen,...(discoverers?{discoverers:[...new Set([b.owner,...discoverers])]}:{})});
+  return registerOffense(d,engine,{act:b.act,subject:b.subject,victim:b.owner,eventId,value:stolen?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity,holder:b.owner})??0:0,stolen,...(discoverers?{discoverers:[...new Set([b.owner,...discoverers])]}:{}),...(b.subject?.covert?{witnesses:[]}:{})});
  });
  return {...result,offenses};
 }
@@ -294,7 +294,7 @@ function watchers(d,engine,place){
         const a=d.get('state','npcs',id);return a?.location===place.id&&!isPhysicallyDead(engine,d,id)&&!['濒死','昏迷','患病'].includes(a.status)&&(a.hp===undefined||a.hp>0)&&!a.scheduleTravel&&!a.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(a.activity??'');
     });
 }
-function infiltrate(d,engine,place,eventId){
+function infiltrate(d,engine,place,eventId,breach){
     const plan=place.site.infiltration;
     if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径，只能直接进入（进别人的地方会被记为侵入）');
     if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
@@ -308,6 +308,8 @@ function infiltrate(d,engine,place,eventId){
         putSite(d,engine,place,ledger(d,place,engine),{eventId});
         holdingSet(d,null,['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',covert:true,minute:d.get('state','minute'),sourceEvent:eventId},'sites');
         infiltrationSucceeded(d,engine,place,eventId);
+        // Slipping in unseen is still entering someone's place (K6).
+        breach('enter',ownerOf(place)??societyAt(engine,place.id)?.id,{id:place.id,kind:'site',covert:true});
         return{...siteView(engine,d.document),covert:true,detected:false,check,minutes:plan.minutes};
     }
     if(!watcher)return{entered:false,detected:false,check,minutes:plan.minutes,note:'未能找到潜入路径，无人察觉'};
@@ -401,7 +403,7 @@ function siteOperation(d,args,eventId,breach){
     if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw preconditionFailure('据点许可名单最多8项');
     const authorizations=[args.authorization,...args.authorizations??[]];
     if(operation==='inspect')return siteView(this,d.document);
-    if(operation==='infiltrate')return infiltrate(d,this,place,eventId);
+    if(operation==='infiltrate')return infiltrate(d,this,place,eventId,breach);
     if(!['enter','investigate','disarm','gather'].includes(operation))throw preconditionFailure('据点操作须为inspect、enter、investigate、disarm、gather或infiltrate');
     const assertAccess=()=>{
         if(operation==='investigate'&&covert(d,place))return;

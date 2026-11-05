@@ -195,12 +195,14 @@ export function registerIncident(d,engine,{victim,offender='player',offense,valu
 // licence has already happened; the norm stack names the offense (offenseOf)
 // and the ordinary incident pipeline carries the consequences: the case and
 // its reporting, wanted notices, and the victim's standing when they saw it.
-export function registerOffense(d,engine,{actor='player',act,subject={},victim=null,value,stolen=null,eventId,location,discoverers}){
+export function registerOffense(d,engine,{actor='player',act,subject={},victim=null,value,stolen=null,eventId,location,discoverers,witnesses:seenBy}){
  const row=offenseOf(act,subject);if(!row)throw Error(`E-OFFENSE-ACT 未登记构成罪名的行为类别：${act}`);
  const s=d.get('state');location??=actor==='player'?s.location:s.npcs?.[actor]?.location??s.location;
  // The case value is what the victim lost, valued as goods where it is goods.
  value??=stolen?.item&&engine.byId.get(stolen.item)?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity??1,holder:victim})??0:stolen?.coins??0;
- const witnesses=Object.entries(s.npcs??{}).filter(([id,npc])=>id!==actor&&awake(npc,d,id)&&npc.location===location).map(([id])=>id);
+ // An act that beat the onlookers' notice (a covert entry) names its own,
+ // empty, list of witnesses; otherwise everyone awake on the spot saw it.
+ const witnesses=seenBy??Object.entries(s.npcs??{}).filter(([id,npc])=>id!==actor&&awake(npc,d,id)&&npc.location===location).map(([id])=>id);
  const key=`${eventId}:offense:${act}:${subject.id??'-'}:${victim??'-'}`;
  const caseId=registerIncident(d,engine,{victim,offender:actor,offense:row.id,value,stolen,witnesses,eventId,caseKey:key,location,optional:true,relationshipApplied:true});
  const seen=caseId?d.get(...path(caseId)).witnesses:witnesses;
