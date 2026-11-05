@@ -61,14 +61,17 @@ test('六街区与18处行业公共建筑及逐户住宅均可寻路，原官道
  assert.deepEqual(world.locations.find(l=>l.id==='loc_bs').workstations.map(station),authored.map(station));
  assert.ok(e.route('loc_bs_dongxue','bld_bs_shrine','walk',540,'t90').minutes>0);
 });
-test('玩家实际走到街区和前厅，私宅无许可拒绝；严辙在场许可可入户且不转移库存',async()=>{
+test('玩家实际走到街区和前厅，私宅无许可照样进门并命中擅入；严辙在场许可可入户且不转移库存',async()=>{
  const e=new WorldEngine(world);let doc=e.createCharacter(legacy,{},'t90-entry');doc.state.location='loc_bs';doc.state.minute=540;
  doc.state.npcs[original.yan.id].location='loc_bs';doc.state.npcs[original.yan.id].activity='核对货单';delete doc.state.npcs[original.yan.id].scheduleTravel;
  const run=async(tool,args,id)=>{const out=await e.reduce(doc,{tool,args,eventId:id});doc=applyPatches(doc,out.patches);return out.result;};
  await run('world_move',{destination:'loc_bs_zhanxi'},'street');await run('world_move',{destination:'bld_bs_guild'},'front');assert.equal(doc.state.location,'bld_bs_guild');
  await run('world_move',{destination:'loc_bs'},'back');doc.state.npcs[original.yan.id].location='loc_bs';doc.state.npcs[original.yan.id].activity='核对货单';delete doc.state.npcs[original.yan.id].scheduleTravel;
  const home=bones.households[0].homeLocation,before=structuredClone(doc);
- await assert.rejects(run('world_move',{destination:home},'no-consent'),/成年住户/);assert.deepEqual(doc,before);
+ // K6 依据（审查 C-b location-access:23）：无住户许可照样走得进去，命中擅入私宅，罪名挂本次事件；只看不落盘，后续仍走许可入户。
+ {const out=await e.reduce(doc,{tool:'world_move',args:{destination:home},eventId:'no-consent'}),after=applyPatches(doc,out.patches);assert.equal(after.state.location,home);
+  const o=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o);assert.equal(after.state.records[o.record].sourceEvent,'no-consent');}
+ assert.deepEqual(doc,before);
  const permission=(await run('world_promise',{operation:'grant_access',promisor:original.yan.id,location:home,minutes:60,content:'独自进屋看共用起居间，不取用物品'},'consent')).authorization;
  const inventory=structuredClone(doc.state.npcs[original.yan.id].inventory),playerInventory=structuredClone(doc.state.inventory);
  await run('world_move',{destination:home,authorization:permission},'enter');assert.equal(doc.state.location,home);assert.deepEqual(doc.state.npcs[original.yan.id].inventory,inventory);assert.deepEqual(doc.state.inventory,playerInventory);
