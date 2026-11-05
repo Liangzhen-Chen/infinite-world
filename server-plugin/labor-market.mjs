@@ -29,7 +29,9 @@ import {registerEarnedClaim,settleClaim,claimDue,claimLimitation} from './obliga
 import {obligationView as dueObligation} from './obligation-state.mjs';
 import {mineEmployment} from './extraction.mjs';
 import {laborCategories} from './npc-labor.mjs';
-import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {currentWorkstationRecipes,stationLicence} from './workstation-services.mjs';
+// 招工清单只拿到状态：许可按状态里的产权、居住与许可记录判断。
+const stateDocument=s=>({get:(...p)=>p.reduce((o,k)=>o?.[k],{state:s})});
 import {householdLaborBudget} from './household-budget.mjs';
 import {householdWorkTime,agriculturalWorkforce} from './npc-state.mjs';
 import {creditBreachEvent,publishTransitionEvent} from './world-events.mjs';
@@ -102,9 +104,12 @@ export function laborOffers(e,s,minute=s.minute){
     for(const [location,asset]of Object.entries(s.buildings??{})){
         const owner=asset.owner;if(!ownerCanHire(e,s,owner)||asset.condition<=0)continue;
         const place=base(e,s,location);if(!place?.workstations?.length)continue;
+        // 只看业主有许可用的工位（stationLicence），先按许可与工位类别筛配方，再读业主当班会做的配方（只读一次）。
+        const kinds=new Set(place.workstations.filter(st=>stationLicence(e,stateDocument(s),st,owner)).map(st=>st.kind));if(!kinds.size)continue;
+        let onDuty=null;
         for(const r of e.world.recipes){
-            if(r.location&&r.location!==location||!r.workstation||!place.workstations.some(st=>st.kind===r.workstation&&(st.access==='public'||st.owner===owner)))continue;
-            if(!r.teachers?.includes(owner)&&!s.npcs[owner]?.recipes?.[r.id]&&!currentWorkstationRecipes(e,s,owner).some(p=>p.id===r.id))continue;
+            if(r.location&&r.location!==location||!kinds.has(r.workstation))continue;
+            if(!r.teachers?.includes(owner)&&!s.npcs[owner]?.recipes?.[r.id]&&!(onDuty??=new Set(currentWorkstationRecipes(e,s,owner).map(p=>p.id))).has(r.id))continue;
             if(recipeFor(e,s,owner,r.output.item).some(p=>p.id===r.id)&&employmentStock({get:(...p)=>p.slice(1).reduce((o,k)=>o?.[k],s)},e,owner,r.output.item)===0)add({owner,location,recipe:r.id,item:r.output.item,quantity:r.output.quantity,source:`workshop:${location}:${r.id}`,reason:'工坊成品缺货'});
         }
     }
