@@ -1,0 +1,29 @@
+{
+  "index": 0,
+  "fingerprint": "977f6b0a0252e658b39ab847eedbe8f63e989ac10c4b90dfdf1831eca85172da",
+  "count": 4,
+  "passed": 4,
+  "ids": [
+    "item_parchment-basePrice",
+    "recipe_smelt_iron-tools",
+    "loc_wild_lq_adit-adit_ore-item",
+    "site_w5_ll_deep_drift-ll_ore-item"
+  ],
+  "rewritten": 0,
+  "manual": [],
+  "pending": [],
+  "flagged": [],
+  "sample": [
+    "site_w5_ll_deep_drift-ll_ore-item",
+    "recipe_smelt_iron-tools",
+    "loc_wild_lq_adit-adit_ore-item",
+    "item_parchment-basePrice"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 0.0057280000000000005,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}
