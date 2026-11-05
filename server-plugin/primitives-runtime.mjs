@@ -82,8 +82,11 @@ export function primitiveClaims(engine,document,effects){
    const kind=holdingKind(effect.holdingKind),variant=kind?.variants?.[effect.variant];
    if(!kind)reject('E-HOLDING-KIND','Unknown holding kind');
    if(!kind.exclusive&&!kind.capacity&&!variant?.contest)continue;
-   const total=kind.exclusive?1:engine.byId.get(effect.subject)?.[kind.capacity]??document.state.created?.[effect.subject]?.[kind.capacity];
-   if(!Number.isSafeInteger(total))reject('E-PRIMITIVE-CONNECTOR','Missing holding capacity');
+   // A contested hold with no capacity field (one person holding another)
+   // takes its capacity from the host's body: one pair of hands holds one.
+   const bodily=!kind.capacity&&variant?.contest&&(effect.subject==='player'||document.state.npcs?.[effect.subject]||document.state.creatures?.[effect.subject])?1:undefined;
+   const total=kind.exclusive?1:bodily??engine.byId.get(effect.subject)?.[kind.capacity]??document.state.created?.[effect.subject]?.[kind.capacity];
+   if(!Number.isSafeInteger(total))reject('E-PRIMITIVE-CONNECTOR','这里没有能容纳或看管这么多人的条件');
    const target=`holding:${kind.id}:${effect.subject}`,old=claims.get(target),needed=(occupancy.get(target)??0)+1;
    occupancy.set(target,needed);
    claims.set(target,{target,targetKind:kind.id,contest:variant?.contest??kind.contest,quantity:Math.max(old?.quantity??0,needed),capacity:Math.max(0,total-aliveHoldings(d,{kind:kind.id,subject:effect.subject}).length)});

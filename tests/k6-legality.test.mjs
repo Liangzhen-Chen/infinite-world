@@ -78,3 +78,28 @@ test('反应随罪行轻重派生：同一失主，贵重之物引起的信任�
  const tune=world.balance.law.params.find(p=>p.id==='offense.reaction').value;
  for(const r of [cheap,dear])assert.equal(r.trust,Math.min(tune.maximum,Math.max(tune.minimum,Math.round(r.fine/tune.finePerTrust))));
 });
+
+test('没有通缉也能当面扣住一个人：留置的容量来自扣人者的身体（一双手扣一人），扣住即命中非法拘禁',async()=>{
+ const g=game(world,'k6-detain');await call(g,'world_move',{destination:'bld_hw_qingdeng'});
+ Object.assign(g.doc.state.npcs.npc_hw_linsui,{location:'bld_hw_qingdeng',activity:'看店'});
+ const hold={op:'holding.open',holdingKind:'guest_of',variant:'detained',holder:'npc_hw_linsui',subject:'player',terms:{mode:'detained',reason:'私自扣留'}};
+ const {eventId,result}=await call(g,'world_propose',{intent:'把林穗扣在酒馆里',effects:[hold]});
+ assert.equal(result.receipt?.status,'committed',JSON.stringify(result.receipt?.reason));
+ assert.ok(Object.values(g.doc.holdings.rows).some(h=>h.kind==='guest_of'&&h.variant==='detained'&&h.holder==='npc_hw_linsui'&&h.subject==='player'&&h.until===undefined));
+ const o=result.receipt.consequences.find(c=>c.type==='offense');assert.equal(o?.offense,'unlawful_detention');assert.equal(g.doc.state.records[o.record].sourceEvent,eventId);
+ // One body holds one: a second person cannot be held by the same hands at once.
+ Object.assign(g.doc.state.npcs.npc_hw_hezhou,{location:'bld_hw_qingdeng',activity:'喝酒'});
+ const second=await g.engine.reduce(g.doc,{tool:'world_propose',args:{intent:'再扣一个',effects:[{...hold,holder:'npc_hw_hezhou'}]},eventId:'k6-detain-2'});
+ assert.notEqual(second.result.receipt?.status,'committed');assert.doesNotMatch(String(second.result.receipt?.reason),/[A-Za-z]{4,}/);
+});
+
+test('打死别人的牲畜后尸体仍归原主：在原地取材照样取得，命中盗窃',async()=>{
+ const g=game(world,'k6-carcass');const here=g.doc.state.location,id='monster_instance_k6carcass';
+ g.doc.state.created??={};g.doc.state.creatures??={};g.doc.state.created[id]={id,name:'林穗的狐',aliases:[],monster:'monster_red_ear_fox',template:1,scope:here};
+ g.doc.state.creatures[id]={name:'林穗的狐',species:'monster_red_ear_fox',ecology:'k6',location:here,level:1,hp:1,maxHp:10,status:'正常',owner:'npc_hw_linsui'};
+ g.doc.state.inventory.item_kitchen_knife={quantity:1,durability:50};g.doc.state.inventory.item_water={quantity:3};
+ for(let i=0;i<12&&!g.doc.state.creatures[id].corpse;i++)await call(g,'world_combat',{target:id});
+ const corpse=g.doc.state.creatures[id].corpse;assert.ok(corpse,'狐已被打死');assert.equal(corpse.owner,'npc_hw_linsui');
+ let done;for(let i=0;i<10;i++){const before=g.doc,r=await call(g,'world_wildlife',{operation:'gather',target:id});if(r.result.success){done=r;break;}g.doc=before;}
+ assert.ok(done,'取材成功');const o=done.result.offenses?.find(o=>o.offense==='theft');assert.ok(o,'取走别人的尸体命中盗窃');assert.equal(o.victim,'npc_hw_linsui');
+});

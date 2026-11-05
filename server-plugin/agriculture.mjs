@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteOffense} from './offense-notes.mjs';
 import {goodsWorth} from './valuation.mjs';
 import {husbandryAction} from './husbandry.mjs';
 import {wearItem,useTool} from './items.mjs';
@@ -504,6 +505,41 @@ export function agricultureAction(d,args,eventId){
 }
 installFacilityRuntime({damageStoredGrain});
 
+// K6: reaping the village's ripe field for oneself is the same work as the
+// public harvest, with the grain going into one's own bag instead of the
+// granary; it happens and is committed as illegal harvest from the village.
+function pilferPublicField(d,engine,p,eventId){
+    const sid=p.settlement,r=clone(d.get(...path(sid))),s=clone(d.get('state','settlements',sid)),item=engine.rules.agriculture.grainItem;
+    if(r?.mode!=='managed'||!r.field.cohorts.some(c=>c.ready))throw preconditionFailure('作物尚未成熟，不能把未来收成取出来');
+    const weather=weatherAt(engine,d.document.randomSeed,p.fieldLocation,d.get('state','minute'));
+    if(['storm','snow'].includes(weather?.kind))throw preconditionFailure('当前雨雪不宜进行这项田间工作');
+    const workday=engine.world.primitiveTables?.['action-costs']?.params?.find(r=>r.id==='workday.minutes')?.value;
+    if(!Number.isSafeInteger(workday)||workday<=0)throw preconditionFailure('田间劳动的工日分钟数未登记');
+    const unitKg=engine.byId.get(item)?.weight??0,room=unitKg>0?Math.floor((carryRoomKg(d,engine)+1e-9)/unitKg):Infinity;
+    if(room<1)reject('E-ACTION-PRECONDITION','拿不动：身上没有空余承载力装下收割的谷物');
+    const hands=Math.max(1,Math.floor(p.areaPerWorkerDay*engine.rules.agriculture.workMinutes/workday));
+    const skill=engine.rules.agriculture.farmingSkill,known=d.get('state','skills',skill),outcome=engine.check(d,{attribute:'体质',...(known?{skill}:{}),difficulty:10},eventId);
+    engine.advance(d,engine.rules.agriculture.workMinutes,eventId);
+    if(d.get('state','player','status')!=='正常'||d.get('state','location')!==p.fieldLocation)return{success:false,effectFailed:'收割完成前已失去行动能力或离开农田'};
+    if(!outcome.success)return{success:false,...outcome,note:'已耗时，但没割下可带走的谷物'};
+    const latest=clone(d.get(...path(sid))),to={account:bag(engine,'player',item)};let grain=0,worked=0;
+    for(const row of latest.field.cohorts.filter(row=>row.ready)){
+        const amount=Math.min(hands-worked,row.areaUnits-row.harvestedUnits);if(amount<=0)continue;
+        const next=row.harvestedUnits+amount,gross=Math.floor(next*row.grownFood/row.areaUnits),total=Math.floor(gross*(10000-(row.pestDamageBps??0))/10000);
+        const take=Math.min(total-row.harvestedFood,room-grain),grossDelta=gross-Math.floor(row.harvestedUnits*row.grownFood/row.areaUnits),account=fieldAccount(engine,p.fieldLocation);
+        if(take<=0)break;
+        note(latest,{out:account,parts:[{id:`public:${row.id}`,amount:take}],to});
+        if(grossDelta>total-row.harvestedFood)note(latest,{out:account,parts:[{id:`public:${row.id}`,amount:grossDelta-(total-row.harvestedFood)}],to:DECAY});
+        if(farmPestProfile(engine,p.settlement))row.potentialHarvestedFood=gross;
+        grain+=take;worked+=amount;row.harvestedFood+=take;row.harvestedUnits=next;
+    }
+    latest.field.cohorts=latest.field.cohorts.filter(row=>row.harvestedUnits<row.areaUnits);
+    latest.ledger.pilfered=(latest.ledger.pilfered??0)+grain;
+    balanced(latest,s);commit(d,engine,sid,latest,eventId);d.set(path(sid),latest);
+    if(grain)engine.itemDelta(d,'player',item,grain,BOOKED);
+    noteOffense(d,{act:'gather',victim:sid,subject:{id:p.fieldId,kind:'field'},stolen:grain?{item,quantity:grain}:null,actor:'player'});
+    return{success:grain>0,...outcome,field:p.fieldId,obtained:grain?[{item,quantity:grain}]:[],units:worked,note:'割下的谷物进了你的行囊；这是村里的公田'};
+}
 // Private crops share the registered crop/weather rules, but public workers
 // never harvest them. Ownership is read at the action, not granted by sowing.
 function privateFarmAction(d,engine,p,args,eventId){
@@ -521,6 +557,7 @@ function privateFarmAction(d,engine,p,args,eventId){
         retainedCrop()||Boolean(delegated&&leaseState(engine,d.get('state'),d.get('state','records',delegated.id)).active&&settlementPresent(engine,d.get('state'),cultivator,'player')):
         retainedCrop()||d.get('state','buildings',location)?.owner==='player'||leases().some(r=>contractTerms(r,d.get('state','minute')).tenant==='player'&&leaseState(engine,d.get('state'),r).factor>0);
     const leaseNote=tenantLease?`期末未收作物按已签条款归${contractTerms(tenantLease).tenancy?.unharvestedCrops==='tenant'?'承租人，可收割原作物但不能继续播种':'田主'}；投入按已签承担条款实际消耗。`:undefined;
+    if(args.operation==='private_harvest'&&location===p.fieldLocation&&d.get('state','location')===location&&!mayFarm()&&!d.get('state','buildings',location)?.owner&&d.get(...path(p.settlement))?.field)return pilferPublicField(d,engine,p,eventId);
     if(location!==p.fieldLocation||d.get('state','location')!==location||!mayFarm()||asset?.condition<=0)throw preconditionFailure('须在本人合法持有且完好的登记田地操作（本人持有或有效承租）');
     if(leases().some(r=>r.id!==delegated?.id&&contractTerms(r,d.get('state','minute')).tenant!=='player'))throw preconditionFailure('田地已有他人的有效租赁使用权，不能重复占用');
     const old=d.get('state','records',id),day=Math.floor(d.get('state','minute')/1440),crop=engine.rules.agriculture.crop;
