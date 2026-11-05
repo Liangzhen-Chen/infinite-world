@@ -49,11 +49,16 @@ export function useClasses(engine,item){
  const def=engine.byId?.get(item),tags=new Set(def?.tags??[]);
  return [...itemClasses(engine,item),...Object.keys(useTags.tags??{}).filter(t=>tags.has(t)),...['combat','checkBonus'].filter(f=>def?.[f])];
 }
-// 单件实例的用途类别：物品的用途类别减去该实例手艺档 loses 里的那些（低档实例“形似”而缺用途）。
+// 一件物品做成某手艺档时缺掉的用途（该档 loses 与物品用途类别的交集）；制成时记在实例的 lostUses 上。
+export function lostUses(engine,item,workmanship){
+ const loses=new Set(workmanshipTier(engine,workmanship).loses);
+ return useClasses(engine,item).filter(c=>loses.has(c));
+}
+// 单件实例的用途类别：物品的用途类别减去实例缺掉的用途（lostUses；旧实例没记的按手艺档推）。低档实例“形似”而缺用途。
 export function instanceClasses(engine,unit){
  if(!unit)return [];
- const loses=new Set(workmanshipTier(engine,unit.workmanship).loses);
- return useClasses(engine,unit.item).filter(c=>!loses.has(c));
+ const lost=new Set(Array.isArray(unit.lostUses)?unit.lostUses:lostUses(engine,unit.item,unit.workmanship));
+ return useClasses(engine,unit.item).filter(c=>!lost.has(c));
 }
 export const isInstanceClass=(engine,unit,cls)=>instanceClasses(engine,unit).includes(cls);
 

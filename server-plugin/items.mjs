@@ -10,7 +10,7 @@ import {partyAccount} from './money.mjs';
 import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {assertCanCarry,packItemKg} from './carry.mjs';
-import {workmanshipTier} from './item-class.mjs';
+import {workmanshipTier,lostUses} from './item-class.mjs';
 export {workmanshipTier};
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 // Harvested portions are minted only from an already conserved physical water
@@ -144,6 +144,8 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null,{dis
     }
     return moved;
 }
+// 卡 Q：低档实例制成时缺掉的用途记在实例上（没有缺失就不写字段）。
+export const lostField=(engine,item,workmanship)=>{const lost=lostUses(engine,item,workmanship);return lost.length?{lostUses:lost}:{};};
 // S1b: books = 产出的来源（制造为 stock.craftOutput，作品誊抄等同）；缺省未入账。
 // grade：卡 Q 品质（标准件 = 1，材料定上限、技能定达成度），乘进耐久；不给就是标准件，不写字段。
 export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,grade,owner='player',maker=owner,books,producedAt=d.get('state','minute')}){
@@ -157,7 +159,7 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
         ids.push(id);
         const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
         holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:maker==='player'?d.get('state','player','name'):engine.byId.get(maker)?.name??maker,
-            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship}),...(grade===undefined?{}:{grade})},'items');
+            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship}),...(grade===undefined?{}:{grade}),...lostField(engine,item,workmanship)},'items');
     }
     engine.itemDelta(d,owner,item,quantity,books);
     const path=[...engine.bagPath(owner),item,'instances'];d.set(path,[...d.get(...path)??[],...ids]);
