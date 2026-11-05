@@ -73,7 +73,12 @@ export function craftGrade(engine,{floor,tier,tools=1,station=1}){
 }
 // 一批制作的结果（检定之后、产出之前）：成功给手艺档与品质；失败给失败类别、回收比例，partial 另给最低档与其品质。
 export function craftOutcome(engine,{standing,degree,success,proficiency,floor,tools,station,recoverFraction,seed,key}){
-    if(success){const tier=craftTier(engine,{standing,degree,proficiency});return {tier,grade:craftGrade(engine,{floor,tier,tools,station})};}
+    if(success){
+        // 材料定上限：品质够不上检定档的达成度时，手艺档落到品质所及的那一档（劣料、劣工具、坏工位都会把档拉下来）。
+        const names=workmanshipNames(engine);let tier=craftTier(engine,{standing,degree,proficiency});const grade=craftGrade(engine,{floor,tier,tools,station});
+        for(let i=names.indexOf(tier);i>0&&workmanshipTier(engine,names[i]).attain>grade+1e-9;i--)tier=names[i-1];
+        return {tier,grade};
+    }
     const failure=craftFailure(engine,{standing,degree,seed,key});
     if(!failure)return {failure:null,recover:recoverFraction};
     const recover=failure==='intact'?1:failure==='wear'?recoverFraction:0;
@@ -153,10 +158,10 @@ export function workstation(d,engine,recipe,args){
     }
     const workMinutes=Math.ceil(recipe.minutes/facility.factor);
     const thermalPlan=prepareThermalWorkstation(d,engine,station,workMinutes);
-    return{...station,fee,workMinutes,...(thermalPlan?{thermalPlan}:{})};
+    return{...station,fee,workMinutes,factor:facility.factor,...(thermalPlan?{thermalPlan}:{})};
 }
 export function manufacture(d,args,eventId){
-    if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult});
+    if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor});
     if(args.batches!==undefined){
         const requested=integer(args.batches,1,100000,'制造批数');
         const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
@@ -217,7 +222,7 @@ export function manufacture(d,args,eventId){
     const outcome=this.check(d,{attribute,skill:recipe.skill,difficulty:recipe.difficulty,tools:recipe.tools??[],helpers:args.helpers??[]},eventId);
     // 品质链的三个输入，在扣料、磨损工具之前读：投入下限、工具乘子、工位乘子（设施完好 1、降级 0.5）。
     const floor=materialFloor(d,this,'player',materials),tools=toolFactor(d,this,'player',recipe.tools),
-        stationFactor=recipe.workstation?facilityView(this,d.get('state'),d.get('state','location'))?.factor??1:1;
+        stationFactor=station?.factor??1;
     for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount,craftInput('manufacturing',eventId));
     if(station?.fee){
         moveCoins(d,{from:purse(null,'player'),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:station.fee,writer:'manufacturing',eventId:eventId});

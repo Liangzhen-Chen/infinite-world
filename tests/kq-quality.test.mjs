@@ -115,7 +115,9 @@ test('档位分层与工具工位：没掌握 < 不到门槛 < 熟练，手艺�
   }
   for(const condition of ['standard','degraded','fineTools']){
    const [a,b,s]=['noSkill','underProficient','skilled'].map(k=>stats[`${condition}:${k}`]);
-   assert.ok(a.tier<b.tier&&b.tier<s.tier,`${family}/${condition} 手艺档 ${a.tier} < ${b.tier} < ${s.tier}`);
+   // 坏工位会把不到门槛者也拉到最低档，所以档位只要求单调不减、熟练严格高于外行；品质分严格分层（下一条）。
+   assert.ok(a.tier<=b.tier&&b.tier<=s.tier&&a.tier<s.tier,`${family}/${condition} 手艺档 ${a.tier} ≤ ${b.tier} ≤ ${s.tier}`);
+   if(condition!=='degraded')assert.ok(a.tier<b.tier,`${family}/${condition} 不到门槛者高于外行`);
    assert.ok(a.durability<b.durability&&b.durability<s.durability,`${family}/${condition} 耐久 ${a.durability} < ${b.durability} < ${s.durability}`);
    assert.ok(a.uses<=b.uses&&b.uses<=s.uses,`${family}/${condition} 用途不减`);
    assert.ok(a.grade<b.grade&&b.grade<s.grade,`${family}/${condition} 成品品质 ${a.grade} < ${b.grade} < ${s.grade}`);
