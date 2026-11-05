@@ -12,7 +12,7 @@ import {settlementStock,bag} from '../server-plugin/stock.mjs';
 import {stateReader} from '../server-plugin/valuation.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
-const owner='npc_hw_linsui',other='npc_hw_duanyan',item='item_bread',DAY=1440;
+const owner='npc_hw_linsui',other='npc_hw_duanyan',supplier='npc_hw_shendu',item='item_bread',DAY=1440;
 function fixture({members=[owner],shared=true}={}){
  const w=structuredClone(world);
  w.households=w.households.map(h=>({...h,members:h.members.filter(id=>!members.includes(id))})).filter(h=>h.members.length);
@@ -278,6 +278,9 @@ test('older world tables without the new preference mixture retain the existing 
 function marketFixture(){
  const f=fixture();
  f.engine.byId.get(owner).shopRestock=[{item,source:'local',amount:6,maximum:6}];
+ // K2（卡 E）依据：本地货架改为向本聚落持货人进货，下一次补货只算得上持货人眼下能出让的余量（shop.mjs 口粮来源）。
+ // 夹具安排一位村民手里有足够多的面包，让“每天补 6 个”的真实上游存在；家户预算的断言不变。
+ f.state.npcs[supplier].inventory={...f.state.npcs[supplier].inventory,[item]:500};
  f.state.minute=DAY/2;f.state.npcs[owner].coins=100;f.sync();return f;
 }
 

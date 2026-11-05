@@ -67,12 +67,15 @@ test('NPC按短缺出任务：报酬从本人钱里托管，告示带来源，�
 });
 
 test('出不起就不出：手头一半余钱不够等级下限时不发布、不扣钱',async()=>{
- const {document,midnight}=setup();document.state.buildings.bld_hw_qingdeng.condition=20;document.state.npcs[owner].coins=18;
+ const {document,midnight}=setup();document.state.buildings.bld_hw_qingdeng.condition=20;document.state.npcs[owner].coins=0;
  const next=await midnight(document);
  // 同一正午收入，K2 后补货向持货人付款（卡 E 依据，原为付公账 12 铜）；余钱的一半仍低于 D 级下限 20，不扣任务钱。
- // 开局钱由 30 改 18：原 30 是按“收入 18 − 补货 12”算到余钱 36；补货不再付公账后，余钱同为 18+18=36。
- const left=18+tradeNet(document,next,owner);assert.ok(Math.floor(left/2)<20);
- assert.equal(generated(next).length,0);assert.equal(next.state.npcs[owner].coins,left);
+ // 开局钱由 30 改 0：原 30 是按“收入 18 − 补货 12”算到余钱 36；补货不再付公账、合入 F 后客流也变了，
+ // 开局 0 才让余钱的一半仍低于 D 级下限，保持“出不起就不出”的前提。
+ // 钱袋加柜台＝开局 0 + 本人真实成交净额；手头（钱袋）的一半低于下限就不出单。
+ const counter=Object.values(next.state.records).find(r=>r.category==='money_account'&&r.owner===owner&&r.purpose==='counter')?.coins??0;
+ const left=next.state.npcs[owner].coins;assert.equal(left+counter,tradeNet(document,next,owner));assert.ok(Math.floor(left/2)<20);
+ assert.equal(generated(next).length,0);
 });
 
 test('数量节流：每日上限、每人按灵智等级上限，守常者只为迫在眉睫的缺口出单',async()=>{

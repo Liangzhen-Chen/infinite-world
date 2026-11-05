@@ -4,7 +4,7 @@
 // 价格是同一市场的报价：经营者进货走买入价差（business 的 buy 侧），转卖走卖出侧，价差就是他的毛利。
 // 店铺（shop.mjs）与没有铺面的经营者共用这一条：店铺的本地货架按货架上限进货，其余经营者按开局时手上的存货量进货。
 import {isEffective} from './lifecycle-state.mjs';
-import {placeSettlement} from './entity-view.mjs';
+import {placeSettlement,personHousehold} from './entity-view.mjs';
 import {marketQuote,recordMarketDeal,saleableStock} from './market.mjs';
 import {transferItems} from './items.mjs';
 import {purse,moveCoins,mirrorPartyCoins,coinRead} from './money.mjs';
@@ -47,8 +47,10 @@ function residentsOf(d,engine,settlement){
  const state=d.get('state');
  return Object.keys(state.npcs??{}).sort().filter(id=>usable(engine,state,id)&&settlementOf(engine,state,id)===settlement);
 }
+// 同一户的人不是彼此的货源：户里的东西本来就共用，向自家人“进货”不是从上游来的货。
 function holdersIn(d,engine,settlement,item,buyer,residents=residentsOf(d,engine,settlement)){
- return residents.filter(id=>id!==buyer&&engine.quantity(d,id,item)>0);
+ const home=new Set(personHousehold(engine,d.get('state'),buyer).value?.members??[buyer]);home.add(buyer);
+ return residents.filter(id=>!home.has(id)&&engine.quantity(d,id,item)>0);
 }
 // 本聚落持货人眼下能出让给 buyer 的这件货合计（店主盘算下一次本地补货能补多少时读它）。
 export function localSpare(d,engine,{settlement,item,buyer}){
