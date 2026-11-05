@@ -164,7 +164,7 @@ function itinerary(e,document,who,stops,at,from=document.state.npcs[who].locatio
 }
 // ---- 劳动行程占用的作息：出发时刻与放弃的营业 ----
 const SLEEP=/睡眠|睡觉|熟睡/,MOVING=/赶路|前往|返回/;
-// 一趟行程碰到本人的营业（作息里开着 trade 的时段）或当班做工，就要放弃这段收入，计入行程成本：
+// 一趟行程碰到本人的营业（作息里开着 trade 的时段）、受雇当班或在自己的工作处做活，就要放弃这段收入，计入行程成本：
 // 营业按本人近期七日真实成交的日均货款折到每分钟（没有成交记录时，按留在铺上的可售存货货值算作一天能卖出的上限；这趟带走去卖的货不算在内）；当班按受雇合同的工价折到每分钟。
 // 已有人按行程来本人这里取货（市场行程登记的接待窗口），那段时间不能走。授课只是可预约时不算占用。
 // 本人一天的营业分钟与铺上货值，同一状态里只读一次（一次决策会比较多个出发时刻与多条行程）。
@@ -182,14 +182,26 @@ function slotsBetween(e,state,who,from,to){
  for(let day=Math.floor(from/DAY)*DAY;day<to;day+=DAY)for(const row of daySlots(e,state,who,day))if(row.end>from&&row.start<to)out.push({start:Math.max(from,row.start),end:Math.min(to,row.end),slot:row.slot});
  return out;
 }
+// 本人的工作处：名册登记的 workplace（状态里改过的以状态为准）。在那里醒着的作息时段就是本人当班做活。
+const workplaceOf=(e,state,who)=>state.npcs[who]?.workplace?.location??e.byId.get(who)?.workplace?.location??null;
+function onDuty(slot,place){return Boolean(place)&&slot.location===place&&!slot.travel&&!SLEEP.test(slot.activity??'');}
+// 自家活计的工价：本人一天的工价（laborValue，按技能阶段派生）摊到当天在工作处当班的分钟上。
+function dutyRate(e,document,who,day,place){
+ const minutes=daySlots(e,document.state,who,day).reduce((n,r)=>n+(r.slot&&onDuty(r.slot,place)&&!r.slot.services?.includes('trade')?r.end-r.start:0),0);
+ return minutes?laborValue(e,document,{worker:who,observer:who}).daily/minutes:0;
+}
 function forgone(e,document,who,trip,taken={}){
- const state=document.state,day=Math.floor(trip.departAt/DAY)*DAY;let trade=0,work=0;
- const job=personEmployment(e,state,who,trip.departAt)?.value;
+ const state=document.state,day=Math.floor(trip.departAt/DAY)*DAY;let trade=0,work=0,duty=0;
+ const job=personEmployment(e,state,who,trip.departAt)?.value,place=workplaceOf(e,state,who);
+ // 行程里走路与作业的分钟（不含在外歇宿）：落在当班时段里的那部分，工时成本已按工价算进行程，不再重复记作放弃的活计。
+ const active=(trip.segments??[]).filter(s=>!s.rest);
+ const busy=(start,end)=>active.reduce((n,s)=>n+Math.max(0,Math.min(end,s.end)-Math.max(start,s.start)),0);
  for(const {start,end,slot} of slotsBetween(e,state,who,trip.departAt,trip.returnAt)){
   if(!slot)return Infinity;
   if(slot.marketTrip&&!slot.travel&&slot.activity==='接待顾客')return Infinity;
   if(slot.services?.includes('trade'))trade+=end-start;
   else if(job&&slot.location===job.location&&slot.production!==false&&!SLEEP.test(slot.activity??''))work+=end-start;
+  else if(onDuty(slot,place))duty+=end-start-busy(start,end);
  }
  let loss=0;
  if(trade){
@@ -206,28 +218,30 @@ function forgone(e,document,who,trip,taken={}){
   if(!Number.isSafeInteger(job.wage)||job.wage<0||!Number.isSafeInteger(job.workMinutes)||job.workMinutes<1)throw Error(`受雇合同 ${job.id} 须登记 wage 与 workMinutes（整数）`);
   loss+=Math.ceil(job.wage*work/job.workMinutes);
  }
+ // 在自己的工作处当班做活：离开的那些时段按自家活计的工价放弃。
+ if(duty>0)loss+=Math.ceil(dutyRate(e,document,who,day,place)*duty);
  return loss;
 }
-// 可以出发的时刻：眼下，以及此后一天内本人作息里每段醒着、不在路上的空闲时段的开头（比如营业前的清晨、收铺之后）。出发地是那时本人所在的地方。
+// 可以出发的时刻：眼下，以及此后一天内本人作息里每段醒着、不在路上、不营业也不当班的空闲时段的开头（比如营业前的清晨、收工之后）。出发地是那时本人所在的地方。
 function departures(e,state,who,at){
- const out=[{at,from:state.npcs[who]?.location}];
+ const out=[{at,from:state.npcs[who]?.location}],place=workplaceOf(e,state,who),job=personEmployment(e,state,who,at)?.value;
  let previous=null;
  for(const {start,slot} of slotsBetween(e,state,who,at,at+DAY)){
   if(!slot)break;
-  const free=slot.location&&!slot.travel&&!SLEEP.test(slot.activity??'')&&!MOVING.test(slot.activity??'')&&!slot.services?.includes('trade');
+  const free=slot.location&&!slot.travel&&!SLEEP.test(slot.activity??'')&&!MOVING.test(slot.activity??'')&&!slot.services?.includes('trade')&&!onDuty(slot,place)&&slot.location!==job?.location;
   if(start>at&&free&&!previous&&out.length<4)out.push({at:start,from:slot.location});
   previous=free;
  }
  return out.filter(d=>d.from);
 }
-// 同一组作业先按眼下出发排一趟；它若耽误营业，再看别的可出发时刻：按同样长短的窗口先估放弃的收入，只对最省的那个时刻重排路线
+// 同一组作业先按眼下出发排一趟；它若耽误营业或活计，再看别的可出发时刻：把这趟原样挪过去先估放弃的收入，只对最省的那个时刻重排路线
 // （要到场接待的对方得在那时开着门）。取放弃的收入最少的，一样少就取眼下这趟。
 function plannedTrip(e,document,who,stops,at,taken,ok=()=>true){
  const [now,...later]=departures(e,document.state,who,at),priced=trip=>{if(!trip||!ok(trip))return null;const lost=forgone(e,document,who,trip,taken);return Number.isFinite(lost)?{...trip,forgone:lost}:null;};
  const first=now?priced(itinerary(e,document,who,stops,now.at,now.from)):null;
  if(first?.forgone===0||!later.length)return first;
  const span=first?first.returnAt-first.departAt:null;
- const guess=span===null?later[0]:later.map(d=>({d,lost:forgone(e,document,who,{departAt:d.at,returnAt:d.at+span},taken)})).sort((x,y)=>x.lost-y.lost||x.d.at-y.d.at)[0];
+ const guess=span===null?later[0]:later.map(d=>({d,lost:forgone(e,document,who,{departAt:d.at,returnAt:d.at+span,segments:first.segments.map(s=>({...s,start:s.start+d.at-first.departAt,end:s.end+d.at-first.departAt}))},taken)})).sort((x,y)=>x.lost-y.lost||x.d.at-y.d.at)[0];
  if(span!==null&&!(guess.lost<first.forgone))return first;
  const other=priced(itinerary(e,document,who,stops,(guess.d??guess).at,(guess.d??guess).from));
  return !first||other&&other.forgone<first.forgone?other??first:first;
