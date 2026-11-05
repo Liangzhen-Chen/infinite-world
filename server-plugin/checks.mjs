@@ -1,7 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {createHash}from'node:crypto';
 import {effectiveProficiency}from'./professions.mjs';
-import {heldUnit}from'./items.mjs';
+import {heldUnit,unitLacks}from'./items.mjs';
 import {trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
 import {hiddenCheckBonus,passiveDomain,observationTime}from'./hidden-passives.mjs';
 import {isPhysicallyDead}from'./holdings.mjs';
@@ -54,7 +54,8 @@ export function toolBonuses(d,engine,tools,attribute,skill,actor='player',level=
         if(grade<0)throw preconditionFailure('工具品质不在规则表');
         if(level<engine.rules.equipment.requiredLevels[grade])throw preconditionFailure('等级不足以使用工具');
         const spec=definition.checkBonus;
-        const matches=spec&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(skill));
+        // 卡 Q：低档单件缺掉 checkBonus（lostUses）就不给加成。
+        const matches=spec&&!unitLacks(engine,{item,...held},'checkBonus')&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(skill));
         return{item,bonus:matches?integer(spec.bonus,0,5,'工具加值'):0};
     });
     return{bonus:Math.min(engine.rules.check.maximumToolBonus??5,details.reduce((sum,row)=>sum+row.bonus,0)),details};

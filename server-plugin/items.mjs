@@ -10,6 +10,8 @@ import {partyAccount} from './money.mjs';
 import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {assertCanCarry,packItemKg} from './carry.mjs';
+import {workmanshipTier,lostUses,unitLostUses,unitLacks} from './item-class.mjs';
+export {workmanshipTier,unitLacks};
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 // Harvested portions are minted only from an already conserved physical water
 // transfer. The feature volume and liquid_binding remain their authority.
@@ -41,7 +43,7 @@ export function useTool(d,engine,requiresUse,selected=undefined){
   if(engine.quantity(d,'player',item)<1)continue;
   const held=heldUnit(d,engine,'player',item),facts=physicalItem(d,engine,held?.instance??item);
   if(held?.instances?.length&&!held.instance&&held.instances.length>=engine.quantity(d,'player',item))continue;
-  const tags=held?.tags??facts.tags;
+  const tags=held?.tags?held.tags.filter(t=>!unitLacks(engine,held,t)):facts.tags;
   if(!Array.isArray(tags)){unknown=true;continue;}
   if(tags.includes(requiresUse)&&(held?.durability??facts.durability??0)>0&&(held?.condition??facts.condition)!==0)return item;
  }
@@ -142,8 +144,11 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null,{dis
     }
     return moved;
 }
+// 卡 Q：低档实例制成时缺掉的用途记在实例上（没有缺失就不写字段）。
+export const lostField=(engine,item,workmanship)=>{const lost=lostUses(engine,item,workmanship);return lost.length?{lostUses:lost}:{};};
 // S1b: books = 产出的来源（制造为 stock.craftOutput，作品誊抄等同）；缺省未入账。
-export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,owner='player',maker=owner,books,producedAt=d.get('state','minute')}){
+// grade：卡 Q 品质（标准件 = 1，材料定上限、技能定达成度），乘进耐久；不给就是标准件，不写字段。
+export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,grade,owner='player',maker=owner,books,producedAt=d.get('state','minute')}){
     if(!Number.isSafeInteger(producedAt)||producedAt<0||producedAt>d.get('state','minute'))throw preconditionFailure('产出日期无效');
     count(quantity);if(quantity>200)throw preconditionFailure('单次制造产物超过处理上限，应拆分工序');
     const definition=engine.byId.get(item),ids=[];
@@ -152,12 +157,29 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
         const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
         if(d.get('state','itemInstances',id))throw preconditionFailure('此次制造的单件编号已经存在，不能重复制造');
         ids.push(id);
-        const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
+        const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
         holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:maker==='player'?d.get('state','player','name'):engine.byId.get(maker)?.name??maker,
-            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship})},'items');
+            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship}),...(grade===undefined?{}:{grade}),...lostField(engine,item,workmanship)},'items');
     }
     engine.itemDelta(d,owner,item,quantity,books);
     const path=[...engine.bagPath(owner),item,'instances'];d.set(path,[...d.get(...path)??[],...ids]);
+    return ids;
+}
+
+// 卡 Q：制作失败（损耗）退回的料已经入库（数量已加），把其中 quantity 份登记为单件并记下降低后的品质 grade——
+// materialFloor 读投入品质的同一处。只登记身份与品质，不增减库存。
+export function markReturnedUnits(d,engine,owner,item,quantity,{eventId,grade}){
+    const held=d.get(...engine.bagPath(owner),item),units=typeof held==='object'?held.instances??[]:[],total=engine.quantity(d,owner,item);
+    if(total-units.length<quantity)throw Error('退回的料不足以登记单件');
+    const definition=engine.byId.get(item),properties=typeof held==='object'?held:{quantity:total,quality:definition.quality,durability:definition.durability,weight:definition.weight},ids=[];
+    for(let index=0;index<quantity;index++){
+        const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:returned:${owner}:${item}:${index}`).digest('hex').slice(0,24)}`;
+        if(d.get('state','itemInstances',id))throw Error('退回料单件编号冲突');
+        holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,origin:'制作失败退回的料，品质已降',
+            quality:properties.quality??definition.quality,durability:properties.durability??definition.durability,maxDurability:properties.maxDurability??definition.durability,grade},'items');
+        ids.push(id);
+    }
+    d.set([...engine.bagPath(owner),item],{...properties,quantity:total,instances:[...units,...ids]});
     return ids;
 }
 
@@ -204,6 +226,9 @@ export function physicalItem(d,engine,id){
  const stored=d.get('state','records',physicalKey(id));
  const facts={...base,...entity?.facts,...unit,...stored?.facts,...(stored?.aliases?{aliases:stored.aliases}:{}),...(stored?.name?{name:stored.name}:{})};
  if(unit?.maxDurability>0)facts.condition=100*unit.durability/unit.maxDurability;
+ // 卡 Q：低档单件缺掉的用途（lostUses）不再是它的事实：用途标签去掉，检定加成、战斗属性不具备。
+ const lost=unit?unitLostUses(engine,unit):[];
+ if(lost.length){if(Array.isArray(facts.tags))facts.tags=facts.tags.filter(t=>!lost.includes(t));for(const f of ['checkBonus','combat'])if(lost.includes(f))delete facts[f];}
  const held=unit?.owner&&unit.item?d.get(...engine.bagPath(unit.owner),unit.item):null;
  if(held?.quantity===1&&held.moisture!==undefined)facts.moisture=held.moisture;
  if(unit?.liquid){
@@ -504,7 +529,7 @@ export function producePremisesItems(d,engine,owner,location,item,quantity,{even
  for(let index=0;index<quantity;index++){
   const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
   if(d.get('state','itemInstances',id))throw preconditionFailure('此次制造的单件编号已经存在，不能重复制造');
-  const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
+  const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor));
   holdingSet(d,engine,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:engine.byId.get(maker)?.name??maker,recipe,source:eventId,minute:d.get('state','minute'),quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'items');
   setLocation(d,{entity:id,at:location,mode:'place',writer:'items',engine});ids.push(id);
  }
