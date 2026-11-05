@@ -103,3 +103,13 @@ test('住户在场授予私宅许可时写明借用的设备：只能写这处�
  const plain=await engine.reduce(document,{tool:'world_promise',args:{operation:'grant_access',promisor:host,location:home,minutes:120,consent:true,content:'借灶做饭'},eventId:'grant-plain'});
  assert.equal(stationLicence(engine,applyPatches(document,plain.patches),station,'player',{authorization:plain.result.authorization}),null,'没写明设备的进屋许可不借出灶');
 });
+
+test('在工位上的师傅当班时可授课，不限作息里的接待时段；离开工位就不教',async()=>{
+ const engine=new WorldEngine(world);let document=engine.createCharacter(seed,{},'kg-teach');
+ const wait=await engine.reduce(document,{tool:'world_time',args:{minutes:360},eventId:'kg-teach-wait'});document=applyPatches(document,wait.patches);
+ const master='npc_wt_wangpu',at=structuredClone(document);assert.equal(at.state.npcs[master].location,'bld_wt_yard','下午在修篓木台院劳动');
+ at.state.location='bld_wt_yard';
+ await engine.reduce(at,{tool:'world_learn',args:{kind:'recipe',entity:'recipe_wooden_pegs',source:master},eventId:'kg-teach'});
+ const away=structuredClone(document);away.state.npcs[master].location='bld_wt_home_02';away.state.location='bld_wt_home_02';
+ await assert.rejects(engine.reduce(away,{tool:'world_learn',args:{kind:'recipe',entity:'recipe_wooden_pegs',source:master},eventId:'kg-teach-away'}),/资格/);
+});

@@ -179,7 +179,9 @@ export function npcServiceFact(engine,state,npcId,version=null){
         value:{activity:available.activity,services:available.services,until:available.until??null}};
 }
 
-export function assertNpcService(d,engine,npcId,service,minutes){
+// K5: a master teaching at a station (atStation, judged by the caller) is not
+// limited to a booked teach slot; they must stay at that station for the lesson.
+export function assertNpcService(d,engine,npcId,service,minutes,{atStation=false}={}){
     const state=d.get('state'),npc=state.npcs[npcId];
     if(facilityView(engine,state,npc?.location)?.factor===0)throw preconditionFailure('服务场所已停用');
     if(!npc||npc.location!==state.location)throw preconditionFailure('服务者不在场');
@@ -188,7 +190,7 @@ export function assertNpcService(d,engine,npcId,service,minutes){
     engine.assertNpcAutonomyAction?.(state,['player',npcId],{minutes});
     if(!engine.byId.get(npcId)?.schedule&&!scheduleAt(engine,npcId,state.minute,state))return; // Archived worlds retain their original service semantics.
     const available=npcAvailability(engine,state,npcId);
-    if(available.services!==null&&!available.services.includes(service)){
+    if(!atStation&&available.services!==null&&!available.services.includes(service)){
         const next=nextNpcService(engine,npcId,state.minute,service,state);
         const plan=next?`；按作息计划在${engine.calendar(next.minute).text}于${engine.byId.get(next.location)?.name??next.location}接待，届时仍需确认在场且清醒`:'';
         reject('E-ACTION-SERVICE',`${engine.byId.get(npcId).name}此刻不提供${service==='teach'?'授课':'交易'}服务：${available.activity}${plan}`,{missing:[`对方需要在场、清醒且正在提供${service==='teach'?'授课':'交易'}服务`],repair:['按原因中列出的作息时间和地点寻找对方，再确认其在场且清醒']});
@@ -196,7 +198,7 @@ export function assertNpcService(d,engine,npcId,service,minutes){
     // Validate the whole action before any money, time or inventory changes.
     for(let cursor=state.minute;cursor<state.minute+minutes;){
         const slot=scheduleAt(engine,npcId,cursor,state);if(!slot)break;
-        if(slot.location!==npc.location||!slot.services.includes(service))throw preconditionFailure('剩余服务时间不足，无法在休息或离开前完成');
+        if(slot.location!==npc.location||!atStation&&!slot.services.includes(service))throw preconditionFailure('剩余服务时间不足，无法在休息或离开前完成');
         cursor=slot.until;
     }
 }

@@ -4,7 +4,7 @@ import {recordsWhere,recordsMemo,stateMemo,recordIndexActive,canonicalEqual,reco
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
-import {fixtureStations} from './workstation-services.mjs';
+import {fixtureStations,stationLicence} from './workstation-services.mjs';
 import {npcSchedule,npcAgeAt,serviceAppointmentSources} from './npc-state.mjs';
 import {personConstraints} from './entity-view.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
@@ -248,6 +248,19 @@ export function knowsKnowledge(e,s,id,entity){
  if(entity.startsWith('skill_'))return knowledgeProficiency(e,s,id,entity)>0;
  const partition=entity.startsWith('recipe_')?'recipes':'spells';
  return Boolean(id==='player'?s[partition]?.[entity]:s.npcs?.[id]?.[partition]?.[entity]||b.teachers?.includes(id)||partition==='recipes'&&stationMaster(e,s,id,b));
+}
+// A master teaches where the craft is done: present at a station of the
+// recipe's kind where they work or live, or may lawfully use, awake and not travelling, sleeping or at a
+// meal. Not limited to a booked teaching slot in the routine.
+const RESTING=/睡眠|睡觉|熟睡|吃饭|用饭|进食/;
+export function teachingAtStation(e,s,id,recipe){
+ const n=s.npcs?.[id];
+ if(!n||!stationMaster(e,s,id,recipe)||n.scheduleTravel||n.cognitionTravel||['濒死','昏迷','患病','睡眠'].includes(n.status))return false;
+ const slot=e.protocolScheduleAt?.(e,id,s.minute,s),activity=slot&&slot.location===n.location?slot.activity:n.activity;
+ if(RESTING.test(activity??''))return false;
+ // Where they work or live is where they practise; elsewhere they need a lawful use of the station.
+ const own=[n.residence?.home,n.vocation?.location,e.byId.get(id)?.home?.location,e.byId.get(id)?.workplace?.location].includes(n.location);
+ return (facilityView(e,s,n.location)?.workstations??[]).some(st=>st.kind===recipe.workstation&&(own||stationLicence(e,{state:s},st,id)));
 }
 // K5: masters follow the stations. A person practising a craft at a station of
 // its kind where they live or work knows that station's recipes within their

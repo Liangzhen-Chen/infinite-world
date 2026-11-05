@@ -10,6 +10,7 @@ import {educationAction} from './education.mjs';
 import {personTeaching} from './entity-view.mjs';
 import {effectiveProficiency,certifiedForSkill}from'./professions.mjs';
 import {assertNpcService}from'./npc-schedule.mjs';
+import {teachingAtStation}from'./education-state.mjs';
 import {teachNpc}from'./npc-growth.mjs';
 import {spiritStudent,teachSpirit}from'./wildlife-society.mjs';
 import {growIntelligence,GROWTH_POINTS}from'./npc-intelligence.mjs';
@@ -115,7 +116,7 @@ function learnNative(d,args,id){
                 fee=0;
             }
         }
-        assertNpcService(d,this,source,'teach',minutes);
+        assertNpcService(d,this,source,'teach',minutes,{atStation:entity.startsWith('recipe_')&&teachingAtStation(this,d.get('state'),source,catalog)});
         if(d.get('state','player','coins')<fee)throw preconditionFailure('教学费不足');
         const permission=teachingConsent(d,this,{teacher:source,subject:entity,minutes,fee,eventId:id});
         if(!permission.allowed)throw preconditionFailure(`导师未同意授课：${permission.reason}`);
