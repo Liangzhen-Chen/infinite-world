@@ -11,7 +11,8 @@ const generatedRecipeRows=Symbol('generated workstation recipes');
 // K5: a workstation is what a place's fixed equipment affords, never a list of
 // stations. world/ontology/fixtures.json says which fixture affords which
 // recipe workstation; a place carries `fixtures` ([{fixture,id?,fee?,
-// thermalRequirement?}] or bare fixture ids), and a constructed facility type
+// thermalRequirement?,owner?}] or bare fixture ids; owner only for equipment
+// owned apart from the building), and a constructed facility type
 // brings its standard fixtures (FACILITY_TYPES[type].fixtures). Owner, opening
 // and fee are read from the place, not from the station.
 const FIXTURES=new Map(JSON.parse(fs.readFileSync(new URL('../world/ontology/fixtures.json',import.meta.url),'utf8')).entries.map(row=>[row.id,row]));
@@ -29,7 +30,7 @@ export function fixtureStations(place){
  for(const row of [...(Array.isArray(place.fixtures)?place.fixtures:[]),...implied].map(fixtureEntry)){
   const fixture=FIXTURES.get(row?.fixture);if(!fixture||out.some(s=>s.kind===fixture.affords))continue;
   out.push({id:row.id??`station_${place.id}_${fixture.affords}`,kind:fixture.affords,fixture:row.fixture,location:place.id,
-   access:row.fee!==undefined||place.access?.mode==='public'?'public':'consent',fee:row.fee??0,
+   access:row.fee!==undefined||place.access?.mode==='public'?'public':'consent',fee:row.fee??0,...(typeof row.owner==='string'?{owner:row.owner,ownedApart:true}:{}),
    ...(row.thermalRequirement?{thermalRequirement:row.thermalRequirement}:{})});
  }
  return out;
@@ -54,21 +55,22 @@ function ownersAt(place,worldHouseholds,state){
 }
 // Load-time projection for readers of place.workstations: every published
 // place's stations are rewritten from its fixtures, so a hand-written list in
-// a world file never survives (and a place without fixtures has none).
+// a world file never survives (a place without fixtures has none).
 // Idempotent; campaign changes (rebuilt, sold, ruined) are read through
 // facilityView/placeWorkstations, which use the same derivation.
+// Every place gets the projection, so fixtures added later are seen too.
 export function materializeWorkstations(world){
  for(const place of world.locations??[]){
-  const stations=fixtureStations(place);
-  delete place.workstations;if(!stations.length)continue;
-  // Non-enumerable: the world's serialized form, hash and clones keep only the fixtures.
-  Object.defineProperty(place,'workstations',{value:stations.map(station=>({...station,owner:ownersAt(place,world.households,null)[0]??null})),enumerable:false,writable:true,configurable:true});
+  delete place.workstations;
+  // A non-enumerable getter: the world's serialized form, hash and clones keep
+  // only the fixtures, and an edited fixture is what every reader sees.
+  Object.defineProperty(place,'workstations',{get:()=>fixtureStations(place).map(station=>({...station,owner:station.owner??ownersAt(place,world.households,null)[0]??null})),enumerable:false,configurable:true});
  }
  return world;
 }
 // The current stations at a place, with their derived owner.
 export function placeWorkstations(engine,state,id){
- return fixtureStations(placeOf(engine,state,id)).map(station=>{const owners=stationOwners(engine,state,station);return {...station,owner:owners[0]??null,owners};});
+ return fixtureStations(placeOf(engine,state,id)).map(station=>{const owners=station.owner?[station.owner]:stationOwners(engine,state,station);return {...station,owner:owners[0]??null,owners};});
 }
 export function workstationDefinition(engine,state,id){
  for(const place of [...engine.world.locations,...Object.values(state?.created??{})]){
@@ -88,9 +90,10 @@ function purposeNames(station,text){
 export function stationLicence(engine,document,station,actor='player',{authorization}={}){
  const reader=typeof document?.get==='function'?document:holdingsView(document),state=reader.get('state');
  if(station.owners?.includes(actor))return {basis:'owner'};
- if(state&&homeResidents(engine,state,station.location).value.includes(actor))return {basis:'resident'};
- if(['leases','operates'].some(kind=>aliveHoldings(reader,{kind,subject:station.location}).some(h=>h.holder===actor)))return {basis:'lease'};
- const grantors=new Set([...station.owners??[],...state?homeResidents(engine,state,station.location).value:[]]);
+ // Living in or renting the place covers its own equipment, not equipment owned apart.
+ if(!station.ownedApart&&state&&homeResidents(engine,state,station.location).value.includes(actor))return {basis:'resident'};
+ if(!station.ownedApart&&['leases','operates'].some(kind=>aliveHoldings(reader,{kind,subject:station.location}).some(h=>h.holder===actor)))return {basis:'lease'};
+ const grantors=new Set([...station.owners??[],...!station.ownedApart&&state?homeResidents(engine,state,station.location).value:[]]);
  const permits=authorization!==undefined?[state?.records?.[authorization]]:recordsWhere(state?.records,'category','authorization');
  const permit=permits.find(p=>p?.category==='authorization'&&p.grantee===actor&&grantors.has(p.grantor)&&p.revoked!==true&&p.endedAt===undefined&&(p.expires===undefined||p.expires>state.minute)&&
   (p.action==='workshop_use'&&[station.id,station.location].includes(p.subject)||p.subject===station.location&&purposeNames(station,p.content)));

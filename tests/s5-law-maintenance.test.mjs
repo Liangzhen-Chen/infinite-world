@@ -14,7 +14,7 @@ import {weatherAt} from '../server-plugin/weather.mjs';
 function scenario({condition=59,expensive=false}={}){
  const f=fixture({at:inn});delete f.w.rules.weather;f.doc.state.location='loc_hw';
  Object.assign(f.w.rules.facilities.maintenance,{horizonDays:14,delayMaxPermille:0,stubbornPermille:0,noisePermille:0});
- f.e.byId.get(inn).lodging.rooms=2;f.e.byId.get(inn).workstations=[];
+ f.e.byId.get(inn).lodging.rooms=2;f.e.byId.get(inn).fixtures=[];// K5：去掉设备即没有工位
  f.w.rules.economy.rentalCopperPerNight=1;f.w.rules.economy.dailyIncomeBySkillStage[0]=[1,1];
  f.e.byId.get('item_wood').basePrice=expensive?4:2;f.e.byId.get('item_stone').basePrice=expensive?2:1;
  f.doc.state.buildings[inn].condition=condition;
@@ -210,7 +210,7 @@ test('全部设施类型均可比较，不因缺服务定价而漏出候选',()=
  // At99 every native private facility has two options, including an
  // unprofitable deferral. No service-type or condition60 filter applies.
  const f=scenario({condition:99}),place=f.e.byId.get(inn);
- delete place.lodging;place.workstations=[];
+ delete place.lodging;place.fixtures=[];// K5：去掉设备即没有工位
  for(const kind of ['house','workshop','bridge','road','clinic','school','granary','public']){
   place.facilityType=kind;
   assert.equal(options(f).options.length,2,kind);assert.ok(options(f).options[0].utility<options(f).options[1].utility,kind);
