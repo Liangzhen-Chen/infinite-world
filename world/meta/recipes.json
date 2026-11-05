@@ -9787,10 +9787,7 @@
         "amount": 1
       }
     ],
-    "tools": [
-      "item_smith_hammer",
-      "item_smith_tongs"
-    ],
+    "tools": [],
     "output": {
       "item": "item_iron",
       "quantity": 1
