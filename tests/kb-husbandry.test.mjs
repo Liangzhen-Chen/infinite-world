@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadRuntimeWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
@@ -10,7 +10,7 @@ import {installEcologyDefinitions} from '../server-plugin/ecology-dynamics.mjs';
 
 // Card B: husbandry products, feed and culling follow species attributes and
 // rule tables; no species carries a product list.
-const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+const world=await loadRuntimeWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const speciesFile=JSON.parse(await fs.readFile('world/ecology/species.json','utf8'));
 const byId=(w,id)=>w.monsters.find(m=>m.id===id);
 const tagged=(w,id,tag)=>(w.items.find(i=>i.id===id)?.tags??[]).includes(tag);
@@ -51,7 +51,9 @@ test('a new species given only attributes yields milk, fibre and a body-sized ca
 
 test('authored species keep their attribute-derived goat milk and pheasant eggs',()=>{
  const goat=byId(world,'monster_bent_horn_goat'),bird=byId(world,'monster_oat_pheasant');
- assert.ok(!speciesFile.species.some(s=>s.husbandry?.yields),'species data carries no product list');
+ // A1: the reviewed species rows keep their authored product list until the approval pipeline;
+ // the runtime products are the attribute-derived rows (each names the attribute it comes from).
+ assert.ok([goat,bird].every(s=>s.husbandry.yields.alive.length&&s.husbandry.yields.alive.every(r=>r.from)),'runtime products are derived from attributes');
  assert.deepEqual(goat.husbandry.yields.alive.map(r=>[r.item,r.perHeadDay>0]),[['item_goat_milk',true],['item_raw_goat_hair',true]]);
  assert.deepEqual(bird.husbandry.yields.alive.map(r=>r.item),['item_pheasant_egg']);
  assert.ok(goat.drops.some(d=>d.item==='item_rawhide'));

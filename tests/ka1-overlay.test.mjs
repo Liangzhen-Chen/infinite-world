@@ -1,0 +1,81 @@
+// 卡 A1：已审内容只经审批管线。盘上的已审行与审批回执一致；规律读的机制字段放在 world/meta/mechanics/，
+// 只在运行时世界里合并；合并不改写任何已审的值，重复合并结果不变。
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {execSync} from 'node:child_process';
+import {loadWorld, loadRuntimeWorld} from '../tools/load-world.mjs';
+import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/runtime-world.mjs';
+import {canonical} from '../server-plugin/storage.mjs';
+
+const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
+const rowFiles = ['meta/items.json', 'meta/recipes.json', 'geo/locations.json', 'meta/professions.json', 'meta/skills.json', 'meta/spells.json', 'people/baseline.json', 'people/residents.json', 'people/households.json'];
+const formal = new Map(rowFiles.flatMap(f => J(`world/${f}`).map(r => [r.id, r])));
+const overlay = Object.fromEntries(mechanicsCollections.map(n => [n, J(`world/meta/mechanics/${n}.json`)]));
+const species = new Map(J('world/ecology/species.json').species.map(s => [s.id, s]));
+const careers = J('world/meta/careers.json');
+const fileRow = (collection, id) => collection === 'species' ? species.get(id) : collection === 'careers' ? careers[id] : formal.get(id);
+
+test('每个审批批次里通过的整行回执，正式文件里的行与其中一份（同一行后来再审的取最新）逐字一致', () => {
+  const approved = new Map();
+  for (const summary of execSync('git ls-files world/drafts', {encoding: 'utf8'}).trim().split('\n').filter(f => /(^|\/)summary\.json$/.test(f))) {
+    const dir = path.dirname(summary);
+    for (const batch of J(summary).batches ?? []) for (const id of batch.ids ?? []) {
+      const file = path.join(dir, `${id}.json`);
+      if (!fs.existsSync(file)) continue;
+      const record = J(file);
+      if (record.status === 'passed' && record.draft?.row && formal.has(id)) approved.set(id, [...approved.get(id) ?? [], JSON.stringify(record.draft.row)]);
+    }
+  }
+  assert.ok(approved.size > 50);
+  const changed = [...approved].filter(([id, rows]) => !rows.includes(JSON.stringify(formal.get(id)))).map(([id]) => id);
+  assert.deepEqual(changed, []);
+});
+
+test('机制字段只在覆盖层：已审行不带覆盖层给的字段与条目，loadWorld 返回的行就是盘上的行', async () => {
+  for (const [collection, rows] of Object.entries(overlay)) for (const [id, patch] of Object.entries(rows)) {
+    const row = fileRow(collection, id);
+    assert.ok(row, `${collection}.${id} 不在正式文件`);
+    const target = collection === 'species' ? row.husbandry : row, fields = collection === 'species' ? patch.husbandry : patch;
+    for (const [key, value] of Object.entries(fields)) {
+      if (Array.isArray(value) && Array.isArray(target[key])) assert.ok(!value.some(v => target[key].some(h => JSON.stringify(h) === JSON.stringify(v))), `${collection}.${id}.${key} 已写进正式文件`);
+      else assert.equal(target[key], undefined, `${collection}.${id}.${key} 已写进正式文件`);
+    }
+  }
+  const world = await loadWorld();
+  for (const key of ['items', 'recipes', 'professions']) for (const row of world[key]) if (formal.has(row.id)) assert.deepEqual(row, formal.get(row.id), `${key}.${row.id}`);
+  // 地点另并入 geo/biomes.json 的群落标签（D1，旧有的加载步骤），其余字段与盘上一致
+  const biomes = J('world/geo/biomes.json').locations ?? {};
+  for (const row of world.locations) assert.deepEqual(row, {...formal.get(row.id), ...biomes[row.id]}, `locations.${row.id}`);
+});
+
+test('运行时世界带上全部机制字段；据点不再生制成品；重复合并不变；注释改写已审值时拒绝', async () => {
+  const runtime = await loadRuntimeWorld();
+  const rows = {items: runtime.items, locations: runtime.locations, professions: runtime.professions, species: runtime.monsters};
+  for (const [collection, patches] of Object.entries(overlay)) for (const [id, patch] of Object.entries(patches)) {
+    const row = collection === 'careers' ? runtime.careers[id] : rows[collection].find(r => r.id === id);
+    const target = collection === 'species' ? row.husbandry : row, fields = collection === 'species' ? patch.husbandry : patch;
+    for (const [key, value] of Object.entries(fields)) {
+      if (Array.isArray(value)) assert.ok(value.every(v => target[key].some(h => JSON.stringify(h) === JSON.stringify(v))), `${collection}.${id}.${key}`);
+      else assert.deepEqual(target[key], value, `${collection}.${id}.${key}`);
+    }
+  }
+  const made = new Set(runtime.recipes.flatMap(r => [r.output.item, ...(r.byproducts ?? []).map(b => b.item)]));
+  for (const l of runtime.locations) {
+    const items = new Map((l.site?.resources ?? []).map(r => [r.id, r.item]));
+    for (const c of l.site?.changes ?? []) if (c.kind === 'regrow') assert.ok(!made.has(items.get(c.resource)), `${l.id}:${c.id}`);
+  }
+  assert.equal(runtime.mechanics, undefined);
+  const before = canonical(runtime);
+  materializeRuntimeWorld(runtime);
+  assert.equal(canonical(runtime), before);
+  // 盘上直接读出的已审世界经引擎同一步合并，得到同一份运行时行
+  const reviewed = materializeRuntimeWorld(await loadWorld());
+  // （运行时世界另有 F 派生的营养与生熟，这里只比合并出来的字段）
+  for (const [i, row] of reviewed.items.entries()) for (const key of Object.keys(row)) assert.equal(canonical(row[key]), canonical(runtime.items[i][key]), `${row.id}.${key}`);
+  assert.equal(canonical(reviewed.locations.map(l => [l.id, l.fixtures, l.site])), canonical(runtime.locations.map(l => [l.id, l.fixtures, l.site])));
+  assert.throws(() => materializeRuntimeWorld({items: [{id: 'item_x', basePrice: 3, tags: ['a']}], locations: [], recipes: [], mechanics: {items: {item_x: {basePrice: 5}}}}), /不能改写已审字段/);
+  const joined = materializeRuntimeWorld({items: [{id: 'item_x', tags: ['a']}], locations: [], recipes: [], mechanics: {items: {item_x: {tags: ['a', 'b'], animalProduct: {from: 'coat'}}}}});
+  assert.deepEqual(joined.items[0], {id: 'item_x', tags: ['a', 'b'], animalProduct: {from: 'coat'}});
+});

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {productionCheck} from '../tools/kc-production-check.mjs';
 import {generate, regrowPlan} from '../tools/kc-processing.mjs';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld, loadRuntimeWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
@@ -13,8 +13,8 @@ import {nextNpcService} from '../server-plugin/npc-schedule.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
 
-test('据点只再生自然物，世界里每种工具都有配方，初加工与工具配方的投入都追得到自然来源', () => {
-  const rep = productionCheck(process.cwd());
+test('据点只再生自然物，世界里每种工具都有配方，初加工与工具配方的投入都追得到自然来源', async () => {
+  const rep = await productionCheck(process.cwd());
   assert.equal(rep.counts['regrow-not-natural'], 0, JSON.stringify(rep.findings.filter(f => f.rule === 'regrow-not-natural')));
   assert.equal(rep.counts['tool-no-recipe'], 0, JSON.stringify(rep.findings.filter(f => f.rule === 'tool-no-recipe')));
   const broken = new Set(rep.findings.filter(f => f.rule === 'chain-not-natural').map(f => f.id));
@@ -25,13 +25,15 @@ test('据点只再生自然物，世界里每种工具都有配方，初加工�
   assert.deepEqual(gaps, [['recipe_kc_felt_wool_wool_felt_sheet', ['item_wool']]]);
 });
 
-test('生成部分与数据表一致：重跑生成器不改变配方与据点（以后改参数只重跑命令，不手改）', () => {
+// A1：据点再生不再写回已审的地点行，而是加载期的规律；这里核对运行时世界的据点就是按规律派生的结果。
+test('生成部分与数据表一致：重跑生成器不改变配方，运行时据点按规律派生（以后改参数只重跑命令，不手改）', async () => {
   const g = generate(process.cwd());
   const inFile = J('world/meta/recipes.json').filter(r => r.id.startsWith('recipe_kc_'));
   assert.deepEqual(inFile, g.recipes);
   const items = new Map(J('world/meta/items.json').map(i => [i.id, i]));
   const plan = regrowPlan(J('world/geo/locations.json'), J('world/meta/recipes.json'), items, J('world/geo/biomes.json').locations);
-  assert.deepEqual(plan.locations, J('world/geo/locations.json'));
+  const runtime = await loadRuntimeWorld();
+  assert.deepEqual(runtime.locations.map(l => l.site), plan.locations.map(l => l.site));
 });
 
 test('真实动作：买原本与纸墨笔，学识字，照原本抄写；书多一本、纸墨按实耗、账本守恒', {timeout: 280000}, async () => {

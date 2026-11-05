@@ -4,20 +4,22 @@
 //   R2 tool-no-recipe      每种工具都要有配方（工具 = 配方里的 tools、带 tool 性状的物品、规则与生物数据里以 tool/tools 字段使用的物品）
 //   R3 chain-not-natural   每条配方的投入（材料与工具）都要能经配方链追到自然来源
 // 自然来源只认世界里会持续产出的规律：据点再生、生态掉落、采矿、渔获、农业、私田、畜牧（含按物种属性派生的畜产物）、家户觅食、林木。
+// 查的是运行时世界（已审行 + 机制注释 + 作用在已审行上的规律，tools/load-world.mjs loadRuntimeWorld），规律读到什么就查什么。
 // 用法：node tools/kc-production-check.mjs [--root <树>] [--json <输出文件>]；退出码恒为 0。
 import fs from 'node:fs';
 import path from 'node:path';
+import {loadRuntimeWorld} from './load-world.mjs';
 
 const argv = process.argv.slice(2);
 const opt = k => argv.includes(k) ? argv[argv.indexOf(k) + 1] : null;
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 
-export function productionCheck(root = path.resolve(import.meta.dirname, '..')) {
-  const W = rel => {const f = path.join(root, 'world', rel); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;};
-  const items = W('meta/items.json') ?? [], recipes = W('meta/recipes.json') ?? [], locs = W('geo/locations.json') ?? [];
-  const rules = W('meta/rules.json') ?? {}, domain = W('rules/tables/domain-rules.json') ?? {};
-  const monsters = [...(W('meta/monsters.json') ?? []), ...(W('meta/bosses.json') ?? [])];
-  const speciesRaw = W('ecology/species.json'), species = (Array.isArray(speciesRaw) ? speciesRaw : speciesRaw?.species) ?? [];
+export async function productionCheck(root = path.resolve(import.meta.dirname, '..')) {
+  const world = await loadRuntimeWorld(path.join(root, 'world'));
+  const items = world.items ?? [], recipes = world.recipes ?? [], locs = world.locations ?? [];
+  const rules = world.rules ?? {}, domain = world.domainRules ?? {};
+  const monsters = [...(world.monsters ?? []), ...(world.bosses ?? [])];
+  const species = monsters.filter(s => s.husbandry);
   const byId = new Map(items.map(i => [i.id, i]));
   const made = new Set(recipes.flatMap(r => [r.output?.item, ...(r.byproducts ?? []).map(b => b.item)]).filter(Boolean));
   const findings = [];
@@ -80,7 +82,7 @@ export function productionCheck(root = path.resolve(import.meta.dirname, '..')) 
 }
 
 if (path.resolve(process.argv[1] ?? '') === path.resolve(import.meta.filename)) {
-  const rep = productionCheck(path.resolve(opt('--root') ?? path.resolve(import.meta.dirname, '..')));
+  const rep = await productionCheck(path.resolve(opt('--root') ?? path.resolve(import.meta.dirname, '..')));
   const json = opt('--json');
   if (json) fs.writeFileSync(json, JSON.stringify(rep, null, 1));
   // 断链按断点汇总，便于看哪一样投入卡住最多配方
