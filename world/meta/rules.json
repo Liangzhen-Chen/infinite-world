@@ -8016,7 +8016,8 @@
   },
   "npcLabor": {
     "tripMinutes": 240,
-    "saleMinutes": 10
+    "saleMinutes": 10,
+    "gatePriorAttempts": 3
   },
   "npcLife": {
     "adultAge": 18,

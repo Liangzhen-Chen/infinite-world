@@ -20,10 +20,19 @@ async function soak(w,hours,tag){
  return {engine,doc,trips:Object.values(doc.state.records).filter(r=>r.category==='market_trip'&&r.labor==='process')};
 }
 const at=doc=>({get:(...p)=>p.reduce((v,k)=>v?.[k],doc)});
+// 价值决定排班：只改数据，让各门手艺的成品值钱（基价十倍），看有手艺的人会不会真去走生产行程。
+// 哪些配方算手艺由职业数据的 processing 派生，不按名单。据点里就能直接拿到的东西、别的配方要用的料不加价（否则抬高的是采集或料价）。
+function paying(){
+ const w=structuredClone(world),cats=new Set(w.professions.flatMap(p=>p.processing??[]));
+ const onSite=new Set(w.locations.flatMap(l=>(l.site?.resources??[]).map(r=>r.item)));
+ const outputs=new Set(w.recipes.filter(r=>cats.has(category(r))).map(r=>r.output?.item).filter(item=>!onSite.has(item)&&!w.recipes.some(r=>r.materials?.some(m=>m.item===item))));
+ for(const item of w.items)if(outputs.has(item.id)&&item.basePrice)item.basePrice*=10;
+ return w;
+}
 let base;
 
 test('加工行程只做本人手艺类别里的配方，只去有许可的工位，料在行程里取得；做出的成品记进制作账，钱物守恒', {timeout:900000}, async()=>{
- base=await soak(structuredClone(world),54,'kd2a');
+ base=await soak(paying(),54,'kd2a');
  const {engine,doc,trips}=base;
  assert.ok(trips.length>0,'两天里应有人出门加工');
  for(const t of trips){
@@ -49,7 +58,7 @@ test('加工行程只做本人手艺类别里的配方，只去有许可的工�
 test('加工类别是数据：把配方的类别改成从没出现过的名字，只有职业登记了这个名字的人才做它', {timeout:900000}, async()=>{
  assert.ok(base,'先跑基线');
  const t=base.trips[0],who=t.actor,recipe=t.action.recipe;
- const w=structuredClone(world),fresh='kd2_'+Math.random().toString(36).slice(2,8);
+ const w=paying(),fresh='kd2_'+Math.random().toString(36).slice(2,8);
  w.recipes.find(x=>x.id===recipe).processing=fresh;
  // 手艺类别只认职业数据：给这个人换上一个新职业，劳动类别照旧，加工类别只登记这个新名字。
  const n=w.npcs.find(x=>x.id===who);
