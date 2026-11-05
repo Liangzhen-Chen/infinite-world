@@ -127,7 +127,8 @@ test('F014 顾客钱袋比例来自数值参数表：改参数就改变谁买得
         Object.defineProperty(w,'balance',{value:{...world.balance,economy:{...world.balance.economy,params:world.balance.economy.params.map(p=>p.id==='shop.customerPurseShare'?{...p,value:share}:p)}},enumerable:false,writable:true,configurable:true});
         const engine=new WorldEngine(w),c=engine.initialFromLegacy({state:seed.state,memories:seed.memories},'w4-share');
         c.state.location='bld_hw_school';c.state.player.coins=500;c.state.skills.skill_literacy=skill(300);
-        c.state.inventory.item_parchment={quantity:10,quality:'木',durability:100,weight:0.06};c.state.inventory.item_soot_ink={quantity:5,quality:'木',durability:100,weight:0.1};
+        // E 卡：出版每册耗 1 纸 1 墨；印费 80÷4=20 册，原 10 纸 5 墨供写稿之外另备 20 纸 20 墨。
+        c.state.inventory.item_parchment={quantity:30,quality:'木',durability:100,weight:0.06};c.state.inventory.item_soot_ink={quantity:25,quality:'木',durability:100,weight:0.1};
         const reader='npc_hw_chenbai';
         for(const [id,npc] of Object.entries(c.state.npcs))npc.coins=0;
         Object.assign(c.state.npcs[reader],{location:'bld_hw_school',status:'正常',activity:'闲坐',coins:50,skills:{...c.state.npcs[reader].skills,skill_literacy:skill(300)}});
