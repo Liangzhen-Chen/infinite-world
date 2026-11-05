@@ -10,6 +10,8 @@ import {partyAccount} from './money.mjs';
 import {handRepairRefused,liquidItem,liquidPortionMl,vocabulary} from './domain-rules.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {assertCanCarry,packItemKg} from './carry.mjs';
+import {workmanshipTier} from './item-class.mjs';
+export {workmanshipTier};
 declareHoldingWriter('items',{kinds:[],entities:['item','building'],locations:true});
 // Harvested portions are minted only from an already conserved physical water
 // transfer. The feature volume and liquid_binding remain their authority.
@@ -143,7 +145,8 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null,{dis
     return moved;
 }
 // S1b: books = 产出的来源（制造为 stock.craftOutput，作品誊抄等同）；缺省未入账。
-export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,owner='player',maker=owner,books,producedAt=d.get('state','minute')}){
+// grade：卡 Q 品质（标准件 = 1，材料定上限、技能定达成度），乘进耐久；不给就是标准件，不写字段。
+export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,grade,owner='player',maker=owner,books,producedAt=d.get('state','minute')}){
     if(!Number.isSafeInteger(producedAt)||producedAt<0||producedAt>d.get('state','minute'))throw preconditionFailure('产出日期无效');
     count(quantity);if(quantity>200)throw preconditionFailure('单次制造产物超过处理上限，应拆分工序');
     const definition=engine.byId.get(item),ids=[];
@@ -152,9 +155,9 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
         const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
         if(d.get('state','itemInstances',id))throw preconditionFailure('此次制造的单件编号已经存在，不能重复制造');
         ids.push(id);
-        const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
+        const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
         holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:maker==='player'?d.get('state','player','name'):engine.byId.get(maker)?.name??maker,
-            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship})},'items');
+            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship}),...(grade===undefined?{}:{grade})},'items');
     }
     engine.itemDelta(d,owner,item,quantity,books);
     const path=[...engine.bagPath(owner),item,'instances'];d.set(path,[...d.get(...path)??[],...ids]);
@@ -504,7 +507,7 @@ export function producePremisesItems(d,engine,owner,location,item,quantity,{even
  for(let index=0;index<quantity;index++){
   const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
   if(d.get('state','itemInstances',id))throw preconditionFailure('此次制造的单件编号已经存在，不能重复制造');
-  const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
+  const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor));
   holdingSet(d,engine,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:engine.byId.get(maker)?.name??maker,recipe,source:eventId,minute:d.get('state','minute'),quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'items');
   setLocation(d,{entity:id,at:location,mode:'place',writer:'items',engine});ids.push(id);
  }

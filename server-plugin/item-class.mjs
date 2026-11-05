@@ -30,6 +30,30 @@ export function itemClasses(engine,item){return classTable(engine.world).get(ite
 export function isItemClass(engine,item,cls){return itemClasses(engine,item).includes(cls);}
 export function classItems(engine,cls){return [...classTable(engine.world)].filter(([,c])=>c.includes(cls)).map(([id])=>id).sort();}
 
+// 卡 Q：手艺档位表（balance/crafting 的 workmanship:* 行，从低到高）。
+export const craftingRows=engine=>(engine?.world?.balance?.crafting??craftingBalance).rows.filter(r=>r.key.startsWith('workmanship:'));
+// 手艺档（仿制、粗陋、粗糙……杰作）的唯一查法（items.mjs 转出）。multiplier 乘耐久与战斗属性（规则表 equipment.workmanship
+// 有的照用，新增低档取本表 perf）；price 乘报价；attain 是品质达成度；loses 是该档实例不再具备的用途类别。
+// 没有手艺档（非制作所得）的按标准件：倍率 1。
+export function workmanshipTier(engine,name){
+ const rows=craftingRows(engine),row=rows.find(r=>r.name===name);
+ const multiplier=engine.rules?.equipment?.workmanship?.find(r=>r.name===name)?.multiplier??row?.perf??1;
+ return {name:name??null,rank:row?rows.indexOf(row):null,multiplier,price:row?.price??1,attain:row?.attain??1,loses:row?.loses??[]};
+}
+// 一件物品的用途类别：上面的类别，加上它标着的用途标签（item-use-tags.tags：cut、pierce…），
+// 加上它带的机制字段（combat 战斗属性、checkBonus 检定加成）。
+export function useClasses(engine,item){
+ const def=engine.byId?.get(item),tags=new Set(def?.tags??[]);
+ return [...itemClasses(engine,item),...Object.keys(useTags.tags??{}).filter(t=>tags.has(t)),...['combat','checkBonus'].filter(f=>def?.[f])];
+}
+// 单件实例的用途类别：物品的用途类别减去该实例手艺档 loses 里的那些（低档实例“形似”而缺用途）。
+export function instanceClasses(engine,unit){
+ if(!unit)return [];
+ const loses=new Set(workmanshipTier(engine,unit.workmanship).loses);
+ return useClasses(engine,unit.item).filter(c=>!loses.has(c));
+}
+export const isInstanceClass=(engine,unit,cls)=>instanceClasses(engine,unit).includes(cls);
+
 // 持有人行囊里某类物品，按 id 排序（稳定）。
 export function heldOfClass(d,engine,holder,cls){
  const bag=d.get(...engine.bagPath(holder))??{};
