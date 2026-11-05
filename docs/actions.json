@@ -15055,7 +15055,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 70,
     "symbol": "activities.wildlife",
-    "dispatch": "server-plugin/wildlife-society.mjs:170"
+    "dispatch": "server-plugin/wildlife-society.mjs:172"
    }
   },
   {
