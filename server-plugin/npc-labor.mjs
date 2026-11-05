@@ -157,7 +157,7 @@ export function laborCandidates(e,view,document){
   const cost=tripCost(e,document,who,view,trip,home);if(!cost)continue;
   const utility=worth-cost.coins-cost.value;
   if(!(utility>0))continue;
-  out.push({id:`labor:${who}:${day}:${s.source}`,kind:'labor',legacy:{kind:'labor_work',labor:s.labor,item:s.item,quantity,source:s.source,resource:s.resource,tool:s.tool,minutesPerUnit:s.minutesPerUnit,...trip},
+  out.push({id:`labor:${who}:${day}:${s.source}`,kind:'labor',legacy:{kind:'labor_work',labor:s.labor,item:s.item,quantity,source:s.source,...(s.resource?{resource:s.resource}:{}),...(s.tool?{tool:s.tool}:{}),minutesPerUnit:s.minutesPerUnit,...trip},
    cost:{coins:cost.coins,value:cost.value,minutes:trip.activeMinutes},reward:worth,needSatisfaction:worth,utility});
  }
  // 出售与运输：本人可售的存货卖给有铺面的收货人；跨聚落的就是运输。

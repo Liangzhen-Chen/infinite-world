@@ -413,6 +413,20 @@
           },
           "calibration": "pending",
           "source": "D14 分种；库存和工时沿用 nw_herb，calibrate-pending"
+        },
+        {
+          "id": "hw_northwood_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "hw_northwood_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "changes": [
@@ -435,6 +449,30 @@
           "max": 20,
           "calibration": "pending",
           "source": "D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"
+        },
+        {
+          "id": "nw_herb_regrow",
+          "kind": "regrow",
+          "resource": "nw_herb",
+          "quantity": 3,
+          "everyDays": 7,
+          "max": 20
+        },
+        {
+          "id": "hw_northwood_native_wood_regrow",
+          "kind": "regrow",
+          "resource": "hw_northwood_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "hw_northwood_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "hw_northwood_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ],
       "truths": []
@@ -865,7 +903,26 @@
     "id": "bld_hw_school",
     "name": "小学堂",
     "site": {
-      "manager": "npc_hw_luqing"
+      "manager": "npc_hw_luqing",
+      "resources": [
+        {
+          "id": "bld_hw_school_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
+        }
+      ],
+      "changes": [
+        {
+          "id": "bld_hw_school_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "bld_hw_school_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        }
+      ]
     },
     "coordinates": [
       0.4,
@@ -1495,7 +1552,7 @@
           "id": "cr_stone",
           "name": "岭上的红褐砾石",
           "item": "item_stone",
-          "quantity": 5,
+          "quantity": 30,
           "minutes": 15
         }
       ],
@@ -1532,9 +1589,9 @@
           "id": "cr_regrow",
           "kind": "regrow",
           "resource": "cr_stone",
-          "quantity": 2,
-          "everyDays": 20,
-          "max": 5
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -1608,7 +1665,7 @@
           "id": "rh_herb",
           "name": "潭边的药草",
           "item": "item_herb",
-          "quantity": 3,
+          "quantity": 30,
           "minutes": 20
         },
         {
@@ -1620,6 +1677,20 @@
           "requires": [
             "rh_trough"
           ]
+        },
+        {
+          "id": "root_hollow_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "root_hollow_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -1655,9 +1726,25 @@
           "id": "rh_regrow",
           "kind": "regrow",
           "resource": "rh_herb",
-          "quantity": 1,
-          "everyDays": 20,
-          "max": 3
+          "quantity": 3,
+          "everyDays": 7,
+          "max": 30
+        },
+        {
+          "id": "root_hollow_native_wood_regrow",
+          "kind": "regrow",
+          "resource": "root_hollow_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "root_hollow_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "root_hollow_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -1744,7 +1831,7 @@
           "id": "bs_stone",
           "name": "剥落的玄岩片",
           "item": "item_stone",
-          "quantity": 4,
+          "quantity": 30,
           "minutes": 15
         }
       ],
@@ -1782,6 +1869,14 @@
           "kind": "rearm",
           "mechanism": "bs_steps",
           "everyDays": 30
+        },
+        {
+          "id": "bs_stone_regrow",
+          "kind": "regrow",
+          "resource": "bs_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -1861,7 +1956,7 @@
           "id": "sr_salt",
           "name": "盐坑底的盐壳",
           "item": "item_salt",
-          "quantity": 4,
+          "quantity": 150,
           "minutes": 25,
           "requires": [
             "sr_pits"
@@ -1871,7 +1966,14 @@
           "id": "sr_reeds",
           "name": "坑边的干苇",
           "item": "item_reed_bundle",
-          "quantity": 3,
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "salt_reeds_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
           "minutes": 15
         }
       ],
@@ -1908,9 +2010,25 @@
           "id": "sr_regrow",
           "kind": "regrow",
           "resource": "sr_salt",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 4
+          "quantity": 15,
+          "everyDays": 3,
+          "max": 150
+        },
+        {
+          "id": "sr_reeds_regrow",
+          "kind": "regrow",
+          "resource": "sr_reeds",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "salt_reeds_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "salt_reeds_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     },
@@ -2010,7 +2128,7 @@
           "id": "gd_grass",
           "name": "背风坡的干草茎",
           "item": "item_reed_bundle",
-          "quantity": 2,
+          "quantity": 15,
           "minutes": 20
         },
         {
@@ -2055,6 +2173,14 @@
           "kind": "rearm",
           "mechanism": "gd_sand",
           "everyDays": 7
+        },
+        {
+          "id": "gd_grass_regrow",
+          "kind": "regrow",
+          "resource": "gd_grass",
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 15
         }
       ]
     }
@@ -2140,6 +2266,13 @@
           "requires": [
             "sc_roots"
           ]
+        },
+        {
+          "id": "silt_canyon_native_reed_bundle",
+          "name": "背风处的干草茎",
+          "item": "item_reed_bundle",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -2178,6 +2311,14 @@
           "quantity": 1,
           "everyDays": 30,
           "max": 1
+        },
+        {
+          "id": "silt_canyon_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "silt_canyon_native_reed_bundle",
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 15
         }
       ]
     }
@@ -2260,18 +2401,32 @@
           "id": "rb_bamboo",
           "name": "高枝上折断的竹节",
           "item": "item_reed_bundle",
-          "quantity": 2,
+          "quantity": 60,
           "minutes": 20
         },
         {
           "id": "rb_resin",
           "name": "老樟桩上的樟脂",
           "item": "item_resin",
-          "quantity": 2,
+          "quantity": 15,
           "minutes": 15,
           "requires": [
             "rb_stumps"
           ]
+        },
+        {
+          "id": "rainstone_basin_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
+        },
+        {
+          "id": "rainstone_basin_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -2307,9 +2462,33 @@
           "id": "rb_regrow",
           "kind": "regrow",
           "resource": "rb_bamboo",
-          "quantity": 1,
-          "everyDays": 20,
-          "max": 2
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "rb_resin_regrow",
+          "kind": "regrow",
+          "resource": "rb_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        },
+        {
+          "id": "rainstone_basin_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "rainstone_basin_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
+        },
+        {
+          "id": "rainstone_basin_native_wood_regrow",
+          "kind": "regrow",
+          "resource": "rainstone_basin_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
         }
       ]
     },
@@ -2416,7 +2595,21 @@
           "id": "pi_sedge",
           "name": "莎草根",
           "item": "item_herb",
-          "quantity": 2,
+          "quantity": 30,
+          "minutes": 15
+        },
+        {
+          "id": "peat_islets_native_reed_bundle",
+          "name": "水边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "peat_islets_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
           "minutes": 15
         }
       ],
@@ -2453,9 +2646,25 @@
           "id": "pi_regrow",
           "kind": "regrow",
           "resource": "pi_sedge",
-          "quantity": 1,
-          "everyDays": 15,
-          "max": 2
+          "quantity": 3,
+          "everyDays": 7,
+          "max": 30
+        },
+        {
+          "id": "peat_islets_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "peat_islets_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "peat_islets_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "peat_islets_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     }
@@ -2550,6 +2759,20 @@
           "mechanisms": [
             "wc_brush"
           ]
+        },
+        {
+          "id": "white_canopy_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "white_canopy_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -2586,6 +2809,22 @@
           "kind": "rearm",
           "mechanism": "wc_brush",
           "everyDays": 30
+        },
+        {
+          "id": "white_canopy_native_wood_regrow",
+          "kind": "regrow",
+          "resource": "white_canopy_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "white_canopy_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "white_canopy_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     },
@@ -2722,7 +2961,7 @@
           "id": "ie_ice",
           "name": "窄缝里凿下的冰块",
           "item": "item_water",
-          "quantity": 1,
+          "quantity": 20,
           "minutes": 20,
           "mechanisms": [
             "ie_fall"
@@ -2763,6 +3002,14 @@
           "kind": "rearm",
           "mechanism": "ie_melt",
           "everyDays": 3
+        },
+        {
+          "id": "ie_ice_regrow",
+          "kind": "regrow",
+          "resource": "ie_ice",
+          "quantity": 4,
+          "everyDays": 3,
+          "max": 20
         }
       ]
     },
@@ -2867,6 +3114,13 @@
           "mechanisms": [
             "rf_fold"
           ]
+        },
+        {
+          "id": "red_fold_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -2905,6 +3159,14 @@
           "quantity": 1,
           "everyDays": 30,
           "max": 3
+        },
+        {
+          "id": "red_fold_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "red_fold_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -2980,6 +3242,20 @@
           "item": "item_quill_set",
           "quantity": 1,
           "minutes": 20
+        },
+        {
+          "id": "moon_cliffs_native_water",
+          "name": "背阴处的积雪",
+          "item": "item_water",
+          "quantity": 20,
+          "minutes": 10
+        },
+        {
+          "id": "moon_cliffs_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -3018,6 +3294,22 @@
           "quantity": 1,
           "everyDays": 30,
           "max": 1
+        },
+        {
+          "id": "moon_cliffs_native_water_regrow",
+          "kind": "regrow",
+          "resource": "moon_cliffs_native_water",
+          "quantity": 4,
+          "everyDays": 3,
+          "max": 20
+        },
+        {
+          "id": "moon_cliffs_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "moon_cliffs_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -3098,8 +3390,15 @@
           "id": "cf_moss",
           "name": "浅坑里的苔草",
           "item": "item_herb",
-          "quantity": 2,
+          "quantity": 10,
           "minutes": 20
+        },
+        {
+          "id": "crown_firn_native_water",
+          "name": "背阴处的积雪",
+          "item": "item_water",
+          "quantity": 20,
+          "minutes": 10
         }
       ],
       "truths": [
@@ -3136,8 +3435,16 @@
           "kind": "regrow",
           "resource": "cf_moss",
           "quantity": 1,
-          "everyDays": 20,
-          "max": 2
+          "everyDays": 15,
+          "max": 10
+        },
+        {
+          "id": "crown_firn_native_water_regrow",
+          "kind": "regrow",
+          "resource": "crown_firn_native_water",
+          "quantity": 4,
+          "everyDays": 3,
+          "max": 20
         }
       ]
     }
@@ -3224,7 +3531,7 @@
           "id": "ds_snow",
           "name": "低处的干净细雪",
           "item": "item_water",
-          "quantity": 1,
+          "quantity": 20,
           "minutes": 15
         }
       ],
@@ -3261,9 +3568,9 @@
           "id": "ds_regrow",
           "kind": "regrow",
           "resource": "ds_snow",
-          "quantity": 1,
-          "everyDays": 10,
-          "max": 1
+          "quantity": 4,
+          "everyDays": 3,
+          "max": 20
         }
       ]
     }
@@ -19693,18 +20000,25 @@
           "id": "yp_branches",
           "name": "林缘的枯榆枝",
           "item": "item_wood",
-          "quantity": 4,
+          "quantity": 40,
           "minutes": 20
         },
         {
           "id": "yp_resin",
           "name": "火燎旧痕渗出的树脂",
           "item": "item_resin",
-          "quantity": 2,
+          "quantity": 15,
           "minutes": 15,
           "requires": [
             "yp_ring"
           ]
+        },
+        {
+          "id": "yp_north_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -19740,9 +20054,25 @@
           "id": "yp_regrow",
           "kind": "regrow",
           "resource": "yp_branches",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "yp_resin_regrow",
+          "kind": "regrow",
+          "resource": "yp_resin",
           "quantity": 2,
-          "everyDays": 15,
-          "max": 4
+          "everyDays": 10,
+          "max": 15
+        },
+        {
+          "id": "yp_north_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "yp_north_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     },
@@ -19887,8 +20217,15 @@
           "id": "mist_reeds",
           "name": "冲上滩的干苇",
           "item": "item_reed_bundle",
-          "quantity": 4,
+          "quantity": 60,
           "minutes": 20
+        },
+        {
+          "id": "wt_mist_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -19924,9 +20261,17 @@
           "id": "mist_regrow",
           "kind": "regrow",
           "resource": "mist_reeds",
-          "quantity": 2,
-          "everyDays": 20,
-          "max": 4
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "wt_mist_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "wt_mist_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     },
@@ -20056,8 +20401,8 @@
         {
           "id": "adit_ore",
           "name": "坑底散落的铁砂块",
-          "item": "item_iron_scrap",
-          "quantity": 5,
+          "item": "item_iron_ore",
+          "quantity": 30,
           "minutes": 20,
           "mechanisms": [
             "adit_seal"
@@ -20067,7 +20412,7 @@
           "id": "adit_stone",
           "name": "坑口码着的碎石料",
           "item": "item_stone",
-          "quantity": 4,
+          "quantity": 30,
           "minutes": 15
         }
       ],
@@ -20105,6 +20450,22 @@
           "kind": "rearm",
           "mechanism": "adit_seal",
           "everyDays": 30
+        },
+        {
+          "id": "adit_ore_regrow",
+          "kind": "regrow",
+          "resource": "adit_ore",
+          "quantity": 1,
+          "everyDays": 15,
+          "max": 30
+        },
+        {
+          "id": "adit_stone_regrow",
+          "kind": "regrow",
+          "resource": "adit_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -20234,8 +20595,15 @@
           "id": "barrow_shards",
           "name": "冷土里的碎陶片",
           "item": "item_clay",
-          "quantity": 3,
+          "quantity": 40,
           "minutes": 15
+        },
+        {
+          "id": "sb_barrow_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -20271,9 +20639,17 @@
           "id": "barrow_regrow",
           "kind": "regrow",
           "resource": "barrow_shards",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 3
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 40
+        },
+        {
+          "id": "sb_barrow_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "sb_barrow_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -20396,6 +20772,13 @@
           "requires": [
             "kiln_crack"
           ]
+        },
+        {
+          "id": "bs_kiln_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -20432,6 +20815,14 @@
           "kind": "rearm",
           "mechanism": "kiln_mouth",
           "everyDays": 20
+        },
+        {
+          "id": "bs_kiln_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "bs_kiln_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     },
@@ -21051,6 +21442,13 @@
           "item": "item_oats",
           "quantity": 37,
           "minutes": 5
+        },
+        {
+          "id": "ms_tj_store_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
         }
       ],
       "clues": [
@@ -21075,7 +21473,17 @@
           "difficulty": 15
         },
         "damage": 5
-      }
+      },
+      "changes": [
+        {
+          "id": "ms_tj_store_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "ms_tj_store_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        }
+      ]
     }
   },
   {
@@ -21649,7 +22057,15 @@
       ],
       "entryMechanisms": [],
       "mechanisms": [],
-      "resources": [],
+      "resources": [
+        {
+          "id": "ms_td_trapcache_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
+        }
+      ],
       "clues": [
         {
           "id": "td_trap_ropes",
@@ -21672,7 +22088,17 @@
           "difficulty": 20
         },
         "damage": 3
-      }
+      },
+      "changes": [
+        {
+          "id": "ms_td_trapcache_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "ms_td_trapcache_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        }
+      ]
     }
   },
   {
@@ -22306,6 +22732,13 @@
           "item": "item_hazelnut",
           "quantity": 24,
           "minutes": 5
+        },
+        {
+          "id": "ms_yg_store_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "clues": [
@@ -22330,7 +22763,17 @@
           "difficulty": 15
         },
         "damage": 3
-      }
+      },
+      "changes": [
+        {
+          "id": "ms_yg_store_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "ms_yg_store_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
+        }
+      ]
     }
   },
   {
@@ -22954,6 +23397,13 @@
           "item": "item_ration",
           "quantity": 18,
           "minutes": 5
+        },
+        {
+          "id": "ms_ll_store_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "clues": [
@@ -22978,7 +23428,17 @@
           "difficulty": 20
         },
         "damage": 6
-      }
+      },
+      "changes": [
+        {
+          "id": "ms_ll_store_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "ms_ll_store_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
+        }
+      ]
     }
   },
   {
@@ -24662,7 +25122,7 @@
           "id": "tj_bricks",
           "name": "封墙拆下的碎砖",
           "item": "item_stone",
-          "quantity": 4,
+          "quantity": 30,
           "minutes": 10,
           "owner": null
         },
@@ -24675,6 +25135,13 @@
           "requires": [
             "tj_beds"
           ]
+        },
+        {
+          "id": "tj_old_draft_native_clay",
+          "name": "坑道壁上的黏土",
+          "item": "item_clay",
+          "quantity": 40,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -24711,6 +25178,22 @@
           "kind": "rearm",
           "mechanism": "tj_air",
           "everyDays": 10
+        },
+        {
+          "id": "tj_bricks_regrow",
+          "kind": "regrow",
+          "resource": "tj_bricks",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
+        },
+        {
+          "id": "tj_old_draft_native_clay_regrow",
+          "kind": "regrow",
+          "resource": "tj_old_draft_native_clay",
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 40
         }
       ]
     }
@@ -24848,6 +25331,20 @@
           "requires": [
             "td_traps"
           ]
+        },
+        {
+          "id": "td_trap_shrine_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "td_trap_shrine_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -24880,12 +25377,20 @@
       ],
       "changes": [
         {
-          "id": "td_regrow",
+          "id": "td_trap_shrine_native_wood_regrow",
           "kind": "regrow",
-          "resource": "td_scrap",
-          "quantity": 1,
-          "everyDays": 40,
-          "max": 3
+          "resource": "td_trap_shrine_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "td_trap_shrine_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "td_trap_shrine_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -25032,7 +25537,7 @@
           "id": "post_honey",
           "name": "檐下野蜂窝的蜜",
           "item": "item_honey",
-          "quantity": 2,
+          "quantity": 30,
           "minutes": 20
         },
         {
@@ -25054,6 +25559,13 @@
           "requires": [
             "post_well"
           ]
+        },
+        {
+          "id": "halfway_post_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -25085,9 +25597,17 @@
           "id": "post_regrow",
           "kind": "regrow",
           "resource": "post_honey",
-          "quantity": 1,
-          "everyDays": 60,
-          "max": 2
+          "quantity": 5,
+          "everyDays": 15,
+          "max": 30
+        },
+        {
+          "id": "halfway_post_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "halfway_post_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -25223,7 +25743,7 @@
           "id": "quarry_stone",
           "name": "坑沿的白石碎料",
           "item": "item_stone",
-          "quantity": 6,
+          "quantity": 30,
           "minutes": 20
         },
         {
@@ -25266,9 +25786,9 @@
           "id": "quarry_regrow",
           "kind": "regrow",
           "resource": "quarry_stone",
-          "quantity": 2,
-          "everyDays": 30,
-          "max": 6
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -25423,7 +25943,7 @@
           "id": "bell_fuling",
           "name": "井边的野茯苓",
           "item": "item_s2_fuling",
-          "quantity": 2,
+          "quantity": 10,
           "minutes": 25
         },
         {
@@ -25445,6 +25965,27 @@
           "requires": [
             "bell_pit"
           ]
+        },
+        {
+          "id": "broken_bell_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "broken_bell_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
+        },
+        {
+          "id": "broken_bell_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -25481,8 +26022,32 @@
           "kind": "regrow",
           "resource": "bell_fuling",
           "quantity": 1,
-          "everyDays": 90,
-          "max": 2
+          "everyDays": 30,
+          "max": 10
+        },
+        {
+          "id": "broken_bell_native_wood_regrow",
+          "kind": "regrow",
+          "resource": "broken_bell_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "broken_bell_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "broken_bell_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        },
+        {
+          "id": "broken_bell_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "broken_bell_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -25643,6 +26208,20 @@
           "mechanisms": [
             "altar_box"
           ]
+        },
+        {
+          "id": "old_bank_altar_native_reed_bundle",
+          "name": "水边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "old_bank_altar_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -25679,6 +26258,22 @@
           "kind": "rearm",
           "mechanism": "altar_pool",
           "everyDays": 15
+        },
+        {
+          "id": "old_bank_altar_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "old_bank_altar_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "old_bank_altar_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "old_bank_altar_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     }
@@ -25851,6 +26446,13 @@
           "item": "item_lampblack",
           "quantity": 3,
           "minutes": 15
+        },
+        {
+          "id": "light_workshop_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -25887,6 +26489,14 @@
           "kind": "rearm",
           "mechanism": "ws_boards",
           "everyDays": 15
+        },
+        {
+          "id": "light_workshop_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "light_workshop_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -25990,6 +26600,13 @@
           "item": "item_iron_scrap",
           "quantity": 2,
           "minutes": 15
+        },
+        {
+          "id": "ash_market_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -26022,12 +26639,12 @@
       ],
       "changes": [
         {
-          "id": "am_regrow",
+          "id": "ash_market_native_herb_regrow",
           "kind": "regrow",
-          "resource": "am_iron",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 2
+          "resource": "ash_market_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -26166,6 +26783,13 @@
           "quantity": 2,
           "minutes": 10,
           "owner": null
+        },
+        {
+          "id": "yupo_beacon_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -26198,12 +26822,12 @@
       ],
       "changes": [
         {
-          "id": "bc_regrow",
+          "id": "yupo_beacon_native_stone_regrow",
           "kind": "regrow",
-          "resource": "bc_charcoal",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 2
+          "resource": "yupo_beacon_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -26350,6 +26974,20 @@
           "item": "item_flax_cord",
           "quantity": 1,
           "minutes": 10
+        },
+        {
+          "id": "sunk_dock_native_reed_bundle",
+          "name": "水边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "sunk_dock_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -26382,12 +27020,20 @@
       ],
       "changes": [
         {
-          "id": "dock_regrow",
+          "id": "sunk_dock_native_reed_bundle_regrow",
           "kind": "regrow",
-          "resource": "dock_pitch",
-          "quantity": 1,
-          "everyDays": 45,
-          "max": 2
+          "resource": "sunk_dock_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "sunk_dock_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "sunk_dock_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     }
@@ -26493,7 +27139,14 @@
           "id": "sm_herb",
           "name": "石缝里的野蒿",
           "item": "item_herb",
-          "quantity": 3,
+          "quantity": 20,
+          "minutes": 20
+        },
+        {
+          "id": "stone_markers_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
           "minutes": 20
         }
       ],
@@ -26531,8 +27184,16 @@
           "kind": "regrow",
           "resource": "sm_herb",
           "quantity": 2,
-          "everyDays": 20,
-          "max": 3
+          "everyDays": 10,
+          "max": 20
+        },
+        {
+          "id": "stone_markers_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "stone_markers_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -26640,6 +27301,13 @@
           "item": "item_s3_incense",
           "quantity": 3,
           "minutes": 5
+        },
+        {
+          "id": "silk_shrine_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -26676,6 +27344,14 @@
           "kind": "rearm",
           "mechanism": "ss_lock",
           "everyDays": 10
+        },
+        {
+          "id": "silk_shrine_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "silk_shrine_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -26824,6 +27500,20 @@
           "mechanisms": [
             "mill_gear"
           ]
+        },
+        {
+          "id": "old_mill_native_reed_bundle",
+          "name": "水边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "old_mill_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -26856,12 +27546,20 @@
       ],
       "changes": [
         {
-          "id": "mill_regrow",
+          "id": "old_mill_native_reed_bundle_regrow",
           "kind": "regrow",
-          "resource": "mill_boards",
-          "quantity": 1,
-          "everyDays": 40,
-          "max": 3
+          "resource": "old_mill_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "old_mill_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "old_mill_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     }
@@ -26983,6 +27681,13 @@
           "item": "item_wood",
           "quantity": 3,
           "minutes": 20
+        },
+        {
+          "id": "east_barracks_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -27015,12 +27720,12 @@
       ],
       "changes": [
         {
-          "id": "eb_regrow",
+          "id": "east_barracks_native_herb_regrow",
           "kind": "regrow",
-          "resource": "eb_wood",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 3
+          "resource": "east_barracks_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -27144,9 +27849,37 @@
           "id": "yg_clay",
           "name": "窟口的干泥扇",
           "item": "item_clay",
-          "quantity": 3,
+          "quantity": 60,
           "minutes": 15,
           "owner": null
+        },
+        {
+          "id": "yg_drowned_sett_native_reed_bundle",
+          "name": "水边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "yg_drowned_sett_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
+        },
+        {
+          "id": "yg_drowned_sett_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "yg_drowned_sett_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -27183,6 +27916,46 @@
           "kind": "rearm",
           "mechanism": "yg_water",
           "everyDays": 10
+        },
+        {
+          "id": "yg_clay_regrow",
+          "kind": "regrow",
+          "resource": "yg_clay",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "yg_drowned_sett_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "yg_drowned_sett_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "yg_drowned_sett_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "yg_drowned_sett_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
+        },
+        {
+          "id": "yg_drowned_sett_native_wood_regrow",
+          "kind": "regrow",
+          "resource": "yg_drowned_sett_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "yg_drowned_sett_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "yg_drowned_sett_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -27262,8 +28035,8 @@
         {
           "id": "ll_ore",
           "name": "封墙后的铁砂",
-          "item": "item_iron_scrap",
-          "quantity": 4,
+          "item": "item_iron_ore",
+          "quantity": 30,
           "minutes": 25,
           "mechanisms": [
             "ll_wall"
@@ -27276,6 +28049,13 @@
           "quantity": 2,
           "minutes": 15,
           "owner": null
+        },
+        {
+          "id": "ll_deep_drift_native_clay",
+          "name": "坑道壁上的黏土",
+          "item": "item_clay",
+          "quantity": 40,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -27312,6 +28092,22 @@
           "kind": "rearm",
           "mechanism": "ll_wall",
           "everyDays": 20
+        },
+        {
+          "id": "ll_ore_regrow",
+          "kind": "regrow",
+          "resource": "ll_ore",
+          "quantity": 1,
+          "everyDays": 15,
+          "max": 30
+        },
+        {
+          "id": "ll_deep_drift_native_clay_regrow",
+          "kind": "regrow",
+          "resource": "ll_deep_drift_native_clay",
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 40
         }
       ]
     }
@@ -27423,6 +28219,13 @@
           "item": "item_pine_board",
           "quantity": 1,
           "minutes": 10
+        },
+        {
+          "id": "north_toll_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -27451,12 +28254,12 @@
       ],
       "changes": [
         {
-          "id": "nt_regrow",
+          "id": "north_toll_native_stone_regrow",
           "kind": "regrow",
-          "resource": "nt_board",
-          "quantity": 1,
-          "everyDays": 60,
-          "max": 1
+          "resource": "north_toll_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -27576,6 +28379,13 @@
           "item": "item_wood",
           "quantity": 2,
           "minutes": 15
+        },
+        {
+          "id": "broken_rut_bridge_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -27608,12 +28418,12 @@
       ],
       "changes": [
         {
-          "id": "rb_regrow",
+          "id": "broken_rut_bridge_native_stone_regrow",
           "kind": "regrow",
-          "resource": "rb_boards",
-          "quantity": 1,
-          "everyDays": 45,
-          "max": 2
+          "resource": "broken_rut_bridge_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -27761,6 +28571,27 @@
           "item": "item_charcoal",
           "quantity": 2,
           "minutes": 20
+        },
+        {
+          "id": "charcoal_camp_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "charcoal_camp_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
+        },
+        {
+          "id": "charcoal_camp_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -27793,12 +28624,28 @@
       ],
       "changes": [
         {
-          "id": "cc_regrow",
+          "id": "charcoal_camp_native_wood_regrow",
           "kind": "regrow",
-          "resource": "cc_slag",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 2
+          "resource": "charcoal_camp_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "charcoal_camp_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "charcoal_camp_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        },
+        {
+          "id": "charcoal_camp_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "charcoal_camp_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -27906,6 +28753,13 @@
           "item": "item_iron_scrap",
           "quantity": 3,
           "minutes": 20
+        },
+        {
+          "id": "cold_smelter_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -27938,12 +28792,12 @@
       ],
       "changes": [
         {
-          "id": "cs_regrow",
+          "id": "cold_smelter_native_stone_regrow",
           "kind": "regrow",
-          "resource": "cs_slag",
-          "quantity": 1,
-          "everyDays": 40,
-          "max": 3
+          "resource": "cold_smelter_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -28083,6 +28937,13 @@
           "mechanisms": [
             "tm_water"
           ]
+        },
+        {
+          "id": "tongji_flooded_mine_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -28119,6 +28980,14 @@
           "kind": "rearm",
           "mechanism": "tm_water",
           "everyDays": 7
+        },
+        {
+          "id": "tongji_flooded_mine_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "tongji_flooded_mine_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -28226,6 +29095,13 @@
           "item": "item_wood",
           "quantity": 2,
           "minutes": 10
+        },
+        {
+          "id": "raid_fort_native_reed_bundle",
+          "name": "背风处的干草茎",
+          "item": "item_reed_bundle",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -28258,12 +29134,12 @@
       ],
       "changes": [
         {
-          "id": "rf_regrow",
+          "id": "raid_fort_native_reed_bundle_regrow",
           "kind": "regrow",
-          "resource": "rf_arrows",
-          "quantity": 1,
-          "everyDays": 60,
-          "max": 2
+          "resource": "raid_fort_native_reed_bundle",
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 15
         }
       ]
     }
@@ -28358,6 +29234,13 @@
           "item": "item_red_ochre",
           "quantity": 2,
           "minutes": 20
+        },
+        {
+          "id": "orc_cairn_native_reed_bundle",
+          "name": "背风处的干草茎",
+          "item": "item_reed_bundle",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -28396,6 +29279,14 @@
           "quantity": 1,
           "everyDays": 30,
           "max": 2
+        },
+        {
+          "id": "orc_cairn_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "orc_cairn_native_reed_bundle",
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 15
         }
       ]
     }
@@ -28503,6 +29394,13 @@
           "item": "item_wood",
           "quantity": 3,
           "minutes": 20
+        },
+        {
+          "id": "seventy_li_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -28535,12 +29433,12 @@
       ],
       "changes": [
         {
-          "id": "sl_regrow",
+          "id": "seventy_li_native_herb_regrow",
           "kind": "regrow",
-          "resource": "sl_wood",
-          "quantity": 1,
-          "everyDays": 40,
-          "max": 3
+          "resource": "seventy_li_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -28656,6 +29554,13 @@
           "quantity": 3,
           "minutes": 5,
           "owner": null
+        },
+        {
+          "id": "way_temple_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 15,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -28692,6 +29597,14 @@
           "kind": "rearm",
           "mechanism": "wt_box",
           "everyDays": 30
+        },
+        {
+          "id": "way_temple_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "way_temple_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -28785,7 +29698,7 @@
           "id": "bp_stones",
           "name": "碑脚堆的石头",
           "item": "item_stone",
-          "quantity": 4,
+          "quantity": 30,
           "minutes": 10
         }
       ],
@@ -28822,9 +29735,9 @@
           "id": "bp_regrow",
           "kind": "regrow",
           "resource": "bp_stones",
-          "quantity": 2,
-          "everyDays": 20,
-          "max": 4
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -28934,8 +29847,22 @@
           "id": "gw_moss_take",
           "name": "沟底刮下的苔泥",
           "item": "item_clay",
-          "quantity": 2,
+          "quantity": 40,
           "minutes": 15
+        },
+        {
+          "id": "granary_watergate_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
+        },
+        {
+          "id": "granary_watergate_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 20,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -28971,9 +29898,25 @@
           "id": "gw_regrow",
           "kind": "regrow",
           "resource": "gw_moss_take",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 2
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 40
+        },
+        {
+          "id": "granary_watergate_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "granary_watergate_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
+        },
+        {
+          "id": "granary_watergate_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "granary_watergate_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 20
         }
       ]
     }
@@ -29081,6 +30024,27 @@
           "item": "item_linen_cloth",
           "quantity": 1,
           "minutes": 15
+        },
+        {
+          "id": "indigo_ditch_native_reed_bundle",
+          "name": "水边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "indigo_ditch_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
+        },
+        {
+          "id": "indigo_ditch_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -29109,12 +30073,28 @@
       ],
       "changes": [
         {
-          "id": "id_regrow",
+          "id": "indigo_ditch_native_reed_bundle_regrow",
           "kind": "regrow",
-          "resource": "id_cloth",
-          "quantity": 1,
-          "everyDays": 90,
-          "max": 1
+          "resource": "indigo_ditch_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "indigo_ditch_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "indigo_ditch_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
+        },
+        {
+          "id": "indigo_ditch_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "indigo_ditch_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -29221,6 +30201,20 @@
           "item": "item_stone",
           "quantity": 2,
           "minutes": 10
+        },
+        {
+          "id": "ferry_shrine_native_reed_bundle",
+          "name": "水边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "ferry_shrine_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -29259,6 +30253,22 @@
           "quantity": 1,
           "everyDays": 10,
           "max": 2
+        },
+        {
+          "id": "ferry_shrine_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "ferry_shrine_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "ferry_shrine_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "ferry_shrine_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     }
@@ -29398,6 +30408,20 @@
           "mechanisms": [
             "yw_hold"
           ]
+        },
+        {
+          "id": "yandu_wreck_native_reed_bundle",
+          "name": "水边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
+        },
+        {
+          "id": "yandu_wreck_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -29430,6 +30454,22 @@
           "kind": "rearm",
           "mechanism": "yw_hold",
           "everyDays": 5
+        },
+        {
+          "id": "yandu_wreck_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "yandu_wreck_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "yandu_wreck_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "yandu_wreck_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     }
@@ -29551,18 +30591,25 @@
           "id": "rs_salt",
           "name": "滩上的盐霜",
           "item": "item_salt",
-          "quantity": 3,
+          "quantity": 150,
           "minutes": 20
         },
         {
           "id": "rs_reeds",
           "name": "卤坑里的芦苇",
           "item": "item_reed_bundle",
-          "quantity": 3,
+          "quantity": 60,
           "minutes": 20,
           "mechanisms": [
             "rs_pit"
           ]
+        },
+        {
+          "id": "reed_salt_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -29598,9 +30645,25 @@
           "id": "rs_regrow",
           "kind": "regrow",
           "resource": "rs_salt",
-          "quantity": 1,
-          "everyDays": 15,
-          "max": 3
+          "quantity": 15,
+          "everyDays": 3,
+          "max": 150
+        },
+        {
+          "id": "rs_reeds_regrow",
+          "kind": "regrow",
+          "resource": "rs_reeds",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "reed_salt_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "reed_salt_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     }
@@ -29688,6 +30751,13 @@
           "quantity": 2,
           "minutes": 5,
           "owner": null
+        },
+        {
+          "id": "tj_kiln_shrine_native_clay",
+          "name": "坑道壁上的黏土",
+          "item": "item_clay",
+          "quantity": 40,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -29724,6 +30794,14 @@
           "kind": "rearm",
           "mechanism": "ks_rubble",
           "everyDays": 30
+        },
+        {
+          "id": "tj_kiln_shrine_native_clay_regrow",
+          "kind": "regrow",
+          "resource": "tj_kiln_shrine_native_clay",
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 40
         }
       ]
     }
@@ -29850,6 +30928,27 @@
           "mechanisms": [
             "he_bark"
           ]
+        },
+        {
+          "id": "yg_hollow_elm_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "yg_hollow_elm_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
+        },
+        {
+          "id": "yg_hollow_elm_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -29882,12 +30981,28 @@
       ],
       "changes": [
         {
-          "id": "he_regrow",
+          "id": "yg_hollow_elm_native_wood_regrow",
           "kind": "regrow",
-          "resource": "he_shavings",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 3
+          "resource": "yg_hollow_elm_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "yg_hollow_elm_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "yg_hollow_elm_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        },
+        {
+          "id": "yg_hollow_elm_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "yg_hollow_elm_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -29992,8 +31107,15 @@
           "id": "rb_moss_board",
           "name": "松脱的台板",
           "item": "item_wood",
-          "quantity": 2,
+          "quantity": 40,
           "minutes": 20
+        },
+        {
+          "id": "rope_bridge_old_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -30029,9 +31151,17 @@
           "id": "rb2_regrow",
           "kind": "regrow",
           "resource": "rb_moss_board",
-          "quantity": 1,
-          "everyDays": 40,
-          "max": 2
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "rope_bridge_old_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "rope_bridge_old_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
         }
       ]
     }
@@ -30137,6 +31267,27 @@
           "item": "item_iron_scrap",
           "quantity": 2,
           "minutes": 15
+        },
+        {
+          "id": "scent_watch_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
+        },
+        {
+          "id": "scent_watch_native_resin",
+          "name": "树干伤口渗出的树脂",
+          "item": "item_resin",
+          "quantity": 15,
+          "minutes": 15
+        },
+        {
+          "id": "scent_watch_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -30173,6 +31324,30 @@
           "kind": "rearm",
           "mechanism": "sw_clips",
           "everyDays": 20
+        },
+        {
+          "id": "scent_watch_native_wood_regrow",
+          "kind": "regrow",
+          "resource": "scent_watch_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
+        },
+        {
+          "id": "scent_watch_native_resin_regrow",
+          "kind": "regrow",
+          "resource": "scent_watch_native_resin",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        },
+        {
+          "id": "scent_watch_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "scent_watch_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
         }
       ]
     }
@@ -30313,8 +31488,15 @@
           "id": "hl_salt",
           "name": "灯盏里的积盐",
           "item": "item_salt",
-          "quantity": 2,
+          "quantity": 150,
           "minutes": 10
+        },
+        {
+          "id": "harbor_lamp_native_reed_bundle",
+          "name": "滩边的芦苇",
+          "item": "item_reed_bundle",
+          "quantity": 60,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -30350,9 +31532,17 @@
           "id": "hl_regrow",
           "kind": "regrow",
           "resource": "hl_salt",
-          "quantity": 1,
-          "everyDays": 15,
-          "max": 2
+          "quantity": 15,
+          "everyDays": 3,
+          "max": 150
+        },
+        {
+          "id": "harbor_lamp_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "harbor_lamp_native_reed_bundle",
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
         }
       ]
     }
@@ -30490,7 +31680,7 @@
           "id": "ic_frost",
           "name": "冰架上的存冰",
           "item": "item_water",
-          "quantity": 2,
+          "quantity": 20,
           "minutes": 20,
           "mechanisms": [
             "ic_door"
@@ -30537,9 +31727,9 @@
           "id": "ic_regrow",
           "kind": "regrow",
           "resource": "ic_frost",
-          "quantity": 1,
-          "everyDays": 10,
-          "max": 2
+          "quantity": 4,
+          "everyDays": 3,
+          "max": 20
         }
       ]
     }
@@ -30663,6 +31853,20 @@
           "mechanisms": [
             "st_store"
           ]
+        },
+        {
+          "id": "silver_trial_native_stone",
+          "name": "坡上的碎石",
+          "item": "item_stone",
+          "quantity": 30,
+          "minutes": 20
+        },
+        {
+          "id": "silver_trial_native_herb",
+          "name": "路边的野草药",
+          "item": "item_herb",
+          "quantity": 20,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -30699,6 +31903,22 @@
           "kind": "rearm",
           "mechanism": "st_store",
           "everyDays": 30
+        },
+        {
+          "id": "silver_trial_native_stone_regrow",
+          "kind": "regrow",
+          "resource": "silver_trial_native_stone",
+          "quantity": 3,
+          "everyDays": 10,
+          "max": 30
+        },
+        {
+          "id": "silver_trial_native_herb_regrow",
+          "kind": "regrow",
+          "resource": "silver_trial_native_herb",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 20
         }
       ]
     }
@@ -30801,6 +32021,13 @@
           "item": "item_fine_sand",
           "quantity": 2,
           "minutes": 15
+        },
+        {
+          "id": "well_camp_native_reed_bundle",
+          "name": "背风处的干草茎",
+          "item": "item_reed_bundle",
+          "quantity": 15,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -30839,6 +32066,14 @@
           "quantity": 1,
           "everyDays": 20,
           "max": 2
+        },
+        {
+          "id": "well_camp_native_reed_bundle_regrow",
+          "kind": "regrow",
+          "resource": "well_camp_native_reed_bundle",
+          "quantity": 2,
+          "everyDays": 15,
+          "max": 15
         }
       ]
     }
@@ -30968,7 +32203,7 @@
           "id": "rc_reeds",
           "name": "坛边的老芦苇",
           "item": "item_reed_bundle",
-          "quantity": 3,
+          "quantity": 60,
           "minutes": 20
         },
         {
@@ -30977,6 +32212,13 @@
           "item": "item_slate_splinter",
           "quantity": 1,
           "minutes": 10
+        },
+        {
+          "id": "reed_circle_native_flax_stalk",
+          "name": "湿地野亚麻",
+          "item": "item_flax_stalk",
+          "quantity": 40,
+          "minutes": 15
         }
       ],
       "truths": [
@@ -31012,9 +32254,17 @@
           "id": "rc_regrow",
           "kind": "regrow",
           "resource": "rc_reeds",
-          "quantity": 1,
-          "everyDays": 20,
-          "max": 3
+          "quantity": 10,
+          "everyDays": 10,
+          "max": 60
+        },
+        {
+          "id": "reed_circle_native_flax_stalk_regrow",
+          "kind": "regrow",
+          "resource": "reed_circle_native_flax_stalk",
+          "quantity": 5,
+          "everyDays": 10,
+          "max": 40
         }
       ]
     }
@@ -31107,15 +32357,22 @@
           "id": "sp_cones",
           "name": "林下的杉果",
           "item": "item_resin",
-          "quantity": 2,
+          "quantity": 15,
           "minutes": 20
         },
         {
           "id": "sp_bark",
           "name": "倒桩上剥下的树皮",
           "item": "item_tannin_bark",
-          "quantity": 2,
+          "quantity": 15,
           "minutes": 15
+        },
+        {
+          "id": "old_season_post_native_wood",
+          "name": "林下的枯枝倒木",
+          "item": "item_wood",
+          "quantity": 40,
+          "minutes": 20
         }
       ],
       "truths": [
@@ -31151,9 +32408,25 @@
           "id": "sp_regrow",
           "kind": "regrow",
           "resource": "sp_cones",
-          "quantity": 1,
-          "everyDays": 30,
-          "max": 2
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        },
+        {
+          "id": "sp_bark_regrow",
+          "kind": "regrow",
+          "resource": "sp_bark",
+          "quantity": 2,
+          "everyDays": 10,
+          "max": 15
+        },
+        {
+          "id": "old_season_post_native_wood_regrow",
+          "kind": "regrow",
+          "resource": "old_season_post_native_wood",
+          "quantity": 4,
+          "everyDays": 7,
+          "max": 40
         }
       ]
     }
