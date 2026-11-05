@@ -92,3 +92,14 @@ test('没有通缉也能当面扣住一个人：留置的容量来自扣人者�
  const second=await g.engine.reduce(g.doc,{tool:'world_propose',args:{intent:'再扣一个',effects:[{...hold,holder:'npc_hw_hezhou'}]},eventId:'k6-detain-2'});
  assert.notEqual(second.result.receipt?.status,'committed');assert.doesNotMatch(String(second.result.receipt?.reason),/[A-Za-z]{4,}/);
 });
+
+test('打死别人的牲畜后尸体仍归原主：在原地取材照样取得，命中盗窃',async()=>{
+ const g=game(world,'k6-carcass');const here=g.doc.state.location,id='monster_instance_k6carcass';
+ g.doc.state.created??={};g.doc.state.creatures??={};g.doc.state.created[id]={id,name:'林穗的狐',aliases:[],monster:'monster_red_ear_fox',template:1,scope:here};
+ g.doc.state.creatures[id]={name:'林穗的狐',species:'monster_red_ear_fox',ecology:'k6',location:here,level:1,hp:1,maxHp:10,status:'正常',owner:'npc_hw_linsui'};
+ g.doc.state.inventory.item_kitchen_knife={quantity:1,durability:50};g.doc.state.inventory.item_water={quantity:3};
+ for(let i=0;i<12&&!g.doc.state.creatures[id].corpse;i++)await call(g,'world_combat',{target:id});
+ const corpse=g.doc.state.creatures[id].corpse;assert.ok(corpse,'狐已被打死');assert.equal(corpse.owner,'npc_hw_linsui');
+ let done;for(let i=0;i<10;i++){const before=g.doc,r=await call(g,'world_wildlife',{operation:'gather',target:id});if(r.result.success){done=r;break;}g.doc=before;}
+ assert.ok(done,'取材成功');const o=done.result.offenses?.find(o=>o.offense==='theft');assert.ok(o,'取走别人的尸体命中盗窃');assert.equal(o.victim,'npc_hw_linsui');
+});

@@ -259,8 +259,10 @@ export function resolveCreature(engine,d,name){
 export function recordWildlifeDeath(d,engine,target,eventId){
     const actor=d.get('state','creatures',target);if(!(actor?.ecology||actor?.herd)||actor.corpse)return null;
     const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw Error('生态个体缺物种定义');
+    // Death closes the living title projection; the carcass stays its owner's.
+    const title=actor.owner??Object.values(d.get('holdings','rows')??{}).filter(h=>h.subject===target&&['tamed_by','owns'].includes(h.kind)).sort((a,b)=>(b.until??Infinity)-(a.until??Infinity))[0]?.holder??null;
     recordCreatureResolution(d,engine,{target,outcome:'death',eventId,location:actor.location});
-    const corpse={status:'未取材',killedBy:'player',source:eventId,expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
+    const corpse={status:'未取材',killedBy:'player',source:eventId,...(title?{owner:title}:{}),expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
         items:clone(bone.drops)};holdingSet(d,null,['state','creatures',target,'corpse'],corpse,'wildlife');
     return{target,expires:corpse.expires,hasMaterials:corpse.items.length>0,note:'仍在尸体中，尚未进入行囊'};
 }
@@ -319,6 +321,7 @@ export function wildlifeAction(d,args,eventId){
     const current=d.get('state','creatures',target,'corpse'),success=check.success&&current.status==='未取材'&&current.expires>d.get('state','minute')&&d.get('state','player','status')==='正常'&&d.get('state','location')===here;
     holdingSet(d,null,['state','creatures',target,'corpse'],{...current,status:success?'已取材':'已损坏',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId},'wildlife');
     if(success)for(const drop of current.items)this.itemDelta(d,'player',drop.item,drop.amount,{flow:'src:harvest',purpose:'butcher',writer:'wildlife',eventId});
-    if(actor.owner&&actor.owner!=='player')for(const drop of success?current.items:[{}])noteOffense(d,{act:'take',victim:actor.owner,subject:{id:target,kind:'carcass'},actor:'player',...(drop.item?{stolen:{item:drop.item,quantity:drop.amount}}:{})});
+    const owner=corpse.owner??actor.owner;
+    if(owner&&owner!=='player')for(const drop of success?current.items:[{}])noteOffense(d,{act:'take',victim:owner,subject:{id:target,kind:'carcass'},actor:'player',...(drop.item?{stolen:{item:drop.item,quantity:drop.amount}}:{})});
     return{success,obtained:success?current.items:[],spent:{minutes:recipe.minutes,materials:recipe.consumes,tool:recipe.tool,toolWear:recipe.tool?1:0},note:'失败仍耗时耗材；仅obtained实际进入行囊，尸体不可反复刷取'};
 }
