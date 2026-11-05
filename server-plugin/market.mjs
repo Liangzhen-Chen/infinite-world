@@ -2,7 +2,7 @@
 import {bagStock,priceRead,settlementStock,granary,pledged,freight,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
 import {placeSettlement,personBusinesses,personHousehold} from './entity-view.mjs';
-import {isItemClass,classItems} from './item-class.mjs';
+import {isItemClass,classItems,workmanshipTier} from './item-class.mjs';
 import {householdUpkeepGap} from './npc-life.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
@@ -244,7 +244,8 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
  const bag=inventoryOf(state,seller),ids=instances??bag[item]?.instances?.slice(0,count)??[];
  const units=ids.map(id=>state.itemInstances?.[id]).filter(Boolean);
  const grade=unit=>{
-  const quality=pow(r.qualityStep,Math.max(0,order.indexOf(unit?.quality??catalog.quality))-Math.max(0,order.indexOf(catalog.quality)));
+  // 卡 Q：单件按实例品质（grade，标准件 1）与手艺档的价格倍率（balance/crafting price）报价。
+  const quality=pow(r.qualityStep,Math.max(0,order.indexOf(unit?.quality??catalog.quality))-Math.max(0,order.indexOf(catalog.quality)))*(unit?.grade??1)*workmanshipTier(engine,unit?.workmanship).price;
   const liquid=unit?.liquid;
   if(!liquid||!liquid.waterMl)return quality;
   const unsafe=(liquid.toxinUg??0)/liquid.waterMl*1000>r.water.toxinUgPerLitre||(liquid.pathogenRisk??0)>0;
