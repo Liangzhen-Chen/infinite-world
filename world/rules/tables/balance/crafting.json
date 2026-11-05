@@ -8,7 +8,11 @@
     {"id":"chain.cap","value":{"daily":10,"luxury":100},"bounds":{"daily":[10,10],"luxury":[100,100]},"basis":"derived","source":"数值方案 §2.11；BAL-C5","playDecision":false,"calibration":"derived","from":["doc:BAL-C5"],"note":"链末端基准价 ÷ 一次原料基准价：日用品 ≤ 10、奢侈品 ≤ 100"},
     {"id":"durability.lifeYears","value":5,"bounds":[2,10],"basis":"calibrate","source":"数值方案 §2.11","playDecision":false,"calibration":"pending","unit":"年","note":"普通做工工具与兵器常用寿命"},
     {"id":"repair.capDecay","value":0.9,"bounds":[0.8,0.95],"basis":"calibrate","source":"数值方案 §2.11","playDecision":false,"calibration":"pending","unit":"倍/次修理","note":"每次修理耐久上限 × 0.9"},
-    {"id":"repair.costShare","value":0.3,"bounds":[0.15,0.6],"basis":"calibrate","source":"数值方案 §2.11；方案未给界处取缺省修正项界 ×[0.5, 2]（附录 A §A.9 第 3 条）","playDecision":false,"calibration":"pending","note":"修理费 = value × 损耗比例 × 0.3（比例制，不累退）"}
+    {"id":"repair.costShare","value":0.3,"bounds":[0.15,0.6],"basis":"calibrate","source":"数值方案 §2.11；方案未给界处取缺省修正项界 ×[0.5, 2]（附录 A §A.9 第 3 条）","playDecision":false,"calibration":"pending","note":"修理费 = value × 损耗比例 × 0.3（比例制，不累退）"},
+    {"id":"nutrition.densityPerKg","value":{"mineral":0,"grain":150,"default":75},"bounds":{"mineral":[0,0],"grain":[100,250],"default":[40,150]},"basis":"calibrate","source":"K4：没有配方、物品表也没写营养的食物按重量 × 类别密度；谷类取干粮 30/0.2kg，其他取野食 15/0.2kg","playDecision":false,"calibration":"pending","unit":"饱腹/公斤","note":"按物品标签取第一个命中的键（mineral、grain），都不命中取 default；盐等矿物没有营养"},
+    {"id":"nutrition.processLoss","value":{"heated":0.1,"unheated":0.05},"bounds":{"heated":[0,0.3],"unheated":[0,0.2]},"basis":"calibrate","source":"K4：营养守恒派生，产物营养 = 投入之和 ×（1 − 损耗）÷ 产出份数","playDecision":false,"calibration":"pending","unit":"比例","note":"配方烧掉燃料类材料为加热加工；未加热的（磨粉、揉饵）生料仍是生料"},
+    {"id":"household.fuelKgPerDay","value":{"cooking":1,"heating":[0.5,0,0.5,2]},"bounds":{"cooking":[0.5,2],"heating.*":[0,4]},"basis":"calibrate","source":"K4：家户炊事与取暖按燃料类消耗（每户每日公斤；heating 按季节序 春、夏、秋、冬）","playDecision":false,"calibration":"pending","unit":"公斤/户·日","note":"从户里持有的燃料类物品按重量扣，整份不足时记欠量，下一日累计"},
+    {"id":"household.saltGramsPerPersonDay","value":5,"bounds":[2,15],"basis":"calibrate","source":"K4：食物调味与保存按盐类消耗","playDecision":false,"calibration":"pending","unit":"克/人·日","note":"从户里持有的盐类物品按重量扣"}
   ],
   "rows": [
     {"key":"workmanship:rough","name":"粗糙","price":0.6,"perf":0.85,"bounds":{"price":[0.42,0.84],"perf":[0.85,0.85]},"basis":"calibrate","source":"数值方案 §2.11；开发指南 3.7","playDecision":false,"calibration":"pending","unit":"倍","note":"粗糙：价格倍率 0.6，性能倍率 0.85；价格界 ×[0.7, 1.4]"},

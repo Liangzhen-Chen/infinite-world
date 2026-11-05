@@ -8,7 +8,7 @@ import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refu
 import {contractFreeze,claimCopper,REFERENCE} from './tender.mjs';
 import {holdGoods,releaseGoods} from './goods-escrow.mjs';
 import {claimUnit} from './claim-unit.mjs';
-import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,quoteSupply,recordMarketDeal,customerReachMinutes,assertMarketDepth} from './market.mjs';
+import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,quoteSupply,recordMarketDeal,customerReachMinutes,assertMarketDepth,upkeepDemand} from './market.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
@@ -694,6 +694,9 @@ function wants(d,engine,id,item,gaps){
             if(units>out.quantity){out.quantity=units;out.severity=100;}
         }
     }
+    // 家户日用欠量（柴、盐……，market.upkeepDemand 读 F 卡的 householdUpkeepGap）也是要买的量。
+    const upkeep=upkeepDemand(state,engine,id,item);
+    if(upkeep>out.quantity){out.quantity=Math.ceil(upkeep);out.severity=Math.max(out.severity,80);}
     const trade=engine.world.recipes.filter(r=>r.tools?.includes(item)&&(r.teachers?.includes(id)||state.npcs[id]?.recipes?.[r.id]));
     if(trade.length&&(!engine.quantity(d,id,item)||(state.npcs[id]?.inventory?.[item]?.durability??1)<=0)&&out.quantity<1){out.quantity=1;out.severity=60;}
     return out;

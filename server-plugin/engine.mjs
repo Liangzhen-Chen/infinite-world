@@ -1,4 +1,6 @@
 import {advanceHook} from './advance-hooks.mjs';
+import {sellLivestock} from './livestock-sale.mjs';
+import {ensureHoldings} from './holdings.mjs';
 import {isPhysicallyDead,aliveHoldings} from './holdings.mjs';
 import {primitiveActionRuntime,PRIMITIVE_EVENT_VERBS} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
@@ -90,6 +92,7 @@ import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {materializeWorkstations}from'./workstation-services.mjs';
+import {deriveItemAttributes}from'./item-class.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceRegistry,advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
@@ -242,6 +245,8 @@ export class WorldEngine {
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
         materializeWorkstations(world);
+        // K4: food nutrition and raw/cooked state are derived from recipes before any consumer reads them.
+        deriveItemAttributes(world);
         this.world = world; this.rules = world.rules;
         // An edition may lack people or venues that sites and festivals name; those rows stay idle instead of stopping the load (tools/validate-world reports them).
         const siteErrors=validateSites(world,{edition:true});if(siteErrors.length)throw Error(siteErrors.join('；'));
@@ -676,13 +681,15 @@ export class WorldEngine {
         if(!args.item)reject('E-ACTION-PRECONDITION','缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
         // Living stock (an animal, a herd, a species) is not catalogue goods.
         // What is not yours is refused as someone else's (K7); your own animal
-        // has no livestock price source to be valued against yet.
-        const beast=typeof args.item==='string'?d.get('state','creatures',args.item):null,herd=typeof args.item==='string'&&d.get('holdings','entities',args.item)?.kind==='population'?d.get('state','records',`husbandry:${args.item}`):null,species=!beast&&!herd?this.world.monsters.find(m=>m.id===args.item):null;
+        // is valued by its species' body and produce (market.livestockValue) and changes hands (livestock-sale.mjs).
+        const beast=typeof args.item==='string'?d.get('state','creatures',args.item):null,herd=typeof args.item==='string'&&d.get('state','records',`husbandry:${args.item}`)?.category==='husbandry'?d.get('state','records',`husbandry:${args.item}`):null,species=!beast&&!herd?this.world.monsters.find(m=>m.id===args.item):null;
         if(seller==='player'&&(beast||herd||species)){
+            if(herd)ensureHoldings(d,this);
             const owner=beast?beast.owner:herd?aliveHoldings(d,{kind:'owns',subject:herd.id})[0]?.holder:null,name=beast?.name??herd?.name??species.name;
             const mine=beast||herd?owner==='player':Object.values(d.get('state','creatures')??{}).some(c=>c.species===species.id&&c.owner==='player'&&!(c.hp<=0));
             if(!mine)reject('E-ACTION-PRECONDITION',owner?`${name}是${this.byId.get(owner)?.name??owner}的，不属于你的牲畜不能拿来卖`:`你名下没有${name}，不属于你的牲畜不能拿来卖`);
-            reject('E-ACTION-PRECONDITION',`${name}是活物，这里没有牲口行情可以作价`);
+            const sold=sellLivestock(d,this,{buyer,seller,target:args.item,quantity:args.quantity??1,location:playerLocation,eventId:id});
+            this.advance(d,5,id);d.say(`${name}×${sold.quantity}，成交${sold.cost}铜`);return sold;
         }
         const item=this.resolve(args.item,'item');
         let quantity=number(args.quantity,1,100000,'数量');const requestedQuantity=quantity,catalog=this.byId.get(item);

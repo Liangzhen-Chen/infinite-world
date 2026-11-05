@@ -12,5 +12,18 @@
     "unlock": "操作简单机械锁的铁线工具",
     "drinkable": "物品内容物可直接饮用",
     "liquid_container": "器物可盛装液体"
-  }
+  },
+  "classes": {
+    "food": {"tags":["food"],"nutrition":true,"note":"可食：带 food 标签或物品表写了营养；能否当一餐另看加载期派生的 nutrition"},
+    "grain": {"tags":["grain"],"note":"粮：谷物及其粉，公仓收粮、口粮、粮价按此类"},
+    "needsHeat": {"tags":["grain","legume","meat","fish","egg"],"note":"生料：未经加热的谷、豆、肉、鱼、蛋不能当一餐；加热与否由配方是否烧掉燃料派生"},
+    "medicine": {"tags":["herb","medicine","medicinal"],"note":"药：入药、施治、义诊耗药按此类"},
+    "bait": {"tags":["bait"],"note":"饵：抛竿消耗按此类"},
+    "fuel": {"tags":["fuel"],"note":"燃料：配方引火、家户炊事与取暖按此类"},
+    "salt": {"tags":["salt"],"note":"盐：调味与保存按此类"},
+    "apparel": {"tags":["clothing"],"note":"随身衣物：穿在身上按日磨损（玩家与 NPC 同一耐用寿命）"},
+    "durable": {"tags":["tool","weapon","clothing","container","liquid_container"],"recipeTool":true,"exclude":["food","fuel"],"note":"日用品：按耐用寿命磨损，磨坏产生替换需求；另含配方里当工具用的物品"}
+  },
+  "substitutable": ["fuel"],
+  "heat": {"materialClass":"fuel","note":"配方烧掉燃料类材料即为加热加工"}
 }

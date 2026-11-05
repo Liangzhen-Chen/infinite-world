@@ -57,8 +57,9 @@ function budgetRead(d,engine,key,build){
 }
 // The shop domain supplies public opening/replenishment facts and bounded
 // local quotes. Keeping the resolver here avoids an economy import cycle.
-let foodSources=()=>[];
-export function registerHouseholdFoodSources(resolve){foodSources=resolve;}
+// Hoisted registry: shop.mjs registers during the same import cycle, before this module body runs.
+export function registerHouseholdFoodSources(resolve){registerHouseholdFoodSources.fn=resolve;}
+const foodSources=(...a)=>registerHouseholdFoodSources.fn?.(...a)??[];
 function bagEntries(d,engine,state,holder,view){
  const raw=view?view.self.inventory:inventory(state,holder),held=new Map();
  for(const [name,value]of Object.entries(raw)){

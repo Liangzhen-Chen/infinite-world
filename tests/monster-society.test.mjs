@@ -251,7 +251,7 @@ test('未被发现的潜入耗时并实际检定；未获许可明着进入被�
  assert.ok(plain.result.offenses.some(o=>o.offense==='trespass'&&plain.document.state.records[o.record].sourceEvent==='plain'));
  d.state.player.attributes=Object.fromEntries(f.engine.rules.attributes.map(k=>[k,1000]));
  let out;for(const id of ['quiet_a','quiet_b','quiet_c','quiet_d']){out=await sneak(f,d,id);if(out.result.covert)break;}
- assert.equal(out.result.covert,true);assert.equal(out.result.detected,false);assert.equal(out.result.check.opponent.npc,guardId);
+ assert.equal(out.result.covert,true);assert.equal(out.result.detected,false);assert.equal(out.result.check.opponent.npc,guardId); /* K6 依据（审查 C-b sites:265）：没被发现的潜入也是进了别人的地方，命中侵入；无人看见，也不留痕，不会被事后发现 */const sneaked=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(sneaked);assert.deepEqual(sneaked.witnesses,[]);assert.equal(out.document.state.records[sneaked.record].discoverers,undefined);
  assert.equal(out.document.state.minute,d.state.minute+30);assert.equal(stance(f,out.document,seatId),undefined);
  assert.equal(receipts(out.document,'infiltration')[0].detected,false);
  const clue=await f.run(out.document,'world_field',{operation:'site_investigate',target:'ledger'},'read_ledger');assert.equal(clue.result.discovered,true);

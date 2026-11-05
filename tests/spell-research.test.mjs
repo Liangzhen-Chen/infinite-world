@@ -60,7 +60,8 @@ test('失败仍耗魔与时间，大失败反噬；同意和社会法典边界�
 
 test('研究书稿携带成果并沿 RW-05 书本学习入口传播',async()=>{
  const r=await create(fresh()),spell=r.result.entity;r.document.state.spells[spell]={};
- r.document.state.inventory.item_parchment={quantity:5,quality:'木',durability:100,weight:0.06};
+ // E 卡：出版每册耗 1 纸 1 墨；印费 200÷4=50 册，原 5 纸供写稿之外另备 50 纸 50 墨。
+ r.document.state.inventory.item_parchment={quantity:55,quality:'木',durability:100,weight:0.06};r.document.state.inventory.item_soot_ink={quantity:50,quality:'木',durability:100,weight:0.1};
  const wrote=await success(r.document,'world_research',{operation:'write',name:'掌伤研习录',concept:'掌伤照护记录',entities:[spell]},'write');
  const work=wrote.document.state.works[wrote.result.work];assert.deepEqual(work.knowledge.teaches,[spell]);
  assert.equal(wrote.document.state.created[work.knowledge.teaches[0]].source,'research_test');
