@@ -53,7 +53,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
     const exportWithWorlds=async(store,id)=>{
         const bundle=await store.export(id),hashes=new Set([bundle.initial.worldHash,
             ...bundle.events.flatMap(event=>[event.input?.worldHash,event.result?.worldHash])].filter(Boolean));
-        bundle.worlds={};for(const hash of hashes)bundle.worlds[hash]=(await store.worldRegistry.get(hash)).world;
+        bundle.worlds={};for(const hash of hashes)bundle.worlds[hash]=await store.worldRegistry.world(hash);
         return bundle;
     };
     const upgrade=async(store,id)=>{
