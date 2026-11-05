@@ -5,7 +5,9 @@ registerIntentMenu(worldActions);
 import {primitiveRuleRegistry} from '../server-plugin/primitive-rules.mjs';
 import path from 'node:path';
 import {materializeWildlifeHabitats} from '../server-plugin/wildlife-habitats.mjs';
+import {materializeRuntimeWorld,mechanicsCollections} from '../server-plugin/runtime-world.mjs';
 import {materializeWorkstations} from '../server-plugin/workstation-services.mjs';
+import {deriveItemAttributes} from '../server-plugin/item-class.mjs';
 import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
 import {requireBalanceTables} from './balance-tables.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
@@ -71,10 +73,17 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         for(const key of Object.keys(row))if(place[key]!==undefined&&JSON.stringify(place[key])!==JSON.stringify(row[key]))throw new Error(`群落数据与地点自带字段重复：${id}`);
         Object.assign(place,row);
     }
+    // A1: reviewed rows change only through the approval pipeline, so this
+    // loader returns them as on disk. Mechanism annotations that laws read live
+    // apart in meta/mechanics/<collection>.json ({id:{field:value}}); with the
+    // production-chain site table they ride along as world.mechanics and are
+    // merged by materializeRuntimeWorld (loadRuntimeWorld, WorldEngine).
+    const mechanics={};
+    for(const name of mechanicsCollections){const rows=await optional(`meta/mechanics/${name}.json`);if(!Array.isArray(rows))mechanics[name]=rows;}
+    const siteEcology=await optional('design/kc-site-ecology.json');if(!Array.isArray(siteEcology))mechanics.siteEcology=siteEcology;
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
-    materializeWorkstations(world);
     const normErrors=validateNormBindings(world);if(normErrors.length)throw Error(normErrors.join('; '));
     if(autonomyCandidates.length)world.autonomy={candidates:autonomyCandidates};
     // Dialogue templates are pinned with the campaign world, including wording
@@ -123,6 +132,16 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     }catch(error){if(error.code!=='ENOENT')throw error;}
     for(const [name,value] of Object.entries(primitiveAssets))Object.defineProperty(world,name,{value,enumerable:Boolean(world.actionDefinitions)||Boolean(world.primitiveRules),writable:true,configurable:true});
     const ecology=await optional('ecology/species.json');if(!Array.isArray(ecology))installEcologyDefinitions(world,ecology);
+    if(Object.keys(mechanics).length)world.mechanics=mechanics;
+    return world;
+}
+
+// The world the engine runs: the reviewed world with its mechanism annotations
+// and the laws that act on reviewed rows, the station projection from fixtures
+// and the derived item attributes (what WorldEngine does on construction).
+export async function loadRuntimeWorld(root){
+    const world=materializeRuntimeWorld(await loadWorld(root));
+    materializeWorkstations(world);deriveItemAttributes(world);
     return world;
 }
 

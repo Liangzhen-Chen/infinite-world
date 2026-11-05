@@ -83,7 +83,42 @@
     ],
     "process": "从无裂纹木料留出装柄端，顺纹削出握持弧度。装柄端留少量余量，交给使用者与具体工具配合。"
   },
-  {"id":"recipe_mill_oats","name":"筛磨燕麦粉","aliases":[],"scope":null,"skill":"skill_life_0_core","minimumProficiency":0,"minutes":20,"difficulty":10,"workstation":"woodworking","process":"先在磨坊脱壳，再用已有磨盘碾细、筛出硬壳；小刀只用于开谷袋。剩壳另入不可食废堆。","materials":[{"item":"item_oats","amount":1}],"tools":["item_whittling_knife"],"output":{"item":"item_oat_flour","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":4,"learnMinutes":120,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[]},
+  {
+    "id": "recipe_mill_oats",
+    "name": "筛磨燕麦粉",
+    "aliases": [],
+    "scope": null,
+    "skill": "skill_life_0_core",
+    "minimumProficiency": 0,
+    "minutes": 20,
+    "difficulty": 10,
+    "workstation": "woodworking",
+    "process": "先在磨坊脱壳，再用已有磨盘碾细、筛出硬壳；小刀只用于开谷袋。剩壳另入不可食废堆。",
+    "materials": [
+      {
+        "item": "item_oats",
+        "amount": 1
+      }
+    ],
+    "tools": [
+      "item_whittling_knife"
+    ],
+    "output": {
+      "item": "item_oat_flour",
+      "quantity": 1
+    },
+    "byproducts": [],
+    "learningRequired": true,
+    "learnFee": 4,
+    "learnMinutes": 120,
+    "teachers": [],
+    "toolWear": 1,
+    "failure": {
+      "recoverFraction": 0,
+      "injury": 0
+    },
+    "prerequisites": []
+  },
   {
     "id": "recipe_bake_flatbread",
     "name": "烙燕麦薄饼",
@@ -270,7 +305,42 @@
     },
     "prerequisites": []
   },
-  {"id":"recipe_spin_wool","name":"手纺粗毛线","aliases":[],"scope":null,"skill":"skill_life_4_core","minimumProficiency":0,"minutes":60,"difficulty":10,"workstation":"weaving","process":"梳齐羊毛并逐段牵伸，用纺锤加捻，分成三团；短毛和断头不计作线团，不冒称丝线。","materials":[{"item":"item_wool","amount":1}],"tools":["item_spindle"],"output":{"item":"item_wool_yarn","quantity":3},"byproducts":[],"learningRequired":false,"learnFee":4,"learnMinutes":120,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[]},
+  {
+    "id": "recipe_spin_wool",
+    "name": "手纺粗毛线",
+    "aliases": [],
+    "scope": null,
+    "skill": "skill_life_4_core",
+    "minimumProficiency": 0,
+    "minutes": 60,
+    "difficulty": 10,
+    "workstation": "weaving",
+    "process": "梳齐羊毛并逐段牵伸，用纺锤加捻，分成三团；短毛和断头不计作线团，不冒称丝线。",
+    "materials": [
+      {
+        "item": "item_wool",
+        "amount": 1
+      }
+    ],
+    "tools": [
+      "item_spindle"
+    ],
+    "output": {
+      "item": "item_wool_yarn",
+      "quantity": 3
+    },
+    "byproducts": [],
+    "learningRequired": true,
+    "learnFee": 4,
+    "learnMinutes": 120,
+    "teachers": [],
+    "toolWear": 1,
+    "failure": {
+      "recoverFraction": 0,
+      "injury": 0
+    },
+    "prerequisites": []
+  },
   {
     "id": "recipe_weave_linen",
     "name": "织窄幅麻布",
@@ -4956,7 +5026,57 @@
     ],
     "process": "净树胶粒1份在石臼中以半份清水浸软，加入1份赤土色粉，石杵缓研至粉团散开。细目工艺筛滤去粗粒，筛下色浆收回石臼，把预留的半份水分次加入调匀。短毫画笔在废木片上试涂，观察是否留有砂粒和明显分层。连泡胶、研磨、过筛和试涂共40分钟，不追加水或色粉。成品为木牌表面颜料，不作人体涂药；粗渣弃置，容器自备。"
   },
-  {"id":"recipe_w3b_soot_ink","name":"制作树胶烟墨","aliases":[],"scope":null,"skill":"skill_life_14_core","minimumProficiency":100,"minutes":50,"difficulty":15,"materials":[{"item":"item_lampblack","amount":1},{"item":"item_gum_grain","amount":1},{"item":"item_water","amount":1}],"tools":["item_stone_mortar","item_fine_sieve","item_reed_pen"],"workstation":"woodworking","output":{"item":"item_soot_ink","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":6,"learnMinutes":90,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[{"skill":"skill_life_14_core","minimum":100}],"process":"1份净树胶粒放入石臼，以1份清水中的三分之一浸软，再分次补入剩余清水，研成胶液。将1份烟墨粉全部分次研入，压散干粉团块，用细目工艺筛滤去粗粒，墨液静置沉泡。芦苇笔蘸墨在旧纸上试写，检查墨线是否连续；过稠处继续研散，不再追加材料。全程50分钟，得到一份烟胶墨液，粗渣弃置，容器自备；字迹受水浸仍可能晕开。"},
+  {
+    "id": "recipe_w3b_soot_ink",
+    "name": "制作树胶烟墨",
+    "aliases": [],
+    "scope": null,
+    "skill": "skill_life_14_core",
+    "minimumProficiency": 100,
+    "minutes": 50,
+    "difficulty": 15,
+    "materials": [
+      {
+        "item": "item_lampblack",
+        "amount": 1
+      },
+      {
+        "item": "item_gum_grain",
+        "amount": 1
+      },
+      {
+        "item": "item_water",
+        "amount": 1
+      }
+    ],
+    "tools": [
+      "item_stone_mortar",
+      "item_fine_sieve",
+      "item_reed_pen"
+    ],
+    "workstation": "woodworking",
+    "output": {
+      "item": "item_soot_ink",
+      "quantity": 1
+    },
+    "byproducts": [],
+    "learningRequired": true,
+    "learnFee": 6,
+    "learnMinutes": 90,
+    "teachers": [],
+    "toolWear": 1,
+    "failure": {
+      "recoverFraction": 0,
+      "injury": 0
+    },
+    "prerequisites": [
+      {
+        "skill": "skill_life_14_core",
+        "minimum": 100
+      }
+    ],
+    "process": "1份净树胶粒放入石臼，以1份清水中的三分之一浸软，再分次补入剩余清水，研成胶液。将1份烟墨粉全部分次研入，压散干粉团块，用细目工艺筛滤去粗粒，墨液静置沉泡。芦苇笔蘸墨在旧纸上试写，检查墨线是否连续；过稠处继续研散，不再追加材料。全程50分钟，得到一份烟胶墨液，粗渣弃置，容器自备；字迹受水浸仍可能晕开。"
+  },
   {
     "id": "recipe_w3b_gall_wash",
     "name": "制作淡瘿染液",
@@ -9646,7 +9766,49 @@
     },
     "process": "把制黄精片、茯苓块和甘草片研成细粉，与滤蜜调成药泥搓成十粒蜜丸，放在东街学馆丹炉上隔火烘40分钟；整段时间炉火须在燃烧，炉温保持在70至140摄氏度之间，炉壁温区不匀时一部分丹丸会焦裂。"
   },
-  {"id":"recipe_smelt_iron","name":"选矿冶炼铁料","aliases":[],"scope":null,"skill":"skill_life_5_core","minimumProficiency":0,"minutes":120,"difficulty":10,"workstation":"smithing","process":"分选含铁矿石，以木炭还原并锻打成可回炉铁料；消耗真实矿石和燃料，失败不凭空返料。","materials":[{"item":"item_iron_ore","amount":2},{"item":"item_charcoal","amount":1}],"tools":[],"output":{"item":"item_iron","quantity":1},"byproducts":[],"learningRequired":true,"learnFee":4,"learnMinutes":120,"teachers":["npc_hw_duanyan"],"toolWear":1,"failure":{"recoverFraction":0,"injury":2},"prerequisites":[]},
+  {
+    "id": "recipe_smelt_iron",
+    "name": "选矿冶炼铁料",
+    "aliases": [],
+    "scope": null,
+    "skill": "skill_life_5_core",
+    "minimumProficiency": 0,
+    "minutes": 120,
+    "difficulty": 10,
+    "workstation": "smithing",
+    "process": "分选含铁矿石，以木炭还原并锻打成可回炉铁料；消耗真实矿石和燃料，失败不凭空返料。",
+    "materials": [
+      {
+        "item": "item_iron_ore",
+        "amount": 2
+      },
+      {
+        "item": "item_charcoal",
+        "amount": 1
+      }
+    ],
+    "tools": [
+      "item_smith_hammer",
+      "item_smith_tongs"
+    ],
+    "output": {
+      "item": "item_iron",
+      "quantity": 1
+    },
+    "byproducts": [],
+    "learningRequired": true,
+    "learnFee": 4,
+    "learnMinutes": 120,
+    "teachers": [
+      "npc_hw_duanyan"
+    ],
+    "toolWear": 1,
+    "failure": {
+      "recoverFraction": 0,
+      "injury": 2
+    },
+    "prerequisites": []
+  },
   {"id": "recipe_hoe", "name": "制作铁锄", "aliases": [], "scope": null, "skill": "skill_life_5_core", "minimumProficiency": 0, "minutes": 60, "difficulty": 10, "materials": [{"item": "item_iron_scrap", "amount": 1}, {"item": "item_charcoal", "amount": 1}, {"item": "item_wood", "amount": 1}], "tools": ["item_smith_hammer", "item_smith_tongs"], "workstation": "smithing", "output": {"item": "item_hoe", "quantity": 1}, "byproducts": [], "learningRequired": true, "learnFee": 4, "learnMinutes": 60, "teachers": ["npc_hw_duanyan"], "toolWear": 1, "failure": {"recoverFraction": 0.25, "injury": 2}, "prerequisites": [], "process": "将铁边料加热锻成农具刃口，修整木柄并牢固安装，冷却后试用检查。每批一件，耗时六十分钟。"},
   {"id": "recipe_sickle", "name": "制作铁镰", "aliases": [], "scope": null, "skill": "skill_life_5_core", "minimumProficiency": 0, "minutes": 60, "difficulty": 10, "materials": [{"item": "item_iron_scrap", "amount": 1}, {"item": "item_charcoal", "amount": 1}, {"item": "item_wood", "amount": 1}], "tools": ["item_smith_hammer", "item_smith_tongs"], "workstation": "smithing", "output": {"item": "item_sickle", "quantity": 1}, "byproducts": [], "learningRequired": true, "learnFee": 4, "learnMinutes": 60, "teachers": ["npc_hw_duanyan"], "toolWear": 1, "failure": {"recoverFraction": 0.25, "injury": 2}, "prerequisites": [], "process": "将铁边料加热锻成农具刃口，修整木柄并牢固安装，冷却后试用检查。每批一件，耗时六十分钟。"},
   {"id": "recipe_fishing_bait", "name": "揉制谷粒钓饵", "aliases": [], "scope": null, "skill": "skill_life_3_core", "minimumProficiency": 0, "minutes": 10, "difficulty": 10, "materials": [{"item": "item_oats", "amount": 1}], "tools": ["item_kitchen_knife"], "output": {"item": "item_fishing_bait", "quantity": 10}, "byproducts": [], "learningRequired": true, "learnFee": 4, "learnMinutes": 30, "teachers": ["npc_hw_linsui"], "toolWear": 1, "failure": {"recoverFraction": 0, "injury": 0}, "prerequisites": [], "process": "将一份燕麦粗粒用刀背碾碎揉成十份小饵团，每份供一次抛竿使用；十分钟制成一批。", "workstation": "cooking"},
@@ -9737,16 +9899,7 @@
   {"id":"recipe_kc_tool_whittling_knife","name":"锻制削木小刀","aliases":[],"scope":null,"skill":"skill_life_5_core","minimumProficiency":0,"minutes":35,"difficulty":10,"workstation":"smithing","process":"铁边料回炉烧红锻合成坯，按样打出形状，淬火回火后锉修；装木柄或铆接的部件最后合装。锻裂或淬裂的坯归废边。","materials":[{"item":"item_iron_scrap","amount":1},{"item":"item_wood","amount":1}],"tools":["item_smith_hammer","item_smith_tongs"],"output":{"item":"item_whittling_knife","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"tool_metal"},
   {"id":"recipe_kc_tool_wood_mallet","name":"削制枣木敲凿槌","aliases":[],"scope":null,"skill":"skill_life_6_core","minimumProficiency":0,"minutes":50,"difficulty":10,"workstation":"woodworking","process":"挑直纹木料下料，顺纹削出形状，修光边角，需要镶件的另行装合；逆纹崩裂的料弃作刨屑。","materials":[{"item":"item_wood","amount":1}],"tools":["item_whittling_knife"],"output":{"item":"item_wood_mallet","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"tool_wood"},
   {"id":"recipe_kc_tool_wood_rasp","name":"锻制粗齿木锉","aliases":[],"scope":null,"skill":"skill_life_5_core","minimumProficiency":0,"minutes":45,"difficulty":10,"workstation":"smithing","process":"铁边料回炉烧红锻合成坯，按样打出形状，淬火回火后锉修；装木柄或铆接的部件最后合装。锻裂或淬裂的坯归废边。","materials":[{"item":"item_iron_scrap","amount":2},{"item":"item_wood","amount":1}],"tools":["item_smith_hammer","item_smith_tongs"],"output":{"item":"item_wood_rasp","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"tool_metal"},
-  {"id":"recipe_kc_copy_book_bake_flatbread_lampblack","name":"照原本抄写烙燕麦薄饼工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_bake_flatbread","item_reed_pen"],"output":{"item":"item_book_bake_flatbread","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_cook_porridge_lampblack","name":"照原本抄写熬干果燕麦粥工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_cook_porridge","item_reed_pen"],"output":{"item":"item_book_cook_porridge","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_curdle_milk_lampblack","name":"照原本抄写凝制果醋鲜乳块工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_curdle_milk","item_reed_pen"],"output":{"item":"item_book_curdle_milk","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_dip_candles_lampblack","name":"照原本抄写浸制细蜂蜡烛工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_dip_candles","item_reed_pen"],"output":{"item":"item_book_dip_candles","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_fire_cup_lampblack","name":"照原本抄写拉烧小陶杯工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_fire_cup","item_reed_pen"],"output":{"item":"item_book_fire_cup","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_fire_pot_lampblack","name":"照原本抄写拉烧素面陶罐工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_fire_pot","item_reed_pen"],"output":{"item":"item_book_fire_pot","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_forge_hinge_lampblack","name":"照原本抄写锻制门柜铰链工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_forge_hinge","item_reed_pen"],"output":{"item":"item_book_forge_hinge","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_forge_nails_lampblack","name":"照原本抄写锻制小铁钉工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_forge_nails","item_reed_pen"],"output":{"item":"item_book_forge_nails","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_household_pottery_lampblack","name":"照原本抄写窑边家用陶器手记（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_household_pottery","item_reed_pen"],"output":{"item":"item_book_household_pottery","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_household_pottery_soot_ink","name":"照原本抄写窑边家用陶器手记（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_household_pottery","item_reed_pen"],"output":{"item":"item_book_household_pottery","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_journey_desk_lampblack","name":"照原本抄写书桌装订小作录（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_journey_desk","item_reed_pen"],"output":{"item":"item_book_journey_desk","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_journey_desk_soot_ink","name":"照原本抄写书桌装订小作录（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_journey_desk","item_reed_pen"],"output":{"item":"item_book_journey_desk","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_journey_grain_lampblack","name":"照原本抄写麦锅火候与稠度录（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_journey_grain","item_reed_pen"],"output":{"item":"item_book_journey_grain","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
@@ -9764,7 +9917,6 @@
   {"id":"recipe_kc_copy_book_journey_wood_lampblack","name":"照原本抄写木角芦片杂工记（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_journey_wood","item_reed_pen"],"output":{"item":"item_book_journey_wood","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_journey_wood_soot_ink","name":"照原本抄写木角芦片杂工记（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_journey_wood","item_reed_pen"],"output":{"item":"item_book_journey_wood","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_contract_lampblack","name":"照原本抄写役灵契纹入门（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_m4_contract","item_reed_pen"],"output":{"item":"item_book_m4_contract","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_m4_contract_soot_ink","name":"照原本抄写役灵契纹入门（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_m4_contract","item_reed_pen"],"output":{"item":"item_book_m4_contract","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_guard_lampblack","name":"照原本抄写元素护卫长契抄（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":360,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":4},{"item":"item_lampblack","amount":1}],"tools":["item_book_m4_guard","item_reed_pen"],"output":{"item":"item_book_m4_guard","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_guard_soot_ink","name":"照原本抄写元素护卫长契抄（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":360,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":4},{"item":"item_soot_ink","amount":1}],"tools":["item_book_m4_guard","item_reed_pen"],"output":{"item":"item_book_m4_guard","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_light_lampblack","name":"照原本抄写火纹与眩点习法（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_m4_light","item_reed_pen"],"output":{"item":"item_book_m4_light","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
@@ -9778,16 +9930,12 @@
   {"id":"recipe_kc_copy_book_m4_renew_lampblack","name":"照原本抄写续供与解离条录（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":270,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":3},{"item":"item_lampblack","amount":1}],"tools":["item_book_m4_renew","item_reed_pen"],"output":{"item":"item_book_m4_renew","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_renew_soot_ink","name":"照原本抄写续供与解离条录（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":270,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":3},{"item":"item_soot_ink","amount":1}],"tools":["item_book_m4_renew","item_reed_pen"],"output":{"item":"item_book_m4_renew","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_surface_lampblack","name":"照原本抄写纸土留痕初抄（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_m4_surface","item_reed_pen"],"output":{"item":"item_book_m4_surface","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_m4_surface_soot_ink","name":"照原本抄写纸土留痕初抄（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_m4_surface","item_reed_pen"],"output":{"item":"item_book_m4_surface","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_travel_lampblack","name":"照原本抄写行旅安神祝词（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_m4_travel","item_reed_pen"],"output":{"item":"item_book_m4_travel","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_m4_travel_soot_ink","name":"照原本抄写行旅安神祝词（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_m4_travel","item_reed_pen"],"output":{"item":"item_book_m4_travel","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_veils_lampblack","name":"照原本抄写折光与微光目记（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":270,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":3},{"item":"item_lampblack","amount":1}],"tools":["item_book_m4_veils","item_reed_pen"],"output":{"item":"item_book_m4_veils","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_m4_veils_soot_ink","name":"照原本抄写折光与微光目记（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":270,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":3},{"item":"item_soot_ink","amount":1}],"tools":["item_book_m4_veils","item_reed_pen"],"output":{"item":"item_book_m4_veils","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_mill_oats_lampblack","name":"照原本抄写筛磨燕麦粉工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_mill_oats","item_reed_pen"],"output":{"item":"item_book_mill_oats","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s1_area_lampblack","name":"照原本抄写交锋圈域读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_s1_area","item_reed_pen"],"output":{"item":"item_book_s1_area","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s1_area_soot_ink","name":"照原本抄写交锋圈域读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s1_area","item_reed_pen"],"output":{"item":"item_book_s1_area","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s1_cover_lampblack","name":"照原本抄写近场防护读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_s1_cover","item_reed_pen"],"output":{"item":"item_book_s1_cover","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_s1_cover_soot_ink","name":"照原本抄写近场防护读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s1_cover","item_reed_pen"],"output":{"item":"item_book_s1_cover","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s1_growth_lampblack","name":"照原本抄写植株与采后读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_s1_growth","item_reed_pen"],"output":{"item":"item_book_s1_growth","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s1_growth_soot_ink","name":"照原本抄写植株与采后读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s1_growth","item_reed_pen"],"output":{"item":"item_book_s1_growth","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s1_message_lampblack","name":"照原本抄写自愿传讯读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_s1_message","item_reed_pen"],"output":{"item":"item_book_s1_message","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
@@ -9795,24 +9943,16 @@
   {"id":"recipe_kc_copy_book_s1_movement_lampblack","name":"照原本抄写锚面与短渡读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_s1_movement","item_reed_pen"],"output":{"item":"item_book_s1_movement","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s1_movement_soot_ink","name":"照原本抄写锚面与短渡读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s1_movement","item_reed_pen"],"output":{"item":"item_book_s1_movement","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s1_utility_lampblack","name":"照原本抄写器物与小沟读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_s1_utility","item_reed_pen"],"output":{"item":"item_book_s1_utility","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_s1_utility_soot_ink","name":"照原本抄写器物与小沟读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s1_utility","item_reed_pen"],"output":{"item":"item_book_s1_utility","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s2_air_lampblack","name":"照原本抄写风力与传声读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_s2_air","item_reed_pen"],"output":{"item":"item_book_s2_air","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_s2_air_soot_ink","name":"照原本抄写风力与传声读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s2_air","item_reed_pen"],"output":{"item":"item_book_s2_air","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s2_farm_lampblack","name":"照原本抄写谷土梁架读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_s2_farm","item_reed_pen"],"output":{"item":"item_book_s2_farm","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_s2_farm_soot_ink","name":"照原本抄写谷土梁架读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s2_farm","item_reed_pen"],"output":{"item":"item_book_s2_farm","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s2_stone_lampblack","name":"照原本抄写岩层回声读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_s2_stone","item_reed_pen"],"output":{"item":"item_book_s2_stone","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s2_stone_soot_ink","name":"照原本抄写岩层回声读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s2_stone","item_reed_pen"],"output":{"item":"item_book_s2_stone","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s3_care_lampblack","name":"照原本抄写看护灯火读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_s3_care","item_reed_pen"],"output":{"item":"item_book_s3_care","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_s3_care_soot_ink","name":"照原本抄写看护灯火读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s3_care","item_reed_pen"],"output":{"item":"item_book_s3_care","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s3_optics_lampblack","name":"照原本抄写光影辨析读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_s3_optics","item_reed_pen"],"output":{"item":"item_book_s3_optics","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s3_optics_soot_ink","name":"照原本抄写光影辨析读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s3_optics","item_reed_pen"],"output":{"item":"item_book_s3_optics","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s4_measure_lampblack","name":"照原本抄写量距契纹读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_s4_measure","item_reed_pen"],"output":{"item":"item_book_s4_measure","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_s4_measure_soot_ink","name":"照原本抄写量距契纹读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s4_measure","item_reed_pen"],"output":{"item":"item_book_s4_measure","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s4_space_lampblack","name":"照原本抄写空间役灵读本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_s4_space","item_reed_pen"],"output":{"item":"item_book_s4_space","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_s4_space_soot_ink","name":"照原本抄写空间役灵读本（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_s4_space","item_reed_pen"],"output":{"item":"item_book_s4_space","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_salt_fish_lampblack","name":"照原本抄写短腌小咸鱼工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_salt_fish","item_reed_pen"],"output":{"item":"item_book_salt_fish","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_sew_sack_lampblack","name":"照原本抄写缝制麻布粮袋工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_sew_sack","item_reed_pen"],"output":{"item":"item_book_sew_sack","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_spin_wool_lampblack","name":"照原本抄写手纺粗毛线工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_spin_wool","item_reed_pen"],"output":{"item":"item_book_spin_wool","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_trades_artisan_lampblack","name":"照原本抄写纸墨与小料手记（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_trades_artisan","item_reed_pen"],"output":{"item":"item_book_trades_artisan","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_trades_artisan_soot_ink","name":"照原本抄写纸墨与小料手记（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_trades_artisan","item_reed_pen"],"output":{"item":"item_book_trades_artisan","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_trades_iron_lampblack","name":"照原本抄写门窗炉具锻作录（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_trades_iron","item_reed_pen"],"output":{"item":"item_book_trades_iron","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
@@ -9826,13 +9966,6 @@
   {"id":"recipe_kc_copy_book_w2_reuse_advanced_lampblack","name":"照原本抄写二阶习术校读册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":270,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":3},{"item":"item_lampblack","amount":1}],"tools":["item_book_w2_reuse_advanced","item_reed_pen"],"output":{"item":"item_book_w2_reuse_advanced","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_w2_reuse_advanced_soot_ink","name":"照原本抄写二阶习术校读册（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":270,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":3},{"item":"item_soot_ink","amount":1}],"tools":["item_book_w2_reuse_advanced","item_reed_pen"],"output":{"item":"item_book_w2_reuse_advanced","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_w2_reuse_basic_lampblack","name":"照原本抄写初阶杂术校读册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_w2_reuse_basic","item_reed_pen"],"output":{"item":"item_book_w2_reuse_basic","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_w2_reuse_basic_soot_ink","name":"照原本抄写初阶杂术校读册（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_soot_ink","amount":1}],"tools":["item_book_w2_reuse_basic","item_reed_pen"],"output":{"item":"item_book_w2_reuse_basic","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
   {"id":"recipe_kc_copy_book_w2_reuse_middle_lampblack","name":"照原本抄写一阶习术校读册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_lampblack","amount":1}],"tools":["item_book_w2_reuse_middle","item_reed_pen"],"output":{"item":"item_book_w2_reuse_middle","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_w2_reuse_middle_soot_ink","name":"照原本抄写一阶习术校读册（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_w2_reuse_middle","item_reed_pen"],"output":{"item":"item_book_w2_reuse_middle","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_book_weave_linen_lampblack","name":"照原本抄写织窄幅麻布工序册（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_book_weave_linen","item_reed_pen"],"output":{"item":"item_book_weave_linen","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_bs_dao_primer_lampblack","name":"照原本抄写验汀符笔初课（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_bs_dao_primer","item_reed_pen"],"output":{"item":"item_bs_dao_primer","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_bs_mage_primer_lampblack","name":"照原本抄写东学光术初课（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_bs_mage_primer","item_reed_pen"],"output":{"item":"item_bs_mage_primer","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_bs_martial_primer_lampblack","name":"照原本抄写量廊馆探步初课（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_bs_martial_primer","item_reed_pen"],"output":{"item":"item_bs_martial_primer","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_bs_monk_primer_lampblack","name":"照原本抄写止波寺三息课（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_bs_monk_primer","item_reed_pen"],"output":{"item":"item_bs_monk_primer","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"},
-  {"id":"recipe_kc_copy_literacy_primer_lampblack","name":"照原本抄写田契识字课本（收烟墨粉）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":90,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":1},{"item":"item_lampblack","amount":1}],"tools":["item_literacy_primer","item_reed_pen"],"output":{"item":"item_literacy_primer","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"}
+  {"id":"recipe_kc_copy_book_w2_reuse_middle_soot_ink","name":"照原本抄写一阶习术校读册（树胶烟墨）","aliases":[],"scope":null,"skill":"skill_literacy","minimumProficiency":0,"minutes":180,"difficulty":10,"process":"把原本摊在案上，羊皮纸裁齐压平，逐页对照誊写，写完一页对读一遍；抄错的页刮不净就作废另抄，墨与纸按实耗。","materials":[{"item":"item_parchment","amount":2},{"item":"item_soot_ink","amount":1}],"tools":["item_book_w2_reuse_middle","item_reed_pen"],"output":{"item":"item_book_w2_reuse_middle","quantity":1},"byproducts":[],"learningRequired":false,"learnFee":0,"learnMinutes":30,"teachers":[],"toolWear":1,"failure":{"recoverFraction":0,"injury":0},"prerequisites":[],"processing":"copy"}
 ]

@@ -1,10 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {loadWorld}from'./load-world.mjs';
+import {loadRuntimeWorld}from'./load-world.mjs';
 import {validateWorld}from'./validate-world.mjs';
 import {digest,atomicJSON}from'../server-plugin/storage.mjs';
 export async function buildWorld({stage='rules',source=null,destination='dist/world'}={}){
-    const world=source??await loadWorld(),validation=validateWorld(world,{stage});
+    const world=source??await loadRuntimeWorld(),validation=validateWorld(world,{stage});
     if(!validation.ok)throw new Error(`世界构建拒绝，${validation.errors.length}项错误：\n${validation.errors.join('\n')}`);
     const hash=digest(world);await fs.mkdir(destination,{recursive:true});
     await atomicJSON(path.join(destination,`${hash}.json`),world);

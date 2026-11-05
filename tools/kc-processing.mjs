@@ -4,10 +4,13 @@
 // 成员只写"原料 → 产物"对；数量、工时、副产物都由物品的 weight 与类参数推出，不逐条手调。
 // 工具类按工具自身的材料构成（金属/木/石/骨/苇/毛/革）派生投入与工位，覆盖世界里每一种被当作工具用的物品。
 // 抄书类覆盖每一件带 book 结构的物品：照原本（工具，不消耗）用羊皮纸与墨抄出一本。
-// 价格更正：刮薄羊皮纸原基准价 12 高出它自己的生产链（一张一公斤生皮 8 文刮出五张）数倍，按链改为 4，见 PRICE_FIXES。
-// 据点：制成品（任何配方的产物）不再生；自然资源的储量与再生按"资源类 × 据点栖地"派生，并给每个据点补上本栖地原生的资源，
-// 参数表 world/design/kc-site-ecology.json；栖地不长的遗留物（废墟旧木料、积盐）不再生。
-// 用法：node tools/kc-processing.mjs [--write] [--root <树>]。改类参数或资源表后重跑 --write，生成的配方行与据点行不手改。
+// 已审行不改（A1）：生成器只写新增的行（recipe_kc_* 配方、两种新物品），作者原有的行一字不动；
+// 对作者行起作用的是本文件的运行时规律 applyChainLaws，由 tools/load-world.mjs 在加载期施加到运行时世界：
+//   据点：制成品（任何配方的产物）不再生；自然资源的储量与再生按"资源类 × 据点栖地"派生，并给每个据点补上本栖地原生的资源，
+//   参数表 world/design/kc-site-ecology.json；栖地不长的遗留物（废墟旧木料、积盐）不再生。
+//   初加工类里没有师傅的作者配方不要求拜师；只由本类配方造出的东西，基准价不低于它最省那条配方的材料价。
+// 改不成规律的作者行更正（羊皮纸按链改价、冶炼不要锻锤、矿道口铁砂的物品登记）不在这里做，见 docs/审查/2026-11-05-已审内容改动盘点.md，走审批管线。
+// 用法：node tools/kc-processing.mjs [--write] [--root <树>]。改类参数或资源表后重跑 --write，生成的配方行不手改。
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -142,9 +145,7 @@ const BOOTSTRAP_ORDER = ['item_smith_hammer', 'item_smith_tongs', 'item_mason_ch
 
 // ---------- 据点自然资源 ----------
 // 储量与再生由"资源类 × 据点栖地"派生，参数在 world/design/kc-site-ecology.json；栖地由地形（或 biomes.json 群落标签）派生。
-const ECOLOGY = JSON.parse(fs.readFileSync(P('world/design/kc-site-ecology.json'), 'utf8'));
-// 数据更正：矿道口、矿支里写成"铁砂"的资源，物品误登为铁边料（制成品）；含铁矿石的产地就是这处矿道口。
-const RESOURCE_FIXES = {adit_ore: 'item_iron_ore', ll_ore: 'item_iron_ore'};
+const SITE_ECOLOGY = JSON.parse(fs.readFileSync(P('world/design/kc-site-ecology.json'), 'utf8'));
 
 const ceil = (x, step = 1) => Math.ceil(x / step - 1e-9) * step;
 const kg = (items, id) => {const w = items.get(id)?.weight; if (!(w > 0)) throw Error(`缺重量 ${id}`); return w;};
@@ -160,7 +161,7 @@ function recipeBase(id, name, {skill, workstation, tools, minutes, process, kind
 export function generate(root = ROOT) {
   const R = rel => JSON.parse(fs.readFileSync(path.join(root, rel), 'utf8'));
   const itemsArr = R('world/meta/items.json').filter(i => !NEW_ITEMS.some(n => n.id === i.id));
-  const items = new Map([...itemsArr, ...NEW_ITEMS].map(i => [i.id, PRICE_FIXES[i.id] !== undefined ? {...i, basePrice: PRICE_FIXES[i.id]} : i]));
+  const items = new Map([...itemsArr, ...NEW_ITEMS].map(i => [i.id, i]));
   const authored = R('world/meta/recipes.json').filter(r => !r.id.startsWith('recipe_kc_'));
   const out = [];
   const covered = (input, product) => authored.some(r => r.output.item === product && r.materials.some(m => m.item === input));
@@ -227,25 +228,39 @@ export function generate(root = ROOT) {
       out.push(r);
     }
   }
-  // 价格底线：作者没写配方、只由本类配方造出的东西，基准价不低于它最省那条配方的材料价（世界校验"配方售价不低于材料"的同一条规律）
-  const authoredOut = new Set(authored.flatMap(r => [r.output.item, ...(r.byproducts ?? []).map(b => b.item)]));
+  return {items: [...NEW_ITEMS], recipes: out, authored, priceFloor: priceFloor([...authored, ...out], items)};
+}
+const GRADE_PAGES = {'初级': 1, '中级': 2, '高级': 3, '特级': 4, '终极': 5};
+
+// 价格底线：作者没写配方、只由本类配方造出的东西，基准价不低于它最省那条配方的材料价（世界校验"配方售价不低于材料"的同一条规律）。
+// 本类配方带 processing（加工类）；抄书（copy）的产物是书，书价由作者定。返回 {物品: 底线价}，只列高于现价的。
+export function priceFloor(recipes, items) {
+  const authoredOut = new Set(recipes.filter(r => !r.processing).flatMap(r => [r.output.item, ...(r.byproducts ?? []).map(b => b.item)]));
   const floor = {};
-  for (const r of out) {
-    if (authoredOut.has(r.output.item) || r.processing === 'copy') continue;
+  for (const r of recipes) {
+    if (!r.processing || authoredOut.has(r.output.item) || r.processing === 'copy') continue;
     const cost = r.materials.reduce((n, m) => n + items.get(m.item).basePrice * m.amount, 0), need = Math.ceil(cost / r.output.quantity);
     floor[r.output.item] = Math.min(floor[r.output.item] ?? Infinity, need);
   }
-  const priceFloor = Object.fromEntries(Object.entries(floor).filter(([id, p]) => p > items.get(id).basePrice));
-  return {items: [...NEW_ITEMS], recipes: out, authored, priceFloor};
+  return Object.fromEntries(Object.entries(floor).filter(([id, p]) => p > items.get(id).basePrice));
 }
-const PRICE_FIXES = {item_parchment: 4};
-const GRADE_PAGES = {'初级': 1, '中级': 2, '高级': 3, '特级': 4, '终极': 5};
+// 初加工是常识手艺：初加工类成员（原料 → 产物）的作者配方，没有任何师傅的，不要求拜师（原先学不到也做不了）。
+const MEMBER_PAIRS = PROCESSES.flatMap(p => p.members);
+export const teacherlessPrimary = r => !r.processing && !r.teachers?.length && MEMBER_PAIRS.some(([i, o]) => r.output?.item === o && r.materials?.some(m => m.item === i));
 
-// 选矿冶炼原先要锻锤和铁钳，而锻锤又要铁料：链没有起点。冶炼本身是炉内还原，锻锤在后道工序（分料、锻制）里用。
-const AUTHORED_FIXES = {recipe_smelt_iron: r => ({...r, tools: []})};
-// 初加工类成员里作者原写、却没有任何师傅的配方（筛磨燕麦粉、纺毛线、树胶烟墨）：同一条"初加工是常识手艺"的规律，不要求拜师（原先学不到也做不了）。
+// 本链对运行时世界的规律（tools/load-world.mjs 加载期调用；就地改加载出的行，盘上的已审行不动）。
+// 重复施加结果不变：再生规划幂等，拜师与价格底线只取一次。ecology 缺省（这一版世界没有据点资源表）时不派生据点。
+export function applyChainLaws({locations, recipes, items}, {ecology, biomes = {}} = {}) {
+  if (ecology) {
+    const plan = regrowPlan(locations, recipes, null, biomes, ecology);
+    locations.forEach((l, i) => {if (l.site) l.site = plan.locations[i].site;});
+  }
+  for (const r of recipes) if (teacherlessPrimary(r)) r.learningRequired = false;
+  const byId = new Map(items.map(i => [i.id, i]));
+  for (const [id, price] of Object.entries(priceFloor(recipes, byId))) byId.get(id).basePrice = price;
+}
 
-export function habitatsOf(location, biomes = {}) {
+export function habitatsOf(location, biomes = {}, ECOLOGY = SITE_ECOLOGY) {
   if (ECOLOGY.siteHabitats?.[location.id]) return ECOLOGY.habitatOrder.filter(h => ECOLOGY.siteHabitats[location.id].includes(h));
   const tags = biomes[location.id]?.biome ?? [];
   const fromBiome = tags.flatMap(t => ECOLOGY.biomeHabitats[t] ?? []);
@@ -253,13 +268,13 @@ export function habitatsOf(location, biomes = {}) {
   return ECOLOGY.habitatOrder.filter(h => hs.has(h));
 }
 // 某资源在某据点的参数：资源本身就是产地（'*'）优先，否则按栖地次序取第一个长这类东西的栖地；都不长就是遗留物，返回 null。
-export function ecologyFor(item, habitats) {
+export function ecologyFor(item, habitats, ECOLOGY = SITE_ECOLOGY) {
   const row = ECOLOGY.resources[item];
   if (!row) return undefined;
   const hit = row['*'] ?? habitats.map(h => row[h]).find(Boolean);
   return hit ? {reserve: hit[0], quantity: hit[1], everyDays: hit[2]} : null;
 }
-export function regrowPlan(locations, recipesAll, items, biomes = {}) {
+export function regrowPlan(locations, recipesAll, items, biomes = {}, ECOLOGY = SITE_ECOLOGY) {
   const made = new Set(recipesAll.flatMap(r => [r.output.item, ...(r.byproducts ?? []).map(b => b.item)]));
   const removed = [], added = [], resized = [];
   const next = structuredClone(locations);
@@ -267,8 +282,7 @@ export function regrowPlan(locations, recipesAll, items, biomes = {}) {
     if (!l.site) continue;
     const hadResources = l.site.resources !== undefined;
     l.site.resources ??= [];
-    const habitats = habitatsOf(l, biomes);
-    for (const r of l.site.resources) if (RESOURCE_FIXES[r.id]) r.item = RESOURCE_FIXES[r.id];
+    const habitats = habitatsOf(l, biomes, ECOLOGY);
     const had = l.site.changes !== undefined;
     let changes = [...(l.site.changes ?? [])];
     const res = new Map(l.site.resources.map(r => [r.id, r]));
@@ -282,13 +296,13 @@ export function regrowPlan(locations, recipesAll, items, biomes = {}) {
     // 本栖地的自然资源：每个据点按它的栖地补上该栖地原生的东西（已有同物品的不重复补）
     const short = l.id.replace(/^(site_w5_|site_|loc_wild_|loc_)/, '');
     for (const h of habitats) for (const n of ECOLOGY.native?.[h] ?? []) {
-      if (l.site.resources.some(r => r.item === n.item) || !ecologyFor(n.item, habitats)) continue;
+      if (l.site.resources.some(r => r.item === n.item) || !ecologyFor(n.item, habitats, ECOLOGY)) continue;
       const row = {id: `${short}_native_${n.item.replace(/^item_/, '')}`, name: n.name, item: n.item, quantity: 1, minutes: n.minutes};
       l.site.resources.push(row); res.set(row.id, row); added.push({location: l.id, resource: row.id, item: n.item, native: h});
     }
     // 资源表里的自然物：按栖地定储量与再生；栖地不长的是遗留物，不再生
     for (const r of l.site.resources) {
-      const eco = ecologyFor(r.item, habitats);
+      const eco = ecologyFor(r.item, habitats, ECOLOGY);
       if (eco === undefined) continue;
       const at = changes.findIndex(c => c.kind === 'regrow' && c.resource === r.id);
       // 持续采集资源：储量与季节密度另有产量表，只补缺的再生登记，上限取原储量
@@ -341,18 +355,13 @@ function writeTable(rel, isGenerated, fix, generated) {
 const isMain = path.resolve(process.argv[1] ?? '') === path.resolve(import.meta.filename);
 if (isMain) {
   const g = generate();
-  const fixAuthored = r => AUTHORED_FIXES[r.id] ? AUTHORED_FIXES[r.id](r) : r;
-  const memberPairs = PROCESSES.flatMap(p => p.members);
-  const primaryAuthored = new Set(g.authored.filter(r => !r.teachers?.length && memberPairs.some(([i, o]) => r.output.item === o && r.materials.some(m => m.item === i))).map(r => r.id));
-  const fixRecipe = r => {const x = fixAuthored(r); return primaryAuthored.has(r.id) ? {...x, learningRequired: false} : x;};
-  const all = [...g.authored.map(fixRecipe), ...g.recipes];
-  const plan = regrowPlan(readJSON('world/geo/locations.json'), all, new Map([...readJSON('world/meta/items.json'), ...g.items].map(i => [i.id, i])), readJSON('world/geo/biomes.json').locations ?? {});
-  console.log(JSON.stringify({recipes: g.recipes.length, byKind: g.recipes.reduce((m, r) => (m[r.processing] = (m[r.processing] ?? 0) + 1, m), {}), primaryAuthored: [...primaryAuthored], priceFloor: g.priceFloor, regrowRemoved: plan.removed, regrowAdded: plan.added, resized: plan.resized}, null, 1));
+  const all = [...g.authored, ...g.recipes];
+  // 下面几项是运行时规律（applyChainLaws）在当前数据上的作用，只打印供核对，不写回作者行
+  const plan = regrowPlan(readJSON('world/geo/locations.json'), all, null, readJSON('world/geo/biomes.json').locations ?? {});
+  console.log(JSON.stringify({recipes: g.recipes.length, byKind: g.recipes.reduce((m, r) => (m[r.processing] = (m[r.processing] ?? 0) + 1, m), {}), primaryAuthored: g.authored.filter(teacherlessPrimary).map(r => r.id), priceFloor: g.priceFloor, regrowRemoved: plan.removed, regrowAdded: plan.added, resized: plan.resized}, null, 1));
   if (WRITE) {
-    writeTable('world/meta/recipes.json', r => r.id.startsWith('recipe_kc_'), fixRecipe, g.recipes);
-    writeTable('world/meta/items.json', r => NEW_ITEMS.some(n => n.id === r.id), r => PRICE_FIXES[r.id] !== undefined ? {...r, basePrice: PRICE_FIXES[r.id]} : g.priceFloor[r.id] !== undefined ? {...r, basePrice: g.priceFloor[r.id]} : r, g.items);
-    const lt = fs.readFileSync(P('world/geo/locations.json'), 'utf8'), leol = lt.includes('\r\n') ? '\r\n' : '\n';
-    fs.writeFileSync(P('world/geo/locations.json'), (JSON.stringify(plan.locations, null, 2) + '\n').replace(/\n/g, leol));
+    writeTable('world/meta/recipes.json', r => r.id.startsWith('recipe_kc_'), r => r, g.recipes);
+    writeTable('world/meta/items.json', r => NEW_ITEMS.some(n => n.id === r.id), r => r, g.items);
     console.log('written');
   }
 }

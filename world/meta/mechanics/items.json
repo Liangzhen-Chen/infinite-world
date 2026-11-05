@@ -1,0 +1,146 @@
+{
+ "item_wood": {
+  "tags": [
+   "fuel",
+   "timber"
+  ]
+ },
+ "item_herb": {
+  "tags": [
+   "herb",
+   "medicine"
+  ]
+ },
+ "item_salt": {
+  "tags": [
+   "salt"
+  ]
+ },
+ "item_milk": {
+  "animalProduct": {
+   "from": "lactation",
+   "when": {
+    "taxon": "cattle"
+   }
+  }
+ },
+ "item_wool": {
+  "animalProduct": {
+   "from": "coat",
+   "when": {
+    "coat": "wool"
+   }
+  }
+ },
+ "item_rawhide": {
+  "animalProduct": {
+   "from": "carcass",
+   "part": "hide"
+  }
+ },
+ "item_pearl_barley": {
+  "tags": [
+   "grain"
+  ]
+ },
+ "item_dry_peas": {
+  "tags": [
+   "legume"
+  ]
+ },
+ "item_hen_egg": {
+  "tags": [
+   "egg"
+  ],
+  "animalProduct": {
+   "from": "laying",
+   "when": {
+    "taxon": "chicken"
+   }
+  }
+ },
+ "item_rye_flour": {
+  "tags": [
+   "grain"
+  ]
+ },
+ "item_pine_board": {
+  "tags": [
+   "timber"
+  ]
+ },
+ "item_willow_rod": {
+  "tags": [
+   "timber"
+  ]
+ },
+ "item_wheat_grain": {
+  "tags": [
+   "grain"
+  ]
+ },
+ "item_broad_bean": {
+  "tags": [
+   "legume"
+  ]
+ },
+ "item_lentil": {
+  "tags": [
+   "legume"
+  ]
+ },
+ "item_mutton": {
+  "tags": [
+   "meat"
+  ],
+  "animalProduct": {
+   "from": "carcass",
+   "part": "meat",
+   "when": {
+    "taxon": [
+     "goat",
+     "sheep"
+    ]
+   }
+  }
+ },
+ "item_horsehair_bundle": {
+  "animalProduct": {
+   "from": "coat",
+   "when": {
+    "coat": "hair",
+    "taxon": "horse"
+   }
+  }
+ },
+ "item_fishing_bait": {
+  "tags": [
+   "bait"
+  ]
+ },
+ "item_goat_milk": {
+  "animalProduct": {
+   "from": "lactation",
+   "when": {
+    "taxon": "goat"
+   }
+  }
+ },
+ "item_raw_goat_hair": {
+  "animalProduct": {
+   "from": "coat",
+   "when": {
+    "coat": "hair",
+    "taxon": "goat"
+   }
+  }
+ },
+ "item_pheasant_egg": {
+  "animalProduct": {
+   "from": "laying",
+   "when": {
+    "taxon": "pheasant"
+   }
+  }
+ }
+}

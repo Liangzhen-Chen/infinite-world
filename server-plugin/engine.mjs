@@ -93,6 +93,7 @@ import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {materializeWorkstations}from'./workstation-services.mjs';
 import {deriveItemAttributes}from'./item-class.mjs';
+import {materializeRuntimeWorld}from'./runtime-world.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceRegistry,advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
@@ -244,6 +245,8 @@ export class WorldEngine {
         this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
+        // A1: a reviewed world (tools/load-world loadWorld) gains its mechanism annotations and the laws on reviewed rows; idempotent.
+        materializeRuntimeWorld(world);
         materializeWorkstations(world);
         // K4: food nutrition and raw/cooked state are derived from recipes before any consumer reads them.
         deriveItemAttributes(world);

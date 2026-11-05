@@ -33,12 +33,16 @@ import {validateMilitary}from'../server-plugin/military.mjs';
 import {validateWarDiplomacy}from'../server-plugin/war-diplomacy.mjs';
 import {validateNormBindings}from'../server-plugin/norm-stack.mjs';
 import {materializeWorkstations}from'../server-plugin/workstation-services.mjs';
+import {materializeRuntimeWorld}from'../server-plugin/runtime-world.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
 const categories=['npcs','residents','locations','items','professions','skills','spells','recipes','monsters','bosses',...worldLoreCategories,...socialCategories,'regions'];
 export function validateWorld(world,{stage='engine'}={}){
     if(!['engine','release','rules','final'].includes(stage))throw new Error(`未知构建阶段：${stage}`);
+    // A1: a reviewed world (with world.mechanics) is checked as the runtime world
+    // it becomes, on a copy: the caller's reviewed rows stay as approved.
+    if(world.mechanics)world=materializeRuntimeWorld(structuredClone(world));
     materializeWorkstations(world);
     const errors=[],warnings=[];
     if(!validate(world))for(const row of validate.errors)errors.push(`schema${row.instancePath}: ${row.message}`);

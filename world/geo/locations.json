@@ -51,6 +51,15 @@
       420,
       1350
     ],
+    "workstations": [
+      {
+        "id": "station_hw_kitchen",
+        "kind": "cooking",
+        "owner": "npc_hw_linsui",
+        "fee": 3,
+        "access": "public"
+      }
+    ],
     "features": [
       {
         "id": "feature_hw_kitchen_bucket",
@@ -109,13 +118,6 @@
         "rumor": "rumor_w5_1_02",
         "label": "酒馆闲谈"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth",
-        "id": "station_hw_kitchen",
-        "fee": 3
-      }
     ]
   },
   {
@@ -132,6 +134,15 @@
     "openHours": [
       420,
       1350
+    ],
+    "workstations": [
+      {
+        "id": "station_hw_mill_bench",
+        "kind": "woodworking",
+        "owner": "loc_hw",
+        "fee": 2,
+        "access": "public"
+      }
     ],
     "mapHierarchy": [
       {
@@ -151,14 +162,7 @@
         "name": "河湾村"
       }
     ],
-    "owner": "loc_hw",
-    "fixtures": [
-      {
-        "fixture": "workbench",
-        "id": "station_hw_mill_bench",
-        "fee": 2
-      }
-    ]
+    "owner": "loc_hw"
   },
   {
     "id": "bld_hw_council",
@@ -191,11 +195,6 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -236,12 +235,7 @@
       "host": "npc_hw_xuling",
       "kind": "空屋",
       "rooms": 1
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_hw_forge",
@@ -257,6 +251,15 @@
     "openHours": [
       420,
       1350
+    ],
+    "workstations": [
+      {
+        "id": "station_hw_anvil",
+        "kind": "smithing",
+        "owner": "npc_hw_duanyan",
+        "fee": 4,
+        "access": "public"
+      }
     ],
     "mapHierarchy": [
       {
@@ -315,16 +318,6 @@
         "unattendedFire": {
           "responsible": "npc_hw_duanyan"
         }
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "forge",
-        "id": "station_hw_anvil",
-        "fee": 4
-      },
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -420,20 +413,6 @@
           },
           "calibration": "pending",
           "source": "D14 分种；库存和工时沿用 nw_herb，calibrate-pending"
-        },
-        {
-          "id": "hw_northwood_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "hw_northwood_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "changes": [
@@ -456,30 +435,6 @@
           "max": 20,
           "calibration": "pending",
           "source": "D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"
-        },
-        {
-          "id": "nw_herb_regrow",
-          "kind": "regrow",
-          "resource": "nw_herb",
-          "quantity": 3,
-          "everyDays": 7,
-          "max": 20
-        },
-        {
-          "id": "hw_northwood_native_wood_regrow",
-          "kind": "regrow",
-          "resource": "hw_northwood_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "hw_northwood_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "hw_northwood_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
         }
       ],
       "truths": []
@@ -516,11 +471,6 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -700,11 +650,6 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -787,6 +732,15 @@
       420,
       1350
     ],
+    "workstations": [
+      {
+        "id": "station_hw_loom_table",
+        "kind": "weaving",
+        "owner": "npc_hw_sulan",
+        "fee": 2,
+        "access": "public"
+      }
+    ],
     "mapHierarchy": [
       {
         "id": "known-continent",
@@ -803,16 +757,6 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "loom",
-        "id": "station_hw_loom_table",
-        "fee": 2
-      },
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -906,39 +850,22 @@
       0,
       1440
     ],
-    "description": "白石镇口连接官道和六条街区。公共小窑工作台仍在镇口，陶作屋可询问工序；白石归途殿仍在东门附近，登记条件沿用原规则。",
-    "fixtures": [
+    "workstations": [
       {
-        "fixture": "kiln",
         "id": "station_bs_small_kiln",
-        "fee": 5
+        "kind": "pottery",
+        "owner": "loc_bs",
+        "fee": 5,
+        "access": "public"
       }
-    ]
+    ],
+    "description": "白石镇口连接官道和六条街区。公共小窑工作台仍在镇口，陶作屋可询问工序；白石归途殿仍在东门附近，登记条件沿用原规则。"
   },
   {
     "id": "bld_hw_school",
     "name": "小学堂",
     "site": {
-      "manager": "npc_hw_luqing",
-      "resources": [
-        {
-          "id": "bld_hw_school_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
-        }
-      ],
-      "changes": [
-        {
-          "id": "bld_hw_school_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "bld_hw_school_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        }
-      ]
+      "manager": "npc_hw_luqing"
     },
     "coordinates": [
       0.4,
@@ -1281,12 +1208,7 @@
         "careProcess": "food"
       }
     ],
-    "owner": "loc_hw",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "owner": "loc_hw"
   },
   {
     "id": "loc_hw_apiary",
@@ -1319,11 +1241,6 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -1370,12 +1287,7 @@
       "owner": "faction_bs_government",
       "settlement": "loc_hw",
       "source": "K10b public postal building maintenance delegation"
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_beilin_tower",
@@ -1583,7 +1495,7 @@
           "id": "cr_stone",
           "name": "岭上的红褐砾石",
           "item": "item_stone",
-          "quantity": 30,
+          "quantity": 5,
           "minutes": 15
         }
       ],
@@ -1620,9 +1532,9 @@
           "id": "cr_regrow",
           "kind": "regrow",
           "resource": "cr_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "quantity": 2,
+          "everyDays": 20,
+          "max": 5
         }
       ]
     }
@@ -1696,7 +1608,7 @@
           "id": "rh_herb",
           "name": "潭边的药草",
           "item": "item_herb",
-          "quantity": 30,
+          "quantity": 3,
           "minutes": 20
         },
         {
@@ -1708,20 +1620,6 @@
           "requires": [
             "rh_trough"
           ]
-        },
-        {
-          "id": "root_hollow_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "root_hollow_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -1757,25 +1655,9 @@
           "id": "rh_regrow",
           "kind": "regrow",
           "resource": "rh_herb",
-          "quantity": 3,
-          "everyDays": 7,
-          "max": 30
-        },
-        {
-          "id": "root_hollow_native_wood_regrow",
-          "kind": "regrow",
-          "resource": "root_hollow_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "root_hollow_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "root_hollow_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
+          "quantity": 1,
+          "everyDays": 20,
+          "max": 3
         }
       ]
     }
@@ -1862,7 +1744,7 @@
           "id": "bs_stone",
           "name": "剥落的玄岩片",
           "item": "item_stone",
-          "quantity": 30,
+          "quantity": 4,
           "minutes": 15
         }
       ],
@@ -1900,14 +1782,6 @@
           "kind": "rearm",
           "mechanism": "bs_steps",
           "everyDays": 30
-        },
-        {
-          "id": "bs_stone_regrow",
-          "kind": "regrow",
-          "resource": "bs_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
         }
       ]
     }
@@ -1987,7 +1861,7 @@
           "id": "sr_salt",
           "name": "盐坑底的盐壳",
           "item": "item_salt",
-          "quantity": 150,
+          "quantity": 4,
           "minutes": 25,
           "requires": [
             "sr_pits"
@@ -1997,14 +1871,7 @@
           "id": "sr_reeds",
           "name": "坑边的干苇",
           "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "salt_reeds_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
+          "quantity": 3,
           "minutes": 15
         }
       ],
@@ -2041,25 +1908,9 @@
           "id": "sr_regrow",
           "kind": "regrow",
           "resource": "sr_salt",
-          "quantity": 15,
-          "everyDays": 3,
-          "max": 150
-        },
-        {
-          "id": "sr_reeds_regrow",
-          "kind": "regrow",
-          "resource": "sr_reeds",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "salt_reeds_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "salt_reeds_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 4
         }
       ]
     },
@@ -2159,7 +2010,7 @@
           "id": "gd_grass",
           "name": "背风坡的干草茎",
           "item": "item_reed_bundle",
-          "quantity": 15,
+          "quantity": 2,
           "minutes": 20
         },
         {
@@ -2204,14 +2055,6 @@
           "kind": "rearm",
           "mechanism": "gd_sand",
           "everyDays": 7
-        },
-        {
-          "id": "gd_grass_regrow",
-          "kind": "regrow",
-          "resource": "gd_grass",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 15
         }
       ]
     }
@@ -2297,13 +2140,6 @@
           "requires": [
             "sc_roots"
           ]
-        },
-        {
-          "id": "silt_canyon_native_reed_bundle",
-          "name": "背风处的干草茎",
-          "item": "item_reed_bundle",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -2342,14 +2178,6 @@
           "quantity": 1,
           "everyDays": 30,
           "max": 1
-        },
-        {
-          "id": "silt_canyon_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "silt_canyon_native_reed_bundle",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 15
         }
       ]
     }
@@ -2432,32 +2260,18 @@
           "id": "rb_bamboo",
           "name": "高枝上折断的竹节",
           "item": "item_reed_bundle",
-          "quantity": 60,
+          "quantity": 2,
           "minutes": 20
         },
         {
           "id": "rb_resin",
           "name": "老樟桩上的樟脂",
           "item": "item_resin",
-          "quantity": 15,
+          "quantity": 2,
           "minutes": 15,
           "requires": [
             "rb_stumps"
           ]
-        },
-        {
-          "id": "rainstone_basin_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
-        },
-        {
-          "id": "rainstone_basin_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -2493,33 +2307,9 @@
           "id": "rb_regrow",
           "kind": "regrow",
           "resource": "rb_bamboo",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "rb_resin_regrow",
-          "kind": "regrow",
-          "resource": "rb_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        },
-        {
-          "id": "rainstone_basin_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "rainstone_basin_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
-        },
-        {
-          "id": "rainstone_basin_native_wood_regrow",
-          "kind": "regrow",
-          "resource": "rainstone_basin_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
+          "quantity": 1,
+          "everyDays": 20,
+          "max": 2
         }
       ]
     },
@@ -2626,21 +2416,7 @@
           "id": "pi_sedge",
           "name": "莎草根",
           "item": "item_herb",
-          "quantity": 30,
-          "minutes": 15
-        },
-        {
-          "id": "peat_islets_native_reed_bundle",
-          "name": "水边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "peat_islets_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
+          "quantity": 2,
           "minutes": 15
         }
       ],
@@ -2677,25 +2453,9 @@
           "id": "pi_regrow",
           "kind": "regrow",
           "resource": "pi_sedge",
-          "quantity": 3,
-          "everyDays": 7,
-          "max": 30
-        },
-        {
-          "id": "peat_islets_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "peat_islets_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "peat_islets_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "peat_islets_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
+          "quantity": 1,
+          "everyDays": 15,
+          "max": 2
         }
       ]
     }
@@ -2790,20 +2550,6 @@
           "mechanisms": [
             "wc_brush"
           ]
-        },
-        {
-          "id": "white_canopy_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "white_canopy_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -2840,22 +2586,6 @@
           "kind": "rearm",
           "mechanism": "wc_brush",
           "everyDays": 30
-        },
-        {
-          "id": "white_canopy_native_wood_regrow",
-          "kind": "regrow",
-          "resource": "white_canopy_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "white_canopy_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "white_canopy_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
         }
       ]
     },
@@ -2992,7 +2722,7 @@
           "id": "ie_ice",
           "name": "窄缝里凿下的冰块",
           "item": "item_water",
-          "quantity": 20,
+          "quantity": 1,
           "minutes": 20,
           "mechanisms": [
             "ie_fall"
@@ -3033,14 +2763,6 @@
           "kind": "rearm",
           "mechanism": "ie_melt",
           "everyDays": 3
-        },
-        {
-          "id": "ie_ice_regrow",
-          "kind": "regrow",
-          "resource": "ie_ice",
-          "quantity": 4,
-          "everyDays": 3,
-          "max": 20
         }
       ]
     },
@@ -3145,13 +2867,6 @@
           "mechanisms": [
             "rf_fold"
           ]
-        },
-        {
-          "id": "red_fold_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -3190,14 +2905,6 @@
           "quantity": 1,
           "everyDays": 30,
           "max": 3
-        },
-        {
-          "id": "red_fold_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "red_fold_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
         }
       ]
     }
@@ -3273,20 +2980,6 @@
           "item": "item_quill_set",
           "quantity": 1,
           "minutes": 20
-        },
-        {
-          "id": "moon_cliffs_native_water",
-          "name": "背阴处的积雪",
-          "item": "item_water",
-          "quantity": 20,
-          "minutes": 10
-        },
-        {
-          "id": "moon_cliffs_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -3325,22 +3018,6 @@
           "quantity": 1,
           "everyDays": 30,
           "max": 1
-        },
-        {
-          "id": "moon_cliffs_native_water_regrow",
-          "kind": "regrow",
-          "resource": "moon_cliffs_native_water",
-          "quantity": 4,
-          "everyDays": 3,
-          "max": 20
-        },
-        {
-          "id": "moon_cliffs_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "moon_cliffs_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
         }
       ]
     }
@@ -3421,15 +3098,8 @@
           "id": "cf_moss",
           "name": "浅坑里的苔草",
           "item": "item_herb",
-          "quantity": 10,
+          "quantity": 2,
           "minutes": 20
-        },
-        {
-          "id": "crown_firn_native_water",
-          "name": "背阴处的积雪",
-          "item": "item_water",
-          "quantity": 20,
-          "minutes": 10
         }
       ],
       "truths": [
@@ -3466,16 +3136,8 @@
           "kind": "regrow",
           "resource": "cf_moss",
           "quantity": 1,
-          "everyDays": 15,
-          "max": 10
-        },
-        {
-          "id": "crown_firn_native_water_regrow",
-          "kind": "regrow",
-          "resource": "crown_firn_native_water",
-          "quantity": 4,
-          "everyDays": 3,
-          "max": 20
+          "everyDays": 20,
+          "max": 2
         }
       ]
     }
@@ -3562,7 +3224,7 @@
           "id": "ds_snow",
           "name": "低处的干净细雪",
           "item": "item_water",
-          "quantity": 20,
+          "quantity": 1,
           "minutes": 15
         }
       ],
@@ -3599,9 +3261,9 @@
           "id": "ds_regrow",
           "kind": "regrow",
           "resource": "ds_snow",
-          "quantity": 4,
-          "everyDays": 3,
-          "max": 20
+          "quantity": 1,
+          "everyDays": 10,
+          "max": 1
         }
       ]
     }
@@ -3662,11 +3324,6 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -3723,11 +3380,6 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -3787,11 +3439,6 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -3849,11 +3496,6 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -3913,11 +3555,6 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -3975,11 +3612,6 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -4039,11 +3671,6 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -4101,11 +3728,6 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -4366,11 +3988,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -4641,11 +4258,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -4713,11 +4325,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -4787,11 +4394,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -4859,11 +4461,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -4933,11 +4530,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -5005,11 +4597,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -5079,11 +4666,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -5151,11 +4733,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -5225,11 +4802,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -5297,11 +4869,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -5371,11 +4938,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -5443,11 +5005,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -5517,11 +5074,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -5589,11 +5141,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -5663,11 +5210,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -5735,11 +5277,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -5809,11 +5346,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -5881,11 +5413,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -5955,11 +5482,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -6028,11 +5550,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -6098,11 +5615,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -6170,11 +5682,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -6240,11 +5747,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -6312,11 +5814,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -6382,11 +5879,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -6454,11 +5946,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -6524,11 +6011,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -6596,11 +6078,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -6667,11 +6144,6 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -6737,11 +6209,6 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -6998,11 +6465,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "workbench"
-      }
     ]
   },
   {
@@ -7056,11 +6518,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -7284,11 +6741,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -7358,11 +6810,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -7434,11 +6881,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -7508,11 +6950,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -7584,11 +7021,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -7658,11 +7090,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -7734,11 +7161,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -7808,11 +7230,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -7884,11 +7301,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -7959,11 +7371,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -8031,11 +7438,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -8105,11 +7507,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -8177,11 +7574,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -8251,11 +7643,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -8323,11 +7710,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -8397,11 +7779,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -8469,11 +7846,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -8543,11 +7915,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -8615,11 +7982,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -8689,11 +8051,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -8761,11 +8118,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -8835,11 +8187,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -8907,11 +8254,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -8981,11 +8323,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -9053,11 +8390,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -9127,11 +8459,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -9199,11 +8526,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -9273,11 +8595,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -9346,11 +8663,6 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -9418,11 +8730,6 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -9684,11 +8991,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -9742,11 +9044,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "workbench"
       }
     ]
   },
@@ -9965,11 +9262,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -10039,11 +9331,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -10115,11 +9402,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -10189,11 +9471,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -10265,11 +9542,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -10340,11 +9612,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -10412,11 +9679,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -10486,11 +9748,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -10558,11 +9815,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -10632,11 +9884,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -10704,11 +9951,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -10778,11 +10020,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -10850,11 +10087,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -10924,11 +10156,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -10996,11 +10223,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -11070,11 +10292,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -11142,11 +10359,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -11216,11 +10428,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -11288,11 +10495,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -11362,11 +10564,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -11434,11 +10631,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -11508,11 +10700,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -11580,11 +10767,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -11654,11 +10836,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -11726,11 +10903,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -11800,11 +10972,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -11872,11 +11039,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -11946,11 +11108,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -12019,11 +11176,6 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -12091,11 +11243,6 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -12352,11 +11499,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "workbench"
-      }
     ]
   },
   {
@@ -12410,11 +11552,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -12638,11 +11775,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -12712,11 +11844,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -12788,11 +11915,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -12862,11 +11984,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -12938,11 +12055,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -13012,11 +12124,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -13088,11 +12195,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -13162,11 +12264,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -13238,11 +12335,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -13312,11 +12404,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -13388,11 +12475,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -13462,11 +12544,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -13538,11 +12615,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -13612,11 +12684,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -13688,11 +12755,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -13762,11 +12824,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -13838,11 +12895,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -13912,11 +12964,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -13988,11 +13035,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -14063,11 +13105,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -14135,11 +13172,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -14209,11 +13241,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -14281,11 +13308,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -14355,11 +13377,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -14427,11 +13444,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -14501,11 +13513,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -14573,11 +13580,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -14647,11 +13649,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -14720,11 +13717,6 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
     ]
   },
   {
@@ -14792,11 +13784,6 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "hearth"
       }
     ]
   },
@@ -15238,12 +14225,7 @@
       }
     ],
     "inventory": {},
-    "description": "南市麦饼铺用于食物售卖联络，可见柜台、烘饼间门帘。前厅可询价，内灶须店主同意。前厅接洽时间为每日6时至19时，打烊后另约。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "南市麦饼铺用于食物售卖联络，可见柜台、烘饼间门帘。前厅可询价，内灶须店主同意。前厅接洽时间为每日6时至19时，打烊后另约。"
   },
   {
     "id": "bld_bs_inn",
@@ -15299,12 +14281,7 @@
       }
     ],
     "inventory": {},
-    "description": "炉巷铁作坊用于金属修补联络，可见接件桌、旧工具架。先在接件桌说明用途，工位由匠人安排。前厅接洽时间为每日8时至18时，打烊后另约。",
-    "fixtures": [
-      {
-        "fixture": "forge"
-      }
-    ]
+    "description": "炉巷铁作坊用于金属修补联络，可见接件桌、旧工具架。先在接件桌说明用途，工位由匠人安排。前厅接洽时间为每日8时至18时，打烊后另约。"
   },
   {
     "id": "bld_bs_potter",
@@ -15360,12 +14337,7 @@
       }
     ],
     "inventory": {},
-    "description": "炉巷缝织屋用于布衣修补联络，可见接衣柜台、布样架。衣物按物主分包，不因挂在架上而可取。前厅接洽时间为每日8时至18时，打烊后另约。",
-    "fixtures": [
-      {
-        "fixture": "loom"
-      }
-    ]
+    "description": "炉巷缝织屋用于布衣修补联络，可见接衣柜台、布样架。衣物按物主分包，不因挂在架上而可取。前厅接洽时间为每日8时至18时，打烊后另约。"
   },
   {
     "id": "bld_bs_school",
@@ -15804,10 +14776,12 @@
         }
       }
     ],
-    "fixtures": [
+    "workstations": [
       {
-        "fixture": "pill_furnace",
         "id": "station_s2_pill_furnace",
+        "kind": "pill_furnace",
+        "owner": "npc_bs_078_1",
+        "access": "public",
         "fee": 4,
         "thermalRequirement": {
           "feature": "feature_s2_pill_furnace",
@@ -16167,12 +15141,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是严辙、贺绵、贺笙、贺砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是严辙、贺绵、贺笙、贺砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_002",
@@ -16212,12 +15181,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是顾澄、顾绵、顾笙、顾砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是顾澄、顾绵、顾笙、顾砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_003",
@@ -16257,12 +15221,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邵澄、邵绵、邵笙、邵砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是邵澄、邵绵、邵笙、邵砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_004",
@@ -16302,12 +15261,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是傅澄、傅绵、傅笙、傅砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是傅澄、傅绵、傅笙、傅砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_005",
@@ -16347,12 +15301,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是罗澄、罗绵、罗笙、罗砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是罗澄、罗绵、罗笙、罗砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_006",
@@ -16392,12 +15341,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是夏澄、夏绵、夏笙、夏砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是夏澄、夏绵、夏笙、夏砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_007",
@@ -16437,12 +15381,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是蔡澄、蔡绵、蔡笙、蔡砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是蔡澄、蔡绵、蔡笙、蔡砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_008",
@@ -16482,12 +15421,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是韩澄、韩绵、韩笙、韩砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是韩澄、韩绵、韩笙、韩砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_009",
@@ -16527,12 +15461,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是程澄、程绵、程笙、程砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是程澄、程绵、程笙、程砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_010",
@@ -16572,12 +15501,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是魏澄、魏绵、魏笙、魏砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是魏澄、魏绵、魏笙、魏砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_011",
@@ -16617,12 +15541,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是秦澄、秦绵、秦笙、秦砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是秦澄、秦绵、秦笙、秦砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_012",
@@ -16662,12 +15581,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是姚澄、姚绵、姚笙、姚砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是姚澄、姚绵、姚笙、姚砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_013",
@@ -16707,12 +15621,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是卢澄、卢绵、卢笙、卢砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是卢澄、卢绵、卢笙、卢砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_014",
@@ -16752,12 +15661,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是谭澄、谭绵、谭笙、谭砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是谭澄、谭绵、谭笙、谭砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_015",
@@ -16797,12 +15701,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是陆澄、陆绵、陆笙、陆砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是陆澄、陆绵、陆笙、陆砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_016",
@@ -16842,12 +15741,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是汪澄、汪绵、汪笙、汪砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是汪澄、汪绵、汪笙、汪砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_017",
@@ -16887,12 +15781,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邢澄、邢绵、邢笙、邢砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是邢澄、邢绵、邢笙、邢砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_018",
@@ -16932,12 +15821,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是钟澄、钟绵、钟笙、钟砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是钟澄、钟绵、钟笙、钟砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_019",
@@ -16977,12 +15861,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是侯澄、侯绵、侯笙、侯砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是侯澄、侯绵、侯笙、侯砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_020",
@@ -17022,12 +15901,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是薛澄、薛绵、薛笙、薛砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是薛澄、薛绵、薛笙、薛砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_021",
@@ -17067,12 +15941,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是石澄、石绵、石笙、石砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是石澄、石绵、石笙、石砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_022",
@@ -17112,12 +15981,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是熊澄、熊绵、熊笙、熊砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是熊澄、熊绵、熊笙、熊砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_023",
@@ -17157,12 +16021,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是乔澄、乔绵、乔笙、乔砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是乔澄、乔绵、乔笙、乔砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_024",
@@ -17202,12 +16061,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是戴澄、戴绵、戴笙、戴砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是戴澄、戴绵、戴笙、戴砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_025",
@@ -17247,12 +16101,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是彭澄、彭绵、彭笙、彭砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是彭澄、彭绵、彭笙、彭砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_026",
@@ -17292,12 +16141,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邓澄、邓绵、邓笙、邓砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是邓澄、邓绵、邓笙、邓砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_027",
@@ -17337,12 +16181,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是叶澄、叶绵、叶笙、叶砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是叶澄、叶绵、叶笙、叶砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_028",
@@ -17382,12 +16221,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邹澄、邹绵、邹笙、邹砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是邹澄、邹绵、邹笙、邹砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_029",
@@ -17427,12 +16261,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是郝澄、郝绵、郝笙、郝砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是郝澄、郝绵、郝笙、郝砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_030",
@@ -17472,12 +16301,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是任澄、任绵、任笙、任砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是任澄、任绵、任笙、任砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_031",
@@ -17517,12 +16341,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是姜澄、姜绵、姜笙、姜砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是姜澄、姜绵、姜笙、姜砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_032",
@@ -17562,12 +16381,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是潘澄、潘绵、潘笙、潘砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是潘澄、潘绵、潘笙、潘砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_033",
@@ -17607,12 +16421,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是余澄、余绵、余笙、余砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是余澄、余绵、余笙、余砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_034",
@@ -17652,12 +16461,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是杜澄、杜绵、杜笙、杜砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是杜澄、杜绵、杜笙、杜砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_035",
@@ -17697,12 +16501,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是钱澄、钱绵、钱笙、钱砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是钱澄、钱绵、钱笙、钱砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_036",
@@ -17742,12 +16541,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是蒋澄、蒋绵、蒋笙、蒋砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是蒋澄、蒋绵、蒋笙、蒋砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_037",
@@ -17786,12 +16580,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是丁澄、丁绵、丁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是丁澄、丁绵、丁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_038",
@@ -17830,12 +16619,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是沈澄、沈绵、沈笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是沈澄、沈绵、沈笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_039",
@@ -17874,12 +16658,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是孟澄、孟绵、孟笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是孟澄、孟绵、孟笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_040",
@@ -17918,12 +16697,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是田澄、田绵、田笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是田澄、田绵、田笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_041",
@@ -17962,12 +16736,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邱澄、邱绵、邱笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是邱澄、邱绵、邱笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_042",
@@ -18006,12 +16775,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是江澄、江绵、江笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是江澄、江绵、江笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_043",
@@ -18050,12 +16814,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是雷澄、雷绵、雷笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是雷澄、雷绵、雷笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_044",
@@ -18094,12 +16853,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是文澄、文绵、文笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是文澄、文绵、文笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_045",
@@ -18138,12 +16892,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是苏澄、苏绵、苏笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是苏澄、苏绵、苏笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_046",
@@ -18182,12 +16931,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是白澄、白绵、白笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是白澄、白绵、白笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_047",
@@ -18226,12 +16970,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是马澄、马绵、马笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是马澄、马绵、马笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_048",
@@ -18270,12 +17009,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是龚澄、龚绵、龚笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是龚澄、龚绵、龚笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_049",
@@ -18314,12 +17048,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是汤澄、汤绵、汤笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是汤澄、汤绵、汤笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_050",
@@ -18358,12 +17087,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是于澄、于绵、于笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是于澄、于绵、于笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_051",
@@ -18402,12 +17126,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是段澄、段绵、段笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是段澄、段绵、段笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_052",
@@ -18446,12 +17165,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是朱澄、朱绵、朱笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是朱澄、朱绵、朱笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_053",
@@ -18490,12 +17204,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是金澄、金绵、金笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是金澄、金绵、金笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_054",
@@ -18534,12 +17243,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是廖澄、廖绵、廖笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是廖澄、廖绵、廖笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_055",
@@ -18578,12 +17282,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是康澄、康绵、康笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是康澄、康绵、康笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_056",
@@ -18622,12 +17321,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是毛澄、毛绵、毛笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是毛澄、毛绵、毛笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_057",
@@ -18666,12 +17360,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是洪澄、洪绵、洪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是洪澄、洪绵、洪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_058",
@@ -18710,12 +17399,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是袁澄、袁绵、袁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是袁澄、袁绵、袁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_059",
@@ -18754,12 +17438,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是尹澄、尹绵、尹笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是尹澄、尹绵、尹笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_060",
@@ -18798,12 +17477,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是赖澄、赖绵、赖笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是赖澄、赖绵、赖笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_061",
@@ -18842,12 +17516,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是阎澄、阎绵、阎笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是阎澄、阎绵、阎笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_062",
@@ -18886,12 +17555,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是陶澄、陶绵、陶笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是陶澄、陶绵、陶笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_063",
@@ -18930,12 +17594,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邝澄、邝绵、邝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是邝澄、邝绵、邝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_064",
@@ -18974,12 +17633,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是崔澄、崔绵、崔笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是崔澄、崔绵、崔笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_065",
@@ -19018,12 +17672,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是武澄、武绵、武笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是武澄、武绵、武笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_066",
@@ -19062,12 +17711,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是费澄、费绵、费笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是费澄、费绵、费笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_067",
@@ -19106,12 +17750,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是高澄、高绵、高笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是高澄、高绵、高笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_068",
@@ -19150,12 +17789,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是郭澄、郭绵、郭笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是郭澄、郭绵、郭笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_069",
@@ -19194,12 +17828,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是翁澄、翁绵、翁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是翁澄、翁绵、翁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_070",
@@ -19238,12 +17867,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是柳澄、柳绵、柳笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是柳澄、柳绵、柳笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_071",
@@ -19282,12 +17906,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是纪澄、纪绵、纪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是纪澄、纪绵、纪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_072",
@@ -19326,12 +17945,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是滕澄、滕绵、滕笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是滕澄、滕绵、滕笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_073",
@@ -19370,12 +17984,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是梅澄、梅绵、梅笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是梅澄、梅绵、梅笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_074",
@@ -19414,12 +18023,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是柯澄、柯绵、柯笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是柯澄、柯绵、柯笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_075",
@@ -19458,12 +18062,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是鲍澄、鲍绵、鲍笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是鲍澄、鲍绵、鲍笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_076",
@@ -19502,12 +18101,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是季澄、季绵、季笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是季澄、季绵、季笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_077",
@@ -19546,12 +18140,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是裴澄、裴绵、裴笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是裴澄、裴绵、裴笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_078",
@@ -19590,12 +18179,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是舒澄、舒绵、舒笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是舒澄、舒绵、舒笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_079",
@@ -19634,12 +18218,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是曲澄、曲绵、曲笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是曲澄、曲绵、曲笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_080",
@@ -19678,12 +18257,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是苗澄、苗绵、苗笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是苗澄、苗绵、苗笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_081",
@@ -19722,12 +18296,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是倪澄、倪绵、倪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是倪澄、倪绵、倪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_082",
@@ -19766,12 +18335,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是闵澄、闵绵、闵笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是闵澄、闵绵、闵笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_083",
@@ -19810,12 +18374,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是祝澄、祝绵、祝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是祝澄、祝绵、祝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_084",
@@ -19854,12 +18413,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是童澄、童绵、童笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是童澄、童绵、童笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_085",
@@ -19898,12 +18452,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是包澄、包绵、包笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是包澄、包绵、包笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_086",
@@ -19942,12 +18491,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是司澄、司绵、司笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是司澄、司绵、司笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_087",
@@ -19986,12 +18530,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是蓝澄、蓝绵、蓝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是蓝澄、蓝绵、蓝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_088",
@@ -20030,12 +18569,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是蒲澄、蒲绵、蒲笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是蒲澄、蒲绵、蒲笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_089",
@@ -20074,12 +18608,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是莫澄、莫绵、莫笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是莫澄、莫绵、莫笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_home_090",
@@ -20118,12 +18647,7 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是艾澄、艾绵、艾笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    "description": "这处私宅是艾澄、艾绵、艾笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
   },
   {
     "id": "bld_bs_reed_dao",
@@ -21169,25 +19693,18 @@
           "id": "yp_branches",
           "name": "林缘的枯榆枝",
           "item": "item_wood",
-          "quantity": 40,
+          "quantity": 4,
           "minutes": 20
         },
         {
           "id": "yp_resin",
           "name": "火燎旧痕渗出的树脂",
           "item": "item_resin",
-          "quantity": 15,
+          "quantity": 2,
           "minutes": 15,
           "requires": [
             "yp_ring"
           ]
-        },
-        {
-          "id": "yp_north_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -21223,25 +19740,9 @@
           "id": "yp_regrow",
           "kind": "regrow",
           "resource": "yp_branches",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "yp_resin_regrow",
-          "kind": "regrow",
-          "resource": "yp_resin",
           "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        },
-        {
-          "id": "yp_north_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "yp_north_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "everyDays": 15,
+          "max": 4
         }
       ]
     },
@@ -21386,15 +19887,8 @@
           "id": "mist_reeds",
           "name": "冲上滩的干苇",
           "item": "item_reed_bundle",
-          "quantity": 60,
+          "quantity": 4,
           "minutes": 20
-        },
-        {
-          "id": "wt_mist_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -21430,17 +19924,9 @@
           "id": "mist_regrow",
           "kind": "regrow",
           "resource": "mist_reeds",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "wt_mist_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "wt_mist_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
+          "quantity": 2,
+          "everyDays": 20,
+          "max": 4
         }
       ]
     },
@@ -21570,8 +20056,8 @@
         {
           "id": "adit_ore",
           "name": "坑底散落的铁砂块",
-          "item": "item_iron_ore",
-          "quantity": 30,
+          "item": "item_iron_scrap",
+          "quantity": 5,
           "minutes": 20,
           "mechanisms": [
             "adit_seal"
@@ -21581,7 +20067,7 @@
           "id": "adit_stone",
           "name": "坑口码着的碎石料",
           "item": "item_stone",
-          "quantity": 30,
+          "quantity": 4,
           "minutes": 15
         }
       ],
@@ -21619,22 +20105,6 @@
           "kind": "rearm",
           "mechanism": "adit_seal",
           "everyDays": 30
-        },
-        {
-          "id": "adit_ore_regrow",
-          "kind": "regrow",
-          "resource": "adit_ore",
-          "quantity": 1,
-          "everyDays": 15,
-          "max": 30
-        },
-        {
-          "id": "adit_stone_regrow",
-          "kind": "regrow",
-          "resource": "adit_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
         }
       ]
     }
@@ -21764,15 +20234,8 @@
           "id": "barrow_shards",
           "name": "冷土里的碎陶片",
           "item": "item_clay",
-          "quantity": 40,
+          "quantity": 3,
           "minutes": 15
-        },
-        {
-          "id": "sb_barrow_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -21808,17 +20271,9 @@
           "id": "barrow_regrow",
           "kind": "regrow",
           "resource": "barrow_shards",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 40
-        },
-        {
-          "id": "sb_barrow_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "sb_barrow_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 3
         }
       ]
     }
@@ -21941,13 +20396,6 @@
           "requires": [
             "kiln_crack"
           ]
-        },
-        {
-          "id": "bs_kiln_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -21984,14 +20432,6 @@
           "kind": "rearm",
           "mechanism": "kiln_mouth",
           "everyDays": 20
-        },
-        {
-          "id": "bs_kiln_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "bs_kiln_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
         }
       ]
     },
@@ -22029,11 +20469,6 @@
           "fuelMg": 4000,
           "moistureMg": 0
         }
-      }
-    ],
-    "fixtures": [
-      {
-        "fixture": "kiln"
       }
     ]
   },
@@ -22206,12 +20641,7 @@
     "description": "共灶厅是炭阶地宫最大的洞室，正中一口大灶，灶火由炉祭钉缨看守，各共灶窟的成员轮流来这里分食。灶的一侧有一块被炭灰磨黑的平石，是窟主座，窟主烟砧夜里在这里见来人、谈交换。厅后有一条窄道通往旧窑膛，换季那夜亡者就送进那里。",
     "access": {
       "mode": "public"
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_ms_tj_fungus",
@@ -22313,12 +20743,7 @@
     "description": "铸补间挨着钉灶窟，是一间用旧窑膛改的小作坊，炉里烧的是废窑里扒出来的木炭。钉扣和钉锉在这里补镇边人家送来的破锅、敲直弯钉，补好的活计和小铁钉拿去换粮。窟主烟砧原本就是这里的铸补匠，夜里还常回来补锅。",
     "access": {
       "mode": "public"
-    },
-    "fixtures": [
-      {
-        "fixture": "forge"
-      }
-    ]
+    }
   },
   {
     "id": "site_ms_tj_yan",
@@ -22461,12 +20886,7 @@
         "npc_ms_tj_yanya",
         "npc_ms_tj_yandou"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_tj_home_02",
@@ -22507,12 +20927,7 @@
         "npc_ms_tj_dingcuo",
         "npc_ms_tj_dingli"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_tj_home_03",
@@ -22553,12 +20968,7 @@
         "npc_ms_tj_lipian",
         "npc_ms_tj_litiao"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_ms_tj_council",
@@ -22641,13 +21051,6 @@
           "item": "item_oats",
           "quantity": 37,
           "minutes": 5
-        },
-        {
-          "id": "ms_tj_store_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
         }
       ],
       "clues": [
@@ -22672,17 +21075,7 @@
           "difficulty": 15
         },
         "damage": 5
-      },
-      "changes": [
-        {
-          "id": "ms_tj_store_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "ms_tj_store_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        }
-      ]
+      }
     }
   },
   {
@@ -23098,12 +21491,7 @@
         "npc_ms_td_tailing",
         "npc_ms_td_taijian"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_td_home_02",
@@ -23144,12 +21532,7 @@
         "npc_ms_td_qingsui",
         "npc_ms_td_qingyuan"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_td_home_03",
@@ -23190,12 +21573,7 @@
         "npc_ms_td_lizhi",
         "npc_ms_td_limao"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_ms_td_council",
@@ -23271,15 +21649,7 @@
       ],
       "entryMechanisms": [],
       "mechanisms": [],
-      "resources": [
-        {
-          "id": "ms_td_trapcache_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
-        }
-      ],
+      "resources": [],
       "clues": [
         {
           "id": "td_trap_ropes",
@@ -23302,17 +21672,7 @@
           "difficulty": 20
         },
         "damage": 3
-      },
-      "changes": [
-        {
-          "id": "ms_td_trapcache_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "ms_td_trapcache_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        }
-      ]
+      }
     }
   },
   {
@@ -23782,12 +22142,7 @@
         "npc_ms_yg_jieqing",
         "npc_ms_yg_jieya"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_yg_home_02",
@@ -23828,12 +22183,7 @@
         "npc_ms_yg_xuhe",
         "npc_ms_yg_xumo"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_yg_home_03",
@@ -23873,12 +22223,7 @@
         "npc_ms_yg_gongni",
         "npc_ms_yg_gongtuan"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_ms_yg_council",
@@ -23961,13 +22306,6 @@
           "item": "item_hazelnut",
           "quantity": 24,
           "minutes": 5
-        },
-        {
-          "id": "ms_yg_store_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "clues": [
@@ -23992,17 +22330,7 @@
           "difficulty": 15
         },
         "damage": 3
-      },
-      "changes": [
-        {
-          "id": "ms_yg_store_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "ms_yg_store_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
-        }
-      ]
+      }
     }
   },
   {
@@ -24216,15 +22544,7 @@
     "description": "共炉是裂炉营正中一口石砌的大炉，各族的饭和铁都在这口炉上做。炉老牙烬日夜守着炉火，每天的首火由她点燃。营头牙钺白天在炉边见来人、收贡、派活。私占共炉首火是营里最重的忌讳，可首火向来只由兽人点，工匠们为此不服。",
     "access": {
       "mode": "public"
-    },
-    "fixtures": [
-      {
-        "fixture": "forge"
-      },
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_ms_ll_shop",
@@ -24470,12 +22790,7 @@
         "npc_ms_ll_yahang",
         "npc_ms_ll_yasun"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_ll_home_02",
@@ -24517,12 +22832,7 @@
         "npc_ms_ll_cuohui",
         "npc_ms_ll_cuosu"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_ll_home_03",
@@ -24561,12 +22871,7 @@
         "npc_ms_ll_panfu",
         "npc_ms_ll_panlei"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_ms_ll_council",
@@ -24649,13 +22954,6 @@
           "item": "item_ration",
           "quantity": 18,
           "minutes": 5
-        },
-        {
-          "id": "ms_ll_store_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "clues": [
@@ -24680,17 +22978,7 @@
           "difficulty": 20
         },
         "damage": 6
-      },
-      "changes": [
-        {
-          "id": "ms_ll_store_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "ms_ll_store_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
-        }
-      ]
+      }
     }
   },
   {
@@ -25768,12 +24056,7 @@
     "description": "灰棚候饭灶供收摊后歇脚，锅边摆着各棚自己带来的食物。兽人和哥布林各认自己的袋子，愿意分食才推到旁人面前。幼体由同棚成年者照看，不替陌生货主看摊。灶旁谈起炭阶的共灶分份，有人羡慕安稳，有人说自己认货签更踏实。",
     "access": {
       "mode": "public"
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_ms_gs_return",
@@ -26003,12 +24286,7 @@
         "npc_ms_hx_yixian",
         "npc_ms_hx_yimo"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_hx_02",
@@ -26048,12 +24326,7 @@
         "npc_ms_hx_qiaofu",
         "npc_ms_hx_qiaoyou"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_hx_03",
@@ -26093,12 +24366,7 @@
         "npc_ms_hx_xianwen",
         "npc_ms_hx_xianduan"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_hx_04",
@@ -26138,12 +24406,7 @@
         "npc_ms_hx_luman",
         "npc_ms_hx_luya"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_gs_01",
@@ -26184,12 +24447,7 @@
         "npc_ms_gs_shengya",
         "npc_ms_gs_sanzhi"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_gs_02",
@@ -26231,12 +24489,7 @@
         "npc_ms_gs_zheyou",
         "npc_ms_gs_sanfu"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "bld_ms_gs_03",
@@ -26276,12 +24529,7 @@
         "npc_ms_gs_zhenbei",
         "npc_ms_gs_zhenya"
       ]
-    },
-    "fixtures": [
-      {
-        "fixture": "hearth"
-      }
-    ]
+    }
   },
   {
     "id": "site_w5_tj_old_draft",
@@ -26414,7 +24662,7 @@
           "id": "tj_bricks",
           "name": "封墙拆下的碎砖",
           "item": "item_stone",
-          "quantity": 30,
+          "quantity": 4,
           "minutes": 10,
           "owner": null
         },
@@ -26427,13 +24675,6 @@
           "requires": [
             "tj_beds"
           ]
-        },
-        {
-          "id": "tj_old_draft_native_clay",
-          "name": "坑道壁上的黏土",
-          "item": "item_clay",
-          "quantity": 40,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -26470,22 +24711,6 @@
           "kind": "rearm",
           "mechanism": "tj_air",
           "everyDays": 10
-        },
-        {
-          "id": "tj_bricks_regrow",
-          "kind": "regrow",
-          "resource": "tj_bricks",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
-        },
-        {
-          "id": "tj_old_draft_native_clay_regrow",
-          "kind": "regrow",
-          "resource": "tj_old_draft_native_clay",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 40
         }
       ]
     }
@@ -26623,20 +24848,6 @@
           "requires": [
             "td_traps"
           ]
-        },
-        {
-          "id": "td_trap_shrine_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "td_trap_shrine_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -26669,20 +24880,12 @@
       ],
       "changes": [
         {
-          "id": "td_trap_shrine_native_wood_regrow",
+          "id": "td_regrow",
           "kind": "regrow",
-          "resource": "td_trap_shrine_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "td_trap_shrine_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "td_trap_shrine_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
+          "resource": "td_scrap",
+          "quantity": 1,
+          "everyDays": 40,
+          "max": 3
         }
       ]
     }
@@ -26829,7 +25032,7 @@
           "id": "post_honey",
           "name": "檐下野蜂窝的蜜",
           "item": "item_honey",
-          "quantity": 30,
+          "quantity": 2,
           "minutes": 20
         },
         {
@@ -26851,13 +25054,6 @@
           "requires": [
             "post_well"
           ]
-        },
-        {
-          "id": "halfway_post_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -26889,17 +25085,9 @@
           "id": "post_regrow",
           "kind": "regrow",
           "resource": "post_honey",
-          "quantity": 5,
-          "everyDays": 15,
-          "max": 30
-        },
-        {
-          "id": "halfway_post_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "halfway_post_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
+          "quantity": 1,
+          "everyDays": 60,
+          "max": 2
         }
       ]
     }
@@ -27035,7 +25223,7 @@
           "id": "quarry_stone",
           "name": "坑沿的白石碎料",
           "item": "item_stone",
-          "quantity": 30,
+          "quantity": 6,
           "minutes": 20
         },
         {
@@ -27078,9 +25266,9 @@
           "id": "quarry_regrow",
           "kind": "regrow",
           "resource": "quarry_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "quantity": 2,
+          "everyDays": 30,
+          "max": 6
         }
       ]
     }
@@ -27235,7 +25423,7 @@
           "id": "bell_fuling",
           "name": "井边的野茯苓",
           "item": "item_s2_fuling",
-          "quantity": 10,
+          "quantity": 2,
           "minutes": 25
         },
         {
@@ -27257,27 +25445,6 @@
           "requires": [
             "bell_pit"
           ]
-        },
-        {
-          "id": "broken_bell_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "broken_bell_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
-        },
-        {
-          "id": "broken_bell_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -27314,32 +25481,8 @@
           "kind": "regrow",
           "resource": "bell_fuling",
           "quantity": 1,
-          "everyDays": 30,
-          "max": 10
-        },
-        {
-          "id": "broken_bell_native_wood_regrow",
-          "kind": "regrow",
-          "resource": "broken_bell_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "broken_bell_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "broken_bell_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        },
-        {
-          "id": "broken_bell_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "broken_bell_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "everyDays": 90,
+          "max": 2
         }
       ]
     }
@@ -27500,20 +25643,6 @@
           "mechanisms": [
             "altar_box"
           ]
-        },
-        {
-          "id": "old_bank_altar_native_reed_bundle",
-          "name": "水边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "old_bank_altar_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -27550,22 +25679,6 @@
           "kind": "rearm",
           "mechanism": "altar_pool",
           "everyDays": 15
-        },
-        {
-          "id": "old_bank_altar_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "old_bank_altar_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "old_bank_altar_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "old_bank_altar_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
         }
       ]
     }
@@ -27738,13 +25851,6 @@
           "item": "item_lampblack",
           "quantity": 3,
           "minutes": 15
-        },
-        {
-          "id": "light_workshop_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -27781,14 +25887,6 @@
           "kind": "rearm",
           "mechanism": "ws_boards",
           "everyDays": 15
-        },
-        {
-          "id": "light_workshop_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "light_workshop_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
         }
       ]
     }
@@ -27892,13 +25990,6 @@
           "item": "item_iron_scrap",
           "quantity": 2,
           "minutes": 15
-        },
-        {
-          "id": "ash_market_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -27931,12 +26022,12 @@
       ],
       "changes": [
         {
-          "id": "ash_market_native_herb_regrow",
+          "id": "am_regrow",
           "kind": "regrow",
-          "resource": "ash_market_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
+          "resource": "am_iron",
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 2
         }
       ]
     }
@@ -28075,13 +26166,6 @@
           "quantity": 2,
           "minutes": 10,
           "owner": null
-        },
-        {
-          "id": "yupo_beacon_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -28114,12 +26198,12 @@
       ],
       "changes": [
         {
-          "id": "yupo_beacon_native_stone_regrow",
+          "id": "bc_regrow",
           "kind": "regrow",
-          "resource": "yupo_beacon_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "resource": "bc_charcoal",
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 2
         }
       ]
     }
@@ -28266,20 +26350,6 @@
           "item": "item_flax_cord",
           "quantity": 1,
           "minutes": 10
-        },
-        {
-          "id": "sunk_dock_native_reed_bundle",
-          "name": "水边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "sunk_dock_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -28312,20 +26382,12 @@
       ],
       "changes": [
         {
-          "id": "sunk_dock_native_reed_bundle_regrow",
+          "id": "dock_regrow",
           "kind": "regrow",
-          "resource": "sunk_dock_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "sunk_dock_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "sunk_dock_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
+          "resource": "dock_pitch",
+          "quantity": 1,
+          "everyDays": 45,
+          "max": 2
         }
       ]
     }
@@ -28431,14 +26493,7 @@
           "id": "sm_herb",
           "name": "石缝里的野蒿",
           "item": "item_herb",
-          "quantity": 20,
-          "minutes": 20
-        },
-        {
-          "id": "stone_markers_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
+          "quantity": 3,
           "minutes": 20
         }
       ],
@@ -28476,16 +26531,8 @@
           "kind": "regrow",
           "resource": "sm_herb",
           "quantity": 2,
-          "everyDays": 10,
-          "max": 20
-        },
-        {
-          "id": "stone_markers_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "stone_markers_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "everyDays": 20,
+          "max": 3
         }
       ]
     }
@@ -28593,13 +26640,6 @@
           "item": "item_s3_incense",
           "quantity": 3,
           "minutes": 5
-        },
-        {
-          "id": "silk_shrine_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -28636,14 +26676,6 @@
           "kind": "rearm",
           "mechanism": "ss_lock",
           "everyDays": 10
-        },
-        {
-          "id": "silk_shrine_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "silk_shrine_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
         }
       ]
     }
@@ -28792,20 +26824,6 @@
           "mechanisms": [
             "mill_gear"
           ]
-        },
-        {
-          "id": "old_mill_native_reed_bundle",
-          "name": "水边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "old_mill_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -28838,20 +26856,12 @@
       ],
       "changes": [
         {
-          "id": "old_mill_native_reed_bundle_regrow",
+          "id": "mill_regrow",
           "kind": "regrow",
-          "resource": "old_mill_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "old_mill_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "old_mill_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
+          "resource": "mill_boards",
+          "quantity": 1,
+          "everyDays": 40,
+          "max": 3
         }
       ]
     }
@@ -28973,13 +26983,6 @@
           "item": "item_wood",
           "quantity": 3,
           "minutes": 20
-        },
-        {
-          "id": "east_barracks_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -29012,12 +27015,12 @@
       ],
       "changes": [
         {
-          "id": "east_barracks_native_herb_regrow",
+          "id": "eb_regrow",
           "kind": "regrow",
-          "resource": "east_barracks_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
+          "resource": "eb_wood",
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 3
         }
       ]
     }
@@ -29141,37 +27144,9 @@
           "id": "yg_clay",
           "name": "窟口的干泥扇",
           "item": "item_clay",
-          "quantity": 60,
+          "quantity": 3,
           "minutes": 15,
           "owner": null
-        },
-        {
-          "id": "yg_drowned_sett_native_reed_bundle",
-          "name": "水边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "yg_drowned_sett_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
-        },
-        {
-          "id": "yg_drowned_sett_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "yg_drowned_sett_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -29208,46 +27183,6 @@
           "kind": "rearm",
           "mechanism": "yg_water",
           "everyDays": 10
-        },
-        {
-          "id": "yg_clay_regrow",
-          "kind": "regrow",
-          "resource": "yg_clay",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "yg_drowned_sett_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "yg_drowned_sett_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "yg_drowned_sett_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "yg_drowned_sett_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
-        },
-        {
-          "id": "yg_drowned_sett_native_wood_regrow",
-          "kind": "regrow",
-          "resource": "yg_drowned_sett_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "yg_drowned_sett_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "yg_drowned_sett_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
         }
       ]
     }
@@ -29327,8 +27262,8 @@
         {
           "id": "ll_ore",
           "name": "封墙后的铁砂",
-          "item": "item_iron_ore",
-          "quantity": 30,
+          "item": "item_iron_scrap",
+          "quantity": 4,
           "minutes": 25,
           "mechanisms": [
             "ll_wall"
@@ -29341,13 +27276,6 @@
           "quantity": 2,
           "minutes": 15,
           "owner": null
-        },
-        {
-          "id": "ll_deep_drift_native_clay",
-          "name": "坑道壁上的黏土",
-          "item": "item_clay",
-          "quantity": 40,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -29384,22 +27312,6 @@
           "kind": "rearm",
           "mechanism": "ll_wall",
           "everyDays": 20
-        },
-        {
-          "id": "ll_ore_regrow",
-          "kind": "regrow",
-          "resource": "ll_ore",
-          "quantity": 1,
-          "everyDays": 15,
-          "max": 30
-        },
-        {
-          "id": "ll_deep_drift_native_clay_regrow",
-          "kind": "regrow",
-          "resource": "ll_deep_drift_native_clay",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 40
         }
       ]
     }
@@ -29511,13 +27423,6 @@
           "item": "item_pine_board",
           "quantity": 1,
           "minutes": 10
-        },
-        {
-          "id": "north_toll_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -29546,12 +27451,12 @@
       ],
       "changes": [
         {
-          "id": "north_toll_native_stone_regrow",
+          "id": "nt_regrow",
           "kind": "regrow",
-          "resource": "north_toll_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "resource": "nt_board",
+          "quantity": 1,
+          "everyDays": 60,
+          "max": 1
         }
       ]
     }
@@ -29671,13 +27576,6 @@
           "item": "item_wood",
           "quantity": 2,
           "minutes": 15
-        },
-        {
-          "id": "broken_rut_bridge_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -29710,12 +27608,12 @@
       ],
       "changes": [
         {
-          "id": "broken_rut_bridge_native_stone_regrow",
+          "id": "rb_regrow",
           "kind": "regrow",
-          "resource": "broken_rut_bridge_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "resource": "rb_boards",
+          "quantity": 1,
+          "everyDays": 45,
+          "max": 2
         }
       ]
     }
@@ -29863,27 +27761,6 @@
           "item": "item_charcoal",
           "quantity": 2,
           "minutes": 20
-        },
-        {
-          "id": "charcoal_camp_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "charcoal_camp_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
-        },
-        {
-          "id": "charcoal_camp_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -29916,28 +27793,12 @@
       ],
       "changes": [
         {
-          "id": "charcoal_camp_native_wood_regrow",
+          "id": "cc_regrow",
           "kind": "regrow",
-          "resource": "charcoal_camp_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "charcoal_camp_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "charcoal_camp_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        },
-        {
-          "id": "charcoal_camp_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "charcoal_camp_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "resource": "cc_slag",
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 2
         }
       ]
     }
@@ -30045,13 +27906,6 @@
           "item": "item_iron_scrap",
           "quantity": 3,
           "minutes": 20
-        },
-        {
-          "id": "cold_smelter_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -30084,12 +27938,12 @@
       ],
       "changes": [
         {
-          "id": "cold_smelter_native_stone_regrow",
+          "id": "cs_regrow",
           "kind": "regrow",
-          "resource": "cold_smelter_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "resource": "cs_slag",
+          "quantity": 1,
+          "everyDays": 40,
+          "max": 3
         }
       ]
     }
@@ -30229,13 +28083,6 @@
           "mechanisms": [
             "tm_water"
           ]
-        },
-        {
-          "id": "tongji_flooded_mine_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -30272,14 +28119,6 @@
           "kind": "rearm",
           "mechanism": "tm_water",
           "everyDays": 7
-        },
-        {
-          "id": "tongji_flooded_mine_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "tongji_flooded_mine_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
         }
       ]
     }
@@ -30387,13 +28226,6 @@
           "item": "item_wood",
           "quantity": 2,
           "minutes": 10
-        },
-        {
-          "id": "raid_fort_native_reed_bundle",
-          "name": "背风处的干草茎",
-          "item": "item_reed_bundle",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -30426,12 +28258,12 @@
       ],
       "changes": [
         {
-          "id": "raid_fort_native_reed_bundle_regrow",
+          "id": "rf_regrow",
           "kind": "regrow",
-          "resource": "raid_fort_native_reed_bundle",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 15
+          "resource": "rf_arrows",
+          "quantity": 1,
+          "everyDays": 60,
+          "max": 2
         }
       ]
     }
@@ -30526,13 +28358,6 @@
           "item": "item_red_ochre",
           "quantity": 2,
           "minutes": 20
-        },
-        {
-          "id": "orc_cairn_native_reed_bundle",
-          "name": "背风处的干草茎",
-          "item": "item_reed_bundle",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -30571,14 +28396,6 @@
           "quantity": 1,
           "everyDays": 30,
           "max": 2
-        },
-        {
-          "id": "orc_cairn_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "orc_cairn_native_reed_bundle",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 15
         }
       ]
     }
@@ -30686,13 +28503,6 @@
           "item": "item_wood",
           "quantity": 3,
           "minutes": 20
-        },
-        {
-          "id": "seventy_li_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -30725,12 +28535,12 @@
       ],
       "changes": [
         {
-          "id": "seventy_li_native_herb_regrow",
+          "id": "sl_regrow",
           "kind": "regrow",
-          "resource": "seventy_li_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
+          "resource": "sl_wood",
+          "quantity": 1,
+          "everyDays": 40,
+          "max": 3
         }
       ]
     }
@@ -30846,13 +28656,6 @@
           "quantity": 3,
           "minutes": 5,
           "owner": null
-        },
-        {
-          "id": "way_temple_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 15,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -30889,14 +28692,6 @@
           "kind": "rearm",
           "mechanism": "wt_box",
           "everyDays": 30
-        },
-        {
-          "id": "way_temple_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "way_temple_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
         }
       ]
     }
@@ -30990,7 +28785,7 @@
           "id": "bp_stones",
           "name": "碑脚堆的石头",
           "item": "item_stone",
-          "quantity": 30,
+          "quantity": 4,
           "minutes": 10
         }
       ],
@@ -31027,9 +28822,9 @@
           "id": "bp_regrow",
           "kind": "regrow",
           "resource": "bp_stones",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "quantity": 2,
+          "everyDays": 20,
+          "max": 4
         }
       ]
     }
@@ -31139,22 +28934,8 @@
           "id": "gw_moss_take",
           "name": "沟底刮下的苔泥",
           "item": "item_clay",
-          "quantity": 40,
+          "quantity": 2,
           "minutes": 15
-        },
-        {
-          "id": "granary_watergate_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
-        },
-        {
-          "id": "granary_watergate_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 20,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -31190,25 +28971,9 @@
           "id": "gw_regrow",
           "kind": "regrow",
           "resource": "gw_moss_take",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 40
-        },
-        {
-          "id": "granary_watergate_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "granary_watergate_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
-        },
-        {
-          "id": "granary_watergate_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "granary_watergate_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 20
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 2
         }
       ]
     }
@@ -31316,27 +29081,6 @@
           "item": "item_linen_cloth",
           "quantity": 1,
           "minutes": 15
-        },
-        {
-          "id": "indigo_ditch_native_reed_bundle",
-          "name": "水边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "indigo_ditch_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
-        },
-        {
-          "id": "indigo_ditch_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -31365,28 +29109,12 @@
       ],
       "changes": [
         {
-          "id": "indigo_ditch_native_reed_bundle_regrow",
+          "id": "id_regrow",
           "kind": "regrow",
-          "resource": "indigo_ditch_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "indigo_ditch_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "indigo_ditch_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
-        },
-        {
-          "id": "indigo_ditch_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "indigo_ditch_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "resource": "id_cloth",
+          "quantity": 1,
+          "everyDays": 90,
+          "max": 1
         }
       ]
     }
@@ -31493,20 +29221,6 @@
           "item": "item_stone",
           "quantity": 2,
           "minutes": 10
-        },
-        {
-          "id": "ferry_shrine_native_reed_bundle",
-          "name": "水边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "ferry_shrine_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -31545,22 +29259,6 @@
           "quantity": 1,
           "everyDays": 10,
           "max": 2
-        },
-        {
-          "id": "ferry_shrine_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "ferry_shrine_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "ferry_shrine_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "ferry_shrine_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
         }
       ]
     }
@@ -31700,20 +29398,6 @@
           "mechanisms": [
             "yw_hold"
           ]
-        },
-        {
-          "id": "yandu_wreck_native_reed_bundle",
-          "name": "水边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
-        },
-        {
-          "id": "yandu_wreck_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -31746,22 +29430,6 @@
           "kind": "rearm",
           "mechanism": "yw_hold",
           "everyDays": 5
-        },
-        {
-          "id": "yandu_wreck_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "yandu_wreck_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "yandu_wreck_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "yandu_wreck_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
         }
       ]
     }
@@ -31883,25 +29551,18 @@
           "id": "rs_salt",
           "name": "滩上的盐霜",
           "item": "item_salt",
-          "quantity": 150,
+          "quantity": 3,
           "minutes": 20
         },
         {
           "id": "rs_reeds",
           "name": "卤坑里的芦苇",
           "item": "item_reed_bundle",
-          "quantity": 60,
+          "quantity": 3,
           "minutes": 20,
           "mechanisms": [
             "rs_pit"
           ]
-        },
-        {
-          "id": "reed_salt_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -31937,25 +29598,9 @@
           "id": "rs_regrow",
           "kind": "regrow",
           "resource": "rs_salt",
-          "quantity": 15,
-          "everyDays": 3,
-          "max": 150
-        },
-        {
-          "id": "rs_reeds_regrow",
-          "kind": "regrow",
-          "resource": "rs_reeds",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "reed_salt_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "reed_salt_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
+          "quantity": 1,
+          "everyDays": 15,
+          "max": 3
         }
       ]
     }
@@ -32043,13 +29688,6 @@
           "quantity": 2,
           "minutes": 5,
           "owner": null
-        },
-        {
-          "id": "tj_kiln_shrine_native_clay",
-          "name": "坑道壁上的黏土",
-          "item": "item_clay",
-          "quantity": 40,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -32086,14 +29724,6 @@
           "kind": "rearm",
           "mechanism": "ks_rubble",
           "everyDays": 30
-        },
-        {
-          "id": "tj_kiln_shrine_native_clay_regrow",
-          "kind": "regrow",
-          "resource": "tj_kiln_shrine_native_clay",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 40
         }
       ]
     }
@@ -32220,27 +29850,6 @@
           "mechanisms": [
             "he_bark"
           ]
-        },
-        {
-          "id": "yg_hollow_elm_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "yg_hollow_elm_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
-        },
-        {
-          "id": "yg_hollow_elm_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -32273,28 +29882,12 @@
       ],
       "changes": [
         {
-          "id": "yg_hollow_elm_native_wood_regrow",
+          "id": "he_regrow",
           "kind": "regrow",
-          "resource": "yg_hollow_elm_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "yg_hollow_elm_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "yg_hollow_elm_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        },
-        {
-          "id": "yg_hollow_elm_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "yg_hollow_elm_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
+          "resource": "he_shavings",
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 3
         }
       ]
     }
@@ -32399,15 +29992,8 @@
           "id": "rb_moss_board",
           "name": "松脱的台板",
           "item": "item_wood",
-          "quantity": 40,
+          "quantity": 2,
           "minutes": 20
-        },
-        {
-          "id": "rope_bridge_old_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -32443,17 +30029,9 @@
           "id": "rb2_regrow",
           "kind": "regrow",
           "resource": "rb_moss_board",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "rope_bridge_old_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "rope_bridge_old_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
+          "quantity": 1,
+          "everyDays": 40,
+          "max": 2
         }
       ]
     }
@@ -32559,27 +30137,6 @@
           "item": "item_iron_scrap",
           "quantity": 2,
           "minutes": 15
-        },
-        {
-          "id": "scent_watch_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
-        },
-        {
-          "id": "scent_watch_native_resin",
-          "name": "树干伤口渗出的树脂",
-          "item": "item_resin",
-          "quantity": 15,
-          "minutes": 15
-        },
-        {
-          "id": "scent_watch_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -32616,30 +30173,6 @@
           "kind": "rearm",
           "mechanism": "sw_clips",
           "everyDays": 20
-        },
-        {
-          "id": "scent_watch_native_wood_regrow",
-          "kind": "regrow",
-          "resource": "scent_watch_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
-        },
-        {
-          "id": "scent_watch_native_resin_regrow",
-          "kind": "regrow",
-          "resource": "scent_watch_native_resin",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        },
-        {
-          "id": "scent_watch_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "scent_watch_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
         }
       ]
     }
@@ -32780,15 +30313,8 @@
           "id": "hl_salt",
           "name": "灯盏里的积盐",
           "item": "item_salt",
-          "quantity": 150,
+          "quantity": 2,
           "minutes": 10
-        },
-        {
-          "id": "harbor_lamp_native_reed_bundle",
-          "name": "滩边的芦苇",
-          "item": "item_reed_bundle",
-          "quantity": 60,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -32824,17 +30350,9 @@
           "id": "hl_regrow",
           "kind": "regrow",
           "resource": "hl_salt",
-          "quantity": 15,
-          "everyDays": 3,
-          "max": 150
-        },
-        {
-          "id": "harbor_lamp_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "harbor_lamp_native_reed_bundle",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
+          "quantity": 1,
+          "everyDays": 15,
+          "max": 2
         }
       ]
     }
@@ -32972,7 +30490,7 @@
           "id": "ic_frost",
           "name": "冰架上的存冰",
           "item": "item_water",
-          "quantity": 20,
+          "quantity": 2,
           "minutes": 20,
           "mechanisms": [
             "ic_door"
@@ -33019,9 +30537,9 @@
           "id": "ic_regrow",
           "kind": "regrow",
           "resource": "ic_frost",
-          "quantity": 4,
-          "everyDays": 3,
-          "max": 20
+          "quantity": 1,
+          "everyDays": 10,
+          "max": 2
         }
       ]
     }
@@ -33145,20 +30663,6 @@
           "mechanisms": [
             "st_store"
           ]
-        },
-        {
-          "id": "silver_trial_native_stone",
-          "name": "坡上的碎石",
-          "item": "item_stone",
-          "quantity": 30,
-          "minutes": 20
-        },
-        {
-          "id": "silver_trial_native_herb",
-          "name": "路边的野草药",
-          "item": "item_herb",
-          "quantity": 20,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -33195,22 +30699,6 @@
           "kind": "rearm",
           "mechanism": "st_store",
           "everyDays": 30
-        },
-        {
-          "id": "silver_trial_native_stone_regrow",
-          "kind": "regrow",
-          "resource": "silver_trial_native_stone",
-          "quantity": 3,
-          "everyDays": 10,
-          "max": 30
-        },
-        {
-          "id": "silver_trial_native_herb_regrow",
-          "kind": "regrow",
-          "resource": "silver_trial_native_herb",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 20
         }
       ]
     }
@@ -33313,13 +30801,6 @@
           "item": "item_fine_sand",
           "quantity": 2,
           "minutes": 15
-        },
-        {
-          "id": "well_camp_native_reed_bundle",
-          "name": "背风处的干草茎",
-          "item": "item_reed_bundle",
-          "quantity": 15,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -33358,14 +30839,6 @@
           "quantity": 1,
           "everyDays": 20,
           "max": 2
-        },
-        {
-          "id": "well_camp_native_reed_bundle_regrow",
-          "kind": "regrow",
-          "resource": "well_camp_native_reed_bundle",
-          "quantity": 2,
-          "everyDays": 15,
-          "max": 15
         }
       ]
     }
@@ -33495,7 +30968,7 @@
           "id": "rc_reeds",
           "name": "坛边的老芦苇",
           "item": "item_reed_bundle",
-          "quantity": 60,
+          "quantity": 3,
           "minutes": 20
         },
         {
@@ -33504,13 +30977,6 @@
           "item": "item_slate_splinter",
           "quantity": 1,
           "minutes": 10
-        },
-        {
-          "id": "reed_circle_native_flax_stalk",
-          "name": "湿地野亚麻",
-          "item": "item_flax_stalk",
-          "quantity": 40,
-          "minutes": 15
         }
       ],
       "truths": [
@@ -33546,17 +31012,9 @@
           "id": "rc_regrow",
           "kind": "regrow",
           "resource": "rc_reeds",
-          "quantity": 10,
-          "everyDays": 10,
-          "max": 60
-        },
-        {
-          "id": "reed_circle_native_flax_stalk_regrow",
-          "kind": "regrow",
-          "resource": "reed_circle_native_flax_stalk",
-          "quantity": 5,
-          "everyDays": 10,
-          "max": 40
+          "quantity": 1,
+          "everyDays": 20,
+          "max": 3
         }
       ]
     }
@@ -33649,22 +31107,15 @@
           "id": "sp_cones",
           "name": "林下的杉果",
           "item": "item_resin",
-          "quantity": 15,
+          "quantity": 2,
           "minutes": 20
         },
         {
           "id": "sp_bark",
           "name": "倒桩上剥下的树皮",
           "item": "item_tannin_bark",
-          "quantity": 15,
+          "quantity": 2,
           "minutes": 15
-        },
-        {
-          "id": "old_season_post_native_wood",
-          "name": "林下的枯枝倒木",
-          "item": "item_wood",
-          "quantity": 40,
-          "minutes": 20
         }
       ],
       "truths": [
@@ -33700,25 +31151,9 @@
           "id": "sp_regrow",
           "kind": "regrow",
           "resource": "sp_cones",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        },
-        {
-          "id": "sp_bark_regrow",
-          "kind": "regrow",
-          "resource": "sp_bark",
-          "quantity": 2,
-          "everyDays": 10,
-          "max": 15
-        },
-        {
-          "id": "old_season_post_native_wood_regrow",
-          "kind": "regrow",
-          "resource": "old_season_post_native_wood",
-          "quantity": 4,
-          "everyDays": 7,
-          "max": 40
+          "quantity": 1,
+          "everyDays": 30,
+          "max": 2
         }
       ]
     }
