@@ -9,9 +9,8 @@ import {applyNpcPlan,npcPlanFingerprint,advanceNpcAutonomy} from '../server-plug
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {laborOffers} from '../server-plugin/labor-market.mjs';
-import {readFileSync} from 'node:fs';
 // K5：配方工位类别对应的设备（world/ontology/fixtures.json）。
-const fixtureFor=kind=>JSON.parse(readFileSync('world/ontology/fixtures.json','utf8')).entries.find(row=>row.affords===kind).id;
+import {fixtureAffording as fixtureFor} from '../server-plugin/workstation-services.mjs';
 
 const smith='npc_hw_duanyan',recipe='recipe_smelt_iron',forge='bld_hw_forge';
 function setup(){
