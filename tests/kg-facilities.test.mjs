@@ -2,7 +2,7 @@
 import test from'node:test';
 import assert from'node:assert/strict';
 import fs from'node:fs/promises';
-import {loadWorld}from'../tools/load-world.mjs';
+import {loadRuntimeWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches}from'../server-plugin/storage.mjs';
 import {facilityView}from'../server-plugin/facility-state.mjs';
@@ -26,7 +26,7 @@ function kit(engine){
  return document;
 }
 const craft=(engine,document,args={},eventId='kg-craft')=>engine.reduce(document,{tool:'world_craft',args:{recipe:'recipe_wooden_pegs',...args},eventId});
-const world=await loadWorld();
+const world=await loadRuntimeWorld();
 
 test('新建筑只要有木作台就能开工，去掉这项属性就不能；手写名单不是来源',async()=>{
  const open=new WorldEngine(worldWith(world,{access:{mode:'public'},fixtures:[{fixture:'workbench'}]}));
