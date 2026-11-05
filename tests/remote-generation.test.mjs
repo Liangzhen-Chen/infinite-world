@@ -21,7 +21,8 @@ import {checkGeneratedProfile} from '../server-plugin/population.mjs';
 
 const WORLD_DIRS=['world/geo','world/lore','world/people','world/meta'];
 async function worldDigest(){
-    const files=[];for(const dir of WORLD_DIRS)for(const f of (await fs.readdir(dir)).sort())files.push(await fs.readFile(path.join(dir,f),'utf8'));
+    // world/meta/mechanics 是机制覆盖层子目录（加载期合并），逐层读文件，不把目录当文件读。
+    const files=[];for(const dir of WORLD_DIRS)for(const f of (await fs.readdir(dir,{recursive:true})).sort()){const p=path.join(dir,f);if((await fs.stat(p)).isFile())files.push(await fs.readFile(p,'utf8'));}
     return digest(files);
 }
 const digestBefore=await worldDigest();
