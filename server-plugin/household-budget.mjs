@@ -14,7 +14,7 @@ import {contractTerms,leaseState,tenancyRentAmount} from './contract-state.mjs';
 import {householdWorkTime} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {physicalItem} from './items.mjs';
-import {isItemClass,craftingParam} from './item-class.mjs';
+import {isItemClass,householdUsage as usageDefinition} from './item-class.mjs';
 import {registerMerchandiseResolver} from './npc-life.mjs';
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
@@ -312,10 +312,8 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
 // 家户用度自留（K2，与 npc-life 的家户用度同一口径）：npc-life 每天从户里扣的消耗类（householdUsage 的燃料、调味按重量），
 // 按一户的日用量 × 一个交易周期（economy.tradeCycleDays）留在家里；在用的日用品（durable，每人每种一件，npc-life 按寿命磨损）
 // 也留一件。店主货架上待售的货（本店补货清单）不是家用，不留。读 saleableStock/householdResources 的地方都据此只卖余量。
-export function householdUsage(engine,state,members){
- const fuel=craftingParam(engine,'household.fuelKgPerDay'),season=engine.calendar(state.minute).season;
- return [{cls:'fuel',gramsPerDay:(fuel.cooking+(fuel.heating[season]??0))*1000},{cls:'salt',gramsPerDay:craftingParam(engine,'household.saltGramsPerPersonDay')*members.length}];
-}
+// 用度定义只有 item-class.mjs 的 householdUsage 一份，这里按状态时刻读它。
+export function householdUsage(engine,state,members){return usageDefinition(engine,state.minute,members);}
 const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
 // 一户一日用掉这件货多少件（不属于消耗类的为 0）。
 export function householdDailyUse(engine,state,members,item){

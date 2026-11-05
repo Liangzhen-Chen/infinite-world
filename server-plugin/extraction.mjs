@@ -5,6 +5,7 @@ import {populationView} from './entity-view.mjs';
 import {npcEntryCheck} from './checks.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {heldUnit,wearItem,produceItems,changeItems} from './items.mjs';
+import {isItemClass,pickHeldOfClass} from './item-class.mjs';
 import {registerIncident} from './law.mjs';
 import {miningJurisdiction} from './law-codes.mjs';
 import {adjustStanding} from './standing.mjs';
@@ -107,8 +108,11 @@ export function fish(d,args,id){
     if(requested&&!species.some(s=>s.id===requested))throw preconditionFailure('该鱼种不在本地栖地');
     // Catch a living body; cleaning/cooking spends its own actual inputs.
     const tool=this.rules.extraction.fishing.tool;usable(d,this,tool);
-    const bait=this.rules.extraction.fishing.bait;
-    if(bait&&this.quantity(d,'player',bait.item)<bait.quantity)throw preconditionFailure('钓饵不足');
+    // 饵按类别（bait）：指定了哪件就挂哪件（须是饵）；没指定时规则里登记的饵首选，行囊里任何够数的同类物品都能挂。
+    const rule=this.rules.extraction.fishing.bait,named=rule&&args.item!==undefined?this.resolve(args.item,'item'):null;
+    if(named&&!isItemClass(this,named,'bait'))throw preconditionFailure(`${this.byId.get(named).name}不能当钓饵`);
+    const bait=rule&&{quantity:rule.quantity,item:named?(this.quantity(d,'player',named)>=rule.quantity?named:null):pickHeldOfClass(d,this,'player','bait',rule.quantity,{prefer:rule.item})};
+    if(bait&&!bait.item)throw preconditionFailure('钓饵不足');
     const minutes=this.rules.extraction.fishing.minutes,season=this.calendar(d.get('state','minute')).season;
     const difficulty=this.rules.extraction.fishing.difficultyBySeason[season];
     const check=this.check(d,{attribute:'敏捷',skill:'skill_life_2_core',difficulty},id);

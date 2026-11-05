@@ -6,6 +6,7 @@ import useTags from '../world/meta/item-use-tags.json' with {type:'json'};
 import craftingBalance from '../world/rules/tables/balance/crafting.json' with {type:'json'};
 
 const CLASSES=useTags.classes;
+const SUB=Array.isArray(useTags.substitutable)?{classes:useTags.substitutable}:useTags.substitutable??{};
 const param=(world,id)=>((world?.balance?.crafting??craftingBalance).params.find(p=>p.id===id)??craftingBalance.params.find(p=>p.id===id)).value;
 export const craftingParam=(engine,id)=>param(engine?.world,id);
 
@@ -43,21 +44,31 @@ export function pickHeldOfClass(d,engine,holder,cls,amount=1,{prefer=null}={}){
 export function pickStockOfClass(engine,items,cls,amount=1){
  return Object.keys(items??{}).sort().find(item=>isItemClass(engine,item,cls)&&(items[item]??0)>=amount)??null;
 }
-// 配方材料按类别落到实际持有的物品：材料行的物品属于可替换类（item-use-tags.substitutable，如燃料），
+// 配方材料按类别落到实际持有的物品：材料行的物品属于可替换类（item-use-tags.substitutable.classes，如燃料），
 // 而持有人不够这一件时，换成持有的同类物品。返回 [{item,amount,class?,authored?}]，同一物品合并；不替换的行原样返回。
 export function resolveMaterials(d,engine,holder,materials){
  const need=new Map(),out=[];
  for(const row of materials){
   const amount=row.amount;let item=row.item,cls=null;
-  const sub=(useTags.substitutable??[]).find(c=>isItemClass(engine,row.item,c));
+  const sub=(SUB.classes??[]).find(c=>isItemClass(engine,row.item,c));
   if(sub&&engine.quantity(d,holder,row.item)-(need.get(row.item)??0)<amount){
-   const alt=heldOfClass(d,engine,holder,sub).find(r=>r.quantity-(need.get(r.item)??0)>=amount)?.item;
+   // 替代品必须具备原物品的全部用途类别（requireAllClasses）：木料（燃料+木材）能顶木炭去烧，木炭顶不了木料。
+   const own=itemClasses(engine,row.item),covers=item=>!SUB.requireAllClasses||own.every(c=>isItemClass(engine,item,c));
+   const alt=heldOfClass(d,engine,holder,sub).find(r=>r.quantity-(need.get(r.item)??0)>=amount&&covers(r.item))?.item;
    if(alt){item=alt;cls=sub;}
   }
   need.set(item,(need.get(item)??0)+amount);
   out.push({item,amount,...(cls?{class:cls,authored:row.item}:{})});
  }
  return out;
+}
+
+// 家户每日用度（唯一一份定义）：按类别、按重量。npc-life 每日照此从户里扣，household-budget 照此自留，market 照此补买。
+// 每行 {cls, purpose（账本用途）, gramsPerDay}；状态里的欠量与短缺日按 `${cls}DebtG`、`${cls}ShortDays` 记。
+export function householdUsage(engine,minute,members){
+ const fuel=craftingParam(engine,'household.fuelKgPerDay'),season=engine.calendar(minute).season;
+ return [{cls:'fuel',purpose:'fuel',gramsPerDay:(fuel.cooking+(fuel.heating[season]??0))*1000},
+  {cls:'salt',purpose:'seasoning',gramsPerDay:craftingParam(engine,'household.saltGramsPerPersonDay')*members.length}];
 }
 
 // —— 加载期派生营养与生熟 ——

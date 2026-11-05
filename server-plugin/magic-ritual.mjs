@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {isItemClass} from './item-class.mjs';
 import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordEntriesWhere} from './storage.mjs';
@@ -101,7 +102,8 @@ export function validateRitualCatalog(c){
  const s=c.effectSpec,m=ritualMechanisms[s.operation],errors=[];
  if(!m)return['役灵仪式机制尚未接入'];
  if(s.power>m[0]||c.duration!==m[1]||!Number.isSafeInteger(c.minutes)||c.minutes<1||c.minutes>60||!Number.isFinite(c.rangeMeters)||c.rangeMeters<0||c.rangeMeters>10)errors.push('役灵仪式强度、期限或射程越过固定边界');
- if(['ritual_heal','restore'].includes(s.operation)&&!c.materials?.some(m=>m.item==='item_herb'&&m.amount>=1))errors.push('仪式治疗需要真实药材');
+ // 目录校验不带世界物品表，只查有实耗材料；是不是药（medicine 类）在施行时按物品类别判（prepareRitual）。
+ if(['ritual_heal','restore'].includes(s.operation)&&!c.materials?.some(m=>m.amount>=1))errors.push('仪式治疗需要真实药材');
  if(s.operation==='ferry'&&(typeof s.destination!=='string'||!s.destination.startsWith('feature_')))errors.push('度亡须登记实际去向');
  if(s.operation==='consecrate'&&!['亡灵','妖怪'].includes(s.group))errors.push('安地法事须限定一类灵体');
  return errors;
@@ -198,6 +200,7 @@ export function prepareRitual(d,c,args,{completion=false}={}){
   if(p.accepted)p.permission=authorization(d,args,'realm_visit',p.id,p.id,until+spirit.invitation.visitMinutes);return p;
  }
  p.deity=qualification(d,this,{...args,ritualOperation:op},until);
+ if(['ritual_heal','restore'].includes(op)&&!c.materials?.some(m=>m.amount>=1&&isItemClass(this,m.item,'medicine')))throw preconditionFailure('仪式治疗需要真实药材');
  if(['spirit_census','consecrate'].includes(op)){
   p.habitat=this.rules.wildlife?.habitats.find(h=>h.location===location);
   if(!p.habitat)throw preconditionFailure('这里没有登记的野外栖地，无从问灵或安地');
