@@ -93,7 +93,7 @@ import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
 import {materializeWorkstations}from'./workstation-services.mjs';
 import {deriveItemAttributes}from'./item-class.mjs';
-import {materializeRuntimeWorld}from'./runtime-world.mjs';
+import {materializeRuntimeWorld,engineWorldCopy}from'./runtime-world.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceRegistry,advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
@@ -232,6 +232,9 @@ function campaignCatalog(engine,document,created,extra=[]){
 }
 export class WorldEngine {
     constructor(world) {
+        // A1: construction writes runtime fields (habitats, mechanism annotations, chain laws, station
+        // projection, derived item attributes, faith clocks) on its own copy; the caller's world is unchanged.
+        world=engineWorldCopy(world);
         this.obligationClaimEnforceable=claimEnforceable;
         this.protocolAdditionalClaimAccounts=(d,owner)=>advanceHook('counterClaimAccounts')(d,owner);
         this.protocolScheduleAt=scheduleAt;

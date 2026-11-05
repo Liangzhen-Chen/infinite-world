@@ -49,3 +49,14 @@ export function materializeRuntimeWorld(world){
  delete world.mechanics;
  return world;
 }
+
+// The collections a WorldEngine writes while it is built (rows gaining
+// annotations, derived fields and station getters; rules gaining habitats and
+// clocks). The engine works on a copy of exactly these; every other part, and
+// the world's non-enumerable tables (balance, primitive assets), is shared.
+const constructionWrites=['items','locations','recipes','professions','monsters','careers','rules'];
+export function engineWorldCopy(world){
+ const copy=Object.defineProperties({},Object.getOwnPropertyDescriptors(world));
+ for(const key of constructionWrites)if(Object.getOwnPropertyDescriptor(world,key)?.enumerable)copy[key]=structuredClone(world[key]);
+ return copy;
+}
