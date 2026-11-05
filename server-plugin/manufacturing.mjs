@@ -9,7 +9,7 @@ import {craftInput,craftOutput,recordCraft} from './stock.mjs';
 declareLedgerWriter('manufacturing',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
-import {produceItems,wearItem,heldUnit}from'./items.mjs';
+import {produceItems,wearItem,heldUnit,workmanshipTier}from'./items.mjs';
 import {milestone}from'./progression.mjs';
 import {prepareThermalWorkstation}from'./magic-object.mjs';
 import {createHash}from'node:crypto';
@@ -18,13 +18,68 @@ import {recordArtWork}from'./works.mjs';
 import {facilityView}from'./facility-state.mjs';
 import {fixtureStations,stationLicence}from'./workstation-services.mjs';
 import {regionalTradePrice} from './settlement-trade.mjs';
-import {resolveMaterials} from './item-class.mjs';
+import {resolveMaterials,craftingRows,craftingParam} from './item-class.mjs';
 import {beginActionActivity,finishActionActivity} from './action-costs.mjs';
 // Replacement value of actual recipe inputs, shared with market quotations.
 // S5 adds labor valuation here; this never charges for already-owned materials.
 export function recipeInputCost(d,engine,recipe,location=d.get('state','location')){
  const materials=recipe.materials.map(({item,amount})=>({item,quantity:amount,unitPrice:regionalTradePrice(d,engine,item,location)}));
  return {materials,copper:materials.reduce((n,r)=>n+r.quantity*r.unitPrice,0)};
+}
+// —— 卡 Q：制作结果的共用规律（玩家、NPC、精怪同一条，参数在 balance/crafting） ——
+// 技能状况：没掌握所需技能 noSkill；掌握了但有效熟练度不到配方门槛 underProficient；否则 skilled。
+// 缺技能不再拒绝：照配方动手，成品落在低档（workmanship.shortfall 封顶）。
+const FAILURE_LABEL={intact:'无损',wear:'损耗',ruin:'报废',partial:'只剩部分功能'};
+export const craftStanding=(hasSkill,proficiency,minimum)=>!hasSkill?'noSkill':proficiency<(minimum??0)?'underProficient':'skilled';
+const unitRoll=(seed,key)=>createHash('sha256').update(`${seed}:${key}`).digest().readUInt32LE(0)/2**32;
+// 成功时的手艺档：检定档与熟练度定档；技能不足时封顶，勉强成功再落一档（不低于最低档）。
+export function craftTier(engine,{standing,degree,proficiency}){
+    const tier=degree==='勉强成功'?'粗糙':degree==='大成功'?(proficiency>=2100?'杰作':proficiency>=1500?'优秀':'精良'):'普通';
+    if(standing==='skilled')return tier;
+    const names=craftingRows(engine).map(r=>r.name),cap=names.indexOf(craftingParam(engine,'workmanship.shortfall')[standing]);
+    const index=Math.min(names.indexOf(tier),cap);
+    return names[degree==='勉强成功'?Math.max(0,index-1):index];
+}
+// 检定失败落到哪一类：intact 无损、wear 损耗、ruin 报废、partial 只剩部分功能；分布按检定档与技能状况取。
+// 不在表里的失败（烧制裂损、工坊停用）返回 null，由调用方按物理原因处理。
+export function craftFailure(engine,{standing,degree,seed,key}){
+    const weights=craftingParam(engine,'failure.outcomes')[degree]?.[standing];
+    if(!weights)return null;
+    const x=unitRoll(seed,`${key}:craft-failure`);let sum=0;
+    for(const [kind,w] of Object.entries(weights)){sum+=w;if(x<sum)return kind;}
+    return Object.keys(weights).at(-1);
+}
+// 投入品质下限：按 changeItems 实际会先扣的单件（行囊 instances 前若干件）取品质，未登记单件的余量取行囊品质（缺省标准件 1）。
+export function materialFloor(d,engine,holder,materials){
+    let floor=1;
+    for(const [item,amount] of materials){
+        const held=d.get(...engine.bagPath(holder),item),units=(typeof held==='object'?held.instances??[]:[]).slice(0,amount);
+        for(const id of units)floor=Math.min(floor,d.get('state','itemInstances',id,'grade')??1);
+        if(amount>units.length)floor=Math.min(floor,(typeof held==='object'?held.grade:undefined)??1);
+    }
+    return floor;
+}
+// 工具乘子：所用工具实际那一件的手艺倍率 × 品质，取平均；没有工具为 1。
+export function toolFactor(d,engine,holder,tools){
+    if(!tools?.length)return 1;
+    return tools.reduce((n,item)=>{const unit=heldUnit(d,engine,holder,item);return n+workmanshipTier(engine,unit?.workmanship).multiplier*(unit?.grade??1);},0)/tools.length;
+}
+// 成品品质 = 投入下限 × 达成度；达成度 = 1 −（1 − 本档 attain）÷（工具乘子 × 工位乘子），截在 [min, 1]：
+// 材料定上限，技能（手艺档）定达成多少，工具与工位按乘法修正，对高手递减。
+export function craftGrade(engine,{floor,tier,tools=1,station=1}){
+    const attain=workmanshipTier(engine,tier).attain,m=tools*station,min=craftingParam(engine,'quality.attainment').min;
+    const reached=m>0?Math.min(1,Math.max(min,1-(1-attain)/m)):min;
+    return Math.round(floor*reached*10000)/10000;
+}
+// 一批制作的结果（检定之后、产出之前）：成功给手艺档与品质；失败给失败类别、回收比例，partial 另给最低档与其品质。
+export function craftOutcome(engine,{standing,degree,success,proficiency,floor,tools,station,recoverFraction,seed,key}){
+    if(success){const tier=craftTier(engine,{standing,degree,proficiency});return {tier,grade:craftGrade(engine,{floor,tier,tools,station})};}
+    const failure=craftFailure(engine,{standing,degree,seed,key});
+    if(!failure)return {failure:null,recover:recoverFraction};
+    const recover=failure==='intact'?1:failure==='wear'?recoverFraction:0;
+    if(failure!=='partial')return {failure,recover};
+    const tier=craftingRows(engine)[0].name;
+    return {failure,recover,tier,grade:craftGrade(engine,{floor,tier,tools,station})};
 }
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};
 export function registerRecipe(d,engine,data,project,maximumStage){
@@ -107,9 +162,8 @@ export function manufacture(d,args,eventId){
         const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
         // Preserve the native precondition order before quoting a workstation.
         if(recipe.learningRequired&&!d.get('state','recipes',recipe.id))throw preconditionFailure('尚未学会这个配方');
-        if(!d.get('state','skills',recipe.skill))throw preconditionFailure('尚未掌握该配方所需技能');
+        // 卡 Q：缺技能、熟练度不够不拒绝（各批照做、落在低档）；只有物理上做不了的才拒绝。
         if(recipe.location&&recipe.location!==d.get('state','location'))throw preconditionFailure('不在所需工坊');
-        if(effectiveProficiency(d,this,recipe.skill)<recipe.minimumProficiency)throw preconditionFailure('技能不足以使用这个配方');
         // 材料按类别落到实际持有物（与单批同一条 resolveMaterials）：批数按第一批实际要用的物品算，各批再各自落实。
         const materials=new Map();for(const row of resolveMaterials(d,this,'player',recipe.materials))materials.set(row.item,(materials.get(row.item)??0)+row.amount);
         const station=workstation(d,this,recipe,args),minutes=station?.workMinutes??recipe.minutes;
@@ -139,10 +193,10 @@ export function manufacture(d,args,eventId){
     }
     const recipe=this.byId.get(this.resolve(args.recipe,'recipe'));
     if(recipe.learningRequired&&!d.get('state','recipes',recipe.id))throw preconditionFailure('尚未学会这个配方');
-    if(!d.get('state','skills',recipe.skill))throw preconditionFailure('尚未掌握该配方所需技能');
     if(recipe.location&&recipe.location!==d.get('state','location'))throw preconditionFailure('不在所需工坊');
-    const proficiency=effectiveProficiency(d,this,recipe.skill);
-    if(proficiency<recipe.minimumProficiency)throw preconditionFailure('技能不足以使用这个配方');
+    // 卡 Q：没掌握技能或熟练度不到门槛照样动手，结果按技能状况落档（craftOutcome）。
+    const hasSkill=Boolean(d.get('state','skills',recipe.skill)),proficiency=hasSkill?effectiveProficiency(d,this,recipe.skill):0;
+    const standing=craftStanding(hasSkill,proficiency,recipe.minimumProficiency);
     const attribute=recipe.attribute??this.byId.get(recipe.skill).attribute??'智力',station=workstation(d,this,recipe,args),workMinutes=station?.workMinutes??recipe.minutes;
     // Check real required tools before spending material, rent or time.
     toolBonuses(d,this,recipe.tools??[],attribute,recipe.skill);
@@ -161,6 +215,9 @@ export function manufacture(d,args,eventId){
     const hpBefore=d.get('state','player','hp');
     const inputCost=recipeInputCost(d,this,{...recipe,materials:resolved});
     const outcome=this.check(d,{attribute,skill:recipe.skill,difficulty:recipe.difficulty,tools:recipe.tools??[],helpers:args.helpers??[]},eventId);
+    // 品质链的三个输入，在扣料、磨损工具之前读：投入下限、工具乘子、工位乘子（设施完好 1、降级 0.5）。
+    const floor=materialFloor(d,this,'player',materials),tools=toolFactor(d,this,'player',recipe.tools),
+        stationFactor=recipe.workstation?facilityView(this,d.get('state'),d.get('state','location'))?.factor??1:1;
     for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount,craftInput('manufacturing',eventId));
     if(station?.fee){
         moveCoins(d,{from:purse(null,'player'),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:station.fee,writer:'manufacturing',eventId:eventId});
@@ -179,25 +236,30 @@ export function manufacture(d,args,eventId){
         toolWear.push({item,name:this.byId.get(item).name,before,after:wearItem(d,this,'player',item,wear)});}
     const ids=[],salvage=[];
     let workmanship=null,work=null;
+    const result=craftOutcome(this,{standing,degree:outcome.degree,success:outcome.success,proficiency,floor,tools,station:stationFactor,recoverFraction:recover,seed:d.document.randomSeed,key:eventId});
+    const grade=result.grade??null,partial=result.failure==='partial'?[{...products[0]}]:[];
     if(outcome.success){
-        workmanship=outcome.degree==='勉强成功'?'粗糙':outcome.degree==='大成功'?(proficiency>=2100?'杰作':proficiency>=1500?'优秀':'精良'):'普通';
-        for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,books:craftOutput('manufacturing',eventId)}));
+        workmanship=result.tier;
+        for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,grade,books:craftOutput('manufacturing',eventId)}));
         work=recordArtWork(d,this,{recipe,instances:ids.filter(unit=>d.get('state','itemInstances',unit,'item')===recipe.output.item),workmanship,eventId});
-        this.practice(d,{skill:recipe.skill,gain:3,target:recipe.id},eventId);
+        // 没掌握的技能无从练起（练习只加在已有技能上）。
+        if(hasSkill)this.practice(d,{skill:recipe.skill,gain:3,target:recipe.id},eventId);
         Object.assign(outcome,milestone(d,this,'craft',recipe.id,eventId));d.say(`制成${this.byId.get(recipe.output.item).name}，做工${workmanship}`);
     }else{
-        for(const[item,amount]of materials){const returned=thermal?.crackedQuantity?0:Math.floor(amount*recover);if(returned){this.itemDelta(d,'player',item,returned,craftOutput('manufacturing',eventId));salvage.push({item,amount:returned});}}
+        // 卡 Q：失败有结构——无损全收回、损耗按配方回收、报废不回收、只剩部分功能得到最低档成品（投入耗尽）。
+        if(partial.length){workmanship=result.tier;ids.push(...produceItems(d,this,partial[0].item,partial[0].amount,{eventId,recipe:recipe.id,workmanship,grade,books:craftOutput('manufacturing',eventId)}));}
+        else for(const[item,amount]of materials){const returned=thermal?.crackedQuantity?0:Math.floor(amount*result.recover);if(returned){this.itemDelta(d,'player',item,returned,craftOutput('manufacturing',eventId));salvage.push({item,amount:returned});}}
         if(outcome.degree==='大失败'&&injury)this.health(d,{delta:-injury},eventId);
-        d.say(`制造${outcome.degree}，耗时${workMinutes}分钟，按配方回收${salvage.reduce((sum,row)=>sum+row.amount,0)}份材料`);
+        d.say(partial.length?`制造${outcome.degree}，只做出${partial[0].amount}件${workmanship}的${this.byId.get(partial[0].item).name}，部分用途不具备`:`制造${outcome.degree}${result.failure?`（${FAILURE_LABEL[result.failure]}）`:''}，耗时${workMinutes}分钟，回收${salvage.reduce((sum,row)=>sum+row.amount,0)}份材料`);
     }
-    const receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?products[0].amount:0,...(thermal?{thermal}:{}),
+    const receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?products[0].amount:partial[0]?.amount??0,...(thermal?{thermal}:{}),
         maker:'player',name:d.get('state','player','name'),minute:d.get('state','minute'),station:station?.id??null,fee:station?.fee??0,inputCost,
-        degree:outcome.degree,workmanship,instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
+        degree:outcome.degree,workmanship,...(grade!==null?{grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
     d.set(['state','crafted',receipt.id],receipt);
-    recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),writer:'manufacturing',eventId});
-    return{recipe:recipe.id,...outcome,...(cost?{cost}:{}),receipt:receipt.id,instances:ids,workmanship,...(work?{work}:{}),salvage,...(thermal?{thermal}:{}),
+    recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):partial.length?partial:salvage).map(row=>[row.item,row.amount])),writer:'manufacturing',eventId});
+    return{recipe:recipe.id,...outcome,...(cost?{cost}:{}),receipt:receipt.id,instances:ids,workmanship,...(grade!==null?{grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),...(work?{work}:{}),salvage,...(thermal?{thermal}:{}),
         spent:{feePaid:station?.fee??0,minutes:workMinutes,materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear},
-        healthDelta:d.get('state','player','hp')-hpBefore,produced:outcome.success?products.filter(row=>row.amount).map(row=>({...row,name:this.byId.get(row.item).name})):[],
-        factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${products[0].amount}件`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${workMinutes}分钟。`,
+        healthDelta:d.get('state','player','hp')-hpBefore,produced:(outcome.success?products.filter(row=>row.amount):partial).map(row=>({...row,name:this.byId.get(row.item).name})),
+        factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${products[0].amount}件`:partial.length?`失败，只做出${partial[0].amount}件${workmanship}的${this.byId.get(partial[0].item).name}（部分用途不具备）`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${workMinutes}分钟。`,
         note:'spent已实际支付及消耗，salvage是实际回收物，produced是实际成品。失败不退款；没有回收时只能描写弃置的废料，不能写回收到刨花或碎屑。'};
 }
