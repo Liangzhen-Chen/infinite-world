@@ -1075,3 +1075,10 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - F：盐、柴的用途决定需求，进而决定价格。
   - E：分销。
 - [ ] 待判（不急）：多名采集户同去一处小据点，后到的人扑空。目前当作随机分布接受，30 天浸泡后看扑空率再定要不要加"公地信息"规律。
+- [ ] 跟进 4：F 合入后，由主会话统一做一轮"接 item-class"。把下面几处改成调用 F 的 item-class.mjs 函数，等各文件的持有卡交付后再做：
+  - manufacturing.mjs:143-156 的燃料材料（G）；
+  - agriculture.mjs:442/449 的公仓收粮（K6 后续）；
+  - extraction.mjs:109-111 的钓饵（D 线，并入跟进 1）；
+  - magic-ritual.mjs:104 的 item_herb（K6 线）；
+  - stock.mjs、settlement-trade.mjs、remote-generation.mjs 里"粮 = 燕麦"的 id 匹配（E）。
+  F 已拿到 engine.mjs 的一行加载期派生。
