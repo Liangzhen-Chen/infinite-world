@@ -146,6 +146,9 @@ export function saleableStock(d,engine,owner,item,{business=false}={}){
  return budgetStock(householdResources(d,engine,owner),owner,item);
 }
 
+// 家户日用（柴、盐……）的欠量是采买需求，进本地需求、抬高稀缺价，也进顾客的采买意愿（business.wants）。
+// 接口位置：F 卡 npc-life 的 householdUpkeepGap(state,key) 合入 t-int 后在这里读它（按持有人的家户与物品折成件数）；在那之前为 0。
+export function upkeepDemand(state,engine,id,item){return 0;}
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  let personalDemand=0;
@@ -162,6 +165,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // One read-only household allocation serves all items in this quote. No
   // writes occur in the loop; repeated allocation cannot change the budget.
   const budget=householdResources(d,engine,id);
+  for(const it of items)personalDemand+=upkeepDemand(state,engine,id,it.id);
   for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;
    if(owners.has(id))rows.push(row);
    else personalDemand+=row.retained+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
