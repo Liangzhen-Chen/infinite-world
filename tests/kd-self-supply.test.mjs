@@ -36,17 +36,20 @@ test('玩家不采集，NPC 按职业采集补入，世界自给且守恒', {tim
  // 采集是逐日的劳动而非一次性的：不止一天有人采。据点存量有限，采空后要等再生（存量与再生量是世界数据），
  // 所以这里不要求每一天都有。
  assert.ok(new Set(gathers.map(r=>Math.floor(r.minute/1440))).size>=2,'采集应持续不止一天');
- // 采得的东西来自据点资源账：据点储量账户的净流出（含期间再生与首次开户）等于采集记录的总量，NPC 手里有这些东西。
+ // 采得的东西来自据点资源账：据点储量账户的净流出（含期间再生与首次开户）等于记在据点账上的那些采集记录的总量，NPC 手里有这些东西。
+ // 每条采集记录取自哪本账，看它的 source 指向的地点：那里有这件物品的林木账（forest:<地点>）就是林木账（sites.mjs 把林地据点的木料记在林木账上），
+ // 否则是据点账。林木账还有家户取柴等别的流出，由下面的总账守恒核对；据点账只有采集一种流出，所以严格相等。
+ const book=(r,item)=>{const place=String(r.source??'').split(':')[1];return Object.hasOwn(doc.ledger.accounts,`forest:${place}|${item}|reserve`)||Object.hasOwn(start.ledger.accounts,`forest:${place}|${item}|reserve`)?'forest':'site';};
  for(const item of items){
-  const recorded=gathers.reduce((s,r)=>s+r.produced.filter(p=>p.item===item).reduce((a,p)=>a+p.quantity,0),0);
+  const recorded=gathers.reduce((s,r)=>s+(book(r,item)==='site'?r.produced.filter(p=>p.item===item).reduce((a,p)=>a+p.quantity,0):0),0);
   const before=Object.entries(start.ledger.accounts).filter(([k])=>k.startsWith('site:')&&k.split('|')[1]===item).reduce((s,[,v])=>s+v,0);
   const after=Object.entries(doc.ledger.accounts).filter(([k])=>k.startsWith('site:')&&k.split('|')[1]===item).reduce((s,[,v])=>s+v,0);
   const regrown=(doc.ledger.flows[`src:regrowth|${item}|site`]??0)-(start.ledger.flows[`src:regrowth|${item}|site`]??0);
   const opened=(doc.ledger.flows[`src:genesis|${item}|site`]??0)-(start.ledger.flows[`src:genesis|${item}|site`]??0);
-  // 林木据点的木料记在林木账上（forest-water），由下面的总账守恒核对。
-  const siteBooked=Object.keys(doc.ledger.accounts).some(k=>k.startsWith('site:')&&k.split('|')[1]===item);
-  if(siteBooked)assert.equal(before+regrown+opened-after,recorded,`${item} 的据点流出应等于采集记录`);
-  assert.ok(npcHeld(doc,item)>0,`${item} 在 NPC 手中应有存量`);
+  assert.equal(before+regrown+opened-after,recorded,`${item} 的据点流出应等于记在据点账上的采集记录`);
+  // 采到的东西进了 NPC 手里：期末仍持有，或期间被消耗掉了（如燃料被家户烧掉，进 sink 流量）。只看期末持有会把"采来就用掉"误判成没采到。
+  const sunk=Object.entries(doc.ledger.flows).filter(([k])=>k.startsWith('sink:')&&k.split('|')[1]===item).reduce((n,[k,v])=>n+v-(start.ledger.flows[k]??0),0);
+  assert.ok(npcHeld(doc,item)>0||sunk>0,`${item} 在 NPC 手中应有存量，或期间被消耗`);
  }
  assert.deepEqual(auditLedger(doc.ledger),[]);
  assert.deepEqual(conservation(engine,start,doc),[]);
