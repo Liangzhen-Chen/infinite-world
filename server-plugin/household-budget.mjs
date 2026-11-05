@@ -329,7 +329,8 @@ function reserveUpkeep(engine,state,members,rows){
   // 家里留着用的是同类里最便宜的那些（usageCost，与 npc-life 实际先用的顺序同一个函数），贵的（如引火包）才是可出让的余货。
   for(const r of [...rows].sort((a,b)=>usageCost(engine,a.item)-usageCost(engine,b.item)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder))){
    if(grams<=0)break;
-   if(!isItemClass(engine,r.item,u.cls)||merchandise(r.holder).has(r.item))continue;
+   // 家户用度只扣名册人物的户（npc-life householdUpkeep 只取 state.npcs 里的户员）；玩家不按日自动扣，也就不替他留。
+   if(!state.npcs?.[r.holder]||!isItemClass(engine,r.item,u.cls)||merchandise(r.holder).has(r.item))continue;
    const free=Math.max(0,r.stock-r.committed-r.food-r.seed-(r.upkeep??0)),take=Math.min(free,Math.ceil(grams/itemGrams(engine,r.item)));
    if(take>0){r.upkeep=(r.upkeep??0)+take;grams-=take*itemGrams(engine,r.item);}
   }
