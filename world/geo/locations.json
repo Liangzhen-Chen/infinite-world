@@ -51,15 +51,6 @@
       420,
       1350
     ],
-    "workstations": [
-      {
-        "id": "station_hw_kitchen",
-        "kind": "cooking",
-        "owner": "npc_hw_linsui",
-        "fee": 3,
-        "access": "public"
-      }
-    ],
     "features": [
       {
         "id": "feature_hw_kitchen_bucket",
@@ -118,6 +109,13 @@
         "rumor": "rumor_w5_1_02",
         "label": "酒馆闲谈"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth",
+        "id": "station_hw_kitchen",
+        "fee": 3
+      }
     ]
   },
   {
@@ -134,15 +132,6 @@
     "openHours": [
       420,
       1350
-    ],
-    "workstations": [
-      {
-        "id": "station_hw_mill_bench",
-        "kind": "woodworking",
-        "owner": "loc_hw",
-        "fee": 2,
-        "access": "public"
-      }
     ],
     "mapHierarchy": [
       {
@@ -162,7 +151,14 @@
         "name": "河湾村"
       }
     ],
-    "owner": "loc_hw"
+    "owner": "loc_hw",
+    "fixtures": [
+      {
+        "fixture": "workbench",
+        "id": "station_hw_mill_bench",
+        "fee": 2
+      }
+    ]
   },
   {
     "id": "bld_hw_council",
@@ -195,6 +191,11 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -235,7 +236,12 @@
       "host": "npc_hw_xuling",
       "kind": "空屋",
       "rooms": 1
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_hw_forge",
@@ -251,15 +257,6 @@
     "openHours": [
       420,
       1350
-    ],
-    "workstations": [
-      {
-        "id": "station_hw_anvil",
-        "kind": "smithing",
-        "owner": "npc_hw_duanyan",
-        "fee": 4,
-        "access": "public"
-      }
     ],
     "mapHierarchy": [
       {
@@ -318,6 +315,16 @@
         "unattendedFire": {
           "responsible": "npc_hw_duanyan"
         }
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "forge",
+        "id": "station_hw_anvil",
+        "fee": 4
+      },
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -510,6 +517,11 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -688,6 +700,11 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -770,15 +787,6 @@
       420,
       1350
     ],
-    "workstations": [
-      {
-        "id": "station_hw_loom_table",
-        "kind": "weaving",
-        "owner": "npc_hw_sulan",
-        "fee": 2,
-        "access": "public"
-      }
-    ],
     "mapHierarchy": [
       {
         "id": "known-continent",
@@ -795,6 +803,16 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "loom",
+        "id": "station_hw_loom_table",
+        "fee": 2
+      },
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -888,16 +906,14 @@
       0,
       1440
     ],
-    "workstations": [
+    "description": "白石镇口连接官道和六条街区。公共小窑工作台仍在镇口，陶作屋可询问工序；白石归途殿仍在东门附近，登记条件沿用原规则。",
+    "fixtures": [
       {
+        "fixture": "kiln",
         "id": "station_bs_small_kiln",
-        "kind": "pottery",
-        "owner": "loc_bs",
-        "fee": 5,
-        "access": "public"
+        "fee": 5
       }
-    ],
-    "description": "白石镇口连接官道和六条街区。公共小窑工作台仍在镇口，陶作屋可询问工序；白石归途殿仍在东门附近，登记条件沿用原规则。"
+    ]
   },
   {
     "id": "bld_hw_school",
@@ -1265,7 +1281,12 @@
         "careProcess": "food"
       }
     ],
-    "owner": "loc_hw"
+    "owner": "loc_hw",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "loc_hw_apiary",
@@ -1298,6 +1319,11 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -1344,7 +1370,12 @@
       "owner": "faction_bs_government",
       "settlement": "loc_hw",
       "source": "K10b public postal building maintenance delegation"
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_beilin_tower",
@@ -3631,6 +3662,11 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -3687,6 +3723,11 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -3746,6 +3787,11 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -3803,6 +3849,11 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -3862,6 +3913,11 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -3919,6 +3975,11 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -3978,6 +4039,11 @@
         "id": "loc_hw",
         "name": "河湾村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -4035,6 +4101,11 @@
       {
         "id": "loc_hw",
         "name": "河湾村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -4295,6 +4366,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -4565,6 +4641,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -4632,6 +4713,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -4701,6 +4787,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -4768,6 +4859,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -4837,6 +4933,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -4904,6 +5005,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -4973,6 +5079,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -5040,6 +5151,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -5109,6 +5225,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -5176,6 +5297,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -5245,6 +5371,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -5312,6 +5443,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -5381,6 +5517,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -5448,6 +5589,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -5517,6 +5663,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -5584,6 +5735,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -5653,6 +5809,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -5720,6 +5881,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -5789,6 +5955,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -5857,6 +6028,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -5922,6 +6098,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -5989,6 +6170,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -6054,6 +6240,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -6121,6 +6312,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -6186,6 +6382,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -6253,6 +6454,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -6318,6 +6524,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -6385,6 +6596,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -6451,6 +6667,11 @@
         "id": "loc_bs_yupo",
         "name": "榆坡村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -6516,6 +6737,11 @@
       {
         "id": "loc_bs_yupo",
         "name": "榆坡村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -6772,6 +6998,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "workbench"
+      }
     ]
   },
   {
@@ -6825,6 +7056,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -7048,6 +7284,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -7117,6 +7358,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -7188,6 +7434,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -7257,6 +7508,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -7328,6 +7584,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -7397,6 +7658,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -7468,6 +7734,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -7537,6 +7808,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -7608,6 +7884,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -7678,6 +7959,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -7745,6 +8031,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -7814,6 +8105,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -7881,6 +8177,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -7950,6 +8251,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -8017,6 +8323,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -8086,6 +8397,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -8153,6 +8469,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -8222,6 +8543,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -8289,6 +8615,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -8358,6 +8689,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -8425,6 +8761,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -8494,6 +8835,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -8561,6 +8907,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -8630,6 +8981,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -8697,6 +9053,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -8766,6 +9127,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -8833,6 +9199,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -8902,6 +9273,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -8970,6 +9346,11 @@
         "id": "loc_bs_weiting",
         "name": "苇汀村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -9037,6 +9418,11 @@
       {
         "id": "loc_bs_weiting",
         "name": "苇汀村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -9298,6 +9684,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -9351,6 +9742,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "workbench"
       }
     ]
   },
@@ -9569,6 +9965,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -9638,6 +10039,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -9709,6 +10115,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -9778,6 +10189,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -9849,6 +10265,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -9919,6 +10340,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -9986,6 +10412,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -10055,6 +10486,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -10122,6 +10558,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -10191,6 +10632,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -10258,6 +10704,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -10327,6 +10778,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -10394,6 +10850,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -10463,6 +10924,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -10530,6 +10996,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -10599,6 +11070,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -10666,6 +11142,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -10735,6 +11216,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -10802,6 +11288,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -10871,6 +11362,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -10938,6 +11434,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -11007,6 +11508,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -11074,6 +11580,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -11143,6 +11654,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -11210,6 +11726,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -11279,6 +11800,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -11346,6 +11872,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -11415,6 +11946,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -11483,6 +12019,11 @@
         "id": "loc_bs_liquan",
         "name": "砾泉村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -11550,6 +12091,11 @@
       {
         "id": "loc_bs_liquan",
         "name": "砾泉村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -11806,6 +12352,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "workbench"
+      }
     ]
   },
   {
@@ -11859,6 +12410,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -12082,6 +12638,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -12151,6 +12712,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -12222,6 +12788,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -12291,6 +12862,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -12362,6 +12938,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -12431,6 +13012,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -12502,6 +13088,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -12571,6 +13162,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -12642,6 +13238,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -12711,6 +13312,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -12782,6 +13388,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -12851,6 +13462,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -12922,6 +13538,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -12991,6 +13612,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -13062,6 +13688,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -13131,6 +13762,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -13202,6 +13838,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -13271,6 +13912,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -13342,6 +13988,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -13412,6 +14063,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -13479,6 +14135,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -13548,6 +14209,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -13615,6 +14281,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -13684,6 +14355,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -13751,6 +14427,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -13820,6 +14501,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -13887,6 +14573,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -13956,6 +14647,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -14024,6 +14720,11 @@
         "id": "loc_bs_sangban",
         "name": "桑坂村"
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
     ]
   },
   {
@@ -14091,6 +14792,11 @@
       {
         "id": "loc_bs_sangban",
         "name": "桑坂村"
+      }
+    ],
+    "fixtures": [
+      {
+        "fixture": "hearth"
       }
     ]
   },
@@ -14532,7 +15238,12 @@
       }
     ],
     "inventory": {},
-    "description": "南市麦饼铺用于食物售卖联络，可见柜台、烘饼间门帘。前厅可询价，内灶须店主同意。前厅接洽时间为每日6时至19时，打烊后另约。"
+    "description": "南市麦饼铺用于食物售卖联络，可见柜台、烘饼间门帘。前厅可询价，内灶须店主同意。前厅接洽时间为每日6时至19时，打烊后另约。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_inn",
@@ -14588,7 +15299,12 @@
       }
     ],
     "inventory": {},
-    "description": "炉巷铁作坊用于金属修补联络，可见接件桌、旧工具架。先在接件桌说明用途，工位由匠人安排。前厅接洽时间为每日8时至18时，打烊后另约。"
+    "description": "炉巷铁作坊用于金属修补联络，可见接件桌、旧工具架。先在接件桌说明用途，工位由匠人安排。前厅接洽时间为每日8时至18时，打烊后另约。",
+    "fixtures": [
+      {
+        "fixture": "forge"
+      }
+    ]
   },
   {
     "id": "bld_bs_potter",
@@ -14644,7 +15360,12 @@
       }
     ],
     "inventory": {},
-    "description": "炉巷缝织屋用于布衣修补联络，可见接衣柜台、布样架。衣物按物主分包，不因挂在架上而可取。前厅接洽时间为每日8时至18时，打烊后另约。"
+    "description": "炉巷缝织屋用于布衣修补联络，可见接衣柜台、布样架。衣物按物主分包，不因挂在架上而可取。前厅接洽时间为每日8时至18时，打烊后另约。",
+    "fixtures": [
+      {
+        "fixture": "loom"
+      }
+    ]
   },
   {
     "id": "bld_bs_school",
@@ -15083,12 +15804,10 @@
         }
       }
     ],
-    "workstations": [
+    "fixtures": [
       {
+        "fixture": "pill_furnace",
         "id": "station_s2_pill_furnace",
-        "kind": "pill_furnace",
-        "owner": "npc_bs_078_1",
-        "access": "public",
         "fee": 4,
         "thermalRequirement": {
           "feature": "feature_s2_pill_furnace",
@@ -15448,7 +16167,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是严辙、贺绵、贺笙、贺砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是严辙、贺绵、贺笙、贺砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_002",
@@ -15488,7 +16212,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是顾澄、顾绵、顾笙、顾砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是顾澄、顾绵、顾笙、顾砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_003",
@@ -15528,7 +16257,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邵澄、邵绵、邵笙、邵砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是邵澄、邵绵、邵笙、邵砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_004",
@@ -15568,7 +16302,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是傅澄、傅绵、傅笙、傅砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是傅澄、傅绵、傅笙、傅砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_005",
@@ -15608,7 +16347,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是罗澄、罗绵、罗笙、罗砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是罗澄、罗绵、罗笙、罗砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_006",
@@ -15648,7 +16392,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是夏澄、夏绵、夏笙、夏砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是夏澄、夏绵、夏笙、夏砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_007",
@@ -15688,7 +16437,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是蔡澄、蔡绵、蔡笙、蔡砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是蔡澄、蔡绵、蔡笙、蔡砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_008",
@@ -15728,7 +16482,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是韩澄、韩绵、韩笙、韩砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是韩澄、韩绵、韩笙、韩砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_009",
@@ -15768,7 +16527,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是程澄、程绵、程笙、程砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是程澄、程绵、程笙、程砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_010",
@@ -15808,7 +16572,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是魏澄、魏绵、魏笙、魏砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是魏澄、魏绵、魏笙、魏砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_011",
@@ -15848,7 +16617,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是秦澄、秦绵、秦笙、秦砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是秦澄、秦绵、秦笙、秦砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_012",
@@ -15888,7 +16662,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是姚澄、姚绵、姚笙、姚砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是姚澄、姚绵、姚笙、姚砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_013",
@@ -15928,7 +16707,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是卢澄、卢绵、卢笙、卢砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是卢澄、卢绵、卢笙、卢砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_014",
@@ -15968,7 +16752,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是谭澄、谭绵、谭笙、谭砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是谭澄、谭绵、谭笙、谭砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_015",
@@ -16008,7 +16797,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是陆澄、陆绵、陆笙、陆砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是陆澄、陆绵、陆笙、陆砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_016",
@@ -16048,7 +16842,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是汪澄、汪绵、汪笙、汪砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是汪澄、汪绵、汪笙、汪砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_017",
@@ -16088,7 +16887,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邢澄、邢绵、邢笙、邢砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是邢澄、邢绵、邢笙、邢砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_018",
@@ -16128,7 +16932,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是钟澄、钟绵、钟笙、钟砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是钟澄、钟绵、钟笙、钟砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_019",
@@ -16168,7 +16977,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是侯澄、侯绵、侯笙、侯砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是侯澄、侯绵、侯笙、侯砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_020",
@@ -16208,7 +17022,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是薛澄、薛绵、薛笙、薛砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是薛澄、薛绵、薛笙、薛砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_021",
@@ -16248,7 +17067,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是石澄、石绵、石笙、石砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是石澄、石绵、石笙、石砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_022",
@@ -16288,7 +17112,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是熊澄、熊绵、熊笙、熊砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是熊澄、熊绵、熊笙、熊砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_023",
@@ -16328,7 +17157,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是乔澄、乔绵、乔笙、乔砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是乔澄、乔绵、乔笙、乔砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_024",
@@ -16368,7 +17202,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是戴澄、戴绵、戴笙、戴砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是戴澄、戴绵、戴笙、戴砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_025",
@@ -16408,7 +17247,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是彭澄、彭绵、彭笙、彭砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是彭澄、彭绵、彭笙、彭砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_026",
@@ -16448,7 +17292,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邓澄、邓绵、邓笙、邓砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是邓澄、邓绵、邓笙、邓砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_027",
@@ -16488,7 +17337,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是叶澄、叶绵、叶笙、叶砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是叶澄、叶绵、叶笙、叶砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_028",
@@ -16528,7 +17382,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邹澄、邹绵、邹笙、邹砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是邹澄、邹绵、邹笙、邹砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_029",
@@ -16568,7 +17427,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是郝澄、郝绵、郝笙、郝砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是郝澄、郝绵、郝笙、郝砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_030",
@@ -16608,7 +17472,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是任澄、任绵、任笙、任砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是任澄、任绵、任笙、任砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_031",
@@ -16648,7 +17517,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是姜澄、姜绵、姜笙、姜砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是姜澄、姜绵、姜笙、姜砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_032",
@@ -16688,7 +17562,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是潘澄、潘绵、潘笙、潘砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是潘澄、潘绵、潘笙、潘砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_033",
@@ -16728,7 +17607,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是余澄、余绵、余笙、余砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是余澄、余绵、余笙、余砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_034",
@@ -16768,7 +17652,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是杜澄、杜绵、杜笙、杜砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是杜澄、杜绵、杜笙、杜砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_035",
@@ -16808,7 +17697,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是钱澄、钱绵、钱笙、钱砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是钱澄、钱绵、钱笙、钱砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_036",
@@ -16848,7 +17742,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是蒋澄、蒋绵、蒋笙、蒋砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是蒋澄、蒋绵、蒋笙、蒋砺的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_037",
@@ -16887,7 +17786,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是丁澄、丁绵、丁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是丁澄、丁绵、丁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_038",
@@ -16926,7 +17830,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是沈澄、沈绵、沈笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是沈澄、沈绵、沈笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_039",
@@ -16965,7 +17874,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是孟澄、孟绵、孟笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是孟澄、孟绵、孟笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_040",
@@ -17004,7 +17918,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是田澄、田绵、田笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是田澄、田绵、田笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_041",
@@ -17043,7 +17962,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邱澄、邱绵、邱笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是邱澄、邱绵、邱笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_042",
@@ -17082,7 +18006,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是江澄、江绵、江笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是江澄、江绵、江笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_043",
@@ -17121,7 +18050,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是雷澄、雷绵、雷笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是雷澄、雷绵、雷笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_044",
@@ -17160,7 +18094,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是文澄、文绵、文笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是文澄、文绵、文笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_045",
@@ -17199,7 +18138,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是苏澄、苏绵、苏笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是苏澄、苏绵、苏笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_046",
@@ -17238,7 +18182,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是白澄、白绵、白笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是白澄、白绵、白笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_047",
@@ -17277,7 +18226,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是马澄、马绵、马笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是马澄、马绵、马笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_048",
@@ -17316,7 +18270,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是龚澄、龚绵、龚笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是龚澄、龚绵、龚笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_049",
@@ -17355,7 +18314,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是汤澄、汤绵、汤笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是汤澄、汤绵、汤笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_050",
@@ -17394,7 +18358,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是于澄、于绵、于笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是于澄、于绵、于笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_051",
@@ -17433,7 +18402,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是段澄、段绵、段笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是段澄、段绵、段笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_052",
@@ -17472,7 +18446,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是朱澄、朱绵、朱笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是朱澄、朱绵、朱笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_053",
@@ -17511,7 +18490,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是金澄、金绵、金笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是金澄、金绵、金笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_054",
@@ -17550,7 +18534,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是廖澄、廖绵、廖笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是廖澄、廖绵、廖笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_055",
@@ -17589,7 +18578,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是康澄、康绵、康笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是康澄、康绵、康笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_056",
@@ -17628,7 +18622,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是毛澄、毛绵、毛笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是毛澄、毛绵、毛笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_057",
@@ -17667,7 +18666,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是洪澄、洪绵、洪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是洪澄、洪绵、洪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_058",
@@ -17706,7 +18710,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是袁澄、袁绵、袁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是袁澄、袁绵、袁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_059",
@@ -17745,7 +18754,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是尹澄、尹绵、尹笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是尹澄、尹绵、尹笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_060",
@@ -17784,7 +18798,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是赖澄、赖绵、赖笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是赖澄、赖绵、赖笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_061",
@@ -17823,7 +18842,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是阎澄、阎绵、阎笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是阎澄、阎绵、阎笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_062",
@@ -17862,7 +18886,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是陶澄、陶绵、陶笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是陶澄、陶绵、陶笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_063",
@@ -17901,7 +18930,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是邝澄、邝绵、邝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是邝澄、邝绵、邝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_064",
@@ -17940,7 +18974,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是崔澄、崔绵、崔笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是崔澄、崔绵、崔笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_065",
@@ -17979,7 +19018,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是武澄、武绵、武笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是武澄、武绵、武笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_066",
@@ -18018,7 +19062,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是费澄、费绵、费笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是费澄、费绵、费笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_067",
@@ -18057,7 +19106,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是高澄、高绵、高笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是高澄、高绵、高笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_068",
@@ -18096,7 +19150,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是郭澄、郭绵、郭笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是郭澄、郭绵、郭笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_069",
@@ -18135,7 +19194,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是翁澄、翁绵、翁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是翁澄、翁绵、翁笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_070",
@@ -18174,7 +19238,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是柳澄、柳绵、柳笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是柳澄、柳绵、柳笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_071",
@@ -18213,7 +19282,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是纪澄、纪绵、纪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是纪澄、纪绵、纪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_072",
@@ -18252,7 +19326,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是滕澄、滕绵、滕笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是滕澄、滕绵、滕笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_073",
@@ -18291,7 +19370,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是梅澄、梅绵、梅笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是梅澄、梅绵、梅笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_074",
@@ -18330,7 +19414,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是柯澄、柯绵、柯笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是柯澄、柯绵、柯笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_075",
@@ -18369,7 +19458,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是鲍澄、鲍绵、鲍笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是鲍澄、鲍绵、鲍笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_076",
@@ -18408,7 +19502,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是季澄、季绵、季笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是季澄、季绵、季笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_077",
@@ -18447,7 +19546,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是裴澄、裴绵、裴笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是裴澄、裴绵、裴笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_078",
@@ -18486,7 +19590,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是舒澄、舒绵、舒笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是舒澄、舒绵、舒笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_079",
@@ -18525,7 +19634,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是曲澄、曲绵、曲笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是曲澄、曲绵、曲笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_080",
@@ -18564,7 +19678,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是苗澄、苗绵、苗笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是苗澄、苗绵、苗笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_081",
@@ -18603,7 +19722,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是倪澄、倪绵、倪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是倪澄、倪绵、倪笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_082",
@@ -18642,7 +19766,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是闵澄、闵绵、闵笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是闵澄、闵绵、闵笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_083",
@@ -18681,7 +19810,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是祝澄、祝绵、祝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是祝澄、祝绵、祝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_084",
@@ -18720,7 +19854,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是童澄、童绵、童笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是童澄、童绵、童笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_085",
@@ -18759,7 +19898,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是包澄、包绵、包笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是包澄、包绵、包笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_086",
@@ -18798,7 +19942,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是司澄、司绵、司笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是司澄、司绵、司笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_087",
@@ -18837,7 +19986,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是蓝澄、蓝绵、蓝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是蓝澄、蓝绵、蓝笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_088",
@@ -18876,7 +20030,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是蒲澄、蒲绵、蒲笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是蒲澄、蒲绵、蒲笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_089",
@@ -18915,7 +20074,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是莫澄、莫绵、莫笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是莫澄、莫绵、莫笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_home_090",
@@ -18954,7 +20118,12 @@
       }
     ],
     "inventory": {},
-    "description": "这处私宅是艾澄、艾绵、艾笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。"
+    "description": "这处私宅是艾澄、艾绵、艾笙的登记住处。门前可招呼，入屋须成年住户许可；同户钱物分别归各自持有人。",
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_bs_reed_dao",
@@ -20861,6 +22030,11 @@
           "moistureMg": 0
         }
       }
+    ],
+    "fixtures": [
+      {
+        "fixture": "kiln"
+      }
     ]
   },
   {
@@ -21032,7 +22206,12 @@
     "description": "共灶厅是炭阶地宫最大的洞室，正中一口大灶，灶火由炉祭钉缨看守，各共灶窟的成员轮流来这里分食。灶的一侧有一块被炭灰磨黑的平石，是窟主座，窟主烟砧夜里在这里见来人、谈交换。厅后有一条窄道通往旧窑膛，换季那夜亡者就送进那里。",
     "access": {
       "mode": "public"
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_ms_tj_fungus",
@@ -21134,7 +22313,12 @@
     "description": "铸补间挨着钉灶窟，是一间用旧窑膛改的小作坊，炉里烧的是废窑里扒出来的木炭。钉扣和钉锉在这里补镇边人家送来的破锅、敲直弯钉，补好的活计和小铁钉拿去换粮。窟主烟砧原本就是这里的铸补匠，夜里还常回来补锅。",
     "access": {
       "mode": "public"
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "forge"
+      }
+    ]
   },
   {
     "id": "site_ms_tj_yan",
@@ -21277,7 +22461,12 @@
         "npc_ms_tj_yanya",
         "npc_ms_tj_yandou"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_tj_home_02",
@@ -21318,7 +22507,12 @@
         "npc_ms_tj_dingcuo",
         "npc_ms_tj_dingli"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_tj_home_03",
@@ -21359,7 +22553,12 @@
         "npc_ms_tj_lipian",
         "npc_ms_tj_litiao"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_ms_tj_council",
@@ -21899,7 +23098,12 @@
         "npc_ms_td_tailing",
         "npc_ms_td_taijian"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_td_home_02",
@@ -21940,7 +23144,12 @@
         "npc_ms_td_qingsui",
         "npc_ms_td_qingyuan"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_td_home_03",
@@ -21981,7 +23190,12 @@
         "npc_ms_td_lizhi",
         "npc_ms_td_limao"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_ms_td_council",
@@ -22568,7 +23782,12 @@
         "npc_ms_yg_jieqing",
         "npc_ms_yg_jieya"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_yg_home_02",
@@ -22609,7 +23828,12 @@
         "npc_ms_yg_xuhe",
         "npc_ms_yg_xumo"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_yg_home_03",
@@ -22649,7 +23873,12 @@
         "npc_ms_yg_gongni",
         "npc_ms_yg_gongtuan"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_ms_yg_council",
@@ -22987,7 +24216,15 @@
     "description": "共炉是裂炉营正中一口石砌的大炉，各族的饭和铁都在这口炉上做。炉老牙烬日夜守着炉火，每天的首火由她点燃。营头牙钺白天在炉边见来人、收贡、派活。私占共炉首火是营里最重的忌讳，可首火向来只由兽人点，工匠们为此不服。",
     "access": {
       "mode": "public"
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "forge"
+      },
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_ms_ll_shop",
@@ -23233,7 +24470,12 @@
         "npc_ms_ll_yahang",
         "npc_ms_ll_yasun"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_ll_home_02",
@@ -23275,7 +24517,12 @@
         "npc_ms_ll_cuohui",
         "npc_ms_ll_cuosu"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_ll_home_03",
@@ -23314,7 +24561,12 @@
         "npc_ms_ll_panfu",
         "npc_ms_ll_panlei"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_ms_ll_council",
@@ -24516,7 +25768,12 @@
     "description": "灰棚候饭灶供收摊后歇脚，锅边摆着各棚自己带来的食物。兽人和哥布林各认自己的袋子，愿意分食才推到旁人面前。幼体由同棚成年者照看，不替陌生货主看摊。灶旁谈起炭阶的共灶分份，有人羡慕安稳，有人说自己认货签更踏实。",
     "access": {
       "mode": "public"
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_ms_gs_return",
@@ -24746,7 +26003,12 @@
         "npc_ms_hx_yixian",
         "npc_ms_hx_yimo"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_hx_02",
@@ -24786,7 +26048,12 @@
         "npc_ms_hx_qiaofu",
         "npc_ms_hx_qiaoyou"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_hx_03",
@@ -24826,7 +26093,12 @@
         "npc_ms_hx_xianwen",
         "npc_ms_hx_xianduan"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_hx_04",
@@ -24866,7 +26138,12 @@
         "npc_ms_hx_luman",
         "npc_ms_hx_luya"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_gs_01",
@@ -24907,7 +26184,12 @@
         "npc_ms_gs_shengya",
         "npc_ms_gs_sanzhi"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_gs_02",
@@ -24949,7 +26231,12 @@
         "npc_ms_gs_zheyou",
         "npc_ms_gs_sanfu"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "bld_ms_gs_03",
@@ -24989,7 +26276,12 @@
         "npc_ms_gs_zhenbei",
         "npc_ms_gs_zhenya"
       ]
-    }
+    },
+    "fixtures": [
+      {
+        "fixture": "hearth"
+      }
+    ]
   },
   {
     "id": "site_w5_tj_old_draft",
