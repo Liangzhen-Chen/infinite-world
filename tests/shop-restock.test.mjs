@@ -53,9 +53,9 @@ test('发布规则自洽；面包基准进入市场投影',async()=>{
     const expected=projected(f,host,'item_bread');
     const r=await f.act('world_trade',{seller:host,item:'item_bread',quantity:1},'bread');
     // S5-02: the authored 2 copper remains a baseline, not a fixed retail truth.
-    // D=14, S>28 after household retention → .5 lower bound;
-    // 2 × .5 × remaining factors 1 = 1.
-    assert.equal(r.cost,1);
+    // 卡 E2 依据：派生摊的货架与其他店铺一样计入本地需求（F026），村里摆着口粮的摊让面包类的需求 D 从 14 升到 79；
+    // 可售供给 S=46（扣家户自留）→ 稀缺 79/46≈1.717；2 × 1.717 × 其余因子 1 = 3.43，整单截断得 3（旧：D=14 落在 .5 下限，得 1）。
+    assert.equal(r.cost,3);
     assert.equal(expected.explanation.baseline,2);assert.equal(r.cost,expected.totalCoins);
 });
 

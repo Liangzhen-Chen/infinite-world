@@ -8,6 +8,7 @@ import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {regionalTradePrice,regionalTradeBase,validateSettlementTradeRules,tradeSources} from '../server-plugin/settlement-trade.mjs';
 import {settlementTradeRules} from '../world/design/m5-trade-rules.mjs';
 import {createTransportAsset} from '../server-plugin/transport.mjs';
+import {quoteSupply} from '../server-plugin/market.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,DEPART=7*DAY+540,lanes=world.rules.settlementTrade.lanes;
@@ -221,8 +222,13 @@ test('公共报价只读且随真实供给重派生，距离与季节进入环�
     // Changed stock is a non-examined premise; synchronize the existing books.
     setGrain(d.document,lane.buyer,100);resyncBooks(engine,d.document);assert.ok(regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+1)>first);
     const next=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+DAY);assert.ok(next>first);
-    // Riverbay timber: baseline4 * scarcity floor .5 * other factors1 =2.
-    const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc);assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),2);assert.deepEqual(outside.document,unchanged);
+    // Riverbay timber: baseline4 (made here: no haul factor; not a seasonal grain) * local scarcity * other factors1.
+    // 卡 E2 依据：提供交易的人按持货派生为摊，摊的货架上限与其他店铺一样计入本地需求（F026），
+    // 所以河湾木料的稀缺不再落在下限 .5，而是本地需求/可售供给（同一份公开供需投影）。
+    const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc),local=quoteSupply(outside,engine,{item:'item_wood',location:'loc_hw'});
+    const [low,high]=engine.rules.economy.priceFactorLimits.region;
+    assert.equal(regionalTradeBase(outside,engine,'item_wood','loc_hw'),4);
+    assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),4*Math.max(low,Math.min(high,local.demand/Math.max(1,local.supply))));assert.deepEqual(outside.document,unchanged);
 });
 test('玩家world_trade消费实时区域价并扣真实商人库存；同日深度与次日复位',async()=>{
     const {engine,doc}=setup(),sid=lanes[0].seller,seller='npc_hw_ayan';

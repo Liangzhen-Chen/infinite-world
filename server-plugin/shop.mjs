@@ -182,8 +182,8 @@ registerShopShelves((engine,place)=>{
     let index=shelfIndex.get(rules);
     if(!index||index.npcs!==engine.world.npcs){
         const rows=new Map();
-        // 摊的货架上限就是摊主手上平常的货，这份货已经算在本地可售供给里；它不是向外采购的需求，不重复计入（卡 E2）。
-        for(const store of shopStores(engine.world))if(!store.stall)rows.set(store.settlement,[...rows.get(store.settlement)??[],...(store.restock??[])]);
+        // 卡 E2：摊的货架与其他店铺一样是本地需求（F026）——摊卖空了，货架缺口就是向外进货的需求，价格由此把外地的货引过来。
+        for(const store of shopStores(engine.world))rows.set(store.settlement,[...rows.get(store.settlement)??[],...(store.restock??[])]);
         shelfIndex.set(rules,index={npcs:engine.world.npcs,rows});
     }
     return index.rows.get(place)??[];

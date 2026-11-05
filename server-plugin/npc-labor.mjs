@@ -167,14 +167,28 @@ function itinerary(e,document,who,stops,at,from=document.state.npcs[who].locatio
  for(const [i,stop] of stops.entries()){
   const path=route(e,document,here,stop.location,t);if(!path)return null;
   walk(path);outboundEdges.push(...path.edges??[]);const arriveAt=t;
+  // 卡 E2：要见对方（收货人、卖家）的一站，到了等对方开门再做，交接一气做完；当天工时不够就先在当地歇一夜再等。
+  if(stop.keeper){
+   if(used>0&&used+stop.work>daily)rest();
+   const open=opening(e,document.state,stop.keeper,stop.location,t);if(open===null)return null;
+   if(open>t){const nextDay=Math.floor(t/DAY)*DAY+DAY+hour;segments.push({start:t,end:open,location:here,activity:'等候开门',rest:true,wait:true});if(open>=nextDay)used=0;t=open;}
+   segments.push({start:t,end:t+stop.work,location:stop.location,work:true,stop:i});const workStart=t;t+=stop.work;used+=stop.work;
+   marks.push({...stop,arriveAt,workStart,finishAt:t});continue;
+  }
   for(let left=stop.work;left>0;){if(used>=daily)rest();const w=Math.min(left,daily-used);segments.push({start:t,end:t+w,location:stop.location,work:true,stop:i});t+=w;used+=w;left-=w;}
   marks.push({...stop,arriveAt,finishAt:t});
  }
  const back=route(e,document,here,from,t);if(!back)return null;
  walk(back);
- const nights=segments.filter(s=>s.rest).length,activeMinutes=segments.filter(s=>!s.rest).reduce((n,s)=>n+s.end-s.start,0),last=marks.at(-1);
+ const nights=segments.filter(s=>s.rest&&!s.wait).length,activeMinutes=segments.filter(s=>!s.rest).reduce((n,s)=>n+s.end-s.start,0),last=marks.at(-1);
  return {from,to:last.location,stops:marks,departAt:at,arriveAt:last.arriveAt,finishAt:last.finishAt,returnAt:t,firstDayEnd:segments.find(s=>s.rest)?.start??t,nights,activeMinutes,
   work:marks.reduce((n,s)=>n+s.work,0),travelCoins,outboundEdges,inboundEdges:back.edges??[],segments};
+}
+// 对方在某地开门营业（作息里开着 trade）的第一个时刻，从 t 起最多等一个交易周期（rules.economy.tradeCycleDays）；等不到就是 null。
+function opening(e,state,keeper,location,t){
+ const limit=t+e.rules.economy.tradeCycleDays*DAY;
+ for(let cursor=t;cursor<limit;){const s=scheduleAt(e,keeper,cursor,state);if(!s)return null;if(s.location===location&&s.services?.includes('trade'))return cursor;cursor=Math.max(cursor+1,s.until);}
+ return null;
 }
 // ---- 劳动行程占用的作息：出发时刻与放弃的营业 ----
 const SLEEP=/睡眠|睡觉|熟睡/,MOVING=/赶路|前往|返回/;
@@ -206,14 +220,15 @@ function dutyRate(e,document,who,day,place){
  return minutes?laborValue(e,document,{worker:who,observer:who}).daily/minutes:0;
 }
 function forgone(e,document,who,trip,taken={}){
- const state=document.state,day=Math.floor(trip.departAt/DAY)*DAY;let trade=0,work=0,duty=0;
+ const state=document.state,day=Math.floor(trip.departAt/DAY)*DAY;let trade=0,work=0,duty=0,idle=0;
  const job=personEmployment(e,state,who,trip.departAt)?.value,place=workplaceOf(e,state,who);
  if(leavesFire(e,document,who,trip))return Infinity;
  // 行程里走路与作业的分钟（不含在外歇宿）：落在当班时段里的那部分，工时成本已按工价算进行程，不再重复记作放弃的活计。
  const active=(trip.segments??[]).filter(s=>!s.rest);
  const busy=(start,end)=>active.reduce((n,s)=>n+Math.max(0,Math.min(end,s.end)-Math.max(start,s.start)),0);
  for(const {start,end,slot} of slotsBetween(e,state,who,trip.departAt,trip.returnAt)){
-  if(!slot)return Infinity;
+  // 没有作息安排的时段：不是不能走，放弃的是本人自己的机会收入——本人一天的工价（laborValue）摊到一整天，路上与作业的分钟工时另算。
+  if(!slot){idle+=end-start-busy(start,end);continue;}
   if(slot.marketTrip&&!slot.travel&&slot.activity==='接待顾客')return Infinity;
   if(slot.services?.includes('trade'))trade+=end-start;
   else if(job&&slot.location===job.location&&slot.production!==false&&!SLEEP.test(slot.activity??''))work+=end-start;
@@ -236,6 +251,7 @@ function forgone(e,document,who,trip,taken={}){
  }
  // 在自己的工作处当班做活：离开的那些时段按自家活计的工价放弃。
  if(duty>0)loss+=Math.ceil(dutyRate(e,document,who,day,place)*duty);
+ if(idle>0)loss+=Math.ceil(laborValue(e,document,{worker:who,observer:who}).daily*idle/DAY);
  return loss;
 }
 // 可以出发的时刻：眼下，以及此后一天内本人作息里每段醒着、不在路上、不营业也不当班的空闲时段的开头（比如营业前的清晨、收工之后）。出发地是那时本人所在的地方。
@@ -329,7 +345,7 @@ export function laborCandidates(e,view,document){
     const shelfRow=shopOfKeeper(e,b.keeper,state)?.restock?.find(r=>r.item===item),shelfRoom=shelfRow?Math.floor(shelfRow.maximum-e.quantity(read,b.keeper,item)):Infinity;
     let quantity=Math.min(capacity,shelfRoom),quote=offer;if(!(quantity>=1))continue;
     if(quantity<capacity){quote=remote?knownQuote(e,document,view,{seller:who,keeper:b.keeper,location:b.location,item,quantity}):tryQuote(()=>keeperQuote(e,marketDocument(document,who),{seller:who,keeper:b.keeper,location:b.location,item,quantity}));if(!quote)continue;}
-    const trip=plannedTrip(e,document,who,[{location:b.location,work:config(e).saleMinutes}],at,{[item]:quantity},t=>receiving(e,state,b.keeper,t.stops[0]));if(!trip)continue;
+    const trip=plannedTrip(e,document,who,[{location:b.location,work:config(e).saleMinutes,keeper:b.keeper}],at,{[item]:quantity},t=>receiving(e,state,b.keeper,t.stops[0]));if(!trip)continue;
     const food=rations(e,trip.nights);if(!food)continue;
     const room=carryRoom(e,document,who,item,food);
     if(room<quantity){quantity=room;if(quantity<1)continue;quote=remote?knownQuote(e,document,view,{seller:who,keeper:b.keeper,location:b.location,item,quantity}):tryQuote(()=>keeperQuote(e,marketDocument(document,who),{seller:who,keeper:b.keeper,location:b.location,item,quantity}));if(!quote)continue;}
@@ -443,7 +459,7 @@ function haulPlan(e,document,view,who,want,seller,home,at){
  const quantity=Math.min(want.quantity,seller.stock);
  // 估一眼：货到了值的钱连货款都抵不过，就不必排路线。
  const first=quantity>=1?buy(quantity):null;if(!first||!((value(quantity)??0)>first.totalCoins))return null;
- const stops=[{location:seller.location,work:config(e).saleMinutes,acts:[{kind:'buy',keeper:seller.keeper,item}]},...want.keeper?[{location:want.location,work:config(e).saleMinutes,acts:[{kind:'sell',keeper:want.keeper,item}]}]:[]];
+ const stops=[{location:seller.location,work:config(e).saleMinutes,keeper:seller.keeper,acts:[{kind:'buy',keeper:seller.keeper,item}]},...want.keeper?[{location:want.location,work:config(e).saleMinutes,keeper:want.keeper,acts:[{kind:'sell',keeper:want.keeper,item}]}]:[]];
  const trip=plannedTrip(e,document,who,stops,at,{},t=>t.stops.every(stop=>receiving(e,state,stop.acts[0].keeper,stop)));if(!trip)return null;
  const food=rations(e,trip.nights);if(!food)return null;
  const cost=tripCost(e,document,who,view,trip,home);if(!cost)return null;
@@ -682,7 +698,7 @@ function furnaceFuel(e,document,who,heat,totals,settlement,local,here,rank){
  return best;
 }
 function receiving(e,state,keeper,stop){
- for(let cursor=stop.arriveAt;cursor<stop.finishAt;){const s=scheduleAt(e,keeper,cursor,state);if(!s||s.location!==stop.location||!s.services?.includes('trade'))return false;cursor=s.until;}
+ for(let cursor=stop.workStart??stop.arriveAt;cursor<stop.finishAt;){const s=scheduleAt(e,keeper,cursor,state);if(!s||s.location!==stop.location||!s.services?.includes('trade'))return false;cursor=s.until;}
  return isEffective(e,state,keeper)&&!['死亡','濒死','昏迷','患病'].includes(state.npcs[keeper]?.status);
 }
 // 卡 E2：买卖劳动对任何成年人开放（条件派生），所以醒着的成年人都要看一眼劳动候选。
@@ -710,7 +726,7 @@ function validateTrip(d,e,who,a,{at,ignoreTask=false,taskId}={}){
   if(start?.location!==a.from||a.departAt===at&&(n.scheduleTravel||n.cognitionTravel)||n.caring||n.levy)throw preconditionFailure('劳动者出发时不在出发地点');
   if(householdWorkTime(e,state,who,a.departAt).unattended)throw preconditionFailure('家中无人照看，不能出门劳动');
   if(activeTrip(state,who,at))throw preconditionFailure('人还在外劳动');
-  const fresh=itinerary(e,d.document,who,a.stops.map(s=>({location:s.location,work:s.work})),a.departAt,a.from);
+  const fresh=itinerary(e,d.document,who,a.stops.map(s=>({location:s.location,work:s.work,...s.keeper?{keeper:s.keeper}:{}})),a.departAt,a.from);
   if(!fresh||fresh.arriveAt!==a.arriveAt||fresh.returnAt!==a.returnAt||fresh.travelCoins!==a.travelCoins||fresh.stops.some((s,i)=>s.finishAt!==a.stops[i].finishAt))throw preconditionFailure('真实路线已改变');
   // 出发当天走路与作业的那段不能是睡觉或另有行程；之后各天由这趟行程占用，作息与家户劳动随之扣除。
   for(let cursor=a.departAt;cursor<a.firstDayEnd;){const s=scheduleAt(e,who,cursor,state);if(!s||SLEEP.test(s.activity??'')||MOVING.test(s.activity??''))throw preconditionFailure('没有完整的劳动空档');cursor=Math.max(cursor+1,s.until);}

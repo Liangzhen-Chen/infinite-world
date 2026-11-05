@@ -99,3 +99,28 @@ test('出摊不以交易服务为门槛：没有交易服务的村民，手上�
  assert.ok(stall,'有余货就出摊');
  const row=stall.restock.find(r=>r.item==='item_iron_nail');assert.ok(row&&row.own&&row.amount>=1&&row.amount<=qty(doc.state.npcs[who].inventory.item_iron_nail));
 });
+
+test('一趟真实贩运：没有贩运职业的村民知道镇上的价，去镇上向持货人买、背回、卖给本村缺货的摊；承运人点名，账本守恒',{timeout:600000},async()=>{
+ const {auditLedger}=await import('../server-plugin/ledger.mjs');
+ const {resyncBooks}=await import('./helpers/ledger-sync.mjs');
+ const {marketQuote}=await import('../server-plugin/market.mjs');
+ const {shopOfKeeper}=await import('../server-plugin/shop.mjs');
+ const who='npc_hw_luowei',item='item_quill_knife',keeper='npc_hw_luqing',holder='npc_hw_yanzhe';
+ const w=structuredClone(world);w.npcs.find(n=>n.id===keeper).inventory[item]=12;// 本村书摊平常备 12 把修笔刀
+ const engine=new WorldEngine(w);let doc=engine.createCharacter(seed,{},'ke2-haul');const s=doc.state;
+ assert.ok(!laborCategories(engine,s,who).some(c=>c==='carry'||c==='sell'),'不是贩运职业');
+ // 前提：本村的修笔刀卖空了，镇上的经营者手上有 10 把；村民记得镇上的实价（见过成交）。
+ for(const n of Object.values(s.npcs))if(n.inventory?.[item])n.inventory[item]=0;
+ s.npcs[holder].inventory[item]=10;s.npcs[who].coins=2000;resyncBooks(engine,doc);
+ const rd={document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)};
+ const real=marketQuote(rd,engine,{item,location:s.npcs[holder].location,seller:holder,buyer:who,quantity:10,business:{...shopOfKeeper(engine,holder,s),keeper:holder}});
+ s.records['knowledge:ke2-haul']={category:'knowledge',observer:who,subject:who,key:`market:${s.npcs[holder].location}:${item}`,value:{unitPrice:Math.ceil(real.totalCoins/10),expires:Number.MAX_SAFE_INTEGER},sourceType:'亲历',minute:0};
+ for(let h=0;h<96;h++){const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:60},eventId:`ke2h${h}`});if(out.patches?.length)doc=applyPatches(doc,out.patches);}
+ const trip=Object.values(doc.state.records).find(r=>r.category==='market_trip'&&r.labor==='haul'&&r.actor===who);
+ assert.ok(trip,'承运人点名：本人的贩运行程');
+ const deals=Object.values(doc.state.records).filter(r=>r.category==='market_trade'&&r.item===item);
+ const bought=deals.find(r=>r.seller===holder&&r.buyer===who),sold=deals.find(r=>r.seller===who&&r.buyer===keeper);
+ assert.ok(bought&&bought.quantity>=1,'在镇上向持货人买到');
+ assert.ok(sold&&sold.totalCoins/sold.quantity>bought.totalCoins/bought.quantity,'回村卖给缺货的摊，卖价高于进价');
+ assert.deepEqual(auditLedger(doc.ledger),[]);
+});
