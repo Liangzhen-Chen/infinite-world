@@ -40,17 +40,33 @@ export function fixtureStations(place){
 // else the building's current owner, its catalogue owner, the household living
 // there, or (for a settlement's own ground) the settlement.
 export function stationOwners(engine,state,station){
- const place=placeOf(engine,state,station.location);if(!place)return [];
+ const place=placeOf(engine,state,station.location);
+ return place?ownersAt(place,engine.world.households,state,station):[];
+}
+function ownersAt(place,worldHouseholds,state,station){
  const feature=station.thermalRequirement&&place.features?.find(f=>f.id===station.thermalRequirement.feature);
  if(typeof feature?.owner==='string')return [feature.owner];
  const building=state?.buildings?.[place.id];
  if(building&&Object.hasOwn(building,'owner'))return typeof building.owner==='string'?[building.owner]:[];
  if(typeof place.owner==='string')return [place.owner];
  // Household rows, not homeResidents: that view reads facilityView, which reads these owners.
- const households=(engine.world.households??[]).filter(h=>h.homeLocation===place.id);
+ const households=(worldHouseholds??[]).filter(h=>h.homeLocation===place.id);
  const residents=[...new Set(households.length?households.flatMap(h=>[...h.members,...state?.family?.households?.[h.id]?.members??[]]):place.access?.residents??[])];
  if(residents.length)return residents;
  return place.scope===place.id?[place.id]:[];
+}
+// Load-time projection for readers of place.workstations: every published
+// place's stations are rewritten from its fixtures, so a hand-written list in
+// a world file never survives (and a place without fixtures has none).
+// Idempotent; campaign changes (rebuilt, sold, ruined) are read through
+// facilityView/placeWorkstations, which use the same derivation.
+export function materializeWorkstations(world){
+ for(const place of world.locations??[]){
+  const stations=fixtureStations(place);
+  if(!stations.length){delete place.workstations;continue;}
+  place.workstations=stations.map(station=>({...station,owner:ownersAt(place,world.households,null,station)[0]??null}));
+ }
+ return world;
 }
 // The current stations at a place, with their derived owner.
 export function placeWorkstations(engine,state,id){
