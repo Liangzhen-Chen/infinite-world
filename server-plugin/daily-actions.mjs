@@ -11,17 +11,22 @@ declareLedgerWriter('daily-actions',{sinks:['sink:consume']});
 function food(engine,raw){
  const item=engine.resolve(raw,'item'),nutrition=engine.byId.get(item)?.nutrition;
  if(!nutrition&&engine.byId.get(item)?.foodState==='raw')throw preconditionFailure('这是生料，须经加热烹制（配方里烧火）才能当一餐');
- if(!nutrition||!Number.isFinite(nutrition.satiety)||nutrition.satiety<=0||nutrition.satiety>100)throw preconditionFailure('这件物品没有登记为可食用的一餐');
+ if(!nutrition||!Number.isFinite(nutrition.satiety)||nutrition.satiety<=0)throw preconditionFailure('这件物品没有登记为可食用的一餐');
  // K4: nutrition may be derived at load (recipe inputs conserved); a derived meal also carries the water its inputs brought.
  return {item,satiety:nutrition.satiety,hydration:Number.isFinite(nutrition.hydration)&&nutrition.hydration>0?nutrition.hydration:0};
 }
 // Apply both vitals a portion carries; hydration only when the food actually holds water.
+// A portion larger than one meal is still eaten: the body absorbs only up to its table cap (body.json max, via
+// writeBodyNeed). The rest is wasted, not kept: a portion is one indivisible unit in the bag (integer stock, no
+// half-portion item), so the whole unit leaves to sink:consume and the receipt reports what the body did not take.
 function nourish(d,engine,foods){
- const sum=need=>Math.min(100,foods.reduce((n,f)=>n+f[need],0));
- const satiety=sum('satiety'),hydration=sum('hydration');
- const out={satiety:applyBodyVital(d,engine,'player','satiety',satiety,{body:{satiety}}).delta};
- if(hydration>0)out.hydration=applyBodyVital(d,engine,'player','hydration',hydration,{body:{hydration}}).delta;
- return out;
+ const out={},wasted={};
+ for(const need of ['satiety','hydration']){
+  const offered=foods.reduce((n,f)=>n+f[need],0);if(need==='hydration'&&!(offered>0))continue;
+  const delta=applyBodyVital(d,engine,'player',need,offered,{body:{[need]:offered}}).delta;
+  out[need]=delta;if(offered>delta)wasted[need]=+(offered-delta).toFixed(3);
+ }
+ return {nutrition:out,...(Object.keys(wasted).length?{wasted}:{})};
 }
 
 export async function treatRumor(d,engine,args,eventId){
@@ -61,9 +66,9 @@ export async function orderMeal(d,engine,args,eventId){
  }
  const remaining=rule.timeMin-(d.get('state','minute')-span.start);
  if(remaining>0)engine.advance(d,remaining,eventId);
- const nutrition=nourish(d,engine,foods);
+ const {nutrition,wasted}=nourish(d,engine,foods);
  const cost=finishActionActivity(d,engine,span),paid=purchases.reduce((sum,p)=>sum+p.cost,0),result={seller,eaten:foods.length,items:foods.map(f=>f.item),purchases,
-  paid,nutrition,cost,socialEvent:{verb:'trade',target:seller,value:paid,tags:['trade','dialogue','cash','meal']},
+  paid,nutrition,...(wasted?{wasted}:{}),cost,socialEvent:{verb:'trade',target:seller,value:paid,tags:['trade','dialogue','cash','meal']},
   actionScope:{kind:'meal',clockManaged:true,minutes:cost.time}};
  d.set(['state','records',key],{category:'daily_action',identity,result});return result;
 }
@@ -80,8 +85,8 @@ export function eatMeal(d,engine,args,eventId){
  const span=beginActionActivity(d,engine,rule.activity);
  engine.itemDelta(d,'player',item,-1,{flow:'sink:consume',purpose:'meal',writer:'daily-actions',eventId});
  engine.advance(d,rule.timeMin,eventId);
- const nutrition=nourish(d,engine,[meal]);
- const cost=finishActionActivity(d,engine,span),result={item,eaten:1,nutrition,cost,
+ const {nutrition,wasted}=nourish(d,engine,[meal]);
+ const cost=finishActionActivity(d,engine,span),result={item,eaten:1,nutrition,...(wasted?{wasted}:{}),cost,
   actionScope:{kind:'meal',clockManaged:true,minutes:cost.time}};
  d.set(['state','records',key],{category:'daily_action',identity,result});
  return result;

@@ -86,3 +86,16 @@ test('浸泡两天：日用品磨损、家户烧柴，账本守恒', async () =>
   assert.ok(worn,'NPC 手里的日用品有磨损');
   assert.deepEqual(auditLedger(doc.ledger),[]);
 });
+
+test('一份超过一餐上限的食物照样能吃：身体只吸收到上限（body 表 max），整份离手，余量记为浪费', async () => {
+  const w=structuredClone(world);w.items.find(i=>i.id==='item_ration').nutrition={satiety:150};
+  const e=new WorldEngine(w),{applyPatches}=await import('../server-plugin/storage.mjs');
+  let doc=e.createCharacter(seed,{},'kf-big');
+  const max=w.primitiveTables.body.rows.find(r=>r.need==='satiety'&&r.selector==='person').max,before=doc.state.inventory.item_ration.quantity;
+  const out=await e.reduce(doc,{tool:'world_act',args:{action:'core:eat.meal',slots:{item:'item_ration'}},eventId:'kf-big-1'});doc=applyPatches(doc,out.patches);
+  const r=out.result;assert.notEqual(r?.receipt?.status,'rejected',JSON.stringify(r?.receipt));
+  assert.equal(doc.state.player.body.satiety.value,max);
+  assert.equal(doc.state.inventory.item_ration.quantity,before-1);
+  assert.ok(r.wasted?.satiety>0&&Math.abs(r.nutrition.satiety+r.wasted.satiety-150)<0.01,JSON.stringify({n:r.nutrition,w:r.wasted}));
+  assert.deepEqual(auditLedger(doc.ledger??{accounts:{},flows:{}}),[]);
+});
