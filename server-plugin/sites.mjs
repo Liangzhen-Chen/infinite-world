@@ -296,7 +296,7 @@ function watchers(d,engine,place){
 }
 function infiltrate(d,engine,place,eventId,breach){
     const plan=place.site.infiltration;
-    if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径，只能直接进入（进别人的地方会被记为侵入）');
+    if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径，只能从正门直接进入');
     if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
     if(d.get('state','player','companions')?.length)throw preconditionFailure('潜入不能带同行者');
     unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
@@ -312,8 +312,9 @@ function infiltrate(d,engine,place,eventId,breach){
         breach('enter',ownerOf(place)??societyAt(engine,place.id)?.id,{id:place.id,kind:'site',covert:true});
         return{...siteView(engine,d.document),covert:true,detected:false,check,minutes:plan.minutes};
     }
-    if(!watcher)return{entered:false,detected:false,check,minutes:plan.minutes,note:'未能找到潜入路径，无人察觉'};
-    return{entered:false,check,minutes:plan.minutes,...caught(d,engine,place,watcher,eventId,plan.damage??0)};
+    // A failed attempt says so: nothing was entered (the time is still spent).
+    if(!watcher)return{success:false,entered:false,detected:false,check,minutes:plan.minutes,note:'未能找到潜入路径，无人察觉'};
+    return{success:false,entered:false,check,minutes:plan.minutes,...caught(d,engine,place,watcher,eventId,plan.damage??0)};
 }
 // A society's watcher who sees an intruder responds by its stance: expulsion
 // (a real walk out) or a fight. Shared by covert and open unlicensed entry.
