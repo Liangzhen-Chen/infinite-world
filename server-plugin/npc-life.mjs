@@ -41,7 +41,8 @@ import {holdingSet,holdingRemove} from './holding-sources.mjs';
 import {pow} from './det-math.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {isItemClass,pickHeldOfClass,heldOfClass,craftingParam} from './item-class.mjs';
-import {shopOfKeeper} from './shop.mjs';
+// Shop restock lists reach npc-life through registration: importing shop.mjs here closes an import cycle (TDZ at load).
+export function registerMerchandiseResolver(fn){registerMerchandiseResolver.fn=fn;}
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
@@ -70,7 +71,7 @@ function wearHeld(d,engine,who,day,items){
  }
 }
 // 店主货架上待售的货（本店补货清单里的物品）不是在用的日用品，也不是家里的柴盐：不磨损，家户炊事先用自家的，货架上的最后才动。
-const merchandise=(engine,state,who)=>new Set((shopOfKeeper(engine,who,state)??shopOfKeeper(engine,who))?.restock?.map(r=>r.item)??[]);
+const merchandise=(engine,state,who)=>new Set(registerMerchandiseResolver.fn?.(engine,state,who)??[]);
 export function advanceDurableWear(d,engine,day){
  if((d.get('state','family','wearDay')??-1)>=day)return;
  const state=d.get('state');

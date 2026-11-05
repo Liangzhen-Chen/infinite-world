@@ -17,8 +17,9 @@ const balanceParam=(engine,id)=>(engine.world.balance?.economy??economyBalance).
 export const customerPurseShare=engine=>balanceParam(engine,'shop.customerPurseShare');
 export const customerReachMinutes=engine=>balanceParam(engine,'shop.customerReachMinutes');
 // 全部商铺（手工登记的与按人物派生的）在某聚落的货架条目：由 shop.mjs 登记，market 只读。
-let shopShelves=()=>null;
-export function registerShopShelves(fn){shopShelves=fn;}
+// Hoisted registry: shop.mjs registers while the module graph is still in a cycle (market -> household-budget -> ... -> finance-tax -> shop).
+export function registerShopShelves(fn){registerShopShelves.fn=fn;}
+const shopShelves=(...a)=>registerShopShelves.fn?.(...a)??null;
 const DAY=1440;
 const quantity=v=>typeof v==='number'?v:v?.quantity??0;
 const clamp=(v,limits)=>Math.max(limits[0],Math.min(limits[1],v));

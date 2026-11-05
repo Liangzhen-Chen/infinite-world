@@ -1,3 +1,4 @@
+import {registerMerchandiseResolver} from './npc-life.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {toRational,fromRational} from './det-math.mjs';
 import {isEffective} from './lifecycle-state.mjs';
@@ -207,6 +208,7 @@ function readCurrentShops(engine,state){
     return out;
 }
 export const shopOfKeeper=(engine,keeper,state=null)=>(state?currentShops(engine,state):shopStores(engine.world)).find(s=>s.keeper===keeper)??null;
+registerMerchandiseResolver((engine,state,who)=>(shopOfKeeper(engine,who,state)??shopOfKeeper(engine,who))?.restock?.map(r=>r.item)??[]);
 // Household planning uses a conservative local quote, not a recursive quote
 // over the very reserves it is deciding. Maximum scarcity and price impact
 // bound the native retail formula; execution always obtains a fresh quote.
