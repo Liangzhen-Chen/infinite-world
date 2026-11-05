@@ -18,7 +18,7 @@ import {recordArtWork}from'./works.mjs';
 import {facilityView}from'./facility-state.mjs';
 import {fixtureStations,stationLicence}from'./workstation-services.mjs';
 import {regionalTradePrice} from './settlement-trade.mjs';
-import {resolveMaterials,craftingRows,craftingParam} from './item-class.mjs';
+import {resolveMaterials,workmanshipNames,craftingParam} from './item-class.mjs';
 import {beginActionActivity,finishActionActivity} from './action-costs.mjs';
 // Replacement value of actual recipe inputs, shared with market quotations.
 // S5 adds labor valuation here; this never charges for already-owned materials.
@@ -36,7 +36,7 @@ const unitRoll=(seed,key)=>createHash('sha256').update(`${seed}:${key}`).digest(
 export function craftTier(engine,{standing,degree,proficiency}){
     const tier=degree==='勉强成功'?'粗糙':degree==='大成功'?(proficiency>=2100?'杰作':proficiency>=1500?'优秀':'精良'):'普通';
     if(standing==='skilled')return tier;
-    const names=craftingRows(engine).map(r=>r.name),cap=names.indexOf(craftingParam(engine,'workmanship.shortfall')[standing]);
+    const names=workmanshipNames(engine),cap=names.indexOf(craftingParam(engine,'workmanship.shortfall')[standing]);
     const index=Math.min(names.indexOf(tier),cap);
     return names[degree==='勉强成功'?Math.max(0,index-1):index];
 }
@@ -78,7 +78,7 @@ export function craftOutcome(engine,{standing,degree,success,proficiency,floor,t
     if(!failure)return {failure:null,recover:recoverFraction};
     const recover=failure==='intact'?1:failure==='wear'?recoverFraction:0;
     if(failure!=='partial')return {failure,recover};
-    const tier=craftingRows(engine)[0].name;
+    const tier=workmanshipNames(engine)[0];
     return {failure,recover,tier,grade:craftGrade(engine,{floor,tier,tools,station})};
 }
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};

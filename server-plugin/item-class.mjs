@@ -32,14 +32,17 @@ export function classItems(engine,cls){return [...classTable(engine.world)].filt
 
 // 卡 Q：手艺档位表（balance/crafting 的 workmanship:* 行，从低到高）。
 export const craftingRows=engine=>(engine?.world?.balance?.crafting??craftingBalance).rows.filter(r=>r.key.startsWith('workmanship:'));
-// 手艺档（仿制、粗陋、粗糙……杰作）的唯一查法（items.mjs 转出）。multiplier 乘耐久与战斗属性（规则表 equipment.workmanship
-// 有的照用，新增低档取本表 perf）；price 乘报价；attain 是品质达成度；loses 是该档实例不再具备的用途类别。
-// 没有手艺档（非制作所得）的按标准件：倍率 1。
+// 手艺档（仿制、粗陋、粗糙……杰作）的唯一查法（items.mjs 转出）。档序与 multiplier（乘耐久与战斗属性）只在规则表
+// equipment.workmanship；price（报价）、attain（品质达成度）、loses（该档实例不再具备的用途类别）在 balance/crafting。
+// 没有手艺档（非制作所得，null/undefined）的按标准件：倍率 1；写了档名却查不到的报错。
 export function workmanshipTier(engine,name){
- const rows=craftingRows(engine),row=rows.find(r=>r.name===name);
- const multiplier=engine.rules?.equipment?.workmanship?.find(r=>r.name===name)?.multiplier??row?.perf??1;
- return {name:name??null,rank:row?rows.indexOf(row):null,multiplier,price:row?.price??1,attain:row?.attain??1,loses:row?.loses??[]};
+ if(name===null||name===undefined)return {name:null,rank:null,multiplier:1,price:1,attain:1,loses:[]};
+ const order=engine.rules?.equipment?.workmanship??[],rank=order.findIndex(r=>r.name===name),row=craftingRows(engine).find(r=>r.name===name);
+ if(rank<0)throw Error(`手艺档未登记：${name}`);
+ return {name,rank,multiplier:order[rank].multiplier,price:row?.price??1,attain:row?.attain??1,loses:row?.loses??[]};
 }
+// 手艺档名，从低到高（规则表 equipment.workmanship 的顺序）。
+export const workmanshipNames=engine=>(engine.rules?.equipment?.workmanship??[]).map(r=>r.name);
 // 一件物品的用途类别：上面的类别，加上它标着的用途标签（item-use-tags.tags：cut、pierce…），
 // 加上它带的机制字段（combat 战斗属性、checkBonus 检定加成）。
 export function useClasses(engine,item){

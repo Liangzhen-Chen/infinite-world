@@ -288,6 +288,14 @@
     ],
     "workmanship": [
       {
+        "name": "仿制",
+        "multiplier": 0.5
+      },
+      {
+        "name": "粗陋",
+        "multiplier": 0.7
+      },
+      {
         "name": "粗糙",
         "multiplier": 0.8
       },
