@@ -80,11 +80,12 @@
       "minimumC": 70,
       "maximumC": 140,
       "burning": true
-     }
+     },
+     "owner": "npc_bs_078_1"
     }
    ],
    "basis": [
-    "原手写工位 station_s2_pill_furnace 改为设备属性（保留编号、收费与热源绑定）"
+    "原手写工位 station_s2_pill_furnace 改为设备属性（保留编号、收费与热源绑定）；丹炉属于丹房炉具的主人（已审定行与 feature_s2_pill_furnace 的主人都是 npc_bs_078_1），与学馆建筑的产权分开"
    ]
   },
   "bld_hw_council": {
