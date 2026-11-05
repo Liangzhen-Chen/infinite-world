@@ -14,7 +14,8 @@ export function scales(T){
   const low=['仿制','粗陋'].filter(n=>!order.includes(n));
   const tiers=[...low,...order];
   const grades=T.world.rules?.equipment?.qualities??[];
-  return {tiers,grades,table:rows,
+  const row=n=>(rows.rows??[]).find(r=>r.name===n);
+  return {tiers,grades,table:rows,loses:n=>row(n)?.loses??[],price:n=>row(n)?.price??1,
     tier:n=>{const i=tiers.indexOf(n);return i<0?null:i;},
     grade:n=>{const i=grades.indexOf(n);return i<0?null:i;},
     genuineMin:tiers.indexOf('普通')};
@@ -23,18 +24,28 @@ export function scales(T){
 // —— 观察 ——
 const stack=(doc,item)=>doc.state.inventory?.[item];
 const unitsOf=(doc,item)=>{const s=stack(doc,item);if(!s)return [];const ids=s.instances??[];return ids.map(id=>({id,...(doc.state.itemInstances?.[id]??{})}));};
-// 实例剩余用途：实例上写了 uses（剩余用途）就用它；写了 lostUses / missingUses（缺失用途）就从物品用途集里扣掉；都没写就是物品用途集全保留。
-export function usesOfUnit(unit,base){
-  if(Array.isArray(unit?.uses))return unit.uses.map(String);
-  const lost=unit?.lostUses??unit?.missingUses??unit?.usesLost??null;
-  if(Array.isArray(lost)){const l=new Set(lost.map(String));return base.filter(u=>!l.has(u)&&!l.has(u.replace(/^class:/,'')));}
-  return [...base];
+// 实例缺掉的用途以引擎的 unitLostUses 为准（item-class.mjs：实例记的 lostUses，旧实例按手艺档推；物理事实 physicalItem 也按它去掉用途标签、
+// checkBonus、combat）。树里没有 unitLostUses 时退回读实例的 lostUses 字段。剩余用途 = 物品用途集（spec.usesOf，含 checkBonus、combat）减去缺掉的。
+export function lostOfUnit(T,engine,unit){
+  if(typeof T.unitLostUses==='function'&&unit?.item)return T.unitLostUses(engine,unit).map(String);
+  return Array.isArray(unit?.lostUses)?unit.lostUses.map(String):[];
 }
+export function usesOfUnit(unit,base,lost){const l=new Set(lost??[]);return base.filter(u=>!l.has(u));}
 const tierName=u=>u?.workmanship??u?.craftsmanship??u?.tier??null;
 const durOf=(u,s)=>u?.maxDurability??u?.durability??s?.durability??null;
-const gradeOf=(u,s)=>u?.quality??s?.quality??null;
-// 失败分档（按现象）：失败且有产物——缺用途记"部分功能"，否则记"损耗"；失败没有产物——材料一点没少记"无损"，全没了记"报废"，介于中间记"损耗"。
-// 引擎回执里如果直接写了分档（outcome / failure.kind 等），一并记下作对照。
+// 实例品质：引擎记在单件上的 grade（数值，标准件 1）；不是目录里的 quality（木…天，那是物品种类的档次）。
+const gradeOf=(u,s)=>u?.grade??(typeof s==='object'?s?.grade:undefined)??1;
+// 持有人某材料的品质分布：单件按各自 grade，未登记单件的余量按行囊 grade（缺省 1）。
+function matGrades(doc,item){
+  const s=stack(doc,item),q=inv(doc.state,item);if(!q)return {qty:0,min:null,sum:0};
+  const ids=typeof s==='object'?s.instances??[]:[],gs=ids.map(id=>doc.state.itemInstances?.[id]?.grade??1);
+  const rest=Math.max(0,q-gs.length),rg=(typeof s==='object'?s.grade:undefined)??1;
+  const all=[...gs,...(rest?[rg]:[])];return {qty:q,min:Math.min(...all),sum:gs.reduce((a,b)=>a+b,0)+rest*rg};
+}
+// 失败分档（按现象）：失败而得到成品记"部分功能"；没有成品时看材料——品质比投入低（退回的料 grade 降了）记"损耗"，
+// 数量少了而品质没降（只剩残料或全无）记"报废"，数量品质都原样记"无损"。
+// 引擎回执里的分档（failure：intact / wear / ruin / partial）另记作对照。
+export const ENGINE_CAT={intact:'无损',wear:'损耗',ruin:'报废',partial:'部分功能'};
 const CAT={无损:/none|intact|lossless|noloss|safe|无损/i,损耗:/wear|damage|loss|损耗|durab|degrad/i,报废:/ruin|scrap|destroy|wreck|break|报废|total/i,部分功能:/partial|部分|function|half/i};
 export const catOf=s=>{if(!s)return null;s=String(s);for(const k of ['部分功能','无损','报废','损耗'])if(CAT[k].test(s)&&!(k==='损耗'&&CAT['无损'].test(s)))return k;return null;};
 
@@ -43,18 +54,24 @@ function trialRecord(T,S,D,recipe,before,after,r){
   const beforeIds=new Set(stack(before,out)?.instances??[]);
   const qtyGain=inv(after.state,out)-inv(before.state,out);
   const fresh=unitsOf(after,out).filter(u=>!beforeIds.has(u.id));
-  const units=fresh.map(u=>({id:u.id,tier:tierName(u),rank:S.tier(tierName(u)),maxDur:durOf(u,stack(after,out)),grade:gradeOf(u,stack(after,out)),gradeRank:S.grade(gradeOf(u,stack(after,out))),uses:usesOfUnit(u,base),lost:base.filter(x=>!usesOfUnit(u,base).includes(x)),maker:u.maker??null}));
+  const units=fresh.map(u=>{const lost=lostOfUnit(T,r.engine,u),uses=usesOfUnit(u,base,lost);
+    return {id:u.id,tier:tierName(u),rank:S.tier(tierName(u)),maxDur:durOf(u,stack(after,out)),grade:gradeOf(u,stack(after,out)),catalogQuality:u.quality??null,uses,lost:base.filter(x=>!uses.includes(x)),lostRecorded:u.lostUses??null,maker:u.maker??null};});
   const res=r.result??{};
   const matBefore=recipe.materials.reduce((s,m)=>s+Math.min(m.amount,inv(before.state,m.item)),0);
   const consumed=recipe.materials.reduce((s,m)=>s+Math.max(0,Math.min(m.amount,inv(before.state,m.item)-inv(after.state,m.item))),0);
   const failed=r.status==='committed'&&(res.success===false||/失败/.test(res.degree??'')||qtyGain<=0);
-  let cat=null;
+  let cat=null,mats=null;
   if(failed){
-    if(qtyGain>0)cat=units.some(u=>u.lost.length)?'部分功能':'损耗';
-    else cat=consumed<=0?'无损':consumed>=matBefore?'报废':'损耗';
+    mats=recipe.materials.map(m=>{const b=matGrades(before,m.item),a=matGrades(after,m.item);
+      return {item:m.item,qtyBefore:b.qty,qtyAfter:a.qty,minBefore:b.min,minAfter:a.min,dropped:a.qty>0&&(a.min<(b.min??1)-1e-9||(a.qty>=b.qty&&a.sum<b.sum-1e-9))};});
+    if(qtyGain>0)cat='部分功能';
+    else if(mats.some(m=>m.dropped))cat='损耗';
+    else cat=consumed>0?'报废':'无损';
   }
-  const engineCat=catOf(res.outcome??res.failure?.kind??res.failureKind??res.failure?.category??res.result??null);
-  return {status:r.status,reason:r.reason??null,degree:res.degree??null,success:res.success??null,engineTier:res.workmanship??null,qtyGain,units,failed,cat,engineCat,consumedFrac:matBefore?consumed/matBefore:null,books:books({T,doc:after,engine:r.engine},before)};
+  const ef=typeof res.failure==='string'?res.failure:(res.failure?.kind??null);
+  const engineCat=ef?(ENGINE_CAT[ef]??catOf(ef)):null;
+  return {status:r.status,reason:r.reason??null,degree:res.degree??null,standing:r.status==='committed'?(res.standing??'skilled'):null,success:res.success??null,engineTier:res.workmanship??null,engineFailure:ef,
+    qtyGain,units,failed,cat,engineCat,mats,consumedFrac:matBefore?consumed/matBefore:null,books:books({T,doc:after,engine:r.engine},before)};
 }
 
 // 从同一快照分叉 K 次，各做一次。
@@ -73,9 +90,12 @@ async function trials(ctx,T,S,D,recipe,K,tag){
 // 外行用真实动作自己做一件东西（劣工具、劣原料），做出来为止（最多 5 次，每次重新备料）。
 async function makeUnskilled(c,D,recipeId,item,need,steps){
   const r=D.recipe(recipeId);
+  // 取不到时按世界规则再去取一次：睡到次日（采集点再生、持有人补货），连外镇的持有人和采集点一起找；仍取不到就是世界里真实的供给不够，
+  // 记为受阻（supply），不是引擎缺陷。
+  const get=async(it,n)=>{if(await obtain(c,it,n,steps))return true;await sleepTill(c);return obtain(c,it,n,steps,{wide:true});};
   for(let k=0;k<5&&pinv(c.doc,item)<need;k++){
-    for(const t of r.tools??[])if(!await obtain(c,t,1,steps))return {ok:false,why:`做 ${recipeId} 缺工具 ${t}`};
-    for(const m of r.materials)if(!await obtain(c,m.item,m.amount,steps))return {ok:false,why:`做 ${recipeId} 缺材料 ${m.item}`};
+    for(const t of r.tools??[])if(!await get(t,1))return {ok:false,supply:true,why:`做 ${recipeId} 缺工具 ${t}：再去取一次（次日、含外镇持有人与采集点）仍取不到，世界供给不足`};
+    for(const m of r.materials)if(!await get(m.item,m.amount))return {ok:false,supply:true,why:`做 ${recipeId} 缺材料 ${m.item}：${k?`前 ${k} 次失败耗掉了材料，`:''}再去取一次（次日、含外镇持有人与采集点）仍取不到，世界供给不足`};
     if(r.workstation){const st=D.station(r.workstation);if(st)await at(c,st);}
     const x=await act(c,'core:craft.manufacture',{recipe:recipeId});
     steps.push(`外行做 ${recipeId}：${say(x)}${x.result?.workmanship?'（'+x.result.workmanship+'）':''}`);
@@ -115,20 +135,31 @@ export async function lineage(T,S,D,spec,kind,{days,K,keep=kind==='A'}){
   if(kind==='B'){
     if(!spec.poorTool){res.blocked='数据里没有能由外行自制的工具';return res;}
     const m=await makeUnskilled(c,D,spec.poorTool.recipe,spec.poorTool.item,1,steps);
-    if(!m.ok){res.blocked=`前提造不出：劣工具（${m.why}）`;return res;}
+    if(!m.ok){res.blocked=`${m.supply?'受阻于世界供给（非引擎缺陷）':'前提造不出'}：劣工具（${m.why}）`;return res;}
     res.poorTool=unitsOf(c.doc,spec.poorTool.item).map(u=>({id:u.id,tier:tierName(u),rank:S.tier(tierName(u)),maxDur:durOf(u,stack(c.doc,spec.poorTool.item))}));
   }
   if(kind==='C'){
     if(!spec.crudeMaterial){res.blocked='数据里没有能由外行自制的原料';return res;}
     const cm=spec.crudeMaterial,m=await makeUnskilled(c,D,cm.recipe,cm.item,cm.amount,steps);
-    if(!m.ok){res.blocked=`前提造不出：劣原料（${m.why}）`;return res;}
+    if(!m.ok){res.blocked=`${m.supply?'受阻于世界供给（非引擎缺陷）':'前提造不出'}：劣原料（${m.why}）`;return res;}
     const us=unitsOf(c.doc,cm.item),s=stack(c.doc,cm.item);
-    res.crude={item:cm.item,units:us.length?us.map(u=>({id:u.id,tier:tierName(u),rank:S.tier(tierName(u)),grade:gradeOf(u,s),gradeRank:S.grade(gradeOf(u,s))})):[{id:null,tier:s?.workmanship??null,rank:S.tier(s?.workmanship??null),grade:s?.quality??null,gradeRank:S.grade(s?.quality??null)}]};
+    res.crude={item:cm.item,units:us.length?us.map(u=>({id:u.id,tier:tierName(u),rank:S.tier(tierName(u)),grade:gradeOf(u,s),catalogQuality:u.quality??null})):[{id:null,tier:s?.workmanship??null,rank:S.tier(s?.workmanship??null),grade:gradeOf(null,s),catalogQuality:s?.quality??null}]};
   }
   for(const t of needTools)if(!await obtain(c,t,1,steps)){res.blocked=`取不到工具 ${t}`;return res;}
   for(const m of needMats)if(!await obtain(c,m.item,m.amount,steps)){res.blocked=`取不到材料 ${m.item}`;return res;}
   const st=stationOf(X);
+  // Q1d 的另选配方（X 的产物没有可丢用途时）：在 A 谱系的缺技能、刚入门两档同一快照上另做 K 次，工具、材料按世界规则取得。
+  const Xd=kind==='A'&&spec.Xd&&spec.Xd!==X.id?D.recipe(spec.Xd):null;
+  if(Xd)res.xd={recipe:Xd.id,tiers:{}};
+  const runXd=async tier=>{
+    if(!Xd||res.xd.blocked)return;
+    for(const t of Xd.tools??[])if(!await obtain(c,t,1,steps)){res.xd.blocked=`取不到 ${Xd.id} 的工具 ${t}`;return;}
+    for(const m of Xd.materials)if(!await obtain(c,m.item,m.amount,steps)){res.xd.blocked=`取不到 ${Xd.id} 的材料 ${m.item}`;return;}
+    const sd=stationOf(Xd);if(sd)await at(c,sd);
+    res.xd.tiers[tier]={proficiency:prof(c,Xd.skill),trials:await trials(c,T,S,D,Xd,K,`d${tier}`)};
+  };
   const runTier=async tier=>{
+    if(tier!=='熟练')await runXd(tier);
     if(st)await at(c,st);
     res.tiers[tier]={proficiency:prof(c,X.skill),day:Math.floor(c.doc.state.minute/1440),trials:await trials(c,T,S,D,X,K,tier)};
     // 留样（A 谱系）：在主线上真做一次并留下产物，供同一时刻对比报价、成交价。
@@ -171,8 +202,8 @@ async function sales(c,T,X,keepers,spec){
     out.buyer=b;
     for(const [tier,u] of ks){
       // 报价：引擎回执里给的单价（没有就取成交前后钱数差）；成交价：真成交后玩家钱数差。两者都在分叉上做，互不影响。
-      const q=await sell(c.doc,b,u.id);out.quotes[tier]={tier:u.tier,rank:u.rank,price:q.quoted??q.price,status:q.status};
-      const d=await sell(c.doc,b,u.id);out.deals[tier]={tier:u.tier,rank:u.rank,price:d.price,status:d.status};
+      const q=await sell(c.doc,b,u.id);out.quotes[tier]={tier:u.tier,rank:u.rank,grade:u.grade,price:q.quoted??q.price,status:q.status};
+      const d=await sell(c.doc,b,u.id);out.deals[tier]={tier:u.tier,rank:u.rank,grade:u.grade,price:d.price,status:d.status};
     }
     break;
   }

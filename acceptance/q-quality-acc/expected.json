@@ -32,7 +32,7 @@
    "expect": "pass",
    "baseline": "fail"
   },
-  "木.Q3b 失败频率与数据表参数大致相符": {
+  "木.Q3b 失败频率与数据表参数大致相符（按实际出现的检定档×技能状况加权，2.5σ）": {
    "expect": "pass",
    "baseline": "fail"
   },
@@ -88,7 +88,7 @@
    "expect": "pass",
    "baseline": "fail"
   },
-  "金属.Q3b 失败频率与数据表参数大致相符": {
+  "金属.Q3b 失败频率与数据表参数大致相符（按实际出现的检定档×技能状况加权，2.5σ）": {
    "expect": "pass",
    "baseline": "fail"
   },
@@ -148,7 +148,7 @@
    "expect": "pass",
    "baseline": "fail"
   },
-  "皮.Q3b 失败频率与数据表参数大致相符": {
+  "皮.Q3b 失败频率与数据表参数大致相符（按实际出现的检定档×技能状况加权，2.5σ）": {
    "expect": "pass",
    "baseline": "fail"
   },
@@ -204,7 +204,7 @@
    "expect": "pass",
    "baseline": "fail"
   },
-  "布.Q3b 失败频率与数据表参数大致相符": {
+  "布.Q3b 失败频率与数据表参数大致相符（按实际出现的检定档×技能状况加权，2.5σ）": {
    "expect": "pass",
    "baseline": "fail"
   },
@@ -288,7 +288,7 @@
    "expect": "pass",
    "baseline": "fail"
   },
-  "V新(布).Q3b 失败频率与数据表参数大致相符": {
+  "V新(布).Q3b 失败频率与数据表参数大致相符（按实际出现的检定档×技能状况加权，2.5σ）": {
    "expect": "pass",
    "baseline": "fail"
   },

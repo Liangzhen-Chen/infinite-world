@@ -38,8 +38,15 @@ function judge(prefix,spec,L,S,D){
     put(`${P}.Q1b 外行产物手艺档为仿制或粗陋`,us.length&&us.every(u=>u.tier==='仿制'||u.tier==='粗陋')?'pass':(us.length?'fail':'blocked'),us.length?{tiers:count(us.map(u=>u.tier))}:'外行没有做出产物',`Q1`);
     const dU=mean(nonNull(us.map(u=>u.maxDur))),cap=(cat?.durability??0)*0.8;
     put(`${P}.Q1c 外行产物耐久明显低于真货（≤ 物品表耐久 × 0.8）`,us.length?(dU!=null&&dU<=cap?'pass':'fail'):'blocked',us.length?{meanMaxDur:dU,catalog:cat?.durability,threshold:cap}:'外行没有做出产物','Q1');
-    const lostAny=us.filter(u=>u.lost.length);
-    put(`${P}.Q1d 外行产物部分用途缺失`,!spec.uses.length?'blocked':us.length?(lostAny.length?'pass':'fail'):'blocked',us.length?{baseUses:spec.uses,withLoss:lostAny.length,of:us.length,example:lostAny[0]?.lost??null}:'外行没有做出产物','Q1');
+    // 样本：产物本身有可丢用途的配方（X 本身，或同族另选的 Xd），缺技能、刚入门两档里落在低档（该档 loses 与物品用途有交集）的单件。
+    // 缺掉的用途读引擎 unitLostUses；每件都必须缺掉该档应缺的全部用途。
+    const xdTr=A.xd?[...(A.xd.tiers['缺技能']?.trials??[]),...(A.xd.tiers['刚入门']?.trials??[])]:[...U,...N];
+    const dUses=spec.Xd===spec.X?spec.uses:spec.usesD??[];
+    const samples=prods(xdTr).map(u=>({...u,expectLost:S.loses(u.tier).filter(x=>dUses.includes(x))})).filter(u=>u.expectLost.length);
+    const short=samples.filter(u=>!u.expectLost.every(x=>u.lost.includes(x)));
+    if(!spec.Xd)put(`${P}.Q1d 外行产物部分用途缺失`,'blocked',`族内没有产物带可丢用途（${[...new Set(S.table.rows.flatMap(r=>r.loses??[]))].join('、')}）且取得到的配方`,'Q1');
+    else if(A.xd?.blocked)put(`${P}.Q1d 外行产物部分用途缺失`,'blocked',A.xd.blocked,'Q1');
+    else put(`${P}.Q1d 外行产物部分用途缺失`,samples.length?(short.length?'fail':'pass'):'blocked',samples.length?{recipe:spec.Xd,baseUses:dUses,samples:samples.length,byTier:count(samples.map(u=>u.tier)),short:short.length,example:(short[0]??samples[0])&&{tier:(short[0]??samples[0]).tier,expectLost:(short[0]??samples[0]).expectLost,lost:(short[0]??samples[0]).lost}}:{recipe:spec.Xd,why:'缺技能、刚入门两档没有落在会缺用途的低档的产物',tiers:count(prods(xdTr).map(u=>u.tier))},'Q1');
     const pr=A.probes,phys=Object.entries(pr).map(([k,v])=>{const want=k==='noMaterial'?'材料':k==='noTool'?'工具':'工位';return {probe:k,status:v.status??'skipped',reason:v.reason??v.skipped,ok:v.status==='rejected'&&PHYS[want].test(v.reason??'')&&!SKILLY.test(v.reason??'')};});
     put(`${P}.Q1e 只有物理不可行才拒绝，理由是物理理由`,phys.length&&phys.every(x=>x.ok)?'pass':'fail',phys,'Q1');
   }
@@ -58,12 +65,17 @@ function judge(prefix,spec,L,S,D){
     const cats=count(fails.map(t=>t.cat));
     const need=['无损','损耗','报废','部分功能'];
     put(`${P}.Q3a 失败落在无损、损耗、报废、部分功能四类，每类都出现过`,need.every(k=>cats[k])?'pass':'fail',{attempts:all.length,failures:fails.length,byCategory:cats,engineReported:count(fails.map(t=>t.engineCat))},'Q3');
+    // 期望按本次实际出现的（检定档, 技能状况）组合逐次加权：每次失败按它那一行的四类概率计期望次数，方差为各次 p(1−p) 之和（二项标准差的逐次推广）；
+    // 观测次数与期望之差 ≤ 2.5σ。表里没有那一行的失败（烧制裂损、工坊停用等物理原因）不进比较，单列。
     const tab=failureTable(S.table);
-    if(!tab)put(`${P}.Q3b 失败频率与数据表参数大致相符`,'fail','balance/crafting.json 里找不到失败分档参数（四类份额）',`Q3`);
-    else if(fails.length<8)put(`${P}.Q3b 失败频率与数据表参数大致相符`,'blocked',`失败只有 ${fails.length} 次，样本不足 8`,'Q3');
+    const inTab=tab?fails.filter(t=>tab.rows[t.degree]?.[t.standing]):[];
+    if(!tab)put(`${P}.Q3b 失败频率与数据表参数大致相符`,'fail','balance/crafting.json 里找不到按检定档、技能状况分行的失败分档参数',`Q3`);
+    else if(inTab.length<8)put(`${P}.Q3b 失败频率与数据表参数大致相符`,'blocked',`表内失败只有 ${inTab.length} 次，样本不足 8`,'Q3');
     else{
-      const n=fails.length,cmp=Object.entries(tab.shares).map(([k,p])=>{const o=(cats[k]??0)/n,tol=Math.max(0.15,2.5*Math.sqrt(p*(1-p)/n));return {cat:k,expected:+p.toFixed(3),observed:+o.toFixed(3),tol:+tol.toFixed(3),ok:Math.abs(o-p)<=tol};});
-      put(`${P}.Q3b 失败频率与数据表参数大致相符`,cmp.every(x=>x.ok)?'pass':'fail',{param:tab.id,failures:n,cmp},'Q3');
+      const n=inTab.length,oc=count(inTab.map(t=>t.cat));
+      const cmp=Object.keys(tab.cats).map(k=>{let e=0,v=0;for(const t of inTab){const p=tab.rows[t.degree][t.standing][k]??0;e+=p;v+=p*(1-p);}
+        const o=oc[k]??0,sd=Math.sqrt(v),tol=2.5*sd;return {cat:k,expected:+e.toFixed(2),observed:o,sd:+sd.toFixed(2),tol:+tol.toFixed(2),ok:Math.abs(o-e)<=tol+1e-9};});
+      put(`${P}.Q3b 失败频率与数据表参数大致相符（按实际出现的检定档×技能状况加权，2.5σ）`,cmp.every(x=>x.ok)?'pass':'fail',{param:tab.id,failures:n,outsideTable:fails.length-n,combos:count(inTab.map(t=>`${t.degree}/${t.standing}`)),cmp},'Q3');
     }
     const bad=fails.filter(t=>!t.books.ok);
     put(`${P}.Q3c 失败消耗的材料账本守恒`,fails.length?(bad.length?'fail':'pass'):'blocked',fails.length?{failures:fails.length,bad:bad.length,example:bad[0]?.books}:'没有失败样本','Q3');
@@ -72,11 +84,12 @@ function judge(prefix,spec,L,S,D){
   const cp=prods(tier(C,'熟练')),crude=C?.crude?.units??[];
   if(C?.blocked||!cp.length)put(`${P}.Q4a 低品质原料：成品不超过原料品质下限`,'blocked',C?.blocked??'C 谱系熟练档没有产物','Q4');
   else{
-    const minR=Math.min(...crude.map(u=>u.rank??Infinity)),minG=Math.min(...crude.map(u=>u.gradeRank??Infinity));
-    const capOk=Number.isFinite(minR)&&cp.every(u=>u.rank!=null&&u.rank<=minR)&&(!Number.isFinite(minG)||cp.every(u=>u.gradeRank==null||u.gradeRank<=minG));
+    // 品质是实例的 grade（数值，标准件 1），不是目录 quality。成品 grade ≤ 劣原料 grade 的下限；且平均 grade 低于真原料对照。
+    const minG=Math.min(...crude.map(u=>u.grade??1));
+    const capOk=cp.every(u=>u.grade!=null&&u.grade<=minG+1e-9);
     const ctl=prods((spec.Xc===spec.X?tier(A,'熟练'):(A.xc?.['熟练']??[])));
-    const ctlRank=mean(nonNull(ctl.map(u=>u.rank))),cRank=mean(nonNull(cp.map(u=>u.rank)));
-    put(`${P}.Q4a 低品质原料：成品不超过原料品质下限（且比真原料对照差）`,capOk&&ctlRank!=null&&cRank<ctlRank?'pass':'fail',{crudeMaterial:C.crude,products:count(cp.map(u=>u.tier)),capRank:Number.isFinite(minR)?minR:null,controlMeanRank:ctlRank,crudeMeanRank:cRank},'Q4');
+    const ctlG=mean(nonNull(ctl.map(u=>u.grade))),cG=mean(nonNull(cp.map(u=>u.grade)));
+    put(`${P}.Q4a 低品质原料：成品品质（grade）不超过原料品质下限（且比真原料对照差）`,capOk&&ctlG!=null&&cG<ctlG?'pass':'fail',{crudeMaterial:C.crude,products:count(cp.map(u=>u.tier)),capGrade:minG,maxProductGrade:Math.max(...cp.map(u=>u.grade??0)),controlMeanGrade:ctlG,crudeMeanGrade:cG,controlMeanRank:mean(nonNull(ctl.map(u=>u.rank))),crudeMeanRank:mean(nonNull(cp.map(u=>u.rank)))},'Q4');
   }
   const bp=[...tier(B,'缺技能'),...tier(B,'刚入门'),...tier(B,'熟练')],ap=all;
   if(B?.blocked||!prods(bp).length)put(`${P}.Q4b 换更好的工具，期望品质上升`,'blocked',B?.blocked??'B 谱系没有产物','Q4');
@@ -98,7 +111,10 @@ function judge(prefix,spec,L,S,D){
       const rs=rows(k),gen=rs.filter(x=>x.rank!=null&&x.rank>=S.genuineMin),imi=rs.filter(x=>x.tier==='仿制'||x.tier==='粗陋');
       if(!gen.length||!imi.length){put(`${P}.${label}`,'blocked',{why:'同一时刻没有同时持有真货和仿制/粗陋留样',held:rs.map(x=>x.tier)},'Q5');continue;}
       const ok=Math.min(...gen.map(x=>x.price))>Math.max(...imi.map(x=>x.price));
-      put(`${P}.${label}`,ok?'pass':'fail',{buyer:sl.buyer,rows:rs},'Q5');
+      // 单件价格按实例品质变化：按 grade × 手艺档价格倍率（balance/crafting rows 的 price）排序，价格单调不减（价格取整允许相等）。
+      const idx=x=>(x.grade??1)*S.price(x.tier),ord=[...rs].sort((a,b)=>idx(a)-idx(b));
+      const mono=ord.every((x,i)=>i===0||idx(x)<=idx(ord[i-1])+1e-9||x.price>=ord[i-1].price);
+      put(`${P}.${label}`,ok&&mono?'pass':'fail',{buyer:sl.buyer,genuineOverImitation:ok,priceFollowsGrade:mono,rows:rs.map(x=>({...x,index:+idx(x).toFixed(4)}))},'Q5');
     }
   }
   // Q7 守恒（每条谱系的全程账本）
@@ -106,13 +122,16 @@ function judge(prefix,spec,L,S,D){
   put(`${P}.Q7 账本审计为空`,lb.length?(lb.every(x=>x.books.ok)?'pass':'fail'):'blocked',lb.map(x=>({kind:x.kind,...x.books})),'Q7');
 }
 const count=a=>a.reduce((m,x)=>(m[x??'无']=(m[x??'无']??0)+1,m),{});
-// 失败分档参数：在 balance/crafting.json 的 params/rows 里找 id/key 含 fail/失败/mishap/outcome、且含至少三个能归到四类的数值字段的条目。
+// 失败分档参数：在 balance/crafting.json 的 params 里找 id 含 fail/失败/mishap/outcome、值为"检定档 → 技能状况 → 各类概率"的条目；
+// 各类键（intact/wear/ruin/partial 等）按名归到四类。返回 rows[检定档][技能状况][类] = 概率。
+const KEYCAT=k=>['部分功能','无损','报废','损耗'].find(n=>({无损:/none|intact|lossless|noloss|safe|无损/i,损耗:/wear|damage|loss|损耗|durab|degrad/i,报废:/ruin|scrap|destroy|wreck|break|报废/i,部分功能:/partial|部分|function|half/i})[n].test(k)&&!(n==='损耗'&&/none|noloss|无损/i.test(k)))??null;
 function failureTable(tab){
-  const cands=[...(tab.params??[]).map(p=>({id:p.id,v:p.value})),...(tab.rows??[]).map(r=>({id:r.key,v:r}))].filter(x=>/fail|失败|mishap|outcome/i.test(x.id??''));
-  for(const c of cands){
-    const shares={};const walk=(o,k)=>{if(typeof o==='number'){const cat=k&&['部分功能','无损','报废','损耗'].find(n=>({无损:/none|intact|lossless|noloss|safe|无损/i,损耗:/wear|damage|loss|损耗|durab|degrad/i,报废:/ruin|scrap|destroy|wreck|break|报废/i,部分功能:/partial|部分|function|half/i})[n].test(k)&&!(n==='损耗'&&/none|noloss|无损/i.test(k)));if(cat)shares[cat]=(shares[cat]??0)+o;}else if(o&&typeof o==='object'&&!Array.isArray(o))for(const [kk,v] of Object.entries(o)){if(/bounds|basis|source|note|calibration|unit/.test(kk))continue;walk(v,kk);}};
-    walk(c.v,null);
-    if(Object.keys(shares).length>=3){const s=Object.values(shares).reduce((a,b)=>a+b,0);for(const k of Object.keys(shares))shares[k]/=s;return {id:c.id,shares};}
+  for(const p of (tab.params??[]).filter(x=>/fail|失败|mishap|outcome/i.test(x.id??''))){
+    const v=p.value;if(!v||typeof v!=='object')continue;
+    const rows={},cats={};let ok=true;
+    for(const [deg,byStanding] of Object.entries(v)){if(!byStanding||typeof byStanding!=='object'){ok=false;break;}rows[deg]={};
+      for(const [st,w] of Object.entries(byStanding)){if(!w||typeof w!=='object'){ok=false;break;}const r={};for(const [k,x] of Object.entries(w)){const c=KEYCAT(k);if(c&&typeof x==='number'){r[c]=(r[c]??0)+x;cats[c]=1;}}rows[deg][st]=r;}}
+    if(ok&&Object.keys(cats).length>=3)return {id:p.id,rows,cats};
   }
   return null;
 }
@@ -157,7 +176,8 @@ if(!has('--no-mut')){
   let ok=true,err=null;try{mut=await runTree(MUT,'V',{mutSpec:D=>{const f=Object.values(D.families).find(s=>s.X===NEW.recipe);if(f)return f;
     // 选族时没被挑中也照样测它：按同一规则补出它的规格。
     const r=D.recipe(NEW.recipe);return {family:`新(${info.family})`,X:r.id,skill:r.skill,station:D.station(r.workstation),teachers:D.teachersOf(r),output:r.output.item,uses:D.usesOf(r.output.item),
-      poorTool:(r.tools??[]).map(t=>({item:t,recipe:(D.prod[t]??[])[0]?.id})).find(x=>x.recipe)??null,Xc:r.id,crudeMaterial:r.materials.map(m=>({item:m.item,amount:m.amount,recipe:(D.prod[m.item]??[])[0]?.id})).find(x=>x.recipe)??null};}});}
+      poorTool:(r.tools??[]).map(t=>({item:t,recipe:(D.prod[t]??[])[0]?.id})).find(x=>x.recipe)??null,Xc:r.id,
+      ...(()=>{const Xd=D.losable(r.output.item).length?r:D.pickXd(D.familyOf(r),r);return {Xd:Xd?.id??null,usesD:Xd?D.usesOf(Xd.output.item):[]};})(),crudeMaterial:r.materials.map(m=>({item:m.item,amount:m.amount,recipe:(D.prod[m.item]??[])[0]?.id})).find(x=>x.recipe)??null};}});}
   catch(e){ok=false;err=String(e?.stack??e).slice(0,600);}
   put('V0 变异副本只改数据就能载入并跑通',ok?'pass':'fail',ok?info:err,'V');
 }

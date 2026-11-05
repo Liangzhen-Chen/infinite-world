@@ -20,9 +20,11 @@ export async function openRepo(repo){
   const {applyPatches}=await import(R+'server-plugin/storage.mjs');
   const {auditLedger}=await import(R+'server-plugin/ledger.mjs');
   const {conservation}=await import(R+'tests/helpers/ledger-audit.mjs');
+  // 单件缺掉的用途以引擎的 unitLostUses 为准（只读：实例记的 lostUses，旧实例按手艺档推）；旧树没有它时退回读实例字段。
+  let unitLostUses=null;try{({unitLostUses}=await import(R+'server-plugin/item-class.mjs'));}catch{}
   const world=await loadRuntimeWorld(path.join(repo,'world'));
   const seed=JSON.parse(fs.readFileSync(`${repo}/tests/fixtures/legacy/seed.json`,'utf8'));
-  const T={repo,world,applyPatches,auditLedger,conservation};
+  const T={repo,world,applyPatches,auditLedger,conservation,unitLostUses};
   T.newGame=(id='q')=>{const engine=new WorldEngine(structuredClone(world));return {T,engine,doc:engine.createCharacter(seed,{},id),id,log:[]};};
   return T;
 }
@@ -99,7 +101,7 @@ export async function practiceTo(c,skill,target,maxDays,steps=[]){
 }
 // —— 取得：先向持有人买（对方不接待就等一个时辰再去），再去带该资源的据点采 ——
 const near=(loc,home)=>{const code=String(home??'').split('_')[1];return code&&String(loc??'').split('_')[1]===code?0:1;};
-export async function obtain(c,item,n,steps=[],{home='loc_hw',exclude=[]}={}){
+export async function obtain(c,item,n,steps=[],{home='loc_hw',exclude=[],wide=false}={}){
   const W=c.T.world;
   if(pinv(c.doc,item)>=n)return true;
   const all=Object.entries(c.doc.state.npcs).filter(([id,p])=>inv(p,item)>0&&!(p.hp<=0)&&p.location&&!exclude.includes(id));
@@ -117,12 +119,15 @@ export async function obtain(c,item,n,steps=[],{home='loc_hw',exclude=[]}={}){
     if(pinv(c.doc,item)>=n)return;}};
   const gather=async sites=>{for(const l of sites){
     const res=l.site.resources.find(r=>r.item===item);
-    await at(c,l.id);await act(c,'core:site.enter',{});
+    await at(c,l.id);const en=await act(c,'core:site.enter',{});if(en.status!=="committed")steps.push(`进 ${l.id}：${say(en)}`);
     for(let k=0;k<n+2&&pinv(c.doc,item)<n;k++){const g=await act(c,'core:site.gather',{target:res.id,quantity:1});if(g.status!=='committed'){steps.push(`在 ${l.id} 采 ${item}：${say(g)}`);break;}}
     if(pinv(c.doc,item)>=n)return;}};
-  const sites=W.locations.filter(l=>(l.site?.resources??[]).some(r=>r.item===item)&&near(l.id,home)===0).slice(0,2);
+  const withRes=W.locations.filter(l=>(l.site?.resources??[]).some(r=>r.item===item));
+  const sites=withRes.filter(l=>near(l.id,home)===0).slice(0,2);
   await buyFrom(local);
   if(pinv(c.doc,item)<n)await gather(sites);
-  if(pinv(c.doc,item)<n)await buyFrom(far);
+  if(pinv(c.doc,item)<n)await buyFrom(wide?all.filter(([,p])=>near(p.location,home)!==0):far);
+  // wide：再取一次时，外镇的采集点也去。
+  if(wide&&pinv(c.doc,item)<n)await gather(withRes.filter(l=>near(l.id,home)!==0).slice(0,3));
   const ok=pinv(c.doc,item)>=n;steps.push(ok?`${item} 备齐 ${pinv(c.doc,item)}/${n}`:`${item} 取不到（${pinv(c.doc,item)}/${n}）`);return ok;
 }

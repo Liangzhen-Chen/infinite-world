@@ -9,10 +9,16 @@ export function derive(T,doc,home='loc_hw'){
   const W=T.world,I=Object.fromEntries(W.items.map(i=>[i.id,i]));
   const useCfg=JSON.parse(fs.readFileSync(path.join(T.repo,'world/meta/item-use-tags.json'),'utf8'));
   const recipeTools=new Set(W.recipes.flatMap(r=>r.tools??[]));
-  // 用途集：物品性状里的用途标签 + 命中的用途类别 + "当配方工具"。
-  const usesOf=id=>{const it=I[id],t=it?.tags??[],u=new Set(t.filter(x=>useCfg.tags[x]));
-    for(const [k,cl] of Object.entries(useCfg.classes))if((cl.tags??[]).some(x=>t.includes(x))&&!(cl.exclude??[]).some(x=>t.includes(x)))u.add('class:'+k);
-    if(recipeTools.has(id))u.add('recipeTool');return [...u];};
+  // 用途集（与引擎读的用途同一口径，全部从数据推）：命中的用途类别（类别规则的 tags、recipeTool、nutrition）+ 物品性状里的用途标签
+  // + 物品带的机制字段 combat（战斗属性）、checkBonus（检定加成）。
+  const usesOf=id=>{const it=I[id],t=it?.tags??[],u=new Set();
+    for(const [k,cl] of Object.entries(useCfg.classes))if(!(cl.exclude??[]).some(x=>t.includes(x))&&((cl.tags??[]).some(x=>t.includes(x))||cl.recipeTool&&recipeTools.has(id)||cl.nutrition&&it?.nutrition))u.add(k);
+    for(const x of t)if(useCfg.tags[x])u.add(x);
+    for(const f of ['combat','checkBonus'])if(it?.[f])u.add(f);return [...u];};
+  // 可丢的用途：低手艺档（balance/crafting.json 各档 loses）会拿走、而这件物品本来就有的用途。没有可丢用途的物品不能当"缺用途"的样本。
+  const crafting=JSON.parse(fs.readFileSync(path.join(T.repo,'world/rules/tables/balance/crafting.json'),'utf8'));
+  const losesAll=new Set((crafting.rows??[]).flatMap(r=>r.loses??[]));
+  const losable=id=>usesOf(id).filter(u=>losesAll.has(u));
   const code=home.split('_')[1],local=loc=>String(loc??'').split('_')[1]===code;
   const holders=it=>Object.entries(doc.state.npcs).filter(([,n])=>inv(n,it)>0&&local(n.location)).reduce((s,[,n])=>s+inv(n,it),0);
   const sites=it=>W.locations.filter(l=>local(l.id)&&(l.site?.resources??[]).some(r=>r.item===it)).length;
@@ -26,9 +32,11 @@ export function derive(T,doc,home='loc_hw'){
   const familyOf=r=>{const ms=[...r.materials].sort((a,b)=>b.amount-a.amount);for(const m of ms){const t=I[m.item]?.tags??[];if(t.includes('fuel')&&!t.includes('timber'))continue;const f=familyOfItem(I[m.item]);if(f)return f;}return null;};
   const crafted=r=>r.materials.filter(m=>(prod[m.item]??[]).some(makeable)).map(m=>({item:m.item,amount:m.amount,recipe:(prod[m.item]??[]).find(makeable).id}));
   const poorTools=r=>(r.tools??[]).filter(t=>(prod[t]??[]).some(makeable)).map(t=>({item:t,recipe:(prod[t]??[]).find(makeable).id}));
-  const ok=r=>r.skill&&teachersOf(r).length&&r.materials.every(m=>obtainable(m.item)||(prod[m.item]??[]).some(makeable))&&(r.tools??[]).every(obtainable)&&(!r.workstation||station(r.workstation))&&(I[r.output.item]?.durability>0)&&usesOf(r.output.item).some(u=>u==='class:durable'||u==='recipeTool');
+  const ok=r=>r.skill&&teachersOf(r).length&&r.materials.every(m=>obtainable(m.item)||(prod[m.item]??[]).some(makeable))&&(r.tools??[]).every(obtainable)&&(!r.workstation||station(r.workstation))&&(I[r.output.item]?.durability>0)&&usesOf(r.output.item).includes('durable');
   const cost=r=>[...r.materials.map(m=>(I[m.item]?.basePrice??0)*m.amount),...(r.tools??[]).map(t=>I[t]?.basePrice??0)].reduce((a,b)=>a+b,0);
   const score=r=>(usesOf(r.output.item).length?8:0)+(crafted(r).length?4:0)+(poorTools(r).length?4:0)+((r.minimumProficiency??0)===0?2:0)-(r.tools??[]).length*0.5-cost(r)/50;
+  const pickXd=(f,X)=>W.recipes.filter(r=>r.id!==X.id&&r.skill&&familyOf(r)===f&&losable(r.output.item).length&&makeable(r))
+    .sort((a,b)=>((b.skill===X.skill)-(a.skill===X.skill))||((a.tools??[]).length-(b.tools??[]).length)||(cost(a)-cost(b))||a.id.localeCompare(b.id))[0]??null;
   const byFam={};
   for(const r of W.recipes.filter(ok)){const f=familyOf(r);if(f)(byFam[f]??=[]).push(r);}
   // 逐族贪心挑选：同分时换技能、换工具（避免所有族都落在同一门手艺、同一把工具上）。
@@ -39,8 +47,11 @@ export function derive(T,doc,home='loc_hw'){
     const X=rs.find(r=>poorTools(r).length)??rs[0];
     const Xc=crafted(X).length?X:rs.find(r=>crafted(r).length&&r.skill===X.skill)??rs.find(r=>crafted(r).length)??null;
     usedSkill.add(X.skill);for(const t of X.tools??[])usedTool.add(t);
+    // Q1d 的样本配方：X 的产物有可丢用途就用 X；否则在同族、取得得到的配方里另选产物有可丢用途的（同技能优先，再换工具、换材料）。
+    const Xd=losable(X.output.item).length?X:pickXd(f,X);
     out[f]={family:f,X:X.id,skill:X.skill,station:station(X.workstation),teachers:teachersOf(X),output:X.output.item,uses:usesOf(X.output.item),
-      poorTool:poorTools(X)[0]??null,Xc:Xc?.id??null,XcStation:Xc?station(Xc.workstation):null,XcTeachers:Xc?teachersOf(Xc):[],crudeMaterial:Xc?crafted(Xc)[0]:null,candidates:rs.length};
+      poorTool:poorTools(X)[0]??null,Xc:Xc?.id??null,XcStation:Xc?station(Xc.workstation):null,XcTeachers:Xc?teachersOf(Xc):[],crudeMaterial:Xc?crafted(Xc)[0]:null,candidates:rs.length,
+      Xd:Xd?.id??null,XdStation:Xd?station(Xd.workstation):null,usesD:Xd?usesOf(Xd.output.item):[],losableD:Xd?losable(Xd.output.item):[]};
   }
-  return {I,usesOf,station,teachersOf,prod,families:out,recipe:id=>W.recipes.find(r=>r.id===id)};
+  return {I,usesOf,losable,familyOf,pickXd,makeable,station,teachersOf,prod,families:out,recipe:id=>W.recipes.find(r=>r.id===id)};
 }
