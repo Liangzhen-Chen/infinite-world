@@ -18,27 +18,25 @@ const FIXTURES=new Map(JSON.parse(fs.readFileSync(new URL('../world/ontology/fix
 export const fixtureDefinition=id=>FIXTURES.get(id)??null;
 const fixtureEntry=row=>typeof row==='string'?{fixture:row}:row;
 const placeOf=(engine,state,id)=>state?.created?.[id]??engine.byId.get(id);
-const stationCache=new WeakMap();
 // Stations from a place's own published or created facts (no campaign state).
 // A place that is open to the public, or whose fixture carries the owner's
 // posted fee, offers the station to anyone for that fee; otherwise only the
 // owner, residents, lessees and those the owner licenses may use it.
 export function fixtureStations(place){
  if(!place||typeof place!=='object')return [];
- const cached=stationCache.get(place);if(cached)return cached;
  const implied=place.facilityType?FACILITY_TYPES[place.facilityType]?.fixtures??[]:[];
  const out=[];
  for(const row of [...(Array.isArray(place.fixtures)?place.fixtures:[]),...implied].map(fixtureEntry)){
   const fixture=FIXTURES.get(row?.fixture);if(!fixture||out.some(s=>s.kind===fixture.affords))continue;
-  out.push({id:row.id??`${place.id}:${fixture.affords}`,kind:fixture.affords,fixture:row.fixture,location:place.id,
-   access:row.fee!==undefined||place.access?.mode==='public'?'public':'private',fee:row.fee??0,
+  out.push({id:row.id??`station_${place.id}_${fixture.affords}`,kind:fixture.affords,fixture:row.fixture,location:place.id,
+   access:row.fee!==undefined||place.access?.mode==='public'?'public':'consent',fee:row.fee??0,
    ...(row.thermalRequirement?{thermalRequirement:row.thermalRequirement}:{})});
  }
- Object.freeze(out);stationCache.set(place,out);return out;
+ return out;
 }
 // Who holds the station: the owner of the physical heat source it is bound to,
 // else the building's current owner, its catalogue owner, the household living
-// there, or (for a settlement's own ground) the settlement.
+// there, or the settlement whose ground it is.
 export function stationOwners(engine,state,station){
  const place=placeOf(engine,state,station.location);
  return place?ownersAt(place,engine.world.households,state,station):[];
@@ -53,7 +51,8 @@ function ownersAt(place,worldHouseholds,state,station){
  const households=(worldHouseholds??[]).filter(h=>h.homeLocation===place.id);
  const residents=[...new Set(households.length?households.flatMap(h=>[...h.members,...state?.family?.households?.[h.id]?.members??[]]):place.access?.residents??[])];
  if(residents.length)return residents;
- return place.scope===place.id?[place.id]:[];
+ // Unclaimed ground belongs to the settlement it lies in.
+ return typeof place.scope==='string'?[place.scope]:[];
 }
 // Load-time projection for readers of place.workstations: every published
 // place's stations are rewritten from its fixtures, so a hand-written list in
@@ -63,8 +62,9 @@ function ownersAt(place,worldHouseholds,state,station){
 export function materializeWorkstations(world){
  for(const place of world.locations??[]){
   const stations=fixtureStations(place);
-  if(!stations.length){delete place.workstations;continue;}
-  place.workstations=stations.map(station=>({...station,owner:ownersAt(place,world.households,null,station)[0]??null}));
+  delete place.workstations;if(!stations.length)continue;
+  // Non-enumerable: the world's serialized form, hash and clones keep only the fixtures.
+  Object.defineProperty(place,'workstations',{value:stations.map(station=>({...station,owner:ownersAt(place,world.households,null,station)[0]??null})),enumerable:false,writable:true,configurable:true});
  }
  return world;
 }
