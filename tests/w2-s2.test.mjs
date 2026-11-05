@@ -21,7 +21,12 @@ const formal=withoutS3(withoutS4(await loadWorld())),publication=await readS2Pub
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
-const before=withoutS2(formal),world=mergeS2Publication(before,publication),engine=new WorldEngine(world);
+const before=withoutS2(formal),world=mergeS2Publication(before,publication);
+// 合入 F 后依据：家户每天吃饭、烧柴（F 的 npc-life）。炼丹导师家既没有别的口粮也没有柴：蜂蜜按类别成了口粮（每份饱腹 7），
+// 几天的饭就把他那 3 份吃完、也按口粮自留；没有柴就只能烧他的艾绒引火包。学成后便买不到炼丹要的蜂蜜与引火包。
+// 夹具（本测试的世界副本）给导师家备 60 个面包作口粮、60 份木柴作家用燃料，让“蜂蜜与引火包是他可出让的余货”这一前提成立；断言不变。
+{const n=world.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:60,item_wood:60};}
+const engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAO='npc_bs_077_1',WU='npc_bs_079_1',DAN='npc_bs_078_1';

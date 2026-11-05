@@ -304,17 +304,19 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  // consumer still needs the goods missing from its current physical bags.
  return {owner,household:f.household,members,scope:subjective?'subjective':'kernel',sharedMeals:f.shared,shortfall,procurementShortfall,market,
   seedShortfall:rows.reduce((n,r)=>n+r.seedTarget-r.seed,0),commitmentShortfall:rows.reduce((n,r)=>n+Math.max(0,r.committed-r.stock),0),rows:rows.map(({definition,key,...r})=>{
-  const retained=Math.max(r.inUse,r.keep??0,r.food+r.seed)+(r.upkeep??0);
+  const retained=Math.max(r.inUse,r.food+r.seed)+(r.upkeep??0);
   return {...r,consumable:Boolean(definition?.nutrition),retained,available:Math.max(0,r.stock-retained-r.committed)};
  })};
 }
 
 // 家户用度自留（K2，与 npc-life 的家户用度同一口径）：npc-life 每天从户里扣的消耗类（householdUsage 的燃料、调味按重量），
-// 按一户的日用量 × 一个交易周期（economy.tradeCycleDays）留在家里；在用的日用品（durable，每人每种一件，npc-life 按寿命磨损）
-// 也留一件。店主货架上待售的货（本店补货清单）不是家用，不留。读 saleableStock/householdResources 的地方都据此只卖余量。
+// 按一户的日用量 × 一个交易周期（economy.tradeCycleDays）留在家里。书、工具等耐用品（durable）不是按日消耗的，
+// 不按“日用量 × 周期”留；正在干活用着的工具由 inUse 留。店主货架上待售的货（本店补货清单）不是家用，不留。读 saleableStock/householdResources 的地方都据此只卖余量。
 // 用度定义只有 item-class.mjs 的 householdUsage 一份，这里按状态时刻读它。
 export function householdUsage(engine,state,members){return usageDefinition(engine,state.minute,members);}
 const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
+// 家户用度先用同类里最便宜的：有热值属性（heatValue）的燃料按 价格 ÷ 热值，否则按 价格 ÷ 克。数据里目前没有物品登记热值，都按克算。
+export function usageCost(engine,item){const it=engine.byId.get(item);return (it?.basePrice??0)/(it?.heatValue>0?it.heatValue:itemGrams(engine,item));}
 // 一户一日用掉这件货多少件（不属于消耗类的为 0）。
 export function householdDailyUse(engine,state,members,item){
  return householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).reduce((n,u)=>n+u.gramsPerDay,0)/itemGrams(engine,item);
@@ -324,14 +326,15 @@ function reserveUpkeep(engine,state,members,rows){
  const merchandise=holder=>{if(!stock.has(holder))stock.set(holder,new Set(registerMerchandiseResolver.fn?.(engine,state,holder)??[]));return stock.get(holder);};
  for(const u of householdUsage(engine,state,members)){
   let grams=u.gramsPerDay*cycle;
-  for(const r of rows){
+  // 家里留着用的是同类里最便宜的那些（usageCost，与 npc-life 实际先用的顺序同一个函数），贵的（如引火包）才是可出让的余货。
+  for(const r of [...rows].sort((a,b)=>usageCost(engine,a.item)-usageCost(engine,b.item)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder))){
    if(grams<=0)break;
-   if(!isItemClass(engine,r.item,u.cls)||merchandise(r.holder).has(r.item))continue;
+   // 家户用度只扣名册人物的户（npc-life householdUpkeep 只取 state.npcs 里的户员）；玩家不按日自动扣，也就不替他留。
+   if(!state.npcs?.[r.holder]||!isItemClass(engine,r.item,u.cls)||merchandise(r.holder).has(r.item))continue;
    const free=Math.max(0,r.stock-r.committed-r.food-r.seed-(r.upkeep??0)),take=Math.min(free,Math.ceil(grams/itemGrams(engine,r.item)));
    if(take>0){r.upkeep=(r.upkeep??0)+take;grams-=take*itemGrams(engine,r.item);}
   }
  }
- for(const r of rows)if(state.npcs?.[r.holder]&&r.stock>0&&isItemClass(engine,r.item,'durable')&&!merchandise(r.holder).has(r.item))r.keep=1;
 }
 function futureSources(d,engine,owner,view){
  return view?buildFutureSources(d,engine,owner,view):budgetRead(d,engine,`future:${owner}`,()=>buildFutureSources(d,engine,owner,null));

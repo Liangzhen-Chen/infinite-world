@@ -14,7 +14,7 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // state.family plus ordinary memories, which then spread only through the
 // existing NPC conversation and message channels.
 import {digest,stateMemo,canonicalEqual} from './storage.mjs';
-import {householdMealPlan,householdMealWithSources} from './household-budget.mjs';
+import {householdMealPlan,householdMealWithSources,usageCost} from './household-budget.mjs';
 import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups} from './household-subsistence.mjs';
 import {placeSettlement} from './entity-view.mjs';
 import {toRational} from './det-math.mjs';
@@ -40,7 +40,7 @@ import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
 import {pow} from './det-math.mjs';
 import {heldUnit,wearItem} from './items.mjs';
-import {isItemClass,pickHeldOfClass,heldOfClass,craftingParam,householdUsage} from './item-class.mjs';
+import {isItemClass,heldOfClass,craftingParam,householdUsage} from './item-class.mjs';
 // Shop restock lists reach npc-life through registration: importing shop.mjs here closes an import cycle (TDZ at load).
 export function registerMerchandiseResolver(fn){registerMerchandiseResolver.fn=fn;}
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
@@ -88,9 +88,11 @@ export function advanceDurableWear(d,engine,day){
 function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId,purpose){
  let debt=debtG+needG,short=false;
  const state=d.get('state'),stock=new Map(holders.map(h=>[h,merchandise(engine,state,h)]));
- const own=h=>heldOfClass(d,engine,h,cls).find(r=>!stock.get(h).has(r.item))?.item;
+ // 先用户里同类中最便宜的（household-budget.usageCost：价格 ÷ 热值，无热值按 价格 ÷ 克），不按物品编号；家用的先于店主货架上的货。
+ const cheapest=rows=>rows.sort((a,b)=>usageCost(engine,a.item)-usageCost(engine,b.item)||a.item.localeCompare(b.item)||a.h.localeCompare(b.h))[0]??null;
+ const held=merchandiseToo=>holders.flatMap(h=>heldOfClass(d,engine,h,cls).filter(r=>merchandiseToo||!stock.get(h).has(r.item)).map(r=>({h,item:r.item})));
  for(;;){
-  const pick=holders.map(h=>({h,item:own(h)})).find(r=>r.item)??holders.map(h=>({h,item:pickHeldOfClass(d,engine,h,cls)})).find(r=>r.item);
+  const pick=cheapest(held(false))??cheapest(held(true));
   if(!pick){short=debt>0;debt=Math.min(debt,needG);break;}
   const unit=grams(engine,pick.item);if(debt<unit)break;
   engine.itemDelta(d,pick.h,pick.item,-1,{...UPKEEP,purpose,eventId});debt-=unit;
