@@ -56,7 +56,9 @@ export function registerRecipe(d,engine,data,project,maximumStage){
     const toolWear=integer(data.toolWear??1,0,10,'工具损耗'),recoverFraction=data.failure?.recoverFraction??0;
     if(typeof recoverFraction!=='number'||!Number.isFinite(recoverFraction)||recoverFraction<0||recoverFraction>1)throw preconditionFailure('失败回收率无效');
     const failure={recoverFraction,injury:integer(data.failure?.injury??0,0,50,'失败伤害')};
-    const location=data.location?engine.resolve(data.location):null;
+    // K5: a recipe that needs a kind of station is made wherever such a station stands; only a
+    // station-free recipe may be bound to one place.
+    const location=data.location&&!data.workstation?engine.resolve(data.location):null;
     if(location&&!engine.world.locations.some(row=>row.id===location))throw preconditionFailure('配方工坊地点未登记');
     if(data.workstation!==undefined&&(!data.workstation||typeof data.workstation!=='string'
         ||![...engine.world.locations,...Object.values(d.get('state','created')??{})].some(row=>(!location||row.id===location)&&fixtureStations(row).some(station=>station.kind===data.workstation))))throw preconditionFailure('配方缺少可用工作台');
