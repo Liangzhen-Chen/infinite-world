@@ -14,6 +14,7 @@ import {hiddenPassives} from './hidden-passives.mjs';
 import {isEffective,isLiving} from './lifecycle-state.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {teachingAtStation} from './education-state.mjs';
 import {obligationCalendar,obligationDate} from './obligation-calendar.mjs';
 
 const fact=(value,source,override=false)=>({value:cloneData(value??null),source,override});
@@ -126,6 +127,8 @@ export function personCertified(engine,state,id,skill){
 export function personTeaching(engine,state,id,entity,{stage=null}={}){
     if(!living(engine,state,id)||personConstraint(engine,state,id))return false;
     if(entity.startsWith('recipe_')&&currentWorkstationRecipes(engine,state,id).some(r=>r.id===entity))return true;
+    // K5: a master present and free at a station of the recipe's kind teaches it.
+    if(entity.startsWith('recipe_')&&teachingAtStation(engine,state,id,engine.byId.get(entity)??state.created?.[entity]))return true;
     const c=personCareer(engine,state,id).value,base=baseOf(engine,state,id),catalog=engine.byId.get(entity);
     if(c.services.includes(entity))return true;
     // Certification/skill instruction does not grant every recipe of that skill.

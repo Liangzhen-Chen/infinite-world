@@ -4,6 +4,7 @@ import {recordsWhere,recordsMemo,stateMemo,recordIndexActive,canonicalEqual,reco
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
+import {fixtureStations,stationLicence} from './workstation-services.mjs';
 import {npcSchedule,npcAgeAt,serviceAppointmentSources} from './npc-state.mjs';
 import {personConstraints} from './entity-view.mjs';
 import {advanceLayerPlan} from './advance-layers.mjs';
@@ -42,7 +43,7 @@ export function initializeDemonstration(d,e,row,context){
  initialAuthority(d,row.actor,context);
  const s=d.get('state'),n=s.npcs?.[row.actor],subject=e.byId.get(row.subject),station=e.byId.get(row.workstation)??s.created?.[row.workstation];
  if(Object.keys(row).some(k=>!['id','actor','subject','workstation','fromMinute','toMinute','teaching'].includes(k))||!row.id||typeof row.id!=='string'||s.records?.[row.id]||!n||isPhysicallyDead(e,s,row.actor)||['濒死','昏迷'].includes(n.status)||n.scheduleTravel||n.cognitionTravel||!subject||!station||n.location!==row.workstation||!e.world.locations.some(p=>p.id===row.workstation)||!Number.isSafeInteger(row.fromMinute)||row.fromMinute<0||!Number.isSafeInteger(row.toMinute)||row.toMinute<=row.fromMinute||row.fromMinute>s.minute||row.toMinute<=s.minute||row.teaching!==false||!knowsKnowledge(e,s,row.actor,row.subject))throw Error('Invalid demonstration subject, workstation or active window');
- const facility=facilityView(e,s,row.workstation),stations=facility?.workstations??station.workstations??[];
+ const facility=facilityView(e,s,row.workstation),stations=facility?.workstations??[];
  if(facility?.factor===0||!stations.some(st=>e.world.recipes.some(r=>r.skill===(subject.skill??subject.id)&&r.workstation===st.kind))||recordsWhere(s.records,'category','education_demonstration').some(r=>r.actor===row.actor&&r.fromMinute<row.toMinute&&r.toMinute>row.fromMinute))throw Error('Demonstration requires a working subject workstation and an unoccupied window');
  holdingSet(d,e,['state','records',row.id],{...row,category:'education_demonstration',sourceEvent:context.eventId,activityBefore:n.activity??'',practicingBefore:n.practicing??null},'education-initial',context.eventId);
  // Legacy observation reads these fields; the timed record remains authoritative.
@@ -246,7 +247,32 @@ export function knowsKnowledge(e,s,id,entity){
  const b=s.created?.[entity]??e.byId.get(entity);if(!b)return false;
  if(entity.startsWith('skill_'))return knowledgeProficiency(e,s,id,entity)>0;
  const partition=entity.startsWith('recipe_')?'recipes':'spells';
- return Boolean(id==='player'?s[partition]?.[entity]:s.npcs?.[id]?.[partition]?.[entity]||b.teachers?.includes(id));
+ return Boolean(id==='player'?s[partition]?.[entity]:s.npcs?.[id]?.[partition]?.[entity]||b.teachers?.includes(id)||partition==='recipes'&&stationMaster(e,s,id,b));
+}
+// A master teaches where the craft is done: present at a station of the
+// recipe's kind where they work or live, or may lawfully use, awake and not travelling, sleeping or at a
+// meal. Not limited to a booked teaching slot in the routine.
+const RESTING=/睡眠|睡觉|熟睡|吃饭|用饭|进食/;
+export function teachingAtStation(e,s,id,recipe){
+ const n=s.npcs?.[id];
+ if(!n||!stationMaster(e,s,id,recipe)||n.scheduleTravel||n.cognitionTravel||['濒死','昏迷','患病','睡眠'].includes(n.status))return false;
+ const slot=e.protocolScheduleAt?.(e,id,s.minute,s),activity=slot&&slot.location===n.location?slot.activity:n.activity;
+ if(RESTING.test(activity??''))return false;
+ // Where they work or live is where they practise; elsewhere they need a lawful use of the station.
+ const own=[n.residence?.home,n.vocation?.location,e.byId.get(id)?.home?.location,e.byId.get(id)?.workplace?.location].includes(n.location);
+ return (facilityView(e,s,n.location)?.workstations??[]).some(st=>st.kind===recipe.workstation&&(own||stationLicence(e,{state:s},st,id)));
+}
+// K5: masters follow the stations. A person practising a craft at a station of
+// its kind where they live or work knows that station's recipes within their
+// proficiency, the same capability currentWorkstationRecipes gives on duty.
+// Knowledge stays with the person when the station is damaged.
+export function stationMaster(e,s,id,recipe){
+ if(id==='player'||!recipe?.workstation||!s.npcs?.[id])return false;
+ const proficiency=knowledgeProficiency(e,s,id,recipe.skill);
+ if(proficiency<=0||proficiency<(recipe.minimumProficiency??0))return false;
+ const n=s.npcs[id],b=e.byId.get(id);
+ const places=new Set([n.residence?.home,n.vocation?.location,b?.home?.location,b?.workplace?.location].filter(Boolean));
+ return [...places].some(place=>(!recipe.location||recipe.location===place)&&fixtureStations(s.created?.[place]??e.byId.get(place)).some(st=>st.kind===recipe.workstation));
 }
 export function educationSites(e,s){
  const out=educationCatalog(e,s).sites.map(p=>({id:`school:${p.id}`,name:p.name,kind:/书院/.test(p.name)?'书院':/私塾/.test(p.name)?'私塾':'学馆',seat:p.id,leader:null}));

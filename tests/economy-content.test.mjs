@@ -72,15 +72,17 @@ test('重复编译经济目录稳定且不丢后续器物、配方或其他工�
  const once=assembleEconomy(world,bones,lore),extended=structuredClone(once);
  extended.items.push({...extended.items.find(row=>row.id==='item_wood'),id:'item_future_wood',name:'测试后续木料',aliases:[]});
  extended.recipes.push({...extended.recipes[0],id:'recipe_future_pegs',name:'测试后续木楔',aliases:[]});
- extended.locations.find(row=>row.id==='bld_hw_mill').workstations.push({id:'station_future_bench',kind:'woodworking',owner:'loc_hw',fee:7,access:'public'});
+ // K5：工位来自设备；一处地点每类工位只有一件，后续另加的是另一类设备（原为同类第二张手写木工台）。
+ extended.locations.find(row=>row.id==='bld_hw_mill').fixtures.push({fixture:'forge',id:'station_future_forge',fee:7});
  const rebuilt=economyFoundation(extended);assert.deepEqual(rebuilt,bones);
  const twice=assembleEconomy(extended,rebuilt,lore);
  assert.deepEqual(twice,extended);assert.equal(twice.items.length,world.items.length+1);assert.equal(twice.recipes.length,world.recipes.length+1);
  assert.equal(new Set(twice.items.map(row=>row.id)).size,twice.items.length);
  assert.equal(new Set(twice.recipes.map(row=>row.id)).size,twice.recipes.length);
  // Existing stations must receive the current hand-authored fee too.
- extended.locations.find(row=>row.id==='bld_hw_mill').workstations[0].fee=99;
- assert.equal(assembleEconomy(extended,bones,lore).locations.find(row=>row.id==='bld_hw_mill').workstations[0].fee,2);
+ const bench=place=>place.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(row=>row.id==='station_hw_mill_bench');
+ bench(extended).fee=99;
+ assert.equal(bench(assembleEconomy(extended,bones,lore)).fee,2);
 });
 test('保存上限逐项进入说明，null不凭空加期限，开发保证措辞拒绝',async()=>{
  const bones=economyFoundation(await loadWorld()),resin=bones.items.find(row=>row.id==='item_resin'),staff=bones.items.find(row=>row.id==='item_staff');

@@ -22,6 +22,7 @@ import {financePath as rec,financeInt as int,financeBalance,financeChange,financ
 import {groupRepresentative,personHousehold,personOccupation,personBusiness,personConstraint,personOffices,placeSettlement,settlementGovernment} from './entity-view.mjs';
 import {groupAccountView,ensureGroupAccount,groupAccountPath} from './group-account.mjs';
 import {facilityView} from './facility-state.mjs';
+import {placeWorkstations,stationLicence} from './workstation-services.mjs';
 import {marketQuote,supplyApart,liquidationValue} from './market.mjs';
 import {currencyRow,currencyTradePrice,currencyAccepted,currencyValue} from './currency.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
@@ -616,7 +617,7 @@ export function assetTrade(d,e,args,id){
         const skills=base(e,state,worker)?.skills??[];
         const knows=Array.isArray(skills)?skills.includes(recipe.skill):Object.hasOwn(skills,recipe.skill);
         if(workerSkill(e,state,worker,recipe)<(recipe.minimumProficiency??0)||!(knows||state.npcs[worker].proficiencies?.[recipe.skill]))throw preconditionFailure('工人未掌握配方所需技能');
-        if(recipe.location&&recipe.location!==subject||recipe.workstation&&!place.workstations?.some(s=>s.kind===recipe.workstation&&(s.access==='public'||s.owner==='player')))throw preconditionFailure('铺面没有合法可用的配方工作台');
+        if(recipe.location&&recipe.location!==subject||recipe.workstation&&!placeWorkstations(e,state,subject).some(s=>s.kind===recipe.workstation&&stationLicence(e,d,s,'player')))throw preconditionFailure('铺面没有合法可用的配方工作台');
         if(all(d).some(r=>r.kind==='workshop'&&r.worker===worker&&['有效','要求加薪','罢工'].includes(r.status)))throw preconditionFailure('工人已有未结束的雇佣合同');
         if(personConstraint(e,state,worker)||state.npcs[worker].levy||state.npcs[worker].caring)throw preconditionFailure('工人受拘押、服役或照护义务约束');
         if(personOffices(e,state,worker).length)throw preconditionFailure('现任公职不能被私人工坊排班覆盖');

@@ -91,6 +91,7 @@ import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
+import {materializeWorkstations}from'./workstation-services.mjs';
 import {deriveItemAttributes}from'./item-class.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
@@ -243,6 +244,7 @@ export class WorldEngine {
         this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
+        materializeWorkstations(world);
         // K4: food nutrition and raw/cooked state are derived from recipes before any consumer reads them.
         deriveItemAttributes(world);
         this.world = world; this.rules = world.rules;

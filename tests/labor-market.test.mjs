@@ -19,7 +19,8 @@ function setup({owner=host,quantity=500}={}){
     f.doc.state.npcs[worker].proficiencies={skill_life_6_core:600};
     f.doc.state.npcs[host].coins=5000;
     f.doc.state.npcs[host].inventory={item_bread:{quantity:20},item_wood:{quantity:100},item_whittling_knife:{quantity:1,durability:100}};
-    f.e.byId.get(mill).workstations.find(s=>s.kind==='woodworking').fee=0;
+    // K5：工位收费是设备属性上的主人报价，改设备而不是派生出的工位。
+    f.e.byId.get(mill).fixtures.find(x=>x.fixture==='workbench').fee=0;
     f.doc.state.npcs[worker].inventory.item_whittling_knife={quantity:1,durability:100};
     const house=f.w.households.find(h=>h.members.includes(worker));house.homeLocation=mill;
     order(f,owner,quantity);

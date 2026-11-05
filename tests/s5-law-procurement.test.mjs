@@ -17,7 +17,7 @@ const market='loc_bs';
 function scenario({known=true}={}){
  const f=fixture({at:inn});delete f.w.rules.weather;f.doc.state.location='loc_hw';
  Object.assign(f.w.rules.facilities.maintenance,{horizonDays:14,delayMaxPermille:0,stubbornPermille:0,noisePermille:0});
- f.e.byId.get(inn).lodging.rooms=20;f.e.byId.get(inn).workstations=[];
+ f.e.byId.get(inn).lodging.rooms=20;f.e.byId.get(inn).fixtures=[];// K5：去掉设备即没有工位
  f.w.rules.economy.rentalCopperPerNight=10;f.w.rules.economy.dailyIncomeBySkillStage[0]=[1,1];
  f.doc.state.buildings[inn].condition=59;
  f.doc.state.npcs=Object.fromEntries([host,worker].map(id=>[id,f.doc.state.npcs[id]]));
@@ -146,7 +146,8 @@ test('已学制作配方也用同一筹料路径，返回后才按原配方消�
  f.doc.state.buildings[inn].condition=100;
  f.doc.state.npcs[host].recipes={[recipe.id]:true};
  for(const tool of recipe.tools)f.doc.state.npcs[host].inventory[tool]={quantity:1,durability:100};
- f.e.byId.get(inn).workstations=[{id:'woodworking',kind:recipe.workstation,access:'public',owner:host,fee:0}];
+ // K5：搭一张木作台（公开、不收费、属于店主），代替手写工位。
+ f.e.byId.get(inn).fixtures=[{fixture:'workbench',id:'station_test_woodworking',owner:host,fee:0}];
  f.e.byId.get(recipe.output.item).basePrice=100;
  f.doc.ledger=undefined;f.doc=withLedger(f.e,f.doc).document;
  const task=choose(f);assert.equal(task?.action.kind,'procure_inputs');assert.equal(task.action.purpose,`craft:${recipe.id}`);

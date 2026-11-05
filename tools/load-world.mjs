@@ -5,6 +5,7 @@ registerIntentMenu(worldActions);
 import {primitiveRuleRegistry} from '../server-plugin/primitive-rules.mjs';
 import path from 'node:path';
 import {materializeWildlifeHabitats} from '../server-plugin/wildlife-habitats.mjs';
+import {materializeWorkstations} from '../server-plugin/workstation-services.mjs';
 import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
 import {requireBalanceTables} from './balance-tables.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
@@ -73,6 +74,7 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
+    materializeWorkstations(world);
     const normErrors=validateNormBindings(world);if(normErrors.length)throw Error(normErrors.join('; '));
     if(autonomyCandidates.length)world.autonomy={candidates:autonomyCandidates};
     // Dialogue templates are pinned with the campaign world, including wording

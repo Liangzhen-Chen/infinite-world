@@ -25,8 +25,9 @@ function fixture(){
  const candidates=heatSpellCandidates(),ignite={...world.spells[0],id:'spell_test_ignite',name:'试验点火',skill:'skill_test_ignite',stage:0,mp:2,minutes:1,difficulty:10,duration:0,rangeMeters:3,materials:[],effectSpec:{kind:'object',operation:'ignite',power:5000}};
  const spells=[...candidates,ignite];
  for(const s of spells){world.spells.push(s);if(!world.skills.some(x=>x.id===s.skill))world.skills.push({id:s.skill,name:s.name,attribute:'精神',profession:null});}
- place.workstations=[{id:'station_test_kiln',kind:'test_kiln',access:'public',owner:'player',fee:2,thermalRequirement:{feature:kiln.id,minimumC:20,maximumC:1000,burning:true}}];
- world.recipes.push({id:'recipe_test_pots',name:'试验陶器',skill:'skill_test_ignite',attribute:'精神',minimumProficiency:0,difficulty:10,minutes:3,workstation:'test_kiln',materials:[{item:'item_clay',amount:1}],output:{item:'item_test_pot',quantity:4},tools:[],toolWear:0,failure:{recoverFraction:0,injury:0}});
+ // K5：工位由设备属性派生——这里搭一座窑（kiln→pottery），保留原编号、收费与热源绑定；主人由所绑热源的主人推出。
+ place.fixtures=[{fixture:'kiln',id:'station_test_kiln',fee:2,thermalRequirement:{feature:kiln.id,minimumC:20,maximumC:1000,burning:true}}];
+ world.recipes.push({id:'recipe_test_pots',name:'试验陶器',skill:'skill_test_ignite',attribute:'精神',minimumProficiency:0,difficulty:10,minutes:3,workstation:'pottery',materials:[{item:'item_clay',amount:1}],output:{item:'item_test_pot',quantity:4},tools:[],toolWear:0,failure:{recoverFraction:0,injury:0}});
  const engine=new WorldEngine(world),doc=engine.initialFromLegacy(seed,'forge-test');doc.state.player.mp=200;doc.state.player.maxMp=200;doc.state.player.hp=200;doc.state.player.maxHp=200;doc.state.weather[location]={temperatureC:20};
  doc.state.inventory.item_charcoal={quantity:5};doc.state.inventory.item_clay={quantity:5};doc.state.inventory.item_resin={quantity:5};
  for(const s of spells){doc.state.spells[s.id]={source:{type:'fixture'}};doc.state.skills[s.skill]={proficiency:1000,daily:{},breakthroughs:[]};}

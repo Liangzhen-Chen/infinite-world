@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
 import Ajv from 'ajv';
 import {loadWorld} from '../tools/load-world.mjs';
 import {baishiSkeleton} from '../world/design/w1-baishi-skeleton.mjs';
@@ -53,7 +54,11 @@ test('六街区与18处行业公共建筑及逐户住宅均可寻路，原官道
  for(const l of world.locations.filter(l=>locationIds.has(l.id)))assert.ok(e.route('loc_bs',l.id,'walk',540,'t90').minutes>0,l.id);
  assert.equal(e.route('loc_hw','loc_bs','walk',540,'t90').minutes,old.route('loc_hw','loc_bs','walk',540,'t90').minutes);
  assert.deepEqual(world.locations.find(l=>l.id==='bld_bs_shrine'),original.shrine);
- assert.deepEqual(world.locations.find(l=>l.id==='loc_bs').workstations,original.town.workstations);
+ // K5：原手写窑位改由设备派生，编号、类别、收费不变。
+ const station=s=>({id:s.id,kind:s.kind,fee:s.fee,access:s.access});
+ // 原始联系人里的手写名单要从文件读：引擎构造会把传入地点的名单换成派生视图。
+ const authored=JSON.parse(readFileSync(`${root}/original-contacts.json`,'utf8')).town.workstations;
+ assert.deepEqual(world.locations.find(l=>l.id==='loc_bs').workstations.map(station),authored.map(station));
  assert.ok(e.route('loc_bs_dongxue','bld_bs_shrine','walk',540,'t90').minutes>0);
 });
 test('玩家实际走到街区和前厅，私宅无许可拒绝；严辙在场许可可入户且不转移库存',async()=>{
@@ -76,7 +81,7 @@ test('聚落经济引用实有商货和小窑，职责与争议有来源和边�
  assert.equal(d.problems.length,6);for(const p of d.problems){assert.equal(p.status,'unresolved');assert.ok(p.options.length>=2);assert.ok(p.stakeholders.every(s=>[...world.npcs,...world.residents].some(x=>x.id===s.person&&x.age>=18)));}
  for(const r of d.rumors)assert.equal(r.propagation,'pending-event');
  assert.deepEqual(d.calendar.marketDays,world.rules.calendar.marketDays);
- for(const l of bones.locations){assert.deepEqual(l.inventory,{});assert.equal(l.workstations,undefined);}
+ for(const l of bones.locations){assert.deepEqual(l.inventory,{});assert.deepEqual(l.workstations??[],[]);/* K5：工位由设备派生，骨架不带设备即没有工位 */}
  const e=new WorldEngine(world),doc=e.createCharacter(legacy,{},'t90-no-grants');for(const p of bones.residents){if(world.npcs.some(n=>n.id===p.id))assert.ok(doc.state.npcs[p.id]);else assert.equal(doc.state.npcs[p.id],undefined);}
 });
 test('提升名册保留同ID和原事实，升级不覆盖已运行的现金库存关系记忆，重复升级无差异',()=>{

@@ -30,7 +30,8 @@ test('制造先校验配方知识、技能、真实工具、工作台与许可�
         c=>delete c.state.inventory.item_whittling_knife,c=>c.state.inventory.item_whittling_knife.durability=0,
         c=>c.state.location='bld_hw_qingdeng',c=>c.state.buildings.bld_hw_mill={condition:0},c=>c.state.player.coins=1,
     ]){const c=structuredClone(document);alter(c);const before=structuredClone(c);await assert.rejects(run(c,'world_craft',{recipe:'recipe_wooden_pegs'},'bad'));assert.deepEqual(c,before);}
-    world.locations.find(row=>row.id==='bld_hw_mill').workstations[0].access='consent';
+    // K5：工位开放与否从设备推出——去掉主人公开的收费，磨坊的木作台就只供主人及其许可的人使用（原为手写 access='consent'）。
+    delete world.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(f=>f.fixture==='workbench').fee;
     // K6 依据（审查 C-b manufacturing:86、D1 本文件:34）：工作台使用许可决定合法与否；没有许可照样能做，命中擅用他人之物。
     const engine=new WorldEngine(world),out=await engine.reduce(document,{tool:'world_craft',args:{recipe:'recipe_wooden_pegs'},eventId:'no-license'});const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,'命中擅用他人之物');assert.equal(o.victim,'loc_hw');
 });
