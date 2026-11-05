@@ -9,6 +9,8 @@ import {applyNpcPlan,npcPlanFingerprint,advanceNpcAutonomy} from '../server-plug
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {laborOffers} from '../server-plugin/labor-market.mjs';
+// K5：配方工位类别对应的设备（world/ontology/fixtures.json）。
+import {fixtureAffording as fixtureFor} from '../server-plugin/workstation-services.mjs';
 
 const smith='npc_hw_duanyan',recipe='recipe_smelt_iron',forge='bld_hw_forge';
 function setup(){
@@ -53,13 +55,14 @@ test('SV: live skill threshold, arrival, work hours and facility condition contr
 
 test('SV: another skilled worker at another matching workstation derives the same recipe',()=>{
     const {e,doc,draft}=setup(),s=doc.state,location='bld_sv_workshop',r=e.byId.get(recipe);
-    s.created[location]={id:location,workstations:[{id:'sv_smith',kind:r.workstation,access:'public'}]};
+    // K5：新建工坊只给一件能做此配方的设备（公开、不收费），代替手写工位。
+    s.created[location]={id:location,fixtures:[{fixture:fixtureFor(r.workstation),id:'station_sv_smith',fee:0}]};
     e.byId.get(host).schedule={default:[{start:0,end:1440,location,activity:'当班制作',production:true,services:[]}]};
     s.location=location;s.npcs[host].location=location;s.npcs[host].skills={[r.skill]:220};
     assert.ok(npcServices(e,s,host).includes(recipe));
     assert.equal(personTeaching(e,s,host,recipe),true);
     assertNpcService(draft(),e,host,'teach',120);
-    s.created[location].workstations=[];
+    s.created[location].fixtures=[];
     assert.ok(!npcServices(e,s,host).includes(recipe));
     assert.equal(personTeaching(e,s,host,recipe),false);
 });
@@ -69,7 +72,7 @@ test('SV: derived recipe can actually be crafted with real inputs, time and cons
     r.teachers=[]; // No authored teacher or learned recipe grants this action.
     for(const m of r.materials)actor.inventory[m.item]={quantity:m.amount};
     for(const item of r.tools)actor.inventory[item]={quantity:1,durability:100};
-    f.e.byId.get(forge).workstations.find(st=>st.kind===r.workstation).fee=0;
+    f.e.byId.get(forge).fixtures.find(x=>x.fixture===fixtureFor(r.workstation)).fee=0;// K5：改设备上的主人报价
     f.doc.ledger=openLedger(f.e,f.doc);
     const d=f.draft(),input={kind:'npc-plan',version:1,minute:s.minute,stateFingerprint:npcPlanFingerprint(f.doc),proposals:[{npc:smith,actions:[{kind:'craft',recipe}]}]};
     const result=applyNpcPlan(d,f.e,input,'sv-craft');
@@ -95,8 +98,9 @@ test('SV: workshop demand uses derived services without bypassing station permis
     for(const item of r.tools)actor.inventory[item]={quantity:1,durability:100};
     s.buildings[forge]={condition:100,owner:smith};
     assert.ok(laborOffers(f.e,s).some(o=>o.source===`workshop:${forge}:${recipe}`));
-    const station=f.e.byId.get(forge).workstations.find(st=>st.kind===r.workstation);
-    station.access='private';station.owner=host;
+    // K5：设备另属他人且不对外收费（原为手写 access='private'、owner=host）。
+    const station=f.e.byId.get(forge).fixtures.find(x=>x.fixture===fixtureFor(r.workstation));
+    delete station.fee;station.owner=host;
     f.doc.ledger=openLedger(f.e,f.doc);
     const d=f.draft(),before=structuredClone(f.doc);
     const result=applyNpcPlan(d,f.e,{kind:'npc-plan',version:1,minute:s.minute,stateFingerprint:npcPlanFingerprint(f.doc),proposals:[{npc:smith,actions:[{kind:'craft',recipe}]}]},'sv-permission');

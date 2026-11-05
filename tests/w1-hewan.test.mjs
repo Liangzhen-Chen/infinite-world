@@ -35,7 +35,7 @@ test('完整档与轻名册分别保存；全新full的现金库存来自骨架�
 });
 test('八栋新私宅接入真实路线，不缩短河湾至白石官道，不自动成为公共服务点',()=>{
  const engine=new WorldEngine({...world,locations:[...world.locations,...bones.locations],routes:[...world.routes,...bones.routes]});
- for(const l of bones.locations){assert.equal(l.access.mode,'private');assert.equal(l.access.requiresConsent,true);assert.ok(engine.route('loc_hw',l.id,'walk',540,'w1').minutes>0);assert.equal(l.workstations,undefined);}
+ for(const l of bones.locations){assert.equal(l.access.mode,'private');assert.equal(l.access.requiresConsent,true);assert.ok(engine.route('loc_hw',l.id,'walk',540,'w1').minutes>0);assert.deepEqual(l.workstations??[],[]);/* K5：工位由设备派生，私宅骨架不带设备即没有工位 */}
  assert.equal(engine.route('loc_hw','loc_bs','walk',540,'w1').minutes,new WorldEngine(world).route('loc_hw','loc_bs','walk',540,'w1').minutes);
 });
 test('L1不允许说明篡改人物字段、泄漏编号或引入未成年恋爱',()=>{

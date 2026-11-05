@@ -9,6 +9,7 @@ import {CampaignStorage,applyPatches}from'../server-plugin/storage.mjs';
 import {catalogDefinition}from'../server-plugin/catalog.mjs';
 import {toolDefinitions}from'../extension/tools.mjs';
 import Ajv from'ajv';
+import {fixtureDefinition} from '../server-plugin/workstation-services.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const engine=new WorldEngine(world),fresh=()=>{
@@ -116,8 +117,9 @@ test('自创配方失败仍扣费耗时并按比例回收；缺料、坏工具�
         const bad=structuredClone(learned.document);change(bad);const before=structuredClone(bad);
         await assert.rejects(run(bad,'world_craft',{recipe:created.result.entity},'bad'));assert.deepEqual(bad,before);
     }
-    const privateWorld=structuredClone(world),station=privateWorld.locations.find(row=>row.id==='bld_hw_mill').workstations.find(row=>row.kind===data().workstation);
-    station.access='consent';
+    // K5：去掉主人公开的收费，磨坊的设备就只供主人及其许可的人使用（原为手写 access='consent'）。
+    const privateWorld=structuredClone(world),station=privateWorld.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(row=>fixtureDefinition(row.fixture).affords===data().workstation);
+    delete station.fee;
     // K6 依据（审查 C-b manufacturing:86、D1 本文件:121）：没有工作台许可照样能做，命中擅用他人之物。
     {const out=await new WorldEngine(privateWorld).reduce(learned.document,{tool:'world_craft',args:{recipe:created.result.entity},eventId:'no_permit'});const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,'命中擅用他人之物');assert.equal(o.victim,'loc_hw');}
 });

@@ -313,7 +313,8 @@ test('定点：补货工读供货人库存与雇主现款；自治交易读卖�
     const labor=()=>{
         const f=financeFixture({at:mill});f.doc.state.npcs[worker].coins=0;f.doc.state.npcs[worker].proficiencies={skill_life_6_core:600};f.doc.state.npcs[host].coins=5000;
         f.doc.state.npcs[host].inventory={item_bread:{quantity:20},item_wood:{quantity:100},item_whittling_knife:{quantity:1,durability:100}};
-        f.e.byId.get(mill).workstations.find(x=>x.kind==='woodworking').fee=0;
+        // K5：工位收费是设备属性上的主人报价，改设备而不是派生出的工位。
+        f.e.byId.get(mill).fixtures.find(x=>x.fixture==='workbench').fee=0;
         f.w.households.find(h=>h.members.includes(worker)).homeLocation=mill;
         f.doc.state.npcs[host].workplace={location:mill};f.doc.state.npcs[worker].inventory={item_whittling_knife:{quantity:1,durability:100}};
         f.doc.state.npcs[clerk].inventory.item_bread={quantity:40};f.e.byId.get(clerk).services=['trade'];
