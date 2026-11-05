@@ -4,6 +4,7 @@ import {allFacilities,facilityView,facilityKind} from './facility-state.mjs';
 import {currentEmployment,employmentActive} from './employment-state.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {recordsWhere} from './storage.mjs';
+import {isItemClass} from './item-class.mjs';
 // Consultations, stock use and appointments are facts; staff and capacity are views.
 export const MEDICAL_SKILL='skill_life_19_core';
 
@@ -48,7 +49,7 @@ export function waterDiseaseExposure(s,location){
  return Object.values(s.records??{}).filter(r=>r.category==='water_exposure'&&r.location===location&&r.since<=s.minute&&(r.until??Infinity)>s.minute&&r.disease&&r.risk>0);
 }
 export function medicinePriceFactor(e,s,item,location,books=null){
- if(item!=='item_herb')return 1;
+ if(!isItemClass(e,item,'medicine'))return 1;
  const pending=medicineRows(s).filter(r=>r.status==='预约'&&r.clinic===`clinic:${location}`).length;
  if(!pending)return 1;
  const supply=medicineSites(e,s).filter(c=>c.seat===location).reduce((sum,c)=>sum+[c.owner,...c.doctors].filter((id,i,a)=>id&&a.indexOf(id)===i).reduce((n,id)=>n+(!s.npcs?.[id]?0:bagStock(books,e,{point:'medicine.herb',id,item,legacy:()=>{const q=s.npcs?.[id]?.inventory?.[item];return typeof q==='number'?q:q?.quantity??0;}})),0),0);
