@@ -10,8 +10,18 @@ declareLedgerWriter('daily-actions',{sinks:['sink:consume']});
 
 function food(engine,raw){
  const item=engine.resolve(raw,'item'),nutrition=engine.byId.get(item)?.nutrition;
+ if(!nutrition&&engine.byId.get(item)?.foodState==='raw')throw preconditionFailure('这是生料，须经加热烹制（配方里烧火）才能当一餐');
  if(!nutrition||!Number.isFinite(nutrition.satiety)||nutrition.satiety<=0||nutrition.satiety>100)throw preconditionFailure('这件物品没有登记为可食用的一餐');
- return {item,satiety:nutrition.satiety};
+ // K4: nutrition may be derived at load (recipe inputs conserved); a derived meal also carries the water its inputs brought.
+ return {item,satiety:nutrition.satiety,hydration:Number.isFinite(nutrition.hydration)&&nutrition.hydration>0?nutrition.hydration:0};
+}
+// Apply both vitals a portion carries; hydration only when the food actually holds water.
+function nourish(d,engine,foods){
+ const sum=need=>Math.min(100,foods.reduce((n,f)=>n+f[need],0));
+ const satiety=sum('satiety'),hydration=sum('hydration');
+ const out={satiety:applyBodyVital(d,engine,'player','satiety',satiety,{body:{satiety}}).delta};
+ if(hydration>0)out.hydration=applyBodyVital(d,engine,'player','hydration',hydration,{body:{hydration}}).delta;
+ return out;
 }
 
 export async function treatRumor(d,engine,args,eventId){
@@ -51,10 +61,9 @@ export async function orderMeal(d,engine,args,eventId){
  }
  const remaining=rule.timeMin-(d.get('state','minute')-span.start);
  if(remaining>0)engine.advance(d,remaining,eventId);
- const satiety=Math.min(100,foods.reduce((sum,f)=>sum+f.satiety,0));
- const nourishment=applyBodyVital(d,engine,'player','satiety',satiety,{body:{satiety}});
+ const nutrition=nourish(d,engine,foods);
  const cost=finishActionActivity(d,engine,span),paid=purchases.reduce((sum,p)=>sum+p.cost,0),result={seller,eaten:foods.length,items:foods.map(f=>f.item),purchases,
-  paid,nutrition:{satiety:nourishment.delta},cost,socialEvent:{verb:'trade',target:seller,value:paid,tags:['trade','dialogue','cash','meal']},
+  paid,nutrition,cost,socialEvent:{verb:'trade',target:seller,value:paid,tags:['trade','dialogue','cash','meal']},
   actionScope:{kind:'meal',clockManaged:true,minutes:cost.time}};
  d.set(['state','records',key],{category:'daily_action',identity,result});return result;
 }
@@ -62,7 +71,7 @@ export async function orderMeal(d,engine,args,eventId){
 // Eating consumes a real, registered portion; prose and caller-filled gains
 // never supply nutrition. The registered meal action selects the food.
 export function eatMeal(d,engine,args,eventId){
- const {item,satiety}=food(engine,args.item);
+ const meal=food(engine,args.item),{item}=meal;
  if(args.quantity!==undefined&&args.quantity!==1)throw preconditionFailure('用餐一次食用一份');
  const key=`daily:${eventId}`,identity=digest({operation:'eat',item}),previous=d.get('state','records',key);
  if(previous){if(previous.identity!==identity)throw preconditionFailure('同一事件编号不能改换用餐内容');return {...previous.result,duplicate:true};}
@@ -71,8 +80,8 @@ export function eatMeal(d,engine,args,eventId){
  const span=beginActionActivity(d,engine,rule.activity);
  engine.itemDelta(d,'player',item,-1,{flow:'sink:consume',purpose:'meal',writer:'daily-actions',eventId});
  engine.advance(d,rule.timeMin,eventId);
- const nourishment=applyBodyVital(d,engine,'player','satiety',satiety,{body:{satiety}});
- const cost=finishActionActivity(d,engine,span),result={item,eaten:1,nutrition:{satiety:nourishment.delta},cost,
+ const nutrition=nourish(d,engine,[meal]);
+ const cost=finishActionActivity(d,engine,span),result={item,eaten:1,nutrition,cost,
   actionScope:{kind:'meal',clockManaged:true,minutes:cost.time}};
  d.set(['state','records',key],{category:'daily_action',identity,result});
  return result;
