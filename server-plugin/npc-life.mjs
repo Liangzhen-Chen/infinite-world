@@ -39,11 +39,72 @@ import {familyEdges} from './family-state.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
 import {pow} from './det-math.mjs';
+import {heldUnit,wearItem} from './items.mjs';
+import {isItemClass,pickHeldOfClass,craftingParam} from './item-class.mjs';
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
+
+// —— K4：日用品按耐用寿命磨损，家户炊事、取暖烧燃料，调味与保存用盐（都按类别，用量见 balance/crafting） ——
+const UPKEEP={flow:'sink:consume',writer:'npc-life'};
+const grams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
+// 在用的一件日用品每天按 耐久上限 ÷ 寿命天数 磨损（小数部分按确定的随机取整），另有 1 ÷ 寿命天数 的意外损坏；
+// 磨到 0 或损坏即离手（进 sink:consume，用途 wear），同种的下一件接着用。手里没了的工具由 business 的"本行当要用而没有完好工具"需求去买。
+function wearHeld(d,engine,who,day,items){
+ const lifeDays=craftingParam(engine,'durability.lifeYears')*360,seed=d.document.randomSeed;
+ for(const item of items){
+  if(engine.quantity(d,who,item)<1)continue;
+  const def=engine.byId.get(item),max=def?.durability;if(!(max>0))continue;
+  const path=[...engine.bagPath(who),item];
+  if(typeof d.get(...path)==='number')d.set(path,{quantity:d.get(...path),quality:def.quality,durability:max,weight:def.weight});
+  const rate=max/lifeDays,points=Math.floor(rate)+(clockRoll(seed,`wear:${who}:${item}`,day)<rate-Math.floor(rate)?1:0);
+  const broken=clockRoll(seed,`wear-break:${who}:${item}`,day)<1/lifeDays;
+  const held=heldUnit(d,engine,who,item),current=held?.durability??max;
+  const left=broken?0:Math.max(0,current-points);
+  if(left===current)continue;
+  if(left>0){wearItem(d,engine,who,item,current-left);continue;}
+  const rest=engine.quantity(d,who,item)-1;
+  engine.itemDelta(d,who,item,-1,{...UPKEEP,purpose:'wear',eventId:`wear:${day}:${who}:${item}`},held?.instance?{selection:[held.instance]}:{});
+  if(rest>0&&typeof d.get(...path)==='object'&&!d.get(...path).instances?.length)d.set([...path,'durability'],max);
+ }
+}
+export function advanceDurableWear(d,engine,day){
+ if((d.get('state','family','wearDay')??-1)>=day)return;
+ const state=d.get('state');
+ for(const who of Object.keys(state.npcs??{}).sort()){
+  if(isPhysicallyDead(engine,state,who))continue;
+  wearHeld(d,engine,who,day,Object.keys(d.get(...engine.bagPath(who))??{}).sort().filter(item=>isItemClass(engine,item,'durable')));
+ }
+ // 玩家：随身衣物（apparel 类）穿着就磨；工具只在真实使用时磨（制作、采集各自的 toolWear）。
+ wearHeld(d,engine,'player',day,Object.keys(d.get(...engine.bagPath('player'))??{}).sort().filter(item=>isItemClass(engine,item,'apparel')));
+ d.set(['state','family','wearDay'],day);
+}
+// 家户每日燃料与盐：从户里各人持有的同类物品按重量扣整份；不足一份的用量记成欠量，下一日累计；手里没有就记短缺日。
+function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId){
+ let debt=debtG+needG,short=false;
+ for(;;){
+  const pick=holders.map(h=>({h,item:pickHeldOfClass(d,engine,h,cls)})).find(r=>r.item);
+  if(!pick){short=debt>0;debt=Math.min(debt,needG);break;}
+  const unit=grams(engine,pick.item);if(debt<unit)break;
+  engine.itemDelta(d,pick.h,pick.item,-1,{...UPKEEP,purpose:cls==='fuel'?'fuel':'seasoning',eventId});debt-=unit;
+ }
+ return {debt,short};
+}
+function householdUpkeep(d,engine,day,p){
+ const state=d.get('state'),holders=[...new Set([p.owner,...p.members])].filter(id=>state.npcs?.[id]).sort();if(!holders.length)return;
+ const fuelKg=craftingParam(engine,'household.fuelKgPerDay'),season=engine.calendar(day*DAY).season;
+ const fuelNeed=Math.round((fuelKg.cooking+(fuelKg.heating[season]??0))*1000),saltNeed=Math.round(craftingParam(engine,'household.saltGramsPerPersonDay')*p.members.length);
+ const key=['state','family','upkeep',p.key],old=d.get(...key)??{fuelDebtG:0,saltDebtG:0,fuelShortDays:0,saltShortDays:0},eventId=`household-upkeep:${day}:${p.household??p.owner}`;
+ const fuel=consumeByWeight(d,engine,holders,'fuel',fuelNeed,old.fuelDebtG,eventId),salt=consumeByWeight(d,engine,holders,'salt',saltNeed,old.saltDebtG,eventId);
+ const row={fuelDebtG:fuel.debt,saltDebtG:salt.debt,fuelShortDays:fuel.short?old.fuelShortDays+1:0,saltShortDays:salt.short?old.saltShortDays+1:0};
+ if(!canonicalEqual(old,row))d.set(key,row);
+}
+// 户里缺燃料、缺盐的程度（连续短缺日数），供采买需求读取。
+export function householdUpkeepGap(state,key){const r=state.family?.upkeep?.[key];return {fuelShortDays:r?.fuelShortDays??0,saltShortDays:r?.saltShortDays??0};}
+
 // Plan all meals against the same revision, then consume physical holdings.
 export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
+ advanceDurableWear(d,engine,day);
  const groups=householdSubsistenceGroups(engine,d.get('state'));
  // Public population portions cover registered residents, not an extra
  // portion for each unregistered visitor present. A stale aggregate count
@@ -83,6 +144,7 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
    // append newly available receipts; its byte order must match a long wait.
    ...(p.supplied.sources.length?{sources:p.supplied.sources,sourceNutrition:nutrients(p.supplied.nutrition)}:{})};
   if(!canonicalEqual(p.previous,record))d.set(['state','family','meals',p.key],record);
+  householdUpkeep(d,engine,day,p);
  }
  for(const settlement of new Set(plans.map(p=>p.settlement??'unregistered')))d.set(['state','family','mealDays',settlement],day);
  return adjustments;

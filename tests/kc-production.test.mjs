@@ -9,6 +9,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
+import {nextNpcService} from '../server-plugin/npc-schedule.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
 
@@ -47,7 +48,12 @@ test('真实动作：买原本与纸墨笔，学识字，照原本抄写；书�
   const qty = item => doc.state.inventory?.[item]?.quantity ?? doc.state.inventory?.[item] ?? 0;
   const goTo = async npc => {const at = doc.state.npcs[npc].location; if (doc.state.location !== at) await act('core:move', {destination: at});};
   // 对方不接待时真等一个时辰再去
-  const withService = async (npc, fn) => {let r; for (let i = 0; i < 20; i++) {await goTo(npc); r = await fn(); if (r.ok || !/此刻不提供|不在场|不在此|剩余服务时间不足/.test(r.reason ?? '')) return r; await act('core:time', {minutes: 60});} return r;};
+  // 对方不在场或不接待（在路上、出门赶集、睡觉、觅食）时，按他自己的作息查下一次接待的时刻与地点，
+  // 真走过去、真等到那时再买；作息照世界原样运转，不固定。查不到就像原来一样等一个时辰。
+  const withService = async (npc, fn) => {let r; for (let i = 0; i < 20; i++) {await goTo(npc); r = await fn(); if (r.ok || !/此刻不提供|不在场|不在此|剩余服务时间不足/.test(r.reason ?? '')) return r;
+    const next = nextNpcService(engine, npc, doc.state.minute + 1, /授课/.test(r.reason ?? '') ? 'teach' : 'trade', doc.state);
+    if (next && next.minute > doc.state.minute) {if (next.location && doc.state.location !== next.location) await act('core:move', {destination: next.location}); for (let t = doc.state.minute; doc.state.minute < next.minute; t = doc.state.minute) {await act('core:time', {minutes: Math.min(1440, next.minute - doc.state.minute)}); if (doc.state.minute === t) break;}}
+    else await act('core:time', {minutes: 60});} return r;};
   const buy = (seller, item) => withService(seller, () => act('core:trade.buy', {seller, item, quantity: 1}));
   const book = 'item_book_mill_oats', teacher = 'npc_hw_luqing';
   assert.ok((await buy(teacher, book)).ok);
