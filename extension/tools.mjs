@@ -113,7 +113,7 @@ export function resolveToolCall(tool,args={}){
     if(tool==='world_field'&&args.operation==='wildlife_release')return {tool:'world_wildlife',args:{...args,operation:'release'}};
     if(tool==='world_field'&&args.operation==='environment_douse_fire')return {tool:'world_environment',args:{...args,operation:'douse_fire'}};
     if(tool==='world_field'&&['farm_private_sow','farm_private_harvest'].includes(args.operation))return {tool:'world_farm',args:{...args,operation:args.operation.slice(5)}};
-    if(tool==='world_field'&&['farm_husbandry_collect','farm_husbandry_inspect'].includes(args.operation))return {tool:'world_farm',args:{...args,operation:args.operation.slice(5)}};
+    if(tool==='world_field'&&['farm_husbandry_collect','farm_husbandry_inspect','farm_husbandry_slaughter'].includes(args.operation))return {tool:'world_farm',args:{...args,operation:args.operation.slice(5)}};
     if(tool==='world_field'&&args.operation==='environment_take_contents')return {tool:'world_environment',args:{...args,operation:'take_contents'}};
     if(tool==='world_law'&&args.operation==='steal')return{tool:'world_crime',args};
     const mapping=routes.get(tool);if(!mapping)return{tool,args};

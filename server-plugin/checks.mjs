@@ -35,6 +35,16 @@ function modifierForNpc(d,engine,npc,attribute,skill,domain=null){
     const score=d.get('state','npcs',npc,'attributes',attribute)??engine.byId.get(npc)?.attributes?.[attribute]??10;
     return Math.floor((integer(score,1,1000,'人物属性')-10)/2)+Math.floor((skill?npcProficiency(d,engine,npc,skill):0)/engine.rules.check.skillDivisor)+hiddenCheckBonus(engine,d.get('state'),npc,domain).bonus;
 }
+// SL: an NPC's own work check with the five degrees (checkDegree, the same
+// table as the player's): attribute and skill as modifierForNpc, plus the
+// bonus of tools the NPC itself holds. Recorded like npcEntryCheck.
+export function npcGradedCheck(d,engine,npc,{attribute,skill,difficulty,tools=[]},eventId){
+    const level=d.get('state','npcs',npc,'level')??engine.byId.get(npc)?.level;
+    const roll=die(d.document,eventId,`npc-check:${npc}`),modifier=modifierForNpc(d,engine,npc,attribute,skill)+toolBonuses(d,engine,tools,attribute,skill,npc,level).bonus,total=roll+modifier;
+    const {degree,success}=checkDegree(roll,total,difficulty);
+    const result={die:roll,modifier,total,difficulty,degree,success};
+    d.set(['state','checks',eventId],{...result,npc,attribute,skill});return result;
+}
 export function npcEntryCheck(d,engine,npc,{attribute,skill,difficulty},eventId){
     const score=d.get('state','npcs',npc,'attributes',attribute)??engine.byId.get(npc)?.attributes?.[attribute]??10;
     const raw=d.get('state','npcs',npc,'skills',skill)??engine.byId.get(npc)?.proficiencies?.[skill]??engine.byId.get(npc)?.skills?.[skill]??0;

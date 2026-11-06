@@ -133,6 +133,8 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
     // increasing the static tool schema or weakening the exact routing check.
     'core:husbandry.inspect':{tool:'world_farm',args:{operation:'husbandry_inspect'}},
     'core:husbandry.collect':{tool:'world_farm',args:{operation:'husbandry_collect'}},
+    // SL: slaughtering one's own beasts reuses the same native farm handler.
+    'core:husbandry.slaughter':{tool:'world_farm',args:{operation:'husbandry_slaughter'}},
     // 指南11.3 F5：取出施法后的原水须走目录入口，仍核对精确分派。
     'core:environment.take_contents':{tool:'world_environment',args:{operation:'take_contents'}}
    };

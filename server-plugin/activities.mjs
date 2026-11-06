@@ -30,6 +30,7 @@ import {transferItems,heldUnit,wearItem,workmanshipTier,unitLacks}from'./items.m
 import {localWeather}from'./weather.mjs';
 import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
+import {husbandryAction}from'./husbandry.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
@@ -69,6 +70,8 @@ export const activities={
     lair(d,args,id){return lairAction.call(this,d,args,id);},
     wildlife(d,args,id){return args.operation==='fish'?fish.call(this,d,args,id):args.operation==='release'?releaseFish.call(this,d,args,id):args.operation==='eat'?eatFish.call(this,d,args,id):wildlifeAction.call(this,d,args,id);},
     farm(d,args,id){
+        // SL: an owner slaughtering their own beast is husbandry work, not an exchange.
+        if(args.operation==='husbandry_slaughter')return husbandryAction.call(this,d,args,id);
         const old=donationReceipt(d,this,args,id);if(old)return old;
         const result=agricultureAction.call(this,d,args,id),contribution=recordDonationContribution(d,this,result,id),receipt={...result,...(contribution?{contribution}:{})};
         saveDonationReceipt(d,receipt,id);return receipt;
