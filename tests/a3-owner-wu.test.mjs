@@ -13,6 +13,7 @@ import {initialKnowledgeAction} from '../server-plugin/primitives-learning.mjs';
 import {personCareer} from '../server-plugin/entity-view.mjs';
 import {advocateService} from '../server-plugin/legal-representation.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
+import {facilityView} from '../server-plugin/facility-state.mjs';
 import {createRuntimePrimitiveFrame} from '../server-plugin/primitives-runtime.mjs';
 import {commitPrimitives} from '../server-plugin/primitives.mjs';
 import {recordLocalContact} from '../server-plugin/environment.mjs';
@@ -128,7 +129,15 @@ test('U: workstation and full demonstration window are real sources; teaching bu
  assert.throws(()=>engine.learn(d,{source:row.actor,entity:row.subject},'busy'),{code:'E-LEARN-SOURCE'});
  assert.deepEqual(d.get('state','consentEvents'),document.state.consentEvents);
  for(const change of [{workstation:'bld_hw_post'},{subject:'skill_fake'},{toMinute:590},{teaching:true},{actor:'missing'},{success:true}])assert.throws(()=>initializeDemonstration(draft(document),engine,{...row,...change},context));
- const wrongStation=draft(document);wrongStation.set(['state','npcs',row.actor,'location'],'bld_hw_post');assert.throws(()=>initializeDemonstration(wrongStation,engine,{...row,workstation:'bld_hw_post'},context),/working subject workstation/);
+ // The counter-example place is derived from fixtures, not named: a facility whose workstations serve none
+ // of the subject skill's recipes. (The post office once served here, but its hearth is a cooking station and
+ // the silk-reeling recipe of this skill is worked at one - s5w2b 3c72c91b - so it is a lawful place now.)
+ const skillOf=engine.byId.get(row.subject),kinds=new Set(engine.world.recipes.filter(r=>r.skill===(skillOf.skill??skillOf.id)).map(r=>r.workstation));
+ const bare=engine.world.locations.map(p=>p.id).sort().find(id=>id!==row.workstation&&facilityView(engine,document.state,id)&&!facilityView(engine,document.state,id).workstations.some(st=>kinds.has(st.kind)));
+ assert.ok(bare,'some facility has no station for this subject');
+ const wrongStation=draft(document);wrongStation.set(['state','npcs',row.actor,'location'],bare);assert.throws(()=>initializeDemonstration(wrongStation,engine,{...row,workstation:bare},context),/working subject workstation/);
+ const post=facilityView(engine,document.state,'bld_hw_post');assert.ok(post.workstations.some(st=>kinds.has(st.kind)),'a cooking hearth serves this subject');
+ const atPost=draft(document);atPost.set(['state','npcs',row.actor,'location'],'bld_hw_post');assert.doesNotThrow(()=>initializeDemonstration(atPost,engine,{...row,workstation:'bld_hw_post'},context));
  assert.throws(()=>initializeDemonstration(d,engine,{...row,id:'overlapping'},context),/unoccupied window/);
  assert.throws(()=>initializeDemonstration(draft(document),engine,row,{origin:'proposal',eventId:'fake'}));
  initializeTeachingActivity(d,engine,row.actor,{demonstrating:false},context);assert.equal(demonstrationAt(engine,d.get('state'),row.actor),null);

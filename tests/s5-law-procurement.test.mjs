@@ -158,8 +158,14 @@ test('已学制作配方也用同一筹料路径，返回后才按原配方消�
  const craft=choose(f,1);assert.equal(craft?.action.kind,'craft');assert.equal(craft.action.recipe,recipe.id);
  finish(f,craft.finish);
  const row=f.doc.state.npcAutonomy.actions[craft.id];assert.equal(row.spent.minutes,20);
- assert.equal(row.spent.materials[0].amount,1);assert.equal(f.doc.state.npcs[host].inventory.item_wood?.quantity??0,0);
- assert.equal(f.doc.state.npcs[host].inventory[recipe.output.item]?.quantity??0,row.outcome.success?4:0);
+ // Q-10 (d87052e6): the one wood is consumed on success; a failed batch returns it by its failure kind -
+ // intact whole, wear per rules.equipment.failureWear (rounded up, at least one), ruin by the recipe's
+ // recoverFraction, partial nothing (it yields the lowest-tier product instead).
+ const wearRule=f.e.rules.equipment.failureWear,failure=row.outcome.failure;
+ const back=row.outcome.success?0:failure==='intact'?1:failure==='wear'?Math.min(1,Math.max(1,Math.ceil(wearRule.returnFraction))):failure==='ruin'?Math.floor(recipe.failure?.recoverFraction??0):0;
+ assert.ok(row.outcome.success||['intact','wear','ruin','partial'].includes(failure),JSON.stringify(row.outcome));
+ assert.equal(row.spent.materials[0].amount,1);assert.equal(f.doc.state.npcs[host].inventory.item_wood?.quantity??0,back);
+ assert.equal(f.doc.state.npcs[host].inventory[recipe.output.item]?.quantity??0,row.outcome.success?4:failure==='partial'?row.produced?.[0]?.amount??0:0);
  assert.deepEqual(reconcile(f.e,f.doc),{audit:[],drift:[],lots:[],mismatches:[]});
 });
 

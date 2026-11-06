@@ -26,14 +26,21 @@ async function degree(run,c,args,wanted){
 test('制造先校验配方知识、技能、真实工具、工作台与许可，失败结构检查不花钱耗时',async()=>{
     const{world,document,run}=await setup();
     for(const alter of[
-        // 卡 Q 依据（impl-Q 第 1 条、产品原则二.3）：缺技能不再拒绝，改为照做、落低档，见下方断言；其余物理与知识前提照样拒绝。
-        c=>delete c.state.recipes.recipe_wooden_pegs,
+        // 卡 Q 依据（impl-Q 第 1 条、产品原则二.3）：缺技能不再拒绝，改为照做、落低档，见下方断言；其余物理前提照样拒绝。
+        // Q-8（3bd7fe2f）：没学过配方也不再拒绝，照做、按外行档出品，见下方断言。
         c=>delete c.state.inventory.item_whittling_knife,c=>c.state.inventory.item_whittling_knife.durability=0,
         c=>c.state.location='bld_hw_qingdeng',c=>c.state.buildings.bld_hw_mill={condition:0},c=>c.state.player.coins=1,
     ]){const c=structuredClone(document);alter(c);const before=structuredClone(c);await assert.rejects(run(c,'world_craft',{recipe:'recipe_wooden_pegs'},'bad'));assert.deepEqual(c,before);}
     {const c=structuredClone(document);delete c.state.skills.skill_life_6_core;
         const out=await degree(run,c,{recipe:'recipe_wooden_pegs'},'成功');
         assert.equal(out.result.workmanship,'仿制');assert.equal(out.result.standing,'noSkill');assert.equal(out.document.state.skills.skill_life_6_core,undefined);}
+    {const c=structuredClone(document);delete c.state.recipes.recipe_wooden_pegs;
+        const out=await degree(run,c,{recipe:'recipe_wooden_pegs'},'成功'),after=out.document;
+        assert.equal(out.result.standing,'underProficient');assert.ok(['仿制','粗陋'].includes(out.result.workmanship),out.result.workmanship);
+        assert.equal(after.state.recipes.recipe_wooden_pegs,undefined,'照做不等于学会');
+        assert.equal(after.state.inventory.item_wood.quantity,5);assert.equal(after.state.minute,560);assert.equal(after.state.player.coins,178);
+        assert.equal(after.state.inventory.item_whittling_knife.durability,79);assert.equal(after.state.inventory.item_wooden_peg.quantity,4);
+        for(const id of out.result.instances)assert.ok(['仿制','粗陋'].includes(after.state.itemInstances[id].workmanship));}
     // K5：工位开放与否从设备推出——去掉主人公开的收费，磨坊的木作台就只供主人及其许可的人使用（原为手写 access='consent'）。
     delete world.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(f=>f.fixture==='workbench').fee;
     // K6 依据（审查 C-b manufacturing:86、D1 本文件:34）：工作台使用许可决定合法与否；没有许可照样能做，命中擅用他人之物。
@@ -53,18 +60,23 @@ test('成功制造真实扣料、工坊费和工具耐久，副产品入库，�
 test('失败仍扣耗材、租费、时间与磨损，大失败有配方伤害，回收比例精确，无成品或经验',async()=>{
     const{world,document}=await setup();const recipe=world.recipes.find(row=>row.id==='recipe_wooden_pegs');recipe.materials=[{item:'item_wood',amount:4}];recipe.failure={recoverFraction:0.5,injury:2};
     const engine=new WorldEngine(world),run=async(c,tool,args,id)=>{const out=await engine.reduce(c,{tool,args,eventId:id});return{document:applyPatches(c,out.patches),result:out.result};};
-    // 卡 Q 依据（impl-Q 第 2 条）：失败分档，"损耗"一类按配方 recoverFraction 回收，即原断言的情形；无损、报废、部分功能另验。
+    // 卡 Q 依据（impl-Q 第 2 条、Q-10 d87052e6）：失败分四类——无损原样全退、损耗按 failureWear 退回且降品质、报废按配方 recoverFraction 回收残料、部分功能不退。
     const kind=async(wanted,failure)=>{for(let i=0;i<400;i++){const out=await run(document,'world_craft',{recipe:'recipe_wooden_pegs'},`manufacture_${i}`);if(out.result.degree===wanted&&out.result.failure===failure)return out;}throw new Error(`未观察到${wanted}/${failure}`);};
     {const intact=await kind('失败','intact'),ruin=await kind('大失败','ruin'),partial=await kind('失败','partial');
         assert.equal(intact.document.state.inventory.item_wood.quantity,6);assert.deepEqual(intact.result.salvage,[{item:'item_wood',amount:4}]);
-        assert.equal(ruin.document.state.inventory.item_wood.quantity,2);assert.deepEqual(ruin.result.salvage,[]);
+        // Q-10（d87052e6）：报废按配方 failure.recoverFraction 回收残料（4×0.5=2）。
+        assert.equal(ruin.document.state.inventory.item_wood.quantity,4);assert.deepEqual(ruin.result.salvage,[{item:'item_wood',amount:2}]);assert.equal(ruin.document.state.player.hp,10);
         assert.equal(partial.document.state.inventory.item_wood.quantity,2);assert.equal(partial.result.workmanship,'仿制');assert.equal(partial.document.state.inventory.item_wooden_peg.quantity,4);}
     for(const wanted of['失败','大失败']){
         const out=await kind(wanted,'wear'),c=out.document;
-        assert.equal(c.state.inventory.item_wood.quantity,4);assert.equal(c.state.player.coins,178);assert.equal(c.state.minute,560);
+        // Q-10（d87052e6）：损耗按 rules.equipment.failureWear 退回（4×returnFraction 向上取整），退回的每份登记为单件、品质 = 投入品质 × gradeFactor。
+        const wearRule=world.rules.equipment.failureWear,back=Math.min(4,Math.max(1,Math.ceil(4*wearRule.returnFraction)));
+        assert.equal(c.state.inventory.item_wood.quantity,2+back);assert.equal(c.state.player.coins,178);assert.equal(c.state.minute,560);
         assert.equal(c.state.inventory.item_whittling_knife.durability,79);assert.equal(c.state.inventory.item_wooden_peg,undefined);
-        assert.equal(c.state.player.hp,wanted==='大失败'?10:12);assert.equal(c.state.player.xp,0);assert.deepEqual(c.state.itemInstances,{});
-        assert.deepEqual(out.result.salvage,[{item:'item_wood',amount:2}]);assert.equal(c.state.crafted[out.result.receipt].quantity,0);
+        assert.equal(c.state.player.hp,wanted==='大失败'?10:12);assert.equal(c.state.player.xp,0);
+        const units=Object.values(c.state.itemInstances);assert.equal(units.length,back);assert.deepEqual(c.state.inventory.item_wood.instances,units.map(u=>u.id));
+        for(const u of units){assert.equal(u.item,'item_wood');assert.equal(u.source,out.result.receipt.replace(/^crafted_/,''));assert.ok(Math.abs(u.grade-wearRule.gradeFactor)<1e-9,String(u.grade));}
+        assert.deepEqual(out.result.salvage,[{item:'item_wood',amount:back}]);assert.equal(c.state.crafted[out.result.receipt].quantity,0);
     }
 });
 test('做工由成功档与手艺计算，区别真实单件耐久上限，不由模型指定',async()=>{
