@@ -18,7 +18,9 @@ export function npcDecision(view,request={}){
  const values=view.self.traits.values??[],weight=name=>values.includes(name)?values.length-values.indexOf(name):1;
  // Goods have opportunity value, but delivering owned goods does not require
  // spending that value from a purse. Only actual coins hit the cash gate below.
- const cost=(money+value)*coefficients.moneyWeight+time/coefficients.timeDivisor+risk*riskAversion*coefficients.riskWeight+Math.max(0,request.cost?.family??0)*weight('家人')*coefficients.familyWeight+Math.max(0,request.cost?.reputation??0)*weight('体面')*coefficients.reputationWeight;
+ // 时间只计一次：请求自己按本人工价给出这段时间值多少（cost.timeValue，铜）时用它，否则按通用的时间折算。
+ const timeValue=request.cost?.timeValue,timeCost=Number.isFinite(timeValue)?Math.max(0,timeValue)*coefficients.moneyWeight:time/coefficients.timeDivisor;
+ const cost=(money+value)*coefficients.moneyWeight+timeCost+risk*riskAversion*coefficients.riskWeight+Math.max(0,request.cost?.family??0)*weight('家人')*coefficients.familyWeight+Math.max(0,request.cost?.reputation??0)*weight('体面')*coefficients.reputationWeight;
  const benefit=Math.max(0,request.reward??0)*coefficients.rewardWeight+(relation.trust??0)/coefficients.trustDivisor+(relation.favors?.filter(f=>f.status!=='已还').length??0)*coefficients.favorWeight+(request.needSatisfaction??0)*coefficients.needWeight;
  add('cost_benefit',{cost,benefit,belief,coins:view.self.coins,riskAversion});
  const urgent=goals(view).find(g=>(g.urgency??0)>(request.urgency??0));
