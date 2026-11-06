@@ -11,7 +11,9 @@ import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {produceItems,wearItem,heldUnit,workmanshipTier,markReturnedUnits}from'./items.mjs';
 import {milestone}from'./progression.mjs';
+import {prepareThermalWorkstation}from'./magic-object.mjs';
 import {prepareStationHeat}from'./facility-kindle.mjs';
+import {hasOwnFirebox}from'./facility-heat.mjs';
 import {createHash}from'node:crypto';
 import {spiritManufacture}from'./wildlife-society.mjs';
 import {recordArtWork}from'./works.mjs';
@@ -173,13 +175,10 @@ export function workstation(d,engine,recipe,args){
     if(licence?.basis==='paid'&&station.owner?.startsWith('npc_')){
         const owner=d.get('state','npcs',station.owner);if(!owner||isPhysicallyDead(engine,d,station.owner)||owner.status==='濒死')throw preconditionFailure('工坊主人无法履约');
     }
-    const processMinutes=Math.ceil(recipe.minutes/facility.factor);
-    // 热工位：炉膛燃料从本人行囊出（不动配方要用的料），点火升温的分钟也算在这次工作里。
-    const reserved=new Map();for(const m of resolveMaterials(d,engine,'player',recipe.materials))reserved.set(m.item,(reserved.get(m.item)??0)+m.amount);
-    for(const item of recipe.tools??[])reserved.set(item,(reserved.get(item)??0)+1);
-    const heat=prepareStationHeat(d,engine,station,processMinutes,{holder:'player',reserved,location});
-    const workMinutes=processMinutes+(heat?.warm??0);
-    return{...station,fee,workMinutes,factor:facility.factor,...(heat?.plan?{thermalPlan:heat.plan}:{})};
+    const workMinutes=Math.ceil(recipe.minutes/facility.factor);
+    // 设备自带炉膛的热工位在工具、材料核对之后再照管炉火（heatWork）；显式登记的热源沿用原口径。
+    const thermalPlan=hasOwnFirebox(station)?null:prepareThermalWorkstation(d,engine,station,workMinutes);
+    return{...station,fee,workMinutes,factor:facility.factor,...(thermalPlan?{thermalPlan}:{})};
 }
 export function manufacture(d,args,eventId){
     if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials});
@@ -220,7 +219,7 @@ export function manufacture(d,args,eventId){
     // 卡 Q：没掌握技能、熟练度不到门槛或没学过配方都照样动手，结果按技能状况落档（craftOutcome）。
     const hasSkill=Boolean(d.get('state','skills',recipe.skill)),proficiency=hasSkill?effectiveProficiency(d,this,recipe.skill):0;
     const standing=craftStanding(hasSkill,proficiency,recipe.minimumProficiency,!recipe.learningRequired||Boolean(d.get('state','recipes',recipe.id)));
-    const attribute=recipe.attribute??this.byId.get(recipe.skill).attribute??'智力',station=workstation(d,this,recipe,args),workMinutes=station?.workMinutes??recipe.minutes;
+    const attribute=recipe.attribute??this.byId.get(recipe.skill).attribute??'智力',station=workstation(d,this,recipe,args);let workMinutes=station?.workMinutes??recipe.minutes;
     // Check real required tools before spending material, rent or time.
     toolBonuses(d,this,recipe.tools??[],attribute,recipe.skill);
     // 材料按类别（item-use-tags.substitutable，如燃料）落到实际持有的同类物品；检查、扣料、回收、记账都用落实后的物品。
@@ -228,6 +227,12 @@ export function manufacture(d,args,eventId){
     const materials=new Map();for(const row of resolved)materials.set(row.item,(materials.get(row.item)??0)+integer(row.amount,1,100000,'材料数量'));
     for(const[item,amount]of materials)if(this.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${this.byId.get(item).name}`);
     if(recipe.tools?.some(item=>materials.has(item)))throw preconditionFailure('同一物品不能同时作为耗材与保留工具');
+    // 热工位：炉膛燃料从本人行囊出（不动配方要用的料与工具），点火升温的分钟也算在这次工作里。
+    if(hasOwnFirebox(station)){
+        const reserved=new Map(materials);for(const item of recipe.tools??[])reserved.set(item,(reserved.get(item)??0)+1);
+        const heat=prepareStationHeat(d,this,station,workMinutes,{holder:'player',reserved,location:d.get('state','location')});
+        workMinutes+=heat.warm;station.thermalPlan=heat.plan;
+    }
     const products=[{item:recipe.output.item,amount:recipe.output.quantity},...recipe.byproducts??[]];
     for(const row of products){integer(row.amount,1,200,'产物数量');if(!this.byId.has(row.item))throw preconditionFailure('产物未登记');}
     if(new Set(products.map(row=>row.item)).size!==products.length)throw preconditionFailure('主产物与副产品不能重复登记');

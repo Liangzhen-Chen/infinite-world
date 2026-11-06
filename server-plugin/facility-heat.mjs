@@ -11,9 +11,11 @@ export const fireboxId=stationId=>`feature_firebox_${stationId}`;
 // 设备类要求的工序炉温；已显式登记热源的设备不套用（行里自己的 thermalRequirement 优先）。
 export const derivedRequirement=(stationId,fixture)=>{const c=LAW[fixture];return c?{feature:fireboxId(stationId),...c.requirement}:null;};
 export const isDerivedFirebox=row=>row?.derivedFrom==='fixture';
-export function fireboxRow(world,station){
+export function fireboxRow(world,station,owner){
  const c=LAW[station.fixture],items=new Map((world.items??[]).map(i=>[i.id,i]));
  const fuels=classItems({world},'fuel').map(id=>({item:id,milligramsPerUnit:Math.round(items.get(id).weight*1000000)})).filter(f=>f.milligramsPerUnit>=1);
- return {id:fireboxId(station.id),name:`${c.label}炉膛`,kind:'object',position:[0,0],state:{},access:'public',derivedFrom:'fixture',
+ return {id:fireboxId(station.id),name:`${c.label}炉膛`,kind:'object',position:[0,0],state:{},owner,access:'public',derivedFrom:'fixture',
   thermalModel:{...c.firebox,fuels},thermalInitial:{temperatureC:c.firebox.ambientC,fuelMg:0,moistureMg:0}};
 }
+// 工位的热源是不是设备自带的炉膛（而不是显式登记的热源）。
+export const hasOwnFirebox=station=>Boolean(station?.thermalRequirement)&&station.thermalRequirement.feature===fireboxId(station.id);

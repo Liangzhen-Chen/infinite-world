@@ -79,7 +79,7 @@ export function materializeWorkstations(world){
  for(const place of world.locations??[]){
   delete place.workstations;
   // 卡 HB：需明火的设备类自带炉膛（设备的一部分，使用权随工位许可）；编辑设备后再次具现时重新派生。
-  const boxes=fixtureStations(place).filter(s=>s.thermalRequirement&&s.thermalRequirement.feature===derivedRequirement(s.id,s.fixture)?.feature).map(s=>fireboxRow(world,s));
+  const boxes=fixtureStations(place).filter(s=>s.thermalRequirement&&s.thermalRequirement.feature===derivedRequirement(s.id,s.fixture)?.feature).map(s=>fireboxRow(world,s,s.owner??ownersAt(place,world.households,null,worldHolders(world))[0]??place.id));
   if(boxes.length||place.features?.some(isDerivedFirebox))place.features=[...(place.features??[]).filter(f=>!isDerivedFirebox(f)),...boxes];
   // A non-enumerable getter: the world's serialized form, hash and clones keep
   // only the fixtures, and an edited fixture is what every reader sees.
