@@ -114,9 +114,18 @@ test('A3 accounts: managed granary and remote recipient reject atomically with s
 });
 test('A3 accounts: unknown/missing resource, foreign source, source mint, protected purposes and atomic shortage still reject',()=>{
  const {engine,document,npc,frame}=fixture(),before=structuredClone(document),cash={op:'transfer',from:'player',to:npc,resource:'coin_river',qty:1};
- for(const [effect,code] of [[{...cash,resource:undefined},'E-TRANSFER-RESOURCE'],[{...cash,to:'npc_missing'},'E-TRANSFER-ACCOUNT'],[{...cash,from:npc,to:'player'},'E-AUTHORITY'],[{...cash,from:'src:genesis'},'E-TRANSFER-ENDPOINT'],[{...cash,from:'player|coin_river|purse',to:`${npc}|item_ration|inventory`},'E-TRANSFER-ENDPOINT'],[{...cash,qty:101},'E-TRANSFER-BALANCE']]){
+ for(const [effect,code] of [[{...cash,resource:undefined},'E-TRANSFER-RESOURCE'],[{...cash,to:'npc_missing'},'E-TRANSFER-ACCOUNT'],[{...cash,from:'src:genesis'},'E-TRANSFER-ENDPOINT'],[{...cash,from:'player|coin_river|purse',to:`${npc}|item_ration|inventory`},'E-TRANSFER-ENDPOINT'],[{...cash,qty:101},'E-TRANSFER-BALANCE']]){
   assert.throws(()=>commitPrimitives(document,[effect],frame(`reject-${code}`)),{code});assert.deepEqual(document,before);
  }
+ // K6 (abc65508/76365571, legality is a consequence): taking from a present person's purse without consent
+ // physically happens and is committed as theft with that person as victim; reaching a purse that is
+ // elsewhere still refuses physically and leaves nothing.
+ {const out=commitPrimitives(document,[{...cash,from:npc,to:'player'}],frame('foreign-source')),after=applyPatches(document,out.patches);assert.deepEqual(document,before);
+  assert.equal(out.receipt.applied.length,1);assert.equal(after.state.player.coins,101);
+  const offense=out.receipt.consequences.find(c=>c.type==='offense'),row=after.state.records[offense?.record];
+  assert.equal(offense?.offense,'theft');assert.equal(offense.victim,npc);assert.equal(row.sourceEvent,'foreign-source');assert.equal(row.offender,'player');assert.deepEqual(row.stolen,{coins:1});reconciled(engine,after);
+  const here=document.state.npcs[npc].location;document.state.npcs[npc].location='loc_bs';const away=structuredClone(document);
+  assert.throws(()=>commitPrimitives(document,[{...cash,from:npc,to:'player'}],frame('foreign-remote')),{code:'E-TRANSFER-REACH'});assert.deepEqual(document,away);document.state.npcs[npc].location=here;}
  const escrow=accountKey('player','coin_river','escrow');document.ledger.accounts[escrow]=1;
  assert.throws(()=>commitPrimitives(document,[{...cash,from:escrow}],frame('protected')),{code:'E-TRANSFER-PURPOSE'});
  delete document.ledger.accounts[escrow];

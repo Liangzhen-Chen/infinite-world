@@ -44,6 +44,11 @@ test('全部14条真实施法改变对应水量、衣物、耐久、防护或契
  switch(s.mechanism){case'dry':assert.equal(out.document.state.inventory.item_clothes.moisture,0);break;case'repair_metal':assert.equal(out.document.state.inventory[args.target].durability,30);assert.equal(out.document.state.inventory.item_iron.quantity,4);assert.equal(out.document.state.inventory.item_resin.quantity,4);break;case'damage_fire':assert.ok(out.result.damage>0);break;case'condense':assert.equal(out.result.condensedMl,35);break;case'clean_water':assert.equal(out.document.state.records['physical_feature:feature_hw_pool'].state.toxinUg,water('feature_hw_pool').toxinUg);break;case'sense_water':assert.equal(out.result.observation.salinityPpt,.2);break;case'clear_silt':assert.equal(out.document.state.records['physical_feature:feature_hw_channel'].state.loosenedSiltGrams,2000);break;case'irrigate':case'soil_water':assert.ok(out.document.state.records['physical_feature:feature_hw_plot'].state.waterMl>0);break;case'servant':assert.ok(Object.values(out.document.state.effects).some(e=>e.summonType==='water_cup'));break;default:assert.ok(Object.values(out.document.state.effects).some(e=>e.status===s.effectSpec.status));}
  }
 });
-test('外部生命目标不在场、精神许可缺失拒绝，原存档钱物时间不变',async()=>{const {d,run}=setup();assert.notEqual(d.state.npcs.npc_hw_linsui.location,d.state.location);const old=structuredClone(d);await assert.rejects(run(d,'world_cast',{spell:'spell_fire_08',target:'npc_hw_linsui'},'no-position'),/法术目标不在场/);await assert.rejects(run(d,'world_cast',{spell:'spell_mind_05',target:'player'},'no-permit'),/许可/);assert.deepEqual(d,old);});
+// K6 (acf503a8, legality is a consequence): an absent target is physical and still refuses; a missing
+// mental-magic permit is legal, so the cast happens and is committed as the mental_magic offense.
+test('外部生命目标不在场拒绝且原存档不变；精神许可缺失照样施法并立精神法术罪',async()=>{const {d,run}=setup();assert.notEqual(d.state.npcs.npc_hw_linsui.location,d.state.location);const old=structuredClone(d);await assert.rejects(run(d,'world_cast',{spell:'spell_fire_08',target:'npc_hw_linsui'},'no-position'),/法术目标不在场/);assert.deepEqual(d,old);
+ const cast=await run(d,'world_cast',{spell:'spell_mind_05',target:'player'},'no-permit');assert.deepEqual(d,old);
+ const rows=Object.values(cast.document.state.records).filter(r=>r.category==='offense'&&r.sourceEvent==='no-permit');
+ assert.equal(rows.length,1);assert.equal(rows[0].offense,'mental_magic');assert.equal(rows[0].offender,'player');assert.ok(cast.document.state.minute>old.state.minute);});
 
 

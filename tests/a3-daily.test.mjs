@@ -268,19 +268,34 @@ test('A3 D14: two hours at the real local herb reserve transfers five herbs and 
  const capped=await act(f,'core:site.gather_session',slots,'a3-herbs-cap');
  assert.equal(capped.out.result.training.gain,0);assert.equal(capped.out.result.quantity,5);
 });
-test('A3 D14: duration, local presence, season, permission, stock and prior commitments remain real gates',async()=>{
- for(const fault of ['short','long','quantity','legacy_quantity','stock','winter','permission','busy','elsewhere']){
+test('A3 D14: duration, local presence, season, stock and prior commitments remain real gates',async()=>{
+ for(const fault of ['short','long','quantity','legacy_quantity','stock','winter','busy','elsewhere']){
   const f=await gatherFixture(),slots={target:'nw_herb',minutes:120},state=f.document.state;
   if(fault==='short')slots.minutes=29;if(fault==='long')slots.minutes=481;if(fault==='quantity')slots.quantity=100;
   if(fault==='legacy_quantity'){delete slots.minutes;slots.quantity=20;}
   if(fault==='stock')state.records['site:loc_hw_northwood'].remaining.nw_herb=0;
   if(fault==='winter')scene('loc_hw_northwood',(9*30+3)*1440+9*60)(state,f.document);
-  if(fault==='permission')f.world.locations.find(p=>p.id==='loc_hw_northwood').site.owner=SELLER;
   if(fault==='elsewhere')state.location=INN;
   if(fault==='busy')state.obligations.busy={id:'busy',reservationVersion:1,type:'等待',promisor:'player',promisee:SELLER,start:state.minute,deadline:state.minute+180,departures:{player:state.minute,[SELLER]:state.minute},status:'待履行',location:state.location};
   const before=structuredClone(f.document);await assertActionRejected(act(f,fault==='legacy_quantity'?'core:site.gather':'core:site.gather_session',slots,`a3-herbs-${fault}`));
   assert.deepEqual(f.document,before);
  }
+});
+// K6 (c60b2a62, legality is a consequence): the owner's permission is a legal gate, not a physical one.
+// Gathering in another's reserve still happens with the same real time and stock, and is committed as
+// illegal harvest against the owner under this act's event.
+test('A3 D14: gathering in a reserve without the owner permission happens and is committed as illegal harvest',async()=>{
+ const f=await gatherFixture(),slots={target:'nw_herb',minutes:120};
+ f.world.locations.find(p=>p.id==='loc_hw_northwood').site.owner=SELLER;
+ const before=structuredClone(f.document),{out,after}=await act(f,'core:site.gather_session',slots,'a3-herbs-permission');
+ assert.equal(after.state.minute-before.state.minute,120);assert.equal(qty(f,after,'player','item_herb')-qty(f,before,'player','item_herb'),5);
+ assert.equal(after.state.records['site:loc_hw_northwood'].remaining.nw_herb,15);
+ const rows=Object.values(after.state.records).filter(r=>r.category==='offense'&&r.sourceEvent==='a3-herbs-permission');
+ // Going onto the private site is its entry breach too (sites.mjs entryBreach): trespass and illegal harvest.
+ assert.deepEqual(rows.map(r=>r.offense).sort(),['illegal_harvest','trespass']);
+ for(const r of rows){assert.equal(r.victim,SELLER);assert.equal(r.offender,'player');}
+ const harvest=rows.find(r=>r.offense==='illegal_harvest');assert.deepEqual(harvest.stolen,{item:'item_herb',quantity:5});assert.ok(harvest.value>0);
+ assert.deepEqual(auditLedger(after.ledger),[]);assert.deepEqual(reconcile(f.engine,after).mismatches,[]);
 });
 test('A3 D14: both duration endpoints execute, and depleted herbs stay empty through the old alias',async()=>{
  for(const [minutes,quantity]of [[30,1],[480,20]]){

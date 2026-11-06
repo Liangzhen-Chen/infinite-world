@@ -43,6 +43,17 @@ async function at(doc,minuteOfDay){let target=Math.floor(doc.state.minute/1440)*
 // Residents can fall ill (NPC life simulation); lessons wait for a day the teacher is actually there.
 async function attend(doc,teacher,place,minuteOfDay){for(let i=0;i<40;i++){doc=await at(doc,minuteOfDay);const n=doc.state.npcs[teacher];if(n.location===place&&!n.status?.match?.(/患病|昏迷/)&&n.status!=='患病')return doc;}assert.fail(`${teacher}长期不在${place}`);}
 async function grant(doc,owner,...targets){const auth=[];for(const t of targets){const r=await run(doc,'world_promise',{operation:'grant_access',promisor:owner,location:t,minutes:600,content:'本人同意限定用途；到期或撤销即终止许可'});doc=r.doc;auth.push(r.result.authorization);}return{doc,authorization:auth[0],authorizations:auth.slice(1)};}
+// K6 (acf503a8, legality is a consequence): casting on someone's object without their grant is physically
+// the same cast; it takes effect and the missing licence is committed as unauthorized use against the
+// object's owner under the cast's own event.
+async function unlicensedCast(doc,args){
+ const r=await cast(doc,args),owner=world.locations.flatMap(l=>l.features??[]).find(f=>f.id===args.target)?.owner;
+ const rows=Object.values(r.doc.state.records).filter(x=>x.category==='offense'&&!doc.state.records[x.id]);
+ assert.ok(typeof owner==='string'&&owner!=='player',args.target);
+ assert.equal(rows.length,1,JSON.stringify(rows));assert.equal(rows[0].offense,'unauthorized_use');assert.equal(rows[0].victim,owner);
+ assert.equal(rows[0].offender,'player');assert.equal(rows[0].subject.id,args.target);assert.equal(rows[0].sourceEvent,`s4-${serial}`);
+ return r;
+}
 async function cast(doc,args){const prior=doc,r=await success(doc,'world_cast',args),s=world.spells.find(x=>x.id===args.spell);
  assert.ok(r.doc.state.player.mp<=prior.state.player.mp-s.mp);
  for(const m of s.materials)assert.equal(r.doc.state.inventory[m.item]?.quantity??0,(prior.state.inventory[m.item]?.quantity??0)-m.amount);
@@ -200,7 +211,7 @@ test('道门符阵：驱邪、护界、镇宅在雾滩真实生效；锁隙、�
  let doc=await attend(fresh(),DAO,home.道,600);
  let g=await grant(doc,DAO,fid('scripture_door'));const lock=await cast(g.doc,{spell:id('door_lock'),target:fid('scripture_door'),authorization:g.authorization});
  await assert.rejects(engine.reduce(lock.doc,{tool:'world_environment',args:{operation:'approach',target:fid('scripture_shelf')},eventId:'locked-door'}),/封界或机械锁/);
- await assert.rejects(engine.reduce(doc,{tool:'world_cast',args:{spell:id('door_lock'),target:fid('scripture_door')},eventId:'lock-no-owner'}),/许可/);
+ {const locked=await unlicensedCast(doc,{spell:id('door_lock'),target:fid('scripture_door')});await assert.rejects(engine.reduce(locked.doc,{tool:'world_environment',args:{operation:'approach',target:fid('scripture_shelf')},eventId:'locked-door-unlicensed'}),/封界或机械锁/);}
  g=await grant(doc,DAO,fid('gate'));const alarm=await cast(g.doc,{spell:id('door_alarm'),target:fid('gate'),authorization:g.authorization});
  const out=await run(alarm.doc,'world_move',{destination:'loc_bs_dongxue'});assert.ok(Object.values(out.doc.state.records).some(r=>r.category==='door_alarm'&&r.target===fid('gate')));
  g=await grant(doc,DAO,fid('gate'));const seal=await cast(g.doc,{spell:id('seal_way'),target:fid('gate'),authorization:g.authorization});assert.equal(seal.result.publicSign,'空间封界：此通道暂时封闭');
@@ -276,7 +287,7 @@ test('书铺两册有限库存：购买、阅读学会空间与役灵、量距�
  const span=await cast(structuredClone(doc),{spell:id('measure'),target:'feature_s2_school_hall',destination:'feature_s2_school_yard'});assert.equal(span.result.metres,1);
  let g=await grant(doc,MAGE,fid('iron_latch'));const rust=await cast(g.doc,{spell:id('rust_bite'),target:fid('iron_latch'),authorization:g.authorization});
  assert.ok(Math.abs(rec(await wait(rust.doc,10),fid('iron_latch')).integrity-92)<1e-9);
- await assert.rejects(engine.reduce(doc,{tool:'world_cast',args:{spell:id('rust_bite'),target:fid('iron_latch')},eventId:'rust-no-owner'}),/许可/);
+ {const bitten=await unlicensedCast(doc,{spell:id('rust_bite'),target:fid('iron_latch')});assert.ok(Math.abs(rec(await wait(bitten.doc,10),fid('iron_latch')).integrity-92)<1e-9);}
  g=await grant(doc,MAGE,fid('brick_pile'),fid('tile_pile'),fid('rubble_cart'));const auth={authorization:g.authorization,authorizations:g.authorizations};
  const one=await cast(g.doc,{spell:id('rubble_servant'),target:fid('brick_pile'),destination:fid('rubble_cart'),...auth});assert.equal(one.result.carriedGrams,2000);
  const two=await cast(one.doc,{spell:id('rubble_servant'),target:fid('tile_pile'),destination:fid('rubble_cart'),...auth});assert.equal(rec(two.doc,fid('rubble_cart')).rubbleGrams,4000);
