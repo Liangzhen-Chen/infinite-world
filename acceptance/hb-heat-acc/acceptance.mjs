@@ -250,7 +250,7 @@ async function buildMut(){
   }
   // 私炉：给一户既有私宅加一座锻炉（只加一条设备数据）
   const priv=locs.find(l=>l.access?.mode==='private'&&(l.access.residents??[]).length&&l.id!=='bld_hw_forge');
-  if(priv)priv.fixtures=[...(priv.fixtures??[]),{fixture:'forge',id:'station_acc_priv',fee:0}];
+  if(priv)priv.fixtures=[...(priv.fixtures??[]),{fixture:'forge',id:'station_acc_priv'}];
   wj('world/geo/locations.json',locs);wj('world/geo/routes.json',routes);
   writeFileSync(stamp,'built');return mut;
 }
@@ -293,8 +293,8 @@ if(mutOK){
       const denied=await call(c,'world_craft',{recipe:rf.id});
       // 与 K6 同口径：先拒；或先发生后定罪：本次用炉事件（sourceEvent）写下 offense 记录，受害人是这户的住户，对象指向这座炉或这户，且回执 consequences 里有指向该记录的 offense 项
       const evId=denied.input?.eventId,recs=Object.values(c.doc.state.records??{}).filter(r=>r.category==='offense'&&r.sourceEvent===evId);
-      const cons=(denied.result?.receipt?.consequences??[]).filter(k=>k.type==='offense');
-      const hit=recs.find(r=>priv.access.residents.includes(r.victim)&&(jstr(r).includes(priv.id)||jstr(r).includes('station_acc_priv'))&&cons.some(k=>k.record===r.id));
+      const cons=(denied.result?.offenses??[]).filter(k=>k&&(k.type==='offense'||k.offense||k.record||k.id));
+      const hit=recs.find(r=>priv.access.residents.includes(r.victim)&&(jstr(r).includes(priv.id)||jstr(r).includes('station_acc_priv'))&&cons.some(k=>[k.record,k.id,k.recordId].includes(r.id)||k===r.id)&&(r.offense==='unauthorized_use'||r.offense?.id==='unauthorized_use'));
       const offense=recs.length,conseq=cons.length;
       const deniedOK=(denied.status==='rejected'&&same(c,s)&&ACCESS.test(denied.reason??''))||(denied.status==='committed'&&!!hit);
       
@@ -305,7 +305,7 @@ if(mutOK){
         if(g.status==='committed'){const auth=g.result?.authorization,mv=await call(t,'world_move',{destination:priv.id,authorization:auth});trace.push(`进屋：${say(mv)}`);
           if(t.doc.state.location===priv.id){const n0=inv(t.doc.state,rf.output.item),before=t.doc,x=await call(t,'world_craft',{recipe:rf.id,authorization:auth});trace.push(`做：${say(x)}`);const bk=books(M,t,before);allowed=x.status==='committed'&&(x.result?.success===false||inv(t.doc.state,rf.output.item)>n0)&&bk.ok;trace.push(`成功=${x.result?.success} 账本=${jstr(bk)}`);}}
       }
-      check('HB10','变异','私炉要许可：他人家的锻炉，无许可被拒且不动；经主人结构化许可（写明借锻炉）后做成、账本守恒',deniedOK&&allowed,{home:priv.id,resident,denied:say(denied),deniedUnchanged:same(c,s),offenseRecords:recs.map(r=>({id:r.id,offense:r.offense,victim:r.victim,subject:r.subject})),receiptOffenses:cons,matched:!!hit,trace});
+      check('HB10','变异','私炉要许可：他人家的锻炉，无许可被拒且不动；经主人结构化许可（写明借锻炉）后做成、账本守恒',deniedOK&&allowed,{home:priv.id,resident,denied:say(denied),deniedUnchanged:same(c,s),offenseRecords:recs.map(r=>({id:r.id,offense:r.offense,victim:r.victim,subject:r.subject})),resultOffenses:cons,matched:!!hit,trace});
     }
   }
 }
