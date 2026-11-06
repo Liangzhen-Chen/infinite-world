@@ -180,16 +180,21 @@ export function advanceHusbandry(d,e,day){
     if(starved){row.starvationDeaths=(row.starvationDeaths??0)+starved;die(d,e,row,species,starved,'starvation',day,eventId);}
    }
   }else row.hungryDays=0;
+  // The pen is a physical limit (husbandry-pen): head beyond it (from any cause)
+  // die of crowding the same day, so a herd never stands above its pen.
+  const pen=penRule(e),crowded=Math.min(row.count,Math.ceil(Math.max(0,row.count-row.capacity)*pen.crowdingExcessDeathFraction));
+  if(crowded){row.crowdingDeaths=(row.crowdingDeaths??0)+crowded;die(d,e,row,species,crowded,'crowding',day,eventId);}
   if(fed>0){
    const alive=row.count;
    const expected=alive>=2?derived(e,d.document,'population:birthRate',row.id,{base:alive*p.birthPerHeadDay*fed,target:row.species}):0;
-   const accrued=accrueStock(row,'birth',expected),penFull=keeper?table(e,'husbandry.cull')?.penFull??0:0;
-   // A full pen does not grow. A tending owner keeps the young and culls the
-   // surplus; an untended full pen simply raises none.
-   const born=penFull?accrued:Math.min(Math.max(0,row.capacity-alive),accrued);
+   const accrued=accrueStock(row,'birth',expected);
+   // Births only fill free pen room; none is born on the assumption of a later
+   // cull. A tending keeper with a full pen first makes room by slaughtering
+   // (turnover share of the young the herd would bear), then the young fill it.
+   if(keeper&&accrued&&row.count>=row.capacity)cull(d,e,row,species,Math.min(row.count,Math.ceil(accrued*pen.keeperTurnover)),day,eventId);
+   const born=Math.min(Math.max(0,row.capacity-row.count),accrued);
    addPopulation(row,{S:born,I:0,R:0});row.born+=born;
    moveStock(d,{from:`src:birth|${resource(row.species)}|herd`,to:animals(row),amount:born,writer:'husbandry',eventId});
-   if(row.count>row.capacity)cull(d,e,row,species,Math.min(row.count-row.capacity,Math.ceil((row.count-row.capacity)*penFull)),day,eventId);
    for(const yieldRow of p.yields.alive){
     // A take rule with a seasonal rhythm (a coat) grows by season; its year mean is one.
     const rule=takeRule(e,yieldRow.from),base=alive*yieldRow.perHeadDay*fed*(rule?.seasonGrowth?rule.seasonGrowth[e.calendar(day*1440).season]:1);
@@ -208,6 +213,7 @@ export function advanceHusbandry(d,e,day){
 // one row per product source) is a craft: a tool chosen by use class, the
 // row's skill check, and Q's craftOutcome for how much of what is taken
 // survives and how well it is done. Sources without a row are picked up.
+const penRule=e=>{const r=e.world.husbandryPen?.pen;if(!r)throw Error('缺栏圈规律（world/meta/mechanics/husbandry-pen.json）');return r;};
 const takeRule=(e,from)=>from?e.world.husbandryTakes?.takes?.[from]??null:null;
 // The same take for the player and an NPC: the tool (own or a household
 // member's at home), the actor's skill standing, the actor's graded check.

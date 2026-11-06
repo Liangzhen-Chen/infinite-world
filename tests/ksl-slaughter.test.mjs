@@ -245,3 +245,20 @@ test('household tools: at home one may use a tool any member of the household ho
  const away=premise(engine,document,{facts:[{path:['state','npcs','npc_hw_duanhe','location'],value:'loc_hw'}]});
  assert.throws(()=>householdTool(engine.primitiveDraft(away),engine,'cut',undefined,'npc_hw_duanhe'),e=>e.code==='E-ACTION-TOOL');
 });
+
+test('the pen is a physical limit: births only fill free room, head beyond it die of crowding; never above the pen',async()=>{
+ const pen=world.husbandryPen.pen;
+ // Above the pen from the start (50 head, 40 places): the excess dies of crowding at the first settlement.
+ const over=herd('monster_oat_pheasant',50,{capacity:40,days:6});
+ let doc=over.document,max=0;
+ for(let i=0;i<5;i++){doc=(await reduce(over.engine,doc,'world_time',{minutes:1440},`day${i}`)).document;max=Math.max(max,rec(doc).count);}
+ assert.ok(max<=40,`栏内最多 ${max}`);
+ assert.equal(rec(doc).crowdingDeaths,Math.ceil(10*pen.crowdingExcessDeathFraction));
+ assert.equal(flow(doc,/^sink:death\|population_monster_oat_pheasant\|crowding/),rec(doc).crowdingDeaths);
+ assert.ok(rec(doc).carcasses>=rec(doc).crowdingDeaths,'挤死的也按胴体规律分割');
+ assert.deepEqual(reconcile(over.engine,doc).mismatches,[]);
+ // A full pen nobody culls raises no young.
+ const full=herd('monster_oat_pheasant',400,{capacity:400,days:6});
+ const after=(await reduce(full.engine,full.document,'world_time',{minutes:1440*5},'full')).document;
+ assert.equal(rec(after).count<=400,true);assert.equal(rec(after).born,rec(full.document)?.born??0);
+});

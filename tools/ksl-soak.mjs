@@ -18,7 +18,7 @@ for(const [id,species] of [['population_ksl_goats','monster_bent_horn_goat'],['p
  world.ecology.herds.push({id,name:'玩家试养群',owner:'player',location:home,species,count:40,capacity:120});
 const engine=new WorldEngine(world);
 let document=applyIntentSetup(engine,engine.createCharacter(seed,{},'ksl-soak'),{minute:1200,location:home,inventory:{item_kitchen_knife:1,item_leather_shears:1},abilities:{skills:{[takes.carcass.skill]:300}}}).document;
-const tally={slaughter:0,slaughterFailed:0,shear:0,shearFailed:0,refusedTheft:0,leftBehind:{},parts:{},lost:{},hair:0,hairLost:0};
+const tally={slaughter:0,slaughterFailed:0,shear:0,shearFailed:0,refusedTheft:0,leftBehind:{},pen:{},parts:{},lost:{},hair:0,hairLost:0};
 const add=(bag,rows)=>{for(const r of rows??[])bag[r.item]=(bag[r.item]??0)+r.quantity;};
 async function act(args,eventId){
  try{const out=await engine.reduce(document,{tool:'world_farm',args,eventId});document=applyPatches(document,out.patches);return out.result;}
@@ -42,7 +42,10 @@ for(let day=0;day<days;day++){
  const feed=Object.values(document.state.records).filter(r=>r.category==='husbandry'&&r.owner==='player').reduce((n,r)=>n+Math.ceil(r.count*engine.byId.get(r.species).husbandry.feed.perHead),0);
  document=applyIntentSetup(engine,document,{inventory:{item_oats:feed}}).document;
  const out=await engine.reduce(document,{tool:'world_time',args:{minutes:1440},eventId:`day:${day}`});document=applyPatches(document,out.patches);
+ for(const r of Object.values(document.state.records).filter(r=>r.category==='husbandry')){const m=tally.pen[r.id]??={maxCount:0,capacity:r.capacity};m.maxCount=Math.max(m.maxCount,r.count);}
 }
 const audit=reconcile(engine,document);
+const npcHerds=Object.values(document.state.records).filter(r=>r.category==='husbandry'&&r.owner&&r.owner!=='player');
+tally.npcCull=Object.fromEntries(npcHerds.map(r=>[r.id,{culled:r.culled??0,takes:r.cullTakes??{},withoutTool:r.cullWithoutTool??0}]));
 console.log(JSON.stringify({days,...tally,herds:Object.fromEntries(['population_ksl_goats','population_ksl_birds','population_hw_home21_goats'].map(h=>[h,document.state.records[`husbandry:${h}`]?.count])),ledgerMismatches:audit.mismatches.length},null,1));
 if(audit.mismatches.length)process.exitCode=1;
