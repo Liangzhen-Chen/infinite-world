@@ -47,7 +47,7 @@ source.items=source.items.filter(item=>!item.id.startsWith('item_bs_'));
 if(source.rules.wildlifeAwakening?.spiritLands)source.rules.wildlifeAwakening.spiritLands=source.rules.wildlifeAwakening.spiritLands.filter(row=>source.locations.some(l=>l.id===row.location));
 if(source.rules.npcGrowth?.vocations)source.rules.npcGrowth.vocations=source.rules.npcGrowth.vocations.filter(row=>source.locations.some(l=>l.id===row.location));
 // T102后法术、配方以白石镇升档人物为来源；人物和镇内场所已投影掉，依赖它们的目录条目随之移出。
-{const keptNpcs=new Set([...preserved,...candidate.npcs].map(n=>n.id)),keptPlaces=new Set(source.locations.map(l=>l.id));Object.assign(source,pruneCatalog(source,[...formal.npcs.filter(n=>!keptNpcs.has(n.id)).map(n=>n.id),...formal.locations.filter(l=>!keptPlaces.has(l.id)).map(l=>l.id),...source.items.filter(i=>i.id.startsWith('item_bs_')).map(i=>i.id)]));}
+{const keptNpcs=new Set([...preserved,...candidate.npcs].map(n=>n.id)),keptPlaces=new Set(source.locations.map(l=>l.id));Object.assign(source,pruneCatalog(source,[...formal.npcs.filter(n=>!keptNpcs.has(n.id)).map(n=>n.id),...formal.locations.filter(l=>!keptPlaces.has(l.id)).map(l=>l.id),...formal.items.filter(i=>i.id.startsWith('item_bs_')).map(i=>i.id)]));}
 // T108节日目录、T110/T111可执行势力时钟与T142九省纲要都晚于本批，分别移出（节日目录整表移出，时钟回到声明式计划）。
 delete source.festivals;
 delete source.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
@@ -158,15 +158,17 @@ test('名册可解析但不生成人物钱物；目录升级保留旧档变化�
  const promoted=compatibleWorld(world,expanded).world;assert.equal(promoted.residents.some(n=>n.id===person.id),false);assert.equal(promoted.npcs.filter(n=>n.id===person.id).length,1);
 });
 
-test('进入私宅必须有覆盖抵达时刻及同行者的成年住户许可，拒绝不改变钱物时间',async()=>{
+test('进入私宅若无覆盖抵达时刻及同行者的成年住户许可：照样进门，立擅入罪、受害人是成年住户、后果回指本次事件；有效许可则无罪名',async()=>{
  const engine=new WorldEngine(world),doc=engine.createCharacter(legacy,{},'private-entry');doc.state.location='loc_hw';
  const house=candidate.locations[0],adult=house.access.residents.find(id=>engine.byId.get(id).age>=18),child=house.access.residents.find(id=>engine.byId.get(id).age<18);
  const run=(document,args)=>engine.reduce(document,{tool:'world_move',args:{destination:house.id,...args},eventId:'enter'});
- const before=structuredClone(doc);await assert.rejects(run(doc,{}),/有效许可/);assert.deepEqual(doc,before);
+ // K6 c60b2a62: walking into a home without consent happens and commits trespass (not refused).
+ const trespass=async(document,args)=>{const saved=structuredClone(document),out=await run(document,args),after=applyPatches(document,out.patches),o=out.result.offenses?.find(x=>x.offense==='trespass');assert.deepEqual(document,saved);assert.equal(after.state.location,house.id);assert.ok(o,'命中擅入私宅');assert.ok(house.access.residents.includes(o.victim)&&engine.byId.get(o.victim).age>=18,'受害人是成年住户');assert.equal(after.state.records[o.record].sourceEvent,'enter');};
+ await trespass(doc,{});
  doc.state.records.permission={category:'authorization',subject:house.id,action:'enter_home',grantee:'player',grantor:adult,expires:doc.state.minute+60};
  for(const edit of [d=>d.state.records.permission.grantor='npc_hw_linsui',d=>d.state.records.permission.grantor=child,d=>d.state.records.permission.expires=d.state.minute+1,d=>d.state.records.permission.revoked=true,d=>d.state.records.permission.grantee='npc_hw_linsui',d=>d.state.player.companions=['npc_hw_wushuo']]){
-  const denied=structuredClone(doc);edit(denied);const saved=structuredClone(denied);await assert.rejects(run(denied,{authorization:'permission'}),/有效许可/);assert.deepEqual(denied,saved);
+  const denied=structuredClone(doc);edit(denied);const saved=structuredClone(denied);await trespass(denied,{authorization:'permission'});assert.deepEqual(denied,saved);
  }
- const accepted=await run(doc,{authorization:'permission'}),after=applyPatches(doc,accepted.patches);assert.equal(after.state.location,house.id);assert.ok(after.state.minute>doc.state.minute);
+ const accepted=await run(doc,{authorization:'permission'}),after=applyPatches(doc,accepted.patches);assert.equal(after.state.location,house.id);assert.ok(!accepted.result.offenses?.some(x=>x.offense==='trespass'),'有效许可不记擅入');assert.ok(after.state.minute>doc.state.minute);
  const exited=await engine.reduce(after,{tool:'world_move',args:{destination:'河湾村'},eventId:'exit'});assert.equal(applyPatches(after,exited.patches).state.location,'loc_hw');
 });

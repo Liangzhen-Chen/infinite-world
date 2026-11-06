@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {entries,reviewDraftFor,validateDraft} from '../tools/w4-b1-content.mjs';
 import {bosses} from '../world/design/w4-b1.mjs';
@@ -13,7 +13,7 @@ import {applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {planRuleStateMigration} from '../server-plugin/rule-state-migration.mjs';
 import {templateBossCounter,applyBossCounterAbility} from '../server-plugin/boss-abilities.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
-const world=await loadWorld(),publication=await readB1Publication(),ids=new Set(bosses.map(b=>b.id));
+const world=await loadRuntimeWorld(),publication=await readB1Publication(),ids=new Set(bosses.map(b=>b.id));
 const before={...structuredClone(world),bosses:world.bosses.filter(b=>!ids.has(b.id))};
 // T157等后续批次的首领排在本批之后；从现目录剔除本批再合并时本批追加到末尾，故按编号排序后比较内容。
 const byId=w=>({...w,bosses:w.bosses.toSorted((a,b)=>a.id.localeCompare(b.id))});
@@ -132,11 +132,11 @@ test('隔离正式发布与重发零写；候选、审核及L4篡改均在写入
  // 03 §3.2: preserve the same A3 executable definitions and vocabulary in the
  // isolated edition; the full-world equality and all tamper rejections remain.
  // S5-06: the isolated edition includes its approved ecology source, retaining exact equality.
- for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true}); await fs.mkdir(path.join(root,'design'),{recursive:true});await fs.copyFile(path.resolve('world/design/kc-site-ecology.json'),path.join(root,'design/kc-site-ecology.json'));/* 运行时视图的据点再生表 */
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w4-b1'),path.join(root,'drafts/w4-b1'),{recursive:true});
  const file=path.join(root,'meta/bosses.json');await fs.writeFile(file,JSON.stringify(before.bosses));const bytes=await fs.readFile(file,'utf8');
  const preview=await publishB1({root});assert.equal(preview.published,false);assert.deepEqual(preview.changed,['meta/bosses.json']);assert.equal(await fs.readFile(file,'utf8'),bytes);
- const first=await publishB1({root,publish:true});assert.deepEqual(first.batchBossIds,bosses.map(b=>b.id));assert.deepEqual(byId(await loadWorld(root)),byId(world));
+ const first=await publishB1({root,publish:true});assert.deepEqual(first.batchBossIds,bosses.map(b=>b.id));assert.deepEqual(byId(await loadRuntimeWorld(root)),byId(world));
  const stat=(await fs.stat(file)).mtimeMs;assert.deepEqual((await publishB1({root,publish:true})).changed,[]);
  for(const [name,mutate,pattern]of [['candidate.json',r=>r.bosses[0].origin+='异文',/候选/],[`${bosses[0].id}.json`,r=>r.draft.prose.behavior+='免费',/内容已改变/],['batch-0.json',r=>r.l4.approved=false,/L4/],['batch-0.json',r=>r.l4.wave[0].scores[0]=2,/评分/]]){
   const p=path.join(root,'drafts/w4-b1',name),original=await fs.readFile(p,'utf8'),r=JSON.parse(original);mutate(r);await fs.writeFile(p,JSON.stringify(r));await assert.rejects(publishB1({root,publish:true}),pattern);await fs.writeFile(p,original);

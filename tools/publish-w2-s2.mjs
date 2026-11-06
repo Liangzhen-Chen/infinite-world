@@ -4,7 +4,7 @@ import {randomUUID} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {siteItemReferences} from '../server-plugin/sites.mjs';
-import {formalOrder} from './catalogue-order.mjs';
+import {formalOrder,withoutRecipesOfItems} from './catalogue-order.mjs';
 import {hashContent,readApprovedContent} from './content-pipeline.mjs';
 import {entries,contextFor,revision,validateDraft,reviewDraftFor,buildCandidate} from './w2-s2-content.mjs';
 import {spells,books,items,recipes,mentors,placements,stations} from '../world/design/w2-s2.mjs';
@@ -57,12 +57,13 @@ export function mergeS2Publication(world,publication){
 }
 // The edition before this batch, rebuilt from any world that may contain it.
 // Older batch tests compare their own reviewed rows against this view.
-export function withoutS2(source){
+export function withoutS2(source,{keepOwnGenerated=false}={}){
  const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
  const w=structuredClone(source);
  // Items that later sites still hold or use stay in the catalogue (server-plugin/sites.mjs).
  for(const id of siteItemReferences(w.locations))ids.items.delete(id);
  for(const k of Object.keys(ids))w[k]=w[k].filter(r=>!ids[k].has(r.id));
+ if(!keepOwnGenerated)withoutRecipesOfItems(w,ids.items);// 本批书的抄书配方是生成行：作为"本批之前"的底本时留着（合并后与正式一致），作为更早批次的夹具时随书移出，不留悬空引用
  const seller=w.npcs.find(n=>n.id==='npc_hw_luqing');for(const b of books)if(seller?.inventory)delete seller.inventory[b.id];
  for(const [id,{teach,inventory}] of Object.entries(mentors)){
   const p=w.npcs.find(n=>n.id===id);if(!p)continue;const skills=new Set(teach.map(t=>source.spells.find(s=>s.id===t)?.skill).filter(Boolean));

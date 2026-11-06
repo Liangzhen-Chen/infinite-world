@@ -18,6 +18,7 @@ import{validateWorld}from'../tools/validate-world.mjs';
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
 import {withoutT142} from '../tools/t142-merge.mjs';
 import {siteItemReferences} from '../server-plugin/sites.mjs';
+import {withoutRecipesOfItems} from '../tools/catalogue-order.mjs';
 const world=await loadWorld(),bones=economyW3Trades(world);
 const lore=[...bones.items.map(row=>({id:row.id,description:row.use,inspection:'检查可见磨损与裂口，记录不能确认之处。',storage:row.shelfLifeDays===null?'干燥放置并避开磕碰，实际破损另行检查。':`保存上限${row.shelfLifeDays}天。`})),...bones.recipes.map(row=>({id:row.id,process:row.processFacts}))];
 
@@ -59,7 +60,8 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
     const old=withoutMonsterSociety2(withoutT142(world)),siteKept=siteItemReferences(world.locations),addedItems=new Set(bones.items.map(row=>row.id).filter(id=>!siteKept.has(id))),addedRecipes=new Set(bones.recipes.map(row=>row.id));
     delete old.festivals;// T108节日目录（材料引用本批物品）晚于本批。
     delete old.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
-    old.items=old.items.filter(row=>!addedItems.has(row.id));old.recipes=old.recipes.filter(row=>!addedRecipes.has(row.id));
+    // 引用被移出物品的配方（含后来生成的加工/抄书配方）一并移出，旧版不留悬空引用（withoutRecipesOfItems）。
+    old.items=old.items.filter(row=>!addedItems.has(row.id));old.recipes=old.recipes.filter(row=>!addedRecipes.has(row.id));withoutRecipesOfItems(old,addedItems);
     for(const npc of old.npcs)for(const id of Object.keys(npc.inventory??{}))if(addedItems.has(id))delete npc.inventory[id];
     const oldEngine=new WorldEngine(old),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');
     document.worldHash=await registry.put(old);document.state.player.coins=319;

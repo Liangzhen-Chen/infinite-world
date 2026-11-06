@@ -59,7 +59,8 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
 }
 export function assembleW3(world,bones,lore) {
   const byId=new Map(lore.map(row=>[row.id,row])),candidate=structuredClone(world);
-  const merge=(existing,rows)=>{const updates=new Map(rows.map(row=>[row.id,row]));return [...existing.map(row=>updates.get(row.id)??row),...rows.filter(row=>!existing.some(old=>old.id===row.id))];};
+  // 已在世界里的行以正式（已审批、已发布）的形态为准：本批骨架只补世界还没有的行。否则重新装配会把后来经审批批次改过的字段（如 P1 修订批的羊皮纸价）按骨架旧值写回。
+  const merge=(existing,rows)=>[...existing,...rows.filter(row=>!existing.some(old=>old.id===row.id))];
   const newItems=bones.items.filter(row=>byId.has(row.id)).map(row=>({...row,...byId.get(row.id)}));
   const available=new Set([...world.items,...newItems].map(row=>row.id));
   const newRecipes=bones.recipes.filter(row=>byId.has(row.id)&&available.has(row.output.item)&&row.materials.every(m=>available.has(m.item))).map(({processFacts,...row})=>({...row,...byId.get(row.id)}));

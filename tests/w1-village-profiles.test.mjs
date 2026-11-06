@@ -1,13 +1,13 @@
 import {copyWorldFixture} from './fixtures/w1-depth-editions.mjs';
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import{tmpRoot}from'../tools/tmp-root.mjs';import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';import {validateWorld} from '../tools/validate-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';import {validateWorld} from '../tools/validate-world.mjs';
 import {villageProfileCandidates} from '../world/design/w1-village-profiles.mjs';
 import {approvedProfiles,validateDraft,contextFor} from '../tools/w1-village-profiles-content.mjs';
 import {depthBatches} from '../tools/npc-depth-content.mjs';
 import {publishVillages} from '../tools/publish-w1-villages.mjs';import {publicSettlement,settlementScene} from '../server-plugin/settlement-profile.mjs';
 import {catalogDefinition} from '../server-plugin/catalog.mjs';import {WorldEngine} from '../server-plugin/engine.mjs';
 import {MemoryIndex} from '../server-plugin/retrieval.mjs';
-const world=await loadWorld(),profiles=await approvedProfiles({world}),withProfiles={...world,settlementProfiles:world.settlementProfiles.map(p=>{const d=profiles.find(d=>d.id===p.id);return d?{...p,details:d,pendingProfileSections:d.pendingProfileSections}:p;})};
+const world=await loadRuntimeWorld(),profiles=await approvedProfiles({world}),withProfiles={...world,settlementProfiles:world.settlementProfiles.map(p=>{const d=profiles.find(d=>d.id===p.id);return d?{...p,details:d,pendingProfileSections:d.pendingProfileSections}:p;})};
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 test('四村问题立场都有原当事人依据，经济/官职登记且传播缺口保留',()=>{
  assert.equal(profiles.length,4);assert.equal(profiles.flatMap(p=>p.problems).length,20);assert.equal(profiles.flatMap(p=>p.rumors).length,40);
@@ -57,7 +57,7 @@ test('四村自然中文搜索命中公开数值、治理、问题和日历，�
 test('聚落档案出版保留人物补充，重复零写入，篡改 details 被拒绝',async()=>{
  const parent=await fs.mkdtemp(path.join(tmpRoot(),'village-profile-publish-')),tmp=await copyWorldFixture(parent);
  try{const first=await publishVillages({root:tmp,publish:true});assert.deepEqual(first.amendedProfileIds,profiles.map(p=>p.id));assert.deepEqual([...first.amendedNpcIds].sort(),Object.values(depthBatches).flatMap(b=>b.depthRows.map(r=>r.id)).sort());
-  const next=await loadWorld(tmp);assert.deepEqual(next.npcs,world.npcs);assert.deepEqual(next.items,world.items);assert.deepEqual(next.households,world.households);assert.deepEqual(next.locations,world.locations);
+  const next=await loadRuntimeWorld(tmp);assert.deepEqual(next.npcs,world.npcs);assert.deepEqual(next.items,world.items);assert.deepEqual(next.households,world.households);assert.deepEqual(next.locations,world.locations);
   assert.deepEqual((await publishVillages({root:tmp,publish:true})).changed,[]);
   const file=path.join(tmp,'geo/settlements.json'),rows=JSON.parse(await fs.readFile(file,'utf8'));rows.find(p=>p.details).details.governance.authority='任意征税';await fs.writeFile(file,JSON.stringify(rows));await assert.rejects(publishVillages({root:tmp}),/聚落补充冲突/);
  }finally{await fs.rm(parent,{recursive:true,force:true});}

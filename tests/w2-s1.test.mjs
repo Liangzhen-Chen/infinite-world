@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {readS1Publication,mergeS1Publication,publishS1} from '../tools/publish-w2-s1.mjs';
 import {spells,books,placements,channelFacts} from '../world/design/w2-s1.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -11,7 +11,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {initialThermalState} from '../server-plugin/magic-object.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
-const formal=await loadWorld(),publication=await readS1Publication();
+const formal=await loadRuntimeWorld(),publication=await readS1Publication();
 // A later batch must survive this batch's removal/republication. Deliberately
 // append one valid spell so the regression covers both counts and row order.
 formal.spells.push({...structuredClone(formal.spells.find(s=>s.id==='spell_light')),id:'spell_after_s1_fixture',name:'后续批次照明夹具',aliases:[]});
@@ -179,7 +179,7 @@ test('隔离发布只追加S1的30条法术并保留后续批次，重复零写�
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s1-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s1'),path.join(root,'drafts/w2-s1'),{recursive:true});
  for(const [f,v]of Object.entries({'meta/spells.json':before.spells,'meta/skills.json':before.skills,'meta/items.json':before.items,'people/baseline.json':before.npcs,'geo/locations.json':before.locations}))await fs.writeFile(path.join(root,f),JSON.stringify(v));
  const original=await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),preview=await publishS1({root});assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,before.spells.length+30);assert.equal(preview.changed.length,5);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
- const first=await publishS1({root,publish:true});assert.equal(first.changed.length,5);assert.deepEqual(await loadWorld(root),world);const times=await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS1({root,publish:true})).changed,[]);
+ const first=await publishS1({root,publish:true});assert.equal(first.changed.length,5);assert.deepEqual(await loadRuntimeWorld(root),world);const times=await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS1({root,publish:true})).changed,[]);
  for(const [file,mutate,pattern]of [['candidate.json',r=>{r.spells[0].failure+='免费';},/候选/],['spell_s1_ember_circle.json',r=>{r.draft.source.readingMinutes=1;},/内容已改变/],['batch-0.json',r=>{r.l4.approved=false;},/L4/],['batch-0.json',r=>{r.l4.wave[0].scores[0]=2;},/评分/]]){const f=path.join(root,'drafts/w2-s1',file),bytes=await fs.readFile(f,'utf8'),r=JSON.parse(bytes);mutate(r);await fs.writeFile(f,JSON.stringify(r));await assert.rejects(publishS1({root,publish:true}),pattern);await fs.writeFile(f,bytes);}
  assert.deepEqual(await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs))),times);
 });

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS3Publication,mergeS3Publication,publishS3,withoutS3,files as publishedFiles} from '../tools/publish-w2-s3.mjs';
 import {withoutS4} from '../tools/publish-w2-s4.mjs';
@@ -19,11 +19,11 @@ import {recordLocalContact} from '../server-plugin/environment.mjs';
 import {skipTo} from './fixtures/skip-clock.mjs';
 
 // Later batches (T104 onward) are removed first so this batch is compared on its own edition.
-const formal=withoutS4(await loadWorld()),publication=await readS3Publication();
+const formal=withoutS4(await loadRuntimeWorld()),publication=await readS3Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
-const before=withoutS3(formal),world=mergeS3Publication(before,publication),engine=new WorldEngine(world);
+const before=withoutS3(formal,{keepOwnGenerated:true}),world=mergeS3Publication(before,publication),engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const JI='npc_bs_076_3',SHU='npc_bs_078_2',MIAO='npc_bs_080_3';
@@ -243,7 +243,7 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const changedFiles=publishedFiles.filter(f=>f!=='meta/recipes.json');
  assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,before.spells.length+spells.length);assert.deepEqual(preview.changed,changedFiles);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
  const first=await publishS3({root,publish:true});assert.deepEqual(first.changed,changedFiles);
- const reloaded=await loadWorld(root);for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
+ const reloaded=await loadRuntimeWorld(root);for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
  const times=await Promise.all(publishedFiles.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS3({root,publish:true})).changed,[]);
  for(const [file,mutate,pattern] of [['candidate.json',r=>{r.spells[0].failure+='免费';},/候选/],[`${spells[0].id}.json`,r=>{r.draft.prose.theory+='另外';},/内容已改变|不符/],['batch-0.json',r=>{r.l4.approved=false;},/L4/],['batch-0.json',r=>{r.l4.wave[0].scores[0]=2;},/评分/]]){
   const f=path.join(root,'drafts/w2-s3',file),bytes=await fs.readFile(f,'utf8'),r=JSON.parse(bytes);mutate(r);await fs.writeFile(f,JSON.stringify(r));await assert.rejects(publishS3({root,publish:true}),pattern);await fs.writeFile(f,bytes);
