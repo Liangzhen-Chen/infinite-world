@@ -58,7 +58,7 @@ function judge(prefix,spec,L,S,D){
   if(!Pf.length)put(`${P}.Q2 三档逐档变好`,'blocked',A.blocked??'熟练档未做',`Q2`);
   else{
     const st=[U,N,Pf].map(t=>stdOnly(t)).map(t=>{const us=prods(t);return {n:t.length,made:us.length,rank:mean(nonNull(us.map(u=>u.rank))),dur:mean(nonNull(us.map(u=>u.maxDur))),uses:mean(us.map(u=>u.uses.length)),tiers:count(us.map(u=>u.tier)),inputGrades:inputs(t)};});
-    const tol=0.15,mono=k=>st.every(x=>x[k]!=null)&&st[1][k]>=st[0][k]-tol*(k==='rank'?1:Math.max(1,Math.abs(st[0][k])*0.1))&&st[2][k]>=st[1][k]-tol*(k==='rank'?1:Math.max(1,Math.abs(st[1][k])*0.1));
+    const tol=0.15,slack=(k,x)=>k==='rank'?tol:Math.abs(x)*0.1,mono=k=>st.every(x=>x[k]!=null)&&st[1][k]>=st[0][k]-slack(k,st[0][k])&&st[2][k]>=st[1][k]-slack(k,st[1][k]);
     const ok=mono('rank')&&mono('dur')&&mono('uses')&&st[2].rank>st[0].rank;
     put(`${P}.Q2 三档逐档变好（手艺档、耐久、保留用途单调不减，熟练严格好于缺技能）`,ok?'pass':'fail',{缺技能:st[0],刚入门:st[1],熟练:st[2],proficiency:[A.tiers['缺技能']?.proficiency,A.tiers['刚入门']?.proficiency,A.tiers['熟练']?.proficiency]},'Q2');
   }

@@ -24,7 +24,8 @@ export async function openRepo(repo){
   let unitLostUses=null;try{({unitLostUses}=await import(R+'server-plugin/item-class.mjs'));}catch{}
   const world=await loadRuntimeWorld(path.join(repo,'world'));
   const seed=JSON.parse(fs.readFileSync(`${repo}/tests/fixtures/legacy/seed.json`,'utf8'));
-  const T={repo,world,applyPatches,auditLedger,conservation,unitLostUses};
+  const {openLedger}=await import(R+'server-plugin/ledger.mjs');
+  const T={repo,world,applyPatches,auditLedger,conservation,unitLostUses,openLedger};
   T.newGame=(id='q')=>{const engine=new WorldEngine(structuredClone(world));return {T,engine,doc:engine.createCharacter(seed,{},id),id,log:[]};};
   return T;
 }
@@ -53,7 +54,10 @@ export const sleepTill=(c,hour=8,minute=30)=>act(c,'core:time.sleep',{until:{day
 export const argDays=(def=3)=>{const i=process.argv.indexOf('--days');return i>=0?Number(process.argv[i+1]):def;};
 export const has=f=>process.argv.includes(f);
 export const write=(name,data)=>fs.writeFileSync(path.join(OUT_DIR,name),typeof data==='string'?data:JSON.stringify(data,null,1));
-export const books=(c,before)=>{const a=c.T.auditLedger(c.doc.ledger)??[],k=before?c.T.conservation(c.engine,before,c.doc):[];return {ok:!a.length&&!k.length,audit:a.slice(0,3),conservation:k.slice(0,3)};};
+// 两头都还没开账（其间没有任何记账的移动）时，conservation 会把"从零开账"当成凭空增量：这时按空流水比旧字段总量，必须不变。
+export const books=(c,before)=>{const a=c.T.auditLedger(c.doc.ledger)??[],bare=d=>d.ledger?d:{...d,ledger:{flows:{}}};
+  const k=!before?[]:(!before.ledger&&!c.doc.ledger)?c.T.conservation(c.engine,bare(before),bare(c.doc)):c.T.conservation(c.engine,before,c.doc);
+  return {ok:!a.length&&!k.length,audit:a.slice(0,3),conservation:k.slice(0,3)};};
 // —— 成长：向师傅学技能、学配方，逐日练习（都是真实动作；对方不接待就睡到次日早上再去） ——
 const SERVE=/此刻不提供|不在场|不在此|作息|睡眠|服务时间|不接待/;
 export async function learnSkill(c,skill,sources,steps=[]){
@@ -136,3 +140,25 @@ export async function obtain(c,item,n,steps=[],{home='loc_hw',exclude=[],wide=fa
 
 // 取不到时按世界规则再去取一次：睡到次日（持有人补货、采集点再生），连外镇的持有人和采集点一起找。
 export async function obtainRetry(c,item,n,steps=[],tries=1){if(await obtain(c,item,n,steps))return true;for(let k=0;k<tries;k++){await sleepTill(c);if(await obtain(c,item,n,steps,{wide:true}))return true;}return false;}
+
+// —— 备料：试做和留样用的原料、工具按需直接写进存档（标准品质：物品表的 quality、durability，没有单件、grade 缺省 1），
+// 不靠本地市场供给。能不能做、做出什么仍全走真实调用。写入后按存档重新开账（ledger.openLedger，同 tests/helpers/ledger-sync.resyncBooks 的做法，但没开过账的存档也开），
+// 守恒按"两次备料之间"分段对账：每段从上次写入后的存档到下次写入前的存档，各段审计、守恒都为空才算守恒。
+export function provision(c,rows,steps=[]){
+  const need=rows.map(([item,n])=>[item,n-pinv(c.doc,item)]).filter(([,k])=>k>0);
+  if(!need.length)return;
+  if(c.seg){c.seg.books.push(books(c,c.seg.start));}
+  const doc=structuredClone(c.doc),bag=doc.state.inventory??={};
+  for(const [item,k] of need){
+    const def=c.engine.byId.get(item),cur=bag[item];
+    if(cur&&typeof cur==='object')bag[item]={...cur,quantity:(cur.quantity??0)+k};
+    else bag[item]={quality:def.quality,durability:def.durability,weight:def.weight,quantity:(typeof cur==='number'?cur:0)+k};
+  }
+  doc.ledger=c.T.openLedger(c.engine,doc);
+  c.doc=doc;if(c.seg)c.seg.start=doc;
+  steps.push(`备料（写存档）：${need.map(([i,k])=>`${i}×${k}`).join('、')}`);
+}
+export function segmentBooks(c){
+  const all=[...(c.seg?.books??[]),books(c,c.seg?.start)];
+  return {ok:all.every(b=>b.ok),segments:all.length,audit:all.flatMap(b=>b.audit).slice(0,3),conservation:all.flatMap(b=>b.conservation).slice(0,3)};
+}

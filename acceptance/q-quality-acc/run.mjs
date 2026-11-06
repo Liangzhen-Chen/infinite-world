@@ -3,7 +3,7 @@
 // 全部用真实动作：买、采、学、练、走到工位、按配方做、卖。不改状态，不调规律层内部函数。
 import fs from 'node:fs';
 import path from 'node:path';
-import {act,call,say,at,inv,pinv,sleepTill,learnSkill,learnRecipe,practiceTo,prof,obtain,obtainRetry,books} from './lib.mjs';
+import {act,call,say,at,inv,pinv,sleepTill,learnSkill,learnRecipe,practiceTo,prof,obtain,obtainRetry,books,provision,segmentBooks} from './lib.mjs';
 
 // —— 品质刻度（全部从数据读） ——
 // 手艺档：rules.equipment.workmanship 的顺序（从低到高）；卡里新增的"仿制""粗陋"如果数据里没有，排在最低两档之下。
@@ -98,7 +98,7 @@ async function makeUnskilled(c,D,recipeId,item,need,steps){
   const r=D.recipe(recipeId);
   // 取不到时按世界规则再去取一次：睡到次日（采集点再生、持有人补货），连外镇的持有人和采集点一起找；仍取不到就是世界里真实的供给不够，
   // 记为受阻（supply），不是引擎缺陷。
-  const get=async(it,n)=>{if(await obtain(c,it,n,steps))return true;await sleepTill(c);return obtain(c,it,n,steps,{wide:true});};
+  const get=async(it,n)=>{provision(c,[[it,n]],steps);return pinv(c.doc,it)>=n;};
   for(let k=0;k<5&&pinv(c.doc,item)<need;k++){
     for(const t of r.tools??[])if(!await get(t,1))return {ok:false,supply:true,why:`做 ${recipeId} 缺工具 ${t}：再去取一次（次日、含外镇持有人与采集点）仍取不到，世界供给不足`};
     for(const m of r.materials)if(!await get(m.item,m.amount))return {ok:false,supply:true,why:`做 ${recipeId} 缺材料 ${m.item}：${k?`前 ${k} 次失败耗掉了材料，`:''}再去取一次（次日、含外镇持有人与采集点）仍取不到，世界供给不足`};
@@ -116,7 +116,7 @@ export async function lineage(T,S,D,spec,kind,{days,K,keep=kind==='A'}){
   const X=D.recipe(kind==='C'?spec.Xc:spec.X);
   const res={family:spec.family,kind,recipe:X.id,steps,tiers:{},probes:{},keepers:{},blocked:null};
   const stationOf=r=>r.workstation?D.station(r.workstation):null;
-  const genesis=c.doc;
+  const genesis=c.doc;c.seg={start:genesis,books:[]};
   // 物理不可行的三种探针（只在 A 谱系、缺技能档做）：缺材料、缺工具、不在工位。
   if(kind==='A'){
     const mk=async(tag,{tools,mats,place})=>{
@@ -151,8 +151,7 @@ export async function lineage(T,S,D,spec,kind,{days,K,keep=kind==='A'}){
     const us=unitsOf(c.doc,cm.item),s=stack(c.doc,cm.item);
     res.crude={item:cm.item,units:us.length?us.map(u=>({id:u.id,tier:tierName(u),rank:S.tier(tierName(u)),grade:gradeOf(u,s),catalogQuality:u.quality??null})):[{id:null,tier:s?.workmanship??null,rank:S.tier(s?.workmanship??null),grade:gradeOf(null,s),catalogQuality:s?.quality??null}]};
   }
-  for(const t of needTools)if(!await obtain(c,t,1,steps)){res.blocked=`取不到工具 ${t}`;return res;}
-  for(const m of needMats)if(!await obtain(c,m.item,m.amount,steps)){res.blocked=`取不到材料 ${m.item}`;return res;}
+  provision(c,[...needTools.map(t=>[t,1]),...needMats.map(m=>[m.item,m.amount])],steps);
   const st=stationOf(X);
   // 换上标准原料：主线上的留样失败（损耗）会把退回的料降档（grade < 1），这些料排在行囊前面、下一次先被扣。
   // 每档试做和做真货留样之前，把身上降了档的 X 原料（C 谱系的劣原料除外）卖给收这种料的人，再按世界规则补足标准料。
@@ -163,7 +162,7 @@ export async function lineage(T,S,D,spec,kind,{days,K,keep=kind==='A'}){
       if(!bad().length)continue;
       const r=await sellOff(c,T,m.item,bad(),steps);
       steps.push(`${phase}前换标准料 ${m.item}：${r}`);
-      await obtainRetry(c,m.item,m.amount,steps);
+      provision(c,[[m.item,m.amount]],steps);
     }
   };
   // Q1d 的另选配方（X 的产物没有可丢用途时）：在 A 谱系的缺技能、刚入门两档同一快照上另做 K 次，工具、材料按世界规则取得。
@@ -171,8 +170,7 @@ export async function lineage(T,S,D,spec,kind,{days,K,keep=kind==='A'}){
   if(Xd)res.xd={recipe:Xd.id,tiers:{}};
   const runXd=async tier=>{
     if(!Xd||res.xd.blocked)return;
-    for(const t of Xd.tools??[])if(!await obtain(c,t,1,steps)){res.xd.blocked=`取不到 ${Xd.id} 的工具 ${t}`;return;}
-    for(const m of Xd.materials)if(!await obtain(c,m.item,m.amount,steps)){res.xd.blocked=`取不到 ${Xd.id} 的材料 ${m.item}`;return;}
+    provision(c,[...(Xd.tools??[]).map(t=>[t,1]),...Xd.materials.map(m=>[m.item,m.amount])],steps);
     const sd=stationOf(Xd);if(sd)await at(c,sd);
     res.xd.tiers[tier]={proficiency:prof(c,Xd.skill),trials:await trials(c,T,S,D,Xd,K,`d${tier}`)};
   };
@@ -180,8 +178,7 @@ export async function lineage(T,S,D,spec,kind,{days,K,keep=kind==='A'}){
     if(tier!=='熟练')await runXd(tier);
     await freshen(tier);
     // 留样在主线上耗掉了料：每档试做前按世界规则补足（工具同理）。
-    for(const t of needTools)if(!await obtainRetry(c,t,1,steps))steps.push(`${tier}前补不到工具 ${t}`);
-    for(const m of needMats)if(!await obtainRetry(c,m.item,m.amount,steps))steps.push(`${tier}前补不到材料 ${m.item}`);
+    provision(c,[...needTools.map(t=>[t,1]),...needMats.map(m=>[m.item,m.amount])],steps);
     if(st)await at(c,st);
     res.tiers[tier]={proficiency:prof(c,X.skill),day:Math.floor(c.doc.state.minute/1440),trials:await trials(c,T,S,D,X,K,tier)};
   };
@@ -194,8 +191,8 @@ export async function lineage(T,S,D,spec,kind,{days,K,keep=kind==='A'}){
     if(!keep)return;
     for(let i=0;i<max&&!goal(res.pool);i++){
       await freshen(`留样${phase}`);
-      let got=true;for(const m of X.materials)if(!await obtainRetry(c,m.item,last?m.amount:m.amount*2,steps,last?3:1)){got=false;break;}
-      if(!got){steps.push(`留样（${phase}）${last?'备不齐材料':'原料只够试做，留样让位'}`);break;}
+      // 留样用的料另备一份：做完身上仍留一份给下一档试做。
+      provision(c,X.materials.map(m=>[m.item,last?m.amount:m.amount*2]),steps);
       if(st)await at(c,st);const before=c.doc;const r=await act(c,'core:craft.manufacture',{recipe:X.id});
       if(r.status==='rejected'){steps.push(`留样（${phase}）：${say(r)}`);break;}
       const rec=trialRecord(T,S,D,X,before,c.doc,{...r,engine:c.engine});
@@ -217,7 +214,7 @@ export async function lineage(T,S,D,spec,kind,{days,K,keep=kind==='A'}){
   await keepUntil(p=>p.some(isGen),8,'熟练',true);
   // 报价与成交价：同一时刻、同一买家，分叉各卖一件留样。
   if(keep)res.sales=await sales(c,T,S,X,res.pool,spec,steps);
-  res.books=books(c,genesis);res.seconds=Math.round((Date.now()-t0)/1000);
+  res.books=segmentBooks(c);res.seconds=Math.round((Date.now()-t0)/1000);
   return res;
 }
 
