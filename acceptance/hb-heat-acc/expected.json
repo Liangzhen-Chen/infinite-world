@@ -1,0 +1,1 @@
+{"note":"卡 HB 交付后应当为 pass 的断言。HB6 依赖 E2/npc-labor 合入，合入前允许 fail；HB7 需先在基线树跑 --yield-only 生成 yield-<days>d-base.json","pass":["HB1","HB2","HB3","HB4","HB5","HB5b","HB6","HB7","HB7b","HB8","HB8b","HB8c","HB9","HB10"]}
