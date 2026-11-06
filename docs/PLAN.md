@@ -1148,3 +1148,14 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [ ] HB 热源绑定（Sonnet）。
 - [ ] 全量扫描 t-int@85af58d3：144 个文件不过（含环境/超时/旧账），分诊中。
 - [ ] issue #5：A1 引擎拷贝分支全量扫描（腾讯）进行中。
+
+### 11-06 夜 第二批（分诊后）
+- [x] 全量红灯分诊：t-int@85af 共 141 个失败——环境 18（云上无 Windows Chrome）、旧账 8、回归 100、新增 5、慢/挂起 10。表 F:/dnd-tmp/cloud/triage-85af.md。
+- [ ] FIX-LAW（Opus，t-fix-law）：R2 应拒未拒 20 个；物理门恢复拒绝、法律门按 K6 走后果。
+- [ ] FIX-PUB（Sonnet，t-fix-pub）：R5 出版比对 17 个；只诊断加工具层修，需发布的交回。
+- [ ] FIX-MISC（Sonnet，t-fix-misc）：快照校验、架构登记、性能、套件崩溃、工具路径 16 个。
+- [ ] FIX-HANG（Sonnet，t-fix-hang）：慢/挂起 10 个。
+- [ ] 等 E2 合入后：R1 市场库存 14、R4 账本价格 24、R7 NPC 劳动 9、新增 5（kd-labor 等）。
+- [ ] A1C（Sonnet，t-a1-overlay）：引擎拷贝后 56 个连带红灯。
+- [x] HB2：擅用私有工位入罪的规律层已在（manufacturing.mjs:170 → law.mjs:198）；验收 HB10 修脚本后通过（12/14，余 HB6 等 E2、HB7 需 30 天）。
+- [ ] Q 验收第 4 轮：Q2 容差按 README 10%、皮 Q3 分类核查、备料补足。
