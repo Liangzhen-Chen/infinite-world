@@ -166,6 +166,18 @@ export function upkeepDemand(state,engine,id,item){
  if(!usage.every(u=>cheapestOfClass(state,engine,place,u.cls)===item))return 0;
  return Math.ceil(daily*days);
 }
+// 一户眼下要补的日用（卡 E2，收货需求）：户里每个用度类要买的那件货（本聚落同类里最便宜的，同 upkeepDemand）与件数，
+// 扣掉户里成员手上已经有的这件货。只记在户里编号最小的在世成员名下（同 upkeepDemand），其余成员返回空。
+export function upkeepWants(state,engine,id){
+ const h=personHousehold(engine,state,id).value,members=(h?.members??[id]).filter(m=>state.npcs?.[m]).sort();
+ if(members[0]!==id)return [];
+ const place=settlementOf(engine,state,locationOf(state,id)),out=[];
+ for(const item of new Set(householdUsage(engine,state,members).map(u=>cheapestOfClass(state,engine,place,u.cls)).filter(Boolean))){
+  const held=members.reduce((n,m)=>n+quantity(state.npcs[m]?.inventory?.[item]),0),want=upkeepDemand(state,engine,id,item)-held;
+  if(want>=1)out.push({item,quantity:Math.floor(want)});
+ }
+ return out.sort((a,b)=>a.item.localeCompare(b.item));
+}
 function cheapestOfClass(state,engine,place,cls){
  const memo=cheapestMemo.get(state)??new Map();cheapestMemo.set(state,memo);
  const key=`${place}|${cls}`;if(memo.has(key))return memo.get(key);
