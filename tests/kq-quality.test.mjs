@@ -31,7 +31,7 @@ const mean=xs=>xs.reduce((a,b)=>a+b,0)/Math.max(1,xs.length);
 const shared=(async()=>{const world=await loadWorld();const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'kq-quality');document.state.player.coins=100000;return {world,engine,document};})();
 async function fresh(mutate){const world=await loadWorld();mutate(world);const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'kq-quality');document.state.player.coins=100000;return {world,engine,document};}
 // 卡 HB：锻炉是要明火的设备，冷炉由用的人添燃料点火；这里给玩家备足炉膛燃料（与配方用料分开）。
-function fuelFor(engine,c,recipeId,location){const r=engine.byId.get(recipeId),place=engine.byId.get(location);if(fixtureStations(place).some(st=>st.kind===r.workstation&&st.thermalRequirement)){const fuel=classItems(engine,'fuel').filter(i=>!r.materials.some(m=>m.item===i)&&!(r.tools??[]).includes(i)).sort((x,y)=>engine.byId.get(y).weight-engine.byId.get(x).weight)[0];give(engine,c,fuel,1);}}
+function fuelFor(engine,c,recipeId,location){const r=engine.byId.get(recipeId),place=engine.byId.get(location);if(fixtureStations(place,engine.world).some(st=>st.kind===r.workstation&&st.thermalRequirement)){const fuel=classItems(engine,'fuel').filter(i=>!r.materials.some(m=>m.item===i)&&!(r.tools??[]).includes(i)).sort((x,y)=>engine.byId.get(y).weight-engine.byId.get(x).weight)[0];give(engine,c,fuel,1);}}
 function give(engine,c,item,quantity){const def=engine.byId.get(item);c.state.inventory[item]={quantity,quality:def.quality,durability:def.durability,weight:def.weight};}
 // 一件指定手艺档与品质的实例（工具或材料）。
 function giveUnit(engine,c,item,id,{workmanship,grade}){

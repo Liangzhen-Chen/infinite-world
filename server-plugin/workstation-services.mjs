@@ -26,13 +26,13 @@ const placeOf=(engine,state,id)=>state?.created?.[id]??engine.byId.get(id);
 // A place that is open to the public, or whose fixture carries the owner's
 // posted fee, offers the station to anyone for that fee; otherwise only the
 // owner, residents, lessees and those the owner licenses may use it.
-export function fixtureStations(place){
+export function fixtureStations(place,world){
  if(!place||typeof place!=='object')return [];
  const implied=place.facilityType?FACILITY_TYPES[place.facilityType]?.fixtures??[]:[];
  const out=[];
  for(const row of [...(Array.isArray(place.fixtures)?place.fixtures:[]),...implied].map(fixtureEntry)){
   const fixture=FIXTURES.get(row?.fixture);if(!fixture||out.some(s=>s.kind===fixture.affords))continue;
-  const id=row.id??`station_${place.id}_${fixture.affords}`,thermalRequirement=row.thermalRequirement??derivedRequirement(id,row.fixture);
+  const id=row.id??`station_${place.id}_${fixture.affords}`,thermalRequirement=row.thermalRequirement??derivedRequirement(world,id,row.fixture);
   out.push({id,kind:fixture.affords,fixture:row.fixture,location:place.id,
    access:row.fee!==undefined||place.access?.mode==='public'?'public':'consent',fee:row.fee??0,...(typeof row.owner==='string'?{owner:row.owner,ownedApart:true}:{}),
    ...(thermalRequirement?{thermalRequirement}:{})});
@@ -79,21 +79,21 @@ export function materializeWorkstations(world){
  for(const place of world.locations??[]){
   delete place.workstations;
   // 卡 HB：需明火的设备类自带炉膛（设备的一部分，使用权随工位许可）；编辑设备后再次具现时重新派生。
-  const boxes=fixtureStations(place).filter(s=>s.thermalRequirement&&s.thermalRequirement.feature===derivedRequirement(s.id,s.fixture)?.feature).map(s=>fireboxRow(world,s,s.owner??ownersAt(place,world.households,null,worldHolders(world))[0]??place.id));
+  const boxes=fixtureStations(place,world).filter(s=>s.thermalRequirement&&s.thermalRequirement.feature===derivedRequirement(world,s.id,s.fixture)?.feature).map(s=>fireboxRow(world,s,s.owner??ownersAt(place,world.households,null,worldHolders(world))[0]??place.id));
   if(boxes.length||place.features?.some(isDerivedFirebox))place.features=[...(place.features??[]).filter(f=>!isDerivedFirebox(f)),...boxes];
   // A non-enumerable getter: the world's serialized form, hash and clones keep
   // only the fixtures, and an edited fixture is what every reader sees.
-  Object.defineProperty(place,'workstations',{get:()=>fixtureStations(place).map(station=>({...station,owner:station.owner??ownersAt(place,world.households,null,worldHolders(world))[0]??null})),enumerable:false,configurable:true});
+  Object.defineProperty(place,'workstations',{get:()=>fixtureStations(place,world).map(station=>({...station,owner:station.owner??ownersAt(place,world.households,null,worldHolders(world))[0]??null})),enumerable:false,configurable:true});
  }
  return world;
 }
 // The current stations at a place, with their derived owner.
 export function placeWorkstations(engine,state,id){
- return fixtureStations(placeOf(engine,state,id)).map(station=>{const owners=station.owner?[station.owner]:stationOwners(engine,state,station);return {...station,owner:owners[0]??null,owners};});
+ return fixtureStations(placeOf(engine,state,id),engine.world).map(station=>{const owners=station.owner?[station.owner]:stationOwners(engine,state,station);return {...station,owner:owners[0]??null,owners};});
 }
 export function workstationDefinition(engine,state,id){
  for(const place of [...engine.world.locations,...Object.values(state?.created??{})]){
-  const station=fixtureStations(place).find(s=>s.id===id);
+  const station=fixtureStations(place,engine.world).find(s=>s.id===id);
   if(station)return {station:placeWorkstations(engine,state,place.id).find(s=>s.id===id),location:place.id};
  }
  return null;

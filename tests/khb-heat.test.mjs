@@ -16,12 +16,12 @@ const npc='npc_hw_duanyan',shop='bld_hw_forge',recipe='recipe_forge_nails';
 test('每个锻炉与窑设备都由设备类派生出热源要求和一个同地的炉膛；灶不受影响；重复具现不叠加',()=>{
  const world=structuredClone(source);materializeWorkstations(world);materializeWorkstations(world);
  let heated=0;
- for(const place of world.locations)for(const s of fixtureStations(place))if(heatClass(s.fixture)&&s.thermalRequirement.feature.startsWith('feature_firebox_')){
+ for(const place of world.locations)for(const s of fixtureStations(place,world))if(heatClass(world,s.fixture)&&s.thermalRequirement.feature.startsWith('feature_firebox_')){
   heated++;assert.equal(place.features.filter(f=>f.id===s.thermalRequirement.feature).length,1,s.id);
   assert.ok(box0(place,s).thermalModel.fuels.length>0);
  }
  assert.ok(heated>=6,'世界里的锻炉与窑都应派生出炉膛，实际 '+heated);
- for(const place of world.locations)for(const s of fixtureStations(place))if(s.fixture==='hearth')assert.equal(s.thermalRequirement,undefined);
+ for(const place of world.locations)for(const s of fixtureStations(place,world))if(s.fixture==='hearth')assert.equal(s.thermalRequirement,undefined);
 });
 const box0=(place,s)=>place.features.find(f=>f.id===s.thermalRequirement.feature);
 
