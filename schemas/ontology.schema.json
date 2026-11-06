@@ -23,7 +23,8 @@
         "entity-templates",
         "primitives",
         "derived-fields",
-        "calendars"
+        "calendars",
+        "fixtures"
       ]
     },
     "namespace": {
@@ -109,6 +110,10 @@
     {
       "if": {"properties":{"kind":{"const":"calendars"}}},
       "then": {"properties":{"entries":{"items":{"$ref":"#/$defs/calendar"}}}}
+    },
+    {
+      "if": {"properties":{"kind":{"const":"fixtures"}}},
+      "then": {"properties":{"entries":{"items":{"$ref":"#/$defs/fixture"}}}}
     },
     {
       "if": {
@@ -280,6 +285,16 @@
     }
   ],
   "$defs": {
+    "fixture": {
+      "type":"object",
+      "required":["id","label","affords"],
+      "properties": {
+        "id":{"type":"string","pattern":"^[a-z][a-z_]*$"},
+        "label":{"type":"string","minLength":1},
+        "affords":{"type":"string","minLength":1}
+      },
+      "additionalProperties":false
+    },
     "calendar": {
       "type":"object",
       "required":["id","epochMinute","months","rateBasis"],

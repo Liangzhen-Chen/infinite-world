@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {entries,reviewDraftFor,validateDraft} from '../tools/creatures-mixed-content.mjs';
 import {readMixedPublication,mergeMixedPublication,publishMixed} from '../tools/publish-creatures-mixed.mjs';
@@ -172,7 +172,7 @@ test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',a
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-t154-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  // A3 archives actions and ontology; carry those inputs into the isolated edition so the full-world equality still checks every field.
  // S5-06: retain the approved ecology catalog in the isolated edition and exact roundtrip.
- for(const folder of ['meta','people','geo','lore','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ for(const folder of ['meta','people','geo','lore','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true}); await fs.mkdir(path.join(root,'design'),{recursive:true});await fs.copyFile(path.resolve('world/design/kc-site-ecology.json'),path.join(root,'design/kc-site-ecology.json'));/* 运行时视图的据点再生表 */
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/creatures-mixed'),path.join(root,'drafts/creatures-mixed'),{recursive:true});
  const write=async(file,value)=>fs.writeFile(path.join(root,file),JSON.stringify(value));
  // This fixture writes hydrated rows back to source files; biome metadata
@@ -181,7 +181,7 @@ test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',a
  const locations=before.locations.map(row=>{const out={...row};for(const key of Object.keys(biomes.locations?.[row.id]??{}))delete out[key];return out;});
  await write('meta/monsters.json',before.monsters);await write('meta/items.json',before.items);await write('geo/locations.json',locations);await write('geo/routes.json',before.routes);await write('meta/rules.json',before.rules);
  const preview=await publishMixed({root});assert.equal(preview.published,false);assert.equal(preview.changed.length,5);
- await publishMixed({root,publish:true});assert.deepEqual(norm(await loadWorld(root)),norm(world));assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
+ await publishMixed({root,publish:true});assert.deepEqual(norm(await loadRuntimeWorld(root)),norm(world));assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
  const stored=JSON.parse(await fs.readFile(path.join(root,'geo/locations.json'),'utf8'));
  for(const row of stored)for(const key of Object.keys(biomes.locations?.[row.id]??{}))assert.equal(Object.hasOwn(row,key),false,`${row.id}.${key}`);
  // Conflicting sources are still rejected; the publisher must preserve the

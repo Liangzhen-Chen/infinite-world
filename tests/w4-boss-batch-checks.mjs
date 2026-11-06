@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {bossBatch} from '../tools/w4-boss-content.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -25,7 +25,7 @@ const byId=w=>({...w,bosses:w.bosses.toSorted((a,b)=>a.id.localeCompare(b.id))})
 const draft=doc=>({document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc),set(p,v){let o=doc;for(const k of p.slice(0,-1))o=o[k]??={};o[p.at(-1)]=v;}});
 
 export async function defineBatchTests(batch,{balanceFile,tiers}){
- const world=await loadWorld(),B=await bossBatch(batch),{bosses,design}=B,ids=new Set(bosses.map(b=>b.id));
+ const world=await loadRuntimeWorld(),B=await bossBatch(batch),{bosses,design}=B,ids=new Set(bosses.map(b=>b.id));
  const target=b=>b.actor??b.id,body=(doc,b)=>b.actor?doc.state.npcs[b.actor]:doc.state.creatures[b.id];
  const before={...structuredClone(world),bosses:world.bosses.filter(b=>!ids.has(b.id))};
  function setup(b,w=world){
@@ -155,11 +155,11 @@ export async function defineBatchTests(batch,{balanceFile,tiers}){
   const root=await fs.mkdtemp(path.join(tmpRoot(),`dnd-${batch}-publish-`));t.after(()=>fs.rm(root,{recursive:true,force:true}));
   // A3 loadWorld includes action definitions and ontology assets; copy the complete edition before checking exact publication equality.
   // S5-06 species/herd definitions are part of the edition being republished.
-  for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+  for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true}); await fs.mkdir(path.join(root,'design'),{recursive:true});await fs.copyFile(path.resolve('world/design/kc-site-ecology.json'),path.join(root,'design/kc-site-ecology.json'));/* 运行时视图的据点再生表 */
   await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve(`world/drafts/${batch}`),path.join(root,`drafts/${batch}`),{recursive:true});
   const file=path.join(root,'meta/bosses.json');await fs.writeFile(file,JSON.stringify(before.bosses)+'\n');
   const preview=await B.publish({root});assert.equal(preview.published,false);assert.deepEqual(preview.changed,['meta/bosses.json']);
-  const first=await B.publish({root,publish:true});assert.deepEqual(first.batchBossIds,bosses.map(b=>b.id));assert.deepEqual(byId(await loadWorld(root)),byId(world));
+  const first=await B.publish({root,publish:true});assert.deepEqual(first.batchBossIds,bosses.map(b=>b.id));assert.deepEqual(byId(await loadRuntimeWorld(root)),byId(world));
   assert.deepEqual((await B.publish({root,publish:true})).changed,[]);
   for(const [name,mutate,pattern]of [['candidate.json',r=>r.bosses[0].origin+='异文',/候选/],['batch-0.json',r=>r.l4.approved=false,/L4/],['batch-0.json',r=>r.l4.wave[0].scores[0]=2,/评分/]]){
    const p=path.join(root,`drafts/${batch}`,name),original=await fs.readFile(p,'utf8'),r=JSON.parse(original);mutate(r);await fs.writeFile(p,JSON.stringify(r));await assert.rejects(B.publish({root,publish:true}),pattern);await fs.writeFile(p,original);

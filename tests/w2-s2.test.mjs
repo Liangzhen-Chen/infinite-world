@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS2Publication,mergeS2Publication,publishS2,withoutS2,files as publishedFiles} from '../tools/publish-w2-s2.mjs';
 import {withoutS3} from '../tools/publish-w2-s3.mjs';
@@ -17,15 +17,15 @@ import {projectileAirPenalty} from '../server-plugin/magic-air.mjs';
 import {skipTo} from './fixtures/skip-clock.mjs';
 
 // Later batches (T103 onward) are removed first so this batch is compared on its own edition.
-const formal=withoutS3(withoutS4(await loadWorld())),publication=await readS2Publication();
+const formal=withoutS3(withoutS4(await loadRuntimeWorld())),publication=await readS2Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
-const before=withoutS2(formal),world=mergeS2Publication(before,publication);
+const before=withoutS2(formal,{keepOwnGenerated:true}),world=mergeS2Publication(before,publication);
 // 合入 F 后依据：家户每天吃饭、烧柴（F 的 npc-life）。炼丹导师家既没有别的口粮也没有柴：蜂蜜按类别成了口粮（每份饱腹 7），
 // 几天的饭就把他那 3 份吃完、也按口粮自留；没有柴就只能烧他的艾绒引火包。学成后便买不到炼丹要的蜂蜜与引火包。
 // 夹具（本测试的世界副本）给导师家备 60 个面包作口粮、60 份木柴作家用燃料，让“蜂蜜与引火包是他可出让的余货”这一前提成立；断言不变。
-{const n=world.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:60,item_wood:60};}
+const mentorHome=w=>{const n=w.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:60,item_wood:60};return w;};mentorHome(world);
 const engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -243,7 +243,9 @@ test('旧战役升级逐键加入书、材料与导师课目，售空不回补�
 test('隔离发布只追加本批，保留其他条目，重复发布零写入，篡改或冲突拒绝且不回补库存',async t=>{
  assert.equal(world.spells.length,before.spells.length+spells.length);
  for(const k of ['spells','skills','items','recipes'])assert.deepEqual(world[k].filter(r=>!ids[k].has(r.id)),before[k].filter(r=>!ids[k].has(r.id)));
- if(published)assert.deepEqual(world,formal);
+ // K5：工位由地点 fixtures 派生（引擎构造时就地物化）。对照项带同一导师家夹具，并经同一物化；草案手写的工位行按类别、热源要求、收费与主人核对其派生结果，不按旧 id。
+ if(published){const expected=mentorHome(structuredClone(formal));new WorldEngine(expected);assert.deepEqual(world,expected);}
+ for(const [place,rows] of Object.entries(stations))for(const row of rows){const got=world.locations.find(l=>l.id===place).workstations?.find(w=>w.kind===row.kind);assert.ok(got,`${place} 的 ${row.kind} 工位由 fixtures 派生`);assert.deepEqual({owner:got.owner,fee:got.fee,access:got.access,thermalRequirement:got.thermalRequirement},{owner:row.owner,fee:row.fee,access:row.access,thermalRequirement:row.thermalRequirement});}
  assert.deepEqual(mergeS2Publication(world,publication),world);
  const zero=structuredClone(world);zero.npcs.find(n=>n.id==='npc_hw_luqing').inventory[books[0].id]=0;zero.npcs.find(n=>n.id===DAN).inventory.item_charcoal=0;assert.deepEqual(mergeS2Publication(zero,publication).npcs,zero.npcs);
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS2Publication(conflict,publication),/冲突/);
@@ -256,7 +258,7 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const original=await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),preview=await publishS2({root});
  assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,before.spells.length+spells.length);assert.equal(preview.changed.length,publishedFiles.length);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
  const first=await publishS2({root,publish:true});assert.equal(first.changed.length,publishedFiles.length);
- const reloaded=await loadWorld(root);for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
+ const reloaded=mentorHome(await loadRuntimeWorld(root));new WorldEngine(reloaded);/* 对照项带同一导师家夹具并经同一引擎物化 */for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
  const times=await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS2({root,publish:true})).changed,[]);
  for(const [file,mutate,pattern] of [['candidate.json',r=>{r.spells[0].failure+='免费';},/候选/],[`${spells[0].id}.json`,r=>{r.draft.prose.theory+='另外';},/内容已改变|不符/],['batch-0.json',r=>{r.l4.approved=false;},/L4/],['batch-0.json',r=>{r.l4.wave[0].scores[0]=2;},/评分/]]){
   const f=path.join(root,'drafts/w2-s2',file),bytes=await fs.readFile(f,'utf8'),r=JSON.parse(bytes);mutate(r);await fs.writeFile(f,JSON.stringify(r));await assert.rejects(publishS2({root,publish:true}),pattern);await fs.writeFile(f,bytes);

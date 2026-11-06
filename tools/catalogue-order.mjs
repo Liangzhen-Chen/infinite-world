@@ -27,3 +27,13 @@ export function formalOrder(key,rows){
  const keyed=rows.map((row,i)=>{const at=order.get(row.id);if(at!==undefined)last=at;return {row,i,at:at??last+0.5};});
  return keyed.sort((a,b)=>a.at-b.at||a.i-b.i).map(x=>x.row);
 }
+
+// Generated rows (tools/kc-processing.mjs recipe_kc_* processing, tool and copy
+// recipes) follow the items they name. An edition rebuilt without a batch's
+// items therefore has no generated recipe that uses or makes those items;
+// authored recipes are reviewed rows and are removed only by their own id.
+export function withoutRecipesOfItems(world,removedItemIds){
+ const gone=removedItemIds instanceof Set?removedItemIds:new Set(removedItemIds);
+ world.recipes=(world.recipes??[]).filter(r=>!r.id.startsWith('recipe_kc_')||![r.output?.item,...(r.byproducts??[]).map(b=>b.item),...(r.materials??[]).map(m=>m.item),...(r.tools??[])].some(id=>gone.has(id)));
+ return world;
+}
