@@ -14,7 +14,7 @@ export function fixture(){
  const e=new WorldEngine(w),doc=e.createCharacter(seed,{},'transport-test');doc.state.minute=600;doc.state.location='loc_hw';doc.state.player.coins=100000;
  for(const id of [DRIVER,SECOND,SENDER,RECIPIENT])Object.assign(doc.state.npcs[id],{location:'loc_hw',activity:'营业',status:'正常',coins:100000,inventory:{item_wood:{quantity:120},item_iron:{quantity:10},item_oats:{quantity:50}}});
  const d={document:doc,get(...p){return p.reduce((v,k)=>v?.[k],this.document);},set(p,value){this.document=applyPatches(this.document,[{op:'set',path:p,value}]);},remove(p){this.document=applyPatches(this.document,[{op:'delete',path:p}]);},say(){}};
- e.airDraft=d;return {w,e,d};
+ e.airDraft=d;return {w:e.world,e,d};/* A1：夹具的世界改指引擎世界 */
 }
 export function asset(d,e,owner=DRIVER,kind='cart',id='cart'){
  // D05 §5.1: the old capacity assertions require real draft animals. Declare

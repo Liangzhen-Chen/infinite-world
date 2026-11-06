@@ -42,7 +42,8 @@ function fixture(){
  for(const s of [...candidates,...extra]){doc.state.spells[s.id]={source:{type:'fixture'}};doc.state.skills[s.skill]={proficiency:1000,daily:{},breakthroughs:[]};}
  // Existing formal watering spells retain their data and material requirements.
  for(const s of world.spells.filter(s=>['irrigate','soil_water','condense'].includes(s.mechanism))){doc.state.spells[s.id]={source:{type:'fixture'}};doc.state.skills[s.skill]={proficiency:1000,daily:{},breakthroughs:[]};}
- return{world,engine,doc,location,rows,candidates};
+ // A1：引擎在自己的世界副本上工作；夹具的世界和行改指引擎世界（断言不动）
+ return{world:engine.world,engine,doc,location,rows:engine.world.locations.find(r=>r.id===location).features,candidates};
 }
 const reader=s=>({get:(...p)=>p.reduce((v,k)=>v?.[k],s.doc)});
 const row=(s,id)=>s.rows.find(r=>r.id===id);

@@ -25,7 +25,8 @@ function fixture({fuel=2,initialFuel=1000,kiln=false,minutes=20}={}){
  doc.state.records[`physical_feature:${feature}`]={id:feature,category:'physical_feature',location,state:{thermal}};
  // Select a fixed successful craft roll without executing or retrying the work.
  for(let i=0;i<20;i++){doc.randomSeed=`furnace-${i}`;const action={kind:'craft',recipe:recipeId},id=`npc_plan_${digest([npcPlanFingerprint(doc),npc,0,action]).slice(0,24)}`;if(parseInt(digest([doc.randomSeed,id,'npc-craft']).slice(0,8),16)%20!==0)break;}
- return{world,engine,doc,model:thermalModel};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return{world:engine.world,engine,doc,model:thermalModel};
 }
 const thermal=s=>s.doc.state.records[`physical_feature:${feature}`].state.thermal;
 const quantity=(s,item)=>s.doc.state.npcs[npc].inventory[item]?.quantity??0;

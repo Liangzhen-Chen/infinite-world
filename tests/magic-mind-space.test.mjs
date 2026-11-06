@@ -50,7 +50,8 @@ function fixture(){
  const code=world.rules.law.codes.find(c=>c.locations.includes(location));
  doc.state.records.mental_permit={category:'authorization',action:'mental_magic',subject:'player',location,grantor:code.officers[0],grantee:'player',expires:1000000};
  doc.state.records.mental_consent={category:'authorization',action:'mental_magic',subject:npc,grantor:npc,grantee:'player',expires:1000000};
- const s={world,engine,doc,location,rows,candidates,serial:0};contact(s);return s;
+ // A1：引擎在自己的世界副本上工作；夹具的世界和行改指引擎世界（断言不动）
+ const s={world:engine.world,engine,doc,location,rows:engine.world.locations.find(l=>l.id===location).features,candidates,serial:0};contact(s);return s;
 }
 function draft(s){return{document:s.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],s.doc),set:(p,v)=>{let n=s.doc;for(const k of p.slice(0,-1))n=n[k]??={};n[p.at(-1)]=structuredClone(v);},remove:p=>{let n=s.doc;for(const k of p.slice(0,-1))n=n[k];delete n[p.at(-1)];},say:()=>{}};}
 function contact(s){recordLocalContact(draft(s),s.engine,npc,`contact-${++s.serial}`);}

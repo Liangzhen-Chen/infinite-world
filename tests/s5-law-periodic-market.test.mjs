@@ -38,7 +38,8 @@ function fixture({food=false}={}){
  doc.state.minute=DAY;doc.state.location=place;doc.state.settlements={};
  doc.state.npcs=Object.fromEntries(ids.map(id=>[id,{...doc.state.npcs[id],coins:id===owner?100:0,inventory:{},location:place,status:'正常',activity:'休息',goals:{},memoryStream:[]}]));
  const sync=()=>{doc.ledger=openLedger(e,doc);return e.primitiveDraft(doc);};
- return {w,e,doc,sync,shop};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return {w:e.world,e,doc,sync,shop};
 }
 const visits=d=>Object.values(d.get('state','records')).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits);
 

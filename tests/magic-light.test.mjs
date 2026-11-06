@@ -34,8 +34,9 @@ function fixture(){
  const engine=new WorldEngine(world),doc=engine.initialFromLegacy(seed,'light');
  Object.assign(doc.state.player,{mp:10000,maxMp:10000,hp:1000,maxHp:1000});doc.state.inventory.item_resin={quantity:100};
  for(const s of candidates){doc.state.spells[s.id]={source:{type:'fixture'}};doc.state.skills[s.skill]={proficiency:1000,daily:{},breakthroughs:[]};}
- for(const row of rows)if(row.state.traces)row.state.traces[0].minute=doc.state.minute;
- return{world,engine,doc,location,rows,candidates};
+ for(const row of engine.world.locations.find(r=>r.id===location).features)if(row.state.traces)row.state.traces[0].minute=doc.state.minute;
+ // A1：引擎在自己的世界副本上工作；夹具的世界和行改指引擎世界（断言不动）
+ return{world:engine.world,engine,doc,location,rows:engine.world.locations.find(r=>r.id===location).features,candidates};
 }
 const reader=s=>({document:s.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],s.doc)});
 function draft(s){return{...reader(s),set:(path,value)=>{let n=s.doc;for(const k of path.slice(0,-1))n=n[k]??={};n[path.at(-1)]=structuredClone(value);},remove:path=>{let n=s.doc;for(const k of path.slice(0,-1))n=n[k];delete n[path.at(-1)];}};}

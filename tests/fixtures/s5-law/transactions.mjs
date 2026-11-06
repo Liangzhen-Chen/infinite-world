@@ -43,7 +43,7 @@ export async function leaseCycle({poor=false,mode='share'}={}){
  const lease=await act('world_act',{action:'trade.rent_in',slots:{location:field,quantity:1,item,days:30,deadline:due,deposit:0,...tenancy,...(mode==='share'?share:{coins:30})}},'lease-sign');
  if(!lease.contract)throw Error(JSON.stringify(lease));
  await act('world_act',{action:'farm.private_sow',slots:{location:field,areaMu:1,item}},'sow');
- if(poor)w.rules.weather.states.clear.crop=.4;
+ if(poor)e.world.rules.weather.states.clear.crop=.4;
  await act('world_time',{minutes:3*DAY},'grow');
  const trades=[];
  for(let i=0;i<100&&document.state.records[`private-farm:${field}`].status==='ready';i++){

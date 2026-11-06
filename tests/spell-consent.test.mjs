@@ -40,7 +40,8 @@ function fixture(){
  for(const id of [guard,judge])doc.state.npcs[id].location=doc.state.location;
  for(const c of world.spells){doc.state.spells[c.id]={source:{type:'fixture'}};doc.state.skills[c.skill]={proficiency:1000,daily:{},breakthroughs:[]};}
  for(const item of world.items)doc.state.inventory[item.id]={quantity:100};
- const s={world,engine,doc,serial:0,spells};contact(s);return s;
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ const s={world:engine.world,engine,doc,serial:0,spells};contact(s);return s;
 }
 function draft(s){return{document:s.doc,get:(...p)=>structuredClone(p.reduce((v,k)=>v?.[k],s.doc)),set:(p,v)=>{let o=s.doc;for(const k of p.slice(0,-1))o=o[k]??={};o[p.at(-1)]=structuredClone(v);},remove:p=>{let o=s.doc;for(const k of p.slice(0,-1))o=o[k];delete o[p.at(-1)];},say:()=>{}};}
 function contact(s){recordLocalContact(draft(s),s.engine,npc,`contact-${++s.serial}`);}

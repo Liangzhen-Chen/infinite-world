@@ -54,7 +54,8 @@ function fixture(){
  doc.state.records.ritual_permit={category:'authorization',action:'ritual_officiate',subject:'player',grantee:'player',grantor:npc,deity:deity.id,church:deity.church.name,profession:deity.church.profession,expires:1000000};
  for(const [id,action,subject,grantor]of [['altar_use','environment_use','feature_altar',npc],['healing','healing',npc,npc],['support','support_magic',npc,npc],['oath','ritual_oath',npc,npc],['mental','mental_magic',npc,npc]])doc.state.records[id]={category:'authorization',action,subject,grantor,grantee:'player',expires:1000000};
  doc.state.revivalPoints[altar]={location:altar,registeredAt:1,fee:10,source:'existing-registration'};
- const s={world,engine,doc,rows,candidates,deity,serial:0};contact(s,npc);return s;
+ // A1：引擎在自己的世界副本上工作；夹具的世界和行改指引擎世界（断言不动）
+ const s={world:engine.world,engine,doc,rows:engine.world.locations.find(l=>l.id===altar).features,candidates,deity,serial:0};contact(s,npc);return s;
 }
 function draft(s){return{document:s.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],s.doc),set:(p,v)=>{let n=s.doc;for(const k of p.slice(0,-1))n=n[k]??={};n[p.at(-1)]=structuredClone(v);},remove:p=>{let n=s.doc;for(const k of p.slice(0,-1))n=n[k];delete n[p.at(-1)];},say:()=>{}};}
 function contact(s,id){recordLocalContact(draft(s),s.engine,id,`contact-${++s.serial}`);}

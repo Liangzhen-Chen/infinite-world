@@ -31,7 +31,9 @@ function fixture(){
  const engine=new WorldEngine(world),doc=engine.initialFromLegacy(seed,'forge-test');doc.state.player.mp=200;doc.state.player.maxMp=200;doc.state.player.hp=200;doc.state.player.maxHp=200;doc.state.weather[location]={temperatureC:20};
  doc.state.inventory.item_charcoal={quantity:5};doc.state.inventory.item_clay={quantity:5};doc.state.inventory.item_resin={quantity:5};
  for(const s of spells){doc.state.spells[s.id]={source:{type:'fixture'}};doc.state.skills[s.skill]={proficiency:1000,daily:{},breakthroughs:[]};}
- return{world,engine,doc,location,place,hearth,kiln,dough,line,water,outside,room,spells,candidates};
+ // A1：引擎在自己的世界副本上工作；夹具的世界和行改指引擎世界里的行（断言不动）
+ const bound=engine.world.locations.find(x=>x.id===location),b=r=>bound.features.find(f=>f.id===r.id);
+ return{world:engine.world,engine,doc,location,place:bound,hearth:b(hearth),kiln:b(kiln),dough:b(dough),line:b(line),water:b(water),outside:b(outside),room,spells,candidates};
 }
 async function run(s,tool,args,eventId){const out=await s.engine.reduce(s.doc,{tool,args,eventId});s.doc=applyPatches(s.doc,out.patches);return out.result;}
 async function cast(s,mechanism,target='player',extra={}){

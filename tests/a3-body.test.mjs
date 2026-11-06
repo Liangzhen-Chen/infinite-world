@@ -20,7 +20,8 @@ function fixture(){
  const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'a3-body');
  document.state.location='bld_hw_qingdeng';
  document.state.player.body={satiety:{value:20,asOf:document.state.minute,activity:'rest'},stamina:{value:100,asOf:document.state.minute,activity:'rest'}};
- return {world,engine,document};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return {world:engine.world,engine,document};
 }
 function book(f){f.document=withLedger(f.engine,f.document).document;f.document.holdings=openHoldings(f.engine,f.document);return f;}
 async function act(f,action,slots,eventId='a3-body-act'){

@@ -27,7 +27,8 @@ function setup({population=2,seedStock=100,workers=1,tools=2}={}){
  doc.state.minute=6*DAY+480;doc.state.settlements[settlement].population=population;
  doc.state.records[key].lastDay=5;
  e.byId.get(worker).schedule={default:[{start:0,end:1440,location:'bld_hw_post',activity:'休息',services:[]}]};
- return {w,e,p,doc};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return {w:e.world,e,p,doc};
 }
 function day(f,at=6){
  const books=withLedger(f.e,f.doc),d=f.e.primitiveDraft(books.document),result=advanceAgriculture(d,f.e,settlement,f.doc.state.settlements[settlement],at);

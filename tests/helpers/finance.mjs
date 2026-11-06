@@ -22,7 +22,8 @@ export function fixture({at=post,coins=3000}={}){
     for(const n of w.npcs.filter(n=>people.includes(n.id))){delete n.schedule;n.schedule={default:[{start:0,end:1440,location:at,activity:'休息',services:['trade']}]};}
     const act=async(args,id,tool='world_trade')=>{const r=await e.reduce(doc,{tool,args,eventId:id});doc=applyPatches(doc,r.patches);return r.result;};
     function draft(){const cursor=new PatchCursor(doc);return {get document(){return cursor.root;},get:(...p)=>cursor.expose(p.reduce((v,k)=>v?.[k],cursor.root)),set:(path,value)=>cursor.apply({op:'set',path,value}),say:()=>{},remove:path=>cursor.apply({op:'delete',path}),done:()=>{doc=cursor.root;}};}
-    return {e,w,act,draft,get doc(){return doc;},set doc(v){doc=v;},tick(minute){const d=draft();d.set(['state','minute'],minute);advanceCredit(d,e,minute);d.done();}};
+    // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+    return {e,w:e.world,act,draft,get doc(){return doc;},set doc(v){doc=v;},tick(minute){const d=draft();d.set(['state','minute'],minute);advanceCredit(d,e,minute);d.done();}};
 }
 export function cash(doc){const s=doc.state;return s.player.coins+Object.values(s.npcs).reduce((n,r)=>n+(r.coins??0),0)+Object.values(s.settlements).reduce((n,r)=>n+(r.treasury??0),0)
     +Object.values(s.records).filter(r=>['bank','faction_assets','legal_treasury','legal_deposit'].includes(r.category)).reduce((n,r)=>n+(r.coins??0),0)

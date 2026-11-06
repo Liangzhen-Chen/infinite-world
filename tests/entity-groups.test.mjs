@@ -23,7 +23,8 @@ function setup(){
     document.state.minute=540;document.state.player.coins=500;document.state.creatures??={};
     const d={document,get(...p){return p.reduce((v,k)=>v?.[k],this.document);},set(p,v){let o=this.document;for(const k of p.slice(0,-1))o=o[k]??={};o[p.at(-1)]=structuredClone(v);},say(){}};
     for(const id of [A,B])Object.assign(document.state.npcs[id],{location:document.state.location,coins:100,status:'正常',activity:'闲谈'});
-    return {world,engine,d,s:document.state};
+    // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+    return {world:engine.world,engine,d,s:document.state};
 }
 function guild(s,id='org_test',extra={}){
     return s.records[`organization:${id}`]={category:'organization',id,source:'created',kind:'行会',name:id,seat:s.location,leader:'player',members:{player:{position:'会长'},[A]:{position:'成员'}},removed:{},treasury:100,ledger:[],charter:{mode:'leader',approval:false,dues:0},...extra};

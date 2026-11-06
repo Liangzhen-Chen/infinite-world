@@ -62,7 +62,8 @@ function fixture({coins=200,credit=false}={}){
  // Formal actions report precondition failures as rejected receipts, while
  // legacy tools throw. Present both failure contracts to assert.rejects.
  const act=async(tool,args,eventId)=>{const input={tool,args,eventId},r=await e.reduce(doc,input);doc=applyPatches(doc,r.patches);inputs.push(input);results.push(r.result);if(r.result.ok===false)throw Error(r.result.receipt.reason);return r.result;};
- return {e,w,inputs,results,act,get doc(){return doc;},set doc(v){doc=v;},
+  /* A1：夹具的世界改指引擎世界（断言不动） */
+ return {e,w:e.world,inputs,results,act,get doc(){return doc;},set doc(v){doc=v;},
   lease:async()=>{const r=await act('world_trade',{operation:'lease',seller:landlord,consent:true,days:1,coins:7,...(credit?{payment:'credit',creditMinutes:120}:{})},'lease');await act('world_act',{action:'business:open_counter',slots:{business:r.business,coins:Math.max(0,doc.state.player.coins-10)}},'counter');return r;},
   manage:(business,operation,slots={},id=operation)=>act('world_act',{action:`core:settlement.business_${operation}`,slots:{business,...slots}},id)};
 }

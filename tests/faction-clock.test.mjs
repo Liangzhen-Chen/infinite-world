@@ -29,7 +29,8 @@ function setup(stages=[stage('start')],{intervalDays=1,probability=1}={}){
  const engine=new WorldEngine(world),doc=engine.createCharacter(legacy,{},'faction-test');
  const run=async(doc,tool,args,eventId='event')=>{const out=await engine.reduce(doc,{tool,args,eventId});return {doc:applyPatches(doc,out.patches),out};};
  const wait=async(doc,minutes,id='wait')=>(await run(doc,'world_time',{minutes},id)).doc;
- return {world,engine,doc,rule,run,wait,f};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return {world:engine.world,engine,doc,rule,run,wait,f};
 }
 const clock=doc=>doc.state.records['faction-clock:test_plan'];
 const assets=(doc,id=owner)=>doc.state.records[`faction-assets:${id}`];

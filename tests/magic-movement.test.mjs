@@ -42,7 +42,8 @@ async function fixture({companions=true}={}){
   if(companions)d=await contact(d);
   return{doc:d,args:{spell:'spell_move_teleport',target:destination,authorizations:[a.result.authorization,b.result.authorization]},permits:[a.result.authorization,b.result.authorization]};
  };
- return{world,engine,doc,run,cast,grant,contact,prepared};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return{world:engine.world,engine,doc,run,cast,grant,contact,prepared};
 }
 async function denied(s,doc,args,pattern){const before=structuredClone(doc);await assert.rejects(s.engine.reduce(doc,{tool:'world_cast',args,eventId:'denied'}),pattern);assert.deepEqual(doc,before);}
 // K6: an act that lacked only a licence happens; the norm stack names the offense under the act's own event.

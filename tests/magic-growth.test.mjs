@@ -48,8 +48,9 @@ async function setup({plant=false,day=0}={}){
  assert.equal(farm(sown).field.cohorts.length,1);assert.equal(farm(sown).ledger.seedSpent,12);
  // Continue growing without offscreen harvest so the public farm_harvest path
  // must actually collect the benefit. This fixture never changes user stock.
- p.farmWorkers=0;
- return{world,engine,p,feature,document,sown,run,wait,cast};
+ const pe=engine.world.rules.agriculture.settlements.find(r=>r.settlement===p.settlement);pe.farmWorkers=0;
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return{world:engine.world,engine,p:pe,feature:engine.world.locations.find(l=>l.id===p.fieldLocation).features.find(r=>r.id===feature.id),document,sown,run,wait,cast};
 }
 async function successfulCast(f,doc=f.sown,id='grow',target=f.p.fieldId){
  for(let i=0;i<20;i++){const out=await f.cast(doc,`${id}-${i}`,target);if(out.result.success)return out;}

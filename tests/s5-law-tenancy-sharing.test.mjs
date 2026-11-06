@@ -47,7 +47,7 @@ async function setup({out=false,collective=false,mode='share',basis='gross',paym
   {path:['state','buildings'],value:{...state.buildings,[field]:{condition:100,owner:collective?p.settlement:out?'player':worker}}},
   {path:['state','npcs'],value:npcs}
  ]});assert.deepEqual(prepared.setupUnmet,[]);doc=prepared.document;
- const f={e,w,get doc(){return doc;},set doc(v){doc=v;},async act(action,slots,id){const r=await e.reduce(doc,{tool:'world_act',args:{action,slots},eventId:id});doc=applyPatches(doc,r.patches);return r.result;}};
+ const f={e,w:e.world,/* A1：夹具的世界改指引擎世界 */get doc(){return doc;},set doc(v){doc=v;},async act(action,slots,id){const r=await e.reduce(doc,{tool:'world_act',args:{action,slots},eventId:id});doc=applyPatches(doc,r.patches);return r.result;}};
  const now=doc.state.minute,due=now+dueDays*DAY;
  const t={rentMode:mode,inputPayer:input,unharvestedCrops:expiry,farmOperator:operator};
  if(input==='shared')Object.assign(t,{ownerInputNumerator:1,ownerInputDenominator:2});

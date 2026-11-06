@@ -27,7 +27,8 @@ async function setup(){
     const run=async(doc,tool,args,eventId='schedule')=>{
         const out=await engine.reduce(doc,{tool,args,eventId});return {document:applyPatches(doc,out.patches),result:out.result};
     };
-    return {world,engine,document,home,school,run};
+    // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+    return {world:engine.world,engine,document,home,school,run};
 }
 
 test('作息使用集市、休息日和冬季覆盖；结构拒绝空档与未知地点',async()=>{

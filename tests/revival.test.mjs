@@ -17,7 +17,8 @@ const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'
 async function setup(){
     const world=await loadWorld(),engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'revival-test');
     const run=async(c,tool,args,id)=>{const out=await engine.reduce(c,{tool,args,eventId:id});return{document:applyPatches(c,out.patches),result:out.result};};
-    return{world,engine,document,run};
+    // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+    return{world:engine.world,engine,document,run};
 }
 test('复活登记须亲自在祭坛，等级和费用满足，收支守恒且再次登记不重复收费',async()=>{
     const{document,run}=await setup(),before=structuredClone(document);

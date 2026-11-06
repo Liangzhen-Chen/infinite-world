@@ -13,7 +13,7 @@ import {adjudicateLegalCase} from '../server-plugin/law.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const HOME='law_royal_xichui',INN='bld_hw_qingdeng';
-const fixture=()=>{const w=structuredClone(world),engine=new WorldEngine(w);return {w,engine,state:engine.initialFromLegacy(seed,'s403').state};};
+const fixture=()=>{const w=structuredClone(world),engine=new WorldEngine(w);return {w:engine.world,engine,state:engine.initialFromLegacy(seed,'s403').state};};/* A1：夹具的世界改指引擎世界 */
 const stack=(f,location=INN,actor=null)=>normStack(f.engine,f.state,actor,location,f.state.minute,{codes:legalCodes(f.w,f.state)});
 const sovereign=f=>f.w.rules.law.templates.find(c=>c.id===HOME);
 const local=f=>f.w.rules.law.codes.find(c=>c.id==='law_hw_property');

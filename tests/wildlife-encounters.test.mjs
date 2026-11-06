@@ -25,7 +25,8 @@ function setup(kind='present'){
     }
     assert.equal(wildlifeEncounterAt({document:c,get:(...p)=>p.reduce((v,k)=>v?.[k],c)},engine,wood,570)?.kind,kind);
     const run=async(doc,tool,args,id)=>{const out=await engine.reduce(doc,{tool,args,eventId:id});return{document:applyPatches(doc,out.patches),result:out.result};};
-    return{world,engine,c,run};
+    // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+    return{world:engine.world,engine,c,run};
 }
 const population=(c,species)=>c.state.records[`ecology:${habitat}`].populations[species];
 function conservation(c){

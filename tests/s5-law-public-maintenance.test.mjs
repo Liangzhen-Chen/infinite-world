@@ -41,7 +41,8 @@ function nativeScenario(building){
  doc.state.buildings[building]={...doc.state.buildings[building],condition:59};
  Object.assign(doc.state.settlements.loc_hw,{treasury:1000,wood:100,stone:100});
  doc=withLedger(e,{...doc,ledger:undefined}).document;
- return {e,w,building,manager,get doc(){return doc;},set doc(v){doc=v;},mutate(fn){const d=e.primitiveDraft(doc),r=fn(d);doc=applyPatches(doc,d.patches);return r;}};
+  /* A1：夹具的世界改指引擎世界（断言不动） */
+ return {e,w:e.world,building,manager,get doc(){return doc;},set doc(v){doc=v;},mutate(fn){const d=e.primitiveDraft(doc),r=fn(d);doc=applyPatches(doc,d.patches);return r;}};
 }
 const nativeCandidates=f=>autonomyCandidates(f.e,subjectiveView(f.e,f.doc,nativeChief),{document:f.doc}).filter(c=>c.kind==='public_maintenance'&&c.legacy.building===f.building);
 function deliverReport(f){
@@ -172,7 +173,8 @@ function scenario(){
  appointOfficeRecord(draft,e,{category:'governance_office',id:officeId,holder:official,settlement,office:def.id,status:'在任',since:0,until:180*DAY,
   nextReview:30*DAY,appointedBy:def.appointedBy,source:def.source,sourceEvent:'appointment'},'appointment');
  doc=withLedger(e,applyPatches(doc,draft.patches)).document;
- return {e,w,get doc(){return doc;},set doc(v){doc=v;},mutate(fn){const d=e.primitiveDraft(doc),r=fn(d);doc=applyPatches(doc,d.patches);return r;}};
+  /* A1：夹具的世界改指引擎世界（断言不动） */
+ return {e,w:e.world,get doc(){return doc;},set doc(v){doc=v;},mutate(fn){const d=e.primitiveDraft(doc),r=fn(d);doc=applyPatches(doc,d.patches);return r;}};
 }
 const options=f=>publicMaintenanceOptions(f.e,f.doc,official,building);
 const candidates=f=>autonomyCandidates(f.e,subjectiveView(f.e,f.doc,official),{document:f.doc}).filter(c=>c.kind==='public_maintenance');

@@ -17,7 +17,8 @@ async function setup(){
  const route=engine.route(document.state.location,destination,'walk',document.state.minute,document.randomSeed);
  const promise={type:'送货',promisor:sender,item,quantity:2,location:destination,deadline:document.state.minute+route.minutes+10,content:'把两份面包送到村务屋交给我'};
  const run=async(doc,tool,args,id,options={})=>{const output=await engine.reduce(doc,{tool,args,eventId:id},options);return{doc:applyPatches(doc,output.patches),result:output.result,patches:output.patches};};
- return{world,engine,document,route,promise,run};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return{world:engine.world,engine,document,route,promise,run};
 }
 
 test('NPC送货按真实路线在途，扣本人路费，到约定地点按时当面交付真实货物一次',async()=>{

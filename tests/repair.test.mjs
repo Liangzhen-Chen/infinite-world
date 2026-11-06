@@ -20,7 +20,8 @@ async function setup(){
     document.state.inventory.item_whittling_knife={quantity:1,quality:'木',durability:80,weight:0.2};
     document.state.skills.skill_life_6_core={proficiency:120,daily:{},breakthroughs:[]};
     const run=async(c,tool,args,id)=>{const out=await engine.reduce(c,{tool,args,eventId:id});return{document:applyPatches(c,out.patches),result:out.result};};
-    return{world,engine,document,run};
+    // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+    return{world:engine.world,engine,document,run};
 }
 async function outcome(run,c,args,success){
     for(let i=0;i<100;i++){

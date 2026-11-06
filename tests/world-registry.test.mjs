@@ -10,7 +10,7 @@ test('并发创建战役只写一次同版本归档，独立注册器也不会�
     const world=await loadWorld(),registries=Array.from({length:16},()=>new WorldRegistry(root));
     const hashes=await Promise.all(registries.map(registry=>registry.put(world)));
     assert.equal(new Set(hashes).size,1);assert.deepEqual(await fs.readdir(root),[`${hashes[0]}.json`]);
-    assert.deepEqual((await new WorldRegistry(root).get(hashes[0])).world,world);
+    assert.deepEqual(await new WorldRegistry(root).world(hashes[0]),world);/* A1：get() 的引擎世界是运行时副本；归档世界取 world(hash) */
 });
 test('E1 世界更新不能改写旧战役的冻结规则或人设',async t=>{
     const root=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-versions-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));

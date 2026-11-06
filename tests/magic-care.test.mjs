@@ -37,7 +37,8 @@ function fixture(){
  doc.state.inventory.item_herb={quantity:100};doc.state.inventory.item_resin={quantity:100};
  for(const c of candidates){doc.state.spells[c.id]={source:{type:'fixture'}};doc.state.skills[c.skill]={proficiency:1000,daily:{},breakthroughs:[]};}
  const gardening=world.skills.find(s=>s.name.includes('园艺'));doc.state.skills[gardening.id]={proficiency:200,daily:{},breakthroughs:[]};
- return{world,engine,doc,location,rows,candidates,serial:0};
+ // A1：引擎在自己的世界副本上工作；夹具的世界和行改指引擎世界（断言不动）
+ return{world:engine.world,engine,doc,location,rows:engine.world.locations.find(r=>r.id===location).features,candidates,serial:0};
 }
 const reader=s=>({document:s.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],s.doc)});
 function draft(s){return{...reader(s),set:(path,value)=>{let n=s.doc;for(const k of path.slice(0,-1))n=n[k]??={};n[path.at(-1)]=structuredClone(value);},remove:path=>{let n=s.doc;for(const k of path.slice(0,-1))n=n[k];delete n[path.at(-1)];}};}

@@ -45,7 +45,8 @@ function fixture(){
    for(const w of p.public.workers)for(const [lo,hi]of [[480,720],[780,1020]])recordProjectAttendance(d,w,Math.max(before,day*DAY+lo),day*DAY+hi,site);
  };
  const finish=(days=3)=>{const before=d.get('state','minute'),after=before+days*DAY;attend(before,after);advancePublicProjects(d,engine,{before,after,id:'advance'});d.set(['state','minute'],after);};
- return {engine,d,w,workers,add,start,finish,attend};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return {engine,d,w:engine.world,workers,add,start,finish,attend};
 }
 
 test('材质进入K1，日常使用和天气损耗按日结算；汛期与K6灾害损毁幂等',()=>{

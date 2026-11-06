@@ -30,7 +30,8 @@ function setup(property='equal'){
  const e=new WorldEngine(w),doc=e.createCharacter(seed,{},'family-politics');doc.state.minute=600;doc.state.location='bld_hw_council';
  for(const id of [A,B,C,D,G])Object.assign(doc.state.npcs[id],{location:doc.state.location,activity:'闲谈',coins:0,inventory:{},relationships:{}});
  const d=draft(doc),setKin=(parent,child,extra={})=>{const p=w.npcs.find(n=>n.id===parent);p.relationships.push({with:child,type:'子女',...extra});};
- return {w,e,d,setKin};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return {w:e.world,e,d,setKin};
 }
 const action=(f,args,id='family-test')=>familyAction.call(f.e,f.d,args,id);
 const tie=(f,a,b)=>{f.d.set(['state','npcs',a,'relationships',b],{trust:90,affection:90});f.d.set(['state','npcs',b,'relationships',a],{trust:90,affection:90});};

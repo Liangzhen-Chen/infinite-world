@@ -16,7 +16,8 @@ function setup(seed='awaken-test'){
     const engine=new WorldEngine(world),doc=engine.createCharacter(legacy,{},seed);doc.state.minute=1200;doc.state.location=wood;
     const run=async(c,tool,args,id='e')=>{const out=await engine.reduce(c,{tool,args,eventId:id});return{doc:applyPatches(c,out.patches),result:out.result};};
     const wait=async(c,minutes,id='wait')=>(await run(c,'world_time',{minutes},id)).doc;
-    return{world,engine,doc,run,wait};
+    // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+    return{world:engine.world,engine,doc,run,wait};
 }
 const ecology=c=>c.state.records['ecology:habitat_hw_wood'].populations[fox];
 async function tracked(s){

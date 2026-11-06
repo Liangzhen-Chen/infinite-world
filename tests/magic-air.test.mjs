@@ -43,7 +43,10 @@ function fixture(){
  const engine=new WorldEngine(world),doc=engine.initialFromLegacy(seed,'air-test');doc.state.player.mp=10000;doc.state.player.maxMp=10000;doc.state.player.hp=1000;doc.state.player.maxHp=1000;
  doc.state.inventory.item_resin={quantity:50};doc.state.inventory.item_air_bow={quantity:1,durability:100};
  for(const s of [...candidates,ignite]){doc.state.spells[s.id]={source:{type:'fixture'}};doc.state.skills[s.skill]={proficiency:1000,daily:{},breakthroughs:[]};}
- return{world,engine,doc,location,destination,candidates,ignite,rooms,hearth,grain,cloth,metal,light,loose,ledge,sail,road,submerged};
+
+ // A1：引擎在自己的世界副本上工作；夹具对象改指引擎世界里的行（断言不动）
+ const bound=engine.world.locations.find(r=>r.id===location).features,b=r=>bound.find(f=>f.id===r.id);
+ return{world:engine.world,engine,doc,location,destination,candidates,ignite,rooms:rooms.map(b),hearth:b(hearth),grain:b(grain),cloth:b(cloth),metal:b(metal),light:b(light),loose:b(loose),ledge:b(ledge),sail:b(sail),road:b(road),submerged:b(submerged)};
 }
 const dynamic=(s,row)=>s.doc.state.records[`physical_feature:${typeof row==='string'?row:row.id}`]?.state;
 const air=(s,row='feature_room')=>dynamic(s,row).air;

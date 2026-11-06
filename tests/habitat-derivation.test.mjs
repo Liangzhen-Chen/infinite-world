@@ -101,13 +101,13 @@ test('新地点自动长出生物：新战役有种群，接上赶路遭遇与�
     // T153: the derived range takes part in travel encounter checks like any authored habitat.
     let seen=null;const d={document:c,get:(...p)=>p.reduce((v,k)=>v?.[k],c)};
     for(let m=0;m<200*360&&!seen;m+=360){const a=wildlifeEncounterAt(d,engine,pine,m+180);if(a?.kind)seen=a;}
-    assert.ok(seen);assert.equal(seen.habitat.id,pineHabitat);assert.ok(w.rules.wildlife.habitats.find(h=>h.id===pineHabitat).species[seen.species.id]);
+    assert.ok(seen);assert.equal(seen.habitat.id,pineHabitat);assert.ok(engine.world.rules.wildlife.habitats.find(h=>h.id===pineHabitat).species[seen.species.id]);
     const walk=structuredClone(c);walk.state.location='loc_hw_northwood';
     const moved=await run(engine,walk,'world_move',{destination:pine},'k8-walk');assert.equal(moved.state.location,pine);
     assert.ok(moved.state.records[`wildlife:encounter:${pineHabitat}`]);conservation(moved);
     // A seasonal route from the authored wood into the derived pine range, departing two days in.
     const day=Math.floor(c.state.minute/1440),route={id:'migration_k8_boar_pine',species:'monster_bristle_boar',from:'habitat_hw_wood',to:pineHabitat,path:['route_k8_pinewood'],departDay:(day+2)%360,travelDays:1,fraction:0.25};
-    w.rules.wildlife.migration.routes.push(route);assert.equal(validateWorld(w).ok,true);
+    engine.world.rules.wildlife.migration.routes.push(route);assert.equal(validateWorld(engine.world).ok,true);
     const later=await run(engine,c,'world_time',{minutes:15*1440},'k8-fortnight');conservation(later);
     const boar=later.state.records[`ecology:${pineHabitat}`].populations.monster_bristle_boar,m=later.state.records['wildlife:migration'];
     assert.ok(boar.immigrated>0,'季节迁徙应把野猪带进派生栖地');assert.equal(m.departed,m.arrived+m.lost+m.transit.reduce((n,t)=>n+t.count+t.actors.length,0));

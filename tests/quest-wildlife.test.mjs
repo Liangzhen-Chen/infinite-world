@@ -21,7 +21,8 @@ function setup(){
  w.rules.questSources.npcNeeds=[];w.rules.questSources.events=[];w.rules.questSources.limits.perDay=20;
  for(const id of Object.keys(w.rules.questSources.publishers))if(doc.state.settlements[id])doc.state.settlements[id].treasury=12000;
  const run=async(tool,args,eventId)=>{const r=await engine.reduce(doc,{tool,args,eventId});const updated=applyPatches(doc,r.patches);Object.assign(doc,updated);return r.result;};
- return {w,engine,doc,run};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return {w:engine.world,engine,doc,run};
 }
 function creatures(s){
  s.doc.state.creatures??={};

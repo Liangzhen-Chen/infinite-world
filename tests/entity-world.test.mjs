@@ -22,7 +22,8 @@ function fixture(){
  const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'entity-world');doc.state.minute=600;
  const d={document:doc,get(...path){return path.reduce((o,k)=>o?.[k],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);},remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);},say(){}};
  const act=async(tool,args,eventId)=>{const out=await engine.reduce(d.document,{tool,args,eventId});d.document=applyPatches(d.document,out.patches);return out.result;};
- return {w,engine,d,act};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return {w:engine.world,engine,d,act};
 }
 const shelf=(d,id,item)=>{const v=d.get('state','npcs',id,'inventory',item);return typeof v==='number'?v:v?.quantity??0;};
 const rolled=(doc,label)=>{for(let n=0;;n++){const id=`${label}_${n}`;if(createHash('sha256').update(`${doc.randomSeed}:${id}:d20`).digest().readUInt32LE(0)%20+1===20)return id;}};

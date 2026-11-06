@@ -31,7 +31,8 @@ async function setup(configure=()=>{}){
     document.state.npcs[guard].location=document.state.location;
     const run=async(c,tool,args,eventId)=>{const out=await engine.reduce(c,{tool,args,eventId});return{document:applyPatches(c,out.patches),result:out.result,patches:out.patches};};
     const law=(c,args,id)=>run(c,'world_law',args,id);
-    return{world,engine,document,run,law};
+    // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+    return{world:engine.world,engine,document,run,law};
 }
 async function convicted(f,{origin=f.document,event='incident',target=victim,court='bld_hw_council',official=judge,officer=guard}={}){
     let out=await f.run(origin,'world_crime',{operation:'steal',target,coins:1},event),c=out.document,id=out.result.case;

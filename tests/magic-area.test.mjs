@@ -36,7 +36,8 @@ async function setup(effect=damage){
  c.state.npcs[actorId].hp=100;c.state.npcs[actorId].maxHp=100;position(c,actorId,[1,0]);
  const run=async(document,tool,args,id)=>{const out=await engine.reduce(document,{tool,args,eventId:id});return{document:applyPatches(document,out.patches),result:out.result};};
  const create=(document=c,id='area',args={})=>{const d=draft(document);engine.applyMagicArea(d,catalog,{target:'player',...args},id);return d.document;};
- return{world,engine,c,catalog,run,create};
+ // A1：引擎在自己的世界副本上工作；夹具的世界改指引擎世界（断言不动）
+ return{world:engine.world,engine,c,catalog,run,create};
 }
 async function cast(s,c=s.c,args={}){
  for(let i=0;i<100;i++){const out=await s.run(c,'world_cast',{spell:s.catalog.id,target:'player',...args},`area-cast-${i}`);if(out.result.success)return{...out,eventId:`area-cast-${i}`};}throw Error('未取得成功施法夹具');
