@@ -6,7 +6,7 @@ import {assembleEconomy,auditEconomyLore,sampleRows,loreIssues,contentHash,check
 import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches}from'../server-plugin/storage.mjs';
 import fs from'node:fs/promises';
-import {classItems}from'../server-plugin/item-class.mjs';
+import {initialThermalState}from'../server-plugin/magic-object.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const fixtureLore=bone=>({id:bone.id,description:(bone.book?'阅读本册需识字100，按实际步骤核对工序。':'')+'当地工坊依来料制作与备货，收货时核对实际材质和数量，使用前查看边缘破损与受潮痕迹。工具按自身用途操作，食物按对应步骤准备。缺口或霉迹需要先辨别，不能只凭外观断定内部情况，无法确认时另行询问供货者。',inspection:'沿物品可见边缘检查破损和受潮痕迹，无法从表面保证所有内部情况，记录不能确认的部分后再决定是否使用。',storage:`放置在与用途相符的干燥或冷凉地方，避免受潮与重压，${bone.shelfLifeDays===null?'按批次来源检查受损征兆':`保存上限${bone.shelfLifeDays}天，按批次日期核对`}，受损时另行处理。`});
 test('经济骨架的配方有真实工具、材料价格和学习来源；成品不低于材料，缝袋不从纤维凭空织布',async()=>{
@@ -48,8 +48,9 @@ test('候选目录的书本学习和铁件制造确实执行，缺锤不扣料�
  assert.ok(learned);c=learned;const before=structuredClone(c);
  await assert.rejects(engine.reduce(c,{tool:'world_craft',args:{recipe:'recipe_forge_nails'},eventId:'no-hammer'}),/工具/);assert.deepEqual(c,before);
  give('item_smith_hammer',1);
- // 冷炉需本人燃料点火（HB 热源规律）：燃料按 fuel 类别选，取不是配方用料的那一类（以免动配方扣料断言）。
- const forgeFuel=classItems(engine,'fuel').filter(i=>!['item_iron','item_charcoal'].includes(i)).sort((x,y)=>engine.byId.get(y).weight-engine.byId.get(x).weight)[0];give(forgeFuel,1);
+ // 冷炉需本人燃料点火（HB 热源规律），升温的分钟也算进工期；这里的前提是铺里的炉已烧旺（炉膛热账为烧着、炉温够、炉料足够本工序），工期仍是配方的 80 分钟。
+ const hearth=engine.byId.get('bld_hw_forge').features.find(f=>f.derivedFrom==='fixture'),thermal=initialThermalState({temperatureC:900,fuelMg:400000},hearth.thermalModel,c.state.minute);thermal.burning=true;
+ c.state.records[`physical_feature:${hearth.id}`]={id:hearth.id,category:'physical_feature',location:'bld_hw_forge',state:{thermal}};
  let made;
  for(let n=0;n<100;n++){const result=await engine.reduce(c,{tool:'world_craft',args:{recipe:'recipe_forge_nails'},eventId:`nails_${n}`});if(result.result.success){made={document:applyPatches(c,result.patches),result:result.result};break;}}
  assert.ok(made);assert.equal(made.document.state.inventory.item_iron_nail.quantity,40);assert.equal(made.result.instances.length,40);assert.equal(made.result.spent.feePaid,4);
