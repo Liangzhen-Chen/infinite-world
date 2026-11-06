@@ -52,7 +52,8 @@ export function mergeS2Publication(world,publication){
   for(const [item,quantity] of Object.entries(inventory))if(!Object.hasOwn(p.inventory,item))p.inventory[item]=quantity;
  }
  for(const [location,rows] of Object.entries(publication.placements)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.features=mergeRows(place.features??[],rows,'环境对象',`features:${location}`);}
- for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.workstations=mergeRows(place.workstations??[],rows,'工作台',`workstations:${location}`);}
+// K5：工位由地点 fixtures 派生；地点已有同类工位（派生所得）时，草案手写的工位行不再并入，合并因此幂等。
+ for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.workstations=mergeRows(place.workstations??[],rows.filter(r=>!place.workstations?.some(w=>w.kind===r.kind)),'工作台',`workstations:${location}`);}
  return next;
 }
 // The edition before this batch, rebuilt from any world that may contain it.
