@@ -40,7 +40,7 @@ for(const {fixture,recipe} of CLASSES){
   const o=unlicensed(out);assert.ok(o,'记擅用');assert.equal(o.victim,HOST);
   const rec=after.state.records[o.record];
   assert.equal(rec.category,'offense');assert.equal(rec.victim,HOST);assert.equal(rec.sourceEvent,'khb-priv-craft');
-  assert.ok(JSON.stringify(rec.subject).includes(`station_${HOME}_${engine.byId.get(recipe).workstation}`)||rec.subject.id,'对象指向工位');
+  assert.ok(JSON.stringify(rec.subject).includes(`station_${HOME}_${engine.byId.get(recipe).workstation}`),'对象指向工位');
   assert.equal(o.record,rec.id,'结果里的后果项指向该记录（旧式工具的后果通道是 result.offenses）');
   assert.ok(r.materials.length>0);
  });
