@@ -10,6 +10,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {npcContext} from '../server-plugin/npc-memory.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {homeResidents} from '../server-plugin/entity-view.mjs';
 
 const world=await loadWorld(),bundle=authorDock(world),ids=new Set(bundle.people.map(p=>p.id));
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -83,9 +84,15 @@ test('玩家沿既有路线找到前厅居民，以真实私人库存成交并�
  await assert.rejects(run('world_trade',{seller:person.id,service:'雇船'},'t91-unsupported'),/未登记/);assert.deepEqual(doc,prior);
 });
 
-test('休息日没有库存接洽，未获许可的住宅入口保留原拒绝',async()=>{
+// K6 (ce314d2f, legality is a consequence): walking into a private home without its residents' consent
+// happens and is trespass against a resident, committed under the move's own event.
+test('休息日没有库存接洽，未获许可走进住宅照样发生并立擅闯',async()=>{
  const engine=new WorldEngine(world),person=bundle.people[0],doc=engine.createCharacter(legacy,{},'t91-home');doc.state.minute=540;doc.state.location='loc_bs';
- const original=structuredClone(doc);await assert.rejects(engine.reduce(doc,{tool:'world_move',args:{destination:person.home.location},eventId:'t91-private-home'}),/成年住户/);assert.deepEqual(doc,original);
+ const original=structuredClone(doc),entered=await engine.reduce(doc,{tool:'world_move',args:{destination:person.home.location},eventId:'t91-private-home'}),inside=applyPatches(doc,entered.patches);assert.deepEqual(doc,original);
+ assert.equal(inside.state.location,person.home.location);
+ const trespass=Object.values(inside.state.records).filter(r=>r.category==='offense'&&r.sourceEvent==='t91-private-home');
+ assert.equal(trespass.length,1);assert.equal(trespass[0].offense,'trespass');assert.equal(trespass[0].offender,'player');assert.equal(trespass[0].subject.id,person.home.location);
+ assert.ok(homeResidents(engine,doc.state,person.home.location).value.includes(trespass[0].victim),'victim is a resident of that home');
  doc.state.minute=9*1440+540;doc.state.location=person.home.location;doc.state.npcs[person.id].location=person.home.location;doc.state.npcs[person.id].activity='家务';
  await assert.rejects(engine.reduce(doc,{tool:'world_trade',args:{seller:person.id,item:Object.keys(person.inventory)[0],quantity:1},eventId:'t91-rest'}),/服务|时段|作息|休息/);
 });

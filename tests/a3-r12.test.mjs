@@ -47,10 +47,24 @@ test('r12: original carried shoe is placed with its memorial, preserving identit
  assert.deepEqual((await engine.reduce(after,input)).patches,[],'same event cannot duplicate shoe or mark');
  assert.deepEqual((await engine.reduce(document,input)).patches,reduced.patches,'deterministic replay');
 });
-test('r12: placement cannot move another object, travel remotely, or fabricate an unreachable support',async()=>{
- for(const mode of ['other_owner','remote','unreachable','missing_support']){
+// K6 (76365571, legality is a consequence): placing a carried object that belongs to someone else is
+// physically the same placement; the missing title is committed as an offense against its owner under the
+// act's own event, and the title itself does not move.
+test('r12: placing another person carried object happens and is committed against its owner',async()=>{
+ const {document,bindings,proposal}=memorial(),shoe=bindings.a3v2_117_old_shoe;
+ for(const h of Object.values(document.holdings.rows))if(h.kind==='owns'&&h.subject===shoe)h.holder='npc_hw_meiling';
+ const before=structuredClone(document),out=await engine.reduce(document,{tool:'world_propose',eventId:'r12-other_owner',args:proposal}),after=applyPatches(document,out.patches);
+ assert.deepEqual(document,before);assert.equal(out.result.receipt.status,'committed');
+ assert.equal(after.holdings.locations[shoe].at,'loc_hw_orchard');assert.equal(after.holdings.locations[shoe].mode,'place');
+ for(const h of Object.values(before.holdings.rows).filter(h=>h.kind==='owns'&&h.subject===shoe))assert.deepEqual(after.holdings.rows[h.id],h);
+ const offense=out.result.receipt.consequences.find(c=>c.type==='offense'),row=after.state.records[offense?.record];
+ assert.ok(offense,'acting on another person shoe is an offense');assert.equal(offense.victim,'npc_hw_meiling');
+ assert.equal(row.sourceEvent,'r12-other_owner');assert.equal(row.offender,'player');assert.equal(row.subject.id,shoe);
+ assert.deepEqual(reconcile(engine,after),{mismatches:[],lots:[],drift:[],audit:[]});
+});
+test('r12: placement cannot travel remotely or fabricate an unreachable support',async()=>{
+ for(const mode of ['remote','unreachable','missing_support']){
   const {document,bindings,proposal}=memorial(),shoe=bindings.a3v2_117_old_shoe,branch=bindings.a3v2_117_branch;
-  if(mode==='other_owner')for(const h of Object.values(document.holdings.rows))if(h.kind==='owns'&&h.subject===shoe)h.holder='npc_hw_meiling';
   if(mode==='remote')proposal.effects[0].to='loc_hw';
   if(mode==='unreachable')document.holdings.entities[branch].facts.reachable=false;
   if(mode==='missing_support')proposal.effects[1].facts.support='missing_branch';

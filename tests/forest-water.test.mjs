@@ -159,17 +159,25 @@ test('实际伐木与据点木料采集同扣林木；无许可不能绕过据�
  const before=forestView(engine,d.get('state'),location).reserve,result=woodcut.call(engine,d,{quantity:2},'cut');
  assert.equal(result.obtained[0].quantity,2);assert.equal(forestView(engine,d.get('state'),location).reserve,before-2);
  const place=engine.byId.get(location);place.site={owner:'npc_hw_miller',mechanisms:[],entryMechanisms:[],resources:[{id:'rw_wood',name:'木料',item:'item_wood',quantity:5,minutes:1}],clues:[],changes:[]};
- assert.throws(()=>woodcut.call(engine,d,{},'private'),/许可/);
+ // K6 (c60b2a62, legality is a consequence): the owner's permission is a legal gate. Cutting in another's
+ // wood still physically happens from the same forest stock and is committed as illegal harvest against him.
+ // Going onto the private site to cut is itself the site's entry breach (sites.mjs entryBreach), so the
+ // one act commits trespass and illegal harvest, both against the owner.
+ const cut=woodcut.call(engine,d,{},'private');
+ assert.equal(cut.obtained[0].quantity,1);assert.equal(forestView(engine,d.get('state'),location).reserve,before-3);
+ assert.deepEqual(cut.offenses.map(o=>o.offense).sort(),['illegal_harvest','trespass']);
+ for(const o of cut.offenses){const row=d.get('state','records',o.record);assert.equal(o.victim,'npc_hw_miller');assert.equal(row.sourceEvent,'private');assert.equal(row.offender,'player');}
+ assert.deepEqual(d.get('state','records',cut.offenses.find(o=>o.offense==='illegal_harvest').record).stolen,{item:'item_wood',quantity:1});
  // 06 §6.3: physical presence does not bypass property or entrance gates.
  // A public outdoor forest needs no menu visit, but a blocked entrance still
  // rejects before harvesting or spending time; retain the private-owner case.
  place.site.owner=null;place.site.entryMechanisms=['rw_gate'];
  const blockedMinute=d.get('state','minute');
  assert.throws(()=>woodcut.call(engine,d,{},'blocked'),/机关/);
- assert.equal(d.get('state','minute'),blockedMinute);assert.equal(forestView(engine,d.get('state'),location).reserve,before-2);
+ assert.equal(d.get('state','minute'),blockedMinute);assert.equal(forestView(engine,d.get('state'),location).reserve,before-3);
  place.site.entryMechanisms=[];d.set(['state','records','site_presence'],{site:location,actor:'player'});
  const gathered=siteAction.call(engine,d,{operation:'gather',target:'rw_wood',quantity:1},'gather');assert.equal(gathered.quantity,1);
- assert.equal(forestView(engine,d.get('state'),location).reserve,before-3);
+ assert.equal(forestView(engine,d.get('state'),location).reserve,before-4);
 });
 
 test('无本卡规则的旧世界仍按原结算；长推进与逐日日结资源事实一致',()=>{
