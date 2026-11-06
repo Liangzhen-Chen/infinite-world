@@ -1,4 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
+import {prepareStationHeat} from './facility-kindle.mjs';
+import {hasOwnFirebox} from './facility-heat.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft} from './stock.mjs';
@@ -130,6 +132,13 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,cra
     for(const item of recipe.tools??[])if(this.quantity(d,'player',item)<1||(heldUnit(d,this,'player',item)?.durability??this.byId.get(item).durability)<=0)throw preconditionFailure(`缺少完好的${this.byId.get(item).name}`);
     const materials=new Map();for(const row of recipe.materials)materials.set(row.item,(materials.get(row.item)??0)+row.amount);
     for(const[item,amount]of materials)if(this.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${this.byId.get(item).name}`);
+    // 自带炉膛的热工位：与玩家、人物同一条（HB 热源规律），燃料取自玩家行囊，升温分钟进工期。
+    let workMinutes=recipe.minutes;
+    if(hasOwnFirebox(station)){
+        const reserved=new Map(materials);for(const item of recipe.tools??[])reserved.set(item,(reserved.get(item)??0)+1);
+        const heat=prepareStationHeat(d,this,station,workMinutes,{holder:'player',reserved,location:here});
+        workMinutes+=heat.warm;station.thermalPlan=heat.plan;
+    }
     const die=createHash('sha256').update(`${d.document.randomSeed}:${eventId}:spirit-craft`).digest().readUInt32LE(0)%20+1;
     const modifier=Math.floor(proficiency/(this.rules.check.skillDivisor??150)),total=die+modifier,diff=recipe.difficulty;
     const degree=die===1||total<=diff-10?'大失败':die===20||total>=diff+10?'大成功':total<diff?'失败':total<diff+5?'勉强成功':'成功';
@@ -142,7 +151,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,cra
         if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+station.fee);
         else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+station.fee);
     }
-    this.advance(d,recipe.minutes,eventId);
+    this.advance(d,workMinutes,eventId);
     const products=[{item:recipe.output.item,amount:recipe.output.quantity},...recipe.byproducts??[]];
     const thermal=kilnWorkResult(d,station?.thermalPlan,outcome,recipe.output.quantity,eventId);
     if(thermal)products[0].amount-=thermal.crackedQuantity;
@@ -162,7 +171,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,cra
     logEvent(d,id,{kind:'制作',party:'player',event:eventId,minute:at,recipe:recipe.id});
     d.say(outcome.success?`${name}制成${this.byId.get(recipe.output.item).name}${products[0].amount}件，做工${workmanship}`:`${name}制造${degree}，耗时${recipe.minutes}分钟`);
     return{recipe:recipe.id,maker:id,...outcome,receipt:receipt.id,instances:ids,workmanship,...(result.grade!==undefined?{grade:result.grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),salvage,
-        spent:{feePaid:station?.fee??0,minutes:recipe.minutes,materials:[...materials].map(([item,quantity])=>({item,quantity}))},
+        spent:{feePaid:station?.fee??0,minutes:workMinutes,materials:[...materials].map(([item,quantity])=>({item,quantity}))},
         note:'材料、工具和工坊费出自你，成品归你；精怪只凭自己学到的配方与熟练度动手'};
 }
 
