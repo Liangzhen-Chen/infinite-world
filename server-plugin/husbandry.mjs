@@ -11,9 +11,16 @@ import {preconditionFailure} from './precondition.mjs';
 import {produceItems} from './items.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 import {yearDays} from './husbandry-traits.mjs';
+import {useTool,wearItem} from './items.mjs';
+import {craftOutcome,craftStanding,toolFactor} from './manufacturing.mjs';
+import {effectiveProficiency} from './professions.mjs';
+import {propertyOwners} from './action-authority.mjs';
+import {recordEntityDeath} from './npc-life.mjs';
+import {recordWildlifeDeath} from './wildlife.mjs';
 
 declareLedgerWriter('husbandry',{sources:{'src:birth':{'*':100000},'src:husbandry':{'*':100000},'src:genesis':{'item_pasture_forage':Infinity},'src:regrowth':{'item_pasture_forage':Infinity}},sinks:['sink:consume','sink:decay','sink:death','sink:individuated']});
-declareHoldingWriter('husbandry',{kinds:['owns'],entities:['population','creature'],locations:true});
+// SL: slaughtering an owned individual closes its body (the wreck) as dressed.
+declareHoldingWriter('husbandry',{kinds:['owns'],entities:['population','creature','wreck'],locations:true});
 const path=id=>['state','records',`husbandry:${id}`];
 const resource=species=>`population_${species}`;
 const animals=row=>accountKey(row.id,resource(row.species),'population');
@@ -88,6 +95,15 @@ function carcass(d,e,row,s,n,day,eventId){
   store(e,row,part.item,quantity,day);
   moveStock(d,{from:`src:husbandry|${part.item}|carcass`,to:produce(row,part.item),amount:quantity,writer:'husbandry',eventId});
  }
+}
+function shed(d,row,item,excess,eventId){
+ if(!excess)return;
+ row.produce[item]-=excess;row.shed=(row.shed??0)+excess;
+ let left=excess;
+ for(const batch of row.batches){if(batch.item!==item||!left)continue;const n=Math.min(left,batch.quantity);batch.quantity-=n;left-=n;}
+ if(left)throw Error('脱落毛被与批次不守恒');
+ row.batches=row.batches.filter(b=>b.quantity);
+ moveStock(d,{from:produce(row,item),to:`sink:decay|${item}|shed`,amount:excess,writer:'husbandry',eventId});
 }
 function die(d,e,row,s,n,cause,day,eventId){
  if(!n)return;
@@ -171,16 +187,97 @@ export function advanceHusbandry(d,e,day){
    moveStock(d,{from:`src:birth|${resource(row.species)}|herd`,to:animals(row),amount:born,writer:'husbandry',eventId});
    if(row.count>row.capacity)cull(d,e,row,species,Math.min(row.count-row.capacity,Math.ceil((row.count-row.capacity)*penFull)),day,eventId);
    for(const yieldRow of p.yields.alive){
-    const quantity=accrueStock(row,`yield:${yieldRow.item}`,derived(e,d.document,'economy:yield',row.id,{base:alive*yieldRow.perHeadDay*fed,holder:row.owner,target:yieldRow.item}));
+    // A take rule with a seasonal rhythm (a coat) grows by season; its year mean is one.
+    const rule=takeRule(e,yieldRow.from),base=alive*yieldRow.perHeadDay*fed*(rule?.seasonGrowth?rule.seasonGrowth[e.calendar(day*1440).season]:1);
+    const quantity=accrueStock(row,`yield:${yieldRow.item}`,derived(e,d.document,'economy:yield',row.id,{base,holder:row.owner,target:yieldRow.item}));
     store(e,row,yieldRow.item,quantity,day);
     moveStock(d,{from:`src:husbandry|${yieldRow.item}|alive`,to:produce(row,yieldRow.item),amount:quantity,writer:'husbandry',eventId});
+    // A product that stays on the living animal (a coat) holds at most holdDays
+    // of growth per head; past that it sheds, oldest first.
+    if(rule?.holdDays>0)shed(d,row,yieldRow.item,Math.max(0,(row.produce[yieldRow.item]??0)-Math.floor(row.count*yieldRow.perHeadDay*rule.holdDays)),eventId);
    }
   }
   row.lastDay=day;holdingSet(d,e,path(row.id),row,'husbandry',eventId);
  }
 }
+// SL: taking from a living animal (world/meta/mechanics/husbandry-takes.json,
+// one row per product source) is a craft: a tool chosen by use class, the
+// row's skill check, and Q's craftOutcome for how much of what is taken
+// survives and how well it is done. Sources without a row are picked up.
+const takeRule=(e,from)=>from?e.world.husbandryTakes?.takes?.[from]??null:null;
+function prepareTake(d,e,rule,selected){
+ if(!rule)throw Error('缺宰杀取出规律（husbandry-takes）');
+ const tool=useTool(d,e,rule.requiresUse,selected),hasSkill=Boolean(d.get('state','skills',rule.skill));
+ const proficiency=hasSkill?effectiveProficiency(d,e,rule.skill):0;
+ return {rule,tool,hasSkill,proficiency,standing:craftStanding(hasSkill,proficiency,rule.minimumProficiency)};
+}
+function settleTake(d,e,take,eventId){
+ const {rule,tool}=take,tools=toolFactor(d,e,'player',[tool]);
+ const check=e.check(d,{attribute:rule.attribute,...(take.hasSkill?{skill:rule.skill}:{}),difficulty:rule.difficulty,tools:[tool]},eventId);
+ const result=craftOutcome(e,{standing:take.standing,degree:check.degree,success:check.success,proficiency:take.proficiency,floor:1,tools,station:1,recoverFraction:rule.recoverFraction,seed:d.document.randomSeed,key:eventId});
+ const whole=check.success||result.failure==='partial';
+ // The kept share follows returnMaterials: a worn take keeps ceil (at least one), others floor.
+ const kept=n=>whole?n:result.gradeFactor!==undefined?Math.min(n,Math.max(1,Math.ceil(n*result.recover))):Math.floor(n*result.recover);
+ const grade=result.grade??result.gradeFactor;
+ return {check,result,kept,workmanship:result.tier,grade};
+}
+const takeReceipt=(take,settled)=>({degree:settled.check.degree,standing:take.standing,tool:take.tool,...(settled.workmanship?{workmanship:settled.workmanship}:{}),...(settled.grade!==undefined?{grade:settled.grade}:{}),...(settled.result.failure?{failure:settled.result.failure}:{})});
+function produceChunked(d,e,item,quantity,options){
+ const ids=[];for(let i=0;i<quantity;i+=200)ids.push(...produceItems(d,e,item,Math.min(200,quantity-i),{...options,eventId:`${options.eventId}:${i}`}));
+ return ids;
+}
+// Slaughter: the owner kills and dresses whole animals, heads of a herd or an
+// owned individual. The parts are the species' body-derived carcass
+// (husbandry-traits). Another's beast is refused as theirs: killing it would
+// be destroying their property (K6), not dressing one's own. Not combat, no XP.
+function slaughter(d,args,eventId){
+ const e=this,here=d.get('state','location'),target=args.target;
+ const creature=typeof target==='string'?d.get('state','creatures',target):null;
+ const row=creature||typeof target!=='string'?null:d.get(...path(target));
+ if(!creature&&(!row||row.category!=='husbandry'||row.location!==here))throw preconditionFailure('这里没有该家畜种群或牲口');
+ if(creature&&(creature.location!==here||creature.hp<=0||isPhysicallyDead(e,d,target)))throw preconditionFailure('这里没有这头活着的牲口');
+ const owners=creature?propertyOwners({engine:e,document:d.document},target):aliveHoldings(d,{kind:'owns',subject:target}).map(h=>h.holder);
+ const label=creature?.name??row.name;
+ if(!owners.includes('player')){
+  const owner=owners[0],name=owner?d.get('state','npcs',owner,'name')??e.byId.get(owner)?.name??owner:null;
+  throw preconditionFailure(owner?`${label}归${name}所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰`:`${label}不归你所有，不能当自家牲口宰`);
+ }
+ const species=e.byId.get(creature?.species??row.species),parts=species?.husbandry?.yields?.carcass??[];
+ if(!parts.length)throw preconditionFailure('这种动物没有可由体型推出的胴体部分');
+ const heads=creature?1:args.quantity??1;
+ if(!Number.isSafeInteger(heads)||heads<1||heads>(creature?1:row.count))throw preconditionFailure(`${label}只有${creature?1:row.count}头`);
+ const take=prepareTake(d,e,takeRule(e,'carcass'),args.tool),minutes=heads*parts.reduce((n,part)=>n+part.collectMinutes,0);
+ const settled=settleTake(d,e,take,eventId);
+ e.advance(d,minutes,eventId);
+ const current=creature?d.get('state','creatures',target):d.get(...path(target));
+ const stillOwned=creature?propertyOwners({engine:e,document:d.document},target).includes('player'):aliveHoldings(d,{kind:'owns',holder:'player',subject:target}).length>0;
+ if(d.get('state','location')!==here||!stillOwned||(creature?isPhysicallyDead(e,d,target):current.count<heads))return {success:false,obtained:[],reason:'宰杀完成前现场或权利已改变'};
+ if(take.rule.toolWearPerHead)wearItem(d,e,'player',take.tool,take.rule.toolWearPerHead*heads);
+ const day=Math.floor(d.get('state','minute')/1440);
+ if(creature){
+  d.set(['state','creatures',target,'hp'],0);recordEntityDeath(d,e,target,d.get('state','minute'),'宰杀');
+  recordWildlifeDeath(d,e,target,eventId);
+  const corpse=d.get('state','creatures',target,'corpse');
+  if(corpse)holdingSet(d,null,['state','creatures',target,'corpse'],{...corpse,status:'已取材',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId},'husbandry');
+ }else{
+  const next=structuredClone(current);takePopulation(next,heads);next.slaughtered=(next.slaughtered??0)+heads;
+  moveStock(d,{from:animals(next),to:`sink:death|${resource(next.species)}|slaughter`,amount:heads,writer:'husbandry',eventId});
+  holdingSet(d,e,path(target),next,'husbandry',eventId);
+ }
+ const obtained=[],lost=[];
+ for(const part of parts){
+  const total=part.amount*heads,quantity=settled.kept(total);
+  if(total>quantity)lost.push({item:part.item,quantity:total-quantity});
+  if(!quantity)continue;
+  const instances=produceChunked(d,e,part.item,quantity,{eventId:`${eventId}:${part.item}`,recipe:{kind:'husbandry_slaughter',[creature?'creature':'population']:target,species:species.id,owner:'player',day},maker:target,workmanship:settled.workmanship,grade:settled.grade,books:{flow:'src:husbandry',purpose:'husbandry_slaughter',writer:'husbandry',eventId}});
+  obtained.push({item:part.item,quantity,instances});
+ }
+ if(take.hasSkill&&settled.check.success)e.practice(d,{skill:take.rule.skill,gain:take.rule.practiceGain,target:species.id},eventId);
+ return {success:settled.check.success,target,species:species.id,heads,obtained,lost,minutes,...takeReceipt(take,settled),experience:0,note:'宰杀自家牲口不是交锋，不计野外战果；lost 是下刀失误损掉、没有入库的部分。'};
+}
 export function husbandryAction(d,args,eventId){
  ensureHoldings(d,this);
+ if(args.operation==='husbandry_slaughter')return slaughter.call(this,d,args,eventId);
  if(args.operation==='husbandry_inspect'&&!args.target)return {herds:Object.values(d.get('state','records')??{}).filter(r=>r.category==='husbandry'&&r.location===d.get('state','location')&&aliveHoldings(d,{kind:'owns',holder:'player',subject:r.id}).length).map(r=>({target:r.id,name:r.name,species:r.species,count:r.count,produce:structuredClone(r.produce)}))};
  const id=args.target,row=d.get(...path(id));
  if(!row||row.category!=='husbandry'||row.location!==d.get('state','location'))throw preconditionFailure('这里没有该家畜种群');
@@ -188,20 +285,25 @@ export function husbandryAction(d,args,eventId){
  if(args.operation==='husbandry_inspect')return {target:id,name:row.name,species:row.species,count:row.count,produce:structuredClone(row.produce)};
  const item=args.item,amount=args.quantity??1,p=profile(this,row.species),yieldRow=[...p?.yields.alive??[],...p?.yields.carcass??[]].find(r=>r.item===item);
  if(!yieldRow||!Number.isSafeInteger(amount)||amount<1||amount>200||(row.produce[item]??0)<amount)throw preconditionFailure('没有足量已产生的畜产物');
+ // A product taken off the living animal by a craft (a coat is shorn) needs its tool and skill.
+ const rule=p.yields.alive.includes(yieldRow)?takeRule(this,yieldRow.from):null,take=rule?prepareTake(d,this,rule,args.tool):null,settled=take?settleTake(d,this,take,eventId):null;
  this.advance(d,yieldRow.collectMinutes*amount,eventId);
  const current=d.get(...path(id));
  if(d.get('state','location')!==row.location||!aliveHoldings(d,{kind:'owns',holder:'player',subject:id}).length||(current.produce[item]??0)<amount)return {success:false,obtained:[],reason:'采集完成前现场或权利已改变'};
- const next=structuredClone(current),instances=[];let left=amount;
+ const next=structuredClone(current),instances=[],kept=settled?settled.kept(amount):amount;let left=amount,keep=kept;
+ if(take?.rule.toolWearPerHead)wearItem(d,this,'player',take.tool,take.rule.toolWearPerHead);
  for(const batch of next.batches){
   if(batch.item!==item||!batch.quantity)continue;
-  const n=Math.min(left,batch.quantity);
-  instances.push(...produceItems(d,this,item,n,{eventId:`${eventId}:${batch.day}`,recipe:{kind:'husbandry',population:id,day:batch.day},maker:id,producedAt:batch.day*1440,books:{account:produce(row,item),writer:'husbandry',eventId}}));
-  batch.quantity-=n;left-=n;if(!left)break;
+  const n=Math.min(left,batch.quantity),k=Math.min(n,keep);
+  if(k)instances.push(...produceItems(d,this,item,k,{eventId:`${eventId}:${batch.day}`,recipe:{kind:'husbandry',population:id,owner:'player',day:batch.day},maker:id,producedAt:batch.day*1440,...(settled?{workmanship:settled.workmanship,grade:settled.grade}:{}),books:{account:produce(row,item),writer:'husbandry',eventId}}));
+  if(n>k)moveStock(d,{from:produce(row,item),to:`sink:decay|${item}|husbandry_take`,amount:n-k,writer:'husbandry',eventId});
+  batch.quantity-=n;left-=n;keep-=k;if(!left)break;
  }
  if(left)throw Error('活体产物批次与储量不守恒');
  next.produce[item]-=amount;next.batches=next.batches.filter(b=>b.quantity);
  holdingSet(d,this,path(id),next,'husbandry',eventId);
- return {success:true,target:id,obtained:[{item,quantity:amount,instances}],minutes:yieldRow.collectMinutes*amount};
+ if(take?.hasSkill&&settled.check.success)this.practice(d,{skill:rule.skill,gain:rule.practiceGain,target:row.species},eventId);
+ return {success:settled?settled.check.success:true,target:id,obtained:kept?[{item,quantity:kept,instances}]:[],...(amount>kept?{lost:[{item,quantity:amount-kept}]}:{}),minutes:yieldRow.collectMinutes*amount,...(take?takeReceipt(take,settled):{})};
 }
 
 // Population stock adapter (01 §1.6 sink:individuated): the only open writer of
