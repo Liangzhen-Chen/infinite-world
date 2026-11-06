@@ -113,11 +113,17 @@ test('自创配方失败仍扣费耗时并按比例回收；缺料、坏工具�
     assert.equal(c.state.player.hp,learned.document.state.player.hp-(out.result.degree==='大失败'?2:0));
     for(const change of[
         doc=>doc.state.inventory.item_wood.quantity=1,doc=>doc.state.inventory.item_whittling_knife.durability=0,
-        doc=>doc.state.location='bld_hw_qingdeng',doc=>delete doc.state.skills.skill_life_6_core,
+        doc=>doc.state.location='bld_hw_qingdeng',
     ]){
         const bad=structuredClone(learned.document);change(bad);const before=structuredClone(bad);
         await assert.rejects(run(bad,'world_craft',{recipe:created.result.entity},'bad'));assert.deepEqual(bad,before);
     }
+    // 卡 Q 依据（Q-2 63f94080、Q-7 42f8ddcb）：缺技能不再拒绝，照做、耗时耗料，出品落外行档（仿制），也不因此生出技能。
+    {const unskilled=structuredClone(learned.document);delete unskilled.state.skills.skill_life_6_core;
+        const out=await observed(unskilled,'world_craft',{recipe:created.result.entity},true,'no_skill'),c2=out.document;
+        assert.equal(out.result.standing,'noSkill');assert.equal(out.result.workmanship,'仿制');assert.equal(c2.state.skills.skill_life_6_core,undefined);
+        assert.equal(c2.state.minute,learned.document.state.minute+60);assert.equal(c2.state.inventory.item_wood.quantity,learned.document.state.inventory.item_wood.quantity-data().materials[0].amount);
+        assert.ok(out.result.instances.length>0);for(const id of out.result.instances)assert.equal(c2.state.itemInstances[id].workmanship,'仿制');}
     // K5：去掉主人公开的收费，磨坊的设备就只供主人及其许可的人使用（原为手写 access='consent'）。
     const privateWorld=structuredClone(world),station=privateWorld.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(row=>fixtureDefinition(row.fixture).affords===data().workstation);
     delete station.fee;
