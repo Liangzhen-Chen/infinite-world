@@ -259,14 +259,14 @@ export function manufacture(d,args,eventId){
     const grade=result.grade??null,partial=result.failure==='partial'?[{...products[0]}]:[];
     if(outcome.success){
         workmanship=result.tier;
-        for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,grade,books:craftOutput('manufacturing',eventId)}));
+        for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,grade,inputs:[...materials.keys()],books:craftOutput('manufacturing',eventId)}));
         work=recordArtWork(d,this,{recipe,instances:ids.filter(unit=>d.get('state','itemInstances',unit,'item')===recipe.output.item),workmanship,eventId});
         // 没掌握的技能无从练起（练习只加在已有技能上）。
         if(hasSkill)this.practice(d,{skill:recipe.skill,gain:3,target:recipe.id},eventId);
         Object.assign(outcome,milestone(d,this,'craft',recipe.id,eventId));d.say(`制成${this.byId.get(recipe.output.item).name}，做工${workmanship}`);
     }else{
         // 卡 Q：失败有结构——无损全收回、损耗按配方回收、报废不回收、只剩部分功能得到最低档成品（投入耗尽）。
-        if(partial.length){workmanship=result.tier;ids.push(...produceItems(d,this,partial[0].item,partial[0].amount,{eventId,recipe:recipe.id,workmanship,grade,books:craftOutput('manufacturing',eventId)}));}
+        if(partial.length){workmanship=result.tier;ids.push(...produceItems(d,this,partial[0].item,partial[0].amount,{eventId,recipe:recipe.id,workmanship,grade,inputs:[...materials.keys()],books:craftOutput('manufacturing',eventId)}));}
         else salvage.push(...returnMaterials(d,this,'player',materials,result,{floors,eventId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>this.itemDelta(d,'player',item,n,craftOutput('manufacturing',eventId))}));
         if(outcome.degree==='大失败'&&injury)this.health(d,{delta:-injury},eventId);
         d.say(partial.length?`制造${outcome.degree}，只做出${partial[0].amount}件${workmanship}的${this.byId.get(partial[0].item).name}，部分用途不具备`:`制造${outcome.degree}${result.failure?`（${FAILURE_LABEL[result.failure]}）`:''}，耗时${workMinutes}分钟，回收${salvage.reduce((sum,row)=>sum+row.amount,0)}份材料`);

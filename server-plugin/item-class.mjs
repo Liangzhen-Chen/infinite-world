@@ -49,10 +49,21 @@ export function useClasses(engine,item){
  const def=engine.byId?.get(item),tags=new Set(def?.tags??[]);
  return [...itemClasses(engine,item),...Object.keys(useTags.tags??{}).filter(t=>tags.has(t)),...['combat','checkBonus'].filter(f=>def?.[f])];
 }
-// 一件物品做成某手艺档时缺掉的用途（该档 loses 与物品用途类别的交集）；制成时记在实例的 lostUses 上。
-export function lostUses(engine,item,workmanship){
+// 投入材料（不含工具）凭物性能提供的用途：材料标签查 runtime world 的 materialUses 表（world/meta/mechanics/material-uses.json）；
+// requiresHeat 的行只在加热加工（投入里有燃料类材料，item-use-tags.heat）时提供。
+export function providedUses(engine,inputs){
+ const rows=engine.world?.materialUses?.rows??{},heated=inputs.some(id=>isItemClass(engine,id,useTags.heat.materialClass)),out=new Set();
+ for(const id of inputs)for(const tag of engine.byId?.get(id)?.tags??[]){const row=rows[tag];if(row&&(!row.requiresHeat||heated))for(const u of row.uses)out.add(u);}
+ return out;
+}
+// 一件物品做成某手艺档时缺掉的用途：该档 loses 与物品用途类别的交集；给了投入材料（inputs，物品 id）时，
+// 投入凭物性能提供的用途保留（形似但低耐久，该有的用途有），检定加成不由材料提供。制成时记在实例的 lostUses 上。
+export function lostUses(engine,item,workmanship,inputs=null){
  const loses=new Set(workmanshipTier(engine,workmanship).loses);
- return useClasses(engine,item).filter(c=>loses.has(c));
+ const lost=useClasses(engine,item).filter(c=>loses.has(c));
+ if(!inputs||!lost.length)return lost;
+ const provided=providedUses(engine,inputs);
+ return lost.filter(c=>c==='checkBonus'||!provided.has(c));
 }
 // 单件实例的用途类别：物品的用途类别减去实例缺掉的用途（lostUses；旧实例没记的按手艺档推）。低档实例“形似”而缺用途。
 export function instanceClasses(engine,unit){

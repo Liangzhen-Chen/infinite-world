@@ -157,11 +157,11 @@ function npcToolBonus(d,engine,id,recipe){
   const spec=definition.checkBonus;if(spec&&!unitLacks(engine,{item,...held},'checkBonus')&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(recipe.skill)))sum+=spec.bonus;
  }return Math.min(engine.rules.check.maximumToolBonus??5,sum);
 }
-function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship,grade){
+function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship,grade,inputs=null){
  const definition=engine.byId.get(item),instances=[];
  for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.document.randomSeed,actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
   const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
-  holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship,...(grade===undefined||grade===null?{}:{grade}),...lostField(engine,item,workmanship)},'npc-autonomy');
+  holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship,...(grade===undefined||grade===null?{}:{grade}),...lostField(engine,item,workmanship,inputs)},'npc-autonomy');
  }
  changeItems(d,engine,id,item,quantity,{books:craftOutput('npc-autonomy',actionId)});d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
 }
@@ -192,7 +192,7 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}
   const result=craftOutcome(engine,{standing,degree,success:outcome.success,proficiency:skill,floor,tools:toolsFactor,station:stationFactor,recoverFraction:r.failure?.recoverFraction??0,seed:d.document.randomSeed,key:actionId});
   if(standing!=='skilled')outcome.standing=standing;if(result.failure)outcome.failure=result.failure;if(result.grade!==undefined)outcome.grade=result.grade;
-  if(outcome.success||result.failure==='partial'){outcome.workmanship=result.tier;produced=outcome.success?[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]]:[{item:r.output.item,amount:r.output.quantity}];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship,result.grade);crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
+  if(outcome.success||result.failure==='partial'){outcome.workmanship=result.tier;produced=outcome.success?[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]]:[{item:r.output.item,amount:r.output.quantity}];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship,result.grade,materials.map(m=>m.item));crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
   else{for(const m of returnMaterials(d,engine,id,materials.map(m=>[m.item,m.amount]),result,{floors,eventId:actionId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>changeItems(d,engine,id,item,n,{books:craftOutput('npc-autonomy',actionId)})}))crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+m.amount;
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }

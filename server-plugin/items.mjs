@@ -145,10 +145,11 @@ export function transferItems(d,engine,from,to,item,quantity,selection=null,{dis
     return moved;
 }
 // 卡 Q：低档实例制成时缺掉的用途记在实例上（没有缺失就不写字段）。
-export const lostField=(engine,item,workmanship)=>{const lost=lostUses(engine,item,workmanship);return lost.length?{lostUses:lost}:{};};
+// 低档（该档有 loses）总写 lostUses，空表也写：材料保住了用途是事实，不能让读取方按档位回退去推。
+export const lostField=(engine,item,workmanship,inputs=null)=>{const lost=lostUses(engine,item,workmanship,inputs);return lost.length||workmanshipTier(engine,workmanship).loses.length?{lostUses:lost}:{};};
 // S1b: books = 产出的来源（制造为 stock.craftOutput，作品誊抄等同）；缺省未入账。
 // grade：卡 Q 品质（标准件 = 1，材料定上限、技能定达成度），乘进耐久；不给就是标准件，不写字段。
-export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,grade,owner='player',maker=owner,books,producedAt=d.get('state','minute')}){
+export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,grade,inputs=null,owner='player',maker=owner,books,producedAt=d.get('state','minute')}){
     if(!Number.isSafeInteger(producedAt)||producedAt<0||producedAt>d.get('state','minute'))throw preconditionFailure('产出日期无效');
     count(quantity);if(quantity>200)throw preconditionFailure('单次制造产物超过处理上限，应拆分工序');
     const definition=engine.byId.get(item),ids=[];
@@ -159,7 +160,7 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
         ids.push(id);
         const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
         holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:maker==='player'?d.get('state','player','name'):engine.byId.get(maker)?.name??maker,
-            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship}),...(grade===undefined?{}:{grade}),...lostField(engine,item,workmanship)},'items');
+            ...(recipe===undefined?{}:{recipe}),source:eventId,minute:producedAt,quality:definition.quality,durability:maxDurability,maxDurability,...(workmanship===undefined?{}:{workmanship}),...(grade===undefined?{}:{grade}),...lostField(engine,item,workmanship,inputs)},'items');
     }
     engine.itemDelta(d,owner,item,quantity,books);
     const path=[...engine.bagPath(owner),item,'instances'];d.set(path,[...d.get(...path)??[],...ids]);

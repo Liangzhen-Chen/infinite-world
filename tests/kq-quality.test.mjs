@@ -200,7 +200,7 @@ test('按实例品质报价：同一物品真货高于粗陋高于仿制，卖�
  }
 });
 
-test('通用性：副本里新加一条从未出现的材料与配方（只给属性，不改代码），外行照做落仿制、缺刃口用途，品质与报价照样成立',async()=>{
+test('通用性：副本里新加一条从未出现的材料与配方（只给属性，不改代码），外行照做落仿制、石料保住刃口用途、无检定加成，品质与报价照样成立',async()=>{
  const {engine,document}=await fresh(w=>{
   w.items.push({id:'item_kq_obsidian',name:'试验黑曜石',basePrice:6,weight:1,quality:'石',durability:40,tags:['stone'],aliases:[],scope:null,description:'试验材料'});
   w.items.push({id:'item_kq_blade',name:'试验石刃',basePrice:30,weight:0.3,quality:'石',durability:80,tags:['cut','tool'],aliases:[],scope:null,description:'试验成品'});
@@ -213,7 +213,8 @@ test('通用性：副本里新加一条从未出现的材料与配方（只给�
   for(const x of rows){
    if(!x.result.success){if(x.result.failure)assert.ok(['intact','wear','ruin','partial'].includes(x.result.failure));continue;}
    const unit=x.document.state.itemInstances[x.result.instances[0]];assert.equal(unit.item,'item_kq_blade');
-   if(standing==='noSkill'){assert.equal(unit.workmanship,'仿制');assert.deepEqual(unit.lostUses,['cut']);assert.ok(!instanceClasses(engine,unit).includes('cut'));assert.ok(unit.maxDurability<80);}
+   // 卡 Q（亮圳）：投入是石料，石能打出刃口，仿制的石刃形似、耐久低，但能割。
+   if(standing==='noSkill'){assert.equal(unit.workmanship,'仿制');assert.deepEqual(unit.lostUses,[]);assert.ok(instanceClasses(engine,unit).includes('cut'));assert.ok(unit.maxDurability<80);}
   }
   grades[standing]=mean(enumerate(engine,r,{standing,modifier:rows[0].result.modifier,proficiency:prof??0}).filter(x=>x.success).map(x=>x.grade));
  }
@@ -224,14 +225,47 @@ test('通用性：副本里新加一条从未出现的材料与配方（只给�
  assert.ok(q('unit_kq_nb_true')>q('unit_kq_nb_fake'));
 });
 
-test('缺掉的用途真的不具备：仿制镰刀不能当刃具、仿制陶轮不给检定加成；普通件照常（实例 lostUses 被用途判断读到）',async()=>{
- const {engine,document}=await shared;
- const holding=(item,workmanship)=>{const c=structuredClone(document);for(const t of Object.keys(c.state.inventory))if(t===item||engine.byId.get(t)?.tags?.includes('cut'))delete c.state.inventory[t];giveUnit(engine,c,item,`unit_kq_use_${item}`,{workmanship});
-  const u=c.state.itemInstances[`unit_kq_use_${item}`];if(workmanship==='仿制')u.lostUses=lostUses(engine,item,workmanship);return actionReader(c);};
- assert.equal(useTool(holding('item_sickle','普通'),engine,'cut','item_sickle'),'item_sickle');
- assert.throws(()=>useTool(holding('item_sickle','仿制'),engine,'cut','item_sickle'),/cut/);
- assert.ok(!physicalItem(holding('item_sickle','仿制'),engine,'unit_kq_use_item_sickle').tags.includes('cut'));
- const wheel=engine.byId.get('item_pottery_wheel'),skill=wheel.checkBonus.skills[0],attr=wheel.checkBonus.attributes?.[0]??'敏捷';
- assert.equal(toolBonuses(holding('item_pottery_wheel','普通'),engine,['item_pottery_wheel'],attr,skill,'player',99).bonus,wheel.checkBonus.bonus);
- assert.equal(toolBonuses(holding('item_pottery_wheel','仿制'),engine,['item_pottery_wheel'],attr,skill,'player',99).bonus,0);
+// 卡 Q（亮圳）：低档单件的用途看投入材料（不含工具）——材料凭物性能提供的用途保留，给不了的才缺；检定加成一律不给。
+// 副本里只给属性新加四种材料（石、铁、木、骨）和两件成品（刃具 cut、锥 pierce），没掌握技能（仿制）与熟练度不到门槛（粗陋）两档真实制作。
+test('用途看材料：石、铁、骨做的仿制刃具能割，木做的不能割但锥能刺；粗陋都保留；低档一律无检定加成；缺掉的用途被用途判断读到',async()=>{
+ const MATS={stone:'item_kq_m_stone',iron:'item_kq_m_iron',wood:'item_kq_m_wood',bone:'item_kq_m_bone'},TAGS={stone:['stone','material'],iron:['metal','iron','material'],wood:['wood','material'],bone:['bone','material']};
+ const PRODUCTS={cut:{id:'item_kq_p_knife',tags:['cut','tool']},pierce:{id:'item_kq_p_awl',tags:['pierce','tool']}};
+ const {engine,document}=await fresh(w=>{
+  for(const [m,id] of Object.entries(MATS))w.items.push({id,name:`试验${m}料`,basePrice:4,weight:0.5,quality:'木',durability:60,tags:TAGS[m],aliases:[],scope:null,description:'试验材料'});
+  for(const [use,p] of Object.entries(PRODUCTS)){
+   w.items.push({id:p.id,name:`试验${use}具`,basePrice:20,weight:0.2,quality:'木',durability:80,tags:p.tags,checkBonus:{bonus:1,skills:['skill_life_5_core']},aliases:[],scope:null,description:'试验成品'});
+   for(const [m,id] of Object.entries(MATS))w.recipes.push({id:`recipe_kq_${use}_${m}`,name:`试验${m}${use}`,skill:'skill_life_5_core',minimumProficiency:100,materials:[{item:id,amount:1}],tools:['item_smith_hammer'],
+    workstation:'smithing',difficulty:10,minutes:30,toolWear:1,failure:{recoverFraction:0,injury:0},output:{item:p.id,quantity:1},byproducts:[],learningRequired:true,teachers:['npc_hw_ayan'],aliases:[],scope:null});
+  }
+ });
+ const expectKeeps={cut:{stone:true,iron:true,bone:true,wood:false},pierce:{stone:true,iron:true,bone:true,wood:true}};
+ let made=0;const tiers=new Set();
+ for(const [use,p] of Object.entries(PRODUCTS))for(const m of Object.keys(MATS))for(const [standing,prof] of [['noSkill',null],['underProficient',50]]){
+  const recipe=`recipe_kq_${use}_${m}`;
+  for(const x of await runs(engine,prepare(engine,document,recipe,'bld_hw_forge',prof),recipe,RUNS,`use_${use}_${m}_${standing}`)){
+   if(!x.result.success)continue;made++;
+   const unit=x.document.state.itemInstances[x.result.instances[0]],def=engine.byId.get(p.id);
+   assert.ok(Array.isArray(unit.lostUses),'低档单件记下缺掉的用途（可为空）');assert.ok(unit.maxDurability<def.durability,'形似但低耐久');
+   // 粗陋档本就不丢割刺（勉强成功落到仿制的看材料）；仿制看材料。
+   const keeps=!workmanshipTier(engine,unit.workmanship).loses.includes(use)||expectKeeps[use][m];tiers.add(`${standing}:${unit.workmanship}`);
+   assert.equal(instanceClasses(engine,unit).includes(use),keeps,`${m}/${use}/${standing}：${keeps?'材料给得了，用途保留':'材料给不了，缺用途'}`);
+   assert.ok(unit.lostUses.includes('checkBonus'),'低档一律无检定加成');
+   // 用途判断读到：按用途选工具、物性事实、检定加成。
+   const c=structuredClone(x.document);for(const t of Object.keys(c.state.inventory))if(t!==p.id&&engine.byId.get(t)?.tags?.includes(use))delete c.state.inventory[t];
+   const r=actionReader(c);
+   if(keeps)assert.equal(useTool(r,engine,use,p.id),p.id);else assert.throws(()=>useTool(r,engine,use,p.id),new RegExp(use));
+   assert.equal(physicalItem(r,engine,unit.id).tags.includes(use),keeps);
+   assert.equal(toolBonuses(r,engine,[p.id],'智力','skill_life_5_core','player',99).bonus,0);
+  }
+ }
+ assert.ok(made>=16,`四材料 × 两用途 × 两档都要有成品（实得 ${made}）`);assert.ok(tiers.has('noSkill:仿制')&&tiers.has('underProficient:粗陋'),[...tiers].join());
+ // 加热条件：黏土只有烧成（投入里有燃料）才能盛液。
+ const fuel=engine.world.items.find(i=>i.tags?.includes('fuel')&&!i.tags.includes('food')).id;
+ const clay=engine.world.items.find(i=>i.tags?.includes('clay')).id,jar=engine.world.items.find(i=>i.tags?.includes('liquid_container')).id;
+ assert.ok(!lostUses(engine,jar,'仿制',[clay,fuel]).includes('liquid_container'));
+ assert.ok(lostUses(engine,jar,'仿制',[clay]).includes('liquid_container'));
+ // 标准档及以上不受影响：普通件照常具备用途与检定加成。
+ const c=structuredClone(document);giveUnit(engine,c,PRODUCTS.cut.id,'unit_kq_plain_knife',{workmanship:'普通'});
+ assert.equal(toolBonuses(actionReader(c),engine,[PRODUCTS.cut.id],'智力','skill_life_5_core','player',99).bonus,1);
+ assert.ok(physicalItem(actionReader(c),engine,'unit_kq_plain_knife').tags.includes('cut'));
 });
