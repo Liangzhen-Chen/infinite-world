@@ -7,14 +7,32 @@ import {sin,acos,tan} from './det-math.mjs';
 
 // Old campaigns retain their published 30-day display calendar. Explicit
 // campaign dates name a native calendar; no season/daylight override is stored.
+// The date part is a pure function of (rules.calendar, calendar id, day) for the two shipped
+// calendars (epoch 0); only hour/minute/text vary within a day, so it is memoized per day.
+const calendarDayMemo=new WeakMap();
+function calendarDay(engine,minute,calendar){
+    const rules=engine.rules.calendar,day=Math.floor(minute/DAY),memo=typeof calendar==='string';
+    let byKey=null,key=null;
+    if(memo){
+        byKey=calendarDayMemo.get(rules);if(!byKey){byKey=new Map();calendarDayMemo.set(rules,byKey);}
+        key=calendar+'|'+day;const hit=byKey.get(key);if(hit)return hit;
+    }
+    const date=calendar==='legacy:30-day'?{year:Math.floor(day/360)+1,month:String(Math.floor(day/30)%12+1),day:day%30+1,offset:minute%DAY,leap:false}:obligationDate(minute,calendar),month=Number(String(date.month).replace('leap:',''));
+    const ten=rules.tens?.[Math.floor((date.day-1)/10)];
+    const base={year:date.year,month,day:date.day,leap:date.leap,season:Math.floor((month-1)/3),ten,market:rules.marketDays?.includes(date.day)??false,
+        prefix:`${rules.epoch}${date.year===1?'元':date.year}年 ${date.leap?'闰':''}${rules.months[month-1]} ${date.day}日 `,epoch0:(calendar==='legacy:30-day'||(date.offset===minute%DAY))};
+    if(memo&&base.epoch0){if(byKey.size>4096)byKey.clear();byKey.set(key,base);}
+    return base;
+}
 export function calendarDateAt(engine,minute,calendar='legacy:30-day'){
     validMinute(minute);
-    const day=Math.floor(minute/DAY),date=calendar==='legacy:30-day'?{year:Math.floor(day/360)+1,month:String(Math.floor(day/30)%12+1),day:day%30+1,offset:minute%DAY,leap:false}:obligationDate(minute,calendar),month=Number(String(date.month).replace('leap:',''));
-    const hour=Math.floor(date.offset/60),clockMinute=date.offset%60;
-    return {year:date.year,month,day:date.day,hour,minute:clockMinute,leap:date.leap,calendar,
-        season:Math.floor((month-1)/3),...(engine.rules.calendar.tens?.[Math.floor((date.day-1)/10)]?{ten:engine.rules.calendar.tens[Math.floor((date.day-1)/10)]}:{}),
-        market:engine.rules.calendar.marketDays?.includes(date.day)??false,
-        text:`${engine.rules.calendar.epoch}${date.year===1?'元':date.year}年 ${date.leap?'闰':''}${engine.rules.calendar.months[month-1]} ${date.day}日 ${String(hour).padStart(2,'0')}:${String(clockMinute).padStart(2,'0')}`};
+    const base=calendarDay(engine,minute,calendar);
+    // offset within the day; for a non-zero-epoch calendar fall back to the calendar's own offset.
+    const offset=base.epoch0?minute%DAY:obligationDate(minute,calendar).offset,hour=Math.floor(offset/60),clockMinute=offset%60;
+    return {year:base.year,month:base.month,day:base.day,hour,minute:clockMinute,leap:base.leap,calendar,
+        season:base.season,...(base.ten?{ten:base.ten}:{}),
+        market:base.market,
+        text:base.prefix+String(hour).padStart(2,'0')+':'+String(clockMinute).padStart(2,'0')};
 }
 export function minuteForCalendarDate(engine,date){
     if(!date||Object.keys(date).some(k=>!['calendar','year','month','day','hour','minute','leap'].includes(k))||
