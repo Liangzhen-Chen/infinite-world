@@ -1,0 +1,782 @@
+{
+ "repo": "/work/sl-acc4/.extra/sl-slaughter-acc/mut",
+ "days": 3,
+ "trials": 6,
+ "useMut": true,
+ "summary": {
+  "pass": 11,
+  "fail": 3,
+  "blocked": 3
+ },
+ "assertions": [
+  {
+   "id": "S1a",
+   "title": "宰杀得到物种推出的胴体部分（肉必有；羽禽出羽毛、其余出骨），同一物种各档总量不变",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "bent_horn_goat",
+     "st": "pass",
+     "note": "部分 meat,hide,bone；总重跨档极差 0.000"
+    },
+    {
+     "label": "oat_pheasant",
+     "st": "pass",
+     "note": "部分 meat,feather；总重跨档极差 0.000"
+    },
+    {
+     "label": "acc_sl_sheep_s",
+     "st": "pass",
+     "note": "部分 meat,bone；总重跨档极差 0.000"
+    },
+    {
+     "label": "acc_sl_sheep_l",
+     "st": "pass",
+     "note": "部分 meat,hide,bone；总重跨档极差 0.000"
+    },
+    {
+     "label": "acc_sl_hare",
+     "st": "pass",
+     "note": "部分 meat,bone；总重跨档极差 0.000"
+    },
+    {
+     "label": "acc_sl_pig",
+     "st": "pass",
+     "note": "部分 meat,bone；总重跨档极差 0.000"
+    }
+   ]
+  },
+  {
+   "id": "S1b",
+   "title": "胴体总重由体重推出：随体重严格增加；同类毛被体重翻倍则近翻倍；占体重比例合理；多头成倍",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "随体重严格增加",
+     "st": "pass",
+     "note": "oat_pheasant:1.25kg→0.45kg acc_sl_hare:6kg→2.90kg acc_sl_sheep_s:12kg→5.80kg acc_sl_sheep_l:24kg→13.10kg acc_sl_pig:28kg→14.20kg bent_horn_goat:40kg→22.50kg"
+    },
+    {
+     "label": "bent_horn_goat 占体重比",
+     "st": "pass",
+     "note": "0.563"
+    },
+    {
+     "label": "oat_pheasant 占体重比",
+     "st": "pass",
+     "note": "0.360"
+    },
+    {
+     "label": "acc_sl_sheep_s 占体重比",
+     "st": "pass",
+     "note": "0.483"
+    },
+    {
+     "label": "acc_sl_sheep_l 占体重比",
+     "st": "pass",
+     "note": "0.546"
+    },
+    {
+     "label": "acc_sl_hare 占体重比",
+     "st": "pass",
+     "note": "0.483"
+    },
+    {
+     "label": "acc_sl_pig 占体重比",
+     "st": "pass",
+     "note": "0.507"
+    },
+    {
+     "label": "同类体重翻倍",
+     "st": "pass",
+     "note": "体重比 2 胴体比 2.26"
+    },
+    {
+     "label": "三头约三倍",
+     "st": "pass",
+     "note": "14.20 → 42.60"
+    }
+   ]
+  },
+  {
+   "id": "S1c",
+   "title": "宰杀耗时：花时间且随胴体增大不减，时钟前进量不少于回执工时",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "bent_horn_goat",
+     "st": "pass",
+     "note": "工时 19"
+    },
+    {
+     "label": "oat_pheasant",
+     "st": "pass",
+     "note": "工时 5"
+    },
+    {
+     "label": "acc_sl_sheep_s",
+     "st": "pass",
+     "note": "工时 9"
+    },
+    {
+     "label": "acc_sl_sheep_l",
+     "st": "pass",
+     "note": "工时 19"
+    },
+    {
+     "label": "acc_sl_hare",
+     "st": "pass",
+     "note": "工时 9"
+    },
+    {
+     "label": "acc_sl_pig",
+     "st": "pass",
+     "note": "工时 9"
+    },
+    {
+     "label": "最重的物种比最轻的耗时长",
+     "st": "pass",
+     "note": "oat_pheasant:5.0 acc_sl_hare:9.0 acc_sl_sheep_s:9.0 acc_sl_sheep_l:19.0 acc_sl_pig:9.0 bent_horn_goat:19.0"
+    },
+    {
+     "label": "同类体重翻倍不更快",
+     "st": "pass",
+     "note": "9 → 19"
+    },
+    {
+     "label": "时钟前进",
+     "st": "pass",
+     "note": "19 ≥ 19"
+    }
+   ]
+  },
+  {
+   "id": "S1d",
+   "title": "宰杀记账：畜群少一头、死亡走宰杀流水、产出入库有来源、账本守恒、不给野外战斗经验",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "bent_horn_goat",
+     "st": "pass",
+     "note": "头数偏差0 经验偏差0 守恒失败0 死亡流水1 产出流水3种 溯源6/6"
+    },
+    {
+     "label": "oat_pheasant",
+     "st": "pass",
+     "note": "头数偏差0 经验偏差0 守恒失败0 死亡流水1 产出流水2种 溯源6/6"
+    },
+    {
+     "label": "acc_sl_sheep_s",
+     "st": "pass",
+     "note": "头数偏差0 经验偏差0 守恒失败0 死亡流水1 产出流水2种 溯源6/6"
+    },
+    {
+     "label": "acc_sl_sheep_l",
+     "st": "pass",
+     "note": "头数偏差0 经验偏差0 守恒失败0 死亡流水1 产出流水3种 溯源6/6"
+    },
+    {
+     "label": "acc_sl_hare",
+     "st": "pass",
+     "note": "头数偏差0 经验偏差0 守恒失败0 死亡流水1 产出流水2种 溯源6/6"
+    },
+    {
+     "label": "acc_sl_pig",
+     "st": "pass",
+     "note": "头数偏差0 经验偏差0 守恒失败0 死亡流水1 产出流水2种 溯源6/6"
+    }
+   ]
+  },
+  {
+   "id": "S1e",
+   "title": "要刃具类工具（按用途 cut，不按物品 id）：无刃具被拒且不耗时；任一 cut 物品可用；非 cut 工具不行；新刃具照样可用",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "bent_horn_goat 无工具被拒",
+     "st": "pass",
+     "note": "需要完好且具备 cut 用途的工具；部分旧物品用途未知"
+    },
+    {
+     "label": "bent_horn_goat 非cut item_cooking_pot 被拒",
+     "st": "pass",
+     "note": "指定工具未实际持有、用途不符或已经损坏；需要完好且具备 cut 用途的工具"
+    },
+    {
+     "label": "bent_horn_goat 非cut item_spindle 被拒",
+     "st": "pass",
+     "note": "指定工具未实际持有、用途不符或已经损坏；需要完好且具备 cut 用途的工具"
+    },
+    {
+     "label": "oat_pheasant 无工具被拒",
+     "st": "pass",
+     "note": "需要完好且具备 cut 用途的工具；部分旧物品用途未知"
+    },
+    {
+     "label": "oat_pheasant 非cut item_cooking_pot 被拒",
+     "st": "pass",
+     "note": "指定工具未实际持有、用途不符或已经损坏；需要完好且具备 cut 用途的工具"
+    },
+    {
+     "label": "oat_pheasant 非cut item_spindle 被拒",
+     "st": "pass",
+     "note": "指定工具未实际持有、用途不符或已经损坏；需要完好且具备 cut 用途的工具"
+    },
+    {
+     "label": "acc_sl_sheep_s 无工具被拒",
+     "st": "pass",
+     "note": "需要完好且具备 cut 用途的工具；部分旧物品用途未知"
+    },
+    {
+     "label": "acc_sl_sheep_s 非cut item_cooking_pot 被拒",
+     "st": "pass",
+     "note": "指定工具未实际持有、用途不符或已经损坏；需要完好且具备 cut 用途的工具"
+    },
+    {
+     "label": "acc_sl_sheep_s 非cut item_spindle 被拒",
+     "st": "pass",
+     "note": "指定工具未实际持有、用途不符或已经损坏；需要完好且具备 cut 用途的工具"
+    },
+    {
+     "label": "cut 工具 item_kitchen_knife 可用",
+     "st": "pass",
+     "note": "用了 item_kitchen_knife"
+    },
+    {
+     "label": "cut 工具 item_leather_shears 可用",
+     "st": "pass",
+     "note": "用了 item_leather_shears"
+    },
+    {
+     "label": "cut 工具 item_whittling_knife 可用",
+     "st": "pass",
+     "note": "用了 item_whittling_knife"
+    },
+    {
+     "label": "cut 工具 item_frame_saw 可用",
+     "st": "pass",
+     "note": "用了 item_frame_saw"
+    },
+    {
+     "label": "cut 工具 item_mortise_chisel 可用",
+     "st": "pass",
+     "note": "用了 item_mortise_chisel"
+    },
+    {
+     "label": "cut 工具 item_sheet_shears 可用",
+     "st": "pass",
+     "note": "用了 item_sheet_shears"
+    },
+    {
+     "label": "cut 工具 item_acc_sl_flint_blade 可用",
+     "st": "pass",
+     "note": "用了 item_acc_sl_flint_blade"
+    }
+   ]
+  },
+  {
+   "id": "S2",
+   "title": "不是自己的牲口不能宰（按产权不按名单）：他人畜群被拒且无变化；换成自己名下可宰；换物种换主人都成立",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "bent_horn_goat 属 npc_hw_xiejin 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "bent_horn_goat 属 npc_hw_xierui 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢芮所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "bent_horn_goat 属 npc_hw_ayan 被拒",
+     "st": "pass",
+     "note": "验收畜群归阿砚所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "bent_horn_goat 属玩家可宰（对照）",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "oat_pheasant 属 npc_hw_xiejin 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "oat_pheasant 属 npc_hw_xierui 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢芮所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "oat_pheasant 属 npc_hw_ayan 被拒",
+     "st": "pass",
+     "note": "验收畜群归阿砚所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "oat_pheasant 属玩家可宰（对照）",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "acc_sl_sheep_s 属 npc_hw_xiejin 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_sheep_s 属 npc_hw_xierui 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢芮所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_sheep_s 属 npc_hw_ayan 被拒",
+     "st": "pass",
+     "note": "验收畜群归阿砚所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_sheep_s 属玩家可宰（对照）",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "acc_sl_sheep_l 属 npc_hw_xiejin 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_sheep_l 属 npc_hw_xierui 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢芮所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_sheep_l 属 npc_hw_ayan 被拒",
+     "st": "pass",
+     "note": "验收畜群归阿砚所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_sheep_l 属玩家可宰（对照）",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "acc_sl_hare 属 npc_hw_xiejin 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_hare 属 npc_hw_xierui 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢芮所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_hare 属 npc_hw_ayan 被拒",
+     "st": "pass",
+     "note": "验收畜群归阿砚所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_hare 属玩家可宰（对照）",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "acc_sl_pig 属 npc_hw_xiejin 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_pig 属 npc_hw_xierui 被拒",
+     "st": "pass",
+     "note": "验收畜群归谢芮所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_pig 属 npc_hw_ayan 被拒",
+     "st": "pass",
+     "note": "验收畜群归阿砚所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "acc_sl_pig 属玩家可宰（对照）",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "真实世界 population_hw_home21_goats 被拒",
+     "st": "pass",
+     "note": "谢堇家的山羊群归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "真实世界 population_hw_home21_pheasants 被拒",
+     "st": "pass",
+     "note": "谢堇家的雉群归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    },
+    {
+     "label": "他人名下个体被拒",
+     "st": "pass",
+     "note": "验收羊归谢堇所有；宰杀别人的牲口等于毁坏他人财物，不能当自家牲口宰。可以先向主人买下，或请主人自己宰"
+    }
+   ]
+  },
+  {
+   "id": "S3a",
+   "title": "活畜取毛：有毛被的物种过些天长出毛，用刃具剪下，得到毛类物品，头数不变，账本守恒，无战斗经验，有来源",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "bent_horn_goat",
+     "st": "pass",
+     "note": "可取41 取40 得40 头数102→102 守恒true 溯源true"
+    },
+    {
+     "label": "acc_sl_sheep_s",
+     "st": "pass",
+     "note": "可取16 取16 得16 头数101→101 守恒true 溯源true"
+    },
+    {
+     "label": "acc_sl_sheep_l",
+     "st": "pass",
+     "note": "可取33 取33 得33 头数101→101 守恒true 溯源true"
+    },
+    {
+     "label": "acc_sl_hare",
+     "st": "pass",
+     "note": "可取6 取6 得6 头数101→101 守恒true 溯源true"
+    }
+   ]
+  },
+  {
+   "id": "S3b",
+   "title": "没毛被的物种取不到毛；活畜取毛要刃具类工具",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "oat_pheasant 无毛",
+     "st": "pass",
+     "note": "没有足量已产生的畜产物｜没有足量已产生的畜产物｜没有足量已产生的畜产物"
+    },
+    {
+     "label": "acc_sl_pig 无毛",
+     "st": "pass",
+     "note": "没有足量已产生的畜产物｜没有足量已产生的畜产物｜没有足量已产生的畜产物"
+    },
+    {
+     "label": "bent_horn_goat 无刃具取毛被拒",
+     "st": "pass",
+     "note": "需要完好且具备 cut 用途的工具；部分旧物品用途未知"
+    },
+    {
+     "label": "bent_horn_goat 新/任一刃具可用",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "acc_sl_sheep_s 无刃具取毛被拒",
+     "st": "pass",
+     "note": "需要完好且具备 cut 用途的工具；部分旧物品用途未知"
+    },
+    {
+     "label": "acc_sl_sheep_s 新/任一刃具可用",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "acc_sl_sheep_l 无刃具取毛被拒",
+     "st": "pass",
+     "note": "需要完好且具备 cut 用途的工具；部分旧物品用途未知"
+    },
+    {
+     "label": "acc_sl_sheep_l 新/任一刃具可用",
+     "st": "pass",
+     "note": ""
+    }
+   ]
+  },
+  {
+   "id": "S3c",
+   "title": "毛量按体重与间隔恢复：剪光后没有；间隔越长毛越多；同类毛被体重翻倍毛量近翻倍；四季都长；年总量与起始季节无关",
+   "status": "blocked",
+   "cells": [
+    {
+     "label": "bent_horn_goat 间隔 10/20/40 天毛量递增",
+     "st": "pass",
+     "note": "13.0 / 27.0 / 56.0"
+    },
+    {
+     "label": "剪光后剩余近零",
+     "st": "pass",
+     "note": "剪前 41 剩 0"
+    },
+    {
+     "label": "立刻再剪取不到",
+     "st": "pass",
+     "note": "没有足量已产生的畜产物"
+    },
+    {
+     "label": "羊(wool)体重 24:12 的毛量比",
+     "st": "pass",
+     "note": "2.06"
+    },
+    {
+     "label": "山羊与兔(hair)单位体重毛量相当",
+     "st": "pass",
+     "note": "1.02"
+    },
+    {
+     "label": "四季",
+     "st": "blocked",
+     "note": "需 --year 长跑：逐季推进 360 天测四个季度的毛增量（直接跳日期会破坏畜群结算前提，不能用跳日期代替）"
+    }
+   ]
+  },
+  {
+   "id": "S4a",
+   "title": "外行损耗更多：每物种各档取回份额随熟练度不减，外行低于熟练；宰杀与取毛都成立",
+   "status": "fail",
+   "cells": [
+    {
+     "label": "bent_horn_goat 各档份额",
+     "st": "pass",
+     "note": "1.00 → 1.00 → 1.00 → 1.00"
+    },
+    {
+     "label": "oat_pheasant 各档份额",
+     "st": "pass",
+     "note": "0.67 → 1.00 → 1.00 → 1.00"
+    },
+    {
+     "label": "acc_sl_sheep_s 各档份额",
+     "st": "pass",
+     "note": "0.92 → 1.00 → 1.00 → 1.00"
+    },
+    {
+     "label": "acc_sl_sheep_l 各档份额",
+     "st": "pass",
+     "note": "1.00 → 1.00 → 1.00 → 1.00"
+    },
+    {
+     "label": "acc_sl_hare 各档份额",
+     "st": "pass",
+     "note": "0.90 → 0.90 → 1.00 → 1.00"
+    },
+    {
+     "label": "acc_sl_pig 各档份额",
+     "st": "pass",
+     "note": "0.92 → 0.92 → 1.00 → 0.92"
+    },
+    {
+     "label": "汇总外行比熟练少取回",
+     "st": "fail",
+     "note": "平均差 0.086，差>0.02 的物种 3/6"
+    },
+    {
+     "label": "剪毛 bent_horn_goat 外行份额低于熟练",
+     "st": "pass",
+     "note": "外行 0.83 熟练 1.00"
+    },
+    {
+     "label": "剪毛 acc_sl_sheep_s 外行份额低于熟练",
+     "st": "fail",
+     "note": "外行 0.92 熟练 0.92"
+    },
+    {
+     "label": "剪毛 acc_sl_sheep_l 外行份额低于熟练",
+     "st": "pass",
+     "note": "外行 0.92 熟练 1.00"
+    }
+   ]
+  },
+  {
+   "id": "S4b",
+   "title": "手艺档沿用制造的同一套：外行品级不超过外行封顶、熟手能超过；平均品级随熟练度上升；standing 词汇与制造一致",
+   "status": "blocked",
+   "cells": [
+    {
+     "label": "数据有封顶档",
+     "st": "pass",
+     "note": "仿制"
+    },
+    {
+     "label": "外行品级不超过封顶",
+     "st": "pass",
+     "note": "外行最高 仿制 封顶 仿制"
+    },
+    {
+     "label": "熟手能超过外行封顶",
+     "st": "pass",
+     "note": "熟手最高 精良"
+    },
+    {
+     "label": "平均品级随熟练度不减且外行<熟练",
+     "st": "pass",
+     "note": "0.00 → 2.32 → 2.50 → 2.67"
+    },
+    {
+     "label": "制造对照",
+     "st": "blocked",
+     "note": "外行制造没拿到 standing：回执无该字段"
+    },
+    {
+     "label": "熟手 standing 为 skilled",
+     "st": "pass",
+     "note": "skilled"
+    }
+   ]
+  },
+  {
+   "id": "S5",
+   "title": "背不动时胴体留在原地、归主人、可回取（不是被拒、不是消失）",
+   "status": "fail",
+   "cells": [
+    {
+     "label": "满包山羊 宰杀成立、畜群少一头",
+     "st": "pass",
+     "note": "3→2"
+    },
+    {
+     "label": "满包山羊 有留在原地的部分且可见",
+     "st": "pass",
+     "note": "[{\"item\":\"item_mutton\",\"quantity\":40},{\"item\":\"item_rawhide\",\"quantity\":2},{\"item\":\"item_raw_bone\",\"quantity\":9}]"
+    },
+    {
+     "label": "满包山羊 守恒（产出=入包+留地+损耗）",
+     "st": "pass",
+     "note": "[]"
+    },
+    {
+     "label": "满包山羊 留地的物品存在于存档某处且归主人",
+     "st": "fail",
+     "note": "state.npcs.npc_hw_wushuo.inventory.item_rawhide（主人 null）；state.records.husbandry:population_acc_sl.produce.item_mutton（主人 player）"
+    },
+    {
+     "label": "满包山羊 可回取",
+     "st": "pass",
+     "note": "回取后守恒 true"
+    },
+    {
+     "label": "公牛(空包) 宰杀成立、畜群少一头",
+     "st": "pass",
+     "note": "3→2"
+    },
+    {
+     "label": "公牛(空包) 有留在原地的部分且可见",
+     "st": "pass",
+     "note": "[{\"item\":\"item_raw_meat\",\"quantity\":334},{\"item\":\"item_rawhide\",\"quantity\":28},{\"item\":\"item_raw_bone\",\"quantity\":96}]"
+    },
+    {
+     "label": "公牛(空包) 守恒（产出=入包+留地+损耗）",
+     "st": "pass",
+     "note": "[]"
+    },
+    {
+     "label": "公牛(空包) 留地的物品存在于存档某处且归主人",
+     "st": "pass",
+     "note": "state.records.husbandry:population_acc_sl.produce.item_raw_meat（主人 player）；state.records.husbandry:population_acc_sl.produce.item_rawhide（主人 player）"
+    },
+    {
+     "label": "公牛(空包) 可回取",
+     "st": "pass",
+     "note": "回取后守恒 true"
+    }
+   ]
+  },
+  {
+   "id": "S6",
+   "title": "NPC 宰杀与玩家同一规律（工具、手艺档、损耗、记账）",
+   "status": "blocked",
+   "cells": [
+    {
+     "label": "NPC 有刀有手艺时宰杀",
+     "st": "blocked",
+     "note": "6 天里谢堇家畜群没有任何宰杀流水（NPC 不会宰杀自家牲口：缺这条规律）"
+    },
+    {
+     "label": "NPC 手艺档与损耗",
+     "st": "blocked",
+     "note": "同上，没有可比样本"
+    }
+   ]
+  },
+  {
+   "id": "S7",
+   "title": "一件毛刷（细筛、墨笔）的毛能追到某户某群羊：剪下的毛做成成品，来源链指向具体畜群与主人；换配方、换畜群都成立",
+   "status": "fail",
+   "cells": [
+    {
+     "label": "bent_horn_goat/recipe_kc_tool_fine_sieve",
+     "st": "fail",
+     "note": "消耗的毛单位 1（来自 population_acc_sl，主人 player）；成品记录指向毛/畜群 false"
+    },
+    {
+     "label": "bent_horn_goat/recipe_kc_tool_goat_hair_brush",
+     "st": "fail",
+     "note": "消耗的毛单位 1（来自 population_acc_sl，主人 player）；成品记录指向毛/畜群 false"
+    },
+    {
+     "label": "acc_sl_hare/recipe_kc_tool_fine_sieve",
+     "st": "fail",
+     "note": "消耗的毛单位 1（来自 population_acc_sl，主人 player）；成品记录指向毛/畜群 false"
+    },
+    {
+     "label": "acc_sl_hare/recipe_kc_tool_goat_hair_brush",
+     "st": "fail",
+     "note": "消耗的毛单位 1（来自 population_acc_sl，主人 player）；成品记录指向毛/畜群 false"
+    }
+   ]
+  },
+  {
+   "id": "S8",
+   "title": "3 天浸泡：玩家养多种畜，每天剪毛、宰一头，逐日推进；统计与账本守恒",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "宰杀次数>0",
+     "st": "pass",
+     "note": "15（检定失败 5，背不动留地 0）"
+    },
+    {
+     "label": "取毛次数>0",
+     "st": "pass",
+     "note": "1（失败 1，毛 1）"
+    },
+    {
+     "label": "违法宰杀每天被拒",
+     "st": "pass",
+     "note": "3/3"
+    },
+    {
+     "label": "自家宰杀不被拒",
+     "st": "pass",
+     "note": ""
+    },
+    {
+     "label": "浸泡后账本守恒",
+     "st": "pass",
+     "note": "[]"
+    }
+   ]
+  },
+  {
+   "id": "L1",
+   "title": "账本守恒：本脚本开出的全部存档（宰杀、取毛、背不动、NPC、制造）账本对账为空",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "93 个存档",
+     "st": "pass",
+     "note": "全部为空"
+    }
+   ]
+  },
+  {
+   "id": "V0",
+   "title": "变异副本只改数据就能载入并跑通（五个新物种+新刃具）",
+   "status": "pass",
+   "cells": [
+    {
+     "label": "变异载入",
+     "st": "pass",
+     "note": "物种 6，有毛被 4"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,2 @@
+{"note":"卡 SL 交付后应为 pass 的断言（含背不动、NPC、毛刷追溯）。S3c 的四季需 --year 长跑才 pass。S4b 的制造对照取决于制造回执是否带 standing。",
+ "expected_pass":["S1a","S1b","S1c","S1d","S1e","S2","S3a","S3b","S3c","S4a","S4b","S5","S6","S7","S8","L1","V0"]}

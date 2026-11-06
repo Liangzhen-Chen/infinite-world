@@ -1,0 +1,50 @@
+[1s] 树 /work/sl-acc4/.extra/sl-slaughter-acc/mut 变异 true 
+[1s] 采样宰杀…
+[8s]   monster_bent_horn_goat 完成
+[13s]   monster_oat_pheasant 完成
+[19s]   monster_acc_sl_sheep_s 完成
+[24s]   monster_acc_sl_sheep_l 完成
+[30s]   monster_acc_sl_hare 完成
+[35s]   monster_acc_sl_pig 完成
+[35s] S1
+[41s] S2
+[45s] S3
+[781s] 毛已长出 bent_horn_goat,acc_sl_sheep_s,acc_sl_sheep_l,acc_sl_hare
+[1030s] S3c
+[1291s] S4
+[1375s] S5
+[1382s] S6
+[1482s] S7
+[1503s] S8
+[1521s] 浸泡 {"slaughter":15,"slaughterFail":5,"shear":1,"shearFail":1,"refusedTheft":3,"carryLeft":0,"parts":{"item_mutton":120,"item_rawhide":9,"item_raw_bone":50,"item_raw_meat":126,"item_raw_feather":3},"lost":{"item_raw_meat":3,"item_raw_bone":1},"hair":1,"refusedOwn":[],"books":true}
+PASS    S1a  宰杀得到物种推出的胴体部分（肉必有；羽禽出羽毛、其余出骨），同一物种各档总量不变
+PASS    S1b  胴体总重由体重推出：随体重严格增加；同类毛被体重翻倍则近翻倍；占体重比例合理；多头成倍
+PASS    S1c  宰杀耗时：花时间且随胴体增大不减，时钟前进量不少于回执工时
+PASS    S1d  宰杀记账：畜群少一头、死亡走宰杀流水、产出入库有来源、账本守恒、不给野外战斗经验
+PASS    S1e  要刃具类工具（按用途 cut，不按物品 id）：无刃具被拒且不耗时；任一 cut 物品可用；非 cut 工具不行；新刃具照样可用
+PASS    S2  不是自己的牲口不能宰（按产权不按名单）：他人畜群被拒且无变化；换成自己名下可宰；换物种换主人都成立
+PASS    S3a  活畜取毛：有毛被的物种过些天长出毛，用刃具剪下，得到毛类物品，头数不变，账本守恒，无战斗经验，有来源
+PASS    S3b  没毛被的物种取不到毛；活畜取毛要刃具类工具
+BLOCKED S3c  毛量按体重与间隔恢复：剪光后没有；间隔越长毛越多；同类毛被体重翻倍毛量近翻倍；四季都长；年总量与起始季节无关
+    ? 四季：需 --year 长跑：逐季推进 360 天测四个季度的毛增量（直接跳日期会破坏畜群结算前提，不能用跳日期代替）
+FAIL    S4a  外行损耗更多：每物种各档取回份额随熟练度不减，外行低于熟练；宰杀与取毛都成立
+    x 汇总外行比熟练少取回：平均差 0.086，差>0.02 的物种 3/6
+    x 剪毛 acc_sl_sheep_s 外行份额低于熟练：外行 0.92 熟练 0.92
+BLOCKED S4b  手艺档沿用制造的同一套：外行品级不超过外行封顶、熟手能超过；平均品级随熟练度上升；standing 词汇与制造一致
+    ? 制造对照：外行制造没拿到 standing：回执无该字段
+FAIL    S5  背不动时胴体留在原地、归主人、可回取（不是被拒、不是消失）
+    x 满包山羊 留地的物品存在于存档某处且归主人：state.npcs.npc_hw_wushuo.inventory.item_rawhide（主人 null）；state.records.husbandry:population_acc_sl.produce.item_mutton（主人 player）
+BLOCKED S6  NPC 宰杀与玩家同一规律（工具、手艺档、损耗、记账）
+    ? NPC 有刀有手艺时宰杀：6 天里谢堇家畜群没有任何宰杀流水（NPC 不会宰杀自家牲口：缺这条规律）
+    ? NPC 手艺档与损耗：同上，没有可比样本
+FAIL    S7  一件毛刷（细筛、墨笔）的毛能追到某户某群羊：剪下的毛做成成品，来源链指向具体畜群与主人；换配方、换畜群都成立
+    x bent_horn_goat/recipe_kc_tool_fine_sieve：消耗的毛单位 1（来自 population_acc_sl，主人 player）；成品记录指向毛/畜群 false
+    x bent_horn_goat/recipe_kc_tool_goat_hair_brush：消耗的毛单位 1（来自 population_acc_sl，主人 player）；成品记录指向毛/畜群 false
+    x acc_sl_hare/recipe_kc_tool_fine_sieve：消耗的毛单位 1（来自 population_acc_sl，主人 player）；成品记录指向毛/畜群 false
+    x acc_sl_hare/recipe_kc_tool_goat_hair_brush：消耗的毛单位 1（来自 population_acc_sl，主人 player）；成品记录指向毛/畜群 false
+PASS    S8  3 天浸泡：玩家养多种畜，每天剪毛、宰一头，逐日推进；统计与账本守恒
+PASS    L1  账本守恒：本脚本开出的全部存档（宰杀、取毛、背不动、NPC、制造）账本对账为空
+PASS    V0  变异副本只改数据就能载入并跑通（五个新物种+新刃具）
+{"pass":11,"fail":3,"blocked":3} 树 /work/sl-acc4/.extra/sl-slaughter-acc/mut 耗时 1521 s
+
+[exited with code 0]
