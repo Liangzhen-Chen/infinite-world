@@ -11,7 +11,9 @@ import {preconditionFailure} from './precondition.mjs';
 import {produceItems} from './items.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
 import {yearDays} from './husbandry-traits.mjs';
-import {useTool,wearItem} from './items.mjs';
+import {wearItem} from './items.mjs';
+import {householdTool} from './household-tools.mjs';
+import {npcGradedCheck,npcProficiency} from './checks.mjs';
 import {craftOutcome,craftStanding,toolFactor} from './manufacturing.mjs';
 import {effectiveProficiency} from './professions.mjs';
 import {propertyOwners} from './action-authority.mjs';
@@ -207,15 +209,19 @@ export function advanceHusbandry(d,e,day){
 // row's skill check, and Q's craftOutcome for how much of what is taken
 // survives and how well it is done. Sources without a row are picked up.
 const takeRule=(e,from)=>from?e.world.husbandryTakes?.takes?.[from]??null:null;
-function prepareTake(d,e,rule,selected){
+// The same take for the player and an NPC: the tool (own or a household
+// member's at home), the actor's skill standing, the actor's graded check.
+function prepareTake(d,e,rule,selected,actor='player'){
  if(!rule)throw Error('缺宰杀取出规律（husbandry-takes）');
- const tool=useTool(d,e,rule.requiresUse,selected),hasSkill=Boolean(d.get('state','skills',rule.skill));
- const proficiency=hasSkill?effectiveProficiency(d,e,rule.skill):0;
- return {rule,tool,hasSkill,proficiency,standing:craftStanding(hasSkill,proficiency,rule.minimumProficiency)};
+ const {item:tool,holder}=householdTool(d,e,rule.requiresUse,selected,actor);
+ const raw=actor==='player'?d.get('state','skills',rule.skill):d.get('state','npcs',actor,'skills',rule.skill)??e.byId.get(actor)?.skills?.[rule.skill]??e.byId.get(actor)?.proficiencies?.[rule.skill];
+ const hasSkill=raw!==undefined&&raw!==null,proficiency=!hasSkill?0:actor==='player'?effectiveProficiency(d,e,rule.skill):npcProficiency(d,e,actor,rule.skill);
+ return {rule,actor,tool,holder,hasSkill,proficiency,standing:craftStanding(hasSkill,proficiency,rule.minimumProficiency)};
 }
 function settleTake(d,e,take,eventId){
- const {rule,tool}=take,tools=toolFactor(d,e,'player',[tool]);
- const check=e.check(d,{attribute:rule.attribute,...(take.hasSkill?{skill:rule.skill}:{}),difficulty:rule.difficulty,tools:[tool]},eventId);
+ const {rule,tool,actor,holder}=take,tools=toolFactor(d,e,holder,[tool]),own=holder===actor?[tool]:[];
+ const args={attribute:rule.attribute,...(take.hasSkill?{skill:rule.skill}:{}),difficulty:rule.difficulty,tools:own};
+ const check=actor==='player'?e.check(d,args,eventId):npcGradedCheck(d,e,actor,{...args,skill:take.hasSkill?rule.skill:null},eventId);
  const result=craftOutcome(e,{standing:take.standing,degree:check.degree,success:check.success,proficiency:take.proficiency,floor:1,tools,station:1,recoverFraction:rule.recoverFraction,seed:d.document.randomSeed,key:eventId});
  const whole=check.success||result.failure==='partial';
  // The kept share follows returnMaterials: a worn take keeps ceil (at least one), others floor.
@@ -223,7 +229,7 @@ function settleTake(d,e,take,eventId){
  const grade=result.grade??result.gradeFactor;
  return {check,result,kept,workmanship:result.tier,grade};
 }
-const takeReceipt=(take,settled)=>({degree:settled.check.degree,standing:take.standing,tool:take.tool,...(settled.workmanship?{workmanship:settled.workmanship}:{}),...(settled.grade!==undefined?{grade:settled.grade}:{}),...(settled.result.failure?{failure:settled.result.failure}:{})});
+const takeReceipt=(take,settled)=>({degree:settled.check.degree,standing:take.standing,tool:take.tool,...(take.holder!==take.actor?{toolHolder:take.holder}:{}),...(settled.workmanship?{workmanship:settled.workmanship}:{}),...(settled.grade!==undefined?{grade:settled.grade}:{}),...(settled.result.failure?{failure:settled.result.failure}:{})});
 function produceChunked(d,e,item,quantity,options){
  const ids=[];for(let i=0;i<quantity;i+=200)ids.push(...produceItems(d,e,item,Math.min(200,quantity-i),{...options,eventId:`${options.eventId}:${i}`}));
  return ids;
@@ -254,7 +260,7 @@ function slaughter(d,args,eventId){
  const current=creature?d.get('state','creatures',target):d.get(...path(target));
  const stillOwned=creature?propertyOwners({engine:e,document:d.document},target).includes('player'):aliveHoldings(d,{kind:'owns',holder:'player',subject:target}).length>0;
  if(d.get('state','location')!==here||!stillOwned||(creature?isPhysicallyDead(e,d,target):current.count<heads))return {success:false,obtained:[],reason:'宰杀完成前现场或权利已改变'};
- if(take.rule.toolWearPerHead)wearItem(d,e,'player',take.tool,take.rule.toolWearPerHead*heads);
+ if(take.rule.toolWearPerHead)wearItem(d,e,take.holder,take.tool,take.rule.toolWearPerHead*heads);
  const day=Math.floor(d.get('state','minute')/1440);
  if(creature){
   d.set(['state','creatures',target,'hp'],0);recordEntityDeath(d,e,target,d.get('state','minute'),'宰杀');
@@ -310,7 +316,7 @@ export function husbandryAction(d,args,eventId){
  const current=d.get(...path(id));
  if(d.get('state','location')!==row.location||!aliveHoldings(d,{kind:'owns',holder:'player',subject:id}).length||(current.produce[item]??0)<amount)return {success:false,obtained:[],reason:'采集完成前现场或权利已改变'};
  const next=structuredClone(current),instances=[],kept=settled?settled.kept(amount):amount;let left=amount,keep=kept;
- if(take?.rule.toolWearPerHead)wearItem(d,this,'player',take.tool,take.rule.toolWearPerHead);
+ if(take?.rule.toolWearPerHead)wearItem(d,this,take.holder,take.tool,take.rule.toolWearPerHead);
  for(const batch of next.batches){
   if(batch.item!==item||!batch.quantity)continue;
   const n=Math.min(left,batch.quantity),k=Math.min(n,keep);

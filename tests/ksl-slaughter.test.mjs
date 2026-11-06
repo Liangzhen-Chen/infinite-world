@@ -8,6 +8,7 @@ import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {installEcologyDefinitions} from '../server-plugin/ecology-dynamics.mjs';
 import {advanceHusbandry} from '../server-plugin/husbandry.mjs';
+import {householdTool} from '../server-plugin/household-tools.mjs';
 import {resolveMaterials,workmanshipNames,craftingParam} from '../server-plugin/item-class.mjs';
 
 // Card SL: an owner slaughters their own beasts and shears living ones. What
@@ -228,4 +229,19 @@ test('what the pack cannot carry stays where it was cut, the owner\'s, and is pi
  const unit=picked.document.state.itemInstances[picked.result.obtained[0].instances[0]];
  assert.equal(unit.recipe.creature,id);assert.equal(unit.workmanship,cut.result.workmanship);
  assert.equal(picked.document.state.minute,unloaded.state.minute,'纯拾取不耗时、不检定');
+});
+
+test('household tools: at home one may use a tool any member of the household holds there; a house with none has none',async()=>{
+ const engine=new WorldEngine(structuredClone(world));
+ const document=premise(engine,engine.createCharacter(seed,{},'ksl-house'),{minute:1200});
+ const d=engine.primitiveDraft(document);
+ // 段家 (house_hw_04, the forge): 段禾 holds no blade, 段岩 at home does.
+ const lent=householdTool(d,engine,'cut',undefined,'npc_hw_duanhe');
+ assert.equal(lent.holder,'npc_hw_duanyan');assert.ok((engine.byId.get(lent.item).tags??[]).includes('cut'));
+ assert.equal(householdTool(d,engine,'cut',undefined,'npc_hw_duanyan').holder,'npc_hw_duanyan','自己有就用自己的');
+ // 陶家 (house_hw_06): nobody in the house holds a cutting tool.
+ assert.throws(()=>householdTool(d,engine,'cut',undefined,'npc_hw_taozhi'),e=>e.code==='E-ACTION-TOOL');
+ // Away from home a member's tool is out of reach.
+ const away=premise(engine,document,{facts:[{path:['state','npcs','npc_hw_duanhe','location'],value:'loc_hw'}]});
+ assert.throws(()=>householdTool(engine.primitiveDraft(away),engine,'cut',undefined,'npc_hw_duanhe'),e=>e.code==='E-ACTION-TOOL');
 });
