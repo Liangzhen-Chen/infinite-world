@@ -11,7 +11,8 @@ import {createHash} from 'node:crypto';
 import {forestHabitatCapacity,forestView,nearbyResourceLocations} from './forest-water.mjs';
 export {displaceForestWildlife} from './forest-water.mjs';
 import {monsterStats,seededRandom} from './combat.mjs';
-import {heldUnit,wearItem} from './items.mjs';
+import {heldUnit,wearItem,produceItems} from './items.mjs';
+import {carryRoomKg} from './carry.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 // S1b: 尸体取材是死亡转化的产物（src:harvest，按物种掉落表），取材耗材进 sink:consume。
 declareLedgerWriter('wildlife',{sources:{'src:harvest':{'*':10000}},sinks:['sink:consume']});
@@ -280,6 +281,20 @@ export function wildlifePriceFactor(engine,document,item,location){
     return Math.min(engine.rules.wildlife.scarcityMaximum,Math.max(1,initial/Math.max(1,current)));
 }
 const mindOf=(engine,d,id,a)=>{const mind=awakeningView(engine,d.document.randomSeed,id,a,d.get('state','minute'));return mind?{mind}:{};};
+function takeDressedParts(d,target,corpse,eventId){
+    const owner=corpse.owner??d.get('state','creatures',target,'owner');
+    if(owner!=='player')throw preconditionFailure(`这具分割好的尸体是${d.get('state','npcs',owner,'name')??this.byId.get(owner)?.name??owner??'别人'}的，不能拿走`);
+    if(corpse.expires<=d.get('state','minute'))throw preconditionFailure('留下的分割部分已经腐坏');
+    let room=carryRoomKg(d,this,'player');const obtained=[],left=[];
+    for(const row of corpse.items){
+        const weight=this.byId.get(row.item).weight,n=Math.min(row.amount,weight>0?Math.floor((room+1e-9)/weight):row.amount);room-=n*weight;
+        if(n)obtained.push({item:row.item,quantity:n,instances:produceItems(d,this,row.item,n,{eventId:`${eventId}:${row.item}`,recipe:corpse.dressed?.recipe,maker:corpse.dressed?.maker,workmanship:corpse.dressed?.workmanship,grade:corpse.dressed?.grade,books:{flow:'src:harvest',purpose:'butcher',writer:'wildlife',eventId}})});
+        if(row.amount>n)left.push({item:row.item,amount:row.amount-n});
+    }
+    if(!obtained.length)throw preconditionFailure('背不动，留下的分割部分一件也拿不走');
+    holdingSet(d,null,['state','creatures',target,'corpse'],{...corpse,items:left,status:left.length?'已分割':'已取材'},'wildlife');
+    return{success:true,obtained,left,note:'只拿走已分割好的部分，不再检定、不耗刀'};
+}
 export function wildlifeAction(d,args,eventId){
     if(!this.rules.wildlife)throw preconditionFailure('当前世界没有启用野外生态');
     const operation=args.operation??'observe';
@@ -310,6 +325,9 @@ export function wildlifeAction(d,args,eventId){
     const target=resolveCreature(this,d,args.target),actor=d.get('state','creatures',target),s=this.byId.get(actor?.species),corpse=actor?.corpse;
     const here=d.get('state','location');
     if(!actor||actor.location!==here||!isPhysicallyDead(this,d,target)||!corpse)throw preconditionFailure('没有这里已死亡且可验证的尸体');
+    // SL: a body its owner has already cut up keeps the parts the pack could not
+    // take; picking them up is no new dressing (no check, no knife). Another's is theirs (K6).
+    if(corpse.status==='已分割')return takeDressedParts.call(this,d,target,corpse,eventId);
     if(corpse.status!=='未取材'||corpse.expires<=d.get('state','minute'))throw preconditionFailure('尸体已处理或已经腐坏');
     // Butchering another's carcass takes what is theirs (K6); noted once the parts are in hand.
     const recipe=s.wildlife.gather;if(!corpse.items.length)throw preconditionFailure('这个物种没有登记可加工材料');

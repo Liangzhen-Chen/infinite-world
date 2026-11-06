@@ -94,9 +94,15 @@ test('an owned individual led out of the herd is slaughtered the same way; its b
  const d1=structuredClone(d0);d1.state.player.level=30;d1.state.player.hp=500;d1.state.player.maxHp=500;
  // Leading one head out of the herd is the existing K7 individuation.
  const {document:settled}=await reduce(engine,d1,'world_time',{minutes:60},'settle');
- const {document:led}=await reduce(engine,settled,'world_combat',{target:HERD},'lead');
- const id=Object.keys(led.state.creatures).find(k=>led.state.creatures[k].herd===HERD);
- if(led.state.creatures[id].hp<=0)return;
+ // The blow that leads a head out is seeded by its event id; take a lead whose
+ // head is still alive, so the slaughter below always runs on a living beast.
+ let led=null,id=null;
+ for(let i=0;i<10&&!led;i++){
+  const {document:next}=await reduce(engine,settled,'world_combat',{target:HERD},`lead${i}`);
+  const head=Object.keys(next.state.creatures).find(k=>next.state.creatures[k].herd===HERD);
+  if(next.state.creatures[head].hp>0){led=next;id=head;}
+ }
+ assert.ok(led,'牵出的那头仍活着');
  const {result,document:after}=await untilSuccess(engine,led,{operation:'husbandry_slaughter',target:id},'one');
  const parts=byId(engine.world,'monster_bent_horn_goat').husbandry.yields.carcass;
  assert.deepEqual(result.obtained.map(o=>[o.item,o.quantity]),parts.map(p=>[p.item,p.amount]));
@@ -182,4 +188,44 @@ test('shorn goat hair stands in for generic animal hair in a brush; plain fibre 
  assert.ok(crafted,'毛刷制成');
  const used=crafted.state.itemInstances[hair];
  assert.equal(used.status,'已消耗');assert.equal(used.recipe.population,HERD);
+});
+
+test('what the pack cannot carry stays where it was cut, the owner\'s, and is picked up later without a new check',async()=>{
+ const parts=byId(world,'monster_bent_horn_goat').husbandry.yields.carcass;
+ // A herd: two goats (~44 kg) against a 30 kg load; the rest goes into the herd's store with its workmanship.
+ const {engine,document}=herd('monster_bent_horn_goat',6,{inventory:{item_kitchen_knife:1},skills:SKILLED});
+ const {result,document:after}=await untilSuccess(engine,document,{operation:'husbandry_slaughter',target:HERD,quantity:2},'heavy');
+ assert.ok(result.leftBehind?.length,'背不动的部分留下');
+ for(const p of parts)assert.equal((result.obtained.find(o=>o.item===p.item)?.quantity??0)+(result.leftBehind.find(o=>o.item===p.item)?.quantity??0),p.amount*2);
+ for(const r of result.leftBehind){
+  assert.equal(rec(after).produce[r.item]-(rec(document).produce[r.item]??0),r.quantity);
+  assert.ok(rec(after).batches.some(b=>b.item===r.item&&b.workmanship===result.workmanship));
+ }
+ assert.deepEqual(reconcile(engine,after).mismatches,[]);
+ // Later, with room in the pack (the carried meat eaten or sold: a premise), the owner collects it.
+ const r0=result.leftBehind[0],light=premise(engine,after,{inventory:Object.fromEntries(result.obtained.map(o=>[o.item,0]))});
+ const back=await farm(engine,light,{operation:'husbandry_collect',target:HERD,item:r0.item,quantity:1},'collect-left');
+ assert.equal(back.result.success,true);
+ assert.equal(back.document.state.itemInstances[back.result.obtained[0].instances[0]].workmanship,result.workmanship);
+ // An individual: its parts stay on its dressed body; the owner picks them up, another may not.
+ const field=herd('monster_bent_horn_goat',6,{location:'loc_hw_fields',inventory:{item_kitchen_knife:1,item_oats:40},skills:SKILLED});
+ const d1=structuredClone(field.document);d1.state.player.level=30;d1.state.player.hp=500;d1.state.player.maxHp=500;
+ const {document:settled}=await reduce(field.engine,d1,'world_time',{minutes:60},'settle');
+ let led=null,id=null;
+ for(let i=0;i<10&&!led;i++){const {document:next}=await reduce(field.engine,settled,'world_combat',{target:HERD},`lead${i}`);const head=Object.keys(next.state.creatures).find(k=>next.state.creatures[k].herd===HERD);if(next.state.creatures[head].hp>0){led=next;id=head;}}
+ assert.ok(led,'牵出的那头仍活着');
+ const cut=await untilSuccess(field.engine,led,{operation:'husbandry_slaughter',target:id},'body');
+ const body=cut.document.state.creatures[id].corpse;
+ assert.ok(cut.result.leftBehind?.length);assert.equal(body.status,'已分割');
+ assert.deepEqual(body.items,cut.result.leftBehind.map(r=>({item:r.item,amount:r.quantity})));
+ const theirs=premise(field.engine,cut.document,{facts:[{path:['state','creatures',id,'corpse','owner'],value:'npc_hw_xiejin'}]});
+ await assert.rejects(reduce(field.engine,theirs,'world_wildlife',{operation:'gather',target:id},'not-mine'),/谢堇.*不能拿走/);
+ const unloaded=premise(field.engine,cut.document,{inventory:{item_oats:0,...Object.fromEntries(cut.result.obtained.map(o=>[o.item,0]))}});
+ const picked=await reduce(field.engine,unloaded,'world_wildlife',{operation:'gather',target:id},'pick');
+ assert.equal(picked.result.success,true);
+ assert.deepEqual(picked.result.obtained.map(o=>[o.item,o.quantity]),cut.result.leftBehind.map(r=>[r.item,r.quantity]));
+ assert.equal(picked.document.state.creatures[id].corpse.status,'已取材');
+ const unit=picked.document.state.itemInstances[picked.result.obtained[0].instances[0]];
+ assert.equal(unit.recipe.creature,id);assert.equal(unit.workmanship,cut.result.workmanship);
+ assert.equal(picked.document.state.minute,unloaded.state.minute,'纯拾取不耗时、不检定');
 });

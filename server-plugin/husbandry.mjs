@@ -17,6 +17,7 @@ import {effectiveProficiency} from './professions.mjs';
 import {propertyOwners} from './action-authority.mjs';
 import {recordEntityDeath} from './npc-life.mjs';
 import {recordWildlifeDeath} from './wildlife.mjs';
+import {carryRoomKg} from './carry.mjs';
 
 declareLedgerWriter('husbandry',{sources:{'src:birth':{'*':100000},'src:husbandry':{'*':100000},'src:genesis':{'item_pasture_forage':Infinity},'src:regrowth':{'item_pasture_forage':Infinity}},sinks:['sink:consume','sink:decay','sink:death','sink:individuated']});
 // SL: slaughtering an owned individual closes its body (the wreck) as dressed.
@@ -75,10 +76,11 @@ function graze(d,e,row,s,heads,day,eventId){
  return eaten/need;
 }
 // A dated product lot in the herd's store; it spoils by the item's shelf life.
-function store(e,row,item,quantity,day){
+// A lot taken by a craft keeps its workmanship and grade until it is collected.
+function store(e,row,item,quantity,day,made={}){
  row.produce[item]=(row.produce[item]??0)+quantity;
  if(quantity){const days=e.byId.get(item).shelfLifeDays;
-  row.batches.push({item,quantity,day:day+1,expiresDay:days===null||days===undefined?null:day+1+days});
+  row.batches.push({item,quantity,day:day+1,expiresDay:days===null||days===undefined?null:day+1+days,...made});
  }
 }
 // Every herd death (culled, starved, diseased, aged) leaves a body dressed
@@ -257,23 +259,40 @@ function slaughter(d,args,eventId){
  if(creature){
   d.set(['state','creatures',target,'hp'],0);recordEntityDeath(d,e,target,d.get('state','minute'),'宰杀');
   recordWildlifeDeath(d,e,target,eventId);
-  const corpse=d.get('state','creatures',target,'corpse');
-  if(corpse)holdingSet(d,null,['state','creatures',target,'corpse'],{...corpse,status:'已取材',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId},'husbandry');
  }else{
   const next=structuredClone(current);takePopulation(next,heads);next.slaughtered=(next.slaughtered??0)+heads;
   moveStock(d,{from:animals(next),to:`sink:death|${resource(next.species)}|slaughter`,amount:heads,writer:'husbandry',eventId});
   holdingSet(d,e,path(target),next,'husbandry',eventId);
  }
- const obtained=[],lost=[];
+ const obtained=[],lost=[],left=[],made={...(settled.workmanship?{workmanship:settled.workmanship}:{}),...(settled.grade!==undefined?{grade:settled.grade}:{})};
+ // What the pack cannot take stays where it was cut: a herd's parts in the
+ // herd's store (collected like any herd product, spoiling by shelf life), an
+ // individual's on its dressed body (picked up from the carcass). Both stay the owner's.
+ let room=carryRoomKg(d,e,'player');
+ const herdRow=creature?null:structuredClone(d.get(...path(target)));
  for(const part of parts){
-  const total=part.amount*heads,quantity=settled.kept(total);
-  if(total>quantity)lost.push({item:part.item,quantity:total-quantity});
+  const total=part.amount*heads,kept=settled.kept(total),weight=e.byId.get(part.item).weight;
+  if(total>kept)lost.push({item:part.item,quantity:total-kept});
+  const quantity=Math.min(kept,weight>0?Math.floor((room+1e-9)/weight):kept),rest=kept-quantity;room-=quantity*weight;
+  if(rest&&creature)left.push({item:part.item,quantity:rest});
+  else if(rest){
+   store(e,herdRow,part.item,rest,day-1,made);
+   moveStock(d,{from:`src:husbandry|${part.item}|slaughter`,to:produce(herdRow,part.item),amount:rest,writer:'husbandry',eventId});
+   left.push({item:part.item,quantity:rest});
+  }
   if(!quantity)continue;
   const instances=produceChunked(d,e,part.item,quantity,{eventId:`${eventId}:${part.item}`,recipe:{kind:'husbandry_slaughter',[creature?'creature':'population']:target,species:species.id,owner:'player',day},maker:target,workmanship:settled.workmanship,grade:settled.grade,books:{flow:'src:husbandry',purpose:'husbandry_slaughter',writer:'husbandry',eventId}});
   obtained.push({item:part.item,quantity,instances});
  }
+ if(herdRow&&left.length)holdingSet(d,e,path(target),herdRow,'husbandry',eventId);
+ if(creature){
+  const corpse=d.get('state','creatures',target,'corpse');
+  if(!corpse&&left.length)throw Error('宰杀个体没有尸体可留分割部分');
+  if(corpse)holdingSet(d,null,['state','creatures',target,'corpse'],{...corpse,status:left.length?'已分割':'已取材',items:left.map(r=>({item:r.item,amount:r.quantity})),
+   dressed:{recipe:{kind:'husbandry_slaughter',creature:target,species:species.id,owner:'player',day},maker:target,...made},processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId},'husbandry');
+ }
  if(take.hasSkill&&settled.check.success)e.practice(d,{skill:take.rule.skill,gain:take.rule.practiceGain,target:species.id},eventId);
- return {success:settled.check.success,target,species:species.id,heads,obtained,lost,minutes,...takeReceipt(take,settled),experience:0,note:'宰杀自家牲口不是交锋，不计野外战果；lost 是下刀失误损掉、没有入库的部分。'};
+ return {success:settled.check.success,target,species:species.id,heads,obtained,lost,...(left.length?{leftBehind:left}:{}),minutes,...takeReceipt(take,settled),experience:0,note:'宰杀自家牲口不是交锋，不计野外战果；lost 是下刀失误损掉、没有入库的部分。'};
 }
 export function husbandryAction(d,args,eventId){
  ensureHoldings(d,this);
@@ -295,7 +314,7 @@ export function husbandryAction(d,args,eventId){
  for(const batch of next.batches){
   if(batch.item!==item||!batch.quantity)continue;
   const n=Math.min(left,batch.quantity),k=Math.min(n,keep);
-  if(k)instances.push(...produceItems(d,this,item,k,{eventId:`${eventId}:${batch.day}`,recipe:{kind:'husbandry',population:id,owner:'player',day:batch.day},maker:id,producedAt:batch.day*1440,...(settled?{workmanship:settled.workmanship,grade:settled.grade}:{}),books:{account:produce(row,item),writer:'husbandry',eventId}}));
+  if(k)instances.push(...produceItems(d,this,item,k,{eventId:`${eventId}:${batch.day}`,recipe:{kind:'husbandry',population:id,owner:'player',day:batch.day},maker:id,producedAt:batch.day*1440,...(settled?{workmanship:settled.workmanship,grade:settled.grade}:{workmanship:batch.workmanship,grade:batch.grade}),books:{account:produce(row,item),writer:'husbandry',eventId}}));
   if(n>k)moveStock(d,{from:produce(row,item),to:`sink:decay|${item}|husbandry_take`,amount:n-k,writer:'husbandry',eventId});
   batch.quantity-=n;left-=n;keep-=k;if(!left)break;
  }
