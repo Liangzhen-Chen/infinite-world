@@ -318,7 +318,9 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
     // Keep the actual unmet input and failure, without freezing an unstarted
     // itinerary into tomorrow's plan or reporting a successful transaction.
     if(autonomyKind(action?.kind)?.itinerary){
-     d.set(['state','records',`input_constraint:${id}:${action.purpose}`],{category:'input_constraint',npc:id,minute:start,purpose:action.purpose,missing:action.inputs,blocked:['feasibility'],reason:error.message});
+     // An itinerary that declares no input purpose (a profession labour trip) is recorded under its kind with an empty input list: a record never carries undefined fields, which do not survive a save.
+     const purpose=action.purpose??action.kind;
+     d.set(['state','records',`input_constraint:${id}:${purpose}`],{category:'input_constraint',npc:id,minute:start,purpose,missing:action.inputs??[],blocked:['feasibility'],reason:error.message});
      if(d.get('state','npcs',id,'plan','candidate')===candidate.id)d.set(['state','npcs',id,'plan'],null);
     }
    }}
