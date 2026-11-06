@@ -33,16 +33,17 @@ export function wearItem(d,engine,owner,item,amount){
 // Stable choice: catalogue ID order, then heldUnit's first intact owned unit.
 // Explicit stored tags override the catalogue, including an empty tag list.
 // Untagged legacy items have unknown uses; names and IDs never supply abilities.
-export function useTool(d,engine,requiresUse,selected=undefined){
+// actor: whose pack is searched (the player by default); SL lets an NPC keeper use it too.
+export function useTool(d,engine,requiresUse,selected=undefined,actor='player'){
  if(typeof requiresUse!=='string'||!requiresUse)throw Error('Missing tool use requirement');
  let unknown=false;
  const specified=selected!==undefined;
- const candidates=specified?[selected]:Object.keys(d.get(...engine.bagPath('player'))??{}).sort();
+ const candidates=specified?[selected]:Object.keys(d.get(...engine.bagPath(actor))??{}).sort();
  for(const item of candidates){
   if(typeof item!=='string'||!item)continue;
-  if(engine.quantity(d,'player',item)<1)continue;
-  const held=heldUnit(d,engine,'player',item),facts=physicalItem(d,engine,held?.instance??item);
-  if(held?.instances?.length&&!held.instance&&held.instances.length>=engine.quantity(d,'player',item))continue;
+  if(engine.quantity(d,actor,item)<1)continue;
+  const held=heldUnit(d,engine,actor,item),facts=physicalItem(d,engine,held?.instance??item);
+  if(held?.instances?.length&&!held.instance&&held.instances.length>=engine.quantity(d,actor,item))continue;
   const tags=held?.tags?held.tags.filter(t=>!unitLacks(engine,held,t)):facts.tags;
   if(!Array.isArray(tags)){unknown=true;continue;}
   if(tags.includes(requiresUse)&&(held?.durability??facts.durability??0)>0&&(held?.condition??facts.condition)!==0)return item;
