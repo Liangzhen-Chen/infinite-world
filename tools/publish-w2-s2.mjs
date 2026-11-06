@@ -54,7 +54,7 @@ export function mergeS2Publication(world,publication){
  }
  for(const [location,rows] of Object.entries(publication.placements)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.features=mergeRows(place.features??[],rows,'环境对象',`features:${location}`);}
 // K5：工位由地点 fixtures 派生；地点的 fixtures 已能承担该类工位（或已有同类工位）时，草案手写的工位行不再并入，合并因此幂等。
- for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.workstations=mergeRows(place.workstations??[],rows.filter(r=>!place.workstations?.some(w=>w.kind===r.kind)&&!(place.fixtures??[]).some(f=>(f.fixture??f)===fixtureAffording(r.kind))),'工作台',`workstations:${location}`);}
+ for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);const add=rows.filter(r=>!place.workstations?.some(w=>w.kind===r.kind)&&!(place.fixtures??[]).some(f=>(f.fixture??f)===fixtureAffording(r.kind)));if(add.length)place.workstations=mergeRows(place.workstations??[],add,'工作台',`workstations:${location}`);}
  return next;
 }
 // The edition before this batch, rebuilt from any world that may contain it.
