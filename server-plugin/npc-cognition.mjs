@@ -38,7 +38,7 @@ function retell(engine,state,from,memory){
  const text=forgotten?.content??memory.content,base=engine.byId.get(from),flaws=(base?.personality?.flaws??[]).join('');
  const hops=(memory.transmissionChain?.length??0)+1;
  const omit=hops>=2||/夸|急|偏|先下判断/.test(flaws);
- return {input:text,content:omit?`听来的大意：${text.replace(/[0-9]+(?:\.\d+)?(?:铜|份|件|分钟)/g,'若干')}`:`转述：${text}`,distortion:omit?'省略数量，需核实':'保留来源的转述',hops};
+ return {input:text,content:omit?`听来的大意：${text.replace(/[0-9]+(?:\.\d+)?(?:铜|份|件|分钟)/g,'若干')}`:`转述：${text}`,distortion:omit?'省略数量，需核实':'保留来源的转述',hops,numbers:!omit};
 }
 export function appendHeard(d,engine,from,to,memory,minute,channel,messageId,location=d.get('state','npcs',to,'location'),version=null){
  if(known(engine,d.get('state'),to,memory))return false;
@@ -48,8 +48,12 @@ export function appendHeard(d,engine,from,to,memory,minute,channel,messageId,loc
   transmissionChain:[...memory.transmissionChain??[],{from,to,minute,channel,messageId,input:told.input,content:told.content,distortion:told.distortion}],distortion:told.distortion,reliability:'未经亲历核实',
   ...(memory.rumor?{rumor:memory.rumor,rumorSource:memory.rumorSource,...(memory.eventRumor?{eventRumor:true}:{})}:{}),
   ...(memory.legalCase?{legalCase:memory.legalCase,legalStage:memory.legalStage}:{}),
-  ...(memory.entities?{entities:clone(memory.entities)}:{}),...(memory.visibility?{visibility:memory.visibility}:{}),...(memory.private?{private:true}:{}),...(memory.permittedRecipients?{permittedRecipients:clone(memory.permittedRecipients)}:{}),...(memory.knownBy?{knownBy:clone(memory.knownBy)}:{})};
- d.set(['state','npcs',to,'memoryStream'],[...d.get('state','npcs',to,'memoryStream')??[],row]);
+  ...(memory.entities?{entities:clone(memory.entities)}:{}),...(memory.visibility?{visibility:memory.visibility}:{}),...(memory.private?{private:true}:{}),...(memory.permittedRecipients?{permittedRecipients:clone(memory.permittedRecipients)}:{}),...(memory.knownBy?{knownBy:clone(memory.knownBy)}:{}),
+  // 记着一件具体事实（key 与 value，如某地行情）的记忆：转述保留了数量（当面转述没省略、书信原文），听的人也就知道这件事实本身；省略了数量就只剩大意。
+  ...(memory.key&&memory.value!==undefined&&told.numbers!==false?{key:memory.key,value:clone(memory.value)}:{})};
+ // 同一件事实听到了更新的说法，旧的听闻让位（亲历的记忆不动）。
+ const stream=(d.get('state','npcs',to,'memoryStream')??[]).filter(m=>!(row.key&&m.key===row.key&&m.sourceType==='听说'&&(m.occurredAt??m.minute)<=row.occurredAt));
+ d.set(['state','npcs',to,'memoryStream'],[...stream,row]);
  observeLegalReputation(d,engine,to,row,location);return true;
 }
 // Used only on an immutable interval-start snapshot. Obligations are checked by
