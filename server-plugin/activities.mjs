@@ -59,7 +59,7 @@ import {medicineAction} from './medicine.mjs';
 import {fish,eatFish,releaseFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
 import {electionAction}from'./elections.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
 declareHoldingWriter('activities',{kinds:['owns','resides','resident_of','devotee_of','certified']});
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw preconditionFailure('记录文字无效');return value.trim();};
@@ -190,7 +190,7 @@ export const activities={
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
         if(escaped){
             d.set(['state','combatDisengaged',target],{minute:d.get('state','minute'),source:id});
-            if(d.get('state','records',`local_actor_position:${target}`))d.remove(['state','records',`local_actor_position:${target}`]);
+            if(d.get('state','records',`local_actor_position:${target}`))holdingRemove(d,null,['state','records',`local_actor_position:${target}`],'activities');
         }
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
         if(breach&&(damage>0||!remaining))noteOffense(d,breach);

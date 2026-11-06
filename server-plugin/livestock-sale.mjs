@@ -44,6 +44,6 @@ export function sellLivestock(d,engine,{buyer,seller,target,quantity=1,location,
  const ids=picked.ids??advanceHook('individuateHerd')(d,engine,{population:picked.herd.id,count,eventId:`${eventId}:individuate`});
  const payment=chargeTrade(d,engine,{buyer,seller,cost,payment:'cash',description:`${engine.byId.get(picked.species)?.name??picked.species}价款`},eventId);
  for(const id of ids){const c=d.get('state','creatures',id),{herd,...rest}=c;holdingSet(d,null,['state','creatures',id],{...rest,owner:buyer,soldAt:d.get('state','minute'),soldBy:seller},'livestock-sale',eventId);}
- d.set(['state','records',`livestock_sale:${eventId}`],{category:'livestock_sale',buyer,seller,species:picked.species,heads:ids,location,minute:d.get('state','minute'),totalCoins:cost,unitValue:quote.value,basis:{carcass:quote.carcass,products:quote.products,horizonDays:quote.horizonDays},sourceEvent:eventId});
+ holdingSet(d,null,['state','records',`livestock_sale:${eventId}`],{category:'livestock_sale',buyer,seller,species:picked.species,heads:ids,location,minute:d.get('state','minute'),totalCoins:cost,unitValue:quote.value,basis:{carcass:quote.carcass,products:quote.products,horizonDays:quote.horizonDays},sourceEvent:eventId},'livestock-sale',eventId);
  return {buyer,seller,species:picked.species,heads:ids,quantity:count,cost,pricing:quote,...payment};
 }
