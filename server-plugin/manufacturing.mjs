@@ -11,7 +11,7 @@ import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {produceItems,wearItem,heldUnit,workmanshipTier,markReturnedUnits}from'./items.mjs';
 import {milestone}from'./progression.mjs';
-import {prepareThermalWorkstation}from'./magic-object.mjs';
+import {prepareStationHeat}from'./facility-kindle.mjs';
 import {createHash}from'node:crypto';
 import {spiritManufacture}from'./wildlife-society.mjs';
 import {recordArtWork}from'./works.mjs';
@@ -173,9 +173,13 @@ export function workstation(d,engine,recipe,args){
     if(licence?.basis==='paid'&&station.owner?.startsWith('npc_')){
         const owner=d.get('state','npcs',station.owner);if(!owner||isPhysicallyDead(engine,d,station.owner)||owner.status==='濒死')throw preconditionFailure('工坊主人无法履约');
     }
-    const workMinutes=Math.ceil(recipe.minutes/facility.factor);
-    const thermalPlan=prepareThermalWorkstation(d,engine,station,workMinutes);
-    return{...station,fee,workMinutes,factor:facility.factor,...(thermalPlan?{thermalPlan}:{})};
+    const processMinutes=Math.ceil(recipe.minutes/facility.factor);
+    // 热工位：炉膛燃料从本人行囊出（不动配方要用的料），点火升温的分钟也算在这次工作里。
+    const reserved=new Map();for(const m of resolveMaterials(d,engine,'player',recipe.materials))reserved.set(m.item,(reserved.get(m.item)??0)+m.amount);
+    for(const item of recipe.tools??[])reserved.set(item,(reserved.get(item)??0)+1);
+    const heat=prepareStationHeat(d,engine,station,processMinutes,{holder:'player',reserved,location});
+    const workMinutes=processMinutes+(heat?.warm??0);
+    return{...station,fee,workMinutes,factor:facility.factor,...(heat?.plan?{thermalPlan:heat.plan}:{})};
 }
 export function manufacture(d,args,eventId){
     if(args.maker!==undefined)return spiritManufacture.call(this,d,args,eventId,{workstation,kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials});

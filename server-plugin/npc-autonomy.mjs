@@ -27,7 +27,8 @@ import {derivedStats} from './combat.mjs';
 import {recordMarketDeal,assertMarketDepth} from './market.mjs';
 import {advanceGovernance} from './governance.mjs';
 import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
-import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
+import {prepareThermalWorkstation} from './magic-object.mjs';
+import {prepareStationHeat} from './facility-kindle.mjs';
 import {kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
@@ -65,8 +66,8 @@ export function npcAutonomyBusy(state,id,minute=state.minute){return Object.valu
 export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes=0}={}){
  for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw preconditionFailure('人物正在完成已经开始的自主工作');
 }
-function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false,taskId}={}){
- const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1));let furnace,work;
+function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false,taskId,warm=0}={}){
+ const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),processMinutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1)),minutes=processMinutes+warm;let furnace,work;
  if(!full(engine,id)||!awake(engine,presence,id,actor)||personConstraint(engine,state,id,at)||state.player.companions?.includes(id))throw preconditionFailure('人物不具备独立行动条件');
  if(isPhysicallyDead(engine,state,id)||['濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw preconditionFailure('人物当前无法完成工作');
  // Moving procurement uses the shared market itinerary rather than a fixed
@@ -107,9 +108,11 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(station?.thermalRequirement&&!ignoreTask){
    work=draft(d.document,at);work.set(['state','npcs',id,'location'],actor.location);
    const reserved=new Map(totals);for(const item of recipe.tools??[])reserved.set(item,1);
-   furnace=prepareNpcFurnace(work,engine,station,minutes,id,reserved);
+   furnace=prepareStationHeat(work,engine,station,processMinutes,{holder:id,reserved,location:actor.location});
    // Presence is a forecast for daily actions; never commit it over the real actor.
    work.patches=work.patches.filter(p=>p.path.join('.')!==`state.npcs.${id}.location`);
+   // 点火升温的分钟算在这次工作里：带着它重新核对作息窗口与每日工时。
+   if(furnace.warm!==warm){if(warm)throw preconditionFailure('炉子升温时间核算不一致');return validateAction(d,engine,id,action,{at,presence,ignoreTask,taskId,warm:furnace.warm});}
   }
  }else if(action.kind==='trade'){
   const seller=presence.npcs[action.seller],sellerBase=engine.byId.get(action.seller),item=engine.byId.get(action.item);
@@ -127,7 +130,7 @@ function presenceOf(n){return {location:n.location,...(n.activity===undefined?{}
 function startTask(d,task,checked,engine){
  if(autonomyKind(task.action.kind)?.itinerary)task.itinerary=true;
  autonomyKind(task.action.kind)?.start?.(d,engine,task.npc,task.action,{actionId:task.id});
- if(checked.furnace){commit(d,checked.work);task.furnace={...checked.furnace,checkedUntil:task.start};}
+ if(checked.furnace){commit(d,checked.work);task.furnace={...checked.furnace,checkedUntil:task.start+(checked.furnace.warm??0)};}
  d.set(['state','npcAutonomy','tasks',task.id],task);
 }
 export function catchUpFurnaces(d,engine,after){

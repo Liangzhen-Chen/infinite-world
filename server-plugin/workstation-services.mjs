@@ -4,6 +4,7 @@ import {knowledgeProficiency} from './education-state.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {homeResidents} from './entity-view.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
+import {derivedRequirement,fireboxRow,isDerivedFirebox} from './facility-heat.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,recordsMemo,persistable} from './storage.mjs';
 const generatedRecipeRows=Symbol('generated workstation recipes');
@@ -31,9 +32,10 @@ export function fixtureStations(place){
  const out=[];
  for(const row of [...(Array.isArray(place.fixtures)?place.fixtures:[]),...implied].map(fixtureEntry)){
   const fixture=FIXTURES.get(row?.fixture);if(!fixture||out.some(s=>s.kind===fixture.affords))continue;
-  out.push({id:row.id??`station_${place.id}_${fixture.affords}`,kind:fixture.affords,fixture:row.fixture,location:place.id,
+  const id=row.id??`station_${place.id}_${fixture.affords}`,thermalRequirement=row.thermalRequirement??derivedRequirement(id,row.fixture);
+  out.push({id,kind:fixture.affords,fixture:row.fixture,location:place.id,
    access:row.fee!==undefined||place.access?.mode==='public'?'public':'consent',fee:row.fee??0,...(typeof row.owner==='string'?{owner:row.owner,ownedApart:true}:{}),
-   ...(row.thermalRequirement?{thermalRequirement:row.thermalRequirement}:{})});
+   ...(thermalRequirement?{thermalRequirement}:{})});
  }
  return out;
 }
@@ -76,6 +78,9 @@ function ownersAt(place,worldHouseholds,state,exists){
 export function materializeWorkstations(world){
  for(const place of world.locations??[]){
   delete place.workstations;
+  // 卡 HB：需明火的设备类自带炉膛（设备的一部分，使用权随工位许可）；编辑设备后再次具现时重新派生。
+  const boxes=fixtureStations(place).filter(s=>s.thermalRequirement&&s.thermalRequirement.feature===derivedRequirement(s.id,s.fixture)?.feature).map(s=>fireboxRow(world,s));
+  if(boxes.length||place.features?.some(isDerivedFirebox))place.features=[...(place.features??[]).filter(f=>!isDerivedFirebox(f)),...boxes];
   // A non-enumerable getter: the world's serialized form, hash and clones keep
   // only the fixtures, and an edited fixture is what every reader sees.
   Object.defineProperty(place,'workstations',{get:()=>fixtureStations(place).map(station=>({...station,owner:station.owner??ownersAt(place,world.households,null,worldHolders(world))[0]??null})),enumerable:false,configurable:true});

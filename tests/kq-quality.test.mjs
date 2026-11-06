@@ -7,6 +7,7 @@ import fs from'node:fs/promises';
 import {loadWorld}from'../tools/load-world.mjs';
 import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches}from'../server-plugin/storage.mjs';
+import {fixtureStations}from'../server-plugin/workstation-services.mjs';
 import {auditLedger}from'../server-plugin/ledger.mjs';
 import {marketQuote}from'../server-plugin/market.mjs';
 import {stateReader}from'../server-plugin/valuation.mjs';
@@ -14,7 +15,7 @@ import {checkDegree,toolBonuses}from'../server-plugin/checks.mjs';
 import {useTool,physicalItem}from'../server-plugin/items.mjs';
 import {actionReader}from'../server-plugin/action-capacity.mjs';
 import {craftOutcome,craftFailure,materialFloor}from'../server-plugin/manufacturing.mjs';
-import {instanceClasses,useClasses,craftingParam,workmanshipTier,lostUses}from'../server-plugin/item-class.mjs';
+import {classItems,instanceClasses,useClasses,craftingParam,workmanshipTier,lostUses}from'../server-plugin/item-class.mjs';
 
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const FAMILIES=[
@@ -29,6 +30,8 @@ const mean=xs=>xs.reduce((a,b)=>a+b,0)/Math.max(1,xs.length);
 
 const shared=(async()=>{const world=await loadWorld();const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'kq-quality');document.state.player.coins=100000;return {world,engine,document};})();
 async function fresh(mutate){const world=await loadWorld();mutate(world);const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'kq-quality');document.state.player.coins=100000;return {world,engine,document};}
+// 卡 HB：锻炉是要明火的设备，冷炉由用的人添燃料点火；这里给玩家备足炉膛燃料（与配方用料分开）。
+function fuelFor(engine,c,recipeId,location){const r=engine.byId.get(recipeId),place=engine.byId.get(location);if(fixtureStations(place).some(st=>st.kind===r.workstation&&st.thermalRequirement)){const fuel=classItems(engine,'fuel').filter(i=>!r.materials.some(m=>m.item===i)&&!(r.tools??[]).includes(i)).sort((x,y)=>engine.byId.get(y).weight-engine.byId.get(x).weight)[0];give(engine,c,fuel,1);}}
 function give(engine,c,item,quantity){const def=engine.byId.get(item);c.state.inventory[item]={quantity,quality:def.quality,durability:def.durability,weight:def.weight};}
 // 一件指定手艺档与品质的实例（工具或材料）。
 function giveUnit(engine,c,item,id,{workmanship,grade}){
@@ -41,7 +44,8 @@ function prepare(engine,doc,recipeId,location,proficiency,condition='standard'){
  const c=structuredClone(doc),r=engine.byId.get(recipeId);
  c.state.location=location;c.state.recipes[recipeId]={source:{type:'teacher',id:r.teachers?.[0]??'npc_hw_ayan'}};
  delete c.state.skills[r.skill];if(proficiency!==null)c.state.skills[r.skill]={proficiency,daily:{},breakthroughs:[]};
- for(const m of r.materials)give(engine,c,m.item,m.amount);
+  for(const m of r.materials)give(engine,c,m.item,m.amount);
+ fuelFor(engine,c,recipeId,location);
  for(const t of r.tools??[]){if(condition==='fineTools')giveUnit(engine,c,t,`unit_kq_${t}`,{workmanship:'精良'});else give(engine,c,t,1);}
  if(condition==='degraded')c.state.buildings[location]={...c.state.buildings[location],condition:50};
  return c;
@@ -172,7 +176,7 @@ test('品质沿链传递：低品质原料做出的成品不超过原料品质�
  delete c.state.skills.skill_life_5_core;give(engine,c,'item_smith_hammer',1);give(engine,c,'item_smith_tongs',1);
  const nailRecipe=engine.byId.get('recipe_forge_nails');
  let nails=null;
- for(let i=0;i<40&&!nails;i++){for(const m of nailRecipe.materials)give(engine,c,m.item,m.amount);const r=await engine.reduce(c,{tool:'world_craft',args:{recipe:'recipe_forge_nails'},eventId:`kq_nail_${i}`});const next=applyPatches(c,r.patches);if(r.result.success)nails={c:next,result:r.result};else c=next;}
+ for(let i=0;i<40&&!nails;i++){for(const m of nailRecipe.materials)give(engine,c,m.item,m.amount);fuelFor(engine,c,'recipe_forge_nails',c.state.location);const r=await engine.reduce(c,{tool:'world_craft',args:{recipe:'recipe_forge_nails'},eventId:`kq_nail_${i}`});const next=applyPatches(c,r.patches);if(r.result.success)nails={c:next,result:r.result};else c=next;}
  assert.ok(nails,'外行应能打出仿制铁钉');assert.equal(nails.result.workmanship,'仿制');
  const nailGrade=nails.result.grade;assert.ok(nailGrade<1);
  // 后道：熟练木匠用这些铁钉做木架，成品品质 ≤ 铁钉品质；对照用标准铁钉，同一点数下品质更高。

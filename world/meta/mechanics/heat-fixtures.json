@@ -1,0 +1,19 @@
+{
+ "kind": "heat-fixtures",
+ "version": 1,
+ "note": "卡 HB：需要明火的设备类（按 world/ontology/fixtures.json 的设备 id）自带炉膛，炉膛是该设备的一部分：热源绑定由设备类派生，不逐个工位手填。requirement 是这类工序要求的炉温范围与是否须在烧；firebox 是炉膛的物理参数（热容、烧速、散热、效率；燃料表由物品的 fuel 类别按目录重量派生）。炉膛的使用权就是设备的使用许可（本人、住户、租户、主人许可或公开收费），不另设一层。没有燃料就熄，冷炉要由用的人添料点火并等炉温升上来，等的时间和燃料都算在工序里。已显式登记 thermalRequirement 的设备（如丹炉）不套这张表。",
+ "classes": {
+  "forge": {
+   "label": "锻炉",
+   "basis": "铁料锻打要炉温 700 摄氏度以上；炉膛约 6 公斤金属与耐火泥，热容约 6 千焦每度；小炉每分钟烧 2 克炭，约 120 克一小时。",
+   "requirement": {"minimumC": 700, "maximumC": 1200, "burning": true},
+   "firebox": {"heatCapacityJPerC": 6000, "maximumC": 1200, "ambientC": 20, "passiveExchangeJPerMinute": 6000, "burnMgPerMinute": 2000, "fuelJPerMg": 20, "efficiencyPermille": 900, "ashPermille": 50, "ignitionMaximumMg": 5000, "ignitable": true, "dryable": false}
+  },
+  "kiln": {
+   "label": "窑",
+   "basis": "陶坯素烧到成瓷要窑温 800 摄氏度上下，土窑壁厚热容约 15 千焦每度，每分钟烧 3 克燃料，升温要几个钟头。",
+   "requirement": {"minimumC": 800, "maximumC": 1100, "burning": true},
+   "firebox": {"heatCapacityJPerC": 15000, "maximumC": 1100, "ambientC": 20, "passiveExchangeJPerMinute": 9000, "burnMgPerMinute": 3000, "fuelJPerMg": 20, "efficiencyPermille": 900, "ashPermille": 50, "ignitionMaximumMg": 5000, "ignitable": true, "dryable": false}
+  }
+ }
+}
