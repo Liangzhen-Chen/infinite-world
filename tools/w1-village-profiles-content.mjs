@@ -56,7 +56,7 @@ export function validateDraft(draft,entry,world){
 }
 export function buildReviewRequest(e,d,c){const r=defaultReviewRequest(e,d,c);r.max_tokens=2200;r.messages[0].content+=' 本批由人工作者提供完整聚落档案，不需要重写。重点核对publishedFacts人物的身份、已有矛盾立场、地点、人口、日历；方案必须是未执行的提议，不能虚构已完成经历。真假传闻的claim可以故意不实，但fact须正确且不能把传闻种子说成已传播。新增节俗/非功能性隐秘处是本批创作内容，允许合理新增，不要仅因旧地点未提到夹格就报冲突；不能新增可领取库存、可通行密道、自动参加节日、未发生的贸易收付。本批charter是明确创作的新开局公共账与村级任命来源，允许以此登记年粮潜力、库存、合同、税章和官职，不把旧档库存重置。数量与单位周期须守恒，官职来自任命而非职业推断。';return r;}
 
-export async function reviewProfiles({world,root=path.resolve('world/drafts/w1/village-ledgers'),budgetRoot=path.resolve('F:/dnd/world/drafts/m4-object'),incrementBudgetYuan=1.2}={}){
+export async function reviewProfiles({world,root=path.resolve('world/drafts/w1/village-ledgers'),budgetRoot=path.resolve('world/drafts/m4-object'),incrementBudgetYuan=1.2}={}){
  if(!(incrementBudgetYuan>0&&incrementBudgetYuan<=1.2))throw Error('四村增量预算须大于0且不超过1.2元');
  world??=await loadWorld();
  const entries=villageProfileCandidates(world),client=new DeepSeekClient({budgetYuan:20,logFile:path.resolve('logs/w1-village-profiles-usage.jsonl')});
@@ -85,6 +85,6 @@ export async function approvedProfiles({world,root=path.resolve('world/drafts/w1
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){
  const arg=(name,fallback)=>{const at=process.argv.indexOf(name);return at<0?fallback:process.argv[at+1];};
  const root=path.resolve(arg('--root','world/drafts/w1/village-ledgers'));
- if(process.argv.includes('--review'))console.log(JSON.stringify((await reviewProfiles({root,budgetRoot:path.resolve(arg('--budget-root','F:/dnd/world/drafts/m4-object')),incrementBudgetYuan:Number(arg('--budget-yuan',1.2))})).summary));
+ if(process.argv.includes('--review'))console.log(JSON.stringify((await reviewProfiles({root,budgetRoot:path.resolve(arg('--budget-root','world/drafts/m4-object')),incrementBudgetYuan:Number(arg('--budget-yuan',1.2))})).summary));
  if(process.argv.includes('--candidate')){const profiles=await approvedProfiles({root});await fs.writeFile(path.join(root,'candidate.json'),JSON.stringify({status:'reviewed-candidate',profiles},null,2)+'\n');console.log(JSON.stringify({profiles:profiles.length,problems:profiles.flatMap(p=>p.problems).length,rumors:profiles.flatMap(p=>p.rumors).length}));}
 }

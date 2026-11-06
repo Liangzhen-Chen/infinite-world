@@ -21,13 +21,16 @@ import {checkGeneratedProfile} from '../server-plugin/population.mjs';
 
 const WORLD_DIRS=['world/geo','world/lore','world/people','world/meta'];
 async function worldDigest(){
-    const files=[];for(const dir of WORLD_DIRS)for(const f of (await fs.readdir(dir)).sort())files.push(await fs.readFile(path.join(dir,f),'utf8'));
+    // world/meta now holds subdirectories (mechanics layers): digest every file beneath, not only the top level.
+    const walk=async dir=>{const out=[];for(const e of (await fs.readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name<b.name?-1:1))out.push(...(e.isDirectory()?await walk(path.join(dir,e.name)):[await fs.readFile(path.join(dir,e.name),'utf8')]));return out;};
+    const files=[];for(const dir of WORLD_DIRS)files.push(...await walk(dir));
     return digest(files);
 }
 const digestBefore=await worldDigest();
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-const worldBefore=digest(world);
 const engine=new WorldEngine(world);
+// WorldEngine merges the mechanism annotations into the loaded world in place (A1, 4a1aa099), so the baseline is taken once the engine holds it.
+const worldBefore=digest(world);
 const ZHEYA='county_hanlu_zheya',TONGJI='county_hanlu_tongji';
 
 async function walk(doc,destinations,prefix){

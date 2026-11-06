@@ -309,7 +309,7 @@ test('T09官方零模型预检保留120份完整请求，最小性别附件逐�
   assert.equal(draftSum,measured.draftCeilingYuan);assert.equal(reviewSum,measured.reviewCeilingYuan);assert.ok(Math.abs(draftSum+reviewSum-measured.totalCeilingYuan)<1e-10);
   assert.ok(draftSum>3);assert.equal(measured.fitsOriginalCard,false);assert.equal(measured.fitsSharedCeilingSum,false);
  }
- assert.equal(report.sharedBudget.root,'F:/dnd/world/drafts/m4-object');assert.equal(report.sharedBudget.readOnly,true);assert.equal(report.sharedBudget.unchanged,true);assert.equal(report.sharedBudget.sha256,report.sharedBudget.sha256After);
+ assert.equal(report.sharedBudget.root.split(String.fromCharCode(92)).join('/').replace(/^.*?(?=world[/]drafts[/])/,''),'world/drafts/m4-object');assert.equal(report.sharedBudget.readOnly,true);assert.equal(report.sharedBudget.unchanged,true);assert.equal(report.sharedBudget.sha256,report.sharedBudget.sha256After);
  assert.ok(report.reservationEnvelopeYuan.lower>3);assert.ok(report.reservationEnvelopeYuan.upper>report.reservationEnvelopeYuan.lower);
  for(const name of ['budget.json','allocation.json','terminal.json','first-source-evidence.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
  // The historical zero-model request report remains unapproved. The later

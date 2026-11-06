@@ -15,7 +15,7 @@ import {DeepSeekClient,normalizeAssistantContent} from '../../../../tools/deepse
 const project=path.resolve(import.meta.dirname,'../../../..');
 const cohortRoot=path.join(project,'world/drafts/w1/sb-depth');
 const firstRoot=path.join(cohortRoot,'first-review');
-const sharedBudgetRoot='F:/dnd/world/drafts/m4-object';
+const sharedBudgetRoot=path.join(project,'world/drafts/m4-object');
 const read=file=>fs.readFile(file,'utf8').then(JSON.parse);
 const sha=raw=>createHash('sha256').update(raw).digest('hex');
 const write=async(file,data)=>{await fs.mkdir(path.dirname(file),{recursive:true});await fs.writeFile(file,JSON.stringify(data,null,2)+'\n');};
