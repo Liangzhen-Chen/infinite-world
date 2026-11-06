@@ -1,0 +1,18 @@
+{
+  "note": "卡 Q（亮圳）：材料标签能提供的用途，物性规律，按材料类别写，不针对任何物品。低档单件（手艺档 loses 里的用途）只有投入材料（不含工具）带着能提供该用途的标签才保留，否则缺掉；检定加成不由材料提供。表外的组合都不提供用途。requiresHeat：配方烧掉燃料类材料（加热加工）时才提供。",
+  "rows": {
+    "stone": {"uses": ["cut", "pierce"], "basis": "石料可打出锋利刃口与尖端，能割、能刺"},
+    "metal": {"uses": ["cut", "pierce"], "basis": "金属可锻磨出刃口与尖，能割、能刺"},
+    "iron": {"uses": ["cut", "pierce"], "basis": "铁可锻磨出刃口与尖，能割、能刺"},
+    "steel": {"uses": ["cut", "pierce"], "basis": "钢可锻磨出刃口与尖，能割、能刺"},
+    "bone": {"uses": ["cut", "pierce"], "basis": "骨片可磨出刃口与尖，能割、能刺"},
+    "wood": {"uses": ["pierce"], "basis": "木料削尖能刺，刃口太软不能割"},
+    "timber": {"uses": ["pierce"], "basis": "木材削尖能刺，刃口太软不能割"},
+    "ceramic": {"uses": ["liquid_container"], "basis": "烧成的陶器胎体致密，能盛液"},
+    "clay": {"uses": ["liquid_container"], "requiresHeat": true, "basis": "黏土烧成陶后能盛液；未烧的泥坯遇水即溃"},
+    "leather": {"uses": ["liquid_container"], "basis": "鞣革致密不透水，可缝成皮囊盛液"},
+    "hide": {"uses": ["liquid_container"], "basis": "整张皮子缝合后可作皮囊盛液"},
+    "herb": {"uses": ["medicine"], "basis": "草药本身带药性，只供药用"},
+    "medicinal": {"uses": ["medicine"], "basis": "药材本身带药性，只供药用"}
+  }
+}

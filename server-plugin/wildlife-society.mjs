@@ -152,7 +152,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,cra
     const made=outcome.success?products:result.failure==='partial'?[{item:recipe.output.item,amount:recipe.output.quantity}]:[];
     if(made.length){
         workmanship=result.tier;
-        for(const row of made)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,grade:result.grade,books:craftOutput('wildlife-society',eventId)}));
+        for(const row of made)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,grade:result.grade,inputs:[...new Map(materials).keys()],books:craftOutput('wildlife-society',eventId)}));
         for(const unit of ids)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),maker:id,makerName:name},'wildlife-society');
     }else salvage.push(...returnMaterials(d,this,'player',materials,result,{floors,eventId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>this.itemDelta(d,'player',item,n,craftOutput('wildlife-society',eventId))}));
     recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((made.length?made.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),writer:'wildlife-society',eventId});

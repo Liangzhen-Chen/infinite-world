@@ -46,6 +46,8 @@ export function materializeRuntimeWorld(world){
  // the biome tags the loader merged into each place.
  const biomes=Object.fromEntries((world.locations??[]).filter(l=>l.biome).map(l=>[l.id,{biome:l.biome}]));
  applyChainLaws({locations:world.locations??[],recipes:world.recipes??[],items:world.items??[]},{ecology:m.siteEcology??null,biomes});
+ // Q's material-use law (which material tags can provide which uses) is a law table, not a row annotation; it stays on the runtime world.
+ if(m.materialUses)world.materialUses=m.materialUses;
  delete world.mechanics;
  return world;
 }
