@@ -198,7 +198,7 @@ const npcs=pickNpcs(5);
   const crafts=craftsSince(start,c.doc).filter(x=>heatedRecipeIds.has(x.recipe)&&seeded.has(makerOf(x,c.doc,c.id)));
   let beyond=0;for(const id of seeded){const matF=crafts.filter(x=>makerOf(x,c.doc,c.id)===id).reduce((a,x)=>a+(x.inputs?.[mainFuel]??0),0);beyond+=f0[id]-inv(c.doc.state.npcs[id],mainFuel)-matF;}
   const burnedMg=Object.values(c.doc.state.records??{}).filter(r=>r.category==='physical_feature').reduce((a,r)=>a+(r.state?.thermal?.burnedFuelMg??0),0);
-  check('HB6','人物','NPC 自主：备好料和燃料的行家，推进时间后会去冷炉点火开工，且真烧了燃料',s.ok&&crafts.length>0&&(burnedMg>0||beyond>0),{days:Math.min(DAYS,3),seeded:seeded.size,heatedCraftsBySeeded:crafts.length,byRecipe:crafts.map(x=>x.recipe).slice(0,6),fuelBeyondMaterials:beyond,burnedFuelMg:burnedMg,note:'依赖 E2/npc-labor 合入；基线可能 fail'});
+  check('HB6','人物','NPC 自主：备好料和燃料的行家，推进时间后会去冷炉点火开工，且真烧了燃料',s.ok&&crafts.length>0&&(burnedMg>0||beyond>0),{days:Math.min(DAYS,3),seeded:seeded.size,heatedCraftsBySeeded:crafts.length,byRecipe:crafts.map(x=>x.recipe).slice(0,6),fuelBeyondMaterials:beyond,burnedFuelMg:burnedMg,note:'依赖 E2/npc-labor 合入；基线可能 fail。窑的 NPC 行跑不了：NPC 单日工时有上限，跨天的工序还没有规律'});
 }
 
 // ===== HB7 产量（对比基线）=====
@@ -291,9 +291,13 @@ if(mutOK){
       const resident=priv.access.residents.find(id=>M.world.npcs.find(n=>n.id===id&&adult(n)));
       const c=kit(M,rf,priv.id,{fuel:[['item_charcoal',60]],mats:1,id:'hb-priv'}),s=snap(c),s0doc=structuredClone(c.doc);
       const denied=await call(c,'world_craft',{recipe:rf.id});
-      const OFFENSE=/offense:[a-z_:]+|擅用|侵占|盗用|私用/g,CONSEQ=/compensation|judgment|fine|wanted|bounty|罚|赔|通缉|立案|案件|追究/g,cnt=(re,x)=>(JSON.stringify(x).match(re)??[]).length;
-      const offense=cnt(OFFENSE,c.doc)-cnt(OFFENSE,s0doc),conseq=cnt(CONSEQ,c.doc)-cnt(CONSEQ,s0doc);
-      const deniedOK=(denied.status==='rejected'&&same(c,s)&&ACCESS.test(denied.reason??''))||(denied.status==='committed'&&offense>0&&conseq>0); // 与 K6 同口径：先拒；或先发生后定擅用并有后果
+      // 与 K6 同口径：先拒；或先发生后定罪：本次用炉事件（sourceEvent）写下 offense 记录，受害人是这户的住户，对象指向这座炉或这户，且回执 consequences 里有指向该记录的 offense 项
+      const evId=denied.input?.eventId,recs=Object.values(c.doc.state.records??{}).filter(r=>r.category==='offense'&&r.sourceEvent===evId);
+      const cons=(denied.result?.receipt?.consequences??[]).filter(k=>k.type==='offense');
+      const hit=recs.find(r=>priv.access.residents.includes(r.victim)&&(jstr(r).includes(priv.id)||jstr(r).includes('station_acc_priv'))&&cons.some(k=>k.record===r.id));
+      const offense=recs.length,conseq=cons.length;
+      const deniedOK=(denied.status==='rejected'&&same(c,s)&&ACCESS.test(denied.reason??''))||(denied.status==='committed'&&!!hit);
+      
       const t=kit(M,rf,'loc_hw',{fuel:[['item_charcoal',60]],mats:1,id:'hb-priv2'}),trace=[];let allowed=false;
       if(resident){
         t.doc.state.npcs[resident].location='loc_hw';
@@ -301,7 +305,7 @@ if(mutOK){
         if(g.status==='committed'){const auth=g.result?.authorization,mv=await call(t,'world_move',{destination:priv.id,authorization:auth});trace.push(`进屋：${say(mv)}`);
           if(t.doc.state.location===priv.id){const n0=inv(t.doc.state,rf.output.item),before=t.doc,x=await call(t,'world_craft',{recipe:rf.id,authorization:auth});trace.push(`做：${say(x)}`);const bk=books(M,t,before);allowed=x.status==='committed'&&(x.result?.success===false||inv(t.doc.state,rf.output.item)>n0)&&bk.ok;trace.push(`成功=${x.result?.success} 账本=${jstr(bk)}`);}}
       }
-      check('HB10','变异','私炉要许可：他人家的锻炉，无许可被拒且不动；经主人结构化许可（写明借锻炉）后做成、账本守恒',deniedOK&&allowed,{home:priv.id,resident,denied:say(denied),deniedUnchanged:same(c,s),offenseMarks:offense,consequences:conseq,trace});
+      check('HB10','变异','私炉要许可：他人家的锻炉，无许可被拒且不动；经主人结构化许可（写明借锻炉）后做成、账本守恒',deniedOK&&allowed,{home:priv.id,resident,denied:say(denied),deniedUnchanged:same(c,s),offenseRecords:recs.map(r=>({id:r.id,offense:r.offense,victim:r.victim,subject:r.subject})),receiptOffenses:cons,matched:!!hit,trace});
     }
   }
 }
