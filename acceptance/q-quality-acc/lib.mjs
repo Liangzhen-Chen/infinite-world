@@ -104,7 +104,9 @@ const near=(loc,home)=>{const code=String(home??'').split('_')[1];return code&&S
 export async function obtain(c,item,n,steps=[],{home='loc_hw',exclude=[],wide=false}={}){
   const W=c.T.world;
   if(pinv(c.doc,item)>=n)return true;
-  const all=Object.entries(c.doc.state.npcs).filter(([id,p])=>inv(p,item)>0&&!(p.hp<=0)&&p.location&&!exclude.includes(id));
+  // c.dumped[item]：把降了档的这种料卖给过的人，不再向他买回这种料（买回来的会是同一批降档料）。
+  const ex=[...exclude,...(c.dumped?.[item]??[])];
+  const all=Object.entries(c.doc.state.npcs).filter(([id,p])=>inv(p,item)>0&&!(p.hp<=0)&&p.location&&!ex.includes(id));
   const local=all.filter(([,p])=>near(p.location,home)===0),far=all.filter(([,p])=>near(p.location,home)!==0).slice(0,2);
   const buyFrom=async list=>{for(const [id] of list){
     let waits=0;
@@ -131,3 +133,6 @@ export async function obtain(c,item,n,steps=[],{home='loc_hw',exclude=[],wide=fa
   if(wide&&pinv(c.doc,item)<n)await gather(withRes.filter(l=>near(l.id,home)!==0).slice(0,3));
   const ok=pinv(c.doc,item)>=n;steps.push(ok?`${item} 备齐 ${pinv(c.doc,item)}/${n}`:`${item} 取不到（${pinv(c.doc,item)}/${n}）`);return ok;
 }
+
+// 取不到时按世界规则再去取一次：睡到次日（持有人补货、采集点再生），连外镇的持有人和采集点一起找。
+export async function obtainRetry(c,item,n,steps=[],tries=1){if(await obtain(c,item,n,steps))return true;for(let k=0;k<tries;k++){await sleepTill(c);if(await obtain(c,item,n,steps,{wide:true}))return true;}return false;}

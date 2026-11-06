@@ -17,6 +17,10 @@ const put=(id,status,evidence,group)=>{results.push({id,group,status,evidence});
 
 const mean=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:null;
 const prods=tr=>(tr??[]).flatMap(t=>t.units);
+// 只取投入原料是标准品质（grade 1）的试做：比工具、比技能时原料品质必须相同。
+const STD=t=>t.inputGrade==null||t.inputGrade>=1-1e-9;
+const stdOnly=tr=>(tr??[]).filter(STD);
+const inputs=tr=>count((tr??[]).filter(t=>t.status==='committed').map(t=>t.inputGrade));
 const nonNull=a=>a.filter(x=>x!=null);
 const PHYS={材料:/缺少|不足|不够|没有.{0,8}(料|材)|材料|原料/,工具:/工具|器具|刀|锤|钳|针/,工位:/工位|作坊|工作台|台|炉|织机|场所|设施|此处|这里|此地|需在|须在/};
 const SKILLY=/学会|技能|熟练|掌握|手艺|资格|尚未|不会/;
@@ -53,7 +57,7 @@ function judge(prefix,spec,L,S,D){
   // Q2 档位分层
   if(!Pf.length)put(`${P}.Q2 三档逐档变好`,'blocked',A.blocked??'熟练档未做',`Q2`);
   else{
-    const st=[U,N,Pf].map(t=>{const us=prods(t);return {n:t.length,made:us.length,rank:mean(nonNull(us.map(u=>u.rank))),dur:mean(nonNull(us.map(u=>u.maxDur))),uses:mean(us.map(u=>u.uses.length)),tiers:count(us.map(u=>u.tier))};});
+    const st=[U,N,Pf].map(t=>stdOnly(t)).map(t=>{const us=prods(t);return {n:t.length,made:us.length,rank:mean(nonNull(us.map(u=>u.rank))),dur:mean(nonNull(us.map(u=>u.maxDur))),uses:mean(us.map(u=>u.uses.length)),tiers:count(us.map(u=>u.tier)),inputGrades:inputs(t)};});
     const tol=0.15,mono=k=>st.every(x=>x[k]!=null)&&st[1][k]>=st[0][k]-tol*(k==='rank'?1:Math.max(1,Math.abs(st[0][k])*0.1))&&st[2][k]>=st[1][k]-tol*(k==='rank'?1:Math.max(1,Math.abs(st[1][k])*0.1));
     const ok=mono('rank')&&mono('dur')&&mono('uses')&&st[2].rank>st[0].rank;
     put(`${P}.Q2 三档逐档变好（手艺档、耐久、保留用途单调不减，熟练严格好于缺技能）`,ok?'pass':'fail',{缺技能:st[0],刚入门:st[1],熟练:st[2],proficiency:[A.tiers['缺技能']?.proficiency,A.tiers['刚入门']?.proficiency,A.tiers['熟练']?.proficiency]},'Q2');
@@ -87,20 +91,20 @@ function judge(prefix,spec,L,S,D){
     // 品质是实例的 grade（数值，标准件 1），不是目录 quality。成品 grade ≤ 劣原料 grade 的下限；且平均 grade 低于真原料对照。
     const minG=Math.min(...crude.map(u=>u.grade??1));
     const capOk=cp.every(u=>u.grade!=null&&u.grade<=minG+1e-9);
-    const ctl=prods((spec.Xc===spec.X?tier(A,'熟练'):(A.xc?.['熟练']??[])));
+    const ctl=prods(stdOnly(spec.Xc===spec.X?tier(A,'熟练'):(A.xc?.['熟练']??[])));
     const ctlG=mean(nonNull(ctl.map(u=>u.grade))),cG=mean(nonNull(cp.map(u=>u.grade)));
     put(`${P}.Q4a 低品质原料：成品品质（grade）不超过原料品质下限（且比真原料对照差）`,capOk&&ctlG!=null&&cG<ctlG?'pass':'fail',{crudeMaterial:C.crude,products:count(cp.map(u=>u.tier)),capGrade:minG,maxProductGrade:Math.max(...cp.map(u=>u.grade??0)),controlMeanGrade:ctlG,crudeMeanGrade:cG,controlMeanRank:mean(nonNull(ctl.map(u=>u.rank))),crudeMeanRank:mean(nonNull(cp.map(u=>u.rank)))},'Q4');
   }
-  const bp=[...tier(B,'缺技能'),...tier(B,'刚入门'),...tier(B,'熟练')],ap=all;
+  const bpAll=[...tier(B,'缺技能'),...tier(B,'刚入门'),...tier(B,'熟练')],bp=stdOnly(bpAll),ap=stdOnly(all);
   if(B?.blocked||!prods(bp).length)put(`${P}.Q4b 换更好的工具，期望品质上升`,'blocked',B?.blocked??'B 谱系没有产物','Q4');
   else{
     const ra=mean(nonNull(prods(ap).map(u=>u.rank))),rb=mean(nonNull(prods(bp).map(u=>u.rank)));
-    put(`${P}.Q4b 换更好的工具，期望品质上升（真工具 vs 外行自制的劣工具，三档合计）`,ra!=null&&rb!=null&&ra>rb?'pass':'fail',{poorTool:B.poorTool,genuineMeanRank:ra,poorMeanRank:rb,genuine:count(prods(ap).map(u=>u.tier)),poor:count(prods(bp).map(u=>u.tier))},'Q4');
+    put(`${P}.Q4b 换更好的工具，期望品质上升（真工具 vs 外行自制的劣工具，三档合计）`,ra!=null&&rb!=null&&ra>rb?'pass':'fail',{poorTool:B.poorTool,genuineMeanRank:ra,poorMeanRank:rb,genuineMeanGrade:mean(nonNull(prods(ap).map(u=>u.grade))),poorMeanGrade:mean(nonNull(prods(bp).map(u=>u.grade))),inputGrades:{genuine:inputs(all),poor:inputs(bpAll)},excludedNonStandard:{genuine:all.length-ap.length,poor:bpAll.length-bp.length},genuine:count(prods(ap).map(u=>u.tier)),poor:count(prods(bp).map(u=>u.tier))},'Q4');
   }
   if(!Pf.length)put(`${P}.Q4c 技能更高，期望品质上升`,'blocked',A.blocked??'熟练档未做','Q4');
   else{
-    const r=[U,N,Pf].map(t=>mean(nonNull(prods(t).map(u=>u.rank))));
-    put(`${P}.Q4c 技能更高，期望品质上升（同工具同原料）`,r.every(x=>x!=null)&&r[2]>r[0]&&r[1]>=r[0]-0.15?'pass':'fail',{meanRank:{缺技能:r[0],刚入门:r[1],熟练:r[2]}},'Q4');
+    const r=[U,N,Pf].map(t=>mean(nonNull(prods(stdOnly(t)).map(u=>u.rank))));
+    put(`${P}.Q4c 技能更高，期望品质上升（同工具同原料）`,r.every(x=>x!=null)&&r[2]>r[0]&&r[1]>=r[0]-0.15?'pass':'fail',{meanRank:{缺技能:r[0],刚入门:r[1],熟练:r[2]},meanGrade:Object.fromEntries(['缺技能','刚入门','熟练'].map((k,i)=>[k,mean(nonNull(prods(stdOnly([U,N,Pf][i])).map(u=>u.grade)))])),inputGrades:{缺技能:inputs(U),刚入门:inputs(N),熟练:inputs(Pf)}},'Q4');
   }
   // Q5 按实例品质报价
   const sl=A.sales;
