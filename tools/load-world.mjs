@@ -81,6 +81,8 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const mechanics={};
     for(const name of mechanicsCollections){const rows=await optional(`meta/mechanics/${name}.json`);if(!Array.isArray(rows))mechanics[name]=rows;}
     const siteEcology=await optional('design/kc-site-ecology.json');if(!Array.isArray(siteEcology))mechanics.siteEcology=siteEcology;
+    // 卡 Q：材料标签能提供的用途（物性规律表，按材料类别）。
+    const materialUses=await optional('meta/mechanics/material-uses.json');if(!Array.isArray(materialUses))mechanics.materialUses=materialUses;
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
