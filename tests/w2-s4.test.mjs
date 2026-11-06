@@ -21,7 +21,7 @@ const formal=await loadWorld(),publication=process.env.W2S4_DESIGN?designPublica
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
-const before=withoutS4(formal),world=mergeS4Publication(before,publication),engine=new WorldEngine(world);
+const before=withoutS4(formal,{keepOwnGenerated:true}),world=mergeS4Publication(before,publication),engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 // Reconstruct the edition in its formal catalogue order, including later items.
 if(published){const order=new Map(formal.items.map((r,i)=>[r.id,i]));world.items.sort((a,b)=>order.get(a.id)-order.get(b.id));}
