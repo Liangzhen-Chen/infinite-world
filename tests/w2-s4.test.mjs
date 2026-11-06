@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS4Publication,mergeS4Publication,publishS4,withoutS4,designPublication,files as publishedFiles} from '../tools/publish-w2-s4.mjs';
 import {spells,books,items,placements,mentors,routes,routeOf,ritualScopes,TABLET} from '../world/design/w2-s4.mjs';
@@ -17,7 +17,7 @@ import {questGenerators} from '../server-plugin/quest-sources.mjs';
 // 跳日的夹具用skipTo同时把势力时钟移到下一边界（T159新增日钟）。
 import {skipTo} from './fixtures/skip-clock.mjs';
 
-const formal=await loadWorld(),publication=process.env.W2S4_DESIGN?designPublication():await readS4Publication();
+const formal=await loadRuntimeWorld(),publication=process.env.W2S4_DESIGN?designPublication():await readS4Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
@@ -333,7 +333,7 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const changedFiles=publishedFiles.filter(f=>f!=='meta/recipes.json');
  assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,before.spells.length+spells.length);assert.deepEqual(preview.changed,changedFiles);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
  const first=await publishS4({root,publish:true});assert.deepEqual(first.changed,changedFiles);
- const reloaded=await loadWorld(root);for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
+ const reloaded=await loadRuntimeWorld(root);for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
  const times=await Promise.all(publishedFiles.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS4({root,publish:true})).changed,[]);
  for(const [file,mutate,pattern] of [['candidate.json',r=>{r.spells[0].failure+='免费';},/候选/],[`${spells[0].id}.json`,r=>{r.draft.prose.theory+='另外';},/内容已改变|不符/],['batch-0.json',r=>{r.l4.approved=false;},/L4/],['batch-0.json',r=>{r.l4.wave[0].scores[0]=2;},/评分/]]){
   const f=path.join(root,'drafts/w2-s4',file),bytes=await fs.readFile(f,'utf8'),r=JSON.parse(bytes);mutate(r);await fs.writeFile(f,JSON.stringify(r));await assert.rejects(publishS4({root,publish:true}),pattern);await fs.writeFile(f,bytes);
