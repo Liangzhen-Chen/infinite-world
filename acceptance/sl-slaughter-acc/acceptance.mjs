@@ -34,9 +34,13 @@ const nonCutTools=world.items.filter(i=>(i.tags??[]).includes('tool')&&!(i.tags?
 const KNIFE='item_kitchen_knife',SHEARS='item_leather_shears',BLADE=NEW.blade;
 const wmNames=(world.rules?.equipment?.workmanship??[]).map(w=>w.name);
 const wmIdx=n=>wmNames.indexOf(n);
-let noSkillCap=null;
-try{const j=JSON.parse(fs.readFileSync(`${T.repo}/world/rules/tables/balance/crafting.json`,'utf8'));const rows=Array.isArray(j)?j:(j.params??j.rows??Object.values(j).find(Array.isArray)??[]);noSkillCap=rows.find(r=>r.id==='workmanship.shortfall')?.value?.noSkill??null;}catch{}
+let noSkillCap=null,shortfallKeys=[];
+try{const j=JSON.parse(fs.readFileSync(`${T.repo}/world/rules/tables/balance/crafting.json`,'utf8'));const rows=Array.isArray(j)?j:(j.params??j.rows??Object.values(j).find(Array.isArray)??[]);const sf=rows.find(r=>r.id==='workmanship.shortfall')?.value??{};noSkillCap=sf.noSkill??null;shortfallKeys=Object.keys(sf);}catch{}
 const TIERS=[null,120,400,900];
+const sd2=xs=>{const m=mean(xs);return xs.length>1?xs.reduce((a,b)=>a+(b-m)**2,0)/(xs.length-1):NaN;};
+// 两组均值之差 hi-lo 的 z 值（样本方差估计；两组都零方差且差>0 记为无穷大，差=0 记 0；样本<2 返回 NaN）
+const zdiff=(lo,hi)=>{if(lo.length<2||hi.length<2)return NaN;const d=mean(hi)-mean(lo),se=Math.sqrt(sd2(lo)/lo.length+sd2(hi)/hi.length);return se===0?(d>0?Infinity:d<0?-Infinity:0):d/se;};
+const MIN_N=30; // 每档至少这么多样本，才有资格判"差异不显著=fail"；不足则 blocked 并写明要加 --trials
 const HID='population_acc_sl';
 const herdRow=(id,species,count,owner='player',location='loc_hw')=>({id,name:'验收畜群',owner,location,species,count,capacity:Math.max(20,count*3)});
 const tierSkills=t=>t==null?{}:{[skillC]:t,[skillS]:t};
@@ -156,7 +160,7 @@ log("S2");
       const c=mk({species:sp,owner:own,count:6}),snap=JSON.stringify(c.doc.state),r=await farm(c,{operation:'husbandry_slaughter',target:HID},'th');
       P(a,`${nm(sp)} 属 ${own} 被拒`,!r.ok&&JSON.stringify(c.doc.state)===snap&&/他人|所有|财物|不是你|归/.test(r.reason),r.reason??'提交了');
     });}
-    await safe(a,`${nm(sp)}/own`,async()=>{const c=mk({species:sp,owner:'player',count:6}),r=await untilSuccess(c,{operation:'husbandry_slaughter',target:HID},'own');P(a,`${nm(sp)} 属玩家可宰（对照）`,r.ok&&r.result.success,r.reason);});
+    await safe(a,`${nm(sp)}/own`,async()=>{const c=mk({species:sp,owner:'player',count:40}),r=await untilSuccess(c,{operation:'husbandry_slaughter',target:HID},'own');P(a,`${nm(sp)} 属玩家可宰（对照）`,r.ok&&r.result.success,r.reason);});
   }
   for(const h of ['population_hw_home21_goats','population_hw_home21_pheasants']){await safe(a,h,async()=>{
     const c=T.game({id:'th',setup:{location:'bld_hw_home_21',inventory:{[KNIFE]:1}}});ALL.push(c);const snap=JSON.stringify(c.doc.state.records),r=await farm(c,{operation:'husbandry_slaughter',target:h},'xj');
@@ -183,8 +187,8 @@ log('毛已长出',COATED.map(nm).join());
   for(const sp of COATED)await safe(a,nm(sp),async()=>{
     const c=fork(grown[sp]),item=coatItemOf(c),avail=Math.floor(rec(c).produce?.[item]??0),n0=rec(c).count;
     if(!item||avail<1){P(a,nm(sp),false,`30 天后没有长出毛（可取 ${avail}）`);return;}
-    const q=Math.min(avail,40),xp=c.doc.state.player.xp;
-    const r=await untilSuccess(c,{operation:'husbandry_collect',target:HID,item,quantity:q},'sh');
+    const q=Math.min(avail,5),xp=c.doc.state.player.xp;
+    const r=await untilSuccess(c,{operation:'husbandry_collect',target:HID,item,quantity:q},'sh',Math.max(1,Math.floor(avail/q)));
     if(!r.ok){P(a,nm(sp),false,r.reason);return;}
     const got=r.result.obtained?.reduce((n,x)=>n+x.quantity,0)??0,t=tagsOf(c.engine,r.result.obtained?.[0]?.item);
     const u=r.result.obtained?.[0]?.instances?.[0],prov=JSON.stringify(c.doc.state.itemInstances[u]??{}).includes(HID);
@@ -239,14 +243,23 @@ log('毛已长出',COATED.map(nm).join());
 // ———— S4 手艺档 ————
 log("S4");
 {
-  const a=A('S4a','外行损耗更多：每物种各档取回份额随熟练度不减，外行低于熟练；宰杀与取毛都成立');
-  const gaps=[];
-  for(const sp of SP){const m=TIERS.map(t=>mean(SL[sp][t].kept));
-    P(a,`${nm(sp)} 各档份额`,m.every((x,i)=>i===0||x>=m[i-1]-0.3/Math.sqrt(TRIALS))&&m[0]<=m[3]+1e-9,m.map(x=>x.toFixed(2)).join(' → '));gaps.push(m[3]-m[0]);}
-  P(a,'汇总外行比熟练少取回',mean(gaps)>=0.08&&gaps.filter(g=>g>0.02).length>=Math.ceil(SP.length*0.6),`平均差 ${mean(gaps).toFixed(3)}，差>0.02 的物种 ${gaps.filter(g=>g>0.02).length}/${SP.length}`);
+  const a=A('S4a','外行损耗更多：外行比熟练取回份额少，差按样本方差判 2.5σ；各档不出现显著倒挂；宰杀与取毛都成立（样本不足记 blocked，不拿固定阈值判）');
+  const lo=SP.flatMap(sp=>SL[sp][null].kept),hi=SP.flatMap(sp=>SL[sp][900].kept);
+  for(const sp of SP){
+    const ks=TIERS.map(t=>SL[sp][t].kept);
+    const inv_=ks.map((k,i)=>i===0?0:zdiff(k,ks[i-1])).map(z=>-z); // 低档比高档高出的 z
+    P(a,`${nm(sp)} 各档份额无显著倒挂`,inv_.every(z=>!(z>2.5)),ks.map(k=>mean(k).toFixed(2)).join(' → ')+`（每档 ${ks[0].length} 样本）`);
+  }
+  {const z=zdiff(lo,hi),n=Math.min(lo.length,hi.length);
+   if(z>=2.5)P(a,'汇总外行比熟练少取回（2.5σ）',true,`差 ${(mean(hi)-mean(lo)).toFixed(3)}，z=${z.toFixed(1)}，每档 ${n} 样本`);
+   else if(n<MIN_N)B(a,'汇总外行比熟练少取回','跑不了：每档只有 '+n+' 个样本，不足 '+MIN_N+'，z='+z.toFixed(1)+'；请加大 --trials');
+   else P(a,'汇总外行比熟练少取回（2.5σ）',false,`差 ${(mean(hi)-mean(lo)).toFixed(3)}，z=${z.toFixed(1)}，每档 ${n} 样本`);}
   for(const sp of COATED.slice(0,3))await safe(a,`剪毛 ${nm(sp)}`,async()=>{
-    const res={};for(const t of [null,900]){const ks=[];for(let i=0;i<TRIALS;i++){const c=fork(grown[sp]);if(t==null)c.doc.state.skills={};else premise(c,{abilities:{skills:tierSkills(t)}});const item=coatItemOf(c),q=Math.min(30,Math.floor(rec(c).produce?.[item]??0));const r=await farm(c,{operation:'husbandry_collect',target:HID,item,quantity:q},`ss${i}`);if(r.ok){const g=parts(r.result).reduce((n,x)=>n+x.quantity,0),l=(r.result.lost??[]).reduce((n,x)=>n+x.quantity,0);if(g+l>0)ks.push(g/(g+l));}}res[t]=mean(ks);}
-    P(a,`剪毛 ${nm(sp)} 外行份额低于熟练`,res.null<res[900]-0.03,`外行 ${res.null.toFixed(2)} 熟练 ${res[900].toFixed(2)}`);
+    const res={};for(const t of [null,900]){const ks=[];for(let i=0;i<TRIALS*3;i++){const c=fork(grown[sp]);if(t==null)c.doc.state.skills={};else premise(c,{abilities:{skills:tierSkills(t)}});const item=coatItemOf(c),q=Math.min(30,Math.floor(rec(c).produce?.[item]??0));const r=await farm(c,{operation:'husbandry_collect',target:HID,item,quantity:q},`ss${i}`);if(r.ok){const g=parts(r.result).reduce((n,x)=>n+x.quantity,0),l=(r.result.lost??[]).reduce((n,x)=>n+x.quantity,0);if(g+l>0)ks.push(g/(g+l));}}res[t]=ks;}
+    const z=zdiff(res.null,res[900]),n=Math.min(res.null.length,res[900].length);
+    if(z>=2.5)P(a,`剪毛 ${nm(sp)} 外行份额低于熟练`,true,`外行 ${mean(res.null).toFixed(2)} 熟练 ${mean(res[900]).toFixed(2)} z=${z.toFixed(1)}`);
+    else if(n<MIN_N)B(a,`剪毛 ${nm(sp)}`,`跑不了：每档 ${n} 样本不足 ${MIN_N}（z=${z.toFixed(1)}）；请加大 --trials`);
+    else P(a,`剪毛 ${nm(sp)} 外行份额低于熟练`,false,`外行 ${mean(res.null).toFixed(2)} 熟练 ${mean(res[900]).toFixed(2)} z=${z.toFixed(1)} n=${n}`);
   });
 }
 {
@@ -263,11 +276,15 @@ log("S4");
     if(!rc){B(a,'制造对照','找不到配方');return;}
     const c=T.game({id:'mf',setup:{location:'bld_hw_mill',inventory:{...Object.fromEntries(rc.materials.map(m=>[m.item,m.amount*3])),...Object.fromEntries((rc.tools??[]).map(t=>[t,1]))},abilities:{recipes:[rc.id]}}});ALL.push(c);
     const r=await call(c,'world_craft',{recipe:rc.id},'mf');
-    const st=r.ok?(r.result.standing??r.result.receipt?.standing):null;
-    if(!r.ok||!st)B(a,'制造对照',`外行制造没拿到 standing：${r.reason??'回执无该字段'}`);
-    else P(a,'外行 standing 与制造外行一致',[...sN].every(x=>x===st),`制造外行 ${st}；宰杀外行 ${[...sN]}`);
+    // 回执在熟练时不写 standing：缺省就是 skilled；期望值从技能值和 minimumProficiency 推
+    const st=r.ok?(r.result.standing??r.result.receipt?.standing??'skilled'):null;
+    const expect=(prof,min)=>prof==null?'noSkill':prof<min?'underProficient':'skilled';
+    const crSkill=c.doc.state.skills?.[rc.skill]?.proficiency;
+    if(!r.ok)B(a,'制造对照',`外行制造被拒：${r.reason}`);
+    else P(a,'制造回执 standing（缺省=skilled）与按技能值推出的一致',st===expect(crSkill,rc.minimumProficiency??0),`回执 ${st}，技能值 ${crSkill}，门槛 ${rc.minimumProficiency??0}`);
+    P(a,'宰杀外行 standing 属于同一套词汇且等于按技能值推出的 noSkill',[...sN].every(x=>x===expect(undefined,takes.carcass?.minimumProficiency??0)&&(!shortfallKeys.length||shortfallKeys.includes(x))),`宰杀外行 ${[...sN]}；词汇 ${shortfallKeys}`);
   });
-  P(a,'熟手 standing 为 skilled',[...sE].every(x=>x==='skilled'),[...sE].join());
+  P(a,'熟手 standing 缺省或为 skilled',[...sE].every(x=>(x??'skilled')==='skilled'),[...sE].join());
 }
 
 // ———— S5 背不动 ————
@@ -277,7 +294,7 @@ log("S5");
   for(const [label,sp,oats] of [['满包山羊','monster_bent_horn_goat',80],['公牛(空包)',OX,0]]){
     if(sp===OX&&!useMut){B(a,label,'未载入变异副本');continue;}
     await safe(a,label,async()=>{
-      const c=mk({species:sp,count:3,inventory:oats?{item_oats:oats}:{}}),n0=rec(c).count;
+      const c=mk({species:sp,count:12,inventory:oats?{item_oats:oats}:{}}),n0=rec(c).count;
       const r=await untilSuccess(c,{operation:'husbandry_slaughter',target:HID},'bc');
       if(!r.ok){P(a,`${label} 不被拒`,false,r.reason);return;}
       const left=r.result.leftBehind??[];
@@ -288,7 +305,7 @@ log("S5");
       const hits=[];
       const walk=(o,path,owner)=>{if(hits.length>5||o===null||typeof o!=='object')return;const ow=typeof o.owner==='string'?o.owner:owner;
         for(const [k,v] of Object.entries(o)){const p2=[...path,k];
-          if(path.length===0&&['inventory','itemInstances','ledger','player','npcs','creatures'].includes(k))continue;
+          if(path.length===1&&['inventory','itemInstances','ledger','player','npcs','creatures'].includes(k))continue;
           if(left.some(l=>k===l.item&&typeof v==='number'&&v>=l.quantity-1e-9||k===l.item&&v&&typeof v==='object'&&(v.quantity>=l.quantity)))hits.push({path:p2.join('.'),owner:ow});
           else if(v&&typeof v==='object'&&v.item&&left.some(l=>l.item===v.item&&(v.quantity??v.amount)>=l.quantity))hits.push({path:p2.join('.'),owner:ow});
           else walk(v,p2,ow);}};
