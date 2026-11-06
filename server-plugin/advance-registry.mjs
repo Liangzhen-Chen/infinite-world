@@ -1,3 +1,5 @@
+import {advanceRegistry,registerAdvance} from './advance-registration.mjs';
+export {advanceRegistry,registerAdvance};
 import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
 import {advanceNations} from './nation-founding.mjs';
 import {advanceEducation,nextEducationMinute,prepareEducation,educationCourses} from './education.mjs';
@@ -82,14 +84,6 @@ const sameNpcScheduleInputs=(...args)=>{const hook=advanceHook('sameNpcScheduleI
 const facilityRuntime=()=>{const hook=advanceHook('facilityRuntime');return hook?hook():{hasUnattendedFurnace:()=>true,recordFurnaceDeparture:()=>{}};};
 const withScheduleCache=(engine,d,task)=>{const hook=advanceHook('withScheduleCache');return hook?hook(engine,d,task):task();};
 const prepareHouseholdSubsistence=(d,e,day)=>advanceHook('prepareHouseholdSubsistence')?.(d,e,day);
-export const advanceRegistry=[];
-export function registerAdvance(system){
-    if(!system||typeof system.id!=='string'||!Number.isFinite(system.order)||typeof system.advance!=='function')throw new Error('推进系统需要 id、order 和 advance');
-    if(advanceRegistry.some(s=>s.id===system.id))throw new Error(`推进系统重复：${system.id}`);
-    if(system.nextMinute!==undefined&&typeof system.nextMinute!=='function')throw new Error(`推进系统${system.id}的 nextMinute 必须是函数`);
-    advanceRegistry.push(system);advanceRegistry.sort((a,b)=>a.order-b.order);
-    return ()=>{const i=advanceRegistry.indexOf(system);if(i>=0)advanceRegistry.splice(i,1);};
-}
 // Next interval boundary: end of span, next midnight, or the earliest registered event.
 export function nextAdvanceMinute(engine,d,now,end){
     prepareHouseholdSubsistence(d,engine,Math.floor(now/1440));

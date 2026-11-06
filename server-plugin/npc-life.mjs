@@ -14,7 +14,7 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // state.family plus ordinary memories, which then spread only through the
 // existing NPC conversation and message channels.
 import {digest,stateMemo,canonicalEqual} from './storage.mjs';
-import {householdMealPlan,householdMealWithSources,usageCost} from './household-budget.mjs';
+import {householdMealPlan,householdMealWithSources,usageCost,registerMerchandiseResolver} from './household-budget.mjs';
 import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups} from './household-subsistence.mjs';
 import {placeSettlement} from './entity-view.mjs';
 import {toRational} from './det-math.mjs';
@@ -41,8 +41,6 @@ import {holdingSet,holdingRemove} from './holding-sources.mjs';
 import {pow} from './det-math.mjs';
 import {heldUnit,wearItem} from './items.mjs';
 import {isItemClass,heldOfClass,craftingParam,householdUsage} from './item-class.mjs';
-// Shop restock lists reach npc-life through registration: importing shop.mjs here closes an import cycle (TDZ at load).
-export function registerMerchandiseResolver(fn){registerMerchandiseResolver.fn=fn;}
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
@@ -108,8 +106,6 @@ function householdUpkeep(d,engine,day,p){
  const row={...Object.fromEntries(done.map(r=>[`${r.u.cls}DebtG`,r.debt])),...Object.fromEntries(done.map(r=>[`${r.u.cls}ShortDays`,r.short?old[`${r.u.cls}ShortDays`]+1:0]))};
  if(!canonicalEqual(old,row))d.set(key,row);
 }
-// 户里缺燃料、缺盐的程度（连续短缺日数），供采买需求读取。
-export function householdUpkeepGap(state,key){const r=state.family?.upkeep?.[key]??{};return Object.fromEntries(Object.entries(r).filter(([k])=>k.endsWith('ShortDays')));}
 
 // Plan all meals against the same revision, then consume physical holdings.
 export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){

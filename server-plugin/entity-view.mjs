@@ -152,7 +152,7 @@ export function personEmployment(engine,state,id,minute=state.minute,constraints
 }
 // Public-facing roles exclude household membership and private associations.
 export function personPublicRole(engine,state,id){
-    const occupation=personOccupation(engine,state,id),roles=memberOrganizations(engine,state,actorId(engine.world,id))
+    const occupation=personOccupation(engine,state,id),roles=memberOrganizations(engine,state,actorId(engine.world,id),{source:'faction'})
         .filter(o=>o.source==='faction'&&o.members[actorId(engine.world,id)]?.position!=='成员')
         .map(o=>`${o.name}${o.members[actorId(engine.world,id)].position}`);
     return fact([...new Set([occupation.value,...roles].filter(Boolean))].join('、'),`${occupation.source} + current public organization positions`,occupation.override||roles.length>0);
@@ -429,8 +429,15 @@ export function groupRepresentative(engine,state,id,requested){
 }
 
 // Current physical state is inside the record, never the record envelope.
+// Catalogue feature id -> its place, built once per locations array (the catalogue is fixed for a loaded world); created places are searched per call.
+const featurePlaces=new WeakMap();
+function catalogueFeaturePlace(locations,id){
+    let index=featurePlaces.get(locations);
+    if(!index||index.length!==locations.length){index={length:locations.length,byId:new Map()};for(const p of locations)for(const f of p.features??[])if(!index.byId.has(f.id))index.byId.set(f.id,p);featurePlaces.set(locations,index);}
+    return index.byId.get(id);
+}
 export function physicalFeature(engine,state,id){
-    const place=[...engine.world.locations,...Object.values(state.created??{})].find(p=>p.features?.some(f=>f.id===id));
+    const place=catalogueFeaturePlace(engine.world.locations,id)??Object.values(state.created??{}).find(p=>p.features?.some(f=>f.id===id));
     const definition=place?.features.find(f=>f.id===id);if(!definition)return null;
     const row=state.records?.[`physical_feature:${id}`];
     return {definition:fact({...definition,location:place.id},`catalog.${place.id}.features.${id}`),

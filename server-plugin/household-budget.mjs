@@ -15,7 +15,9 @@ import {householdWorkTime} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {physicalItem} from './items.mjs';
 import {isItemClass,householdUsage as usageDefinition} from './item-class.mjs';
-import {registerMerchandiseResolver} from './npc-life.mjs';
+// Shop restock lists and the upkeep-shortage reader are household facts: they live here (L1) so market and the household packs read them without importing npc-life.
+export function registerMerchandiseResolver(fn){registerMerchandiseResolver.fn=fn;}
+export function householdUpkeepGap(state,key){const r=state.family?.upkeep?.[key]??{};return Object.fromEntries(Object.entries(r).filter(([k])=>k.endsWith('ShortDays')));}
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
 const mealCandidates=Symbol('physical meal candidates');

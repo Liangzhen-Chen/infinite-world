@@ -14,7 +14,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const argv = process.argv.slice(2);
+// Command-line options belong to this script only when it is the entry point; imported as a library (runtime-world) the host's own --root must not redirect it.
+const isMain = path.resolve(process.argv[1] ?? '') === path.resolve(import.meta.filename);
+const argv = isMain ? process.argv.slice(2) : [];
 const ROOT = argv.includes('--root') ? argv[argv.indexOf('--root') + 1] : path.resolve(import.meta.dirname, '..');
 const WRITE = argv.includes('--write');
 const P = rel => path.join(ROOT, rel);
@@ -352,7 +354,6 @@ function writeTable(rel, isGenerated, fix, generated) {
   fs.writeFileSync(file, (head + body + tail).replace(/\n/g, eol));
 }
 
-const isMain = path.resolve(process.argv[1] ?? '') === path.resolve(import.meta.filename);
 if (isMain) {
   const g = generate();
   const all = [...g.authored, ...g.recipes];

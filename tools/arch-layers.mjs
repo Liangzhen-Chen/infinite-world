@@ -47,6 +47,13 @@ put(['deterrence'],'L1');
 // S5-F/F2 legal-tender pricing and goods escrow sit beside currency and money; W5 deterministic math and the claim-unit label are leaves every layer may read.
 put(['tender','goods-escrow'],'L1');
 put(['det-math','claim-unit'],'L0');
+// SL / K-line modules. Leaves read by the composition root and every layer: the breach-noting transaction hook, the species-trait
+// derivation (husbandry products from physiology, no per-species list) and the runtime-world assembler that applies it.
+put(['offense-notes','husbandry-traits','runtime-world','item-class','advance-registration'],'L0');
+// Household-tool rule: the same law for the player and NPCs; husbandry and professions read it. item-class (above) is a pure leaf read by engine and items alike.
+put(['household-tools'],'L1');
+// Dealer restocking, livestock sale and profession-driven labour trade goods through the existing market and shop.
+put(['distribution','livestock-sale'],'L2','economy');put(['npc-labor'],'L2','npc');
 // W8C: body-derived safe carry load (attr.carry), read by item transfers.
 put(['carry'],'L1');
 // Time-slot resolution and request programs belong to the shared action ontology.

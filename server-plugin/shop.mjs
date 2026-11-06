@@ -1,4 +1,4 @@
-import {registerMerchandiseResolver} from './npc-life.mjs';
+import {registerMerchandiseResolver} from './household-budget.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {toRational,fromRational} from './det-math.mjs';
 import {isEffective} from './lifecycle-state.mjs';

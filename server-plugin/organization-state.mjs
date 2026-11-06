@@ -107,8 +107,13 @@ export function storedOrganizationIds(engine,state){
         ...(engine.world.locations??[]).filter(l=>l.monsterSociety&&!engine.world.factions?.some(f=>f.contactAnchor===l.id)).map(l=>l.id),
         ...temples(engine).map(t=>t.id),...recordsWhere(state.records,'category','organization').map(r=>r.id)])].sort();
 }
-export function memberOrganizations(engine,state,member){
+// {source:'faction'} reads only the organisations whose catalogue base is a faction: a reader that keeps nothing else need not derive every household, school and clinic.
+export function memberOrganizations(engine,state,member,{source=null}={}){
     member=actorId(engine.world,member);
+    if(source==='faction'){
+        const factionIds=new Set([...(engine.world.factions??[]).map(f=>f.id),...reputationFactions(engine).map(f=>f.id)]);
+        return [...factionIds].map(id=>organizationState(engine,state,id)).filter(o=>o?.source==='faction'&&o.members[member]);
+    }
     const ids=organizationIds(engine,state),family=natalFamily(engine,state,member);if(family)ids.push(family);
     return ids.map(id=>organizationState(engine,state,id)).filter(o=>o?.members[member]);
 }

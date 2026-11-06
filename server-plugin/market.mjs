@@ -3,7 +3,7 @@ import {bagStock,priceRead,settlementStock,granary,pledged,freight,crop as cropA
 import {privateCropYieldBase} from './domain-rules.mjs';
 import {placeSettlement,personBusinesses,personHousehold} from './entity-view.mjs';
 import {isItemClass,classItems,workmanshipTier} from './item-class.mjs';
-import {householdUpkeepGap} from './npc-life.mjs';
+import {householdUpkeepGap} from './household-budget.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
