@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {entries,reviewDraftFor,validateDraft} from '../tools/creatures-mixed-content.mjs';
 import {readMixedPublication,mergeMixedPublication,publishMixed} from '../tools/publish-creatures-mixed.mjs';
@@ -181,7 +181,7 @@ test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',a
  const locations=before.locations.map(row=>{const out={...row};for(const key of Object.keys(biomes.locations?.[row.id]??{}))delete out[key];return out;});
  await write('meta/monsters.json',before.monsters);await write('meta/items.json',before.items);await write('geo/locations.json',locations);await write('geo/routes.json',before.routes);await write('meta/rules.json',before.rules);
  const preview=await publishMixed({root});assert.equal(preview.published,false);assert.equal(preview.changed.length,5);
- await publishMixed({root,publish:true});assert.deepEqual(norm(await loadWorld(root)),norm(world));assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
+ await publishMixed({root,publish:true});assert.deepEqual(norm(await loadRuntimeWorld(root)),norm(world));assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
  const stored=JSON.parse(await fs.readFile(path.join(root,'geo/locations.json'),'utf8'));
  for(const row of stored)for(const key of Object.keys(biomes.locations?.[row.id]??{}))assert.equal(Object.hasOwn(row,key),false,`${row.id}.${key}`);
  // Conflicting sources are still rejected; the publisher must preserve the
