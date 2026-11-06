@@ -55,8 +55,17 @@ test('A3 route order: loan consent and unauthored transfers retain real authorit
  assert.equal(refused.receipt.status,'rejected');assert.equal(refused.receipt.code,'E-ACTION-CONSENT');
  assert.equal(refused.receipt.routed,'core:trade.lend');assert.match(refused.receipt.reason,/明确同意/);
  assert.deepEqual(refused.receipt.applied,[]);assert.equal(refused.receipt.cost.time,0);
- assert.throws(()=>prepareOpenAction(engine,document,{intent:'xyzzy',effects:[{op:'transfer',resource:'coin',from:shop,to:'self',qty:5}]}),{code:'E-OPEN-TRANSFER'});
+ // K6 (76365571, legality is a consequence): an unauthored transfer out of a present person's purse is the
+ // same physical act and is committed as theft against her; out of reach it still refuses physically.
+ const take={intent:'xyzzy',effects:[{op:'transfer',resource:'coin',from:shop,to:'self',qty:5}]};
+ const taken=await engine.reduce(document,{tool:'world_propose',eventId:'route-unauthored-take',args:take}),after=applyPatches(document,taken.patches);
+ assert.equal(taken.result.receipt.status,'committed');assert.equal(after.state.player.coins,105);
+ const offense=taken.result.receipt.consequences.find(c=>c.type==='offense'),row=after.state.records[offense?.record];
+ assert.equal(offense?.offense,'theft');assert.equal(offense.victim,shop);assert.equal(row.sourceEvent,'route-unauthored-take');assert.deepEqual(row.stolen,{coins:5});
  assert.deepEqual(document,before);
+ const away=structuredClone(document);away.state.npcs[shop].location='loc_bs';
+ const far=await engine.reduce(away,{tool:'world_propose',eventId:'route-unauthored-far',args:take}).then(out=>({status:out.result.receipt?.status,patches:out.patches,reason:out.result.receipt?.reason}),error=>({status:'rejected',patches:[],reason:error.message}));
+ assert.equal(far.status,'rejected',JSON.stringify(far.reason));assert.deepEqual(far.patches,[]);assert.doesNotMatch(far.reason??'',/同意|授权|许可/);
 });
 
 test('A3 route order: sale direction wins over incidental buyer wording, price is not item quantity',()=>{

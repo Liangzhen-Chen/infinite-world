@@ -11,6 +11,7 @@ import {prepareMagic,applyMagic} from '../server-plugin/magic.mjs';
 import {advanceMagicObjects,douseObjectFire,initialThermalState} from '../server-plugin/magic-object.mjs';
 import {weatherAt} from '../server-plugin/weather.mjs';
 import {servantCarryWater} from '../server-plugin/environment.mjs';
+import {commitOffenses} from '../server-plugin/law.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const engine=new WorldEngine(world),species=id=>world.monsters.find(m=>m.id===id);
@@ -100,7 +101,16 @@ test('焰矢射向干草线即点燃；浇水灭火并浸湿，湿草线再射�
  assert.equal(rec().burning,true);
  assert.ok(traitsOf(engine,doc,'feature_s2_fire_strip').tags.includes('burning'));
  assert.throws(()=>prepareMagic.call(engine,d,fireBolt,{target:'feature_s2_fire_strip',authorization:'auth_strip'}),/没有可成立的作用/);
- assert.throws(()=>prepareMagic.call(engine,d,fireBolt,{target:'feature_s2_fire_strip'}),/授权/);
+ // K6 (acf503a8, legality is a consequence): the owner's authorization is a legal gate. On the burning strip
+ // the refusal stays physical with or without it; on an unburnt strip the bolt without authorization still
+ // ignites it and is committed as unauthorized use against the owner under the cast's event.
+ assert.throws(()=>prepareMagic.call(engine,d,fireBolt,{target:'feature_s2_fire_strip'}),/没有可成立的作用/);
+ {const bare=strip('ix-strip-unlicensed'),owner=world.locations.find(l=>l.id==='bld_bs_reed_dao').features.find(f=>f.id==='feature_s2_fire_strip').owner;
+  const lit=applyMagic.call(engine,bare.d,prepareMagic.call(engine,bare.d,fireBolt,{target:'feature_s2_fire_strip'}),'ev-bolt-unlicensed');
+  assert.deepEqual(lit.added,['burning']);assert.equal(bare.doc.state.records['physical_feature:feature_s2_fire_strip'].state.thermal.burning,true);
+  const [offense]=commitOffenses(bare.d,engine,'ev-bolt-unlicensed'),row=bare.d.get('state','records',offense?.record);
+  assert.ok(typeof owner==='string'&&owner!=='player');assert.equal(offense?.offense,'unauthorized_use');assert.equal(offense.victim,owner);
+  assert.equal(row.sourceEvent,'ev-bolt-unlicensed');assert.equal(row.subject.id,'feature_s2_fire_strip');assert.equal(row.offender,'player');}
  const pool={id:'feature_ix_tub',name:'试验水桶',aliases:[],kind:'container',owner:'player',access:'public',position:[0,1],state:{capacityMl:5000,waterMl:4000,turbidity:0,saltMg:0,toxinUg:0,pathogenRisk:0,odor:''}};
  const w=structuredClone(world);w.locations.find(l=>l.id==='bld_bs_reed_dao').features.push(pool);
  const e2=new WorldEngine(w);

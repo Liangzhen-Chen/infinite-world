@@ -178,9 +178,15 @@ test('old query gives no authority after the native ownership transfer protocol 
  transferHolding(d,{id:owned.id,holder:Object.keys(f.document.state.npcs)[0],writer:owned.writer,reason:'transferred',eventId:'inspect-ownership-transfer',engine:f.engine});
  f.document=applyPatches(f.document,d.patches);
  const now=menu(f).target.primitives.find(row=>row.effect.field==='condition'&&row.tool==='item_staff');shape(now.blocked);
- const before=structuredClone(f.document),out=await f.engine.reduce(f.document,{tool:'world_propose',eventId:'inspect-stale-authority',args:{intent:'一边打磨一边说话',means:ability.means,effects:[ability.effect,{op:'emit',verb:'tell',visibility:'witnessed',payload:{text:'正在打磨'}}]}});
- assert.equal(out.result.receipt.status,'rejected');shape(out.result.receipt);
- assert.deepEqual(out.patches,[]);assert.deepEqual(f.document,before);
+ // K6 (76365571, legality is a consequence): the stale query confers no right. Working the door that now
+ // belongs to someone else still physically happens; the missing title is committed as an offense against
+ // the new owner under this act's event, not ignored as if the old right still held.
+ const holder=Object.keys(f.document.state.npcs)[0];
+ const out=await f.engine.reduce(f.document,{tool:'world_propose',eventId:'inspect-stale-authority',args:{intent:'一边打磨一边说话',means:ability.means,effects:[ability.effect,{op:'emit',verb:'tell',visibility:'witnessed',payload:{text:'正在打磨'}}]}});
+ assert.equal(out.result.receipt.status,'committed');const after=applyPatches(f.document,out.patches);
+ const offense=out.result.receipt.consequences.find(c=>c.type==='offense'),row=after.state.records[offense?.record];
+ assert.ok(offense,'acting on the transferred door is an offense');assert.equal(offense.victim,holder);
+ assert.equal(row.sourceEvent,'inspect-stale-authority');assert.equal(row.offender,'player');assert.equal(row.subject.id,f.door);
 });
 
 test('hidden NPCs never enter scene text, selectors, target cards or the model projection',()=>{

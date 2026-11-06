@@ -148,8 +148,15 @@ test('B/C: actual destruction reads owner-issued subject permission, and rejects
  const transferred=write(document,d=>executeProtocolPrimitive(d,engine,{op:'holding.transfer',id:title.id,holder:npc},{eventId:'title-changed'})).document;
  assert.equal(limitedPermit(context(save(transferred)),'player',target,'destroy'),null);
  assert.deepEqual(currentControllers(context(transferred),target),[npc]);
+ // K6 (76365571, legality is a consequence): an expired saved grant no longer licenses the act. Destroying
+ // the crate in hand still physically happens, without acting under the permit, and is committed as
+ // property damage against the owner who issued it.
  const expired=save(document);expired.state.minute=800;
- assert.throws(()=>commitPrimitives(expired,effects,frame),{code:'E-AUTHORITY'});
+ const late=commitPrimitives(expired,effects,frame),broken=save(applyPatches(expired,late.patches));
+ assert.notEqual(late.receipt.applied[0].actedAs?.kind,'permit');assert.ok(broken.holdings.protocol.entities[target].gone);
+ const offense=late.receipt.consequences.find(c=>c.type==='offense'),row=broken.state.records[offense?.record];
+ assert.equal(offense?.offense,'property_damage');assert.equal(offense.victim,other);assert.equal(row.sourceEvent,'permitted-destroy');assert.equal(row.offender,'player');
+ assert.equal((out.receipt.consequences??[]).some(c=>c.type==='offense'),false);
 });
 
 test('D: actorless history keeps payload and identity, replays without social/wealth effects and rejects forged bindings',()=>{
