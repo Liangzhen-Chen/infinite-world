@@ -1,4 +1,3 @@
-import {registerAdvanceHook} from './advance-hooks.mjs';
 import {readFileSync} from 'node:fs';
 import {takeNotedOffenses,noteOffense} from './offense-notes.mjs';
 import lawBalance from '../world/rules/tables/balance/law.json' with {type:'json'};
@@ -1143,5 +1142,3 @@ export function lawView(engine,document){
         note:wanted.some(w=>w.case===id)?'已发通缉：范围内的执法者与知情人会认出你，可自首(confess)或到法院履行':row.reported?'案件已受理，判罚以当前审理结果为准':'执法人员未获报案，不能当作已通缉或定罪'}))};
 }
 installFacilityRuntime({registerFireDamage});
-// Called through the advance-hook registry by lower layers (dependency inversion).
-registerAdvanceHook('registerOffense',registerOffense);

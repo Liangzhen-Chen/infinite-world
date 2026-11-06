@@ -1,5 +1,5 @@
 import {advanceHook} from './advance-hooks.mjs';
-const sellLivestock=(...a)=>advanceHook('sellLivestock')(...a);
+import {sellLivestock} from './livestock-sale.mjs';
 import {ensureHoldings} from './holdings.mjs';
 import {isPhysicallyDead,aliveHoldings} from './holdings.mjs';
 import {primitiveActionRuntime,PRIMITIVE_EVENT_VERBS} from './primitives.mjs';
@@ -91,7 +91,7 @@ import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
-const materializeWorkstations=world=>advanceHook('materializeWorkstations')(world);
+import {materializeWorkstations}from'./workstation-services.mjs';
 import {deriveItemAttributes}from'./item-class.mjs';
 import {materializeRuntimeWorld}from'./runtime-world.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationPlan}from'./population.mjs';

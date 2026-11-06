@@ -1,4 +1,3 @@
-import {registerAdvanceHook} from './advance-hooks.mjs';
 import fs from 'node:fs';
 import {facilityView,installFacilityRuntime,FACILITY_TYPES} from './facility-state.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
@@ -192,5 +191,3 @@ export function currentWorkstationRecipes(engine,state,id){
     const slot=engine.protocolScheduleAt?.(engine,id,state.minute,state);
     return workstationRecipes(engine,state,id,slot,{present:true});
 }
-// Called through the advance-hook registry by lower layers (dependency inversion).
-registerAdvanceHook('materializeWorkstations',materializeWorkstations);

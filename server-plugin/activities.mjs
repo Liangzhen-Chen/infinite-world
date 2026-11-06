@@ -1,8 +1,8 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isEffective,isPhysicallyDead} from './holdings.mjs';
-const unlicensedProperty=(...a)=>advanceHook('unlicensedProperty')(...a);
+import {unlicensedProperty} from './action-authority.mjs';
 import {noteOffense} from './offense-notes.mjs';
-const headOf=(...a)=>advanceHook('headOf')(...a);
+import {headOf} from './primitives-effects.mjs';
 import {advanceHook} from './advance-hooks.mjs';
 import {declareLedgerWriter,transfer,accountKey,LEDGER_COIN} from './ledger.mjs';
 declareLedgerWriter('activities',{sinks:['sink:export']});
@@ -30,7 +30,7 @@ import {transferItems,heldUnit,wearItem,workmanshipTier,unitLacks}from'./items.m
 import {localWeather}from'./weather.mjs';
 import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
-const husbandryAction={call:(self,...a)=>advanceHook('husbandryAction').apply(self,a)};
+import {husbandryAction}from'./husbandry.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';

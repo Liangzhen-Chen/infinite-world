@@ -1,4 +1,3 @@
-import {registerAdvanceHook} from './advance-hooks.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -1017,5 +1016,3 @@ export function validateNpcLifeRules(world){
  }
  return errors;
 }
-// Called through the advance-hook registry by lower layers (dependency inversion).
-registerAdvanceHook('recordEntityDeath',recordEntityDeath);

@@ -4,7 +4,7 @@ import {declareLedgerWriter,accountKey} from './ledger.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings,ensureHoldings} from './holdings.mjs';
 import {addPopulation,populationHealth,advancePopulationDisease,takePopulation} from './population-health.mjs';
 import {monsterStats} from './combat-state.mjs';
-import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
 import {digest} from './storage.mjs';
 import {spiritStateFor} from './creature-nature.mjs';
 import {preconditionFailure} from './precondition.mjs';
@@ -14,11 +14,10 @@ import {yearDays} from './husbandry-traits.mjs';
 import {wearItem} from './items.mjs';
 import {householdTool} from './household-tools.mjs';
 import {npcGradedCheck,npcProficiency} from './checks.mjs';
-// Cross-pack calls go through the advance-hook registry (manufacturing, professions, npc-life register them).
-const craftOutcome=(...a)=>advanceHook('craftOutcome')(...a),craftStanding=(...a)=>advanceHook('craftStanding')(...a),toolFactor=(...a)=>advanceHook('toolFactor')(...a);
-const effectiveProficiency=(...a)=>advanceHook('effectiveProficiency')(...a);
+import {craftOutcome,craftStanding,toolFactor} from './manufacturing.mjs';
+import {effectiveProficiency} from './professions.mjs';
 import {propertyOwners} from './action-authority.mjs';
-const recordEntityDeath=(...a)=>advanceHook('recordEntityDeath')(...a);
+import {recordEntityDeath} from './npc-life.mjs';
 import {recordWildlifeDeath} from './wildlife.mjs';
 import {carryRoomKg} from './carry.mjs';
 
@@ -367,5 +366,3 @@ export function individuateHerd(d,engine,{population,count,eventId}){
  return ids;
 }
 registerAdvanceHook('individuateHerd',individuateHerd);
-// Called through the advance-hook registry by lower layers (dependency inversion).
-registerAdvanceHook('husbandryAction',husbandryAction);
