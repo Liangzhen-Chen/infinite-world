@@ -245,3 +245,29 @@ test('household tools: at home one may use a tool any member of the household ho
  const away=premise(engine,document,{facts:[{path:['state','npcs','npc_hw_duanhe','location'],value:'loc_hw'}]});
  assert.throws(()=>householdTool(engine.primitiveDraft(away),engine,'cut',undefined,'npc_hw_duanhe'),e=>e.code==='E-ACTION-TOOL');
 });
+
+test('an NPC keeper culls by the same law: a household member\'s knife at home, own skill, tier and loss; no knife in the house, no cull',async()=>{
+ // Test herds kept by authored households: 段家 (house_hw_04, the forge: 段岩 holds knives,
+ // 段禾 holds none) and 陶家 (house_hw_06: nobody holds a cutting tool).
+ const run=async(owner,location)=>{
+  const w=structuredClone(world);
+  w.ecology.herds.push({id:'population_ksl_npc',name:'试验雉群',owner,location,species:'monster_oat_pheasant',count:400,capacity:400});
+  const engine=new WorldEngine(w);
+  let document=premise(engine,engine.createCharacter(seed,{},'ksl-npc'),{minute:1200});
+  const before=structuredClone(document);
+  document=(await reduce(engine,document,'world_time',{minutes:240+1440*3},'npc')).document;
+  return {engine,before,document,row:document.state.records['husbandry:population_ksl_npc']};
+ };
+ const bare=await run('npc_hw_taozhi','bld_hw_herbs');
+ assert.equal(bare.row.culled??0,0);assert.ok(bare.row.cullWithoutTool>0,'整户没有刀就宰不了');
+ const armed=await run('npc_hw_duanhe','bld_hw_forge');
+ assert.ok(armed.row.culled>0,'借用同户在家成员的刀宰杀');
+ assert.equal(Object.values(armed.row.cullTakes).reduce((a,b)=>a+b,0)>0,true);
+ const blades=id=>Object.entries(armed.document.state.npcs[id].inventory).filter(([k])=>(armed.engine.byId.get(k)?.tags??[]).includes('cut'));
+ assert.deepEqual(blades('npc_hw_duanhe'),[],'刀没有挪到宰杀者包里');
+ const worn=blades('npc_hw_duanyan').some(([k,v])=>(v.durability??armed.engine.byId.get(k).durability)<(armed.before.state.npcs.npc_hw_duanyan.inventory[k].durability??armed.engine.byId.get(k).durability));
+ assert.ok(worn,'磨损落在持刀人的刀上');
+ const units=Object.values(armed.document.state.itemInstances).filter(u=>u.recipe?.kind==='husbandry_slaughter'&&u.recipe.population==='population_ksl_npc');
+ assert.ok(units.length&&units.every(u=>u.owner==='npc_hw_duanhe'));
+ assert.deepEqual(reconcile(armed.engine,armed.document).mismatches,[]);
+});

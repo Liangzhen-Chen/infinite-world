@@ -115,7 +115,26 @@ function die(d,e,row,s,n,cause,day,eventId){
  moveStock(d,{from:animals(row),to:`sink:death|${resource(row.species)}|${cause}`,amount:n,writer:'husbandry',eventId});
  carcass(d,e,row,s,n,day,eventId);
 }
-const cull=(d,e,row,s,n,day,eventId)=>{if(n){row.culled=(row.culled??0)+n;die(d,e,row,s,n,'cull',day,eventId);}};
+// A tending NPC keeper culls by slaughtering (SL): the same take law as the
+// player's (household tool, own skill standing and check, craftOutcome for tier
+// and kept share). Without a cutting tool in the household no head is culled.
+function cull(d,e,row,s,n,day,eventId){
+ if(!n)return;
+ const keeper=tendedBy(d,e,row);
+ let take;try{take=prepareTake(d,e,takeRule(e,'carcass'),undefined,keeper);}
+ catch(error){if(error?.code!=='E-ACTION-TOOL')throw error;row.cullWithoutTool=(row.cullWithoutTool??0)+n;return;}
+ const key=`${eventId}:cull:${row.culled??0}`,settled=settleTake(d,e,take,key);
+ if(take.rule.toolWearPerHead)wearItem(d,e,take.holder,take.tool,take.rule.toolWearPerHead*n);
+ takePopulation(row,n);row.culled=(row.culled??0)+n;
+ moveStock(d,{from:animals(row),to:`sink:death|${resource(row.species)}|cull`,amount:n,writer:'husbandry',eventId});
+ const tier=settled.workmanship??(settled.result.failure?`失败:${settled.result.failure}`:'标准');
+ row.cullTakes={...row.cullTakes,[tier]:(row.cullTakes?.[tier]??0)+1};
+ for(const part of s.husbandry.yields?.carcass??[]){
+  const total=part.amount*n,kept=settled.kept(total);
+  if(total>kept)row.cullLost={...row.cullLost,[part.item]:(row.cullLost?.[part.item]??0)+total-kept};
+  if(kept)produceChunked(d,e,part.item,kept,{eventId:`${key}:${part.item}`,owner:keeper,maker:row.id,recipe:{kind:'husbandry_slaughter',population:row.id,species:s.id,owner:keeper,day},workmanship:settled.workmanship,grade:settled.grade,books:{flow:'src:husbandry',purpose:'husbandry_slaughter',writer:'husbandry',eventId}});
+ }
+}
 // Natural death: one over the species' lifespan per head and day. Without an
 // authored lifespan it follows body mass (lifespan ~ mass^1/4).
 function lifespanDays(e,s){
