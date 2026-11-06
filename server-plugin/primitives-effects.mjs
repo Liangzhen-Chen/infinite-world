@@ -3,7 +3,7 @@ import {reject} from './primitive-policy.mjs';
 import {createEntity,setLocation,openHolding,closeHolding,aliveHoldings,declareHoldingWriter,templatesOf,isPhysicallyDead,isGone,holdingSet} from './holdings.mjs';
 import {physicalLocation,changeItems,trackTransferUnit} from './items.mjs';
 import {placed} from './stock.mjs';
-import {advanceHook} from './advance-hooks.mjs';
+import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
 import {unlicensedProperty} from './action-authority.mjs';
 import {noteOffense} from './offense-notes.mjs';
 // A lethal or harming blow aimed at a herd lands on one head: the herd stock
@@ -365,3 +365,5 @@ function createNarrative(d,engine,effect,{frame,child,limits={}}){
  if(['item','building'].includes(effect.kind))openHolding(d,{kind:'owns',holder:frame.actor,subject:id,terms:{share:1},writer:'primitives',eventId:child,engine});
  return {entity:id,template:template.id,location};
 }
+// Called through the advance-hook registry by lower layers (dependency inversion).
+registerAdvanceHook('headOf',headOf);

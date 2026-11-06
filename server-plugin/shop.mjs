@@ -1,3 +1,4 @@
+import './livestock-sale.mjs';// registers the livestock sale hook the composition root calls
 import {registerMerchandiseResolver} from './household-budget.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {toRational,fromRational} from './det-math.mjs';

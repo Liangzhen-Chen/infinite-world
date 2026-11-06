@@ -4,7 +4,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {livestockValue} from './market.mjs';
 import {chargeTrade} from './contracts.mjs';
-import {advanceHook} from './advance-hooks.mjs';
+import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
 import {aliveHoldings,declareHoldingWriter,holdingSet,isPhysicallyDead} from './holdings.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
@@ -47,3 +47,5 @@ export function sellLivestock(d,engine,{buyer,seller,target,quantity=1,location,
  holdingSet(d,null,['state','records',`livestock_sale:${eventId}`],{category:'livestock_sale',buyer,seller,species:picked.species,heads:ids,location,minute:d.get('state','minute'),totalCoins:cost,unitValue:quote.value,basis:{carcass:quote.carcass,products:quote.products,horizonDays:quote.horizonDays},sourceEvent:eventId},'livestock-sale',eventId);
  return {buyer,seller,species:picked.species,heads:ids,quantity:count,cost,pricing:quote,...payment};
 }
+// Called through the advance-hook registry by lower layers (dependency inversion).
+registerAdvanceHook('sellLivestock',sellLivestock);

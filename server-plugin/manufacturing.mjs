@@ -1,3 +1,4 @@
+import {registerAdvanceHook} from './advance-hooks.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {noteUnlicensedUse} from './offense-notes.mjs';
 import {reject} from './action-rejection.mjs';
@@ -282,3 +283,7 @@ export function manufacture(d,args,eventId){
         factSummary:`${outcome.success?`制成${this.byId.get(recipe.output.item).name}${products[0].amount}件`:partial.length?`失败，只做出${partial[0].amount}件${workmanship}的${this.byId.get(partial[0].item).name}（部分用途不具备）`:'未得到任何成品'}；${salvage.length?`实际回收${salvage.map(row=>`${this.byId.get(row.item).name}${row.amount}份`).join('、')}`:'没有回收到任何可用材料'}；工坊费${station?.fee??0}铜已支付，耗时${workMinutes}分钟。`,
         note:'spent已实际支付及消耗，salvage是实际回收物，produced是实际成品。失败不退款；没有回收时只能描写弃置的废料，不能写回收到刨花或碎屑。'};
 }
+// Called through the advance-hook registry by lower layers (dependency inversion).
+registerAdvanceHook('craftOutcome',craftOutcome);
+registerAdvanceHook('craftStanding',craftStanding);
+registerAdvanceHook('toolFactor',toolFactor);

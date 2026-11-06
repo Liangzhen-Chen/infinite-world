@@ -1,3 +1,4 @@
+import {registerAdvanceHook} from './advance-hooks.mjs';
 import {aliveHoldings,holdingKind,locationOf,located,declareHoldingWriter,holdingSet,isEffective} from './holdings.mjs';
 import {settlementGovernment,groupView} from './entity-view.mjs';
 import {temples} from './faith-catalog.mjs';
@@ -301,3 +302,5 @@ export function createActionPrimitiveFrame(context,{actor,eventId,source,mirrorT
   },
   location:(document,id)=>located(actionReader(document),id,x=>x==='player'?document.state?.location:actionEntity(withDocument(document),x)?.location??context.engine?.byId?.get(x)?.location??null)});
 }
+// Called through the advance-hook registry by lower layers (dependency inversion).
+registerAdvanceHook('unlicensedProperty',unlicensedProperty);

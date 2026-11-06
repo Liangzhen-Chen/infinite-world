@@ -1,3 +1,4 @@
+import {registerAdvanceHook} from './advance-hooks.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead,isEffective} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
@@ -130,3 +131,5 @@ export function profession(d,args,id){
     }
     return{profession:role,...(application?{...application,cost:outcome.success?catalog.fee:0}:{}),certified:outcome.success,...(task?{entryTask:task.name}:{}),...outcome};
 }
+// Called through the advance-hook registry by lower layers (dependency inversion).
+registerAdvanceHook('effectiveProficiency',effectiveProficiency);

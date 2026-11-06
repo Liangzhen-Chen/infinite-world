@@ -1,3 +1,4 @@
+import {registerAdvanceHook} from './advance-hooks.mjs';
 import {pruneRecords} from './record-cleanup.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {createHash}from'node:crypto';
@@ -111,3 +112,5 @@ export function simulateFight(team,opponent,rules,rng){
     }
     return {won:false,rounds:rules.combat.simulationRoundLimit,reason:'超过交锋上限'};
 }
+// Called through the advance-hook registry by lower layers (dependency inversion).
+registerAdvanceHook('derivedStats',derivedStats);
