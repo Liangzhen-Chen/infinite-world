@@ -4065,7 +4065,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 87,
+    "line": 90,
     "symbol": "activities.combat"
    }
   },
@@ -4095,7 +4095,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 216,
+    "line": 219,
     "symbol": "activities.craft"
    }
   },
@@ -4125,9 +4125,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 216,
+    "line": 219,
     "symbol": "activities.craft",
-    "dispatch": "server-plugin/activities.mjs:217"
+    "dispatch": "server-plugin/activities.mjs:220"
    }
   },
   {
@@ -4157,7 +4157,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 221,
+    "line": 224,
     "symbol": "activities.research"
    }
   },
@@ -4260,7 +4260,7 @@
    "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/business.mjs:578"
    }
@@ -4364,7 +4364,7 @@
    "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/business.mjs:592"
    }
@@ -4468,7 +4468,7 @@
    "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/business.mjs:575"
    }
@@ -4572,7 +4572,7 @@
    "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/business.mjs:574"
    }
@@ -4676,9 +4676,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/activities.mjs:267"
+    "dispatch": "server-plugin/activities.mjs:270"
    }
   },
   {
@@ -4780,7 +4780,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/civic.mjs:141"
    }
@@ -4884,7 +4884,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/civic.mjs:150"
    }
@@ -4988,7 +4988,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/civic.mjs:156"
    }
@@ -5092,7 +5092,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/civic.mjs:165"
    }
@@ -5196,7 +5196,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/civic.mjs:165"
    }
@@ -5300,7 +5300,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/civic.mjs:146"
    }
@@ -5404,7 +5404,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/governance.mjs:201"
    }
@@ -5508,7 +5508,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/monster-society.mjs:350"
    }
@@ -5612,7 +5612,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/monster-society.mjs:359"
    }
@@ -5716,7 +5716,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/monster-society.mjs:375"
    }
@@ -5820,7 +5820,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/governance.mjs:240"
    }
@@ -5924,7 +5924,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/governance.mjs:247"
    }
@@ -6028,7 +6028,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/governance.mjs:264"
    }
@@ -6132,7 +6132,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/governance.mjs:272"
    }
@@ -6236,7 +6236,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/governance.mjs:292"
    }
@@ -6340,9 +6340,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/activities.mjs:254"
+    "dispatch": "server-plugin/activities.mjs:257"
    }
   },
   {
@@ -6444,9 +6444,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/activities.mjs:266"
+    "dispatch": "server-plugin/activities.mjs:269"
    }
   },
   {
@@ -6548,7 +6548,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/titles.mjs:164"
    }
@@ -6652,7 +6652,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/titles.mjs:165"
    }
@@ -6756,7 +6756,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/titles.mjs:166"
    }
@@ -6860,7 +6860,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/notables.mjs:151"
    }
@@ -6964,7 +6964,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/notables.mjs:152"
    }
@@ -7068,7 +7068,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/notables.mjs:153"
    }
@@ -7172,7 +7172,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/promotion.mjs:134"
    }
@@ -7276,7 +7276,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/promotion.mjs:135"
    }
@@ -7380,7 +7380,7 @@
    "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/education.mjs:190"
    }
@@ -7484,7 +7484,7 @@
    "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/education.mjs:181"
    }
@@ -7588,7 +7588,7 @@
    "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/education.mjs:175"
    }
@@ -7692,7 +7692,7 @@
    "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/education.mjs:186"
    }
@@ -7796,7 +7796,7 @@
    "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/medicine.mjs:252"
    }
@@ -7900,7 +7900,7 @@
    "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/medicine.mjs:254"
    }
@@ -8004,7 +8004,7 @@
    "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/medicine.mjs:55"
    }
@@ -8108,7 +8108,7 @@
    "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/medicine.mjs:273"
    }
@@ -8212,7 +8212,7 @@
    "pack": "medicine",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/medicine.mjs:283"
    }
@@ -8316,7 +8316,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/festival.mjs:283"
    }
@@ -8420,7 +8420,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/festival.mjs:254"
    }
@@ -8524,7 +8524,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/festival.mjs:317"
    }
@@ -8628,7 +8628,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/festival.mjs:331"
    }
@@ -8732,7 +8732,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/festival.mjs:306"
    }
@@ -8836,7 +8836,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/faction-clock.mjs:239"
    }
@@ -8940,7 +8940,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/faction-clock.mjs:244"
    }
@@ -9044,7 +9044,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement"
    }
   },
@@ -9147,7 +9147,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/organizations.mjs:440"
    }
@@ -9251,7 +9251,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/organizations.mjs:441"
    }
@@ -9355,7 +9355,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/organizations.mjs:513"
    }
@@ -9459,7 +9459,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/organizations.mjs:532"
    }
@@ -9563,7 +9563,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/organizations.mjs:538"
    }
@@ -9667,7 +9667,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/organizations.mjs:551"
    }
@@ -9771,7 +9771,7 @@
    "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/family-politics.mjs:50"
    }
@@ -9875,7 +9875,7 @@
    "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/family-politics.mjs:48"
    }
@@ -9979,7 +9979,7 @@
    "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/family-politics.mjs:46"
    }
@@ -10083,7 +10083,7 @@
    "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/family-politics.mjs:73"
    }
@@ -10187,7 +10187,7 @@
    "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/family-politics.mjs:44"
    }
@@ -10291,7 +10291,7 @@
    "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/family-politics.mjs:91"
    }
@@ -10395,7 +10395,7 @@
    "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/family-politics.mjs:105"
    }
@@ -10499,7 +10499,7 @@
    "pack": "family",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/family-politics.mjs:49"
    }
@@ -10603,7 +10603,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/faith.mjs:285"
    }
@@ -10707,7 +10707,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/faith.mjs:297"
    }
@@ -10811,7 +10811,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/faith.mjs:300"
    }
@@ -10915,7 +10915,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/faith.mjs:306"
    }
@@ -11019,7 +11019,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/faith.mjs:278"
    }
@@ -11123,7 +11123,7 @@
    "pack": "organizations",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/faith.mjs:308"
    }
@@ -11227,7 +11227,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/nation-founding.mjs:179"
    }
@@ -11331,9 +11331,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/activities.mjs:252"
+    "dispatch": "server-plugin/activities.mjs:255"
    }
   },
   {
@@ -11435,7 +11435,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/high-nobility.mjs:91"
    }
@@ -11539,7 +11539,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/high-nobility.mjs:95"
    }
@@ -11643,7 +11643,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/high-nobility.mjs:99"
    }
@@ -11747,7 +11747,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/high-nobility.mjs:109"
    }
@@ -11851,7 +11851,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/titles.mjs:162"
    }
@@ -11955,7 +11955,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/titles.mjs:163"
    }
@@ -12059,7 +12059,7 @@
    "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/war-diplomacy.mjs:152"
    }
@@ -12163,7 +12163,7 @@
    "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/war-diplomacy.mjs:155"
    }
@@ -12267,9 +12267,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/activities.mjs:259"
+    "dispatch": "server-plugin/activities.mjs:262"
    }
   },
   {
@@ -12371,7 +12371,7 @@
    "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/military.mjs:517"
    }
@@ -12475,7 +12475,7 @@
    "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/military.mjs:518"
    }
@@ -12579,7 +12579,7 @@
    "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/military.mjs:519"
    }
@@ -12683,7 +12683,7 @@
    "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/military.mjs:520"
    }
@@ -12787,7 +12787,7 @@
    "pack": "military",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/military.mjs:521"
    }
@@ -12891,7 +12891,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/duels.mjs:27"
    }
@@ -12995,7 +12995,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/duels.mjs:44"
    }
@@ -13099,7 +13099,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/duels.mjs:51"
    }
@@ -13203,7 +13203,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/elections.mjs:32"
    }
@@ -13307,7 +13307,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/elections.mjs:66"
    }
@@ -13411,7 +13411,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement"
    }
   },
@@ -13514,7 +13514,7 @@
    "pack": "governance",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
     "dispatch": "server-plugin/elections.mjs:54"
    }
@@ -13618,9 +13618,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 241,
+    "line": 244,
     "symbol": "activities.settlement",
-    "dispatch": "server-plugin/activities.mjs:245"
+    "dispatch": "server-plugin/activities.mjs:248"
    }
   },
   {
@@ -13654,7 +13654,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 286,
+    "line": 289,
     "symbol": "activities.quest",
     "dispatch": "server-plugin/law.mjs:994"
    }
@@ -13690,7 +13690,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 286,
+    "line": 289,
     "symbol": "activities.quest",
     "dispatch": "server-plugin/bounty.mjs:350"
    }
@@ -13726,7 +13726,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 286,
+    "line": 289,
     "symbol": "activities.quest",
     "dispatch": "server-plugin/perception.mjs:60"
    }
@@ -13762,7 +13762,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 286,
+    "line": 289,
     "symbol": "activities.quest",
     "dispatch": "server-plugin/bounty.mjs:359"
    }
@@ -13798,7 +13798,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 286,
+    "line": 289,
     "symbol": "activities.quest",
     "dispatch": "server-plugin/agriculture.mjs:425"
    }
@@ -13829,7 +13829,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 287,
+    "line": 290,
     "symbol": "activities.create"
    }
   },
@@ -13982,7 +13982,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 76,
+    "line": 79,
     "symbol": "activities.weather",
     "dispatch": "server-plugin/agriculture.mjs:425"
    }
@@ -14045,7 +14045,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:425"
    }
@@ -14108,7 +14108,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:446"
    }
@@ -14171,7 +14171,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:451"
    }
@@ -14234,7 +14234,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:463"
    }
@@ -14297,9 +14297,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
-    "dispatch": "server-plugin/activities.mjs:217"
+    "dispatch": "server-plugin/activities.mjs:220"
    }
   },
   {
@@ -14360,7 +14360,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:494"
    }
@@ -14423,7 +14423,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:496"
    }
@@ -14486,7 +14486,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:474"
    }
@@ -14549,7 +14549,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:431"
    }
@@ -14612,7 +14612,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 71,
+    "line": 72,
     "symbol": "activities.farm",
     "dispatch": "server-plugin/agriculture.mjs:424"
    }
@@ -14675,7 +14675,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/bosses.mjs:146"
    }
@@ -14738,7 +14738,7 @@
    "pack": "character",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/hidden-passives.mjs:73"
    }
@@ -14801,7 +14801,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/sites.mjs:454"
    }
@@ -14864,7 +14864,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/wildlife-awakening.mjs:196"
    }
@@ -14927,7 +14927,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/wildlife-awakening.mjs:204"
    }
@@ -14990,7 +14990,7 @@
    "pack": "quests",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/quest-sources.mjs:122"
    }
@@ -15053,9 +15053,9 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
-    "dispatch": "server-plugin/wildlife-society.mjs:170"
+    "dispatch": "server-plugin/wildlife-society.mjs:172"
    }
   },
   {
@@ -15116,7 +15116,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/pets.mjs:248"
    }
@@ -15179,7 +15179,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/pets.mjs:248"
    }
@@ -15242,7 +15242,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/engine.mjs:1175"
    }
@@ -15305,7 +15305,7 @@
    "pack": "npc",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
     "dispatch": "server-plugin/dialogue.mjs:54"
    }
@@ -15368,7 +15368,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife"
    }
   },
@@ -15430,9 +15430,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
-    "dispatch": "server-plugin/activities.mjs:70"
+    "dispatch": "server-plugin/activities.mjs:71"
    }
   },
   {
@@ -15493,9 +15493,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 70,
+    "line": 71,
     "symbol": "activities.wildlife",
-    "dispatch": "server-plugin/activities.mjs:70"
+    "dispatch": "server-plugin/activities.mjs:71"
    }
   },
   {
@@ -15556,7 +15556,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/agriculture.mjs:425"
    }
@@ -15619,7 +15619,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/environment.mjs:395"
    }
@@ -15682,7 +15682,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/environment.mjs:401"
    }
@@ -15745,7 +15745,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/environment.mjs:406"
    }
@@ -15808,7 +15808,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/environment.mjs:411"
    }
@@ -15871,7 +15871,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment"
    }
   },
@@ -15933,7 +15933,7 @@
    "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/magic-air.mjs:266"
    }
@@ -15996,7 +15996,7 @@
    "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/magic-air.mjs:265"
    }
@@ -16059,7 +16059,7 @@
    "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/magic-air.mjs:273"
    }
@@ -16122,7 +16122,7 @@
    "pack": "magic",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 86,
+    "line": 89,
     "symbol": "activities.environment",
     "dispatch": "server-plugin/magic-air.mjs:289"
    }
@@ -16185,7 +16185,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 69,
+    "line": 70,
     "symbol": "activities.lair",
     "dispatch": "server-plugin/bosses.mjs:146"
    }
@@ -16248,7 +16248,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 69,
+    "line": 70,
     "symbol": "activities.lair",
     "dispatch": "server-plugin/environment.mjs:411"
    }
@@ -16311,7 +16311,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 69,
+    "line": 70,
     "symbol": "activities.lair",
     "dispatch": "server-plugin/bosses.mjs:152"
    }
@@ -16374,7 +16374,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 68,
+    "line": 69,
     "symbol": "activities.site",
     "dispatch": "server-plugin/agriculture.mjs:425"
    }
@@ -16437,7 +16437,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 68,
+    "line": 69,
     "symbol": "activities.site",
     "dispatch": "server-plugin/sites.mjs:480"
    }
@@ -16500,7 +16500,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 68,
+    "line": 69,
     "symbol": "activities.site",
     "dispatch": "server-plugin/sites.mjs:465"
    }
@@ -16563,7 +16563,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 68,
+    "line": 69,
     "symbol": "activities.site",
     "dispatch": "server-plugin/primitives-learning.mjs:20"
    }
@@ -16626,7 +16626,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 68,
+    "line": 69,
     "symbol": "activities.site",
     "dispatch": "server-plugin/sites.mjs:454"
    }
@@ -16689,7 +16689,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 68,
+    "line": 69,
     "symbol": "activities.site",
     "dispatch": "server-plugin/sites.mjs:462"
    }
@@ -16752,9 +16752,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 68,
+    "line": 69,
     "symbol": "activities.site",
-    "dispatch": "server-plugin/activities.mjs:68"
+    "dispatch": "server-plugin/activities.mjs:69"
    }
   },
   {
@@ -16815,9 +16815,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 68,
+    "line": 69,
     "symbol": "activities.site",
-    "dispatch": "server-plugin/activities.mjs:68"
+    "dispatch": "server-plugin/activities.mjs:69"
    }
   },
   {
@@ -16848,7 +16848,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/agriculture.mjs:425"
    }
@@ -16881,7 +16881,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/legacy-primitives.mjs:205"
    }
@@ -16914,7 +16914,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:197"
    }
@@ -16947,7 +16947,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:197"
    }
@@ -16980,7 +16980,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:270"
    }
@@ -17013,7 +17013,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:277"
    }
@@ -17046,7 +17046,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:277"
    }
@@ -17079,7 +17079,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:264"
    }
@@ -17112,7 +17112,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:248"
    }
@@ -17145,7 +17145,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:248"
    }
@@ -17178,9 +17178,9 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
-    "dispatch": "server-plugin/activities.mjs:70"
+    "dispatch": "server-plugin/activities.mjs:71"
    }
   },
   {
@@ -17211,7 +17211,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:254"
    }
@@ -17244,7 +17244,7 @@
    "pack": "companion",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 85,
+    "line": 88,
     "symbol": "activities.pet",
     "dispatch": "server-plugin/pets.mjs:244"
    }
@@ -17277,7 +17277,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 84,
+    "line": 87,
     "symbol": "activities.summon",
     "dispatch": "server-plugin/agriculture.mjs:425"
    }
@@ -17310,7 +17310,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 84,
+    "line": 87,
     "symbol": "activities.summon",
     "dispatch": "server-plugin/legacy-primitives.mjs:239"
    }
@@ -17343,7 +17343,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 84,
+    "line": 87,
     "symbol": "activities.summon"
    }
   },
@@ -17375,7 +17375,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 84,
+    "line": 87,
     "symbol": "activities.summon",
     "dispatch": "server-plugin/agriculture.mjs:474"
    }
@@ -17428,7 +17428,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 82,
+    "line": 85,
     "symbol": "activities.crime",
     "dispatch": "server-plugin/boss-cognition.mjs:94"
    }
@@ -17481,7 +17481,7 @@
    "pack": "ecology",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/agriculture.mjs:425"
    }
@@ -17534,7 +17534,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:411"
    }
@@ -17587,7 +17587,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:255"
    }
@@ -17640,7 +17640,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:1060"
    }
@@ -17693,7 +17693,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:1068"
    }
@@ -17746,7 +17746,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:894"
    }
@@ -17799,7 +17799,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:428"
    }
@@ -17852,7 +17852,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:994"
    }
@@ -17905,7 +17905,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:910"
    }
@@ -17958,7 +17958,7 @@
    "pack": "economy",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/business.mjs:216"
    }
@@ -18011,7 +18011,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:1097"
    }
@@ -18064,7 +18064,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:1097"
    }
@@ -18117,7 +18117,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:898"
    }
@@ -18170,7 +18170,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:898"
    }
@@ -18223,7 +18223,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:867"
    }
@@ -18276,7 +18276,7 @@
    "pack": "law",
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/law.mjs:991"
    }
@@ -18329,7 +18329,7 @@
    "pack": null,
    "handler": {
     "file": "server-plugin/activities.mjs",
-    "line": 83,
+    "line": 86,
     "symbol": "activities.law",
     "dispatch": "server-plugin/employment-state.mjs:94"
    }

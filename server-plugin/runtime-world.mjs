@@ -9,6 +9,8 @@ import {applyChainLaws} from '../tools/kc-processing.mjs';
 import {installHusbandryTraits} from './husbandry-traits.mjs';
 
 export const mechanicsCollections=['items','locations','professions','careers','species'];
+// meta/mechanics/<file>.json -> its key on world.mechanics: kebab-case to camelCase.
+export const mechanicsKey=file=>file.replace(/\.json$/,'').replace(/-([a-z0-9])/g,(_,c)=>c.toUpperCase());
 
 // A field the row lacks is set, lists are joined (row entries first, no
 // repeats), objects merge field by field, and a value the row already has must
@@ -46,6 +48,9 @@ export function materializeRuntimeWorld(world){
  // the biome tags the loader merged into each place.
  const biomes=Object.fromEntries((world.locations??[]).filter(l=>l.biome).map(l=>[l.id,{biome:l.biome}]));
  applyChainLaws({locations:world.locations??[],recipes:world.recipes??[],items:world.items??[]},{ecology:m.siteEcology??null,biomes});
+ // Any other mechanics file is a law table, not a row annotation (Q's material
+ // uses, SL's husbandry takes); it stays on the runtime world under its key.
+ for(const [key,table] of Object.entries(m))if(!mechanicsCollections.includes(key)&&key!=='siteEcology')world[key]=table;
  delete world.mechanics;
  return world;
 }

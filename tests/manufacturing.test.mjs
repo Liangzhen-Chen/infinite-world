@@ -27,10 +27,14 @@ async function degree(run,c,args,wanted){
 test('制造先校验配方知识、技能、真实工具、工作台与许可，失败结构检查不花钱耗时',async()=>{
     const{world,document,run}=await setup();
     for(const alter of[
-        c=>delete c.state.recipes.recipe_wooden_pegs,c=>delete c.state.skills.skill_life_6_core,
+        // 卡 Q 依据（impl-Q 第 1 条、产品原则二.3）：缺技能不再拒绝，改为照做、落低档，见下方断言；其余物理与知识前提照样拒绝。
+        c=>delete c.state.recipes.recipe_wooden_pegs,
         c=>delete c.state.inventory.item_whittling_knife,c=>c.state.inventory.item_whittling_knife.durability=0,
         c=>c.state.location='bld_hw_qingdeng',c=>c.state.buildings.bld_hw_mill={condition:0},c=>c.state.player.coins=1,
     ]){const c=structuredClone(document);alter(c);const before=structuredClone(c);await assert.rejects(run(c,'world_craft',{recipe:'recipe_wooden_pegs'},'bad'));assert.deepEqual(c,before);}
+    {const c=structuredClone(document);delete c.state.skills.skill_life_6_core;
+        const out=await degree(run,c,{recipe:'recipe_wooden_pegs'},'成功');
+        assert.equal(out.result.workmanship,'仿制');assert.equal(out.result.standing,'noSkill');assert.equal(out.document.state.skills.skill_life_6_core,undefined);}
     // K5：工位开放与否从设备推出——去掉主人公开的收费，磨坊的木作台就只供主人及其许可的人使用（原为手写 access='consent'）。
     delete world.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(f=>f.fixture==='workbench').fee;
     // K6 依据（审查 C-b manufacturing:86、D1 本文件:34）：工作台使用许可决定合法与否；没有许可照样能做，命中擅用他人之物。
@@ -50,8 +54,14 @@ test('成功制造真实扣料、工坊费和工具耐久，副产品入库，�
 test('失败仍扣耗材、租费、时间与磨损，大失败有配方伤害，回收比例精确，无成品或经验',async()=>{
     const{world,document}=await setup();const recipe=world.recipes.find(row=>row.id==='recipe_wooden_pegs');recipe.materials=[{item:'item_wood',amount:4}];recipe.failure={recoverFraction:0.5,injury:2};
     const engine=new WorldEngine(world),run=async(c,tool,args,id)=>{const out=await engine.reduce(c,{tool,args,eventId:id});return{document:applyPatches(c,out.patches),result:out.result};};
+    // 卡 Q 依据（impl-Q 第 2 条）：失败分档，"损耗"一类按配方 recoverFraction 回收，即原断言的情形；无损、报废、部分功能另验。
+    const kind=async(wanted,failure)=>{for(let i=0;i<400;i++){const out=await run(document,'world_craft',{recipe:'recipe_wooden_pegs'},`manufacture_${i}`);if(out.result.degree===wanted&&out.result.failure===failure)return out;}throw new Error(`未观察到${wanted}/${failure}`);};
+    {const intact=await kind('失败','intact'),ruin=await kind('大失败','ruin'),partial=await kind('失败','partial');
+        assert.equal(intact.document.state.inventory.item_wood.quantity,6);assert.deepEqual(intact.result.salvage,[{item:'item_wood',amount:4}]);
+        assert.equal(ruin.document.state.inventory.item_wood.quantity,2);assert.deepEqual(ruin.result.salvage,[]);
+        assert.equal(partial.document.state.inventory.item_wood.quantity,2);assert.equal(partial.result.workmanship,'仿制');assert.equal(partial.document.state.inventory.item_wooden_peg.quantity,4);}
     for(const wanted of['失败','大失败']){
-        const out=await degree(run,document,{recipe:'recipe_wooden_pegs'},wanted),c=out.document;
+        const out=await kind(wanted,'wear'),c=out.document;
         assert.equal(c.state.inventory.item_wood.quantity,4);assert.equal(c.state.player.coins,178);assert.equal(c.state.minute,560);
         assert.equal(c.state.inventory.item_whittling_knife.durability,79);assert.equal(c.state.inventory.item_wooden_peg,undefined);
         assert.equal(c.state.player.hp,wanted==='大失败'?10:12);assert.equal(c.state.player.xp,0);assert.deepEqual(c.state.itemInstances,{});
@@ -63,7 +73,8 @@ test('做工由成功档与手艺计算，区别真实单件耐久上限，不�
     const rough=await degree(run,document,{recipe:'recipe_wooden_pegs',workmanship:'杰作'},'勉强成功');
     const fine=await degree(run,document,{recipe:'recipe_wooden_pegs'},'大成功');
     const peg=out=>out.document.state.itemInstances[out.document.state.inventory.item_wooden_peg.instances[0]];
-    assert.equal(rough.result.workmanship,'粗糙');assert.equal(peg(rough).maxDurability,48);
+    // 卡 Q 依据（impl-Q 第 3 条）：耐久另乘品质；勉强成功的粗糙档品质达成度 0.8（balance/crafting attain），60×0.8×0.8≈38（原 48 只乘手艺倍率）。
+    assert.equal(rough.result.workmanship,'粗糙');assert.equal(peg(rough).maxDurability,38);assert.equal(rough.result.grade,0.8);
     assert.equal(fine.result.workmanship,'精良');assert.equal(peg(fine).maxDurability,69);
 });
 test('交易、任务交付及到期送货保留制作者与单件归属，不凭空产生新单件',async()=>{

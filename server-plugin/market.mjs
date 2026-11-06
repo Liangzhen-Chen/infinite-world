@@ -2,14 +2,14 @@
 import {bagStock,priceRead,settlementStock,granary,pledged,freight,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
 import {placeSettlement,personBusinesses,personHousehold} from './entity-view.mjs';
-import {isItemClass} from './item-class.mjs';
+import {isItemClass,classItems,workmanshipTier} from './item-class.mjs';
 import {householdUpkeepGap} from './npc-life.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {recordsMemo} from './storage.mjs';
-import {householdResources,householdCommitments,householdUsage,householdDailyUse} from './household-budget.mjs';
+import {householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 
@@ -157,9 +157,24 @@ export function upkeepDemand(state,engine,id,item){
  if(members[0]!==id)return 0;
  const daily=householdDailyUse(engine,state,members,item);if(!(daily>0))return 0;
  // householdUpkeepGap 按用度类给连续短缺日数（fuelShortDays、saltShortDays……）：这件货所属用度类的短缺日数取最长的。
- const gap=householdUpkeepGap(state,h?.id??id),days=Math.min(Math.max(0,...householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).map(u=>gap[`${u.cls}ShortDays`]??0)),engine.rules.economy.tradeCycleDays??1);
- return days>0?Math.ceil(daily*days):0;
+ const usage=householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls));
+ const gap=householdUpkeepGap(state,h?.id??id),days=Math.min(Math.max(0,...usage.map(u=>gap[`${u.cls}ShortDays`]??0)),engine.rules.economy.tradeCycleDays??1);
+ if(!(days>0))return 0;
+ // 户里缺柴要买的是本聚落买得到的同类里最便宜的那种（household-budget.usageCost），不是同类每种货各买一份：
+ // 先看本聚落商铺货架上摆的同类货，没有就看本聚落有人持有的，都没有就记在目录里同类最便宜的那件上。
+ const place=settlementOf(engine,state,locationOf(state,id));
+ if(!usage.every(u=>cheapestOfClass(state,engine,place,u.cls)===item))return 0;
+ return Math.ceil(daily*days);
 }
+function cheapestOfClass(state,engine,place,cls){
+ const memo=cheapestMemo.get(state)??new Map();cheapestMemo.set(state,memo);
+ const key=`${place}|${cls}`;if(memo.has(key))return memo.get(key);
+ const items=classItems(engine,cls),shelved=new Set((shopShelves(engine,place)??[]).map(r=>r.item).filter(item=>items.includes(item))),held=new Set();
+ if(!shelved.size)for(const [id,n]of Object.entries(state.npcs??{})){if(settlementOf(engine,state,n.location)!==place)continue;for(const item of items)if(quantity(n.inventory?.[item])>0)held.add(item);}
+ const pool=shelved.size?[...shelved]:held.size?[...held]:items,best=pool.sort((a,b)=>usageCost(engine,a)-usageCost(engine,b)||a.localeCompare(b))[0]??null;
+ memo.set(key,best);return best;
+}
+const cheapestMemo=new WeakMap();
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  let personalDemand=0;
@@ -229,7 +244,8 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
  const bag=inventoryOf(state,seller),ids=instances??bag[item]?.instances?.slice(0,count)??[];
  const units=ids.map(id=>state.itemInstances?.[id]).filter(Boolean);
  const grade=unit=>{
-  const quality=pow(r.qualityStep,Math.max(0,order.indexOf(unit?.quality??catalog.quality))-Math.max(0,order.indexOf(catalog.quality)));
+  // 卡 Q：单件按实例品质（grade，标准件 1）与手艺档的价格倍率（balance/crafting price）报价。
+  const quality=pow(r.qualityStep,Math.max(0,order.indexOf(unit?.quality??catalog.quality))-Math.max(0,order.indexOf(catalog.quality)))*(unit?.grade??1)*workmanshipTier(engine,unit?.workmanship).price;
   const liquid=unit?.liquid;
   if(!liquid||!liquid.waterMl)return quality;
   const unsafe=(liquid.toxinUg??0)/liquid.waterMl*1000>r.water.toxinUgPerLitre||(liquid.pathogenRisk??0)>0;

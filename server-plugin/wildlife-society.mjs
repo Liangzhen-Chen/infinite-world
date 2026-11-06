@@ -117,15 +117,14 @@ export function teachSpirit(d,engine,args,eventId,id){
 }
 
 // world_craft 带 maker：结缘精怪按自己学会的配方和熟练度代工；材料、工具与工坊费由你出，成品归你，制作者记为精怪。
-export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult}){
+// 卡 Q：落档、失败分档与品质链用 manufacturing 传入的同一组函数（与玩家、NPC 共用）。
+export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials}){
     if((args.operation??'manufacture')!=='manufacture')throw preconditionFailure('精怪只能代工制造，不能代做维修');
     const here=d.get('state','location'),id=spiritStudent(d,args.maker)??args.maker,actor=presentSpirit(d,this,id,{label:'代工者'});
     if(!partner(actor))throw preconditionFailure('只有与你结缘的精怪会替你动手');
     const recipe=this.byId.get(this.resolve(args.recipe,'recipe')),c=actor.cultivation??{};
-    if(recipe.learningRequired&&!c.recipes?.[recipe.id])throw preconditionFailure('它尚未学会这个配方');
-    const proficiency=c.skills?.[recipe.skill];
-    if(proficiency===undefined)throw preconditionFailure('它尚未修习该配方所需技能');
-    if(proficiency<recipe.minimumProficiency)throw preconditionFailure('它的技能不足以使用这个配方');
+    // 卡 Q：没修习该技能、熟练度不到门槛或没学过配方都不拒绝，照做落低档。
+    const known=c.skills?.[recipe.skill]!==undefined,proficiency=c.skills?.[recipe.skill]??0,standing=craftStanding(known,proficiency,recipe.minimumProficiency,!recipe.learningRequired||Boolean(c.recipes?.[recipe.id]));
     if(recipe.location&&recipe.location!==here)throw preconditionFailure('不在所需工坊');
     const station=workstation(d,this,recipe,args);
     for(const item of recipe.tools??[])if(this.quantity(d,'player',item)<1||(heldUnit(d,this,'player',item)?.durability??this.byId.get(item).durability)<=0)throw preconditionFailure(`缺少完好的${this.byId.get(item).name}`);
@@ -135,6 +134,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult}){
     const modifier=Math.floor(proficiency/(this.rules.check.skillDivisor??150)),total=die+modifier,diff=recipe.difficulty;
     const degree=die===1||total<=diff-10?'大失败':die===20||total>=diff+10?'大成功':total<diff?'失败':total<diff+5?'勉强成功':'成功';
     const outcome={die,modifier,total,degree,difficulty:diff,success:['勉强成功','成功','大成功'].includes(degree)};
+    const floor=materialFloor(d,this,'player',materials),floors=materialFloors(d,this,'player',materials),tools=toolFactor(d,this,'player',recipe.tools);
     for(const[item,amount]of materials)this.itemDelta(d,'player',item,-amount,craftInput('wildlife-society',eventId));
     if(station?.fee){
         moveCoins(d,{from:purse(null,'player'),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:station.fee,writer:'wildlife-society',eventId:eventId});
@@ -148,18 +148,20 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult}){
     if(thermal)products[0].amount-=thermal.crackedQuantity;
     for(const item of recipe.tools??[])wearItem(d,this,'player',item,recipe.toolWear??1);
     const ids=[],salvage=[],name=nameOf(this,id,actor);let workmanship=null;
-    if(outcome.success){
-        workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(proficiency>=1500?'优秀':'精良'):'普通';
-        for(const row of products)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,books:craftOutput('wildlife-society',eventId)}));
+    const result=craftOutcome(this,{standing,degree,success:outcome.success,proficiency,floor,tools,station:station?.factor??1,recoverFraction:recipe.failure?.recoverFraction??0,seed:d.document.randomSeed,key:eventId});
+    const made=outcome.success?products:result.failure==='partial'?[{item:recipe.output.item,amount:recipe.output.quantity}]:[];
+    if(made.length){
+        workmanship=result.tier;
+        for(const row of made)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,grade:result.grade,inputs:[...new Map(materials).keys()],books:craftOutput('wildlife-society',eventId)}));
         for(const unit of ids)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),maker:id,makerName:name},'wildlife-society');
-    }else for(const[item,amount]of materials){const back=thermal?.crackedQuantity?0:Math.floor(amount*(recipe.failure?.recoverFraction??0));if(back){this.itemDelta(d,'player',item,back,craftOutput('wildlife-society',eventId));salvage.push({item,amount:back});}}
-    recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),writer:'wildlife-society',eventId});
-    const at=d.get('state','minute'),receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:outcome.success?products[0].amount:0,
-        maker:id,name,minute:at,station:station?.id??null,fee:station?.fee??0,degree,workmanship,instances:ids,salvage,...(thermal?{thermal}:{})};
+    }else salvage.push(...returnMaterials(d,this,'player',materials,result,{floors,eventId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>this.itemDelta(d,'player',item,n,craftOutput('wildlife-society',eventId))}));
+    recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((made.length?made.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),writer:'wildlife-society',eventId});
+    const at=d.get('state','minute'),receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:made[0]?.amount??0,
+        maker:id,name,minute:at,station:station?.id??null,fee:station?.fee??0,degree,workmanship,...(result.grade!==undefined?{grade:result.grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),instances:ids,salvage,...(thermal?{thermal}:{})};
     d.set(['state','crafted',receipt.id],receipt);
     logEvent(d,id,{kind:'制作',party:'player',event:eventId,minute:at,recipe:recipe.id});
     d.say(outcome.success?`${name}制成${this.byId.get(recipe.output.item).name}${products[0].amount}件，做工${workmanship}`:`${name}制造${degree}，耗时${recipe.minutes}分钟`);
-    return{recipe:recipe.id,maker:id,...outcome,receipt:receipt.id,instances:ids,workmanship,salvage,
+    return{recipe:recipe.id,maker:id,...outcome,receipt:receipt.id,instances:ids,workmanship,...(result.grade!==undefined?{grade:result.grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),salvage,
         spent:{feePaid:station?.fee??0,minutes:recipe.minutes,materials:[...materials].map(([item,quantity])=>({item,quantity}))},
         note:'材料、工具和工坊费出自你，成品归你；精怪只凭自己学到的配方与熟练度动手'};
 }

@@ -199,10 +199,12 @@ for(const module of ['repair','dialogue','manufacturing'])test(`A3 generic refus
   action='core:dialogue.accept';slots={subject};
   legacy={tool:'world_remember',args:{subject,key:'dialogue:accept',content:'接受条件'}};reason='没有待接受的条件';
  }else{
-  const recipe=world.recipes.find(r=>r.learningRequired);
-  assert.ok(recipe);delete document.state.recipes[recipe.id];
+  // 卡 Q：没学过配方不再拒绝（照做落低档）；业务前提改用物理的一条——不在有所需工作台的地方。
+  const here=world.locations.find(l=>l.id===document.state.location);
+  const recipe=world.recipes.find(r=>r.workstation&&!r.location&&!(here?.fixtures??[]).length&&!(here?.workstations??[]).some(w=>w.kind===r.workstation));
+  assert.ok(recipe);
   action='core:craft.manufacture';slots={recipe:recipe.id};
-  legacy={tool:'world_craft',args:{operation:'manufacture',...slots}};reason='尚未学会这个配方';
+  legacy={tool:'world_craft',args:{operation:'manufacture',...slots}};reason='当前位置没有所需工作台';
  }
  const before=structuredClone(document);
  // 06 §6.10.4: a business precondition rejects at its source with a stable code. The legacy

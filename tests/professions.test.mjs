@@ -75,7 +75,9 @@ test('退职保留的高级手艺不能绕过配方与研究阶段上限',async(
     world.recipes.push({id:'recipe_test_retired',name:'退职校验样件',skill,minimumProficiency:600,materials:[],minutes:10,difficulty:10,output:{item:'item_staff',quantity:1},tools:[]});
     const engine=new WorldEngine(world);document.state.skills[skill]={proficiency:750,breakthroughs:[],daily:{}};
     const before=structuredClone(document);
-    await assert.rejects(engine.reduce(document,{tool:'world_craft',args:{recipe:'recipe_test_retired'},eventId:'retired-craft'}),/技能不足/);
+    // 卡 Q 依据（impl-Q 第 1 条）：退职后有效熟练度封在 299，不到配方门槛 600——不再拒绝，照做而手艺档封顶粗陋（或失败）。
+    const retired=await engine.reduce(document,{tool:'world_craft',args:{recipe:'recipe_test_retired'},eventId:'retired-craft'});
+    assert.equal(retired.result.standing,'underProficient');if(retired.result.success)assert.ok(['仿制','粗陋'].includes(retired.result.workmanship));
     assert.deepEqual(document,before);
     document.state.projects.research_fixture={id:'research_fixture',type:'研究',skills:[skill],stage:'原型',progress:3,investment:0,days:[1,2,3]};
     const experiment=await engine.reduce(document,{tool:'world_research',args:{project:'research_fixture'},eventId:'retired-research'});

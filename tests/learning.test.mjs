@@ -63,9 +63,12 @@ test('学习失败实际花时间并留下可重放记录，虚假来源拒绝�
     await assert.rejects(run(document,'world_learn',{entity:'skill_joinery',source:'npc_hw_linsui'}),/资格/);
     assert.deepEqual(document,before);
 });
-test('技能与配方可从实际书籍学得，未学配方无法制作',async()=>{
+test('技能与配方可从实际书籍学得；未学技能与配方照做落低档',async()=>{
     const{document,run}=await setup();
-    await assert.rejects(run(document,'world_craft',{recipe:'recipe_staff_pair'}),/尚未学会/);
+    // 卡 Q：没学过配方不再拒绝，照做落低档（没掌握技能封顶仿制）。
+    {const c=structuredClone(document);c.state.inventory.item_wood={quantity:1,quality:'木',durability:100,weight:2};
+     const naive=await outcome(run,c,'world_craft',{recipe:'recipe_staff_pair'},true);
+     assert.equal(naive.result.standing,'noSkill');assert.equal(naive.result.workmanship,'仿制');}
     const skill=await outcome(run,document,'world_learn',{entity:'skill_joinery',source:'item_test_skillbook'},true);
     const recipe=await outcome(run,skill.document,'world_learn',{entity:'recipe_staff_pair',source:'item_test_recipebook'},true);
     assert.equal(recipe.document.state.recipes.recipe_staff_pair.source.id,'item_test_recipebook');

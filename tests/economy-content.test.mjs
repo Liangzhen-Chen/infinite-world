@@ -50,7 +50,12 @@ test('候选目录的书本学习和铁件制造确实执行，缺锤不扣料�
  for(let n=0;n<100;n++){const result=await engine.reduce(c,{tool:'world_craft',args:{recipe:'recipe_forge_nails'},eventId:`nails_${n}`});if(result.result.success){made={document:applyPatches(c,result.patches),result:result.result};break;}}
  assert.ok(made);assert.equal(made.document.state.inventory.item_iron_nail.quantity,40);assert.equal(made.result.instances.length,40);assert.equal(made.result.spent.feePaid,4);
  assert.equal(made.document.state.player.coins,c.state.player.coins-4);assert.equal(made.document.state.inventory.item_iron,undefined);assert.equal(made.document.state.inventory.item_charcoal,undefined);
- assert.equal(made.document.state.minute,c.state.minute+80);assert.equal(made.document.state.npcs.npc_hw_duanyan.coins,c.state.npcs.npc_hw_duanyan.coins+4);
+ assert.equal(made.document.state.minute,c.state.minute+80);
+ // K2/F（卡 E）依据：制作这 80 分钟里，段岩按自家日用需求去青灯赶集，是真实成交；断言改为：他的钱 = 原有 + 工坊费 4 + 本人这段时间的真实成交净额（卖得为正、买付为负、缴税为负），仍严格相等。
+ const fresh=(k,r)=>!c.state.records[k];
+ const net=Object.entries(made.document.state.records).filter(([k,r])=>r.category==='market_trade'&&fresh(k)).reduce((n,[,r])=>n+(r.seller==='npc_hw_duanyan'?r.totalCoins:0)-(r.buyer==='npc_hw_duanyan'?r.totalCoins:0),0)
+  -Object.entries(made.document.state.records).filter(([k,r])=>r.category==='trade_tax'&&r.payer==='npc_hw_duanyan'&&fresh(k)).reduce((n,[,r])=>n+r.amount,0);
+ assert.equal(made.document.state.npcs.npc_hw_duanyan.coins,c.state.npcs.npc_hw_duanyan.coins+4+net);
 });
 test('旧草稿的新事实校验会失败，人工评分不足或哈希改变也拒绝，不重写原输出',async()=>{
  const world=await loadWorld(),bones=economyFoundation(world);

@@ -21,14 +21,14 @@ import {applyPatches,digest,withLegacyUndefinedActivity} from './storage.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
 import {npcPresenceAt,shareNpcMemory} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
-import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
+import {changeItems,transferItems,heldUnit,wearItem,workmanshipTier,lostField,unitLacks} from './items.mjs';
 import {resolveMaterials} from './item-class.mjs';
 import {derivedStats} from './combat.mjs';
 import {recordMarketDeal,assertMarketDepth} from './market.mjs';
 import {advanceGovernance} from './governance.mjs';
 import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
 import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
-import {kilnWorkResult} from './manufacturing.mjs';
+import {kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
@@ -91,8 +91,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(!goal||!auditGoal(goal)||goal.progress>=100)throw preconditionFailure('这项目标不能通过盘点本人库存直接完成');
  }else if(action.kind==='craft'){
   const recipe=engine.world.recipes.find(r=>r.id===action.recipe);if(!recipe)throw preconditionFailure('配方未登记');
-  if(recipe.learningRequired&&!recipe.teachers?.includes(id)&&!state.npcs[id].recipes?.[recipe.id]&&!currentWorkstationRecipes(engine,{...state,minute:at,npcs:presence.npcs},id).some(r=>r.id===recipe.id))throw preconditionFailure('人物没有学会该配方');
-  if(proficiency(engine,state,id,recipe.skill)<recipe.minimumProficiency)throw preconditionFailure('人物技能不足');
+  // 卡 Q：技能不足、没学过配方都不拒绝，照做落低档（npcCraft 经 manufacturing.craftOutcome，与玩家同一条）。
   if(recipe.location&&recipe.location!==actor.location)throw preconditionFailure('不在配方地点');
   // 材料按类别落到本人实际持有的同类物品（与玩家制作同一条 resolveMaterials）。
   const totals=new Map();for(const m of resolveMaterials(d,engine,id,recipe.materials))totals.set(m.item,(totals.get(m.item)??0)+m.amount);
@@ -155,14 +154,14 @@ function npcToolBonus(d,engine,id,recipe){
  const attribute=recipe.attribute??engine.byId.get(recipe.skill)?.attribute??'智力';let sum=0;
  for(const item of recipe.tools??[]){const definition=engine.byId.get(item),held=heldUnit(d,engine,id,item),grade=engine.rules.equipment.qualities.indexOf(held?.quality??definition.quality);
   if(grade<0||(d.get('state','npcs',id,'level')??engine.byId.get(id).level??1)<engine.rules.equipment.requiredLevels[grade])throw preconditionFailure('人物等级不足以使用工具');
-  const spec=definition.checkBonus;if(spec&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(recipe.skill)))sum+=spec.bonus;
+  const spec=definition.checkBonus;if(spec&&!unitLacks(engine,{item,...held},'checkBonus')&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(recipe.skill)))sum+=spec.bonus;
  }return Math.min(engine.rules.check.maximumToolBonus??5,sum);
 }
-function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
+function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship,grade,inputs=null){
  const definition=engine.byId.get(item),instances=[];
  for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.document.randomSeed,actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
-  const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
-  holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'npc-autonomy');
+  const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
+  holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship,...(grade===undefined||grade===null?{}:{grade}),...lostField(engine,item,workmanship,inputs)},'npc-autonomy');
  }
  changeItems(d,engine,id,item,quantity,{books:craftOutput('npc-autonomy',actionId)});d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
 }
@@ -170,6 +169,8 @@ function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
 // tool wear, products, ledger.crafts and skill growth. The caller has checked
 // the recipe, materials and station (validateAction) and keeps its own action
 // record and memories.
+// 人物是否学过这个配方：配方不需学、本人是传授者、学过，或所在工位的现行做法里有它。
+const knowsRecipe=(engine,state,id,r)=>!r.learningRequired||Boolean(r.teachers?.includes(id)||state.npcs?.[id]?.recipes?.[r.id]||currentWorkstationRecipes(engine,state,id).some(p=>p.id===r.id));
 export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnace,minutes}){
  const base=engine.byId.get(id),spent={minutes};let outcome,summary,produced=[];
  minutes??=Math.ceil(engine.byId.get(recipeId).minutes/(facilityView(engine,d.get('state'),location)?.factor||1));spent.minutes=minutes;
@@ -182,17 +183,22 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   const station=facilityView(engine,d.get('state'),location)?.workstations.find(s=>s.kind===r.workstation),fee=station&&stationLicence(engine,d,station,id)?.basis==='paid'?station.fee??0:0;
   if(fee){moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
   const materials=resolveMaterials(d,engine,id,r.materials).map(({item,amount})=>({item,amount}));
+  // 卡 Q：品质链输入（扣料、磨损前读）与技能状况，和玩家制作同一组函数。
+  const raw=d.get('state','npcs',id,'skills',r.skill)??base.skills?.[r.skill]??base.proficiencies?.[r.skill],standing=craftStanding(raw!==undefined&&raw!==null,skill,r.minimumProficiency,knowsRecipe(engine,d.get('state'),id,r));
+  const floor=materialFloor(d,engine,id,materials.map(m=>[m.item,m.amount])),floors=materialFloors(d,engine,id,materials.map(m=>[m.item,m.amount])),toolsFactor=toolFactor(d,engine,id,r.tools),stationFactor=r.workstation?facilityView(engine,d.get('state'),location)?.factor??1:1;
   spent.fee=fee;spent.materials=clone(materials);if(furnace)spent.fuel=clone(furnace.fuel);
   for(const m of materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
   const crafted={recipe:r.id,batches:1,inputs:materials.reduce((o,m)=>({...o,[m.item]:(o[m.item]??0)+m.amount}),{}),outputs:{},writer:'npc-autonomy',eventId:actionId};
   for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}
-  if(outcome.success){outcome.workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(skill>=2100?'杰作':skill>=1500?'优秀':'精良'):'普通';produced=[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship);crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
-  else{for(const m of materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered){changeItems(d,engine,id,m.item,recovered,{books:craftOutput('npc-autonomy',actionId)});crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+recovered;}}
+  const result=craftOutcome(engine,{standing,degree,success:outcome.success,proficiency:skill,floor,tools:toolsFactor,station:stationFactor,recoverFraction:r.failure?.recoverFraction??0,seed:d.document.randomSeed,key:actionId});
+  if(standing!=='skilled')outcome.standing=standing;if(result.failure)outcome.failure=result.failure;if(result.grade!==undefined)outcome.grade=result.grade;
+  if(outcome.success||result.failure==='partial'){outcome.workmanship=result.tier;produced=outcome.success?[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]]:[{item:r.output.item,amount:r.output.quantity}];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship,result.grade,materials.map(m=>m.item));crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
+  else{for(const m of returnMaterials(d,engine,id,materials.map(m=>[m.item,m.amount]),result,{floors,eventId:actionId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>changeItems(d,engine,id,item,n,{books:craftOutput('npc-autonomy',actionId)})}))crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+m.amount;
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }
   recordCraft(d,crafted);
   const gained=npcWorkGrowth(d,engine,id,r.skill,outcome.success,start);if(gained)outcome.growth={skill:r.skill,gained};
-  summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:'没有得到成品'}，工坊费${fee}铜${gained?`，手艺熟练度提高${gained}`:''}。`;
+  summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:produced.length?`失败，只做出${produced[0].amount}份${outcome.workmanship}的${engine.byId.get(r.output.item).name}（部分用途不具备）`:'没有得到成品'}，工坊费${fee}铜${gained?`，手艺熟练度提高${gained}`:''}。`;
  return {outcome,spent,produced,summary};
 }
 function executeAction(target,engine,id,action,{at,presence,actionId,start,ignoreTask=false,furnace}){

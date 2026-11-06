@@ -29,7 +29,7 @@ test('A3 route order: trade and manufacture select programs before account/sink 
  assert.equal(trade.routed,'core:trade.buy');assert.equal(trade.slots.item,'item_bread');assert.equal(trade.slots.quantity,2);
  const craft={intent:'按配方削木楔',means:{recipe:'recipe_wooden_pegs'},effects:[{op:'transfer',resource:'item_wood',from:'self',to:'sink:craft',qty:999}]};
  const plan=prepareOpenAction(engine,document,craft);assert.equal(plan.routed,'core:craft.manufacture');assert.equal(plan.slots.recipe,'recipe_wooden_pegs');
- await assertActionRejected(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-recipe',args:craft}),/尚未学会这个配方/);
+ await assertActionRejected(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-recipe',args:craft}),/当前位置没有所需工作台/);
  assert.deepEqual(document,before);
 });
 

@@ -26,10 +26,11 @@ import {interactEnvironment,recordLocalContact}from'./environment.mjs';
 import {petAction}from'./pets.mjs';
 import {summonAction}from'./summons.mjs';
 import {crimeAction,lawAction,recordViolence}from'./law.mjs';
-import {transferItems,heldUnit,wearItem}from'./items.mjs';
+import {transferItems,heldUnit,wearItem,workmanshipTier,unitLacks}from'./items.mjs';
 import {localWeather}from'./weather.mjs';
 import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
+import {husbandryAction}from'./husbandry.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
@@ -69,6 +70,8 @@ export const activities={
     lair(d,args,id){return lairAction.call(this,d,args,id);},
     wildlife(d,args,id){return args.operation==='fish'?fish.call(this,d,args,id):args.operation==='release'?releaseFish.call(this,d,args,id):args.operation==='eat'?eatFish.call(this,d,args,id):wildlifeAction.call(this,d,args,id);},
     farm(d,args,id){
+        // SL: an owner slaughtering their own beast is husbandry work, not an exchange.
+        if(args.operation==='husbandry_slaughter')return husbandryAction.call(this,d,args,id);
         const old=donationReceipt(d,this,args,id);if(old)return old;
         const result=agricultureAction.call(this,d,args,id),contribution=recordDonationContribution(d,this,result,id),receipt={...result,...(contribution?{contribution}:{})};
         saveDonationReceipt(d,receipt,id);return receipt;
@@ -118,8 +121,8 @@ export const activities={
         const opponentContext=this.magicStatusContext(d,target),opponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext));
         opponent.evasion=Math.max(0,opponent.evasion-waterEarthMudPenalty(d,this,target)*.05);
         if(opponent.divine&&!d.get('state','divinePermissions',target))throw preconditionFailure('神性屏障阻止普通攻击，需要交涉、逃离或取得特殊条件');
-        const rawWeaponStats=weapon?this.byId.get(weapon).combat??{}:{},held=weapon?heldUnit(d,this,attacker,weapon):null;
-        const workmanshipFactor=this.rules.equipment.workmanship?.find(row=>row.name===held?.workmanship)?.multiplier??1;
+        const held=weapon?heldUnit(d,this,attacker,weapon):null,rawWeaponStats=weapon&&!unitLacks(this,{item:weapon,...held},'combat')?this.byId.get(weapon).combat??{}:{};
+        const workmanshipFactor=workmanshipTier(this,held?.workmanship).multiplier;
         const weaponStats=Object.fromEntries(Object.entries(rawWeaponStats).map(([key,value])=>[key,value*workmanshipFactor])),careerStats=attacker==='player'?careerEquipment(d.get('state')):{};
         const hidden=hiddenCombat(this,d.get('state'),attacker,args.intent??'attack'),otherHidden=hiddenCombat(this,d.get('state'),target,'attack');
         opponent.defense+=otherHidden.defense;

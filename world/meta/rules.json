@@ -286,7 +286,20 @@
       180,
       200
     ],
+    "failureWear": {
+      "returnFraction": 1,
+      "gradeFactor": 0.6,
+      "note": "卡 Q：制作失败落在损耗（wear）时，材料按 returnFraction 退回（向上取整，至少一份），退回的每份品质 grade = 原投入品质 × gradeFactor；无损原样全退，报废按配方 failure.recoverFraction 回收残料"
+    },
     "workmanship": [
+      {
+        "name": "仿制",
+        "multiplier": 0.5
+      },
+      {
+        "name": "粗陋",
+        "multiplier": 0.7
+      },
       {
         "name": "粗糙",
         "multiplier": 0.8

@@ -20056,7 +20056,7 @@
         {
           "id": "adit_ore",
           "name": "坑底散落的铁砂块",
-          "item": "item_iron_scrap",
+          "item": "item_iron_ore",
           "quantity": 5,
           "minutes": 20,
           "mechanisms": [
@@ -27262,7 +27262,7 @@
         {
           "id": "ll_ore",
           "name": "封墙后的铁砂",
-          "item": "item_iron_scrap",
+          "item": "item_iron_ore",
           "quantity": 4,
           "minutes": 25,
           "mechanisms": [

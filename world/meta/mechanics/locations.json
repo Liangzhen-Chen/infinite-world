@@ -1076,7 +1076,8 @@
      "minimumC": 70,
      "maximumC": 140,
      "burning": true
-    }
+    },
+    "owner": "npc_bs_078_1"
    }
   ]
  },

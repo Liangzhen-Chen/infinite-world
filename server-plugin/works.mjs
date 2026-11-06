@@ -17,7 +17,7 @@ import {digest}from'./storage.mjs';
 import {settlementAt}from'./reputation.mjs';
 import {adjustStanding}from'./standing.mjs';
 import {presentWitnesses}from'./world-events.mjs';
-import {produceItems,transferItems}from'./items.mjs';
+import {produceItems,transferItems,workmanshipTier}from'./items.mjs';
 import {effectiveProficiency}from'./professions.mjs';
 import {spellElements}from'./career-metrics.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -41,7 +41,7 @@ const text=(value,label)=>{if(typeof value!=='string'||!value.trim()||value.leng
 const grade=value=>`${['初级','中级','高级','特级','专家级','大师级','宗师级','圣级','神级'][Math.min(8,Math.floor(value/300))]}${Math.floor(value%300/100)+1}等`;
 // Same scale as manufacturing workmanship.
 export const workQuality=(outcome,proficiency)=>!outcome.success?null:outcome.degree==='勉强成功'?'粗糙':outcome.degree==='大成功'?(proficiency>=2100?'杰作':proficiency>=1500?'优秀':'精良'):'普通';
-const factor=(engine,quality)=>engine.rules.equipment.workmanship?.find(row=>row.name===quality)?.multiplier??1;
+const factor=(engine,quality)=>workmanshipTier(engine,quality).multiplier;
 
 function learned(d,engine,name,label){
     const skill=engine.resolve(name,'skill');

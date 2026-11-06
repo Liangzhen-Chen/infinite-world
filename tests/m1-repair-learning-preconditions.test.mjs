@@ -102,7 +102,8 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     const s=await session(t,'craft');assert.ok(s.scenario.turns.length>=8&&s.scenario.turns.length<=20);
     await s.turn(0,async()=>[await s.call('world_move',{destination:'旧磨坊'})]);
     await s.reject('world_craft',{operation:'repair',item:'旧木杖'},/可恢复的耐久空间/);
-    await s.reject('world_craft',{operation:'manufacture',recipe:'削制榫用木楔'},/尚未学会/);
+    // 卡 Q：没学过配方不再拒绝；此刻手里没有材料与工具，拒绝理由是物理的。
+    await s.reject('world_craft',{operation:'manufacture',recipe:'削制榫用木楔'},/缺少|工具|工作台/);
     const bought=await s.turn(1,async()=>[await s.call('world_trade',{seller:'阿砚',item:'削木小刀',quantity:1}),await s.call('world_trade',{seller:'阿砚',item:'木料',quantity:2})]);
     assert.equal(bought.after.state.inventory.item_whittling_knife.durability,80);
     assert.equal(bought.before.state.player.coins-bought.after.state.player.coins,

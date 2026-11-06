@@ -21,7 +21,12 @@ const formal=withoutS3(withoutS4(await loadWorld())),publication=await readS2Pub
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
-const before=withoutS2(formal),world=mergeS2Publication(before,publication),engine=new WorldEngine(world);
+const before=withoutS2(formal),world=mergeS2Publication(before,publication);
+// 合入 F 后依据：家户每天吃饭、烧柴（F 的 npc-life）。炼丹导师家既没有别的口粮也没有柴：蜂蜜按类别成了口粮（每份饱腹 7），
+// 几天的饭就把他那 3 份吃完、也按口粮自留；没有柴就只能烧他的艾绒引火包。学成后便买不到炼丹要的蜂蜜与引火包。
+// 夹具（本测试的世界副本）给导师家备 60 个面包作口粮、60 份木柴作家用燃料，让“蜂蜜与引火包是他可出让的余货”这一前提成立；断言不变。
+{const n=world.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:60,item_wood:60};}
+const engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAO='npc_bs_077_1',WU='npc_bs_079_1',DAN='npc_bs_078_1';
@@ -172,7 +177,7 @@ test('道门符术：镇火、火线、静声、阻风、水帘、固堤、整�
  assert.equal(rec(seal.doc,fid('clay_heap')).clayGrams,99800);const basin=rec(seal.doc,fid('vat_basin')).waterMl;assert.equal(rec(await wait(seal.doc,2),fid('vat_basin')).waterMl,basin);
  assert.ok(rec(await wait(fresh(),2),fid('vat_basin')).waterMl>0);
  // Private objects need the owner's permission; refusals keep money and materials.
- const refused=fresh();await assert.rejects(engine.reduce(refused,{tool:'world_cast',args:{spell:'spell_s2_altar_level',target:fid('altar_ground')},eventId:'no-permit'}),/授权/);
+ /* K6 依据（审查 C-b，所有者授权是后果）：他人之物无授权照样施放，命中擅用他人之物，罪名挂本次事件 */{const before=fresh(),out=await engine.reduce(before,{tool:'world_cast',args:{spell:'spell_s2_altar_level',target:fid('altar_ground')},eventId:'no-permit'}),after=applyPatches(before,out.patches);const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,JSON.stringify(out.result.offenses));assert.equal(after.state.records[o.record].sourceEvent,'no-permit');assert.ok(after.state.player.mp<before.state.player.mp,'施放确实发生');}
 });
 
 test('武者器用：拨矢、落叶身、闭息、听风、暖掌、开石、水索、陷足按真实条件生效',async()=>{
@@ -191,7 +196,7 @@ test('武者器用：拨矢、落叶身、闭息、听风、暖掌、开石、�
  g=await grant(fresh(),WU,fid('rope_post'),fid('wash_trough'));const rope=await cast(g.doc,{spell:'spell_s2_water_rope',target:fid('rope_post'),source:fid('wash_trough'),authorization:g.authorization,authorizations:g.authorizations});
  assert.equal(rope.result.reservedWaterMl,2000);assert.equal(rec(rope.doc,fid('wash_trough')).waterMl,18000);assert.equal(rec(await wait(rope.doc,2),fid('wash_trough')).waterMl,20000);
  g=await grant(fresh(),WU,fid('mud_pit'));const mud=await cast(g.doc,{spell:'spell_s2_mire_step',target:fid('mud_pit'),authorization:g.authorization});assert.ok(Object.values(mud.doc.state.effects).some(e=>e.operation==='mud_trap'&&e.target===fid('mud_pit')));
- await assert.rejects(engine.reduce(fresh(),{tool:'world_cast',args:{spell:'spell_s2_stone_wedge',target:fid('trial_stone')},eventId:'no-permit-stone'}),/授权/);
+ /* K6 依据（审查 C-b，所有者授权是后果）：他人之物无授权照样施放，命中擅用他人之物，罪名挂本次事件 */{const before=fresh(),out=await engine.reduce(before,{tool:'world_cast',args:{spell:'spell_s2_stone_wedge',target:fid('trial_stone')},eventId:'no-permit-stone'}),after=applyPatches(before,out.patches);const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,JSON.stringify(out.result.offenses));assert.equal(after.state.records[o.record].sourceEvent,'no-permit-stone');assert.ok(after.state.player.mp<before.state.player.mp,'施放确实发生');}
 });
 
 test('书铺三册有限库存：购买、阅读学会法师与通用术式，并在学馆实地施放',async()=>{

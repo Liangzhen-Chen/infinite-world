@@ -10,6 +10,7 @@ import {validateWildlifeAwakening} from '../server-plugin/wildlife-awakening.mjs
 import {clockTransaction} from '../server-plugin/world-clock.mjs';
 import {sceneCard} from '../server-plugin/scene-card.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
+import {workmanshipTier} from '../server-plugin/item-class.mjs';
 
 const source=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),DAY=1440;
 const wood='loc_hw_northwood',fox='monster_red_ear_fox',temple='bld_bs_still_temple',carve='skill_life_6_core',handle='recipe_tool_handle';
@@ -83,7 +84,8 @@ test('真实教学和制作：按日修习，学会配方后由精怪代工，�
     c=(await s.run(c,'world_move',{destination:'loc_hw'},'m1')).doc;c=(await s.run(c,'world_move',{destination:'bld_hw_mill'},'m2')).doc;
     assert.equal(c.state.creatures[id].location,'bld_hw_mill');
     const unlearned=structuredClone(c);delete unlearned.state.creatures[id].cultivation.recipes[handle];
-    await assert.rejects(s.run(unlearned,'world_craft',{operation:'manufacture',recipe:handle,maker:id}),/尚未学会/);
+    // 卡 Q：没学过配方的精怪照做，落低档（技能状况 underProficient 或 noSkill），不再拒绝。
+    {const naive=await s.run(unlearned,'world_craft',{operation:'manufacture',recipe:handle,maker:id},'naive');assert.ok(['underProficient','noSkill'].includes(naive.result.standing));}
     const unbound=structuredClone(c);delete unbound.state.creatures[id].companion;
     await assert.rejects(s.run(unbound,'world_craft',{operation:'manufacture',recipe:handle,maker:id}),/结缘/);
     let made=null;
@@ -93,7 +95,10 @@ test('真实教学和制作：按日修习，学会配方后由精怪代工，�
         assert.equal(out.doc.state.player.coins,c.state.player.coins-2);
         const receipt=out.doc.state.crafted[`crafted_craft${i}`];assert.equal(receipt.maker,id);
         if(out.result.success){made=out;break;}
-        assert.deepEqual(out.result.instances,[]);c=out.doc;
+        // 卡 Q 依据（impl-Q 第 2 条，主会话批准）：失败分档；只剩部分功能（partial）得到最低档成品，其余失败没有成品。
+        if(out.result.failure==='partial')for(const unit of out.result.instances)assert.equal(workmanshipTier(s.engine,out.doc.state.itemInstances[unit].workmanship).rank,0);
+        else assert.deepEqual(out.result.instances,[]);
+        c=out.doc;
     }
     assert.ok(made,'八次代工应至少成功一次');
     const units=made.result.instances.map(unit=>made.doc.state.itemInstances[unit]);

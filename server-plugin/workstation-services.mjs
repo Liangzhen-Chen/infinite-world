@@ -37,23 +37,35 @@ export function fixtureStations(place){
  }
  return out;
 }
-// Who holds the station: the building's current owner, its catalogue owner,
-// the household living there, or the settlement whose ground it is. A bound
-// heat source keeps its own owner and consent (magic-object reads those).
+// Who holds the station (see ownersAt). A bound heat source keeps its own
+// owner and consent (magic-object reads those).
 export function stationOwners(engine,state,station){
  const place=placeOf(engine,state,station.location);
- return place?ownersAt(place,engine.world.households,state):[];
+ return place?ownersAt(place,engine.world.households,state,id=>engine.byId.has(id)||Boolean(state?.npcs?.[id]||state?.created?.[id])||id==='player'):[];
 }
-function ownersAt(place,worldHouseholds,state){
+// Those who can hold a station are real entities of this world edition.
+const holderIds=new WeakMap();
+function worldHolders(world){
+ let ids=holderIds.get(world);
+ if(!ids){ids=new Set(['player',...[...world.npcs??[],...world.residents??[],...world.locations??[],...world.factions??[],...world.deities??[],...world.factionPeople??[]].map(r=>r.id)]);holderIds.set(world,ids);}
+ return id=>ids.has(id);
+}
+// Title and running follow the existing property and management relations
+// (action-authority currentControllers' order): a building's current owner,
+// the person running it (site manager, lodging host), its catalogue owner, the
+// household living there, or the settlement whose ground it is. A holder that
+// is not an entity of this world is skipped, never named.
+function ownersAt(place,worldHouseholds,state,exists){
+ const pick=ids=>ids.filter(id=>typeof id==='string'&&exists(id));
  const building=state?.buildings?.[place.id];
- if(building&&Object.hasOwn(building,'owner'))return typeof building.owner==='string'?[building.owner]:[];
- if(typeof place.owner==='string')return [place.owner];
+ if(building&&Object.hasOwn(building,'owner'))return pick([building.owner]);
+ for(const ids of [[place.site?.manager??place.lodging?.host],[place.owner]]){const held=pick(ids);if(held.length)return held;}
  // Household rows, not homeResidents: that view reads facilityView, which reads these owners.
  const households=(worldHouseholds??[]).filter(h=>h.homeLocation===place.id);
- const residents=[...new Set(households.length?households.flatMap(h=>[...h.members,...state?.family?.households?.[h.id]?.members??[]]):place.access?.residents??[])];
+ const residents=pick([...new Set(households.length?households.flatMap(h=>[...h.members,...state?.family?.households?.[h.id]?.members??[]]):place.access?.residents??[])]);
  if(residents.length)return residents;
  // Unclaimed ground belongs to the settlement it lies in.
- return typeof place.scope==='string'?[place.scope]:[];
+ return pick([place.scope]);
 }
 // Load-time projection for readers of place.workstations: every published
 // place's stations are rewritten from its fixtures, so a hand-written list in
@@ -66,7 +78,7 @@ export function materializeWorkstations(world){
   delete place.workstations;
   // A non-enumerable getter: the world's serialized form, hash and clones keep
   // only the fixtures, and an edited fixture is what every reader sees.
-  Object.defineProperty(place,'workstations',{get:()=>fixtureStations(place).map(station=>({...station,owner:station.owner??ownersAt(place,world.households,null)[0]??null})),enumerable:false,configurable:true});
+  Object.defineProperty(place,'workstations',{get:()=>fixtureStations(place).map(station=>({...station,owner:station.owner??ownersAt(place,world.households,null,worldHolders(world))[0]??null})),enumerable:false,configurable:true});
  }
  return world;
 }
