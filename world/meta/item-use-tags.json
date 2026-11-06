@@ -21,10 +21,11 @@
     "bait": {"tags":["bait"],"note":"饵：抛竿消耗按此类"},
     "fuel": {"tags":["fuel"],"note":"燃料：配方引火、家户炊事与取暖按此类"},
     "salt": {"tags":["salt"],"note":"盐：调味与保存按此类"},
+    "hair": {"tags":["hair"],"note":"兽毛：从畜兽身上取下的毛（山羊毛、马鬃、通用兽毛），制刷、筛、笔的毛头按此类；只是纤维（麻、棉）不算"},
     "timber": {"tags":["timber"],"note":"木材：当部件做工的原木、木板、木料（成批标注：木作配方投入里的木质原料，不含已成形部件）"},
     "apparel": {"tags":["clothing"],"note":"随身衣物：穿在身上按日磨损（玩家与 NPC 同一耐用寿命）"},
     "durable": {"tags":["tool","weapon","clothing","container","liquid_container"],"recipeTool":true,"exclude":["food","fuel"],"note":"日用品：按耐用寿命磨损，磨坏产生替换需求；另含配方里当工具用的物品"}
   },
-  "substitutable": {"classes":["fuel"],"requireAllClasses":true,"note":"配方材料属于这些类别时，持有人缺这一件可换持有的同类物品；替代品必须具备原物品的全部用途类别（木料还是木材，木炭只是燃料，顶不了木料；木料能顶木炭去烧）"},
+  "substitutable": {"classes":["fuel","hair"],"requireAllClasses":true,"note":"配方材料属于这些类别时，持有人缺这一件可换持有的同类物品；替代品必须具备原物品的全部用途类别（木料还是木材，木炭只是燃料，顶不了木料；木料能顶木炭去烧）"},
   "heat": {"materialClass":"fuel","note":"配方烧掉燃料类材料即为加热加工"}
 }

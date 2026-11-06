@@ -1,0 +1,32 @@
+{
+ "schema": "mechanics/husbandry-takes@1",
+ "note": "卡 SL 畜牧取出物规律：从活畜身上取出东西（宰杀取胴体、剪毛）是一门手艺。按产物来源属性（animalProduct.from）一行；没有行的来源（拾蛋、挤奶、拾取已死畜的胴体）照旧是拾取。产量仍由物种属性派生（husbandry-traits），这里只定取出要什么工具用途、哪门手艺、多难、外行损耗与毛被生长节律；结果走 manufacturing.craftOutcome 同一套。",
+ "takes": {
+  "carcass": {
+   "operation": "husbandry_slaughter",
+   "requiresUse": "cut",
+   "skill": "skill_life_1_core",
+   "attribute": "敏捷",
+   "difficulty": 10,
+   "minimumProficiency": 0,
+   "recoverFraction": 0.5,
+   "toolWearPerHead": 1,
+   "practiceGain": 3,
+   "basis": "放血、剥皮、开膛、分割都要刃口（cut 用途，按物品用途标签选刀，不认物品 id）；与野外尸体取材同一门猎人手艺（wildlife gather 用 skill_life_1_core、敏捷、难度 10）；失败（下刀破胆、割穿皮板、肉沾污）按配方失败回收的同一口径只保住约一半；工时按胴体各部分重量（collectMinutesPerKg.carcass）。"
+  },
+  "coat": {
+   "operation": "husbandry_collect",
+   "requiresUse": "cut",
+   "skill": "skill_life_15_core",
+   "attribute": "敏捷",
+   "difficulty": 10,
+   "minimumProficiency": 0,
+   "recoverFraction": 0.5,
+   "toolWearPerHead": 0,
+   "practiceGain": 1,
+   "holdDays": 360,
+   "seasonGrowth": [1, 0.5, 1.25, 1.25],
+   "basis": "剪毛要剪刀或刀（cut 用途）；按住活畜不惊不伤靠照护牲畜的驯兽手艺；外行剪破皮、剪短毛茬、毛被踩脏，约损一半。毛被长在畜身上直到剪下：一年毛量（coatKgPerBodyKgYear）满了就自然脱落（holdDays 一个毛被年，超出部分记为脱落腐失）。季节节律按春夏秋冬（engine.calendar season 0–3）：夏季长毛最慢，秋冬长出冬毛，四季平均为 1，年毛量不变。"
+  }
+ }
+}
