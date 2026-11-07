@@ -11,7 +11,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {transfer,declareLedgerWriter,emptyLedger,auditLedger,ledgerWriters,reviseLots,lotAccount,parseAccount,isSource} from '../server-plugin/ledger.mjs';
-import {bag,granary,seedBank,itemResource,legacyStock,LOT_PURPOSES,bookStock} from '../server-plugin/stock.mjs';
+import {bag,granary,seedBank,itemResource,legacyStock,LOT_PURPOSES,bookStock,BOOKED,bookedBy} from '../server-plugin/stock.mjs';
 import {reconcile,eventDiscrepancies,conservation} from './helpers/ledger-audit.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 
@@ -83,6 +83,19 @@ test('持有人库存的减少 = 各用途汇流入：两个持有人入账、�
     assert.equal(L.flows['sink:consume|item_wood|fuel'],9);assert.equal(L.flows['sink:consume|item_wood|craft'],3);
     assert.equal(L.flows['src:regrowth|item_wood|harvest'],40);
     assert.deepEqual(auditLedger(L),[]);
+});
+
+test('bookedBy：带标注的已记账写入不再写账、不记漂移；未标记为已记账的写入照常记账',()=>{
+    const d=draft({state:{minute:DAY},ledger:emptyLedger()}),account='npc_a|item_wood|inventory';
+    transfer(d,{from:'src:regrowth|item_wood|harvest',to:account,amount:5,writer:'stock-test'});
+    const snapshot=structuredClone(d.document.ledger);
+    const tag=bookedBy('stock-test','upkeep-gather','evt-1');
+    assert.equal(tag.booked,true);assert.equal(tag.writer,'stock-test');assert.equal(tag.purpose,'upkeep-gather');assert.equal(tag.eventId,'evt-1');assert.ok(Object.isFrozen(tag));
+    assert.equal(bookStock(d,null,account,3,tag),0);assert.equal(bookStock(d,null,account,-1,BOOKED),0);
+    assert.deepEqual(d.document.ledger,snapshot);// 无新转移、无漂移、余额与流量都不变
+    assert.equal(bookStock(d,null,account,-2,{booked:false,writer:'stock-test',flow:'sink:consume',purpose:'fuel'}),2);
+    assert.equal(d.document.ledger.accounts[account],3);assert.equal(d.document.ledger.flows['sink:consume|item_wood|fuel'],2);
+    assert.equal(d.document.ledger.drift,undefined);assert.deepEqual(auditLedger(d.document.ledger),[]);
 });
 
 test('源汇：S1b 用到的源汇都登记在词汇表，写入者声明的每个源都带每日预算',()=>{

@@ -8,6 +8,7 @@ import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {regionalTradePrice,regionalTradeBase,validateSettlementTradeRules} from '../server-plugin/settlement-trade.mjs';
 import {settlementTradeRules} from '../world/design/m5-trade-rules.mjs';
 import {createTransportAsset} from '../server-plugin/transport.mjs';
+import {bag} from '../server-plugin/stock.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,DEPART=7*DAY+540,lanes=world.rules.settlementTrade.lanes;
@@ -86,6 +87,7 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
     // week. Adjust the original exact snapshot ONLY for successful meal writes;
     // public trade must still leave every other private item and coin untouched.
     const itemDelta=engine.itemDelta.bind(engine);
+    globalThis.__LEDGER_TRACE__=[];// 既有调试钩子：账本每笔转移的记录，用来核对自采入库的来源
     engine.itemDelta=(d,owner,item,delta,books,options)=>{
         const result=itemDelta(d,owner,item,delta,books,options);
         // 合入 F 后：家户烧柴、用盐、日用品损耗（npc-life 的 fuel/seasoning/wear）同样是真实消耗，与吃饭一并调整快照。
@@ -98,10 +100,14 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
                 const now=d.get('state','npcs',owner,'inventory',item);assert.equal(typeof now==='number'?now:now?.quantity,quantity);inventory[item]=structuredClone(now);
             }else{const def=engine.byId.get(item);inventory[item]={...(typeof old==='object'?old:{quality:def.quality,durability:def.durability,weight:def.weight}),quantity};}
         }
-        // 家户日用自给（取柴、取盐类）：来源写入者（林木/据点账本）已把货记进取货人行囊账户，这里只是同一批货进入私人行囊。
-        // 只认带 writer/purpose 标注的已记账正数写入；其余私人物品的增加仍照旧不得发生。
-        if(books?.booked===true&&books.writer==='household-subsistence'&&books.purpose==='upkeep-gather'){
-            assert.ok(delta>0);const inventory=privateAssets.npcs[owner].inventory,old=inventory[item],def=engine.byId.get(item);
+        // 家户自采入库：来源写入者（林木/据点资源点账户）已把货记进取货人行囊账户，这里只是同一批货进入私人行囊的旧字段。
+        // 通用口径：已记账（booked）、带 writer/purpose/eventId 标注的正数写入，且账本里确有同一事件从资源点账户（forest:/site:）流入该行囊账户的记录；
+        // 缺任一项都不计入快照，照旧使"其余私人物品不得增加"的核心断言失败。
+        if(books?.booked===true&&books.writer&&books.purpose&&delta>0){
+            assert.ok(books.eventId,'已记账的自采入库必须带事件编号，来源才可查');
+            const account=bag(engine,owner,item),sourced=globalThis.__LEDGER_TRACE__.filter(t=>t.eventId===books.eventId&&t.to===account&&/^(forest|site):/.test(t.from)).reduce((n,t)=>n+t.amount,0);
+            assert.ok(sourced>=delta,`${owner} 自采 ${item}×${delta} 在账本里没有对应的资源点账户流出（${sourced}）`);
+            const inventory=privateAssets.npcs[owner].inventory,old=inventory[item],def=engine.byId.get(item);
             inventory[item]={...(typeof old==='object'?old:{quality:def.quality,durability:def.durability,weight:def.weight}),quantity:(typeof old==='number'?old:old?.quantity??0)+delta};
         }
         return result;
@@ -139,6 +145,7 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
         if(want!==undefined&&qtyOf(want)===qtyOf(v)&&typeof v==='object'&&durOf(v,item)<=durOf(want,item)&&!v.instances?.length)privateAssets.npcs[id].inventory[item]=structuredClone(v);
     }
     assert.deepEqual({player:c.state.player.coins,inventory:c.state.inventory,npcs:Object.fromEntries(Object.entries(c.state.npcs).map(([id,n])=>[id,{coins:n.coins,inventory:n.inventory}]))},privateAssets);
+    delete globalThis.__LEDGER_TRACE__;
     assert.deepEqual(applyPatches(first.doc,first.out.patches),first.doc);
 });
 test('大小时间步、跨两周与JSON重启得到相同粮、现金、税账、在途和锁价',async()=>{

@@ -401,8 +401,8 @@ function unitMinutes(engine,state,r){
 }
 // 公共自然来源（家户自给用）：无主、无需许可、世界数据里没有挡路机关的据点资源。不评估也不去解机关，谁都可取；
 // remaining 是据点账当前存量，minutesPerUnit 是眼下当季每份工时（当季不产为 null）。
-export function commonsResources(engine,state,accept=()=>true){
-    return engine.world.locations.filter(p=>p.site?.resources?.length&&!p.access?.requiresConsent).flatMap(place=>
+export function commonsResources(engine,state,accept=()=>true,publicPlace=()=>true){// publicPlace: the caller's one commons rule for the place itself
+    return engine.world.locations.filter(p=>p.site?.resources?.length&&!p.access?.requiresConsent&&publicPlace(p)).flatMap(place=>
         place.site.resources.filter(r=>accept(r.item)&&!ownerOf(place,r)&&!gatesOf(place,r).length).map(r=>({site:place.id,resource:r.id,item:r.item})));
 }
 // Today's live figures of one commons resource: the site's own ledger only (never the whole world). Keyed by the exact

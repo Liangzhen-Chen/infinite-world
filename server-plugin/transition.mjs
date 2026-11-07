@@ -127,11 +127,24 @@ const live=(d,e,id)=>{
     // Freight remains in a shipment's custody account after its vehicle is lost.
     return row?.category==='transport'&&!!row.cargoLocation&&live(d,e,row.cargoLocation);
 };
+// One pass over the authored locations (first match wins, as a linear find would): which place holds a workstation / an environment feature.
+const anchorIndexes=new WeakMap();
+function anchorIndex(e){
+    const list=e.world?.locations??[];let hit=anchorIndexes.get(list);
+    if(hit?.length===list.length)return hit;
+    hit={length:list.length,stations:new Map(),features:new Map()};
+    for(const p of list){
+        for(const s of p.workstations??[])if(!hit.stations.has(s.id))hit.stations.set(s.id,p.id);
+        for(const f of p.features??[])if(!hit.features.has(f.id))hit.features.set(f.id,p.id);
+    }
+    anchorIndexes.set(list,hit);return hit;
+}
+const createdPlaces=d=>Object.values(read(d,'state','created')??{});
 function workstationAnchorOwner(d,e,id){
-    return [...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id))?.id??null;
+    return anchorIndex(e).stations.get(id)??createdPlaces(d).find(p=>p.workstations?.some(s=>s.id===id))?.id??null;
 }
 function featureAnchorOwner(d,e,id){
-    return [...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.features?.some(f=>f.id===id))?.id??read(d,'state','records',`physical_feature:${id}`)?.location??null;
+    return anchorIndex(e).features.get(id)??createdPlaces(d).find(p=>p.features?.some(f=>f.id===id))?.id??read(d,'state','records',`physical_feature:${id}`)?.location??null;
 }
 function accountOwnerLive(d,e,id){
     if(live(d,e,id))return true;

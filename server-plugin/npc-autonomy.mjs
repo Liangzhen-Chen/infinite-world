@@ -193,7 +193,10 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   const result=craftOutcome(engine,{standing,degree,success:outcome.success,proficiency:skill,floor,tools:toolsFactor,station:stationFactor,recoverFraction:r.failure?.recoverFraction??0,seed:d.document.randomSeed,key:actionId});
   if(standing!=='skilled')outcome.standing=standing;if(result.failure)outcome.failure=result.failure;if(result.grade!==undefined)outcome.grade=result.grade;
   if(outcome.success||result.failure==='partial'){outcome.workmanship=result.tier;produced=outcome.success?[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]]:[{item:r.output.item,amount:r.output.quantity}];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship,result.grade,materials.map(m=>m.item));crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
-  else{for(const m of returnMaterials(d,engine,id,materials.map(m=>[m.item,m.amount]),result,{floors,eventId:actionId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>changeItems(d,engine,id,item,n,{books:craftOutput('npc-autonomy',actionId)})}))crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+m.amount;
+  else{const back=returnMaterials(d,engine,id,materials.map(m=>[m.item,m.amount]),result,{floors,eventId:actionId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>changeItems(d,engine,id,item,n,{books:craftOutput('npc-autonomy',actionId)})});
+   // spent.materials is what the batch took in; a failed batch gives part back (spent.returned), so the net draw on the bag is materials - returned.
+   for(const m of back)crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+m.amount;
+   if(back.length)spent.returned=back.map(m=>({item:m.item,amount:m.amount}));
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }
   recordCraft(d,crafted);

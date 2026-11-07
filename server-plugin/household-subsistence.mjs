@@ -28,6 +28,8 @@ registerLegacyStock('household-subsistence',(e,state,add)=>{
  if(!config(e))return;
  for(const row of Object.values(state.records??{}))if(row.category==='household_forage')add(account(e,row.location),row.reserve);
 });
+// The one commons rule: an owned plot, an owned site or a consent-gated place is never a free household source (food, forest and site alike).
+const publicPlace=place=>Boolean(place)&&!place.owner&&!place.site?.owner&&!place.access?.requiresConsent;
 const geography=new WeakMap();
 function sources(e,state){
  let hit=geography.get(e);
@@ -43,7 +45,7 @@ function sources(e,state){
   if(forests.has(h.location))types.push('forest');
   if(!types.length)for(const species of e.world.monsters.filter(s=>s.wildlife?.habitat===h.id))types.push(...ecology.speciesHabitatTypes(e.world,species,e.rules.wildlife.habitats));
   // An owned plot or a gated site is never a free household commons.
-  if(!place||place.owner||place.site?.owner||place.access?.requiresConsent)return [];
+  if(!publicPlace(place))return [];
   // This stock belongs to the outdoor habitat fringe, not to the authored
   // site interior behind its mechanisms. Existing site stocks/gates are untouched.
   const fertility=Math.max(0,...types.map(type=>r.forageTypes[type]??0));if(!fertility)return [];
@@ -59,17 +61,18 @@ function sources(e,state){
 // and ungated, ownerless site resources (finite site ledger). Static facts only; live stock is read per day.
 const upkeepClasses=e=>householdUsage(e,0,[]).map(u=>u.cls);
 function upkeepSources(e,state){
- const out=new Map(),forest=e.rules.forestWater?.forest,wood=ecology.forestItem?.(e);
+ const out=new Map(),forest=e.rules.forestWater?.forest,wood=ecology.forestItem?.(e),forestLocations=new Set((ecology.forestSites?.(e)??[]).map(s=>s.location));
  for(const cls of upkeepClasses(e)){
   const rows=[];
   if(forest&&wood&&isItemClass(e,wood,cls))for(const s of ecology.forestSites?.(e)??[]){
    const place=e.byId.get(s.location);
    // Same commons rule as food foraging: the outdoor forest fringe of an authored site is public unless owned or consent-gated.
-   if(!place||place.owner||place.site?.owner||place.access?.requiresConsent)continue;
+   if(!publicPlace(place))continue;
    rows.push({id:`upkeep:${cls}:${s.location}`,location:s.location,kind:'forest',cls,item:wood,unitGrams:itemGrams(e,wood),capacity:s.capacity,minutesPerPortion:forest.minutes});
   }
-  // A site resource backed by the same forest stock is already that forest row.
-  for(const r of ecology.commonsResources?.(e,state,item=>isItemClass(e,item,cls))??[])if(!rows.some(row=>row.kind==='forest'&&row.location===r.site&&row.item===r.item))
+  // A site resource backed by the forest ledger is drawn only through the forest row (siteTake would draw the forest stock for it anyway),
+  // whether or not that forest is a public row: never offer it a second time as a site resource.
+  for(const r of ecology.commonsResources?.(e,state,item=>isItemClass(e,item,cls),publicPlace)??[])if(!(r.item===wood&&forestLocations.has(r.site)))
    rows.push({id:`upkeep:${cls}:${r.site}:${r.resource}`,location:r.site,kind:'site',cls,site:r.site,resource:r.resource,item:r.item,unitGrams:itemGrams(e,r.item),capacity:0,minutesPerPortion:null});
   out.set(cls,rows);
  }
@@ -671,7 +674,7 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
    minute=(day+1)*DAY;
   const quantity=trip.kind==='forest'?ecology.harvestForest(d,e,trip.location,units,minute,{to,eventId})
    :ecology.siteTake(d,e,trip.site,trip.resource,{minutes:units*trip.minutesPerPortion,quantity:units,holder,settlement,to,eventId,settledAt:minute});
-  if(quantity>0)e.itemDelta(d,holder,trip.item,quantity,bookedBy('household-subsistence','upkeep-gather'));
+  if(quantity>0)e.itemDelta(d,holder,trip.item,quantity,bookedBy('household-subsistence','upkeep-gather',eventId));
   sources.push({kind:'upkeep',cls:trip.cls,source:trip.id,location:trip.location,worker:trip.worker,minutes:trip.minutes,travelMinutes:trip.travelMinutes,item:trip.item,quantity});
  }
  return {nutrition,sources};
