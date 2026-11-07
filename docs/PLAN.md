@@ -1213,3 +1213,4 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [x] **B 合入 t-int 9d47c510**（找路同日复用搜索树 + 日历按日记忆）。完整检查（腾讯同机同时 523 文件）修前 4374/205、修后 4379/206；差异 3 个低负载复跑：actions-catalog 重导后过、storage 两版 16/16、ledger-stock 两版同败 #6（旧败）——零新增失败。独立审查（diff 5dbe7d5f..1c650e08 server-plugin）：无阻断；可选项（日历记忆键不含自定义日历定义、扩展失败后不再找其他树、ROUTE_DAY_PLANS 容量常数）不影响结果，未改。合并后重导 actions.json；合并树 overfit-guard / actions-catalog 云上复核中。
 - [x] 上传改法：腾讯上行约 30KB/s。F:/dnd-tools/cloud/sync.sh 服务器复制已有目录、按 md5 只补差异（83 文件 651KB 38 秒；4 文件 56KB 19 秒）。踩坑两处已修：未提交改动不在 HEAD（现拒绝）、差异为空时误传整包。
 - [~] C 提交 t-fuel-trail 8758deb7（flowBy + 加工记录补料）；独立审查无阻断（flowBy 已入 emptyLedger；m2 断言改写认可）。云上 9 文件修前/修后对比中。
+- [x] 日用自给审查修复 70d6fd32（t-upkeep-subsist）：A1 upkeep 路线按（户、类、日、量、候选库存签名）备忘、upkeepWants 按户日缓存；A2 commonsResources 只给静态候选、commonsLive 只读单点账（键含分钟——据点再生按分钟结算，按日会不等价）；A4 林木物品由 forest-water 的 forestItem 给出，不再点名。probe7 修前/修后：缺柴 90/90、缺盐 231/231、自给趟 561/561、守恒 0/0、耗时 45.2s/42.5s（单次）。9 文件零新增失败。主会话审 diff 认可。合入方式：t-int + C + 日用自给组成候选，跑一次完整检查后合。
