@@ -19,8 +19,9 @@ import {scheduleAt} from './npc-schedule.mjs';
 import {personHousehold,placeSettlement,personEmployment} from './entity-view.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {stateReader,goodsWorth} from './valuation.mjs';
-import {laborValue,marketQuote,saleableStock,recordMarketDeal,subjectiveMarketQuote,goodsClass,quoteSupply,upkeepWants} from './market.mjs';
-import {knownMarket,noteMarketSighting,exchangeMarketNews} from './market-news.mjs';
+import {laborValue,marketQuote,saleableStock,recordMarketDeal,subjectiveMarketQuote,goodsClass,quoteSupply,upkeepWants,registerItemDemand} from './market.mjs';
+import {knownMarket,noteMarketSighting,noteMarketPrices,exchangeMarketNews} from './market-news.mjs';
+import {publicCommons} from './household-subsistence.mjs';
 import {regionalTradeBase,tradeSources} from './settlement-trade.mjs';
 import {localSpare,dealingStock} from './distribution.mjs';
 import {carryRiskCost,transportServices,quoteTransport,bookTransport} from './transport.mjs';
@@ -111,7 +112,8 @@ function worth(e,state,{item,quantity,holder=null,location}){
 const marketDocument=(document,who)=>{const state=marketState(document.state);return state===document.state?document:{...document,state};};
 const homeSettlement=(e,state,id)=>personHousehold(e,state,id).value?.settlement??placeSettlement(e,state,state.npcs[id]?.location).value;
 // 自然来源：每个来源给出地点、产物、每份工时与当前可取量；取用只经各自规律的账本入口。
-function naturalSources(e,state,id,labor){
+// buyTool：本人没有完好工具也列出要工具的来源（标 needTool，由劳动候选去排“先买工具再去干”）；加工的就地取料仍只认手上有工具的来源。
+function naturalSources(e,state,id,labor,{buyTool=false}={}){
  const rows=[];
  // 据点：一趟劳动行程走得到的就是本地据点（行程核算在下面）；只去合法的，会被定罪的不去（sites.mjs 的同一条许可规律）。
  if(labor.includes('gather')){
@@ -122,12 +124,15 @@ function naturalSources(e,state,id,labor){
     ...(r.gates.length?{gates:r.gates,setupMinutes:r.gates.reduce((n,g)=>n+g.minutes,0),odds:r.gates.reduce((n,g)=>n*g.odds,1)}:{})});
  }
  const forest=e.rules.forestWater?.forest;
- if(labor.includes('fell')&&forest&&e.quantity(stateReader(state),id,forest.tool)>0)
+ const felling=labor.includes('fell')&&forest,held=felling&&usableTool(reader({state}),e,id,forest.tool);
+ if(felling&&(held||buyTool))
   for(const s of forestSites(e)){
-   const place=e.byId.get(s.location),owner=place?.site?.owner??place?.owner;
-   if(owner&&owner!==id||place?.access?.requiresConsent||place?.site)continue;
+   // 林地准入与家户自给同一条公共判据（无主、不需许可）；据点的林地也在内。据点资源与林木存量是同一份账（同地同物）的，已经列过的不重复列。
+   if(!publicCommons(e.byId.get(s.location)))continue;
+   const wood=stockItem(e,'wood');
+   if(rows.some(r=>r.location===s.location&&r.item===wood))continue;
    const reserve=forestView(e,state,s.location)?.reserve??0;
-   if(reserve>0)rows.push({labor:'fell',location:s.location,item:stockItem(e,'wood'),minutesPerUnit:forest.minutes,available:Math.min(reserve,forest.maximumCut),source:`forest:${s.location}`,tool:forest.tool});
+   if(reserve>0)rows.push({labor:'fell',location:s.location,item:wood,minutesPerUnit:forest.minutes,available:Math.min(reserve,forest.maximumCut),source:`forest:${s.location}`,tool:forest.tool,toolWear:forest.wear,...(held?{}:{needTool:true})});
   }
  return rows;
 }
@@ -302,41 +307,59 @@ function tripCost(e,document,who,view,trip,home){
  const time=laborCost(e,document,who,view,trip.activeMinutes);
  return {coins:trip.travelCoins,value:time+meals+(trip.forgone??0),time};
 }
-function carryRoom(e,document,who,item,food=null){
- const d=reader(document),kg=packItemKg(d,e,who,item),load=food?.quantity?food.quantity*packItemKg(d,e,who,food.item):0;
+function carryRoom(e,document,who,item,food=null,extraKg=0){
+ const d=reader(document),kg=packItemKg(d,e,who,item),load=(food?.quantity?food.quantity*packItemKg(d,e,who,food.item):0)+extraKg;
  return kg>0?Math.max(0,Math.floor((safeCarryKg(d,e,who)-carriedKg(d,e,who)-load)/kg)):Infinity;
 }
 function laborCost(e,document,who,view,minutes){return Math.ceil(laborValue(e,document,{worker:who,observer:who,view}).daily*minutes/480);}
 
+// 买一件工具：本聚落有铺面、手上有这件货的卖家里，按市场报价最省的一家（与加工缺工具同一条采买通道 supplies）。
+// amortized 是这趟作业磨掉的那份本钱：磨损（物品耐久与该劳动的磨损规则）占整件耐久的比例。
+function toolPurchase(e,document,who,s,settlement,home){
+ const supply=supplies(e,document,who,s.tool,1,settlement,localSupply(e,document.state,who,settlement,[])).sort((a,b)=>a.coins-b.coins||a.location.localeCompare(b.location))[0];
+ if(!supply)return null;
+ const share=Math.min(1,(s.toolWear??1)/Math.max(1,e.byId.get(s.tool)?.durability??1));
+ return {supply,price:supply.coins,amortized:Math.ceil(supply.coins*share),kg:packItemKg(reader(document),e,who,s.tool)};
+}
 export function laborCandidates(e,view,document){
  const state=document.state,who=view.observer,labor=laborCategories(e,state,who),at=view.minute,out=[];
  if(!adult(e,state,who,at))return out;
- const read=stateReader(marketState(state,who)),home=view.self.location,day=Math.floor(at/DAY);
+ const read=stateReader(marketState(state,who)),home=view.self.location,day=Math.floor(at/DAY),settlement=homeSettlement(e,state,who);
  // 采集与伐木：作业量按据点存量与负重定（口粮也占负重），值不值得去看货值与总工时、路费、口粮的比较。
  if(activeTrip(state,who,at))return out;
- for(const s of naturalSources(e,state,who,labor)){
-  let quantity=Math.min(s.available,carryRoom(e,document,who,s.item));if(!(quantity>=1))continue;
+ for(const s of naturalSources(e,state,who,labor,{buyTool:true})){
+  // 要工具而本人没有：先向本聚落有铺面的持货人按报价买一件（买不到就不去），工具只把这趟磨掉的那份算作成本（按耐久与磨损规则摊销），其余仍是本人的家当。
+  const tool=s.needTool?toolPurchase(e,document,who,s,settlement,home):null;if(s.needTool&&!tool)continue;
+  const stopsFor=n=>{
+   const work={location:s.location,work:n*s.minutesPerUnit+(s.setupMinutes??0)};
+   return tool?[{location:tool.supply.location,work:config(e).saleMinutes,keeper:tool.supply.keeper,acts:[tool.supply.act]},{...work,acts:[{kind:s.labor,item:s.item,quantity:n,source:s.source,minutesPerUnit:s.minutesPerUnit,tool:s.tool}]}]:[work];
+  };
+  const open=t=>t.stops.every(stop=>(stop.acts??[]).every(act=>act.kind!=='buy'||receiving(e,state,act.keeper,stop)));
+  const plan=n=>plannedTrip(e,document,who,stopsFor(n),at,{},open);
+  let quantity=Math.min(s.available,carryRoom(e,document,who,s.item,null,tool?.kg??0));if(!(quantity>=1))continue;
   // 货值连作业工时都抵不过，就不必排路线。
   const setup=s.setupMinutes??0,odds=s.odds??1,gateCost=gateMaterials(e,state,s,home);
   if(!(outletWorth(e,document,view,who,{item:s.item,quantity,home,at})*odds>laborCost(e,document,who,view,quantity*s.minutesPerUnit+setup)+gateCost))continue;
-  let trip=plannedTrip(e,document,who,[{location:s.location,work:quantity*s.minutesPerUnit+setup}],at);if(!trip)continue;
+  let trip=plan(quantity);if(!trip)continue;
   // 口粮占的负重可能挤掉几份货：按带上口粮后的负重重算一次。
   const food=rations(e,trip.nights);if(!food)continue;
-  const room=carryRoom(e,document,who,s.item,food);
-  if(room<quantity){quantity=room;if(quantity<1)continue;trip=plannedTrip(e,document,who,[{location:s.location,work:quantity*s.minutesPerUnit+setup}],at);if(!trip)continue;}
+  const room=carryRoom(e,document,who,s.item,food,tool?.kg??0);
+  if(room<quantity){quantity=room;if(quantity<1)continue;trip=plan(quantity);if(!trip)continue;}
   const value=outletWorth(e,document,view,who,{item:s.item,quantity,home,at})*odds;if(!Number.isFinite(value))continue;
   const priced=tripCost(e,document,who,view,trip,home),cost=priced&&{...priced,value:priced.value+gateCost};if(!cost)continue;
-  const utility=value-cost.coins-cost.value;
+  // 买工具的本钱与路费都要付得起。
+  if(tool&&tool.price+trip.travelCoins>(view.self.coins??0))continue;
+  const utility=value-cost.coins-cost.value-(tool?.amortized??0);
   if(!(utility>0))continue;
-  out.push({id:`labor:${who}:${day}:${s.source}`,kind:'labor',legacy:{kind:'labor_work',labor:s.labor,item:s.item,quantity,source:s.source,...(s.resource?{resource:s.resource}:{}),...(s.tool?{tool:s.tool}:{}),...(s.gates?{gates:s.gates,setupMinutes:setup}:{}),minutesPerUnit:s.minutesPerUnit,...trip},
-   cost:decisionCost(cost,trip),reward:value,needSatisfaction:value,utility});
+  out.push({id:`labor:${who}:${day}:${s.source}`,kind:'labor',legacy:{kind:'labor_work',labor:s.labor,item:s.item,quantity,source:s.source,...(s.resource?{resource:s.resource}:{}),...(s.tool?{tool:s.tool}:{}),...(tool?{coins:tool.price}:{}),...(s.gates?{gates:s.gates,setupMinutes:setup}:{}),minutesPerUnit:s.minutesPerUnit,...trip},
+   cost:decisionCost(cost,trip,tool?{coins:tool.price,value:tool.amortized-tool.price}:{}),reward:value,needSatisfaction:value,utility});
  }
  // 出售与运输：本人可售的存货交给本聚落或外地的收货方（有铺面的按收购价收，缺日用的人家按零售价买；收不收由对方决定）；
  // 跨聚落的就是运输（卡 E2：不看职业，条件派生）。一趟按运力装：背得动多少、对方收得下多少、付得起多少就带多少，
  // 一个聚落里可以连着交给几家（allocate）。自己有铺面的人在本铺零售（已有的店铺规律），不把铺货送去本地别家；
  // 跨聚落去卖时，放弃的营业算进成本（forgone）。
  if(!activeTrip(state,who,at)){
-  const settlement=homeSettlement(e,state,who),inventory=state.npcs[who]?.inventory??{},shop=shopOfKeeper(e,who,state),own=shop&&!shop.surplus;// 只卖余货的摊（没有营业时段）照样挑去别家卖
+  const inventory=state.npcs[who]?.inventory??{},shop=shopOfKeeper(e,who,state),own=shop&&!shop.surplus;// 只卖余货的摊（没有营业时段）照样挑去别家卖
   for(const item of Object.keys(inventory).sort()){
    const available=saleableStock(read,e,who,item).available;if(!(available>0)||!e.byId.get(item)?.basePrice)continue;
    const capacity=Math.floor(Math.min(available,carryRoom(e,document,who,item)));if(!(capacity>=1))continue;
@@ -505,7 +528,7 @@ function haulWants(e,document,who,settlement){
  return [...rows].sort((x,y)=>x[0].localeCompare(y[0])).map(([item,own])=>({item,own})).filter(r=>spareHere(e,document,settlement,r.item,who)<1);
 }
 function haulSeller(e,document,who,item,settlement,home,at){
- return haulRead(document.state,`seller|${item}|${settlement}|${home}|${at}`,()=>{
+ return haulRead(document.state,`seller|${who}|${item}|${settlement}|${home}|${at}`,()=>{
   const state=document.state,read=stateReader(marketState(state)),sources=new Set(tradeSources(reader(document),e,item).filter(s=>s!==settlement));
   if(!sources.size)return null;
   const rows=buyers(e,state,who).filter(b=>sources.has(placeSettlement(e,state,b.location).value))
@@ -536,7 +559,8 @@ function haulCandidates(e,view,document){
 }
 function haulPlan(e,document,view,who,want,seller,home,at,settlement){
  const state=document.state,day=Math.floor(at/DAY),item=want.item,coins=coinsOf(state,who);
- const buyOne=(r,n)=>knownQuote(e,document,view,{seller:r.keeper,buyer:who,keeper:r.keeper,location:r.location,item,quantity:n});
+ // 每家的报价按（卖家，数量）只算一次：排先后的单价、各量的货款、付得起的二分都复用同一份。
+ const quoted=new Map(),buyOne=(r,n)=>{const k=`${r.keeper}|${n}`;if(!quoted.has(k))quoted.set(k,knownQuote(e,document,view,{seller:r.keeper,buyer:who,keeper:r.keeper,location:r.location,item,quantity:n}));return quoted.get(k);};
  // 货源聚落里各家持货人按单价（买一件的报价）、路程排先后，逐家买到量满；一趟量不够某家的存量就只向前面几家买。
  const order=seller.all.map(r=>({...r,unit:buyOne(r,1)?.totalCoins??Infinity})).filter(r=>Number.isFinite(r.unit)).sort((x,y)=>x.unit-y.unit||x.path.minutes-y.path.minutes||x.keeper.localeCompare(y.keeper));
  if(!order.length)return null;
@@ -559,9 +583,11 @@ function haulPlan(e,document,view,who,want,seller,home,at,settlement){
  // 一趟最多进：本地收得下的量（placed）、合并后的可售存量、本人负重可携量（carryRoom：体能与已背的货）三者取小。
  const quantity=placed(Math.min(stockAll,Math.floor(carryRoom(e,document,who,item))));
  // 估一眼：货到了值的钱连货款都抵不过，就不必排路线。
+ // 剪枝：买货的单价只会随买得越多越高、后排的卖家单价又不低于头一家，所以货款不低于头一家单价乘件数；货值连这个下限都不到，就不必逐家报价。
+ if(quantity>=1&&!(value(quantity)>lead.unit*quantity))return null;
  const first=quantity>=1?buy(quantity):null;if(!first||!(value(quantity)>first.totalCoins))return null;
  // 下限先估：去货源地来回的工时与路费都抵不过差价，就不必排行程。
- if(!(value(quantity)-first.totalCoins>laborCost(e,document,who,view,2*seller.path.minutes)+2*(seller.path.cost??0)))return null;
+ if(!(value(quantity)-first.totalCoins>laborCost(e,document,who,view,2*lead.path.minutes)+2*(lead.path.cost??0)))return null;
  const buyStops=bill=>bill.rows.map(x=>({location:x.r.location,work:config(e).saleMinutes,keeper:x.r.keeper,acts:[{kind:'buy',keeper:x.r.keeper,item}]}));
  const stopsFor=(n,bf=buy)=>{const s=sale(n-ownPart(n));return [...buyStops(bf(n)),...(s?saleStops(e,item,s.rows):[])];};
  const open=t=>t.stops.every(stop=>receiving(e,state,stop.acts[0].keeper,stop));
@@ -569,7 +595,7 @@ function haulPlan(e,document,view,who,want,seller,home,at,settlement){
  const trip=tripFor(quantity);if(!trip)return null;
  const food=rations(e,trip.nights);if(!food)return null;
  const cost=tripCost(e,document,who,view,trip,home);if(!cost)return null;
- const budget=coins-trip.travelCoins,afford=(limit,extra=()=>0,bf=buy)=>{let low=0,high=limit;while(low<high){const mid=Math.ceil((low+high)/2);if((bf(mid)?.totalCoins??Infinity)+extra(mid)<=budget)low=mid;else high=mid-1;}return low;};
+ const budget=coins-trip.travelCoins,afford=(limit,extra=()=>0,bf=buy)=>{if(limit>=1&&(bf(limit)?.totalCoins??Infinity)+extra(limit)<=budget)return limit;let low=0,high=limit;while(low<high){const mid=Math.ceil((low+high)/2);if((bf(mid)?.totalCoins??Infinity)+extra(mid)<=budget)low=mid;else high=mid-1;}return low;};
  const plans=[];
  // 自己背回：一趟背得动的量（口粮也占负重）、付得起的量；途中风险自担。
  const carried=placed(afford(Math.min(quantity,Math.floor(carryRoom(e,document,who,item,food)))));
@@ -599,8 +625,10 @@ function haulPlan(e,document,view,who,want,seller,home,at,settlement){
  // 本钱：到了货源地最多肯付的货款——付到这趟不赚不赔为止，也不超过路费之外手上的钱。
  const pay=Math.floor(Math.min(budget-best.freight,best.worthHome-best.freight-spent.coins-spent.value-best.risk-best.tied));
  const sold=sale(best.quantity-ownPart(best.quantity))?.rows??[];
- // 每家的本钱按它那一笔货款占总货款的比例分摊最多肯付的货款（总货款不超过 pay，每家都够付）。
- const legacyStops=chosen.stops.map((stop,i)=>({...stop,acts:stop.acts.map(act=>act.kind==='buy'?{...act,quantity:best.bill.rows[i].quantity,coins:Math.floor(best.bill.rows[i].quote.totalCoins*pay/best.bill.totalCoins)}:{...act,quantity:sold[i-best.nb].quantity}),...i===0&&best.ship?{ship:best.ship}:{}}));
+ // 本钱按买货的先后分：前几家各付满自己那一笔报价，最后一家拿余下的（报价之外的余量也在它那里，不压低任何一家的报价）。
+ let left=pay;
+ const coinsAt=i=>{const price=best.bill.rows[i].quote.totalCoins,c=i===best.nb-1?left:Math.min(price,left);left-=c;return c;};
+ const legacyStops=chosen.stops.map((stop,i)=>({...stop,acts:stop.acts.map(act=>act.kind==='buy'?{...act,quantity:best.bill.rows[i].quantity,coins:coinsAt(i)}:{...act,quantity:sold[i-best.nb].quantity}),...i===0&&best.ship?{ship:best.ship}:{}}));
  return {id:`labor:${who}:${day}:haul:${item}:${best.bill.rows[0].r.keeper}`,kind:'labor',legacy:{kind:'labor_haul',labor:'haul',...chosen,item,quantity:best.quantity,coins:pay+best.freight,stops:legacyStops},
   cost:decisionCost(spent,chosen,{coins:best.bill.totalCoins+best.freight,value:best.risk+best.tied}),reward:best.worthHome,needSatisfaction:best.worthHome,utility:best.utility};
 }
@@ -679,9 +707,9 @@ function supplies(e,document,who,item,quantity,settlement,local){
 }
 // 本地能取得投入的地方，一次决策里只读一次：本人职业做得了的采集（据点、林木），本聚落有铺面的卖家（可售存货按卖家与物品记一次）。
 // 不做采集的手艺人缺料就向持货人买，分工照职业。
-function localSupply(e,state,who,settlement){
+function localSupply(e,state,who,settlement,natural=naturalSources(e,state,who,laborCategories(e,state,who))){
  const read=stateReader(marketState(state,who)),seen=new Map();
- return {natural:naturalSources(e,state,who,laborCategories(e,state,who)),keepers:buyers(e,state,who).filter(b=>placeSettlement(e,state,b.location).value===settlement),
+ return {natural,keepers:buyers(e,state,who).filter(b=>placeSettlement(e,state,b.location).value===settlement),
   stock:(keeper,item)=>{const key=`${keeper}|${item}`;if(!seen.has(key))seen.set(key,saleableStock(read,e,keeper,item,{business:true}).available);return seen.get(key);}};
 }
 // 同一状态里同一买卖双方、同一货与数量的报价只算一次（多道配方常要同一种料）。
@@ -821,6 +849,21 @@ function receiving(e,state,keeper,stop){
 }
 // 卡 E2：买卖劳动对任何成年人开放（条件派生），所以醒着的成年人都要看一眼劳动候选。
 const relevant=(e,state,id,presence)=>adult(e,state,id,state.minute)&&!/睡眠|睡觉|熟睡/.test(presence?.activity??'');
+// 工具需求（市场的需求项）：有这项劳动的手艺、眼下去得了公共来源、却没有完好工具的成年人，每人缺一件。
+// 这份需求进 market.stockSupply 的需求（只计买得起的人），工具的报价随之抬高，会做这件工具的人在 processPlan 里就看到更好的卖价。
+const toolWanted=new WeakMap();
+function commonsToCut(e,state){
+ let hit=toolWanted.get(state);if(hit!==undefined)return hit;
+ const forest=e.rules.forestWater?.forest;
+ hit=Boolean(forest)&&forestSites(e).some(s=>publicCommons(e.byId.get(s.location))&&(forestView(e,state,s.location)?.reserve??0)>0);
+ toolWanted.set(state,hit);return hit;
+}
+registerItemDemand((e,state,id,item)=>{
+ const forest=e.rules.forestWater?.forest;
+ if(!forest||item!==forest.tool||!state.npcs?.[id]||!isEffective(e,state,id)||!adult(e,state,id,state.minute))return 0;
+ // 有效需求要有购买力：手上的钱够买一件（目录价）才算“想买”，没钱的人缺工具是缺钱，不是市场上的求购。
+ return (state.npcs[id].coins??0)>=(e.byId.get(item)?.basePrice??Infinity)&&laborCategories(e,state,id).includes('fell')&&!usableTool(reader({state}),e,id,item)&&commonsToCut(e,state)?1:0;
+});
 registerAutonomyProvider('npc_labor',{
  relevant,
  candidateRelevant:(e,document,id,presence)=>relevant(e,document.state,id,presence),
@@ -876,7 +919,11 @@ registerAutonomyKind('labor_work',{
  validate(d,e,who,a,o){
   if(!validGoods(e,a))throw preconditionFailure('劳动数量无效');
   validateTrip(d,e,who,a,o);
-  if(!usableTool(d,e,who,a.tool)||(a.gates??[]).some(g=>!usableTool(d,e,who,g.tool)))throw preconditionFailure('没有完好的实际工具');
+  // 先买工具再去干的：工具在路上买，出发前只要卖家在铺里接待；否则出发时就得有完好的工具。
+  const buying=a.stops.some(s=>s.acts?.some(x=>x.kind==='buy'));
+  if(buying){if(!o.ignoreTask)for(const stop of a.stops)if(stop.acts?.some(act=>act.kind==='buy'&&!receiving(e,d.get('state'),act.keeper,stop)))throw preconditionFailure('卖家没有接待窗口');}
+  else if(!usableTool(d,e,who,a.tool))throw preconditionFailure('没有完好的实际工具');
+  if((a.gates??[]).some(g=>!usableTool(d,e,who,g.tool)))throw preconditionFailure('没有完好的实际工具');
  },
  start:startTrip,
  execute:(d,e,who,a)=>departure(e,a)
@@ -974,9 +1021,15 @@ function householdWant(e,state,payer,item){
 // 采买一站：卖家实际在铺里、货还在、实价不高过计划的本钱、卖家同意，才付款取货；货不够就照实少买。
 function settleBuy(d,e,who,a,stop,id,at,part){
  const state=d.get('state'),keeper=stop.acts[0].keeper,k=state.npcs[keeper];
- const fail=reason=>laborRecord(d,id,{npc:who,labor:a.labor,side:'buy',seller:keeper,location:stop.location,minute:at,goods:[],success:false,reason,nights:a.nights},part);
+ // 到了站、见到了卖家却没买成：这一站看到的真实行情记进本人的见闻（market-news），后续规划按它估价，不再按中性供需去撞同一家铺面。
+ let sawPrices=false;
+ const fail=reason=>{
+  if(sawPrices)noteMarketPrices(d,e,who,stop.location,stop.acts.map(act=>act.item),at);
+  return laborRecord(d,id,{npc:who,labor:a.labor,side:'buy',seller:keeper,location:stop.location,minute:at,goods:[],success:false,reason,nights:a.nights},part);
+ };
  if(!present(d,e,who,stop.location))return fail('劳动者没有实际到场');
  if(!k||k.location!==stop.location||k.scheduleTravel||k.cognitionTravel)return fail('卖家实际不在铺里');
+ sawPrices=true;
  const read=reader(d.document),rows=stop.acts.map(act=>({...act,quantity:Math.min(act.quantity,saleableStock(read,e,keeper,act.item,{business:true}).available)})).filter(r=>r.quantity>0);
  if(!rows.length)return fail('卖家可售的货已经没有了');
  const quotes=rows.map(r=>freshSupplierQuote(e,d.document,{buyer:who,keeper,location:stop.location,item:r.item,quantity:r.quantity})),total=quotes.reduce((n,q)=>n+q.totalCoins,0);
@@ -1024,7 +1077,7 @@ function settleStop(d,e,trip,i){
   const act=stop.acts?.[0];if(!act)return settleSale(d,e,who,a,trip.sourceEvent,at);
   return settleSale(d,e,who,{...a,keeper:act.keeper,item:act.item,quantity:act.quantity,to:stop.location,peer:act.peer},a.stops.length>1?`${trip.sourceEvent}:${i}`:trip.sourceEvent,at);
  }
- if(a.kind==='labor_work')return settleWork(d,e,who,a,trip.sourceEvent,at);
+ if(a.kind==='labor_work'&&!stop.acts)return settleWork(d,e,who,a,trip.sourceEvent,at);
  const id=trip.sourceEvent,part=`:${i}`,kind=stop.acts[0].kind;
  if(kind==='buy'){settleBuy(d,e,who,a,stop,id,at,part);if(stop.ship)shipHaul(d,e,who,stop,id,part);return;}
  if(kind==='sell'){const act=stop.acts[0];return settleSale(d,e,who,{...a,keeper:act.keeper,item:act.item,quantity:act.quantity,to:stop.location,peer:act.peer},`${id}${part}`,at);}

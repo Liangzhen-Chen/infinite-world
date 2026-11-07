@@ -15,6 +15,8 @@ import {reserve,moveStock,registerLegacyStock,accrueStock,bag,BOOKED,stockItem} 
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 
 const DAY=1440,config=e=>e.rules.householdSubsistence;
+// A natural source is a public commons when nobody owns it and entering needs no consent (household foraging, upkeep sources and NPC felling share this one rule).
+export const publicCommons=place=>Boolean(place)&&!place.owner&&!place.site?.owner&&!place.access?.requiresConsent;
 // The household's two work windows, shared with agriculture/employment.
 const WORK_WINDOWS=[[480,720],[780,1020]];
 const workerPreference=compileRX('roll("subsistence-worker")');
@@ -44,7 +46,7 @@ function sources(e,state){
   if(forests.has(h.location))types.push('forest');
   if(!types.length)for(const species of e.world.monsters.filter(s=>s.wildlife?.habitat===h.id))types.push(...ecology.speciesHabitatTypes(e.world,species,e.rules.wildlife.habitats));
   // An owned plot or a gated site is never a free household commons.
-  if(!place||place.owner||place.site?.owner||place.access?.requiresConsent)return [];
+  if(!publicCommons(place))return [];
   // This stock belongs to the outdoor habitat fringe, not to the authored
   // site interior behind its mechanisms. Existing site stocks/gates are untouched.
   const fertility=Math.max(0,...types.map(type=>r.forageTypes[type]??0));if(!fertility)return [];
@@ -66,7 +68,7 @@ function upkeepSources(e,state){
   if(forest&&wood&&isItemClass(e,wood,cls))for(const s of ecology.forestSites?.(e)??[]){
    const place=e.byId.get(s.location);
    // Same commons rule as food foraging: the outdoor forest fringe of an authored site is public unless owned or consent-gated.
-   if(!place||place.owner||place.site?.owner||place.access?.requiresConsent)continue;
+   if(!publicCommons(place))continue;
    rows.push({id:`upkeep:${cls}:${s.location}`,location:s.location,kind:'forest',cls,item:wood,unitGrams:itemGrams(e,wood),capacity:s.capacity,minutesPerPortion:forest.minutes});
   }
   // A site resource backed by the same forest stock is already that forest row.

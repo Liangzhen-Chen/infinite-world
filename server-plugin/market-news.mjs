@@ -56,6 +56,20 @@ export function noteMarketSighting(d,e,who,location,minute=d.get('state','minute
  d.set(['state','npcs',who,'memoryStream'],[...stream.filter(m=>!(m.key===key&&m.sourceType==='亲历')),row]);
  return true;
 }
+// 人到了一站，亲眼见到某几件货的真实行情（采买没成时也见到了）：把它们并进本人这一聚落的亲历见闻（没有就新记一条），
+// 价按当地市场估值（goodsWorth，与见闻里别的货同一口径、读真实供需），后续规划就改用它而不是中性估价。
+export function noteMarketPrices(d,e,who,location,items,minute=d.get('state','minute')){
+ const state=d.get('state'),n=state.npcs?.[who],settlement=settlementOf(e,state,location);if(!n||!settlement)return false;
+ const read=stateReader(state),seen={};
+ for(const item of [...new Set(items)].sort()){const v=goodsWorth(read,e,{item,quantity:1,location});if(Number.isFinite(v)&&v>0)seen[item]=v;}
+ if(!Object.keys(seen).length)return false;
+ const key=marketKey(settlement),stream=n.memoryStream??[],old=stream.find(m=>m.key===key&&m.sourceType==='亲历'&&m.value?.values);
+ const base=old?.value??marketSighting(e,state,settlement,location),name=e.byId.get(settlement)?.name??settlement;
+ const row={id:old?.id??`market_seen_${digest([who,settlement,minute]).slice(0,24)}`,key,kind:'market',value:{...base,values:{...base.values,...seen},minute,expires:minute+cycle(e)*DAY},minute,occurredAt:minute,location,
+  participants:[],sourceType:'亲历',salience:2,content:`在${name}见到的行情：铺面上的货价与本地人家缺的日用。`};
+ d.set(['state','npcs',who,'memoryStream'],[...stream.filter(m=>!(m.key===key&&m.sourceType==='亲历')),row]);
+ return true;
+}
 // 集市渠道：买卖双方当面交货时，各自把亲眼见过的行情讲给对方（经 npc-cognition 的转述，同交谈一样会省略、会过期）。
 export function exchangeMarketNews(d,e,a,b,minute,location){
  const state=d.get('state');if(!state.npcs?.[a]||!state.npcs?.[b]||a===b)return 0;
