@@ -71,6 +71,8 @@ export function hazardRouteClosure(engine,seed,routeId,minute){
  return null;
 }
 export const hazardRouteClosed=(engine,seed,routeId,minute)=>Boolean(hazardRouteClosure(engine,seed,routeId,minute));
+// Whether any pure hazard clock can close this route at all (its closures start and end on any minute).
+export const hazardRouteHasClosures=(engine,routeId)=>closuresOf(engine).has(routeId);
 
 // Region of a location: the nearest ancestor (or itself) among `ids`.
 export function regionWithin(engine,location,ids){
