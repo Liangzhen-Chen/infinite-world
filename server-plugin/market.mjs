@@ -143,7 +143,7 @@ export function forwardSupply(d,engine,item,location){
 }
 function budgetStock(budget,owner,item){
  const row=budget.rows.find(r=>r.holder===owner&&r.item===item);
- return row?{owner,item,stock:row.stock,retained:row.retained,committed:row.committed,available:row.available}:{owner,item,stock:0,retained:0,committed:0,available:0};
+ return row?{owner,item,stock:row.stock,retained:row.retained,upkeep:row.upkeep??0,committed:row.committed,available:row.available}:{owner,item,stock:0,retained:0,upkeep:0,committed:0,available:0};
 }
 export function saleableStock(d,engine,owner,item,{business=false}={}){
  return budgetStock(householdResources(d,engine,owner),owner,item);
@@ -195,7 +195,8 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   personalDemand+=upkeepDemand(state,engine,id,item);
   for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;
    if(owners.has(id))rows.push(row);
-   else personalDemand+=row.retained+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
+   // 日用留存（row.upkeep）的需要已由上面的 upkeepDemand 表达（一户一次）；持有量不再叠加成需求，否则自给越多柴价越高。
+   else personalDemand+=row.retained-row.upkeep+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
   }
  }
  const profile=engine.rules.agriculture?.settlements.find(p=>p.settlement===place),settlement=state.settlements?.[place];
@@ -214,7 +215,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店；居民口粮需求是每位持有人（含户内成员）的储备目标，
  // 已在上面 rows.retained 与 personalDemand 中逐户计入，聚落粮仓另计全村储备——这里不再重复计入口粮需求。
  const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+r.maximum+(r.reserve??0),0);
- const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained+r.committed,0),1);
+ const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained-(r.upkeep??0)+r.committed,0),1);
  return {place,goods,supply,demand,rows};
 }
 export function marketSupply(d,engine,item,location,options={}){
