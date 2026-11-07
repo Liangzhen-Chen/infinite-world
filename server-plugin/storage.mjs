@@ -322,6 +322,18 @@ function carryStateMemos(state, path, previousCategory, nextCategory, previousKi
     }
     return retained;
 }
+// 账本与持仓不在 state 里：它们的写入不动 state，stateMemo 看不见。读账本（priceRead/coinRead/bagStock…）的 memo
+// 把 bookRevision(来源) 展开放进 inputs，账本或持仓一写就自然换 key；只读 state 的 memo 不受牵连。
+// 草稿（带 PatchCursor）用游标上的单调编号；只有文档快照时用 ledger/holdings 对象身份（读过的快照下次写入必被复制）。编号全局唯一，不会跨游标撞号。
+let bookSeq=0;
+const bookIds=new WeakMap();
+const bookId=o=>{if(!o||typeof o!=='object')return 0;let id=bookIds.get(o);if(!id)bookIds.set(o,id=++bookSeq);return id;};
+export function bookRevision(source){
+    const cursor=source?.cursor;
+    if(cursor instanceof PatchCursor&&source.document===cursor.root)return [cursor.bookRevision,0];
+    const document=source?.document??source;
+    return [bookId(document?.ledger),bookId(document?.holdings)];
+}
 export const recordIndexActive = () => recordIndexDepth > 0;
 let indexCheck = process.env.FIELDS_INDEX_CHECK === '1';
 export const recordIndexCheck = { hits: 0, memoHits: 0, violations: [] };
@@ -465,7 +477,7 @@ export class PatchCursor {
     // chain: the own copies along the last written path. While none of them
     // has escaped since and each still hangs where it did, they are still
     // writable, so consecutive writes below them skip the mark lookups.
-    reset(document) { this.onPatch?.({op:'reset',path:[]});stateMemos.delete(this.root?.state);stateMemos.delete(document?.state);this.root = document; this.marks = new WeakMap(); this.ownedChildren = new WeakMap(); this.chain = null; this.revision=(this.revision??-1)+1; }
+    reset(document) { this.onPatch?.({op:'reset',path:[]});stateMemos.delete(this.root?.state);stateMemos.delete(document?.state);this.root = document; this.marks = new WeakMap(); this.ownedChildren = new WeakMap(); this.chain = null; this.revision=(this.revision??-1)+1;this.bookRevision=++bookSeq; }
     // Only this cursor's own copies are ever written in place, so only they need marking.
     expose(value) {
         if (value && typeof value === 'object' && this.marks.get(value) === 1) {
@@ -548,6 +560,7 @@ export class PatchCursor {
         this.ownedChildren.get(target)?.delete(key);
         this.chain = { nodes, keys: path.slice(0, last) };
         this.revision++;
+        if(path[0]==='ledger'||path[0]==='holdings')this.bookRevision=++bookSeq;
         // An exposed old subtree is immutable: its indexes/memos remain valid.
         // Invalidate only an object actually mutated in place, then install the
         // unaffected groups on the new root. Comparisons of old/new snapshots
@@ -555,8 +568,6 @@ export class PatchCursor {
         if(path[0]==='state'&&this.root.state===previousState)stateMemos.delete(previousState);
         if(indexedRecords&&this.root.state[path[1]]===indexedRecords)recordIndexes.delete(indexedRecords);
         if(retainedMemos?.size)stateMemos.set(this.root.state,retainedMemos);
-        // 账本与持仓不在 state 里：它们的写入不动 state，却会让读它们的 memo 过期。依赖声明为整个 state（dependencies 缺省）的 memo 把它们也算作输入，在此一并失效；声明了具体 state 路径的 memo 只读 state，保留。
-        if(path[0]==='ledger'||path[0]==='holdings')stateMemos.get(this.root.state)?.delete(null);
         if (recordCache) updateRecordGroups(recordCache, this.root.state[path[1]], path[2], previousRow, previousFields,path);
         return this.root;
     }

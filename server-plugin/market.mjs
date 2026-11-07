@@ -8,7 +8,7 @@ import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
-import {recordsMemo,stateMemo} from './storage.mjs';
+import {recordsMemo,stateMemo,bookRevision} from './storage.mjs';
 import {householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
@@ -276,7 +276,7 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
 // 卡 E2：供给只取决于聚落、货的类别与哪位经营者在报价，同一状态里只算一次（一次决策会给许多人、许多收货人报价）。
 export function quoteSupply(d,engine,{item,location,business=null}){
  const state=stateOf(d),place=settlementOf(engine,state,location);
- return stateMemo(state,engine,[quoteSupplyMemo,item,place,business?.keeper??null],()=>marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]}));
+ return stateMemo(state,engine,[quoteSupplyMemo,...bookRevision(d),item,place,business?.keeper??null],()=>marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]}));
 }
 const quoteSupplyMemo=Symbol('quote supply');
 // 不含某持有人自己那批货的供给：海关估入境货值时，货物自身不压低入境地的价格。

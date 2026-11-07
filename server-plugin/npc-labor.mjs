@@ -11,8 +11,8 @@
 // 是否值得去由真实报价与工时价值比较得出（按需求排班）。
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 import {registerAdvance} from './advance-registry.mjs';
-import {recordsWhere,stateMemo} from './storage.mjs';
-import {householdBudget} from './household-budget.mjs';
+import {recordsWhere,stateMemo,bookRevision} from './storage.mjs';
+import {coinTimeline} from './household-budget.mjs';
 import {bodyRule} from './primitives-body.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {npcAgeAt,householdWorkTime} from './npc-state.mjs';
@@ -319,7 +319,7 @@ function laborCost(e,document,who,view,minutes){return Math.ceil(laborValue(e,do
 // 同一聚落同一件工具的报价与是谁买无关：按（状态，聚落，工具，磨损）只查一次（状态写入后自动失效）。
 const toolOfferMemo=Symbol('tool offer');
 function toolPurchase(e,document,who,s,settlement,home){
- const offer=stateMemo(document.state,e,[toolOfferMemo,settlement,s.tool,s.toolWear??1],()=>{
+ const offer=stateMemo(document.state,e,[toolOfferMemo,...bookRevision(document),settlement,s.tool,s.toolWear??1],()=>{
   const supply=supplies(e,document,who,s.tool,1,settlement,localSupply(e,document.state,who,settlement,[])).sort((a,b)=>a.coins-b.coins||a.location.localeCompare(b.location))[0];
   const share=Math.min(1,(s.toolWear??1)/Math.max(1,e.byId.get(s.tool)?.durability??1));
   return supply?{supply,price:supply.coins,amortized:Math.ceil(supply.coins*share)}:null;
@@ -869,33 +869,28 @@ const commonsMemo=Symbol('commons to cut'),toolDemandMemo=Symbol('tool demand');
 // 登记表：哪块规则数据声明了“这项劳动要这件工具”（规则里的 labor 与 tool 字段），以及这项劳动开工的公共来源眼下开不开。
 // 新增一项要工具的劳动：在规则数据里写 labor 与 tool，再在这里登记它的规则块与来源判据，toolDemand 不需改。
 const TOOLED_LABOR=[{rule:e=>e.rules.forestWater?.forest,open:commonsToCut}];
-// 重入保护：toolDemand→householdBudget→…→stockSupply→itemDemand→toolDemand 会绕回来。
-// 绕回时返回“无需求”而不记入缓存，外层那次算完后自会记下完整结果。
-let toolDemandBusy=false;
 function toolDemand(d,e,item){
  const labors=TOOLED_LABOR.map(t=>({labor:t.rule(e)?.labor,tool:t.rule(e)?.tool,open:t.open})).filter(t=>t.labor&&t.tool===item);
- if(!labors.length||toolDemandBusy)return null;
+ if(!labors.length)return null;
  const state=d.get('state');
- return stateMemo(state,e,[toolDemandMemo,item],()=>{
-  toolDemandBusy=true;
-  try{
+ return stateMemo(state,e,[toolDemandMemo,...bookRevision(d),item],()=>{
    const places=new Map(),read=reader({state}),ask=new Map();
    for(const [id,n] of Object.entries(state.npcs??{})){
-    // 先过廉价条件（有效、成年、缺工具、有手艺、来源开着、在聚落），预算时间线最后才算。
+    // 先过廉价条件（有效、成年、缺工具、有手艺、来源开着、在聚落），现金时间线最后才算。
     if(!isEffective(e,state,id)||!adult(e,state,id,state.minute)||usableTool(read,e,id,item))continue;
     const have=laborCategories(e,state,id);
     if(!labors.some(t=>have.includes(t.labor)&&t.open(e,state)))continue;
     const place=placeSettlement(e,state,n.location).value;if(!place)continue;
     if(!ask.has(place))ask.set(place,regionalTradeBase(d,e,item,place,state.minute));
     // 有效需求要有购买力：账上的钱（扣掉在途行程已承诺的）够买一件才算“想买”，没钱的人缺工具是缺钱，不是市场上的求购。
-    // 现钱不足一件价的直接跳过，不必算预算时间线。
+    // 现钱不足一件价的直接跳过，不必算现金时间线。
+    // 只看现金时间线（现钱、已承诺的付款、确定的收入），不算预算里的食物估值与报价：后者会经市场需求绕回本函数。
     const cash=coinRead(d,{point:'assets.cash',account:purse(e,id),legacy:()=>coinsOf(state,id)});
     if(cash<ask.get(place))continue;
-    const budget=householdBudget(d,e,id,{kernel:true});
-    if(Math.min(cash,...budget.timeline.map(r=>r.balance))>=ask.get(place))places.set(place,(places.get(place)??0)+1);
+    const money=coinTimeline(d,e,id);
+    if(Math.min(cash,...money.timeline.map(r=>r.balance))>=ask.get(place))places.set(place,(places.get(place)??0)+1);
    }
    return places;
-  }finally{toolDemandBusy=false;}
  });
 }
 registerItemDemand((d,e,item,place)=>toolDemand(d,e,item)?.get(place)??0);

@@ -1,4 +1,4 @@
-import {recordsWhere,recordEntriesWhere,stateMemo} from './storage.mjs';
+import {recordsWhere,recordEntriesWhere,stateMemo,bookRevision} from './storage.mjs';
 import {placeSettlement} from './entity-view.mjs';
 import {marketQuote} from './market.mjs';
 import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
@@ -126,7 +126,7 @@ function haul(d,engine,item,sid,minute){
 // Inputs retained by the unified market: physical transport, season, hazard,
 // magic and water conditions. Supply/demand is calculated once by market.mjs.
 export function regionalTradeBase(d,engine,item,location,minute=d.get('state','minute')){
- return stateMemo(d.get('state'),engine,[regionalBaseMemo,item,location,minute],()=>readRegionalTradeBase(d,engine,item,location,minute));
+ return stateMemo(d.get('state'),engine,[regionalBaseMemo,...bookRevision(d),item,location,minute],()=>readRegionalTradeBase(d,engine,item,location,minute));
 }
 const regionalBaseMemo=Symbol('regional trade base');
 function readRegionalTradeBase(d,engine,item,location,minute){

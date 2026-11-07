@@ -401,24 +401,31 @@ function buildFutureSources(d,engine,owner,view){
  return {future:future.sort((a,b)=>a.at-b.at),payments:payments.sort((a,b)=>a.at-b.at)};
 }
 
-// Default is the actor's knowledge. Kernel consumers must opt in explicitly.
-export function householdBudget(d,engine,owner,{kernel=false,view=null,risk=0,commonRisk=0,creditCoverage=0}={}){
- const state=d.get('state'),document=d.document??{state};
- if(!kernel)view??=subjectiveView(engine,document,owner);
- if(view&&view.observer!==owner)throw Error('Household budget observer mismatch');
+// 现钱与已承诺的付款/确定的收入组成的现金时间线：不含食物估值、报价与库存，所以不会绕回市场需求。
+// 只想知道“付不付得起”的调用方（如工具需求）用它；householdBudget 的现金部分也由它给出，口径只此一份。
+export function coinTimeline(d,engine,owner,{view=null}={}){
+ const state=d.get('state');
  const cash=view?(view.self.accounts?.[purse(engine,owner)]?.balance??view.self.coins):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
  const {future,payments}=futureSources(d,engine,owner,view),reliable=future.find(r=>r.reliable),next=reliable??future.find(r=>r.source==='harvest'),until=next?.at??state.minute+engine.world.marketRules.personalReserveDays*DAY;
- const incomeRisk=future.length?future.filter(r=>!r.reliable).length/future.length:0;
- const purchasable=cash>0&&commonRisk<1?foodSources(d,engine,owner,{view}).filter(r=>r.at>=state.minute&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0&&r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0)):[];
- const foodDays=purchasable.length?Math.max(0,(Math.min(...purchasable.map(r=>r.at))-state.minute)/DAY):null;
- const target=householdBufferTarget(d,engine,owner,{incomeDays:(until-state.minute)/DAY,risk:risk+incomeRisk,commonRisk,creditCoverage,foodDays});
- const resources=householdResources(d,engine,owner,{days:target.days,view,risk,commonRisk});
  // Simultaneous contractual receipts precede payments in this projection;
  // nothing is spendable now until its actual transfer has occurred.
  const times=[...new Set([...future,...payments].filter(r=>r.resource===COIN&&r.at<=until).map(r=>r.at))].sort((a,b)=>a-b);
  let balance=cash,gap=0;const timeline=[];
  const net=at=>future.filter(r=>r.resource===COIN&&r.reliable&&r.at===at).reduce((n,r)=>n+r.amount,0)-payments.filter(r=>r.resource===COIN&&r.at===at).reduce((n,r)=>n+r.amount,0);
  for(const at of times){balance+=net(at);gap=Math.max(gap,-balance);timeline.push({at,balance,shortfall:Math.max(0,-balance)});}
+ return {cash,future,payments,reliable,next,until,times,net,timeline,gap};
+}
+// Default is the actor's knowledge. Kernel consumers must opt in explicitly.
+export function householdBudget(d,engine,owner,{kernel=false,view=null,risk=0,commonRisk=0,creditCoverage=0}={}){
+ const state=d.get('state'),document=d.document??{state};
+ if(!kernel)view??=subjectiveView(engine,document,owner);
+ if(view&&view.observer!==owner)throw Error('Household budget observer mismatch');
+ const {cash,future,payments,reliable,next,until,times,net,timeline,gap}=coinTimeline(d,engine,owner,{view});
+ const incomeRisk=future.length?future.filter(r=>!r.reliable).length/future.length:0;
+ const purchasable=cash>0&&commonRisk<1?foodSources(d,engine,owner,{view}).filter(r=>r.at>=state.minute&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0&&r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0)):[];
+ const foodDays=purchasable.length?Math.max(0,(Math.min(...purchasable.map(r=>r.at))-state.minute)/DAY):null;
+ const target=householdBufferTarget(d,engine,owner,{incomeDays:(until-state.minute)/DAY,risk:risk+incomeRisk,commonRisk,creditCoverage,foodDays});
+ const resources=householdResources(d,engine,owner,{days:target.days,view,risk,commonRisk});
  // Hypothetical purchases are a separate scenario, not new obligations or
  // already-spent cash. K09 can compare its gap with the contractual timeline.
  const foodPlan=resources.market.purchases.filter(r=>r.at<=until),foodTimeline=[];
