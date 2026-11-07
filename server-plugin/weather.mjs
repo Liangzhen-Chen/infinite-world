@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { seededRandom } from './combat.mjs';
 import { canonical } from './storage.mjs';
-import { hazardRouteClosed } from './hazard-calendar.mjs';
+import { hazardRouteClosed, hazardRouteHasClosures } from './hazard-calendar.mjs';
 import {obligationCalendar,obligationDate,DAY} from './obligation-calendar.mjs';
 import {sin,acos,tan} from './det-math.mjs';
 
@@ -177,7 +177,14 @@ export function weatherTravel(engine, seed, edge, mode, minute,cache=null) {
         region: row.region, weather: row.name, day: row.day };
     modeDays?.set(day,result);return result;
 }
-export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, movingBefore, speed,weatherCache=null) {
+// probe (optional, route-search reuse): narrows [probe.lo, probe.hi], the shifts of the departure
+// minute under which this result is unchanged. Travel conditions are fixed per day (weatherTravel),
+// so a shift that keeps every looked-up instant on its own day and moves no chunk across midnight
+// gives the same elapsed and moving minutes. A route a hazard clock can close pins the shift to 0.
+export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, movingBefore, speed,weatherCache=null,probe=null) {
+    const look=probe?at=>{const o=at%1440;if(-o>probe.lo)probe.lo=-o;if(1439-o<probe.hi)probe.hi=1439-o;}:null;
+    const pin=()=>{if(probe.lo<0)probe.lo=0;if(probe.hi>0)probe.hi=0;};
+    if(probe){look(departure+elapsedBefore);if(hazardRouteHasClosures(engine,edge.id))pin();}
     // U3: a seeded flood stage closes the route for its stated span.
     if (hazardRouteClosed(engine,seed,edge.id,departure+elapsedBefore)) return null;
     if (!edge.lengthKm) {
@@ -189,13 +196,14 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
         if(distance<=1e-9)return{elapsed,moving};
         const budget=mode==='boat'?1440:engine.rules.travel.dailyTravelMinutes;
         if(mode!=='boat'&&moving>0&&moving%budget===0)elapsed+=1440-budget;
-        const now=departure+elapsed,conditions=weatherTravel(engine,seed,edge,mode,now,weatherCache);
+        const now=departure+elapsed;look?.(now);const conditions=weatherTravel(engine,seed,edge,mode,now,weatherCache);
         if(edge.closedSeasons.length&&edge.closedSeasons.includes(engine.calendar(now).season))return null;
         if(conditions.closed||hazardRouteClosed(engine,seed,edge.id,now))return null;
         const rate=speed/conditions.multiplier/60;
         const remainingBudget=mode==='boat'?1440:budget-moving%budget;
         const toMidnight=1440-now%1440;
-        const chunk=Math.min(remainingBudget,toMidnight,Math.max(1,Math.ceil(distance/rate)));
+        const unclamped=Math.min(remainingBudget,Math.max(1,Math.ceil(distance/rate))),chunk=Math.min(unclamped,toMidnight);
+        if(probe){if(toMidnight<=unclamped)pin();else if(toMidnight-unclamped-1<probe.hi)probe.hi=toMidnight-unclamped-1;}
         distance=Math.max(0,distance-chunk*rate);moving+=chunk;elapsed+=chunk;
     }
     throw Error('天气路线超过规划步数限制');

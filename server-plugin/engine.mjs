@@ -116,6 +116,7 @@ const clone = value => structuredClone(value);
 const ROUTE_PLACES = Symbol('route places');
 // Departure instants whose route searches are kept (oldest dropped first).
 const ROUTE_FRONTIERS = 8;
+const ROUTE_DAY_PLANS = 8;
 const ROUTE_CACHE_CHECK = process.env.FIELDS_INDEX_CHECK === '1';
 // Native read projection shared by dialogue, routing and evidence. No draft
 // writer is exposed, and the normal quote uses the same environmental inputs.
@@ -875,10 +876,15 @@ export class WorldEngine {
                 graph.facilitySignatures.set(facilities,factors);
             }
         }
-        // Each departure instant keeps its own frontier (a few recent ones), so a
-        // return leg at another minute does not discard the outbound searches.
+        // Searches are kept per departure day (a few recent days), so a return leg
+        // at another minute does not discard the outbound searches. Within the day a
+        // search made at minute m0 serves a departure at m0+shift when the shift lies
+        // in the range its edge evaluations recorded (weatherEdge probe: every looked-up
+        // instant stays on its own travel day, no chunk moves across midnight), which
+        // gives the same tree. A calendar whose day does not start at minute%1440===0
+        // keeps one frontier per departure minute.
         if(graphCache){
-            const frontier=`${minute}|${seed}|${this.calendarId}`;
+            const clock=this.calendar(minute),frontier=`${clock.hour*60+clock.minute===minute%1440?'d'+Math.floor(minute/1440):minute}|${seed}|${this.calendarId}`;
             let searches=(graph.frontiers??=new Map()).get(frontier);
             if(!searches){
                 if(graph.frontiers.size>=ROUTE_FRONTIERS)graph.frontiers.delete(graph.frontiers.keys().next().value);
@@ -888,8 +894,8 @@ export class WorldEngine {
         }
         const searchKey=graphCache?JSON.stringify([from,[...closedRoutes].sort(),factors]):null;
         const search=prior=>{
-            const tree=prior??{settled:new Set(),distances:new Map([[from,0]]),movingTimes:new Map([[from,0]]),previous:new Map(),costs:new Map([[from,0]]),heap:[],pending:null};
-            const {settled,distances,movingTimes,previous,costs,heap}=tree;
+            const tree=prior??{departure:minute,lo:-Infinity,hi:Infinity,settled:new Set(),distances:new Map([[from,0]]),movingTimes:new Map([[from,0]]),previous:new Map(),costs:new Map([[from,0]]),heap:[],pending:null};
+            const {settled,distances,movingTimes,previous,costs,heap,departure}=tree;
             // P2: each edge as seen from one end, built once per topology (read-only).
             const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
             // P2: a binary heap of discovered nodes ordered by (distance, world
@@ -926,7 +932,7 @@ export class WorldEngine {
                     if(facilities.get(edge.id)?.factor===0)continue;
                     const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
                     const speed=(edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1))*(facilities.has(edge.id)?1.25*facilities.get(edge.id).factor:1);
-                    const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
+                    const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,departure,distances.get(current),movingTimes.get(current),speed,weatherCache,tree):null;
                     if(this.rules.weather&&!travel)continue;
                     const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
                     if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);push(next);}
@@ -934,17 +940,22 @@ export class WorldEngine {
             }
             return tree;
         };
-        let plan=graph.searches?.get(searchKey);
-        const hit=!!plan;
+        const fits=tree=>{const shift=minute-tree.departure;return shift>=tree.lo&&shift<=tree.hi;};
+        let plan=graph.searches?.get(searchKey)?.find(fits);
         if(plan&&!plan.settled.has(to)){
             try{search(plan);}catch(error){graph.searches.delete(searchKey);throw error;}
+            // Extending looked at further instants; this departure may no longer share them.
+            if(!fits(plan))plan=null;
         }
-        else if(!plan){
+        const hit=!!plan;
+        if(!plan){
             plan=search();
             if(graphCache){
                 graph.searches??=new Map();
                 if(graph.searches.size>=512)graph.searches.clear();
-                graph.searches.set(searchKey,plan);
+                const plans=graph.searches.get(searchKey)??[];
+                if(plans.length>=ROUTE_DAY_PLANS)plans.shift();
+                plans.push(plan);graph.searches.set(searchKey,plans);
             }
         }
         const project=tree=>{
