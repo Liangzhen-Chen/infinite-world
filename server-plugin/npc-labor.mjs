@@ -579,7 +579,9 @@ function startTrip(d,e,who,a,{actionId}){
 }
 // 劳动记录：谁、做了哪类劳动、在哪、产出或卖出了什么、卖给谁、得了多少钱。
 function laborRecord(d,actionId,row,part=''){holdingSet(d,null,['state','records',`labor:${actionId}${part}`],{category:'labor',sourceEvent:actionId,...row},writer,actionId);}
-const departure=(e,a)=>({summary:`动身去${e.byId.get(a.to)?.name??a.to}${ACTIVITY[a.labor]??'劳动'}${a.nights?`，预计在外${a.nights}夜`:''}。`,spent:{minutes:a.firstDayEnd-a.departAt,coins:a.travelCoins}});
+// 行程上已结算的制作实际扣掉的料与工坊费（见 settleCraft），与制作记录同字段 spent.materials(item/amount)、spent.fee。
+const craftSpent=trip=>trip?.materials?.length?{materials:clone(trip.materials),fee:trip.workFee??0}:{};
+const departure=(d,e,a,actionId)=>({summary:`动身去${e.byId.get(a.to)?.name??a.to}${ACTIVITY[a.labor]??'劳动'}${a.nights?`，预计在外${a.nights}夜`:''}。`,spent:{minutes:a.firstDayEnd-a.departAt,coins:a.travelCoins,...craftSpent(d.get('state','records',tripKey(actionId)))}});
 // 解机关要耗的材料，按本人家里的货值折价（它们从本人行囊里出）。
 function gateMaterials(e,state,s,home){return (s.gates??[]).flatMap(g=>g.materials??[]).reduce((n,m)=>n+(worth(e,state,{item:m.item,quantity:m.quantity,location:home})??0),0);}
 const usableTool=(d,e,who,tool)=>!tool||e.quantity(d,who,tool)>0&&(heldUnit(d,e,who,tool)?.durability??e.byId.get(tool)?.durability??0)>0;
@@ -593,7 +595,7 @@ registerAutonomyKind('labor_work',{
   if(!usableTool(d,e,who,a.tool)||(a.gates??[]).some(g=>!usableTool(d,e,who,g.tool)))throw preconditionFailure('没有完好的实际工具');
  },
  start:startTrip,
- execute:(d,e,who,a)=>departure(e,a)
+ execute:(d,e,who,a,o)=>departure(d,e,a,o.actionId)
 });
 registerAutonomyKind('labor_sale',{
  itinerary:true,
@@ -606,7 +608,7 @@ registerAutonomyKind('labor_sale',{
   if(!o.ignoreTask&&!receiving(e,d.get('state'),a.keeper,a.stops[0]))throw preconditionFailure('收货人没有接待窗口');
  },
  start:startTrip,
- execute:(d,e,who,a)=>departure(e,a)
+ execute:(d,e,who,a,o)=>departure(d,e,a,o.actionId)
 });
 // 加工行程：配方仍在本人手艺之内、已经会做、熟练度够；出发前各站的卖家要在铺里接待，工位要仍可获准使用。
 registerAutonomyKind('labor_process',{
@@ -622,7 +624,7 @@ registerAutonomyKind('labor_process',{
   for(const stop of a.stops)if(stop.acts.some(act=>act.kind==='buy'&&!receiving(e,state,act.keeper,stop)))throw preconditionFailure('卖家没有接待窗口');
  },
  start:startTrip,
- execute:(d,e,who,a)=>departure(e,a)
+ execute:(d,e,who,a,o)=>departure(d,e,a,o.actionId)
 });
 const stationAt=(e,document,who,location,id)=>facilityView(e,document.get('state'),location,who)?.workstations?.find(s=>s.id===id&&(!s.thermalRequirement||heatAllowed(heatSource(e,location,s),who))&&stationLicence(e,document,s,who))??null;
 
@@ -688,7 +690,7 @@ function settleBuy(d,e,who,a,stop,id,at,part){
 function settleCraft(d,e,who,a,stop,id,at,part,trip,i){
  const act=stop.acts[0],r=e.byId.get(act.recipe);let furnace=null;
  const before=new Map([r.output.item,...r.materials.map(m=>m.item),...(r.byproducts??[]).map(p=>p.item)].map(item=>[item,e.quantity(d,who,item)]));
- let reason=null,batches=0;
+ let reason=null,batches=0;const used=new Map();let workFee=0;
  const station=act.station?stationAt(e,d,who,stop.location,act.station):null,licence=station&&stationLicence(e,d,station,who);
  if(!present(d,e,who,stop.location))reason='劳动者没有实际到场';
  else if(act.station&&!station)reason='工位已不能用';
@@ -699,7 +701,17 @@ function settleCraft(d,e,who,a,stop,id,at,part,trip,i){
   if((r.tools??[]).some(t=>!usableTool(d,e,who,t))){reason='没有完好的实际工具';break;}
   if(licence?.basis==='paid'&&(station.fee??0)>(d.get('state','npcs',who,'coins')??0)){reason='工坊费不够';break;}
   const start=stop.arriveAt+batches*act.minutes;
-  npcCraft(d,e,who,r.id,{start,at:start+act.minutes,actionId:`${id}${part}:${batches}`,location:stop.location,minutes:act.minutes,...(furnace?{furnace:{plan:furnace.plan,fuel:batches?[]:furnace.fuel}}:{})});
+  const made=npcCraft(d,e,who,r.id,{start,at:start+act.minutes,actionId:`${id}${part}:${batches}`,location:stop.location,minutes:act.minutes,...(furnace?{furnace:{plan:furnace.plan,fuel:batches?[]:furnace.fuel}}:{})});
+  for(const m of made.spent.materials)used.set(m.item,(used.get(m.item)??0)+m.amount);
+  workFee+=made.spent.fee??0;
+ }
+ // 行程的行动记录在动身时写成，真正扣料在各站结算时发生，两者先后不定：实际扣掉的料记在行程上（item/amount，与制作记录同字段），
+// 行动记录已写则同时并入其 spent.materials，未写则动身时由 departure 带入。
+ if(used.size){
+  const merge=key=>{const rows=(d.get(...key)??[]).map(m=>({...m}));for(const [item,amount] of used){const row=rows.find(m=>m.item===item);if(row)row.amount+=amount;else rows.push({item,amount});}d.set(key,rows);};
+  const tripRec=['state','records',tripKey(id)],fee=(d.get(...tripRec,'workFee')??0)+workFee;
+  merge([...tripRec,'materials']);d.set([...tripRec,'workFee'],fee);
+  if(d.get('state','npcAutonomy','actions',id)){merge(['state','npcAutonomy','actions',id,'spent','materials']);d.set(['state','npcAutonomy','actions',id,'spent','fee'],fee);}
  }
  const change=[...before].map(([item,n])=>({item,quantity:e.quantity(d,who,item)-n}));
  laborRecord(d,id,{npc:who,labor:a.labor,recipe:r.id,station:act.station,location:stop.location,minute:at,batches,
