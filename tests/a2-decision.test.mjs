@@ -62,3 +62,17 @@ test('知情和 belief 读版本；揭穿覆盖信念，分支读取不会污染
  assert.equal(npcDecision(after,{kind:'bill',proposition:'bank_safe'}).outcome,'agree');
  assert.deepEqual(subjectiveView(engine,a,npc),before);
 });
+test('留存资产：花出去但仍归本人的现钱按净支出计，现金门槛仍按全额',()=>{
+ const v=subjectiveView(engine,fresh(),npc),coins=v.self.coins,moneyCost=r=>npcDecision(v,{kind:'help',...r}).explain().find(s=>s.stage==='cost_benefit').basis.cost;
+ const price=Math.max(2,Math.floor(coins/2)),retained=price-1;
+ // 规则：cost 按 (coins-retained+value) 计，所以把 retained 全部归入 value 与把 coins 减去 retained 等价；
+ assert.equal(moneyCost({cost:{coins:price,retained}}),moneyCost({cost:{coins:price-retained}}));
+ assert.equal(moneyCost({cost:{coins:price,retained:0}}),moneyCost({cost:{coins:price}}));
+ // 留存部分不会超过支出（不会变成负开销）。
+ assert.equal(moneyCost({cost:{coins:price,retained:price*10}}),moneyCost({cost:{}}));
+ // 同一笔支出：留存越多，开销越低，且不低于只付净额的开销。
+ assert.ok(moneyCost({cost:{coins:price,retained}})<moneyCost({cost:{coins:price}}));
+ // 现金门槛按全额：拿不出全额现钱，留存再多也不行。
+ const broke=npcDecision(v,{kind:'help',cost:{coins:coins+1,retained:coins+1}});
+ assert.equal(broke.outcome,'refuse');assert.match(broke.reason,/随身钱款/);
+});

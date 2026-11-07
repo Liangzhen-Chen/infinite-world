@@ -357,7 +357,7 @@ export function laborCandidates(e,view,document){
   const utility=value-cost.coins-cost.value-(tool?.amortized??0);
   if(!(utility>0))continue;
   out.push({id:`labor:${who}:${day}:${s.source}`,kind:'labor',legacy:{kind:'labor_work',labor:s.labor,item:s.item,quantity,source:s.source,...(s.resource?{resource:s.resource}:{}),...(s.tool?{tool:s.tool}:{}),...(tool?{coins:tool.price}:{}),...(s.gates?{gates:s.gates,setupMinutes:setup}:{}),minutesPerUnit:s.minutesPerUnit,...trip},
-   cost:decisionCost(cost,trip,tool?{coins:tool.price,value:tool.amortized-tool.price}:{}),reward:value,needSatisfaction:value,utility});
+   cost:decisionCost(cost,trip,tool?{coins:tool.price,retained:tool.price-tool.amortized}:{}),reward:value,needSatisfaction:value,utility});
  }
  // 出售与运输：本人可售的存货交给本聚落或外地的收货方（有铺面的按收购价收，缺日用的人家按零售价买；收不收由对方决定）；
  // 跨聚落的就是运输（卡 E2：不看职业，条件派生）。一趟按运力装：背得动多少、对方收得下多少、付得起多少就带多少，
@@ -462,7 +462,8 @@ function allocate(e,document,view,who,{settlement,item,quantity,remote,seller=wh
 }
 const saleStops=(e,item,rows)=>rows.map(x=>({location:x.r.location,work:config(e).saleMinutes,keeper:x.r.keeper,...(x.r.peer?{peer:true}:{}),acts:[{kind:'sell',keeper:x.r.keeper,item,quantity:x.quantity,...(x.r.peer?{peer:true}:{})}]}));
 // 决策用的成本：工时已按本人工价算过一次（timeValue），npcDecision 不再另按分钟折算。
-const decisionCost=(cost,trip,{coins=0,value=0}={})=>({coins:cost.coins+coins,value:cost.value-cost.time+value,timeValue:cost.time,minutes:trip.activeMinutes});
+// retained：这笔 coins 里换成仍归本人资产的部分（npcDecision 按净支出计，现金门槛仍按全额）。cost.value 含工时（laborCost），减去后只剩口粮/放弃的营业等，不会为负，故 value 不会被截零丢信息。
+const decisionCost=(cost,trip,{coins=0,value=0,retained=0}={})=>({coins:cost.coins+coins,value:cost.value-cost.time+value,...(retained?{retained}:{}),timeValue:cost.time,minutes:trip.activeMinutes});
 function saleCandidate(e,document,view,who,{plan,item,home,at,day,remote}){
  const state=document.state,open=t=>t.stops.every(stop=>receiving(e,state,stop.keeper,stop));
  // 下限先估：来回走路与各家交货的工时都抵不过货款，就不必排行程。
@@ -832,7 +833,7 @@ function processPlan(e,document,view,r,place,batches,totals,settlement,local,uni
  if(!(utility>0)||bought+fee+cost.coins>(view.self.coins??0))return null;
  return {id:`labor:${who}:${day}:process:${r.id}:${place.location}`,kind:'labor',
   legacy:{kind:'labor_process',labor:'process',recipe:r.id,batches,station:place.station?.id??null,coins:bought,fee,...trip},
-  cost:decisionCost(cost,trip,{coins:bought+fee,value:held+tools}),reward:gross,needSatisfaction:gross,utility};
+  cost:decisionCost(cost,trip,{coins:bought+fee,value:held,retained:-tools}),reward:gross,needSatisfaction:gross,utility};
 }
 // 炉料：热源认的燃料里，先用手上够数的（扣掉这道配方要用的料），没有就按别的投入一样找最省的采集或采买。
 // 返回 undefined 表示不缺料，null 表示炉料取不到。
