@@ -1356,3 +1356,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - 已上传到 b2-c1（哈希 307e00e5）。
   - 第 1 轮审查 b2-r1 进行中，重点查两点：户键是否一致；N17 依赖“窗口内无木头买卖”，这个前提没有检查。
 - 台账：b1-c2 完整检查在跑（pid 1220949，23:33:59Z 起）；b2-r1 审查子代理在跑；b1-b1 基线待起。
+- 11-08 批次 2 第一项：b2-c2（894f0af9，哈希 50d9339b）两轮审查齐全。第 1 轮 b2-r1 在 307e00e5 上 approve，主会话另要求修两处；第 2 轮 b2-r2 approve。
+  - 第 2 轮核对了三类归类与实际账本写法一一对应：stock:222-223、npc-autonomy:190/196、npc-life:49、forest-water:110、sites:46。
+  - 非阻断风险：有配方产出 item_wood（木炭窑副产，ledger-stock 旧败里见过）。阿言若在窗口内做这道配方，N17 会明确失败，不会静默放过。
+  - 下一步：等 b1-c2 完整检查结束（机器负载约 14），再在 b2-c2 跑相关检查（m2-preconditions、b2-upkeep-record、s5-law-subsistence、s5-law-water-source、ledger-stock、settlement-trade、npc-life 相关）。
