@@ -1228,3 +1228,12 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 自查（今天违反的）：先测后审——F1 修复 3df660e2/cd127d6f（e2s-f9 跑 39 文件后才审）、880d00e9/375e7c15（e2s-f10）、19939bd1（e2s-f11）、0a47a633（e2s-f12）；日用自给 bcbef347/9aab3c54/c201c099（cand-fix/subs-r7/subs-m1，未审）；C 改版 374238d2/40679427/4536a0a9（c-fuel2/c-fuel3，未审）；候选 846f6532 整体（合并+重导 actions 未审，C 8758deb7 无独立审查记录）；fell-dbg1 插桩探针。审后改未再审——dcd39349（主会话审后自改 storage.mjs 并在 e2s-f13 直接跑 6 文件）；9d47c510 审后重导 actions.json；70d6fd32 审查修复未复核即进候选。
 - 在跑旧任务（不重开，结果不作验收证据）：/work/int-m（9d47c510 基线，subs-run2，约 04:00 CST 起）；/work/c-fuel3（4536a0a9，未审）ledger-stock。
 - 已暂停所有执行者云测。门禁实现：服务器 forced command（gate.sh）为唯一拦截点；审查记录仅经 tc_review 钥匙写入、绑定内容哈希；实现中，待两轮独立审查后部署。
+
+## 11-08 门禁上线与首批交付（批次 1）
+- 门禁：F:/dnd-tools/cloud/gate，最终批准指纹 b5e4c395（审查记录 gate/reviews/r1-da3a7e924ea4、r2-014c9178、r2-fb1ea1ce（changes）、r2-429bbdb0、r2-b5e4c395）。05:43 CST 部署（install，未 harden），tc_dnd 已受限。已验证：无记录拒绝、直跑 node/scp/路径穿越拒绝、tc_review 垃圾输入拒绝（证据 gate/verify-case1-6.txt）。待验：只有第1轮/审者即实现者/同一审者/多文档/批准后改动/齐全放行（独立验证审查员进行中）。
+- 批次 1 世界行为目标：家户需求汇总正确（同户不重复计）；无关住户不扰动原户；物资与账目守恒（自采柴走得到账、可追）；必要计算调用数与性能不恶化。
+  - 内容：SUBS 日用自给 bcbef347+9aab3c54+c201c099（基于 70d6fd32）＋ C 来源追溯（8758deb7 主体，flowBy 已撤）合进 t-int 9d47c510 为候选。
+  - 阻断：settlement-trade #3（自采入库走 changeItems BOOKED，不经 engine.itemDelta——先查是代码绕过原语还是测试包装缺口）；N17 断言无法在无对方明细下表达（先读真实接口定取证方式）；候选整体两轮审查。
+  - 暂缓（理由）：据点采光不再生/无留种（新规律卡，不影响本批守恒）；伐木工具=武器条目（A4，内容卡）；E2SUBS 合入（依赖本批候选先落）；overfit-guard 旧败 #2#4（两版同败，不影响本批行为）。
+  - 检查顺序：相关检查（实测耗时：w8e3 232s、daily-b2 43s、settlement-trade 429s、market 直接引用 30 个合计 3519s、ledger 相关 c-fuel3 11 个约 31min，ledger-stock 1852s 为主）→ 完整检查；基线复用 int-m.full（11-08 02:03，同机），不重跑未审基线。
+  - 下一行动：主会话读 SUBS/C 累计 diff 与接口 → 派实现修两阻断 → 两轮审 → 门禁相关检查 → 完整检查。重新决策触发：相关检查出现新增失败非同根、或性能探针变慢超噪声。
