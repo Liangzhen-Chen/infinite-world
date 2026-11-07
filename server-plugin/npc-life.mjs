@@ -107,7 +107,8 @@ function householdUpkeep(d,engine,day,p){
  const usage=householdUsage(engine,day*DAY,p.members),key=['state','family','upkeep',p.key],eventId=`household-upkeep:${day}:${p.household??p.owner}`;
  const zero=Object.fromEntries([...usage.map(u=>[`${u.cls}DebtG`,0]),...usage.map(u=>[`${u.cls}ShortDays`,0])]),old={...zero,...d.get(...key)};
  const tally={},done=usage.map(u=>({u,...consumeByWeight(d,engine,holders,u.cls,Math.round(u.gramsPerDay),old[`${u.cls}DebtG`],eventId,u.purpose,tally)}));
- const row={...old,...Object.fromEntries(done.map(r=>[`${r.u.cls}DebtG`,r.debt])),...Object.fromEntries(done.map(r=>[`${r.u.cls}ShortDays`,r.short?old[`${r.u.cls}ShortDays`]+1:0]))};
+ // Only today's classes' debt/short keys plus the cumulative records carry on; keys of a class no longer in the usage definition are dropped.
+ const row={...Object.fromEntries(done.map(r=>[`${r.u.cls}DebtG`,r.debt])),...Object.fromEntries(done.map(r=>[`${r.u.cls}ShortDays`,r.short?old[`${r.u.cls}ShortDays`]+1:0])),...(old.burned?{burned:old.burned}:{}),...(old.gathered?{gathered:old.gathered}:{})};
  // Cumulative burn record (see addTally): one holder/item counter per unit actually taken, the same itemDelta calls the ledger books to sink:consume.
  if(Object.keys(tally).length)row.burned=addTally(old.burned,tally);
  if(!canonicalEqual(old,row))d.set(key,row);

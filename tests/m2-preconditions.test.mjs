@@ -7,6 +7,8 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {modelToolCall} from '../extension/tools.mjs';
 import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
 import {homeResidents,personHousehold} from '../server-plugin/entity-view.mjs';
+import {bag,craftInput,craftOutput} from '../server-plugin/stock.mjs';
+import {householdUsage} from '../server-plugin/item-class.mjs';
 
 const world=await loadWorld();
 const legacy=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -195,7 +197,10 @@ test('N17只取白石镇十天等待窗口内新增已结算行动，真实料�
     await s.turn(0,async()=>[await s.call('world_move',{destination:'旧磨坊'})],5);
     await s.turn(1,undefined,5);
     await s.turn(2,async()=>[await s.call('world_move',{destination:'白石镇'})]);
-    const absent=await s.turn(3,async()=>[await s.call('world_time',{minutes:14400,activity:'等待'})]);
+    // 窗口内账本每一笔转移都留痕（既有调试钩子，用完即删），用来显式核对户员木头只有“行动扣料/退料、家户烧柴、自采入库”三种来去。
+    globalThis.__LEDGER_TRACE__=[];
+    let absent,trace;
+    try{absent=await s.turn(3,async()=>[await s.call('world_time',{minutes:14400,activity:'等待'})]);}finally{trace=globalThis.__LEDGER_TRACE__;delete globalThis.__LEDGER_TRACE__;}
     const evidence=absent.checked.find(row=>row.kind==='newRecordsDuringTurn').actual;
     assert.equal(evidence.to-evidence.from,14400);
     assert.ok(evidence.records.every(row=>row.minute>evidence.from&&row.minute<=evidence.to&&row.start>=evidence.from&&typeof row.outcome.success==='boolean'));
@@ -213,6 +218,17 @@ test('N17只取白石镇十天等待窗口内新增已结算行动，真实料�
         const own=fresh.filter(row=>row.npc===id),actionNet=woodOf(own,'materials')-woodOf(own,'returned');
         const burned=counter(absent.after.state,'burned',id)-counter(absent.before.state,'burned',id),gathered=counter(absent.after.state,'gathered',id)-counter(absent.before.state,'gathered',id);
         const change=qty(absent.after.state.npcs[id].inventory.item_wood)-qty(absent.before.state.npcs[id].inventory.item_wood);
+        // 账本逐笔归类：只认三类；归不进的（买卖、赠与、搬运等）一律让测试失败并打印该笔。
+        const account=bag(s.engine,id,'item_wood'),sums={action:0,burn:0,gather:0};
+        for(const move of trace.filter(row=>row.from===account||row.to===account)){
+            const into=move.to===account,other=into?move.from:move.to;
+            if(move.writer==='npc-autonomy'&&!into&&other===craftInput('npc-autonomy','x').flow+'|item_wood|'+craftInput('npc-autonomy','x').purpose)sums.action+=move.amount;
+            else if(move.writer==='npc-autonomy'&&into&&other===craftOutput('npc-autonomy','x').flow+'|item_wood|'+craftOutput('npc-autonomy','x').purpose)sums.action-=move.amount;
+            else if(move.writer==='npc-life'&&!into&&other===`sink:consume|item_wood|${householdUsage(s.engine,0,[]).find(u=>u.cls==='fuel').purpose}`)sums.burn+=move.amount;
+            else if(into&&/^(forest|site):/.test(other))sums.gather+=move.amount;
+            else assert.fail(`${id} 的木头出现了三类之外的转移：${JSON.stringify(move)}`);
+        }
+        assert.deepEqual(sums,{action:actionNet,burn:burned,gather:gathered},`${id} 账本分类合计必须等于记录读出的各项`);
         settled.wood[id]={change,actionNet,burned,gathered};
         assert.equal(change,-actionNet-burned+gathered,`${id} 的木头变化必须等于 −行动净扣料 − 烧柴 + 自采入库：${JSON.stringify(settled.wood[id])}`);
     }
