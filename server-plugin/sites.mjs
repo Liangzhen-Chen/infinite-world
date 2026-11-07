@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {heldUnit,wearItem} from './items.mjs';
-import {digest,recordsWhere} from './storage.mjs';
+import {digest,recordsWhere,stateMemo} from './storage.mjs';
 import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity,learnFromWork} from './action-costs.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {unlicensedEntry} from './location-access.mjs';
@@ -19,6 +19,7 @@ import {registerAdvanceHook} from './advance-hooks.mjs';
 import {derived} from './derived.mjs';
 import {derivedStats} from './combat.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {registerSubsistenceResources} from './household-subsistence.mjs';
 declareHoldingWriter('sites',{kinds:['permit']});
 // S1b: 据点的有限资源是资源点账户 site:<据点>:<资源>|<物品>|reserve：首次建账按世界数据（resource.quantity）经 src:genesis 开户，
 // 定期再生来自 src:regrowth，采集转入采集者行囊；机关消耗材料、续约供品进 sink:consume。
@@ -392,13 +393,36 @@ function gateTerms(engine,state,holder,m,place){
 }
 const openGates=(place,row,r)=>gatesOf(place,r).filter(m=>row.mechanisms[m.id]?.status!=='已解除');
 const lawfulFor=(place,r,holder,settlement)=>{const owner=ownerOf(place,r);return (!owner||owner===holder||owner===settlement)&&(!place.access?.requiresConsent||owner===holder);};
+// 一份资源眼下每份要多少工时（采集类按季节与工日折算，当季不产为 null）。
+function unitMinutes(engine,state,r){
+    if(!r.gather)return r.minutes;
+    const {yields,day}=gatherRates(engine,r),rate=yields*herbDensity(engine,r,engine.calendar(state.minute).season);
+    return inSeason(engine,r,state.minute,state.minute)&&rate>0?Math.ceil(day/rate):null;
+}
+// 公共自然来源（家户自给用）：无主、无需许可、世界数据里没有挡路机关的据点资源。不评估也不去解机关，谁都可取；
+// remaining 是据点账当前存量，minutesPerUnit 是眼下当季每份工时（当季不产为 null）。
+export function commonsResources(engine,state,accept=()=>true){
+    return engine.world.locations.filter(p=>p.site?.resources?.length&&!p.access?.requiresConsent).flatMap(place=>
+        place.site.resources.filter(r=>accept(r.item)&&!ownerOf(place,r)&&!gatesOf(place,r).length).map(r=>({site:place.id,resource:r.id,item:r.item})));
+}
+// Today's live figures of one commons resource: the site's own ledger only (never the whole world). Keyed by the exact
+// minute and the site records, so a draw by any household invalidates it.
+const commonsLiveMemo=Symbol('commons live'),commonsLiveInputs=[{path:['records'],categories:['site']}];
+export function commonsLive(engine,state,siteId,resourceId){
+    return stateMemo(state,engine,[commonsLiveMemo,siteId,resourceId,state.minute],()=>{
+        const place=engine.byId.get(siteId),r=place?.site?.resources?.find(x=>x.id===resourceId);
+        if(!r)return {remaining:0,minutesPerUnit:null};
+        const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+        return {remaining:ledger(d,place,engine).remaining[r.id]??0,minutesPerUnit:unitMinutes(engine,state,r)};
+    },commonsLiveInputs);
+}
+registerSubsistenceResources({commonsResources,commonsLive,siteTake});
 export function siteResources(engine,state,{holder,settlement=null}){
     const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
     return engine.world.locations.filter(p=>p.site?.resources?.length).flatMap(place=>{
         const row=ledger(d,place,engine);
         return place.site.resources.map(r=>{
-            let minutesPerUnit=r.minutes;
-            if(r.gather){const {yields,day}=gatherRates(engine,r),rate=yields*herbDensity(engine,r,engine.calendar(state.minute).season);minutesPerUnit=inSeason(engine,r,state.minute,state.minute)&&rate>0?Math.ceil(day/rate):null;}
+            const minutesPerUnit=unitMinutes(engine,state,r);
             const gates=openGates(place,row,r).map(m=>gateTerms(engine,state,holder,m,place));
             return {site:place.id,resource:r.id,item:r.item,minutesPerUnit,remaining:row.remaining[r.id]??0,lawful:lawfulFor(place,r,holder,settlement),
                 gates:gates.includes(null)?null:gates};

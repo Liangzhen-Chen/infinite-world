@@ -13,11 +13,13 @@ import {registerAdvanceHook} from './advance-hooks.mjs';
 import {reserve as reserveAccount,settlementStock,granary as granaryAccount,moveStock,bookStock,priceRead,moveFishPopulation,logisticStock} from './stock.mjs';
 import {exp} from './det-math.mjs';
 import {registerSubsistenceResources} from './household-subsistence.mjs';
-registerSubsistenceResources({forestSites});
+// The one item the forest ledger accounts for; household subsistence reads it from here instead of naming a product.
+const FOREST_ITEM='item_wood',forestItem=()=>FOREST_ITEM;
+registerSubsistenceResources({forestSites,forestView,harvestForest,forestItem});
 // S1b: 林木存量是资源点账户 forest:<地点>|item_wood|reserve：首次触及时按世界数据（site.capacity）经 src:genesis 开户，
 // 生长来自 src:regrowth，采伐转入聚落木料或采伐者行囊；聚落烧柴进 sink:consume。没有林木规则时聚落日产木料来自 src:regrowth。
 declareLedgerWriter('forest-water',{sources:{'src:genesis':{item_wood:10000000},'src:regrowth':{item_wood:10000000}},sinks:['sink:consume']});
-const forestAccount=(engine,location)=>reserveAccount(engine,`forest:${location}`,'item_wood');
+const forestAccount=(engine,location)=>reserveAccount(engine,`forest:${location}`,FOREST_ITEM);
 function bookForest(d,engine,location,old,row,eventId){
  const account=forestAccount(engine,location);
  if(!old)moveStock(d,{from:'src:genesis|item_wood|forest',to:account,amount:row.initial,writer:'forest-water',eventId});
@@ -68,7 +70,7 @@ export function forestSites(engine){
  const list=engine.world.locations,hit=siteCache.get(list);
  if(hit?.rules===r&&hit.length===list.length)return hit.rows;
  const rows=list.filter(l=>locationHabitatTypes(l).includes('forest')||
-  (l.features??[]).some(f=>featureTraits(f).tags.includes('wood'))&&(l.site?.resources??[]).some(resource=>resource.item==='item_wood'&&l.site.changes?.some(c=>c.kind==='regrow'&&c.resource===resource.id))).map(l=>{
+  (l.features??[]).some(f=>featureTraits(f).tags.includes('wood'))&&(l.site?.resources??[]).some(resource=>resource.item===FOREST_ITEM&&l.site.changes?.some(c=>c.kind==='regrow'&&c.resource===resource.id))).map(l=>{
   const tags=locationTraits(l).tags,kind=tags.includes('frost')||/针|松|杉/.test(l.terrain)?'conifer':tags.includes('wet')?'wetwood':'broadleaf';
   const species=r.forest.species[kind],area=l.areaKm2??r.forest.defaultAreaKm2;
   return {location:l.id,kind,capacity:Math.max(1,Math.floor(area*r.forest.stockPerKm2)),growthPerDay:species.growthPerDay};

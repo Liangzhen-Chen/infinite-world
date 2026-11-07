@@ -5,11 +5,13 @@ import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
-import {householdMealPlan} from './household-budget.mjs';
+import {householdMealPlan,itemGrams} from './household-budget.mjs';
+import {householdUsage,isItemClass,heldOfClass} from './item-class.mjs';
+import {changeItems} from './items.mjs';
 import {warClosedRoutes} from './hazard-calendar.mjs';
 import {facilityRouteStates} from './facility-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {reserve,moveStock,registerLegacyStock,accrueStock} from './stock.mjs';
+import {reserve,moveStock,registerLegacyStock,accrueStock,bag,BOOKED} from './stock.mjs';
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 
 const DAY=1440,config=e=>e.rules.householdSubsistence;
@@ -51,7 +53,53 @@ function sources(e,state){
   const area=place.areaKm2??e.rules.habitatDerivation?.referenceAreaKm2;
   return [{location:place.id,capacity:Math.floor(area*r.portionsPerKm2*fertility),minutesPerPortion:Math.ceil(r.forageMinutes/fertility)}];
  }).filter(s=>s.capacity>0);
- hit={locations,routes,water,waterById:new Map(water.map(row=>[row.id,row])),food,distances:new Map(),walking:new Map()};geography.set(e,hit);return hit;
+ hit={locations,routes,water,waterById:new Map(water.map(row=>[row.id,row])),food,upkeep:upkeepSources(e,state),distances:new Map(),walking:new Map()};geography.set(e,hit);return hit;
+}
+// Household upkeep classes (fuel, salt...) come from the one householdUsage definition. A class can be
+// self-supplied from any public natural source whose product belongs to it: forests (finite forest stock)
+// and ungated, ownerless site resources (finite site ledger). Static facts only; live stock is read per day.
+const upkeepClasses=e=>householdUsage(e,0,[]).map(u=>u.cls);
+function upkeepSources(e,state){
+ const out=new Map(),forest=e.rules.forestWater?.forest,wood=ecology.forestItem?.(e);
+ for(const cls of upkeepClasses(e)){
+  const rows=[];
+  if(forest&&wood&&isItemClass(e,wood,cls))for(const s of ecology.forestSites?.(e)??[]){
+   const place=e.byId.get(s.location);
+   // Same commons rule as food foraging: the outdoor forest fringe of an authored site is public unless owned or consent-gated.
+   if(!place||place.owner||place.site?.owner||place.access?.requiresConsent)continue;
+   rows.push({id:`upkeep:${cls}:${s.location}`,location:s.location,kind:'forest',cls,item:wood,unitGrams:itemGrams(e,wood),capacity:s.capacity,minutesPerPortion:forest.minutes});
+  }
+  // A site resource backed by the same forest stock is already that forest row.
+  for(const r of ecology.commonsResources?.(e,state,item=>isItemClass(e,item,cls))??[])if(!rows.some(row=>row.kind==='forest'&&row.location===r.site&&row.item===r.item))
+   rows.push({id:`upkeep:${cls}:${r.site}:${r.resource}`,location:r.site,kind:'site',cls,site:r.site,resource:r.resource,item:r.item,unitGrams:itemGrams(e,r.item),capacity:0,minutesPerPortion:null});
+  out.set(cls,rows);
+ }
+ return out;
+}
+// Today's finite stock and per-unit work of a candidate (forest ledger or one site's own ledger), one read per day.
+function upkeepLive(e,state,source,context){
+ const key=`u:${source.id}`,held=context?.stocks.get(key);if(held)return held;
+ let live;
+ if(source.kind==='forest')live={reserve:ecology.forestView?.(e,state,source.location)?.reserve??source.capacity,minutes:source.minutesPerPortion};
+ else{const r=ecology.commonsLive?.(e,state,source.site,source.resource);live={reserve:r?.remaining??0,minutes:r?.minutesPerUnit??null};}
+ context?.stocks.set(key,live);return live;
+}
+// What the household still lacks of one upkeep class: next trade cycle's use plus carried debt, less what its
+// members hold (same arithmetic basis as market.upkeepDemand: daily use x cycle, in grams).
+const upkeepWantsMemo=Symbol('household upkeep wants');
+function upkeepWants(e,state,owner,members,minute){
+ return stateMemo(state,e,[upkeepWantsMemo,owner,members.join(','),Math.floor(minute/DAY)],()=>readUpkeepWants(e,state,owner,members,minute));
+}
+function readUpkeepWants(e,state,owner,members,minute){
+ const holders=[...new Set([owner,...members])].filter(id=>state.npcs?.[id]).sort();if(!holders.length)return [];
+ const doc={state},d={document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)},cycle=e.rules.economy?.tradeCycleDays??1;
+ const row=state.family?.upkeep?.[personHousehold(e,state,owner).value?.id??owner]??{};
+ return householdUsage(e,minute,members).flatMap(u=>{
+  if(!(u.gramsPerDay>0)||!sources(e,state).upkeep.get(u.cls)?.length)return [];
+  const held=holders.reduce((n,h)=>n+heldOfClass(d,e,h,u.cls).reduce((m,r)=>m+r.quantity*itemGrams(e,r.item),0),0);
+  const grams=Math.ceil(u.gramsPerDay*cycle+(row[`${u.cls}DebtG`]??0)-held);
+  return grams>0?[{cls:u.cls,grams}]:[];
+ });
 }
 // The engine route resolver owns weather, closed roads, local rooms and tolls.
 // Only the bounded candidate ordering is retained across reads; live route
@@ -83,11 +131,13 @@ function journey(e,state,home,kind,minute,portions=0,avoid=null,memoState=state,
  }
  if(Object.values(state.effects??{}).some(effect=>effect.kind==='air'&&effect.operation==='area_wind'&&effect.route))return readJourney(e,state,home,kind,minute,portions,avoid);
  const day=Math.floor(minute/DAY),waterKey=kind==='water'?waterSignature(e,state,day,memoState):null;
- const geography=kind==='food'?sourceGeography(e,state,home,kind,minute):null;
- const stockKey=geography?candidateStockKey(state,geography.candidates):null;
+ const geography=kind!=='water'?sourceGeography(e,state,home,kind,minute):null;
+ // Finite stock (forage reserve, forest/site ledger) is part of the key: any household's draw makes a new key.
+ const stockKey=geography?candidateStockKey(e,state,geography.candidates,kind):null;
  return stateMemo(memoState,e,[journeyMemo,home,kind,day,portions,avoid,seedOf(e),waterKey,stockKey],()=>readJourney(e,state,home,kind,minute,portions,avoid,memoState,geography),waterJourneyInputs);
 }
-function candidateStockKey(state,candidates){
+function candidateStockKey(e,state,candidates,kind){
+ if(kind.startsWith('upkeep:'))return JSON.stringify(candidates.map(source=>{const live=upkeepLive(e,state,source,null);return [source.id,live.reserve,live.minutes];}));
  return JSON.stringify(candidates.map(source=>{const row=state.records?.[stockKey(source.location)];return [source.location,row?.reserve??source.capacity,row?.updatedDay??null,row?.accruals?.regrowth??null];}));
 }
 function sourceSkeleton(e,state,home,seed,context){
@@ -131,7 +181,7 @@ function sourceGeography(e,state,home,kind,minute,context=null){
  const candidateKey=`${kind}|${skeleton?.county??''}|${r.maximumJourneyMinutes??e.rules.travel.dailyTravelMinutes}|${e.rules.travel.walkKmh}`;
  if(!candidates.has(candidateKey)){
   const represented=skeleton?new Set([skeleton.seat,...skeleton.locations.filter(l=>e.byId.has(l.id)).map(l=>l.id)]):null;
-  const list=(kind==='water'?index.water:index.food).filter(s=>!represented||represented.has(s.location));
+  const list=(kind==='water'?index.water:kind==='food'?index.food:index.upkeep.get(kind.slice('upkeep:'.length))??[]).filter(s=>!represented||represented.has(s.location));
   candidates.set(candidateKey,list.filter(s=>distances.has(s.location)&&2*distances.get(s.location)*60/e.rules.travel.walkKmh<=(r.maximumJourneyMinutes??e.rules.travel.dailyTravelMinutes)).map(s=>({...s,distance:distances.get(s.location)})).sort((a,b)=>a.distance-b.distance||a.location.localeCompare(b.location)));
  }
  return {index,distanceKey,candidates:candidates.get(candidateKey)};
@@ -145,17 +195,18 @@ function readJourney(e,state,home,kind,minute,portions,avoid,memoState=state,geo
  const {index,distanceKey,candidates}=geography??sourceGeography(e,state,home,kind,minute);
  const points=candidates.map(s=>{
   if(kind==='food'&&context&&!context.stocks.has(s.location))context.stocks.set(s.location,forageStock(e,state,s,day));
-  const distance=s.distance,remaining=kind==='food'?(context?.stocks.get(s.location)??forageStock(e,state,s,day)).reserve:0,quantity=Math.min(portions,remaining);
-  const effort=2*distance*60/e.rules.travel.walkKmh+quantity*(s.minutesPerPortion??0);
+  const upkeep=kind.startsWith('upkeep:')?upkeepLive(e,state,s,context):null;
+  const distance=s.distance,remaining=upkeep?upkeep.reserve:kind==='food'?(context?.stocks.get(s.location)??forageStock(e,state,s,day)).reserve:0,quantity=Math.min(upkeep?Math.ceil(portions/s.unitGrams):portions,remaining);
+  const minutesPerPortion=upkeep?upkeep.minutes:s.minutesPerPortion,effort=2*distance*60/e.rules.travel.walkKmh+quantity*(minutesPerPortion??0);
   // Per-portion efficiency includes the real shared journey. Comparing only
   // harvest time sends a hungry lone worker across the county for one extra
   // unit of reserve, leaving no time to collect an otherwise affordable meal.
-  return {...s,distance,remaining,effort,foodScore:remaining*quantity/Math.max(1,effort)};
+  return {...s,distance,remaining,effort,...(upkeep?{minutesPerPortion}:{}),foodScore:remaining*quantity/Math.max(1,effort)};
  })
   // A source outside even the still-weather workday is not reachable for
   // this chore. Reject it before resolving real weather/room/toll routes.
-  .filter(s=>kind!=='food'||s.remaining>0)
-  .sort((a,b)=>kind==='food'?(b.foodScore-a.foodScore)||a.effort-b.effort||a.location.localeCompare(b.location):a.effort-b.effort||a.location.localeCompare(b.location));
+  .filter(s=>kind==='water'||s.remaining>0&&(kind==='food'||s.minutesPerPortion>0))
+  .sort((a,b)=>kind!=='water'?(b.foodScore-a.foodScore)||a.effort-b.effort||a.location.localeCompare(b.location):a.effort-b.effort||a.location.localeCompare(b.location));
  let best=null;
  for(const source of points){
   if(!sourceAccessible(e,state,source))continue;
@@ -229,7 +280,8 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
   const notBefore=context?.notBefore??(Math.floor(state.minute/DAY)===day?state.minute%DAY:0);
  const meal=mealOverride??mealDeficit(e,state,owner,settlement,members),portions=Math.ceil(meal.shortfall.satiety/(e.byId.get(r.foodItem)?.nutrition?.satiety??1));
  const water=meal.needs.hydration>0?journey(e,state,home,'water',minute,0,null,memoState,context):null;
- if(!portions&&!water)return {worker:null,home,members,water:null,food:null,foodTrips:[],duties:[],chores:[]};
+ const wants=upkeepWants(e,state,owner,members,minute);
+ if(!portions&&!water&&!wants.length)return {worker:null,home,members,water:null,food:null,foodTrips:[],upkeepTrips:[],duties:[],chores:[]};
  const preference=id=>evaluateRX(workerPreference,{}, {rollKey:{seed:seedOf(e),pack:'household',rule:'subsistence-worker',object:`${h?.id??owner}:${id}`,date:0}});
  const opportunity=id=>{
   const routine=personRoutine(e,state,id)??state.npcs[id]?.routine??e.byId.get(id)?.schedule,calendar=context?.calendar??e.calendar(day*DAY+480);
@@ -354,6 +406,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  );
  const allocate=(kind,source,minutes)=>{
   if(!source)return null;
+  const activity=kind==='water'?'家户取水':kind==='food'?'家户觅食':'家户采集';
   let chosen;
   // Equal-opportunity members share the accumulated chores. Packing every
   // errand onto the first tie winner can erase all of a public service window.
@@ -389,7 +442,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
   // same real140 minutes of that allowance as an08:00–12:00 worker.
   const actual=[];let remaining=minutes;
   for(const slot of physical){const used=Math.min(remaining,slot.end-slot.start);if(used){actual.push({start:slot.start,end:slot.start+used,boundaryEnd:slot.boundaryEnd});slot.start+=used;}remaining-=used;}
-  chores.push(...windows.map(w=>({...base,...w,location:home,activity:kind==='water'?'家户取水':'家户觅食',subsistence:true})));
+  chores.push(...windows.map(w=>({...base,...w,location:home,activity:activity,subsistence:true})));
   start=actual[0].start;end=actual.at(-1).end;
   const clock=(offset,startOfPhase=false)=>{
    for(let i=0;i<actual.length;i++){const w=actual[i],length=w.end-w.start;if(offset<length||offset===length&&(!startOfPhase||i===actual.length-1))return w.start+offset;offset-=length;}
@@ -400,7 +453,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
   Object.assign(base,{boundaryEnd,subsistence:true});
   const travel=(from,to,depart,arrive,edges)=>({from,to,depart:day*DAY+depart,arrive:day*DAY+arrive,edges,subsistence:true,subsistenceUntil:day*DAY+boundaryEnd});
   if(arrive>start)duties.push({...base,start,end:arrive,location:null,activity:'生计出行',travel:travel(home,source.location,start,arrive,source.outboundEdges)});
-  for(const w of actual){const lo=Math.max(arrive,w.start),hi=Math.min(finish,w.end);if(hi>lo)duties.push({...base,start:lo,end:hi,location:source.location,activity:kind==='water'?'家户取水':'家户觅食'});}
+  for(const w of actual){const lo=Math.max(arrive,w.start),hi=Math.min(finish,w.end);if(hi>lo)duties.push({...base,start:lo,end:hi,location:source.location,activity:activity});}
   for(let i=1;i<actual.length;i++)if(actual[i-1].end<actual[i].start&&arrive<=actual[i-1].end&&finish>=actual[i].start)duties.push({...base,start:actual[i-1].end,end:actual[i].start,location:source.location,activity:'野外歇息'});
   if(end>finish)duties.push({...base,start:finish,end,location:null,activity:'生计返程',travel:travel(source.location,home,finish,end,source.inboundEdges)});
   return {...source,worker,minutes,windows};
@@ -421,7 +474,22 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
    foodTrips.push(trip);remaining-=quantity;
   }
  }
- return {worker,home,members,...(skeleton&&!water&&!food?{sourceStatus:'unknown',sourceCounty:skeleton.county}:{}),publicSource:Boolean(publicSource),water:waterWork,food:foodTrips[0]??null,foodTrips,duties,chores};
+ // Upkeep classes (fuel, salt...) share the same two work windows and round-trip cap, after water and food.
+ const upkeepTrips=[];
+ for(const want of wants){
+  const kind=`upkeep:${want.cls}`;let left=want.grams;
+  while(left>0){
+   const source=journey(e,state,home,kind,minute,left,null,memoState,context);if(!source)break;
+   const units=Math.min(Math.ceil(left/source.unitGrams),source.remaining);
+   const capacity=Math.max(0,...[...workerWindows].map(([w,free])=>workCapacity(w,free)));
+   const quantity=Math.min(units,Math.max(0,Math.floor((capacity-source.travelMinutes)/source.minutesPerPortion)));
+   if(!(quantity>0))break;
+   const trip=allocate(kind,source,source.travelMinutes+quantity*source.minutesPerPortion);if(!trip)break;
+   upkeepTrips.push({...trip,units:quantity});left-=quantity*source.unitGrams;
+   if(context)context.stocks.set(`u:${source.id}`,{reserve:source.remaining-quantity,minutes:source.minutesPerPortion});
+  }
+ }
+ return {worker,home,members,upkeepTrips,...(skeleton&&!water&&!food?{sourceStatus:'unknown',sourceCounty:skeleton.county}:{}),publicSource:Boolean(publicSource),water:waterWork,food:foodTrips[0]??null,foodTrips,duties,chores};
 }
 // Morning decisions are campaign facts, not a process-local decision cache.
 const planKey=settlement=>`subsistence-plan:${settlement??'unregistered'}`;
@@ -462,8 +530,8 @@ export function prepareHouseholdSubsistence(d,e,day=Math.floor(d.get('state','mi
   for(const id of personHousehold(e,morning,g.owner).value?.members??[g.owner])people[id]=[sid,g.key];
   const p=householdSubsistencePlan(e,morning,g.owner,morning.minute,morning,null,context);
   if(!p){row.households[g.key]=null;continue;}
-  const compact=source=>source&&Object.fromEntries(['id','location','home','near','capacity','minutesPerPortion','worker','minutes','travelMinutes','outboundEdges','inboundEdges'].filter(key=>source[key]!==undefined).map(key=>[key,source[key]]));
-  row.households[g.key]={water:compact(p.water),foodTrips:p.foodTrips.map(compact),...(p.sourceStatus?{sourceStatus:p.sourceStatus,sourceCounty:p.sourceCounty}:{})};
+  const compact=source=>source&&Object.fromEntries(['id','location','home','near','capacity','minutesPerPortion','worker','minutes','travelMinutes','outboundEdges','inboundEdges','cls','kind','item','site','resource','unitGrams','units'].filter(key=>source[key]!==undefined).map(key=>[key,source[key]]));
+  row.households[g.key]={water:compact(p.water),foodTrips:p.foodTrips.map(compact),...(p.upkeepTrips?.length?{upkeepTrips:p.upkeepTrips.map(compact)}:{}),...(p.sourceStatus?{sourceStatus:p.sourceStatus,sourceCounty:p.sourceCounty}:{})};
   // Reserve tomorrow's assigned baskets only in this planning snapshot.
   // Actual finite stock and its ledger are touched by execution, never here.
   for(const source of p.foodTrips){
@@ -576,6 +644,20 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
   if(!canonicalEqual(old,row))d.set(['state','records',key],row);
   nutrition.satiety+=quantity*gain;
   sources.push({kind:'forage',source:key,location:source.location,worker:source.worker,minutes:source.minutes,travelMinutes:source.travelMinutes,item:r.foodItem,quantity,maximumHarvest:Math.floor((source.minutes-source.travelMinutes)/source.minutesPerPortion)});
+ }
+ for(const trip of p.upkeepTrips??[]){
+  const state=d.get('state');
+  if(!executableSource(e,state,trip,day))continue;
+  const want=upkeepWants(e,state,owner,meal.members,day*DAY).find(w=>w.cls===trip.cls);if(!want)continue;
+  const holder=state.npcs?.[trip.worker]?trip.worker:meal.members.find(id=>state.npcs?.[id])??owner;
+  const units=Math.min(trip.units,Math.ceil(want.grams/trip.unitGrams),Math.floor((trip.minutes-trip.travelMinutes)/trip.minutesPerPortion));
+  if(!(units>0))continue;
+  // The source's own ledger writer books the withdrawal into the fetcher's bag account.
+  const eventId=`subsistence:${day}:${meal.household??owner}:${trip.cls}`,to=bag(e,holder,trip.item),minute=state.minute;
+  const quantity=trip.kind==='forest'?ecology.harvestForest(d,e,trip.location,units,minute,{to,eventId})
+   :ecology.siteTake(d,e,trip.site,trip.resource,{minutes:units*trip.minutesPerPortion,quantity:units,holder,settlement,to,eventId});
+  if(quantity>0)changeItems(d,e,holder,trip.item,quantity,{books:BOOKED});
+  sources.push({kind:'upkeep',cls:trip.cls,source:trip.id,location:trip.location,worker:trip.worker,minutes:trip.minutes,travelMinutes:trip.travelMinutes,item:trip.item,quantity});
  }
  return {nutrition,sources};
 }

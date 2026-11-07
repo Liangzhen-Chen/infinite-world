@@ -20,7 +20,7 @@ export function fixture({source=true,stock=20,granary=true}={}){
  for(const n of w.npcs){delete n.tier;n.schedule={default:[[0,480],[480,720],[720,780],[780,1020],[1020,1440]].map(([start,end])=>({start,end,location:'loc_hw',activity:start===720?'午饭':start===0||start===1020?'睡眠':'日常起居',services:[]}))};}
  if(!source)delete w.rules.forestWater;
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'k16-mechanism');
- doc.state.minute=0;doc.state.npcs=Object.fromEntries([A,B].map(id=>[id,{...doc.state.npcs[id],location:'loc_hw',inventory:{item_water:id===A?stock:0},coins:0,status:'正常'}]));
+ doc.state.minute=0;doc.state.npcs=Object.fromEntries([A,B].map(id=>[id,{...doc.state.npcs[id],location:'loc_hw',inventory:{item_water:id===A?stock:0,...(id===A?{item_wood:1000}:{})},coins:0,status:'正常'}]));
  delete doc.state.records['agriculture:loc_hw'];
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:2,granary,food:1000,foodPerDay:0,woodPerDay:0}};
  doc.ledger=openLedger(e,doc);return {e,doc,d:e.primitiveDraft(doc)};
