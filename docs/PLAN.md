@@ -1219,3 +1219,4 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [!] overfit-guard 在 daf028f5、5dbe7d5f、合并后 9d47c510 三树上同为 2 败（#2 同义词复制、#4 白名单条目失配）——旧问题，非本轮引入；guard-commit 依赖它，需单列查（可能是同步树缺未跟踪语料，或真失配）。
 - [~] F1 独立审查：无阻断；应修——在途本钱未进预算（疑为 monster #4 根因）、itemDemand 读镜像钱且用目录价门槛、coinsAt 负本钱、toolPurchase/itemDemand 热路径放大、registerItemDemand 点名 forest.tool；"3 倍封顶"是 market.mjs 既有稀缺上限，非本 diff。已派修卡（Sonnet）。
 - [~] 候选 t-cand 846f6532 = t-int 9d47c510 + C 8758deb7 + 日用自给 70d6fd32（无冲突，重导 actions）。npc-autonomy 两版同为 1 小时超时。完整检查 cand vs int-m 腾讯同机同时 P12 已起，零新增失败则 t-int 快进到 t-cand。
+- 11-07 伐木为零诊断（cd127d6f 8 天探针）：主因 bug——npc-decision.mjs:14 把 cost.value 截成 ≥0，npc-labor 传入的“斧头留作家当”负抵扣（amortized−price）被丢，175 文斧价按全额开销计，12 个 fell 候选全被判 conditional 落选（已亲自核对代码）。分层：本聚落无人卖斧 47 人/277 人日（全世界仅 duanyan 一家、库存 2 把）、买不起 7 人、排不出行程 8 人、利润负 1 人。次因缺规律：缺工具不触发 credit 融资/租借。另：forest.tool 绑定的是武器条目 item_singlebit_axe（银质战斗斧，定价写死 175），伐木工具应从物品功能/材料派生——归入审查清单 A4 工具链。下一步：F1 第二轮审查修复合入后，派“决策层按净支出计留存资产”通用修复。
