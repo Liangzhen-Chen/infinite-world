@@ -352,8 +352,8 @@ function buildFutureSources(d,engine,owner,view){
   if(debtor(r)===owner)payments.push(entry);
  }
  // 已排定、还没走完的行程带着的本钱（各采买站的货款与随行运费）已经有了去处：出发后仍在现钱里，却不再是能另作他用的钱。保守起见全部立即占用（at 取当下）：出发后随时可能在某站付款，没走完的站才算，不按到站时刻错后。
- for(const t of recordsWhere(s.records,'actor',owner)){
-  if(t.category!=='market_trip'||!t.action||t.settledAt!==undefined)continue;
+ for(const t of recordsWhere(s.records,'category','market_trip')){
+  if(t.actor!==owner||!t.action||t.settledAt!==undefined)continue;
   const stops=t.action.stops??[],buys=stop=>(stop.acts??[]).filter(act=>act.kind==='buy'),planned=stops.reduce((n,stop)=>n+buys(stop).reduce((m,act)=>m+(act.coins??0),0),0);
   const spare=Math.max(0,(t.action.coins??0)-planned);
   stops.forEach((stop,i)=>{
