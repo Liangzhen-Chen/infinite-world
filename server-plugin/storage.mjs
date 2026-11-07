@@ -329,8 +329,10 @@ let bookSeq=0;
 const bookIds=new WeakMap();
 const bookId=o=>{if(!o||typeof o!=='object')return 0;let id=bookIds.get(o);if(!id)bookIds.set(o,id=++bookSeq);return id;};
 export function bookRevision(source){
+    // 有游标就按游标取号，不读 source.document：草稿的 document getter 会落盘 adopt 的行并标根逃逸（破坏连续写入优化）；
+    // 只读包装（valuation 的 reader）抓的 document 是旧快照，按它的对象身份取号会读到旧值。
     const cursor=source?.cursor;
-    if(cursor instanceof PatchCursor&&source.document===cursor.root)return [cursor.bookRevision,0];
+    if(cursor instanceof PatchCursor)return [cursor.bookRevision,0];
     const document=source?.document??source;
     return [bookId(document?.ledger),bookId(document?.holdings)];
 }
