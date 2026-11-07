@@ -42,7 +42,7 @@ function retell(engine,state,from,memory){
 }
 export function appendHeard(d,engine,from,to,memory,minute,channel,messageId,location=d.get('state','npcs',to,'location'),version=null){
  if(known(engine,d.get('state'),to,memory))return false;
- const told=version??retell(engine,d.get('state'),from,memory),row={id:`heard_${key(originalId(memory),to)}`,rootMemoryId:originalId(memory),sourceEvent:memory.sourceEvent,
+ const told=version??retell(engine,d.get('state'),from,memory),row={id:`heard_${key(originalId(memory),to)}`,rootMemoryId:originalId(memory),...(memory.sourceEvent===undefined?{}:{sourceEvent:memory.sourceEvent}),
   kind:memory.kind,minute,occurredAt:memory.occurredAt??memory.minute,location,participants:clone(memory.participants??[]),
   content:told.content,sourceType:'听说',heardFrom:from,channel,messageId,salience:memory.kind==='rumor'?2:Math.max(1,(memory.salience??2)-1),emotion:'待核实',
   transmissionChain:[...memory.transmissionChain??[],{from,to,minute,channel,messageId,input:told.input,content:told.content,distortion:told.distortion}],distortion:told.distortion,reliability:'未经亲历核实',
