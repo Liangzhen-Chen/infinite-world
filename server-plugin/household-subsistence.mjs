@@ -313,7 +313,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  const foodMinutes=food?food.travelMinutes+portions*food.minutesPerPortion:0;
  // Signed appointments and real market journeys outrank daily work. Split
  // work across the same two windows as agriculture/employment; no overtime.
- const lunchBlocked=new Set(),workerSlots=new Map(),workerWindows=new Map(eligible.map(worker=>{
+ const lunchBlocked=new Set(),workerSlots=new Map(),workerOffSlots=new Map(),workerWindows=new Map(eligible.map(worker=>{
  const blocked=[];
   for(const o of context?(context.reservations.get(worker)??[]):Object.values(state.obligations??{}))if(o.reservationVersion===1&&!['已取消','取消','void','cancelled'].includes(o.status)&&[o.promisor,o.promisee].includes(worker))blocked.push({start:(o.departures?.[worker]??o.start)-day*DAY,end:(o.fulfilledAt??o.deadline)-day*DAY});
  for(const trip of [state.npcs[worker]?.scheduleTravel,state.npcs[worker]?.cognitionTravel])if(trip&&!trip.subsistence)blocked.push({start:trip.depart-day*DAY,end:trip.arrive-day*DAY});
@@ -355,7 +355,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
    const time=householdWorkTime(e,state,worker,day*DAY+480,{commuteMinutes:job.commuteMinutes??0,workMinutes:job.workMinutes??480,subsistence:false});
    physicalBlocked.push(...time.work,...time.commute);
   }
-  const physical=[];
+  const physical=[],atHome=slot=>!slot.location||slot.location===home;
  // A day off cancels paid work, not the household's need for food. The
  // authored all-day rest slot can contain household work; an explicit sleep
  // or meal slot still cannot. Keep its existing edges rather than inventing
@@ -371,24 +371,34 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
  for(const slot of slots.filter(s=>!onRoad.has(s)&&!/睡|吃饭|用餐|早饭|午饭|晚饭/.test(s.activity??'')&&(variant==='rest'||!/歇息|休息/.test(s.activity??'')))){
   let at=slot.start;
    for(const b of physicalBlocked.filter(b=>b.start<slot.end&&b.end>slot.start).sort((a,b)=>a.start-b.start)){
-   if(b.start>at)physical.push({start:at,end:Math.min(slot.end,b.start),boundaryEnd:Math.min(slot.end,b.start)});
+   if(b.start>at)physical.push({start:at,end:Math.min(slot.end,b.start),boundaryEnd:Math.min(slot.end,b.start),off:atHome(slot)});
    at=Math.max(at,b.end);
   }
-  if(at<slot.end)physical.push({start:at,end:slot.end,boundaryEnd:slot.end});
+  if(at<slot.end)physical.push({start:at,end:slot.end,boundaryEnd:slot.end,off:atHome(slot)});
  }
- const physicalRuns=[];
+ const physicalRuns=[],offRuns=[];
   // The first advance of a sparse/imported campaign may start after dawn.
   // It cannot invent a departure before the campaign's actual current time.
   // Nobody abandons an activity midway: a departure waits for an authored
   // edge. Before the work day opens nothing has begun yet, so a slot that
   // started before dawn is available from the plan's minute.
   const opens=WORK_WINDOWS[0][0];
-  for(const span of physical.map(s=>s.start<notBefore&&notBefore<=opens&&s.end>notBefore?{...s,start:notBefore}:s).filter(s=>s.start>=notBefore)){
+  const spans=physical.map(s=>s.start<notBefore&&notBefore<=opens&&s.end>notBefore?{...s,start:notBefore}:s).filter(s=>s.start>=notBefore);
+  for(const span of spans){
   const prior=physicalRuns.at(-1)?.at(-1);
    if(prior&&!physicalBlocked.some(b=>b.start<span.start&&b.end>prior.end))physicalRuns.at(-1).push(span);
   else physicalRuns.push([span]);
  }
- workerSlots.set(worker,physicalRuns);
+ // Routine upkeep (fuel, salt...) is not a survival errand: it only uses routine time spent at home (or nowhere in
+ // particular), and only inside the working day (see runMinutes). A slot placed elsewhere (a field, a shop, a hall)
+ // is where that person is meant to be; an errand neither takes it nor bridges across it. Food and water keep all
+ // physical slots.
+ for(const span of spans.filter(s=>s.off)){
+  const prior=offRuns.at(-1)?.at(-1);
+  if(prior&&!physicalBlocked.some(b=>b.start<span.start&&b.end>prior.end)&&!spans.some(s=>!s.off&&s.start<span.start&&s.end>prior.end))offRuns.at(-1).push(span);
+  else offRuns.push([span]);
+ }
+ workerSlots.set(worker,physicalRuns);workerOffSlots.set(worker,offRuns);
   const free=[];for(const [begin,hi]of WORK_WINDOWS){
    const lo=Math.max(begin,notBefore);if(lo>=hi)continue;
   let at=lo;for(const b of blocked.filter(b=>b.start<hi&&b.end>lo).sort((a,b)=>a.start-b.start)){if(b.start>at)free.push({start:at,end:Math.min(hi,b.start)});at=Math.max(at,b.end);}if(at<hi)free.push({start:at,end:hi});
@@ -400,9 +410,13 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
    if(previous?.end===720&&window.start===780&&!lunchBlocked.has(worker))last.push(window);else out.push([window]);
   }return out;
  };
- const workCapacity=(worker,free)=>Math.min(
+ const slotRuns=(worker,kind)=>(kind?.startsWith('upkeep:')?workerOffSlots:workerSlots).get(worker);
+ // Length of a physical run usable for this kind. An upkeep errand is consumed from the front of its run, so cutting the
+ // run at the end of the household work windows keeps the whole round trip (back home included) inside the working day.
+ const dayEnd=WORK_WINDOWS.at(-1)[1],runMinutes=(run,kind)=>run.reduce((n,w)=>n+(kind?.startsWith('upkeep:')?Math.max(0,Math.min(w.end,dayEnd)-w.start):w.end-w.start),0);
+ const workCapacity=(worker,free,kind)=>Math.min(
   Math.max(0,...runs(worker,free).map(run=>run.reduce((n,w)=>n+w.end-w.start,0))),
-  Math.max(0,...workerSlots.get(worker).map(run=>run.reduce((n,w)=>n+w.end-w.start,0)))
+  Math.max(0,...slotRuns(worker,kind).map(run=>runMinutes(run,kind)))
  );
  const allocate=(kind,source,minutes)=>{
   if(!source)return null;
@@ -420,7 +434,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
    if(preferred&&workCapacity(...preferred)<foodMinutes+minutes)candidates.sort(([a],[b])=>Number(a===preferred[0])-Number(b===preferred[0]));
   }
   for(const [worker,free]of candidates){
-   const physical=workerSlots.get(worker).find(spans=>spans.reduce((n,s)=>n+s.end-s.start,0)>=minutes);
+   const physical=slotRuns(worker,kind).find(spans=>runMinutes(spans,kind)>=minutes);
    if(!(kind==='water'&&source.near)&&!physical)continue;
    const run=runs(worker,free).find(run=>run.reduce((n,w)=>n+w.end-w.start,0)>=minutes);if(run){chosen={worker,run,physical};break;}
   }
@@ -481,7 +495,7 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
   while(left>0){
    const source=journey(e,state,home,kind,minute,left,null,memoState,context);if(!source)break;
    const units=Math.min(Math.ceil(left/source.unitGrams),source.remaining);
-   const capacity=Math.max(0,...[...workerWindows].map(([w,free])=>workCapacity(w,free)));
+   const capacity=Math.max(0,...[...workerWindows].map(([w,free])=>workCapacity(w,free,kind)));
    const quantity=Math.min(units,Math.max(0,Math.floor((capacity-source.travelMinutes)/source.minutesPerPortion)));
    if(!(quantity>0))break;
    const trip=allocate(kind,source,source.travelMinutes+quantity*source.minutesPerPortion);if(!trip)break;
@@ -653,9 +667,11 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
   const units=Math.min(trip.units,Math.ceil(want.grams/trip.unitGrams),Math.floor((trip.minutes-trip.travelMinutes)/trip.minutesPerPortion));
   if(!(units>0))continue;
   // The source's own ledger writer books the withdrawal into the fetcher's bag account.
-  const eventId=`subsistence:${day}:${meal.household??owner}:${trip.cls}`,to=bag(e,holder,trip.item),minute=state.minute;
+  const eventId=`subsistence:${day}:${meal.household??owner}:${trip.cls}`,to=bag(e,holder,trip.item),
+   // The day's stocks are settled at its close (same instant the daily block brings forests and site ledgers current); a draw dated earlier would run a ledger backwards.
+   minute=(day+1)*DAY;
   const quantity=trip.kind==='forest'?ecology.harvestForest(d,e,trip.location,units,minute,{to,eventId})
-   :ecology.siteTake(d,e,trip.site,trip.resource,{minutes:units*trip.minutesPerPortion,quantity:units,holder,settlement,to,eventId});
+   :ecology.siteTake(d,e,trip.site,trip.resource,{minutes:units*trip.minutesPerPortion,quantity:units,holder,settlement,to,eventId,settledAt:minute});
   if(quantity>0)changeItems(d,e,holder,trip.item,quantity,{books:BOOKED});
   sources.push({kind:'upkeep',cls:trip.cls,source:trip.id,location:trip.location,worker:trip.worker,minutes:trip.minutes,travelMinutes:trip.travelMinutes,item:trip.item,quantity});
  }

@@ -454,7 +454,7 @@ export function siteUnlock(d,engine,siteId,resourceId,{holder,eventId}){
     return open;
 }
 // 劳动结束时结算：按在场工时折算产量（不超过存量与所求），经据点账转入 to，返回实际取得的份数。
-export function siteTake(d,engine,siteId,resourceId,{minutes,quantity=Infinity,holder,settlement=null,to,eventId}){
+export function siteTake(d,engine,siteId,resourceId,{minutes,quantity=Infinity,holder,settlement=null,to,eventId,settledAt=null}){ // settledAt: when the backing forest ledger is settled, if later than the state clock (a daily close draws at the day's end).
     const place=engine.byId.get(siteId),target=place?.site?.resources?.find(r=>r.id===resourceId);
     if(!target||!Number.isSafeInteger(minutes)||minutes<1)throw preconditionFailure('没有这个据点资源或工时无效');
     const now=d.get('state','minute'),row=ledger(d,place,engine);
@@ -462,7 +462,7 @@ export function siteTake(d,engine,siteId,resourceId,{minutes,quantity=Infinity,h
     let n=target.gather?(inSeason(engine,target,now-minutes,now)?timedYield(engine,d.document,place,row,target,{holder,from:now-minutes,minutes,channel:`gather:${target.id}:${holder}`}):0):Math.floor(minutes/target.minutes);
     n=Math.max(0,Math.min(n,quantity,row.remaining[target.id]??0));
     const wood=n>0&&forestBacked(engine,place,target);
-    if(wood&&harvestForest(d,engine,place.id,n,now,{to,eventId})!==n)throw preconditionFailure('林木存量不足');
+    if(wood&&harvestForest(d,engine,place.id,n,Math.max(now,settledAt??now),{to,eventId})!==n)throw preconditionFailure('林木存量不足');
     row.remaining[target.id]-=n;putSite(d,engine,place,row,{eventId,to:wood||!n?null:{account:to,taken:{[target.id]:n}}});
     const owner=ownerOf(place,target);
     if(!lawfulFor(place,target,holder,settlement)&&owner)registerOffense(d,engine,{actor:holder,act:'gather',subject:{id:target.id,kind:'resource'},victim:owner,eventId,stolen:n?{item:target.item,quantity:n}:null});
