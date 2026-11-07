@@ -1222,3 +1222,9 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 11-07 伐木为零诊断（cd127d6f 8 天探针）：主因 bug——npc-decision.mjs:14 把 cost.value 截成 ≥0，npc-labor 传入的“斧头留作家当”负抵扣（amortized−price）被丢，175 文斧价按全额开销计，12 个 fell 候选全被判 conditional 落选（已亲自核对代码）。分层：本聚落无人卖斧 47 人/277 人日（全世界仅 duanyan 一家、库存 2 把）、买不起 7 人、排不出行程 8 人、利润负 1 人。次因缺规律：缺工具不触发 credit 融资/租借。另：forest.tool 绑定的是武器条目 item_singlebit_axe（银质战斗斧，定价写死 175），伐木工具应从物品功能/材料派生——归入审查清单 A4 工具链。下一步：F1 第二轮审查修复合入后，派“决策层按净支出计留存资产”通用修复。
 - 11-07 候选 t-cand 完整检查（cand vs int-m 同机）：**未通过，不快进**。cand 新增失败约 18 个文件：林木更新时间倒退（civic/military/s2c-dues/s5ca）、私宅许可在场类（home-permission/m2-action-context/m2-preconditions #1#5/m3-consistency）及 a3-model-catalog、daily-b2 #9、magic-ritual #23、rumor-route、settlement-trade #3、w8e3 #5、s5-f-tender #7 等；初判多来自日用自给（出门取柴破坏日程在场、森林推进时刻错）。已派二分+修复。之前日用自给只测了受影响 9 个文件，漏网——教训：合并候选必须全量对比。
 - 11-07 日用自给剩余失败根因：家户持柴后 market.stockSupply 把持有 retained 与 upkeepDemand 缺口叠加计需求（柴需求 6→18），推高柴价→劳动市场采光北林边柴与药草，连带 w8e3 #5、daily-b2 #9、settlement-trade #3。已派“同户需求口径一致”修复。magic-ritual #23 已修（9aab3c54：物品容器要素账户锚定持有地点）。另记缺规律：据点资源无 regrow 时采到 0 永不再生、siteTake 无留种份额（后续卡）。C 的 flowBy 违反“账本顶层字段不增不减”设计约束，已派改为派生。
+
+## 11-08 测前两轮审查硬拦截（亮圳要求）
+- 规则：新一轮跑测前须两轮审查（第 1 轮代码与关联调用，重点性能与通用规则；修后第 2 轮复核最终改动），至少一名独立于实现者的审查者明确批准**当前实际被测内容**（含未提交改动、测试文件、运行脚本，按内容哈希，不按提交号）；批准后内容变化即失效。
+- 自查（今天违反的）：先测后审——F1 修复 3df660e2/cd127d6f（e2s-f9 跑 39 文件后才审）、880d00e9/375e7c15（e2s-f10）、19939bd1（e2s-f11）、0a47a633（e2s-f12）；日用自给 bcbef347/9aab3c54/c201c099（cand-fix/subs-r7/subs-m1，未审）；C 改版 374238d2/40679427/4536a0a9（c-fuel2/c-fuel3，未审）；候选 846f6532 整体（合并+重导 actions 未审，C 8758deb7 无独立审查记录）；fell-dbg1 插桩探针。审后改未再审——dcd39349（主会话审后自改 storage.mjs 并在 e2s-f13 直接跑 6 文件）；9d47c510 审后重导 actions.json；70d6fd32 审查修复未复核即进候选。
+- 在跑旧任务（不重开，结果不作验收证据）：/work/int-m（9d47c510 基线，subs-run2，约 04:00 CST 起）；/work/c-fuel3（4536a0a9，未审）ledger-stock。
+- 已暂停所有执行者云测。门禁实现：服务器 forced command（gate.sh）为唯一拦截点；审查记录仅经 tc_review 钥匙写入、绑定内容哈希；实现中，待两轮独立审查后部署。
