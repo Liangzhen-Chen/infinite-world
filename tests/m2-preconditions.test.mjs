@@ -6,7 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {modelToolCall} from '../extension/tools.mjs';
 import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
-import {homeResidents} from '../server-plugin/entity-view.mjs';
+import {homeResidents,personHousehold} from '../server-plugin/entity-view.mjs';
 
 const world=await loadWorld();
 const legacy=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -200,10 +200,23 @@ test('N17只取白石镇十天等待窗口内新增已结算行动，真实料�
     assert.equal(evidence.to-evidence.from,14400);
     assert.ok(evidence.records.every(row=>row.minute>evidence.from&&row.minute<=evidence.to&&row.start>=evidence.from&&typeof row.outcome.success==='boolean'));
     assert.ok(evidence.records.some(row=>!row.outcome.success),'失败制作同样保留，未强制成功骰点');
-    const fees=evidence.records.reduce((n,row)=>n+row.spent.fee,0),wood=evidence.records.reduce((n,row)=>n+row.spent.materials.filter(m=>m.item==='item_wood').reduce((sum,m)=>sum+m.amount,0),0);
+    const fees=evidence.records.reduce((n,row)=>n+row.spent.fee,0);
     assert.equal(absent.before.state.npcs.npc_hw_ayan.coins-absent.after.state.npcs.npc_hw_ayan.coins,fees);
-    assert.equal(qty(absent.before.state.npcs.npc_hw_ayan.inventory.item_wood)-qty(absent.after.state.npcs.npc_hw_ayan.inventory.item_wood),wood);
-    t.diagnostic(JSON.stringify({window:evidence,settled:{fees,wood}}));
+    // 每个户员的木头变化 = −Σ(行动 materials − returned) − 本人烧柴 + 本人自采入库，三项都读自记录：
+    // 行动记录（制作、加工行程）的 spent.materials/spent.returned；state.family.upkeep 各户行的 burned / gathered（累计，前后状态相减）。
+    const household=personHousehold(s.engine,absent.before.state,'npc_hw_ayan').value,members=[...new Set(['npc_hw_ayan',...(household?.members??[])])].filter(id=>absent.before.state.npcs[id]);
+    const woodOf=(list,field)=>list.reduce((n,row)=>n+(row.spent?.[field]??[]).filter(m=>m.item==='item_wood').reduce((sum,m)=>sum+m.amount,0),0);
+    const counter=(state,field,id)=>Object.values(state.family?.upkeep??{}).reduce((n,row)=>n+(row[field]?.[id]?.item_wood??0),0);
+    const beforeActions=absent.before.state.npcAutonomy?.actions??{},fresh=Object.entries(absent.after.state.npcAutonomy?.actions??{}).filter(([key,row])=>!Object.hasOwn(beforeActions,key)&&row.minute>evidence.from&&row.minute<=evidence.to).map(([,row])=>row);
+    const settled={fees,wood:{}};
+    for(const id of members){
+        const own=fresh.filter(row=>row.npc===id),actionNet=woodOf(own,'materials')-woodOf(own,'returned');
+        const burned=counter(absent.after.state,'burned',id)-counter(absent.before.state,'burned',id),gathered=counter(absent.after.state,'gathered',id)-counter(absent.before.state,'gathered',id);
+        const change=qty(absent.after.state.npcs[id].inventory.item_wood)-qty(absent.before.state.npcs[id].inventory.item_wood);
+        settled.wood[id]={change,actionNet,burned,gathered};
+        assert.equal(change,-actionNet-burned+gathered,`${id} 的木头变化必须等于 −行动净扣料 − 烧柴 + 自采入库：${JSON.stringify(settled.wood[id])}`);
+    }
+    t.diagnostic(JSON.stringify({window:evidence,settled}));
     await s.turn(4,async()=>[await s.call('world_move',{destination:'河湾村'})]);
     await s.turn(5,async()=>[await s.call('world_move',{destination:'旧磨坊'})]);
     await s.turn(6,async()=>[await s.call('world_time',{until:{dayOffset:1,hour:8},activity:'等待'})],15);

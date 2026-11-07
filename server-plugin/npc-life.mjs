@@ -83,7 +83,7 @@ export function advanceDurableWear(d,engine,day){
  d.set(['state','family','wearDay'],day);
 }
 // 家户每日燃料与盐：从户里各人持有的同类物品按重量扣整份；不足一份的用量记成欠量，下一日累计；手里没有就记短缺日。
-function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId,purpose){
+function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId,purpose,tally){
  let debt=debtG+needG,short=false;
  const state=d.get('state'),stock=new Map(holders.map(h=>[h,merchandise(engine,state,h)]));
  // 先用户里同类中最便宜的（household-budget.usageCost：价格 ÷ 热值，无热值按 价格 ÷ 克），不按物品编号；家用的先于店主货架上的货。
@@ -94,16 +94,22 @@ function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId,purpose){
   if(!pick){short=debt>0;debt=Math.min(debt,needG);break;}
   const unit=grams(engine,pick.item);if(debt<unit)break;
   engine.itemDelta(d,pick.h,pick.item,-1,{...UPKEEP,purpose,eventId});debt-=unit;
+  ((tally[pick.h]??={})[pick.item]=(tally[pick.h][pick.item]??0)+1);
  }
  return {debt,short};
 }
+// 每户烧柴盐记录：state.family.upkeep[户键].burned = {持有人:{物品:累计件数}}（只记 npc-life 每日用度实际扣掉的件，写入常数级、大小只随户内人×用度物品增长），
+// 自采入库同理记在 .gathered（household-subsistence）。任意两个时刻的状态相减即得这段时间的逐持有人用量，与账本 sink:consume|<物品>|<用度用途> 的流水按同一批 itemDelta 对应。
+const addTally=(prev={},tally)=>Object.fromEntries([...Object.keys({...prev,...tally})].sort().map(h=>[h,Object.fromEntries([...Object.keys({...prev[h],...tally[h]})].sort().map(item=>[item,(prev[h]?.[item]??0)+(tally[h]?.[item]??0)]))]));
 function householdUpkeep(d,engine,day,p){
  const state=d.get('state'),holders=[...new Set([p.owner,...p.members])].filter(id=>state.npcs?.[id]).sort();if(!holders.length)return;
  // 用度按 item-class 的 householdUsage（唯一一份定义）逐类扣：欠量、短缺日按 `${cls}DebtG`、`${cls}ShortDays` 记。
  const usage=householdUsage(engine,day*DAY,p.members),key=['state','family','upkeep',p.key],eventId=`household-upkeep:${day}:${p.household??p.owner}`;
  const zero=Object.fromEntries([...usage.map(u=>[`${u.cls}DebtG`,0]),...usage.map(u=>[`${u.cls}ShortDays`,0])]),old={...zero,...d.get(...key)};
- const done=usage.map(u=>({u,...consumeByWeight(d,engine,holders,u.cls,Math.round(u.gramsPerDay),old[`${u.cls}DebtG`],eventId,u.purpose)}));
- const row={...Object.fromEntries(done.map(r=>[`${r.u.cls}DebtG`,r.debt])),...Object.fromEntries(done.map(r=>[`${r.u.cls}ShortDays`,r.short?old[`${r.u.cls}ShortDays`]+1:0]))};
+ const tally={},done=usage.map(u=>({u,...consumeByWeight(d,engine,holders,u.cls,Math.round(u.gramsPerDay),old[`${u.cls}DebtG`],eventId,u.purpose,tally)}));
+ const row={...old,...Object.fromEntries(done.map(r=>[`${r.u.cls}DebtG`,r.debt])),...Object.fromEntries(done.map(r=>[`${r.u.cls}ShortDays`,r.short?old[`${r.u.cls}ShortDays`]+1:0]))};
+ // Cumulative burn record (see addTally): one holder/item counter per unit actually taken, the same itemDelta calls the ledger books to sink:consume.
+ if(Object.keys(tally).length)row.burned=addTally(old.burned,tally);
  if(!canonicalEqual(old,row))d.set(key,row);
 }
 

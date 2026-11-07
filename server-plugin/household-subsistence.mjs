@@ -674,7 +674,11 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
    minute=(day+1)*DAY;
   const quantity=trip.kind==='forest'?ecology.harvestForest(d,e,trip.location,units,minute,{to,eventId})
    :ecology.siteTake(d,e,trip.site,trip.resource,{minutes:units*trip.minutesPerPortion,quantity:units,holder,settlement,to,eventId,settledAt:minute});
-  if(quantity>0)e.itemDelta(d,holder,trip.item,quantity,bookedBy('household-subsistence','upkeep-gather',eventId));
+  if(quantity>0){
+   e.itemDelta(d,holder,trip.item,quantity,bookedBy('household-subsistence','upkeep-gather',eventId));
+   // Cumulative gather record next to the burn record (npc-life): state.family.upkeep[household key].gathered = {holder:{item:units}}.
+   if(meal.key){const path=['state','family','upkeep',meal.key],row=d.get(...path)??{},g=row.gathered??{};d.set(path,{...row,gathered:{...g,[holder]:{...g[holder],[trip.item]:(g[holder]?.[trip.item]??0)+quantity}}});}
+  }
   sources.push({kind:'upkeep',cls:trip.cls,source:trip.id,location:trip.location,worker:trip.worker,minutes:trip.minutes,travelMinutes:trip.travelMinutes,item:trip.item,quantity});
  }
  return {nutrition,sources};
