@@ -82,7 +82,6 @@ function openScopes(engine,document,ledger,scopes){
             ledger.accounts[key]=(ledger.accounts[key]??0)+amount;
             if(lots?.length)ledger.lots[key]=[...(ledger.lots[key]??[]),...lots.map(l=>({...l}))];
             const flow=accountKey('src:genesis',resource,'opening');ledger.flows[flow]=(ledger.flows[flow]??0)+amount;
-            const by=((ledger.currencyActivity??={}).flowBy??={})[flow]??={};by[owner]=(by[owner]??0)+amount;
             ledger.transfers++;
         }
     }
@@ -99,7 +98,7 @@ export function withLedger(engine,document){
     if(document.ledger){
         const missing=LEDGER_SCOPES.filter(s=>!openedScopes(document.ledger).includes(s));
         if(!missing.length||document.ledger.version!==LEDGER_VERSION)return {document,opening:null};
-        const old=document.ledger,ledger=openScopes(engine,document,{...old,accounts:{...old.accounts},flows:{...old.flows},lots:{...old.lots??{}},...old.currencyActivity&&{currencyActivity:structuredClone(old.currencyActivity)}},missing);
+        const old=document.ledger,ledger=openScopes(engine,document,{...old,accounts:{...old.accounts},flows:{...old.flows},lots:{...old.lots??{}}},missing);
         return {document:{...document,ledger},opening:{op:'set',path:['ledger'],value:ledger}};
     }
     const ledger=openLedger(engine,document);
@@ -196,14 +195,9 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
             if(rest.length)d.set(['ledger','lots',from],rest);else if(read(d,'ledger','lots',from))d.remove(['ledger','lots',from]);
         }
     }
-    if(isSink(b.owner)){
-        d.set(['ledger','flows',to],(read(d,'ledger','flows',to)??0)+amount);
-        // 汇的"来自谁"：持有人账户流入汇时按（汇账户, 持有人）累计，只存累计值；所有消耗共用，不按用途分支。
-        if(!isSource(a.owner))d.set(['ledger',...FLOW_BY,to,a.owner],(read(d,'ledger',...FLOW_BY,to,a.owner)??0)+amount);
-    }else{
+    if(isSink(b.owner))d.set(['ledger','flows',to],(read(d,'ledger','flows',to)??0)+amount);
+    else{
         d.set(['ledger','accounts',to],balance(d,to)+amount);
-        // 源的"流向谁"：源流出到持有人账户时按（源账户, 持有人）累计。
-        if(isSource(a.owner))d.set(['ledger',...FLOW_BY,from,b.owner],(read(d,'ledger',...FLOW_BY,from,b.owner)??0)+amount);
         if(lotAccount(to)){
             // 携带转出的批次（lot 为对象时覆盖其元数据，如改换来源）；lot 为数组时即转入的全部批次；
             // 来自源或非批次账户的部分按 lot 元数据新开批次。
@@ -222,22 +216,6 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
     for(const observe of transferObservers.values())observe(d,{from,to,fromAccount:a,toAccount:b,amount,eventId,writer});
     globalThis.__LEDGER_TRACE__?.push({from,to,amount,writer,eventId});// 调试：对账定位用
     return amount;
-}
-
-// 源汇的对方明细无法由 flows 派生（flows 只按源/汇账户累计，从不记对方），所以必须存；账本顶层字段集合是设计约束
-// （S5F-7），故挂在已有的可选顶层字段 currencyActivity 的保留子键 flowBy 下（账户键含 '|'，不会与之相撞）。
-// 读取全部经 flowByRows，写入只在 transfer / 开账。
-const FLOW_BY=['currencyActivity','flowBy'];
-export const flowByRows=ledger=>ledger?.currencyActivity?.flowBy??{};
-// 某持有人与匹配源/汇之间的累计量：kind='sink' 为流入汇的量，'src' 为自源流入的量（resource / purpose 省略即不限）。
-export function flowByHolder(d,holder,{resource=null,purpose=null,kind='sink'}={}){
-    const by=flowByRows(d?.ledger??d),want=kind==='src'?isSource:isSink;let n=0;
-    for(const [key,row] of Object.entries(by)){
-        const a=parseAccount(key);
-        if(!want(a.owner)||resource!==null&&a.resource!==resourceKey(resource)||purpose!==null&&a.purpose!==purpose)continue;
-        n+=row[holder]??0;
-    }
-    return n;
 }
 
 // ---- 世界版本更新（包升级）的折算 ------------------------------------------------
