@@ -130,6 +130,9 @@ const live=(d,e,id)=>{
 function workstationAnchorOwner(d,e,id){
     return [...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.workstations?.some(s=>s.id===id))?.id??null;
 }
+function featureAnchorOwner(d,e,id){
+    return [...e.world?.locations??[],...Object.values(read(d,'state','created')??{})].find(p=>p.features?.some(f=>f.id===id))?.id??read(d,'state','records',`physical_feature:${id}`)?.location??null;
+}
 function accountOwnerLive(d,e,id){
     if(live(d,e,id))return true;
     if((byEntity(d,id)??read(d,'state','records',`transition:${id}`))?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
@@ -147,6 +150,9 @@ function accountOwnerLive(d,e,id){
     // Workstation inventory is a real S1 account, anchored at its building.
     const stationOwner=workstationAnchorOwner(d,e,id);
     if(stationOwner)return !byEntity(d,stationOwner)?.gone&&entityRow(d,stationOwner)?.goneAt===undefined;
+    // An item container (chest, shelf, paper box) is an environment feature: its custody account is anchored at the place that holds the feature, like a workstation's.
+    const featureOwner=featureAnchorOwner(d,e,id);
+    if(featureOwner)return !byEntity(d,featureOwner)?.gone&&entityRow(d,featureOwner)?.goneAt===undefined;
     if(byEntity(d,id)?.gone||entityRow(d,id)?.goneAt!==undefined)return false;
     const row=read(d,'state','records',id);
     if(row?.category==='legal_treasury')return id===`legal_treasury:${row.law}`&&!!legalCodeById(e,row.law,read(d,'state'));
