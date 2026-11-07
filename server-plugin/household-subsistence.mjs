@@ -7,11 +7,10 @@ import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {householdMealPlan,itemGrams} from './household-budget.mjs';
 import {householdUsage,isItemClass,heldOfClass} from './item-class.mjs';
-import {changeItems} from './items.mjs';
 import {warClosedRoutes} from './hazard-calendar.mjs';
 import {facilityRouteStates} from './facility-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {reserve,moveStock,registerLegacyStock,accrueStock,bag,BOOKED} from './stock.mjs';
+import {reserve,moveStock,registerLegacyStock,accrueStock,bag,bookedBy} from './stock.mjs';
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 
 const DAY=1440,config=e=>e.rules.householdSubsistence;
@@ -672,7 +671,7 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
    minute=(day+1)*DAY;
   const quantity=trip.kind==='forest'?ecology.harvestForest(d,e,trip.location,units,minute,{to,eventId})
    :ecology.siteTake(d,e,trip.site,trip.resource,{minutes:units*trip.minutesPerPortion,quantity:units,holder,settlement,to,eventId,settledAt:minute});
-  if(quantity>0)changeItems(d,e,holder,trip.item,quantity,{books:BOOKED});
+  if(quantity>0)e.itemDelta(d,holder,trip.item,quantity,bookedBy('household-subsistence','upkeep-gather'));
   sources.push({kind:'upkeep',cls:trip.cls,source:trip.id,location:trip.location,worker:trip.worker,minutes:trip.minutes,travelMinutes:trip.travelMinutes,item:trip.item,quantity});
  }
  return {nutrition,sources};

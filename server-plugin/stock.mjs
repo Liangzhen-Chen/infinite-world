@@ -100,6 +100,8 @@ export function moveStock(d,{from,to,amount,writer,eventId=null,lot=null,pick=nu
 }
 export {reviseLots};
 export const BOOKED=Object.freeze({booked:true});
+// 已由来源写入者记过账、但要让公共入口（engine.itemDelta）看得出是谁、为何写入：带 writer/purpose 的已记账标记（只标注，不再记账）。
+export const bookedBy=(writer,purpose)=>Object.freeze({booked:true,writer,purpose});
 // 单边旧写入（某个账户加减）的双写：books 给出对方——
 //   {account}                  对方账户键（资源须相同）
 //   {party, purpose='inventory'} 对方实体（行囊缺省）：账户 = <party>|<本资源>|<purpose>
@@ -114,7 +116,7 @@ export function counterAccount(engine,account,books){
     return null;
 }
 export function bookStock(d,engine,account,delta,books){
-    if(books===BOOKED||!delta)return 0;
+    if(books?.booked===true||!delta)return 0;
     const other=books?.writer?counterAccount(engine,account,books):null;
     if(!other){
         if(ledgerActive(d)){d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));tallyDrift(d,'unbooked');}

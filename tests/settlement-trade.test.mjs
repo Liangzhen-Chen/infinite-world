@@ -98,6 +98,12 @@ test('正常world_time周发货→逐路在途→到货税款；双方现金、�
                 const now=d.get('state','npcs',owner,'inventory',item);assert.equal(typeof now==='number'?now:now?.quantity,quantity);inventory[item]=structuredClone(now);
             }else{const def=engine.byId.get(item);inventory[item]={...(typeof old==='object'?old:{quality:def.quality,durability:def.durability,weight:def.weight}),quantity};}
         }
+        // 家户日用自给（取柴、取盐类）：来源写入者（林木/据点账本）已把货记进取货人行囊账户，这里只是同一批货进入私人行囊。
+        // 只认带 writer/purpose 标注的已记账正数写入；其余私人物品的增加仍照旧不得发生。
+        if(books?.booked===true&&books.writer==='household-subsistence'&&books.purpose==='upkeep-gather'){
+            assert.ok(delta>0);const inventory=privateAssets.npcs[owner].inventory,old=inventory[item],def=engine.byId.get(item);
+            inventory[item]={...(typeof old==='object'?old:{quality:def.quality,durability:def.durability,weight:def.weight}),quantity:(typeof old==='number'?old:old?.quantity??0)+delta};
+        }
         return result;
     };
     // W8-E8 (c930d578): the forge stocks one sickle on day 1 (next: day 8). K2（卡 E）依据：原先这把铁镰从模拟范围外进货、
