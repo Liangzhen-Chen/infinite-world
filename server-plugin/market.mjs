@@ -22,7 +22,7 @@ export const customerReachMinutes=engine=>balanceParam(engine,'shop.customerReac
 // Hoisted registry: shop.mjs registers while the module graph is still in a cycle (market -> household-budget -> ... -> finance-tax -> shop).
 export function registerShopShelves(fn){registerShopShelves.fn=fn;}
 const shopShelves=(...a)=>registerShopShelves.fn?.(...a)??null;
-// 某人对某件货的需求（工具之类：人有事要做、缺这件家什），由使用它的规律登记（npc-labor），market 只读。
+// 某件货在某聚落的求购量（工具之类：人有事要做、缺这件家什），由使用它的规律登记（npc-labor），market 只读。
 export function registerItemDemand(fn){registerItemDemand.fn=fn;}
 const itemDemand=(...a)=>registerItemDemand.fn?.(...a)??0;
 const DAY=1440;
@@ -207,12 +207,13 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // writes occur in the loop; repeated allocation cannot change the budget.
   const budget=householdResources(d,engine,id);
   // 同一户的柴（盐）缺口按被报价的这件货折件数计一次，不按同类每种货重复计。
-  personalDemand+=upkeepDemand(state,engine,id,item)+itemDemand(engine,state,id,item);
+  personalDemand+=upkeepDemand(state,engine,id,item);
   for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;
    if(owners.has(id))rows.push(row);
    else personalDemand+=row.retained+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
   }
  }
+ personalDemand+=itemDemand(d,engine,item,place);
  const profile=engine.rules.agriculture?.settlements.find(p=>p.settlement===place),settlement=state.settlements?.[place];
  for(const it of items){
   const stockName=Object.entries(engine.rules.economy?.shops?.stockItems??{}).find(([,id])=>id===it.id)?.[0];

@@ -583,7 +583,8 @@ function localRestock(d,engine,shop,row,minute,want,ctx){
     if(!d.get('state','npcs',shop.keeper))return {...entry,reason:'店主不是名册人物，无从向持货人进货'};
     const eventId=`shop:${shop.id}:${minute}:${row.item}:local`;
     ctx.view??=keeperView(d,engine,shop.keeper,minute);
-    const view=ctx.view,budget=()=>{const b=householdBudget(d,engine,shop.keeper,{view});return counterCash(d,shop.keeper)+Math.max(0,Math.min(b.cash,...b.timeline.map(r=>r.balance)));};
+    const view=ctx.view,budget=()=>{// 每笔进货付过款，钱就少了：预算每次读当下的账（开头的那份视图里的钱是旧的，会让后一家的货款超出实有）。
+        const b=householdBudget(d,engine,shop.keeper,{view:keeperView(d,engine,shop.keeper,minute)});return counterCash(d,shop.keeper)+Math.max(0,Math.min(b.cash,...b.timeline.map(r=>r.balance)));};
     const pay=({to,amount,eventId:id})=>{
         if(amount>counterCash(d,shop.keeper))fundCounter(d,engine,{shop,minute,target:amount,eventId:`${id}:fund`,ctx});
         const counter=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account;

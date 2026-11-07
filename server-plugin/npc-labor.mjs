@@ -11,7 +11,8 @@
 // 是否值得去由真实报价与工时价值比较得出（按需求排班）。
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 import {registerAdvance} from './advance-registry.mjs';
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,stateMemo} from './storage.mjs';
+import {householdBudget} from './household-budget.mjs';
 import {bodyRule} from './primitives-body.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {npcAgeAt,householdWorkTime} from './npc-state.mjs';
@@ -31,7 +32,7 @@ import {forestSites,forestView,harvestForest} from './forest-water.mjs';
 import {siteResources,siteTake,siteUnlock} from './sites.mjs';
 import {shopOfKeeper,currentShops} from './shop.mjs';
 import {safeCarryKg,carriedKg,packItemKg} from './carry.mjs';
-import {purse,sink,moveCoins,mirrorPartyCoins} from './money.mjs';
+import {purse,sink,moveCoins,mirrorPartyCoins,coinRead} from './money.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -315,11 +316,15 @@ function laborCost(e,document,who,view,minutes){return Math.ceil(laborValue(e,do
 
 // 买一件工具：本聚落有铺面、手上有这件货的卖家里，按市场报价最省的一家（与加工缺工具同一条采买通道 supplies）。
 // amortized 是这趟作业磨掉的那份本钱：磨损（物品耐久与该劳动的磨损规则）占整件耐久的比例。
+// 同一聚落同一件工具的报价与是谁买无关：按（状态，聚落，工具，磨损）只查一次（状态写入后自动失效）。
+const toolOfferMemo=Symbol('tool offer');
 function toolPurchase(e,document,who,s,settlement,home){
- const supply=supplies(e,document,who,s.tool,1,settlement,localSupply(e,document.state,who,settlement,[])).sort((a,b)=>a.coins-b.coins||a.location.localeCompare(b.location))[0];
- if(!supply)return null;
- const share=Math.min(1,(s.toolWear??1)/Math.max(1,e.byId.get(s.tool)?.durability??1));
- return {supply,price:supply.coins,amortized:Math.ceil(supply.coins*share),kg:packItemKg(reader(document),e,who,s.tool)};
+ const offer=stateMemo(document.state,e,[toolOfferMemo,settlement,s.tool,s.toolWear??1],()=>{
+  const supply=supplies(e,document,who,s.tool,1,settlement,localSupply(e,document.state,who,settlement,[])).sort((a,b)=>a.coins-b.coins||a.location.localeCompare(b.location))[0];
+  const share=Math.min(1,(s.toolWear??1)/Math.max(1,e.byId.get(s.tool)?.durability??1));
+  return supply?{supply,price:supply.coins,amortized:Math.ceil(supply.coins*share)}:null;
+ });
+ return offer&&{...offer,kg:packItemKg(reader(document),e,who,s.tool)};
 }
 export function laborCandidates(e,view,document){
  const state=document.state,who=view.observer,labor=laborCategories(e,state,who),at=view.minute,out=[];
@@ -627,7 +632,7 @@ function haulPlan(e,document,view,who,want,seller,home,at,settlement){
  const sold=sale(best.quantity-ownPart(best.quantity))?.rows??[];
  // 本钱按买货的先后分：前几家各付满自己那一笔报价，最后一家拿余下的（报价之外的余量也在它那里，不压低任何一家的报价）。
  let left=pay;
- const coinsAt=i=>{const price=best.bill.rows[i].quote.totalCoins,c=i===best.nb-1?left:Math.min(price,left);left-=c;return c;};
+ const coinsAt=i=>{const price=best.bill.rows[i].quote.totalCoins,c=Math.max(0,i===best.nb-1?left:Math.min(price,left));left-=c;return c;};
  const legacyStops=chosen.stops.map((stop,i)=>({...stop,acts:stop.acts.map(act=>act.kind==='buy'?{...act,quantity:best.bill.rows[i].quantity,coins:coinsAt(i)}:{...act,quantity:sold[i-best.nb].quantity}),...i===0&&best.ship?{ship:best.ship}:{}}));
  return {id:`labor:${who}:${day}:haul:${item}:${best.bill.rows[0].r.keeper}`,kind:'labor',legacy:{kind:'labor_haul',labor:'haul',...chosen,item,quantity:best.quantity,coins:pay+best.freight,stops:legacyStops},
   cost:decisionCost(spent,chosen,{coins:best.bill.totalCoins+best.freight,value:best.risk+best.tied}),reward:best.worthHome,needSatisfaction:best.worthHome,utility:best.utility};
@@ -849,21 +854,36 @@ function receiving(e,state,keeper,stop){
 }
 // 卡 E2：买卖劳动对任何成年人开放（条件派生），所以醒着的成年人都要看一眼劳动候选。
 const relevant=(e,state,id,presence)=>adult(e,state,id,state.minute)&&!/睡眠|睡觉|熟睡/.test(presence?.activity??'');
-// 工具需求（市场的需求项）：有这项劳动的手艺、眼下去得了公共来源、却没有完好工具的成年人，每人缺一件。
-// 这份需求进 market.stockSupply 的需求（只计买得起的人），工具的报价随之抬高，会做这件工具的人在 processPlan 里就看到更好的卖价。
-const toolWanted=new WeakMap();
+// 工具需求（市场的需求项）：劳动规则声明自己要哪件工具、开工的公共来源眼下有没有；市场只读“某件货在某聚落的求购量”。
+// 有这项劳动的手艺、来源在、没有完好工具、付得起一件（当地区域价，扣掉行程已承诺的本钱）的成年人，每人缺一件，按（状态，货）一次汇总全员。
 function commonsToCut(e,state){
- let hit=toolWanted.get(state);if(hit!==undefined)return hit;
- const forest=e.rules.forestWater?.forest;
- hit=Boolean(forest)&&forestSites(e).some(s=>publicCommons(e.byId.get(s.location))&&(forestView(e,state,s.location)?.reserve??0)>0);
- toolWanted.set(state,hit);return hit;
+ return stateMemo(state,e,[commonsMemo],()=>{
+  const forest=e.rules.forestWater?.forest;
+  return Boolean(forest)&&forestSites(e).some(s=>publicCommons(e.byId.get(s.location))&&(forestView(e,state,s.location)?.reserve??0)>0);
+ });
 }
-registerItemDemand((e,state,id,item)=>{
- const forest=e.rules.forestWater?.forest;
- if(!forest||item!==forest.tool||!state.npcs?.[id]||!isEffective(e,state,id)||!adult(e,state,id,state.minute))return 0;
- // 有效需求要有购买力：手上的钱够买一件（目录价）才算“想买”，没钱的人缺工具是缺钱，不是市场上的求购。
- return (state.npcs[id].coins??0)>=(e.byId.get(item)?.basePrice??Infinity)&&laborCategories(e,state,id).includes('fell')&&!usableTool(reader({state}),e,id,item)&&commonsToCut(e,state)?1:0;
-});
+const commonsMemo=Symbol('commons to cut'),toolDemandMemo=Symbol('tool demand');
+const TOOLED_LABOR={fell:{tool:e=>e.rules.forestWater?.forest?.tool,open:commonsToCut}};
+function toolDemand(d,e,item){
+ const labors=Object.entries(TOOLED_LABOR).filter(([,t])=>t.tool(e)===item);
+ if(!labors.length)return null;
+ const state=d.get('state');
+ return stateMemo(state,e,[toolDemandMemo,item],()=>{
+  const places=new Map(),read=reader({state}),ask=new Map();
+  for(const [id,n] of Object.entries(state.npcs??{})){
+   if(!isEffective(e,state,id)||!adult(e,state,id,state.minute)||usableTool(read,e,id,item))continue;
+   const have=laborCategories(e,state,id);
+   if(!labors.some(([labor,t])=>have.includes(labor)&&t.open(e,state)))continue;
+   const place=placeSettlement(e,state,n.location).value;if(!place)continue;
+   if(!ask.has(place))ask.set(place,regionalTradeBase(d,e,item,place,state.minute));
+   // 有效需求要有购买力：账上的钱（扣掉在途行程已承诺的）够买一件才算“想买”，没钱的人缺工具是缺钱，不是市场上的求购。
+   const budget=householdBudget(d,e,id,{kernel:true}),cash=Math.max(0,Math.min(coinRead(d,{point:'labor.toolBuyer',account:purse(e,id),legacy:()=>coinsOf(state,id)}),...budget.timeline.map(r=>r.balance)));
+   if(cash>=ask.get(place))places.set(place,(places.get(place)??0)+1);
+  }
+  return places;
+ });
+}
+registerItemDemand((d,e,item,place)=>toolDemand(d,e,item)?.get(place)??0);
 registerAutonomyProvider('npc_labor',{
  relevant,
  candidateRelevant:(e,document,id,presence)=>relevant(e,document.state,id,presence),
