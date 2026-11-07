@@ -202,13 +202,7 @@ test('N17只取白石镇十天等待窗口内新增已结算行动，真实料�
     assert.ok(evidence.records.some(row=>!row.outcome.success),'失败制作同样保留，未强制成功骰点');
     const fees=evidence.records.reduce((n,row)=>n+row.spent.fee,0),wood=evidence.records.reduce((n,row)=>n+row.spent.materials.filter(m=>m.item==='item_wood').reduce((sum,m)=>sum+m.amount,0),0);
     assert.equal(absent.before.state.npcs.npc_hw_ayan.coins-absent.after.state.npcs.npc_hw_ayan.coins,fees);
-    // 阿言 item_wood 库存的减少量 = 窗口内其全部新增已结算行动记录（制作与加工行程）spent.materials 里的木头：
-    // 剧本的 newRecordsDuringTurn 只取 kind=craft，而加工行程（labor_process）也经制作汇扣料，其行动记录现在同样带 spent.materials。
-    const beforeActions=absent.before.state.npcAutonomy?.actions??{},woodRecorded=Object.entries(absent.after.state.npcAutonomy?.actions??{})
-        .filter(([id,row])=>!Object.hasOwn(beforeActions,id)&&row.npc==='npc_hw_ayan'&&row.minute>evidence.from&&row.minute<=evidence.to&&Array.isArray(row.spent?.materials))
-        .reduce((n,[,row])=>n+row.spent.materials.filter(m=>m.item==='item_wood').reduce((sum,m)=>sum+m.amount,0),0);
-    assert.equal(qty(absent.before.state.npcs.npc_hw_ayan.inventory.item_wood)-qty(absent.after.state.npcs.npc_hw_ayan.inventory.item_wood),woodRecorded);
-    assert.ok(woodRecorded>=wood);
+    assert.equal(qty(absent.before.state.npcs.npc_hw_ayan.inventory.item_wood)-qty(absent.after.state.npcs.npc_hw_ayan.inventory.item_wood),wood);
     t.diagnostic(JSON.stringify({window:evidence,settled:{fees,wood}}));
     await s.turn(4,async()=>[await s.call('world_move',{destination:'河湾村'})]);
     await s.turn(5,async()=>[await s.call('world_move',{destination:'旧磨坊'})]);
