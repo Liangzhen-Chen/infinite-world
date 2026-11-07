@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {modelToolCall} from '../extension/tools.mjs';
 import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
+import {flowByHolder} from '../server-plugin/ledger.mjs';
 import {homeResidents} from '../server-plugin/entity-view.mjs';
 
 const world=await loadWorld();
@@ -202,7 +203,19 @@ test('N17只取白石镇十天等待窗口内新增已结算行动，真实料�
     assert.ok(evidence.records.some(row=>!row.outcome.success),'失败制作同样保留，未强制成功骰点');
     const fees=evidence.records.reduce((n,row)=>n+row.spent.fee,0),wood=evidence.records.reduce((n,row)=>n+row.spent.materials.filter(m=>m.item==='item_wood').reduce((sum,m)=>sum+m.amount,0),0);
     assert.equal(absent.before.state.npcs.npc_hw_ayan.coins-absent.after.state.npcs.npc_hw_ayan.coins,fees);
-    assert.equal(qty(absent.before.state.npcs.npc_hw_ayan.inventory.item_wood)-qty(absent.after.state.npcs.npc_hw_ayan.inventory.item_wood),wood);
+    // 守恒：实扣 = 阿言流入所有 sink:*|item_wood|* 汇的累计差 − 从所有 src:*|item_wood|* 源流入阿言的累计差
+    // （窗口内阿言 item_wood 账户的全部转移只有对汇与对源两类，无与其他持有人账户之间的直接转移：见云上 ledger trace，tag fuel-d3）；
+    // 其中制作用途汇的累计差 = 行动记录料费里的木头。
+    const W={resource:'item_wood'},diff=(opts)=>flowByHolder(absent.after.ledger,'npc_hw_ayan',{...W,...opts})-flowByHolder(absent.before.ledger,'npc_hw_ayan',{...W,...opts});
+    const woodSunk=diff({kind:'sink'}),woodIn=diff({kind:'src'}),woodCraft=diff({kind:'sink',purpose:'craft'});
+    assert.equal(qty(absent.before.state.npcs.npc_hw_ayan.inventory.item_wood)-qty(absent.after.state.npcs.npc_hw_ayan.inventory.item_wood),woodSunk-woodIn);
+    // 剧本的 newRecordsDuringTurn 只取 kind=craft（见 tests/playtests/npc_offscreen.json），而加工行程（labor_process）也经制作汇扣料、
+    // 其行动记录现在同样带 spent.materials：b) 对照窗口内阿言全部新增已结算行动记录里的木头，不限行动种类。
+    const beforeActions=absent.before.state.npcAutonomy?.actions??{},woodRecorded=Object.entries(absent.after.state.npcAutonomy?.actions??{})
+        .filter(([id,row])=>!Object.hasOwn(beforeActions,id)&&row.npc==='npc_hw_ayan'&&row.minute>evidence.from&&row.minute<=evidence.to&&Array.isArray(row.spent?.materials))
+        .reduce((n,[,row])=>n+row.spent.materials.filter(m=>m.item==='item_wood').reduce((sum,m)=>sum+m.amount,0),0);
+    assert.equal(woodCraft,woodRecorded);
+    assert.ok(woodRecorded>=wood);
     t.diagnostic(JSON.stringify({window:evidence,settled:{fees,wood}}));
     await s.turn(4,async()=>[await s.call('world_move',{destination:'河湾村'})]);
     await s.turn(5,async()=>[await s.call('world_move',{destination:'旧磨坊'})]);

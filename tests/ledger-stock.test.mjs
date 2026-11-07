@@ -10,7 +10,7 @@ import fc from 'fast-check';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {transfer,declareLedgerWriter,emptyLedger,auditLedger,ledgerWriters,reviseLots,lotAccount,parseAccount,isSource} from '../server-plugin/ledger.mjs';
+import {transfer,declareLedgerWriter,emptyLedger,auditLedger,ledgerWriters,reviseLots,lotAccount,parseAccount,isSource,flowByHolder} from '../server-plugin/ledger.mjs';
 import {bag,granary,seedBank,itemResource,legacyStock,LOT_PURPOSES,bookStock} from '../server-plugin/stock.mjs';
 import {reconcile,eventDiscrepancies,conservation} from './helpers/ledger-audit.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
@@ -71,6 +71,20 @@ test('性质：批次账户与普通账户之间任意转移后，Σ批次 = 余
         });
         assert.deepEqual(auditLedger(d.document.ledger),[]);
     }),{numRuns:200});
+});
+
+test('源汇的对方：两个持有人各自入账、烧柴、制作后 flowBy 分别读出，flows = 各持有人 flowBy 之和',()=>{
+    const d=draft({state:{minute:DAY},ledger:emptyLedger()}),w='stock-test';
+    for(const who of ['npc_a','npc_b'])transfer(d,{from:'src:regrowth|item_wood|harvest',to:`${who}|item_wood|inventory`,amount:20,writer:w});
+    const burn=(who,n,purpose)=>transfer(d,{from:`${who}|item_wood|inventory`,to:`sink:consume|item_wood|${purpose}`,amount:n,writer:w});
+    burn('npc_a',3,'fuel');burn('npc_a',2,'craft');burn('npc_b',5,'fuel');burn('npc_b',1,'craft');burn('npc_a',1,'fuel');
+    const L=d.document.ledger;
+    assert.equal(flowByHolder(L,'npc_a',{resource:'item_wood'}),6);assert.equal(flowByHolder(L,'npc_b',{resource:'item_wood'}),6);
+    assert.equal(flowByHolder(L,'npc_a',{resource:'item_wood',purpose:'fuel'}),4);assert.equal(flowByHolder(L,'npc_b',{resource:'item_wood',purpose:'craft'}),1);
+    for(const key of ['sink:consume|item_wood|fuel','sink:consume|item_wood|craft'])assert.equal(L.flows[key],Object.values(L.flowBy[key]).reduce((n,v)=>n+v,0));
+    assert.equal(flowByHolder(L,'npc_a',{resource:'item_wood',kind:'src'}),20);assert.equal(flowByHolder(L,'npc_b',{resource:'item_wood',kind:'src'}),20);
+    assert.equal(L.flows['src:regrowth|item_wood|harvest'],Object.values(L.flowBy['src:regrowth|item_wood|harvest']).reduce((n,v)=>n+v,0));
+    assert.deepEqual(auditLedger(L),[]);
 });
 
 test('源汇：S1b 用到的源汇都登记在词汇表，写入者声明的每个源都带每日预算',()=>{
