@@ -1162,3 +1162,23 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [x] FIX-LAW 三轮合入 t-int（7bcdc6bf、e68adf04、2b7ff67a）：20 个里 19 个绿；物理门全部仍拒绝，法律门按 K6 改测"做成且立罪"。余 m2:205 待"消耗可追溯到户"（待办）。
 - [x] FIX-PUB 合入 t-int（17a12cb4）：17 个里 16 个绿，w4-b2/b3 合后复跑 52/52；余 ledger-reconcile 一条市场深度（E2）。
 - [x] FIX-MISC 合入 t-int：套件崩溃、快照往返、归层、写入点、路径修好；performance 中位 85ms。主会话撤回了"按名字查钩子"绕过 import 检查的改法（3c6a381e），arch-metrics 如实红 15 条新边——后续卡：把手艺档/失败分类等共用规则下沉到底层公共模块（等 HB、E2 合入后做）。
+
+## 11-07 新主会话1106：B 找路记忆 + 日历换算（只修已查清根因，不加规则、不动架构）
+验收现象（世界里必须出现）：同一存档同一种子推进同样天数，修后世界终态与修前逐字段一致（NPC 去向、日期文本、账目都不变），只是更快；四个最慢文件（agriculture、event-size、farm-pests-clock、npc-autonomy）在自身时限内跑完并给出通过/失败数。禁止加超时、减模拟天数。
+- [x] A：云上核实——腾讯 hang-g（HANG@c2de6037 只含日历修）四文件 11-06 23:13 起跑，00:03 全部在 50 分钟被取消，0 通过；npc-autonomy 另有 1 条子测失败（第29行 undefined[0]）。阿里空闲。本机 18 个旧等待进程待用户批准再停。
+- 修前数据：t-int@85af58d3 全量扫描四文件均 1 小时超时、单独重跑仍超时（triage-85af.md），无子测通过数——标"缺"。
+- [ ] 阿里云 profile farm-pests-clock（HANG），定位找路热点。
+- [ ] 修找路记忆；腾讯同条件跑修前(5dbe7d5f)/日历修(c2de6037)/全修 三组对表。
+- [x] 阿里云 profile（HANG@c2de6037，farm-pests-clock 前 4 分钟，F:/dnd-tmp/cloud/hang-prof5.txt）：日历已不在热点里（日历修有效）。61% 在 NPC 劳动候选 laborCandidates（npc-labor.mjs:275）；其中市场估值 marketSupply（market.mjs:220）约 25%、找路 route（engine.mjs:841）约 16%、家户预算读取（household-budget.mjs:223）约 10%。
+- [x] 找路计数（hang-count1）：4 分钟内 35 万次找路，耗 43/239 秒（18%）；按"出发分钟"不同的 6.6 万种，按"出发日"只有 1.4 万种——记忆按分钟作废确有其事，但全修好最多省约 15%，单靠它四文件仍跑不完。
+- [ ] 腾讯同机同时跑：修前 5dbe7d5f vs 日历修 c2de6037，四文件 60 分钟上限，记通过/失败/取消与推进游戏天数（F:/dnd-tmp/cloud/four-before-5dbe7d5f.txt、four-after-c2de6037.txt）。
+
+### 主会话自定目标（11-07，亮圳授权"你给自己写 goal 继续干"）
+目标：找路记忆按"依据没变就不重算"修好，且世界结果与逐分钟重算逐位一致；腾讯云同机给出 修前(5dbe7d5f) / 日历修(c2de6037) / 日历+找路修 三列对表（四文件：跑完/超时、过/败/取消、秒数、推进游戏天）。
+做法（只动 engine.mjs route/search 与 weather.mjs weatherEdge，不加规则、不改世界数据）：一次搜索记下它查过的每个时刻离当天边界还有多少余量；同一天里换个出发分钟，只要平移量落在余量内（查的天气日、季节、险情都不变，也不跨午夜切段），就复用这次搜索；否则重搜。用已有的 ROUTE_CACHE_CHECK（命中时与重搜逐字段比对）在云上跑四文件+找路相关测试，零不一致才算过。
+停止线：同一步失败两次即停并报告；对表若找路修后提速不足 5%，如实报，不再在找路上烧。
+- [x] 找路修（HANG 工作树未提交：engine.mjs route 按出发日记忆+可平移余量；weather.mjs weatherEdge 记余量；hazard-calendar.mjs 导出 hazardRouteHasClosures）。阿里云 20 个找路/行程/劳动相关文件：修后与 c2de6037 逐文件、逐失败子测名一致（5 个旧账同败），无新增失败（route-set-new.txt / route-set-cal.txt）。复用比对模式（命中即与重搜逐字段比对）8 文件 2.5 机时，不一致 0（route-check2.txt）。
+- [x] 11-07 早核实腾讯：`timeout 3600` 只发 SIGTERM，测试在同步推进中收不到，farm-pests/agriculture 三组实际空转到 5.5 小时（四文件 tap 除 npc 外全空）。已杀掉超限进程；rt.sh 全量模式改 `timeout -k 30 3600`（到点 30 秒后强杀），对表脚本改 `timeout -s KILL 3600`。旧三组可用的只有：event-size 三组均在 ~4140 秒被杀、推进 540 游戏天；npc-autonomy 第 1 子测三组同败（第29行 undefined[0]，修前就有），第 2 子测单条 4655–4724 秒。
+- [x] 找路修提交 t-fix-hang@bf60118e（审 diff：按出发日复用找路树，天气探针记可平移范围，有纯灾害封路的路线钉死不平移；通用、无特例）。
+- [ ] 重跑对表（拆分并发、公平同机同时）：阿里云 agriculture 16 条 + npc-autonomy 10 条各自独立跑，三个版本各 10 并发；腾讯 farm-pests、event-size 整文件（一个世界不拆），三版本同时。每单元 1 小时硬上限，记逐 10 游戏天的耗时曲线（series-*.txt），按同一游戏天比快慢。
+- [ ] C 消耗追溯到户（t-fuel-trail，Sonnet）：验收现象＝十天窗口里阿言木头实扣 = 行动记录制作耗材 + 账本按阿言记的其它木头去向（烧柴）；账本 transfer 原语按持有人累计各汇去向（只存累计，不存流水），所有消耗共用。
