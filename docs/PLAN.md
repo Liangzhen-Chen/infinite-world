@@ -1275,3 +1275,9 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 11-08 批次 1 进展：CAND 3e4657f3（合 FUEL 4536a0a9，ledger/m2 净零）+ 4a4b2736（自采入库改走 engine.itemDelta + bookedBy 标注；bookStock 判定改 booked===true；settlement-trade 快照认家户自采正数入库）。主会话已读 diff，接受 bookedBy（全仓仅 BOOKED 带 booked 字段，写入经来源写入者记账，属 (1)+(3)）。服务器 b1-c1 hash=baafc640（首次从旧 CRLF 底子同步，传 120MB/60s，之后增量）。阶段：第 1 轮独立审查中（b1-r1）。
   - N17（m2 #6）：旧败，阿言柴 11→0 而行动记录 8，差 3；实现者推断为家户日用烧柴但未证实 → 归 (4) 来源未明。本批暂缓理由：基线同败、账本审计为零、缺的是“按户消耗可追”这一新能力（不在本批守恒目标内）。待门禁下一次批准的探针取证后，在经济循环板块单开：按户用度消耗记录（只在 state.family.upkeep 行内，不动账本顶层）。
   - 门禁 f 用例：round=2.0 被接受——JSON 中 2.0==2，且该记录同样过了独立性检查，非绕过；VERIFY-PLAN 预期写错，下次门禁改动时改预期。
+
+### 后台任务机制与在途任务台账（11-08）
+- 三类机制（Claude Code 2.1.116，桌面版）：①执行者/审查子代理（Agent run_in_background）：完成时 harness 推 task-notification + SubagentHandback；子代理自己起的后台命令/远端任务会让通知标"仍有后台工作"，结果可能是中间态。完整会话记录在 ~/.claude/projects/<proj>/<session>/subagents/agent-<id>.jsonl（tasks/*.output 只是桩，常为 0 字节）。②主会话后台命令（Bash run_in_background）：退出时通知，输出文件 tasks/<id>.output。③腾讯云远端任务：无任何推送；现走门禁 `run` 启动，`jobs` 列出（含 hash、起止时间），结果 /work/<dir>.full 末行 FINISHED。
+- 已见漏收/失真案例：(a) a7eed7cc 交回文本仅 "pending"，结果在其写的文件里——只有完成信号没有内容；(b) bc3j6xg0a 等十余个轮询任务来源不明（执行者遗留），我无法确认归属；(c) 执行者 ad209/ae18 结束后其远端任务（subs-run2、agriculture）仍在跑；(d) 审计员被我指错路径（tasks/*.output），误判"会话证据缺失"。未见：通知完全丢失而结果也丢的案例。
+- 最小办法：本台账为准。启动即登一行（负责人｜任务ID｜内容 hash/版本｜输出位置｜状态｜最后有效活动），完成/失败/超时即改；交回只有标签无内容→去输出位置取原始结果，取不到算失败。远端任务只由门禁 `run` 起（目录锁防重复启动），等待用单个后台命令长间隔（≥300 s）+总超时；无输出超时→查 `jobs` 与 .full，再决定。压缩恢复与每批检查点：对账 harness 任务列表、`jobs`、本台账三者，不一致先查清再动。禁止执行者自起远端轮询（须在回报里交出任务ID与输出位置）。
+- 在途：b1-owner=a269407916603a60b（批次1 修 r1 意见+探针，未开测）；hp-r2=a9cbc17ab1f5b61d7（加固探针第2轮）；远端无在跑任务（最后一次 gate-fake 22:08Z 结束）。
