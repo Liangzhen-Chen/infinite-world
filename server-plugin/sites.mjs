@@ -2,7 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {heldUnit,wearItem} from './items.mjs';
-import {digest,recordsWhere} from './storage.mjs';
+import {digest,recordsWhere,stateMemo} from './storage.mjs';
 import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity,learnFromWork} from './action-costs.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
 import {unlicensedEntry} from './location-access.mjs';
@@ -402,15 +402,21 @@ function unitMinutes(engine,state,r){
 // 公共自然来源（家户自给用）：无主、无需许可、世界数据里没有挡路机关的据点资源。不评估也不去解机关，谁都可取；
 // remaining 是据点账当前存量，minutesPerUnit 是眼下当季每份工时（当季不产为 null）。
 export function commonsResources(engine,state,accept=()=>true){
-    const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
-    return engine.world.locations.filter(p=>p.site?.resources?.length&&!p.access?.requiresConsent).flatMap(place=>{
-        const rows=place.site.resources.filter(r=>accept(r.item)&&!ownerOf(place,r)&&!gatesOf(place,r).length);
-        if(!rows.length)return [];
-        const row=ledger(d,place,engine);
-        return rows.map(r=>({site:place.id,resource:r.id,item:r.item,minutesPerUnit:unitMinutes(engine,state,r),remaining:row.remaining[r.id]??0}));
-    });
+    return engine.world.locations.filter(p=>p.site?.resources?.length&&!p.access?.requiresConsent).flatMap(place=>
+        place.site.resources.filter(r=>accept(r.item)&&!ownerOf(place,r)&&!gatesOf(place,r).length).map(r=>({site:place.id,resource:r.id,item:r.item})));
 }
-registerSubsistenceResources({commonsResources,siteTake});
+// Today's live figures of one commons resource: the site's own ledger only (never the whole world). Keyed by the exact
+// minute and the site records, so a draw by any household invalidates it.
+const commonsLiveMemo=Symbol('commons live'),commonsLiveInputs=[{path:['records'],categories:['site']}];
+export function commonsLive(engine,state,siteId,resourceId){
+    return stateMemo(state,engine,[commonsLiveMemo,siteId,resourceId,state.minute],()=>{
+        const place=engine.byId.get(siteId),r=place?.site?.resources?.find(x=>x.id===resourceId);
+        if(!r)return {remaining:0,minutesPerUnit:null};
+        const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+        return {remaining:ledger(d,place,engine).remaining[r.id]??0,minutesPerUnit:unitMinutes(engine,state,r)};
+    },commonsLiveInputs);
+}
+registerSubsistenceResources({commonsResources,commonsLive,siteTake});
 export function siteResources(engine,state,{holder,settlement=null}){
     const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
     return engine.world.locations.filter(p=>p.site?.resources?.length).flatMap(place=>{

@@ -11,7 +11,7 @@ import {changeItems} from './items.mjs';
 import {warClosedRoutes} from './hazard-calendar.mjs';
 import {facilityRouteStates} from './facility-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {reserve,moveStock,registerLegacyStock,accrueStock,bag,BOOKED,stockItem} from './stock.mjs';
+import {reserve,moveStock,registerLegacyStock,accrueStock,bag,BOOKED} from './stock.mjs';
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
 
 const DAY=1440,config=e=>e.rules.householdSubsistence;
@@ -60,7 +60,7 @@ function sources(e,state){
 // and ungated, ownerless site resources (finite site ledger). Static facts only; live stock is read per day.
 const upkeepClasses=e=>householdUsage(e,0,[]).map(u=>u.cls);
 function upkeepSources(e,state){
- const out=new Map(),forest=e.rules.forestWater?.forest,wood=stockItem(e,'wood');
+ const out=new Map(),forest=e.rules.forestWater?.forest,wood=ecology.forestItem?.(e);
  for(const cls of upkeepClasses(e)){
   const rows=[];
   if(forest&&wood&&isItemClass(e,wood,cls))for(const s of ecology.forestSites?.(e)??[]){
@@ -76,22 +76,21 @@ function upkeepSources(e,state){
  }
  return out;
 }
-// Today's finite stock and per-unit work of a candidate (forest ledger or site ledger), one read per day.
-const commonsLive=new WeakMap();
+// Today's finite stock and per-unit work of a candidate (forest ledger or one site's own ledger), one read per day.
 function upkeepLive(e,state,source,context){
  const key=`u:${source.id}`,held=context?.stocks.get(key);if(held)return held;
  let live;
  if(source.kind==='forest')live={reserve:ecology.forestView?.(e,state,source.location)?.reserve??source.capacity,minutes:source.minutesPerPortion};
- else{
-  let rows=commonsLive.get(state);
-  if(!rows)commonsLive.set(state,rows=new Map((ecology.commonsResources?.(e,state,item=>upkeepClasses(e).some(cls=>isItemClass(e,item,cls)))??[]).map(r=>[`${r.site}:${r.resource}`,r])));
-  const r=rows.get(`${source.site}:${source.resource}`);live={reserve:r?.remaining??0,minutes:r?.minutesPerUnit??null};
- }
+ else{const r=ecology.commonsLive?.(e,state,source.site,source.resource);live={reserve:r?.remaining??0,minutes:r?.minutesPerUnit??null};}
  context?.stocks.set(key,live);return live;
 }
 // What the household still lacks of one upkeep class: next trade cycle's use plus carried debt, less what its
 // members hold (same arithmetic basis as market.upkeepDemand: daily use x cycle, in grams).
+const upkeepWantsMemo=Symbol('household upkeep wants');
 function upkeepWants(e,state,owner,members,minute){
+ return stateMemo(state,e,[upkeepWantsMemo,owner,members.join(','),Math.floor(minute/DAY)],()=>readUpkeepWants(e,state,owner,members,minute));
+}
+function readUpkeepWants(e,state,owner,members,minute){
  const holders=[...new Set([owner,...members])].filter(id=>state.npcs?.[id]).sort();if(!holders.length)return [];
  const doc={state},d={document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)},cycle=e.rules.economy?.tradeCycleDays??1;
  const row=state.family?.upkeep?.[personHousehold(e,state,owner).value?.id??owner]??{};
@@ -131,14 +130,14 @@ function journey(e,state,home,kind,minute,portions=0,avoid=null,memoState=state,
   if(kind==='water')context.waterJourneys.set(home,result);return result;
  }
  if(Object.values(state.effects??{}).some(effect=>effect.kind==='air'&&effect.operation==='area_wind'&&effect.route))return readJourney(e,state,home,kind,minute,portions,avoid);
- // Finite upkeep stock changes with every household's draw: never memoized across calls.
- if(kind.startsWith('upkeep:'))return readJourney(e,state,home,kind,minute,portions,avoid,memoState,sourceGeography(e,state,home,kind,minute));
  const day=Math.floor(minute/DAY),waterKey=kind==='water'?waterSignature(e,state,day,memoState):null;
- const geography=kind==='food'?sourceGeography(e,state,home,kind,minute):null;
- const stockKey=geography?candidateStockKey(state,geography.candidates):null;
+ const geography=kind!=='water'?sourceGeography(e,state,home,kind,minute):null;
+ // Finite stock (forage reserve, forest/site ledger) is part of the key: any household's draw makes a new key.
+ const stockKey=geography?candidateStockKey(e,state,geography.candidates,kind):null;
  return stateMemo(memoState,e,[journeyMemo,home,kind,day,portions,avoid,seedOf(e),waterKey,stockKey],()=>readJourney(e,state,home,kind,minute,portions,avoid,memoState,geography),waterJourneyInputs);
 }
-function candidateStockKey(state,candidates){
+function candidateStockKey(e,state,candidates,kind){
+ if(kind.startsWith('upkeep:'))return JSON.stringify(candidates.map(source=>{const live=upkeepLive(e,state,source,null);return [source.id,live.reserve,live.minutes];}));
  return JSON.stringify(candidates.map(source=>{const row=state.records?.[stockKey(source.location)];return [source.location,row?.reserve??source.capacity,row?.updatedDay??null,row?.accruals?.regrowth??null];}));
 }
 function sourceSkeleton(e,state,home,seed,context){
