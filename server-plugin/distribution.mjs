@@ -107,9 +107,9 @@ export function advanceDealers(d,engine,minute,{keepers=new Set()}={}){
   if(!items.length)continue;
   const settlement=settlementOf(engine,d.get('state'),id);if(!settlement)continue;
   let view=null;
+  // Each deal spends coins: the next seller's budget is read from the buyer's view as of now, not the day's first snapshot.
   const cash=()=>{
-   view??=wakingView(d,engine,id,minute);
-   const budget=householdBudget(d,engine,id,{view});
+   const budget=householdBudget(d,engine,id,{view:wakingView(d,engine,id,minute)});
    return Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance)));
   };
   const rows=[];

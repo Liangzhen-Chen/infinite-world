@@ -29,7 +29,7 @@ function fixture({capacity=2000,separate=false,owned=false,location=home,settlem
  // boundary inside a single all-day fixture slot.
  for(const n of w.npcs){delete n.tier;n.schedule={default:[[0,480],[480,720],[720,780],[780,1020],[1020,1440]].map(([start,end])=>({start,end,location,activity:start===720?'午饭':start===0||start===1020?'睡眠':'日常起居',services:[]}))};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'k16-forage');
- doc.state.npcs=Object.fromEntries([A,B].map(id=>[id,{...doc.state.npcs[id],inventory:id===A&&food?{item_wild_food:food}:{},coins:0,location,status:'正常'}]));
+ doc.state.npcs=Object.fromEntries([A,B].map(id=>[id,{...doc.state.npcs[id],inventory:{...(id===A&&food?{item_wild_food:food}:{}),...(id===A?{item_wood:1000}:{})},coins:0,location,status:'正常'}]));
  delete doc.state.records['agriculture:loc_hw'];
  doc.state.settlements={...(fullClock?doc.state.settlements:{}),[settlement]:{...doc.state.settlements[settlement],granary:false,population:2,food:0}};
  doc.state.minute=0;doc.ledger=openLedger(e,doc);return {e,doc,d:e.primitiveDraft(doc)};
@@ -686,4 +686,19 @@ test('equal-opportunity adults share water and forage work instead of losing one
  assert.equal(p.water.minutes,15);assert.equal(p.food.minutes,80);
  assert.notEqual(p.water.worker,p.food.worker);
  assert.equal(p.water.minutes+p.food.minutes,95);
+});
+
+test('a household with no fuel fetches it from a public forest in its shared work time and the books stay balanced',()=>{
+ const f=fixture();f.d.set(['state','npcs',A,'inventory'],{});
+ const p=householdSubsistencePlan(f.e,f.d.get('state'),A,480);
+ // Fuel is an upkeep class like food: a bounded, finite, public source journey charged to the same workers.
+ const trip=p.upkeepTrips.find(t=>t.cls==='fuel');
+ assert.ok(trip&&trip.kind==='forest'&&trip.units>0);
+ assert.ok(p.duties.some(r=>r.activity==='家户采集'));
+ const before=f.e.quantity(f.d,trip.worker,trip.item);
+ advanceHouseholdMeals(f.d,f.e,0);
+ const held=[A,B].reduce((n,id)=>n+f.e.quantity(f.d,id,trip.item),0);
+ assert.ok(held>before,'fetched fuel reaches the household members, net of the day\'s burning');
+ assert.ok(meals(f)[0].sources.some(s=>s.kind==='upkeep'&&s.cls==='fuel'&&s.quantity>0));
+ assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
 });

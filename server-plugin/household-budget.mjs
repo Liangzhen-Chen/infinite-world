@@ -316,7 +316,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
 // 不按“日用量 × 周期”留；正在干活用着的工具由 inUse 留。店主货架上待售的货（本店补货清单）不是家用，不留。读 saleableStock/householdResources 的地方都据此只卖余量。
 // 用度定义只有 item-class.mjs 的 householdUsage 一份，这里按状态时刻读它。
 export function householdUsage(engine,state,members){return usageDefinition(engine,state.minute,members);}
-const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
+export const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
 // 家户用度先用同类里最便宜的：有热值属性（heatValue）的燃料按 价格 ÷ 热值，否则按 价格 ÷ 克。数据里目前没有物品登记热值，都按克算。
 export function usageCost(engine,item){const it=engine.byId.get(item);return (it?.basePrice??0)/(it?.heatValue>0?it.heatValue:itemGrams(engine,item));}
 // 一户一日用掉这件货多少件（不属于消耗类的为 0）。
