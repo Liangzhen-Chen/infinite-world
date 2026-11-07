@@ -1218,3 +1218,4 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - [x] C 云测（c-int=daf028f5 / c-fuel=8758deb7，同机）：m2-preconditions 修前 N17 败→修后 6/6 过；ledger-stock 修后多 1 个新测试、旧败同一条（#6→#7）；kd2-thermal、kd-labor-categories、kd-self-supply、ledger-reconcile 两版同败（旧败）；kd2-process、kd-labor-world 两版过。零新增失败（npc-autonomy 待出）。
 - [!] overfit-guard 在 daf028f5、5dbe7d5f、合并后 9d47c510 三树上同为 2 败（#2 同义词复制、#4 白名单条目失配）——旧问题，非本轮引入；guard-commit 依赖它，需单列查（可能是同步树缺未跟踪语料，或真失配）。
 - [~] F1 独立审查：无阻断；应修——在途本钱未进预算（疑为 monster #4 根因）、itemDemand 读镜像钱且用目录价门槛、coinsAt 负本钱、toolPurchase/itemDemand 热路径放大、registerItemDemand 点名 forest.tool；"3 倍封顶"是 market.mjs 既有稀缺上限，非本 diff。已派修卡（Sonnet）。
+- [~] 候选 t-cand 846f6532 = t-int 9d47c510 + C 8758deb7 + 日用自给 70d6fd32（无冲突，重导 actions）。npc-autonomy 两版同为 1 小时超时。完整检查 cand vs int-m 腾讯同机同时 P12 已起，零新增失败则 t-int 快进到 t-cand。
