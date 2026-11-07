@@ -877,7 +877,7 @@ function toolDemand(d,e,item){
    const place=placeSettlement(e,state,n.location).value;if(!place)continue;
    if(!ask.has(place))ask.set(place,regionalTradeBase(d,e,item,place,state.minute));
    // 有效需求要有购买力：账上的钱（扣掉在途行程已承诺的）够买一件才算“想买”，没钱的人缺工具是缺钱，不是市场上的求购。
-   const budget=householdBudget(d,e,id,{kernel:true}),cash=Math.max(0,Math.min(coinRead(d,{point:'labor.toolBuyer',account:purse(e,id),legacy:()=>coinsOf(state,id)}),...budget.timeline.map(r=>r.balance)));
+   const budget=householdBudget(d,e,id,{kernel:true}),cash=Math.max(0,Math.min(coinRead(d,{point:'assets.cash',account:purse(e,id),legacy:()=>coinsOf(state,id)}),...budget.timeline.map(r=>r.balance)));
    if(cash>=ask.get(place))places.set(place,(places.get(place)??0)+1);
   }
   return places;
