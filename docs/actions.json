@@ -14803,7 +14803,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 71,
     "symbol": "activities.wildlife",
-    "dispatch": "server-plugin/sites.mjs:454"
+    "dispatch": "server-plugin/sites.mjs:478"
    }
   },
   {
@@ -16439,7 +16439,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 69,
     "symbol": "activities.site",
-    "dispatch": "server-plugin/sites.mjs:480"
+    "dispatch": "server-plugin/sites.mjs:504"
    }
   },
   {
@@ -16502,7 +16502,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 69,
     "symbol": "activities.site",
-    "dispatch": "server-plugin/sites.mjs:465"
+    "dispatch": "server-plugin/sites.mjs:489"
    }
   },
   {
@@ -16628,7 +16628,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 69,
     "symbol": "activities.site",
-    "dispatch": "server-plugin/sites.mjs:454"
+    "dispatch": "server-plugin/sites.mjs:478"
    }
   },
   {
@@ -16691,7 +16691,7 @@
     "file": "server-plugin/activities.mjs",
     "line": 69,
     "symbol": "activities.site",
-    "dispatch": "server-plugin/sites.mjs:462"
+    "dispatch": "server-plugin/sites.mjs:486"
    }
   },
   {
