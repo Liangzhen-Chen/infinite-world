@@ -631,8 +631,10 @@ function haulPlan(e,document,view,who,want,seller,home,at,settlement){
  const pay=Math.floor(Math.min(budget-best.freight,best.worthHome-best.freight-spent.coins-spent.value-best.risk-best.tied));
  const sold=sale(best.quantity-ownPart(best.quantity))?.rows??[];
  // 本钱按买货的先后分：前几家各付满自己那一笔报价，最后一家拿余下的（报价之外的余量也在它那里，不压低任何一家的报价）。
+ // 本钱够付全部报价是计划成立的前提（afford 与盈亏上限都以货款为下限）；不够就不出这个候选，不靠截零掩盖。
+ if(!(pay>=best.bill.totalCoins))return null;
  let left=pay;
- const coinsAt=i=>{const price=best.bill.rows[i].quote.totalCoins,c=Math.max(0,i===best.nb-1?left:Math.min(price,left));left-=c;return c;};
+ const coinsAt=i=>{const price=best.bill.rows[i].quote.totalCoins,c=i===best.nb-1?left:Math.min(price,left);left-=c;return c;};
  const legacyStops=chosen.stops.map((stop,i)=>({...stop,acts:stop.acts.map(act=>act.kind==='buy'?{...act,quantity:best.bill.rows[i].quantity,coins:coinsAt(i)}:{...act,quantity:sold[i-best.nb].quantity}),...i===0&&best.ship?{ship:best.ship}:{}}));
  return {id:`labor:${who}:${day}:haul:${item}:${best.bill.rows[0].r.keeper}`,kind:'labor',legacy:{kind:'labor_haul',labor:'haul',...chosen,item,quantity:best.quantity,coins:pay+best.freight,stops:legacyStops},
   cost:decisionCost(spent,chosen,{coins:best.bill.totalCoins+best.freight,value:best.risk+best.tied}),reward:best.worthHome,needSatisfaction:best.worthHome,utility:best.utility};
@@ -863,24 +865,36 @@ function commonsToCut(e,state){
  });
 }
 const commonsMemo=Symbol('commons to cut'),toolDemandMemo=Symbol('tool demand');
-const TOOLED_LABOR={fell:{tool:e=>e.rules.forestWater?.forest?.tool,open:commonsToCut}};
+// 登记表：哪块规则数据声明了“这项劳动要这件工具”（规则里的 labor 与 tool 字段），以及这项劳动开工的公共来源眼下开不开。
+// 新增一项要工具的劳动：在规则数据里写 labor 与 tool，再在这里登记它的规则块与来源判据，toolDemand 不需改。
+const TOOLED_LABOR=[{rule:e=>e.rules.forestWater?.forest,open:commonsToCut}];
+// 重入保护：toolDemand→householdBudget→…→stockSupply→itemDemand→toolDemand 会绕回来。
+// 绕回时返回“无需求”而不记入缓存，外层那次算完后自会记下完整结果。
+let toolDemandBusy=false;
 function toolDemand(d,e,item){
- const labors=Object.entries(TOOLED_LABOR).filter(([,t])=>t.tool(e)===item);
- if(!labors.length)return null;
+ const labors=TOOLED_LABOR.map(t=>({labor:t.rule(e)?.labor,tool:t.rule(e)?.tool,open:t.open})).filter(t=>t.labor&&t.tool===item);
+ if(!labors.length||toolDemandBusy)return null;
  const state=d.get('state');
  return stateMemo(state,e,[toolDemandMemo,item],()=>{
-  const places=new Map(),read=reader({state}),ask=new Map();
-  for(const [id,n] of Object.entries(state.npcs??{})){
-   if(!isEffective(e,state,id)||!adult(e,state,id,state.minute)||usableTool(read,e,id,item))continue;
-   const have=laborCategories(e,state,id);
-   if(!labors.some(([labor,t])=>have.includes(labor)&&t.open(e,state)))continue;
-   const place=placeSettlement(e,state,n.location).value;if(!place)continue;
-   if(!ask.has(place))ask.set(place,regionalTradeBase(d,e,item,place,state.minute));
-   // 有效需求要有购买力：账上的钱（扣掉在途行程已承诺的）够买一件才算“想买”，没钱的人缺工具是缺钱，不是市场上的求购。
-   const budget=householdBudget(d,e,id,{kernel:true}),cash=Math.max(0,Math.min(coinRead(d,{point:'assets.cash',account:purse(e,id),legacy:()=>coinsOf(state,id)}),...budget.timeline.map(r=>r.balance)));
-   if(cash>=ask.get(place))places.set(place,(places.get(place)??0)+1);
-  }
-  return places;
+  toolDemandBusy=true;
+  try{
+   const places=new Map(),read=reader({state}),ask=new Map();
+   for(const [id,n] of Object.entries(state.npcs??{})){
+    // 先过廉价条件（有效、成年、缺工具、有手艺、来源开着、在聚落），预算时间线最后才算。
+    if(!isEffective(e,state,id)||!adult(e,state,id,state.minute)||usableTool(read,e,id,item))continue;
+    const have=laborCategories(e,state,id);
+    if(!labors.some(t=>have.includes(t.labor)&&t.open(e,state)))continue;
+    const place=placeSettlement(e,state,n.location).value;if(!place)continue;
+    if(!ask.has(place))ask.set(place,regionalTradeBase(d,e,item,place,state.minute));
+    // 有效需求要有购买力：账上的钱（扣掉在途行程已承诺的）够买一件才算“想买”，没钱的人缺工具是缺钱，不是市场上的求购。
+    // 现钱不足一件价的直接跳过，不必算预算时间线。
+    const cash=coinRead(d,{point:'assets.cash',account:purse(e,id),legacy:()=>coinsOf(state,id)});
+    if(cash<ask.get(place))continue;
+    const budget=householdBudget(d,e,id,{kernel:true});
+    if(Math.min(cash,...budget.timeline.map(r=>r.balance))>=ask.get(place))places.set(place,(places.get(place)??0)+1);
+   }
+   return places;
+  }finally{toolDemandBusy=false;}
  });
 }
 registerItemDemand((d,e,item,place)=>toolDemand(d,e,item)?.get(place)??0);

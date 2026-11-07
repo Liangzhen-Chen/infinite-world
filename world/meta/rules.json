@@ -47,6 +47,7 @@
       "peoplePerFuel": 40,
       "maximumPriceFactor": 3,
       "tool": "item_singlebit_axe",
+      "labor": "fell",
       "maximumCut": 20,
       "minutes": 15,
       "difficulty": 10,

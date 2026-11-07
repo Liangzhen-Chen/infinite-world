@@ -555,6 +555,8 @@ export class PatchCursor {
         if(path[0]==='state'&&this.root.state===previousState)stateMemos.delete(previousState);
         if(indexedRecords&&this.root.state[path[1]]===indexedRecords)recordIndexes.delete(indexedRecords);
         if(retainedMemos?.size)stateMemos.set(this.root.state,retainedMemos);
+        // 账本与持仓不在 state 里：它们的写入不动 state，却会让读它们的 memo 过期。依赖声明为整个 state（dependencies 缺省）的 memo 把它们也算作输入，在此一并失效；声明了具体 state 路径的 memo 只读 state，保留。
+        if(path[0]==='ledger'||path[0]==='holdings')stateMemos.get(this.root.state)?.delete(null);
         if (recordCache) updateRecordGroups(recordCache, this.root.state[path[1]], path[2], previousRow, previousFields,path);
         return this.root;
     }
