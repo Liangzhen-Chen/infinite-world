@@ -8,7 +8,7 @@ import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
-import {recordsMemo} from './storage.mjs';
+import {recordsMemo,stateMemo} from './storage.mjs';
 import {householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
@@ -166,6 +166,18 @@ export function upkeepDemand(state,engine,id,item){
  if(!usage.every(u=>cheapestOfClass(state,engine,place,u.cls)===item))return 0;
  return Math.ceil(daily*days);
 }
+// 一户眼下要补的日用（卡 E2，收货需求）：户里每个用度类要买的那件货（本聚落同类里最便宜的，同 upkeepDemand）与件数，
+// 扣掉户里成员手上已经有的这件货。只记在户里编号最小的在世成员名下（同 upkeepDemand），其余成员返回空。
+export function upkeepWants(state,engine,id){
+ const h=personHousehold(engine,state,id).value,members=(h?.members??[id]).filter(m=>state.npcs?.[m]).sort();
+ if(members[0]!==id)return [];
+ const place=settlementOf(engine,state,locationOf(state,id)),out=[];
+ for(const item of new Set(householdUsage(engine,state,members).map(u=>cheapestOfClass(state,engine,place,u.cls)).filter(Boolean))){
+  const held=members.reduce((n,m)=>n+quantity(state.npcs[m]?.inventory?.[item]),0),want=upkeepDemand(state,engine,id,item)-held;
+  if(want>=1)out.push({item,quantity:Math.floor(want)});
+ }
+ return out.sort((a,b)=>a.item.localeCompare(b.item));
+}
 function cheapestOfClass(state,engine,place,cls){
  const memo=cheapestMemo.get(state)??new Map();cheapestMemo.set(state,memo);
  const key=`${place}|${cls}`;if(memo.has(key))return memo.get(key);
@@ -257,7 +269,12 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
 }
 // The supply a quote reads. Callers pricing several quantities of one item in a row (no writes in between)
 // compute it once and pass it back as `supply`; the value is identical to what marketQuote derives itself.
-export function quoteSupply(d,engine,{item,location,business=null}){return marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]});}
+// 卡 E2：供给只取决于聚落、货的类别与哪位经营者在报价，同一状态里只算一次（一次决策会给许多人、许多收货人报价）。
+export function quoteSupply(d,engine,{item,location,business=null}){
+ const state=stateOf(d),place=settlementOf(engine,state,location);
+ return stateMemo(state,engine,[quoteSupplyMemo,item,place,business?.keeper??null],()=>marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]}));
+}
+const quoteSupplyMemo=Symbol('quote supply');
 // 不含某持有人自己那批货的供给：海关估入境货值时，货物自身不压低入境地的价格。
 export function supplyApart(d,engine,{item,location,owner}){
  const all=quoteSupply(d,engine,{item,location}),own=all.rows.filter(r=>r.owner===owner).reduce((n,r)=>n+r.available,0);

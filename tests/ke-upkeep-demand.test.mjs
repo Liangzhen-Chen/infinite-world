@@ -18,6 +18,10 @@ const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/
 const DAY=1440,smith='npc_hw_duanyan',forge='bld_hw_forge',item='item_charcoal';
 // The forge serves at its door all day, so the noon walk-in market reaches it (the authored smith lunches at noon).
 const w=structuredClone(world);{const n=w.npcs.find(x=>x.id===smith);delete n.tier;n.schedule={default:[{start:0,end:1440,location:forge,activity:'营业',services:['trade']}]};}
+// 卡 E2 依据：提供交易又持货的人按持货派生为摊，摊架上的柴炭也是本村买得到的燃料（market.cheapestOfClass 读全部货架）。
+// 夹具让河湾村除铁匠铺的炭以外，没有人把别的燃料摆出来卖（开局行囊里不带），“缺柴就想买炭”的前提照旧；断言语义不变。
+const fuelWorld=new WorldEngine(structuredClone(world));
+for(const n of w.npcs)if(n.id!==smith&&placeSettlement(fuelWorld,{},n.workplace?.location??n.location).value==='loc_hw')for(const it of Object.keys(n.inventory??{}))if(isItemClass(fuelWorld,it,'fuel'))delete n.inventory[it];
 const engine=new WorldEngine(w);
 const read=doc=>({document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)});
 const quote=doc=>{const d=read(doc);return tradeQuote(d,engine,{buyer:'player',seller:smith,item,quantity:1,location:forge,base:()=>regionalTradeBase(d,engine,item,forge)});};

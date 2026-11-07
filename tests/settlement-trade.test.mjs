@@ -5,9 +5,10 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
-import {regionalTradePrice,regionalTradeBase,validateSettlementTradeRules} from '../server-plugin/settlement-trade.mjs';
+import {regionalTradePrice,regionalTradeBase,validateSettlementTradeRules,tradeSources} from '../server-plugin/settlement-trade.mjs';
 import {settlementTradeRules} from '../world/design/m5-trade-rules.mjs';
 import {createTransportAsset} from '../server-plugin/transport.mjs';
+import {quoteSupply} from '../server-plugin/market.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,DEPART=7*DAY+540,lanes=world.rules.settlementTrade.lanes;
@@ -205,18 +206,29 @@ test('公共报价只读且随真实供给重派生，距离与季节进入环�
     const {engine,doc}=setup(),lane=lanes[0],d=draft(doc),minute=DEPART;
     const before=structuredClone(d.document),first=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute);
     assert.deepEqual(d.document,before,'15.2/15.4: quotes are projections, not saved truth');
-    // Independent environmental calculation from authored road distances,
-    // actual travel time and spring .9. No market price computes this oracle.
-    const distance=world.routes.filter(e=>lane.routes.includes(e.id)).reduce((n,e)=>n+e.lengthKm,0);
-    const route=engine.route(world.rules.agriculture.settlements.find(p=>p.settlement===lane.seller).counter,world.rules.agriculture.settlements.find(p=>p.settlement===lane.buyer).counter,lane.mode,minute,doc.randomSeed);
-    const risk=Math.max(1,route.movingMinutes/(distance/engine.rules.travel.walkKmh*60));
-    const limits=engine.rules.economy.priceFactorLimits.transport,transport=Math.max(limits[0],Math.min(limits[1],(1+distance*.01)*risk));
-    assert.ok(transport>1);assert.equal(regionalTradeBase(d,engine,'item_oats',lane.buyer,minute),3*transport*.9);
+    // 卡 E2 依据：区域价的运输因子改为从最近的真实货源（产地、公仓余粮、经营者持货）运来，不再按周贸易航线。
+    // 买方村自己仓里有余粮时，它就是货源，不加运费：只剩季节因子。
+    assert.ok(tradeSources(d,engine,'item_oats').includes(lane.buyer));
+    assert.equal(regionalTradeBase(d,engine,'item_oats',lane.buyer,minute),3*.9);
+    // 仓空（无余粮）且不是产地时，从最近的货源运来。Independent environmental calculation from authored road
+    // distances, actual travel time and spring .9 from that nearest source. No market price computes this oracle.
+    const empty=draft(structuredClone(doc));setGrain(empty.document,lane.buyer,0);resyncBooks(engine,empty.document);
+    const sources=tradeSources(empty,engine,'item_oats');assert.ok(!sources.includes(lane.buyer)&&sources.length);
+    const counter=id=>world.rules.agriculture.settlements.find(p=>p.settlement===id)?.counter??id;
+    const legs=sources.map(id=>{const route=engine.route(counter(id),counter(lane.buyer),'walk',minute,doc.randomSeed),distance=route.edges.reduce((n,x)=>n+world.routes.find(e=>e.id===x).lengthKm,0);
+        return {id,distance,risk:Math.max(1,route.movingMinutes/(distance/engine.rules.travel.walkKmh*60))};}).sort((a,b)=>a.distance-b.distance||a.id.localeCompare(b.id));
+    const limits=engine.rules.economy.priceFactorLimits.transport,transport=Math.max(limits[0],Math.min(limits[1],(1+legs[0].distance*.01)*legs[0].risk));
+    assert.ok(transport>1);assert.equal(regionalTradeBase(empty,engine,'item_oats',lane.buyer,minute),3*transport*.9);
     // Changed stock is a non-examined premise; synchronize the existing books.
     setGrain(d.document,lane.buyer,100);resyncBooks(engine,d.document);assert.ok(regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+1)>first);
     const next=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+DAY);assert.ok(next>first);
-    // Riverbay timber: baseline4 * scarcity floor .5 * other factors1 =2.
-    const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc);assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),2);assert.deepEqual(outside.document,unchanged);
+    // Riverbay timber: baseline4 (made here: no haul factor; not a seasonal grain) * local scarcity * other factors1.
+    // 卡 E2 依据：提供交易的人按持货派生为摊，摊的货架上限与其他店铺一样计入本地需求（F026），
+    // 所以河湾木料的稀缺不再落在下限 .5，而是本地需求/可售供给（同一份公开供需投影）。
+    const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc),local=quoteSupply(outside,engine,{item:'item_wood',location:'loc_hw'});
+    const [low,high]=engine.rules.economy.priceFactorLimits.region;
+    assert.equal(regionalTradeBase(outside,engine,'item_wood','loc_hw'),4);
+    assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),4*Math.max(low,Math.min(high,local.demand/Math.max(1,local.supply))));assert.deepEqual(outside.document,unchanged);
 });
 test('玩家world_trade消费实时区域价并扣真实商人库存；同日深度与次日复位',async()=>{
     const {engine,doc}=setup(),sid=lanes[0].seller,seller='npc_hw_ayan';
@@ -226,9 +238,9 @@ test('玩家world_trade消费实时区域价并扣真实商人库存；同日深
     const cash=snapshotCash(doc),initial=engine.quantity(draft(doc),seller,'item_oats'),wallet=doc.state.player.coins;
     const run=async(c,id)=>{const out=await engine.reduce(c,{tool:'world_trade',args:{seller,item:'item_oats',quantity:1},eventId:id});return{doc:applyPatches(c,out.patches),out};};
     const first=await run(doc,'local-buy');let c=first.doc;
-    const day=Math.floor(doc.state.minute/DAY),price=2;
-    // Oats3 * plentiful-supply floor .5 * incoming distance24.142km
-    // factor1.241421... * terrain1.2 * spring.9 =2.01110... ->2.
+    const day=Math.floor(doc.state.minute/DAY),price=1;
+    // 卡 E2 依据：区域价的运输因子从最近的真实货源算起；鱼坡村自己公仓有余粮，就是货源，不再加 24km 外的来路运费。
+    // Oats3 * plentiful-supply floor .5 * haul factor1 * spring.9 =1.35 ->1（旧：再乘来路 1.2414*1.2 得 2）。
     // Neutral regard/grade/spread/depth and corrections are all1.
     assert.equal(first.out.result.cost,price);assert.equal(first.out.result.pricing.depth,1);
     assert.equal(c.state.player.coins,wallet-price);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-1);assert.equal(snapshotCash(c),cash);

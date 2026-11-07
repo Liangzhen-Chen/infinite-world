@@ -235,6 +235,43 @@ export function porterCharges(d,e,{from,to,cargo,owner,minute=d.get('state','min
  const duties=tariff+(route.cost??0);
  return {route,freight:Math.max(1,Math.ceil(freight)),tariff,toll:route.cost??0,duties,total:Math.max(1,Math.ceil(freight))+duties};
 }
+// 卡 E2：不雇承运、自己背货走一段路时，途中的风险由自己承担。期望损失与承运人为同一段路收取的风险加价同一口径
+// （quoteTransport：运价 × (1+risk)）：路段登记的风险（经 transport:risk 修正槽）× 路段公里 × 计费重量 × 挑夫运价。
+// 只读路线的真实事故率与路程，不另设风险常数。
+export function carryRiskCost(document,e,{edges,cargo,carrier}){
+ const load=dimensions(e,cargo,[]),billableKg=Math.max(load.kg,load.m3*250,1),rate=specOf(e,'pack').rate;
+ return (edges??[]).reduce((n,id)=>{
+  const r=e.world.routes.find(x=>x.id===id);if(!r)return n;
+  const risk=derived(e,document,'transport:risk',carrier,{target:r.id,base:Math.max(0,Number(r.risk)||0)});
+  return n+r.lengthKm*billableKg*rate*risk;
+ },0);
+}
+// 卡 E2：跨聚落搬运点名承运人（通用承运记录，不按物品分支）。一趟搬运由几个人背，就从出发聚落挑出几个当下真能出门的成年人
+// （在世、清醒、无羁押或照看、不在路上、不在别的行程里），按编号定序；每人记一条 market_trip（承运行程），
+// 作息与家户劳动按它的整段窗口扣除（npc-state、household-subsistence 读 market_trip），时间与劳动真实占用。
+const tripBusy=(s,id,from,to)=>Object.values(s.records??{}).some(r=>r.category==='market_trip'&&r.actor===id&&r.departAt<to&&from<r.returnAt);
+export function availableCarriers(e,s,{settlement,count,departAt,returnAt,place}){
+ if(!(count>=1))return [];
+ const out=[];
+ for(const id of Object.keys(s.npcs??{}).sort()){
+  if(out.length>=count)break;
+  const n=s.npcs[id];if(!n||place(n.location)!==settlement)continue;
+  if(!available(e,s,id)||n.caring||n.levy||tripBusy(s,id,departAt,returnAt))continue;
+  out.push(id);
+ }
+ return out;
+}
+export function reserveCarriers(d,e,{carriers,from,to,departAt,returnAt,sourceEvent,purpose,outboundEdges=[],inboundEdges=[]}){
+ for(const actor of carriers){
+  const id=`market_trip:carry:${sourceEvent}:${actor}`;
+  holdingSet(d,null,path(id),{id,category:'market_trip',actor,from,to,departAt,arriveAt:departAt,finishAt:returnAt,returnAt,outboundEdges,inboundEdges,paid:0,sourceEvent,purpose,labor:'carry',activity:'承运',travelActivity:'承运途中'},'transport');
+ }
+ return carriers.map(actor=>`market_trip:carry:${sourceEvent}:${actor}`);
+}
+// 承运实际走完（到家或货毁）时，把每人的承运行程收在真实的结束时刻。
+export function releaseCarriers(d,e,ids,minute){
+ for(const id of ids??[]){const row=d.get(...path(id));if(row&&row.returnAt!==minute)holdingSet(d,null,path(id),{...row,finishAt:Math.min(row.finishAt,minute),returnAt:minute},'transport');}
+}
 export function leaseTransportAsset(d,e,{asset,tenant='player',minutes,coins},eventId){
  const a=transportAssetView(e,d.document,asset),now=d.get('state','minute');int(minutes,1,'租期');int(coins,1,'租金');
  if(!a||a.busy||a.holder!==a.owner||a.owner===tenant||a.location!==actorLocation(d.get('state'),tenant))throw preconditionFailure('资产不能出租');

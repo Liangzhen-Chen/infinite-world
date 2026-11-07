@@ -53,9 +53,9 @@ test('发布规则自洽；面包基准进入市场投影',async()=>{
     const expected=projected(f,host,'item_bread');
     const r=await f.act('world_trade',{seller:host,item:'item_bread',quantity:1},'bread');
     // S5-02: the authored 2 copper remains a baseline, not a fixed retail truth.
-    // D=14, S>28 after household retention → .5 lower bound;
-    // 2 × .5 × remaining factors 1 = 1.
-    assert.equal(r.cost,1);
+    // 卡 E2 依据：派生摊的货架与其他店铺一样计入本地需求（F026），村里摆着口粮的摊让面包类的需求 D 从 14 升到 79；
+    // 可售供给 S=46（扣家户自留）→ 稀缺 79/46≈1.717；2 × 1.717 × 其余因子 1 = 3.43，整单截断得 3（旧：D=14 落在 .5 下限，得 1）。
+    assert.equal(r.cost,3);
     assert.equal(expected.explanation.baseline,2);assert.equal(r.cost,expected.totalCoins);
 });
 
@@ -66,20 +66,29 @@ test('周期补货：按店家周期在午夜向本聚落持货人补到上限�
     const f=fixture();
     // 合入 F 后的依据：F 让果粥也成为口粮，店主家户先拿果粥、牛奶顶到下次进货，面包就不必自留，“不会无限出售”的前提消失。
     // 夹具让面包是店主家里唯一的口粮（拿走果粥与牛奶），自留才落在面包上；断言语义不变：家户要留的那几个面包不卖。
-    for(const item of ['item_fruit_porridge','item_milk'])delete f.doc.state.npcs[host].inventory[item];resyncBooks(f.engine,f.doc);
+    for(const item of ['item_fruit_porridge','item_milk'])delete f.doc.state.npcs[host].inventory[item];
+    // 卡 E2 依据：提供交易的人按持货派生为摊（不靠 shopType），本村摊上的口粮也是店主家户可指望的口粮来源（shop.mjs 口粮来源）。
+    // 夹具让村里的摊上没有口粮，“家户要留的那几个面包不卖”的前提照旧；断言语义不变。
+    const {currentShops}=await import('../server-plugin/shop.mjs');
+    for(const stall of currentShops(f.engine,f.doc.state).filter(s=>s.stall&&s.settlement==='loc_hw')){const bag=f.doc.state.npcs[stall.keeper].inventory;for(const item of Object.keys(bag))if(f.engine.byId.get(item)?.nutrition?.satiety>0)delete bag[item];}
+    resyncBooks(f.engine,f.doc);
     await f.act('world_trade',{seller:host,item:'item_bread',quantity:2},'buy-bread');
     assert.equal(qty(f.doc,host,'item_bread'),4);
     // Four remain; some bridge delivery, so all four exceed the saleable loaves.
     // K2（卡 E）依据：店主家户只把“本聚落持货人眼下能出让的余量”算作下一次本地补货（shop.mjs 口粮来源）；
     // 村里还没人有多余面包时，自家面包要留着顶到下次真实进货，所以多买被拒。持货人在这之后才出现。
     await assert.rejects(f.act('world_trade',{seller:host,item:'item_bread',quantity:4},'too-many'),/库存不足/);
-    f.doc.state.npcs[holder].inventory={...f.doc.state.npcs[holder].inventory,item_bread:20};resyncBooks(f.engine,f.doc);
     const total=everyone(f.doc)+boundary(f.doc);
     f.doc.state.location=forge;
     await f.act('world_trade',{seller:smith,item:'item_kitchen_knife',quantity:2},'buy-knife');
     assert.equal(qty(f.doc,smith,'item_kitchen_knife'),0);
+    // 卡 E2 依据：卖货不再看职业名单，手上有多余面包的村民白天会自己挑去酒馆卖（派生卖家）。这里要测的是店家午夜补货，
+    // 所以持货人的面包在午夜前一刻才到手（比如刚出炉），白天没有可卖的余量；补货的语义不变。
+    const day1=(Math.floor(f.doc.state.minute/DAY)+1)*DAY,start=f.doc.state.minute;
+    await f.act('world_time',{minutes:day1-1-start},'day1-eve');
+    f.doc.state.npcs[holder].inventory={...f.doc.state.npcs[holder].inventory,item_bread:20};resyncBooks(f.engine,f.doc);
     const holderCoins=f.doc.state.npcs[holder].coins;
-    await f.act('world_time',{minutes:DAY},'day1');
+    await f.act('world_time',{minutes:start+DAY-(day1-1)},'day1');
     // Tavern restocks daily (6 per cycle, ceiling 6) by buying the missing loaves from the villager who holds bread
     // (at least the two the player took; walk-in customers paid by D's labour sales may have taken more).
     const inn1=ledger(f.doc,'shop_hw_qingdeng').entries.find(e=>e.item==='item_bread');
@@ -224,13 +233,21 @@ test('同日按新立场与成交深度重报，次日重新派生',async()=>{
 
 test('K10：有交易服务并登记店铺类型的人物自动成为店铺；现有三家店不变',async()=>{
     const {shopStores,derivedShops}=await import('../server-plugin/shop.mjs');
-    // Published world: no person declares a shop type, so the shop list is exactly the three registered stores.
-    assert.deepEqual(derivedShops(world),[]);
+    // 卡 E2 依据（派生卖家，不靠 shopType 字段）：发布世界里没有人登记店铺类型，但提供交易又持有有人用得上的货的人，
+    // 都按 rules.economy.shops.derivedType 出摊；没有可卖的货就不出摊。旧断言“派生店为零”随之改为下面的派生条件。
+    const stalls=derivedShops(world);
+    assert.ok(stalls.length>0);
+    for(const s of stalls){
+        const n=world.npcs.find(x=>x.id===s.keeper);
+        assert.equal(n.shopType,undefined);assert.ok((n.services??[]).includes('trade')||(n.serviceCatalog??[]).some(c=>c.kind==='trade'));
+        assert.deepEqual([s.shopType,s.stall,s.channels],[rules.derivedType,true,rules.types[rules.derivedType].channels]);
+        assert.ok(s.restock.length&&s.restock.every(r=>r.maximum===r.amount&&(r.source==='local'?originSettlement(world,r.item)===s.settlement:originSettlement(world,r.item)===r.from)));
+    }
     // W8-E8 adds one independent shelf, leaving all reviewed store fields and
-    // rows unchanged. The runtime catalogue must contain exactly that addition.
+    // rows unchanged. The runtime catalogue must contain exactly that addition, ahead of the derived stalls.
     const registered=structuredClone(rules.stores);
     registered.find(s=>s.id==='shop_hw_forge').restock.splice(3,0,{item:'item_sickle',source:'local',amount:1,maximum:2,basis:'W8-E8：乡村铁匠铺常备农具；铁镰已在目录（审批管线）'});
-    assert.deepEqual(shopStores(world),registered);
+    assert.deepEqual(shopStores(world),[...registered,...stalls]);
     assert.deepEqual(rules.stores.map(s=>s.id),['shop_hw_qingdeng','shop_hw_forge','shop_bs_yanzhe']);
     const miller='npc_hw_ayan',mill='bld_hw_mill';
     const edit=w=>{const n=w.npcs.find(x=>x.id===miller);n.shopType='merchant';n.inventory={...n.inventory,item_iron_nail:6};};

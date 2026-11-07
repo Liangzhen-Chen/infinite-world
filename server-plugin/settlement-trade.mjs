@@ -1,4 +1,5 @@
-import {recordsWhere,recordEntriesWhere} from './storage.mjs';
+import {recordsWhere,recordEntriesWhere,stateMemo} from './storage.mjs';
+import {placeSettlement} from './entity-view.mjs';
 import {marketQuote} from './market.mjs';
 import {escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -12,7 +13,7 @@ import {hazardPriceFactor} from './hazard-calendar.mjs';
 import {tradeTax} from './finance-tax.mjs';
 import {magicPriceFactor} from './magic-economy.mjs';
 import {transportSegment} from './transport-route.mjs';
-import {transportServices,quoteTransport,bookTransport,settleWreckedShipment} from './transport.mjs';
+import {transportServices,quoteTransport,bookTransport,settleWreckedShipment,availableCarriers,reserveCarriers,releaseCarriers} from './transport.mjs';
 import {registerLoss,registerEarnedClaim} from './obligation-claims.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('settlement-trade',{kinds:[],locations:true});
@@ -72,28 +73,73 @@ function fiscal(d,id){
     if(f.category!=='village_fiscal'||!Array.isArray(f.entries)||['openingTreasuryCopper','advanceCopper','salesGrossCopper','salesNetCopper','taxReceiptsCopper','purchasesCopper','exportedFood','importedFood'].some(k=>!integer(f[k]))||f.salesGrossCopper!==f.salesNetCopper+f.taxReceiptsCopper||f.advanceCopper!==sum('advanceCopper')||f.salesNetCopper!==sum('netCopper')||f.taxReceiptsCopper!==sum('taxCopper')||f.purchasesCopper!==-f.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.copper,0)||f.exportedFood!==-f.entries.filter(e=>e.phase==='pickup').reduce((n,e)=>n+e.food,0)||f.importedFood!==f.entries.filter(e=>e.phase==='deliver').reduce((n,e)=>n+e.food,0))throw Error('周贸易税贸明细不守恒，拒绝覆盖');
     return f;
 }
-function region(engine,location){
-    const seen=new Set();while(location&&!seen.has(location)){
-        if(profile(engine,location))return location;
-        seen.add(location);location=engine.byId.get(location)?.parent;
-    }
-    return null;
-}
 export function regionalTradePrice(d,engine,item,location,minute=d.get('state','minute')){
  return marketQuote(d,engine,{item,location,minute,base:regionalTradeBase(d,engine,item,location,minute)}).listPrice;
+}
+// 卡 E2 区域价（任意可交易物，一类一起覆盖）：货从哪里来——这件货的产地（目录 origin 所在聚落）、
+// 公仓里这件货超过本村储备的聚落、以及本地有经营者（提供交易服务的人）手上持有这件货的聚落。
+// 不认物品编号：哪件货都按同一条规律找货源。
+const traderIds=new WeakMap();
+function traders(engine){
+ let ids=traderIds.get(engine.world.npcs);
+ if(!ids)traderIds.set(engine.world.npcs,ids=engine.world.npcs.filter(n=>(n.services??[]).includes('trade')||(n.serviceCatalog??[]).some(s=>s?.kind==='trade')).map(n=>n.id).sort());
+ return ids;
+}
+const heldQuantity=v=>typeof v==='number'?v:v?.quantity??0;
+function publicSurplus(engine,state,sid,item){
+ const stocks=engine.rules.economy?.shops?.stockItems??{},name=Object.entries(stocks).find(([,id])=>id===item)?.[0],s=state.settlements?.[sid];
+ if(!name||!s)return 0;
+ if(name!=='food')return Math.max(0,s[name]??0);
+ const farm=state.records?.[`agriculture:${sid}`],day=Math.floor(state.minute/DAY);
+ const held=farm?.batches?farm.batches.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0):s.food??0;
+ return Math.max(0,held-(s.population??0)*(profile(engine,sid)?.reserveDays??0));
+}
+export function tradeSources(d,engine,item){
+ const state=d.get('state'),day=Math.floor((state.minute??0)/DAY);
+ return stateMemo(state,engine,[tradeSourcesMemo,item,day],()=>{
+  const out=new Set(),origin=placeSettlement(engine,state,engine.byId.get(item)?.origin).value;
+  if(origin)out.add(origin);
+  for(const sid of new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...Object.keys(state.settlements??{})]))if(publicSurplus(engine,state,sid,item)>0)out.add(sid);
+  for(const id of traders(engine)){
+   const n=state.npcs?.[id];if(!n||!(heldQuantity(n.inventory?.[item])>0))continue;
+   const sid=placeSettlement(engine,state,n.location).value;if(sid)out.add(sid);
+  }
+  return [...out].sort();
+ });
+}
+const tradeSourcesMemo=Symbol('trade sources');
+// 路线端点：托管村以柜台为收发处（周贸易同一口径），其余聚落就是聚落本身。
+const endpoint=(engine,sid)=>profile(engine,sid)?.counter??sid;
+// 从最近的货源运到这里：路程（公里）与实际耗时相对平路步行的倍数；当季不通的路不算货源路线。
+function haul(d,engine,item,sid,minute){
+ const sources=tradeSources(d,engine,item);
+ if(sources.includes(sid))return {distanceKm:0,slowness:1,source:sid};
+ let best=null,closed=false;
+ for(const from of sources){
+  let route;try{route=engine.route(endpoint(engine,from),endpoint(engine,sid),'walk',minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;continue;}
+  const distanceKm=(route.edges??[]).reduce((n,id)=>n+(engine.world.routes.find(e=>e.id===id)?.lengthKm??0),0);
+  const slowness=Math.max(1,(route.movingMinutes??route.minutes??0)/Math.max(1,distanceKm/engine.rules.travel.walkKmh*60));
+  if(!best||distanceKm<best.distanceKm||distanceKm===best.distanceKm&&from<best.source)best={distanceKm,slowness,source:from};
+ }
+ return best??(closed||sources.length?{closed:true}:{distanceKm:0,slowness:1,source:null});
 }
 // Inputs retained by the unified market: physical transport, season, hazard,
 // magic and water conditions. Supply/demand is calculated once by market.mjs.
 export function regionalTradeBase(d,engine,item,location,minute=d.get('state','minute')){
- // 区域价公式的输入：目录基准价是规则定义的起点，乘环境/运输/季节后才成为区域基准（现价由 marketQuote 再乘供需）。
- const base=engine.byId.get(item).basePrice,r=engine.rules.settlementTrade,sid=region(engine,location);
- const environment=hazardPriceFactor(engine,d.get('state'),item,location,minute)*magicPriceFactor(engine,d.get('state'),item,location)*forestWaterPriceFactor(engine,d.get('state'),item,location,d);
- if(!r||item!==r.item||!sid)return base*environment;
- const lane=r.lanes.find(l=>l.buyer===sid),distanceKm=(lane?.routes??[]).reduce((n,id)=>n+engine.world.routes.find(e=>e.id===id).lengthKm,0);
- let route=null,closed=false;
- if(lane)try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,sid).counter,lane.mode,minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
- const risk=closed?3:Math.max(1,(route?.movingMinutes??0)/Math.max(1,distanceKm/engine.rules.travel.walkKmh*60));
- return base*environment*clamp((1+distanceKm*r.distanceFactorPerKm)*risk,...engine.rules.economy.priceFactorLimits.transport)*r.seasonFactors[engine.calendar(minute).season];
+ return stateMemo(d.get('state'),engine,[regionalBaseMemo,item,location,minute],()=>readRegionalTradeBase(d,engine,item,location,minute));
+}
+const regionalBaseMemo=Symbol('regional trade base');
+function readRegionalTradeBase(d,engine,item,location,minute){
+ // 区域价公式的输入：目录基准价是规则定义的起点，乘环境/运输/季节后才成为区域基准（现价由 marketQuote 再乘本地供需）。
+ const base=engine.byId.get(item).basePrice,r=engine.rules.settlementTrade,state=d.get('state'),sid=placeSettlement(engine,state,location).value;
+ const environment=hazardPriceFactor(engine,state,item,location,minute)*magicPriceFactor(engine,state,item,location)*forestWaterPriceFactor(engine,state,item,location,d);
+ if(!r||!sid)return base*environment;
+ const limits=engine.rules.economy.priceFactorLimits.transport,h=haul(d,engine,item,sid,minute);
+ // 断路：货进不来，运输因子取规则允许的上限（不另设常数）。
+ const transport=h.closed?limits[1]:clamp((1+h.distanceKm*r.distanceFactorPerKm)*h.slowness,...limits);
+ // 季节因子随收成周期走，只作用于登记的随季节收成的那一类货（rules.economy.seasonalTrait，按类别不按编号）。
+ const seasonal=hasTrait(itemTraits(engine.byId.get(item)),engine.rules.economy.seasonalTrait)?r.seasonFactors[engine.calendar(minute).season]:1;
+ return base*environment*transport*seasonal;
 }
 function spareWorkers(state,engine,sid){
     const p=profile(engine,sid),s=state.settlements[sid],r=engine.rules.settlementTrade;
@@ -114,7 +160,7 @@ function schedule(d,engine,o,minute){
             entry(o,'return',minute);
             return schedule(d,engine,o,minute);
         }
-        t.phase='home';t.nextAt=null;o.homeAt=minute;entry(o,'home',minute);return;
+        t.phase='home';t.nextAt=null;o.homeAt=minute;entry(o,'home',minute);releaseCarriers(d,engine,o.carrierTrips,minute);return;
     }
     const segment=transportSegment(engine,d.get('state'),d.document.randomSeed,t,o.mode,minute);
     if(segment.kind==='rest'){t.segment=segment;t.nextAt=minute+segment.minutes;return;}
@@ -183,7 +229,7 @@ function lose(d,engine,o,trip,minute){
         registerEarnedClaim(d,engine,{id:`settlement-trade:${o.id}:loss:claim`,kind:'compensation',debtor:trip.carrier,creditor:o.seller,amount:owed,createdAt:minute,deadline:minute,source:`settlement-trade:${o.id}:loss`});
         o.lossClaim=`settlement-trade:${o.id}:loss:claim`;
     }
-    Object.assign(o.transport,{phase:'home',nextAt:null,segment:null});o.homeAt=minute;
+    Object.assign(o.transport,{phase:'home',nextAt:null,segment:null});o.homeAt=minute;releaseCarriers(d,engine,o.carrierTrips,minute);
     entry(o,'lost',minute,{lostFood:lost,refundCopper:refund,owedCopper:owed,carrier:trip.carrier,shipment:trip.id});entry(o,'home',minute);
     putWarehouse(d,o.seller,a);putWarehouse(d,o.buyer,b);
     holdingSet(d,null,['state','records',`village-fiscal:${o.seller}`],sf,'settlement-trade');holdingSet(d,null,['state','records',`village-fiscal:${o.buyer}`],bf,'settlement-trade');
@@ -208,8 +254,15 @@ function dispatch(d,engine,lane,minute){
     // This is a signed unit-price contract: freeze an integer unit before
     // dispatch. Floating projections never enter the copper ledger.
     const price=Math.ceil(regionalTradePrice(d,engine,r.item,lane.buyer,minute));
-    const quantity=Math.min(lane.maximumQuantity,Math.floor(workers*r.carryKgPerWorker/r.unitKg),surplus,demand,space,Math.floor(b.s.treasury/price));
+    let quantity=Math.min(lane.maximumQuantity,Math.floor(workers*r.carryKgPerWorker/r.unitKg),surplus,demand,space,Math.floor(b.s.treasury/price));
     if(!quantity)return reject('买方无足额实际现金');
+    // 卡 E2：背粮的人点名——从卖方村里挑当下真能出门的成年人，按估计的往返时间占住他们（transport 通用承运记录）。
+    const state=d.get('state'),returnAt=minute+2*route.minutes;
+    // 本地有车船驮队可雇的，赶车的人留给自己的班次，不再被点去背粮（下面先试雇他们）。
+    const drivers=new Set(transportServices(engine,d.document,profile(engine,lane.seller).counter).map(x=>x.driver));
+    let carriers=availableCarriers(engine,state,{settlement:lane.seller,count:Math.ceil(quantity*r.unitKg/r.carryKgPerWorker)+drivers.size,departAt:minute,returnAt,place:at=>placeSettlement(engine,state,at).value}).filter(id=>!drivers.has(id));
+    if(!carriers.length)return reject('村里没有能出门背粮的人');
+    quantity=Math.min(quantity,Math.floor(carriers.length*r.carryKgPerWorker/r.unitKg));carriers=carriers.slice(0,Math.ceil(quantity*r.unitKg/r.carryKgPerWorker));
     const parts=[];let remaining=quantity;
     a.r.batches.sort((x,y)=>x.expiresDay-y.expiresDay||x.id.localeCompare(y.id));
     for(const batch of a.r.batches){if(batch.kind!=='grain'||batch.expiresDay<=day)continue;const amount=Math.min(remaining,batch.amount);if(amount){parts.push({...batch,amount});moveStock(d,{from:granaryAccount(engine,lane.seller),to:cargoAccount(engine,`settlement-trade:${id}`,r.item),amount,writer:'settlement-trade',eventId:id,pick:[String(batch.id)]});}batch.amount-=amount;remaining-=amount;if(!remaining)break;}
@@ -218,8 +271,9 @@ function dispatch(d,engine,lane,minute){
     const sf=fiscal(d,lane.seller),bf=fiscal(d,lane.buyer);
     sf.exportedFood+=quantity;sf.entries.push({eventId:id,contract:id,phase:'pickup',other:lane.buyer,minute,food:-quantity,copper:0,advanceCopper:0,taxCopper:0});
     bf.entries.push({eventId:id,contract:id,phase:'reserve',other:lane.seller,minute,food:0,copper:-cost,escrowCopper:cost});
-    const o={category:'settlement_trade',id,lane:lane.id,seller:lane.seller,buyer:lane.buyer,item:r.item,mode:lane.mode,source:r.source,status:'in-transit',quantity,workers:Math.ceil(quantity*r.unitKg/r.carryKgPerWorker),unitPriceCopper:price,taxBps:tradeTax(engine,d.get('state'),lane.seller).bps,batches:parts,spoiledFood:0,rejectedFood:0,deliveredFood:0,paidCopper:0,refundCopper:0,taxCopper:0,escrowCopper:cost,dispatchAt:minute,estimatedArrivalAt:minute+route.minutes,entries:[],transport:{phase:'outbound',edges:route.edges,edgeIndex:0,location:profile(engine,lane.seller).counter,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:null,segment:null}};
-    entry(o,'dispatch',minute,{seller:o.seller,buyer:o.buyer,item:o.item,unitPriceCopper:price,taxBps:o.taxBps,quantity,escrowCopper:cost,workers:o.workers,route:route.edges,estimatedMinutes:route.minutes});
+    const carrierTrips=reserveCarriers(d,engine,{carriers,from:profile(engine,lane.seller).counter,to:profile(engine,lane.buyer).counter,departAt:minute,returnAt,sourceEvent:`settlement-trade:${id}`,purpose:`carry:settlement-trade:${lane.id}`,outboundEdges:route.edges,inboundEdges:[...route.edges].reverse()});
+    const o={category:'settlement_trade',id,lane:lane.id,carriers,carrierTrips,seller:lane.seller,buyer:lane.buyer,item:r.item,mode:lane.mode,source:r.source,status:'in-transit',quantity,workers:Math.ceil(quantity*r.unitKg/r.carryKgPerWorker),unitPriceCopper:price,taxBps:tradeTax(engine,d.get('state'),lane.seller).bps,batches:parts,spoiledFood:0,rejectedFood:0,deliveredFood:0,paidCopper:0,refundCopper:0,taxCopper:0,escrowCopper:cost,dispatchAt:minute,estimatedArrivalAt:minute+route.minutes,entries:[],transport:{phase:'outbound',edges:route.edges,edgeIndex:0,location:profile(engine,lane.seller).counter,remainingKm:null,movingMinutes:0,restedBudgets:0,nextAt:null,segment:null}};
+    entry(o,'dispatch',minute,{seller:o.seller,buyer:o.buyer,item:o.item,unitPriceCopper:price,taxBps:o.taxBps,quantity,escrowCopper:cost,workers:o.workers,carriers,route:route.edges,estimatedMinutes:route.minutes});
     if(d.get('state','location')===profile(engine,lane.seller).counter)d.say?.(`周贸易${id}发货：${engine.byId.get(r.item).name}${quantity}份，运往${engine.byId.get(lane.buyer).name}，预付款${cost}铜入在途账`);
     putWarehouse(d,lane.seller,a);putWarehouse(d,lane.buyer,b);
     holdingSet(d,null,['state','records',`village-fiscal:${lane.seller}`],sf,'settlement-trade');holdingSet(d,null,['state','records',`village-fiscal:${lane.buyer}`],bf,'settlement-trade');
@@ -239,6 +293,8 @@ function dispatch(d,engine,lane,minute){
         const carriageCost=trip.freight+trip.toll+trip.tariff,fs=fiscal(d,lane.seller);
         fs.entries.push({eventId:id,contract:id,phase:'freight',other:trip.carrier,minute,food:0,copper:-carriageCost,freightCopper:trip.freight,tollCopper:trip.toll,tariffCopper:trip.tariff});
         holdingSet(d,null,['state','records',`village-fiscal:${lane.seller}`],fs,'settlement-trade');
+        // 雇了车船，村里的人不必出门背粮：点名的承运人当场收工。
+        releaseCarriers(d,engine,o.carrierTrips,minute);
         o.carriageCostCopper=carriageCost;entry(o,'carriage',minute,{carrier:trip.carrier,shipment:trip.id,freightCopper:trip.freight,tollCopper:trip.toll,tariffCopper:trip.tariff});
         d.set(path,o);break;
     }
@@ -301,7 +357,7 @@ export function advanceSettlementTrade(d,engine,minute){
 
 // Military quartermasters use the same regional quote, route availability and granary outflow.
 export function armySupplyQuote(d,engine,base,location,minute){
-    const item=engine.rules.settlementTrade?.item??engine.rules.agriculture?.grainItem??'item_oats';
+    const item=engine.rules.agriculture.grainItem;
     let closed=false;
     if(base!==location)try{engine.route(base,location,'walk',minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
     return {price:Math.ceil(regionalTradePrice(d,engine,item,base,minute)),closed};

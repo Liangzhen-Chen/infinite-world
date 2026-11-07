@@ -17,12 +17,15 @@ import {recordFinanceSale} from './finance-assets.mjs';
 import {recordsWhere} from './storage.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
+import {collectTransport} from './transport.mjs';
 declareLedgerWriter('distribution',{});
 declareHoldingWriter('distribution',{kinds:[]});
 
 const DAY=1440;
 const quantityOf=v=>typeof v==='number'?v:v?.quantity??0;
-const tradeable=(engine,item)=>{const it=engine.byId.get(item);return Boolean(it?.id?.startsWith('item_')&&it.basePrice>0&&!(it.tags??[]).includes('coin'));};
+// 可交易物：物品目录里有定价、不是钱币类的货（按目录与类别，不按编号前缀）。
+const catalogItems=new WeakMap();
+const tradeable=(engine,item)=>{let ids=catalogItems.get(engine.world.items);if(!ids)catalogItems.set(engine.world.items,ids=new Map(engine.world.items.map(i=>[i.id,i])));const it=ids.get(item);return Boolean(it&&it.basePrice>0&&!(it.tags??[]).includes('coin'));};
 const settlementOf=(engine,state,id)=>{const n=state.npcs?.[id];return n?placeSettlement(engine,state,n.location).value??null:null;};
 const usable=(engine,state,id)=>{const n=state.npcs?.[id];return Boolean(n&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(n.status));};
 // 午夜结算时双方都在睡觉；决定取本人当天醒着的上午十点的主观视图（与店主进货同一口径，shop.mjs keeperView）。
@@ -38,6 +41,7 @@ export function dealingStock(engine,id){
  return Object.fromEntries(Object.entries(base.inventory??{}).map(([item,v])=>[item,quantityOf(v)]).filter(([item,n])=>n>0&&tradeable(engine,item)));
 }
 // 某人手上这件货能出让给经营者的量：可售存货减去他自己作为经营者平常要留的那份。
+export function holderSpare(d,engine,id,item){return spare(d,engine,id,item);}
 function spare(d,engine,id,item){
  const available=saleableStock(d,engine,id,item).available;if(!(available>0))return 0;
  return Math.max(0,Math.floor(available-(dealingStock(engine,id)[item]??0)));
@@ -97,8 +101,18 @@ export function buyFromHolders(d,engine,{buyer,settlement,item,want,minute,event
  if(!out.added)out.reason??='持货人都没有可出让的余量';
  return out;
 }
+// 卡 E2：外地进的货托运到家（npc-labor 贩运行程在货源地订的运单）：收货人在到货地点，就提取已到站的实货。
+// 只认 transport 记成 arrived 的真实运单；运单上记着承运人、运费与途中经过。
+function collectArrivals(d,engine){
+ const state=d.get('state');
+ for(const trip of recordsWhere(state.records,'category','transport').filter(r=>r.status==='arrived'&&state.npcs?.[r.recipient]).sort((a,b)=>a.id.localeCompare(b.id))){
+  if(!usable(engine,state,trip.recipient)||state.npcs[trip.recipient].location!==trip.to)continue;
+  collectTransport(d,engine,trip.id,trip.recipient);
+ }
+}
 // 没有铺面的经营者：每天一次，低于平常存货的货向本聚落持货人补进。店主由 shop.mjs 自己的周期补货负责。
 export function advanceDealers(d,engine,minute,{keepers=new Set()}={}){
+ collectArrivals(d,engine);
  const state=d.get('state'),day=Math.floor(minute/DAY),bySettlement=new Map();
  const residents=s=>{if(!bySettlement.has(s))bySettlement.set(s,residentsOf(d,engine,s));return bySettlement.get(s);};
  for(const id of Object.keys(state.npcs??{}).sort()){

@@ -21,7 +21,7 @@ import {marketFactor}from'./promotion.mjs';
 import {personBusinesses,personHousehold,personSimulation,placeSettlement,settlementPopulationCount} from './entity-view.mjs';
 import {actorPath} from './npc-state.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
-import {buyFromHolders,advanceDealers,localSpare} from './distribution.mjs';
+import {buyFromHolders,advanceDealers,localSpare,holderSpare} from './distribution.mjs';
 const worldEvent=(state,key)=>{const id=key?.replace(/^world_event:/,'');const row=state.records?.[`world_event:${id}`];return row?.category==='world_event'&&row.id===id?row:null;};
 import {digest,recordsWhere,stateMemo,PatchCursor,persistable} from './storage.mjs';
 import {derivedBankAt,derivedBankById} from './finance-bank.mjs';
@@ -131,27 +131,48 @@ function catalog(world,rules){
 function settlementIds(world,rules){return catalog(world,rules).places;}
 const held=(npc,item)=>{const v=npc?.inventory?.[item];return typeof v==='number'?v:v?.quantity??0;};
 const trades=npc=>(npc.services??[]).includes('trade')||(npc.serviceCatalog??[]).some(s=>s?.kind==='trade');
-// Derived shops: a person who offers trade (services or serviceCatalog) and whose
-// `shopType` names a type in rules.economy.shops.types becomes a shop with that
-// type's channels, markup and cycle. Its settlement is found by walking up from
-// the person's settlement, workplace, home or location; its restock is the
-// person's `shopRestock` rows, or else each held item produced locally and
-// admitted by quality, restocked locally by half the shelf (at least 1) up to
-// what the person holds now. Hand-registered stores always win for their keeper.
+// Derived shops: a person who offers trade (services or serviceCatalog) becomes a shop. An authored
+// `shopType` naming a type in rules.economy.shops.types gives that type's channels, markup and cycle;
+// otherwise (卡 E2 派生卖家，不靠 shopType 字段) the holder sets up as rules.economy.shops.derivedType —
+// a stall — as long as he holds goods somebody uses (food, a recipe's material, or durable gear that wears out).
+// Its settlement is found by walking up from the person's settlement, workplace, home or location; its restock
+// is the person's `shopRestock` rows, or else each held item (an authored type keeps only locally produced ones)
+// admitted by quality, restocked by half the shelf (at least 1) up to what the person holds now.
+// Hand-registered stores always win for their keeper.
+const demandIndex=new WeakMap();
+function inDemand(world,item){
+    let used=demandIndex.get(world.recipes??world.items);
+    if(!used){used=new Set((world.recipes??[]).flatMap(r=>(r.materials??[]).map(m=>m.item)));demandIndex.set(world.recipes??world.items,used);}
+    const row=catalog(world,world.rules.economy?.shops).itemById.get(item);
+    return Boolean(row)&&(used.has(item)||row.nutrition?.satiety>0||row.durability>0);
+}
+const derivedMemo=new WeakMap();
 export function derivedShops(world,rules=world.rules.economy?.shops){
     const types=rules?.types??{},keepers=new Set((rules?.stores??[]).map(s=>s.keeper));
     if(!rules||!Object.keys(types).length)return[];
     const places=settlementIds(world,rules),byId=catalog(world,rules).locations,rows=[];
     const settle=npc=>{for(let at of [npc.settlement,npc.workplace?.location,npc.home?.location??npc.home,npc.location]){const seen=new Set();
         while(typeof at==='string'&&!seen.has(at)){if(places.has(at))return at;seen.add(at);at=byId.get(at)?.parent;}}return null;};
+    // 同一份规则下，一个人的派生店只取决于他的登记（店型、所在、工作处、交易服务、开局存货）：按这些记一次，状态投影反复派生时直接取用。
+    let memo=derivedMemo.get(rules);if(!memo||memo.world!==world.items)derivedMemo.set(rules,memo={world:world.items,rows:new Map()});
     for(const npc of world.npcs){
-        if(typeof npc.shopType!=='string'||keepers.has(npc.id))continue;
-        const type=Object.hasOwn(types,npc.shopType)?types[npc.shopType]:null,settlement=settle(npc);
+        const authored=typeof npc.shopType==='string';
+        if(keepers.has(npc.id)||!authored&&!trades(npc))continue;
+        const key=`${npc.id}|${npc.shopType}|${npc.settlement}|${npc.workplace?.location}|${npc.home?.location??npc.home}|${npc.location}|${trades(npc)}`,hit=memo.rows.get(key);
+        if(hit&&hit.inventory===npc.inventory&&hit.restock===npc.shopRestock){if(hit.shop)rows.push(structuredClone(hit.shop));continue;}
+        const shopType=authored?npc.shopType:rules.derivedType,type=Object.hasOwn(types,shopType)?types[shopType]:null,settlement=settle(npc);
         const shop={id:`shop_${npc.id.replace(/^npc_/,'')}`,name:byId.get(npc.workplace?.location)?.name??npc.occupation??npc.name,keeper:npc.id,settlement,
-            channels:[...type?.channels??[]],markup:type?.markup,cycleDays:type?.cycleDays,firstDay:type?.firstDay,shopType:npc.shopType,derived:true,trades:trades(npc),restock:[]};
-        shop.restock=Array.isArray(npc.shopRestock)?structuredClone(npc.shopRestock):type&&settlement?Object.keys(npc.inventory??{}).filter(item=>held(npc,item)>0&&world.items.some(i=>i.id===item)
-            &&originSettlement(world,item,rules)===settlement&&qualityAllowed(world,shop,item,rules)).sort().map(item=>({item,source:'local',amount:Math.max(1,Math.ceil(held(npc,item)/2)),maximum:held(npc,item)})):[];
-        rows.push(shop);
+            channels:[...type?.channels??[]],markup:type?.markup,cycleDays:type?.cycleDays,firstDay:type?.firstDay,shopType,derived:true,...(authored?{}:{stall:true}),trades:trades(npc),restock:[]};
+        // A stall's goods made elsewhere restock along the route from where they are made (real shipments only, receivedRouteStock).
+        // 摆摊的人照旧把卖掉的货补回平常的存货（与没有铺面的经营者同一条：distribution.dealingStock），每个周期补满。
+        const row=item=>{const from=originSettlement(world,item,rules),base={item,amount:authored?Math.max(1,Math.ceil(held(npc,item)/2)):held(npc,item),maximum:held(npc,item)};
+            return from===settlement?{...base,source:'local'}:!authored&&from?{...base,source:'route',from}:null;};
+        shop.restock=Array.isArray(npc.shopRestock)?structuredClone(npc.shopRestock):type&&settlement?Object.keys(npc.inventory??{}).filter(item=>held(npc,item)>0&&catalog(world,rules).itemById.has(item)
+            &&(authored||inDemand(world,item))&&qualityAllowed(world,shop,item,rules)).sort().map(row).filter(Boolean):[];
+        // 没有可卖的货（或没有人用得上），就不出摊。
+        const kept=!authored&&!shop.restock.length?null:shop;
+        memo.rows.set(key,{inventory:npc.inventory,restock:npc.shopRestock,shop:kept?structuredClone(kept):null});
+        if(kept)rows.push(shop);
     }
     return rows;
 }
@@ -167,6 +188,7 @@ registerShopShelves((engine,place)=>{
     let index=shelfIndex.get(rules);
     if(!index||index.npcs!==engine.world.npcs){
         const rows=new Map();
+        // 卡 E2：摊的货架与其他店铺一样是本地需求（F026）——摊卖空了，货架缺口就是向外进货的需求，价格由此把外地的货引过来。
         for(const store of shopStores(engine.world))rows.set(store.settlement,[...rows.get(store.settlement)??[],...(store.restock??[])]);
         shelfIndex.set(rules,index={npcs:engine.world.npcs,rows});
     }
@@ -176,10 +198,30 @@ const currentShopsMemo=Symbol('current shops');
 export function currentShops(engine,state){
     return stateMemo(state,engine,[currentShopsMemo],()=>readCurrentShops(engine,state));
 }
+// 店铺清单只取决于各人的营业事实（开没开、在哪、店型、所在聚落）、店主改价记录、当天的出摊记录与聚落人口：
+// 这些都没变时沿用上一次的清单，不必每次状态变动都把一百多家店重新派生一遍（卡 E2 性能）。
+const shopListMemo=new WeakMap();
 function readCurrentShops(engine,state){
     const rules=shopRules(engine);if(!rules)return[];
     // One legal index for the whole pass; people who can never be open are skipped (entity-view.mjs personBusinesses).
     const businesses=personBusinesses(engine,state,(rules.stores??[]).map(s=>s.keeper));
+    const facts=[...businesses].map(([id,b])=>b?[id,b.open.value,b.location.value,b.shopType.value,b.settlement.value,state.records?.[`shop_pricing:${b.keeper.value}`]??null]:[id]);
+    const stalls=recordsWhere(state.records,'category','stall');
+    const places=[...new Set([...facts.map(f=>f[4]),...stalls.map(r=>r.settlement),...(rules.stores??[]).map(s=>s.settlement)].filter(Boolean))].sort();
+    const signature={facts,stalls,population:places.map(p=>settlementPopulationCount(engine,state,p).value)};
+    const last=shopListMemo.get(engine);
+    if(last&&sameFacts(last.signature,signature))return last.shops;
+    const shops=deriveCurrentShops(engine,state,rules,businesses);
+    shopListMemo.set(engine,{signature,shops});
+    return shops;
+}
+function sameFacts(a,b){
+    if(a.facts.length!==b.facts.length||a.stalls.length!==b.stalls.length||a.population.length!==b.population.length)return false;
+    for(let i=0;i<a.facts.length;i++){const x=a.facts[i],y=b.facts[i];if(x.length!==y.length)return false;for(let j=0;j<x.length;j++)if(x[j]!==y[j])return false;}
+    for(let i=0;i<a.stalls.length;i++)if(a.stalls[i]!==b.stalls[i])return false;
+    return a.population.every((n,i)=>n===b.population[i]);
+}
+function deriveCurrentShops(engine,state,rules,businesses){
     const projected=[...businesses].map(([id,b])=>b?{...engine.byId.get(id),shopType:b.shopType.value,settlement:b.settlement.value,workplace:{location:b.location.value},services:b.open.value?['trade']:[],serviceCatalog:[]}:null).filter(Boolean);
     const stores=[...registeredStores(rules),...derivedShops({...engine.world,npcs:projected},rules).filter(s=>s.trades&&s.restock.length)],used=new Set(),out=[];
     for(const store of stores){
@@ -192,7 +234,7 @@ function readCurrentShops(engine,state){
         if(!settlement)continue;
         const changedType=type&&type!==(store.shopType??original?.shopType)&&!store.channels.includes(type),template=changedType?rules.types?.[type]:null;
         if(changedType&&!template)continue;
-        const shop={...store,...template,keeper,settlement,location:business.location.value,shopType:type,channels:template?.channels??store.channels};
+        const shop={...store,...template,keeper,settlement,location:business.location.value,shopType:type??store.shopType,channels:template?.channels??store.channels};
         // The keeper's own repricing (restockShop) stands in place of the type's standard markup while it is on record.
         const pricing=state.records?.[`shop_pricing:${keeper}`];
         if(pricing?.category==='shop_pricing'&&pricing.shop===shop.id){shop.baseMarkup=shop.markup;shop.markup=typeof pricing.markup==='number'?pricing.markup:fromRational(pricing.markup);}
@@ -205,7 +247,48 @@ function readCurrentShops(engine,state){
         }).filter(row=>qualityAllowed(engine.world,shop,row.item,rules,population));
         used.add(keeper);out.push(shop);
     }
+    // 卡 E2：手上有超出家户自留与自身经营用量的余货、而这货有人用的人，当天出摊卖这份余货（advanceStalls 每日派生、记在 stall:<人>）。
+    // 交易服务只是出摊的现成条件之一（上面的派生摊），不是门槛；登记店与 shopType 店优先。
+    const type=rules.types?.[rules.derivedType];
+    if(type)for(const row of recordsWhere(state.records,'category','stall')){
+        if(used.has(row.keeper)||!state.npcs?.[row.keeper])continue;
+        used.add(row.keeper);
+        out.push({id:`stall_${row.keeper.replace(/^npc_/,'')}`,name:engine.byId.get(row.keeper)?.name??row.keeper,keeper:row.keeper,settlement:row.settlement,location:row.location,
+            channels:[...type.channels],markup:type.markup,cycleDays:type.cycleDays,firstDay:type.firstDay,shopType:rules.derivedType,derived:true,stall:true,surplus:true,restock:structuredClone(row.restock)});
+    }
     return out;
+}
+// 每日出摊：余货 = 可售存货（已扣家户自留与承诺）再扣本人作为经营者平常要留的那份（distribution.holderSpare）；
+// 只算有人用得上的可交易货（inDemand）。摊卖的是自己的余货，不补货（row.own）。没有余货就收摊。
+// 本聚落谁手上有可出让的余货：聚落|货 → 持货人（在同一份状态上一次读完）。
+function spareHolders(d,engine){
+    const state=d.get('state'),out=new Map();
+    for(const id of Object.keys(state.npcs??{}).sort()){
+        const n=state.npcs[id],sid=placeSettlement(engine,state,n.location).value;if(!sid||!isEffective(engine,state,id))continue;
+        for(const item of Object.keys(n.inventory??{}))if(engine.quantity(d,id,item)>=1&&holderSpare(d,engine,id,item)>=1){const k=`${sid}|${item}`;out.set(k,[...out.get(k)??[],id]);}
+    }
+    return out;
+}
+function advanceStalls(d,engine,minute){
+    const state=d.get('state'),rules=shopRules(engine);if(!rules?.types?.[rules.derivedType])return;
+    const keepers=new Set(currentShops(engine,state).filter(s=>!s.surplus).map(s=>s.keeper)),day=Math.floor(minute/DAY),writes=[];
+    // 先在同一份状态上读完所有人的余货（只读，估值缓存跨人有效），再一次写入。
+    for(const id of Object.keys(state.npcs??{}).sort()){
+        const n=state.npcs[id],rows=[];
+        if(!keepers.has(id)&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷','患病'].includes(n.status)){
+            for(const item of Object.keys(n.inventory??{}).sort()){
+                const def=catalog(engine.world,rules).itemById.get(item);if(!def||!(def.basePrice>0)||(def.tags??[]).includes('coin')||!inDemand(engine.world,item)||!(engine.quantity(d,id,item)>=1))continue;
+                const spare=holderSpare(d,engine,id,item);if(spare>=1)rows.push({item,source:'local',amount:spare,maximum:Math.max(spare,Math.floor(engine.quantity(d,id,item))),own:true});
+            }
+        }
+        const settlement=rows.length?placeSettlement(engine,state,n.location).value:null;
+        writes.push({id,row:rows.length&&settlement?{category:'stall',keeper:id,settlement,location:engine.byId.get(id)?.workplace?.location??n.home?.location??n.location,day,restock:rows}:null});
+    }
+    for(const {id,row} of writes){
+        const key=['state','records',`stall:${id}`],old=d.get(...key);
+        if(row){if(JSON.stringify(old?.restock)!==JSON.stringify(row.restock)||old?.location!==row.location)d.set(key,row);}
+        else if(old)d.remove(key);
+    }
 }
 export const shopOfKeeper=(engine,keeper,state=null)=>(state?currentShops(engine,state):shopStores(engine.world)).find(s=>s.keeper===keeper)??null;
 registerMerchandiseResolver((engine,state,who)=>(shopOfKeeper(engine,who,state)??shopOfKeeper(engine,who))?.restock?.map(r=>r.item)??[]);
@@ -231,18 +314,30 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const cursor=d.cursor instanceof PatchCursor&&d.document===d.cursor.root?d.cursor:null;
  let read=cursor?householdSourceReads.get(cursor):null;
  if(!read||read.revision!==cursor?.revision||read.engine!==engine){
-  read={revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map()};
+  // 只有货架上有口粮、会开门营业的店才是口粮来源：按聚落分好，一户只看本聚落的那几家。
+  const bySettlement=new Map();
+  for(const shop of currentShops(engine,state))if(!shop.surplus&&shop.restock.some(row=>engine.byId.get(row.item)?.nutrition?.satiety>0))bySettlement.set(shop.settlement,[...bySettlement.get(shop.settlement)??[],shop]);
+  read={revision:cursor?.revision,engine,bySettlement,physical:new Map()};
   if(cursor)householdSourceReads.set(cursor,read);
  }
  const out=[];
- for(const shop of read.shops){
-  if(shop.settlement!==place||shop.keeper!==owner&&members.includes(shop.keeper)||view&&shop.keeper!==owner)continue;
+ // 只卖余货的摊没有营业时段、也不补货，不是可指望的口粮来源。
+ for(const shop of read.bySettlement.get(place)??[]){
+  if(shop.keeper!==owner&&members.includes(shop.keeper)||view&&shop.keeper!==owner)continue;
   let travel=0;
-  if(location!==shop.location){try{travel=engine.route(location,shop.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
+  if(location!==shop.location){
+   // 同一时刻同一段路各户共用一次路线（一户一户问口粮来源时）。
+   const key=`${location}|${shop.location}|${now}`;read.travel??=new Map();
+   if(!read.travel.has(key)){let minutes=null;try{minutes=engine.route(location,shop.location,'walk',now,d.document.randomSeed).minutes;}catch{}read.travel.set(key,minutes);}
+   travel=read.travel.get(key);if(travel===null)continue;
+  }
   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
   // Buying from another keeper needs their trading hours. One's own restock
   // reaches the shelf on the delivery cycle regardless of one's own hours.
-  const opening=shop.keeper===owner?{minute:now+travel,location:shop.location}:nextFoodService(engine,state,shop,now+travel);
+  // 同一时刻各户问同一家店何时开门、卖什么价：店家这边的答案各户共用一份（只看到达时刻）。
+  read.openings??=new Map();const openKey=`${shop.id}|${now+travel}`;
+  if(shop.keeper!==owner&&!read.openings.has(openKey))read.openings.set(openKey,nextFoodService(engine,state,shop,now+travel));
+  const opening=shop.keeper===owner?{minute:now+travel,location:shop.location}:read.openings.get(openKey);
   if(!opening||opening.location!==shop.location)continue;
   const ledger=state.records?.[`shop:${shop.id}`];
   let physical=null;
@@ -250,14 +345,21 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    if(!(engine.byId.get(row.item)?.nutrition?.satiety>0))continue;
    const own=shop.keeper===owner;
    if(!own){
+    // 货架上眼下一件也没有的，不必去算店家一户的自留。
+    if(!(engine.quantity(d,shop.keeper,row.item)>=1))continue;
     physical??=read.physical.get(shop.keeper);
     if(!physical){physical=householdResources(d,engine,shop.keeper,{marketSubstitution:false});read.physical.set(shop.keeper,physical);}
     const stock=physical.rows.find(r=>r.holder===shop.keeper&&r.item===row.item)?.available??0;
     if(!stock)continue;
     const at=Math.max(opening.minute,now+travel);
-    const base=regionalTradeBase(d,engine,row.item,shop.settlement,now);
-    const quote=marketQuote(d,engine,{item:row.item,location:shop.location,seller:shop.keeper,buyer:owner,business:shop,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place:shop.settlement,goods:goodsClass(engine,row.item),supply:0,demand:1}});
-    out.push({source:shop.id,seller:shop.keeper,item:row.item,at,quantity:stock,unitPrice:Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact))),priceBasis:'local-retail-ceiling'});
+    read.ceilings??=new Map();const priceKey=`${shop.id}|${row.item}`;
+    if(!read.ceilings.has(priceKey)){
+     // 上限价不看买的是哪一户（关系取规则上限、供需取稀缺上限），各户共用。
+     const base=regionalTradeBase(d,engine,row.item,shop.settlement,now);
+     const quote=marketQuote(d,engine,{item:row.item,location:shop.location,seller:shop.keeper,buyer:null,business:shop,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place:shop.settlement,goods:goodsClass(engine,row.item),supply:0,demand:1}});
+     read.ceilings.set(priceKey,Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact))));
+    }
+    out.push({source:shop.id,seller:shop.keeper,item:row.item,at,quantity:stock,unitPrice:read.ceilings.get(priceKey),priceBasis:'local-retail-ceiling'});
     continue;
    }
    // Own shelves cannot be bought from oneself. Only the next paid upstream
@@ -496,10 +598,15 @@ function localRestock(d,engine,shop,row,minute,want,ctx){
         origin:{kind:'holders',from:shop.settlement},reason:'向本聚落持货人进货'};
 }
 function restockRow(d,engine,shop,row,minute,ctx={}){
+    // 出摊卖自己的余货，不进货。
+    if(row.own)return null;
     // U13: a promoted settlement holds a market; restock amount and ceiling scale with it.
     const market=marketFactor(engine,d.get('state'),shop.settlement),want=Math.min(row.amount*market,row.maximum*market-shelf(engine,d,shop.keeper,row.item));
     if(row.source==='route')return receivedRouteStock(d,engine,shop,row,minute,Math.max(0,want),ctx);
     if(want<=0)return null;
+    // 当天午夜之前谁手上有可出让的余货（一次读完的快照）：本聚落没人有余货的，不必逐人去问（回执照写原因）。
+    if(row.source==='local'&&ctx.holders&&!(ctx.holders.get(`${shop.settlement}|${row.item}`)??[]).some(id=>id!==shop.keeper))
+        return {day:Math.floor(minute/DAY),minute,item:row.item,source:'local',wanted:want,added:0,paidCopper:0,shipments:[],reason:'本聚落没有人持有这件货的余量'};
     if(row.source==='local')return localRestock(d,engine,shop,row,minute,want,ctx);
     const from=shop.settlement;
     // Supply and base are read once per call site below; they do not change between the quotes of one binary search.
@@ -564,10 +671,10 @@ function repriceShop(d,engine,shop,minute,entries,ctx){
     d.set(['state','records',`shop_pricing:${shop.keeper}`],pricingRecord({category:'shop_pricing',shop:shop.id,keeper:shop.keeper,markup,previous:shop.markup,standard,minute,
         sourceEvent:`shop:${shop.id}:${minute}`,basis:{paidCopper:paid,referenceCopper:reference},decision:{outcome:decision.outcome,trace:decision.trace}}));
 }
-function restockShop(d,engine,shop,minute,{receiveOnly=false,onSite=false}={}){
+function restockShop(d,engine,shop,minute,{receiveOnly=false,onSite=false,holders=null}={}){
     const keeper=d.get('state','npcs',shop.keeper)??d.get('state','creatures',shop.keeper);
     if(!isEffective(engine,d,shop.keeper)||!keeper||['濒死'].includes(keeper.status))return;
-    const ctx={onSite},entries=shop.restock.map(row=>{
+    const ctx={onSite,holders},entries=shop.restock.map(row=>{
         if(!receiveOnly)return restockRow(d,engine,shop,row,minute,ctx);
         if(row.source!=='route')return null;
         if(onSite)return restockRow(d,engine,shop,row,minute,ctx);
@@ -599,7 +706,9 @@ export function advanceShops(d,engine,before,after){
     const stores=currentShops(engine,d.get('state'));if(!stores.length)return;
     assertRules(engine);
     for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++){
-        for(const shop of stores)restockShop(d,engine,shop,day*DAY,{receiveOnly:day<shop.firstDay||(day-shop.firstDay)%shop.cycleDays!==0});
+        advanceStalls(d,engine,day*DAY);
+        const holders=spareHolders(d,engine);
+        for(const shop of stores)restockShop(d,engine,shop,day*DAY,{receiveOnly:day<shop.firstDay||(day-shop.firstDay)%shop.cycleDays!==0,holders});
         // 没有铺面的经营者同一天午夜向本聚落持货人补进卖掉的货（店主由上面的周期补货负责）。
         advanceDealers(d,engine,day*DAY,{keepers:new Set(stores.map(s=>s.keeper))});
     }

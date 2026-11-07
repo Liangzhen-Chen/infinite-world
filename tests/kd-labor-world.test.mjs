@@ -37,7 +37,9 @@ test('只给 labor 属性的新职业，有人按它去劳动；劳动记录与�
  const rows=laborRows(doc);
  assert.ok(rows.length>0,'两天里应有职业驱动的劳动');
  for(const r of rows){
-  assert.ok(laborCategories(engine,doc.state,r.npc).includes(r.labor),`${r.npc} 的职业不含 ${r.labor}`);
+  // 卡 E2 依据：出售、跨聚落运输与贩运进货（sell/carry/haul）是由条件派生的买卖劳动，任何成年人都可以做（不看职业名单）；
+  // 其余劳动（采集、伐木、加工……）仍只来自职业数据。
+  assert.ok(['sell','carry','haul'].includes(r.labor)||laborCategories(engine,doc.state,r.npc).includes(r.labor),`${r.npc} 的职业不含 ${r.labor}`);
   assert.ok(doc.state.npcAutonomy.actions[r.sourceEvent],'劳动记录对应一条自主行动');
   if(r.side==='sell'){
    assert.notEqual(r.buyer,r.npc);assert.ok(r.totalCoins>0);
