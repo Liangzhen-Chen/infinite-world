@@ -420,13 +420,27 @@ test('rg: boundary tie (take equal to the whole population) loses the exact inte
 });
 
 test('rg: a breeding population of a single ppm still restarts the stock from the restart base', () => {
- // capacity 1e8 x 1 ppm = 100 units, restart base 1000: limit 1100, reserve 1000 -> one day of logistic growth gives 1001, i.e. 1 visible unit
+ // capacity 1e8 x 1 ppm = 100 units, restart base 1000: limit 1100, reserve 1000 -> one day of logistic growth gives 1100/(1+0.1*e^-0.02) = 1001.8, floor 1001,
+ // i.e. 1 visible unit. (The cloud run first gave 2: logisticStock evaluated the curve at its own start as 999.9999999999999, read that as a harvest of one
+ // unit and began the anchor one unit high; stock.mjs now returns the exact reserve at the anchor's minute, see the logisticStock test below.)
  const props={...perennial,restartUnits:1000},row={visible:0,persistence:1};
  const expected=Math.max(0,logisticStock({},'stock',{reserve:1000,capacity:1e8*1/1e6+1000,rate:perennial.ratePerDay,from:0,to:1440})-1000);
  assert.equal(expected,1);
  run(row,props,{capacity:1e8,fromDay:0,toDay:1});
  assert.equal(row.visible,expected,'the base applies as soon as any breeding population survives');
  assert.equal(row.persistence,1);
+});
+
+test('stock: logisticStock does not invent a unit at a fresh anchor, and a zero rate never grows', () => {
+ // capacity/(1+(capacity/reserve-1)) is 100.99999999999999 for 1001/101 and 999.9999999999999 for 1100/1000: the floor of that is one below the reserve
+ for(const [reserve,capacity] of [[101,1001],[1000,1100]]){
+  const row={},grown=logisticStock(row,'x',{reserve,capacity,rate:0,from:0,to:1440});
+  assert.equal(grown,reserve,`rate 0 never grows (reserve ${reserve})`);
+  assert.equal(row.growthAnchors.x.reserve,reserve,'the fresh anchor starts exactly at the reserve');
+ }
+ const row={};
+ assert.equal(logisticStock(row,'x',{reserve:1000,capacity:1100,rate:0.02,from:0,to:1440}),1001,'ideal curve 1001.8, floor 1001');
+ assert.equal(row.growthAnchors.x.reserve,1000);
 });
 
 test('rg: pending data is refused, never defaulted; every filled value has a source and a published basis', () => {

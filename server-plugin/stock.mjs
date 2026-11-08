@@ -66,7 +66,10 @@ export const stockSink=(engine,kind,item,purpose)=>accountKey(`sink:${kind}`,res
 // continuous quantity before starting the next segment. Zero cannot regrow.
 export function logisticStock(row,channel,{reserve,capacity,rate,from,to}){
     if(![reserve,capacity,rate,from,to].every(Number.isFinite)||reserve<0||capacity<0||rate<0||to<from)throw Error('无效的再生参数');
-    const at=(a,t)=>a.reserve<=0||a.capacity<=0?0:a.capacity/(1+(a.capacity/a.reserve-1)*exp(-a.rate*(t-a.minute)/1440));
+    // At the anchor's own minute the curve is exactly the anchor's reserve. Evaluating the formula there gives reserve - 1 ulp for some
+    // inputs (capacity / (1 + (capacity / reserve - 1)) is not always reserve), the floor then reads one unit less than the integer
+    // reserve, and the rebase below mistakes that for a harvest and starts the anchor one unit too high.
+    const at=(a,t)=>a.reserve<=0||a.capacity<=0?0:t===a.minute?a.reserve:a.capacity/(1+(a.capacity/a.reserve-1)*exp(-a.rate*(t-a.minute)/1440));
     let a=row.growthAnchors?.[channel]??{minute:from,reserve,capacity,rate};
     const current=at(a,from),visible=Math.floor(current);
     if(visible!==reserve||a.capacity!==capacity||a.rate!==rate){
