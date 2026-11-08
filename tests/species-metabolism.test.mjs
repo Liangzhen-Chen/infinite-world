@@ -9,6 +9,7 @@ import {planBossMigration} from '../server-plugin/boss-migration.mjs';
 import {bodyRule,bodyDrain,readBodyState} from '../server-plugin/primitives-body.mjs';
 import {householdMealPlan} from '../server-plugin/household-budget.mjs';
 import {saleableStock} from '../server-plugin/market.mjs';
+import {societyForageNeed} from '../server-plugin/wildlife-society.mjs';
 import {mouthWeight} from '../server-plugin/household-subsistence.mjs';
 import {readMixedPublication,mergeMixedPublication} from '../tools/publish-creatures-mixed.mjs';
 import {validateCreatureNature} from '../server-plugin/creature-nature.mjs';
@@ -84,4 +85,16 @@ test('公共口粮人头按饱食代谢加权：不进食者权重 0，其余为
  // 正式目录里的 nature.metabolism 是后补字段：本批骨架不含它，合并不报“正式条目冲突”。
  const publication=await readMixedPublication();
  assert.doesNotThrow(()=>mergeMixedPublication(world,publication));
+});
+
+test('精怪社会觅食需求按成员饱食代谢加权：不进食的游魂、沼火灵不占口粮',()=>{
+ const f=fixture(),doc=structuredClone(f.document),per=f.engine.rules.wildlifeAwakening.society.foragePerMember;
+ const spirits=world.monsters.filter(m=>m.nature?.spirit&&m.nature.metabolism?.satiety===0).map(m=>m.id),eaters=world.monsters.filter(m=>m.nature?.spirit&&m.nature.metabolism===undefined).map(m=>m.id);
+ assert.ok(spirits.length>0&&eaters.length>0);
+ doc.state.creatures??={};
+ doc.state.creatures.t_fast=doc.state.creatures.t_fast??{species:spirits[0]};doc.state.creatures.t_eat={species:eaters[0]};
+ const d=f.engine.primitiveDraft(doc);
+ assert.equal(societyForageNeed(d,f.engine,['t_fast']),0);
+ assert.equal(societyForageNeed(d,f.engine,['t_fast','t_eat']),per);
+ assert.equal(societyForageNeed(d,f.engine,['t_eat','t_eat']),per*2);
 });

@@ -9,6 +9,7 @@ import {createHash} from 'node:crypto';
 import {assertTrainingRitual} from './training.mjs';
 import {effectiveProficiency} from './professions.mjs';
 import {heldUnit,wearItem,produceItems} from './items.mjs';
+import {metabolismFactor} from './primitives-body.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {initialIn} from './wildlife-habitats.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings} from './holdings.mjs';
@@ -273,6 +274,8 @@ function forage(d,engine,location){
         :speciesInHabitat(engine.rules,engine.world.monsters,habitat.id).reduce((n,s)=>n+initialIn(habitat,s),0);
     return{habitat:habitat.id,total};
 }
+// 觅食需求按成员的饱食代谢加权：不进食的物种不占口粮（同 primitives-body.metabolismFactor 的唯一入口）。
+export const societyForageNeed=(d,engine,ids)=>rulesOf(engine).society.foragePerMember*ids.reduce((n,id)=>n+metabolismFactor(engine,d.get('state'),id,'satiety'),0);
 const voluntary=(a,d,id)=>sapient(a)&&alive(a,d,id)&&!a.owner&&!a.society&&a.location&&!a.companion?.following&&(!partner(a)||a.mind.settle?.location===a.location);
 export function checkSpiritSocieties(d,engine,minute,sourceEvent,only=null){
     const r=rulesOf(engine).society,result={formed:[],joined:[],wandering:[]},groups=new Map();
@@ -284,7 +287,7 @@ export function checkSpiritSocieties(d,engine,minute,sourceEvent,only=null){
         let reason=null;
         if(!home&&!food)reason='此地不可居住：不是登记的栖地或精怪之乡';
         else if(!prior&&!home&&ids.length<r.minimumMembers)reason=`自愿成员不足${r.minimumMembers}`;
-        else if(food.kind!=='home'&&food.total<r.foragePerMember*(members.length+ids.length))reason='口粮来源不足以养活全部成员';
+        else if(food.kind!=='home'&&food.total<societyForageNeed(d,engine,[...members,...ids]))reason='口粮来源不足以养活全部成员';
         if(reason){for(const id of ids)result.wandering.push({id,location,reason});continue;}
         const row=prior&&prior.status!=='已散'?clone(prior):{category:'spirit_society',id:key,location,kind:home?'home':'formed',founded:minute,sourceEvent,members:{},history:[]};
         if(prior?.status==='已散')Object.assign(row,{history:prior.history,refounded:minute});
