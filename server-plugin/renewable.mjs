@@ -23,6 +23,7 @@
 // population; a take that does is the capped branch, computed on the persistence itself, and is not grouping-independent. The double
 // keep=1−spare can be off by at most one unit in the last place: the total taken off is the floor of the total of the doubles' decimal values,
 // which can be 1 ppm below the mathematical total, and is the same for every grouping of the same takes.
+// The quantity given to accrueStock is the product PPM·loss·keep; the product itself can also be one ulp off, equally for every grouping.
 // RG-B: when wiring this in, validate on entry that the row is self-consistent (visible not above capacity × persistence / 1e6 + restartUnits);
 // from an inconsistent state different groupings of one day's takes can end differently.
 // Seasons are read at the start of each world day (calendar(day start).season) and apply to that whole day, for growth and for the

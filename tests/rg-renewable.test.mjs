@@ -189,6 +189,8 @@ test('rg: step sizes agree when harvests fall on step edges and season edges (pe
   }
   return whole;
  };
+ // The growth-rate edge at day 90 (season 0 to 1 densities differ) is covered by the perennial variant's events on days 89 and 90 and
+ // its dense per-day path; keep events on both sides of every season edge there whenever the event set changes.
  // events on block first days (7, 14, 30, 60, 90, 180), on block last days (69 ends a 7-day block, 89 and 179 end season blocks) and two on one day
  const perennialEvents=[harvest(7,'cut_shoots',200,0.4),harvest(14,'pull_whole',100,0),harvest(30,'pick_leaf',60,1),harvest(30,'pull_whole',40,0.2,'gatherer-2'),harvest(60,'cut_shoots',150,0.1),harvest(69,'pick_leaf',25,0),harvest(89,'pull_whole',30,0),harvest(90,'cut_shoots',100,0.5),harvest(179,'pick_leaf',20,0),harvest(180,'cut_shoots',40,0)];
  const whole=agree({...perennial,seasonDensity:density},perennialEvents,'perennial');
@@ -315,7 +317,8 @@ test('rg: pending data is refused, never defaulted; every filled value has a sou
  const span=baseRate({maturityDays:100}),curve={};
  const at95=logisticStock(curve,'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:100*1440});
  assert.equal(at95,950000,'5% to 95% in maturityDays');
- assert.ok(logisticStock({},'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:50*1440})<900000,'halfway through maturity the stock is not yet at 95%');
+ // half of the maturity time from 5%: the logistic is at exactly half of capacity (K/2)
+ assert.equal(logisticStock({},'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:50*1440}),500000,'halfway through maturity the stock is at K/2');
  assert.throws(()=>baseRate(data.species.find(s=>s.id==='herb.generic')),/species needs ratePerDay or maturityDays/);
  assert.throws(()=>baseRate({ratePerDay:0.1,maturityDays:10}),/ratePerDay and maturityDays are alternatives: give only one/);
 });
