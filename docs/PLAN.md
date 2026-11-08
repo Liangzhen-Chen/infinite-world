@@ -1299,6 +1299,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - ledger-stock 剩“逐日推进对账”一条，失败点在 checkCrafts 的木炭配方（产出 item_wood），与 c-fuel3 同败，归旧败 (4)。
   - 完整检查：`run b1-c2 12 --all`，2026-11-07T23:33:59Z 起，pid 1220949，hash 8b130481。跑完后由负责人再起 `run b1-b1 12 --all` 作基线。
 
+- 11-08 overfit-guard #2/#4 旧败定因（原语与基础设施负责人，只读）：环境问题——作业以 runner 运行而 .git 由 ubuntu 建，git 报 dubious ownership（测试 :70 得 128）；另快照 master 即同步树本身，#2 即便能跑也恒真。
+  - 门禁改动（本地，未部署）：runjob.sh 作业级 safe.directory；sync.sh 上传真实 master 的 world/actions/*.json，apply 建 master 分支、snapshot 为同步树，两侧打印并比对 master tree 哈希；deploy.sh 拒 CR 字节、预检 git≥2.31；VERIFY-PLAN round 2.0 规范化、新增 14–20 项（含恶意 .master 应 DENIED）；内容哈希范围不变。
+  - 审查：r1-df3475be07c6（gate-r1e-sonnet，approve）→ 补 N1/N2/N5/N6、主会话修 sync.sh:30 stat 格式 → r2-1c509170cec1（gate-r2e-sonnet，approve），最终指纹 1c509170cec133ed…。已知局限（不阻断）：master 文件名含空格或 100755 会让 tree 比对响亮误报；put 不加锁（既有）。
+  - 待亮圳批准部署（deploy.sh update）；部署后：重同步一棵树跑 overfit-guard，并按 VERIFY-PLAN 植入复制同义词确认 #2 能抓到。CRLF（npc-depth-yp）只出方案未实施：先定位它哈希的原始文件。
+
 ## Claude API 开放式试玩者（PT-AI，常设路线项；主会话负责定期检查、主动推进）
 - 原约定（已查到）：10-31 会话 a099826b，用户批准，存在 claude-api-budget 记忆和本文件“S5 收口后：接入 Claude API”一条。
   - 每月 200 美元，其中约 120 美元给 Sonnet 5.5 扮演想象力足的玩家，专试离谱、自由的玩法，找自由度受阻和不现实结果，再转成规律卡。
