@@ -1250,6 +1250,12 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 真正属于用户的决定（花钱、玩法/内容方向、存档与正式部署到用户环境）：单列一次通知后安静等待，不因 Stop hook 反复只回“等批准”；同时继续其余授权工作。
 - 11-08 执行：探针第三版、RG-A 第三版恢复修订；门禁 1c509170 已部署到腾讯云（r1 df3475be approve、r2 1c509170 approve 绑定最终指纹；部署前服务器脚本与批准快照 429bbdb0e9d4 逐字节一致，原版另备份于服务器 ~/gate-bak-429bbdb0e9d4；恢复：tc_admin 入口保留，把快照脚本经 deploy.sh 同法推回；未动 /work 数据、未改密钥与权限，部署时无运行中作业）。
 
+### 11-08 服务器与门禁状态
+- 清理（亮圳批准，仅限 28 个旧副本，非长期授权）：diag-wood、diag-wood-axe、diag-wood-base、diag-wood-nosite、e2s-bis、e2s-f9..f13、e2s-n2、e2s-p2、e2s-base、e2s-new、fuel-tc3、fuel-tc9、re-base、re-hang、c-fuel、c-int、subs-m1、subs-r7、subs-v-after、subs-v-before、rg-c1、b1-p1、b1-p2、b1-pb2。结果 1795 个文件先备份到 F:/dnd-tmp/server-archive-1108/results.tgz（清单 server-manifest.txt，逐一核对）；逐个复核后经门禁 rm 删除，磁盘 99%→46%（剩 26G）。以后删除仍需逐次批准。
+- 门禁部署后验证（VERIFY-PLAN 14–20）：14、15、17、18、20（静态）通过；16 的无 master 分支未测；19 发现 sync.sh 缺陷：本机 core.autocrlf=true，git archive 把 master json 转成 CRLF，与服务端 tree 不符而 exit 5。修法：sync.sh 在 archive 前用 GIT_CONFIG_* 强制 core.autocrlf=false。并入下一次门禁改动（连同 npc-depth-yp CRLF C+A、review-submit.sh 相对路径找不到 manifest.py），两轮审查后部署；在此之前上传继续用 sync-deployed.sh。plant-a-synonym 与 overfit-guard 重跑待该改动部署后做。
+- 探针：v3（b1-p3/b1-pb3）第 1 轮 changes（4 条必改）→ 复盘：手工重写测试逻辑导致每轮新差距，已报李白 → v4（CAND 86b08923 / B1BASE a5026498，b1-p4/b1-pb4）判定改 deepStrictEqual、N≤30 逐日扫描、office/lifecycle 照抄测试断言、失败 exitCode=1；第 1 轮审查中。
+- RG-A 第三版 8d605045（2·ln19、繁殖种群分母、无事件整段对照测试），重新上传中。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
