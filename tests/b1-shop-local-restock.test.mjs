@@ -22,6 +22,30 @@ function setup(purse,counter){
  if(counter>0){const d=engine.primitiveDraft(doc);depositCounter(d,engine,{owner:keeper,seat:doc.state.npcs[keeper].location,business:'shop_hw_forge',amount:counter,eventId:'b1-counter',writer:'money'});return {engine,doc:d.document};}
  return {engine,doc};
 }
+// 同一轮连续两笔进货（预算按钱袋现有现金封顶的区分用例）：只改测试运行时克隆出来的世界文档——该补货行 amount 提到 2，两位本聚落持货人各持 1 把铁镰（每个持货人至多一笔），
+// 店主只有钱袋 14（无柜台）。第一笔约 10 文从钱袋付出后钱袋只剩约 4，而店主视图整轮固定（钱袋仍是 14）：
+// 有封顶（purseNow）时第二笔预算不足、不成交；没有封顶时第二笔按旧视图放行、付款时钱袋不够而抛错（变异 3 应被它杀掉）。
+function setupTwoHolders(purseCoins){
+ const w=structuredClone(world);
+ for(const n of w.npcs){delete n.schedule;delete n.tier;}
+ for(const place of w.locations)place.minerals=[];
+ w.rules.economy.shops.additionalRestock.shop_hw_forge.find(r=>r.item==='item_sickle').amount=2;
+ const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'trade-test');
+ for(const id of [holder,'npc_hw_luowei'])doc.state.npcs[id].inventory.item_sickle={quality:'木',durability:100,weight:0.5,quantity:1};
+ doc.state.npcs[keeper].coins=purseCoins;resyncBooks(engine,doc);
+ return {engine,doc};
+}
+test('同一轮连续两笔进货：第二笔的预算反映第一笔已从钱袋付出的钱，不抛错、账目守恒、只成交第一笔',async()=>{
+ const {engine,doc}=setupTwoHolders(14),before=cashTotal(doc);
+ const out=await engine.reduce(doc,{tool:'world_time',args:{minutes:DEPART-doc.state.minute},eventId:'wait'}),after=applyPatches(doc,out.patches);
+ assert.equal(cashTotal(after),before,'全世界现金前后相等');
+ const bought=after.state.records['shop:shop_hw_forge']?.entries?.find(e=>e.item==='item_sickle'&&e.added);
+ assert.ok(bought,'第一笔应当成交');
+ assert.equal(bought.deals.length,1,'钱袋付出第一笔之后，第二笔预算不足，不成交');
+ assert.ok(after.state.npcs[keeper].coins>=0);
+ const result=reconcile(engine,after);
+ assert.deepEqual(result.mismatches,[]);assert.deepEqual(result.lots,[]);assert.deepEqual(result.audit,[]);
+});
 const cashTotal=doc=>{
  const s=doc.state,counters=Object.values(s.records??{}).filter(r=>r.category==='money_account'&&r.purpose==='counter').reduce((n,r)=>n+r.coins,0);
  return s.player.coins+Object.values(s.npcs).reduce((n,p)=>n+p.coins,0)+Object.values(s.settlements).reduce((n,x)=>n+x.treasury,0)+Object.values(s.workshopFunds??{}).reduce((n,c)=>n+c,0)+counters;

@@ -226,8 +226,10 @@ export function depositCounter(d,engine,{owner,seat,business,amount,eventId,writ
 export function payCounterThenPurse(d,engine,{owner,to,amount,writer,eventId}){
     if(!Number.isSafeInteger(amount)||amount<1)throw Error('Payment requires a positive whole amount');
     const row=dedicatedCoinAccount(d.get('state'),owner,'counter'),fromCounter=row?Math.min(counterCash(d,owner),amount):0,fromPurse=amount-fromCounter;
-    // Pre-check against what moveCoins will really accept: the smaller of the legacy coins and the ledger purse account.
-    const legacyCoins=d.get(...engine.actorPath(owner),'coins')??0,purseCoins=Math.min(legacyCoins,d.get('ledger','accounts',purse(engine,owner))??legacyCoins);
+    // Pre-check against the legacy coins only: the legacy field is the authority while both books run (ledger.mjs transfer books a shortfall of the ledger account as drift and
+    // never refuses a legacy settlement), and mirrorPartyCoins below is what really throws Invalid party balance. Checking the ledger balance as well would turn a tolerated drift
+    // into a refused payment while the shop budget (which reads the legacy coins) still allows it, and abort the whole advance.
+    const purseCoins=d.get(...engine.actorPath(owner),'coins')??0;
     if(fromPurse>purseCoins)throw Error(`Payment ${amount} exceeds the counter (${fromCounter}) plus the purse (${purseCoins})`);
     if(fromCounter)moveCoins(d,{from:row.account,to,amount:fromCounter,writer,eventId});
     if(fromPurse){moveCoins(d,{from:purse(engine,owner),to,amount:fromPurse,writer,eventId});mirrorPartyCoins(d,engine,owner,-fromPurse,eventId,writer);}
