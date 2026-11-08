@@ -18,6 +18,13 @@
 // population destroyed by a take is taken / (capacity × persistence); species whose unit weight differs from their breeding unit
 // would need a per-species conversion (not in the data yet).
 // Atomic: settle works on a copy of the row and writes it back only when every day succeeded, so a throw leaves the row untouched.
+// Additivity of the damage: for one method and one spare the loss from takes that stay below the breeding population is strictly additive
+// (floor of the exact rational total, however the takes are grouped). That holds only while no single take reaches the whole breeding
+// population; a take that does is the capped branch, computed on the persistence itself, and is not grouping-independent. The double
+// keep=1−spare can be off by at most one unit in the last place, which shifts the exact total by far less than 1 ppm per take and is the
+// same for every grouping of the same takes.
+// Seasons are read at the start of each world day (calendar(day start).season) and apply to that whole day, for growth and for the
+// seed-season test of a harvest on that day.
 // Write-back replaces the row's keys with the copy's, including nested objects (growthAnchors, accruals): callers must not cache references
 // to the row's sub-objects across a settle call (re-read them from the row). A field-by-field deep write-back would keep references but
 // copies every nested object a second time on every call and has to track which fields exist; the row is always fetched from the state
@@ -34,8 +41,10 @@ const num=(v,label)=>{if(!Number.isFinite(v))fail(`${label} is missing or pendin
 
 // Base growth rate per day from the species record.
 export function baseRate(props){
-    if(Number.isFinite(props?.ratePerDay)&&props.ratePerDay>0)return props.ratePerDay;
-    if(Number.isFinite(props?.maturityDays)&&props.maturityDays>0)return LOGISTIC_SPAN/props.maturityDays;
+    const hasRate=props?.ratePerDay!==null&&props?.ratePerDay!==undefined,hasSpan=props?.maturityDays!==null&&props?.maturityDays!==undefined;
+    if(hasRate&&hasSpan)fail('ratePerDay and maturityDays are alternatives: give only one');
+    if(hasRate&&Number.isFinite(props.ratePerDay)&&props.ratePerDay>0)return props.ratePerDay;
+    if(hasSpan&&Number.isFinite(props.maturityDays)&&props.maturityDays>0)return LOGISTIC_SPAN/props.maturityDays;
     return fail('species needs ratePerDay or maturityDays');
 }
 // Capacity in stock units = area × standing stock per km².
@@ -64,12 +73,13 @@ function applyHarvest(row,ev,ctx){
     if(typeof spareOf!=='function')fail('a spare(method, event) function is required (skill to spared share is pending)');
     const spare=spareOf(method,ev);   // share of the patch the gatherer spares
     if(!Number.isFinite(spare)||spare<0||spare>1)fail('spare must be within [0,1]');
+    // the botany of this method on this species is validated even when nothing stands to be taken (same rule as spare)
+    const loss=breedingLoss(props,method,calendar(ev.day*MINUTES).season);
     const before=row.visible,taken=Math.min(ev.quantity,before);
     if(!taken)return 0;
     // The share of the breeding population destroyed is the taken amount over that population (the plants that can seed or
     // resprout = capacity × persistence), not over the visible stock: a patch cut to nothing still has its roots.
-    const population=ctx.capacity*(row.persistence??PPM)/PPM,keep=1-spare,loss=breedingLoss(props,method,calendar(ev.day*MINUTES).season);
-    const persistence=row.persistence??PPM;
+    const persistence=row.persistence??PPM,population=ctx.capacity*persistence/PPM,keep=1-spare;
     let lost;
     if(taken<population){
         // persistence × (taken / (capacity × persistence / PPM)) = PPM × taken / capacity: persistence cancels, so the exact loss per take
@@ -102,6 +112,7 @@ export function settle(target,{props,methods={},capacity,calendar,fromDay,toDay,
     const rate0=baseRate(props),restart=restartOf(props),density=props.seasonDensity,ctx={props,methods,calendar,spareOf:spare,capacity};
     if(!Array.isArray(density))fail('seasonDensity is missing or pending');
     for(const ev of harvests)if(!Number.isSafeInteger(ev.day)||ev.day<fromDay||ev.day>=toDay)fail(`harvest day ${ev.day} is outside [${fromDay},${toDay})`);
+    if(row.persistence!==undefined&&(!Number.isSafeInteger(row.persistence)||row.persistence<0||row.persistence>PPM))fail('row.persistence must be an integer within [0,1e6] ppm');
     row.persistence??=PPM;
     const events=harvests.map((ev,i)=>({ev,i})).sort((a,b)=>a.ev.day-b.ev.day||a.i-b.i);
     const days=[],ledger=[];let regrownTotal=0,takenTotal=0,next=0;

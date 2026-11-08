@@ -26,7 +26,7 @@ const harvest=(day,method,quantity,skill=0,actor='gatherer-1')=>({day,method,qua
 
 test('rg: seasons are the world calendar\'s, not a constant in the module', () => {
  assert.equal(seasonOfDay(20),0);assert.equal(seasonOfDay(100),1);assert.equal(seasonOfDay(200),2);assert.equal(seasonOfDay(300),3);
- assert.throws(()=>settle(fresh(),{props:perennial,methods,capacity:K,fromDay:0,toDay:1}),/calendar/);
+ assert.throws(()=>settle(fresh(),{props:perennial,methods,capacity:K,fromDay:0,toDay:1}),/a world calendar function is required/);
  // a different calendar moves the seed season with the same species data
  const late=minute=>({season:Math.floor(minute/1440)>=10?2:0});
  const early=fresh();settle(early,{props:annual,methods,capacity:K,calendar:late,spare,fromDay:0,toDay:11,harvests:[harvest(5,'cut_shoots',500,0)]});
@@ -47,14 +47,14 @@ test('rg: a world day is the only step — 1, 7 and 30 day steps give identical 
    const out=run(row,props,{harvests:inside(from,to),fromDay:from,toDay:to});
    days.push(...out.days);regrown+=out.regrown;taken+=out.taken;
   }
-  assert.deepEqual(row,whole,`step ${step}: row state`);
-  assert.deepEqual(days,all.days,`step ${step}: per-day series`);
+  assert.deepStrictEqual(row,whole,`step ${step}: row state`);
+  assert.deepStrictEqual(days,all.days,`step ${step}: per-day series`);
   assert.equal(regrown,all.regrown);assert.equal(taken,all.taken);
  }
  assert.equal(all.taken,400+300+50+200+100,'every harvest found stock to take');
  assert.ok(all.regrown>0);
  // replay: the same inputs always give the same state (no hidden randomness)
- const again=fresh();assert.deepEqual(run(again,props,{harvests:events,fromDay:0,toDay:180}).days,all.days);assert.deepEqual(again,whole);
+ const again=fresh();assert.deepStrictEqual(run(again,props,{harvests:events,fromDay:0,toDay:180}).days,all.days);assert.deepStrictEqual(again,whole);
 });
 
 test('rg: stripped patch recovers or not according to how it regrows and what the method destroys', () => {
@@ -88,15 +88,15 @@ test('rg: sparing breeding plants (through the caller\'s spare function) leaves 
  assert.ok(results[0].after<results[1].after&&results[1].after<results[2].after,JSON.stringify(results));
  assert.ok(results[0].visible<results[2].visible,JSON.stringify(results));
  // the module has no skill formula: without spare() a harvest fails loudly, and a spare outside [0,1] is refused
- assert.throws(()=>settle(fresh(),{props:perennial,methods,capacity:K,calendar,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',10,1)]}),/spare/);
- for(const bad of [-0.1,1.1,NaN])assert.throws(()=>run(fresh(),perennial,{fromDay:0,toDay:1,spare:()=>bad,harvests:[harvest(0,'pick_leaf',10,1)]}),/spare must be within/);
+ assert.throws(()=>settle(fresh(),{props:perennial,methods,capacity:K,calendar,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',10,1)]}),/a spare[(]method, event[)] function is required/);
+ for(const bad of [-0.1,1.1,NaN])assert.throws(()=>run(fresh(),perennial,{fromDay:0,toDay:1,spare:()=>bad,harvests:[harvest(0,'pick_leaf',10,1)]}),/spare must be within .0,1./);
  // a full-spare gatherer destroys nothing even when pulling plants out by the root
  const all=fresh();run(all,perennial,{fromDay:0,toDay:1,spare:()=>1,harvests:[harvest(0,'pull_whole',600,1)]});assert.equal(all.persistence,1e6);
 });
 
 test('rg: loud failures — harvest outside the interval, missing seasonDensity, unknown effect', () => {
- assert.throws(()=>run(fresh(),perennial,{fromDay:5,toDay:10,harvests:[harvest(4,'pick_leaf',1,0)]}),/outside \[5,10\)/);
- assert.throws(()=>run(fresh(),perennial,{fromDay:5,toDay:10,harvests:[harvest(10,'pick_leaf',1,0)]}),/outside \[5,10\)/);
+ assert.throws(()=>run(fresh(),perennial,{fromDay:5,toDay:10,harvests:[harvest(4,'pick_leaf',1,0)]}),/harvest day 4 is outside [[]5,10[)]/);
+ assert.throws(()=>run(fresh(),perennial,{fromDay:5,toDay:10,harvests:[harvest(10,'pick_leaf',1,0)]}),/harvest day 10 is outside [[]5,10[)]/);
  assert.throws(()=>run(fresh(),{...perennial,seasonDensity:null},{fromDay:0,toDay:1}),/seasonDensity is missing or pending/);
  const {seasonDensity,...noDensity}=perennial;
  assert.throws(()=>run(fresh(),noDensity,{fromDay:0,toDay:1}),/seasonDensity is missing or pending/);
@@ -104,8 +104,8 @@ test('rg: loud failures — harvest outside the interval, missing seasonDensity,
  assert.throws(()=>run(fresh(),{...perennial,seasonDensity:[1,1,1,-1]},{fromDay:270,toDay:271}),/no valid entry for season 3/);
  const odd={...methods,odd:{kills:'burn',takesSeed:false}};
  assert.throws(()=>settle(fresh(),{props:perennial,methods:odd,capacity:K,calendar,spare,fromDay:0,toDay:1,harvests:[harvest(0,'odd',10,0)]}),/unknown harvest effect burn/);
- assert.throws(()=>breedingLoss(perennial,{kills:'burn'},0),/unknown harvest effect/);
- assert.throws(()=>breedingLoss({regrowFrom:'seed',seedSeason:null},methods.cut_shoots,0),/seedSeason/);
+ assert.throws(()=>breedingLoss(perennial,{kills:'burn'},0),/unknown harvest effect burn/);
+ assert.throws(()=>breedingLoss({regrowFrom:'seed',seedSeason:null},methods.cut_shoots,0),/seedSeason is missing or pending/);
 });
 
 test('rg: damage is the share of the breeding population, not of the visible stock', () => {
@@ -141,7 +141,7 @@ test('rg: many tiny takes accumulate exactly (no per-take rounding up to a ppm)'
  const split=fresh();run(split,perennial,{capacity:1e8,fromDay:0,toDay:1,harvests:takes(100)});
  const rest=JSON.parse(JSON.stringify(split));run(rest,perennial,{capacity:1e8,fromDay:1,toDay:2,harvests:takes(150).map(ev=>({...ev,day:1}))});
  const one=fresh();run(one,perennial,{capacity:1e8,fromDay:0,toDay:2,harvests:[...takes(100),...takes(150).map(ev=>({...ev,day:1}))]});
- assert.deepEqual(rest,one,'grouping the same takes over the same days does not change the state');
+ assert.deepStrictEqual(rest,one,'grouping the same takes over the same days does not change the state');
 });
 
 test('rg: grouping the same takes on one day gives bit-identical state (damage is strictly additive)', () => {
@@ -153,7 +153,7 @@ test('rg: grouping the same takes on one day gives bit-identical state (damage i
    const row=fresh(),harvests=groups.map(quantity=>harvest(0,'pull_whole',quantity,skill));
    run(row,perennial,{capacity,fromDay:0,toDay:1,harvests});return row;
   });
-  rows.forEach((row,i)=>assert.deepEqual(row,rows[0],`capacity ${capacity}, skill ${skill}: grouping ${JSON.stringify(groupings[i])}`));
+  rows.forEach((row,i)=>assert.deepStrictEqual(row,rows[0],`capacity ${capacity}, skill ${skill}: grouping ${JSON.stringify(groupings[i])}`));
   assert.ok(rows[0].persistence<1e6&&rows[0].persistence>0);
  }
  // the exact total, not a tolerance: 50 of 1000 at no spare is 50000 ppm
@@ -166,15 +166,37 @@ test('rg: grouping the same takes on one day gives bit-identical state (damage i
  assert.equal(reach.persistence,0);
 });
 
+test('rg: botany and entry state are validated even when nothing stands to be taken', () => {
+ const odd={...methods,odd:{kills:'burn',takesSeed:false}};
+ assert.throws(()=>settle({visible:0},{props:perennial,methods:odd,capacity:K,calendar,spare,fromDay:0,toDay:1,harvests:[harvest(0,'odd',10,0)]}),/unknown harvest effect burn/);
+ const seeded={...annual,seedSeason:null};
+ assert.throws(()=>run({visible:0},seeded,{fromDay:0,toDay:1,harvests:[harvest(0,'cut_shoots',10,0)]}),/seedSeason is missing or pending/);
+ assert.throws(()=>run({visible:0},{...perennial,regrowFrom:'spores'},{fromDay:0,toDay:1,harvests:[harvest(0,'cut_shoots',10,0)]}),/species regrowFrom must be root or seed/);
+ for(const bad of [2e6,-1,0.5,NaN])assert.throws(()=>run({visible:5,persistence:bad},perennial,{fromDay:0,toDay:1}),/row[.]persistence must be an integer within/);
+ for(const ok of [0,1,999999,1e6])assert.doesNotThrow(()=>run({visible:5,persistence:ok},perennial,{fromDay:0,toDay:1}));
+});
+
+test('rg: step sizes agree when harvests fall exactly on step boundaries', () => {
+ const props={...perennial,seasonDensity:[1,1,0.5,0.25]};
+ const events=[harvest(7,'cut_shoots',200,0.4),harvest(14,'pull_whole',100,0),harvest(30,'pick_leaf',60,1),harvest(30,'pull_whole',40,0.2,'gatherer-2'),harvest(60,'cut_shoots',150,0.1),harvest(89,'pull_whole',30,0),harvest(90,'cut_shoots',100,0.5)];
+ const whole=fresh();run(whole,props,{harvests:events,fromDay:0,toDay:120});
+ for(const step of [1,7,30,45]){
+  let row=fresh();
+  for(let from=0;from<120;from+=step){const to=Math.min(120,from+step);row=JSON.parse(JSON.stringify(row));run(row,props,{harvests:events.filter(ev=>ev.day>=from&&ev.day<to),fromDay:from,toDay:to});}
+  assert.deepStrictEqual(row,whole,`step ${step}`);
+ }
+ assert.ok(whole.persistence<1e6&&whole.visible>0);
+});
+
 test('rg: spare is checked even when nothing is taken, and a failing settle leaves the row untouched', () => {
- assert.throws(()=>settle({visible:0},{props:perennial,methods,capacity:K,calendar,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/spare/);
- assert.throws(()=>run({visible:0},perennial,{spare:()=>2,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/spare must be within/);
+ assert.throws(()=>settle({visible:0},{props:perennial,methods,capacity:K,calendar,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/a spare[(]method, event[)] function is required/);
+ assert.throws(()=>run({visible:0},perennial,{spare:()=>2,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/spare must be within .0,1./);
  // the failure comes on day 3, after three days of growth have been computed
  const row=fresh(100),before=structuredClone(row);
- assert.throws(()=>run(row,perennial,{fromDay:0,toDay:5,harvests:[harvest(0,'pick_leaf',10,0),harvest(3,'no-such-method',1,0)]}),/unknown harvest method/);
- assert.deepEqual(row,before,'row is exactly as before the failed call');
+ assert.throws(()=>run(row,perennial,{fromDay:0,toDay:5,harvests:[harvest(0,'pick_leaf',10,0),harvest(3,'no-such-method',1,0)]}),/unknown harvest method no-such-method/);
+ assert.deepStrictEqual(row,before,'row is exactly as before the failed call');
  const noDays=fresh(100);assert.throws(()=>run(noDays,{...perennial,seasonDensity:[1,1,1]},{fromDay:260,toDay:300}),/no valid entry for season 3/);
- assert.deepEqual(noDays,fresh(100));
+ assert.deepStrictEqual(noDays,fresh(100));
 });
 
 test('rg: with no harvests the daily settlement equals one logisticStock call over the whole span', () => {
@@ -239,7 +261,7 @@ test('rg: pending data is refused, never defaulted; every filled value has a sou
  const rules=JSON.parse(read('world/meta/rules.json')).forestWater,yields=JSON.parse(read('world/rules/tables/balance/yields.json')).params;
  assert.match(data.pending.spare,/spare/);
  for(const [id,m] of Object.entries(methods)){
-  assert.deepEqual(Object.keys(m).sort(),['basis','calibration','kills','source','takesSeed'],`${id}: only fields the module reads, no unsourced cap`);
+  assert.deepStrictEqual(Object.keys(m).sort(),['basis','calibration','kills','source','takesSeed'],`${id}: only fields the module reads, no unsourced cap`);
   assert.ok(['root','shoot','none'].includes(m.kills)&&typeof m.takesSeed==='boolean'&&m.source&&m.basis,id);
  }
  for(const s of data.species){
@@ -249,7 +271,7 @@ test('rg: pending data is refused, never defaulted; every filled value has a sou
   const missing=['standingPerKm2','restartUnits','regrowFrom','seasonDensity'].filter(f=>s[f]===null||s[f]===undefined);
   if(s.ratePerDay==null&&s.maturityDays==null)missing.unshift('ratePerDay','maturityDays');
   if(s.regrowFrom==='seed'&&s.seedSeason==null)missing.push('seedSeason');
-  assert.deepEqual([...s.pending].sort(),[...missing].sort(),`${s.id}: pending is exactly the unknown required fields`);
+  assert.deepStrictEqual([...s.pending].sort(),[...missing].sort(),`${s.id}: pending is exactly the unknown required fields`);
   if(s.regrowFrom!=='seed')assert.equal('seedSeason' in s,false,`${s.id}: seedSeason only for seed-regenerated species`);
   for(const field of ['ratePerDay','maturityDays','standingPerKm2','restartUnits','regrowFrom','seedSeason','seasonDensity']){
    if(s[field]!==null&&s[field]!==undefined)assert.ok(s.sources?.[field],`${s.id}.${field} has a stated source`);
@@ -259,30 +281,35 @@ test('rg: pending data is refused, never defaulted; every filled value has a sou
    const kind=s.id.split('.')[1];
    assert.equal(s.ratePerDay,rules.forest.species[kind].growthPerDay,`${s.id} rate comes from the published forest rule`);
    assert.equal(s.standingPerKm2,rules.forest.stockPerKm2);
-   assert.deepEqual(s.seasonDensity,[1,1,1,1],`${s.id}: forest-water applies one rate all year`);
-   assert.deepEqual(s.pending,['restartUnits']);
+   assert.deepStrictEqual(s.seasonDensity,[1,1,1,1],`${s.id}: forest-water applies one rate all year`);
+   assert.deepStrictEqual(s.pending,['restartUnits']);
   }
   const tableId=s.sources?.seasonDensity?.match(/herb[.][a-z]+[.]seasonDensity/)?.[0];
-  if(tableId)assert.deepEqual(s.seasonDensity,yields.find(p=>p.id===tableId)?.value,`${s.id} density equals the table entry ${tableId}`);
+  if(tableId)assert.deepStrictEqual(s.seasonDensity,yields.find(p=>p.id===tableId)?.value,`${s.id} density equals the table entry ${tableId}`);
   // the module refuses every real species until its pending fields are filled
-  assert.throws(()=>settle(fresh(),{props:s,methods,capacity:K,calendar,spare,fromDay:0,toDay:1}),/ratePerDay or maturityDays|restartUnits|seasonDensity|standingPerKm2|regrowFrom/,s.id);
-  if(s.standingPerKm2===null)assert.throws(()=>capacityOf(s,1),/standingPerKm2/);
+  // settle checks the rate first, then the restart base: the message names the first pending field
+  const first=s.ratePerDay==null&&s.maturityDays==null?'species needs ratePerDay or maturityDays':'restartUnits is missing or pending';
+  assert.throws(()=>settle(fresh(),{props:s,methods,capacity:K,calendar,spare,fromDay:0,toDay:1}),new RegExp(first),s.id);
+  assert.equal(s.ratePerDay!=null&&s.maturityDays!=null,false,`${s.id}: ratePerDay and maturityDays are alternatives`);
+  if(s.standingPerKm2===null)assert.throws(()=>capacityOf(s,1),/standingPerKm2 is missing or pending/);
  }
- assert.deepEqual(data.species.filter(s=>s.pending.length===0).map(s=>s.id),[],'no species is runnable yet');
- assert.deepEqual(data.species.filter(s=>s.seasonDensity&&!s.id.startsWith('forest.')).map(s=>s.id).sort(),['herb.honeysuckle','herb.plantain']);
+ assert.deepStrictEqual(data.species.filter(s=>s.pending.length===0).map(s=>s.id),[],'no species is runnable yet');
+ assert.deepStrictEqual(data.species.filter(s=>s.seasonDensity&&!s.id.startsWith('forest.')).map(s=>s.id).sort(),['herb.honeysuckle','herb.plantain']);
  assert.equal(capacityOf(data.species.find(s=>s.id==='forest.broadleaf'),2),100000);
- assert.ok(Math.abs(baseRate({maturityDays:100})-LOGISTIC_SPAN/100)<1e-15);
+ assert.equal(baseRate({maturityDays:100}),LOGISTIC_SPAN/100);
  // maturityDays is the logistic 5%→95% time: starting at 5% of capacity, after maturityDays at baseRate the stock is at 95% (derived, not fitted)
  const span=baseRate({maturityDays:100}),curve={};
  const at95=logisticStock(curve,'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:100*1440});
- assert.ok(Math.abs(at95-950000)<=1,`5% to 95% in maturityDays: ${at95}`);
+ // the exact curve value is 950000; the integer result is the floor of a double within 1e-9 of it, hence 949999 or 950000
+ assert.ok(at95===950000||at95===949999,`5% to 95% in maturityDays: ${at95}`);
  assert.ok(logisticStock({},'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:50*1440})<900000,'halfway through maturity the stock is not yet at 95%');
- assert.throws(()=>baseRate(data.species.find(s=>s.id==='herb.generic')),/ratePerDay or maturityDays/);
+ assert.throws(()=>baseRate(data.species.find(s=>s.id==='herb.generic')),/species needs ratePerDay or maturityDays/);
+ assert.throws(()=>baseRate({ratePerDay:0.1,maturityDays:10}),/ratePerDay and maturityDays are alternatives: give only one/);
 });
 
 test('rg: the module source names no resource, item, site or species, no calendar constant and no defaults', () => {
  const source=read('server-plugin/renewable.mjs').split(String.fromCharCode(10)).map(line=>line.split('//')[0]).join(String.fromCharCode(10));
- assert.deepEqual(source.match(/(?:^|[^A-Za-z0-9_])(?:item|loc|bld|npc|skill|site|res)_[a-z0-9_]+/g)??[],[]);
+ assert.deepStrictEqual(source.match(/(?:^|[^A-Za-z0-9_])(?:item|loc|bld|npc|skill|site|res)_[a-z0-9_]+/g)??[],[]);
  const names=[...data.species.flatMap(s=>[s.id,...s.items]),...Object.keys(methods)];
  for(const name of names){
   const word=new RegExp('(^|[^A-Za-z0-9_.])'+name.split('.').join('[.]')+'($|[^A-Za-z0-9_])');
