@@ -1314,6 +1314,14 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 新增测试：步长 1/7/30 天一致、采空可否恢复、技能差异、结种季前采割、同种子复演、账目守恒、源码无单点特判。
 - RG-A 进展（t-rg，F:/dnd-wt/RG）：b143d273 → 0e599abb（季节改取世界日历、删 noise/immigration、restartUnits 待定）→ 6f669f39（删 leaveCap、spare 由调用方传入、seasonDensity 必填）。审查：rg-c1 第 1 轮 changes（leaveCap 拍系数、密度静默取 1）；rg-c2 第 1 轮 approve → 第 2 轮 changes（ln19 少乘 2，速率偏快一倍；损伤比例以可见存量为分母，近空时补拔几株即判整片根绝）。两次送审未过，按两次失败即停，已报亮圳待定。上传暂用 F:/dnd-tools/cloud/sync-deployed.sh（服务器门禁未部署新版前，新版 sync.sh 上传 .master 会被拒）。
 
+## 11-08 GX 受阻资源经职业 NPC 进入家户（世界内容卡；首个用例：盐；负责人 abddc2e7c16bf507e）
+- 世界行为目标：被机关/条件挡住的资源，由有相应技能的职业 NPC 按营生、受雇、委托意图解开或开采，经市场/分配进入家户；家户用度短缺天数随之下降。规律不写任何具体资源 id。
+- 现状（只读）：NPC 解机关后采集的路径已存在——sites.mjs:368-390 gatesOf/gateTerms（d20+属性、工具/材料）；npc-labor.mjs:104-113 把带机关资源列为 naturalSources，:284-285 按 货值×成功率 对比 工时+材料，:642 siteUnlock→siteTake；extraction.mjs:160 mineEmployment（任务字面量“矿脉开采”）、:237-258 矿脉再生；market.mjs:159 按短缺日数生需求。5 个盐点中 3 个资源级 requires 是线索 id，入口机关只有属性检定、无技能字段。
+- 先验证再修：盐没人采，可能是货值×成功率不划算或线索门挡住，需多日仿真取证（不现实=缺规律，先定位缺的是哪条规律）。
+- 草案：主体选 max(货值×成功率 − 工时与材料)，货值含本户用度缺口与市场价；受雇/委托合同任务改为通用“据点资源 source”；按世界日一次决策；解开状态记据点账，rearm 可重新关闭；账目沿用 src:regrowth→资源点→行囊→市场→家户，解机关材料入 sink:consume。
+- 缺字段：机关 skill（依据 skills.json、职业表）；盐的矿脉/盐泉类别与再生走 RG renewables。
+- 冲突：sites/npc-labor/market 与 t-cand、t-b2 冲突，代码待批次 1 合入后做；数据字段与测试可先做。受影响测试：sites、s5-02、s5-07、s3-labor-justice、s5-law-household-labor、a3-derived-difficulty；新增：步长 1/7/30 一致、有无技能差异、账目对账、家户短缺天数下降。
+
 ## Claude API 开放式试玩者（PT-AI，常设路线项；主会话负责定期检查、主动推进）
 - 原约定（已查到）：10-31 会话 a099826b，用户批准，存在 claude-api-budget 记忆和本文件“S5 收口后：接入 Claude API”一条。
   - 每月 200 美元，其中约 120 美元给 Sonnet 5.5 扮演想象力足的玩家，专试离谱、自由的玩法，找自由度受阻和不现实结果，再转成规律卡。
