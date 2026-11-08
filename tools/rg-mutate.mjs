@@ -22,7 +22,7 @@ const original=fs.readFileSync(moduleFile,'utf8'),testSource=fs.readFileSync(tes
 const stockFile=path.join(root,'server-plugin/stock.mjs'),stockText=fs.readFileSync(stockFile,'utf8');
 const stockStart=stockText.indexOf('export function logisticStock('),stockEnd=stockText.indexOf('\n}\n',stockStart)+3;
 const stockFunction=stockText.slice(stockStart,stockEnd);
-// only= takes numbers and ranges (only=1-77 then only=78-154 splits a run in two); options are written `--jobs 4` or, because the gate refuses script arguments that start with a dash, `jobs=4`
+// only= takes numbers and ranges (only=1-77 then only=78-155 splits a run in two); options are written `--jobs 4` or, because the gate refuses script arguments that start with a dash, `jobs=4`
 const args=process.argv.slice(2),option=name=>{const i=args.indexOf(name),bare=args.find(x=>x.startsWith(name.slice(2)+'='));return i>=0?args[i+1]:bare?bare.slice(name.length-1):null;};
 const JOBS=Number(option('--jobs'))||4,ONLY=option('--only')?new Set(option('--only').split(',').flatMap(x=>{const [a,b=a]=x.split('-').map(Number);return Array.from({length:b-a+1},(_,k)=>a+k);})):null,TIMEOUT_MS=15*60*1000;
 
@@ -184,10 +184,11 @@ const PATCHES=[
  ['harvests default dropped','harvests=[],','harvests,'],
 
  // logisticStock (stock.mjs): the exact cases of the curve
- ['stock: rate 0 no longer returns the reserve exactly','(t===a.minute||a.rate===0)?a.reserve:','t===a.minute?a.reserve:',undefined,'stock'],
- ['stock: anchor minute no longer returns the reserve exactly','(t===a.minute||a.rate===0)?a.reserve:','a.rate===0?a.reserve:',undefined,'stock'],
- ['stock: every time returns the reserve (no growth at all)','(t===a.minute||a.rate===0)?a.reserve:','(t>=a.minute||a.rate===0)?a.reserve:',undefined,'stock'],
- ['stock: rate <= 0 instead of === 0','a.rate===0)?a.reserve:','a.rate<=0)?a.reserve:','rates below 0 are rejected on entry (rate<0 throws), so <= 0 and === 0 select the same inputs','stock'],
+ ['stock: reserve not returned when the exponential is exactly 1','return e===1?a.reserve:a.capacity/','return a.capacity/',undefined,'stock'],
+ ['stock: only the anchor minute and rate 0 are exact (the previous two special cases)','return e===1?a.reserve:','return (t===a.minute||a.rate===0)?a.reserve:',undefined,'stock'],
+ ['stock: only rate 0 is exact','return e===1?a.reserve:','return a.rate===0?a.reserve:',undefined,'stock'],
+ ['stock: only the anchor minute is exact','return e===1?a.reserve:','return t===a.minute?a.reserve:',undefined,'stock'],
+ ['stock: the curve is always the reserve (no growth at all)','e===1?a.reserve:a.capacity/(1+(a.capacity/a.reserve-1)*e)','a.reserve',undefined,'stock'],
  ['stock: rebase only when the capacity changes','visible!==reserve||a.capacity!==capacity||a.rate!==rate','a.capacity!==capacity||a.rate!==rate',undefined,'stock'],
  ['stock: result without the reserve floor','return Math.max(reserve,Math.floor(at(a,to)));','return Math.floor(at(a,to));',undefined,'stock'],
 ];

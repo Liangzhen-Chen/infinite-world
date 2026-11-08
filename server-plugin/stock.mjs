@@ -66,14 +66,20 @@ export const stockSink=(engine,kind,item,purpose)=>accountKey(`sink:${kind}`,res
 // continuous quantity before starting the next segment. Zero cannot regrow.
 export function logisticStock(row,channel,{reserve,capacity,rate,from,to}){
     if(![reserve,capacity,rate,from,to].every(Number.isFinite)||reserve<0||capacity<0||rate<0||to<from)throw Error('无效的再生参数');
-    // The curve equals the anchor's reserve exactly (a) at the anchor's own minute and (b) at every time when the rate is 0 (e^0 = 1). The
-    // closed form does not return it in IEEE doubles: with e = 1, capacity / (1 + (capacity / reserve - 1) * e) is reserve - 1 ulp for some inputs
-    // (101 and 1001 give 100.99999999999999, 1000 and 1100 give 999.9999999999999, 250 and 1100 give 249.99999999999997). The floor then reads one
-    // unit less than the integer reserve and the rebase below mistakes that for a harvest and starts the anchor one unit too high: at a fresh
-    // anchor (a), and on every later day of a zero-rate stretch such as a winter with density 0 (b). The closed form is not rewritten
-    // (reserve * capacity / (reserve + (capacity - reserve) * e) is also not exact at e = 1, 1% of inputs against 8%, and it changes the
-    // bits of about half of all results for e < 1), so only these two exact cases are returned directly.
-    const at=(a,t)=>a.reserve<=0||a.capacity<=0?0:(t===a.minute||a.rate===0)?a.reserve:a.capacity/(1+(a.capacity/a.reserve-1)*exp(-a.rate*(t-a.minute)/1440));
+    // When the exponential is exactly 1 the curve value is the anchor's reserve. That is the case at the anchor's own minute (exponent 0),
+    // for a rate of 0, and for any positive rate small enough that det-math's exp rounds to 1.0 (|exponent| below about 5.5e-17: checked by
+    // replaying det-math's algorithm, exp(0) = exp(-0) = exp(-1e-18) = 1 and exp(-6e-17) = 0.9999999999999999). The closed form does not
+    // return it in IEEE doubles: with e = 1, capacity / (1 + (capacity / reserve - 1) * e) is reserve - 1 ulp for some inputs (101 and 1001 give
+    // 100.99999999999999, 1000 and 1100 give 999.9999999999999, 250 and 1100 give 249.99999999999997). The floor then reads one unit less than
+    // the integer reserve, and the rebase below mistakes that for a harvest and starts the anchor one unit too high: at a fresh anchor, on every
+    // later day of a zero-rate stretch (a winter with density 0), and for a vanishing rate. The closed form is not rewritten
+    // (reserve * capacity / (reserve + (capacity - reserve) * e) is also not exact at e = 1, 1% of inputs against 8%, and it changes the bits of
+    // about half of all results for e < 1), so the one exact case, e === 1, is returned directly.
+    const at=(a,t)=>{
+        if(a.reserve<=0||a.capacity<=0)return 0;
+        const e=exp(-a.rate*(t-a.minute)/1440);
+        return e===1?a.reserve:a.capacity/(1+(a.capacity/a.reserve-1)*e);
+    };
     let a=row.growthAnchors?.[channel]??{minute:from,reserve,capacity,rate};
     const current=at(a,from),visible=Math.floor(current);
     if(visible!==reserve||a.capacity!==capacity||a.rate!==rate){

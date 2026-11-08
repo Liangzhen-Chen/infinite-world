@@ -456,6 +456,16 @@ test('stock: logisticStock does not invent a unit at a fresh anchor, and a zero 
   for(const day of [1,2,3,4])value=logisticStock(row,'x',{reserve:value,capacity,rate:0,from:day*1440,to:(day+1)*1440});
   assert.equal(value,grownOnce,`rate 0 after one growing day keeps ${grownOnce} (reserve ${reserve}, capacity ${capacity})`);
  }
+ // a positive rate so small that det-math's exp returns exactly 1.0 (exp(-1e-18) = 1: its result 1 - 1e-18 rounds to 1.0, python replay of the algorithm)
+ // is the same case: nothing grows, on the first day and on every later one
+ for(const [reserve,capacity] of pairs){
+  const row={};let value=reserve;
+  for(const day of [0,1,2,3,10,25]){
+   value=logisticStock(row,'x',{reserve:value,capacity,rate:1e-18,from:day*1440,to:(day+1)*1440});
+   assert.equal(value,reserve,`rate 1e-18, day ${day} (reserve ${reserve}, capacity ${capacity})`);
+   assert.equal(row.growthAnchors.x.reserve,reserve);
+  }
+ }
  const row={};
  assert.equal(logisticStock(row,'x',{reserve:1000,capacity:1100,rate:0.02,from:0,to:1440}),1001,'ideal curve 1001.8, floor 1001');
  assert.equal(row.growthAnchors.x.reserve,1000);
