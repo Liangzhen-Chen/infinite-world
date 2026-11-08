@@ -10,6 +10,7 @@ import {auditLedger} from '../server-plugin/ledger.mjs';
 import {processingCategories,laborCategories} from '../server-plugin/npc-labor.mjs';
 import {stationLicence} from '../server-plugin/workstation-services.mjs';
 import {facilityView} from '../server-plugin/facility-state.mjs';
+import {bag,craftInput,craftOutput} from '../server-plugin/stock.mjs';
 
 const world=await loadWorld();
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -32,7 +33,12 @@ function paying(){
 let base;
 
 test('加工行程只做本人手艺类别里的配方，只去有许可的工位，料在行程里取得；做出的成品记进制作账，钱物守恒', {timeout:900000}, async()=>{
- base=await soak(paying(),54,'kd2a');
+ // 归类（旧预期不适用）：ledger.crafts 是近期审计窗口（stock.mjs:218-227 原话“制造凭据…审计按配方核对产出不超过投入”，写入时只留最后 50 条），
+ // 世界里别处的制作变多时较早的凭据会被挤出窗口，所以它不能当逐笔追溯的完整账。逐笔追溯以 transfer 实际过账为准：
+ // 用账本既有的调试钩子 __LEDGER_TRACE__（ledger.mjs:217，每笔成功的 transfer 都记 from/to/amount/writer/eventId）取得本次推进里的全部过账，
+ // 对每一次成功的加工制作（不限窗口）逐笔核对；窗口内的 ledger.crafts 凭据保留为附加检查，只对窗口内条目做。
+ globalThis.__LEDGER_TRACE__=[];let trace;
+ try{base=await soak(paying(),54,'kd2a');}finally{trace=globalThis.__LEDGER_TRACE__;delete globalThis.__LEDGER_TRACE__;}
  const {engine,doc,trips}=base;
  assert.ok(trips.length>0,'两天里应有人出门加工');
  for(const t of trips){
@@ -46,11 +52,24 @@ test('加工行程只做本人手艺类别里的配方，只去有许可的工�
   // 计划的料：出发时手上的加上沿途各站要取得的，够做计划的批数；各站都在出发人的聚落之内由行程核算。
   for(const s of a.stops.slice(0,-1))for(const x of s.acts)assert.ok(['buy','gather','fell'].includes(x.kind)&&x.quantity>=1);
  }
- const crafted=Object.values(doc.state.records).filter(r=>r.category==='labor'&&r.labor==='process'&&r.recipe&&r.success);
+ const crafted=Object.entries(doc.state.records).filter(([,r])=>r.category==='labor'&&r.labor==='process'&&r.recipe&&r.success);
  assert.ok(crafted.length>0,'应有加工行程真实做出成品');
- for(const row of crafted){
+ const crafts=doc.ledger.crafts??[],windowFull=crafts.length>=50;
+ for(const [key,row] of crafted){
   assert.ok(row.consumed.length>0&&row.produced.length>0,'加工有投入也有产出');
-  assert.ok(doc.ledger.crafts.some(c=>c.recipe===row.recipe&&String(c.eventId).startsWith(row.sourceEvent)&&c.eventId.includes(row.npc)),'制作账里能认出做工者');
+  // 逐笔追溯（全部成功的加工制作）：本条劳动记录对应的每次制作事件编号是 `<记录键去掉 labor:>:<批序>`，
+  // 在 transfer 实际过账里：做工者行囊账户进汇的投入件数合计 = 配方投入合计 × 批数；成品从源流入做工者行囊，数量在配方上限之内且等于记录里的新增成品数。
+  const recipe=engine.byId.get(row.recipe),prefix=`${key.slice('labor:'.length)}:`,account=item=>bag(engine,row.npc,item);
+  const mine=trace.filter(t=>String(t.eventId).startsWith(prefix)&&t.writer==='npc-autonomy');
+  const sourceOf=item=>`${craftOutput('npc-autonomy',null).flow}|${item}|${craftOutput('npc-autonomy',null).purpose}`;
+  const taken=mine.filter(t=>t.from.startsWith(`${row.npc}|`)&&t.to.startsWith(`${craftInput('npc-autonomy',null).flow}|`)&&t.to.endsWith(`|${craftInput('npc-autonomy',null).purpose}`)).reduce((n,t)=>n+t.amount,0);
+  assert.equal(taken,recipe.materials.reduce((n,m)=>n+m.amount,0)*row.batches,`${row.npc} ${row.recipe} ${key}：投入进汇的过账件数 = 配方投入 × 批数`);
+  const made=mine.filter(t=>t.from===sourceOf(recipe.output.item)&&t.to===account(recipe.output.item)).reduce((n,t)=>n+t.amount,0);
+  assert.ok(made>0&&made<=recipe.output.quantity*row.batches,`${row.npc} ${row.recipe} ${key}：成品出源的过账数量在配方上限内`);
+  const gained=row.produced.find(p=>p.item===recipe.output.item&&!recipe.materials.some(m=>m.item===p.item));
+  if(gained)assert.equal(made,gained.quantity,`${row.npc} ${row.recipe} ${key}：成品过账数量 = 记录里新增的成品数`);
+  // 附加检查：只对仍在近期窗口内的记录（窗口满时早于最旧凭据的不在窗口内）。
+  if(!windowFull||row.minute>crafts[0].minute)assert.ok(crafts.some(c=>c.recipe===row.recipe&&String(c.eventId).startsWith(row.sourceEvent)&&c.eventId.includes(row.npc)),'制作账里能认出做工者');
  }
  assert.deepEqual(auditLedger(doc),[]);
 });
