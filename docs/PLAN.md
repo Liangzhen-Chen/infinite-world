@@ -1369,3 +1369,5 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - 批次 1 暂不交付、不合入。批次 2 依赖 t-cand，b2-c2 的相关检查顺延到批次 1 修复之后。
 - 11-08 基线 b1-b1（5cf4489f）对照结果：kd2-process 2/0、npc-schedule 12/0、s4-office-quests 9/0 → 三者确认为 t-cand 回归，待查根因。npc-depth-yp 基线同样失败 → 环境（换行统一）。a3-model-catalog 基线同样失败 → 环境。
   - 下一步：负责人 a269407916603a60b 提交 tools/probe-b1c.mjs → 新目录 b1-p1 → 两轮独立审查 → 在候选与基线两侧跑 cowork 二分 / office 栈 / kd2 窗口 → 按规则层修 → 相关检查（加多天一致性集）→ 完整检查。
+- 11-08 基线 b1-b1 完整检查结束（513 文件，见 F:/dnd-tmp/b1-b1-full.full）。候选失败而基线通过共 5 个：kd2-process、npc-schedule、s4-office-quests，另加 playtest-lifecycle #3（九个月真实日结，同样 Invalid party balance，与 s4-office-quests 疑同根）、m3-language #1（整整三十天等待后断言 false；int-m 也失败 → 来源未明，随长程问题一起复核）。基线失败而候选通过：s2c-run001r。两侧同败 86 个（旧败）。
+- 11-08 探针送审两次未过：b1-p1 第 2 轮 changes（键序比较致假分歧）；b1-p2 第 1 轮 changes（我加的首个分歧日二分未验证单调前提）。按两次失败即停，已报亮圳待定，未上云。
