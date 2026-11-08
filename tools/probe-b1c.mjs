@@ -9,6 +9,7 @@
 //        每天全量输出规范化后的三类差异路径（仅长程有/仅逐日有/值不同，按路径排序，不设上限，值截 200 字符）和撞车键清单，供离线做候选减基线；
 //        (2) 两人在 coworkDay 的运行时刻（日结）经导出的 advanceNpcLife 取判定，并给出资格输入、计划行、作息片段；默认日期固定为 24..26，也可用参数指定。
 //        耗时估算（候选约 7 秒/模拟日）：N=26 全做约 3300 秒，接近单作业 3600 秒上限，所以可分段：`cowork5 26 1-13 no`、`cowork5 26 14-26 no`、`cowork5 26 none yes`。
+//   node tools/probe-b1c.mjs cowork8        同工丢失的最短跨度定位：从逐日快照 S_j 出发各新开引擎一次 reduce 推到第 25 天，及从 S_24/第 24 天 23:59 出发的更细几组（详见 cowork8 注释，约 800 秒）
 // 任何模式出现断言失败、异常或分歧：打印 error.stack / 差异，并设 process.exitCode=1。
 // 基线对照：本文件原样放进 t-int 同一份代码的目录，同参数运行。
 // 与原测试不同、不复现的部分：
@@ -215,6 +216,62 @@ async function cowork5(){
  out(report);
 }
 
+// ---------- cowork8 ----------
+// 同工丢失的最短跨度定位（第八版）。起点是“逐日推进”一侧的 09:00 快照 S_j（minute 540+1440j，同一引擎连续逐日得到），
+// 每次新开引擎、一次 reduce（world_time minutes）推到目标分钟，看两人关系里有没有 routine.cowork（同工是否发生）。
+//   A 组：j∈{24,23,22,20,15,10,5,0} → 第 25 天 09:00（minute 25*1440+540）。跨度从 1 天到 25 天；
+//   B 组（更细）：从 S_24 分别推到第 25 天 00:01、01:00、09:00；再从“逐日一侧推到第 24 天 23:59”的状态出发推 2 分钟到 00:01。
+//     用来区分“reduce 内部”与“午夜处理顺序”：若 B 组的 00:01 就缺同工而 A 组短跨度有，说明午夜处理顺序；若只在长跨度缺，说明跨日累积的内存状态。
+// 同工判定输入的原始值（同地非休息重叠分钟、tied、资格原始字段）：coworkDay 与 lifeActor/incapacitated/settled 未导出，不为探针改引擎，只输出它们读取的原始字段、导出的 npcIsMinor、
+// 静态亲缘（engine.byId.relationships）、状态里已有的关系（tied 的另一半），以及 scheduleAt 对第 24 天的逐段读取。
+// 注意：每次 reduce 结束后第 24 天的计划行通常已被第 25 天的覆盖，所以 inputsAtEnd 里的作息只含基础作息；
+// inputsFromStart（取自起点快照，第 24 天计划行仍在库里）才是“同工判定当时能读到的输入”的近似，仅对 j=24 有意义（j<24 的快照里没有第 24 天的计划行，照实标注）。
+// 耗时估算（候选约 7 秒/模拟日）：逐日基线 24 天 + A 组 Σ(25-j)=81 天 + B 组约 3 天，合计约 110 个模拟日，约 800 秒，在单作业 3600 秒内。
+async function cowork8(){
+ const {scheduleAt}=await import('../server-plugin/npc-schedule.mjs');
+ const {personConstraints}=await import('../server-plugin/entity-view.mjs');
+ const {npcIsMinor}=await import('../server-plugin/npc-life.mjs');
+ const world=await loadWorld(),CHARACTER_SEED='schedule-month',DAY=1440,TARGET_DAY=25,RESTING_RX=/睡|歇息|休息|赶路|前往|返回|照护/,other=id=>PAIR.find(x=>x!==id);
+ const fresh=()=>{const engine=new WorldEngine(world);return {engine,doc:engine.createCharacter(seed,{},CHARACTER_SEED)};};
+ const {engine,doc}=fresh(),snapshots=[doc];let daily=doc;
+ for(let day=0;day<24;day++){const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,o.patches);snapshots.push(daily);}
+ const threshold=engine.rules.npcLife?.kindness?.cowork??null;
+ const rel=(state,id)=>state.npcs[id].relationships?.[other(id)]??null;
+ const slotsOf=(eng,state,id,day)=>{const c=personConstraints(eng,state),rows=[];for(let cur=day*DAY;cur<(day+1)*DAY;){const slot=scheduleAt(eng,id,cur,state,c);if(!slot)break;const end=Math.min(slot.until,(day+1)*DAY);rows.push({start:cur-day*DAY,end:end-day*DAY,location:slot.location,activity:slot.activity});cur=end;}return rows;};
+ const inputs=(eng,state,day)=>{
+  const slots=Object.fromEntries(PAIR.map(id=>[id,slotsOf(eng,state,id,day)]));let together=0;
+  for(const x of slots[PAIR[0]].filter(s=>!RESTING_RX.test(s.activity??'')))for(const y of slots[PAIR[1]].filter(s=>!RESTING_RX.test(s.activity??'')))if(x.location&&x.location===y.location)together+=Math.max(0,Math.min(x.end,y.end)-Math.max(x.start,y.start));
+  const planDays=[...new Set(Object.values(state.records).filter(r=>r.category==='subsistence_plan').map(r=>r.day))].sort((a,b)=>a-b);
+  return {evaluatedDay:day,togetherMinutes:together,thresholdMinutes:threshold?.minutes??null,
+   tied:(eng.byId.get(PAIR[0])?.relationships??[]).some(r=>r.with===PAIR[1])||(eng.byId.get(PAIR[1])?.relationships??[]).some(r=>r.with===PAIR[0])||Boolean(state.npcs[PAIR[0]].relationships?.[PAIR[1]]||state.npcs[PAIR[1]].relationships?.[PAIR[0]]),
+   staticTie:(eng.byId.get(PAIR[0])?.relationships??[]).some(r=>r.with===PAIR[1])||(eng.byId.get(PAIR[1])?.relationships??[]).some(r=>r.with===PAIR[0]),
+   existingRelation:{[PAIR[0]]:Boolean(state.npcs[PAIR[0]].relationships?.[PAIR[1]]),[PAIR[1]]:Boolean(state.npcs[PAIR[1]].relationships?.[PAIR[0]])},
+   eligibilityRaw:Object.fromEntries(PAIR.map(id=>{const n=state.npcs[id];return [id,{status:n.status,caring:n.caring??null,location:n.location,scheduleTravel:n.scheduleTravel??null,cognitionTravel:n.cognitionTravel??null,companion:Boolean(state.player?.companions?.includes(id)),minor:npcIsMinor(eng,state,id,(day+1)*DAY),life:n.life?true:false}];})),
+   subsistencePlanDaysInState:planDays,planRowForEvaluatedDayPresent:planDays.includes(day),slots};
+ };
+ const runs=[];
+ const run=async(group,label,startDoc,startLabel,minutes)=>{
+  const entry={group,label,start:startLabel,startMinute:startDoc.state.minute,reduceMinutes:minutes};
+  try{
+   const eng=new WorldEngine(world),out=await eng.reduce(startDoc,{tool:'world_time',args:{minutes},eventId:`v8_${label}`}),end=applyPatches(startDoc,out.patches);
+   Object.assign(entry,{endMinute:end.state.minute,coworkHappened:PAIR.some(id=>rel(end.state,id)?.routine?.cowork!==undefined),
+    relations:Object.fromEntries(PAIR.map(id=>[id,rel(end.state,id)])),inputsAtEnd:inputs(eng,end.state,24)});
+   runs.push(entry);return end;
+  }catch(error){process.exitCode=1;entry.error=String(error?.stack??error);runs.push(entry);return null;}
+ };
+ const T=TARGET_DAY*DAY+540;
+ // A 组
+ for(const j of [24,23,22,20,15,10,5,0])await run('A',`A_from_day${j}`,snapshots[j],`S_${j}（逐日第 ${j} 天 09:00）`,T-snapshots[j].state.minute);
+ // B 组
+ const S24=snapshots[24];
+ for(const [name,target] of [['00:01',TARGET_DAY*DAY+1],['01:00',TARGET_DAY*DAY+60],['09:00',T]])await run('B',`B_S24_to_day25_${name}`,S24,'S_24',target-S24.state.minute);
+ const near=await run('B','B_S24_to_day24_23:59',S24,'S_24（逐日一侧推到第 24 天 23:59）',TARGET_DAY*DAY-1-S24.state.minute);
+ if(near)await run('B','B_day24_23:59_plus2',near,'上一行的结束状态（第 24 天 23:59）',2);
+ // 起点快照里的输入（j=24 才含第 24 天计划行）。
+ const startInputs=Object.fromEntries([24,23].map(j=>[`S_${j}`,inputs(engine,snapshots[j].state,24)]));
+ out({mode:'cowork8',characterSeed:CHARACTER_SEED,targetDay:TARGET_DAY,note:'每次新开引擎一次 reduce；coworkHappened=两人关系里出现 routine.cowork',inputsFromStart:startInputs,runs});
+}
+
 // ---------- office ----------
 async function office(){
  const {applyIntentSetup}=await import('./a3-score.mjs');
@@ -298,6 +355,7 @@ try{
  if(mode==='kd2')await kd2();
  else if(mode==='cowork')await cowork();
  else if(mode==='cowork5')await cowork5();
+ else if(mode==='cowork8')await cowork8();
  else if(mode==='office')await office();
  else if(mode==='lifecycle')await lifecycle();
  else if(mode==='catalog')await catalog();
