@@ -31,18 +31,20 @@ test('rg: seasons are the world calendar\'s, not a constant in the module', () =
  const late=minute=>({season:Math.floor(minute/1440)>=10?2:0});
  const early=fresh();settle(early,{props:annual,methods,capacity:K,calendar:late,spare,fromDay:0,toDay:11,harvests:[harvest(5,'cut_shoots',500,0)]});
  const inSeason=fresh();settle(inSeason,{props:annual,methods,capacity:K,calendar:late,spare,fromDay:0,toDay:11,harvests:[harvest(10,'cut_shoots',500,0)]});
- assert.ok(early.persistence<6e5,'before the calendar\'s seed season');assert.equal(inSeason.persistence,1e6,'in the calendar\'s seed season');
+ assert.equal(early.persistence,logisticStock({},'persistence',{reserve:500000,capacity:1e6,rate:annual.ratePerDay,from:5*1440,to:11*1440}),'half lost before the seed season, then six days of recovery');assert.equal(inSeason.persistence,1e6,'in the calendar\'s seed season');
 });
 
-test('rg: a world day is the only step — 1, 7 and 30 day steps give identical state', () => {
- const props={...perennial,seasonDensity:[1,1,0.5,0]};
- const events=[harvest(3,'cut_shoots',400,0.5),harvest(40,'pull_whole',300,0.2,'gatherer-2'),harvest(41,'pick_leaf',50,1),harvest(95,'cut_shoots',200,0),harvest(170,'pull_whole',100,0.9)];
+test('rg: a world day is the only step — 1, 7 and 30 day steps give identical state across season edges', () => {
+ // the density differs in seasons 0, 1 and 2 and the span crosses two season edges (days 90 and 180), where the anchor is rebuilt
+ const props={...perennial,seasonDensity:[1,0.5,0.75,0.25]},HORIZON=200;
+ assert.deepStrictEqual([0,89,90,179,180,199].map(seasonOfDay),[0,0,1,1,2,2]);
+ const events=[harvest(3,'cut_shoots',400,0.5),harvest(40,'pull_whole',300,0.2,'gatherer-2'),harvest(41,'pick_leaf',50,1),harvest(89,'pick_leaf',20,0),harvest(90,'pick_leaf',20,0),harvest(95,'cut_shoots',200,0),harvest(170,'pull_whole',100,0.9),harvest(179,'pick_leaf',20,0),harvest(180,'cut_shoots',20,0)];
  const inside=(from,to)=>events.filter(ev=>ev.day>=from&&ev.day<to);
- const whole=fresh();const all=run(whole,props,{harvests:events,fromDay:0,toDay:180});
+ const whole=fresh();const all=run(whole,props,{harvests:events,fromDay:0,toDay:HORIZON});
  for(const step of [1,7,30]){
   let row=fresh();const days=[];let regrown=0,taken=0;
-  for(let from=0;from<180;from+=step){
-   const to=Math.min(180,from+step);
+  for(let from=0;from<HORIZON;from+=step){
+   const to=Math.min(HORIZON,from+step);
    row=JSON.parse(JSON.stringify(row));            // the row round-trips through storage between steps
    const out=run(row,props,{harvests:inside(from,to),fromDay:from,toDay:to});
    days.push(...out.days);regrown+=out.regrown;taken+=out.taken;
@@ -51,10 +53,10 @@ test('rg: a world day is the only step — 1, 7 and 30 day steps give identical 
   assert.deepStrictEqual(days,all.days,`step ${step}: per-day series`);
   assert.equal(regrown,all.regrown);assert.equal(taken,all.taken);
  }
- assert.equal(all.taken,400+300+50+200+100,'every harvest found stock to take');
+ assert.equal(all.taken,events.reduce((n,ev)=>n+ev.quantity,0),'every harvest found stock to take');
  assert.ok(all.regrown>0);
  // replay: the same inputs always give the same state (no hidden randomness)
- const again=fresh();assert.deepStrictEqual(run(again,props,{harvests:events,fromDay:0,toDay:180}).days,all.days);assert.deepStrictEqual(again,whole);
+ const again=fresh();assert.deepStrictEqual(run(again,props,{harvests:events,fromDay:0,toDay:HORIZON}).days,all.days);assert.deepStrictEqual(again,whole);
 });
 
 test('rg: stripped patch recovers or not according to how it regrows and what the method destroys', () => {
@@ -89,7 +91,7 @@ test('rg: sparing breeding plants (through the caller\'s spare function) leaves 
  assert.ok(results[0].visible<results[2].visible,JSON.stringify(results));
  // the module has no skill formula: without spare() a harvest fails loudly, and a spare outside [0,1] is refused
  assert.throws(()=>settle(fresh(),{props:perennial,methods,capacity:K,calendar,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',10,1)]}),/a spare[(]method, event[)] function is required/);
- for(const bad of [-0.1,1.1,NaN])assert.throws(()=>run(fresh(),perennial,{fromDay:0,toDay:1,spare:()=>bad,harvests:[harvest(0,'pick_leaf',10,1)]}),/spare must be within .0,1./);
+ for(const bad of [-0.1,1.1,NaN])assert.throws(()=>run(fresh(),perennial,{fromDay:0,toDay:1,spare:()=>bad,harvests:[harvest(0,'pick_leaf',10,1)]}),/spare must be within [[]0,1[\]]/);
  // a full-spare gatherer destroys nothing even when pulling plants out by the root
  const all=fresh();run(all,perennial,{fromDay:0,toDay:1,spare:()=>1,harvests:[harvest(0,'pull_whole',600,1)]});assert.equal(all.persistence,1e6);
 });
@@ -176,21 +178,32 @@ test('rg: botany and entry state are validated even when nothing stands to be ta
  for(const ok of [0,1,999999,1e6])assert.doesNotThrow(()=>run({visible:5,persistence:ok},perennial,{fromDay:0,toDay:1}));
 });
 
-test('rg: step sizes agree when harvests fall exactly on step boundaries', () => {
- const props={...perennial,seasonDensity:[1,1,0.5,0.25]};
- const events=[harvest(7,'cut_shoots',200,0.4),harvest(14,'pull_whole',100,0),harvest(30,'pick_leaf',60,1),harvest(30,'pull_whole',40,0.2,'gatherer-2'),harvest(60,'cut_shoots',150,0.1),harvest(89,'pull_whole',30,0),harvest(90,'cut_shoots',100,0.5)];
- const whole=fresh();run(whole,props,{harvests:events,fromDay:0,toDay:120});
- for(const step of [1,7,30,45]){
-  let row=fresh();
-  for(let from=0;from<120;from+=step){const to=Math.min(120,from+step);row=JSON.parse(JSON.stringify(row));run(row,props,{harvests:events.filter(ev=>ev.day>=from&&ev.day<to),fromDay:from,toDay:to});}
-  assert.deepStrictEqual(row,whole,`step ${step}`);
- }
+test('rg: step sizes agree when harvests fall on step edges and season edges (perennial and seed-regenerated)', () => {
+ const density=[1,0.5,0.75,0.25],HORIZON=200;   // seasons 0, 1, 2 differ; edges at days 90 and 180
+ const agree=(props,events,label)=>{
+  const whole=fresh();run(whole,props,{harvests:events,fromDay:0,toDay:HORIZON});
+  for(const step of [1,7,30,45]){
+   let row=fresh();
+   for(let from=0;from<HORIZON;from+=step){const to=Math.min(HORIZON,from+step);row=JSON.parse(JSON.stringify(row));run(row,props,{harvests:events.filter(ev=>ev.day>=from&&ev.day<to),fromDay:from,toDay:to});}
+   assert.deepStrictEqual(row,whole,`${label}: step ${step}`);
+  }
+  return whole;
+ };
+ // events on block first days (7, 14, 30, 60, 90, 180), on block last days (69 ends a 7-day block, 89 and 179 end season blocks) and two on one day
+ const perennialEvents=[harvest(7,'cut_shoots',200,0.4),harvest(14,'pull_whole',100,0),harvest(30,'pick_leaf',60,1),harvest(30,'pull_whole',40,0.2,'gatherer-2'),harvest(60,'cut_shoots',150,0.1),harvest(69,'pick_leaf',25,0),harvest(89,'pull_whole',30,0),harvest(90,'cut_shoots',100,0.5),harvest(179,'pick_leaf',20,0),harvest(180,'cut_shoots',40,0)];
+ const whole=agree({...perennial,seasonDensity:density},perennialEvents,'perennial');
  assert.ok(whole.persistence<1e6&&whole.visible>0);
+ // seed-regenerated: a cut just before the seed season (day 179, season 1) costs offspring, a cut on its first day (day 180, season 2) does not
+ const seedProps={...annual,seasonDensity:density};
+ const both=agree(seedProps,[harvest(179,'cut_shoots',300,0),harvest(180,'cut_shoots',300,0)],'seed, both sides of the seed season');
+ const after=agree(seedProps,[harvest(180,'cut_shoots',300,0)],'seed, first day of the seed season only');
+ assert.equal(after.persistence,1e6,'no offspring lost after the seed season starts');
+ assert.ok(both.persistence<1e6,'the day-179 cut lost offspring');
 });
 
 test('rg: spare is checked even when nothing is taken, and a failing settle leaves the row untouched', () => {
  assert.throws(()=>settle({visible:0},{props:perennial,methods,capacity:K,calendar,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/a spare[(]method, event[)] function is required/);
- assert.throws(()=>run({visible:0},perennial,{spare:()=>2,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/spare must be within .0,1./);
+ assert.throws(()=>run({visible:0},perennial,{spare:()=>2,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/spare must be within [[]0,1[\]]/);
  // the failure comes on day 3, after three days of growth have been computed
  const row=fresh(100),before=structuredClone(row);
  assert.throws(()=>run(row,perennial,{fromDay:0,toDay:5,harvests:[harvest(0,'pick_leaf',10,0),harvest(3,'no-such-method',1,0)]}),/unknown harvest method no-such-method/);
@@ -226,10 +239,11 @@ test('rg: harvesting before the seed season destroys offspring, after it does no
  assert.equal(seasonOfDay(20),0);assert.equal(seasonOfDay(200),2);
  const persistenceAfter=(method,day)=>{const row=fresh();run(row,annual,{fromDay:0,toDay:day});
   run(row,annual,{fromDay:day,toDay:day+1,harvests:[harvest(day,method,500,0)]});return row.persistence;};
- const lost=value=>value>=5e5&&value<6e5;   // half the plants lost their offspring, then one day of recovery
- assert.ok(lost(persistenceAfter('cut_shoots',20)),'cut before seed: half the plants lost their seed');
+ // half the plants lost their offspring (500000 ppm), then one day of recovery from exactly that
+ const lost=(value,day)=>value===logisticStock({},'persistence',{reserve:500000,capacity:1e6,rate:annual.ratePerDay,from:day*1440,to:(day+1)*1440});
+ assert.ok(lost(persistenceAfter('cut_shoots',20),20),'cut before seed: half the plants lost their seed');
  assert.equal(persistenceAfter('cut_shoots',200),1e6,'cut after seed: nothing lost');
- assert.ok(lost(persistenceAfter('pick_fruit',20)),'fruit picked before seed sheds takes the seed');
+ assert.ok(lost(persistenceAfter('pick_fruit',20),20),'fruit picked before seed sheds takes the seed');
  assert.equal(persistenceAfter('pick_fruit',200),1e6);
  assert.equal(persistenceAfter('pick_leaf',20),1e6,'leaves do not carry the seed');
  // the botany table itself
@@ -300,8 +314,7 @@ test('rg: pending data is refused, never defaulted; every filled value has a sou
  // maturityDays is the logistic 5%→95% time: starting at 5% of capacity, after maturityDays at baseRate the stock is at 95% (derived, not fitted)
  const span=baseRate({maturityDays:100}),curve={};
  const at95=logisticStock(curve,'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:100*1440});
- // the exact curve value is 950000; the integer result is the floor of a double within 1e-9 of it, hence 949999 or 950000
- assert.ok(at95===950000||at95===949999,`5% to 95% in maturityDays: ${at95}`);
+ assert.equal(at95,950000,'5% to 95% in maturityDays');
  assert.ok(logisticStock({},'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:50*1440})<900000,'halfway through maturity the stock is not yet at 95%');
  assert.throws(()=>baseRate(data.species.find(s=>s.id==='herb.generic')),/species needs ratePerDay or maturityDays/);
  assert.throws(()=>baseRate({ratePerDay:0.1,maturityDays:10}),/ratePerDay and maturityDays are alternatives: give only one/);

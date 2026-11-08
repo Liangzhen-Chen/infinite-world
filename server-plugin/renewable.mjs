@@ -21,8 +21,10 @@
 // Additivity of the damage: for one method and one spare the loss from takes that stay below the breeding population is strictly additive
 // (floor of the exact rational total, however the takes are grouped). That holds only while no single take reaches the whole breeding
 // population; a take that does is the capped branch, computed on the persistence itself, and is not grouping-independent. The double
-// keep=1−spare can be off by at most one unit in the last place, which shifts the exact total by far less than 1 ppm per take and is the
-// same for every grouping of the same takes.
+// keep=1−spare can be off by at most one unit in the last place: the total taken off is the floor of the total of the doubles' decimal values,
+// which can be 1 ppm below the mathematical total, and is the same for every grouping of the same takes.
+// RG-B: when wiring this in, validate on entry that the row is self-consistent (visible not above capacity × persistence / 1e6 + restartUnits);
+// from an inconsistent state different groupings of one day's takes can end differently.
 // Seasons are read at the start of each world day (calendar(day start).season) and apply to that whole day, for growth and for the
 // seed-season test of a harvest on that day.
 // Write-back replaces the row's keys with the copy's, including nested objects (growthAnchors, accruals): callers must not cache references
