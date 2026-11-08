@@ -23,7 +23,7 @@ test('欠薪逾期的关系证据整段推进与逐日推进一致：同一条�
   assert.deepEqual(a,b,`${key} 的证据（含 minute）相同`);
   // 午夜登记之后，期末那次调用不会再登记一次：关系里该证据键只出现一次。
   for(const side of [long,daily]){
-   const view=side.state.npcs[a.from].relationships?.[a.to];
+   const holderOf=id=>id==='player'?side.state.player:side.state.npcs[id],view=holderOf(a.from).relationships?.[a.to];
    assert.equal(view.evidenceKeys.filter(k=>k===key).length,1,`${key} 只登记一次`);
   }
  }

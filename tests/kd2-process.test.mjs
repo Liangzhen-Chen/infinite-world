@@ -68,6 +68,18 @@ test('加工行程只做本人手艺类别里的配方，只去有许可的工�
   assert.ok(made>0&&made<=recipe.output.quantity*row.batches,`${row.npc} ${row.recipe} ${key}：成品出源的过账数量在配方上限内`);
   const gained=row.produced.find(p=>p.item===recipe.output.item&&!recipe.materials.some(m=>m.item===p.item));
   if(gained)assert.equal(made,gained.quantity,`${row.npc} ${row.recipe} ${key}：成品过账数量 = 记录里新增的成品数`);
+  // 精确对账：上面的 gained 断言只在“成品不同时是投入或副产品”时才能精确——成品若同时是材料，记录里的 produced/consumed 是该物品的净变化，
+  // 不能和单一的成品出源数直接比。所以另外对记录追踪的每个物品（成品、材料、副产品）逐一严格对账：
+  // 记录里的净变化（produced − consumed）= 过账里该物品在做工者行囊上的净变化（流入 − 流出）。
+  const tracked=new Set([recipe.output.item,...recipe.materials.map(m=>m.item),...(recipe.byproducts??[]).map(p=>p.item)]),netInTrace=new Map();
+  for(const t of mine){
+   if(t.to.startsWith(`${row.npc}|`)){const item=t.to.split('|')[1];netInTrace.set(item,(netInTrace.get(item)??0)+t.amount);}
+   if(t.from.startsWith(`${row.npc}|`)){const item=t.from.split('|')[1];netInTrace.set(item,(netInTrace.get(item)??0)-t.amount);}
+  }
+  for(const item of tracked){
+   const recorded=(row.produced.find(p=>p.item===item)?.quantity??0)-(row.consumed.find(c=>c.item===item)?.quantity??0);
+   assert.equal(netInTrace.get(item)??0,recorded,`${row.npc} ${row.recipe} ${key}：${item} 的净变化（过账）= 记录里的净变化`);
+  }
   // 附加检查：只对仍在近期窗口内的记录（窗口满时早于最旧凭据的不在窗口内）。
   if(!windowFull||row.minute>crafts[0].minute)assert.ok(crafts.some(c=>c.recipe===row.recipe&&String(c.eventId).startsWith(row.sourceEvent)&&c.eventId.includes(row.npc)),'制作账里能认出做工者');
  }

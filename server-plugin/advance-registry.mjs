@@ -269,7 +269,7 @@ function resolveContestPool(d,ctx){
 }
 // These handlers only loop over crossed midnight/day boundaries. Keep legacy
 // state-driven handlers running until their non-clock work has an explicit owner.
-const midnightSystems=new Set(['daily','projects','public_projects','hazard_clock','magic_economy','military','war_diplomacy','tribal_awakening','quest_sources']);
+const midnightSystems=new Set(['relation_evidence','daily','projects','public_projects','hazard_clock','magic_economy','military','war_diplomacy','tribal_awakening','quest_sources']);
 const deadlineSystems=new Set(['world_clock','faction_clock','transport','notables','upper_appointments','society_news','effect_expiry','dying','agriculture_expiry']);
 const ledgerAudit=Symbol('tick ledger audit');
 function systemRunsAt(system,engine,d,ctx){
@@ -416,8 +416,6 @@ const systems=[
       advancePets(d,e,(day+1)*1440);
       advanceWildlife(d,e,day);displaceForestWildlife(d,e,day);advanceBosses(d,e,day);
     }
-    // Day-sliced relation evidence: transitions since the previous midnight (or this reduce's start) are registered now, not at the end of the reduce.
-    advanceHook('settleRecordRelationEvidence')?.(d,e,d.relationBase);d.relationBase=d.get('state');
  }},
  {id:'pets',order:600,nextMinute:nextPetMinute,advance:(e,d,{after})=>advancePets(d,e,after)},
  {id:'agriculture_expiry',order:700,nextMinute:nextAgricultureDeadline,advance:(e,d)=>settleAgricultureExpiry(d,e)},
@@ -520,6 +518,10 @@ const systems=[
  }},
  {id:'wildlife_encounter',order:2800,active:(e,d,now)=>nextWildlifeEncounterMinute(d,e,now)!==Infinity,nextMinute:(e,d,now)=>nextWildlifeEncounterMinute(d,e,now),
   advance:(e,d,{before,after,id})=>{if(after===nextWildlifeEncounterMinute(d,e,before))settleWildlifeEncounter(d,e,wildlifeEncounterAt(d,e,d.get('state','location'),after),id);}},
+ // Day-sliced relation evidence: runs at every midnight crossing and is the LAST system (order above every system that changes a record or obligation status, deliveries 2700 included),
+ // so the transitions of the whole midnight round are registered at that midnight whatever the step length; the end-of-reduce call only repeats them (evidence keys make that a no-op).
+ // The base is this reduce's first segment start, then the previous midnight's state.
+ {id:'relation_evidence',order:3000,advance:(e,d)=>{advanceHook('settleRecordRelationEvidence')?.(d,e,d.relationBase);d.relationBase=d.get('state');}},
 ];
 // Preparatory rules remain before the rules that consume their attendance and
 // booking contexts. Stable rule ids preserve those existing dependencies.
