@@ -1376,3 +1376,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - 下一步：负责人 a269407916603a60b 提交 tools/probe-b1c.mjs → 新目录 b1-p1 → 两轮独立审查 → 在候选与基线两侧跑 cowork 二分 / office 栈 / kd2 窗口 → 按规则层修 → 相关检查（加多天一致性集）→ 完整检查。
 - 11-08 基线 b1-b1 完整检查结束（513 文件，见 F:/dnd-tmp/b1-b1-full.full）。候选失败而基线通过共 5 个：kd2-process、npc-schedule、s4-office-quests，另加 playtest-lifecycle #3（九个月真实日结，同样 Invalid party balance，与 s4-office-quests 疑同根）、m3-language #1（整整三十天等待后断言 false；int-m 也失败 → 来源未明，随长程问题一起复核）。基线失败而候选通过：s2c-run001r。两侧同败 86 个（旧败）。
 - 11-08 探针送审两次未过：b1-p1 第 2 轮 changes（键序比较致假分歧）；b1-p2 第 1 轮 changes（我加的首个分歧日二分未验证单调前提）。按两次失败即停，已报亮圳待定，未上云。
+- 11-08 静态根因分析（负责人只读）：
+  - m3-language #1：第 11 轮三十天等待后 inventory 变了（玩家衣物每日磨损 100→98），int-m 同轮同断言失败 → 旧败，非候选引入；基线 b1-b1 通过而 int-m 失败，疑与真实 HTTP 轮次有关，归来源未明（旧），不阻断本批。
+  - Invalid party balance（playtest-lifecycle #3、s4-office-quests #6）：diff 中唯一碰钱的 distribution.mjs:109-111 cash() 已排除；倾向是长程动态变化暴露某条未核余额的扣款路径（mirrorPartyCoins 负数调用点 20 多处）。需 office 探针取栈。规则层方向：扣款统一走带余额判定的原语。
+  - kd2-process #1：候选未新增 recordCraft 调用点，自采不记 craft；窗口挤掉假设约 50%，需 kd2 探针确认。
