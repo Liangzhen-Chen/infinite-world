@@ -1294,6 +1294,13 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - **t-int 快进到 t-rg（e9567ddb）**。批次 1 候选须与新 t-int 合并后再跑一次全量对照才可合入（合并候选必须全量对比）。
 - b1 拆账用例：b1-c7 实测店主同意补柜台（柜台段 12、钱袋段 0），同一步第二次失败，已报李白复盘。诊断：npc-decision 对 fund_counter reward=cost。曾试 818171c5（撤必须拆账、变异 1 预期存活，以 playtest-lifecycle 为真实路径证据）→ b1-c8 第一轮 changes：lifecycle 归因不严（b1-c2→b1-c5 间还有别的改动）、并指出可用人物既有字段 redLines。307cfffe：拆账组合给店主追加 redLines {action:'fund_counter'}（只拒补柜台），恢复必须拆账，变异 1 恢复应杀 → b1-c9（eea78d8e…）两轮 approve。非阻断：世界数据 redLines 均为字符串、发布 schema（tools/npc-profile-schema.mjs:16）不收对象形，引擎认可对象形。b1-c8 已按四条清理。
 
+### 11-08 20:55 批次 1 验证完、合并全量起跑、提速已部署
+- b1-c9 云测：三项新测全过（拆账用例真拆账），变异 1/2/3/5 KILLED、4 EXPECTED-SURVIVOR。
+- b1-c5 全量对照 int-m：新失败仅 npc-depth-yp（环境，rg-d12 同败）；b1-shop-local-restock 0/5 为夹具问题已在 b1-c9 修；修好 farm-pests-harvest、ka1-overlay、overfit-guard、performance、playtest-lifecycle、s2c-run001r；a1-daily-probes、festival-runtime、s5-02、s5-w4-economy 各少败一条；ledger-stock、monster-society-content 同 rg-d12（基线已有）。结论：候选零真新失败。
+- 合并候选 t-b1m（F:/dnd-wt/B1M）87da89f9 = t-cand 307cfffe + t-int e9567ddb，自动合并无冲突（仅 stock.mjs 两边都改且行区不相交），b1m-1（ac3f8672…）两轮 approve（r1-20261108T204840Z-2276233、r2-20261108T204947Z-2276811）。20:54 起腾讯全量 P=6（F:/dnd-tmp/b1m1/run.sh → full.full）。零新增失败（对照 int-m 与 b1-c5/rg-d12）则 t-int 快进到 t-b1m，批次 1 收口（核 PT-AI E1–E4）。
+- 云测提速已部署：服务器 /home/ubuntu/gate/runjob.sh = 80eef2ff（deploy.sh update，PREFLIGHT-OK；其余 4 个门禁脚本哈希与本地一致未变）；旧版备份 /home/ubuntu/gate-bak-5058374f；回退=把备份 runjob.sh 拷回。b1m-1 是首个按最长先跑的全量，实际耗时用来核对 6.5h 估算。
+- 独立工作：npc-depth-yp CRLF C+A 实施中（t-crlf，F:/dnd-wt/CRLF）。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
