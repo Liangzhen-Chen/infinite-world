@@ -1344,6 +1344,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 卡 METAB（t-metab，基于 t-msfix b1f275b4）：物种 nature 加结构化 metabolism（{satiety:0} 等，校验），木精及同类设计“不进食”物种声明；统一“按行动者物种取身体速率”入口，所有按 drainPerHour 算饱食/饥渴处一类改走；水分保留；新测 species-metabolism；怪物测试 #5 节苍榛仁改回可成交，t162 按 saleableStock 分流并保留烟苔拒卖明确覆盖。产物取代 ms-2。
 - fs-1（口粮替代统一）第一轮 approve，第二轮进行中。
 
+### 11-08 23:40 FOODSRC 云上通过
+- fs-1（6541f7eb，两轮 approve）云上新测 1/3 失败：非店铺卖家一笔未计入。根因 shop.mjs 非店铺循环用 row.definition 判食物，householdResources 返回行（household-budget.mjs:308 rows.map 剥离 definition/key）无该字段，恒假。两轮审查都漏了“返回结构剥离字段”——教训：审查要对照被调函数的返回形状逐字段核。同一步第 1 次失败。
+- 修 360565b3（按物品表判食物，同店铺分支）→ fs-2（b55a46d1…）两轮 approve（r1-20261108T233122Z-2403656、r2-20261108T233203Z-2404080）；云上 tests/household-food-sources-traders.test.mjs pass=3 fail=0（F:/dnd-tmp/fs2-test.full）。相关慢测（s5-law-household-budget、kd-labor-world、s5-02、s5-09、monster-society-content 等）待 b1m-1 结束后跑。
+- 服务器磁盘 82%（剩 9.4 GB）；fs-1 跑过有结果，按四条不可清（跳过正确）。有结果的旧目录（b1-p4/pb4/p7/pb7/p10/pb10、rg-d9、b1-c1/c2/b1 等）清理需逐次批准，接近 4 GB 门槛时再报李白。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
