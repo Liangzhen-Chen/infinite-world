@@ -1289,6 +1289,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - b1-shop-local-restock 夹具修复：24aaa489（openLedger 开账；删全世界现金合计——世界货币有合法外部进出 military.mjs:35/works.mjs:14/business.mjs:817；改按 __LEDGER_TRACE__ 核对本次本地进货过账+reconcile）→ b1-c6 第一轮 approve、第二轮 changes（筛选未限定本店本物品；变异 4 新理由无据，与 advance-registry.mjs:518-524 冲突——我给的措辞错了）→ 主会话自修 fe0e5f9b（只认 shop:shop_hw_forge:…:item_sickle:local:；两持货人 paidCopper>0；变异 4 理由改回）→ b1-c7（7f74c687…）两轮 approve（r1-20261108T195648Z-2210821、r2-20261108T195758Z-2211516）。未采纳“不成交用例断言一定不成交”：mustBuy=false 原意可成交可不成交。b1-c6 按四条清理（证据 F:/dnd-tmp/server-cleanup-1108c）。b1-c7 只改测试与变异工具，引擎同 b1-c5，不重跑全量；云上先跑三项新测（F:/dnd-tmp/b1c7/run.sh），新测过了再跑变异两段。
 - 云测提速（门禁 runjob.sh 最长先跑）：按历史 /work/*.full 最大 secs 降序、无历史排最前、任何失败退回原顺序；改前 5058374f（=快照 b65433ce），改后 80eef2ff（含第一轮建议的 `cat > $l || { cat; return; }`）。纸面推演（int-m.full，P=6）7.2h→6.5h（约 10%，达总量/6 下限）。第一轮 approve（两次），第二轮进行中。部署须等 rg-d12、b1-c5 全量跑完（bash 边读边执行，运行中替换脚本会打断作业）；部署照 deploy.sh update，先核版本与恢复入口，备份旧版。改后备份 F:/dnd-tmp/runjob.sh.bak-before-lpt。
 
+### 11-08 20:20 RG-A 合入、b1 拆账用例第三版
+- RG-A 全量 rg-d12 对照 int-m：新失败 2——system-map（renewable.mjs 未入 SYSTEMS 手工表，真错误；e9567ddb 归入 sim_wildlife，提交说明误写 sim_environment，以代码为准；rg-d13 两轮 approve，云上 system-map 9/9、rg-renewable 30/30）；npc-depth-yp（README 换行符，b1-c5 同败，与 RG 无关，排在下一次门禁/CRLF 修复）。修好 6（farm-pests-harvest、playtest-lifecycle、seasonal-migration 原超时，ka1-overlay、overfit-guard、performance）。ledger-stock（木炭配方产出 item_wood 超配方）、monster-society-content（市场深度库存不足 6 条）在 int-m 中超时被掩盖，b1-c5 与 rg-d12 失败逐条相同→基线已有真错误，记待办（守恒/库存类，不可归预期）。
+- **t-int 快进到 t-rg（e9567ddb）**。批次 1 候选须与新 t-int 合并后再跑一次全量对照才可合入（合并候选必须全量对比）。
+- b1 拆账用例：b1-c7 实测店主同意补柜台（柜台段 12、钱袋段 0），同一步第二次失败，已报李白复盘。诊断：npc-decision 对 fund_counter reward=cost。曾试 818171c5（撤必须拆账、变异 1 预期存活，以 playtest-lifecycle 为真实路径证据）→ b1-c8 第一轮 changes：lifecycle 归因不严（b1-c2→b1-c5 间还有别的改动）、并指出可用人物既有字段 redLines。307cfffe：拆账组合给店主追加 redLines {action:'fund_counter'}（只拒补柜台），恢复必须拆账，变异 1 恢复应杀 → b1-c9（eea78d8e…）两轮 approve。非阻断：世界数据 redLines 均为字符串、发布 schema（tools/npc-profile-schema.mjs:16）不收对象形，引擎认可对象形。b1-c8 已按四条清理。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
