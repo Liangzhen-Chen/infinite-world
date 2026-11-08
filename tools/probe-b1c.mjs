@@ -6,8 +6,8 @@
 //   node tools/probe-b1c.mjs catalog          a3-model-catalog #5 的前两步（不经 playtest 服务器，只取栈）
 //   node tools/probe-b1c.mjs cowork5 [N=26] [scan=1-26|none] [pair=yes|no|d1,d2,..]
 //        cowork 分歧的定位（第五、六版）：(1) 对世界日 k∈scan，新开引擎整段推进 k 天 vs 同一引擎逐日第 k 天，比较完整文档（所有顶层键）规范化事件编号后的 deepStrictEqual，
-//        报告第一个有差异的日子、当天前 20 条差异、按“仅长程有/仅逐日有/值不同”和顶层分组计数；
-//        (2) 两人在 coworkDay 的运行时刻（日结）经导出的 advanceNpcLife 取判定，并给出资格输入、计划行、作息片段；默认日期为 24..26，若 (1) 找到首个差异日则取其 ±1。
+//        每天全量输出规范化后的三类差异路径（仅长程有/仅逐日有/值不同，按路径排序，不设上限，值截 200 字符）和撞车键清单，供离线做候选减基线；
+//        (2) 两人在 coworkDay 的运行时刻（日结）经导出的 advanceNpcLife 取判定，并给出资格输入、计划行、作息片段；默认日期固定为 24..26，也可用参数指定。
 //        耗时估算（候选约 7 秒/模拟日）：N=26 全做约 3300 秒，接近单作业 3600 秒上限，所以可分段：`cowork5 26 1-13 no`、`cowork5 26 14-26 no`、`cowork5 26 none yes`。
 // 任何模式出现断言失败、异常或分歧：打印 error.stack / 差异，并设 process.exitCode=1。
 // 基线对照：本文件原样放进 t-int 同一份代码的目录，同参数运行。
@@ -117,36 +117,38 @@ async function cowork(){
 // 两份文档比较之前，把键名和字符串值里的 month、day_<数字> 统一换成 <EV>（两侧同一规则），再 deepStrictEqual；
 // 键名规范化后若撞车，按出现顺序加 ~n 后缀保留（不丢数据），所以“逐日有 N 条事件记录、整段只有 1 条”会如实显示为“仅逐日有”，不会被吞掉。
 // 规范化后仍有的差异一律算真实差异（exitCode=1），按三类计数并列出：仅长程有 / 仅逐日有 / 两边都有但值不同；同时给出两侧各替换了多少处。
-const EV_RX=/\bmonth\b|day_\d+/g;
-function normalizeEvents(value,counter){
+const EV_RX=/\bmonth\b|\bday_\d+\b/g;
+// 键名规范化后撞车（同一对象里多个键规范化成同一个）：第一个照常配对，其余不参与配对，单独记入 collisions（路径 + 次数），不进比较树、不当成值不同。
+function normalizeEvents(value,counter,path=[]){
  if(typeof value==='string')return value.replace(EV_RX,()=>{counter.n++;return '<EV>';});
- if(Array.isArray(value))return value.map(x=>normalizeEvents(x,counter));
+ if(Array.isArray(value))return value.map((x,i)=>normalizeEvents(x,counter,[...path,i]));
  if(value&&typeof value==='object'){
-  const out={},seen=new Map();
+  const out={};
   for(const [k,v] of Object.entries(value)){
-   let key=k.replace(EV_RX,()=>{counter.n++;return '<EV>';});
-   if(has(out,key)){const n=(seen.get(key)??0)+1;seen.set(key,n);key=`${key}~${n}`;}
-   out[key]=normalizeEvents(v,counter);
+   const key=k.replace(EV_RX,()=>{counter.n++;return '<EV>';});
+   if(has(out,key)){const id=[...path,key].join('.');counter.collisions.set(id,(counter.collisions.get(id)??0)+1);continue;}
+   out[key]=normalizeEvents(v,counter,[...path,key]);
   }
   return out;
  }
  return value;
 }
-const patternOf=path=>path.split('.').map(seg=>/^\d+$/.test(seg)?'#':seg).slice(0,6).join('.');
-const classify=d=>d.note==='键只在一边'?(d.longHasKey?'onlyLong':'onlyDaily'):'valueDiffers';
-function docDiffs(a,b,limit=400){
- const acc=[],walk=(x,y,path)=>{
-  if(acc.length>=limit||x===y)return;
-  if(typeof x!=='object'||typeof y!=='object'||x===null||y===null){acc.push({path:path.join('.'),long:x,daily:y});return;}
-  if(Array.isArray(x)!==Array.isArray(y)){acc.push({path:path.join('.'),note:'数组/对象不同'});return;}
+const clip=v=>{const t=JSON.stringify(v)??'undefined';return t.length>200?`${t.slice(0,200)}…(${t.length})`:t;};
+// 完整差异集（不设条数上限，不截深度）：键只在一侧存在时输出那个键的路径，不展开子树；两侧都有则下到叶子（或数组/对象形态不同处）。
+function fullDiffs(a,b){
+ const onlyLong=[],onlyDaily=[],valueDiffers=[],walk=(x,y,path)=>{
+  if(x===y)return;
+  if(typeof x!=='object'||typeof y!=='object'||x===null||y===null){valueDiffers.push({path:path.join('.'),long:clip(x),daily:clip(y)});return;}
+  if(Array.isArray(x)!==Array.isArray(y)){valueDiffers.push({path:path.join('.'),long:Array.isArray(x)?'<数组>':'<对象>',daily:Array.isArray(y)?'<数组>':'<对象>'});return;}
   for(const k of new Set([...Object.keys(x),...Object.keys(y)])){
-   if(has(x,k)!==has(y,k)){acc.push({path:[...path,k].join('.'),note:'键只在一边',longHasKey:has(x,k),dailyHasKey:has(y,k)});if(acc.length>=limit)return;continue;}
+   if(has(x,k)!==has(y,k)){(has(x,k)?onlyLong:onlyDaily).push([...path,k].join('.'));continue;}
    walk(x[k],y[k],[...path,k]);
   }
  };
- walk(a,b,[]);return acc;
+ walk(a,b,[]);
+ const byPath=(p,q)=>p<q?-1:p>q?1:0;
+ return {onlyLong:onlyLong.sort(byPath),onlyDaily:onlyDaily.sort(byPath),valueDiffers:valueDiffers.sort((p,q)=>byPath(p.path,q.path))};
 }
-const topOf=path=>path.split('.').slice(0,2).join('.');
 // PAIR 来自 v4 的 cowork 结果（分歧只在这两人），只是定点诊断，不代表别人没有分歧；全员的分歧由逐日整文档扫描覆盖。
 const PAIR=['npc_hw_duanyan','npc_hw_anhuai'];
 async function cowork5(){
@@ -164,18 +166,18 @@ async function cowork5(){
  if(hi>=lo){
   const {engine,doc}=fresh(),snapshots=[doc];let daily=doc;
   for(let day=0;day<hi;day++){const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,o.patches);snapshots.push(daily);}
-  const scan=[];
+  const scan=[],compact=m=>[...m].sort((p,q)=>p[0]<q[0]?-1:p[0]>q[0]?1:0).map(([path,extra])=>({path,collidedExtraKeys:extra}));
   for(let k=lo;k<=hi;k++){
-   const L=await longRun(k),D=snapshots[k],cl={n:0},cd={n:0},NL=normalizeEvents(L.doc,cl),ND=normalizeEvents(D,cd);
+   const L=await longRun(k),D=snapshots[k],cl={n:0,collisions:new Map()},cd={n:0,collisions:new Map()},NL=normalizeEvents(L.doc,cl),ND=normalizeEvents(D,cd);
    const same=Object.keys({...NL,...ND}).every(key=>strictSame(NL[key],ND[key]));
-   if(same){scan.push({day:k,identicalAfterNormalization:true,eventIdTokensReplaced:{long:cl.n,daily:cd.n}});continue;}
-   const diffs=docDiffs(NL,ND),cats={onlyLong:0,onlyDaily:0,valueDiffers:0},patterns={},groups={};
-   for(const x of diffs){const c=classify(x);cats[c]++;const key=`${c} ${patternOf(x.path)}`;patterns[key]=(patterns[key]??0)+1;const g=topOf(x.path);groups[g]=(groups[g]??0)+1;}
-   scan.push({day:k,identicalAfterNormalization:false,eventIdTokensReplaced:{long:cl.n,daily:cd.n},diffCount:diffs.length,diffCountCapped:diffs.length>=400,byCategory:cats,byTopLevelGroup:groups,
-    topPatterns:Object.entries(patterns).sort((x,y)=>y[1]-x[1]).slice(0,15).map(([pattern,count])=>({pattern,count})),...(firstDiffDay===null?{first20Diffs:diffs.slice(0,20)}:{})});
+   const collisionKeys={long:compact(cl.collisions),daily:compact(cd.collisions)};
+   if(same){scan.push({day:k,identicalAfterNormalization:true,eventIdTokensReplaced:{long:cl.n,daily:cd.n},collisionKeys});continue;}
+   const full=fullDiffs(NL,ND);
+   scan.push({day:k,identicalAfterNormalization:false,eventIdTokensReplaced:{long:cl.n,daily:cd.n},collisionKeys,
+    counts:{onlyLong:full.onlyLong.length,onlyDaily:full.onlyDaily.length,valueDiffers:full.valueDiffers.length},onlyLong:full.onlyLong,onlyDaily:full.onlyDaily,valueDiffers:full.valueDiffers});
    if(firstDiffDay===null)firstDiffDay=k;
   }
-  report.dailyScan={scan,firstDayWithDifference:firstDiffDay,note:'diffs 上限 400 条/天，达到上限时计数是下限；规范化后仍有的差异全部算真实差异'};
+  report.dailyScan={scan,firstDayWithDifference:firstDiffDay,note:'三类差异路径每天全量输出（按路径排序，不设上限；值截到 200 字符）；firstDayWithDifference 和退出码按任何差异判定，只作参考，真正定位靠离线做候选差异集减基线差异集（两边输出格式完全一致）'};
  }
  // (2)(3) 两人在 coworkDay 真实运行的时刻（日结那一刻、刚结束的那一天）的判定：直接调用引擎导出的 advanceNpcLife（它在每个午夜调用 coworkDay，npc-life.mjs:970），
  // 在“日结前一分钟（minute = 1440k-1）”的状态上对草稿跑 advanceNpcLife(before=1440k-1, after=1440k)，读两人关系记录的变化。
@@ -183,7 +185,7 @@ async function cowork5(){
  // advanceNpcLife 在同一刻还会跑 healthDay/familyDay 等（只发生在探针的草稿里，不写任何东西），所以只看两人 relationships 的变化。
  // 资格过滤的各项无法直接取到，改为输出它们读取的原始字段、导出的 npcIsMinor、静态亲缘（engine.byId 的 relationships）和阈值（rules.npcLife.kindness.cowork）。
  if(pairArg!=='no'){
-  const days=pairArg==='yes'?(firstDiffDay!==null?[firstDiffDay-1,firstDiffDay,firstDiffDay+1]:[24,25,26]):pairArg.split(',').map(Number);
+  const days=pairArg==='yes'?[24,25,26]:pairArg.split(',').map(Number);
   const pairDays=days.filter(k=>k>=1&&k<=N),maxDay=Math.max(...pairDays);
   // 逐日一侧：第一次推进到第 1 个午夜前一分钟，之后每次 1440 分钟，快照分钟 = 1440k-1。
   const {engine,doc}=fresh();let daily=doc;const boundary=[null];
@@ -199,7 +201,7 @@ async function cowork5(){
     const state=document.state,d=eng.primitiveDraft(document),before=Object.fromEntries(PAIR.map(id=>[id,structuredClone(state.npcs[id].relationships?.[other(id)]??null)]));
     let error=null;try{advanceNpcLife(d,eng,state.minute,state.minute+1);}catch(e){error=e.stack??String(e);}
     const after=d.get('state'),rel=Object.fromEntries(PAIR.map(id=>[id,{before:before[id],after:after.npcs[id].relationships?.[other(id)]??null}]));
-    return {stateMinute:state.minute,advanceNpcLifeError:error,pairRelationships:rel,coworkApplied:PAIR.some(id=>rel[id].after?.routine?.coworkTimes!==rel[id].before?.routine?.coworkTimes),
+    return {stateMinute:state.minute,advanceNpcLifeError:error,pairRelationships:rel,coworkApplied:PAIR.some(id=>rel[id].after?.routine?.coworkTimes!==rel[id].before?.routine?.coworkTimes),statusAfterAdvance:Object.fromEntries(PAIR.map(id=>[id,after.npcs[id].status])),
      eligibilityInputs:Object.fromEntries(PAIR.map(id=>{const n=state.npcs[id];return [id,{status:n.status,caring:n.caring??null,location:n.location,scheduleTravel:n.scheduleTravel??null,cognitionTravel:n.cognitionTravel??null,minor:npcIsMinor(eng,state,id,k*1440)}];})),
      staticTie:(eng.byId.get(PAIR[0])?.relationships??[]).some(r=>r.with===PAIR[1])||(eng.byId.get(PAIR[1])?.relationships??[]).some(r=>r.with===PAIR[0]),
      threshold:rules,plan:Object.fromEntries(PAIR.map(id=>[id,planRow(state,id,k)])),slots:Object.fromEntries(PAIR.map(id=>[id,slotsOf(eng,state,id,k)]))};
