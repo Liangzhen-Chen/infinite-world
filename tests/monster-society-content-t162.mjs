@@ -65,12 +65,16 @@ test('T162 六处聚居地均有路线和实际交易，私宅与议事处许可
  ['loc_ms_yugen','loc_bs_yupo','site_ms_yg_gate','npc_ms_yg_jiecang','item_hazelnut',600],['loc_ms_lielu','loc_bs_liquan','site_ms_ll_shop','npc_ms_ll_cuozhen','item_iron_nail',1140],
  [HX,'loc_bs_weiting',hx.garden,P.xianpu,'item_herb',600],[GS,'loc_bs_sangban',gs.gate,P.shenge,'item_flax_cord',600]];
  for(const[seat,parent,shop,seller,item,time]of all){const s=session();assert.ok(s.engine.route(parent,seat,'walk',time,'t162-six').minutes>0);const slot=world.npcs.find(n=>n.id===seller).schedule.default.find(x=>x.start<=time&&time<x.end);s.locate(slot.location,time);
-  // 食物受家庭口粮预留约束（李白口径）：烟苔一户的干蘑菇设计库存不足自用，应被拒；非食物（草药、铁钉、亚麻绳）照常成交。
+  // 食物受家庭口粮预留约束（李白口径）：按引擎事实判定——可售量够就成交，不够就拒卖；烟苔一户进食，干蘑菇设计库存不足自用，须拒卖（与不进食的木精户对照）。
   if(s.engine.byId.get(item).tags?.includes('food')){
    const stock=qty(s.doc,seller,item),sale=saleableStock(s.engine.primitiveDraft(s.doc),s.engine,seller,item),player=qty(s.doc,'player',item);
-   assert.equal(sale.stock,stock);assert.ok(sale.retained>=sale.stock,`自留${sale.retained}应不少于库存${sale.stock}`);assert.equal(sale.available,0);
-   await assert.rejects(s.call('world_trade',{seller,item,quantity:1}),e=>e.code==='E-ACTION-PRECONDITION'&&/扣除自用和已承诺存量后不够出售/.test(e.message));
-   assert.equal(qty(s.doc,seller,item),stock);assert.equal(qty(s.doc,'player',item),player);continue;
+   assert.equal(sale.stock,stock);
+   if(item==='item_dry_mushroom')assert.equal(sale.available,0,'烟苔进食，库存不足口粮');
+   if(!(sale.available>=1)){
+    assert.ok(sale.retained>=sale.stock,`自留${sale.retained}应不少于库存${sale.stock}`);
+    await assert.rejects(s.call('world_trade',{seller,item,quantity:1}),e=>e.code==='E-ACTION-PRECONDITION'&&/扣除自用和已承诺存量后不够出售/.test(e.message));
+    assert.equal(qty(s.doc,seller,item),stock);assert.equal(qty(s.doc,'player',item),player);continue;
+   }
   }
   const before=qty(s.doc,seller,item),buy=await s.call('world_trade',{seller,item,quantity:1});assert.ok(buy.cost>=0);assert.equal(qty(s.doc,seller,item),before-1);assert.ok(qty(s.doc,'player',item)>=1);
  }

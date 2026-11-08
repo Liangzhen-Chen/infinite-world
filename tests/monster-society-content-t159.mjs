@@ -36,14 +36,6 @@ async function enterUnlicensed(f,d,place,eventId){
  return out;
 }
 
-// 口粮预留按家庭真实需求整类适用（李白口径）：食物交易在设计库存下被拒；与 assertMarketDepth 同源读 saleableStock，只断言关系不手填数值。
-async function refuseFood(f,d,seller,item,eventId){
- const stock=qty(d,seller,item),sale=saleableStock(f.engine.primitiveDraft(d),f.engine,seller,item),player=qty(d,'player',item);
- assert.equal(sale.stock,stock);assert.ok(sale.retained>=sale.stock,`自留${sale.retained}应不少于库存${sale.stock}`);assert.equal(sale.available,0);
- await assert.rejects(f.run(d,'world_trade',{seller,item,quantity:1},eventId),e=>e.code==='E-ACTION-PRECONDITION'&&/扣除自用和已承诺存量后不够出售/.test(e.message));
- assert.equal(qty(d,seller,item),stock);assert.equal(qty(d,'player',item),player);
-}
-
 function fixture(world=formal,randomSeed='t159-content'){
  const engine=new WorldEngine(world);let document=engine.createCharacter(seed,{},randomSeed);
  document=applyPatches(document,planBossMigration(document,world.rules,world.bosses,world));
@@ -153,7 +145,11 @@ test('混居物种配额与资源来源：按物种生成到各自住区，族�
 test('榆坡附近进入榆根里：白天与节苍换林产，夜里与须晓换铲柄；通行约覆盖公共处，私宅与议根洞进入记擅入',async()=>{
  const f=fixture();let d=await at(f,f.document,yg.gate,600);
  assert.match(f.engine.scene(d),/节苍/);
- await refuseFood(f,d,P.jiecang,'item_hazelnut','buy_nut');
+ // 节榆木精不进食（物种代谢系数饱食为 0），节苍一户的榛仁没有饱食口粮预留：成交前可售量由引擎规则算出，须够卖 2 个。
+ const before=qty(d,P.jiecang,'item_hazelnut');
+ assert.ok(saleableStock(f.engine.primitiveDraft(d),f.engine,P.jiecang,'item_hazelnut').available>=2);
+ d=(await f.run(d,'world_trade',{seller:P.jiecang,item:'item_hazelnut',quantity:2},'buy_nut')).document;
+ assert.equal(qty(d,'player','item_hazelnut'),2);assert.equal(qty(d,P.jiecang,'item_hazelnut'),before-2);
  const signed=await f.run(d,'world_lair',{operation:'negotiate',lair:'lair_ms_yugen',pact:'nonaggression',term:'passage',days:10},'yg_pass');
  assert.equal(signed.result.accepted,true,JSON.stringify(signed.result));
  for(const id of signed.document.state.records[signed.result.agreement].locations)assert.ok(!['private','council'].includes(byId(formal,'locations',id).access?.mode),id);
