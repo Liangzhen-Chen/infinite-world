@@ -23,7 +23,7 @@ const MUTANTS=[
  ['shop pay 与预算都改回旧写法（整笔钱袋，预算不按钱袋现有现金封顶）',SHOP,[[NEW_PAY,OLD_PAY],[CAP,NOCAP]],SHOP_TESTS],
  ['shop 预算不再按钱袋现有现金封顶（付款仍用新原语）',SHOP,[[CAP,NOCAP]],SHOP_TESTS],
  ['relation_evidence 的 order 改回 500（与 daily 同位）',REGISTRY,[["{id:'relation_evidence',order:3000,","{id:'relation_evidence',order:500,"]],RELATION_TESTS,
-  '只有 order>500 的系统（shop_restock、npc_life、deliveries 等）在同一个午夜轮里产生债务逾期或约定违约时才有差别；正式世界的现成路径里没有这样的转移（欠薪逾期由 contracts order 200 翻转），构造它需要新夹具，不做；该位置的依据是代码审查（order 3000 在所有改记录状态的系统之后）'],
+  '合同、赊账、交付在 due 阶段处理，因此 relation_evidence 的 order 退回 500 不改变可观察结果（预期存活）；该位置的依据是代码审查（order 3000 在所有改记录状态的系统之后）'],
  ['去掉每个午夜的关系证据登记（只剩 reduce 末尾那次）',REGISTRY,[["advance:(e,d,ctx)=>{if(!(ctx.days>0))return;advanceHook('settleRecordRelationEvidence')?.(d,e,d.relationBase);d.relationBase=d.get('state');}}","advance:(e,d,ctx)=>{}}"]],RELATION_TESTS],
 ];
 const args=process.argv.slice(2),has=name=>args.some(x=>x===name||x.startsWith(`${name}=`)),value=name=>args.find(x=>x.startsWith(`${name}=`))?.slice(name.length+1)??null;
