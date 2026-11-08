@@ -44,19 +44,32 @@ async function cowork(){
  const days=(process.argv[3]??'3,6,10,15,20,30').split(',').map(Number),world=await loadWorld(),report=[];
  // 与 tests/npc-schedule.test.mjs 的 deepEqual 同一口径：键序无关，只看逐路径的值（diffPaths），不用 JSON.stringify。
  const realDiffs=(x,y)=>Object.keys({...x.state.npcs,...y.state.npcs}).map(id=>({id,diffs:diffPaths(x.state.npcs[id],y.state.npcs[id])})).filter(row=>row.diffs.length);
- const longRun=async(N)=>{const engine=new WorldEngine(world),doc=engine.createCharacter(seed,{},'schedule-month');return applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:N*1440},eventId:'month'})).patches);};
+ const CHARACTER_SEED='schedule-month',STEP_LONG='一次 world_time N×1440 分钟（eventId month）',STEP_DAILY='N 次 world_time 1440 分钟（eventId day_0..day_N-1，每次后 applyPatches）';
+ const fresh=()=>{const engine=new WorldEngine(world);return {engine,doc:engine.createCharacter(seed,{},CHARACTER_SEED)};};
+ const longRun=async(N)=>{const {engine,doc}=fresh();return applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:N*1440},eventId:'month'})).patches);};
  for(const N of days){
-  const engine=new WorldEngine(world),doc=engine.createCharacter(seed,{},'schedule-month'),long=await longRun(N),snapshots=[doc];
+  const {engine,doc}=fresh(),long=await longRun(N),snapshots=[doc];
   let daily=doc;
   for(let day=0;day<N;day++){const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,o.patches);snapshots.push(daily);}
   const differing=realDiffs(long,daily);
-  const row={days:N,differingNpcs:differing.map(r=>r.id),first:differing.slice(0,3)};
+  const row={days:N,
+   setup:{legacySeedFile:'tests/fixtures/legacy/seed.json',characterSeed:CHARACTER_SEED,randomSeed:doc.randomSeed??null,world:'loadWorld()（已审原样世界）',longStep:STEP_LONG,dailyStep:STEP_DAILY,
+    startMinute:doc.state.minute,endMinute:long.state.minute,startDate:engine.calendar(doc.state.minute).text,endDate:engine.calendar(long.state.minute).text},
+   differingNpcCount:differing.length,differingNpcs:differing.map(r=>r.id),first:differing.slice(0,6)};
   if(differing.length){
-   // 首个分歧日：对 k=1..N 二分（长程推 k 天 与 逐日第 k 天快照比较）。假设分歧一旦出现就持续；若不单调，二分只给出一个分歧点。
+   const diffAt=async k=>realDiffs(await longRun(k),snapshots[k]);
    try{
+    // 二分找候选首个分歧日 lo，然后实测核实：lo 两侧必须不一致、lo-1 两侧必须一致（单调）。不满足则报非单调并给逐日扫描，不报某个分歧日。
     let lo=1,hi=N;
-    while(lo<hi){const mid=Math.floor((lo+hi)/2);if(realDiffs(await longRun(mid),snapshots[mid]).length)hi=mid;else lo=mid+1;}
-    row.firstDivergentDay={day:lo,method:'binary-search-assumes-monotone',diffsAtThatDay:realDiffs(await longRun(lo),snapshots[lo]).slice(0,3)};
+    while(lo<hi){const mid=Math.floor((lo+hi)/2);if((await diffAt(mid)).length)hi=mid;else lo=mid+1;}
+    const atLo=await diffAt(lo),before=lo>1?await diffAt(lo-1):[];
+    if(atLo.length&&!before.length)row.firstDivergentDay={day:lo,verified:{dayDiffers:true,previousDayIdentical:lo>1?true:'lo=1，前一日是初始存档（两侧同一份）'},method:'binary-search+verified-both-sides',diffsAtThatDay:atLo.slice(0,6)};
+    else{
+     // 非单调（或二分落点自身与预期不符）：不报错误的分歧日，改逐日扫描 1..N（代价约 N²/2 个模拟日），输出每天是否一致。
+     const scan=[];for(let k=1;k<=N;k++){const diffs=await diffAt(k);scan.push({day:k,identical:diffs.length===0,differingNpcCount:diffs.length});}
+     row.firstDivergentDay={day:null,reason:'非单调：二分落点两侧核实不通过，改给逐日扫描',binarySearchLanding:lo,dayDiffersAtLanding:atLo.length>0,previousDayDiffers:before.length>0,
+      linearScan:scan,firstDivergentInScan:scan.find(r=>!r.identical)?.day??null};
+    }
    }catch(error){row.firstDivergentDay={day:null,reason:`推不出：${error.message}`};}
   }
   report.push(row);
