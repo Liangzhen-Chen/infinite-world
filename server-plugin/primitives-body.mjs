@@ -10,6 +10,18 @@ export function bodyRule(engine,need){
  if(!row)reject('E-BODY-TABLE','The archived body table is required');
  return row;
 }
+// The single entry for how fast an actor's need falls. The species' nature.metabolism
+// scales the person table per need (absent = 1, 0 = never falls); player and
+// speciesless actors follow the table as is. Every drain reader goes through here.
+export function metabolismFactor(engine,state,actor,need){
+ if(actor==='player')return 1;
+ const row=state?.npcs?.[actor]??state?.creatures?.[actor],species=engine.byId?.get(row?.species??engine.byId?.get(actor)?.species);
+ const factor=species?.nature?.metabolism?.[need];
+ return factor===undefined?1:factor;
+}
+export function bodyDrain(engine,state,actor,need,activity='light'){
+ return bodyRule(engine,need).drainPerHour[activity]*metabolismFactor(engine,state,actor,need);
+}
 export function bodyFact(engine,document,actor,need){
  const path=pathOf(document,actor);if(!path)reject('E-BODY-TARGET','The actor has no body');
  const rule=bodyRule(engine,need),stored=atPath(document,path)?.body?.[need];
@@ -20,7 +32,7 @@ export function bodyFact(engine,document,actor,need){
 export function readBodyState(engine,document,actor,need,minute=document.state.minute){
  const fact=bodyFact(engine,document,actor,need),rule=bodyRule(engine,need);
  if(!Number.isSafeInteger(minute)||minute<fact.asOf)reject('E-BODY-TIME','A body read cannot precede its saved fact');
- const rate=fixedUnits(rule.drainPerHour[fact.activity]);
+ const rate=fixedUnits(bodyDrain(engine,document.state,actor,need,fact.activity));
  let numerator=checkedFixed(fixedUnits(fact.value)*60n+BigInt(fact.remainder??0)+(need==='fatigue'?1n:-1n)*rate*BigInt(minute-fact.asOf));
  const maximum=fixedUnits(rule.max)*60n;numerator=numerator<0n?0n:numerator>maximum?maximum:numerator;
  // remainder is an integer division carry for minutes/hour, not a second

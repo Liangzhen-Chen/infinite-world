@@ -67,7 +67,7 @@ const speciesRows=[
    voice:'夜里彼此用短促的“咯咯”声招呼，换盐时会学着人说几个简单的词，比如“盐”“换”“不要”，声音尖细，说完便退后两步等对方回应。',
    niche:'北林边林下的杂食者，捕食小兽与虫，也吃浆果，把吃剩的果核带到别处，林下新苗里有不少是它们散出去的。',
    relations:'和河湾猎户互相提防又常有往来，用药草干果换盐；与灰脊林狼互相避让，狼来时整窝换洞。另有成群定居的同族，不计在这片野外。'}}),
- S({id:'monster_knot_elm_sprite',name:'节榆木精',lineage:'中式',kind:'木精',civilized:true,template:2,levelRange:[14,24],habitat:'habitat_yp_north_grove',grouping:'三至六个',
+ S({id:'monster_knot_elm_sprite',metabolism:{satiety:0},name:'节榆木精',lineage:'中式',kind:'木精',civilized:true,template:2,levelRange:[14,24],habitat:'habitat_yp_north_grove',grouping:'三至六个',
   diet:'不吃东西，靠根须吸取林下水土，白天晒太阳；也把腐叶埋进根旁',intelligence:3,population:8,capacity:12,recoveryPerWeek:0.4,activeHours:[300,1140],
   distinction:'身上长着一圈圈榆树节疤，走过的地方留下翻松的小土坑',drops:[],gather:{minutes:10,tool:null,consumes:[]},exchange:['item_dried_fruit','item_herb'],
   affinity:{weak:['magic_fire'],resist:['unarmed']},taming:{possible:false,conditions:['有灵智，只能结交或交易，不能驯服']},
@@ -91,7 +91,7 @@ const speciesRows=[
    voice:'很少出声，受惊时从鼻子里喷出一声短促的“嗤”，母獐唤小獐时发出低低的“呦”声，拖得很长。',
    niche:'北岗老林里的林下草食者，啃食嫩芽和朽木菌芝，把林下新长的灌木啃得稀疏，让老林里留出走动的空地。',
    relations:'被榆坡村民视作吉兽，不许追猎；与节榆木精共享林下互不打扰；见到石冠鸡蛇便远远避开。'}}),
- S({id:'monster_mist_flat_soul',name:'汀雾游魂',lineage:'中式',kind:'游魂',civilized:false,template:1,levelRange:[3,8],habitat:'habitat_wt_mist_flat',grouping:'独行',
+ S({id:'monster_mist_flat_soul',metabolism:{satiety:0},name:'汀雾游魂',lineage:'中式',kind:'游魂',civilized:false,template:1,levelRange:[3,8],habitat:'habitat_wt_mist_flat',grouping:'独行',
   diet:'不进食；凝在夜雾里，靠近生人时会挨过来取暖',intelligence:1,population:3,capacity:6,recoveryPerWeek:0,activeHours:[1260,300],
   distinction:'雾里一团人形的淡影，经过处草叶结一层冷霜',drops:[{item:'item_mist_frost',amount:1}],gather:{minutes:10,tool:null,consumes:[]},
   spirit:{nature:'malevolent',rank:0},manifest:{perWeek:1,seasons:[0,2,3],cause:'溺亡后未得安葬的人留下的残念，在春、秋、冬的雾夜里于滩上重新聚成形'},
@@ -116,7 +116,7 @@ const speciesRows=[
    voice:'在水里互相招呼时发出“咕噜咕噜”的冒泡声，上岸偷鱼时一边吱吱叫一边回头张望，被惊动便尖叫着跳回水里。',
    niche:'下游雾滩浅水里的捕鱼者，以鱼虾为食，夜里也翻找滩上的死鱼烂虾，滩边因此少有腐鱼堆积。',
    relations:'和苇汀渔家是冤家，常偷鱼、扯坏渔网；见到汀雾游魂就躲进苇丛；与沼光鬼火互不理会。'}}),
- S({id:'monster_gravel_womb_sprite',name:'石胎精',lineage:'中式',kind:'精怪',civilized:false,template:1,levelRange:[2,7],habitat:'habitat_lq_old_adit',grouping:'三至八个',
+ S({id:'monster_gravel_womb_sprite',metabolism:{satiety:0},name:'石胎精',lineage:'中式',kind:'精怪',civilized:false,template:1,levelRange:[2,7],habitat:'habitat_lq_old_adit',grouping:'三至八个',
   diet:'不吃东西；舔食泉沟石面上渗出的矿水',intelligence:1,population:6,capacity:10,recoveryPerWeek:0,activeHours:[360,1080],
   distinction:'拳头大的圆卵石长出四条短腿，在泉沟里慢慢挪动',drops:[{item:'item_stone',amount:1}],gather:{minutes:15,tool:null,consumes:[]},
   manifest:{perWeek:1,seasons:[0,1,2,3],cause:'泉沟里被水流长年冲磨的卵石偶尔开窍，自己生出腿来'},
@@ -129,7 +129,7 @@ const speciesRows=[
    voice:'没有叫声，只有石身磕碰的“咔、咔”声；许多个一起挪动时，泉沟里像有人在慢慢敲石头。',
    niche:'旧矿道口泉沟里的精怪，不吃活物也不被捕食，靠舔食矿水维持，是这片碎石坡上数量最多的异物。',
    relations:'砾泉村民大多不理它，取水时随手把它拨开；月涎灵蟾常趴在它们中间晒不到太阳的石缝里；裂牙兽人和苔背巨魔经过时会随脚踢开它们。'}}),
- S({id:'monster_barrow_stiff_corpse',name:'冢坡硬尸',lineage:'中式',kind:'僵尸',civilized:false,template:2,levelRange:[12,18],habitat:'habitat_sb_barrow_slope',grouping:'独行',
+ S({id:'monster_barrow_stiff_corpse',metabolism:{satiety:0,hydration:0},name:'冢坡硬尸',lineage:'中式',kind:'僵尸',civilized:false,template:2,levelRange:[12,18],habitat:'habitat_sb_barrow_slope',grouping:'独行',
   diet:'不进食；靠夜里冷土中的阴气维持僵硬的身体',intelligence:0,population:3,capacity:5,recoveryPerWeek:0,activeHours:[1200,300],
   distinction:'直挺挺地跳着走，所过之处的冷土上留下成对的深脚坑',drops:[],gather:{minutes:10,tool:null,consumes:[]},
   manifest:{perWeek:1,seasons:[2,3],cause:'浅埋又未行葬仪的尸身，在秋冬寒土里僵直起身'},
@@ -203,7 +203,7 @@ const speciesRows=[
    voice:'声音像远处滚石头一样低沉，说话很慢，一次只说一两个词，比如“饿”“搬”“粮”；打呼噜时整个坑道口都在嗡嗡响。',
    niche:'旧矿道口一带食量最大的杂食者，啃掉坡上大片苔藓和草根，也清理掉野兽的腐尸。',
    relations:'常和裂牙兽人在同一片坑道口出没，替他们搬重物换食物；砾泉村民怕它，但也雇它搬过大石；其他动物都远远躲开它睡觉的地方。另有成群定居的同族，不计在这片野外。'}}),
- S({id:'monster_tower_footing_skeleton',name:'塔基骷髅',lineage:'西式',kind:'骷髅',civilized:false,template:1,levelRange:[5,10],habitat:'habitat_hw_tower',grouping:'一至三具',
+ S({id:'monster_tower_footing_skeleton',metabolism:{satiety:0,hydration:0},name:'塔基骷髅',lineage:'西式',kind:'骷髅',civilized:false,template:1,levelRange:[5,10],habitat:'habitat_hw_tower',grouping:'一至三具',
   diet:'不进食；只在阴冷的夜里由塔基下积聚的寒气牵动',intelligence:0,population:3,capacity:6,recoveryPerWeek:0,activeHours:[1260,300],
   distinction:'一副发黄的人骨架，关节处缠着枯草根，走动时骨头咔咔作响',drops:[{item:'item_bone_blank',amount:1}],gather:{minutes:20,tool:'item_kitchen_knife',consumes:[{item:'item_water',amount:1}]},
   manifest:{perWeek:1,seasons:[0,1,2,3],cause:'废塔地基下无人收殓的枯骨，被塔基积聚的寒气牵动起身'},
@@ -229,7 +229,7 @@ const speciesRows=[
    voice:'没有叫声，身上的炭块互相摩擦时噼啪作响，吞下干柴时火光一涨，发出“呼”的一声。',
    niche:'西郊废窑里的元素体，靠吞食木炭、干柴和窑膛余热维持火光，不与活物争食，也没有野兽敢靠近它。',
    relations:'镇上拣砖人见了它就躲；灰窟哥布林远远绕开它；同在窑场的瓦灯魅和酸苔软泥与它各不相干。'}}),
- S({id:'monster_marsh_wisp',name:'沼光鬼火',lineage:'西式',kind:'鬼火',civilized:false,template:1,levelRange:[2,6],habitat:'habitat_wt_mist_flat',grouping:'三两点成串',
+ S({id:'monster_marsh_wisp',metabolism:{satiety:0},name:'沼光鬼火',lineage:'西式',kind:'鬼火',civilized:false,template:1,levelRange:[2,6],habitat:'habitat_wt_mist_flat',grouping:'三两点成串',
   diet:'不进食；从腐苇下冒出的沼气里汲取光亮',intelligence:1,population:5,capacity:8,recoveryPerWeek:0,activeHours:[1200,240],
   distinction:'几点淡绿的光浮在雾上，忽明忽暗，走近便往远处退',drops:[{item:'item_marsh_phosphor',amount:1}],gather:{minutes:10,tool:null,consumes:[]},
   spirit:{nature:'malevolent',rank:0},manifest:{perWeek:1,seasons:[0,1,2],cause:'腐苇下冒出的沼气缠上滩上残留的人念，在春夏秋的暖夜里点亮成形'},
@@ -285,7 +285,7 @@ export const species=speciesRows.map(r=>({
  id:r.id,name:r.name,aliases:[],template:r.template,levelRange:r.levelRange,habitatTags:[places.find(p=>p.habitat.id===r.habitat)?.habitat.name??{habitat_hw_wood:'北林边林下',habitat_hw_tower:'废观测塔林隙'}[r.habitat]],
  grouping:r.grouping,diet:r.diet,drops:r.drops,intelligence:r.intelligence,taming:r.taming,
  wildlife:{habitat:r.habitat,population:r.population,capacity:r.capacity,recoveryPerWeek:r.recoveryPerWeek,activeHours:r.activeHours,predatorOf:[],distinction:r.distinction,gather:r.gather,...(r.manifest?{manifest:r.manifest}:{})},
- nature:{lineage:r.lineage,group:groupOf[r.kind],kind:r.kind,civilized:r.civilized,reproduction:r.manifest?'manifest':'breeding',...(r.spirit?{spirit:r.spirit}:{}),affinity:r.affinity,...(r.exchange?{exchange:r.exchange}:{})}}));
+ nature:{lineage:r.lineage,group:groupOf[r.kind],kind:r.kind,civilized:r.civilized,reproduction:r.manifest?'manifest':'breeding',...(r.metabolism?{metabolism:r.metabolism}:{}),...(r.spirit?{spirit:r.spirit}:{}),affinity:r.affinity,...(r.exchange?{exchange:r.exchange}:{})}}));
 export const speciesProse=Object.fromEntries(speciesRows.map(r=>[r.id,r.prose]));
 export const proseFields=['appearance','habits','threat','materials','folklore','voice','niche','relations'];
 export const batchIds={species:species.map(s=>s.id),items:items.map(i=>i.id),places:places.map(p=>p.id),habitats:places.map(p=>p.habitat.id)};

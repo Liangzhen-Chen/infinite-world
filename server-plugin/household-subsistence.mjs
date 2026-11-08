@@ -2,7 +2,7 @@
 import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities} from './entity-view.mjs';
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
-import {bodyRule} from './primitives-body.mjs';
+import {bodyRule,bodyDrain} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {householdMealPlan,itemGrams} from './household-budget.mjs';
@@ -263,7 +263,7 @@ function mealDeficit(e,state,owner,settlement,members){
  // No private unit, seed or promise can increase a zero food deficit. Keep
  // the full meal allocator for partial shares and installed drain modifiers.
  if(publicShare===1&&!e.world.derived?.modifiers?.length){
-  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.length*bodyRule(e,need).drainPerHour.light*24]));
+  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((n,id)=>n+bodyDrain(e,state,id,need)*24,0)]));
   return {needs,shortfall:{satiety:0,hydration:needs.hydration}};
  }
  // A read-only meal projection keeps only copied quantities/selection rows.
