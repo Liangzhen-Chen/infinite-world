@@ -1310,6 +1310,13 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 新发现（目标“云测提速及找路、日历修复”范围内）：10 个测试文件三份全量都 3600 s 超时、多数第一个子测都没跑完（wildlife、s3-run001、record-index-check、npc-autonomy、ledger-price、farm-pests-hunt、farm-pests-clock、event-size、agriculture、a3-acceptance），等于零覆盖、可掩盖真失败。只读诊断进行中，之后定剖析方案。
 - 提速部署验证：b1m-1 前 6 个并行即历史 3600 s 的文件（最长先跑生效）。
 
+### 11-08 22:05 换行修复验证通过、待合入队列
+- 门禁 manifest.py -text 原字节 d49e1ab2 两轮 approve，本机已启用，快照 gate-approved-d49e1ab2e36e；服务器不规范化、暂不必部署，b1m-1 结束后 deploy.sh update 保持一致。遗留加固：_rx 对多重 '*a' 模式多项式回溯（本机同步可被乱写的 .gitattributes 拖慢）→ 折叠连续 '*' 或限长，下一次门禁改动做。
+- t-crlf a2466a1c → crlf-1（e83c392f…）两轮 approve（r1-20261108T220039Z-2338317、r2-20261108T220205Z-2339016）；云上 tests/npc-depth-yp.test.mjs pass=12 fail=0（F:/dnd-tmp/crlf1-test.full）。小瑕疵：.gitattributes 原 3 行行尾变 CRLF，下次顺手改回。
+- 待合入队列（都等 b1m-1 结论、t-int 快进到 t-b1m 之后依次合）：t-crlf（基于 t-int）、t-craftcap cc-2（基于 t-b1m，云测待跑 ledger-stock 等）、t-msfix ms-1（基于 t-b1m，云测待跑 monster-society-content）、t-prof prof-1（剖析工具，云上跑 mode=farm days=10）。
+- monster-society 的 K15 注释“同一午夜先分份后吃饭”与 advance-registry 顺序不符（daily 500 在 faction_clock 1400 前），下次改该文件时一并修注释。
+- b1m-1 实况（21:55）：前 6 个最长文件 05:53:57 结束，5 个 3600 s 超时、farm-pests-harvest 2794 s 通过，即“最长先跑”生效。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
