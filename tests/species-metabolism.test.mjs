@@ -10,6 +10,8 @@ import {bodyRule,bodyDrain,readBodyState} from '../server-plugin/primitives-body
 import {householdMealPlan} from '../server-plugin/household-budget.mjs';
 import {saleableStock} from '../server-plugin/market.mjs';
 import {societyForageNeed} from '../server-plugin/wildlife-society.mjs';
+import {explainDerived} from '../server-plugin/derived.mjs';
+import {settlementMealRatio,mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 import {mouthWeight} from '../server-plugin/household-subsistence.mjs';
 import {readMixedPublication,mergeMixedPublication} from '../tools/publish-creatures-mixed.mjs';
 import {validateCreatureNature} from '../server-plugin/creature-nature.mjs';
@@ -36,7 +38,7 @@ function pick(f){
 test('代谢系数校验：只允许饱食/水分两键，取值 0 到 4；正式数据全部通过',()=>{
  assert.deepEqual(validateCreatureNature(world),[]);
  const base=world.monsters.find(m=>m.id===ELM);assert.deepEqual(base.nature.metabolism,{satiety:0});
- for(const bad of [{satiety:5},{satiety:-1},{foo:1},{},{satiety:'0'},[0],null]){
+ for(const bad of [{satiety:0.001},{satiety:5},{satiety:-1},{foo:1},{},{satiety:'0'},[0],null]){
   const errors=validateCreatureNature({...world,monsters:[{...base,nature:{...base.nature,metabolism:bad}}]});
   assert.ok(errors.some(e=>e.includes(ELM)&&/代谢系数/.test(e)),JSON.stringify(bad));
  }
@@ -71,8 +73,9 @@ test('木精一户的口粮需求：饱食分量为 0，水分按人形；榛仁
  for(const id of plan.members)assert.equal(f.engine.byId.get(speciesOf(f.engine,state,id))?.nature?.metabolism?.satiety,0,id);
  assert.equal(plan.needs.satiety,0);assert.equal(plan.shortfall.satiety,0);
  assert.ok(plan.needs.hydration>0);
- // 水分需求按规则表：每名成员每日 light×24（无其他修正时），只断言不低于该基数。
- assert.ok(plan.needs.hydration>=plan.members.length*bodyRule(f.engine,'hydration').drainPerHour.light*24*0.999);
+ // 水分需求由规则精确推出：各成员按人形规则表每日 light×24，经同一 body:drain 派生求和。
+ const rule=bodyRule(f.engine,'hydration');
+ assert.equal(plan.needs.hydration,plan.members.reduce((n,id)=>n+explainDerived(f.engine,draft.document,'body:drain',id,{base:rule.drainPerHour.light*24}).value,0));
  const sale=saleableStock(draft,f.engine,elm,HAZELNUT);
  assert.equal(sale.available,sale.stock-sale.retained);assert.ok(sale.retained<sale.stock);assert.ok(sale.available>=1);
 });
@@ -97,4 +100,19 @@ test('精怪社会觅食需求按成员饱食代谢加权：不进食的游魂�
  assert.equal(societyForageNeed(d,f.engine,['t_fast']),0);
  assert.equal(societyForageNeed(d,f.engine,['t_fast','t_eat']),per);
  assert.equal(societyForageNeed(d,f.engine,['t_eat','t_eat']),per*2);
+});
+
+test('聚落公仓口粮按物种构成加权：混居聚落口数低于人头，全员进食的聚落不变',()=>{
+ const f=fixture(),factor=sp=>f.engine.byId.get(sp)?.nature?.metabolism?.satiety??1;
+ let mixed=0,plain=0;
+ for(const p of world.settlementProfiles){
+  const named=(p.residentIds??[]).map(id=>f.engine.byId.get(id)?.species);
+  const pending=p.pendingSpeciesStructure?Object.entries(p.pendingSpeciesStructure).map(([sp,g])=>[sp,g.population]):[[undefined,p.pendingPopulation??0]];
+  const total=named.length+pending.reduce((n,[,c])=>n+c,0),weighted=named.reduce((n,sp)=>n+factor(sp),0)+pending.reduce((n,[sp,c])=>n+c*factor(sp),0);
+  if(!(total>0))continue;
+  const ratio=settlementMealRatio(f.engine,p.id);
+  if(weighted===total){plain++;assert.equal(ratio,1,p.id);assert.equal(mealMouthsOf(f.engine,p.id,137),137);}
+  else{mixed++;assert.equal(ratio,weighted/total,p.id);assert.ok(ratio<1);assert.equal(mealMouthsOf(f.engine,p.id,100),Math.round(100*ratio));}
+ }
+ assert.ok(plain>0&&mixed>0,'既有全员进食聚落，也有含不进食物种的聚落');
 });

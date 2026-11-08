@@ -70,6 +70,7 @@ test('T162 六处聚居地均有路线和实际交易，私宅与议事处许可
    const stock=qty(s.doc,seller,item),sale=saleableStock(s.engine.primitiveDraft(s.doc),s.engine,seller,item),player=qty(s.doc,'player',item);
    assert.equal(sale.stock,stock);
    if(item==='item_dry_mushroom')assert.equal(sale.available,0,'烟苔进食，库存不足口粮');
+   if(item==='item_hazelnut')assert.ok(sale.available>=1,'节榆木精不进食，榛仁没有饱食口粮预留，应可成交');
    if(!(sale.available>=1)){
     assert.ok(sale.retained>=sale.stock,`自留${sale.retained}应不少于库存${sale.stock}`);
     await assert.rejects(s.call('world_trade',{seller,item,quantity:1}),e=>e.code==='E-ACTION-PRECONDITION'&&/扣除自用和已承诺存量后不够出售/.test(e.message));
