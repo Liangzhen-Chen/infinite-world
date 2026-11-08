@@ -1385,3 +1385,4 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - m3-language #1：第 11 轮三十天等待后 inventory 变了（玩家衣物每日磨损 100→98），int-m 同轮同断言失败 → 旧败，非候选引入；基线 b1-b1 通过而 int-m 失败，疑与真实 HTTP 轮次有关，归来源未明（旧），不阻断本批。
   - Invalid party balance（playtest-lifecycle #3、s4-office-quests #6）：diff 中唯一碰钱的 distribution.mjs:109-111 cash() 已排除；倾向是长程动态变化暴露某条未核余额的扣款路径（mirrorPartyCoins 负数调用点 20 多处）。需 office 探针取栈。规则层方向：扣款统一走带余额判定的原语。
   - kd2-process #1：候选未新增 recordCraft 调用点，自采不记 craft；窗口挤掉假设约 50%，需 kd2 探针确认。
+  - npc-schedule #11 静态排查：取柴排程（household-subsistence:525 按日幂等）、采集结算（:673、sites:462-465 固定午夜）、先采后烧（npc-life:111）、随机种子均已排除步长依赖。剩余嫌疑：逐日推进多切的日内段边界 + catchUpSubsistenceSchedules（npc-schedule:384）读当日计划行（约 40%）；coworkDay（npc-life:891）午夜回读昨天作息时计划行已被覆盖（约 30%）。须靠 cowork 探针二分定案。规则层方向：按世界日切片保留昨日计划行至午夜结算完毕。修后必带：npc-schedule、s5-law-subsistence、kd2-process、m3-language、playtest-lifecycle、education、record-index-check、agriculture、farm-pests-clock。
