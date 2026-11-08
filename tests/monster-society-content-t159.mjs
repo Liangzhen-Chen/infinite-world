@@ -13,6 +13,7 @@ import {planBossMigration} from '../server-plugin/boss-migration.mjs';
 import {planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {validateMonsterSocieties} from '../server-plugin/monster-society.mjs';
 import {homeResidents} from '../server-plugin/entity-view.mjs';
+import {saleableStock} from '../server-plugin/market.mjs';
 import {populationTemplate} from '../server-plugin/population.mjs';
 import {publicLore} from '../server-plugin/lore.mjs';
 import {buildBatch,ids,people,settlements,places,organizations} from '../world/design/monster-society-2.mjs';
@@ -33,6 +34,14 @@ async function enterUnlicensed(f,d,place,eventId){
  const access=f.engine.byId.get(place).access;
  if(access.mode==='council')assert.equal(rows[0].victim,access.authority);else assert.ok(homeResidents(f.engine,out.document.state,place).value.includes(rows[0].victim),rows[0].victim);
  return out;
+}
+
+// 口粮预留按家庭真实需求整类适用（李白口径）：食物交易在设计库存下被拒；与 assertMarketDepth 同源读 saleableStock，只断言关系不手填数值。
+async function refuseFood(f,d,seller,item,eventId){
+ const stock=qty(d,seller,item),sale=saleableStock(f.engine.primitiveDraft(d),f.engine,seller,item),player=qty(d,'player',item);
+ assert.equal(sale.stock,stock);assert.ok(sale.retained>=sale.stock,`自留${sale.retained}应不少于库存${sale.stock}`);assert.equal(sale.available,0);
+ await assert.rejects(f.run(d,'world_trade',{seller,item,quantity:1},eventId),e=>e.code==='E-ACTION-PRECONDITION'&&/扣除自用和已承诺存量后不够出售/.test(e.message));
+ assert.equal(qty(d,seller,item),stock);assert.equal(qty(d,'player',item),player);
 }
 
 function fixture(world=formal,randomSeed='t159-content'){
@@ -144,9 +153,7 @@ test('混居物种配额与资源来源：按物种生成到各自住区，族�
 test('榆坡附近进入榆根里：白天与节苍换林产，夜里与须晓换铲柄；通行约覆盖公共处，私宅与议根洞进入记擅入',async()=>{
  const f=fixture();let d=await at(f,f.document,yg.gate,600);
  assert.match(f.engine.scene(d),/节苍/);
- const before=qty(d,P.jiecang,'item_hazelnut');
- d=(await f.run(d,'world_trade',{seller:P.jiecang,item:'item_hazelnut',quantity:2},'buy_nut')).document;
- assert.equal(qty(d,'player','item_hazelnut'),2);assert.equal(qty(d,P.jiecang,'item_hazelnut'),before-2);
+ await refuseFood(f,d,P.jiecang,'item_hazelnut','buy_nut');
  const signed=await f.run(d,'world_lair',{operation:'negotiate',lair:'lair_ms_yugen',pact:'nonaggression',term:'passage',days:10},'yg_pass');
  assert.equal(signed.result.accepted,true,JSON.stringify(signed.result));
  for(const id of signed.document.state.records[signed.result.agreement].locations)assert.ok(!['private','council'].includes(byId(formal,'locations',id).access?.mode),id);
@@ -258,7 +265,7 @@ test('两地方案后果不同：榆根里同议则林产分给排水头与修�
   if(passed){d=(await persuade(c.gov,d,key,P.jieyin,'approve','沟是他们挖的')).document;d=(await persuade(c.gov,d,key,P.jiecang,'approve','刻上同议')).document;}
   d=(await c.gov(d,{operation:'governance_close',proposal:key,authority:P.jiecang},'close')).document;
   if(tweak)d=await tweak(f,d);
-  // 与上一例同理（K15）：同一午夜里先分份、后吃饭，等待后的库存已含消耗；改观察实际的 itemDelta 发放。
+  // 与上一例同理（K15）：发放（faction_clock，1400）排在每日结算（daily，500）之后，吃饭发生在其后的午夜，等待后的库存可能已含消耗；改观察实际的 itemDelta 发放。
   const changes=[],itemDelta=f.engine.itemDelta;
   f.engine.itemDelta=function(d,id,item,amount,books,...rest){
    const result=itemDelta.call(this,d,id,item,amount,books,...rest);

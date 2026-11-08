@@ -6,6 +6,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {validateNpcDepth} from '../tools/npc-profile-validation.mjs';
 import {validatePopulation} from '../tools/population-validation.mjs';
+import {saleableStock} from '../server-plugin/market.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {planBossMigration} from '../server-plugin/boss-migration.mjs';
@@ -32,6 +33,16 @@ async function enterUnlicensed(f,d,place,eventId){
  if(access.mode==='council')assert.equal(rows[0].victim,access.authority);else assert.ok(homeResidents(f.engine,out.document.state,place).value.includes(rows[0].victim),rows[0].victim);
  return out;
 }
+
+// 口粮预留按家庭真实需求整类适用（李白口径）：食物交易在设计库存下被拒；与 assertMarketDepth 同源读 saleableStock，只断言关系不手填数值。
+async function refuseFood(f,d,seller,item,eventId){
+ const stock=stockOf(d,seller,item),sale=saleableStock(f.engine.primitiveDraft(d),f.engine,seller,item),player=(d.state.inventory[item]?.quantity??0);
+ assert.equal(sale.stock,stock);assert.ok(sale.retained>=sale.stock,`自留${sale.retained}应不少于库存${sale.stock}`);assert.equal(sale.available,0);
+ await assert.rejects(f.run(d,'world_trade',{seller,item,quantity:1},eventId),e=>e.code==='E-ACTION-PRECONDITION'&&/扣除自用和已承诺存量后不够出售/.test(e.message));
+ assert.equal(stockOf(d,seller,item),stock);assert.equal((d.state.inventory[item]?.quantity??0),player);
+}
+
+const stockOf=(d,id,item)=>{const x=d.state.npcs[id].inventory[item];return typeof x==='number'?x:x?.quantity??0;};
 
 function fixture(world=formal){
  const engine=new WorldEngine(world);let document=engine.createCharacter(seed,{},'t157-content');
@@ -135,10 +146,7 @@ test('待生成人口与具名成员分开：登记12名，余数按种子配额
 test('白石镇近郊进入炭阶：黄昏后与换粮台的烟苔做有限库存交易，公共洞室可通行，私铺与议事窟进入记擅入',async()=>{
  const f=fixture();let d=await at(f,f.document,tj.stair,18*60+30);
  assert.match(f.engine.scene(d),/烟苔/);
- const stock=d.state.npcs[P.yantai].inventory.item_dry_mushroom.quantity??d.state.npcs[P.yantai].inventory.item_dry_mushroom;
- const buy=await f.run(d,'world_trade',{seller:P.yantai,item:'item_dry_mushroom',quantity:2},'buy_mushroom');d=buy.document;
- assert.equal(d.state.inventory.item_dry_mushroom.quantity,2);assert.equal(d.state.npcs[P.yantai].inventory.item_dry_mushroom.quantity,stock-2);
- await assert.rejects(f.run(d,'world_trade',{seller:P.yantai,item:'item_dry_mushroom',quantity:stock},'too_many'),/库存|不足|没有/);
+ await refuseFood(f,d,P.yantai,'item_dry_mushroom','buy_mushroom');
  for(const place of [tj.hearth,tj.fungus,tj.shaft,tj.forge,tj.yan])d=(await f.run(d,'world_move',{destination:place},`walk_${place}`)).document;
  assert.equal(d.state.location,tj.yan);
  await enterUnlicensed(f,d,tj.home1,'home');
