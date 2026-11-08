@@ -1338,6 +1338,12 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - MSFIX 续卡执行者核实：干蘑菇（烟苔/炭阶）与榛仁（节苍/榆根里）无任何配方产出、不在 renewables.json；monster-society-1.mjs 里职业 professions:[]（烟苔“菌床工”无 labor 类别），菌床 tj.fungus、育苗地 yg.nursery 无 site.resources；仅仓窟“窟粮燕麦”、yg.store“窖存榛仁 24”为静态存货。→ 按“不现实=缺规律”，属世界内容缺口：怪物据点生产职业与产地数据整类缺失。
 - 处置：本卡只做 (a) 拒卖断言（并修 #9/#10 注释）；(b) 盈余可卖暂缓到新内容卡“怪物据点生产职业与产地数据（整类）”补齐后再加。内容卡待李白定排期。
 
+### 11-08 23:45 物种代谢规律缺失（新卡 METAB）
+- ms-2 第一轮（approve 但指出）：节榆木精设计写“不吃东西”（creatures-mixed.mjs:71），引擎仍按人形给节苍户 5 口算每日 300 饱食口粮 → 榛仁拒卖是缺规律，不能写进测试。ms-2 停在第一轮，不进第二轮。
+- 诊断：物种无结构化饮食/代谢字段；body:drain 只被家户预算用，真实饱食衰减（primitives-body readBodyState）、household-subsistence、npc-labor 直接按人形速率算——只改预算会造成“预算不吃、实际照饿”的新不一致。derived 乘 0 会被相对下限 0.25 夹住，不走该路。
+- 卡 METAB（t-metab，基于 t-msfix b1f275b4）：物种 nature 加结构化 metabolism（{satiety:0} 等，校验），木精及同类设计“不进食”物种声明；统一“按行动者物种取身体速率”入口，所有按 drainPerHour 算饱食/饥渴处一类改走；水分保留；新测 species-metabolism；怪物测试 #5 节苍榛仁改回可成交，t162 按 saleableStock 分流并保留烟苔拒卖明确覆盖。产物取代 ms-2。
+- fs-1（口粮替代统一）第一轮 approve，第二轮进行中。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
