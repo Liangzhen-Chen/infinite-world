@@ -1301,6 +1301,15 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 云测提速已部署：服务器 /home/ubuntu/gate/runjob.sh = 80eef2ff（deploy.sh update，PREFLIGHT-OK；其余 4 个门禁脚本哈希与本地一致未变）；旧版备份 /home/ubuntu/gate-bak-5058374f；回退=把备份 runjob.sh 拷回。b1m-1 是首个按最长先跑的全量，实际耗时用来核对 6.5h 估算。
 - 独立工作：npc-depth-yp CRLF C+A 实施中（t-crlf，F:/dnd-wt/CRLF）。
 
+### 11-08 21:15 等合并全量期间的并行工作
+- 核证材料：b1-c5 逐文件差异 F:/dnd-tmp/b1c5/diff-vs-int-m.txt；b1-c9 原文 F:/dnd-tmp/b1c9/（远端第一段变异原文被第二段覆盖，仅本机副本）；b1m-1 审查原文 /work/.reviews/ac3f8672…/；本机用已批准 manifest.py 重算 CAND=eea78d8e、B1M=ac3f8672 与运行哈希一致。
+- 纪律：执行者曾直接改本机 gate/manifest.py（未审，且 sync/manifest.sh 会用它）→ 已移到 F:/dnd-tmp/manifest.py.text-new，本机恢复已批准版 7607c436。今后门禁改动一律在副本上做。
+- npc-depth-yp 换行：仓库侧 t-crlf a2466a1c（8 个文件 CRLF 入库+逐路径 -text）；门禁侧 manifest.py 认根 .gitattributes 的 -text/binary 保持原字节（d49e1ab2；第一轮抓到 pack 分支 notext 未定义的 NameError 已修，复核 approve；第二轮进行中）。部署须在 b1m-1 结束后，部署后云上只跑 npc-depth-yp。
+- ledger-stock 木炭产出木材=测试误判（失败退料按类别：intact 全退、wear 按 failureWear.returnFraction 向上取整、ruin 按 recoverFraction），账平。t-craftcap（基于 t-b1m）b316ab9e：manufacturing 抽 failureRecover/refundCount 作单一来源，recordCraft 失败时记 failure，ledger-stock 与 a3-score 同规则求上限（同类一并修）。cc-2（f5645dad…）两轮 approve；b1m-1 结束后云上跑 ledger-stock 等相关。
+- monster-society-content 6 条分三类：A #6/#28 K6（c60b2a62）改为进入记擅入、测试过时；B #10 分份后被家户吃掉（K15 同类，#9 已有观察写法）；C #5/#16/#27 市场深度把卖家食物货全留作口粮、怪物按人类消耗——规律缺口（经营存货与家用存粮不分账/物种生理），方案起草中（F:/dnd-tmp/proposal-market-depth.md），交李白定，不擅自开工。A+B：t-msfix 6b5131bb（只改测试），ms-1（236776d5…）第一轮 approve，第二轮进行中。
+- 新发现（目标“云测提速及找路、日历修复”范围内）：10 个测试文件三份全量都 3600 s 超时、多数第一个子测都没跑完（wildlife、s3-run001、record-index-check、npc-autonomy、ledger-price、farm-pests-hunt、farm-pests-clock、event-size、agriculture、a3-acceptance），等于零覆盖、可掩盖真失败。只读诊断进行中，之后定剖析方案。
+- 提速部署验证：b1m-1 前 6 个并行即历史 3600 s 的文件（最长先跑生效）。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
