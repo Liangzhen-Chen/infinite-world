@@ -1307,10 +1307,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 ## 11-08 RG 可再生存量规律（世界内容卡，批次 1 期间并行；负责人 abddc2e7c16bf507e）
 - 世界行为目标：公共采集点被采后按材料属性恢复或被采绝；留种与否由采集方式和采集者技能推出；同一世界日结果与推进步长无关；账目可追（src:regrowth → 资源点 → 行囊）。
 - 现状：sites.mjs:218-230 settle 已用 logisticStock（stock.mjs:67），127 个据点资源仅 44 个手写 regrow（全 calibration:pending），83 个不再生；forest-water/extraction/wildlife 同用 logisticStock。
-- 设计：K = 据点面积 × 单位面积生物量；r = ln19 ÷ 成熟期天数 × 季节密度（ln19 为逻辑斯蒂 5%→95% 时长，推出）；采集方式（连根/割叶/萌蘖/采果）× 繁殖方式 × 技能决定留存；个体差异用世界种子+据点+日+采集者确定性抽样；按世界日、沿季节边界分段结算。手写 regrow 条目迁移后删除（不做旧档兼容）。
+- 设计：K = 据点面积 × 单位面积生物量；r = 2·ln19 ÷ 成熟期天数 × 季节密度（逻辑斯蒂 5%→95% 历时 = 2·ln19/r；原写 ln19 有误，RG-A 第 2 轮指出）；采集方式（连根/割叶/萌蘖/采果）× 繁殖方式 × 技能决定留存；个体差异用世界种子+据点+日+采集者确定性抽样；按世界日、沿季节边界分段结算。手写 regrow 条目迁移后删除（不做旧档兼容）。
 - 缺字段：成熟期、繁殖方式、结种季、采集方式表、水补给周转天数——须有依据（forest growthPerDay、herb seasonDensity、植物学资料），不得拍值。
 - 分期：RG-A（现在可做，基于 t-int 9d47c510 新工作树）：独立纯函数模块 + 数据字段 + 单元/多步长测试，不接入 settle；RG-B（批次 1 合入后）：接入 sites settle / projectForest，迁移手写条目，跑受影响测试（sites、forest-water、kd-self-supply、kc-production、ledger-stock、numeric-persistence、s5-05、s5-09、s5-w4-economy、daily-b2-mechanisms）+ 多天一致性集。
 - 新增测试：步长 1/7/30 天一致、采空可否恢复、技能差异、结种季前采割、同种子复演、账目守恒、源码无单点特判。
+- RG-A 进展（t-rg，F:/dnd-wt/RG）：b143d273 → 0e599abb（季节改取世界日历、删 noise/immigration、restartUnits 待定）→ 6f669f39（删 leaveCap、spare 由调用方传入、seasonDensity 必填）。审查：rg-c1 第 1 轮 changes（leaveCap 拍系数、密度静默取 1）；rg-c2 第 1 轮 approve → 第 2 轮 changes（ln19 少乘 2，速率偏快一倍；损伤比例以可见存量为分母，近空时补拔几株即判整片根绝）。两次送审未过，按两次失败即停，已报亮圳待定。上传暂用 F:/dnd-tools/cloud/sync-deployed.sh（服务器门禁未部署新版前，新版 sync.sh 上传 .master 会被拒）。
 
 ## Claude API 开放式试玩者（PT-AI，常设路线项；主会话负责定期检查、主动推进）
 - 原约定（已查到）：10-31 会话 a099826b，用户批准，存在 claude-api-budget 记忆和本文件“S5 收口后：接入 Claude API”一条。
