@@ -1285,6 +1285,10 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 实质发现（15:26 就已在 run.log，我 4 小时没看）：b1-c5 变异全部未跑——未变异的候选基线就挂：tests/b1-shop-local-restock.test.mjs 5/5 失败，均为测试夹具问题：①setup 调 depositCounter 时账本未开（money.mjs:214）；②自写“全世界现金合计”7 天多 ~2682（漏算合法进出项或另有原因待查）。引擎修复尚未被它验证。已派实现者修夹具（复用账本逐笔+reconcile），修后两轮审再上云；“同一步两次失败”计数：本步第 1 次。
 - 自查：压缩后我把调度完全交给后台脚本的完成通知，脚本把变异与全量串在一起、只在全部结束才通知，中间失败无人看；且等待期间没推进其他不冲突工作。改：长测启动后每 30–45 分钟实查一次，分段结果一出就读。
 
+### 11-08 20:00 b1 夹具修复与云测提速
+- b1-shop-local-restock 夹具修复：24aaa489（openLedger 开账；删全世界现金合计——世界货币有合法外部进出 military.mjs:35/works.mjs:14/business.mjs:817；改按 __LEDGER_TRACE__ 核对本次本地进货过账+reconcile）→ b1-c6 第一轮 approve、第二轮 changes（筛选未限定本店本物品；变异 4 新理由无据，与 advance-registry.mjs:518-524 冲突——我给的措辞错了）→ 主会话自修 fe0e5f9b（只认 shop:shop_hw_forge:…:item_sickle:local:；两持货人 paidCopper>0；变异 4 理由改回）→ b1-c7（7f74c687…）两轮 approve（r1-20261108T195648Z-2210821、r2-20261108T195758Z-2211516）。未采纳“不成交用例断言一定不成交”：mustBuy=false 原意可成交可不成交。b1-c6 按四条清理（证据 F:/dnd-tmp/server-cleanup-1108c）。b1-c7 只改测试与变异工具，引擎同 b1-c5，不重跑全量；云上先跑三项新测（F:/dnd-tmp/b1c7/run.sh），新测过了再跑变异两段。
+- 云测提速（门禁 runjob.sh 最长先跑）：按历史 /work/*.full 最大 secs 降序、无历史排最前、任何失败退回原顺序；改前 5058374f（=快照 b65433ce），改后 80eef2ff（含第一轮建议的 `cat > $l || { cat; return; }`）。纸面推演（int-m.full，P=6）7.2h→6.5h（约 10%，达总量/6 下限）。第一轮 approve（两次），第二轮进行中。部署须等 rg-d12、b1-c5 全量跑完（bash 边读边执行，运行中替换脚本会打断作业）；部署照 deploy.sh update，先核版本与恢复入口，备份旧版。改后备份 F:/dnd-tmp/runjob.sh.bak-before-lpt。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
