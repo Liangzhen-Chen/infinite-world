@@ -227,8 +227,8 @@ async function cowork5(){
 // 注意：每次 reduce 结束后第 24 天的计划行通常已被第 25 天的覆盖，所以 inputsAtEnd 里的作息只含基础作息；
 // inputsFromStart（取自起点快照，第 24 天计划行仍在库里）才是“同工判定当时能读到的输入”的近似，仅对 j=24 有意义（j<24 的快照里没有第 24 天的计划行，照实标注）。
 // eventId 对照：A 组每个 S_j 用同一跨度各跑两次（eventId v8_* 与 month），C 组再跑 S_0→T 用 month、S_24→T 用 day_24（v7 失败/成功调用的原 eventId），看结果是否随 eventId 变化。
-// 参照：多推一天得到逐日快照 S_25，凡终点为第 25 天 09:00 的运行，两人关系必须与 S_25 严格相等，不一致设 exitCode=1。
-// 耗时估算（候选约 7 秒/模拟日）：逐日基线 25 天 + A 组 Σ(25-j)=81 天 ×2（两种 eventId）+ C 组约 1 天 + B 组约 3 天，合计约 190 个模拟日，约 1350 秒，在单作业 3600 秒内。
+// 参照：多推一天得到逐日快照 S_25，凡终点为第 25 天 09:00 的运行，两人关系的 routine 子对象必须与 S_25 严格相等，不一致设 exitCode=1（全文规范化后的比较另列为参考）。
+// 耗时估算（候选约 7 秒/模拟日）：逐日基线 25 天 + A 组 Σ(25-j)=81 天 ×2（两种 eventId）+ C 组约 1 天 + B 组约 3 天，合计约 190 个模拟日，约 1500 秒（含余量），在单作业 3600 秒内。
 async function cowork8(){
  const {scheduleAt}=await import('../server-plugin/npc-schedule.mjs');
  const {personConstraints}=await import('../server-plugin/entity-view.mjs');
@@ -258,9 +258,11 @@ async function cowork8(){
   try{
    const eng=new WorldEngine(world),out=await eng.reduce(startDoc,{tool:'world_time',args:{minutes},eventId}),end=applyPatches(startDoc,out.patches);
    // 参照比较：终点正好是第 25 天 09:00 的那些运行，两人关系必须与逐日快照 S_25 严格相等；其余终点（00:01、01:00 等）没有参照，只报是否出现 routine.cowork。
-   const comparable=end.state.minute===S25.state.minute,matchesS25=comparable?strictSame(pairRel(end.state),reference):null;
-   if(comparable&&!matchesS25)process.exitCode=1;// 同工丢失（与 S_25 不一致）
-   Object.assign(entry,{endMinute:end.state.minute,comparableToS25:comparable,matchesS25,coworkHappened:PAIR.some(id=>rel(end.state,id)?.routine?.cowork!==undefined),
+   // 两种比较都输出：(a) 关系全文先规范化事件编号再 strictSame（参考；evidenceKeys 等带事件编号文字，规范化后才可比）；(b) 只比 routine 子对象（cowork 周期、coworkTimes），exitCode 只看 (b)。
+   const comparable=end.state.minute===S25.state.minute,norm=v=>normalizeEvents(v,{n:0,collisions:new Map()}),routineOf=r=>Object.fromEntries(PAIR.map(id=>[id,r[id]?.routine??null]));
+   const matchesS25Normalized=comparable?strictSame(norm(pairRel(end.state)),norm(reference)):null,routineMatchesS25=comparable?strictSame(routineOf(pairRel(end.state)),routineOf(reference)):null;
+   if(comparable&&!routineMatchesS25)process.exitCode=1;// 同工丢失（routine 与 S_25 不一致）
+   Object.assign(entry,{endMinute:end.state.minute,comparableToS25:comparable,matchesS25Normalized,routineMatchesS25,coworkHappened:PAIR.some(id=>rel(end.state,id)?.routine?.cowork!==undefined),
     relations:pairRel(end.state),inputsAtEnd:inputs(eng,end.state,24)});
    runs.push(entry);return end;
   }catch(error){process.exitCode=1;entry.error=String(error?.stack??error);runs.push(entry);return null;}
@@ -271,8 +273,7 @@ async function cowork8(){
   await run('A',`A_from_day${j}`,snapshots[j],`S_${j}（逐日第 ${j} 天 09:00）`,T-snapshots[j].state.minute);
   await run('A-month',`A_from_day${j}_eventId_month`,snapshots[j],`S_${j}`,T-snapshots[j].state.minute,'month');// 同一跨度换成 v7 失败调用用的 eventId
  }
- // C 组（eventId 对照）：S_0→T 用 month（v7 整段，预期丢失同工，同 A-month 的 j=0）；S_24→T 用 day_24（v7 逐日最后一天，预期发生同工）。
- await run('C','C_S0_to_T_eventId_month',snapshots[0],'S_0',T-snapshots[0].state.minute,'month');
+ // C 组（eventId 对照）：S_0→T 用 month（v7 整段，预期丢失同工）就是 A-month 的 j=0 那一次（A_from_day0_eventId_month），不重复跑；S_24→T 用 day_24（v7 逐日最后一天，预期发生同工）。
  await run('C','C_S24_to_T_eventId_day_24',snapshots[24],'S_24',T-snapshots[24].state.minute,'day_24');
  // B 组
  const S24=snapshots[24];
@@ -281,7 +282,7 @@ async function cowork8(){
  if(near)await run('B','B_day24_23:59_plus2',near,'上一行的结束状态（第 24 天 23:59）',2);
  // 起点快照里的输入（j=24 才含第 24 天计划行）。
  const startInputs=Object.fromEntries([24,23].map(j=>[`S_${j}`,inputs(engine,snapshots[j].state,24)]));
- out({mode:'cowork8',characterSeed:CHARACTER_SEED,targetDay:TARGET_DAY,note:'每次新开引擎一次 reduce；coworkHappened=两人关系里出现 routine.cowork；matchesS25=终点为第 25 天 09:00 的运行，两人关系与逐日快照 S_25 的 strictSame 结果（不一致即同工丢失，exitCode=1）',referencePairRelationsAtS25:reference,inputsFromStart:startInputs,runs});
+ out({mode:'cowork8',characterSeed:CHARACTER_SEED,targetDay:TARGET_DAY,note:'每次新开引擎一次 reduce；coworkHappened=两人关系里出现 routine.cowork；matchesS25Normalized=终点为第 25 天 09:00 的运行，两人关系全文规范化事件编号后与 S_25 的 strictSame 结果（参考）；routineMatchesS25=只比 routine 子对象（cowork 周期、coworkTimes），不一致即同工丢失，exitCode=1',referencePairRelationsAtS25:reference,inputsFromStart:startInputs,runs});
 }
 
 // ---------- office ----------
