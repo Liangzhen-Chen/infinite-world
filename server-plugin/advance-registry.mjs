@@ -288,6 +288,8 @@ function systemRunsAt(system,engine,d,ctx){
     return true;
 }
 function runAdvanceSystems(engine,d,ctx){
+    // The state that day-sliced consumers (relation evidence from status transitions) compare against: this reduce's first segment start, then each midnight.
+    d.relationBase??=ctx.beforeState??d.get('state');
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
     if(d.scheduler)beginReactionTick(d);
@@ -414,6 +416,8 @@ const systems=[
       advancePets(d,e,(day+1)*1440);
       advanceWildlife(d,e,day);displaceForestWildlife(d,e,day);advanceBosses(d,e,day);
     }
+    // Day-sliced relation evidence: transitions since the previous midnight (or this reduce's start) are registered now, not at the end of the reduce.
+    advanceHook('settleRecordRelationEvidence')?.(d,e,d.relationBase);d.relationBase=d.get('state');
  }},
  {id:'pets',order:600,nextMinute:nextPetMinute,advance:(e,d,{after})=>advancePets(d,e,after)},
  {id:'agriculture_expiry',order:700,nextMinute:nextAgricultureDeadline,advance:(e,d)=>settleAgricultureExpiry(d,e)},
