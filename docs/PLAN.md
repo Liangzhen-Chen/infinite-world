@@ -1250,6 +1250,13 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 真正属于用户的决定（花钱、玩法/内容方向、存档与正式部署到用户环境）：单列一次通知后安静等待，不因 Stop hook 反复只回“等批准”；同时继续其余授权工作。
 - 11-08 执行：探针第三版、RG-A 第三版恢复修订；门禁 1c509170 已部署到腾讯云（r1 df3475be approve、r2 1c509170 approve 绑定最终指纹；部署前服务器脚本与批准快照 429bbdb0e9d4 逐字节一致，原版另备份于服务器 ~/gate-bak-429bbdb0e9d4；恢复：tc_admin 入口保留，把快照脚本经 deploy.sh 同法推回；未动 /work 数据、未改密钥与权限，部署时无运行中作业）。
 
+### 上传副本生命周期与清理边界（11-08 亮圳批准、长期授权李白；压缩恢复后先读本节）
+- 长期限定授权（核实后清理、事后报李白，不再等用户点卡）：只限同时满足四条的上传副本——①已被取代（继任目录在服务器上存在）②从未运行（门禁 jobs 无记录）③无结果文件（无 <dir>/.out/*、<dir>.full、<dir>.script.out）④无任务依赖（无进程 cwd 在其中）。任一不满足或不确定即跳过；不通配批删，不拿别的目录补数。不含：跑过的目录、结果文件、审查记录（/work/.reviews）、源代码、在用版本；不扩大权限、不增购。其余删除仍逐次请批准。
+- 工具（不在门禁指纹内，只用既有只读 df 与门禁 rm 动词）：F:/dnd-tools/cloud/cleanup-superseded.sh <证据目录> <目录:继任> …（逐个核四条、写证据、跳过不满足者）；F:/dnd-tools/cloud/upload-checked.sh <工作树> <底子> <新目录>（剩余空间 <4GB 拒绝上传并列出目录供清理，再调 sync.sh）。今后上传一律走 upload-checked.sh。
+- 生命周期：每张卡/每个探针在服务器上只留“当前送审版”加“有结果的版本”；新版上传成功后，被取代且未运行的旧版当场按上面四条清理，并在批次条目记一行。
+- 11-08 第二次清理：20 个（b1-p3/p5/p6/p8/p9、b1-pb3/pb5/pb6/pb8/pb9、rg-d1..d8/d10/d11），四条逐个核实，0 跳过，证据 F:/dnd-tmp/server-cleanup-1108b/（list、dirs、jobs、job-deps、hashes、deletions、df）。磁盘 100%→56%，腾出 22.5GB。
+- rg-d12 完整检查因磁盘满在 292/524 处停（已 kill）；磁盘满之后的结果不可信，部分结果留作参考 F:/dnd-tmp/rg12/full-aborted-diskfull.full，整轮重跑（含变异 149-155）。批次 1 候选 8a50aeb4 已上传 b1-c3（哈希 c5585558…）。
+
 ### 11-08 服务器与门禁状态
 - 清理（亮圳批准，仅限 28 个旧副本，非长期授权）：diag-wood、diag-wood-axe、diag-wood-base、diag-wood-nosite、e2s-bis、e2s-f9..f13、e2s-n2、e2s-p2、e2s-base、e2s-new、fuel-tc3、fuel-tc9、re-base、re-hang、c-fuel、c-int、subs-m1、subs-r7、subs-v-after、subs-v-before、rg-c1、b1-p1、b1-p2、b1-pb2。结果 1795 个文件先备份到 F:/dnd-tmp/server-archive-1108/results.tgz（清单 server-manifest.txt，逐一核对）；逐个复核后经门禁 rm 删除，磁盘 99%→46%（剩 26G）。以后删除仍需逐次批准。
 - 门禁部署后验证（VERIFY-PLAN 14–20）：14、15、17、18、20（静态）通过；16 的无 master 分支未测；19 发现 sync.sh 缺陷：本机 core.autocrlf=true，git archive 把 master json 转成 CRLF，与服务端 tree 不符而 exit 5。修法：sync.sh 在 archive 前用 GIT_CONFIG_* 强制 core.autocrlf=false。并入下一次门禁改动（连同 npc-depth-yp CRLF C+A、review-submit.sh 相对路径找不到 manifest.py），两轮审查后部署；在此之前上传继续用 sync-deployed.sh。plant-a-synonym 与 overfit-guard 重跑待该改动部署后做。
