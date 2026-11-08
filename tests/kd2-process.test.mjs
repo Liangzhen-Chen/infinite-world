@@ -81,6 +81,7 @@ test('加工行程只做本人手艺类别里的配方，只去有许可的工�
    assert.equal(netInTrace.get(item)??0,recorded,`${row.npc} ${row.recipe} ${key}：${item} 的净变化（过账）= 记录里的净变化`);
   }
   // 附加检查：只对仍在近期窗口内的记录（窗口满时早于最旧凭据的不在窗口内）。
+  assert.ok(Number.isSafeInteger(row.minute),`${row.npc} ${row.recipe} ${key}：加工劳动记录必须带 minute，否则窗口检查会被静默跳过`);
   if(!windowFull||row.minute>crafts[0].minute)assert.ok(crafts.some(c=>c.recipe===row.recipe&&String(c.eventId).startsWith(row.sourceEvent)&&c.eventId.includes(row.npc)),'制作账里能认出做工者');
  }
  assert.deepEqual(auditLedger(doc),[]);

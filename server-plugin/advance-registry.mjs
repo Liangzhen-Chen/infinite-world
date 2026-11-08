@@ -518,10 +518,11 @@ const systems=[
  }},
  {id:'wildlife_encounter',order:2800,active:(e,d,now)=>nextWildlifeEncounterMinute(d,e,now)!==Infinity,nextMinute:(e,d,now)=>nextWildlifeEncounterMinute(d,e,now),
   advance:(e,d,{before,after,id})=>{if(after===nextWildlifeEncounterMinute(d,e,before))settleWildlifeEncounter(d,e,wildlifeEncounterAt(d,e,d.get('state','location'),after),id);}},
- // Day-sliced relation evidence: runs at every midnight crossing and is the LAST system (order above every system that changes a record or obligation status, deliveries 2700 included),
- // so the transitions of the whole midnight round are registered at that midnight whatever the step length; the end-of-reduce call only repeats them (evidence keys make that a no-op).
- // The base is this reduce's first segment start, then the previous midnight's state.
- {id:'relation_evidence',order:3000,advance:(e,d)=>{advanceHook('settleRecordRelationEvidence')?.(d,e,d.relationBase);d.relationBase=d.get('state');}},
+ // Day-sliced relation evidence: runs at every midnight crossing (the self-check below keeps it day-sliced on the unscheduled path too, which does not consult systemRunsAt) and is the last
+ // system of the clock phase (order 3000, kept by ruleId 3000:relation_evidence, above every system that changes a record or obligation status, deliveries 2700 included; rite_projects runs in
+ // the later assertion phase and does not touch them), so the transitions of the whole midnight round are registered at that midnight whatever the step length;
+ // the end-of-reduce call only repeats them (evidence keys make that a no-op). The base is this reduce's first segment start, then the previous midnight's state.
+ {id:'relation_evidence',order:3000,advance:(e,d,ctx)=>{if(!(ctx.days>0))return;advanceHook('settleRecordRelationEvidence')?.(d,e,d.relationBase);d.relationBase=d.get('state');}},
 ];
 // Preparatory rules remain before the rules that consume their attendance and
 // booking contexts. Stable rule ids preserve those existing dependencies.
