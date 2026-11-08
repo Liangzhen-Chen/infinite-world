@@ -1270,6 +1270,8 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - kd2：候选两次早期制作在 ledger.crafts 里找不到凭据——stock.mjs:227 只留最后 50 条（“制造凭据…审计窗口”），候选家户自烧炭使制作变多把早期凭据挤出窗口。归类：旧预期不适用（窗口不是完整账，只有 kd2 当完整账读）。不采：按时限保留（时限无依据=拍系数）、新增持久逐笔记录（为测试造设施、存档变大）。采：测试开账本既有调试钩子 __LEDGER_TRACE__（ledger.mjs:217，每笔 transfer 记 eventId），对全部制作逐笔核对投入进汇、成品出源；窗口检查只对窗口内条目。t-cand 281446b1。
   - cowork（npc-schedule）：运行中（1 小时作业上限）。
   - 其余截断写法核查：ledger.drift 有计数兜底；military ledger 无测试当完整账读；organizations 只是视图截取。
+  - npc-schedule 定因（探针 v7/v10）：债务逾期、守约/违约等状态转移产生的关系证据原在整次 reduce 末尾以 reduce 起点为 before 登记一次，整段推进中途逾期的关系到 reduce 末尾才出现 → 依赖该关系的同工随步长不同。修：独立系统 relation_evidence（order 3000，午夜最后），每个午夜以上一午夜为 before 登记，末尾调用按键幂等（t-cand 49693f08、068ad62f、8a50aeb4，测试 tests/b1-relation-day-sliced.test.mjs）。
+  - 遗留（本批不改，登记）：S2 localRestock 视图整轮固定，钱袋已付出后家户预留可能被同轮后续进货重复计入可花额（旧有，现已按钱袋现金封顶不会透支）；S4 relation_evidence 每午夜遍历全部记录，规模=记录数×天数，待性能探针确认。
 - RG-A：rg-d1…rg-d12 共多轮审查。复盘两次：测试缺口靠零散变异逐个暴露 → 改为 tools/rg-mutate.mjs 系统变异（155 条，入库、随代码审查、云上跑）；手算期望值不可靠 → 一律按 IEEE double 推导并以云测为准。
   - 云测发现真引擎缺陷：stock.mjs logisticStock 在 e=exp(..)=1（锚点当分钟、rate 0、极小 rate）时闭式求值少 1 ulp，floor 后被当作收获、锚点抬高 1，森林/据点/矿脉/鱼群凭空多 1。修：e===1 返回 a.reserve（02a10f57，rg-d12，两轮 approve）。下一步：rg-d12 跑 RG 测试 + 变异两段 + 完整检查对照 int-m.full。
 - 违规自查：11-08 曾让审查者在本机跑纯算术/变异 node 脚本，并一度让实现者本机跑变异——违反“本地不跑 node 测试”，已撤回；此后本地只 node --check、静态推演、python 算术。
