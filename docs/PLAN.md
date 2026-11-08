@@ -1317,6 +1317,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - monster-society 的 K15 注释“同一午夜先分份后吃饭”与 advance-registry 顺序不符（daily 500 在 faction_clock 1400 前），下次改该文件时一并修注释。
 - b1m-1 实况（21:55）：前 6 个最长文件 05:53:57 结束，5 个 3600 s 超时、farm-pests-harvest 2794 s 通过，即“最长先跑”生效。
 
+### 11-08 22:40 b1m-1 实查与市场深度复现
+- b1m-1 实查（22:20）：447 B、6/527，6 个工作进程 CPU 均满载（ledger-price 42 min CPU 等），内存可用 115 GB，磁盘 75%，无卡死。前 6 个慢测在 int-m/b1-c5/rg-d12/b1-b1/b1-c2 里同样 3600 s 超时（farm-pests-harvest 除外），非合并引入；“最长先跑”致开头 2 小时少出结果。按最近实测重算：总 CPU 约 10.2 万 s，P=6 约 4.7 h，预计本机 01:40 前后完（原估 03:25 作废）。
+- pmd-1 市场深度探针（t-probe-md 265a70bc，两轮 approve）云上结果 F:/dnd-tmp/pmd1.out：人类店主林穗 item_ration 库存 6/20/200 retained 0 均成交；怪物烟苔 item_dry_mushroom 20/6 全额 retained 被拒、200 retained 60 成交；世界无非店主的人类 trade 服务者。
+- 再诊断（F:/dnd-tmp/proposal-market-depth.md 第 5 节）：allocateMeals 不认 merchandise，无豁免；林穗 retained 0 是短保质粮先抵或市场替代（未区分，需再跑探针）。烟苔户 4 人×1 日缓冲=240 饱食≈60 件干蘑菇，只有 20 件——拒卖可能合理。**待李白定设计口径**：怪物交易摊是否应有专门出售的存货（内容/数据层）或测试期望过高；定之前不改规则。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
