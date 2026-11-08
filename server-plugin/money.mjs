@@ -220,6 +220,18 @@ export function depositCounter(d,engine,{owner,seat,business,amount,eventId,writ
     mirrorPartyCoins(d,engine,owner,-amount,eventId,writer);
     return {account:row.account,amount};
 }
+// A business outlay: the counter pays first (up to what it holds), whatever it lacks comes from the owner's own purse (up to what the purse
+// holds); both legs are real transfers and the purse leg mirrors its legacy coins. Short in total -> fails loudly before anything is written.
+// The caller books the receiving side (mirrorPartyCoins) as for any moveCoins payment.
+export function payCounterThenPurse(d,engine,{owner,to,amount,writer,eventId}){
+    if(!Number.isSafeInteger(amount)||amount<1)throw Error('Payment requires a positive whole amount');
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter'),fromCounter=row?Math.min(counterCash(d,owner),amount):0,fromPurse=amount-fromCounter;
+    const purseCoins=d.get(...engine.actorPath(owner),'coins')??0;
+    if(fromPurse>purseCoins)throw Error(`Payment ${amount} exceeds the counter (${fromCounter}) plus the purse (${purseCoins})`);
+    if(fromCounter)moveCoins(d,{from:row.account,to,amount:fromCounter,writer,eventId});
+    if(fromPurse){moveCoins(d,{from:purse(engine,owner),to,amount:fromPurse,writer,eventId});mirrorPartyCoins(d,engine,owner,-fromPurse,eventId,writer);}
+    return {fromCounter,fromPurse};
+}
 // A payment out of the counter to any money party, limited to what the counter holds.
 export function payFromCounter(d,engine,{owner,to,amount,writer,eventId}){
     const row=dedicatedCoinAccount(d.get('state'),owner,'counter');

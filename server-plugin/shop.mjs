@@ -2,7 +2,7 @@ import {registerMerchandiseResolver} from './household-budget.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {toRational,fromRational} from './det-math.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {purse,treasury as treasuryAccount,moveCoins,coinRead,sink,dedicatedCoinAccount,counterCash,depositCounter,booksOpen,mirrorPartyCoins} from './money.mjs';
+import {purse,treasury as treasuryAccount,moveCoins,coinRead,sink,dedicatedCoinAccount,counterCash,depositCounter,payCounterThenPurse,booksOpen,mirrorPartyCoins} from './money.mjs';
 import {collectTransport} from './transport.mjs';
 import {transferItems} from './items.mjs';
 import {obligationTransaction} from './transition.mjs';
@@ -481,12 +481,14 @@ function localRestock(d,engine,shop,row,minute,want,ctx){
     if(!d.get('state','npcs',shop.keeper))return {...entry,reason:'店主不是名册人物，无从向持货人进货'};
     const eventId=`shop:${shop.id}:${minute}:${row.item}:local`;
     ctx.view??=keeperView(d,engine,shop.keeper,minute);
-    const view=ctx.view,budget=()=>{const b=householdBudget(d,engine,shop.keeper,{view});return counterCash(d,shop.keeper)+Math.max(0,Math.min(b.cash,...b.timeline.map(r=>r.balance)));};
+    // What this round may spend = what pay() can really draw: the counter plus the purse, the purse side also capped by the coins it holds now
+    // (the keeper's view is fixed for the round and does not see the purse money paid out in earlier deals).
+    const view=ctx.view,purseNow=()=>d.get(...actorPath(engine.world,shop.keeper),'coins')??0;
+    const budget=()=>{const b=householdBudget(d,engine,shop.keeper,{view});return counterCash(d,shop.keeper)+Math.max(0,Math.min(b.cash,...b.timeline.map(r=>r.balance),purseNow()));};
     const pay=({to,amount,eventId:id})=>{
         if(amount>counterCash(d,shop.keeper))fundCounter(d,engine,{shop,minute,target:amount,eventId:`${id}:fund`,ctx});
-        const counter=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account;
-        if(counter&&counterCash(d,shop.keeper)>=amount)moveCoins(d,{from:counter,to,amount,writer:'shop',eventId:id});
-        else{moveCoins(d,{from:purse(engine,shop.keeper),to,amount,writer:'shop',eventId:id});mirrorPartyCoins(d,engine,shop.keeper,-amount,id,'shop');}
+        // The keeper may decline to top the counter up; the outlay then comes from the counter as far as it goes and the rest from his purse.
+        payCounterThenPurse(d,engine,{owner:shop.keeper,to,amount,writer:'shop',eventId:id});
     };
     const decide=({cost,resale,seller})=>keeperChoice(d,engine,shop,minute,ctx,{kind:'restock',from:seller,cost:{value:cost},reward:Math.max(resale,Math.ceil(cost*shop.markup))});
     const r=buyFromHolders(d,engine,{buyer:shop.keeper,settlement:shop.settlement,item:row.item,want,minute,eventPrefix:eventId,view,cash:budget,pay,decide});
