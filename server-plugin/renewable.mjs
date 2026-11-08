@@ -85,7 +85,7 @@ function applyHarvest(row,ev,ctx){
     if(!taken)return 0;
     // The share of the breeding population destroyed is the taken amount over that population (the plants that can seed or
     // resprout = capacity × persistence), not over the visible stock: a patch cut to nothing still has its roots.
-    const persistence=row.persistence??PPM,population=ctx.capacity*persistence/PPM,keep=1-spare;
+    const persistence=row.persistence,population=ctx.capacity*persistence/PPM,keep=1-spare;
     let lost;
     if(taken<population){
         // persistence × (taken / (capacity × persistence / PPM)) = PPM × taken / capacity: persistence cancels, so the exact loss per take

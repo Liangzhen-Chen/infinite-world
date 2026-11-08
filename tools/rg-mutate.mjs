@@ -81,7 +81,7 @@ const PATCHES=[
  ['population without /PPM','population=ctx.capacity*persistence/PPM','population=ctx.capacity*persistence'],
  ['keep = 1+spare','keep=1-spare;','keep=1+spare;'],
  ['keep = spare','keep=1-spare;','keep=spare;'],
- ['branch: taken<=population','if(taken<population){','if(taken<=population){','at taken == population the two branches give the same loss (PPM*taken/capacity equals persistence) and the same accrual state'],
+ ['branch: taken<=population','if(taken<population){','if(taken<=population){','at taken == population the two branches give the same mathematical loss; their doubles (PPM*loss*keep vs persistence*loss*keep) can differ by one ulp when keep is not binary-exact, which can move the floored loss only when the exact total is an integer, by at most 1 ppm; the boundary-tie test pins keep=0.5, 0.9 and 0.95 to the exact integer loss'],
  ['branch: taken>population','if(taken<population){','if(taken>population){'],
  ['linear branch: periods 1','PPM*loss*keep,taken,ctx.capacity)','PPM*loss*keep,1,ctx.capacity)'],
  ['linear branch: divisor 1','PPM*loss*keep,taken,ctx.capacity)','PPM*loss*keep,taken,1)'],
@@ -156,6 +156,28 @@ const PATCHES=[
  ['result taken is regrown','taken:takenTotal','taken:regrownTotal'],
  ['spare function lost in context','spareOf:spare,','spareOf:undefined,'],
  ['capacity doubled in context','spareOf:spare,capacity}','spareOf:spare,capacity:capacity*2}'],
+ // day numbers and ledger postings
+ ['ledger: gatherer posting day fixed at 0','{day,from:\'reserve\'','{day:0,from:\'reserve\''],
+ ['ledger: regrowth posting day is fromDay','{day,from:\'src:regrowth\'','{day:fromDay,from:\'src:regrowth\''],
+ ['days entry day fixed at 0','days.push({day,visible','days.push({day:0,visible'],
+ ['ledger: gatherer posting direction reversed','from:\'reserve\',to:\'gatherer\'','from:\'gatherer\',to:\'reserve\''],
+ ['ledger: gatherer posting to reserve','to:\'gatherer\',actor','to:\'reserve\',actor'],
+ ['ledger: gatherer amount 0','amount:t}','amount:0}'],
+ ['ledger: regrowth posted to the gatherer','from:\'src:regrowth\',to:\'reserve\'','from:\'src:regrowth\',to:\'gatherer\''],
+ ['ledger: regrowth amount is the grown stock','amount:regrown}','amount:grown}'],
+ // remaining arithmetic and literals
+ ['persistence logistic starts from PPM','{reserve:row.persistence,','{reserve:PPM,'],
+ ['persistence logistic result not stored','row.persistence=logisticStock(','logisticStock('],
+ ['limit without /PPM','limit=capacity*row.persistence/PPM+base','limit=capacity*row.persistence+base'],
+ ['restart base only above 1 ppm','row.persistence>0?restart:0','row.persistence>1?restart:0'],
+ ['stock growth ignores density','{reserve:row.visible+base,capacity:limit,rate,from,to}','{reserve:row.visible+base,capacity:limit,rate:rate0,from,to}'],
+ ['day length 1 minute','to=from+MINUTES','to=from+1'],
+ ['root pull test inverted','if(method.kills===\'root\')','if(method.kills!==\'root\')'],
+ ['shoot cut test inverted','if(method.kills===\'shoot\')','if(method.kills!==\'shoot\')'],
+ ['shoot cut: resprout test on seed','props.regrowFrom===\'root\'?0:before?1:0','props.regrowFrom===\'seed\'?0:before?1:0'],
+ ['shoot cut: before inverted','?0:before?1:0;','?0:before?0:1;'],
+ ['methods default dropped','methods={},','methods,'],
+ ['harvests default dropped','harvests=[],','harvests,'],
 ];
 
 const MUTANTS=PATCHES.map(([note,from,to,equivalent],i)=>({n:i+1,note,from,to,equivalent}));
@@ -183,38 +205,42 @@ function run(testCopy){
 }
 const firstFailure=out=>(out.match(/^not ok \d+ - (.*)$/m)??[])[1]??'(no failing test name; the file did not load or crashed)';
 
-console.log(`rg-mutate: ${MUTANTS.length} mutants, ${JOBS} at a time, temp ${tmp}`);
-const base=build('base',original),baseline=await run(base.testCopy);
-if(baseline.code!==0){console.log('BASELINE FAILS: the unmutated module does not pass the tests; no mutant was run.\n'+baseline.out.split('\n').slice(-40).join('\n'));fs.rmSync(tmp,{recursive:true,force:true});process.exit(2);}
-console.log('baseline passes');
+async function main(){
+ console.log(`rg-mutate: ${MUTANTS.length} mutants, ${JOBS} at a time, temp ${tmp}`);
+ const base=build('base',original),baseline=await run(base.testCopy);
+ if(baseline.code!==0){console.log('BASELINE FAILS: the unmutated module does not pass the tests; no mutant was run.\n'+baseline.out.split('\n').slice(-40).join('\n'));return 2;}
+ console.log('baseline passes');
 
-const results=[];let next=0;
-async function worker(){
- for(;;){
-  const m=MUTANTS[next++];if(!m)return;
-  if(ONLY&&!ONLY.has(m.n))continue;
-  const count=original.split(m.from).length-1,tag=`M${String(m.n).padStart(3,'0')}`;
-  let status,detail='';
-  if(count!==1){status='PATCH-MISS';detail=` (pattern occurs ${count} times)`;}
-  else{
-   const built=build(String(m.n),original.replace(m.from,()=>m.to));
-   const check=spawnSync(process.execPath,['--check',built.moduleCopy],{encoding:'utf8'});
-   if(check.status!==0){status='INVALID';detail=` (${(check.stderr||'').split('\n').find(l=>l.includes('Error'))??'syntax error'})`;}
+ const results=[];let next=0;
+ async function worker(){
+  for(;;){
+   const m=MUTANTS[next++];if(!m)return;
+   if(ONLY&&!ONLY.has(m.n))continue;
+   const count=original.split(m.from).length-1,tag=`M${String(m.n).padStart(3,'0')}`;
+   let status,detail='';
+   if(count!==1){status='PATCH-MISS';detail=` (pattern occurs ${count} times)`;}
    else{
-    const r=await run(built.testCopy);
-    if(r.timedOut){status='TIMEOUT';}
-    else if(r.code!==0){status=m.equivalent?'EQUIVALENT-KILLED':'KILLED';detail=`  <- ${firstFailure(r.out).slice(0,110)}`;}
-    else status=m.equivalent?'EQUIVALENT':'SURVIVED';
+    const built=build(String(m.n),original.replace(m.from,()=>m.to));
+    const check=spawnSync(process.execPath,['--check',built.moduleCopy],{encoding:'utf8'});
+    if(check.status!==0){status='INVALID';detail=` (${(check.stderr||'').split('\n').find(l=>l.includes('Error'))??'syntax error'})`;}
+    else{
+     const r=await run(built.testCopy);
+     if(r.timedOut){status='TIMEOUT';}
+     else if(r.code!==0){status=m.equivalent?'EQUIVALENT-KILLED':'KILLED';detail=`  <- ${firstFailure(r.out).slice(0,110)}`;}
+     else status=m.equivalent?'EQUIVALENT':'SURVIVED';
+    }
    }
+   results.push({m,status});
+   console.log(`${tag} ${status.padEnd(18)} ${m.note}${detail}${status==='EQUIVALENT'?`  [${m.equivalent}]`:''}`);
   }
-  results.push({m,status});
-  console.log(`${tag} ${status.padEnd(18)} ${m.note}${detail}${status==='EQUIVALENT'?`  [${m.equivalent}]`:''}`);
  }
+ await Promise.all(Array.from({length:JOBS},worker));
+ const count=s=>results.filter(r=>r.status===s).length;
+ const bad=results.filter(r=>['SURVIVED','INVALID','PATCH-MISS','TIMEOUT'].includes(r.status));
+ console.log(`\nmutants run ${results.length}: killed ${count('KILLED')}, equivalent (survived as expected) ${count('EQUIVALENT')}, equivalent but killed ${count('EQUIVALENT-KILLED')}, survived ${count('SURVIVED')}, invalid ${count('INVALID')}, patch-miss ${count('PATCH-MISS')}, timeout ${count('TIMEOUT')}`);
+ if(bad.length)console.log('NOT KILLED OR NOT RUN: '+bad.map(r=>`M${String(r.m.n).padStart(3,'0')} ${r.status}`).join(', '));
+ return bad.length?1:0;
 }
-await Promise.all(Array.from({length:JOBS},worker));
-fs.rmSync(tmp,{recursive:true,force:true});
-const count=s=>results.filter(r=>r.status===s).length;
-const bad=results.filter(r=>['SURVIVED','INVALID','PATCH-MISS','TIMEOUT'].includes(r.status));
-console.log(`\nmutants run ${results.length}: killed ${count('KILLED')}, equivalent (survived as expected) ${count('EQUIVALENT')}, equivalent but killed ${count('EQUIVALENT-KILLED')}, survived ${count('SURVIVED')}, invalid ${count('INVALID')}, patch-miss ${count('PATCH-MISS')}, timeout ${count('TIMEOUT')}`);
-if(bad.length)console.log('NOT KILLED OR NOT RUN: '+bad.map(r=>`M${String(r.m.n).padStart(3,'0')} ${r.status}`).join(', '));
-process.exit(bad.length?1:0);
+let code=2;
+try{code=await main();}finally{fs.rmSync(tmp,{recursive:true,force:true});}
+process.exit(code);
