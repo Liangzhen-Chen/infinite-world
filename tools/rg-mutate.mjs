@@ -1,4 +1,5 @@
 // Mutation check for server-plugin/renewable.mjs against tests/rg-renewable.test.mjs.
+// Mutants target server-plugin/renewable.mjs, plus the pure logisticStock function of server-plugin/stock.mjs (patches with a fifth field 'stock').
 // Read-only: every mutant is built in memory and written under the system temp directory (the module copy and a copy of the test file whose
 // relative imports are rewritten to absolute file URLs); nothing in the repository is touched. Each mutant runs `node --test` on its temp copy.
 //
@@ -17,7 +18,11 @@ const root=path.resolve(import.meta.dirname,'..');
 const rootUrl=pathToFileURL(root).href+'/';
 const moduleFile=path.join(root,'server-plugin/renewable.mjs'),testFile=path.join(root,'tests/rg-renewable.test.mjs');
 const original=fs.readFileSync(moduleFile,'utf8'),testSource=fs.readFileSync(testFile,'utf8');
-// only= takes numbers and ranges (only=1-74 then only=75-148 splits a run in two); options are written `--jobs 4` or, because the gate refuses script arguments that start with a dash, `jobs=4`
+// logisticStock is pure: mutants of it are built as a small stand-alone module (the real stock.mjs registers ledger hooks and must not be loaded twice)
+const stockFile=path.join(root,'server-plugin/stock.mjs'),stockText=fs.readFileSync(stockFile,'utf8');
+const stockStart=stockText.indexOf('export function logisticStock('),stockEnd=stockText.indexOf('\n}\n',stockStart)+3;
+const stockFunction=stockText.slice(stockStart,stockEnd);
+// only= takes numbers and ranges (only=1-77 then only=78-154 splits a run in two); options are written `--jobs 4` or, because the gate refuses script arguments that start with a dash, `jobs=4`
 const args=process.argv.slice(2),option=name=>{const i=args.indexOf(name),bare=args.find(x=>x.startsWith(name.slice(2)+'='));return i>=0?args[i+1]:bare?bare.slice(name.length-1):null;};
 const JOBS=Number(option('--jobs'))||4,ONLY=option('--only')?new Set(option('--only').split(',').flatMap(x=>{const [a,b=a]=x.split('-').map(Number);return Array.from({length:b-a+1},(_,k)=>a+k);})):null,TIMEOUT_MS=15*60*1000;
 
@@ -177,19 +182,34 @@ const PATCHES=[
  ['shoot cut: before inverted','?0:before?1:0;','?0:before?0:1;'],
  ['methods default dropped','methods={},','methods,'],
  ['harvests default dropped','harvests=[],','harvests,'],
+
+ // logisticStock (stock.mjs): the exact cases of the curve
+ ['stock: rate 0 no longer returns the reserve exactly','(t===a.minute||a.rate===0)?a.reserve:','t===a.minute?a.reserve:',undefined,'stock'],
+ ['stock: anchor minute no longer returns the reserve exactly','(t===a.minute||a.rate===0)?a.reserve:','a.rate===0?a.reserve:',undefined,'stock'],
+ ['stock: every time returns the reserve (no growth at all)','(t===a.minute||a.rate===0)?a.reserve:','(t>=a.minute||a.rate===0)?a.reserve:',undefined,'stock'],
+ ['stock: rate <= 0 instead of === 0','a.rate===0)?a.reserve:','a.rate<=0)?a.reserve:','rates below 0 are rejected on entry (rate<0 throws), so <= 0 and === 0 select the same inputs','stock'],
+ ['stock: rebase only when the capacity changes','visible!==reserve||a.capacity!==capacity||a.rate!==rate','a.capacity!==capacity||a.rate!==rate',undefined,'stock'],
+ ['stock: result without the reserve floor','return Math.max(reserve,Math.floor(at(a,to)));','return Math.floor(at(a,to));',undefined,'stock'],
 ];
 
-const MUTANTS=PATCHES.map(([note,from,to,equivalent],i)=>({n:i+1,note,from,to,equivalent}));
+const MUTANTS=PATCHES.map(([note,from,to,equivalent,target],i)=>({n:i+1,note,from,to,equivalent,target:target??'renewable'}));
 if(args.includes('--list')||args.includes('list')){for(const m of MUTANTS)console.log(`M${String(m.n).padStart(3,'0')} ${m.equivalent?'(equivalent) ':''}${m.note}`);process.exit(0);}
 
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'rg-mutate-'));
-function build(id,source){
+function build(id,source,stockSource=null){
  const moduleCopy=path.join(tmp,`renewable.${id}.mjs`);
- fs.writeFileSync(moduleCopy,source.split("from './stock.mjs'").join(`from '${rootUrl}server-plugin/stock.mjs'`).split("from './det-math.mjs'").join(`from '${rootUrl}server-plugin/det-math.mjs'`));
+ let stubUrl=null;
+ if(stockSource!==null){
+  const stub=path.join(tmp,`stock-pure.${id}.mjs`);stubUrl=pathToFileURL(stub).href;
+  fs.writeFileSync(stub,`import {exp} from '${rootUrl}server-plugin/det-math.mjs';\n${stockSource}\n`);
+ }
+ const renewableSource=stubUrl===null?source:source.replace("import {logisticStock,accrueStock} from './stock.mjs';",`import {logisticStock} from '${stubUrl}';\nimport {accrueStock} from './stock.mjs';`);
+ fs.writeFileSync(moduleCopy,renewableSource.split("from './stock.mjs'").join(`from '${rootUrl}server-plugin/stock.mjs'`).split("from './det-math.mjs'").join(`from '${rootUrl}server-plugin/det-math.mjs'`));
  // the source-scan test reads the mutated module text as written (imports not rewritten)
  const scanCopy=path.join(tmp,`scan.${id}.mjs`);fs.writeFileSync(scanCopy,source);
  let test=testSource.split("'../server-plugin/renewable.mjs'").join(`'${pathToFileURL(moduleCopy).href}'`);
  test=test.split("read('server-plugin/renewable.mjs')").join(`fs.readFileSync(${JSON.stringify(scanCopy)},'utf8')`);
+ if(stubUrl!==null)test=test.replace("import {logisticStock} from '../server-plugin/stock.mjs';",`import {logisticStock} from '${stubUrl}';`);
  test=test.split("from '../").join(`from '${rootUrl}`).split('import.meta.url').join(JSON.stringify(pathToFileURL(testFile).href));
  const testCopy=path.join(tmp,`test.${id}.mjs`);fs.writeFileSync(testCopy,test);
  return {moduleCopy,testCopy};
@@ -209,18 +229,21 @@ async function main(){
  const base=build('base',original),baseline=await run(base.testCopy);
  if(baseline.code!==0){console.log('BASELINE FAILS: the unmutated module does not pass the tests; no mutant was run.\n'+baseline.out.split('\n').slice(-40).join('\n'));return 2;}
  console.log('baseline passes');
+ const stubBase=build('stubbase',original,stockFunction),stubBaseline=await run(stubBase.testCopy);
+ if(stubBaseline.code!==0){console.log('BASELINE WITH THE STAND-ALONE logisticStock FAILS; no mutant was run.\n'+stubBaseline.out.split('\n').slice(-40).join('\n'));return 2;}
+ console.log('stand-alone logisticStock baseline passes');
 
  const results=[];let next=0;
  async function worker(){
   for(;;){
    const m=MUTANTS[next++];if(!m)return;
    if(ONLY&&!ONLY.has(m.n))continue;
-   const count=original.split(m.from).length-1,tag=`M${String(m.n).padStart(3,'0')}`;
+   const target=m.target==='stock'?stockFunction:original,count=target.split(m.from).length-1,tag=`M${String(m.n).padStart(3,'0')}`;
    let status,detail='';
    if(count!==1){status='PATCH-MISS';detail=` (pattern occurs ${count} times)`;}
    else{
-    const built=build(String(m.n),original.replace(m.from,()=>m.to));
-    const check=spawnSync(process.execPath,['--check',built.moduleCopy],{encoding:'utf8'});
+    const built=m.target==='stock'?build(String(m.n),original,stockFunction.replace(m.from,()=>m.to)):build(String(m.n),original.replace(m.from,()=>m.to));
+    const check=spawnSync(process.execPath,['--check',m.target==='stock'?path.join(tmp,`stock-pure.${m.n}.mjs`):built.moduleCopy],{encoding:'utf8'});
     if(check.status!==0){status='INVALID';detail=` (${(check.stderr||'').split('\n').find(l=>l.includes('Error'))??'syntax error'})`;}
     else{
      const r=await run(built.testCopy);

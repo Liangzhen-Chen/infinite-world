@@ -431,16 +431,46 @@ test('rg: a breeding population of a single ppm still restarts the stock from th
  assert.equal(row.persistence,1);
 });
 
-test('stock: logisticStock does not invent a unit at a fresh anchor, and a zero rate never grows', () => {
- // capacity/(1+(capacity/reserve-1)) is 100.99999999999999 for 1001/101 and 999.9999999999999 for 1100/1000: the floor of that is one below the reserve
- for(const [reserve,capacity] of [[101,1001],[1000,1100]]){
+test('stock: logisticStock does not invent a unit at a fresh anchor, and a zero rate never grows (any number of days, any gaps)', () => {
+ // IEEE doubles: capacity / (1 + (capacity / reserve - 1) * 1) is below the reserve by one ulp for these pairs, so its floor is reserve - 1:
+ // 1001/101 -> 100.99999999999999, 1100/1000 -> 999.9999999999999, 1100/500 -> 499.99999999999994, 1100/250 -> 249.99999999999997,
+ // 275.5/250 -> 249.99999999999997 (python float; e^0 is exactly 1)
+ const pairs=[[101,1001],[1000,1100],[500,1100],[250,1100],[250,275.5]];
+ for(const [reserve,capacity] of pairs){
   const row={},grown=logisticStock(row,'x',{reserve,capacity,rate:0,from:0,to:1440});
-  assert.equal(grown,reserve,`rate 0 never grows (reserve ${reserve})`);
+  assert.equal(grown,reserve,`fresh anchor, rate 0 (reserve ${reserve}, capacity ${capacity})`);
   assert.equal(row.growthAnchors.x.reserve,reserve,'the fresh anchor starts exactly at the reserve');
+  // three consecutive days, then two intervals that do not start where the previous one ended: always the same reserve, never one more
+  let value=reserve;
+  for(const day of [1,2,3,10,25]){
+   value=logisticStock(row,'x',{reserve:value,capacity,rate:0,from:day*1440,to:(day+1)*1440});
+   assert.equal(value,reserve,`day ${day}, rate 0 (reserve ${reserve}, capacity ${capacity})`);
+   assert.equal(row.growthAnchors.x.reserve,reserve,`the anchor stays at the reserve on day ${day}`);
+  }
+ }
+ // the same through a rate that changes from positive to zero on a later day: the stretch with rate 0 adds nothing
+ for(const [reserve,capacity] of pairs){
+  const row={};let value=reserve;
+  value=logisticStock(row,'x',{reserve:value,capacity,rate:0.02,from:0,to:1440});
+  const grownOnce=value;assert.ok(grownOnce>=reserve);
+  for(const day of [1,2,3,4])value=logisticStock(row,'x',{reserve:value,capacity,rate:0,from:day*1440,to:(day+1)*1440});
+  assert.equal(value,grownOnce,`rate 0 after one growing day keeps ${grownOnce} (reserve ${reserve}, capacity ${capacity})`);
  }
  const row={};
  assert.equal(logisticStock(row,'x',{reserve:1000,capacity:1100,rate:0.02,from:0,to:1440}),1001,'ideal curve 1001.8, floor 1001');
  assert.equal(row.growthAnchors.x.reserve,1000);
+});
+
+test('rg: a winter with density 0 adds nothing on any day, also across the season edge', () => {
+ // day 270 is the first day of season 3. Visible 100 with the one-unit base gives reserve 101 and limit 1001: the pair whose closed form is 100.99999999999999
+ const props={...perennial,seasonDensity:[1,1,1,0]},row=fresh(100),out=run(row,props,{fromDay:270,toDay:330});
+ assert.equal(out.regrown,0);assert.equal(row.visible,100);assert.ok(out.days.every(d=>d.visible===100&&d.regrown===0));assert.deepStrictEqual(out.ledger,[]);
+ // across the edge: whatever grew in season 2 stays exactly constant from day 270 on, in both channels
+ const crossing={visible:100,persistence:500000},before=run(crossing,props,{fromDay:260,toDay:270});
+ const frozen={visible:crossing.visible,persistence:crossing.persistence},winter=run(crossing,props,{fromDay:270,toDay:330});
+ assert.ok(before.regrown>0,'it grew before winter');
+ assert.equal(winter.regrown,0);assert.equal(crossing.visible,frozen.visible);assert.equal(crossing.persistence,frozen.persistence);
+ assert.ok(winter.days.every(d=>d.visible===frozen.visible&&d.regrown===0));
 });
 
 test('rg: pending data is refused, never defaulted; every filled value has a source and a published basis', () => {
