@@ -1256,6 +1256,18 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 探针：v3（b1-p3/b1-pb3）第 1 轮 changes（4 条必改）→ 复盘：手工重写测试逻辑导致每轮新差距，已报李白 → v4（CAND 86b08923 / B1BASE a5026498，b1-p4/b1-pb4）判定改 deepStrictEqual、N≤30 逐日扫描、office/lifecycle 照抄测试断言、失败 exitCode=1；第 1 轮审查中。
 - RG-A 第三版 8d605045（2·ln19、繁殖种群分母、无事件整段对照测试），重新上传中。
 
+### 11-08 批次 1 根因与 RG-A 进展（续）
+- 探针 v4 两轮审过（p4-r1/p4-r2），腾讯云跑 b1-p4（候选）/b1-pb4（基线），结果在 F:/dnd-tmp/probe4/：
+  - office：候选 month-three 抛 Invalid party balance，基线通过。根因 shop.mjs:485-490 localRestock 的 pay：柜台不足整笔就从钱袋扣，而预算=柜台+家户可用（视图在本轮固定，看不到前几笔已付）。修：money.mjs 新原语 payCounterThenPurse（柜台先付、钱袋补、合计不足先抛错），budget 再按钱袋现有现金封顶；同类付款点核查无第二处。t-cand 7c16804f + tests/b1-shop-pay.test.mjs。
+  - lifecycle：候选第 2 个月同样 Invalid party balance，基线通过（minute 412529）；推定同根，修后复跑探针确认。
+  - kd2：候选两次早期制作在 ledger.crafts 里找不到凭据——stock.mjs:227 只留最后 50 条（“制造凭据…审计窗口”），候选家户自烧炭使制作变多把早期凭据挤出窗口。归类：旧预期不适用（窗口不是完整账，只有 kd2 当完整账读）。不采：按时限保留（时限无依据=拍系数）、新增持久逐笔记录（为测试造设施、存档变大）。采：测试开账本既有调试钩子 __LEDGER_TRACE__（ledger.mjs:217，每笔 transfer 记 eventId），对全部制作逐笔核对投入进汇、成品出源；窗口检查只对窗口内条目。t-cand 281446b1。
+  - cowork（npc-schedule）：运行中（1 小时作业上限）。
+  - 其余截断写法核查：ledger.drift 有计数兜底；military ledger 无测试当完整账读；organizations 只是视图截取。
+- RG-A：rg-d1…rg-d12 共多轮审查。复盘两次：测试缺口靠零散变异逐个暴露 → 改为 tools/rg-mutate.mjs 系统变异（155 条，入库、随代码审查、云上跑）；手算期望值不可靠 → 一律按 IEEE double 推导并以云测为准。
+  - 云测发现真引擎缺陷：stock.mjs logisticStock 在 e=exp(..)=1（锚点当分钟、rate 0、极小 rate）时闭式求值少 1 ulp，floor 后被当作收获、锚点抬高 1，森林/据点/矿脉/鱼群凭空多 1。修：e===1 返回 a.reserve（02a10f57，rg-d12，两轮 approve）。下一步：rg-d12 跑 RG 测试 + 变异两段 + 完整检查对照 int-m.full。
+- 违规自查：11-08 曾让审查者在本机跑纯算术/变异 node 脚本，并一度让实现者本机跑变异——违反“本地不跑 node 测试”，已撤回；此后本地只 node --check、静态推演、python 算术。
+- 门禁小改 b65433ce（sync.sh 强制 autocrlf=false、manifest.sh 绝对路径）两轮 approve，仅本地文件，无需部署，快照 gate-approved-b65433ce78a7；上传已改回新 sync.sh。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
