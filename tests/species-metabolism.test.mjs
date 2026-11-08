@@ -9,6 +9,8 @@ import {planBossMigration} from '../server-plugin/boss-migration.mjs';
 import {bodyRule,bodyDrain,readBodyState} from '../server-plugin/primitives-body.mjs';
 import {householdMealPlan} from '../server-plugin/household-budget.mjs';
 import {saleableStock} from '../server-plugin/market.mjs';
+import {mouthWeight} from '../server-plugin/household-subsistence.mjs';
+import {readMixedPublication,mergeMixedPublication} from '../tools/publish-creatures-mixed.mjs';
 import {validateCreatureNature} from '../server-plugin/creature-nature.mjs';
 
 const DAY=1440,ELM='monster_knot_elm_sprite',HAZELNUT='item_hazelnut';
@@ -72,4 +74,14 @@ test('木精一户的口粮需求：饱食分量为 0，水分按人形；榛仁
  assert.ok(plan.needs.hydration>=plan.members.length*bodyRule(f.engine,'hydration').drainPerHour.light*24*0.999);
  const sale=saleableStock(draft,f.engine,elm,HAZELNUT);
  assert.equal(sale.available,sale.stock-sale.retained);assert.ok(sale.retained<sale.stock);assert.ok(sale.available>=1);
+});
+
+test('公共口粮人头按饱食代谢加权：不进食者权重 0，其余为 1；后补的代谢字段不使重新发布判冲突',async()=>{
+ const f=fixture(),{elm,plain}=pick(f),state=f.document.state;
+ assert.equal(mouthWeight(f.engine,state,[elm]),0);
+ assert.equal(mouthWeight(f.engine,state,[plain,'player']),2);
+ assert.equal(mouthWeight(f.engine,state,[elm,plain]),1);
+ // 正式目录里的 nature.metabolism 是后补字段：本批骨架不含它，合并不报“正式条目冲突”。
+ const publication=await readMixedPublication();
+ assert.doesNotThrow(()=>mergeMixedPublication(world,publication));
 });

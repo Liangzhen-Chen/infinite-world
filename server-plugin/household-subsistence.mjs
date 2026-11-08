@@ -2,7 +2,7 @@
 import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities} from './entity-view.mjs';
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
-import {bodyRule,bodyDrain} from './primitives-body.mjs';
+import {bodyRule,bodyDrain,metabolismFactor} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {householdMealPlan,itemGrams} from './household-budget.mjs';
@@ -509,13 +509,15 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
 }
 // Morning decisions are campaign facts, not a process-local decision cache.
 const planKey=settlement=>`subsistence-plan:${settlement??'unregistered'}`;
+// A mouth is weighted by the member's satiety metabolism (1 for a person, 0 for one who never eats); public rations and meal accounts count weight, not heads.
+export const mouthWeight=(e,state,ids)=>ids.reduce((n,id)=>n+metabolismFactor(e,state,id,'satiety'),0);
 const mealMember=(e,state,id)=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded;
 export function householdSubsistenceGroups(e,state){
  const groups=new Map();
  for(const id of [...new Set([...Object.keys(state.npcs??{}),...(e.world.households??[]).flatMap(h=>h.members),...Object.values(state.family?.households??{}).flatMap(h=>h.members??[])])].sort()){
   if(!mealMember(e,state,id))continue;
   const h=personHousehold(e,state,id).value,key=h?.id??id,remote=state.npcs?.[id]?.materialized?.settlement;
-  if(!groups.has(key))groups.set(key,{owner:id,key,registered:Boolean(h||remote),mouths:h?.members.filter(member=>mealMember(e,state,member)).length??(remote?1:0),settlement:h?.settlement??remote??placeSettlement(e,state,state.npcs?.[id]?.location).value});
+  if(!groups.has(key))groups.set(key,{owner:id,key,registered:Boolean(h||remote),mouths:h?mouthWeight(e,state,h.members.filter(member=>mealMember(e,state,member))):(remote?mouthWeight(e,state,[id]):0),settlement:h?.settlement??remote??placeSettlement(e,state,state.npcs?.[id]?.location).value});
  }
  return [...groups.values()].sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);
 }
