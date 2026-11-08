@@ -42,18 +42,18 @@ test('同一轮连续两笔进货：第二笔的预算反映第一笔已从钱�
  try{out=await engine.reduce(doc,{tool:'world_time',args:{minutes:DEPART-doc.state.minute},eventId:'wait'});}finally{trace=globalThis.__LEDGER_TRACE__;delete globalThis.__LEDGER_TRACE__;}
  const after=applyPatches(doc,out.patches);
  const bought=after.state.records['shop:shop_hw_forge']?.entries?.find(e=>e.item==='item_sickle'&&e.added);
- assert.ok(bought,'第一笔应当成交');
+ assert.ok(bought,'第一笔应当成交');assert.ok(bought.paidCopper>0);
  assert.equal(bought.deals.length,1,'钱袋付出第一笔之后，第二笔预算不足，不成交');
  assert.ok(after.state.npcs[keeper].coins>=0);
  localPayments(trace,engine,after,[holder,'npc_hw_luowei'],bought.paidCopper);
  const result=reconcile(engine,after);
  assert.deepEqual(result.mismatches,[]);assert.deepEqual(result.lots,[]);assert.deepEqual(result.audit,[]);
 });
-// 守恒判定：这笔本地进货事件（eventId 含 ':local:'，排除 ':fund' 注资）的过账——付给卖方钱袋的钱必须全部来自店主的钱袋或柜台（没有第三方出钱），合计 = 成交额（没成交则为 0）。
+// 守恒判定：这笔本地进货事件（只认锻炉铺铁镰：shop.mjs:483 前缀 shop:shop_hw_forge:<分钟>:item_sickle:local，distribution.mjs:85 追加 :物品:卖方；同一周别的货的本地进货不计入，排除 ':fund' 注资）的过账——付给卖方钱袋的钱必须全部来自店主的钱袋或柜台（没有第三方出钱），合计 = 成交额（没成交则为 0）。
 // 不合计全世界现金：七天的世界时间里别的系统（工资、家户、税……）合法地进出现金，全世界合计不是这笔交易的不变量。
 function localPayments(trace,engine,after,holders,paidCopper){
  const keeperAccounts=new Set([purse(engine,keeper),dedicatedCoinAccount(after.state,keeper,'counter')?.account].filter(Boolean)),sellers=new Set(holders.map(h=>purse(engine,h)));
- const local=trace.filter(t=>t.writer==='shop'&&String(t.eventId).includes(':local:')&&!String(t.eventId).endsWith(':fund')),pay=local.filter(t=>sellers.has(t.to));
+ const local=trace.filter(t=>t.writer==='shop'&&String(t.eventId).startsWith('shop:shop_hw_forge:')&&String(t.eventId).includes(':item_sickle:local:')&&!String(t.eventId).endsWith(':fund')),pay=local.filter(t=>sellers.has(t.to));
  assert.deepEqual(local.filter(t=>!sellers.has(t.to)),[],'本地进货的非注资过账只能是付给卖方');
  assert.ok(pay.every(t=>keeperAccounts.has(t.from)),'付给卖方的钱只能来自店主的钱袋或柜台');
  assert.equal(pay.reduce((n,t)=>n+t.amount,0),paidCopper,'付给卖方的合计 = 成交额');
