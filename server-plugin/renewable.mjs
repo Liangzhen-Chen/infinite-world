@@ -134,7 +134,8 @@ export function settle(target,{props,methods={},capacity,calendar,fromDay,toDay,
         // breeding population: logistic recovery from what survived (zero cannot regrow)
         row.persistence=logisticStock(row,'persistence',{reserve:row.persistence,capacity:PPM,rate,from,to});
         const base=row.persistence>0?restart:0,limit=capacity*row.persistence/PPM+base;
-        const grown=Math.max(row.visible,logisticStock(row,'stock',{reserve:row.visible+base,capacity:limit,rate,from,to})-base);
+        // logisticStock never returns less than its reserve (visible + base), so the stock cannot shrink here: that guarantee is stock.mjs's
+        const grown=logisticStock(row,'stock',{reserve:row.visible+base,capacity:limit,rate,from,to})-base;
         const regrown=grown-row.visible;row.visible=grown;
         if(regrown)ledger.push({day,from:'src:regrowth',to:'reserve',amount:regrown});
         regrownTotal+=regrown;takenTotal+=taken;days.push({day,visible:row.visible,regrown,taken});

@@ -72,9 +72,11 @@ test('rg: stripped patch recovers or not according to how it regrows and what th
  // the same patch pulled out by the root is gone for good.
  row=fresh();grow(row,perennial,0,1,[harvest(0,'pull_whole',K,0)]);
  assert.equal(row.persistence,0);grow(row,perennial,1,2500);assert.equal(row.visible,0,'uprooted perennial stays extinct');
+ assert.equal(row.growthAnchors.stock.capacity,0,'an extinct patch has no capacity: zero cannot regrow (and the saved anchor says so)');
  // a seed-regenerated plant cut before it sheds seed leaves no offspring...
  row=fresh();grow(row,annual,0,1,[harvest(0,'cut_shoots',K,0)]);
  assert.equal(row.persistence,0);grow(row,annual,1,2500);assert.equal(row.visible,0);
+ assert.equal(row.growthAnchors.stock.capacity,0);
  // ...but cut after the seed season (day 200 is season 2) the seed is already in the ground.
  row=fresh();grow(row,annual,0,200);grow(row,annual,200,201,[harvest(200,'cut_shoots',K,0)]);
  assert.equal(row.persistence,1e6);grow(row,annual,201,2700);assert.ok(row.visible>=0.99*K);
@@ -415,6 +417,16 @@ test('rg: boundary tie (take equal to the whole population) loses the exact inte
   const damaged={visible:K,persistence:4e5};run(damaged,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',400,skill)]});
   assert.equal(damaged.persistence,after(leftOfDamaged),`skill ${skill}: population of 400 units (4e5 ppm x spare)`);
  }
+});
+
+test('rg: a breeding population of a single ppm still restarts the stock from the restart base', () => {
+ // capacity 1e8 x 1 ppm = 100 units, restart base 1000: limit 1100, reserve 1000 -> one day of logistic growth gives 1001, i.e. 1 visible unit
+ const props={...perennial,restartUnits:1000},row={visible:0,persistence:1};
+ const expected=Math.max(0,logisticStock({},'stock',{reserve:1000,capacity:1e8*1/1e6+1000,rate:perennial.ratePerDay,from:0,to:1440})-1000);
+ assert.equal(expected,1);
+ run(row,props,{capacity:1e8,fromDay:0,toDay:1});
+ assert.equal(row.visible,expected,'the base applies as soon as any breeding population survives');
+ assert.equal(row.persistence,1);
 });
 
 test('rg: pending data is refused, never defaulted; every filled value has a source and a published basis', () => {

@@ -2,7 +2,7 @@
 // Read-only: every mutant is built in memory and written under the system temp directory (the module copy and a copy of the test file whose
 // relative imports are rewritten to absolute file URLs); nothing in the repository is touched. Each mutant runs `node --test` on its temp copy.
 //
-//   node tools/rg-mutate.mjs [jobs=N] [only=3,17,40] [list]     (`--jobs N`, `--only ...`, `--list` also work)
+//   node tools/rg-mutate.mjs [jobs=N] [only=3,17,40-75] [list]     (`--jobs N`, `--only ...`, `--list` also work)
 //
 // Output, one line per mutant: number, KILLED / SURVIVED / EQUIVALENT (expected survivor, with its reason) / INVALID / PATCH-MISS / TIMEOUT,
 // the patch note and, for killed mutants, the first failing test. Exit code 0 only when every non-equivalent mutant is killed and the
@@ -17,9 +17,9 @@ const root=path.resolve(import.meta.dirname,'..');
 const rootUrl=pathToFileURL(root).href+'/';
 const moduleFile=path.join(root,'server-plugin/renewable.mjs'),testFile=path.join(root,'tests/rg-renewable.test.mjs');
 const original=fs.readFileSync(moduleFile,'utf8'),testSource=fs.readFileSync(testFile,'utf8');
-// options are written `--jobs 4` or, because the gate refuses script arguments that start with a dash, `jobs=4`
+// only= takes numbers and ranges (only=1-74 then only=75-148 splits a run in two); options are written `--jobs 4` or, because the gate refuses script arguments that start with a dash, `jobs=4`
 const args=process.argv.slice(2),option=name=>{const i=args.indexOf(name),bare=args.find(x=>x.startsWith(name.slice(2)+'='));return i>=0?args[i+1]:bare?bare.slice(name.length-1):null;};
-const JOBS=Number(option('--jobs'))||4,ONLY=option('--only')?new Set(option('--only').split(',').map(Number)):null,TIMEOUT_MS=15*60*1000;
+const JOBS=Number(option('--jobs'))||4,ONLY=option('--only')?new Set(option('--only').split(',').flatMap(x=>{const [a,b=a]=x.split('-').map(Number);return Array.from({length:b-a+1},(_,k)=>a+k);})):null,TIMEOUT_MS=15*60*1000;
 
 // [note, from, to, equivalent-reason?]   `from` must occur exactly once in the module source
 const PATCHES=[
@@ -81,7 +81,7 @@ const PATCHES=[
  ['population without /PPM','population=ctx.capacity*persistence/PPM','population=ctx.capacity*persistence'],
  ['keep = 1+spare','keep=1-spare;','keep=1+spare;'],
  ['keep = spare','keep=1-spare;','keep=spare;'],
- ['branch: taken<=population','if(taken<population){','if(taken<=population){','at taken == population the two branches give the same mathematical loss; their doubles (PPM*loss*keep vs persistence*loss*keep) can differ by one ulp when keep is not binary-exact, which can move the floored loss only when the exact total is an integer, by at most 1 ppm; the boundary-tie test pins keep=0.5, 0.9 and 0.95 to the exact integer loss'],
+ ['branch: taken<=population','if(taken<population){','if(taken<=population){','at taken == population the two branches give the same mathematical loss; their doubles (PPM*loss*keep vs persistence*loss*keep) can differ by one ulp when keep is not binary-exact, which can move the floored loss only when the exact total is an integer, by at most 1 ppm; on keep=0.5, 0.9 and 0.95 the boundary-tie test pins the exact integer loss, in general the difference is at most 1 ppm'],
  ['branch: taken>population','if(taken<population){','if(taken>population){'],
  ['linear branch: periods 1','PPM*loss*keep,taken,ctx.capacity)','PPM*loss*keep,1,ctx.capacity)'],
  ['linear branch: divisor 1','PPM*loss*keep,taken,ctx.capacity)','PPM*loss*keep,taken,1)'],
@@ -144,8 +144,7 @@ const PATCHES=[
  ['restart base at persistence 0 (>=)','row.persistence>0?restart:0','row.persistence>=0?restart:0'],
  ['limit ignores persistence','limit=capacity*row.persistence/PPM+base','limit=capacity+base'],
  ['limit without restart base','limit=capacity*row.persistence/PPM+base','limit=capacity*row.persistence/PPM'],
- ['stock may shrink','Math.max(row.visible,logisticStock(','(logisticStock('],
- ['base not subtracted from grown stock','{reserve:row.visible+base,capacity:limit,rate,from,to})-base)','{reserve:row.visible+base,capacity:limit,rate,from,to}))'],
+ ['base not subtracted from grown stock','rate,from,to})-base;','rate,from,to});'],
  ['base not added to the reserve','reserve:row.visible+base','reserve:row.visible'],
  ['regrown without subtracting visible','regrown=grown-row.visible;','regrown=grown;'],
  ['zero regrowth posted','if(regrown)ledger.push','ledger.push'],
@@ -197,7 +196,7 @@ function build(id,source){
 }
 function run(testCopy){
  return new Promise(resolve=>{
-  const child=spawn(process.execPath,['--test','--test-reporter=tap',testCopy],{cwd:root,stdio:['ignore','pipe','pipe']});
+  const child=spawn(process.execPath,['--test','--test-isolation=none','--test-reporter=tap',testCopy],{cwd:root,stdio:['ignore','pipe','pipe']});
   let out='',timedOut=false;const timer=setTimeout(()=>{timedOut=true;child.kill('SIGKILL');},TIMEOUT_MS);
   child.stdout.on('data',d=>out+=d);child.stderr.on('data',d=>out+=d);
   child.on('close',code=>{clearTimeout(timer);resolve({code,out,timedOut});});
