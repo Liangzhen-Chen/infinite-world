@@ -13,7 +13,9 @@
 // path); the module has no skill formula of its own, and a harvest without `spare` fails loudly.
 // Restart: while any breeding population survives it stands for `restartUnits` stock units of growth base (species data; pending
 // for every real species until a basis exists), so a stripped patch regrows from that base; with no survivor it cannot regrow
-// (as in logisticStock). Not modelled here (RG-B decisions): individual variation, immigration from neighbouring patches.
+// (as in logisticStock). Not modelled here (RG-B decisions): individual variation, immigration from neighbouring patches,
+// and the life cycle of perennial seed-regenerated trees (a mature tree is itself a seed source, so felling one after the seed season
+// costs no offspring under the annual rule used for the whole seed class until RG-B decides).
 // Unit assumption: one stock unit stands for one breeding unit (mass and plant count scale together), so the share of the breeding
 // population destroyed by a take is taken / (capacity × persistence); species whose unit weight differs from their breeding unit
 // would need a per-species conversion (not in the data yet).
@@ -59,7 +61,8 @@ const restartOf=props=>{
 
 // Share of the taken plants' breeding units destroyed (botany, no coefficients): a root-pulled plant is gone; a shoot-cut plant
 // is gone unless it resprouts from the root; seed-regenerated plants lose their offspring when taken before the species sheds
-// seed; picking fruit takes the seed. After the seed season an annual's seed is already in the ground.
+// seed; picking fruit takes the seed. After the seed season the seed of a seed-regenerated plant is already in the ground (true of
+// annuals; a perennial seed-regenerated tree is not modelled, see the header).
 export function breedingLoss(props,method,season){
     if(!['root','seed'].includes(props.regrowFrom))fail('species regrowFrom must be root or seed');
     if(!['root','shoot','none'].includes(method?.kills))fail(`unknown harvest effect ${method?.kills}`);

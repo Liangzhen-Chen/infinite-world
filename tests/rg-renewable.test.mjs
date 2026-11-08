@@ -63,7 +63,11 @@ test('rg: stripped patch recovers or not according to how it regrows and what th
  const grow=(row,props,from,to,harvests=[])=>run(row,props,{fromDay:from,toDay:to,harvests});
  // perennial cut at the shoot resprouts from the root: back to capacity.
  let row=fresh();grow(row,perennial,0,1,[harvest(0,'cut_shoots',K,0)]);
- assert.equal(row.persistence>0,true);assert.ok(row.visible<=1);
+ assert.equal(row.persistence,1e6,'the roots are intact');
+ // exact: the restart base is one unit; after one day the stock is what one logistic day gives from that base (minus the base)
+ assert.equal(row.visible,Math.max(0,logisticStock({},'stock',{reserve:1,capacity:K+1,rate:perennial.ratePerDay,from:0,to:1440})-1));
+ // 2500 days is a long-run property (the exact value is the floor of the end of the curve; the day-by-day path is pinned exactly by the
+ // no-harvest comparison test), so only 'back to capacity' is asserted
  grow(row,perennial,1,2500);assert.ok(row.visible>=0.99*K,`resprouted: ${row.visible}`);
  // the same patch pulled out by the root is gone for good.
  row=fresh();grow(row,perennial,0,1,[harvest(0,'pull_whole',K,0)]);
@@ -102,6 +106,7 @@ test('rg: loud failures — harvest outside the interval, missing seasonDensity,
  assert.throws(()=>run(fresh(),{...perennial,seasonDensity:null},{fromDay:0,toDay:1}),/seasonDensity is missing or pending/);
  const {seasonDensity,...noDensity}=perennial;
  assert.throws(()=>run(fresh(),noDensity,{fromDay:0,toDay:1}),/seasonDensity is missing or pending/);
+ assert.equal(seasonOfDay(270),3,'precondition: day 270 is the first day of season 3');
  assert.throws(()=>run(fresh(),{...perennial,seasonDensity:[1,1,1]},{fromDay:270,toDay:271}),/no valid entry for season 3/);
  assert.throws(()=>run(fresh(),{...perennial,seasonDensity:[1,1,1,-1]},{fromDay:270,toDay:271}),/no valid entry for season 3/);
  const odd={...methods,odd:{kills:'burn',takesSeed:false}};
@@ -158,6 +163,10 @@ test('rg: grouping the same takes on one day gives bit-identical state (damage i
   rows.forEach((row,i)=>assert.deepStrictEqual(row,rows[0],`capacity ${capacity}, skill ${skill}: grouping ${JSON.stringify(groupings[i])}`));
   assert.ok(rows[0].persistence<1e6&&rows[0].persistence>0);
  }
+ // the per-day figures and postings of a grouped day
+ const og=fresh(),ogOut=run(og,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',20,0,'a'),harvest(0,'pull_whole',20,0,'b'),harvest(0,'pull_whole',10,0,'c')]});
+ assert.equal(ogOut.taken,50);assert.equal(ogOut.days[0].taken,50);assert.deepStrictEqual(Object.keys(ogOut.days[0]),['day','visible','regrown','taken']);
+ assert.deepStrictEqual(ogOut.ledger.filter(p=>p.to==='gatherer'),[{day:0,from:'reserve',to:'gatherer',actor:'a',amount:20},{day:0,from:'reserve',to:'gatherer',actor:'b',amount:20},{day:0,from:'reserve',to:'gatherer',actor:'c',amount:10}]);
  // the exact total, not a tolerance: 50 of 1000 at no spare is 50000 ppm
  const exact=fresh();run(exact,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',50,0)]});
  const grouped=fresh();run(grouped,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',20,0),harvest(0,'pull_whole',20,0),harvest(0,'pull_whole',10,0)]});
@@ -265,11 +274,117 @@ test('rg: ledger conservation — visible_end = visible_start + regrown − take
  let running=start;
  for(const day of out.days){running+=day.regrown-day.taken;assert.equal(day.visible,running);assert.ok(day.visible>=0&&Number.isSafeInteger(day.visible));}
  assert.ok(out.ledger.every(p=>(p.from==='src:regrowth'&&p.to==='reserve')||(p.from==='reserve'&&p.to==='gatherer')));
+ assert.ok(out.ledger.every(p=>Number.isSafeInteger(p.amount)&&p.amount>0&&Number.isSafeInteger(p.day)),'no empty or fractional postings');
+ assert.ok(out.ledger.filter(p=>p.to==='gatherer').every(p=>/^g[0-2]$/.test(p.actor)),'every take names its actor');
  assert.ok(out.taken>0&&out.regrown>0&&out.taken===out.ledger.filter(p=>p.to==='gatherer').reduce((n,p)=>n+p.amount,0));
  // a take can never exceed what stands, and stock never shrinks by itself.
  const small=fresh(5);const r=run(small,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',999,0)]});
  assert.equal(r.taken,5);assert.ok(small.visible>=0);
- const sat=fresh(K);const s=run(sat,perennial,{fromDay:0,toDay:50});assert.equal(s.regrown,0);assert.equal(sat.visible,K);
+ const sat=fresh(K);const s=run(sat,perennial,{fromDay:0,toDay:50});assert.equal(s.regrown,0);assert.equal(sat.visible,K);assert.deepStrictEqual(s.ledger,[],'a saturated patch posts nothing');
+});
+
+test('rg: a take that reaches the whole breeding population still keeps the gatherer spare (capped branch, exact)', () => {
+ const after=reserve=>logisticStock({},'persistence',{reserve,capacity:1e6,rate:perennial.ratePerDay,from:0,to:1440});
+ // fixture spare = 0.5 x skill: skill 1 spares half
+ const half=fresh();run(half,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',K,1)]});
+ assert.equal(half.persistence,after(500000),'pulling everything with half spared leaves half');
+ // damaged patch: population = 1000 x 0.4 = 400 units; a take of 500 reaches all of it, the spare keeps half of what is left
+ const damaged={visible:K,persistence:4e5};run(damaged,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',500,1)]});
+ assert.equal(damaged.persistence,after(200000));
+ // a take exactly the size of the population: capped and linear formulas coincide (the two branches agree on the boundary)
+ const exact={visible:K,persistence:4e5};run(exact,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',400,1)]});
+ assert.equal(exact.persistence,after(200000));
+ // the method's own botany still applies in the capped branch: cutting shoots of a perennial destroys nothing even when everything is cut
+ const cut={visible:K,persistence:4e5};run(cut,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'cut_shoots',500,1)]});
+ assert.equal(cut.persistence,after(4e5));
+});
+
+test('rg: seed-regenerated species pulled by the root leave no offspring before the seed season, none lost after it', () => {
+ assert.equal(breedingLoss(annual,methods.pull_whole,0),1);assert.equal(breedingLoss(annual,methods.pull_whole,1),1);
+ assert.equal(breedingLoss(annual,methods.pull_whole,2),0);assert.equal(breedingLoss(annual,methods.pull_whole,3),0);
+ const day=20,pulled=fresh();run(pulled,annual,{fromDay:day,toDay:day+1,harvests:[harvest(day,'pull_whole',500,0)]});
+ assert.equal(pulled.persistence,logisticStock({},'persistence',{reserve:500000,capacity:1e6,rate:annual.ratePerDay,from:day*1440,to:(day+1)*1440}));
+ const late=fresh();run(late,annual,{fromDay:200,toDay:201,harvests:[harvest(200,'pull_whole',500,0)]});
+ assert.equal(late.persistence,1e6);
+});
+
+test('rg: harvest order - across days the input order does not matter, within a day the given order is kept', () => {
+ const props={...perennial,seasonDensity:[1,0.5,0.75,0.25]};
+ const events=[harvest(0,'pick_leaf',10,0),harvest(3,'cut_shoots',400,0.5),harvest(40,'pull_whole',300,0.2,'g2'),harvest(41,'pick_leaf',50,1),harvest(95,'cut_shoots',200,0),harvest(170,'pull_whole',100,0.9)];
+ const sorted=fresh(),a=run(sorted,props,{harvests:events,fromDay:0,toDay:200});
+ const shuffled=fresh(),b=run(shuffled,props,{harvests:[events[5],events[2],events[0],events[4],events[1],events[3]],fromDay:0,toDay:200});
+ assert.deepStrictEqual(shuffled,sorted);assert.deepStrictEqual(b.days,a.days);assert.deepStrictEqual(b.ledger,a.ledger);
+ assert.equal(b.ledger.find(p=>p.to==='gatherer').day,0,'the day-0 take is not dropped');assert.ok(a.taken>=10);
+ // two takes on one day with different spare: the result depends on the order given, and the given order is the one applied
+ const A=harvest(0,'pull_whole',600,1,'a'),B=harvest(0,'pull_whole',600,0,'b');
+ const after=reserve=>logisticStock({},'persistence',{reserve,capacity:1e6,rate:perennial.ratePerDay,from:0,to:1440});
+ const ab=fresh(2000),abOut=run(ab,perennial,{fromDay:0,toDay:1,harvests:[A,B]});
+ const ba=fresh(2000),baOut=run(ba,perennial,{fromDay:0,toDay:1,harvests:[B,A]});
+ // A then B: 300000 lost (spare half), then 600 of a population of 700 (600000 lost) -> 100000. B then A: 600000 lost, then 600 reaches the
+ // whole population of 400 and half is spared -> 200000
+ assert.equal(ab.persistence,after(100000));assert.equal(ba.persistence,after(200000));
+ assert.deepStrictEqual(abOut.ledger.filter(p=>p.to==='gatherer').map(p=>p.actor),['a','b']);
+ assert.deepStrictEqual(baOut.ledger.filter(p=>p.to==='gatherer').map(p=>p.actor),['b','a']);
+});
+
+test('rg: harvest quantity must be a non-negative integer; zero takes change nothing', () => {
+ for(const bad of [-1,1.5,NaN,'3',undefined,Infinity])assert.throws(()=>run(fresh(),perennial,{fromDay:0,toDay:1,harvests:[{day:0,method:'pick_leaf',quantity:bad,skill:0,actor:'x'}]}),/harvest quantity must be a non-negative integer/);
+ for(const [row,quantity] of [[fresh(),0],[{visible:0},5]]){
+  const out=run(row,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',quantity,1)]});
+  assert.equal(out.taken,0);assert.equal('accruals' in row,false,'a take of nothing leaves no loss accrual behind');
+  assert.equal(row.persistence,1e6);assert.deepStrictEqual(out.ledger.filter(p=>p.to==='gatherer'),[],'no posting for nothing');
+ }
+});
+
+test('rg: baseRate and capacityOf refuse invalid numbers and round down', () => {
+ for(const bad of [0,-1,NaN,Infinity])assert.throws(()=>baseRate({ratePerDay:bad}),/species needs ratePerDay or maturityDays/);
+ for(const bad of [0,-5,NaN,Infinity])assert.throws(()=>baseRate({maturityDays:bad}),/species needs ratePerDay or maturityDays/);
+ assert.equal(baseRate({ratePerDay:0.5}),0.5);
+ // a null on one side means 'not given': the other one is used (the species table writes null for what is pending)
+ assert.equal(baseRate({ratePerDay:null,maturityDays:100}),LOGISTIC_SPAN/100);
+ assert.equal(baseRate({ratePerDay:0.1,maturityDays:null}),0.1);
+ assert.equal(baseRate({ratePerDay:undefined,maturityDays:100}),LOGISTIC_SPAN/100);
+ assert.equal(capacityOf({standingPerKm2:3},0.5),1,'1.5 units round down');assert.equal(capacityOf({standingPerKm2:1},0.999),0);
+ for(const area of [undefined,NaN,Infinity])assert.throws(()=>capacityOf({standingPerKm2:5},area),/areaKm2 is missing or pending/);
+ assert.throws(()=>capacityOf({},1),/standingPerKm2 is missing or pending/);
+});
+
+test('rg: settle validates its inputs', () => {
+ for(const [fromDay,toDay] of [[0.5,3],[0,2.5],[NaN,3],[0,NaN],[5,4]])assert.throws(()=>run(fresh(),perennial,{fromDay,toDay}),/fromDay[/]toDay must be integer world days/);
+ const empty=fresh(10),out=run(empty,perennial,{fromDay:4,toDay:4});   // an empty interval is a no-op that still defaults the persistence
+ assert.deepStrictEqual(out.days,[]);assert.equal(empty.visible,10);assert.equal(empty.persistence,1e6);
+ for(const bad of [-1,1.5,'5',NaN])assert.throws(()=>run({visible:bad},perennial,{fromDay:0,toDay:1}),/row[.]visible must be a non-negative integer/);
+ for(const bad of [undefined,NaN,Infinity])assert.throws(()=>run(fresh(),perennial,{capacity:bad,fromDay:0,toDay:1}),/capacity is missing or pending/);
+ for(const bad of [0,-1,1.5])assert.throws(()=>run(fresh(),perennial,{capacity:bad,fromDay:0,toDay:1}),/capacity must be a positive integer/);
+ for(const bad of [0,-1,1.5,NaN,'1',undefined])assert.throws(()=>run(fresh(),{...perennial,restartUnits:bad},{fromDay:0,toDay:1}),/restartUnits is missing or pending/);
+ assert.throws(()=>run({visible:5,persistence:1000001},perennial,{fromDay:0,toDay:1}),/row[.]persistence must be an integer within/);
+ assert.throws(()=>run(fresh(),perennial,{fromDay:0,toDay:5,harvests:[harvest(1.5,'pick_leaf',1,0)]}),/harvest day 1.5 is outside/);
+ for(const bad of [{0:1,1:1,2:1,3:1},'1111',7])assert.throws(()=>run(fresh(),{...perennial,seasonDensity:bad},{fromDay:0,toDay:1}),/seasonDensity is missing or pending/);
+ assert.throws(()=>run(fresh(),{...perennial,seasonDensity:[NaN,1,1,1]},{fromDay:0,toDay:1}),/no valid entry for season 0/);
+});
+
+test('rg: zero density stops growth, a patch above its limit never shrinks, the season is the day-start season', () => {
+ const winter={visible:100,persistence:500000},out=run(winter,{...perennial,seasonDensity:[0,0,0,0]},{fromDay:0,toDay:30});
+ assert.equal(out.regrown,0);assert.equal(winter.visible,100);assert.equal(winter.persistence,500000);
+ // visible above capacity x persistence (a damaged patch): the stock stays, nothing is posted
+ const over={visible:1000,persistence:4e5},overOut=run(over,perennial,{fromDay:0,toDay:30});
+ assert.equal(overOut.regrown,0);assert.equal(over.visible,1000);assert.ok(overOut.days.every(d=>d.visible===1000));assert.deepStrictEqual(overOut.ledger,[]);
+ // day 89 is season 0 (density 1) and grows; day 90 is season 1 (density 0) and does not: the season is read at the start of the day
+ const edge=[1,0,1,1];
+ assert.ok(run(fresh(100),{...perennial,seasonDensity:edge},{fromDay:89,toDay:90}).regrown>0);
+ assert.equal(run(fresh(100),{...perennial,seasonDensity:edge},{fromDay:90,toDay:91}).regrown,0);
+});
+
+test('rg: the breeding population recovers at the season-dependent rate (per-season reference, exact)', () => {
+ const props={...perennial,seasonDensity:[1,0.5,0.75,0.25]},row={visible:K,persistence:5e5},total=200;
+ run(row,props,{fromDay:0,toDay:total});
+ const ref={};let value=5e5,edge=0;
+ for(let day=1;day<=total;day++){
+  if(day===total||seasonOfDay(day)!==seasonOfDay(edge)){
+   value=logisticStock(ref,'persistence',{reserve:value,capacity:1e6,rate:perennial.ratePerDay*props.seasonDensity[seasonOfDay(edge)],from:edge*1440,to:day*1440});edge=day;
+  }
+ }
+ assert.equal(row.persistence,value);
 });
 
 test('rg: pending data is refused, never defaulted; every filled value has a source and a published basis', () => {
