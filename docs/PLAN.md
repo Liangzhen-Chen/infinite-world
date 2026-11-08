@@ -1303,6 +1303,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - 门禁改动（本地，未部署）：runjob.sh 作业级 safe.directory；sync.sh 上传真实 master 的 world/actions/*.json，apply 建 master 分支、snapshot 为同步树，两侧打印并比对 master tree 哈希；deploy.sh 拒 CR 字节、预检 git≥2.31；VERIFY-PLAN round 2.0 规范化、新增 14–20 项（含恶意 .master 应 DENIED）；内容哈希范围不变。
   - 审查：r1-df3475be07c6（gate-r1e-sonnet，approve）→ 补 N1/N2/N5/N6、主会话修 sync.sh:30 stat 格式 → r2-1c509170cec1（gate-r2e-sonnet，approve），最终指纹 1c509170cec133ed…。已知局限（不阻断）：master 文件名含空格或 100755 会让 tree 比对响亮误报；put 不加锁（既有）。
   - 待亮圳批准部署（deploy.sh update）；部署后：重同步一棵树跑 overfit-guard，并按 VERIFY-PLAN 植入复制同义词确认 #2 能抓到。CRLF（npc-depth-yp）只出方案未实施：先定位它哈希的原始文件。
+  - npc-depth-yp #7 定因（只读）：prepare-offline.mjs:68-76 对 reopen/freeze.json 83 个 originalFiles 按 utf8 串算 sha256（tools/content-pipeline.mjs:7），冻结值是 10-12 在 Windows 主检出（core.autocrlf=true，文件 i/lf w/crlf）按 CRLF 冻结的；其中 8 个文件只在 CRLF 下相符（README.md 等）。Windows 本地应通过，Linux/sync 统一 LF 后失败 → 环境。修法定 C+A：.gitattributes 对 world/drafts/w1/yp-depth-rest/** 设 -text 并把 8 个文件按 CRLF 重新入库；sync 规范化与 manifest.py 认 -text 按原字节。不采 B（改冻结值=改写历史证据）。排在当前门禁部署之后作为下一次门禁改动，需两轮审查。
 
 ## 11-08 RG 可再生存量规律（世界内容卡，批次 1 期间并行；负责人 abddc2e7c16bf507e）
 - 世界行为目标：公共采集点被采后按材料属性恢复或被采绝；留种与否由采集方式和采集者技能推出；同一世界日结果与推进步长无关；账目可追（src:regrowth → 资源点 → 行囊）。
