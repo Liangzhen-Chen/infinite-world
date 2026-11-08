@@ -156,7 +156,7 @@ const SYSTEMS=[
  {id:'sim_character',layer:'sim',name:'角色成长',modules:['character.mjs','progression.mjs','professions.mjs','career-metrics.mjs','hidden-passives.mjs','spell-research.mjs','training.mjs','learning.mjs','education.mjs','education-state.mjs','education-cohorts.mjs','local-exams.mjs','checks.mjs','revival.mjs']},
  {id:'sim_combat',layer:'sim',name:'战斗',modules:['combat.mjs','combat-state.mjs','duels.mjs']},
  {id:'sim_boss',layer:'sim',name:'首领',modules:['bosses.mjs','boss-abilities.mjs','boss-cognition.mjs','boss-negotiation.mjs']},
- {id:'sim_wildlife',layer:'sim',name:'生态',modules:['husbandry.mjs','husbandry-traits.mjs','ecology-dynamics.mjs','wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs','forest-water.mjs','water-cycle.mjs']},
+ {id:'sim_wildlife',layer:'sim',name:'生态',modules:['husbandry.mjs','husbandry-traits.mjs','ecology-dynamics.mjs','wildlife.mjs','wildlife-awakening.mjs','wildlife-range.mjs','wildlife-habitats.mjs','wildlife-society.mjs','wildlife-migration.mjs','creature-nature.mjs','seasonal-migration.mjs','farm-pests.mjs','forest-water.mjs','renewable.mjs','water-cycle.mjs']},
  {id:'sim_companion',layer:'sim',name:'伙伴',modules:['pets.mjs','summons.mjs']},
  {id:'sim_environment',layer:'sim',name:'环境与地点',modules:['environment.mjs','water-volume.mjs','environment-state.mjs','perception.mjs','place-layout.mjs','map-state.mjs','weather.mjs','location-access.mjs','sites.mjs','regions.mjs','remote-generation.mjs']},
  {id:'sim_magic',layer:'sim',name:'法术',modules:SERVER.map(f=>f.slice(14)).filter(f=>/^magic(-[\w-]+)?\.mjs$/.test(f)&&f!=='magic-economy.mjs')},
