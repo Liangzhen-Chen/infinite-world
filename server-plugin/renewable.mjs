@@ -18,6 +18,10 @@
 // population destroyed by a take is taken / (capacity × persistence); species whose unit weight differs from their breeding unit
 // would need a per-species conversion (not in the data yet).
 // Atomic: settle works on a copy of the row and writes it back only when every day succeeded, so a throw leaves the row untouched.
+// Write-back replaces the row's keys with the copy's, including nested objects (growthAnchors, accruals): callers must not cache references
+// to the row's sub-objects across a settle call (re-read them from the row). A field-by-field deep write-back would keep references but
+// copies every nested object a second time on every call and has to track which fields exist; the row is always fetched from the state
+// store by key, so the simpler rule is enough.
 // The ledger postings use abstract names ('reserve', 'gatherer'); RG-B must map them to accountKey accounts (src:regrowth → the site's
 // reserve → the gatherer's bag) and add site, resource, method and actor checks (the actor is only a label here).
 import {logisticStock,accrueStock} from './stock.mjs';
@@ -64,12 +68,21 @@ function applyHarvest(row,ev,ctx){
     if(!taken)return 0;
     // The share of the breeding population destroyed is the taken amount over that population (the plants that can seed or
     // resprout = capacity × persistence), not over the visible stock: a patch cut to nothing still has its roots.
-    const population=ctx.capacity*(row.persistence??PPM)/PPM,share=population>0?Math.min(1,taken/population):1;
-    const damage=share*breedingLoss(props,method,calendar(ev.day*MINUTES).season)*(1-spare);
-    // Loss in ppm accumulates rationally (accrueStock) and only the whole-ppm total is taken off, so many small takes neither vanish
-    // nor round up to a ppm each: the total lost is floor(sum of exact losses), deterministic and independent of how takes are grouped.
+    const population=ctx.capacity*(row.persistence??PPM)/PPM,keep=1-spare,loss=breedingLoss(props,method,calendar(ev.day*MINUTES).season);
     const persistence=row.persistence??PPM;
-    row.persistence=persistence-Math.min(persistence,accrueStock(row,'breedingLoss',persistence*damage));
+    let lost;
+    if(taken<population){
+        // persistence × (taken / (capacity × persistence / PPM)) = PPM × taken / capacity: persistence cancels, so the exact loss per take
+        // is PPM × loss × keep × taken / capacity. accrueStock adds that rationally (BigInt) with periods=taken, divisor=capacity and keeps
+        // the fraction, so for one spare and one loss the total taken off is floor(PPM·loss·keep·Σtaken / capacity): strictly additive,
+        // independent of how the same takes are grouped, with no float noise from persistence.
+        lost=accrueStock(row,'breedingLoss',PPM*loss*keep,taken,ctx.capacity);
+    }else{
+        // the take reaches the whole breeding population: the damaged share is 1 (only the part the method destroys and the gatherer
+        // does not spare). Not a linear accumulation, so it is computed on the persistence itself.
+        lost=accrueStock(row,'breedingLoss',persistence*loss*keep);
+    }
+    row.persistence=persistence-Math.min(persistence,lost);
     row.visible=before-taken;
     return taken;
 }
@@ -85,6 +98,7 @@ export function settle(target,{props,methods={},capacity,calendar,fromDay,toDay,
     if(!Number.isSafeInteger(fromDay)||!Number.isSafeInteger(toDay)||toDay<fromDay)fail('fromDay/toDay must be integer world days');
     if(!Number.isSafeInteger(row.visible)||row.visible<0)fail('row.visible must be a non-negative integer');
     num(capacity,'capacity');
+    if(!Number.isSafeInteger(capacity)||capacity<1)fail('capacity must be a positive integer number of stock units');
     const rate0=baseRate(props),restart=restartOf(props),density=props.seasonDensity,ctx={props,methods,calendar,spareOf:spare,capacity};
     if(!Array.isArray(density))fail('seasonDensity is missing or pending');
     for(const ev of harvests)if(!Number.isSafeInteger(ev.day)||ev.day<fromDay||ev.day>=toDay)fail(`harvest day ${ev.day} is outside [${fromDay},${toDay})`);

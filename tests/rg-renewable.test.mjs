@@ -121,7 +121,8 @@ test('rg: damage is the share of the breeding population, not of the visible sto
  // 1000 leave 950000 ppm (an old visible-stock denominator would give 20/50, 20/30, 10/10 = extinction)
  const staged={visible:50};run(staged,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',20,0),harvest(0,'pull_whole',20,0),harvest(0,'pull_whole',10,0)]});
  const expected=logisticStock({},'persistence',{reserve:950000,capacity:1e6,rate:perennial.ratePerDay,from:0,to:1440});
- assert.ok(Math.abs(staged.persistence-expected)<=2,`${staged.persistence} vs ${expected} (each step is exact in the model; the accumulated float error is below 1 ppm and rounded once)`);
+ // exact: PPM·taken/capacity per take = 20000+20000+10000 ppm = 950000 left, then one day of recovery from exactly that
+ assert.equal(staged.persistence,expected);
  assert.ok(staged.persistence>0.9e6);
  // pulling the entire population by the root is extinction
  const all=fresh();run(all,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',K,0)]});
@@ -141,6 +142,28 @@ test('rg: many tiny takes accumulate exactly (no per-take rounding up to a ppm)'
  const rest=JSON.parse(JSON.stringify(split));run(rest,perennial,{capacity:1e8,fromDay:1,toDay:2,harvests:takes(150).map(ev=>({...ev,day:1}))});
  const one=fresh();run(one,perennial,{capacity:1e8,fromDay:0,toDay:2,harvests:[...takes(100),...takes(150).map(ev=>({...ev,day:1}))]});
  assert.deepEqual(rest,one,'grouping the same takes over the same days does not change the state');
+});
+
+test('rg: grouping the same takes on one day gives bit-identical state (damage is strictly additive)', () => {
+ // For one method and one spare the loss is PPM·loss·(1−spare)·taken/capacity, added rationally: the total is floor(PPM·loss·(1−spare)·Σtaken/capacity)
+ // however the takes are split. (Computing it from the persistence would carry 1 ulp of float noise per take and let groupings differ by a ppm.)
+ const groupings=[[50],[20,20,10],[10,10,10,10,10],[1,49],[33,17],[7,13,5,25],Array(50).fill(1)];
+ for(const [capacity,skill] of [[K,0],[K,0.3],[777,0],[777,0.9],[123457,0.45]]){
+  const rows=groupings.map(groups=>{
+   const row=fresh(),harvests=groups.map(quantity=>harvest(0,'pull_whole',quantity,skill));
+   run(row,perennial,{capacity,fromDay:0,toDay:1,harvests});return row;
+  });
+  rows.forEach((row,i)=>assert.deepEqual(row,rows[0],`capacity ${capacity}, skill ${skill}: grouping ${JSON.stringify(groupings[i])}`));
+  assert.ok(rows[0].persistence<1e6&&rows[0].persistence>0);
+ }
+ // the exact total, not a tolerance: 50 of 1000 at no spare is 50000 ppm
+ const exact=fresh();run(exact,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',50,0)]});
+ const grouped=fresh();run(grouped,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',20,0),harvest(0,'pull_whole',20,0),harvest(0,'pull_whole',10,0)]});
+ const expected=logisticStock({},'persistence',{reserve:950000,capacity:1e6,rate:perennial.ratePerDay,from:0,to:1440});
+ assert.equal(exact.persistence,expected);assert.equal(grouped.persistence,expected);
+ // a take that reaches the whole breeding population is the capped case: extinction, however it was grouped
+ const reach=fresh();run(reach,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',600,0),harvest(0,'pull_whole',400,0)]});
+ assert.equal(reach.persistence,0);
 });
 
 test('rg: spare is checked even when nothing is taken, and a failing settle leaves the row untouched', () => {
