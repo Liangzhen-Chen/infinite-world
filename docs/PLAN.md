@@ -1229,6 +1229,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 在跑旧任务（不重开，结果不作验收证据）：/work/int-m（9d47c510 基线，subs-run2，约 04:00 CST 起）；/work/c-fuel3（4536a0a9，未审）ledger-stock。
 - 已暂停所有执行者云测。门禁实现：服务器 forced command（gate.sh）为唯一拦截点；审查记录仅经 tc_review 钥匙写入、绑定内容哈希；实现中，待两轮独立审查后部署。
 
+- 相关检查选法（11-08 起，因批次 1 两次漏掉长链测试：kd2-process、npc-schedule、s4-office-quests、playtest-lifecycle 都不直接引用改动模块）：
+  - (a) 直接引用改动模块的测试，加一层间接引用（tools/import-graph.mjs）；
+  - (b) 改动碰到日程、ledger/stock/money/transition、推进钩子，或需求/价格/生产行为的，必须加多天一致性集：用 world_time 或 core:time 循环、推进 ≥1 天的测试，含整月对逐日一致性（npc-schedule）、长程日结（playtest-lifecycle、s4-office-quests、kd2-process）；
+  - (c) 再加浸泡类测试。选出的清单与实测耗时写进批次条目；漏选在完整检查才暴露的，记为本批流程问题。
+
 ## 11-08 门禁上线与首批交付（批次 1）
 - 门禁：F:/dnd-tools/cloud/gate，最终批准指纹 b5e4c395（审查记录 gate/reviews/r1-da3a7e924ea4、r2-014c9178、r2-fb1ea1ce（changes）、r2-429bbdb0、r2-b5e4c395）。05:43 CST 部署（install，未 harden），tc_dnd 已受限。已验证：无记录拒绝、直跑 node/scp/路径穿越拒绝、tc_review 垃圾输入拒绝（证据 gate/verify-case1-6.txt）。待验：只有第1轮/审者即实现者/同一审者/多文档/批准后改动/齐全放行（独立验证审查员进行中）。
 - 批次 1 世界行为目标：家户需求汇总正确（同户不重复计）；无关住户不扰动原户；物资与账目守恒（自采柴走得到账、可追）；必要计算调用数与性能不恶化。
