@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {settle,breedingLoss,baseRate,capacityOf,LN19} from '../server-plugin/renewable.mjs';
+import {settle,breedingLoss,baseRate,capacityOf,LOGISTIC_SPAN} from '../server-plugin/renewable.mjs';
+import {logisticStock} from '../server-plugin/stock.mjs';
 
 const read=file=>fs.readFileSync(new URL(`../${file}`,import.meta.url),'utf8');
 const data=JSON.parse(read('world/ecology/renewables.json'));
@@ -107,6 +108,45 @@ test('rg: loud failures — harvest outside the interval, missing seasonDensity,
  assert.throws(()=>breedingLoss({regrowFrom:'seed',seedSeason:null},methods.cut_shoots,0),/seedSeason/);
 });
 
+test('rg: damage is the share of the breeding population, not of the visible stock', () => {
+ // near-empty patch with living roots: pulling the few plants that stand must not wipe out the whole patch
+ const row={visible:5};run(row,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',5,0)]});
+ assert.ok(row.persistence>0.99e6,`5 of ${K} breeding plants pulled: persistence ${row.persistence}`);
+ // the same take from a full patch is the same share of the population, so the same damage
+ const full=fresh();run(full,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',5,0)]});
+ assert.ok(Math.abs(full.persistence-row.persistence)<=1000,'damage depends on the take over the population, not on how much stands');
+ // repeated small pulls add up to the whole population before the patch is gone
+ const staged=fresh();let day=0;
+ for(;day<10&&staged.persistence!==0;day++)run(staged,perennial,{fromDay:day,toDay:day+1,harvests:[harvest(day,'pull_whole',100,0)]});
+ assert.ok(staged.persistence>0,'ten pulls of a tenth, with regrowth between, do not exceed the population');
+ // pulling the entire population by the root is extinction
+ const all=fresh();run(all,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',K,0)]});
+ assert.equal(all.persistence,0);
+ // a take larger than what the damaged population could carry also ends it
+ const damaged={visible:K,persistence:4e5};run(damaged,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',K,0)]});
+ assert.equal(damaged.persistence,0);
+});
+
+test('rg: with no harvests the daily settlement equals one logisticStock call over the whole span', () => {
+ const start=100,base=perennial.restartUnits,limit=K+base,rate=perennial.ratePerDay;
+ // constant rate and capacity: the anchor never rebases, so both sample the same continuous curve and floor the same value (exact)
+ const days=200,row=fresh(start),out=run(row,perennial,{fromDay:0,toDay:days});
+ const ref={},refValue=Math.max(start,logisticStock(ref,'stock',{reserve:start+base,capacity:limit,rate,from:0,to:days*1440})-base);
+ assert.equal(out.visible,refValue);assert.equal(out.regrown,refValue-start);
+ // seasonal density: the rate changes at season edges and the anchor is rebased from the continuous value; compare with one call per
+ // season span. The tolerance is one stock unit: the two paths evaluate the same curve and can differ only by float rounding at an integer edge.
+ const props={...perennial,seasonDensity:[1,0.5,1,0.25]},total=400,seasonal=fresh(start);run(seasonal,props,{fromDay:0,toDay:total});
+ const refRow={};let value=start,edge=0;
+ for(let day=1;day<=total;day++){
+  if(day===total||seasonOfDay(day)!==seasonOfDay(edge)){
+   const factor=props.seasonDensity[seasonOfDay(edge)];
+   value=Math.max(value,logisticStock(refRow,'stock',{reserve:value+base,capacity:limit,rate:rate*factor,from:edge*1440,to:day*1440})-base);edge=day;
+  }
+ }
+ assert.ok(Math.abs(seasonal.visible-value)<=1,`daily ${seasonal.visible} vs per-season ${value}`);
+ assert.ok(seasonal.visible>start,'the patch grew');
+});
+
 test('rg: harvesting before the seed season destroys offspring, after it does not (cut and fruit)', () => {
  assert.equal(seasonOfDay(20),0);assert.equal(seasonOfDay(200),2);
  const persistenceAfter=(method,day)=>{const row=fresh();run(row,annual,{fromDay:0,toDay:day});
@@ -178,7 +218,12 @@ test('rg: pending data is refused, never defaulted; every filled value has a sou
  assert.deepEqual(data.species.filter(s=>s.pending.length===0).map(s=>s.id),[],'no species is runnable yet');
  assert.deepEqual(data.species.filter(s=>s.seasonDensity&&!s.id.startsWith('forest.')).map(s=>s.id).sort(),['herb.honeysuckle','herb.plantain']);
  assert.equal(capacityOf(data.species.find(s=>s.id==='forest.broadleaf'),2),100000);
- assert.ok(Math.abs(baseRate({maturityDays:100})-LN19/100)<1e-15);
+ assert.ok(Math.abs(baseRate({maturityDays:100})-LOGISTIC_SPAN/100)<1e-15);
+ // maturityDays is the logistic 5%→95% time: starting at 5% of capacity, after maturityDays at baseRate the stock is at 95% (derived, not fitted)
+ const span=baseRate({maturityDays:100}),curve={};
+ const at95=logisticStock(curve,'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:100*1440});
+ assert.ok(Math.abs(at95-950000)<=1,`5% to 95% in maturityDays: ${at95}`);
+ assert.ok(logisticStock({},'x',{reserve:50000,capacity:1000000,rate:span,from:0,to:50*1440})<900000,'halfway through maturity the stock is not yet at 95%');
  assert.throws(()=>baseRate(data.species.find(s=>s.id==='herb.generic')),/ratePerDay or maturityDays/);
 });
 

@@ -5,8 +5,9 @@
 //   row.persistence    integer ppm of the breeding population still alive (default 1e6); capacity scales with it
 //   row.growthAnchors  continuous anchors kept by logisticStock
 // A world day is the only step: events of day d apply at the start of d, then day d grows. Cutting [from,to) into smaller
-// intervals therefore gives the identical state. Growth is logistic (stock.mjs), r = ratePerDay (or ln19 / maturityDays; ln19 is
-// the logistic 5%→95% duration) × the season's density (required: a missing density fails loudly). Seasons come from the world
+// intervals therefore gives the identical state. Growth is logistic (stock.mjs), r = ratePerDay (or LOGISTIC_SPAN / maturityDays,
+// where maturityDays is the time from 5% to 95% of capacity: N/K = 1/(1+A·e^(−r·t)) is 5% at A·e^(−r·t)=19 and 95% at 1/19, so
+// that span is ln361/r = 2·ln19/r) × the season's density (required: a missing density fails loudly). Seasons come from the world
 // calendar passed in (engine.calendar(minute).season); seedSeason and seasonDensity use that same index.
 // The gatherer's skill enters only through `spare(method, event)`, supplied by the caller (RG-B: through the repo's derived-slot
 // path); the module has no skill formula of its own, and a harvest without `spare` fails loudly.
@@ -15,7 +16,7 @@
 // (as in logisticStock). Not modelled here (RG-B decisions): individual variation, immigration from neighbouring patches.
 import {logisticStock} from './stock.mjs';
 
-export const LN19=Math.log(19);
+export const LOGISTIC_SPAN=Math.log(361);   // 2·ln19: logistic 5%→95% duration is LOGISTIC_SPAN / r
 const PPM=1e6,MINUTES=1440;
 const fail=message=>{throw Error(`renewable: ${message}`);};
 const num=(v,label)=>{if(!Number.isFinite(v))fail(`${label} is missing or pending`);return v;};
@@ -23,7 +24,7 @@ const num=(v,label)=>{if(!Number.isFinite(v))fail(`${label} is missing or pendin
 // Base growth rate per day from the species record.
 export function baseRate(props){
     if(Number.isFinite(props?.ratePerDay)&&props.ratePerDay>0)return props.ratePerDay;
-    if(Number.isFinite(props?.maturityDays)&&props.maturityDays>0)return LN19/props.maturityDays;
+    if(Number.isFinite(props?.maturityDays)&&props.maturityDays>0)return LOGISTIC_SPAN/props.maturityDays;
     return fail('species needs ratePerDay or maturityDays');
 }
 // Capacity in stock units = area × standing stock per km².
@@ -54,7 +55,10 @@ function applyHarvest(row,ev,ctx){
     if(typeof spareOf!=='function')fail('a spare(method, event) function is required (skill to spared share is pending)');
     const spare=spareOf(method,ev);   // share of the patch the gatherer spares
     if(!Number.isFinite(spare)||spare<0||spare>1)fail('spare must be within [0,1]');
-    const damage=taken/before*breedingLoss(props,method,calendar(ev.day*MINUTES).season)*(1-spare);
+    // The share of the breeding population destroyed is the taken amount over that population (the plants that can seed or
+    // resprout = capacity × persistence), not over the visible stock: a patch cut to nothing still has its roots.
+    const population=ctx.capacity*(row.persistence??PPM)/PPM,share=population>0?Math.min(1,taken/population):1;
+    const damage=share*breedingLoss(props,method,calendar(ev.day*MINUTES).season)*(1-spare);
     row.persistence=Math.floor((row.persistence??PPM)*(1-damage));
     row.visible=before-taken;
     return taken;
@@ -70,7 +74,7 @@ export function settle(row,{props,methods={},capacity,calendar,fromDay,toDay,har
     if(!Number.isSafeInteger(fromDay)||!Number.isSafeInteger(toDay)||toDay<fromDay)fail('fromDay/toDay must be integer world days');
     if(!Number.isSafeInteger(row.visible)||row.visible<0)fail('row.visible must be a non-negative integer');
     num(capacity,'capacity');
-    const rate0=baseRate(props),restart=restartOf(props),density=props.seasonDensity,ctx={props,methods,calendar,spareOf:spare};
+    const rate0=baseRate(props),restart=restartOf(props),density=props.seasonDensity,ctx={props,methods,calendar,spareOf:spare,capacity};
     if(!Array.isArray(density))fail('seasonDensity is missing or pending');
     for(const ev of harvests)if(!Number.isSafeInteger(ev.day)||ev.day<fromDay||ev.day>=toDay)fail(`harvest day ${ev.day} is outside [${fromDay},${toDay})`);
     row.persistence??=PPM;
