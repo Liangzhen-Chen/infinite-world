@@ -6,8 +6,10 @@
 //   row.growthAnchors  continuous anchors kept by logisticStock
 // A world day is the only step: events of day d apply at the start of d, then day d grows. Cutting [from,to) into smaller
 // intervals therefore gives the identical state. Growth is logistic (stock.mjs), r = ratePerDay (or ln19 / maturityDays; ln19 is
-// the logistic 5%→95% duration) × the season's density. Seasons come from the world calendar passed in (engine.calendar(minute).season);
-// seedSeason and seasonDensity use that same index.
+// the logistic 5%→95% duration) × the season's density (required: a missing density fails loudly). Seasons come from the world
+// calendar passed in (engine.calendar(minute).season); seedSeason and seasonDensity use that same index.
+// The gatherer's skill enters only through `spare(method, event)`, supplied by the caller (RG-B: through the repo's derived-slot
+// path); the module has no skill formula of its own, and a harvest without `spare` fails loudly.
 // Restart: while any breeding population survives it stands for `restartUnits` stock units of growth base (species data; pending
 // for every real species until a basis exists), so a stripped patch regrows from that base; with no survivor it cannot regrow
 // (as in logisticStock). Not modelled here (RG-B decisions): individual variation, immigration from neighbouring patches.
@@ -36,6 +38,7 @@ const restartOf=props=>{
 // seed; picking fruit takes the seed. After the seed season an annual's seed is already in the ground.
 export function breedingLoss(props,method,season){
     if(!['root','seed'].includes(props.regrowFrom))fail('species regrowFrom must be root or seed');
+    if(!['root','shoot','none'].includes(method?.kills))fail(`unknown harvest effect ${method?.kills}`);
     const seeds=props.regrowFrom==='seed',before=seeds&&season<num(props.seedSeason,'seedSeason');
     if(method.kills==='root')return seeds&&!before?0:1;
     if(method.kills==='shoot')return props.regrowFrom==='root'?0:before?1:0;
@@ -43,31 +46,35 @@ export function breedingLoss(props,method,season){
 }
 
 function applyHarvest(row,ev,ctx){
-    const {props,methods,calendar}=ctx,method=methods[ev.method];
+    const {props,methods,calendar,spareOf}=ctx,method=methods[ev.method];
     if(!method)fail(`unknown harvest method ${ev.method}`);
     if(!Number.isSafeInteger(ev.quantity)||ev.quantity<0)fail('harvest quantity must be a non-negative integer');
     const before=row.visible,taken=Math.min(ev.quantity,before);
     if(!taken)return 0;
-    const skill=Math.min(1,Math.max(0,num(ev.skill,'skill'))),cap=num(method.leaveCap,'leaveCap');
-    const spare=skill*cap;   // share of the patch a careful gatherer spares; the method table bounds it
+    if(typeof spareOf!=='function')fail('a spare(method, event) function is required (skill to spared share is pending)');
+    const spare=spareOf(method,ev);   // share of the patch the gatherer spares
+    if(!Number.isFinite(spare)||spare<0||spare>1)fail('spare must be within [0,1]');
     const damage=taken/before*breedingLoss(props,method,calendar(ev.day*MINUTES).season)*(1-spare);
     row.persistence=Math.floor((row.persistence??PPM)*(1-damage));
     row.visible=before-taken;
     return taken;
 }
 
-// settle(row, {props, methods, capacity, calendar, fromDay, toDay, harvests})
+// settle(row, {props, methods, capacity, calendar, fromDay, toDay, harvests, spare})
 // calendar(minute) must return {season} (the world calendar, e.g. minute=>engine.calendar(minute)).
+// harvests: [{day, method, quantity, actor, ...}] with every day inside [fromDay,toDay).
 // Returns {visible, regrown, taken, days:[{day,visible,regrown,taken}], ledger}; the ledger lists the postings that reproduce
 // visible_end = visible_start + regrown − taken (src:regrowth → reserve, reserve → gatherer).
-export function settle(row,{props,methods={},capacity,calendar,fromDay,toDay,harvests=[]}){
+export function settle(row,{props,methods={},capacity,calendar,fromDay,toDay,harvests=[],spare}){
     if(typeof calendar!=='function')fail('a world calendar function is required');
     if(!Number.isSafeInteger(fromDay)||!Number.isSafeInteger(toDay)||toDay<fromDay)fail('fromDay/toDay must be integer world days');
     if(!Number.isSafeInteger(row.visible)||row.visible<0)fail('row.visible must be a non-negative integer');
     num(capacity,'capacity');
-    const rate0=baseRate(props),restart=restartOf(props),density=props.seasonDensity,ctx={props,methods,calendar};
+    const rate0=baseRate(props),restart=restartOf(props),density=props.seasonDensity,ctx={props,methods,calendar,spareOf:spare};
+    if(!Array.isArray(density))fail('seasonDensity is missing or pending');
+    for(const ev of harvests)if(!Number.isSafeInteger(ev.day)||ev.day<fromDay||ev.day>=toDay)fail(`harvest day ${ev.day} is outside [${fromDay},${toDay})`);
     row.persistence??=PPM;
-    const events=harvests.map((ev,i)=>({ev,i})).filter(({ev})=>ev.day>=fromDay&&ev.day<toDay).sort((a,b)=>a.ev.day-b.ev.day||a.i-b.i);
+    const events=harvests.map((ev,i)=>({ev,i})).sort((a,b)=>a.ev.day-b.ev.day||a.i-b.i);
     const days=[],ledger=[];let regrownTotal=0,takenTotal=0,next=0;
     for(let day=fromDay;day<toDay;day++){
         let taken=0;
@@ -75,7 +82,9 @@ export function settle(row,{props,methods={},capacity,calendar,fromDay,toDay,har
             const t=applyHarvest(row,events[next].ev,ctx);taken+=t;
             if(t)ledger.push({day,from:'reserve',to:'gatherer',actor:events[next].ev.actor,amount:t});
         }
-        const from=day*MINUTES,to=from+MINUTES,rate=rate0*(density?.[calendar(from).season]??1);
+        const from=day*MINUTES,to=from+MINUTES,season=calendar(from).season,factor=density[season];
+        if(!Number.isFinite(factor)||factor<0)fail(`seasonDensity has no valid entry for season ${season}`);
+        const rate=rate0*factor;
         // breeding population: logistic recovery from what survived (zero cannot regrow)
         row.persistence=logisticStock(row,'persistence',{reserve:row.persistence,capacity:PPM,rate,from,to});
         const base=row.persistence>0?restart:0,limit=capacity*row.persistence/PPM+base;
