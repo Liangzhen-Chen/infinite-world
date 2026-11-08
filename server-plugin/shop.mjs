@@ -324,7 +324,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    if(!physical){physical=householdResources(d,engine,id,{marketSubstitution:false});read.physical.set(id,physical);}
    const business={keeper:id,markup:1},at=Math.max(opening.minute,now+travel);
    for(const row of physical.rows){
-    if(row.holder!==id||!(row.definition?.nutrition?.satiety>0)||!(row.available>0))continue;
+    if(row.holder!==id||!(engine.byId.get(row.item)?.nutrition?.satiety>0)||!(row.available>0))continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
     const base=regionalTradeBase(d,engine,row.item,place,now);
     const quote=marketQuote(d,engine,{item:row.item,location:first.location,seller:id,buyer:owner,business,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place,goods:goodsClass(engine,row.item),supply:0,demand:1}});
     out.push({source:`trader_${id}`,seller:id,item:row.item,at,cycleDays:0,quantity:row.available,unitPrice:Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact))),priceBasis:'local-retail-ceiling'});
