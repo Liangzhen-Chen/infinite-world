@@ -1360,3 +1360,10 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
   - 第 2 轮核对了三类归类与实际账本写法一一对应：stock:222-223、npc-autonomy:190/196、npc-life:49、forest-water:110、sites:46。
   - 非阻断风险：有配方产出 item_wood（木炭窑副产，ledger-stock 旧败里见过）。阿言若在窗口内做这道配方，N17 会明确失败，不会静默放过。
   - 下一步：等 b1-c2 完整检查结束（机器负载约 14），再在 b2-c2 跑相关检查（m2-preconditions、b2-upkeep-record、s5-law-subsistence、s5-law-water-source、ledger-stock、settlement-trade、npc-life 相关）。
+- 11-08 批次 1 完整检查：b1-c2 共 523 个文件（23:33Z 到 02:30Z），对照 int-m 有 5 个新增失败，见 F:/dnd-tmp/b1-c2-full.full 和 b1c2tap/。
+  - 疑似 (2)：kd2-process #1（制作账认不出做工者）、npc-schedule #11（整月与逐日的同工关系不一致，涉及家户觅食）、s4-office-quests #6（账本 Invalid party balance）、a3-model-catalog #5（读取 undefined 的 .id）。
+  - 疑似环境：npc-depth-yp #7（README 原文件改变）。
+  - 另有 3 个旧败转过：farm-pests、performance、s2c-run001r。
+  - 基线 b1-b1 `--all` 于 02:35Z 起，用来排除环境差异。负责人已在查根因，只读，不上云。
+  - 教训：相关检查又漏了长链测试（三个都不直接引用改动的模块），已要负责人给出选法规则。
+  - 批次 1 暂不交付、不合入。批次 2 依赖 t-cand，b2-c2 的相关检查顺延到批次 1 修复之后。
