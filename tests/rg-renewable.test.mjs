@@ -111,14 +111,18 @@ test('rg: loud failures — harvest outside the interval, missing seasonDensity,
 test('rg: damage is the share of the breeding population, not of the visible stock', () => {
  // near-empty patch with living roots: pulling the few plants that stand must not wipe out the whole patch
  const row={visible:5};run(row,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',5,0)]});
- assert.ok(row.persistence>0.99e6,`5 of ${K} breeding plants pulled: persistence ${row.persistence}`);
- // the same take from a full patch is the same share of the population, so the same damage
+ // exact: 5/1000 of the population is lost = 5000 ppm, then one day of logistic recovery from 995000 ppm
+ const recovered=logisticStock({},'persistence',{reserve:995000,capacity:1e6,rate:perennial.ratePerDay,from:0,to:1440});
+ assert.equal(row.persistence,recovered);assert.ok(row.persistence>0.99e6);
+ // the damage depends only on the take over the population, so a full patch gives the identical persistence
  const full=fresh();run(full,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',5,0)]});
- assert.ok(Math.abs(full.persistence-row.persistence)<=1000,'damage depends on the take over the population, not on how much stands');
- // repeated small pulls add up to the whole population before the patch is gone
- const staged=fresh();let day=0;
- for(;day<10&&staged.persistence!==0;day++)run(staged,perennial,{fromDay:day,toDay:day+1,harvests:[harvest(day,'pull_whole',100,0)]});
- assert.ok(staged.persistence>0,'ten pulls of a tenth, with regrowth between, do not exceed the population');
+ assert.equal(full.persistence,row.persistence);
+ // several takes on one day from a near-empty patch: every take is a share of what is left of the population, so 20+20+10 of
+ // 1000 leave 950000 ppm (an old visible-stock denominator would give 20/50, 20/30, 10/10 = extinction)
+ const staged={visible:50};run(staged,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',20,0),harvest(0,'pull_whole',20,0),harvest(0,'pull_whole',10,0)]});
+ const expected=logisticStock({},'persistence',{reserve:950000,capacity:1e6,rate:perennial.ratePerDay,from:0,to:1440});
+ assert.ok(Math.abs(staged.persistence-expected)<=2,`${staged.persistence} vs ${expected} (each step is exact in the model; the accumulated float error is below 1 ppm and rounded once)`);
+ assert.ok(staged.persistence>0.9e6);
  // pulling the entire population by the root is extinction
  const all=fresh();run(all,perennial,{fromDay:0,toDay:1,harvests:[harvest(0,'pull_whole',K,0)]});
  assert.equal(all.persistence,0);
@@ -127,14 +131,40 @@ test('rg: damage is the share of the breeding population, not of the visible sto
  assert.equal(damaged.persistence,0);
 });
 
+test('rg: many tiny takes accumulate exactly (no per-take rounding up to a ppm)', () => {
+ // capacity 1e8: each take of 1 unit is 1e-8 of the population = 0.01 ppm. 250 takes = 2.5 ppm: the patch loses 2 ppm (floor of the exact total),
+ // not 250 ppm (what rounding each take up to a whole ppm would give), and the result does not depend on how the takes are grouped.
+ const takes=n=>Array.from({length:n},()=>harvest(0,'pull_whole',1,0));
+ const row=fresh();run(row,perennial,{capacity:1e8,fromDay:0,toDay:1,harvests:takes(250)});
+ assert.equal(row.persistence,1e6-2);
+ const split=fresh();run(split,perennial,{capacity:1e8,fromDay:0,toDay:1,harvests:takes(100)});
+ const rest=JSON.parse(JSON.stringify(split));run(rest,perennial,{capacity:1e8,fromDay:1,toDay:2,harvests:takes(150).map(ev=>({...ev,day:1}))});
+ const one=fresh();run(one,perennial,{capacity:1e8,fromDay:0,toDay:2,harvests:[...takes(100),...takes(150).map(ev=>({...ev,day:1}))]});
+ assert.deepEqual(rest,one,'grouping the same takes over the same days does not change the state');
+});
+
+test('rg: spare is checked even when nothing is taken, and a failing settle leaves the row untouched', () => {
+ assert.throws(()=>settle({visible:0},{props:perennial,methods,capacity:K,calendar,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/spare/);
+ assert.throws(()=>run({visible:0},perennial,{spare:()=>2,fromDay:0,toDay:1,harvests:[harvest(0,'pick_leaf',5,0)]}),/spare must be within/);
+ // the failure comes on day 3, after three days of growth have been computed
+ const row=fresh(100),before=structuredClone(row);
+ assert.throws(()=>run(row,perennial,{fromDay:0,toDay:5,harvests:[harvest(0,'pick_leaf',10,0),harvest(3,'no-such-method',1,0)]}),/unknown harvest method/);
+ assert.deepEqual(row,before,'row is exactly as before the failed call');
+ const noDays=fresh(100);assert.throws(()=>run(noDays,{...perennial,seasonDensity:[1,1,1]},{fromDay:260,toDay:300}),/no valid entry for season 3/);
+ assert.deepEqual(noDays,fresh(100));
+});
+
 test('rg: with no harvests the daily settlement equals one logisticStock call over the whole span', () => {
  const start=100,base=perennial.restartUnits,limit=K+base,rate=perennial.ratePerDay;
  // constant rate and capacity: the anchor never rebases, so both sample the same continuous curve and floor the same value (exact)
  const days=200,row=fresh(start),out=run(row,perennial,{fromDay:0,toDay:days});
  const ref={},refValue=Math.max(start,logisticStock(ref,'stock',{reserve:start+base,capacity:limit,rate,from:0,to:days*1440})-base);
  assert.equal(out.visible,refValue);assert.equal(out.regrown,refValue-start);
- // seasonal density: the rate changes at season edges and the anchor is rebased from the continuous value; compare with one call per
- // season span. The tolerance is one stock unit: the two paths evaluate the same curve and can differ only by float rounding at an integer edge.
+ // seasonal density: the rate changes at season edges and the anchor is rebased from the continuous value (the visible stock is the floor
+ // of that value, so the rebase adds exactly zero); within a season the daily path keeps the same anchor and evaluates the same
+ // expression as one call per season span, so the two are bit-identical.
+ // Boundary of this check: no harvests, so capacity and persistence are constant. With damage the capacity changes daily, the anchor is
+ // rebuilt every day and the result is the day-by-day path (step independence is covered by the 1/7/30-day test), not a single call.
  const props={...perennial,seasonDensity:[1,0.5,1,0.25]},total=400,seasonal=fresh(start);run(seasonal,props,{fromDay:0,toDay:total});
  const refRow={};let value=start,edge=0;
  for(let day=1;day<=total;day++){
@@ -143,7 +173,7 @@ test('rg: with no harvests the daily settlement equals one logisticStock call ov
    value=Math.max(value,logisticStock(refRow,'stock',{reserve:value+base,capacity:limit,rate:rate*factor,from:edge*1440,to:day*1440})-base);edge=day;
   }
  }
- assert.ok(Math.abs(seasonal.visible-value)<=1,`daily ${seasonal.visible} vs per-season ${value}`);
+ assert.equal(seasonal.visible,value,`daily ${seasonal.visible} vs per-season ${value}`);
  assert.ok(seasonal.visible>start,'the patch grew');
 });
 
@@ -238,5 +268,7 @@ test('rg: the module source names no resource, item, site or species, no calenda
  assert.equal(/if *[(].*(?:forest|herb|water|reed|fruit)/i.test(source),false,'no per-class branches');
  assert.equal(/(^|[^0-9.])(360|90|30)([^0-9]|$)/.test(source),false,'no year/season length constants');
  assert.equal(source.includes('crypto')||source.includes('Math.random'),false,'no randomness');
+ assert.equal(/Math[.](log|exp|pow|sqrt|sin|cos|tan|hypot|atan2|acos)/.test(source),false,'transcendental math only through det-math (bit-exact across platforms)');
+ assert.ok(source.includes("from './det-math.mjs'"));
  assert.equal(/leaveCap|seasonDensity[^;]*[?][?]|density[^;]*[?][?]/.test(source),false,'no skill constant or silent density default');
 });

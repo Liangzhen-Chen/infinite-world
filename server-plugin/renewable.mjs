@@ -14,9 +14,16 @@
 // Restart: while any breeding population survives it stands for `restartUnits` stock units of growth base (species data; pending
 // for every real species until a basis exists), so a stripped patch regrows from that base; with no survivor it cannot regrow
 // (as in logisticStock). Not modelled here (RG-B decisions): individual variation, immigration from neighbouring patches.
-import {logisticStock} from './stock.mjs';
+// Unit assumption: one stock unit stands for one breeding unit (mass and plant count scale together), so the share of the breeding
+// population destroyed by a take is taken / (capacity × persistence); species whose unit weight differs from their breeding unit
+// would need a per-species conversion (not in the data yet).
+// Atomic: settle works on a copy of the row and writes it back only when every day succeeded, so a throw leaves the row untouched.
+// The ledger postings use abstract names ('reserve', 'gatherer'); RG-B must map them to accountKey accounts (src:regrowth → the site's
+// reserve → the gatherer's bag) and add site, resource, method and actor checks (the actor is only a label here).
+import {logisticStock,accrueStock} from './stock.mjs';
+import {ln} from './det-math.mjs';   // the platform's Math.log/exp may differ in the last bit between builds; det-math is bit-exact
 
-export const LOGISTIC_SPAN=Math.log(361);   // 2·ln19: logistic 5%→95% duration is LOGISTIC_SPAN / r
+export const LOGISTIC_SPAN=ln(361);   // 2·ln19: logistic 5%→95% duration is LOGISTIC_SPAN / r
 const PPM=1e6,MINUTES=1440;
 const fail=message=>{throw Error(`renewable: ${message}`);};
 const num=(v,label)=>{if(!Number.isFinite(v))fail(`${label} is missing or pending`);return v;};
@@ -50,16 +57,19 @@ function applyHarvest(row,ev,ctx){
     const {props,methods,calendar,spareOf}=ctx,method=methods[ev.method];
     if(!method)fail(`unknown harvest method ${ev.method}`);
     if(!Number.isSafeInteger(ev.quantity)||ev.quantity<0)fail('harvest quantity must be a non-negative integer');
-    const before=row.visible,taken=Math.min(ev.quantity,before);
-    if(!taken)return 0;
     if(typeof spareOf!=='function')fail('a spare(method, event) function is required (skill to spared share is pending)');
     const spare=spareOf(method,ev);   // share of the patch the gatherer spares
     if(!Number.isFinite(spare)||spare<0||spare>1)fail('spare must be within [0,1]');
+    const before=row.visible,taken=Math.min(ev.quantity,before);
+    if(!taken)return 0;
     // The share of the breeding population destroyed is the taken amount over that population (the plants that can seed or
     // resprout = capacity × persistence), not over the visible stock: a patch cut to nothing still has its roots.
     const population=ctx.capacity*(row.persistence??PPM)/PPM,share=population>0?Math.min(1,taken/population):1;
     const damage=share*breedingLoss(props,method,calendar(ev.day*MINUTES).season)*(1-spare);
-    row.persistence=Math.floor((row.persistence??PPM)*(1-damage));
+    // Loss in ppm accumulates rationally (accrueStock) and only the whole-ppm total is taken off, so many small takes neither vanish
+    // nor round up to a ppm each: the total lost is floor(sum of exact losses), deterministic and independent of how takes are grouped.
+    const persistence=row.persistence??PPM;
+    row.persistence=persistence-Math.min(persistence,accrueStock(row,'breedingLoss',persistence*damage));
     row.visible=before-taken;
     return taken;
 }
@@ -69,7 +79,8 @@ function applyHarvest(row,ev,ctx){
 // harvests: [{day, method, quantity, actor, ...}] with every day inside [fromDay,toDay).
 // Returns {visible, regrown, taken, days:[{day,visible,regrown,taken}], ledger}; the ledger lists the postings that reproduce
 // visible_end = visible_start + regrown − taken (src:regrowth → reserve, reserve → gatherer).
-export function settle(row,{props,methods={},capacity,calendar,fromDay,toDay,harvests=[],spare}){
+export function settle(target,{props,methods={},capacity,calendar,fromDay,toDay,harvests=[],spare}){
+    const row=structuredClone(target);   // written back to `target` only after every day succeeded
     if(typeof calendar!=='function')fail('a world calendar function is required');
     if(!Number.isSafeInteger(fromDay)||!Number.isSafeInteger(toDay)||toDay<fromDay)fail('fromDay/toDay must be integer world days');
     if(!Number.isSafeInteger(row.visible)||row.visible<0)fail('row.visible must be a non-negative integer');
@@ -97,5 +108,7 @@ export function settle(row,{props,methods={},capacity,calendar,fromDay,toDay,har
         if(regrown)ledger.push({day,from:'src:regrowth',to:'reserve',amount:regrown});
         regrownTotal+=regrown;takenTotal+=taken;days.push({day,visible:row.visible,regrown,taken});
     }
+    for(const key of Object.keys(target))delete target[key];
+    Object.assign(target,row);
     return {visible:row.visible,regrown:regrownTotal,taken:takenTotal,days,ledger};
 }
