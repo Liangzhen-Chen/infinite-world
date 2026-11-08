@@ -4,12 +4,11 @@
 //   node tools/probe-b1c.mjs office           tests/s4-office-quests.test.mjs:115-135 第 6 条（逐条断言）
 //   node tools/probe-b1c.mjs lifecycle        tests/playtest-lifecycle.test.mjs:48-58 第 3 条（经 tools/playtest-runner.mjs 的 createPlaytestServer）
 //   node tools/probe-b1c.mjs catalog          a3-model-catalog #5 的前两步（不经 playtest 服务器，只取栈）
-//   node tools/probe-b1c.mjs cowork5 [N=26] [scan=1-26|none] [pair=yes|no]
-//        cowork 分歧的定位（第五版新增）：(1) 对世界日 k∈scan，新开引擎整段推进 k 天 vs 同一引擎逐日第 k 天，比较完整文档（state、ledger 及其余顶层键）的 deepStrictEqual，
-//        报告第一个出现世界状态差异的日子及当天最先出现的前 20 条差异路径（按顶层分组计数）；天然不同的字段逐个列明（见 cowork5 注释），不整类忽略；
-//        (2) 两人在第 24..N 天各自的当日计划行、作息片段、位置、同工重叠分钟（阈值 180）及 planFactsEqual/slotsEqual。
-//        耗时估算（候选约 7 秒/模拟日）：逐日基线 N 天 + 扫描 Σk 天 + 第(2)项 24..26 三次整段；N=26 全做约 3300 秒，接近单作业 3600 秒上限，
-//        所以可分段：`cowork5 26 1-13 no`、`cowork5 26 14-26 no`、`cowork5 26 none yes`。
+//   node tools/probe-b1c.mjs cowork5 [N=26] [scan=1-26|none] [pair=yes|no|d1,d2,..]
+//        cowork 分歧的定位（第五、六版）：(1) 对世界日 k∈scan，新开引擎整段推进 k 天 vs 同一引擎逐日第 k 天，比较完整文档（所有顶层键）规范化事件编号后的 deepStrictEqual，
+//        报告第一个有差异的日子、当天前 20 条差异、按“仅长程有/仅逐日有/值不同”和顶层分组计数；
+//        (2) 两人在 coworkDay 的运行时刻（日结）经导出的 advanceNpcLife 取判定，并给出资格输入、计划行、作息片段；默认日期为 24..26，若 (1) 找到首个差异日则取其 ±1。
+//        耗时估算（候选约 7 秒/模拟日）：N=26 全做约 3300 秒，接近单作业 3600 秒上限，所以可分段：`cowork5 26 1-13 no`、`cowork5 26 14-26 no`、`cowork5 26 none yes`。
 // 任何模式出现断言失败、异常或分歧：打印 error.stack / 差异，并设 process.exitCode=1。
 // 基线对照：本文件原样放进 t-int 同一份代码的目录，同参数运行。
 // 与原测试不同、不复现的部分：
@@ -114,13 +113,27 @@ async function cowork(){
 }
 
 // ---------- cowork5 ----------
-// 天然不同、不属于世界状态的字段（逐个列明，其余差异一律算世界状态差异）：整段推进用 eventId 'month'，逐日推进用 eventId 'day_<i>'，
-// 二者写进文档的位置只有“事件编号本身”：
-//   1. 路径里带事件编号（记录键 / 事件键以 month 或 day_<i> 命名）；
-//   2. 值里含事件编号文本（如 sourceEvent、eventId、receipt 里的 appliedEvent）。
-// 判定规则：差异路径的任一段、或两边的值序列化后，含单词 month 或 day_<数字> 的，记为 eventIdDerived 并按路径模式汇总列出（不隐藏），其余记为 world。
-const EVENT_TOKEN=/(^|[^A-Za-z_])month([^A-Za-z_]|$)|day_\d+/;
-const patternOf=path=>path.split('.').map(seg=>/^(month|day_\d+)$/.test(seg)||EVENT_TOKEN.test(seg)?'<事件编号>':/^\d+$/.test(seg)?'#':seg).slice(0,6).join('.');
+// 事件编号规范化（取代"含 month/day_数字就排除"）：整段推进用 eventId 'month'，逐日推进用 eventId 'day_<i>'，二者写进文档的位置只有事件编号本身。
+// 两份文档比较之前，把键名和字符串值里的 month、day_<数字> 统一换成 <EV>（两侧同一规则），再 deepStrictEqual；
+// 键名规范化后若撞车，按出现顺序加 ~n 后缀保留（不丢数据），所以“逐日有 N 条事件记录、整段只有 1 条”会如实显示为“仅逐日有”，不会被吞掉。
+// 规范化后仍有的差异一律算真实差异（exitCode=1），按三类计数并列出：仅长程有 / 仅逐日有 / 两边都有但值不同；同时给出两侧各替换了多少处。
+const EV_RX=/\bmonth\b|day_\d+/g;
+function normalizeEvents(value,counter){
+ if(typeof value==='string')return value.replace(EV_RX,()=>{counter.n++;return '<EV>';});
+ if(Array.isArray(value))return value.map(x=>normalizeEvents(x,counter));
+ if(value&&typeof value==='object'){
+  const out={},seen=new Map();
+  for(const [k,v] of Object.entries(value)){
+   let key=k.replace(EV_RX,()=>{counter.n++;return '<EV>';});
+   if(has(out,key)){const n=(seen.get(key)??0)+1;seen.set(key,n);key=`${key}~${n}`;}
+   out[key]=normalizeEvents(v,counter);
+  }
+  return out;
+ }
+ return value;
+}
+const patternOf=path=>path.split('.').map(seg=>/^\d+$/.test(seg)?'#':seg).slice(0,6).join('.');
+const classify=d=>d.note==='键只在一边'?(d.longHasKey?'onlyLong':'onlyDaily'):'valueDiffers';
 function docDiffs(a,b,limit=400){
  const acc=[],walk=(x,y,path)=>{
   if(acc.length>=limit||x===y)return;
@@ -133,50 +146,70 @@ function docDiffs(a,b,limit=400){
  };
  walk(a,b,[]);return acc;
 }
-const derived=d=>EVENT_TOKEN.test(d.path)||EVENT_TOKEN.test(JSON.stringify(d.long)??'')||EVENT_TOKEN.test(JSON.stringify(d.daily)??'');
 const topOf=path=>path.split('.').slice(0,2).join('.');
-const RESTING_RX=/睡|歇息|休息|赶路|前往|返回|照护/,PAIR=['npc_hw_duanyan','npc_hw_anhuai'];
+// PAIR 来自 v4 的 cowork 结果（分歧只在这两人），只是定点诊断，不代表别人没有分歧；全员的分歧由逐日整文档扫描覆盖。
+const PAIR=['npc_hw_duanyan','npc_hw_anhuai'];
 async function cowork5(){
  const {scheduleAt}=await import('../server-plugin/npc-schedule.mjs');
  const {personConstraints}=await import('../server-plugin/entity-view.mjs');
- const N=Number(process.argv[3]??26),scanArg=process.argv[4]??`1-${N}`,pairArg=(process.argv[5]??'yes')==='yes';
+ const {advanceNpcLife,npcIsMinor}=await import('../server-plugin/npc-life.mjs');
+ const N=Number(process.argv[3]??26),scanArg=process.argv[4]??`1-${N}`,pairArg=process.argv[5]??'yes';
  const [lo,hi]=scanArg==='none'?[1,0]:scanArg.split('-').map(Number),world=await loadWorld(),CHARACTER_SEED='schedule-month';
  const fresh=()=>{const engine=new WorldEngine(world);return {engine,doc:engine.createCharacter(seed,{},CHARACTER_SEED)};};
  const longRun=async k=>{const f=fresh(),o=await f.engine.reduce(f.doc,{tool:'world_time',args:{minutes:k*1440},eventId:'month'});return {engine:f.engine,doc:applyPatches(f.doc,o.patches)};};
- const {engine,doc}=fresh(),snapshots=[doc];let daily=doc;
- const need=Math.max(hi,pairArg?Math.min(N,26):0);
- for(let day=0;day<need;day++){const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,o.patches);snapshots.push(daily);}
- const report={mode:'cowork5',N,scan:scanArg,pair:pairArg,characterSeed:CHARACTER_SEED,note:'快照取各日 09:00（minute 540+1440k）；逐日一侧是同一引擎连续逐日，整段一侧每个天数新开引擎一次 reduce；比较完整文档（所有顶层键）的 deepStrictEqual',
-  eventIdRule:'路径或值含事件编号（month 或 day_<数字>）的差异记为 eventIdDerived（整段用 eventId month，逐日用 day_<i>，天然不同），按路径模式列出；其余全部算世界状态差异，不整类忽略'};
+ const report={mode:'cowork5',N,scan:scanArg,pair:pairArg,characterSeed:CHARACTER_SEED,
+  note:'(1) 快照取各日 09:00（minute 540+1440k）；逐日一侧是同一引擎连续逐日，整段一侧每个天数新开引擎一次 reduce；比较完整文档（所有顶层键）规范化事件编号后的 deepStrictEqual。'};
  // (1) 逐日整文档比较。
- const scan=[];let firstWorldDay=null;const patterns=new Map();
- for(let k=lo;k<=hi;k++){
-  const L=await longRun(k),D=snapshots[k],topKeys=Object.keys({...L.doc,...D}),same=topKeys.every(key=>strictSame(L.doc[key],D[key]));
-  if(same){scan.push({day:k,identicalDocument:true});continue;}
-  const diffs=docDiffs(L.doc,D),world=diffs.filter(x=>!derived(x)),natural=diffs.filter(derived);
-  for(const x of natural){const key=patternOf(x.path);patterns.set(key,(patterns.get(key)??0)+1);}
-  const groups={};for(const x of world){const key=topOf(x.path);groups[key]=(groups[key]??0)+1;}
-  const row={day:k,identicalDocument:false,worldDiffCount:world.length,eventIdDerivedCount:natural.length,diffCountCapped:diffs.length>=400,worldDiffGroups:groups,...(world.length&&firstWorldDay===null?{first20WorldDiffs:world.slice(0,20)}:{})};
-  if(world.length&&firstWorldDay===null)firstWorldDay=k;
-  scan.push(row);
- }
- report.dailyScan={scan,firstDayWithWorldStateDifference:firstWorldDay,eventIdDerivedPatterns:[...patterns].map(([pattern,count])=>({pattern,count})),
-  note:'diffs 上限 400 条/天，达到上限 diffCountCapped=true（分组计数是下限）'};
- // (2)(3) 两人第 24..26 天的计划行、作息、位置、同工重叠分钟。
- if(pairArg){
-  const daySlots=(eng,state,id,day)=>{const c=personConstraints(eng,state),rows=[];for(let cur=day*1440;cur<(day+1)*1440;){const slot=scheduleAt(eng,id,cur,state,c);if(!slot)break;const end=Math.min(slot.until,(day+1)*1440);rows.push({start:cur-day*1440,end:end-day*1440,location:slot.location,activity:slot.activity});cur=end;}return rows;};
-  const together=(a,b)=>{let n=0;for(const x of a.filter(s=>!RESTING_RX.test(s.activity??'')))for(const y of b.filter(s=>!RESTING_RX.test(s.activity??'')))if(x.location&&x.location===y.location)n+=Math.max(0,Math.min(x.end,y.end)-Math.max(x.start,y.start));return n;};
-  const facts=(state,id,day)=>{const entry=state.family?.subsistence?.[1]?.[id],row=Object.values(state.records).find(r=>r.category==='subsistence_plan'&&r.day===day&&r.workers?.[id]),key=entry?.[1],n=state.npcs[id],w=n.inventory?.item_wood;
-   return {subsistenceDay:state.family?.subsistence?.[0]??null,planRowDay:row?.day??null,duties:row?.workers?.[id]?.duties??null,chores:row?.workers?.[id]?.chores??null,household:key&&row?row.households?.[key]??null:null,upkeepRow:key?state.family?.upkeep?.[key]??null:null,
-    npc:{location:n.location,activity:n.activity,status:n.status,caring:n.caring??null,scheduleTravel:n.scheduleTravel??null,wood:typeof w==='number'?w:w?.quantity??0}};};
-  report.pairByDay=[];
-  for(const k of [24,25,26].filter(k=>k<=N)){
-   const L=await longRun(k),side=(st,eng)=>{const slots=Object.fromEntries(PAIR.map(id=>[id,daySlots(eng,st,id,k)]));return {plan:Object.fromEntries(PAIR.map(id=>[id,facts(st,id,k)])),slots,togetherMinutes:together(slots[PAIR[0]],slots[PAIR[1]])};};
-   const a=side(L.doc.state,L.engine),b=side(snapshots[k].state,engine);
-   report.pairByDay.push({day:k,long:a,daily:b,planFactsEqual:strictSame(a.plan,b.plan),slotsEqual:strictSame(a.slots,b.slots)});
+ let firstDiffDay=null;
+ if(hi>=lo){
+  const {engine,doc}=fresh(),snapshots=[doc];let daily=doc;
+  for(let day=0;day<hi;day++){const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,o.patches);snapshots.push(daily);}
+  const scan=[];
+  for(let k=lo;k<=hi;k++){
+   const L=await longRun(k),D=snapshots[k],cl={n:0},cd={n:0},NL=normalizeEvents(L.doc,cl),ND=normalizeEvents(D,cd);
+   const same=Object.keys({...NL,...ND}).every(key=>strictSame(NL[key],ND[key]));
+   if(same){scan.push({day:k,identicalAfterNormalization:true,eventIdTokensReplaced:{long:cl.n,daily:cd.n}});continue;}
+   const diffs=docDiffs(NL,ND),cats={onlyLong:0,onlyDaily:0,valueDiffers:0},patterns={},groups={};
+   for(const x of diffs){const c=classify(x);cats[c]++;const key=`${c} ${patternOf(x.path)}`;patterns[key]=(patterns[key]??0)+1;const g=topOf(x.path);groups[g]=(groups[g]??0)+1;}
+   scan.push({day:k,identicalAfterNormalization:false,eventIdTokensReplaced:{long:cl.n,daily:cd.n},diffCount:diffs.length,diffCountCapped:diffs.length>=400,byCategory:cats,byTopLevelGroup:groups,
+    topPatterns:Object.entries(patterns).sort((x,y)=>y[1]-x[1]).slice(0,15).map(([pattern,count])=>({pattern,count})),...(firstDiffDay===null?{first20Diffs:diffs.slice(0,20)}:{})});
+   if(firstDiffDay===null)firstDiffDay=k;
   }
+  report.dailyScan={scan,firstDayWithDifference:firstDiffDay,note:'diffs 上限 400 条/天，达到上限时计数是下限；规范化后仍有的差异全部算真实差异'};
  }
- if(firstWorldDay!==null)process.exitCode=1;
+ // (2)(3) 两人在 coworkDay 真实运行的时刻（日结那一刻、刚结束的那一天）的判定：直接调用引擎导出的 advanceNpcLife（它在每个午夜调用 coworkDay，npc-life.mjs:970），
+ // 在“日结前一分钟（minute = 1440k-1）”的状态上对草稿跑 advanceNpcLife(before=1440k-1, after=1440k)，读两人关系记录的变化。
+ // 近似之处（coworkDay、lifeActor/incapacitated/settled/tied 均未导出，不为探针改引擎）：状态取日结前一分钟，不是引擎在日结当刻中途的状态；
+ // advanceNpcLife 在同一刻还会跑 healthDay/familyDay 等（只发生在探针的草稿里，不写任何东西），所以只看两人 relationships 的变化。
+ // 资格过滤的各项无法直接取到，改为输出它们读取的原始字段、导出的 npcIsMinor、静态亲缘（engine.byId 的 relationships）和阈值（rules.npcLife.kindness.cowork）。
+ if(pairArg!=='no'){
+  const days=pairArg==='yes'?(firstDiffDay!==null?[firstDiffDay-1,firstDiffDay,firstDiffDay+1]:[24,25,26]):pairArg.split(',').map(Number);
+  const pairDays=days.filter(k=>k>=1&&k<=N),maxDay=Math.max(...pairDays);
+  // 逐日一侧：第一次推进到第 1 个午夜前一分钟，之后每次 1440 分钟，快照分钟 = 1440k-1。
+  const {engine,doc}=fresh();let daily=doc;const boundary=[null];
+  {const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440-1-doc.state.minute},eventId:'day_0'});daily=applyPatches(daily,o.patches);boundary.push(daily);}
+  for(let day=1;day<maxDay;day++){const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,o.patches);boundary.push(daily);}
+  const rules=engine.rules.npcLife?.kindness?.cowork??null,other=id=>PAIR.find(x=>x!==id);
+  const slotsOf=(eng,state,id,k)=>{const c=personConstraints(eng,state),rows=[];for(let cur=(k-1)*1440;cur<k*1440;){const slot=scheduleAt(eng,id,cur,state,c);if(!slot)break;const end=Math.min(slot.until,k*1440);rows.push({start:cur-(k-1)*1440,end:end-(k-1)*1440,location:slot.location,activity:slot.activity});cur=end;}return rows;};
+  const planRow=(state,id,k)=>{const row=Object.values(state.records).find(r=>r.category==='subsistence_plan'&&r.workers?.[id]&&r.day===k-1);return row?{day:row.day,duties:row.workers[id].duties,chores:row.workers[id].chores}:{shapeMissing:`没有 day=${k-1} 且含该人的 subsistence_plan 行（计划行可能已被次日覆盖）`};};
+  report.pairByDay=[];
+  for(const k of pairDays){
+   const f=fresh(),o=await f.engine.reduce(f.doc,{tool:'world_time',args:{minutes:1440*k-1-f.doc.state.minute},eventId:'month'}),Ldoc=applyPatches(f.doc,o.patches);
+   const run=(eng,document)=>{
+    const state=document.state,d=eng.primitiveDraft(document),before=Object.fromEntries(PAIR.map(id=>[id,structuredClone(state.npcs[id].relationships?.[other(id)]??null)]));
+    let error=null;try{advanceNpcLife(d,eng,state.minute,state.minute+1);}catch(e){error=e.stack??String(e);}
+    const after=d.get('state'),rel=Object.fromEntries(PAIR.map(id=>[id,{before:before[id],after:after.npcs[id].relationships?.[other(id)]??null}]));
+    return {stateMinute:state.minute,advanceNpcLifeError:error,pairRelationships:rel,coworkApplied:PAIR.some(id=>rel[id].after?.routine?.coworkTimes!==rel[id].before?.routine?.coworkTimes),
+     eligibilityInputs:Object.fromEntries(PAIR.map(id=>{const n=state.npcs[id];return [id,{status:n.status,caring:n.caring??null,location:n.location,scheduleTravel:n.scheduleTravel??null,cognitionTravel:n.cognitionTravel??null,minor:npcIsMinor(eng,state,id,k*1440)}];})),
+     staticTie:(eng.byId.get(PAIR[0])?.relationships??[]).some(r=>r.with===PAIR[1])||(eng.byId.get(PAIR[1])?.relationships??[]).some(r=>r.with===PAIR[0]),
+     threshold:rules,plan:Object.fromEntries(PAIR.map(id=>[id,planRow(state,id,k)])),slots:Object.fromEntries(PAIR.map(id=>[id,slotsOf(eng,state,id,k)]))};
+   };
+   const a=run(f.engine,Ldoc),b=run(engine,boundary[k]);
+   report.pairByDay.push({evaluatesDay:k-1,boundaryMinute:1440*k,long:a,daily:b,coworkResultEqual:strictSame(a.pairRelationships,b.pairRelationships),slotsEqual:strictSame(a.slots,b.slots),planEqual:strictSame(a.plan,b.plan)});
+  }
+  if(report.pairByDay.some(r=>!r.coworkResultEqual||!r.slotsEqual||!r.planEqual||r.long.advanceNpcLifeError||r.daily.advanceNpcLifeError))process.exitCode=1;
+ }
+ if(firstDiffDay!==null)process.exitCode=1;
  out(report);
 }
 
