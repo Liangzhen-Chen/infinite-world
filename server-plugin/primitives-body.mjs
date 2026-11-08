@@ -3,6 +3,7 @@
 import {reject} from './primitive-policy.mjs';
 import {fixedUnits,fixedNumber,checkedFixed} from './rx.mjs';
 import {physicalItem} from './items.mjs';
+import {isPhysicallyDead} from './holdings.mjs';
 const pathOf=(document,actor)=>actor==='player'?['state','player']:document.state.npcs?.[actor]?['state','npcs',actor]:document.state.creatures?.[actor]?['state','creatures',actor]:null;
 const atPath=(document,path)=>path?.reduce((v,k)=>v?.[k],document);
 export function bodyRule(engine,need){
@@ -22,23 +23,31 @@ export function metabolismFactor(engine,state,actor,need){
  const row=state?.npcs?.[actor]??state?.creatures?.[actor];
  return speciesMetabolism(engine,row?.species??engine.byId?.get(actor)?.species,need);
 }
-// Share of a settlement's people who eat, from its species make-up: registered residents by
-// species plus the pending population (by species when the profile is mixed, otherwise people).
-// 1 when every member eats (all human settlements), so their ration is unchanged.
-const mealRatios=new WeakMap();
-export function settlementMealRatio(engine,sid){
- const cache=mealRatios.get(engine)??new Map();mealRatios.set(engine,cache);
- if(cache.has(sid))return cache.get(sid);
- const profile=engine.world?.settlementProfiles?.find(p=>p.id===sid);let weighted=0,total=0;
- if(profile){
-  for(const id of profile.residentIds??[]){total++;weighted+=speciesMetabolism(engine,engine.byId?.get(id)?.species,'satiety');}
-  if(profile.pendingSpeciesStructure)for(const [species,g] of Object.entries(profile.pendingSpeciesStructure)){total+=g.population;weighted+=g.population*speciesMetabolism(engine,species,'satiety');}
-  else{const n=profile.pendingPopulation??0;total+=n;weighted+=n;}
- }
- const ratio=total>0&&weighted!==total?weighted/total:1;cache.set(sid,ratio);return ratio;
+// Mouths a settlement's granary must feed, derived from the live state: living named residents
+// count by their own species factor; the rest of the head count follows the world's authored
+// species make-up (pendingSpeciesStructure), or eats as people when there is none.
+// Real-valued: callers round once, at the step that removes whole portions.
+export function settlementMouths(engine,state,sid,population,need='satiety'){
+ const profile=engine.world?.settlementProfiles?.find(p=>p.id===sid);if(!profile)return population;
+ const mixed=profile.pendingSpeciesStructure,ids=new Set(profile.residentIds??[]);
+ if(mixed)for(const [id,n] of Object.entries(state?.npcs??{}))if(n.materialized?.settlement===sid)ids.add(id);
+ let named=0,weighted=0;
+ for(const id of ids){if(state?.npcs?.[id]&&isPhysicallyDead(engine,state,id))continue;named++;weighted+=metabolismFactor(engine,state,id,need);}
+ let share=1;
+ if(mixed){const total=Object.values(mixed).reduce((n,g)=>n+g.population,0);if(total>0)share=Object.entries(mixed).reduce((n,[sp,g])=>n+g.population*speciesMetabolism(engine,sp,need),0)/total;}
+ if(weighted===named&&share===1)return population;
+ if(population<named)return named>0?weighted*population/named:0;
+ return weighted+(population-named)*share;
 }
-// Whole mouths the public granary feeds for a head count.
-export function mealMouthsOf(engine,sid,population){const ratio=settlementMealRatio(engine,sid);return ratio===1?population:Math.round(population*ratio);}
+export function settlementMealRatio(engine,state,sid,need='satiety'){
+ const population=state?.settlements?.[sid]?.population??0;
+ return population>0?settlementMouths(engine,state,sid,population,need)/population:1;
+}
+// Mouths for a head count after `levy` of them left (soldiers keep the settlement's make-up).
+export function mealMouthsOf(engine,state,sid,population,{levy=0,need='satiety'}={}){
+ const full=settlementMouths(engine,state,sid,population,need);
+ return levy>0&&population>0?full*Math.max(0,population-levy)/population:full;
+}
 export function bodyDrain(engine,state,actor,need,activity='light'){
  return bodyRule(engine,need).drainPerHour[activity]*metabolismFactor(engine,state,actor,need);
 }

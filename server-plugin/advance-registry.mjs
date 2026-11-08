@@ -398,9 +398,9 @@ const systems=[
         if(source.granary===false)continue;// public money only, no public granary (D1 town ledger): no daily settlement ration; residents' households still eat their own stock
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
         const production=farming?0:accrueFoodProduction(e,d,s,sid,cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
-        const fed=mealMouthsOf(e,sid,s.population),missing=farming?.missingMeals??Math.max(0,fed-available);
-        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,fed),day);s.food=Math.max(0,available-fed);}
-        const mouths=farming?Math.max(0,fed-mealMouthsOf(e,sid,d.get('state','records',`levy:${sid}`)?.count??0)):fed;
+        const levy=farming?(d.get('state','records',`levy:${sid}`)?.count??0):0,meals=Math.ceil(mealMouthsOf(e,d.get('state'),sid,s.population)),missing=farming?.missingMeals??Math.max(0,meals-available);
+        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,meals),day);s.food=Math.max(0,available-meals);}
+        const mouths=farming?Math.ceil(mealMouthsOf(e,d.get('state'),sid,s.population,{levy})):meals;
         publicMeals.set(sid,{mouths,eaten:mouths-missing,missing});
         const wood=farming?.woodProduced??harvestSettlementWood(d,e,sid,s.woodPerDay??0,(day+1)*1440);
         settleFuel(d,e,sid,s,wood,day);d.set(['state','settlements',sid],s);
