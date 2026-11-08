@@ -1,0 +1,143 @@
+{
+  "schema": "ecology/renewables@1",
+  "note": "RG-A 可再生存量规律的材料属性与采集方式表（模块 server-plugin/renewable.mjs，尚未接入 sites/forest-water，接入是 RG-B）。每个字段要么有依据，要么是 null 并列入 pending；pending 的字段不得被任何代码补默认值（模块遇到 null 直接报错）。basis 取值：rule＝本仓库已发布的规则值（注明文件）；table＝本仓库已有的参数表项（用 id 引用，不复制数值）；botany＝植物学常识，常识性来源、未逐条核对文献，一律 calibration:pending 待标定；pending＝无依据，不填值。",
+  "seasons": {
+    "note": "季节下标与 sites.mjs seasonalSpans 一致：一年 360 日，每季 90 日，0 春 1 夏 2 秋 3 冬。",
+    "daysPerSeason": 90
+  },
+  "methods": {
+    "pull_whole": {
+      "kills": "root", "takesSeed": false, "leaveCap": 0.3333333333333333,
+      "basis": "botany", "calibration": "pending",
+      "source": "连根拔起：整株连根带走。leaveCap 取采药/采集行业通行的“采集不超过一丛的三分之一”经验规则，常识性来源，未逐条核对文献。"
+    },
+    "cut_shoots": {
+      "kills": "shoot", "takesSeed": false, "leaveCap": 0.3333333333333333,
+      "basis": "botany", "calibration": "pending",
+      "source": "割取地上茎叶：能从根重新萌发的种类不死，只靠种子更新的种类被割则当年不留种。leaveCap 同三分之一规则（常识性来源）。"
+    },
+    "pick_leaf": {
+      "kills": "none", "takesSeed": false, "leaveCap": 0.3333333333333333,
+      "basis": "botany", "calibration": "pending",
+      "source": "摘叶：植株与根都留着。leaveCap 同三分之一规则（常识性来源）。"
+    },
+    "pick_fruit": {
+      "kills": "none", "takesSeed": true, "leaveCap": 0.3333333333333333,
+      "basis": "botany", "calibration": "pending",
+      "source": "采果：植株留着，但果实里就是种子，结种前全采则无后代。leaveCap 同三分之一规则（常识性来源）。"
+    },
+    "fell_tree": {
+      "kills": "shoot", "takesSeed": false, "leaveCap": 0.3333333333333333,
+      "basis": "botany", "calibration": "pending",
+      "source": "伐木：留桩；阔叶树多能从桩与根萌蘖，针叶树不能（species 里的 regrowFrom 决定）。leaveCap 取林业“择伐留母树”的三分之一经验量级（常识性来源）。"
+    },
+    "draw_water": {
+      "kills": "none", "takesSeed": false, "leaveCap": 0,
+      "basis": "botany", "calibration": "pending",
+      "source": "取水不伤水源的繁殖基础；水的补给率与容量见 species 里 water 条目（pending）。"
+    }
+  },
+  "species": [
+    {
+      "id": "forest.broadleaf", "kind": "tree", "items": ["item_wood"],
+      "ratePerDay": 0.0008,
+      "regrowFrom": "root", "seedSeason": null,
+      "standingPerKm2": 50000,
+      "seasonDensity": null,
+      "sources": {
+        "ratePerDay": "rule: world/meta/rules.json forestWater.forest.species.broadleaf.growthPerDay（forest-water 现用同值）",
+        "standingPerKm2": "rule: world/meta/rules.json forestWater.forest.stockPerKm2",
+        "regrowFrom": "botany（常识性来源，待标定）：阔叶树伐后多能自桩与根萌蘖",
+        "seasonDensity": "forest-water 现不分季；沿用，不填值"
+      },
+      "pending": ["seedSeason"]
+    },
+    {
+      "id": "forest.conifer", "kind": "tree", "items": ["item_wood"],
+      "ratePerDay": 0.0006,
+      "regrowFrom": "seed", "seedSeason": 2,
+      "standingPerKm2": 50000,
+      "seasonDensity": null,
+      "sources": {
+        "ratePerDay": "rule: world/meta/rules.json forestWater.forest.species.conifer.growthPerDay",
+        "standingPerKm2": "rule: world/meta/rules.json forestWater.forest.stockPerKm2",
+        "regrowFrom": "botany（常识性来源，待标定）：针叶树伐后一般不萌蘖，靠种子更新",
+        "seedSeason": "botany（常识性来源，待标定）：松、杉球果多在秋季散种（下标 2）",
+        "seasonDensity": "forest-water 现不分季；沿用，不填值"
+      },
+      "pending": []
+    },
+    {
+      "id": "forest.wetwood", "kind": "tree", "items": ["item_wood"],
+      "ratePerDay": 0.001,
+      "regrowFrom": "root", "seedSeason": null,
+      "standingPerKm2": 50000,
+      "seasonDensity": null,
+      "sources": {
+        "ratePerDay": "rule: world/meta/rules.json forestWater.forest.species.wetwood.growthPerDay",
+        "standingPerKm2": "rule: world/meta/rules.json forestWater.forest.stockPerKm2",
+        "regrowFrom": "botany（常识性来源，待标定）：湿地树种（柳、桤类）萌蘖力强",
+        "seasonDensity": "forest-water 现不分季；沿用，不填值"
+      },
+      "pending": ["seedSeason"]
+    },
+    {
+      "id": "herb.plantain", "kind": "herb", "items": ["item_plantain"],
+      "ratePerDay": null, "maturityDays": null,
+      "regrowFrom": "root", "seedSeason": null,
+      "standingPerKm2": null,
+      "seasonDensityParam": "herb.plantain.seasonDensity",
+      "sources": {
+        "seasonDensityParam": "table: world/rules/tables/balance/yields.json 的 herb.plantain.seasonDensity（引用 id，不复制数值；该项本身 calibration:pending）",
+        "regrowFrom": "botany（常识性来源，待标定）：车前为多年生，莲座丛根保留，摘叶不死"
+      },
+      "pending": ["ratePerDay", "maturityDays", "standingPerKm2", "seedSeason"]
+    },
+    {
+      "id": "herb.honeysuckle", "kind": "herb", "items": ["item_honeysuckle"],
+      "ratePerDay": null, "maturityDays": null,
+      "regrowFrom": "root", "seedSeason": null,
+      "standingPerKm2": null,
+      "seasonDensityParam": "herb.honeysuckle.seasonDensity",
+      "sources": {
+        "seasonDensityParam": "table: world/rules/tables/balance/yields.json 的 herb.honeysuckle.seasonDensity（引用 id；该项 calibration:pending）",
+        "regrowFrom": "botany（常识性来源，待标定）：金银花为多年生藤本，采花不伤根"
+      },
+      "pending": ["ratePerDay", "maturityDays", "standingPerKm2", "seedSeason"]
+    },
+    {
+      "id": "herb.generic", "kind": "herb", "items": ["item_herb"],
+      "ratePerDay": null, "maturityDays": null,
+      "regrowFrom": null, "seedSeason": null,
+      "standingPerKm2": null, "seasonDensity": null,
+      "sources": {},
+      "pending": ["ratePerDay", "maturityDays", "regrowFrom", "seedSeason", "standingPerKm2", "seasonDensity"],
+      "why": "未分种的“药草”没有可依据的物种：须先按 D14 的做法分种（车前、金银花那样）再填，不得拿别的种的值代填。"
+    },
+    {
+      "id": "reed", "kind": "reed", "items": ["item_reed_bundle"],
+      "ratePerDay": null, "maturityDays": null,
+      "regrowFrom": "root", "seedSeason": null,
+      "standingPerKm2": null, "seasonDensity": null,
+      "sources": {"regrowFrom": "botany（常识性来源，待标定）：芦苇为多年生根状茎植物，割茎后自根重发"},
+      "pending": ["ratePerDay", "maturityDays", "standingPerKm2", "seasonDensity", "seedSeason"]
+    },
+    {
+      "id": "wild.fruit", "kind": "fruit", "items": [],
+      "ratePerDay": null, "maturityDays": null,
+      "regrowFrom": null, "seedSeason": null,
+      "standingPerKm2": null, "seasonDensity": null,
+      "sources": {},
+      "pending": ["ratePerDay", "maturityDays", "regrowFrom", "seedSeason", "standingPerKm2", "seasonDensity"],
+      "why": "野果目前没有对应的据点资源与物品，先占位；有了物种再填。"
+    },
+    {
+      "id": "water", "kind": "water", "items": ["item_water"],
+      "ratePerDay": null, "maturityDays": null,
+      "regrowFrom": null, "seedSeason": null,
+      "standingPerKm2": null, "seasonDensity": null,
+      "sources": {"note": "forest-water 已有流域水量模型（rules.json forestWater.water：dailyFlowShare、evaporationShare、rainShare）；水的再生要与它合并还是并行，是 RG-B 的决定，这里不填值"},
+      "pending": ["ratePerDay", "maturityDays", "regrowFrom", "seedSeason", "standingPerKm2", "seasonDensity"]
+    }
+  ]
+}
