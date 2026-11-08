@@ -42,13 +42,24 @@ const diffPaths=(a,b,path=[],acc=[])=>{
 };
 async function cowork(){
  const days=(process.argv[3]??'3,6,10,15,20,30').split(',').map(Number),world=await loadWorld(),report=[];
+ // 与 tests/npc-schedule.test.mjs 的 deepEqual 同一口径：键序无关，只看逐路径的值（diffPaths），不用 JSON.stringify。
+ const realDiffs=(x,y)=>Object.keys({...x.state.npcs,...y.state.npcs}).map(id=>({id,diffs:diffPaths(x.state.npcs[id],y.state.npcs[id])})).filter(row=>row.diffs.length);
+ const longRun=async(N)=>{const engine=new WorldEngine(world),doc=engine.createCharacter(seed,{},'schedule-month');return applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:N*1440},eventId:'month'})).patches);};
  for(const N of days){
-  const engine=new WorldEngine(world),doc=engine.createCharacter(seed,{},'schedule-month');
-  const long=applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:N*1440},eventId:'month'})).patches);
+  const engine=new WorldEngine(world),doc=engine.createCharacter(seed,{},'schedule-month'),long=await longRun(N),snapshots=[doc];
   let daily=doc;
-  for(let day=0;day<N;day++){const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,o.patches);}
-  const differing=Object.keys(daily.state.npcs).filter(id=>JSON.stringify(long.state.npcs[id])!==JSON.stringify(daily.state.npcs[id]));
-  report.push({days:N,differingNpcs:differing,first:differing.slice(0,3).map(id=>({id,diffs:diffPaths(long.state.npcs[id],daily.state.npcs[id])}))});
+  for(let day=0;day<N;day++){const o=await engine.reduce(daily,{tool:'world_time',args:{minutes:1440},eventId:`day_${day}`});daily=applyPatches(daily,o.patches);snapshots.push(daily);}
+  const differing=realDiffs(long,daily);
+  const row={days:N,differingNpcs:differing.map(r=>r.id),first:differing.slice(0,3)};
+  if(differing.length){
+   // 首个分歧日：对 k=1..N 二分（长程推 k 天 与 逐日第 k 天快照比较）。假设分歧一旦出现就持续；若不单调，二分只给出一个分歧点。
+   try{
+    let lo=1,hi=N;
+    while(lo<hi){const mid=Math.floor((lo+hi)/2);if(realDiffs(await longRun(mid),snapshots[mid]).length)hi=mid;else lo=mid+1;}
+    row.firstDivergentDay={day:lo,method:'binary-search-assumes-monotone',diffsAtThatDay:realDiffs(await longRun(lo),snapshots[lo]).slice(0,3)};
+   }catch(error){row.firstDivergentDay={day:null,reason:`推不出：${error.message}`};}
+  }
+  report.push(row);
   if(differing.length)break;
  }
  out({mode:'cowork',report});
