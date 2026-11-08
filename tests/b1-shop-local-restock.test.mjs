@@ -12,9 +12,11 @@ import {openLedger} from '../server-plugin/ledger.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,DEPART=7*DAY+540,keeper='npc_hw_duanyan',holder='npc_hw_shendu';
-function setup(purse,counter){
+function setup(purse,counter,refuseTopUp=false){
  const w=structuredClone(world);
  for(const n of w.npcs){delete n.schedule;delete n.tier;}
+ // 店主的底线（人物既有字段 redLines，subjective-view.mjs:95 读入，npc-decision.mjs:11/33 按请求 kind 匹配即拒）：不拿家里的钱填柜台。只拒 fund_counter，进货（kind restock）不受影响。
+ if(refuseTopUp){const k=w.npcs.find(n=>n.id===keeper);k.redLines=[...(k.redLines??[]),{action:'fund_counter',reason:'柜台的钱只从生意里来，不拿家里的钱去填'}];}
  for(const place of w.locations)place.minerals=[];
  const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'trade-test');
  doc.state.npcs[holder].inventory.item_sickle={quality:'木',durability:100,weight:0.5,quantity:2};
@@ -59,13 +61,12 @@ function localPayments(trace,engine,after,holders,paidCopper){
  assert.equal(pay.reduce((n,t)=>n+t.amount,0),paidCopper,'付给卖方的合计 = 成交额');
  return pay;
 }
-// split=true 的组合（钱袋 7、柜台 7，成交额 X∈(7,14]，铁镰 basePrice=10，world/meta/items.json:3）落在旧写法必败的金额区间，但旧写法只在店主拒绝补柜台时才败。
-// 11-08 云上实测（b1-c7）：店主同意从钱袋补 5 文进柜台、整笔 12 由柜台付——npc-decision.mjs 对 fund_counter 的 reward 恰等于 cost，单测夹具里找不到只拒补柜台、不拒进货的合法状态。
-// 所以本组合只核对：若拆账，两段合计 = 成交额；不论是否拆账，过账来源、合计与 reconcile 都成立。拆账分支本身由 b1-shop-pay.test.mjs（payCounterThenPurse 柜台先付钱袋补）覆盖；
-// 店主真实拒补柜台的路径由 tests/playtest-lifecycle.test.mjs 覆盖：旧写法下它在第 2 个月抛 Invalid party balance（b1-c2 全量 288 s 失败，探针 v4 定位到 shop pay），新写法 b1-c5 通过。
-for(const [name,purseCoins,counter,mustBuy,split] of [['柜台只有一部分钱、钱袋有余',60,5,true,false],['没有柜台、整笔由钱袋付',60,0,true,false],['柜台与钱袋都不宽裕',40,5,false,false],['钱袋 7、柜台 7：成交额大于两段各自、不大于两段之和',7,7,true,true]]){
+// split=true 的组合是旧写法必败的那一个：旧写法只有在“店主拒绝补柜台，且成交额 X 大于钱袋、也大于柜台、但不大于两者之和”时才整笔记到钱袋上而抛 Invalid party balance；
+// 钱袋 7、柜台 7 时 X∈(7,14] 正是这个区间（铁镰 basePrice=10，world/meta/items.json:3，1 件约 10 文）。店主同意补柜台就走不到这里（11-08 云上 b1-c7 实测：柜台段 12、钱袋段 0），
+// 所以该组合给店主一条真实的人物底线“不拿家里的钱填柜台”（redLines，只拒 fund_counter），使补柜台被拒；成交后用账本过账核对“柜台段与钱袋段都付了钱、合计等于成交额”，没走到拆账就明确失败。
+for(const [name,purseCoins,counter,mustBuy,split] of [['柜台只有一部分钱、钱袋有余',60,5,true,false],['没有柜台、整笔由钱袋付',60,0,true,false],['柜台与钱袋都不宽裕',40,5,false,false],['钱袋 7、柜台 7、店主不拿家里的钱填柜台：成交额大于两段各自、不大于两段之和（必须拆账）',7,7,true,true]]){
  test(`铁匠进货（${name}）：不抛 Invalid party balance，账目守恒，legacy 与账户一致`,async()=>{
-  const {engine,doc}=setup(purseCoins,counter);
+  const {engine,doc}=setup(purseCoins,counter,split);
   globalThis.__LEDGER_TRACE__=[];
   let out,trace;
   try{out=await engine.reduce(doc,{tool:'world_time',args:{minutes:DEPART-doc.state.minute},eventId:'wait'});}finally{trace=globalThis.__LEDGER_TRACE__;delete globalThis.__LEDGER_TRACE__;}
@@ -74,10 +75,11 @@ for(const [name,purseCoins,counter,mustBuy,split] of [['柜台只有一部分钱
   if(mustBuy){assert.ok(bought,'这次进货应当成交');assert.ok(bought.paidCopper>0);assert.deepEqual(bought.from,[holder]);}
   const pay=localPayments(trace,engine,after,[holder],bought?.paidCopper??0);
   if(split){
-   // 柜台段与钱袋段（任一段可为 0，取决于店主是否补柜台），合计 = 成交额。
+   // 柜台段与钱袋段各一笔或多笔，合计 = 成交额。
    const counterAccount=dedicatedCoinAccount(after.state,keeper,'counter')?.account;
    const fromCounter=pay.filter(t=>t.from===counterAccount).reduce((n,t)=>n+t.amount,0),fromPurse=pay.filter(t=>t.from===purse(engine,keeper)).reduce((n,t)=>n+t.amount,0);
-   assert.equal(fromCounter+fromPurse,bought.paidCopper,'柜台段与钱袋段合计 = 成交额（只有店主钱袋与柜台出钱）');
+   assert.equal(fromCounter+fromPurse,bought.paidCopper,'柜台段与钱袋段合计 = 成交额');
+   assert.ok(fromCounter>0&&fromPurse>0,`必须拆账（柜台段 ${fromCounter}，钱袋段 ${fromPurse}）：店主有不填柜台的底线，柜台不够的部分应由钱袋补`);
   }
   const result=reconcile(engine,after);
   assert.deepEqual(result.mismatches,[]);assert.deepEqual(result.lots,[]);assert.deepEqual(result.audit,[]);

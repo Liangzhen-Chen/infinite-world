@@ -19,8 +19,7 @@ const OLD_PAY="const counter=dedicatedCoinAccount(d.get('state'),shop.keeper,'co
 const CAP=",purseNow()));};",NOCAP="));};";
 // [说明, 目标文件, [[from,to],...], 相关测试, 预期存活的理由?]   每个 from 必须在目标文件里恰好出现一次；写了“预期存活的理由”的变异存活时记为 EXPECTED-SURVIVOR，不影响退出码
 const MUTANTS=[
- ['shop pay 改回旧写法：柜台够整笔才走柜台，否则整笔走钱袋（保留预算封顶）',SHOP,[[NEW_PAY,OLD_PAY]],SHOP_TESTS,
-  '旧写法只在店主拒绝补柜台时才败；单测夹具里店主总会同意（npc-decision.mjs 对 fund_counter 的 reward=cost，云上 b1-c7 实测柜台段 12、钱袋段 0），无合法状态可迫使拒绝，不造设施（预期存活）。真实路径的杀手是 tests/playtest-lifecycle.test.mjs：旧写法 b1-c2 全量 288 s 抛 Invalid party balance，新写法 b1-c5 通过；它基线约 3500 s，放不进 3600 s 的变异作业'],
+ ['shop pay 改回旧写法：柜台够整笔才走柜台，否则整笔走钱袋（保留预算封顶）',SHOP,[[NEW_PAY,OLD_PAY]],SHOP_TESTS],
  ['shop pay 与预算都改回旧写法（整笔钱袋，预算不按钱袋现有现金封顶）',SHOP,[[NEW_PAY,OLD_PAY],[CAP,NOCAP]],SHOP_TESTS],
  ['shop 预算不再按钱袋现有现金封顶（付款仍用新原语）',SHOP,[[CAP,NOCAP]],SHOP_TESTS],
  ['relation_evidence 的 order 改回 500（与 daily 同位）',REGISTRY,[["{id:'relation_evidence',order:3000,","{id:'relation_evidence',order:500,"]],RELATION_TESTS,
