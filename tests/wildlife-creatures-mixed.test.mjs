@@ -33,7 +33,8 @@ const habitatOf=s=>world.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habit
 // T102/T157等后续批次在本批之后追加物品、地点、路线与首领；剔除本批再合并会把本批排到末尾，同样按编号比较。
 const sortId=rows=>[...rows].sort((a,b)=>a.id.localeCompare(b.id));
 // K1在本批发布后给全体物种补了性状标签tags；本批候选不含该字段，比较时只对本批物种剔除tags（正式目录须有tags另行核对）。
-const untag=m=>newIds.monsters.has(m.id)?(({tags,...row})=>row)(m):m;
+// nature.metabolism（物种代谢系数）同 tags 是发布后补的结构化字段：骨架与候选刻意不含，登记在正式目录；比较时只对本批物种剔除该键，nature 其余键仍逐键比较。
+const untag=m=>newIds.monsters.has(m.id)?(({tags,...row})=>row.nature?{...row,nature:(({metabolism,...n})=>n)(row.nature)}:row)(m):m;
 const norm=w=>({...w,monsters:sortId(w.monsters.map(untag)),items:sortId(w.items),locations:sortId(w.locations),routes:sortId(w.routes),bosses:sortId(w.bosses),rules:{...w.rules,wildlife:{...w.rules.wildlife,habitats:sortId(w.rules.wildlife.habitats)}}});
 const insideHours=([a,b])=>a<b?a+30:(a+30)%1440;
 function setup(seed,mutate){

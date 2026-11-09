@@ -2,7 +2,7 @@
 import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities} from './entity-view.mjs';
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
-import {bodyRule,bodyDrain,metabolismFactor,settlementMouths} from './primitives-body.mjs';
+import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {householdMealPlan,itemGrams} from './household-budget.mjs';
@@ -258,7 +258,7 @@ function forageStock(e,state,source,day){
 function mealDeficit(e,state,owner,settlement,members){
  const s=state.settlements?.[settlement],h=personHousehold(e,state,owner).value;
  const resident=Boolean(h||state.npcs?.[owner]?.materialized?.settlement);
- const publicShare=resident&&s&&s.granary!==false?Math.min(1,Math.max(0,s.food??0)/Math.max(1,s.population??0)):0;
+ const publicShare=resident&&s&&s.granary!==false?Math.min(1,Math.max(0,s.food??0)/Math.max(1,Math.ceil(mealMouthsOf(e,state,settlement,s.population??0)))):0;
  // A guaranteed complete public ration already covers native daily satiety.
  // No private unit, seed or promise can increase a zero food deficit. Keep
  // the full meal allocator for partial shares and installed drain modifiers.

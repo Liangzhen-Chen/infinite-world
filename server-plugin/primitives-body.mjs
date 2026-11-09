@@ -38,11 +38,23 @@ function settlementMayDiffer(engine,sid,need){
  const result=species.some(sp=>sp!==undefined&&speciesMetabolism(engine,sp,need)!==1);
  cache.set(key,result);return result;
 }
+const oddSets=new WeakMap();
+function oddSpecies(engine,need){
+ const cache=oddSets.get(engine)??new Map();oddSets.set(engine,cache);
+ if(!cache.has(need))cache.set(need,new Set((engine.world?.monsters??[]).filter(m=>speciesMetabolism(engine,m.id,need)!==1).map(m=>m.id)));
+ return cache.get(need);
+}
 export function settlementMouths(engine,state,sid,population,need='satiety'){
- if(!settlementMayDiffer(engine,sid,need))return population;
- const profile=engine.world.settlementProfiles.find(p=>p.id===sid);
+ const staticDiffer=settlementMayDiffer(engine,sid,need),odd=staticDiffer?null:oddSpecies(engine,need);
+ // Late arrivals (migrants, generated residents) of a non-1 species also change the answer: a cheap
+ // scan, O(npcs) with a set lookup, and only when the world has any such species at all.
+ const arrivals=[];
+ if(odd?.size)for(const [id,n] of Object.entries(state?.npcs??{}))if(n.materialized?.settlement===sid&&odd.has(n.species??engine.byId?.get(id)?.species))arrivals.push(id);
+ if(!staticDiffer&&!arrivals.length)return population;
+ const profile=engine.world?.settlementProfiles?.find(p=>p.id===sid)??{};
  const mixed=profile.pendingSpeciesStructure,ids=new Set(profile.residentIds??[]);
  if(mixed)for(const [id,n] of Object.entries(state?.npcs??{}))if(n.materialized?.settlement===sid)ids.add(id);
+ for(const id of arrivals)ids.add(id);
  let named=0,weighted=0;
  for(const id of ids){if(state?.npcs?.[id]&&isPhysicallyDead(engine,state,id))continue;named++;weighted+=metabolismFactor(engine,state,id,need);}
  let share=1;
