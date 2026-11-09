@@ -237,6 +237,42 @@ function nonShopTraders(engine){
  }
  return list;
 }
+// 同一卖家的同一件可售食物只有一份存量，却会被本聚落所有付得起钱的买方各自当作替代来源。
+// 买方户的“口粮替代”读到的 quantity 因此不是卖家的全部可售量，而是这位买方在全部潜在买方之间应得的一份：
+// 潜在买方 = 本聚落里手上有钱、且不靠自家存粮就有口粮缺口或要占用存粮的人（卖家同户的人不算，他们不向自家买）；
+// 权重 = 该买方一户的口粮需求（satiety，不含市场替代，故不回头读卖家，不递归）；
+// 按权重比例分，最大余数法凑整，余数并列按编号，保证各买方所得之和恰为卖家可售量（整件）。无新参数；与种子无关，只由状态决定。
+function physicalOf(d,engine,read,id){
+ let physical=read.physical.get(id);
+ if(!physical){physical=householdResources(d,engine,id,{marketSubstitution:false});read.physical.set(id,physical);}
+ return physical;
+}
+function buyerNeeds(d,engine,state,place,read){
+ let list=read.buyers.get(place);
+ if(!list){
+  list=[];
+  const ids=Object.keys(state.npcs??{}).filter(id=>{const n=state.npcs[id];return n?.location&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(n.status)&&placeSettlement(engine,state,n.location).value===place;});
+  if(state.location&&placeSettlement(engine,state,state.location).value===place)ids.push('player');
+  for(const id of ids.sort()){
+   const physical=physicalOf(d,engine,read,id);
+   if(!(physical.market.cash>0))continue;
+   const need=physical.shortfall.satiety+physical.rows.reduce((n,r)=>n+r.food*(engine.byId.get(r.item)?.nutrition?.satiety??0),0);
+   if(need>0)list.push({id,need});
+  }
+  read.buyers.set(place,list);
+ }
+ return list;
+}
+function sellerShare(d,engine,state,place,read,owner,seller,available){
+ const total=Math.floor(available);if(!(total>0))return 0;
+ const away=new Set(personHousehold(engine,state,seller).value?.members??[seller]);
+ const rows=buyerNeeds(d,engine,state,place,read).filter(b=>!away.has(b.id)),sum=rows.reduce((n,b)=>n+b.need,0);
+ if(!(sum>0))return 0;
+ const part=rows.map(b=>{const exact=total*b.need/sum;return {id:b.id,n:Math.floor(exact),rem:exact-Math.floor(exact)};});
+ let left=total-part.reduce((n,r)=>n+r.n,0);
+ for(const r of [...part].sort((a,b)=>b.rem-a.rem||a.id.localeCompare(b.id))){if(left<=0)break;r.n++;left--;}
+ return part.find(r=>r.id===owner)?.n??0;
+}
 registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const state=d.get('state'),now=state.minute,location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
  const members=personHousehold(engine,state,owner).value?.members??[owner];
@@ -245,7 +281,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const cursor=d.cursor instanceof PatchCursor&&d.document===d.cursor.root?d.cursor:null;
  let read=cursor?householdSourceReads.get(cursor):null;
  if(!read||read.revision!==cursor?.revision||read.engine!==engine){
-  read={revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map(),reach:new Map()};
+  read={revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map(),reach:new Map(),buyers:new Map()};
   if(cursor)householdSourceReads.set(cursor,read);
  }
  const out=[];
@@ -264,9 +300,8 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    if(!(engine.byId.get(row.item)?.nutrition?.satiety>0))continue;
    const own=shop.keeper===owner;
    if(!own){
-    physical??=read.physical.get(shop.keeper);
-    if(!physical){physical=householdResources(d,engine,shop.keeper,{marketSubstitution:false});read.physical.set(shop.keeper,physical);}
-    const stock=physical.rows.find(r=>r.holder===shop.keeper&&r.item===row.item)?.available??0;
+    physical??=physicalOf(d,engine,read,shop.keeper);
+    const stock=sellerShare(d,engine,state,place,read,owner,shop.keeper,physical.rows.find(r=>r.holder===shop.keeper&&r.item===row.item)?.available??0);
     if(!stock)continue;
     const at=Math.max(opening.minute,now+travel);
     const base=regionalTradeBase(d,engine,row.item,shop.settlement,now);
@@ -335,14 +370,14 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   for(const {id,location:serviceAt,at} of candidates){
    if(id===owner||members.includes(id)||taken.has(id))continue;
    const first={location:serviceAt};
-   let physical=read.physical.get(id);
-   if(!physical){physical=householdResources(d,engine,id,{marketSubstitution:false});read.physical.set(id,physical);}
+   const physical=physicalOf(d,engine,read,id);
    const business={keeper:id,markup:1};
    for(const row of physical.rows){
-    if(row.holder!==id||!(engine.byId.get(row.item)?.nutrition?.satiety>0)||!(row.available>0))continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
+    if(row.holder!==id||!(engine.byId.get(row.item)?.nutrition?.satiety>0)||!(row.available>0))continue;
+    const quantity=sellerShare(d,engine,state,place,read,owner,id,row.available);if(!quantity)continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
     const base=regionalTradeBase(d,engine,row.item,place,now);
     const quote=marketQuote(d,engine,{item:row.item,location:first.location,seller:id,buyer:owner,business,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place,goods:goodsClass(engine,row.item),supply:0,demand:1}});
-    out.push({source:`trader_${id}`,seller:id,item:row.item,at,cycleDays:0,quantity:row.available,unitPrice:Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact))),priceBasis:'local-retail-ceiling'});
+    out.push({source:`trader_${id}`,seller:id,item:row.item,at,cycleDays:0,quantity,unitPrice:Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact))),priceBasis:'local-retail-ceiling'});
    }
   }
  }
