@@ -230,12 +230,12 @@ async function authorizeIncrease(){
  const file=path.join(draftRoot,'budget.json'),ledger=await readJSON(file),next=grantMaxRequests(ledger);
  if(JSON.stringify(next)!==JSON.stringify(ledger))await fs.writeFile(file,JSON.stringify(next,null,2)+'\n');
 }
-// REVIEW_INCONSISTENT：该条自动重试 1 次（走同一预算与同条次数上限）；重试仍自相矛盾则在发请求前抛 REVIEW_INCONSISTENT_EXHAUSTED，该条转 manual（record.errors 带原因）。
-// 标记 inconsistentRetried 只在真请求（非预检用的 record 副本）上写入。
+// REVIEW_INCONSISTENT：该条自动重试 1 次（走同一预算与同条次数上限）。按记录的错误历史（record.errorHistory，流水线每次失败追加）里
+// 本条实际出现的 REVIEW_INCONSISTENT 次数判断：已出现 2 次（初次 + 重试）则在发请求前抛 REVIEW_INCONSISTENT_EXHAUSTED，该条转 manual；
+// 中间夹别的错误不影响计数，也不会提前判用尽。门只读不写记录。
 export function inconsistentGate(record){
- if(record?.errorCode!=='REVIEW_INCONSISTENT'){if(record)delete record.inconsistentRetried;return;}
- if(record.inconsistentRetried)throw Object.assign(new Error('L2 审查输出两次自相矛盾（hard 但自认无误），不当作通过，转人工'),{code:'REVIEW_INCONSISTENT_EXHAUSTED'});
- record.inconsistentRetried=true;
+ const n=(record?.errorHistory??[]).filter(c=>c==='REVIEW_INCONSISTENT').length;
+ if(n>=2)throw Object.assign(new Error('L2 审查输出两次自相矛盾（hard 但自认无误），不当作通过，转人工'),{code:'REVIEW_INCONSISTENT_EXHAUSTED'});
 }
 async function capReviews({body,entry,phase,record}){
  if(phase!=='review')return {body};

@@ -103,6 +103,7 @@ export async function runContentPipeline({
     record.status='pending';
     for (let attempt = priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
       let reservations=[],preparedDraft;
+      if(!eligible)record.errorCode=null; // 本次尝试开始前清上次的错误码，成功后不残留
       try {
         if(budget.stopped)throw budget.stopped;
         const offline=eligible?record.protocolRecovery.prior.draftResponse:null;
@@ -155,7 +156,7 @@ export async function runContentPipeline({
           if(eligible)record.protocolRecovery.status='budget-stopped';
           await writeJSON(file,record);return record;
         }
-        record.errorCode=error.code??null;
+        record.errorCode=error.code??null;(record.errorHistory??=[]).push(error.code??null);
         feedback = [String(error.message)]; record.errors = feedback;
         // Transport failure keeps an already sent attempt and its unknown cost.
         if (/费用上限|环境变量|fetch failed|timeout|timed out|HTTP (429|5\d\d)/i.test(error.message)) {

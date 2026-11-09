@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {migrateDepthBudget} from '../tools/content-budget.mjs';
-import {entriesFor, draftFor, validateDraft, l1, extractReview, inconsistentGate, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels} from '../world/design/matprops-approval.mjs';
+import {entriesFor, draftFor, validateDraft, l1, extractReview, inconsistentGate, archiveForRedo, explainEntry, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels} from '../world/design/matprops-approval.mjs';
 
 test('条目 = 每个类别行 + 每个物品覆盖行；候选与盘上数据逐字一致', async () => {
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
@@ -41,21 +41,41 @@ test('一致性：正常 hard（conflict）与 soft/style 不受影响；reason 
   assert.equal(r.contradictions.length, 3);
   assert.equal(r.contradictions[0].severity, 'hard');
 });
-test('一致性重试：第一次矛盾放行 1 次重试，第二次矛盾发请求前拒绝（转 manual），其他错误码不触发', () => {
-  const rec = {};
-  inconsistentGate(rec);                       // 首次发请求：无前序错误
-  rec.errorCode = 'REVIEW_INCONSISTENT';
-  const planned = structuredClone(rec);
-  inconsistentGate(planned);                   // 预检副本放行，且不污染真记录
-  assert.equal(rec.inconsistentRetried, undefined);
-  inconsistentGate(rec);                       // 真请求：放行 1 次重试并标记
-  assert.equal(rec.inconsistentRetried, true);
-  rec.errorCode = 'REVIEW_INCONSISTENT';       // 重试仍矛盾
-  assert.throws(() => inconsistentGate(structuredClone(rec)), e => e.code === 'REVIEW_INCONSISTENT_EXHAUSTED');
-  assert.throws(() => inconsistentGate(rec), e => e.code === 'REVIEW_INCONSISTENT_EXHAUSTED');
-  rec.errorCode = 'REVIEW_FORMAT';             // 换了错误码：标记清除，不沿用
+test('一致性重试：按错误历史计数，第二次矛盾后发请求前拒绝；夹别的错误不提前误判，不改记录', () => {
+  const rec = {errorHistory: []};
   inconsistentGate(rec);
-  assert.equal(rec.inconsistentRetried, undefined);
+  rec.errorHistory.push('REVIEW_INCONSISTENT');   // 第一次矛盾：放行 1 次重试
+  inconsistentGate(rec);
+  rec.errorHistory.push('REVIEW_FORMAT');         // 中间插一次普通失败：仍只算 1 次矛盾
+  inconsistentGate(rec);
+  assert.deepEqual(rec.errorHistory, ['REVIEW_INCONSISTENT', 'REVIEW_FORMAT']);
+  rec.errorHistory.push('REVIEW_INCONSISTENT');   // 第二次矛盾：用尽
+  assert.throws(() => inconsistentGate(rec), e => e.code === 'REVIEW_INCONSISTENT_EXHAUSTED');
+  inconsistentGate({});                           // 无历史放行
+});
+test('archiveForRedo：只归档 manual 记录、不删、编号递增；非 manual 拒绝；归档不改账本计次', async () => {
+  const os = await import('node:os'), path = await import('node:path');
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'redo-')), root = path.join(dir, 'r'), arc = path.join(dir, 'a');
+  await fs.mkdir(root);
+  await fs.writeFile(path.join(root, 'class_egg.json'), JSON.stringify({id: 'class_egg', status: 'manual'}));
+  await fs.writeFile(path.join(root, 'class_x.json'), JSON.stringify({id: 'class_x', status: 'passed'}));
+  const [dest] = await archiveForRedo(['class_egg'], {root, archiveRoot: arc});
+  assert.equal(JSON.parse(await fs.readFile(dest, 'utf8')).status, 'manual');
+  await assert.rejects(fs.stat(path.join(root, 'class_egg.json')));
+  await assert.rejects(archiveForRedo(['class_x'], {root, archiveRoot: arc}), /只归档 manual/);
+  await fs.writeFile(path.join(root, 'class_egg.json'), JSON.stringify({id: 'class_egg', status: 'manual'}));
+  const [d2] = await archiveForRedo(['class_egg'], {root, archiveRoot: arc});
+  assert.notEqual(d2, dest);
+  assert.equal((await fs.readdir(arc)).length, 2);
+  const ledger = {requests: Object.fromEntries([0, 1, 2].map(i => [`r${i}`, {label: `content-review-2-class_egg-review${i}`, status: 'settled'}]))};
+  assert.throws(() => checkReviewCap(ledger, 'class_egg'), e => e.code === 'REVIEW_LIMIT');
+});
+test('--show：物品覆盖行打印相对类别代表值的偏差、阈值与比较结果', () => {
+  const table = {kcalPerSatiety: 24, memberDeviationThreshold: 0.25,
+    classes: {fruit: {selection: {method: 'mean'}, sources: [{name: 'a', moistureFraction: 0.8, kcalPer100gWet: 50}, {name: 'b', moistureFraction: 0.8, kcalPer100gWet: 50}]}}};
+  const entry = {id: 'item_x', kind: 'material-props-item', row: {sources: [{name: 'x', citation: 'c', moistureFraction: 0.6, kcalPer100gWet: 50}]}};
+  const text = explainEntry(entry, table, [], ['fruit']).join('\n');
+  assert.match(text, /相对类别 fruit 代表值.*dryFraction 100\.00%.*阈值 25\.00%.*超阈值/);
 });
 
 test('同条审查上限 = 1 初审 + 2 修正：第 3 次放行，第 4 次在发请求前报 REVIEW_LIMIT（不发调用、不计费）', () => {
