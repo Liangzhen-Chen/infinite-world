@@ -296,8 +296,12 @@ export function shareByNeed(total,rows,u=0){
  let cum=0;
  part.forEach((r,i)=>{
   const next=i===part.length-1?left:cum+r.rem;// 浮点累计的末端钉到精确整数 left，保证守恒
-  r.n+=Math.min(1,Math.max(0,Math.ceil(next-u)-Math.ceil(cum-u)));cum=next;
+  r.add=Math.min(1,Math.max(0,Math.ceil(next-u)-Math.ceil(cum-u)));r.n+=r.add;cum=next;
  });
+ // 浮点累计漂移可能让某区间略长于 1 而被夹到 1，少分一件；把缺额补给尚未加件、小数部分最大的户（并列按码点序），
+ // 保持每户为 floor 或 floor+1、总量恰为 total。漂移量级为浮点误差，对期望的影响可忽略。
+ let short=left-part.reduce((n,r)=>n+r.add,0);
+ for(const r of [...part].filter(r=>!r.add).sort((a,b)=>b.rem-a.rem||(a.id<b.id?-1:a.id>b.id?1:0))){if(short<=0)break;r.n++;short--;}
  for(const r of part)out.set(r.id,r.n);
  return out;
 }
