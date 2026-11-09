@@ -128,22 +128,32 @@ export async function approvalState(entries,{manual=new Map(),loadRecord=id=>rea
 export async function summarizeApproval(entries){
  const doc=await readJSON(manualFile).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
  const st=await approvalState(entries,{manual:await checkManual(doc,entries)});
- await fs.writeFile(path.join(reviewRoot,'approval-summary.json'),JSON.stringify({total:entries.length,l2Passed:st.l2,manualVerified:st.manual,unresolved:st.unresolved},null,2)+'\n');
+ await fs.writeFile(path.join(reviewRoot,'approval-summary.json'),JSON.stringify({rule:'人工核定条目不计入人工队列比例（needsSystemicRepair），其余检查同 readApprovedContent；规则解释待李白确认',total:entries.length,l2Passed:st.l2,manualVerified:st.manual,unresolved:st.unresolved},null,2)+'\n');
  return st;
 }
-// verify：L1 必过；每条 L2 通过或人工核定；批次防篡改与 L4 检查与 content-pipeline.readApprovedContent 相同（批指纹、阅读笔记、波次评分），
-// 差别只有：人工核定条目允许记录状态不是 passed，且不因这些条目触发「人工队列超过 10%」（它们已核定，不在队列里）。
+// verify：L1 必过；每条 L2 通过或人工核定；批次检查与 content-pipeline.mjs readApprovedContent 逐项等价：
+// ①读 summary.json，逐批核对批指纹（summary 与 batch 文件一致）、L4 已批准、ids 清单、行内容哈希；②sample 与 flagged 的阅读笔记；
+// ③条目都在已审查批次里；④记录指纹、无错、无 hard。另加波次随机 10 条六项评分（checkWave）。
+// 唯一差别（规则解释待李白确认）：已人工核定的条目允许记录状态不是 passed，且不计入人工队列比例（needsSystemicRepair）——
+// 它们已核定，不在待处理队列里；未决条目为空才通过。该差别同样写在 approval-summary.json 的 rule 字段。
 export async function verifyPublished(){
  await l1();
- const entries=await entriesFor(),batch=await readJSON(batchFile);
+ const entries=await entriesFor(),summary=await readJSON(path.join(reviewRoot,'summary.json'));
  const st=await summarizeApproval(entries);
  assert.deepEqual(st.unresolved,[],'尚有条目既未通过 L2 也无人工核定');
- if(!batch.l4?.approved)throw Error('批 0 尚未完成 L4');
- const rows=await Promise.all(batch.ids.map(id=>readJSON(path.join(reviewRoot,`${id}.json`))));
- if(hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==batch.fingerprint)throw Error('批 0 审查后内容已改变');
- for(const id of [...batch.sample,...batch.flagged])if(!batch.l4.notes?.some(r=>r.id===id&&typeof r.note==='string'&&r.note.trim()))throw Error(`缺少 L4 阅读记录 ${id}`);
- checkWave(batch.l4.wave,entries.map(e=>e.id));
- for(const id of st.l2)assert.deepEqual(rows.find(r=>r.id===id).draft,draftFor(entries.find(e=>e.id===id)),`${id} 盘上数据与审批回执不符`);
+ const inBatch=new Set(),rowsById=new Map();
+ for(const b of summary.batches){
+  const current=await readJSON(path.join(reviewRoot,`batch-${b.index}.json`));
+  if(!current?.l4?.approved||current.fingerprint!==b.fingerprint)throw Error(`批 ${b.index} 尚未完成 L4 或批指纹与摘要不符`);
+  if(!Array.isArray(current.ids))throw Error('批次缺少条目清单');
+  const rows=await Promise.all(current.ids.map(id=>readJSON(path.join(reviewRoot,`${id}.json`))));
+  if(rows.some(r=>!r)||hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==current.fingerprint)throw Error(`批 ${b.index} 审查后内容已改变`);
+  for(const id of [...current.sample,...current.flagged])if(!current.l4.notes?.some(r=>r.id===id&&typeof r.note==='string'&&r.note.trim()))throw Error(`缺少 L4 阅读记录 ${id}`);
+  checkWave(current.l4.wave,entries.map(e=>e.id));
+  for(const r of rows){inBatch.add(r.id);rowsById.set(r.id,r);}
+ }
+ for(const e of entries)if(!inBatch.has(e.id))throw Error(`条目不在已审查批次 ${e.id}`);
+ for(const id of st.l2)assert.deepEqual(rowsById.get(id).draft,draftFor(entries.find(e=>e.id===id)),`${id} 盘上数据与审批回执不符`);
  return {total:entries.length,l2Passed:st.l2.length,manualVerified:st.manual,dimensions:MATERIAL_DIMENSIONS.length};
 }
 // 管线规则：1 次初审 + 最多 2 次定点修正；按条目 id 累计账本里已发出的审查，不随指纹重置。

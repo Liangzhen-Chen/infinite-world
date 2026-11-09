@@ -60,3 +60,10 @@ test('人工核定与 L2 通过分开计数；既无 L2 通过也无人工核定
   const st = await approvalState(entries, {manual, loadRecord: async id => rec[id] ?? null, fingerprint: fp});
   assert.deepEqual(st, {l2: ['a'], manual: ['b'], unresolved: ['c', 'd']});
 });
+
+test('人工核定：缺日期拒绝、重复条目拒绝', async () => {
+  const entries = [E('a')];
+  await assert.rejects(checkManual({entries: [{...good('a'), date: ''}]}, entries, fp), /日期/);
+  await assert.rejects(checkManual({entries: [{...good('a'), date: '11-09'}]}, entries, fp), /日期/);
+  await assert.rejects(checkManual({entries: [good('a'), good('a')]}, entries, fp), /重复/);
+});
