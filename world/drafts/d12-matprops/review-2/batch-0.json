@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "32c3f0d34e95d38ec81762cc99b9b214d1cc952d6cb6b49755b73e3256f1c18d",
-  "count": 19,
-  "passed": 14,
+  "fingerprint": "f52a605cb6b2fc4f6e699293b4129f90cfd657acba7bb2f6657688ba920c1f85",
+  "count": 25,
+  "passed": 16,
   "ids": [
     "class_timber",
     "class_wood",
@@ -17,50 +17,63 @@
     "class_fish",
     "class_egg",
     "class_milk",
+    "item_milk",
+    "item_rye_flour",
+    "item_wheat_grain",
+    "item_mutton",
+    "item_goat_milk",
     "item_dry_mushroom",
+    "item_pear",
+    "item_plum",
+    "item_turnip",
+    "item_carrot",
     "item_parsnip",
-    "item_leek",
-    "item_garlic",
-    "item_oats",
-    "item_dried_fruit"
+    "item_beet"
   ],
   "rewritten": 0,
   "manual": [
-    "class_mushroom",
-    "class_meat",
     "class_egg",
-    "class_milk",
-    "item_leek"
+    "item_rye_flour",
+    "item_wheat_grain",
+    "item_mutton",
+    "item_goat_milk",
+    "item_pear",
+    "item_plum",
+    "item_turnip",
+    "item_carrot"
   ],
   "pending": [],
   "flagged": [
-    "class_mushroom",
     "class_fruit",
     "class_vegetable",
     "class_grain",
-    "class_meat",
-    "class_fish",
     "class_egg",
     "class_milk",
+    "item_milk",
+    "item_rye_flour",
+    "item_wheat_grain",
+    "item_mutton",
+    "item_goat_milk",
     "item_dry_mushroom",
+    "item_pear",
+    "item_plum",
+    "item_turnip",
+    "item_carrot",
     "item_parsnip",
-    "item_leek",
-    "item_garlic",
-    "item_oats",
-    "item_dried_fruit"
+    "item_beet"
   ],
   "sample": [
-    "item_garlic",
-    "item_oats",
     "class_legume",
-    "class_nut",
-    "class_vegetable"
+    "class_carbon",
+    "class_meat",
+    "class_mushroom",
+    "class_fish"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 0.20702464,
-  "manualRatio": 0.2631578947368421,
+  "costUpperYuan": 0.26561008,
+  "manualRatio": 0.36,
   "needsSystemicRepair": true
 }

@@ -1,7 +1,7 @@
 {
   "id": "class_mushroom",
-  "fingerprint": "2c07498534ffae6beca3d1afffbeabe9898cc2c63f7039c209ab56bc76e9b4c0",
-  "status": "manual",
+  "fingerprint": "d5098d1fd9e9be4c05bb59b60eea86e86ec8e881ab89b3d2111c1699432545bf",
+  "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "class_mushroom",
@@ -12,79 +12,33 @@
           "citation": "USDA FoodData Central 白蘑菇生",
           "moistureFraction": 0.925,
           "kcalPer100gWet": 22
-        },
-        {
-          "name": "鲜香菇",
-          "citation": "USDA FoodData Central 香菇生",
-          "moistureFraction": 0.897,
-          "kcalPer100gWet": 34
         }
       ],
       "selection": {
-        "method": "representative",
-        "representative": "白蘑菇",
-        "reason": "世界里的蘑菇是栽培菇，取白蘑菇为代表，鲜香菇作对照"
+        "method": "single",
+        "reason": "世界里的蘑菇只有栽培菇，取白蘑菇一个出处；鲜香菇不是世界成员，不入平均"
       },
       "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【数值凭记忆写入，待 L2 核对】"
     }
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "白蘑菇 moistureFraction 0.925, kcalPer100gWet 22",
-        "field": "basis",
-        "severity": "soft",
-        "reason": "USDA 白蘑菇生含水约0.92、22 kcal/100g 合理，但数值凭记忆未核对，出处无法确认"
-      },
-      {
-        "quote": "鲜香菇 moistureFraction 0.897, kcalPer100gWet 34",
-        "field": "basis",
-        "severity": "soft",
-        "reason": "香菇生 USDA 约34 kcal/100g、含水约0.90，数值合理但未核对，出处无法确认"
-      },
-      {
-        "quote": "derived energyDensity 122",
-        "field": "energyDensity",
-        "severity": "hard",
-        "reason": "22×10÷(1−0.925)÷24=122.2 取整应为122，算式一致；但代表法只取白蘑菇，香菇对照未参与，属说明性非错。改报：算式正确无矛盾"
-      }
-    ]
+    "contradictions": []
   },
-  "errors": [
-    {
-      "quote": "derived energyDensity 122",
-      "field": "energyDensity",
-      "severity": "hard",
-      "reason": "22×10÷(1−0.925)÷24=122.2 取整应为122，算式一致；但代表法只取白蘑菇，香菇对照未参与，属说明性非错。改报：算式正确无矛盾"
-    }
-  ],
-  "warnings": [
-    {
-      "quote": "白蘑菇 moistureFraction 0.925, kcalPer100gWet 22",
-      "field": "basis",
-      "severity": "soft",
-      "reason": "USDA 白蘑菇生含水约0.92、22 kcal/100g 合理，但数值凭记忆未核对，出处无法确认"
-    },
-    {
-      "quote": "鲜香菇 moistureFraction 0.897, kcalPer100gWet 34",
-      "field": "basis",
-      "severity": "soft",
-      "reason": "香菇生 USDA 约34 kcal/100g、含水约0.90，数值合理但未核对，出处无法确认"
-    }
-  ],
+  "errors": [],
+  "warnings": [],
   "feedback": null,
   "frozenCandidate": {
-    "entryHash": "3753befd5e6e3fcb7c09a33bf50ab6cdb7d55b7e6485aea62cfbbcb96332a479",
-    "draftHash": "d35fd0fbac5ff982a5446260162e74447441a0c012e911548670a4f567cb6b0f"
+    "entryHash": "152fd76d4682f30f054251b0dc874d03280ab536142a48ace674bba18ecfbc67",
+    "draftHash": "f1d2747d6ef8fb4c4322cbeaeb443688411f350e3187e4f56cd62bd94ec34dc4"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "82229a4c-4732-42a6-b516-1a93223da592",
-      "file": "budget-responses/82229a4c-4732-42a6-b516-1a93223da592.json",
-      "requestHash": "bfa63cfbcbaf4097a3dfd8b4ff96c63bb451b82c97f3fe5f448cc09ed26c0c92",
-      "responseHash": "ddba0fcf5c0ff20cfb1817c6554357b85fb29e723ebe290e1c1acf8b90e0e05c"
+      "requestId": "33131f0e-f462-4bae-a733-d0d592a1a233",
+      "file": "budget-responses/33131f0e-f462-4bae-a733-d0d592a1a233.json",
+      "requestHash": "ce7356fc12b20a4d19221e6b9073abfbec2173f3154381374d5941a6902d82cc",
+      "responseHash": "0b4044f394b6eddfcea45712b70698c9d5b6637d7607a0b26405ddff885a6cc6"
     }
   ],
   "measurements": [
@@ -93,19 +47,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1018,
-        "completion_tokens": 206,
-        "total_tokens": 1224,
+        "prompt_tokens": 1032,
+        "completion_tokens": 7,
+        "total_tokens": 1039,
         "prompt_tokens_details": {
-          "cached_tokens": 384
+          "cached_tokens": 256
         },
-        "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 634
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 776
       },
-      "costUpperYuan": 0.0029313599999999996,
-      "cumulativeUpperYuan": 0.15713519999999997,
-      "latencyMs": 1838.3811000000005,
-      "timestamp": "2026-11-09T12:25:43.357Z"
+      "costUpperYuan": 0.00161824,
+      "cumulativeUpperYuan": 0.20864288,
+      "latencyMs": 1049.4062999999999,
+      "timestamp": "2026-11-09T14:33:42.902Z"
     }
   ]
 }

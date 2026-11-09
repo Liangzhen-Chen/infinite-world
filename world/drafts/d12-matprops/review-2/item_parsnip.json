@@ -1,6 +1,6 @@
 {
   "id": "item_parsnip",
-  "fingerprint": "ebb8c750448ca3472f26743c60db4d7ee172ff7b153cc807a0820cdbe06bc70d",
+  "fingerprint": "c69d109467e7de06dccd0ffc68365349f982f2ea65aab4da30a225a06812b4a8",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -27,13 +27,13 @@
         "quote": "欧防风根含水低于蔬菜类别均值，覆盖类别值",
         "field": "basis",
         "severity": "soft",
-        "reason": "USDA 欧防风生含水约0.79–0.80，确低于类别均值0.907，但类别 selection 理由已把欧防风列为偏离者，此处又单列覆盖，口径重复；数值本身在区间内"
+        "reason": "USDA 欧防风生含水约0.79–0.80，确低于类别均值0.907，表述成立；但数值凭记忆，出处无法逐条确认，建议核对。"
       },
       {
         "quote": "energyDensity 152",
         "field": "energyDensity",
         "severity": "soft",
-        "reason": "按75×10÷(1−0.795)÷24≈152.4，取整152，算式正确；但USDA欧防风生约75kcal/100g、含水0.795属边缘可接受，若按0.80则约156，差异小"
+        "reason": "按75×10÷(1−0.795)÷24≈152.4，算术正确；USDA欧防风生约75kcal/100g，落在公认区间，仅出处待核。"
       }
     ]
   },
@@ -43,13 +43,13 @@
       "quote": "欧防风根含水低于蔬菜类别均值，覆盖类别值",
       "field": "basis",
       "severity": "soft",
-      "reason": "USDA 欧防风生含水约0.79–0.80，确低于类别均值0.907，但类别 selection 理由已把欧防风列为偏离者，此处又单列覆盖，口径重复；数值本身在区间内"
+      "reason": "USDA 欧防风生含水约0.79–0.80，确低于类别均值0.907，表述成立；但数值凭记忆，出处无法逐条确认，建议核对。"
     },
     {
       "quote": "energyDensity 152",
       "field": "energyDensity",
       "severity": "soft",
-      "reason": "按75×10÷(1−0.795)÷24≈152.4，取整152，算式正确；但USDA欧防风生约75kcal/100g、含水0.795属边缘可接受，若按0.80则约156，差异小"
+      "reason": "按75×10÷(1−0.795)÷24≈152.4，算术正确；USDA欧防风生约75kcal/100g，落在公认区间，仅出处待核。"
     }
   ],
   "feedback": null,
@@ -61,10 +61,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "babea377-2521-47bb-8fc8-e52ecbb1f278",
-      "file": "budget-responses/babea377-2521-47bb-8fc8-e52ecbb1f278.json",
-      "requestHash": "7e9452c54e4ef0d5f876a145c5ca6e3b03420ffe56377c67f898a2e8ac419b02",
-      "responseHash": "f3cbf227615ab981e8fd743100dca2ddc784b7d0d1fcf1fc1cf99344def11c07"
+      "requestId": "0e7b307e-ac81-4ca9-8f0c-7de42315baac",
+      "file": "budget-responses/0e7b307e-ac81-4ca9-8f0c-7de42315baac.json",
+      "requestHash": "e53474de66ee4b5d317bdf142afce122a257e807463d76fbcb5c32d5249edc4a",
+      "responseHash": "08a58a2d4605889aa62b59af30280d8f14e0656515ab030baebfccd375cd1f93"
     }
   ],
   "measurements": [
@@ -73,19 +73,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1367,
-        "completion_tokens": 168,
-        "total_tokens": 1535,
+        "prompt_tokens": 1417,
+        "completion_tokens": 140,
+        "total_tokens": 1557,
         "prompt_tokens_details": {
           "cached_tokens": 384
         },
         "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 983
+        "prompt_cache_miss_tokens": 1033
       },
-      "costUpperYuan": 0.00332536,
-      "cumulativeUpperYuan": 0.19243712000000002,
-      "latencyMs": 1647.636400000003,
-      "timestamp": "2026-11-09T12:26:06.770Z"
+      "costUpperYuan": 0.0032013600000000003,
+      "cumulativeUpperYuan": 0.26228272,
+      "latencyMs": 1953.630799999999,
+      "timestamp": "2026-11-09T14:34:19.738Z"
     }
   ]
 }

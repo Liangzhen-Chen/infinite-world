@@ -1,6 +1,6 @@
 {
   "id": "class_fish",
-  "fingerprint": "4d9ae7a51c9bb8f543facf44b49fc2686e424de72922289f4d0bfd073646ab30",
+  "fingerprint": "a87e6866dcc27142e9da9232a5d32b80bd411bf21f04a0522141083c925cd7b6",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -12,78 +12,33 @@
           "citation": "USDA FoodData Central 鲤生",
           "moistureFraction": 0.761,
           "kcalPer100gWet": 127
-        },
-        {
-          "name": "鳕",
-          "citation": "USDA FoodData Central 大西洋鳕生",
-          "moistureFraction": 0.812,
-          "kcalPer100gWet": 82
         }
       ],
       "selection": {
-        "method": "representative",
-        "representative": "鲤",
-        "reason": "世界里的鱼是淡水鱼（剖净鲜鱼），鳕为海鱼，只作区间参照"
+        "method": "single",
+        "reason": "世界里的鱼是淡水鱼，取鲤一个出处；鳕是海鱼，不是世界成员，不入平均"
       },
       "basis": "淡水鱼鲜肉；腌制品的营养由配方按投入守恒派生，不读本类别值。【数值凭记忆写入，待 L2 核对】"
     }
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "「鲤」moistureFraction 0.761、kcalPer100gWet 127",
-        "field": "basis",
-        "severity": "soft",
-        "reason": "USDA 鲤生鲜约 76% 水、127 kcal/100g 属合理区间，但凭记忆写入无法核实，建议 L2 核对"
-      },
-      {
-        "quote": "「鳕」moistureFraction 0.812、kcalPer100gWet 82",
-        "field": "basis",
-        "severity": "soft",
-        "reason": "大西洋鳕生约 81% 水、82 kcal/100g 与 USDA 相符，但出处未核实"
-      },
-      {
-        "quote": "members 含「短腌咸鱼」",
-        "field": "moisture",
-        "severity": "soft",
-        "reason": "类别含水 0.761 仅适用于鲜鱼；咸鱼经腌制脱水，含水应显著更低，类别值对其不成立"
-      }
-    ]
+    "contradictions": []
   },
   "errors": [],
-  "warnings": [
-    {
-      "quote": "「鲤」moistureFraction 0.761、kcalPer100gWet 127",
-      "field": "basis",
-      "severity": "soft",
-      "reason": "USDA 鲤生鲜约 76% 水、127 kcal/100g 属合理区间，但凭记忆写入无法核实，建议 L2 核对"
-    },
-    {
-      "quote": "「鳕」moistureFraction 0.812、kcalPer100gWet 82",
-      "field": "basis",
-      "severity": "soft",
-      "reason": "大西洋鳕生约 81% 水、82 kcal/100g 与 USDA 相符，但出处未核实"
-    },
-    {
-      "quote": "members 含「短腌咸鱼」",
-      "field": "moisture",
-      "severity": "soft",
-      "reason": "类别含水 0.761 仅适用于鲜鱼；咸鱼经腌制脱水，含水应显著更低，类别值对其不成立"
-    }
-  ],
+  "warnings": [],
   "feedback": null,
   "frozenCandidate": {
-    "entryHash": "84d776445036ad00260c9cc8e3619dcb443beae8359b9bf2afe1a7e888733f02",
-    "draftHash": "9da7defe6569d02c402443e0fd960da9b2c9e56fb5980ae94f1bd2b8350cf30e"
+    "entryHash": "44d7356618f98bc0601cb219d810575c6648d0f3bc5e3db7732f31452f3bebde",
+    "draftHash": "731904f5fe98486993dd52797bf6f132f38fc5721646f3968f5144888634a11b"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "41f546ca-e36b-4cab-8912-3fecf357e0b0",
-      "file": "budget-responses/41f546ca-e36b-4cab-8912-3fecf357e0b0.json",
-      "requestHash": "d52760c4fd033ab057286ff37d601a4991b16be97cda4e054177f4052a20d218",
-      "responseHash": "91e91fd472d7eaa31a8061d4010b97a985cb66189ee13db62700163fee9a2da4"
+      "requestId": "8970f4a4-c599-4b15-b360-7d1dd03c46ac",
+      "file": "budget-responses/8970f4a4-c599-4b15-b360-7d1dd03c46ac.json",
+      "requestHash": "a5a808997df7362979f4103957d70aa1d1f1faf5aaf84a47801399f890ac9dca",
+      "responseHash": "fda5633a7f95a9c45bdf016333b5c958fe682a433244b68472f199d6f23825af"
     }
   ],
   "measurements": [
@@ -92,19 +47,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1074,
-        "completion_tokens": 197,
-        "total_tokens": 1271,
+        "prompt_tokens": 1083,
+        "completion_tokens": 7,
+        "total_tokens": 1090,
         "prompt_tokens_details": {
           "cached_tokens": 384
         },
         "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 690
+        "prompt_cache_miss_tokens": 699
       },
-      "costUpperYuan": 0.0029713599999999997,
-      "cumulativeUpperYuan": 0.17988968,
-      "latencyMs": 1690.5541999999987,
-      "timestamp": "2026-11-09T12:25:59.100Z"
+      "costUpperYuan": 0.0014693599999999999,
+      "cumulativeUpperYuan": 0.21760832000000002,
+      "latencyMs": 1192.2382000000007,
+      "timestamp": "2026-11-09T14:33:49.232Z"
     }
   ]
 }

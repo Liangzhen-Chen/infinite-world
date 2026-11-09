@@ -1,6 +1,6 @@
 {
   "id": "class_fruit",
-  "fingerprint": "8a72424806e9b122ecf9141640d90730bca612ef6736922c79e0a2c1de9eecad",
+  "fingerprint": "b273499ff084098646466c45139d4127fa508c7561a875ae779f91d0862097d3",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -42,19 +42,13 @@
         "quote": "含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）",
         "field": "basis",
         "severity": "soft",
-        "reason": "refuse 含果核、果蒂、果梗，并非仅去核蒂；苹果、梨 refuse 0.1 合理，李 0.06 偏低但可接受"
+        "reason": "USDA refuse 含果核、果蒂、果皮等，并非仅去核蒂；苹果 refuse 约 10% 合理，但表述把 refuse 窄化为去核蒂，出处含义不准确"
       },
       {
-        "quote": "derived.edibleFraction 0.913",
-        "field": "edibleFraction",
+        "quote": "【数值凭记忆写入，待 L2 核对】",
+        "field": "basis",
         "severity": "soft",
-        "reason": "三源 refuse 均值 0.087，可食 0.913 与算式一致；但李 refuse 0.06 偏低于 USDA 常见 0.06–0.10 区间上缘，属边缘值"
-      },
-      {
-        "quote": "derived.energyDensity 148",
-        "field": "energyDensity",
-        "severity": "soft",
-        "reason": "按 52/57/46 kcal/100g 与含水 0.856/0.837/0.872 换算干物质约 361/350/359 kcal/kg，均值约 357，÷24≈15，非 148；148 对应约 3550 kcal/kg 干物质，明显偏高"
+        "reason": "出处数值凭记忆写入，未核对 USDA 原值；苹果 52、梨 57、李 46 kcal/100g 与 USDA 常见值接近，但无法确认精确条目"
       }
     ]
   },
@@ -64,19 +58,13 @@
       "quote": "含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）",
       "field": "basis",
       "severity": "soft",
-      "reason": "refuse 含果核、果蒂、果梗，并非仅去核蒂；苹果、梨 refuse 0.1 合理，李 0.06 偏低但可接受"
+      "reason": "USDA refuse 含果核、果蒂、果皮等，并非仅去核蒂；苹果 refuse 约 10% 合理，但表述把 refuse 窄化为去核蒂，出处含义不准确"
     },
     {
-      "quote": "derived.edibleFraction 0.913",
-      "field": "edibleFraction",
+      "quote": "【数值凭记忆写入，待 L2 核对】",
+      "field": "basis",
       "severity": "soft",
-      "reason": "三源 refuse 均值 0.087，可食 0.913 与算式一致；但李 refuse 0.06 偏低于 USDA 常见 0.06–0.10 区间上缘，属边缘值"
-    },
-    {
-      "quote": "derived.energyDensity 148",
-      "field": "energyDensity",
-      "severity": "soft",
-      "reason": "按 52/57/46 kcal/100g 与含水 0.856/0.837/0.872 换算干物质约 361/350/359 kcal/kg，均值约 357，÷24≈15，非 148；148 对应约 3550 kcal/kg 干物质，明显偏高"
+      "reason": "出处数值凭记忆写入，未核对 USDA 原值；苹果 52、梨 57、李 46 kcal/100g 与 USDA 常见值接近，但无法确认精确条目"
     }
   ],
   "feedback": null,
@@ -88,18 +76,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "3937ee7e-2819-4250-87a6-0fe44f1be7de",
-      "file": "budget-responses/3937ee7e-2819-4250-87a6-0fe44f1be7de.json",
-      "requestHash": "fa7c2905c383899abb1ebdcbc73c3417da7758e420d6b70fb08bd82a7c2047ff",
-      "responseHash": "886e6ae6bbfb8700e51222cb825944dd2c3fdef7405bc57108d23c31dfb2dc64"
-    },
-    {
-      "phase": "review",
-      "attempt": 2,
-      "requestId": "c9e1f1aa-0c22-4150-9a20-2b3ebf1312c3",
-      "file": "budget-responses/c9e1f1aa-0c22-4150-9a20-2b3ebf1312c3.json",
-      "requestHash": "fa7c2905c383899abb1ebdcbc73c3417da7758e420d6b70fb08bd82a7c2047ff",
-      "responseHash": "0f9e6078994308a9ac6789e6d28b6e6ccc69985057438f9d438dcd126b838cf8"
+      "requestId": "8aff337a-635d-4209-a695-db7f1c47080e",
+      "file": "budget-responses/8aff337a-635d-4209-a695-db7f1c47080e.json",
+      "requestHash": "1572c4e1d81aa7e8786b72d5448bc9fe2337558412e85592678b3bf378e51143",
+      "responseHash": "45e436a5db992e57a35824dbb916dac4cd675a44a8df4e17bc29215da44e6eab"
     }
   ],
   "measurements": [
@@ -108,39 +88,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1193,
-        "completion_tokens": 159,
-        "total_tokens": 1352,
+        "prompt_tokens": 1243,
+        "completion_tokens": 169,
+        "total_tokens": 1412,
         "prompt_tokens_details": {
           "cached_tokens": 384
         },
         "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 809
+        "prompt_cache_miss_tokens": 859
       },
-      "costUpperYuan": 0.0029053599999999996,
-      "cumulativeUpperYuan": 0.16141791999999996,
-      "latencyMs": 2004.6845000000003,
-      "timestamp": "2026-11-09T12:25:46.405Z"
-    },
-    {
-      "label": "content-review-2-class_fruit-review1",
-      "model": "deepseek-flash",
-      "thinking": "disabled",
-      "usage": {
-        "prompt_tokens": 1193,
-        "completion_tokens": 266,
-        "total_tokens": 1459,
-        "prompt_tokens_details": {
-          "cached_tokens": 1024
-        },
-        "prompt_cache_hit_tokens": 1024,
-        "prompt_cache_miss_tokens": 169
-      },
-      "costUpperYuan": 0.00250696,
-      "cumulativeUpperYuan": 0.16392487999999997,
-      "latencyMs": 2468.9601000000002,
-      "timestamp": "2026-11-09T12:25:48.903Z"
+      "costUpperYuan": 0.0030853599999999997,
+      "cumulativeUpperYuan": 0.21172824,
+      "latencyMs": 2144.2941,
+      "timestamp": "2026-11-09T14:33:45.073Z"
     }
-  ],
-  "errorCode": "REVIEW_FORMAT"
+  ]
 }

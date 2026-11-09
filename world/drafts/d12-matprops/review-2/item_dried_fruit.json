@@ -1,6 +1,6 @@
 {
   "id": "item_dried_fruit",
-  "fingerprint": "681b0444cd4b5099197854280dc9caf8b3fe2dec28330b604105dd2bae93c473",
+  "fingerprint": "5a748e8e5519a497dc3fac66f4345ecb911df4868ab128c92bf785e36273f0a2",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -32,13 +32,13 @@
         "quote": "干果：只覆盖含水率，其余用类别 fruit",
         "field": "basis",
         "severity": "soft",
-        "reason": "干果干基能量应远高于鲜果；类别 fruit 的 energyDensity 148 是鲜果口径，直接套用会低估干果约 3 倍，应另给干果干基能量"
+        "reason": "干果含水率0.25与出处一致，但干基能量按类别fruit鲜果推算约149饱腹/kg干物质，与干果实际干基能量（葡萄干约1400 kcal/kg干物质，约58饱腹/kg）相差一个数量级，类别fruit的干基能量不能代表干果"
       },
       {
-        "quote": "传统晾晒干果为长期贮存多压到 25% 以下",
+        "quote": "干果 15.4%、干苹果 31.8%、李干 30.9%",
         "field": "basis",
         "severity": "soft",
-        "reason": "葡萄干等实际含水约 15–18%，25% 为贮存上限而非典型值，取 0.25 偏边缘但仍在 0.15–0.32 区间内"
+        "reason": "USDA葡萄干含水约15-16%、李干约30%、干苹果约32%，数值合理；但取25%作为传统晾晒上限与所引成员范围一致，属边缘取值，可接受"
       }
     ]
   },
@@ -48,13 +48,13 @@
       "quote": "干果：只覆盖含水率，其余用类别 fruit",
       "field": "basis",
       "severity": "soft",
-      "reason": "干果干基能量应远高于鲜果；类别 fruit 的 energyDensity 148 是鲜果口径，直接套用会低估干果约 3 倍，应另给干果干基能量"
+      "reason": "干果含水率0.25与出处一致，但干基能量按类别fruit鲜果推算约149饱腹/kg干物质，与干果实际干基能量（葡萄干约1400 kcal/kg干物质，约58饱腹/kg）相差一个数量级，类别fruit的干基能量不能代表干果"
     },
     {
-      "quote": "传统晾晒干果为长期贮存多压到 25% 以下",
+      "quote": "干果 15.4%、干苹果 31.8%、李干 30.9%",
       "field": "basis",
       "severity": "soft",
-      "reason": "葡萄干等实际含水约 15–18%，25% 为贮存上限而非典型值，取 0.25 偏边缘但仍在 0.15–0.32 区间内"
+      "reason": "USDA葡萄干含水约15-16%、李干约30%、干苹果约32%，数值合理；但取25%作为传统晾晒上限与所引成员范围一致，属边缘取值，可接受"
     }
   ],
   "feedback": null,
@@ -66,10 +66,18 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "fbd281d2-b500-4753-8dc3-9fcdc54e2f28",
-      "file": "budget-responses/fbd281d2-b500-4753-8dc3-9fcdc54e2f28.json",
-      "requestHash": "1a13f24b6f8bd8c978383e97d994efd56b4ce7a690a8d21ae9d087722ae10825",
-      "responseHash": "e3f181de2a1dc7635e81aeaaae344385ebd60b7d6aa6e8408e37679399c3d281"
+      "requestId": "6d407e08-d342-4943-b1d1-804bd1c1d310",
+      "file": "budget-responses/6d407e08-d342-4943-b1d1-804bd1c1d310.json",
+      "requestHash": "d9287498679971b879705d49f65f75cb464df23817e7964334bed184bfc4feb6",
+      "responseHash": "ee1ea0d7b5c56fa6345af26a5930ced094668291c20b2932c02090749e6ffb0e"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "33d7f024-f1b5-48e7-99ac-2156ec74b19a",
+      "file": "budget-responses/33d7f024-f1b5-48e7-99ac-2156ec74b19a.json",
+      "requestHash": "d9287498679971b879705d49f65f75cb464df23817e7964334bed184bfc4feb6",
+      "responseHash": "2306d510fc2ed59f0a6d355408d2d93756e56cb44c33204ef09ca9fe5e93baa8"
     }
   ],
   "measurements": [
@@ -78,19 +86,39 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1384,
-        "completion_tokens": 156,
-        "total_tokens": 1540,
+        "prompt_tokens": 1434,
+        "completion_tokens": 234,
+        "total_tokens": 1668,
         "prompt_tokens_details": {
           "cached_tokens": 384
         },
         "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 1000
+        "prompt_cache_miss_tokens": 1050
       },
-      "costUpperYuan": 0.00326336,
-      "cumulativeUpperYuan": 0.20702464,
-      "latencyMs": 1560.0126000000018,
-      "timestamp": "2026-11-09T12:26:15.431Z"
+      "costUpperYuan": 0.0039873600000000006,
+      "cumulativeUpperYuan": 0.2923608000000001,
+      "latencyMs": 2529.375,
+      "timestamp": "2026-11-09T14:34:39.621Z"
+    },
+    {
+      "label": "content-review-2-item_dried_fruit-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1434,
+        "completion_tokens": 185,
+        "total_tokens": 1619,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 154
+      },
+      "costUpperYuan": 0.0018392,
+      "cumulativeUpperYuan": 0.2942000000000001,
+      "latencyMs": 2609.333700000003,
+      "timestamp": "2026-11-09T14:34:42.272Z"
     }
-  ]
+  ],
+  "errorCode": "REVIEW_FORMAT"
 }

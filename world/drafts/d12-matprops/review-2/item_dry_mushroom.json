@@ -1,6 +1,6 @@
 {
   "id": "item_dry_mushroom",
-  "fingerprint": "97926e6238f901afc36f070315204d836520ac7746b39e3bba122e794419c8bd",
+  "fingerprint": "30e4318cf5db45f24e695ee4910de0a6c833c2b3a2a3522954f81ae2401a2983",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -26,13 +26,19 @@
         "quote": "干香菇 moistureFraction 0.095",
         "field": "moisture",
         "severity": "soft",
-        "reason": "USDA 干香菇含水约 0.09–0.10，0.095 合理；但 basis 称凭记忆待核，出处无法确认，故记 soft"
+        "reason": "USDA 干香菇含水约 0.09–0.10，0.095 合理；但出处名未给具体条目，无法确认，故 soft"
       },
       {
-        "quote": "干蘑菇片：只覆盖含水率，能量用类别 mushroom",
-        "field": "basis",
+        "quote": "白蘑菇 moistureFraction 0.925",
+        "field": "moisture",
         "severity": "soft",
-        "reason": "干制品含水 0.095 与鲜菇类别 0.925 相差极大，直接套用类别能量密度 122 会严重低估干菇能量（干基约 1300 kcal/kg），口径不一致"
+        "reason": "USDA 白蘑菇生含水约 0.92，0.925 在区间内偏边缘但可接受"
+      },
+      {
+        "quote": "白蘑菇 kcalPer100gWet 22",
+        "field": "energyDensity",
+        "severity": "soft",
+        "reason": "USDA 白蘑菇生约 22 kcal/100g，与 0.925 含水推算干基约 293 kcal/kg，饱腹约 12，合理"
       }
     ]
   },
@@ -42,13 +48,19 @@
       "quote": "干香菇 moistureFraction 0.095",
       "field": "moisture",
       "severity": "soft",
-      "reason": "USDA 干香菇含水约 0.09–0.10，0.095 合理；但 basis 称凭记忆待核，出处无法确认，故记 soft"
+      "reason": "USDA 干香菇含水约 0.09–0.10，0.095 合理；但出处名未给具体条目，无法确认，故 soft"
     },
     {
-      "quote": "干蘑菇片：只覆盖含水率，能量用类别 mushroom",
-      "field": "basis",
+      "quote": "白蘑菇 moistureFraction 0.925",
+      "field": "moisture",
       "severity": "soft",
-      "reason": "干制品含水 0.095 与鲜菇类别 0.925 相差极大，直接套用类别能量密度 122 会严重低估干菇能量（干基约 1300 kcal/kg），口径不一致"
+      "reason": "USDA 白蘑菇生含水约 0.92，0.925 在区间内偏边缘但可接受"
+    },
+    {
+      "quote": "白蘑菇 kcalPer100gWet 22",
+      "field": "energyDensity",
+      "severity": "soft",
+      "reason": "USDA 白蘑菇生约 22 kcal/100g，与 0.925 含水推算干基约 293 kcal/kg，饱腹约 12，合理"
     }
   ],
   "feedback": null,
@@ -60,10 +72,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "7ecd623d-d0f3-4687-b9e6-3352448740d2",
-      "file": "budget-responses/7ecd623d-d0f3-4687-b9e6-3352448740d2.json",
-      "requestHash": "1d9e39e23be8342c19d510b0ae354ff055de16642df1772df9316e46f4002aac",
-      "responseHash": "e5b46d61ca7f1d716c7471f2acef1a7815d8b9f02028c5849a4e75bed89fa349"
+      "requestId": "52c36677-a7c9-4dd4-a61f-93bb48e87323",
+      "file": "budget-responses/52c36677-a7c9-4dd4-a61f-93bb48e87323.json",
+      "requestHash": "6d5e6435514ace87aa5db14a631e8821677c4e1a8309d05deba04c79a0f5f044",
+      "responseHash": "b33c204d3df8b831cbf43d49241cb9afc33a8627bad4b313537268909ab0a2ba"
     }
   ],
   "measurements": [
@@ -72,19 +84,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1233,
-        "completion_tokens": 147,
-        "total_tokens": 1380,
+        "prompt_tokens": 1247,
+        "completion_tokens": 184,
+        "total_tokens": 1431,
         "prompt_tokens_details": {
           "cached_tokens": 384
         },
         "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 849
+        "prompt_cache_miss_tokens": 863
       },
-      "costUpperYuan": 0.0028893599999999997,
-      "cumulativeUpperYuan": 0.18911176000000002,
-      "latencyMs": 1781.4314000000013,
-      "timestamp": "2026-11-09T12:26:05.093Z"
+      "costUpperYuan": 0.0032133599999999997,
+      "cumulativeUpperYuan": 0.24258392,
+      "latencyMs": 1724.4032000000007,
+      "timestamp": "2026-11-09T14:34:06.626Z"
     }
   ]
 }

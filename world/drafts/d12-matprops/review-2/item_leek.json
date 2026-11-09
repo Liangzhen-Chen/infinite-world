@@ -1,7 +1,7 @@
 {
   "id": "item_leek",
-  "fingerprint": "6b3505df441aad7001ad9c98560425117d7a5621bf9daca766c11e7a60cd45b2",
-  "status": "manual",
+  "fingerprint": "485dd5b8a4602d75fa6ce70c2f36f7c949f2c62fa853817fbec74366337cfb51",
+  "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "item_leek",
@@ -27,30 +27,41 @@
         "quote": "韭葱含水低于蔬菜类别均值，覆盖类别值",
         "field": "basis",
         "severity": "soft",
-        "reason": "USDA 韭葱生含水约0.83、61 kcal/100g，与出处一致；但类别均值0.907，0.83确低于均值，表述成立，仅出处凭记忆待核"
+        "reason": "韭葱含水约0.83，确实低于类别均值0.907，但类别均值已含韭葱以外的六种蔬菜，此句表述易误解为类别均值已含韭葱；数值本身合理"
       },
       {
-        "quote": "energyDensity 150",
+        "quote": "moistureFraction:0.83, kcalPer100gWet:61",
+        "field": "sources",
+        "severity": "soft",
+        "reason": "USDA韭葱生含水约0.83、能量约61 kcal/100g，与记忆值一致，但出处无法逐条确认，标soft"
+      },
+      {
+        "quote": "energyDensity:150",
         "field": "energyDensity",
-        "severity": "hard",
-        "reason": "61×10÷(1−0.83)÷24=149.5，取整应为150，算式正确；但USDA韭葱生实际约61 kcal/100g，干物质约359 kcal/kg，饱腹约15，非150，疑小数位错"
+        "severity": "soft",
+        "reason": "按61×10÷(1−0.83)÷24≈149.5，取整150，算式正确；但鲜重61 kcal/100g对韭葱偏高边缘，干基能量约3588 kcal/kg，属正常蔬菜干基范围"
       }
     ]
   },
-  "errors": [
-    {
-      "quote": "energyDensity 150",
-      "field": "energyDensity",
-      "severity": "hard",
-      "reason": "61×10÷(1−0.83)÷24=149.5，取整应为150，算式正确；但USDA韭葱生实际约61 kcal/100g，干物质约359 kcal/kg，饱腹约15，非150，疑小数位错"
-    }
-  ],
+  "errors": [],
   "warnings": [
     {
       "quote": "韭葱含水低于蔬菜类别均值，覆盖类别值",
       "field": "basis",
       "severity": "soft",
-      "reason": "USDA 韭葱生含水约0.83、61 kcal/100g，与出处一致；但类别均值0.907，0.83确低于均值，表述成立，仅出处凭记忆待核"
+      "reason": "韭葱含水约0.83，确实低于类别均值0.907，但类别均值已含韭葱以外的六种蔬菜，此句表述易误解为类别均值已含韭葱；数值本身合理"
+    },
+    {
+      "quote": "moistureFraction:0.83, kcalPer100gWet:61",
+      "field": "sources",
+      "severity": "soft",
+      "reason": "USDA韭葱生含水约0.83、能量约61 kcal/100g，与记忆值一致，但出处无法逐条确认，标soft"
+    },
+    {
+      "quote": "energyDensity:150",
+      "field": "energyDensity",
+      "severity": "soft",
+      "reason": "按61×10÷(1−0.83)÷24≈149.5，取整150，算式正确；但鲜重61 kcal/100g对韭葱偏高边缘，干基能量约3588 kcal/kg，属正常蔬菜干基范围"
     }
   ],
   "feedback": null,
@@ -62,10 +73,18 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "0362624e-3d39-4a64-9e3d-a9b2166b1625",
-      "file": "budget-responses/0362624e-3d39-4a64-9e3d-a9b2166b1625.json",
-      "requestHash": "8de18ec3d126b1b0e3ca78707da379a6db57b45aaf78edd98fdb2833110b0982",
-      "responseHash": "9829861a3a70b792a613e2a9fcdfc1649c5d6420b1693e21fa2e145a17f786bf"
+      "requestId": "99b6a4c5-928d-42b1-aafc-0f04b13ad1ad",
+      "file": "budget-responses/99b6a4c5-928d-42b1-aafc-0f04b13ad1ad.json",
+      "requestHash": "8cc3cbcc5ff3cddd3c1a7bd7414a139738964a227fbde199a316ecf15ea369fd",
+      "responseHash": "b3da00133570f5ff5bdae0eecdb94d47adcd821f9b294097ed185cb2636239e6"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "f0cb7c2e-0020-4b1d-98cc-6bc437304fa9",
+      "file": "budget-responses/f0cb7c2e-0020-4b1d-98cc-6bc437304fa9.json",
+      "requestHash": "8cc3cbcc5ff3cddd3c1a7bd7414a139738964a227fbde199a316ecf15ea369fd",
+      "responseHash": "f32e06c4885f8867c315c376be9385e2e5d6509df6126338e419f2c71d6582c4"
     }
   ],
   "measurements": [
@@ -74,19 +93,39 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1386,
-        "completion_tokens": 161,
-        "total_tokens": 1547,
+        "prompt_tokens": 1436,
+        "completion_tokens": 143,
+        "total_tokens": 1579,
         "prompt_tokens_details": {
           "cached_tokens": 384
         },
         "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 1002
+        "prompt_cache_miss_tokens": 1052
       },
-      "costUpperYuan": 0.0033073599999999996,
-      "cumulativeUpperYuan": 0.19574448000000003,
-      "latencyMs": 2010.9980000000032,
-      "timestamp": "2026-11-09T12:26:08.814Z"
+      "costUpperYuan": 0.0032633600000000003,
+      "cumulativeUpperYuan": 0.27559616000000003,
+      "latencyMs": 1609.2566000000006,
+      "timestamp": "2026-11-09T14:34:27.355Z"
+    },
+    {
+      "label": "content-review-2-item_leek-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1436,
+        "completion_tokens": 223,
+        "total_tokens": 1659,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 156
+      },
+      "costUpperYuan": 0.0021471999999999997,
+      "cumulativeUpperYuan": 0.27774336000000005,
+      "latencyMs": 2699.882399999995,
+      "timestamp": "2026-11-09T14:34:30.084Z"
     }
-  ]
+  ],
+  "errorCode": "REVIEW_FORMAT"
 }
