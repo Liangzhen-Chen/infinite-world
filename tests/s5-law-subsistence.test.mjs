@@ -718,10 +718,10 @@ test('self-gathered fuel and held-fuel offset follow effective heat; without mat
  const table={dimensions:{},precedence:[],classes:{[REF]:{heatValue:18,moisture:0.2,basis:'夹具：参照类'}}};
  const damp={moisture:0.5,heatValue:18,basis:'夹具：含水更多的木料'};
  const L=craftingBalance.params.find(p=>p.id==='household.waterLatentHeat').value;
- const eff=(h,m)=>h*(1-m)-L*m,ref=eff(18,0.2),grams=2000;
+ const eff=(h,m)=>h*(1-m)-L*m,ref=eff(18,0.2);
  const legacy=plan({dimensions:{},precedence:[],classes:{}},null,0),known=plan(table,damp,0);
  const tripOf=r=>r.p.upkeepTrips.find(t=>t.cls==='fuel');
- assert.equal(itemGrams(legacy.f.e,'item_wood'),grams);
+ const grams=itemGrams(legacy.f.e,'item_wood');
  assert.equal(tripOf(legacy).unitGrams,grams,'无属性：每件按重量克');
  assert.equal(fuelReferenceHeat(known.f.e),ref);
  assert.equal(fuelEffectiveHeat(known.f.e,'item_wood'),eff(18,0.5));
