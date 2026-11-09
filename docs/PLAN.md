@@ -1397,6 +1397,9 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 待合入队列：t-metab 2c4e6ad2（含测试修正）、t-mprod 4dff5631、t-memo 6488ad12（性能存疑，待 m2-2 耗时对照）、t-ptai 055105ec（工具，不影响世界）。m2-2 全量结束后，按结果组下一轮合并候选。
 
 ### ★ 压缩恢复入口（11-09 04:20 写，压缩后先读本节）
+- 06:3x m2-3 巡查（服务器 14:28）：72 字节、0/529、首批 6 个重文件在跑，30 秒 CPU 各增约 33 秒（117–120%），负载 7–8。每游戏日耗时：m2-3 目录被全量锁住，prof-day 需等全量结束后在 m2-3 上跑，对比基线 4.96 / pf-3 5.43。
+- 只读作用域补充 t-rscope2 5d90d47d（F:/dnd-wt/RSCOPE2）：inputProcurement 入作用域、memo 键加 randomSeed、补命中计数测试；未纳入 continueInputPlan（无读取器）、candidateRelevant（public-projects 预演草稿）、business.mjs:783 与 finance-bank.mjs:201（执行路径）。上传 rs2-1（hash 238cb063…），第一轮已派，重点核 report_maintenance 候选内 primitiveDraft 预演是否原地改 document.state（关系到 m2-3）。
+- 为上传腾空间按三条证据清理 pf-2（继任 pf-3）、m2-2（继任 m2-3，已备份 57/57），证据 F:/dnd-tmp/server-cleanup-1109-pf2m22/，磁盘 93%→88%。
 - 06:2x 李白决定执行：①m2-2 停前备份（服务器时间 14:25:49，50/529）：F:/dnd-tmp/m22/backup-before-stop/（results.tgz sha256 31bce94b…，run.log 51d87e56…，m2-2.full a1b98893…，57 个文件本机与服务器逐文件 sha256 一致）；门禁 kill m2-2 后 m2-2.full 哈希不变、无残留进程。m2-2 只作性能参考，不作合入依据。②推送：密钥/大文件扫描通过后推 t-int 5dbe7d5f..87da89f9、新建 t-m3 9abb0959；t149 及其他分支不推。PLAN 无与此冲突的亮圳推送规则（github-remote 记忆：11-03“全部推上去”为一次性授权）。④S5 八项+剩余工作总表+各卡状态统一表：已派执行者出草稿，主会话审后写入 PLAN 并推 master。
 - 每游戏日耗时更正（按 10 日逐日原文求均值；此前所写 5.07/5.38/7.9 有误，以此为准）：基线 prof-1 4.96 s、pm-1 只代谢 5.26 s、pf-1 只口粮 7.48 s、pf-2 7.36 s、pf-3 5.43 s（pf-3 比基线 +9.5%，比只代谢 +3.2%）。
 - 06:24Z m2-3 全量已在腾讯云启动（P=6，--all，结果 /work/m2-3.full，本机脚本 F:/dnd-tmp/m23/run.sh、后台 b5dkr6gx5）。m2-3 = t-m3 9abb0959 = t-int 87da89f9 + a2466a1c + b316ab9e + 2c4e6ad2 + t-hrmemo 89fa891d + 4dff5631 + 6a78e53e + 055105ec（t-memo 未合）；hash c89e9253d54bacba30c5fdd4c23dbe97c26e4bdb9c2413faa96528272ef1a881；两轮 approve：r1 …/r1-20261109T062210Z-2878695-m23-r1-sonnet、r2 …/r2-20261109T062352Z-2879602-m23-r2-sonnet（89fa891d 测试修正一并审过：更严、非放宽）。与 m2-2 并行（服务器 32 核、负载 7、可用内存 113G，不抢资源），m2-2 不停、保留输出。完成后逐文件对照 b1m-1，零新增真失败才快进 t-int。
