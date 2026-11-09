@@ -4,6 +4,8 @@
 // L4 照内容管线规则（先例 tools/w5-rumors.mjs sampleL4/recordL4/approved）：人读（不调模型）——被标记项 + 随机 5 条（batch.sample）
 // 须有阅读笔记；波次随机 10 条各给六项评分（整数 3–5，均分 ≥4）。--sample 抽签并列出要读的条目，--l4 <文件> 记录笔记与评分。
 // 模型返回格式错只算该条一次失败（错误码 REVIEW_FORMAT，不是预算停止；预算停止会经 content-pipeline.mjs:178 拦住整轮）；
+// 审查输出一致性：每条 contradiction 须带 verdict（conflict|no_conflict）；severity=hard 而 verdict=no_conflict（先报后自撤）判无效输出 REVIEW_INCONSISTENT，
+// 该条自动重试 1 次，仍矛盾则转 manual（原因写进记录）；不改 L2 判据。
 // 同一条最多发 3 次审查请求（1 初审 + 2 修正，requestTransform），仍错则该条转 manual。
 // 修订 d12-matprops-2（亮圳 2026-11-09 12:11 批准、李白同意的整类修复）：数据改为结构化出处字段，含水、可食部分、能量由程序推算
 // （server-plugin/item-class.mjs deriveFromSources）；之后每条按新 revision 再审。两项调整：
@@ -11,7 +13,7 @@
 //    content-review-<n>-<id>-review<k> 按 n 计数，旧 revision 的记录与次数保留不删（checkReviewCap）；人工核定记录放在各 revision 自己的目录，对新 revision 自然失效。
 //  ②卡账本 maxRequests 由 40 调到 60（追加约 19–20 次再审的批准额度；李白 2026-11-09 13:1x 口径修正后再批 60→75，只用于口径修正后的复审，到额自动停），limitYuan 仍 1.5 元不变（grantMaxRequests，写入账本 authorizations，同 a3w-props 先例）。
 //    两项同时记在 docs/决策.md「D12 材料属性整类修复」。
-// 用法：node world/design/matprops-approval.mjs --l1 | --review | --sample | --l4 <json> | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
+// 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --sample | --l4 <json> | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -28,7 +30,7 @@ export const draftRoot='world/drafts/d12-matprops';
 export const reviewDirName=`review-${revisionNumber}`;
 export const reviewRoot=path.join(draftRoot,reviewDirName);
 export const cardId='D12-MATPROPS';
-export const cardLimitYuan=1.5, maxRequests=100, maxOverrideRatio=0.15;
+export const cardLimitYuan=1.5, maxRequests=130, maxOverrideRatio=0.15;
 const readJSON=async f=>JSON.parse(await fs.readFile(f,'utf8'));
 const tableFile='world/meta/mechanics/material-props.json', overlayFile='world/meta/mechanics/items.json';
 
@@ -60,7 +62,7 @@ export async function validateDraft(draft,entry){
 }
 export function reviewRequest(entry,draft,context){
  return {thinking:{type:'disabled'},temperature:0,max_tokens:1200,response_format:{type:'json_object'},messages:[
-  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。行内 sources 是出处原值（moistureFraction 含水分数、kcalPer100gWet 鲜重 kcal/100g、refuseFraction 不可食比例），每个出处代表类别的一个成员；selection.method 为 mean 时，各成员（出处）分别推算含水、干物质比例、干基能量与能量，再对各成员的推算结果取平均（没有取代表的方式）；为 single 时只有一个出处，按它自身推算。moisture、energyDensity、edibleFraction 由程序推出，context.derived 给出推出值：含水取 3 位小数；成员的干基能量 = 鲜重 kcal/100g × 10 ÷ (1−该成员含水) ÷ kcalPerSatiety，类别值为各成员干基能量的平均并取整。'},
+  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","verdict":"conflict|no_conflict","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。verdict 先定：核算后确有矛盾写 conflict，核算后发现无误或应撤回写 no_conflict；severity 为 hard 时 verdict 必须是 conflict，核算无误的项不要列入或不要写 hard。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。行内 sources 是出处原值（moistureFraction 含水分数、kcalPer100gWet 鲜重 kcal/100g、refuseFraction 不可食比例），每个出处代表类别的一个成员；selection.method 为 mean 时，各成员（出处）分别推算含水、干物质比例、干基能量与能量，再对各成员的推算结果取平均（没有取代表的方式）；为 single 时只有一个出处，按它自身推算。moisture、energyDensity、edibleFraction 由程序推出，context.derived 给出推出值：含水取 3 位小数；成员的干基能量 = 鲜重 kcal/100g × 10 ÷ (1−该成员含水) ÷ kcalPerSatiety，类别值为各成员干基能量的平均并取整。'},
   {role:'user',content:JSON.stringify({entry:{id:entry.id,kind:entry.kind,row:entry.row},context})}]};
 }
 export function extractReview(response){
@@ -69,10 +71,14 @@ export function extractReview(response){
   assert.ok(Array.isArray(review?.contradictions),'Missing contradictions array');
   for(const issue of review.contradictions){
    assert.ok(['hard','soft','style'].includes(issue.severity));
+   assert.ok(['conflict','no_conflict'].includes(issue.verdict),'缺 verdict（conflict|no_conflict）');
    for(const key of ['quote','field','reason'])assert.ok(typeof issue[key]==='string'&&issue[key].trim());
   }
-  return review;
  }catch(error){throw Object.assign(new Error(`Invalid contradictions JSON: ${error.message}`),{code:'REVIEW_FORMAT'});}
+ // 一致性校验（结构化）：severity=hard 必须 verdict=conflict；模型自己判 no_conflict 却标 hard（先报后自撤）= 无效输出，不算通过也不算 hard。
+ const bad=review.contradictions.filter(c=>c.severity==='hard'&&c.verdict==='no_conflict');
+ if(bad.length)throw Object.assign(new Error(`审查输出自相矛盾（severity=hard 但 verdict=no_conflict）：${bad.map(c=>c.field).join('、')}`),{code:'REVIEW_INCONSISTENT'});
+ return review;
 }
 const draftRequest=()=>{throw Error('候选已冻结；不请求模型改写');};
 export async function l1(){
@@ -199,11 +205,13 @@ export function checkReviewCap(ledger,id,dirName=reviewDirName){
 // 账本上限分两步批准，按顺序逐步落到账本 authorizations（幂等；账本其余字段不动，旧请求与花费保留）：
 //  40→60：亮圳 2026-11-09 12:11 批准、李白同意（整类修复后每条再审 1 次）；
 //  60→75：李白 2026-11-09 13:1x 批准（整类口径修正后的复审；limitYuan 1.5 不变，到额自动停，只用于本次口径修正后的复审）；
-//  75→100：李白 2026-11-09 14:2x 批准（只复审 25 条，保持原指纹的 7 条不重审；金额上限仍 1.5 元，到额自动停）。
+//  75→100：李白 2026-11-09 14:2x 批准（只复审 25 条，保持原指纹的 7 条不重审；金额上限仍 1.5 元，到额自动停）；
+//  100→130：李白 2026-11-09 15:1x 批准（卡 D 审批工具问题：L2 输出 hard 后自撤，加一致性校验与重试、class_egg 按新口径重审；金额上限仍 1.5 元，到额自动停）。
 export const grants=[
  {id:'d12-matprops-2-maxrequests-60',from:40,to:60,source:'亮圳 2026-11-09 12:11 批准、李白同意：D 卡整类修复后每条再审 1 次，maxRequests 40→60，limitYuan 仍 1.5 元，只限这一轮'},
  {id:'d12-matprops-2-maxrequests-75',from:60,to:75,source:'李白 2026-11-09 13:1x 批准：整类口径修正后的复审，maxRequests 60→75，limitYuan 仍 1.5 元，到额自动停，只用于本次口径修正后的复审'},
- {id:'d12-matprops-2-maxrequests-100',from:75,to:100,source:'李白 2026-11-09 14:2x 批准：只复审 25 条，保持原指纹的 7 条不重审，maxRequests 75→100，limitYuan 仍 1.5 元，到额自动停'}];
+ {id:'d12-matprops-2-maxrequests-100',from:75,to:100,source:'李白 2026-11-09 14:2x 批准：只复审 25 条，保持原指纹的 7 条不重审，maxRequests 75→100，limitYuan 仍 1.5 元，到额自动停'},
+ {id:'d12-matprops-2-maxrequests-130',from:100,to:130,source:'李白 2026-11-09 15:1x 批准：L2 一致性校验重试与 class_egg 按新口径重审，maxRequests 100→130，limitYuan 仍 1.5 元，到额自动停'}];
 export const grantId=grants[0].id;
 export function grantMaxRequests(ledger){
  const out=structuredClone(ledger),card=out.cards?.[cardId];
@@ -222,15 +230,23 @@ async function authorizeIncrease(){
  const file=path.join(draftRoot,'budget.json'),ledger=await readJSON(file),next=grantMaxRequests(ledger);
  if(JSON.stringify(next)!==JSON.stringify(ledger))await fs.writeFile(file,JSON.stringify(next,null,2)+'\n');
 }
-async function capReviews({body,entry,phase}){
+// REVIEW_INCONSISTENT：该条自动重试 1 次（走同一预算与同条次数上限）；重试仍自相矛盾则在发请求前抛 REVIEW_INCONSISTENT_EXHAUSTED，该条转 manual（record.errors 带原因）。
+// 标记 inconsistentRetried 只在真请求（非预检用的 record 副本）上写入。
+export function inconsistentGate(record){
+ if(record?.errorCode!=='REVIEW_INCONSISTENT'){if(record)delete record.inconsistentRetried;return;}
+ if(record.inconsistentRetried)throw Object.assign(new Error('L2 审查输出两次自相矛盾（hard 但自认无误），不当作通过，转人工'),{code:'REVIEW_INCONSISTENT_EXHAUSTED'});
+ record.inconsistentRetried=true;
+}
+async function capReviews({body,entry,phase,record}){
  if(phase!=='review')return {body};
+ inconsistentGate(record);
  let ledger;try{ledger=await readJSON(path.join(draftRoot,'budget.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
  checkReviewCap(ledger,entry.id);
  return {body};
 }
 // --l1 --show <id,...>：逐条打印出处字段（带单位）、推算中间量、推算值与一致性检查结果。
 const pct=x=>`${(x*100).toFixed(2)}%`;
-export function explainEntry(entry,table,l1Errors=[]){
+export function explainEntry(entry,table,l1Errors=[],itemTags=[]){
  const kps=table.kcalPerSatiety,row=entry.row,L=[`== ${entry.id}（${entry.kind}）`,`kcalPerSatiety = ${kps} kcal/饱腹（表头标定值，${table.kcalPerSatietyBasis?.slice(0,20)}…）`];
  const srcs=Array.isArray(row.sources)?row.sources:[],sel=row.selection??{method:'single'};
  L.push(`selection = ${sel.method}（${sel.reason??'无'}）`);
@@ -251,14 +267,39 @@ export function explainEntry(entry,table,l1Errors=[]){
  if(entry.kind==='material-props-class'&&sel.method==='mean'){
   for(const m of memberDeviations(row,kps,table.memberItems?.[entry.key]))L.push(`成员偏差 ${m.item}（${m.name}）：${Object.entries(m.dev).map(([k,v])=>`${k} ${pct(v)}`).join('，')}；阈值 ${pct(table.memberDeviationThreshold)}；${m.max>table.memberDeviationThreshold?'超阈值，须有覆盖行':'未超'}`);
  }
+ if(entry.kind==='material-props-item'&&Array.isArray(row.sources)){
+  const thr=table.memberDeviationThreshold;
+  for(const t of itemTags.filter(t=>table.classes[t]?.selection?.method==='mean')){
+   const cls=deriveFromSources(table.classes[t],kps);
+   for(const x of row.sources){const o=memberValues(x,kps),dev={};
+    if(o.m!==undefined&&cls.moisture!==undefined)dev.dryFraction=((1-o.m)-(1-cls.moisture))/(1-cls.moisture);
+    if(o.e!==undefined&&cls.energyDensity!==undefined){dev.dmEnergy=(o.e-cls.energyDensity)/cls.energyDensity;dev.freshEnergy=(o.e*(1-o.m)-cls.energyDensity*(1-cls.moisture))/(cls.energyDensity*(1-cls.moisture));}
+    const max=Math.max(0,...Object.values(dev).map(Math.abs));
+    L.push(`相对类别 ${t} 代表值（干物质比例 ${(1-cls.moisture).toFixed(4)}、干基能量 ${cls.energyDensity} 饱腹/kg 干物质）的偏差 ${x.name}：${Object.entries(dev).map(([k,v])=>`${k} ${pct(v)}`).join('，')}；阈值 ${pct(thr)}；${max>thr?'超阈值，须有覆盖行（本条即覆盖行）':'未超'}`);}
+  }
+ }
  const own=l1Errors.filter(e=>e.includes(entry.kind==='material-props-class'?`classes.${entry.key}`:`items.${entry.id}.`)||e.includes(entry.id));
  L.push(own.length?`L1 检查：${own.length} 项问题：${own.join('；')}`:'L1 检查：通过（出处字段齐全、范围合法、存值与推算一致、成员偏差有覆盖）');
  return L;
 }
 export async function show(ids){
- const entries=await entriesFor(),table=await readJSON(tableFile),world=await runtime(),errors=validateMaterialProps(world),lines=[];
- for(const id of ids){const e=entries.find(x=>x.id===id);if(!e)throw Error(`没有这条：${id}`);lines.push(...explainEntry(e,table,errors),'');}
+ const entries=await entriesFor(),table=await readJSON(tableFile),overlay=await readJSON(overlayFile),world=await runtime(),errors=validateMaterialProps(world),lines=[];
+ for(const id of ids){const e=entries.find(x=>x.id===id);if(!e)throw Error(`没有这条：${id}`);lines.push(...explainEntry(e,table,errors,overlay[id]?.tags??[]),'');}
  return lines.join('\n');
+}
+// --redo <id,...>：新口径重审——把该条 manual 记录归档到 <draftRoot>/review-2-archive/（不删），不动账本；之后 --review 会为该条起新记录。
+// 不绕过上限：同条次数按账本里本 revision 的请求标签计数（checkReviewCap），归档记录后已用次数照旧计入。
+export async function archiveForRedo(ids,{root=reviewRoot,archiveRoot=path.join(draftRoot,`${reviewDirName}-archive`)}={}){
+ await fs.mkdir(archiveRoot,{recursive:true});
+ const out=[];
+ for(const id of ids){
+  const file=path.join(root,`${id}.json`),rec=await readJSON(file);
+  if(rec.status!=='manual')throw Error(`只归档 manual 记录：${id} 现为 ${rec.status}`);
+  let n=1;while(await fs.stat(path.join(archiveRoot,`${id}.${n}.json`)).then(()=>true,()=>false))n++;
+  const dest=path.join(archiveRoot,`${id}.${n}.json`);
+  await fs.rename(file,dest);out.push(dest);
+ }
+ return out;
 }
 export async function run(args=process.argv.slice(2)){
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
@@ -266,6 +307,7 @@ export async function run(args=process.argv.slice(2)){
  if(args.includes('--review')){
   await l1();
   await authorizeIncrease();
+  if(args.includes('--redo'))console.log(JSON.stringify({archived:await archiveForRedo(args[args.indexOf('--redo')+1].split(','))}));
   const entries=await entriesFor();
   console.log(JSON.stringify({pid:process.pid,mode:'review',entries:entries.length}));
   const {summary}=await runContentPipeline({entries,root:reviewRoot,budgetRoot:draftRoot,revision,contextFor,

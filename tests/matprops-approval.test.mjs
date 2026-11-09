@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {migrateDepthBudget} from '../tools/content-budget.mjs';
-import {entriesFor, draftFor, validateDraft, l1, extractReview, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels} from '../world/design/matprops-approval.mjs';
+import {entriesFor, draftFor, validateDraft, l1, extractReview, inconsistentGate, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels} from '../world/design/matprops-approval.mjs';
 
 test('条目 = 每个类别行 + 每个物品覆盖行；候选与盘上数据逐字一致', async () => {
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
@@ -23,8 +23,39 @@ test('L1：运行时世界的属性表通过校验，覆盖行不超过物品总
 test('畸形的审查响应不算通过', () => {
   const response = content => ({choices: [{message: {content}}]});
   assert.deepEqual(extractReview(response('{"contradictions":[]}')), {contradictions: []});
-  for (const content of ['{}', '{"contradictions":[{}]}', '{"contradictions":[{"quote":"a","field":"b","severity":"bad","reason":"c"}]}'])
+  for (const content of ['{}', '{"contradictions":[{}]}', '{"contradictions":[{"quote":"a","field":"b","severity":"bad","verdict":"conflict","reason":"c"}]}',
+    '{"contradictions":[{"quote":"a","field":"b","severity":"soft","reason":"c"}]}', '{"contradictions":[{"quote":"a","field":"b","severity":"soft","verdict":"maybe","reason":"c"}]}'])
     assert.throws(() => extractReview(response(content)), error => error.code === 'REVIEW_FORMAT');
+});
+
+const item = (severity, verdict, reason = '原因') => ({quote: 'q', field: 'moisture', severity, verdict, reason});
+const resp = list => ({choices: [{message: {content: JSON.stringify({contradictions: list})}}]});
+test('一致性：hard 而 verdict=no_conflict（自撤）判无效输出 REVIEW_INCONSISTENT，哪怕 reason 不含撤回字样也按结构判', () => {
+  for (const reason of ['算式无误，应报 soft', '此项不成立', '原因'])
+    assert.throws(() => extractReview(resp([item('hard', 'no_conflict', reason)])), e => e.code === 'REVIEW_INCONSISTENT');
+  // 同一输出里混有正常 hard 也整体无效（模型输出自相矛盾，不能部分采信）
+  assert.throws(() => extractReview(resp([item('hard', 'conflict'), item('hard', 'no_conflict')])), e => e.code === 'REVIEW_INCONSISTENT');
+});
+test('一致性：正常 hard（conflict）与 soft/style 不受影响；reason 里出现「无误」字样但 verdict=conflict 不误伤', () => {
+  const r = extractReview(resp([item('hard', 'conflict', '另一处算式无误，但单位错'), item('soft', 'no_conflict'), item('style', 'conflict')]));
+  assert.equal(r.contradictions.length, 3);
+  assert.equal(r.contradictions[0].severity, 'hard');
+});
+test('一致性重试：第一次矛盾放行 1 次重试，第二次矛盾发请求前拒绝（转 manual），其他错误码不触发', () => {
+  const rec = {};
+  inconsistentGate(rec);                       // 首次发请求：无前序错误
+  rec.errorCode = 'REVIEW_INCONSISTENT';
+  const planned = structuredClone(rec);
+  inconsistentGate(planned);                   // 预检副本放行，且不污染真记录
+  assert.equal(rec.inconsistentRetried, undefined);
+  inconsistentGate(rec);                       // 真请求：放行 1 次重试并标记
+  assert.equal(rec.inconsistentRetried, true);
+  rec.errorCode = 'REVIEW_INCONSISTENT';       // 重试仍矛盾
+  assert.throws(() => inconsistentGate(structuredClone(rec)), e => e.code === 'REVIEW_INCONSISTENT_EXHAUSTED');
+  assert.throws(() => inconsistentGate(rec), e => e.code === 'REVIEW_INCONSISTENT_EXHAUSTED');
+  rec.errorCode = 'REVIEW_FORMAT';             // 换了错误码：标记清除，不沿用
+  inconsistentGate(rec);
+  assert.equal(rec.inconsistentRetried, undefined);
 });
 
 test('同条审查上限 = 1 初审 + 2 修正：第 3 次放行，第 4 次在发请求前报 REVIEW_LIMIT（不发调用、不计费）', () => {
@@ -105,30 +136,36 @@ test('审查上限按 revision 计数：旧 revision 的 3 次不挡新 revision
   assert.match(revision, /-2$/);
 });
 
-test('maxRequests 40→60→75→100：逐步授权写入账本、limitYuan 不变、幂等；共用预算模块只认调整后的 100', () => {
+test('maxRequests 40→60→75→100→130：逐步授权写入账本、limitYuan 不变、幂等；共用预算模块只认调整后的 130', () => {
   const ledger40 = {spentYuan: 0.14, reservedYuan: 0, limitYuan: 20, waveLimitYuan: 20,
     cards: {[cardId]: {limitYuan: cardLimitYuan, spentYuan: 0.14, reservedYuan: 0, maxRequests: 40}}, requests: {a: {card: cardId, status: 'settled'}}};
   const allocation = {cardId, incrementLimitYuan: cardLimitYuan, maxRequests, waveLimitYuan: 20, startingSpentYuan: 0, startingReservedYuan: 0};
-  assert.equal(maxRequests, 100);
+  assert.equal(maxRequests, 130);
   assert.throws(() => migrateDepthBudget(ledger40, cardId, allocation), /单卡授权额度已改变/);
   // 从 40 直接走完两步
   const both = grantMaxRequests(ledger40);
-  assert.equal(both.cards[cardId].maxRequests, 100);
+  assert.equal(both.cards[cardId].maxRequests, 130);
   assert.equal(both.cards[cardId].limitYuan, 1.5);
   assert.equal(both.cards[cardId].spentYuan, 0.14);
   assert.ok(both.requests.a);
-  assert.deepEqual(both.authorizations.map(a => [a.before.maxRequests, a.after.maxRequests]), [[40, 60], [60, 75], [75, 100]]);
+  assert.deepEqual(both.authorizations.map(a => [a.before.maxRequests, a.after.maxRequests]), [[40, 60], [60, 75], [75, 100], [100, 130]]);
   assert.equal(both.authorizations[0].id, grantId);
   assert.deepEqual(migrateDepthBudget(both, cardId, allocation).cards, both.cards);
   assert.deepEqual(grantMaxRequests(both), both);
   // 账本已在 60（含 60 的授权记录）时只补第二步
   const at60 = {...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], maxRequests: 60}}, authorizations: [both.authorizations[0]]};
   const step2 = grantMaxRequests(at60);
-  assert.equal(step2.cards[cardId].maxRequests, 100);
-  assert.equal(step2.authorizations.length, 3);
+  assert.equal(step2.cards[cardId].maxRequests, 130);
+  assert.equal(step2.authorizations.length, 4);
   // 账本已在 75（含 60、75 的授权记录）时只补最后一步
   const at75 = {...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], maxRequests: 75}}, authorizations: step2.authorizations.slice(0, 2)};
-  assert.equal(grantMaxRequests(at75).cards[cardId].maxRequests, 100);
+  assert.equal(grantMaxRequests(at75).cards[cardId].maxRequests, 130);
+  // 账本已在 100（含前三条授权）时只补 100→130
+  const at100 = {...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], maxRequests: 100}}, authorizations: step2.authorizations.slice(0, 3)};
+  const s130 = grantMaxRequests(at100);
+  assert.equal(s130.cards[cardId].maxRequests, 130);
+  assert.equal(s130.cards[cardId].limitYuan, 1.5);
+  assert.equal(s130.authorizations.at(-1).before.maxRequests, 100);
   // 账本与批准时快照不符、或 60 没有授权记录：拒绝
   assert.throws(() => grantMaxRequests({...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], limitYuan: 2}}}), /快照不符/);
   assert.throws(() => grantMaxRequests({...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], maxRequests: 60}}}), /快照不符/);
