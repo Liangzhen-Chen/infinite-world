@@ -3,35 +3,56 @@
 // difference 0 (and a perturbed ledger is caught); a short real-engine window is deterministic and partitions.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runAudit,verdict,buildFacts,reconcileBooks} from '../tools/audit-food-causes.mjs';
+import {runAudit,verdict,buildFacts,reconcileBooks,supplySatiety} from '../tools/audit-food-causes.mjs';
 
-// One open own-settlement shop holding 100 satiety of food; a person-day costs 5 coins; the household has 50 coins.
-const shelf=(over={})=>({shopId:'shop_a',sameSettlement:true,engineServes:true,toll:0,items:[{item:'item_bread',avail:20,cost:5,bought:0,...over}]});
-const snap=(over={})=>({supply:100,demand:10,refCost:4,cash:50,declined:null,townShops:{total:1,open:1},reach:[shelf()],...over});
+// One open own-settlement shop; one meal of its bread costs PRICE; the household has plenty of cash unless a case says otherwise.
+const PRICE=5,UNITS=2;
+const item=(over={})=>({item:'item_bread',avail:20,units:UNITS,cost:PRICE,bought:0,...over});
+const shelf=(over={},items=[item()])=>({shopId:'shop_a',sameSettlement:true,engineServes:true,toll:0,items,...over});
+const snap=(over={})=>({supply:100,demand:10,refCost:PRICE-1,cash:PRICE*10,declined:null,townShops:{total:1,open:1},reach:[shelf()],...over});
 const cause=over=>verdict(buildFacts(snap(over))).cause;
 
 test('harvest: saleable food within a day is less than the town demand',()=>{
  assert.equal(cause({supply:5}),'harvest');
  assert.equal(cause({supply:5,cash:0,reach:[]}),'harvest');// shortage outranks poverty and chain
 });
-test('poverty: household cash cannot buy the cheapest person-day within reach',()=>{
- assert.equal(cause({cash:4}),'poverty');// total cash 4 < one meal at 5
- assert.equal(cause({cash:6}),'chain');// 6 >= 5 is not poverty however many mouths
+test('harvest is judged on each household own reach: two households at different places',()=>{
+ const gain=()=>1,near=[[{item:'a',avail:100}]],far=[[{item:'a',avail:5}]];
+ const a=verdict(buildFacts(snap({supply:supplySatiety(near,gain)}))),b=verdict(buildFacts(snap({supply:supplySatiety(far,gain)})));
+ assert.equal(a.cause,'chain');assert.equal(b.cause,'harvest');
+ assert.equal(verdict(buildFacts(snap({supply:null}))).cause,'undetermined');// no location: listed apart, no default
+ assert.equal(verdict(buildFacts(snap({supply:null}))).sub,'noLocation');
+});
+test('poverty: threshold is the fixture price (price-1 poor; price and price+1 not)',()=>{
+ assert.equal(cause({cash:PRICE-1}),'poverty');
+ assert.notEqual(cause({cash:PRICE}),'poverty');
+ assert.notEqual(cause({cash:PRICE+1}),'poverty');
  assert.equal(cause({cash:0,reach:[],townShops:{total:1,open:0}}),'poverty');// nothing on sale: priced at the catalogue's cheapest
 });
-test('allocation: food and cash exist but the shelf was bought out, or the customer refused',()=>{
- assert.equal(cause({reach:[shelf({bought:20})]}),'allocation');
- assert.equal(cause({declined:'price above willingness'}),'allocation');
+test('allocation: everything edible reachable is bought out, or the customer refused on price',()=>{
+ assert.equal(cause({reach:[shelf({},[item({bought:20})])]}),'allocation');
+ assert.equal(cause({reach:[shelf({},[item({avail:21,bought:20})])]}),'allocation');// left 1 unit < one meal
+ assert.equal(cause({declined:{outcome:'conditional',reason:'price above willingness'}}),'allocation');
+});
+test('not allocation: cheapest tier bought out but other goods or sellers remain',()=>{
+ const cheap=item({bought:20}),dear=item({item:'item_rice',cost:PRICE+3});
+ assert.equal(cause({reach:[shelf({},[cheap,dear])]}),'chain');
+ assert.equal(cause({reach:[shelf({},[cheap]),shelf({shopId:'shop_b'},[dear])]}),'chain');
+});
+test('not allocation: a defer (time/obligation) or other non-price refusal is chain, with the type in the reason',()=>{
+ const v=verdict(buildFacts(snap({declined:{outcome:'defer',reason:'busy'}})));
+ assert.equal(v.cause,'chain');assert.match(v.reason,/outcome defer/);
+ assert.equal(cause({declined:{outcome:'refuse',reason:'conflict'}}),'chain');
 });
 test('chain: food on sale, shop open, household can pay, still no meal',()=>{
  assert.equal(cause({reach:[],townShops:{total:0,open:0}}),'chain');
  assert.match(verdict(buildFacts(snap({reach:[],townShops:{total:1,open:0}}))).reason,/not trading in it at noon/);
- assert.equal(cause({reach:[{...shelf(),engineServes:false}]}),'chain');// shop beyond customer reach
+ assert.equal(cause({reach:[shelf({engineServes:false})]}),'chain');// shop beyond customer reach
  assert.equal(cause({}),'chain');// everything present, no purchase
 });
 test('undetermined: a roster-only household (no purse in state) is not given a default cause, but harvest still applies',()=>{
  const v=verdict(buildFacts(snap({cash:null})));
- assert.equal(v.cause,'undetermined');assert.match(v.reason,/no purse or stock/);
+ assert.equal(v.cause,'undetermined');assert.equal(v.sub,'roster');assert.match(v.reason,/no purse or stock/);
  assert.equal(verdict(buildFacts(snap({cash:null,supply:1}))).cause,'harvest');
 });
 
