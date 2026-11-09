@@ -102,3 +102,21 @@ test('shared-source read is reused within one revision and dropped by a state wr
  assert.deepEqual(after,fresh(),'after a write the cache is rebuilt and equals an uncached read');
  assert.ok(sum(after)<=sellable({...f,d:plain()}));
 });
+
+test('a multi-person household takes one share, not one per member, so no stock is left idle by duplicate slots',()=>{
+ const groups=[[shopSeller],['npc_hw_chenbai','npc_hw_fangqin'],['npc_hw_xuling'],['npc_hw_wushuo']];
+ const setup=f=>{f.document.state.npcs.npc_hw_fangqin.inventory={};f.document.state.npcs.npc_hw_fangqin.location=f.document.state.npcs[shopSeller].location;return f;};
+ const f=setup(fixture({seller:shopSeller,groups}));
+ const available=sellable(f);
+ const need=id=>{const r=householdResources(f.d,f.engine,id,{marketSubstitution:false});return r.shortfall.satiety+r.rows.reduce((n,x)=>n+x.food*(f.engine.byId.get(x.item)?.nutrition?.satiety??0),0);};
+ const reps=buyers;   // one member per buyer household; chenbai stands for the two-person household
+ // Each household's own demand cap: what it buys when it is the only buyer (the other buyer households hold no cash).
+ const alone=reps.map(id=>{const g=setup(fixture({seller:shopSeller,groups}));for(const o of reps)if(o!==id)g.document.state.npcs[o].coins=0;return credited(g,id);});
+ // Shares are keyed by household id (the fixture registers group i as house_share_fixture_i), as the production allocation is, so ties break the same way.
+ const hh=i=>`house_share_fixture_${i+1}`,share=shareByNeed(available,reps.map((id,i)=>({id:hh(i),need:need(id)})));
+ const got=reps.map(id=>credited(f,id));
+ assert.ok(available>0&&got.some(n=>n>0));
+ assert.equal(credited(f,'npc_hw_fangqin'),got[0],'both members of a household read the same household part');
+ // The two-person household competes with its household need once; each household gets min(own demand, its share).
+ reps.forEach((id,i)=>assert.equal(got[i],Math.min(alone[i],share.get(hh(i))),`${id}: credited ${got[i]}, alone ${alone[i]}, share ${share.get(hh(i))}`));
+});

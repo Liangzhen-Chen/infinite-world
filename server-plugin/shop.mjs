@@ -241,7 +241,7 @@ function nonShopTraders(engine){
 // 买方户的“口粮替代”读到的 quantity 因此不是卖家的全部可售量，而是这位买方在全部潜在买方之间应得的一份：
 // 潜在买方 = 本聚落里手上有钱、且不靠自家存粮就有口粮缺口或要占用存粮的人（卖家同户的人不算，他们不向自家买）；
 // 权重 = 该买方一户的口粮需求（satiety，不含市场替代，故不回头读卖家，不递归）；
-// 按权重比例分，最大余数法凑整，余数并列按编号，保证各买方所得之和恰为卖家可售量（整件）。无新参数；与种子无关，只由状态决定。
+// 按权重比例分，最大余数法凑整，余数并列按编号（户编号或无户者本人编号），保证各买方户所得之和恰为卖家可售量（整件）。无新参数；与种子无关，只由状态决定。
 function physicalOf(d,engine,read,id){
  let physical=read.physical.get(id);
  if(!physical){physical=householdResources(d,engine,id,{marketSubstitution:false});read.physical.set(id,physical);}
@@ -253,21 +253,27 @@ function buyerNeeds(d,engine,state,place,read){
   list=[];
   const ids=Object.keys(state.npcs??{}).filter(id=>{const n=state.npcs[id];return n?.location&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(n.status)&&placeSettlement(engine,state,n.location).value===place;});
   if(state.location&&placeSettlement(engine,state,state.location).value===place)ids.push('player');
+  // 一户只占一个名额：householdResources 返回的是整户的钱与需求，按人逐个入列会让 k 人户以整户需求被计 k 次。
+  const seen=new Set();
   for(const id of ids.sort()){
+   const key=buyerKey(engine,state,id);
+   if(seen.has(key))continue;seen.add(key);
    const physical=physicalOf(d,engine,read,id);
    if(!(physical.market.cash>0))continue;
    const need=physical.shortfall.satiety+physical.rows.reduce((n,r)=>n+r.food*(engine.byId.get(r.item)?.nutrition?.satiety??0),0);
-   if(need>0)list.push({id,need});
+   if(need>0)list.push({id:key,need});
   }
   read.buyers.set(place,list);
  }
  return list;
 }
+// 买方名额的键：登记户用户编号，无户的人用本人编号。
+function buyerKey(engine,state,id){return personHousehold(engine,state,id).value?.id??id;}
 function sellerShare(d,engine,state,place,read,owner,seller,available){
  const total=Math.floor(available);if(!(total>0))return 0;
- const away=new Set(personHousehold(engine,state,seller).value?.members??[seller]);
- const rows=buyerNeeds(d,engine,state,place,read).filter(b=>!away.has(b.id));
- return shareByNeed(total,rows).get(owner)??0;
+ const away=buyerKey(engine,state,seller);
+ const rows=buyerNeeds(d,engine,state,place,read).filter(b=>b.id!==away);
+ return shareByNeed(total,rows).get(buyerKey(engine,state,owner))??0;
 }
 // 按需求比例把 total 件整分给 rows（{id,need}），最大余数法；余数并列按编号的码点序（不用 localeCompare，跨环境一致）。
 export function shareByNeed(total,rows){
