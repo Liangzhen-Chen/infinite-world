@@ -35,7 +35,7 @@ test('畸形的审查响应不算通过', () => {
   assert.deepEqual(ok.contradictions.map(c => c.severity), ['soft']);
 });
 
-const item = (severity, verdict, reason = '原因') => ({quote: 'q', field: 'moisture', severity, verdict, reason});
+const item = (severity, verdict, reason = '原因') => ({quote: 'q', field: 'moisture', severity, verdict, reason, kind: 'fact'});
 const resp = list => ({choices: [{message: {content: JSON.stringify({contradictions: list})}}]});
 test('一致性：hard 而 verdict=no_conflict（自撤）判无效输出 REVIEW_INCONSISTENT，哪怕 reason 不含撤回字样也按结构判', () => {
   for (const reason of ['算式无误，应报 soft', '此项不成立', '原因'])

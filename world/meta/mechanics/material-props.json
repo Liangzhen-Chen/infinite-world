@@ -670,5 +670,356 @@
   "fish": {
    "鲤": "item_fish"
   }
+ },
+ "sourceIds": {
+  "class_mushroom": {
+   "白蘑菇": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_nut": {
+   "榛仁": {
+    "id": null,
+    "status": "未知"
+   },
+   "核桃仁": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_fruit": {
+   "苹果": {
+    "id": "09003",
+    "idType": "NDB",
+    "status": "待核对"
+   },
+   "梨": {
+    "id": null,
+    "status": "未知"
+   },
+   "李": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_vegetable": {
+   "甘蓝": {
+    "id": "11109",
+    "idType": "NDB",
+    "status": "待核对"
+   },
+   "胡萝卜": {
+    "id": "11124",
+    "idType": "NDB",
+    "status": "待核对"
+   },
+   "芜菁": {
+    "id": null,
+    "status": "未知"
+   },
+   "红甜菜": {
+    "id": null,
+    "status": "未知"
+   },
+   "洋葱": {
+    "id": "11282",
+    "idType": "NDB",
+    "status": "待核对"
+   },
+   "黄瓜": {
+    "id": "11205",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "class_legume": {
+   "扁豆": {
+    "id": null,
+    "status": "未知"
+   },
+   "干豌豆": {
+    "id": null,
+    "status": "未知"
+   },
+   "蚕豆": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_grain": {
+   "硬红冬小麦": {
+    "id": null,
+    "status": "未知"
+   },
+   "黑麦粉": {
+    "id": null,
+    "status": "未知"
+   },
+   "燕麦": {
+    "id": null,
+    "status": "未知"
+   },
+   "珍珠大麦": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_meat": {
+   "猪里脊": {
+    "id": null,
+    "status": "未知"
+   },
+   "牛肉末 85% 瘦": {
+    "id": null,
+    "status": "未知"
+   },
+   "羊腿瘦肥混合": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_fish": {
+   "鲤": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_egg": {
+   "鸡全蛋": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_milk": {
+   "牛乳": {
+    "id": "01077",
+    "idType": "NDB",
+    "status": "待核对"
+   },
+   "羊乳": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "class_edible_fat": {
+   "菜籽油": {
+    "id": "04582",
+    "idType": "NDB",
+    "status": "待核对"
+   },
+   "猪脂": {
+    "id": "04574",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "class_sweetener": {
+   "蜂蜜": {
+    "id": "19296",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "class_vinegar": {
+   "苹果醋": {
+    "id": "02048",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "class_salt": {
+   "食盐": {
+    "id": "02047",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "class_fresh_herb": {
+   "莳萝（鲜）": {
+    "id": "02045",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "class_spice_seed": {
+   "黄芥籽": {
+    "id": "02024",
+    "idType": "NDB",
+    "status": "待核对"
+   },
+   "罂粟籽": {
+    "id": "02033",
+    "idType": "NDB",
+    "status": "待核对"
+   },
+   "香芹籽": {
+    "id": "02005",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "class_cream": {
+   "稠乳（高脂奶油）": {
+    "id": "01053",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "class_cheese": {
+   "硬乳酪（切达）": {
+    "id": "01009",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_milk": {
+   "牛乳": {
+    "id": "01077",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_rye_flour": {
+   "黑麦粉": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_wheat_grain": {
+   "硬红冬小麦": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_mutton": {
+   "羊腿瘦肥混合": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_goat_milk": {
+   "羊乳": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_dry_mushroom": {
+   "干香菇": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_pear": {
+   "梨": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_plum": {
+   "李": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_turnip": {
+   "芜菁": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_carrot": {
+   "胡萝卜": {
+    "id": "11124",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_parsnip": {
+   "欧防风": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_beet": {
+   "红甜菜": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_onion": {
+   "洋葱": {
+    "id": "11282",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_cabbage": {
+   "甘蓝": {
+    "id": "11109",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_leek": {
+   "韭葱": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_cucumber": {
+   "黄瓜": {
+    "id": "11205",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_garlic": {
+   "大蒜": {
+    "id": "11215",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_oats": {
+   "燕麦（带壳整粒）": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_dried_fruit": {
+   "干果": {
+    "id": null,
+    "status": "未知"
+   }
+  },
+  "item_butter": {
+   "无盐黄油": {
+    "id": "01145",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_mustard_seed": {
+   "黄芥籽": {
+    "id": "02024",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_poppy_seed": {
+   "罂粟籽": {
+    "id": "02033",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  },
+  "item_caraway_seed": {
+   "香芹籽": {
+    "id": "02005",
+    "idType": "NDB",
+    "status": "待核对"
+   }
+  }
  }
 }
