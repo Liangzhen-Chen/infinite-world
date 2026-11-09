@@ -1,5 +1,6 @@
 // NPC request execution belongs to the gameplay adapter, not shared routing ontology.
 import {reject} from './action-rejection.mjs';
+import {withReadScope} from './read-scope.mjs';
 import {canAct} from './action-capacity.mjs';
 import {MemoryIndex} from './retrieval.mjs';
 import {saveDialogue} from './dialogue.mjs';
@@ -288,7 +289,8 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length)&&!autonomyRelevant(engine,d.get('state'),id,actor,projectDocument))continue;
    projectDocument();
    const view=subjectiveView(engine,projected,id);
-   const procurement=facilityRuntime().inputProcurement?.(engine,projected,view,choices);
+   // Read-only planning (building-maintenance.mjs procurement/repairProcurement write nothing; constraints are written below, outside the scope): derived reads share one scope.
+   const procurement=withReadScope(()=>facilityRuntime().inputProcurement?.(engine,projected,view,choices));
    for(const row of procurement?.constraints??[]){
     const key=`input_constraint:${id}:${row.purpose}`;
     d.set(['state','records',key],{category:'input_constraint',npc:id,minute:start,...row});

@@ -78,5 +78,19 @@ test('laborCandidates 在作用域内与独立重算逐字一致',{timeout:60000
  const make=()=>{const e=new WorldEngine(structuredClone(rw));return {e,doc:e.createCharacter(legacy,{},'labor-household-read-scope-smith')};};
  const run=({e,doc})=>laborCandidates(e,subjectiveView(e,doc,smith),doc);
  const a=make(),b=make();
- assert.deepEqual(plain(withReadScope(()=>run(a))),plain(run(b)));
+ const scoped=counted(()=>withReadScope(()=>run(a))),fresh=counted(()=>run(b));
+ assert.deepEqual(plain(scoped.result),plain(fresh.result));
+ // 真实口粮来源解析调用计数：作用域外每次读取都解析；作用域内重复读取命中，调用更少。
+ assert.ok(fresh.calls.length>0,'laborCandidates 应触达家计读取');
+ assert.ok(scoped.calls.length<fresh.calls.length,`作用域内应命中：${scoped.calls.length} vs ${fresh.calls.length}`);
+});
+
+test('documentReader 的 memo 键含 randomSeed：同状态对象不同种子不互相命中',()=>{
+ const f=fixture(),other={...f.doc,randomSeed:`${f.doc.randomSeed}-other`};
+ withReadScope(()=>{
+  let n=0;const a=documentReader(f.doc),b=documentReader(other),c=documentReader(f.doc);
+  assert.equal(a.memo('k',[1],()=>++n),1);
+  assert.equal(c.memo('k',[1],()=>++n),1,'同种子命中');
+  assert.equal(b.memo('k',[1],()=>++n),2,'不同种子不命中');
+ });
 });
