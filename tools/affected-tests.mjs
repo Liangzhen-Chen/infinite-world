@@ -68,7 +68,7 @@ if (opt.files) changed = opt.files;
 else if (opt.deps) changed = [];
 else {
     if (opt.positional.length !== 2) { console.error('usage: affected-tests.mjs <base> <head> | --files f...'); process.exit(2); }
-    changed = git('diff', '--name-only', opt.positional[0], opt.positional[1]).split('\n').filter(Boolean);
+    changed = git('diff', '--no-renames', '--name-only', opt.positional[0], opt.positional[1]).split('\n').filter(Boolean);
 }
 changed = changed.map(f => f.replace(/\\/g, '/'));
 
