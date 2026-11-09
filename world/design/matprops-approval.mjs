@@ -13,7 +13,11 @@
 //    content-review-<n>-<id>-review<k> 按 n 计数，旧 revision 的记录与次数保留不删（checkReviewCap）；人工核定记录放在各 revision 自己的目录，对新 revision 自然失效。
 //  ②卡账本 maxRequests 由 40 调到 60（追加约 19–20 次再审的批准额度；李白 2026-11-09 13:1x 口径修正后再批 60→75，只用于口径修正后的复审，到额自动停），limitYuan 仍 1.5 元不变（grantMaxRequests，写入账本 authorizations，同 a3w-props 先例）。
 //    两项同时记在 docs/决策.md「D12 材料属性整类修复」。
-// 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --sample | --l4 <json> | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
+// 审查解析失败即停：extractReview 抛出任何错误（REVIEW_FORMAT、没有 code 的意外异常）都使本次 --review 立即停止后续所有条目的请求（reviewStops，经流水线通用参数 stopOnReviewError），
+// 已发请求的记录照常写盘，输出报明条目与错误；REVIEW_INCONSISTENT 沿用上面"重试 1 次"的既定规则，不算解析失败。
+// --rejudge [--dry-run]：d3228afb 的 extractReview 作用域错误使 2026-11-09T15:19:49Z 之后的审查回复全被丢弃；按已保存的原始回复离线重放判定（0 新调用，不动账本）。
+// --retry-garlic：一次性授权（retryGrants），仅 item_garlic 在 --rejudge 标 needsRetry 后可多发 1 次审查，金额上限 0.01 元。
+// 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --rejudge [--dry-run] | --retry-garlic | --sample | --l4 <json> | --verify   （--review/--retry-garlic 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -197,11 +201,11 @@ export async function verifyPublished(){
 // 管线规则：每个 revision 内 1 次初审 + 最多 2 次定点修正；按条目 id 与 revision（审查目录名）累计账本里已发出的审查。
 // 旧 revision 的请求标签（content-review-1-…）不计入当前 revision，也不删除。
 export const maxReviewsPerEntry=1+2;
-export function checkReviewCap(ledger,id,dirName=reviewDirName){
+export function checkReviewCap(ledger,id,dirName=reviewDirName,extra=0){
  const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
  const label=new RegExp(`^content-${esc(dirName)}-${esc(id)}-review\\d+$`);
  const sent=Object.values(ledger?.requests??{}).filter(r=>label.test(r.label??'')&&['sent','settled','unknown'].includes(r.status));
- if(sent.length>=maxReviewsPerEntry)throw Object.assign(new Error(`同条审核在 ${dirName} 内已达 ${maxReviewsPerEntry} 次（初审+2次修正）：${id}`),{code:'REVIEW_LIMIT'});
+ if(sent.length>=maxReviewsPerEntry+extra)throw Object.assign(new Error(`同条审核在 ${dirName} 内已达 ${maxReviewsPerEntry+extra} 次（初审+2次修正${extra?`+${extra}次一次性授权`:''}）：${id}`),{code:'REVIEW_LIMIT'});
 }
 // 账本上限分两步批准，按顺序逐步落到账本 authorizations（幂等；账本其余字段不动，旧请求与花费保留）：
 //  40→60：亮圳 2026-11-09 12:11 批准、李白同意（整类修复后每条再审 1 次）；
@@ -214,6 +218,24 @@ export const grants=[
  {id:'d12-matprops-2-maxrequests-100',from:75,to:100,source:'李白 2026-11-09 14:2x 批准：只复审 25 条，保持原指纹的 7 条不重审，maxRequests 75→100，limitYuan 仍 1.5 元，到额自动停'},
  {id:'d12-matprops-2-maxrequests-130',from:100,to:130,source:'李白 2026-11-09 15:1x 批准：L2 一致性校验重试与 class_egg 按新口径重审，maxRequests 100→130，limitYuan 仍 1.5 元，到额自动停'}];
 export const grantId=grants[0].id;
+// 一次性授权（与 grants 不同：不动账本，只放宽 checkReviewCap 的次数，且只对 entry 指定的那一条）。是否已用掉由账本里该条请求标签数判断（用过一次即达 3+1，再无余量）。
+export const retryGrants=[
+ {id:'d12-matprops-2-garlic-retry',entry:'item_garlic',extraReviews:1,limitYuan:0.01,source:'李白 2026-11-09 16:1x：garlic 原始回复解析不出判定时只允许单条重问 1 次，上限 0.01 元，其余不追加调用'}];
+export const garlicRetry=retryGrants[0];
+// 发请求前校验：条目须是授权条目、记录须被 --rejudge 标 needsRetry、账本里该条次数未用掉这 1 次、本请求的预留上界不超过金额上限。
+export function estimateRequestYuan(client,body){
+ const encoded={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...body};
+ const v=client.rates?(Buffer.byteLength(JSON.stringify(encoded))*client.rates.miss+encoded.max_tokens*client.rates.output)/1e6:client.estimateCostYuan?.(body);
+ if(!Number.isFinite(v)||v<0)throw Object.assign(new Error('无法核算请求预留上界，拒绝一次性授权'),{code:'RETRY_DENIED'});
+ return v;
+}
+export function assertRetryAllowed({grant=garlicRetry,id,needsRetry,ledger,body,client}){
+ const deny=m=>Object.assign(new Error(`一次性授权 ${grant.id}：${m}`),{code:'RETRY_DENIED'});
+ if(id!==grant.entry)throw deny(`只允许 ${grant.entry}，不允许 ${id}`);
+ if(needsRetry!==true)throw deny(`${id} 未被 --rejudge 标 needsRetry`);
+ try{checkReviewCap(ledger,id,reviewDirName,grant.extraReviews);}catch(e){if(e.code==='REVIEW_LIMIT')throw deny(`${id} 的额外 ${grant.extraReviews} 次已用掉`);throw e;}
+ if(body!==undefined){const est=estimateRequestYuan(client,body);if(est>grant.limitYuan+1e-12)throw deny(`本次请求预留上界 ${est.toFixed(6)} 元超过上限 ${grant.limitYuan} 元`);}
+}
 export function grantMaxRequests(ledger){
  const out=structuredClone(ledger),card=out.cards?.[cardId];
  if(!card)throw Error('缺卡账本');
@@ -238,13 +260,16 @@ export function inconsistentGate(record){
  const n=(record?.errorHistory??[]).filter(c=>c==='REVIEW_INCONSISTENT').length;
  if(n>=2)throw Object.assign(new Error('L2 审查输出两次自相矛盾（hard 但自认无误），不当作通过，转人工'),{code:'REVIEW_INCONSISTENT_EXHAUSTED'});
 }
-async function capReviews({body,entry,phase,record}){
+export const capReviewsFor=({budgetRoot=draftRoot,client,retry=null,needsRetry=false}={})=>async({body,entry,phase,record})=>{
  if(phase!=='review')return {body};
  inconsistentGate(record);
- let ledger;try{ledger=await readJSON(path.join(draftRoot,'budget.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
- checkReviewCap(ledger,entry.id);
+ let ledger;try{ledger=await readJSON(path.join(budgetRoot,'budget.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
+ if(retry)assertRetryAllowed({grant:retry,id:entry.id,needsRetry,ledger,body,client}); // 一次性授权模式：只有授权条目能发请求
+ else checkReviewCap(ledger,entry.id);
  return {body};
-}
+};
+// 审查解析错误（extractReview 抛出的任何错误，含无 code 的意外异常）一律使整轮停止；REVIEW_INCONSISTENT 走自己的重试规则。
+export const reviewStops=error=>error?.code!=='REVIEW_INCONSISTENT';
 // --l1 --show <id,...>：逐条打印出处字段（带单位）、推算中间量、推算值与一致性检查结果。
 const pct=x=>`${(x*100).toFixed(2)}%`;
 export function explainEntry(entry,table,l1Errors=[],itemTags=[]){
@@ -302,20 +327,106 @@ export async function archiveForRedo(ids,{root=reviewRoot,archiveRoot=path.join(
  }
  return out;
 }
+// --review 的流水线调用；全部可注入（client、目录、条目、审查解析），生产默认值即真实路径。审查解析出错即停止后续所有条目（reviewStops）。
+export async function runReview({entries,client,root=reviewRoot,budgetRoot=draftRoot,ctx=contextFor,validate=validateDraft,extract=extractReview,retry=null,needsRetry=false,
+ cardIdArg=cardId,allocation={cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0}}){
+ return runContentPipeline({entries,root,budgetRoot,revision,contextFor:ctx,
+  validateDraft:validate,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,buildDraftRequest:draftRequest,buildReviewRequest:reviewRequest,extractReview:extract,
+  stopOnReviewError:reviewStops,requestTransform:capReviewsFor({budgetRoot,client,retry,needsRetry}),client,cardId:cardIdArg,allocation,concurrency:1,batchSize:25});
+}
+const reportHalt=h=>h?{halted:{entry:h.id,code:h.code,message:h.message,note:'审查解析失败，本次运行已停止后续所有条目的请求'}}:{};
+
+// --rejudge：离线重放。证据 = 记录里 phase=review 的 responseEvidence，对应账本请求时间（measurement.timestamp，缺则取证据 savedAt）晚于 rejudgeCutoff。
+export const rejudgeCutoff='2026-11-09T15:19:49Z';
+export const rejudgeReason='d3228afb extractReview 作用域错误，李白 2026-11-09 16:1x 批准离线重判，0 新调用';
+export async function rejudgeRecord(rec,entry,{budgetRoot=draftRoot,ledger,fingerprint=fingerprintOf,validate=validateDraft,extract=extractReview,cutoff=rejudgeCutoff,now=new Date().toISOString()}){
+ if(rec.fingerprint!==await fingerprint(entry))throw Error(`记录指纹与当前数据不符：${entry.id}`);
+ if(!rec.frozenCandidate||rec.frozenCandidate.entryHash!==hashContent(entry)||rec.frozenCandidate.draftHash!==hashContent(draftFor(entry))||!deepEq(rec.draft,draftFor(entry)))throw Error(`冻结候选与当前 draft 不一致：${entry.id}`);
+ const evs=(rec.responseEvidence??[]).filter(e=>e.phase==='review').sort((a,b)=>a.attempt-b.attempt),used=[];
+ for(const e of evs){
+  const file=path.join(budgetRoot,e.file),saved=await readJSON(file);
+  if(saved.requestId!==e.requestId||saved.responseHash!==e.responseHash||hashContent(saved.response)!==saved.responseHash)throw Error(`回复文件哈希与记录不符：${entry.id} ${e.requestId}`);
+  const at=ledger?.requests?.[e.requestId]?.measurement?.timestamp??saved.savedAt;
+  if(at>cutoff)used.push({e,response:saved.response});
+ }
+ if(!used.length)return {id:entry.id,skipped:'没有 cutoff 之后的已保存审查回复'};
+ let inconsistent=0,pick=null,stop=null;
+ for(const u of used){
+  try{pick={...u,review:extract(u.response,entry)};break;}
+  catch(err){if(err.code==='REVIEW_INCONSISTENT'){if(++inconsistent>=2){stop={...u,code:'REVIEW_INCONSISTENT_EXHAUSTED'};break;}}} // 其余（REVIEW_FORMAT、意外异常）看下一条已保存回复
+ }
+ const previous={status:rec.status,errors:rec.errors,errorHistory:rec.errorHistory??null,errorCode:rec.errorCode??null,warnings:rec.warnings,feedback:rec.feedback??null,review:rec.review??null,needsRetry:rec.needsRetry};
+ const out=structuredClone(rec),stamp=(u,outcome)=>({from:'saved-response',requestId:u?.e.requestId??null,responseHash:u?.e.responseHash??null,at:now,reason:rejudgeReason,outcome,previous});
+ if(pick){
+  const issues=pick.review.contradictions,hard=issues.filter(x=>x.severity==='hard'),l1=await validate(out.draft,entry);
+  out.review=pick.review;out.errors=[...(Array.isArray(l1)?l1:l1.errors??[]),...hard];out.warnings=issues.filter(x=>x.severity!=='hard');
+  out.status=out.errors.length?'manual':'passed';out.feedback=out.errors.length?out.errors:null;out.errorCode=null;delete out.needsRetry;
+  out.rejudge=stamp(pick,out.status);
+  return {id:entry.id,record:out,requestId:pick.e.requestId,verdict:out.status,hard:hard.length,soft:out.warnings.map(x=>`${x.severity}:${x.field}`)};
+ }
+ out.status='manual';
+ if(stop){out.errorCode=stop.code;out.rejudge=stamp(stop,'manual-inconsistent');delete out.needsRetry;return {id:entry.id,record:out,requestId:stop.e.requestId,verdict:'manual',hard:0,soft:[],note:'两次自相矛盾，转人工'};}
+ out.needsRetry=true;out.rejudge=stamp(null,'needs-retry');
+ return {id:entry.id,record:out,requestId:null,verdict:'manual',needsRetry:true,hard:0,soft:[],note:'全部已保存回复都解析不出判定'};
+}
+const deepEq=(a,b)=>{try{assert.deepEqual(a,b);return true;}catch{return false;}};
+// 批文件与摘要按流水线同一规则重算（指纹 = hash(id,draft,review,status)；指纹变了则 L4 抽样与批准作废，重抽 5 条）。账本 budget.json 不动。
+export async function refreshBatches(root,records){
+ const sum=await readJSON(path.join(root,'summary.json')).catch(()=>null);
+ if(!sum)return;
+ const files=sum.batches.map(b=>path.join(root,`batch-${b.index}.json`)),byId=new Map(records.map(r=>[r.id,r]));
+ for(const f of files){
+  const b=await readJSON(f),oldFp=b.fingerprint,rows=b.ids.map(id=>byId.get(id)),fp=hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})));
+  const passed=rows.filter(r=>r.status==='passed'),pool=[...passed];for(let i=pool.length-1;i>0;i--){const j=randomInt(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];}
+  Object.assign(b,{fingerprint:fp,passed:passed.length,manual:rows.filter(r=>r.status==='manual').map(r=>r.id),pending:rows.filter(r=>r.status==='pending').map(r=>r.id),flagged:rows.filter(r=>r.warnings.length).map(r=>r.id),
+   sample:fp===oldFp?b.sample:pool.slice(0,5).map(r=>r.id),l4:fp===oldFp?b.l4:{approved:false,notes:[]}});
+  b.manualRatio=b.manual.length/b.count;b.needsSystemicRepair=b.manualRatio>0.1;
+  await fs.writeFile(f,JSON.stringify(b,null,2)+'\n');
+  sum.batches[sum.batches.findIndex(x=>x.index===b.index)]=b;
+ }
+ const all=records;Object.assign(sum,{passed:all.filter(r=>r.status==='passed').length,manual:all.filter(r=>r.status==='manual').length,pending:all.filter(r=>r.status==='pending').length});
+ await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(sum,null,2)+'\n');
+}
+export async function rejudge({entries,root=reviewRoot,budgetRoot=draftRoot,dry=false,fingerprint=fingerprintOf,validate=validateDraft,extract=extractReview,cutoff=rejudgeCutoff}={}){
+ entries??=await entriesFor();
+ const ledger=await readJSON(path.join(budgetRoot,'budget.json')),rows=[],records=[];
+ for(const entry of entries){
+  const file=path.join(root,`${entry.id}.json`),rec=await readJSON(file).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
+  if(!rec){rows.push({id:entry.id,skipped:'无记录'});continue;}
+  records.push(rec);
+  if(rec.rejudge){rows.push({id:entry.id,skipped:'已重判过'});continue;}
+  try{
+   const r=await rejudgeRecord(rec,entry,{budgetRoot,ledger,fingerprint,validate,extract,cutoff});rows.push(r);
+   if(r.record){records[records.length-1]=r.record;if(!dry)await fs.writeFile(file,JSON.stringify(r.record,null,2)+'\n');}
+  }catch(e){rows.push({id:entry.id,rejected:e.message});}
+ }
+ if(!dry&&rows.some(r=>r.record))await refreshBatches(root,records);
+ return rows.map(({record,...r})=>r);
+}
 export async function run(args=process.argv.slice(2)){
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
  if(args.includes('--show'))console.log(await show(args[args.indexOf('--show')+1].split(',')));
- if(args.includes('--review')){
+ if(args.includes('--rejudge')){
+  const rows=await rejudge({dry:args.includes('--dry-run')});
+  for(const r of rows)console.log(JSON.stringify(r));
+  if(rows.some(r=>r.rejected))process.exitCode=1;
+ }
+ const retry=args.includes('--retry-garlic');
+ if(args.includes('--review')||retry){
   await l1();
   await authorizeIncrease();
-  if(args.includes('--redo'))console.log(JSON.stringify({archived:await archiveForRedo(args[args.indexOf('--redo')+1].split(','))}));
+  let needsRetry=false;
+  if(retry){
+   const rec=await readJSON(path.join(reviewRoot,`${garlicRetry.entry}.json`));
+   needsRetry=rec.needsRetry===true;
+   assertRetryAllowed({id:garlicRetry.entry,needsRetry,ledger:await readJSON(path.join(draftRoot,'budget.json'))});
+   console.log(JSON.stringify({archived:await archiveForRedo([garlicRetry.entry])}));
+  }
+  else if(args.includes('--redo'))console.log(JSON.stringify({archived:await archiveForRedo(args[args.indexOf('--redo')+1].split(','))}));
   const entries=await entriesFor();
-  console.log(JSON.stringify({pid:process.pid,mode:'review',entries:entries.length}));
-  const {summary}=await runContentPipeline({entries,root:reviewRoot,budgetRoot:draftRoot,revision,contextFor,
-   validateDraft,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,buildDraftRequest:draftRequest,buildReviewRequest:reviewRequest,extractReview,
-   requestTransform:capReviews,client:new DeepSeekClient({budgetYuan:cardLimitYuan,logFile:path.join(draftRoot,'usage.jsonl')}),cardId,
-   allocation:{cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:25});
-  console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards[cardId]}));
+  console.log(JSON.stringify({pid:process.pid,mode:retry?'retry-garlic':'review',entries:entries.length}));
+  const {summary,halted}=await runReview({entries,client:new DeepSeekClient({budgetYuan:cardLimitYuan,logFile:path.join(draftRoot,'usage.jsonl')}),retry:retry?garlicRetry:null,needsRetry});
+  console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards[cardId],...reportHalt(halted)}));
  }
  if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4()));
  if(args.includes('--l4'))console.log(JSON.stringify(await recordL4(args[args.indexOf('--l4')+1],'主会话人读')));

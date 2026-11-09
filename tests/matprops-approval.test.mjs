@@ -2,8 +2,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import path from 'node:path';
+import {tmpRoot} from '../tools/tmp-root.mjs';
+import {hashContent} from '../tools/content-pipeline.mjs';
 import {migrateDepthBudget} from '../tools/content-budget.mjs';
-import {entriesFor, draftFor, validateDraft, l1, extractReview, inconsistentGate, archiveForRedo, explainEntry, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels} from '../world/design/matprops-approval.mjs';
+import {entriesFor, draftFor, validateDraft, l1, extractReview, inconsistentGate, archiveForRedo, explainEntry, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels, runReview, reviewStops, rejudge, rejudgeRecord, rejudgeCutoff, assertRetryAllowed, garlicRetry, retryGrants, capReviewsFor} from '../world/design/matprops-approval.mjs';
 
 test('条目 = 每个类别行 + 每个物品覆盖行；候选与盘上数据逐字一致', async () => {
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
@@ -189,4 +192,131 @@ test('maxRequests 40→60→75→100→130：逐步授权写入账本、limitYua
   // 账本与批准时快照不符、或 60 没有授权记录：拒绝
   assert.throws(() => grantMaxRequests({...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], limitYuan: 2}}}), /快照不符/);
   assert.throws(() => grantMaxRequests({...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], maxRequests: 60}}}), /快照不符/);
+});
+
+// ---- 审查解析失败即停 / 离线重判 / garlic 一次性授权 ----
+const fakeEntries = ids => ids.map(id => ({id, kind: 'material-props-item', row: {basis: 'b'}}));
+const okContent = JSON.stringify({contradictions: [{quote: 'q', field: 'basis', severity: 'soft', verdict: 'conflict', reason: 'r'}]});
+const mkClient = contentFor => { const calls = []; return {calls, spent: 0, budgetYuan: 20, estimateCostYuan: () => .01,
+  async generate(body, label) { calls.push(label); this.spent += .01; return {choices: [{message: {content: contentFor(label, calls.length)}}], usage: {completion_tokens: 5}, measurement: {costUpperYuan: .01}}; }}; };
+const mkRoot = async t => { const dir = await fs.mkdtemp(path.join(tmpRoot(), 'matprops-')); t.after(() => fs.rm(dir, {recursive: true, force: true})); return dir; };
+const offline = {ctx: () => null, cardIdArg: null, allocation: null};
+
+test('审查解析失败即停：第一条解析报错（REVIEW_FORMAT）后第二条不再发请求，已发请求的记录照常写盘并报明条目与错误', async t => {
+  const dir = await mkRoot(t), client = mkClient(() => 'not json');
+  const {halted, results} = await runReview({entries: fakeEntries(['item_a', 'item_b']), client, root: dir, budgetRoot: dir, ...offline});
+  assert.equal(client.calls.length, 1);
+  assert.deepEqual([halted.id, halted.code], ['item_a', 'REVIEW_FORMAT']);
+  assert.equal((await fs.readdir(dir)).filter(f => f.startsWith('item_')).join(), 'item_a.json');   // item_b 没有写记录
+  const a = JSON.parse(await fs.readFile(path.join(dir, 'item_a.json'), 'utf8'));
+  assert.equal(a.responseEvidence.length, 1);   // 已发请求的证据保留
+  assert.equal(results.find(r => r.id === 'item_b').status, 'pending');
+});
+test('审查解析失败即停：没有 code 的意外异常同样停整轮', async t => {
+  const dir = await mkRoot(t), client = mkClient(() => okContent);
+  const {halted} = await runReview({entries: fakeEntries(['item_a', 'item_b']), client, root: dir, budgetRoot: dir, ...offline,
+    extract: () => { throw new ReferenceError('boom'); }});
+  assert.equal(client.calls.length, 1);
+  assert.deepEqual([halted.id, halted.code], ['item_a', null]);
+  assert.equal(reviewStops(new ReferenceError('x')), true);
+  assert.equal(reviewStops(Object.assign(Error('x'), {code: 'REVIEW_INCONSISTENT'})), false);
+});
+test('正常响应不受影响；REVIEW_INCONSISTENT 沿用重试规则、不停整轮', async t => {
+  const dir = await mkRoot(t), client = mkClient(() => okContent);
+  const r = await runReview({entries: fakeEntries(['item_a', 'item_b']), client, root: dir, budgetRoot: dir, ...offline});
+  assert.equal(r.halted, null);
+  assert.equal(client.calls.length, 2);
+  assert.equal(r.summary.passed, 2);
+  const dir2 = await mkRoot(t), bad = JSON.stringify({contradictions: [{quote: 'q', field: 'f', severity: 'hard', verdict: 'no_conflict', reason: 'r'}]});
+  const client2 = mkClient((_l, n) => n === 1 ? bad : okContent);
+  const r2 = await runReview({entries: fakeEntries(['item_a', 'item_b']), client: client2, root: dir2, budgetRoot: dir2, ...offline});
+  assert.equal(r2.halted, null);
+  assert.equal(client2.calls.length, 3);   // item_a 自撤一次后重试通过，item_b 照常
+  assert.equal(r2.summary.passed, 2);
+});
+
+// 离线重判：临时目录里的假记录与假回复
+async function rejudgeFixture(t, replies, {tamper = false} = {}) {
+  const budgetRoot = await mkRoot(t), root = path.join(budgetRoot, 'review-2'), entry = fakeEntries(['item_x'])[0];
+  await fs.mkdir(path.join(budgetRoot, 'budget-responses'), {recursive: true}); await fs.mkdir(root);
+  const ledger = {requests: {}}, evidence = [];
+  for (const [i, {content, at}] of replies.entries()) {
+    const id = `req-${i}`, response = {choices: [{message: {content}}]}, responseHash = hashContent(response);
+    ledger.requests[id] = {measurement: {timestamp: at}};
+    await fs.writeFile(path.join(budgetRoot, 'budget-responses', `${id}.json`), JSON.stringify({requestId: id, response, responseHash, savedAt: at}));
+    evidence.push({phase: 'review', attempt: i + 1, requestId: id, file: `budget-responses/${id}.json`, responseHash: tamper ? 'bad' : responseHash});
+  }
+  await fs.writeFile(path.join(budgetRoot, 'budget.json'), JSON.stringify(ledger));
+  const draft = draftFor(entry);
+  const rec = {id: 'item_x', fingerprint: 'fp', status: 'manual', attempts: 0, draft, review: null, errors: ['旧错'], warnings: [], errorCode: null, errorHistory: [null, null],
+    frozenCandidate: {entryHash: hashContent(entry), draftHash: hashContent(draft)}, responseEvidence: evidence, measurements: []};
+  await fs.writeFile(path.join(root, 'item_x.json'), JSON.stringify(rec));
+  const ledgerBytes = await fs.readFile(path.join(budgetRoot, 'budget.json'), 'utf8');
+  const run = (dry = false) => rejudge({entries: [entry], root, budgetRoot, dry, fingerprint: () => 'fp'});
+  const read = async () => JSON.parse(await fs.readFile(path.join(root, 'item_x.json'), 'utf8'));
+  return {run, read, entry, budgetRoot, ledgerBytes, root};
+}
+const after = '2026-11-09T16:00:00Z', before = '2026-11-09T12:00:00Z';
+const hardContent = JSON.stringify({contradictions: [{quote: 'q', field: 'moisture', severity: 'hard', verdict: 'conflict', reason: 'r'}, {quote: 'q', field: 'basis', severity: 'soft', verdict: 'conflict', reason: 'r'}]});
+test('--rejudge：无 hard 的已保存回复 → passed，写 rejudge 字段并保留原 errors/errorHistory，不动账本；dry-run 不写盘', async t => {
+  const f = await rejudgeFixture(t, [{content: okContent, at: after}]);
+  const [dry] = await f.run(true);
+  assert.deepEqual([dry.verdict, dry.hard, dry.requestId], ['passed', 0, 'req-0']);
+  assert.equal((await f.read()).status, 'manual');   // dry-run 没写
+  const [row] = await f.run();
+  assert.equal(row.verdict, 'passed');
+  const rec = await f.read();
+  assert.equal(rec.status, 'passed'); assert.deepEqual(rec.errors, []); assert.equal(rec.warnings.length, 1); assert.equal(rec.review.contradictions.length, 1);
+  assert.equal(rec.rejudge.from, 'saved-response'); assert.equal(rec.rejudge.requestId, 'req-0'); assert.match(rec.rejudge.reason, /d3228afb/);
+  assert.deepEqual(rec.rejudge.previous.errors, ['旧错']); assert.deepEqual(rec.rejudge.previous.errorHistory, [null, null]);
+  assert.equal(await fs.readFile(path.join(f.budgetRoot, 'budget.json'), 'utf8'), f.ledgerBytes);
+  assert.equal((await f.run())[0].skipped, '已重判过');   // 幂等
+});
+test('--rejudge：有 hard → manual；先格式错再成功时取第一条解析成功的；cutoff 之前的回复不参与', async t => {
+  const f = await rejudgeFixture(t, [{content: '{坏', at: after}, {content: hardContent, at: after}]);
+  const [row] = await f.run();
+  assert.deepEqual([row.verdict, row.hard, row.requestId, row.soft], ['manual', 1, 'req-1', ['soft:basis']]);
+  const rec = await f.read();
+  assert.equal(rec.status, 'manual'); assert.equal(rec.errors.length, 1); assert.equal(rec.errors[0].severity, 'hard'); assert.ok(!rec.needsRetry);
+  const g = await rejudgeFixture(t, [{content: '{坏', at: before}]);
+  assert.match((await g.run())[0].skipped, /没有 cutoff/);
+  assert.equal((await g.read()).status, 'manual'); assert.equal((await g.read()).rejudge, undefined);
+});
+test('--rejudge：全部已保存回复都解析不出 → 保持 manual 并标 needsRetry；两次自相矛盾 → 转人工', async t => {
+  const f = await rejudgeFixture(t, [{content: '{坏', at: after}, {content: 'xx', at: after}]);
+  const [row] = await f.run();
+  assert.equal(row.needsRetry, true);
+  const rec = await f.read();
+  assert.equal(rec.status, 'manual'); assert.equal(rec.needsRetry, true); assert.equal(rec.rejudge.outcome, 'needs-retry');
+  const bad = JSON.stringify({contradictions: [{quote: 'q', field: 'f', severity: 'hard', verdict: 'no_conflict', reason: 'r'}]});
+  const g = await rejudgeFixture(t, [{content: bad, at: after}, {content: bad, at: after}]);
+  const [r2] = await g.run();
+  assert.equal(r2.verdict, 'manual'); assert.ok(!r2.needsRetry);
+  assert.equal((await g.read()).errorCode, 'REVIEW_INCONSISTENT_EXHAUSTED');
+});
+test('--rejudge：回复哈希、指纹或冻结候选与记录不符 → 拒绝该条，不改记录', async t => {
+  const f = await rejudgeFixture(t, [{content: okContent, at: after}], {tamper: true});
+  const before1 = await fs.readFile(path.join(f.root, 'item_x.json'), 'utf8');
+  const [row] = await f.run();
+  assert.match(row.rejected, /哈希/);
+  assert.equal(await fs.readFile(path.join(f.root, 'item_x.json'), 'utf8'), before1);
+  const g = await rejudgeFixture(t, [{content: okContent, at: after}]);
+  assert.match((await rejudge({entries: [g.entry], root: g.root, budgetRoot: g.budgetRoot, fingerprint: () => 'other'}))[0].rejected, /指纹/);
+  const rec = await g.read(); rec.draft = {...rec.draft, row: {basis: 'changed'}}; await fs.writeFile(path.join(g.root, 'item_x.json'), JSON.stringify(rec));
+  assert.match((await g.run())[0].rejected, /冻结候选/);
+});
+
+test('garlic 一次性授权：仅 item_garlic、仅 1 次、金额上限 0.01 元、须 needsRetry', async () => {
+  assert.deepEqual([retryGrants.length, garlicRetry.entry, garlicRetry.extraReviews, garlicRetry.limitYuan], [1, 'item_garlic', 1, 0.01]);
+  const sent = n => ({requests: Object.fromEntries(Array.from({length: n}, (_, i) => [`r${i}`, {label: 'content-review-2-item_garlic-review0', status: 'settled'}]))});
+  const cheap = {estimateCostYuan: () => .005}, body = {messages: []};
+  assertRetryAllowed({id: 'item_garlic', needsRetry: true, ledger: sent(3), body, client: cheap});   // 第 4 次放行
+  assert.throws(() => assertRetryAllowed({id: 'item_onion', needsRetry: true, ledger: sent(3), body, client: cheap}), e => e.code === 'RETRY_DENIED' && /只允许 item_garlic/.test(e.message));
+  assert.throws(() => assertRetryAllowed({id: 'item_garlic', needsRetry: true, ledger: sent(4), body, client: cheap}), e => e.code === 'RETRY_DENIED' && /已用掉/.test(e.message));   // 第二次被拒
+  assert.throws(() => assertRetryAllowed({id: 'item_garlic', needsRetry: true, ledger: sent(3), body, client: {estimateCostYuan: () => .02}}), e => e.code === 'RETRY_DENIED' && /超过上限/.test(e.message));
+  assert.throws(() => assertRetryAllowed({id: 'item_garlic', needsRetry: false, ledger: sent(3), body, client: cheap}), e => e.code === 'RETRY_DENIED');
+  // 不带授权时 garlic 的第 4 次仍是 REVIEW_LIMIT；授权模式下发请求前的闸门也拒绝非 garlic 条目
+  assert.throws(() => checkReviewCap(sent(3), 'item_garlic'), e => e.code === 'REVIEW_LIMIT');
+  const gate = capReviewsFor({budgetRoot: '.', client: cheap, retry: garlicRetry, needsRetry: true});
+  await assert.rejects(() => gate({body, entry: {id: 'item_onion'}, phase: 'review', record: {}}), e => e.code === 'RETRY_DENIED');
 });
