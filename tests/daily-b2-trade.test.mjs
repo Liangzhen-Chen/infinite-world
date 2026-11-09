@@ -17,7 +17,8 @@ const projected=(world,document,seller,item,quantity=1)=>facilityRuntime().curre
 
 // 稀缺度独立重算：不读报价里的稀缺度，而取市场的需求与供给，套规则表的公式（稀缺度 = 需求 ÷ max(1, 供给)，夹在 priceFactorLimits.region）。
 // 开市食物价格比饱腹系数改动前高约 17%（总价 11→12，6→7，5→6），原因：需求里的口粮留存按“每户每日饱腹需求 ÷ 单件派生饱腹”折成件数，
-// 烙饼、鱼汤、面包的单件派生饱腹下降，同样的口粮要留的件数更多，需求件数上升，稀缺度从下限 0.5 升到下限之上；供给是在售件数，没有变。
+// 烙饼、鱼汤、面包的单件派生饱腹下降，同样的口粮要留的件数更多：两侧都变——其他居民的留存件数上升推高需求（D35 24→28），
+// 卖家自家留存减少使在售件数（供给）也略增（44→47），净效果稀缺度从下限 0.5 升到下限之上。
 const scarcityFromWorld=(world,document,item)=>{
  const engine=new WorldEngine(world),scoped=engine.byId.has('player')?engine:engine.scoped(document);
  const d={document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)},s=marketSupply(d,scoped,item,document.state.location);
