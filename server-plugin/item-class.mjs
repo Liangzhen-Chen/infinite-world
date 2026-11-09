@@ -242,6 +242,8 @@ export function memberValues(x,kcalPerSatiety){
  if(m!==undefined)o.m=m;
  if(x?.refuseFraction!==undefined)o.edible=1-x.refuseFraction;
  if(x?.kcalPer100gWet!==undefined&&m!==undefined&&m<1&&kcalPerSatiety>0)o.e=x.kcalPer100gWet*10/(1-m)/kcalPerSatiety;
+ // 干物质为 0（含水 1）：没有可供能的物质，能量为 0（通用规则；有热量却无干物质是矛盾，不推算）。
+ else if(x?.kcalPer100gWet===0&&m===1&&kcalPerSatiety>0)o.e=0;
  // 单餐量按鲜重给（mealGrams）；mealBasis:'dryMatter' 的出处，惯常量是干物质量：mealGrams × (1 − 食用时的含水)（eatenMoistureFraction，没写取出处自己的含水；谷、豆按煮熟后食用），类别里存干物质量，到每件物品再按它自己的含水折回鲜重（鲜果与干果同一个类值）。
  if(x?.mealGrams!==undefined){if(x.mealBasis==='dryMatter'){const eaten=x.eatenMoistureFraction??m;if(eaten!==undefined)o.capDry=x.mealGrams*(1-eaten);}else o.cap=x.mealGrams;}
  return o;
