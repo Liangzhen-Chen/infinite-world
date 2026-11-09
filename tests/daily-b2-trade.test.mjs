@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
 import {variant,setPrice,scene,stack,tool,monthDayMinute,conserved,primed,held,safeEventId,SEED,DAY} from './helpers/daily-b2.mjs';
 
@@ -13,6 +14,22 @@ const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',WEAVING='bld_hw_weaving',SULA
 // S5-02 / 15 §15.2: fixture prices are baselines. Expected current totals
 // use the native read projection; no saved quote is authoritative.
 const projected=(world,document,seller,item,quantity=1)=>facilityRuntime().currentTradeQuote(new WorldEngine(world),document,{seller,item,quantity});
+
+// 稀缺度独立重算：不读报价里的稀缺度，而取市场的需求与供给，套规则表的公式（稀缺度 = 需求 ÷ max(1, 供给)，夹在 priceFactorLimits.region）。
+// 开市食物价格比饱腹系数改动前高约 17%（总价 11→12，6→7，5→6），原因：需求里的口粮留存按“每户每日饱腹需求 ÷ 单件派生饱腹”折成件数，
+// 烙饼、鱼汤、面包的单件派生饱腹下降，同样的口粮要留的件数更多，需求件数上升，稀缺度从下限 0.5 升到下限之上；供给是在售件数，没有变。
+const scarcityFromWorld=(world,document,item)=>{
+ const engine=new WorldEngine(world),scoped=engine.byId.has('player')?engine:engine.scoped(document);
+ const d={document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)},s=marketSupply(d,scoped,item,document.state.location);
+ const [lo,hi]=world.rules.economy.priceFactorLimits.region;
+ return {scarcity:Math.min(hi,Math.max(lo,s.demand/Math.max(1,s.supply))),lo,hi};
+};
+const sameScarcity=(world,document,quote,item)=>{
+ const {scarcity,lo,hi}=scarcityFromWorld(world,document,item);
+ assert.ok(Math.abs(quote.explanation.scarcity-scarcity)<1e-12,`${item}: 报价稀缺度 ${quote.explanation.scarcity} ≠ 按需求/供给重算 ${scarcity}`);
+ assert.ok(scarcity>=lo&&scarcity<=hi&&scarcity>lo,`稀缺度 ${scarcity} 应在 [${lo}, ${hi}] 内且高于下限`);
+ return scarcity;
+};
 
 test('D03 议价在市场区间内成交；钱货守恒、基准不变、次日重报，好感变化在 ±2 以内',async t=>{
  // 粗布 50 文/匹（世界副本把窄幅麻布标价改为 50）；孙二→苏岚，好感 +20；玩家 200 文；夏季六月初八巳时。
@@ -78,10 +95,14 @@ async function dine(t){
  const r=await ui.choose('eat.order',{subject:LINSUI,item:'item_oat_flatbread',side:'item_mutton_turnip_stew'},{target:LINSUI,search:true});
  assert.ok(r.ok,r.error);const after=await ui.read();
  const paid=r.result.purchases.reduce((n,p)=>n+p.cost,0);for(const p of r.result.purchases)assert.equal(p.cost,Math.trunc(p.pricing.unroundedTotal));
- // Prices follow the native market projection (scarcity = demand/supply of food, which counts derived satiety), not a fixed floor:
- // the first purchase equals the read projection for that item, the second follows the first's depth; each rounds as trunc(unrounded).
- assert.equal(r.result.purchases[0].cost,projected(world,before,LINSUI,'item_oat_flatbread').totalCoins);
- assert.equal(paid,r.result.purchases.reduce((n,p)=>n+p.cost,0));
+ // Prices follow the market (see scarcityFromWorld), not a fixed floor. The first purchase equals the read projection for that item and its scarcity
+ // matches the independent recomputation; the second item is priced after the first left the shelf, so its scarcity and cost are at least its projection on the opening state.
+ const flat=projected(world,before,LINSUI,'item_oat_flatbread'),stew=projected(world,before,LINSUI,'item_mutton_turnip_stew');
+ sameScarcity(world,before,flat,'item_oat_flatbread');sameScarcity(world,before,stew,'item_mutton_turnip_stew');
+ const [p1,p2]=r.result.purchases;
+ assert.equal(r.result.purchases.length,2);
+ assert.equal(p1.cost,flat.totalCoins);
+ assert.ok(p2.pricing.scarcity>=stew.explanation.scarcity-1e-12&&p2.cost>=stew.totalCoins,`第二笔 ${p2.cost} 不应低于开市投影 ${stew.totalCoins}`);
  assert.equal(r.result.paid,paid);assert.equal(before.state.player.coins-after.state.player.coins,paid);conserved(before,after,'D05用餐',new WorldEngine(world));
  return {before,after,r};
 }
@@ -106,9 +127,9 @@ test('D35 参加节庆 ①④：按当前市场买 2 份，实付总额一次取
  const before=await primed(ui),expected=projected(world,before,LINSUI,'item_oat_flatbread',2),r=await ui.choose('trade.buy',{item:'item_oat_flatbread',quantity:2},{target:LINSUI});assert.ok(r.ok,r.error);
  const after=await ui.read();
  assert.equal(r.result.cost,expected.totalCoins);assert.equal(before.state.player.coins,50);assert.equal(after.state.player.coins,50-expected.totalCoins,'①按实付总额扣款');
- // Opening food scarcity comes from the market projection; 6 × scarcity × 2, all other factors 1.
- const q=expected.explanation;assert.ok([q.quality,q.depth,q.spread,q.relation].every(x=>x===1));
- assert.equal(r.result.cost,Math.trunc(6*q.scarcity*2));
+ // Opening food scarcity recomputed from the market's demand and supply (scarcityFromWorld); 6 × scarcity × 2, all other factors 1.
+ const q=expected.explanation,scarcity=sameScarcity(world,before,expected,'item_oat_flatbread');assert.ok([q.quality,q.depth,q.spread,q.relation].every(x=>x===1));
+ assert.equal(r.result.cost,Math.trunc(6*scarcity*2));
  assert.equal(held(after.state.inventory,'item_oat_flatbread')-held(before.state.inventory,'item_oat_flatbread'),2,'②背包 +2 个月饼');
  const engine=new WorldEngine(world);assert.ok(standing(engine,after.state,LINSUI,'player')>=standing(engine,before.state,LINSUI,'player'),'④在场村民对玩家的好感没有下降（题面“可小幅上升”，不变也符合）');
  conserved(before,after,'D35',engine);
@@ -120,9 +141,9 @@ test('D35.2 true riddle answer transfers one host-stock lantern, preserves two b
  // S5-02: the riddle examines original reward stock, not a forced old price.
  const before=await primed(ui),expected=projected(world,before,HOST,'item_oat_flatbread',2),buy=await ui.choose('trade.trade',{seller:HOST,item:'item_oat_flatbread',quantity:2},{target:HOST,search:true});assert.ok(buy.ok,buy.error);assert.equal(buy.result.cost,expected.totalCoins);
  // trust=100 → regard 100; weighted .7 gives relation .895.
- // 6 × scarcity × relation (trust 100 → regard 100; weighted .7 gives .895) × 2, truncated; other factors 1.
- const q=expected.explanation;assert.ok([q.quality,q.depth,q.spread].every(x=>x===1));
- assert.equal(buy.result.cost,Math.trunc(6*q.scarcity*q.relation*2));
+ // 6 × scarcity (recomputed from demand and supply) × relation (trust 100 → regard 100; weighted .7 gives .895) × 2, truncated; other factors 1.
+ const q=expected.explanation,scarcity=sameScarcity(world,before,expected,'item_oat_flatbread');assert.ok([q.quality,q.depth,q.spread].every(x=>x===1));
+ assert.equal(buy.result.cost,Math.trunc(6*scarcity*q.relation*2));
  const plan=await ui.choose('settlement.festival_plan',{festival:FESTIVAL,cost:0},{search:true});assert.ok(plan.ok,plan.error);const id=plan.result.festival;
  const permission=await ui.choose('settlement.festival_authorize',{festival:id,speaker:HOST},{search:true});assert.ok(permission.ok,permission.error);assert.equal(permission.result.agreement.decision.outcome,'agree');
  const join=await ui.choose('settlement.festival_join',{festival:id,speaker:'player'},{search:true});assert.ok(join.ok,join.error);const wait=await ui.choose('time',{until:{dayOffset:0,hour:19}});assert.ok(wait.ok,wait.error);
