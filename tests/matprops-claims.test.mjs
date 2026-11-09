@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
@@ -214,4 +214,42 @@ test('调味卡新修订 d12-condiment-2 / review-2：同条次数从 0 计，�
   const b = await condimentBudget();   // 沿用同一账本：累计花费就是账本里的值，额度仍 1.0 元
   assert.deepEqual([b.limitYuan, b.sharedLimitYuan, b.spentYuan], [1, 1, ledger.cards[condimentCard.cardId].spentYuan]);
   assert.ok(b.spentYuan >= 0.12998);
+});
+
+test('调味卡 maxRequests 60→110 授权：落账、幂等、快照不符拒绝；金额上限不变', () => {
+  assert.deepEqual([condimentGrants[0].id, condimentGrants[0].from, condimentGrants[0].to, condimentCard.maxRequests], ['d12-condiment-maxrequests-110', 60, 110, 110]);
+  const base = condimentInitialLedger();   // 建账时是 60
+  assert.equal(base.cards[condimentCard.cardId].maxRequests, 60);
+  const once = grantCondimentMaxRequests(base), c = once.cards[condimentCard.cardId];
+  assert.deepEqual([c.maxRequests, c.limitYuan, c.spentYuan], [110, 1, 0]);
+  assert.deepEqual(once.authorizations.at(-1).before, {maxRequests: 60, limitYuan: 1, spentYuan: 0, requests: 0});
+  assert.match(once.authorizations.at(-1).source, /60→110/);
+  assert.equal(base.cards[condimentCard.cardId].maxRequests, 60);   // 不改入参
+  const twice = grantCondimentMaxRequests(once);
+  assert.deepEqual(twice, once); assert.equal(twice.authorizations.length, once.authorizations.length);   // 幂等
+  const bump = f => { const l = structuredClone(base); f(l); return l; };
+  for (const f of [l => { l.cards[condimentCard.cardId].maxRequests = 70; }, l => { l.cards[condimentCard.cardId].limitYuan = 2; }, l => { l.cards[condimentCard.cardId].reservedYuan = 0.1; }, l => { l.reservedYuan = 0.1; }])
+    assert.throws(() => grantCondimentMaxRequests(bump(f)), /快照不符/);
+  assert.throws(() => grantCondimentMaxRequests({...base, cards: {}}), /缺调味卡账本/);
+});
+
+test('依赖未核对出处的条目先不审：按出处状态判定，类别行跳过则其成员物品行一并跳过，同类新条目自动适用', () => {
+  const cls = (key, names) => ({id: 'class_' + key, kind: 'material-props-class', key, row: {sources: names.map(name => ({name, citation: 'USDA FoodData Central x'}))}});
+  const item = (id, names) => ({id, kind: 'material-props-item', row: {sources: names.map(name => ({name, citation: 'USDA FoodData Central x'}))}});
+  const entries = [cls('milk', ['牛乳', '羊乳']), item('item_goat_milk', ['羊乳']), item('item_milk', ['牛乳']), cls('veg', ['胡萝卜']), item('item_carrot', ['胡萝卜']), cls('nosrc', [])];
+  const ok = {id: '01077', idType: 'NDB', status: '已核对'};
+  const table = {sourceIds: {class_milk: {牛乳: ok, 羊乳: {id: null, status: '未知'}}, item_goat_milk: {羊乳: {id: null, status: '未知'}}, item_milk: {牛乳: ok}, class_veg: {胡萝卜: ok}, item_carrot: {胡萝卜: ok}}};
+  const overlay = {item_goat_milk: {tags: ['milk']}, item_milk: {tags: ['milk']}, item_carrot: {tags: ['veg']}};
+  const r = skipUnverified(entries, table, overlay);
+  assert.deepEqual(r.skipped.map(x => x.id), ['class_milk', 'item_goat_milk', 'item_milk']);   // item_milk 自身已核对，但所属类别行跳过 → 一并跳过
+  assert.match(r.skipped[0].reason, /出处未核对：羊乳/); assert.match(r.skipped[2].reason, /所属类别行依赖未核对出处（milk）/);
+  assert.deepEqual(r.keep.map(e => e.id), ['class_veg', 'item_carrot', 'class_nosrc']);
+  // 出处核对后状态改为已核对 → 自然进入审查；待核对（有编号未核）同样先不审；同类新条目（另一个类别的新出处）自动适用
+  const verified = structuredClone(table); verified.sourceIds.class_milk.羊乳 = ok; verified.sourceIds.item_goat_milk.羊乳 = ok;
+  assert.equal(skipUnverified(entries, verified, overlay).skipped.length, 0);
+  const pending = structuredClone(verified); pending.sourceIds.class_veg.胡萝卜 = {id: '11124', idType: 'NDB', status: '待核对'};
+  assert.deepEqual(skipUnverified(entries, pending, overlay).skipped.map(x => x.id), ['class_veg', 'item_carrot']);
+  const added = [...entries, cls('fish', ['鲤']), item('item_fish', ['鲤'])];
+  const t2 = {sourceIds: {...table.sourceIds, class_fish: {鲤: {id: null, status: '未知'}}, item_fish: {鲤: ok}}};
+  assert.deepEqual(skipUnverified(added, t2, {...overlay, item_fish: {tags: ['fish']}}).skipped.map(x => x.id).slice(-2), ['class_fish', 'item_fish']);
 });

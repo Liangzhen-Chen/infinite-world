@@ -43,7 +43,7 @@ export const cardLimitYuan=1.5, maxRequests=130, maxOverrideRatio=0.15;
 // 调味佐餐卡（D12-CONDIMENT）：与 D 卡互不影响的独立账（自己的 budget.json 与 usage.jsonl），额度 1.0 元，条目上限 = 条目数 × 每条每 revision 最多 3 次。
 export const condimentCard={
  id:'d12-condiment',cardId:'D12-CONDIMENT',revision:'d12-condiment-2',draftRoot:'world/drafts/d12-condiment',reviewDirName:'review-2',
- limitYuan:1.0,maxRequests:60,
+ limitYuan:1.0,maxRequests:110,initialMaxRequests:60, // maxRequests = 现行上限（allocation 与账本须一致，见 condimentGrants）；initialMaxRequests = 建账时的初始值
  source:'李白 2026-11-09 16:5x：亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡',
  // 修订来源：d12-condiment-1（review-1）的记录与请求原样保留；内容变了按修订规则另起新修订，账本沿用同一 budget.json（额度仍 1.0 元，已花费照旧累计），同条次数按 review-2 标签重新计。
  revisionSource:'内容按 USDA FDC 核对后变化（7ca0fc76），按修订规则另起 review-2'};
@@ -52,8 +52,8 @@ condimentCard.allocation={cardId:condimentCard.cardId,incrementLimitYuan:condime
 // 本卡初始账本（共享额度与单卡额度同为 1.0 元，授权来源写入 authorizations）；只在账本文件不存在时由 --review --card condiment 创建，不动 D 卡账本。
 export const condimentInitialLedger=()=>({spentYuan:0,reservedYuan:0,limitYuan:condimentCard.limitYuan,waveLimitYuan:condimentCard.limitYuan,
  note:'D12-CONDIMENT 独立账：与 D12-MATPROPS 的 world/drafts/d12-matprops/budget.json 互不影响',
- cards:{[condimentCard.cardId]:{limitYuan:condimentCard.limitYuan,spentYuan:0,reservedYuan:0,maxRequests:condimentCard.maxRequests}},requests:{},historicalUnallocatedSpentYuan:0,
- authorizations:[{id:'d12-condiment-limit-1.0',source:condimentCard.source,after:{limitYuan:condimentCard.limitYuan,maxRequests:condimentCard.maxRequests}}]});
+ cards:{[condimentCard.cardId]:{limitYuan:condimentCard.limitYuan,spentYuan:0,reservedYuan:0,maxRequests:condimentCard.initialMaxRequests}},requests:{},historicalUnallocatedSpentYuan:0,
+ authorizations:[{id:'d12-condiment-limit-1.0',source:condimentCard.source,after:{limitYuan:condimentCard.limitYuan,maxRequests:condimentCard.initialMaxRequests}}]});
 const readJSON=async f=>JSON.parse(await fs.readFile(f,'utf8'));
 const tableFile='world/meta/mechanics/material-props.json', overlayFile='world/meta/mechanics/items.json';
 
@@ -556,6 +556,39 @@ export async function withMisjudgeStats(out,root){
  return out;
 }
 // 调味佐餐卡账本：文件不存在才创建（初始额 1.0 元）；已存在则必须与本卡的卡号与额度一致，不一致即拒绝（不改动）。
+// 调味卡请求数上限授权（仿 D 卡 grants）：只在账本快照与批准时一致（maxRequests 60、limitYuan 1.0、reservedYuan 0）才落账，幂等；金额上限不变，到额自动停。
+export const condimentGrants=[
+ {id:'d12-condiment-maxrequests-110',from:60,to:110,source:'李白 2026-11-09 18:5x：调味卡请求数上限 maxRequests 60→110，金额上限仍 1.0 元、到额自动停，不新增预算；USDA 限流未核对的 8 项补查前不得用来源不明的数值顶替，先做不依赖它们的条目'}];
+export function grantCondimentMaxRequests(ledger){
+ const out=structuredClone(ledger),card=out.cards?.[condimentCard.cardId];
+ if(!card)throw Error('缺调味卡账本');
+ for(const g of condimentGrants){
+  if(out.authorizations?.some(a=>a.id===g.id)){assert.ok(card.maxRequests>=g.to,`${g.id} 已授权但账本上限低于 ${g.to}`);continue;}
+  if(card.maxRequests!==g.from||card.limitYuan!==condimentCard.limitYuan||card.reservedYuan!==0||out.reservedYuan!==0)throw Error('调味卡账本与批准时的快照不符，拒绝调整');
+  out.authorizations??=[];
+  out.authorizations.push({id:g.id,source:g.source,before:{maxRequests:card.maxRequests,limitYuan:card.limitYuan,spentYuan:card.spentYuan,requests:Object.keys(out.requests??{}).length},after:{maxRequests:g.to,limitYuan:condimentCard.limitYuan},at:new Date().toISOString()});
+  card.maxRequests=g.to;
+ }
+ assert.equal(card.maxRequests,condimentCard.maxRequests);
+ return out;
+}
+// 依赖未核对出处的条目先不审（按出处状态判定，不按名字）：条目 sources 里有 sourceIds 已登记但状态不是「已核对」（含 id:null 的未知）的出处，本次跳过；
+// 类别行依赖这些出处则该类别行跳过，其成员物品覆盖行（带该类别标签的物品行，上下文含类别值）一并跳过。出处核对后状态改为已核对，自然进入审查。
+export function skipUnverified(entries,table,overlay={}){
+ const unverified=e=>(e.row?.sources??[]).filter(x=>{const r=table.sourceIds?.[e.id]?.[x.name];return r&&r.status!=='已核对';}).map(x=>x.name);
+ const skipped=[],skipClass=new Set();
+ for(const e of entries.filter(e=>e.kind==='material-props-class')){const u=unverified(e);if(u.length){skipped.push({id:e.id,reason:`出处未核对：${u.join('、')}`});skipClass.add(e.key);}}
+ for(const e of entries.filter(e=>e.kind!=='material-props-class')){
+  const u=unverified(e),dep=(overlay[e.id]?.tags??[]).filter(t=>skipClass.has(t));
+  if(u.length||dep.length)skipped.push({id:e.id,reason:[u.length&&`出处未核对：${u.join('、')}`,dep.length&&`所属类别行依赖未核对出处（${dep.join('、')}）`].filter(Boolean).join('；')});
+ }
+ const ids=new Set(skipped.map(x=>x.id));
+ return {keep:entries.filter(e=>!ids.has(e.id)),skipped};
+}
+async function authorizeCondiment(){
+ const {file,ledger}=await condimentLedgerFile(),next=grantCondimentMaxRequests(ledger);
+ if(JSON.stringify(next)!==JSON.stringify(ledger))await fs.writeFile(file,JSON.stringify(next,null,2)+'\n');
+}
 async function condimentLedgerFile(){
  const file=path.join(condimentCard.draftRoot,'budget.json');
  await fs.mkdir(condimentCard.draftRoot,{recursive:true});
@@ -569,12 +602,12 @@ export async function condimentBudget(){
  return {card:condimentCard.cardId,limitYuan:c.limitYuan,spentYuan:c.spentYuan,reservedYuan:c.reservedYuan,maxRequests:c.maxRequests,requests:Object.keys(ledger.requests??{}).length,sharedLimitYuan:ledger.limitYuan,source:ledger.authorizations?.[0]?.source};
 }
 export async function condimentReview(){
- await l1();await condimentLedgerFile();
- const entries=await condimentEntries();
- console.log(JSON.stringify({pid:process.pid,mode:'review-condiment',entries:entries.length}));
+ await l1();await authorizeCondiment();
+ const {keep:entries,skipped}=skipUnverified(await condimentEntries(),await readJSON(tableFile),await readJSON(overlayFile));
+ console.log(JSON.stringify({pid:process.pid,mode:'review-condiment',entries:entries.length,skipped}));
  const client=new DeepSeekClient({budgetYuan:condimentCard.limitYuan,logFile:path.join(condimentCard.draftRoot,'usage.jsonl')});
  const {summary,halted}=await runReview({entries,client,root:condimentCard.reviewRoot,budgetRoot:condimentCard.draftRoot,cardIdArg:condimentCard.cardId,allocation:condimentCard.allocation,revisionArg:condimentCard.revision,dirName:condimentCard.reviewDirName});
- return {passed:summary.passed,manual:summary.manual,pending:summary.pending,aiMisjudgedByProgram:summary.aiMisjudgedByProgram,factPendingHuman:summary.factPendingHuman,budget:summary.budget.cards[condimentCard.cardId],...reportHalt(halted)};
+ return {skipped,passed:summary.passed,manual:summary.manual,pending:summary.pending,aiMisjudgedByProgram:summary.aiMisjudgedByProgram,factPendingHuman:summary.factPendingHuman,budget:summary.budget.cards[condimentCard.cardId],...reportHalt(halted)};
 }
 // 全表发布校验：L1 一次；两张卡各自校验（各自的 L2/人工核定/L4），合并结论；未决条目标明属于哪张卡。cards 可注入（测试用）。
 export async function verifyAll({cards=cardProfiles,verify=verifyPublished}={}){
