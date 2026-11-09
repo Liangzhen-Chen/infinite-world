@@ -12,6 +12,7 @@ import {saleableStock} from '../server-plugin/market.mjs';
 import {societyForageNeed} from '../server-plugin/wildlife-society.mjs';
 import {explainDerived} from '../server-plugin/derived.mjs';
 import {settlementMouths,settlementMealRatio,mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {batchIds,places} from '../world/design/creatures-mixed.mjs';
 import {generateCounty} from '../server-plugin/remote-generation.mjs';
 import {mouthWeight} from '../server-plugin/household-subsistence.mjs';
 import {readMixedPublication,mergeMixedPublication} from '../tools/publish-creatures-mixed.mjs';
@@ -26,7 +27,8 @@ function fixture(){
  const run=async(doc,tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});return{document:applyPatches(doc,out.patches),result:out.result};};
  return{engine,document,run};
 }
-const speciesOf=(engine,state,id)=>state.npcs[id].species??engine.byId.get(id)?.species;
+// 户成员与具名居民不一定都已落到 state.npcs（未落实者取目录里的物种），与 metabolismFactor 同口径。
+const speciesOf=(engine,state,id)=>state.npcs?.[id]?.species??engine.byId.get(id)?.species;
 const stockOf=(d,id,item)=>{const x=d.state.npcs[id].inventory?.[item];return typeof x==='number'?x:x?.quantity??0;};
 // 持有榛仁的木精居民与一个不带代谢系数的居民，都由数据挑出。
 function pick(f){
@@ -88,7 +90,12 @@ test('公共口粮人头按饱食代谢加权：不进食者权重 0，其余为
  assert.equal(mouthWeight(f.engine,state,[elm,plain]),1);
  // 正式目录里的 nature.metabolism 是后补字段：本批骨架不含它，合并不报“正式条目冲突”。
  const publication=await readMixedPublication();
- assert.doesNotThrow(()=>mergeMixedPublication(world,publication));
+ // 正式地点、物品等在本批之后另有补充，与本批骨架不逐字相同，那是既有口径；这里只验证物种：取出本批的地点、路线、物品、栖地后重新发布，物种目录（带 metabolism）不判冲突，且结果仍带 metabolism。
+ const input=structuredClone(world),ids=batchIds;
+ input.locations=input.locations.filter(l=>!ids.places.includes(l.id));input.routes=input.routes.filter(r=>!places.some(p=>p.route.id===r.id));
+ input.items=input.items.filter(i=>!ids.items.includes(i.id));input.rules.wildlife.habitats=input.rules.wildlife.habitats.filter(h=>!ids.habitats.includes(h.id));
+ const merged=mergeMixedPublication(input,publication);
+ assert.equal(merged.monsters.find(m=>m.id===ELM).nature.metabolism.satiety,0);
 });
 
 test('精怪社会觅食需求按成员饱食代谢加权：不进食的游魂、沼火灵不占口粮',()=>{
@@ -130,7 +137,7 @@ test('聚落公仓口粮按存活居民与物种构成派生：人类聚落恰�
 test('木精居民全部死亡后，聚落口数按剩余居民与世界构成重算；人口 1 的口数是实数而非取整为 0',()=>{
  const f=fixture(),p=mixedProfile(f),d=structuredClone(f.document),state=d.state,pop=headCount(state,p);
  const before=settlementMouths(f.engine,state,p.id,pop);
- for(const id of p.residentIds)if(f.engine.byId.get(id)?.species&&f.engine.byId.get(f.engine.byId.get(id).species)?.nature?.metabolism?.satiety===0)state.npcs[id].status='死亡';
+ for(const id of p.residentIds)if(f.engine.byId.get(id)?.species&&f.engine.byId.get(f.engine.byId.get(id).species)?.nature?.metabolism?.satiety===0)state.npcs[id]={...state.npcs[id],status:'死亡'};
  const after=settlementMouths(f.engine,state,p.id,pop);
  assert.ok(Math.abs(after-expectedMouths(f,state,p,pop))<1e-9);assert.ok(after>before,'不进食居民死亡后，占口粮的比例上升');
  // 人口 1：口数等于规则推出的实数份额，严格介于 0 与 1 之间，不被取整。
