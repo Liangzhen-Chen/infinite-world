@@ -19,17 +19,19 @@ const SAT=world.items.find(i=>i.id===item).nutrition.satiety;
 const satOf=(f,id)=>f.engine.byId.get(id).nutrition?.satiety??0;
 const near=(a,b,m)=>assert.ok(Math.abs(a-b)<1e-6,m??`${a} ≈ ${b}`);
 // 市场替代的独立复算（不拿引擎的结果去验引擎的结果）：
-//  ① 首购物品 = 从可得来源（shop.mjs 登记的家户食物来源）按引擎的购买次序独立排出来的第一件：到货时间早者先，同时间价低者先，再按编号；
-//     只算买得起（现金扣到货前的应付款）、有派生饱腹、且单餐额度允许买满至少一件的来源。物品名不写死，由来源与派生值算出。
-//     （引擎并不按“每铜饱腹最高”挑货：它按到货与价格排序，所以这里断言的是排序结果，不是单价最优。）
+//  ① 首购物品 = 从可得来源（shop.mjs 登记的家户食物来源）独立算出的“到货最早的那批里每铜币有效饱腹最高者”（并列按物品编号）：
+//     只算买得起（现金扣到货前的应付款）、有派生饱腹、且单餐额度允许买满至少一件的来源；有效饱腹 = 派生饱腹，覆盖不超过缺口（这些夹具里缺口远大于一件）。物品名不写死，由来源与派生值算出。
 //  ② 覆盖量 = Σ 购买量 × 该物品的派生饱腹，独立相加后与引擎的 coverage 比较；
 //  ③ 缺口 = 需求（人数 × 天数 × 每人每天 10 个面包的饱腹）− 覆盖量 − 手里的存粮（面包 × SAT）。
+const bestPerCoin=(f,sources)=>{
+ const first=Math.min(...sources.map(s=>s.at));
+ return sources.filter(s=>s.at===first).sort((x,y)=>satOf(f,y.item)/y.unitPrice-satOf(f,x.item)/x.unitPrice||(x.item<y.item?-1:x.item>y.item?1:0))[0]?.item;
+};
 const marketCheck=(f,b,{members=1,days=b.target?.days,cash=b.resources?.market?.cash??b.market.cash,payments=0,held,minute=f.state.minute}={})=>{
  const m=b.resources?.market??b.market,res=b.resources??b;
  const caps=mealCapPools(f.engine,{days:Array(members).fill(days)});
- const buyable=registerHouseholdFoodSources.fn(f.d,f.engine,owner,{}).filter(s=>s.at>=minute&&s.quantity>0&&s.unitPrice>0&&s.unitPrice<=cash-payments&&satOf(f,s.item)>0&&caps.unitsRoom(s.item,(s.at-minute)/DAY)>=1)
-  .sort((x,y)=>x.at-y.at||x.unitPrice-y.unitPrice||(x.item<y.item?-1:x.item>y.item?1:0));
- assert.equal(m.purchases[0]?.item,buyable[0]?.item,'first purchase is the first buyable source in arrival/price order');
+ const buyable=registerHouseholdFoodSources.fn(f.d,f.engine,owner,{}).filter(s=>s.at>=minute&&s.quantity>0&&s.unitPrice>0&&s.unitPrice<=cash-payments&&satOf(f,s.item)>0&&caps.unitsRoom(s.item,(s.at-minute)/DAY)>=1);
+ assert.equal(m.purchases[0]?.item,bestPerCoin(f,buyable),'first purchase is the best satiety-per-coin source among those arriving first');
  const coverage=m.purchases.reduce((n,p)=>n+p.quantity*satOf(f,p.item),0);
  near(m.coverage.satiety,coverage);
  near(res.shortfall.satiety,Math.max(0,members*days*10*SAT-coverage-held));
@@ -362,6 +364,22 @@ test('one affordable market meal cannot erase the remaining six-day income gap',
  // Intent: the purse buys exactly one paid meal (price coins), which does not close the six-day gap. First purchase, coverage and gap are recomputed independently.
  assert.equal(b.resources.market.purchases.reduce((n,p)=>n+p.quantity,0),1);
  marketCheck(f,b,{held:20*SAT});
+});
+
+test('simultaneous sources: residents buy the food with the most effective satiety per coin, not the cheapest',()=>{
+ // Intent (Li Bai's rule): among foods arriving together the household buys the best satiety per coin. Vinegar is cheapest but has no derived satiety,
+ // cabbage is cheaper than bread but bread's derived satiety per coin is far higher; the expected winner is computed from derived values, not named.
+ const before=registerHouseholdFoodSources.fn;
+ try{
+  const f=fixture();f.state.npcs[owner].coins=100;f.sync();
+  const at=f.state.minute,offers=[['item_fruit_vinegar',1],['item_cabbage',2],[item,3]].map(([it,unitPrice])=>({source:`fx_${it}`,seller:'npc_fx_seller',item:it,at,quantity:50,unitPrice}));
+  registerHouseholdFoodSources(()=>offers);
+  const b=householdBudget(f.d,f.engine,owner,{kernel:true}),expected=bestPerCoin(f,offers.filter(o=>satOf(f,o.item)>0));
+  assert.equal(b.resources.market.purchases[0].item,expected);
+  const cheapest=[...offers].sort((x,y)=>x.unitPrice-y.unitPrice).find(o=>satOf(f,o.item)>0).item;
+  assert.notEqual(expected,cheapest,'premise: the best per coin is not the cheapest food');
+  assert.ok(!b.resources.market.purchases.some(p=>satOf(f,p.item)===0),'a source with no satiety is never bought');
+ }finally{registerHouseholdFoodSources(before);}
 });
 
 test('missing business, failed supply and common loss cannot act as paid food access',()=>{

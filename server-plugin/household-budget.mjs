@@ -320,22 +320,43 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   if(source.cycleDays>0)for(let at=source.at+source.cycleDays*DAY;at<=state.minute+maxDays*DAY;at+=source.cycleDays*DAY)rows.push({...source,at});
   return rows;
  });
- for(const source of deliveries.sort((a,b)=>a.at-b.at||a.unitPrice-b.unitPrice||a.item.localeCompare(b.item))){
-  const wait=(source.at-state.minute)/DAY;if(wait>maxDays)continue;
-  const nutrition=engine.byId.get(source.item)?.nutrition??{};
-  const remaining=Object.fromEntries(Object.keys(needs).map(need=>{
-   const before=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*Math.min(wait,horizons.get(id)),...(view?{observer:owner,view}:{})}).value,0);
-   market.physicalFloor[need]=Math.max(market.physicalFloor[need],before-otherFood[need]-market.coverage[need]);
-   return [need,Math.max(0,needs[need]-otherFood[need]-market.physicalFloor[need]-market.coverage[need])];
-  }));
-  const wanted=Math.max(0,...Object.keys(needs).filter(n=>nutrition[n]>0).map(n=>Math.ceil(remaining[n]/nutrition[n])));
-  const due=payments.filter(r=>r.resource===COIN&&r.at<=source.at).reduce((n,r)=>n+r.amount,0);
-  const money=Math.max(0,cash-due-market.spent),quantity=Math.min(wanted,Math.floor(source.quantity*Math.max(0,1-commonRisk)),Math.floor(money/source.unitPrice),caps.unitsRoom(source.item,wait));
-  if(!quantity)continue;
-  caps.take(source.item,{eatMg:quantity*itemMg(engine,source.item),start:wait});
-  const cost=quantity*source.unitPrice;market.spent+=cost;
-  for(const need of Object.keys(needs))market.coverage[need]+=Math.min(remaining[need],quantity*(nutrition[need]??0));
-  market.purchases.push({...source,quantity,cost});
+ // 购买次序（李白 2026-11-10 口径：居民买每铜币有效饱腹最高的东西）：先按到货时间（早到的先用）；同一时间到货的来源，逐次挑“对本户当前剩余缺口
+ // 的有效覆盖 ÷ 花费”最高者，买完再按新的剩余缺口重算；最后按物品编号、来源编号的码点序（不用 localeCompare），结果确定。
+ // 有效覆盖已计入现金、供货量、单餐额度池（被额度卡住的佐餐品只算额度内买得到、吃得掉的那几件）与缺口（不超过剩余缺口）。
+ // 多种营养（satiety、hydration）合成一个价值：每种营养取“覆盖量 ÷ 当前剩余缺口”（即这次购买补上了这一项缺口的多大比例）再相加，
+ // 以当前剩余缺口为权重，没有任何拍定系数；只有一种营养有缺口时就是按饱腹 ÷ 单价。
+ const cmp=(x,y)=>x<y?-1:x>y?1:0;
+ const pending=deliveries.sort((a,b)=>a.at-b.at||cmp(a.item,b.item)||cmp(a.source??'',b.source??''));
+ while(pending.length){
+  const at=pending[0].at,wait=(at-state.minute)/DAY;
+  let n=0;while(n<pending.length&&pending[n].at===at)n++;
+  const group=pending.splice(0,n);
+  if(wait>maxDays)continue;
+  const due=payments.filter(r=>r.resource===COIN&&r.at<=at).reduce((m,r)=>m+r.amount,0);
+  while(group.length){
+   const remaining=Object.fromEntries(Object.keys(needs).map(need=>{
+    const before=members.reduce((m,id)=>m+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*Math.min(wait,horizons.get(id)),...(view?{observer:owner,view}:{})}).value,0);
+    market.physicalFloor[need]=Math.max(market.physicalFloor[need],before-otherFood[need]-market.coverage[need]);
+    return [need,Math.max(0,needs[need]-otherFood[need]-market.physicalFloor[need]-market.coverage[need])];
+   }));
+   const money=Math.max(0,cash-due-market.spent);
+   const options=group.map(source=>{
+    const nutrition=engine.byId.get(source.item)?.nutrition??{};
+    const wanted=Math.max(0,...Object.keys(needs).filter(k=>nutrition[k]>0).map(k=>Math.ceil(remaining[k]/nutrition[k])));
+    const quantity=Math.min(wanted,Math.floor(source.quantity*Math.max(0,1-commonRisk)),Math.floor(money/source.unitPrice),caps.unitsRoom(source.item,wait));
+    const cover=Object.fromEntries(Object.keys(needs).map(k=>[k,Math.min(remaining[k],quantity*(nutrition[k]??0))]));
+    const value=quantity>0?Object.keys(needs).reduce((m,k)=>m+(remaining[k]>0?cover[k]/remaining[k]:0),0)/(quantity*source.unitPrice):0;
+    return {source,quantity,cover,value};
+   }).filter(o=>o.quantity>0);
+   if(!options.length)break;
+   const best=options.reduce((a,b)=>b.value>a.value||b.value===a.value&&(cmp(b.source.item,a.source.item)<0||b.source.item===a.source.item&&cmp(b.source.source??'',a.source.source??'')<0)?b:a);
+   const {source,quantity}=best;
+   caps.take(source.item,{eatMg:quantity*itemMg(engine,source.item),start:wait});
+   const cost=quantity*source.unitPrice;market.spent+=cost;
+   for(const need of Object.keys(needs))market.coverage[need]+=best.cover[need];
+   market.purchases.push({...source,quantity,cost});
+   group.splice(group.indexOf(source),1);
+  }
  }
  const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(needs).map(need=>[need,Math.max(0,needs[need]-market.coverage[need])])),caps);
  {const bad=caps.violations();if(bad.length)throw Error(`单餐额度不变量被破坏：${bad.join('、')}`);}
