@@ -11,7 +11,9 @@ import {householdMealPlan} from '../server-plugin/household-budget.mjs';
 import {saleableStock} from '../server-plugin/market.mjs';
 import {societyForageNeed} from '../server-plugin/wildlife-society.mjs';
 import {explainDerived} from '../server-plugin/derived.mjs';
-import {settlementMealRatio,mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {settlementMouths,settlementMealRatio,mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {batchIds,places} from '../world/design/creatures-mixed.mjs';
+import {generateCounty} from '../server-plugin/remote-generation.mjs';
 import {mouthWeight} from '../server-plugin/household-subsistence.mjs';
 import {readMixedPublication,mergeMixedPublication} from '../tools/publish-creatures-mixed.mjs';
 import {validateCreatureNature} from '../server-plugin/creature-nature.mjs';
@@ -25,7 +27,8 @@ function fixture(){
  const run=async(doc,tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});return{document:applyPatches(doc,out.patches),result:out.result};};
  return{engine,document,run};
 }
-const speciesOf=(engine,state,id)=>state.npcs[id].species??engine.byId.get(id)?.species;
+// 户成员与具名居民不一定都已落到 state.npcs（未落实者取目录里的物种），与 metabolismFactor 同口径。
+const speciesOf=(engine,state,id)=>state.npcs?.[id]?.species??engine.byId.get(id)?.species;
 const stockOf=(d,id,item)=>{const x=d.state.npcs[id].inventory?.[item];return typeof x==='number'?x:x?.quantity??0;};
 // 持有榛仁的木精居民与一个不带代谢系数的居民，都由数据挑出。
 function pick(f){
@@ -87,7 +90,12 @@ test('公共口粮人头按饱食代谢加权：不进食者权重 0，其余为
  assert.equal(mouthWeight(f.engine,state,[elm,plain]),1);
  // 正式目录里的 nature.metabolism 是后补字段：本批骨架不含它，合并不报“正式条目冲突”。
  const publication=await readMixedPublication();
- assert.doesNotThrow(()=>mergeMixedPublication(world,publication));
+ // 正式地点、物品等在本批之后另有补充，与本批骨架不逐字相同，那是既有口径；这里只验证物种：取出本批的地点、路线、物品、栖地后重新发布，物种目录（带 metabolism）不判冲突，且结果仍带 metabolism。
+ const input=structuredClone(world),ids=batchIds;
+ input.locations=input.locations.filter(l=>!ids.places.includes(l.id));input.routes=input.routes.filter(r=>!places.some(p=>p.route.id===r.id));
+ input.items=input.items.filter(i=>!ids.items.includes(i.id));input.rules.wildlife.habitats=input.rules.wildlife.habitats.filter(h=>!ids.habitats.includes(h.id));
+ const merged=mergeMixedPublication(input,publication);
+ assert.equal(merged.monsters.find(m=>m.id===ELM).nature.metabolism.satiety,0);
 });
 
 test('精怪社会觅食需求按成员饱食代谢加权：不进食的游魂、沼火灵不占口粮',()=>{
@@ -102,17 +110,52 @@ test('精怪社会觅食需求按成员饱食代谢加权：不进食的游魂�
  assert.equal(societyForageNeed(d,f.engine,['t_eat','t_eat']),per*2);
 });
 
-test('聚落公仓口粮按物种构成加权：混居聚落口数低于人头，全员进食的聚落不变',()=>{
- const f=fixture(),factor=sp=>f.engine.byId.get(sp)?.nature?.metabolism?.satiety??1;
- let mixed=0,plain=0;
+// 人口：状态里有聚落账就取账上人口，否则取世界定义的具名加待生成总数。
+const headCount=(state,p)=>state.settlements?.[p.id]?.population??(p.residentIds??[]).length+(p.pendingSpeciesStructure?Object.values(p.pendingSpeciesStructure).reduce((n,g)=>n+g.population,0):p.pendingPopulation??0);
+// 期望口数由世界数据与运行时存活居民推出：存活具名居民按各自物种因子，余数按世界定义的物种构成均值。
+function expectedMouths(f,state,p,population){
+ const factor=sp=>f.engine.byId.get(sp)?.nature?.metabolism?.satiety??1;
+ const alive=(p.residentIds??[]).filter(id=>!(state.npcs[id]?.status==='死亡'));
+ const named=alive.reduce((n,id)=>n+factor(f.engine.byId.get(id)?.species),0);
+ const pend=p.pendingSpeciesStructure?Object.entries(p.pendingSpeciesStructure):[],tot=pend.reduce((n,[,g])=>n+g.population,0);
+ const share=tot>0?pend.reduce((n,[sp,g])=>n+g.population*factor(sp),0)/tot:1;
+ return population<alive.length?named*population/alive.length:named+(population-alive.length)*share;
+}
+const mixedProfile=f=>world.settlementProfiles.find(p=>p.pendingSpeciesStructure&&Object.keys(p.pendingSpeciesStructure).some(sp=>f.engine.byId.get(sp)?.nature?.metabolism?.satiety===0));
+
+test('聚落公仓口粮按存活居民与物种构成派生：人类聚落恰为 1，混居聚落为实数口数',()=>{
+ const f=fixture(),state=f.document.state;let plain=0,mixed=0;
  for(const p of world.settlementProfiles){
-  const named=(p.residentIds??[]).map(id=>f.engine.byId.get(id)?.species);
-  const pending=p.pendingSpeciesStructure?Object.entries(p.pendingSpeciesStructure).map(([sp,g])=>[sp,g.population]):[[undefined,p.pendingPopulation??0]];
-  const total=named.length+pending.reduce((n,[,c])=>n+c,0),weighted=named.reduce((n,sp)=>n+factor(sp),0)+pending.reduce((n,[sp,c])=>n+c*factor(sp),0);
-  if(!(total>0))continue;
-  const ratio=settlementMealRatio(f.engine,p.id);
-  if(weighted===total){plain++;assert.equal(ratio,1,p.id);assert.equal(mealMouthsOf(f.engine,p.id,137),137);}
-  else{mixed++;assert.equal(ratio,weighted/total,p.id);assert.ok(ratio<1);assert.equal(mealMouthsOf(f.engine,p.id,100),Math.round(100*ratio));}
+  const pop=headCount(state,p);if(!(pop>0))continue;
+  const mouths=settlementMouths(f.engine,state,p.id,pop),want=expectedMouths(f,state,p,pop);
+  if(want===pop){plain++;assert.equal(mouths,pop,p.id);assert.equal(settlementMealRatio(f.engine,state,p.id),1);}
+  else{mixed++;assert.ok(Math.abs(mouths-want)<1e-9,`${p.id} ${mouths} vs ${want}`);assert.ok(mouths<pop);}
  }
- assert.ok(plain>0&&mixed>0,'既有全员进食聚落，也有含不进食物种的聚落');
+ assert.ok(plain>0&&mixed>0);
+});
+
+test('木精居民全部死亡后，聚落口数按剩余居民与世界构成重算；人口 1 的口数是实数而非取整为 0',()=>{
+ const f=fixture(),p=mixedProfile(f),d=structuredClone(f.document),state=d.state,pop=headCount(state,p);
+ const before=settlementMouths(f.engine,state,p.id,pop);
+ // 人口 1：在木精仍在世（口粮比例 <1）时，口数等于规则推出的实数份额，严格介于 0 与 1 之间，不被取整。
+ const one=settlementMouths(f.engine,state,p.id,1),want=expectedMouths(f,state,p,1);
+ assert.ok(Math.abs(one-want)<1e-9);assert.ok(one>0&&one<1&&!Number.isInteger(one));
+ assert.equal(mealMouthsOf(f.engine,state,p.id,1),one);
+ for(const id of p.residentIds)if(f.engine.byId.get(id)?.species&&f.engine.byId.get(f.engine.byId.get(id).species)?.nature?.metabolism?.satiety===0)state.npcs[id]={...state.npcs[id],status:'死亡'};
+ const after=settlementMouths(f.engine,state,p.id,pop);
+ assert.ok(Math.abs(after-expectedMouths(f,state,p,pop))<1e-9);assert.ok(after>before,'不进食居民死亡后，占口粮的比例上升');
+});
+
+test('远方生成的木精聚落人物按其物种计入加权：不进食者不占公仓口粮',()=>{
+ const f=fixture(),county='county_wushan_shanyi',skeleton=generateCounty(world,county,'species-metabolism');
+ const elms=skeleton.people.filter(p=>f.engine.byId.get(p.species)?.nature?.metabolism?.satiety===0);
+ assert.ok(elms.length>0);
+ const sid=elms[0].settlement,here=elms.filter(p=>p.settlement===sid);
+ const d=structuredClone(f.document);d.state.remote={[county]:{skeleton}};
+ for(const p of here)d.state.npcs[p.id]={species:p.species,materialized:{county,settlement:sid}};
+ const population=here.length+5;
+ // 世界里没有该聚落的档案：具名者按各自因子（0），其余人头按人形（1）；数值由规则推出。
+ assert.equal(settlementMouths(f.engine,d.state,sid,population),population-here.length);
+ for(const p of here)d.state.npcs[p.id].status='死亡';
+ assert.equal(settlementMouths(f.engine,d.state,sid,population-here.length),population-here.length);
 });

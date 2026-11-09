@@ -12,6 +12,7 @@ import {recordsMemo} from './storage.mjs';
 import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
 // （商店成交、书籍出版的读者、店铺客流共用；不在代码里写字面）。
@@ -207,7 +208,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   const stock=stockName==='food'
    ?priceRead(d,{point:'region.grain',account:granary(engine,place),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0})
    :priceRead(d,{point:'region.material',account:settlementStock(engine,place,stockName),legacy:()=>settlement[stockName]??0});
-  const retained=stockName==='food'?(settlement.population??0)*(profile?.reserveDays??1):0;
+  const retained=stockName==='food'?Math.ceil(mealMouthsOf(engine,state,place,settlement.population??0)*(profile?.reserveDays??1)):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,retained,committed,available:Math.max(0,stock-retained-committed)});
  }
  const supply=rows.reduce((n,r)=>n+r.available,0);
