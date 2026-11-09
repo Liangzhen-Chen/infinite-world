@@ -202,8 +202,8 @@ function dispatch(d,engine,lane,minute){
     try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,lane.buyer).counter,lane.mode,minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;return reject('封路或天气不通');}
     if(route.cost)return reject('路线收费没有登记的实际收款账');
     if(lane.routes.some(id=>!route.edges.includes(id)))return reject('实际路线偏离登记贸易道路');
-    const reserve=mealMouthsOf(engine,d.get('state'),lane.seller,a.s.population)*profile(engine,lane.seller).reserveDays,surplus=Math.max(0,grain(a,day)-reserve);
-    const pending=reserved(d.get('state'),lane.buyer),demand=Math.max(0,mealMouthsOf(engine,d.get('state'),lane.buyer,b.s.population)*r.targetDays-grain(b,day)-pending);
+    const reserve=mealMouthsOf(engine,d.get('state'),lane.seller,a.s.population)*profile(engine,lane.seller).reserveDays,surplus=Math.max(0,Math.floor(grain(a,day)-reserve));// floor: the exporter never ships into its reserve; whole units only
+    const pending=reserved(d.get('state'),lane.buyer),demand=Math.max(0,Math.floor(mealMouthsOf(engine,d.get('state'),lane.buyer,b.s.population)*r.targetDays-grain(b,day)-pending));// floor: never ship more than the whole units still wanted
     const space=Math.max(0,b.r.granary.capacity-b.s.food-b.r.field.seedBank-pending);
     if(!surplus)return reject('无实际可出口余粮');if(!demand)return reject('无登记目标内的实际需求');if(!space)return reject('收货仓容已满或已预留');
     // This is a signed unit-price contract: freeze an integer unit before

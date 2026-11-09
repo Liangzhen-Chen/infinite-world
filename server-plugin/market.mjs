@@ -208,7 +208,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   const stock=stockName==='food'
    ?priceRead(d,{point:'region.grain',account:granary(engine,place),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0})
    :priceRead(d,{point:'region.material',account:settlementStock(engine,place,stockName),legacy:()=>settlement[stockName]??0});
-  const retained=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0)*(profile?.reserveDays??1):0;
+  const retained=stockName==='food'?Math.ceil(mealMouthsOf(engine,state,place,settlement.population??0)*(profile?.reserveDays??1)):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,retained,committed,available:Math.max(0,stock-retained-committed)});
  }
  const supply=rows.reduce((n,r)=>n+r.available,0);

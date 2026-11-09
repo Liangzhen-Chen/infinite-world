@@ -27,8 +27,20 @@ export function metabolismFactor(engine,state,actor,need){
 // count by their own species factor; the rest of the head count follows the world's authored
 // species make-up (pendingSpeciesStructure), or eats as people when there is none.
 // Real-valued: callers round once, at the step that removes whole portions.
+// Static per engine: can any species tied to this settlement (resident or authored make-up) have a
+// non-1 factor? If not, the head count is the answer and nothing is derived (every human settlement).
+const mayDiffer=new WeakMap();
+function settlementMayDiffer(engine,sid,need){
+ const cache=mayDiffer.get(engine)??new Map();mayDiffer.set(engine,cache);
+ const key=`${sid}|${need}`;if(cache.has(key))return cache.get(key);
+ const profile=engine.world?.settlementProfiles?.find(p=>p.id===sid);
+ const species=profile?[...(profile.residentIds??[]).map(id=>engine.byId?.get(id)?.species),...Object.keys(profile.pendingSpeciesStructure??{})]:[];
+ const result=species.some(sp=>sp!==undefined&&speciesMetabolism(engine,sp,need)!==1);
+ cache.set(key,result);return result;
+}
 export function settlementMouths(engine,state,sid,population,need='satiety'){
- const profile=engine.world?.settlementProfiles?.find(p=>p.id===sid);if(!profile)return population;
+ if(!settlementMayDiffer(engine,sid,need))return population;
+ const profile=engine.world.settlementProfiles.find(p=>p.id===sid);
  const mixed=profile.pendingSpeciesStructure,ids=new Set(profile.residentIds??[]);
  if(mixed)for(const [id,n] of Object.entries(state?.npcs??{}))if(n.materialized?.settlement===sid)ids.add(id);
  let named=0,weighted=0;
