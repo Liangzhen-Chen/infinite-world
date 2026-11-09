@@ -61,7 +61,7 @@ test('本批正式发布：中西各九的设计，已过L2者入正式目录，
  assert.deepEqual([...published.map(m=>m.id),...held].sort(),[...batchIds.species].sort());
  assert.ok(published.filter(m=>m.template<=2).length>=12);
  for(const m of published)assert.ok(Array.isArray(m.tags)&&m.tags.length,`${m.id}.tags`);
- for(const m of published){const d=designed.find(s=>s.id===m.id);for(const k of Object.keys(d))assert.deepEqual(m[k],d[k],`${m.id}.${k}`);}
+ for(const m of published){const d=designed.find(s=>s.id===m.id),u=untag(m);for(const k of Object.keys(d))assert.deepEqual(u[k],d[k],`${m.id}.${k}`);}// 与 norm 同口径剔发布后补字段（tags、nature.metabolism），骨架其余键逐键比较
  assert.deepEqual(norm(mergeMixedPublication(before,publication)),norm(world));assert.deepEqual(mergeMixedPublication(world,publication),world);
  const bad=structuredClone(world);bad.monsters.find(m=>m.id===published[0].id).habits+='异文';assert.throws(()=>mergeMixedPublication(bad,publication),/冲突/);
  // Old reviewed species keep their exact text.
