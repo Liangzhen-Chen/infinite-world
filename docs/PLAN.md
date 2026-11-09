@@ -1391,6 +1391,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - GitHub：管理文档 master 补推 2026095c→94d36b39（82 个 PLAN 提交，推前密钥扫描仅变量名）；guard-commit.sh 本机跑 node 不再用；t-int 等分支是否推待李白定。
 - m2-2 全量运行中（03:22 时 6/529）。
 
+### 11-09 03:50 测试修正云上结果
+- mprod-5（t-mprod 4dff5631，两轮 approve r1-20261109T033015Z-2758813 / r2-20261109T033250Z-2768082）：tests/monster-production.test.mjs 3/0（F:/dnd-tmp/mprod5-test.full）。
+- metab-13（t-metab 2c4e6ad2，两轮 approve r1-20261109T033246Z-2767935 / r2-20261109T033349Z-2770400）：tests/monster-society.test.mjs 10/1（F:/dnd-tmp/metab13-test.full）——#3 K6 断言修好；#2 仍 `2 !== 4`（市场供给按留存投影 quoteSupply.supply，K16 r3 手算锚点 :86），与基线 b1m-1 的 #2 完全相同 → 基线已有，记入基线待查清单（与 ledger-stock、市场深度同列，需判“旧预期不适用”还是真错）。
+- 待合入队列：t-metab 2c4e6ad2（含测试修正）、t-mprod 4dff5631、t-memo 6488ad12（性能存疑，待 m2-2 耗时对照）、t-ptai 055105ec（工具，不影响世界）。m2-2 全量结束后，按结果组下一轮合并候选。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
