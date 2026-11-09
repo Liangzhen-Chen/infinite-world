@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import craftingBalance from '../world/rules/tables/balance/crafting.json' with {type:'json'};
 import {deriveItemAttributes,householdUsage,fuelEffectiveHeat,fuelReferenceHeat,usageGrams} from '../server-plugin/item-class.mjs';
-import {usageCost} from '../server-plugin/household-budget.mjs';
+import {usageCost,usageItemGrams,itemGrams} from '../server-plugin/household-budget.mjs';
 
 const dimensions={
  moisture:{unit:'质量分数',min:0,max:1},edibleFraction:{unit:'质量分数',min:0,max:1},
@@ -125,4 +125,15 @@ test('燃料：参照类属性未知（无表、或参照类行缺含水率）�
    {cls:'salt',purpose:'seasoning',gramsPerDay:P('household.saltGramsPerPersonDay')*2}]);
  }
  assert.equal(usageGrams(known(),'item_fx_unknown','fuel',1234),1234,'物品自己没有热值也不折算');
+});
+
+test('燃料：自采与持有抵扣共用的 usageItemGrams（household-subsistence 的 unitGrams 与持有量都走它）按有效热值折算，未知时等于重量克', () => {
+ const e=known(),ref=fuelReferenceHeat(e);
+ assert.equal(usageItemGrams(e,'item_fx_damp','fuel'),itemGrams(e,'item_fx_damp')*fuelEffectiveHeat(e,'item_fx_damp')/ref);
+ // 采 portions 个基准克的燃料需要的件数随有效热值反比
+ const portions=5000;
+ assert.equal(Math.ceil(portions/usageItemGrams(e,'item_fx_damp','fuel')),Math.ceil(portions/(itemGrams(e,'item_fx_damp')*fuelEffectiveHeat(e,'item_fx_damp')/ref)));
+ for(const eng of [e,legacy()])assert.equal(usageItemGrams(eng,'item_fx_unknown','fuel'),itemGrams(eng,'item_fx_unknown'));
+ assert.equal(usageItemGrams(legacy(),'item_fx_ref','fuel'),itemGrams(legacy(),'item_fx_ref'));
+ assert.equal(usageItemGrams(e,'item_fx_soaked','fuel'),0);
 });
