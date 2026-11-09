@@ -25,6 +25,31 @@
       "id": "class_milk",
       "oldFingerprint": "ba2917a3229f16ff9385c27f7986fd694428b738b7e3dcbea05c17023ac31880",
       "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_legume",
+      "oldFingerprint": "5348184ce3db4e7c2578ece533fb9ee09f563f25209bce132f14dd6d2a889b93",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_grain",
+      "oldFingerprint": "ef4481b9b3e75e6b4157adcdd5755ea600e458e588836cf693fe3ea020cf74ff",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_meat",
+      "oldFingerprint": "b3fe90c8e939c12a3f91a3d6b93161b1debc009afae059695dfe82ace4a2103f",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_fish",
+      "oldFingerprint": "a87e6866dcc27142e9da9232a5d32b80bd411bf21f04a0522141083c925cd7b6",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_egg",
+      "oldFingerprint": "21644fc2126c2aea9ef345c5911ba8f3623bcd560b000f2f49a85342577f5ed9",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
     }
   ]
 }

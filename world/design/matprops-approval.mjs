@@ -93,7 +93,7 @@ const runtime=async()=>worldCache??=await loadRuntimeWorld();
 // 不进任何条目的推算与上下文，所以不进指纹。类别行带上属于该类别的物品（名称、重量、标签），物品行带上该物品自身与它所属的类别值。
 // 物品覆盖行审的是它自己的含水与能量对类别值的偏离，单餐量（mealGrams/mealBasis/mealCap/mealDry）与它无关：
 // 类别行后来加了单餐量，不让物品条目的上下文（指纹）跟着变，已审的物品覆盖行结论不作废。
-const withoutCap=({mealCapBasis,...row})=>({...row,sources:row.sources?.map(({mealGrams,mealBasis,mealCitation,...x})=>x)});
+const withoutCap=({mealCapBasis,...row})=>({...row,sources:row.sources?.map(({mealGrams,mealBasis,mealCitation,eatenMoistureFraction,...x})=>x)});
 const withoutCapDerived=({mealCap,mealDry,...d})=>d;
 export async function contextFor(entry){
  const world=await runtime(),table=await readJSON(tableFile);

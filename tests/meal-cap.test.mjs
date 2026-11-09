@@ -68,6 +68,10 @@ test('额度池：同类共用一个池，额度 = 现有累计额度 + 预算�
  const saved={allow:{fxsweet:30000},open:{}},held=mealCapPools(e,{days:[1],saved});held.markHeld('item_fx_a');
  assert.equal(held.allowMg('item_fx_a'),30000+20000*perDay);
  assert.equal(mealCapPools(e,{days:[1],saved}).allowMg('item_fx_a'),20000*perDay,'手里没有就不带旧额度');
+ // 攒下的额度最多一天的量（每人每餐上限 × mealsPerDay × 人数）：整件分几天吃由开封余量负责，额度不无限攒
+ const hoard=mealCapPools(e,{days:[1,1],saved:{allow:{fxsweet:1e9},open:{}}});hoard.markHeld('item_fx_a');
+ assert.equal(hoard.dayMg('item_fx_a'),20000*perDay*2);
+ assert.equal(hoard.allowMg('item_fx_a'),hoard.dayMg('item_fx_a')+20000*perDay*2,'旧额度只算一天，再加预算期内新增的两人一天');
  // 货到手后才开始累计：晚到 1 天，少 1 天的新增额度
  const late=mealCapPools(e,{days:[3]});
  assert.equal(late.allowMg('item_fx_a',1),20000*perDay*2);
@@ -240,6 +244,14 @@ test('累计额度：整件分几天吃完，额度吃完后清零，状态走�
  assert.equal(run(),run(),'同一夹具两次推进结果一致');
 });
 
+test('累计额度封顶：攒下的额度不超过一天的量，哪怕存档里攒得很多', () => {
+ const f=fixture({item_fx_sweet_a:12}),perDay=perDayOf(f.engine),dayMg=mealCapOf(f.engine,'item_fx_sweet_a').mg*perDay;
+ f.state.family??={};f.state.family.mealCap={[HOUSE]:{allow:{fxsweet:50*dayMg},open:{}}};f.sync();
+ const plan=eatDay(f),eaten=plan.rows.reduce((n,r)=>n+(r.eatMg??0),0);
+ assert.ok(eaten<=2*dayMg,'当天最多吃：旧额度（封顶一天）+ 当天新增');
+ assert.ok(f.state.family.mealCap[HOUSE].allow.fxsweet<=dayMg,'吃完后存档里的额度不超过一天');
+});
+
 test('不变量：预算期内买进的调味佐餐品，按额度逐日都吃得掉，不会买了不吃', () => {
  const before=registerHouseholdFoodSources.fn;
  try{
@@ -247,6 +259,7 @@ test('不变量：预算期内买进的调味佐餐品，按额度逐日都吃�
   registerHouseholdFoodSources((d)=>[{source:'fx_shop',seller:'npc_fx_seller',item:'item_fx_sweet_a',at:d.get('state').minute,quantity:100,unitPrice:1}]);
   const r=householdResources(f.d,f.engine,owner,{days:DAYS}),bought=r.market.purchases.reduce((n,p)=>n+p.quantity,0);
   assert.ok(bought>0);
+  assert.ok(bought*itemMg(f.engine,'item_fx_sweet_a')<=allowMg(f.engine,'item_fx_sweet_a',DAYS),'买进量不超过预算期内（逐日额度 + 开封余量）可吃的量');
   // 买进的件数放进背包，逐日按额度吃满预算期：需求每天都有缺口，所以每天吃到额度为止，期末家里不该剩下（件与开封余量都吃完）。
   f.state.npcs[owner].inventory.item_fx_sweet_a=bought;f.sync();
   const w=itemMg(f.engine,'item_fx_sweet_a');

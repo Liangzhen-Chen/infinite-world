@@ -271,26 +271,39 @@
      "name": "扁豆",
      "citation": "USDA FoodData Central 扁豆干生",
      "moistureFraction": 0.083,
-     "kcalPer100gWet": 352
+     "kcalPer100gWet": 352,
+     "mealGrams": 1100,
+     "mealBasis": "dryMatter",
+     "eatenMoistureFraction": 0.7,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；豆类按煮熟后食用，食用含水取 USDA 煮熟豆类 0.70（煮熟扁豆 0.70、豌豆 0.70），按干物质折算再折回"
     },
     {
      "name": "干豌豆",
      "citation": "USDA FoodData Central 干豌豆（劈）生",
      "moistureFraction": 0.113,
-     "kcalPer100gWet": 341
+     "kcalPer100gWet": 341,
+     "mealGrams": 1100,
+     "mealBasis": "dryMatter",
+     "eatenMoistureFraction": 0.7,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；豆类按煮熟后食用，食用含水取 USDA 煮熟豆类 0.70（煮熟扁豆 0.70、豌豆 0.70），按干物质折算再折回"
     },
     {
      "name": "蚕豆",
      "citation": "USDA FoodData Central 蚕豆干生",
      "moistureFraction": 0.11,
-     "kcalPer100gWet": 341
+     "kcalPer100gWet": 341,
+     "mealGrams": 1100,
+     "mealBasis": "dryMatter",
+     "eatenMoistureFraction": 0.7,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；豆类按煮熟后食用，食用含水取 USDA 煮熟豆类 0.70（煮熟扁豆 0.70、豌豆 0.70），按干物质折算再折回"
     }
    ],
    "selection": {
     "method": "mean",
     "reason": "世界里的干豆为扁豆、干豌豆、蚕豆，逐项取平均（Codex Stan 171-1989 豆类含水上限 15%，均在其内）"
    },
-   "basis": "干豆。【数值凭记忆写入，待 L2 核对】"
+   "basis": "干豆。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限（生理上限）：同谷类，胃容量折一餐最多约 1100 g 熟豆，干物质基准折回各件物品鲜重。【数值凭记忆写入，待 L2 核对】"
   },
   "grain": {
    "sources": [
@@ -298,32 +311,49 @@
      "name": "硬红冬小麦",
      "citation": "USDA FoodData Central 硬红冬小麦生",
      "moistureFraction": 0.131,
-     "kcalPer100gWet": 327
+     "kcalPer100gWet": 327,
+     "mealGrams": 1100,
+     "mealBasis": "dryMatter",
+     "eatenMoistureFraction": 0.72,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；谷类按煮熟后食用，食用含水取 USDA 煮熟谷类均值 0.72（煮熟大米 0.68、意面 0.62、燕麦粥 0.84、碎小麦 0.78、珍珠大麦 0.69），按干物质折算，再按每件物品自己的含水折回"
     },
     {
      "name": "黑麦粉",
      "citation": "USDA FoodData Central 黑麦粉（深色）",
      "moistureFraction": 0.11,
-     "kcalPer100gWet": 325
+     "kcalPer100gWet": 325,
+     "mealGrams": 1100,
+     "mealBasis": "dryMatter",
+     "eatenMoistureFraction": 0.72,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；谷类按煮熟后食用，食用含水取 USDA 煮熟谷类均值 0.72（煮熟大米 0.68、意面 0.62、燕麦粥 0.84、碎小麦 0.78、珍珠大麦 0.69），按干物质折算，再按每件物品自己的含水折回"
     },
     {
      "name": "燕麦",
      "citation": "USDA FoodData Central 燕麦生",
      "moistureFraction": 0.082,
-     "kcalPer100gWet": 389
+     "kcalPer100gWet": 389,
+     "mealGrams": 1100,
+     "mealBasis": "dryMatter",
+     "eatenMoistureFraction": 0.72,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；谷类按煮熟后食用，食用含水取 USDA 煮熟谷类均值 0.72（煮熟大米 0.68、意面 0.62、燕麦粥 0.84、碎小麦 0.78、珍珠大麦 0.69），按干物质折算，再按每件物品自己的含水折回"
     },
     {
      "name": "珍珠大麦",
      "citation": "USDA FoodData Central 珍珠大麦生",
      "moistureFraction": 0.094,
-     "kcalPer100gWet": 352
+     "kcalPer100gWet": 352,
+     "mealGrams": 1100,
+     "mealBasis": "dryMatter",
+     "eatenMoistureFraction": 0.72,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；谷类按煮熟后食用，食用含水取 USDA 煮熟谷类均值 0.72（煮熟大米 0.68、意面 0.62、燕麦粥 0.84、碎小麦 0.78、珍珠大麦 0.69），按干物质折算，再按每件物品自己的含水折回"
     }
    ],
    "selection": {
     "method": "mean",
     "reason": "世界里的谷物与谷粉为小麦、黑麦、燕麦、大麦，逐项取平均；已脱壳或磨粉的状态，带壳者在物品行覆盖可食部分"
    },
-   "basis": "谷物与谷粉。【数值凭记忆写入，待 L2 核对】"
+   "basis": "谷物与谷粉。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限（生理上限）：胃容量折一餐最多约 1100 g 熟食，按干物质基准折回各件物品的鲜重（生粮约 350 g）；这是一次进食的生理极限，不是惯常量（惯常量如 RACC 面包 50 g 会让人吃不饱），正常饮食不会触发，只防止一顿吃几公斤。【数值凭记忆写入，待 L2 核对】"
   },
   "meat": {
    "sources": [
@@ -331,26 +361,33 @@
      "name": "猪里脊",
      "citation": "USDA FoodData Central 猪里脊生（凭记忆约 143 kcal、含水约 71%）",
      "moistureFraction": 0.71,
-     "kcalPer100gWet": 143
+     "kcalPer100gWet": 143,
+     "mealGrams": 1100,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g（鲜重，按食用状态计）"
     },
     {
      "name": "牛肉末 85% 瘦",
      "citation": "USDA FoodData Central 牛肉末 85% 瘦生（凭记忆约 215 kcal、含水约 64%）",
      "moistureFraction": 0.64,
-     "kcalPer100gWet": 215
+     "kcalPer100gWet": 215,
+     "mealGrams": 1100,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g（鲜重，按食用状态计）"
     },
     {
      "name": "羊腿瘦肥混合",
      "citation": "USDA FoodData Central 羊腿瘦肥混合生（凭记忆约 217 kcal、含水约 67%）",
      "moistureFraction": 0.67,
-     "kcalPer100gWet": 217
+     "kcalPer100gWet": 217,
+     "mealGrams": 1100,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g（鲜重，按食用状态计）"
     }
    ],
    "selection": {
     "method": "mean",
     "reason": "混合肉类别，猪、牛、羊等肉种未限定，取三种代表肉的平均组成"
    },
-   "basis": "家畜生肉（瘦肥混合）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "家畜生肉（瘦肥混合）。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限（生理上限）：胃容量折一餐最多约 1100 g；正常饮食远不会触发，只防止一顿吃几公斤肉或一盆鱼。【数值凭记忆写入，待 L2 核对】"
   },
   "fish": {
    "sources": [
@@ -358,14 +395,17 @@
      "name": "鲤",
      "citation": "USDA FoodData Central 鲤生",
      "moistureFraction": 0.761,
-     "kcalPer100gWet": 127
+     "kcalPer100gWet": 127,
+     "mealGrams": 1100,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g（鲜重，按食用状态计）"
     }
    ],
    "selection": {
     "method": "single",
     "reason": "世界里的鱼是淡水鱼，取鲤一个出处；鳕是海鱼，不是世界成员，不入平均"
    },
-   "basis": "淡水鱼鲜肉；腌制品的营养由配方按投入守恒派生，不读本类别值。【数值凭记忆写入，待 L2 核对】"
+   "basis": "淡水鱼鲜肉；腌制品的营养由配方按投入守恒派生，不读本类别值。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限（生理上限）：胃容量折一餐最多约 1100 g；正常饮食远不会触发，只防止一顿吃几公斤肉或一盆鱼。【数值凭记忆写入，待 L2 核对】"
   },
   "egg": {
    "sources": [
@@ -374,14 +414,17 @@
      "citation": "USDA FoodData Central 鸡全蛋生（refuse 为蛋壳）",
      "moistureFraction": 0.762,
      "kcalPer100gWet": 143,
-     "refuseFraction": 0.12
+     "refuseFraction": 0.12,
+     "mealGrams": 1100,
+     "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g（鲜重，按食用状态计）"
     }
    ],
    "selection": {
     "method": "single",
     "reason": "禽蛋以鸡蛋为代表"
    },
-   "basis": "禽蛋，按可食内容计。蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费本类别值。【数值凭记忆写入，待 L2 核对】"
+   "basis": "禽蛋，按可食内容计。蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费本类别值。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限（生理上限）：胃容量折一餐最多约 1100 g；正常饮食远不会触发，只防止一顿吃几公斤肉或一盆鱼。【数值凭记忆写入，待 L2 核对】"
   },
   "milk": {
    "sources": [
@@ -468,16 +511,17 @@
    "sources": [
     {
      "name": "食盐",
-     "citation": "USDA FoodData Central 食盐（salt, table）：能量 0，含水约 0.2%",
+     "citation": "USDA FoodData Central 食盐（salt, table）：能量 0，含水约 0.2%；WHO《Guideline: Sodium intake for adults and children》（2012）：成人每日食盐 <5 g，一日三餐折每餐约 1.7 g（惯常量依据，不是生理上限）",
      "moistureFraction": 0.002,
-     "kcalPer100gWet": 0
+     "kcalPer100gWet": 0,
+     "mealGrams": 1.7
     }
    ],
    "selection": {
     "method": "single",
     "reason": "世界里的盐是食盐（粗盐小包）"
    },
-   "basis": "食盐：无能量，所以不能当口粮（饱腹为 0），不需要再写单餐上限。【数值凭记忆写入，待 L2 核对】"
+   "basis": "食盐：无能量，所以不能当口粮（饱腹为 0）；仍按类给单餐上限，取 WHO 每日盐摄入上限 5 g ÷ 三餐 ≈ 1.7 g（惯常量依据）。【数值凭记忆写入，待 L2 核对】"
   },
   "fresh_herb": {
    "sources": [

@@ -226,8 +226,8 @@ export function memberValues(x,kcalPerSatiety){
  if(m!==undefined)o.m=m;
  if(x?.refuseFraction!==undefined)o.edible=1-x.refuseFraction;
  if(x?.kcalPer100gWet!==undefined&&m!==undefined&&m<1&&kcalPerSatiety>0)o.e=x.kcalPer100gWet*10/(1-m)/kcalPerSatiety;
- // 单餐量按鲜重给（mealGrams）；mealBasis:'dryMatter' 的出处，惯常量是干物质量：mealGrams × (1 − 含水)，类别里存干物质量，到每件物品再按它自己的含水折回鲜重（鲜果与干果同一个类值）。
- if(x?.mealGrams!==undefined){if(x.mealBasis==='dryMatter'){if(m!==undefined)o.capDry=x.mealGrams*(1-m);}else o.cap=x.mealGrams;}
+ // 单餐量按鲜重给（mealGrams）；mealBasis:'dryMatter' 的出处，惯常量是干物质量：mealGrams × (1 − 食用时的含水)（eatenMoistureFraction，没写取出处自己的含水；谷、豆按煮熟后食用），类别里存干物质量，到每件物品再按它自己的含水折回鲜重（鲜果与干果同一个类值）。
+ if(x?.mealGrams!==undefined){if(x.mealBasis==='dryMatter'){const eaten=x.eatenMoistureFraction??m;if(eaten!==undefined)o.capDry=x.mealGrams*(1-eaten);}else o.cap=x.mealGrams;}
  return o;
 }
 export function deriveFromSources(row,kcalPerSatiety){
@@ -296,6 +296,8 @@ export function mealCapOf(engine,item){
 // 按时间累计的单餐额度（李白 2026-11-09 决定 A）。每户每个池记两样（存档 state.family.mealCap[户键] = {allow:{池:毫克}, open:{物品:毫克}}）：
 //   allow：上次吃后攒下的额度；open：整件（整瓶油、整罐蜜）开封后剩下的量，可分好几天吃完。
 // 日推进时累计：一天的额度 = 每人每餐上限 × 表头 mealsPerDay × 人数，只在这户手里（含开封余量）有这个池的东西时才累计，手里没了就清零（额度不能存着没东西吃）。
+// 攒下的额度封顶为一天的量（每人每餐上限 × mealsPerDay × 人数）：整件分几天吃由 open 负责。封顶后预算与实际对得上的道理：预算期内可吃总量 = 现有额度（≤一天）+ 每天新增，
+// 只要需求每天都有缺口（这时才会买），每天都把当天额度吃满，不会因封顶丢额度；买进量按总量限购，所以买进的都吃得掉。需求当天已满足的天数，额度作废，这时那笔购买本来就不被需要。
 // 吃饭时扣减：吃多少毫克，先吃开封余量，不够再开新的一件（整件从背包扣，余量进 open）。
 // 预算（多日采购）与实际吃饭同一套：池的总额度 = 现有累计额度 + 预算期内新增额度（新买的货到货后才开始累计，按整天向下取整）。
 // opts：days = 各成员的预算天数（日推进为每人 1），saved = 存档里这户的 {allow,open}，held(item) = 这户现在手里有没有这件（含开封余量）。表头没有 mealsPerDay 时没有任何上限。
@@ -309,7 +311,9 @@ export function mealCapPools(engine,{days=[],saved=null}={}){
   markHeld(item){const c=active&&poolOf(item);if(c)held.add(c.pool);},
   holding(item){const c=active&&poolOf(item);return Boolean(c)&&(held.has(c.pool)||Object.keys(open0).some(k=>(open0[k]??0)>0&&poolOf(k)?.pool===c.pool));},
   // 这个池总共能吃多少毫克：start = 货到手的天数（手里已有则 0）。
-  allowMg(item,start=0){const c=active&&poolOf(item);if(!c)return Infinity;const now=api.holding(item);return (now?(allow0[c.pool]??0):0)+accrual(c,now?0:start);},
+  // 攒下的额度最多一天的量（每人每餐上限 × mealsPerDay × 人数）：整件分几天吃由开封余量负责，额度不能无限攒（否则隔几天一次喝下几公斤奶）。
+  dayMg(item){const c=active&&poolOf(item);return c?c.mg*perDay*days.length:Infinity;},
+  allowMg(item,start=0){const c=active&&poolOf(item);if(!c)return Infinity;const now=api.holding(item);return (now?Math.min(allow0[c.pool]??0,api.dayMg(item)):0)+accrual(c,now?0:start);},
   roomMg(item,start=0){const c=active&&poolOf(item);if(!c)return Infinity;return Math.max(0,api.allowMg(item,start)-(used.get(c.pool)??0));},
   openMg(item){return Math.max(0,(open0[item]??0)-(openUsed.get(item)??0));},
   take(item,{eatMg=0,fromOpen=0,start=0}={}){const c=active&&poolOf(item);if(!c)return;if(eatMg>api.roomMg(item,start)+1e-6)bad.add(c.pool);if(eatMg>0)used.set(c.pool,(used.get(c.pool)??0)+eatMg);if(fromOpen>0)openUsed.set(item,(openUsed.get(item)??0)+fromOpen);},
@@ -324,7 +328,7 @@ export function mealCapPools(engine,{days=[],saved=null}={}){
    const allow={};
    for(const r of rows){const c=active&&poolOf(r.item);if(!c||c.pool in allow)continue;
     const left=rows.some(x=>poolOf(x.item)?.pool===c.pool&&remainMg(x)>0);
-    if(left)allow[c.pool]=Math.max(0,api.allowMg(r.item)-(used.get(c.pool)??0));}
+    if(left)allow[c.pool]=Math.min(api.dayMg(r.item),Math.max(0,api.allowMg(r.item)-(used.get(c.pool)??0)));}
    return allow;
   }
  };
@@ -374,7 +378,8 @@ export function validateMaterialProps(world){
   });
   if(sel?.method==='mean')for(const key of Object.keys(bounds)){const n=srcs.filter(x=>x?.[key]!==undefined).length;if(n!==0&&n!==srcs.length)errors.push(`材料属性 mean 要求各出处都写 ${key}：${where}`);}
   // 单餐量基准：mealBasis 只能是 dryMatter（惯常量按干物质折算），须同时有 mealGrams 与含水分数；同一行不混用两种基准。
-  for(const [i,x] of srcs.entries())if(x?.mealBasis!==undefined&&(x.mealBasis!=='dryMatter'||x.mealGrams===undefined||x.moistureFraction===undefined))errors.push(`材料属性 mealBasis 只能是 dryMatter，且须同时写 mealGrams 与 moistureFraction：${where}.sources[${i}]`);
+  for(const [i,x] of srcs.entries())if(x?.eatenMoistureFraction!==undefined&&!(x.mealBasis==='dryMatter'&&Number.isFinite(x.eatenMoistureFraction)&&x.eatenMoistureFraction>=0&&x.eatenMoistureFraction<1))errors.push(`材料属性 eatenMoistureFraction 只用于 dryMatter 基准且须在 0–1：${where}.sources[${i}]`);
+  for(const [i,x] of srcs.entries())if(x?.mealBasis!==undefined&&(x.mealBasis!=='dryMatter'||x.mealGrams===undefined||(x.moistureFraction===undefined&&x.eatenMoistureFraction===undefined)))errors.push(`材料属性 mealBasis 只能是 dryMatter，且须同时写 mealGrams 与 moistureFraction：${where}.sources[${i}]`);
   if(new Set(srcs.filter(x=>x?.mealGrams!==undefined).map(x=>x.mealBasis??'wet')).size>1)errors.push(`材料属性同一行不能混用鲜重与干物质两种单餐量基准：${where}`);
   const hasKcal=srcs.some(x=>x?.kcalPer100gWet!==undefined);
   if(hasKcal&&!(kps>0))errors.push(`材料属性表头缺 kcalPerSatiety，无法由出处推算能量：${where}`);
