@@ -117,8 +117,38 @@ export function resolveMaterials(d,engine,holder,materials){
 // 每行 {cls, purpose（账本用途）, gramsPerDay}；状态里的欠量与短缺日按 `${cls}DebtG`、`${cls}ShortDays` 记。
 export function householdUsage(engine,minute,members){
  const fuel=craftingParam(engine,'household.fuelKgPerDay'),season=engine.calendar(minute).season;
- return [{cls:'fuel',purpose:'fuel',gramsPerDay:(fuel.cooking+(fuel.heating[season]??0))*1000},
+ const fuelKg=fuel.cooking+(fuel.heating[season]??0),ref=fuelReferenceHeat(engine);
+ // 燃料需求本质是热量：现行“每日公斤”是按基准有效热值（世界里已知热值的燃料的平均有效热值）算的，demandMJ = 公斤 × 基准热值；
+ // 具体一件燃料顶多少，见 usageGrams（有效热值 ÷ 基准）。没有任何燃料知道热值时不带 demandMJ，一切同现行。
+ return [{cls:'fuel',purpose:'fuel',gramsPerDay:fuelKg*1000,...(ref?{demandMJ:fuelKg*ref}:{})},
   {cls:'salt',purpose:'seasoning',gramsPerDay:craftingParam(engine,'household.saltGramsPerPersonDay')*members.length}];
+}
+
+// D12 卡 B：燃料有效热值（MJ/件重 kg）= 热值 ×（1 − 含水率）− 水分汽化潜热 × 含水率。热值与含水率按材料属性（materialProps）；
+// 热值是 MJ/kg 干物质，所以干物质 (1−m) 公斤放热，m 公斤水要先汽化吸热。潜热是物理常数（balance/crafting household.waterLatentHeat）。
+// 任一属性未知返回 null（不给默认值）。
+export function fuelEffectiveHeat(engine,item){
+ const p=materialProps(engine,item);
+ if(!p.heatValue.known||!p.moisture.known)return null;
+ const m=p.moisture.value;
+ return p.heatValue.value*(1-m)-craftingParam(engine,'household.waterLatentHeat')*m;
+}
+// 基准有效热值：世界里燃料类物品中有效热值已知且为正者的平均（按物品编号序，确定）；没有则 null。随世界与属性表缓存。
+const refMemo=new WeakMap();
+export function fuelReferenceHeat(engine){
+ const world=engine.world,table=world?.materialProps,hit=refMemo.get(world);
+ if(hit&&hit.table===table)return hit.value;
+ const heats=classItems(engine,'fuel').map(id=>fuelEffectiveHeat(engine,id)).filter(h=>h!==null&&h>0);
+ const value=heats.length?heats.reduce((a,b)=>a+b,0)/heats.length:null;
+ if(world&&typeof world==='object')refMemo.set(world,{table,value});
+ return value;
+}
+// 一件用度类物品顶多少“基准克”：燃料按有效热值 ÷ 基准热值折算其重量（含水多的柴要烧更多公斤，同热量需求不变）；
+// 其余类、或属性未知，原样返回重量克数。有效热值不为正的燃料返回 0（烧不出净热）。
+export function usageGrams(engine,item,cls,grams){
+ if(cls!=='fuel')return grams;
+ const ref=fuelReferenceHeat(engine),heat=ref?fuelEffectiveHeat(engine,item):null;
+ return heat===null?grams:grams*Math.max(0,heat)/ref;
 }
 
 // —— 加载期派生营养与生熟 ——
@@ -134,6 +164,9 @@ export function deriveItemAttributes(world){
  const cache=new Map(),busy=new Set();
  const base=item=>{
   const tags=item.tags??[],key=Object.keys(density).find(k=>k!=='default'&&tags.includes(k));
+  // D12 卡 B：干物质能量密度与含水率都已知时，饱腹 = 重量(kg) × 能量密度(饱腹/kg 干物质) ×（1 − 含水率）；任一未知走现行三档密度。
+  const mp=materialProps({world,byId},item.id);
+  if(mp.energyDensity.known&&mp.moisture.known)return {satiety:(item.weight??0)*mp.energyDensity.value*(1-mp.moisture.value),hydration:0,raw:has(item.id,'needsHeat')};
   const perKg=key?density[key]:density.default;
   return {satiety:(item.weight??0)*perKg,hydration:0,raw:has(item.id,'needsHeat')};
  };
