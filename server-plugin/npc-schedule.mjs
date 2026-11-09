@@ -52,6 +52,8 @@ function invalidateSchedule(cache,{path,value,op}){
     if(['minute','scheduler','npcObligationClock'].includes(path[1]))return;
     if(path[1]==='family'&&path[2]==='mealDays')return;
     if(path[1]==='family'&&path[2]==='meals')return;
+    // 单餐累计额度（household-budget mealCapPools 写的 state.family.mealCap）同属吃饭记账，不改变任何人的日程；与 education-state.mjs 的 relevant 同步。
+    if(path[1]==='family'&&path[2]==='mealCap')return;
     if(path[1]==='npcs'&&path.length>=3){
         if(!ignoredNpcScheduleFields.has(path[3])){cache.people.delete(path[2]);}
         return;

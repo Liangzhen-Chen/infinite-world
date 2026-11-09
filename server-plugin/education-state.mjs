@@ -118,7 +118,8 @@ export function sameScheduleInputs(a,b){
  // Source choice reads current finite stocks, never yesterday's failed stop.
  // Meal receipts themselves do not change anybody's allocation.
  if(a.family!==b.family){
-  const relevant=f=>Object.keys(f??{}).filter(k=>k!=='meals'&&k!=='mealDays');
+  // 吃饭记账字段（meals、mealDays、单餐累计额度 mealCap）不影响课程分配；与 npc-schedule.mjs invalidateSchedule 同步。
+  const relevant=f=>Object.keys(f??{}).filter(k=>k!=='meals'&&k!=='mealDays'&&k!=='mealCap');
   const x=relevant(a.family),y=relevant(b.family);
   if(x.length!==y.length||x.some(k=>a.family[k]!==b.family?.[k]))return false;
  }
