@@ -71,6 +71,7 @@ test('unequal needs: a two-person household is credited in proportion to a one-p
  f.document.state.npcs.npc_hw_fangqin.inventory={};f.document.state.npcs.npc_hw_fangqin.location=f.document.state.npcs[shopSeller].location;
  const need=id=>{const r=householdResources(f.d,f.engine,id,{marketSubstitution:false});return r.shortfall.satiety+r.rows.reduce((n,x)=>n+x.food*(f.engine.byId.get(x.item)?.nutrition?.satiety??0),0);};
  const nb=need('npc_hw_chenbai'),nx=need('npc_hw_xuling'),gb=credited(f,'npc_hw_chenbai'),gx=credited(f,'npc_hw_xuling');
+ assert.ok(gb+gx>0,'at least one buyer must really be credited from the seller');
  assert.ok(nb>nx,'the larger household has the larger need');
  // Each part is the floor or ceiling of total*need/sum, so credited/need ratios agree within one unit per household.
  assert.ok(Math.abs(gb-gx*nb/nx)<=1+nb/nx,`credited ${gb} vs ${gx} for needs ${nb}:${nx}`);
@@ -82,6 +83,7 @@ test('the seller household is not a competing buyer and buys nothing from its ow
  f.document.state.npcs.npc_hw_chenbai.coins=100;
  const available=sellable(f),others=['npc_hw_xuling','npc_hw_wushuo'].map(id=>credited(f,id));
  assert.equal(credited(f,'npc_hw_chenbai'),0);
+ assert.ok(others.some(n=>n>0),'other buyers must really be credited, else the case passes empty');
  assert.ok(sum(others)<=available);assert.ok(Math.max(...others)-Math.min(...others)<=1);
 });
 
@@ -91,6 +93,7 @@ test('shared-source read is reused within one revision and dropped by a state wr
  const plain=()=>({get document(){return cursor.root;},get:(...p)=>p.reduce((v,k)=>v?.[k],cursor.root)});
  const read=()=>buyers.map(id=>credited(f,id,d)),fresh=()=>buyers.map(id=>credited(f,id,plain()));
  const first=read();
+ assert.ok(first.some(n=>n>0),'at least one buyer must really be credited before the cache is tested');
  assert.deepEqual(read(),first,'cache hit returns the same parts');
  assert.deepEqual(first,fresh(),'cached parts equal an uncached read of the same revision');
  cursor.apply({op:'set',path:['state','npcs',buyers[0],'coins'],value:0});
