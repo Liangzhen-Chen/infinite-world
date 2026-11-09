@@ -80,7 +80,7 @@ function assertCropAvailable(d,subject,tenant){
 function tenancyRisk(d,e,party){
     const profiles=e.rules.agriculture.fieldRent.riskPreferences,traits=subjectiveView(e,d.document,party).self.traits;
     if(traits.riskAversion!==undefined)return {riskPermille:1000,source:'personality.riskAversion'};
-    const total=profiles.reduce((n,p)=>n+p.weight,0),roll=rollDice(d.document.randomSeed,'tenancy:preference',party,0,0,total);
+    const total=profiles.reduce((n,p)=>n+p.weight,0),roll=rollDice(d.get('randomSeed'),'tenancy:preference',party,0,0,total);
     let cumulative=0;const profile=profiles.find(p=>(cumulative+=p.weight)>=roll);
     return {profile:profile.id,riskPermille:profile.riskPermille,roll,source:'rules.agriculture.fieldRent.riskPreferences'};
 }

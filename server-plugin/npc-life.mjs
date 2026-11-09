@@ -53,7 +53,7 @@ const grams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight?
 // 在用的一件日用品每天按 耐久上限 ÷ 寿命天数 磨损（小数部分按确定的随机取整），另有 1 ÷ 寿命天数 的意外损坏；
 // 磨到 0 或损坏即离手（进 sink:consume，用途 wear），同种的下一件接着用。手里没了的工具由 business 的"本行当要用而没有完好工具"需求去买。
 function wearHeld(d,engine,who,day,items){
- const lifeDays=craftingParam(engine,'durability.lifeYears')*360,seed=d.document.randomSeed;
+ const lifeDays=craftingParam(engine,'durability.lifeYears')*360,seed=d.get('randomSeed');
  for(const item of items){
   if(engine.quantity(d,who,item)<1)continue;
   const def=engine.byId.get(item),max=def?.durability;if(!(max>0))continue;
@@ -329,7 +329,7 @@ function deliver(d,engine,pregnancy,minute){
  const house=npcHousehold(engine,state,pregnancy.mother)??{id:pregnancy.household,...engine.world.households.find(h=>h.id===pregnancy.household)};
  const ledger=state.settlements?.[house.settlement];
  if(!Number.isSafeInteger(ledger?.population)){holdingSet(d,null,['state','family','pregnancies',pregnancy.id],{...pregnancy,status:'中止',endedAt:minute,reason:'聚落人口账不存在'},'npc-life');return;}
- const seed=d.document.randomSeed,day=minute/DAY,sex=clockRoll(seed,`${pregnancy.id}:sex`,day)<0.5?'女':'男';
+ const seed=d.get('randomSeed'),day=minute/DAY,sex=clockRoll(seed,`${pregnancy.id}:sex`,day)<0.5?'女':'男';
  const given=r.givenNames[Math.floor(clockRoll(seed,`${pregnancy.id}:name`,day)*r.givenNames.length)];
  const child=`npc_born_${key(pregnancy.id)}`,name=`${nameOf(engine,state,pregnancy.father).slice(0,1)}${given}`,birthId=`birth_${key(pregnancy.id)}`;
  holdingSet(d,null,['state','family','people',child],{id:child,name,sex,birth:calendarDate(minute),bornAt:minute,parents:{mother:pregnancy.mother,father:pregnancy.father},
@@ -352,7 +352,7 @@ function deliver(d,engine,pregnancy,minute){
 }
 
 function familyDay(d,engine,minute){
- const r=rules(engine),seed=d.document.randomSeed,day=minute/DAY;
+ const r=rules(engine),seed=d.get('randomSeed'),day=minute/DAY;
  for(const m of Object.values(d.get('state','family','marriages')??{}).sort((x,y)=>x.id.localeCompare(y.id))){
   const state=d.get('state');
   if(m.status==='在婚'&&m.partners.some(p=>!alive(state,p)))holdingSet(d,null,['state','family','marriages',m.id],{...m,status:'丧偶',endedAt:minute},'npc-life');
@@ -502,7 +502,7 @@ function assignCare(d,engine,illness,minute){
 }
 
 function fallIll(d,engine,id,minute,band){
- const h=healthRules(engine),seed=d.document.randomSeed,day=minute/DAY,state=d.get('state'),npc=state.npcs[id];
+ const h=healthRules(engine),seed=d.get('randomSeed'),day=minute/DAY,state=d.get('state'),npc=state.npcs[id];
  const graveChance=Math.min(1,band.graveShare*(weakened(npc)?h.weakenedGraveMultiplier:1));
  const severity=clockRoll(seed,`illness-severity:${id}`,day)<graveChance?'重':'轻',[low,high]=severity==='重'?h.graveDays:h.mildDays;
  const days=low+Math.floor(clockRoll(seed,`illness-days:${id}`,day)*(high-low+1));
@@ -609,7 +609,7 @@ function healthDay(d,engine,minute){
  const clock=['state','records','npc_life:health'];
  if((d.get(...clock)?.minute??-1)>=minute)return;
  const h=healthRules(engine);if(!h)return;
- const seed=d.document.randomSeed,day=minute/DAY,ended=new Set();
+ const seed=d.get('randomSeed'),day=minute/DAY,ended=new Set();
  for(const illness of Object.values(d.get('state','family','illnesses')??{}).filter(r=>r.status==='患病中').sort((a,b)=>a.id.localeCompare(b.id))){
   if(illness.patient==='player')continue;
   const npc=d.get('state','npcs',illness.patient);
@@ -769,7 +769,7 @@ function migrationDay(d,engine,minute){
  const constraints=personConstraints(engine,d.get('state'));
  for(const id of Object.keys(d.get('state','npcs')).sort()){
   const state=d.get('state');if(!mobile(engine,state,id,constraints))continue;
-  const why=migrationReason(engine,state,id,minute,d.document.randomSeed);if(!why)continue;
+  const why=migrationReason(engine,state,id,minute,d.get('randomSeed'));if(!why)continue;
   const from=npcHousehold(engine,state,id,constraints),mid=`migration_${key(id,minute)}`;
   const row={id:mid,person:id,reason:why.reason,cause:why.cause,...(why.fleeing?{fleeing:why.fleeing}:{}),...(why.stranger?{stranger:true}:{}),host:why.host,
    from:{household:from.id,settlement:from.settlement,home:from.homeLocation},to:{household:why.house.id,settlement:why.house.settlement,home:why.house.homeLocation},
@@ -825,7 +825,7 @@ function depart(d,engine,m,at){
  if(!alive(state,m.person)){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'本人已不在',endedAt:at},'npc-life');return;}
  if(!alive(state,m.host)||npcHousehold(engine,state,m.host)?.id!==m.to.household){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'投奔的人家已不在原处',endedAt:at},'npc-life');return;}
  if(!settled(state,m.person)||incapacitated(state,m.person)||npc.caring||engine.npcAutonomyBusy?.(state,m.person,at)){postpone(d,engine,m,'动身时不得空');return;}
- let route;try{route=engine.route(npc.location,m.to.home,'walk',at,d.document.randomSeed);}catch{postpone(d,engine,m,'路线暂不可通行');return;}
+ let route;try{route=engine.route(npc.location,m.to.home,'walk',at,d.get('randomSeed'));}catch{postpone(d,engine,m,'路线暂不可通行');return;}
  if((npc.coins??0)<route.cost){postpone(d,engine,m,'路费不足');return;}
  const arriveAt=at+route.minutes,{schedule,changed}=residenceSchedule(engine,state,m);
  const early=endObligations(d,engine,m.person,o=>(o.start??o.due??0)<arriveAt,`${name}迁居途中，无法赴约`,m.id,at);

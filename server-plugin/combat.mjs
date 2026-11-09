@@ -54,7 +54,7 @@ export function combatEscapeDestination(d,e,requested){
  }
  const destinations=paths.size?[...paths]:adjacent.filter(id=>known.has(id));
  const candidates=destinations.filter(id=>(!exact||id===exact)).filter(id=>{
-  try{return e.route(s.location,id,'walk',s.minute,d.document.randomSeed).edges.length>0;}catch{return false;}
+  try{return e.route(s.location,id,'walk',s.minute,d.get('randomSeed')).edges.length>0;}catch{return false;}
  });
  if(candidates.length!==1)throw Error('Escape requires one known passable path destination');
  return candidates[0];

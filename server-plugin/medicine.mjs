@@ -76,7 +76,7 @@ function bookVisit(d,e,{patient='player',clinic,source=null,credit=false,charity
  // A bedridden grave patient is visited at home; everyone else walks to the clinic.
  const house=patient!=='player'&&actor(s,patient).status==='患病'&&conditions.some(c=>c.severity==='重'),place=house?present(s,patient):site.seat;
  let travel=0;
- if(present(s,patient)!==site.seat){try{travel=e.route(present(s,patient),site.seat,'walk',now,d.document.randomSeed).minutes;}catch{throw preconditionFailure('病人没有可行赴诊路线');}}
+ if(present(s,patient)!==site.seat){try{travel=e.route(present(s,patient),site.seat,'walk',now,d.get('randomSeed')).minutes;}catch{throw preconditionFailure('病人没有可行赴诊路线');}}
  if(!Number.isFinite(travel)||travel>DAY)throw preconditionFailure('病人路程过远，需先安排运输');
  const urgency=serviceUrgency(conditions),displaced=[];
  // A new acute patient may take an unstarted lower-priority appointment.
@@ -134,7 +134,7 @@ function finish(d,e,r){
  const herb=stock.item;
  if(stock.temple){const a=ensureGroupAccount(d,e,stock.temple);moveStock(d,{from:store(e,stock.temple,herb),to:`sink:consume|${itemResource(e,herb)}|treatment`,amount:1,writer:'medicine',eventId:r.id});d.set(groupAccountPath(stock.temple),{...a,items:{...a.items,[herb]:a.items[herb]-1},ledger:[...a.ledger,{kind:'义诊耗药',coins:0,items:{[herb]:-1},sourceEvent:r.id}]});}
  else e.itemDelta(d,stock.holder,herb,-1,HERB_USE('treatment',r.id));
- const score=Math.min(.95,.35+medicalSkill(e,s,r.doctor)/1500+(r.assistants.length?.05:0)),roll=clockRoll(d.document.randomSeed,`medicine-diagnosis:${r.id}`,r.start),correct=roll<score;
+ const score=Math.min(.95,.35+medicalSkill(e,s,r.doctor)/1500+(r.assistants.length?.05:0)),roll=clockRoll(d.get('randomSeed'),`medicine-diagnosis:${r.id}`,r.start),correct=roll<score;
  const outcome=[];
  for(const c of medicalConditions(s,r.patient).filter(c=>r.conditions.some(x=>x.id===c.id&&x.kind===c.kind))){
   if(c.kind==='illness'){
@@ -238,7 +238,7 @@ export function advanceMedicine(d,e,{before,after}){
    if(amount)settleClaim(d,e,{id:debt.id,payer:debt.debtor,amount},`${debt.id}:collect:${after}`);
   }
   if(Object.values(d.get('state','records')??{}).some(r=>r.category==='water_exposure'))for(const n of Object.keys(d.get('state','npcs')??{}))for(const exposure of waterDiseaseExposure(d.get('state'),present(d.get('state'),n))){
-   const disease=e.rules.hazardClock?.diseases?.find(x=>x.id===exposure.disease);if(disease&&clockRoll(d.document.randomSeed,`water-exposure:${n}:${exposure.id}`,Math.floor(after/DAY))<exposure.risk)contractIllness(d,e,n,after,{severity:'轻',days:disease.courseDays[0],disease});
+   const disease=e.rules.hazardClock?.diseases?.find(x=>x.id===exposure.disease);if(disease&&clockRoll(d.get('randomSeed'),`water-exposure:${n}:${exposure.id}`,Math.floor(after/DAY))<exposure.risk)contractIllness(d,e,n,after,{severity:'轻',days:disease.courseDays[0],disease});
   }
  }
  delete e.medicineParticipants;

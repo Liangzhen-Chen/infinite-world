@@ -156,7 +156,7 @@ export function produceItems(d,engine,item,quantity,{eventId,recipe,workmanship,
     const definition=engine.byId.get(item),ids=[];
     if(!definition)throw preconditionFailure('产物未登记');
     for(let index=0;index<quantity;index++){
-        const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
+        const id=`unit_${createHash('sha256').update(`${d.get('randomSeed')}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
         if(d.get('state','itemInstances',id))throw preconditionFailure('此次制造的单件编号已经存在，不能重复制造');
         ids.push(id);
         const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
@@ -175,7 +175,7 @@ export function markReturnedUnits(d,engine,owner,item,quantity,{eventId,grade}){
     if(total-units.length<quantity)throw Error('退回的料不足以登记单件');
     const definition=engine.byId.get(item),properties=typeof held==='object'?held:{quantity:total,quality:definition.quality,durability:definition.durability,weight:definition.weight},ids=[];
     for(let index=0;index<quantity;index++){
-        const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:returned:${owner}:${item}:${index}`).digest('hex').slice(0,24)}`;
+        const id=`unit_${createHash('sha256').update(`${d.get('randomSeed')}:${eventId}:returned:${owner}:${item}:${index}`).digest('hex').slice(0,24)}`;
         if(d.get('state','itemInstances',id))throw Error('退回料单件编号冲突');
         holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,origin:'制作失败退回的料，品质已降',
             quality:properties.quality??definition.quality,durability:properties.durability??definition.durability,maxDurability:properties.maxDurability??definition.durability,grade},'items');
@@ -189,7 +189,7 @@ export function trackSingleItem(d,engine,owner,item,eventId){
     const held=d.get(...engine.bagPath(owner),item);
     if(engine.quantity(d,owner,item)!==1)throw preconditionFailure('需要单件物品才能确定受术对象');
     if(held.instances?.length){const unit=heldUnit(d,engine,owner,item);if(!unit.instance)throw Error('单件登记缺失');return unit.instance;}
-    const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:existing:${owner}:${item}`).digest('hex').slice(0,24)}`;
+    const id=`unit_${createHash('sha256').update(`${d.get('randomSeed')}:${eventId}:existing:${owner}:${item}`).digest('hex').slice(0,24)}`;
     if(d.get('state','itemInstances',id))throw Error('既有物品的编号重复');
     const definition=engine.byId.get(item);
     holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,
@@ -209,7 +209,7 @@ export function trackTransferUnit(d,engine,owner,item,eventId,requested=null,{un
         return selected;
     }
     if(units.length>=quantity)throw preconditionFailure('没有未登记的单件');
-    const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:transfer:${owner}:${item}`).digest('hex').slice(0,24)}`;
+    const id=`unit_${createHash('sha256').update(`${d.get('randomSeed')}:${eventId}:transfer:${owner}:${item}`).digest('hex').slice(0,24)}`;
     if(d.get('state','itemInstances',id))throw Error('既有单件登记编号冲突');
     const definition=engine.byId.get(item),properties=typeof held==='object'?held:{quantity,quality:definition.quality,durability:definition.durability,weight:definition.weight};
     holdingSet(d,null,['state','itemInstances',id],{id,item,owner,status:'持有',maker:null,makerName:null,source:eventId,
@@ -529,7 +529,7 @@ export function producePremisesItems(d,engine,owner,location,item,quantity,{even
  count(quantity);if(quantity>200)throw preconditionFailure('单次制造产物超过处理上限，应拆分工序');
  const definition=engine.byId.get(item),ids=[];
  for(let index=0;index<quantity;index++){
-  const id=`unit_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
+  const id=`unit_${createHash('sha256').update(`${d.get('randomSeed')}:${eventId}:${item}:${index}`).digest('hex').slice(0,24)}`;
   if(d.get('state','itemInstances',id))throw preconditionFailure('此次制造的单件编号已经存在，不能重复制造');
   const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor));
   holdingSet(d,engine,['state','itemInstances',id],{id,item,owner,status:'持有',maker,makerName:engine.byId.get(maker)?.name??maker,recipe,source:eventId,minute:d.get('state','minute'),quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'items');

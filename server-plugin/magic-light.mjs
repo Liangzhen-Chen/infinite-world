@@ -209,7 +209,7 @@ export function prepareOptics(d,c,args){
   if(!route||![route.from,route.to].includes(location)||!d.get('state','discoveries',route.from)||!d.get('state','discoveries',route.to))throw preconditionFailure('光标只能标记已亲历两端的实际路线');
   // Reuse the normal route resolver; markers never grant access or reveal routes.
   const destination=route.from===location?route.to:route.from;
-  const usable=this.route(location,destination,'walk',d.get('state','minute'),d.document.randomSeed);
+  const usable=this.route(location,destination,'walk',d.get('state','minute'),d.get('randomSeed'));
   if(!usable.edges.includes(route.id))throw preconditionFailure('指定路线当前不可通行');
   return{...p,target:route.id,route:clone(route),point:localPlayerPoint(d)};
  }

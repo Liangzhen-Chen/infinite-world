@@ -73,11 +73,11 @@ export function commitNpcCrime(d,e,plan,minute){
  }else throw preconditionFailure('未登记的NPC犯罪来源');
  const key=registerIncident(d,e,{offender:actor,victim:offense==='smuggling'?null:victim,offense,value,stolen,witnesses,eventId:id,location,minute,relationshipApplied:true});
  const code=legalCodeAt(e,location,d.get('state'));let reportAt=null,reportRoute=null;
- if(witnesses.length){try{reportRoute=e.route(location,code.court,'walk',minute,d.document.randomSeed);reportAt=minute+code.reportMinutes+reportRoute.minutes;}catch{}}
+ if(witnesses.length){try{reportRoute=e.route(location,code.court,'walk',minute,d.get('randomSeed'));reportAt=minute+code.reportMinutes+reportRoute.minutes;}catch{}}
  let flight=null;
  const destinations=plan.destination?[plan.destination]:plan.embezzlement?(e.rules.law.codes??[]).filter(c=>c.id!==code.id).map(c=>c.court).filter(Boolean).sort():[];
  for(const destination of destinations){
-  try{const route=e.route(location,destination,'walk',minute,d.document.randomSeed),coins=d.get('state','npcs',actor,'coins');
+  try{const route=e.route(location,destination,'walk',minute,d.get('randomSeed')),coins=d.get('state','npcs',actor,'coins');
    if(route.minutes>0&&Number.isFinite(route.minutes)&&(route.cost??0)<=coins){
     const cost=route.cost??0;if(cost){moveCoins(d,{from:purse(null,actor),to:sink('export','travel'),amount:cost,writer:'npc-crime',eventId:id});d.set(['state','npcs',actor,'coins'],coins-cost);}
     flight={from:location,to:destination,depart:minute,arrive:minute+route.minutes,edges:route.edges,cost};
@@ -154,7 +154,7 @@ export function advanceNpcCrime(d,e,{before,after}){
   for(const id of Object.keys(state.npcs??{}).sort()){
    if(state.npcs[id].location===state.location)continue;
    const plan=npcCrimePlan(e,d.get('state'),id);if(!plan)continue;
-   if(clockRoll(d.document.randomSeed,`npc-crime:${id}`,Math.floor(at/DAY))>=e.rules.law.npcCrime.dailyChance)continue;
+   if(clockRoll(d.get('randomSeed'),`npc-crime:${id}`,Math.floor(at/DAY))>=e.rules.law.npcCrime.dailyChance)continue;
    commitNpcCrime(d,e,plan,at);
   }
  }

@@ -41,7 +41,7 @@ export function messageDistance(d,engine,target){
   if(!facts)throw preconditionFailure('缺少收者实际距离事实，须先实际接触');
   return{meters:hypot(point[0]-facts.point[0],point[1]-facts.point[1]),basis:'local_contact',edges:[]};
  }
- const route=engine.route(location,actor.location,'walk',d.get('state','minute'),d.document.randomSeed);
+ const route=engine.route(location,actor.location,'walk',d.get('state','minute'),d.get('randomSeed'));
  let meters=0;
  for(const id of route.edges){const edge=engine.world.routes.find(e=>e.id===id);if(!edge||!Number.isFinite(edge.lengthKm)||edge.lengthKm<0)throw preconditionFailure('消息路线缺少真实距离');meters+=edge.lengthKm*1000;}
  if(!route.edges.length||!Number.isFinite(meters)||meters<=0)throw preconditionFailure('消息路线缺少真实距离');
@@ -54,7 +54,7 @@ export function messageConsent(d,target,key,kind,until){
  return r;
 }
 function routeDistance(d,engine,from,to){
- const route=engine.route(from,to,'walk',d.get('state','minute'),d.document.randomSeed);
+ const route=engine.route(from,to,'walk',d.get('state','minute'),d.get('randomSeed'));
  let meters=0;for(const id of route.edges){const edge=engine.world.routes.find(e=>e.id===id);if(!edge||!Number.isFinite(edge.lengthKm)||edge.lengthKm<0)throw preconditionFailure('消息路线缺少真实距离');meters+=edge.lengthKm*1000;}
  if(!route.edges.length||meters<=0)throw preconditionFailure('消息路线缺少真实距离');return{meters,basis:'route_length',edges:[...route.edges]};
 }

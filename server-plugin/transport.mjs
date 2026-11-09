@@ -195,7 +195,7 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='
  const s=d.get('state'),a=transportAssetView(e,d.document,asset);if(!a||!a.factor||!a.capacityKg||a.location!==from)throw preconditionFailure('没有同地可用运力');
  const letter=isLetter(cargo,passengers,escort),load=dimensions(e,cargo,passengers),clock=tripClock(e,s,a,{from,to,load,passengers,letter,requested}),{departAt}=clock;
  const used=batchLoad(clock.rows);if(load.kg+used.kg>a.capacityKg||load.m3+used.m3>a.capacityM3||passengers.length+used.seats>a.seats)throw preconditionFailure('货舱重量、体积或座位容量不足');
- const prior=e.airDraft;e.airDraft=d;let route;try{route=e.route(from,to,a.mode,departAt,d.document.randomSeed);}finally{e.airDraft=prior;}
+ const prior=e.airDraft;e.airDraft=d;let route;try{route=e.route(from,to,a.mode,departAt,d.get('randomSeed'));}finally{e.airDraft=prior;}
  if(clock.rows.length&&(route.edges.length!==clock.rows[0].transport.edges.length||route.edges.some((id,i)=>id!==clock.rows[0].transport.edges[i])))throw preconditionFailure('原车次路线已变化，不能并入不同路线');
  const edges=route.edges.map(id=>e.world.routes.find(r=>r.id===id)),distanceKm=edges.reduce((n,r)=>n+r.lengthKm,0);
  const billableKg=Math.max(load.kg,load.m3*250,1),capacityFactor=Math.max(1,specOf(e,a.kind).kg/a.capacityKg);
@@ -215,13 +215,13 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='
  const risk=distanceKm?passages.reduce((sum,p,i)=>sum+p.risk*edges[i].lengthKm,0)/distanceKm:0;
  const freight=Math.max(1,Math.ceil(passages.reduce((sum,p)=>sum+p.freight,0)));
  const tariff=passages.reduce((n,p)=>n+p.tariff,0);
- const estimatedArrivalAt=arrivalMinute(e,s,d.document.randomSeed,route.edges,from,a.mode,departAt,clock.travelWindow),toll=passages.reduce((n,p)=>n+p.toll,0);
+ const estimatedArrivalAt=arrivalMinute(e,s,d.get('randomSeed'),route.edges,from,a.mode,departAt,clock.travelWindow),toll=passages.reduce((n,p)=>n+p.toll,0);
  return {asset:a.id,mode:a.mode,from,to,departAt,estimatedArrivalAt,route:{...route,minutes:estimatedArrivalAt-departAt},passages,load,distanceKm,risk,capacityFactor,freight,tariff,toll,total:freight+tariff+toll,...clock.batchClosesAt!==undefined?{batch:clock.batch,batchClosesAt:clock.batchClosesAt,travelWindow:clock.travelWindow}:{} };
 }
 // F010：模拟范围外的来货（店铺外路补货）不再免费入库——按挑夫背货的运价（balance/transport.json carrier:pack）、沿途关口通行费与进口关税，
 // 由收货人实际支付。与 quoteTransport 同一套口径：运价按路程×计费重量×费率，关税按到岸聚落的 tariff 税率与货值。
 export function porterCharges(d,e,{from,to,cargo,owner,minute=d.get('state','minute')}){
- const s=d.get('state'),route=e.route(from,to,'walk',minute,d.document.randomSeed),load=dimensions(e,cargo,[]);
+ const s=d.get('state'),route=e.route(from,to,'walk',minute,d.get('randomSeed')),load=dimensions(e,cargo,[]);
  const billableKg=Math.max(load.kg,load.m3*250,1),edges=route.edges.map(id=>e.world.routes.find(r=>r.id===id));
  let at=from,freight=0,tariff=0;
  for(const r of edges){
@@ -330,7 +330,7 @@ function bookTransportInner(d,e,args,eventId){
 }
 function startLeg(d,e,row,minute){
  const t=row.transport;
- t.segment=transportSegment(e,d.get('state'),d.document.randomSeed,t,row.mode,minute);t.segmentStartedAt=minute;t.nextAt=minute+t.segment.minutes;
+ t.segment=transportSegment(e,d.get('state'),d.get('randomSeed'),t,row.mode,minute);t.segmentStartedAt=minute;t.nextAt=minute+t.segment.minutes;
  if(row.departedAt===undefined&&t.movingMinutes===0&&t.segment.kind==='move'){row.departedAt=minute;row.history.push({minute,location:t.location,kind:'departed'});}
  row.status=t.segment.kind==='wait'?'delayed':'moving';row.reason=t.segment.reason??null;
  const animal=d.get(...path(row.asset),'animal'),care=animal&&d.get('state','creatures',animal,'care');
@@ -549,7 +549,7 @@ export function cancelTransport(d,e,{shipment,actor='player'},eventId){
   const remaining=occupied(d.get('state')).filter(r=>row.batch&&r.batch===row.batch);
   if(remaining.length){
    const a=transportAssetView(e,d.document,row.asset),clock=tripClock(e,d.get('state'),a,{from:row.from,to:row.to,load:{kg:0,m3:0},passengers:[],letter:false,requested:s.minute});
-   const arrival=arrivalMinute(e,d.get('state'),d.document.randomSeed,remaining[0].transport.edges,row.from,row.mode,clock.departAt,clock.travelWindow);
+   const arrival=arrivalMinute(e,d.get('state'),d.get('randomSeed'),remaining[0].transport.edges,row.from,row.mode,clock.departAt,clock.travelWindow);
    retimeBatch(d,e,remaining,clock.departAt,arrival);
   }
   return clone(row);

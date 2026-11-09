@@ -92,7 +92,7 @@ export function regionalTradeBase(d,engine,item,location,minute=d.get('state','m
  if(!r||item!==r.item||!sid)return base*environment;
  const lane=r.lanes.find(l=>l.buyer===sid),distanceKm=(lane?.routes??[]).reduce((n,id)=>n+engine.world.routes.find(e=>e.id===id).lengthKm,0);
  let route=null,closed=false;
- if(lane)try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,sid).counter,lane.mode,minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
+ if(lane)try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,sid).counter,lane.mode,minute,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
  const risk=closed?3:Math.max(1,(route?.movingMinutes??0)/Math.max(1,distanceKm/engine.rules.travel.walkKmh*60));
  return base*environment*clamp((1+distanceKm*r.distanceFactorPerKm)*risk,...engine.rules.economy.priceFactorLimits.transport)*r.seasonFactors[engine.calendar(minute).season];
 }
@@ -117,7 +117,7 @@ function schedule(d,engine,o,minute){
         }
         t.phase='home';t.nextAt=null;o.homeAt=minute;entry(o,'home',minute);return;
     }
-    const segment=transportSegment(engine,d.get('state'),d.document.randomSeed,t,o.mode,minute);
+    const segment=transportSegment(engine,d.get('state'),d.get('randomSeed'),t,o.mode,minute);
     if(segment.kind==='rest'){t.segment=segment;t.nextAt=minute+segment.minutes;return;}
     const edge=routeEdge(engine,o);
     if(segment.kind==='wait'){
@@ -199,7 +199,7 @@ function dispatch(d,engine,lane,minute){
     const workers=spareWorkers(d.get('state'),engine,lane.seller);
     if(!workers)return reject('无空余劳力或运力仍在路上');
     let route;
-    try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,lane.buyer).counter,lane.mode,minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;return reject('封路或天气不通');}
+    try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,lane.buyer).counter,lane.mode,minute,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;return reject('封路或天气不通');}
     if(route.cost)return reject('路线收费没有登记的实际收款账');
     if(lane.routes.some(id=>!route.edges.includes(id)))return reject('实际路线偏离登记贸易道路');
     const reserve=mealMouthsOf(engine,d.get('state'),lane.seller,a.s.population)*profile(engine,lane.seller).reserveDays,surplus=Math.max(0,Math.floor(grain(a,day)-reserve));// floor: the exporter never ships into its reserve; whole units only
@@ -304,7 +304,7 @@ export function advanceSettlementTrade(d,engine,minute){
 export function armySupplyQuote(d,engine,base,location,minute){
     const item=engine.rules.settlementTrade?.item??engine.rules.agriculture?.grainItem??'item_oats';
     let closed=false;
-    if(base!==location)try{engine.route(base,location,'walk',minute,d.document.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
+    if(base!==location)try{engine.route(base,location,'walk',minute,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
     return {price:Math.ceil(regionalTradePrice(d,engine,item,base,minute)),closed};
 }
 export function drawArmyRations(d,engine,settlement,quantity,options){return drawGranary(d,engine,settlement,quantity,options);}

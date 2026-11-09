@@ -117,7 +117,7 @@ const housesIn=(engine,settlement)=>(engine.world.households??[]).filter(h=>h.se
 registerEffect('epidemic',{
  validate(engine,e){if(!diseaseOf(engine,e.disease)||!locationKnown(engine,e.settlement)||!int(e.cases,1,10))throw Error('疫病效果病名、地点或病例数无效');},
  apply(d,engine,e,context){
-  const year=yearOf(context.minute),key=epidemicKey(shiftKey(context),year),seed=d.document.randomSeed,day=context.minute/DAY;
+  const year=yearOf(context.minute),key=epidemicKey(shiftKey(context),year),seed=d.get('randomSeed'),day=context.minute/DAY;
   if(d.get('state','records',key))return {applied:false,reason:'本年疫病已经起过'};
   const houses=housesIn(engine,e.settlement);if(!houses.length)return {applied:false,reason:'受灾聚落没有登记住户'};
   const ep={category:'epidemic',id:key,clock:context.clock??null,disease:e.disease,origin:e.settlement,since:context.minute,status:'流行',settlements:[e.settlement],households:{},measures:[],sourceEvent:context.sourceEvent};
@@ -204,7 +204,7 @@ export function validateHazardRules(world){
 
 // ---- Clocks -----------------------------------------------------------------
 function conditionMet(d,engine,rule,c,at){
- const state=d.get('state'),seed=d.document.randomSeed,year=yearOf(at);
+ const state=d.get('state'),seed=d.get('randomSeed'),year=yearOf(at);
  switch(c.kind){
  case 'always':case 'weather':return pureConditionMet(engine,seed,rule,c,at/DAY);
  case 'hunger':{const s=state.settlements?.[rule.settlement],value=s?.starvation??0;return {met:value>0||Boolean(famineAt(state,rule.settlement,at)),value,evidence:`settlement:${rule.settlement}`};}
@@ -219,11 +219,11 @@ function conditionMet(d,engine,rule,c,at){
 // Stages passed this year. A pure clock is read from its seeded history so
 // it agrees with route closures even before its record is written.
 export function phaseOf(d,engine,rule,at=d.get('state','minute')){
- if(isPureClock(rule))return pureHazardPhase(engine,d.document.randomSeed,rule,at);
+ if(isPureClock(rule))return pureHazardPhase(engine,d.get('randomSeed'),rule,at);
  const row=d.get('state','records',hazardKey(rule.id));return row?.year===yearOf(at)+1?row.phase:0;
 }
 function tick(d,engine,rule,at){
- const key=hazardKey(rule.id),seed=d.document.randomSeed,year=yearOf(at),day=at/DAY;
+ const key=hazardKey(rule.id),seed=d.get('randomSeed'),year=yearOf(at),day=at/DAY;
  let row=d.get('state','records',key);
  if(row?.lastTick>=at)return;
  const phase=row?.year===year+1?row.phase:0;
@@ -275,7 +275,7 @@ function endpoint(engine,location){
  return null;
 }
 function stepEpidemic(d,engine,rule,ep,at){
- const seed=d.document.randomSeed,day=at/DAY,disease=diseaseOf(engine,ep.disease);
+ const seed=d.get('randomSeed'),day=at/DAY,disease=diseaseOf(engine,ep.disease);
  // 1. Course: incubation ends, the sick recover.
  for(const id of Object.keys(ep.households).sort()){
   const h=ep.households[id];
@@ -345,7 +345,7 @@ function exposeDrinkingWater(d,engine,day,at){
   const key=rule?epidemicKey(rule.id,yearOf(at)):`epidemic:water:${settlement}:${disease.id}:${yearOf(at)}`,old=d.get('state','records',key);
   const ep=structuredClone(old??{category:'epidemic',id:key,clock:rule?.id??null,waterExposure:!rule,disease:disease.id,origin:settlement,since:at,status:'流行',settlements:[settlement],households:{},measures:[],sourceEvent:`water:${settlement}:${day}`});
   const candidates=housesIn(engine,settlement).filter(h=>!ep.households[h]),chance=Math.min(1,r.exposureRate*water.pathogenRisk/100)*measureFactor(engine,ep,settlement,at,'household',disease);
-  for(const house of candidates)if(hazardRoll(d.document.randomSeed,`water:${settlement}:${house}`,day)<chance)infect(engine,d.document.randomSeed,ep,house,settlement,at,{source:'drinking_water',pathogenRisk:water.pathogenRisk});
+  for(const house of candidates)if(hazardRoll(d.get('randomSeed'),`water:${settlement}:${house}`,day)<chance)infect(engine,d.get('randomSeed'),ep,house,settlement,at,{source:'drinking_water',pathogenRisk:water.pathogenRisk});
   if(Object.keys(ep.households).length){ep.status='流行';d.set(['state','records',key],ep);}
  }
 }

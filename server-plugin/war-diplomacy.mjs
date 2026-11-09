@@ -103,7 +103,7 @@ export function campaignRound(d,e,w,at){
  if(w.status!=='交战')return null;const r=rules(e),src=`war:${w.id}:${at}`;
  const county=regionOf(e.world,w.front)?.county.id;
  for(const h of e.world.households??[])if(regionOf(e.world,h.settlement)?.county.id===county&&e.world.locations.find(l=>l.id===h.settlement)?.region&& !w.villages.includes(h.settlement))w.villages.push(h.settlement);
- const left=sidePower(d,e,w,w.aggressor,at),right=sidePower(d,e,w,w.defender,at),roll=r.rollMinimum+clockRoll(d.document.randomSeed,w.id,at/DAY)*r.rollRange;
+ const left=sidePower(d,e,w,w.aggressor,at),right=sidePower(d,e,w,w.defender,at),roll=r.rollMinimum+clockRoll(d.get('randomSeed'),w.id,at/DAY)*r.rollRange;
  const winner=left.power*roll>=right.power?w.aggressor:w.defender;
  const losses={};for(const side of [left,right])for(const row of side.units){const a=copy(row),n=Math.min(armyStrength(a),Math.ceil(armyStrength(a)*r.lossBps/10000*(sideOf(w,a)===winner?r.winnerLossFactor:r.loserLossFactor)));
   losses[a.id]=loseSoldiers(d,e,a,n,{at,reason:'战事结算',killed:true});a.morale=Math.max(0,Math.min(100,a.morale+(sideOf(w,a)===winner?r.victoryMorale:-r.victoryMorale)));holdingSet(d,null,path(armyKey(a.id)),a,'war-diplomacy');}

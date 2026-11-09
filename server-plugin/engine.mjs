@@ -530,7 +530,7 @@ export class WorldEngine {
             if(approach?.arrived===false)return {...approach,destination,arrived:false};
             localMinutes=approach?.minutes??0;start=d.get('state','minute');npc=d.get(...path);
         }
-        const route=this.route(npc.location,destination,mode,start,d.document.randomSeed);
+        const route=this.route(npc.location,destination,mode,start,d.get('randomSeed'));
         if(path[1]==='creatures'&&mode!=='walk')throw Error('Creature self-movement requires walking');
         if(path[1]==='npcs')try{preparePetTravel(d,this,mode,route.movingMinutes,entity);}catch(error){throw Object.assign(error,{code:'E-MOVE-MOUNT'});}
         if(mode==='horse'){const mounted=d.get(...path,'mount');assertMindAwake(d,mounted);assertWaterEarthMovement(d,mounted);assertLightMovement(d,this,mounted);}
@@ -993,7 +993,7 @@ export class WorldEngine {
             if(approach?.arrived===false)return {...approach,destination,arrived:false};
             localMinutes=approach?.minutes??0;
         }
-        let route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
+        let route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.get('randomSeed'));
         const local=d.get('state','records','local_player_position'),mudMinutes=waterEarthWalkMinutes(d,this,local?.location===old?local.point:[0,0],local?.location===old?local.point:[0,0]);
         const attempts=[];let encounterAttempt=null;
         for(const checkpoint of route.checkpoints){
@@ -1212,7 +1212,7 @@ export class WorldEngine {
         let routePreview;
         if(type==='带路'){
             obligation.destination=this.resolve(args.destination);
-            const from=d.get('state','location'),calculatedAt=d.get('state','minute'),route=this.route(from,obligation.destination,'walk',calculatedAt,d.document.randomSeed);
+            const from=d.get('state','location'),calculatedAt=d.get('state','minute'),route=this.route(from,obligation.destination,'walk',calculatedAt,d.get('randomSeed'));
             routePreview={from,destination:obligation.destination,minutes:route.minutes,movingMinutes:route.movingMinutes,cost:route.cost,calculatedAt,estimate:true};
             if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))reject('E-ACTION-PRECONDITION','带路者必须在场');
             obligation.status='进行中';holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions'),promisor])],'engine');

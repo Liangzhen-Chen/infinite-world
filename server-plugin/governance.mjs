@@ -385,7 +385,7 @@ export function advanceGovernance(d,engine,before,after,{beforeState}={}){
     const results=[];
     for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
         const at=day*DAY+600;if(at<=before||at>after||at<beforeState.minute)continue;
-        const presence=at===beforeState.minute?beforeState:at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
+        const presence=at===beforeState.minute?beforeState:at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.get('randomSeed'));
         for(const [id,r]of Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(r.category!=='governance_request'||r.status!=='待办理'||r.due>at||presence.npcs[r.steward]?.location===presence.location)continue;
             const grant=d.get(...path(r.authorization));

@@ -1069,7 +1069,7 @@ export function lawAction(d,args,eventId){
         const officer=authority(d,this,code,args.authority,'officer');
         if(!row.reported||evidenceScore(d,row)<code.evidenceRequired||!['已报案','证据不足'].includes(row.status))throw preconditionFailure('没有已报案且足够的证据，不能逮捕');
         const custodyKey=`legal_custody:${row.id}`;unique(d,custodyKey);
-        const route=this.route(d.get('state','location'),code.court,'walk',now,d.document.randomSeed);
+        const route=this.route(d.get('state','location'),code.court,'walk',now,d.get('randomSeed'));
         advanceWithNpcParticipants(d,this,route.minutes,eventId,[officer]);d.set(['state','location'],code.court);d.set(['state','npcs',officer,'location'],code.court);
         if(d.get('state','player','mount'))d.remove(['state','player','mount']);
         holdingSet(d,null,path(custodyKey),{category:'legal_custody',case:row.id,reason:'待审',location:code.court,status:'生效',started:d.get('state','minute'),expires:d.get('state','minute')+code.maximumDetentionMinutes},'law');

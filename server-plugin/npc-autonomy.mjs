@@ -160,7 +160,7 @@ function npcToolBonus(d,engine,id,recipe){
 }
 function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship,grade,inputs=null){
  const definition=engine.byId.get(item),instances=[];
- for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.document.randomSeed,actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
+ for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.get('randomSeed'),actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
   const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
   holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship,...(grade===undefined||grade===null?{}:{grade}),...lostField(engine,item,workmanship,inputs)},'npc-autonomy');
  }
@@ -175,7 +175,7 @@ const knowsRecipe=(engine,state,id,r)=>!r.learningRequired||Boolean(r.teachers?.
 export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnace,minutes}){
  const base=engine.byId.get(id),spent={minutes};let outcome,summary,produced=[];
  minutes??=Math.ceil(engine.byId.get(recipeId).minutes/(facilityView(engine,d.get('state'),location)?.factor||1));spent.minutes=minutes;
-  const r=engine.byId.get(recipeId),skill=proficiency(engine,d.get('state'),id,r.skill),die=parseInt(digest([d.document.randomSeed,actionId,'npc-craft']).slice(0,8),16)%20+1;
+  const r=engine.byId.get(recipeId),skill=proficiency(engine,d.get('state'),id,r.skill),die=parseInt(digest([d.get('randomSeed'),actionId,'npc-craft']).slice(0,8),16)%20+1;
   const attribute=r.attribute??engine.byId.get(r.skill)?.attribute??'智力',score=d.get('state','npcs',id,'attributes',attribute)??base.attributes?.[attribute]??10;
   const modifier=Math.floor((score-10)/2)+Math.floor(skill/(engine.rules.check.skillDivisor??150))+npcToolBonus(d,engine,id,r),total=die+modifier;
   const degree=die===1||total<=r.difficulty-10?'大失败':die===20||total>=r.difficulty+10?'大成功':total<r.difficulty?'失败':total<r.difficulty+5?'勉强成功':'成功';
@@ -191,7 +191,7 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   for(const m of materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
   const crafted={recipe:r.id,batches:1,inputs:materials.reduce((o,m)=>({...o,[m.item]:(o[m.item]??0)+m.amount}),{}),outputs:{},writer:'npc-autonomy',eventId:actionId};
   for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}
-  const result=craftOutcome(engine,{standing,degree,success:outcome.success,proficiency:skill,floor,tools:toolsFactor,station:stationFactor,recoverFraction:r.failure?.recoverFraction??0,seed:d.document.randomSeed,key:actionId});
+  const result=craftOutcome(engine,{standing,degree,success:outcome.success,proficiency:skill,floor,tools:toolsFactor,station:stationFactor,recoverFraction:r.failure?.recoverFraction??0,seed:d.get('randomSeed'),key:actionId});
   if(standing!=='skilled')outcome.standing=standing;if(result.failure)outcome.failure=result.failure;if(result.grade!==undefined)outcome.grade=result.grade;
   if(outcome.success||result.failure==='partial'){outcome.workmanship=result.tier;produced=outcome.success?[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]]:[{item:r.output.item,amount:r.output.quantity}];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship,result.grade,materials.map(m=>m.item));crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
   else{const back=returnMaterials(d,engine,id,materials.map(m=>[m.item,m.amount]),result,{floors,eventId:actionId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>changeItems(d,engine,id,item,n,{books:craftOutput('npc-autonomy',actionId)})});
@@ -271,8 +271,8 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
  if(!beforeState)return results;
  for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
   const start=day*DAY+600;if(start<before||start>after)continue;
-  const presence=start===after?d.get('state'):npcPresenceAt(engine,beforeState,before,start,d.document.randomSeed);
-  const objectKey=id=>clockDiceKey(d.document.randomSeed,'npc_autonomy:daily',id,start);
+  const presence=start===after?d.get('state'):npcPresenceAt(engine,beforeState,before,start,d.get('randomSeed'));
+  const objectKey=id=>clockDiceKey(d.get('randomSeed'),'npc_autonomy:daily',id,start);
   for(const id of Object.keys(presence.npcs).sort((a,b)=>d.scheduler?objectKey(a).localeCompare(objectKey(b)):a.localeCompare(b))){
    const actor=presence.npcs[id],base=engine.byId.get(id),actionId=`npc_daily_${day}_${id}`;
    if(!full(engine,id)||!awake(engine,beforeState,id,actor)||actor.location===beforeState.location||beforeState.player.companions?.includes(id)||npcObligationAt(beforeState,id,start)||npcAutonomyBusy(beforeState,id,start))continue;

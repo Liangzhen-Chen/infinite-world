@@ -60,7 +60,7 @@ function awaken(d,engine,id,kind,minute,sourceEvent){
 }
 function settle(d,engine,id,kind,minute,sourceEvent){
     const actor=d.get('state','creatures',id);
-    if(sapient(actor)||awakeningTotal(engine,d.document.randomSeed,id,actor,Math.floor(minute/DAY))<stageRule(engine,'liyi').points)return null;
+    if(sapient(actor)||awakeningTotal(engine,d.get('randomSeed'),id,actor,Math.floor(minute/DAY))<stageRule(engine,'liyi').points)return null;
     return awaken(d,engine,id,kind,minute,sourceEvent);
 }
 // 日结只处理灵地停留与随人经历（受照料的宠物与你同处）；野生个体若无这两项来源则不写任何账。
@@ -112,7 +112,7 @@ function advanceObjectAwakening(d,engine,day){
    const risk=1-pow(1-annual,1/360),causes=[{kind:'age',madeAt,years},{kind:'rule',rule:'lifecycle.awaken'},
     ...events.map(r=>({kind:'event',event:r.id})),...(land?[{kind:'spirit_land',location:land.location}]:[])];
    clock={...clock,lastDay:at,filled:clock.filled+risk,causes};
-   const roll=createHash('sha256').update(JSON.stringify([d.document.randomSeed,`object-awakening:${id}`,at])).digest().readUInt32LE(0)/2**32;
+   const roll=createHash('sha256').update(JSON.stringify([d.get('randomSeed'),`object-awakening:${id}`,at])).digest().readUInt32LE(0)/2**32;
    if(roll>=risk)continue;
    const creature=`creature_${createHash('sha256').update(`spirit:object:${id}`).digest('hex').slice(0,24)}`;
    const species=engine.byId.get(spec.species),level=species.levelRange?.[0]??1,stats=monsterStats({level,template:species.template},engine.rules);
@@ -162,7 +162,7 @@ export const wildlifeAwakeningConsumer=Object.freeze({
         const points=effect.points??engine.rules.wildlifeAwakening.clockPoints;
         addSource(d,id,day,'clock',points,{minute,event:context.sourceEvent,faction:context.faction??null,settlement:context.settlement??null});
         const awakened=settle(d,engine,id,'clock',minute,context.sourceEvent);
-        return{applied:true,target:id,points,stage:awakened?'立意':awakeningView(engine,d.document.randomSeed,id,d.get('state','creatures',id),minute)?.stage??null};
+        return{applied:true,target:id,points,stage:awakened?'立意':awakeningView(engine,d.get('randomSeed'),id,d.get('state','creatures',id),minute)?.stage??null};
     },
 });
 // world_wildlife 的 nurture / enlighten / pact；立意后的交谈、跟随、结社与借形在 wildlife-society。观察只读，不在此处。
@@ -212,6 +212,6 @@ export function awakeningAction(d,args,eventId,target){
     }else throw preconditionFailure('未知野外操作');
     const awakened=settle(d,this,target,op==='nurture'?'item':'mentor',d.get('state','minute'),eventId);
     const after=d.get('state','creatures',target);
-    return{success:true,target,source:op==='nurture'?'item':'mentor',mind:awakeningView(this,d.document.randomSeed,target,after,d.get('state','minute'))??{stage:null},
+    return{success:true,target,source:op==='nurture'?'item':'mentor',mind:awakeningView(this,d.get('randomSeed'),target,after,d.get('state','minute'))??{stage:null},
         ...(awakened?{awakened}:{}),note:'灵智与战力分开；只有实际灵物、灵地、经历或有资格的点化才增长'};
 }

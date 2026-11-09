@@ -228,7 +228,7 @@ function settleTake(d,e,take,eventId){
  const {rule,tool,actor,holder}=take,tools=toolFactor(d,e,holder,[tool]),own=holder===actor?[tool]:[];
  const args={attribute:rule.attribute,...(take.hasSkill?{skill:rule.skill}:{}),difficulty:rule.difficulty,tools:own};
  const check=actor==='player'?e.check(d,args,eventId):npcGradedCheck(d,e,actor,{...args,skill:take.hasSkill?rule.skill:null},eventId);
- const result=craftOutcome(e,{standing:take.standing,degree:check.degree,success:check.success,proficiency:take.proficiency,floor:1,tools,station:1,recoverFraction:rule.recoverFraction,seed:d.document.randomSeed,key:eventId});
+ const result=craftOutcome(e,{standing:take.standing,degree:check.degree,success:check.success,proficiency:take.proficiency,floor:1,tools,station:1,recoverFraction:rule.recoverFraction,seed:d.get('randomSeed'),key:eventId});
  const whole=check.success||result.failure==='partial';
  // The kept share follows returnMaterials: a worn take keeps ceil (at least one), others floor.
  const kept=n=>whole?n:result.gradeFactor!==undefined?Math.min(n,Math.max(1,Math.ceil(n*result.recover))):Math.floor(n*result.recover);
@@ -357,7 +357,7 @@ export function individuateHerd(d,engine,{population,count,eventId}){
  const sick=[...Array(taken.I).fill('I'),...Array(taken.R).fill('R')];
  for(let i=0;i<count;i++){
   // Same identity shape as a wild individual (wildlife.mjs createWildlifeInstance).
-  const hash=digest([d.document.randomSeed,eventId,population,i]).slice(0,16),id=`monster_instance_${hash}`,name=`${species.name}·${hash.slice(0,4)}`;
+  const hash=digest([d.get('randomSeed'),eventId,population,i]).slice(0,16),id=`monster_instance_${hash}`,name=`${species.name}·${hash.slice(0,4)}`;
   if(d.get('state','created',id)||d.get('state','creatures',id))throw Error('个体化编号重复');
   holdingSet(d,null,['state','created',id],{id,name,aliases:[],monster:species.id,template:species.template,scope:row.location},'husbandry',eventId);
   holdingSet(d,null,['state','creatures',id],{name,species:species.id,herd:population,location:row.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner,individuatedAt:d.get('state','minute'),...(sick[i]?{populationHealth:sick[i]}:{}),...spiritStateFor(species)},'husbandry',eventId);

@@ -190,7 +190,7 @@ export function advanceFactionClocks(d,engine,at){
   if(row.nextAt<at)throw Error('势力时钟越过未处理的日期');if(row.nextAt!==at)continue;
   const year=Math.floor(at/DAY/360)+1;
   row={...row,nextAt:at+rule.intervalDays*DAY,lastAt:at,...(rule.cycle==='year'&&row.year!==year?{phase:0,paused:false,interventions:[]}:{}),year};
-  const stage=rule.stages[row.phase],roll=clockRoll(d.document.randomSeed,rule.id,at/DAY);row.lastRoll=roll;
+  const stage=rule.stages[row.phase],roll=clockRoll(d.get('randomSeed'),rule.id,at/DAY);row.lastRoll=roll;
   if(stage&&!row.paused){
    const assets=ensureAccount(d,engine,rule.faction),met=condition(d,rule,row,assets);row.lastCondition=met;
    if(met&&roll<rule.probability){

@@ -158,7 +158,7 @@ export function kilnWorkResult(d,plan,outcome,quantity,eventId,{endStress}={}){
     const stress=finalStress-plan.startStress,riskPermille=Math.min(1000,stress*plan.crackPermillePerStress);
     let crackedQuantity=0;
     if(outcome.success)for(let i=0;i<quantity;i++){
-        const roll=createHash('sha256').update(`${d.document.randomSeed}:${eventId}:kiln:${i}`).digest().readUInt32LE(0)%1000;
+        const roll=createHash('sha256').update(`${d.get('randomSeed')}:${eventId}:kiln:${i}`).digest().readUInt32LE(0)%1000;
         if(roll<riskPermille)crackedQuantity++;
     }
     if(outcome.success&&crackedQuantity===quantity){outcome.success=false;outcome.degree='烧制裂损';}
@@ -262,7 +262,7 @@ export function manufacture(d,args,eventId){
         toolWear.push({item,name:this.byId.get(item).name,before,after:wearItem(d,this,'player',item,wear)});}
     const ids=[],salvage=[];
     let workmanship=null,work=null;
-    const result=craftOutcome(this,{standing,degree:outcome.degree,success:outcome.success,proficiency,floor,tools,station:stationFactor,recoverFraction:recover,seed:d.document.randomSeed,key:eventId});
+    const result=craftOutcome(this,{standing,degree:outcome.degree,success:outcome.success,proficiency,floor,tools,station:stationFactor,recoverFraction:recover,seed:d.get('randomSeed'),key:eventId});
     const grade=result.grade??null,partial=result.failure==='partial'?[{...products[0]}]:[];
     if(outcome.success){
         workmanship=result.tier;

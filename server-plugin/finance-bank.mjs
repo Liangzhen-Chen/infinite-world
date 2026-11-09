@@ -268,7 +268,7 @@ export function seasonalCredit(d,e,{borrower,lender,bank=null,principal,days,col
     const haircut=param('seasonal.harvestRecoveryPermille'),noiseRange=param('seasonal.noisePermille');
     // One decision key per planning window: reading/previewing cannot reroll it.
     const window=Math.floor(state.minute/(param('seasonal.decisionDays')*DAY));
-    const noise=rollDice(d.document.randomSeed,'credit:choice',`${observer}:${borrower}`,window,0,noiseRange*2+1)-1-noiseRange;
+    const noise=rollDice(d.get('randomSeed'),'credit:choice',`${observer}:${borrower}`,window,0,noiseRange*2+1)-1-noiseRange;
     const expected=receipts.reduce((n,r)=>n+Math.floor((r.copper??(r.resource==='coin_river'?r.amount:0))*(r.reliable?1000:clamp(Math.floor(haircut*1000/aversion)+noise,0,1000))/1000),0);
     const recoverable=Math.floor(collateral*param('seasonal.collateralRecoveryPermille')/1000);
     const net=unknownPrior?0:Math.max(0,(flow.cash??0)+expected-prior);

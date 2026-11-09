@@ -148,7 +148,7 @@ export function societyReceipts(document,society){
 function sendNews(d,engine,{from,to,actor,victim,act,sourceEvent,minute}){
     const key=`society_news:${sourceEvent}:${to}`;if(d.get(...rec(key))||from===to&&to!==victim)return;
     let travel=0;
-    if(from!==to){try{travel=engine.route(from,to,'walk',minute,d.document.randomSeed).minutes;}catch{return;}}
+    if(from!==to){try{travel=engine.route(from,to,'walk',minute,d.get('randomSeed')).minutes;}catch{return;}}
     holdingSet(d,null,rec(key),{category:'society_news',from,to,actor,victim,act,sourceEvent,sentAt:minute,arrivesAt:minute+travel,status:'在途'},'monster-society');
 }
 function broadcast(d,engine,society,act,sourceEvent){

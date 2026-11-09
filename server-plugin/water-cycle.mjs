@@ -193,7 +193,7 @@ export function advanceWaterCycle(d,engine,day){
   if(!Number.isSafeInteger(capacity)||capacity<=0||!Number.isSafeInteger(w.waterMl)||w.waterMl<0||w.waterMl+(w.reservedWaterMl??0)>capacity)throw Error('流域实际水量越界');
   // Existing spells can add/remove water between days. Observe the actual change
   // separately from rainfall, so it cannot be reported as natural regeneration.
-  const external=w.waterMl-(old?.water.waterMl??w.waterMl),weather=basinWeather(engine,d.document.randomSeed,b.location,day*DAY+720);
+  const external=w.waterMl-(old?.water.waterMl??w.waterMl),weather=basinWeather(engine,d.get('randomSeed'),b.location,day*DAY+720);
   const rain=Math.floor(capacity*precipitationShare(engine,d.document,b.location,weather,day,rains).share);
   receive(w,{waterMl:rain});
   const ledger={initial:old?.initial??w.waterMl-rain,rain:(old?.rain??0)+rain,inflow:old?.inflow??0,outflow:old?.outflow??0,consumed:old?.consumed??0,evaporated:old?.evaporated??0,overflow:old?.overflow??0,externalDelta:(old?.externalDelta??0)+external,day,farms:{},drinking:{}};
@@ -212,7 +212,7 @@ export function advanceWaterCycle(d,engine,day){
    const area=farm?(d.get('state','records',`agriculture:${id}`)?.field?.areaUnits??farm.areaUnits):
     s.granary!==false&&s.foodPerDay>0&&crop?Math.ceil(s.foodPerDay*360*crop.areaUnitsPerHa/crop.yieldPerHa):0;
    if(!area)continue;
-   const local=basinWeather(engine,d.document.randomSeed,id,day*DAY+720);
+   const local=basinWeather(engine,d.get('randomSeed'),id,day*DAY+720);
    const precipitation=precipitationShare(engine,d.document,id,local,day,rains);
    const needFarm=Math.ceil(area*rules.irrigationMlPerArea),rainShare=Math.min(1,precipitation.share/rules.cropRainShare);
    const irrigation=withdraw(w,frozen?0:needFarm*(1-rainShare));ledger.consumed+=irrigation.waterMl;
