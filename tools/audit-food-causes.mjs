@@ -1,0 +1,273 @@
+// S5 closing audit (t-m3 port): attribute every missed meal of the town to harvest / poverty /
+// allocation / chain-break from the world state of that noon, and reconcile coins and food against
+// the ledger flows. Read-only: drives the real engine day by day, changes no rule and no save field.
+// Output is deterministic (no clock values in it).
+// Usage: node tools/audit-food-causes.mjs [days=30] [outFile]   (also runnable by the gate run-script)
+//
+// Definitions (docs/当前状态.md "S5 收尾清单" item 1), applied in this order:
+//  harvest    - saleable food within a day's walk is less than the town's demand that day;
+//  poverty    - household cash cannot buy the cheapest person-day of food within reach;
+//  allocation - food and cash exist, but the shelf was bought out first or the customer's own decision refused;
+//  chain      - food on sale in own settlement / within a day, shop open, household can pay, still no meal.
+// A household whose members have no simulated state (roster-only) owns no purse or stock in state;
+// after the harvest test it is reported as "undetermined" with the reason, never given a default.
+// The producer-side clause of chain-break ("surplus >0, road open, buyer has money, 7 days zero
+// transport") needs a producer-to-town sale mechanism that t-m3 does not have; reported as undetermined.
+import fs from 'node:fs/promises';
+import {performance} from 'node:perf_hooks';
+import {loadWorld} from './load-world.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+import {currentShops} from '../server-plugin/shop.mjs';
+import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
+import {isEffective} from '../server-plugin/lifecycle-state.mjs';
+import {placeSettlement} from '../server-plugin/entity-view.mjs';
+import {marketQuote,quoteSupply,saleableStock,customerReachMinutes} from '../server-plugin/market.mjs';
+import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
+import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
+import {bodyRule,mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {legacyMoney} from '../server-plugin/money.mjs';
+import {legacyStock} from '../server-plugin/stock.mjs';
+import {auditLedger,driftCounts,parseAccount} from '../server-plugin/ledger.mjs';
+
+const DAY=1440,NOON=720,CAUSES=['harvest','poverty','allocation','chain'],ALL=[...CAUSES,'undetermined'];
+const sid='loc_bs';
+const num=v=>typeof v==='number'?v:Number(v?.numerator??0)/Number(v?.denominator??1);
+const reader=doc=>({document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)});
+const round=(n,k=2)=>Math.round(n*10**k)/10**k;
+
+// file:line of the engine gate behind a verdict; found by text so it never goes stale unnoticed.
+const lineCache=new Map();
+async function srcLine(file,needle){
+ const key=`${file}\u0000${needle}`;if(lineCache.has(key))return lineCache.get(key);
+ const text=(await fs.readFile(new URL(`../server-plugin/${file}`,import.meta.url),'utf8')).split('\n');
+ const at=text.findIndex(l=>l.includes(needle));
+ const out=at<0?`${file}:?(${needle})`:`server-plugin/${file}:${at+1}`;lineCache.set(key,out);return out;
+}
+
+// Pure: facts of one missed meal from a plain snapshot.
+// snap: {supply,demand,refCost,cash(null = no purse in state),mouths,declined,townShops:{total,open},
+//        reach:[{shopId,sameSettlement,engineServes,toll,items:[{item,avail,cost,bought}]}]}
+//  cost = engine price of one person-day of that item; bought = units already sold there that day.
+export function buildFacts(snap){
+ let best=null;
+ for(const r of snap.reach??[])for(const it of r.items){
+  const cost=it.cost+(r.toll??0);
+  if(!best||cost<best.cost||(cost===best.cost&&r.shopId<best.shopId))best={shopId:r.shopId,item:it.item,cost,sameSettlement:r.sameSettlement,engineServes:r.engineServes,avail:it.avail,bought:it.bought??0};
+ }
+ return {supply:snap.supply,demand:snap.demand,refCost:snap.refCost,cashKnown:snap.cash!==null&&snap.cash!==undefined,
+  perCapitaCash:snap.cash===null||snap.cash===undefined?null:snap.cash/Math.max(1,snap.mouths),cash:snap.cash,
+  best:best&&{cost:best.cost,sameSettlement:best.sameSettlement},
+  soldOut:Boolean(best&&best.engineServes&&best.bought>0&&best.bought>=best.avail),declined:snap.declined??null,
+  servedShops:(snap.reach??[]).filter(r=>r.engineServes).length,townShops:snap.townShops??{total:0,open:0}};
+}
+
+// Pure: the verdict for one missed meal. Order is the card's. Clues are [file,needle,note] to be resolved to file:line.
+export function verdict(f){
+ if(f.supply<f.demand)return {cause:'harvest',reason:'saleable food within a day (shop shelves) is less than the town demand',clue:[['market.mjs','export function saleableStock']]};
+ if(!f.cashKnown)return {cause:'undetermined',reason:'roster-only household: no member has simulated state, so no purse or stock exists to judge poverty, allocation or chain (the customer flow only walks in members of state.npcs)',
+  clue:[['business.mjs','function walkIns(']]};
+ const need=f.best?.cost??f.refCost;
+ if(f.perCapitaCash<need)return {cause:'poverty',reason:`cash per person is less than the cheapest person-day of food${f.best?' within reach':' (none on sale; catalogue price)'}`,clue:[['household-budget.mjs','export function householdBudget(']]};
+ if(!f.best){
+  const own=f.townShops;
+  const why=!own.total?'no food shop is registered in the own settlement':!own.open?'the own settlement\'s shop is not trading in it at noon (closed, or its keeper stands elsewhere)':'the own settlement\'s open shop has nothing edible on its shelf';
+  const gate=!own.total?['shop.mjs','export function currentShops']:!own.open?['business.mjs','function openShops(']:['business.mjs','const shelfOf='];
+  return {cause:'chain',reason:`food is sellable within a day and the household can pay, but nothing is on sale within reach: ${why}`,clue:[gate]};
+ }
+ if(f.soldOut)return {cause:'allocation',reason:'shelf was bought out before this household',clue:[['business.mjs','let quantity=Math.min(want.quantity,available),quote=null;']]};
+ if(f.declined)return {cause:'allocation',reason:`customer decision refused: ${f.declined}`,clue:[['business.mjs',"if(decision.outcome!=='agree')"]]};
+ if(!f.servedShops)return {cause:'chain',reason:f.best.sameSettlement?'shop open in own settlement but beyond customer reach':'food is on sale within a day, but no open shop in own settlement (residents only walk in to own-settlement shops)',clue:[['business.mjs','settlement!==shop.settlement']]};
+ return {cause:'chain',reason:'open shop with stock in own settlement, money in hand, no purchase happened',clue:[['business.mjs','const want=wants(d,engine,id,item,gaps);']]};
+}
+
+// Pure: books reconciliation. start/end = {money:Map,stock:Map} (legacy fields as ledger account keys);
+// ledger = document.ledger; edible = Set of food resource ids. Differences must all be 0.
+export function reconcileBooks({start,end,ledger,edible}){
+ const byRes=map=>{const out={};for(const [k,n] of map){const r=parseAccount(k).resource;out[r]=(out[r]??0)+n;}return out;};
+ const flowsBy=res=>{const out={sources:{},sinks:{},genesis:0};for(const [k,n] of Object.entries(ledger?.flows??{})){const a=parseAccount(k);if(a.resource!==res)continue;
+  if(k.startsWith('src:genesis|'))out.genesis+=n;else if(a.owner.startsWith('src:'))out.sources[`${a.owner}|${a.purpose}`]=n;else out.sinks[`${a.owner}|${a.purpose}`]=n;}return out;};
+ const sum=o=>Object.values(o).reduce((a,b)=>a+b,0);
+ const startM=byRes(start.money),endM=byRes(end.money),startS=byRes(start.stock),endS=byRes(end.stock);
+ const money={};
+ for(const res of Object.keys({...startM,...endM}).filter(r=>r.startsWith('coin_')).sort()){
+  const f=flowsBy(res),late=f.genesis-(startM[res]??0),delta=(endM[res]??0)-(startM[res]??0),net=sum(f.sources)+late-sum(f.sinks);
+  money[res]={start:startM[res]??0,end:endM[res]??0,delta,sources:sum(f.sources),lateGenesis:late,sinks:sum(f.sinks),flowNet:net,difference:delta-net,
+   ledgerEnd:Object.entries(ledger?.accounts??{}).filter(([k])=>parseAccount(k).resource===res).reduce((n,[,v])=>n+v,0),
+   topSources:Object.entries(f.sources).sort((a,b)=>b[1]-a[1]).slice(0,8),topSinks:Object.entries(f.sinks).sort((a,b)=>b[1]-a[1]).slice(0,8)};
+ }
+ const rows={};
+ for(const res of [...edible].sort()){
+  const f=flowsBy(res),late=f.genesis-(startS[res]??0),delta=(endS[res]??0)-(startS[res]??0),net=sum(f.sources)+late-sum(f.sinks);
+  if(!delta&&!net&&!(startS[res]))continue;
+  rows[res]={start:startS[res]??0,end:endS[res]??0,delta,lateGenesis:late,sources:f.sources,sinks:f.sinks,difference:delta-net};
+ }
+ const total={start:0,end:0,delta:0,lateGenesis:0,in:{},out:{},difference:0};
+ for(const row of Object.values(rows)){
+  total.start+=row.start;total.end+=row.end;total.delta+=row.delta;total.lateGenesis+=row.lateGenesis;total.difference+=row.difference;
+  for(const [k,n] of Object.entries(row.sources))total.in[k]=(total.in[k]??0)+n;
+  for(const [k,n] of Object.entries(row.sinks))total.out[k]=(total.out[k]??0)+n;
+ }
+ total.in=Object.fromEntries(Object.entries(total.in).sort());total.out=Object.fromEntries(Object.entries(total.out).sort());
+ // Accounts on which the legacy fields and the ledger disagree at the end.
+ const expected=new Map([...end.money,...end.stock]),accounts=ledger?.accounts??{},mismatches=[];
+ for(const k of new Set([...expected.keys(),...Object.keys(accounts)])){const a=expected.get(k)??0,b=accounts[k]??0;if(a!==b)mismatches.push({account:k,legacy:a,ledger:b});}
+ mismatches.sort((a,b)=>a.account<b.account?-1:1);
+ return {money,food:{rows,total},mismatches:{count:mismatches.length,first:mismatches.slice(0,20)}};
+}
+
+export async function runAudit({days=30,progress=()=>{}}={}){
+ const world=await loadWorld(),e=new WorldEngine(world);
+ const legacy=JSON.parse(await fs.readFile(new URL('../tests/fixtures/legacy/seed.json',import.meta.url),'utf8'));
+ let doc=e.createCharacter(legacy,{},'TFB-30-day');
+ const grain=e.rules.agriculture?.grainItem,seed=doc.randomSeed;
+ const baseMeal=bodyRule(e,'satiety').drainPerHour.light*24,reach=customerReachMinutes(e),dayTrip=e.rules.travel.dailyTravelMinutes;
+ const homeOf=new Map((world.households??[]).map(h=>[h.id,h.homeLocation]));
+ const gain=item=>e.byId.get(item)?.nutrition?.satiety??0;
+ const refCost=Math.min(...world.items.filter(i=>gain(i.id)>0&&i.basePrice>0).map(i=>Math.ceil(baseMeal/gain(i.id))*i.basePrice));
+ const start={minute:doc.state.minute,money:legacyMoney(e,doc.state),stock:legacyStock(e,doc.state).balances};
+ const advance=async(to,id)=>{const out=await e.reduce(doc,{tool:'world_time',args:{minutes:to-doc.state.minute},eventId:id});doc=applyPatches(doc,out.patches);};
+
+ const daily=[],tally={},incidents=[],chainRows=[],undeterminedRows=[];
+ for(const c of ALL)tally[c]={incidents:0,meals:0,people:0,households:new Set(),reasons:{}};
+ const total={named:{incidents:0,meals:0},roster:{incidents:0,meals:0}};
+ const prevUnmet=new Map();
+ const routeMemo=new Map();
+ const route=(from,to,minute)=>{
+  const key=`${from}|${to}|${Math.floor(minute/DAY)}`;
+  if(!routeMemo.has(key)){try{const r=e.route(from,to,'walk',minute,seed);routeMemo.set(key,{minutes:r.minutes,cost:r.cost??0});}catch{routeMemo.set(key,null);}}
+  return routeMemo.get(key);
+ };
+
+ for(let j=0;j<days;j++){
+  const noon=Math.floor(doc.state.minute/DAY)*DAY+NOON;
+  await advance(noon-1,`audit:pre:${j}`);
+  const P=doc,rd=reader(P),ps=P.state,day=Math.floor(noon/DAY);
+
+  // ---- shops open at noon and their edible shelf (same open test as business.openShops for native shops) ----
+  const slots=new Map();
+  const slotOf=id=>{if(!slots.has(id))slots.set(id,scheduleAt(e,id,noon,ps)??null);return slots.get(id);};
+  const openKeeper=keeper=>{
+   const n=ps.npcs?.[keeper],slot=n&&slotOf(keeper);
+   return Boolean(n&&isEffective(e,ps,keeper)&&!['死亡','濒死','昏迷','患病'].includes(n.status)&&slot?.services?.includes('trade')&&!n.scheduleTravel&&!n.cognitionTravel);
+  };
+  const shopRows=[];
+  for(const shop of currentShops(e,ps)){
+   const open=openKeeper(shop.keeper),slot=slotOf(shop.keeper),location=open?slot.location:shop.location;
+   const items=[];
+   if(open)for(const item of [...new Set(shop.restock.map(r=>r.item))]){
+    const avail=saleableStock(rd,e,shop.keeper,item,{business:true}).available;
+    if(avail>0&&gain(item)>0)items.push({item,avail});
+   }
+   shopRows.push({id:shop.id,keeper:shop.keeper,markup:shop.markup??1,registered:shop.settlement,settlement:open?placeSettlement(e,ps,location).value:shop.settlement,location,open,items});
+  }
+  const townShopRows=shopRows.filter(s=>s.registered===sid);
+  const quoteMemo=new Map();
+  const unitPrice=(shop,item,units,buyer)=>{
+   const key=`${shop.id}|${item}|${units}`;
+   if(!quoteMemo.has(key)){
+    let out=null;
+    try{
+     const business={keeper:shop.keeper,markup:shop.markup},supply=quoteSupply(rd,e,{item,location:shop.location,business});
+     const base=regionalTradeBase(rd,e,item,shop.location,noon)*wildlifePriceFactor(e,P,item,shop.location);
+     out=marketQuote(rd,e,{seller:shop.keeper,buyer,item,quantity:units,location:shop.location,minute:noon,base,business,supply}).totalCoins;
+    }catch{out=null;}
+    quoteMemo.set(key,out);
+   }
+   return quoteMemo.get(key);
+  };
+  // Granary surplus beyond the winter reserve: sold only to the player or the army in t-m3, so it is reported, not counted as saleable.
+  const producers=[];
+  for(const p of e.rules.agriculture?.settlements??[]){
+   const rec=ps.records?.[`agriculture:${p.settlement}`],s=ps.settlements?.[p.settlement];
+   if(rec?.mode!=='managed'||!s)continue;
+   const stock=rec.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0);
+   producers.push({settlement:p.settlement,surplus:round(Math.max(0,stock-mealMouthsOf(e,ps,p.settlement,s.population)*p.reserveDays))});
+  }
+
+  // ---- run the rest of the day (noon customers, afternoon, midnight meal) ----
+  await advance((day+1)*DAY+540,`audit:post:${j}`);
+  const E=doc,es=E.state;
+
+  // ---- today's town meal records: one per household or lone resident registered to the town ----
+  const entities=Object.entries(es.family?.meals??{}).filter(([,m])=>m.settlement===sid).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([key,m])=>{
+   const members=m.members??[],simulated=members.filter(id=>ps.npcs?.[id]);
+   const owner=simulated[0]??null;
+   const location=owner?(slotOf(owner)?.location??ps.npcs[owner].location):(homeOf.get(m.household)??null);
+   return {key,meal:m,members,owner,location,demand:num(m.needs?.satiety),
+    cash:owner?simulated.reduce((n,id)=>n+(ps.npcs[id].coins??0),0):null};
+  });
+  let townDemand=0;for(const en of entities)townDemand+=en.demand;
+  const reachable=location=>{
+   const out=[];
+   if(location)for(const shop of shopRows){
+    if(!shop.open||!shop.items.length)continue;
+    const a=location===shop.location?{minutes:0,cost:0}:route(location,shop.location,noon),b=location===shop.location?{minutes:0,cost:0}:route(shop.location,location,noon);
+    if(!a||!b||a.minutes+b.minutes>dayTrip)continue;
+    out.push({shop,toll:a.cost+b.cost,sameSettlement:shop.settlement===sid,engineServes:shop.settlement===sid&&a.minutes<=reach});
+   }
+   return out;
+  };
+  // The town's saleable supply: edible shelf stock within a day's walk of the first resident whose home is known.
+  const anchor=entities.find(en=>en.location);
+  const townReach=anchor?reachable(anchor.location):shopRows.filter(s=>s.open&&s.settlement===sid&&s.items.length).map(shop=>({shop}));
+  let shelfSatiety=0;for(const r of townReach)for(const it of r.shop.items)shelfSatiety+=it.avail*gain(it.item);
+
+  const visitsOf=shopId=>es.records?.[`customer_flow:${shopId}:${day}`]?.visits??[];
+  const boughtAt=(shop,item)=>visitsOf(shop).filter(v=>v.outcome==='bought'&&v.item===item).reduce((n,v)=>n+v.quantity,0);
+
+  // ---- missed meals of this day ----
+  const missed=[];
+  for(const en of entities){
+   const before=prevUnmet.get(en.key)??0,now=en.meal.unmetMealDays??0;prevUnmet.set(en.key,now);
+   const meals=num(en.meal.missingMeals);
+   if(meals>0&&now>before)missed.push({en,meals,people:en.members.length});
+  }
+  for(const {en,meals,people} of missed){
+   const kind=en.owner?'named':'roster';
+   total[kind].incidents++;total[kind].meals+=meals;
+   const reach1=en.owner?reachable(en.location):[];
+   // price of one person-day of each edible item on every reachable shelf, through the engine quote
+   const reachRows=reach1.map(r=>({shopId:r.shop.id,sameSettlement:r.sameSettlement,engineServes:r.engineServes,toll:r.toll,
+    items:r.shop.items.flatMap(it=>{const units=Math.max(1,Math.ceil(baseMeal/gain(it.item))),price=unitPrice(r.shop,it.item,units,en.owner);
+     return price===null||price<1?[]:[{item:it.item,avail:it.avail,cost:price,bought:boughtAt(r.shop.id,it.item)}];})})).filter(r=>r.items.length);
+   const mine=reach1.filter(r=>r.engineServes),declined=mine.flatMap(r=>visitsOf(r.shop.id)).find(v=>en.members.includes(v.npc)&&v.outcome!=='bought');
+   const facts=buildFacts({supply:shelfSatiety,demand:townDemand,refCost,cash:en.cash,mouths:people,declined:declined&&(declined.reason??declined.outcome),
+    townShops:{total:townShopRows.length,open:townShopRows.filter(s=>s.open&&s.settlement===sid).length},reach:reachRows});
+   const v=verdict(facts),cause=v.cause;
+   const clue=(await Promise.all(v.clue.map(([f,n])=>srcLine(f,n)))).join('; ');
+   const t=tally[cause];t.incidents++;t.meals+=meals;t.reasons[v.reason]=(t.reasons[v.reason]??0)+1;
+   if(!t.households.has(en.key)){t.households.add(en.key);t.people+=people;}
+   const row={household:en.key,day,kind,location:en.location,cash:en.cash===null?null:round(en.cash),missingMeals:round(meals),reason:v.reason,clue,
+    townSupplySatiety:round(shelfSatiety),townDemandSatiety:round(townDemand),cheapestPersonDay:facts.best?{coins:facts.best.cost}:null};
+   if(cause==='chain'&&chainRows.length<20)chainRows.push(row);
+   if(cause==='undetermined'&&undeterminedRows.length<5)undeterminedRows.push(row);
+   if(incidents.length<400)incidents.push({day,household:en.key,cause,meals:round(meals),reason:v.reason});
+  }
+  daily.push({day,townDemand:round(townDemand),shelfSatiety:round(shelfSatiety),missedNamed:round(missed.filter(m=>m.en.owner).reduce((n,m)=>n+m.meals,0)),missedRoster:round(missed.filter(m=>!m.en.owner).reduce((n,m)=>n+m.meals,0)),granarySurplusNotCounted:producers});
+  progress(j,doc.state.minute);
+ }
+
+ // ---- conservation ----
+ const end={minute:doc.state.minute,money:legacyMoney(e,doc.state),stock:legacyStock(e,doc.state).balances};
+ const edible=new Set(world.items.filter(i=>i.nutrition?.satiety>0).map(i=>i.id));
+ for(let grew=true;grew;){grew=false;for(const r of world.recipes)if(edible.has(r.output.item))for(const m of r.materials)if(!edible.has(m.item)){edible.add(m.item);grew=true;}}
+ const books=reconcileBooks({start,end,ledger:doc.ledger,edible});
+
+ const attribution={};
+ for(const c of ALL)attribution[c]={incidents:tally[c].incidents,meals:round(tally[c].meals),households:tally[c].households.size,people:tally[c].people,reasons:tally[c].reasons};
+ return {days,start:start.minute,end:end.minute,grainItem:grain??null,
+  totals:{named:{incidents:total.named.incidents,meals:round(total.named.meals)},statistical:{incidents:total.roster.incidents,meals:round(total.roster.meals),note:'roster-only households (no member in state.npcs)'}},
+  attribution,daily,chainBreakFirst20:chainRows,undeterminedFirst5:undeterminedRows,
+  producerChainBreak:{status:'undetermined',reason:'t-m3 has no producer-to-town grain sale mechanism (no food-supply module), so "surplus > 0, road open, buyer has money, 7 days zero transport" has no transport to count; granary surplus is listed per day, not counted as saleable'},
+  conservation:{money:books.money,food:books.food,ledger:{audit:auditLedger(doc.ledger),drift:driftCounts(doc),transfers:doc.ledger?.transfers??0},mismatches:books.mismatches},
+  incidentsSample:incidents.slice(0,40)};
+}
+
+if(process.argv[1]?.endsWith('audit-food-causes.mjs')){
+ const days=Number(process.argv[2]??30),out=process.argv[3],begin=performance.now();
+ const result=await runAudit({days,progress:j=>process.stderr.write(`day ${j+1}/${days}\n`)});
+ const text=JSON.stringify(result,null,2)+'\n';
+ if(out){await fs.writeFile(out,text);console.log(JSON.stringify({out,elapsedMs:Math.round(performance.now()-begin),attribution:Object.fromEntries(Object.entries(result.attribution).map(([k,v])=>[k,{incidents:v.incidents,meals:v.meals,people:v.people}]))}));}
+ else process.stdout.write(text);
+}
