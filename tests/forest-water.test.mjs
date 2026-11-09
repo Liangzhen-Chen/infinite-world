@@ -25,7 +25,7 @@ function setup(mutate=()=>{}){
 const water=(id,volume,risk=0)=>({id,name:id,kind:'water',owner:'player',access:'public',position:[0,0],state:{capacityMl:1000000,waterMl:volume,pathogenRisk:risk,saltMg:1000,toxinUg:100,turbidity:10,odor:'原水'}});
 function river({use=0,pollution=0,rain=0}={}){
  const x=setup(w=>{
-  for(const l of w.locations){delete l.site;delete l.features;delete l.biome;l.terrain='平地';}
+  for(const l of w.locations){delete l.site;delete l.features;delete l.biome;l.terrain='平地';} for(const o of Object.values(w.mechanics?.locations??{}))delete o.site;/* 夹具要无据点的世界：连机制覆盖层的据点一并去掉，否则覆盖层把无 quantity 的据点加回而 biome 已删、无从派生 */
   const down=w.locations.find(l=>l.id==='loc_hw');down.features=[water('feature_rw_down',10000)];down.elevationMeters=0;
   w.locations.push({id:'loc_rw_up',name:'上游测试地',parent:null,coordinates:[0,100],terrain:'丘陵',elevationMeters:100,features:[water('feature_rw_up',900000,pollution)]});
   w.rules.weather.regions[0].locations.push('loc_rw_up');
