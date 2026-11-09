@@ -1,6 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {takePopulation,addPopulation} from './population-health.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
 // RW-04. Stocks are facts; species, capacity and catchments are derived views.
 import {locationHabitatTypes,rangeSpec} from './wildlife-habitats.mjs';
 import {locationTraits,itemTraits,featureTraits} from './traits.mjs';
@@ -200,7 +201,7 @@ export function forestWaterPriceFactor(engine,state,item,location,books=null){
   const s=state.settlements[settlement],limits=engine.rules.economy.priceFactorLimits.region;
   if(s.granary===false||!(s.foodPerDay>0))return 1;
   const food=priceRead(books,{point:'forest.food',account:granaryAccount(engine,settlement),legacy:()=>s.food});
-  return Math.max(limits[0],Math.min(limits[1],s.population*engine.rules.settlementTrade.targetDays/Math.max(1,food)));
+  return Math.max(limits[0],Math.min(limits[1],mealMouthsOf(engine,state,settlement,s.population)*engine.rules.settlementTrade.targetDays/Math.max(1,food)));
  }
  if(item!=='item_wood'&&!itemTraits(engine.byId.get(item)).tags.includes('wood'))return 1;
  const forests=settlement?settlementForests(engine,state,settlement):forestSites(engine).filter(s=>s.location===location);

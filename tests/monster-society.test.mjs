@@ -12,6 +12,7 @@ import {validateWorld}from'../tools/validate-world.mjs';
 import {readBossCognition}from'../server-plugin/boss-cognition.mjs';
 import {validateSites}from'../server-plugin/sites.mjs';
 import {quoteSupply}from'../server-plugin/market.mjs';
+import {homeResidents}from'../server-plugin/entity-view.mjs';
 
 const baseline=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const person='npc_hw_linsui',market='site_ms_market',council='site_ms_council',home='bld_hw_qingdeng',bossId='boss_ms_leader',lairKey='lair:lair_ms_market';
@@ -43,6 +44,22 @@ function fixture(){
 }
 const move=(f,d,destination,args={})=>f.run(d,'world_move',{destination,...args},`move_${destination}`);
 const enter=(f,d,args={})=>f.run(d,'world_site',{operation:'enter',...args},'site_enter');
+// K6（c60b2a62）：没有有效许可的进入照常发生，并恰好记一条擅入；受害人是议事区负责人或该处成年住户。
+async function enterUnlicensed(f,d,place,args={}){
+ const eventId=`move_${place}`,out=await move(f,d,place,args);
+ assert.equal(out.document.state.location,place,'未获有效许可也能走进去');
+ const rows=Object.values(out.document.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place);
+ assert.equal(rows.length,1,'恰好记一条擅入');assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');assert.equal(rows[0].sourceEvent,eventId);
+ const access=f.engine.byId.get(place).access;
+ if(access.mode==='council')assert.equal(rows[0].victim,access.authority);else assert.ok(homeResidents(f.engine,out.document.state,place).value.includes(rows[0].victim),rows[0].victim);
+ return out;
+}
+// 有效授权进入：成功且不记擅入。
+async function enterLicensed(f,d,place,args){
+ const out=await move(f,d,place,args);assert.equal(out.document.state.location,place);
+ assert.equal(Object.values(out.document.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place).length,0,'有效授权不记擅入');
+ return out;
+}
 const negotiate=(f,d,args={},id='agreement')=>f.run(d,'world_lair',{operation:'negotiate',lair:'lair_ms_market',pact:'nonaggression',...args},id);
 
 test('物种、社会归属和身体引用通过实际世界校验，坏引用和野怪补刷被拒绝',()=>{
@@ -87,19 +104,22 @@ test('议事区与私巢分别签发许可，公共通行和议和均不授权�
  const f=fixture();let d=(await move(f,f.document,market)).document;d=(await enter(f,d)).document;
  d=(await negotiate(f,d)).document;
  const before=structuredClone(d);
- await assert.rejects(move(f,d,council),/许可/);await assert.rejects(move(f,d,home),/许可/);assert.deepEqual(d,before);
+ // 公共通行与议和均不授权议事区/私巢：无许可照常进入并各记一条擅入（K6 取代原先的拒绝）；输入文档不被改动。
+ await enterUnlicensed(f,d,council);await enterUnlicensed(f,d,home);assert.deepEqual(d,before);
  const grant=await f.run(d,'world_promise',{operation:'grant_access',promisor:person,location:council,content:'进入议事室商谈',minutes:60},'council_grant');
- const authorized=(await move(f,grant.document,council,{authorization:grant.result.authorization})).document;
+ const authorized=(await enterLicensed(f,grant.document,council,{authorization:grant.result.authorization})).document;
  assert.equal((await enter(f,authorized,{authorization:grant.result.authorization})).result.entered,true);
- await assert.rejects(move(f,grant.document,home,{authorization:grant.result.authorization}),/许可/);
+ // 议事区的许可不覆盖私巢：带着它进私巢仍是擅入。
+ await enterUnlicensed(f,grant.document,home,{authorization:grant.result.authorization});
  const homeGrant=await f.run(grant.document,'world_promise',{operation:'grant_access',promisor:person,location:home,content:'拜访住处',minutes:60},'home_grant');
- assert.equal((await move(f,homeGrant.document,home,{authorization:homeGrant.result.authorization})).document.state.location,home);
+ await enterLicensed(f,homeGrant.document,home,{authorization:homeGrant.result.authorization});
  const expired=structuredClone(homeGrant.document);expired.state.minute+=60;
- await assert.rejects(move(f,expired,home,{authorization:homeGrant.result.authorization}),/许可/);
+ await enterUnlicensed(f,expired,home,{authorization:homeGrant.result.authorization});
  const revoke=await f.run(homeGrant.document,'world_promise',{operation:'revoke_access',promisor:person,authorization:homeGrant.result.authorization},'revoke');
- await assert.rejects(move(f,revoke.document,home,{authorization:homeGrant.result.authorization}),/许可/);
+ await enterUnlicensed(f,revoke.document,home,{authorization:homeGrant.result.authorization});
  const guests=structuredClone(homeGrant.document);guests.state.player.companions=['npc_hw_zhouyan'];
- await assert.rejects(move(f,guests,home,{authorization:homeGrant.result.authorization}),/同行者/);
+ // 许可未覆盖同行者：同 home-permission.test 的 K6 口径，照常进入并记擅入（location-access.mjs:25-26）
+ await enterUnlicensed(f,guests,home,{authorization:homeGrant.result.authorization});
 });
 
 test('首领受伤和死亡同时影响接触、交谈、交易和巢穴，离开回来不补刷居民',async()=>{

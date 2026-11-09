@@ -15,6 +15,8 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // existing NPC conversation and message channels.
 import {digest,stateMemo,canonicalEqual} from './storage.mjs';
 import {householdMealPlan,householdMealWithSources,usageCost,registerMerchandiseResolver} from './household-budget.mjs';
+import {mouthWeight} from './household-subsistence.mjs';
+import {mealMouthsOf,metabolismFactor} from './primitives-body.mjs';
 import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups} from './household-subsistence.mjs';
 import {placeSettlement} from './entity-view.mjs';
 import {toRational} from './det-math.mjs';
@@ -140,8 +142,8 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
    engine.itemDelta(d,row.holder,row.item,-row.food,{flow:'sink:consume',purpose:'meal',writer:'npc-life',eventId:`household-meal:${day}:${p.household??p.owner}`},{selection:row.selection});
    consumed.push({holder:row.holder,item:row.item,quantity:row.food});
   }
-  const missing=p.needs.satiety>0?p.members.length*p.shortfall.satiety/p.needs.satiety:0;
-  if(p.registered){const adjustment=adjustments.get(p.settlement)??0;adjustments.set(p.settlement,adjustment+missing-p.members.length*(1-p.share));}
+  const mouths=mouthWeight(engine,d.get('state'),p.members),missing=p.needs.satiety>0?mouths*p.shortfall.satiety/p.needs.satiety:0;
+  if(p.registered){const adjustment=adjustments.get(p.settlement)??0;adjustments.set(p.settlement,adjustment+missing-mouths*(1-p.share));}
   const record={household:p.household,owner:p.owner,settlement:p.settlement,members:p.members,
    needs:nutrients(p.needs),publicNutrition:nutrients(p.publicNutrition),consumed,shortfall:nutrients(p.shortfall),missingMeals:saved(missing),
    unmetMealDays:(p.previous?.unmetMealDays??0)+(missing>0?1:0),
@@ -677,7 +679,7 @@ function strangerHost(engine,state,id,from,minute){
  for(const house of engine.world.households??[]){
   if(house.settlement===from?.settlement||hungry(engine,state,house.settlement))continue;
   const ledger=state.settlements?.[house.settlement];
-  if(!Number.isSafeInteger(ledger?.population)||!((ledger.food??0)>=(ledger.population+1)*s.foodDays))continue;
+  if(!Number.isSafeInteger(ledger?.population)||!((ledger.food??0)>=(mealMouthsOf(engine,state,house.settlement,ledger.population)+metabolismFactor(engine,state,id,'satiety'))*s.foodDays))continue;
   const members=householdMembers(engine,state,house.id).filter(x=>present(engine,state,x));
   const coming=Object.values(state.family?.migrations??{}).filter(m=>m.to.household===house.id&&m.status!=='中止');
   if(members.length+coming.filter(m=>['待出发','在途'].includes(m.status)).length>=s.maxHousehold||coming.filter(m=>m.stranger&&!m.with).length>=s.perHousehold)continue;

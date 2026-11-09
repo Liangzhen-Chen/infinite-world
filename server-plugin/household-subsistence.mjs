@@ -2,7 +2,7 @@
 import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities} from './entity-view.mjs';
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
-import {bodyRule} from './primitives-body.mjs';
+import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {householdMealPlan,itemGrams} from './household-budget.mjs';
@@ -258,12 +258,12 @@ function forageStock(e,state,source,day){
 function mealDeficit(e,state,owner,settlement,members){
  const s=state.settlements?.[settlement],h=personHousehold(e,state,owner).value;
  const resident=Boolean(h||state.npcs?.[owner]?.materialized?.settlement);
- const publicShare=resident&&s&&s.granary!==false?Math.min(1,Math.max(0,s.food??0)/Math.max(1,s.population??0)):0;
+ const publicShare=resident&&s&&s.granary!==false?Math.min(1,Math.max(0,s.food??0)/Math.max(1,Math.ceil(mealMouthsOf(e,state,settlement,s.population??0)))):0;
  // A guaranteed complete public ration already covers native daily satiety.
  // No private unit, seed or promise can increase a zero food deficit. Keep
  // the full meal allocator for partial shares and installed drain modifiers.
  if(publicShare===1&&!e.world.derived?.modifiers?.length){
-  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.length*bodyRule(e,need).drainPerHour.light*24]));
+  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((n,id)=>n+bodyDrain(e,state,id,need)*24,0)]));
   return {needs,shortfall:{satiety:0,hydration:needs.hydration}};
  }
  // A read-only meal projection keeps only copied quantities/selection rows.
@@ -509,13 +509,15 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
 }
 // Morning decisions are campaign facts, not a process-local decision cache.
 const planKey=settlement=>`subsistence-plan:${settlement??'unregistered'}`;
+// A mouth is weighted by the member's satiety metabolism (1 for a person, 0 for one who never eats); public rations and meal accounts count weight, not heads.
+export const mouthWeight=(e,state,ids)=>ids.reduce((n,id)=>n+metabolismFactor(e,state,id,'satiety'),0);
 const mealMember=(e,state,id)=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded;
 export function householdSubsistenceGroups(e,state){
  const groups=new Map();
  for(const id of [...new Set([...Object.keys(state.npcs??{}),...(e.world.households??[]).flatMap(h=>h.members),...Object.values(state.family?.households??{}).flatMap(h=>h.members??[])])].sort()){
   if(!mealMember(e,state,id))continue;
   const h=personHousehold(e,state,id).value,key=h?.id??id,remote=state.npcs?.[id]?.materialized?.settlement;
-  if(!groups.has(key))groups.set(key,{owner:id,key,registered:Boolean(h||remote),mouths:h?.members.filter(member=>mealMember(e,state,member)).length??(remote?1:0),settlement:h?.settlement??remote??placeSettlement(e,state,state.npcs?.[id]?.location).value});
+  if(!groups.has(key))groups.set(key,{owner:id,key,registered:Boolean(h||remote),mouths:h?mouthWeight(e,state,h.members.filter(member=>mealMember(e,state,member))):(remote?mouthWeight(e,state,[id]):0),settlement:h?.settlement??remote??placeSettlement(e,state,state.npcs?.[id]?.location).value});
  }
  return [...groups.values()].sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);
 }
@@ -622,13 +624,14 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
   const state=d.get('state'),w=ecology.basinState(e,state,water),rules=e.rules.forestWater.water;
   const safe=(w.frozenUntil??0)<=(day+1)*DAY&&(w.pathogenRisk??0)<rules.diseaseThreshold&&(w.toxinUg??0)/Math.max(1,w.waterMl)<rules.toxinScale&&(w.saltMg??0)/Math.max(1,w.waterMl)<r.maximumSaltMgPerMl;
   const baseHydration=bodyRule(e,'hydration').drainPerHour.light*24;
-  const ordinaryMl=meal.members.length*rules.drinkingMlPerPerson;
+  // 人头按水分代谢加权（不饮水的物种为 0；人形为 1，结果与按人头相同）。
+  const drinkers=meal.members.reduce((n,id)=>n+metabolismFactor(e,state,id,'hydration'),0),ordinaryMl=Math.ceil(drinkers*rules.drinkingMlPerPerson);
   const need=baseHydration>0?Math.ceil(meal.needs.hydration*rules.drinkingMlPerPerson/baseHydration):0;
   let ml=0,cohort=false;
   const local=registered&&ecology.basinForLocation(e,settlement,sourcesIndex(e,state).water)?.id===water.id;
   const exposure=local&&state.records?.[`water-cycle:${water.id}`]?.drinking?.[settlement];
   if(safe&&exposure?.day===day){
-   const used=waterCohorts.get(settlement)??0,den=Math.max(state.settlements[settlement]?.population??0,meal.members.length);
+   const used=waterCohorts.get(settlement)??0,den=Math.max(settlementMouths(e,state,settlement,state.settlements[settlement]?.population??0,'hydration'),drinkers);
    ml=Math.min(need,Math.max(0,exposure.takenMl-used),Math.floor(ordinaryMl*Math.min(1,exposure.takenMl/Math.max(1,den*rules.drinkingMlPerPerson))));
    waterCohorts.set(settlement,used+ml);cohort=true;
    // Population cohorts can lag a birth or household change. They are a

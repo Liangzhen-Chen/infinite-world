@@ -74,6 +74,7 @@ import {advanceWanted}from'./bounty.mjs';
 import {auditLedger,stampDriftReport}from'./ledger.mjs';
 import {holdingRemove,declareHoldingWriter} from './holdings.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
 export {registerAdvanceHook} from './advance-hooks.mjs';
 declareHoldingWriter('advance-registry',{kinds:[]});
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
@@ -397,9 +398,9 @@ const systems=[
         if(source.granary===false)continue;// public money only, no public granary (D1 town ledger): no daily settlement ration; residents' households still eat their own stock
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
         const production=farming?0:accrueFoodProduction(e,d,s,sid,cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
-        const missing=farming?.missingMeals??Math.max(0,s.population-available);
-        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,s.population),day);s.food=Math.max(0,available-s.population);}
-        const mouths=farming?Math.max(0,s.population-(d.get('state','records',`levy:${sid}`)?.count??0)):s.population;
+        const levy=farming?(d.get('state','records',`levy:${sid}`)?.count??0):0,meals=Math.ceil(mealMouthsOf(e,d.get('state'),sid,s.population)),missing=farming?.missingMeals??Math.max(0,meals-available);
+        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,meals),day);s.food=Math.max(0,available-meals);}
+        const mouths=farming?Math.ceil(mealMouthsOf(e,d.get('state'),sid,s.population,{levy})):meals;
         publicMeals.set(sid,{mouths,eaten:mouths-missing,missing});
         const wood=farming?.woodProduced??harvestSettlementWood(d,e,sid,s.woodPerDay??0,(day+1)*1440);
         settleFuel(d,e,sid,s,wood,day);d.set(['state','settlements',sid],s);

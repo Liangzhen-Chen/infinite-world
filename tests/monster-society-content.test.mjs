@@ -6,11 +6,13 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {validateNpcDepth} from '../tools/npc-profile-validation.mjs';
 import {validatePopulation} from '../tools/population-validation.mjs';
+import {saleableStock} from '../server-plugin/market.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {planBossMigration} from '../server-plugin/boss-migration.mjs';
 import {planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {validateMonsterSocieties} from '../server-plugin/monster-society.mjs';
+import {homeResidents} from '../server-plugin/entity-view.mjs';
 import {populationTemplate,populationBasis} from '../server-plugin/population.mjs';
 import {householdMealPlan} from '../server-plugin/household-budget.mjs';
 import {buildBatch,ids,people,settlements,places,households} from '../world/design/monster-society-1.mjs';
@@ -20,6 +22,27 @@ const {TJ,TD,tj,td,P}=ids,batch=buildBatch(),formal=await loadWorld();
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440;
 const byId=(w,key,id)=>w[key].find(r=>r.id===id);
+
+// K6（c60b2a62）：没有许可的进入照常发生，并记擅入；受害人是议事区负责人或该处成年住户。
+async function enterUnlicensed(f,d,place,eventId){
+ const out=await f.run(d,'world_move',{destination:place},eventId);
+ assert.equal(out.document.state.location,place,'未获许可也能走进去');
+ const rows=Object.values(out.document.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place);
+ assert.equal(rows.length,1,'恰好记一条擅入');assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');assert.equal(rows[0].sourceEvent,eventId);
+ const access=f.engine.byId.get(place).access;
+ if(access.mode==='council')assert.equal(rows[0].victim,access.authority);else assert.ok(homeResidents(f.engine,out.document.state,place).value.includes(rows[0].victim),rows[0].victim);
+ return out;
+}
+
+// 口粮预留按家庭真实需求整类适用（李白口径）：食物交易在设计库存下被拒；与 assertMarketDepth 同源读 saleableStock，只断言关系不手填数值。
+async function refuseFood(f,d,seller,item,eventId){
+ const stock=stockOf(d,seller,item),sale=saleableStock(f.engine.primitiveDraft(d),f.engine,seller,item),player=(d.state.inventory[item]?.quantity??0);
+ assert.equal(sale.stock,stock);assert.ok(sale.retained>=sale.stock,`自留${sale.retained}应不少于库存${sale.stock}`);assert.equal(sale.available,0);
+ await assert.rejects(f.run(d,'world_trade',{seller,item,quantity:1},eventId),e=>e.code==='E-ACTION-PRECONDITION'&&/扣除自用和已承诺存量后不够出售/.test(e.message));
+ assert.equal(stockOf(d,seller,item),stock);assert.equal((d.state.inventory[item]?.quantity??0),player);
+}
+
+const stockOf=(d,id,item)=>{const x=d.state.npcs[id].inventory[item];return typeof x==='number'?x:x?.quantity??0;};
 
 function fixture(world=formal){
  const engine=new WorldEngine(world);let document=engine.createCharacter(seed,{},'t157-content');
@@ -120,29 +143,26 @@ test('待生成人口与具名成员分开：登记12名，余数按种子配额
  }
 });
 
-test('白石镇近郊进入炭阶：黄昏后与换粮台的烟苔做有限库存交易，公共洞室可通行，私铺与议事窟要许可',async()=>{
+test('白石镇近郊进入炭阶：黄昏后换粮台的烟苔因家庭口粮预留拒卖干蘑菇，公共洞室可通行，私铺与议事窟进入记擅入',async()=>{
  const f=fixture();let d=await at(f,f.document,tj.stair,18*60+30);
  assert.match(f.engine.scene(d),/烟苔/);
- const stock=d.state.npcs[P.yantai].inventory.item_dry_mushroom.quantity??d.state.npcs[P.yantai].inventory.item_dry_mushroom;
- const buy=await f.run(d,'world_trade',{seller:P.yantai,item:'item_dry_mushroom',quantity:2},'buy_mushroom');d=buy.document;
- assert.equal(d.state.inventory.item_dry_mushroom.quantity,2);assert.equal(d.state.npcs[P.yantai].inventory.item_dry_mushroom.quantity,stock-2);
- await assert.rejects(f.run(d,'world_trade',{seller:P.yantai,item:'item_dry_mushroom',quantity:stock},'too_many'),/库存|不足|没有/);
+ await refuseFood(f,d,P.yantai,'item_dry_mushroom','buy_mushroom');
  for(const place of [tj.hearth,tj.fungus,tj.shaft,tj.forge,tj.yan])d=(await f.run(d,'world_move',{destination:place},`walk_${place}`)).document;
  assert.equal(d.state.location,tj.yan);
- await assert.rejects(f.run(d,'world_move',{destination:tj.home1},'home'),/许可/);
- await assert.rejects(f.run(d,'world_move',{destination:tj.council},'council'),/许可/);
+ await enterUnlicensed(f,d,tj.home1,'home');
+ await enterUnlicensed(f,d,tj.council,'council');
  const sleeping=await at(f,f.document,tj.stair,10*60);
  await assert.rejects(f.run(sleeping,'world_trade',{seller:P.yantai,item:'item_dry_mushroom',quantity:1},'day_trade'),/不在场|不提供|清醒/);
 });
 
-test('河湾北林进入苔灯坞：天黑后与换盐石的青芷交易，共食庭可通行，家巢与长老树洞要许可',async()=>{
+test('河湾北林进入苔灯坞：天黑后与换盐石的青芷交易，共食庭可通行，家巢与长老树洞进入记擅入',async()=>{
  const f=fixture();let d=await at(f,f.document,td.saltstone,19*60);
  const before=d.state.npcs[P.qingzhi].inventory.item_herb.quantity??d.state.npcs[P.qingzhi].inventory.item_herb;
  d=(await f.run(d,'world_trade',{seller:P.qingzhi,item:'item_herb',quantity:3},'buy_herb')).document;
  assert.equal(d.state.npcs[P.qingzhi].inventory.item_herb.quantity,before-3);
  for(const place of [td.commons,td.garden,td.ropes,td.lampground,td.tai])d=(await f.run(d,'world_move',{destination:place},`walk_${place}`)).document;
- await assert.rejects(f.run(d,'world_move',{destination:td.home1},'nest'),/许可/);
- await assert.rejects(f.run(d,'world_move',{destination:td.council},'council'),/许可/);
+ await enterUnlicensed(f,d,td.home1,'nest');
+ await enterUnlicensed(f,d,td.council,'council');
 });
 
 test('立约：两位首领在各自座处立通行约，覆盖辖区公共处而不含私宅与议事区',async()=>{

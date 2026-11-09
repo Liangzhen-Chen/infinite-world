@@ -9,7 +9,7 @@
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 import {registerAdvance} from './advance-registry.mjs';
 import {recordsWhere} from './storage.mjs';
-import {bodyRule} from './primitives-body.mjs';
+import {bodyDrain} from './primitives-body.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {npcAgeAt,householdWorkTime} from './npc-state.mjs';
 import {scheduleAt} from './npc-schedule.mjs';
@@ -255,14 +255,14 @@ function plannedTrip(e,document,who,stops,at,taken,ok=()=>true){
 }
 // 在外过夜的口粮：家户自给的那种粮，按身体每日饱腹消耗折份。它是成本，也占负重，所以一趟能走多远由负重与储粮派生。
 // 世界没有登记自给口粮时，在外过夜就无从备粮：当天往返之外的行程不成立。
-function rations(e,nights){
+function rations(e,state,who,nights){
  if(!nights)return {item:null,quantity:0};
  const food=e.byId.get(e.rules.householdSubsistence?.foodItem);if(!food?.nutrition?.satiety)return null;
- const perDay=Math.ceil(bodyRule(e,'satiety').drainPerHour.light*24/food.nutrition.satiety);
- return {item:food.id,quantity:nights*perDay};
+ const perDay=Math.ceil(bodyDrain(e,state,who,'satiety')*24/food.nutrition.satiety);
+ return perDay?{item:food.id,quantity:nights*perDay}:{item:null,quantity:0};
 }
 function tripCost(e,document,who,view,trip,home){
- const food=rations(e,trip.nights),read=stateReader(marketState(document.state,who));if(!food)return null;
+ const food=rations(e,document.state,who,trip.nights),read=stateReader(marketState(document.state,who));if(!food)return null;
  const meals=food.quantity?worth(e,document.state,{item:food.item,quantity:food.quantity,holder:who,location:home})??Infinity:0;
  return {coins:trip.travelCoins,value:laborCost(e,document,who,view,trip.activeMinutes)+meals+(trip.forgone??0)};
 }
@@ -285,7 +285,7 @@ export function laborCandidates(e,view,document){
   if(!((worth(e,state,{item:s.item,quantity,location:home})??0)*odds>laborCost(e,document,who,view,quantity*s.minutesPerUnit+setup)+gateCost))continue;
   let trip=plannedTrip(e,document,who,[{location:s.location,work:quantity*s.minutesPerUnit+setup}],at);if(!trip)continue;
   // 口粮占的负重可能挤掉几份货：按带上口粮后的负重重算一次。
-  const food=rations(e,trip.nights);if(!food)continue;
+  const food=rations(e,document.state,who,trip.nights);if(!food)continue;
   const room=carryRoom(e,document,who,s.item,food);
   if(room<quantity){quantity=room;if(quantity<1)continue;trip=plannedTrip(e,document,who,[{location:s.location,work:quantity*s.minutesPerUnit+setup}],at);if(!trip)continue;}
   const value=worth(e,state,{item:s.item,quantity,location:home})*odds;if(!Number.isFinite(value))continue;
@@ -307,7 +307,7 @@ export function laborCandidates(e,view,document){
     let quote;try{quote=keeperQuote(e,marketDocument(document,who),{seller:who,keeper:b.keeper,location:b.location,item,quantity:available});}catch{continue;}
     // 货款连在铺里交货的工时都抵不过，就不必排路线。
     if(!(quote.totalCoins>laborCost(e,document,who,view,config(e).saleMinutes))||quote.totalCoins>(state.npcs[b.keeper]?.coins??0))continue;
-    const trip=plannedTrip(e,document,who,[{location:b.location,work:config(e).saleMinutes}],at,{[item]:available},t=>receiving(e,state,b.keeper,t.stops[0]));if(!trip||!rations(e,trip.nights))continue;
+    const trip=plannedTrip(e,document,who,[{location:b.location,work:config(e).saleMinutes}],at,{[item]:available},t=>receiving(e,state,b.keeper,t.stops[0]));if(!trip||!rations(e,document.state,who,trip.nights))continue;
     // 可售存货（saleableStock 已扣除本人与家户的自留）是待售的货，值不值得送去卖看货款能否抵过工时与路费。
     const cost=tripCost(e,document,who,view,trip,home);if(!cost)continue;
     const utility=quote.totalCoins-cost.coins-cost.value;
@@ -504,7 +504,7 @@ function processPlan(e,document,view,r,place,batches,totals,settlement,local,uni
   const at=furnaceForecast(e,document,who,place.location,place.station,{arriveAt:trip.stops.at(-1).arriveAt,minutes:minutes*batches});
   if(!at||at.missingMg>(fuel?.milligrams??0)||at.risk>heat.risk)return null;
  }
- const food=rations(e,trip.nights);if(!food)return null;
+ const food=rations(e,document.state,who,trip.nights);if(!food)return null;
  // 负重：带去的口粮，加上一路取得的投入与做成的成品，不超过安全负重（整趟不出门就不用背）。
  const load=(food.quantity?food.quantity*packItemKg(d,e,who,food.item):0)+acts.reduce((n,a)=>n+a.act.quantity*packItemKg(d,e,who,a.act.item),0)+batches*r.output.quantity*packItemKg(d,e,who,r.output.item);
  if(trip.segments.some(s=>s.travel)&&carriedKg(d,e,who)+load>safeCarryKg(d,e,who))return null;

@@ -3,7 +3,7 @@ import {bagStock,bag,priceRead,itemResource,crop as cropAccount} from './stock.m
 import {coinRead,purse,COIN} from './money.mjs';
 import {personHousehold} from './entity-view.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
-import {bodyRule} from './primitives-body.mjs';
+import {bodyDrain} from './primitives-body.mjs';
 import {explainDerived} from './derived.mjs';
 import {domainRules,privateCropYieldBase} from './domain-rules.mjs';
 import {digest,recordsMemo,recordsWhere,stateMemo,PatchCursor} from './storage.mjs';
@@ -193,8 +193,8 @@ function allocateMeals(rows,needs){
 export function householdMealPlan(d,engine,owner,{publicShare=0,sourceNutrition={}}={}){
  const state=d.get('state'),f=family(d,engine,owner);
  const members=f.members.filter(id=>id!=='player'&&!isPhysicallyDead(engine,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded);
- const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((sum,id)=>sum+explainDerived(engine,d.document,'body:drain',id,{base:bodyRule(engine,need).drainPerHour.light*24}).value,0)]));
- const publicNutrition={satiety:bodyRule(engine,'satiety').drainPerHour.light*24*members.length*Math.max(0,Math.min(1,publicShare)),hydration:0};
+ const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((sum,id)=>sum+explainDerived(engine,d.document,'body:drain',id,{base:bodyDrain(engine,state,id,need)*24}).value,0)]));
+ const publicNutrition={satiety:members.reduce((n,id)=>n+bodyDrain(engine,state,id,'satiety')*24,0)*Math.max(0,Math.min(1,publicShare)),hydration:0};
  const seeds=stateMemo(state,engine,[seedRecords,JSON.stringify(members)],()=>seedNeeds(engine,state,members),seedInputs);
  const commitments=stateMemo(state,engine,[commitmentMemo],()=>commitmentAllocation(state),commitmentInputs);
  // Meals need physical food, seeds and promises, not a quote/income horizon
@@ -270,7 +270,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   const incomeRisk=future.length?future.filter(r=>!r.reliable).length/future.length:0;
   return [id,days??householdBufferTarget(d,engine,planner,{incomeDays,risk:risk+incomeRisk,commonRisk,foodDays:nextFood===null?null:(nextFood-state.minute)/DAY}).days];
  }));
- const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyRule(engine,need).drainPerHour.light*24*horizons.get(id),...(view?{observer:owner,view}:{})}).value,0)]));
+ const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*horizons.get(id),...(view?{observer:owner,view}:{})}).value,0)]));
  const baseline=rows.map(r=>({...r})),procurementShortfall=allocateMeals(baseline,needs);
  // Shared food is allocated once in a stable order. My cash can release my
  // own retained goods, but cannot silently release another holder's reserve
@@ -288,7 +288,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   const wait=(source.at-state.minute)/DAY;if(wait>maxDays)continue;
   const nutrition=engine.byId.get(source.item)?.nutrition??{};
   const remaining=Object.fromEntries(Object.keys(needs).map(need=>{
-   const before=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyRule(engine,need).drainPerHour.light*24*Math.min(wait,horizons.get(id)),...(view?{observer:owner,view}:{})}).value,0);
+   const before=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*Math.min(wait,horizons.get(id)),...(view?{observer:owner,view}:{})}).value,0);
    market.physicalFloor[need]=Math.max(market.physicalFloor[need],before-otherFood[need]-market.coverage[need]);
    return [need,Math.max(0,needs[need]-otherFood[need]-market.physicalFloor[need]-market.coverage[need])];
   }));
