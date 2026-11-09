@@ -39,8 +39,11 @@ export function validateConfig(config){
  need(typeof config.model==='string'&&config.model,'配置缺 model');
  for(const key of ['maxTurns','maxSessionUsd','monthlyCapUsd','maxTokens'])need(positive(config[key]),`配置缺 ${key}（正数）`);
  need(Number.isInteger(config.maxTurns),'maxTurns 须为整数');
- const price=config.prices;
- need(price&&positive(price.inputPerMTok)&&positive(price.outputPerMTok),'配置缺 prices.inputPerMTok / outputPerMTok');
+ // 单价按模型 id 索引；所选模型必须有单价，所有单价字段必须是正的有限数（防 NaN 让上限比较恒假）。
+ need(config.prices&&typeof config.prices==='object'&&Object.hasOwn(config.prices,config.model),`配置缺 prices[${config.model}]（该模型无单价，拒绝启动）`);
+ const price=config.prices[config.model];
+ for(const [name,value]of Object.entries(price))need(positive(value),`prices[${config.model}].${name} 须为正的有限数`);
+ need(positive(price.inputPerMTok)&&positive(price.outputPerMTok),'配置缺 prices[model].inputPerMTok / outputPerMTok');
  need(typeof config.ledgerPath==='string'&&config.ledgerPath,'配置缺 ledgerPath（账本位置只由配置决定）');
  assertApiUrl(config.apiUrl??API_URL);
  return {retries:3,backoffMs:1000,historyPairs:12,apiVersion:'2023-06-01',testHosts:[],...config,apiUrl:API_URL,
@@ -127,7 +130,7 @@ const redact=(text,key)=>{let out=String(text);if(key)out=out.split(key).join('[
 // 每次实际发出请求前调用 onAttempt（复核上限并按上界预留一行账本）；
 // 收到明确的 HTTP 错误响应（未生成内容、不计费）时 onResult(attempt,{billed:false})；
 // 网络错误/超时无法确认是否计费，保留预留。429/408/5xx 与网络错误重试（上限 config.retries，指数退避）。
-export async function callClaude(body,{config,key,fetchImpl,sleep=defaultSleep,onAttempt=async()=>null,onResult=async()=>{}}){
+export async function callClaude(body,{config,key,fetchImpl,sleep=defaultSleep,onAttempt=async()=>null,onResult=async()=>{},onRetry=async()=>{}}){
  assertApiUrl(config.apiUrl);
  let lastMessage='未知错误';
  for(let attempt=0;attempt<=config.retries;attempt++){
@@ -140,13 +143,16 @@ export async function callClaude(body,{config,key,fetchImpl,sleep=defaultSleep,o
    lastMessage=`网络错误: ${redact(error.message,key)}`;
   }
   if(response){
-   if(response.ok)return {response:JSON.parse(text),attempt:booked};
+   if(response.ok){
+    try{return {response:JSON.parse(text),attempt:booked};}
+    catch(error){throw new Error(redact(`响应解析失败: ${error.message}`,key));}
+   }
    await onResult(booked,{billed:false});
    lastMessage=`Claude API HTTP ${response.status}: ${redact(text,key).slice(0,300)}`;
    const retryable=response.status===429||response.status===408||response.status>=500;
    if(!retryable)throw new Error(lastMessage);
   }
-  if(attempt<config.retries)await sleep(config.backoffMs*2**attempt);
+  if(attempt<config.retries){await onRetry({attempt:attempt+1,message:lastMessage});await sleep(config.backoffMs*2**attempt);}
  }
  throw new Error(`${lastMessage}（已重试 ${config.retries} 次）`);
 }
@@ -234,13 +240,15 @@ export async function runPlayer({config:rawConfig,api,fetchImpl=globalThis.fetch
    const body={model:config.model,max_tokens:config.maxTokens,
     system:[{type:'text',text:SYSTEM_PROMPT,cache_control:{type:'ephemeral'}}],tools,messages:trimHistory(messages,config.historyPairs)};
    let sent;
-   try{sent=await callClaude(body,{config,key,fetchImpl,sleep,onAttempt,onResult});}
+   try{sent=await callClaude(body,{config,key,fetchImpl,sleep,onAttempt,onResult,onRetry:row=>trace({type:'retry',turn:turns+1,...row})});}
    catch(error){if(error instanceof CapStop){stop=error.reason;break;}throw error;}
    const {response,attempt}=sent;
    turns++;
+   // 响应先落轨迹，再计费、再执行工具：中途崩溃也不丢这一回合的响应。
+   await trace({type:'response',turn:turns,request:body,response,usage:response.usage});
    let usd;
    try{usd=usageCost(response.usage,config.prices);}
-   catch(error){await trace({type:'turn',turn:turns,request:body,response,error:error.message});throw error;}
+   catch(error){await trace({type:'error',turn:turns,error:error.message});throw error;}
    await adjust(attempt,usd);
    const monthTotal=await monthSpend(ledgerPath,month);
    const content=Array.isArray(response.content)?response.content:[];
@@ -255,7 +263,7 @@ export async function runPlayer({config:rawConfig,api,fetchImpl=globalThis.fetch
     executed.push({tool:call.name,args:call.input,result,isError});
     results.push({type:'tool_result',tool_use_id:call.id,content:JSON.stringify(modelToolResult(result)),...(isError?{is_error:true}:{})});
    }
-   await trace({type:'turn',turn:turns,request:body,response,usage:response.usage,usd,sessionUsd,monthTotal,text:textOf(content),calls:executed,minute:view.document?.state?.minute??null});
+   await trace({type:'turn',turn:turns,usage:response.usage,usd,sessionUsd,monthTotal,text:textOf(content),calls:executed,minute:view.document?.state?.minute??null});
    if(response.stop_reason==='max_tokens'){stop='output-truncated';break;}
    messages.push(results.length?{role:'user',content:results}:await sceneMessage());
   }
@@ -280,6 +288,12 @@ export function parseArgs(argv){
  }
  return out;
 }
+// 命令行的数值上限只能把配置调低；非数字会变成 NaN，随后被 validateConfig 拒绝。
+export function applyCliLimits(config,args){
+ for(const [flag,key]of [['max-turns','maxTurns'],['max-usd','maxSessionUsd'],['monthly-usd','monthlyCapUsd']])
+  if(args[flag]!==undefined)config[key]=Math.min(config[key],Number(args[flag]));
+ return config;
+}
 export function httpApi(origin,{fetchImpl=globalThis.fetch,allowedHosts=[]}={}){
  const base=assertOrigin(origin,allowedHosts);
  return async(endpoint,body={})=>{
@@ -294,7 +308,7 @@ export function httpApi(origin,{fetchImpl=globalThis.fetch,allowedHosts=[]}={}){
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const args=parseArgs(process.argv.slice(2));
  const config=JSON.parse(await fs.readFile(args.config??path.join(here,'config.example.json'),'utf8'));
- for(const [flag,key]of [['max-turns','maxTurns'],['max-usd','maxSessionUsd'],['monthly-usd','monthlyCapUsd']])if(args[flag]!==undefined)config[key]=Math.min(config[key],Number(args[flag]));
+ applyCliLimits(config,args);
  if(args.model!==undefined)config.model=args.model;
  if(args.out!==undefined)config.outDir=args.out;
  need(args.origin&&args['run-id'],'须给 --origin 与 --run-id');

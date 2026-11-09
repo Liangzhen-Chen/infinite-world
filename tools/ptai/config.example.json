@@ -4,7 +4,7 @@
   "maxSessionUsd": 5,
   "monthlyCapUsd": 120,
   "maxTokens": 2048,
-  "prices": {"inputPerMTok": 3, "outputPerMTok": 15},
+  "prices": {"claude-sonnet-5-5": {"inputPerMTok": 3, "outputPerMTok": 15}},
   "retries": 3,
   "backoffMs": 1000,
   "historyPairs": 12,

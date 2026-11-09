@@ -4,12 +4,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {withLock,runPlayer,monthSpend,monthKey,ALLOWED_ENDPOINTS,validateConfig,costCeiling,httpApi,assertApiUrl} from '../tools/ptai/driver.mjs';
+import {applyCliLimits,withLock,runPlayer,monthSpend,monthKey,ALLOWED_ENDPOINTS,validateConfig,costCeiling,httpApi,assertApiUrl} from '../tools/ptai/driver.mjs';
 
 const KEY='sk-test-SECRET-1234567890';
 const MANIFEST='m'.repeat(64);
 const baseConfig=(over={})=>({model:'claude-test',maxTurns:3,maxSessionUsd:100,monthlyCapUsd:1000,maxTokens:256,
- prices:{inputPerMTok:3,outputPerMTok:15},retries:2,backoffMs:1,historyPairs:6,ledgerPath:'.tmp/ptai/ledger.jsonl',...over});
+ prices:{'claude-test':{inputPerMTok:3,outputPerMTok:15}},retries:2,backoffMs:1,historyPairs:6,ledgerPath:'.tmp/ptai/ledger.jsonl',...over});
 const tmp=()=>fs.mkdtemp(path.join(os.tmpdir(),'ptai-test-'));
 const now=()=>new Date('2026-11-15T00:00:00Z');
 const env={CLAUDE_API_KEY:KEY};
@@ -43,10 +43,12 @@ function fakeFetch(steps,delayMs=0){
 }
 const USAGE={input_tokens:1000,output_tokens:100};
 const ACTUAL=(1000*3+100*15)/1e6;
+// 余量必须小于一次实际花费 ACTUAL（0.0045）：首个请求可预留，之后任何一次预留必超限。
+const MARGIN=ACTUAL/2;
 const toolTurn=(id,name='world_move',input={destination:'loc_b'})=>({json:{content:[{type:'text',text:'我看看'},{type:'tool_use',id,name,input}],stop_reason:'tool_use',usage:USAGE}});
 const readLedger=async file=>(await fs.readFile(file,'utf8')).trim().split('\n').map(l=>JSON.parse(l));
 
-// 首个请求的花费上界 c：上限设为 c+0.005，则首个请求可预留，之后一次预留必超限。
+// 首个请求的花费上界 c：上限设为 c+MARGIN，则首个请求可预留，之后一次预留必超限。
 async function ceilingOf(){
  const cwd=await tmp(),f=fakeFetch([toolTurn('t1')]),config=baseConfig({maxTurns:1});
  await run({config,api:fakeWorld().api,fetchImpl:f.impl,cwd,runId:'probe'});
@@ -65,8 +67,11 @@ test('轨迹字段齐全；只打 Anthropic 固定端点；密钥不入轨迹', 
  const rows=(await fs.readFile(result.tracePath,'utf8')).trim().split('\n').map(l=>JSON.parse(l));
  for(const k of ['seed','worldSeed','initialStateHash','gitHead','manifestHash','driverHash','model','limits','prices'])assert.ok(rows[0][k]!==undefined,k);
  assert.equal(rows[0].manifestHash,MANIFEST);
+ const resp=rows.find(r=>r.type==='response');
+ for(const k of ['request','response','usage'])assert.ok(resp[k]!==undefined,k);
  const turn=rows.find(r=>r.type==='turn');
- for(const k of ['request','response','usage','usd','calls'])assert.ok(turn[k]!==undefined,k);
+ for(const k of ['usage','usd','calls'])assert.ok(turn[k]!==undefined,k);
+ assert.ok(rows.findIndex(r=>r.type==='response')<rows.findIndex(r=>r.type==='turn'));
  assert.ok(Math.abs(turn.usd-ACTUAL)<1e-12);
  assert.equal(rows.at(-1).type,'end');
  assert.equal(JSON.stringify(rows).includes(KEY),false);
@@ -132,7 +137,7 @@ test('模型注入的额外参数被丢弃（search/catalog/execute 只转发 sc
 
 test('单局花费上限与回合数上限触发即停', async()=>{
  const c=await ceilingOf(),cwd=await tmp(),f=fakeFetch([toolTurn('t1')]);
- const result=await run({config:baseConfig({maxTurns:10,maxSessionUsd:c+0.005}),api:fakeWorld().api,fetchImpl:f.impl,cwd,runId:'cap'});
+ const result=await run({config:baseConfig({maxTurns:10,maxSessionUsd:c+MARGIN}),api:fakeWorld().api,fetchImpl:f.impl,cwd,runId:'cap'});
  assert.equal(result.stop,'session-cap');assert.equal(f.requests.length,1);
  const f2=fakeFetch([toolTurn('t1')]);
  const r2=await run({config:baseConfig({maxTurns:1}),api:fakeWorld().api,fetchImpl:f2.impl,cwd:await tmp(),runId:'turns'});
@@ -141,7 +146,7 @@ test('单局花费上限与回合数上限触发即停', async()=>{
 
 test('月度账本：每次发送预留、响应后修正；跨局累计、只追加、超额停止', async()=>{
  const c=await ceilingOf(),cwd=await tmp(),f=fakeFetch([toolTurn('t1')]);
- const cfg=baseConfig({maxTurns:1,monthlyCapUsd:c+0.005});
+ const cfg=baseConfig({maxTurns:1,monthlyCapUsd:c+MARGIN});
  const ledger=path.join(cwd,'.tmp/ptai/ledger.jsonl');
  const a=await run({config:cfg,api:fakeWorld().api,fetchImpl:f.impl,cwd,runId:'a'});
  const rowsA=await readLedger(ledger);
@@ -159,7 +164,7 @@ test('月度账本：每次发送预留、响应后修正；跨局累计、只�
 test('网络错误的重试按上界计费，并在重试前复核上限', async()=>{
  const c=await ceilingOf(),cwd=await tmp(),ledger=path.join(cwd,'.tmp/ptai/ledger.jsonl');
  const f=fakeFetch([new Error('socket hang up')]);
- const r=await run({config:baseConfig({maxTurns:1,monthlyCapUsd:c+0.005}),api:fakeWorld().api,fetchImpl:f.impl,cwd,runId:'net'});
+ const r=await run({config:baseConfig({maxTurns:1,monthlyCapUsd:c+MARGIN}),api:fakeWorld().api,fetchImpl:f.impl,cwd,runId:'net'});
  assert.equal(r.stop,'monthly-cap');assert.equal(f.requests.length,1);
  assert.ok(Math.abs(await monthSpend(ledger,monthKey(now()))-c)<1e-12);
  const cwd2=await tmp(),ledger2=path.join(cwd2,'.tmp/ptai/ledger.jsonl'),f2=fakeFetch([new Error('timeout'),toolTurn('t1')]);
@@ -283,4 +288,31 @@ test('账本崩溃半行后追加：先补换行，合计正确', async()=>{
  assert.equal(await monthSpend(file,'2026-11'),3);
  await appendLedger(file,{month:'2026-11',usd:4});
  assert.equal(await monthSpend(file,'2026-11'),7);
+});
+
+test('单价加固：NaN/非正数拒绝；模型无单价拒绝；命令行上限只能调低', ()=>{
+ const price=over=>baseConfig({prices:{'claude-test':{inputPerMTok:3,outputPerMTok:15,...over}}});
+ for(const bad of [{inputPerMTok:NaN},{outputPerMTok:Infinity},{cacheWritePerMTok:NaN},{cacheReadPerMTok:-1},{cacheReadPerMTok:0}])
+  assert.throws(()=>validateConfig(price(bad)),/须为正的有限数/,JSON.stringify(bad));
+ assert.doesNotThrow(()=>validateConfig(price({cacheWritePerMTok:3.75,cacheReadPerMTok:0.3})));
+ assert.throws(()=>validateConfig({...baseConfig(),model:'claude-other'}),/无单价/);
+ const cfg=applyCliLimits(baseConfig({maxTurns:10,maxSessionUsd:5,monthlyCapUsd:50}),{'max-turns':'3','max-usd':'100','monthly-usd':'20'});
+ assert.deepEqual([cfg.maxTurns,cfg.maxSessionUsd,cfg.monthlyCapUsd],[3,5,20]);
+ assert.throws(()=>validateConfig(applyCliLimits(baseConfig(),{'max-usd':'abc'})),/maxSessionUsd/);
+});
+
+test('ok 响应解析失败：异常经 redact，不含密钥；响应先于工具执行入轨迹，重试摘要入轨迹', async()=>{
+ const cwd=await tmp(),f={requests:[],impl:async(url,init)=>({ok:true,status:200,text:async()=>`not json ${KEY}`})};
+ await assert.rejects(run({api:fakeWorld().api,fetchImpl:f.impl,cwd,runId:'badjson'}),error=>{
+  assert.equal(error.message.includes(KEY),false);assert.match(error.message,/解析失败/);return true;});
+ assert.equal((await fs.readFile(path.join(cwd,'.tmp/ptai/badjson/trace.jsonl'),'utf8')).includes(KEY),false);
+ // 重试摘要与“响应先于执行”
+ const cwd2=await tmp(),world=fakeWorld(),f2=fakeFetch([{status:500,json:{error:`x ${KEY}`}},toolTurn('t1')]);
+ const order=[];
+ const api=async(e,b)=>{if(e==='execute')order.push((await fs.readFile(path.join(cwd2,'.tmp/ptai/ord/trace.jsonl'),'utf8')).includes('"type":"response"'));return world.api(e,b);};
+ await run({config:baseConfig({maxTurns:1}),api,fetchImpl:f2.impl,cwd:cwd2,runId:'ord'});
+ assert.deepEqual(order,[true]);
+ const trace=await fs.readFile(path.join(cwd2,'.tmp/ptai/ord/trace.jsonl'),'utf8');
+ assert.ok(trace.includes('"type":"retry"')&&trace.includes('HTTP 500'));
+ assert.equal(trace.includes(KEY),false);
 });
