@@ -15,7 +15,7 @@ function fixture(extra={}){
   {id:'item_fx_none',tags:['unlisted']},
   ...(extra.items??[])
  ];
- const materialProps={dimensions,precedence:['shelled','plantish'],
+ const materialProps={dimensions:structuredClone(dimensions),precedence:['shelled','plantish'],
   classes:{shelled:{moisture:0.1,edibleFraction:0.4,basis:'夹具：带壳类'},plantish:{moisture:0.8,energyDensity:3000,basis:'夹具：植物类'}},...(extra.table??{})};
  const world={items,recipes:[],materialProps};
  return {world,byId:new Map(items.map(i=>[i.id,i])),items};
