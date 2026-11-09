@@ -32,6 +32,14 @@
       {"id": "thrifty", "through": 20, "cycles": 2}
     ]
   },
+  "foodHabit": {
+    "source": "calibrate（可改；非历史估计）：惯常性 = 买得起的居民比例 × min(1,卖家数/habitualSellers)（稀缺已在手写 basePrice 里，不重复折价；marketSupply 在预算内调用会递归，故不用）；dailyFoodShare=一份食物单价占居民日均收入的日常上限（调研 F:/dnd-tmp/avail/report.md 口径：食物是贫户支出大头，单种单份取四分之一，初值）；luxuryBelow=惯常性低于此值即奢侈；richCashDays=本户现金超过本户 N 天日均收入才算宽裕，奢侈来源才参与购买；habitualSellers=算作广泛可得的卖家数；poorPurchaseLuxuryShareMax=审计：贫户预算期购买中奢侈来源花费占比上限",
+    "dailyFoodShare": 0.25,
+    "luxuryBelow": 0.1,
+    "richCashDays": 5,
+    "habitualSellers": 2,
+    "poorPurchaseLuxuryShareMax": 0.1
+  },
   "water": {
     "saltMgPerLitre": 1000,
     "toxinUgPerLitre": 1,

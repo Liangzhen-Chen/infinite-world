@@ -65,6 +65,16 @@ function budgetRead(d,engine,key,build){
 // Hoisted registry: shop.mjs registers during the same import cycle, before this module body runs.
 export function registerHouseholdFoodSources(resolve){registerHouseholdFoodSources.fn=resolve;}
 const foodSources=(...a)=>registerHouseholdFoodSources.fn?.(...a)??[];
+// 食物来源的惯常性（food-habit.mjs）：给每个来源标 luxury；没有注册时全部按日常品。
+export function registerHouseholdFoodHabit(fn){registerHouseholdFoodHabit.fn=fn;}
+const foodHabit=(d,engine,owner,sources,opts)=>registerHouseholdFoodHabit.fn?.(d,engine,owner,sources,opts)??{rich:true,sources};
+// 本户眼下买得到的来源：到货未过、有量、有价、付得起；奢侈来源（惯常性低）只在本户现金宽裕时才算数，否则不进购买候选，
+// 也不拿来当“有食物可买”的依据。惯常性按本户看得到的全部来源算（卖家数不受现金影响），再按现金筛。
+function accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now}){
+ const seen=foodSources(d,engine,owner,{view}).filter(r=>r.at>=now&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0);
+ const {rich,sources}=foodHabit(d,engine,owner,seen,{cash,view});
+ return sources.filter(r=>(rich||!r.luxury)&&r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0));
+}
 function bagEntries(d,engine,state,holder,view){
  const raw=view?view.self.inventory:inventory(state,holder),held=new Map();
  for(const [name,value]of Object.entries(raw)){
@@ -291,7 +301,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  // person's cash, net of known payments before acquisition; no family purse.
  const cash=view?(view.self.accounts?.[purse(engine,owner)]?.balance??view.self.coins):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
  const payments=futureSources(d,engine,owner,view).payments;
- const sources=marketSubstitution&&cash>0&&commonRisk<1?foodSources(d,engine,owner,{view}).filter(r=>r.at>=state.minute&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0&&r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0)):[];
+ const sources=marketSubstitution&&cash>0&&commonRisk<1?accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now:state.minute}):[];
  const nextFood=sources.length?Math.min(...sources.map(r=>r.at)):null;
  // Resolve each person's target once for both nutrient dimensions.
  const horizons=new Map(members.map(id=>{
@@ -461,7 +471,7 @@ export function householdBudget(d,engine,owner,{kernel=false,view=null,risk=0,co
  const cash=view?(view.self.accounts?.[purse(engine,owner)]?.balance??view.self.coins):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
  const {future,payments}=futureSources(d,engine,owner,view),reliable=future.find(r=>r.reliable),next=reliable??future.find(r=>r.source==='harvest'),until=next?.at??state.minute+engine.world.marketRules.personalReserveDays*DAY;
  const incomeRisk=future.length?future.filter(r=>!r.reliable).length/future.length:0;
- const purchasable=cash>0&&commonRisk<1?foodSources(d,engine,owner,{view}).filter(r=>r.at>=state.minute&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0&&r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0)):[];
+ const purchasable=cash>0&&commonRisk<1?accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now:state.minute}):[];
  const foodDays=purchasable.length?Math.max(0,(Math.min(...purchasable.map(r=>r.at))-state.minute)/DAY):null;
  const target=householdBufferTarget(d,engine,owner,{incomeDays:(until-state.minute)/DAY,risk:risk+incomeRisk,commonRisk,creditCoverage,foodDays});
  const resources=householdResources(d,engine,owner,{days:target.days,view,risk,commonRisk});
