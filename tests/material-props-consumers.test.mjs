@@ -41,6 +41,14 @@ test('营养：能量密度与含水率已知时，饱腹 = 重量 × 能量密�
  assert.ok(got.get('item_fx_a').nutrition.satiety>got.get('item_fx_b').nutrition.satiety,'含水多的同重食物饱腹低');
 });
 
+test('营养：可食部分比例已知时再乘，未知时不乘', () => {
+ const classes={...foodTable,shelled:{energyDensity:4000,moisture:0.2,edibleFraction:0.5,basis:'夹具'}};
+ const world=withTable([{id:'item_fx_s',tags:['food','shelled'],weight:0.5},{id:'item_fx_a',tags:['food','plantish'],weight:0.5}],['shelled','plantish'],classes);
+ deriveItemAttributes(world);const got=new Map(world.items.map(i=>[i.id,i])),c=classes;
+ assert.equal(got.get('item_fx_s').nutrition.satiety,Math.floor(0.5*c.shelled.energyDensity*(1-c.shelled.moisture)*c.shelled.edibleFraction));
+ assert.equal(got.get('item_fx_a').nutrition.satiety,Math.floor(0.5*c.plantish.energyDensity*(1-c.plantish.moisture)));
+});
+
 test('营养：手写营养不动', () => {
  assert.deepEqual(derive(foodTable).get('item_fx_hand').nutrition,{satiety:7});
 });

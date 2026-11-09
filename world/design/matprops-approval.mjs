@@ -1,11 +1,14 @@
 // D12 卡 D：材料属性表（类别行与物品覆盖行）的审批入口：L1 确定性检查、L2 真实模型事实核对、L4 阅读记录核验。
 // 沿用 a3w-props-approval 的冻结候选做法：候选就是盘上的数据，只请求审查，不请求改写；预算走 tools/content-budget.mjs
 // 的单卡账（调用前按请求上界预留，累计到单卡上限即停并写 budgetStop），调用记录（请求、响应、费用）落在 draftRoot。
-// 用法：node world/design/matprops-approval.mjs --l1 | --review | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
+// L4 照内容管线规则（先例 tools/w5-rumors.mjs sampleL4/recordL4/approved）：人读（不调模型）——被标记项 + 随机 5 条（batch.sample）
+// 须有阅读笔记；波次随机 10 条各给六项评分（整数 3–5，均分 ≥4）。--sample 抽签并列出要读的条目，--l4 <文件> 记录笔记与评分。
+// 用法：node world/design/matprops-approval.mjs --l1 | --review | --sample | --l4 <json> | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {randomInt} from 'node:crypto';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, readApprovedContent, hashContent, parseModelJSON} from '../../tools/content-pipeline.mjs';
 import {loadRuntimeWorld} from '../../tools/load-world.mjs';
@@ -68,10 +71,30 @@ export async function l1(){
  assert.deepEqual(errors,[]);
  return {L1:'passed',entries:entries.length,overrides,items:world.items.length};
 }
+const batchFile=path.join(reviewRoot,'batch-0.json'),selectionFile=path.join(reviewRoot,'l4-selection.json');
+export async function sampleL4(){
+ const batch=await readJSON(batchFile);
+ if(batch.passed!==batch.count)throw Error('L2 尚未全过');
+ const pool=[...batch.ids];for(let i=pool.length-1;i>0;i--){const j=randomInt(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];}
+ const selection={fingerprint:batch.fingerprint,wave:pool.slice(0,10),read:[...new Set([...batch.sample,...batch.flagged,...pool.slice(0,10)])]};
+ await fs.writeFile(selectionFile,JSON.stringify(selection,null,2)+'\n');
+ return selection;
+}
+export async function recordL4(file,reviewer){
+ const batch=await readJSON(batchFile),selection=await readJSON(selectionFile),notes=await readJSON(file);
+ if(selection.fingerprint!==batch.fingerprint||selection.read.some(id=>!notes.notes?.some(r=>r.id===id&&r.note?.trim()))||selection.wave.some(id=>!notes.wave?.some(r=>r.id===id)))throw Error('L4 缺少实际抽样阅读或评分');
+ batch.l4={approved:true,reviewer,notes:notes.notes,wave:notes.wave};
+ await fs.writeFile(batchFile,JSON.stringify(batch,null,2)+'\n');
+ return batch.l4;
+}
+export function checkWave(wave,ids){
+ if(wave?.length!==10||new Set(wave.map(r=>r.id)).size!==10||wave.some(r=>!ids.includes(r.id)||r.scores?.length!==6||r.scores.some(x=>!Number.isInteger(x)||x<3||x>5)||!r.note?.trim())||wave.flatMap(r=>r.scores).reduce((a,c)=>a+c,0)/60<4)throw Error('L4 波次随机 10 条六项评分不达标');
+}
 export async function verifyPublished(){
  const entries=await entriesFor();
  const approved=await readApprovedContent(reviewRoot,entries,{revision,contextFor});
  assert.equal(approved.length,entries.length,'L1/L2 未全部通过');
+ checkWave((await readJSON(batchFile)).l4.wave,entries.map(e=>e.id));
  for(const d of approved)assert.deepEqual(d,draftFor(entries.find(e=>e.id===d.id)),`${d.id} 盘上数据与审批回执不符`);
  return {approved:approved.length,dimensions:MATERIAL_DIMENSIONS.length};
 }
@@ -87,6 +110,8 @@ export async function run(args=process.argv.slice(2)){
    allocation:{cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:25});
   console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards[cardId]}));
  }
+ if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4()));
+ if(args.includes('--l4'))console.log(JSON.stringify(await recordL4(args[args.indexOf('--l4')+1],'主会话人读')));
  if(args.includes('--verify'))console.log(JSON.stringify(await verifyPublished()));
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)await run();

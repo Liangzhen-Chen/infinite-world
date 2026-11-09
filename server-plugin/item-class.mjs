@@ -162,9 +162,10 @@ export function deriveItemAttributes(world){
  const cache=new Map(),busy=new Set();
  const base=item=>{
   const tags=item.tags??[],key=Object.keys(density).find(k=>k!=='default'&&tags.includes(k));
-  // D12 卡 B：干物质能量密度与含水率都已知时，饱腹 = 重量(kg) × 能量密度(饱腹/kg 干物质) ×（1 − 含水率）；任一未知走现行三档密度。
+  // D12 卡 B：干物质能量密度与含水率都已知时，饱腹 = 重量(kg) × 能量密度(饱腹/kg 干物质) ×（1 − 含水率）×（可食部分比例，已知时）；任一未知走现行三档密度。
   const mp=materialProps({world,byId},item.id);
-  if(mp.energyDensity.known&&mp.moisture.known)return {satiety:(item.weight??0)*mp.energyDensity.value*(1-mp.moisture.value),hydration:0,raw:has(item.id,'needsHeat')};
+  // 可食部分比例已知时再乘（壳、核、骨不供能）；未知不乘，同现行。
+  if(mp.energyDensity.known&&mp.moisture.known)return {satiety:(item.weight??0)*mp.energyDensity.value*(1-mp.moisture.value)*(mp.edibleFraction.known?mp.edibleFraction.value:1),hydration:0,raw:has(item.id,'needsHeat')};
   const perKg=key?density[key]:density.default;
   return {satiety:(item.weight??0)*perKg,hydration:0,raw:has(item.id,'needsHeat')};
  };

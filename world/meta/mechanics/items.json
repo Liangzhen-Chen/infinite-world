@@ -159,7 +159,7 @@
   ],
   "props": {
    "moisture": 0.1,
-   "basis": "干蘑菇片：干香菇含水 9.5%（USDA FoodData Central 干香菇），商品干菇含水约 8–12%，取 10%。"
+   "basis": "干蘑菇片：干香菇含水 9.5%（USDA FoodData Central 干香菇），商品干菇含水约 8–12%，取 10%。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_fresh_apple": {
@@ -194,7 +194,7 @@
   "props": {
    "moisture": 0.8,
    "energyDensity": 153,
-   "basis": "欧防风根含水 79.5%、75 kcal/100g（USDA FoodData Central 生欧防风），干物质约 3.66 kcal/g；饱腹=kcal÷24，3660÷24≈153。"
+   "basis": "欧防风根含水 79.5%、75 kcal/100g（USDA FoodData Central 生欧防风），干物质约 3.66 kcal/g；饱腹=kcal÷24，3660÷24≈153。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_beet": {
@@ -219,7 +219,7 @@
   "props": {
    "moisture": 0.83,
    "energyDensity": 150,
-   "basis": "韭葱含水 83.0%、61 kcal/100g（USDA FoodData Central 生韭葱），干物质约 3.6 kcal/g；饱腹=kcal÷24，3600÷24=150。"
+   "basis": "韭葱含水 83.0%、61 kcal/100g（USDA FoodData Central 生韭葱），干物质约 3.6 kcal/g；饱腹=kcal÷24，3600÷24=150。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_cucumber": {
@@ -234,20 +234,19 @@
   "props": {
    "moisture": 0.59,
    "energyDensity": 150,
-   "basis": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜），干物质约 3.6 kcal/g；饱腹=kcal÷24，3600÷24=150。"
+   "basis": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜），干物质约 3.6 kcal/g；饱腹=kcal÷24，3600÷24=150。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_oats": {
   "props": {
    "edibleFraction": 0.7,
-   "energyDensity": 114,
-   "basis": "带壳燕麦：壳约占谷粒质量 25–35%，取脱壳后仁占 70%（Webster & Wood《Oats: Chemistry and Technology》AACC 2011）；整粒（含壳）能量密度 = 类别 grain 的 163 × 0.70 ≈ 114，壳不供能。"
+   "basis": "带壳燕麦：壳约占谷粒质量 25–35%，取脱壳后仁占 70%（Webster & Wood《Oats: Chemistry and Technology》AACC 2011）；能量密度与含水率用类别 grain 的值，按可食部分 70% 折算（壳不供能）。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_dried_fruit": {
   "props": {
    "moisture": 0.25,
-   "basis": "干果：含水约 15–32%（USDA FoodData Central：葡萄干 15.4%、干苹果 31.8%、李干 30.9%），传统晾晒干果为长期贮存多压到 25% 以下，取 25%。"
+   "basis": "干果：含水约 15–32%（USDA FoodData Central：葡萄干 15.4%、干苹果 31.8%、李干 30.9%），传统晾晒干果为长期贮存多压到 25% 以下，取 25%。【数值凭记忆写入，待 L2 核对】"
   }
  }
 }
