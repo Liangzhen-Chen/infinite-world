@@ -109,14 +109,19 @@ function hasOpaqueImport(src) {
             else if (c === '"' || c === "'" || c === '`') { for (i++; i < src.length && src[i] !== c && src[i] !== '\n'; i++) if (src.charCodeAt(i) === 92) i++; }
         }
         if (depth > 0) return true;
-        // `import(x) {` can never be an expression, so it is a method definition
-        if (/^\s*\{/.test(src.slice(i, i + 40))) continue;
+        // A method definition `[async ]import(params) {` sits where a class/object member starts (previous token `{` `}` `;` `,`)
+        // and its body brace is on the same line. An expression such as `x = import(y)` followed by a block on the next line
+        // (no semicolons) has an operator, `await`, `return` etc. before it and/or the brace on a later line: stays opaque.
+        const head = src.slice(0, m.index).replace(/\basync\s*$/, '').replace(/\s+$/, '');
+        if (/[{};,]$/.test(head) && /^[ \t]*\{/.test(src.slice(i, i + 40))) continue;
         return true;
     }
     return false;
 }
 // A bare-word literal (no "/" and no ".") used as a comparison operand (=== !== == != case) or as a quoted object key is a value/name,
 // not a path. Anything else (arguments, array elements, path-like literals, unclear shapes) stays a candidate path (conservative).
+// Known blind spot (accepted, none in the repository today): a bare word compared or used as a key and later passed to a
+// directory read, e.g. `if (x === 'world') fs.readdirSync(x)`; such code should build the path as a literal path or a join.
 function isNonPathLiteral(src, idx, len, lit) {
     if (lit.includes('/') || lit.includes('.')) return false;
     const before = src.slice(Math.max(0, idx - 12), idx), after = src.slice(idx + len, idx + len + 6);
