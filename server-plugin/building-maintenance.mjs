@@ -1,6 +1,7 @@
 // Owner maintenance is an NPC action, not free healing in the facility clock.
 // Use the same material/work specification, project stock and completion hook
 // as player repairs. Existing autonomous trade buys genuinely available stock.
+import {documentReader} from './read-scope.mjs';
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 import {facilityView,facilityRepairMaterials,facilityRuntime,installFacilityRuntime,facilityDefinition,facilityWearScale,facilityWearRemainder} from './facility-state.mjs';
 import {currentControllers} from './action-authority.mjs';
@@ -46,7 +47,7 @@ function noServiceLoss(e,state,building,view){
  return view.condition>=60&&wear>=0&&view.condition-Math.floor((remainder+Math.max(0,horizon-1)*wear)/denominator)>=60;
 }
 const items=p=>[['item_wood',p.wood],['item_stone',p.stone]];
-const reader=document=>({document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)});
+const reader=documentReader;
 const scheduleAt=(...args)=>facilityRuntime().scheduleAt(...args);
 const serviceMinutes=e=>actionCostRule(e,'trade.retail').timeMin;
 const trades=n=>(n?.serviceCatalog??[]).some(s=>s.kind==='trade'&&s.price?.mode==='engineQuote');
@@ -227,7 +228,7 @@ function publicProposal(e,document,who,building){
  if(!knownPublicBuildings(document.state,who).includes(building))return null;
  const physical=facilityView(e,document.state,building);if(physical&&noServiceLoss(e,document.state,building,physical))return null;
  const w=publicMaintenanceOptions(e,document,who,building);if(!w||!Number.isFinite(w.cost)||w.options[0].utility<=0)return null;
- const state=document.state,read={document,get:(...path)=>path.reduce((v,k)=>v?.[k],document)},s=state.settlements[w.settlement];
+ const state=document.state,read=documentReader(document),s=state.settlements[w.settlement];
  const bill=w.laborCost,cap=w.office.monthlyBudgetCopper;
  if(!s||!Number.isSafeInteger(cap)||w.used+bill>cap||
     coinRead(read,{point:'public.treasury',account:treasury(w.settlement),legacy:()=>s.treasury})-bill<w.reserve||

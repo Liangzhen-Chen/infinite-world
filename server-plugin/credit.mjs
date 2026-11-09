@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {documentReader} from './read-scope.mjs';
 import {reject} from './action-rejection.mjs';
 import {contractTerms,partyInProcedure} from './contract-state.mjs';
 import {currentGrace} from './obligation-state.mjs';
@@ -226,7 +227,7 @@ export function loanFreeze(d,engine,{copper,debtor='player',location=d.get('stat
 // a lender reveals neither that person's cash nor an agreement to lend it.
 export function householdFundingCandidates(engine,view,document){
     if(!fundingRelevant(engine,document.state,view.observer))return [];
-    const owner=view.observer,reader={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+    const owner=view.observer,reader=documentReader(document);
     const budget=householdBudget(reader,engine,owner,{view});
     let required=Math.max(budget.cashShortfall,budget.plannedCashShortfall);
     if(!required){
