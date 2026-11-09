@@ -266,12 +266,18 @@ function buyerNeeds(d,engine,state,place,read){
 function sellerShare(d,engine,state,place,read,owner,seller,available){
  const total=Math.floor(available);if(!(total>0))return 0;
  const away=new Set(personHousehold(engine,state,seller).value?.members??[seller]);
- const rows=buyerNeeds(d,engine,state,place,read).filter(b=>!away.has(b.id)),sum=rows.reduce((n,b)=>n+b.need,0);
- if(!(sum>0))return 0;
+ const rows=buyerNeeds(d,engine,state,place,read).filter(b=>!away.has(b.id));
+ return shareByNeed(total,rows).get(owner)??0;
+}
+// 按需求比例把 total 件整分给 rows（{id,need}），最大余数法；余数并列按编号的码点序（不用 localeCompare，跨环境一致）。
+export function shareByNeed(total,rows){
+ const sum=rows.reduce((n,b)=>n+b.need,0),out=new Map();
+ if(!(total>0)||!(sum>0))return out;
  const part=rows.map(b=>{const exact=total*b.need/sum;return {id:b.id,n:Math.floor(exact),rem:exact-Math.floor(exact)};});
  let left=total-part.reduce((n,r)=>n+r.n,0);
- for(const r of [...part].sort((a,b)=>b.rem-a.rem||a.id.localeCompare(b.id))){if(left<=0)break;r.n++;left--;}
- return part.find(r=>r.id===owner)?.n??0;
+ for(const r of [...part].sort((a,b)=>b.rem-a.rem||(a.id<b.id?-1:a.id>b.id?1:0))){if(left<=0)break;r.n++;left--;}
+ for(const r of part)out.set(r.id,r.n);
+ return out;
 }
 registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const state=d.get('state'),now=state.minute,location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
