@@ -62,12 +62,16 @@ export async function entriesFor(){
  const items=Object.entries(overlay).filter(([,patch])=>patch.props).map(([id,patch])=>({id,kind:'material-props-item',row:patch.props,source:{path:`${overlayFile}#${id}.props`,detail:patch.props.basis}}));
  return [...classes,...items];
 }
-// 调味佐餐卡的条目：在 D 卡 review-2 里没有审查记录的条目（新增的类别行与物品覆盖行）；D 卡已审条目不重发。
-export async function condimentEntries(entries,{dReviewRoot=reviewRoot}={}){
- const out=[];
- for(const e of entries??await entriesFor())if(!await fs.stat(path.join(dReviewRoot,`${e.id}.json`)).then(()=>true,()=>false))out.push(e);
- return out;
+// 条目分卡（显式范围，不看记录文件在不在）：D 卡条目 = D 卡已冻结批次 review-2/batch-*.json 的 ids 并集；调味佐餐卡条目 = 其余。
+// 归档、重审、重问只动记录文件，不动冻结批次，所以不会改变归属。三个函数都可注入批次来源（batches：批次对象数组）。
+export const cardIdsOf=batches=>new Set((batches??[]).flatMap(b=>b.ids??[]));
+export const splitByCard=(entries,dIds)=>({d:entries.filter(e=>dIds.has(e.id)),condiment:entries.filter(e=>!dIds.has(e.id))});
+export async function frozenDBatches(root=path.join('world/drafts/d12-matprops','review-2')){
+ const files=(await fs.readdir(root)).filter(f=>/^batch-[0-9]+[.]json$/.test(f)).sort();
+ return Promise.all(files.map(f=>readJSON(path.join(root,f))));
 }
+export async function dEntries(entries,{batches}={}){return splitByCard(entries??await entriesFor(),cardIdsOf(batches??await frozenDBatches())).d;}
+export async function condimentEntries(entries,{batches}={}){return splitByCard(entries??await entriesFor(),cardIdsOf(batches??await frozenDBatches())).condiment;}
 export const draftFor=entry=>({id:entry.id,row:structuredClone(entry.row)});
 let worldCache;
 const runtime=async()=>worldCache??=await loadRuntimeWorld();
@@ -122,17 +126,18 @@ export async function l1(){
  assert.deepEqual(errors,[]);
  return {L1:'passed',entries:entries.length,overrides,items:world.items.length};
 }
-const batchFile=path.join(reviewRoot,'batch-0.json'),selectionFile=path.join(reviewRoot,'l4-selection.json');
-export async function sampleL4(){
- const batch=await readJSON(batchFile),entries=await entriesFor();
- const st=await summarizeApproval(entries);
+export async function sampleL4(card=cardProfiles.d){
+ const batchFile=path.join(card.reviewRoot,'batch-0.json'),selectionFile=path.join(card.reviewRoot,'l4-selection.json');
+ const batch=await readJSON(batchFile),entries=await card.entries();
+ const st=await summarizeApproval(entries,card);
  if(st.unresolved.length)throw Error(`尚有条目既未通过 L2 也无人工核定：${st.unresolved.join(',')}`);
  const pool=[...batch.ids];for(let i=pool.length-1;i>0;i--){const j=randomInt(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];}
  const selection={fingerprint:batch.fingerprint,wave:pool.slice(0,10),read:[...new Set([...batch.sample,...batch.flagged,...pool.slice(0,10)])]};
  await fs.writeFile(selectionFile,JSON.stringify(selection,null,2)+'\n');
  return selection;
 }
-export async function recordL4(file,reviewer){
+export async function recordL4(file,reviewer,card=cardProfiles.d){
+ const batchFile=path.join(card.reviewRoot,'batch-0.json'),selectionFile=path.join(card.reviewRoot,'l4-selection.json');
  const batch=await readJSON(batchFile),selection=await readJSON(selectionFile),notes=await readJSON(file);
  if(selection.fingerprint!==batch.fingerprint||selection.read.some(id=>!notes.notes?.some(r=>r.id===id&&r.note?.trim()))||selection.wave.some(id=>!notes.wave?.some(r=>r.id===id)))throw Error('L4 缺少实际抽样阅读或评分');
  batch.l4={approved:true,reviewer,notes:notes.notes,wave:notes.wave};
@@ -145,12 +150,16 @@ export function checkWave(wave,ids){
 // 人工核定：L2 已达同条上限仍有 hard 意见、经主会话复算认定为模型误判的条目。与 L2 通过分开记录、分开计数，不改 L2 规则与阈值。
 // 只接受：指纹与当前数据一致、带复算算式、有不同于复算者的独立审查者确认、日期、固定标注。
 export const manualFile=path.join(reviewRoot,'manual-verified.json');
+// 两张卡各用自己的审查目录、人工核定、L4 与 revision。
+export const cardProfiles={
+ d:{name:cardId,revision,reviewRoot,manualFile,entries:dEntries},
+ condiment:{name:condimentCard.cardId,revision:condimentCard.revision,reviewRoot:condimentCard.reviewRoot,manualFile:path.join(condimentCard.reviewRoot,'manual-verified.json'),entries:condimentEntries}};
 // 两种固定标注：reviewed = 当前数据被 L2 审过且 hard 意见自撤（记录指纹须等于核定指纹且有 review）；
 // unreviewed = 同条上限后数据有改动、未再经 L2（须写明上次 L2 记录的指纹与改动内容）。
 export const manualLabels={reviewed:'人工核定、模型误判',unreviewed:'人工核定、未经L2复审'};
 export const manualLabel=manualLabels.reviewed;
 const loadRecordDefault=id=>readJSON(path.join(reviewRoot,`${id}.json`)).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
-export const fingerprintOf=async entry=>hashContent({entry,context:await contextFor(entry),revision});
+export const fingerprintOf=async(entry,rev=revision)=>hashContent({entry,context:await contextFor(entry),revision:rev});
 export async function checkManual(doc,entries,fingerprint=fingerprintOf,loadRecord=loadRecordDefault){
  const ok=new Map();
  for(const r of doc?.entries??[]){
@@ -190,10 +199,12 @@ export async function approvalState(entries,{manual=new Map(),loadRecord=id=>rea
  }
  return out;
 }
-export async function summarizeApproval(entries){
- const doc=await readJSON(manualFile).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
- const st=await approvalState(entries,{manual:await checkManual(doc,entries)});
- await fs.writeFile(path.join(reviewRoot,'approval-summary.json'),JSON.stringify({rule:'人工核定条目不计入人工队列比例（needsSystemicRepair），其余检查同 readApprovedContent；规则解释待李白确认',total:entries.length,l2Passed:st.l2,manualVerified:st.manual,unresolved:st.unresolved},null,2)+'\n');
+export async function summarizeApproval(entries,card=cardProfiles.d){
+ const doc=await readJSON(card.manualFile).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
+ const loadRecord=id=>readJSON(path.join(card.reviewRoot,`${id}.json`)).catch(e=>e.code==='ENOENT'?null:Promise.reject(e)),fingerprint=e=>fingerprintOf(e,card.revision);
+ const st=await approvalState(entries,{manual:await checkManual(doc,entries,fingerprint,loadRecord),loadRecord,fingerprint});
+ await fs.mkdir(card.reviewRoot,{recursive:true});
+ await fs.writeFile(path.join(card.reviewRoot,'approval-summary.json'),JSON.stringify({rule:'人工核定条目不计入人工队列比例（needsSystemicRepair），其余检查同 readApprovedContent；规则解释待李白确认',total:entries.length,l2Passed:st.l2,manualVerified:st.manual,unresolved:st.unresolved},null,2)+'\n');
  return st;
 }
 // verify：L1 必过；每条 L2 通过或人工核定；批次检查与 content-pipeline.mjs readApprovedContent 逐项等价：
@@ -201,11 +212,11 @@ export async function summarizeApproval(entries){
 // ③条目都在已审查批次里；④记录指纹、无错、无 hard。另加波次随机 10 条六项评分（checkWave）。
 // 唯一差别（规则解释待李白确认）：已人工核定的条目允许记录状态不是 passed，且不计入人工队列比例（needsSystemicRepair）——
 // 它们已核定，不在待处理队列里；未决条目为空才通过。该差别同样写在 approval-summary.json 的 rule 字段。
-export async function verifyPublished(){
- await l1();
- const entries=await entriesFor(),summary=await readJSON(path.join(reviewRoot,'summary.json'));
- const st=await summarizeApproval(entries);
- assert.deepEqual(st.unresolved,[],'尚有条目既未通过 L2 也无人工核定');
+export async function verifyPublished(card=cardProfiles.d,{checkL1=true}={}){
+ if(checkL1)await l1();
+ const reviewRoot=card.reviewRoot,entries=await card.entries(),summary=await readJSON(path.join(reviewRoot,'summary.json'));
+ const st=await summarizeApproval(entries,card);
+ if(st.unresolved.length)throw Object.assign(Error('尚有条目既未通过 L2 也无人工核定'),{unresolved:st.unresolved});
  const summaryIds=summary.batches.flatMap(b=>b.ids??[]);
  if(new Set(summaryIds).size!==summaryIds.length)throw Error('发布编号重复（摘要批次 ids）');
  const inBatch=new Set(),rowsById=new Map();
@@ -395,11 +406,25 @@ export async function condimentBudget(){
 }
 export async function condimentReview(){
  await l1();await condimentLedgerFile();
- const entries=await condimentEntries(await entriesFor());
+ const entries=await condimentEntries();
  console.log(JSON.stringify({pid:process.pid,mode:'review-condiment',entries:entries.length}));
  const client=new DeepSeekClient({budgetYuan:condimentCard.limitYuan,logFile:path.join(condimentCard.draftRoot,'usage.jsonl')});
  const {summary,halted}=await runReview({entries,client,root:condimentCard.reviewRoot,budgetRoot:condimentCard.draftRoot,cardIdArg:condimentCard.cardId,allocation:condimentCard.allocation,revisionArg:condimentCard.revision,dirName:condimentCard.reviewDirName});
  return {passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards[condimentCard.cardId],...reportHalt(halted)};
+}
+// 全表发布校验：L1 一次；两张卡各自校验（各自的 L2/人工核定/L4），合并结论；未决条目标明属于哪张卡。cards 可注入（测试用）。
+export async function verifyAll({cards=cardProfiles,verify=verifyPublished}={}){
+ await l1();
+ const out={ok:true,cards:{},unresolved:[]};
+ for(const [key,card] of Object.entries(cards)){
+  try{out.cards[key]={ok:true,...await verify(card,{checkL1:false})};}
+  catch(e){
+   out.ok=false;out.cards[key]={ok:false,error:e.message};
+   const ids=e.unresolved??(await summarizeApproval(await card.entries(),card).catch(()=>null))?.unresolved??[];
+   for(const id of ids)out.unresolved.push({id,card:card.name});
+  }
+ }
+ return out;
 }
 const reportHalt=h=>h?{halted:{entry:h.id,code:h.code,message:h.message,note:'审查解析失败，本次运行已停止后续所有条目的请求'}}:{};
 
@@ -455,7 +480,7 @@ export async function refreshBatches(root,records){
  await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(sum,null,2)+'\n');
 }
 export async function rejudge({entries,root=reviewRoot,budgetRoot=draftRoot,dry=false,fingerprint=fingerprintOf,validate=validateDraft,extract=extractReview,cutoff=rejudgeCutoff,grant=garlicRetry}={}){
- entries??=await entriesFor();
+ entries??=await dEntries();
  const ledger=await readJSON(path.join(budgetRoot,'budget.json')),rows=[],records=[];let changed=false;
  for(const entry of entries){
   const file=path.join(root,`${entry.id}.json`),rec=await readJSON(file).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
@@ -509,14 +534,15 @@ export async function run(args=process.argv.slice(2)){
   await l1();
   await authorizeIncrease();
   if(!retry&&args.includes('--redo'))console.log(JSON.stringify({archived:await archiveForRedo(args[args.indexOf('--redo')+1].split(','))}));
-  const entries=await entriesFor();
+  const entries=await dEntries();// D 卡路径只处理 D 卡已冻结批次里的条目
   console.log(JSON.stringify({pid:process.pid,mode:retry?'retry-garlic':'review',entries:entries.length}));
   const client=new DeepSeekClient({budgetYuan:cardLimitYuan,logFile:path.join(draftRoot,'usage.jsonl')});
   const {summary,halted}=retry?await retryRun({entries,client}):await runReview({entries,client});
   console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards[cardId],...reportHalt(halted)}));
  }
- if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4()));
- if(args.includes('--l4'))console.log(JSON.stringify(await recordL4(args[args.indexOf('--l4')+1],'主会话人读')));
- if(args.includes('--verify'))console.log(JSON.stringify(await verifyPublished()));
+ const card=condiment?cardProfiles.condiment:cardProfiles.d;
+ if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4(card)));
+ if(args.includes('--l4'))console.log(JSON.stringify(await recordL4(args[args.indexOf('--l4')+1],'主会话人读',card)));
+ if(args.includes('--verify'))console.log(JSON.stringify(args.includes('--card')?await verifyPublished(card):await verifyAll()));
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)await run();
