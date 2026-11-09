@@ -1,0 +1,143 @@
+{
+  "total": 23,
+  "passed": 0,
+  "manual": 1,
+  "pending": 22,
+  "costUpperYuan": 0.00355648,
+  "budget": {
+    "spentYuan": 0.00355648,
+    "reservedYuan": 0,
+    "limitYuan": 1,
+    "waveLimitYuan": 1,
+    "note": "D12-CONDIMENT 独立账：与 D12-MATPROPS 的 world/drafts/d12-matprops/budget.json 互不影响",
+    "cards": {
+      "D12-CONDIMENT": {
+        "limitYuan": 1,
+        "spentYuan": 0.00355648,
+        "reservedYuan": 0,
+        "maxRequests": 60
+      }
+    },
+    "requests": {
+      "11e05d27-6a76-4049-a641-d2f702a94537": {
+        "card": "D12-CONDIMENT",
+        "label": "content-review-1-class_mushroom-review0",
+        "requestHash": "f053a3650b133dcfdeaeef32ac2ef14cd2903aab51cbbe2d8591e806ab4f5f51",
+        "reservedYuan": 0.019788,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/11e05d27-6a76-4049-a641-d2f702a94537.json",
+          "requestHash": "f053a3650b133dcfdeaeef32ac2ef14cd2903aab51cbbe2d8591e806ab4f5f51",
+          "responseHash": "e52c7a38ed9171ee517892aefe34606609770821666edffd947104f2c49d40bb"
+        },
+        "costUpperYuan": 0.00355648,
+        "measurement": {
+          "label": "content-review-1-class_mushroom-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1256,
+            "completion_tokens": 256,
+            "total_tokens": 1512,
+            "prompt_tokens_details": {
+              "cached_tokens": 512
+            },
+            "prompt_cache_hit_tokens": 512,
+            "prompt_cache_miss_tokens": 744
+          },
+          "costUpperYuan": 0.00355648,
+          "cumulativeUpperYuan": 0.00355648,
+          "latencyMs": 2100.6551,
+          "timestamp": "2026-11-09T17:53:18.396Z"
+        }
+      }
+    },
+    "historicalUnallocatedSpentYuan": 0,
+    "authorizations": [
+      {
+        "id": "d12-condiment-limit-1.0",
+        "source": "李白 2026-11-09 16:5x：亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡",
+        "after": {
+          "limitYuan": 1,
+          "maxRequests": 60
+        }
+      }
+    ]
+  },
+  "batches": [
+    {
+      "index": 0,
+      "fingerprint": "94b1324c377f909e11071d805b722c777831136395e77c3e103926f187177af9",
+      "count": 23,
+      "passed": 0,
+      "ids": [
+        "class_mushroom",
+        "class_nut",
+        "class_fruit",
+        "class_vegetable",
+        "class_legume",
+        "class_grain",
+        "class_meat",
+        "class_fish",
+        "class_egg",
+        "class_milk",
+        "class_edible_fat",
+        "class_sweetener",
+        "class_vinegar",
+        "class_salt",
+        "class_fresh_herb",
+        "class_spice_seed",
+        "class_cream",
+        "class_cheese",
+        "class_condiment_sauce",
+        "item_butter",
+        "item_mustard_seed",
+        "item_poppy_seed",
+        "item_caraway_seed"
+      ],
+      "rewritten": 0,
+      "manual": [
+        "class_mushroom"
+      ],
+      "pending": [
+        "class_nut",
+        "class_fruit",
+        "class_vegetable",
+        "class_legume",
+        "class_grain",
+        "class_meat",
+        "class_fish",
+        "class_egg",
+        "class_milk",
+        "class_edible_fat",
+        "class_sweetener",
+        "class_vinegar",
+        "class_salt",
+        "class_fresh_herb",
+        "class_spice_seed",
+        "class_cream",
+        "class_cheese",
+        "class_condiment_sauce",
+        "item_butter",
+        "item_mustard_seed",
+        "item_poppy_seed",
+        "item_caraway_seed"
+      ],
+      "flagged": [],
+      "sample": [],
+      "l4": {
+        "approved": false,
+        "notes": []
+      },
+      "costUpperYuan": 0.00355648,
+      "manualRatio": 0.043478260869565216,
+      "needsSystemicRepair": false
+    }
+  ],
+  "scope": "L1/L2 审核结果；尚须 L4 抽读与发布校验",
+  "halted": {
+    "id": "class_mushroom",
+    "code": "REVIEW_FORMAT",
+    "message": "Invalid contradictions JSON: The expression evaluated to a falsy value:\n\n  assert.ok(['hard','soft','style'].includes(issue.severity))\n"
+  }
+}

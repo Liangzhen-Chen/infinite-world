@@ -29,6 +29,10 @@ test('畸形的审查响应不算通过', () => {
   for (const content of ['{}', '{"contradictions":[{}]}', '{"contradictions":[{"quote":"a","field":"b","severity":"bad","verdict":"conflict","reason":"c"}]}',
     '{"contradictions":[{"quote":"a","field":"b","severity":"soft","reason":"c"}]}', '{"contradictions":[{"quote":"a","field":"b","severity":"soft","verdict":"maybe","reason":"c"}]}'])
     assert.throws(() => extractReview(response(content)), error => error.code === 'REVIEW_FORMAT');
+  // severity=no_conflict 只允许与 verdict=no_conflict 配对（“核过、无问题”），且不进入问题列表；与 conflict 配对仍是格式错误
+  assert.throws(() => extractReview(response('{"contradictions":[{"quote":"a","field":"b","severity":"no_conflict","verdict":"conflict","reason":"c"}]}')), error => error.code === 'REVIEW_FORMAT');
+  const ok = extractReview(response('{"contradictions":[{"quote":"a","field":"b","severity":"no_conflict","verdict":"no_conflict","reason":"c"},{"quote":"d","field":"e","severity":"soft","verdict":"conflict","reason":"f"}]}'));
+  assert.deepEqual(ok.contradictions.map(c => c.severity), ['soft']);
 });
 
 const item = (severity, verdict, reason = '原因') => ({quote: 'q', field: 'moisture', severity, verdict, reason});

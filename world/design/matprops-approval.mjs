@@ -113,7 +113,7 @@ export async function validateDraft(draft,entry){
 }
 export function reviewRequest(entry,draft,context){
  return {thinking:{type:'disabled'},temperature:0,max_tokens:1200,response_format:{type:'json_object'},messages:[
-  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","verdict":"conflict|no_conflict","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。verdict 先定：核算后确有矛盾写 conflict，核算后发现无误或应撤回写 no_conflict；severity 为 hard 时 verdict 必须是 conflict，核算无误的项不要列入或不要写 hard。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。行内 sources 是出处原值（moistureFraction 含水分数、kcalPer100gWet 鲜重 kcal/100g、refuseFraction 不可食比例），每个出处代表类别的一个成员；selection.method 为 mean 时，各成员（出处）分别推算含水、干物质比例、干基能量与能量，再对各成员的推算结果取平均（没有取代表的方式）；为 single 时只有一个出处，按它自身推算。moisture、energyDensity、edibleFraction 由程序推出，context.derived 给出推出值：含水取 3 位小数；成员的干基能量 = 鲜重 kcal/100g × 10 ÷ (1−该成员含水) ÷ kcalPerSatiety，类别值为各成员干基能量的平均并取整。'},
+  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","verdict":"conflict|no_conflict","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。verdict 先定：核算后确有矛盾写 conflict，核算后发现无误或应撤回写 no_conflict；severity 为 hard 时 verdict 必须是 conflict，核算无误的项不要列入；若列入，verdict 与 severity 都写 no_conflict。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。行内 sources 是出处原值（moistureFraction 含水分数、kcalPer100gWet 鲜重 kcal/100g、refuseFraction 不可食比例），每个出处代表类别的一个成员；selection.method 为 mean 时，各成员（出处）分别推算含水、干物质比例、干基能量与能量，再对各成员的推算结果取平均（没有取代表的方式）；为 single 时只有一个出处，按它自身推算。moisture、energyDensity、edibleFraction 由程序推出，context.derived 给出推出值：含水取 3 位小数；成员的干基能量 = 鲜重 kcal/100g × 10 ÷ (1−该成员含水) ÷ kcalPerSatiety，类别值为各成员干基能量的平均并取整。'},
   {role:'user',content:JSON.stringify({entry:{id:entry.id,kind:entry.kind,row:entry.row},context})}]};
 }
 export function extractReview(response){
@@ -122,7 +122,9 @@ export function extractReview(response){
   review=parseModelJSON(response);
   assert.ok(Array.isArray(review?.contradictions),'Missing contradictions array');
   for(const issue of review.contradictions){
-   assert.ok(['hard','soft','style'].includes(issue.severity));
+   // 核算无误的项（verdict=no_conflict）可把 severity 也写成 no_conflict：只表示“核过、无问题”，不是问题项，下面剔除；
+   // 与 conflict 配对或其他任何值仍是格式错误。
+   assert.ok(['hard','soft','style'].includes(issue.severity)||(issue.severity==='no_conflict'&&issue.verdict==='no_conflict'));
    assert.ok(['conflict','no_conflict'].includes(issue.verdict),'缺 verdict（conflict|no_conflict）');
    for(const key of ['quote','field','reason'])assert.ok(typeof issue[key]==='string'&&issue[key].trim());
   }
@@ -130,6 +132,7 @@ export function extractReview(response){
  // 一致性校验（结构化）：severity=hard 必须 verdict=conflict；模型自己判 no_conflict 却标 hard（先报后自撤）= 无效输出，不算通过也不算 hard。
  const bad=review.contradictions.filter(c=>c.severity==='hard'&&c.verdict==='no_conflict');
  if(bad.length)throw Object.assign(new Error(`审查输出自相矛盾（severity=hard 但 verdict=no_conflict）：${bad.map(c=>c.field).join('、')}`),{code:'REVIEW_INCONSISTENT'});
+ review.contradictions=review.contradictions.filter(c=>c.severity!=='no_conflict');
  return review;
 }
 const draftRequest=()=>{throw Error('候选已冻结；不请求模型改写');};
