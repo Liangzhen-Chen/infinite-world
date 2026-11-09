@@ -10,6 +10,38 @@ export function bodyRule(engine,need){
  if(!row)reject('E-BODY-TABLE','The archived body table is required');
  return row;
 }
+// The single entry for how fast an actor's need falls. The species' nature.metabolism
+// scales the person table per need (absent = 1, 0 = never falls); player and
+// speciesless actors follow the table as is. Every drain reader goes through here.
+export function speciesMetabolism(engine,speciesId,need){
+ const factor=engine.byId?.get(speciesId)?.nature?.metabolism?.[need];
+ return factor===undefined?1:factor;
+}
+export function metabolismFactor(engine,state,actor,need){
+ if(actor==='player')return 1;
+ const row=state?.npcs?.[actor]??state?.creatures?.[actor];
+ return speciesMetabolism(engine,row?.species??engine.byId?.get(actor)?.species,need);
+}
+// Share of a settlement's people who eat, from its species make-up: registered residents by
+// species plus the pending population (by species when the profile is mixed, otherwise people).
+// 1 when every member eats (all human settlements), so their ration is unchanged.
+const mealRatios=new WeakMap();
+export function settlementMealRatio(engine,sid){
+ const cache=mealRatios.get(engine)??new Map();mealRatios.set(engine,cache);
+ if(cache.has(sid))return cache.get(sid);
+ const profile=engine.world?.settlementProfiles?.find(p=>p.id===sid);let weighted=0,total=0;
+ if(profile){
+  for(const id of profile.residentIds??[]){total++;weighted+=speciesMetabolism(engine,engine.byId?.get(id)?.species,'satiety');}
+  if(profile.pendingSpeciesStructure)for(const [species,g] of Object.entries(profile.pendingSpeciesStructure)){total+=g.population;weighted+=g.population*speciesMetabolism(engine,species,'satiety');}
+  else{const n=profile.pendingPopulation??0;total+=n;weighted+=n;}
+ }
+ const ratio=total>0&&weighted!==total?weighted/total:1;cache.set(sid,ratio);return ratio;
+}
+// Whole mouths the public granary feeds for a head count.
+export function mealMouthsOf(engine,sid,population){const ratio=settlementMealRatio(engine,sid);return ratio===1?population:Math.round(population*ratio);}
+export function bodyDrain(engine,state,actor,need,activity='light'){
+ return bodyRule(engine,need).drainPerHour[activity]*metabolismFactor(engine,state,actor,need);
+}
 export function bodyFact(engine,document,actor,need){
  const path=pathOf(document,actor);if(!path)reject('E-BODY-TARGET','The actor has no body');
  const rule=bodyRule(engine,need),stored=atPath(document,path)?.body?.[need];
@@ -20,7 +52,7 @@ export function bodyFact(engine,document,actor,need){
 export function readBodyState(engine,document,actor,need,minute=document.state.minute){
  const fact=bodyFact(engine,document,actor,need),rule=bodyRule(engine,need);
  if(!Number.isSafeInteger(minute)||minute<fact.asOf)reject('E-BODY-TIME','A body read cannot precede its saved fact');
- const rate=fixedUnits(rule.drainPerHour[fact.activity]);
+ const rate=fixedUnits(bodyDrain(engine,document.state,actor,need,fact.activity));
  let numerator=checkedFixed(fixedUnits(fact.value)*60n+BigInt(fact.remainder??0)+(need==='fatigue'?1n:-1n)*rate*BigInt(minute-fact.asOf));
  const maximum=fixedUnits(rule.max)*60n;numerator=numerator<0n?0n:numerator>maximum?maximum:numerator;
  // remainder is an integer division carry for minutes/hour, not a second
