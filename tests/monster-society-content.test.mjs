@@ -143,7 +143,7 @@ test('待生成人口与具名成员分开：登记12名，余数按种子配额
  }
 });
 
-test('白石镇近郊进入炭阶：黄昏后与换粮台的烟苔做有限库存交易，公共洞室可通行，私铺与议事窟进入记擅入',async()=>{
+test('白石镇近郊进入炭阶：黄昏后换粮台的烟苔因家庭口粮预留拒卖干蘑菇，公共洞室可通行，私铺与议事窟进入记擅入',async()=>{
  const f=fixture();let d=await at(f,f.document,tj.stair,18*60+30);
  assert.match(f.engine.scene(d),/烟苔/);
  await refuseFood(f,d,P.yantai,'item_dry_mushroom','buy_mushroom');

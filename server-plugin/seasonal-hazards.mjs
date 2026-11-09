@@ -29,6 +29,7 @@ import {famineAt} from './hazard-calendar.mjs';
 import {droughtRelief,purifiedWaterFactor} from './magic-economy.mjs';
 import {hazardClocks,hazardKey,hazardRoll,isPureClock,isHazardTick,pureHazardFires,pureHazardPhase,pureConditionMet,hazardRouteClosed,PURE_CONDITIONS} from './hazard-calendar.mjs';
 import {pow} from './det-math.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
 
 const DAY=1440,YEAR=360*DAY,int=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const KINDS=['flood','famine','epidemic','price'],WEATHER=['clear','cloudy','rain','storm','snow','fog'];
@@ -208,7 +209,7 @@ function conditionMet(d,engine,rule,c,at){
  case 'always':case 'weather':return pureConditionMet(engine,seed,rule,c,at/DAY);
  case 'hunger':{const s=state.settlements?.[rule.settlement],value=s?.starvation??0;return {met:value>0||Boolean(famineAt(state,rule.settlement,at)),value,evidence:`settlement:${rule.settlement}`};}
  case 'all':{const parts=c.conditions.map(x=>conditionMet(d,engine,rule,x,at));return {met:parts.every(x=>x.met),value:parts.map(x=>x.value??null),evidence:parts.map(x=>x.evidence??null)};}
- case 'granary_short':{const s=state.settlements?.[rule.settlement];const value=s?.food??null;return {met:Boolean(s)&&s.population>0&&s.food<s.population*c.days,value,evidence:`settlement:${rule.settlement}`};}
+ case 'granary_short':{const s=state.settlements?.[rule.settlement];const value=s?.food??null;return {met:Boolean(s)&&s.population>0&&s.food<mealMouthsOf(engine,state,rule.settlement,s.population)*c.days,value,evidence:`settlement:${rule.settlement}`};}
  case 'hazard_phase':{const other=hazardClocks(engine).find(r=>r.id===c.clock),value=phaseOf(d,engine,other,at);return {met:value>=c.minimum,value,evidence:hazardKey(c.clock)};}
  case 'epidemic_cases':{const ep=state.records?.[epidemicKey(rule.id,year)],value=ep?Object.keys(ep.households).length:0;return {met:value>=c.minimum,value,evidence:ep?.id??null};}
  case 'epidemic_clear':{const ep=state.records?.[epidemicKey(rule.id,year)];return {met:ep?.status==='平息',value:ep?.status??null,evidence:ep?.id??null};}

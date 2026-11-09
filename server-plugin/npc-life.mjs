@@ -16,6 +16,7 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 import {digest,stateMemo,canonicalEqual} from './storage.mjs';
 import {householdMealPlan,householdMealWithSources,usageCost,registerMerchandiseResolver} from './household-budget.mjs';
 import {mouthWeight} from './household-subsistence.mjs';
+import {mealMouthsOf,metabolismFactor} from './primitives-body.mjs';
 import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups} from './household-subsistence.mjs';
 import {placeSettlement} from './entity-view.mjs';
 import {toRational} from './det-math.mjs';
@@ -678,7 +679,7 @@ function strangerHost(engine,state,id,from,minute){
  for(const house of engine.world.households??[]){
   if(house.settlement===from?.settlement||hungry(engine,state,house.settlement))continue;
   const ledger=state.settlements?.[house.settlement];
-  if(!Number.isSafeInteger(ledger?.population)||!((ledger.food??0)>=(ledger.population+1)*s.foodDays))continue;
+  if(!Number.isSafeInteger(ledger?.population)||!((ledger.food??0)>=(mealMouthsOf(engine,state,house.settlement,ledger.population)+metabolismFactor(engine,state,id,'satiety'))*s.foodDays))continue;
   const members=householdMembers(engine,state,house.id).filter(x=>present(engine,state,x));
   const coming=Object.values(state.family?.migrations??{}).filter(m=>m.to.household===house.id&&m.status!=='中止');
   if(members.length+coming.filter(m=>['待出发','在途'].includes(m.status)).length>=s.maxHousehold||coming.filter(m=>m.stranger&&!m.with).length>=s.perHousehold)continue;
