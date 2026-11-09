@@ -192,9 +192,9 @@
    "vegetable"
   ],
   "props": {
-   "moisture": 0.8,
-   "energyDensity": 153,
-   "basis": "欧防风根含水 79.5%、75 kcal/100g（USDA FoodData Central 生欧防风），干物质约 3.66 kcal/g；饱腹=kcal÷24，3660÷24≈153。【数值凭记忆写入，待 L2 核对】"
+   "moisture": 0.795,
+   "energyDensity": 152,
+   "basis": "欧防风根含水 79.5%、75 kcal/100g（USDA FoodData Central 生欧防风）；含水字段取出处值 0.795（不取整）；干物质能量 = 750 kcal/kg ÷ (1−0.795) ≈ 3660 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），3660÷24≈152。覆盖蔬菜类别的值。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_beet": {
@@ -232,9 +232,9 @@
    "vegetable"
   ],
   "props": {
-   "moisture": 0.59,
+   "moisture": 0.586,
    "energyDensity": 150,
-   "basis": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）；干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），3600÷24=150。覆盖蔬菜类别（含水 0.90）的值。【数值凭记忆写入，待 L2 核对】"
+   "basis": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）；含水字段取出处值 0.586（不取整）；干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），3600÷24=150。覆盖蔬菜类别（含水 0.90）的值。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_oats": {

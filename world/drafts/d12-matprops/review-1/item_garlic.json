@@ -14,22 +14,16 @@
   "review": {
     "contradictions": [
       {
-        "quote": "干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质",
-        "field": "basis",
-        "severity": "hard",
-        "reason": "算式与结果不符：1490÷(1−0.586)=1490÷0.414≈3599，约 3600 正确；但 149 kcal/100g 即 1490 kcal/kg 鲜重，除以干物质分数得约 3600 kcal/kg 干物质，数值本身在干物质能量合理范围（约 3500–3700）。问题在于 3600÷24=150 与 energyDensity=150 一致，故此处算式无误。真正矛盾：basis 写“覆盖蔬菜类别（含水 0.90）的值”，但该物品行 moisture=0.59 与类别 0.90 差异大，属覆盖说明，非数值错误。综合看无 hard 算式错。"
-      },
-      {
         "quote": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）",
         "field": "moisture",
         "severity": "soft",
-        "reason": "USDA 生大蒜含水约 58.6%、热量约 149 kcal/100g 与记忆一致，落在合理范围；但 basis 标注“凭记忆写入，待 L2 核对”，出处无法当场确认，故记 soft 而非 hard。"
+        "reason": "USDA 生大蒜含水约 58–59%、约 149 kcal/100g，与所写一致；但 0.59 与 58.6% 略有出入，属四舍五入，可接受。"
       },
       {
-        "quote": "覆盖蔬菜类别（含水 0.90）的值",
+        "quote": "干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质",
         "field": "basis",
-        "severity": "style",
-        "reason": "表述易误解：物品行 moisture=0.59 覆盖类别 0.90，但 basis 写“覆盖蔬菜类别（含水 0.90）的值”未明确是覆盖而非沿用；属表述风格问题，不影响数值。"
+        "severity": "hard",
+        "reason": "1490÷0.414≈3599，算式无误；但 basis 写 58.6% 而 moisture 填 0.59，二者不一致，应统一为 0.586 或 0.59。"
       }
     ]
   },
@@ -38,7 +32,7 @@
       "quote": "干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质",
       "field": "basis",
       "severity": "hard",
-      "reason": "算式与结果不符：1490÷(1−0.586)=1490÷0.414≈3599，约 3600 正确；但 149 kcal/100g 即 1490 kcal/kg 鲜重，除以干物质分数得约 3600 kcal/kg 干物质，数值本身在干物质能量合理范围（约 3500–3700）。问题在于 3600÷24=150 与 energyDensity=150 一致，故此处算式无误。真正矛盾：basis 写“覆盖蔬菜类别（含水 0.90）的值”，但该物品行 moisture=0.59 与类别 0.90 差异大，属覆盖说明，非数值错误。综合看无 hard 算式错。"
+      "reason": "1490÷0.414≈3599，算式无误；但 basis 写 58.6% 而 moisture 填 0.59，二者不一致，应统一为 0.586 或 0.59。"
     }
   ],
   "warnings": [
@@ -46,13 +40,7 @@
       "quote": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）",
       "field": "moisture",
       "severity": "soft",
-      "reason": "USDA 生大蒜含水约 58.6%、热量约 149 kcal/100g 与记忆一致，落在合理范围；但 basis 标注“凭记忆写入，待 L2 核对”，出处无法当场确认，故记 soft 而非 hard。"
-    },
-    {
-      "quote": "覆盖蔬菜类别（含水 0.90）的值",
-      "field": "basis",
-      "severity": "style",
-      "reason": "表述易误解：物品行 moisture=0.59 覆盖类别 0.90，但 basis 写“覆盖蔬菜类别（含水 0.90）的值”未明确是覆盖而非沿用；属表述风格问题，不影响数值。"
+      "reason": "USDA 生大蒜含水约 58–59%、约 149 kcal/100g，与所写一致；但 0.59 与 58.6% 略有出入，属四舍五入，可接受。"
     }
   ],
   "feedback": null,
@@ -64,10 +52,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "9e10cd8f-c4cd-482d-a96b-15eefb47ccb5",
-      "file": "budget-responses/9e10cd8f-c4cd-482d-a96b-15eefb47ccb5.json",
-      "requestHash": "95f3997ea80b4367b26ecef4faff103730f6dc764c36dd1f12f11f89e1d7eb20",
-      "responseHash": "779986152bc1cf641721fe75f8fb67912bc543225dc70f02fae18ac0e2660727"
+      "requestId": "f2296d2d-9898-4ba2-a33b-c2c7bb591538",
+      "file": "budget-responses/f2296d2d-9898-4ba2-a33b-c2c7bb591538.json",
+      "requestHash": "750467a17b76081fa00a6468ebcd5b41cb03e6d5063109f6b328993e49c58741",
+      "responseHash": "a8982904ef5a691bfbe07e1d3246faa161c65dbf7da37d2f6efe69fb39fa3bbf"
     }
   ],
   "measurements": [
@@ -76,19 +64,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1043,
-        "completion_tokens": 382,
-        "total_tokens": 1425,
+        "prompt_tokens": 1087,
+        "completion_tokens": 187,
+        "total_tokens": 1274,
         "prompt_tokens_details": {
           "cached_tokens": 128
         },
         "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 915
+        "prompt_cache_miss_tokens": 959
       },
-      "costUpperYuan": 0.00489112,
-      "cumulativeUpperYuan": 0.11719984000000001,
-      "latencyMs": 2992.804400000001,
-      "timestamp": "2026-11-09T09:39:55.362Z"
+      "costUpperYuan": 0.00341912,
+      "cumulativeUpperYuan": 0.14038527999999997,
+      "latencyMs": 1765.8601999999992,
+      "timestamp": "2026-11-09T09:55:16.605Z"
     }
   ]
 }

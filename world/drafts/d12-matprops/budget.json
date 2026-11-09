@@ -1,5 +1,5 @@
 {
-  "spentYuan": 0.11904256000000002,
+  "spentYuan": 0.14038527999999997,
   "reservedYuan": 0,
   "limitYuan": 20,
   "note": "D12 卡 D 材料属性 L2：卡 D12-MATPROPS 单卡上限 1.5 元（亮圳批准，仅本轮），最多 40 次调用；超出即停并写 budgetStop。",
@@ -7,7 +7,7 @@
   "cards": {
     "D12-MATPROPS": {
       "limitYuan": 1.5,
-      "spentYuan": 0.11904256000000002,
+      "spentYuan": 0.14038527999999997,
       "reservedYuan": 0,
       "maxRequests": 40
     }
@@ -907,6 +907,198 @@
         "cumulativeUpperYuan": 0.11904256000000002,
         "latencyMs": 1827.7448000000004,
         "timestamp": "2026-11-09T09:39:57.209Z"
+      }
+    },
+    "0ddd4cc7-a230-4316-84eb-5526e2f75ff1": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-1-class_fruit-review0",
+      "requestHash": "868238f134c4d5df80e68ee5133abcf7fc2062cf376645a4d4f620ebd1757faa",
+      "reservedYuan": 0.017404,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0ddd4cc7-a230-4316-84eb-5526e2f75ff1.json",
+        "requestHash": "868238f134c4d5df80e68ee5133abcf7fc2062cf376645a4d4f620ebd1757faa",
+        "responseHash": "f827d7c9a2c52f0d54164b0c7c5d7f81c8c55a8d073fbdea0ad0466dd5564970"
+      },
+      "costUpperYuan": 0.00395712,
+      "measurement": {
+        "label": "content-review-1-class_fruit-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1012,
+          "completion_tokens": 273,
+          "total_tokens": 1285,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 884
+        },
+        "costUpperYuan": 0.00395712,
+        "cumulativeUpperYuan": 0.12299968000000001,
+        "latencyMs": 2477.7601999999997,
+        "timestamp": "2026-11-09T09:54:06.799Z"
+      }
+    },
+    "453cffff-2438-4360-aa6a-f4b519655865": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-1-class_meat-review0",
+      "requestHash": "8a590c55d63118618f702357812f4d906524c98a302977bcc6017977c44601a3",
+      "reservedYuan": 0.016864,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/453cffff-2438-4360-aa6a-f4b519655865.json",
+        "requestHash": "8a590c55d63118618f702357812f4d906524c98a302977bcc6017977c44601a3",
+        "responseHash": "8978b8ce1074089fda358d346b13db463e161e0694322fbbb95069cc307e3f1b"
+      },
+      "costUpperYuan": 0.00397712,
+      "measurement": {
+        "label": "content-review-1-class_meat-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 938,
+          "completion_tokens": 294,
+          "total_tokens": 1232,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 810
+        },
+        "costUpperYuan": 0.00397712,
+        "cumulativeUpperYuan": 0.1269768,
+        "latencyMs": 2880.4635000000003,
+        "timestamp": "2026-11-09T09:54:09.710Z"
+      }
+    },
+    "a5f2e131-8159-4745-b5db-08a222442dfd": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-1-class_egg-review0",
+      "requestHash": "39767ae83f44a0fcf9f1cc9ac577ab01a9cec28a7c92c2adca639d87b4d1b775",
+      "reservedYuan": 0.017252,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/a5f2e131-8159-4745-b5db-08a222442dfd.json",
+        "requestHash": "39767ae83f44a0fcf9f1cc9ac577ab01a9cec28a7c92c2adca639d87b4d1b775",
+        "responseHash": "a6c2794642e29f3b5295b51183f9449417b89e74f734b75f2a93da861acdc43c"
+      },
+      "costUpperYuan": 0.00304712,
+      "measurement": {
+        "label": "content-review-1-class_egg-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 981,
+          "completion_tokens": 167,
+          "total_tokens": 1148,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 853
+        },
+        "costUpperYuan": 0.00304712,
+        "cumulativeUpperYuan": 0.13002392,
+        "latencyMs": 1754.3835,
+        "timestamp": "2026-11-09T09:55:09.991Z"
+      }
+    },
+    "e1350f85-dc11-42cb-ba64-7e90dcd4ace6": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-1-class_milk-review0",
+      "requestHash": "9ff82c92e0dbdb2c313614b7cdca68d3c1ae9d5aef3254d18ae735154d795da0",
+      "reservedYuan": 0.016982,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/e1350f85-dc11-42cb-ba64-7e90dcd4ace6.json",
+        "requestHash": "9ff82c92e0dbdb2c313614b7cdca68d3c1ae9d5aef3254d18ae735154d795da0",
+        "responseHash": "b43cd55b096d0e47e7396bf3c55a5caff77882eb98c108605bc2c5a10af1e48e"
+      },
+      "costUpperYuan": 0.00332512,
+      "measurement": {
+        "label": "content-review-1-class_milk-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 948,
+          "completion_tokens": 210,
+          "total_tokens": 1158,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 820
+        },
+        "costUpperYuan": 0.00332512,
+        "cumulativeUpperYuan": 0.13334903999999997,
+        "latencyMs": 2296.5927,
+        "timestamp": "2026-11-09T09:55:12.319Z"
+      }
+    },
+    "0d050d9a-95cc-4105-ba64-46d07ee81446": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-1-item_parsnip-review0",
+      "requestHash": "b764e20a5aafa2c69f17ce85ba25997b6180f968a31f5b92dc594f0998d41619",
+      "reservedYuan": 0.017748,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0d050d9a-95cc-4105-ba64-46d07ee81446.json",
+        "requestHash": "b764e20a5aafa2c69f17ce85ba25997b6180f968a31f5b92dc594f0998d41619",
+        "responseHash": "1b8d472ec95c8bb8890baa0031dbf66ff92acbf74f96a702846848e0544cdb4f"
+      },
+      "costUpperYuan": 0.0036171199999999997,
+      "measurement": {
+        "label": "content-review-1-item_parsnip-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1058,
+          "completion_tokens": 219,
+          "total_tokens": 1277,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 930
+        },
+        "costUpperYuan": 0.0036171199999999997,
+        "cumulativeUpperYuan": 0.13696615999999998,
+        "latencyMs": 2468.3451999999997,
+        "timestamp": "2026-11-09T09:55:14.813Z"
+      }
+    },
+    "f2296d2d-9898-4ba2-a33b-c2c7bb591538": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-1-item_garlic-review0",
+      "requestHash": "750467a17b76081fa00a6468ebcd5b41cb03e6d5063109f6b328993e49c58741",
+      "reservedYuan": 0.01789,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f2296d2d-9898-4ba2-a33b-c2c7bb591538.json",
+        "requestHash": "750467a17b76081fa00a6468ebcd5b41cb03e6d5063109f6b328993e49c58741",
+        "responseHash": "a8982904ef5a691bfbe07e1d3246faa161c65dbf7da37d2f6efe69fb39fa3bbf"
+      },
+      "costUpperYuan": 0.00341912,
+      "measurement": {
+        "label": "content-review-1-item_garlic-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1087,
+          "completion_tokens": 187,
+          "total_tokens": 1274,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "prompt_cache_hit_tokens": 128,
+          "prompt_cache_miss_tokens": 959
+        },
+        "costUpperYuan": 0.00341912,
+        "cumulativeUpperYuan": 0.14038527999999997,
+        "latencyMs": 1765.8601999999992,
+        "timestamp": "2026-11-09T09:55:16.605Z"
       }
     }
   },
