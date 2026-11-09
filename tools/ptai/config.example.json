@@ -8,6 +8,7 @@
   "retries": 3,
   "backoffMs": 1000,
   "historyPairs": 12,
+  "testHosts": [],
   "outDir": ".tmp/ptai",
   "ledgerPath": ".tmp/ptai/ledger.jsonl"
 }
