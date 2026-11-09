@@ -5,6 +5,12 @@
 // 须有阅读笔记；波次随机 10 条各给六项评分（整数 3–5，均分 ≥4）。--sample 抽签并列出要读的条目，--l4 <文件> 记录笔记与评分。
 // 模型返回格式错只算该条一次失败（错误码 REVIEW_FORMAT，不是预算停止；预算停止会经 content-pipeline.mjs:178 拦住整轮）；
 // 同一条最多发 3 次审查请求（1 初审 + 2 修正，requestTransform），仍错则该条转 manual。
+// 修订 d12-matprops-2（亮圳 2026-11-09 12:11 批准、李白同意的整类修复）：数据改为结构化出处字段，含水、可食部分、能量由程序推算
+// （server-plugin/item-class.mjs deriveFromSources）；之后每条按新 revision 再审。两项调整：
+//  ①审查上限按 revision 计数——「每个 revision 内 1 次初审 + 2 次修正」，revision 由审查目录 review-<n> 区分，账本里请求标签
+//    content-review-<n>-<id>-review<k> 按 n 计数，旧 revision 的记录与次数保留不删（checkReviewCap）；人工核定记录放在各 revision 自己的目录，对新 revision 自然失效。
+//  ②卡账本 maxRequests 由 40 调到 60（追加约 19–20 次再审的批准额度），limitYuan 仍 1.5 元不变（grantMaxRequests，写入账本 authorizations，同 a3w-props 先例）。
+//    两项同时记在 docs/决策.md「D12 材料属性整类修复」。
 // 用法：node world/design/matprops-approval.mjs --l1 | --review | --sample | --l4 <json> | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -14,13 +20,15 @@ import {randomInt} from 'node:crypto';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, hashContent, parseModelJSON} from '../../tools/content-pipeline.mjs';
 import {loadRuntimeWorld} from '../../tools/load-world.mjs';
-import {validateMaterialProps, MATERIAL_DIMENSIONS} from '../../server-plugin/item-class.mjs';
+import {validateMaterialProps, deriveFromSources, MATERIAL_DIMENSIONS} from '../../server-plugin/item-class.mjs';
 
-export const revision='d12-matprops-1';
+export const revisionNumber=2;
+export const revision=`d12-matprops-${revisionNumber}`;
 export const draftRoot='world/drafts/d12-matprops';
-export const reviewRoot=path.join(draftRoot,'review-1');
+export const reviewDirName=`review-${revisionNumber}`;
+export const reviewRoot=path.join(draftRoot,reviewDirName);
 export const cardId='D12-MATPROPS';
-export const cardLimitYuan=1.5, maxRequests=40, maxOverrideRatio=0.15;
+export const cardLimitYuan=1.5, maxRequests=60, previousMaxRequests=40, maxOverrideRatio=0.15;
 const readJSON=async f=>JSON.parse(await fs.readFile(f,'utf8'));
 const tableFile='world/meta/mechanics/material-props.json', overlayFile='world/meta/mechanics/items.json';
 
@@ -39,9 +47,9 @@ export async function contextFor(entry){
  const world=await runtime(),table=await readJSON(tableFile);
  const dimensions=Object.fromEntries(Object.entries(table.dimensions).map(([k,v])=>[k,`${v.unit}，范围 ${v.min}–${v.max}`]));
  const brief=i=>({id:i.id,name:i.name,weight:i.weight,tags:i.tags});
- if(entry.kind==='material-props-class')return {dimensions,note:table.note,members:world.items.filter(i=>(i.tags??[]).includes(entry.key)).map(brief)};
+ if(entry.kind==='material-props-class')return {dimensions,note:table.note,kcalPerSatiety:table.kcalPerSatiety,derived:deriveFromSources(entry.row,table.kcalPerSatiety),members:world.items.filter(i=>(i.tags??[]).includes(entry.key)).map(brief)};
  const item=world.items.find(i=>i.id===entry.id);
- return {dimensions,note:table.note,item:{...brief(item),use:item.use,description:item.description},classValues:Object.fromEntries((item.tags??[]).filter(t=>table.classes[t]).map(t=>[t,table.classes[t]]))};
+ return {dimensions,note:table.note,kcalPerSatiety:table.kcalPerSatiety,derived:deriveFromSources(entry.row,table.kcalPerSatiety),item:{...brief(item),use:item.use,description:item.description},classValues:Object.fromEntries((item.tags??[]).filter(t=>table.classes[t]).map(t=>[t,{row:table.classes[t],derived:deriveFromSources(table.classes[t],table.kcalPerSatiety)}]))};
 }
 export async function validateDraft(draft,entry){
  try{assert.deepEqual(draft,draftFor(entry));assert.ok(typeof entry.row.basis==='string'&&entry.row.basis.trim());return [];}
@@ -49,7 +57,7 @@ export async function validateDraft(draft,entry){
 }
 export function reviewRequest(entry,draft,context){
  return {thinking:{type:'disabled'},temperature:0,max_tokens:1200,response_format:{type:'json_object'},messages:[
-  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。'},
+  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。行内 sources 是出处原值（moistureFraction 含水分数、kcalPer100gWet 鲜重 kcal/100g、refuseFraction 不可食比例），selection 说明多出处时取平均（mean）还是取代表（representative）及理由；moisture、energyDensity、edibleFraction 由程序按出处推出，context.derived 给出推出值（含水取 3 位小数，能量 = 鲜重 kcal/100g × 10 ÷ (1−含水) ÷ kcalPerSatiety 取整）。'},
   {role:'user',content:JSON.stringify({entry:{id:entry.id,kind:entry.kind,row:entry.row},context})}]};
 }
 export function extractReview(response){
@@ -176,11 +184,31 @@ export async function verifyPublished(){
  // 所以盘上数据与核定时数据一致已由指纹证明（pipeline 记录里的 draft 对这些条目是旧数据或 null，不作比对）。
  return {total:entries.length,l2Passed:st.l2.length,manualVerified:st.manual,dimensions:MATERIAL_DIMENSIONS.length};
 }
-// 管线规则：1 次初审 + 最多 2 次定点修正；按条目 id 累计账本里已发出的审查，不随指纹重置。
+// 管线规则：每个 revision 内 1 次初审 + 最多 2 次定点修正；按条目 id 与 revision（审查目录名）累计账本里已发出的审查。
+// 旧 revision 的请求标签（content-review-1-…）不计入当前 revision，也不删除。
 export const maxReviewsPerEntry=1+2;
-export function checkReviewCap(ledger,id){
- const sent=Object.values(ledger?.requests??{}).filter(r=>r.label?.includes(`-${id}-review`)&&['sent','settled','unknown'].includes(r.status));
- if(sent.length>=maxReviewsPerEntry)throw Object.assign(new Error(`同条审核已达 ${maxReviewsPerEntry} 次（初审+2次修正）：${id}`),{code:'REVIEW_LIMIT'});
+export function checkReviewCap(ledger,id,dirName=reviewDirName){
+ const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+ const label=new RegExp(`^content-${esc(dirName)}-${esc(id)}-review\\d+$`);
+ const sent=Object.values(ledger?.requests??{}).filter(r=>label.test(r.label??'')&&['sent','settled','unknown'].includes(r.status));
+ if(sent.length>=maxReviewsPerEntry)throw Object.assign(new Error(`同条审核在 ${dirName} 内已达 ${maxReviewsPerEntry} 次（初审+2次修正）：${id}`),{code:'REVIEW_LIMIT'});
+}
+// 亮圳 2026-11-09 12:11 批准：卡账本 maxRequests 40 → 60，limitYuan 仍 1.5。幂等；账本其余字段不动，旧请求与花费保留。
+export const grantId='d12-matprops-2-maxrequests-60';
+export function grantMaxRequests(ledger){
+ const out=structuredClone(ledger),card=out.cards?.[cardId];
+ if(!card)throw Error('缺卡账本');
+ if(out.authorizations?.some(a=>a.id===grantId)){assert.equal(card.maxRequests,maxRequests);return out;}
+ if(card.maxRequests!==previousMaxRequests||card.limitYuan!==cardLimitYuan||card.reservedYuan!==0||out.reservedYuan!==0)throw Error('卡账本与批准时的快照不符，拒绝调整');
+ out.authorizations??=[];
+ out.authorizations.push({id:grantId,source:'亮圳 2026-11-09 12:11 批准、李白同意：D 卡整类修复后每条再审 1 次，maxRequests 40→60，limitYuan 仍 1.5 元，只限这一轮',
+  before:{maxRequests:card.maxRequests,limitYuan:card.limitYuan,spentYuan:card.spentYuan,requests:Object.keys(out.requests??{}).length},after:{maxRequests,limitYuan:cardLimitYuan},at:new Date().toISOString()});
+ card.maxRequests=maxRequests;
+ return out;
+}
+async function authorizeIncrease(){
+ const file=path.join(draftRoot,'budget.json'),ledger=await readJSON(file),next=grantMaxRequests(ledger);
+ if(JSON.stringify(next)!==JSON.stringify(ledger))await fs.writeFile(file,JSON.stringify(next,null,2)+'\n');
 }
 async function capReviews({body,entry,phase}){
  if(phase!=='review')return {body};
@@ -192,6 +220,7 @@ export async function run(args=process.argv.slice(2)){
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
  if(args.includes('--review')){
   await l1();
+  await authorizeIncrease();
   const entries=await entriesFor();
   console.log(JSON.stringify({pid:process.pid,mode:'review',entries:entries.length}));
   const {summary}=await runContentPipeline({entries,root:reviewRoot,budgetRoot:draftRoot,revision,contextFor,

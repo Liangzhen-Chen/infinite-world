@@ -2,7 +2,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {entriesFor, draftFor, validateDraft, l1, extractReview, checkReviewCap, maxReviewsPerEntry, checkManual, approvalState, manualLabels} from '../world/design/matprops-approval.mjs';
+import {migrateDepthBudget} from '../tools/content-budget.mjs';
+import {entriesFor, draftFor, validateDraft, l1, extractReview, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels} from '../world/design/matprops-approval.mjs';
 
 test('条目 = 每个类别行 + 每个物品覆盖行；候选与盘上数据逐字一致', async () => {
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
@@ -27,7 +28,7 @@ test('畸形的审查响应不算通过', () => {
 });
 
 test('同条审查上限 = 1 初审 + 2 修正：第 3 次放行，第 4 次在发请求前报 REVIEW_LIMIT（不发调用、不计费）', () => {
-  const ledger = n => ({requests: Object.fromEntries(Array.from({length: n}, (_, i) => [`r${i}`, {label: `content-review-1-class_x-review${i}`, status: 'settled'}]))});
+  const ledger = n => ({requests: Object.fromEntries(Array.from({length: n}, (_, i) => [`r${i}`, {label: `content-review-2-class_x-review${i}`, status: 'settled'}]))});
   assert.equal(maxReviewsPerEntry, 3);
   checkReviewCap(ledger(0), 'class_x'); checkReviewCap(ledger(2), 'class_x');
   assert.throws(() => checkReviewCap(ledger(3), 'class_x'), error => error.code === 'REVIEW_LIMIT');
@@ -87,4 +88,36 @@ test('L2 通过的记录缺 errors 字段或 review 结构非法时抛错（同 
   await assert.rejects(run({id: 'a', status: 'passed', fingerprint: 'fp-a', review: {contradictions: []}}), /errors/);
   await assert.rejects(run({id: 'a', status: 'passed', fingerprint: 'fp-a', errors: [], review: {}}), /contradictions/);
   await assert.rejects(run({id: 'a', status: 'passed', fingerprint: 'fp-a', errors: [], review: {contradictions: [{severity: 'x'}]}}), /无效/);
+});
+
+// 按 revision 计次：旧 revision（review-1）的请求保留且不计入新 revision；新 revision 内 1 初审 + 2 修正，第 4 次报 REVIEW_LIMIT（该条转 manual）。
+const labelled = (dir, id, n) => ({requests: Object.fromEntries(Array.from({length: n}, (_, i) => [`${dir}-${i}`, {label: `content-${dir}-${id}-review${i}`, status: 'settled'}]))});
+test('审查上限按 revision 计数：旧 revision 的 3 次不挡新 revision，新 revision 内第 4 次才超限', () => {
+  const old = labelled('review-1', 'class_x', 3);
+  checkReviewCap(old, 'class_x', 'review-2');
+  assert.throws(() => checkReviewCap(old, 'class_x', 'review-1'), error => error.code === 'REVIEW_LIMIT');
+  const both = {requests: {...old.requests, ...labelled('review-2', 'class_x', 2).requests}};
+  checkReviewCap(both, 'class_x', 'review-2');
+  const over = {requests: {...old.requests, ...labelled('review-2', 'class_x', 3).requests}};
+  assert.throws(() => checkReviewCap(over, 'class_x', 'review-2'), error => error.code === 'REVIEW_LIMIT');
+  // id 前缀相近的条目互不影响
+  checkReviewCap(labelled('review-2', 'class_xy', 3), 'class_x', 'review-2');
+  assert.match(revision, /-2$/);
+});
+
+test('maxRequests 40→60：授权写入账本、limitYuan 不变、幂等；共用预算模块只认调整后的 60', () => {
+  const ledger = {spentYuan: 0.14, reservedYuan: 0, limitYuan: 20, waveLimitYuan: 20,
+    cards: {[cardId]: {limitYuan: cardLimitYuan, spentYuan: 0.14, reservedYuan: 0, maxRequests: 40}}, requests: {a: {card: cardId, status: 'settled'}}};
+  const allocation = {cardId, incrementLimitYuan: cardLimitYuan, maxRequests, waveLimitYuan: 20, startingSpentYuan: 0, startingReservedYuan: 0};
+  assert.equal(maxRequests, 60);
+  assert.throws(() => migrateDepthBudget(ledger, cardId, allocation), /单卡授权额度已改变/);
+  const granted = grantMaxRequests(ledger);
+  assert.equal(granted.cards[cardId].maxRequests, 60);
+  assert.equal(granted.cards[cardId].limitYuan, 1.5);
+  assert.equal(granted.cards[cardId].spentYuan, 0.14);
+  assert.ok(granted.requests.a);
+  assert.equal(granted.authorizations.at(-1).id, grantId);
+  assert.deepEqual(migrateDepthBudget(granted, cardId, allocation).cards, granted.cards);
+  assert.deepEqual(grantMaxRequests(granted), granted);
+  assert.throws(() => grantMaxRequests({...ledger, cards: {[cardId]: {...ledger.cards[cardId], limitYuan: 2}}}), /快照不符/);
 });

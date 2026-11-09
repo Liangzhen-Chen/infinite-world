@@ -158,8 +158,18 @@
    "mushroom"
   ],
   "props": {
-   "moisture": 0.1,
-   "basis": "干蘑菇片：干香菇含水 9.5%（USDA FoodData Central 干香菇），商品干菇含水约 8–12%，取 10%。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "干香菇",
+     "citation": "USDA FoodData Central 干香菇",
+     "moistureFraction": 0.095
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "单一出处，干制品覆盖鲜菇类别的含水率"
+   },
+   "basis": "干蘑菇片：只覆盖含水率，能量用类别 mushroom。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_fresh_apple": {
@@ -192,9 +202,19 @@
    "vegetable"
   ],
   "props": {
-   "moisture": 0.795,
-   "energyDensity": 152,
-   "basis": "欧防风根含水 79.5%、75 kcal/100g（USDA FoodData Central 生欧防风）；含水字段取出处值 0.795（不取整）；干物质能量 = 750 kcal/kg ÷ (1−0.795) ≈ 3660 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），3660÷24≈152。覆盖蔬菜类别的值。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "欧防风",
+     "citation": "USDA FoodData Central 欧防风生",
+     "moistureFraction": 0.795,
+     "kcalPer100gWet": 75
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "单一出处，覆盖蔬菜类别"
+   },
+   "basis": "欧防风根含水低于蔬菜类别均值，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_beet": {
@@ -217,9 +237,19 @@
    "vegetable"
   ],
   "props": {
-   "moisture": 0.83,
-   "energyDensity": 150,
-   "basis": "韭葱含水 83.0%、61 kcal/100g（USDA FoodData Central 生韭葱），干物质约 3.6 kcal/g；饱腹=kcal÷24，3600÷24=150。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "韭葱",
+     "citation": "USDA FoodData Central 韭葱生",
+     "moistureFraction": 0.83,
+     "kcalPer100gWet": 61
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "单一出处，覆盖蔬菜类别"
+   },
+   "basis": "韭葱含水低于蔬菜类别均值，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_cucumber": {
@@ -232,21 +262,63 @@
    "vegetable"
   ],
   "props": {
-   "moisture": 0.586,
-   "energyDensity": 150,
-   "basis": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）；含水字段取出处值 0.586（不取整）；干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），3600÷24=150。覆盖蔬菜类别（含水 0.90）的值。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "大蒜",
+     "citation": "USDA FoodData Central 大蒜生",
+     "moistureFraction": 0.586,
+     "kcalPer100gWet": 149
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "单一出处，覆盖蔬菜类别"
+   },
+   "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_oats": {
   "props": {
-   "edibleFraction": 0.7,
-   "basis": "带壳燕麦：壳约占谷粒质量 25–35%，取脱壳后仁占 70%（Webster & Wood《Oats: Chemistry and Technology》AACC 2011）；能量密度与含水率用类别 grain 的值，按可食部分 70% 折算（壳不供能）。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "燕麦壳",
+     "citation": "Webster & Wood《Oats: Chemistry and Technology》AACC 2011：壳占谷粒质量 25–35%",
+     "refuseFraction": 0.3,
+     "range": {
+      "refuseFraction": [
+       0.25,
+       0.35
+      ]
+     }
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "区间中值 30%（脱壳后仁占 70%）"
+   },
+   "basis": "带壳燕麦：含水与能量用类别 grain 的值，可食部分由壳占比推出（壳不供能）。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_dried_fruit": {
   "props": {
-   "moisture": 0.25,
-   "basis": "干果：含水约 15–32%（USDA FoodData Central：葡萄干 15.4%、干苹果 31.8%、李干 30.9%），传统晾晒干果为长期贮存多压到 25% 以下，取 25%。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "干果",
+     "citation": "USDA FoodData Central：葡萄干 15.4%、干苹果 31.8%、李干 30.9%；传统晾晒干果为长期贮存多压到 25% 以下",
+     "moistureFraction": 0.25,
+     "range": {
+      "moistureFraction": [
+       0.15,
+       0.32
+      ]
+     }
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "区间内取传统晾晒贮存上限 25%；能量用类别 fruit（干基能量与状态无关）"
+   },
+   "basis": "干果：只覆盖含水率，其余用类别 fruit。【数值凭记忆写入，待 L2 核对】"
   }
  }
 }

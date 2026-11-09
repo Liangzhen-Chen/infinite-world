@@ -136,9 +136,10 @@ export function fuelEffectiveHeat(engine,item){
 // 基准有效热值：现行“每日公斤”原本针对的参照燃料类（规则表 household.fuelReferenceClass）按类别行的热值与含水率算的有效热值；
 // 类别行缺任一项（含表为空）返回 null，一切同现行。只读规则数据，不随其他燃料的属性变化。
 export function fuelReferenceHeat(engine){
- const row=engine.world?.materialProps?.classes?.[craftingParam(engine,'household.fuelReferenceClass')];
- if(row?.heatValue===undefined||row?.moisture===undefined)return null;
- const h=row.heatValue*(1-row.moisture)-craftingParam(engine,'household.waterLatentHeat')*row.moisture;
+ const table=engine.world?.materialProps,row=table?.classes?.[craftingParam(engine,'household.fuelReferenceClass')];
+ const heat=rowValue(row,'heatValue',table?.kcalPerSatiety),m=rowValue(row,'moisture',table?.kcalPerSatiety);
+ if(heat===undefined||m===undefined)return null;
+ const h=heat*(1-m)-craftingParam(engine,'household.waterLatentHeat')*m;
  return h>0?h:null;
 }
 // 一件用度类物品顶多少“基准克”：燃料按有效热值 ÷ 基准热值折算其重量（含水多的柴要烧更多公斤，同热量需求不变）；
@@ -206,15 +207,50 @@ export function deriveItemAttributes(world){
 // 取值：物品所属类别中按表头 precedence（从最具体到最一般）逐维取第一个写了该维的类别；物品自己的 props 覆盖类别值；
 // 多类别冲突取更具体者，不求平均；没有任何来源的维度返回 {known:false}，不给默认值。
 export const MATERIAL_DIMENSIONS=['moisture','edibleFraction','energyDensity','heatValue','charYield'];
+// D12 卡 D 整类修复：含水、可食部分、能量密度不手写，由行内的出处原值（sources）推出；heatValue、charYield 仍直接写。
+//   sources：[{name, citation, moistureFraction（水占鲜重）, kcalPer100gWet（鲜重 kcal/100g）, refuseFraction（不可食部分，壳核骨）, range?}]
+//   selection：{method:'single'|'mean'|'representative', representative?, reason}；多出处时按 mean（逐项算术平均）或 representative（取代表出处）。
+//   推算（唯一一处，取整规则统一）：moisture = 取值后的含水分数，四舍五入到 3 位小数；edibleFraction = 1 − 不可食部分，3 位小数；
+//   energyDensity（饱腹/kg 干物质）= round(kcalPer100gWet × 10 ÷ (1 − moisture) ÷ kcalPerSatiety)，取整到个位；
+//   kcalPerSatiety 读表头（world/meta/mechanics/material-props.json 的 kcalPerSatiety，calibrate 标定值），代码里不写死。
+//   行里若仍直接存了 moisture/edibleFraction/energyDensity，值必须等于推算值（L1 校验）；没有 sources 的行（夹具）直接用存的值。
+const meanOf=a=>a.reduce((n,x)=>n+x,0)/a.length,round3=x=>Math.round(x*1000)/1000;
+export function deriveFromSources(row,kcalPerSatiety){
+ const srcs=Array.isArray(row?.sources)?row.sources:null;
+ if(!srcs?.length)return {};
+ const sel=row.selection??{method:'single'};
+ const pick=key=>{
+  const have=srcs.filter(x=>x[key]!==undefined);
+  if(!have.length)return undefined;
+  if(sel.method==='mean')return meanOf(have.map(x=>x[key]));
+  const one=sel.method==='representative'?srcs.find(x=>x.name===sel.representative):srcs[0];
+  return one?.[key];
+ };
+ const out={},m=pick('moistureFraction'),refuse=pick('refuseFraction'),kcal=pick('kcalPer100gWet');
+ if(m!==undefined)out.moisture=round3(m);
+ if(refuse!==undefined)out.edibleFraction=round3(1-refuse);
+ if(kcal!==undefined&&out.moisture!==undefined&&out.moisture<1&&kcalPerSatiety>0)out.energyDensity=Math.round(kcal*10/(1-out.moisture)/kcalPerSatiety);
+ return out;
+}
+const derivedMemo=new WeakMap();
+// 行上某一维的取值：行里直接存了就用存的；否则从 sources 推出；都没有为 undefined。
+export function rowValue(row,dim,kcalPerSatiety){
+ if(!row)return undefined;
+ if(row[dim]!==undefined)return row[dim];
+ if(!Array.isArray(row.sources))return undefined;
+ let m=derivedMemo.get(row);if(!m||m.k!==kcalPerSatiety){m={k:kcalPerSatiety,d:deriveFromSources(row,kcalPerSatiety)};derivedMemo.set(row,m);}
+ return m.d[dim];
+}
 export function materialProps(engine,item){
- const table=engine.world?.materialProps,def=engine.byId?.get(item),own=def?.props??{};
+ const table=engine.world?.materialProps,def=engine.byId?.get(item),own=def?.props??{},kps=table?.kcalPerSatiety;
  const member=new Set([...itemClasses(engine,item),...(def?.tags??[])]);
  const chain=(table?.precedence??[]).filter(k=>member.has(k)&&table.classes?.[k]);
  const out={};
  for(const dim of MATERIAL_DIMENSIONS){
-  if(own[dim]!==undefined){out[dim]={known:true,value:own[dim],source:'item'};continue;}
-  const cls=chain.find(k=>table.classes[k][dim]!==undefined);
-  out[dim]=cls?{known:true,value:table.classes[cls][dim],source:cls}:{known:false};
+  const mine=rowValue(own,dim,kps);
+  if(mine!==undefined){out[dim]={known:true,value:mine,source:'item'};continue;}
+  const cls=chain.find(k=>rowValue(table.classes[k],dim,kps)!==undefined);
+  out[dim]=cls?{known:true,value:rowValue(table.classes[cls],dim,kps),source:cls}:{known:false};
  }
  return out;
 }
@@ -228,10 +264,47 @@ export function validateMaterialProps(world){
   if(!h||typeof h.unit!=='string'||!h.unit)errors.push(`材料属性表头缺单位：${d}`);
   else if(!(Number.isFinite(h.min)&&Number.isFinite(h.max)&&h.min<=h.max))errors.push(`材料属性表头缺范围：${d}`);}
  for(const d of Object.keys(dims))if(!MATERIAL_DIMENSIONS.includes(d))errors.push(`材料属性维度未登记：${d}`);
+ const kps=t.kcalPerSatiety;
+ if(kps!==undefined){
+  if(!(Number.isFinite(kps)&&kps>0))errors.push('材料属性表头 kcalPerSatiety 须为正数');
+  if(typeof t.kcalPerSatietyBasis!=='string'||!t.kcalPerSatietyBasis.trim())errors.push('材料属性表头 kcalPerSatiety 缺标定依据 kcalPerSatietyBasis');
+ }
+ // 出处字段：齐全、范围合法；存了推算维度的必须与推算值一致。
+ const checkSources=(row,where)=>{
+  const srcs=row.sources;
+  if(srcs===undefined){if(row.selection!==undefined)errors.push(`材料属性 selection 没有 sources：${where}`);return;}
+  if(!Array.isArray(srcs)||!srcs.length){errors.push(`材料属性 sources 须为非空数组：${where}`);return;}
+  const sel=row.selection;
+  if(!sel||!['single','mean','representative'].includes(sel.method)||typeof sel.reason!=='string'||!sel.reason.trim())errors.push(`材料属性缺 selection（method 取 single/mean/representative 并写 reason）：${where}`);
+  else{
+   if(sel.method==='single'&&srcs.length!==1)errors.push(`材料属性 single 只能有 1 个出处：${where}`);
+   if(sel.method==='mean'&&srcs.length<2)errors.push(`材料属性 mean 至少 2 个出处：${where}`);
+   if(sel.method==='representative'&&!srcs.some(x=>x.name===sel.representative))errors.push(`材料属性 representative 不在 sources 里：${where}`);
+  }
+  const bounds={moistureFraction:[0,1],refuseFraction:[0,0.99],kcalPer100gWet:[0,900]},names=new Set();
+  srcs.forEach((x,i)=>{
+   const w=`${where}.sources[${i}]`;
+   if(typeof x?.name!=='string'||!x.name.trim()||names.has(x.name))errors.push(`材料属性出处缺 name 或重名：${w}`);else names.add(x.name);
+   if(typeof x?.citation!=='string'||!x.citation.trim())errors.push(`材料属性出处缺 citation：${w}`);
+   for(const [key,[lo,hi]] of Object.entries(bounds))if(x?.[key]!==undefined&&!(Number.isFinite(x[key])&&x[key]>=lo&&x[key]<=hi))errors.push(`材料属性出处越界：${w}.${key}=${x[key]}（${lo}–${hi}）`);
+   for(const [key,r] of Object.entries(x?.range??{}))if(!(Array.isArray(r)&&r.length===2&&r[0]<=r[1]&&Number.isFinite(x[key])&&x[key]>=r[0]&&x[key]<=r[1]))errors.push(`材料属性出处取值不在公认区间内：${w}.${key}`);
+  });
+  if(sel?.method==='mean')for(const key of Object.keys(bounds)){const n=srcs.filter(x=>x?.[key]!==undefined).length;if(n!==0&&n!==srcs.length)errors.push(`材料属性 mean 要求各出处都写 ${key}：${where}`);}
+  const hasKcal=srcs.some(x=>x?.kcalPer100gWet!==undefined);
+  if(hasKcal&&!(kps>0))errors.push(`材料属性表头缺 kcalPerSatiety，无法由出处推算能量：${where}`);
+  const d=deriveFromSources(row,kps);
+  if(hasKcal&&d.energyDensity===undefined)errors.push(`材料属性写了 kcalPer100gWet 却缺含水分数，无法推算能量：${where}`);
+  for(const [dim,v] of Object.entries(d)){
+   const h=dims[dim];if(h&&(v<h.min||v>h.max))errors.push(`材料属性推算值越界：${where}.${dim}=${v}（${h.min}–${h.max} ${h.unit}）`);
+   if(row[dim]!==undefined&&!(Math.abs(row[dim]-v)<1e-9))errors.push(`材料属性 ${dim} 与出处推算值不一致：${where}（存 ${row[dim]}，推算 ${v}）`);
+  }
+  for(const dim of ['moisture','edibleFraction','energyDensity'])if(row[dim]!==undefined&&d[dim]===undefined)errors.push(`材料属性存了 ${dim} 但出处推不出：${where}`);
+ };
  const check=(row,where)=>{
   if(typeof row?.basis!=='string'||!row.basis.trim())errors.push(`材料属性缺 basis：${where}`);
+  checkSources(row??{},where);
   for(const [k,v] of Object.entries(row??{})){
-   if(k==='basis')continue;
+   if(k==='basis'||k==='sources'||k==='selection')continue;
    if(!MATERIAL_DIMENSIONS.includes(k)){errors.push(`材料属性维度未登记：${where}.${k}`);continue;}
    const h=dims[k];if(!h)continue;
    if(typeof v!=='number'||!Number.isFinite(v)||v<h.min||v>h.max)errors.push(`材料属性越界：${where}.${k}=${v}（${h.min}–${h.max} ${h.unit}）`);

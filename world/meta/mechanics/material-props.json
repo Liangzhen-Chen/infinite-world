@@ -1,5 +1,5 @@
 {
- "note": "D12 卡 A/D：材料属性表，按材料类别写物理量，不针对任何物品。类别键必须是现有标签或用途类别名；物品个别偏离写在 mechanics/items.json 的 props 行（须带 basis）。取值：物品所属类别中按 precedence（从最具体到最一般）逐维取第一个写了该维的类别，物品 props 覆盖；缺项为未知，不给默认值。能量密度的饱腹换算：1 饱腹≈24 kcal，basis 为 calibrate（标定，不是事实）：现行 nutrition.densityPerKg.grain=150 饱腹/kg 鲜重，对应谷物鲜重约 3.4–3.9 kcal/g（USDA FoodData Central 小麦 3.27、燕麦 3.89、黑麦粉 3.25 kcal/g，待 L2 核对）取约 3.6 kcal/g，3600÷150=24；pending，待李白标定。表内数值均先写 kcal 再换算。热值是高位热值。",
+ "note": "D12 卡 A/D：材料属性表，按材料类别写，不针对任何物品。类别键必须是现有标签或用途类别名；物品个别偏离写在 mechanics/items.json 的 props 行（须带 basis）。取值：物品所属类别中按 precedence（从最具体到最一般）逐维取第一个写了该维的类别，物品 props 覆盖；缺项为未知，不给默认值。含水（moisture）、可食部分（edibleFraction）、能量密度（energyDensity）不手写，由行内 sources（出处原值）按 selection（single/mean/representative）推出，公式与取整规则见 server-plugin/item-class.mjs deriveFromSources；热值是高位热值。",
  "dimensions": {
   "moisture": {
    "unit": "质量分数（水占鲜重）",
@@ -44,72 +44,335 @@
  ],
  "classes": {
   "timber": {
-   "moisture": 0.15,
+   "sources": [
+    {
+     "name": "风干材",
+     "citation": "USDA Forest Products Laboratory《Wood Handbook》第4章：风干材含水率约 12–20%",
+     "moistureFraction": 0.15,
+     "range": {
+      "moistureFraction": [
+       0.12,
+       0.2
+      ]
+     }
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "区间内取典型风干值 15%（世界里的木料是冬伐风干存放的通用料）"
+   },
    "heatValue": 19.0,
    "charYield": 0.265,
-   "basis": "木材（原木、板、条等风干材）：风干材含水率约 12–20%，取 15%（USDA Forest Products Laboratory《Wood Handbook》第4章 含水率）；绝干木材高位热值约 18.5–21 MJ/kg，取 19.0（Phyllis2 生物质数据库；Biomass Energy Data Book）；传统土窑烧炭的质量得率约 20–33%（占绝干材，FAO Forestry Paper 63《Simple technologies for charcoal making》），取区间中心 26.5%。【数值凭记忆写入，待 L2 核对】"
+   "basis": "木材（原木、板、条等风干材）。热值：绝干木材高位热值约 18.5–21 MJ/kg（Phyllis2 生物质数据库；Biomass Energy Data Book），取 19.0。烧炭得率：传统土窑质量得率约 20–33%（占绝干材，FAO Forestry Paper 63《Simple technologies for charcoal making》），取区间中心 26.5%。【数值凭记忆写入，待 L2 核对】"
   },
   "wood": {
-   "moisture": 0.12,
+   "sources": [
+    {
+     "name": "成形木器与木屑",
+     "citation": "Wood Handbook 第4章：室内平衡含水率约 8–14%",
+     "moistureFraction": 0.12,
+     "range": {
+      "moistureFraction": [
+       0.08,
+       0.14
+      ]
+     }
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "区间内取典型室内平衡值 12%"
+   },
    "heatValue": 19.0,
-   "basis": "成形木器、木部件与木屑（标签 wood）：室内平衡含水率约 8–14%，取 12%（Wood Handbook 第4章 平衡含水率表）；热值同 timber（绝干木材高位热值约 18.5–21 MJ/kg，取 19.0，Phyllis2）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "成形木器、木部件与木屑（标签 wood）。热值同 timber（绝干木材高位热值 18.5–21 MJ/kg，Phyllis2），取 19.0。【数值凭记忆写入，待 L2 核对】"
   },
   "carbon": {
-   "moisture": 0.05,
+   "sources": [
+    {
+     "name": "商品木炭",
+     "citation": "FAO Forestry Paper 63：商品木炭含水率约 3–8%",
+     "moistureFraction": 0.05,
+     "range": {
+      "moistureFraction": [
+       0.03,
+       0.08
+      ]
+     }
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "区间内取典型值 5%"
+   },
    "heatValue": 30.0,
-   "basis": "木炭：商品木炭含水率约 3–8%，取 5%（FAO Forestry Paper 63）；高位热值约 28–33 MJ/kg，取 30.0（Engineering ToolBox 燃料热值表；FAO Forestry Paper 63）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "木炭。高位热值约 28–33 MJ/kg（Engineering ToolBox 燃料热值表；FAO Forestry Paper 63），取 30.0。【数值凭记忆写入，待 L2 核对】"
   },
   "mushroom": {
-   "moisture": 0.92,
-   "energyDensity": 125,
-   "basis": "食用菇（新鲜状态，干制品在物品行覆盖含水率）：鲜蘑菇含水约 90–92.5%，取 92%（USDA FoodData Central：白蘑菇 92.5%、鲜香菇 89.7%）；干物质能量约 2.9–3.3 kcal/g（白蘑菇 22 kcal/100g；干香菇 296 kcal/100g、含水 9.5%），取 3.0 kcal/g；饱腹=kcal÷24，标定见表头 note，3000÷24=125。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "白蘑菇",
+     "citation": "USDA FoodData Central 白蘑菇生",
+     "moistureFraction": 0.925,
+     "kcalPer100gWet": 22
+    },
+    {
+     "name": "鲜香菇",
+     "citation": "USDA FoodData Central 香菇生",
+     "moistureFraction": 0.897,
+     "kcalPer100gWet": 34
+    }
+   ],
+   "selection": {
+    "method": "representative",
+    "representative": "白蘑菇",
+    "reason": "世界里的蘑菇是栽培菇，取白蘑菇为代表，鲜香菇作对照"
+   },
+   "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【数值凭记忆写入，待 L2 核对】"
   },
   "nut": {
-   "moisture": 0.05,
-   "energyDensity": 279,
-   "basis": "去壳坚果仁：含水约 4–5%，取 5%（USDA FoodData Central：榛仁 4.7%、核桃仁 4.1%）；榛仁 628、核桃仁 654 kcal/100g 鲜重；干物质能量：榛仁 6280÷0.953≈6590，核桃仁 6540÷0.959≈6820 kcal/kg 干物质，取 6700；饱腹=kcal÷24（calibrate 标定，见表头 note），6700÷24≈279。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "榛仁",
+     "citation": "USDA FoodData Central 榛仁生",
+     "moistureFraction": 0.047,
+     "kcalPer100gWet": 628
+    },
+    {
+     "name": "核桃仁",
+     "citation": "USDA FoodData Central 核桃仁生",
+     "moistureFraction": 0.041,
+     "kcalPer100gWet": 654
+    }
+   ],
+   "selection": {
+    "method": "mean",
+    "reason": "世界里只有榛仁与核桃仁两种去壳坚果仁，逐项取平均"
+   },
+   "basis": "去壳坚果仁。【数值凭记忆写入，待 L2 核对】"
   },
   "fruit": {
-   "moisture": 0.85,
-   "energyDensity": 148,
-   "basis": "鲜果（干制品在物品行覆盖含水率）：含水约 84–87%，取 85%（USDA FoodData Central：苹果 85.6%、梨 83.7%、李 87.2%）；能量与含水按可食部分计，可食部分约 90%（苹果、梨去核与蒂约 10%，李去核约 6%，取偏保守的 90%，USDA refuse）；干物质能量按各自含水率折算：苹果 520÷0.144≈3610、梨 570÷0.163≈3500、李 460÷0.128≈3590 kcal/kg 干物质，取 3550；饱腹=kcal÷24（calibrate 标定，见表头 note），3550÷24≈148。【数值凭记忆写入，待 L2 核对】",
-   "edibleFraction": 0.9
+   "sources": [
+    {
+     "name": "苹果",
+     "citation": "USDA FoodData Central 苹果带皮生",
+     "moistureFraction": 0.856,
+     "kcalPer100gWet": 52,
+     "refuseFraction": 0.1
+    },
+    {
+     "name": "梨",
+     "citation": "USDA FoodData Central 梨生",
+     "moistureFraction": 0.837,
+     "kcalPer100gWet": 57,
+     "refuseFraction": 0.1
+    },
+    {
+     "name": "李",
+     "citation": "USDA FoodData Central 李生",
+     "moistureFraction": 0.872,
+     "kcalPer100gWet": 46,
+     "refuseFraction": 0.06
+    }
+   ],
+   "selection": {
+    "method": "mean",
+    "reason": "世界里的鲜果为苹果、梨、李，逐项取平均"
+   },
+   "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。【数值凭记忆写入，待 L2 核对】"
   },
   "vegetable": {
-   "moisture": 0.9,
-   "energyDensity": 142,
-   "basis": "鲜蔬与块根：含水约 88–95%，取 90%（USDA FoodData Central：甘蓝 92.2%、胡萝卜 88.3%、芜菁 91.9%、红甜菜 87.6%、洋葱 89.1%、黄瓜 95.2%）；干物质能量约 3.1–3.7 kcal/g，取 3.4 kcal/g；饱腹=kcal÷24，标定见表头 note，3400÷24≈142。含水明显偏离者（蒜、韭葱、欧防风）在物品行覆盖。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "甘蓝",
+     "citation": "USDA FoodData Central 甘蓝生",
+     "moistureFraction": 0.922,
+     "kcalPer100gWet": 25
+    },
+    {
+     "name": "胡萝卜",
+     "citation": "USDA FoodData Central 胡萝卜生",
+     "moistureFraction": 0.883,
+     "kcalPer100gWet": 41
+    },
+    {
+     "name": "芜菁",
+     "citation": "USDA FoodData Central 芜菁生",
+     "moistureFraction": 0.919,
+     "kcalPer100gWet": 28
+    },
+    {
+     "name": "红甜菜",
+     "citation": "USDA FoodData Central 红甜菜生",
+     "moistureFraction": 0.876,
+     "kcalPer100gWet": 43
+    },
+    {
+     "name": "洋葱",
+     "citation": "USDA FoodData Central 洋葱生",
+     "moistureFraction": 0.891,
+     "kcalPer100gWet": 40
+    },
+    {
+     "name": "黄瓜",
+     "citation": "USDA FoodData Central 黄瓜带皮生",
+     "moistureFraction": 0.952,
+     "kcalPer100gWet": 15
+    }
+   ],
+   "selection": {
+    "method": "mean",
+    "reason": "类别内六种代表蔬菜逐项取平均；含水明显偏离者（蒜、韭葱、欧防风）在物品行覆盖"
+   },
+   "basis": "鲜蔬与块根。【数值凭记忆写入，待 L2 核对】"
   },
   "legume": {
-   "moisture": 0.11,
-   "energyDensity": 160,
-   "basis": "干豆：含水约 8–14%，取 11%（USDA FoodData Central：扁豆 8.3%、干豌豆 11.3%、蚕豆 11.0%；Codex Stan 171-1989 豆类含水上限 15%）；扁豆 352、豌豆 341、蚕豆 341 kcal/100g，干物质约 3.8 kcal/g，取 3.84 kcal/g；饱腹=kcal÷24，标定见表头 note，3840÷24=160。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "扁豆",
+     "citation": "USDA FoodData Central 扁豆干生",
+     "moistureFraction": 0.083,
+     "kcalPer100gWet": 352
+    },
+    {
+     "name": "干豌豆",
+     "citation": "USDA FoodData Central 干豌豆（劈）生",
+     "moistureFraction": 0.113,
+     "kcalPer100gWet": 341
+    },
+    {
+     "name": "蚕豆",
+     "citation": "USDA FoodData Central 蚕豆干生",
+     "moistureFraction": 0.11,
+     "kcalPer100gWet": 341
+    }
+   ],
+   "selection": {
+    "method": "mean",
+    "reason": "世界里的干豆为扁豆、干豌豆、蚕豆，逐项取平均（Codex Stan 171-1989 豆类含水上限 15%，均在其内）"
+   },
+   "basis": "干豆。【数值凭记忆写入，待 L2 核对】"
   },
   "grain": {
-   "moisture": 0.12,
-   "energyDensity": 163,
-   "basis": "谷物与谷粉（已脱壳或磨粉的状态；带壳者在物品行覆盖）：安全贮存含水约 12–14%，取 12%（FAO 谷物贮存手册）；干物质能量约 3.65–4.24 kcal/g（USDA FoodData Central：硬红冬小麦 327 kcal/100g 含水 13.1%、黑麦粉 325 含水 11%、燕麦 389 含水 8.2%、珍珠大麦 352 含水 9.4%），取 3.9 kcal/g；饱腹=kcal÷24，标定见表头 note，3900÷24≈163。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "硬红冬小麦",
+     "citation": "USDA FoodData Central 硬红冬小麦生",
+     "moistureFraction": 0.131,
+     "kcalPer100gWet": 327
+    },
+    {
+     "name": "黑麦粉",
+     "citation": "USDA FoodData Central 黑麦粉（深色）",
+     "moistureFraction": 0.11,
+     "kcalPer100gWet": 325
+    },
+    {
+     "name": "燕麦",
+     "citation": "USDA FoodData Central 燕麦生",
+     "moistureFraction": 0.082,
+     "kcalPer100gWet": 389
+    },
+    {
+     "name": "珍珠大麦",
+     "citation": "USDA FoodData Central 珍珠大麦生",
+     "moistureFraction": 0.094,
+     "kcalPer100gWet": 352
+    }
+   ],
+   "selection": {
+    "method": "mean",
+    "reason": "世界里的谷物与谷粉为小麦、黑麦、燕麦、大麦，逐项取平均；已脱壳或磨粉的状态，带壳者在物品行覆盖可食部分"
+   },
+   "basis": "谷物与谷粉。【数值凭记忆写入，待 L2 核对】"
   },
   "meat": {
-   "moisture": 0.673,
-   "energyDensity": 245,
-   "basis": "家畜生肉（混合肉类别：猪、牛、羊等未限定肉种，取三种代表肉的平均组成）：鲜重能量与含水（USDA FoodData Central，凭记忆）——猪里脊生约 143 kcal/100g、含水约 71%（干基 1430÷0.29≈4930 kcal/kg）；牛肉末 85% 瘦生约 215 kcal、含水约 64%（2150÷0.36≈5970）；羊腿瘦肥混合生约 217 kcal、含水约 67%（2170÷0.33≈6580）。三者含水 64–71%、鲜重 143–217 kcal/100g、干基 4930–6580 kcal/kg。取平均组成：含水 (71+64+67)÷3≈67.3%→0.673，鲜重 (143+215+217)÷3≈192 kcal/100g，干物质能量 = 1920 kcal/kg ÷ (1−0.673) ≈ 5870 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），5870÷24≈245。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "猪里脊",
+     "citation": "USDA FoodData Central 猪里脊生（凭记忆约 143 kcal、含水约 71%）",
+     "moistureFraction": 0.71,
+     "kcalPer100gWet": 143
+    },
+    {
+     "name": "牛肉末 85% 瘦",
+     "citation": "USDA FoodData Central 牛肉末 85% 瘦生（凭记忆约 215 kcal、含水约 64%）",
+     "moistureFraction": 0.64,
+     "kcalPer100gWet": 215
+    },
+    {
+     "name": "羊腿瘦肥混合",
+     "citation": "USDA FoodData Central 羊腿瘦肥混合生（凭记忆约 217 kcal、含水约 67%）",
+     "moistureFraction": 0.67,
+     "kcalPer100gWet": 217
+    }
+   ],
+   "selection": {
+    "method": "mean",
+    "reason": "混合肉类别，猪、牛、羊等肉种未限定，取三种代表肉的平均组成"
+   },
+   "basis": "家畜生肉（瘦肥混合）。【数值凭记忆写入，待 L2 核对】"
   },
   "fish": {
-   "moisture": 0.77,
-   "energyDensity": 221,
-   "basis": "淡水鱼鲜肉：含水约 70–82%，取 77%（USDA FoodData Central：鲤 76.1%、鳕 81.2%）；鲤 127 kcal/100g 鲜重，干物质能量 = 1270 kcal/kg ÷ (1−0.761) ≈ 5310 kcal/kg 干物质（即 5.3 kcal/g 干物质，不是鲜重）；饱腹=kcal÷24（calibrate 标定，见表头 note），5300÷24≈221。本类别是鲜鱼状态；腌制品（item_salt_fish）的营养由配方按投入守恒派生，不读本类别值。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "鲤",
+     "citation": "USDA FoodData Central 鲤生",
+     "moistureFraction": 0.761,
+     "kcalPer100gWet": 127
+    },
+    {
+     "name": "鳕",
+     "citation": "USDA FoodData Central 大西洋鳕生",
+     "moistureFraction": 0.812,
+     "kcalPer100gWet": 82
+    }
+   ],
+   "selection": {
+    "method": "representative",
+    "representative": "鲤",
+    "reason": "世界里的鱼是淡水鱼（剖净鲜鱼），鳕为海鱼，只作区间参照"
+   },
+   "basis": "淡水鱼鲜肉；腌制品的营养由配方按投入守恒派生，不读本类别值。【数值凭记忆写入，待 L2 核对】"
   },
   "egg": {
-   "moisture": 0.762,
-   "energyDensity": 250,
-   "basis": "禽蛋（能量与含水按可食内容计）：全蛋生含水 76.2%、143 kcal/100g（USDA FoodData Central）；干物质能量 = 1430 kcal/kg ÷ (1−0.762) ≈ 6010 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），6010÷24≈250。可食部分 88%（蛋壳约 12%，USDA refuse）。本类别按食用禽蛋写；蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费该类别值。【数值凭记忆写入，待 L2 核对】",
-   "edibleFraction": 0.88
+   "sources": [
+    {
+     "name": "鸡全蛋",
+     "citation": "USDA FoodData Central 鸡全蛋生（refuse 为蛋壳）",
+     "moistureFraction": 0.762,
+     "kcalPer100gWet": 143,
+     "refuseFraction": 0.12
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "禽蛋以鸡蛋为代表"
+   },
+   "basis": "禽蛋，按可食内容计。蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费本类别值。【数值凭记忆写入，待 L2 核对】"
   },
   "milk": {
-   "moisture": 0.877,
-   "energyDensity": 207,
-   "basis": "鲜乳（取牛乳为代表，牛乳是主要乳源）：牛乳含水 87.7%、61 kcal/100g（USDA FoodData Central）；干物质能量 = 610 kcal/kg ÷ (1−0.877) ≈ 4960 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），4960÷24≈207。羊乳含水 87.0%、69 kcal/100g，干物质能量 690÷0.130≈5310 kcal/kg，比牛乳高约 7%，成员里的羊乳、兽乳按牛乳值取，未另覆盖。【数值凭记忆写入，待 L2 核对】"
+   "sources": [
+    {
+     "name": "牛乳",
+     "citation": "USDA FoodData Central 全脂牛乳",
+     "moistureFraction": 0.877,
+     "kcalPer100gWet": 61
+    },
+    {
+     "name": "羊乳",
+     "citation": "USDA FoodData Central 羊乳",
+     "moistureFraction": 0.87,
+     "kcalPer100gWet": 69
+    }
+   ],
+   "selection": {
+    "method": "representative",
+    "representative": "牛乳",
+    "reason": "牛乳是主要乳源，羊乳作对照（干基能量比牛乳高约 7%，成员里的羊乳、兽乳按牛乳值取，未另覆盖）"
+   },
+   "basis": "鲜乳。【数值凭记忆写入，待 L2 核对】"
   }
- }
+ },
+ "kcalPerSatiety": 24,
+ "kcalPerSatietyBasis": "calibrate（标定，不是事实），pending 待李白标定：现行 balance/crafting nutrition.densityPerKg.grain=150 饱腹/kg 鲜重，对应谷物鲜重约 3.4–3.9 kcal/g（USDA FoodData Central 小麦 3.27、燕麦 3.89、黑麦粉 3.25 kcal/g，待 L2 核对），取约 3.6 kcal/g，3600÷150=24。"
 }
