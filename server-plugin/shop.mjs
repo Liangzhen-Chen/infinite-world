@@ -213,6 +213,7 @@ registerMerchandiseResolver((engine,state,who)=>(shopOfKeeper(engine,who,state)?
 // over the very reserves it is deciding. Maximum scarcity and price impact
 // bound the native retail formula; execution always obtains a fresh quote.
 const householdSourceReads=new WeakMap();
+const reachSymbol=Symbol('household food reachable traders');
 // shop.location 缺省（非店铺卖家）= 第一个含 trade 的接待窗口在哪就在哪；店铺固定在自己的铺面。
 function nextFoodService(engine,state,shop,minute){
  for(let at=minute;at<minute+31*DAY;){
@@ -244,7 +245,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const cursor=d.cursor instanceof PatchCursor&&d.document===d.cursor.root?d.cursor:null;
  let read=cursor?householdSourceReads.get(cursor):null;
  if(!read||read.revision!==cursor?.revision||read.engine!==engine){
-  read={revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map()};
+  read={revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map(),reach:new Map()};
   if(cursor)householdSourceReads.set(cursor,read);
  }
  const out=[];
@@ -309,20 +310,34 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  // 主观视图只认收到的报价，与店铺一致，不读他人私有存量。复杂度：O(本聚落内有交易服务的非店铺人物 × 其食物行)，名单随世界定义缓存。
  if(!view){
   const taken=new Set(read.shops.map(s=>s.keeper));
-  for(const id of nonShopTraders(engine)){
+  // 可达候选（有效、未死亡、同聚落、路程内、营业窗口内）只取决于买方所在地与当前状态，不取决于买方是谁：
+  // 同一状态版本（游标 revision / 同一状态对象的 stateMemo，任何写入即失效）内按（所在地、分钟、种子）共享。
+  const reachKey=`${location}|${now}|${d.document.randomSeed}|${place}`;
+  const reachable=()=>{
+   const list=[];
+   for(const id of nonShopTraders(engine)){
+    const npc=state.npcs?.[id];
+    if(!npc||!isEffective(engine,state,id)||['死亡','濒死','昏迷'].includes(npc.status))continue;
+    const trader={keeper:id},first=nextFoodService(engine,state,trader,now);
+    if(!first||placeSettlement(engine,state,first.location).value!==place)continue;
+    let travel=0;
+    if(location!==first.location){try{travel=engine.route(location,first.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
+    if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
+    const opening=nextFoodService(engine,state,{keeper:id,location:first.location},now+travel);
+    if(!opening||opening.location!==first.location)continue;
+    list.push({id,location:first.location,at:Math.max(opening.minute,now+travel)});
+   }
+   return list;
+  };
+  let candidates;
+  if(cursor){candidates=read.reach.get(reachKey);if(!candidates)read.reach.set(reachKey,candidates=reachable());}
+  else candidates=d.memo?d.memo(engine,[reachSymbol,reachKey],reachable):reachable();
+  for(const {id,location:serviceAt,at} of candidates){
    if(id===owner||members.includes(id)||taken.has(id))continue;
-   const npc=state.npcs?.[id];
-   if(!npc||!isEffective(engine,state,id)||['死亡','濒死','昏迷'].includes(npc.status))continue;
-   const trader={keeper:id},first=nextFoodService(engine,state,trader,now);
-   if(!first||placeSettlement(engine,state,first.location).value!==place)continue;
-   let travel=0;
-   if(location!==first.location){try{travel=engine.route(location,first.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
-   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
-   const opening=nextFoodService(engine,state,{keeper:id,location:first.location},now+travel);
-   if(!opening||opening.location!==first.location)continue;
+   const first={location:serviceAt};
    let physical=read.physical.get(id);
    if(!physical){physical=householdResources(d,engine,id,{marketSubstitution:false});read.physical.set(id,physical);}
-   const business={keeper:id,markup:1},at=Math.max(opening.minute,now+travel);
+   const business={keeper:id,markup:1};
    for(const row of physical.rows){
     if(row.holder!==id||!(engine.byId.get(row.item)?.nutrition?.satiety>0)||!(row.available>0))continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
     const base=regionalTradeBase(d,engine,row.item,place,now);
