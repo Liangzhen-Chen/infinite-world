@@ -4,6 +4,7 @@ import {reject} from './primitive-policy.mjs';
 import {fixedUnits,fixedNumber,checkedFixed} from './rx.mjs';
 import {physicalItem} from './items.mjs';
 import {isPhysicallyDead} from './holdings.mjs';
+import {stateMemo} from './storage.mjs';
 const pathOf=(document,actor)=>actor==='player'?['state','player']:document.state.npcs?.[actor]?['state','npcs',actor]:document.state.creatures?.[actor]?['state','creatures',actor]:null;
 const atPath=(document,path)=>path?.reduce((v,k)=>v?.[k],document);
 export function bodyRule(engine,need){
@@ -38,6 +39,20 @@ function settlementMayDiffer(engine,sid,need){
  const result=species.some(sp=>sp!==undefined&&speciesMetabolism(engine,sp,need)!==1);
  cache.set(key,result);return result;
 }
+// Index of residents with a non-1 species, by settlement. It reads only each npc's species and
+// materialized settlement, so stateMemo drops it exactly when an npc is added/removed or those change.
+// Without an active record index stateMemo just builds: one O(npcs) pass per call.
+const oddArrivalInputs=[['npcs','*','species'],['npcs','*','materialized','settlement']];
+function oddArrivals(engine,state,need,odd){
+ return stateMemo(state,engine,['oddArrivals',need],()=>{
+  const map=new Map();
+  for(const [id,n] of Object.entries(state?.npcs??{})){
+   const sid=n.materialized?.settlement;if(!sid||!odd.has(n.species??engine.byId?.get(id)?.species))continue;
+   (map.get(sid)??map.set(sid,[]).get(sid)).push(id);
+  }
+  return map;
+ },oddArrivalInputs);
+}
 const oddSets=new WeakMap();
 function oddSpecies(engine,need){
  const cache=oddSets.get(engine)??new Map();oddSets.set(engine,cache);
@@ -46,10 +61,9 @@ function oddSpecies(engine,need){
 }
 export function settlementMouths(engine,state,sid,population,need='satiety'){
  const staticDiffer=settlementMayDiffer(engine,sid,need),odd=staticDiffer?null:oddSpecies(engine,need);
- // Late arrivals (migrants, generated residents) of a non-1 species also change the answer: a cheap
- // scan, O(npcs) with a set lookup, and only when the world has any such species at all.
- const arrivals=[];
- if(odd?.size)for(const [id,n] of Object.entries(state?.npcs??{}))if(n.materialized?.settlement===sid&&odd.has(n.species??engine.byId?.get(id)?.species))arrivals.push(id);
+ // Late arrivals (migrants, generated residents) of a non-1 species also change the answer. They come
+ // from a per-state index (settlement -> ids), built once per state revision and then O(1) per call.
+ const arrivals=odd?.size?oddArrivals(engine,state,need,odd).get(sid)??[]:[];
  if(!staticDiffer&&!arrivals.length)return population;
  const profile=engine.world?.settlementProfiles?.find(p=>p.id===sid)??{};
  const mixed=profile.pendingSpeciesStructure,ids=new Set(profile.residentIds??[]);
