@@ -7,8 +7,7 @@ import {loadRuntimeWorld} from '../tools/load-world.mjs';
 import {applyChainLaws} from '../tools/kc-processing.mjs';
 
 // 据点资源表属于运行时机制数据（meta/mechanics），只含运行时目录的世界根也要派生出与完整世界一致的储量。
-const sites = world => Object.fromEntries(world.locations.filter(l => l.id.startsWith('site_ms_') || l.site?.resources?.some(r => r.id.startsWith('site_ms_')))
-  .map(l => [l.id, l.site?.resources?.map(r => [r.id, r.quantity])]));
+const sites = world => Object.fromEntries(world.locations.filter(l => l.site?.resources?.some(r => r.id.startsWith('site_ms_')))  .map(l => [l.id, l.site.resources.filter(r => r.id.startsWith('site_ms_')).map(r => [r.id, r.quantity])]));
 const runtimeOnlyRoot = async t => {
   const root = await fs.mkdtemp(path.join(tmpRoot(), 'site-eco-runtime-'));
   t.after(async () => {const target = path.resolve(root); assert.ok(target.startsWith(path.resolve(tmpRoot()) + path.sep)); await fs.rm(target, {recursive: true, force: true});});
