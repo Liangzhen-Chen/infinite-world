@@ -22,6 +22,21 @@
    "when": {
     "taxon": "cattle"
    }
+  },
+  "props": {
+   "sources": [
+    {
+     "name": "牛乳",
+     "citation": "USDA FoodData Central 全脂牛乳",
+     "moistureFraction": 0.877,
+     "kcalPer100gWet": 61
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "牛乳：类别 milk 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_wool": {
@@ -62,7 +77,22 @@
  "item_rye_flour": {
   "tags": [
    "grain"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "黑麦粉",
+     "citation": "USDA FoodData Central 黑麦粉（深色）",
+     "moistureFraction": 0.11,
+     "kcalPer100gWet": 325
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "黑麦粉：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_pine_board": {
   "tags": [
@@ -77,7 +107,22 @@
  "item_wheat_grain": {
   "tags": [
    "grain"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "硬红冬小麦",
+     "citation": "USDA FoodData Central 硬红冬小麦生",
+     "moistureFraction": 0.131,
+     "kcalPer100gWet": 327
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "硬红冬小麦：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_broad_bean": {
   "tags": [
@@ -102,6 +147,21 @@
      "sheep"
     ]
    }
+  },
+  "props": {
+   "sources": [
+    {
+     "name": "羊腿瘦肥混合",
+     "citation": "USDA FoodData Central 羊腿瘦肥混合生（凭记忆约 217 kcal、含水约 67%）",
+     "moistureFraction": 0.67,
+     "kcalPer100gWet": 217
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "羊腿瘦肥混合：类别 meat 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_horsehair_bundle": {
@@ -124,6 +184,21 @@
    "when": {
     "taxon": "goat"
    }
+  },
+  "props": {
+   "sources": [
+    {
+     "name": "羊乳",
+     "citation": "USDA FoodData Central 羊乳",
+     "moistureFraction": 0.87,
+     "kcalPer100gWet": 69
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "羊乳：类别 milk 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_raw_goat_hair": {
@@ -180,22 +255,84 @@
  "item_pear": {
   "tags": [
    "fruit"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "梨",
+     "citation": "USDA FoodData Central 梨生",
+     "moistureFraction": 0.837,
+     "kcalPer100gWet": 57,
+     "refuseFraction": 0.1
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "梨：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_plum": {
   "tags": [
    "fruit"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "李",
+     "citation": "USDA FoodData Central 李生",
+     "moistureFraction": 0.872,
+     "kcalPer100gWet": 46,
+     "refuseFraction": 0.06
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_turnip": {
   "tags": [
    "vegetable"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "芜菁",
+     "citation": "USDA FoodData Central 芜菁生",
+     "moistureFraction": 0.919,
+     "kcalPer100gWet": 28
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "芜菁：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_carrot": {
   "tags": [
    "vegetable"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "胡萝卜",
+     "citation": "USDA FoodData Central 胡萝卜生",
+     "moistureFraction": 0.883,
+     "kcalPer100gWet": 41
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "胡萝卜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_parsnip": {
   "tags": [
@@ -220,17 +357,62 @@
  "item_beet": {
   "tags": [
    "vegetable"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "红甜菜",
+     "citation": "USDA FoodData Central 红甜菜生",
+     "moistureFraction": 0.876,
+     "kcalPer100gWet": 43
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "红甜菜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_onion": {
   "tags": [
    "vegetable"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "洋葱",
+     "citation": "USDA FoodData Central 洋葱生",
+     "moistureFraction": 0.891,
+     "kcalPer100gWet": 40
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_cabbage": {
   "tags": [
    "vegetable"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "甘蓝",
+     "citation": "USDA FoodData Central 甘蓝生",
+     "moistureFraction": 0.922,
+     "kcalPer100gWet": 25
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "甘蓝：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_leek": {
   "tags": [
@@ -255,7 +437,22 @@
  "item_cucumber": {
   "tags": [
    "vegetable"
-  ]
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "黄瓜",
+     "citation": "USDA FoodData Central 黄瓜带皮生",
+     "moistureFraction": 0.952,
+     "kcalPer100gWet": 15
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "黄瓜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
  },
  "item_garlic": {
   "tags": [
@@ -281,8 +478,10 @@
   "props": {
    "sources": [
     {
-     "name": "燕麦壳",
-     "citation": "Webster & Wood《Oats: Chemistry and Technology》AACC 2011：壳占谷粒质量 25–35%",
+     "name": "燕麦（带壳整粒）",
+     "citation": "USDA FoodData Central 燕麦生；壳占谷粒质量 25–35%：Webster & Wood《Oats: Chemistry and Technology》AACC 2011",
+     "moistureFraction": 0.082,
+     "kcalPer100gWet": 389,
      "refuseFraction": 0.3,
      "range": {
       "refuseFraction": [
@@ -294,9 +493,9 @@
    ],
    "selection": {
     "method": "single",
-    "reason": "区间中值 30%（脱壳后仁占 70%）"
+    "reason": "成员偏差超过阈值，用自己的出处；壳占比取区间中值 30%（脱壳后仁占 70%）"
    },
-   "basis": "带壳燕麦：含水与能量用类别 grain 的值，可食部分由壳占比推出（壳不供能）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "带壳燕麦：含水、能量取燕麦（仁）的出处，可食部分由壳占比推出（壳不供能）。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_dried_fruit": {

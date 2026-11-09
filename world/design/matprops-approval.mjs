@@ -9,7 +9,7 @@
 // （server-plugin/item-class.mjs deriveFromSources）；之后每条按新 revision 再审。两项调整：
 //  ①审查上限按 revision 计数——「每个 revision 内 1 次初审 + 2 次修正」，revision 由审查目录 review-<n> 区分，账本里请求标签
 //    content-review-<n>-<id>-review<k> 按 n 计数，旧 revision 的记录与次数保留不删（checkReviewCap）；人工核定记录放在各 revision 自己的目录，对新 revision 自然失效。
-//  ②卡账本 maxRequests 由 40 调到 60（追加约 19–20 次再审的批准额度），limitYuan 仍 1.5 元不变（grantMaxRequests，写入账本 authorizations，同 a3w-props 先例）。
+//  ②卡账本 maxRequests 由 40 调到 60（追加约 19–20 次再审的批准额度；李白 2026-11-09 13:1x 口径修正后再批 60→75，只用于口径修正后的复审，到额自动停），limitYuan 仍 1.5 元不变（grantMaxRequests，写入账本 authorizations，同 a3w-props 先例）。
 //    两项同时记在 docs/决策.md「D12 材料属性整类修复」。
 // 用法：node world/design/matprops-approval.mjs --l1 | --review | --sample | --l4 <json> | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
@@ -20,7 +20,7 @@ import {randomInt} from 'node:crypto';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, hashContent, parseModelJSON} from '../../tools/content-pipeline.mjs';
 import {loadRuntimeWorld} from '../../tools/load-world.mjs';
-import {validateMaterialProps, deriveFromSources, MATERIAL_DIMENSIONS} from '../../server-plugin/item-class.mjs';
+import {validateMaterialProps, deriveFromSources, memberValues, memberDeviations, MATERIAL_DIMENSIONS} from '../../server-plugin/item-class.mjs';
 
 export const revisionNumber=2;
 export const revision=`d12-matprops-${revisionNumber}`;
@@ -28,7 +28,7 @@ export const draftRoot='world/drafts/d12-matprops';
 export const reviewDirName=`review-${revisionNumber}`;
 export const reviewRoot=path.join(draftRoot,reviewDirName);
 export const cardId='D12-MATPROPS';
-export const cardLimitYuan=1.5, maxRequests=60, previousMaxRequests=40, maxOverrideRatio=0.15;
+export const cardLimitYuan=1.5, maxRequests=75, maxOverrideRatio=0.15;
 const readJSON=async f=>JSON.parse(await fs.readFile(f,'utf8'));
 const tableFile='world/meta/mechanics/material-props.json', overlayFile='world/meta/mechanics/items.json';
 
@@ -193,17 +193,24 @@ export function checkReviewCap(ledger,id,dirName=reviewDirName){
  const sent=Object.values(ledger?.requests??{}).filter(r=>label.test(r.label??'')&&['sent','settled','unknown'].includes(r.status));
  if(sent.length>=maxReviewsPerEntry)throw Object.assign(new Error(`同条审核在 ${dirName} 内已达 ${maxReviewsPerEntry} 次（初审+2次修正）：${id}`),{code:'REVIEW_LIMIT'});
 }
-// 亮圳 2026-11-09 12:11 批准：卡账本 maxRequests 40 → 60，limitYuan 仍 1.5。幂等；账本其余字段不动，旧请求与花费保留。
-export const grantId='d12-matprops-2-maxrequests-60';
+// 账本上限分两步批准，按顺序逐步落到账本 authorizations（幂等；账本其余字段不动，旧请求与花费保留）：
+//  40→60：亮圳 2026-11-09 12:11 批准、李白同意（整类修复后每条再审 1 次）；
+//  60→75：李白 2026-11-09 13:1x 批准（整类口径修正后的复审；limitYuan 1.5 不变，到额自动停，只用于本次口径修正后的复审）。
+export const grants=[
+ {id:'d12-matprops-2-maxrequests-60',from:40,to:60,source:'亮圳 2026-11-09 12:11 批准、李白同意：D 卡整类修复后每条再审 1 次，maxRequests 40→60，limitYuan 仍 1.5 元，只限这一轮'},
+ {id:'d12-matprops-2-maxrequests-75',from:60,to:75,source:'李白 2026-11-09 13:1x 批准：整类口径修正后的复审，maxRequests 60→75，limitYuan 仍 1.5 元，到额自动停，只用于本次口径修正后的复审'}];
+export const grantId=grants[0].id;
 export function grantMaxRequests(ledger){
  const out=structuredClone(ledger),card=out.cards?.[cardId];
  if(!card)throw Error('缺卡账本');
- if(out.authorizations?.some(a=>a.id===grantId)){assert.equal(card.maxRequests,maxRequests);return out;}
- if(card.maxRequests!==previousMaxRequests||card.limitYuan!==cardLimitYuan||card.reservedYuan!==0||out.reservedYuan!==0)throw Error('卡账本与批准时的快照不符，拒绝调整');
- out.authorizations??=[];
- out.authorizations.push({id:grantId,source:'亮圳 2026-11-09 12:11 批准、李白同意：D 卡整类修复后每条再审 1 次，maxRequests 40→60，limitYuan 仍 1.5 元，只限这一轮',
-  before:{maxRequests:card.maxRequests,limitYuan:card.limitYuan,spentYuan:card.spentYuan,requests:Object.keys(out.requests??{}).length},after:{maxRequests,limitYuan:cardLimitYuan},at:new Date().toISOString()});
- card.maxRequests=maxRequests;
+ for(const g of grants){
+  if(out.authorizations?.some(a=>a.id===g.id)){assert.ok(card.maxRequests>=g.to,`${g.id} 已授权但账本上限低于 ${g.to}`);continue;}
+  if(card.maxRequests!==g.from||card.limitYuan!==cardLimitYuan||card.reservedYuan!==0||out.reservedYuan!==0)throw Error('卡账本与批准时的快照不符，拒绝调整');
+  out.authorizations??=[];
+  out.authorizations.push({id:g.id,source:g.source,before:{maxRequests:card.maxRequests,limitYuan:card.limitYuan,spentYuan:card.spentYuan,requests:Object.keys(out.requests??{}).length},after:{maxRequests:g.to,limitYuan:cardLimitYuan},at:new Date().toISOString()});
+  card.maxRequests=g.to;
+ }
+ assert.equal(card.maxRequests,maxRequests);
  return out;
 }
 async function authorizeIncrease(){
@@ -216,8 +223,41 @@ async function capReviews({body,entry,phase}){
  checkReviewCap(ledger,entry.id);
  return {body};
 }
+// --l1 --show <id,...>：逐条打印出处字段（带单位）、推算中间量、推算值与一致性检查结果。
+const pct=x=>`${(x*100).toFixed(2)}%`;
+export function explainEntry(entry,table,l1Errors=[]){
+ const kps=table.kcalPerSatiety,row=entry.row,L=[`== ${entry.id}（${entry.kind}）`,`kcalPerSatiety = ${kps} kcal/饱腹（表头标定值，${table.kcalPerSatietyBasis?.slice(0,20)}…）`];
+ const srcs=Array.isArray(row.sources)?row.sources:[],sel=row.selection??{method:'single'};
+ L.push(`selection = ${sel.method}（${sel.reason??'无'}）`);
+ for(const x of srcs){
+  const o=memberValues(x,kps);
+  L.push(`出处「${x.name}」${x.item?`（成员物品 ${x.item}）`:''}：${x.citation}`);
+  if(x.moistureFraction!==undefined)L.push(`  含水分数 moistureFraction = ${x.moistureFraction}（水占鲜重，质量分数）→ 干物质比例 = 1 − ${x.moistureFraction} = ${(1-x.moistureFraction).toFixed(4)}（质量分数）`);
+  if(x.kcalPer100gWet!==undefined){
+   L.push(`  鲜重能量 kcalPer100gWet = ${x.kcalPer100gWet}（kcal/100g 鲜重）`);
+   if(o.e!==undefined)L.push(`  干基能量 = ${x.kcalPer100gWet} × 10 ÷ ${(1-x.moistureFraction).toFixed(4)} = ${(x.kcalPer100gWet*10/(1-x.moistureFraction)).toFixed(1)}（kcal/kg 干物质）；÷ ${kps} = ${o.e.toFixed(3)}（饱腹/kg 干物质）`);
+  }
+  if(x.refuseFraction!==undefined)L.push(`  不可食比例 refuseFraction = ${x.refuseFraction}（质量分数）→ 可食部分 = ${(1-x.refuseFraction).toFixed(4)}`);
+ }
+ const d=deriveFromSources(row,kps);
+ L.push(`推算值（${sel.method==='mean'?'各成员推算后取平均':'单一出处'}）：moisture = ${d.moisture??'无'}（3 位小数）；energyDensity = ${d.energyDensity??'无'}（饱腹/kg 干物质，取整）；edibleFraction = ${d.edibleFraction??'无'}`);
+ const stored=['moisture','energyDensity','edibleFraction'].filter(k=>row[k]!==undefined);
+ L.push(stored.length?`行里另存了：${stored.map(k=>`${k}=${row[k]}`).join('，')}；与推算值${stored.every(k=>Math.abs(row[k]-d[k])<1e-9)?'一致':'不一致'}`:'行里没有另存 moisture/energyDensity/edibleFraction（只存出处，无重复值，不会冲突）');
+ if(entry.kind==='material-props-class'&&sel.method==='mean'){
+  for(const m of memberDeviations(row,kps))L.push(`成员偏差 ${m.item}（${m.name}）：${Object.entries(m.dev).map(([k,v])=>`${k} ${pct(v)}`).join('，')}；阈值 ${pct(table.memberDeviationThreshold)}；${m.max>table.memberDeviationThreshold?'超阈值，须有覆盖行':'未超'}`);
+ }
+ const own=l1Errors.filter(e=>e.includes(entry.kind==='material-props-class'?`classes.${entry.key}`:`items.${entry.id}.`)||e.includes(entry.id));
+ L.push(own.length?`L1 检查：${own.length} 项问题：${own.join('；')}`:'L1 检查：通过（出处字段齐全、范围合法、存值与推算一致、成员偏差有覆盖）');
+ return L;
+}
+export async function show(ids){
+ const entries=await entriesFor(),table=await readJSON(tableFile),world=await runtime(),errors=validateMaterialProps(world),lines=[];
+ for(const id of ids){const e=entries.find(x=>x.id===id);if(!e)throw Error(`没有这条：${id}`);lines.push(...explainEntry(e,table,errors),'');}
+ return lines.join('\n');
+}
 export async function run(args=process.argv.slice(2)){
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
+ if(args.includes('--show'))console.log(await show(args[args.indexOf('--show')+1].split(',')));
  if(args.includes('--review')){
   await l1();
   await authorizeIncrease();

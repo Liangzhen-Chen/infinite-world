@@ -208,28 +208,47 @@ export function deriveItemAttributes(world){
 // 多类别冲突取更具体者，不求平均；没有任何来源的维度返回 {known:false}，不给默认值。
 export const MATERIAL_DIMENSIONS=['moisture','edibleFraction','energyDensity','heatValue','charYield'];
 // D12 卡 D 整类修复：含水、可食部分、能量密度不手写，由行内的出处原值（sources）推出；heatValue、charYield 仍直接写。
-//   sources：[{name, citation, moistureFraction（水占鲜重）, kcalPer100gWet（鲜重 kcal/100g）, refuseFraction（不可食部分，壳核骨）, range?}]
-//   selection：{method:'single'|'mean'|'representative', representative?, reason}；多出处时按 mean（逐项算术平均）或 representative（取代表出处）。
-//   推算（唯一一处，取整规则统一）：moisture = 取值后的含水分数，四舍五入到 3 位小数；edibleFraction = 1 − 不可食部分，3 位小数；
-//   energyDensity（饱腹/kg 干物质）= round(kcalPer100gWet × 10 ÷ (1 − moisture) ÷ kcalPerSatiety)，取整到个位；
+//   sources：[{name, citation, moistureFraction（水占鲜重）, kcalPer100gWet（鲜重 kcal/100g）, refuseFraction（不可食部分，壳核骨）, range?, item?}]
+//   每个出处代表类别里的一个成员；item 写该成员对应的世界物品 id（没有对应物品的是参照成员）。
+//   selection：{method:'single'|'mean', reason}。整类口径（李白 2026-11-09 13:1x 定，适用所有类别，不对个别类别特判）：
+//   类别代表值 = 对每个成员（出处）分别用同一程序推算，再对各成员的推算结果取平均；只有 1 个出处时用 single。
+//   成员推算（唯一一处，取整规则统一）：含水 m_i = 出处含水分数；干基能量 e_i = kcalPer100gWet × 10 ÷ (1 − m_i) ÷ kcalPerSatiety（饱腹/kg 干物质，不取整）；
+//   可食部分 = 1 − 不可食比例。类别值：moisture = 平均 m_i，四舍五入到 3 位小数；edibleFraction = 平均可食部分，3 位小数；energyDensity = 平均 e_i，取整到个位。
 //   kcalPerSatiety 读表头（world/meta/mechanics/material-props.json 的 kcalPerSatiety，calibrate 标定值），代码里不写死。
+//   成员偏差：每个成员与类别代表值比较三项——干物质比例（1 − 含水，含水对鲜重的影响经它起作用）、干基能量、鲜重能量（e×(1 − 含水)，消费者实际用的）——
+//   相对偏差任一超过表头 memberDeviationThreshold 的成员，必须单独写覆盖行（物品 props，带自己的出处，推算值与该出处一致）；L1 检查，没有覆盖即报错（memberDeviations）。
 //   行里若仍直接存了 moisture/edibleFraction/energyDensity，值必须等于推算值（L1 校验）；没有 sources 的行（夹具）直接用存的值。
 const meanOf=a=>a.reduce((n,x)=>n+x,0)/a.length,round3=x=>Math.round(x*1000)/1000;
+// 单个成员（出处）的推算量：m 含水、edible 可食部分、e 干基能量（饱腹/kg 干物质，未取整）。
+export function memberValues(x,kcalPerSatiety){
+ const o={},m=x?.moistureFraction;
+ if(m!==undefined)o.m=m;
+ if(x?.refuseFraction!==undefined)o.edible=1-x.refuseFraction;
+ if(x?.kcalPer100gWet!==undefined&&m!==undefined&&m<1&&kcalPerSatiety>0)o.e=x.kcalPer100gWet*10/(1-m)/kcalPerSatiety;
+ return o;
+}
 export function deriveFromSources(row,kcalPerSatiety){
  const srcs=Array.isArray(row?.sources)?row.sources:null;
  if(!srcs?.length)return {};
  const sel=row.selection??{method:'single'};
- const pick=key=>{
-  const have=srcs.filter(x=>x[key]!==undefined);
-  if(!have.length)return undefined;
-  if(sel.method==='mean')return meanOf(have.map(x=>x[key]));
-  const one=sel.method==='representative'?srcs.find(x=>x.name===sel.representative):srcs[0];
-  return one?.[key];
- };
- const out={},m=pick('moistureFraction'),refuse=pick('refuseFraction'),kcal=pick('kcalPer100gWet');
+ const ms=(sel.method==='single'?srcs.slice(0,1):srcs).map(x=>memberValues(x,kcalPerSatiety));
+ const avg=key=>{const v=ms.map(o=>o[key]).filter(x=>x!==undefined);return v.length?meanOf(v):undefined;};
+ const out={},m=avg('m'),edible=avg('edible'),e=avg('e');
  if(m!==undefined)out.moisture=round3(m);
- if(refuse!==undefined)out.edibleFraction=round3(1-refuse);
- if(kcal!==undefined&&out.moisture!==undefined&&out.moisture<1&&kcalPerSatiety>0)out.energyDensity=Math.round(kcal*10/(1-out.moisture)/kcalPerSatiety);
+ if(edible!==undefined)out.edibleFraction=round3(edible);
+ if(e!==undefined)out.energyDensity=Math.round(e);
+ return out;
+}
+// 每个带 item 的成员与类别代表值的相对偏差（三项）与其中最大绝对值。
+export function memberDeviations(row,kcalPerSatiety){
+ const cls=deriveFromSources(row,kcalPerSatiety),out=[],rel=(a,b)=>(a-b)/b;
+ for(const x of row?.sources??[]){
+  if(!x.item)continue;
+  const o=memberValues(x,kcalPerSatiety),dev={};
+  if(o.m!==undefined&&cls.moisture!==undefined)dev.dryFraction=rel(1-o.m,1-cls.moisture);
+  if(o.e!==undefined&&cls.energyDensity!==undefined){dev.dmEnergy=rel(o.e,cls.energyDensity);dev.freshEnergy=rel(o.e*(1-o.m),cls.energyDensity*(1-cls.moisture));}
+  out.push({item:x.item,name:x.name,dev,max:Math.max(0,...Object.values(dev).map(Math.abs))});
+ }
  return out;
 }
 const derivedMemo=new WeakMap();
@@ -275,11 +294,10 @@ export function validateMaterialProps(world){
   if(srcs===undefined){if(row.selection!==undefined)errors.push(`材料属性 selection 没有 sources：${where}`);return;}
   if(!Array.isArray(srcs)||!srcs.length){errors.push(`材料属性 sources 须为非空数组：${where}`);return;}
   const sel=row.selection;
-  if(!sel||!['single','mean','representative'].includes(sel.method)||typeof sel.reason!=='string'||!sel.reason.trim())errors.push(`材料属性缺 selection（method 取 single/mean/representative 并写 reason）：${where}`);
+  if(!sel||!['single','mean'].includes(sel.method)||typeof sel.reason!=='string'||!sel.reason.trim())errors.push(`材料属性缺 selection（method 取 single/mean 并写 reason）：${where}`);
   else{
    if(sel.method==='single'&&srcs.length!==1)errors.push(`材料属性 single 只能有 1 个出处：${where}`);
    if(sel.method==='mean'&&srcs.length<2)errors.push(`材料属性 mean 至少 2 个出处：${where}`);
-   if(sel.method==='representative'&&!srcs.some(x=>x.name===sel.representative))errors.push(`材料属性 representative 不在 sources 里：${where}`);
   }
   const bounds={moistureFraction:[0,1],refuseFraction:[0,0.99],kcalPer100gWet:[0,900]},names=new Set();
   srcs.forEach((x,i)=>{
@@ -311,6 +329,24 @@ export function validateMaterialProps(world){
   }};
  const keys=Object.keys(t.classes??{});
  for(const k of keys){if(!known.has(k))errors.push(`材料属性类别不是已有标签：${k}`);check(t.classes[k],`classes.${k}`);}
+  // 整类口径：类别代表值是成员逐项推算后的平均；带 item 的成员偏差超阈值必须有自己的覆盖行。
+ const thr=t.memberDeviationThreshold,meanKeys=keys.filter(k=>t.classes[k]?.selection?.method==='mean');
+ if(meanKeys.length){
+  if(!(Number.isFinite(thr)&&thr>0&&thr<1))errors.push('材料属性表头 memberDeviationThreshold 须为 0–1 之间的正数');
+  if(typeof t.memberDeviationBasis!=='string'||!t.memberDeviationBasis.trim())errors.push('材料属性表头 memberDeviationThreshold 缺依据 memberDeviationBasis');
+ }
+ for(const k of meanKeys){
+  const row=t.classes[k];
+  for(const d of memberDeviations(row,kps)){
+   const item=(world.items??[]).find(i=>i.id===d.item);
+   if(!item){errors.push(`材料属性类别成员物品不存在：classes.${k} 的 item ${d.item}`);continue;}
+   if(!(thr>0)||d.max<=thr)continue;
+   const pct=`${(d.max*100).toFixed(1)}%`;
+   if(!Array.isArray(item.props?.sources)){errors.push(`材料属性类别 ${k} 的成员 ${d.item}（${d.name}）与类别代表值偏差 ${pct} 超过阈值 ${thr*100}%，须单独写覆盖行（带自己的出处）`);continue;}
+   const own=deriveFromSources(item.props,kps),mine=deriveFromSources({sources:[row.sources.find(x=>x.item===d.item)],selection:{method:'single'}},kps);
+   for(const dim of ['moisture','energyDensity'])if(mine[dim]!==undefined&&own[dim]!==mine[dim])errors.push(`材料属性成员 ${d.item} 的覆盖行 ${dim} 与类别里它的出处不一致（覆盖 ${own[dim]}，出处 ${mine[dim]}）`);
+  }
+ }
  const order=t.precedence??[];
  if(!Array.isArray(order)||order.length!==new Set(order).size||order.length!==keys.length||keys.some(k=>!order.includes(k)))errors.push('材料属性 precedence 必须恰好列出全部类别键且不重复（从最具体到最一般）');
  for(const i of world.items??[])if(i.props!==undefined)check(i.props,`items.${i.id}.props`);

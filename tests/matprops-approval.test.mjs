@@ -105,19 +105,28 @@ test('审查上限按 revision 计数：旧 revision 的 3 次不挡新 revision
   assert.match(revision, /-2$/);
 });
 
-test('maxRequests 40→60：授权写入账本、limitYuan 不变、幂等；共用预算模块只认调整后的 60', () => {
-  const ledger = {spentYuan: 0.14, reservedYuan: 0, limitYuan: 20, waveLimitYuan: 20,
+test('maxRequests 40→60→75：两步授权写入账本、limitYuan 不变、幂等；共用预算模块只认调整后的 75', () => {
+  const ledger40 = {spentYuan: 0.14, reservedYuan: 0, limitYuan: 20, waveLimitYuan: 20,
     cards: {[cardId]: {limitYuan: cardLimitYuan, spentYuan: 0.14, reservedYuan: 0, maxRequests: 40}}, requests: {a: {card: cardId, status: 'settled'}}};
   const allocation = {cardId, incrementLimitYuan: cardLimitYuan, maxRequests, waveLimitYuan: 20, startingSpentYuan: 0, startingReservedYuan: 0};
-  assert.equal(maxRequests, 60);
-  assert.throws(() => migrateDepthBudget(ledger, cardId, allocation), /单卡授权额度已改变/);
-  const granted = grantMaxRequests(ledger);
-  assert.equal(granted.cards[cardId].maxRequests, 60);
-  assert.equal(granted.cards[cardId].limitYuan, 1.5);
-  assert.equal(granted.cards[cardId].spentYuan, 0.14);
-  assert.ok(granted.requests.a);
-  assert.equal(granted.authorizations.at(-1).id, grantId);
-  assert.deepEqual(migrateDepthBudget(granted, cardId, allocation).cards, granted.cards);
-  assert.deepEqual(grantMaxRequests(granted), granted);
-  assert.throws(() => grantMaxRequests({...ledger, cards: {[cardId]: {...ledger.cards[cardId], limitYuan: 2}}}), /快照不符/);
+  assert.equal(maxRequests, 75);
+  assert.throws(() => migrateDepthBudget(ledger40, cardId, allocation), /单卡授权额度已改变/);
+  // 从 40 直接走完两步
+  const both = grantMaxRequests(ledger40);
+  assert.equal(both.cards[cardId].maxRequests, 75);
+  assert.equal(both.cards[cardId].limitYuan, 1.5);
+  assert.equal(both.cards[cardId].spentYuan, 0.14);
+  assert.ok(both.requests.a);
+  assert.deepEqual(both.authorizations.map(a => [a.before.maxRequests, a.after.maxRequests]), [[40, 60], [60, 75]]);
+  assert.equal(both.authorizations[0].id, grantId);
+  assert.deepEqual(migrateDepthBudget(both, cardId, allocation).cards, both.cards);
+  assert.deepEqual(grantMaxRequests(both), both);
+  // 账本已在 60（含 60 的授权记录）时只补第二步
+  const at60 = {...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], maxRequests: 60}}, authorizations: [both.authorizations[0]]};
+  const step2 = grantMaxRequests(at60);
+  assert.equal(step2.cards[cardId].maxRequests, 75);
+  assert.equal(step2.authorizations.length, 2);
+  // 账本与批准时快照不符、或 60 没有授权记录：拒绝
+  assert.throws(() => grantMaxRequests({...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], limitYuan: 2}}}), /快照不符/);
+  assert.throws(() => grantMaxRequests({...ledger40, cards: {[cardId]: {...ledger40.cards[cardId], maxRequests: 60}}}), /快照不符/);
 });
