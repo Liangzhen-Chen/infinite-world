@@ -150,6 +150,19 @@ export function usageGrams(engine,item,cls,grams){
  return heat===null?grams:grams*Math.max(0,heat)/ref;
 }
 
+// 饱腹系数 = Π 各因子（饱腹不等于热量：同样的热量，低能量密度的食物更饱，高能量密度的更不饱）。
+// 参数在 crafting.json nutrition.satietyFactor：energyDensity 因子 =（成品能量密度 ÷ ref）^k 夹在 [min,max]；
+// dimensions 里每项 {k,ref,min,max} 是按材料属性维度追加的因子（如蛋白、纤维、含水），该物品该维度未知则因子取 1，现在为空。
+// 配方的能量守恒不动：系数只在最终写入 nutrition / nutrientContent 时乘一次。
+const factorOf=(spec,x)=>Math.min(spec.max,Math.max(spec.min,(x/spec.ref)**spec.k));
+export function satietyFactor(world,item,satiety){
+ const spec=param(world,'nutrition.satietyFactor'),kps=world?.materialProps?.kcalPerSatiety,dims=Object.entries(spec.dimensions??{});
+ let f=1;
+ if(spec.energyDensity&&kps>0&&item.weight>0&&satiety>0)f*=factorOf(spec.energyDensity,satiety*kps/(item.weight*1000));
+ if(dims.length){const mp=materialProps({world,byId:new Map((world.items??[]).map(i=>[i.id,i]))},item.id);for(const [dim,d] of dims){const v=mp[dim];if(v?.known)f*=factorOf(d,v.value);}}
+ return f;
+}
+
 // —— 加载期派生营养与生熟 ——
 // 物品表写了 nutrition 的照用；没写的食物：有产出它的配方就按投入守恒派生，没有配方就按重量 × 类别密度。
 // 结果：可直接当一餐的食物写入 nutrition（消费方照旧读 nutrition）；全部食物写 nutrientContent（含生料）与 foodState。
@@ -194,9 +207,10 @@ export function deriveItemAttributes(world){
   const c=content(item.id);if(!c||c.inedible)continue;
   if(c.authored)continue;
   item.foodState=c.raw?'raw':'ready';
-  item.nutrientContent={satiety:Math.floor(c.satiety),hydration:Math.floor(c.hydration)};
+  const sat=Math.floor(c.satiety*satietyFactor(world,item,c.satiety));
+  item.nutrientContent={satiety:sat,hydration:Math.floor(c.hydration)};
   if(c.raw)continue;
-  const nutrition={...(Math.floor(c.satiety)>0?{satiety:Math.floor(c.satiety)}:{}),...(Math.floor(c.hydration)>0?{hydration:Math.floor(c.hydration)}:{})};
+  const nutrition={...(sat>0?{satiety:sat}:{}),...(Math.floor(c.hydration)>0?{hydration:Math.floor(c.hydration)}:{})};
   if(Object.keys(nutrition).length)item.nutrition=nutrition;
  }
  return world;
