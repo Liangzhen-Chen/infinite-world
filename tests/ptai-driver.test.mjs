@@ -4,12 +4,12 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {runPlayer,monthSpend,monthKey,ALLOWED_ENDPOINTS,validateConfig,costCeiling,httpApi,assertApiUrl} from '../tools/ptai/driver.mjs';
+import {withLock,runPlayer,monthSpend,monthKey,ALLOWED_ENDPOINTS,validateConfig,costCeiling,httpApi,assertApiUrl} from '../tools/ptai/driver.mjs';
 
 const KEY='sk-test-SECRET-1234567890';
 const MANIFEST='m'.repeat(64);
 const baseConfig=(over={})=>({model:'claude-test',maxTurns:3,maxSessionUsd:100,monthlyCapUsd:1000,maxTokens:256,
- prices:{inputPerMTok:3,outputPerMTok:15},retries:2,backoffMs:1,historyPairs:6,...over});
+ prices:{inputPerMTok:3,outputPerMTok:15},retries:2,backoffMs:1,historyPairs:6,ledgerPath:'.tmp/ptai/ledger.jsonl',...over});
 const tmp=()=>fs.mkdtemp(path.join(os.tmpdir(),'ptai-test-'));
 const now=()=>new Date('2026-11-15T00:00:00Z');
 const env={CLAUDE_API_KEY:KEY};
@@ -218,4 +218,53 @@ test('失败重试有上限与退避；错误信息与轨迹不含密钥；4xx �
 test('配置缺上限或单价即拒绝（金额不写死）', ()=>{
  assert.throws(()=>validateConfig({...baseConfig(),monthlyCapUsd:undefined}),/monthlyCapUsd/);
  assert.throws(()=>validateConfig({...baseConfig(),prices:{}}),/prices/);
+});
+
+test('fetch 带 redirect:error；遇 3xx 报错不跟随（Anthropic 与回合接口）', async()=>{
+ const f=fakeFetch([{status:307,json:{}}]);
+ await assert.rejects(run({api:fakeWorld().api,fetchImpl:f.impl,cwd:await tmp(),runId:'redir'}),/307/);
+ assert.equal(f.requests.length,1);assert.equal(f.requests[0].init.redirect,'error');
+ const seen=[];
+ const api=httpApi('http://127.0.0.1:1',{fetchImpl:async(url,init)=>{seen.push(init);return {ok:false,status:307,json:async()=>({})};}});
+ await assert.rejects(api('read',{}),/重定向/);
+ assert.equal(seen[0].redirect,'error');
+});
+
+test('ledgerPath 必填', ()=>{
+ assert.throws(()=>validateConfig({...baseConfig(),ledgerPath:undefined}),/ledgerPath/);
+});
+
+test('账本锁：陈旧锁被接管、他人锁不被误删、EPERM 重试', async()=>{
+ const dir=await tmp(),file=path.join(dir,'l.jsonl'),lock=file+'.lock';
+ // 持有者 pid 已死：立即接管
+ await fs.writeFile(lock,JSON.stringify({pid:2147483646,token:'dead',ts:Date.now()}));
+ assert.equal(await withLock(file,async()=>'ok',{alive:()=>false}),'ok');
+ await assert.rejects(fs.stat(lock));
+ // pid 活着但锁龄超阈值：接管
+ await fs.writeFile(lock,JSON.stringify({pid:process.pid,token:'old',ts:Date.now()-100000}));
+ assert.equal(await withLock(file,async()=>'ok2',{alive:()=>true,staleMs:1000}),'ok2');
+ // 他人新鲜锁：不接管、不删除，等待超时报错
+ const other=JSON.stringify({pid:process.pid,token:'other',ts:Date.now()});
+ await fs.writeFile(lock,other);
+ await assert.rejects(withLock(file,async()=>'x',{alive:()=>true,staleMs:60000,waitMs:50}),/超时/);
+ assert.equal(await fs.readFile(lock,'utf8'),other);
+ // fn 执行期间锁被他人换掉：释放时不删别人的锁
+ const swapped=JSON.stringify({pid:process.pid,token:'swapped',ts:Date.now()});
+ await fs.rm(lock);
+ await withLock(file,async()=>{await fs.writeFile(lock,swapped);});
+ assert.equal(await fs.readFile(lock,'utf8'),swapped);
+ await fs.rm(lock);
+ // EPERM/EBUSY 重试
+ let n=0;
+ const link=async(a,b)=>{if(n++<2){const e=new Error('busy');e.code=n===1?'EPERM':'EBUSY';throw e;}return fs.link(a,b);};
+ assert.equal(await withLock(file,async()=>'ok3',{link,sleep:nosleep}),'ok3');
+ assert.equal(n,3);
+});
+
+test('账本半行：无换行结尾的坏末行被忽略，其余坏行拒绝', async()=>{
+ const dir=await tmp(),file=path.join(dir,'l.jsonl');
+ await fs.writeFile(file,JSON.stringify({month:'2026-11',usd:1})+'\n{"month":"2026-11","us');
+ assert.equal(await monthSpend(file,'2026-11'),1);
+ await fs.writeFile(file,'garbage\n'+JSON.stringify({month:'2026-11',usd:1})+'\n');
+ await assert.rejects(monthSpend(file,'2026-11'),/损坏/);
 });

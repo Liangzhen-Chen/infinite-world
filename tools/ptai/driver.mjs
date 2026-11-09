@@ -41,6 +41,7 @@ export function validateConfig(config){
  need(Number.isInteger(config.maxTurns),'maxTurns 须为整数');
  const price=config.prices;
  need(price&&positive(price.inputPerMTok)&&positive(price.outputPerMTok),'配置缺 prices.inputPerMTok / outputPerMTok');
+ need(typeof config.ledgerPath==='string'&&config.ledgerPath,'配置缺 ledgerPath（账本位置只由配置决定）');
  assertApiUrl(config.apiUrl??API_URL);
  return {retries:3,backoffMs:1000,historyPairs:12,apiVersion:'2023-06-01',testHosts:[],...config,apiUrl:API_URL,
   prices:{cacheWritePerMTok:price.inputPerMTok*1.25,cacheReadPerMTok:price.inputPerMTok,...price}};
@@ -59,33 +60,59 @@ export function costCeiling(body,config){
 
 // 月度账本：只追加的 JSONL，一行一次 API 调用；从不改写、不截断历史。
 export function monthKey(date=new Date()){return date.toISOString().slice(0,7);}
+// 行只在锁内整行追加。末行若无换行结尾且解析失败，视为崩溃遗留的半行（其预留尚未完成，请求没有发出），忽略；
+// 其余任何坏行都抛错（宁可停，不可漏记）。
 export async function monthSpend(ledgerPath,month){
  let text;
  try{text=await fs.readFile(ledgerPath,'utf8');}catch(error){if(error.code==='ENOENT')return 0;throw error;}
+ const lines=text.split('\n'),partialTail=!text.endsWith('\n');
  let total=0;
- for(const line of text.split('\n')){
+ for(const [i,line]of lines.entries()){
   if(!line.trim())continue;
-  const row=JSON.parse(line);
+  let row;
+  try{row=JSON.parse(line);}catch(error){if(partialTail&&i===lines.length-1)continue;throw new Error(`账本第 ${i+1} 行损坏，拒绝继续`);}
   if(row.month===month&&Number.isFinite(row.usd))total+=row.usd;
  }
  return total;
 }
-// 同一账本的“读合计、检查、预留”在文件锁内完成，并行多局不会越限。
-export async function withLock(file,fn,{sleep=defaultSleep}={}){
+// 同一账本的“读合计、检查、预留/修正”在文件锁内完成，并行多局不会越限。
+// 锁文件内容是本进程唯一令牌（pid+随机数+时间）：先写临时文件再 link 成锁（原子，已存在则 EEXIST）；
+// 释放时只删令牌匹配的锁。陈旧判定：持有者 pid 已不存在，或锁龄超过 staleMs；
+// 接管用原子 rename 把旧锁挪走（只有一个竞争者成功），挪走后核对令牌，若发现挪走的不是判定陈旧的那把就放回去。
+// Windows 上 EPERM/EBUSY/EACCES 常是短暂占用，按 EEXIST 同样重试。等待上限（waitMs）大于陈旧阈值。
+const pidAlive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error.code==='EPERM';}};
+const TRANSIENT=new Set(['EEXIST','EPERM','EBUSY','EACCES']);
+async function readLock(lock){
+ try{return JSON.parse(await fs.readFile(lock,'utf8'));}catch{return null;}
+}
+export async function withLock(file,fn,{sleep=defaultSleep,staleMs=60000,waitMs=staleMs+30000,link=fs.link,alive=pidAlive}={}){
  await fs.mkdir(path.dirname(file),{recursive:true});
- const lock=file+'.lock';
- for(let i=0;;i++){
-  let handle=null;
-  try{handle=await fs.open(lock,'wx');}
-  catch(error){
-   if(error.code!=='EEXIST')throw error;
-   need(i<1000,'账本锁等待超时');
-   try{if(Date.now()-(await fs.stat(lock)).mtimeMs>30000)await fs.rm(lock,{force:true});}catch{}
-   await sleep(10);
-   continue;
+ const lock=file+'.lock',token=`${process.pid}-${randomUUID()}`,tmpFile=`${lock}.${token}.tmp`;
+ await fs.writeFile(tmpFile,JSON.stringify({pid:process.pid,token,ts:Date.now()}));
+ const deadline=Date.now()+waitMs;
+ try{
+  for(;;){
+   try{await link(tmpFile,lock);break;}
+   catch(error){
+    if(!TRANSIENT.has(error.code))throw error;
+    need(Date.now()<deadline,'账本锁等待超时');
+    const holder=await readLock(lock);
+    if(error.code==='EEXIST'&&(holder===null||!alive(holder.pid)||Date.now()-holder.ts>staleMs)){
+     const moved=`${lock}.stale.${token}`;
+     try{
+      await fs.rename(lock,moved);
+      const got=await readLock(moved);
+      if(holder!==null&&got?.token!==holder.token)try{await link(moved,lock);}catch{}
+      await fs.rm(moved,{force:true});
+     }catch{}
+     continue;
+    }
+    await sleep(10);
+   }
   }
-  try{return await fn();}finally{await handle.close();await fs.rm(lock,{force:true});}
- }
+  try{return await fn();}
+  finally{const now=await readLock(lock);if(now?.token===token)await fs.rm(lock,{force:true});}
+ }finally{await fs.rm(tmpFile,{force:true});}
 }
 export async function appendLedger(ledgerPath,row){
  await fs.mkdir(path.dirname(ledgerPath),{recursive:true});
@@ -104,7 +131,7 @@ export async function callClaude(body,{config,key,fetchImpl,sleep=defaultSleep,o
   const booked=await onAttempt(body);
   let response,text;
   try{
-   response=await fetchImpl(config.apiUrl,{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':config.apiVersion},body:JSON.stringify(body)});
+   response=await fetchImpl(config.apiUrl,{method:'POST',redirect:'error',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':config.apiVersion},body:JSON.stringify(body)});
    text=await response.text();
   }catch(error){
    lastMessage=`网络错误: ${redact(error.message,key)}`;
@@ -144,7 +171,7 @@ export async function runPlayer({config:rawConfig,api,fetchImpl=globalThis.fetch
  need(typeof api==='function','缺少回合接口 api(endpoint, body)');
  need(typeof runId==='string'&&/^[a-zA-Z0-9_-]{1,80}$/.test(runId),'须给 runId（字母数字下划线连字符）');
  const outDir=path.resolve(cwd,config.outDir??'.tmp/ptai');
- const ledgerPath=path.resolve(cwd,config.ledgerPath??path.join(outDir,'ledger.jsonl'));
+ const ledgerPath=path.resolve(cwd,config.ledgerPath);
  const tracePath=path.join(outDir,runId,'trace.jsonl');
  await fs.mkdir(path.dirname(tracePath),{recursive:true});
  const trace=row=>fs.appendFile(tracePath,JSON.stringify({ts:now().toISOString(),...row})+'\n','utf8');
@@ -177,7 +204,7 @@ export async function runPlayer({config:rawConfig,api,fetchImpl=globalThis.fetch
  });
  const adjust=async(attempt,usd)=>{
   const delta=usd-attempt.ceiling;
-  await appendLedger(ledgerPath,{ts:now().toISOString(),month,runId,kind:'adjust',id:attempt.id,usd:delta});
+  await withLock(ledgerPath,()=>appendLedger(ledgerPath,{ts:now().toISOString(),month,runId,kind:'adjust',id:attempt.id,usd:delta}));
   sessionUsd+=delta;
  };
  const onResult=(attempt,{billed})=>billed===false?adjust(attempt,0):undefined;
@@ -254,7 +281,8 @@ export function httpApi(origin,{fetchImpl=globalThis.fetch,allowedHosts=[]}={}){
  const base=assertOrigin(origin,allowedHosts);
  return async(endpoint,body={})=>{
   need(ALLOWED_ENDPOINTS.includes(endpoint),`非回合接口: ${endpoint}`);
-  const response=await fetchImpl(`${base}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close'},body:JSON.stringify(body)});
+  const response=await fetchImpl(`${base}/${endpoint}`,{method:'POST',redirect:'error',headers:{'Content-Type':'application/json','Connection':'close'},body:JSON.stringify(body)});
+  need(!(response.status>=300&&response.status<400),`拒绝重定向 ${response.status}`);
   const data=await response.json();
   if(!response.ok||data.ok===false)throw new Error(data.error??`HTTP ${response.status}`);
   return data;
