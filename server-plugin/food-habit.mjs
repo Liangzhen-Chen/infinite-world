@@ -11,33 +11,36 @@ import {laborValue} from './market.mjs';
 import {coinRead,purse} from './money.mjs';
 import {placeSettlement,personHousehold} from './entity-view.mjs';
 
+// 一人的现金：读账本 purse 余额；主观视图读视图里本人账户（本户成员的钱算本户可见）。
+const memberCash=(d,engine,m,view=null)=>view?(view.self.accounts?.[purse(engine,m)]?.balance??(m===view.observer?view.self.coins??0:0)):coinRead(d,{point:'assets.cash',account:purse(engine,m),legacy:()=>d.get('state').npcs?.[m]?.coins??0});
 // 本聚落各户的现金（户内成员的 purse 余额之和），有名册人物在场的户才计。
 const householdCash=(d,engine,place)=>{
  const state=d.get('state'),out=[];
  for(const h of engine.world.households??[]){
   const live=h.members.filter(m=>state.npcs?.[m]?.location&&!['死亡','濒死','昏迷'].includes(state.npcs[m].status));
   if(!live.length||placeSettlement(engine,state,state.npcs[live[0]].location).value!==place)continue;
-  out.push(live.reduce((n,m)=>n+coinRead(d,{point:'assets.cash',account:purse(engine,m),legacy:()=>state.npcs[m]?.coins??0}),0));
+  out.push(live.reduce((n,m)=>n+memberCash(d,engine,m),0));
  }
  return out.sort((a,b)=>a-b);
 };
 export const affordableShare=(budgets,price,share)=>budgets.length?budgets.filter(c=>c*share>=price).length/budgets.length:0;
 
 // 返回 {rich, sources}：sources 与入参一一对应，每项多出 habit（0..1）与 luxury（布尔）。规则表缺 foodHabit 时全部按日常品。
-export function foodHabit(d,engine,owner,sources,{cash=0,view=null}={}){
+export function foodHabit(d,engine,owner,sources,{view=null}={}){
  const rule=engine.world.marketRules.foodHabit;
  if(!rule||!sources.length)return {rich:true,sources:sources.map(s=>({...s,habit:1,luxury:false}))};
  const state=d.get('state'),document=d.document??{state},location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
- const budgets=view?[cash]:d.memo?d.memo(engine,['food-habit-cash',place],()=>householdCash(d,engine,place)):householdCash(d,engine,place);
  const members=personHousehold(engine,state,owner).value?.members??[owner];
+ const home=members.reduce((n,m)=>n+memberCash(d,engine,m,view),0);// 户现金：p、奢侈判定、宽裕判定同一口径（成员 purse 之和）
+ const budgets=view?[home]:d.memo?d.memo(engine,['food-habit-cash',place],()=>householdCash(d,engine,place)):householdCash(d,engine,place);
  const income=members.reduce((n,id)=>n+laborValue(engine,document,{worker:id,observer:null}).daily,0);
- const rich=cash>=rule.richCashDays*income;
+ const rich=home>=rule.richCashDays*income;
  const sellers=new Map();
  for(const s of sources){const set=sellers.get(s.item)??new Set();set.add(s.seller);sellers.set(s.item,set);}
  return {rich,sources:sources.map(s=>{
   const affordable=affordableShare(budgets,s.unitPrice,rule.dailyFoodShare);
   const habit=affordable*Math.min(1,sellers.get(s.item).size/rule.habitualSellers);
   // 奢侈 = 聚落里不惯常（habit 低），或超出本户日常预算（单价 > 本户现金 × dailyFoodShare）。
-  return {...s,habit,luxury:habit<rule.luxuryBelow||s.unitPrice>cash*rule.dailyFoodShare};
+  return {...s,habit,luxury:habit<rule.luxuryBelow||s.unitPrice>home*rule.dailyFoodShare};
  })};
 }

@@ -72,7 +72,7 @@ const foodHabit=(d,engine,owner,sources,opts)=>registerHouseholdFoodHabit.fn?.(d
 // 只补日常补不满的缺口。惯常性按本户看得到的全部来源算（卖家数不受现金影响），再按现金筛。
 function accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now}){
  const seen=foodSources(d,engine,owner,{view}).filter(r=>r.at>=now&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0);
- const {rich,sources}=foodHabit(d,engine,owner,seen,{cash,view});
+ const {rich,sources}=foodHabit(d,engine,owner,seen,{view});
  return sources.map(r=>({...r,deferred:r.luxury&&!rich})).filter(r=>r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0));
 }
 function bagEntries(d,engine,state,holder,view){

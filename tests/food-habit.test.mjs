@@ -5,6 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
+import {purse as purseOf} from '../server-plugin/money.mjs';
 import {foodHabit} from '../server-plugin/food-habit.mjs';
 import {poorLuxuryShare} from '../tools/audit-food-habit.mjs';
 
@@ -13,7 +14,7 @@ import {poorLuxuryShare} from '../tools/audit-food-habit.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',home='bld_hw_qingdeng',item='item_honey';
 const SELLERS=['npc_hw_linsui','npc_hw_ayan','npc_hw_chenbai'];
-function fixture({sellers=1,basePrice=null,cash=20,rule={},bread=false,otherCash=0}={}){
+function fixture({sellers=1,basePrice=null,cash=20,rule={},bread=false,otherCash=0,bCash=0}={}){
  const w=structuredClone(world),ids=SELLERS.slice(0,sellers+(bread?1:0)),breadSeller=bread?ids.at(-1):null;
  delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
@@ -27,7 +28,7 @@ function fixture({sellers=1,basePrice=null,cash=20,rule={},bread=false,otherCash
  for(const n of w.npcs.filter(n=>[A,...ids].includes(n.id))){n.tier='full';n.schedule={default:[{start:0,end:1440,location:home,activity:'休息',services:ids.includes(n.id)?['trade']:[]}]};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'food-habit');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
- doc.state.npcs=Object.fromEntries([A,B,...ids].map(id=>[id,{...doc.state.npcs[id],coins:id===A?cash:ids.includes(id)?otherCash:0,inventory:id===A||id===B?{}:id===breadSeller?{item_bread:100}:{[item]:100},location:home,status:'正常',activity:'休息'}]));
+ doc.state.npcs=Object.fromEntries([A,B,...ids].map(id=>[id,{...doc.state.npcs[id],coins:id===A?cash:id===B?bCash:ids.includes(id)?otherCash:0,inventory:id===A||id===B?{}:id===breadSeller?{item_bread:100}:{[item]:100},location:home,status:'正常',activity:'休息'}]));
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:2+ids.length,granary:false,food:0,foodPerDay:0,woodPerDay:0}};
  doc.ledger=openLedger(e,doc);
  return {e,doc,d:e.primitiveDraft(doc)};
@@ -55,13 +56,25 @@ test('a household with cash far above its daily income treats the luxury like an
 });
 
 test('p is the share of local households whose cash budget covers the price; the subjective view reads only the own household',()=>{
- const src=[{item,seller:'x',unitPrice:9,quantity:1}],view={self:{location:home}};
+ const src=[{item,seller:'x',unitPrice:9,quantity:1}];
  const poor=fixture({sellers:1,cash:20,otherCash:0}),mixed=fixture({sellers:1,cash:20,otherCash:100000});
- const obj=f=>foodHabit(f.d,f.e,A,src,{cash:20}).sources[0].habit,sub=f=>foodHabit(f.d,f.e,A,src,{cash:20,view}).sources[0].habit;
+ const view=(coins)=>({observer:A,self:{location:home,coins,accounts:{}}});
+ const obj=f=>foodHabit(f.d,f.e,A,src).sources[0].habit,sub=(f,coins=20)=>foodHabit(f.d,f.e,A,src,{view:view(coins)}).sources[0].habit;
  assert.ok(obj(mixed)>obj(poor),'objective: a richer neighbour household raises the affordable share');
  assert.equal(sub(mixed),sub(poor),'subjective: other households are not read');
  assert.equal(sub(poor),0);// 本户预算 20 × 0.25 < 9
- assert.ok(foodHabit(poor.d,poor.e,A,src,{cash:100,view}).sources[0].habit>0);
+ assert.ok(sub(poor,100)>0);
+});
+
+test('a multi-member household pools its members cash for p, the luxury judgement and the subjective view alike',()=>{
+ // 22 + 22：单人现金 22×0.25=5.5 < 9（奢侈），合计 44×0.25=11 ≥ 9（日常）。
+ const f=fixture({sellers:1,cash:22,bCash:22});
+ const g=e=>e.d,src=[{item,seller:'x',unitPrice:9,quantity:1},{item,seller:'y',unitPrice:9,quantity:1}];
+ const one=fixture({sellers:1,cash:22});
+ const pooled=foodHabit(g(f),f.e,A,src).sources,single=foodHabit(g(one),one.e,A,src).sources;
+ assert.ok(single.every(s=>s.luxury)&&pooled.every(s=>!s.luxury),'objective path pools B into the household');
+ const view={observer:A,self:{location:home,coins:22,accounts:{[purseOf(f.e,B)]:{balance:22}}}};
+ assert.ok(foodHabit(g(f),f.e,A,src,{view}).sources.every(s=>!s.luxury),'subjective path pools visible member accounts');
 });
 
 test('household purchase planning with habit is deterministic',()=>{
