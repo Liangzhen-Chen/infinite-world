@@ -61,31 +61,38 @@ export function costCeiling(body,config){
 // 月度账本：只追加的 JSONL，一行一次 API 调用；从不改写、不截断历史。
 export function monthKey(date=new Date()){return date.toISOString().slice(0,7);}
 // 行只在锁内整行追加。末行若无换行结尾且解析失败，视为崩溃遗留的半行（其预留尚未完成，请求没有发出），忽略；
+// 下一次追加会先补换行并给新行打 afterPartial 标记，这样中间的半行只在紧跟标记行时被容忍；
 // 其余任何坏行都抛错（宁可停，不可漏记）。
 export async function monthSpend(ledgerPath,month){
  let text;
  try{text=await fs.readFile(ledgerPath,'utf8');}catch(error){if(error.code==='ENOENT')return 0;throw error;}
- const lines=text.split('\n'),partialTail=!text.endsWith('\n');
- let total=0;
+ const lines=text.split('"""+bn+"""'),partialTail=!text.endsWith('"""+bn+"""');
+ let total=0,badAt=null;
  for(const [i,line]of lines.entries()){
   if(!line.trim())continue;
   let row;
-  try{row=JSON.parse(line);}catch(error){if(partialTail&&i===lines.length-1)continue;throw new Error(`账本第 ${i+1} 行损坏，拒绝继续`);}
+  try{row=JSON.parse(line);}
+  catch(error){
+   if(partialTail&&i===lines.length-1)continue;
+   if(badAt!==null)throw new Error(`账本第 ${badAt+1} 行损坏，拒绝继续`);
+   badAt=i;continue;
+  }
+  if(badAt!==null){if(row.afterPartial!==true)throw new Error(`账本第 ${badAt+1} 行损坏，拒绝继续`);badAt=null;}
   if(row.month===month&&Number.isFinite(row.usd))total+=row.usd;
  }
+ if(badAt!==null)throw new Error(`账本第 ${badAt+1} 行损坏，拒绝继续`);
  return total;
 }
-// 同一账本的“读合计、检查、预留/修正”在文件锁内完成，并行多局不会越限。
-// 锁文件内容是本进程唯一令牌（pid+随机数+时间）：先写临时文件再 link 成锁（原子，已存在则 EEXIST）；
-// 释放时只删令牌匹配的锁。陈旧判定：持有者 pid 已不存在，或锁龄超过 staleMs；
-// 接管用原子 rename 把旧锁挪走（只有一个竞争者成功），挪走后核对令牌，若发现挪走的不是判定陈旧的那把就放回去。
-// Windows 上 EPERM/EBUSY/EACCES 常是短暂占用，按 EEXIST 同样重试。等待上限（waitMs）大于陈旧阈值。
+// 同一账本的“读合计、检查、预留/修正”在文件锁内完成。设计上同一账本同一时间只允许一个运行实例（多局串行）；
+// 锁只是防误并行的保险，不做自动接管：锁文件内容是 pid+令牌+时间，link 原子建立；
+// 持有者 pid 存活则等待至 waitMs 后报错；持有者 pid 不存在或锁内容不可解析则立即报错并提示人工确认后删除。
+// 释放只删令牌匹配的锁。EEXIST/EPERM/EBUSY/EACCES（Windows 上常是短暂占用）重试至上限。
 const pidAlive=pid=>{try{process.kill(pid,0);return true;}catch(error){return error.code==='EPERM';}};
 const TRANSIENT=new Set(['EEXIST','EPERM','EBUSY','EACCES']);
 async function readLock(lock){
  try{return JSON.parse(await fs.readFile(lock,'utf8'));}catch{return null;}
 }
-export async function withLock(file,fn,{sleep=defaultSleep,staleMs=60000,waitMs=staleMs+30000,link=fs.link,alive=pidAlive}={}){
+export async function withLock(file,fn,{sleep=defaultSleep,waitMs=30000,link=fs.link,alive=pidAlive}={}){
  await fs.mkdir(path.dirname(file),{recursive:true});
  const lock=file+'.lock',token=`${process.pid}-${randomUUID()}`,tmpFile=`${lock}.${token}.tmp`;
  await fs.writeFile(tmpFile,JSON.stringify({pid:process.pid,token,ts:Date.now()}));
@@ -95,28 +102,24 @@ export async function withLock(file,fn,{sleep=defaultSleep,staleMs=60000,waitMs=
    try{await link(tmpFile,lock);break;}
    catch(error){
     if(!TRANSIENT.has(error.code))throw error;
-    need(Date.now()<deadline,'账本锁等待超时');
-    const holder=await readLock(lock);
-    if(error.code==='EEXIST'&&(holder===null||!alive(holder.pid)||Date.now()-holder.ts>staleMs)){
-     const moved=`${lock}.stale.${token}`;
-     try{
-      await fs.rename(lock,moved);
-      const got=await readLock(moved);
-      if(holder!==null&&got?.token!==holder.token)try{await link(moved,lock);}catch{}
-      await fs.rm(moved,{force:true});
-     }catch{}
-     continue;
+    if(error.code==='EEXIST'){
+     const holder=await readLock(lock);
+     if(holder===null||!Number.isInteger(holder.pid)||!alive(holder.pid))
+      throw new Error(`账本锁已存在且持有者不可确认（${lock}；持有 pid ${holder?.pid??'未知'}；建立于 ${holder?.ts?new Date(holder.ts).toISOString():'未知'}）。不自动接管；确认没有运行中的试玩实例后请手动删除该锁文件`);
     }
+    if(Date.now()>=deadline)throw new Error(`账本锁等待超时（${lock}；最后错误码 ${error.code}）`);
     await sleep(10);
    }
   }
   try{return await fn();}
-  finally{const now=await readLock(lock);if(now?.token===token)await fs.rm(lock,{force:true});}
+  finally{const held=await readLock(lock);if(held?.token===token)await fs.rm(lock,{force:true});}
  }finally{await fs.rm(tmpFile,{force:true});}
 }
 export async function appendLedger(ledgerPath,row){
  await fs.mkdir(path.dirname(ledgerPath),{recursive:true});
- await fs.appendFile(ledgerPath,JSON.stringify(row)+'\n','utf8');
+ let prefix='';
+ try{const text=await fs.readFile(ledgerPath,'utf8');if(text&&!text.endsWith('\n')){prefix='\n';row={...row,afterPartial:true};}}catch(error){if(error.code!=='ENOENT')throw error;}
+ await fs.appendFile(ledgerPath,prefix+JSON.stringify(row)+'\n','utf8');
 }
 
 const defaultSleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));

@@ -234,26 +234,32 @@ test('ledgerPath 必填', ()=>{
  assert.throws(()=>validateConfig({...baseConfig(),ledgerPath:undefined}),/ledgerPath/);
 });
 
-test('账本锁：陈旧锁被接管、他人锁不被误删、EPERM 重试', async()=>{
+test('账本锁：活锁等待超时、死锁立即报错且不删、释放不删他人锁、EPERM 重试', async()=>{
  const dir=await tmp(),file=path.join(dir,'l.jsonl'),lock=file+'.lock';
- // 持有者 pid 已死：立即接管
- await fs.writeFile(lock,JSON.stringify({pid:2147483646,token:'dead',ts:Date.now()}));
- assert.equal(await withLock(file,async()=>'ok',{alive:()=>false}),'ok');
- await assert.rejects(fs.stat(lock));
- // pid 活着但锁龄超阈值：接管
- await fs.writeFile(lock,JSON.stringify({pid:process.pid,token:'old',ts:Date.now()-100000}));
- assert.equal(await withLock(file,async()=>'ok2',{alive:()=>true,staleMs:1000}),'ok2');
- // 他人新鲜锁：不接管、不删除，等待超时报错
- const other=JSON.stringify({pid:process.pid,token:'other',ts:Date.now()});
- await fs.writeFile(lock,other);
- await assert.rejects(withLock(file,async()=>'x',{alive:()=>true,staleMs:60000,waitMs:50}),/超时/);
- assert.equal(await fs.readFile(lock,'utf8'),other);
+ const live=JSON.stringify({pid:process.pid,token:'other',ts:Date.now()});
+ await fs.writeFile(lock,live);
+ await assert.rejects(withLock(file,async()=>'x',{alive:()=>true,waitMs:50}),/超时.*EEXIST/);
+ assert.equal(await fs.readFile(lock,'utf8'),live);
+ // 持有者 pid 不存在：立即报错、不删锁、提示含路径与 pid
+ const dead=JSON.stringify({pid:2147483646,token:'dead',ts:Date.now()-5000});
+ await fs.writeFile(lock,dead);
+ let ran=false;
+ await assert.rejects(withLock(file,async()=>{ran=true;},{alive:()=>false,waitMs:60000}),error=>{
+  assert.ok(error.message.includes(lock)&&error.message.includes('2147483646')&&error.message.includes('手动删除'));return true;});
+ assert.equal(ran,false);assert.equal(await fs.readFile(lock,'utf8'),dead);
+ // 锁内容不可解析：同样不接管
+ await fs.writeFile(lock,'not json');
+ await assert.rejects(withLock(file,async()=>{},{waitMs:60000}),/不自动接管/);
+ assert.equal(await fs.readFile(lock,'utf8'),'not json');
  // fn 执行期间锁被他人换掉：释放时不删别人的锁
- const swapped=JSON.stringify({pid:process.pid,token:'swapped',ts:Date.now()});
  await fs.rm(lock);
+ const swapped=JSON.stringify({pid:process.pid,token:'swapped',ts:Date.now()});
  await withLock(file,async()=>{await fs.writeFile(lock,swapped);});
  assert.equal(await fs.readFile(lock,'utf8'),swapped);
  await fs.rm(lock);
+ // 正常获取后释放
+ assert.equal(await withLock(file,async()=>'ok'),'ok');
+ await assert.rejects(fs.stat(lock));
  // EPERM/EBUSY 重试
  let n=0;
  const link=async(a,b)=>{if(n++<2){const e=new Error('busy');e.code=n===1?'EPERM':'EBUSY';throw e;}return fs.link(a,b);};
@@ -267,4 +273,14 @@ test('账本半行：无换行结尾的坏末行被忽略，其余坏行拒绝',
  assert.equal(await monthSpend(file,'2026-11'),1);
  await fs.writeFile(file,'garbage\n'+JSON.stringify({month:'2026-11',usd:1})+'\n');
  await assert.rejects(monthSpend(file,'2026-11'),/损坏/);
+});
+
+test('账本崩溃半行后追加：先补换行，合计正确', async()=>{
+ const dir=await tmp(),file=path.join(dir,'l.jsonl');
+ await fs.writeFile(file,JSON.stringify({month:'2026-11',usd:1})+'\n{"month":"2026-11","us');
+ const {appendLedger}=await import('../tools/ptai/driver.mjs');
+ await appendLedger(file,{month:'2026-11',usd:2});
+ assert.equal(await monthSpend(file,'2026-11'),3);
+ await appendLedger(file,{month:'2026-11',usd:4});
+ assert.equal(await monthSpend(file,'2026-11'),7);
 });

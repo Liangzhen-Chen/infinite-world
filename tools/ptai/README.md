@@ -7,3 +7,4 @@
 - 轨迹：`<outDir>/<runId>/trace.jsonl`（header 含种子、初态哈希、git HEAD、门禁 manifest 哈希、驱动哈希、模型；每回合含完整请求/响应、用量、花费、工具调用与结果）。
 - 账本：`ledgerPath` 只追加 JSONL，按 UTC 月累计；单局或当月上界将超限时在下一次调用前停止。
 - 本卡未联网、未运行；离线测试用假 fetch：`tests/ptai-driver.test.mjs`。
+- 同一账本同一时间只允许一个运行实例（多局串行）；账本锁不自动接管，遇到持有者已不存在的残留锁会报错并提示手动删除。
