@@ -168,3 +168,46 @@ export function deriveItemAttributes(world){
  }
  return world;
 }
+
+// D12 卡 A：材料属性（物理量）。类别行在 world/meta/mechanics/material-props.json（runtime world 的 materialProps），
+// 物品个别偏离写在 mechanics/items.json 的 props 行。不新造分类：类别键是现有标签或用途类别名（itemClasses）。
+// 取值：物品所属类别中按表头 precedence（从最具体到最一般）逐维取第一个写了该维的类别；物品自己的 props 覆盖类别值；
+// 多类别冲突取更具体者，不求平均；没有任何来源的维度返回 {known:false}，不给默认值。
+export const MATERIAL_DIMENSIONS=['moisture','edibleFraction','energyDensity','heatValue','charYield'];
+export function materialProps(engine,item){
+ const table=engine.world?.materialProps,def=engine.byId?.get(item),own=def?.props??{};
+ const member=new Set([...itemClasses(engine,item),...(def?.tags??[])]);
+ const chain=(table?.precedence??[]).filter(k=>member.has(k)&&table.classes?.[k]);
+ const out={};
+ for(const dim of MATERIAL_DIMENSIONS){
+  if(own[dim]!==undefined){out[dim]={known:true,value:own[dim],source:'item'};continue;}
+  const cls=chain.find(k=>table.classes[k][dim]!==undefined);
+  out[dim]=cls?{known:true,value:table.classes[cls][dim],source:cls}:{known:false};
+ }
+ return out;
+}
+// L1：属性表校验。表头 dimensions 声明每维的单位与范围（分数 0–1）；precedence 必须恰好列全部类别键；
+// 每个类别行与物品 props 行必须带 basis；类别键必须是已存在标签（物品标签、用途标签或用途类别名）。
+export function validateMaterialProps(world){
+ const t=world.materialProps,errors=[];
+ if(t===undefined)return errors;
+ const dims=t.dimensions??{},known=new Set([...(world.items??[]).flatMap(i=>i.tags??[]),...Object.keys(CLASSES),...Object.keys(useTags.tags??{})]);
+ for(const d of MATERIAL_DIMENSIONS){const h=dims[d];
+  if(!h||typeof h.unit!=='string'||!h.unit)errors.push(`材料属性表头缺单位：${d}`);
+  else if(!(Number.isFinite(h.min)&&Number.isFinite(h.max)&&h.min<=h.max))errors.push(`材料属性表头缺范围：${d}`);}
+ for(const d of Object.keys(dims))if(!MATERIAL_DIMENSIONS.includes(d))errors.push(`材料属性维度未登记：${d}`);
+ const check=(row,where)=>{
+  if(typeof row?.basis!=='string'||!row.basis.trim())errors.push(`材料属性缺 basis：${where}`);
+  for(const [k,v] of Object.entries(row??{})){
+   if(k==='basis')continue;
+   if(!MATERIAL_DIMENSIONS.includes(k)){errors.push(`材料属性维度未登记：${where}.${k}`);continue;}
+   const h=dims[k];if(!h)continue;
+   if(typeof v!=='number'||!Number.isFinite(v)||v<h.min||v>h.max)errors.push(`材料属性越界：${where}.${k}=${v}（${h.min}–${h.max} ${h.unit}）`);
+  }};
+ const keys=Object.keys(t.classes??{});
+ for(const k of keys){if(!known.has(k))errors.push(`材料属性类别不是已有标签：${k}`);check(t.classes[k],`classes.${k}`);}
+ const order=t.precedence??[];
+ if(!Array.isArray(order)||order.length!==new Set(order).size||order.length!==keys.length||keys.some(k=>!order.includes(k)))errors.push('材料属性 precedence 必须恰好列出全部类别键且不重复（从最具体到最一般）');
+ for(const i of world.items??[])if(i.props!==undefined)check(i.props,`items.${i.id}.props`);
+ return errors;
+}

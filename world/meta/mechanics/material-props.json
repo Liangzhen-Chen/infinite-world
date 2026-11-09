@@ -1,0 +1,12 @@
+{
+  "note": "D12 卡 A：材料属性表，按材料类别写物理量，不针对任何物品。类别键必须是现有标签或用途类别名；物品个别偏离写在 mechanics/items.json 的 props 行（须带 basis）。取值：物品所属类别中按 precedence 逐维取第一个写了该维的类别，物品 props 覆盖；缺项为未知，不给默认值。数值由卡 D 经审批管线写入，本卡为空表。",
+  "dimensions": {
+    "moisture": {"unit": "质量分数（水占鲜重）", "min": 0, "max": 1},
+    "edibleFraction": {"unit": "质量分数（可食部分占整重）", "min": 0, "max": 1},
+    "energyDensity": {"unit": "饱腹/kg 干物质", "min": 0, "max": 100000},
+    "heatValue": {"unit": "MJ/kg 干物质", "min": 0, "max": 60},
+    "charYield": {"unit": "质量分数（炭占投入干重）", "min": 0, "max": 1}
+  },
+  "precedence": [],
+  "classes": {}
+}
