@@ -519,5 +519,140 @@
    },
    "basis": "干果：只覆盖含水率，其余用类别 fruit。【数值凭记忆写入，待 L2 核对】"
   }
+ },
+ "item_rapeseed_oil": {
+  "tags": [
+   "edible_fat"
+  ]
+ },
+ "item_pork_fat": {
+  "tags": [
+   "edible_fat"
+  ]
+ },
+ "item_butter": {
+  "tags": [
+   "edible_fat"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "无盐黄油",
+     "citation": "USDA FoodData Central 无盐黄油（butter, without salt）：717 kcal/100g，含水约 17.9%",
+     "moistureFraction": 0.179,
+     "kcalPer100gWet": 717
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "黄油含水约 18%，明显高于油脂类（近 0），用自己的出处覆盖类别值；单餐上限仍取油脂类"
+   },
+   "basis": "黄油：含水与能量取 USDA 无盐黄油。【数值凭记忆写入，待 L2 核对】"
+  }
+ },
+ "item_rendered_cooking_fat": {
+  "tags": [
+   "edible_fat"
+  ]
+ },
+ "item_garlic_butter": {
+  "tags": [
+   "edible_fat"
+  ]
+ },
+ "item_honey": {
+  "tags": [
+   "sweetener"
+  ]
+ },
+ "item_fruit_paste": {
+  "tags": [
+   "sweetener"
+  ]
+ },
+ "item_plum_honey_spread": {
+  "tags": [
+   "sweetener"
+  ]
+ },
+ "item_dill": {
+  "tags": [
+   "fresh_herb"
+  ]
+ },
+ "item_mustard_seed": {
+  "tags": [
+   "spice_seed"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "黄芥籽",
+     "citation": "USDA FoodData Central 黄芥籽（mustard seed, yellow）：469 kcal/100g，含水约 5.9%；家用量：1 汤匙约 10 g",
+     "moistureFraction": 0.059,
+     "kcalPer100gWet": 469
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，用自己的出处"
+   },
+   "basis": "成员偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
+ },
+ "item_poppy_seed": {
+  "tags": [
+   "spice_seed"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "罂粟籽",
+     "citation": "USDA FoodData Central 罂粟籽（poppy seed）：525 kcal/100g，含水约 6.0%；家用量：1 汤匙约 8.8 g",
+     "moistureFraction": 0.06,
+     "kcalPer100gWet": 525
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，用自己的出处"
+   },
+   "basis": "成员偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
+ },
+ "item_caraway_seed": {
+  "tags": [
+   "spice_seed"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "香芹籽",
+     "citation": "USDA FoodData Central 香芹籽（caraway seed）：333 kcal/100g，含水约 9.9%；家用量：1 汤匙约 6.3 g",
+     "moistureFraction": 0.099,
+     "kcalPer100gWet": 333
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，用自己的出处"
+   },
+   "basis": "成员偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
+ },
+ "item_cream": {
+  "tags": [
+   "cream"
+  ]
+ },
+ "item_hard_cheese": {
+  "tags": [
+   "cheese"
+  ]
+ },
+ "item_mustard_relish": {
+  "tags": [
+   "condiment_sauce"
+  ]
  }
 }

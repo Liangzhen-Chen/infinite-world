@@ -26,9 +26,23 @@
    "unit": "质量分数（炭占投入干重）",
    "min": 0,
    "max": 1
+  },
+  "mealCap": {
+   "unit": "g/人·餐（单餐可食量上限，鲜重）",
+   "min": 0,
+   "max": 2000
   }
  },
  "precedence": [
+  "edible_fat",
+  "sweetener",
+  "vinegar",
+  "salt",
+  "fresh_herb",
+  "spice_seed",
+  "cream",
+  "cheese",
+  "condiment_sauce",
   "timber",
   "wood",
   "carbon",
@@ -357,13 +371,185 @@
     "reason": "成员为牛乳、羊乳，逐项推算后取平均；偏差超阈值的成员单独覆盖，类别值只供未单列的鲜兽乳"
    },
    "basis": "鲜乳。【数值凭记忆写入，待 L2 核对】"
+  },
+  "edible_fat": {
+   "sources": [
+    {
+     "name": "菜籽油",
+     "citation": "USDA FoodData Central 菜籽油（canola oil）；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：油脂类 1 汤匙 = 14 g",
+     "moistureFraction": 0,
+     "kcalPer100gWet": 884,
+     "mealGrams": 14
+    },
+    {
+     "name": "猪脂",
+     "citation": "USDA FoodData Central 猪脂（lard）；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：油脂类 1 汤匙 = 14 g",
+     "moistureFraction": 0,
+     "kcalPer100gWet": 902,
+     "mealGrams": 14
+    }
+   ],
+   "selection": {
+    "method": "mean",
+    "reason": "世界里的食用油脂为植物油与动物脂（板脂、熟脂），逐项取平均；黄油含水明显更高，在物品行覆盖"
+   },
+   "basis": "食用油脂（Codex 食品分类 02 油脂类）：近纯脂肪，能量约 880–900 kcal/100g，含水近 0。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（油脂类 1 汤匙 14 g）：油脂是烹调与佐餐用，一餐的食用量以汤匙计，不能靠它补满一餐的能量缺口。【数值凭记忆写入，待 L2 核对】"
+  },
+  "sweetener": {
+   "sources": [
+    {
+     "name": "蜂蜜",
+     "citation": "USDA FoodData Central 蜂蜜；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蜂蜜、果酱类 1 汤匙 = 21 g",
+     "moistureFraction": 0.171,
+     "kcalPer100gWet": 304,
+     "mealGrams": 21
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "世界里的甜味佐餐品只有蜂蜜；蜜煮果酱等蜜制品按同一类上限（果酱类与蜂蜜同属一个参照食用量类别），其能量由配方投入推出"
+   },
+   "basis": "甜味佐餐品（蜂蜜、果酱、蜜制酱）。蜂蜜含水约 17%，能量约 304 kcal/100g。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（蜂蜜、果酱类 1 汤匙 21 g）。【数值凭记忆写入，待 L2 核对】"
+  },
+  "vinegar": {
+   "sources": [
+    {
+     "name": "苹果醋",
+     "citation": "USDA FoodData Central 苹果醋（vinegar, cider）；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：醋类 1 汤匙 = 15 g",
+     "moistureFraction": 0.939,
+     "kcalPer100gWet": 21,
+     "mealGrams": 15
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "世界里的食醋只有果醋（酸果压汁发酵），以苹果醋为代表"
+   },
+   "basis": "食醋：含水约 94%，能量约 21 kcal/100g，单瓶（50 g）只有约半个饱腹。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（醋类 1 汤匙 15 g）。【数值凭记忆写入，待 L2 核对】"
+  },
+  "salt": {
+   "sources": [
+    {
+     "name": "食盐",
+     "citation": "USDA FoodData Central 食盐（salt, table）：能量 0，含水约 0.2%",
+     "moistureFraction": 0.002,
+     "kcalPer100gWet": 0
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "世界里的盐是食盐（粗盐小包）"
+   },
+   "basis": "食盐：无能量，所以不能当口粮（饱腹为 0），不需要再写单餐上限。【数值凭记忆写入，待 L2 核对】"
+  },
+  "fresh_herb": {
+   "sources": [
+    {
+     "name": "莳萝（鲜）",
+     "citation": "USDA FoodData Central 莳萝叶（dill weed, fresh）：含水约 86%，43 kcal/100g；家用量：1 杯整枝约 9 g",
+     "moistureFraction": 0.859,
+     "kcalPer100gWet": 43,
+     "mealGrams": 9
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "世界里的鲜香草只有莳萝"
+   },
+   "basis": "鲜香草（USDA 食物类别 Spices and Herbs）：含水高、能量低，只作香味。单餐可食量上限取 USDA 家用量（1 杯整枝约 9 g）。【数值凭记忆写入，待 L2 核对】"
+  },
+  "spice_seed": {
+   "sources": [
+    {
+     "name": "黄芥籽",
+     "citation": "USDA FoodData Central 黄芥籽（mustard seed, yellow）：469 kcal/100g，含水约 5.9%；家用量：1 汤匙约 10 g",
+     "moistureFraction": 0.059,
+     "kcalPer100gWet": 469,
+     "mealGrams": 10
+    },
+    {
+     "name": "罂粟籽",
+     "citation": "USDA FoodData Central 罂粟籽（poppy seed）：525 kcal/100g，含水约 6.0%；家用量：1 汤匙约 8.8 g",
+     "moistureFraction": 0.06,
+     "kcalPer100gWet": 525,
+     "mealGrams": 8.8
+    },
+    {
+     "name": "香芹籽",
+     "citation": "USDA FoodData Central 香芹籽（caraway seed）：333 kcal/100g，含水约 9.9%；家用量：1 汤匙约 6.3 g",
+     "moistureFraction": 0.099,
+     "kcalPer100gWet": 333,
+     "mealGrams": 6.3
+    }
+   ],
+   "selection": {
+    "method": "mean",
+    "reason": "世界里的香料籽为黄芥籽、罂粟籽、香芹籽，逐项取平均；三者干基能量都偏离平均超过阈值，各在物品行覆盖"
+   },
+   "basis": "香料籽（USDA 食物类别 Spices and Herbs）：含水约 6–10%，能量不低，但一餐只用一撮。单餐可食量上限取 USDA 家用量（1 汤匙，约 6–10 g），三者取平均。【数值凭记忆写入，待 L2 核对】"
+  },
+  "cream": {
+   "sources": [
+    {
+     "name": "稠乳（高脂奶油）",
+     "citation": "USDA FoodData Central 高脂奶油（cream, fluid, heavy whipping）：340 kcal/100g，含水约 57.7%；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：奶油类 1 汤匙 = 15 g",
+     "moistureFraction": 0.577,
+     "kcalPer100gWet": 340,
+     "mealGrams": 15
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "世界里的稠乳是鲜乳上层稠乳，以高脂奶油为代表"
+   },
+   "basis": "奶油（Codex 食品分类 01.4）：属乳制品，按真实能量入表（取代统一密度兜底）。稠乳是涂抹、调汤的佐餐用法，一餐的食用量以汤匙计，单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，奶油类 1 汤匙 15 g）。【数值凭记忆写入，待 L2 核对】"
+  },
+  "cheese": {
+   "sources": [
+    {
+     "name": "硬乳酪（切达）",
+     "citation": "USDA FoodData Central 切达乳酪（cheese, cheddar）：403 kcal/100g，含水约 37.1%",
+     "moistureFraction": 0.371,
+     "kcalPer100gWet": 403
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "世界里的熟成硬乳酪以切达为代表"
+   },
+   "basis": "硬乳酪（Codex 食品分类 01.6）：按真实能量入表（取代统一密度兜底）；乳酪可以当一餐的蛋白与脂肪来源，本类不写单餐上限。【数值凭记忆写入，待 L2 核对】"
+  },
+  "condiment_sauce": {
+   "sources": [
+    {
+     "name": "调味酱",
+     "citation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蘸酱、调味酱、佐料类 1 汤匙 = 15 g",
+     "mealGrams": 15
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "调味酱（芥醋酱之类）只用单餐上限；其能量由配方投入推出，本类不写能量"
+   },
+   "basis": "调味酱（Codex 食品分类 12.6 酱汁与类似产品）：用量以汤匙计。只写单餐可食量上限，取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（酱类 1 汤匙 15 g）。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "kcalPerSatiety": 24,
  "kcalPerSatietyBasis": "calibrate（标定，不是事实），pending 待李白标定：现行 balance/crafting nutrition.densityPerKg.grain=150 饱腹/kg 鲜重，对应谷物鲜重约 3.4–3.9 kcal/g（USDA FoodData Central 小麦 3.27、燕麦 3.89、黑麦粉 3.25 kcal/g，待 L2 核对），取约 3.6 kcal/g，3600÷150=24。",
  "memberDeviationThreshold": 0.05,
  "memberDeviationBasis": "5% 为李白 2026-11-09 13:1x 所定默认阈值（calibrate，pending）；成员与类别代表值比较三项：干物质比例（1−含水）、干基能量、鲜重能量，任一相对偏差超过阈值，该成员须单独写覆盖行并带自己的出处。含水用干物质比例比较，因为含水对鲜重的影响经 1−含水 起作用。",
+ "mealsPerDay": 3,
+ "mealsPerDayBasis": "每人每日三餐（早、午、晚），中国居民膳食指南（2022）：一日三餐、定时定量；用来把单餐可食量上限（mealCap，g/人·餐）换成一段时间内的总量：总量 = 人数 × 天数 × mealsPerDay × mealCap。calibrate（标定，不是事实），pending 待李白标定。",
  "memberItems": {
+  "edible_fat": {
+   "菜籽油": "item_rapeseed_oil",
+   "猪脂": "item_pork_fat"
+  },
+  "spice_seed": {
+   "黄芥籽": "item_mustard_seed",
+   "罂粟籽": "item_poppy_seed",
+   "香芹籽": "item_caraway_seed"
+  },
   "nut": {
    "榛仁": "item_hazelnut",
    "核桃仁": "item_walnut"
