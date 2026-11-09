@@ -103,22 +103,19 @@ test('shared-source read is reused within one revision and dropped by a state wr
  assert.ok(sum(after)<=sellable({...f,d:plain()}));
 });
 
-test('a multi-person household takes one share, not one per member, so no stock is left idle by duplicate slots',()=>{
+test('a multi-person household takes one share, not one per member with cash',()=>{
+ // Both members of the two-person household hold cash. Before the fix each moneyed member took its own slot weighted by the
+ // whole household need, so the household's buyer was diluted by its own relative. Now the household has one slot: the
+ // buyer's part is the same whether or not the second member has cash, and the second member reads none of it.
  const groups=[[shopSeller],['npc_hw_chenbai','npc_hw_fangqin'],['npc_hw_xuling'],['npc_hw_wushuo']];
- const setup=f=>{f.document.state.npcs.npc_hw_fangqin.inventory={};f.document.state.npcs.npc_hw_fangqin.location=f.document.state.npcs[shopSeller].location;return f;};
- const f=setup(fixture({seller:shopSeller,groups}));
- const available=sellable(f);
- const need=id=>{const r=householdResources(f.d,f.engine,id,{marketSubstitution:false});return r.shortfall.satiety+r.rows.reduce((n,x)=>n+x.food*(f.engine.byId.get(x.item)?.nutrition?.satiety??0),0);};
- const reps=buyers;   // one member per buyer household; chenbai stands for the two-person household
- // Each household's own demand cap: what it buys when it is the only buyer (the other buyer households hold no cash).
- const alone=reps.map(id=>{const g=setup(fixture({seller:shopSeller,groups}));for(const o of reps)if(o!==id)g.document.state.npcs[o].coins=0;return credited(g,id);});
- // Shares are keyed by household id (the fixture registers group i as house_share_fixture_i), as the production allocation is, so ties break the same way.
- const hh=i=>`house_share_fixture_${i+1}`,share=shareByNeed(available,reps.map((id,i)=>({id:hh(i),need:need(id)})));
- const got=reps.map(id=>credited(f,id));
- assert.ok(available>0&&got.some(n=>n>0));
- assert.equal(credited(f,'npc_hw_fangqin'),got[0],'both members of a household read the same household part');
- // The two-person household competes with its household need once; each household gets min(own demand, its share).
- reps.forEach((id,i)=>assert.equal(got[i],Math.min(alone[i],share.get(hh(i))),`${id}: credited ${got[i]}, alone ${alone[i]}, share ${share.get(hh(i))}`));
+ const make=fangqinCoins=>{const f=fixture({seller:shopSeller,groups}),n=f.document.state.npcs;
+  n.npc_hw_fangqin.inventory={};n.npc_hw_fangqin.location=n[shopSeller].location;n.npc_hw_fangqin.coins=fangqinCoins;return f;};
+ const both=make(100),one=make(0);
+ const parts=f=>buyers.map(id=>credited(f,id));
+ assert.ok(parts(both).some(n=>n>0)&&credited(both,'npc_hw_chenbai')>0,'the household buyer is really credited');
+ assert.deepEqual(parts(both),parts(one),'a second moneyed member does not change any household part');
+ assert.equal(credited(both,'npc_hw_fangqin'),0,'only the household buyer (first member with cash) reads the share');
+ assert.ok(sum(parts(both))<=sellable(both));
 });
 
 test('cash is a personal purse: a household whose first member is penniless still buys through its member with cash, once',()=>{
