@@ -1574,6 +1574,8 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 待合入队列：t-metab 2c4e6ad2（含测试修正）、t-mprod 4dff5631、t-memo 6488ad12（性能存疑，待 m2-2 耗时对照）、t-ptai 055105ec（工具，不影响世界）。m2-2 全量结束后，按结果组下一轮合并候选。
 
 ### ★ 压缩恢复入口（11-09 04:20 写，压缩后先读本节）
+- 07:1x t-rscope2 60a28ba6（rs2-2，hash 3dad35d8…）两轮 approve（r1 …070515Z-2918540、r2 …070743Z-2919614）。food-sources-memo 根因：夹具开账本后卖家存量读账本持货（stock.mjs:301-306），旧字段 d.set 不改账本；改用 changeItems 正式持货写入清空（重开账本的做法已打回）。云测：food-sources-memo 2/0、input-plan-read-scope 1/0、household-food-sources-traders 3/0、labor-household-read-scope 10/0。t-rscope2 待并入下一候选（m2-3 内的 89fa891d 版 food-sources-memo 仍会失败，属已知，由 t-rscope2 修）。
+- m2-3 巡查（服务器 15:17:58）：137 字节、1/529：farm-pests-harvest 1/0 2508s（b1m-1 2794s、m2-2 超时）。清理 rs2-1（继任 rs2-2）、pf-3（继任 m2-3），证据 F:/dnd-tmp/server-cleanup-1109-rs21/，磁盘 93%→89%。
 - 06:4x t-rscope2 两轮 approve（r1 …063443Z-2898766，r2 …063738Z-2900004；两轮均核 PatchCursor 写时复制，report_maintenance 预演不改原 state，m2-3 不受影响）。rs2-1 云测：traders 3/0、labor-market 16/0、credit 6/0、building-maintenance 3/1（基线同败）；失败三处：①food-sources-memo #1 清零后仍 4→4——该测试第二次失败（原 100→10、主会话 89fa891d 改清零），按规则停止换法，先查根因（卖家存量来源是账本持货还是旧缓存真 bug），已交实现者查文件:行；m2-3 含 89fa891d，此测将同样失败，属已知。②labor-household-read-scope #9 命中 2918 vs 2918：laborCandidates 自带作用域，对照组也在作用域内，测试设计错误。③input-plan-read-scope 夹具未产生筹料候选。
 - m2-3 巡查（服务器 14:58:35→14:59:05）：72 字节、0/529、首批 6 个重文件在跑 34–35 分钟，30 秒 CPU 各增约 32–35 秒，磁盘 91%。
 - 06:3x m2-3 巡查（服务器 14:28）：72 字节、0/529、首批 6 个重文件在跑，30 秒 CPU 各增约 33 秒（117–120%），负载 7–8。每游戏日耗时：m2-3 目录被全量锁住，prof-day 需等全量结束后在 m2-3 上跑，对比基线 4.96 / pf-3 5.43。
