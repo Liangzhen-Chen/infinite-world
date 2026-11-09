@@ -66,8 +66,9 @@ export function reviewRequest(entry,draft,context){
   {role:'user',content:JSON.stringify({entry:{id:entry.id,kind:entry.kind,row:entry.row},context})}]};
 }
 export function extractReview(response){
+ let review;
  try{
-  const review=parseModelJSON(response);
+  review=parseModelJSON(response);
   assert.ok(Array.isArray(review?.contradictions),'Missing contradictions array');
   for(const issue of review.contradictions){
    assert.ok(['hard','soft','style'].includes(issue.severity));
