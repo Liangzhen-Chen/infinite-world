@@ -119,7 +119,7 @@
    ],
    "selection": {
     "method": "single",
-    "reason": "世界里的蘑菇只有栽培菇（干栽培蘑菇片），取白蘑菇一个出处；鲜香菇不是世界成员，不入平均"
+    "reason": "世界里的蘑菇只有栽培菇，取白蘑菇一个出处；鲜香菇不是世界成员，不入平均"
    },
    "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【数值凭记忆写入，待 L2 核对】"
   },
@@ -129,20 +129,18 @@
      "name": "榛仁",
      "citation": "USDA FoodData Central 榛仁生",
      "moistureFraction": 0.047,
-     "kcalPer100gWet": 628,
-     "item": "item_hazelnut"
+     "kcalPer100gWet": 628
     },
     {
      "name": "核桃仁",
      "citation": "USDA FoodData Central 核桃仁生",
      "moistureFraction": 0.041,
-     "kcalPer100gWet": 654,
-     "item": "item_walnut"
+     "kcalPer100gWet": 654
     }
    ],
    "selection": {
     "method": "mean",
-    "reason": "成员为榛仁、核桃仁，逐项推算后取平均"
+    "reason": "世界里只有榛仁与核桃仁两种去壳坚果仁，逐项取平均"
    },
    "basis": "去壳坚果仁。【数值凭记忆写入，待 L2 核对】"
   },
@@ -153,29 +151,26 @@
      "citation": "USDA FoodData Central 苹果带皮生",
      "moistureFraction": 0.856,
      "kcalPer100gWet": 52,
-     "refuseFraction": 0.1,
-     "item": "item_fresh_apple"
+     "refuseFraction": 0.1
     },
     {
      "name": "梨",
      "citation": "USDA FoodData Central 梨生",
      "moistureFraction": 0.837,
      "kcalPer100gWet": 57,
-     "refuseFraction": 0.1,
-     "item": "item_pear"
+     "refuseFraction": 0.1
     },
     {
      "name": "李",
      "citation": "USDA FoodData Central 李生",
      "moistureFraction": 0.872,
      "kcalPer100gWet": 46,
-     "refuseFraction": 0.06,
-     "item": "item_plum"
+     "refuseFraction": 0.06
     }
    ],
    "selection": {
     "method": "mean",
-    "reason": "成员为苹果、梨、李，逐项推算后取平均；偏差超阈值的成员（梨、李）单独覆盖"
+    "reason": "世界里的鲜果为苹果、梨、李，逐项取平均"
    },
    "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。【数值凭记忆写入，待 L2 核对】"
   },
@@ -185,48 +180,42 @@
      "name": "甘蓝",
      "citation": "USDA FoodData Central 甘蓝生",
      "moistureFraction": 0.922,
-     "kcalPer100gWet": 25,
-     "item": "item_cabbage"
+     "kcalPer100gWet": 25
     },
     {
      "name": "胡萝卜",
      "citation": "USDA FoodData Central 胡萝卜生",
      "moistureFraction": 0.883,
-     "kcalPer100gWet": 41,
-     "item": "item_carrot"
+     "kcalPer100gWet": 41
     },
     {
      "name": "芜菁",
      "citation": "USDA FoodData Central 芜菁生",
      "moistureFraction": 0.919,
-     "kcalPer100gWet": 28,
-     "item": "item_turnip"
+     "kcalPer100gWet": 28
     },
     {
      "name": "红甜菜",
      "citation": "USDA FoodData Central 红甜菜生",
      "moistureFraction": 0.876,
-     "kcalPer100gWet": 43,
-     "item": "item_beet"
+     "kcalPer100gWet": 43
     },
     {
      "name": "洋葱",
      "citation": "USDA FoodData Central 洋葱生",
      "moistureFraction": 0.891,
-     "kcalPer100gWet": 40,
-     "item": "item_onion"
+     "kcalPer100gWet": 40
     },
     {
      "name": "黄瓜",
      "citation": "USDA FoodData Central 黄瓜带皮生",
      "moistureFraction": 0.952,
-     "kcalPer100gWet": 15,
-     "item": "item_cucumber"
+     "kcalPer100gWet": 15
     }
    ],
    "selection": {
     "method": "mean",
-    "reason": "成员为甘蓝、胡萝卜、芜菁、红甜菜、洋葱、黄瓜，逐项推算后取平均；各成员含水不同，偏差超阈值者都单独覆盖，类别值只供未单列的蔬菜；蒜、韭葱、欧防风本来就单列"
+    "reason": "类别内六种代表蔬菜逐项取平均；含水明显偏离者（蒜、韭葱、欧防风）在物品行覆盖"
    },
    "basis": "鲜蔬与块根。【数值凭记忆写入，待 L2 核对】"
   },
@@ -236,27 +225,24 @@
      "name": "扁豆",
      "citation": "USDA FoodData Central 扁豆干生",
      "moistureFraction": 0.083,
-     "kcalPer100gWet": 352,
-     "item": "item_lentil"
+     "kcalPer100gWet": 352
     },
     {
      "name": "干豌豆",
      "citation": "USDA FoodData Central 干豌豆（劈）生",
      "moistureFraction": 0.113,
-     "kcalPer100gWet": 341,
-     "item": "item_dry_peas"
+     "kcalPer100gWet": 341
     },
     {
      "name": "蚕豆",
      "citation": "USDA FoodData Central 蚕豆干生",
      "moistureFraction": 0.11,
-     "kcalPer100gWet": 341,
-     "item": "item_broad_bean"
+     "kcalPer100gWet": 341
     }
    ],
    "selection": {
     "method": "mean",
-    "reason": "成员为扁豆、干豌豆、蚕豆，逐项推算后取平均"
+    "reason": "世界里的干豆为扁豆、干豌豆、蚕豆，逐项取平均（Codex Stan 171-1989 豆类含水上限 15%，均在其内）"
    },
    "basis": "干豆。【数值凭记忆写入，待 L2 核对】"
   },
@@ -266,34 +252,30 @@
      "name": "硬红冬小麦",
      "citation": "USDA FoodData Central 硬红冬小麦生",
      "moistureFraction": 0.131,
-     "kcalPer100gWet": 327,
-     "item": "item_wheat_grain"
+     "kcalPer100gWet": 327
     },
     {
      "name": "黑麦粉",
      "citation": "USDA FoodData Central 黑麦粉（深色）",
      "moistureFraction": 0.11,
-     "kcalPer100gWet": 325,
-     "item": "item_rye_flour"
+     "kcalPer100gWet": 325
     },
     {
      "name": "燕麦",
      "citation": "USDA FoodData Central 燕麦生",
      "moistureFraction": 0.082,
-     "kcalPer100gWet": 389,
-     "item": "item_oats"
+     "kcalPer100gWet": 389
     },
     {
      "name": "珍珠大麦",
      "citation": "USDA FoodData Central 珍珠大麦生",
      "moistureFraction": 0.094,
-     "kcalPer100gWet": 352,
-     "item": "item_pearl_barley"
+     "kcalPer100gWet": 352
     }
    ],
    "selection": {
     "method": "mean",
-    "reason": "成员为小麦、黑麦粉、燕麦、大麦，逐项推算后取平均；偏差超阈值的成员（小麦、黑麦粉、燕麦）单独覆盖"
+    "reason": "世界里的谷物与谷粉为小麦、黑麦、燕麦、大麦，逐项取平均；已脱壳或磨粉的状态，带壳者在物品行覆盖可食部分"
    },
    "basis": "谷物与谷粉。【数值凭记忆写入，待 L2 核对】"
   },
@@ -315,13 +297,12 @@
      "name": "羊腿瘦肥混合",
      "citation": "USDA FoodData Central 羊腿瘦肥混合生（凭记忆约 217 kcal、含水约 67%）",
      "moistureFraction": 0.67,
-     "kcalPer100gWet": 217,
-     "item": "item_mutton"
+     "kcalPer100gWet": 217
     }
    ],
    "selection": {
     "method": "mean",
-    "reason": "混合肉类别：成员为猪里脊、牛肉末、羊腿（肉种未限定），逐项推算后取平均；有对应物品且偏差超阈值的成员（羊肉）单独覆盖"
+    "reason": "混合肉类别，猪、牛、羊等肉种未限定，取三种代表肉的平均组成"
    },
    "basis": "家畜生肉（瘦肥混合）。【数值凭记忆写入，待 L2 核对】"
   },
@@ -331,13 +312,12 @@
      "name": "鲤",
      "citation": "USDA FoodData Central 鲤生",
      "moistureFraction": 0.761,
-     "kcalPer100gWet": 127,
-     "item": "item_fish"
+     "kcalPer100gWet": 127
     }
    ],
    "selection": {
     "method": "single",
-    "reason": "世界里的鱼是淡水鱼（剖净鲜鱼），取鲤一个出处；鳕是海鱼，不是世界成员，不入平均"
+    "reason": "世界里的鱼是淡水鱼，取鲤一个出处；鳕是海鱼，不是世界成员，不入平均"
    },
    "basis": "淡水鱼鲜肉；腌制品的营养由配方按投入守恒派生，不读本类别值。【数值凭记忆写入，待 L2 核对】"
   },
@@ -348,13 +328,12 @@
      "citation": "USDA FoodData Central 鸡全蛋生（refuse 为蛋壳）",
      "moistureFraction": 0.762,
      "kcalPer100gWet": 143,
-     "refuseFraction": 0.12,
-     "item": "item_hen_egg"
+     "refuseFraction": 0.12
     }
    ],
    "selection": {
     "method": "single",
-    "reason": "禽蛋以鸡蛋为代表，成员只有这一个出处"
+    "reason": "禽蛋以鸡蛋为代表"
    },
    "basis": "禽蛋，按可食内容计。蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费本类别值。【数值凭记忆写入，待 L2 核对】"
   },
@@ -364,20 +343,18 @@
      "name": "牛乳",
      "citation": "USDA FoodData Central 全脂牛乳",
      "moistureFraction": 0.877,
-     "kcalPer100gWet": 61,
-     "item": "item_milk"
+     "kcalPer100gWet": 61
     },
     {
      "name": "羊乳",
      "citation": "USDA FoodData Central 羊乳",
      "moistureFraction": 0.87,
-     "kcalPer100gWet": 69,
-     "item": "item_goat_milk"
+     "kcalPer100gWet": 69
     }
    ],
    "selection": {
     "method": "mean",
-    "reason": "成员为牛乳、羊乳，逐项推算后取平均；偏差超阈值的成员（牛乳、羊乳）单独覆盖，类别值只供未单列的鲜兽乳"
+    "reason": "成员为牛乳、羊乳，逐项推算后取平均；偏差超阈值的成员单独覆盖，类别值只供未单列的鲜兽乳"
    },
    "basis": "鲜乳。【数值凭记忆写入，待 L2 核对】"
   }
@@ -385,5 +362,45 @@
  "kcalPerSatiety": 24,
  "kcalPerSatietyBasis": "calibrate（标定，不是事实），pending 待李白标定：现行 balance/crafting nutrition.densityPerKg.grain=150 饱腹/kg 鲜重，对应谷物鲜重约 3.4–3.9 kcal/g（USDA FoodData Central 小麦 3.27、燕麦 3.89、黑麦粉 3.25 kcal/g，待 L2 核对），取约 3.6 kcal/g，3600÷150=24。",
  "memberDeviationThreshold": 0.05,
- "memberDeviationBasis": "5% 为李白 2026-11-09 13:1x 所定默认阈值（calibrate，pending）；成员与类别代表值比较三项：干物质比例（1−含水）、干基能量、鲜重能量，任一相对偏差超过阈值，该成员须单独写覆盖行并带自己的出处。含水用干物质比例比较，因为含水对鲜重的影响经 1−含水 起作用。"
+ "memberDeviationBasis": "5% 为李白 2026-11-09 13:1x 所定默认阈值（calibrate，pending）；成员与类别代表值比较三项：干物质比例（1−含水）、干基能量、鲜重能量，任一相对偏差超过阈值，该成员须单独写覆盖行并带自己的出处。含水用干物质比例比较，因为含水对鲜重的影响经 1−含水 起作用。",
+ "memberItems": {
+  "nut": {
+   "榛仁": "item_hazelnut",
+   "核桃仁": "item_walnut"
+  },
+  "fruit": {
+   "苹果": "item_fresh_apple",
+   "梨": "item_pear",
+   "李": "item_plum"
+  },
+  "vegetable": {
+   "甘蓝": "item_cabbage",
+   "胡萝卜": "item_carrot",
+   "芜菁": "item_turnip",
+   "红甜菜": "item_beet",
+   "洋葱": "item_onion",
+   "黄瓜": "item_cucumber"
+  },
+  "legume": {
+   "扁豆": "item_lentil",
+   "干豌豆": "item_dry_peas",
+   "蚕豆": "item_broad_bean"
+  },
+  "grain": {
+   "硬红冬小麦": "item_wheat_grain",
+   "黑麦粉": "item_rye_flour",
+   "燕麦": "item_oats",
+   "珍珠大麦": "item_pearl_barley"
+  },
+  "meat": {
+   "羊腿瘦肥混合": "item_mutton"
+  },
+  "milk": {
+   "牛乳": "item_milk",
+   "羊乳": "item_goat_milk"
+  },
+  "fish": {
+   "鲤": "item_fish"
+  }
+ }
 }

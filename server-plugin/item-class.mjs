@@ -209,7 +209,8 @@ export function deriveItemAttributes(world){
 export const MATERIAL_DIMENSIONS=['moisture','edibleFraction','energyDensity','heatValue','charYield'];
 // D12 卡 D 整类修复：含水、可食部分、能量密度不手写，由行内的出处原值（sources）推出；heatValue、charYield 仍直接写。
 //   sources：[{name, citation, moistureFraction（水占鲜重）, kcalPer100gWet（鲜重 kcal/100g）, refuseFraction（不可食部分，壳核骨）, range?, item?}]
-//   每个出处代表类别里的一个成员；item 写该成员对应的世界物品 id（没有对应物品的是参照成员）。
+//   每个出处代表类别里的一个成员；成员对应的世界物品 id 写在表头 memberItems[类别键][出处 name]（也接受出处里的 item 字段）；没有对应物品的是参照成员。
+//   链接放在表头而不在类别行里，是为了不改动类别行的内容（类别行内容进 L2 指纹，只为登记链接不应让已审结论作废）。
 //   selection：{method:'single'|'mean', reason}。整类口径（李白 2026-11-09 13:1x 定，适用所有类别，不对个别类别特判）：
 //   类别代表值 = 对每个成员（出处）分别用同一程序推算，再对各成员的推算结果取平均；只有 1 个出处时用 single。
 //   成员推算（唯一一处，取整规则统一）：含水 m_i = 出处含水分数；干基能量 e_i = kcalPer100gWet × 10 ÷ (1 − m_i) ÷ kcalPerSatiety（饱腹/kg 干物质，不取整）；
@@ -240,14 +241,15 @@ export function deriveFromSources(row,kcalPerSatiety){
  return out;
 }
 // 每个带 item 的成员与类别代表值的相对偏差（三项）与其中最大绝对值。
-export function memberDeviations(row,kcalPerSatiety){
+export function memberDeviations(row,kcalPerSatiety,links={}){
  const cls=deriveFromSources(row,kcalPerSatiety),out=[],rel=(a,b)=>(a-b)/b;
  for(const x of row?.sources??[]){
-  if(!x.item)continue;
+  const item=x.item??links?.[x.name];
+  if(!item)continue;
   const o=memberValues(x,kcalPerSatiety),dev={};
   if(o.m!==undefined&&cls.moisture!==undefined)dev.dryFraction=rel(1-o.m,1-cls.moisture);
   if(o.e!==undefined&&cls.energyDensity!==undefined){dev.dmEnergy=rel(o.e,cls.energyDensity);dev.freshEnergy=rel(o.e*(1-o.m),cls.energyDensity*(1-cls.moisture));}
-  out.push({item:x.item,name:x.name,dev,max:Math.max(0,...Object.values(dev).map(Math.abs))});
+  out.push({item,name:x.name,dev,max:Math.max(0,...Object.values(dev).map(Math.abs))});
  }
  return out;
 }
@@ -337,16 +339,17 @@ export function validateMaterialProps(world){
  }
  for(const k of meanKeys){
   const row=t.classes[k];
-  for(const d of memberDeviations(row,kps)){
+  for(const d of memberDeviations(row,kps,t.memberItems?.[k])){
    const item=(world.items??[]).find(i=>i.id===d.item);
    if(!item){errors.push(`材料属性类别成员物品不存在：classes.${k} 的 item ${d.item}`);continue;}
    if(!(thr>0)||d.max<=thr)continue;
    const pct=`${(d.max*100).toFixed(1)}%`;
    if(!Array.isArray(item.props?.sources)){errors.push(`材料属性类别 ${k} 的成员 ${d.item}（${d.name}）与类别代表值偏差 ${pct} 超过阈值 ${thr*100}%，须单独写覆盖行（带自己的出处）`);continue;}
-   const own=deriveFromSources(item.props,kps),mine=deriveFromSources({sources:[row.sources.find(x=>x.item===d.item)],selection:{method:'single'}},kps);
+   const own=deriveFromSources(item.props,kps),mine=deriveFromSources({sources:[row.sources.find(x=>x.name===d.name)],selection:{method:'single'}},kps);
    for(const dim of ['moisture','energyDensity'])if(mine[dim]!==undefined&&own[dim]!==mine[dim])errors.push(`材料属性成员 ${d.item} 的覆盖行 ${dim} 与类别里它的出处不一致（覆盖 ${own[dim]}，出处 ${mine[dim]}）`);
   }
  }
+ for(const [k,m] of Object.entries(t.memberItems??{}))for(const name of Object.keys(m))if(!t.classes?.[k]?.sources?.some(x=>x.name===name))errors.push(`材料属性 memberItems 的出处不存在：${k}.${name}`);
  const order=t.precedence??[];
  if(!Array.isArray(order)||order.length!==new Set(order).size||order.length!==keys.length||keys.some(k=>!order.includes(k)))errors.push('材料属性 precedence 必须恰好列出全部类别键且不重复（从最具体到最一般）');
  for(const i of world.items??[])if(i.props!==undefined)check(i.props,`items.${i.id}.props`);

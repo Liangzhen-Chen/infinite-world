@@ -134,3 +134,17 @@ test('--show 输出：出处字段带单位、推算中间量、推算值与一�
   assert.ok(text.includes('L1 检查：通过'));
   assert.ok(explainEntry(entry, table, ['材料属性 classes.tagA 出了问题']).join('\n').includes('L1 检查：1 项问题'));
 });
+
+test('成员链接放在表头 memberItems：类别行不带 item 也按链接检查偏差；链接的出处不存在报错', () => {
+  const rows = {tagA: {basis: 'b', sources: [noItem(A), noItem(B)], selection: {method: 'mean', reason: 'r'}}};
+  const links = {tagA: {[A.name]: 'item_a', [B.name]: 'item_b'}};
+  const devs = memberDeviations(rows.tagA, KPS, links.tagA);
+  assert.deepEqual(devs.map(d => d.item), ['item_a', 'item_b']);
+  assert.deepEqual(memberDeviations(rows.tagA, KPS), [], '没有链接的出处是参照成员，不计偏差');
+  const errs = validateMaterialProps(world(rows, [], {memberItems: links}));
+  assert.equal(errs.filter(x => /须单独写覆盖行/.test(x)).length, 2);
+  const ok = world({tagA: structuredClone(rows.tagA)}, [], {memberItems: links});
+  ok.items[0].props = own(A); ok.items[1].props = own(B);
+  assert.deepEqual(validateMaterialProps(ok), []);
+  assert.ok(validateMaterialProps(world(rows, [], {memberItems: {tagA: {无此出处: 'item_a'}}})).some(x => /memberItems 的出处不存在/.test(x)));
+});

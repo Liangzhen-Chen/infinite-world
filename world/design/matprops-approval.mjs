@@ -247,7 +247,7 @@ export function explainEntry(entry,table,l1Errors=[]){
  const stored=['moisture','energyDensity','edibleFraction'].filter(k=>row[k]!==undefined);
  L.push(stored.length?`行里另存了：${stored.map(k=>`${k}=${row[k]}`).join('，')}；与推算值${stored.every(k=>Math.abs(row[k]-d[k])<1e-9)?'一致':'不一致'}`:'行里没有另存 moisture/energyDensity/edibleFraction（只存出处，无重复值，不会冲突）');
  if(entry.kind==='material-props-class'&&sel.method==='mean'){
-  for(const m of memberDeviations(row,kps))L.push(`成员偏差 ${m.item}（${m.name}）：${Object.entries(m.dev).map(([k,v])=>`${k} ${pct(v)}`).join('，')}；阈值 ${pct(table.memberDeviationThreshold)}；${m.max>table.memberDeviationThreshold?'超阈值，须有覆盖行':'未超'}`);
+  for(const m of memberDeviations(row,kps,table.memberItems?.[entry.key]))L.push(`成员偏差 ${m.item}（${m.name}）：${Object.entries(m.dev).map(([k,v])=>`${k} ${pct(v)}`).join('，')}；阈值 ${pct(table.memberDeviationThreshold)}；${m.max>table.memberDeviationThreshold?'超阈值，须有覆盖行':'未超'}`);
  }
  const own=l1Errors.filter(e=>e.includes(entry.kind==='material-props-class'?`classes.${entry.key}`:`items.${entry.id}.`)||e.includes(entry.id));
  L.push(own.length?`L1 检查：${own.length} 项问题：${own.join('；')}`:'L1 检查：通过（出处字段齐全、范围合法、存值与推算一致、成员偏差有覆盖）');
