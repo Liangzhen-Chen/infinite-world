@@ -1396,6 +1396,16 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - metab-13（t-metab 2c4e6ad2，两轮 approve r1-20261109T033246Z-2767935 / r2-20261109T033349Z-2770400）：tests/monster-society.test.mjs 10/1（F:/dnd-tmp/metab13-test.full）——#3 K6 断言修好；#2 仍 `2 !== 4`（市场供给按留存投影 quoteSupply.supply，K16 r3 手算锚点 :86），与基线 b1m-1 的 #2 完全相同 → 基线已有，记入基线待查清单（与 ledger-stock、市场深度同列，需判“旧预期不适用”还是真错）。
 - 待合入队列：t-metab 2c4e6ad2（含测试修正）、t-mprod 4dff5631、t-memo 6488ad12（性能存疑，待 m2-2 耗时对照）、t-ptai 055105ec（工具，不影响世界）。m2-2 全量结束后，按结果组下一轮合并候选。
 
+### ★ 压缩恢复入口（11-09 04:20 写，压缩后先读本节）
+**云上在跑**：m2-2 全量（门禁 pid 2606592，hash eae2e21b…，start 01:36:24Z，本机脚本 F:/dnd-tmp/m22/run.sh→run.log，结果 F:/dnd-tmp/m22/full.full；后台 shell b0utk95qq）。04:14 远端 12/529（11 个 3600 s 超时 + ledger-stock 8/0 3084 s），6 进程 CPU 15 s 内各涨约 17 s。**性能回退已证实**：同文件对 b1m-1——playtest-lifecycle 3135 s 通过→3600 s 超时、ledger-stock 2222→3084 s、s3-offscreen-life 1900→已跑 2793 s；与 memo-1 剖析每日 7.4 s 对 5.0 s 一致。原估 4.5 h 作废，按约 1.4 倍估本机约 07:50 结束。
+**m2-2 = t-m2 782cf3e7** = t-int 87da89f9 + t-crlf a2466a1c + t-craftcap b316ab9e + t-metab d8505767 + t-foodsrc 360565b3 + t-prof 6a78e53e（两轮 r1-20261109T013408Z-2603971 / r2-20261109T013602Z-2604839）。结束后：逐文件对照 b1m-1（新失败四类归类；t162/monster-society.test K6 过时断言、ledger-stock 应转好、monster-society #2 `2!==4` 基线已有）。
+**下一件（最高优先）**：查性能回退根因——嫌疑 t-foodsrc（每户预算对每个可达非店铺卖家 householdResources+route）与 t-metab（settlementMouths/oddArrivals 推进期外每次重建）。做法：建两个探针目录 t-prof+t-foodsrc、t-prof+t-metab 各跑 prof-day（需两轮审），或静态定位后直接修热路径；修好前不把 m2 快进到 t-int。
+**已过审待合入（分支指针=审过提交，已核）**：t-metab 2c4e6ad2（metab-13，含 K6 测试清理，云上 monster-society.test 10/1，#2 基线已有）；t-mprod 4dff5631（mprod-5，monster-production 3/0；另 ka1/sites/species/kc 已过）；t-memo 6488ad12（memo-1，marketSupply 缓存+route LRU，收益未证）；t-ptai 055105ec（ptai-6，离线 21/0）。
+**待人定**：PT-AI E3（试玩在哪跑/密钥是否上服务器）→ 再报 E4；t-int 等分支是否推 GitHub（master 文档已推到 94d36b39，之后的 PLAN 提交未推）；怪物据点“含水率/可食仁比例”材料属性缺口另开卡。
+**02:20 李白待核清单**：①memo-1 已答（01:45:50–01:47:05 结束 EXIT=0，结果 F:/dnd-tmp/prof1/memo1-farm.out）；②m2-2 实况已答（本节）；③a–f 原文已贴（b1m-1 汇总与差异、GitHub 未推、清理证据、metab-10 与 ptai-6 审查与云测、t-msfix 状态）。
+**服务器磁盘** 84%（7.7 GB）；上传低于 4 GB 拒绝；已跑完旧目录清理按“三条证据”授权（F:/dnd-tmp/server-cleanup-1109-11/run.sh）。
+**纪律**：本机只 node --check；审查者禁止 `python -` 读 stdin（曾三次卡死后台）；合并前核分支指针=审过提交；中文汇报。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
