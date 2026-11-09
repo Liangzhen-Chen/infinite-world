@@ -289,7 +289,7 @@ function grainSeller(d,engine,a,at){
  if(granaries.includes(a.base))return a.base;
  let best=null;
  for(const id of granaries){
-  let minutes;try{minutes=engine.route(a.base,id,'walk',at,d.document.randomSeed).minutes;}catch{continue;}
+  let minutes;try{minutes=engine.route(a.base,id,'walk',at,d.get('randomSeed')).minutes;}catch{continue;}
   if(!best||minutes<best.minutes||minutes===best.minutes&&id<best.id)best={id,minutes};
  }
  return best?.id??null;

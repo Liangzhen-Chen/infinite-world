@@ -30,7 +30,7 @@ export function smuggleTrade(d,args,id){
         const reserved=cargo(d.get('state')).filter(r=>r.item===item).reduce((n,r)=>n+r.quantity,0);
         if(this.quantity(d,'player',item)<quantity+reserved)throw preconditionFailure('没有足量未托运的货物');
         if(!awake(d.get('state'),buyer,d.get('state','npcs',buyer)))throw preconditionFailure('没有可履约的买方');
-        const mode=args.mode??'walk',route=this.route(d.get('state','location'),destination,mode,d.get('state','minute'),d.document.randomSeed);
+        const mode=args.mode??'walk',route=this.route(d.get('state','location'),destination,mode,d.get('state','minute'),d.get('randomSeed'));
         const checks=checkpoints(this,route,d.get('state')),banned=this.rules.smuggling.contraband.includes(item)||this.byId.get(item).tags?.includes('contraband');
         if(!checks.length||!banned&&!checks.some(c=>c.taxBps>0))throw preconditionFailure('路线没有违禁或逃税货物检查点');
         const bribe=args.coins??0;if(!Number.isSafeInteger(bribe)||bribe<0||bribe>1000000)throw preconditionFailure('贿金数额无效');

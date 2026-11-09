@@ -140,7 +140,7 @@ function orderedSystems(d,ctx){
         const phase=(a.phase??PHASE.clock)-(b.phase??PHASE.clock);
         if(phase)return phase;
         if(a.phase===PHASE.due)return compareDue(a,b)||a.id.localeCompare(b.id);
-        return compareClock(d.document.randomSeed,ctx.after)({...a,ruleId:a.ruleId??a.id},{...b,ruleId:b.ruleId??b.id});
+        return compareClock(d.get('randomSeed'),ctx.after)({...a,ruleId:a.ruleId??a.id},{...b,ruleId:b.ruleId??b.id});
     });
 }
 // 接线后的刻集由日程堆唯一确定（14 §14.2）：只有到期项与时钟规则的刻才存在，
@@ -252,11 +252,11 @@ function recordContestEvent(d,event){
 function resolveContestPool(d,ctx){
     if(!d.contestPool?.length)return;
     const proposals=d.contestPool.splice(0).sort((a,b)=>{
-        const key=p=>clockDiceKey(d.document.randomSeed,p.ruleId??'',p.objectId??'',ctx.after);
+        const key=p=>clockDiceKey(d.get('randomSeed'),p.ruleId??'',p.objectId??'',ctx.after);
         return key(a).localeCompare(key(b));
     });
     for(const proposal of proposals)proposal.seq=d.scheduler.nextSeq();
-    const outcomes=resolveContest(proposals,{seed:d.document.randomSeed,minute:ctx.after});
+    const outcomes=resolveContest(proposals,{seed:d.get('randomSeed'),minute:ctx.after});
     for(const outcome of outcomes){
         for(const winner of outcome.winners){
             // The callback owns the entire proposal, including money and goods.
@@ -397,7 +397,7 @@ const systems=[
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
         if(source.granary===false)continue;// public money only, no public granary (D1 town ledger): no daily settlement ration; residents' households still eat their own stock
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
-        const production=farming?0:accrueFoodProduction(e,d,s,sid,cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
+        const production=farming?0:accrueFoodProduction(e,d,s,sid,cropProduction(e,d.get('randomSeed'),sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
         const levy=farming?(d.get('state','records',`levy:${sid}`)?.count??0):0,meals=Math.ceil(mealMouthsOf(e,d.get('state'),sid,s.population)),missing=farming?.missingMeals??Math.max(0,meals-available);
         if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,meals),day);s.food=Math.max(0,available-meals);}
         const mouths=farming?Math.ceil(mealMouthsOf(e,d.get('state'),sid,s.population,{levy})):meals;

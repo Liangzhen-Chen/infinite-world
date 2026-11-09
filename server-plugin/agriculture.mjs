@@ -178,7 +178,7 @@ export function advanceAgriculture(d,engine,id,source,day){
     const p=profile(engine,id),original=d.get(...path(id));if(!p||original?.mode!=='managed')return null;
     const r=clone(original),s=clone(source);balanced(r,s);
     if(r.lastDay!==day-1)throw Error('农事日结顺序不连续，拒绝重复或补算过往收成');
-    const weather=weatherAt(engine,d.document.randomSeed,p.fieldLocation,day*1440+720),season=engine.calendar(day*1440).season;
+    const weather=weatherAt(engine,d.get('randomSeed'),p.fieldLocation,day*1440+720),season=engine.calendar(day*1440).season;
     // U12: able-bodied villagers away on levy (levy:<village>) are not in the fields.
     const state=d.get('state'),{availableWorkers,processing,freshWorkers,fieldWorkers,ownFieldWorkers}=agriculturalWorkforce(engine,state,p,r,day,s.population);
     const fresh=accrueStock(r,'fresh',derived(engine,d.document,'economy:yield',p.fieldLocation,{holder:id,base:freshWorkers?p.freshFoodPerDay*p.freshSeasonFactors[season]*(weather?.cropMultiplier??1)*freshWorkers/p.freshWorkers:0}));
@@ -490,7 +490,7 @@ export function agricultureAction(d,args,eventId){
     if(!['sow','harvest'].includes(operation))throw preconditionFailure('未知农事操作');
     if(d.get('state','location')!==p.fieldLocation)throw preconditionFailure('须本人到登记农田工作');
     if(r.tools.condition<=0||r.tools.capacity<1)throw preconditionFailure('公共农具不可用');
-    const day=Math.floor(d.get('state','minute')/1440),weather=weatherAt(this,d.document.randomSeed,p.fieldLocation,d.get('state','minute'));
+    const day=Math.floor(d.get('state','minute')/1440),weather=weatherAt(this,d.get('randomSeed'),p.fieldLocation,d.get('state','minute'));
     if(['storm','snow'].includes(weather?.kind))throw preconditionFailure('当前雨雪不宜进行这项田间工作');
     if(operation==='sow'&&(day%360<this.rules.agriculture.crop.sowDays[0]||day%360>this.rules.agriculture.crop.sowDays[1]))throw preconditionFailure('不在本作物播种窗口');
     if(operation==='sow'&&r.field.seedBank<=0)throw preconditionFailure('没有实际种粮');
@@ -504,7 +504,7 @@ export function agricultureAction(d,args,eventId){
     const latest=clone(d.get(...path(id))),stock=clone(d.get('state','settlements',id)),nowDay=Math.floor(d.get('state','minute')/1440);
     if(d.get('state','player','status')!=='正常'||d.get('state','location')!==p.fieldLocation)return{success:false,effectFailed:'工作完成前已失去履行能力或离开农田'};
     if(!outcome.success)return{success:false,...outcome,note:'已耗时，但未播种或收获'};
-    const nowWeather=weatherAt(this,d.document.randomSeed,p.fieldLocation,d.get('state','minute'));
+    const nowWeather=weatherAt(this,d.get('randomSeed'),p.fieldLocation,d.get('state','minute'));
     if(['storm','snow'].includes(nowWeather?.kind)||latest.tools.condition<=0)return{success:false,effectFailed:'工作完成前天气或农具条件已不合适'};
     if(operation==='sow'&&(nowDay%360<this.rules.agriculture.crop.sowDays[0]||nowDay%360>this.rules.agriculture.crop.sowDays[1]))return{success:false,effectFailed:'工作完成时已错过播种窗口，种粮未投入'};
     const result=operation==='sow'?sow(latest,this,p,nowDay,cap):harvest(latest,stock,this,p,nowDay,cap,eventId,granaryCapacity(this,d.get('state'),p.settlement,latest.granary.capacity));
@@ -523,7 +523,7 @@ installFacilityRuntime({damageStoredGrain});
 function pilferPublicField(d,engine,p,eventId){
     const sid=p.settlement,r=clone(d.get(...path(sid))),s=clone(d.get('state','settlements',sid)),item=engine.rules.agriculture.grainItem;
     if(r?.mode!=='managed'||!r.field.cohorts.some(c=>c.ready))throw preconditionFailure('作物尚未成熟，不能把未来收成取出来');
-    const weather=weatherAt(engine,d.document.randomSeed,p.fieldLocation,d.get('state','minute'));
+    const weather=weatherAt(engine,d.get('randomSeed'),p.fieldLocation,d.get('state','minute'));
     if(['storm','snow'].includes(weather?.kind))throw preconditionFailure('当前雨雪不宜进行这项田间工作');
     const workday=engine.world.primitiveTables?.['action-costs']?.params?.find(r=>r.id==='workday.minutes')?.value;
     if(!Number.isSafeInteger(workday)||workday<=0)throw preconditionFailure('田间劳动的工日分钟数未登记');
@@ -595,10 +595,10 @@ function privateFarmAction(d,engine,p,args,eventId){
     const laborMinutes=Math.ceil(areaMu*(args.operation==='private_sow'?labor.laborSow:labor.laborHarvest)*workday*(plan?plan.take:1)/(plan?old.yield:1));
     const started=d.get('state','minute');
     const work=()=>{
-        const weather=weatherAt(engine,d.document.randomSeed,location,d.get('state','minute'));
+        const weather=weatherAt(engine,d.get('randomSeed'),location,d.get('state','minute'));
         if(['storm','snow'].includes(weather?.kind))throw preconditionFailure('当前雨雪不宜进行田间工作');
         for(let remaining=laborMinutes;remaining>0;){
-            const workingWeather=weatherAt(engine,d.document.randomSeed,location,d.get('state','minute'));
+            const workingWeather=weatherAt(engine,d.get('randomSeed'),location,d.get('state','minute'));
             if(['storm','snow'].includes(workingWeather?.kind))return false;
             const minutes=Math.min(remaining,workday);
             engine.advance(d,minutes,`${eventId}:work:${remaining}`);remaining-=minutes;
@@ -606,7 +606,7 @@ function privateFarmAction(d,engine,p,args,eventId){
         }
         if(tool)wearItem(d,engine,'player',tool,1);
         const current=d.get('state','buildings',location);
-        const endWeather=weatherAt(engine,d.document.randomSeed,location,d.get('state','minute'));
+        const endWeather=weatherAt(engine,d.get('randomSeed'),location,d.get('state','minute'));
         return d.get('state','player','status')==='正常'&&d.get('state','location')===location&&mayFarm()&&(cultivator==='player'||settlementPresent(engine,d.get('state'),cultivator,'player'))&&(current?.condition??100)>0&&!['storm','snow'].includes(endWeather?.kind);
     };
     if(args.operation==='private_sow'){
@@ -685,7 +685,7 @@ function advancePrivateFarms(d,engine,settlement,day){
         const farm=clone(old);
         for(let at=old.lastDay+1;at<=day;at++){
             if(farm.status==='growing'){
-                const weather=weatherAt(engine,d.document.randomSeed,farm.location,at*1440+720);
+                const weather=weatherAt(engine,d.get('randomSeed'),farm.location,at*1440+720);
                 if((weather?.temperatureC??10)>=crop.minimumTemperatureC){farm.grownDays++;farm.qualityDays++;farm.qualitySum+=(weather?.cropMultiplier??1)*farmWaterFactor(engine,d.get('state'),settlement,at);}
                 if(farm.grownDays>=crop.growthDays){
                     farm.status='ready';farm.readyDay=at;farm.expiresDay=at+p.normalStorageDays;

@@ -756,7 +756,7 @@ function walkIns(d,engine,t){
 }
 
 function serve(d,engine,shop,t,residents,gaps,routes){
-    const state=d.get('state'),day=Math.floor(t/DAY),reach=customerReachMinutes(engine),seed=d.document.randomSeed;
+    const state=d.get('state'),day=Math.floor(t/DAY),reach=customerReachMinutes(engine),seed=d.get('randomSeed');
     if(d.get(...flowKey(shop.id,day)))return;
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
@@ -838,7 +838,7 @@ export function advanceCustomerFlow(d,engine,before,after){
     for(let day=Math.floor((before-NOON)/DAY)+1;day<=Math.floor((after-NOON)/DAY);day++){
         const t=day*DAY+NOON;
         if(t<0)continue;
-        const order=(purpose,id)=>rollDice(d.document.randomSeed,`market:${purpose}`,id,t,0,4294967296);
+        const order=(purpose,id)=>rollDice(d.get('randomSeed'),`market:${purpose}`,id,t,0,4294967296);
         const shops=openShops(d,engine,t).sort((a,b)=>order('shop-order',a.id)-order('shop-order',b.id)||a.id.localeCompare(b.id));
         if(!shops.length)continue;
         const residents=walkIns(d,engine,t).sort((a,b)=>order('customer-order',a.id)-order('customer-order',b.id)||a.id.localeCompare(b.id)),gaps=new Map(),routes=new Map();

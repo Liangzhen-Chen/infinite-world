@@ -49,7 +49,7 @@ export function revivePlayer(d,args,id){
         const registered=point=>point&&d.get('state','revivalPoints',point.location),standing=point=>point&&d.get('state','buildings',point.location,'condition')!==0;
         const available=point=>registered(point)&&standing(point);
         // Nearest by the engine's own route time; unreachable points sort last, ties by world order.
-        const order=new Map(this.world.locations.map((l,i)=>[l.id,i])),minutes=point=>{try{return this.route(from,point.location,'walk',d.get('state','minute'),d.document.randomSeed).minutes;}catch{return Infinity;}};
+        const order=new Map(this.world.locations.map((l,i)=>[l.id,i])),minutes=point=>{try{return this.route(from,point.location,'walk',d.get('state','minute'),d.get('randomSeed')).minutes;}catch{return Infinity;}};
         const nearest=pool=>pool.map(point=>({point,m:minutes(point)})).sort((x,y)=>x.m-y.m||(order.get(x.point.location)??Infinity)-(order.get(y.point.location)??Infinity)||(x.point.location<y.point.location?-1:1))[0]?.point;
         const name=id=>this.byId.get(id)?.name??id,points=this.rules.death.points;
         let selected=available(active)?active:null;

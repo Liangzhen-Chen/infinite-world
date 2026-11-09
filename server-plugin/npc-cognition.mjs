@@ -93,7 +93,7 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
  if(occupied(state,from,at,at+1))throw preconditionFailure('携信者正受同行或义务占用');
  if(!b.location)throw preconditionFailure('收件人正在途中，没有可确认的投递地址');
  const messages=state.npcCognition?.messages??{};if(messages[messageId])return {duplicate:true,messageId};
- const route=engine.route(a.location,b.location,'walk',at,d.document.randomSeed);
+ const route=engine.route(a.location,b.location,'walk',at,d.get('randomSeed'));
  assertNpcObligationAction(d,engine,[from],{start:at,minutes:route.minutes,location:b.location,kind:'move'});
  if(a.coins<route.cost)throw preconditionFailure('携信者路费不足');
  if(occupied(state,from,at,at+route.minutes+1))throw preconditionFailure('携信路线与既有义务冲突');
@@ -165,7 +165,7 @@ export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}=
  }
  if(beforeState)for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
   const at=day*DAY+600;if(at<=before||at>after)continue;
-  const presence=at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
+  const presence=at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.get('randomSeed'));
   const sourceStreams=d.get('state','npcs');
   for(const from of Object.keys(presence.npcs).sort()){
    if(!awake(engine,presence,from,presence.npcs[from])||occupied(beforeState,from,at,at+1))continue;

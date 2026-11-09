@@ -102,7 +102,7 @@ export function issueWanted(d,engine,row,reason,minute){
     const scope=wantedScope(engine,code.id,d.get('state')),reach={};
     for(const law of scope){
         let travel=0;
-        if(law!==code.id){try{travel=engine.route(code.court,codeById(engine,law).court,'walk',minute,d.document.randomSeed).minutes;}catch{continue;}}
+        if(law!==code.id){try{travel=engine.route(code.court,codeById(engine,law).court,'walk',minute,d.get('randomSeed')).minutes;}catch{continue;}}
         reach[law]=minute+(rules.relayBaseMinutes??60)+travel;
     }
     const b=rules.bounty??{},declared=Math.min(b.maximum??2000,(b.base??0)+Math.ceil((row.judgment?.fine??row.value??0)*(b.perFine??1)));
@@ -145,7 +145,7 @@ export function closeWanted(d,engine,w,status,reason,minute){
 // A recognised or caught player is held where found and escorted to the issuing court.
 export function holdPlayer(d,engine,w,{captor,location,minute,surrendered=false}){
     const code=codeById(engine,w.law);let escort=60;
-    try{escort=Math.max(30,engine.route(location,code.court,'walk',minute,d.document.randomSeed).minutes);}catch{}
+    try{escort=Math.max(30,engine.route(location,code.court,'walk',minute,d.get('randomSeed')).minutes);}catch{}
     const key=`legal_custody:${w.id}:${minute}`;
     holdingSet(d,null,rec(key),{category:'legal_custody',case:w.case,wanted:w.id,reason:'到案',captor,location,status:'生效',started:minute,expires:minute+escort,surrendered},'bounty');
     const caseRow=d.get(...rec(w.case));
@@ -205,7 +205,7 @@ export function advanceWanted(d,engine,after){
         const row=d.get(...rec(w.case));
         if(!row||['已结案','服役中','已撤案','已到案'].includes(row.status)||row.appeal?.outcome==='overturned'){closeWanted(d,engine,w,'已销案',row?.status==='已撤案'?'案件撤销':'案件已结或改判',after);continue;}
         const scope=wantedScope(engine,w.law,d.get('state')),reach={...w.reach};
-        for(const law of scope)if(reach[law]===undefined){try{reach[law]=after+(rules.relayBaseMinutes??60)+engine.route(codeById(engine,w.law).court,codeById(engine,law).court,'walk',after,d.document.randomSeed).minutes;}catch{}}
+        for(const law of scope)if(reach[law]===undefined){try{reach[law]=after+(rules.relayBaseMinutes??60)+engine.route(codeById(engine,w.law).court,codeById(engine,law).court,'walk',after,d.get('randomSeed')).minutes;}catch{}}
         if(scope.some(law=>!w.scope.includes(law)))save(d,{...w,scope:[...new Set([...w.scope,...scope])],reach});
         relay(d,engine,d.get(...rec(w.id)),after);
         if(w.subject==='player')recognise(d,engine,rules,d.get(...rec(w.id)),after);

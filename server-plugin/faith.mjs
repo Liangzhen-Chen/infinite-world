@@ -88,7 +88,7 @@ registerEffect('faith_rain',{sources:['world'],validate(e,v){
  const quota=faithRainQuota(e,d.document,v.temple,v.rite,c.minute);
  if(!quota.remaining)return {applied:false,reason:'本季求雨配额已用尽'};
  const config=rainRule(e,v.rite).rainfall;
- const choice=createHash('sha256').update(JSON.stringify([d.document.randomSeed,quota.key,quota.used])).digest().readUInt32LE(0)%config.footprints.length;
+ const choice=createHash('sha256').update(JSON.stringify([d.get('randomSeed'),quota.key,quota.used])).digest().readUInt32LE(0)%config.footprints.length;
  const rain={category:'faith_rain',temple:v.temple,rite:v.rite,sourceEvent:c.sourceEvent,since:c.minute,expires:c.minute+config.minutes,coverage:structuredClone(config.footprints[choice])};
  holdingSet(d,e,path(key),rain,'faith');holdingSet(d,e,path(quota.key),{category:'faith_rain_quota',temple:v.temple,rite:v.rite,year:quota.year,season:quota.season,used:quota.used+1},'faith');
  return {applied:true,rain};

@@ -64,8 +64,8 @@ export function nextWildlifeEncounterMinute(d,engine,now){
     const habitat=engine.rules.wildlife?.habitats.find(h=>h.location===d.get('state','location'));
     if(!habitat)return Infinity;
     let window=Math.floor(now/WINDOW);
-    let minute=window*WINDOW+1+Math.floor(random(engine,d.document.randomSeed,`encounter-time:${habitat.id}:${window}`)()*(WINDOW-1));
-    if(minute<=now){window++;minute=window*WINDOW+1+Math.floor(random(engine,d.document.randomSeed,`encounter-time:${habitat.id}:${window}`)()*(WINDOW-1));}
+    let minute=window*WINDOW+1+Math.floor(random(engine,d.get('randomSeed'),`encounter-time:${habitat.id}:${window}`)()*(WINDOW-1));
+    if(minute<=now){window++;minute=window*WINDOW+1+Math.floor(random(engine,d.get('randomSeed'),`encounter-time:${habitat.id}:${window}`)()*(WINDOW-1));}
     return minute;
 }
 export function wildlifeEncounterAt(d,engine,location,minute){
@@ -74,7 +74,7 @@ export function wildlifeEncounterAt(d,engine,location,minute){
     if(!habitat)return null;
     const window=Math.floor(minute/WINDOW),old=d.get(...encounterPath(habitat.id));
     if(old?.checkedWindow>=window)return null;
-    const rng=random(engine,d.document.randomSeed,`encounter:${habitat.id}:${window}`),chance=rng();
+    const rng=random(engine,d.get('randomSeed'),`encounter:${habitat.id}:${window}`),chance=rng();
     const here=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===location&&!a.owner&&!sapient(a)&&alive(a,d,id));
     const populations=d.get(...path(habitat.id),'populations');
     const ward=warded(d,location,minute),eligible=speciesAt(engine,habitat).filter(s=>populations?.[s.id]?.count>0&&activeAt(s.wildlife.activeHours,minute%1440)&&!(ward&&s.nature?.spirit));
@@ -89,7 +89,7 @@ export function wildlifeEncounterAt(d,engine,location,minute){
 function createWildlifeInstance(d,engine,habitat,s,eventId,rng){
     const latest=clone(d.get(...path(habitat.id))),p=latest.populations[s.id];
     if(!p.count||!activeAt(s.wildlife.activeHours,d.get('state','minute')%1440))return null;
-    const hash=createHash('sha256').update(`${d.document.randomSeed}:${eventId}`).digest('hex').slice(0,16),id=`monster_instance_${hash}`;
+    const hash=createHash('sha256').update(`${d.get('randomSeed')}:${eventId}`).digest('hex').slice(0,16),id=`monster_instance_${hash}`;
     if(d.get('state','created',id)||d.get('state','creatures',id))throw preconditionFailure('个体编号已存在，拒绝重复接触');
     const level=s.levelRange[0]+Math.floor(rng()*(s.levelRange[1]-s.levelRange[0]+1)),stats=monsterStats({level,template:s.template},engine.rules),name=`${s.name}·${hash.slice(0,4)}`;
     moveFishPopulation(d,engine,s.id,habitat.location,id,1,eventId);
@@ -110,7 +110,7 @@ export function settleWildlifeEncounter(d,engine,attempt,eventId){
         const available=d.get(...path(habitat.id),'populations',s.id,'count')>0&&activeAt(s.wildlife.activeHours,minute%1440);
         if(attempt.kind==='present'&&!target&&available&&engine.npcObligationAction?.tool!=='time'){
             const here=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===habitat.location&&alive(a,d,id)).map(([,a])=>a);
-            if(here.length<engine.rules.wildlife.maximumPresent)target=createWildlifeInstance(d,engine,habitat,s,`encounter:${habitat.id}:${window}`,random(engine,d.document.randomSeed,`encounter-instance:${habitat.id}:${window}`))?.id;
+            if(here.length<engine.rules.wildlife.maximumPresent)target=createWildlifeInstance(d,engine,habitat,s,`encounter:${habitat.id}:${window}`,random(engine,d.get('randomSeed'),`encounter-instance:${habitat.id}:${window}`))?.id;
         }
         if(target||available)sighting={kind:target?'present':'trace',habitat:habitat.id,location:habitat.location,species:s.id,name:s.name,
             ...(target?{target}:{}),minute,expires:(window+1)*WINDOW,source:eventId,description:target?`看见${s.name}，尚未开战`:`${s.name}的活动踪迹；辨认依据：${s.wildlife.distinction}`};
@@ -280,7 +280,7 @@ export function wildlifePriceFactor(engine,document,item,location){
     },0);
     return Math.min(engine.rules.wildlife.scarcityMaximum,Math.max(1,initial/Math.max(1,current)));
 }
-const mindOf=(engine,d,id,a)=>{const mind=awakeningView(engine,d.document.randomSeed,id,a,d.get('state','minute'));return mind?{mind}:{};};
+const mindOf=(engine,d,id,a)=>{const mind=awakeningView(engine,d.get('randomSeed'),id,a,d.get('state','minute'));return mind?{mind}:{};};
 function takeDressedParts(d,target,corpse,eventId){
     const owner=corpse.owner??d.get('state','creatures',target,'owner');
     if(owner!=='player')throw preconditionFailure(`这具分割好的尸体是${d.get('state','npcs',owner,'name')??this.byId.get(owner)?.name??owner??'别人'}的，不能拿走`);
@@ -314,7 +314,7 @@ export function wildlifeAction(d,args,eventId){
         const skill='skill_life_1_core',known=d.get('state','skills',skill),check=this.check(d,{attribute:'敏捷',...(known?{skill}:{}),difficulty:10},eventId);
         this.advance(d,this.rules.wildlife.trackMinutes,eventId);if(!check.success)return{success:false,...check,found:null,note:'已花追踪时间，没有接触动物'};
         if(d.get('state','location')!==habitat.location||d.get('state','player','status')!=='正常')return{success:false,found:null,note:'完成追踪前已失去行动能力或离开栖地'};
-        const latest=clone(d.get(...path(habitat.id))),rng=random(this,d.document.randomSeed,eventId),s=eligible[Math.floor(rng()*eligible.length)],p=latest.populations[s.id];
+        const latest=clone(d.get(...path(habitat.id))),rng=random(this,d.get('randomSeed'),eventId),s=eligible[Math.floor(rng()*eligible.length)],p=latest.populations[s.id];
         if(!p.count||!activeAt(s.wildlife.activeHours,d.get('state','minute')%1440))return{success:false,found:null,note:'线索在追踪期间消失或活动时段已结束'};
         const found=createWildlifeInstance(d,this,habitat,s,eventId,rng);
         // Tracking ends at arm's length: the found individual is in sight for the next few minutes.

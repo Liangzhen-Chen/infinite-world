@@ -269,3 +269,11 @@ test('K10：有交易服务并登记店铺类型的人物自动成为店铺；�
     const nails=ledger(f.doc,'shop_hw_ayan').entries.find(e=>e.item==='item_iron_nail');
     assert.equal(nails.added,3);assert.deepEqual(nails.from,[holder]);
 });
+
+test('只有 state 的读取器（无 document）报价与完整文档读取器一致，不因取种子崩溃',()=>{
+    const f=fixture(),item='item_bread',location=f.doc.state.location;
+    const full={document:f.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],f.doc)};
+    const stateOnly={get:(...p)=>p.reduce((v,k)=>v?.[k],{state:f.doc.state,randomSeed:f.doc.randomSeed})};
+    const quote=d=>tradeQuote(d,f.engine,{buyer:'player',seller:host,item,quantity:1,location,base:()=>regionalTradeBase(d,f.engine,item,location)});
+    assert.deepEqual(quote(stateOnly),quote(full));
+});

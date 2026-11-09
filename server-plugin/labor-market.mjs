@@ -307,7 +307,7 @@ function settleShift(d,e,row,at){
     }else if(row.supplier){
         const supplier=d.get('state','npcs',row.supplier),business=personBusiness(e,s,row.supplier);
         let trip;
-        try{trip=supplier?.location===row.location?0:e.route(row.location,supplier?.location,'walk',start,d.document.randomSeed).minutes*2;}catch{trip=Infinity;}
+        try{trip=supplier?.location===row.location?0:e.route(row.location,supplier?.location,'walk',start,d.get('randomSeed')).minutes*2;}catch{trip=Infinity;}
         const price=marketQuote(d,e,{item:row.item,location:supplier?.location,seller:row.supplier,buyer:row.owner}).listPrice;
         // S1c: 供货人的库存与雇主现款读账户。
         const stock=supplier?bagStock(d,e,{point:'labor.stock',id:row.supplier,item:row.item,legacy:()=>{const held=supplier.inventory?.[row.item];return typeof held==='number'?held:held?.quantity??0;}}):0;
@@ -411,7 +411,7 @@ export function advanceLaborMarket(d,e,{before,after,id,beforeState}){
     for(const offer of offers){
         if(layer(e,d.get('state'),offer.location,plan)==='statistics'&&Math.floor(before/(7*DAY))===Math.floor(after/(7*DAY)))continue;
         const s=d.get('state'),pool=pools.get(placeSettlement(e,s,offer.location).value)??[];
-        const apps=pool.map(worker=>laborApplication(e,s,worker,offer,{minute:after,changing:Boolean(currentEmployment(s,worker,after)),seed:d.document.randomSeed,document:d.document})).filter(Boolean).sort((a,b)=>b.score-a.score||a.worker.localeCompare(b.worker));
+        const apps=pool.map(worker=>laborApplication(e,s,worker,offer,{minute:after,changing:Boolean(currentEmployment(s,worker,after)),seed:d.get('randomSeed'),document:d.document})).filter(Boolean).sort((a,b)=>b.score-a.score||a.worker.localeCompare(b.worker));
         for(const app of apps){
             const old=currentEmployment(d.get('state'),app.worker,after),trial={...offer,worker:app.worker,id:old?.id};if(conflict(d,e,trial,Math.floor(after/DAY)*DAY+480))continue;
             const decision=hireDecision(d,e,app,offer,after,old);
@@ -468,7 +468,7 @@ export function laborTrade(d,e,args,id){
         if(!offer)throw preconditionFailure('新雇主当前没有真实用工缺口');
         if(args.coins!==undefined)offer.wage=financeInt(args.coins,offer.wage,1e6,'新日薪');
         if(financeBalance(d,e,offer.owner)<offer.wage)throw preconditionFailure('新雇主现钱不足以接受所议日薪');
-        const app=laborApplication(e,s,row.worker,offer,{minute:now,changing:true,seed:d.document.randomSeed,decisionKey:`${offer.id}:${id}`,document:d.document});if(!app)throw preconditionFailure('工匠不接受新雇主或工钱');
+        const app=laborApplication(e,s,row.worker,offer,{minute:now,changing:true,seed:d.get('randomSeed'),decisionKey:`${offer.id}:${id}`,document:d.document});if(!app)throw preconditionFailure('工匠不接受新雇主或工钱');
         const rep=s.npcs[offer.owner]?offer.owner:groupRepresentative(e,s,offer.owner);
         if(!rep||s.npcs[rep]?.location!==s.location||!able(s,rep))throw preconditionFailure('新雇主或当前代表须在场同意');
         const decision=hireDecision(d,e,app,offer,now,row);if(decision.outcome!=='agree')throw preconditionFailure('工匠不接受新雇主或工钱');

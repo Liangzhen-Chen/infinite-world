@@ -131,7 +131,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,cra
     for(const item of recipe.tools??[])if(this.quantity(d,'player',item)<1||(heldUnit(d,this,'player',item)?.durability??this.byId.get(item).durability)<=0)throw preconditionFailure(`缺少完好的${this.byId.get(item).name}`);
     const materials=new Map();for(const row of recipe.materials)materials.set(row.item,(materials.get(row.item)??0)+row.amount);
     for(const[item,amount]of materials)if(this.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${this.byId.get(item).name}`);
-    const die=createHash('sha256').update(`${d.document.randomSeed}:${eventId}:spirit-craft`).digest().readUInt32LE(0)%20+1;
+    const die=createHash('sha256').update(`${d.get('randomSeed')}:${eventId}:spirit-craft`).digest().readUInt32LE(0)%20+1;
     const modifier=Math.floor(proficiency/(this.rules.check.skillDivisor??150)),total=die+modifier,diff=recipe.difficulty;
     const degree=die===1||total<=diff-10?'大失败':die===20||total>=diff+10?'大成功':total<diff?'失败':total<diff+5?'勉强成功':'成功';
     const outcome={die,modifier,total,degree,difficulty:diff,success:['勉强成功','成功','大成功'].includes(degree)};
@@ -149,7 +149,7 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,cra
     if(thermal)products[0].amount-=thermal.crackedQuantity;
     for(const item of recipe.tools??[])wearItem(d,this,'player',item,recipe.toolWear??1);
     const ids=[],salvage=[],name=nameOf(this,id,actor);let workmanship=null;
-    const result=craftOutcome(this,{standing,degree,success:outcome.success,proficiency,floor,tools,station:station?.factor??1,recoverFraction:recipe.failure?.recoverFraction??0,seed:d.document.randomSeed,key:eventId});
+    const result=craftOutcome(this,{standing,degree,success:outcome.success,proficiency,floor,tools,station:station?.factor??1,recoverFraction:recipe.failure?.recoverFraction??0,seed:d.get('randomSeed'),key:eventId});
     const made=outcome.success?products:result.failure==='partial'?[{item:recipe.output.item,amount:recipe.output.quantity}]:[];
     if(made.length){
         workmanship=result.tier;

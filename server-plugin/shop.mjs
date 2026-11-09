@@ -252,7 +252,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  for(const shop of read.shops){
   if(shop.settlement!==place||shop.keeper!==owner&&members.includes(shop.keeper)||view&&shop.keeper!==owner)continue;
   let travel=0;
-  if(location!==shop.location){try{travel=engine.route(location,shop.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
+  if(location!==shop.location){try{travel=engine.route(location,shop.location,'walk',now,d.get('randomSeed')).minutes;}catch{continue;}}
   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
   // Buying from another keeper needs their trading hours. One's own restock
   // reaches the shelf on the delivery cycle regardless of one's own hours.
@@ -282,7 +282,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    day+=((shop.cycleDays-(day-shop.firstDay)%shop.cycleDays)%shop.cycleDays);
    const at=day*DAY;
    if(row.source==='route'){
-    try{engine.route(row.from,shop.settlement,'walk',at,d.document.randomSeed);}catch{continue;}
+    try{engine.route(row.from,shop.settlement,'walk',at,d.get('randomSeed'));}catch{continue;}
    }
    let quantity=Math.min(row.amount,row.maximum);
    // K2：本地货架要向本聚落持货人进货，下一次补货最多补得到他们眼下能出让的余量；没人有余量就不是可指望的口粮来源。
@@ -312,7 +312,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   const taken=new Set(read.shops.map(s=>s.keeper));
   // 可达候选（有效、未死亡、同聚落、路程内、营业窗口内）只取决于买方所在地与当前状态，不取决于买方是谁：
   // 同一状态版本（游标 revision / 同一状态对象的 stateMemo，任何写入即失效）内按（所在地、分钟、种子）共享。
-  const reachKey=`${location}|${now}|${d.document.randomSeed}|${place}`;
+  const reachKey=`${location}|${now}|${d.get('randomSeed')}|${place}`;
   const reachable=()=>{
    const list=[];
    for(const id of nonShopTraders(engine)){
@@ -321,7 +321,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
     const trader={keeper:id},first=nextFoodService(engine,state,trader,now);
     if(!first||placeSettlement(engine,state,first.location).value!==place)continue;
     let travel=0;
-    if(location!==first.location){try{travel=engine.route(location,first.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
+    if(location!==first.location){try{travel=engine.route(location,first.location,'walk',now,d.get('randomSeed')).minutes;}catch{continue;}}
     if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
     const opening=nextFoodService(engine,state,{keeper:id,location:first.location},now+travel);
     if(!opening||opening.location!==first.location)continue;
@@ -357,7 +357,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   // private current schedule, stock or status to silently correct that offer.
   const pickup=q.location??shop.location??engine.byId.get(shop.keeper)?.workplace?.location??engine.byId.get(shop.keeper)?.location;
   let travel=0;
-  if(location!==pickup){try{travel=engine.route(location,pickup,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
+  if(location!==pickup){try{travel=engine.route(location,pickup,'walk',now,d.get('randomSeed')).minutes;}catch{continue;}}
   const at=Math.max(now+travel,q.at);
   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine)||at>q.expires)continue;
   out.push({source:fact.source??shop.id,seller:q.seller,item:q.item,at,quantity:q.quantity,unitPrice:q.unitPrice,priceBasis:'received-offer',expires:q.expires});

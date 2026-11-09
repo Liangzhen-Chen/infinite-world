@@ -42,7 +42,7 @@ export {environmentFeatures,localPlayerPoint,featureRecordMatches} from './envir
 // A.18 weather_exposure: only real protection counts. Merely carrying a coat
 // or writing mark:shelter does not create a roof or put rain gear on the body.
 function rainSheltered(d,engine,state,location,travel=false){
- const weather=weatherAt(engine,d.document.randomSeed,location,state.minute);
+ const weather=weatherAt(engine,d.get('randomSeed'),location,state.minute);
  if(!travel&&(weather?.indoors||!weather&&isFacility(engine.byId.get(location))))return true;
  const reader={get:(...p)=>p.reduce((v,k)=>v?.[k],{...d.document,state})};
  if(Object.values(wornItems(reader,engine,'player')).some(id=>{
@@ -67,7 +67,7 @@ registerWorldEventSubscriber({id:'weather_exposure',order:5,priorityClass:'core'
  const wasWet=row.wet;
  // Weather changes daily. Integrate constant environments by day, never by minute.
  for(let at=before.minute;at<end;){
-  const until=Math.min(end,(Math.floor(at/1440)+1)*1440),w=weatherAt(engine,d.document.randomSeed,location,at);
+  const until=Math.min(end,(Math.floor(at/1440)+1)*1440),w=weatherAt(engine,d.get('randomSeed'),location,at);
   const precipitation=w&&['rain','storm'].includes(w.kind)?derived(engine,{...d.document,state:{...before,minute:at}},'weather:precipitation',location,{base:engine.rules.forestWater?.water.rainShare[w.kind]??0}):0;
   const rain=!sheltered&&w&&(travel||!w.indoors)&&precipitation>0;
   // Provenance is the clock fact (this place's weather on this day), not the

@@ -754,8 +754,8 @@ export function unfoldRemoteAt(d,engine,location){
         return missingLedger||patches.length?{version:REMOTE_VERSION,kind:'tribal',settlement:s.id,habitats:habitats.map(h=>h.id)}:null;
     }
     if(!county||d.get('state','remote',county))return null;
-    const skeleton=generateCounty(base,county,d.document.randomSeed??'default-campaign');
-    const record={version:REMOTE_VERSION,county,seed:d.document.randomSeed??'default-campaign',minute:d.get('state','minute'),firstPlace:location,hash:digest(skeleton).slice(0,24),revision:0,profiles:{},skeleton};
+    const skeleton=generateCounty(base,county,d.get('randomSeed')??'default-campaign');
+    const record={version:REMOTE_VERSION,county,seed:d.get('randomSeed')??'default-campaign',minute:d.get('state','minute'),firstPlace:location,hash:digest(skeleton).slice(0,24),revision:0,profiles:{},skeleton};
     d.set(['state','remote',county],record);
     // K8: the county's wild land gets its derived habitat now, stocked in the
     // campaign as an edition update would, so remote wilds hold creatures on the first visit.

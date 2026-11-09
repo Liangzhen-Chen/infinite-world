@@ -115,7 +115,7 @@ export function prepareMovement(d,catalog,args,{completion=false}={}){
   if(sourceAnchor.id===row.id)throw preconditionFailure('传送需要不同的两个已知锚点');
   if(!localSightClear(d,this,location,point,sourceAnchor.position))throw preconditionFailure('出发锚点视线被遮挡');
   clearSpace(d,this,location,point,sourceAnchor.position);clearSpace(d,this,row.location,row.position,row.position);
-  const route=this.route(location,row.location,'walk',d.get('state','minute'),d.document.randomSeed);
+  const route=this.route(location,row.location,'walk',d.get('state','minute'),d.get('randomSeed'));
   metres=route.edges.reduce((sum,id)=>sum+this.world.routes.find(e=>e.id===id).lengthKm*1000,0)+distance(point,sourceAnchor.position)+(location===row.location?distance(sourceAnchor.position,row.position):distance(sourceAnchor.position,[0,0])+distance(row.position,[0,0]));
   permitIds=[permits(d,sourceAnchor,args,companions,arrival),permits(d,row,args,companions,arrival)];
  }
@@ -160,7 +160,7 @@ export function prepareAnchorCargo(d,catalog,args,{completion=false}={}){
  for(const row of [source,destination]){anchor(d,this,row);assertKnown(d,row);}
  if(source.id===destination.id||source.location!==location||distance(origin,source.position)>catalog.rangeMeters||!localSightClear(d,this,location,origin,source.position))throw preconditionFailure('货运需要两个不同已知锚点及实际近端距离');
  clearSpace(d,this,location,origin,source.position);clearSpace(d,this,destination.location,destination.position,destination.position);
- const route=this.route(location,destination.location,'walk',d.get('state','minute'),d.document.randomSeed);
+ const route=this.route(location,destination.location,'walk',d.get('state','minute'),d.get('randomSeed'));
  const metres=route.edges.reduce((n,id)=>n+this.world.routes.find(e=>e.id===id).lengthKm*1000,0);
  if(metres>100000)throw preconditionFailure('货运锚点超过100公里');
  const permissions=[permits(d,source,args,[],until),permits(d,destination,args,[],until)];

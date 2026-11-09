@@ -99,7 +99,7 @@ function instantiate(d,engine,{id,species,location,lair,boss=null,eventId}){
 function drawSpecies(d,engine,species,lair,eventId){
     const s=engine.byId.get(species),habitat=engine.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habitat),path=['state','records',`ecology:${habitat.id}`];
     const record=clone(d.get(...path)),p=record.populations[species];if(!p?.count)return null;
-    const id=`monster_instance_${createHash('sha256').update(`${d.document.randomSeed}:${eventId}:${species}`).digest('hex').slice(0,16)}`;
+    const id=`monster_instance_${createHash('sha256').update(`${d.get('randomSeed')}:${eventId}:${species}`).digest('hex').slice(0,16)}`;
     if(d.get('state','creatures',id)||d.get('state','created',id))throw Error('巢穴迁入个体编号重复');
     moveFishPopulation(d,engine,species,habitat.location,id,1,eventId);
     const health=takePopulation(p,1);p.withdrawn++;d.set(path,record);

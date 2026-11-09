@@ -31,7 +31,7 @@ export function advanceFarmPredation(d,e,day){
         const r=structuredClone(d.get(...path(p.habitat))),prey=r.populations[rule.prey],definition=e.byId.get(rule.prey);
         const rate=derived(e,d.document,'ecology:predation',e.rules.wildlife.habitats.find(h=>h.id===p.habitat).location,{base:rule.killsPerWeek,holder:rule.species,target:rule.prey});
         const expected=hunters*rate*prey.count/definition.wildlife.capacity;
-        const rng=seededRandom(createHash('sha256').update(`${d.document.randomSeed}:${p.fieldId}:${rule.species}:${rule.prey}:${day}`).digest().readUInt32LE(0));
+        const rng=seededRandom(createHash('sha256').update(`${d.get('randomSeed')}:${p.fieldId}:${rule.species}:${rule.prey}:${day}`).digest().readUInt32LE(0));
         const eaten=Math.min(Math.max(0,prey.count-rule.refugeCount),Math.floor(expected)+(rng()<expected%1?1:0));
         takePopulation(prey,eaten);prey.predated+=eaten;d.set(path(p.habitat),r);
     }

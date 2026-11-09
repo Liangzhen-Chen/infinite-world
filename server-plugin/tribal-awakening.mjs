@@ -173,7 +173,7 @@ function gather(d,engine,t,dyn,rec,members,from,at,sourceEvent){
 
 // ---- 批量开灵：沿用 wildlife-awakening 的听息、立意，经 K6 awakening 效果 -----------------
 function batchAwaken(d,engine,dyn,members,stageId,at,sourceEvent){
- const stage=engine.rules.wildlifeAwakening.stages.find(s=>s.id===stageId),seed=d.document.randomSeed,day=Math.floor(at/DAY),done=[];
+ const stage=engine.rules.wildlifeAwakening.stages.find(s=>s.id===stageId),seed=d.get('randomSeed'),day=Math.floor(at/DAY),done=[];
  for(const id of members){
   const actor=d.get('state','creatures',id);
   if(!awakeningEligible(engine,actor)||sapient(actor)||actor.owner&&actor.owner!=='player')continue;
@@ -194,7 +194,7 @@ function stanceFor(seed,dyn,id){
  return dyn.factions.at(-1).stance;
 }
 function placeMembers(d,engine,dyn,rec,members,at,sourceEvent){
- const seed=d.document.randomSeed;
+ const seed=d.get('randomSeed');
  for(const id of members){
   const actor=d.get('state','creatures',id);if(!sapient(actor))continue;
   if(rec.factions.some(org=>groupView(engine,d.get('state'),org)?.members.value[id])||rec.factions.some(org=>d.get('state','records',`organization:${org}`)?.removed?.[id]))continue;
@@ -229,7 +229,7 @@ function split(d,engine,t,dyn,rec,members,at,sourceEvent){
 
 // ---- 派别时钟与玩家选择 ---------------------------------------------------------------
 function advanceClocks(d,engine,t,dyn,rec,g,members,at,sourceEvent){
- const c=t.clock,cap=v=>Math.min(c.choiceCap,v),ch=g.choices,seed=d.document.randomSeed;
+ const c=t.clock,cap=v=>Math.min(c.choiceCap,v),ch=g.choices,seed=d.get('randomSeed');
  const decisive=ch.suppress>=c.suppressDecisive;
  const pressure={
   accord:dyn.drift.accord+cap(ch.teach)+cap(ch.trade)+cap(ch.mediate),
@@ -297,7 +297,7 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   // The range keeps half its current (forest-derived) capacity, never below a
   // breeding pair, so weekly births can refill it instead of the species dying out.
   const joining=sustainableJoiners(d,engine,dyn);
-  const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:joining+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
+  const skeleton=tribalSettlementSkeleton(d.get('randomSeed'),dyn,{population:joining+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
   holdingSet(d,null,['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton,inhabitants},'tribal-awakening');
   d.set(['state','settlements',skeleton.id],{name:skeleton.name,population:skeleton.population,food:0,wood:0,stone:0,iron:0,treasury:0,...(resourceAware?{granary:false}:{})});
   for(const id of inhabitants)holdingSet(d,null,['state','creatures',id,'location'],skeleton.id,'tribal-awakening');

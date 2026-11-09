@@ -437,7 +437,7 @@ export function siteUnlock(d,engine,siteId,resourceId,{holder,eventId}){
     for(const m of openGates(place,row,target)){
         const terms=gateTerms(engine,state,holder,m,place);if(!terms){open=false;break;}
         for(const c of terms.materials??[])engine.itemDelta(d,holder,c.item,-c.quantity,{flow:'sink:consume',purpose:'mechanism',writer:'sites',eventId});
-        const die=terms.element?null:parseInt(digest([d.document.randomSeed,eventId,m.id,'site-gate']).slice(0,8),16)%20+1,success=terms.element?true:die+terms.modifier>=m.check.difficulty;
+        const die=terms.element?null:parseInt(digest([d.get('randomSeed'),eventId,m.id,'site-gate']).slice(0,8),16)%20+1,success=terms.element?true:die+terms.modifier>=m.check.difficulty;
         row.mechanisms[m.id]={status:success?'已解除':'未解除',...(terms.element?{method:terms.element}:{die,total:die+terms.modifier}),actor:holder,sourceEvent:eventId,minute:d.get('state','minute')};
         // 亲手试过的机关记进本人记忆：成败都记，下次估成功率时用。
         if(!terms.element&&state.npcs?.[holder]){const stream=d.get('state','npcs',holder,'memoryStream')??[],id=`${eventId}:gate:${m.id}`;

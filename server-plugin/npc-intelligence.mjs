@@ -66,7 +66,7 @@ function rowPath(d,id){
 export function growIntelligence(d,engine,id,points,source,eventId){
  if(!(points>0))return 0;
  const path=rowPath(d,id);if(!path)return 0;
- const state=d.get('state'),now=intelligenceOf(engine,state,id,{seed:d.document.randomSeed});
+ const state=d.get('state'),now=intelligenceOf(engine,state,id,{seed:d.get('randomSeed')});
  if(!now||now.level>=NATURAL_CAP||now.level<1)return 0;
  const minute=state.minute,day=Math.floor(minute/DAY),old=d.get(...path)??{};
  const today=old.today?.day===day?old.today:{day,points:0},gain=Math.min(points,DAILY_GROWTH-today.points);if(gain<=0)return 0;
