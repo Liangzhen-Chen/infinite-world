@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {entriesFor, draftFor, validateDraft, l1, extractReview} from '../world/design/matprops-approval.mjs';
+import {entriesFor, draftFor, validateDraft, l1, extractReview, checkReviewCap, maxReviewsPerEntry} from '../world/design/matprops-approval.mjs';
 
 test('条目 = 每个类别行 + 每个物品覆盖行；候选与盘上数据逐字一致', async () => {
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
@@ -24,4 +24,14 @@ test('畸形的审查响应不算通过', () => {
   assert.deepEqual(extractReview(response('{"contradictions":[]}')), {contradictions: []});
   for (const content of ['{}', '{"contradictions":[{}]}', '{"contradictions":[{"quote":"a","field":"b","severity":"bad","reason":"c"}]}'])
     assert.throws(() => extractReview(response(content)), error => error.code === 'REVIEW_FORMAT');
+});
+
+test('同条审查上限 = 1 初审 + 2 修正：第 3 次放行，第 4 次在发请求前报 REVIEW_LIMIT（不发调用、不计费）', () => {
+  const ledger = n => ({requests: Object.fromEntries(Array.from({length: n}, (_, i) => [`r${i}`, {label: `content-review-1-class_x-review${i}`, status: 'settled'}]))});
+  assert.equal(maxReviewsPerEntry, 3);
+  checkReviewCap(ledger(0), 'class_x'); checkReviewCap(ledger(2), 'class_x');
+  assert.throws(() => checkReviewCap(ledger(3), 'class_x'), error => error.code === 'REVIEW_LIMIT');
+  checkReviewCap(ledger(3), 'class_y');
+  const cancelled = ledger(3); for (const r of Object.values(cancelled.requests)) r.status = 'cancelled-unissued';
+  checkReviewCap(cancelled, 'class_x');
 });

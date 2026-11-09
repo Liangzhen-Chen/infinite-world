@@ -4,7 +4,7 @@
 // L4 照内容管线规则（先例 tools/w5-rumors.mjs sampleL4/recordL4/approved）：人读（不调模型）——被标记项 + 随机 5 条（batch.sample）
 // 须有阅读笔记；波次随机 10 条各给六项评分（整数 3–5，均分 ≥4）。--sample 抽签并列出要读的条目，--l4 <文件> 记录笔记与评分。
 // 模型返回格式错只算该条一次失败（错误码 REVIEW_FORMAT，不是预算停止；预算停止会经 content-pipeline.mjs:178 拦住整轮）；
-// 同一条最多发 2 次审查请求（requestTransform），仍错则该条转 manual。
+// 同一条最多发 3 次审查请求（1 初审 + 2 修正，requestTransform），仍错则该条转 manual。
 // 用法：node world/design/matprops-approval.mjs --l1 | --review | --sample | --l4 <json> | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -100,11 +100,16 @@ export async function verifyPublished(){
  for(const d of approved)assert.deepEqual(d,draftFor(entries.find(e=>e.id===d.id)),`${d.id} 盘上数据与审批回执不符`);
  return {approved:approved.length,dimensions:MATERIAL_DIMENSIONS.length};
 }
+// 管线规则：1 次初审 + 最多 2 次定点修正；按条目 id 累计账本里已发出的审查，不随指纹重置。
+export const maxReviewsPerEntry=1+2;
+export function checkReviewCap(ledger,id){
+ const sent=Object.values(ledger?.requests??{}).filter(r=>r.label?.includes(`-${id}-review`)&&['sent','settled','unknown'].includes(r.status));
+ if(sent.length>=maxReviewsPerEntry)throw Object.assign(new Error(`同条审核已达 ${maxReviewsPerEntry} 次（初审+2次修正）：${id}`),{code:'REVIEW_LIMIT'});
+}
 async function capReviews({body,entry,phase}){
  if(phase!=='review')return {body};
  let ledger;try{ledger=await readJSON(path.join(draftRoot,'budget.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
- const sent=Object.values(ledger?.requests??{}).filter(r=>r.label?.includes(`-${entry.id}-review`)&&['sent','settled','unknown'].includes(r.status));
- if(sent.length>=2)throw Object.assign(new Error(`同条审核已达两次：${entry.id}`),{code:'REVIEW_LIMIT'});
+ checkReviewCap(ledger,entry.id);
  return {body};
 }
 export async function run(args=process.argv.slice(2)){
