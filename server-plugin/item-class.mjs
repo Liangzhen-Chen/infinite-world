@@ -300,15 +300,20 @@ export function mealCapOf(engine,item){
 // 预算（多日采购）同一公式：期内可吃量 = 天数 × 一天额度（新买的货到货后才开始，整天向下取整），首日可用额度不超过一天；
 // 需求每天都有缺口时每天吃满当天额度，所以按期内总量限购的买进量都吃得掉；需求当天已满足的日子额度作废，那笔购买本来就不被需要。
 // opts：days = 各成员的预算天数（日推进为每人 1），saved = 存档里这户的 {open}。表头没有 mealsPerDay 时没有任何上限。
-export function mealCapPools(engine,{days=[],saved=null}={}){
+export function mealCapPools(engine,{days=[],saved=null,poolMemo=new Map()}={}){
  const perDay=engine?.world?.materialProps?.mealsPerDay,active=perDay>0,used=new Map(),openUsed=new Map(),held=new Set(),bad=new Set(),open0=saved?.open??{};
- const poolOf=item=>mealCapOf(engine,item);
+ // 性能：mealCapOf 只读引擎世界表（加载后不变）与物品，同一 engine 下同一物品结果恒同；poolMemo 的作用域是
+ // 调用方给定的一次计算（householdResources 一次调用内 engine 不变；不传则只在本次 mealCapPools 内），结果对象只读不改。
+ const poolOf=item=>{let c=poolMemo.get(item);if(c===undefined){c=mealCapOf(engine,item);poolMemo.set(item,c);}return c;};
+ // open0 里余量 > 0 的物品所属池：只依赖 open0 与 poolOf（均不变），首次用到时算一次；语义同原先每次 some 扫描。
+ let openPools=null;
+ const openPoolSet=()=>openPools??=new Set(Object.keys(open0).filter(k=>(open0[k]??0)>0).map(k=>poolOf(k)?.pool));
  const accrual=(c,start)=>c.mg*perDay*days.reduce((n,x)=>n+Math.max(0,Math.floor(x-start+1e-9)),0);
  const api={
   active,
   // 登记这户现在手里有这件（库存 > 0）；开封余量 > 0 的物品由 openMg 自动视为持有。
   markHeld(item){const c=active&&poolOf(item);if(c)held.add(c.pool);},
-  holding(item){const c=active&&poolOf(item);return Boolean(c)&&(held.has(c.pool)||Object.keys(open0).some(k=>(open0[k]??0)>0&&poolOf(k)?.pool===c.pool));},
+  holding(item){const c=active&&poolOf(item);return Boolean(c)&&(held.has(c.pool)||openPoolSet().has(c.pool));},
   // 这个池总共能吃多少毫克：start = 货到手的天数（手里已有则 0）。
   // 一天的额度（每人每餐上限 × mealsPerDay × 人数）。
   dayMg(item){const c=active&&poolOf(item);return c?c.mg*perDay*days.length:Infinity;},
