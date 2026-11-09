@@ -66,7 +66,7 @@ export function monthKey(date=new Date()){return date.toISOString().slice(0,7);}
 export async function monthSpend(ledgerPath,month){
  let text;
  try{text=await fs.readFile(ledgerPath,'utf8');}catch(error){if(error.code==='ENOENT')return 0;throw error;}
- const lines=text.split('"""+bn+"""'),partialTail=!text.endsWith('"""+bn+"""');
+ const lines=text.split('\n'),partialTail=!text.endsWith('\n');
  let total=0,badAt=null;
  for(const [i,line]of lines.entries()){
   if(!line.trim())continue;
