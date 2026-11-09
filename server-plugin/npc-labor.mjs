@@ -39,7 +39,20 @@ import {environmentFeatures} from './environment-state.mjs';
 const DAY=1440,writer='npc-labor';
 declareLedgerWriter(writer,{sinks:['sink:export']});
 declareHoldingWriter(writer,{kinds:[]});
-const reader=document=>({document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)});
+// 一次 laborCandidates 内文档只读：同一份状态与账本下的家计读取（householdResources 经 d.memo）在这一次生成内共享，
+// 不再每次报价、每个买方重读。键含状态与账本对象；生成结束即丢弃，执行结算的读取（不在作用域内）不受影响。
+let laborReadScope=null;
+const scopedValue=Symbol('labor read scope value');
+function scopedMemo(scope,document,key,inputs,build){
+ let at=scope;
+ for(const part of [document.state,document.ledger,key,...inputs]){let next=at.get(part);if(!next)at.set(part,next=new Map());at=next;}
+ if(!at.has(scopedValue))at.set(scopedValue,build());
+ return at.get(scopedValue);
+}
+const reader=document=>{
+ const read={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)},scope=laborReadScope;
+ return scope?{...read,memo:(key,inputs,build)=>scopedMemo(scope,document,key,inputs,build)}:read;
+};
 // 劳动的工时参数只来自 rules.npcLabor；缺了是数据错误，不用缺省值顶替。
 function config(e){
  const c=e.rules.npcLabor;
@@ -273,6 +286,11 @@ function carryRoom(e,document,who,item,food=null){
 function laborCost(e,document,who,view,minutes){return Math.ceil(laborValue(e,document,{worker:who,observer:who,view}).daily*minutes/480);}
 
 export function laborCandidates(e,view,document){
+ if(laborReadScope)return readLaborCandidates(e,view,document);
+ laborReadScope=new Map();
+ try{return readLaborCandidates(e,view,document);}finally{laborReadScope=null;}
+}
+function readLaborCandidates(e,view,document){
  const state=document.state,who=view.observer,labor=laborCategories(e,state,who),at=view.minute,out=[];
  if(!labor.length||!adult(e,state,who,at))return out;
  const read=stateReader(marketState(state,who)),home=view.self.location,day=Math.floor(at/DAY);
