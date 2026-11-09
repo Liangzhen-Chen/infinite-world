@@ -1407,6 +1407,8 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - ② 完成时间估计依据：剩余未开始 509 个文件在 b1m-1 累计 40175 s ×1.4 ÷6 ≈ 9374 s，加在跑 6 个最多再 1323 s，合计约 10410 s ≈ 2.9 h（从本机 04:14 起，约 07:10）；1.4 倍按已完成文件推得、假设各文件同比例变慢，误差可能较大。
 - ③ 性能根因并行做（不等 m2-2）：探针目录 pf-1（t-pf c410f576 = t-foodsrc+t-prof，hash 33a139ae…）、pm-1（t-pm 100c45d7 = t-metab 2c4e6ad2+t-prof，hash 3c2c96f3…），两轮审后各跑 `run-script <dir> tools/prof-day.mjs mode=farm days=10`，与 prof-1（5.0 s/日）、memo-1（7.4 s/日）同场景比较每游戏日秒数与 readHouseholdResources 调用数；定位后整类修（如可达卖家列表/聚落口数按天或按状态版本缓存，失效条件写清），两轮审再上云。
 
+**04:35 性能根因已定位**：pf-1/pm-1 两轮 approve（pf1 r1-20261109T042622Z-2803767 / r2-…042741Z-2804561；pm1 r1-…042636Z-2804002 / r2-…042754Z-2804804）。同场景剖析（F:/dnd-tmp/prof1/pf-1-farm.out、pm-1-farm.out）：基线 prof-1 5.07 s/日、readHouseholdResources 37,021；**只开 t-foodsrc：约 7.9 s/日（+56%）、130,803 次、stockSupply 34.9%** → 主因；只开 t-metab：5.38 s/日（+6%）、37,025 次 → 次要。修复卡已派（t-foodsrc 上）：卖家物理可出让量按状态版本共享缓存（budgetRead）、可达非店铺卖家候选按聚落+日/状态缓存，结果逐字不变，新测 food-sources-memo；两轮审后上云复剖析，达标再重组合并候选（m2-2 结果仍要对照，但快进前须先修回退）。
+
 **02:20 李白待核清单**：①memo-1 已答（01:45:50–01:47:05 结束 EXIT=0，结果 F:/dnd-tmp/prof1/memo1-farm.out）；②m2-2 实况已答（本节）；③a–f 原文已贴（b1m-1 汇总与差异、GitHub 未推、清理证据、metab-10 与 ptai-6 审查与云测、t-msfix 状态）。
 **服务器磁盘** 84%（7.7 GB）；上传低于 4 GB 拒绝；已跑完旧目录清理按“三条证据”授权（F:/dnd-tmp/server-cleanup-1109-11/run.sh）。
 **纪律**：本机只 node --check；审查者禁止 `python -` 读 stdin（曾三次卡死后台）；合并前核分支指针=审过提交；中文汇报。
