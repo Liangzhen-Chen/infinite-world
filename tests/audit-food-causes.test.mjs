@@ -1,9 +1,10 @@
 // The closing food audit: each of the four causes is reachable from a small fixture and classified by the
-// card's definitions; undeterminable cases say so instead of getting a default; books reconcile with
+// card's definitions (there is no undetermined class: roster-only and no-location households are chain, flagged apart);
+// the producer-side chain-break rule is tested at its 7-day boundary; books reconcile with
 // difference 0 (and a perturbed ledger is caught); a short real-engine window is deterministic and partitions.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runAudit,verdict,buildFacts,reconcileBooks,supplySatiety,demandSharing} from '../tools/audit-food-causes.mjs';
+import {runAudit,verdict,buildFacts,reconcileBooks,supplySatiety,demandSharing,producerStep,PRODUCER_IDLE_DAYS} from '../tools/audit-food-causes.mjs';
 
 // One open own-settlement shop; one meal of its bread costs PRICE; the household has plenty of cash unless a case says otherwise.
 const PRICE=5,UNITS=2;
@@ -39,7 +40,7 @@ test('poverty: threshold is the fixture price (price-1 poor; price and price+1 n
  assert.notEqual(cause({cash:PRICE+1}),'poverty');
  assert.equal(cause({cash:0,reach:[],townShops:{total:1,open:0}}),'poverty');// nothing on sale: priced at the catalogue's cheapest
 });
-test('allocation: everything edible reachable is bought out, (a price-only refusal cannot be isolated in the record)',()=>{
+test('allocation: everything edible reachable is bought out, or the customer refused on price (prepay >= 2)',()=>{
  assert.equal(cause({reach:[shelf({},[item({bought:20})])]}),'allocation');
  assert.equal(cause({reach:[shelf({},[item({avail:21,bought:20})])]}),'allocation');// left 1 unit < one meal
 });
@@ -60,7 +61,7 @@ test('not allocation: a defer (time/obligation) or other non-price refusal is ch
  assert.equal(v.cause,'chain');assert.match(v.reason,/outcome defer/);
  assert.equal(cause({declined:{outcome:'refuse',reason:'conflict'}}),'chain');
 });
-test('conditional: prepay >=2 is a price refusal (allocation); prepay 1 cannot be told from a breach-history prepay (chain, flagged)',()=>{
+test('conditional: prepay >=2 is a price refusal (allocation); prepay 1 is ambiguous with a breach-history prepay (chain, flagged for review)',()=>{
  assert.equal(cause({declined:{outcome:'conditional',reason:'需先付3文，再谈这件事。'}}),'allocation');
  const v=verdict(buildFacts(snap({declined:{outcome:'conditional',reason:'需先付1文，再谈这件事。'}})));
  assert.equal(v.cause,'chain');assert.equal(v.flag,'conditional');
@@ -89,6 +90,26 @@ test('quote failed for every good and cash below the catalogue price: poverty, f
 test('conditional prepay boundary: 2 is the smallest price refusal, 1 is not',()=>{
  assert.equal(cause({declined:{outcome:'conditional',reason:'需先付2文，再谈这件事。'}}),'allocation');
  assert.equal(cause({declined:{outcome:'conditional',reason:'需先付1文，再谈这件事。'}}),'chain');
+});
+
+// Producer side: feed a day-by-day record through producerStep; returns the day (1-based) of the first stall, or 0.
+const ON={surplus:30,roadOpen:true,buyerCash:100,moved:false};
+const run=days=>{let idle=0;for(let i=0;i<days.length;i++){const r=producerStep(idle,{...ON,...days[i]});idle=r.idle;if(r.stalled)return i+1;}return 0;};
+const none=n=>Array.from({length:n},()=>({}));
+test('producer chain break: 6 idle days are not a break, the 7th day is',()=>{
+ assert.equal(PRODUCER_IDLE_DAYS,7);
+ assert.equal(run(none(6)),0);
+ assert.equal(run(none(7)),7);
+});
+test('producer chain break: a transport record resets the count, which restarts from zero',()=>{
+ assert.equal(run([...none(6),{moved:true},...none(6)]),0);// 6 idle, record, 6 idle: never 7 in a row
+ assert.equal(run([...none(6),{moved:true},...none(7)]),14);// the 7th idle day after the record
+});
+test('producer chain break: no coin in town, zero surplus or a closed road each reset it',()=>{
+ assert.equal(run([...none(6),{buyerCash:0},...none(6)]),0);
+ assert.equal(run(Array.from({length:10},()=>({buyerCash:0}))),0);
+ assert.equal(run(Array.from({length:10},()=>({surplus:0}))),0);
+ assert.equal(run(Array.from({length:10},()=>({roadOpen:false}))),0);
 });
 
 const COIN='coin_river',OATS='item_oats';

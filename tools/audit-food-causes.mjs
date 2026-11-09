@@ -46,6 +46,16 @@ async function srcLine(file,needle){
  const out=at<0?`${file}:?(${needle})`:`server-plugin/${file}:${at+1}`;lineCache.set(key,out);return out;
 }
 
+// Pure: one day of the producer-side chain-break test. surplus = grain above the settlement's own reserve; roadOpen = a route
+// exists to the town (a route that threw counts as open: an error must never hide a chain break); buyerCash = coins held by
+// town buyers; moved = a transport/trade record from the producer to the town first appeared that day.
+// idle counts consecutive days that could have shipped and did not; any record or any missing condition resets it to 0.
+export const PRODUCER_IDLE_DAYS=7;
+export function producerStep(idle,{surplus,roadOpen,buyerCash,moved}){
+ const can=surplus>0&&roadOpen&&buyerCash>0,next=can&&!moved?idle+1:0;
+ return {idle:next,stalled:next>=PRODUCER_IDLE_DAYS};
+}
+
 // Pure: satiety of everything edible on the given sellers' shelves (itemLists = [[{item,avail}]] per reachable seller).
 export function supplySatiety(itemLists,gain){let n=0;for(const items of itemLists)for(const it of items)n+=it.avail*gain(it.item);return n;}
 
@@ -165,10 +175,10 @@ export async function runAudit({days=30,progress=()=>{}}={}){
  const condSplit={incidents:0,meals:0,keys:new Set()};
  const total={named:{incidents:0,meals:0},roster:{incidents:0,meals:0}};
  const prevUnmet=new Map();
- const routeMemo=new Map();
+ const routeMemo=new Map(),routeErrors={};
  const route=(from,to,minute)=>{
   const key=`${from}|${to}|${Math.floor(minute/DAY)}`;
-  if(!routeMemo.has(key)){try{const r=e.route(from,to,'walk',minute,seed);routeMemo.set(key,{minutes:r.minutes,cost:r.cost??0});}catch{routeMemo.set(key,null);}}
+  if(!routeMemo.has(key)){try{const r=e.route(from,to,'walk',minute,seed);routeMemo.set(key,{minutes:r.minutes,cost:r.cost??0});}catch(error){routeMemo.set(key,{error:String(error?.message??error)});routeErrors[error?.message??String(error)]=(routeErrors[error?.message??String(error)]??0)+1;}}
   return routeMemo.get(key);
  };
 
@@ -249,8 +259,10 @@ export async function runAudit({days=30,progress=()=>{}}={}){
    if(location)for(const shop of shopRows){
     if(!shop.open||!shop.items.length)continue;
     const a=location===shop.location?{minutes:0,cost:0}:route(location,shop.location,noon),b=location===shop.location?{minutes:0,cost:0}:route(shop.location,location,noon);
-    if(!a||a.minutes>dayTrip)continue;// one way, rules travel.dailyTravelMinutes
-    out.push({shop,roundTrip:Boolean(b&&a.minutes+b.minutes<=dayTrip),toll:a.cost+(b?.cost??0),sameSettlement:shop.settlement===sid,engineServes:shop.settlement===sid&&a.minutes<=reach});
+    // A route that threw has no minutes: the seller stays in the supply (never hide a chain break) but is not counted as served by the customer flow.
+    if(a.error){out.push({shop,roundTrip:false,routeError:true,toll:0,sameSettlement:shop.settlement===sid,engineServes:false});continue;}
+    if(a.minutes>dayTrip)continue;// one way, rules travel.dailyTravelMinutes
+    out.push({shop,roundTrip:Boolean(!b.error&&a.minutes+b.minutes<=dayTrip),toll:a.cost+(b.error?0:b.cost),sameSettlement:shop.settlement===sid,engineServes:shop.settlement===sid&&a.minutes<=reach});
    }
    return out;
   };
@@ -326,11 +338,11 @@ export async function runAudit({days=30,progress=()=>{}}={}){
   }
   const stalledToday=[];
   for(const pr of producers){
-   const toTown=route(pr.counter,sid,noon),back=route(sid,pr.counter,noon),roadOpen=Boolean(toTown&&back);
-   const can=pr.surplus>0&&roadOpen&&buyerCash>0,idle=can&&seenNow.get(pr.settlement)===0?(idleDays.get(pr.settlement)??0)+1:0;
+   const toTown=route(pr.counter,sid,noon),back=route(sid,pr.counter,noon),roadOpen=Boolean(toTown.error||back.error||(toTown&&back));
+   const step=producerStep(idleDays.get(pr.settlement)??0,{surplus:pr.surplus,roadOpen,buyerCash,moved:seenNow.get(pr.settlement)>0}),idle=step.idle;
    idleDays.set(pr.settlement,idle);
    pr.roadOpen=roadOpen;pr.idleDays=idle;
-   if(idle>=7){producerStalls.push({day,producer:pr.settlement,town:sid,idleDays:idle,surplus:pr.surplus,buyerCash:round(buyerCash)});stalledToday.push(pr.settlement);}
+   if(step.stalled){producerStalls.push({day,producer:pr.settlement,town:sid,idleDays:idle,surplus:pr.surplus,buyerCash:round(buyerCash)});stalledToday.push(pr.settlement);}
   }
   daily.push({day,townDemand:round(townDemand),shelfSatiety:round(shelfSatiety),missedNamed:round(missed.filter(m=>m.en.owner).reduce((n,m)=>n+m.meals,0)),missedRoster:round(missed.filter(m=>!m.en.owner).reduce((n,m)=>n+m.meals,0)),granarySurplusNotCounted:producers});
   progress(j,doc.state.minute);
@@ -352,6 +364,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
   conditionalNotDistinguished:{households:condSplit.keys.size,incidents:condSplit.incidents,meals:round(condSplit.meals),note:'prepay 1 only; counted in chain. prepay >=2 is price refusal (allocation)'},
   oneWayOnlySellers:{involved:{households:oneWayInvolved.keys.size,incidents:oneWayInvolved.incidents,meals:round(oneWayInvolved.meals)},verdictChanged:{households:oneWayChanged.keys.size,incidents:oneWayChanged.incidents,meals:round(oneWayChanged.meals),changes:oneWayChanged.changes},note:'events whose reach includes a seller reachable one way but not round trip, and the subset whose cause differs when such sellers are dropped; for review'},
   attribution,daily,chainBreakFirst20:chainRows,
+  routeErrors:{note:'engine.route threw; such a seller stays in supply but is not served, such a producer road counts as open',byMessage:routeErrors},
   producerChainBreak:{rule:'surplus > 0 (granary grain minus the settlement\'s own meal reserve), road open both ways (engine.route), a buyer with coins in town, and 7 consecutive days with no new settlement_trade or transport record from the producer to the town',
    surplusSource:await srcLine('agriculture.mjs','const surplus=r.batches.filter'),routeSources:[await srcLine('settlement-trade.mjs',"category:'settlement_trade'"),await srcLine('transport.mjs',"category:'transport'")],
    stalledRows:producerStalls.length,stalledPairs:[...new Set(producerStalls.map(r=>`${r.producer}->${r.town}`))].sort(),first:producerStalls.slice(0,10),last:producerStalls.slice(-3)},
