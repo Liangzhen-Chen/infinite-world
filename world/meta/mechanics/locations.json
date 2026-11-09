@@ -1894,7 +1894,6 @@
      "id": "td_garden_herb",
      "name": "药圃药草",
      "item": "item_herb",
-     "quantity": 30,
      "minutes": 20
     }
    ],
@@ -1913,7 +1912,6 @@
      "id": "yg_nursery_herb",
      "name": "林下药草",
      "item": "item_herb",
-     "quantity": 30,
      "minutes": 20
     }
    ],
@@ -1932,7 +1930,6 @@
      "id": "ll_adit_ore",
      "name": "矿口的铁矿",
      "item": "item_iron_ore",
-     "quantity": 30,
      "minutes": 20
     }
    ],
@@ -1951,7 +1948,6 @@
      "id": "hx_dew_herb",
      "name": "露根圃药草",
      "item": "item_herb",
-     "quantity": 30,
      "minutes": 20
     }
    ],
@@ -1970,7 +1966,6 @@
      "id": "yg_rootslope_wood",
      "name": "归根坡的枯枝落木",
      "item": "item_wood",
-     "quantity": 40,
      "minutes": 20
     }
    ],

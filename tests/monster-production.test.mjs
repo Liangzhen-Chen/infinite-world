@@ -1,6 +1,6 @@
-// 怪物据点生产：职业、产地与加工配方整类补齐（design-monster-production），产出从材料属性与职业技能推导，不为单点塞数据。
-// 数据完整性：由世界数据遍历推出每个据点的产地、劳动者与加工链，不写死名单。
-// “烟苔户盈余可卖”依赖晾干产率（需鲜蘑菇含水率属性，物品表没有），随晾干类一起移出本卡，见下方显式缺口。
+// 怪物据点生产：职业、产地数据整类补齐（design-monster-production）。期望一律由世界数据推出（据点居民的职业文本 → 劳动类别 → 本聚落的产地资源），
+// 再与运行时世界比对；产地的储量、再生与采集工时由栖地规律给出，不手填。
+// “烟苔户盈余可卖”依赖晾干产率（需鲜蘑菇含水率属性，物品表没有），随晾干类一起移出本卡，见完整性测试里的显式缺口。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,11 +8,12 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {planBossMigration} from '../server-plugin/boss-migration.mjs';
-import {laborCategories, processingCategories} from '../server-plugin/npc-labor.mjs';
-import {ids} from '../world/design/monster-society-1.mjs';
+import {laborCategories} from '../server-plugin/npc-labor.mjs';
+import {habitatsOf, ecologyFor} from '../tools/kc-processing.mjs';
 
 const world = await loadWorld();
 const seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
+const ecology = JSON.parse(await fs.readFile('world/design/kc-site-ecology.json', 'utf8'));
 
 function fixture() {
   const engine = new WorldEngine(structuredClone(world));
@@ -27,36 +28,71 @@ const societies = engine => engine.world.locations.filter(l => l.monsterSociety)
 const bodiesOf = (engine, society) => [...engine.world.npcs, ...engine.world.residents ?? []].filter(n => n.society === society);
 const speciesOf = (engine, id) => engine.byId.get(id)?.species;
 
-test('怪物据点生产数据完整：每个据点的产地由本聚落拥有且有再生，登记的产出物种有劳动者，产地的原料有人能采、有人会加工', () => {
-  const f = fixture(), e = f.engine, state = f.document.state, recipes = e.world.recipes;
-  // 覆盖层里手写的生产资源（据点行里本没有）；规律另加的本栖地原生资源不在此列
-  const authored = new Set(Object.values(world.mechanics.locations).flatMap(p => (p.site?.resources ?? []).map(r => r.id)));
-  assert.ok(authored.size >= 5);
-  const uncovered = [];
+test('怪物据点生产数据完整：居民的采集职业与本聚落产地双向对得上，产地的储量、再生、工时都是规律值，登记的产出物有来源', () => {
+  const f = fixture(), e = f.engine, state = f.document.state, recipes = e.world.recipes, locations = e.world.locations;
+  const handWritten = new Set(Object.values(world.mechanics.locations).flatMap(p => (p.site?.resources ?? []).map(r => r.id)));
+  const gatherNoSite = [], siteNoGather = [], noSourceOrLabor = [], noProduction = [];
   for (const society of societies(e)) {
     const bodies = bodiesOf(e, society.id), labor = id => laborCategories(e, state, id);
-    // 本聚落拥有的生产地点：据点资源的所有人是这个聚落（数据里读出，不写名单）
-    const owned = e.world.locations.filter(l => ownerOf(l) === society.id && l.site?.resources?.length);
-    if (!owned.some(l => l.site.resources.some(r => authored.has(r.id)))) uncovered.push(society.id);
+    const owned = locations.filter(l => ownerOf(l) === society.id && l.site?.resources?.length);
     const gatherers = bodies.filter(b => labor(b.id).includes('gather'));
-    const crafts = new Set(bodies.flatMap(b => [...processingCategories(e, state, b.id)]));
-    for (const place of owned) for (const r of place.site.resources.filter(r => authored.has(r.id))) {
-      assert.ok(e.byId.has(r.item), `${place.id}/${r.id} 物品未登记`);
-      assert.ok(place.site.changes?.some(c => c.kind === 'regrow' && c.resource === r.id && c.max <= r.quantity), `${place.id}/${r.id} 缺再生登记（应由栖地表派生）`);
-      assert.ok(gatherers.length, `${society.id} 有产地 ${place.id} 却没有任何居民的职业带采集`);
-      // 产地原料的加工：凡有不要工位的初加工配方以它为料，聚落里要有人的手艺含这类加工（逐类，不逐配方点名）
-      for (const category of new Set(recipes.filter(x => x.processing && !x.workstation && x.materials.some(m => m.item === r.item)).map(x => x.processing)))
-        assert.ok(crafts.has(category), `${society.id} 产地 ${place.id} 的 ${r.item} 可做「${category}」加工，聚落里没有人会`);
+    // 期望：居民里有采集职业的聚落，应拥有可采的产地；拥有产地的聚落，应有人能采
+    if (gatherers.length && !owned.length) gatherNoSite.push(society.id);
+    if (owned.length && !gatherers.length) siteNoGather.push(society.id);
+    if (!gatherers.length && !owned.length && bodies.some(b => labor(b.id).length)) noProduction.push(society.id);
+    for (const place of owned) for (const r of place.site.resources) {
+      // 储量与再生：栖地规律的值（覆盖层不手写 quantity）
+      const eco = ecologyFor(r.item, habitatsOf(place, {[place.id]: {biome: place.biome}}, ecology), ecology);
+      assert.ok(eco, `${place.id}/${r.id} 的 ${r.item} 在本栖地没有生态行`);
+      assert.equal(r.quantity, eco.reserve, `${place.id}/${r.id} 储量应等于栖地规律值`);
+      const change = place.site.changes?.find(c => c.kind === 'regrow' && c.resource === r.id);
+      assert.ok(change, `${place.id}/${r.id} 缺再生登记`);
+      assert.deepEqual([change.quantity, change.everyDays, change.max], [eco.quantity, eco.everyDays, eco.reserve]);
     }
-    // 登记的本地产出（supplies 里按物种在某处产出的行）：该物种在本聚落里要有带劳动类别的居民
+    // 采集工时：手写的 minutes 只能取规律口径——栖地表原生条目登记了该物品就取它，否则取世界里同物品既有条目的最小值
+    for (const place of owned) for (const r of place.site.resources.filter(r => handWritten.has(r.id))) {
+      const native = Object.values(ecology.native).flat().find(n => n.item === r.item);
+      const others = locations.filter(l => ownerOf(l) !== society.id).flatMap(l => l.site?.resources ?? []).filter(x => x.item === r.item && !x.gather).map(x => x.minutes);
+      const expected = native ? native.minutes : Math.min(...others);
+      assert.equal(r.minutes, expected, `${place.id}/${r.id} 采集工时应取规律口径`);
+    }
+    // 登记的本地产出（supplies 里按物种在某处产出的行）须有来源：本聚落产地资源，或不要工位的配方由已有来源的料做出；且该物种有带劳动类别的居民
+    const items = new Set(owned.flatMap(l => l.site.resources.map(r => r.item)));
+    const sourced = (item, depth = 3) => items.has(item) || depth > 0 && recipes.some(r => r.output.item === item && !r.workstation && r.materials.every(m => sourced(m.item, depth - 1)));
     for (const row of society.monsterSociety.supplies ?? []) if (row.species) {
-      const members = bodies.filter(b => speciesOf(e, b.id) === row.species);
-      assert.ok(members.some(b => labor(b.id).length), `${society.id} 登记 ${row.item} 由 ${row.species} 在 ${row.place} 产出，但该物种居民没有任何劳动类别`);
+      const labored = bodies.some(b => speciesOf(e, b.id) === row.species && labor(b.id).length);
+      if (!sourced(row.item) || !labored) noSourceOrLabor.push(`${society.id}:${row.item}`);
     }
   }
-  // 显式缺口（没有手写产地的据点），有变化需显式更新：
-  // 灰棚集：补具檐的绳索、木柄都是制成品，原料没有本地来源，又没有工位。
-  // 炭阶：菌床洞的鲜蘑菇要晾成干菌片才有产出，晾干产率须由材料含水率（可食/干物比例）推导，物品表没有该属性，不借他物数值；待补属性：鲜蘑菇含水率。
-  // 另缺同类属性而移出本卡：苔灯与榆根里的浆果晾干（浆果含水率）、榆根里榛与核桃脱壳（带壳榛、带壳核桃的可食仁比例与脱壳工时）。
-  assert.deepEqual(uncovered, ['loc_ms_huipeng', 'loc_ms_tanjie']);
+  // 显式缺口，双向比对，有变化需显式更新：
+  // 炭阶：菌床工有采集职业，但菌床洞的鲜蘑菇要晾成干菌片才有产出，晾干产率须由材料含水率推导，物品表没有该属性，不借他物数值；待补属性：鲜蘑菇含水率。
+  assert.deepEqual(gatherNoSite, ['loc_ms_tanjie']);
+  assert.deepEqual(siteNoGather, []);
+  // 灰棚集：补具檐的绳索、木柄是制成品，原料无本地来源，又没有工位。
+  assert.deepEqual(noProduction, ['loc_ms_huipeng']);
+  // 登记产出物无来源或无劳动者：榆根里的榛、核桃、干果（待补属性：带壳榛与带壳核桃的可食仁比例及脱壳工时、浆果含水率）与木柄（缺木工工位，修具职业无只含加工的劳动类别）；
+  // 裂炉的铁、铁钉、矿镐（缺炼铁类与锻工位）、木炭（本聚落无木料来源）；回汐埠的鲜鱼（fish 劳动尚无候选实现）；灰棚集的绳索、木柄（无工位）。
+  assert.deepEqual(noSourceOrLabor.sort(), [
+    'loc_ms_huipeng:item_flax_cord', 'loc_ms_huipeng:item_tool_handle', 'loc_ms_huixi:item_fish',
+    'loc_ms_lielu:item_charcoal', 'loc_ms_lielu:item_iron', 'loc_ms_lielu:item_iron_nail', 'loc_ms_lielu:item_mining_pick',
+    'loc_ms_yugen:item_dried_fruit', 'loc_ms_yugen:item_hazelnut', 'loc_ms_yugen:item_tool_handle', 'loc_ms_yugen:item_walnut']);
+});
+
+// 玩家在怪物公共产地采集：公共据点本不算擅入；采走的是本聚落所有的资源，记一条采集侵犯，受害者是产地所有人（与派系所有的公共据点同一规律）。
+test('玩家在怪物公共产地采集：只记一条采集侵犯，受害者是产地所有人；不另记擅入', async () => {
+  const f = fixture(), e = f.engine, homes = new Set(societies(e).map(s => s.id));
+  const places = e.world.locations.filter(l => !l.monsterSociety && l.access?.mode === 'public' && homes.has(ownerOf(l)) && l.site?.resources?.some(r => !r.gather));
+  assert.ok(places.length >= 4);
+  for (const place of places) {
+    const resource = place.site.resources.find(r => !r.gather);
+    const doc = structuredClone(f.document); doc.state.location = place.id;
+    const before = doc.state.inventory[resource.item]?.quantity ?? 0;
+    const eventId = `mprod-gather-${place.id}`, out = await f.run(doc, 'world_site', {operation: 'gather', target: resource.id}, eventId);
+    assert.equal(out.document.state.inventory[resource.item]?.quantity ?? 0, before + 1, `${place.id} 采到一份`);
+    const offenses = Object.values(out.document.state.records).filter(r => r.category === 'offense' && r.sourceEvent === eventId);
+    assert.equal(offenses.length, 1, `${place.id} 只应记一条（采集侵犯），实际 ${offenses.map(o => o.act)}`);
+    assert.equal(offenses[0].act, 'gather');
+    assert.equal(offenses[0].victim, ownerOf(place));
+    assert.equal(offenses[0].offender, 'player');
+  }
 });
