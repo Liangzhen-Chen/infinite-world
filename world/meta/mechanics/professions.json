@@ -33,7 +33,8 @@
   "aliases": [
    "渔工",
    "渔家帮工",
-   "渔家雇工"
+   "渔家雇工",
+   "照看水道"
   ],
   "labor": [
    "fish",
@@ -60,6 +61,10 @@
    "felt",
    "weave",
    "weaving"
+  ],
+  "aliases": [
+   "织芦席",
+   "修绳换货"
   ]
  },
  "profession_life_5": {
@@ -72,6 +77,10 @@
    "cut",
    "tool_metal",
    "tool_cast"
+  ],
+  "aliases": [
+   "铸补匠",
+   "修矿具"
   ]
  },
  "profession_life_6": {
@@ -87,6 +96,11 @@
    "pitch",
    "tool_wood",
    "tool_rod"
+  ],
+  "aliases": [
+   "修具",
+   "烧炭",
+   "削柄修具"
   ]
  },
  "profession_life_8": {
@@ -105,11 +119,18 @@
    "采果",
    "采叶工",
    "采叶雇工",
-   "家务与采叶"
+   "家务与采叶",
+   "菌床工",
+   "照看育苗根",
+   "育苗"
   ],
   "labor": [
    "gather",
    "farm"
+  ],
+  "processing": [
+   "dry",
+   "shell"
   ]
  },
  "profession_life_12": {

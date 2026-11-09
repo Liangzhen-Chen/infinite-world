@@ -33,6 +33,11 @@ const NEW_ITEMS = [
     tags: ['glue', 'material'], seasonality: '全年可熬，暑天易腐须阴干', use: '五十克干胶块，温水化开后作颜料与墨的黏结剂，也可黏木；遇潮回软。',
     description: '用生皮边角或生骨加水久熬，滤去渣后摊薄阴干的胶块，色呈琥珀到深褐，断面有光。温水泡软化开即成胶液，调烟炱可成墨，调色粉可作胶彩。',
     inspection: '对光看应透亮无渣，敲之脆响；发霉、发臭或一捏即软的已受潮。', storage: '纸包后装干罐，避潮避热，一年内用完。'},
+  // 怪物据点生产：这四种自然物供晾干、脱壳两类初加工用（鲜菌、鲜浆果可晾干；带壳榛、带壳核桃可脱壳）。重量按成品重量÷类产率反推（一份原料恰出一份成品），基准价按成品价平价，数字待标定。
+  {"id":"item_fresh_mushroom","name":"鲜栽培蘑菇","basePrice":5,"weight":0.2,"aliases":[],"quality":"木","durability":100,"scope":null,"origin":"site_ms_tj_fungus","shelfLifeDays":7,"tags":["food"],"seasonality":"菌床常年出菇，暖潮时出得多","use":"二百克一份的鲜栽培蘑菇，须煮透；采下后不及时晾干或烹煮，几天内就会发黏变味。","description":"菌床洞里培出的鲜蘑菇，一份约二百克，菌盖浅褐，菌褶细密，掰开菌柄断面洁白。采下当天最嫩，放久会发黏出水，须趁鲜煮食或切片晾成干菌片。","inspection":"菌盖应挺括干爽，菌柄断面洁白；发黏、出水、带酸臭或霉斑的整份弃去，不作试尝。","storage":"摊开放在阴凉通风处，不堆压不密封，七天内用完或晾干。"},
+  {"id":"item_fresh_berry","name":"鲜林下浆果","basePrice":3,"weight":0.5,"aliases":[],"quality":"木","durability":100,"scope":null,"origin":"loc_ms_taideng","shelfLifeDays":7,"tags":["fruit","food"],"seasonality":"林下浆果夏秋成熟","use":"五百克一份的林下鲜浆果，可鲜食或切片晾成干果；熟透的易烂。","description":"林下采来的鲜浆果，一份约五百克，果皮薄，色从暗红到紫黑不等，熟透处一碰就破。当天吃最好，吃不完要切片摊开晾成干果。","inspection":"挑去压烂、出汁、生霉的果子；闻有酸馊味的整份弃去。","storage":"摊薄放在阴凉通风处，七天内吃完或晾干。"},
+  {"id":"item_hazelnut_inshell","name":"带壳榛","basePrice":6,"weight":0.4,"aliases":[],"quality":"木","durability":100,"scope":null,"origin":"site_ms_yg_nursery","shelfLifeDays":60,"tags":["plant","material"],"seasonality":"秋季成熟采收","use":"四百克一份的带壳榛子，须敲裂外壳取仁；不能直接当干粮。","description":"榆根里育苗地榛树结的带壳榛子，一份约四百克，硬壳棕褐，圆头尖尾。须敲裂外壳、拣净碎壳才得榛仁。","inspection":"摇一摇听有无空响，空壳与有虫孔的拣出；壳面发霉的整份弃去。","storage":"装在透气筐里放干燥处，六十天内脱壳。"},
+  {"id":"item_walnut_inshell","name":"带壳核桃","basePrice":6,"weight":0.3,"aliases":[],"quality":"木","durability":100,"scope":null,"origin":"site_ms_yg_nursery","shelfLifeDays":60,"tags":["plant","material"],"seasonality":"秋季成熟采收","use":"三百克一份的带壳核桃，须去青皮、敲壳取仁；不能直接当干粮。","description":"育苗地核桃树结的带壳核桃，一份约三百克，外壳起皱、色黄褐，须敲开壳、拣净隔膜碎壳才得核桃仁。","inspection":"掂有无分量，轻飘的多为空壳；壳缝发黑、出油腥的整份弃去。","storage":"装在透气筐里放干燥处，六十天内脱壳。"},
 ];
 
 // ---------- 加工类 ----------
@@ -88,6 +93,14 @@ const PROCESSES = [
   {id: 'cut', name: '分料', skill: 'skill_life_5_core', workstation: 'smithing', tools: ['item_smith_hammer', 'item_smith_tongs'], yield: 0.9, minutesPerKg: 20, reagents: {item_charcoal: 1},
     process: '铁料回炉烧红，按规格剁开、拔长或拉细，冷后分拣；烧过火起泡的料归废边。',
     members: [['item_iron', 'item_iron_scrap'], ['item_iron', 'item_iron_wire'], ['item_iron', 'item_steel_bar']]},
+  // 晾干：类参数取自仓库唯一的已审晾干配方「薄梨干片」（0.3 公斤鲜梨→0.09 公斤，300 分钟）：产率 0.3、每公斤原料 1000 分钟。calibration: pending。
+  {id: 'dry', name: '晾干', skill: 'skill_life_9_core', workstation: null, tools: [], yield: 0.3, minutesPerKg: 1000, calibration: 'pending',
+    process: '原料切片或摊开在竹筛与晾架上，放在通风处翻面晾到发脆，收袋；阴雨回潮或晾不透的发霉，失败不返料。',
+    members: [['item_fresh_mushroom', 'item_dry_mushroom'], ['item_fresh_berry', 'item_dried_fruit']]},
+  // 脱壳：仓库里没有已审的脱壳产率，产率 0.5 与每公斤 40 分钟均为占位（工时借「磨粉」类每公斤 40 分钟的脱壳磨粉工序）。calibration: pending，待标定。
+  {id: 'shell', name: '脱壳', skill: 'skill_life_9_core', workstation: null, tools: [], yield: 0.5, minutesPerKg: 40, calibration: 'pending',
+    process: '带壳的果实敲开或砸裂外壳，挑出果仁，拣净碎壳与空壳；砸碎了仁的归废，失败不返料。',
+    members: [['item_hazelnut_inshell', 'item_hazelnut'], ['item_walnut_inshell', 'item_walnut']]},
 ];
 
 // ---------- 工具类 ----------

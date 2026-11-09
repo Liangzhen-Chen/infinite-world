@@ -31,7 +31,10 @@ test('生成部分与数据表一致：重跑生成器不改变配方，运行�
   const inFile = J('world/meta/recipes.json').filter(r => r.id.startsWith('recipe_kc_'));
   assert.deepEqual(inFile, g.recipes);
   const items = new Map(J('world/meta/items.json').map(i => [i.id, i]));
-  const plan = regrowPlan(J('world/geo/locations.json'), J('world/meta/recipes.json'), items, J('world/geo/biomes.json').locations);
+  // 怪物据点的生产地点：行里本没有 site，据点由覆盖层给出；运行时据点 = 覆盖层给的据点经同一规律派生
+  const siteOverlay = J('world/meta/mechanics/locations.json');
+  const base = J('world/geo/locations.json').map(l => siteOverlay[l.id]?.site && !l.site ? {...l, site: structuredClone(siteOverlay[l.id].site)} : l);
+  const plan = regrowPlan(base, J('world/meta/recipes.json'), items, J('world/geo/biomes.json').locations);
   const runtime = await loadRuntimeWorld();
   assert.deepEqual(runtime.locations.map(l => l.site), plan.locations.map(l => l.site));
 });

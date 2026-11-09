@@ -37,9 +37,24 @@
     ],
     "loc_wild_wt_mist": [
       "wetland"
+    ],
+    "site_ms_tj_fungus": [
+      "underground"
+    ],
+    "site_ms_yg_nursery": [
+      "woodland"
+    ],
+    "site_ms_td_garden": [
+      "woodland"
+    ],
+    "site_ms_hx_dew": [
+      "wetland"
+    ],
+    "site_ms_yg_rootslope": [
+      "woodland"
     ]
   },
-  "siteHabitatsNote": "地形只写了笼统的平地、丘陵、而地点用途写明是林子或苇滩的，按用途记栖地（老榆杂木林、苇根泥滩）。",
+  "siteHabitatsNote": "地形只写了笼统的平地、丘陵、而地点用途写明是林子或苇滩的，按用途记栖地（老榆杂木林、苇根泥滩）。　怪物据点的生产地点（菌床洞、育苗地、药圃、露根圃）同理按用途登记栖地：整个聚落的 terrain 是统一值（平地、丘陵、湿地），不能表达洞内、林下或滩边。",
   "terrainHabitats": {
     "盐湿滩地": [
       "saltmarsh",
@@ -360,6 +375,34 @@
         2,
         15
       ]
+    },
+    "item_fresh_mushroom": {
+      "underground": [
+        30,
+        3,
+        7
+      ]
+    },
+    "item_fresh_berry": {
+      "woodland": [
+        30,
+        3,
+        7
+      ]
+    },
+    "item_hazelnut_inshell": {
+      "woodland": [
+        15,
+        2,
+        10
+      ]
+    },
+    "item_walnut_inshell": {
+      "woodland": [
+        15,
+        2,
+        10
+      ]
     }
   },
   "native": {
@@ -434,5 +477,6 @@
         "minutes": 20
       }
     ]
-  }
+  },
+  "calibrationNote": "怪物据点生产卡新增：鲜栽培蘑菇、鲜林下浆果借药草 woodland 行 [30,3,7]（蘑菇用于 underground 栖地），带壳榛、带壳核桃借树脂 woodland 行 [15,2,10]；均无已审来源，calibration: pending，待标定。RG-A 可再生律尚未接入运行时，这里不假装由它派生。"
 }
