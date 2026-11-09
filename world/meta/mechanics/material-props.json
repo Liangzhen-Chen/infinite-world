@@ -126,8 +126,8 @@
    "sources": [
     {
      "name": "白蘑菇",
-     "citation": "USDA FoodData Central 白蘑菇生",
-     "moistureFraction": 0.925,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169251，NDB 11260）：Mushrooms, white, raw；含水 92.4 g/100g，22 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.924,
      "kcalPer100gWet": 22,
      "mealGrams": 85,
      "mealBasis": "dryMatter",
@@ -138,23 +138,23 @@
     "method": "single",
     "reason": "世界里的蘑菇只有栽培菇，取白蘑菇一个出处；鲜香菇不是世界成员，不入平均"
    },
-   "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【数值凭记忆写入，待 L2 核对】",
+   "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "mealCapBasis": "单餐可食量上限：取 RACC 蔬菜类 85 g 鲜蘑菇，按干物质折算，再按每件物品自己的含水折回（干蘑菇片约 7 g）。【数值凭记忆写入，待 L2 核对】"
   },
   "nut": {
    "sources": [
     {
      "name": "榛仁",
-     "citation": "USDA FoodData Central 榛仁生",
-     "moistureFraction": 0.047,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170581，NDB 12120）：Nuts, hazelnuts or filberts；含水 5.31 g/100g，628 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.0531,
      "kcalPer100gWet": 628,
      "mealGrams": 30,
      "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：坚果 30 g"
     },
     {
      "name": "核桃仁",
-     "citation": "USDA FoodData Central 核桃仁生",
-     "moistureFraction": 0.041,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170187，NDB 12155）：Nuts, walnuts, english；含水 4.07 g/100g，654 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.0407,
      "kcalPer100gWet": 654,
      "mealGrams": 30,
      "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：坚果 30 g"
@@ -164,14 +164,14 @@
     "method": "mean",
     "reason": "世界里只有榛仁与核桃仁两种去壳坚果仁，逐项取平均"
    },
-   "basis": "去壳坚果仁。【数值凭记忆写入，待 L2 核对】",
+   "basis": "去壳坚果仁。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "mealCapBasis": "单餐可食量上限：取 RACC 坚果 30 g。坚果能量密度高，一餐的惯常量是一把。【数值凭记忆写入，待 L2 核对】"
   },
   "fruit": {
    "sources": [
     {
      "name": "苹果",
-     "citation": "USDA FoodData Central 苹果带皮生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171688，NDB 9003）：Apples, raw, with skin (Includes foods for USDA's Food Distribution Program)；含水 85.6 g/100g，52 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.856,
      "kcalPer100gWet": 52,
      "refuseFraction": 0.1,
@@ -181,8 +181,8 @@
     },
     {
      "name": "梨",
-     "citation": "USDA FoodData Central 梨生",
-     "moistureFraction": 0.837,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169118，NDB 9252）：Pears, raw；含水 84.0 g/100g，57 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.84,
      "kcalPer100gWet": 57,
      "refuseFraction": 0.1,
      "mealGrams": 140,
@@ -191,7 +191,7 @@
     },
     {
      "name": "李",
-     "citation": "USDA FoodData Central 李生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169949，NDB 9279）：Plums, raw；含水 87.2 g/100g，46 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.872,
      "kcalPer100gWet": 46,
      "refuseFraction": 0.06,
@@ -204,14 +204,14 @@
     "method": "mean",
     "reason": "世界里的鲜果为苹果、梨、李，逐项取平均"
    },
-   "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。【数值凭记忆写入，待 L2 核对】",
+   "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "mealCapBasis": "单餐可食量上限（mealCap）：出处给鲜果的惯常单餐量 140 g，按干物质折算（mealBasis=dryMatter：140 g × (1 − 含水)，三者取平均），再按每件物品自己的含水折回鲜重——鲜果约 140 g，含水 25% 的干果约 27 g，整类同一个值，不按名字区分。【数值凭记忆写入，待 L2 核对】"
   },
   "vegetable": {
    "sources": [
     {
      "name": "甘蓝",
-     "citation": "USDA FoodData Central 甘蓝生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169975，NDB 11109）：Cabbage, raw；含水 92.2 g/100g，25 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.922,
      "kcalPer100gWet": 25,
      "mealGrams": 85,
@@ -219,7 +219,7 @@
     },
     {
      "name": "胡萝卜",
-     "citation": "USDA FoodData Central 胡萝卜生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170393，NDB 11124）：Carrots, raw；含水 88.3 g/100g，41 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.883,
      "kcalPer100gWet": 41,
      "mealGrams": 85,
@@ -227,7 +227,7 @@
     },
     {
      "name": "芜菁",
-     "citation": "USDA FoodData Central 芜菁生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170465，NDB 11564）：Turnips, raw；含水 91.9 g/100g，28 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.919,
      "kcalPer100gWet": 28,
      "mealGrams": 85,
@@ -235,7 +235,7 @@
     },
     {
      "name": "红甜菜",
-     "citation": "USDA FoodData Central 红甜菜生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169145，NDB 11080）：Beets, raw；含水 87.6 g/100g，43 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.876,
      "kcalPer100gWet": 43,
      "mealGrams": 85,
@@ -243,7 +243,7 @@
     },
     {
      "name": "洋葱",
-     "citation": "USDA FoodData Central 洋葱生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170000，NDB 11282）：Onions, raw；含水 89.1 g/100g，40 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.891,
      "kcalPer100gWet": 40,
      "mealGrams": 85,
@@ -251,7 +251,7 @@
     },
     {
      "name": "黄瓜",
-     "citation": "USDA FoodData Central 黄瓜带皮生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168409，NDB 11205）：Cucumber, with peel, raw；含水 95.2 g/100g，15 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.952,
      "kcalPer100gWet": 15,
      "mealGrams": 85,
@@ -262,15 +262,15 @@
     "method": "mean",
     "reason": "类别内六种代表蔬菜逐项取平均；含水明显偏离者（蒜、韭葱、欧防风）在物品行覆盖"
    },
-   "basis": "鲜蔬与块根。【数值凭记忆写入，待 L2 核对】",
+   "basis": "鲜蔬与块根。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "mealCapBasis": "单餐可食量上限：取 RACC 蔬菜 85 g（鲜重）。蔬菜能量密度低，这个上限主要影响整件大的蔬菜要分几天吃。【数值凭记忆写入，待 L2 核对】"
   },
   "legume": {
    "sources": [
     {
      "name": "扁豆",
-     "citation": "USDA FoodData Central 扁豆干生",
-     "moistureFraction": 0.083,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 172420，NDB 16069）：Lentils, raw；含水 8.26 g/100g，352 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.0826,
      "kcalPer100gWet": 352,
      "mealGrams": 1100,
      "mealBasis": "dryMatter",
@@ -279,9 +279,9 @@
     },
     {
      "name": "干豌豆",
-     "citation": "USDA FoodData Central 干豌豆（劈）生",
-     "moistureFraction": 0.113,
-     "kcalPer100gWet": 341,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 172428，NDB 16085）：Peas, green, split, mature seeds, raw；含水 8.69 g/100g，364 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.0869,
+     "kcalPer100gWet": 364,
      "mealGrams": 1100,
      "mealBasis": "dryMatter",
      "eatenMoistureFraction": 0.7,
@@ -289,7 +289,7 @@
     },
     {
      "name": "蚕豆",
-     "citation": "USDA FoodData Central 蚕豆干生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 175205，NDB 16052）：Broadbeans (fava beans), mature seeds, raw；含水 11.0 g/100g，341 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.11,
      "kcalPer100gWet": 341,
      "mealGrams": 1100,
@@ -302,14 +302,14 @@
     "method": "mean",
     "reason": "世界里的干豆为扁豆、干豌豆、蚕豆，逐项取平均（Codex Stan 171-1989 豆类含水上限 15%，均在其内）"
    },
-   "basis": "干豆。【数值凭记忆写入，待 L2 核对】",
+   "basis": "干豆。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "mealCapBasis": "单餐可食量上限（生理上限）：同谷类，胃容量折一餐最多约 1100 g 熟豆，干物质基准折回各件物品鲜重。【数值凭记忆写入，待 L2 核对】"
   },
   "grain": {
    "sources": [
     {
      "name": "硬红冬小麦",
-     "citation": "USDA FoodData Central 硬红冬小麦生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168890，NDB 20072）：Wheat, hard red winter；含水 13.1 g/100g，327 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.131,
      "kcalPer100gWet": 327,
      "mealGrams": 1100,
@@ -319,8 +319,8 @@
     },
     {
      "name": "黑麦粉",
-     "citation": "USDA FoodData Central 黑麦粉（深色）",
-     "moistureFraction": 0.11,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168885，NDB 20063）：Rye flour, dark；含水 10.8 g/100g，325 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.108,
      "kcalPer100gWet": 325,
      "mealGrams": 1100,
      "mealBasis": "dryMatter",
@@ -329,8 +329,8 @@
     },
     {
      "name": "燕麦",
-     "citation": "USDA FoodData Central 燕麦生",
-     "moistureFraction": 0.082,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169705，NDB 20038）：Oats (Includes foods for USDA's Food Distribution Program)；含水 8.22 g/100g，389 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.0822,
      "kcalPer100gWet": 389,
      "mealGrams": 1100,
      "mealBasis": "dryMatter",
@@ -339,8 +339,8 @@
     },
     {
      "name": "珍珠大麦",
-     "citation": "USDA FoodData Central 珍珠大麦生",
-     "moistureFraction": 0.094,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170284，NDB 20005）：Barley, pearled, raw；含水 10.1 g/100g，352 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.101,
      "kcalPer100gWet": 352,
      "mealGrams": 1100,
      "mealBasis": "dryMatter",
@@ -352,7 +352,7 @@
     "method": "mean",
     "reason": "世界里的谷物与谷粉为小麦、黑麦、燕麦、大麦，逐项取平均；已脱壳或磨粉的状态，带壳者在物品行覆盖可食部分"
    },
-   "basis": "谷物与谷粉。【数值凭记忆写入，待 L2 核对】",
+   "basis": "谷物与谷粉。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "mealCapBasis": "单餐可食量上限（生理上限）：胃容量折一餐最多约 1100 g 熟食，按干物质基准折回各件物品的鲜重（生粮约 350 g）；这是一次进食的生理极限，不是惯常量（惯常量如 RACC 面包 50 g 会让人吃不饱），正常饮食不会触发，只防止一顿吃几公斤。【数值凭记忆写入，待 L2 核对】"
   },
   "meat": {
@@ -411,7 +411,7 @@
    "sources": [
     {
      "name": "鸡全蛋",
-     "citation": "USDA FoodData Central 鸡全蛋生（refuse 为蛋壳）",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171287，NDB 1123）：Egg, whole, raw, fresh；含水 76.2 g/100g，143 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.762,
      "kcalPer100gWet": 143,
      "refuseFraction": 0.12,
@@ -423,15 +423,15 @@
     "method": "single",
     "reason": "禽蛋以鸡蛋为代表"
    },
-   "basis": "禽蛋，按可食内容计。蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费本类别值。【数值凭记忆写入，待 L2 核对】",
+   "basis": "禽蛋，按可食内容计。蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费本类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "mealCapBasis": "单餐可食量上限（生理上限）：胃容量折一餐最多约 1100 g；正常饮食远不会触发，只防止一顿吃几公斤肉或一盆鱼。【数值凭记忆写入，待 L2 核对】"
   },
   "milk": {
    "sources": [
     {
      "name": "牛乳",
-     "citation": "USDA FoodData Central 全脂牛乳",
-     "moistureFraction": 0.877,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171265，NDB 1077）：Milk, whole, 3.25% milkfat, with added vitamin D；含水 88.1 g/100g，61 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.881,
      "kcalPer100gWet": 61,
      "mealGrams": 240,
      "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：牛奶 240 mL（约 240 g）"
@@ -456,14 +456,14 @@
    "sources": [
     {
      "name": "菜籽油",
-     "citation": "USDA FoodData Central 菜籽油（canola oil）；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：油脂类 1 汤匙 = 14 g",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 172336，NDB 4582）：Oil, canola；含水 0 g/100g，884 kcal/100g；2026-11-09 已按 FDC API 核对；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：油脂类 1 汤匙 = 14 g",
      "moistureFraction": 0,
      "kcalPer100gWet": 884,
      "mealGrams": 14
     },
     {
      "name": "猪脂",
-     "citation": "USDA FoodData Central 猪脂（lard）；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：油脂类 1 汤匙 = 14 g",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171401，NDB 4002）：Lard；含水 0 g/100g，902 kcal/100g；2026-11-09 已按 FDC API 核对；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：油脂类 1 汤匙 = 14 g",
      "moistureFraction": 0,
      "kcalPer100gWet": 902,
      "mealGrams": 14
@@ -473,13 +473,13 @@
     "method": "mean",
     "reason": "世界里的食用油脂为植物油与动物脂（板脂、熟脂），逐项取平均；黄油含水明显更高，在物品行覆盖"
    },
-   "basis": "食用油脂（Codex 食品分类 02 油脂类）：近纯脂肪，能量约 880–900 kcal/100g，含水近 0。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（油脂类 1 汤匙 14 g）：油脂是烹调与佐餐用，一餐的食用量以汤匙计，不能靠它补满一餐的能量缺口。【数值凭记忆写入，待 L2 核对】"
+   "basis": "食用油脂（Codex 食品分类 02 油脂类）：近纯脂肪，能量约 880–900 kcal/100g，含水近 0。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（油脂类 1 汤匙 14 g）：油脂是烹调与佐餐用，一餐的食用量以汤匙计，不能靠它补满一餐的能量缺口。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   },
   "sweetener": {
    "sources": [
     {
      "name": "蜂蜜",
-     "citation": "USDA FoodData Central 蜂蜜；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蜂蜜、果酱类 1 汤匙 = 21 g",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169640，NDB 19296）：Honey；含水 17.1 g/100g，304 kcal/100g；2026-11-09 已按 FDC API 核对；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蜂蜜、果酱类 1 汤匙 = 21 g",
      "moistureFraction": 0.171,
      "kcalPer100gWet": 304,
      "mealGrams": 21
@@ -489,14 +489,14 @@
     "method": "single",
     "reason": "世界里的甜味佐餐品只有蜂蜜；蜜煮果酱等蜜制品按同一类上限（果酱类与蜂蜜同属一个参照食用量类别），其能量由配方投入推出"
    },
-   "basis": "甜味佐餐品（蜂蜜、果酱、蜜制酱）。蜂蜜含水约 17%，能量约 304 kcal/100g。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（蜂蜜、果酱类 1 汤匙 21 g）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "甜味佐餐品（蜂蜜、果酱、蜜制酱）。蜂蜜含水约 17%，能量约 304 kcal/100g。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（蜂蜜、果酱类 1 汤匙 21 g）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   },
   "vinegar": {
    "sources": [
     {
      "name": "苹果醋",
-     "citation": "USDA FoodData Central 苹果醋（vinegar, cider）；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：醋类 1 汤匙 = 15 g",
-     "moistureFraction": 0.939,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 173469，NDB 2048）：Vinegar, cider；含水 93.8 g/100g，21 kcal/100g；2026-11-09 已按 FDC API 核对；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：醋类 1 汤匙 = 15 g",
+     "moistureFraction": 0.938,
      "kcalPer100gWet": 21,
      "mealGrams": 15
     }
@@ -505,13 +505,13 @@
     "method": "single",
     "reason": "世界里的食醋只有果醋（酸果压汁发酵），以苹果醋为代表"
    },
-   "basis": "食醋：含水约 94%，能量约 21 kcal/100g，单瓶（50 g）只有约半个饱腹。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（醋类 1 汤匙 15 g）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "食醋：含水约 94%，能量约 21 kcal/100g，单瓶（50 g）只有约半个饱腹。单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）（醋类 1 汤匙 15 g）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   },
   "salt": {
    "sources": [
     {
      "name": "食盐",
-     "citation": "USDA FoodData Central 食盐（salt, table）：能量 0，含水约 0.2%；WHO（2012）成人每日食盐 <5 g（日上限），÷ 一日三餐 ≈ 1.7 g/餐（日上限折算，非每餐文献值）",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 173468，NDB 2047）：Salt, table；含水 0.2 g/100g，0 kcal/100g；2026-11-09 已按 FDC API 核对；WHO（2012）成人每日食盐 <5 g（日上限），÷ 一日三餐 ≈ 1.7 g/餐（日上限折算，非每餐文献值）",
      "moistureFraction": 0.002,
      "kcalPer100gWet": 0,
      "mealGrams": 1.7
@@ -521,7 +521,7 @@
     "method": "single",
     "reason": "世界里的盐是食盐（粗盐小包）"
    },
-   "basis": "食盐：无能量，所以不能当口粮（饱腹为 0）；仍按类给单餐上限。依据是 WHO《Guideline: Sodium intake for adults and children》（2012）成人每日食盐 <5 g 的日上限，除以 mealsPerDay=3 折成每餐约 1.7 g；这是日上限折算出的每餐值，不是文献直接给的每餐量，也不是 RACC 或生理上限。【数值凭记忆写入，待 L2 核对】"
+   "basis": "食盐：无能量，所以不能当口粮（饱腹为 0）；仍按类给单餐上限。依据是 WHO《Guideline: Sodium intake for adults and children》（2012）成人每日食盐 <5 g 的日上限，除以 mealsPerDay=3 折成每餐约 1.7 g；这是日上限折算出的每餐值，不是文献直接给的每餐量，也不是 RACC 或生理上限。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   },
   "fresh_herb": {
    "sources": [
@@ -543,22 +543,22 @@
    "sources": [
     {
      "name": "黄芥籽",
-     "citation": "USDA FoodData Central 黄芥籽（mustard seed, yellow）：469 kcal/100g，含水约 5.9%；家用量：1 汤匙约 10 g",
-     "moistureFraction": 0.059,
-     "kcalPer100gWet": 469,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170929，NDB 2024）：Spices, mustard seed, ground；含水 5.27 g/100g，508 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 10 g",
+     "moistureFraction": 0.0527,
+     "kcalPer100gWet": 508,
      "mealGrams": 10
     },
     {
      "name": "罂粟籽",
-     "citation": "USDA FoodData Central 罂粟籽（poppy seed）：525 kcal/100g，含水约 6.0%；家用量：1 汤匙约 8.8 g",
-     "moistureFraction": 0.06,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171330，NDB 2033）：Spices, poppy seed；含水 5.95 g/100g，525 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 8.8 g",
+     "moistureFraction": 0.0595,
      "kcalPer100gWet": 525,
      "mealGrams": 8.8
     },
     {
      "name": "香芹籽",
-     "citation": "USDA FoodData Central 香芹籽（caraway seed）：333 kcal/100g，含水约 9.9%；家用量：1 汤匙约 6.3 g",
-     "moistureFraction": 0.099,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170918，NDB 2005）：Spices, caraway seed；含水 9.87 g/100g，333 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 6.3 g",
+     "moistureFraction": 0.0987,
      "kcalPer100gWet": 333,
      "mealGrams": 6.3
     }
@@ -567,13 +567,13 @@
     "method": "mean",
     "reason": "世界里的香料籽为黄芥籽、罂粟籽、香芹籽，逐项取平均；三者干基能量都偏离平均超过阈值，各在物品行覆盖"
    },
-   "basis": "香料籽（USDA 食物类别 Spices and Herbs）：含水约 6–10%，能量不低，但一餐只用一撮。单餐可食量上限取 USDA FoodData Central 的家用量（household measure：1 汤匙对应的克数，黄芥籽 10 g、罂粟籽 8.8 g、香芹籽 6.3 g），三者取平均 8.4 g；依据是家用量，不是 FDA 参照食用量（RACC）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "香料籽（USDA 食物类别 Spices and Herbs）：含水约 6–10%，能量不低，但一餐只用一撮。单餐可食量上限取 USDA FoodData Central 的家用量（household measure：1 汤匙对应的克数，黄芥籽 10 g、罂粟籽 8.8 g、香芹籽 6.3 g），三者取平均 8.4 g；依据是家用量，不是 FDA 参照食用量（RACC）。黄芥籽取舍：USDA SR Legacy 没有整粒黄芥籽条目，NDB 2024 对应 Spices, mustard seed, ground（FDC 170929），这里用它近似世界里的整粒黄芥籽（磨粉不改变含水与能量的量级，已知取舍）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   },
   "cream": {
    "sources": [
     {
      "name": "稠乳（高脂奶油）",
-     "citation": "USDA FoodData Central 高脂奶油（cream, fluid, heavy whipping）：340 kcal/100g，含水约 57.7%；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：奶油类 1 汤匙 = 15 g",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170859，NDB 1053）：Cream, fluid, heavy whipping；含水 57.7 g/100g，340 kcal/100g；2026-11-09 已按 FDC API 核对；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：奶油类 1 汤匙 = 15 g",
      "moistureFraction": 0.577,
      "kcalPer100gWet": 340,
      "mealGrams": 15
@@ -583,15 +583,15 @@
     "method": "single",
     "reason": "世界里的稠乳是鲜乳上层稠乳，以高脂奶油为代表"
    },
-   "basis": "奶油（Codex 食品分类 01.4）：属乳制品，按真实能量入表（取代统一密度兜底）。稠乳是涂抹、调汤的佐餐用法，一餐的食用量以汤匙计，单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，奶油类 1 汤匙 15 g）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "奶油（Codex 食品分类 01.4）：属乳制品，按真实能量入表（取代统一密度兜底）。稠乳是涂抹、调汤的佐餐用法，一餐的食用量以汤匙计，单餐可食量上限取 FDA 21 CFR 101.12 参照食用量（RACC，奶油类 1 汤匙 15 g）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   },
   "cheese": {
    "sources": [
     {
      "name": "硬乳酪（切达）",
-     "citation": "USDA FoodData Central 切达乳酪（cheese, cheddar）：403 kcal/100g，含水约 37.1%；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：硬乳酪 30 g",
-     "moistureFraction": 0.371,
-     "kcalPer100gWet": 403,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 328637，NDB 1009）：Cheese, cheddar；含水 36.6 g/100g，408 kcal/100g；2026-11-09 已按 FDC API 核对；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：硬乳酪 30 g",
+     "moistureFraction": 0.366,
+     "kcalPer100gWet": 408,
      "mealGrams": 30
     }
    ],
@@ -599,7 +599,7 @@
     "method": "single",
     "reason": "世界里的熟成硬乳酪以切达为代表"
    },
-   "basis": "硬乳酪（Codex 食品分类 01.6）：按真实能量入表（取代统一密度兜底）；乳酪是一餐的蛋白与脂肪来源之一。单餐可食量上限：取 RACC 乳酪 30 g（原先写「不写上限」，按李白 2026-11-09 的整类决定改为有上限）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "硬乳酪（Codex 食品分类 01.6）：按真实能量入表（取代统一密度兜底）；乳酪是一餐的蛋白与脂肪来源之一。单餐可食量上限：取 RACC 乳酪 30 g（原先写「不写上限」，按李白 2026-11-09 的整类决定改为有上限）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   },
   "condiment_sauce": {
    "sources": [
@@ -670,355 +670,488 @@
   "fish": {
    "鲤": "item_fish"
   }
- },
+ },
  "sourceIds": {
   "class_mushroom": {
    "白蘑菇": {
-    "id": null,
-    "status": "未知"
+    "id": "169251",
+    "idType": "FDC",
+    "ndb": "11260",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_nut": {
    "榛仁": {
-    "id": null,
-    "status": "未知"
+    "id": "170581",
+    "idType": "FDC",
+    "ndb": "12120",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "核桃仁": {
-    "id": null,
-    "status": "未知"
+    "id": "170187",
+    "idType": "FDC",
+    "ndb": "12155",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_fruit": {
    "苹果": {
-    "id": "09003",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "171688",
+    "idType": "FDC",
+    "ndb": "09003",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "梨": {
-    "id": null,
-    "status": "未知"
+    "id": "169118",
+    "idType": "FDC",
+    "ndb": "09252",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "李": {
-    "id": null,
-    "status": "未知"
+    "id": "169949",
+    "idType": "FDC",
+    "ndb": "09279",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_vegetable": {
    "甘蓝": {
-    "id": "11109",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "169975",
+    "idType": "FDC",
+    "ndb": "11109",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "胡萝卜": {
-    "id": "11124",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170393",
+    "idType": "FDC",
+    "ndb": "11124",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "芜菁": {
-    "id": null,
-    "status": "未知"
+    "id": "170465",
+    "idType": "FDC",
+    "ndb": "11564",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "红甜菜": {
-    "id": null,
-    "status": "未知"
+    "id": "169145",
+    "idType": "FDC",
+    "ndb": "11080",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "洋葱": {
-    "id": "11282",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170000",
+    "idType": "FDC",
+    "ndb": "11282",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "黄瓜": {
-    "id": "11205",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "168409",
+    "idType": "FDC",
+    "ndb": "11205",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_legume": {
    "扁豆": {
-    "id": null,
-    "status": "未知"
+    "id": "172420",
+    "idType": "FDC",
+    "ndb": "16069",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "干豌豆": {
-    "id": null,
-    "status": "未知"
+    "id": "172428",
+    "idType": "FDC",
+    "ndb": "16085",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "蚕豆": {
-    "id": null,
-    "status": "未知"
+    "id": "175205",
+    "idType": "FDC",
+    "ndb": "16052",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_grain": {
    "硬红冬小麦": {
-    "id": null,
-    "status": "未知"
+    "id": "168890",
+    "idType": "FDC",
+    "ndb": "20072",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "黑麦粉": {
-    "id": null,
-    "status": "未知"
+    "id": "168885",
+    "idType": "FDC",
+    "ndb": "20063",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "燕麦": {
-    "id": null,
-    "status": "未知"
+    "id": "169705",
+    "idType": "FDC",
+    "ndb": "20038",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "珍珠大麦": {
-    "id": null,
-    "status": "未知"
+    "id": "170284",
+    "idType": "FDC",
+    "ndb": "20005",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_meat": {
    "猪里脊": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    },
    "牛肉末 85% 瘦": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    },
    "羊腿瘦肥混合": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    }
   },
   "class_fish": {
    "鲤": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    }
   },
   "class_egg": {
    "鸡全蛋": {
-    "id": null,
-    "status": "未知"
+    "id": "171287",
+    "idType": "FDC",
+    "ndb": "01123",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_milk": {
    "牛乳": {
-    "id": "01077",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "171265",
+    "idType": "FDC",
+    "ndb": "01077",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "羊乳": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    }
   },
   "class_edible_fat": {
    "菜籽油": {
-    "id": "04582",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "172336",
+    "idType": "FDC",
+    "ndb": "04582",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "猪脂": {
-    "id": "04574",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "171401",
+    "idType": "FDC",
+    "ndb": "04002",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_sweetener": {
    "蜂蜜": {
-    "id": "19296",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "169640",
+    "idType": "FDC",
+    "ndb": "19296",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_vinegar": {
    "苹果醋": {
-    "id": "02048",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "173469",
+    "idType": "FDC",
+    "ndb": "02048",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_salt": {
    "食盐": {
-    "id": "02047",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "173468",
+    "idType": "FDC",
+    "ndb": "02047",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_fresh_herb": {
    "莳萝（鲜）": {
-    "id": "02045",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": null,
+    "status": "未知",
+    "verified": "未核对"
    }
   },
   "class_spice_seed": {
    "黄芥籽": {
-    "id": "02024",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170929",
+    "idType": "FDC",
+    "ndb": "02024",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "罂粟籽": {
-    "id": "02033",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "171330",
+    "idType": "FDC",
+    "ndb": "02033",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    },
    "香芹籽": {
-    "id": "02005",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170918",
+    "idType": "FDC",
+    "ndb": "02005",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_cream": {
    "稠乳（高脂奶油）": {
-    "id": "01053",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170859",
+    "idType": "FDC",
+    "ndb": "01053",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "class_cheese": {
    "硬乳酪（切达）": {
-    "id": "01009",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "328637",
+    "idType": "FDC",
+    "ndb": "01009",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_milk": {
    "牛乳": {
-    "id": "01077",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "171265",
+    "idType": "FDC",
+    "ndb": "01077",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_rye_flour": {
    "黑麦粉": {
-    "id": null,
-    "status": "未知"
+    "id": "168885",
+    "idType": "FDC",
+    "ndb": "20063",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_wheat_grain": {
    "硬红冬小麦": {
-    "id": null,
-    "status": "未知"
+    "id": "168890",
+    "idType": "FDC",
+    "ndb": "20072",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_mutton": {
    "羊腿瘦肥混合": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    }
   },
   "item_goat_milk": {
    "羊乳": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    }
   },
   "item_dry_mushroom": {
    "干香菇": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    }
   },
   "item_pear": {
    "梨": {
-    "id": null,
-    "status": "未知"
+    "id": "169118",
+    "idType": "FDC",
+    "ndb": "09252",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_plum": {
    "李": {
-    "id": null,
-    "status": "未知"
+    "id": "169949",
+    "idType": "FDC",
+    "ndb": "09279",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_turnip": {
    "芜菁": {
-    "id": null,
-    "status": "未知"
+    "id": "170465",
+    "idType": "FDC",
+    "ndb": "11564",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_carrot": {
    "胡萝卜": {
-    "id": "11124",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170393",
+    "idType": "FDC",
+    "ndb": "11124",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_parsnip": {
    "欧防风": {
-    "id": null,
-    "status": "未知"
+    "id": "170417",
+    "idType": "FDC",
+    "ndb": "11298",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_beet": {
    "红甜菜": {
-    "id": null,
-    "status": "未知"
+    "id": "169145",
+    "idType": "FDC",
+    "ndb": "11080",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_onion": {
    "洋葱": {
-    "id": "11282",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170000",
+    "idType": "FDC",
+    "ndb": "11282",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_cabbage": {
    "甘蓝": {
-    "id": "11109",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "169975",
+    "idType": "FDC",
+    "ndb": "11109",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_leek": {
    "韭葱": {
-    "id": null,
-    "status": "未知"
+    "id": "169246",
+    "idType": "FDC",
+    "ndb": "11246",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_cucumber": {
    "黄瓜": {
-    "id": "11205",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "168409",
+    "idType": "FDC",
+    "ndb": "11205",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_garlic": {
    "大蒜": {
-    "id": "11215",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "169230",
+    "idType": "FDC",
+    "ndb": "11215",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_oats": {
    "燕麦（带壳整粒）": {
-    "id": null,
-    "status": "未知"
+    "id": "169705",
+    "idType": "FDC",
+    "ndb": "20038",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_dried_fruit": {
    "干果": {
     "id": null,
-    "status": "未知"
+    "status": "未知",
+    "verified": "未核对"
    }
   },
   "item_butter": {
    "无盐黄油": {
-    "id": "01145",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "173430",
+    "idType": "FDC",
+    "ndb": "01145",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_mustard_seed": {
    "黄芥籽": {
-    "id": "02024",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170929",
+    "idType": "FDC",
+    "ndb": "02024",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_poppy_seed": {
    "罂粟籽": {
-    "id": "02033",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "171330",
+    "idType": "FDC",
+    "ndb": "02033",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   },
   "item_caraway_seed": {
    "香芹籽": {
-    "id": "02005",
-    "idType": "NDB",
-    "status": "待核对"
+    "id": "170918",
+    "idType": "FDC",
+    "ndb": "02005",
+    "status": "已核对",
+    "verified": "已按 FDC API 核对 2026-11-09"
    }
   }
  }

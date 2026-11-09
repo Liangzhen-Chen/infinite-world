@@ -27,8 +27,8 @@
    "sources": [
     {
      "name": "牛乳",
-     "citation": "USDA FoodData Central 全脂牛乳",
-     "moistureFraction": 0.877,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171265，NDB 1077）：Milk, whole, 3.25% milkfat, with added vitamin D；含水 88.1 g/100g，61 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.881,
      "kcalPer100gWet": 61
     }
    ],
@@ -36,7 +36,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "牛乳：类别 milk 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "牛乳：类别 milk 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_wool": {
@@ -82,8 +82,8 @@
    "sources": [
     {
      "name": "黑麦粉",
-     "citation": "USDA FoodData Central 黑麦粉（深色）",
-     "moistureFraction": 0.11,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168885，NDB 20063）：Rye flour, dark；含水 10.8 g/100g，325 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.108,
      "kcalPer100gWet": 325
     }
    ],
@@ -91,7 +91,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "黑麦粉：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "黑麦粉：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_pine_board": {
@@ -112,7 +112,7 @@
    "sources": [
     {
      "name": "硬红冬小麦",
-     "citation": "USDA FoodData Central 硬红冬小麦生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168890，NDB 20072）：Wheat, hard red winter；含水 13.1 g/100g，327 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.131,
      "kcalPer100gWet": 327
     }
@@ -121,7 +121,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "硬红冬小麦：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "硬红冬小麦：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_broad_bean": {
@@ -260,8 +260,8 @@
    "sources": [
     {
      "name": "梨",
-     "citation": "USDA FoodData Central 梨生",
-     "moistureFraction": 0.837,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169118，NDB 9252）：Pears, raw；含水 84.0 g/100g，57 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.84,
      "kcalPer100gWet": 57,
      "refuseFraction": 0.1
     }
@@ -270,7 +270,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "梨：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "梨：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_plum": {
@@ -281,7 +281,7 @@
    "sources": [
     {
      "name": "李",
-     "citation": "USDA FoodData Central 李生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169949，NDB 9279）：Plums, raw；含水 87.2 g/100g，46 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.872,
      "kcalPer100gWet": 46,
      "refuseFraction": 0.06
@@ -291,7 +291,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_turnip": {
@@ -302,7 +302,7 @@
    "sources": [
     {
      "name": "芜菁",
-     "citation": "USDA FoodData Central 芜菁生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170465，NDB 11564）：Turnips, raw；含水 91.9 g/100g，28 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.919,
      "kcalPer100gWet": 28
     }
@@ -311,7 +311,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "芜菁：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "芜菁：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_carrot": {
@@ -322,7 +322,7 @@
    "sources": [
     {
      "name": "胡萝卜",
-     "citation": "USDA FoodData Central 胡萝卜生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170393，NDB 11124）：Carrots, raw；含水 88.3 g/100g，41 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.883,
      "kcalPer100gWet": 41
     }
@@ -331,7 +331,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "胡萝卜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "胡萝卜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_parsnip": {
@@ -342,7 +342,7 @@
    "sources": [
     {
      "name": "欧防风",
-     "citation": "USDA FoodData Central 欧防风生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170417，NDB 11298）：Parsnips, raw；含水 79.5 g/100g，75 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.795,
      "kcalPer100gWet": 75
     }
@@ -351,7 +351,7 @@
     "method": "single",
     "reason": "单一出处，覆盖蔬菜类别"
    },
-   "basis": "欧防风根含水低于蔬菜类别均值，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
+   "basis": "欧防风根含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_beet": {
@@ -362,7 +362,7 @@
    "sources": [
     {
      "name": "红甜菜",
-     "citation": "USDA FoodData Central 红甜菜生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169145，NDB 11080）：Beets, raw；含水 87.6 g/100g，43 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.876,
      "kcalPer100gWet": 43
     }
@@ -371,7 +371,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "红甜菜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "红甜菜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_onion": {
@@ -382,7 +382,7 @@
    "sources": [
     {
      "name": "洋葱",
-     "citation": "USDA FoodData Central 洋葱生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170000，NDB 11282）：Onions, raw；含水 89.1 g/100g，40 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.891,
      "kcalPer100gWet": 40
     }
@@ -391,7 +391,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_cabbage": {
@@ -402,7 +402,7 @@
    "sources": [
     {
      "name": "甘蓝",
-     "citation": "USDA FoodData Central 甘蓝生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169975，NDB 11109）：Cabbage, raw；含水 92.2 g/100g，25 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.922,
      "kcalPer100gWet": 25
     }
@@ -411,7 +411,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "甘蓝：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "甘蓝：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_leek": {
@@ -422,7 +422,7 @@
    "sources": [
     {
      "name": "韭葱",
-     "citation": "USDA FoodData Central 韭葱生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169246，NDB 11246）：Leeks, (bulb and lower leaf-portion), raw；含水 83.0 g/100g，61 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.83,
      "kcalPer100gWet": 61
     }
@@ -431,7 +431,7 @@
     "method": "single",
     "reason": "单一出处，覆盖蔬菜类别"
    },
-   "basis": "韭葱含水低于蔬菜类别均值，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
+   "basis": "韭葱含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_cucumber": {
@@ -442,7 +442,7 @@
    "sources": [
     {
      "name": "黄瓜",
-     "citation": "USDA FoodData Central 黄瓜带皮生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168409，NDB 11205）：Cucumber, with peel, raw；含水 95.2 g/100g，15 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.952,
      "kcalPer100gWet": 15
     }
@@ -451,7 +451,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "黄瓜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "黄瓜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_garlic": {
@@ -462,7 +462,7 @@
    "sources": [
     {
      "name": "大蒜",
-     "citation": "USDA FoodData Central 大蒜生",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169230，NDB 11215）：Garlic, raw；含水 58.6 g/100g，149 kcal/100g；2026-11-09 已按 FDC API 核对",
      "moistureFraction": 0.586,
      "kcalPer100gWet": 149
     }
@@ -471,7 +471,7 @@
     "method": "single",
     "reason": "单一出处，覆盖蔬菜类别"
    },
-   "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
+   "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_oats": {
@@ -479,8 +479,8 @@
    "sources": [
     {
      "name": "燕麦（带壳整粒）",
-     "citation": "USDA FoodData Central 燕麦生；壳占谷粒质量 25–35%：Webster & Wood《Oats: Chemistry and Technology》AACC 2011",
-     "moistureFraction": 0.082,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169705，NDB 20038）：Oats (Includes foods for USDA's Food Distribution Program)；含水 8.22 g/100g，389 kcal/100g；2026-11-09 已按 FDC API 核对；壳占谷粒质量 25–35%：Webster & Wood《Oats: Chemistry and Technology》AACC 2011",
+     "moistureFraction": 0.0822,
      "kcalPer100gWet": 389,
      "refuseFraction": 0.3,
      "range": {
@@ -495,7 +495,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，用自己的出处；壳占比取区间中值 30%（脱壳后仁占 70%）"
    },
-   "basis": "带壳燕麦：含水、能量取燕麦（仁）的出处，可食部分由壳占比推出（壳不供能）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "带壳燕麦：含水、能量取燕麦（仁）的出处，可食部分由壳占比推出（壳不供能）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_dried_fruit": {
@@ -538,8 +538,8 @@
    "sources": [
     {
      "name": "无盐黄油",
-     "citation": "USDA FoodData Central 无盐黄油（butter, without salt）：717 kcal/100g，含水约 17.9%",
-     "moistureFraction": 0.179,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 173430，NDB 1145）：Butter, without salt；含水 16.2 g/100g，717 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.162,
      "kcalPer100gWet": 717
     }
    ],
@@ -547,7 +547,7 @@
     "method": "single",
     "reason": "黄油含水约 18%，明显高于油脂类（近 0），用自己的出处覆盖类别值；单餐上限仍取油脂类"
    },
-   "basis": "黄油：含水与能量取 USDA 无盐黄油。【数值凭记忆写入，待 L2 核对】"
+   "basis": "黄油：含水与能量取 USDA 无盐黄油。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_rendered_cooking_fat": {
@@ -588,16 +588,16 @@
    "sources": [
     {
      "name": "黄芥籽",
-     "citation": "USDA FoodData Central 黄芥籽（mustard seed, yellow）：469 kcal/100g，含水约 5.9%；家用量：1 汤匙约 10 g",
-     "moistureFraction": 0.059,
-     "kcalPer100gWet": 469
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170929，NDB 2024）：Spices, mustard seed, ground；含水 5.27 g/100g，508 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 10 g",
+     "moistureFraction": 0.0527,
+     "kcalPer100gWet": 508
     }
    ],
    "selection": {
     "method": "single",
     "reason": "成员偏差超过阈值，用自己的出处"
    },
-   "basis": "成员偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "成员偏差超过阈值，用自己的出处。黄芥籽取舍：USDA SR Legacy 没有整粒黄芥籽条目，NDB 2024 对应 Spices, mustard seed, ground（FDC 170929），这里用它近似世界里的整粒黄芥籽（磨粉不改变含水与能量的量级，已知取舍）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_poppy_seed": {
@@ -608,8 +608,8 @@
    "sources": [
     {
      "name": "罂粟籽",
-     "citation": "USDA FoodData Central 罂粟籽（poppy seed）：525 kcal/100g，含水约 6.0%；家用量：1 汤匙约 8.8 g",
-     "moistureFraction": 0.06,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171330，NDB 2033）：Spices, poppy seed；含水 5.95 g/100g，525 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 8.8 g",
+     "moistureFraction": 0.0595,
      "kcalPer100gWet": 525
     }
    ],
@@ -617,7 +617,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，用自己的出处"
    },
-   "basis": "成员偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "成员偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_caraway_seed": {
@@ -628,8 +628,8 @@
    "sources": [
     {
      "name": "香芹籽",
-     "citation": "USDA FoodData Central 香芹籽（caraway seed）：333 kcal/100g，含水约 9.9%；家用量：1 汤匙约 6.3 g",
-     "moistureFraction": 0.099,
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170918，NDB 2005）：Spices, caraway seed；含水 9.87 g/100g，333 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 6.3 g",
+     "moistureFraction": 0.0987,
      "kcalPer100gWet": 333
     }
    ],
@@ -637,7 +637,7 @@
     "method": "single",
     "reason": "成员偏差超过阈值，用自己的出处"
    },
-   "basis": "成员偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+   "basis": "成员偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
   }
  },
  "item_cream": {
