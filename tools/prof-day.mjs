@@ -1,4 +1,4 @@
-// 只读性能剖析：node tools/prof-day.mjs [mode=farm|a3|s5pm] [scene=hall|school|post|proposal](s5pm 用) [days=N] [out=dir]
+// 只读性能剖析：node tools/prof-day.mjs [mode=farm|a3|s5pm] [scene=hall|school|post|proposal](s5pm 用) [days=N] [limit=秒(scene=proposal，默认900)] [replay=1] [out=dir]
 // 不改引擎/测试/世界数据；用 node:inspector 进程内采样 + 加载钩子计数包装。
 import inspector from 'node:inspector';
 import {register} from 'node:module';
@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {performance} from 'node:perf_hooks';
 import {pathToFileURL,fileURLToPath} from 'node:url';
+import {spawn,spawnSync} from 'node:child_process';
 const args=Object.fromEntries(process.argv.slice(2).map(a=>{const i=a.indexOf('=');return i<0?[a,'1']:[a.slice(0,i),a.slice(i+1)];}));
 const mode=args.mode??'farm',days=Number(args.days??10),outDir=path.resolve(args.out??'.tmp/prof');
 const T0=performance.now(),BUDGET_MS=1200e3,over=()=>performance.now()-T0>BUDGET_MS;
@@ -35,10 +36,14 @@ const callerOf=(name)=>{const fn=name.split('@')[0];const L=(new Error().stack??
   const i=L.findIndex(l=>l.includes(`at ${fn} `)||l.includes(`at async ${fn} `));
   const f=L.slice(i<0?0:i+1).find(l=>!l.includes('prof-day.mjs')&&!l.includes(`at ${fn} `)&&!l.includes('__orig_'+fn));
   if(!f)return '(?)';const m=/at (?:async )?(.*?) \(?([^()]*?)([^\/()]*:\d+):\d+\)?$/.exec(f.trim());return m?`${m[1]} ${m[3]}`:f.trim();};
+// 子进程进度：每 100 次钩子调用同步写一行累计计数到进度文件（进程被杀也留得下）
+let progFd=null,progN=0;
+const progress=(name,force)=>{if(progFd==null)return;progN++;if(!force&&progN%100)return;
+  try{fs.writeSync(progFd,`${((performance.now()-T0)/1000).toFixed(1)}s calls=${progN} last=${name} `+[...stats].map(([k,v])=>`${k.split('@')[0]}=${v.total}`).join(' ')+'\n');}catch{}};
 const stats=new Map();
 const S=name=>{let s=stats.get(name);if(!s)stats.set(name,s={total:0,byDay:new Map(),dayKeys:new Set(),stateKeys:new Set(),dupDay:0,dupState:0,callers:new Map()});return s;};
 globalThis.__PROF={wrap(name,a,orig){
-  const s=S(name);s.total++;s.byDay.set(curDay,(s.byDay.get(curDay)??0)+1);
+  const s=S(name);s.total++;progress(name);s.byDay.set(curDay,(s.byDay.get(curDay)??0)+1);
   let k='';try{k=(keyOf[name]??(()=>''))(a);}catch{}
   const dk=`${curDay}#${k}`;if(s.dayKeys.has(dk))s.dupDay++;else s.dayKeys.add(dk);
   let st=null;try{st=(stateArg[name]?.(a))??stateOf(a[0]);}catch{}
@@ -117,9 +122,10 @@ async function s5pm(){
     proposal=true;f=fx.scenario();
   }else f=fx.nativeScenario(scene==='school'?'bld_hw_school':'bld_hw_post');
   console.log(`scene=${scene} step=${step}日/次`);
-  await startProf();const ms=[];
+  if(args.child)progFd=fs.openSync(path.resolve(args.progress),'a');
+  if(!args.child)await startProf();const ms=[];
   if(proposal){ // 全程计时与采样覆盖 proposalAdvance（子测 8 的 599 秒所在）；replay=1 时再造一份同构场景（子测 8 的同种子重放）再跑一遍
-    for(const [n,x] of [['主',f],...(args.replay?[['replay',fx.scenario()]]:[])]){curDay=0;const t=performance.now();fx.proposalAdvance(x);console.log(`proposalAdvance(${n}) ${(performance.now()-t).toFixed(0)} ms`);if(n==='主')f=x;}
+    for(const [n,x] of [['主',f],...(args.replay?[['replay',fx.scenario()]]:[])]){curDay=0;const t=performance.now();progress('proposalAdvance:start',1);fx.proposalAdvance(x);progress('proposalAdvance:done',1);console.log(`proposalAdvance(${n}) ${(performance.now()-t).toFixed(0)} ms`);if(n==='主')f=x;}
   }
   for(let i=0;i<(proposal&&args.days==null?0:days);i+=step){
     if(over()){console.log(`超过自限时间，提前结束于第 ${i} 天`);break;}
@@ -127,7 +133,7 @@ async function s5pm(){
     const out=await f.e.reduce(f.doc,{tool:'world_time',args:{minutes:step*1440},eventId:`prof-s5pm:${scene}:${i}`});f.doc=applyPatches(f.doc,out.patches);
     const d=performance.now()-t;ms.push(d/step);console.log(`第 ${i+1}-${i+step} 天 ${d.toFixed(0)} ms（日均 ${(d/step).toFixed(0)}）`);
   }
-  await stopProf('s5pm-'+scene);
+  if(!args.child)await stopProf('s5pm-'+scene);
   if(ms.length>=3){const m=a=>a.reduce((x,y)=>x+y,0)/a.length,h=m(ms.slice(0,3)),t=m(ms.slice(-3));
     console.log(`
 首3次日均 ${h.toFixed(0)} ms；末3次日均 ${t.toFixed(0)} ms；比值 ${(t/h).toFixed(2)}`);}
@@ -150,8 +156,31 @@ async function a3(){
   }
   await stopProf('a3');report();
 }
+// scene=proposal：单次 proposalAdvance 可能同步跑过 1 小时，进程内采样来不及输出。
+// 父进程用 node --prof 起子进程（逐 tick 日志持续落盘），limit 秒后强杀，再用 --prof-process 出摘要。
+async function parentProposal(){
+  const limit=Number(args.limit??900),log=path.join(outDir,'proposal-v8.log'),prog=path.join(outDir,'proposal-progress.txt');
+  for(const f of [log,prog])try{fs.rmSync(f);}catch{}
+  const passthru=process.argv.slice(2).filter(a=>!a.startsWith('limit=')&&!a.startsWith('out='));
+  const child=spawn(process.execPath,['--prof','--no-logfile-per-isolate',`--logfile=${log}`,fileURLToPath(import.meta.url),...passthru,'child=1',`progress=${prog}`,`out=${outDir}`],{stdio:['ignore','inherit','inherit']});
+  let killed=false;const timer=setTimeout(()=>{killed=true;child.kill('SIGKILL');},limit*1000);
+  const code=await new Promise(res=>child.on('exit',c=>res(c)));clearTimeout(timer);
+  console.log(`子进程 ${killed?`到 limit=${limit}s 被强制结束`:`自行结束 code=${code}`}；V8 日志 ${log}（${fs.existsSync(log)?(fs.statSync(log).size/1e6).toFixed(0)+' MB':'缺失'}）`);
+  if(fs.existsSync(prog)){const L=fs.readFileSync(prog,'utf8').trim().split('\n');console.log(`进度文件 ${prog}，共 ${L.length} 行；最后 3 行：
+`+L.slice(-3).join('\n'));}
+  if(!fs.existsSync(log))return;
+  const r=spawnSync(process.execPath,['--prof-process',log],{cwd:outDir,encoding:'utf8',maxBuffer:1<<30,timeout:1200e3});
+  const txt=r.stdout??'';const outF=path.join(outDir,'proposal-prof-process.txt');fs.writeFileSync(outF,txt+(r.stderr?'\n'+r.stderr:''));
+  console.log(`--prof-process 完成(status=${r.status})，全文 ${outF}`);
+  const bi=txt.indexOf('[Bottom up (heavy) profile]');
+  console.log('\n'+txt.slice(txt.indexOf('[Summary]'),Math.max(0,txt.indexOf('[C++]'))||2000).slice(0,1500));
+  if(bi>=0){const lines=txt.slice(bi).split('\n');
+    console.log('\n== 自底向上(heavy)前 40 项（含按调用者聚合的缩进行） ==');
+    let top=0,out=[];for(const l of lines.slice(1)){if(/^\s+\d+\s+[\d.]+%\s{1,2}\S/.test(l)&&!/^\s{5,}/.test(l)){if(++top>40)break;}if(top>0)out.push(l.slice(0,200));}
+    console.log(out.join('\n'));}
+}
 try{
   console.log(`mode=${mode} days=${days} out=${outDir} cwd=${process.cwd()} node=${process.version}`);
-  if(mode==='a3')await a3();else if(mode==='s5pm')await s5pm();else await farm();
+  if(mode==='s5pm'&&args.scene==='proposal'&&!args.child)await parentProposal();else if(mode==='a3')await a3();else if(mode==='s5pm')await s5pm();else await farm();
   console.log(`总耗时 ${((performance.now()-T0)/1000).toFixed(0)} s\nEXIT=0`);process.exit(0);
 }catch(e){console.log(e?.stack??e);process.exit(1);}
