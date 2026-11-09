@@ -22,75 +22,15 @@
       "basis": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
     }
   },
-  "review": {
-    "contradictions": [
-      {
-        "quote": "energyDensity 150（李，single）",
-        "field": "energyDensity",
-        "severity": "hard",
-        "reason": "按公式 46×10÷(1−0.872)÷24=149.7，取整应为150，但需核对：46×10=460，460÷0.128=3593.75，÷24=149.74，取整150，算式无误；问题在类别行"
-      },
-      {
-        "quote": "类别 fruit 的 energyDensity 149",
-        "field": "energyDensity",
-        "severity": "hard",
-        "reason": "苹果52×10÷0.144÷24=150.5，梨57×10÷0.163÷24=145.7，李149.7，平均148.6，取整应为149，与149一致；但苹果算式：52×10=520÷0.144=3611÷24=150.5，梨57×10=570÷0.163=3497÷24=145.7，平均(150.5+145.7+149.7)/3=148.6→149，无误"
-      },
-      {
-        "quote": "类别 fruit 的 moisture 0.855",
-        "field": "moisture",
-        "severity": "soft",
-        "reason": "(0.856+0.837+0.872)/3=0.855，算式一致；USDA 苹果含水约0.856、梨约0.84、李约0.87，均在公认范围内"
-      },
-      {
-        "quote": "类别 fruit 的 edibleFraction 0.913",
-        "field": "edibleFraction",
-        "severity": "soft",
-        "reason": "(0.9+0.9+0.94)/3=0.913，算式一致；USDA 苹果 refuse 约0.1、梨约0.1、李约0.06，合理"
-      },
-      {
-        "quote": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处",
-        "field": "basis",
-        "severity": "soft",
-        "reason": "李的含水0.872与类别均值0.855差0.017，能量149.7与149差0.7，偏差很小，称超过阈值缺乏依据；但属说明性文字，非数值错误"
-      }
-    ]
-  },
+  "review": null,
   "errors": [
-    {
-      "quote": "energyDensity 150（李，single）",
-      "field": "energyDensity",
-      "severity": "hard",
-      "reason": "按公式 46×10÷(1−0.872)÷24=149.7，取整应为150，但需核对：46×10=460，460÷0.128=3593.75，÷24=149.74，取整150，算式无误；问题在类别行"
-    },
-    {
-      "quote": "类别 fruit 的 energyDensity 149",
-      "field": "energyDensity",
-      "severity": "hard",
-      "reason": "苹果52×10÷0.144÷24=150.5，梨57×10÷0.163÷24=145.7，李149.7，平均148.6，取整应为149，与149一致；但苹果算式：52×10=520÷0.144=3611÷24=150.5，梨57×10=570÷0.163=3497÷24=145.7，平均(150.5+145.7+149.7)/3=148.6→149，无误"
-    }
+    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_plum"
   ],
-  "warnings": [
-    {
-      "quote": "类别 fruit 的 moisture 0.855",
-      "field": "moisture",
-      "severity": "soft",
-      "reason": "(0.856+0.837+0.872)/3=0.855，算式一致；USDA 苹果含水约0.856、梨约0.84、李约0.87，均在公认范围内"
-    },
-    {
-      "quote": "类别 fruit 的 edibleFraction 0.913",
-      "field": "edibleFraction",
-      "severity": "soft",
-      "reason": "(0.9+0.9+0.94)/3=0.913，算式一致；USDA 苹果 refuse 约0.1、梨约0.1、李约0.06，合理"
-    },
-    {
-      "quote": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处",
-      "field": "basis",
-      "severity": "soft",
-      "reason": "李的含水0.872与类别均值0.855差0.017，能量149.7与149差0.7，偏差很小，称超过阈值缺乏依据；但属说明性文字，非数值错误"
-    }
+  "warnings": [],
+  "feedback": [
+    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_plum"
   ],
-  "feedback": null,
+  "errorCode": "REVIEW_LIMIT",
   "frozenCandidate": {
     "entryHash": "c1820200f26f54f9c79afd71b463b13f19e38df00fcf0ad221e2d02254cbe1fd",
     "draftHash": "78cbbcf00d20f16e81bffbf85ca738670ca732c29d5c553aa8d20b56c0d13216"
@@ -99,10 +39,18 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "8fc8d7e9-48a5-498f-9068-1ee30db73804",
-      "file": "budget-responses/8fc8d7e9-48a5-498f-9068-1ee30db73804.json",
-      "requestHash": "64565edc8c4775fce17ff02c881ff3bb83e3bec5233b7c84cf5bbcb045d6fca9",
-      "responseHash": "a667926a59d0965f3ce081c8055799e235f68feb6f07d16eb5426490b93babda"
+      "requestId": "72c17c90-db95-47b7-bb97-e7f2e21b12bd",
+      "file": "budget-responses/72c17c90-db95-47b7-bb97-e7f2e21b12bd.json",
+      "requestHash": "f04fb19d6b935c315a6a17c5492c69051a6052d5683936ad10c60d866121c355",
+      "responseHash": "b0edfe068f52c89b9b599a0457a2de9b2b686c0201e1ae25b83c3bbc1a3b1448"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "f4f2818c-4bf9-4dc4-97d6-ad6cdc0489c3",
+      "file": "budget-responses/f4f2818c-4bf9-4dc4-97d6-ad6cdc0489c3.json",
+      "requestHash": "f04fb19d6b935c315a6a17c5492c69051a6052d5683936ad10c60d866121c355",
+      "responseHash": "bb2e8d8d1a3e1e60d900af692a493b63ee8233ffbf732328cceeefe5134e8001"
     }
   ],
   "measurements": [
@@ -111,19 +59,43 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1392,
-        "completion_tokens": 470,
-        "total_tokens": 1862,
+        "prompt_tokens": 1449,
+        "completion_tokens": 299,
+        "total_tokens": 1748,
         "prompt_tokens_details": {
-          "cached_tokens": 384
+          "cached_tokens": 512
         },
-        "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 1008
+        "prompt_cache_hit_tokens": 512,
+        "prompt_cache_miss_tokens": 937
       },
-      "costUpperYuan": 0.00579136,
-      "cumulativeUpperYuan": 0.25217864,
-      "latencyMs": 3738.8534,
-      "timestamp": "2026-11-09T14:34:12.981Z"
+      "costUpperYuan": 0.00428648,
+      "cumulativeUpperYuan": 0.33049951999999994,
+      "latencyMs": 2222.0290999999997,
+      "timestamp": "2026-11-09T15:57:02.984Z"
+    },
+    {
+      "label": "content-review-2-item_plum-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1449,
+        "completion_tokens": 315,
+        "total_tokens": 1764,
+        "prompt_tokens_details": {
+          "cached_tokens": 1280
+        },
+        "prompt_cache_hit_tokens": 1280,
+        "prompt_cache_miss_tokens": 169
+      },
+      "costUpperYuan": 0.0029092,
+      "cumulativeUpperYuan": 0.33340871999999994,
+      "latencyMs": 2820.8562999999995,
+      "timestamp": "2026-11-09T15:57:05.835Z"
     }
+  ],
+  "errorHistory": [
+    null,
+    null,
+    "REVIEW_LIMIT"
   ]
 }

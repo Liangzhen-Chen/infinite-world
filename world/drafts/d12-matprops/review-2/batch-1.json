@@ -1,6 +1,6 @@
 {
   "index": 1,
-  "fingerprint": "ee80c4bc7b6adc00c6f4169e42768c13cc2f8d2e6157a30179f7158ce94a7d30",
+  "fingerprint": "20561ad30280bde2a440be3dc8741d352dad2ae3a636b9181feed2a1b9305e54",
   "count": 7,
   "passed": 3,
   "ids": [
@@ -21,10 +21,7 @@
   ],
   "pending": [],
   "flagged": [
-    "item_onion",
-    "item_cabbage",
     "item_leek",
-    "item_cucumber",
     "item_oats",
     "item_dried_fruit"
   ],
@@ -37,7 +34,7 @@
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 0.2942000000000001,
+  "costUpperYuan": 0.36009911999999994,
   "manualRatio": 0.5714285714285714,
   "needsSystemicRepair": true
 }

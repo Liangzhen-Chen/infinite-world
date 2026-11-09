@@ -21,39 +21,15 @@
       "basis": "羊乳：类别 milk 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
     }
   },
-  "review": {
-    "contradictions": [
-      {
-        "quote": "moistureFraction 0.87, kcalPer100gWet 69",
-        "field": "basis",
-        "severity": "soft",
-        "reason": "USDA 羊乳约 87% 水、69 kcal/100g，数值合理；但出处标注「凭记忆写入，待核对」，无法确认，故记 soft。"
-      },
-      {
-        "quote": "energyDensity 221",
-        "field": "energyDensity",
-        "severity": "hard",
-        "reason": "按 69×10÷(1−0.87)÷24=221.2，取整应为 221，与 derived 一致；但 69 kcal/100g 鲜重对应干基约 5310 kcal/kg，÷24≈221，算式无误，故不报。"
-      }
-    ]
-  },
+  "review": null,
   "errors": [
-    {
-      "quote": "energyDensity 221",
-      "field": "energyDensity",
-      "severity": "hard",
-      "reason": "按 69×10÷(1−0.87)÷24=221.2，取整应为 221，与 derived 一致；但 69 kcal/100g 鲜重对应干基约 5310 kcal/kg，÷24≈221，算式无误，故不报。"
-    }
+    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_goat_milk"
   ],
-  "warnings": [
-    {
-      "quote": "moistureFraction 0.87, kcalPer100gWet 69",
-      "field": "basis",
-      "severity": "soft",
-      "reason": "USDA 羊乳约 87% 水、69 kcal/100g，数值合理；但出处标注「凭记忆写入，待核对」，无法确认，故记 soft。"
-    }
+  "warnings": [],
+  "feedback": [
+    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_goat_milk"
   ],
-  "feedback": null,
+  "errorCode": "REVIEW_LIMIT",
   "frozenCandidate": {
     "entryHash": "144b248a061575ecac36c976e3638b32353a683e1ed2d97b3c04ca58629e0727",
     "draftHash": "18b47947fc4f119f47ebea8b10347ed0646655553e3e82cd6052645a0607aef8"
@@ -62,10 +38,18 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "2fec656a-ac59-42e6-a4f0-3e14c696b5a6",
-      "file": "budget-responses/2fec656a-ac59-42e6-a4f0-3e14c696b5a6.json",
-      "requestHash": "206504abcbdaaf35752968c974a1043afcbb6791456f9c810f06d916f693bda3",
-      "responseHash": "f56af3505bf0fefa6c7a6d0a1cc27fca2a50d33694944adc4369490bfa67c151"
+      "requestId": "47716af9-8f11-4485-85a4-63e73d33b3d9",
+      "file": "budget-responses/47716af9-8f11-4485-85a4-63e73d33b3d9.json",
+      "requestHash": "e33231481eb0ed4eabf74846bbd14e38e60ba873f396a45a7d78ec0a9f50754a",
+      "responseHash": "1b49a35dfa39420597d945ff6107fce612e5ca0e63c48101431dcf111eb8ec09"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "3bf1d941-356a-4f80-acb8-9e1b8eb96663",
+      "file": "budget-responses/3bf1d941-356a-4f80-acb8-9e1b8eb96663.json",
+      "requestHash": "e33231481eb0ed4eabf74846bbd14e38e60ba873f396a45a7d78ec0a9f50754a",
+      "responseHash": "2b8fdb72df1901032939bec2cd9a81b5685e8a16560f6211d59ebdf1e5e2705d"
     }
   ],
   "measurements": [
@@ -74,19 +58,43 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1260,
-        "completion_tokens": 163,
-        "total_tokens": 1423,
+        "prompt_tokens": 1317,
+        "completion_tokens": 145,
+        "total_tokens": 1462,
         "prompt_tokens_details": {
-          "cached_tokens": 384
+          "cached_tokens": 512
         },
-        "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 876
+        "prompt_cache_hit_tokens": 512,
+        "prompt_cache_miss_tokens": 805
       },
-      "costUpperYuan": 0.0030713599999999995,
-      "cumulativeUpperYuan": 0.23937056,
-      "latencyMs": 1996.1618000000017,
-      "timestamp": "2026-11-09T14:34:04.872Z"
+      "costUpperYuan": 0.00279048,
+      "cumulativeUpperYuan": 0.31741727999999997,
+      "latencyMs": 1797.2571000000007,
+      "timestamp": "2026-11-09T15:56:53.287Z"
+    },
+    {
+      "label": "content-review-2-item_goat_milk-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1317,
+        "completion_tokens": 169,
+        "total_tokens": 1486,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 165
+      },
+      "costUpperYuan": 0.00172808,
+      "cumulativeUpperYuan": 0.31914536,
+      "latencyMs": 2281.7106999999996,
+      "timestamp": "2026-11-09T15:56:55.604Z"
     }
+  ],
+  "errorHistory": [
+    null,
+    null,
+    "REVIEW_LIMIT"
   ]
 }

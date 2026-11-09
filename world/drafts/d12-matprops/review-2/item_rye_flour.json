@@ -21,41 +21,15 @@
       "basis": "黑麦粉：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
     }
   },
-  "review": {
-    "contradictions": [
-      {
-        "quote": "黑麦粉（深色）moistureFraction 0.11, kcalPer100gWet 325",
-        "field": "basis",
-        "severity": "soft",
-        "reason": "USDA 黑麦粉（深色）约含水 10–11%、鲜重约 325–330 kcal/100g，数值合理；但出处标注凭记忆，无法逐条确认，建议核对原条目"
-      },
-      {
-        "quote": "energyDensity 152",
-        "field": "energyDensity",
-        "severity": "hard",
-        "reason": "按公式 325×10÷(1−0.11)÷24≈152.2，取整应为 152，与 derived 一致；但类别 grain 的 mean 推算 162 与成员黑麦粉 152 相差约 6%，selection 用 single 覆盖合理，不构成矛盾"
-      }
-    ]
-  },
+  "review": null,
   "errors": [
-    {
-      "quote": "energyDensity 152",
-      "field": "energyDensity",
-      "severity": "hard",
-      "reason": "按公式 325×10÷(1−0.11)÷24≈152.2，取整应为 152，与 derived 一致；但类别 grain 的 mean 推算 162 与成员黑麦粉 152 相差约 6%，selection 用 single 覆盖合理，不构成矛盾"
-    }
+    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_rye_flour"
   ],
-  "warnings": [
-    {
-      "quote": "黑麦粉（深色）moistureFraction 0.11, kcalPer100gWet 325",
-      "field": "basis",
-      "severity": "soft",
-      "reason": "USDA 黑麦粉（深色）约含水 10–11%、鲜重约 325–330 kcal/100g，数值合理；但出处标注凭记忆，无法逐条确认，建议核对原条目"
-    }
-  ],
+  "warnings": [],
   "feedback": [
-    "Invalid contradictions JSON: Expected ',' or '}' after property value in JSON at position 189 (line 1 column 190)"
+    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_rye_flour"
   ],
+  "errorCode": "REVIEW_LIMIT",
   "frozenCandidate": {
     "entryHash": "74f82681772a6b273678bef54008ba1d26e0bc08aa3fe16614150d080aef5d11",
     "draftHash": "fc0f0f270d0d73d4e664aca5f8ca0bef4a9c863599367f7cb0ad8d5c95a70966"
@@ -64,18 +38,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "20232de5-0ba1-4668-ba82-670d2ced794d",
-      "file": "budget-responses/20232de5-0ba1-4668-ba82-670d2ced794d.json",
-      "requestHash": "d5e264c30b51747ed580a73016b941d6979d67ec18ec752f1299bf380d18bcab",
-      "responseHash": "47a1aaba0598f7ee566edbdc5fc2d4fef75d57b230367922bfb138dbc5e68243"
-    },
-    {
-      "phase": "review",
-      "attempt": 2,
-      "requestId": "72f51970-db09-4c46-a8f6-039cbb6c1ce1",
-      "file": "budget-responses/72f51970-db09-4c46-a8f6-039cbb6c1ce1.json",
-      "requestHash": "d5e264c30b51747ed580a73016b941d6979d67ec18ec752f1299bf380d18bcab",
-      "responseHash": "cfe6527050fea75f9f3847718bf8856c9a46c6702434e374bb631122113ef911"
+      "requestId": "9f99a204-8809-4624-a00e-871b6c7d7acb",
+      "file": "budget-responses/9f99a204-8809-4624-a00e-871b6c7d7acb.json",
+      "requestHash": "3f34566c87750051cb07e54e6adbdd08084bd314d6ba289b901c4742d5259105",
+      "responseHash": "017b8f72442780c1f0582f20a8bf79fcb43a3d96c6a0af8a080f2ff112b32dff"
     }
   ],
   "measurements": [
@@ -84,39 +50,24 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1408,
-        "completion_tokens": 149,
-        "total_tokens": 1557,
+        "prompt_tokens": 1465,
+        "completion_tokens": 187,
+        "total_tokens": 1652,
         "prompt_tokens_details": {
-          "cached_tokens": 384
+          "cached_tokens": 512
         },
-        "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 1024
+        "prompt_cache_hit_tokens": 512,
+        "prompt_cache_miss_tokens": 953
       },
-      "costUpperYuan": 0.00325536,
-      "cumulativeUpperYuan": 0.22675840000000003,
-      "latencyMs": 2184.0985,
-      "timestamp": "2026-11-09T14:33:55.567Z"
-    },
-    {
-      "label": "content-review-2-item_rye_flour-review1",
-      "model": "deepseek-flash",
-      "thinking": "disabled",
-      "usage": {
-        "prompt_tokens": 1408,
-        "completion_tokens": 184,
-        "total_tokens": 1592,
-        "prompt_tokens_details": {
-          "cached_tokens": 1152
-        },
-        "prompt_cache_hit_tokens": 1152,
-        "prompt_cache_miss_tokens": 256
-      },
-      "costUpperYuan": 0.00203008,
-      "cumulativeUpperYuan": 0.22878848000000002,
-      "latencyMs": 2047.7268000000004,
-      "timestamp": "2026-11-09T14:33:57.641Z"
+      "costUpperYuan": 0.00342248,
+      "cumulativeUpperYuan": 0.30397144000000004,
+      "latencyMs": 2102.3186000000005,
+      "timestamp": "2026-11-09T15:56:44.305Z"
     }
   ],
-  "errorCode": "REVIEW_FORMAT"
+  "errorHistory": [
+    null,
+    "REVIEW_LIMIT",
+    "REVIEW_LIMIT"
+  ]
 }

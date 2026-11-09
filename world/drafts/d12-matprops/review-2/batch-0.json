@@ -1,6 +1,6 @@
 {
   "index": 0,
-  "fingerprint": "f52a605cb6b2fc4f6e699293b4129f90cfd657acba7bb2f6657688ba920c1f85",
+  "fingerprint": "904c69414c96c621549cfef21efffbf412cb347ee3e0714343587d79dba4a2ff",
   "count": 25,
   "passed": 16,
   "ids": [
@@ -47,33 +47,24 @@
     "class_fruit",
     "class_vegetable",
     "class_grain",
-    "class_egg",
     "class_milk",
     "item_milk",
-    "item_rye_flour",
-    "item_wheat_grain",
-    "item_mutton",
-    "item_goat_milk",
     "item_dry_mushroom",
-    "item_pear",
-    "item_plum",
-    "item_turnip",
-    "item_carrot",
     "item_parsnip",
     "item_beet"
   ],
   "sample": [
     "class_legume",
-    "class_carbon",
-    "class_meat",
-    "class_mushroom",
-    "class_fish"
+    "class_timber",
+    "item_milk",
+    "class_fruit",
+    "item_parsnip"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 0.26561008,
+  "costUpperYuan": 0.3451280799999999,
   "manualRatio": 0.36,
   "needsSystemicRepair": true
 }
