@@ -65,6 +65,7 @@ export async function runContentPipeline({
   revision = 'v2', retryManual = false, onBatch = null, budgetRoot = root,
   cardId, allocation, protocolRecoveryIds = [], requestTransform,
   reviewDraftFor = buildDraftRequest?.reviewDraftFor, reuseFrozenDrafts = false,
+  storeContext = false, // 可选：true 时把审查时的上下文原样存进记录（contextSnapshot），供 reuseRecord 比对
   reuseRecord = null, // 可选：(旧记录, 条目, 新指纹) => 沿用后的记录 | null；仅在旧记录 passed 而指纹变了时调用，返回记录则不重审（小改动沿用）
   stopOnReviewError = null, // 可选：(error, entry) => true 时，该审查解析错误使整轮停止后续条目（不再发请求）；默认不停，其他卡行为不变
 }) {
@@ -94,7 +95,7 @@ export async function runContentPipeline({
     let record = recordsById.get(entry.id);
     if(record?.budgetStop){budget.stop(record.budgetStop.message);return record;}
     if(halted)return record??{id:entry.id,fingerprint,status:'pending',attempts:0,draft:null,review:null,errors:[],warnings:[]}; // 已因审查解析错误停止：不发请求、不写盘
-    if(reuseRecord&&record?.status==='passed'&&record.fingerprint!==fingerprint){const carried=await reuseRecord(record,entry,fingerprint);if(carried){await writeJSON(file,carried);recordsById.set(entry.id,carried);return carried;}}
+    if(reuseRecord&&record?.status==='passed'&&record.fingerprint!==fingerprint){const carried=await reuseRecord(record,entry,fingerprint,context);if(carried){await writeJSON(file,carried);recordsById.set(entry.id,carried);return carried;}}
     const recovering=protocolRecoveryIds.length>0;
     let eligible=recovering&&protocolRecoveryIds.includes(entry.id)&&entry.contract==='audit-patch-v1'&&record?.fingerprint===fingerprint&&record.status==='manual'&&!record.review&&!record.protocolRecovery&&
       hasWrapperEvidence(record,entry);
@@ -106,6 +107,7 @@ export async function runContentPipeline({
     if(eligible){record.protocolRecovery={kind:'audit-patch-v1-single-wrapper',startedAt:new Date().toISOString(),prior:structuredClone(record),status:'started'};record.status='pending';await writeJSON(file,record);}
     else record = record?.fingerprint===fingerprint?structuredClone(record):{ id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
     record.status='pending';
+    if(storeContext)record.contextSnapshot=JSON.parse(JSON.stringify(context??null));
     for (let attempt = priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
       let reservations=[],preparedDraft;
       if(!eligible)record.errorCode=null; // 本次尝试开始前清上次的错误码，成功后不残留

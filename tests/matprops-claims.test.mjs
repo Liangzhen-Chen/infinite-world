@@ -7,7 +7,7 @@ import path from 'node:path';
 import {loadRuntimeWorld as runtimeWorld} from '../tools/load-world.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {contextChange, manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
@@ -252,7 +252,7 @@ test('出处状态「近似」（凭记忆、量级已判合理）可审；「�
 });
 
 // ---- 小改动沿用（±10%） ----
-const passedRec = (entry, extra = {}) => ({id: entry.id, fingerprint: 'old', status: 'passed', attempts: 1, draft: {id: entry.id, row: structuredClone(entry.row)}, review: {contradictions: []}, errors: [], warnings: [], ...extra});
+const passedRec = (entry, extra = {}) => ({id: entry.id, fingerprint: 'old', status: 'passed', attempts: 1, draft: {id: entry.id, row: structuredClone(entry.row)}, review: {contradictions: []}, errors: [], warnings: [], contextSnapshot: null, ...extra});
 const tweak = (e, fn) => { const x = structuredClone(e); fn(x.row); return x; };
 const tolEnv = {kcalPerSatiety: 24, tolerance: 0.1};
 test('小改动沿用：所有出处数值相对快照 ±10% 内且结构未变 → 沿用原 L2 结论，不发请求，记「小改动沿用（±10%）」', async t => {
@@ -330,4 +330,43 @@ test('调味卡 review-2 人工核定：item_turnip、class_spice_seed、item_ca
   // 8 项近似出处现为「近似」且带 note：现行数据下调味卡没有因出处状态被跳过的条目
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
   assert.equal(skipUnverified(await condimentEntries(), table, worldTags(await runtimeWorld())).skipped.length, 0);
+});
+
+// ---- 小改动沿用也比上下文（所属类别推算值、标签、成员关系）----
+const ctxOf = (ed, extra = {}) => ({dimensions: {moisture: '质量分数'}, derived: {moisture: 0.5}, item: {id: 'item_a', name: 'A', tags: ['grain']}, members: [{id: 'item_a', weight: 1}],
+  classValues: {grain: {row: {basis: '说明', sources: [{name: '麦', citation: '文字', kcalPer100gWet: 350}]}, derived: {energyDensity: ed, moisture: 0.12}}}, ...extra});
+const runCtx = async (t, oldCtx, newCtx, rec = {}) => {
+  const entry = entryOf('item_a'), dir = await mkRoot(t), client = mkClient([reply([])]);
+  await fs.writeFile(path.join(dir, 'item_a.json'), JSON.stringify(passedRec(entry, {contextSnapshot: oldCtx, ...rec})));
+  const out = await runReview({entries: [entry], client, root: dir, budgetRoot: dir, ctx: () => newCtx, cardIdArg: null, allocation: null, claimEnv: tolEnv});
+  return {client, out, rec: JSON.parse(await fs.readFile(path.join(dir, 'item_a.json'), 'utf8'))};
+};
+test('小改动沿用要比上下文：类别行改动超过 10%、物品行自身不变 → 物品必须重审；10% 以内可沿用', async t => {
+  const big = await runCtx(t, ctxOf(1000), ctxOf(1200));   // 类别推算值 +20%
+  assert.equal(big.client.calls.length, 1); assert.equal(big.rec.carriedOver, undefined);
+  const small = await runCtx(t, ctxOf(1000), ctxOf(1050));  // +5%
+  assert.equal(small.client.calls.length, 0); assert.equal(small.rec.carriedOver.note, '小改动沿用（±10%）');
+  assert.equal(small.rec.contextSnapshot.classValues.grain.derived.energyDensity, 1050);   // 快照随之更新
+  assert.equal(small.rec.reviewedContext.classValues.grain.derived.energyDensity, 1000);   // 基准不前移
+  // 类别行的文字（citation、basis）变了不算结构变化
+  const text = ctxOf(1000); text.classValues.grain.row.basis = '换了说明'; text.classValues.grain.row.sources[0].citation = '换了出处文字';
+  assert.equal((await runCtx(t, ctxOf(1000), text)).client.calls.length, 0);
+});
+test('小改动沿用要比上下文：标签、成员关系、类别键变化 → 重审；记录没有上下文快照的旧记录 → 重审；累计漂移按最初基准', async t => {
+  const cases = {
+    标签: ctxOf(1000, {item: {id: 'item_a', name: 'A', tags: ['legume']}}),
+    成员关系: ctxOf(1000, {members: [{id: 'item_a', weight: 1}, {id: 'item_b', weight: 1}]}),
+    类别键: (() => { const c = ctxOf(1000); c.classValues = {legume: c.classValues.grain}; return c; })(),
+    成员换人: ctxOf(1000, {members: [{id: 'item_z', weight: 1}]})};
+  for (const [name, now] of Object.entries(cases)) assert.equal((await runCtx(t, ctxOf(1000), now)).client.calls.length, 1, name);
+  const noSnap = await runCtx(t, undefined, ctxOf(1000));   // 旧记录没有 contextSnapshot（JSON 里不写 undefined）
+  assert.equal(noSnap.client.calls.length, 1);
+  // 沿用一次（+5%）后再涨到相对最初 +14%：必须重审
+  const first = await runCtx(t, ctxOf(1000), ctxOf(1050));
+  assert.equal(first.client.calls.length, 0);
+  const entry = entryOf('item_a'), dir = await mkRoot(t), client = mkClient([reply([])]);
+  await fs.writeFile(path.join(dir, 'item_a.json'), JSON.stringify(first.rec));
+  await runReview({entries: [entry], client, root: dir, budgetRoot: dir, ctx: () => ctxOf(1140), cardIdArg: null, allocation: null, claimEnv: tolEnv});
+  assert.equal(client.calls.length, 1);
+  assert.equal(contextChange(null, null, 0.1).ok, true); assert.equal(contextChange({a: 1}, {a: 1.2}, 0.1).ok, false);
 });

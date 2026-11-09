@@ -218,7 +218,7 @@ export async function reviewExtractor(claimEnv=null){
  return (response,entry,record)=>extractReview(response,entry,{kcalPerSatiety:env.kcalPerSatiety,record});
 }
 // 小改动沿用（亮圳 19:24 小出入口径）：条目内容变了，若所有出处数值相对「审查时快照」变化都在 ±tolerance 内，且结构（类别归属对应的条目、选取方法、出处个数与名称、各出处写了哪些字段、mealBasis 等）未变，就沿用原 L2 结论，不重审。
-// 快照 = 记录里审查时的 draft（行原样）；沿用后快照基准不前移（reviewedSnapshot 保持最初审过的值），避免小改动逐次累积越过 10%。文字（citation、basis、mealCitation）不参与比较。
+// 快照 = 记录里审查时的 draft（行原样）加 contextSnapshot（审查时的上下文）；沿用后快照基准不前移（reviewedSnapshot、reviewedContext 保持最初审过的值），避免小改动逐次累积越过 10%。文字（citation、basis、mealCitation）不参与比较。
 const ignoredSourceKeys=['citation','mealCitation','range','item'];
 export function smallChange(oldRow,newRow,tol){
  const rel=(a,b)=>a===b||(b!==0&&Math.abs(a-b)/Math.abs(b)<=tol+1e-12);
@@ -241,12 +241,32 @@ export function smallChange(oldRow,newRow,tol){
  }
  return {ok:true};
 }
-export function carryOverRecord(rec,entry,fingerprint,tol,now=new Date().toISOString()){
- if(rec?.status!=='passed'||rec.draft?.id!==entry.id)return null;
- const base=rec.reviewedSnapshot??rec.draft;
- if(!smallChange(base.row,entry.row,tol).ok)return null;
+// 上下文（contextFor 给出的全部内容：所属类别推算值、物品标签、类别成员关系等）同样要比：数值 ±tol 内、结构（键集、数组长度与元素、标签、成员 id）未变才算小改动；
+// 文字说明类字段（citation、basis、description、use 等）不参与。记录里没有审查时的上下文快照（contextSnapshot 缺失）的旧记录一律不沿用。
+const ignoredContextKeys=['citation','mealCitation','basis','mealCapBasis','reason','description','use','note','range'];
+export function contextChange(a,b,tol,where='context'){
+ const no=reason=>({ok:false,reason}),rel=(x,y)=>x===y||(y!==0&&Math.abs(x-y)/Math.abs(y)<=tol+1e-12);
+ if(typeof b==='number')return typeof a==='number'&&rel(b,a)?{ok:true}:no(`${where} 数值变化超过 ±${tol*100}%`);
+ if(Array.isArray(b)){
+  if(!Array.isArray(a)||a.length!==b.length)return no(`${where} 数组长度变了`);
+  for(const [i,y] of b.entries()){const r=contextChange(a[i],y,tol,`${where}[${i}]`);if(!r.ok)return r;}
+  return {ok:true};
+ }
+ if(b&&typeof b==='object'){
+  if(!a||typeof a!=='object'||Array.isArray(a))return no(`${where} 结构变了`);
+  const ks=o=>Object.keys(o).filter(k=>!ignoredContextKeys.includes(k)).sort();
+  if(JSON.stringify(ks(a))!==JSON.stringify(ks(b)))return no(`${where} 键集变了`);
+  for(const k of ks(b)){const r=contextChange(a[k],b[k],tol,`${where}.${k}`);if(!r.ok)return r;}
+  return {ok:true};
+ }
+ return JSON.stringify(a)===JSON.stringify(b)?{ok:true}:no(`${where} 变了`);
+}
+export function carryOverRecord(rec,entry,fingerprint,tol,now=new Date().toISOString(),context=null){
+ if(rec?.status!=='passed'||rec.draft?.id!==entry.id||rec.contextSnapshot===undefined)return null;
+ const base=rec.reviewedSnapshot??rec.draft,baseCtx=rec.reviewedContext!==undefined?rec.reviewedContext:rec.contextSnapshot;
+ if(!smallChange(base.row,entry.row,tol).ok||!contextChange(baseCtx,JSON.parse(JSON.stringify(context??null)),tol).ok)return null;
  const out=structuredClone(rec),draft=draftFor(entry);
- Object.assign(out,{fingerprint,draft,frozenCandidate:{entryHash:hashContent(entry),draftHash:hashContent(draft)},reviewedSnapshot:structuredClone(base),
+ Object.assign(out,{fingerprint,draft,contextSnapshot:structuredClone(context),reviewedContext:structuredClone(baseCtx),frozenCandidate:{entryHash:hashContent(entry),draftHash:hashContent(draft)},reviewedSnapshot:structuredClone(base),
   carriedOver:{note:`小改动沿用（±${Math.round(tol*100)}%）`,tolerance:tol,fromFingerprint:rec.fingerprint,at:now}});
  return out;
 }
@@ -583,7 +603,7 @@ export async function runReview({entries,client,root=reviewRoot,budgetRoot=draft
  cardIdArg=cardId,allocation={cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},revisionArg=revision,dirName=reviewDirName}){
  const env=claimEnv??await loadClaimEnv();
  extract??=await reviewExtractor(env);
- const out=await runContentPipeline({entries,root,budgetRoot,revision:revisionArg,contextFor:ctx,reuseRecord:env.tolerance>0?(rec,entry,fp)=>carryOverRecord(rec,entry,fp,env.tolerance):undefined,
+ const out=await runContentPipeline({entries,root,budgetRoot,revision:revisionArg,contextFor:ctx,storeContext:true,reuseRecord:env.tolerance>0?(rec,entry,fp,context)=>carryOverRecord(rec,entry,fp,env.tolerance,undefined,context):undefined,
   validateDraft:validate,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,buildDraftRequest:draftRequest,buildReviewRequest:reviewRequest,extractReview:extract,
   stopOnReviewError:reviewStops,requestTransform:capReviewsFor({budgetRoot,client,retry,eligible,dirName}),client,cardId:cardIdArg,allocation,concurrency:1,batchSize:25});
  return withMisjudgeStats(out,root);
