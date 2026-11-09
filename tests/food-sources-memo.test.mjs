@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
+import {changeItems} from '../server-plugin/items.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
 import {stateReader} from '../server-plugin/valuation.mjs';
 import {withRecordIndex} from '../server-plugin/storage.mjs';
@@ -43,9 +44,8 @@ test('draft path: same revision shares the seller physical read and buyer result
  assert.ok(purchases(d,e).length>0);
  const before=purchases(d,e).reduce((n,p)=>n+p.quantity,0);
  // 清空卖家库存：卖家无货可卖，旧缓存若仍被读到就会继续给出购买。
- d.set(['state','npcs',seller,'inventory',item],0);
- // 账本已开：库存以账本持货为准（stock.mjs priceRead 在账本开启时读 ledgerValue，不读旧字段）；旧字段改动后须由状态重开账本，才是同一世界的清空。
- d.set(['ledger'],openLedger(e,d.document));
+ // 正式持货写入原语：卖家把现有存量全部耗掉，旧字段与账本持货同步变化（数量读自现有持货，不写死）。
+ changeItems(d,e,seller,item,-e.quantity(d,seller,item),{books:{writer:'items',eventId:'seller-sold-out',flow:'sink:consume',purpose:'sold-out'}});
  const p2=physical(d,e);
  assert.notEqual(p2,p1,'a write must invalidate the shared read');
  const after=purchases(d,e).reduce((n,p)=>n+p.quantity,0);
