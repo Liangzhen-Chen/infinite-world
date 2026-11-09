@@ -1,4 +1,5 @@
 import {laborValue,marketQuote} from './market.mjs';
+import {documentReader} from './read-scope.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {recordsWhere} from './storage.mjs';
 
@@ -165,7 +166,7 @@ export function laborApplication(e,s,id,offer,{minute=s.minute,changing=false,se
     let travel=0,travelCost=0;
     if(n.location!==offer.location){try{const route=e.route(n.location,offer.location,'walk',minute,seed);travel=route.minutes;travelCost=(route.cost??0)*2;if(travelCost>(n.coins??0))return null;}catch{return null;}}
     if(travel>60||!Number.isFinite(travel)||minute+travel>Math.floor(minute/DAY)*DAY+480&&minute%DAY<480)return null;
-    const source=document??{state:s,randomSeed:seed},d={document:source,get:(...p)=>p.reduce((o,k)=>o?.[k],source)};
+    const source=document??{state:s,randomSeed:seed},d=documentReader(source);
     const budget=householdLaborBudget(d,e,id,{minute,wage:offer.wage,workMinutes:offer.workMinutes??480,commuteMinutes:travel,travelCost,outsideWage:Math.max(wage(e,s,id,id),old?.wage??0),meals:offer.meals??[],employer:offer.owner,decisionKey});
     if(!budget.feasible)return null;
     if(old&&old.status!=='罢工'){

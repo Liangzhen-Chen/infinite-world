@@ -16,6 +16,7 @@ import {scheduleAt} from './npc-schedule.mjs';
 import {personHousehold,placeSettlement,personEmployment} from './entity-view.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {stateReader,goodsWorth} from './valuation.mjs';
+import {withReadScope,documentReader} from './read-scope.mjs';
 import {laborValue,marketQuote,saleableStock,recordMarketDeal} from './market.mjs';
 import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
 import {bag,BOOKED,stockItem} from './stock.mjs';
@@ -39,7 +40,7 @@ import {environmentFeatures} from './environment-state.mjs';
 const DAY=1440,writer='npc-labor';
 declareLedgerWriter(writer,{sinks:['sink:export']});
 declareHoldingWriter(writer,{kinds:[]});
-const reader=document=>({document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)});
+const reader=documentReader;
 // 劳动的工时参数只来自 rules.npcLabor；缺了是数据错误，不用缺省值顶替。
 function config(e){
  const c=e.rules.npcLabor;
@@ -272,7 +273,8 @@ function carryRoom(e,document,who,item,food=null){
 }
 function laborCost(e,document,who,view,minutes){return Math.ceil(laborValue(e,document,{worker:who,observer:who,view}).daily*minutes/480);}
 
-export function laborCandidates(e,view,document){
+export function laborCandidates(e,view,document){return withReadScope(()=>readLaborCandidates(e,view,document));}
+function readLaborCandidates(e,view,document){
  const state=document.state,who=view.observer,labor=laborCategories(e,state,who),at=view.minute,out=[];
  if(!labor.length||!adult(e,state,who,at))return out;
  const read=stateReader(marketState(state,who)),home=view.self.location,day=Math.floor(at/DAY);

@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 // L1 extension point. Pack predicates and scores receive the four-domain view.
+import {withReadScope} from './read-scope.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {consumerCoefficients} from './derived-consumers.mjs';
 import {subjectiveFact} from './subjective-view.mjs';
@@ -27,7 +28,7 @@ export function autonomyRelevant(engine,state,id,presence,projectDocument){
 }
 export function autonomyCandidates(engine,view,{fallback=[] ,scheduled=[],document=null}={}){
  const coefficients=consumerCoefficients(view,'autonomy'),decisionCoefficients=consumerCoefficients(view,'decision');
- const derivedRows=document?[...providers.values()].flatMap(p=>p.candidates(engine,view,document)):[];
+ const derivedRows=document?withReadScope(()=>[...providers.values()].flatMap(p=>p.candidates(engine,view,document))):[];
  const candidates=[...(engine.world.autonomy?.candidates??[]),...(engine.rules.npcAutonomy?.candidates??[]),...derivedRows,...scheduled,...fallback];
  const needs=Object.values(view.self.goals??{}).flat().filter(g=>(g.progress??0)<100).sort((a,b)=>(b.urgency??0)-(a.urgency??0));
  const need=needs[0]?.need;
