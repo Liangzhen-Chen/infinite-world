@@ -1,0 +1,66 @@
+{
+  "id": "item_carrot",
+  "fingerprint": "db4bcd2679a235d475d81fea32738da8f8718cac4de375b99cae88d15e9ab7b8",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_carrot",
+    "row": {
+      "sources": [
+        {
+          "name": "胡萝卜",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 170393，NDB 11124）：Carrots, raw；含水 88.3 g/100g，41 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.883,
+          "kcalPer100gWet": 41
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+      },
+      "basis": "胡萝卜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "5e92fddac32088b7002eb7d21b7df32fe899c96afcabab72255d692f0f9871d6",
+    "draftHash": "e51a72f730006aeef983f37bc35f1cebf446adb0ba5154049df355a263e806bd"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "04a88d89-13ca-4e00-bb74-ce40bc59211b",
+      "file": "budget-responses/04a88d89-13ca-4e00-bb74-ce40bc59211b.json",
+      "requestHash": "a7846a25051da0ae9df31abc20bbee2293ecb30c362201c88f3fc8045b4cfdac",
+      "responseHash": "09d32b3c2b11b1ace65675027e7584e228b20737429a351280fbe6d4a4a226ac"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_carrot-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2320,
+        "completion_tokens": 85,
+        "total_tokens": 2405,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1424
+      },
+      "costUpperYuan": 0.00356384,
+      "cumulativeUpperYuan": 0.18659088000000001,
+      "latencyMs": 1318.2037000000018,
+      "timestamp": "2026-11-09T19:14:56.269Z"
+    }
+  ]
+}

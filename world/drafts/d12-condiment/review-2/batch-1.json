@@ -1,0 +1,50 @@
+{
+  "index": 1,
+  "fingerprint": "548e0302a0ca601221728f37f0e7eb51bde59505051887cb959e9aac1d07c4f5",
+  "count": 8,
+  "passed": 6,
+  "ids": [
+    "class_spice_seed",
+    "class_cream",
+    "class_cheese",
+    "class_condiment_sauce",
+    "item_butter",
+    "item_mustard_seed",
+    "item_poppy_seed",
+    "item_caraway_seed"
+  ],
+  "rewritten": 0,
+  "manual": [
+    "class_spice_seed",
+    "item_caraway_seed"
+  ],
+  "pending": [],
+  "flagged": [],
+  "sample": [
+    "item_poppy_seed",
+    "class_condiment_sauce",
+    "class_cream",
+    "class_cheese",
+    "item_mustard_seed"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 0.26149928000000006,
+  "manualRatio": 0.25,
+  "needsSystemicRepair": true,
+  "aiMisjudgedByProgram": {
+    "count": 0,
+    "ids": [],
+    "reaskPassed": 0,
+    "reaskPassedIds": []
+  },
+  "factPendingHuman": {
+    "count": 2,
+    "ids": [
+      "class_spice_seed",
+      "item_caraway_seed"
+    ]
+  }
+}

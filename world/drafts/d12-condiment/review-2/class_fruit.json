@@ -1,0 +1,91 @@
+{
+  "id": "class_fruit",
+  "fingerprint": "8db4f84d6245f8edcb7577b1bb7014bf023fe87f1891efc01d279ab87318871b",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "class_fruit",
+    "row": {
+      "sources": [
+        {
+          "name": "苹果",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 171688，NDB 9003）：Apples, raw, with skin (Includes foods for USDA's Food Distribution Program)；含水 85.6 g/100g，52 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.856,
+          "kcalPer100gWet": 52,
+          "refuseFraction": 0.1,
+          "mealGrams": 140,
+          "mealBasis": "dryMatter",
+          "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：鲜果 140 g（1 个中等大小的果）"
+        },
+        {
+          "name": "梨",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 169118，NDB 9252）：Pears, raw；含水 84.0 g/100g，57 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.84,
+          "kcalPer100gWet": 57,
+          "refuseFraction": 0.1,
+          "mealGrams": 140,
+          "mealBasis": "dryMatter",
+          "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：鲜果 140 g（1 个中等大小的果）"
+        },
+        {
+          "name": "李",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 169949，NDB 9279）：Plums, raw；含水 87.2 g/100g，46 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.872,
+          "kcalPer100gWet": 46,
+          "refuseFraction": 0.06,
+          "mealGrams": 140,
+          "mealBasis": "dryMatter",
+          "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：鲜果 140 g（1 个中等大小的果）"
+        }
+      ],
+      "selection": {
+        "method": "mean",
+        "reason": "世界里的鲜果为苹果、梨、李，逐项取平均"
+      },
+      "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+      "mealCapBasis": "单餐可食量上限（mealCap）：出处给鲜果的惯常单餐量 140 g，按干物质折算（mealBasis=dryMatter：140 g × (1 − 含水)，三者取平均），再按每件物品自己的含水折回鲜重——鲜果约 140 g，含水 25% 的干果约 27 g，整类同一个值，不按名字区分。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "914c4cd49e957b5982abc2cb3c5549e18b5f8d46a039bffdadeddef97b1569bc",
+    "draftHash": "67f78482836b1869e383725eee35b1416ef240596db1f1fd557eaa9540a8fc6b"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "ec490eae-d812-4df9-b640-6b291ea45170",
+      "file": "budget-responses/ec490eae-d812-4df9-b640-6b291ea45170.json",
+      "requestHash": "2c0e8b372595309e6d536564764ab8602986719c56d220ec756bfe99e2ec15e1",
+      "responseHash": "1d7ebfbbb08b31175ccb77aeddd38d8a2eb07703355f3c61dadac61af7d87ee0"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_fruit-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2251,
+        "completion_tokens": 382,
+        "total_tokens": 2633,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1355
+      },
+      "costUpperYuan": 0.00580184,
+      "cumulativeUpperYuan": 0.14204048,
+      "latencyMs": 2537.3758,
+      "timestamp": "2026-11-09T19:14:38.502Z"
+    }
+  ]
+}

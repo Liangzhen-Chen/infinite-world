@@ -1,0 +1,73 @@
+{
+  "id": "item_oats",
+  "fingerprint": "7dcee860cd21ca13e3b3aa31c1499c494c04e2f27cad36fbcabe2a9424e4b4e1",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_oats",
+    "row": {
+      "sources": [
+        {
+          "name": "燕麦（带壳整粒）",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 169705，NDB 20038）：Oats (Includes foods for USDA's Food Distribution Program)；含水 8.22 g/100g，389 kcal/100g；2026-11-09 已按 FDC API 核对；壳占谷粒质量 25–35%：Webster & Wood《Oats: Chemistry and Technology》AACC 2011",
+          "moistureFraction": 0.0822,
+          "kcalPer100gWet": 389,
+          "refuseFraction": 0.3,
+          "range": {
+            "refuseFraction": [
+              0.25,
+              0.35
+            ]
+          }
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，用自己的出处；壳占比取区间中值 30%（脱壳后仁占 70%）"
+      },
+      "basis": "带壳燕麦：含水、能量取燕麦（仁）的出处，可食部分由壳占比推出（壳不供能）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "d86ddd4daba10fe29988d3b69286190dfeff6a24726e2eda818e6fda3b0dfeaa",
+    "draftHash": "a6a748e53fdc28b276712a71566464428d12a455555bded9da5584964dbf0cea"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "2316830f-42d2-4be8-b523-7cd4f180c3d6",
+      "file": "budget-responses/2316830f-42d2-4be8-b523-7cd4f180c3d6.json",
+      "requestHash": "b5a9b64aa2e4695f45996bce1434434a47e18e3ec7f37d8f766de365674b1dec",
+      "responseHash": "a0decd66e15eb6a0c1ad9dcd84be6be386cb1c7aaea4f0029c8d88d6cd4cdb08"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_oats-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2289,
+        "completion_tokens": 100,
+        "total_tokens": 2389,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1393
+      },
+      "costUpperYuan": 0.0036218400000000003,
+      "cumulativeUpperYuan": 0.2155896,
+      "latencyMs": 1797.5975000000035,
+      "timestamp": "2026-11-09T19:15:08.144Z"
+    }
+  ]
+}

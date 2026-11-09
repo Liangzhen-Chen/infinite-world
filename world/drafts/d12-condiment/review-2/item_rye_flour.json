@@ -1,0 +1,66 @@
+{
+  "id": "item_rye_flour",
+  "fingerprint": "70df8f1561d7f551ca926890d2cf191e27f4cd2c186f95e614ed1a39ea22fe8b",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_rye_flour",
+    "row": {
+      "sources": [
+        {
+          "name": "黑麦粉",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 168885，NDB 20063）：Rye flour, dark；含水 10.8 g/100g，325 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.108,
+          "kcalPer100gWet": 325
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+      },
+      "basis": "黑麦粉：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "f22e2999ddcf5a85f56ad4973fbbf02ac37430d4ffcf123a9ada788f003e7318",
+    "draftHash": "2a618206e9044b4083a9f63cb91188ee58789a454e8b51bfa4ca13472fd44d4f"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "0f5eac72-2506-4a50-b9ec-81f75edb8347",
+      "file": "budget-responses/0f5eac72-2506-4a50-b9ec-81f75edb8347.json",
+      "requestHash": "936667ec8b715531a32222f7a67ba64af0af077101cfa5a94808893870528edb",
+      "responseHash": "853155092c697fd506ba81b56c883ec67dce33d26708fb056eaabc509e87aab9"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_rye_flour-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2200,
+        "completion_tokens": 95,
+        "total_tokens": 2295,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1304
+      },
+      "costUpperYuan": 0.00340384,
+      "cumulativeUpperYuan": 0.16888368,
+      "latencyMs": 1152.1548000000003,
+      "timestamp": "2026-11-09T19:14:48.846Z"
+    }
+  ]
+}

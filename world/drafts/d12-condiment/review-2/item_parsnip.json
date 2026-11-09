@@ -1,0 +1,66 @@
+{
+  "id": "item_parsnip",
+  "fingerprint": "4f001462101cde6e97cde64e70845dc2b1ab775cea85b18de7e66252a99334a0",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_parsnip",
+    "row": {
+      "sources": [
+        {
+          "name": "欧防风",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 170417，NDB 11298）：Parsnips, raw；含水 79.5 g/100g，75 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.795,
+          "kcalPer100gWet": 75
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "单一出处，覆盖蔬菜类别"
+      },
+      "basis": "欧防风根含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "c33d8bc1aa92b13d245b7c8a44e3fe5a66fe1cdfae460f9c1f3f8c77e995b666",
+    "draftHash": "539ffed1e17717f735b9b4470ea9e5e85167487853a032e69592f66e3f3c1610"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "3100b4b5-9fa7-46c6-b2fe-eea008b86b82",
+      "file": "budget-responses/3100b4b5-9fa7-46c6-b2fe-eea008b86b82.json",
+      "requestHash": "d8a66b2ec9f79ce1c0db7f1a812603de732272fb99fbbc8854a011ed7211eba5",
+      "responseHash": "75b85db42f9da3087655829c7ba618224c80be382bb231cdfb7d239c72d9f1a8"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_parsnip-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2303,
+        "completion_tokens": 118,
+        "total_tokens": 2421,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1407
+      },
+      "costUpperYuan": 0.00379384,
+      "cumulativeUpperYuan": 0.19038472,
+      "latencyMs": 1127.9557999999997,
+      "timestamp": "2026-11-09T19:14:57.429Z"
+    }
+  ]
+}

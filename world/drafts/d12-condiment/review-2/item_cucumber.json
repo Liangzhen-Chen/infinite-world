@@ -1,0 +1,66 @@
+{
+  "id": "item_cucumber",
+  "fingerprint": "798d9979976894291b1cf7f4b4c1594ac9344453d4e20d20d8b08ba54484d023",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_cucumber",
+    "row": {
+      "sources": [
+        {
+          "name": "黄瓜",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 168409，NDB 11205）：Cucumber, with peel, raw；含水 95.2 g/100g，15 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.952,
+          "kcalPer100gWet": 15
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+      },
+      "basis": "黄瓜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "d2bc5abd819a028b886f43471badef11abd6fb37fda66e3dc087982594b202a1",
+    "draftHash": "b058222dced62510bd6beec72c836d7951e669742de816d131642a58bebeee4a"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "11ca5f9e-00e7-42e4-bfad-1d95342d73c8",
+      "file": "budget-responses/11ca5f9e-00e7-42e4-bfad-1d95342d73c8.json",
+      "requestHash": "2d7071e689daf0790a6a0fc7ca3a935851cc21ba1c64c29a4943ab1a09e21e52",
+      "responseHash": "866523cfec61dfa3c363cc410ff8a0cf228d02309f3390876c92ed71b8cdf111"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_cucumber-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2330,
+        "completion_tokens": 86,
+        "total_tokens": 2416,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1434
+      },
+      "costUpperYuan": 0.0035918400000000002,
+      "cumulativeUpperYuan": 0.20839792000000001,
+      "latencyMs": 1388.256300000001,
+      "timestamp": "2026-11-09T19:15:04.632Z"
+    }
+  ]
+}

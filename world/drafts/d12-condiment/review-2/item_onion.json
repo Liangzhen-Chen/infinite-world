@@ -1,0 +1,66 @@
+{
+  "id": "item_onion",
+  "fingerprint": "2bde2a97c5a02117096494923d087a7f63cf2ed903ba61a49673e689c614ca69",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_onion",
+    "row": {
+      "sources": [
+        {
+          "name": "洋葱",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 170000，NDB 11282）：Onions, raw；含水 89.1 g/100g，40 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.891,
+          "kcalPer100gWet": 40
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+      },
+      "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "bbf1249b2ed27b0bfff2d98b0de1c14d6f956f86475330bfc0232206a0f29d20",
+    "draftHash": "1b162f631a90c69d2aa95a0ad46e7879ea1a09fbe3eb97ba758ce691d463d47d"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "360a7805-5a2a-45cc-ace3-4dde36bc7e1a",
+      "file": "budget-responses/360a7805-5a2a-45cc-ace3-4dde36bc7e1a.json",
+      "requestHash": "dd5bc881d513b098267e90875a6b8f5aee984533132f816ed64ff759f8bc49a8",
+      "responseHash": "b2d3efb00385983a0ef200b60ac543b16b7823e540e52c82aea523bb07c79e17"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_onion-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2324,
+        "completion_tokens": 86,
+        "total_tokens": 2410,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1428
+      },
+      "costUpperYuan": 0.00357984,
+      "cumulativeUpperYuan": 0.1976004,
+      "latencyMs": 1295.4746999999988,
+      "timestamp": "2026-11-09T19:15:00.253Z"
+    }
+  ]
+}

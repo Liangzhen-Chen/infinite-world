@@ -1,0 +1,66 @@
+{
+  "id": "item_mustard_seed",
+  "fingerprint": "d770b1ff795efc6fee0758d01181937dacbfb9feaaa39a0a0339b62fbcb02e66",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_mustard_seed",
+    "row": {
+      "sources": [
+        {
+          "name": "黄芥籽",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 170929，NDB 2024）：Spices, mustard seed, ground；含水 5.27 g/100g，508 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 10 g",
+          "moistureFraction": 0.0527,
+          "kcalPer100gWet": 508
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，用自己的出处"
+      },
+      "basis": "成员偏差超过阈值，用自己的出处。黄芥籽取舍：USDA SR Legacy 没有整粒黄芥籽条目，NDB 2024 对应 Spices, mustard seed, ground（FDC 170929），这里用它近似世界里的整粒黄芥籽（磨粉不改变含水与能量的量级，已知取舍）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "1a1a2067b1b46c12aa8c162b6039bd32794e4f09008c64110385578b600b6b3d",
+    "draftHash": "e0a25febb4e13b2e217c1b3de654b24d3681642ee320e0e9528925609e485c57"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "00768311-a2da-41c7-a1ce-02e6fdcf9b2a",
+      "file": "budget-responses/00768311-a2da-41c7-a1ce-02e6fdcf9b2a.json",
+      "requestHash": "cbecbe33a3186a9f6f934b45aba77a251cb6154508ba54144b94097e784fc913",
+      "responseHash": "ab787ea3e7d766d56a6b0ee8e5bc5f680739f64a5a44eade6b332c274e445feb"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_mustard_seed-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2363,
+        "completion_tokens": 353,
+        "total_tokens": 2716,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1467
+      },
+      "costUpperYuan": 0.00579384,
+      "cumulativeUpperYuan": 0.25051656000000005,
+      "latencyMs": 2415.3130999999994,
+      "timestamp": "2026-11-09T19:15:27.367Z"
+    }
+  ]
+}

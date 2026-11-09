@@ -1,0 +1,67 @@
+{
+  "id": "class_salt",
+  "fingerprint": "e1c52de89b26acac1e7ed9011c2a5b257cf4fcf0a64bb0086e25875676c5e745",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "class_salt",
+    "row": {
+      "sources": [
+        {
+          "name": "食盐",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 173468，NDB 2047）：Salt, table；含水 0.2 g/100g，0 kcal/100g；2026-11-09 已按 FDC API 核对；WHO（2012）成人每日食盐 <5 g（日上限），÷ 一日三餐 ≈ 1.7 g/餐（日上限折算，非每餐文献值）",
+          "moistureFraction": 0.002,
+          "kcalPer100gWet": 0,
+          "mealGrams": 1.7
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "世界里的盐是食盐（粗盐小包）"
+      },
+      "basis": "食盐：无能量，所以不能当口粮（饱腹为 0）；仍按类给单餐上限。依据是 WHO《Guideline: Sodium intake for adults and children》（2012）成人每日食盐 <5 g 的日上限，除以 mealsPerDay=3 折成每餐约 1.7 g；这是日上限折算出的每餐值，不是文献直接给的每餐量，也不是 RACC 或生理上限。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "dc0e766bbd4f211a2914f0653cbfc9302b9bd0256ef2bf59356893ced06e37b2",
+    "draftHash": "05ce52b73d9186f8f55a2197d70ef62f61d10095d8ec0232f2d11e287bd0def0"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "99270deb-7664-40b1-9ef0-d55a03052b4a",
+      "file": "budget-responses/99270deb-7664-40b1-9ef0-d55a03052b4a.json",
+      "requestHash": "93bf8a2a019d68261fdc382fb3245165162a84cdbd0c2ec5bf22f16a8dcecb40",
+      "responseHash": "f4472fa5d9d5961d817651bb8ec89657b037379b08767e295e1ee55aed84d82a"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_salt-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1761,
+        "completion_tokens": 7,
+        "total_tokens": 1768,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 865
+      },
+      "costUpperYuan": 0.00182184,
+      "cumulativeUpperYuan": 0.22845552000000002,
+      "latencyMs": 985.9480999999942,
+      "timestamp": "2026-11-09T19:15:16.485Z"
+    }
+  ]
+}

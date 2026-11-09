@@ -1,0 +1,70 @@
+{
+  "id": "class_mushroom",
+  "fingerprint": "b9935f565525f09bc9aa1320ed1078664fc5e27dd28c4f22fb94deed1cceab2e",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "class_mushroom",
+    "row": {
+      "sources": [
+        {
+          "name": "白蘑菇",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 169251，NDB 11260）：Mushrooms, white, raw；含水 92.4 g/100g，22 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.924,
+          "kcalPer100gWet": 22,
+          "mealGrams": 85,
+          "mealBasis": "dryMatter",
+          "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蘑菇（按蔬菜）85 g"
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "世界里的蘑菇只有栽培菇，取白蘑菇一个出处；鲜香菇不是世界成员，不入平均"
+      },
+      "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+      "mealCapBasis": "单餐可食量上限：取 RACC 蔬菜类 85 g 鲜蘑菇，按干物质折算，再按每件物品自己的含水折回（干蘑菇片约 7 g）。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "dcb9bed0cefaa40ed3cabba997d8224d4af2efc5691af71c4abca156a460b487",
+    "draftHash": "5c012e80e1446ab2d1601875a1d697d4d40e6132f3298091a62fb31d9340a39d"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "9b5b5684-66fe-4a50-a3f0-25123f19f510",
+      "file": "budget-responses/9b5b5684-66fe-4a50-a3f0-25123f19f510.json",
+      "requestHash": "e5f74c35f62ed5d90856012214db4124ed09b74b679563bb9eca1f2e30e61702",
+      "responseHash": "d0eba4884d985355d8a2f72fb1a069340559dc8f2a1b7f721c334b4b14b6f90d"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_mushroom-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1768,
+        "completion_tokens": 7,
+        "total_tokens": 1775,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 872
+      },
+      "costUpperYuan": 0.0018358399999999998,
+      "cumulativeUpperYuan": 0.13181879999999999,
+      "latencyMs": 1130.6118,
+      "timestamp": "2026-11-09T19:14:33.575Z"
+    }
+  ]
+}

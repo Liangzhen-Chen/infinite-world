@@ -1,0 +1,67 @@
+{
+  "id": "item_pear",
+  "fingerprint": "96d4d6251565e678973a86cb4fc7cc08fbb058ac1791905b2af27a1da13c1b85",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_pear",
+    "row": {
+      "sources": [
+        {
+          "name": "梨",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 169118，NDB 9252）：Pears, raw；含水 84.0 g/100g，57 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.84,
+          "kcalPer100gWet": 57,
+          "refuseFraction": 0.1
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+      },
+      "basis": "梨：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "9be075acb7eecaef360b37497d2d706971dbbd11c994fb39e3589dc594478876",
+    "draftHash": "763e119232ecf6acf53d47c862fe90531989ac6b5fa37e666f75159e20ac2295"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "f1dfe0db-d811-4d0e-867b-dd44292e2194",
+      "file": "budget-responses/f1dfe0db-d811-4d0e-867b-dd44292e2194.json",
+      "requestHash": "9f5d8e6ac397fcf2f3d39e46073b162d6d9be1adf3e5632457a8bca91a59f25e",
+      "responseHash": "6c09ff2b19cb7c4c3ca0911995e388e29fc3795046085f1eb9e9da1cd94d648c"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_pear-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2148,
+        "completion_tokens": 84,
+        "total_tokens": 2232,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1252
+      },
+      "costUpperYuan": 0.00321184,
+      "cumulativeUpperYuan": 0.17544136,
+      "latencyMs": 1592.5131000000001,
+      "timestamp": "2026-11-09T19:14:51.693Z"
+    }
+  ]
+}

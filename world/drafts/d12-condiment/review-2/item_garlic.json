@@ -1,0 +1,66 @@
+{
+  "id": "item_garlic",
+  "fingerprint": "03fcc8fae308920513c4fb1bd686050c22ace03eabc6eda81b642bf6d65d3ec2",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_garlic",
+    "row": {
+      "sources": [
+        {
+          "name": "大蒜",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 169230，NDB 11215）：Garlic, raw；含水 58.6 g/100g，149 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.586,
+          "kcalPer100gWet": 149
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "单一出处，覆盖蔬菜类别"
+      },
+      "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "a0d8aef2e829a625fbac8e1579eef828cdcf9d3bdd4c05ec0933cc4ead883774",
+    "draftHash": "406599f6588211dd409a4c8ad96ed16afc92645c19728127bd30b0f9d6ee3c79"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "ecc03f9a-f10e-49a5-a05f-30e4d324c78f",
+      "file": "budget-responses/ecc03f9a-f10e-49a5-a05f-30e4d324c78f.json",
+      "requestHash": "55502e5441c82aa71fcb0a9d73f953d5dc9380517ae7e7eab0a525c703ce7966",
+      "responseHash": "f134597233f4f927194fea2c2b6285cbd4faa265a4a9843e2a5d1c0150b84c0e"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_garlic-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2291,
+        "completion_tokens": 93,
+        "total_tokens": 2384,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1395
+      },
+      "costUpperYuan": 0.0035698400000000003,
+      "cumulativeUpperYuan": 0.21196776,
+      "latencyMs": 1652.5747999999949,
+      "timestamp": "2026-11-09T19:15:06.312Z"
+    }
+  ]
+}

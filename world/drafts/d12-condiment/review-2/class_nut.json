@@ -1,0 +1,77 @@
+{
+  "id": "class_nut",
+  "fingerprint": "7cf9ad80074c3b832ad5fc21f359c86332a245a89db6dfd7d4985835d07c8a59",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "class_nut",
+    "row": {
+      "sources": [
+        {
+          "name": "榛仁",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 170581，NDB 12120）：Nuts, hazelnuts or filberts；含水 5.31 g/100g，628 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.0531,
+          "kcalPer100gWet": 628,
+          "mealGrams": 30,
+          "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：坚果 30 g"
+        },
+        {
+          "name": "核桃仁",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 170187，NDB 12155）：Nuts, walnuts, english；含水 4.07 g/100g，654 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.0407,
+          "kcalPer100gWet": 654,
+          "mealGrams": 30,
+          "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：坚果 30 g"
+        }
+      ],
+      "selection": {
+        "method": "mean",
+        "reason": "世界里只有榛仁与核桃仁两种去壳坚果仁，逐项取平均"
+      },
+      "basis": "去壳坚果仁。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+      "mealCapBasis": "单餐可食量上限：取 RACC 坚果 30 g。坚果能量密度高，一餐的惯常量是一把。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "72779fc11a49cf141fc7cee4026ee3b36a1eedee84d97144e5b8fe50400e3039",
+    "draftHash": "940a4826e8b5224b332bba8d397d253e1666b9846a47be5bb5519117f7d598e2"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "12c57700-0ed2-4f43-8798-8dd1ee9c2407",
+      "file": "budget-responses/12c57700-0ed2-4f43-8798-8dd1ee9c2407.json",
+      "requestHash": "d861503a33878978fad30e37febd67c581a294fb5572b079033658cb448a264d",
+      "responseHash": "d26c2a30152bcbebcebdd9b27e6ac1bf39fa8c6354027056eb4928c0108396db"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_nut-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1888,
+        "completion_tokens": 300,
+        "total_tokens": 2188,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 992
+      },
+      "costUpperYuan": 0.00441984,
+      "cumulativeUpperYuan": 0.13623864,
+      "latencyMs": 2340.3142,
+      "timestamp": "2026-11-09T19:14:35.940Z"
+    }
+  ]
+}

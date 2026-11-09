@@ -1,0 +1,91 @@
+{
+  "id": "class_legume",
+  "fingerprint": "daad416dedde7a2da76e7107ca19782a0cf833fb0384ddc301c5a549924aa9ef",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "class_legume",
+    "row": {
+      "sources": [
+        {
+          "name": "扁豆",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 172420，NDB 16069）：Lentils, raw；含水 8.26 g/100g，352 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.0826,
+          "kcalPer100gWet": 352,
+          "mealGrams": 1100,
+          "mealBasis": "dryMatter",
+          "eatenMoistureFraction": 0.7,
+          "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；豆类按煮熟后食用，食用含水取 USDA 煮熟豆类 0.70（煮熟扁豆 0.70、豌豆 0.70），按干物质折算再折回"
+        },
+        {
+          "name": "干豌豆",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 172428，NDB 16085）：Peas, green, split, mature seeds, raw；含水 8.69 g/100g，364 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.0869,
+          "kcalPer100gWet": 364,
+          "mealGrams": 1100,
+          "mealBasis": "dryMatter",
+          "eatenMoistureFraction": 0.7,
+          "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；豆类按煮熟后食用，食用含水取 USDA 煮熟豆类 0.70（煮熟扁豆 0.70、豌豆 0.70），按干物质折算再折回"
+        },
+        {
+          "name": "蚕豆",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 175205，NDB 16052）：Broadbeans (fava beans), mature seeds, raw；含水 11.0 g/100g，341 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.11,
+          "kcalPer100gWet": 341,
+          "mealGrams": 1100,
+          "mealBasis": "dryMatter",
+          "eatenMoistureFraction": 0.7,
+          "mealCitation": "成人胃容量约 1.0–1.2 L（Geliebter 1988《Gastric distension and gastric capacity in relation to food intake in humans》；Geliebter & Hashim 2001《Gastric capacity in normal, obese, and bulimic women》），取 1.1 L，食物密度约 1，折一餐最多约 1100 g；豆类按煮熟后食用，食用含水取 USDA 煮熟豆类 0.70（煮熟扁豆 0.70、豌豆 0.70），按干物质折算再折回"
+        }
+      ],
+      "selection": {
+        "method": "mean",
+        "reason": "世界里的干豆为扁豆、干豌豆、蚕豆，逐项取平均（Codex Stan 171-1989 豆类含水上限 15%，均在其内）"
+      },
+      "basis": "干豆。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+      "mealCapBasis": "单餐可食量上限（生理上限）：同谷类，胃容量折一餐最多约 1100 g 熟豆，干物质基准折回各件物品鲜重。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "9ef792818ab078beffc7e84ccfb4af330a6e69d074557d7c6756f93eb4fa71aa",
+    "draftHash": "695f5042098a7c0366fdfb65af070741646c5405fa6b652517fd30d1689a909a"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "9f23f6c0-8b60-4dc7-b6d0-649677498e35",
+      "file": "budget-responses/9f23f6c0-8b60-4dc7-b6d0-649677498e35.json",
+      "requestHash": "4df0f3d7ef6c26c4ebc43cc921b3b832166445f3b0c68bf7dbf1d5939d40911c",
+      "responseHash": "d7fb9d6c29a519cf04015b184b4153cf3f24d2399106cfab83acc58e6b3623a2"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_legume-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2435,
+        "completion_tokens": 329,
+        "total_tokens": 2764,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1539
+      },
+      "costUpperYuan": 0.00574584,
+      "cumulativeUpperYuan": 0.15581816,
+      "latencyMs": 2266.5535999999993,
+      "timestamp": "2026-11-09T19:14:43.466Z"
+    }
+  ]
+}

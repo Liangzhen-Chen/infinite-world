@@ -1,0 +1,82 @@
+{
+  "id": "item_leek",
+  "fingerprint": "bd71c135e1438b6c8b192d857bf32dc21f8492bc825a5edcd83a5e6840f6d608",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_leek",
+    "row": {
+      "sources": [
+        {
+          "name": "韭葱",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 169246，NDB 11246）：Leeks, (bulb and lower leaf-portion), raw；含水 83.0 g/100g，61 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.83,
+          "kcalPer100gWet": 61
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "单一出处，覆盖蔬菜类别"
+      },
+      "basis": "韭葱含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "韭葱含水低于蔬菜类别均值，覆盖类别值",
+        "field": "basis",
+        "verdict": "conflict",
+        "severity": "soft",
+        "reason": "韭葱含水0.83确低于类别均值0.907，但类别selection.reason称韭葱在物品行覆盖，而物品行未写moisture覆盖，仅由sources推出，表述与机制不符"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "韭葱含水低于蔬菜类别均值，覆盖类别值",
+      "field": "basis",
+      "verdict": "conflict",
+      "severity": "soft",
+      "reason": "韭葱含水0.83确低于类别均值0.907，但类别selection.reason称韭葱在物品行覆盖，而物品行未写moisture覆盖，仅由sources推出，表述与机制不符"
+    }
+  ],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "31214d5b3feaa44556f83ee668eaac28424084b58bd527388260beab1aad481b",
+    "draftHash": "0189d181dfcc62382ec73c10cf1ef9b593513db0d6f3b5298f38e0174ef78998"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "821d23da-6dc8-4a57-b169-8eb31759b50c",
+      "file": "budget-responses/821d23da-6dc8-4a57-b169-8eb31759b50c.json",
+      "requestHash": "fbf95823f3f1962724a039159af7f72244ce6219b5ef73a3d63271f11a4429f4",
+      "responseHash": "cd0b1bc97d402e914541d240740d7b53e856de933fb0ba35f556321d337cdae1"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_leek-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2330,
+        "completion_tokens": 87,
+        "total_tokens": 2417,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1434
+      },
+      "costUpperYuan": 0.00359984,
+      "cumulativeUpperYuan": 0.20480608,
+      "latencyMs": 1370.718499999999,
+      "timestamp": "2026-11-09T19:15:03.216Z"
+    }
+  ]
+}

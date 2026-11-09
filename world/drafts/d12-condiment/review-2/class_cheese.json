@@ -1,0 +1,67 @@
+{
+  "id": "class_cheese",
+  "fingerprint": "889b3751f55a5f9e83429b6ee1e2c0133fed8c2a01824a954ea7776b6155131a",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "class_cheese",
+    "row": {
+      "sources": [
+        {
+          "name": "硬乳酪（切达）",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 328637，NDB 1009）：Cheese, cheddar；含水 36.6 g/100g，408 kcal/100g；2026-11-09 已按 FDC API 核对；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：硬乳酪 30 g",
+          "moistureFraction": 0.366,
+          "kcalPer100gWet": 408,
+          "mealGrams": 30
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "世界里的熟成硬乳酪以切达为代表"
+      },
+      "basis": "硬乳酪（Codex 食品分类 01.6）：按真实能量入表（取代统一密度兜底）；乳酪是一餐的蛋白与脂肪来源之一。单餐可食量上限：取 RACC 乳酪 30 g（原先写「不写上限」，按李白 2026-11-09 的整类决定改为有上限）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "3457005b8009ed64d39ec879b1403d08ab589f7799b668d912a698f55d15efbb",
+    "draftHash": "15ff52e11e7da47a1abad67d7f1cf297bf625730c6c6bd3cad4ffcb175b69e10"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "7d05478c-d7d7-4468-9b1c-6d162c45ccd5",
+      "file": "budget-responses/7d05478c-d7d7-4468-9b1c-6d162c45ccd5.json",
+      "requestHash": "bd439bdfd9387bd6b65588422979f14b049fb35718273647dc3f5dc829fb0e42",
+      "responseHash": "bfcc7a0ba7e668b8e1495a1d166578da7e063594b40b15bbcbce3bbc83eb078b"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_cheese-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1752,
+        "completion_tokens": 7,
+        "total_tokens": 1759,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 856
+      },
+      "costUpperYuan": 0.00180384,
+      "cumulativeUpperYuan": 0.23985104000000002,
+      "latencyMs": 825.0625,
+      "timestamp": "2026-11-09T19:15:22.661Z"
+    }
+  ]
+}

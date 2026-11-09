@@ -1,0 +1,66 @@
+{
+  "id": "item_butter",
+  "fingerprint": "bcb27ef622c128389bc7e1a9a14e5ed13a9d23e11ce5a58df2a1b5b5ee4ea36b",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_butter",
+    "row": {
+      "sources": [
+        {
+          "name": "无盐黄油",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 173430，NDB 1145）：Butter, without salt；含水 16.2 g/100g，717 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.162,
+          "kcalPer100gWet": 717
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "黄油含水约 18%，明显高于油脂类（近 0），用自己的出处覆盖类别值；单餐上限仍取油脂类"
+      },
+      "basis": "黄油：含水与能量取 USDA 无盐黄油。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "f2417adf70ad196c85b1b66b7b3a4091b2ed277b08c53950f4fc6068c444855f",
+    "draftHash": "dcc8bf5bcc98753ae7a66cc08f52f405da87f1699dd9f04a95552eb794c9154a"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "067e8a15-a718-477a-a70f-ded879d199e6",
+      "file": "budget-responses/067e8a15-a718-477a-a70f-ded879d199e6.json",
+      "requestHash": "66dab895c4aa299906b112a51d2c65c168050402d292906dd7d6baec52446917",
+      "responseHash": "b5b5e478aa83a15ed1367f0cef3ce09e4511b446a103d2e083e94d5bad387b39"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_butter-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2159,
+        "completion_tokens": 90,
+        "total_tokens": 2249,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1263
+      },
+      "costUpperYuan": 0.0032818400000000003,
+      "cumulativeUpperYuan": 0.24472272000000003,
+      "latencyMs": 1469.1235000000015,
+      "timestamp": "2026-11-09T19:15:24.925Z"
+    }
+  ]
+}

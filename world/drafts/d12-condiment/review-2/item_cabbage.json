@@ -1,0 +1,66 @@
+{
+  "id": "item_cabbage",
+  "fingerprint": "5b5e2aa5eb830541389ac6bfe9caa12d4ae5732e272f8e41fb9be099d40d0d99",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_cabbage",
+    "row": {
+      "sources": [
+        {
+          "name": "甘蓝",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 169975，NDB 11109）：Cabbage, raw；含水 92.2 g/100g，25 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.922,
+          "kcalPer100gWet": 25
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+      },
+      "basis": "甘蓝：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "f76e3cef131227915941d44091c374d8262e54254008a14b3cf3679a11a3caa6",
+    "draftHash": "983f359fba020e813821d68dbd92cc90bb6365a8393fad56d2b67b739596cfe1"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "75cc72f9-dbd2-4318-9312-594d6f20c0d3",
+      "file": "budget-responses/75cc72f9-dbd2-4318-9312-594d6f20c0d3.json",
+      "requestHash": "1e998d21e1f94f980919f5879506b17e77e5a6ef7be39ee9d9533e926014538d",
+      "responseHash": "0f759a2e419d084ecd7ebca347906ea82f1d81e85c608ebf412099cb327526f6"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_cabbage-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2313,
+        "completion_tokens": 92,
+        "total_tokens": 2405,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1417
+      },
+      "costUpperYuan": 0.0036058400000000003,
+      "cumulativeUpperYuan": 0.20120624,
+      "latencyMs": 1529.7509000000027,
+      "timestamp": "2026-11-09T19:15:01.814Z"
+    }
+  ]
+}

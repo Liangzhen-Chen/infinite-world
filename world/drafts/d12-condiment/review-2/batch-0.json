@@ -1,0 +1,71 @@
+{
+  "index": 0,
+  "fingerprint": "a1e65835e77f4fbfefb46fbef02809f3b42d4c29483e4df37eeceae5cde7f1b8",
+  "count": 25,
+  "passed": 24,
+  "ids": [
+    "class_mushroom",
+    "class_nut",
+    "class_fruit",
+    "class_vegetable",
+    "class_legume",
+    "class_grain",
+    "class_egg",
+    "item_rye_flour",
+    "item_wheat_grain",
+    "item_pear",
+    "item_plum",
+    "item_turnip",
+    "item_carrot",
+    "item_parsnip",
+    "item_beet",
+    "item_onion",
+    "item_cabbage",
+    "item_leek",
+    "item_cucumber",
+    "item_garlic",
+    "item_oats",
+    "class_edible_fat",
+    "class_sweetener",
+    "class_vinegar",
+    "class_salt"
+  ],
+  "rewritten": 0,
+  "manual": [
+    "item_turnip"
+  ],
+  "pending": [],
+  "flagged": [
+    "class_grain",
+    "item_leek",
+    "class_edible_fat"
+  ],
+  "sample": [
+    "item_cucumber",
+    "class_edible_fat",
+    "class_fruit",
+    "class_vinegar",
+    "item_carrot"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 0.22845552000000002,
+  "manualRatio": 0.04,
+  "needsSystemicRepair": false,
+  "aiMisjudgedByProgram": {
+    "count": 1,
+    "ids": [
+      "class_vinegar"
+    ],
+    "reaskPassed": 1,
+    "reaskPassedIds": [
+      "class_vinegar"
+    ]
+  },
+  "factPendingHuman": {
+    "count": 0,
+    "ids": []
+  }
+}

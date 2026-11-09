@@ -1,0 +1,66 @@
+{
+  "id": "item_wheat_grain",
+  "fingerprint": "4ae5753260546edecfe5aaa396cfe4d3f830042e55796d2bdfbd80ac99981e07",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_wheat_grain",
+    "row": {
+      "sources": [
+        {
+          "name": "硬红冬小麦",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 168890，NDB 20072）：Wheat, hard red winter；含水 13.1 g/100g，327 kcal/100g；2026-11-09 已按 FDC API 核对",
+          "moistureFraction": 0.131,
+          "kcalPer100gWet": 327
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+      },
+      "basis": "硬红冬小麦：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "a79d19a0e8edd8b89ca14ca6b995c7d1471d068ccaf39eb48a7b47017a682baa",
+    "draftHash": "bc6785a4e1aa3352aeda8964513221aee42981c13bf0caab3b43835e6aab0a31"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "bc63c530-e5e6-4fbe-8436-929a57817a32",
+      "file": "budget-responses/bc63c530-e5e6-4fbe-8436-929a57817a32.json",
+      "requestHash": "1ab05498f2148e5b12a51a5ffa995df3d151d3296356b4bbf3bd6b418a3bf623",
+      "responseHash": "26126034ba0369e4337105e5ab081a784f67b8717fa550b977f44413f5b49616"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_wheat_grain-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2175,
+        "completion_tokens": 94,
+        "total_tokens": 2269,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1279
+      },
+      "costUpperYuan": 0.00334584,
+      "cumulativeUpperYuan": 0.17222952,
+      "latencyMs": 1199.6011999999973,
+      "timestamp": "2026-11-09T19:14:50.072Z"
+    }
+  ]
+}

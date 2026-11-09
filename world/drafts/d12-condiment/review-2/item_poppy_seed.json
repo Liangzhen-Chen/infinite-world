@@ -1,0 +1,66 @@
+{
+  "id": "item_poppy_seed",
+  "fingerprint": "464cdf7f1bb3cc3e6a04934101e30386f368153e9184e69649e414bd2bdfce14",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_poppy_seed",
+    "row": {
+      "sources": [
+        {
+          "name": "罂粟籽",
+          "citation": "USDA FoodData Central（SR Legacy，FDC 171330，NDB 2033）：Spices, poppy seed；含水 5.95 g/100g，525 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 8.8 g",
+          "moistureFraction": 0.0595,
+          "kcalPer100gWet": 525
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "成员偏差超过阈值，用自己的出处"
+      },
+      "basis": "成员偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "d9fbf0fe6db68848a71e4f62f119f23b2522cbec994cb2f6a99d7d3f09535467",
+    "draftHash": "335a471de6055c748f79ba42f7335b2fffe7c9fbc5c6ca45b2586f2047f45b73"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "5081498d-502c-424a-b4cd-adc6288c3bf4",
+      "file": "budget-responses/5081498d-502c-424a-b4cd-adc6288c3bf4.json",
+      "requestHash": "7567d95ebf385ad29f43a6ebe1fd63e236c80580624538765d2e8aa5025eb2c9",
+      "responseHash": "85b8e597ce88a7ce4b1b5165ac12ecc9ebb9e5e198dea38e99dbd4857d81019f"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_poppy_seed-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2298,
+        "completion_tokens": 340,
+        "total_tokens": 2638,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1402
+      },
+      "costUpperYuan": 0.00555984,
+      "cumulativeUpperYuan": 0.25607640000000004,
+      "latencyMs": 2343.499499999998,
+      "timestamp": "2026-11-09T19:15:29.739Z"
+    }
+  ]
+}
