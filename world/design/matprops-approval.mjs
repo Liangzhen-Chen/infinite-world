@@ -49,7 +49,7 @@ export async function validateDraft(draft,entry){
 }
 export function reviewRequest(entry,draft,context){
  return {thinking:{type:'disabled'},temperature:0,max_tokens:1200,response_format:{type:'json_object'},messages:[
-  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。reason 不超过 80 字；复核后发现算式或数值其实无误的，不要输出该条（不要写出后又在理由里撤回）。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。含水字段与 basis 所引出处值相差不超过 0.01 属取整，只在 soft 里提；相差更大、或能量按另一个含水算出，才报 hard。先完成核算再下结论，核算后无误的不要输出。'},
+  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。'},
   {role:'user',content:JSON.stringify({entry:{id:entry.id,kind:entry.kind,row:entry.row},context})}]};
 }
 export function extractReview(response){
@@ -96,9 +96,13 @@ export function checkWave(wave,ids){
 // 人工核定：L2 已达同条上限仍有 hard 意见、经主会话复算认定为模型误判的条目。与 L2 通过分开记录、分开计数，不改 L2 规则与阈值。
 // 只接受：指纹与当前数据一致、带复算算式、有不同于复算者的独立审查者确认、日期、固定标注。
 export const manualFile=path.join(reviewRoot,'manual-verified.json');
-export const manualLabel='人工核定、模型误判';
+// 两种固定标注：reviewed = 当前数据被 L2 审过且 hard 意见自撤（记录指纹须等于核定指纹且有 review）；
+// unreviewed = 同条上限后数据有改动、未再经 L2（须写明上次 L2 记录的指纹与改动内容）。
+export const manualLabels={reviewed:'人工核定、模型误判',unreviewed:'人工核定、未经L2复审'};
+export const manualLabel=manualLabels.reviewed;
+const loadRecordDefault=id=>readJSON(path.join(reviewRoot,`${id}.json`)).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
 export const fingerprintOf=async entry=>hashContent({entry,context:await contextFor(entry),revision});
-export async function checkManual(doc,entries,fingerprint=fingerprintOf){
+export async function checkManual(doc,entries,fingerprint=fingerprintOf,loadRecord=loadRecordDefault){
  const ok=new Map();
  for(const r of doc?.entries??[]){
   const entry=entries.find(e=>e.id===r.id);
@@ -108,18 +112,30 @@ export async function checkManual(doc,entries,fingerprint=fingerprintOf){
   for(const k of ['recompute','recomputedBy','confirmedBy'])if(typeof r[k]!=='string'||!r[k].trim())throw Error(`人工核定缺 ${k}：${r.id}`);
   if(r.confirmedBy===r.recomputedBy)throw Error(`人工核定缺独立审查者确认（确认者不得是复算者）：${r.id}`);
   if(!/^\d{4}-\d{2}-\d{2}$/.test(r.date??''))throw Error(`人工核定缺日期：${r.id}`);
-  if(r.label!==manualLabel)throw Error(`人工核定缺固定标注「${manualLabel}」：${r.id}`);
+  if(!Object.values(manualLabels).includes(r.label))throw Error(`人工核定缺固定标注（${Object.values(manualLabels).join('／')}）：${r.id}`);
+  const rec=await loadRecord(r.id);
+  if(r.label===manualLabels.reviewed&&!(rec?.review&&rec.fingerprint===r.fingerprint))throw Error(`标注「${r.label}」要求现存 L2 记录审的是当前数据（指纹相同且有 review）：${r.id}`);
+  if(r.label===manualLabels.unreviewed){
+   for(const k of ['lastL2Fingerprint','changeDescription'])if(typeof r[k]!=='string'||!r[k].trim())throw Error(`标注「${r.label}」缺 ${k}（上次 L2 记录的指纹与改动内容）：${r.id}`);
+   if(r.lastL2Fingerprint===r.fingerprint)throw Error(`上次 L2 记录指纹与当前相同，应用「${manualLabels.reviewed}」：${r.id}`);
+  }
   ok.set(r.id,r);
  }
  return ok;
 }
 const hardIssues=record=>(record?.review?.contradictions??[]).filter(c=>c.severity==='hard');
+// 同 content-pipeline.mjs reviewIssues / readApprovedContent：passed 记录必须有 errors 数组，review 结构合法，否则抛错。
+function checkPassedRecord(rec){
+ if(!Array.isArray(rec.errors))throw Error(`记录缺 errors 字段：${rec.id}`);
+ if(!Array.isArray(rec.review?.contradictions))throw Error(`事实审查缺少 contradictions 数组：${rec.id}`);
+ for(const c of rec.review.contradictions)if(!['hard','soft','style'].includes(c.severity)||!['quote','field','reason'].every(k=>typeof c[k]==='string'&&c[k].trim()))throw Error(`事实审查的原句、字段、严重度或原因无效：${rec.id}`);
+}
 // 每条要么 L2 通过（记录 passed、指纹一致、无错、无 hard），要么人工核定；两类分开列出。
 export async function approvalState(entries,{manual=new Map(),loadRecord=id=>readJSON(path.join(reviewRoot,`${id}.json`)).catch(e=>e.code==='ENOENT'?null:Promise.reject(e)),fingerprint=fingerprintOf}={}){
  const out={l2:[],manual:[],unresolved:[]};
  for(const e of entries){
   const rec=await loadRecord(e.id);
-  if(rec?.status==='passed'&&rec.fingerprint===await fingerprint(e)&&!rec.errors?.length&&!hardIssues(rec).length)out.l2.push(e.id);
+  if(rec?.status==='passed'&&rec.fingerprint===await fingerprint(e)){checkPassedRecord(rec);if(!rec.errors.length&&!hardIssues(rec).length)out.l2.push(e.id);else if(manual.has(e.id))out.manual.push(e.id);else out.unresolved.push(e.id);}
   else if(manual.has(e.id))out.manual.push(e.id);
   else out.unresolved.push(e.id);
  }
@@ -141,6 +157,8 @@ export async function verifyPublished(){
  const entries=await entriesFor(),summary=await readJSON(path.join(reviewRoot,'summary.json'));
  const st=await summarizeApproval(entries);
  assert.deepEqual(st.unresolved,[],'尚有条目既未通过 L2 也无人工核定');
+ const summaryIds=summary.batches.flatMap(b=>b.ids??[]);
+ if(new Set(summaryIds).size!==summaryIds.length)throw Error('发布编号重复（摘要批次 ids）');
  const inBatch=new Set(),rowsById=new Map();
  for(const b of summary.batches){
   const current=await readJSON(path.join(reviewRoot,`batch-${b.index}.json`));
@@ -150,10 +168,12 @@ export async function verifyPublished(){
   if(rows.some(r=>!r)||hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==current.fingerprint)throw Error(`批 ${b.index} 审查后内容已改变`);
   for(const id of [...current.sample,...current.flagged])if(!current.l4.notes?.some(r=>r.id===id&&typeof r.note==='string'&&r.note.trim()))throw Error(`缺少 L4 阅读记录 ${id}`);
   checkWave(current.l4.wave,entries.map(e=>e.id));
-  for(const r of rows){inBatch.add(r.id);rowsById.set(r.id,r);}
+  for(const r of rows){if(inBatch.has(r.id))throw Error(`发布编号重复 ${r.id}`);inBatch.add(r.id);rowsById.set(r.id,r);}
  }
- for(const e of entries)if(!inBatch.has(e.id))throw Error(`条目不在已审查批次 ${e.id}`);
+ for(const e of entries)if(!inBatch.has(e.id)||!summaryIds.includes(e.id))throw Error(`条目不在已审查批次 ${e.id}`);
  for(const id of st.l2)assert.deepEqual(rowsById.get(id).draft,draftFor(entries.find(e=>e.id===id)),`${id} 盘上数据与审批回执不符`);
+ // 人工核定条目：核定记录里的指纹 = hash(条目内容, 上下文, revision)，checkManual 已要求它等于当前数据的指纹，
+ // 所以盘上数据与核定时数据一致已由指纹证明（pipeline 记录里的 draft 对这些条目是旧数据或 null，不作比对）。
  return {total:entries.length,l2Passed:st.l2.length,manualVerified:st.manual,dimensions:MATERIAL_DIMENSIONS.length};
 }
 // 管线规则：1 次初审 + 最多 2 次定点修正；按条目 id 累计账本里已发出的审查，不随指纹重置。
