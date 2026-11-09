@@ -60,6 +60,7 @@ for (let i = 0; i < argv.length; i++) {
     else if (a === '--files') { opt.files = argv.slice(i + 1); break; }
     else opt.positional.push(a);
 }
+if (opt.tier !== undefined && !['merge', 'full'].includes(opt.tier)) { console.error(`invalid --tier ${opt.tier} (merge|full)`); process.exit(2); }
 const ROOT = opt.root;
 const git = (...args) => execFileSync('git', ['-c', 'core.quotePath=false', '-C', ROOT, ...args], {encoding: 'utf8', maxBuffer: 1 << 28});
 
@@ -215,10 +216,11 @@ const deferred = [];
 if (opt.tier === 'merge') {
     const sp = path.join(ROOT, 'tools/smoke-tests.json');
     const heavy = new Set(fs.existsSync(sp) ? JSON.parse(fs.readFileSync(sp, 'utf8')).nightlyOnly ?? [] : []);
-    out = out.filter(t => heavy.has(t) ? (deferred.push(t), false) : true);
+    // a heavy test that was itself changed is never deferred: changing it means running it
+    out = out.filter(t => heavy.has(t) && !changedSet.has(t) ? (deferred.push(t), false) : true);
 }
 if (opt.perFile) for (const [f, n] of [...perFile].sort((a, b) => a[1] - b[1])) console.log(`${n}	${f}`);
-if (opt.json) console.log(JSON.stringify({changed, selected: out, total: tests.length, reasons: Object.fromEntries(out.map(t => [t, reasons.get(t) ?? []])), unmapped}, null, 1));
+if (opt.json) console.log(JSON.stringify({changed, selected: out, total: tests.length, reasons: Object.fromEntries(out.map(t => [t, reasons.get(t) ?? []])), deferred, unmapped}, null, 1));
 else if (!opt.perFile) {
     for (const t of out) { console.log(t); if (opt.why) for (const r of reasons.get(t) ?? []) console.log(`# ${t}: ${r}`); }
     if (opt.why) for (const d of deferred) console.log(`# deferred to nightly/stage-close full run: ${d}`);
