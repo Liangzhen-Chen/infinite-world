@@ -174,7 +174,7 @@ export async function runPlayer({config:rawConfig,api,fetchImpl=globalThis.fetch
   await appendLedger(ledgerPath,{ts:now().toISOString(),month,runId,kind:'reserve',id,model:config.model,usd:ceiling});
   sessionUsd+=ceiling;
   return {id,ceiling};
- },{sleep});
+ });
  const adjust=async(attempt,usd)=>{
   const delta=usd-attempt.ceiling;
   await appendLedger(ledgerPath,{ts:now().toISOString(),month,runId,kind:'adjust',id:attempt.id,usd:delta});
