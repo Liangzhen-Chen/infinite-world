@@ -172,7 +172,7 @@ export function programClaim(c,entry,kcalPerSatiety){
 }
 const sourceIdList=map=>Object.entries(map??{}).filter(([,v])=>v?.id).map(([name,v])=>`${name}：${v.idType??'编号'} ${v.id}（${v.status??'待核对'}）`);
 // extractReview(response, entry, opts)：opts.legacy 只做旧格式解析（重放旧回复用，不要求 kind）；
-// opts.kcalPerSatiety 是推算用的表头标定值；opts.sourceIds 是该条目的出处编号（表头 sourceIds[条目 id]）；opts.reasked={arithmetic,fact} 表示这些重问已发过，不再重问。
+// opts.kcalPerSatiety 是推算用的表头标定值；opts.sourceIds 是该条目的出处编号（表头 sourceIds[条目 id]）；opts.record 是流水线传入的本条记录：重问状态一律从已落盘的 errorHistory（REVIEW_ARITH_MISJUDGED / REVIEW_FACT_RECHECK）与 feedback 推导，不靠进程内存，中断续跑不丢。
 export function extractReview(response,entry,opts={}){
  let review;const claims=new Map();
  try{
@@ -199,9 +199,10 @@ export function extractReview(response,entry,opts={}){
  for(const c of hard)c.programCheck=c.kind==='arithmetic'?claims.get(c):{verdict:'fact'};
  const arith=hard.filter(c=>c.kind==='arithmetic'&&c.programCheck.verdict!=='disputes-input'),mis=arith.filter(c=>c.programCheck.verdict==='misjudged'),facts=hard.filter(c=>c.kind==='fact'||c.programCheck.verdict==='disputes-input'); // 质疑输入的 arithmetic 按 fact 处理
  if(arith.some(c=>c.programCheck.verdict!=='misjudged'))return review; // 程序推算支持 AI（原数据真错）或说不清：照常 hard
- const reasked=opts.reasked??{},ids=sourceIdList(opts.sourceIds),pick=c=>({field:c.field,quote:c.quote,reason:c.reason,kind:c.kind,...(c.claimedValue!==undefined?{claimedValue:c.claimedValue,claimedFormula:c.claimedFormula,target:c.target}:{})});
- const prior=opts.priorFacts??[];
- if(prior.length&&reasked.fact){ // 事实项已按编号重问过：不管 AI 现在怎么说，该条转人工（待按编号人工核对），不计通过
+ const hist=opts.record?.errorHistory??[],reasked={arithmetic:hist.includes('REVIEW_ARITH_MISJUDGED'),fact:hist.includes('REVIEW_FACT_RECHECK')},ids=sourceIdList(opts.sourceIds),pick=c=>({field:c.field,quote:c.quote,reason:c.reason,kind:c.kind,...(c.claimedValue!==undefined?{claimedValue:c.claimedValue,claimedFormula:c.claimedFormula,target:c.target}:{})});
+ if(reasked.fact){ // 本条出现过 fact 型 hard（记录里有 REVIEW_FACT_RECHECK）：此后任何回复都不能使该条计通过，转人工（待按编号人工核对）
+  const m=/【初审事实项】(.*)$/s.exec((opts.record?.feedback??[]).join('；'));let prior=[];try{prior=JSON.parse(m?.[1]??'[]');}catch{}
+  if(!prior.length)prior=[{field:'（记录里的初审意见已被后续错误覆盖，见 errorHistory）',quote:'',reason:'',kind:'fact'}];
   const second=facts.map(pick);
   review.factPending={status:'待按编号人工核对',sourceIds:ids,first:prior,second};
   review.contradictions.push({quote:prior[0].quote,field:prior[0].field,verdict:'conflict',severity:'hard',kind:'fact',reason:`待按编号人工核对：${ids.join('；')}；AI 初审与按编号重问两次意见见 review.factPending`,programCheck:{verdict:'fact-pending-human'}});
@@ -211,18 +212,15 @@ export function extractReview(response,entry,opts={}){
  const parts=[];
  if(wantArith)for(const c of mis){const p=c.programCheck;parts.push(`「${c.field}」你给 ${p.target} 的正确值是 ${c.claimedValue}（算式 ${c.claimedFormula}），程序按出处推算 ${p.target} = ${p.program}${p.source===undefined?'，与原数据一致':`（${p.formula}${p.grams!==undefined?`，grams=${p.grams}，source=${p.source}`:''}）`}，两者不同；请逐步重新核算，核算无误的项不要列入`);}
  if(wantFact)parts.push(`数据来源类事实项请按出处编号核对（不是算术题）：${ids.join('；')}`);
- throw Object.assign(new Error(parts.join('；')),{code:wantArith?'REVIEW_ARITH_MISJUDGED':'REVIEW_FACT_RECHECK',reask:{arithmetic:wantArith,fact:wantFact},facts:wantFact?facts.map(pick):undefined});
+ if(wantFact)parts.push(`【初审事实项】${JSON.stringify(facts.map(pick))}`); // 随 feedback 落盘，续跑时取回 AI 的初审意见
+ throw Object.assign(new Error(parts.join('；')),{code:wantFact?'REVIEW_FACT_RECHECK':'REVIEW_ARITH_MISJUDGED'});
 }
 // 重放旧回复（--rejudge、retryEligible）沿用旧格式，不要求 kind：旧回复是在没有结构化字段的提示下得到的。
 export const legacyExtractReview=(response,entry)=>extractReview(response,entry,{legacy:true});
-// 生产默认的审查解析：读表头 kcalPerSatiety 与 sourceIds；每条目记住本次运行里已重问过什么（重问只发 1 次）。env 可注入（claimEnv）。
+// 生产默认的审查解析：读表头 kcalPer100gWet 标定值与 sourceIds；重问状态取自流水线传入的记录（落盘信息），无进程内状态。env 可注入（claimEnv）。
 export async function reviewExtractor(claimEnv=null){
- const env=claimEnv??await readJSON(tableFile).then(t=>({kcalPerSatiety:t.kcalPerSatiety,sourceIds:t.sourceIds??{}})),asked=new Map();
- return (response,entry)=>{
-  const st=asked.get(entry?.id)??{};
-  try{return extractReview(response,entry,{kcalPerSatiety:env.kcalPerSatiety,sourceIds:env.sourceIds?.[entry?.id],reasked:st,priorFacts:st.priorFacts});}
-  catch(error){if(error.reask)asked.set(entry.id,{...st,...(error.reask.arithmetic&&{arithmetic:true}),...(error.reask.fact&&{fact:true,priorFacts:error.facts})});throw error;}
- };
+ const env=claimEnv??await readJSON(tableFile).then(t=>({kcalPerSatiety:t.kcalPerSatiety,sourceIds:t.sourceIds??{}}));
+ return (response,entry,record)=>extractReview(response,entry,{kcalPerSatiety:env.kcalPerSatiety,sourceIds:env.sourceIds?.[entry?.id],record});
 }
 // 统计：程序判定 AI 误判（errorHistory 里出现过 REVIEW_ARITH_MISJUDGED）单列；其中重问后通过的另计。人工比例照旧只数 manual 条目，不因此放宽。
 // factPendingHuman：事实项判 hard 的条目（含 AI 质疑输入的 arithmetic），一律 manual 待人工，单列计数；人工比例仍按 manual 条目原样计入。

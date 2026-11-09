@@ -5,7 +5,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {tmpRoot} from '../tools/tmp-root.mjs';
-import {extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {hashContent} from '../tools/content-pipeline.mjs';
+import {revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
@@ -175,4 +176,24 @@ test('L1 出处编号：引用 USDA FoodData Central 的出处必须登记编号
   assert.match(checkSourceIds({sourceIds: {class_a: {苹果醋: {id: '02048', idType: 'NDB', status: '待核对'}, 梨: {id: null, status: '未知'}}}}, [e])[0], /登记的出处不存在/);
   // 不引用 USDA FoodData Central 的出处（FDA、FAO、Wood Handbook）不要求编号
   assert.deepEqual(checkSourceIds({}, [{id: 'class_w', row: {sources: [{name: '木', citation: 'Wood Handbook 第4章'}]}}]), []);
+});
+
+test('中断续跑：第一次回复 fact hard 后进程中断，新进程只拿到重问回复，也不能计通过（状态取自落盘记录，不靠内存）', async t => {
+  const e = entryOf('class_a'), dir = await mkRoot(t);
+  // 第一次运行落盘的状态：errorHistory 记着 REVIEW_FACT_RECHECK，feedback 带初审事实项（与 extractReview 抛错时写入的格式一致）
+  let msg;
+  try { extractReview(resp([fact({reason: '初审意见'})]), e, {kcalPerSatiety: 24, sourceIds: env.sourceIds.class_a, record: {}}); } catch (x) { msg = x; }
+  assert.equal(msg.code, 'REVIEW_FACT_RECHECK');
+  const persisted = {errorHistory: ['REVIEW_FACT_RECHECK'], feedback: [msg.message]};
+  const review = extractReview(resp([]), e, {kcalPerSatiety: 24, sourceIds: env.sourceIds.class_a, record: persisted});   // 新进程：没有任何内存状态
+  assert.equal(review.factPending.status, '待按编号人工核对'); assert.equal(review.factPending.first[0].reason, '初审意见');
+  assert.equal(review.contradictions.at(-1).severity, 'hard');
+  // 端到端：盘上已有这条记录，新进程的 runReview 只收到重问回复（空）
+  const entry = entryOf('class_a'), fingerprint = hashContent({entry, context: null, revision});
+  await fs.writeFile(path.join(dir, 'class_a.json'), JSON.stringify({id: 'class_a', fingerprint, status: 'pending', attempts: 0, draft: null, review: null, errors: [], warnings: [], ...persisted}));
+  const client = mkClient([reply([])]);
+  const out = await runReview({entries: [entry], client, root: dir, budgetRoot: dir, ctx: () => null, cardIdArg: null, allocation: null, claimEnv: env});
+  const rec = JSON.parse(await fs.readFile(path.join(dir, 'class_a.json'), 'utf8'));
+  assert.equal(rec.status, 'manual'); assert.equal(out.summary.passed, 0); assert.equal(rec.review.factPending.status, '待按编号人工核对');
+  assert.deepEqual(out.summary.factPendingHuman, {count: 1, ids: ['class_a']});
 });

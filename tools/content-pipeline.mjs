@@ -143,7 +143,7 @@ export async function runContentPipeline({
           record.rawProviderReviewResponses??=[];
           record.rawProviderReviewResponses.push({attempt:attempt+1,response:reviewResponse.rawProviderReviewResponse,hash:reviewResponse.rawProviderReviewResponseHash});
         }
-        try{record.review = await extractReview(reviewResponse, entry);}
+        try{record.review = await extractReview(reviewResponse, entry, record);}
         catch(error){if(stopOnReviewError?.(error,entry))halted={id:entry.id,code:error.code??null,message:error.message};throw error;}
         const issues = reviewIssues(record.review);
         record.errors.push(...issues.filter(row => row.severity === 'hard'));
