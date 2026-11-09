@@ -9,7 +9,7 @@ import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from '
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {recordsMemo} from './storage.mjs';
-import {householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
+import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 
@@ -218,7 +218,13 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained-(r.upkeep??0)+r.committed,0),1);
  return {place,goods,supply,demand,rows};
 }
+// The supply is a pure read of this draft revision (or of this state, for a state reader) and of
+// item, location and the extra business owners. Callers only read the returned rows.
+const supplyMemo=Symbol('market supply');
 export function marketSupply(d,engine,item,location,options={}){
+ return budgetRead(d,engine,[supplyMemo,item,location,JSON.stringify(options.businessOwners??[])],()=>readMarketSupply(d,engine,item,location,options));
+}
+function readMarketSupply(d,engine,item,location,options){
  const current=stockSupply(d,engine,item,location,options);
  const forward=engine.world.items.filter(it=>goodsClass(engine,it.id)===current.goods).map(it=>forwardSupply(d,engine,it.id,location));
  const state=stateOf(d),horizon=rulesOf(engine).forward.timeDiscountMinutes??rulesOf(engine).forward.quarterMinutes,consignments=[];

@@ -44,8 +44,9 @@ const promisedRecords=Symbol('household legacy promises');
 const budgetReads=new WeakMap();
 const budgetValue=Symbol('budget value'),resourceMemo=Symbol('household resources');
 // Kernel reads share work only while this exact draft revision is unchanged.
-// Subjective views stay uncached: their observer and evidence are independent inputs.
-function budgetRead(d,engine,key,build){
+// Subjective views stay uncached: their observer and evidence are independent inputs (evidence is mutable).
+// market.mjs shares this scope for the supply read.
+export function budgetRead(d,engine,key,build){
  const inputs=Array.isArray(key)?key:[key];
  if(!(d.cursor instanceof PatchCursor)||d.document!==d.cursor.root)return d.memo?d.memo(engine,[budgetValue,...inputs],build):build();
  let cache=budgetReads.get(d.cursor);

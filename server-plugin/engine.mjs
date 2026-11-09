@@ -116,7 +116,7 @@ const clone = value => structuredClone(value);
 const ROUTE_PLACES = Symbol('route places');
 // Departure instants whose route searches are kept (oldest dropped first).
 const ROUTE_FRONTIERS = 8;
-const ROUTE_DAY_PLANS = 8;
+const ROUTE_DAY_PLANS = 24;
 const ROUTE_CACHE_CHECK = process.env.FIELDS_INDEX_CHECK === '1';
 // Native read projection shared by dialogue, routing and evidence. No draft
 // writer is exposed, and the normal quote uses the same environmental inputs.
@@ -948,6 +948,8 @@ export class WorldEngine {
             if(!fits(plan))plan=null;
         }
         const hit=!!plan;
+        // A reused search is the most recent one: eviction below drops the least recently used, not the oldest made.
+        if(plan){const kept=graph.searches.get(searchKey),at=kept.indexOf(plan);if(at>=0&&at<kept.length-1){kept.splice(at,1);kept.push(plan);}}
         if(!plan){
             plan=search();
             if(graphCache){
