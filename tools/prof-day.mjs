@@ -109,7 +109,7 @@ async function s5pm(){
   const fx=await import('../tests/helpers/s5pm-fixture.mjs');
   const {applyPatches}=await import('../server-plugin/storage.mjs');const {withLedger}=await import('../server-plugin/ledger.mjs');
   const scene=args.scene??'hall',step=Number(args.step??1);
-  let f;
+  let f,proposal=false;
   if(scene==='hall'){ // 测试「完整一季推进」(tests/s5-law-public-maintenance.test.mjs 末尾) 的同一前置
     f=fx.scenario();f.doc.state.npcs=Object.fromEntries([fx.official,fx.worker].map(id=>[id,f.doc.state.npcs[id]]));
     f.doc=withLedger(f.e,{...f.doc,ledger:undefined}).document;
@@ -118,7 +118,10 @@ async function s5pm(){
   }else f=fx.nativeScenario(scene==='school'?'bld_hw_school':'bld_hw_post');
   console.log(`scene=${scene} step=${step}日/次`);
   await startProf();const ms=[];
-  for(let i=0;i<days;i+=step){
+  if(proposal){ // 全程计时与采样覆盖 proposalAdvance（子测 8 的 599 秒所在）；replay=1 时再造一份同构场景（子测 8 的同种子重放）再跑一遍
+    for(const [n,x] of [['主',f],...(args.replay?[['replay',fx.scenario()]]:[])]){curDay=0;const t=performance.now();fx.proposalAdvance(x);console.log(`proposalAdvance(${n}) ${(performance.now()-t).toFixed(0)} ms`);if(n==='主')f=x;}
+  }
+  for(let i=0;i<(proposal&&args.days==null?0:days);i+=step){
     if(over()){console.log(`超过自限时间，提前结束于第 ${i} 天`);break;}
     curDay=i+step;const t=performance.now();
     const out=await f.e.reduce(f.doc,{tool:'world_time',args:{minutes:step*1440},eventId:`prof-s5pm:${scene}:${i}`});f.doc=applyPatches(f.doc,out.patches);

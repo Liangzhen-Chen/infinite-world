@@ -14,4 +14,3 @@ tests/fixtures/private/
 *.log
 .tmp/
 
-.tmp/
