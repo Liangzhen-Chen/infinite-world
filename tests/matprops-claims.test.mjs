@@ -7,7 +7,7 @@ import path from 'node:path';
 import {loadRuntimeWorld as runtimeWorld} from '../tools/load-world.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
@@ -41,7 +41,6 @@ test('算术误判：程序推算与原数据一致而 AI 的 claimedValue 不�
   const rec = await r.rec('class_a');
   assert.equal(rec.status, 'passed'); assert.ok(rec.errorHistory.includes('REVIEW_ARITH_MISJUDGED'));
   assert.equal(reviewStops(Object.assign(Error('x'), {code: 'REVIEW_ARITH_MISJUDGED'})), false);   // 不停整轮
-  assert.equal(reviewStops(Object.assign(Error('x'), {code: 'REVIEW_FACT_RECHECK'})), false);
 });
 
 test('算术误判：取整口径内同值不算不符（含水 3 位、能量个位）；基础量按自己的口径', () => {
@@ -87,37 +86,33 @@ test('arithmetic 缺字段判格式错（REVIEW_FORMAT），不放行；缺 kind
   assert.equal((await r.rec('class_a')).status, 'manual');
 });
 
-test('fact 项一旦判 hard 就不能计为通过：有编号重问 1 次收集意见，重问后无论如何都是 manual（待按编号人工核对，附两次意见）；无编号直接 manual', async t => {
-  for (const second of [[fact()], []]) {   // 重问后仍 hard / AI 不再列出该项：都不通过
-    const r = await run(t, [entryOf('class_a')], [reply([fact({reason: '初审意见'})]), reply(second)]);
-    assert.equal(r.client.calls.length, 2);
-    assert.match(lastText(r.client), /按出处编号核对.*苹果醋：NDB 02048（待核对）/);
+test('fact 项一旦判 hard：不发重问、不放行，直接 manual，标「人工扫一眼量级」，hard 与 AI 意见留在记录里（有无编号都一样）', async t => {
+  for (const sourceIds of [env.sourceIds, {}]) {
+    const r = await run(t, [entryOf('class_a')], [reply([fact({reason: '含水量与 FDC 不符'})]), reply([])], {kcalPerSatiety: 24, sourceIds});
+    assert.equal(r.client.calls.length, 1);   // 没有重问
     const rec = await r.rec('class_a');
-    assert.equal(rec.status, 'manual'); assert.ok(rec.errorHistory.includes('REVIEW_FACT_RECHECK'));
-    assert.equal(rec.review.factPending.status, '待按编号人工核对'); assert.equal(rec.review.factPending.first[0].reason, '初审意见'); assert.equal(rec.review.factPending.second.length, second.length);
-    assert.match(rec.errors.at(-1).reason, /02048/);
+    assert.equal(rec.status, 'manual'); assert.deepEqual(rec.errorHistory ?? [], []);
+    assert.equal(rec.errors[0].severity, 'hard'); assert.equal(rec.errors[0].reviewNote, '人工扫一眼量级');
+    assert.equal(rec.review.factPending.status, '人工扫一眼量级'); assert.equal(rec.review.factPending.facts[0].reason, '含水量与 FDC 不符');
     assert.deepEqual([r.summary.passed, r.summary.manual], [0, 1]);   // 人工比例照原算法计入
     assert.deepEqual(r.summary.factPendingHuman, {count: 1, ids: ['class_a']});
     assert.equal(r.summary.aiMisjudgedByProgram.count, 0);
   }
-  const none = await run(t, [entryOf('class_b')], [reply([fact()]), reply([])]);   // class_b 没有登记编号
-  assert.equal(none.client.calls.length, 1); assert.equal((await none.rec('class_b')).status, 'manual'); assert.equal(none.summary.factPendingHuman.count, 1);
-  const unknown = await run(t, [entryOf('class_a')], [reply([fact()]), reply([])], {kcalPerSatiety: 24, sourceIds: {class_a: {苹果醋: {id: null, status: '未知'}}}});
-  assert.equal(unknown.client.calls.length, 1); assert.equal((await unknown.rec('class_a')).status, 'manual');
+  // 同一回复里既有 fact 又有算术误判：不为算术部分再发重问（条目反正转人工，不耗调用）
+  const mix = await run(t, [entryOf('class_a')], [reply([fact(), arith(83)]), reply([])]);
+  assert.equal(mix.client.calls.length, 1); assert.equal((await mix.rec('class_a')).status, 'manual');
   assert.deepEqual(factPendingStats([{id: 'a', status: 'passed', review: {contradictions: [fact()]}}, {id: 'b', status: 'manual', review: {contradictions: [fact()]}}]), {count: 1, ids: ['b']});
 });
 
-test('AI 质疑输入（输入与出处不一致）的 arithmetic 转 fact：不自动放行，不当算术误判', async t => {
+test('AI 质疑输入（输入与出处不一致）的 arithmetic 转 fact：不自动放行、不重问，直接人工扫一眼量级', async t => {
   const disputed = arith(95, {claimedInputs: {苹果醋: {moistureFraction: 0.44, kcalPer100gWet: 21}}});   // 「含水应为 0.44」
   assert.equal(programClaim(disputed, entryOf('class_a'), 24).verdict, 'disputes-input');
   const r = await run(t, [entryOf('class_a')], [reply([disputed]), reply([])]);
-  assert.equal(r.client.calls.length, 2);   // 有编号：按 fact 重问一次，但不是算术重问
-  assert.doesNotMatch(lastText(r.client), /与原数据一致/);
+  assert.equal(r.client.calls.length, 1);
   const rec = await r.rec('class_a');
-  assert.equal(rec.status, 'manual'); assert.ok(!rec.errorHistory.includes('REVIEW_ARITH_MISJUDGED'));
+  assert.equal(rec.status, 'manual'); assert.ok(!(rec.errorHistory ?? []).includes('REVIEW_ARITH_MISJUDGED'));
+  assert.equal(rec.review.factPending.status, '人工扫一眼量级');
   assert.deepEqual([r.summary.aiMisjudgedByProgram.count, r.summary.factPendingHuman.count], [0, 1]);
-  const none = await run(t, [entryOf('class_b')], [reply([disputed]), reply([])]);
-  assert.equal(none.client.calls.length, 1); assert.equal((await none.rec('class_b')).status, 'manual');
 });
 
 test('输入一致但算错 → 重问；输入一致、值也相同却标 hard → 保守留人工', async t => {
@@ -161,7 +156,6 @@ test('统计单列：程序判定误判（含重问后通过的）单列计数�
 test('重问次数上限：错误历史里同一重问代码出现 2 次，发请求前拒绝；旧格式回复仍可离线重放', () => {
   reaskGate({errorHistory: ['REVIEW_ARITH_MISJUDGED']});
   assert.throws(() => reaskGate({errorHistory: ['REVIEW_ARITH_MISJUDGED', null, 'REVIEW_ARITH_MISJUDGED']}), e => e.code === 'REVIEW_REASK_EXHAUSTED');
-  assert.throws(() => reaskGate({errorHistory: ['REVIEW_FACT_RECHECK', 'REVIEW_FACT_RECHECK']}), e => e.code === 'REVIEW_REASK_EXHAUSTED');
   const oldHard = resp([{quote: 'q', field: 'moisture', severity: 'hard', verdict: 'conflict', reason: 'r'}]);   // 没有 kind 的旧回复
   assert.equal(legacyExtractReview(oldHard).contradictions[0].severity, 'hard');
   assert.throws(() => extractReview(oldHard, entryOf('class_a'), {kcalPerSatiety: 24}), x => x.code === 'REVIEW_FORMAT');
@@ -173,30 +167,12 @@ test('L1 出处编号：引用 USDA FoodData Central 的出处必须登记编号
   assert.deepEqual(checkSourceIds({sourceIds: {class_a: {苹果醋: {id: null, status: '未知'}}}}, [e]), []);
   assert.match(checkSourceIds({}, [e])[0], /缺编号登记/);
   assert.match(checkSourceIds({sourceIds: {class_a: {苹果醋: {id: null}}}}, [e])[0], /status:'未知'/);
+  assert.match(checkSourceIds({sourceIds: {class_a: {苹果醋: {id: null, status: '近似'}}}}, [e])[0], /近似须带 note/);
+  assert.deepEqual(checkSourceIds({sourceIds: {class_a: {苹果醋: {id: null, status: '近似', note: '凭记忆、量级已判合理'}}}}, [e]), []);
   assert.match(checkSourceIds({sourceIds: {class_a: {苹果醋: {id: 'abc', idType: 'NDB', status: '待核对'}}}}, [e])[0], /4–8 位数字/);
   assert.match(checkSourceIds({sourceIds: {class_a: {苹果醋: {id: '02048', idType: 'NDB', status: '待核对'}, 梨: {id: null, status: '未知'}}}}, [e])[0], /登记的出处不存在/);
   // 不引用 USDA FoodData Central 的出处（FDA、FAO、Wood Handbook）不要求编号
   assert.deepEqual(checkSourceIds({}, [{id: 'class_w', row: {sources: [{name: '木', citation: 'Wood Handbook 第4章'}]}}]), []);
-});
-
-test('中断续跑：第一次回复 fact hard 后进程中断，新进程只拿到重问回复，也不能计通过（状态取自落盘记录，不靠内存）', async t => {
-  const e = entryOf('class_a'), dir = await mkRoot(t);
-  // 第一次运行落盘的状态：errorHistory 记着 REVIEW_FACT_RECHECK，feedback 带初审事实项（与 extractReview 抛错时写入的格式一致）
-  let msg;
-  try { extractReview(resp([fact({reason: '初审意见'})]), e, {kcalPerSatiety: 24, sourceIds: env.sourceIds.class_a, record: {}}); } catch (x) { msg = x; }
-  assert.equal(msg.code, 'REVIEW_FACT_RECHECK');
-  const persisted = {errorHistory: ['REVIEW_FACT_RECHECK'], feedback: [msg.message]};
-  const review = extractReview(resp([]), e, {kcalPerSatiety: 24, sourceIds: env.sourceIds.class_a, record: persisted});   // 新进程：没有任何内存状态
-  assert.equal(review.factPending.status, '待按编号人工核对'); assert.equal(review.factPending.first[0].reason, '初审意见');
-  assert.equal(review.contradictions.at(-1).severity, 'hard');
-  // 端到端：盘上已有这条记录，新进程的 runReview 只收到重问回复（空）
-  const entry = entryOf('class_a'), fingerprint = hashContent({entry, context: null, revision});
-  await fs.writeFile(path.join(dir, 'class_a.json'), JSON.stringify({id: 'class_a', fingerprint, status: 'pending', attempts: 0, draft: null, review: null, errors: [], warnings: [], ...persisted}));
-  const client = mkClient([reply([])]);
-  const out = await runReview({entries: [entry], client, root: dir, budgetRoot: dir, ctx: () => null, cardIdArg: null, allocation: null, claimEnv: env});
-  const rec = JSON.parse(await fs.readFile(path.join(dir, 'class_a.json'), 'utf8'));
-  assert.equal(rec.status, 'manual'); assert.equal(out.summary.passed, 0); assert.equal(rec.review.factPending.status, '待按编号人工核对');
-  assert.deepEqual(out.summary.factPendingHuman, {count: 1, ids: ['class_a']});
 });
 
 test('调味卡新修订 d12-condiment-2 / review-2：同条次数从 0 计，旧修订请求不计入，账本累计花费连续，额度不变', async () => {
@@ -262,8 +238,96 @@ test('标签只在基础世界、不在 items.json 覆盖层的物品，也随�
   const overlay = JSON.parse(await fs.readFile('world/meta/mechanics/items.json', 'utf8'));
   assert.ok(!overlay.item_milk?.tags?.includes('milk'));   // 覆盖层里没有，只看覆盖层会漏
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
+  table.sourceIds.class_milk.羊乳 = {id: null, status: '未知'};   // 真实表里羊乳已是「近似」（可审），这里显式设为未知来测标签口径
   const e = (id, kind, key) => ({id, kind, key, row: {sources: (table.sourceIds[id] ? Object.keys(table.sourceIds[id]) : []).map(name => ({name, citation: 'USDA FoodData Central x'}))}});
   const entries = [e('class_milk', 'material-props-class', 'milk'), e('item_milk', 'material-props-item')];
   assert.deepEqual(skipUnverified(entries, table, tags).skipped.map(x => x.id), ['class_milk', 'item_milk']);
   assert.deepEqual(skipUnverified(entries, table, {}).skipped.map(x => x.id), ['class_milk']);   // 对照：不给标签就漏判
+});
+
+test('出处状态「近似」（凭记忆、量级已判合理）可审；「未知」「待核对」仍先不审', () => {
+  const cls = {id: 'class_a', kind: 'material-props-class', key: 'a', row: {sources: [{name: '甲', citation: 'USDA FoodData Central x'}]}};
+  const of = status => skipUnverified([cls], {sourceIds: {class_a: {甲: {id: null, status, note: 'n'}}}}, {}).skipped.length;
+  assert.deepEqual([of('近似'), of('未知'), of('待核对'), of('已核对')], [0, 1, 1, 0]);
+});
+
+// ---- 小改动沿用（±10%） ----
+const passedRec = (entry, extra = {}) => ({id: entry.id, fingerprint: 'old', status: 'passed', attempts: 1, draft: {id: entry.id, row: structuredClone(entry.row)}, review: {contradictions: []}, errors: [], warnings: [], ...extra});
+const tweak = (e, fn) => { const x = structuredClone(e); fn(x.row); return x; };
+const tolEnv = {kcalPerSatiety: 24, tolerance: 0.1};
+test('小改动沿用：所有出处数值相对快照 ±10% 内且结构未变 → 沿用原 L2 结论，不发请求，记「小改动沿用（±10%）」', async t => {
+  const old = entryOf('class_a'), dir = await mkRoot(t);
+  const now = tweak(old, r => { r.sources[0].kcalPer100gWet = 22; r.sources[0].moistureFraction = 0.94; r.sources[0].citation = '改了出处文字'; r.basis = '改了说明'; });   // 21→22（+4.8%）、含水 +0.1%
+  await fs.writeFile(path.join(dir, 'class_a.json'), JSON.stringify(passedRec(old)));
+  const client = mkClient([reply([])]);
+  const out = await runReview({entries: [now], client, root: dir, budgetRoot: dir, ctx: () => null, cardIdArg: null, allocation: null, claimEnv: tolEnv});
+  assert.equal(client.calls.length, 0); assert.equal(out.summary.passed, 1);
+  const rec = JSON.parse(await fs.readFile(path.join(dir, 'class_a.json'), 'utf8'));
+  assert.equal(rec.status, 'passed'); assert.equal(rec.carriedOver.note, '小改动沿用（±10%）');
+  assert.deepEqual(rec.draft, {id: 'class_a', row: now.row});   // 记录里的 draft 跟上现行数据（verify 要求相等）
+  assert.equal(rec.reviewedSnapshot.row.sources[0].kcalPer100gWet, 21);   // 快照基准不前移
+  // 累计漂移：沿用后再改一次，仍按最初审过的值比，累计超 10% 就必须重审
+  const again = tweak(old, r => { r.sources[0].kcalPer100gWet = 24; });   // 相对最初 21 为 +14%，相对上次 22 只 +9%
+  const c2 = mkClient([reply([])]);
+  await runReview({entries: [again], client: c2, root: dir, budgetRoot: dir, ctx: () => null, cardIdArg: null, allocation: null, claimEnv: tolEnv});
+  assert.equal(c2.calls.length, 1);
+});
+
+test('小改动超出 ±10% 或结构变化 → 重审（不沿用）；没有容差参数时不沿用', async t => {
+  const old = entryOf('class_a');
+  const cases = {
+    超出10: tweak(old, r => { r.sources[0].kcalPer100gWet = 24; }),                       // +14%
+    出处个数: tweak(old, r => { r.sources.push({...r.sources[0], name: '乙'}); r.selection = {method: 'mean', reason: 'r'}; }),
+    选取方法: tweak(old, r => { r.selection = {method: 'mean', reason: 'r'}; }),
+    出处名: tweak(old, r => { r.sources[0].name = '丙'; }),
+    字段集: tweak(old, r => { delete r.sources[0].mealGrams; }),
+    mealBasis: tweak(old, r => { r.sources[0].mealBasis = 'dryMatter'; r.sources[0].eatenMoistureFraction = 0.9; }),
+    顶层数值: tweak(old, r => { r.heatValue = 18; })};
+  for (const [name, now] of Object.entries(cases)) {
+    const dir = await mkRoot(t); await fs.writeFile(path.join(dir, 'class_a.json'), JSON.stringify(passedRec(old)));
+    const client = mkClient([reply([])]);
+    await runReview({entries: [now], client, root: dir, budgetRoot: dir, ctx: () => null, cardIdArg: null, allocation: null, claimEnv: tolEnv});
+    assert.equal(client.calls.length, 1, name);   // 发了审查请求
+    assert.equal(JSON.parse(await fs.readFile(path.join(dir, 'class_a.json'), 'utf8')).carriedOver, undefined, name);
+  }
+  assert.deepEqual(smallChange(old.row, tweak(old, r => { r.sources[0].mealGrams = 16; }).row, 0.1), {ok: true});   // 15→16（+6.7%）
+  assert.equal(smallChange(old.row, tweak(old, r => { r.sources[0].mealGrams = 17; }).row, 0.1).ok, false);        // +13%
+  // 非 passed 的旧记录、缺快照的旧记录都不沿用
+  assert.equal(carryOverRecord(passedRec(old, {status: 'manual'}), tweak(old, r => { r.sources[0].mealGrams = 16; }), 'new', 0.1), null);
+  assert.equal(carryOverRecord(passedRec(old, {draft: null}), tweak(old, r => { r.sources[0].mealGrams = 16; }), 'new', 0.1), null);
+  // 没有容差参数（claimEnv 不带 tolerance）：照旧重审
+  const dir = await mkRoot(t); await fs.writeFile(path.join(dir, 'class_a.json'), JSON.stringify(passedRec(old)));
+  const client = mkClient([reply([])]);
+  await runReview({entries: [tweak(old, r => { r.sources[0].mealGrams = 16; })], client, root: dir, budgetRoot: dir, ctx: () => null, cardIdArg: null, allocation: null, claimEnv: env});
+  assert.equal(client.calls.length, 1);
+});
+
+test('已核对数据不得被改回近似值：L1 对状态「已核对」且 citation 带 FDC 编号与数值的出处，行内数值偏离 FDC 记录值就报错', async () => {
+  const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8')), entries = await entriesFor();
+  assert.deepEqual(checkVerifiedValues(table, entries), []);   // 现行数据全部一致
+  const bad = structuredClone(entries.find(e => e.id === 'class_spice_seed'));
+  bad.row.sources[2].moistureFraction = 0.1; bad.row.sources[2].kcalPer100gWet = 340;   // 香芹籽 FDC 170918：9.87 g/100g、333 kcal/100g
+  const errs = checkVerifiedValues(table, [bad]);
+  assert.equal(errs.length, 2); assert.match(errs[0], /含水偏离 FDC 记录值.*香芹籽/); assert.match(errs[1], /能量偏离 FDC 记录值/);
+  assert.match(checkSourceIds(table, [bad]).join('\n'), /偏离 FDC 记录值/);   // 走 L1 的 checkSourceIds
+  // 编号与 citation 不一致也报错；状态不是已核对则不查数值
+  const wrongId = structuredClone(table); wrongId.sourceIds.class_spice_seed.香芹籽.id = '999999';
+  assert.match(checkVerifiedValues(wrongId, entries.filter(e => e.id === 'class_spice_seed'))[0], /FDC 编号不一致/);
+  const approx = structuredClone(table); approx.sourceIds.class_spice_seed.香芹籽 = {id: null, status: '近似', note: 'n'};
+  assert.deepEqual(checkVerifiedValues(approx, [bad]), []);
+  assert.deepEqual(checkSmallChangeParam(table), []);
+  assert.equal(checkSmallChangeParam({}).length, 1);
+  assert.equal(table.smallChangeTolerance, 0.1); assert.match(table.smallChangeBasis, /calibrate.*亮圳 19:24 小出入口径/);
+});
+
+test('调味卡 review-2 人工核定：item_turnip、class_spice_seed、item_caraway_seed 记「人工核定、模型误判」，指纹与现存 L2 记录一致', async () => {
+  const doc = JSON.parse(await fs.readFile(cardProfiles.condiment.manualFile, 'utf8'));
+  assert.deepEqual(doc.entries.map(x => x.id), ['item_turnip', 'class_spice_seed', 'item_caraway_seed']);
+  assert.ok(doc.entries.every(x => x.label === manualLabels.reviewed));
+  const ok = await checkManual(doc, await condimentEntries(), e => fingerprintOf(e, condimentCard.revision), id => fs.readFile(path.join(condimentCard.reviewRoot, id + '.json'), 'utf8').then(JSON.parse));
+  assert.equal(ok.size, 3);
+  assert.match(doc.entries[1].recompute, /170918.*170929.*171330|170929.*171330.*170918/);
+  // 8 项近似出处现为「近似」且带 note：现行数据下调味卡没有因出处状态被跳过的条目
+  const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
+  assert.equal(skipUnverified(await condimentEntries(), table, worldTags(await runtimeWorld())).skipped.length, 0);
 });

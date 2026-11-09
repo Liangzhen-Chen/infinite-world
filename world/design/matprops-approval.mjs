@@ -125,8 +125,8 @@ export function reviewRequest(entry,draft,context){
 // basis.satiety 2 位小数、basis.kcal 1 位小数、basis.dryEnergy 取整（与 AI 在 basis 里惯用的写法同级）。AI 的 claimedValue 先取到同一口径再比，相等才算同值。
 // 判定（详见 programClaim）：AI 的输入与出处逐项一致、按同一公式重算与 claimedValue 不同 = 「程序判定 AI 误判」（misjudged）；输入与出处不一致 = 质疑数据，转 fact；
 // 推算与原数据不一致 = 真错（data-error）；claimedValue 与推算相同却仍标 hard = 说不清哪里错，保守当真 hard（agrees）。basis.*——用 AI 自己给的克数/出处算，claimedValue 与推算不同 = AI 自己算错（misjudged），相同 = 保守当真 hard。
-// kind=fact：出处数据本身是否符合权威实值，不是算术题，程序不能自动放行（李白：事实题不能自动放行）。一旦判 hard，该条无论有没有编号、重问后结果如何都不计 L2 通过：
-// 有编号时重问 1 次，只为收集 AI 按编号核对的意见；重问后程序追加一条 hard「待按编号人工核对」（附编号与 AI 两次意见，review.factPending），状态 manual。
+// kind=fact：出处数据本身是否符合权威实值，不是算术题，程序不能自动放行。亮圳 19:24「材料数值大致合理即可，不为小出入耗调用」：fact 型 hard 不再带编号重问，
+// 直接保留 hard、该条转 manual，标「人工扫一眼量级」（review.factPending），人工看量级是否离谱；明显离谱的整类修。
 // 缺 kind、缺 claimedValue/claimedFormula/target/claimedInputs（含 target 所需的输入项）、field 与 target 不对应、target 推不出来 = REVIEW_FORMAT，不能放行。AI 的输入与出处不一致 = 它在质疑数据，转 fact 路径。
 export const issueKinds=['arithmetic','fact'];
 const round3=x=>Math.round(x*1000)/1000,round2=x=>Math.round(x*100)/100,round1=x=>Math.round(x*10)/10;
@@ -172,9 +172,8 @@ export function programClaim(c,entry,kcalPerSatiety){
  const program=t.grid(raw),match=t.inputs.every(k=>sameNum(c.claimedInputs[k],src[k]));
  return {target:c.target,source:c.source,...(t.grams?{grams:c.grams}:{}),program,stored:null,claimed,verdict:!match?'disputes-input':claimed!==program?'misjudged':'agrees',inputsMatch:match,formula:t.formula};
 }
-const sourceIdList=map=>Object.entries(map??{}).filter(([,v])=>v?.id).map(([name,v])=>`${name}：${v.idType??'编号'} ${v.id}（${v.status??'待核对'}）`);
 // extractReview(response, entry, opts)：opts.legacy 只做旧格式解析（重放旧回复用，不要求 kind）；
-// opts.kcalPerSatiety 是推算用的表头标定值；opts.sourceIds 是该条目的出处编号（表头 sourceIds[条目 id]）；opts.record 是流水线传入的本条记录：重问状态一律从已落盘的 errorHistory（REVIEW_ARITH_MISJUDGED / REVIEW_FACT_RECHECK）与 feedback 推导，不靠进程内存，中断续跑不丢。
+// opts.kcalPerSatiety 是推算用的表头标定值；opts.record 是流水线传入的本条记录：算术重问状态从已落盘的 errorHistory（REVIEW_ARITH_MISJUDGED）推导，不靠进程内存，中断续跑不丢。
 export function extractReview(response,entry,opts={}){
  let review;const claims=new Map();
  try{
@@ -199,30 +198,57 @@ export function extractReview(response,entry,opts={}){
  if(opts.legacy)return review;
  const hard=review.contradictions.filter(c=>c.severity==='hard');
  for(const c of hard)c.programCheck=c.kind==='arithmetic'?claims.get(c):{verdict:'fact'};
+ const pick=c=>({field:c.field,quote:c.quote,reason:c.reason,kind:c.kind,...(c.claimedValue!==undefined?{claimedValue:c.claimedValue,claimedFormula:c.claimedFormula,target:c.target}:{})});
  const arith=hard.filter(c=>c.kind==='arithmetic'&&c.programCheck.verdict!=='disputes-input'),mis=arith.filter(c=>c.programCheck.verdict==='misjudged'),facts=hard.filter(c=>c.kind==='fact'||c.programCheck.verdict==='disputes-input'); // 质疑输入的 arithmetic 按 fact 处理
- if(arith.some(c=>c.programCheck.verdict!=='misjudged'))return review; // 程序推算支持 AI（原数据真错）或说不清：照常 hard
- const hist=opts.record?.errorHistory??[],reasked={arithmetic:hist.includes('REVIEW_ARITH_MISJUDGED'),fact:hist.includes('REVIEW_FACT_RECHECK')},ids=sourceIdList(opts.sourceIds),pick=c=>({field:c.field,quote:c.quote,reason:c.reason,kind:c.kind,...(c.claimedValue!==undefined?{claimedValue:c.claimedValue,claimedFormula:c.claimedFormula,target:c.target}:{})});
- if(reasked.fact){ // 本条出现过 fact 型 hard（记录里有 REVIEW_FACT_RECHECK）：此后任何回复都不能使该条计通过，转人工（待按编号人工核对）
-  const m=/【初审事实项】(.*)$/s.exec((opts.record?.feedback??[]).join('；'));let prior=[];try{prior=JSON.parse(m?.[1]??'[]');}catch{}
-  if(!prior.length)prior=[{field:'（记录里的初审意见已被后续错误覆盖，见 errorHistory）',quote:'',reason:'',kind:'fact'}];
-  const second=facts.map(pick);
-  review.factPending={status:'待按编号人工核对',sourceIds:ids,first:prior,second};
-  review.contradictions.push({quote:prior[0].quote,field:prior[0].field,verdict:'conflict',severity:'hard',kind:'fact',reason:`待按编号人工核对：${ids.join('；')}；AI 初审与按编号重问两次意见见 review.factPending`,programCheck:{verdict:'fact-pending-human'}});
- }
- const wantArith=mis.length>0&&!reasked.arithmetic,wantFact=facts.length>0&&ids.length>0&&!reasked.fact;
- if(!wantArith&&!wantFact)return review; // 已重问过仍对不上，或事实项没有编号可核对：留人工
- const parts=[];
- if(wantArith)for(const c of mis){const p=c.programCheck;parts.push(`「${c.field}」你给 ${p.target} 的正确值是 ${c.claimedValue}（算式 ${c.claimedFormula}），程序按出处推算 ${p.target} = ${p.program}${p.source===undefined?'，与原数据一致':`（${p.formula}${p.grams!==undefined?`，grams=${p.grams}，source=${p.source}`:''}）`}，两者不同；请逐步重新核算，核算无误的项不要列入`);}
- if(wantFact)parts.push(`数据来源类事实项请按出处编号核对（不是算术题）：${ids.join('；')}`);
- if(wantFact)parts.push(`【初审事实项】${JSON.stringify(facts.map(pick))}`); // 随 feedback 落盘，续跑时取回 AI 的初审意见
- throw Object.assign(new Error(parts.join('；')),{code:wantFact?'REVIEW_FACT_RECHECK':'REVIEW_ARITH_MISJUDGED'});
+ // 事实项（亮圳 19:24 / 李白 19:4x）：不发重问、不放行，hard 原样保留，该条转 manual，标「人工扫一眼量级」，记 AI 的意见。
+ if(facts.length){for(const c of facts)c.reviewNote=factNote;review.factPending={status:factNote,facts:facts.map(pick)};}
+ if(arith.some(c=>c.programCheck.verdict!=='misjudged')||facts.length)return review; // 程序推算支持 AI（原数据真错）、说不清、或有事实项：照常 hard
+ const reasked=(opts.record?.errorHistory??[]).includes('REVIEW_ARITH_MISJUDGED');
+ if(!mis.length||reasked)return review; // 无误判；或已重问过仍对不上：留人工
+ const parts=mis.map(c=>{const p=c.programCheck;return `「${c.field}」你给 ${p.target} 的正确值是 ${c.claimedValue}（算式 ${c.claimedFormula}），程序按出处推算 ${p.target} = ${p.program}${p.source===undefined?'，与原数据一致':`（${p.formula}${p.grams!==undefined?`，grams=${p.grams}，source=${p.source}`:''}）`}，两者不同；请逐步重新核算，核算无误的项不要列入`;});
+ throw Object.assign(new Error(parts.join('；')),{code:'REVIEW_ARITH_MISJUDGED'});
 }
+export const factNote='人工扫一眼量级';
 // 重放旧回复（--rejudge、retryEligible）沿用旧格式，不要求 kind：旧回复是在没有结构化字段的提示下得到的。
 export const legacyExtractReview=(response,entry)=>extractReview(response,entry,{legacy:true});
-// 生产默认的审查解析：读表头 kcalPer100gWet 标定值与 sourceIds；重问状态取自流水线传入的记录（落盘信息），无进程内状态。env 可注入（claimEnv）。
+// 生产默认的审查解析：重问状态取自流水线传入的记录（落盘信息），无进程内状态。env（kcalPerSatiety、tolerance）可注入（claimEnv），默认读表头。
+export const loadClaimEnv=()=>readJSON(tableFile).then(t=>({kcalPerSatiety:t.kcalPerSatiety,tolerance:t.smallChangeTolerance}));
 export async function reviewExtractor(claimEnv=null){
- const env=claimEnv??await readJSON(tableFile).then(t=>({kcalPerSatiety:t.kcalPerSatiety,sourceIds:t.sourceIds??{}}));
- return (response,entry,record)=>extractReview(response,entry,{kcalPerSatiety:env.kcalPerSatiety,sourceIds:env.sourceIds?.[entry?.id],record});
+ const env=claimEnv??await loadClaimEnv();
+ return (response,entry,record)=>extractReview(response,entry,{kcalPerSatiety:env.kcalPerSatiety,record});
+}
+// 小改动沿用（亮圳 19:24 小出入口径）：条目内容变了，若所有出处数值相对「审查时快照」变化都在 ±tolerance 内，且结构（类别归属对应的条目、选取方法、出处个数与名称、各出处写了哪些字段、mealBasis 等）未变，就沿用原 L2 结论，不重审。
+// 快照 = 记录里审查时的 draft（行原样）；沿用后快照基准不前移（reviewedSnapshot 保持最初审过的值），避免小改动逐次累积越过 10%。文字（citation、basis、mealCitation）不参与比较。
+const ignoredSourceKeys=['citation','mealCitation','range','item'];
+export function smallChange(oldRow,newRow,tol){
+ const rel=(a,b)=>a===b||(b!==0&&Math.abs(a-b)/Math.abs(b)<=tol+1e-12);
+ const keys=o=>Object.keys(o??{}).filter(k=>!['basis','mealCapBasis'].includes(k)).sort();
+ const no=reason=>({ok:false,reason});
+ if(!(tol>0)||!oldRow||!newRow)return no('缺快照或容差');
+ if(JSON.stringify(keys(oldRow))!==JSON.stringify(keys(newRow)))return no('行字段集变了');
+ for(const k of keys(newRow)){
+  const a=oldRow[k],b=newRow[k];
+  if(k==='sources'){
+   if(!Array.isArray(a)||!Array.isArray(b)||a.length!==b.length)return no('出处个数变了');
+   for(const [i,y] of b.entries()){
+    const x=a[i],ks=o=>Object.keys(o??{}).filter(q=>!ignoredSourceKeys.includes(q)).sort();
+    if(x?.name!==y?.name||JSON.stringify(ks(x))!==JSON.stringify(ks(y)))return no(`出处 ${i} 的名称或字段集变了`);
+    for(const q of ks(y)){if(typeof y[q]==='number'){if(typeof x[q]!=='number'||!rel(y[q],x[q]))return no(`出处 ${y.name}.${q} 变化超过 ±${tol*100}%`);}else if(JSON.stringify(x[q])!==JSON.stringify(y[q]))return no(`出处 ${y.name}.${q} 变了`);}
+   }
+  }else if(k==='selection'){if(a?.method!==b?.method)return no('选取方法变了');}
+  else if(typeof b==='number'){if(typeof a!=='number'||!rel(b,a))return no(`${k} 变化超过 ±${tol*100}%`);}
+  else if(JSON.stringify(a)!==JSON.stringify(b))return no(`${k} 变了`);
+ }
+ return {ok:true};
+}
+export function carryOverRecord(rec,entry,fingerprint,tol,now=new Date().toISOString()){
+ if(rec?.status!=='passed'||rec.draft?.id!==entry.id)return null;
+ const base=rec.reviewedSnapshot??rec.draft;
+ if(!smallChange(base.row,entry.row,tol).ok)return null;
+ const out=structuredClone(rec),draft=draftFor(entry);
+ Object.assign(out,{fingerprint,draft,frozenCandidate:{entryHash:hashContent(entry),draftHash:hashContent(draft)},reviewedSnapshot:structuredClone(base),
+  carriedOver:{note:`小改动沿用（±${Math.round(tol*100)}%）`,tolerance:tol,fromFingerprint:rec.fingerprint,at:now}});
+ return out;
 }
 // 统计：程序判定 AI 误判（errorHistory 里出现过 REVIEW_ARITH_MISJUDGED）单列；其中重问后通过的另计。人工比例照旧只数 manual 条目，不因此放宽。
 // factPendingHuman：事实项判 hard 的条目（含 AI 质疑输入的 arithmetic），一律 manual 待人工，单列计数；人工比例仍按 manual 条目原样计入。
@@ -238,22 +264,41 @@ const draftRequest=()=>{throw Error('候选已冻结；不请求模型改写');}
 // 出处编号（李白 2026-11-09 决定）：凡引用 USDA FoodData Central 的出处，表头 sourceIds[条目 id][出处 name] 必须有一项：
 // 带编号（id 为 4–8 位数字串，idType 为 FDC 或 NDB，status 为 待核对|已核对），或明确写 {id:null,status:'未知'}（记不清不编造，列给协调者，该条事实项保持人工）。
 // 编号放表头而不放行内：行内容进 L2 指纹，登记编号不应让已审结论作废（同 memberItems 的做法）。
+export function checkVerifiedValues(table,entries){
+ const errors=[];
+ for(const e of entries)for(const x of e.row?.sources??[]){
+  const r=table.sourceIds?.[e.id]?.[x.name];
+  if(r?.status!=='已核对')continue;
+  const w=`sourceIds.${e.id}.${x.name}`,c=x.citation??'',fdc=/FDC\s*(\d{4,8})/.exec(c),water=/含水\s*(\d+(?:\.\d+)?)\s*g\/100\s*g/.exec(c),kcal=/(\d+(?:\.\d+)?)\s*kcal\/100\s*g/.exec(c);
+  if(fdc&&String(r.id)!==fdc[1])errors.push(`已核对出处的编号与 citation 里的 FDC 编号不一致：${w}（登记 ${r.id}，citation ${fdc[1]}）`);
+  if(!fdc)continue;
+  if(water&&x.moistureFraction!==undefined&&Math.abs(x.moistureFraction*100-Number(water[1]))>0.051)errors.push(`已核对出处的含水偏离 FDC 记录值：${w}（行内 ${x.moistureFraction}，FDC ${water[1]} g/100g）`);
+  if(kcal&&x.kcalPer100gWet!==undefined&&Math.abs(x.kcalPer100gWet-Number(kcal[1]))>0.5)errors.push(`已核对出处的能量偏离 FDC 记录值：${w}（行内 ${x.kcalPer100gWet}，FDC ${kcal[1]} kcal/100g）`);
+ }
+ return errors;
+}
+export function checkSmallChangeParam(table){
+ const v=table.smallChangeTolerance;
+ return (v>0&&v<1&&typeof table.smallChangeBasis==='string'&&/calibrate/.test(table.smallChangeBasis)&&/小出入口径/.test(table.smallChangeBasis))?[]:['表头 smallChangeTolerance 须为 0–1 之间的正数，并有 smallChangeBasis（标 calibrate，来源写「亮圳 19:24 小出入口径」）'];
+}
 export function checkSourceIds(table,entries){
  const errors=[],ids=table.sourceIds??{};
  for(const e of entries)for(const x of e.row?.sources??[]){
   if(!/FoodData Central/.test(x.citation??''))continue;
   const r=ids[e.id]?.[x.name],w=`sourceIds.${e.id}.${x.name}`;
   if(!r){errors.push(`引用 USDA FoodData Central 的出处缺编号登记：${w}`);continue;}
-  if(r.id===null){if(r.status!=='未知')errors.push(`编号未知须写 status:'未知'：${w}`);continue;}
+  if(r.id===null){if(!['未知','近似'].includes(r.status))errors.push(`编号未知须写 status:'未知' 或 '近似'（近似 = 凭记忆、量级已判合理，须带 note）：${w}`);else if(r.status==='近似'&&!(typeof r.note==='string'&&r.note.trim()))errors.push(`状态近似须带 note（凭记忆、量级已判合理，未按官方出处核对）：${w}`);continue;}
   if(!/^\d{4,8}$/.test(String(r.id))||!['FDC','NDB'].includes(r.idType)||!['待核对','已核对'].includes(r.status))errors.push(`出处编号须为 4–8 位数字、idType 取 FDC|NDB、status 取 待核对|已核对：${w}`);
  }
+ // 已核对的出处不得被改回近似值：citation 里有 FDC 编号与数值（含水 g/100g、kcal/100g）的，行内数值必须等于 FDC 记录值；编号须与登记一致。
+ errors.push(...checkVerifiedValues(table,entries));
  for(const [id,m] of Object.entries(ids))for(const name of Object.keys(m)){const e=entries.find(x=>x.id===id);if(!e||!e.row?.sources?.some(x=>x.name===name))errors.push(`sourceIds 登记的出处不存在：${id}.${name}`);}
  return errors;
 }
 export async function l1(){
  const entries=await entriesFor(),world=await runtime(),errors=[];
  errors.push(...validateMaterialProps(world));
- errors.push(...checkSourceIds(await readJSON(tableFile),entries));
+ errors.push(...checkSourceIds(await readJSON(tableFile),entries),...checkSmallChangeParam(await readJSON(tableFile)));
  for(const e of entries)errors.push(...(await validateDraft(draftFor(e),e)).map(x=>`${e.id}: ${x}`));
  const overrides=entries.filter(e=>e.kind==='material-props-item').length;
  if(overrides/world.items.length>maxOverrideRatio)errors.push(`覆盖行占物品总数 ${overrides}/${world.items.length} 超过 ${maxOverrideRatio*100}%：类别划得不对，回头改类别`);
@@ -454,14 +499,14 @@ export function inconsistentGate(record){
  const n=(record?.errorHistory??[]).filter(c=>c==='REVIEW_INCONSISTENT').length;
  if(n>=2)throw Object.assign(new Error('L2 审查输出两次自相矛盾（hard 但自认无误），不当作通过，转人工'),{code:'REVIEW_INCONSISTENT_EXHAUSTED'});
 }
-// 程序判定误判的重问（REVIEW_ARITH_MISJUDGED）与事实项按编号重问（REVIEW_FACT_RECHECK）各只许 1 次：错误历史里同一代码已出现 2 次，发请求前拒绝，该条转 manual。
+// 程序判定误判的重问（REVIEW_ARITH_MISJUDGED）只许 1 次（事实项不再重问）：错误历史里同一代码已出现 2 次，发请求前拒绝，该条转 manual。
 export function reaskGate(record){
- for(const code of ['REVIEW_ARITH_MISJUDGED','REVIEW_FACT_RECHECK'])if((record?.errorHistory??[]).filter(c=>c===code).length>=2)throw Object.assign(new Error(`L2 重问后仍对不上（${code}），不再重问，转人工`),{code:'REVIEW_REASK_EXHAUSTED'});
+ for(const code of ['REVIEW_ARITH_MISJUDGED'])if((record?.errorHistory??[]).filter(c=>c===code).length>=2)throw Object.assign(new Error(`L2 重问后仍对不上（${code}），不再重问，转人工`),{code:'REVIEW_REASK_EXHAUSTED'});
 }
 // 重问时把程序核对结果（上一轮失败的 feedback，含程序推算值或出处编号）作为一条追加消息发给模型。
 export function withProgramHint(body,record){
  const last=(record?.errorHistory??[]).at(-1);
- if(!['REVIEW_ARITH_MISJUDGED','REVIEW_FACT_RECHECK'].includes(last)||!record.feedback?.length)return body;
+ if(last!=='REVIEW_ARITH_MISJUDGED'||!record.feedback?.length)return body;
  return {...body,messages:[...body.messages,{role:'user',content:`【程序核对】上一轮审查回复里的问题项经程序复核：${record.feedback.join('；')}。请据此重新审查，只返回 JSON，格式同前。`}]};
 }
 export const capReviewsFor=({budgetRoot=draftRoot,client,retry=null,eligible=false,dirName=reviewDirName}={})=>async({body,entry,phase,record})=>{
@@ -475,7 +520,7 @@ export const capReviewsFor=({budgetRoot=draftRoot,client,retry=null,eligible=fal
  return {body};
 };
 // 审查解析错误（extractReview 抛出的任何错误，含无 code 的意外异常）一律使整轮停止；REVIEW_INCONSISTENT 走自己的重试规则。
-export const reviewStops=error=>!['REVIEW_INCONSISTENT','REVIEW_ARITH_MISJUDGED','REVIEW_FACT_RECHECK'].includes(error?.code);
+export const reviewStops=error=>!['REVIEW_INCONSISTENT','REVIEW_ARITH_MISJUDGED'].includes(error?.code);
 // --l1 --show <id,...>：逐条打印出处字段（带单位）、推算中间量、推算值与一致性检查结果。
 const pct=x=>`${(x*100).toFixed(2)}%`;
 export function explainEntry(entry,table,l1Errors=[],itemTags=[]){
@@ -536,8 +581,9 @@ export async function archiveForRedo(ids,{root=reviewRoot,archiveRoot=path.join(
 // --review 的流水线调用；全部可注入（client、目录、条目、审查解析），生产默认值即真实路径。审查解析出错即停止后续所有条目（reviewStops）。
 export async function runReview({entries,client,root=reviewRoot,budgetRoot=draftRoot,ctx=contextFor,validate=validateDraft,extract=null,claimEnv=null,retry=null,eligible=false,
  cardIdArg=cardId,allocation={cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},revisionArg=revision,dirName=reviewDirName}){
- extract??=await reviewExtractor(claimEnv);
- const out=await runContentPipeline({entries,root,budgetRoot,revision:revisionArg,contextFor:ctx,
+ const env=claimEnv??await loadClaimEnv();
+ extract??=await reviewExtractor(env);
+ const out=await runContentPipeline({entries,root,budgetRoot,revision:revisionArg,contextFor:ctx,reuseRecord:env.tolerance>0?(rec,entry,fp)=>carryOverRecord(rec,entry,fp,env.tolerance):undefined,
   validateDraft:validate,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,buildDraftRequest:draftRequest,buildReviewRequest:reviewRequest,extractReview:extract,
   stopOnReviewError:reviewStops,requestTransform:capReviewsFor({budgetRoot,client,retry,eligible,dirName}),client,cardId:cardIdArg,allocation,concurrency:1,batchSize:25});
  return withMisjudgeStats(out,root);
@@ -572,11 +618,11 @@ export function grantCondimentMaxRequests(ledger){
  assert.equal(card.maxRequests,condimentCard.maxRequests);
  return out;
 }
-// 依赖未核对出处的条目先不审（按出处状态判定，不按名字）：条目 sources 里有 sourceIds 已登记但状态不是「已核对」（含 id:null 的未知）的出处，本次跳过；
+// 依赖未核对出处的条目先不审（按出处状态判定，不按名字）：条目 sources 里有 sourceIds 已登记但状态不是「已核对」或「近似」（凭记忆、量级已判合理，可审；含 id:null 的未知则跳过）的出处，本次跳过；
 // 类别行依赖这些出处则该类别行跳过，其成员物品覆盖行（带该类别标签的物品行，上下文含类别值）一并跳过。出处核对后状态改为已核对，自然进入审查。
 // tagsById：物品 id → 运行时世界里物品的实际标签（基础世界加覆盖层合并后，同 show/explainEntry 口径），不是只看 items.json 覆盖层。
 export function skipUnverified(entries,table,tagsById={}){
- const unverified=e=>(e.row?.sources??[]).filter(x=>{const r=table.sourceIds?.[e.id]?.[x.name];return r&&r.status!=='已核对';}).map(x=>x.name);
+ const unverified=e=>(e.row?.sources??[]).filter(x=>{const r=table.sourceIds?.[e.id]?.[x.name];return r&&!['已核对','近似'].includes(r.status);}).map(x=>x.name);
  const skipped=[],skipClass=new Set();
  for(const e of entries.filter(e=>e.kind==='material-props-class')){const u=unverified(e);if(u.length){skipped.push({id:e.id,reason:`出处未核对：${u.join('、')}`});skipClass.add(e.key);}}
  for(const e of entries.filter(e=>e.kind!=='material-props-class')){

@@ -65,6 +65,7 @@ export async function runContentPipeline({
   revision = 'v2', retryManual = false, onBatch = null, budgetRoot = root,
   cardId, allocation, protocolRecoveryIds = [], requestTransform,
   reviewDraftFor = buildDraftRequest?.reviewDraftFor, reuseFrozenDrafts = false,
+  reuseRecord = null, // 可选：(旧记录, 条目, 新指纹) => 沿用后的记录 | null；仅在旧记录 passed 而指纹变了时调用，返回记录则不重审（小改动沿用）
   stopOnReviewError = null, // 可选：(error, entry) => true 时，该审查解析错误使整轮停止后续条目（不再发请求）；默认不停，其他卡行为不变
 }) {
   if (!Array.isArray(entries) || new Set(entries.map(row => row.id)).size !== entries.length) throw new Error('条目编号重复或缺失');
@@ -93,6 +94,7 @@ export async function runContentPipeline({
     let record = recordsById.get(entry.id);
     if(record?.budgetStop){budget.stop(record.budgetStop.message);return record;}
     if(halted)return record??{id:entry.id,fingerprint,status:'pending',attempts:0,draft:null,review:null,errors:[],warnings:[]}; // 已因审查解析错误停止：不发请求、不写盘
+    if(reuseRecord&&record?.status==='passed'&&record.fingerprint!==fingerprint){const carried=await reuseRecord(record,entry,fingerprint);if(carried){await writeJSON(file,carried);recordsById.set(entry.id,carried);return carried;}}
     const recovering=protocolRecoveryIds.length>0;
     let eligible=recovering&&protocolRecoveryIds.includes(entry.id)&&entry.contract==='audit-patch-v1'&&record?.fingerprint===fingerprint&&record.status==='manual'&&!record.review&&!record.protocolRecovery&&
       hasWrapperEvidence(record,entry);
