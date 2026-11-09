@@ -1,8 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs/promises';
 import {world,DAY} from './helpers/finance.mjs';
-import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {appointOfficeRecord,closeOfficeIncumbents,spendPublic,publicSpent} from '../server-plugin/governance.mjs';
 import {questQuotaMonth} from '../server-plugin/entity-view.mjs';
@@ -12,7 +10,6 @@ import {facilityView} from '../server-plugin/facility-state.mjs';
 import {advanceFacilities} from '../server-plugin/facilities.mjs';
 import {autonomyCandidates,autonomyKind} from '../server-plugin/autonomy-candidates.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
-import {advanceNpcAutonomy,npcAutonomyBusy} from '../server-plugin/npc-autonomy.mjs';
 import {withLedger} from '../server-plugin/ledger.mjs';
 import {aliveHoldings,holdingsView} from '../server-plugin/holdings.mjs';
 import {changeHolding} from '../server-plugin/transition.mjs';
@@ -24,7 +21,7 @@ import {personOffices} from '../server-plugin/entity-view.mjs';
 import {publicMaintenanceReport,reportPublicMaintenance} from '../server-plugin/public-projects.mjs';
 import {advanceNpcCognition} from '../server-plugin/npc-cognition.mjs';
 
-import {nativeChief,nativeWorker,nativeScenario,settlement,building,village,official,worker,officeId,scenario} from './helpers/s5pm-fixture.mjs';
+import {nativeChief,nativeWorker,nativeScenario,settlement,building,village,official,worker,officeId,scenario,proposalAdvance} from './helpers/s5pm-fixture.mjs';
 const nativeCandidates=f=>autonomyCandidates(f.e,subjectiveView(f.e,f.doc,nativeChief),{document:f.doc}).filter(c=>c.kind==='public_maintenance'&&c.legacy.building===f.building);
 function deliverReport(f){
  const sent=f.mutate(d=>reportPublicMaintenance(d,f.e,f.manager,f.building,'native-report'));
@@ -177,11 +174,7 @@ test('真实自治提案只押公共材料和工钱，施工前不恢复；同�
  const f=scenario(),replay=scenario(),before=structuredClone(f.doc),o=options(f);
  assert.equal(o.required.wood,8);assert.equal(o.required.stone,4);assert.equal(o.laborCost,96);
  assert.equal(o.completionDays,4);assert.ok(o.options[0].utility>0);assert.equal(candidates(f).length,1);
- for(const s of [f,replay])s.mutate(d=>{
-  advanceNpcAutonomy(d,s.e,600,600,'choose',{beforeState:d.get('state')});
-  assert.equal(npcAutonomyBusy(d.get('state'),official,600)?.action.kind,'public_maintenance');
-  d.set(['state','minute'],630);advanceNpcAutonomy(d,s.e,600,630,'finish');
- });
+ for(const s of [f,replay])proposalAdvance(s);
  assert.deepEqual(f.doc,replay.doc);
  const p=Object.values(f.doc.state.projects).find(p=>p.creator===official&&p.projectWork==='repair');
  assert.ok(p);assert.equal(p.public.escrow,96);assert.equal(p.public.minutesDone,0);

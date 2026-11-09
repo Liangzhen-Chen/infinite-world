@@ -13,3 +13,5 @@ tests/fixtures/private/
 **/.env.*
 *.log
 .tmp/
+
+.tmp/

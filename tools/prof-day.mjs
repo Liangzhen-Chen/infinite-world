@@ -1,4 +1,4 @@
-// 只读性能剖析：node tools/prof-day.mjs [mode=farm|a3|s5pm] [scene=hall|school|post](s5pm 用) [days=N] [out=dir]
+// 只读性能剖析：node tools/prof-day.mjs [mode=farm|a3|s5pm] [scene=hall|school|post|proposal](s5pm 用) [days=N] [out=dir]
 // 不改引擎/测试/世界数据；用 node:inspector 进程内采样 + 加载钩子计数包装。
 import inspector from 'node:inspector';
 import {register} from 'node:module';
@@ -113,6 +113,8 @@ async function s5pm(){
   if(scene==='hall'){ // 测试「完整一季推进」(tests/s5-law-public-maintenance.test.mjs 末尾) 的同一前置
     f=fx.scenario();f.doc.state.npcs=Object.fromEntries([fx.official,fx.worker].map(id=>[id,f.doc.state.npcs[id]]));
     f.doc=withLedger(f.e,{...f.doc,ledger:undefined}).document;
+  }else if(scene==='proposal'){ // 子测 8「真实自治提案…」(test.mjs:171起)：scenario() 后 600→630 分钟的 choose/finish；剖析只跑一遍，replay=1 再跑一份对照；之后可选 days=N 继续 world_time
+    proposal=true;f=fx.scenario();
   }else f=fx.nativeScenario(scene==='school'?'bld_hw_school':'bld_hw_post');
   console.log(`scene=${scene} step=${step}日/次`);
   await startProf();const ms=[];

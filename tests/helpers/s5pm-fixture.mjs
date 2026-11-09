@@ -1,4 +1,6 @@
 // s5-law-public-maintenance 测试与剖析工具共用的夹具（从测试文件原样迁出，逻辑未改）。
+import assert from 'node:assert/strict';
+import {advanceNpcAutonomy,npcAutonomyBusy} from '../../server-plugin/npc-autonomy.mjs';
 import fs from 'node:fs/promises';
 import {world} from './finance.mjs';
 import {DAY} from './finance.mjs';
@@ -50,4 +52,13 @@ export function scenario(){
   nextReview:30*DAY,appointedBy:def.appointedBy,source:def.source,sourceEvent:'appointment'},'appointment');
  doc=withLedger(e,applyPatches(doc,draft.patches)).document;
  return {e,w,get doc(){return doc;},set doc(v){doc=v;},mutate(fn){const d=e.primitiveDraft(doc),r=fn(d);doc=applyPatches(doc,d.patches);return r;}};
+}
+
+// 子测「真实自治提案…」(tests/s5-law-public-maintenance.test.mjs) 的推进步骤：600 分钟选择提案、630 分钟完成行动（原样迁出）。
+export function proposalAdvance(s){
+ return s.mutate(d=>{
+  advanceNpcAutonomy(d,s.e,600,600,'choose',{beforeState:d.get('state')});
+  assert.equal(npcAutonomyBusy(d.get('state'),official,600)?.action.kind,'public_maintenance');
+  d.set(['state','minute'],630);advanceNpcAutonomy(d,s.e,600,630,'finish');
+ });
 }
