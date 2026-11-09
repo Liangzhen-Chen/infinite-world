@@ -21,7 +21,7 @@
 // （world/drafts/d12-condiment/ 下自己的 budget.json、usage.jsonl、review-1/；revision 另起，D 卡已审条目的指纹逐字不变），外部模型核对上限 1.0 元，到额自动停（单卡与共享上限都是 1.0 元）。
 // 授权来源：李白 2026-11-09 16:5x，亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡。条目范围 = 在 D 卡 review-2 里没有审查记录的条目（condimentEntries）。
 // 用法：--review --card condiment（只发上述条目的审查，需 DEEPSEEK_API_KEY）；--card condiment --budget 只读账本（不发请求）。
-// 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --rejudge [--dry-run] | --backfill-snapshots [--dry-run] [--card condiment] | --retry-garlic | --sample | --l4 <json> | --verify   （--review/--retry-garlic 需环境变量 DEEPSEEK_API_KEY）
+// 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --rejudge [--dry-run] | --backfill-snapshots [--dry-run] [--card condiment] | --retry-garlic | --sample [--batch N] | --l4 <json> [--batch N] | --verify   （--review/--retry-garlic 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -345,26 +345,45 @@ export async function l1(){
  assert.deepEqual(errors,[]);
  return {L1:'passed',entries:entries.length,overrides,items:world.items.length};
 }
-export async function sampleL4(card=cardProfiles.d){
- const batchFile=path.join(card.reviewRoot,'batch-0.json'),selectionFile=path.join(card.reviewRoot,'l4-selection.json');
- const batch=await readJSON(batchFile),entries=await card.entries();
- const st=await summarizeApproval(entries,card);
- if(st.unresolved.length)throw Error(`尚有条目既未通过 L2 也无人工核定：${st.unresolved.join(',')}`);
- const pool=[...batch.ids];for(let i=pool.length-1;i>0;i--){const j=randomInt(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];}
- const selection={fingerprint:batch.fingerprint,wave:pool.slice(0,10),read:[...new Set([...batch.sample,...batch.flagged,...pool.slice(0,10)])]};
- await fs.writeFile(selectionFile,JSON.stringify(selection,null,2)+'\n');
- return selection;
+// L4 按批处理：summary.json 里每一批各抽一份（l4-selection-<N>.json），每批各记一次 L4（batch-<N>.json 的 l4），verify 逐批都要求。
+// 范围只含仍属本卡的条目（batch.ids ∩ card.entries()）：D 卡冻结批次里已移交到调味卡的条目不抽、不读、不评，由调味卡的 L4 覆盖；整批都已移交的批不需要 L4。
+// 抽样规则沿用：read = 该批 sample + flagged + wave；wave = 批内随机 min(10, 批内条数) 条（批内不足 10 条则全取）。
+// batch-0 旧选择文件 l4-selection.json 兼容：没有 l4-selection-0.json 时 batch 0 读旧文件（其中记的 L4 保留在 batch-0.json 里，不动）。
+export const selectionFileOf=(card,n)=>path.join(card.reviewRoot,`l4-selection-${n}.json`);
+export async function readSelection(card,n){
+ const miss=e=>e.code==='ENOENT'?null:Promise.reject(e);
+ return await readJSON(selectionFileOf(card,n)).catch(miss)??(n===0?await readJSON(path.join(card.reviewRoot,'l4-selection.json')).catch(miss):null);
 }
-export async function recordL4(file,reviewer,card=cardProfiles.d){
- const batchFile=path.join(card.reviewRoot,'batch-0.json'),selectionFile=path.join(card.reviewRoot,'l4-selection.json');
- const batch=await readJSON(batchFile),selection=await readJSON(selectionFile),notes=await readJSON(file);
+export const waveSize=count=>Math.min(10,count);
+export async function sampleL4(card=cardProfiles.d,{batch:only=null,approval=summarizeApproval}={}){
+ const entries=await card.entries(),st=await approval(entries,card);
+ if(st.unresolved.length)throw Error(`尚有条目既未通过 L2 也无人工核定：${st.unresolved.join(',')}`);
+ const summary=await readJSON(path.join(card.reviewRoot,'summary.json')),own=new Set(entries.map(e=>e.id)),out=[];
+ if(only!==null&&!summary.batches.some(b=>b.index===only))throw Error(`没有批 ${only}`);
+ for(const b of summary.batches){
+  if(only!==null&&b.index!==only)continue;
+  const batch=await readJSON(path.join(card.reviewRoot,`batch-${b.index}.json`)),ids=batch.ids.filter(id=>own.has(id));
+  if(!ids.length){out.push({batch:b.index,skipped:'该批条目都不属于本卡（已移交），无需 L4'});continue;}
+  if(batch.l4?.approved){if(only!==null)throw Error(`批 ${b.index} 已记录 L4，不重抽（重抽会使已记录的 L4 与选择不符）`);out.push({batch:b.index,skipped:'已记录 L4'});continue;}
+  const pool=[...ids];for(let i=pool.length-1;i>0;i--){const j=randomInt(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];}
+  const wave=pool.slice(0,waveSize(ids.length)),selection={batch:b.index,fingerprint:batch.fingerprint,wave,read:[...new Set([...batch.sample.filter(id=>own.has(id)),...batch.flagged.filter(id=>own.has(id)),...wave])]};
+  await fs.writeFile(selectionFileOf(card,b.index),JSON.stringify(selection,null,2)+'\n');
+  out.push(selection);
+ }
+ return out;
+}
+export async function recordL4(file,reviewer,card=cardProfiles.d,{batch:n=0}={}){
+ const batchFile=path.join(card.reviewRoot,`batch-${n}.json`);
+ const batch=await readJSON(batchFile),selection=await readSelection(card,n),notes=await readJSON(file);
+ if(!selection)throw Error(`批 ${n} 还没有抽样选择文件，先 --sample --batch ${n}`);
  if(selection.fingerprint!==batch.fingerprint||selection.read.some(id=>!notes.notes?.some(r=>r.id===id&&r.note?.trim()))||selection.wave.some(id=>!notes.wave?.some(r=>r.id===id)))throw Error('L4 缺少实际抽样阅读或评分');
  batch.l4={approved:true,reviewer,notes:notes.notes,wave:notes.wave};
  await fs.writeFile(batchFile,JSON.stringify(batch,null,2)+'\n');
  return batch.l4;
 }
-export function checkWave(wave,ids){
- if(wave?.length!==10||new Set(wave.map(r=>r.id)).size!==10||wave.some(r=>!ids.includes(r.id)||r.scores?.length!==6||r.scores.some(x=>!Number.isInteger(x)||x<3||x>5)||!r.note?.trim())||wave.flatMap(r=>r.scores).reduce((a,c)=>a+c,0)/60<4)throw Error('L4 波次随机 10 条六项评分不达标');
+// 波次评分：n 条（默认 10；批内不足 10 条时 n = 批内条数，由调用方按 waveSize 传入），每条六项整数 3–5、均分 ≥4，其余要求不变。
+export function checkWave(wave,ids,n=10){
+ if(!(n>=1)||wave?.length!==n||new Set(wave.map(r=>r.id)).size!==n||wave.some(r=>!ids.includes(r.id)||r.scores?.length!==6||r.scores.some(x=>!Number.isInteger(x)||x<3||x>5)||!r.note?.trim())||wave.flatMap(r=>r.scores).reduce((a,c)=>a+c,0)/(6*n)<4)throw Error(`L4 波次随机 ${n} 条六项评分不达标`);
 }
 // 人工核定：L2 已达同条上限仍有 hard 意见、经主会话复算认定为模型误判的条目。与 L2 通过分开记录、分开计数，不改 L2 规则与阈值。
 // 只接受：指纹与当前数据一致、带复算算式、有不同于复算者的独立审查者确认、日期、固定标注。
@@ -434,22 +453,25 @@ export async function summarizeApproval(entries,card=cardProfiles.d){
 // ③条目都在已审查批次里；④记录指纹、无错、无 hard。另加波次随机 10 条六项评分（checkWave）。
 // 唯一差别（规则解释待李白确认）：已人工核定的条目允许记录状态不是 passed，且不计入人工队列比例（needsSystemicRepair）——
 // 它们已核定，不在待处理队列里；未决条目为空才通过。该差别同样写在 approval-summary.json 的 rule 字段。
-export async function verifyPublished(card=cardProfiles.d,{checkL1=true}={}){
+export async function verifyPublished(card=cardProfiles.d,{checkL1=true,approval=summarizeApproval}={}){
  if(checkL1)await l1();
  const reviewRoot=card.reviewRoot,entries=await card.entries(),summary=await readJSON(path.join(reviewRoot,'summary.json'));
- const st=await summarizeApproval(entries,card);
+ const st=await approval(entries,card);
  if(st.unresolved.length)throw Object.assign(Error('尚有条目既未通过 L2 也无人工核定'),{unresolved:st.unresolved});
  const summaryIds=summary.batches.flatMap(b=>b.ids??[]);
  if(new Set(summaryIds).size!==summaryIds.length)throw Error('发布编号重复（摘要批次 ids）');
  const inBatch=new Set(),rowsById=new Map();
  for(const b of summary.batches){
   const current=await readJSON(path.join(reviewRoot,`batch-${b.index}.json`));
-  if(!current?.l4?.approved||current.fingerprint!==b.fingerprint)throw Error(`批 ${b.index} 尚未完成 L4 或批指纹与摘要不符`);
-  if(!Array.isArray(current.ids))throw Error('批次缺少条目清单');
+  if(!Array.isArray(current?.ids))throw Error('批次缺少条目清单');
+  const own=current.ids.filter(id=>entries.some(e=>e.id===id)),needL4=own.length>0; // 整批都已移交到别的卡的批，L4 由那张卡覆盖
+  if(current.fingerprint!==b.fingerprint||needL4&&!current.l4?.approved)throw Error(`批 ${b.index} 尚未完成 L4 或批指纹与摘要不符`);
   const rows=await Promise.all(current.ids.map(id=>readJSON(path.join(reviewRoot,`${id}.json`))));
   if(rows.some(r=>!r)||hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==current.fingerprint)throw Error(`批 ${b.index} 审查后内容已改变`);
-  for(const id of [...current.sample,...current.flagged])if(!current.l4.notes?.some(r=>r.id===id&&typeof r.note==='string'&&r.note.trim()))throw Error(`缺少 L4 阅读记录 ${id}`);
-  checkWave(current.l4.wave,entries.map(e=>e.id));
+  if(needL4){
+   for(const id of [...current.sample,...current.flagged].filter(id=>own.includes(id)))if(!current.l4.notes?.some(r=>r.id===id&&typeof r.note==='string'&&r.note.trim()))throw Error(`缺少 L4 阅读记录 ${id}`);
+   checkWave(current.l4.wave,own,waveSize(own.length));
+  }
   for(const r of rows){if(inBatch.has(r.id))throw Error(`发布编号重复 ${r.id}`);inBatch.add(r.id);rowsById.set(r.id,r);}
  }
  for(const e of entries)if(!inBatch.has(e.id)||!summaryIds.includes(e.id))throw Error(`条目不在已审查批次 ${e.id}`);
@@ -859,8 +881,10 @@ export async function run(args=process.argv.slice(2)){
   console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,aiMisjudgedByProgram:summary.aiMisjudgedByProgram,factPendingHuman:summary.factPendingHuman,budget:summary.budget.cards[cardId],...reportHalt(halted)}));
  }
  const card=condiment?cardProfiles.condiment:cardProfiles.d;
- if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4(card)));
- if(args.includes('--l4'))console.log(JSON.stringify(await recordL4(args[args.indexOf('--l4')+1],'主会话人读',card)));
+ const batchArg=args.includes('--batch')?Number(args[args.indexOf('--batch')+1]):null;
+ if(batchArg!==null&&!Number.isInteger(batchArg))throw Error('--batch 须为整数');
+ if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4(card,{batch:batchArg})));
+ if(args.includes('--l4'))console.log(JSON.stringify(await recordL4(args[args.indexOf('--l4')+1],'主会话人读',card,{batch:batchArg??0})));
  if(args.includes('--verify'))console.log(JSON.stringify(args.includes('--card')?await verifyPublished(card):await verifyAll()));
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)await run();
