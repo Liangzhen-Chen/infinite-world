@@ -14,6 +14,7 @@ import {moveCoins,purse,mirrorPartyCoins,depositCounter,dedicatedCoinAccount} fr
 import {transferItems} from '../server-plugin/items.mjs';
 import {bookTransport,advanceTransport,nextTransportMinute} from '../server-plugin/transport.mjs';
 import {fixture as transportFixture,asset,DRIVER} from './helpers/transport.mjs';
+import {pinSatiety} from './helpers/satiety-pin.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,owner='npc_hw_linsui',buyer='npc_hw_luowei',seller='npc_hw_yanzhe',place='bld_hw_qingdeng',item='item_ration';
@@ -30,7 +31,7 @@ function fixture({food=false}={}){
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:food?1:0}];
  w.marketRules.customerChoice.noisePermille=0;
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?10/24:0;
- w.items.find(i=>i.id===item).nutrition={satiety:1};
+ pinSatiety(w,item,1);
  const row={item,source:'route',from:'loc_bs',amount:2,maximum:20};
  const shop=w.rules.economy.shops.stores.find(s=>s.keeper===owner);shop.restock=[row];shop.firstDay=1;shop.cycleDays=1;
  w.npcs.find(n=>n.id===owner).shopRestock=[row];

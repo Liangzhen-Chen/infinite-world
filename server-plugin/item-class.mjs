@@ -187,6 +187,9 @@ export function deriveItemAttributes(world){
  const content=id=>{
   if(cache.has(id))return cache.get(id);
   const item=byId.get(id);if(!item)return null;
+  // 幂等：已派生过的物品（nutrition 与 nutrientContent 仍一致，说明没被人改过）按当时记下的“按热量基值” nutrientBase 重算，不把已乘过系数的值再当手写值乘一遍。
+  const prior=item.nutrition&&item.nutrientBase&&item.nutrientContent&&(item.nutrition.satiety??0)===item.nutrientContent.satiety&&(item.nutrition.hydration??0)===item.nutrientContent.hydration?item.nutrientBase:null;
+  if(prior)return set(id,{satiety:prior.satiety,hydration:prior.hydration,raw:false,authored:true});
   const auth=item.nutrition;
   if(auth&&auth.satiety!==undefined&&auth.hydration!==undefined)return set(id,{satiety:auth.satiety,hydration:auth.hydration,raw:false,authored:true});
   if(!has(id,'food'))return set(id,{satiety:0,hydration:0,raw:false,inedible:true});
@@ -212,6 +215,8 @@ export function deriveItemAttributes(world){
   item.foodState=c.raw?'raw':'ready';
   const sat=Math.floor(c.satiety*satietyFactor(world,item,c.satiety));
   item.nutrientContent={satiety:sat,hydration:Math.floor(c.hydration)};
+  // nutrientBase：未乘系数的“按热量基值”（配方的能量守恒在它上面成立；重复派生时也从它重算）。
+  item.nutrientBase={satiety:c.satiety,hydration:c.hydration};
   if(c.raw)continue;
   const nutrition={...(sat>0?{satiety:sat}:{}),...(Math.floor(c.hydration)>0?{hydration:Math.floor(c.hydration)}:{})};
   if(Object.keys(nutrition).length)item.nutrition=nutrition;

@@ -5,6 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
+import {pinSatiety} from './helpers/satiety-pin.mjs';
 
 // 口粮替代的食物来源按“本聚落内、营业窗口内、持有可出让食物的交易服务持有人”整类计，店铺只是其中一种。
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -21,7 +22,7 @@ function fixture({shop=true,open=true,away=null,sameHousehold=false,cash=10000}=
  w.households=[{id:'meal-house-0',members:sameHousehold?[A,B,seller]:[A,B],settlement:'loc_hw',homeLocation:home}];
  if(!sameHousehold)w.households.push({id:'meal-seller',members:[seller],settlement:'loc_hw',homeLocation:home});
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
- w.items.find(i=>i.id===item).nutrition={satiety:30};
+ pinSatiety(w,item,30);
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  const at=away??home;
  for(const n of w.npcs.filter(n=>[A,seller].includes(n.id))){n.tier='full';n.schedule={default:[{start:0,end:1440,location:n.id===seller?at:home,activity:'休息',services:n.id===seller&&open?['trade']:[]}]};}

@@ -7,6 +7,7 @@ import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
 import {shareByNeed} from '../server-plugin/shop.mjs';
 import {PatchCursor} from '../server-plugin/storage.mjs';
+import {pinSatiety} from './helpers/satiety-pin.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const item='item_bread',shopSeller='npc_hw_linsui',traderSeller='npc_hw_meiling';
@@ -21,7 +22,7 @@ function fixture({seller,groups,coins={},stock=20}){
  w.households=w.households.map(h=>({...h,members:h.members.filter(id=>!members.includes(id))})).filter(h=>h.members.length);
  groups.forEach((g,i)=>w.households.push({id:`house_share_fixture_${i}`,members:g,settlement:'loc_hw',homeLocation:'bld_hw_qingdeng',tenure:'沿用已发布住处，独立登记家计'}));
  for(const r of w.primitiveTables.body.rows)if(r.need==='satiety'&&r.selector==='person')r.drainPerHour.light=10/24;
- w.items.find(i=>i.id===item).nutrition={satiety:1};
+ pinSatiety(w,item,1);
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];
  const engine=new WorldEngine(w);let document=engine.initialFromLegacy(legacy,'seller-share');
  document.state.minute=300;

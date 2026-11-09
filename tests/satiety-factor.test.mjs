@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import crafting0 from '../world/rules/tables/balance/crafting.json' with {type:'json'};
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {satietyFactor,materialProps,craftingParam} from '../server-plugin/item-class.mjs';
+import {satietyFactor,materialProps,craftingParam,deriveItemAttributes} from '../server-plugin/item-class.mjs';
 
 const world=await loadWorld();
 const engine=new WorldEngine(structuredClone(world));
@@ -51,7 +51,9 @@ test('扩展因子接口：没有数据的维度因子取 1，有数据时按配
   assert.ok(mp.moisture.known);
   const base=satietyFactor(engine.world,known,40),want=Math.min(1.25,Math.max(0.8,(mp.moisture.value/0.5)**-0.2));
   assert.ok(Math.abs(satietyFactor(w,known,40)-base*want)<1e-9);
-  const unknown=engine.byId.get('item_water');
+  // 含水未知的物品：从引擎里找一件（不按名字挑）
+  const unknown=engine.world.items.find(i=>!materialProps(engine,i.id).moisture.known);
+  assert.ok(unknown);
   assert.equal(materialProps({world:w,byId:engine.byId},unknown.id).moisture.known,false);
   assert.equal(satietyFactor(w,unknown,12),satietyFactor(engine.world,unknown,12));
 });
@@ -109,4 +111,15 @@ test('多个维度叠加后，系数整体仍夹在 [min,max] 内', () => {
   // 极稀（能量密度因子已到 max）再叠加含水因子大于 1：仍封顶在 max
   p.value.dimensions={moisture:{k:-3,ref:0.9,min:0.1,max:3}};
   assert.equal(satietyFactor(w,item,1e-4*item.weight),ed.max);
+});
+
+test('重复派生不变（手写值不会被已乘过系数的结果再乘一遍）；手改营养则按手改值重算', () => {
+  const once=structuredClone(engine.world);
+  deriveItemAttributes(once);
+  assert.deepEqual(once.items,engine.world.items);
+  const w=structuredClone(engine.world),ration=w.items.find(i=>i.id==='item_ration');
+  ration.nutrition={satiety:40};
+  deriveItemAttributes(w);
+  const after=w.items.find(i=>i.id==='item_ration');
+  assert.equal(after.nutrition.satiety,Math.floor(40*satietyFactor(w,after,40)));
 });

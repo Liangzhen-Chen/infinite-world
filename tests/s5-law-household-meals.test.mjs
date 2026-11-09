@@ -11,6 +11,7 @@ import {householdResources} from '../server-plugin/household-budget.mjs';
 import {advanceCustomerFlow} from '../server-plugin/business.mjs';
 import {bag,granary} from '../server-plugin/stock.mjs';
 import {CampaignStorage} from '../server-plugin/storage.mjs';
+import {pinSatiety} from './helpers/satiety-pin.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',seller='npc_hw_linsui',item='item_bread',home='bld_hw_qingdeng',DAY=1440;
@@ -29,7 +30,7 @@ function fixture({publicFood=0,granaryEnabled=false,bread=2,shared=true,market=f
  // An absent seller must not add a third registered mouth to public ration math.
  if(market&&!guest)w.households.push({id:'meal-seller',members:[seller],settlement:'loc_hw',homeLocation:home});
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
- w.items.find(i=>i.id===item).nutrition={satiety:30};
+ pinSatiety(w,item,30);
  if(drainMultiplier!==1)w.derived.modifiers.push({id:'meal-drain-premise',pack:'core',target:'body:drain',stage:'mul',value:drainMultiplier});
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  if(market)for(const n of w.npcs.filter(n=>[A,seller].includes(n.id))){n.tier='full';n.schedule={default:[{start:0,end:1440,location:home,activity:'休息',services:n.id===seller?['trade']:[]}]};}

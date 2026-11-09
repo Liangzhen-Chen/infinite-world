@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdBudget,householdResources,householdBufferTarget,householdOptions,registerHouseholdFoodSources} from '../server-plugin/household-budget.mjs';
@@ -14,8 +14,8 @@ import {stateReader} from '../server-plugin/valuation.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const owner='npc_hw_linsui',other='npc_hw_duanyan',supplier='npc_hw_shendu',item='item_bread',DAY=1440;
-// 面包的饱腹读材料数据（items.json 里的手写营养），夹具不再覆盖成 1；手算锚点按它缩放：一个面包 = SAT 饱腹，每人每天需 10 个面包。
-const SAT=world.items.find(i=>i.id===item).nutrition.satiety;
+// 面包的饱腹由其出处（props）推导并乘饱腹系数，取引擎派生后的值，夹具不再覆盖成 1；手算锚点按它缩放：一个面包 = SAT 饱腹，每人每天需 10 个面包。
+const SAT=(await loadRuntimeWorld()).items.find(i=>i.id===item).nutrition.satiety;
 const satOf=(f,id)=>f.engine.byId.get(id).nutrition?.satiety??0;
 const near=(a,b,m)=>assert.ok(Math.abs(a-b)<1e-6,m??`${a} ≈ ${b}`);
 // 市场替代的独立复算（不拿引擎的结果去验引擎的结果）：

@@ -16,10 +16,13 @@ import {advanceHook} from '../server-plugin/advance-hooks.mjs';
 import {fuelEffectiveHeat,fuelReferenceHeat,householdUsage} from '../server-plugin/item-class.mjs';
 import {itemGrams} from '../server-plugin/household-budget.mjs';
 import craftingBalance from '../world/rules/tables/balance/crafting.json' with {type:'json'};
+import {pinSatiety} from './helpers/satiety-pin.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',home='loc_hw_northwood';
 function fixture({capacity=2000,separate=false,owned=false,location=home,settlement='loc_hw',food=0,fullClock=false}={}){
  const w=structuredClone(world);
+ // 手算锚点按每份野食 15 饱腹（8 份 = 120）；手写基值要乘饱腹系数，这里用生产系数反解，使最终仍是 15。
+ pinSatiety(w,'item_wild_food',15);
  w.rules.householdSubsistence.portionsPerKm2=capacity;
  if(!fullClock)w.rules.wildlife.habitats=w.rules.wildlife.habitats.filter(h=>h.location===location);
  // Arithmetic fixtures isolate one reachable commons, including plant-only
