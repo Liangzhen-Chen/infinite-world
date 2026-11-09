@@ -1,69 +1,20 @@
 {
   "id": "item_parsnip",
-  "fingerprint": "ba4b79a29a79c761d87d8e38ed78058bdc4f6a74394400a9426a417b19197f9d",
+  "fingerprint": "3f07311d543c3982b856357cb2e5db21d1fbba258c1f34499920cb0716298153",
   "status": "manual",
   "attempts": 0,
-  "draft": {
-    "id": "item_parsnip",
-    "row": {
-      "moisture": 0.8,
-      "energyDensity": 153,
-      "basis": "欧防风根含水 79.5%、75 kcal/100g（USDA FoodData Central 生欧防风），干物质约 3.66 kcal/g；饱腹=kcal÷24，3660÷24≈153。【数值凭记忆写入，待 L2 核对】"
-    }
-  },
-  "review": {
-    "contradictions": [
-      {
-        "quote": "欧防风根含水 79.5%、75 kcal/100g（USDA FoodData Central 生欧防风），干物质约 3.66 kcal/g",
-        "field": "basis",
-        "severity": "hard",
-        "reason": "USDA 生欧防风约 75 kcal/100g 但含水约 79.5%，干物质 20.5%，干基能量应约 3.66 kcal/g 无误；但 75 kcal/100g 与 79.5% 含水并存时干基=75/0.205≈366 kcal/100g=3.66 kcal/g，算式自洽。问题在类别行称欧防风含水明显偏离需覆盖，而物品行 0.8 与 79.5% 一致，无矛盾。真正矛盾：类别行 basis 列欧防风为偏离者，但物品行覆盖值 0.8 与 USDA 79.5% 相符，属类别行表述与数据不符，soft。"
-      }
-    ]
-  },
+  "draft": null,
+  "review": null,
   "errors": [
-    {
-      "quote": "欧防风根含水 79.5%、75 kcal/100g（USDA FoodData Central 生欧防风），干物质约 3.66 kcal/g",
-      "field": "basis",
-      "severity": "hard",
-      "reason": "USDA 生欧防风约 75 kcal/100g 但含水约 79.5%，干物质 20.5%，干基能量应约 3.66 kcal/g 无误；但 75 kcal/100g 与 79.5% 含水并存时干基=75/0.205≈366 kcal/100g=3.66 kcal/g，算式自洽。问题在类别行称欧防风含水明显偏离需覆盖，而物品行 0.8 与 79.5% 一致，无矛盾。真正矛盾：类别行 basis 列欧防风为偏离者，但物品行覆盖值 0.8 与 USDA 79.5% 相符，属类别行表述与数据不符，soft。"
-    }
+    "同条审核已达 3 次（初审+2次修正）：item_parsnip"
   ],
   "warnings": [],
-  "feedback": null,
-  "frozenCandidate": {
-    "entryHash": "9bb461c21d37c873306dcc7632df9bcc2443c40b6a929400e7d69f479f6d09fd",
-    "draftHash": "71984ed78bc563646259505db22d1571d630fc636847245392e1044e10e264b7"
-  },
-  "responseEvidence": [
-    {
-      "phase": "review",
-      "attempt": 1,
-      "requestId": "0d050d9a-95cc-4105-ba64-46d07ee81446",
-      "file": "budget-responses/0d050d9a-95cc-4105-ba64-46d07ee81446.json",
-      "requestHash": "b764e20a5aafa2c69f17ce85ba25997b6180f968a31f5b92dc594f0998d41619",
-      "responseHash": "1b8d472ec95c8bb8890baa0031dbf66ff92acbf74f96a702846848e0544cdb4f"
-    }
+  "feedback": [
+    "同条审核已达 3 次（初审+2次修正）：item_parsnip"
   ],
-  "measurements": [
-    {
-      "label": "content-review-1-item_parsnip-review0",
-      "model": "deepseek-flash",
-      "thinking": "disabled",
-      "usage": {
-        "prompt_tokens": 1058,
-        "completion_tokens": 219,
-        "total_tokens": 1277,
-        "prompt_tokens_details": {
-          "cached_tokens": 128
-        },
-        "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 930
-      },
-      "costUpperYuan": 0.0036171199999999997,
-      "cumulativeUpperYuan": 0.13696615999999998,
-      "latencyMs": 2468.3451999999997,
-      "timestamp": "2026-11-09T09:55:14.813Z"
-    }
-  ]
+  "frozenCandidate": {
+    "entryHash": "250ee88249eab7577625673e9fc74f546fa9facc892665289dd103fef400f50b",
+    "draftHash": "5189cf5cde56ee3b2845930e89ba8055e82303d9f2cad77bfcf0952d93a9ff41"
+  },
+  "errorCode": "REVIEW_LIMIT"
 }

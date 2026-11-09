@@ -1,82 +1,20 @@
 {
   "id": "class_egg",
-  "fingerprint": "9718bff3856df69dcfc4f68821545fa697ac1cd8bf61af7268b35e51e31a6d00",
+  "fingerprint": "774307e7fe1cfa090e1b5cd1493c0edaf560bd36a40b4948d713eff83787d96c",
   "status": "manual",
   "attempts": 0,
-  "draft": {
-    "id": "class_egg",
-    "row": {
-      "moisture": 0.76,
-      "energyDensity": 250,
-      "basis": "禽蛋（能量与含水按可食内容计）：全蛋生含水 76.2%、143 kcal/100g（USDA FoodData Central）；干物质能量 = 1430 kcal/kg ÷ (1−0.762) ≈ 6010 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），6010÷24≈250。可食部分 88%（蛋壳约 12%，USDA refuse）。本类别按食用禽蛋写；蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费该类别值。【数值凭记忆写入，待 L2 核对】",
-      "edibleFraction": 0.88
-    }
-  },
-  "review": {
-    "contradictions": [
-      {
-        "quote": "1430 kcal/kg ÷ (1−0.762) ≈ 6010 kcal/kg 干物质",
-        "field": "basis",
-        "severity": "hard",
-        "reason": "1430÷0.238≈6008，算式本身无误；但 143 kcal/100g 与 76.2% 水分的全蛋干物质能量约 6010 kcal/kg 合理，问题在下一项换算"
-      },
-      {
-        "quote": "6010÷24≈250",
-        "field": "energyDensity",
-        "severity": "hard",
-        "reason": "6010÷24≈250.4，数值正确；但 250 饱腹/kg 干物质对应约 6000 kcal/kg 干物质，与全蛋干物质约 6000 kcal/kg 一致，无矛盾"
-      }
-    ]
-  },
+  "draft": null,
+  "review": null,
   "errors": [
-    {
-      "quote": "1430 kcal/kg ÷ (1−0.762) ≈ 6010 kcal/kg 干物质",
-      "field": "basis",
-      "severity": "hard",
-      "reason": "1430÷0.238≈6008，算式本身无误；但 143 kcal/100g 与 76.2% 水分的全蛋干物质能量约 6010 kcal/kg 合理，问题在下一项换算"
-    },
-    {
-      "quote": "6010÷24≈250",
-      "field": "energyDensity",
-      "severity": "hard",
-      "reason": "6010÷24≈250.4，数值正确；但 250 饱腹/kg 干物质对应约 6000 kcal/kg 干物质，与全蛋干物质约 6000 kcal/kg 一致，无矛盾"
-    }
+    "同条审核已达 3 次（初审+2次修正）：class_egg"
   ],
   "warnings": [],
-  "feedback": null,
-  "frozenCandidate": {
-    "entryHash": "e105f71c0a8abae54ade30b752025b56028a5bcc8e79cb4e8c221aab31cb522c",
-    "draftHash": "5360fd1c72ad05379076cd636e500f3cd9252f685bf68cd633f2476e9f050b12"
-  },
-  "responseEvidence": [
-    {
-      "phase": "review",
-      "attempt": 1,
-      "requestId": "a5f2e131-8159-4745-b5db-08a222442dfd",
-      "file": "budget-responses/a5f2e131-8159-4745-b5db-08a222442dfd.json",
-      "requestHash": "39767ae83f44a0fcf9f1cc9ac577ab01a9cec28a7c92c2adca639d87b4d1b775",
-      "responseHash": "a6c2794642e29f3b5295b51183f9449417b89e74f734b75f2a93da861acdc43c"
-    }
+  "feedback": [
+    "同条审核已达 3 次（初审+2次修正）：class_egg"
   ],
-  "measurements": [
-    {
-      "label": "content-review-1-class_egg-review0",
-      "model": "deepseek-flash",
-      "thinking": "disabled",
-      "usage": {
-        "prompt_tokens": 981,
-        "completion_tokens": 167,
-        "total_tokens": 1148,
-        "prompt_tokens_details": {
-          "cached_tokens": 128
-        },
-        "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 853
-      },
-      "costUpperYuan": 0.00304712,
-      "cumulativeUpperYuan": 0.13002392,
-      "latencyMs": 1754.3835,
-      "timestamp": "2026-11-09T09:55:09.991Z"
-    }
-  ]
+  "frozenCandidate": {
+    "entryHash": "7659e2b32095921bc78cbb33130f51b5bea738dbb97680804223a22e44202a68",
+    "draftHash": "0711cc0b8280667c2a6bef6935121cc53065620094eda5fc47449284c93232f5"
+  },
+  "errorCode": "REVIEW_LIMIT"
 }

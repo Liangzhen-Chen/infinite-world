@@ -1,82 +1,20 @@
 {
   "id": "class_milk",
-  "fingerprint": "3d8f053b7e95ed0251eb563d28bc0418bf1ef5585a9dac7c683556889902b3bc",
+  "fingerprint": "5e80e786682f68db29579c0516b783952d8ab6a4fda60e016574ec5d8865b603",
   "status": "manual",
   "attempts": 0,
-  "draft": {
-    "id": "class_milk",
-    "row": {
-      "moisture": 0.875,
-      "energyDensity": 208,
-      "basis": "鲜乳：牛乳含水 87.7%、61 kcal/100g，羊乳含水 87.0%、69 kcal/100g（USDA FoodData Central）；干物质能量：牛乳 610÷0.123≈4960，羊乳 690÷0.130≈5310 kcal/kg 干物质；类别取 5000（靠近牛乳，为主要乳源）；饱腹=kcal÷24（calibrate 标定，见表头 note），5000÷24≈208。【数值凭记忆写入，待 L2 核对】"
-    }
-  },
-  "review": {
-    "contradictions": [
-      {
-        "quote": "牛乳 610÷0.123≈4960，羊乳 690÷0.130≈5310",
-        "field": "basis",
-        "severity": "hard",
-        "reason": "61 kcal/100g 即 610 kcal/kg 鲜重，干物质 0.123，610÷0.123≈4960 正确；但 69 kcal/100g 即 690 kcal/kg，690÷0.130≈5308，算式无误。问题在类别取 5000 与成员：鲜兽乳、山羊乳能量更高，5000 偏低但仍在区间内，属 soft。"
-      },
-      {
-        "quote": "类别取 5000（靠近牛乳，为主要乳源）",
-        "field": "energyDensity",
-        "severity": "soft",
-        "reason": "牛乳约 4960、羊乳约 5310 kcal/kg 干物质，5000 落在两者之间，对 members 中的山羊乳偏低约 6%，可接受但偏边缘。"
-      }
-    ]
-  },
+  "draft": null,
+  "review": null,
   "errors": [
-    {
-      "quote": "牛乳 610÷0.123≈4960，羊乳 690÷0.130≈5310",
-      "field": "basis",
-      "severity": "hard",
-      "reason": "61 kcal/100g 即 610 kcal/kg 鲜重，干物质 0.123，610÷0.123≈4960 正确；但 69 kcal/100g 即 690 kcal/kg，690÷0.130≈5308，算式无误。问题在类别取 5000 与成员：鲜兽乳、山羊乳能量更高，5000 偏低但仍在区间内，属 soft。"
-    }
+    "同条审核已达 3 次（初审+2次修正）：class_milk"
   ],
-  "warnings": [
-    {
-      "quote": "类别取 5000（靠近牛乳，为主要乳源）",
-      "field": "energyDensity",
-      "severity": "soft",
-      "reason": "牛乳约 4960、羊乳约 5310 kcal/kg 干物质，5000 落在两者之间，对 members 中的山羊乳偏低约 6%，可接受但偏边缘。"
-    }
+  "warnings": [],
+  "feedback": [
+    "同条审核已达 3 次（初审+2次修正）：class_milk"
   ],
-  "feedback": null,
   "frozenCandidate": {
-    "entryHash": "c5e08cadeea0679206861539614587ab2e6f7f02536e81e79f967f34c02ff1ac",
-    "draftHash": "fd630f177bcb3296af3b234244dd44760be4b80c7f4b7ed6aff880dbd5d99373"
+    "entryHash": "a09521568970db7689c68194e31afaec10d7ed1f64cdbd3564493c166f183fb5",
+    "draftHash": "af996c6c50f511bdb77b032393b21392b0e29369efa5d4f9b62ad4776da5a2a2"
   },
-  "responseEvidence": [
-    {
-      "phase": "review",
-      "attempt": 1,
-      "requestId": "e1350f85-dc11-42cb-ba64-7e90dcd4ace6",
-      "file": "budget-responses/e1350f85-dc11-42cb-ba64-7e90dcd4ace6.json",
-      "requestHash": "9ff82c92e0dbdb2c313614b7cdca68d3c1ae9d5aef3254d18ae735154d795da0",
-      "responseHash": "b43cd55b096d0e47e7396bf3c55a5caff77882eb98c108605bc2c5a10af1e48e"
-    }
-  ],
-  "measurements": [
-    {
-      "label": "content-review-1-class_milk-review0",
-      "model": "deepseek-flash",
-      "thinking": "disabled",
-      "usage": {
-        "prompt_tokens": 948,
-        "completion_tokens": 210,
-        "total_tokens": 1158,
-        "prompt_tokens_details": {
-          "cached_tokens": 128
-        },
-        "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 820
-      },
-      "costUpperYuan": 0.00332512,
-      "cumulativeUpperYuan": 0.13334903999999997,
-      "latencyMs": 2296.5927,
-      "timestamp": "2026-11-09T09:55:12.319Z"
-    }
-  ]
+  "errorCode": "REVIEW_LIMIT"
 }

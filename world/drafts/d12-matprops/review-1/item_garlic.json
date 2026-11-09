@@ -1,82 +1,20 @@
 {
   "id": "item_garlic",
-  "fingerprint": "00cc8f8f941faaa562184681b07e109364e966594e9818d2bb8a131b0931d71d",
+  "fingerprint": "259b82ba593e390446febd13269b6619d2ade2ccbc8fe4b424c7cfda1694c87c",
   "status": "manual",
   "attempts": 0,
-  "draft": {
-    "id": "item_garlic",
-    "row": {
-      "moisture": 0.59,
-      "energyDensity": 150,
-      "basis": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）；干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），3600÷24=150。覆盖蔬菜类别（含水 0.90）的值。【数值凭记忆写入，待 L2 核对】"
-    }
-  },
-  "review": {
-    "contradictions": [
-      {
-        "quote": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）",
-        "field": "moisture",
-        "severity": "soft",
-        "reason": "USDA 生大蒜含水约 58–59%、约 149 kcal/100g，与所写一致；但 0.59 与 58.6% 略有出入，属四舍五入，可接受。"
-      },
-      {
-        "quote": "干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质",
-        "field": "basis",
-        "severity": "hard",
-        "reason": "1490÷0.414≈3599，算式无误；但 basis 写 58.6% 而 moisture 填 0.59，二者不一致，应统一为 0.586 或 0.59。"
-      }
-    ]
-  },
+  "draft": null,
+  "review": null,
   "errors": [
-    {
-      "quote": "干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质",
-      "field": "basis",
-      "severity": "hard",
-      "reason": "1490÷0.414≈3599，算式无误；但 basis 写 58.6% 而 moisture 填 0.59，二者不一致，应统一为 0.586 或 0.59。"
-    }
+    "同条审核已达 3 次（初审+2次修正）：item_garlic"
   ],
-  "warnings": [
-    {
-      "quote": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）",
-      "field": "moisture",
-      "severity": "soft",
-      "reason": "USDA 生大蒜含水约 58–59%、约 149 kcal/100g，与所写一致；但 0.59 与 58.6% 略有出入，属四舍五入，可接受。"
-    }
+  "warnings": [],
+  "feedback": [
+    "同条审核已达 3 次（初审+2次修正）：item_garlic"
   ],
-  "feedback": null,
   "frozenCandidate": {
-    "entryHash": "2ee2488e2931dccac29eb222259f234cf9ac4fa6c943ad0275c53f263aaddf8b",
-    "draftHash": "6206401c818e4491361d34660c39e0436e1cc9e32decc9c97a5b212a9f185774"
+    "entryHash": "5dff7fbb6fd1241d9d570669c22ad7bb8ee164876e6e3e192dd1feccdbac2be5",
+    "draftHash": "c3aa82b7e918e6286c46a844f62b144cfff32113bd6e1ace1c3fa1ba956e83ab"
   },
-  "responseEvidence": [
-    {
-      "phase": "review",
-      "attempt": 1,
-      "requestId": "f2296d2d-9898-4ba2-a33b-c2c7bb591538",
-      "file": "budget-responses/f2296d2d-9898-4ba2-a33b-c2c7bb591538.json",
-      "requestHash": "750467a17b76081fa00a6468ebcd5b41cb03e6d5063109f6b328993e49c58741",
-      "responseHash": "a8982904ef5a691bfbe07e1d3246faa161c65dbf7da37d2f6efe69fb39fa3bbf"
-    }
-  ],
-  "measurements": [
-    {
-      "label": "content-review-1-item_garlic-review0",
-      "model": "deepseek-flash",
-      "thinking": "disabled",
-      "usage": {
-        "prompt_tokens": 1087,
-        "completion_tokens": 187,
-        "total_tokens": 1274,
-        "prompt_tokens_details": {
-          "cached_tokens": 128
-        },
-        "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 959
-      },
-      "costUpperYuan": 0.00341912,
-      "cumulativeUpperYuan": 0.14038527999999997,
-      "latencyMs": 1765.8601999999992,
-      "timestamp": "2026-11-09T09:55:16.605Z"
-    }
-  ]
+  "errorCode": "REVIEW_LIMIT"
 }

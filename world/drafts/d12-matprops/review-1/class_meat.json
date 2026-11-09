@@ -1,6 +1,6 @@
 {
   "id": "class_meat",
-  "fingerprint": "60d83d3c351bba8588d713709dfe9135afdcf42b96adfa589418e25ef681c341",
+  "fingerprint": "3c8ffe528ff4fb654ed11d572b8f90669898f3cfb55c0cb2ccaaa9062df17e62",
   "status": "manual",
   "attempts": 0,
   "draft": null,
@@ -13,8 +13,8 @@
     "同条审核已达 3 次（初审+2次修正）：class_meat"
   ],
   "frozenCandidate": {
-    "entryHash": "c4022329acea83fef69eb9dde459f330ff9b6011eb2970cfd2c31c57707920fd",
-    "draftHash": "ca064e6e98cf9fabb7a4cc5ead37ec4d9d5b02d2fa9f8d27d8b8e8a578c453c4"
+    "entryHash": "f2c7926dec28b24dbf7cb651cef3cc5895f8ff287455f36631637f5cd5050f44",
+    "draftHash": "0301b3002199b38c00f355e1d5a248a073df3b5cbdf5c6df0da036eb607a1202"
   },
   "errorCode": "REVIEW_LIMIT"
 }

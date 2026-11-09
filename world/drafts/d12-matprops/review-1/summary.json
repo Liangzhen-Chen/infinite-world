@@ -1,11 +1,11 @@
 {
   "total": 19,
-  "passed": 14,
-  "manual": 5,
+  "passed": 12,
+  "manual": 7,
   "pending": 0,
-  "costUpperYuan": 0.14038527999999997,
+  "costUpperYuan": 0.14799487999999997,
   "budget": {
-    "spentYuan": 0.14038527999999997,
+    "spentYuan": 0.14799487999999997,
     "reservedYuan": 0,
     "limitYuan": 20,
     "note": "D12 卡 D 材料属性 L2：卡 D12-MATPROPS 单卡上限 1.5 元（亮圳批准，仅本轮），最多 40 次调用；超出即停并写 budgetStop。",
@@ -13,7 +13,7 @@
     "cards": {
       "D12-MATPROPS": {
         "limitYuan": 1.5,
-        "spentYuan": 0.14038527999999997,
+        "spentYuan": 0.14799487999999997,
         "reservedYuan": 0,
         "maxRequests": 40
       }
@@ -1106,6 +1106,102 @@
           "latencyMs": 1765.8601999999992,
           "timestamp": "2026-11-09T09:55:16.605Z"
         }
+      },
+      "2ca7931d-103c-4ded-af1c-d3106cb4a3e5": {
+        "card": "D12-MATPROPS",
+        "label": "content-review-1-class_nut-review0",
+        "requestHash": "fd3bb02a55ca42f185577e1792b42710930f9494f9aa24a750b8616942d93ccd",
+        "reservedYuan": 0.017098,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/2ca7931d-103c-4ded-af1c-d3106cb4a3e5.json",
+          "requestHash": "fd3bb02a55ca42f185577e1792b42710930f9494f9aa24a750b8616942d93ccd",
+          "responseHash": "3b02763701b7686700618d0464a555f53bcd7854317ba03ef74cd45fd85ec4dd"
+        },
+        "costUpperYuan": 0.00177112,
+        "measurement": {
+          "label": "content-review-1-class_nut-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 983,
+            "completion_tokens": 7,
+            "total_tokens": 990,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 855
+          },
+          "costUpperYuan": 0.00177112,
+          "cumulativeUpperYuan": 0.14215639999999996,
+          "latencyMs": 704.2693999999999,
+          "timestamp": "2026-11-09T11:14:17.116Z"
+        }
+      },
+      "4ca85d06-82d0-4e2f-a26b-c5478ca3aad1": {
+        "card": "D12-MATPROPS",
+        "label": "content-review-1-class_fish-review0",
+        "requestHash": "2cd2946e7a52a05e800975886666910206ccde53d2090e3af028827c70873b7d",
+        "reservedYuan": 0.017436,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/4ca85d06-82d0-4e2f-a26b-c5478ca3aad1.json",
+          "requestHash": "2cd2946e7a52a05e800975886666910206ccde53d2090e3af028827c70873b7d",
+          "responseHash": "fe342ece8a6d499d361e4ab9d5d510184f7252b4d9e3ab09483e45d5bcc6879b"
+        },
+        "costUpperYuan": 0.0031262399999999997,
+        "measurement": {
+          "label": "content-review-1-class_fish-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1018,
+            "completion_tokens": 199,
+            "total_tokens": 1217,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 762
+          },
+          "costUpperYuan": 0.0031262399999999997,
+          "cumulativeUpperYuan": 0.14528263999999996,
+          "latencyMs": 2415.2129000000004,
+          "timestamp": "2026-11-09T11:14:19.574Z"
+        }
+      },
+      "d1ea7863-dec3-4d98-9180-c274b64e68ac": {
+        "card": "D12-MATPROPS",
+        "label": "content-review-1-item_dried_fruit-review0",
+        "requestHash": "ba827219ec941815321960d79e38502800b34cb08fedb5b87efb8cb35c084de1",
+        "reservedYuan": 0.018812,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/d1ea7863-dec3-4d98-9180-c274b64e68ac.json",
+          "requestHash": "ba827219ec941815321960d79e38502800b34cb08fedb5b87efb8cb35c084de1",
+          "responseHash": "b4973dd2826d618f636c6b1db5ce91fada25839df616c2d1dc5a57b378908a2f"
+        },
+        "costUpperYuan": 0.00271224,
+        "measurement": {
+          "label": "content-review-1-item_dried_fruit-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1215,
+            "completion_tokens": 98,
+            "total_tokens": 1313,
+            "prompt_tokens_details": {
+              "cached_tokens": 256
+            },
+            "prompt_cache_hit_tokens": 256,
+            "prompt_cache_miss_tokens": 959
+          },
+          "costUpperYuan": 0.00271224,
+          "cumulativeUpperYuan": 0.14799487999999997,
+          "latencyMs": 1503.8810999999996,
+          "timestamp": "2026-11-09T11:14:21.150Z"
+        }
       }
     },
     "historicalUnallocatedSpentYuan": 0
@@ -1113,9 +1209,9 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "f4e57e97b024a5b99c6519f1bc34ff299e48fa36d1d4b484690b73d8d509db60",
+      "fingerprint": "fa84c78c2b59bc672fb6bc712a99d1bbc4cde139aebca0c76e4e2a2a274fc210",
       "count": 19,
-      "passed": 14,
+      "passed": 12,
       "ids": [
         "class_timber",
         "class_wood",
@@ -1139,7 +1235,9 @@
       ],
       "rewritten": 0,
       "manual": [
+        "class_fruit",
         "class_meat",
+        "class_fish",
         "class_egg",
         "class_milk",
         "item_parsnip",
@@ -1148,32 +1246,27 @@
       "pending": [],
       "flagged": [
         "class_mushroom",
-        "class_nut",
-        "class_fruit",
         "class_vegetable",
         "class_legume",
         "class_grain",
-        "class_fish",
-        "class_milk",
         "item_dry_mushroom",
         "item_leek",
-        "item_garlic",
         "item_oats",
         "item_dried_fruit"
       ],
       "sample": [
-        "item_dried_fruit",
-        "class_fruit",
-        "class_wood",
-        "class_fish",
-        "class_nut"
+        "class_vegetable",
+        "class_legume",
+        "item_oats",
+        "item_leek",
+        "class_mushroom"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 0.14038527999999997,
-      "manualRatio": 0.2631578947368421,
+      "costUpperYuan": 0.14799487999999997,
+      "manualRatio": 0.3684210526315789,
       "needsSystemicRepair": true
     }
   ],

@@ -16,7 +16,7 @@
         "quote": "传统晾晒干果为长期贮存多压到 25% 以下，取 25%",
         "field": "moisture",
         "severity": "soft",
-        "reason": "USDA 数据中葡萄干 15.4%、李干 30.9%、干苹果 31.8%，25% 落在公认区间内，但“传统晾晒多压到 25% 以下”与李干、干苹果等常见晾晒干果 30% 左右的实际值不符；作为类别代表值偏干，建议 15–32% 区间内取中位约 25–30%，或说明这是偏干端取值。"
+        "reason": "USDA 干果含水多在 15–32%，葡萄干约 15%、李干约 31%，25% 在区间内但偏中高，与「压到 25% 以下」的表述略不符，可接受。"
       }
     ]
   },
@@ -26,7 +26,7 @@
       "quote": "传统晾晒干果为长期贮存多压到 25% 以下，取 25%",
       "field": "moisture",
       "severity": "soft",
-      "reason": "USDA 数据中葡萄干 15.4%、李干 30.9%、干苹果 31.8%，25% 落在公认区间内，但“传统晾晒多压到 25% 以下”与李干、干苹果等常见晾晒干果 30% 左右的实际值不符；作为类别代表值偏干，建议 15–32% 区间内取中位约 25–30%，或说明这是偏干端取值。"
+      "reason": "USDA 干果含水多在 15–32%，葡萄干约 15%、李干约 31%，25% 在区间内但偏中高，与「压到 25% 以下」的表述略不符，可接受。"
     }
   ],
   "feedback": null,
@@ -38,10 +38,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "06e7eea3-3bd6-447b-b06a-94c4be016396",
-      "file": "budget-responses/06e7eea3-3bd6-447b-b06a-94c4be016396.json",
-      "requestHash": "d1d489763d26df174b536239766fe48f523dd0ae38ad005c6d43366dea2a89bb",
-      "responseHash": "a52e3fc4d5c63a10b4f0dde74c56fada17b0820573faabbd8ef8a155772c3d8c"
+      "requestId": "d1ea7863-dec3-4d98-9180-c274b64e68ac",
+      "file": "budget-responses/d1ea7863-dec3-4d98-9180-c274b64e68ac.json",
+      "requestHash": "ba827219ec941815321960d79e38502800b34cb08fedb5b87efb8cb35c084de1",
+      "responseHash": "b4973dd2826d618f636c6b1db5ce91fada25839df616c2d1dc5a57b378908a2f"
     }
   ],
   "measurements": [
@@ -50,19 +50,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1086,
-        "completion_tokens": 147,
-        "total_tokens": 1233,
+        "prompt_tokens": 1215,
+        "completion_tokens": 98,
+        "total_tokens": 1313,
         "prompt_tokens_details": {
-          "cached_tokens": 768
+          "cached_tokens": 256
         },
-        "prompt_cache_hit_tokens": 768,
-        "prompt_cache_miss_tokens": 318
+        "prompt_cache_hit_tokens": 256,
+        "prompt_cache_miss_tokens": 959
       },
-      "costUpperYuan": 0.00184272,
-      "cumulativeUpperYuan": 0.11904256000000002,
-      "latencyMs": 1827.7448000000004,
-      "timestamp": "2026-11-09T09:39:57.209Z"
+      "costUpperYuan": 0.00271224,
+      "cumulativeUpperYuan": 0.14799487999999997,
+      "latencyMs": 1503.8810999999996,
+      "timestamp": "2026-11-09T11:14:21.150Z"
     }
   ]
 }
