@@ -1581,6 +1581,9 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 待合入队列：t-metab 2c4e6ad2（含测试修正）、t-mprod 4dff5631、t-memo 6488ad12（性能存疑，待 m2-2 耗时对照）、t-ptai 055105ec（工具，不影响世界）。m2-2 全量结束后，按结果组下一轮合并候选。
 
 ### ★ 压缩恢复入口（11-09 04:20 写，压缩后先读本节）
+- 08:0x D12 卡 A t-matprops d86e81ac（mp-2，hash 6e448510…）两轮 approve（r1 …075834Z-3007322、r2 …075931Z-3007956；mp-1 54311d31 两轮 …075013Z/…075155Z）；云测 material-props 6/0、kf-item-class 7/0、world-validation 6/0。待并入下一候选。D 卡写 props 前须核 world.schema.json 不拒绝该字段。
+- D3 审计移植：aud-1/aud-2/aud-3/aud-4 四版第一轮均 changes（逐步收紧：分配买空与非价格拒绝、需求口径、单程一日路程、取消无法判定、产地链断实检、conditional N≥2 判分配/N=1 链断单列、报价失败货计存量），aud-5（ab9c0dd7，hash a7e97ebb…）补产地链断纯函数与边界测试，第一轮已派。已按"两次失败=复盘报障"报李白：均为边界收紧，方案未推翻。清理 aud-1..4（未运行，继任 aud-5）。
+- m2-3（服务器 16:00:47）：506 字节、7/529、超时 5。
 - 07:5x D12 方案（草稿 scratchpad/d12-material-props-plan.md，主会话已审）：新覆盖层表 world/meta/mechanics/material-props.json 按类别给 moisture/edibleFraction/energyDensity/heatValue/charYield，物品 props 数据覆盖，不改已审行；拆 5 卡：A 表与继承机制（已派，t-matprops 基于 t-m3，表内不放真实数值）→ B 营养与燃料读属性、C 加工产率读属性、D 类别数值内容走 L1+L2（+L4 待定）并行 → E 怪物据点恢复。D 卡要花钱：估 18–30 次 L2 约 0.2–0.75 元，上限报 1 元，含 L4 上限 1.5 元（依据 PLAN 先例单价 0.012–0.025 元/次，非实测），派 D 前报价亮圳。待李白：L4 是否适用于数值表；traits.mjs/item-use-tags/classTable 三套分类整合登记为后续项。B 会改燃料与营养平衡，需先定世界行为目标。
 - D3 审计移植 aud-1 第一轮 changes（r1 …074001Z-2962637）：分配判得过宽（最便宜档买空即判、defer 也判）、阈值魔数；主会话另要求可售量按每户自身位置为锚。已交实现者改。
 - 07:3x D7 t-browser bcd2bc75（F:/dnd-wt/BROWSER，br-1 hash e463ca10…）：tests/helpers/browser-path.mjs（BROWSER_EXECUTABLE→Windows 默认→明确报错），18 个测试改调用；两轮 approve（r1 …073338Z-2954493、r2 …073450Z-2955091）。未改：tools/capture-request.mjs:9、check-browser.mjs:6、playtest.mjs:5（手工工具，顺带改）。待办（m2-3 结束后）：服务器装 playwright-core 1.64.0 配套 chromium 到公共目录；Ubuntu 24.04 非 root 沙箱问题待李白选（a）包装脚本加 --no-sandbox（推荐，不动系统设置）或（b）系统层 AppArmor/sysctl（属系统安全设置，主会话不做）；runjob.sh 导出 BROWSER_EXECUTABLE（改门禁，两轮审后部署）；再跑 18 个文件按失败归类。
