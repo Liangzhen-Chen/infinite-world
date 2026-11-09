@@ -12,15 +12,16 @@ test('分卡是纯函数、可注入批次：D 卡 = 批次 ids 并集，调味�
  const s=splitByCard(all,cardIdsOf(batches));
  assert.deepEqual(s.d.map(e=>e.id),['a','b','c','item_garlic']);
  assert.deepEqual(s.condiment.map(e=>e.id),['n1','n2']);
- assert.deepEqual((await dEntries(all,{batches})).map(e=>e.id),s.d.map(e=>e.id));
- assert.deepEqual((await condimentEntries(all,{batches})).map(e=>e.id),['n1','n2']);
+ // 纯函数用例：移交名单显式注入为空（真实 moved-from-d.json 随数据变化，另由下方真实数据用例覆盖）
+ assert.deepEqual((await dEntries(all,{batches,moved:[]})).map(e=>e.id),s.d.map(e=>e.id));
+ assert.deepEqual((await condimentEntries(all,{batches,moved:[]})).map(e=>e.id),['n1','n2']);
 });
 
 test('garlic 记录被归档（记录文件不在）后仍属 D 卡：归属只看冻结批次，不看记录文件', async () => {
  // 注入的批次里有 item_garlic，不提供任何记录文件，等同归档后的状态
  const all=fake(['item_garlic','n1']);
- assert.deepEqual((await dEntries(all,{batches})).map(e=>e.id),['item_garlic']);
- assert.deepEqual((await condimentEntries(all,{batches})).map(e=>e.id),['n1']);
+ assert.deepEqual((await dEntries(all,{batches,moved:[]})).map(e=>e.id),['item_garlic']);
+ assert.deepEqual((await condimentEntries(all,{batches,moved:[]})).map(e=>e.id),['n1']);
 });
 
 test('误跑 D 卡 --review/--retry-garlic/--rejudge 的条目来源（dEntries）不含任何调味卡条目；真实数据 32 + 13 = 全部条目', async () => {
@@ -30,7 +31,8 @@ test('误跑 D 卡 --review/--retry-garlic/--rejudge 的条目来源（dEntries�
  assert.ok(d.every(e=>frozen.has(e.id)&&!moved.has(e.id))&&c.every(e=>!frozen.has(e.id)||moved.has(e.id)));
  assert.ok(moved.size>0&&[...moved].every(id=>c.some(e=>e.id===id)));
  assert.equal(d.length+c.length,all.length);
- assert.ok(d.some(e=>e.id==='item_garlic'));
+ // garlic 在冻结批次里：未移交则属 D 卡，移交（指纹因数据核对而变）则属调味卡，绝不同时属两张卡
+ assert.ok(moved.has('item_garlic')?c.some(e=>e.id==='item_garlic'):d.some(e=>e.id==='item_garlic'));
  assert.ok(c.length>0&&c.every(e=>!d.some(x=>x.id===e.id)));
 });
 
