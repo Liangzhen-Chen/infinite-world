@@ -51,21 +51,38 @@ test('扩展因子接口：没有数据的维度因子取 1，有数据时按配
   assert.ok(mp.moisture.known);
   const base=satietyFactor(engine.world,known,40),want=Math.min(1.25,Math.max(0.8,(mp.moisture.value/0.5)**-0.2));
   assert.ok(Math.abs(satietyFactor(w,known,40)-base*want)<1e-9);
-  const unknown=engine.byId.get('item_bread');
+  const unknown=engine.byId.get('item_water');
   assert.equal(materialProps({world:w,byId:engine.byId},unknown.id).moisture.known,false);
   assert.equal(satietyFactor(w,unknown,12),satietyFactor(engine.world,unknown,12));
 });
 
-test('面包不再手写饱腹：由整类推导（类别密度 × 重量 × 系数），量级与主食相当', () => {
+test('面包不再手写饱腹：按物品自己的出处推导（重量 × 能量密度 ×（1 − 含水）× 系数），量级与主食相当', () => {
   const raw=world.items.find(i=>i.id==='item_bread');
   assert.equal(raw.nutrition,undefined);
-  const bread=engine.byId.get('item_bread');
-  const base=bread.weight*craftingParam(engine,'nutrition.densityPerKg').default;
-  const want=Math.floor(base*satietyFactor(engine.world,bread,base));
-  assert.equal(bread.nutrition.satiety,want);
+  const bread=engine.byId.get('item_bread'),mp=materialProps(engine,bread.id);
+  assert.equal(mp.moisture.source,'item');
+  assert.equal(mp.energyDensity.source,'item');
+  const base=bread.weight*mp.energyDensity.value*(1-mp.moisture.value);
+  assert.equal(bread.nutrition.satiety,Math.floor(base*satietyFactor(engine.world,bread,base)));
   // 成品能量密度落在主食参照的 0.5–1.5 倍内
   const e=bread.nutrition.satiety*kps/(bread.weight*1000);
   assert.ok(e>ed.ref*0.5&&e<ed.ref*1.5,String(e));
+});
+
+test('手写饱腹视为按热量的基值，同样乘系数；手写只给部分维度时，没给的维度用推导值', () => {
+  const authored=world.items.filter(i=>i.nutrition?.satiety!==undefined&&i.nutrition.satiety>0);
+  assert.ok(authored.length>0);
+  for(const a of authored){
+    const it=engine.byId.get(a.id),b=a.nutrition.satiety;
+    assert.equal(it.nutrition.satiety,Math.floor(b*satietyFactor(engine.world,it,b)),a.id);
+  }
+  // 只手写了 hydration 的物品：hydration 用手写，satiety 由类别推导（牛奶）
+  const milkRaw=world.items.find(i=>i.id==='item_milk'),milk=engine.byId.get('item_milk'),mp=materialProps(engine,milk.id);
+  assert.equal(milkRaw.nutrition.satiety,undefined);
+  assert.equal(milk.nutrition.hydration,milkRaw.nutrition.hydration);
+  const base=milk.weight*mp.energyDensity.value*(1-mp.moisture.value);
+  assert.equal(milk.nutrition.satiety,Math.floor(base*satietyFactor(engine.world,milk,base)));
+  assert.ok(milk.nutrition.satiety>0);
 });
 
 test('烙饼、鱼汤、炖菜不再手写饱腹，由配方派生；能量密度：烙饼近主食，鱼汤远低于主食', () => {

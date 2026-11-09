@@ -164,7 +164,7 @@ export function satietyFactor(world,item,satiety){
 }
 
 // —— 加载期派生营养与生熟 ——
-// 物品表写了 nutrition 的照用；没写的食物：有产出它的配方就按投入守恒派生，没有配方就按重量 × 类别密度。
+// 物品表写了 nutrition 的维度照用（视为按热量的基值，同样乘饱腹系数），没写的维度和没写 nutrition 的食物：有产出它的配方就按投入守恒派生，没有配方就按重量 × 类别密度。
 // 结果：可直接当一餐的食物写入 nutrition（消费方照旧读 nutrition）；全部食物写 nutrientContent（含生料）与 foodState。
 export function deriveItemAttributes(world){
  const byId=new Map((world.items??[]).map(i=>[i.id,i])),table=classTable(world);
@@ -186,7 +186,8 @@ export function deriveItemAttributes(world){
  const content=id=>{
   if(cache.has(id))return cache.get(id);
   const item=byId.get(id);if(!item)return null;
-  if(item.nutrition)return set(id,{satiety:item.nutrition.satiety??0,hydration:item.nutrition.hydration??0,raw:false,authored:true});
+  const auth=item.nutrition;
+  if(auth&&auth.satiety!==undefined&&auth.hydration!==undefined)return set(id,{satiety:auth.satiety,hydration:auth.hydration,raw:false,authored:true});
   if(!has(id,'food'))return set(id,{satiety:0,hydration:0,raw:false,inedible:true});
   if(busy.has(id))return null;
   busy.add(id);
@@ -200,12 +201,13 @@ export function deriveItemAttributes(world){
    if(!best||row.satiety<best.satiety)best=row;
   }
   busy.delete(id);
-  return set(id,best??base(item));
+  // 物品表手写的营养按维度合并：写了哪个维度用手写值（作为“按热量的基值”，同样乘系数），没写的维度用推导值。
+  const d=best??base(item);
+  return set(id,auth?{...d,...(auth.satiety!==undefined?{satiety:auth.satiety}:{}),...(auth.hydration!==undefined?{hydration:auth.hydration}:{}),raw:false,authored:true}:d);
  };
  function set(id,v){cache.set(id,v);return v;}
  for(const item of world.items??[]){
   const c=content(item.id);if(!c||c.inedible)continue;
-  if(c.authored)continue;
   item.foodState=c.raw?'raw':'ready';
   const sat=Math.floor(c.satiety*satietyFactor(world,item,c.satiety));
   item.nutrientContent={satiety:sat,hydration:Math.floor(c.hydration)};
