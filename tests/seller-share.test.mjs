@@ -116,6 +116,10 @@ test('a multi-person household takes one share, not one per member with cash',()
  assert.deepEqual(parts(both),parts(one),'a second moneyed member does not change any household part');
  assert.equal(credited(both,'npc_hw_fangqin'),0,'only the household buyer (first member with cash) reads the share');
  assert.ok(sum(parts(both))<=sellable(both));
+ // The stock must really bind, or both readings would equal the household's own demand and prove nothing:
+ // the buyer gets strictly more when the other households hold no cash (it is then the only buyer).
+ const solo=make(0);for(const id of ['npc_hw_xuling','npc_hw_wushuo'])solo.document.state.npcs[id].coins=0;
+ assert.ok(credited(solo,'npc_hw_chenbai')>credited(one,'npc_hw_chenbai'),`alone ${credited(solo,'npc_hw_chenbai')} vs shared ${credited(one,'npc_hw_chenbai')}`);
 });
 
 test('cash is a personal purse: a household whose first member is penniless still buys through its member with cash, once',()=>{
