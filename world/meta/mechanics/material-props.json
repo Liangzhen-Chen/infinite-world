@@ -1,12 +1,113 @@
 {
-  "note": "D12 卡 A：材料属性表，按材料类别写物理量，不针对任何物品。类别键必须是现有标签或用途类别名；物品个别偏离写在 mechanics/items.json 的 props 行（须带 basis）。取值：物品所属类别中按 precedence 逐维取第一个写了该维的类别，物品 props 覆盖；缺项为未知，不给默认值。数值由卡 D 经审批管线写入，本卡为空表。",
-  "dimensions": {
-    "moisture": {"unit": "质量分数（水占鲜重）", "min": 0, "max": 1},
-    "edibleFraction": {"unit": "质量分数（可食部分占整重）", "min": 0, "max": 1},
-    "energyDensity": {"unit": "饱腹/kg 干物质", "min": 0, "max": 100000},
-    "heatValue": {"unit": "MJ/kg 干物质", "min": 0, "max": 60},
-    "charYield": {"unit": "质量分数（炭占投入干重）", "min": 0, "max": 1}
+ "note": "D12 卡 A/D：材料属性表，按材料类别写物理量，不针对任何物品。类别键必须是现有标签或用途类别名；物品个别偏离写在 mechanics/items.json 的 props 行（须带 basis）。取值：物品所属类别中按 precedence（从最具体到最一般）逐维取第一个写了该维的类别，物品 props 覆盖；缺项为未知，不给默认值。能量密度的饱腹换算：1 饱腹≈24 kcal（按现行 nutrition.densityPerKg.grain=150 饱腹/kg 鲜重对应谷物约 3.6 kcal/g 标定，calibrate/pending），表内数值均先写 kcal 再换算。热值是高位热值。",
+ "dimensions": {
+  "moisture": {
+   "unit": "质量分数（水占鲜重）",
+   "min": 0,
+   "max": 1
   },
-  "precedence": [],
-  "classes": {}
+  "edibleFraction": {
+   "unit": "质量分数（可食部分占整重）",
+   "min": 0,
+   "max": 1
+  },
+  "energyDensity": {
+   "unit": "饱腹/kg 干物质",
+   "min": 0,
+   "max": 100000
+  },
+  "heatValue": {
+   "unit": "MJ/kg 干物质",
+   "min": 0,
+   "max": 60
+  },
+  "charYield": {
+   "unit": "质量分数（炭占投入干重）",
+   "min": 0,
+   "max": 1
+  }
+ },
+ "precedence": [
+  "timber",
+  "wood",
+  "carbon",
+  "mushroom",
+  "nut",
+  "fruit",
+  "vegetable",
+  "legume",
+  "grain",
+  "meat",
+  "fish",
+  "egg",
+  "milk"
+ ],
+ "classes": {
+  "timber": {
+   "moisture": 0.15,
+   "heatValue": 19.0,
+   "charYield": 0.3,
+   "basis": "木材（原木、板、条等风干材）：风干材含水率约 12–20%，取 15%（USDA Forest Products Laboratory《Wood Handbook》第4章 含水率）；绝干木材高位热值约 18.5–21 MJ/kg，取 19.0（Phyllis2 生物质数据库；Biomass Energy Data Book）；传统土窑烧炭的质量得率约 20–33%（占绝干材，FAO Forestry Paper 63《Simple technologies for charcoal making》），取 30%，在区间上沿。"
+  },
+  "wood": {
+   "moisture": 0.12,
+   "heatValue": 19.0,
+   "basis": "成形木器、木部件与木屑（标签 wood）：室内平衡含水率约 8–14%，取 12%（Wood Handbook 第4章 平衡含水率表）；热值同 timber（绝干木材高位热值约 18.5–21 MJ/kg，取 19.0，Phyllis2）。"
+  },
+  "carbon": {
+   "moisture": 0.05,
+   "heatValue": 30.0,
+   "basis": "木炭：商品木炭含水率约 3–8%，取 5%（FAO Forestry Paper 63）；高位热值约 28–33 MJ/kg，取 30.0（Engineering ToolBox 燃料热值表；FAO Forestry Paper 63）。"
+  },
+  "mushroom": {
+   "moisture": 0.92,
+   "energyDensity": 125,
+   "basis": "食用菇（新鲜状态，干制品在物品行覆盖含水率）：鲜蘑菇含水约 90–92.5%，取 92%（USDA FoodData Central：白蘑菇 92.5%、鲜香菇 89.7%）；干物质能量约 2.9–3.3 kcal/g（白蘑菇 22 kcal/100g；干香菇 296 kcal/100g、含水 9.5%），取 3.0 kcal/g；饱腹=kcal÷24，标定见表头 note，3000÷24=125。"
+  },
+  "nut": {
+   "moisture": 0.05,
+   "energyDensity": 279,
+   "basis": "去壳坚果仁：含水约 4–5%，取 5%（USDA FoodData Central：榛仁 4.7%、核桃仁 4.1%）；能量榛仁 628、核桃仁 654 kcal/100g，干物质约 6.6–6.8 kcal/g，取 6.7 kcal/g；饱腹=kcal÷24，标定见表头 note，6700÷24≈279。"
+  },
+  "fruit": {
+   "moisture": 0.85,
+   "energyDensity": 148,
+   "basis": "鲜果（干制品在物品行覆盖含水率）：含水约 84–87%，取 85%（USDA FoodData Central：苹果 85.6%、梨 83.7%、李 87.2%）；鲜重能量苹果 52、梨 57、李 46 kcal/100g，干物质约 3.5–3.6 kcal/g，取 3.55 kcal/g；饱腹=kcal÷24，标定见表头 note，3550÷24≈148。"
+  },
+  "vegetable": {
+   "moisture": 0.9,
+   "energyDensity": 142,
+   "basis": "鲜蔬与块根：含水约 88–95%，取 90%（USDA FoodData Central：甘蓝 92.2%、胡萝卜 88.3%、芜菁 91.9%、红甜菜 87.6%、洋葱 89.1%、黄瓜 95.2%）；干物质能量约 3.1–3.7 kcal/g，取 3.4 kcal/g；饱腹=kcal÷24，标定见表头 note，3400÷24≈142。含水明显偏离者（蒜、韭葱、欧防风）在物品行覆盖。"
+  },
+  "legume": {
+   "moisture": 0.11,
+   "energyDensity": 160,
+   "basis": "干豆：含水约 8–14%，取 11%（USDA FoodData Central：扁豆 8.3%、干豌豆 11.3%、蚕豆 11.0%；Codex Stan 171-1989 豆类含水上限 15%）；扁豆 352、豌豆 341、蚕豆 341 kcal/100g，干物质约 3.8 kcal/g，取 3.84 kcal/g；饱腹=kcal÷24，标定见表头 note，3840÷24=160。"
+  },
+  "grain": {
+   "moisture": 0.12,
+   "energyDensity": 163,
+   "basis": "谷物与谷粉（已脱壳或磨粉的状态；带壳者在物品行覆盖）：安全贮存含水约 12–14%，取 12%（FAO 谷物贮存手册）；干物质能量约 3.65–4.24 kcal/g（USDA FoodData Central：硬红冬小麦 327 kcal/100g 含水 13.1%、黑麦粉 325 含水 11%、燕麦 389 含水 8.2%、珍珠大麦 352 含水 9.4%），取 3.9 kcal/g；饱腹=kcal÷24，标定见表头 note，3900÷24≈163。"
+  },
+  "meat": {
+   "moisture": 0.68,
+   "energyDensity": 250,
+   "basis": "家畜生肉（瘦肥混合）：含水约 62–74%，取 68%；鲜重能量约 140–280 kcal/100g（USDA FoodData Central：猪里脊、牛肉末 85% 瘦、羊肉等生肉），干物质约 6.0 kcal/g；饱腹=kcal÷24，标定见表头 note，6000÷24=250。"
+  },
+  "fish": {
+   "moisture": 0.77,
+   "energyDensity": 221,
+   "basis": "淡水鱼鲜肉：含水约 75–80%，取 77%（USDA FoodData Central：鲤 76.1%、鳕 81.2%）；鲤 127 kcal/100g，干物质约 5.3 kcal/g；饱腹=kcal÷24，标定见表头 note，5300÷24≈221。"
+  },
+  "egg": {
+   "moisture": 0.76,
+   "energyDensity": 250,
+   "basis": "禽蛋（按可食内容计，蛋壳约占 12% 未扣）：全蛋含水 76.2%、143 kcal/100g（USDA FoodData Central 鸡全蛋生），干物质约 6.0 kcal/g；饱腹=kcal÷24，标定见表头 note，6000÷24=250。"
+  },
+  "milk": {
+   "moisture": 0.875,
+   "energyDensity": 208,
+   "basis": "鲜乳：牛乳含水 87.7%、61 kcal/100g，羊乳含水 87.0%、69 kcal/100g（USDA FoodData Central），干物质约 5.0–5.3 kcal/g，取 5.0 kcal/g；饱腹=kcal÷24，标定见表头 note，5000÷24≈208。"
+  }
+ }
 }

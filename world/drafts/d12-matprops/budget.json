@@ -1,0 +1,6 @@
+{
+  "spentYuan": 0,
+  "reservedYuan": 0,
+  "limitYuan": 20,
+  "note": "D12 卡 D 材料属性 L2：卡 D12-MATPROPS 单卡上限 1.5 元（亮圳批准，仅本轮），最多 40 次调用；超出即停并写 budgetStop。"
+}
