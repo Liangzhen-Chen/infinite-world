@@ -206,7 +206,7 @@ export function deriveItemAttributes(world){
 // 物品个别偏离写在 mechanics/items.json 的 props 行。不新造分类：类别键是现有标签或用途类别名（itemClasses）。
 // 取值：物品所属类别中按表头 precedence（从最具体到最一般）逐维取第一个写了该维的类别；物品自己的 props 覆盖类别值；
 // 多类别冲突取更具体者，不求平均；没有任何来源的维度返回 {known:false}，不给默认值。
-export const MATERIAL_DIMENSIONS=['moisture','edibleFraction','energyDensity','heatValue','charYield'];
+export const MATERIAL_DIMENSIONS=['moisture','edibleFraction','energyDensity','heatValue','charYield','mealCap'];
 // D12 卡 D 整类修复：含水、可食部分、能量密度不手写，由行内的出处原值（sources）推出；heatValue、charYield 仍直接写。
 //   sources：[{name, citation, moistureFraction（水占鲜重）, kcalPer100gWet（鲜重 kcal/100g）, refuseFraction（不可食部分，壳核骨）, range?, item?}]
 //   每个出处代表类别里的一个成员；成员对应的世界物品 id 写在表头 memberItems[类别键][出处 name]（也接受出处里的 item 字段）；没有对应物品的是参照成员。
@@ -226,6 +226,7 @@ export function memberValues(x,kcalPerSatiety){
  if(m!==undefined)o.m=m;
  if(x?.refuseFraction!==undefined)o.edible=1-x.refuseFraction;
  if(x?.kcalPer100gWet!==undefined&&m!==undefined&&m<1&&kcalPerSatiety>0)o.e=x.kcalPer100gWet*10/(1-m)/kcalPerSatiety;
+ if(x?.mealGrams!==undefined)o.cap=x.mealGrams;
  return o;
 }
 export function deriveFromSources(row,kcalPerSatiety){
@@ -234,10 +235,11 @@ export function deriveFromSources(row,kcalPerSatiety){
  const sel=row.selection??{method:'single'};
  const ms=(sel.method==='single'?srcs.slice(0,1):srcs).map(x=>memberValues(x,kcalPerSatiety));
  const avg=key=>{const v=ms.map(o=>o[key]).filter(x=>x!==undefined);return v.length?meanOf(v):undefined;};
- const out={},m=avg('m'),edible=avg('edible'),e=avg('e');
+ const out={},m=avg('m'),edible=avg('edible'),e=avg('e'),cap=avg('cap');
  if(m!==undefined)out.moisture=round3(m);
  if(edible!==undefined)out.edibleFraction=round3(edible);
  if(e!==undefined)out.energyDensity=Math.round(e);
+ if(cap!==undefined)out.mealCap=Math.round(cap*10)/10;
  return out;
 }
 // 每个带 item 的成员与类别代表值的相对偏差（三项）与其中最大绝对值。
@@ -275,13 +277,44 @@ export function materialProps(engine,item){
  }
  return out;
 }
+// 单餐可食量上限：物品所属类别（或物品自己的 props）写了 mealCap（g/人·餐）才有上限；没写就是没有上限（不给默认值）。
+// 上限按“池”计：同一类别的物品共用一个池（醋、油、蜜各是各的池），物品自己覆盖的上限单独成池。返回 {pool, kg}（每人每餐可吃多少公斤）或 null。
+export function mealCapOf(engine,item){
+ const cap=materialProps(engine,item).mealCap;
+ return cap.known?{pool:cap.source==='item'?`item:${item}`:cap.source,kg:cap.value/1000}:null;
+}
+// 一段时间内一户的“单餐上限池”：personDays = 这段时间里全户的人·天数（各人天数之和），人·餐数 = personDays × 表头 mealsPerDay。表头没有 mealsPerDay 时没有任何上限。
+// room(item) 返回这件物品所在池还能吃多少件（整件，向下取整；没有上限为 Infinity），take(item,units) 记已吃。
+export function mealCapPools(engine,personDays){
+ const used=new Map(),perDay=engine?.world?.materialProps?.mealsPerDay,active=perDay>0&&personDays>=0,personMeals=personDays*perDay;
+ const unitKg=item=>engine.byId?.get(item)?.weight??0;
+ return {
+  room(item){
+   if(!active||!(unitKg(item)>0))return Infinity;
+   const c=mealCapOf(engine,item);if(!c)return Infinity;
+   return Math.max(0,Math.floor((c.kg*personMeals-(used.get(c.pool)??0))/unitKg(item)+1e-9));
+  },
+  take(item,units){
+   if(!active||!(units>0)||!(unitKg(item)>0))return;
+   const c=mealCapOf(engine,item);if(c)used.set(c.pool,(used.get(c.pool)??0)+units*unitKg(item));
+  }
+ };
+}
+
 // L1：属性表校验。表头 dimensions 声明每维的单位与范围（分数 0–1）；precedence 必须恰好列全部类别键；
 // 每个类别行与物品 props 行必须带 basis；类别键必须是已存在标签（物品标签、用途标签或用途类别名）。
 export function validateMaterialProps(world){
  const t=world.materialProps,errors=[];
  if(t===undefined)return errors;
  const dims=t.dimensions??{},known=new Set([...(world.items??[]).flatMap(i=>i.tags??[]),...Object.keys(CLASSES),...Object.keys(useTags.tags??{})]);
- for(const d of MATERIAL_DIMENSIONS){const h=dims[d];
+ // 单餐可食量上限（mealCap，g/人·餐）：出处给每餐摄入量 mealGrams；换算成“人·餐数”需要表头 mealsPerDay（每人每日餐数），须带依据。
+ const usesCap=Object.values(t.classes??{}).some(r=>r?.sources?.some(x=>x?.mealGrams!==undefined))||(world.items??[]).some(i=>i.props?.sources?.some(x=>x?.mealGrams!==undefined));
+ if(usesCap){
+  if(!(Number.isInteger(t.mealsPerDay)&&t.mealsPerDay>0))errors.push('材料属性表头 mealsPerDay 须为正整数（单餐可食量上限换算人·餐数用）');
+  if(typeof t.mealsPerDayBasis!=='string'||!t.mealsPerDayBasis.trim())errors.push('材料属性表头 mealsPerDay 缺依据 mealsPerDayBasis');
+ }
+ // mealCap 是后加的维度：表里用到它（出处写了 mealGrams）或表头声明了它才要求表头单位与范围，早先不含单餐上限的表（含测试夹具）照旧合格。
+ for(const d of MATERIAL_DIMENSIONS){if(d==='mealCap'&&!usesCap&&!dims.mealCap)continue;const h=dims[d];
   if(!h||typeof h.unit!=='string'||!h.unit)errors.push(`材料属性表头缺单位：${d}`);
   else if(!(Number.isFinite(h.min)&&Number.isFinite(h.max)&&h.min<=h.max))errors.push(`材料属性表头缺范围：${d}`);}
  for(const d of Object.keys(dims))if(!MATERIAL_DIMENSIONS.includes(d))errors.push(`材料属性维度未登记：${d}`);
@@ -301,7 +334,7 @@ export function validateMaterialProps(world){
    if(sel.method==='single'&&srcs.length!==1)errors.push(`材料属性 single 只能有 1 个出处：${where}`);
    if(sel.method==='mean'&&srcs.length<2)errors.push(`材料属性 mean 至少 2 个出处：${where}`);
   }
-  const bounds={moistureFraction:[0,1],refuseFraction:[0,0.99],kcalPer100gWet:[0,900]},names=new Set();
+  const bounds={moistureFraction:[0,1],refuseFraction:[0,0.99],kcalPer100gWet:[0,920],mealGrams:[0,2000]},names=new Set();
   srcs.forEach((x,i)=>{
    const w=`${where}.sources[${i}]`;
    if(typeof x?.name!=='string'||!x.name.trim()||names.has(x.name))errors.push(`材料属性出处缺 name 或重名：${w}`);else names.add(x.name);
@@ -318,7 +351,7 @@ export function validateMaterialProps(world){
    const h=dims[dim];if(h&&(v<h.min||v>h.max))errors.push(`材料属性推算值越界：${where}.${dim}=${v}（${h.min}–${h.max} ${h.unit}）`);
    if(row[dim]!==undefined&&!(Math.abs(row[dim]-v)<1e-9))errors.push(`材料属性 ${dim} 与出处推算值不一致：${where}（存 ${row[dim]}，推算 ${v}）`);
   }
-  for(const dim of ['moisture','edibleFraction','energyDensity'])if(row[dim]!==undefined&&d[dim]===undefined)errors.push(`材料属性存了 ${dim} 但出处推不出：${where}`);
+  for(const dim of ['moisture','edibleFraction','energyDensity','mealCap'])if(row[dim]!==undefined&&d[dim]===undefined)errors.push(`材料属性存了 ${dim} 但出处推不出：${where}`);
  };
  const check=(row,where)=>{
   if(typeof row?.basis!=='string'||!row.basis.trim())errors.push(`材料属性缺 basis：${where}`);
