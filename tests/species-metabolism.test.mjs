@@ -137,13 +137,13 @@ test('聚落公仓口粮按存活居民与物种构成派生：人类聚落恰�
 test('木精居民全部死亡后，聚落口数按剩余居民与世界构成重算；人口 1 的口数是实数而非取整为 0',()=>{
  const f=fixture(),p=mixedProfile(f),d=structuredClone(f.document),state=d.state,pop=headCount(state,p);
  const before=settlementMouths(f.engine,state,p.id,pop);
- for(const id of p.residentIds)if(f.engine.byId.get(id)?.species&&f.engine.byId.get(f.engine.byId.get(id).species)?.nature?.metabolism?.satiety===0)state.npcs[id]={...state.npcs[id],status:'死亡'};
- const after=settlementMouths(f.engine,state,p.id,pop);
- assert.ok(Math.abs(after-expectedMouths(f,state,p,pop))<1e-9);assert.ok(after>before,'不进食居民死亡后，占口粮的比例上升');
- // 人口 1：口数等于规则推出的实数份额，严格介于 0 与 1 之间，不被取整。
+ // 人口 1：在木精仍在世（口粮比例 <1）时，口数等于规则推出的实数份额，严格介于 0 与 1 之间，不被取整。
  const one=settlementMouths(f.engine,state,p.id,1),want=expectedMouths(f,state,p,1);
  assert.ok(Math.abs(one-want)<1e-9);assert.ok(one>0&&one<1&&!Number.isInteger(one));
  assert.equal(mealMouthsOf(f.engine,state,p.id,1),one);
+ for(const id of p.residentIds)if(f.engine.byId.get(id)?.species&&f.engine.byId.get(f.engine.byId.get(id).species)?.nature?.metabolism?.satiety===0)state.npcs[id]={...state.npcs[id],status:'死亡'};
+ const after=settlementMouths(f.engine,state,p.id,pop);
+ assert.ok(Math.abs(after-expectedMouths(f,state,p,pop))<1e-9);assert.ok(after>before,'不进食居民死亡后，占口粮的比例上升');
 });
 
 test('远方生成的木精聚落人物按其物种计入加权：不进食者不占公仓口粮',()=>{
