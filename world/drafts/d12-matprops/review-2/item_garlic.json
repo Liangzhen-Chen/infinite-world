@@ -64,5 +64,13 @@
       "timestamp": "2026-11-09T14:34:34.389Z"
     }
   ],
-  "errorCode": "REVIEW_LIMIT"
+  "errorCode": "REVIEW_LIMIT",
+  "retryEligible": {
+    "eligible": true,
+    "requestIds": [
+      "062ec82e-ace0-4be7-82eb-dad35764af94"
+    ],
+    "reason": "全部已保存回复都解析不出判定",
+    "at": "2026-11-09T16:30:38.975Z"
+  }
 }

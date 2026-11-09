@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "904c69414c96c621549cfef21efffbf412cb347ee3e0714343587d79dba4a2ff",
+  "fingerprint": "4c0648cec2cb8b15caf736f89af76fd19a97181d80f3952fb812c782b5c4c6eb",
   "count": 25,
-  "passed": 16,
+  "passed": 25,
   "ids": [
     "class_timber",
     "class_wood",
@@ -31,40 +31,39 @@
     "item_beet"
   ],
   "rewritten": 0,
-  "manual": [
-    "class_egg",
-    "item_rye_flour",
-    "item_wheat_grain",
-    "item_mutton",
-    "item_goat_milk",
-    "item_pear",
-    "item_plum",
-    "item_turnip",
-    "item_carrot"
-  ],
+  "manual": [],
   "pending": [],
   "flagged": [
     "class_fruit",
     "class_vegetable",
     "class_grain",
+    "class_egg",
     "class_milk",
     "item_milk",
+    "item_rye_flour",
+    "item_wheat_grain",
+    "item_mutton",
+    "item_goat_milk",
     "item_dry_mushroom",
+    "item_pear",
+    "item_plum",
+    "item_turnip",
+    "item_carrot",
     "item_parsnip",
     "item_beet"
   ],
   "sample": [
-    "class_legume",
-    "class_timber",
-    "item_milk",
-    "class_fruit",
-    "item_parsnip"
+    "class_meat",
+    "class_milk",
+    "item_mutton",
+    "item_wheat_grain",
+    "class_egg"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
   "costUpperYuan": 0.3451280799999999,
-  "manualRatio": 0.36,
-  "needsSystemicRepair": true
+  "manualRatio": 0,
+  "needsSystemicRepair": false
 }

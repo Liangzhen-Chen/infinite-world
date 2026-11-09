@@ -1,7 +1,7 @@
 {
   "total": 32,
-  "passed": 19,
-  "manual": 13,
+  "passed": 31,
+  "manual": 1,
   "pending": 0,
   "costUpperYuan": 0.36009911999999994,
   "budget": {
@@ -3575,9 +3575,9 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "904c69414c96c621549cfef21efffbf412cb347ee3e0714343587d79dba4a2ff",
+      "fingerprint": "4c0648cec2cb8b15caf736f89af76fd19a97181d80f3952fb812c782b5c4c6eb",
       "count": 25,
-      "passed": 16,
+      "passed": 25,
       "ids": [
         "class_timber",
         "class_wood",
@@ -3606,48 +3606,47 @@
         "item_beet"
       ],
       "rewritten": 0,
-      "manual": [
-        "class_egg",
-        "item_rye_flour",
-        "item_wheat_grain",
-        "item_mutton",
-        "item_goat_milk",
-        "item_pear",
-        "item_plum",
-        "item_turnip",
-        "item_carrot"
-      ],
+      "manual": [],
       "pending": [],
       "flagged": [
         "class_fruit",
         "class_vegetable",
         "class_grain",
+        "class_egg",
         "class_milk",
         "item_milk",
+        "item_rye_flour",
+        "item_wheat_grain",
+        "item_mutton",
+        "item_goat_milk",
         "item_dry_mushroom",
+        "item_pear",
+        "item_plum",
+        "item_turnip",
+        "item_carrot",
         "item_parsnip",
         "item_beet"
       ],
       "sample": [
-        "class_legume",
-        "class_timber",
-        "item_milk",
-        "class_fruit",
-        "item_parsnip"
+        "class_meat",
+        "class_milk",
+        "item_mutton",
+        "item_wheat_grain",
+        "class_egg"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
       "costUpperYuan": 0.3451280799999999,
-      "manualRatio": 0.36,
-      "needsSystemicRepair": true
+      "manualRatio": 0,
+      "needsSystemicRepair": false
     },
     {
       "index": 1,
-      "fingerprint": "20561ad30280bde2a440be3dc8741d352dad2ae3a636b9181feed2a1b9305e54",
+      "fingerprint": "b55843eb5d14fb9f37560edf2b63bdb52ec9b3570688258487c0c72dbb390237",
       "count": 7,
-      "passed": 3,
+      "passed": 6,
       "ids": [
         "item_onion",
         "item_cabbage",
@@ -3659,28 +3658,30 @@
       ],
       "rewritten": 0,
       "manual": [
-        "item_onion",
-        "item_cabbage",
-        "item_cucumber",
         "item_garlic"
       ],
       "pending": [],
       "flagged": [
+        "item_onion",
+        "item_cabbage",
         "item_leek",
+        "item_cucumber",
         "item_oats",
         "item_dried_fruit"
       ],
       "sample": [
+        "item_cucumber",
+        "item_onion",
         "item_leek",
-        "item_dried_fruit",
-        "item_oats"
+        "item_cabbage",
+        "item_dried_fruit"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
       "costUpperYuan": 0.36009911999999994,
-      "manualRatio": 0.5714285714285714,
+      "manualRatio": 0.14285714285714285,
       "needsSystemicRepair": true
     }
   ],

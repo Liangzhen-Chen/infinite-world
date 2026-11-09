@@ -1,7 +1,7 @@
 {
   "id": "item_turnip",
   "fingerprint": "4ac09f2f4b4915457e59baf851995d0ef4c4a77dc1ea5da522e48d799f4dbd43",
-  "status": "manual",
+  "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "item_turnip",
@@ -21,15 +21,57 @@
       "basis": "芜菁：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
     }
   },
-  "review": null,
-  "errors": [
-    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_turnip"
+  "review": {
+    "contradictions": [
+      {
+        "quote": "moistureFraction:0.919, kcalPer100gWet:28（芜菁）",
+        "field": "basis",
+        "verdict": "no_conflict",
+        "severity": "soft",
+        "reason": "USDA 芜菁生约含水92%、28 kcal/100g，数值在公认区间内；凭记忆写入无法逐条核实，标 soft"
+      },
+      {
+        "quote": "derived.energyDensity:144",
+        "field": "energyDensity",
+        "verdict": "no_conflict",
+        "severity": "soft",
+        "reason": "28×10÷(1−0.919)÷24≈144，算式与取整一致；干基约3457 kcal/kg 对根菜合理"
+      },
+      {
+        "quote": "类别 vegetable 六成员均值 moisture 0.907、energyDensity 142",
+        "field": "basis",
+        "verdict": "no_conflict",
+        "severity": "soft",
+        "reason": "六成员干基能量均值约3400 kcal/kg÷24≈142，与逐项推算一致；含水均值0.907亦相符"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "moistureFraction:0.919, kcalPer100gWet:28（芜菁）",
+      "field": "basis",
+      "verdict": "no_conflict",
+      "severity": "soft",
+      "reason": "USDA 芜菁生约含水92%、28 kcal/100g，数值在公认区间内；凭记忆写入无法逐条核实，标 soft"
+    },
+    {
+      "quote": "derived.energyDensity:144",
+      "field": "energyDensity",
+      "verdict": "no_conflict",
+      "severity": "soft",
+      "reason": "28×10÷(1−0.919)÷24≈144，算式与取整一致；干基约3457 kcal/kg 对根菜合理"
+    },
+    {
+      "quote": "类别 vegetable 六成员均值 moisture 0.907、energyDensity 142",
+      "field": "basis",
+      "verdict": "no_conflict",
+      "severity": "soft",
+      "reason": "六成员干基能量均值约3400 kcal/kg÷24≈142，与逐项推算一致；含水均值0.907亦相符"
+    }
   ],
-  "warnings": [],
-  "feedback": [
-    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_turnip"
-  ],
-  "errorCode": "REVIEW_LIMIT",
+  "feedback": null,
+  "errorCode": null,
   "frozenCandidate": {
     "entryHash": "71f71d897a30c1017166139ed8f9e9c6368740c3e94f4dc5973708fb091be9d2",
     "draftHash": "f81e7f9a12fc03ff327159ec1015eebc9f1b71212d7fe55212b0b27285bd5b1e"
@@ -96,5 +138,30 @@
     null,
     null,
     "REVIEW_LIMIT"
-  ]
+  ],
+  "rejudge": {
+    "from": "saved-response",
+    "requestId": "29168887-6a3a-49a4-97df-868b71b60927",
+    "responseHash": "1b0c91961a373a2ef7124f1ea6e90115318268de9d5af431cc32d519e794ea94",
+    "at": "2026-11-09T16:30:38.957Z",
+    "reason": "d3228afb extractReview 作用域错误，李白 2026-11-09 16:1x 批准离线重判，0 新调用",
+    "outcome": "passed",
+    "previous": {
+      "status": "manual",
+      "errors": [
+        "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_turnip"
+      ],
+      "errorHistory": [
+        null,
+        null,
+        "REVIEW_LIMIT"
+      ],
+      "errorCode": "REVIEW_LIMIT",
+      "warnings": [],
+      "feedback": [
+        "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_turnip"
+      ],
+      "review": null
+    }
+  }
 }

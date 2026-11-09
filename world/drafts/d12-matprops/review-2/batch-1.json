@@ -1,8 +1,8 @@
 {
   "index": 1,
-  "fingerprint": "20561ad30280bde2a440be3dc8741d352dad2ae3a636b9181feed2a1b9305e54",
+  "fingerprint": "b55843eb5d14fb9f37560edf2b63bdb52ec9b3570688258487c0c72dbb390237",
   "count": 7,
-  "passed": 3,
+  "passed": 6,
   "ids": [
     "item_onion",
     "item_cabbage",
@@ -14,27 +14,29 @@
   ],
   "rewritten": 0,
   "manual": [
-    "item_onion",
-    "item_cabbage",
-    "item_cucumber",
     "item_garlic"
   ],
   "pending": [],
   "flagged": [
+    "item_onion",
+    "item_cabbage",
     "item_leek",
+    "item_cucumber",
     "item_oats",
     "item_dried_fruit"
   ],
   "sample": [
+    "item_cucumber",
+    "item_onion",
     "item_leek",
-    "item_dried_fruit",
-    "item_oats"
+    "item_cabbage",
+    "item_dried_fruit"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
   "costUpperYuan": 0.36009911999999994,
-  "manualRatio": 0.5714285714285714,
+  "manualRatio": 0.14285714285714285,
   "needsSystemicRepair": true
 }

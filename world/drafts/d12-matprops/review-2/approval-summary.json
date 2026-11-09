@@ -1,0 +1,41 @@
+{
+  "rule": "人工核定条目不计入人工队列比例（needsSystemicRepair），其余检查同 readApprovedContent；规则解释待李白确认",
+  "total": 32,
+  "l2Passed": [
+    "class_timber",
+    "class_wood",
+    "class_carbon",
+    "class_mushroom",
+    "class_nut",
+    "class_fruit",
+    "class_vegetable",
+    "class_legume",
+    "class_grain",
+    "class_meat",
+    "class_fish",
+    "class_egg",
+    "class_milk",
+    "item_milk",
+    "item_rye_flour",
+    "item_wheat_grain",
+    "item_mutton",
+    "item_goat_milk",
+    "item_dry_mushroom",
+    "item_pear",
+    "item_plum",
+    "item_turnip",
+    "item_carrot",
+    "item_parsnip",
+    "item_beet",
+    "item_onion",
+    "item_cabbage",
+    "item_leek",
+    "item_cucumber",
+    "item_oats",
+    "item_dried_fruit"
+  ],
+  "manualVerified": [],
+  "unresolved": [
+    "item_garlic"
+  ]
+}

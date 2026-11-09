@@ -1,7 +1,7 @@
 {
   "id": "item_onion",
   "fingerprint": "5c96155debd2d11a0a6c4786ba0c092b8a776e0c982ca23c768b5e3f7934ee51",
-  "status": "manual",
+  "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "item_onion",
@@ -21,15 +21,43 @@
       "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
     }
   },
-  "review": null,
-  "errors": [
-    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_onion"
+  "review": {
+    "contradictions": [
+      {
+        "quote": "moistureFraction:0.891, kcalPer100gWet:40",
+        "field": "basis",
+        "verdict": "no_conflict",
+        "severity": "soft",
+        "reason": "USDA 洋葱生约 89% 水、40 kcal/100g，数值吻合；干基 40×10÷0.109≈3670 kcal/kg，÷24≈153，与 derived 一致"
+      },
+      {
+        "quote": "类别 vegetable 的成员，与类别代表值偏差超过阈值",
+        "field": "basis",
+        "verdict": "no_conflict",
+        "severity": "soft",
+        "reason": "洋葱含水 0.891 与类别均值 0.907 差 0.016，能量 153 对 142 差约 8%，偏差不大，单独覆盖理由偏弱但非数值错误"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "moistureFraction:0.891, kcalPer100gWet:40",
+      "field": "basis",
+      "verdict": "no_conflict",
+      "severity": "soft",
+      "reason": "USDA 洋葱生约 89% 水、40 kcal/100g，数值吻合；干基 40×10÷0.109≈3670 kcal/kg，÷24≈153，与 derived 一致"
+    },
+    {
+      "quote": "类别 vegetable 的成员，与类别代表值偏差超过阈值",
+      "field": "basis",
+      "verdict": "no_conflict",
+      "severity": "soft",
+      "reason": "洋葱含水 0.891 与类别均值 0.907 差 0.016，能量 153 对 142 差约 8%，偏差不大，单独覆盖理由偏弱但非数值错误"
+    }
   ],
-  "warnings": [],
-  "feedback": [
-    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_onion"
-  ],
-  "errorCode": "REVIEW_LIMIT",
+  "feedback": null,
+  "errorCode": null,
   "frozenCandidate": {
     "entryHash": "a18f24dd8a5d1254eb17f3a66edf108cc229428057c8fdf80ec015d2cce4a151",
     "draftHash": "43f917b80e9d154e408a098ff9d8586c1e9166987772625f395b40afea3280d1"
@@ -96,5 +124,30 @@
     null,
     null,
     "REVIEW_LIMIT"
-  ]
+  ],
+  "rejudge": {
+    "from": "saved-response",
+    "requestId": "0a7054b8-2ae4-4f77-a5e7-3434b31f5855",
+    "responseHash": "89315ec3160a6f7f61725e486ea9e434de4eff25409cacc72649f27a3253fc93",
+    "at": "2026-11-09T16:30:38.965Z",
+    "reason": "d3228afb extractReview 作用域错误，李白 2026-11-09 16:1x 批准离线重判，0 新调用",
+    "outcome": "passed",
+    "previous": {
+      "status": "manual",
+      "errors": [
+        "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_onion"
+      ],
+      "errorHistory": [
+        null,
+        null,
+        "REVIEW_LIMIT"
+      ],
+      "errorCode": "REVIEW_LIMIT",
+      "warnings": [],
+      "feedback": [
+        "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_onion"
+      ],
+      "review": null
+    }
+  }
 }
