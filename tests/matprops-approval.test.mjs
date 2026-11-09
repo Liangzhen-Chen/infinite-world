@@ -62,7 +62,7 @@ test('一致性重试：按错误历史计数，第二次矛盾后发请求前�
 });
 test('archiveForRedo：只归档 manual 记录、不删、编号递增；非 manual 拒绝；归档不改账本计次', async () => {
   const os = await import('node:os'), path = await import('node:path');
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'redo-')), root = path.join(dir, 'r'), arc = path.join(dir, 'a');
+  const dir = await fs.mkdtemp(path.join(tmpRoot(), 'redo-')), root = path.join(dir, 'r'), arc = path.join(dir, 'a');
   await fs.mkdir(root);
   await fs.writeFile(path.join(root, 'class_egg.json'), JSON.stringify({id: 'class_egg', status: 'manual'}));
   await fs.writeFile(path.join(root, 'class_x.json'), JSON.stringify({id: 'class_x', status: 'passed'}));
