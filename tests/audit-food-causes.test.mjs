@@ -3,11 +3,12 @@
 // difference 0 (and a perturbed ledger is caught); a short real-engine window is deterministic and partitions.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runAudit,verdict,buildFacts,reconcileBooks,supplySatiety} from '../tools/audit-food-causes.mjs';
+import {runAudit,verdict,buildFacts,reconcileBooks,supplySatiety,demandSharing} from '../tools/audit-food-causes.mjs';
 
 // One open own-settlement shop; one meal of its bread costs PRICE; the household has plenty of cash unless a case says otherwise.
 const PRICE=5,UNITS=2;
 const item=(over={})=>({item:'item_bread',avail:20,units:UNITS,cost:PRICE,bought:0,...over});
+const demandOf=(list,key)=>demandSharing(list,key,list.find(o=>o.key===key).demand);
 const shelf=(over={},items=[item()])=>({shopId:'shop_a',sameSettlement:true,engineServes:true,toll:0,items,...over});
 const snap=(over={})=>({supply:100,demand:10,refCost:PRICE-1,cash:PRICE*10,declined:null,townShops:{total:1,open:1},reach:[shelf()],...over});
 const cause=over=>verdict(buildFacts(snap(over))).cause;
@@ -23,6 +24,15 @@ test('harvest is judged on each household own reach: two households at different
  assert.equal(verdict(buildFacts(snap({supply:null}))).cause,'undetermined');// no location: listed apart, no default
  assert.equal(verdict(buildFacts(snap({supply:null}))).sub,'noLocation');
 });
+test('harvest demand: own reach covers the demand of households sharing its sellers, not the whole town',()=>{
+ const list=[{key:'a',demand:10,sellers:new Set(['s1'])},{key:'b',demand:10,sellers:new Set(['s1','s2'])},{key:'c',demand:500,sellers:new Set(['s9'])}];
+ const local=demandOf(list,'a'),town=list.reduce((n,o)=>n+o.demand,0);
+ assert.equal(local,20);assert.ok(town>local);
+ const supply=local;// enough for the neighbours, far below the whole town
+ assert.notEqual(verdict(buildFacts(snap({supply,demand:local}))).cause,'harvest');
+ assert.equal(verdict(buildFacts(snap({supply,demand:town}))).cause,'harvest');// the old whole-town reading would have said harvest
+ assert.equal(demandOf([{key:'z',demand:7,sellers:new Set()}],'z'),7);// no seller at all: only itself
+});
 test('poverty: threshold is the fixture price (price-1 poor; price and price+1 not)',()=>{
  assert.equal(cause({cash:PRICE-1}),'poverty');
  assert.notEqual(cause({cash:PRICE}),'poverty');
@@ -32,6 +42,13 @@ test('poverty: threshold is the fixture price (price-1 poor; price and price+1 n
 test('allocation: everything edible reachable is bought out, (a price-only refusal cannot be isolated in the record)',()=>{
  assert.equal(cause({reach:[shelf({},[item({bought:20})])]}),'allocation');
  assert.equal(cause({reach:[shelf({},[item({avail:21,bought:20})])]}),'allocation');// left 1 unit < one meal
+});
+test('unpriced goods (quote failed) still count as stock in the bought-out test and show in the chain reason',()=>{
+ const sold=item({bought:20}),unpriced=item({item:'item_rice',cost:null});
+ const v=verdict(buildFacts(snap({reach:[shelf({},[sold,unpriced])]})));
+ assert.equal(v.cause,'chain');assert.match(v.reason,/could not be quoted/);// the unpriced rice is still on the shelf: not bought out
+ assert.equal(verdict(buildFacts(snap({reach:[shelf({},[item({cost:null})])]}))).cause,'chain');
+ assert.match(verdict(buildFacts(snap({reach:[shelf({},[item({cost:null})])]}))).reason,/could not be quoted/);
 });
 test('not allocation: cheapest tier bought out but other goods or sellers remain',()=>{
  const cheap=item({bought:20}),dear=item({item:'item_rice',cost:PRICE+3});
@@ -43,9 +60,15 @@ test('not allocation: a defer (time/obligation) or other non-price refusal is ch
  assert.equal(v.cause,'chain');assert.match(v.reason,/outcome defer/);
  assert.equal(cause({declined:{outcome:'refuse',reason:'conflict'}}),'chain');
 });
-test('not allocation: conditional (price or breach-history prepay) is chain and flagged for review',()=>{
- const v=verdict(buildFacts(snap({declined:{outcome:'conditional',reason:'需先付5文，再谈这件事。'}})));
+test('conditional: prepay >=2 is a price refusal (allocation); prepay 1 cannot be told from a breach-history prepay (chain, flagged)',()=>{
+ assert.equal(cause({declined:{outcome:'conditional',reason:'需先付3文，再谈这件事。'}}),'allocation');
+ const v=verdict(buildFacts(snap({declined:{outcome:'conditional',reason:'需先付1文，再谈这件事。'}})));
  assert.equal(v.cause,'chain');assert.equal(v.flag,'conditional');
+});
+test('chain: no adult with coins, or no visit record (budget cap), are flagged apart',()=>{
+ assert.equal(verdict(buildFacts(snap({walkIn:false}))).flag,'noWalkIn');
+ const v=verdict(buildFacts(snap({noVisit:true})));
+ assert.equal(v.cause,'chain');assert.equal(v.flag,'noVisit');assert.match(v.reason,/budget cap/);
 });
 test('chain: food on sale, shop open, household can pay, still no meal',()=>{
  assert.equal(cause({reach:[],townShops:{total:0,open:0}}),'chain');
