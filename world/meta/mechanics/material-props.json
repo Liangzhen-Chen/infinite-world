@@ -76,7 +76,7 @@
     "method": "single",
     "reason": "区间内取典型风干值 15%（世界里的木料是冬伐风干存放的通用料）"
    },
-   "heatValue": 19.0,
+   "heatValue": 19,
    "charYield": 0.265,
    "basis": "木材（原木、板、条等风干材）。热值：绝干木材高位热值约 18.5–21 MJ/kg（Phyllis2 生物质数据库；Biomass Energy Data Book），取 19.0。烧炭得率：传统土窑质量得率约 20–33%（占绝干材，FAO Forestry Paper 63《Simple technologies for charcoal making》），取区间中心 26.5%。【数值凭记忆写入，待 L2 核对】"
   },
@@ -98,7 +98,7 @@
     "method": "single",
     "reason": "区间内取典型室内平衡值 12%"
    },
-   "heatValue": 19.0,
+   "heatValue": 19,
    "basis": "成形木器、木部件与木屑（标签 wood）。热值同 timber（绝干木材高位热值 18.5–21 MJ/kg，Phyllis2），取 19.0。【数值凭记忆写入，待 L2 核对】"
   },
   "carbon": {
@@ -119,7 +119,7 @@
     "method": "single",
     "reason": "区间内取典型值 5%"
    },
-   "heatValue": 30.0,
+   "heatValue": 30,
    "basis": "木炭。高位热值约 28–33 MJ/kg（Engineering ToolBox 燃料热值表；FAO Forestry Paper 63），取 30.0。【数值凭记忆写入，待 L2 核对】"
   },
   "mushroom": {
@@ -128,14 +128,18 @@
      "name": "白蘑菇",
      "citation": "USDA FoodData Central 白蘑菇生",
      "moistureFraction": 0.925,
-     "kcalPer100gWet": 22
+     "kcalPer100gWet": 22,
+     "mealGrams": 85,
+     "mealBasis": "dryMatter",
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蘑菇（按蔬菜）85 g"
     }
    ],
    "selection": {
     "method": "single",
     "reason": "世界里的蘑菇只有栽培菇，取白蘑菇一个出处；鲜香菇不是世界成员，不入平均"
    },
-   "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【数值凭记忆写入，待 L2 核对】"
+   "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限：取 RACC 蔬菜类 85 g 鲜蘑菇，按干物质折算，再按每件物品自己的含水折回（干蘑菇片约 7 g）。【数值凭记忆写入，待 L2 核对】"
   },
   "nut": {
    "sources": [
@@ -143,20 +147,25 @@
      "name": "榛仁",
      "citation": "USDA FoodData Central 榛仁生",
      "moistureFraction": 0.047,
-     "kcalPer100gWet": 628
+     "kcalPer100gWet": 628,
+     "mealGrams": 30,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：坚果 30 g"
     },
     {
      "name": "核桃仁",
      "citation": "USDA FoodData Central 核桃仁生",
      "moistureFraction": 0.041,
-     "kcalPer100gWet": 654
+     "kcalPer100gWet": 654,
+     "mealGrams": 30,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：坚果 30 g"
     }
    ],
    "selection": {
     "method": "mean",
     "reason": "世界里只有榛仁与核桃仁两种去壳坚果仁，逐项取平均"
    },
-   "basis": "去壳坚果仁。【数值凭记忆写入，待 L2 核对】"
+   "basis": "去壳坚果仁。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限：取 RACC 坚果 30 g。坚果能量密度高，一餐的惯常量是一把。【数值凭记忆写入，待 L2 核对】"
   },
   "fruit": {
    "sources": [
@@ -165,28 +174,38 @@
      "citation": "USDA FoodData Central 苹果带皮生",
      "moistureFraction": 0.856,
      "kcalPer100gWet": 52,
-     "refuseFraction": 0.1
+     "refuseFraction": 0.1,
+     "mealGrams": 140,
+     "mealBasis": "dryMatter",
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：鲜果 140 g（1 个中等大小的果）"
     },
     {
      "name": "梨",
      "citation": "USDA FoodData Central 梨生",
      "moistureFraction": 0.837,
      "kcalPer100gWet": 57,
-     "refuseFraction": 0.1
+     "refuseFraction": 0.1,
+     "mealGrams": 140,
+     "mealBasis": "dryMatter",
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：鲜果 140 g（1 个中等大小的果）"
     },
     {
      "name": "李",
      "citation": "USDA FoodData Central 李生",
      "moistureFraction": 0.872,
      "kcalPer100gWet": 46,
-     "refuseFraction": 0.06
+     "refuseFraction": 0.06,
+     "mealGrams": 140,
+     "mealBasis": "dryMatter",
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：鲜果 140 g（1 个中等大小的果）"
     }
    ],
    "selection": {
     "method": "mean",
     "reason": "世界里的鲜果为苹果、梨、李，逐项取平均"
    },
-   "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限（mealCap）：出处给鲜果的惯常单餐量 140 g，按干物质折算（mealBasis=dryMatter：140 g × (1 − 含水)，三者取平均），再按每件物品自己的含水折回鲜重——鲜果约 140 g，含水 25% 的干果约 27 g，整类同一个值，不按名字区分。【数值凭记忆写入，待 L2 核对】"
   },
   "vegetable": {
    "sources": [
@@ -194,44 +213,57 @@
      "name": "甘蓝",
      "citation": "USDA FoodData Central 甘蓝生",
      "moistureFraction": 0.922,
-     "kcalPer100gWet": 25
+     "kcalPer100gWet": 25,
+     "mealGrams": 85,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蔬菜 85 g"
     },
     {
      "name": "胡萝卜",
      "citation": "USDA FoodData Central 胡萝卜生",
      "moistureFraction": 0.883,
-     "kcalPer100gWet": 41
+     "kcalPer100gWet": 41,
+     "mealGrams": 85,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蔬菜 85 g"
     },
     {
      "name": "芜菁",
      "citation": "USDA FoodData Central 芜菁生",
      "moistureFraction": 0.919,
-     "kcalPer100gWet": 28
+     "kcalPer100gWet": 28,
+     "mealGrams": 85,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蔬菜 85 g"
     },
     {
      "name": "红甜菜",
      "citation": "USDA FoodData Central 红甜菜生",
      "moistureFraction": 0.876,
-     "kcalPer100gWet": 43
+     "kcalPer100gWet": 43,
+     "mealGrams": 85,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蔬菜 85 g"
     },
     {
      "name": "洋葱",
      "citation": "USDA FoodData Central 洋葱生",
      "moistureFraction": 0.891,
-     "kcalPer100gWet": 40
+     "kcalPer100gWet": 40,
+     "mealGrams": 85,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蔬菜 85 g"
     },
     {
      "name": "黄瓜",
      "citation": "USDA FoodData Central 黄瓜带皮生",
      "moistureFraction": 0.952,
-     "kcalPer100gWet": 15
+     "kcalPer100gWet": 15,
+     "mealGrams": 85,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：蔬菜 85 g"
     }
    ],
    "selection": {
     "method": "mean",
     "reason": "类别内六种代表蔬菜逐项取平均；含水明显偏离者（蒜、韭葱、欧防风）在物品行覆盖"
    },
-   "basis": "鲜蔬与块根。【数值凭记忆写入，待 L2 核对】"
+   "basis": "鲜蔬与块根。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限：取 RACC 蔬菜 85 g（鲜重）。蔬菜能量密度低，这个上限主要影响整件大的蔬菜要分几天吃。【数值凭记忆写入，待 L2 核对】"
   },
   "legume": {
    "sources": [
@@ -357,20 +389,25 @@
      "name": "牛乳",
      "citation": "USDA FoodData Central 全脂牛乳",
      "moistureFraction": 0.877,
-     "kcalPer100gWet": 61
+     "kcalPer100gWet": 61,
+     "mealGrams": 240,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：牛奶 240 mL（约 240 g）"
     },
     {
      "name": "羊乳",
      "citation": "USDA FoodData Central 羊乳",
      "moistureFraction": 0.87,
-     "kcalPer100gWet": 69
+     "kcalPer100gWet": 69,
+     "mealGrams": 240,
+     "mealCitation": "FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：牛奶 240 mL（约 240 g）"
     }
    ],
    "selection": {
     "method": "mean",
     "reason": "成员为牛乳、羊乳，逐项推算后取平均；偏差超阈值的成员单独覆盖，类别值只供未单列的鲜兽乳"
    },
-   "basis": "鲜乳。【数值凭记忆写入，待 L2 核对】"
+   "basis": "鲜乳。【数值凭记忆写入，待 L2 核对】",
+   "mealCapBasis": "单餐可食量上限：取 RACC 牛奶 1 杯 240 g。【数值凭记忆写入，待 L2 核对】"
   },
   "edible_fat": {
    "sources": [
@@ -508,16 +545,17 @@
    "sources": [
     {
      "name": "硬乳酪（切达）",
-     "citation": "USDA FoodData Central 切达乳酪（cheese, cheddar）：403 kcal/100g，含水约 37.1%",
+     "citation": "USDA FoodData Central 切达乳酪（cheese, cheddar）：403 kcal/100g，含水约 37.1%；FDA 21 CFR 101.12 参照食用量（RACC，每次食用场合的惯常食用量）：硬乳酪 30 g",
      "moistureFraction": 0.371,
-     "kcalPer100gWet": 403
+     "kcalPer100gWet": 403,
+     "mealGrams": 30
     }
    ],
    "selection": {
     "method": "single",
     "reason": "世界里的熟成硬乳酪以切达为代表"
    },
-   "basis": "硬乳酪（Codex 食品分类 01.6）：按真实能量入表（取代统一密度兜底）；乳酪可以当一餐的蛋白与脂肪来源，本类不写单餐上限。【数值凭记忆写入，待 L2 核对】"
+   "basis": "硬乳酪（Codex 食品分类 01.6）：按真实能量入表（取代统一密度兜底）；乳酪是一餐的蛋白与脂肪来源之一。单餐可食量上限：取 RACC 乳酪 30 g（原先写「不写上限」，按李白 2026-11-09 的整类决定改为有上限）。【数值凭记忆写入，待 L2 核对】"
   },
   "condiment_sauce": {
    "sources": [

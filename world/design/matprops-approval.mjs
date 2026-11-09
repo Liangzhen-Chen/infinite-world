@@ -43,7 +43,7 @@ export const cardLimitYuan=1.5, maxRequests=130, maxOverrideRatio=0.15;
 // 调味佐餐卡（D12-CONDIMENT）：与 D 卡互不影响的独立账（自己的 budget.json 与 usage.jsonl），额度 1.0 元，条目上限 = 条目数 × 每条每 revision 最多 3 次。
 export const condimentCard={
  id:'d12-condiment',cardId:'D12-CONDIMENT',revision:'d12-condiment-1',draftRoot:'world/drafts/d12-condiment',reviewDirName:'review-1',
- limitYuan:1.0,maxRequests:40,
+ limitYuan:1.0,maxRequests:60,
  source:'李白 2026-11-09 16:5x：亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡'};
 condimentCard.reviewRoot=path.join(condimentCard.draftRoot,condimentCard.reviewDirName);
 condimentCard.allocation={cardId:condimentCard.cardId,incrementLimitYuan:condimentCard.limitYuan,maxRequests:condimentCard.maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0};
@@ -70,8 +70,20 @@ export async function frozenDBatches(root=path.join('world/drafts/d12-matprops',
  const files=(await fs.readdir(root)).filter(f=>/^batch-[0-9]+[.]json$/.test(f)).sort();
  return Promise.all(files.map(f=>readJSON(path.join(root,f))));
 }
-export async function dEntries(entries,{batches}={}){return splitByCard(entries??await entriesFor(),cardIdsOf(batches??await frozenDBatches())).d;}
-export async function condimentEntries(entries,{batches}={}){return splitByCard(entries??await entriesFor(),cardIdsOf(batches??await frozenDBatches())).condiment;}
+// 从 D 卡移到调味卡重审的条目：D 卡冻结批次里的条目，因类别行新增单餐量而指纹变了（moved-from-d.json 记着它们在 D 卡审查时的指纹，
+// 现在的指纹必须与之不同才算数，见 checkMoved）。它们改在调味卡下重审，费用记 d12-condiment；D 卡其余条目原样。
+export const movedFile=path.join(condimentCard.draftRoot,'moved-from-d.json');
+export async function loadMoved(file=movedFile){return (await readJSON(file).catch(e=>e.code==='ENOENT'?{entries:[]}:Promise.reject(e))).entries.map(e=>e.id);}
+export async function checkMoved(entries,doc,fingerprint=fingerprintOf){
+ for(const m of doc.entries){
+  const e=entries.find(x=>x.id===m.id);
+  if(!e)throw Error(`移交条目不存在：${m.id}`);
+  if(await fingerprint(e)===m.oldFingerprint)throw Error(`移交条目指纹没变，应留在 D 卡：${m.id}`);
+ }
+ return doc.entries.map(m=>m.id);
+}
+export async function dEntries(entries,{batches,moved}={}){const all=entries??await entriesFor(),m=new Set(moved??await loadMoved());return splitByCard(all,cardIdsOf(batches??await frozenDBatches())).d.filter(e=>!m.has(e.id));}
+export async function condimentEntries(entries,{batches,moved}={}){const all=entries??await entriesFor(),m=new Set(moved??await loadMoved()),r=splitByCard(all,cardIdsOf(batches??await frozenDBatches()));return [...r.d.filter(e=>m.has(e.id)),...r.condiment];}
 export const draftFor=entry=>({id:entry.id,row:structuredClone(entry.row)});
 let worldCache;
 const runtime=async()=>worldCache??=await loadRuntimeWorld();
@@ -79,6 +91,10 @@ const runtime=async()=>worldCache??=await loadRuntimeWorld();
 // 上下文里只放影响审查内容的表头字段：dimensions（单位与范围）、kcalPerSatiety（推算除数）、note（修订 2 审查时的原文，冻结——
 // 改它会使全部条目指纹作废，新的说明文字写在表头 selectionRule，不进上下文）；memberDeviationThreshold 只决定哪些成员须有覆盖行（L1），
 // 不进任何条目的推算与上下文，所以不进指纹。类别行带上属于该类别的物品（名称、重量、标签），物品行带上该物品自身与它所属的类别值。
+// 物品覆盖行审的是它自己的含水与能量对类别值的偏离，单餐量（mealGrams/mealBasis/mealCap/mealDry）与它无关：
+// 类别行后来加了单餐量，不让物品条目的上下文（指纹）跟着变，已审的物品覆盖行结论不作废。
+const withoutCap=({mealCapBasis,...row})=>({...row,sources:row.sources?.map(({mealGrams,mealBasis,mealCitation,...x})=>x)});
+const withoutCapDerived=({mealCap,mealDry,...d})=>d;
 export async function contextFor(entry){
  const world=await runtime(),table=await readJSON(tableFile);
  // mealCap（单餐可食量上限）是后加的维度：只在用到它的条目（出处写了 mealGrams 或类别里有它）的上下文里出现，
@@ -89,7 +105,7 @@ export async function contextFor(entry){
  const brief=i=>({id:i.id,name:i.name,weight:i.weight,tags:i.tags});
  if(entry.kind==='material-props-class')return {dimensions,note:table.note,kcalPerSatiety:table.kcalPerSatiety,derived:deriveFromSources(entry.row,table.kcalPerSatiety),members:world.items.filter(i=>(i.tags??[]).includes(entry.key)).map(brief)};
  const item=world.items.find(i=>i.id===entry.id);
- return {dimensions,note:table.note,kcalPerSatiety:table.kcalPerSatiety,derived:deriveFromSources(entry.row,table.kcalPerSatiety),item:{...brief(item),use:item.use,description:item.description},classValues:Object.fromEntries((item.tags??[]).filter(t=>table.classes[t]).map(t=>[t,{row:table.classes[t],derived:deriveFromSources(table.classes[t],table.kcalPerSatiety)}]))};
+ return {dimensions,note:table.note,kcalPerSatiety:table.kcalPerSatiety,derived:deriveFromSources(entry.row,table.kcalPerSatiety),item:{...brief(item),use:item.use,description:item.description},classValues:Object.fromEntries((item.tags??[]).filter(t=>table.classes[t]).map(t=>[t,{row:withoutCap(table.classes[t]),derived:withoutCapDerived(deriveFromSources(table.classes[t],table.kcalPerSatiety))}]))};
 }
 export async function validateDraft(draft,entry){
  try{assert.deepEqual(draft,draftFor(entry));assert.ok(typeof entry.row.basis==='string'&&entry.row.basis.trim());return [];}

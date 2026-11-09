@@ -9,7 +9,7 @@
       "limitYuan": 1,
       "spentYuan": 0,
       "reservedYuan": 0,
-      "maxRequests": 40
+      "maxRequests": 60
     }
   },
   "requests": {},
@@ -20,7 +20,7 @@
       "source": "李白 2026-11-09 16:5x：亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡",
       "after": {
         "limitYuan": 1,
-        "maxRequests": 40
+        "maxRequests": 60
       }
     }
   ]

@@ -1,0 +1,30 @@
+{
+  "note": "从 D 卡（D12-MATPROPS）移到调味卡（D12-CONDIMENT）重审的条目：类别行新增单餐量（mealGrams）使指纹改变。oldFingerprint 是它们在 D 卡审查时的指纹。李白 2026-11-09 决定：费用记 d12-condiment，不动 D 卡账本。",
+  "entries": [
+    {
+      "id": "class_mushroom",
+      "oldFingerprint": "d5098d1fd9e9be4c05bb59b60eea86e86ec8e881ab89b3d2111c1699432545bf",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_nut",
+      "oldFingerprint": "70d28e7d1526422dd73d55ea94940f6a594628cb4bed75a9d7c7ac6e501c01ef",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_fruit",
+      "oldFingerprint": "b273499ff084098646466c45139d4127fa508c7561a875ae779f91d0862097d3",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_vegetable",
+      "oldFingerprint": "2a465c2f5b14fd7778d4d72bdd70d79d951886bf9b20ec477dda9c1eceda3da9",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    },
+    {
+      "id": "class_milk",
+      "oldFingerprint": "ba2917a3229f16ff9385c27f7986fd694428b738b7e3dcbea05c17023ac31880",
+      "reason": "类别行新增单餐可食量上限（mealGrams）"
+    }
+  ]
+}

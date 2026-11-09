@@ -1,7 +1,7 @@
 // D12 材料属性两张审批卡（D12-MATPROPS 与 D12-CONDIMENT）按显式范围划分：D 卡条目 = D 卡已冻结批次的 ids 并集，调味卡 = 其余。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {entriesFor, cardIdsOf, splitByCard, dEntries, condimentEntries, frozenDBatches, verifyAll} from '../world/design/matprops-approval.mjs';
+import {entriesFor, cardIdsOf, splitByCard, dEntries, condimentEntries, frozenDBatches, verifyAll, loadMoved, checkMoved} from '../world/design/matprops-approval.mjs';
 
 const fake=ids=>ids.map(id=>({id}));
 const batches=[{ids:['a','b']},{ids:['c','item_garlic']}];
@@ -42,4 +42,20 @@ test('全表校验：两卡分别校验后合并结论，未决条目标明属�
  assert.equal(mixed.ok,false);
  assert.equal(mixed.cards.d.ok,true);assert.equal(mixed.cards.condiment.ok,false);
  assert.deepEqual(mixed.unresolved,[{id:'n1',card:'D12-CONDIMENT'},{id:'n2',card:'D12-CONDIMENT'}]);
+});
+
+test('移交条目：指纹因类别行改动而变的 D 卡条目改在调味卡重审，D 卡其余不动；移交须真的改了指纹', async () => {
+ const all=fake(['a','b','c','item_garlic','n1']);
+ const moved=['b'];
+ assert.deepEqual((await dEntries(all,{batches,moved})).map(e=>e.id),['a','c','item_garlic']);
+ assert.deepEqual((await condimentEntries(all,{batches,moved})).map(e=>e.id),['b','n1']);
+ // checkMoved：现指纹与记录的旧指纹相同则报错（不该移交），不同才通过
+ const doc={entries:[{id:'b',oldFingerprint:'old'}]};
+ await assert.rejects(checkMoved(all,doc,async()=>'old'),/指纹没变/);
+ assert.deepEqual(await checkMoved(all,doc,async()=>'new'),['b']);
+ // 真实数据：移交文件里的条目都真的改了指纹，且都在 D 卡冻结批次里、现在归调味卡
+ const real=await entriesFor(),ids=await loadMoved(),frozen=cardIdsOf(await frozenDBatches()),c=await condimentEntries();
+ assert.ok(ids.length>0&&ids.every(id=>frozen.has(id)&&c.some(e=>e.id===id)));
+ assert.ok(!(await dEntries()).some(e=>ids.includes(e.id)));
+ assert.ok(real.length>0);
 });
