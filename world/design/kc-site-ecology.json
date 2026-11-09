@@ -38,9 +38,6 @@
     "loc_wild_wt_mist": [
       "wetland"
     ],
-    "site_ms_tj_fungus": [
-      "underground"
-    ],
     "site_ms_yg_nursery": [
       "woodland"
     ],
@@ -375,34 +372,6 @@
         2,
         15
       ]
-    },
-    "item_fresh_mushroom": {
-      "underground": [
-        30,
-        3,
-        7
-      ]
-    },
-    "item_fresh_berry": {
-      "woodland": [
-        30,
-        3,
-        7
-      ]
-    },
-    "item_hazelnut_inshell": {
-      "woodland": [
-        15,
-        2,
-        10
-      ]
-    },
-    "item_walnut_inshell": {
-      "woodland": [
-        15,
-        2,
-        10
-      ]
     }
   },
   "native": {
@@ -477,6 +446,5 @@
         "minutes": 20
       }
     ]
-  },
-  "calibrationNote": "怪物据点生产卡新增：鲜栽培蘑菇、鲜林下浆果借药草 woodland 行 [30,3,7]（蘑菇用于 underground 栖地），带壳榛、带壳核桃借树脂 woodland 行 [15,2,10]；均无已审来源，calibration: pending，待标定。RG-A 可再生律尚未接入运行时，这里不假装由它派生。"
+  }
 }

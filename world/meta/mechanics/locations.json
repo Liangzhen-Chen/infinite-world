@@ -1882,25 +1882,6 @@
    }
   ]
  },
- "site_ms_tj_fungus": {
-  "site": {
-   "owner": "loc_ms_tanjie",
-   "occupants": [],
-   "entryMechanisms": [],
-   "mechanisms": [],
-   "clues": [],
-   "resources": [
-    {
-     "id": "tj_fungus_mushroom",
-     "name": "菌床鲜菇",
-     "item": "item_fresh_mushroom",
-     "quantity": 30,
-     "minutes": 20
-    }
-   ],
-   "truths": []
-  }
- },
  "site_ms_td_garden": {
   "site": {
    "owner": "loc_ms_taideng",
@@ -1913,13 +1894,6 @@
      "id": "td_garden_herb",
      "name": "药圃药草",
      "item": "item_herb",
-     "quantity": 30,
-     "minutes": 20
-    },
-    {
-     "id": "td_garden_berry",
-     "name": "林下浆果",
-     "item": "item_fresh_berry",
      "quantity": 30,
      "minutes": 20
     }
@@ -1935,27 +1909,6 @@
    "mechanisms": [],
    "clues": [],
    "resources": [
-    {
-     "id": "yg_nursery_hazelnut",
-     "name": "育苗地榛树的榛子",
-     "item": "item_hazelnut_inshell",
-     "quantity": 15,
-     "minutes": 20
-    },
-    {
-     "id": "yg_nursery_walnut",
-     "name": "育苗地核桃树的核桃",
-     "item": "item_walnut_inshell",
-     "quantity": 15,
-     "minutes": 20
-    },
-    {
-     "id": "yg_nursery_berry",
-     "name": "林下浆果",
-     "item": "item_fresh_berry",
-     "quantity": 30,
-     "minutes": 20
-    },
     {
      "id": "yg_nursery_herb",
      "name": "林下药草",
