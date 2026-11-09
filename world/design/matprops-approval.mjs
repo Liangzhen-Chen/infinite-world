@@ -16,7 +16,7 @@
 // 审查解析失败即停：extractReview 抛出任何错误（REVIEW_FORMAT、没有 code 的意外异常）都使本次 --review 立即停止后续所有条目的请求（reviewStops，经流水线通用参数 stopOnReviewError），
 // 已发请求的记录照常写盘，输出报明条目与错误；REVIEW_INCONSISTENT 沿用上面"重试 1 次"的既定规则，不算解析失败。
 // --rejudge [--dry-run]：d3228afb 的 extractReview 作用域错误使 2026-11-09T15:19:49Z 之后的审查回复全被丢弃；按已保存的原始回复离线重放判定（0 新调用，不动账本）。
-// --retry-garlic：一次性授权（retryGrants），仅 item_garlic 在 --rejudge 标 needsRetry 后可多发 1 次审查，金额上限 0.01 元。
+// --retry-garlic：一次性授权（retryGrants），仅 item_garlic 在 --rejudge 评估为 retryEligible（当前 revision 内全部已保存审查回复都解析不出判定）后可多发 1 次审查，金额上限 0.01 元（用较小的 max_tokens 压低预留上界）。
 // 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --rejudge [--dry-run] | --retry-garlic | --sample | --l4 <json> | --verify   （--review/--retry-garlic 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -25,6 +25,7 @@ import {pathToFileURL} from 'node:url';
 import {randomInt} from 'node:crypto';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, hashContent, parseModelJSON} from '../../tools/content-pipeline.mjs';
+import {reserveCeilingYuan} from '../../tools/content-budget.mjs';
 import {loadRuntimeWorld} from '../../tools/load-world.mjs';
 import {validateMaterialProps, deriveFromSources, memberValues, memberDeviations, MATERIAL_DIMENSIONS} from '../../server-plugin/item-class.mjs';
 
@@ -219,22 +220,41 @@ export const grants=[
  {id:'d12-matprops-2-maxrequests-130',from:100,to:130,source:'李白 2026-11-09 15:1x 批准：L2 一致性校验重试与 class_egg 按新口径重审，maxRequests 100→130，limitYuan 仍 1.5 元，到额自动停'}];
 export const grantId=grants[0].id;
 // 一次性授权（与 grants 不同：不动账本，只放宽 checkReviewCap 的次数，且只对 entry 指定的那一条）。是否已用掉由账本里该条请求标签数判断（用过一次即达 3+1，再无余量）。
+// max_tokens 取值依据：item_garlic 在 review-2 内三次请求的 usage.completion_tokens 实测为 174、104、140，最大 174；174×2=348，向上取整到 50 → 350（原审查请求为 1200）。
+// 预留上界按账本同一口径（content-budget.mjs reserveCeilingYuan：UTF-8 字节×miss 费率 + max_tokens×output 费率）核算，超 limitYuan 即拒绝，不自动放宽。
 export const retryGrants=[
- {id:'d12-matprops-2-garlic-retry',entry:'item_garlic',extraReviews:1,limitYuan:0.01,source:'李白 2026-11-09 16:1x：garlic 原始回复解析不出判定时只允许单条重问 1 次，上限 0.01 元，其余不追加调用'}];
+ {id:'d12-matprops-2-garlic-retry',entry:'item_garlic',extraReviews:1,limitYuan:0.01,maxTokens:350,source:'李白 2026-11-09 16:1x：garlic 原始回复解析不出判定时只允许单条重问 1 次，上限 0.01 元，其余不追加调用'}];
 export const garlicRetry=retryGrants[0];
-// 发请求前校验：条目须是授权条目、记录须被 --rejudge 标 needsRetry、账本里该条次数未用掉这 1 次、本请求的预留上界不超过金额上限。
-export function estimateRequestYuan(client,body){
- const encoded={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...body};
- const v=client.rates?(Buffer.byteLength(JSON.stringify(encoded))*client.rates.miss+encoded.max_tokens*client.rates.output)/1e6:client.estimateCostYuan?.(body);
- if(!Number.isFinite(v)||v<0)throw Object.assign(new Error('无法核算请求预留上界，拒绝一次性授权'),{code:'RETRY_DENIED'});
- return v;
+export const retryBody=(grant,body)=>({...body,max_tokens:grant.maxTokens});
+// 触发条件（纯函数）：授权条目，且当前 revision 内全部已保存审查回复（saved=[{requestId,response}]，调用方已核对哈希，不限时间）都解析不出判定
+// （REVIEW_FORMAT 或意外异常）。至少 1 条；出现过可解析回复或 REVIEW_INCONSISTENT（保守：任一次即不算）都不可。
+export function retryEligible({id,saved,grant=garlicRetry,extract=extractReview}){
+ const out={eligible:false,requestIds:(saved??[]).map(x=>x.requestId)};
+ if(id!==grant.entry)return {...out,reason:`只允许 ${grant.entry}`};
+ if(!saved?.length)return {...out,reason:'没有已保存的审查回复'};
+ for(const x of saved){
+  try{extract(x.response);return {...out,reason:`回复 ${x.requestId} 可解析`};}
+  catch(e){if(e.code==='REVIEW_INCONSISTENT')return {...out,reason:`回复 ${x.requestId} 解析为自相矛盾`};}
+ }
+ return {...out,eligible:true,reason:'全部已保存回复都解析不出判定'};
 }
-export function assertRetryAllowed({grant=garlicRetry,id,needsRetry,ledger,body,client}){
+// 读取记录里 phase=review 的全部已保存回复（不限时间），核对哈希；不符抛错。
+export async function loadSavedReviews(rec,budgetRoot=draftRoot){
+ const out=[];
+ for(const e of (rec.responseEvidence??[]).filter(x=>x.phase==='review').sort((x,y)=>x.attempt-y.attempt)){
+  const saved=await readJSON(path.join(budgetRoot,e.file));
+  if(saved.requestId!==e.requestId||saved.responseHash!==e.responseHash||hashContent(saved.response)!==saved.responseHash)throw Error(`回复文件哈希与记录不符：${rec.id} ${e.requestId}`);
+  out.push({requestId:e.requestId,response:saved.response});
+ }
+ return out;
+}
+// 发请求前校验：条目须是授权条目、记录须带 retryEligible.eligible、账本里该条次数未用掉这 1 次、本请求（含 max_tokens 覆盖）的预留上界不超过金额上限。
+export function assertRetryAllowed({grant=garlicRetry,id,eligible,ledger,body,client}){
  const deny=m=>Object.assign(new Error(`一次性授权 ${grant.id}：${m}`),{code:'RETRY_DENIED'});
  if(id!==grant.entry)throw deny(`只允许 ${grant.entry}，不允许 ${id}`);
- if(needsRetry!==true)throw deny(`${id} 未被 --rejudge 标 needsRetry`);
+ if(eligible!==true)throw deny(`${id} 未被 --rejudge 评估为 retryEligible`);
  try{checkReviewCap(ledger,id,reviewDirName,grant.extraReviews);}catch(e){if(e.code==='REVIEW_LIMIT')throw deny(`${id} 的额外 ${grant.extraReviews} 次已用掉`);throw e;}
- if(body!==undefined){const est=estimateRequestYuan(client,body);if(est>grant.limitYuan+1e-12)throw deny(`本次请求预留上界 ${est.toFixed(6)} 元超过上限 ${grant.limitYuan} 元`);}
+ if(body!==undefined){const est=reserveCeilingYuan(client,retryBody(grant,body));if(!Number.isFinite(est))throw deny('无法核算预留上界');if(est>grant.limitYuan+1e-12)throw deny(`本次请求（max_tokens=${grant.maxTokens}）预留上界 ${est.toFixed(6)} 元超过上限 ${grant.limitYuan} 元`);}
 }
 export function grantMaxRequests(ledger){
  const out=structuredClone(ledger),card=out.cards?.[cardId];
@@ -260,12 +280,12 @@ export function inconsistentGate(record){
  const n=(record?.errorHistory??[]).filter(c=>c==='REVIEW_INCONSISTENT').length;
  if(n>=2)throw Object.assign(new Error('L2 审查输出两次自相矛盾（hard 但自认无误），不当作通过，转人工'),{code:'REVIEW_INCONSISTENT_EXHAUSTED'});
 }
-export const capReviewsFor=({budgetRoot=draftRoot,client,retry=null,needsRetry=false}={})=>async({body,entry,phase,record})=>{
+export const capReviewsFor=({budgetRoot=draftRoot,client,retry=null,eligible=false}={})=>async({body,entry,phase,record})=>{
  if(phase!=='review')return {body};
  inconsistentGate(record);
  let ledger;try{ledger=await readJSON(path.join(budgetRoot,'budget.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
- if(retry)assertRetryAllowed({grant:retry,id:entry.id,needsRetry,ledger,body,client}); // 一次性授权模式：只有授权条目能发请求
- else checkReviewCap(ledger,entry.id);
+ if(retry){assertRetryAllowed({grant:retry,id:entry.id,eligible,ledger,body,client});return {body:retryBody(retry,body)};} // 一次性授权模式：只有授权条目能发请求，且用较小 max_tokens
+ checkReviewCap(ledger,entry.id);
  return {body};
 };
 // 审查解析错误（extractReview 抛出的任何错误，含无 code 的意外异常）一律使整轮停止；REVIEW_INCONSISTENT 走自己的重试规则。
@@ -328,11 +348,11 @@ export async function archiveForRedo(ids,{root=reviewRoot,archiveRoot=path.join(
  return out;
 }
 // --review 的流水线调用；全部可注入（client、目录、条目、审查解析），生产默认值即真实路径。审查解析出错即停止后续所有条目（reviewStops）。
-export async function runReview({entries,client,root=reviewRoot,budgetRoot=draftRoot,ctx=contextFor,validate=validateDraft,extract=extractReview,retry=null,needsRetry=false,
+export async function runReview({entries,client,root=reviewRoot,budgetRoot=draftRoot,ctx=contextFor,validate=validateDraft,extract=extractReview,retry=null,eligible=false,
  cardIdArg=cardId,allocation={cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0}}){
  return runContentPipeline({entries,root,budgetRoot,revision,contextFor:ctx,
   validateDraft:validate,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,buildDraftRequest:draftRequest,buildReviewRequest:reviewRequest,extractReview:extract,
-  stopOnReviewError:reviewStops,requestTransform:capReviewsFor({budgetRoot,client,retry,needsRetry}),client,cardId:cardIdArg,allocation,concurrency:1,batchSize:25});
+  stopOnReviewError:reviewStops,requestTransform:capReviewsFor({budgetRoot,client,retry,eligible}),client,cardId:cardIdArg,allocation,concurrency:1,batchSize:25});
 }
 const reportHalt=h=>h?{halted:{entry:h.id,code:h.code,message:h.message,note:'审查解析失败，本次运行已停止后续所有条目的请求'}}:{};
 
@@ -387,21 +407,44 @@ export async function refreshBatches(root,records){
  const all=records;Object.assign(sum,{passed:all.filter(r=>r.status==='passed').length,manual:all.filter(r=>r.status==='manual').length,pending:all.filter(r=>r.status==='pending').length});
  await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(sum,null,2)+'\n');
 }
-export async function rejudge({entries,root=reviewRoot,budgetRoot=draftRoot,dry=false,fingerprint=fingerprintOf,validate=validateDraft,extract=extractReview,cutoff=rejudgeCutoff}={}){
+export async function rejudge({entries,root=reviewRoot,budgetRoot=draftRoot,dry=false,fingerprint=fingerprintOf,validate=validateDraft,extract=extractReview,cutoff=rejudgeCutoff,grant=garlicRetry}={}){
  entries??=await entriesFor();
- const ledger=await readJSON(path.join(budgetRoot,'budget.json')),rows=[],records=[];
+ const ledger=await readJSON(path.join(budgetRoot,'budget.json')),rows=[],records=[];let changed=false;
  for(const entry of entries){
   const file=path.join(root,`${entry.id}.json`),rec=await readJSON(file).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
   if(!rec){rows.push({id:entry.id,skipped:'无记录'});continue;}
   records.push(rec);
-  if(rec.rejudge){rows.push({id:entry.id,skipped:'已重判过'});continue;}
-  try{
-   const r=await rejudgeRecord(rec,entry,{budgetRoot,ledger,fingerprint,validate,extract,cutoff});rows.push(r);
-   if(r.record){records[records.length-1]=r.record;if(!dry)await fs.writeFile(file,JSON.stringify(r.record,null,2)+'\n');}
-  }catch(e){rows.push({id:entry.id,rejected:e.message});}
+  let row,cur=rec;
+  if(rec.rejudge)row={id:entry.id,skipped:'已重判过'};
+  else try{row=await rejudgeRecord(rec,entry,{budgetRoot,ledger,fingerprint,validate,extract,cutoff});if(row.record)cur=row.record;}
+  catch(e){row={id:entry.id,rejected:e.message};}
+  // 一次性授权条目额外评估 retryEligible（不限 cutoff；哈希不符则拒绝并不写入）
+  if(entry.id===grant.entry&&!row.rejected){
+   try{const el=retryEligible({id:entry.id,saved:await loadSavedReviews(rec,budgetRoot),grant,extract});cur={...cur,retryEligible:{eligible:el.eligible,requestIds:el.requestIds,reason:el.reason,at:new Date().toISOString()}};row={...row,retryEligible:el.eligible,retryRequestIds:el.requestIds,retryReason:el.reason};}
+   catch(e){row={...row,rejected:e.message};}
+  }
+  rows.push(row);records[records.length-1]=cur;
+  if(cur!==rec&&!dry)await fs.writeFile(file,JSON.stringify(cur,null,2)+'\n');
+  if(cur!==rec)changed=true;
  }
- if(!dry&&rows.some(r=>r.record))await refreshBatches(root,records);
+ if(!dry&&changed)await refreshBatches(root,records);
  return rows.map(({record,...r})=>r);
+}
+// --retry-garlic：只把授权条目交给流水线；先核对 retryEligible、次数与预留上界（发请求前、归档前），不符直接拒绝并报数，不自动放宽。
+// 流水线会按自己收到的条目重写 batch/summary，所以先存后还，再按全部记录重算（refreshBatches）。账本只追加这一次请求。
+export async function retryRun({entries,client,root=reviewRoot,budgetRoot=draftRoot,ctx=contextFor,grant=garlicRetry,...rest}){
+ const entry=entries.find(e=>e.id===grant.entry);
+ if(!entry)throw Error(`没有授权条目 ${grant.entry}`);
+ const rec=await readJSON(path.join(root,`${entry.id}.json`)),eligible=rec.retryEligible?.eligible===true;
+ assertRetryAllowed({grant,id:entry.id,eligible,ledger:await readJSON(path.join(budgetRoot,'budget.json')),body:reviewRequest(entry,draftFor(entry),await ctx(entry)),client});
+ const keep=new Map();
+ for(const f of (await fs.readdir(root)).filter(f=>/^(batch-[0-9]+|summary)\.json$/.test(f)))keep.set(f,await fs.readFile(path.join(root,f)));
+ const archived=await archiveForRedo([entry.id],{root,archiveRoot:path.join(budgetRoot,`${path.basename(root)}-archive`)});
+ const out=await runReview({entries:[entry],client,root,budgetRoot,ctx,retry:grant,eligible,...rest});
+ for(const [f,b] of keep)await fs.writeFile(path.join(root,f),b);
+ const records=[];for(const e of entries)records.push(await readJSON(path.join(root,`${e.id}.json`)).catch(()=>null));
+ if(records.every(Boolean))await refreshBatches(root,records);
+ return {...out,archived};
 }
 export async function run(args=process.argv.slice(2)){
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
@@ -415,17 +458,11 @@ export async function run(args=process.argv.slice(2)){
  if(args.includes('--review')||retry){
   await l1();
   await authorizeIncrease();
-  let needsRetry=false;
-  if(retry){
-   const rec=await readJSON(path.join(reviewRoot,`${garlicRetry.entry}.json`));
-   needsRetry=rec.needsRetry===true;
-   assertRetryAllowed({id:garlicRetry.entry,needsRetry,ledger:await readJSON(path.join(draftRoot,'budget.json'))});
-   console.log(JSON.stringify({archived:await archiveForRedo([garlicRetry.entry])}));
-  }
-  else if(args.includes('--redo'))console.log(JSON.stringify({archived:await archiveForRedo(args[args.indexOf('--redo')+1].split(','))}));
+  if(!retry&&args.includes('--redo'))console.log(JSON.stringify({archived:await archiveForRedo(args[args.indexOf('--redo')+1].split(','))}));
   const entries=await entriesFor();
   console.log(JSON.stringify({pid:process.pid,mode:retry?'retry-garlic':'review',entries:entries.length}));
-  const {summary,halted}=await runReview({entries,client:new DeepSeekClient({budgetYuan:cardLimitYuan,logFile:path.join(draftRoot,'usage.jsonl')}),retry:retry?garlicRetry:null,needsRetry});
+  const client=new DeepSeekClient({budgetYuan:cardLimitYuan,logFile:path.join(draftRoot,'usage.jsonl')});
+  const {summary,halted}=retry?await retryRun({entries,client}):await runReview({entries,client});
   console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards[cardId],...reportHalt(halted)}));
  }
  if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4()));

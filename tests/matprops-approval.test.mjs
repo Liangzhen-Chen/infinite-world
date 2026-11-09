@@ -5,8 +5,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {migrateDepthBudget} from '../tools/content-budget.mjs';
-import {entriesFor, draftFor, validateDraft, l1, extractReview, inconsistentGate, archiveForRedo, explainEntry, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels, runReview, reviewStops, rejudge, rejudgeRecord, rejudgeCutoff, assertRetryAllowed, garlicRetry, retryGrants, capReviewsFor} from '../world/design/matprops-approval.mjs';
+import {migrateDepthBudget, reserveCeilingYuan} from '../tools/content-budget.mjs';
+import {entriesFor, draftFor, validateDraft, l1, extractReview, inconsistentGate, archiveForRedo, explainEntry, checkReviewCap, maxReviewsPerEntry, grantMaxRequests, grantId, maxRequests, cardId, cardLimitYuan, revision, checkManual, approvalState, manualLabels, runReview, reviewStops, rejudge, rejudgeRecord, rejudgeCutoff, assertRetryAllowed, garlicRetry, retryGrants, capReviewsFor, retryEligible, retryRun, retryBody, loadSavedReviews, contextFor} from '../world/design/matprops-approval.mjs';
 
 test('条目 = 每个类别行 + 每个物品覆盖行；候选与盘上数据逐字一致', async () => {
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
@@ -236,8 +236,8 @@ test('正常响应不受影响；REVIEW_INCONSISTENT 沿用重试规则、不停
 });
 
 // 离线重判：临时目录里的假记录与假回复
-async function rejudgeFixture(t, replies, {tamper = false} = {}) {
-  const budgetRoot = await mkRoot(t), root = path.join(budgetRoot, 'review-2'), entry = fakeEntries(['item_x'])[0];
+async function rejudgeFixture(t, replies, {tamper = false, id = 'item_x'} = {}) {
+  const budgetRoot = await mkRoot(t), root = path.join(budgetRoot, 'review-2'), entry = fakeEntries([id])[0];
   await fs.mkdir(path.join(budgetRoot, 'budget-responses'), {recursive: true}); await fs.mkdir(root);
   const ledger = {requests: {}}, evidence = [];
   for (const [i, {content, at}] of replies.entries()) {
@@ -248,12 +248,12 @@ async function rejudgeFixture(t, replies, {tamper = false} = {}) {
   }
   await fs.writeFile(path.join(budgetRoot, 'budget.json'), JSON.stringify(ledger));
   const draft = draftFor(entry);
-  const rec = {id: 'item_x', fingerprint: 'fp', status: 'manual', attempts: 0, draft, review: null, errors: ['旧错'], warnings: [], errorCode: null, errorHistory: [null, null],
+  const rec = {id, fingerprint: 'fp', status: 'manual', attempts: 0, draft, review: null, errors: ['旧错'], warnings: [], errorCode: null, errorHistory: [null, null],
     frozenCandidate: {entryHash: hashContent(entry), draftHash: hashContent(draft)}, responseEvidence: evidence, measurements: []};
-  await fs.writeFile(path.join(root, 'item_x.json'), JSON.stringify(rec));
+  await fs.writeFile(path.join(root, `${id}.json`), JSON.stringify(rec));
   const ledgerBytes = await fs.readFile(path.join(budgetRoot, 'budget.json'), 'utf8');
   const run = (dry = false) => rejudge({entries: [entry], root, budgetRoot, dry, fingerprint: () => 'fp'});
-  const read = async () => JSON.parse(await fs.readFile(path.join(root, 'item_x.json'), 'utf8'));
+  const read = async () => JSON.parse(await fs.readFile(path.join(root, `${id}.json`), 'utf8'));
   return {run, read, entry, budgetRoot, ledgerBytes, root};
 }
 const after = '2026-11-09T16:00:00Z', before = '2026-11-09T12:00:00Z';
@@ -306,17 +306,71 @@ test('--rejudge：回复哈希、指纹或冻结候选与记录不符 → 拒绝
   assert.match((await g.run())[0].rejected, /冻结候选/);
 });
 
-test('garlic 一次性授权：仅 item_garlic、仅 1 次、金额上限 0.01 元、须 needsRetry', async () => {
-  assert.deepEqual([retryGrants.length, garlicRetry.entry, garlicRetry.extraReviews, garlicRetry.limitYuan], [1, 'item_garlic', 1, 0.01]);
+test('retryEligible（纯函数）：全部解析失败 → 可；有一条可解析 → 否；非授权条目 → 否；无已保存回复 → 否；自相矛盾 → 否', () => {
+  const r = content => ({choices: [{message: {content}}]});
+  const bad = [{requestId: 'a', response: r('{坏')}, {requestId: 'b', response: r('xx')}];
+  const el = retryEligible({id: 'item_garlic', saved: bad});
+  assert.deepEqual([el.eligible, el.requestIds], [true, ['a', 'b']]);
+  assert.equal(retryEligible({id: 'item_garlic', saved: [...bad, {requestId: 'c', response: r(okContent)}]}).eligible, false);
+  assert.equal(retryEligible({id: 'item_onion', saved: bad}).eligible, false);
+  assert.equal(retryEligible({id: 'item_garlic', saved: []}).eligible, false);
+  const inc = JSON.stringify({contradictions: [{quote: 'q', field: 'f', severity: 'hard', verdict: 'no_conflict', reason: 'r'}]});
+  assert.equal(retryEligible({id: 'item_garlic', saved: [bad[0], {requestId: 'd', response: r(inc)}]}).eligible, false);
+  // 意外异常也算解析不出
+  assert.equal(retryEligible({id: 'item_garlic', saved: bad, extract: () => { throw new TypeError('x'); }}).eligible, true);
+});
+test('--rejudge 对授权条目额外评估 retryEligible 并写入记录（不限 cutoff），其他条目不写', async t => {
+  const f = await rejudgeFixture(t, [{content: '{坏', at: before}], {id: 'item_garlic'});
+  const [row] = await f.run();
+  assert.equal(row.retryEligible, true);
+  const rec = await f.read();
+  assert.equal(rec.retryEligible.eligible, true); assert.deepEqual(rec.retryEligible.requestIds, ['req-0']);
+  const g = await rejudgeFixture(t, [{content: '{坏', at: before}]);
+  await g.run();
+  assert.equal((await g.read()).retryEligible, undefined);
+});
+
+test('garlic 一次性授权：仅 item_garlic、仅 1 次、须 retryEligible', async () => {
+  assert.deepEqual([retryGrants.length, garlicRetry.entry, garlicRetry.extraReviews, garlicRetry.limitYuan, garlicRetry.maxTokens], [1, 'item_garlic', 1, 0.01, 350]);
   const sent = n => ({requests: Object.fromEntries(Array.from({length: n}, (_, i) => [`r${i}`, {label: 'content-review-2-item_garlic-review0', status: 'settled'}]))});
-  const cheap = {estimateCostYuan: () => .005}, body = {messages: []};
-  assertRetryAllowed({id: 'item_garlic', needsRetry: true, ledger: sent(3), body, client: cheap});   // 第 4 次放行
-  assert.throws(() => assertRetryAllowed({id: 'item_onion', needsRetry: true, ledger: sent(3), body, client: cheap}), e => e.code === 'RETRY_DENIED' && /只允许 item_garlic/.test(e.message));
-  assert.throws(() => assertRetryAllowed({id: 'item_garlic', needsRetry: true, ledger: sent(4), body, client: cheap}), e => e.code === 'RETRY_DENIED' && /已用掉/.test(e.message));   // 第二次被拒
-  assert.throws(() => assertRetryAllowed({id: 'item_garlic', needsRetry: true, ledger: sent(3), body, client: {estimateCostYuan: () => .02}}), e => e.code === 'RETRY_DENIED' && /超过上限/.test(e.message));
-  assert.throws(() => assertRetryAllowed({id: 'item_garlic', needsRetry: false, ledger: sent(3), body, client: cheap}), e => e.code === 'RETRY_DENIED');
-  // 不带授权时 garlic 的第 4 次仍是 REVIEW_LIMIT；授权模式下发请求前的闸门也拒绝非 garlic 条目
-  assert.throws(() => checkReviewCap(sent(3), 'item_garlic'), e => e.code === 'REVIEW_LIMIT');
-  const gate = capReviewsFor({budgetRoot: '.', client: cheap, retry: garlicRetry, needsRetry: true});
+  const cheap = {rates: {hit: 0, miss: 0, output: 1}}, body = {max_tokens: 1200, messages: []};
+  assertRetryAllowed({id: 'item_garlic', eligible: true, ledger: sent(3), body, client: cheap});   // 第 4 次放行
+  assert.throws(() => assertRetryAllowed({id: 'item_onion', eligible: true, ledger: sent(3), body, client: cheap}), e => e.code === 'RETRY_DENIED' && /只允许 item_garlic/.test(e.message));
+  assert.throws(() => assertRetryAllowed({id: 'item_garlic', eligible: true, ledger: sent(4), body, client: cheap}), e => e.code === 'RETRY_DENIED' && /已用掉/.test(e.message));   // 第二次被拒
+  assert.throws(() => assertRetryAllowed({id: 'item_garlic', eligible: false, ledger: sent(3), body, client: cheap}), e => e.code === 'RETRY_DENIED');
+  assert.throws(() => checkReviewCap(sent(3), 'item_garlic'), e => e.code === 'REVIEW_LIMIT');   // 无授权时仍是 REVIEW_LIMIT
+  const gate = capReviewsFor({budgetRoot: '.', client: cheap, retry: garlicRetry, eligible: true});
   await assert.rejects(() => gate({body, entry: {id: 'item_onion'}, phase: 'review', record: {}}), e => e.code === 'RETRY_DENIED');
+});
+test('garlic 金额上限：按账本同一预留口径，用授权的 max_tokens 核算；上界 ≤0.01 放行，>0.01 拒绝并报出数', () => {
+  const ledger = {requests: Object.fromEntries([0, 1, 2].map(i => [`r${i}`, {label: 'content-review-2-item_garlic-review0', status: 'settled'}]))};
+  const body = {max_tokens: 1200, messages: [{role: 'user', content: 'x'.repeat(1000)}]};
+  // 预留上界 = (UTF-8 字节 × miss + max_tokens × output) / 1e6；字节数含 model 等默认字段，这里只验大小关系与 max_tokens 覆盖
+  const exact = rates => reserveCeilingYuan({rates}, retryBody(garlicRetry, body));
+  const lo = {hit: 0, miss: 0.001, output: 1}, hi = {hit: 0, miss: 0.001, output: 100};
+  assert.ok(exact(lo) <= 0.01 && exact(hi) > 0.01);
+  assert.ok(exact(lo) < reserveCeilingYuan({rates: lo}, body));   // 350 < 1200，覆盖生效
+  assertRetryAllowed({id: 'item_garlic', eligible: true, ledger, body, client: {rates: lo}});
+  assert.throws(() => assertRetryAllowed({id: 'item_garlic', eligible: true, ledger, body, client: {rates: hi}}), e => e.code === 'RETRY_DENIED' && /预留上界 \d+\.\d+ 元超过上限 0\.01/.test(e.message));
+});
+test('--retry-garlic：流水线只收到授权条目，请求带授权的 max_tokens，其他条目记录不动；不符条件时发请求前拒绝且不归档', async t => {
+  const budgetRoot = await mkRoot(t), root = path.join(budgetRoot, 'review-2'), entries = fakeEntries(['item_garlic', 'item_other']);
+  await fs.mkdir(root);
+  await fs.writeFile(path.join(budgetRoot, 'budget.json'), JSON.stringify({spentYuan: 0, reservedYuan: 0, limitYuan: 20, requests: Object.fromEntries([0, 1, 2].map(i => [`r${i}`, {label: 'content-review-2-item_garlic-review0', status: 'settled'}]))}));
+  const other = JSON.stringify({id: 'item_other', status: 'manual'});
+  await fs.writeFile(path.join(root, 'item_other.json'), other);
+  const garlicRec = {id: 'item_garlic', status: 'manual', retryEligible: {eligible: true}};
+  await fs.writeFile(path.join(root, 'item_garlic.json'), JSON.stringify(garlicRec));
+  const seen = [], client = {rates: {hit: 0, miss: 0.001, output: 1}, spent: 0, budgetYuan: 20, async generate(body, label) { seen.push([label, body.max_tokens]); return {choices: [{message: {content: okContent}}], usage: {completion_tokens: 5}, measurement: {costUpperYuan: .001}}; }};
+  // 不合格：未评估为 retryEligible → 拒绝，记录原地不动
+  await fs.writeFile(path.join(root, 'item_garlic.json'), JSON.stringify({id: 'item_garlic', status: 'manual'}));
+  await assert.rejects(() => retryRun({entries, client, root, budgetRoot, ctx: () => null, cardIdArg: null, allocation: null}), e => e.code === 'RETRY_DENIED');
+  assert.equal(seen.length, 0); assert.ok(await fs.stat(path.join(root, 'item_garlic.json')).then(() => true, () => false));
+  await fs.writeFile(path.join(root, 'item_garlic.json'), JSON.stringify(garlicRec));
+  await retryRun({entries, client, root, budgetRoot, ctx: () => null, cardIdArg: null, allocation: null});
+  assert.deepEqual(seen, [['content-review-2-item_garlic-review0', 350]]);
+  assert.equal(await fs.readFile(path.join(root, 'item_other.json'), 'utf8'), other);
+  assert.equal(JSON.parse(await fs.readFile(path.join(root, 'item_garlic.json'), 'utf8')).status, 'passed');
+  // 再来一次：账本里已 4 次，被拒
+  await assert.rejects(() => retryRun({entries, client, root, budgetRoot, ctx: () => null, cardIdArg: null, allocation: null}), e => e.code === 'RETRY_DENIED');
 });
