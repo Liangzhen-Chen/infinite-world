@@ -14,13 +14,14 @@ import {contractTerms,leaseState,tenancyRentAmount} from './contract-state.mjs';
 import {householdWorkTime} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {physicalItem} from './items.mjs';
-import {isItemClass,householdUsage as usageDefinition,usageGrams,mealCapPools} from './item-class.mjs';
+import {isItemClass,householdUsage as usageDefinition,usageGrams,mealCapPools,itemMg} from './item-class.mjs';
 // Shop restock lists and the upkeep-shortage reader are household facts: they live here (L1) so market and the household packs read them without importing npc-life.
 export function registerMerchandiseResolver(fn){registerMerchandiseResolver.fn=fn;}
 export function householdUpkeepGap(state,key){const r=state.family?.upkeep?.[key]??{};return Object.fromEntries(Object.entries(r).filter(([k])=>k.endsWith('ShortDays')));}
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
-const mealCandidates=Symbol('physical meal candidates'),mealDays=Symbol('meal cap engine and person-days');
+const mealCandidates=Symbol('physical meal candidates'),mealCapCtx=Symbol('meal cap engine and saved state');
+const savedMealCap=(d,key)=>d.get('state','family','mealCap',key)??{allow:{},open:{}};
 const preferenceRoll=compileRX('roll("thrift")');
 const laborPreferenceRoll=compileRX('roll("reservation")'),laborNoiseRoll=compileRX('roll("choice")');
 const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id];
@@ -173,22 +174,42 @@ function seedNeeds(engine,state,holders){
  return new Map([...needs].map(([key,fields])=>[key,[...fields.values()].reduce((a,b)=>a+b,0)]));
 }
 
-// 单餐可食量上限（D12 材料属性 mealCap，按类推导）：caps 是 item-class.mealCapPools 给的池，记着这段时间里每个池已吃多少；
-// 带上限的物品（调味佐餐类：醋、油脂、蜜、香草、香料籽）最多吃到池里的余量，主体食物不够时它们补不满缺口。没有上限的类别照旧。
-// 调用方负责把 rows 里已有的 food（别的持有人的、市场买的）事先记入 caps。
+// 单餐可食量上限（D12 材料属性 mealCap，按类推导，按时间累计，见 item-class.mealCapPools）：caps 记着每个池的额度、已吃量与整件开封后的余量。
+// 带上限的物品（调味佐餐类、水果、坚果等）按毫克吃：先吃开封余量，不够再开新的一件；吃多少不超过池的额度，主体食物不够时它们补不满缺口。无上限的类别照旧按整件。
+// 调用方负责把 rows 里已有的（别的持有人的）吃量事先记入 caps。
+const unitMg=r=>Math.round((r.definition?.weight??0)*1e6);
+const credit=(r,gain)=>r.eatMg!==undefined?r.eatMg*gain/unitMg(r):r.food*gain;
 function allocateMeals(rows,needs,caps){
  const shortfall={};
  for(const need of ['satiety','hydration']){
-  let remaining=needs[need]-rows.reduce((n,r)=>n+r.food*(r.definition?.nutrition?.[need]??0),0);
+  let remaining=needs[need]-rows.reduce((n,r)=>n+credit(r,r.definition?.nutrition?.[need]??0),0);
   for(const r of rows){
    const gain=r.definition?.nutrition?.[need]??0;if(gain<=0||remaining<=0)continue;
-   const used=Math.min(Math.max(0,r.stock-r.committed-r.seed-r.food),Math.ceil(remaining/gain),caps.room(r.item));
+   const w=unitMg(r),room=caps.roomMg(r.item),free=Math.max(0,r.stock-r.committed-r.seed-r.food);
+   if(room<Infinity&&w>0){
+    if(r.eatMg!==undefined)continue;
+    const open=caps.openMg(r.item),eat=Math.min(open+free*w,room,Math.ceil(remaining*w/gain-1e-9));
+    if(!(eat>0))continue;
+    const fromOpen=Math.min(open,eat);
+    r.eatMg=eat;r.fromOpen=fromOpen;r.food+=Math.ceil((eat-fromOpen)/w-1e-9);remaining-=eat*gain/w;caps.take(r.item,{eatMg:eat,fromOpen});
+    continue;
+   }
+   const used=Math.min(free,Math.ceil(remaining/gain));
    if(used<=0)continue;
-   r.food+=used;remaining-=used*gain;caps.take(r.item,used);
+   r.food+=used;remaining-=used*gain;
   }
   shortfall[need]=Math.max(0,remaining);
  }
  return shortfall;
+}
+// 一户吃完后的单餐额度状态（写进存档 state.family.mealCap[户键]）：open = 各件开封后剩下的毫克；allow = 池里没吃完的额度（手里没了的池清零）。
+function nextMealCapState(rows,caps,saved){
+ const open={...saved.open},touched=new Map();
+ for(const r of rows)if(r.eatMg!==undefined){const w=unitMg(r),t=touched.get(r.item)??0;touched.set(r.item,t-r.fromOpen+r.food*w-(r.eatMg-r.fromOpen));}
+ for(const [item,delta] of touched)open[item]=(saved.open[item]??0)+delta;
+ for(const k of Object.keys(open))if(!(open[k]>0))delete open[k];
+ const allow=caps.nextState(rows,{remainMg:r=>(r.stock-r.food)*unitMg(r)+(open[r.item]??0)});
+ return {allow,open};
 }
 
 // Public agriculture has already consumed standard daily portions, whose
@@ -203,27 +224,33 @@ export function householdMealPlan(d,engine,owner,{publicShare=0,sourceNutrition=
  const commitments=stateMemo(state,engine,[commitmentMemo],()=>commitmentAllocation(state),commitmentInputs);
  // Meals need physical food, seeds and promises, not a quote/income horizon
  // or a scan of everyone's production tasks for every inventory row.
- const rows=members.flatMap(holder=>bagEntries(d,engine,state,holder,null).flatMap(([item,held])=>{
+ const saved=savedMealCap(d,f.household??owner);
+ // 开封后的余量（整瓶油、整罐蜜没吃完的部分）不在背包里，也是家里的食物：库存为 0 的行代表它，吃的时候不从背包扣。
+ const bags=members.flatMap(holder=>bagEntries(d,engine,state,holder,null).map(e=>[holder,...e])),seen=new Set(bags.map(([,item])=>item));
+ for(const item of Object.keys(saved.open))if(!seen.has(item)&&members.length)bags.push([members[0],item,undefined]);
+ const rows=bags.flatMap(([holder,item,held])=>{
   const definition=engine.byId.get(item);if(!definition?.nutrition)return [];
   const stock=bagStock(d,engine,{point:'region.material',id:holder,item,legacy:()=>qty(held)}),key=`${holder}:${item}`;
   const committed=commitments.get(key)??0,seed=Math.min(Math.max(0,stock-committed),seeds.get(key)??0);
   return [{holder,item,definition,stock,committed,seed,food:0}];
- })).sort((a,b)=>(a.definition?.shelfLifeDays??Infinity)-(b.definition?.shelfLifeDays??Infinity)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder)).map(r=>{
+ }).sort((a,b)=>(a.definition?.shelfLifeDays??Infinity)-(b.definition?.shelfLifeDays??Infinity)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder)).map(r=>{
   const held=d.get(...engine.bagPath(r.holder),r.item),units=held?.instances??[];
   const safe=id=>{const f=physicalItem(d,engine,id);return f.contaminated!==true&&f.toxic!==true&&f.condition!==0;};
   const selection=units.filter(safe),loose=safe(r.item)?Math.max(0,r.stock-units.length):0;
   return {...r,definition:engine.byId.get(r.item),stock:Math.min(r.stock,loose+selection.length),selection,food:0};
  });
- return householdMealWithSources({household:f.household,members,needs,publicNutrition,[mealCandidates]:rows,[mealDays]:{engine,personDays:members.length}},sourceNutrition);
+ return householdMealWithSources({household:f.household,members,needs,publicNutrition,[mealCandidates]:rows,[mealCapCtx]:{engine,saved,days:members.map(()=>1)}},sourceNutrition);
 }
 
 // Midnight reads every household's physical bags against one revision. Source
 // withdrawals do not alter those bags, so changing the supplied nutrition can
 // reuse the same safe units/seeds/promises without rebuilding ledger indexes.
 export function householdMealWithSources(plan,sourceNutrition={}){
- const rows=plan[mealCandidates].map(r=>({...r,food:0}));
- const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(plan.needs).map(n=>[n,plan.needs[n]-plan.publicNutrition[n]-(sourceNutrition[n]??0)])),mealCapPools(plan[mealDays].engine,plan[mealDays].personDays));
- return {...plan,shortfall,rows:rows.filter(r=>r.food>0).map(({definition,...r})=>({...r,selection:r.selection.slice(0,r.food)}))};
+ const rows=plan[mealCandidates].map(r=>({...r,food:0,eatMg:undefined,fromOpen:undefined})),{engine,saved,days}=plan[mealCapCtx];
+ const caps=mealCapPools(engine,{days,saved});for(const r of rows)if(r.stock>0)caps.markHeld(r.item);
+ const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(plan.needs).map(n=>[n,plan.needs[n]-plan.publicNutrition[n]-(sourceNutrition[n]??0)])),caps);
+ const bad=caps.violations();if(bad.length)throw Error(`单餐额度不变量被破坏：${bad.join('、')}`);
+ return {...plan,shortfall,capState:nextMealCapState(rows,caps,saved),rows:rows.filter(r=>r.food>0||r.eatMg>0).map(({definition,...r})=>({...r,selection:r.selection.slice(0,r.food)}))};
 }
 
 export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true}={}){
@@ -239,8 +266,11 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  const holders=subjective?[owner]:f.holders,members=f.shared?f.members:[owner];
  const seeds=subjective?new Map():stateMemo(state,engine,[seedRecords,JSON.stringify(holders)],()=>seedNeeds(engine,state,holders),seedInputs);
  const promises=subjective?view.self.obligations??[]:[...obligationRows(state),...recordsMemo(state.records,promisedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='procurement'||r.category==='agreed_quote'))];
+ const saved=savedMealCap(d,f.household??owner);
  const rows=holders.flatMap(holder=>{
   const entries=new Map(bagEntries(d,engine,state,holder,view));
+  // 开封余量属于这户，由这户的第一位持有人（排序后）的行代表；库存为 0。
+  if(holder===holders[0])for(const item of Object.keys(saved.open))if(!entries.has(item)&&engine.byId.has(item))entries.set(item,undefined);
   for(const key of seeds.keys())if(key.startsWith(`${holder}:`))entries.set(key.slice(holder.length+1),entries.get(key.slice(holder.length+1)));
   for(const r of promises){
    const item=r.resource??r.item??r.subject;
@@ -275,16 +305,16 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   return [id,days??householdBufferTarget(d,engine,planner,{incomeDays,risk:risk+incomeRisk,commonRisk,foodDays:nextFood===null?null:(nextFood-state.minute)/DAY}).days];
  }));
  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*horizons.get(id),...(view?{observer:owner,view}:{})}).value,0)]));
- // 单餐上限的池按这段时间的人·天数计：各人的预算天数之和。
- const personDays=[...horizons.values()].reduce((n,x)=>n+x,0);
- const baseline=rows.map(r=>({...r})),procurementShortfall=allocateMeals(baseline,needs,mealCapPools(engine,personDays));
+ // 单餐额度的池：现有累计额度 + 预算期内新增额度（各成员的预算天数），与日推进实际吃掉的量同一套（item-class.mealCapPools）。
+ const capDays=[...horizons.values()],newCaps=()=>{const c=mealCapPools(engine,{days:capDays,saved});for(const r of rows)if(r.stock>0)c.markHeld(r.item);return c;};
+ const baseline=rows.map(r=>({...r})),procurementShortfall=allocateMeals(baseline,needs,newCaps());
  // Shared food is allocated once in a stable order. My cash can release my
  // own retained goods, but cannot silently release another holder's reserve
  // by promising that I will feed them later. That requires an actual transfer.
- for(let i=0;i<rows.length;i++)if(rows[i].holder!==owner)rows[i].food=baseline[i].food;
- const caps=mealCapPools(engine,personDays);
- for(const r of rows)if(r.food>0)caps.take(r.item,r.food);
- const otherFood=Object.fromEntries(Object.keys(needs).map(need=>[need,rows.reduce((n,r)=>n+r.food*(r.definition?.nutrition?.[need]??0),0)]));
+ for(let i=0;i<rows.length;i++)if(rows[i].holder!==owner)Object.assign(rows[i],{food:baseline[i].food,eatMg:baseline[i].eatMg,fromOpen:baseline[i].fromOpen});
+ const caps=newCaps();
+ for(const r of rows)if(r.eatMg>0)caps.take(r.item,{eatMg:r.eatMg,fromOpen:r.fromOpen});
+ const otherFood=Object.fromEntries(Object.keys(needs).map(need=>[need,rows.reduce((n,r)=>n+credit(r,r.definition?.nutrition?.[need]??0),0)]));
  const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],nextFoodAt:nextFood};
  const maxDays=Math.max(0,...horizons.values());
  const deliveries=sources.flatMap(source=>{
@@ -302,14 +332,15 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   }));
   const wanted=Math.max(0,...Object.keys(needs).filter(n=>nutrition[n]>0).map(n=>Math.ceil(remaining[n]/nutrition[n])));
   const due=payments.filter(r=>r.resource===COIN&&r.at<=source.at).reduce((n,r)=>n+r.amount,0);
-  const money=Math.max(0,cash-due-market.spent),quantity=Math.min(wanted,Math.floor(source.quantity*Math.max(0,1-commonRisk)),Math.floor(money/source.unitPrice),caps.room(source.item));
+  const money=Math.max(0,cash-due-market.spent),quantity=Math.min(wanted,Math.floor(source.quantity*Math.max(0,1-commonRisk)),Math.floor(money/source.unitPrice),caps.unitsRoom(source.item,wait));
   if(!quantity)continue;
-  caps.take(source.item,quantity);
+  caps.take(source.item,{eatMg:quantity*itemMg(engine,source.item),start:wait});
   const cost=quantity*source.unitPrice;market.spent+=cost;
   for(const need of Object.keys(needs))market.coverage[need]+=Math.min(remaining[need],quantity*(nutrition[need]??0));
   market.purchases.push({...source,quantity,cost});
  }
  const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(needs).map(need=>[need,Math.max(0,needs[need]-market.coverage[need])])),caps);
+ {const bad=caps.violations();if(bad.length)throw Error(`单餐额度不变量被破坏：${bad.join('、')}`);}
  reserveUpkeep(engine,state,members,rows);
  // Cash-backed access is not a completed purchase. The real shopping
  // consumer still needs the goods missing from its current physical bags.

@@ -139,6 +139,7 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
  for(const p of plans){
   const consumed=[];
   for(const row of p.rows){
+   if(!(row.food>0))continue;// 只吃开封余量的行不动背包
    engine.itemDelta(d,row.holder,row.item,-row.food,{flow:'sink:consume',purpose:'meal',writer:'npc-life',eventId:`household-meal:${day}:${p.household??p.owner}`},{selection:row.selection});
    consumed.push({holder:row.holder,item:row.item,quantity:row.food});
   }
@@ -151,6 +152,9 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
    // append newly available receipts; its byte order must match a long wait.
    ...(p.supplied.sources.length?{sources:p.supplied.sources,sourceNutrition:nutrients(p.supplied.nutrition)}:{})};
   if(!canonicalEqual(p.previous,record))d.set(['state','family','meals',p.key],record);
+  // 单餐额度（item-class.mealCapPools）：吃完后的累计额度与开封余量写进存档，下一天接着用；与预算读的是同一个位置。
+  const capKey=['state','family','mealCap',p.key],capOld=d.get(...capKey),capNew=p.capState;
+  if(capNew&&!canonicalEqual(capOld??{allow:{},open:{}},capNew))d.set(capKey,capNew);
   householdUpkeep(d,engine,day,p);
  }
  for(const settlement of new Set(plans.map(p=>p.settlement??'unregistered')))d.set(['state','family','mealDays',settlement],day);
