@@ -1379,6 +1379,12 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 受影响：t-memo、t-mprod 建于 t-m2 旧版 dd9c1c91（含旧 metab），交回后先合入 t-m2 782cf3e7 再送审。
 - PT-AI 驱动 t-ptai cc41764f 已写好（只走玩家 HTTP 回合接口 execute 等白名单；轨迹 JSONL；单局/月度上限与只追加账本；密钥只读环境变量；离线测试用假 fetch），待两轮审与云上跑离线测试；单价为占位，需按价目表核。
 
+### 11-09 02:10 性能回退线索与在途
+- memo-1（t-memo 6488ad12，两轮 approve）云上剖析 F:/dnd-tmp/prof1/memo1-farm.out：每游戏日约 7.4 s（首/末 3 日 7885/7364 ms），比 prof-1（基于 t-b1m）的约 5.0 s 慢约 47%；readHouseholdResources 调用 130,807 次（prof-1 为 37,021，约 3.5 倍），marketSupply/route 次数不变。推断回退来自 t-m2 合入的 t-foodsrc（每户口粮预算对每个可达非店铺卖家读一次其家户资源）或 t-metab，不是 memo 本身——待证：m2-2 全量各文件耗时对照 b1m-1（m2-2 运行中，不能并跑剖析）。若确认，修 foodsrc/metab 的热路径后再合；memo 的收益要在同一底子上对比才算数。
+- PT-AI ptai-2 第一轮 changes（fetch 未设 redirect:'error' 可致密钥随重定向外泄；文件锁竞态/陈旧锁/Windows EPERM），已退回修。
+- MPROD 交回：数据覆盖层与 dry/shell 配方；退回两点——shell 产率/工时与 dry 产率借他物数值属拍系数，须由材料属性推导否则移出列缺口；需合入 t-m2 782cf3e7。
+- 李白要求的世界进度核查已按原记录回答（PT-AI E1–E4 原文 PLAN:1472 起；指南 v3 D 节路线；S5 收口未完成）。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
