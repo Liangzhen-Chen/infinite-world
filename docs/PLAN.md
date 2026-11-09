@@ -1592,6 +1592,7 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 待合入队列：t-metab 2c4e6ad2（含测试修正）、t-mprod 4dff5631、t-memo 6488ad12（性能存疑，待 m2-2 耗时对照）、t-ptai 055105ec（工具，不影响世界）。m2-2 全量结束后，按结果组下一轮合并候选。
 
 ### ★ 压缩恢复入口（11-09 04:20 写，压缩后先读本节）
+- 10:5x s5 回退分离完成：mprod-5（t-mprod，含 foodsrc 360565b3、无 hrmemo）3600s 超时；metab-13 762s/774s 15/0；rs2-2 超时。结论确定：口粮替代统一引起，物种代谢无关，怪物据点生产只因带着 foodsrc 才慢。剖析子测 8 的工具 pt-3（t-proft 1ead6d61）第一轮 approve（…104835Z-3241231），第二轮中。
 - 10:4x D12 卡 D md-6（ab9753fc，hash a4ec1221…）两轮 approve（r1 …103837Z-3206110、r2 …104153Z-3215650）。审查提示只留释义（"相差≤0.01 只报 soft"10:20 加、未用于任何调用；"核算无误不要输出"883fc8de 09:41 加、已删）。在后者提示下 passed：class_fruit（09:54 轮，HEAD 8252bd2f，确定）；class_nut、class_fish、item_dried_fruit（09:39 轮，HEAD f8b0d915 不含该句，工作区无法证明）。5 条人工核定统一标「人工核定、未经L2复审」，独立确认 independent-sonnet-mv1。verify 对 needsSystemicRepair 整项不查（第二轮论证不会漏放：manual 行不在核定表即 unresolved）。待李白：①人工核定不计入人工队列比例（及整项不查写法）；②balance-tables 测试接受 docs/决策.md 条目；③上述 4 条通过是否有效。未做：L4、verify。累计 34 次、0.1404 元。
 - s5-law-public-maintenance：基线子测 8「真实自治提案只押公共材料和工钱…同种子重放一致」单个 599 秒（其余 ≤64 秒），回退在此；hall/school 场景剖析每日 0.35–0.45 秒不慢。已加 scene=proposal（t-proft d72f1a99，pt-2），送审中；pt-1 上单跑该文件取逐子测耗时（后台 bw6lr7tcj）。
 - 10:3x s5-law-public-maintenance 回退结论：b1m-1 15/0 753s；metab-13（只物种代谢）15/0 774s、重跑 762s → 非代谢；rs2-2（foodsrc 360565b3+ff28b093+hrmemo+rscope2）3600s 超时；mprod-5（t-mprod，含 foodsrc 360565b3、不含 hrmemo）已跑 40 分钟未完；m2-2、m2-3 均超时。结论：回退来自口粮替代统一（foodsrc），hrmemo/rscope2 的规划期只读作用域未覆盖该文件路径（公共维修，候选相关性与执行路径在作用域外）。下一步：对该测试场景做剖析定位热点（需剖析工具支持测试场景，改工具两轮审），再整类修。m2-3（18:29）56/529、超时 11、3466 字节。
