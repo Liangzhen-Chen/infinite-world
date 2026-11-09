@@ -213,15 +213,28 @@ registerMerchandiseResolver((engine,state,who)=>(shopOfKeeper(engine,who,state)?
 // over the very reserves it is deciding. Maximum scarcity and price impact
 // bound the native retail formula; execution always obtains a fresh quote.
 const householdSourceReads=new WeakMap();
+// shop.location 缺省（非店铺卖家）= 第一个含 trade 的接待窗口在哪就在哪；店铺固定在自己的铺面。
 function nextFoodService(engine,state,shop,minute){
  for(let at=minute;at<minute+31*DAY;){
   const slot=facilityRuntime().scheduleAt?.(engine,shop.keeper,at,state);
   // A keeper without any authored schedule keeps the legacy always-open service.
-  if(!slot)return at===minute?{minute:at,location:shop.location}:null;
-  if(slot.location===shop.location&&slot.services?.includes('trade'))return {minute:at,location:slot.location};
+  if(!slot)return at===minute?{minute:at,location:shop.location??state.npcs?.[shop.keeper]?.location}:null;
+  if((shop.location===undefined||slot.location===shop.location)&&slot.services?.includes('trade'))return {minute:at,location:slot.location};
   at=slot.until;
  }
  return null;
+}
+// 提供交易服务但不是店铺的人（没有 shopType、也不是登记店主）：口粮替代同样可向他们买他们可出让的食物。
+// 名单只由世界定义决定，按 npcs 数组缓存；每次读只对这份名单（有交易服务的非店铺人物）逐个判聚落，不扫全体人物。
+const traderLists=new WeakMap();
+function nonShopTraders(engine){
+ const npcs=engine.world.npcs;let list=traderLists.get(npcs);
+ if(!list){
+  const keepers=new Set((engine.world.rules?.economy?.shops?.stores??[]).map(s=>s.keeper));
+  list=npcs.filter(n=>typeof n.shopType!=='string'&&!keepers.has(n.id)&&trades(n)).map(n=>n.id).sort();
+  traderLists.set(npcs,list);
+ }
+ return list;
 }
 registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const state=d.get('state'),now=state.minute,location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
@@ -288,6 +301,34 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    // stock purchase would count the same finite upstream goods twice. Only
    // the domain's regular local-production channel repeats in this forecast.
    out.push({source:shop.id,seller:shop.settlement,item:row.item,at,cycleDays:row.source==='local'?shop.cycleDays:null,quantity,unitPrice,priceBasis:last?.added?'observed-upstream-ceiling':'local-upstream-ceiling'});
+  }
+ }
+ // 非店铺的交易持有人：与店铺同一判定（本聚落、路程在 customerReachMinutes 内、对方营业窗口内、排除自己与同户成员），
+ // 数量取其可出让存量。读卖家存量用 marketSubstitution:false（不含市场替代）：买方户的口粮预留要读卖家的 available，
+ // 若卖家的 available 又去读市场替代，就会回头读到买方，递归；店铺分支同理。无补货周期（cycleDays:0）。
+ // 主观视图只认收到的报价，与店铺一致，不读他人私有存量。复杂度：O(本聚落内有交易服务的非店铺人物 × 其食物行)，名单随世界定义缓存。
+ if(!view){
+  const taken=new Set(read.shops.map(s=>s.keeper));
+  for(const id of nonShopTraders(engine)){
+   if(id===owner||members.includes(id)||taken.has(id))continue;
+   const npc=state.npcs?.[id];
+   if(!npc||!isEffective(engine,state,id)||['死亡','濒死','昏迷'].includes(npc.status))continue;
+   const trader={keeper:id},first=nextFoodService(engine,state,trader,now);
+   if(!first||placeSettlement(engine,state,first.location).value!==place)continue;
+   let travel=0;
+   if(location!==first.location){try{travel=engine.route(location,first.location,'walk',now,d.document.randomSeed).minutes;}catch{continue;}}
+   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine))continue;
+   const opening=nextFoodService(engine,state,{keeper:id,location:first.location},now+travel);
+   if(!opening||opening.location!==first.location)continue;
+   let physical=read.physical.get(id);
+   if(!physical){physical=householdResources(d,engine,id,{marketSubstitution:false});read.physical.set(id,physical);}
+   const business={keeper:id,markup:1},at=Math.max(opening.minute,now+travel);
+   for(const row of physical.rows){
+    if(row.holder!==id||!(engine.byId.get(row.item)?.nutrition?.satiety>0)||!(row.available>0))continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
+    const base=regionalTradeBase(d,engine,row.item,place,now);
+    const quote=marketQuote(d,engine,{item:row.item,location:first.location,seller:id,buyer:owner,business,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place,goods:goodsClass(engine,row.item),supply:0,demand:1}});
+    out.push({source:`trader_${id}`,seller:id,item:row.item,at,cycleDays:0,quantity:row.available,unitPrice:Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact))),priceBasis:'local-retail-ceiling'});
+   }
   }
  }
  // A subjective planner may use a received, still-valid offer, not another
