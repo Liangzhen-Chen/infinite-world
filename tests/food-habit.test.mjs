@@ -5,7 +5,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
-import {purse as purseOf} from '../server-plugin/money.mjs';
+import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {foodHabit} from '../server-plugin/food-habit.mjs';
 import {poorLuxuryShare} from '../tools/audit-food-habit.mjs';
 
@@ -66,15 +66,17 @@ test('p is the share of local households whose cash budget covers the price; the
  assert.ok(sub(poor,100)>0);
 });
 
-test('a multi-member household pools its members cash for p, the luxury judgement and the subjective view alike',()=>{
- // 22 + 22：单人现金 22×0.25=5.5 < 9（奢侈），合计 44×0.25=11 ≥ 9（日常）。
- const f=fixture({sellers:1,cash:22,bCash:22});
- const g=e=>e.d,src=[{item,seller:'x',unitPrice:9,quantity:1},{item,seller:'y',unitPrice:9,quantity:1}];
- const one=fixture({sellers:1,cash:22});
- const pooled=foodHabit(g(f),f.e,A,src).sources,single=foodHabit(g(one),one.e,A,src).sources;
- assert.ok(single.every(s=>s.luxury)&&pooled.every(s=>!s.luxury),'objective path pools B into the household');
- const view={observer:A,self:{location:home,coins:22,accounts:{[purseOf(f.e,B)]:{balance:22}}}};
- assert.ok(foodHabit(g(f),f.e,A,src,{view}).sources.every(s=>!s.luxury),'subjective path pools visible member accounts');
+test('multi-member household: the own wallet decides the in-household judgement on both paths; p varies with neighbours only on the objective path',()=>{
+ // A 20、B 30：本人钱包 20×0.25=5 < 8/10/12，户内判定一律奢侈；户合计 50 不参与户内判定。两条路径（view 用生产的 subjectiveView）一致。
+ const f=fixture({sellers:1,cash:20,bCash:30}),prices=[8,10,12],src=prices.map((unitPrice,i)=>({item,seller:'x'+i,unitPrice,quantity:1}));
+ const view=subjectiveView(f.e,f.doc,A);
+ const obj=foodHabit(f.d,f.e,A,src).sources,sub=foodHabit(f.d,f.e,A,src,{view}).sources;
+ assert.deepEqual(obj.map(s=>s.luxury),[true,true,true]);
+ assert.deepEqual(sub.map(s=>s.luxury),obj.map(s=>s.luxury),'objective and view agree on the own-wallet judgement');
+ assert.equal(foodHabit(f.d,f.e,A,src).rich,foodHabit(f.d,f.e,A,src,{view}).rich);
+ // 本人钱包够（60×0.25=15 ≥ 12）：两条路径都判日常，与 B 的钱无关。
+ const g=fixture({sellers:1,cash:60,bCash:0}),gv=subjectiveView(g.e,g.doc,A);
+ assert.ok(foodHabit(g.d,g.e,A,src).sources.every(s=>!s.luxury)&&foodHabit(g.d,g.e,A,src,{view:gv}).sources.every(s=>!s.luxury));
 });
 
 test('household purchase planning with habit is deterministic',()=>{

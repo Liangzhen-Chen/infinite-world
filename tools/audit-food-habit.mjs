@@ -1,16 +1,11 @@
 // 回归守护：贫户（本聚落户现金分位 ≤ poorQuantile 的户）在预算期内的市场替代购买里，奢侈来源（food-habit 的惯常性判定，不按物品名）的花费占比（只统计有日常来源可买的户；只有奢侈来源时补缺口的购买不计）不超过规则表 foodHabit.poorPurchaseLuxuryShareMax。
 // 只读：对每户调用 householdResources，不推进、不写状态。
 import {householdResources} from '../server-plugin/household-budget.mjs';
-import {coinRead,purse} from '../server-plugin/money.mjs';
-import {placeSettlement} from '../server-plugin/entity-view.mjs';
+import {localHouseholds} from '../server-plugin/food-habit.mjs';
 
 export function poorLuxuryShare(engine,doc,{poorQuantile=0.5}={}){
- const d=engine.primitiveDraft(doc),state=doc.state,max=engine.world.marketRules.foodHabit?.poorPurchaseLuxuryShareMax??1;
- const rows=[];
- for(const h of engine.world.households){
-  const id=h.members.find(m=>state.npcs?.[m]?.location);if(!id)continue;
-  rows.push({household:h.id,owner:id,place:placeSettlement(engine,state,state.npcs[id].location).value,cash:h.members.reduce((n,m)=>n+coinRead(d,{point:'assets.cash',account:purse(engine,m),legacy:()=>state.npcs?.[m]?.coins??0}),0)});
- }
+ const d=engine.primitiveDraft(doc),max=engine.world.marketRules.foodHabit?.poorPurchaseLuxuryShareMax??1;
+ const rows=localHouseholds(d,engine);// 与 foodHabit 同一份成员集合与现金
  const cut=new Map();
  for(const place of new Set(rows.map(r=>r.place))){
   const cash=rows.filter(r=>r.place===place).map(r=>r.cash).sort((a,b)=>a-b);
