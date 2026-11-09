@@ -11,6 +11,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {transfer,declareLedgerWriter,emptyLedger,auditLedger,ledgerWriters,reviseLots,lotAccount,parseAccount,isSource} from '../server-plugin/ledger.mjs';
+import {failureRecover,refundCount} from '../server-plugin/manufacturing.mjs';
 import {bag,granary,seedBank,itemResource,legacyStock,LOT_PURPOSES,bookStock,BOOKED,bookedBy} from '../server-plugin/stock.mjs';
 import {reconcile,eventDiscrepancies,conservation} from './helpers/ledger-audit.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
@@ -132,7 +133,9 @@ function checkCrafts(c){
         assert.deepEqual(x.inputs,inputs,`${x.recipe} 投入 = 配方投入`);
         const cap={[recipe.output.item]:recipe.output.quantity*x.batches};
         for(const b of recipe.byproducts??[])cap[b.item]=(cap[b.item]??0)+b.amount*x.batches;
-        for(const m of recipe.materials)cap[m.item]=Math.max(cap[m.item]??0,Math.floor(m.amount*x.batches*(recipe.failure?.recoverFraction??0)));
+        // 失败退料上限按凭据记的失败类别，用引擎同一条退料规则推出（无类别=成功，无退料）。
+        if(x.failure){const rule=failureRecover(c.engine,x.failure,recipe.failure?.recoverFraction??0);
+            for(const m of recipe.materials)cap[m.item]=Math.max(cap[m.item]??0,refundCount(m.amount*x.batches,rule));}
         for(const [item,n] of Object.entries(x.outputs))assert.ok(n<=(cap[item]??0),`${x.recipe} 产出 ${item} ${n} 不超过配方`);
     }
 }
