@@ -1,5 +1,5 @@
 {
-  "spentYuan": 0.14799487999999997,
+  "spentYuan": 0.20702464,
   "reservedYuan": 0,
   "limitYuan": 20,
   "note": "D12 卡 D 材料属性 L2：卡 D12-MATPROPS 单卡上限 1.5 元（亮圳批准，仅本轮），最多 40 次调用；超出即停并写 budgetStop。",
@@ -7,9 +7,9 @@
   "cards": {
     "D12-MATPROPS": {
       "limitYuan": 1.5,
-      "spentYuan": 0.14799487999999997,
+      "spentYuan": 0.20702464,
       "reservedYuan": 0,
-      "maxRequests": 40
+      "maxRequests": 60
     }
   },
   "requests": {
@@ -1196,7 +1196,696 @@
         "latencyMs": 1503.8810999999996,
         "timestamp": "2026-11-09T11:14:21.150Z"
       }
+    },
+    "fc768f99-a9f1-4ebd-931a-520464e09e47": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_timber-review0",
+      "requestHash": "ef1a6fe5102055dae9a7dc5b6cc1b8aaad99a22f5fd959ec88eb9f0cc9945f77",
+      "reservedYuan": 0.018722,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/fc768f99-a9f1-4ebd-931a-520464e09e47.json",
+        "requestHash": "ef1a6fe5102055dae9a7dc5b6cc1b8aaad99a22f5fd959ec88eb9f0cc9945f77",
+        "responseHash": "6897c9dd380d12db31bb67d1c0124cdd932a7a82df67de2d14a5dcbb9f66b063"
+      },
+      "costUpperYuan": 0.00186024,
+      "measurement": {
+        "label": "content-review-2-class_timber-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1153,
+          "completion_tokens": 7,
+          "total_tokens": 1160,
+          "prompt_tokens_details": {
+            "cached_tokens": 256
+          },
+          "prompt_cache_hit_tokens": 256,
+          "prompt_cache_miss_tokens": 897
+        },
+        "costUpperYuan": 0.00186024,
+        "cumulativeUpperYuan": 0.14985511999999998,
+        "latencyMs": 1009.2259000000001,
+        "timestamp": "2026-11-09T12:25:39.595Z"
+      }
+    },
+    "f87364d2-fe3c-4131-9066-ff3c107679fd": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_wood-review0",
+      "requestHash": "4298f66519a5a979833a568d08ac1e2a7d627c97f0b971aba9477612501bcd47",
+      "reservedYuan": 0.023534,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f87364d2-fe3c-4131-9066-ff3c107679fd.json",
+        "requestHash": "4298f66519a5a979833a568d08ac1e2a7d627c97f0b971aba9477612501bcd47",
+        "responseHash": "dbc8096f25aaf0ede6e894ed6d8d30368ade5d5870f76d70083b97385cf3f6a5"
+      },
+      "costUpperYuan": 0.0030573600000000003,
+      "measurement": {
+        "label": "content-review-2-class_wood-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1877,
+          "completion_tokens": 7,
+          "total_tokens": 1884,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 1493
+        },
+        "costUpperYuan": 0.0030573600000000003,
+        "cumulativeUpperYuan": 0.15291248,
+        "latencyMs": 801.4767999999999,
+        "timestamp": "2026-11-09T12:25:40.421Z"
+      }
+    },
+    "0a4f1c0c-04fa-472c-bafc-6fae88da07d2": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_carbon-review0",
+      "requestHash": "dac1f97615f0c5354fad6b3cecf4f175cfc2d1098f9ec8fb447ea6a9a8a25cc9",
+      "reservedYuan": 0.01761,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0a4f1c0c-04fa-472c-bafc-6fae88da07d2.json",
+        "requestHash": "dac1f97615f0c5354fad6b3cecf4f175cfc2d1098f9ec8fb447ea6a9a8a25cc9",
+        "responseHash": "d049b20aa0bfb6496027b5c2aaf2e380cafa44b07d55c3af252d74f1fecdd31d"
+      },
+      "costUpperYuan": 0.0012913599999999999,
+      "measurement": {
+        "label": "content-review-2-class_carbon-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 994,
+          "completion_tokens": 7,
+          "total_tokens": 1001,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 610
+        },
+        "costUpperYuan": 0.0012913599999999999,
+        "cumulativeUpperYuan": 0.15420383999999998,
+        "latencyMs": 1044.2642999999998,
+        "timestamp": "2026-11-09T12:25:41.493Z"
+      }
+    },
+    "82229a4c-4732-42a6-b516-1a93223da592": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_mushroom-review0",
+      "requestHash": "bfa63cfbcbaf4097a3dfd8b4ff96c63bb451b82c97f3fe5f448cc09ed26c0c92",
+      "reservedYuan": 0.017916,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/82229a4c-4732-42a6-b516-1a93223da592.json",
+        "requestHash": "bfa63cfbcbaf4097a3dfd8b4ff96c63bb451b82c97f3fe5f448cc09ed26c0c92",
+        "responseHash": "ddba0fcf5c0ff20cfb1817c6554357b85fb29e723ebe290e1c1acf8b90e0e05c"
+      },
+      "costUpperYuan": 0.0029313599999999996,
+      "measurement": {
+        "label": "content-review-2-class_mushroom-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1018,
+          "completion_tokens": 206,
+          "total_tokens": 1224,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 634
+        },
+        "costUpperYuan": 0.0029313599999999996,
+        "cumulativeUpperYuan": 0.15713519999999997,
+        "latencyMs": 1838.3811000000005,
+        "timestamp": "2026-11-09T12:25:43.357Z"
+      }
+    },
+    "74a8c324-b1d9-4f63-bb14-d2901f77df81": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_nut-review0",
+      "requestHash": "40e25ac3f85a48c13459a4e78d3265e867c9b22f26fc213fc20f1baa2cf1e6c6",
+      "reservedYuan": 0.017914,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/74a8c324-b1d9-4f63-bb14-d2901f77df81.json",
+        "requestHash": "40e25ac3f85a48c13459a4e78d3265e867c9b22f26fc213fc20f1baa2cf1e6c6",
+        "responseHash": "f6f3f4b47c8580224c24f9947abddf174f3eba1361a5795dffb49e54e2e8ddc9"
+      },
+      "costUpperYuan": 0.00137736,
+      "measurement": {
+        "label": "content-review-2-class_nut-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1037,
+          "completion_tokens": 7,
+          "total_tokens": 1044,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 653
+        },
+        "costUpperYuan": 0.00137736,
+        "cumulativeUpperYuan": 0.15851255999999997,
+        "latencyMs": 979.6082999999999,
+        "timestamp": "2026-11-09T12:25:44.366Z"
+      }
+    },
+    "3937ee7e-2819-4250-87a6-0fe44f1be7de": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_fruit-review0",
+      "requestHash": "fa7c2905c383899abb1ebdcbc73c3417da7758e420d6b70fb08bd82a7c2047ff",
+      "reservedYuan": 0.019004,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/3937ee7e-2819-4250-87a6-0fe44f1be7de.json",
+        "requestHash": "fa7c2905c383899abb1ebdcbc73c3417da7758e420d6b70fb08bd82a7c2047ff",
+        "responseHash": "886e6ae6bbfb8700e51222cb825944dd2c3fdef7405bc57108d23c31dfb2dc64"
+      },
+      "costUpperYuan": 0.0029053599999999996,
+      "measurement": {
+        "label": "content-review-2-class_fruit-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1193,
+          "completion_tokens": 159,
+          "total_tokens": 1352,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 809
+        },
+        "costUpperYuan": 0.0029053599999999996,
+        "cumulativeUpperYuan": 0.16141791999999996,
+        "latencyMs": 2004.6845000000003,
+        "timestamp": "2026-11-09T12:25:46.405Z"
+      }
+    },
+    "c9e1f1aa-0c22-4150-9a20-2b3ebf1312c3": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_fruit-review1",
+      "requestHash": "fa7c2905c383899abb1ebdcbc73c3417da7758e420d6b70fb08bd82a7c2047ff",
+      "reservedYuan": 0.019004,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c9e1f1aa-0c22-4150-9a20-2b3ebf1312c3.json",
+        "requestHash": "fa7c2905c383899abb1ebdcbc73c3417da7758e420d6b70fb08bd82a7c2047ff",
+        "responseHash": "0f9e6078994308a9ac6789e6d28b6e6ccc69985057438f9d438dcd126b838cf8"
+      },
+      "costUpperYuan": 0.00250696,
+      "measurement": {
+        "label": "content-review-2-class_fruit-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1193,
+          "completion_tokens": 266,
+          "total_tokens": 1459,
+          "prompt_tokens_details": {
+            "cached_tokens": 1024
+          },
+          "prompt_cache_hit_tokens": 1024,
+          "prompt_cache_miss_tokens": 169
+        },
+        "costUpperYuan": 0.00250696,
+        "cumulativeUpperYuan": 0.16392487999999997,
+        "latencyMs": 2468.9601000000002,
+        "timestamp": "2026-11-09T12:25:48.903Z"
+      }
+    },
+    "8250bc9f-2370-49d6-a6a2-f7bb842e8e16": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_vegetable-review0",
+      "requestHash": "74762922aad9be433b868e4e116d0f2172ca0ab8c4e14a7c1a5c11cd4d3fd965",
+      "reservedYuan": 0.020618,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/8250bc9f-2370-49d6-a6a2-f7bb842e8e16.json",
+        "requestHash": "74762922aad9be433b868e4e116d0f2172ca0ab8c4e14a7c1a5c11cd4d3fd965",
+        "responseHash": "5aa3fa3eacd3a41e9d9d14bf5561a7e58ba6360c3a4454f0eafe5cbe92fa0c61"
+      },
+      "costUpperYuan": 0.00321536,
+      "measurement": {
+        "label": "content-review-2-class_vegetable-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1420,
+          "completion_tokens": 141,
+          "total_tokens": 1561,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 1036
+        },
+        "costUpperYuan": 0.00321536,
+        "cumulativeUpperYuan": 0.16714023999999997,
+        "latencyMs": 1911.7621999999992,
+        "timestamp": "2026-11-09T12:25:50.845Z"
+      }
+    },
+    "25ea41dc-9f80-4289-b0e6-1069470e519f": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_legume-review0",
+      "requestHash": "360f8ee1224bba7f59d6306c150ec04c3f03e6637573a71fec662d2a9a3bc581",
+      "reservedYuan": 0.01851,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/25ea41dc-9f80-4289-b0e6-1069470e519f.json",
+        "requestHash": "360f8ee1224bba7f59d6306c150ec04c3f03e6637573a71fec662d2a9a3bc581",
+        "responseHash": "f08934cf03a89db2b5d3fd43d3e85cbba65b0cc03cff1a71ff04847acb5a02c5"
+      },
+      "costUpperYuan": 0.00156136,
+      "measurement": {
+        "label": "content-review-2-class_legume-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1129,
+          "completion_tokens": 7,
+          "total_tokens": 1136,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 745
+        },
+        "costUpperYuan": 0.00156136,
+        "cumulativeUpperYuan": 0.16870159999999998,
+        "latencyMs": 1183.1666000000005,
+        "timestamp": "2026-11-09T12:25:52.054Z"
+      }
+    },
+    "66f40ac1-88f9-4728-9f9a-1ae656fd7cc5": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_grain-review0",
+      "requestHash": "91e2972e72728b397deca8c9ea3c2610061098d9c25d3edc261697b36a7cfafa",
+      "reservedYuan": 0.019458,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/66f40ac1-88f9-4728-9f9a-1ae656fd7cc5.json",
+        "requestHash": "91e2972e72728b397deca8c9ea3c2610061098d9c25d3edc261697b36a7cfafa",
+        "responseHash": "67c5ea667f8d05b287b229b43bc19e2963bd42b360464ac02746b131f3bf050e"
+      },
+      "costUpperYuan": 0.0034693599999999995,
+      "measurement": {
+        "label": "content-review-2-class_grain-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1259,
+          "completion_tokens": 213,
+          "total_tokens": 1472,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 875
+        },
+        "costUpperYuan": 0.0034693599999999995,
+        "cumulativeUpperYuan": 0.17217095999999998,
+        "latencyMs": 2219.0840000000007,
+        "timestamp": "2026-11-09T12:25:54.300Z"
+      }
+    },
+    "1fd857d6-8489-44dc-a432-40aec6069383": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_meat-review0",
+      "requestHash": "db35e6c99ab3adb581bc4c6ba15689589208def95b203108ca802cb5e2e60363",
+      "reservedYuan": 0.018512,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1fd857d6-8489-44dc-a432-40aec6069383.json",
+        "requestHash": "db35e6c99ab3adb581bc4c6ba15689589208def95b203108ca802cb5e2e60363",
+        "responseHash": "0f1c3f2732f67d02faf9555ef0ff8fb24350ec1a95fde19a8815195090b5fb46"
+      },
+      "costUpperYuan": 0.00474736,
+      "measurement": {
+        "label": "content-review-2-class_meat-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1126,
+          "completion_tokens": 406,
+          "total_tokens": 1532,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 742
+        },
+        "costUpperYuan": 0.00474736,
+        "cumulativeUpperYuan": 0.17691832,
+        "latencyMs": 3049.6644000000015,
+        "timestamp": "2026-11-09T12:25:57.382Z"
+      }
+    },
+    "41f546ca-e36b-4cab-8912-3fecf357e0b0": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_fish-review0",
+      "requestHash": "d52760c4fd033ab057286ff37d601a4991b16be97cda4e054177f4052a20d218",
+      "reservedYuan": 0.018248,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/41f546ca-e36b-4cab-8912-3fecf357e0b0.json",
+        "requestHash": "d52760c4fd033ab057286ff37d601a4991b16be97cda4e054177f4052a20d218",
+        "responseHash": "91e91fd472d7eaa31a8061d4010b97a985cb66189ee13db62700163fee9a2da4"
+      },
+      "costUpperYuan": 0.0029713599999999997,
+      "measurement": {
+        "label": "content-review-2-class_fish-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1074,
+          "completion_tokens": 197,
+          "total_tokens": 1271,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 690
+        },
+        "costUpperYuan": 0.0029713599999999997,
+        "cumulativeUpperYuan": 0.17988968,
+        "latencyMs": 1690.5541999999987,
+        "timestamp": "2026-11-09T12:25:59.100Z"
+      }
+    },
+    "d9538e7a-1118-4e7b-b1ec-ca84efeea7e0": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_egg-review0",
+      "requestHash": "fd46df2d3c494f8916f69bbb05917917e32d7f5ccc1009dfea8f117e750b1646",
+      "reservedYuan": 0.018352,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d9538e7a-1118-4e7b-b1ec-ca84efeea7e0.json",
+        "requestHash": "fd46df2d3c494f8916f69bbb05917917e32d7f5ccc1009dfea8f117e750b1646",
+        "responseHash": "b2510c2523a6349029520aeb2fb25894c6ab8aba31e6ec7820a0ba308ae3f99a"
+      },
+      "costUpperYuan": 0.0034433599999999995,
+      "measurement": {
+        "label": "content-review-2-class_egg-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1106,
+          "completion_tokens": 248,
+          "total_tokens": 1354,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 722
+        },
+        "costUpperYuan": 0.0034433599999999995,
+        "cumulativeUpperYuan": 0.18333304,
+        "latencyMs": 2035.7972999999984,
+        "timestamp": "2026-11-09T12:26:01.164Z"
+      }
+    },
+    "4736c35e-9957-4f47-86cb-c3d96d9b0869": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-class_milk-review0",
+      "requestHash": "5e9e1867ef3a297e84138a0addfe80cb7120451346eb3b6b4d91e15f0a30ae2d",
+      "reservedYuan": 0.01851,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/4736c35e-9957-4f47-86cb-c3d96d9b0869.json",
+        "requestHash": "5e9e1867ef3a297e84138a0addfe80cb7120451346eb3b6b4d91e15f0a30ae2d",
+        "responseHash": "d622e6bd517ec8b2fa2905cfb4cb4f2fb97c1e1ccb8677171dfff29e9d29d3a1"
+      },
+      "costUpperYuan": 0.0028893599999999997,
+      "measurement": {
+        "label": "content-review-2-class_milk-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1125,
+          "completion_tokens": 174,
+          "total_tokens": 1299,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 741
+        },
+        "costUpperYuan": 0.0028893599999999997,
+        "cumulativeUpperYuan": 0.1862224,
+        "latencyMs": 2090.420100000003,
+        "timestamp": "2026-11-09T12:26:03.284Z"
+      }
+    },
+    "7ecd623d-d0f3-4687-b9e6-3352448740d2": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-item_dry_mushroom-review0",
+      "requestHash": "1d9e39e23be8342c19d510b0ae354ff055de16642df1772df9316e46f4002aac",
+      "reservedYuan": 0.019562,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7ecd623d-d0f3-4687-b9e6-3352448740d2.json",
+        "requestHash": "1d9e39e23be8342c19d510b0ae354ff055de16642df1772df9316e46f4002aac",
+        "responseHash": "e5b46d61ca7f1d716c7471f2acef1a7815d8b9f02028c5849a4e75bed89fa349"
+      },
+      "costUpperYuan": 0.0028893599999999997,
+      "measurement": {
+        "label": "content-review-2-item_dry_mushroom-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1233,
+          "completion_tokens": 147,
+          "total_tokens": 1380,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 849
+        },
+        "costUpperYuan": 0.0028893599999999997,
+        "cumulativeUpperYuan": 0.18911176000000002,
+        "latencyMs": 1781.4314000000013,
+        "timestamp": "2026-11-09T12:26:05.093Z"
+      }
+    },
+    "babea377-2521-47bb-8fc8-e52ecbb1f278": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-item_parsnip-review0",
+      "requestHash": "7e9452c54e4ef0d5f876a145c5ca6e3b03420ffe56377c67f898a2e8ac419b02",
+      "reservedYuan": 0.020454,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/babea377-2521-47bb-8fc8-e52ecbb1f278.json",
+        "requestHash": "7e9452c54e4ef0d5f876a145c5ca6e3b03420ffe56377c67f898a2e8ac419b02",
+        "responseHash": "f3cbf227615ab981e8fd743100dca2ddc784b7d0d1fcf1fc1cf99344def11c07"
+      },
+      "costUpperYuan": 0.00332536,
+      "measurement": {
+        "label": "content-review-2-item_parsnip-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1367,
+          "completion_tokens": 168,
+          "total_tokens": 1535,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 983
+        },
+        "costUpperYuan": 0.00332536,
+        "cumulativeUpperYuan": 0.19243712000000002,
+        "latencyMs": 1647.636400000003,
+        "timestamp": "2026-11-09T12:26:06.770Z"
+      }
+    },
+    "0362624e-3d39-4a64-9e3d-a9b2166b1625": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-item_leek-review0",
+      "requestHash": "8de18ec3d126b1b0e3ca78707da379a6db57b45aaf78edd98fdb2833110b0982",
+      "reservedYuan": 0.020518,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0362624e-3d39-4a64-9e3d-a9b2166b1625.json",
+        "requestHash": "8de18ec3d126b1b0e3ca78707da379a6db57b45aaf78edd98fdb2833110b0982",
+        "responseHash": "9829861a3a70b792a613e2a9fcdfc1649c5d6420b1693e21fa2e145a17f786bf"
+      },
+      "costUpperYuan": 0.0033073599999999996,
+      "measurement": {
+        "label": "content-review-2-item_leek-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1386,
+          "completion_tokens": 161,
+          "total_tokens": 1547,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 1002
+        },
+        "costUpperYuan": 0.0033073599999999996,
+        "cumulativeUpperYuan": 0.19574448000000003,
+        "latencyMs": 2010.9980000000032,
+        "timestamp": "2026-11-09T12:26:08.814Z"
+      }
+    },
+    "35d62b01-f7fd-4ed1-b775-f6ef9aa04dd4": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-item_garlic-review0",
+      "requestHash": "7a69030ea9a382780706ac0d5644aef2601ad894a938891d8ab98fbfc2091be1",
+      "reservedYuan": 0.02033,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/35d62b01-f7fd-4ed1-b775-f6ef9aa04dd4.json",
+        "requestHash": "7a69030ea9a382780706ac0d5644aef2601ad894a938891d8ab98fbfc2091be1",
+        "responseHash": "b6b063bb41db86bd8eade55b7539c993fc7cbeeaaf83605df8689a52eac89217"
+      },
+      "costUpperYuan": 0.0033493599999999996,
+      "measurement": {
+        "label": "content-review-2-item_garlic-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1355,
+          "completion_tokens": 174,
+          "total_tokens": 1529,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 971
+        },
+        "costUpperYuan": 0.0033493599999999996,
+        "cumulativeUpperYuan": 0.19909384000000002,
+        "latencyMs": 1806.1913999999997,
+        "timestamp": "2026-11-09T12:26:10.651Z"
+      }
+    },
+    "d4bf10ab-ba66-42e5-a787-290320419d80": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-item_garlic-review1",
+      "requestHash": "7a69030ea9a382780706ac0d5644aef2601ad894a938891d8ab98fbfc2091be1",
+      "reservedYuan": 0.02033,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/d4bf10ab-ba66-42e5-a787-290320419d80.json",
+        "requestHash": "7a69030ea9a382780706ac0d5644aef2601ad894a938891d8ab98fbfc2091be1",
+        "responseHash": "4612ccb9deae3cff2fa89ff84df2eea41b6215a2e5d49b37c638afea91d51b0e"
+      },
+      "costUpperYuan": 0.00128408,
+      "measurement": {
+        "label": "content-review-2-item_garlic-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1355,
+          "completion_tokens": 104,
+          "total_tokens": 1459,
+          "prompt_tokens_details": {
+            "cached_tokens": 1152
+          },
+          "prompt_cache_hit_tokens": 1152,
+          "prompt_cache_miss_tokens": 203
+        },
+        "costUpperYuan": 0.00128408,
+        "cumulativeUpperYuan": 0.20037792000000001,
+        "latencyMs": 1278.3812000000034,
+        "timestamp": "2026-11-09T12:26:11.962Z"
+      }
+    },
+    "5a294b5d-b6c5-41b4-abb2-fc1d4963f3c6": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-item_oats-review0",
+      "requestHash": "f54fc40276af21c63667905bc82248cf7cae1148f13f0862c815b4ed13210027",
+      "reservedYuan": 0.020394,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/5a294b5d-b6c5-41b4-abb2-fc1d4963f3c6.json",
+        "requestHash": "f54fc40276af21c63667905bc82248cf7cae1148f13f0862c815b4ed13210027",
+        "responseHash": "7158ea563b39892df5d3c364a241ead5993abc86da698b8f4cc84c045f119089"
+      },
+      "costUpperYuan": 0.0033833599999999998,
+      "measurement": {
+        "label": "content-review-2-item_oats-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1376,
+          "completion_tokens": 173,
+          "total_tokens": 1549,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 992
+        },
+        "costUpperYuan": 0.0033833599999999998,
+        "cumulativeUpperYuan": 0.20376128000000002,
+        "latencyMs": 1853.4832999999999,
+        "timestamp": "2026-11-09T12:26:13.841Z"
+      }
+    },
+    "fbd281d2-b500-4753-8dc3-9fcdc54e2f28": {
+      "card": "D12-MATPROPS",
+      "label": "content-review-2-item_dried_fruit-review0",
+      "requestHash": "1a13f24b6f8bd8c978383e97d994efd56b4ce7a690a8d21ae9d087722ae10825",
+      "reservedYuan": 0.020494,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/fbd281d2-b500-4753-8dc3-9fcdc54e2f28.json",
+        "requestHash": "1a13f24b6f8bd8c978383e97d994efd56b4ce7a690a8d21ae9d087722ae10825",
+        "responseHash": "e3f181de2a1dc7635e81aeaaae344385ebd60b7d6aa6e8408e37679399c3d281"
+      },
+      "costUpperYuan": 0.00326336,
+      "measurement": {
+        "label": "content-review-2-item_dried_fruit-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1384,
+          "completion_tokens": 156,
+          "total_tokens": 1540,
+          "prompt_tokens_details": {
+            "cached_tokens": 384
+          },
+          "prompt_cache_hit_tokens": 384,
+          "prompt_cache_miss_tokens": 1000
+        },
+        "costUpperYuan": 0.00326336,
+        "cumulativeUpperYuan": 0.20702464,
+        "latencyMs": 1560.0126000000018,
+        "timestamp": "2026-11-09T12:26:15.431Z"
+      }
     }
   },
-  "historicalUnallocatedSpentYuan": 0
+  "historicalUnallocatedSpentYuan": 0,
+  "authorizations": [
+    {
+      "id": "d12-matprops-2-maxrequests-60",
+      "source": "亮圳 2026-11-09 12:11 批准、李白同意：D 卡整类修复后每条再审 1 次，maxRequests 40→60，limitYuan 仍 1.5 元，只限这一轮",
+      "before": {
+        "maxRequests": 40,
+        "limitYuan": 1.5,
+        "spentYuan": 0.14799487999999997,
+        "requests": 37
+      },
+      "after": {
+        "maxRequests": 60,
+        "limitYuan": 1.5
+      },
+      "at": "2026-11-09T12:25:38.546Z"
+    }
+  ]
 }

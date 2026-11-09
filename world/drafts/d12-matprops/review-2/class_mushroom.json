@@ -1,0 +1,111 @@
+{
+  "id": "class_mushroom",
+  "fingerprint": "2c07498534ffae6beca3d1afffbeabe9898cc2c63f7039c209ab56bc76e9b4c0",
+  "status": "manual",
+  "attempts": 0,
+  "draft": {
+    "id": "class_mushroom",
+    "row": {
+      "sources": [
+        {
+          "name": "白蘑菇",
+          "citation": "USDA FoodData Central 白蘑菇生",
+          "moistureFraction": 0.925,
+          "kcalPer100gWet": 22
+        },
+        {
+          "name": "鲜香菇",
+          "citation": "USDA FoodData Central 香菇生",
+          "moistureFraction": 0.897,
+          "kcalPer100gWet": 34
+        }
+      ],
+      "selection": {
+        "method": "representative",
+        "representative": "白蘑菇",
+        "reason": "世界里的蘑菇是栽培菇，取白蘑菇为代表，鲜香菇作对照"
+      },
+      "basis": "食用菇，新鲜状态；干制品在物品行覆盖含水率。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "白蘑菇 moistureFraction 0.925, kcalPer100gWet 22",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "USDA 白蘑菇生含水约0.92、22 kcal/100g 合理，但数值凭记忆未核对，出处无法确认"
+      },
+      {
+        "quote": "鲜香菇 moistureFraction 0.897, kcalPer100gWet 34",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "香菇生 USDA 约34 kcal/100g、含水约0.90，数值合理但未核对，出处无法确认"
+      },
+      {
+        "quote": "derived energyDensity 122",
+        "field": "energyDensity",
+        "severity": "hard",
+        "reason": "22×10÷(1−0.925)÷24=122.2 取整应为122，算式一致；但代表法只取白蘑菇，香菇对照未参与，属说明性非错。改报：算式正确无矛盾"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "derived energyDensity 122",
+      "field": "energyDensity",
+      "severity": "hard",
+      "reason": "22×10÷(1−0.925)÷24=122.2 取整应为122，算式一致；但代表法只取白蘑菇，香菇对照未参与，属说明性非错。改报：算式正确无矛盾"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "白蘑菇 moistureFraction 0.925, kcalPer100gWet 22",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "USDA 白蘑菇生含水约0.92、22 kcal/100g 合理，但数值凭记忆未核对，出处无法确认"
+    },
+    {
+      "quote": "鲜香菇 moistureFraction 0.897, kcalPer100gWet 34",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "香菇生 USDA 约34 kcal/100g、含水约0.90，数值合理但未核对，出处无法确认"
+    }
+  ],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "3753befd5e6e3fcb7c09a33bf50ab6cdb7d55b7e6485aea62cfbbcb96332a479",
+    "draftHash": "d35fd0fbac5ff982a5446260162e74447441a0c012e911548670a4f567cb6b0f"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "82229a4c-4732-42a6-b516-1a93223da592",
+      "file": "budget-responses/82229a4c-4732-42a6-b516-1a93223da592.json",
+      "requestHash": "bfa63cfbcbaf4097a3dfd8b4ff96c63bb451b82c97f3fe5f448cc09ed26c0c92",
+      "responseHash": "ddba0fcf5c0ff20cfb1817c6554357b85fb29e723ebe290e1c1acf8b90e0e05c"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_mushroom-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1018,
+        "completion_tokens": 206,
+        "total_tokens": 1224,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 634
+      },
+      "costUpperYuan": 0.0029313599999999996,
+      "cumulativeUpperYuan": 0.15713519999999997,
+      "latencyMs": 1838.3811000000005,
+      "timestamp": "2026-11-09T12:25:43.357Z"
+    }
+  ]
+}

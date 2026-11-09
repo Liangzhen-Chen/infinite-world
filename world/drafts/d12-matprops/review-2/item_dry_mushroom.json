@@ -1,0 +1,90 @@
+{
+  "id": "item_dry_mushroom",
+  "fingerprint": "97926e6238f901afc36f070315204d836520ac7746b39e3bba122e794419c8bd",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_dry_mushroom",
+    "row": {
+      "sources": [
+        {
+          "name": "干香菇",
+          "citation": "USDA FoodData Central 干香菇",
+          "moistureFraction": 0.095
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "单一出处，干制品覆盖鲜菇类别的含水率"
+      },
+      "basis": "干蘑菇片：只覆盖含水率，能量用类别 mushroom。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "干香菇 moistureFraction 0.095",
+        "field": "moisture",
+        "severity": "soft",
+        "reason": "USDA 干香菇含水约 0.09–0.10，0.095 合理；但 basis 称凭记忆待核，出处无法确认，故记 soft"
+      },
+      {
+        "quote": "干蘑菇片：只覆盖含水率，能量用类别 mushroom",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "干制品含水 0.095 与鲜菇类别 0.925 相差极大，直接套用类别能量密度 122 会严重低估干菇能量（干基约 1300 kcal/kg），口径不一致"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "干香菇 moistureFraction 0.095",
+      "field": "moisture",
+      "severity": "soft",
+      "reason": "USDA 干香菇含水约 0.09–0.10，0.095 合理；但 basis 称凭记忆待核，出处无法确认，故记 soft"
+    },
+    {
+      "quote": "干蘑菇片：只覆盖含水率，能量用类别 mushroom",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "干制品含水 0.095 与鲜菇类别 0.925 相差极大，直接套用类别能量密度 122 会严重低估干菇能量（干基约 1300 kcal/kg），口径不一致"
+    }
+  ],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "97c2443355cfd43a0c263c10cd89f58058403d9e5625f0966df5e38d2ef4d6ae",
+    "draftHash": "fdbeb2f23f57892a7fc1a81f483bcde466de395fe4ef9f8011e7df79a8a74889"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "7ecd623d-d0f3-4687-b9e6-3352448740d2",
+      "file": "budget-responses/7ecd623d-d0f3-4687-b9e6-3352448740d2.json",
+      "requestHash": "1d9e39e23be8342c19d510b0ae354ff055de16642df1772df9316e46f4002aac",
+      "responseHash": "e5b46d61ca7f1d716c7471f2acef1a7815d8b9f02028c5849a4e75bed89fa349"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_dry_mushroom-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1233,
+        "completion_tokens": 147,
+        "total_tokens": 1380,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 849
+      },
+      "costUpperYuan": 0.0028893599999999997,
+      "cumulativeUpperYuan": 0.18911176000000002,
+      "latencyMs": 1781.4314000000013,
+      "timestamp": "2026-11-09T12:26:05.093Z"
+    }
+  ]
+}

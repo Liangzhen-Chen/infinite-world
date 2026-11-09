@@ -1,0 +1,146 @@
+{
+  "id": "class_fruit",
+  "fingerprint": "8a72424806e9b122ecf9141640d90730bca612ef6736922c79e0a2c1de9eecad",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "class_fruit",
+    "row": {
+      "sources": [
+        {
+          "name": "苹果",
+          "citation": "USDA FoodData Central 苹果带皮生",
+          "moistureFraction": 0.856,
+          "kcalPer100gWet": 52,
+          "refuseFraction": 0.1
+        },
+        {
+          "name": "梨",
+          "citation": "USDA FoodData Central 梨生",
+          "moistureFraction": 0.837,
+          "kcalPer100gWet": 57,
+          "refuseFraction": 0.1
+        },
+        {
+          "name": "李",
+          "citation": "USDA FoodData Central 李生",
+          "moistureFraction": 0.872,
+          "kcalPer100gWet": 46,
+          "refuseFraction": 0.06
+        }
+      ],
+      "selection": {
+        "method": "mean",
+        "reason": "世界里的鲜果为苹果、梨、李，逐项取平均"
+      },
+      "basis": "鲜果；干制品在物品行覆盖含水率。含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "refuse 含果核、果蒂、果梗，并非仅去核蒂；苹果、梨 refuse 0.1 合理，李 0.06 偏低但可接受"
+      },
+      {
+        "quote": "derived.edibleFraction 0.913",
+        "field": "edibleFraction",
+        "severity": "soft",
+        "reason": "三源 refuse 均值 0.087，可食 0.913 与算式一致；但李 refuse 0.06 偏低于 USDA 常见 0.06–0.10 区间上缘，属边缘值"
+      },
+      {
+        "quote": "derived.energyDensity 148",
+        "field": "energyDensity",
+        "severity": "soft",
+        "reason": "按 52/57/46 kcal/100g 与含水 0.856/0.837/0.872 换算干物质约 361/350/359 kcal/kg，均值约 357，÷24≈15，非 148；148 对应约 3550 kcal/kg 干物质，明显偏高"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "含水、能量与可食部分均由出处推出（可食部分 = 1 − 去核蒂等不可食比例，USDA refuse）",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "refuse 含果核、果蒂、果梗，并非仅去核蒂；苹果、梨 refuse 0.1 合理，李 0.06 偏低但可接受"
+    },
+    {
+      "quote": "derived.edibleFraction 0.913",
+      "field": "edibleFraction",
+      "severity": "soft",
+      "reason": "三源 refuse 均值 0.087，可食 0.913 与算式一致；但李 refuse 0.06 偏低于 USDA 常见 0.06–0.10 区间上缘，属边缘值"
+    },
+    {
+      "quote": "derived.energyDensity 148",
+      "field": "energyDensity",
+      "severity": "soft",
+      "reason": "按 52/57/46 kcal/100g 与含水 0.856/0.837/0.872 换算干物质约 361/350/359 kcal/kg，均值约 357，÷24≈15，非 148；148 对应约 3550 kcal/kg 干物质，明显偏高"
+    }
+  ],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "3f763959cb2ba54aac92ce1910978aef28c207258cb62ffcc563060cd1a2d69e",
+    "draftHash": "e381a34c5fec338272d49fd87ced70e01927d6442362bd5d25200babb4c971bd"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "3937ee7e-2819-4250-87a6-0fe44f1be7de",
+      "file": "budget-responses/3937ee7e-2819-4250-87a6-0fe44f1be7de.json",
+      "requestHash": "fa7c2905c383899abb1ebdcbc73c3417da7758e420d6b70fb08bd82a7c2047ff",
+      "responseHash": "886e6ae6bbfb8700e51222cb825944dd2c3fdef7405bc57108d23c31dfb2dc64"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "c9e1f1aa-0c22-4150-9a20-2b3ebf1312c3",
+      "file": "budget-responses/c9e1f1aa-0c22-4150-9a20-2b3ebf1312c3.json",
+      "requestHash": "fa7c2905c383899abb1ebdcbc73c3417da7758e420d6b70fb08bd82a7c2047ff",
+      "responseHash": "0f9e6078994308a9ac6789e6d28b6e6ccc69985057438f9d438dcd126b838cf8"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_fruit-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1193,
+        "completion_tokens": 159,
+        "total_tokens": 1352,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 809
+      },
+      "costUpperYuan": 0.0029053599999999996,
+      "cumulativeUpperYuan": 0.16141791999999996,
+      "latencyMs": 2004.6845000000003,
+      "timestamp": "2026-11-09T12:25:46.405Z"
+    },
+    {
+      "label": "content-review-2-class_fruit-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1193,
+        "completion_tokens": 266,
+        "total_tokens": 1459,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 169
+      },
+      "costUpperYuan": 0.00250696,
+      "cumulativeUpperYuan": 0.16392487999999997,
+      "latencyMs": 2468.9601000000002,
+      "timestamp": "2026-11-09T12:25:48.903Z"
+    }
+  ],
+  "errorCode": "REVIEW_FORMAT"
+}

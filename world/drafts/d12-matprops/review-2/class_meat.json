@@ -1,0 +1,140 @@
+{
+  "id": "class_meat",
+  "fingerprint": "bf9aefa6dfe564abfeffd93105ef64ce0cebe5b0b7dc2c43e766eab4c1302afe",
+  "status": "manual",
+  "attempts": 0,
+  "draft": {
+    "id": "class_meat",
+    "row": {
+      "sources": [
+        {
+          "name": "猪里脊",
+          "citation": "USDA FoodData Central 猪里脊生（凭记忆约 143 kcal、含水约 71%）",
+          "moistureFraction": 0.71,
+          "kcalPer100gWet": 143
+        },
+        {
+          "name": "牛肉末 85% 瘦",
+          "citation": "USDA FoodData Central 牛肉末 85% 瘦生（凭记忆约 215 kcal、含水约 64%）",
+          "moistureFraction": 0.64,
+          "kcalPer100gWet": 215
+        },
+        {
+          "name": "羊腿瘦肥混合",
+          "citation": "USDA FoodData Central 羊腿瘦肥混合生（凭记忆约 217 kcal、含水约 67%）",
+          "moistureFraction": 0.67,
+          "kcalPer100gWet": 217
+        }
+      ],
+      "selection": {
+        "method": "mean",
+        "reason": "混合肉类别，猪、牛、羊等肉种未限定，取三种代表肉的平均组成"
+      },
+      "basis": "家畜生肉（瘦肥混合）。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "USDA FoodData Central 猪里脊生（凭记忆约 143 kcal、含水约 71%）",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "猪里脊生约 143 kcal/100g 合理，含水约 71% 也接近 USDA 值（约 73%），凭记忆值在公认区间内，仅出处未核实。"
+      },
+      {
+        "quote": "USDA FoodData Central 牛肉末 85% 瘦生（凭记忆约 215 kcal、含水约 64%）",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "85% 瘦牛肉末生约 215 kcal/100g、含水约 64% 与 USDA 量级相符，属凭记忆未核实，非硬错。"
+      },
+      {
+        "quote": "USDA FoodData Central 羊腿瘦肥混合生（凭记忆约 217 kcal、含水约 67%）",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "羊腿瘦肥混合生约 217 kcal/100g、含水约 67% 在合理范围，出处凭记忆未核实。"
+      },
+      {
+        "quote": "derived moisture 0.673",
+        "field": "moisture",
+        "severity": "hard",
+        "reason": "三源含水均值应为 (0.71+0.64+0.67)/3=0.6733，取 3 位为 0.673，与 derived 一致，此项无误；但需核对能量。"
+      },
+      {
+        "quote": "derived energyDensity 244",
+        "field": "energyDensity",
+        "severity": "hard",
+        "reason": "按公式逐源算干物质 kcal/kg：143×10/0.29=4931；215×10/0.36=5972；217×10/0.33=6576；均值 5826，÷24=243，取整 243 而非 244，且应说明是均值后再除。"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "derived moisture 0.673",
+      "field": "moisture",
+      "severity": "hard",
+      "reason": "三源含水均值应为 (0.71+0.64+0.67)/3=0.6733，取 3 位为 0.673，与 derived 一致，此项无误；但需核对能量。"
+    },
+    {
+      "quote": "derived energyDensity 244",
+      "field": "energyDensity",
+      "severity": "hard",
+      "reason": "按公式逐源算干物质 kcal/kg：143×10/0.29=4931；215×10/0.36=5972；217×10/0.33=6576；均值 5826，÷24=243，取整 243 而非 244，且应说明是均值后再除。"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "USDA FoodData Central 猪里脊生（凭记忆约 143 kcal、含水约 71%）",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "猪里脊生约 143 kcal/100g 合理，含水约 71% 也接近 USDA 值（约 73%），凭记忆值在公认区间内，仅出处未核实。"
+    },
+    {
+      "quote": "USDA FoodData Central 牛肉末 85% 瘦生（凭记忆约 215 kcal、含水约 64%）",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "85% 瘦牛肉末生约 215 kcal/100g、含水约 64% 与 USDA 量级相符，属凭记忆未核实，非硬错。"
+    },
+    {
+      "quote": "USDA FoodData Central 羊腿瘦肥混合生（凭记忆约 217 kcal、含水约 67%）",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "羊腿瘦肥混合生约 217 kcal/100g、含水约 67% 在合理范围，出处凭记忆未核实。"
+    }
+  ],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "95247295bd22242cf92f69c340538f99acb9968c3b389d15f31d004d15c2aad6",
+    "draftHash": "5d28515eb3f1273ff2714bbf35cbd7f1174d47cb596907c5bc1f54a2969c9550"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "1fd857d6-8489-44dc-a432-40aec6069383",
+      "file": "budget-responses/1fd857d6-8489-44dc-a432-40aec6069383.json",
+      "requestHash": "db35e6c99ab3adb581bc4c6ba15689589208def95b203108ca802cb5e2e60363",
+      "responseHash": "0f1c3f2732f67d02faf9555ef0ff8fb24350ec1a95fde19a8815195090b5fb46"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-class_meat-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1126,
+        "completion_tokens": 406,
+        "total_tokens": 1532,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 742
+      },
+      "costUpperYuan": 0.00474736,
+      "cumulativeUpperYuan": 0.17691832,
+      "latencyMs": 3049.6644000000015,
+      "timestamp": "2026-11-09T12:25:57.382Z"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "index": 0,
+  "fingerprint": "32c3f0d34e95d38ec81762cc99b9b214d1cc952d6cb6b49755b73e3256f1c18d",
+  "count": 19,
+  "passed": 14,
+  "ids": [
+    "class_timber",
+    "class_wood",
+    "class_carbon",
+    "class_mushroom",
+    "class_nut",
+    "class_fruit",
+    "class_vegetable",
+    "class_legume",
+    "class_grain",
+    "class_meat",
+    "class_fish",
+    "class_egg",
+    "class_milk",
+    "item_dry_mushroom",
+    "item_parsnip",
+    "item_leek",
+    "item_garlic",
+    "item_oats",
+    "item_dried_fruit"
+  ],
+  "rewritten": 0,
+  "manual": [
+    "class_mushroom",
+    "class_meat",
+    "class_egg",
+    "class_milk",
+    "item_leek"
+  ],
+  "pending": [],
+  "flagged": [
+    "class_mushroom",
+    "class_fruit",
+    "class_vegetable",
+    "class_grain",
+    "class_meat",
+    "class_fish",
+    "class_egg",
+    "class_milk",
+    "item_dry_mushroom",
+    "item_parsnip",
+    "item_leek",
+    "item_garlic",
+    "item_oats",
+    "item_dried_fruit"
+  ],
+  "sample": [
+    "item_garlic",
+    "item_oats",
+    "class_legume",
+    "class_nut",
+    "class_vegetable"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 0.20702464,
+  "manualRatio": 0.2631578947368421,
+  "needsSystemicRepair": true
+}

@@ -1,0 +1,92 @@
+{
+  "id": "item_leek",
+  "fingerprint": "6b3505df441aad7001ad9c98560425117d7a5621bf9daca766c11e7a60cd45b2",
+  "status": "manual",
+  "attempts": 0,
+  "draft": {
+    "id": "item_leek",
+    "row": {
+      "sources": [
+        {
+          "name": "韭葱",
+          "citation": "USDA FoodData Central 韭葱生",
+          "moistureFraction": 0.83,
+          "kcalPer100gWet": 61
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "单一出处，覆盖蔬菜类别"
+      },
+      "basis": "韭葱含水低于蔬菜类别均值，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "韭葱含水低于蔬菜类别均值，覆盖类别值",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "USDA 韭葱生含水约0.83、61 kcal/100g，与出处一致；但类别均值0.907，0.83确低于均值，表述成立，仅出处凭记忆待核"
+      },
+      {
+        "quote": "energyDensity 150",
+        "field": "energyDensity",
+        "severity": "hard",
+        "reason": "61×10÷(1−0.83)÷24=149.5，取整应为150，算式正确；但USDA韭葱生实际约61 kcal/100g，干物质约359 kcal/kg，饱腹约15，非150，疑小数位错"
+      }
+    ]
+  },
+  "errors": [
+    {
+      "quote": "energyDensity 150",
+      "field": "energyDensity",
+      "severity": "hard",
+      "reason": "61×10÷(1−0.83)÷24=149.5，取整应为150，算式正确；但USDA韭葱生实际约61 kcal/100g，干物质约359 kcal/kg，饱腹约15，非150，疑小数位错"
+    }
+  ],
+  "warnings": [
+    {
+      "quote": "韭葱含水低于蔬菜类别均值，覆盖类别值",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "USDA 韭葱生含水约0.83、61 kcal/100g，与出处一致；但类别均值0.907，0.83确低于均值，表述成立，仅出处凭记忆待核"
+    }
+  ],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "dc519815c4a88a2688355f9edf367adb8891aac9d9c09757da3dfe6c96a1b7ee",
+    "draftHash": "2f9f1e23029b0aee9119ca5d96994deb8773d82844050d307c8d391ebab13df7"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "0362624e-3d39-4a64-9e3d-a9b2166b1625",
+      "file": "budget-responses/0362624e-3d39-4a64-9e3d-a9b2166b1625.json",
+      "requestHash": "8de18ec3d126b1b0e3ca78707da379a6db57b45aaf78edd98fdb2833110b0982",
+      "responseHash": "9829861a3a70b792a613e2a9fcdfc1649c5d6420b1693e21fa2e145a17f786bf"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_leek-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1386,
+        "completion_tokens": 161,
+        "total_tokens": 1547,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1002
+      },
+      "costUpperYuan": 0.0033073599999999996,
+      "cumulativeUpperYuan": 0.19574448000000003,
+      "latencyMs": 2010.9980000000032,
+      "timestamp": "2026-11-09T12:26:08.814Z"
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "id": "item_garlic",
+  "fingerprint": "a85c9ce7962377a8afdc89039eb44638a96aef218751202dbddfc59aff85d047",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_garlic",
+    "row": {
+      "sources": [
+        {
+          "name": "大蒜",
+          "citation": "USDA FoodData Central 大蒜生",
+          "moistureFraction": 0.586,
+          "kcalPer100gWet": 149
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "单一出处，覆盖蔬菜类别"
+      },
+      "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "蒜头含水明显低于蔬菜类别，覆盖类别值。【数值凭记忆写入，待 L2 核对】",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "USDA 大蒜生含水约0.59、149 kcal/100g，与出处值一致；但 basis 称覆盖类别值，而类别均值0.907/143 与蒜0.586/150 差异大，属说明性表述，非数值错误。"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "蒜头含水明显低于蔬菜类别，覆盖类别值。【数值凭记忆写入，待 L2 核对】",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "USDA 大蒜生含水约0.59、149 kcal/100g，与出处值一致；但 basis 称覆盖类别值，而类别均值0.907/143 与蒜0.586/150 差异大，属说明性表述，非数值错误。"
+    }
+  ],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "f498888a51c9ecca1a29dcf39a7c3c7fedfd3d92e63c48e9d257e6c7d2be1b93",
+    "draftHash": "085687e2054ef0349fff6e08de6029c00cfcc0599b8851a3f3c650822ad61262"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "35d62b01-f7fd-4ed1-b775-f6ef9aa04dd4",
+      "file": "budget-responses/35d62b01-f7fd-4ed1-b775-f6ef9aa04dd4.json",
+      "requestHash": "7a69030ea9a382780706ac0d5644aef2601ad894a938891d8ab98fbfc2091be1",
+      "responseHash": "b6b063bb41db86bd8eade55b7539c993fc7cbeeaaf83605df8689a52eac89217"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "d4bf10ab-ba66-42e5-a787-290320419d80",
+      "file": "budget-responses/d4bf10ab-ba66-42e5-a787-290320419d80.json",
+      "requestHash": "7a69030ea9a382780706ac0d5644aef2601ad894a938891d8ab98fbfc2091be1",
+      "responseHash": "4612ccb9deae3cff2fa89ff84df2eea41b6215a2e5d49b37c638afea91d51b0e"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_garlic-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1355,
+        "completion_tokens": 174,
+        "total_tokens": 1529,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 971
+      },
+      "costUpperYuan": 0.0033493599999999996,
+      "cumulativeUpperYuan": 0.19909384000000002,
+      "latencyMs": 1806.1913999999997,
+      "timestamp": "2026-11-09T12:26:10.651Z"
+    },
+    {
+      "label": "content-review-2-item_garlic-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1355,
+        "completion_tokens": 104,
+        "total_tokens": 1459,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 203
+      },
+      "costUpperYuan": 0.00128408,
+      "cumulativeUpperYuan": 0.20037792000000001,
+      "latencyMs": 1278.3812000000034,
+      "timestamp": "2026-11-09T12:26:11.962Z"
+    }
+  ],
+  "errorCode": "REVIEW_FORMAT"
+}

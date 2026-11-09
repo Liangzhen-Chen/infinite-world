@@ -1,0 +1,96 @@
+{
+  "id": "item_oats",
+  "fingerprint": "a8f3a38b5da4dd2f4743784cfc8f7d5c30484ee54c46437a171366f010c8d018",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "item_oats",
+    "row": {
+      "sources": [
+        {
+          "name": "燕麦壳",
+          "citation": "Webster & Wood《Oats: Chemistry and Technology》AACC 2011：壳占谷粒质量 25–35%",
+          "refuseFraction": 0.3,
+          "range": {
+            "refuseFraction": [
+              0.25,
+              0.35
+            ]
+          }
+        }
+      ],
+      "selection": {
+        "method": "single",
+        "reason": "区间中值 30%（脱壳后仁占 70%）"
+      },
+      "basis": "带壳燕麦：含水与能量用类别 grain 的值，可食部分由壳占比推出（壳不供能）。【数值凭记忆写入，待 L2 核对】"
+    }
+  },
+  "review": {
+    "contradictions": [
+      {
+        "quote": "带壳燕麦：含水与能量用类别 grain 的值，可食部分由壳占比推出（壳不供能）",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "壳不供能但含水仍按整粒计，可食部分0.7与含水0.104口径不一致；带壳燕麦含水应更高（约0.12–0.14），能量按可食干物质计更合理"
+      },
+      {
+        "quote": "燕麦 USDA FoodData Central 燕麦生 moistureFraction 0.082 kcalPer100gWet 389",
+        "field": "basis",
+        "severity": "soft",
+        "reason": "USDA生燕麦约389 kcal/100g、含水约8%属合理，但该值通常指脱壳燕麦粒，与带壳物品口径需说明"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "带壳燕麦：含水与能量用类别 grain 的值，可食部分由壳占比推出（壳不供能）",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "壳不供能但含水仍按整粒计，可食部分0.7与含水0.104口径不一致；带壳燕麦含水应更高（约0.12–0.14），能量按可食干物质计更合理"
+    },
+    {
+      "quote": "燕麦 USDA FoodData Central 燕麦生 moistureFraction 0.082 kcalPer100gWet 389",
+      "field": "basis",
+      "severity": "soft",
+      "reason": "USDA生燕麦约389 kcal/100g、含水约8%属合理，但该值通常指脱壳燕麦粒，与带壳物品口径需说明"
+    }
+  ],
+  "feedback": null,
+  "frozenCandidate": {
+    "entryHash": "5e8a10ffe96dc4f6dc71e5b9481edb5bc2944d4868f534d9abe79a3b7d15bef5",
+    "draftHash": "cf94999a3114c5340331eb2ae04e3bdb91eb8b0beded3514d54448b6ad2a322e"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "5a294b5d-b6c5-41b4-abb2-fc1d4963f3c6",
+      "file": "budget-responses/5a294b5d-b6c5-41b4-abb2-fc1d4963f3c6.json",
+      "requestHash": "f54fc40276af21c63667905bc82248cf7cae1148f13f0862c815b4ed13210027",
+      "responseHash": "7158ea563b39892df5d3c364a241ead5993abc86da698b8f4cc84c045f119089"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-2-item_oats-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1376,
+        "completion_tokens": 173,
+        "total_tokens": 1549,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 992
+      },
+      "costUpperYuan": 0.0033833599999999998,
+      "cumulativeUpperYuan": 0.20376128000000002,
+      "latencyMs": 1853.4832999999999,
+      "timestamp": "2026-11-09T12:26:13.841Z"
+    }
+  ]
+}
