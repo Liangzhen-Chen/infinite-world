@@ -83,8 +83,9 @@ export function verdict(f){
   return {cause:'chain',reason:`food is sellable within a day and the household can pay, but nothing is on sale within reach: ${why}`,clue:[gate]};
  }
  if(f.soldOut)return {cause:'allocation',reason:'shelf was bought out before this household',clue:[['business.mjs','let quantity=Math.min(want.quantity,available),quote=null;']]};
- // Only a price refusal (quote above the household's willingness: outcome 'conditional', cost > benefit) is allocation; defer (time/obligation) and other refusals are not.
- if(f.declined&&f.declined.outcome==='conditional')return {cause:'allocation',reason:`customer decision refused on price: ${f.declined.reason}`,clue:[['business.mjs',"if(decision.outcome!=='agree')"]]};
+ // The customer_flow visit keeps only {outcome,reason,quoted}; decision.conditions (prepay) and trace.breaches are not recorded, so 'conditional' (quote above willingness,
+ // OR a breach history demanding prepayment) cannot be told apart. It is therefore never allocation: chain, flagged and counted apart for review.
+ if(f.declined?.outcome==='conditional')return {cause:'chain',flag:'conditional',reason:`customer decision was conditional (${f.declined.reason}); price above willingness cannot be told from a prepayment demanded for breach history in the visit record, so not counted as allocation`,clue:[['business.mjs',"if(decision.outcome!=='agree')"],['npc-decision.mjs',"outcome='conditional'"]]};
  if(f.declined)return {cause:'chain',reason:`food, cash and shop were there but the customer decision was not a price refusal: outcome ${f.declined.outcome} (${f.declined.reason})`,clue:[['business.mjs',"if(decision.outcome!=='agree')"]]};
  if(!f.servedShops)return {cause:'chain',reason:f.best.sameSettlement?'shop open in own settlement but beyond customer reach':'food is on sale within a day, but no open shop in own settlement (residents only walk in to own-settlement shops)',clue:[['business.mjs','settlement!==shop.settlement']]};
  return {cause:'chain',reason:'open shop with stock in own settlement, money in hand, no purchase happened',clue:[['business.mjs','const want=wants(d,engine,id,item,gaps);']]};
@@ -140,6 +141,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
  const daily=[],tally={},incidents=[],chainRows=[],undeterminedRows=[];
  for(const c of ALL)tally[c]={incidents:0,meals:0,people:0,households:new Set(),reasons:{}};
  const undSplit={roster:{incidents:0,meals:0,keys:new Set()},noLocation:{incidents:0,meals:0,keys:new Set()}};
+ const condSplit={incidents:0,meals:0,keys:new Set()};
  const total={named:{incidents:0,meals:0},roster:{incidents:0,meals:0}};
  const prevUnmet=new Map();
  const routeMemo=new Map();
@@ -260,6 +262,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
    const v=verdict(facts),cause=v.cause;
    const clue=(await Promise.all(v.clue.map(([f,n])=>srcLine(f,n)))).join('; ');
    const t=tally[cause];t.incidents++;t.meals+=meals;t.reasons[v.reason]=(t.reasons[v.reason]??0)+1;
+   if(v.flag==='conditional'){condSplit.incidents++;condSplit.meals+=meals;condSplit.keys.add(en.key);}
    if(v.sub){const u=undSplit[v.sub];u.incidents++;u.meals+=meals;u.keys.add(en.key);}
    if(!t.households.has(en.key)){t.households.add(en.key);t.people+=people;}
    const row={household:en.key,day,kind,location:en.location,cash:en.cash===null?null:round(en.cash),missingMeals:round(meals),reason:v.reason,clue,
@@ -282,6 +285,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
  for(const c of ALL)attribution[c]={incidents:tally[c].incidents,meals:round(tally[c].meals),households:tally[c].households.size,people:tally[c].people,reasons:tally[c].reasons};
  return {days,start:start.minute,end:end.minute,grainItem:grain??null,
   totals:{named:{incidents:total.named.incidents,meals:round(total.named.meals)},statistical:{incidents:total.roster.incidents,meals:round(total.roster.meals),note:'roster-only households (no member in state.npcs)'}},
+  conditionalNotDistinguished:{households:condSplit.keys.size,incidents:condSplit.incidents,meals:round(condSplit.meals),note:'counted in chain; review whether price refusal or breach prepayment'},
   undeterminedSplit:Object.fromEntries(Object.entries(undSplit).map(([k,u])=>[k,{households:u.keys.size,incidents:u.incidents,meals:round(u.meals)}])),// roster = no member with state (no purse); noLocation = no home known; neither is counted in the four causes
   attribution,daily,chainBreakFirst20:chainRows,undeterminedFirst5:undeterminedRows,
   producerChainBreak:{status:'undetermined',reason:'t-m3 has no producer-to-town grain sale mechanism (no food-supply module), so "surplus > 0, road open, buyer has money, 7 days zero transport" has no transport to count; granary surplus is listed per day, not counted as saleable'},

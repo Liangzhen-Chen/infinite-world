@@ -29,10 +29,9 @@ test('poverty: threshold is the fixture price (price-1 poor; price and price+1 n
  assert.notEqual(cause({cash:PRICE+1}),'poverty');
  assert.equal(cause({cash:0,reach:[],townShops:{total:1,open:0}}),'poverty');// nothing on sale: priced at the catalogue's cheapest
 });
-test('allocation: everything edible reachable is bought out, or the customer refused on price',()=>{
+test('allocation: everything edible reachable is bought out, (a price-only refusal cannot be isolated in the record)',()=>{
  assert.equal(cause({reach:[shelf({},[item({bought:20})])]}),'allocation');
  assert.equal(cause({reach:[shelf({},[item({avail:21,bought:20})])]}),'allocation');// left 1 unit < one meal
- assert.equal(cause({declined:{outcome:'conditional',reason:'price above willingness'}}),'allocation');
 });
 test('not allocation: cheapest tier bought out but other goods or sellers remain',()=>{
  const cheap=item({bought:20}),dear=item({item:'item_rice',cost:PRICE+3});
@@ -43,6 +42,10 @@ test('not allocation: a defer (time/obligation) or other non-price refusal is ch
  const v=verdict(buildFacts(snap({declined:{outcome:'defer',reason:'busy'}})));
  assert.equal(v.cause,'chain');assert.match(v.reason,/outcome defer/);
  assert.equal(cause({declined:{outcome:'refuse',reason:'conflict'}}),'chain');
+});
+test('not allocation: conditional (price or breach-history prepay) is chain and flagged for review',()=>{
+ const v=verdict(buildFacts(snap({declined:{outcome:'conditional',reason:'需先付5文，再谈这件事。'}})));
+ assert.equal(v.cause,'chain');assert.equal(v.flag,'conditional');
 });
 test('chain: food on sale, shop open, household can pay, still no meal',()=>{
  assert.equal(cause({reach:[],townShops:{total:0,open:0}}),'chain');
