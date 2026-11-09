@@ -28,9 +28,28 @@
         "field": "basis",
         "verdict": "conflict",
         "severity": "hard",
-        "reason": "USDA 香芹籽约 333 kcal/100g 属实，但含水约 9.9% 偏高；USDA 记录含水约 9.9% 与 333 kcal 并存可疑，干基能量推算约 154 饱腹/kg，低于同类香料籽，建议核对含水（约 9–10% 可接受但偏边缘）"
+        "kind": "fact",
+        "reason": "待按编号人工核对：香芹籽：NDB 02005（待核对）；AI 初审与按编号重问两次意见见 review.factPending",
+        "programCheck": {
+          "verdict": "fact-pending-human"
+        }
       }
-    ]
+    ],
+    "factPending": {
+      "status": "待按编号人工核对",
+      "sourceIds": [
+        "香芹籽：NDB 02005（待核对）"
+      ],
+      "first": [
+        {
+          "field": "basis",
+          "quote": "香芹籽（caraway seed）：333 kcal/100g，含水约 9.9%",
+          "reason": "USDA 香芹籽约 333 kcal/100g 属实，但含水约 9.9% 偏高；权威值约 9.9% 需核实，常见约 9.9% 与 333 kcal 并存可疑，干基能量约 370 kcal/100g 偏低，实际香芹籽干基约 370 kcal/100g 合理，故仅含水存疑，标 soft 更妥",
+          "kind": "fact"
+        }
+      ],
+      "second": []
+    }
   },
   "errors": [
     {
@@ -38,11 +57,17 @@
       "field": "basis",
       "verdict": "conflict",
       "severity": "hard",
-      "reason": "USDA 香芹籽约 333 kcal/100g 属实，但含水约 9.9% 偏高；USDA 记录含水约 9.9% 与 333 kcal 并存可疑，干基能量推算约 154 饱腹/kg，低于同类香料籽，建议核对含水（约 9–10% 可接受但偏边缘）"
+      "kind": "fact",
+      "reason": "待按编号人工核对：香芹籽：NDB 02005（待核对）；AI 初审与按编号重问两次意见见 review.factPending",
+      "programCheck": {
+        "verdict": "fact-pending-human"
+      }
     }
   ],
   "warnings": [],
-  "feedback": null,
+  "feedback": [
+    "数据来源类事实项请按出处编号核对（不是算术题）：香芹籽：NDB 02005（待核对）；【初审事实项】[{\"field\":\"basis\",\"quote\":\"香芹籽（caraway seed）：333 kcal/100g，含水约 9.9%\",\"reason\":\"USDA 香芹籽约 333 kcal/100g 属实，但含水约 9.9% 偏高；权威值约 9.9% 需核实，常见约 9.9% 与 333 kcal 并存可疑，干基能量约 370 kcal/100g 偏低，实际香芹籽干基约 370 kcal/100g 合理，故仅含水存疑，标 soft 更妥\",\"kind\":\"fact\"}]"
+  ],
   "errorCode": null,
   "frozenCandidate": {
     "entryHash": "35348684a2e4de6e4766f15290b4adaec90015a3fe830e714fcfa2316ae52fdf",
@@ -52,10 +77,18 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "eb422134-7173-4bab-afe9-17d250973c48",
-      "file": "budget-responses/eb422134-7173-4bab-afe9-17d250973c48.json",
-      "requestHash": "de046dc2c7c97b9ba307995df528b34b3333a62663d9f42a15e5bb5b75a5f6d0",
-      "responseHash": "3607a8ad1a9a3c6f5caf9e6140c120eef4eb8fb1f2aae7c3309e6e9cbdd6d328"
+      "requestId": "3ac5ac5b-695b-4ff1-bc13-1015c7384226",
+      "file": "budget-responses/3ac5ac5b-695b-4ff1-bc13-1015c7384226.json",
+      "requestHash": "383e25a2e3741dfeb20489950561d3503dc285081dc4e24658e2de3d306d6876",
+      "responseHash": "63b4bbc535e458408675c8f3dbdbc6d2fda92e07f74f49bf651264eee42db92b"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "923f8463-3c57-4408-bcf5-83192c0d9bea",
+      "file": "budget-responses/923f8463-3c57-4408-bcf5-83192c0d9bea.json",
+      "requestHash": "b7de373f850849b6aed9ac1f08427877a182354bfcc3d0cce8d28697afc6a001",
+      "responseHash": "2d75b6e131073d7ecaf0ddf95b1bd6d9efee0320e1611be809d413a508393a18"
     }
   ],
   "measurements": [
@@ -64,19 +97,41 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1625,
-        "completion_tokens": 475,
-        "total_tokens": 2100,
+        "prompt_tokens": 2043,
+        "completion_tokens": 394,
+        "total_tokens": 2437,
         "prompt_tokens_details": {
-          "cached_tokens": 512
+          "cached_tokens": 896
         },
-        "prompt_cache_hit_tokens": 512,
-        "prompt_cache_miss_tokens": 1113
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1147
       },
-      "costUpperYuan": 0.00604648,
-      "cumulativeUpperYuan": 0.10701216,
-      "latencyMs": 3016.163099999998,
-      "timestamp": "2026-11-09T17:57:45.402Z"
+      "costUpperYuan": 0.00548184,
+      "cumulativeUpperYuan": 0.12848616,
+      "latencyMs": 2918.940199999999,
+      "timestamp": "2026-11-09T18:28:02.552Z"
+    },
+    {
+      "label": "content-review-1-item_caraway_seed-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2238,
+        "completion_tokens": 98,
+        "total_tokens": 2336,
+        "prompt_tokens_details": {
+          "cached_tokens": 1920
+        },
+        "prompt_cache_hit_tokens": 1920,
+        "prompt_cache_miss_tokens": 318
+      },
+      "costUpperYuan": 0.0014968,
+      "cumulativeUpperYuan": 0.12998295999999998,
+      "latencyMs": 1660.9102999999996,
+      "timestamp": "2026-11-09T18:28:04.239Z"
     }
+  ],
+  "errorHistory": [
+    "REVIEW_FACT_RECHECK"
   ]
 }

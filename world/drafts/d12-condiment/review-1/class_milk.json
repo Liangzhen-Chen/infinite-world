@@ -1,7 +1,7 @@
 {
   "id": "class_milk",
   "fingerprint": "b7e02e7d680d84fb2bf887fc4567df3058913878d002b68e56b0f29f12bd87c1",
-  "status": "manual",
+  "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "class_milk",
@@ -33,25 +33,9 @@
     }
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "energyDensity=214",
-        "field": "energyDensity",
-        "verdict": "conflict",
-        "severity": "hard",
-        "reason": "按成员推算：牛乳61×10÷0.123÷24≈207，羊乳69×10÷0.13÷24≈221，均值约214，核算无误，故不列"
-      }
-    ]
+    "contradictions": []
   },
-  "errors": [
-    {
-      "quote": "energyDensity=214",
-      "field": "energyDensity",
-      "verdict": "conflict",
-      "severity": "hard",
-      "reason": "按成员推算：牛乳61×10÷0.123÷24≈207，羊乳69×10÷0.13÷24≈221，均值约214，核算无误，故不列"
-    }
-  ],
+  "errors": [],
   "warnings": [],
   "feedback": null,
   "errorCode": null,
@@ -63,10 +47,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "8d4c1dcf-6236-41fd-807c-b7094d98612e",
-      "file": "budget-responses/8d4c1dcf-6236-41fd-807c-b7094d98612e.json",
-      "requestHash": "805f001a4b2e0dc9a6e4ee25fb65d1ef3fabe0d201e90b382e2842059ad9f857",
-      "responseHash": "975aa08e425596811312deb3a243fe8a5a7434942662d094d7ec98b77772aade"
+      "requestId": "bc7b2714-cc51-4d75-8809-ef81600c6903",
+      "file": "budget-responses/bc7b2714-cc51-4d75-8809-ef81600c6903.json",
+      "requestHash": "487730dca05be7cd93c7f9458b2734971b96d1a3784d777609ff5328f4037260",
+      "responseHash": "699ccd8cff261ae8833ffe87ced26c132281d40d318961a82b74551fba4ec06c"
     }
   ],
   "measurements": [
@@ -75,19 +59,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1411,
-        "completion_tokens": 187,
-        "total_tokens": 1598,
+        "prompt_tokens": 1829,
+        "completion_tokens": 300,
+        "total_tokens": 2129,
         "prompt_tokens_details": {
-          "cached_tokens": 512
+          "cached_tokens": 128
         },
-        "prompt_cache_hit_tokens": 512,
-        "prompt_cache_miss_tokens": 899
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1701
       },
-      "costUpperYuan": 0.00331448,
-      "cumulativeUpperYuan": 0.055015919999999996,
-      "latencyMs": 1948.5799000000006,
-      "timestamp": "2026-11-09T17:57:17.321Z"
+      "costUpperYuan": 0.00580712,
+      "cumulativeUpperYuan": 0.11281928,
+      "latencyMs": 2859.3959000000004,
+      "timestamp": "2026-11-09T18:27:52.468Z"
     }
   ]
 }

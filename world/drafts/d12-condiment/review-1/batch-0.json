@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "e325e3fe28ae63b3c77b16664ada17fb3cbf89695a30fa6c1422f6981560fe34",
+  "fingerprint": "d21ab976f377dc8b3c0b337979b64fb755c820c18846e6a28d2651296f43e9f1",
   "count": 23,
-  "passed": 19,
+  "passed": 21,
   "ids": [
     "class_mushroom",
     "class_nut",
@@ -30,28 +30,44 @@
   ],
   "rewritten": 0,
   "manual": [
-    "class_milk",
-    "class_vinegar",
     "class_spice_seed",
     "item_caraway_seed"
   ],
   "pending": [],
   "flagged": [
     "class_grain",
-    "class_edible_fat"
+    "class_edible_fat",
+    "class_spice_seed"
   ],
   "sample": [
-    "class_cheese",
-    "class_fresh_herb",
-    "class_mushroom",
+    "class_meat",
     "class_fruit",
-    "item_poppy_seed"
+    "class_edible_fat",
+    "class_fish",
+    "class_vegetable"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 0.10701216,
-  "manualRatio": 0.17391304347826086,
-  "needsSystemicRepair": true
+  "costUpperYuan": 0.12998295999999998,
+  "manualRatio": 0.08695652173913043,
+  "needsSystemicRepair": false,
+  "aiMisjudgedByProgram": {
+    "count": 1,
+    "ids": [
+      "class_vinegar"
+    ],
+    "reaskPassed": 1,
+    "reaskPassedIds": [
+      "class_vinegar"
+    ]
+  },
+  "factPendingHuman": {
+    "count": 2,
+    "ids": [
+      "class_spice_seed",
+      "item_caraway_seed"
+    ]
+  }
 }

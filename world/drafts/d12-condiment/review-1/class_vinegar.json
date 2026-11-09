@@ -1,7 +1,7 @@
 {
   "id": "class_vinegar",
   "fingerprint": "81b307871d6f4bb878b4f6eae20e3a53dfa05dc0d1edc3f661e0cd85260f145b",
-  "status": "manual",
+  "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "class_vinegar",
@@ -23,25 +23,9 @@
     }
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "单瓶（50 g）只有约半个饱腹",
-        "field": "basis",
-        "verdict": "conflict",
-        "severity": "hard",
-        "reason": "按干基能量 21×10÷(1−0.939)=3443 kcal/kg，50 g 鲜重仅含约 2.1 kcal，约 0.09 个饱腹（1 饱腹=24 kcal），远非半个；半个饱腹需约 12 kcal，即约 285 g 苹果醋"
-      }
-    ]
+    "contradictions": []
   },
-  "errors": [
-    {
-      "quote": "单瓶（50 g）只有约半个饱腹",
-      "field": "basis",
-      "verdict": "conflict",
-      "severity": "hard",
-      "reason": "按干基能量 21×10÷(1−0.939)=3443 kcal/kg，50 g 鲜重仅含约 2.1 kcal，约 0.09 个饱腹（1 饱腹=24 kcal），远非半个；半个饱腹需约 12 kcal，即约 285 g 苹果醋"
-    }
-  ],
+  "errors": [],
   "warnings": [],
   "feedback": null,
   "errorCode": null,
@@ -53,10 +37,18 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "9e29fc02-a8f7-4c3e-af16-52e3e4085725",
-      "file": "budget-responses/9e29fc02-a8f7-4c3e-af16-52e3e4085725.json",
-      "requestHash": "dfb3241ea31b9dbfdfbedbe887fbbb6e63f362c9b1dd9b2dad9a8cf37c639efc",
-      "responseHash": "54f6179d21c305a3f15198340e1d60726c6f35cae538dba71f06e890d3a5e07b"
+      "requestId": "3c44a2a9-e877-462e-8512-87ce513fd199",
+      "file": "budget-responses/3c44a2a9-e877-462e-8512-87ce513fd199.json",
+      "requestHash": "945205e45777e1104bdba4855e99a16c1331df6266b654a4f2ed1c81b37d2078",
+      "responseHash": "cf7716e5dc192d7cab72be1ecd2025ceb5aa35773ee9256231cee0f7bedf0a83"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "da7ce777-1511-4261-83cc-079598607a6a",
+      "file": "budget-responses/da7ce777-1511-4261-83cc-079598607a6a.json",
+      "requestHash": "44bb43fdc9635080da33c15e609949657ee9ed85e52b5f20214c6f0b2b1ecea8",
+      "responseHash": "63ea5a9ebf235edd4a678a65fc6b997173be78bb5c01f73dc960464d2d560cac"
     }
   ],
   "measurements": [
@@ -65,19 +57,41 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1250,
-        "completion_tokens": 265,
-        "total_tokens": 1515,
+        "prompt_tokens": 1668,
+        "completion_tokens": 188,
+        "total_tokens": 1856,
         "prompt_tokens_details": {
-          "cached_tokens": 512
+          "cached_tokens": 896
         },
-        "prompt_cache_hit_tokens": 512,
-        "prompt_cache_miss_tokens": 738
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 772
       },
-      "costUpperYuan": 0.00361648,
-      "cumulativeUpperYuan": 0.06668536,
-      "latencyMs": 1856.4843,
-      "timestamp": "2026-11-09T17:57:24.367Z"
+      "costUpperYuan": 0.00308384,
+      "cumulativeUpperYuan": 0.11590312,
+      "latencyMs": 2166.4222,
+      "timestamp": "2026-11-09T18:27:54.664Z"
+    },
+    {
+      "label": "content-review-1-class_vinegar-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1809,
+        "completion_tokens": 7,
+        "total_tokens": 1816,
+        "prompt_tokens_details": {
+          "cached_tokens": 1664
+        },
+        "prompt_cache_hit_tokens": 1664,
+        "prompt_cache_miss_tokens": 145
+      },
+      "costUpperYuan": 0.00041256,
+      "cumulativeUpperYuan": 0.11631568,
+      "latencyMs": 1040.5614000000005,
+      "timestamp": "2026-11-09T18:27:55.732Z"
     }
+  ],
+  "errorHistory": [
+    "REVIEW_ARITH_MISJUDGED"
   ]
 }

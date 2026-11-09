@@ -39,25 +39,75 @@
   "review": {
     "contradictions": [
       {
-        "quote": "derived.energyDensity=198",
-        "field": "energyDensity",
+        "quote": "黄芥籽：469 kcal/100g，含水约 5.9%",
+        "field": "basis",
+        "verdict": "conflict",
+        "severity": "soft",
+        "kind": "fact",
+        "reason": "USDA 黄芥籽约 508 kcal/100g、含水约 5.3%；469 偏低，疑与罂粟籽混淆，但差距不大，故 soft"
+      },
+      {
+        "quote": "黄芥籽：469 kcal/100g，含水约 5.9%",
+        "field": "basis",
         "verdict": "conflict",
         "severity": "hard",
-        "reason": "按公式各成员干基能量均值约 1982 kcal/kg，÷24≈83 饱腹/kg，非 198；198 疑为漏除 24 或口径错。"
+        "kind": "fact",
+        "reason": "待按编号人工核对：黄芥籽：NDB 02024（待核对）；罂粟籽：NDB 02033（待核对）；香芹籽：NDB 02005（待核对）；AI 初审与按编号重问两次意见见 review.factPending",
+        "programCheck": {
+          "verdict": "fact-pending-human"
+        }
       }
-    ]
+    ],
+    "factPending": {
+      "status": "待按编号人工核对",
+      "sourceIds": [
+        "黄芥籽：NDB 02024（待核对）",
+        "罂粟籽：NDB 02033（待核对）",
+        "香芹籽：NDB 02005（待核对）"
+      ],
+      "first": [
+        {
+          "field": "basis",
+          "quote": "黄芥籽：469 kcal/100g，含水约 5.9%",
+          "reason": "USDA 黄芥籽约 508 kcal/100g、含水约 5.3%；469 偏低，疑与罂粟籽混淆",
+          "kind": "fact"
+        },
+        {
+          "field": "basis",
+          "quote": "香芹籽：333 kcal/100g，含水约 9.9%",
+          "reason": "USDA 香芹籽约 333 kcal/100g 但含水约 9.9% 可接受；能量与含水组合偏离，干基约 3700 kcal/kg 偏低，权威值约 333 kcal/100g 含水 9.9% 尚可，soft 更妥",
+          "kind": "fact"
+        }
+      ],
+      "second": []
+    }
   },
   "errors": [
     {
-      "quote": "derived.energyDensity=198",
-      "field": "energyDensity",
+      "quote": "黄芥籽：469 kcal/100g，含水约 5.9%",
+      "field": "basis",
       "verdict": "conflict",
       "severity": "hard",
-      "reason": "按公式各成员干基能量均值约 1982 kcal/kg，÷24≈83 饱腹/kg，非 198；198 疑为漏除 24 或口径错。"
+      "kind": "fact",
+      "reason": "待按编号人工核对：黄芥籽：NDB 02024（待核对）；罂粟籽：NDB 02033（待核对）；香芹籽：NDB 02005（待核对）；AI 初审与按编号重问两次意见见 review.factPending",
+      "programCheck": {
+        "verdict": "fact-pending-human"
+      }
     }
   ],
-  "warnings": [],
-  "feedback": null,
+  "warnings": [
+    {
+      "quote": "黄芥籽：469 kcal/100g，含水约 5.9%",
+      "field": "basis",
+      "verdict": "conflict",
+      "severity": "soft",
+      "kind": "fact",
+      "reason": "USDA 黄芥籽约 508 kcal/100g、含水约 5.3%；469 偏低，疑与罂粟籽混淆，但差距不大，故 soft"
+    }
+  ],
+  "feedback": [
+    "数据来源类事实项请按出处编号核对（不是算术题）：黄芥籽：NDB 02024（待核对）；罂粟籽：NDB 02033（待核对）；香芹籽：NDB 02005（待核对）；【初审事实项】[{\"field\":\"basis\",\"quote\":\"黄芥籽：469 kcal/100g，含水约 5.9%\",\"reason\":\"USDA 黄芥籽约 508 kcal/100g、含水约 5.3%；469 偏低，疑与罂粟籽混淆\",\"kind\":\"fact\"},{\"field\":\"basis\",\"quote\":\"香芹籽：333 kcal/100g，含水约 9.9%\",\"reason\":\"USDA 香芹籽约 333 kcal/100g 但含水约 9.9% 可接受；能量与含水组合偏离，干基约 3700 kcal/kg 偏低，权威值约 333 kcal/100g 含水 9.9% 尚可，soft 更妥\",\"kind\":\"fact\"}]"
+  ],
   "errorCode": null,
   "frozenCandidate": {
     "entryHash": "090f89ea2db05436351595ed2bddf30230781c916b0b16a9dc711f1761c6b266",
@@ -67,10 +117,18 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "6f615b4e-200a-4804-bea5-f89738130975",
-      "file": "budget-responses/6f615b4e-200a-4804-bea5-f89738130975.json",
-      "requestHash": "d2c45e90e25c3412788751028e756402b836eb8150a60d50ed2aaa788f9a89b9",
-      "responseHash": "fbee475af54a0f23928ce50ebf6def19dbd550e37f27a2ccc0c3b15d8deb0f23"
+      "requestId": "82e696a9-258c-499f-991f-7349127d0dd7",
+      "file": "budget-responses/82e696a9-258c-499f-991f-7349127d0dd7.json",
+      "requestHash": "ece08a4b0d996e076c428b647a2154f1312415d4a9798c60cbeca6eafd0f1320",
+      "responseHash": "d3f709f63a38e2fe270cf838f3d22c703579e28b97a1e3b92ccf8ad02a32b17a"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "3fd27eed-c8e5-46ac-bd5c-bd11bc2e8b12",
+      "file": "budget-responses/3fd27eed-c8e5-46ac-bd5c-bd11bc2e8b12.json",
+      "requestHash": "7ce16a0ffc1537348b113110ccdc688cdbbd14e31cf641df89bf260a5d5aaedb",
+      "responseHash": "bbeef4b3d543ae88f9775221d357db7c4c9c53e2b404958e0cb89fe69a13cab1"
     }
   ],
   "measurements": [
@@ -79,19 +137,41 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1537,
-        "completion_tokens": 527,
-        "total_tokens": 2064,
+        "prompt_tokens": 1955,
+        "completion_tokens": 315,
+        "total_tokens": 2270,
         "prompt_tokens_details": {
-          "cached_tokens": 512
+          "cached_tokens": 896
         },
-        "prompt_cache_hit_tokens": 512,
-        "prompt_cache_miss_tokens": 1025
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1059
       },
-      "costUpperYuan": 0.00628648,
-      "cumulativeUpperYuan": 0.0782808,
-      "latencyMs": 3341.925599999995,
-      "timestamp": "2026-11-09T17:57:31.200Z"
+      "costUpperYuan": 0.00467384,
+      "cumulativeUpperYuan": 0.12098952,
+      "latencyMs": 2391.2258999999995,
+      "timestamp": "2026-11-09T18:27:58.151Z"
+    },
+    {
+      "label": "content-review-1-class_spice_seed-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2209,
+        "completion_tokens": 170,
+        "total_tokens": 2379,
+        "prompt_tokens_details": {
+          "cached_tokens": 1920
+        },
+        "prompt_cache_hit_tokens": 1920,
+        "prompt_cache_miss_tokens": 289
+      },
+      "costUpperYuan": 0.0020147999999999998,
+      "cumulativeUpperYuan": 0.12300432,
+      "latencyMs": 1425.3620999999985,
+      "timestamp": "2026-11-09T18:27:59.604Z"
     }
+  ],
+  "errorHistory": [
+    "REVIEW_FACT_RECHECK"
   ]
 }
