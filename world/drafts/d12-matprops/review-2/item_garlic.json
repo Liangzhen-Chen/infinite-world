@@ -1,7 +1,7 @@
 {
   "id": "item_garlic",
   "fingerprint": "ea78c861fdb788041c011a5de66729cd2ec328dc5d3e384a17fa4ced82961193",
-  "status": "manual",
+  "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "item_garlic",
@@ -21,14 +21,29 @@
       "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【数值凭记忆写入，待 L2 核对】"
     }
   },
-  "review": null,
-  "errors": [
-    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_garlic"
+  "review": {
+    "contradictions": [
+      {
+        "quote": "蒜头含水明显低于蔬菜类别，覆盖类别值。",
+        "field": "basis",
+        "verdict": "no_conflict",
+        "severity": "style",
+        "reason": "大蒜含水0.586、149 kcal/100g与USDA生蒜（约0.59、149）一致，干基能量约150饱腹/kg，确低于蔬菜类别均值0.907，表述无误。"
+      }
+    ]
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "quote": "蒜头含水明显低于蔬菜类别，覆盖类别值。",
+      "field": "basis",
+      "verdict": "no_conflict",
+      "severity": "style",
+      "reason": "大蒜含水0.586、149 kcal/100g与USDA生蒜（约0.59、149）一致，干基能量约150饱腹/kg，确低于蔬菜类别均值0.907，表述无误。"
+    }
   ],
-  "warnings": [],
-  "feedback": [
-    "同条审核在 review-2 内已达 3 次（初审+2次修正）：item_garlic"
-  ],
+  "feedback": null,
+  "errorCode": null,
   "frozenCandidate": {
     "entryHash": "f498888a51c9ecca1a29dcf39a7c3c7fedfd3d92e63c48e9d257e6c7d2be1b93",
     "draftHash": "085687e2054ef0349fff6e08de6029c00cfcc0599b8851a3f3c650822ad61262"
@@ -37,10 +52,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "062ec82e-ace0-4be7-82eb-dad35764af94",
-      "file": "budget-responses/062ec82e-ace0-4be7-82eb-dad35764af94.json",
-      "requestHash": "659ab19089dc22f60054164322c56bab1e00a23adca1e3ccb8d5d929972a9373",
-      "responseHash": "53d41dbc0739320fce25dcf4a9f854425cb3be1d4d20d16de44c3b50c286d014"
+      "requestId": "587be35a-5e80-4339-9eb4-6c4227b3963b",
+      "file": "budget-responses/587be35a-5e80-4339-9eb4-6c4227b3963b.json",
+      "requestHash": "c09422cd72440b345c26e79088405e9c4fd93e386045bdb0299aefb4c950d047",
+      "responseHash": "e9d768fbb26d49f588934fb60b8f2cb0eed28e79f25c1e9fe690cdd27da1cfc3"
     }
   ],
   "measurements": [
@@ -49,28 +64,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1405,
-        "completion_tokens": 140,
-        "total_tokens": 1545,
+        "prompt_tokens": 1462,
+        "completion_tokens": 88,
+        "total_tokens": 1550,
         "prompt_tokens_details": {
-          "cached_tokens": 384
+          "cached_tokens": 512
         },
-        "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 1021
+        "prompt_cache_hit_tokens": 512,
+        "prompt_cache_miss_tokens": 950
       },
-      "costUpperYuan": 0.00317736,
-      "cumulativeUpperYuan": 0.28424408000000007,
-      "latencyMs": 2206.5939,
-      "timestamp": "2026-11-09T14:34:34.389Z"
+      "costUpperYuan": 0.00262448,
+      "cumulativeUpperYuan": 0.3627235999999999,
+      "latencyMs": 1792.159,
+      "timestamp": "2026-11-09T16:30:56.619Z"
     }
-  ],
-  "errorCode": "REVIEW_LIMIT",
-  "retryEligible": {
-    "eligible": true,
-    "requestIds": [
-      "062ec82e-ace0-4be7-82eb-dad35764af94"
-    ],
-    "reason": "全部已保存回复都解析不出判定",
-    "at": "2026-11-09T16:30:38.975Z"
-  }
+  ]
 }
