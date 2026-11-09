@@ -22,6 +22,13 @@ import {scheduleAt,assertNpcService} from '../server-plugin/npc-schedule.mjs';
 const {HX,GS,hx,gs,P}=ids,DAY=1440,batch=buildBatch(),formal=await loadWorld();
 const world=mergeMonsterSociety3(formal,batch),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const qty=(doc,id,item)=>{const x=id==='player'?doc.state.inventory[item]:doc.state.npcs[id].inventory[item];return typeof x==='number'?x:x?.quantity??0;};
+// K6（c60b2a62）：没有许可的进入照常发生，并记一条擅入（同 t159、content.test 的 enterUnlicensed 口径）。
+async function enterUnlicensed(s,place){
+ await s.call('world_move',{destination:place});
+ assert.equal(s.doc.state.location,place,'未获许可也能走进去');
+ const rows=Object.values(s.doc.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place);
+ assert.equal(rows.length,1,'恰好记一条擅入');assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');
+}
 function session(w=world,seed='t162'){
  const engine=new WorldEngine(w);let doc=engine.createCharacter(legacy,{},seed),serial=0;
  doc=applyPatches(doc,planBossMigration(doc,w.rules,w.bosses,w));
@@ -80,7 +87,7 @@ test('T162 六处聚居地均有路线和实际交易，私宅与议事处许可
   const before=qty(s.doc,seller,item),buy=await s.call('world_trade',{seller,item,quantity:1});assert.ok(buy.cost>=0);assert.equal(qty(s.doc,seller,item),before-1);assert.ok(qty(s.doc,'player',item)>=1);
  }
  for(const st of settlements){const s=session();for(const p of places.filter(p=>p.settlement===st.id))assert.ok(s.engine.route(st.parent,p.id,'walk',600,'t162').minutes>=0);
-  s.locate(st.id);const home=places.find(p=>p.settlement===st.id&&p.kind==='home');await assert.rejects(s.call('world_move',{destination:home.id}),/许可/);await assert.rejects(s.call('world_move',{destination:st.society.meetingPlace}),/许可/);
+  s.locate(st.id);const home=places.find(p=>p.settlement===st.id&&p.kind==='home');await enterUnlicensed(s,home.id);await enterUnlicensed(s,st.society.meetingPlace);
  }
 });
 
