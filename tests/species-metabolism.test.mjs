@@ -12,6 +12,7 @@ import {saleableStock} from '../server-plugin/market.mjs';
 import {societyForageNeed} from '../server-plugin/wildlife-society.mjs';
 import {explainDerived} from '../server-plugin/derived.mjs';
 import {settlementMouths,settlementMealRatio,mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {generateCounty} from '../server-plugin/remote-generation.mjs';
 import {mouthWeight} from '../server-plugin/household-subsistence.mjs';
 import {readMixedPublication,mergeMixedPublication} from '../tools/publish-creatures-mixed.mjs';
 import {validateCreatureNature} from '../server-plugin/creature-nature.mjs';
@@ -136,4 +137,18 @@ test('木精居民全部死亡后，聚落口数按剩余居民与世界构成�
  const one=settlementMouths(f.engine,state,p.id,1),want=expectedMouths(f,state,p,1);
  assert.ok(Math.abs(one-want)<1e-9);assert.ok(one>0&&one<1&&!Number.isInteger(one));
  assert.equal(mealMouthsOf(f.engine,state,p.id,1),one);
+});
+
+test('远方生成的木精聚落人物按其物种计入加权：不进食者不占公仓口粮',()=>{
+ const f=fixture(),county='county_wushan_shanyi',skeleton=generateCounty(world,county,'species-metabolism');
+ const elms=skeleton.people.filter(p=>f.engine.byId.get(p.species)?.nature?.metabolism?.satiety===0);
+ assert.ok(elms.length>0);
+ const sid=elms[0].settlement,here=elms.filter(p=>p.settlement===sid);
+ const d=structuredClone(f.document);d.state.remote={[county]:{skeleton}};
+ for(const p of here)d.state.npcs[p.id]={species:p.species,materialized:{county,settlement:sid}};
+ const population=here.length+5;
+ // 世界里没有该聚落的档案：具名者按各自因子（0），其余人头按人形（1）；数值由规则推出。
+ assert.equal(settlementMouths(f.engine,d.state,sid,population),population-here.length);
+ for(const p of here)d.state.npcs[p.id].status='死亡';
+ assert.equal(settlementMouths(f.engine,d.state,sid,population-here.length),population-here.length);
 });

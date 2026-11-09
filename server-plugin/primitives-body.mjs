@@ -42,7 +42,7 @@ function settlementMayDiffer(engine,sid,need){
 // Index of residents with a non-1 species, by settlement. It reads only each npc's species and
 // materialized settlement, so stateMemo drops it exactly when an npc is added/removed or those change.
 // Without an active record index stateMemo just builds: one O(npcs) pass per call.
-const oddArrivalInputs=[['npcs','*','species'],['npcs','*','materialized','settlement'],['created']];
+const oddArrivalInputs=[['npcs','*','species'],['npcs','*','materialized','settlement'],['created'],['remote']];
 const oddDefinedCache=new WeakMap();
 function oddDefined(engine,odd){
  let byOdd=oddDefinedCache.get(engine);if(!byOdd)oddDefinedCache.set(engine,byOdd=new Map());
@@ -53,7 +53,9 @@ function oddArrivals(engine,state,need,odd){
  return stateMemo(state,engine,['oddArrivals',need],()=>{
   // 只看可能属于非 1 因子物种的人：世界定义里该物种的 NPC（按引擎静态缓存）加运行时新建的人物，而不是遍历全体 NPC。
   const map=new Map(),seen=new Set();
-  for(const id of [...oddDefined(engine,odd),...Object.keys(state?.created??{})]){
+  // 远方生成的人物直接写入 npcs，来源是 state.remote 各县骨架的 people（带物种）；只取物种属非 1 集合者。
+  const remote=Object.values(state?.remote??{}).flatMap(rec=>(rec?.skeleton?.people??[]).filter(p=>odd.has(p.species)).map(p=>p.id));
+  for(const id of [...oddDefined(engine,odd),...Object.keys(state?.created??{}),...remote]){
    if(seen.has(id))continue;seen.add(id);
    const n=state?.npcs?.[id],sid=n?.materialized?.settlement;if(!sid||!odd.has(n.species??engine.byId?.get(id)?.species))continue;
    (map.get(sid)??map.set(sid,[]).get(sid)).push(id);
