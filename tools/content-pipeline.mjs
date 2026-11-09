@@ -65,6 +65,7 @@ export async function runContentPipeline({
   revision = 'v2', retryManual = false, onBatch = null, budgetRoot = root,
   cardId, allocation, protocolRecoveryIds = [], requestTransform,
   reviewDraftFor = buildDraftRequest?.reviewDraftFor, reuseFrozenDrafts = false,
+  stopOnReviewError = null, // 可选：(error, entry) => true 时，该审查解析错误使整轮停止后续条目（不再发请求）；默认不停，其他卡行为不变
 }) {
   if (!Array.isArray(entries) || new Set(entries.map(row => row.id)).size !== entries.length) throw new Error('条目编号重复或缺失');
   if (entries.some(row => !/^[a-z][a-z0-9_-]+$/i.test(row.id ?? ''))) throw new Error('条目编号不安全');
@@ -76,6 +77,7 @@ export async function runContentPipeline({
   if(!Array.isArray(protocolRecoveryIds)||protocolRecoveryIds.some(id=>!entries.some(e=>e.id===id)))throw Error('协议恢复 id 不在冻结条目中');
   const budget=await openContentBudget({file:ledgerPath,client,cardId,allocation});
   const results = [], batches = [], recordsById=new Map();
+  let halted=null;
   async function prepareRequest(body,details){return requestTransform?requestTransform({...details,body}):{body};}
   async function request(transformed,label,details,reservationId){
     const receipt=transformed.receipt;
@@ -90,6 +92,7 @@ export async function runContentPipeline({
     const file = path.join(root, `${entry.id}.json`);
     let record = recordsById.get(entry.id);
     if(record?.budgetStop){budget.stop(record.budgetStop.message);return record;}
+    if(halted)return record??{id:entry.id,fingerprint,status:'pending',attempts:0,draft:null,review:null,errors:[],warnings:[]}; // 已因审查解析错误停止：不发请求、不写盘
     const recovering=protocolRecoveryIds.length>0;
     let eligible=recovering&&protocolRecoveryIds.includes(entry.id)&&entry.contract==='audit-patch-v1'&&record?.fingerprint===fingerprint&&record.status==='manual'&&!record.review&&!record.protocolRecovery&&
       hasWrapperEvidence(record,entry);
@@ -103,6 +106,7 @@ export async function runContentPipeline({
     record.status='pending';
     for (let attempt = priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
       let reservations=[],preparedDraft;
+      if(!eligible)record.errorCode=null; // 本次尝试开始前清上次的错误码，成功后不残留
       try {
         if(budget.stopped)throw budget.stopped;
         const offline=eligible?record.protocolRecovery.prior.draftResponse:null;
@@ -139,7 +143,8 @@ export async function runContentPipeline({
           record.rawProviderReviewResponses??=[];
           record.rawProviderReviewResponses.push({attempt:attempt+1,response:reviewResponse.rawProviderReviewResponse,hash:reviewResponse.rawProviderReviewResponseHash});
         }
-        record.review = await extractReview(reviewResponse, entry);
+        try{record.review = await extractReview(reviewResponse, entry);}
+        catch(error){if(stopOnReviewError?.(error,entry))halted={id:entry.id,code:error.code??null,message:error.message};throw error;}
         const issues = reviewIssues(record.review);
         record.errors.push(...issues.filter(row => row.severity === 'hard'));
         record.warnings.push(...issues.filter(row => row.severity !== 'hard'));
@@ -155,7 +160,7 @@ export async function runContentPipeline({
           if(eligible)record.protocolRecovery.status='budget-stopped';
           await writeJSON(file,record);return record;
         }
-        record.errorCode=error.code??null;
+        record.errorCode=error.code??null;(record.errorHistory??=[]).push(error.code??null);
         feedback = [String(error.message)]; record.errors = feedback;
         // Transport failure keeps an already sent attempt and its unknown cost.
         if (/费用上限|环境变量|fetch failed|timeout|timed out|HTTP (429|5\d\d)/i.test(error.message)) {
@@ -165,6 +170,7 @@ export async function runContentPipeline({
         }
       } finally {if(reservations.length)await budget.releaseRound(reservations);}
       record.feedback = feedback;
+      if(halted?.id===entry.id)break; // 本条不再请求新的审查，记录按失败写盘
       await writeJSON(file, record);
     }
     if (record.status !== 'passed') record.status = 'manual';
@@ -202,9 +208,9 @@ export async function runContentPipeline({
     batches.push(batch); await writeJSON(file, batch);
     if (onBatch) await onBatch(batch, rows);
   }
-  const summary = { total: entries.length, passed: results.filter(row => row.status === 'passed').length, manual: results.filter(row => row.status === 'manual').length, pending: results.filter(row => row.status === 'pending').length, costUpperYuan: client.spent+(client.reserved??0), budget:budget.ledger, batches, scope: 'L1/L2 审核结果；尚须 L4 抽读与发布校验' };
+  const summary = { total: entries.length, passed: results.filter(row => row.status === 'passed').length, manual: results.filter(row => row.status === 'manual').length, pending: results.filter(row => row.status === 'pending').length, costUpperYuan: client.spent+(client.reserved??0), budget:budget.ledger, batches, scope: 'L1/L2 审核结果；尚须 L4 抽读与发布校验', ...(halted?{halted}:{}) };
   await writeJSON(path.join(root, 'summary.json'), summary);
-  return { results, summary };
+  return { results, summary, halted };
   } finally {await budget.close();}
 }
 

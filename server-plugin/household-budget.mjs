@@ -14,7 +14,7 @@ import {contractTerms,leaseState,tenancyRentAmount} from './contract-state.mjs';
 import {householdWorkTime} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {physicalItem} from './items.mjs';
-import {isItemClass,householdUsage as usageDefinition} from './item-class.mjs';
+import {isItemClass,householdUsage as usageDefinition,usageGrams} from './item-class.mjs';
 // Shop restock lists and the upkeep-shortage reader are household facts: they live here (L1) so market and the household packs read them without importing npc-life.
 export function registerMerchandiseResolver(fn){registerMerchandiseResolver.fn=fn;}
 export function householdUpkeepGap(state,key){const r=state.family?.upkeep?.[key]??{};return Object.fromEntries(Object.entries(r).filter(([k])=>k.endsWith('ShortDays')));}
@@ -317,11 +317,13 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
 // 用度定义只有 item-class.mjs 的 householdUsage 一份，这里按状态时刻读它。
 export function householdUsage(engine,state,members){return usageDefinition(engine,state.minute,members);}
 export const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
-// 家户用度先用同类里最便宜的：有热值属性（heatValue）的燃料按 价格 ÷ 热值，否则按 价格 ÷ 克。数据里目前没有物品登记热值，都按克算。
-export function usageCost(engine,item){const it=engine.byId.get(item);return (it?.basePrice??0)/(it?.heatValue>0?it.heatValue:itemGrams(engine,item));}
+// 这件货顶多少基准克（燃料按有效热值折算，见 item-class.usageGrams；其余等于 itemGrams）。
+export const usageItemGrams=(engine,item,cls)=>usageGrams(engine,item,cls,itemGrams(engine,item));
+// 家户用度先用同类里最便宜的：价格 ÷ 顶多少基准克。燃料按有效热值折算（热值与含水率已知，见 item-class.usageGrams），其余与未知时按 价格 ÷ 克。
+export function usageCost(engine,item){const it=engine.byId.get(item);return (it?.basePrice??0)/(isItemClass(engine,item,'fuel')?usageItemGrams(engine,item,'fuel'):itemGrams(engine,item));}
 // 一户一日用掉这件货多少件（不属于消耗类的为 0）。
 export function householdDailyUse(engine,state,members,item){
- return householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).reduce((n,u)=>n+u.gramsPerDay,0)/itemGrams(engine,item);
+ return householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).reduce((n,u)=>{const g=usageItemGrams(engine,item,u.cls);return g>0?n+u.gramsPerDay/g:n;},0);
 }
 function reserveUpkeep(engine,state,members,rows){
  const cycle=engine.rules.economy?.tradeCycleDays??1,stock=new Map();
@@ -333,8 +335,10 @@ function reserveUpkeep(engine,state,members,rows){
    if(grams<=0)break;
    // 家户用度只扣名册人物的户（npc-life householdUpkeep 只取 state.npcs 里的户员）；玩家不按日自动扣，也就不替他留。
    if(!state.npcs?.[r.holder]||!isItemClass(engine,r.item,u.cls)||merchandise(r.holder).has(r.item))continue;
-   const free=Math.max(0,r.stock-r.committed-r.food-r.seed-(r.upkeep??0)),take=Math.min(free,Math.ceil(grams/itemGrams(engine,r.item)));
-   if(take>0){r.upkeep=(r.upkeep??0)+take;grams-=take*itemGrams(engine,r.item);}
+   const free=Math.max(0,r.stock-r.committed-r.food-r.seed-(r.upkeep??0)),unit=usageItemGrams(engine,r.item,u.cls);
+   if(!(unit>0))continue;
+   const take=Math.min(free,Math.ceil(grams/unit));
+   if(take>0){r.upkeep=(r.upkeep??0)+take;grams-=take*unit;}
   }
  }
 }

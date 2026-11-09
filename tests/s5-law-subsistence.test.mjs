@@ -13,6 +13,9 @@ import {assertSiteHarvest} from '../server-plugin/sites.mjs';
 import {assertTransitionInvariants} from '../server-plugin/transition.mjs';
 import {applyPatches,withRecordIndex,setRecordIndexCheck} from '../server-plugin/storage.mjs';
 import {advanceHook} from '../server-plugin/advance-hooks.mjs';
+import {fuelEffectiveHeat,fuelReferenceHeat,householdUsage} from '../server-plugin/item-class.mjs';
+import {itemGrams} from '../server-plugin/household-budget.mjs';
+import craftingBalance from '../world/rules/tables/balance/crafting.json' with {type:'json'};
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',home='loc_hw_northwood';
 function fixture({capacity=2000,separate=false,owned=false,location=home,settlement='loc_hw',food=0,fullClock=false}={}){
@@ -701,4 +704,34 @@ test('a household with no fuel fetches it from a public forest in its shared wor
  assert.ok(held>before,'fetched fuel reaches the household members, net of the day\'s burning');
  assert.ok(meals(f)[0].sources.some(s=>s.kind==='upkeep'&&s.cls==='fuel'&&s.quantity>0));
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
+});
+
+// D12 卡 B：自采燃料的每件顶多少基准克与持有抵扣，和 npc-life 消耗同口径（有效热值折算）；去掉属性表时与现行一致。
+test('self-gathered fuel and held-fuel offset follow effective heat; without material props they equal the current weight rule',()=>{
+ const REF=craftingBalance.params.find(p=>p.id==='household.fuelReferenceClass').value;
+ const plan=(table,wood,held)=>{
+  const f=fixture();f.d.set(['state','npcs',A,'inventory'],held?{item_wood:held}:{});
+  f.e.world.materialProps=table;
+  const it=f.e.byId.get('item_wood');delete it.props;if(wood)it.props=wood;
+  return {f,p:householdSubsistencePlan(f.e,f.d.get('state'),A,480)};
+ };
+ const table={dimensions:{},precedence:[],classes:{[REF]:{heatValue:18,moisture:0.2,basis:'夹具：参照类'}}};
+ const damp={moisture:0.5,heatValue:18,basis:'夹具：含水更多的木料'};
+ const L=craftingBalance.params.find(p=>p.id==='household.waterLatentHeat').value;
+ const eff=(h,m)=>h*(1-m)-L*m,ref=eff(18,0.2);
+ const legacy=plan({dimensions:{},precedence:[],classes:{}},null,0),known=plan(table,damp,0);
+ const tripOf=r=>r.p.upkeepTrips.find(t=>t.cls==='fuel');
+ const grams=itemGrams(legacy.f.e,'item_wood');
+ assert.equal(tripOf(legacy).unitGrams,grams,'无属性：每件按重量克');
+ assert.equal(fuelReferenceHeat(known.f.e),ref);
+ assert.equal(fuelEffectiveHeat(known.f.e,'item_wood'),eff(18,0.5));
+ assert.equal(tripOf(known).unitGrams,grams*eff(18,0.5)/ref,'有属性：每件按有效热值折算');
+ // 持有抵扣：缺口 = 日用度 × 交易周期 −（持有件数 × 每件顶的基准克）；有无缺口（是否要出门采柴）按公式。
+ const cycle=legacy.f.e.rules.economy?.tradeCycleDays??1;
+ const need=householdUsage(known.f.e,0,[A,B]).find(u=>u.cls==='fuel').gramsPerDay*cycle;
+ for(const [label,args,unit] of [['legacy',[{dimensions:{},precedence:[],classes:{}},null],grams],['known',[table,damp],grams*eff(18,0.5)/ref]])
+  for(const held of [1,Math.ceil(need/unit)+1]){
+   const r=plan(...args,held);
+   assert.equal(Boolean(tripOf(r)),Math.ceil(need-held*unit)>0,`${label} held=${held}`);
+  }
 });

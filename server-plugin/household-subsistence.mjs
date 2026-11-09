@@ -5,7 +5,7 @@ import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
-import {householdMealPlan,itemGrams} from './household-budget.mjs';
+import {householdMealPlan,usageItemGrams} from './household-budget.mjs';
 import {householdUsage,isItemClass,heldOfClass} from './item-class.mjs';
 import {warClosedRoutes} from './hazard-calendar.mjs';
 import {facilityRouteStates} from './facility-state.mjs';
@@ -68,13 +68,13 @@ function upkeepSources(e,state){
    const place=e.byId.get(s.location);
    // Same commons rule as food foraging: the outdoor forest fringe of an authored site is public unless owned or consent-gated.
    if(!publicPlace(place))continue;
-   rows.push({id:`upkeep:${cls}:${s.location}`,location:s.location,kind:'forest',cls,item:wood,unitGrams:itemGrams(e,wood),capacity:s.capacity,minutesPerPortion:forest.minutes});
+   rows.push({id:`upkeep:${cls}:${s.location}`,location:s.location,kind:'forest',cls,item:wood,unitGrams:usageItemGrams(e,wood,cls),capacity:s.capacity,minutesPerPortion:forest.minutes});
   }
   // A site resource backed by the forest ledger is drawn only through the forest row (siteTake would draw the forest stock for it anyway),
   // whether or not that forest is a public row: never offer it a second time as a site resource.
   for(const r of ecology.commonsResources?.(e,state,item=>isItemClass(e,item,cls),publicPlace)??[])if(!(r.item===wood&&forestLocations.has(r.site)))
-   rows.push({id:`upkeep:${cls}:${r.site}:${r.resource}`,location:r.site,kind:'site',cls,site:r.site,resource:r.resource,item:r.item,unitGrams:itemGrams(e,r.item),capacity:0,minutesPerPortion:null});
-  out.set(cls,rows);
+   rows.push({id:`upkeep:${cls}:${r.site}:${r.resource}`,location:r.site,kind:'site',cls,site:r.site,resource:r.resource,item:r.item,unitGrams:usageItemGrams(e,r.item,cls),capacity:0,minutesPerPortion:null});
+  out.set(cls,rows.filter(r=>r.unitGrams>0));
  }
  return out;
 }
@@ -98,7 +98,7 @@ function readUpkeepWants(e,state,owner,members,minute){
  const row=state.family?.upkeep?.[personHousehold(e,state,owner).value?.id??owner]??{};
  return householdUsage(e,minute,members).flatMap(u=>{
   if(!(u.gramsPerDay>0)||!sources(e,state).upkeep.get(u.cls)?.length)return [];
-  const held=holders.reduce((n,h)=>n+heldOfClass(d,e,h,u.cls).reduce((m,r)=>m+r.quantity*itemGrams(e,r.item),0),0);
+  const held=holders.reduce((n,h)=>n+heldOfClass(d,e,h,u.cls).reduce((m,r)=>m+r.quantity*usageItemGrams(e,r.item,u.cls),0),0);
   const grams=Math.ceil(u.gramsPerDay*cycle+(row[`${u.cls}DebtG`]??0)-held);
   return grams>0?[{cls:u.cls,grams}]:[];
  });

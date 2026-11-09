@@ -40,7 +40,7 @@ test('每个条目都带来源类别、出处、界与待标定标注；硬设�
    if(/-?\d/.test(JSON.stringify(payload)))assert.ok(e.bounds&&(Array.isArray(e.bounds)||Object.keys(e.bounds).length),`${name}/${id} 含数值的条目带上下界`);
    if(e.basis==='hard'){assert.equal(e.closed,true,`${name}/${id} 硬设定封闭`);assert.equal(e.calibration,'fixed');}
    if(e.basis==='calibrate')assert.equal(e.calibration,'pending',`${name}/${id} 待标定`);
-   if(e.basis==='play'){assert.equal(e.playDecision,true);assert.match(e.decisionRef,/^docs\/待用户确认\.md 2026-10-16/);}
+   if(e.basis==='play'){assert.equal(e.playDecision,true);assert.match(e.decisionRef,/^docs\/(待用户确认\.md 2026-10-16|决策\.md D12 燃料参照类)/);}
    if(e.basis==='derived')assert.ok(e.from.length,`${name}/${id} 可推算带上游`);
   }
  }

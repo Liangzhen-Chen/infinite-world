@@ -13,6 +13,7 @@
 // 用法：node tools/kc-processing.mjs [--write] [--root <树>]。改类参数或资源表后重跑 --write，生成的配方行不手改。
 import fs from 'node:fs';
 import path from 'node:path';
+import {materialProps} from '../server-plugin/item-class.mjs';
 
 // Command-line options belong to this script only when it is the entry point; imported as a library (runtime-world) the host's own --root must not redirect it.
 const isMain = path.resolve(process.argv[1] ?? '') === path.resolve(import.meta.filename);
@@ -36,16 +37,16 @@ const NEW_ITEMS = [
 ];
 
 // ---------- 加工类 ----------
-// yield：产物重量 / 原料重量；minutesPerKg：每公斤原料的劳动分钟；reagents：每公斤原料另需的辅料（份数，向上取整）。
+// yield：产物重量 / 原料重量（常数）；yieldFrom 标了的类（char、mill）在原料属性已知时改由属性推出（见 processYield），属性未知时仍用 yield 常数；minutesPerKg：每公斤原料的劳动分钟；reagents：每公斤原料另需的辅料（份数，向上取整）。
 // 每条配方处理一份原料（按原料最小计量单位），产物份数 = floor(原料重 × 产率 / 产物单重)，至少要能出 1 份，否则多取几份原料。
 const PROCESSES = [
-  {id: 'char', name: '烧炭', skill: 'skill_life_6_core', workstation: null, tools: [], yield: 0.25, minutesPerKg: 20,
+  {id: 'char', name: '烧炭', skill: 'skill_life_6_core', workstation: null, tools: [], yield: 0.25, yieldFrom: 'char', minutesPerKg: 20,
     process: '把原料截段码进土窑或炭坑，引火后封闷，看烟色转青再封死冷却，扒出炭块敲碎装袋；烧过头成灰、欠火留生柴，失败不返料。',
     members: [['item_wood', 'item_charcoal']]},
   {id: 'saw', name: '开料', skill: 'skill_life_6_core', workstation: 'woodworking', tools: ['item_frame_saw'], yield: 0.5, minutesPerKg: 15, shavings: true,
     process: '挑无裂段顺纹弹线，锯开成规格料，修去树皮与毛边，余下边角刨成刨屑；料面开裂即成废料。',
     members: [['item_wood', 'item_pine_board'], ['item_wood', 'item_beech_blank'], ['item_wood', 'item_ash_stave']]},
-  {id: 'mill', name: '磨粉', skill: 'skill_life_0_core', workstation: 'woodworking', tools: ['item_fine_sieve'], yield: 0.8, minutesPerKg: 40,
+  {id: 'mill', name: '磨粉', skill: 'skill_life_0_core', workstation: 'woodworking', tools: ['item_fine_sieve'], yield: 0.8, yieldFrom: 'mill', minutesPerKg: 40,
     process: '谷粒脱壳后上磨碾细，过细筛分出麸壳；潮粒结块须先晾干，筛不净的粗粉不算成品。',
     members: [['item_oats', 'item_oat_flour']]},
   {id: 'ret', name: '沤麻', skill: 'skill_life_0_core', workstation: null, tools: [], yield: 0.3, minutesPerKg: 60, reagents: {item_water: 2},
@@ -160,21 +161,45 @@ function recipeBase(id, name, {skill, workstation, tools, minutes, process, kind
   return r;
 }
 
+// D12 卡 C：加工产率读原料属性（materialProps，取值与继承见 server-plugin/item-class.mjs）。
+//   磨粉：出粉率 = 可食部分比例 ×（1 − 加工损耗）；加工损耗沿用规则表 balance/crafting 的 nutrition.processLoss.unheated
+//         （未加热加工的损耗，磨粉在其定义里属"未加热"），不另拍系数。
+//   烧炭：得率 = 炭化得率 charYield（占投入干重）× 干重占比 (1 − 含水率)。
+//   属性任一必需维度未知，返回 null，调用方沿用该类的 yield 常数（正式表 classes 为空时即如此，生成结果不变）。
+//   晾干、脱壳类：现有 PROCESSES 里没有对应过程，本卡不新增（见汇报）。
+export function processYield(p, props, loss) {
+  const known = k => props?.[k]?.known ? props[k].value : null;
+  if (p.yieldFrom === 'mill') { const e = known('edibleFraction'); return e === null ? null : e * (1 - loss); }
+  if (p.yieldFrom === 'char') { const c = known('charYield'), m = known('moisture'); return c === null || m === null ? null : c * (1 - m); }
+  return null;
+}
+
 export function generate(root = ROOT) {
   const R = rel => JSON.parse(fs.readFileSync(path.join(root, rel), 'utf8'));
   const itemsArr = R('world/meta/items.json').filter(i => !NEW_ITEMS.some(n => n.id === i.id));
   const items = new Map([...itemsArr, ...NEW_ITEMS].map(i => [i.id, i]));
   const authored = R('world/meta/recipes.json').filter(r => !r.id.startsWith('recipe_kc_'));
+  // 属性取值用的引擎壳：物品带上覆盖层 mechanics/items.json 追加的标签与 props（运行时世界的合并结果），加属性表
+  const overlayFile = path.join(root, 'world/meta/mechanics/items.json'), tableFile = path.join(root, 'world/meta/mechanics/material-props.json');
+  const overlay = fs.existsSync(overlayFile) ? R('world/meta/mechanics/items.json') : {};
+  const engineItems = [...items.values()].map(i => {
+    const o = overlay[i.id]; if (!o) return i;
+    return {...i, tags: [...new Set([...(i.tags ?? []), ...(o.tags ?? [])])], ...(o.props ? {props: o.props} : {})};
+  });
+  const engine = {world: {items: engineItems, recipes: authored, materialProps: fs.existsSync(tableFile) ? R('world/meta/mechanics/material-props.json') : undefined}, byId: new Map(engineItems.map(i => [i.id, i]))};
+  const loss = R('world/rules/tables/balance/crafting.json').params.find(x => x.id === 'nutrition.processLoss').value.unheated;
   const out = [];
   const covered = (input, product) => authored.some(r => r.output.item === product && r.materials.some(m => m.item === input));
   // 加工类
   for (const p of PROCESSES) for (const [input, product] of p.members) {
     if (!p.binder && covered(input, product)) continue; // 已有作者写的同类配方（例如筛磨燕麦粉、选矿冶炼），不重复
     const inKg = kg(items, input), outKg = kg(items, product);
+    const yld = (p.yieldFrom && processYield(p, materialProps(engine, input), loss)) ?? p.yield;
+    if (!(yld > 0)) continue; // 属性推出零产率：这一对原料做不出东西，不生成配方
     // 一批取几份原料：至少够出 1 份产物；调墨这类加水成液的按份配（成品重量里有水，不按重量算产率）
     let units = p.batch ?? p.perOutput ?? 1;
-    if (!p.batch) while (Math.floor(units * inKg * p.yield / outKg + 1e-9) < 1) units++;
-    const qty = p.batch ? 1 : Math.min(200, Math.floor(units * inKg * p.yield / outKg + 1e-9));
+    if (!p.batch) while (Math.floor(units * inKg * yld / outKg + 1e-9) < 1) units++;
+    const qty = p.batch ? 1 : Math.min(200, Math.floor(units * inKg * yld / outKg + 1e-9));
     const binders = p.binder ?? [null];
     for (const binder of binders) {
       if (binder && authored.some(r => r.output.item === product && r.materials.some(m => m.item === binder) && r.materials.some(m => m.item === input))) continue;

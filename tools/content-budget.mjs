@@ -29,6 +29,12 @@ export function migrateDepthBudget(ledger,card,allocation){
  }
  return out;
 }
+// 单次请求的预留上界（账本发请求前预留所用的同一口径）；无法核算返回 NaN。
+export function reserveCeilingYuan(client,body){
+  const encodedRequest={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...body};
+  if(encodedRequest.messages)encodedRequest.messages=encodedRequest.messages.map(m=>m.role==='assistant'&&m.content===undefined?{...m,content:null}:m);
+  return client.rates?(Buffer.byteLength(JSON.stringify(encodedRequest))*client.rates.miss+encodedRequest.max_tokens*client.rates.output)/1e6:typeof client.estimateCostYuan==='function'?client.estimateCostYuan(body):NaN;
+}
 export const reopenAuthorizationId='user-reopen-20261012-01';
 const reopenLimits={T06:[2,2.5],T07:[3,4.5],T08:[3,4.5],T09:[3,4.5]};
 const amendedCardLimits={T07:7,T08:6.5,T09:4.5};
@@ -130,9 +136,7 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
  function stop(message){stopped??=Object.assign(Error(message),{code:'CONTENT_BUDGET_STOP'});return stopped;}
  function guard(){if(stopped)throw stopped;}
  function estimate(body){
-  const encodedRequest={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...body};
-  if(encodedRequest.messages)encodedRequest.messages=encodedRequest.messages.map(m=>m.role==='assistant'&&m.content===undefined?{...m,content:null}:m);
-  const ceiling=client.rates?(Buffer.byteLength(JSON.stringify(encodedRequest))*client.rates.miss+encodedRequest.max_tokens*client.rates.output)/1e6:typeof client.estimateCostYuan==='function'?client.estimateCostYuan(body):NaN;
+  const ceiling=reserveCeilingYuan(client,body);
   if(!amount(ceiling))throw stop('缺少可验证的请求费用预留，已停止');
   return ceiling;
  }

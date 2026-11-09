@@ -42,7 +42,7 @@ import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
 import {pow} from './det-math.mjs';
 import {heldUnit,wearItem} from './items.mjs';
-import {isItemClass,heldOfClass,craftingParam,householdUsage} from './item-class.mjs';
+import {isItemClass,heldOfClass,craftingParam,householdUsage,usageGrams} from './item-class.mjs';
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
@@ -90,11 +90,11 @@ function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId,purpose){
  const state=d.get('state'),stock=new Map(holders.map(h=>[h,merchandise(engine,state,h)]));
  // 先用户里同类中最便宜的（household-budget.usageCost：价格 ÷ 热值，无热值按 价格 ÷ 克），不按物品编号；家用的先于店主货架上的货。
  const cheapest=rows=>rows.sort((a,b)=>usageCost(engine,a.item)-usageCost(engine,b.item)||a.item.localeCompare(b.item)||a.h.localeCompare(b.h))[0]??null;
- const held=merchandiseToo=>holders.flatMap(h=>heldOfClass(d,engine,h,cls).filter(r=>merchandiseToo||!stock.get(h).has(r.item)).map(r=>({h,item:r.item})));
+ const held=merchandiseToo=>holders.flatMap(h=>heldOfClass(d,engine,h,cls).filter(r=>usageGrams(engine,r.item,cls,grams(engine,r.item))>0&&(merchandiseToo||!stock.get(h).has(r.item))).map(r=>({h,item:r.item})));
  for(;;){
   const pick=cheapest(held(false))??cheapest(held(true));
   if(!pick){short=debt>0;debt=Math.min(debt,needG);break;}
-  const unit=grams(engine,pick.item);if(debt<unit)break;
+  const unit=usageGrams(engine,pick.item,cls,grams(engine,pick.item));if(debt<unit)break;
   engine.itemDelta(d,pick.h,pick.item,-1,{...UPKEEP,purpose,eventId});debt-=unit;
  }
  return {debt,short};
