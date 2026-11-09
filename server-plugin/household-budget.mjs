@@ -304,7 +304,8 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  }));
  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*horizons.get(id),...(view?{observer:owner,view}:{})}).value,0)]));
  // 单餐额度的池：现有累计额度 + 预算期内新增额度（各成员的预算天数），与日推进实际吃掉的量同一套（item-class.mealCapPools）。
- const capDays=[...horizons.values()],newCaps=()=>{const c=mealCapPools(engine,{days:capDays,saved});for(const r of rows)if(r.stock>0)c.markHeld(r.item);return c;};
+ // 两次 newCaps 共用同一份 poolMemo：池只由 engine 与物品定，与额度已用量无关；used/held 等状态仍各自独立。
+ const capDays=[...horizons.values()],poolMemo=new Map(),newCaps=()=>{const c=mealCapPools(engine,{days:capDays,saved,poolMemo});for(const r of rows)if(r.stock>0)c.markHeld(r.item);return c;};
  const baseline=rows.map(r=>({...r})),procurementShortfall=allocateMeals(baseline,needs,newCaps());
  // Shared food is allocated once in a stable order. My cash can release my
  // own retained goods, but cannot silently release another holder's reserve
