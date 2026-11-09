@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,7 +22,7 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     const origin=`http://127.0.0.1:${server.address().port}`;
     const response=await fetch(`${origin}/api/plugins/infinite-fields/create`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close'},body:'{}'});
     const created=await response.json();
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage(),pageErrors=[],consoleErrors=[];let failReconcile=false,generationRequests=0,preReleaseFixture=false;
     page.on('pageerror',error=>pageErrors.push(error.message));
     page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});
@@ -216,7 +217,7 @@ test('T41 浏览器：现有账本显示实际居民与分村贡献，重绘不�
     const donation=await run('world_farm',{operation:'donate',settlement:'loc_hw',quantity:10},'grain');
     const other={category:'civic_contribution',subject:'npc_hw_luqing',settlement:'loc_bs_yupo',kind:'teaching',points:99};
     doc.state.records['civic_source:private-teacher']=other;
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:390,height:844}});
     await page.route('http://ledger.fixture/**',async route=>route.fulfill({contentType:route.request().url().endsWith('.mjs')?'text/javascript':'text/html',body:route.request().url().endsWith('.mjs')?await fs.readFile('extension/ledger-view.mjs','utf8'):'<div id="ledger"></div>'}));
     await page.goto('http://ledger.fixture/');await page.addStyleTag({content:await fs.readFile('extension/style.css','utf8')});

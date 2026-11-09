@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -109,7 +110,7 @@ test('M6-06 返回开始页还在保存时选择备份，导入保留并在快�
 
 test('M6-06 浏览器：创建→固定回复发送→保存→导入→继续，双主题桌面与390手机开始页及前情截图',{timeout:90000},async t=>{
     const {origin,request}=await fixture(t);
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:1440,height:900},acceptDownloads:true}),errors=[],consoleErrors=[];
     page.on('pageerror',error=>errors.push(error.stack??error.message));
     page.on('console',message=>{if(message.type()==='error')consoleErrors.push(message.text());});

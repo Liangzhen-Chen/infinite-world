@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,7 +9,7 @@ import {uiSession} from './helpers/ui-script.mjs';
 test('390×844 对话面板：点击在场者、寒暄、询问、告辞，无 LLM、无脚本错误',{timeout:60000},async t=>{
  const ui=await uiSession(t,{mutate:s=>{s.npcs.npc_hw_linsui.goals={};}});
  const work=await fs.mkdtemp(path.join(tmpRoot(),'a2-ui-'));
- const browser=await chromium.launchPersistentContext(path.join(work,'profile'),{executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true,artifactsDir:work,downloadsPath:work,viewport:{width:390,height:844}});t.after(()=>browser.close());
+ const browser=await chromium.launchPersistentContext(path.join(work,'profile'),{executablePath:browserExecutablePath(),headless:true,artifactsDir:work,downloadsPath:work,viewport:{width:390,height:844}});t.after(()=>browser.close());
  const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.exposeFunction('a2Api',(endpoint,body)=>ui.server.api(endpoint,{...body,campaignId:ui.campaignId}));
  await page.exposeFunction('a2Act',async(action,slots)=>({result:await ui.choose(action,slots,{search:true}),document:await ui.read()}));

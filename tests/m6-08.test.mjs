@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -123,7 +124,7 @@ test('M6-08 界面模块自动注册且所选战役只读，素材可由扩展�
 
 test('M6-08 浏览器：背景联系表、真实出行切景、头像知情过滤、减少动画、聊天清理，双主题桌面与390截图',{timeout:60000},async t=>{
     const {origin,request}=await fixture(t),created=await request('create',{name:'绘景旅人'}),campaignId=created.body.reference.campaignId;
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.route('**/favicon.ico',route=>route.fulfill({status:204}));
     await page.route('**/api/backends/**',()=>{throw Error('视觉验收禁止模型请求');});

@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import {reviewResponse} from './helpers/consistency-response.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -17,7 +18,7 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
  }};
  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
  const created=await server.api('create',{});
- const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+ const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
  const page=await browser.newPage(),endpoints=[];
  await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{
   const relative=decodeURIComponent(new URL(route.request().url()).pathname).slice(1);

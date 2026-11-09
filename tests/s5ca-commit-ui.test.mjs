@@ -1,4 +1,5 @@
 // S5-A F081：交易已提交、随后聊天保存失败，界面显示已成交；再点同一笔不再扣钱、不再给货，取回原回执。
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,7 +9,7 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 test('提交成功后保存失败：显示已成交并要求对账；再点同一笔复用原请求编号，只成交一次',{timeout:120000},async t=>{
  const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
  const created=await server.api('create',{});
- const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+ const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
  const page=await browser.newPage({viewport:{width:390,height:844}}),executes=[];
  await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{
   const relative=decodeURIComponent(new URL(route.request().url()).pathname).slice(1);

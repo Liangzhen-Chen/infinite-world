@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -167,7 +168,7 @@ test('M6-05 三面板空态、到期标识和收发筛选；旧请求不覆盖�
 
 test('M6-05 浏览器：无领地、有领地及到期排序，双主题桌面与390手机截图',{timeout:60000},async t=>{
     const {origin,request}=await fixture(t),created=await request('create',{name:'事务旅人'});
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.route('**/favicon.ico',route=>route.fulfill({status:204}));
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>事务面板测试</title></head><body><div id="sheld"><div id="chat"><div class="mes_text">旅人核对已登记事务。</div></div><div id="form_sheld"><form id="send_form"><textarea id="send_textarea"></textarea></form></div></div></body></html>'}));

@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -93,7 +94,7 @@ test('M6-01 隔离打包包含界面模块、完整字体和许可，二进制�
 
 test('M6-01 浏览器：双主题、两行顶栏、全屏抽屉、字号持久化与键盘焦点', {timeout:60000},async t=>{
     const {origin,request}=await fixture(t),created=await request('create',{name:'测试旅人'});
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
     const narrative='雨停之后，檐角仍在滴水。';
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:`<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>无限原野界面测试</title></head><body><div id="sheld"><div id="chat"><div class="mes_text"><p>${narrative}</p></div></div><div id="form_sheld"><form id="send_form"><textarea id="send_textarea" aria-label="行动输入"></textarea></form></div></div></body></html>`}));

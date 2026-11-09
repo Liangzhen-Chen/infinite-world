@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -133,7 +134,7 @@ async function fixture(t){
 test('M6-09 隔离浏览器：点击前无声，实际合成输出，手机共用音量与聊天停止',{timeout:60000},async t=>{
     const {origin,created}=await fixture(t);
     // Remove Playwright's default mute flag so the main session can listen.
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:process.env.FIELDS_AUDIO_HEADFUL!=='1',ignoreDefaultArgs:['--mute-audio']});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:process.env.FIELDS_AUDIO_HEADFUL!=='1',ignoreDefaultArgs:['--mute-audio']});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.route('**/favicon.ico',route=>route.fulfill({status:204}));
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"></head><body><div id="sheld"></div><textarea id="send_textarea"></textarea></body></html>'}));

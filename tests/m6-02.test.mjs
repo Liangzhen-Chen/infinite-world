@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -85,7 +86,7 @@ test('M6-02 消息路由按当前战役读取，不改变存档，模块自动�
 
 test('M6-02 浏览器：名牌、登记、事件邮件、错误及手机输入，两主题截图', {timeout:60000},async t=>{
     const {origin,request}=await fixture(t),created=await request('create',{name:'旅人'});
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
     const projection=messageProjection(engine,{state:sample()});let events=[{anchor:'a',notices:[{type:'coins',text:'钱袋 -6铜，现有 174'},...projection.documents.map(card=>({type:card.kind,text:card.title,card}))]}];
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"></head><body><div id="sheld"><div id="chat"><div class="mes" mesid="1"><div class="mes_block"><div class="mes_text"></div></div></div><div class="mes" mesid="2"><div class="mes_text"></div></div></div><div id="form_sheld"><form id="send_form"><textarea id="send_textarea" aria-label="行动输入"></textarea><button type="submit">发送</button></form></div></div></body></html>'}));

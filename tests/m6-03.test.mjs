@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -120,7 +121,7 @@ test('M6-03 四面板文字呈现与空态，回滚较新请求胜出且失败�
 
 test('M6-03 浏览器：四面板双主题桌面与手机截图，空值及回滚自动刷新',{timeout:60000},async t=>{
     const {origin,request}=await fixture(t),created=await request('create',{name:'个人面板旅人'}),campaignId=created.body.reference.campaignId;
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>个人面板测试</title></head><body><div id="sheld"><div id="chat"><div class="mes_text"><p>雨后，旅人清点随身物品。</p></div></div><div id="form_sheld"><form id="send_form"><textarea id="send_textarea"></textarea></form></div></div></body></html>'}));
     await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{

@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -45,7 +46,7 @@ test('试玩复用同一窗口，跨批次保留稳定历史开头且完整聊�
 });
 
 test('原生生成拦截器只裁当前请求副本，不隐藏原文或修改聊天锚点',{timeout:60000},async t=>{
- const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());const row=await campaign(server),browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());const page=await browser.newPage();
+ const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());const row=await campaign(server),browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());const page=await browser.newPage();
  await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{
   const relative=decodeURIComponent(new URL(route.request().url()).pathname).slice(1);
   let body=await fs.readFile(`extension/${relative}`,'utf8');

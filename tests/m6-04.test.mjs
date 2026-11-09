@@ -1,3 +1,4 @@
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -141,7 +142,7 @@ test('M6-04 浏览器：三面板、搜索、笔记与判断保存，双主题�
     assert.equal((await request('execute',{campaignId,tool:'world_trade',args:{seller:'林穗',item:'面包',quantity:1},eventId:'browser-bread',anchor:'bread'})).status,200);
     const heard=await request('execute',{campaignId,tool:'remember',args:{subject:'player',key:rumor.id,rumor:rumor.id,source:'npc_hw_linsui',content:rumor.claim},eventId:'browser-rumor',anchor:'rumor'});assert.equal(heard.status,200,heard.body.error);
     const exported=await request('export',{campaignId});
-    const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+    const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
     const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
     await page.route('**/fixture.html',route=>route.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>人物与历史</title></head><body><div id="sheld"><div id="chat"><div class="mes_text"><p>旅人记下与林穗的相遇。</p></div></div><div id="form_sheld"><form id="send_form"><textarea id="send_textarea"></textarea></form></div></div></body></html>'}));
     await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{

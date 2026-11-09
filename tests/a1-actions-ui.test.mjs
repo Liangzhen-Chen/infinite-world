@@ -1,5 +1,6 @@
 // A1 界面可操作（无 LLM）：浏览器里打开“可做之事”，用快捷栏与对象菜单买东西、出门、等待，
 // 结果按事件流模板显示且与账本一致；390×844 可用，控制台无错误。截图写到 logs/a1-actions-ui.png。
+import{browserExecutablePath}from'./helpers/browser-path.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -9,7 +10,7 @@ import {createPlaytestServer} from '../tools/playtest-runner.mjs';
 test('可做之事面板：快捷栏交易、出路移动、等待都直接结算，事件流显示已应用效果',{timeout:120000},async t=>{
  const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
  const created=await server.api('create',{});
- const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
+ const browser=await chromium.launch({executablePath:browserExecutablePath(),headless:true});t.after(()=>browser.close());
  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[],endpoints=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.route(/\.(?:mjs|js|css)(?:\?.*)?$/,async route=>{
