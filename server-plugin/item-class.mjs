@@ -118,7 +118,7 @@ export function resolveMaterials(d,engine,holder,materials){
 export function householdUsage(engine,minute,members){
  const fuel=craftingParam(engine,'household.fuelKgPerDay'),season=engine.calendar(minute).season;
  const fuelKg=fuel.cooking+(fuel.heating[season]??0),ref=fuelReferenceHeat(engine);
- // 燃料需求本质是热量：现行“每日公斤”是按基准有效热值（世界里已知热值的燃料的平均有效热值）算的，demandMJ = 公斤 × 基准热值；
+ // 燃料需求本质是热量：现行“每日公斤”是按参照燃料类（fuelReferenceClass）的有效热值算的，demandMJ = 公斤 × 基准热值；
  // 具体一件燃料顶多少，见 usageGrams（有效热值 ÷ 基准）。没有任何燃料知道热值时不带 demandMJ，一切同现行。
  return [{cls:'fuel',purpose:'fuel',gramsPerDay:fuelKg*1000,...(ref?{demandMJ:fuelKg*ref}:{})},
   {cls:'salt',purpose:'seasoning',gramsPerDay:craftingParam(engine,'household.saltGramsPerPersonDay')*members.length}];
@@ -133,15 +133,13 @@ export function fuelEffectiveHeat(engine,item){
  const m=p.moisture.value;
  return p.heatValue.value*(1-m)-craftingParam(engine,'household.waterLatentHeat')*m;
 }
-// 基准有效热值：世界里燃料类物品中有效热值已知且为正者的平均（按物品编号序，确定）；没有则 null。随世界与属性表缓存。
-const refMemo=new WeakMap();
+// 基准有效热值：现行“每日公斤”原本针对的参照燃料类（规则表 household.fuelReferenceClass）按类别行的热值与含水率算的有效热值；
+// 类别行缺任一项（含表为空）返回 null，一切同现行。只读规则数据，不随其他燃料的属性变化。
 export function fuelReferenceHeat(engine){
- const world=engine.world,table=world?.materialProps,hit=refMemo.get(world);
- if(hit&&hit.table===table)return hit.value;
- const heats=classItems(engine,'fuel').map(id=>fuelEffectiveHeat(engine,id)).filter(h=>h!==null&&h>0);
- const value=heats.length?heats.reduce((a,b)=>a+b,0)/heats.length:null;
- if(world&&typeof world==='object')refMemo.set(world,{table,value});
- return value;
+ const row=engine.world?.materialProps?.classes?.[craftingParam(engine,'household.fuelReferenceClass')];
+ if(row?.heatValue===undefined||row?.moisture===undefined)return null;
+ const h=row.heatValue*(1-row.moisture)-craftingParam(engine,'household.waterLatentHeat')*row.moisture;
+ return h>0?h:null;
 }
 // 一件用度类物品顶多少“基准克”：燃料按有效热值 ÷ 基准热值折算其重量（含水多的柴要烧更多公斤，同热量需求不变）；
 // 其余类、或属性未知，原样返回重量克数。有效热值不为正的燃料返回 0（烧不出净热）。

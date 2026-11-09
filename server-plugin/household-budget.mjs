@@ -319,8 +319,8 @@ export function householdUsage(engine,state,members){return usageDefinition(engi
 export const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
 // 这件货顶多少基准克（燃料按有效热值折算，见 item-class.usageGrams；其余等于 itemGrams）。
 export const usageItemGrams=(engine,item,cls)=>usageGrams(engine,item,cls,itemGrams(engine,item));
-// 家户用度先用同类里最便宜的：有热值属性（heatValue）的燃料按 价格 ÷ 热值，否则按 价格 ÷ 克。数据里目前没有物品登记热值，都按克算。
-export function usageCost(engine,item){const it=engine.byId.get(item);return (it?.basePrice??0)/(it?.heatValue>0?it.heatValue:itemGrams(engine,item));}
+// 家户用度先用同类里最便宜的：价格 ÷ 顶多少基准克。燃料按有效热值折算（热值与含水率已知，见 item-class.usageGrams），其余与未知时按 价格 ÷ 克。
+export function usageCost(engine,item){const it=engine.byId.get(item);return (it?.basePrice??0)/(isItemClass(engine,item,'fuel')?usageItemGrams(engine,item,'fuel'):itemGrams(engine,item));}
 // 一户一日用掉这件货多少件（不属于消耗类的为 0）。
 export function householdDailyUse(engine,state,members,item){
  return householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).reduce((n,u)=>{const g=usageItemGrams(engine,item,u.cls);return g>0?n+u.gramsPerDay/g:n;},0);

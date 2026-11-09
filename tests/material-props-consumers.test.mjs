@@ -4,6 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import craftingBalance from '../world/rules/tables/balance/crafting.json' with {type:'json'};
 import {deriveItemAttributes,householdUsage,fuelEffectiveHeat,fuelReferenceHeat,usageGrams} from '../server-plugin/item-class.mjs';
+import {usageCost} from '../server-plugin/household-budget.mjs';
 
 const dimensions={
  moisture:{unit:'质量分数',min:0,max:1},edibleFraction:{unit:'质量分数',min:0,max:1},
@@ -54,47 +55,50 @@ test('营养：属性未知（无表、没覆盖的类别、只知一项）与�
 });
 
 // —— 燃料 ——
-const L=P('household.waterLatentHeat');
+const L=P('household.waterLatentHeat'),REF=P('household.fuelReferenceClass');
 const eff=(heat,m)=>heat*(1-m)-L*m;
 const fuels=()=>[
- {id:'item_fx_dry',tags:['fuel','dryfuel'],weight:1},
- {id:'item_fx_damp',tags:['fuel','dampfuel'],weight:1},
- {id:'item_fx_soaked',tags:['fuel','soakedfuel'],weight:1},
- {id:'item_fx_unknown',tags:['fuel'],weight:1},
+ {id:'item_fx_ref',tags:['fuel',REF],weight:1,basePrice:10},
+ {id:'item_fx_damp',tags:['fuel','dampfuel'],weight:1,basePrice:10},
+ {id:'item_fx_soaked',tags:['fuel','soakedfuel'],weight:1,basePrice:10},
+ {id:'item_fx_unknown',tags:['fuel'],weight:1,basePrice:10},
  {id:'item_fx_salt',tags:['food'],weight:1}
 ];
 const fuelTable={
- dryfuel:{heatValue:18,moisture:0.1,basis:'夹具'},
- dampfuel:{heatValue:18,moisture:0.4,basis:'夹具'},
+ [REF]:{heatValue:18,moisture:0.2,basis:'夹具：参照类'},
+ dampfuel:{heatValue:18,moisture:0.5,basis:'夹具'},
  soakedfuel:{heatValue:2,moisture:0.9,basis:'夹具：含水过多烧不出净热'}
 };
 const engineOf=world=>({world,byId:new Map(world.items.map(i=>[i.id,i])),calendar:()=>({season:0})});
-const known=()=>engineOf(withTable(fuels(),['dryfuel','dampfuel','soakedfuel'],fuelTable));
+const known=(table=fuelTable)=>engineOf(withTable(fuels(),['dampfuel','soakedfuel',REF],structuredClone(table)));
 const legacy=()=>engineOf({items:fuels(),recipes:[]});
+const kgPerDay=()=>P('household.fuelKgPerDay').cooking+P('household.fuelKgPerDay').heating[0];
 
-test('燃料：有效热值 = 热值×(1−含水率) − 潜热×含水率；潜热来自规则表', () => {
+test('燃料：有效热值 = 热值×(1−含水率) − 潜热×含水率；潜热与参照类来自规则表', () => {
  const e=known();
- assert.ok(L>0);
- assert.equal(fuelEffectiveHeat(e,'item_fx_dry'),eff(18,0.1));
- assert.equal(fuelEffectiveHeat(e,'item_fx_damp'),eff(18,0.4));
+ assert.ok(L>0&&typeof REF==='string');
+ assert.equal(fuelEffectiveHeat(e,'item_fx_ref'),eff(18,0.2));
+ assert.equal(fuelEffectiveHeat(e,'item_fx_damp'),eff(18,0.5));
  assert.equal(fuelEffectiveHeat(e,'item_fx_unknown'),null);
 });
 
-test('燃料：基准热值是已知且为正的燃料的平均；同一热量需求下 MJ 不变，含水多的要烧更多公斤', () => {
+test('燃料：基准热值只取参照类，其他燃料写入属性不改变它；同一热量需求下 MJ 不变，含水多的要烧更多公斤', () => {
  const e=known(),ref=fuelReferenceHeat(e);
- assert.equal(ref,(eff(18,0.1)+eff(18,0.4))/2);
- const usage=householdUsage(e,0,[]).find(u=>u.cls==='fuel');
- const kg=P('household.fuelKgPerDay').cooking+P('household.fuelKgPerDay').heating[0];
+ assert.equal(ref,eff(18,0.2));
+ const more=structuredClone(fuelTable);more.dampfuel.heatValue=30;
+ assert.equal(fuelReferenceHeat(known(more)),ref,'别的燃料改属性，基准不动');
+ const usage=householdUsage(e,0,[]).find(u=>u.cls==='fuel'),kg=kgPerDay();
  assert.equal(usage.gramsPerDay,kg*1000);
  assert.equal(usage.demandMJ,kg*ref);
- const needKg={};
- for(const id of ['item_fx_dry','item_fx_damp']){
-  const perKgRef=usageGrams(e,id,'fuel',1000)/1000;            // 烧 1 公斤这种燃料顶多少基准公斤
-  assert.ok(Math.abs(perKgRef-eff(id==='item_fx_dry'?18:18,id==='item_fx_dry'?0.1:0.4)/ref)<1e-12);
-  needKg[id]=kg/perKgRef;                                       // 满足日需求要烧的公斤
-  assert.ok(Math.abs(needKg[id]*fuelEffectiveHeat(e,id)-usage.demandMJ)<1e-9,`${id} MJ 守恒`);
+ const need={};
+ for(const id of ['item_fx_ref','item_fx_damp']){
+  const perKgRef=usageGrams(e,id,'fuel',1000)/1000;
+  assert.ok(Math.abs(perKgRef-fuelEffectiveHeat(e,id)/ref)<1e-12);
+  need[id]=kg/perKgRef;
+  assert.ok(Math.abs(need[id]*fuelEffectiveHeat(e,id)-usage.demandMJ)<1e-9,`${id} MJ 守恒`);
  }
- assert.ok(needKg.item_fx_damp>needKg.item_fx_dry);
+ assert.equal(need.item_fx_ref,kg,'参照燃料本身公斤数同现行');
+ assert.ok(need.item_fx_damp>need.item_fx_ref);
 });
 
 test('燃料：有效热值不为正的燃料顶 0；非燃料类不折算', () => {
@@ -104,13 +108,21 @@ test('燃料：有效热值不为正的燃料顶 0；非燃料类不折算', () 
  assert.equal(usageGrams(e,'item_fx_salt','salt',1000),1000);
 });
 
-test('燃料：属性未知（物品没有热值、或整个世界无表）时与现行逐字相等', () => {
- const e=known(),old=legacy();
- assert.equal(usageGrams(e,'item_fx_unknown','fuel',1234),1234);
- assert.equal(usageGrams(old,'item_fx_dry','fuel',1234),1234);
- assert.equal(fuelReferenceHeat(old),null);
- const kg=P('household.fuelKgPerDay').cooking+P('household.fuelKgPerDay').heating[0];
- assert.deepEqual(householdUsage(old,0,['m1','m2']),[
-  {cls:'fuel',purpose:'fuel',gramsPerDay:kg*1000},
-  {cls:'salt',purpose:'seasoning',gramsPerDay:P('household.saltGramsPerPersonDay')*2}]);
+test('燃料：比价按 价格 ÷ 顶多少基准克；属性未知时 价格 ÷ 克', () => {
+ const e=known();
+ assert.equal(usageCost(e,'item_fx_damp'),10/(1000*fuelEffectiveHeat(e,'item_fx_damp')/fuelReferenceHeat(e)));
+ assert.equal(usageCost(e,'item_fx_unknown'),10/1000);
+ assert.equal(usageCost(legacy(),'item_fx_ref'),10/1000);
+});
+
+test('燃料：参照类属性未知（无表、或参照类行缺含水率）时，全部与现行逐字相等', () => {
+ const noMoisture=structuredClone(fuelTable);delete noMoisture[REF].moisture;
+ for(const e of [legacy(),known(noMoisture)]){
+  assert.equal(fuelReferenceHeat(e),null);
+  assert.equal(usageGrams(e,'item_fx_damp','fuel',1234),1234);
+  assert.deepEqual(householdUsage(e,0,['m1','m2']),[
+   {cls:'fuel',purpose:'fuel',gramsPerDay:kgPerDay()*1000},
+   {cls:'salt',purpose:'seasoning',gramsPerDay:P('household.saltGramsPerPersonDay')*2}]);
+ }
+ assert.equal(usageGrams(known(),'item_fx_unknown','fuel',1234),1234,'物品自己没有热值也不折算');
 });
