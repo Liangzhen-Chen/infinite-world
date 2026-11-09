@@ -503,8 +503,10 @@ test('water assignment preserves the idle adult long food run instead of forcing
 });
 test('two households share one stock and cannot create food when it runs out',()=>{
  const f=fixture({capacity:5,separate:true});advanceHouseholdMeals(f.d,f.e,0);
- // Hand anchor: 5 portions*U against 120; total shortage 120-5U, not two stocks.
- assert.equal(meals(f).reduce((n,m)=>n+m.shortfall.satiety,0),120-5*U);
+ // Hand anchor: 5 portions in one shared stock against 2*60. The first household takes ceil(60/U) whole portions (U overshoots 60 when it does not divide it),
+ // the second gets what is left; total shortage = what each household still lacks, not two stocks.
+ const first=Math.ceil(60/U),second=5-first;
+ assert.equal(meals(f).reduce((n,m)=>n+m.shortfall.satiety,0),Math.max(0,60-first*U)+Math.max(0,60-second*U));
  assert.equal(f.d.get('state','records',`forage:${home}`,'reserve'),0);
  assert.equal(f.d.get('ledger','flows','sink:consume|item_wild_food|meal'),5);
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);

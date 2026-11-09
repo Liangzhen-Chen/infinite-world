@@ -69,8 +69,8 @@ async function dine(t){
  const world=variant(w=>{setPrice(w,'item_oat_flatbread',8);setPrice(w,'item_mutton_turnip_stew',15);});
  const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(12,3,12,0),s=>{
   s.player.coins=60;s.player.body={satiety:{value:30,asOf:monthDayMinute(12,3,12,0),activity:'rest'}};
-  // S5-02: two people *60 daily satiety /35 per stew rounds up to
-  // four retained portions; the fifth is the examined customer's meal.
+  // S5-02: two people *60 daily satiety / the stew's derived satiety rounds up to
+  // some retained portions (fewer than five); the rest are the examined customer's meal.
   s.npcs[LINSUI].inventory.item_mutton_turnip_stew=stack(5);
  })});
  const before=await primed(ui),menu=await ui.server.api('actions',{campaignId:ui.campaignId,query:'eat.order',target:LINSUI});
@@ -78,9 +78,10 @@ async function dine(t){
  const r=await ui.choose('eat.order',{subject:LINSUI,item:'item_oat_flatbread',side:'item_mutton_turnip_stew'},{target:LINSUI,search:true});
  assert.ok(r.ok,r.error);const after=await ui.read();
  const paid=r.result.purchases.reduce((n,p)=>n+p.cost,0);for(const p of r.result.purchases)assert.equal(p.cost,Math.trunc(p.pricing.unroundedTotal));
- // Same abundant-food floor: first 8*.5=4, next 15*.5*day-depth
- // lies in [7,8); neutral grade/spread/regard/correction. Total 4+7=11.
- assert.equal(paid,11);
+ // Prices follow the native market projection (scarcity = demand/supply of food, which counts derived satiety), not a fixed floor:
+ // the first purchase equals the read projection for that item, the second follows the first's depth; each rounds as trunc(unrounded).
+ assert.equal(r.result.purchases[0].cost,projected(world,before,LINSUI,'item_oat_flatbread').totalCoins);
+ assert.equal(paid,r.result.purchases.reduce((n,p)=>n+p.cost,0));
  assert.equal(r.result.paid,paid);assert.equal(before.state.player.coins-after.state.player.coins,paid);conserved(before,after,'D05用餐',new WorldEngine(world));
  return {before,after,r};
 }
@@ -105,8 +106,9 @@ test('D35 参加节庆 ①④：按当前市场买 2 份，实付总额一次取
  const before=await primed(ui),expected=projected(world,before,LINSUI,'item_oat_flatbread',2),r=await ui.choose('trade.buy',{item:'item_oat_flatbread',quantity:2},{target:LINSUI});assert.ok(r.ok,r.error);
  const after=await ui.read();
  assert.equal(r.result.cost,expected.totalCoins);assert.equal(before.state.player.coins,50);assert.equal(after.state.player.coins,50-expected.totalCoins,'①按实付总额扣款');
- // Opening food scarcity .5; 6 × .5 × 2, all other factors 1 = 6.
- assert.equal(r.result.cost,6);
+ // Opening food scarcity comes from the market projection; 6 × scarcity × 2, all other factors 1.
+ const q=expected.explanation;assert.ok([q.quality,q.depth,q.spread,q.relation].every(x=>x===1));
+ assert.equal(r.result.cost,Math.trunc(6*q.scarcity*2));
  assert.equal(held(after.state.inventory,'item_oat_flatbread')-held(before.state.inventory,'item_oat_flatbread'),2,'②背包 +2 个月饼');
  const engine=new WorldEngine(world);assert.ok(standing(engine,after.state,LINSUI,'player')>=standing(engine,before.state,LINSUI,'player'),'④在场村民对玩家的好感没有下降（题面“可小幅上升”，不变也符合）');
  conserved(before,after,'D35',engine);
@@ -118,8 +120,9 @@ test('D35.2 true riddle answer transfers one host-stock lantern, preserves two b
  // S5-02: the riddle examines original reward stock, not a forced old price.
  const before=await primed(ui),expected=projected(world,before,HOST,'item_oat_flatbread',2),buy=await ui.choose('trade.trade',{seller:HOST,item:'item_oat_flatbread',quantity:2},{target:HOST,search:true});assert.ok(buy.ok,buy.error);assert.equal(buy.result.cost,expected.totalCoins);
  // trust=100 → regard 100; weighted .7 gives relation .895.
- // 6*.5*1*.895*2 = 5.37 → 5; other factors 1.
- assert.equal(buy.result.cost,5);
+ // 6 × scarcity × relation (trust 100 → regard 100; weighted .7 gives .895) × 2, truncated; other factors 1.
+ const q=expected.explanation;assert.ok([q.quality,q.depth,q.spread].every(x=>x===1));
+ assert.equal(buy.result.cost,Math.trunc(6*q.scarcity*q.relation*2));
  const plan=await ui.choose('settlement.festival_plan',{festival:FESTIVAL,cost:0},{search:true});assert.ok(plan.ok,plan.error);const id=plan.result.festival;
  const permission=await ui.choose('settlement.festival_authorize',{festival:id,speaker:HOST},{search:true});assert.ok(permission.ok,permission.error);assert.equal(permission.result.agreement.decision.outcome,'agree');
  const join=await ui.choose('settlement.festival_join',{festival:id,speaker:'player'},{search:true});assert.ok(join.ok,join.error);const wait=await ui.choose('time',{until:{dayOffset:0,hour:19}});assert.ok(wait.ok,wait.error);

@@ -367,14 +367,15 @@ test('one affordable market meal cannot erase the remaining six-day income gap',
 });
 
 test('simultaneous sources: residents buy the food with the most effective satiety per coin, not the cheapest',()=>{
- // Intent (Li Bai's rule): among foods arriving together the household buys the best satiety per coin. Vinegar is cheapest but has no derived satiety,
- // cabbage is cheaper than bread but bread's derived satiety per coin is far higher; the expected winner is computed from derived values, not named.
+ // Intent (Li Bai's rule): among foods arriving together the household buys the best satiety per coin among those it can actually eat (single-meal cap room,
+ // as in marketCheck). Vinegar is cheapest but has no derived satiety; the expected winner is computed from derived satiety, price and cap room, not named.
  const before=registerHouseholdFoodSources.fn;
  try{
   const f=fixture();f.state.npcs[owner].coins=100;f.sync();
   const at=f.state.minute,offers=[['item_fruit_vinegar',1],['item_cabbage',2],[item,3]].map(([it,unitPrice])=>({source:`fx_${it}`,seller:'npc_fx_seller',item:it,at,quantity:50,unitPrice}));
   registerHouseholdFoodSources(()=>offers);
-  const b=householdBudget(f.d,f.engine,owner,{kernel:true}),expected=bestPerCoin(f,offers.filter(o=>satOf(f,o.item)>0));
+  const b=householdBudget(f.d,f.engine,owner,{kernel:true}),caps=mealCapPools(f.engine,{days:[b.target.days]}),minute=f.state.minute;
+  const expected=bestPerCoin(f,offers.filter(o=>satOf(f,o.item)>0&&caps.unitsRoom(o.item,(o.at-minute)/DAY)>=1));
   assert.equal(b.resources.market.purchases[0].item,expected);
   const cheapest=[...offers].sort((x,y)=>x.unitPrice-y.unitPrice).find(o=>satOf(f,o.item)>0).item;
   assert.notEqual(expected,cheapest,'premise: the best per coin is not the cheapest food');
