@@ -1,4 +1,4 @@
-// 回归守护：贫户（本聚落户现金分位 ≤ poorQuantile 的户）在预算期内的市场替代购买里，奢侈来源（food-habit 的惯常性判定，不按物品名）的花费占比不超过规则表 foodHabit.poorPurchaseLuxuryShareMax。
+// 回归守护：贫户（本聚落户现金分位 ≤ poorQuantile 的户）在预算期内的市场替代购买里，奢侈来源（food-habit 的惯常性判定，不按物品名）的花费占比（只统计有日常来源可买的户；只有奢侈来源时补缺口的购买不计）不超过规则表 foodHabit.poorPurchaseLuxuryShareMax。
 // 只读：对每户调用 householdResources，不推进、不写状态。
 import {householdResources} from '../server-plugin/household-budget.mjs';
 import {placeSettlement} from '../server-plugin/entity-view.mjs';
@@ -19,7 +19,10 @@ export function poorLuxuryShare(engine,doc,{poorQuantile=0.5}={}){
  for(const r of rows){
   if(r.cash>cut.get(r.place))continue;
   poor++;
-  for(const p of householdResources(d,engine,r.owner).market.purchases){
+  // 只计“有日常来源可买”的户（至少买了一件日常来源）：只有奢侈来源时补缺口的购买不算违规。
+  const buys=householdResources(d,engine,r.owner).market.purchases;
+  if(!buys.some(p=>!p.luxury))continue;
+  for(const p of buys){
    total+=p.cost;if(p.luxury){luxury+=p.cost;byItem[p.item]=(byItem[p.item]??0)+p.cost;}
   }
  }

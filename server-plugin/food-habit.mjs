@@ -4,7 +4,7 @@
 //   惯常性 habit = p × b，低于 luxuryBelow 的来源是奢侈。
 // 不复用 market.mjs 的稀缺比（marketSupply→stockSupply 会回头读每户的 householdResources，在预算内调用即无限递归，shop.mjs 报价处也因此传入固定供需）；
 // 稀缺已在手写 basePrice 里，这里也不再折价格。
-// 本户现金不超过 richCashDays 天的本户日均收入时，奢侈来源不参与购买；现金远超时，奢侈来源与日常品一样按价值参与挑选。
+// 本户现金不超过 richCashDays 天的本户日均收入时，奢侈来源排在日常来源之后（household-budget 的 deferred），只补日常补不满的缺口；现金远超时与日常品一样按价值参与挑选。
 import {laborValue} from './market.mjs';
 import {placeSettlement,personHousehold} from './entity-view.mjs';
 

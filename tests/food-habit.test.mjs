@@ -12,39 +12,45 @@ import {poorLuxuryShare} from '../tools/audit-food-habit.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',home='bld_hw_qingdeng',item='item_honey';
 const SELLERS=['npc_hw_linsui','npc_hw_ayan','npc_hw_chenbai'];
-function fixture({sellers=1,basePrice=null,cash=20,rule={}}={}){
- const w=structuredClone(world),ids=SELLERS.slice(0,sellers);
+function fixture({sellers=1,basePrice=null,cash=20,rule={},bread=false}={}){
+ const w=structuredClone(world),ids=SELLERS.slice(0,sellers+(bread?1:0)),breadSeller=bread?ids.at(-1):null;
  delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
  w.rules.economy.shops.stores=w.rules.economy.shops.stores.filter(s=>!ids.includes(s.keeper));
  for(const id of ids)delete w.npcs.find(n=>n.id===id).shopType;
  w.households=[{id:'habit-house',members:[A,B],settlement:'loc_hw',homeLocation:home},...ids.map(id=>({id:`habit-seller-${id}`,members:[id],settlement:'loc_hw',homeLocation:home}))];
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
- const honey=w.items.find(i=>i.id===item);honey.nutrition={satiety:30};if(basePrice!==null)honey.basePrice=basePrice;
+ const honey=w.items.find(i=>i.id===item);honey.nutrition={satiety:30};w.items.find(i=>i.id==='item_bread').nutrition={satiety:1000};if(basePrice!==null)honey.basePrice=basePrice;
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  Object.assign(w.marketRules.foodHabit,rule);
  for(const n of w.npcs.filter(n=>[A,...ids].includes(n.id))){n.tier='full';n.schedule={default:[{start:0,end:1440,location:home,activity:'休息',services:ids.includes(n.id)?['trade']:[]}]};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'food-habit');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
- doc.state.npcs=Object.fromEntries([A,B,...ids].map(id=>[id,{...doc.state.npcs[id],coins:id===A?cash:0,inventory:id===A||id===B?{}:{[item]:100},location:home,status:'正常',activity:'休息'}]));
+ doc.state.npcs=Object.fromEntries([A,B,...ids].map(id=>[id,{...doc.state.npcs[id],coins:id===A?cash:0,inventory:id===A||id===B?{}:id===breadSeller?{item_bread:100}:{[item]:100},location:home,status:'正常',activity:'休息'}]));
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:2+ids.length,granary:false,food:0,foodPerDay:0,woodPerDay:0}};
  doc.ledger=openLedger(e,doc);
  return {e,doc,d:e.primitiveDraft(doc)};
 }
 const honey=f=>householdResources(f.d,f.e,A).market.purchases.filter(p=>p.item===item);
 
-test('the same rule: a scarce single-seller honey is a luxury for a poor household, a locally plentiful cheap honey is an everyday food',()=>{
- const original=fixture({sellers:1,cash:20});
- assert.equal(honey(original).length,0,'original world: the poor household does not buy honey');
- const local=fixture({sellers:3,basePrice:1,cash:20}),buys=honey(local);
- assert.ok(buys.length>0&&buys.every(p=>p.luxury===false&&p.habit>=local.e.world.marketRules.foodHabit.luxuryBelow),'local cheap multi-seller honey is bought as an everyday food');
+test('poor household: with an everyday source available it buys no luxury; with only the luxury and a big gap it buys it after all',()=>{
+ const withDaily=householdResources(...(f=>[f.d,f.e,A])(fixture({sellers:1,bread:true,cash:20}))).market.purchases;
+ assert.ok(withDaily.some(p=>p.item==='item_bread')&&!withDaily.some(p=>p.item===item),'everyday bread covers the gap, honey is not bought');
+ const only=honey(fixture({sellers:1,cash:20}));
+ assert.ok(only.length>0&&only.every(p=>p.luxury===true&&p.deferred===true),'only luxury honey on offer: bought to fill the remaining gap');
 });
 
-test('a household with cash far above its daily income may buy the luxury; the rule table decides how far',()=>{
- const rich=fixture({sellers:1,cash:10000}),buys=honey(rich);
- assert.ok(buys.length>0&&buys.every(p=>p.luxury===true),'the rich household buys the luxury honey');
- // 门槛来自规则表：把宽裕天数抬到现金之上，同一户就又不买了。
- assert.equal(honey(fixture({sellers:1,cash:10000,rule:{richCashDays:1e9}})).length,0);
+test('the same rule on different world data: cheap multi-seller local honey is an everyday food, not a luxury',()=>{
+ const local=fixture({sellers:3,basePrice:1,cash:20}),buys=honey(local);
+ assert.ok(buys.length>0&&buys.every(p=>p.luxury===false&&p.habit>=local.e.world.marketRules.foodHabit.luxuryBelow));
+ const original=honey(fixture({sellers:1,cash:20}));
+ assert.ok(original.every(p=>p.luxury===true),'original world: same honey is judged luxury by the same rule');
+});
+
+test('a household with cash far above its daily income treats the luxury like any food (not deferred); the rule table decides how far',()=>{
+ const buys=honey(fixture({sellers:1,cash:10000}));
+ assert.ok(buys.length>0&&buys.every(p=>p.luxury===true&&p.deferred===false));
+ assert.ok(honey(fixture({sellers:1,cash:10000,rule:{richCashDays:1e9}})).every(p=>p.deferred===true));
 });
 
 test('household purchase planning with habit is deterministic',()=>{
