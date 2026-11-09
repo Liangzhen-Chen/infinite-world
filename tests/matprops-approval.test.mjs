@@ -109,8 +109,8 @@ test('人工核定：指纹不符、缺独立确认、确认者即复算者、�
 
 test('人工核定与 L2 通过分开计数；既无 L2 通过也无人工核定的列为未决', async () => {
   const entries = [E('a'), E('b'), E('c'), E('d')];
-  const rec = {a: {status: 'passed', fingerprint: 'fp-a', errors: [], review: {contradictions: [{severity: 'soft'}]}},
-    b: {status: 'manual', fingerprint: 'fp-b', errors: [{severity: 'hard'}], review: {contradictions: [{severity: 'hard'}]}},
+  const rec = {a: {status: 'passed', fingerprint: 'fp-a', errors: [], review: {contradictions: [{quote: 'q', field: 'moisture', severity: 'soft', verdict: 'conflict', reason: 'r'}]}},
+    b: {status: 'manual', fingerprint: 'fp-b', errors: [{severity: 'hard'}], review: {contradictions: [{quote: 'q', field: 'moisture', severity: 'hard', verdict: 'conflict', reason: 'r'}]}},
     c: {status: 'passed', fingerprint: 'old', errors: [], review: {contradictions: []}}};
   const manual = await checkManual({entries: [good('b')]}, entries, fp, reviewedRec);
   const st = await approvalState(entries, {manual, loadRecord: async id => rec[id] ?? null, fingerprint: fp});
@@ -133,7 +133,7 @@ test('人工核定两种标注：「模型误判」要求现存记录审的是�
   assert.equal((await checkManual({entries: [un]}, entries, fp, never)).size, 1);
   await assert.rejects(checkManual({entries: [{...un, lastL2Fingerprint: ''}]}, entries, fp, never), /lastL2Fingerprint/);
   await assert.rejects(checkManual({entries: [{...un, changeDescription: ''}]}, entries, fp, never), /changeDescription/);
-  await assert.rejects(checkManual({entries: [{...un, lastL2Fingerprint: 'fp-a'}]}, entries, fp, never), /指纹相同/);
+  await assert.rejects(checkManual({entries: [{...un, lastL2Fingerprint: 'fp-a'}]}, entries, fp, never), /记录指纹与当前相同/);
 });
 
 test('L2 通过的记录缺 errors 字段或 review 结构非法时抛错（同 readApprovedContent）', async () => {
@@ -361,7 +361,7 @@ test('--retry-garlic：流水线只收到授权条目，请求带授权的 max_t
   await fs.writeFile(path.join(root, 'item_other.json'), other);
   const garlicRec = {id: 'item_garlic', status: 'manual', retryEligible: {eligible: true}};
   await fs.writeFile(path.join(root, 'item_garlic.json'), JSON.stringify(garlicRec));
-  const seen = [], client = {rates: {hit: 0, miss: 0.001, output: 1}, spent: 0, budgetYuan: 20, async generate(body, label) { seen.push([label, body.max_tokens]); return {choices: [{message: {content: okContent}}], usage: {completion_tokens: 5}, measurement: {costUpperYuan: .001}}; }};
+  const seen = [], client = {rates: {hit: 0, miss: 0.001, output: 1}, spent: 0, budgetYuan: 20, async generate(body, label) { seen.push([label, body.max_tokens]); return {choices: [{message: {content: okContent}}], usage: {completion_tokens: 5}, measurement: {costUpperYuan: .00001}}; }};   // 实际花费须不高于预留上界（账本发请求后核对，超出即停整轮）
   // 不合格：未评估为 retryEligible → 拒绝，记录原地不动
   await fs.writeFile(path.join(root, 'item_garlic.json'), JSON.stringify({id: 'item_garlic', status: 'manual'}));
   await assert.rejects(() => retryRun({entries, client, root, budgetRoot, ctx: () => null, cardIdArg: null, allocation: null}), e => e.code === 'RETRY_DENIED');
