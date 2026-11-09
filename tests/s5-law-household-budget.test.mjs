@@ -13,13 +13,16 @@ import {stateReader} from '../server-plugin/valuation.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const owner='npc_hw_linsui',other='npc_hw_duanyan',supplier='npc_hw_shendu',item='item_bread',DAY=1440;
+// 面包的饱腹读材料数据（items.json 里的手写营养），夹具不再覆盖成 1；手算锚点按它缩放：一个面包 = SAT 饱腹，每人每天需 10 个面包。
+const SAT=world.items.find(i=>i.id===item).nutrition.satiety;
+const satOf=(f,id)=>f.engine.byId.get(id).nutrition?.satiety??0;
+const near=(a,b,m)=>assert.ok(Math.abs(a-b)<1e-6,m??`${a} ≈ ${b}`);
 function fixture({members=[owner],shared=true}={}){
  const w=structuredClone(world);
  w.households=w.households.map(h=>({...h,members:h.members.filter(id=>!members.includes(id))})).filter(h=>h.members.length);
  for(const [i,group]of (shared?[members]:members.map(id=>[id])).entries())w.households.push({id:`house_budget_fixture_${i}`,members:group,settlement:'loc_hw',homeLocation:'bld_hw_qingdeng',tenure:'沿用已发布住处，独立登记家计'});
- // Hand anchor: each resident needs 10 satiety per day; one bread = one.
- for(const r of w.primitiveTables.body.rows)if(r.need==='satiety'&&r.selector==='person')r.drainPerHour.light=10/24;
- w.items.find(i=>i.id===item).nutrition={satiety:1};
+ // Hand anchor: each resident needs ten breads' worth (10*SAT) satiety per day; one bread = SAT (its material-data nutrition, not overridden).
+ for(const r of w.primitiveTables.body.rows)if(r.need==='satiety'&&r.selector==='person')r.drainPerHour.light=10*SAT/24;
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];
  const engine=new WorldEngine(w);let document=engine.initialFromLegacy(legacy,'household-budget');
  document.state.minute=0;
@@ -163,7 +166,10 @@ test('signed employment sets the reserve horizon and unpaid harvest is future go
  f.state.records['budget-job']={id:'budget-job',category:'contract',kind:'workshop',worker:owner,owner:other,status:'有效',createdAt:0,starts:0,deadline:20*DAY,nextWork:6*DAY,wage:10};
  f.sync();const b=householdBudget(f.d,f.engine,owner,{kernel:true});
  assert.equal(b.future[0].day,6);assert.equal(b.cash,5);
- assert.ok(b.resources.shortfall.satiety>39.9);
+ // Intent: the six-day horizon leaves a ~40-bread gap beyond the 20 held. Residents may spend their 5 coin on real food from a shop (the best satiety-per-coin one),
+ // so the gap is 40 breads minus whatever that purchase covers, not a fixed 40.
+ near(b.resources.shortfall.satiety,40*SAT-b.resources.market.coverage.satiety);
+ assert.ok(b.resources.market.coverage.satiety<=b.cash/Math.min(...b.resources.market.purchases.map(p=>p.unitPrice/satOf(f,p.item)))+1e-9,'coverage is bounded by what the cash buys at the best satiety per coin');
  assert.equal(saleableStock(f.d,f.engine,owner,item).available,0);
  // Growing crops are not in the bag, even when they have an expected yield.
  f.state.buildings.bld_hw_qingdeng={...f.state.buildings.bld_hw_qingdeng,owner,condition:100};
@@ -194,10 +200,10 @@ test('children are mouths to feed; a common crop failure cannot create aid',()=>
  const child=world.npcs.find(n=>n.flags?.minor||n.age<18).id;
  const f=fixture({members:[owner,child]});f.state.npcs[owner].inventory[item]=5;f.sync();
  // Hand anchor: two bodies need20; five meals leave15, including the child.
- const r=householdResources(f.d,f.engine,owner,{days:1});assert.ok(r.shortfall.satiety>14.9);
+ const r=householdResources(f.d,f.engine,owner,{days:1});near(r.shortfall.satiety,15*SAT-r.market.coverage.satiety);assert.ok(r.shortfall.satiety>0);
  const subjective=householdBudget(f.d,f.engine,owner);
  assert.deepEqual(subjective.resources.members,[owner,child]);
- assert.ok(subjective.resources.shortfall.satiety>14.9,'the parent budgets for the child without reading another purse');
+ near(subjective.resources.shortfall.satiety,15*SAT-subjective.resources.market.coverage.satiety,'the parent budgets for the child without reading another purse');
  const calm=householdBudget(f.d,f.engine,owner,{kernel:true}),disaster=householdBudget(f.d,f.engine,owner,{kernel:true,commonRisk:1});
  assert.ok(disaster.target.days>calm.target.days);assert.equal(disaster.cash,calm.cash);
  assert.equal(disaster.mutualAidAvailable,0);assert.ok(disaster.resources.shortfall.satiety>calm.resources.shortfall.satiety);
@@ -278,9 +284,17 @@ test('older world tables without the new preference mixture retain the existing 
 function marketFixture(){
  const f=fixture();
  f.engine.byId.get(owner).shopRestock=[{item,source:'local',amount:6,maximum:6}];
+ // Shelf control: this fixture is about the paid daily bread channel, so every other keeper's shelf is emptied (the owner's single bread row stays);
+ // otherwise a real shop food with better satiety per coin legitimately wins the purchase and hides what these tests mean to check.
+ const shops=f.engine.world.rules.economy.shops;
+ for(const store of shops.stores)if(store.keeper!==owner)store.restock=[];
+ shops.additionalRestock={};
+ for(const npc of f.engine.byId.values())if(npc.id!==owner&&String(npc.id).startsWith("npc_"))npc.shopRestock=[];
  // K2（卡 E）依据：本地货架改为向本聚落持货人进货，下一次补货只算得上持货人眼下能出让的余量（shop.mjs 口粮来源）。
  // 夹具安排一位村民手里有足够多的面包，让“每天补 6 个”的真实上游存在；家户预算的断言不变。
  f.state.npcs[supplier].inventory={...f.state.npcs[supplier].inventory,[item]:500};
+ // Likewise no other resident has goods to sell as a walk-in trader; the supplier keeps the bread that backs the owner's daily restock.
+ for(const [id,npc] of Object.entries(f.state.npcs))if(id!==owner&&id!==supplier)npc.inventory={};
  f.state.minute=DAY/2;f.state.npcs[owner].coins=100;f.sync();return f;
 }
 
@@ -289,7 +303,7 @@ test('paid daily replenishment replaces only food after its real delivery time',
  const b=householdBudget(f.d,f.engine,owner,{kernel:true});
  // Ten meals/day, half a day until tomorrow: retain5, buy the other5.
  assert.equal(b.resources.market.nextFoodAt,DAY);
- assert.equal(b.resources.market.coverage.satiety,5);
+ assert.equal(b.resources.market.coverage.satiety,5*SAT);
  assert.equal(b.resources.rows.find(r=>r.item===item).food,5);
  assert.equal(b.cash,100);assert.equal(JSON.stringify(f.d.document),before);
  assert.ok(b.resources.market.spent>0&&b.resources.market.spent<=100);
@@ -298,7 +312,7 @@ test('paid daily replenishment replaces only food after its real delivery time',
  // 15 meals are needed but only6 have arrived: at least9 remain physical.
  f.engine.world.marketRules.householdBuffer.profiles=[{id:'thrifty',through:20,cycles:2}];
  const thrifty=householdBudget(f.d,f.engine,owner,{kernel:true});
- assert.equal(thrifty.resources.market.coverage.satiety,11);
+ assert.equal(thrifty.resources.market.coverage.satiety,11*SAT);
  assert.equal(thrifty.resources.rows.find(r=>r.item===item).food,9);
 });
 
@@ -308,7 +322,7 @@ test('cash and supplier capacity each bound substitution; a future wage is not c
  f.state.npcs[owner].coins=price*2;f.sync();
  // A purse for two meals replaces2, not all five post-delivery meals.
  const limited=householdBudget(f.d,f.engine,owner,{kernel:true});
- assert.equal(limited.resources.market.coverage.satiety,2);
+ assert.equal(limited.resources.market.coverage.satiety,2*SAT);
  assert.equal(limited.resources.rows.find(r=>r.item===item).food,8);
  f.state.npcs[owner].coins=0;
  f.state.obligations.wage={id:'wage',kind:'wage',debtor:other,creditor:owner,resource:'coin_river',amount:100,deadline:6*DAY};f.sync();
@@ -324,8 +338,9 @@ test('one affordable market meal cannot erase the remaining six-day income gap',
  // Six days need60 meals: one paid future meal plus physical20 still lack39.
  const b=householdBudget(f.d,f.engine,owner,{kernel:true});
  assert.equal(b.target.days,6);assert.equal(b.target.foodDays,0.5);
- assert.equal(b.resources.market.coverage.satiety,1);
- assert.equal(b.resources.shortfall.satiety,39);
+ // One paid meal: the first purchase is whatever shop food the engine's derived nutrition ranks first; its coverage is that item's own satiety.
+ assert.equal(b.resources.market.coverage.satiety,satOf(f,b.resources.market.purchases[0].item));
+ near(b.resources.shortfall.satiety,40*SAT-b.resources.market.coverage.satiety);
 });
 
 test('missing business, failed supply and common loss cannot act as paid food access',()=>{
@@ -351,7 +366,7 @@ test('received local food offer uses its pickup window without reading another f
  view.knowledge.facts['local-food-offer']={kind:'observed',source:'received-quote',value:{seller:owner,item,quantity:5,unitPrice:2,at:DAY*3/4,expires:DAY}};
  // Two copper each, own six buys3; a quarter day still needs2.5 meals.
  const b=householdBudget(f.d,f.engine,planner,{view});
- assert.equal(b.resources.market.coverage.satiety,3);
+ assert.equal(b.resources.market.coverage.satiety,3*SAT);
  assert.equal(b.resources.market.spent,6);
  assert.equal(b.resources.market.nextFoodAt,DAY*3/4);
  f.state.npcs[owner].coins=9999;f.state.npcs[owner].inventory[item]=9999;
@@ -362,7 +377,8 @@ test('received local food offer uses its pickup window without reading another f
 });
 
 test('market cash is earmarked once across resources and known prior payments',()=>{
- const f=marketFixture();f.engine.byId.get(item).nutrition={satiety:1,hydration:1};
+ const f=marketFixture();// Premise: the bread supplies both nutrients; satiety stays its material-data value, hydration is set equal to it.
+ f.engine.byId.get(item).nutrition={...f.engine.byId.get(item).nutrition,hydration:SAT};
  const rich=householdBudget(f.d,f.engine,owner,{kernel:true}),price=rich.resources.market.purchases[0].unitPrice;
  f.state.npcs[owner].coins=price*2;
  f.state.obligations.bill={id:'bill',kind:'rent',debtor:owner,creditor:other,resource:'coin_river',amount:price,deadline:DAY};f.sync();
@@ -371,8 +387,9 @@ test('market cash is earmarked once across resources and known prior payments',(
  const b=householdBudget(f.d,f.engine,owner,{kernel:true});
  assert.equal(b.resources.market.spent,price);
  assert.equal(b.resources.market.purchases.reduce((n,p)=>n+p.quantity,0),1);
- assert.equal(b.resources.market.coverage.satiety,1);
- assert.ok(b.resources.market.coverage.hydration<=1);
+ const first=b.resources.market.purchases[0].item;
+ assert.equal(b.resources.market.coverage.satiety,satOf(f,first));
+ assert.ok(b.resources.market.coverage.hydration<=(f.engine.byId.get(first).nutrition?.hydration??0));
  assert.equal(b.cash,price*2);
  assert.equal(b.foodTimeline.find(r=>r.at===DAY).plannedFood,price);
  assert.equal(b.foodTimeline.find(r=>r.at===DAY).balance,0);
@@ -389,8 +406,8 @@ test('a real local seller opening defines access, while an unknown remote accoun
  assert.equal(known.resources.market.nextFoodAt,540);
  assert.ok(known.resources.market.coverage.satiety>0);
  // Cash-backed access has not put a single meal into the shopper's empty bag.
- assert.equal(known.resources.procurementShortfall.satiety,10);
- assert.equal(reserveShortfall(f.d,f.engine,planner).satiety,10);
+ assert.equal(known.resources.procurementShortfall.satiety,10*SAT);
+ assert.equal(reserveShortfall(f.d,f.engine,planner).satiety,10*SAT);
  const subjective=householdBudget(f.d,f.engine,planner);
  assert.equal(subjective.resources.market.coverage.satiety,0);
  f.state.npcs[owner].status='患病';
@@ -438,7 +455,7 @@ test('configured edible public-stock access follows its actual account, not a st
  assert.ok(ready.resources.market.coverage.satiety>0);
  f.engine.world.marketRules.householdBuffer.profiles=[{id:'thrifty',through:20,cycles:2}];
  const finite=householdBudget(f.d,f.engine,owner,{kernel:true});
- assert.equal(finite.resources.market.coverage.satiety,6);
+ assert.equal(finite.resources.market.coverage.satiety,6*SAT);
  assert.equal(finite.resources.rows.find(r=>r.item===item).food,14);
  f.d.document.ledger.accounts[account]=0;
  // Legacy six is unchanged; booked zero must remove the promised access.
