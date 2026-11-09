@@ -1,5 +1,6 @@
 {
- "note": "D12 卡 A/D：材料属性表，按材料类别写，不针对任何物品。类别键必须是现有标签或用途类别名；物品个别偏离写在 mechanics/items.json 的 props 行（须带 basis）。取值：物品所属类别中按 precedence（从最具体到最一般）逐维取第一个写了该维的类别，物品 props 覆盖；缺项为未知，不给默认值。含水（moisture）、可食部分（edibleFraction）、能量密度（energyDensity）不手写，由行内 sources（每个出处代表类别的一个成员）按 selection（single 或 mean：各成员逐项推算后取平均）推出，公式与取整规则见 server-plugin/item-class.mjs deriveFromSources；偏差超过 memberDeviationThreshold 的成员单独写覆盖行；热值是高位热值。",
+ "note": "D12 卡 A/D：材料属性表，按材料类别写，不针对任何物品。类别键必须是现有标签或用途类别名；物品个别偏离写在 mechanics/items.json 的 props 行（须带 basis）。取值：物品所属类别中按 precedence（从最具体到最一般）逐维取第一个写了该维的类别，物品 props 覆盖；缺项为未知，不给默认值。含水（moisture）、可食部分（edibleFraction）、能量密度（energyDensity）不手写，由行内 sources（出处原值）按 selection（single/mean/representative）推出，公式与取整规则见 server-plugin/item-class.mjs deriveFromSources；热值是高位热值。",
+ "selectionRule": "D12 卡 A/D：材料属性表，按材料类别写，不针对任何物品。类别键必须是现有标签或用途类别名；物品个别偏离写在 mechanics/items.json 的 props 行（须带 basis）。取值：物品所属类别中按 precedence（从最具体到最一般）逐维取第一个写了该维的类别，物品 props 覆盖；缺项为未知，不给默认值。含水（moisture）、可食部分（edibleFraction）、能量密度（energyDensity）不手写，由行内 sources（每个出处代表类别的一个成员）按 selection（single 或 mean：各成员逐项推算后取平均）推出，公式与取整规则见 server-plugin/item-class.mjs deriveFromSources；偏差超过 memberDeviationThreshold 的成员单独写覆盖行；热值是高位热值。",
  "dimensions": {
   "moisture": {
    "unit": "质量分数（水占鲜重）",

@@ -42,7 +42,10 @@ export async function entriesFor(){
 export const draftFor=entry=>({id:entry.id,row:structuredClone(entry.row)});
 let worldCache;
 const runtime=async()=>worldCache??=await loadRuntimeWorld();
-// 上下文：表头单位与范围、饱腹换算说明；类别行带上属于该类别的物品（名称、重量、标签），物品行带上该物品自身与它所属的类别值。
+// 指纹 = hashContent({entry, context, revision})（tools/content-pipeline.mjs:89），entry 与下面的上下文逐字进指纹。
+// 上下文里只放影响审查内容的表头字段：dimensions（单位与范围）、kcalPerSatiety（推算除数）、note（修订 2 审查时的原文，冻结——
+// 改它会使全部条目指纹作废，新的说明文字写在表头 selectionRule，不进上下文）；memberDeviationThreshold 只决定哪些成员须有覆盖行（L1），
+// 不进任何条目的推算与上下文，所以不进指纹。类别行带上属于该类别的物品（名称、重量、标签），物品行带上该物品自身与它所属的类别值。
 export async function contextFor(entry){
  const world=await runtime(),table=await readJSON(tableFile);
  const dimensions=Object.fromEntries(Object.entries(table.dimensions).map(([k,v])=>[k,`${v.unit}，范围 ${v.min}–${v.max}`]));
