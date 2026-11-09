@@ -25,8 +25,10 @@ test('garlic 记录被归档（记录文件不在）后仍属 D 卡：归属只�
 
 test('误跑 D 卡 --review/--retry-garlic/--rejudge 的条目来源（dEntries）不含任何调味卡条目；真实数据 32 + 13 = 全部条目', async () => {
  const all=await entriesFor(),d=await dEntries(),c=await condimentEntries();
- const frozen=cardIdsOf(await frozenDBatches());
- assert.ok(d.every(e=>frozen.has(e.id))&&c.every(e=>!frozen.has(e.id)));
+ const frozen=cardIdsOf(await frozenDBatches()),moved=new Set(await loadMoved());
+ // D 卡 = 冻结批次里未移交的条目；调味卡 = 冻结批次之外的条目 + 移交条目（指纹因类别行改动而变，改在调味卡重审）
+ assert.ok(d.every(e=>frozen.has(e.id)&&!moved.has(e.id))&&c.every(e=>!frozen.has(e.id)||moved.has(e.id)));
+ assert.ok(moved.size>0&&[...moved].every(id=>c.some(e=>e.id===id)));
  assert.equal(d.length+c.length,all.length);
  assert.ok(d.some(e=>e.id==='item_garlic'));
  assert.ok(c.length>0&&c.every(e=>!d.some(x=>x.id===e.id)));
