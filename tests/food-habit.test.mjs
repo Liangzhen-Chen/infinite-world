@@ -50,9 +50,11 @@ test('the same rule on different world data: cheap multi-seller local honey is a
 });
 
 test('a household with cash far above its daily income treats the luxury like any food (not deferred); the rule table decides how far',()=>{
- const buys=honey(fixture({sellers:1,cash:10000}));
+ // 买方本人钱包 10000 远超本户日收入：现金充足，被判奢侈的蜂蜜（luxuryBelow 抬到 2，使一切来源都算奢侈）也不推后；把宽裕天数抬到现金之上就又推后。
+ const buys=honey(fixture({sellers:1,cash:10000,rule:{luxuryBelow:2}}));
  assert.ok(buys.length>0&&buys.every(p=>p.luxury===true&&p.deferred===false));
- assert.ok(honey(fixture({sellers:1,cash:10000,rule:{richCashDays:1e9}})).every(p=>p.deferred===true));
+ const poorRule=honey(fixture({sellers:1,cash:10000,rule:{luxuryBelow:2,richCashDays:1e9}}));
+ assert.ok(poorRule.length>0&&poorRule.every(p=>p.deferred===true));
 });
 
 test('p is the share of local households whose cash budget covers the price; the subjective view reads only the own household',()=>{
