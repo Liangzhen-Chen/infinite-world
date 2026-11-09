@@ -25,6 +25,10 @@ function fixture({seller,groups}){
  document.state.minute=300;
  for(const id of members){document.state.npcs[id].inventory={};document.state.npcs[id].coins=0;document.state.npcs[id].location=document.state.npcs[seller].location;}
  document.state.npcs[seller].inventory={[item]:20};
+ // The settlement's other households would be potential buyers of the same stock; leave them penniless so only the fixture's households claim it.
+ // They likewise hold no food of their own to sell, so the seller under test is the only source in the settlement.
+ for(const [id,n] of Object.entries(document.state.npcs))if(!members.includes(id)){n.coins=0;n.inventory={};}
+ if(document.state.player)document.state.player.coins=0;
  for(const id of buyers)if(members.includes(id))document.state.npcs[id].coins=100;
  document.ledger=openLedger(engine,document);
  return {engine,seller,get document(){return document;},d:{get document(){return document;},get:(...p)=>p.reduce((v,k)=>v?.[k],document)}};
@@ -67,8 +71,8 @@ test('non-shop trader branch: same bound for a trader who is not a registered sh
 });
 
 test('unequal needs: a two-person household is credited in proportion to a one-person household',()=>{
- const f=fixture({seller:shopSeller,groups:[[shopSeller],['npc_hw_chenbai','npc_hw_fangqin'],['npc_hw_xuling']]});
- f.document.state.npcs.npc_hw_fangqin.inventory={};f.document.state.npcs.npc_hw_fangqin.location=f.document.state.npcs[shopSeller].location;
+ const f=fixture({seller:shopSeller,groups:[[shopSeller],['npc_hw_chenbai','npc_hw_taozhi'],['npc_hw_xuling']]});
+ f.document.state.npcs.npc_hw_taozhi.inventory={};f.document.state.npcs.npc_hw_taozhi.location=f.document.state.npcs[shopSeller].location;
  const need=id=>{const r=householdResources(f.d,f.engine,id,{marketSubstitution:false});return r.shortfall.satiety+r.rows.reduce((n,x)=>n+x.food*(f.engine.byId.get(x.item)?.nutrition?.satiety??0),0);};
  const nb=need('npc_hw_chenbai'),nx=need('npc_hw_xuling'),gb=credited(f,'npc_hw_chenbai'),gx=credited(f,'npc_hw_xuling');
  assert.ok(gb+gx>0,'at least one buyer must really be credited from the seller');
@@ -107,14 +111,14 @@ test('a multi-person household takes one share, not one per member with cash',()
  // Both members of the two-person household hold cash. Before the fix each moneyed member took its own slot weighted by the
  // whole household need, so the household's buyer was diluted by its own relative. Now the household has one slot: the
  // buyer's part is the same whether or not the second member has cash, and the second member reads none of it.
- const groups=[[shopSeller],['npc_hw_chenbai','npc_hw_fangqin'],['npc_hw_xuling'],['npc_hw_wushuo']];
+ const groups=[[shopSeller],['npc_hw_chenbai','npc_hw_taozhi'],['npc_hw_xuling'],['npc_hw_wushuo']];
  const make=fangqinCoins=>{const f=fixture({seller:shopSeller,groups}),n=f.document.state.npcs;
-  n.npc_hw_fangqin.inventory={};n.npc_hw_fangqin.location=n[shopSeller].location;n.npc_hw_fangqin.coins=fangqinCoins;return f;};
+  n.npc_hw_taozhi.inventory={};n.npc_hw_taozhi.location=n[shopSeller].location;n.npc_hw_taozhi.coins=fangqinCoins;return f;};
  const both=make(100),one=make(0);
  const parts=f=>buyers.map(id=>credited(f,id));
  assert.ok(parts(both).some(n=>n>0)&&credited(both,'npc_hw_chenbai')>0,'the household buyer is really credited');
  assert.deepEqual(parts(both),parts(one),'a second moneyed member does not change any household part');
- assert.equal(credited(both,'npc_hw_fangqin'),0,'only the household buyer (first member with cash) reads the share');
+ assert.equal(credited(both,'npc_hw_taozhi'),0,'only the household buyer (first member with cash) reads the share');
  assert.ok(sum(parts(both))<=sellable(both));
  // The stock must really bind, or both readings would equal the household's own demand and prove nothing:
  // the buyer gets strictly more when the other households hold no cash (it is then the only buyer).
@@ -123,11 +127,11 @@ test('a multi-person household takes one share, not one per member with cash',()
 });
 
 test('cash is a personal purse: a household whose first member is penniless still buys through its member with cash, once',()=>{
- const f=fixture({seller:shopSeller,groups:[[shopSeller],['npc_hw_chenbai','npc_hw_fangqin'],['npc_hw_xuling']]});
+ const f=fixture({seller:shopSeller,groups:[[shopSeller],['npc_hw_chenbai','npc_hw_taozhi'],['npc_hw_xuling']]});
  const n=f.document.state.npcs;
- n.npc_hw_fangqin.inventory={};n.npc_hw_fangqin.location=n[shopSeller].location;
- n.npc_hw_chenbai.coins=0;n.npc_hw_fangqin.coins=100;   // chenbai sorts first but has no cash
- const fq=credited(f,'npc_hw_fangqin'),cb=credited(f,'npc_hw_chenbai'),xl=credited(f,'npc_hw_xuling');
+ n.npc_hw_taozhi.inventory={};n.npc_hw_taozhi.location=n[shopSeller].location;
+ n.npc_hw_chenbai.coins=0;n.npc_hw_taozhi.coins=100;   // chenbai sorts first but has no cash
+ const fq=credited(f,'npc_hw_taozhi'),cb=credited(f,'npc_hw_chenbai'),xl=credited(f,'npc_hw_xuling');
  assert.ok(fq>0,'the member with cash buys for the household');
  assert.equal(cb,0,'the penniless member reads no share');
  assert.ok(fq+xl<=sellable(f),`credited ${fq}+${xl} against ${sellable(f)}`);
