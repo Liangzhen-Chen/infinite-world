@@ -334,9 +334,13 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   const group=pending.splice(0,n);
   if(wait>maxDays)continue;
   const due=payments.filter(r=>r.resource===COIN&&r.at<=at).reduce((m,r)=>m+r.amount,0);
+  // 性能：「到货前身体消耗」只取决于（成员、营养项、wait、状态、视角），本组内 wait 与状态都不变（循环只改 market/caps 局部量，
+  // 不写状态），每买一件重算得到的是同一个数；按营养项在本组内首次用到时算一次（惰性，抛错时机与原先一致），其后复用。
+  const drainBefore=new Map();
   while(group.length){
    const remaining=Object.fromEntries(Object.keys(needs).map(need=>{
-    const before=members.reduce((m,id)=>m+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*Math.min(wait,horizons.get(id)),...(view?{observer:owner,view}:{})}).value,0);
+    let before=drainBefore.get(need);
+    if(before===undefined){before=members.reduce((m,id)=>m+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*Math.min(wait,horizons.get(id)),...(view?{observer:owner,view}:{})}).value,0);drainBefore.set(need,before);}
     market.physicalFloor[need]=Math.max(market.physicalFloor[need],before-otherFood[need]-market.coverage[need]);
     return [need,Math.max(0,needs[need]-otherFood[need]-market.physicalFloor[need]-market.coverage[need])];
    }));
