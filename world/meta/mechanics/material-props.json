@@ -511,7 +511,7 @@
    "sources": [
     {
      "name": "食盐",
-     "citation": "USDA FoodData Central 食盐（salt, table）：能量 0，含水约 0.2%；WHO《Guideline: Sodium intake for adults and children》（2012）：成人每日食盐 <5 g，一日三餐折每餐约 1.7 g（惯常量依据，不是生理上限）",
+     "citation": "USDA FoodData Central 食盐（salt, table）：能量 0，含水约 0.2%；WHO（2012）成人每日食盐 <5 g（日上限），÷ 一日三餐 ≈ 1.7 g/餐（日上限折算，非每餐文献值）",
      "moistureFraction": 0.002,
      "kcalPer100gWet": 0,
      "mealGrams": 1.7
@@ -521,7 +521,7 @@
     "method": "single",
     "reason": "世界里的盐是食盐（粗盐小包）"
    },
-   "basis": "食盐：无能量，所以不能当口粮（饱腹为 0）；仍按类给单餐上限，取 WHO 每日盐摄入上限 5 g ÷ 三餐 ≈ 1.7 g（惯常量依据）。【数值凭记忆写入，待 L2 核对】"
+   "basis": "食盐：无能量，所以不能当口粮（饱腹为 0）；仍按类给单餐上限。依据是 WHO《Guideline: Sodium intake for adults and children》（2012）成人每日食盐 <5 g 的日上限，除以 mealsPerDay=3 折成每餐约 1.7 g；这是日上限折算出的每餐值，不是文献直接给的每餐量，也不是 RACC 或生理上限。【数值凭记忆写入，待 L2 核对】"
   },
   "fresh_herb": {
    "sources": [
@@ -567,7 +567,7 @@
     "method": "mean",
     "reason": "世界里的香料籽为黄芥籽、罂粟籽、香芹籽，逐项取平均；三者干基能量都偏离平均超过阈值，各在物品行覆盖"
    },
-   "basis": "香料籽（USDA 食物类别 Spices and Herbs）：含水约 6–10%，能量不低，但一餐只用一撮。单餐可食量上限取 USDA 家用量（1 汤匙，约 6–10 g），三者取平均。【数值凭记忆写入，待 L2 核对】"
+   "basis": "香料籽（USDA 食物类别 Spices and Herbs）：含水约 6–10%，能量不低，但一餐只用一撮。单餐可食量上限取 USDA FoodData Central 的家用量（household measure：1 汤匙对应的克数，黄芥籽 10 g、罂粟籽 8.8 g、香芹籽 6.3 g），三者取平均 8.4 g；依据是家用量，不是 FDA 参照食用量（RACC）。【数值凭记忆写入，待 L2 核对】"
   },
   "cream": {
    "sources": [

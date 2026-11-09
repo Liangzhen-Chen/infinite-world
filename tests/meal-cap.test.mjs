@@ -1,4 +1,5 @@
-// D12 单餐可食量上限（材料属性维度 mealCap，g/人·餐）：按类推导、按时间累计的额度（累计额度 + 整件开封后的余量，存档 state.family.mealCap）。
+// D12 单餐可食量上限（材料属性维度 mealCap，g/人·餐）：按类推导；任一天可吃量 ≤ 一天额度（每人每餐上限 × mealsPerDay × 人数），当天没吃完的额度作废、不跨日叠加；
+// 整件（整瓶油、整罐蜜）分几天吃完由开封余量负责，余量存档在 state.family.mealCap[户键].open。
 // 夹具类别（fxsweet 带上限、fxstaple 无上限、fxfruit 按干物质基准）与夹具物品都是测试里临时构造的，期望值按公式在测试里算，不写死数字，不用正式世界的物品名单；
 // 注入点都是生产代码自己的参数：世界的 materialProps 表（类别行、表头 mealsPerDay）、物品 tags/props、householdResources 的 days/marketSubstitution、
 // household-budget 导出的 householdMealPlan 与 registerHouseholdFoodSources（与 shop.mjs 同一个登记口）。
@@ -52,7 +53,7 @@ test('干物质基准：类别里存干物质量，每件物品按自己的含�
  assert.ok(validateMaterialProps({items:[fresh],recipes:[],materialProps:mixed}).some(m=>m.includes('混用')));
 });
 
-test('额度池：同类共用一个池，额度 = 现有累计额度 + 预算期内新增（每人每餐上限 × mealsPerDay × 人·天数），无上限者不受限', () => {
+test('额度池：同类共用一个池，额度 = 天数 × 一天额度（每人每餐上限 × mealsPerDay × 人数），无上限者不受限', () => {
  const e=pureEngine(foods(),header(20)),perDay=e.world.materialProps.mealsPerDay,w=itemMg(e,'item_fx_a');
  const pools=mealCapPools(e,{days:[1,1]});
  const total=20000*perDay*2;
@@ -64,14 +65,12 @@ test('额度池：同类共用一个池，额度 = 现有累计额度 + 预算�
  assert.deepEqual(pools.violations(),[]);
  pools.take('item_fx_a',{eatMg:total});
  assert.deepEqual(pools.violations(),['fxsweet'],'吃超过额度记为违反不变量');
- // 现有累计额度并入总额；手里没有这个池时不带旧额度
- const saved={allow:{fxsweet:30000},open:{}},held=mealCapPools(e,{days:[1],saved});held.markHeld('item_fx_a');
- assert.equal(held.allowMg('item_fx_a'),30000+20000*perDay);
- assert.equal(mealCapPools(e,{days:[1],saved}).allowMg('item_fx_a'),20000*perDay,'手里没有就不带旧额度');
- // 攒下的额度最多一天的量（每人每餐上限 × mealsPerDay × 人数）：整件分几天吃由开封余量负责，额度不无限攒
- const hoard=mealCapPools(e,{days:[1,1],saved:{allow:{fxsweet:1e9},open:{}}});hoard.markHeld('item_fx_a');
- assert.equal(hoard.dayMg('item_fx_a'),20000*perDay*2);
- assert.equal(hoard.allowMg('item_fx_a'),hoard.dayMg('item_fx_a')+20000*perDay*2,'旧额度只算一天，再加预算期内新增的两人一天');
+ // 手里没有这个池时，货到手前没有额度；不持有时 start 之前不累计
+ assert.equal(mealCapPools(e,{days:[1]}).allowMg('item_fx_a'),20000*perDay);
+ // 当天没吃完的额度不跨日叠加：存档里即使有旧的 allow 字段也不影响，一天的额度就是一天的额度
+ const stale=mealCapPools(e,{days:[1,1],saved:{allow:{fxsweet:1e9},open:{}}});stale.markHeld('item_fx_a');
+ assert.equal(stale.dayMg('item_fx_a'),20000*perDay*2);
+ assert.equal(stale.allowMg('item_fx_a'),stale.dayMg('item_fx_a'),'首日可用额度不超过一天');
  // 货到手后才开始累计：晚到 1 天，少 1 天的新增额度
  const late=mealCapPools(e,{days:[3]});
  assert.equal(late.allowMg('item_fx_a',1),20000*perDay*2);
@@ -238,18 +237,25 @@ test('累计额度：整件分几天吃完，额度吃完后清零，状态走�
   assert.equal(eaten[2],0,'第三天家里没有了');
   assert.equal(f.state.npcs[owner].inventory.item_fx_sweet_a,0);
   assert.deepEqual(states[0].open,{item_fx_sweet_a:w-dayMg},'开封余量写进存档');
-  assert.deepEqual(states[2],{allow:{},open:{}},'手里没了，额度与余量清零');
+  assert.deepEqual(states[2],{open:{}},'手里没了，余量清零');
   return JSON.stringify({eaten,states});
  };
  assert.equal(run(),run(),'同一夹具两次推进结果一致');
 });
 
-test('累计额度封顶：攒下的额度不超过一天的量，哪怕存档里攒得很多', () => {
- const f=fixture({item_fx_sweet_a:12}),perDay=perDayOf(f.engine),dayMg=mealCapOf(f.engine,'item_fx_sweet_a').mg*perDay;
- f.state.family??={};f.state.family.mealCap={[HOUSE]:{allow:{fxsweet:50*dayMg},open:{}}};f.sync();
- const plan=eatDay(f),eaten=plan.rows.reduce((n,r)=>n+(r.eatMg??0),0);
- assert.ok(eaten<=2*dayMg,'当天最多吃：旧额度（封顶一天）+ 当天新增');
- assert.ok(f.state.family.mealCap[HOUSE].allow.fxsweet<=dayMg,'吃完后存档里的额度不超过一天');
+test('任一天可吃量 ≤ 一天额度：任意需求序列下没有一天超过；面包先吃完后第二天也不补吃前一天没用的额度', () => {
+ const f=fixture({item_fx_main:1,item_fx_sweet_a:12}),dayMg=mealCapOf(f.engine,'item_fx_sweet_a').mg*perDayOf(f.engine);
+ // 主体食物（编号排在佐餐品前，先吃）每天够当天需求时佐餐品吃不到；某天主体食物没了，佐餐品那天最多吃一天的额度，前几天没用的额度不叠加。
+ const stock=[1,1,0,0,1,0,0,0];
+ for(const main of stock){
+  f.state.npcs[owner].inventory.item_fx_main=main;f.sync();
+  const plan=householdMealPlan(f.d,f.engine,owner),eaten=plan.rows.filter(r=>r.item==='item_fx_sweet_a').reduce((n,r)=>n+(r.eatMg??0),0);
+  assert.ok(eaten<=dayMg,`一天吃 ${eaten} 毫克不超过一天额度 ${dayMg}`);
+  if(main===0)assert.ok(eaten>0,'没有主体食物的那天，佐餐品吃满当天额度');
+  if(main===0)assert.equal(eaten,dayMg,'前几天没用的额度不叠加，正好一天');
+  const inv=f.state.npcs[owner].inventory;for(const r of plan.rows)if(r.food>0)inv[r.item]=(inv[r.item]??0)-r.food;
+  f.state.family??={};f.state.family.mealCap={[HOUSE]:plan.capState};f.sync();
+ }
 });
 
 test('不变量：预算期内买进的调味佐餐品，按额度逐日都吃得掉，不会买了不吃', () => {

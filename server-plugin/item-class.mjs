@@ -293,16 +293,15 @@ export function mealCapOf(engine,item){
  const cap=materialProps(engine,item).mealCap;
  return cap.known?{pool:cap.source==='item'?`item:${item}`:cap.source,mg:Math.round(cap.value*1000)}:null;
 }
-// 按时间累计的单餐额度（李白 2026-11-09 决定 A）。每户每个池记两样（存档 state.family.mealCap[户键] = {allow:{池:毫克}, open:{物品:毫克}}）：
-//   allow：上次吃后攒下的额度；open：整件（整瓶油、整罐蜜）开封后剩下的量，可分好几天吃完。
-// 日推进时累计：一天的额度 = 每人每餐上限 × 表头 mealsPerDay × 人数，只在这户手里（含开封余量）有这个池的东西时才累计，手里没了就清零（额度不能存着没东西吃）。
-// 攒下的额度封顶为一天的量（每人每餐上限 × mealsPerDay × 人数）：整件分几天吃由 open 负责。封顶后预算与实际对得上的道理：预算期内可吃总量 = 现有额度（≤一天）+ 每天新增，
-// 只要需求每天都有缺口（这时才会买），每天都把当天额度吃满，不会因封顶丢额度；买进量按总量限购，所以买进的都吃得掉。需求当天已满足的天数，额度作废，这时那笔购买本来就不被需要。
-// 吃饭时扣减：吃多少毫克，先吃开封余量，不够再开新的一件（整件从背包扣，余量进 open）。
-// 预算（多日采购）与实际吃饭同一套：池的总额度 = 现有累计额度 + 预算期内新增额度（新买的货到货后才开始累计，按整天向下取整）。
-// opts：days = 各成员的预算天数（日推进为每人 1），saved = 存档里这户的 {allow,open}，held(item) = 这户现在手里有没有这件（含开封余量）。表头没有 mealsPerDay 时没有任何上限。
+// 单餐额度（李白 2026-11-09 决定 A，协调者 2026-11-10 修正：任一天可吃量 ≤ 一天额度）。
+// 每户存档只记整件开封后的余量（state.family.mealCap[户键] = {open:{物品:毫克}}）：整瓶油、整罐蜜可以分好几天吃完，由 open 负责。
+// 一天的额度 = 每人每餐上限 × 表头 mealsPerDay × 人数；当天没吃完的额度作废，不跨日叠加（不存“攒下的额度”）。
+// 日推进时：这户手里（库存或开封余量）有这个池的东西，当天才有额度；吃饭时先吃开封余量，不够再开新的一件（整件从背包扣，余量进 open）。
+// 预算（多日采购）同一公式：期内可吃量 = 天数 × 一天额度（新买的货到货后才开始，整天向下取整），首日可用额度不超过一天；
+// 需求每天都有缺口时每天吃满当天额度，所以按期内总量限购的买进量都吃得掉；需求当天已满足的日子额度作废，那笔购买本来就不被需要。
+// opts：days = 各成员的预算天数（日推进为每人 1），saved = 存档里这户的 {open}。表头没有 mealsPerDay 时没有任何上限。
 export function mealCapPools(engine,{days=[],saved=null}={}){
- const perDay=engine?.world?.materialProps?.mealsPerDay,active=perDay>0,used=new Map(),openUsed=new Map(),held=new Set(),bad=new Set(),allow0=saved?.allow??{},open0=saved?.open??{};
+ const perDay=engine?.world?.materialProps?.mealsPerDay,active=perDay>0,used=new Map(),openUsed=new Map(),held=new Set(),bad=new Set(),open0=saved?.open??{};
  const poolOf=item=>mealCapOf(engine,item);
  const accrual=(c,start)=>c.mg*perDay*days.reduce((n,x)=>n+Math.max(0,Math.floor(x-start+1e-9)),0);
  const api={
@@ -311,9 +310,9 @@ export function mealCapPools(engine,{days=[],saved=null}={}){
   markHeld(item){const c=active&&poolOf(item);if(c)held.add(c.pool);},
   holding(item){const c=active&&poolOf(item);return Boolean(c)&&(held.has(c.pool)||Object.keys(open0).some(k=>(open0[k]??0)>0&&poolOf(k)?.pool===c.pool));},
   // 这个池总共能吃多少毫克：start = 货到手的天数（手里已有则 0）。
-  // 攒下的额度最多一天的量（每人每餐上限 × mealsPerDay × 人数）：整件分几天吃由开封余量负责，额度不能无限攒（否则隔几天一次喝下几公斤奶）。
+  // 一天的额度（每人每餐上限 × mealsPerDay × 人数）。
   dayMg(item){const c=active&&poolOf(item);return c?c.mg*perDay*days.length:Infinity;},
-  allowMg(item,start=0){const c=active&&poolOf(item);if(!c)return Infinity;const now=api.holding(item);return (now?Math.min(allow0[c.pool]??0,api.dayMg(item)):0)+accrual(c,now?0:start);},
+  allowMg(item,start=0){const c=active&&poolOf(item);if(!c)return Infinity;const now=api.holding(item);return accrual(c,now?0:start);},
   roomMg(item,start=0){const c=active&&poolOf(item);if(!c)return Infinity;return Math.max(0,api.allowMg(item,start)-(used.get(c.pool)??0));},
   openMg(item){return Math.max(0,(open0[item]??0)-(openUsed.get(item)??0));},
   take(item,{eatMg=0,fromOpen=0,start=0}={}){const c=active&&poolOf(item);if(!c)return;if(eatMg>api.roomMg(item,start)+1e-6)bad.add(c.pool);if(eatMg>0)used.set(c.pool,(used.get(c.pool)??0)+eatMg);if(fromOpen>0)openUsed.set(item,(openUsed.get(item)??0)+fromOpen);},
@@ -322,15 +321,7 @@ export function mealCapPools(engine,{days=[],saved=null}={}){
   usedMg:pool=>used.get(pool)??0,
   pools:()=>[...used.keys()],
   // 不变量：每个池吃掉与买进的总量不超过它的额度（买了就吃得掉）；take 时记下违反者。
-  violations:()=>[...bad],
-  // 吃完后的新状态：allow = 额度 − 吃掉（手里没了的池清零）；open 由调用方按行写入。remain(item) = 吃完后这户手里这件剩多少毫克（库存件 + 开封余量）。
-  nextState(rows,{remainMg}){
-   const allow={};
-   for(const r of rows){const c=active&&poolOf(r.item);if(!c||c.pool in allow)continue;
-    const left=rows.some(x=>poolOf(x.item)?.pool===c.pool&&remainMg(x)>0);
-    if(left)allow[c.pool]=Math.min(api.dayMg(r.item),Math.max(0,api.allowMg(r.item)-(used.get(c.pool)??0)));}
-   return allow;
-  }
+  violations:()=>[...bad]
  };
  return api;
 }

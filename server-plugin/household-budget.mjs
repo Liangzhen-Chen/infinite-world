@@ -21,7 +21,7 @@ export function householdUpkeepGap(state,key){const r=state.family?.upkeep?.[key
 
 const DAY=1440,qty=v=>typeof v==='number'?v:v?.quantity??0;
 const mealCandidates=Symbol('physical meal candidates'),mealCapCtx=Symbol('meal cap engine and saved state');
-const savedMealCap=(d,key)=>d.get('state','family','mealCap',key)??{allow:{},open:{}};
+const savedMealCap=(d,key)=>d.get('state','family','mealCap',key)??{open:{}};
 const preferenceRoll=compileRX('roll("thrift")');
 const laborPreferenceRoll=compileRX('roll("reservation")'),laborNoiseRoll=compileRX('roll("choice")');
 const actor=(s,id)=>id==='player'?s.player:s.npcs?.[id]??s.creatures?.[id];
@@ -202,14 +202,12 @@ function allocateMeals(rows,needs,caps){
  }
  return shortfall;
 }
-// 一户吃完后的单餐额度状态（写进存档 state.family.mealCap[户键]）：open = 各件开封后剩下的毫克；allow = 池里没吃完的额度（手里没了的池清零）。
-function nextMealCapState(rows,caps,saved){
- const open={...saved.open},touched=new Map();
- for(const r of rows)if(r.eatMg!==undefined){const w=unitMg(r),t=touched.get(r.item)??0;touched.set(r.item,t-r.fromOpen+r.food*w-(r.eatMg-r.fromOpen));}
- for(const [item,delta] of touched)open[item]=(saved.open[item]??0)+delta;
+// 一户吃完后的单餐额度状态（写进存档 state.family.mealCap[户键]）：open = 各件开封后剩下的毫克；当天没吃完的额度不留（不跨日叠加）。
+function nextMealCapState(rows,saved){
+ const open={...saved.open};
+ for(const item of new Set(rows.filter(r=>r.eatMg!==undefined).map(r=>r.item)))open[item]=(saved.open[item]??0)+rows.filter(r=>r.item===item&&r.eatMg!==undefined).reduce((n,r)=>n+r.food*unitMg(r)-r.eatMg,0);
  for(const k of Object.keys(open))if(!(open[k]>0))delete open[k];
- const allow=caps.nextState(rows,{remainMg:r=>(r.stock-r.food)*unitMg(r)+(open[r.item]??0)});
- return {allow,open};
+ return {open};
 }
 
 // Public agriculture has already consumed standard daily portions, whose
@@ -250,7 +248,7 @@ export function householdMealWithSources(plan,sourceNutrition={}){
  const caps=mealCapPools(engine,{days,saved});for(const r of rows)if(r.stock>0)caps.markHeld(r.item);
  const shortfall=allocateMeals(rows,Object.fromEntries(Object.keys(plan.needs).map(n=>[n,plan.needs[n]-plan.publicNutrition[n]-(sourceNutrition[n]??0)])),caps);
  const bad=caps.violations();if(bad.length)throw Error(`单餐额度不变量被破坏：${bad.join('、')}`);
- return {...plan,shortfall,capState:nextMealCapState(rows,caps,saved),rows:rows.filter(r=>r.food>0||r.eatMg>0).map(({definition,...r})=>({...r,selection:r.selection.slice(0,r.food)}))};
+ return {...plan,shortfall,capState:nextMealCapState(rows,saved),rows:rows.filter(r=>r.food>0||r.eatMg>0).map(({definition,...r})=>({...r,selection:r.selection.slice(0,r.food)}))};
 }
 
 export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true}={}){

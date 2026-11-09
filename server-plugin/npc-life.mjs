@@ -154,7 +154,7 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
   if(!canonicalEqual(p.previous,record))d.set(['state','family','meals',p.key],record);
   // 单餐额度（item-class.mealCapPools）：吃完后的累计额度与开封余量写进存档，下一天接着用；与预算读的是同一个位置。
   const capKey=['state','family','mealCap',p.key],capOld=d.get(...capKey),capNew=p.capState;
-  if(capNew&&!canonicalEqual(capOld??{allow:{},open:{}},capNew))d.set(capKey,capNew);
+  if(capNew&&!canonicalEqual(capOld??{open:{}},capNew))d.set(capKey,capNew);
   householdUpkeep(d,engine,day,p);
  }
  for(const settlement of new Set(plans.map(p=>p.settlement??'unregistered')))d.set(['state','family','mealDays',settlement],day);

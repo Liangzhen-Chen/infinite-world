@@ -4,7 +4,8 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
-import {householdBudget,householdResources,householdBufferTarget,householdOptions} from '../server-plugin/household-budget.mjs';
+import {householdBudget,householdResources,householdBufferTarget,householdOptions,registerHouseholdFoodSources} from '../server-plugin/household-budget.mjs';
+import {mealCapPools} from '../server-plugin/item-class.mjs';
 import {saleableStock,reserveShortfall} from '../server-plugin/market.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {applyPatches,PatchCursor,withRecordIndex} from '../server-plugin/storage.mjs';
@@ -17,6 +18,23 @@ const owner='npc_hw_linsui',other='npc_hw_duanyan',supplier='npc_hw_shendu',item
 const SAT=world.items.find(i=>i.id===item).nutrition.satiety;
 const satOf=(f,id)=>f.engine.byId.get(id).nutrition?.satiety??0;
 const near=(a,b,m)=>assert.ok(Math.abs(a-b)<1e-6,m??`${a} ≈ ${b}`);
+// 市场替代的独立复算（不拿引擎的结果去验引擎的结果）：
+//  ① 首购物品 = 从可得来源（shop.mjs 登记的家户食物来源）按引擎的购买次序独立排出来的第一件：到货时间早者先，同时间价低者先，再按编号；
+//     只算买得起（现金扣到货前的应付款）、有派生饱腹、且单餐额度允许买满至少一件的来源。物品名不写死，由来源与派生值算出。
+//     （引擎并不按“每铜饱腹最高”挑货：它按到货与价格排序，所以这里断言的是排序结果，不是单价最优。）
+//  ② 覆盖量 = Σ 购买量 × 该物品的派生饱腹，独立相加后与引擎的 coverage 比较；
+//  ③ 缺口 = 需求（人数 × 天数 × 每人每天 10 个面包的饱腹）− 覆盖量 − 手里的存粮（面包 × SAT）。
+const marketCheck=(f,b,{members=1,days=b.target?.days,cash=b.resources?.market?.cash??b.market.cash,payments=0,held,minute=f.state.minute}={})=>{
+ const m=b.resources?.market??b.market,res=b.resources??b;
+ const caps=mealCapPools(f.engine,{days:Array(members).fill(days)});
+ const buyable=registerHouseholdFoodSources.fn(f.d,f.engine,owner,{}).filter(s=>s.at>=minute&&s.quantity>0&&s.unitPrice>0&&s.unitPrice<=cash-payments&&satOf(f,s.item)>0&&caps.unitsRoom(s.item,(s.at-minute)/DAY)>=1)
+  .sort((x,y)=>x.at-y.at||x.unitPrice-y.unitPrice||(x.item<y.item?-1:x.item>y.item?1:0));
+ assert.equal(m.purchases[0]?.item,buyable[0]?.item,'first purchase is the first buyable source in arrival/price order');
+ const coverage=m.purchases.reduce((n,p)=>n+p.quantity*satOf(f,p.item),0);
+ near(m.coverage.satiety,coverage);
+ near(res.shortfall.satiety,Math.max(0,members*days*10*SAT-coverage-held));
+ return coverage;
+};
 function fixture({members=[owner],shared=true}={}){
  const w=structuredClone(world);
  w.households=w.households.map(h=>({...h,members:h.members.filter(id=>!members.includes(id))})).filter(h=>h.members.length);
@@ -166,10 +184,10 @@ test('signed employment sets the reserve horizon and unpaid harvest is future go
  f.state.records['budget-job']={id:'budget-job',category:'contract',kind:'workshop',worker:owner,owner:other,status:'有效',createdAt:0,starts:0,deadline:20*DAY,nextWork:6*DAY,wage:10};
  f.sync();const b=householdBudget(f.d,f.engine,owner,{kernel:true});
  assert.equal(b.future[0].day,6);assert.equal(b.cash,5);
- // Intent: the six-day horizon leaves a ~40-bread gap beyond the 20 held. Residents may spend their 5 coin on real food from a shop (the best satiety-per-coin one),
- // so the gap is 40 breads minus whatever that purchase covers, not a fixed 40.
- near(b.resources.shortfall.satiety,40*SAT-b.resources.market.coverage.satiety);
- assert.ok(b.resources.market.coverage.satiety<=b.cash/Math.min(...b.resources.market.purchases.map(p=>p.unitPrice/satOf(f,p.item)))+1e-9,'coverage is bounded by what the cash buys at the best satiety per coin');
+ // Intent: a signed wage six days out sets a six-day horizon, so ~40 breads' worth of gap remains beyond the 20 held (the wage is not cash). The 5 coin may buy real
+ // shop food; the gap is then the full need minus that purchase's independently computed coverage minus the held bread.
+ assert.equal(b.target.days,6);
+ marketCheck(f,b,{held:20*SAT});
  assert.equal(saleableStock(f.d,f.engine,owner,item).available,0);
  // Growing crops are not in the bag, even when they have an expected yield.
  f.state.buildings.bld_hw_qingdeng={...f.state.buildings.bld_hw_qingdeng,owner,condition:100};
@@ -200,10 +218,13 @@ test('children are mouths to feed; a common crop failure cannot create aid',()=>
  const child=world.npcs.find(n=>n.flags?.minor||n.age<18).id;
  const f=fixture({members:[owner,child]});f.state.npcs[owner].inventory[item]=5;f.sync();
  // Hand anchor: two bodies need20; five meals leave15, including the child.
- const r=householdResources(f.d,f.engine,owner,{days:1});near(r.shortfall.satiety,15*SAT-r.market.coverage.satiety);assert.ok(r.shortfall.satiety>0);
+ // Intent: two mouths for one day need 20 breads' worth, five held leave 15; the child counts. Real shop food may cover part of it, computed independently.
+ const r=householdResources(f.d,f.engine,owner,{days:1});marketCheck(f,r,{members:2,days:1,held:5*SAT});assert.ok(r.shortfall.satiety>0);
  const subjective=householdBudget(f.d,f.engine,owner);
  assert.deepEqual(subjective.resources.members,[owner,child]);
- near(subjective.resources.shortfall.satiety,15*SAT-subjective.resources.market.coverage.satiety,'the parent budgets for the child without reading another purse');
+ // The subjective view only knows received offers: no purchase, so the parent's gap is the full 15 breads (needs, not another purse).
+ assert.equal(subjective.resources.market.purchases.length,0);
+ near(subjective.resources.shortfall.satiety,15*SAT,'the parent budgets for the child without reading another purse');
  const calm=householdBudget(f.d,f.engine,owner,{kernel:true}),disaster=householdBudget(f.d,f.engine,owner,{kernel:true,commonRisk:1});
  assert.ok(disaster.target.days>calm.target.days);assert.equal(disaster.cash,calm.cash);
  assert.equal(disaster.mutualAidAvailable,0);assert.ok(disaster.resources.shortfall.satiety>calm.resources.shortfall.satiety);
@@ -338,9 +359,9 @@ test('one affordable market meal cannot erase the remaining six-day income gap',
  // Six days need60 meals: one paid future meal plus physical20 still lack39.
  const b=householdBudget(f.d,f.engine,owner,{kernel:true});
  assert.equal(b.target.days,6);assert.equal(b.target.foodDays,0.5);
- // One paid meal: the first purchase is whatever shop food the engine's derived nutrition ranks first; its coverage is that item's own satiety.
- assert.equal(b.resources.market.coverage.satiety,satOf(f,b.resources.market.purchases[0].item));
- near(b.resources.shortfall.satiety,40*SAT-b.resources.market.coverage.satiety);
+ // Intent: the purse buys exactly one paid meal (price coins), which does not close the six-day gap. First purchase, coverage and gap are recomputed independently.
+ assert.equal(b.resources.market.purchases.reduce((n,p)=>n+p.quantity,0),1);
+ marketCheck(f,b,{held:20*SAT});
 });
 
 test('missing business, failed supply and common loss cannot act as paid food access',()=>{
@@ -387,8 +408,9 @@ test('market cash is earmarked once across resources and known prior payments',(
  const b=householdBudget(f.d,f.engine,owner,{kernel:true});
  assert.equal(b.resources.market.spent,price);
  assert.equal(b.resources.market.purchases.reduce((n,p)=>n+p.quantity,0),1);
+ // Intent: the one affordable purchase supplies both nutrients and the due bill takes the other price; independent first purchase and coverage, hydration bounded by that item's own.
+ marketCheck(f,b,{payments:price,held:20*SAT});
  const first=b.resources.market.purchases[0].item;
- assert.equal(b.resources.market.coverage.satiety,satOf(f,first));
  assert.ok(b.resources.market.coverage.hydration<=(f.engine.byId.get(first).nutrition?.hydration??0));
  assert.equal(b.cash,price*2);
  assert.equal(b.foodTimeline.find(r=>r.at===DAY).plannedFood,price);
