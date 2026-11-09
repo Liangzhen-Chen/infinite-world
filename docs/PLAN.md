@@ -1402,6 +1402,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 **下一件（最高优先）**：查性能回退根因——嫌疑 t-foodsrc（每户预算对每个可达非店铺卖家 householdResources+route）与 t-metab（settlementMouths/oddArrivals 推进期外每次重建）。做法：建两个探针目录 t-prof+t-foodsrc、t-prof+t-metab 各跑 prof-day（需两轮审），或静态定位后直接修热路径；修好前不把 m2 快进到 t-int。
 **已过审待合入（分支指针=审过提交，已核）**：t-metab 2c4e6ad2（metab-13，含 K6 测试清理，云上 monster-society.test 10/1，#2 基线已有）；t-mprod 4dff5631（mprod-5，monster-production 3/0；另 ka1/sites/species/kc 已过）；t-memo 6488ad12（memo-1，marketSupply 缓存+route LRU，收益未证）；t-ptai 055105ec（ptai-6，离线 21/0）。
 **待人定**：PT-AI E3（试玩在哪跑/密钥是否上服务器）→ 再报 E4；t-int 等分支是否推 GitHub（master 文档已推到 94d36b39，之后的 PLAN 提交未推）；怪物据点“含水率/可食仁比例”材料属性缺口另开卡。
+**04:30 李白纠偏三项（压缩后照此接续）**
+- ① m2-2 的 11 个 3600 s 超时一律不算通过、本轮无结论。对 b1m-1：原来也超时 8 个（a3-acceptance、farm-pests-clock、agriculture、event-size、farm-pests-hunt、ledger-price、npc-autonomy、record-index-check）；**原来能跑完、现因变慢看不到结果 3 个**：farm-pests-harvest（b1m-1 1/0 2794 s 通过）、playtest-lifecycle（3/0 3135 s 通过）、monster-society-content（27/6 2181 s 失败）。
+- ② 完成时间估计依据：剩余未开始 509 个文件在 b1m-1 累计 40175 s ×1.4 ÷6 ≈ 9374 s，加在跑 6 个最多再 1323 s，合计约 10410 s ≈ 2.9 h（从本机 04:14 起，约 07:10）；1.4 倍按已完成文件推得、假设各文件同比例变慢，误差可能较大。
+- ③ 性能根因并行做（不等 m2-2）：探针目录 pf-1（t-pf c410f576 = t-foodsrc+t-prof，hash 33a139ae…）、pm-1（t-pm 100c45d7 = t-metab 2c4e6ad2+t-prof，hash 3c2c96f3…），两轮审后各跑 `run-script <dir> tools/prof-day.mjs mode=farm days=10`，与 prof-1（5.0 s/日）、memo-1（7.4 s/日）同场景比较每游戏日秒数与 readHouseholdResources 调用数；定位后整类修（如可达卖家列表/聚落口数按天或按状态版本缓存，失效条件写清），两轮审再上云。
+
 **02:20 李白待核清单**：①memo-1 已答（01:45:50–01:47:05 结束 EXIT=0，结果 F:/dnd-tmp/prof1/memo1-farm.out）；②m2-2 实况已答（本节）；③a–f 原文已贴（b1m-1 汇总与差异、GitHub 未推、清理证据、metab-10 与 ptai-6 审查与云测、t-msfix 状态）。
 **服务器磁盘** 84%（7.7 GB）；上传低于 4 GB 拒绝；已跑完旧目录清理按“三条证据”授权（F:/dnd-tmp/server-cleanup-1109-11/run.sh）。
 **纪律**：本机只 node --check；审查者禁止 `python -` 读 stdin（曾三次卡死后台）；合并前核分支指针=审过提交；中文汇报。
