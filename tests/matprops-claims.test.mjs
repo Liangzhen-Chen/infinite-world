@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
@@ -196,4 +196,22 @@ test('中断续跑：第一次回复 fact hard 后进程中断，新进程只拿
   const rec = JSON.parse(await fs.readFile(path.join(dir, 'class_a.json'), 'utf8'));
   assert.equal(rec.status, 'manual'); assert.equal(out.summary.passed, 0); assert.equal(rec.review.factPending.status, '待按编号人工核对');
   assert.deepEqual(out.summary.factPendingHuman, {count: 1, ids: ['class_a']});
+});
+
+test('调味卡新修订 d12-condiment-2 / review-2：同条次数从 0 计，旧修订请求不计入，账本累计花费连续，额度不变', async () => {
+  assert.deepEqual([condimentCard.revision, condimentCard.reviewDirName, condimentCard.reviewRoot], ['d12-condiment-2', 'review-2', path.join('world/drafts/d12-condiment', 'review-2')]);
+  assert.match(condimentCard.revisionSource, /7ca0fc76.*review-2/);
+  assert.equal(cardProfiles.condiment.revision, 'd12-condiment-2');
+  assert.equal(cardProfiles.condiment.reviewRoot, condimentCard.reviewRoot);   // 人工核定、L4、verify 都指向新修订目录
+  assert.equal(cardProfiles.condiment.manualFile, path.join(condimentCard.reviewRoot, 'manual-verified.json'));
+  const ledger = JSON.parse(await fs.readFile(path.join(condimentCard.draftRoot, 'budget.json'), 'utf8'));
+  const used = id => Object.values(ledger.requests).filter(r => r.label?.startsWith(`content-review-1-${id}-review`)).length;
+  assert.equal(used('class_vinegar'), 3);   // 旧修订已用满 3 次
+  assert.throws(() => checkReviewCap(ledger, 'class_vinegar', 'review-1'), e => e.code === 'REVIEW_LIMIT');
+  for (const id of ['class_vinegar', 'class_spice_seed', 'item_caraway_seed']) checkReviewCap(ledger, id, condimentCard.reviewDirName);   // 新修订从 0 计，不被旧请求挡
+  const withNew = {requests: {...ledger.requests, ...Object.fromEntries([0, 1, 2].map(i => [`n${i}`, {label: `content-review-2-class_vinegar-review${i}`, status: 'settled'}]))}};
+  assert.throws(() => checkReviewCap(withNew, 'class_vinegar', 'review-2'), e => e.code === 'REVIEW_LIMIT');   // 新修订内第 4 次才超限
+  const b = await condimentBudget();   // 沿用同一账本：累计花费就是账本里的值，额度仍 1.0 元
+  assert.deepEqual([b.limitYuan, b.sharedLimitYuan, b.spentYuan], [1, 1, ledger.cards[condimentCard.cardId].spentYuan]);
+  assert.ok(b.spentYuan >= 0.12998);
 });

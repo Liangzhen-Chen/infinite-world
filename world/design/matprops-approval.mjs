@@ -42,9 +42,11 @@ export const cardId='D12-MATPROPS';
 export const cardLimitYuan=1.5, maxRequests=130, maxOverrideRatio=0.15;
 // 调味佐餐卡（D12-CONDIMENT）：与 D 卡互不影响的独立账（自己的 budget.json 与 usage.jsonl），额度 1.0 元，条目上限 = 条目数 × 每条每 revision 最多 3 次。
 export const condimentCard={
- id:'d12-condiment',cardId:'D12-CONDIMENT',revision:'d12-condiment-1',draftRoot:'world/drafts/d12-condiment',reviewDirName:'review-1',
+ id:'d12-condiment',cardId:'D12-CONDIMENT',revision:'d12-condiment-2',draftRoot:'world/drafts/d12-condiment',reviewDirName:'review-2',
  limitYuan:1.0,maxRequests:60,
- source:'李白 2026-11-09 16:5x：亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡'};
+ source:'李白 2026-11-09 16:5x：亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡',
+ // 修订来源：d12-condiment-1（review-1）的记录与请求原样保留；内容变了按修订规则另起新修订，账本沿用同一 budget.json（额度仍 1.0 元，已花费照旧累计），同条次数按 review-2 标签重新计。
+ revisionSource:'内容按 USDA FDC 核对后变化（7ca0fc76），按修订规则另起 review-2'};
 condimentCard.reviewRoot=path.join(condimentCard.draftRoot,condimentCard.reviewDirName);
 condimentCard.allocation={cardId:condimentCard.cardId,incrementLimitYuan:condimentCard.limitYuan,maxRequests:condimentCard.maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0};
 // 本卡初始账本（共享额度与单卡额度同为 1.0 元，授权来源写入 authorizations）；只在账本文件不存在时由 --review --card condiment 创建，不动 D 卡账本。
@@ -685,7 +687,7 @@ export async function run(args=process.argv.slice(2)){
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
  if(condiment&&args.includes('--budget')){console.log(JSON.stringify(await condimentBudget()));return;}
  if(condiment&&args.includes('--review')){
-  // --redo <id,...>：同 D 卡，只归档本卡 review-1 里的 manual 记录（不删），不动账本；同条次数仍按本卡账本标签计（checkReviewCap）。
+  // --redo <id,...>：同 D 卡，只归档本卡当前修订目录（review-2）里的 manual 记录（不删），不动账本；同条次数仍按本卡账本标签计（checkReviewCap）。
   if(args.includes('--redo')){
    const ids=args[args.indexOf('--redo')+1].split(','),own=new Set((await condimentEntries()).map(e=>e.id));
    for(const id of ids)if(!own.has(id))throw Error(`--redo 只收调味卡条目：${id}`);
