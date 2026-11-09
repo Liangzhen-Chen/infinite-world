@@ -277,9 +277,19 @@ function sellerShare(d,engine,state,place,read,owner,seller,item,available){
  const away=buyerKey(engine,state,seller);
  const rows=buyerNeeds(d,engine,state,place,read).filter(b=>b.id!==away),key=buyerKey(engine,state,owner);
  if(rows.find(b=>b.id===key)?.buyer!==owner)return 0;
- // 余数抽签的随机数按日派生（世界种子、聚落、卖家、物品、日序）：同一天同一来源的份额稳定，隔天重抽。
- const day=Math.floor(state.minute/1440),u=(rollDice(d.get('randomSeed'),`seller-share:${place}:${seller}:${item}`,'share',day*1440,0,4294967296)-1)/4294967296;
- return shareByNeed(total,rows,u).get(key)??0;
+ // 性能：同一状态版本（read 与游标 revision 绑定，非游标时 read 每次新建）内，(聚落、卖家、物品、整件可售量) 相同则
+ // rows（buyerNeeds 已按 read 缓存，away 由卖家定）、u（种子、聚落、卖家、物品、日序，rollDice 是纯哈希无状态）与 shareByNeed
+ // 的结果都相同，各买方户只是在同一张分配表里取自己的一格。故按该键缓存整张表，rollDice 对同键只算一次；
+ // 取表发生在上面“买方名额不符即返回 0”之后，所以哪些调用会走到抽签的条件不变，结果逐位相同，随机种子与键串不变。
+ const memoKey=JSON.stringify([place,seller,item,total]);
+ let shares=read.shares?.get(memoKey);
+ if(!shares){
+  // 余数抽签的随机数按日派生（世界种子、聚落、卖家、物品、日序）：同一天同一来源的份额稳定，隔天重抽。
+  const day=Math.floor(state.minute/1440),u=(rollDice(d.get('randomSeed'),`seller-share:${place}:${seller}:${item}`,'share',day*1440,0,4294967296)-1)/4294967296;
+  shares=shareByNeed(total,rows,u);
+  (read.shares??=new Map()).set(memoKey,shares);
+ }
+ return shares.get(key)??0;
 }
 // 按需求比例把 total 件整分给 rows（{id,need}）：每户先得 floor(total*need/sum)，剩余 left 件按小数部分做无放回加权抽签，
 // 每户至多多得 1 件，总量恰为 total。抽样法为系统抽样：按编号码点序（不用 localeCompare，跨环境一致）把各户小数部分 f_i 排成
