@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {advanceShops,currentShops,tradeQuote,recordAgreedQuote} from '../server-plugin/shop.mjs';
@@ -14,10 +14,11 @@ import {moveCoins,purse,mirrorPartyCoins,depositCounter,dedicatedCoinAccount} fr
 import {transferItems} from '../server-plugin/items.mjs';
 import {bookTransport,advanceTransport,nextTransportMinute} from '../server-plugin/transport.mjs';
 import {fixture as transportFixture,asset,DRIVER} from './helpers/transport.mjs';
-import {pinSatiety} from './helpers/satiety-pin.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,owner='npc_hw_linsui',buyer='npc_hw_luowei',seller='npc_hw_yanzhe',place='bld_hw_qingdeng',item='item_ration';
+// 口粮、水的营养由材料数据推导，读引擎派生值；夹具把每人每天的饱食/水分消耗设为 10 份该物的量（原先手写每份 1、每天 10）。
+const derived=(await loadRuntimeWorld()).items,SAT=derived.find(i=>i.id===item).nutrition.satiety,WATER='item_water',HYD=derived.find(i=>i.id===WATER).nutrition.hydration;
 function fixture({food=false}={}){
  const w=structuredClone(world);
  const ids=[owner,buyer,seller];
@@ -30,8 +31,7 @@ function fixture({food=false}={}){
  for(const id of ids)w.households.push({id:`house_${id}`,members:[id],settlement:'loc_hw',homeLocation:place,tenure:'独立家计'});
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:food?1:0}];
  w.marketRules.customerChoice.noisePermille=0;
- for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?10/24:0;
- pinSatiety(w,item,1);
+ for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?10*SAT/24:0;
  const row={item,source:'route',from:'loc_bs',amount:2,maximum:20};
  const shop=w.rules.economy.shops.stores.find(s=>s.keeper===owner);shop.restock=[row];shop.firstDay=1;shop.cycleDays=1;
  w.npcs.find(n=>n.id===owner).shopRestock=[row];
@@ -158,11 +158,10 @@ test('shopping replaces the overlapping own-farm production minutes, not just th
 });
 
 test('one visit can fill food and water needs with two goods and pays its real round trip once',()=>{
- const f=fixture({food:true}),home='loc_hw',drink='item_bread';
+ const f=fixture({food:true}),home='loc_hw',drink=WATER;
  f.doc.state.minute=720;f.doc.state.npcs[buyer].coins=1000;f.doc.state.npcs[buyer].location=home;
  f.w.npcs.find(n=>n.id===buyer).schedule.default[0].location=home;
- for(const r of f.w.primitiveTables.body.rows)if(r.selector==='person'&&r.need==='hydration')r.drainPerHour.light=10/24;
- f.w.items.find(i=>i.id===drink).nutrition={hydration:1};
+ for(const r of f.w.primitiveTables.body.rows)if(r.selector==='person'&&r.need==='hydration')r.drainPerHour.light=10*HYD/24;
  const row={item:drink,source:'local',amount:2,maximum:100};
  f.shop.restock.push(row);f.w.npcs.find(n=>n.id===owner).shopRestock.push(row);
  f.doc.state.npcs[owner].inventory={[item]:100,[drink]:100};

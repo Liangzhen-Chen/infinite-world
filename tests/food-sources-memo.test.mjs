@@ -8,7 +8,6 @@ import {changeItems} from '../server-plugin/items.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
 import {stateReader} from '../server-plugin/valuation.mjs';
 import {withRecordIndex} from '../server-plugin/storage.mjs';
-import {pinSatiety} from './helpers/satiety-pin.mjs';
 
 // 口粮替代的卖家可出让量与可达卖家候选按状态版本共享：同状态重复读结果不变且不重复计算，状态一变即失效。
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -21,7 +20,6 @@ function fixture(){
  delete w.npcs.find(n=>n.id===seller).shopType;
  w.households=[{id:'meal-house-0',members:[A,B],settlement:'loc_hw',homeLocation:home},{id:'meal-seller',members:[seller],settlement:'loc_hw',homeLocation:home}];
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
- pinSatiety(w,item,30);
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  for(const n of w.npcs.filter(n=>[A,seller].includes(n.id))){n.tier='full';n.schedule={default:[{start:0,end:1440,location:home,activity:'休息',services:n.id===seller?['trade']:[]}]};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'food-sources-memo');

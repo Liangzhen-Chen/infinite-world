@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {advanceHouseholdMeals} from '../server-plugin/npc-life.mjs';
@@ -16,13 +16,13 @@ import {advanceHook} from '../server-plugin/advance-hooks.mjs';
 import {fuelEffectiveHeat,fuelReferenceHeat,householdUsage} from '../server-plugin/item-class.mjs';
 import {itemGrams} from '../server-plugin/household-budget.mjs';
 import craftingBalance from '../world/rules/tables/balance/crafting.json' with {type:'json'};
-import {pinSatiety} from './helpers/satiety-pin.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',home='loc_hw_northwood';
+// 每份野食的饱腹：物品表的手写值是按热量的基值，加载时乘饱腹系数；这里读引擎派生值 U，凭它折算手算锚点（不再按手写 15）。
+// 两人一天 120 饱腹：整份采，份数 = ceil(缺口 ÷ U)。
+const U=(await loadRuntimeWorld()).items.find(i=>i.id==='item_wild_food').nutrition.satiety;
 function fixture({capacity=2000,separate=false,owned=false,location=home,settlement='loc_hw',food=0,fullClock=false}={}){
  const w=structuredClone(world);
- // 手算锚点按每份野食 15 饱腹（8 份 = 120）；手写基值要乘饱腹系数，这里用生产系数反解，使最终仍是 15。
- pinSatiety(w,'item_wild_food',15);
  w.rules.householdSubsistence.portionsPerKm2=capacity;
  if(!fullClock)w.rules.wildlife.habitats=w.rules.wildlife.habitats.filter(h=>h.location===location);
  // Arithmetic fixtures isolate one reachable commons, including plant-only
@@ -144,7 +144,7 @@ test('one settlement record freezes all household plans through depletion and sa
  const f=fixture({separate:true});delete f.e.rules.forestWater;
  prepareHouseholdSubsistence(f.d,f.e,0);
  const key='subsistence-plan:loc_hw',record=structuredClone(f.d.get('state','records',key));
- // Two single mouths need four15-satiety portions each; one settlement row,
+ // Two single mouths need ceil(60/U)=4 portions each; one settlement row,
  // two40-minute assignments, and zero physical withdrawals during planning.
  assert.equal(Object.values(f.d.get('state','records')).filter(r=>r.category==='subsistence_plan').length,1);
  assert.equal(Object.keys(record.households).length,2);
@@ -226,14 +226,14 @@ test('household grouping and allocation use the same morning rental validity',()
 
 test('private food removes only the covered daily deficit and produces no unnecessary forage journey',()=>{
  const full=fixture({food:8});delete full.e.rules.forestWater;
- //120 need -8*15 private nutrition =0: no duty and no forage receipt.
+ //120 need -8*U private nutrition <=0: no duty and no forage receipt.
  const p=householdSubsistencePlan(full.e,full.d.get('state'),A,480);
  assert.equal(p.food,null);assert.deepEqual(p.duties,[]);
  advanceHouseholdMeals(full.d,full.e,0);
  assert.equal(meals(full)[0].shortfall.satiety,0);
  assert.equal(Object.values(full.d.get('state','records')).filter(r=>r.category==='household_forage').length,0);
  const partial=fixture({food:7});delete partial.e.rules.forestWater;
- //120 -7*15 =15: exactly one10-minute portion is needed.
+ //120 -7*U leaves a small gap: exactly one10-minute portion is needed.
  assert.equal(householdSubsistencePlan(partial.e,partial.d.get('state'),A,480).food.minutes,10);
  advanceHouseholdMeals(partial.d,partial.e,0);
  assert.equal(meals(partial)[0].sources.find(s=>s.kind==='forage').quantity,1);
@@ -338,7 +338,7 @@ test('geographic reads in other save branches preserve an unchanged household pl
 test('a household without a granary gathers finite food, charges shared work and consumes from the reserve',()=>{
  const f=fixture(),p=householdSubsistencePlan(f.e,f.d.get('state'),A,480);
  advanceHouseholdMeals(f.d,f.e,0);
- // Hand anchor: two people120 satiety /15 =8 portions; local8*10=80min.
+ // Hand anchor: two people120 satiety /U =ceil=8 portions; local8*10=80min.
  const meal=meals(f)[0],forage=meal.sources.find(s=>s.kind==='forage');
  assert.equal(forage.quantity,8);assert.equal(forage.minutes,80);assert.equal(forage.travelMinutes,0);
  assert.equal(meal.shortfall.satiety,0);assert.equal(f.d.get('state','records',`forage:${home}`,'reserve'),1992);
@@ -503,8 +503,8 @@ test('water assignment preserves the idle adult long food run instead of forcing
 });
 test('two households share one stock and cannot create food when it runs out',()=>{
  const f=fixture({capacity:5,separate:true});advanceHouseholdMeals(f.d,f.e,0);
- // Hand anchor:5 portions*15=75 against120; total shortage45, not two stocks.
- assert.equal(meals(f).reduce((n,m)=>n+m.shortfall.satiety,0),45);
+ // Hand anchor: 5 portions*U against 120; total shortage 120-5U, not two stocks.
+ assert.equal(meals(f).reduce((n,m)=>n+m.shortfall.satiety,0),120-5*U);
  assert.equal(f.d.get('state','records',`forage:${home}`,'reserve'),0);
  assert.equal(f.d.get('ledger','flows','sink:consume|item_wild_food|meal'),5);
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
@@ -546,7 +546,7 @@ test('five days regrow two spring portions but less than one winter portion from
  // Hand anchor:8*5%*5=2; winter recovery1/4 gives1/2, retained rationally.
  assert.equal(spring.d.get('state','records',`forage:${home}`,'grown'),2);
  assert.equal(winter.d.get('state','records',`forage:${home}`,'grown'),0);
- assert.equal(meals(spring)[0].shortfall.satiety,90);assert.equal(meals(winter)[0].shortfall.satiety,120);
+ assert.equal(meals(spring)[0].shortfall.satiety,120-2*U);assert.equal(meals(winter)[0].shortfall.satiety,120);
  assert.deepEqual(auditLedger(spring.d.get('ledger')),[]);assert.deepEqual(auditLedger(winter.d.get('ledger')),[]);
 });
 test('one foraging journey can rest at the source over lunch without charging a second journey or counting rest as harvest',()=>{
@@ -581,12 +581,13 @@ test('registered roster relatives count as mouths and available labour without d
  for(const id of [A,B])f.d.set(['state','npcs',id,'status'],'患病');
  assert.equal(f.d.get('state','npcs',relative),undefined);
  advanceHouseholdMeals(f.d,f.e,0);
- // Hand anchor: three registered mouths need180, hence12*15 wild portions.
- // The healthy adult relative supplies those120 work minutes statistically.
+ // Hand anchor: three registered mouths need180, hence ceil(180/U) wild portions.
+ // The healthy adult relative supplies those 10-minute portions' work minutes statistically.
  const meal=meals(f)[0],source=meal.sources.find(s=>s.kind==='forage');
- assert.equal(meal.needs.satiety,180);assert.equal(source.worker,relative);assert.equal(source.quantity,12);
+ const portions=Math.ceil(180/U);
+ assert.equal(meal.needs.satiety,180);assert.equal(source.worker,relative);assert.equal(source.quantity,portions);
  assert.equal(meal.shortfall.satiety,0);assert.equal(f.d.get('state','npcs',relative),undefined);
- assert.ok(householdWorkTime(f.e,f.d.get('state'),relative,480).reservedMinutes>=120);
+ assert.ok(householdWorkTime(f.e,f.d.get('state'),relative,480).reservedMinutes>=portions*10);
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
 });
 
@@ -687,7 +688,7 @@ test('equal-opportunity adults share water and forage work instead of losing one
  // Source-safety failures are exercised separately in water-source tests.
  Object.assign(place.features[0].state,{waterMl:place.features[0].state.capacityMl,pathogenRisk:0,toxinUg:0,saltMg:0,frozenUntil:0});
  const p=householdSubsistencePlan(f.e,f.d.get('state'),A,480);
- // Two mouths need8*15=120 satiety: local forage80min plus water15min.
+ // Two mouths need ceil(120/U)=8 portions: local forage80min plus water15min.
  // Equal opportunity cost keeps95 total minutes, shared between two adults.
  assert.equal(p.water.minutes,15);assert.equal(p.food.minutes,80);
  assert.notEqual(p.water.worker,p.food.worker);

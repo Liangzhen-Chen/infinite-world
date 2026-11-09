@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
+import {materializeRuntimeWorld} from '../server-plugin/runtime-world.mjs';
 import {deriveItemAttributes,satietyFactor,isItemClass,itemClasses,resolveMaterials,pickHeldOfClass} from '../server-plugin/item-class.mjs';
 
 const world=await loadWorld();
@@ -43,7 +44,8 @@ test('生熟由加热派生：生谷与只磨不烧的粉是生料，烧火炒�
 });
 
 test('新物品、新配方不写营养也照样派生（规律不认 id）', () => {
-  const w=structuredClone(world);
+  // 用已装入材料属性（含各物品出处）、尚未派生的运行时世界：水等物品由出处推导为 0 饱腹，不落到默认档（未装材料属性的原始世界里水会按默认密度得到饱腹）。
+  const w=materializeRuntimeWorld(structuredClone(world));
   const base=w.items.find(i=>i.id==='item_oat_crisp');
   w.items.push({...structuredClone(base),id:'item_kf_soup',name:'试验汤',tags:['food']},{...structuredClone(base),id:'item_kf_root',name:'试验根',tags:['food'],weight:0.4});
   const tpl=w.recipes.find(r=>r.id==='recipe_w3_oat_crisp');
