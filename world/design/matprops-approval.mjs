@@ -17,6 +17,10 @@
 // 已发请求的记录照常写盘，输出报明条目与错误；REVIEW_INCONSISTENT 沿用上面"重试 1 次"的既定规则，不算解析失败。
 // --rejudge [--dry-run]：d3228afb 的 extractReview 作用域错误使 2026-11-09T15:19:49Z 之后的审查回复全被丢弃；按已保存的原始回复离线重放判定（0 新调用，不动账本）。
 // --retry-garlic：一次性授权（retryGrants），仅 item_garlic 在 --rejudge 评估为 retryEligible（当前 revision 内全部已保存审查回复都解析不出判定）后可多发 1 次审查，单次金额上限 0.015 元（李白 16:1x 原定 0.01 元，按账本口径预留上界约 0.0145 元超限，李白 2026-11-09 选 A 仅此一条这一次提到 0.015 元；其他条目单次上限仍 0.01 元，卡总额仍 1.5 元；用较小的 max_tokens 压低预留上界）。用完即无余量（次数按账本标签计），不留可复用的放宽。
+// 修订 d12-condiment-1（调味佐餐类与新维度 mealCap：单餐可食量上限）：新增类别行与物品覆盖行另开一张卡 D12-CONDIMENT，账本、调用记录、审查记录都与 D 卡分开
+// （world/drafts/d12-condiment/ 下自己的 budget.json、usage.jsonl、review-1/；revision 另起，D 卡已审条目的指纹逐字不变），外部模型核对上限 1.0 元，到额自动停（单卡与共享上限都是 1.0 元）。
+// 授权来源：李白 2026-11-09 16:5x，亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡。条目范围 = 在 D 卡 review-2 里没有审查记录的条目（condimentEntries）。
+// 用法：--review --card condiment（只发上述条目的审查，需 DEEPSEEK_API_KEY）；--card condiment --budget 只读账本（不发请求）。
 // 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --rejudge [--dry-run] | --retry-garlic | --sample | --l4 <json> | --verify   （--review/--retry-garlic 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -36,6 +40,18 @@ export const reviewDirName=`review-${revisionNumber}`;
 export const reviewRoot=path.join(draftRoot,reviewDirName);
 export const cardId='D12-MATPROPS';
 export const cardLimitYuan=1.5, maxRequests=130, maxOverrideRatio=0.15;
+// 调味佐餐卡（D12-CONDIMENT）：与 D 卡互不影响的独立账（自己的 budget.json 与 usage.jsonl），额度 1.0 元，条目上限 = 条目数 × 每条每 revision 最多 3 次。
+export const condimentCard={
+ id:'d12-condiment',cardId:'D12-CONDIMENT',revision:'d12-condiment-1',draftRoot:'world/drafts/d12-condiment',reviewDirName:'review-1',
+ limitYuan:1.0,maxRequests:40,
+ source:'李白 2026-11-09 16:5x：亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡'};
+condimentCard.reviewRoot=path.join(condimentCard.draftRoot,condimentCard.reviewDirName);
+condimentCard.allocation={cardId:condimentCard.cardId,incrementLimitYuan:condimentCard.limitYuan,maxRequests:condimentCard.maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0};
+// 本卡初始账本（共享额度与单卡额度同为 1.0 元，授权来源写入 authorizations）；只在账本文件不存在时由 --review --card condiment 创建，不动 D 卡账本。
+export const condimentInitialLedger=()=>({spentYuan:0,reservedYuan:0,limitYuan:condimentCard.limitYuan,waveLimitYuan:condimentCard.limitYuan,
+ note:'D12-CONDIMENT 独立账：与 D12-MATPROPS 的 world/drafts/d12-matprops/budget.json 互不影响',
+ cards:{[condimentCard.cardId]:{limitYuan:condimentCard.limitYuan,spentYuan:0,reservedYuan:0,maxRequests:condimentCard.maxRequests}},requests:{},historicalUnallocatedSpentYuan:0,
+ authorizations:[{id:'d12-condiment-limit-1.0',source:condimentCard.source,after:{limitYuan:condimentCard.limitYuan,maxRequests:condimentCard.maxRequests}}]});
 const readJSON=async f=>JSON.parse(await fs.readFile(f,'utf8'));
 const tableFile='world/meta/mechanics/material-props.json', overlayFile='world/meta/mechanics/items.json';
 
@@ -46,6 +62,12 @@ export async function entriesFor(){
  const items=Object.entries(overlay).filter(([,patch])=>patch.props).map(([id,patch])=>({id,kind:'material-props-item',row:patch.props,source:{path:`${overlayFile}#${id}.props`,detail:patch.props.basis}}));
  return [...classes,...items];
 }
+// 调味佐餐卡的条目：在 D 卡 review-2 里没有审查记录的条目（新增的类别行与物品覆盖行）；D 卡已审条目不重发。
+export async function condimentEntries(entries,{dReviewRoot=reviewRoot}={}){
+ const out=[];
+ for(const e of entries??await entriesFor())if(!await fs.stat(path.join(dReviewRoot,`${e.id}.json`)).then(()=>true,()=>false))out.push(e);
+ return out;
+}
 export const draftFor=entry=>({id:entry.id,row:structuredClone(entry.row)});
 let worldCache;
 const runtime=async()=>worldCache??=await loadRuntimeWorld();
@@ -55,7 +77,11 @@ const runtime=async()=>worldCache??=await loadRuntimeWorld();
 // 不进任何条目的推算与上下文，所以不进指纹。类别行带上属于该类别的物品（名称、重量、标签），物品行带上该物品自身与它所属的类别值。
 export async function contextFor(entry){
  const world=await runtime(),table=await readJSON(tableFile);
- const dimensions=Object.fromEntries(Object.entries(table.dimensions).map(([k,v])=>[k,`${v.unit}，范围 ${v.min}–${v.max}`]));
+ // mealCap（单餐可食量上限）是后加的维度：只在用到它的条目（出处写了 mealGrams 或类别里有它）的上下文里出现，
+ // 其余条目的上下文与加这个维度之前逐字相同，已审结论的指纹不因新维度作废。
+ const usesCap=entry.row?.sources?.some(x=>x?.mealGrams!==undefined)||false;
+ const dimensions=Object.fromEntries(Object.entries(table.dimensions).filter(([k])=>k!=='mealCap'||usesCap).map(([k,v])=>[k,`${v.unit}，范围 ${v.min}–${v.max}`]));
+ if(usesCap)dimensions.mealsPerDay=`${table.mealsPerDay} 餐/人·日（把单餐上限换成一段时间总量的换算）`;
  const brief=i=>({id:i.id,name:i.name,weight:i.weight,tags:i.tags});
  if(entry.kind==='material-props-class')return {dimensions,note:table.note,kcalPerSatiety:table.kcalPerSatiety,derived:deriveFromSources(entry.row,table.kcalPerSatiety),members:world.items.filter(i=>(i.tags??[]).includes(entry.key)).map(brief)};
  const item=world.items.find(i=>i.id===entry.id);
@@ -280,12 +306,12 @@ export function inconsistentGate(record){
  const n=(record?.errorHistory??[]).filter(c=>c==='REVIEW_INCONSISTENT').length;
  if(n>=2)throw Object.assign(new Error('L2 审查输出两次自相矛盾（hard 但自认无误），不当作通过，转人工'),{code:'REVIEW_INCONSISTENT_EXHAUSTED'});
 }
-export const capReviewsFor=({budgetRoot=draftRoot,client,retry=null,eligible=false}={})=>async({body,entry,phase,record})=>{
+export const capReviewsFor=({budgetRoot=draftRoot,client,retry=null,eligible=false,dirName=reviewDirName}={})=>async({body,entry,phase,record})=>{
  if(phase!=='review')return {body};
  inconsistentGate(record);
  let ledger;try{ledger=await readJSON(path.join(budgetRoot,'budget.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
  if(retry){assertRetryAllowed({grant:retry,id:entry.id,eligible,ledger,body,client});return {body:retryBody(retry,body)};} // 一次性授权模式：只有授权条目能发请求，且用较小 max_tokens
- checkReviewCap(ledger,entry.id);
+ checkReviewCap(ledger,entry.id,dirName);
  return {body};
 };
 // 审查解析错误（extractReview 抛出的任何错误，含无 code 的意外异常）一律使整轮停止；REVIEW_INCONSISTENT 走自己的重试规则。
@@ -349,10 +375,31 @@ export async function archiveForRedo(ids,{root=reviewRoot,archiveRoot=path.join(
 }
 // --review 的流水线调用；全部可注入（client、目录、条目、审查解析），生产默认值即真实路径。审查解析出错即停止后续所有条目（reviewStops）。
 export async function runReview({entries,client,root=reviewRoot,budgetRoot=draftRoot,ctx=contextFor,validate=validateDraft,extract=extractReview,retry=null,eligible=false,
- cardIdArg=cardId,allocation={cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0}}){
- return runContentPipeline({entries,root,budgetRoot,revision,contextFor:ctx,
+ cardIdArg=cardId,allocation={cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},revisionArg=revision,dirName=reviewDirName}){
+ return runContentPipeline({entries,root,budgetRoot,revision:revisionArg,contextFor:ctx,
   validateDraft:validate,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,buildDraftRequest:draftRequest,buildReviewRequest:reviewRequest,extractReview:extract,
-  stopOnReviewError:reviewStops,requestTransform:capReviewsFor({budgetRoot,client,retry,eligible}),client,cardId:cardIdArg,allocation,concurrency:1,batchSize:25});
+  stopOnReviewError:reviewStops,requestTransform:capReviewsFor({budgetRoot,client,retry,eligible,dirName}),client,cardId:cardIdArg,allocation,concurrency:1,batchSize:25});
+}
+// 调味佐餐卡账本：文件不存在才创建（初始额 1.0 元）；已存在则必须与本卡的卡号与额度一致，不一致即拒绝（不改动）。
+async function condimentLedgerFile(){
+ const file=path.join(condimentCard.draftRoot,'budget.json');
+ await fs.mkdir(condimentCard.draftRoot,{recursive:true});
+ let ledger;try{ledger=await readJSON(file);}catch(e){if(e.code!=='ENOENT')throw e;await fs.writeFile(file,JSON.stringify(condimentInitialLedger(),null,2)+'\n');ledger=await readJSON(file);}
+ const c=ledger.cards?.[condimentCard.cardId];
+ if(!c||c.limitYuan!==condimentCard.limitYuan||ledger.cards&&Object.keys(ledger.cards).some(k=>k!==condimentCard.cardId))throw Error('调味佐餐卡账本与卡号或额度不符，拒绝使用');
+ return {file,ledger};
+}
+export async function condimentBudget(){
+ const {ledger}=await condimentLedgerFile(),c=ledger.cards[condimentCard.cardId];
+ return {card:condimentCard.cardId,limitYuan:c.limitYuan,spentYuan:c.spentYuan,reservedYuan:c.reservedYuan,maxRequests:c.maxRequests,requests:Object.keys(ledger.requests??{}).length,sharedLimitYuan:ledger.limitYuan,source:ledger.authorizations?.[0]?.source};
+}
+export async function condimentReview(){
+ await l1();await condimentLedgerFile();
+ const entries=await condimentEntries(await entriesFor());
+ console.log(JSON.stringify({pid:process.pid,mode:'review-condiment',entries:entries.length}));
+ const client=new DeepSeekClient({budgetYuan:condimentCard.limitYuan,logFile:path.join(condimentCard.draftRoot,'usage.jsonl')});
+ const {summary,halted}=await runReview({entries,client,root:condimentCard.reviewRoot,budgetRoot:condimentCard.draftRoot,cardIdArg:condimentCard.cardId,allocation:condimentCard.allocation,revisionArg:condimentCard.revision,dirName:condimentCard.reviewDirName});
+ return {passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards[condimentCard.cardId],...reportHalt(halted)};
 }
 const reportHalt=h=>h?{halted:{entry:h.id,code:h.code,message:h.message,note:'审查解析失败，本次运行已停止后续所有条目的请求'}}:{};
 
@@ -447,7 +494,10 @@ export async function retryRun({entries,client,root=reviewRoot,budgetRoot=draftR
  return {...out,archived};
 }
 export async function run(args=process.argv.slice(2)){
+ const condiment=args.includes('--card')&&args[args.indexOf('--card')+1]==='condiment';
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
+ if(condiment&&args.includes('--budget')){console.log(JSON.stringify(await condimentBudget()));return;}
+ if(condiment&&args.includes('--review')){console.log(JSON.stringify(await condimentReview()));return;}
  if(args.includes('--show'))console.log(await show(args[args.indexOf('--show')+1].split(',')));
  if(args.includes('--rejudge')){
   const rows=await rejudge({dry:args.includes('--dry-run')});

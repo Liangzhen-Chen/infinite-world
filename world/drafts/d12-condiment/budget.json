@@ -1,0 +1,27 @@
+{
+  "spentYuan": 0,
+  "reservedYuan": 0,
+  "limitYuan": 1,
+  "waveLimitYuan": 1,
+  "note": "D12-CONDIMENT 独立账：与 D12-MATPROPS 的 world/drafts/d12-matprops/budget.json 互不影响",
+  "cards": {
+    "D12-CONDIMENT": {
+      "limitYuan": 1,
+      "spentYuan": 0,
+      "reservedYuan": 0,
+      "maxRequests": 40
+    }
+  },
+  "requests": {},
+  "historicalUnallocatedSpentYuan": 0,
+  "authorizations": [
+    {
+      "id": "d12-condiment-limit-1.0",
+      "source": "李白 2026-11-09 16:5x：亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡",
+      "after": {
+        "limitYuan": 1,
+        "maxRequests": 40
+      }
+    }
+  ]
+}
