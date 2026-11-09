@@ -21,7 +21,7 @@
 // （world/drafts/d12-condiment/ 下自己的 budget.json、usage.jsonl、review-1/；revision 另起，D 卡已审条目的指纹逐字不变），外部模型核对上限 1.0 元，到额自动停（单卡与共享上限都是 1.0 元）。
 // 授权来源：李白 2026-11-09 16:5x，亮圳给李白的 5 元小额授权内，单列 1.0 元，不挪用 D 卡。条目范围 = 在 D 卡 review-2 里没有审查记录的条目（condimentEntries）。
 // 用法：--review --card condiment（只发上述条目的审查，需 DEEPSEEK_API_KEY）；--card condiment --budget 只读账本（不发请求）。
-// 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --rejudge [--dry-run] | --retry-garlic | --sample | --l4 <json> | --verify   （--review/--retry-garlic 需环境变量 DEEPSEEK_API_KEY）
+// 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --rejudge [--dry-run] | --backfill-snapshots [--dry-run] [--card condiment] | --retry-garlic | --sample | --l4 <json> | --verify   （--review/--retry-garlic 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -744,6 +744,25 @@ export async function refreshBatches(root,records){
  const all=records;Object.assign(sum,{passed:all.filter(r=>r.status==='passed').length,manual:all.filter(r=>r.status==='manual').length,pending:all.filter(r=>r.status==='pending').length});
  await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(sum,null,2)+'\n');
 }
+// --backfill-snapshots [--dry-run] [--card condiment]：已有审查记录没有 contextSnapshot。记录指纹等于当前 fingerprintOf(条目) 且 draft 与当前行一致，
+// 说明条目与上下文自审查以来都没变，可用当前上下文回填快照（标「指纹一致回填」），供以后的小改动沿用比对；指纹不一致的不回填（照常重审）。
+// 只对 passed 记录回填；不发请求、不动账本、不改状态与 review（批指纹只按 id/draft/review/status 算，不受影响）。写回方式同 --rejudge：逐条写原记录文件。
+export async function backfillSnapshots({entries,root=reviewRoot,revisionArg=revision,ctx=contextFor,fingerprint=e=>fingerprintOf(e,revisionArg),dry=false,now=new Date().toISOString()}={}){
+ entries??=await dEntries();
+ const rows=[];
+ for(const entry of entries){
+  const file=path.join(root,`${entry.id}.json`),rec=await readJSON(file).catch(e=>e.code==='ENOENT'?null:Promise.reject(e));
+  if(!rec){rows.push({id:entry.id,skipped:'无记录'});continue;}
+  if(rec.contextSnapshot!==undefined){rows.push({id:entry.id,skipped:'已有快照'});continue;}
+  if(rec.status!=='passed'){rows.push({id:entry.id,skipped:`状态 ${rec.status}`});continue;}
+  const fp=await fingerprint(entry);
+  if(rec.fingerprint!==fp||!deepEq(rec.draft,draftFor(entry))){rows.push({id:entry.id,skipped:'指纹不一致，不回填（按无快照重审）'});continue;}
+  const out={...rec,contextSnapshot:JSON.parse(JSON.stringify(await ctx(entry)??null)),snapshotBackfill:{note:'指纹一致回填',fingerprint:fp,at:now}};
+  if(!dry)await fs.writeFile(file,JSON.stringify(out,null,2)+'\n');
+  rows.push({id:entry.id,backfilled:true});
+ }
+ return rows;
+}
 export async function rejudge({entries,root=reviewRoot,budgetRoot=draftRoot,dry=false,fingerprint=fingerprintOf,validate=validateDraft,extract=legacyExtractReview,cutoff=rejudgeCutoff,grant=garlicRetry}={}){
  entries??=await dEntries();
  const ledger=await readJSON(path.join(budgetRoot,'budget.json')),rows=[],records=[];let changed=false;
@@ -786,6 +805,12 @@ export async function retryRun({entries,client,root=reviewRoot,budgetRoot=draftR
 export async function run(args=process.argv.slice(2)){
  const condiment=args.includes('--card')&&args[args.indexOf('--card')+1]==='condiment';
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
+ if(args.includes('--backfill-snapshots')){
+  const card=condiment?cardProfiles.condiment:cardProfiles.d,rows=await backfillSnapshots({entries:await card.entries(),root:card.reviewRoot,revisionArg:card.revision,dry:args.includes('--dry-run')});
+  for(const r of rows)console.log(JSON.stringify(r));
+  console.log(JSON.stringify({card:card.name,dryRun:args.includes('--dry-run'),backfilled:rows.filter(r=>r.backfilled).length,skipped:rows.filter(r=>r.skipped).length}));
+  return;
+ }
  if(condiment&&args.includes('--budget')){console.log(JSON.stringify(await condimentBudget()));return;}
  if(condiment&&args.includes('--review')){
   // --redo <id,...>：同 D 卡，只归档本卡当前修订目录（review-2）里的 manual 记录（不删），不动账本；同条次数仍按本卡账本标签计（checkReviewCap）。

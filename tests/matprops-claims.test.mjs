@@ -7,7 +7,7 @@ import path from 'node:path';
 import {loadRuntimeWorld as runtimeWorld} from '../tools/load-world.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {contextChange, manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {backfillSnapshots, contextChange, manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
@@ -369,4 +369,28 @@ test('小改动沿用要比上下文：标签、成员关系、类别键变化 �
   await runReview({entries: [entry], client, root: dir, budgetRoot: dir, ctx: () => ctxOf(1140), cardIdArg: null, allocation: null, claimEnv: tolEnv});
   assert.equal(client.calls.length, 1);
   assert.equal(contextChange(null, null, 0.1).ok, true); assert.equal(contextChange({a: 1}, {a: 1.2}, 0.1).ok, false);
+});
+
+test('--backfill-snapshots：指纹一致才回填（标「指纹一致回填」），不一致的不回填、照常重审；dry-run 不写盘；不发请求', async t => {
+  const a = entryOf('item_a'), b = entryOf('item_b'), dir = await mkRoot(t), ctx = ctxOf(1000), fp = e => hashContent({entry: e, context: ctx, revision});
+  const noSnap = (e, extra = {}) => { const r = passedRec(e, {fingerprint: fp(e), ...extra}); delete r.contextSnapshot; return r; };
+  const stale = tweak(b, r => { r.sources[0].mealGrams = 16; });   // 记录是旧数据审的：记录指纹 ≠ 现行指纹
+  await fs.writeFile(path.join(dir, 'item_a.json'), JSON.stringify(noSnap(a)));
+  await fs.writeFile(path.join(dir, 'item_b.json'), JSON.stringify(noSnap(b, {fingerprint: 'old-fp'})));
+  const run = dry => backfillSnapshots({entries: [a, stale], root: dir, ctx: () => ctx, fingerprint: fp, dry});
+  const dry = await run(true);
+  assert.deepEqual(dry.map(r => r.backfilled ?? r.skipped), [true, '指纹不一致，不回填（按无快照重审）']);
+  assert.equal(JSON.parse(await fs.readFile(path.join(dir, 'item_a.json'), 'utf8')).contextSnapshot, undefined);   // dry-run 没写
+  await run(false);
+  const ra = JSON.parse(await fs.readFile(path.join(dir, 'item_a.json'), 'utf8')), rb = JSON.parse(await fs.readFile(path.join(dir, 'item_b.json'), 'utf8'));
+  assert.deepEqual(ra.contextSnapshot, ctx); assert.equal(ra.snapshotBackfill.note, '指纹一致回填'); assert.equal(ra.status, 'passed');
+  assert.equal(rb.contextSnapshot, undefined);
+  assert.equal((await run(false))[0].skipped, '已有快照');   // 幂等
+  // 回填后，a 的小改动（+5%）沿用，不发请求；b 没回填 → 照常重审（发 1 次请求）
+  const client = mkClient([reply([])]);
+  const a2 = tweak(a, r => { r.sources[0].kcalPer100gWet = 22; }), b2 = tweak(b, r => { r.sources[0].kcalPer100gWet = 22; });
+  await runReview({entries: [a2, b2], client, root: dir, budgetRoot: dir, ctx: () => ctx, cardIdArg: null, allocation: null, claimEnv: tolEnv});
+  assert.equal(client.calls.length, 1); assert.deepEqual(client.calls.map(l => l.includes('item_b')), [true]);
+  assert.equal(JSON.parse(await fs.readFile(path.join(dir, 'item_a.json'), 'utf8')).carriedOver.note, '小改动沿用（±10%）');
+  assert.equal(client.bodies.length, 1);
 });
