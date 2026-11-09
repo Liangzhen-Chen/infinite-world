@@ -424,6 +424,7 @@ test('冻结清单：已核对出处降级为近似、改清单内数值、删�
   assert.ok(checkFrozenVerified(appended, table, entries).every(x => /class_meat/.test(x)));   // 追加项自己与表对不上才报，旧 50 条不受影响
   // 清单外新增近似出处：通过（猪里脊是近似、不在清单里）
   assert.equal(table.sourceIds.class_meat.猪里脊.status, '近似');
-  assert.deepEqual(checkSourceIds(table, entries.filter(e => e.id === 'class_meat')), []);
+  // checkSourceIds 也会报“登记了但条目不在传入集合里”的出处，所以传全部条目、只看 class_meat 的错误
+  assert.deepEqual(checkSourceIds(table, entries).filter(x => /class_meat/.test(x)), []);
   assert.deepEqual(checkFrozenVerified(doc, table, entries.filter(e => e.id === 'class_meat')).filter(x => /class_meat/.test(x)), []);
 });
