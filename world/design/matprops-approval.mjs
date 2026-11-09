@@ -28,7 +28,7 @@ export const draftRoot='world/drafts/d12-matprops';
 export const reviewDirName=`review-${revisionNumber}`;
 export const reviewRoot=path.join(draftRoot,reviewDirName);
 export const cardId='D12-MATPROPS';
-export const cardLimitYuan=1.5, maxRequests=75, maxOverrideRatio=0.15;
+export const cardLimitYuan=1.5, maxRequests=100, maxOverrideRatio=0.15;
 const readJSON=async f=>JSON.parse(await fs.readFile(f,'utf8'));
 const tableFile='world/meta/mechanics/material-props.json', overlayFile='world/meta/mechanics/items.json';
 
@@ -198,10 +198,12 @@ export function checkReviewCap(ledger,id,dirName=reviewDirName){
 }
 // 账本上限分两步批准，按顺序逐步落到账本 authorizations（幂等；账本其余字段不动，旧请求与花费保留）：
 //  40→60：亮圳 2026-11-09 12:11 批准、李白同意（整类修复后每条再审 1 次）；
-//  60→75：李白 2026-11-09 13:1x 批准（整类口径修正后的复审；limitYuan 1.5 不变，到额自动停，只用于本次口径修正后的复审）。
+//  60→75：李白 2026-11-09 13:1x 批准（整类口径修正后的复审；limitYuan 1.5 不变，到额自动停，只用于本次口径修正后的复审）；
+//  75→100：李白 2026-11-09 14:2x 批准（只复审 25 条，保持原指纹的 7 条不重审；金额上限仍 1.5 元，到额自动停）。
 export const grants=[
  {id:'d12-matprops-2-maxrequests-60',from:40,to:60,source:'亮圳 2026-11-09 12:11 批准、李白同意：D 卡整类修复后每条再审 1 次，maxRequests 40→60，limitYuan 仍 1.5 元，只限这一轮'},
- {id:'d12-matprops-2-maxrequests-75',from:60,to:75,source:'李白 2026-11-09 13:1x 批准：整类口径修正后的复审，maxRequests 60→75，limitYuan 仍 1.5 元，到额自动停，只用于本次口径修正后的复审'}];
+ {id:'d12-matprops-2-maxrequests-75',from:60,to:75,source:'李白 2026-11-09 13:1x 批准：整类口径修正后的复审，maxRequests 60→75，limitYuan 仍 1.5 元，到额自动停，只用于本次口径修正后的复审'},
+ {id:'d12-matprops-2-maxrequests-100',from:75,to:100,source:'李白 2026-11-09 14:2x 批准：只复审 25 条，保持原指纹的 7 条不重审，maxRequests 75→100，limitYuan 仍 1.5 元，到额自动停'}];
 export const grantId=grants[0].id;
 export function grantMaxRequests(ledger){
  const out=structuredClone(ledger),card=out.cards?.[cardId];
