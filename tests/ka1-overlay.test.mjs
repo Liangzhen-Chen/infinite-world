@@ -10,6 +10,9 @@ import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/ru
 import {canonical} from '../server-plugin/storage.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
+// 覆盖层的值被运行时值包含：对象逐字段包含，数组的每个元素都在运行时数组里有一个包含它的元素
+const contains = (have, want) => Array.isArray(want) ? Array.isArray(have) && want.every(w => have.some(h => contains(h, w)))
+  : want && typeof want === 'object' ? have && typeof have === 'object' && Object.entries(want).every(([k, v]) => contains(have[k], v)) : have === want;
 const rowFiles = ['meta/items.json', 'meta/recipes.json', 'geo/locations.json', 'meta/professions.json', 'meta/skills.json', 'meta/spells.json', 'people/baseline.json', 'people/residents.json', 'people/households.json'];
 const formal = new Map(rowFiles.flatMap(f => J(`world/${f}`).map(r => [r.id, r])));
 const overlay = Object.fromEntries(mechanicsCollections.map(n => [n, J(`world/meta/mechanics/${n}.json`)]));
@@ -58,6 +61,8 @@ test('运行时世界带上全部机制字段；据点不再生制成品；重�
     const target = collection === 'species' ? row.husbandry : row, fields = collection === 'species' ? patch.husbandry : patch;
     for (const [key, value] of Object.entries(fields)) {
       if (Array.isArray(value)) assert.ok(value.every(v => target[key].some(h => JSON.stringify(h) === JSON.stringify(v))), `${collection}.${id}.${key}`);
+      // 据点（site）是作者给的部分加上加载期规律（再生、本栖地原生资源）派生的部分：覆盖层写的每个字段都必须原样出现在运行时据点里，规律另加的条目不在此比较
+      else if (key === 'site') assert.ok(contains(target[key], value), `${collection}.${id}.${key}`);
       else assert.deepEqual(target[key], value, `${collection}.${id}.${key}`);
     }
   }

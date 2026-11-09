@@ -277,7 +277,7 @@ export function assertSiteHarvest(d,engine,place,args,breach=noteBreaches().brea
  const authorizations=[args.authorization,...args.authorizations??[]];
  assertSocietyEntry(d,engine,place);
  entryBreach(d,engine,place,authorizations,breach);
- if(!allowed(d.document,place,ownerOf(place),authorizations,'enter'))breach('enter',ownerOf(place),{id:place.id,kind:'site'});
+ if(place.access?.mode!=='public'&&!allowed(d.document,place,ownerOf(place),authorizations,'enter'))breach('enter',ownerOf(place),{id:place.id,kind:'site'});
  if(!allowed(d.document,place,ownerOf(place),authorizations,'gather'))breach('gather',ownerOf(place),{id:place.id,kind:'site'});
  assertOccupants(d,engine,place,authorizations,breach);
  // 06 §6.3 existence-and-presence: an action needs the actor at the target's node, which woodcut
@@ -489,7 +489,7 @@ function siteOperation(d,args,eventId,breach){
         if(operation==='investigate'&&covert(d,place))return;
         assertSocietyEntry(d,this,place);
         entryBreach(d,this,place,authorizations,breach);
-        if(!(place.access?.mode==='public'&&['enter','investigate'].includes(operation))&&!allowed(d.document,place,ownerOf(place),authorizations,'enter'))breach('enter',ownerOf(place),{id:place.id,kind:'site'});
+        if(place.access?.mode!=='public'&&!allowed(d.document,place,ownerOf(place),authorizations,'enter'))breach('enter',ownerOf(place),{id:place.id,kind:'site'});
         if(operation==='disarm'&&!allowed(d.document,place,ownerOf(place),authorizations,'disarm'))breach('destroy',ownerOf(place),{id:place.id,kind:'mechanism'});
         assertOccupants(d,this,place,authorizations,breach);
     };
