@@ -18,8 +18,8 @@ import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
 // S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
 declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {facilityView,facilityRuntime} from './facility-state.mjs';
-import {applyPatches,digest,withLegacyUndefinedActivity} from './storage.mjs';
-import {scheduleAt} from './npc-schedule.mjs';
+import {applyPatches,digest,withLegacyUndefinedActivity,PatchCursor,withRecordIndex} from './storage.mjs';
+import {scheduleAt,withScheduleCache} from './npc-schedule.mjs';
 import {npcPresenceAt,shareNpcMemory} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
 import {changeItems,transferItems,heldUnit,wearItem,workmanshipTier,lostField,unitLacks} from './items.mjs';
@@ -235,7 +235,7 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
  d.set(['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'自主行动',source:actionId,minute:at,content:summary}]);commit(target,d);return record;
 }
 
-export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={}){
+function advanceNpcAutonomyRead(d,engine,before,after,eventId,{beforeState}={}){
  const results=[...advanceGovernance(d,engine,before,after,{beforeState}),...advanceQuestBoard(d,engine,before,after,{beforeState})];
  const settle=()=>{for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}).sort((a,b)=>a.finish-b.finish||a.id.localeCompare(b.id))){
   if(task.status!=='进行中')continue;
@@ -334,6 +334,13 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
   settle();
  }
  return results;
+}
+// Planning reads every candidate's schedule, and each schedule read derives the education courses of the whole
+// population. Engine advances already share that derivation through the record index and the schedule cache; a
+// direct call on a draft gets the same scopes (no-ops when already inside them), so results are identical.
+export function advanceNpcAutonomy(d,engine,before,after,eventId,options){
+ const run=()=>advanceNpcAutonomyRead(d,engine,before,after,eventId,options);
+ return d.cursor instanceof PatchCursor?withScheduleCache(engine,d,()=>withRecordIndex(run)):run();
 }
 export function npcPlanFingerprint(document){return digest({minute:document.state.minute,npcs:document.state.npcs,location:document.state.location,companions:document.state.player.companions,obligations:document.state.obligations,actions:document.state.npcAutonomy});}
 // R25: a plan frozen before the fix fingerprinted task presence with activity:undefined.

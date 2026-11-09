@@ -4,7 +4,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {educationStatistics,educationCourses,knowledgeProficiency} from '../server-plugin/education-state.mjs';
 import {npcAgeAt} from '../server-plugin/npc-state.mjs';
 import {prepareEducation,advanceEducation} from '../server-plugin/education.mjs';
-import {advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
+import {advanceNpcSchedules,scheduleAt,withScheduleCache} from '../server-plugin/npc-schedule.mjs';
 import {organizationState} from '../server-plugin/organization-state.mjs';
 import {personCertified} from '../server-plugin/entity-view.mjs';
 import {fixture,run,open,world,seed} from './fixtures/education.mjs';
@@ -251,4 +251,54 @@ test('统计层按种子人口与学馆容量授业，分段与重放一致，�
  assert.equal(f.doc.state.created[kept].skills.skill_literacy,120);
  const active=rosterLifeState(scale.engine.scoped(f.doc),f.doc.state,id,f.doc.state.minute,'近处入学',{minor:true});assert.equal(active.skills.skill_literacy,120);assert.equal(active.growth.skills.skill_literacy.teach,120);
  const after=structuredClone(f.doc);settlePopulationLayers(fixtureDraft(f.doc),e);assert.deepEqual(f.doc,after);assert.equal(educationStatistics(e,f.doc.state,sid).literate,stats.literate);
+});
+
+// Course derivation reads the settlement profile list exactly once per derivation, so its access count is a real count of derivations.
+function countDerivations(e,run){
+ const profiles=e.world.settlementProfiles;let n=0;
+ Object.defineProperty(e.world,'settlementProfiles',{configurable:true,get(){n++;return profiles;}});
+ try{run();}finally{Object.defineProperty(e.world,'settlementProfiles',{configurable:true,writable:true,value:profiles});}
+ return n;
+}
+
+test('cached education courses equal a direct derivation after births, deaths, age crossings, course and skill writes and day changes',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc),pupil=educationCourses(f.e,f.doc.state).find(c=>c.school&&c.teacher===f.teacher)?.students[0];
+ assert.ok(pupil);
+ const writes=[
+  ()=>{},
+  ()=>cursor.apply({op:'set',path:['state','family','people',pupil],value:{...f.e.byId.get(pupil),birth:{year:-90,month:1,day:1}}}),
+  ()=>cursor.apply({op:'set',path:['state','family','people',pupil],value:{...f.e.byId.get(pupil),birth:{year:-10,month:1,day:1}}}),
+  ()=>cursor.apply({op:'set',path:['state','npcs',f.teacher,'status'],value:'死亡'}),
+  ()=>cursor.apply({op:'set',path:['state','npcs',f.teacher,'status'],value:'正常'}),
+  ()=>cursor.apply({op:'set',path:['state','npcs',f.teacher,'skills','skill_literacy'],value:0}),
+  ()=>cursor.apply({op:'set',path:['state','npcs',f.teacher,'skills','skill_literacy'],value:200}),
+  ()=>cursor.apply({op:'set',path:['state','minute'],value:cursor.root.state.minute+1440}),
+  ()=>cursor.apply({op:'set',path:['state','minute'],value:cursor.root.state.minute+30*1440}),
+ ];
+ const steps=[];
+ withRecordIndex(()=>{
+  for(const write of writes){
+   write();
+   steps.push({cached:JSON.stringify(educationCourses(f.e,cursor.expose(cursor.root.state))),plain:structuredClone(cursor.root.state)});
+  }
+ });
+ // The direct side re-derives from each plain copy outside the index; both sides must agree byte for byte.
+ for(const {cached,plain} of steps)assert.equal(cached,JSON.stringify(educationCourses(f.e,plain)));
+ assert.ok(new Set(steps.map(s=>s.cached)).size>1,'the writes must actually change the courses');
+});
+
+test('repeated schedule queries on one state derive the courses once; the unscoped path derives for every query',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc),state=cursor.expose(cursor.root.state),minute=state.minute;
+ const ids=[...new Set(educationCourses(f.e,state).flatMap(c=>[c.teacher,...c.students]).filter(Boolean))].slice(0,8);
+ assert.ok(ids.length>=2);
+ const query=()=>ids.map(id=>scheduleAt(f.e,id,minute,state));
+ const direct=[];const unscoped=countDerivations(f.e,()=>direct.push(...query(),...query()));
+ const cached=[];
+ const scoped=countDerivations(f.e,()=>withScheduleCache(f.e,{cursor},()=>withRecordIndex(()=>cached.push(...query(),...query()))));
+ assert.equal(JSON.stringify(cached),JSON.stringify(direct));
+ assert.ok(scoped<unscoped,`scoped ${scoped} must derive fewer times than unscoped ${unscoped}`);
+ // One more full round on the same state adds no derivation.
+ let extra;
+ const once=countDerivations(f.e,()=>withScheduleCache(f.e,{cursor},()=>withRecordIndex(()=>{query();extra=countDerivations(f.e,query);})));
+ assert.equal(extra,0);assert.ok(once>0);
 });
