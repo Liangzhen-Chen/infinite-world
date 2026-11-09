@@ -176,7 +176,7 @@ async function parentProposal(){
   console.log('\n'+txt.slice(txt.indexOf('[Summary]'),Math.max(0,txt.indexOf('[C++]'))||2000).slice(0,1500));
   if(bi>=0){const lines=txt.slice(bi).split('\n');
     console.log('\n== 自底向上(heavy)前 40 项（含按调用者聚合的缩进行） ==');
-    let top=0,out=[];for(const l of lines.slice(1)){if(/^\s+\d+\s+[\d.]+%\s{1,2}\S/.test(l)&&!/^\s{5,}/.test(l)){if(++top>40)break;}if(top>0)out.push(l.slice(0,200));}
+    let top=0,out=[];for(const l of lines.slice(1)){if(/^\s+\d+\s+[\d.]+%\s{1,2}\S/.test(l)){if(++top>40)break;}if(top>0)out.push(l.slice(0,200));}
     console.log(out.join('\n'));}
 }
 try{
