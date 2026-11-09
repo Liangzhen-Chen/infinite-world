@@ -19,6 +19,9 @@ const FILES = {
     // genuine path use
     'tools/x.json': '{}\n',
     'tools/README.md': 'readme\n',
+    // a real dynamic import without semicolons, followed by a block on the next line: still opaque (not a method definition)
+    'server-plugin/asi.mjs': 'export async function load(name) {\n  const m = await import(name)\n  { use(m) }\n}\n',
+    'tests/asi.test.mjs': "import '../server-plugin/asi.mjs';\n",
     'tests/method.test.mjs': "import '../server-plugin/storage.mjs';\n",
     'tests/dyn.test.mjs': "import '../server-plugin/dyn.mjs';\n",
     'tests/keys.test.mjs': "import '../server-plugin/keys.mjs';\n",
@@ -38,6 +41,7 @@ test('method definition import(...) {} is not a dynamic import', () => {
 });
 test('a real import(expression) stays opaque', () => {
     assert.ok(pick('server-plugin/b.mjs').includes('dyn'));
+    assert.ok(pick('server-plugin/b.mjs').includes('asi'), 'an import(expr) followed by a block on the next line is not a method definition');
 });
 test('object keys and comparison values are not directory reads', () => {
     assert.ok(!pick('tools/README.md').includes('keys'));
