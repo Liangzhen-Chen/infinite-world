@@ -24,25 +24,7 @@ import {personOffices} from '../server-plugin/entity-view.mjs';
 import {publicMaintenanceReport,reportPublicMaintenance} from '../server-plugin/public-projects.mjs';
 import {advanceNpcCognition} from '../server-plugin/npc-cognition.mjs';
 
-const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
-const nativeChief='npc_hw_chenbai',nativeWorker='npc_hw_zhengshuisheng';
-function nativeScenario(building){
- const w=structuredClone(world),e=new WorldEngine(w);let doc=e.createCharacter(seed,{},'native-public-maintenance');
- delete w.rules.weather;
- Object.assign(w.rules.facilities.maintenance,{horizonDays:90,delayMaxPermille:0,stubbornPermille:0,noisePermille:0});
- const base=e.byId.get(building),manager=base.site?.manager??base.lodging.host;
- doc.state.minute=600;doc.state.location='loc_bs';
- for(const [id,location] of [[nativeChief,'bld_hw_council'],[nativeWorker,'bld_hw_council'],[manager,building]]){
-  Object.assign(doc.state.npcs[id],{location,status:'正常',activity:'工作',goals:{}});
-  w.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location,activity:'工作',services:[]}]};
- }
- doc.state.npcs=Object.fromEntries([nativeChief,nativeWorker,manager].map(id=>[id,doc.state.npcs[id]]));
- doc.state.npcs[nativeWorker].coins=0;
- doc.state.buildings[building]={...doc.state.buildings[building],condition:59};
- Object.assign(doc.state.settlements.loc_hw,{treasury:1000,wood:100,stone:100});
- doc=withLedger(e,{...doc,ledger:undefined}).document;
- return {e,w,building,manager,get doc(){return doc;},set doc(v){doc=v;},mutate(fn){const d=e.primitiveDraft(doc),r=fn(d);doc=applyPatches(doc,d.patches);return r;}};
-}
+import {nativeChief,nativeWorker,nativeScenario,settlement,building,village,official,worker,officeId,scenario} from './helpers/s5pm-fixture.mjs';
 const nativeCandidates=f=>autonomyCandidates(f.e,subjectiveView(f.e,f.doc,nativeChief),{document:f.doc}).filter(c=>c.kind==='public_maintenance'&&c.legacy.building===f.building);
 function deliverReport(f){
  const sent=f.mutate(d=>reportPublicMaintenance(d,f.e,f.manager,f.building,'native-report'));
@@ -148,32 +130,6 @@ test('K10b season with no monthly allowance or no public materials defers native
   assert.deepEqual(reconcile(f.e,f.doc).mismatches,[]);
  }
 });
-const settlement='loc_bs_yupo',building='bld_yp_hall';
-const village=world.settlementProfiles.find(p=>p.id===settlement),official=village.details.governance.head;
-const worker=village.details.governance.coordinators.find(id=>id!==official);
-const officeId=`governance_office:${settlement}:office_works_deputy:${official}`;
-function scenario(){
- const w=structuredClone(world),e=new WorldEngine(w);let doc=e.createCharacter(seed,{},'public-maintenance');
- delete w.rules.weather;
- Object.assign(w.rules.facilities.maintenance,{horizonDays:90,delayMaxPermille:0,stubbornPermille:0,noisePermille:0});
- doc.state.minute=600;doc.state.location='loc_hw';
- // Campaign premises: an existing collective hall has a registered public
- // title and a formally appointed works deputy. No new place/person or power.
- doc.state.buildings[building]={...doc.state.buildings[building],owner:settlement,condition:24};
- Object.assign(doc.state.settlements[settlement],{treasury:1000,wood:100,stone:100});
- for(const id of [official,worker]){
-  Object.assign(doc.state.npcs[id],{location:building,status:'正常',activity:'休息',goals:{}});
-  w.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location:building,activity:'休息',services:[]}]};
- }
- // An existing resident needs income; a24/day public offer is real, while
- // the market's30/day reference quote is not an alternative signed job.
- doc.state.npcs[worker].coins=0;
- const draft=e.primitiveDraft(doc),def=w.rules.governance.authority.offices.office_works_deputy;
- appointOfficeRecord(draft,e,{category:'governance_office',id:officeId,holder:official,settlement,office:def.id,status:'在任',since:0,until:180*DAY,
-  nextReview:30*DAY,appointedBy:def.appointedBy,source:def.source,sourceEvent:'appointment'},'appointment');
- doc=withLedger(e,applyPatches(doc,draft.patches)).document;
- return {e,w,get doc(){return doc;},set doc(v){doc=v;},mutate(fn){const d=e.primitiveDraft(doc),r=fn(d);doc=applyPatches(doc,d.patches);return r;}};
-}
 const options=f=>publicMaintenanceOptions(f.e,f.doc,official,building);
 const candidates=f=>autonomyCandidates(f.e,subjectiveView(f.e,f.doc,official),{document:f.doc}).filter(c=>c.kind==='public_maintenance');
 function start(f,event='repair'){

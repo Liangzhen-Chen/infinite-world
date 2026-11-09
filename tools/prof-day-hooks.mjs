@@ -3,7 +3,7 @@
 const TARGETS={
   'server-plugin/npc-labor.mjs':['laborCandidates','route'],
   'server-plugin/market.mjs':['marketSupply'],
-  'server-plugin/household-budget.mjs':['householdBudget','readHouseholdResources'],
+  'server-plugin/household-budget.mjs':['householdBudget','readHouseholdResources','householdResources'],
   'server-plugin/building-maintenance.mjs':['route'],
 };
 export async function load(url,context,nextLoad){
@@ -19,5 +19,7 @@ export async function load(url,context,nextLoad){
     src=src.replace(re,(all,a,b,c)=>`${a}${c??''}function __orig_${name}(`);
     tail+=`\n${m[2]??''}${m[3]??''}function ${name}(...a){return globalThis.__PROF?globalThis.__PROF.wrap('${name}@${label}',a,__orig_${name}):__orig_${name}(...a);}`;
   }
+  // foodSources 是 shop.mjs 经 registerHouseholdFoodSources 注册的匿名回调：在注册处包一层。
+  if(hit==='server-plugin/household-budget.mjs')src=src.replace('registerHouseholdFoodSources.fn=resolve;',"registerHouseholdFoodSources.fn=(...a)=>globalThis.__PROF?globalThis.__PROF.wrap('foodSources@shop',a,resolve):resolve(...a);");
   return {...r,source:src+tail};
 }
