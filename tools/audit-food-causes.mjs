@@ -9,10 +9,11 @@
 //  poverty    - household cash in hand (all members) is less than the price of the cheapest meal within reach;
 //  allocation - food and cash exist, but the shelf was bought out first or the customer's own decision refused;
 //  chain      - food on sale in own settlement / within a day, shop open, household can pay, still no meal.
-// A household whose members have no simulated state (roster-only) owns no purse or stock in state;
-// after the harvest test it is reported as "undetermined" with the reason, never given a default.
-// The producer-side clause of chain-break ("surplus >0, road open, buyer has money, 7 days zero
-// transport") needs a producer-to-town sale mechanism that t-m3 does not have; reported as undetermined.
+// A roster-only household (no member with simulated state) has no purse in state: after the harvest test it is chain
+// ("customer flow does not serve roster households"), flagged apart; a household with no known location is chain too ("no location").
+// Reach is ONE-WAY: seller within rules.travel.dailyTravelMinutes on foot (engine.route); sellers reachable one way but not
+// round trip are reviewed apart. There is no undetermined class. The producer-side clause of chain-break is actually checked
+// (surplus > 0, road open, town buyer has coins, 7 consecutive days without a transport/trade record on the route).
 import fs from 'node:fs/promises';
 import {performance} from 'node:perf_hooks';
 import {loadWorld} from './load-world.mjs';
@@ -30,7 +31,7 @@ import {legacyMoney} from '../server-plugin/money.mjs';
 import {legacyStock} from '../server-plugin/stock.mjs';
 import {auditLedger,driftCounts,parseAccount} from '../server-plugin/ledger.mjs';
 
-const DAY=1440,NOON=720,CAUSES=['harvest','poverty','allocation','chain'],ALL=[...CAUSES,'undetermined'];
+const DAY=1440,NOON=720,CAUSES=['harvest','poverty','allocation','chain'],ALL=CAUSES;
 const sid='loc_bs';
 const num=v=>typeof v==='number'?v:Number(v?.numerator??0)/Number(v?.denominator??1);
 const reader=doc=>({document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)});
@@ -79,12 +80,12 @@ export function buildFacts(snap){
 
 // Pure: the verdict for one missed meal. Order is the card's. Clues are [file,needle,note] to be resolved to file:line.
 export function verdict(f){
- if(f.supply===null)return {cause:'undetermined',sub:'noLocation',reason:'household has no known location, so its day-walk reach and saleable supply cannot be computed',clue:[['business.mjs','function walkIns(']]};
+ if(f.supply===null)return {cause:'chain',flag:'noLocation',reason:'no location: the household has no known location, so no seller can be reached from it',clue:[['business.mjs','function walkIns(']]};
  if(f.supply<f.demand)return {cause:'harvest',reason:'saleable food within a day (shop shelves) is less than the demand of every household that shares its reachable sellers',clue:[['market.mjs','export function saleableStock']]};
- if(!f.cashKnown)return {cause:'undetermined',sub:'roster',reason:'roster-only household: no member has simulated state, so no purse or stock exists to judge poverty, allocation or chain (the customer flow only walks in members of state.npcs)',
+ if(!f.cashKnown)return {cause:'chain',flag:'roster',reason:'customer flow does not serve roster households: no member has simulated state (no purse or stock in state), yet food is sellable within reach; the customer flow only walks in members of state.npcs',
   clue:[['business.mjs','function walkIns(']]};
  const need=f.best?.cost??f.refCost;
- if(f.cash<need)return {cause:'poverty',reason:`household cash is less than the price of the cheapest meal (one person-day of food)${f.best?' within reach':' (none on sale; catalogue price)'}`,clue:[['household-budget.mjs','export function householdBudget(']]};
+ if(f.cash<need)return {cause:'poverty',...(!f.best&&f.unpriced?{flag:'quoteFailedPoverty'}:{}),reason:`household cash is less than the price of the cheapest meal (one person-day of food)${f.best?' within reach':' (none on sale or no quote possible; catalogue price)'}`,clue:[['household-budget.mjs','export function householdBudget(']]};
  if(!f.best){
   const own=f.townShops;
   const unpriced=f.unpriced?` (${f.unpriced} edible goods on reachable shelves could not be quoted: quote failed or price below 1 coin)`:'';
@@ -156,10 +157,11 @@ export async function runAudit({days=30,progress=()=>{}}={}){
  const start={minute:doc.state.minute,money:legacyMoney(e,doc.state),stock:legacyStock(e,doc.state).balances};
  const advance=async(to,id)=>{const out=await e.reduce(doc,{tool:'world_time',args:{minutes:to-doc.state.minute},eventId:id});doc=applyPatches(doc,out.patches);};
 
- const daily=[],tally={},incidents=[],chainRows=[],undeterminedRows=[];
+ const routeSeen=new Set(),idleDays=new Map(),producerStalls=[];
+ const daily=[],tally={},incidents=[],chainRows=[];
  for(const c of ALL)tally[c]={incidents:0,meals:0,people:0,households:new Set(),reasons:{}};
- const undSplit={roster:{incidents:0,meals:0,keys:new Set()},noLocation:{incidents:0,meals:0,keys:new Set()}};
- const townOnly={incidents:0,meals:0,keys:new Set()},flagSplit={noVisit:{incidents:0,meals:0,keys:new Set()},noWalkIn:{incidents:0,meals:0,keys:new Set()}};
+ const townOnly={incidents:0,meals:0,keys:new Set()},flagSplit={};
+ const oneWayInvolved={incidents:0,meals:0,keys:new Set()},oneWayChanged={incidents:0,meals:0,keys:new Set(),changes:{}};
  const condSplit={incidents:0,meals:0,keys:new Set()};
  const total={named:{incidents:0,meals:0},roster:{incidents:0,meals:0}};
  const prevUnmet=new Map();
@@ -170,6 +172,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
   return routeMemo.get(key);
  };
 
+ for(const rec of Object.values(doc.state.records??{}))if(rec?.id&&(rec.category==='settlement_trade'||rec.category==='transport'))routeSeen.add(rec.id);
  for(let j=0;j<days;j++){
   const noon=Math.floor(doc.state.minute/DAY)*DAY+NOON;
   await advance(noon-1,`audit:pre:${j}`);
@@ -225,7 +228,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
    const rec=ps.records?.[`agriculture:${p.settlement}`],s=ps.settlements?.[p.settlement];
    if(rec?.mode!=='managed'||!s)continue;
    const stock=rec.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0);
-   producers.push({settlement:p.settlement,surplus:round(Math.max(0,stock-mealMouthsOf(e,ps,p.settlement,s.population)*p.reserveDays))});
+   producers.push({settlement:p.settlement,counter:p.counter,surplus:round(Math.max(0,stock-mealMouthsOf(e,ps,p.settlement,s.population)*p.reserveDays))});
   }
 
   // ---- run the rest of the day (noon customers, afternoon, midnight meal) ----
@@ -246,16 +249,17 @@ export async function runAudit({days=30,progress=()=>{}}={}){
    if(location)for(const shop of shopRows){
     if(!shop.open||!shop.items.length)continue;
     const a=location===shop.location?{minutes:0,cost:0}:route(location,shop.location,noon),b=location===shop.location?{minutes:0,cost:0}:route(shop.location,location,noon);
-    if(!a||!b||a.minutes+b.minutes>dayTrip)continue;
-    out.push({shop,toll:a.cost+b.cost,sameSettlement:shop.settlement===sid,engineServes:shop.settlement===sid&&a.minutes<=reach});
+    if(!a||a.minutes>dayTrip)continue;// one way, rules travel.dailyTravelMinutes
+    out.push({shop,roundTrip:Boolean(b&&a.minutes+b.minutes<=dayTrip),toll:a.cost+(b?.cost??0),sameSettlement:shop.settlement===sid,engineServes:shop.settlement===sid&&a.minutes<=reach});
    }
    return out;
   };
-  // The town's saleable supply: edible stock of every open seller (shops and non-shop traders) within a day's round trip (rules travel.dailyTravelMinutes, engine.route on foot) of the first resident whose home is known; without a known home, every open seller.
+  // The town's saleable supply: edible stock of every open seller (shops and non-shop traders) within a day's one-way walk (rules travel.dailyTravelMinutes, engine.route on foot) of the first resident whose home is known; without a known home, every open seller.
   const reachMemo=new Map(),reachOf=location=>{if(!reachMemo.has(location))reachMemo.set(location,reachable(location));return reachMemo.get(location);};
+  const sellerIdsRT=new Map(entities.filter(en=>en.location).map(en=>[en.key,new Set(reachOf(en.location).filter(r=>r.roundTrip).map(r=>r.shop.id))]));
   const sellerIds=new Map(entities.filter(en=>en.location).map(en=>[en.key,new Set(reachOf(en.location).map(r=>r.shop.id))]));
   // demand of every household sharing at least one reachable seller with this one (itself always included)
-  const localDemandOf=en=>demandSharing(entities.filter(o=>sellerIds.has(o.key)).map(o=>({key:o.key,demand:o.demand,sellers:sellerIds.get(o.key)})),en.key,en.demand);
+  const localDemandOf=(en,ids)=>demandSharing(entities.filter(o=>ids.has(o.key)).map(o=>({key:o.key,demand:o.demand,sellers:ids.get(o.key)})),en.key,en.demand);
   const supplyOf=reachRows=>supplySatiety(reachRows.map(r=>r.shop.items),gain);
   let shelfSatiety=0;for(const r of shopRows)for(const it of r.items)shelfSatiety+=it.avail*gain(it.item);// all open sellers, for the daily row only
 
@@ -272,7 +276,8 @@ export async function runAudit({days=30,progress=()=>{}}={}){
   for(const {en,meals,people} of missed){
    const kind=en.owner?'named':'roster';
    total[kind].incidents++;total[kind].meals+=meals;
-   const reach1=en.location?reachOf(en.location):[],supply=en.location?supplyOf(reach1):null;// anchored on this household's own location
+   const evaluate=(reach1,ids)=>{
+   const supply=en.location?supplyOf(reach1):null;// anchored on this household's own location
    // price of one person-day of each edible item on every reachable shelf, through the engine quote
    const reachRows=reach1.map(r=>({shopId:r.shop.id,sameSettlement:r.sameSettlement,engineServes:r.engineServes,toll:r.toll,
     items:r.shop.items.flatMap(it=>{const units=Math.max(1,Math.ceil(baseMeal/gain(it.item))),price=en.owner?unitPrice(r.shop,it.item,units,en.owner):null;
@@ -280,26 +285,52 @@ export async function runAudit({days=30,progress=()=>{}}={}){
    // a refusal counts only on goods this household could buy: an item priced on that same reachable shelf
    const buyable=new Map(reachRows.filter(r=>r.engineServes).map(r=>[r.shopId,new Set(r.items.filter(i=>i.cost!==null).map(i=>i.item))]));
    const declined=[...buyable.keys()].flatMap(id=>visitsOf(id).filter(v=>buyable.get(id).has(v.item))).find(v=>en.members.includes(v.npc)&&v.outcome!=='bought');
-   const localDemand=localDemandOf(en);
+   const localDemand=localDemandOf(en,ids);
    const adult=id=>(e.byId.get(id)?.age??e.rules.npcLife.adultAge)>=e.rules.npcLife.adultAge;
    const walkIn=en.members.some(id=>ps.npcs?.[id]&&adult(id)&&(ps.npcs[id].coins??0)>=1);
    const noVisit=!reachRows.filter(r=>r.engineServes).some(r=>visitsOf(r.shopId).some(v=>en.members.includes(v.npc)));
    const facts=buildFacts({supply,demand:localDemand,walkIn,noVisit,refCost,cash:en.cash,declined:declined&&{outcome:declined.outcome,reason:declined.reason??declined.outcome},
     townShops:{total:townShopRows.length,open:townShopRows.filter(s=>s.open&&s.settlement===sid).length},reach:reachRows});
-   const v=verdict(facts),cause=v.cause;
+   return {facts,supply,localDemand,v:verdict(facts)};
+   };
+   const reachAll=en.location?reachOf(en.location):[];
+   const {facts,supply,localDemand,v}=evaluate(reachAll,sellerIds),cause=v.cause;
+   // review: sellers reachable one way but not round trip; does dropping them change the verdict?
+   if(reachAll.some(r=>!r.roundTrip)){oneWayInvolved.incidents++;oneWayInvolved.meals+=meals;oneWayInvolved.keys.add(en.key);
+    const alt=evaluate(reachAll.filter(r=>r.roundTrip),sellerIdsRT).v.cause;
+    if(alt!==cause){oneWayChanged.incidents++;oneWayChanged.meals+=meals;oneWayChanged.keys.add(en.key);oneWayChanged.changes[`${alt}->${cause}`]=(oneWayChanged.changes[`${alt}->${cause}`]??0)+1;}}
    // review list: harvest would have been judged on the whole-town demand but is not on the local one
    if(supply!==null&&supply<townDemand&&supply>=localDemand){townOnly.incidents++;townOnly.meals+=meals;townOnly.keys.add(en.key);}
-   if(v.flag==='noVisit'||v.flag==='noWalkIn'){const u=flagSplit[v.flag];u.incidents++;u.meals+=meals;u.keys.add(en.key);}
+   if(v.flag&&v.flag!=='conditional'){const u=(flagSplit[v.flag]??={incidents:0,meals:0,keys:new Set()});u.incidents++;u.meals+=meals;u.keys.add(en.key);}
    const clue=(await Promise.all(v.clue.map(([f,n])=>srcLine(f,n)))).join('; ');
    const t=tally[cause];t.incidents++;t.meals+=meals;t.reasons[v.reason]=(t.reasons[v.reason]??0)+1;
    if(v.flag==='conditional'){condSplit.incidents++;condSplit.meals+=meals;condSplit.keys.add(en.key);}
-   if(v.sub){const u=undSplit[v.sub];u.incidents++;u.meals+=meals;u.keys.add(en.key);}
    if(!t.households.has(en.key)){t.households.add(en.key);t.people+=people;}
    const row={household:en.key,day,kind,location:en.location,cash:en.cash===null?null:round(en.cash),missingMeals:round(meals),reason:v.reason,clue,
     supplySatiety:supply===null?null:round(supply),townDemandSatiety:round(townDemand),cheapestPersonDay:facts.best?{coins:facts.best.cost}:null};
    if(cause==='chain'&&chainRows.length<20)chainRows.push(row);
-   if(cause==='undetermined'&&undeterminedRows.length<5)undeterminedRows.push(row);
    if(incidents.length<400)incidents.push({day,household:en.key,cause,meals:round(meals),reason:v.reason});
+  }
+  // ---- producer side: surplus > 0, road open to the town, a buyer with coins in town, and no transport/trade record on the route ----
+  // Route records: settlement_trade rows (seller = producer settlement, buyer = the town, one of its shops or their keepers) and transport rows from the producer
+  // settlement to the town, counted by first appearance of their id.
+  const townBuyers=new Set([sid,...townShopRows.map(r=>r.id),...townShopRows.map(r=>r.keeper)]);
+  const buyerCash=entities.reduce((n,en)=>n+(en.cash??0),0)+townShopRows.reduce((n,r)=>n+(es.npcs?.[r.keeper]?.coins??0),0);
+  const placeOf=loc=>{try{return placeSettlement(e,es,loc).value;}catch{return null;}};
+  const seenNow=new Map(producers.map(p=>[p.settlement,0]));
+  for(const rec of Object.values(es.records??{})){
+   if(!rec||(rec.category!=='settlement_trade'&&rec.category!=='transport')||!rec.id)continue;
+   const to=rec.category==='settlement_trade'?(townBuyers.has(rec.buyer)?sid:null):placeOf(rec.to),from=rec.category==='settlement_trade'?rec.seller:placeOf(rec.from);
+   if(to!==sid||!seenNow.has(from)||routeSeen.has(rec.id))continue;
+   routeSeen.add(rec.id);seenNow.set(from,seenNow.get(from)+1);
+  }
+  const stalledToday=[];
+  for(const pr of producers){
+   const toTown=route(pr.counter,sid,noon),back=route(sid,pr.counter,noon),roadOpen=Boolean(toTown&&back);
+   const can=pr.surplus>0&&roadOpen&&buyerCash>0,idle=can&&seenNow.get(pr.settlement)===0?(idleDays.get(pr.settlement)??0)+1:0;
+   idleDays.set(pr.settlement,idle);
+   pr.roadOpen=roadOpen;pr.idleDays=idle;
+   if(idle>=7){producerStalls.push({day,producer:pr.settlement,town:sid,idleDays:idle,surplus:pr.surplus,buyerCash:round(buyerCash)});stalledToday.push(pr.settlement);}
   }
   daily.push({day,townDemand:round(townDemand),shelfSatiety:round(shelfSatiety),missedNamed:round(missed.filter(m=>m.en.owner).reduce((n,m)=>n+m.meals,0)),missedRoster:round(missed.filter(m=>!m.en.owner).reduce((n,m)=>n+m.meals,0)),granarySurplusNotCounted:producers});
   progress(j,doc.state.minute);
@@ -312,15 +343,18 @@ export async function runAudit({days=30,progress=()=>{}}={}){
  const books=reconcileBooks({start,end,ledger:doc.ledger,edible});
 
  const attribution={};
- for(const c of ALL)attribution[c]={incidents:tally[c].incidents,meals:round(tally[c].meals),households:tally[c].households.size,people:tally[c].people,reasons:tally[c].reasons};
+ const producerRoute={stalledPairs:[...new Set(producerStalls.map(r=>`${r.producer}->${r.town}`))].sort().length,stalledRows:producerStalls.length};
+ for(const c of ALL)attribution[c]={incidents:tally[c].incidents,meals:round(tally[c].meals),households:tally[c].households.size,people:tally[c].people,reasons:tally[c].reasons,...(c==='chain'?{producerRoute}:{})};
  return {days,start:start.minute,end:end.minute,grainItem:grain??null,
   totals:{named:{incidents:total.named.incidents,meals:round(total.named.meals)},statistical:{incidents:total.roster.incidents,meals:round(total.roster.meals),note:'roster-only households (no member in state.npcs)'}},
   harvestOnTownDemandOnly:{households:townOnly.keys.size,incidents:townOnly.incidents,meals:round(townOnly.meals),note:'supply covers the demand of households sharing the same sellers but not the whole town; classified by the other causes, listed for review'},
   chainSubflags:Object.fromEntries(Object.entries(flagSplit).map(([k,u])=>[k,{households:u.keys.size,incidents:u.incidents,meals:round(u.meals)}])),
   conditionalNotDistinguished:{households:condSplit.keys.size,incidents:condSplit.incidents,meals:round(condSplit.meals),note:'prepay 1 only; counted in chain. prepay >=2 is price refusal (allocation)'},
-  undeterminedSplit:Object.fromEntries(Object.entries(undSplit).map(([k,u])=>[k,{households:u.keys.size,incidents:u.incidents,meals:round(u.meals)}])),// roster = no member with state (no purse); noLocation = no home known; neither is counted in the four causes
-  attribution,daily,chainBreakFirst20:chainRows,undeterminedFirst5:undeterminedRows,
-  producerChainBreak:{status:'undetermined',reason:'t-m3 has no producer-to-town grain sale mechanism (no food-supply module), so "surplus > 0, road open, buyer has money, 7 days zero transport" has no transport to count; granary surplus is listed per day, not counted as saleable'},
+  oneWayOnlySellers:{involved:{households:oneWayInvolved.keys.size,incidents:oneWayInvolved.incidents,meals:round(oneWayInvolved.meals)},verdictChanged:{households:oneWayChanged.keys.size,incidents:oneWayChanged.incidents,meals:round(oneWayChanged.meals),changes:oneWayChanged.changes},note:'events whose reach includes a seller reachable one way but not round trip, and the subset whose cause differs when such sellers are dropped; for review'},
+  attribution,daily,chainBreakFirst20:chainRows,
+  producerChainBreak:{rule:'surplus > 0 (granary grain minus the settlement\'s own meal reserve), road open both ways (engine.route), a buyer with coins in town, and 7 consecutive days with no new settlement_trade or transport record from the producer to the town',
+   surplusSource:await srcLine('agriculture.mjs','const surplus=r.batches.filter'),routeSources:[await srcLine('settlement-trade.mjs',"category:'settlement_trade'"),await srcLine('transport.mjs',"category:'transport'")],
+   stalledRows:producerStalls.length,stalledPairs:[...new Set(producerStalls.map(r=>`${r.producer}->${r.town}`))].sort(),first:producerStalls.slice(0,10),last:producerStalls.slice(-3)},
   conservation:{money:books.money,food:books.food,ledger:{audit:auditLedger(doc.ledger),drift:driftCounts(doc),transfers:doc.ledger?.transfers??0},mismatches:books.mismatches},
   incidentsSample:incidents.slice(0,40)};
 }

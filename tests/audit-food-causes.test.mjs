@@ -21,8 +21,8 @@ test('harvest is judged on each household own reach: two households at different
  const gain=()=>1,near=[[{item:'a',avail:100}]],far=[[{item:'a',avail:5}]];
  const a=verdict(buildFacts(snap({supply:supplySatiety(near,gain)}))),b=verdict(buildFacts(snap({supply:supplySatiety(far,gain)})));
  assert.equal(a.cause,'chain');assert.equal(b.cause,'harvest');
- assert.equal(verdict(buildFacts(snap({supply:null}))).cause,'undetermined');// no location: listed apart, no default
- assert.equal(verdict(buildFacts(snap({supply:null}))).sub,'noLocation');
+ const lost=verdict(buildFacts(snap({supply:null})));// no location: chain, flagged apart, never undetermined
+ assert.equal(lost.cause,'chain');assert.equal(lost.flag,'noLocation');assert.match(lost.reason,/no location/);
 });
 test('harvest demand: own reach covers the demand of households sharing its sellers, not the whole town',()=>{
  const list=[{key:'a',demand:10,sellers:new Set(['s1'])},{key:'b',demand:10,sellers:new Set(['s1','s2'])},{key:'c',demand:500,sellers:new Set(['s9'])}];
@@ -76,10 +76,19 @@ test('chain: food on sale, shop open, household can pay, still no meal',()=>{
  assert.equal(cause({reach:[shelf({engineServes:false})]}),'chain');// shop beyond customer reach
  assert.equal(cause({}),'chain');// everything present, no purchase
 });
-test('undetermined: a roster-only household (no purse in state) is not given a default cause, but harvest still applies',()=>{
+test('roster-only household (no purse in state): harvest still applies, otherwise chain flagged "customer flow does not serve roster households"',()=>{
  const v=verdict(buildFacts(snap({cash:null})));
- assert.equal(v.cause,'undetermined');assert.equal(v.sub,'roster');assert.match(v.reason,/no purse or stock/);
+ assert.equal(v.cause,'chain');assert.equal(v.flag,'roster');assert.match(v.reason,/does not serve roster households/);
  assert.equal(verdict(buildFacts(snap({cash:null,supply:1}))).cause,'harvest');
+});
+test('quote failed for every good and cash below the catalogue price: poverty, flagged apart',()=>{
+ const v=verdict(buildFacts(snap({cash:3,reach:[shelf({},[item({cost:null})])]})));// refCost is 4
+ assert.equal(v.cause,'poverty');assert.equal(v.flag,'quoteFailedPoverty');
+ assert.equal(verdict(buildFacts(snap({cash:3}))).flag,undefined);// priced goods: ordinary poverty
+});
+test('conditional prepay boundary: 2 is the smallest price refusal, 1 is not',()=>{
+ assert.equal(cause({declined:{outcome:'conditional',reason:'需先付2文，再谈这件事。'}}),'allocation');
+ assert.equal(cause({declined:{outcome:'conditional',reason:'需先付1文，再谈这件事。'}}),'chain');
 });
 
 const COIN='coin_river',OATS='item_oats';
@@ -101,7 +110,8 @@ test('food-cause audit (real engine, 3 days): deterministic, causes partition th
  assert.equal(JSON.stringify(a),JSON.stringify(b));
  const incidents=Object.values(a.attribution).reduce((n,c)=>n+c.incidents,0);
  assert.equal(incidents,a.totals.named.incidents+a.totals.statistical.incidents);
- assert.deepEqual(Object.keys(a.attribution),['harvest','poverty','allocation','chain','undetermined']);
+ assert.deepEqual(Object.keys(a.attribution),['harvest','poverty','allocation','chain']);
+ assert.ok(a.producerChainBreak.rule);
  for(const row of Object.values(a.conservation.food.rows))assert.equal(row.difference,0);
  for(const row of Object.values(a.conservation.money))assert.equal(row.difference,0);
  assert.deepEqual(a.conservation.ledger.audit,[]);
