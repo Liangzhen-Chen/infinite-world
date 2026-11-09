@@ -1362,6 +1362,12 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 慢测（monster-society-content、household-budget 相关、s5-law-*、npc-life 等）待 b1m-1 结束后跑；t-metab 取代 ms-2。
 - 服务器磁盘 89%（5.7 GB），已请李白批准清理跑过且已被取代的目录（b1-p4/pb4/p7/pb7/p10/pb10、rg-d9、metab-8/9、fs-1、b1-c7）。
 
+### 11-09 01:30 批次 1 收口
+- b1m-1 全量（20:54→01:23，4 h 30 min，总 CPU 96,863 s，P=6 达下限；b1-c5 用了 5 h 19 min，最长先跑实测提速约 15%）对照 int-m、b1-c5、rg-d12：新失败仅 npc-depth-yp（换行，已在 t-crlf 修并云上 12/0）；其余失败文件计数与 b1-c5 或 rg-d12 逐条相同（基线已有）；转好 10 个（批次 1 三个新测、rg-renewable、farm-pests-harvest、ka1-overlay、overfit-guard、performance、playtest-lifecycle、s2c-run001r）。清单 F:/dnd-tmp/b1m1/diff-vs-baselines.txt。**零新增真失败 → t-int 快进到 t-b1m（87da89f9），批次 1 交付。**
+- 服务器门禁 manifest.py 同步到 d49e1ab2（deploy.sh update，PREFLIGHT-OK；旧版备份 ~/gate-bak-7607c436）；五个门禁脚本哈希与本机一致。
+- PT-AI 启用条件核对：E1（最近一批已交付、t-int 全量无未归类新增失败）**达成**；E2 驱动未写——按计划现在派驱动卡（不调用 API、不花钱）；E3（试玩跑在哪、key 是否上服务器）待亮圳或李白定（Q1）；E4 报价未做。
+- 下一轮合并候选 t-m2（F:/dnd-wt/M2）dd9c1c91 = t-int + t-crlf + t-craftcap + t-metab（含 t-msfix）+ t-foodsrc + t-prof，自动合并无冲突；m2-1（8ad2eacf…）第一轮审查中；两轮过后腾讯全量，对照 b1m-1。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
