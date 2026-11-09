@@ -4,9 +4,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {loadRuntimeWorld as runtimeWorld} from '../tools/load-world.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
@@ -239,7 +240,7 @@ test('依赖未核对出处的条目先不审：按出处状态判定，类别�
   const entries = [cls('milk', ['牛乳', '羊乳']), item('item_goat_milk', ['羊乳']), item('item_milk', ['牛乳']), cls('veg', ['胡萝卜']), item('item_carrot', ['胡萝卜']), cls('nosrc', [])];
   const ok = {id: '01077', idType: 'NDB', status: '已核对'};
   const table = {sourceIds: {class_milk: {牛乳: ok, 羊乳: {id: null, status: '未知'}}, item_goat_milk: {羊乳: {id: null, status: '未知'}}, item_milk: {牛乳: ok}, class_veg: {胡萝卜: ok}, item_carrot: {胡萝卜: ok}}};
-  const overlay = {item_goat_milk: {tags: ['milk']}, item_milk: {tags: ['milk']}, item_carrot: {tags: ['veg']}};
+  const overlay = {item_goat_milk: ['milk'], item_milk: ['milk'], item_carrot: ['veg']};   // 物品 id → 运行时世界里的实际标签
   const r = skipUnverified(entries, table, overlay);
   assert.deepEqual(r.skipped.map(x => x.id), ['class_milk', 'item_goat_milk', 'item_milk']);   // item_milk 自身已核对，但所属类别行跳过 → 一并跳过
   assert.match(r.skipped[0].reason, /出处未核对：羊乳/); assert.match(r.skipped[2].reason, /所属类别行依赖未核对出处（milk）/);
@@ -251,5 +252,17 @@ test('依赖未核对出处的条目先不审：按出处状态判定，类别�
   assert.deepEqual(skipUnverified(entries, pending, overlay).skipped.map(x => x.id), ['class_veg', 'item_carrot']);
   const added = [...entries, cls('fish', ['鲤']), item('item_fish', ['鲤'])];
   const t2 = {sourceIds: {...table.sourceIds, class_fish: {鲤: {id: null, status: '未知'}}, item_fish: {鲤: ok}}};
-  assert.deepEqual(skipUnverified(added, t2, {...overlay, item_fish: {tags: ['fish']}}).skipped.map(x => x.id).slice(-2), ['class_fish', 'item_fish']);
+  assert.deepEqual(skipUnverified(added, t2, {...overlay, item_fish: ['fish']}).skipped.map(x => x.id).slice(-2), ['class_fish', 'item_fish']);
+});
+
+test('标签只在基础世界、不在 items.json 覆盖层的物品，也随其类别行一并跳过（用运行时世界的实际标签）', async () => {
+  const tags = worldTags(await runtimeWorld());
+  assert.ok(tags.item_milk.includes('milk'));   // item_milk 的 milk 标签在基础世界
+  const overlay = JSON.parse(await fs.readFile('world/meta/mechanics/items.json', 'utf8'));
+  assert.ok(!overlay.item_milk?.tags?.includes('milk'));   // 覆盖层里没有，只看覆盖层会漏
+  const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
+  const e = (id, kind, key) => ({id, kind, key, row: {sources: (table.sourceIds[id] ? Object.keys(table.sourceIds[id]) : []).map(name => ({name, citation: 'USDA FoodData Central x'}))}});
+  const entries = [e('class_milk', 'material-props-class', 'milk'), e('item_milk', 'material-props-item')];
+  assert.deepEqual(skipUnverified(entries, table, tags).skipped.map(x => x.id), ['class_milk', 'item_milk']);
+  assert.deepEqual(skipUnverified(entries, table, {}).skipped.map(x => x.id), ['class_milk']);   // 对照：不给标签就漏判
 });

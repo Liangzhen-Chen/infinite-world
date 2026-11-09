@@ -574,17 +574,19 @@ export function grantCondimentMaxRequests(ledger){
 }
 // 依赖未核对出处的条目先不审（按出处状态判定，不按名字）：条目 sources 里有 sourceIds 已登记但状态不是「已核对」（含 id:null 的未知）的出处，本次跳过；
 // 类别行依赖这些出处则该类别行跳过，其成员物品覆盖行（带该类别标签的物品行，上下文含类别值）一并跳过。出处核对后状态改为已核对，自然进入审查。
-export function skipUnverified(entries,table,overlay={}){
+// tagsById：物品 id → 运行时世界里物品的实际标签（基础世界加覆盖层合并后，同 show/explainEntry 口径），不是只看 items.json 覆盖层。
+export function skipUnverified(entries,table,tagsById={}){
  const unverified=e=>(e.row?.sources??[]).filter(x=>{const r=table.sourceIds?.[e.id]?.[x.name];return r&&r.status!=='已核对';}).map(x=>x.name);
  const skipped=[],skipClass=new Set();
  for(const e of entries.filter(e=>e.kind==='material-props-class')){const u=unverified(e);if(u.length){skipped.push({id:e.id,reason:`出处未核对：${u.join('、')}`});skipClass.add(e.key);}}
  for(const e of entries.filter(e=>e.kind!=='material-props-class')){
-  const u=unverified(e),dep=(overlay[e.id]?.tags??[]).filter(t=>skipClass.has(t));
+  const u=unverified(e),dep=(tagsById[e.id]??[]).filter(t=>skipClass.has(t));
   if(u.length||dep.length)skipped.push({id:e.id,reason:[u.length&&`出处未核对：${u.join('、')}`,dep.length&&`所属类别行依赖未核对出处（${dep.join('、')}）`].filter(Boolean).join('；')});
  }
  const ids=new Set(skipped.map(x=>x.id));
  return {keep:entries.filter(e=>!ids.has(e.id)),skipped};
 }
+export const worldTags=world=>Object.fromEntries((world.items??[]).map(i=>[i.id,i.tags??[]]));
 async function authorizeCondiment(){
  const {file,ledger}=await condimentLedgerFile(),next=grantCondimentMaxRequests(ledger);
  if(JSON.stringify(next)!==JSON.stringify(ledger))await fs.writeFile(file,JSON.stringify(next,null,2)+'\n');
@@ -603,7 +605,7 @@ export async function condimentBudget(){
 }
 export async function condimentReview(){
  await l1();await authorizeCondiment();
- const {keep:entries,skipped}=skipUnverified(await condimentEntries(),await readJSON(tableFile),await readJSON(overlayFile));
+ const {keep:entries,skipped}=skipUnverified(await condimentEntries(),await readJSON(tableFile),worldTags(await runtime()));
  console.log(JSON.stringify({pid:process.pid,mode:'review-condiment',entries:entries.length,skipped}));
  const client=new DeepSeekClient({budgetYuan:condimentCard.limitYuan,logFile:path.join(condimentCard.draftRoot,'usage.jsonl')});
  const {summary,halted}=await runReview({entries,client,root:condimentCard.reviewRoot,budgetRoot:condimentCard.draftRoot,cardIdArg:condimentCard.cardId,allocation:condimentCard.allocation,revisionArg:condimentCard.revision,dirName:condimentCard.reviewDirName});
