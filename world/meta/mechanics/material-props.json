@@ -67,12 +67,12 @@
   "nut": {
    "moisture": 0.05,
    "energyDensity": 279,
-   "basis": "去壳坚果仁：含水约 4–5%，取 5%（USDA FoodData Central：榛仁 4.7%、核桃仁 4.1%）；能量榛仁 628、核桃仁 654 kcal/100g，干物质约 6.6–6.8 kcal/g，取 6.7 kcal/g；饱腹=kcal÷24，标定见表头 note，6700÷24≈279。【数值凭记忆写入，待 L2 核对】"
+   "basis": "去壳坚果仁：含水约 4–5%，取 5%（USDA FoodData Central：榛仁 4.7%、核桃仁 4.1%）；榛仁 628、核桃仁 654 kcal/100g 鲜重；干物质能量：榛仁 6280÷0.953≈6590，核桃仁 6540÷0.959≈6820 kcal/kg 干物质，取 6700；饱腹=kcal÷24（calibrate 标定，见表头 note），6700÷24≈279。【数值凭记忆写入，待 L2 核对】"
   },
   "fruit": {
    "moisture": 0.85,
    "energyDensity": 148,
-   "basis": "鲜果（干制品在物品行覆盖含水率）：含水约 84–87%，取 85%（USDA FoodData Central：苹果 85.6%、梨 83.7%、李 87.2%）；能量与含水按可食部分计，可食部分约 90%（苹果、梨去核与蒂约 10%，李去核约 6%，USDA FoodData Central refuse）；鲜重能量苹果 52、梨 57、李 46 kcal/100g，干物质约 3.5–3.6 kcal/g，取 3.55 kcal/g；饱腹=kcal÷24，标定见表头 note，3550÷24≈148。【数值凭记忆写入，待 L2 核对】",
+   "basis": "鲜果（干制品在物品行覆盖含水率）：含水约 84–87%，取 85%（USDA FoodData Central：苹果 85.6%、梨 83.7%、李 87.2%）；能量与含水按可食部分计，可食部分约 90%（苹果、梨去核与蒂约 10%，李去核约 6%，取偏保守的 90%，USDA refuse）；干物质能量按各自含水率折算：苹果 520÷0.144≈3610、梨 570÷0.163≈3500、李 460÷0.128≈3590 kcal/kg 干物质，取 3550；饱腹=kcal÷24（calibrate 标定，见表头 note），3550÷24≈148。【数值凭记忆写入，待 L2 核对】",
    "edibleFraction": 0.9
   },
   "vegetable": {
@@ -93,23 +93,23 @@
   "meat": {
    "moisture": 0.68,
    "energyDensity": 250,
-   "basis": "家畜生肉（瘦肥混合）：含水约 62–74%，取 68%；鲜重能量约 140–280 kcal/100g（USDA FoodData Central：猪里脊、牛肉末 85% 瘦、羊肉等生肉），干物质约 6.0 kcal/g；饱腹=kcal÷24，标定见表头 note，6000÷24=250。【数值凭记忆写入，待 L2 核对】"
+   "basis": "家畜生肉（瘦肥混合）：含水约 55–75%，取 68%；鲜重能量约 140–290 kcal/100g（USDA FoodData Central：猪里脊约 143、牛肉末 85% 瘦约 250、羊肉约 200–290）。取值链：含水 68% 的肉取鲜重 192 kcal/100g（区间内偏中），干物质能量 = 1920 kcal/kg ÷ (1−0.68) = 6000 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），6000÷24=250。（区间两端按各自含水折算为干基约 4.4–8.8 kcal/g，取值为中间。）【数值凭记忆写入，待 L2 核对】"
   },
   "fish": {
    "moisture": 0.77,
    "energyDensity": 221,
-   "basis": "淡水鱼鲜肉：含水约 75–80%，取 77%（USDA FoodData Central：鲤 76.1%、鳕 81.2%）；鲤 127 kcal/100g，干物质约 5.3 kcal/g；饱腹=kcal÷24，标定见表头 note，5300÷24≈221。【数值凭记忆写入，待 L2 核对】"
+   "basis": "淡水鱼鲜肉：含水约 70–82%，取 77%（USDA FoodData Central：鲤 76.1%、鳕 81.2%）；鲤 127 kcal/100g 鲜重，干物质能量 = 1270 kcal/kg ÷ (1−0.761) ≈ 5310 kcal/kg 干物质（即 5.3 kcal/g 干物质，不是鲜重）；饱腹=kcal÷24（calibrate 标定，见表头 note），5300÷24≈221。本类别是鲜鱼状态；腌制品（item_salt_fish）的营养由配方按投入守恒派生，不读本类别值。【数值凭记忆写入，待 L2 核对】"
   },
   "egg": {
    "moisture": 0.76,
    "energyDensity": 250,
-   "basis": "禽蛋（能量与含水按可食内容计；可食部分 88%，蛋壳约占 12%，USDA FoodData Central 全蛋生 refuse）：全蛋含水 76.2%、143 kcal/100g（USDA FoodData Central 鸡全蛋生），干物质约 6.0 kcal/g；饱腹=kcal÷24，标定见表头 note，6000÷24=250。【数值凭记忆写入，待 L2 核对】",
+   "basis": "禽蛋（能量与含水按可食内容计）：全蛋生含水 76.2%、143 kcal/100g（USDA FoodData Central）；干物质能量 = 1430 kcal/kg ÷ (1−0.762) ≈ 6010 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），6010÷24≈250。可食部分 88%（蛋壳约 12%，USDA refuse）。本类别按食用禽蛋写；蚕种纸（item_silkworm_eggs）虽带 egg 标签但不是食物，营养派生只读 food 类物品，不消费该类别值。【数值凭记忆写入，待 L2 核对】",
    "edibleFraction": 0.88
   },
   "milk": {
    "moisture": 0.875,
    "energyDensity": 208,
-   "basis": "鲜乳：牛乳含水 87.7%、61 kcal/100g，羊乳含水 87.0%、69 kcal/100g（USDA FoodData Central），干物质约 5.0–5.3 kcal/g，取 5.0 kcal/g；饱腹=kcal÷24，标定见表头 note，5000÷24≈208。【数值凭记忆写入，待 L2 核对】"
+   "basis": "鲜乳：牛乳含水 87.7%、61 kcal/100g，羊乳含水 87.0%、69 kcal/100g（USDA FoodData Central）；干物质能量：牛乳 610÷0.123≈4960，羊乳 690÷0.130≈5310 kcal/kg 干物质；类别取 5000（靠近牛乳，为主要乳源）；饱腹=kcal÷24（calibrate 标定，见表头 note），5000÷24≈208。【数值凭记忆写入，待 L2 核对】"
   }
  }
 }

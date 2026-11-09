@@ -234,7 +234,7 @@
   "props": {
    "moisture": 0.59,
    "energyDensity": 150,
-   "basis": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜），干物质约 3.6 kcal/g；饱腹=kcal÷24，3600÷24=150。【数值凭记忆写入，待 L2 核对】"
+   "basis": "蒜头含水 58.6%、149 kcal/100g（USDA FoodData Central 生大蒜）；干物质能量 = 1490 kcal/kg ÷ (1−0.586) ≈ 3600 kcal/kg 干物质；饱腹=kcal÷24（calibrate 标定，见表头 note），3600÷24=150。覆盖蔬菜类别（含水 0.90）的值。【数值凭记忆写入，待 L2 核对】"
   }
  },
  "item_oats": {
