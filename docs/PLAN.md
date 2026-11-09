@@ -1368,6 +1368,11 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - PT-AI 启用条件核对：E1（最近一批已交付、t-int 全量无未归类新增失败）**达成**；E2 驱动未写——按计划现在派驱动卡（不调用 API、不花钱）；E3（试玩跑在哪、key 是否上服务器）待亮圳或李白定（Q1）；E4 报价未做。
 - 下一轮合并候选 t-m2（F:/dnd-wt/M2）dd9c1c91 = t-int + t-crlf + t-craftcap + t-metab（含 t-msfix）+ t-foodsrc + t-prof，自动合并无冲突；m2-1（8ad2eacf…）第一轮审查中；两轮过后腾讯全量，对照 b1m-1。
 
+### 11-09 01:50 剖析结果与提速卡 MEMO
+- prof-1 云上剖析（mode=farm days=10，F:/dnd-tmp/prof1/farm.out）：每游戏日约 5.0 s，首/末 3 日 5073/5094 ms，不随天数增长（无退化）——720 日级测试必撞 3600 s。包含时间：laborCandidates 52.8%、plannedTrip 23.9%、marketSupply 18.8%、route 16%（search self 14.9%）、readHouseholdResources 7.7%。同一状态对象同键重复：readHouseholdResources 86.6%、marketSupply 52.1%、route 35.9%（同日同键 73.7%）。
+- 卡 MEMO（t-memo，基于 t-m2）：三处纯读加“同状态版本+同参数”缓存（复用 stateMemo/现有 cursor 缓存，修 route 日级缓存键），只缓存不改结果；新测 hot-read-memo。预估省约 2 成；要让 720 日测试进 1 小时还需减少劳动候选本身计算量（下一步，剖析复跑后定）。
+- 其他进行中：m2-1 合并候选第一轮审查；PT-AI 驱动卡（t-ptai，不调 API）；怪物据点产地内容卡（t-mprod，基于 t-m2）。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
