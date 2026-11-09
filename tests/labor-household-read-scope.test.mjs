@@ -73,10 +73,24 @@ test('作用域外读取器没有 memo，作用域结束后丢弃',()=>{
  assert.ok(kept);
 });
 
-test('laborCandidates 在作用域内与独立重算逐字一致',{timeout:600000},async()=>{
+test('laborCandidates 在作用域内与独立重算逐字一致，且共享作用域命中',{timeout:600000},async()=>{
  const rw=await loadRuntimeWorld(),smith='npc_hw_duanyan';
- const make=()=>{const e=new WorldEngine(structuredClone(rw));return {e,doc:e.createCharacter(legacy,{},'labor-household-read-scope-smith')};};
- const run=({e,doc})=>laborCandidates(e,subjectiveView(e,doc,smith),doc);
- const a=make(),b=make();
- assert.deepEqual(plain(withReadScope(()=>run(a))),plain(run(b)));
+ const e=new WorldEngine(structuredClone(rw)),doc=e.createCharacter(legacy,{},'labor-household-read-scope-smith');
+ const run=()=>laborCandidates(e,subjectiveView(e,doc,smith),doc);
+ // laborCandidates 自己开作用域；对照组是两次各自独立的作用域（互不共享），实验组是两次包在同一个外层作用域里（后一次命中）。
+ const independent=counted(()=>[run(),run()]),shared=counted(()=>withReadScope(()=>[run(),run()]));
+ assert.deepEqual(plain(shared.result),plain(independent.result));
+ assert.deepEqual(plain(independent.result[0]),plain(independent.result[1]));
+ assert.ok(independent.calls.length>0,'laborCandidates 应触达家计读取');
+ assert.ok(shared.calls.length<independent.calls.length,`共享作用域应命中：${shared.calls.length} vs ${independent.calls.length}`);
+});
+
+test('documentReader 的 memo 键含 randomSeed：同状态对象不同种子不互相命中',()=>{
+ const f=fixture(),other={...f.doc,randomSeed:`${f.doc.randomSeed}-other`};
+ withReadScope(()=>{
+  let n=0;const a=documentReader(f.doc),b=documentReader(other),c=documentReader(f.doc);
+  assert.equal(a.memo('k',[1],()=>++n),1);
+  assert.equal(c.memo('k',[1],()=>++n),1,'同种子命中');
+  assert.equal(b.memo('k',[1],()=>++n),2,'不同种子不命中');
+ });
 });
