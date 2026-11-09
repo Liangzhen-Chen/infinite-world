@@ -42,7 +42,7 @@ function settlementMayDiffer(engine,sid,need){
 // Index of residents with a non-1 species, by settlement. It reads only each npc's species and
 // materialized settlement, so stateMemo drops it exactly when an npc is added/removed or those change.
 // Without an active record index stateMemo just builds: one O(npcs) pass per call.
-const oddArrivalInputs=[['npcs','*','species'],['npcs','*','materialized','settlement']];
+const oddArrivalInputs=[['npcs','*','species'],['npcs','*','materialized','settlement'],['created']];
 const oddDefinedCache=new WeakMap();
 function oddDefined(engine,odd){
  let byOdd=oddDefinedCache.get(engine);if(!byOdd)oddDefinedCache.set(engine,byOdd=new Map());
