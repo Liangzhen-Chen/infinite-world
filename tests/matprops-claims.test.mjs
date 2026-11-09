@@ -5,14 +5,18 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {tmpRoot} from '../tools/tmp-root.mjs';
-import {extractReview, runReview, reviewStops, reaskGate, misjudgeStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
 const rowOf = extra => ({sources: [src], selection: {method: 'single', reason: 'r'}, basis: 'b', ...extra});
 const entryOf = (id, extra) => ({id, kind: 'material-props-class', row: rowOf(extra)});
 const env = {kcalPerSatiety: 24, sourceIds: {class_a: {苹果醋: {id: '02048', idType: 'NDB', status: '待核对'}}}};
-const arith = (value, extra = {}) => ({quote: 'q', field: 'energyDensity', verdict: 'conflict', severity: 'hard', kind: 'arithmetic', reason: 'r', claimedValue: value, claimedFormula: '21×10÷0.061÷24', target: 'energyDensity', ...extra});
+// field 与 target 对应（派生维度 field=target，basis.* 的 field=basis）；claimedInputs：派生维度按出处名嵌套，basis.* 平铺
+const own = {moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
+const arith = (value, extra = {}) => { const target = 'target' in extra ? extra.target : 'energyDensity';
+  return {quote: 'q', field: typeof target === 'string' && target.startsWith('basis') ? 'basis' : target, verdict: 'conflict', severity: 'hard', kind: 'arithmetic', reason: 'r', claimedValue: value, claimedFormula: '21×10÷0.061÷24', target,
+    claimedInputs: typeof target === 'string' && target.startsWith('basis') ? own : {苹果醋: own}, ...extra}; };
 const fact = (extra = {}) => ({quote: 'q', field: 'moisture', verdict: 'conflict', severity: 'hard', kind: 'fact', reason: 'r', ...extra});
 const reply = list => JSON.stringify({contradictions: list});
 const resp = list => ({choices: [{message: {content: reply(list)}}]});
@@ -45,7 +49,7 @@ test('算术误判：取整口径内同值不算不符（含水 3 位、能量�
   assert.equal(programClaim(arith(0.9394, {target: 'moisture'}), e, 24).verdict, 'agrees');   // 3 位小数后 0.939
   assert.equal(programClaim(arith(0.94, {target: 'moisture'}), e, 24).verdict, 'misjudged');
   // 醋的单瓶 50 g：50×21÷100÷24 = 0.4375 → 0.44；AI 算成别的数 = 它自己算错
-  const v = c => programClaim(arith(c, {field: 'basis', target: 'basis.satiety', source: '苹果醋', grams: 50}), e, 24);
+  const v = c => programClaim(arith(c, {target: 'basis.satiety', source: '苹果醋', grams: 50}), e, 24);
   assert.equal(v(0.44).verdict, 'agrees'); assert.equal(v(0.3).verdict, 'misjudged'); assert.equal(v(0.3).program, 0.44);
 });
 
@@ -64,10 +68,15 @@ test('算术真错：程序推算与原数据不一致 → 照常 hard，不重�
 
 test('arithmetic 缺字段判格式错（REVIEW_FORMAT），不放行；缺 kind 同', async t => {
   const e = entryOf('class_a'), opts = {kcalPerSatiety: 24};
+  const flat = {target: 'basis.kcal', field: 'basis', claimedInputs: own};
   const bads = [arith(83, {claimedValue: undefined}), arith(83, {claimedValue: '83'}), arith(83, {claimedFormula: ''}), arith(83, {target: undefined}),
-    arith(83, {target: 'heatValue'}), arith(83, {target: 'basis.satiety', source: '苹果醋'}),                // 缺 grams
-    arith(83, {target: 'basis.kcal', grams: 50}), arith(83, {target: 'basis.kcal', grams: 50, source: '不存在'}), // 缺/错 source
-    arith(83, {target: 'mealDry'}), {...arith(83), kind: undefined}, {...arith(83), kind: 'other'}];
+    arith(83, {target: 'heatValue', field: 'heatValue'}), arith(83, {target: 'basis.satiety', source: '苹果醋'}),                // 缺 grams
+    arith(83, {...flat, grams: 50}), arith(83, {...flat, grams: 50, source: '不存在'}),                                         // 缺/错 source
+    arith(83, {target: 'mealDry', field: 'mealDry'}), {...arith(83), kind: undefined}, {...arith(83), kind: 'other'},
+    arith(83, {claimedInputs: undefined}), arith(83, {claimedInputs: {苹果醋: {moistureFraction: 0.939}}}),                      // 缺 claimedInputs / 缺 kcalPer100gWet
+    arith(83, {claimedInputs: {别的: own}}),                                                                                  // 出处名对不上
+    arith(83, {field: 'moisture'}), arith(83, {target: 'moisture', field: 'energyDensity'}),                                    // field 与 target 不对应
+    arith(83, {...flat, grams: 50, source: '苹果醋', field: 'energyDensity'})];
   for (const b of bads) assert.throws(() => extractReview(resp([b]), e, opts), x => x.code === 'REVIEW_FORMAT', JSON.stringify(b));
   // 推不出来：行里没有出处可推 moisture
   assert.throws(() => extractReview(resp([arith(1, {target: 'moisture'})]), {id: 'x', row: {basis: 'b', moisture: 0.5}}, opts), x => x.code === 'REVIEW_FORMAT');
@@ -76,20 +85,54 @@ test('arithmetic 缺字段判格式错（REVIEW_FORMAT），不放行；缺 kind
   assert.equal((await r.rec('class_a')).status, 'manual');
 });
 
-test('fact 项不自动放行：有编号 → 重问 1 次并给出编号；重问后仍 hard → 留人工；没有编号 → 直接留人工，不重问', async t => {
-  const r = await run(t, [entryOf('class_a')], [reply([fact()]), reply([fact()])]);
-  assert.equal(r.client.calls.length, 2);
-  assert.match(lastText(r.client), /按出处编号核对.*苹果醋：NDB 02048（待核对）/);
-  const rec = await r.rec('class_a');
-  assert.equal(rec.status, 'manual'); assert.equal(rec.errors[0].kind, 'fact'); assert.ok(rec.errorHistory.includes('REVIEW_FACT_RECHECK'));
-  assert.equal(r.summary.aiMisjudgedByProgram.count, 0);   // fact 重问不计入「程序判定 AI 误判」
+test('fact 项一旦判 hard 就不能计为通过：有编号重问 1 次收集意见，重问后无论如何都是 manual（待按编号人工核对，附两次意见）；无编号直接 manual', async t => {
+  for (const second of [[fact()], []]) {   // 重问后仍 hard / AI 不再列出该项：都不通过
+    const r = await run(t, [entryOf('class_a')], [reply([fact({reason: '初审意见'})]), reply(second)]);
+    assert.equal(r.client.calls.length, 2);
+    assert.match(lastText(r.client), /按出处编号核对.*苹果醋：NDB 02048（待核对）/);
+    const rec = await r.rec('class_a');
+    assert.equal(rec.status, 'manual'); assert.ok(rec.errorHistory.includes('REVIEW_FACT_RECHECK'));
+    assert.equal(rec.review.factPending.status, '待按编号人工核对'); assert.equal(rec.review.factPending.first[0].reason, '初审意见'); assert.equal(rec.review.factPending.second.length, second.length);
+    assert.match(rec.errors.at(-1).reason, /02048/);
+    assert.deepEqual([r.summary.passed, r.summary.manual], [0, 1]);   // 人工比例照原算法计入
+    assert.deepEqual(r.summary.factPendingHuman, {count: 1, ids: ['class_a']});
+    assert.equal(r.summary.aiMisjudgedByProgram.count, 0);
+  }
   const none = await run(t, [entryOf('class_b')], [reply([fact()]), reply([])]);   // class_b 没有登记编号
-  assert.equal(none.client.calls.length, 1); assert.equal((await none.rec('class_b')).status, 'manual');
+  assert.equal(none.client.calls.length, 1); assert.equal((await none.rec('class_b')).status, 'manual'); assert.equal(none.summary.factPendingHuman.count, 1);
   const unknown = await run(t, [entryOf('class_a')], [reply([fact()]), reply([])], {kcalPerSatiety: 24, sourceIds: {class_a: {苹果醋: {id: null, status: '未知'}}}});
   assert.equal(unknown.client.calls.length, 1); assert.equal((await unknown.rec('class_a')).status, 'manual');
-  // 编号核对后 AI 自己撤回 hard，则算通过（是 AI 按编号重新核对的结果，不是程序放行）
-  const ok = await run(t, [entryOf('class_a')], [reply([fact()]), reply([])]);
-  assert.equal(ok.client.calls.length, 2); assert.equal((await ok.rec('class_a')).status, 'passed');
+  assert.deepEqual(factPendingStats([{id: 'a', status: 'passed', review: {contradictions: [fact()]}}, {id: 'b', status: 'manual', review: {contradictions: [fact()]}}]), {count: 1, ids: ['b']});
+});
+
+test('AI 质疑输入（输入与出处不一致）的 arithmetic 转 fact：不自动放行，不当算术误判', async t => {
+  const disputed = arith(95, {claimedInputs: {苹果醋: {moistureFraction: 0.44, kcalPer100gWet: 21}}});   // 「含水应为 0.44」
+  assert.equal(programClaim(disputed, entryOf('class_a'), 24).verdict, 'disputes-input');
+  const r = await run(t, [entryOf('class_a')], [reply([disputed]), reply([])]);
+  assert.equal(r.client.calls.length, 2);   // 有编号：按 fact 重问一次，但不是算术重问
+  assert.doesNotMatch(lastText(r.client), /与原数据一致/);
+  const rec = await r.rec('class_a');
+  assert.equal(rec.status, 'manual'); assert.ok(!rec.errorHistory.includes('REVIEW_ARITH_MISJUDGED'));
+  assert.deepEqual([r.summary.aiMisjudgedByProgram.count, r.summary.factPendingHuman.count], [0, 1]);
+  const none = await run(t, [entryOf('class_b')], [reply([disputed]), reply([])]);
+  assert.equal(none.client.calls.length, 1); assert.equal((await none.rec('class_b')).status, 'manual');
+});
+
+test('输入一致但算错 → 重问；输入一致、值也相同却标 hard → 保守留人工', async t => {
+  const e = entryOf('class_a');
+  assert.equal(programClaim(arith(83), e, 24).verdict, 'misjudged');
+  assert.equal(programClaim(arith(143), e, 24).verdict, 'agrees');
+  const r = await run(t, [e], [reply([arith(83)]), reply([])]);
+  assert.equal(r.client.calls.length, 2); assert.equal((await r.rec('class_a')).status, 'passed');
+});
+
+test('mealCap 对干物质基准的类（谷豆果菌）不可比对：转人工，不判格式错、不停整轮', async t => {
+  const grain = {id: 'class_g', kind: 'material-props-class', row: {sources: [{name: '燕麦', citation: 'c', moistureFraction: 0.1, kcalPer100gWet: 380, mealGrams: 60, mealBasis: 'dryMatter', eatenMoistureFraction: 0.7}], selection: {method: 'single', reason: 'r'}, basis: 'b'}};
+  const claim = arith(40, {target: 'mealCap', claimedInputs: {燕麦: {mealGrams: 60}}});
+  assert.equal(programClaim(claim, grain, 24).verdict, 'not-comparable');
+  const r = await run(t, [grain, entryOf('class_a')], [reply([claim]), reply([])]);
+  assert.equal(r.halted, null); assert.equal(r.client.calls.length, 2);   // 第二条照常发
+  assert.equal((await r.rec('class_g')).status, 'manual'); assert.equal((await r.rec('class_a')).status, 'passed');
 });
 
 test('重问后仍对不上 → 留人工，不再发第三次请求，hard 与程序核对结果留在记录里', async t => {

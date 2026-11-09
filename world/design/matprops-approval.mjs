@@ -113,7 +113,7 @@ export async function validateDraft(draft,entry){
 }
 export function reviewRequest(entry,draft,context){
  return {thinking:{type:'disabled'},temperature:0,max_tokens:1200,response_format:{type:'json_object'},messages:[
-  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","verdict":"conflict|no_conflict","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。verdict 先定：核算后确有矛盾写 conflict，核算后发现无误或应撤回写 no_conflict；severity 为 hard 时 verdict 必须是 conflict，核算无误的项不要列入；若列入，verdict 与 severity 都写 no_conflict。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。行内 sources 是出处原值（moistureFraction 含水分数、kcalPer100gWet 鲜重 kcal/100g、refuseFraction 不可食比例），每个出处代表类别的一个成员；selection.method 为 mean 时，各成员（出处）分别推算含水、干物质比例、干基能量与能量，再对各成员的推算结果取平均（没有取代表的方式）；为 single 时只有一个出处，按它自身推算。moisture、energyDensity、edibleFraction 由程序推出，context.derived 给出推出值：含水取 3 位小数；成员的干基能量 = 鲜重 kcal/100g × 10 ÷ (1−该成员含水) ÷ kcalPerSatiety，类别值为各成员干基能量的平均并取整。severity 为 hard 的项必须带 kind：arithmetic（核算题：含水、可食部分、能量、单餐量、饱腹等能由出处数值算出的量）或 fact（出处数据本身是否符合权威数据库实值，如某食材的含水量）。kind=arithmetic 还必须带 claimedValue（你认为正确的数，数字）、claimedFormula（你的算式，字符串）、target（被质疑的量：moisture、energyDensity、edibleFraction、mealCap，或 basis.satiety、basis.kcal、basis.dryEnergy）；target 为 basis.* 时另带 source（出处 name），basis.satiety 与 basis.kcal 另带 grams（所算的克数，数字）。kind=fact 不填这些字段。程序会用不靠模型的推算复核你给的数；算不清就不要标 hard。'},
+  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","verdict":"conflict|no_conflict","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。核算后发现无误的项不要列入；若一定要列，verdict 与 severity 必须都写 no_conflict，绝不能写 hard 又在理由里说无误（程序只看这两个字段，不看理由文字）。verdict 先定：核算后确有矛盾写 conflict，核算后发现无误或应撤回写 no_conflict；severity 为 hard 时 verdict 必须是 conflict，核算无误的项不要列入；若列入，verdict 与 severity 都写 no_conflict。reason 不超过 80 字。字符串内不要使用英文双引号，引用原文用「」。字段释义：basis 里并列多套口径——「鲜重 kcal/100g」「干物质 kcal/kg」「X kcal/g 干物质」「饱腹」，换算为：干物质 kcal/kg = 鲜重 kcal/100g × 10 ÷ (1−含水分数)；X kcal/g 干物质 = 1000X kcal/kg 干物质；饱腹/kg 干物质 = kcal/kg 干物质 ÷ 24。比较前先换到同一口径，不要把不同口径的数直接比。行内 sources 是出处原值（moistureFraction 含水分数、kcalPer100gWet 鲜重 kcal/100g、refuseFraction 不可食比例），每个出处代表类别的一个成员；selection.method 为 mean 时，各成员（出处）分别推算含水、干物质比例、干基能量与能量，再对各成员的推算结果取平均（没有取代表的方式）；为 single 时只有一个出处，按它自身推算。moisture、energyDensity、edibleFraction 由程序推出，context.derived 给出推出值：含水取 3 位小数；成员的干基能量 = 鲜重 kcal/100g × 10 ÷ (1−该成员含水) ÷ kcalPerSatiety，类别值为各成员干基能量的平均并取整。severity 为 hard 的项必须带 kind：arithmetic（核算题：含水、可食部分、能量、单餐量、饱腹等能由出处数值算出的量）或 fact（出处数据本身是否符合权威数据库实值，如某食材的含水量）。kind=arithmetic 还必须带 claimedValue（你认为正确的数，数字）、claimedFormula（你的算式，字符串）、target（被质疑的量：moisture、energyDensity、edibleFraction、mealCap，或 basis.satiety、basis.kcal、basis.dryEnergy）、claimedInputs（你计算所用的输入：派生维度写成 {出处名:{输入名:值}}，basis.* 直接写 {输入名:值}；输入名按 target：moisture 用 moistureFraction，edibleFraction 用 refuseFraction，energyDensity 用 moistureFraction 与 kcalPer100gWet，mealCap 用 mealGrams，basis.satiety 与 basis.kcal 用 kcalPer100gWet，basis.dryEnergy 用 kcalPer100gWet 与 moistureFraction）；field 必须与 target 对应（派生维度 field 等于 target，basis.* 的 field 写 basis）；如果你认为出处里的输入数据本身不对（例如含水量应是别的值），那是 fact，不是 arithmetic，写 kind=fact；mealCap 对干物质基准的类（谷、豆、果、菌）不能作算术目标，质疑它请写 fact；target 为 basis.* 时另带 source（出处 name），basis.satiety 与 basis.kcal 另带 grams（所算的克数，数字）。kind=fact 不填这些字段。程序会用不靠模型的推算复核你给的数；算不清就不要标 hard。'},
   {role:'user',content:JSON.stringify({entry:{id:entry.id,kind:entry.kind,row:entry.row},context})}]};
 }
 // ---- 结构化核对（李白 2026-11-09 决定）：AI 判 hard 的项必须说明是算术题还是事实题，算术题由程序用不靠 AI 的推算复核 ----
@@ -121,39 +121,54 @@ export function reviewRequest(entry,draft,context){
 // 用 deriveFromSources 推算）或 basis.satiety / basis.kcal / basis.dryEnergy（basis 里写的量，用行内 sources 按同一公式推算；须带 source 出处名，satiety 与 kcal 另带 grams）。
 // 取整口径 = 程序推算自己的口径，无另设容差：moisture、edibleFraction 3 位小数，energyDensity 取整到个位，mealCap 1 位小数（同 deriveFromSources）；
 // basis.satiety 2 位小数、basis.kcal 1 位小数、basis.dryEnergy 取整（与 AI 在 basis 里惯用的写法同级）。AI 的 claimedValue 先取到同一口径再比，相等才算同值。
-// 判定：派生维度——行里若另存该维则须等于推算值（L1 已保证），推算与原数据一致而 claimedValue 与之不同 = 「程序判定 AI 误判」（misjudged）；
+// 判定（详见 programClaim）：AI 的输入与出处逐项一致、按同一公式重算与 claimedValue 不同 = 「程序判定 AI 误判」（misjudged）；输入与出处不一致 = 质疑数据，转 fact；
 // 推算与原数据不一致 = 真错（data-error）；claimedValue 与推算相同却仍标 hard = 说不清哪里错，保守当真 hard（agrees）。basis.*——用 AI 自己给的克数/出处算，claimedValue 与推算不同 = AI 自己算错（misjudged），相同 = 保守当真 hard。
-// kind=fact：出处数据本身是否符合权威实值，不是算术题，程序不能自动放行；条目的出处有编号（表头 sourceIds）时重问 1 次并给出编号让 AI 按编号核对，没有编号或重问后仍 hard 的留人工。
-// 缺 kind、缺 claimedValue/claimedFormula/target、target 推不出来 = REVIEW_FORMAT，不能放行。
+// kind=fact：出处数据本身是否符合权威实值，不是算术题，程序不能自动放行（李白：事实题不能自动放行）。一旦判 hard，该条无论有没有编号、重问后结果如何都不计 L2 通过：
+// 有编号时重问 1 次，只为收集 AI 按编号核对的意见；重问后程序追加一条 hard「待按编号人工核对」（附编号与 AI 两次意见，review.factPending），状态 manual。
+// 缺 kind、缺 claimedValue/claimedFormula/target/claimedInputs（含 target 所需的输入项）、field 与 target 不对应、target 推不出来 = REVIEW_FORMAT，不能放行。AI 的输入与出处不一致 = 它在质疑数据，转 fact 路径。
 export const issueKinds=['arithmetic','fact'];
 const round3=x=>Math.round(x*1000)/1000,round2=x=>Math.round(x*100)/100,round1=x=>Math.round(x*10)/10;
+// field 与 target 须对应：派生维度时 field 等于 target；basis.* 时 field 为 basis。claimedInputs = AI 计算所用的输入，按 target 逐项列出（inputs）：
+// 派生维度写成 {出处名:{输入名:值}}（single 只需第一个出处，mean 需全部出处）；basis.* 直接写 {输入名:值}，并带 source（出处名）。
 export const claimTargets={
- moisture:{grid:round3},edibleFraction:{grid:round3},energyDensity:{grid:Math.round},mealCap:{grid:round1},
- 'basis.satiety':{grid:round2,grams:true,formula:'grams × kcalPer100gWet ÷ 100 ÷ kcalPerSatiety',calc:(x,g,k)=>x.kcalPer100gWet===undefined?undefined:g*x.kcalPer100gWet/100/k},
- 'basis.kcal':{grid:round1,grams:true,formula:'grams × kcalPer100gWet ÷ 100',calc:(x,g)=>x.kcalPer100gWet===undefined?undefined:g*x.kcalPer100gWet/100},
- 'basis.dryEnergy':{grid:Math.round,formula:'kcalPer100gWet × 10 ÷ (1 − moistureFraction) ÷ kcalPerSatiety',calc:(x,g,k)=>memberValues(x,k).e}};
-// 程序对一条 arithmetic 项的推算与判定；缺字段或推不出来抛错（由 extractReview 转成 REVIEW_FORMAT）。
+ moisture:{grid:round3,inputs:['moistureFraction']},edibleFraction:{grid:round3,inputs:['refuseFraction']},energyDensity:{grid:Math.round,inputs:['moistureFraction','kcalPer100gWet']},mealCap:{grid:round1,inputs:['mealGrams']},
+ 'basis.satiety':{grid:round2,grams:true,inputs:['kcalPer100gWet'],formula:'grams × kcalPer100gWet ÷ 100 ÷ kcalPerSatiety',calc:(x,g,k)=>x.kcalPer100gWet===undefined?undefined:g*x.kcalPer100gWet/100/k},
+ 'basis.kcal':{grid:round1,grams:true,inputs:['kcalPer100gWet'],formula:'grams × kcalPer100gWet ÷ 100',calc:(x,g)=>x.kcalPer100gWet===undefined?undefined:g*x.kcalPer100gWet/100},
+ 'basis.dryEnergy':{grid:Math.round,inputs:['kcalPer100gWet','moistureFraction'],formula:'kcalPer100gWet × 10 ÷ (1 − moistureFraction) ÷ kcalPerSatiety',calc:(x,g,k)=>memberValues(x,k).e}};
+// 程序对一条 arithmetic 项的推算与判定；缺字段或推不出来抛错（由 extractReview 转成 REVIEW_FORMAT）。verdict：
+//  misjudged = AI 的输入与出处逐项一致，按同一公式重算与它的 claimedValue 不同（AI 自己算错）；
+//  disputes-input = AI 的输入与出处不一致（它在质疑数据本身）：转 fact 路径，不自动放行；
+//  data-error = 行里另存的值与出处推算不一致；agrees = 输入一致、值也相同却标 hard（说不清）；
+//  not-comparable = mealCap 对干物质基准的类（grain、fruit、legume、mushroom 等 mealBasis=dryMatter）没有鲜重推算路径，不比对，按真 hard 转人工（不判格式错，免得整轮停）。
+const sameNum=(a,b)=>Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<1e-9;
 export function programClaim(c,entry,kcalPerSatiety){
  assert.ok(Number.isFinite(c.claimedValue),'arithmetic 项缺 claimedValue（数）');
  assert.ok(typeof c.claimedFormula==='string'&&c.claimedFormula.trim(),'arithmetic 项缺 claimedFormula');
  const t=claimTargets[c.target];
  assert.ok(typeof c.target==='string'&&t,`arithmetic 项 target 无法识别：${c.target}`);
+ assert.ok(c.field===(t.calc?'basis':c.target),`arithmetic 项 field 须与 target 对应（派生维度 field=target，basis.* 的 field=basis）：field=${c.field} target=${c.target}`);
  assert.ok(kcalPerSatiety>0&&entry?.row,'缺 kcalPerSatiety 或条目，无法推算');
- const claimed=t.grid(c.claimedValue);
+ assert.ok(c.claimedInputs&&typeof c.claimedInputs==='object'&&!Array.isArray(c.claimedInputs),'arithmetic 项缺 claimedInputs（计算所用的输入）');
+ const claimed=t.grid(c.claimedValue),srcs=entry.row.sources??[];
+ const need=(o,where)=>{assert.ok(o&&typeof o==='object','claimedInputs 缺 '+where);for(const k of t.inputs)assert.ok(Number.isFinite(o[k]),`claimedInputs 缺 ${where}.${k}（数）`);};
  if(!t.calc){ // 派生维度
   const program=deriveFromSources(entry.row,kcalPerSatiety)[c.target];
+  if(program===undefined&&c.target==='mealCap'&&srcs.some(x=>x?.mealBasis==='dryMatter'))return {target:c.target,program:null,stored:null,claimed,verdict:'not-comparable',formula:'mealCap 对干物质基准的类不可作算术目标'};
   assert.ok(program!==undefined,`target ${c.target} 无法由出处推算`);
+  const used=(entry.row.selection?.method==='single'?srcs.slice(0,1):srcs);let match=true;
+  for(const s of used){const ci=c.claimedInputs[s.name];need(ci,s.name);if(!t.inputs.every(k=>sameNum(ci[k],s[k])))match=false;}
   const stored=entry.row[c.target];
-  const verdict=stored!==undefined&&!(Math.abs(stored-program)<1e-9)?'data-error':claimed!==program?'misjudged':'agrees';
-  return {target:c.target,program,stored:stored??null,claimed,verdict,formula:'deriveFromSources（出处原值逐成员推算后取平均并按取整口径）'};
+  const verdict=!match?'disputes-input':stored!==undefined&&!sameNum(stored,program)?'data-error':claimed!==program?'misjudged':'agrees';
+  return {target:c.target,program,stored:stored??null,claimed,verdict,inputsMatch:match,formula:'deriveFromSources（出处原值逐成员推算后取平均并按取整口径）'};
  }
- const src=(entry.row.sources??[]).find(x=>x.name===c.source);
+ const src=srcs.find(x=>x.name===c.source);
  assert.ok(src,`arithmetic 项 target=${c.target} 须带 source（出处 name），当前：${c.source}`);
  if(t.grams)assert.ok(Number.isFinite(c.grams)&&c.grams>0,`target=${c.target} 须带 grams（正数）`);
+ need(c.claimedInputs,'claimedInputs');
  const raw=t.calc(src,c.grams,kcalPerSatiety);
  assert.ok(Number.isFinite(raw),`target ${c.target} 无法由出处「${c.source}」推算`);
- const program=t.grid(raw);
- return {target:c.target,source:c.source,...(t.grams?{grams:c.grams}:{}),program,stored:null,claimed,verdict:claimed!==program?'misjudged':'agrees',formula:t.formula};
+ const program=t.grid(raw),match=t.inputs.every(k=>sameNum(c.claimedInputs[k],src[k]));
+ return {target:c.target,source:c.source,...(t.grams?{grams:c.grams}:{}),program,stored:null,claimed,verdict:!match?'disputes-input':claimed!==program?'misjudged':'agrees',inputsMatch:match,formula:t.formula};
 }
 const sourceIdList=map=>Object.entries(map??{}).filter(([,v])=>v?.id).map(([name,v])=>`${name}：${v.idType??'编号'} ${v.id}（${v.status??'待核对'}）`);
 // extractReview(response, entry, opts)：opts.legacy 只做旧格式解析（重放旧回复用，不要求 kind）；
@@ -182,15 +197,21 @@ export function extractReview(response,entry,opts={}){
  if(opts.legacy)return review;
  const hard=review.contradictions.filter(c=>c.severity==='hard');
  for(const c of hard)c.programCheck=c.kind==='arithmetic'?claims.get(c):{verdict:'fact'};
- const arith=hard.filter(c=>c.kind==='arithmetic'),mis=arith.filter(c=>c.programCheck.verdict==='misjudged'),facts=hard.filter(c=>c.kind==='fact');
+ const arith=hard.filter(c=>c.kind==='arithmetic'&&c.programCheck.verdict!=='disputes-input'),mis=arith.filter(c=>c.programCheck.verdict==='misjudged'),facts=hard.filter(c=>c.kind==='fact'||c.programCheck.verdict==='disputes-input'); // 质疑输入的 arithmetic 按 fact 处理
  if(arith.some(c=>c.programCheck.verdict!=='misjudged'))return review; // 程序推算支持 AI（原数据真错）或说不清：照常 hard
- const reasked=opts.reasked??{},ids=sourceIdList(opts.sourceIds);
+ const reasked=opts.reasked??{},ids=sourceIdList(opts.sourceIds),pick=c=>({field:c.field,quote:c.quote,reason:c.reason,kind:c.kind,...(c.claimedValue!==undefined?{claimedValue:c.claimedValue,claimedFormula:c.claimedFormula,target:c.target}:{})});
+ const prior=opts.priorFacts??[];
+ if(prior.length&&reasked.fact){ // 事实项已按编号重问过：不管 AI 现在怎么说，该条转人工（待按编号人工核对），不计通过
+  const second=facts.map(pick);
+  review.factPending={status:'待按编号人工核对',sourceIds:ids,first:prior,second};
+  review.contradictions.push({quote:prior[0].quote,field:prior[0].field,verdict:'conflict',severity:'hard',kind:'fact',reason:`待按编号人工核对：${ids.join('；')}；AI 初审与按编号重问两次意见见 review.factPending`,programCheck:{verdict:'fact-pending-human'}});
+ }
  const wantArith=mis.length>0&&!reasked.arithmetic,wantFact=facts.length>0&&ids.length>0&&!reasked.fact;
  if(!wantArith&&!wantFact)return review; // 已重问过仍对不上，或事实项没有编号可核对：留人工
  const parts=[];
  if(wantArith)for(const c of mis){const p=c.programCheck;parts.push(`「${c.field}」你给 ${p.target} 的正确值是 ${c.claimedValue}（算式 ${c.claimedFormula}），程序按出处推算 ${p.target} = ${p.program}${p.source===undefined?'，与原数据一致':`（${p.formula}${p.grams!==undefined?`，grams=${p.grams}，source=${p.source}`:''}）`}，两者不同；请逐步重新核算，核算无误的项不要列入`);}
  if(wantFact)parts.push(`数据来源类事实项请按出处编号核对（不是算术题）：${ids.join('；')}`);
- throw Object.assign(new Error(parts.join('；')),{code:wantArith?'REVIEW_ARITH_MISJUDGED':'REVIEW_FACT_RECHECK',reask:{arithmetic:wantArith,fact:wantFact}});
+ throw Object.assign(new Error(parts.join('；')),{code:wantArith?'REVIEW_ARITH_MISJUDGED':'REVIEW_FACT_RECHECK',reask:{arithmetic:wantArith,fact:wantFact},facts:wantFact?facts.map(pick):undefined});
 }
 // 重放旧回复（--rejudge、retryEligible）沿用旧格式，不要求 kind：旧回复是在没有结构化字段的提示下得到的。
 export const legacyExtractReview=(response,entry)=>extractReview(response,entry,{legacy:true});
@@ -199,11 +220,16 @@ export async function reviewExtractor(claimEnv=null){
  const env=claimEnv??await readJSON(tableFile).then(t=>({kcalPerSatiety:t.kcalPerSatiety,sourceIds:t.sourceIds??{}})),asked=new Map();
  return (response,entry)=>{
   const st=asked.get(entry?.id)??{};
-  try{return extractReview(response,entry,{kcalPerSatiety:env.kcalPerSatiety,sourceIds:env.sourceIds?.[entry?.id],reasked:st});}
-  catch(error){if(error.reask)asked.set(entry.id,{...st,...(error.reask.arithmetic&&{arithmetic:true}),...(error.reask.fact&&{fact:true})});throw error;}
+  try{return extractReview(response,entry,{kcalPerSatiety:env.kcalPerSatiety,sourceIds:env.sourceIds?.[entry?.id],reasked:st,priorFacts:st.priorFacts});}
+  catch(error){if(error.reask)asked.set(entry.id,{...st,...(error.reask.arithmetic&&{arithmetic:true}),...(error.reask.fact&&{fact:true,priorFacts:error.facts})});throw error;}
  };
 }
 // 统计：程序判定 AI 误判（errorHistory 里出现过 REVIEW_ARITH_MISJUDGED）单列；其中重问后通过的另计。人工比例照旧只数 manual 条目，不因此放宽。
+// factPendingHuman：事实项判 hard 的条目（含 AI 质疑输入的 arithmetic），一律 manual 待人工，单列计数；人工比例仍按 manual 条目原样计入。
+export function factPendingStats(records){
+ const hit=(records??[]).filter(r=>r&&r.status!=='passed'&&(r.review?.contradictions??[]).some(c=>c.severity==='hard'&&(c.kind==='fact'||c.programCheck?.verdict==='disputes-input')));
+ return {count:hit.length,ids:hit.map(r=>r.id)};
+}
 export function misjudgeStats(records){
  const hit=(records??[]).filter(r=>r&&(r.errorHistory??[]).includes('REVIEW_ARITH_MISJUDGED'));
  return {count:hit.length,ids:hit.map(r=>r.id),reaskPassed:hit.filter(r=>r.status==='passed').length,reaskPassedIds:hit.filter(r=>r.status==='passed').map(r=>r.id)};
@@ -313,8 +339,9 @@ export async function summarizeApproval(entries,card=cardProfiles.d){
  const st=await approvalState(entries,{manual:await checkManual(doc,entries,fingerprint,loadRecord),loadRecord,fingerprint});
  const recs=[];for(const e of entries){const r=await loadRecord(e.id);if(r&&r.fingerprint===await fingerprint(e))recs.push(r);}
  st.aiMisjudgedByProgram=misjudgeStats(recs);
+ st.factPendingHuman=factPendingStats(recs);
  await fs.mkdir(card.reviewRoot,{recursive:true});
- await fs.writeFile(path.join(card.reviewRoot,'approval-summary.json'),JSON.stringify({rule:'人工核定条目不计入人工队列比例（needsSystemicRepair），其余检查同 readApprovedContent；规则解释待李白确认',total:entries.length,l2Passed:st.l2,manualVerified:st.manual,unresolved:st.unresolved,aiMisjudgedByProgram:st.aiMisjudgedByProgram},null,2)+'\n');
+ await fs.writeFile(path.join(card.reviewRoot,'approval-summary.json'),JSON.stringify({rule:'人工核定条目不计入人工队列比例（needsSystemicRepair），其余检查同 readApprovedContent；规则解释待李白确认',total:entries.length,l2Passed:st.l2,manualVerified:st.manual,unresolved:st.unresolved,aiMisjudgedByProgram:st.aiMisjudgedByProgram,factPendingHuman:st.factPendingHuman},null,2)+'\n');
  return st;
 }
 // verify：L1 必过；每条 L2 通过或人工核定；批次检查与 content-pipeline.mjs readApprovedContent 逐项等价：
@@ -519,8 +546,10 @@ export async function runReview({entries,client,root=reviewRoot,budgetRoot=draft
 export async function withMisjudgeStats(out,root){
  const byId=new Map(out.results.map(r=>[r.id,r]));
  out.summary.aiMisjudgedByProgram=misjudgeStats(out.results);
+ out.summary.factPendingHuman=factPendingStats(out.results);
  for(const b of out.summary.batches??[]){
   b.aiMisjudgedByProgram=misjudgeStats((b.ids??[]).map(id=>byId.get(id)));
+  b.factPendingHuman=factPendingStats((b.ids??[]).map(id=>byId.get(id)));
   await fs.writeFile(path.join(root,`batch-${b.index}.json`),JSON.stringify(b,null,2)+'\n');
  }
  await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(out.summary,null,2)+'\n');
@@ -545,7 +574,7 @@ export async function condimentReview(){
  console.log(JSON.stringify({pid:process.pid,mode:'review-condiment',entries:entries.length}));
  const client=new DeepSeekClient({budgetYuan:condimentCard.limitYuan,logFile:path.join(condimentCard.draftRoot,'usage.jsonl')});
  const {summary,halted}=await runReview({entries,client,root:condimentCard.reviewRoot,budgetRoot:condimentCard.draftRoot,cardIdArg:condimentCard.cardId,allocation:condimentCard.allocation,revisionArg:condimentCard.revision,dirName:condimentCard.reviewDirName});
- return {passed:summary.passed,manual:summary.manual,pending:summary.pending,aiMisjudgedByProgram:summary.aiMisjudgedByProgram,budget:summary.budget.cards[condimentCard.cardId],...reportHalt(halted)};
+ return {passed:summary.passed,manual:summary.manual,pending:summary.pending,aiMisjudgedByProgram:summary.aiMisjudgedByProgram,factPendingHuman:summary.factPendingHuman,budget:summary.budget.cards[condimentCard.cardId],...reportHalt(halted)};
 }
 // 全表发布校验：L1 一次；两张卡各自校验（各自的 L2/人工核定/L4），合并结论；未决条目标明属于哪张卡。cards 可注入（测试用）。
 export async function verifyAll({cards=cardProfiles,verify=verifyPublished}={}){
@@ -681,7 +710,7 @@ export async function run(args=process.argv.slice(2)){
   console.log(JSON.stringify({pid:process.pid,mode:retry?'retry-garlic':'review',entries:entries.length}));
   const client=new DeepSeekClient({budgetYuan:cardLimitYuan,logFile:path.join(draftRoot,'usage.jsonl')});
   const {summary,halted}=retry?await retryRun({entries,client}):await runReview({entries,client});
-  console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,aiMisjudgedByProgram:summary.aiMisjudgedByProgram,budget:summary.budget.cards[cardId],...reportHalt(halted)}));
+  console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,aiMisjudgedByProgram:summary.aiMisjudgedByProgram,factPendingHuman:summary.factPendingHuman,budget:summary.budget.cards[cardId],...reportHalt(halted)}));
  }
  const card=condiment?cardProfiles.condiment:cardProfiles.d;
  if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4(card)));
