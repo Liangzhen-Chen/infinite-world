@@ -12,6 +12,7 @@ import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {ActionBuilder,builderStep} from '../extension/action-builder.mjs';
 import {builderToolCall} from '../extension/tools.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
+import {failureRecover,refundCount} from '../server-plugin/manufacturing.mjs';
 import {isGone,isPhysicallyDead,bookHoldingsUpgrade,openHoldings,aliveHoldings,declareHoldingWriter,holdingSet,createEntity,updateEntity,openHolding,setLocation,ensureHoldings} from '../server-plugin/holdings.mjs';
 import {initialNpcState} from '../server-plugin/npc-state.mjs';
 import {monsterStats} from '../server-plugin/combat.mjs';
@@ -1298,9 +1299,11 @@ export function validateCheckBranch(engine,run,row,outcome,target){
    if(!success&&((batch.produced??[]).length||(batch.instances??[]).length||(record?.byproducts??[]).length))issues.push('failed craft granted products');
    const products=[{item:recipe.output.item,amount:recipe.output.quantity},...recipe.byproducts??[]];
    if((batch.produced??[]).some(product=>!products.some(p=>p.item===product.item&&product.amount<=p.amount)))issues.push('craft output exceeds recipe');
+   // 退料上限按该批的失败类别，用引擎同一条退料规则推出（manufacturing.mjs failureRecover/refundCount；无类别按配方回收）。
+   const refund=failureRecover(engine,batch.failure??record?.failure??'ruin',recipe.failure?.recoverFraction??0);
    for(const salvage of batch.salvage??[]){
     const input=(batch.spent?.materials??[]).find(m=>m.item===salvage.item);
-    if(!input||salvage.amount>Math.floor(input.quantity*(recipe.failure?.recoverFraction??0)))issues.push('craft salvage exceeds recipe');
+    if(!input||salvage.amount>refundCount(input.quantity,refund))issues.push('craft salvage exceeds recipe');
    }
   }
   const records=(document.ledger.crafts??[]).filter(c=>c.eventId===receipt.eventId||c.eventId?.startsWith(`${receipt.eventId}:batch:`));

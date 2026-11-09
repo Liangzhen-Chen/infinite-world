@@ -230,14 +230,14 @@ export function settleWorks(d,engine,p,{returned={},to,writer,eventId=null}){
 
 // ---- 制造守恒对（src:craft，01 §1.6） ------------------------------------------
 // 配方投入经 sink:consume|<物品>|craft 消耗，产出（含失败时按配方回收的残料）经 src:craft|<物品>|craft 流入；
-// 同一事务内记一条制造凭据（ledger.crafts：配方、批数、投入与产出），审计按配方核对产出不超过投入的函数。
+// 同一事务内记一条制造凭据（ledger.crafts：配方、批数、投入与产出；失败时另记 failure 类别 intact/wear/ruin/partial（检定未落类别的按配方回收记 ruin），成功不带），审计按配方核对产出不超过投入的函数。
 export const CRAFT_PURPOSE='craft';
 export const craftInput=(writer,eventId)=>({flow:'sink:consume',purpose:CRAFT_PURPOSE,writer,eventId});
 export const craftOutput=(writer,eventId)=>({flow:'src:craft',purpose:CRAFT_PURPOSE,writer,eventId});
-export function recordCraft(d,{recipe,batches=1,inputs={},outputs={},writer,eventId=null}){
+export function recordCraft(d,{recipe,batches=1,inputs={},outputs={},failure=null,writer,eventId=null}){
     if(!ledgerActive(d))return;
     if(!recipe)throw Error('制造产出必须指明配方（src:craft 守恒对）');
-    d.set(['ledger','crafts'],[...(d.get('ledger','crafts')??[]),{recipe,batches,inputs,outputs,writer,eventId,minute:d.get('state','minute')??null}].slice(-50));
+    d.set(['ledger','crafts'],[...(d.get('ledger','crafts')??[]),{recipe,batches,inputs,outputs,...(failure?{failure}:{}),writer,eventId,minute:d.get('state','minute')??null}].slice(-50));
 }
 
 // ---- S1c 价格输入读账户（15 §15.2：价格是账户的投影） --------------------------------

@@ -72,6 +72,14 @@ export function craftGrade(engine,{floor,tier,tools=1,station=1}){
     const reached=m>0?Math.min(1,Math.max(min,1-(1-attain)/m)):min;
     return Math.round(floor*reached*10000)/10000;
 }
+// 失败类别的退料规则（单一来源）：intact 全退，wear 按 failureWear.returnFraction（并带 gradeFactor），其余按配方 recoverFraction；partial 不退。
+export function failureRecover(engine,failure,recoverFraction){
+    if(failure==='wear'){const {returnFraction,gradeFactor}=engine.rules.equipment.failureWear;return {recover:returnFraction,gradeFactor};}
+    if(failure==='partial')return {recover:0};
+    return {recover:failure==='intact'?1:recoverFraction};
+}
+// 退回份数（returnMaterials 与账本对账共用）：损耗向上取整、至少一份且不超过投入，其余向下取整。
+export const refundCount=(amount,result)=>result.gradeFactor!==undefined?Math.min(amount,Math.max(1,Math.ceil(amount*result.recover))):Math.floor(amount*result.recover);
 // 一批制作的结果（检定之后、产出之前）：成功给手艺档与品质；失败给失败类别、回收比例，partial 另给最低档与其品质。
 export function craftOutcome(engine,{standing,degree,success,proficiency,floor,tools,station,recoverFraction,seed,key}){
     if(success){
@@ -82,8 +90,7 @@ export function craftOutcome(engine,{standing,degree,success,proficiency,floor,t
     }
     const failure=craftFailure(engine,{standing,degree,seed,key});
     if(!failure)return {failure:null,recover:recoverFraction};
-    if(failure==='wear'){const {returnFraction,gradeFactor}=engine.rules.equipment.failureWear;return {failure,recover:returnFraction,gradeFactor};}
-    if(failure!=='partial')return {failure,recover:failure==='intact'?1:recoverFraction};
+    if(failure!=='partial')return {failure,...failureRecover(engine,failure,recoverFraction)};
     const tier=workmanshipNames(engine)[0];
     return {failure,recover:0,tier,grade:craftGrade(engine,{floor,tier,tools,station})};
 }
@@ -93,7 +100,7 @@ export function craftOutcome(engine,{standing,degree,success,proficiency,floor,t
 export function returnMaterials(d,engine,holder,materials,result,{floors,eventId,give,cracked=false}){
     const back=[];if(cracked)return back;
     for(const [item,amount] of materials){
-        const n=result.gradeFactor!==undefined?Math.min(amount,Math.max(1,Math.ceil(amount*result.recover))):Math.floor(amount*result.recover);
+        const n=refundCount(amount,result);
         if(!n)continue;
         give(item,n);
         if(result.gradeFactor!==undefined)markReturnedUnits(d,engine,holder,item,n,{eventId,grade:Math.round((floors.get(item)??1)*result.gradeFactor*10000)/10000});
@@ -275,7 +282,7 @@ export function manufacture(d,args,eventId){
         maker:'player',name:d.get('state','player','name'),minute:d.get('state','minute'),station:station?.id??null,fee:station?.fee??0,inputCost,
         degree:outcome.degree,workmanship,...(grade!==null?{grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
     d.set(['state','crafted',receipt.id],receipt);
-    recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):partial.length?partial:salvage).map(row=>[row.item,row.amount])),writer:'manufacturing',eventId});
+    recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):partial.length?partial:salvage).map(row=>[row.item,row.amount])),...(!outcome.success?{failure:result.failure??'ruin'}:{}),writer:'manufacturing',eventId});
     return{recipe:recipe.id,...outcome,...(cost?{cost}:{}),receipt:receipt.id,instances:ids,workmanship,...(grade!==null?{grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),...(work?{work}:{}),salvage,...(thermal?{thermal}:{}),
         spent:{feePaid:station?.fee??0,minutes:workMinutes,materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear},
         healthDelta:d.get('state','player','hp')-hpBefore,produced:(outcome.success?products.filter(row=>row.amount):partial).map(row=>({...row,name:this.byId.get(row.item).name})),

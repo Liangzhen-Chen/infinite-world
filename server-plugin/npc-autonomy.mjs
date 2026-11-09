@@ -199,6 +199,7 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
    if(back.length)spent.returned=back.map(m=>({item:m.item,amount:m.amount}));
    if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
   }
+  if(!outcome.success)crafted.failure=result.failure??'ruin';
   recordCraft(d,crafted);
   const gained=npcWorkGrowth(d,engine,id,r.skill,outcome.success,start);if(gained)outcome.growth={skill:r.skill,gained};
   summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:produced.length?`失败，只做出${produced[0].amount}份${outcome.workmanship}的${engine.byId.get(r.output.item).name}（部分用途不具备）`:'没有得到成品'}，工坊费${fee}铜${gained?`，手艺熟练度提高${gained}`:''}。`;
