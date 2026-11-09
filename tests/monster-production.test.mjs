@@ -82,10 +82,13 @@ test('怪物据点生产数据完整：居民的采集职业与本聚落产地�
 async function gatherOnce(f, place, resource) {
   const doc = structuredClone(f.document); doc.state.location = place.id;
   const before = doc.state.inventory[resource.item]?.quantity ?? 0;
-  const eventId = `mprod-gather-${place.id}`, out = await f.run(doc, 'world_site', {operation: 'gather', target: resource.id}, eventId);
+  const enterId = `mprod-enter-${place.id}`, gatherId = `mprod-gather-${place.id}`;
+  // 采集前须先进入据点（进入公共据点本就不记违约）；整个进入加采集的流程只应记一条采集侵犯
+  const entered = await f.run(doc, 'world_site', {operation: 'enter'}, enterId);
+  const out = await f.run(entered.document, 'world_site', {operation: 'gather', target: resource.id}, gatherId);
   assert.equal(out.document.state.inventory[resource.item]?.quantity ?? 0, before + 1, `${place.id} 采到一份`);
-  const offenses = Object.values(out.document.state.records).filter(r => r.category === 'offense' && r.sourceEvent === eventId);
-  assert.equal(offenses.length, 1, `${place.id} 只应记一条（采集侵犯），实际 ${offenses.map(o => o.act)}`);
+  const offenses = Object.values(out.document.state.records).filter(r => r.category === 'offense' && [enterId, gatherId].includes(r.sourceEvent));
+  assert.equal(offenses.length, 1, `${place.id} 进入加采集只应记一条（采集侵犯），实际 ${offenses.map(o => o.act)}`);
   assert.equal(offenses[0].act, 'gather');
   assert.equal(offenses[0].victim, ownerOf(place));
   assert.equal(offenses[0].offender, 'player');
