@@ -251,7 +251,7 @@ const MEMBER_PAIRS = PROCESSES.flatMap(p => p.members);
 export const teacherlessPrimary = r => !r.processing && !r.teachers?.length && MEMBER_PAIRS.some(([i, o]) => r.output?.item === o && r.materials?.some(m => m.item === i));
 
 // 本链对运行时世界的规律（tools/load-world.mjs 加载期调用；就地改加载出的行，盘上的已审行不动）。
-// 重复施加结果不变：再生规划幂等，拜师与价格底线只取一次。ecology 缺省（这一版世界没有据点资源表）时不派生据点。
+// 重复施加结果不变：再生规划幂等，拜师与价格底线只取一次。ecology（world/meta/mechanics/site-ecology.json，随运行时世界加载）缺省时不派生据点。
 export function applyChainLaws({locations, recipes, items}, {ecology, biomes = {}} = {}) {
   if (ecology) {
     const plan = regrowPlan(locations, recipes, null, biomes, ecology);
