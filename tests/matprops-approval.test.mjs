@@ -23,5 +23,5 @@ test('畸形的审查响应不算通过', () => {
   const response = content => ({choices: [{message: {content}}]});
   assert.deepEqual(extractReview(response('{"contradictions":[]}')), {contradictions: []});
   for (const content of ['{}', '{"contradictions":[{}]}', '{"contradictions":[{"quote":"a","field":"b","severity":"bad","reason":"c"}]}'])
-    assert.throws(() => extractReview(response(content)), error => error.code === 'CONTENT_BUDGET_STOP');
+    assert.throws(() => extractReview(response(content)), error => error.code === 'REVIEW_FORMAT');
 });

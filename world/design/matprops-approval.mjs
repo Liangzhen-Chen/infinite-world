@@ -3,6 +3,8 @@
 // 的单卡账（调用前按请求上界预留，累计到单卡上限即停并写 budgetStop），调用记录（请求、响应、费用）落在 draftRoot。
 // L4 照内容管线规则（先例 tools/w5-rumors.mjs sampleL4/recordL4/approved）：人读（不调模型）——被标记项 + 随机 5 条（batch.sample）
 // 须有阅读笔记；波次随机 10 条各给六项评分（整数 3–5，均分 ≥4）。--sample 抽签并列出要读的条目，--l4 <文件> 记录笔记与评分。
+// 模型返回格式错只算该条一次失败（错误码 REVIEW_FORMAT，不是预算停止；预算停止会经 content-pipeline.mjs:178 拦住整轮）；
+// 同一条最多发 2 次审查请求（requestTransform），仍错则该条转 manual。
 // 用法：node world/design/matprops-approval.mjs --l1 | --review | --sample | --l4 <json> | --verify   （--review 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -46,8 +48,8 @@ export async function validateDraft(draft,entry){
  catch{return ['候选须与盘上数据完全一致且带 basis'];}
 }
 export function reviewRequest(entry,draft,context){
- return {thinking:{type:'disabled'},temperature:0,max_tokens:900,response_format:{type:'json_object'},messages:[
-  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。'},
+ return {thinking:{type:'disabled'},temperature:0,max_tokens:1200,response_format:{type:'json_object'},messages:[
+  {role:'system',content:'你是游戏世界物性数据的事实审查员。逐项核对材料属性行里每个数值：(1) 是否落在公认的真实世界范围内（对照 basis 里写的出处与你所知的权威数据：USDA FoodData Central、FAO、木材与燃料手册等）；(2) 是否与 basis 自己写的数字和算式一致；(3) 单位与含义是否符合 dimensions（含水率是水占鲜重的质量分数；能量密度是饱腹/kg 干物质，饱腹=kcal÷24 是本游戏的标定约定，不要质疑该约定本身，只核算术）；(4) 类别行的含水率与能量对 members 里的物品是否说得通。只返回 JSON {"contradictions":[{"quote":"basis 或数值原文","field":"维度名或 basis","severity":"hard|soft|style","reason":"具体原因，给出你认为的正确范围"}]}。hard 表示数值明显超出公认范围、算式错、单位错或出处与数值相反；取值在公认区间内但偏边缘、或出处无法确认的写 soft；不要因为 basis 没有穷举所有数据而报错，不要编造你不确定的数据库条目，不确定就用 soft 说明。无问题则空数组。reason 不超过 80 字；复核后发现算式或数值其实无误的，不要输出该条（不要写出后又在理由里撤回）。字符串内不要使用英文双引号，引用原文用「」。'},
   {role:'user',content:JSON.stringify({entry:{id:entry.id,kind:entry.kind,row:entry.row},context})}]};
 }
 export function extractReview(response){
@@ -59,7 +61,7 @@ export function extractReview(response){
    for(const key of ['quote','field','reason'])assert.ok(typeof issue[key]==='string'&&issue[key].trim());
   }
   return review;
- }catch(error){throw Object.assign(new Error(`Invalid contradictions JSON: ${error.message}`),{code:'CONTENT_BUDGET_STOP'});}
+ }catch(error){throw Object.assign(new Error(`Invalid contradictions JSON: ${error.message}`),{code:'REVIEW_FORMAT'});}
 }
 const draftRequest=()=>{throw Error('候选已冻结；不请求模型改写');};
 export async function l1(){
@@ -98,6 +100,13 @@ export async function verifyPublished(){
  for(const d of approved)assert.deepEqual(d,draftFor(entries.find(e=>e.id===d.id)),`${d.id} 盘上数据与审批回执不符`);
  return {approved:approved.length,dimensions:MATERIAL_DIMENSIONS.length};
 }
+async function capReviews({body,entry,phase}){
+ if(phase!=='review')return {body};
+ let ledger;try{ledger=await readJSON(path.join(draftRoot,'budget.json'));}catch(e){if(e.code!=='ENOENT')throw e;}
+ const sent=Object.values(ledger?.requests??{}).filter(r=>r.label?.includes(`-${entry.id}-review`)&&['sent','settled','unknown'].includes(r.status));
+ if(sent.length>=2)throw Object.assign(new Error(`同条审核已达两次：${entry.id}`),{code:'REVIEW_LIMIT'});
+ return {body};
+}
 export async function run(args=process.argv.slice(2)){
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
  if(args.includes('--review')){
@@ -106,7 +115,7 @@ export async function run(args=process.argv.slice(2)){
   console.log(JSON.stringify({pid:process.pid,mode:'review',entries:entries.length}));
   const {summary}=await runContentPipeline({entries,root:reviewRoot,budgetRoot:draftRoot,revision,contextFor,
    validateDraft,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,buildDraftRequest:draftRequest,buildReviewRequest:reviewRequest,extractReview,
-   client:new DeepSeekClient({budgetYuan:cardLimitYuan,logFile:path.join(draftRoot,'usage.jsonl')}),cardId,
+   requestTransform:capReviews,client:new DeepSeekClient({budgetYuan:cardLimitYuan,logFile:path.join(draftRoot,'usage.jsonl')}),cardId,
    allocation:{cardId,incrementLimitYuan:cardLimitYuan,maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:25});
   console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards[cardId]}));
  }
