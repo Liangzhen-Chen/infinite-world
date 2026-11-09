@@ -118,7 +118,8 @@ test('议事区与私巢分别签发许可，公共通行和议和均不授权�
  const revoke=await f.run(homeGrant.document,'world_promise',{operation:'revoke_access',promisor:person,authorization:homeGrant.result.authorization},'revoke');
  await enterUnlicensed(f,revoke.document,home,{authorization:homeGrant.result.authorization});
  const guests=structuredClone(homeGrant.document);guests.state.player.companions=['npc_hw_zhouyan'];
- await assert.rejects(move(f,guests,home,{authorization:homeGrant.result.authorization}),/同行者/);
+ // 许可未覆盖同行者：同 home-permission.test 的 K6 口径，照常进入并记擅入（location-access.mjs:25-26）
+ await enterUnlicensed(f,guests,home,{authorization:homeGrant.result.authorization});
 });
 
 test('首领受伤和死亡同时影响接触、交谈、交易和巢穴，离开回来不补刷居民',async()=>{
