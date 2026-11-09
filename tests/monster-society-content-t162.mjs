@@ -19,6 +19,7 @@ import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadPromptBundle} from '../tools/build-card.mjs';
 import {scheduleAt,assertNpcService} from '../server-plugin/npc-schedule.mjs';
+import {homeResidents} from '../server-plugin/entity-view.mjs';
 const {HX,GS,hx,gs,P}=ids,DAY=1440,batch=buildBatch(),formal=await loadWorld();
 const world=mergeMonsterSociety3(formal,batch),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const qty=(doc,id,item)=>{const x=id==='player'?doc.state.inventory[item]:doc.state.npcs[id].inventory[item];return typeof x==='number'?x:x?.quantity??0;};
@@ -27,7 +28,9 @@ async function enterUnlicensed(s,place){
  await s.call('world_move',{destination:place});
  assert.equal(s.doc.state.location,place,'未获许可也能走进去');
  const rows=Object.values(s.doc.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place);
- assert.equal(rows.length,1,'恰好记一条擅入');assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');
+ assert.equal(rows.length,1,'恰好记一条擅入');assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');assert.equal(rows[0].sourceEvent,`t162_${s.serial}`);
+ const access=s.engine.byId.get(place).access;
+ if(access.mode==='council')assert.equal(rows[0].victim,access.authority);else assert.ok(homeResidents(s.engine,s.doc.state,place).value.includes(rows[0].victim),rows[0].victim);
 }
 function session(w=world,seed='t162'){
  const engine=new WorldEngine(w);let doc=engine.createCharacter(legacy,{},seed),serial=0;
@@ -51,7 +54,7 @@ function session(w=world,seed='t162'){
   }
   throw Error('导师在真实日程中没有足够的接待窗口');
  };
- return{engine,call,next,locate,present,get doc(){return doc;},set doc(d){doc=d;}};
+ return{engine,call,next,locate,present,get serial(){return serial;},get doc(){return doc;},set doc(d){doc=d;}};
 }
 
 test('T162 正式发布、人口深度、四种精怪本相与旧物种隔离',async()=>{
