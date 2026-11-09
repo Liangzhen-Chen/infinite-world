@@ -253,15 +253,17 @@ function buyerNeeds(d,engine,state,place,read){
   list=[];
   const ids=Object.keys(state.npcs??{}).filter(id=>{const n=state.npcs[id];return n?.location&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(n.status)&&placeSettlement(engine,state,n.location).value===place;});
   if(state.location&&placeSettlement(engine,state,state.location).value===place)ids.push('player');
-  // 一户只占一个名额：householdResources 返回的是整户的钱与需求，按人逐个入列会让 k 人户以整户需求被计 k 次。
+  // 一户只占一个名额：householdResources 的需求是整户的，按人逐个入列会让 k 人户以整户需求被计 k 次。
+  // 钱是个人钱包（无家庭共用钱包），所以该户由编号最前的有钱成员代为购买（buyer）；该户份额只记在他名下。
   const seen=new Set();
   for(const id of ids.sort()){
    const key=buyerKey(engine,state,id);
-   if(seen.has(key))continue;seen.add(key);
+   if(seen.has(key))continue;
    const physical=physicalOf(d,engine,read,id);
    if(!(physical.market.cash>0))continue;
+   seen.add(key);
    const need=physical.shortfall.satiety+physical.rows.reduce((n,r)=>n+r.food*(engine.byId.get(r.item)?.nutrition?.satiety??0),0);
-   if(need>0)list.push({id:key,need});
+   if(need>0)list.push({id:key,buyer:id,need});
   }
   read.buyers.set(place,list);
  }
@@ -272,8 +274,9 @@ function buyerKey(engine,state,id){return personHousehold(engine,state,id).value
 function sellerShare(d,engine,state,place,read,owner,seller,available){
  const total=Math.floor(available);if(!(total>0))return 0;
  const away=buyerKey(engine,state,seller);
- const rows=buyerNeeds(d,engine,state,place,read).filter(b=>b.id!==away);
- return shareByNeed(total,rows).get(buyerKey(engine,state,owner))??0;
+ const rows=buyerNeeds(d,engine,state,place,read).filter(b=>b.id!==away),key=buyerKey(engine,state,owner);
+ if(rows.find(b=>b.id===key)?.buyer!==owner)return 0;
+ return shareByNeed(total,rows).get(key)??0;
 }
 // 按需求比例把 total 件整分给 rows（{id,need}），最大余数法；余数并列按编号的码点序（不用 localeCompare，跨环境一致）。
 export function shareByNeed(total,rows){

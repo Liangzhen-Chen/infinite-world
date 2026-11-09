@@ -120,3 +120,14 @@ test('a multi-person household takes one share, not one per member, so no stock 
  // The two-person household competes with its household need once; each household gets min(own demand, its share).
  reps.forEach((id,i)=>assert.equal(got[i],Math.min(alone[i],share.get(hh(i))),`${id}: credited ${got[i]}, alone ${alone[i]}, share ${share.get(hh(i))}`));
 });
+
+test('cash is a personal purse: a household whose first member is penniless still buys through its member with cash, once',()=>{
+ const f=fixture({seller:shopSeller,groups:[[shopSeller],['npc_hw_chenbai','npc_hw_fangqin'],['npc_hw_xuling']]});
+ const n=f.document.state.npcs;
+ n.npc_hw_fangqin.inventory={};n.npc_hw_fangqin.location=n[shopSeller].location;
+ n.npc_hw_chenbai.coins=0;n.npc_hw_fangqin.coins=100;   // chenbai sorts first but has no cash
+ const fq=credited(f,'npc_hw_fangqin'),cb=credited(f,'npc_hw_chenbai'),xl=credited(f,'npc_hw_xuling');
+ assert.ok(fq>0,'the member with cash buys for the household');
+ assert.equal(cb,0,'the penniless member reads no share');
+ assert.ok(fq+xl<=sellable(f),`credited ${fq}+${xl} against ${sellable(f)}`);
+});
