@@ -95,8 +95,34 @@ const IMPORT_RE = [
     /(?:^|[;\s])import\s*(['"])([^'"\n]+)\1/g,
     /(?<![\w.$])import\(\s*(['"`])([^'"`\n$]+)\1\s*[,)]/g,
 ];
-// a module import(<expression>); engine.import(bundle) method calls and npm packages (require.resolve) do not count
-const NONLIT_IMPORT = /(?<![\w.$])import\(\s*(?!['"`][^'"`$\n]*['"`]\s*[,)])(?!pathToFileURL\(require\.resolve)/;
+// a module import(<expression>) is opaque. Not counted: engine.import(bundle) member calls (lookbehind), npm packages
+// (require.resolve), and method definitions `[async ]import(params) {` in classes / object literals (see hasOpaqueImport).
+const NONLIT_IMPORT_G = /(?<![\w.$])import\(\s*(?!['"`][^'"`$\n]*['"`]\s*[,)])(?!pathToFileURL\(require\.resolve)/g;
+function hasOpaqueImport(src) {
+    for (const m of src.matchAll(NONLIT_IMPORT_G)) {
+        // find the matching ")" (naive: strings/templates are skipped, comments are not; an unmatched paren stays opaque = conservative)
+        let i = m.index + m[0].indexOf('(') + 1, depth = 1;
+        for (; i < src.length && depth > 0; i++) {
+            const c = src[i];
+            if (c === '(') depth++;
+            else if (c === ')') depth--;
+            else if (c === '"' || c === "'" || c === '`') { for (i++; i < src.length && src[i] !== c && src[i] !== '\n'; i++) if (src.charCodeAt(i) === 92) i++; }
+        }
+        if (depth > 0) return true;
+        // `import(x) {` can never be an expression, so it is a method definition
+        if (/^\s*\{/.test(src.slice(i, i + 40))) continue;
+        return true;
+    }
+    return false;
+}
+// A bare-word literal (no "/" and no ".") used as a comparison operand (=== !== == != case) or as a quoted object key is a value/name,
+// not a path. Anything else (arguments, array elements, path-like literals, unclear shapes) stays a candidate path (conservative).
+function isNonPathLiteral(src, idx, len, lit) {
+    if (lit.includes('/') || lit.includes('.')) return false;
+    const before = src.slice(Math.max(0, idx - 12), idx), after = src.slice(idx + len, idx + len + 6);
+    if (/(?:[!=]==?|\bcase)\s*$/.test(before) || /^\s*[!=]==?/.test(after)) return true;
+    return /^\s*:/.test(after) && /[{,]\s*$/.test(before);
+}
 const LIT_RE = /(['"`])((?:\\.|(?!\1)[^\\\n])*?)\1/g;
 const JOIN_ARG_RE = /(['"`])(?:(?!\1)[^\\\n$])*\1/g;
 const JOIN_RE = /\b(?:join|resolve)\(([^()]*)\)/g;
@@ -134,11 +160,11 @@ function scan(f) {
     let src; try { src = fs.readFileSync(path.join(ROOT, f), 'utf8'); } catch { return rec; }
     const dir = path.posix.dirname(f);
     for (const re of IMPORT_RE) for (const m of src.matchAll(re)) { const r = resolveImport(m[2], dir); if (r) rec.nodes.add(r); }
-    if (NONLIT_IMPORT.test(src)) { rec.opaque = true; rec.prefixes.add(dir === '.' ? '' : dir + '/'); }
+    if (hasOpaqueImport(src)) { rec.opaque = true; rec.prefixes.add(dir === '.' ? '' : dir + '/'); }
     const lits = new Set();
     // literals that are arguments of a multi-literal join/resolve count only as the joined path, not one by one
     const litSrc = src.replace(JOIN_RE, (all, args) => ((args.match(JOIN_ARG_RE) ?? []).length > 1 ? '' : all));
-    for (const m of litSrc.matchAll(LIT_RE)) { let s = m[2]; if (m[1] === '`' && s.includes('${')) s = s.slice(0, s.indexOf('${')); lits.add(s); }
+    for (const m of litSrc.matchAll(LIT_RE)) { if (isNonPathLiteral(litSrc, m.index, m[0].length, m[2])) continue; let s = m[2]; if (m[1] === '`' && s.includes('${')) s = s.slice(0, s.indexOf('${')); lits.add(s); }
     for (const m of src.matchAll(JOIN_RE)) {
         const parts = [...m[1].matchAll(/(['"`])((?:(?!\1)[^\\\n$])*)\1/g)].map(x => x[2]);
         if (parts.length > 1) lits.add(parts.join('/'));
