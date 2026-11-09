@@ -42,11 +42,12 @@ test('draft path: same revision shares the seller physical read and buyer result
  assert.deepEqual(purchases(d,e),purchases(d,e));
  assert.ok(purchases(d,e).length>0);
  const before=purchases(d,e).reduce((n,p)=>n+p.quantity,0);
- d.set(['state','npcs',seller,'inventory',item],10);
+ // 清空卖家库存：卖家无货可卖，旧缓存若仍被读到就会继续给出购买。
+ d.set(['state','npcs',seller,'inventory',item],0);
  const p2=physical(d,e);
  assert.notEqual(p2,p1,'a write must invalidate the shared read');
  const after=purchases(d,e).reduce((n,p)=>n+p.quantity,0);
- assert.ok(after<before,`seller stock cut from 100 to 10 must cut purchasable quantity (${before} -> ${after})`);
+ assert.ok(before>0&&after===0,`seller stock emptied must leave nothing to buy from this seller (${before} -> ${after})`);
 });
 
 test('state-reader path: inside one indexed pass repeated reads share, outside it every read is fresh and equal',()=>{
