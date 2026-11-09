@@ -5,9 +5,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {runAudit,verdict,buildFacts,reconcileBooks} from '../tools/audit-food-causes.mjs';
 
-// One open own-settlement shop holding 100 satiety of food; a person-day costs 5 coins; the household has 50 coins for 2 mouths.
+// One open own-settlement shop holding 100 satiety of food; a person-day costs 5 coins; the household has 50 coins.
 const shelf=(over={})=>({shopId:'shop_a',sameSettlement:true,engineServes:true,toll:0,items:[{item:'item_bread',avail:20,cost:5,bought:0,...over}]});
-const snap=(over={})=>({supply:100,demand:10,refCost:4,cash:50,mouths:2,declined:null,townShops:{total:1,open:1},reach:[shelf()],...over});
+const snap=(over={})=>({supply:100,demand:10,refCost:4,cash:50,declined:null,townShops:{total:1,open:1},reach:[shelf()],...over});
 const cause=over=>verdict(buildFacts(snap(over))).cause;
 
 test('harvest: saleable food within a day is less than the town demand',()=>{
@@ -15,7 +15,8 @@ test('harvest: saleable food within a day is less than the town demand',()=>{
  assert.equal(cause({supply:5,cash:0,reach:[]}),'harvest');// shortage outranks poverty and chain
 });
 test('poverty: household cash cannot buy the cheapest person-day within reach',()=>{
- assert.equal(cause({cash:6}),'poverty');// 6 coins for 2 mouths = 3 each < 5
+ assert.equal(cause({cash:4}),'poverty');// total cash 4 < one meal at 5
+ assert.equal(cause({cash:6}),'chain');// 6 >= 5 is not poverty however many mouths
  assert.equal(cause({cash:0,reach:[],townShops:{total:1,open:0}}),'poverty');// nothing on sale: priced at the catalogue's cheapest
 });
 test('allocation: food and cash exist but the shelf was bought out, or the customer refused',()=>{
