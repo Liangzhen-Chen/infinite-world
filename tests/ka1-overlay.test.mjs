@@ -8,6 +8,7 @@ import {execSync} from 'node:child_process';
 import {loadWorld, loadRuntimeWorld} from '../tools/load-world.mjs';
 import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/runtime-world.mjs';
 import {canonical} from '../server-plugin/storage.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
 // 覆盖层的值被运行时值包含：对象逐字段包含，数组的每个元素都在运行时数组里有一个包含它的元素
@@ -83,4 +84,21 @@ test('运行时世界带上全部机制字段；据点不再生制成品；重�
   assert.throws(() => materializeRuntimeWorld({items: [{id: 'item_x', basePrice: 3, tags: ['a']}], locations: [], recipes: [], mechanics: {items: {item_x: {basePrice: 5}}}}), /不能改写已审字段/);
   const joined = materializeRuntimeWorld({items: [{id: 'item_x', tags: ['a']}], locations: [], recipes: [], mechanics: {items: {item_x: {tags: ['a', 'b'], animalProduct: {from: 'coat'}}}}});
   assert.deepEqual(joined.items[0], {id: 'item_x', tags: ['a', 'b'], animalProduct: {from: 'coat'}});
+});
+
+test('同一份世界浅拷贝后连建两次引擎：覆盖层按 id 合并，产地行与库存不重复、不变', async () => {
+  const world = await loadWorld();
+  const copy = {...world};
+  const first = new WorldEngine(world);
+  const places = engine => engine.world.locations.filter(l => l.id.startsWith('site_ms_') && l.site?.resources?.length);
+  const snapshot = engine => JSON.stringify(places(engine).map(l => [l.id, l.site.resources, l.site.changes]));
+  const before = snapshot(first);
+  assert.ok(places(first).length > 0);
+  const second = new WorldEngine(copy);
+  assert.equal(snapshot(second), before);
+  for (const l of places(second)) {
+    const ids = l.site.resources.map(r => r.id);
+    assert.equal(new Set(ids).size, ids.length, l.id);
+    for (const r of l.site.resources) assert.ok(Number.isFinite(r.quantity) && r.quantity > 0, `${l.id}:${r.id}`);
+  }
 });

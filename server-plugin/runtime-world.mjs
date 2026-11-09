@@ -18,12 +18,21 @@ export const mechanicsKey=file=>file.replace(/\.json$/,'').replace(/-([a-z0-9])/
 // written back from a runtime world carry the merged values and merge again to
 // the same rows.
 const isRecord=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
+const hasId=entry=>isRecord(entry)&&typeof entry.id==='string';
 const sameValue=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 function annotate(row,patch,where){
  for(const [key,value] of Object.entries(patch)){
   const have=row[key];
   if(have===undefined)row[key]=structuredClone(value);
-  else if(Array.isArray(have)&&Array.isArray(value)){for(const entry of value)if(!have.some(h=>sameValue(h,entry)))have.push(structuredClone(entry));}
+  else if(Array.isArray(have)&&Array.isArray(value)){
+   for(const entry of value){
+    // An entry with an id is the row's entry with that id, however the laws have since
+    // filled it (a derived quantity): merge field by field, never add it twice.
+    const same=hasId(entry)?have.find(h=>hasId(h)&&h.id===entry.id):have.find(h=>sameValue(h,entry));
+    if(same===undefined)have.push(structuredClone(entry));
+    else if(hasId(entry))annotate(same,entry,`${where}.${key}[${entry.id}]`);
+   }
+  }
   else if(isRecord(have)&&isRecord(value))annotate(have,value,`${where}.${key}`);
   else if(!sameValue(have,value))throw new Error(`机制注释不能改写已审字段：${where}.${key}`);
  }
