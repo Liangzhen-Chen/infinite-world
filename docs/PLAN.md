@@ -1353,6 +1353,13 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - 排期：t-foodsrc（口粮替代统一）与 t-msfix (a) 拒卖断言先做；之后开整类内容卡「怪物据点生产职业与产地数据」：所有据点职业统一补劳动类别与可采产地，产出从材料属性+职业技能推导，不为烟苔单点塞数据；补完再加 (b) 盈余可卖测试。内容卡可与长测并行，两轮审后上腾讯云，不挤占批次 1 收尾。
 - 物种饮食：同意整类修，按物种生理属性在数据层推导（不吃/少吃/吃什么），不为节苍单点豁免；人类与会吃的怪物要做回归（卡 METAB 进行中，见上节）。
 
+### 11-09 00:40 METAB 云上通过
+- t-metab（基于 t-msfix）终版 d8505767 → metab-10（d301237d…）两轮 approve（r1-20261109T003537Z-2512809、r2-20261109T003630Z-2513265）。云上 tests/species-metabolism.test.mjs pass=9 fail=0（F:/dnd-tmp/metab10-test.full）；wildlife-creatures-mixed 65/0（metab-8）。
+- 审查往返：metab-1→10 共约 9 轮，逐次补齐聚落层口粮（运行时按存活具名居民物种 + pendingSpeciesStructure）、入账整数、饮水、公共份额、strangerHost、精怪觅食、迁入者索引（定义+created+remote，stateMemo）、发布一致性（monsters.json 后补字段 laterNature，测试同 tags 口径剔除）。云上新测同一步两次失败（夹具假设 NPC 存在；死亡后断言人口 1 为小数），均测试错，已报李白复盘：执行者本机不能跑测试，状态假设无人实测。
+- 遗留（登记后续）：出生/迁居/招募的非 1 物种居民在聚落层仍按 1 人头（只有远方生成人物写 materialized.settlement）；迁出者仍在原聚落 residentIds；推进期外 remote 索引每次重建遍历各县骨架（剖析后定是否按骨架引用缓存）。
+- 慢测（monster-society-content、household-budget 相关、s5-law-*、npc-life 等）待 b1m-1 结束后跑；t-metab 取代 ms-2。
+- 服务器磁盘 89%（5.7 GB），已请李白批准清理跑过且已被取代的目录（b1-p4/pb4/p7/pb7/p10/pb10、rg-d9、metab-8/9、fs-1、b1-c7）。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
