@@ -1,7 +1,7 @@
 {
   "id": "class_mushroom",
   "fingerprint": "15eaf3a0d3135e4468f21cdba515e8e8f7bedb47d04efd6180ea82b61ca67046",
-  "status": "manual",
+  "status": "passed",
   "attempts": 0,
   "draft": {
     "id": "class_mushroom",
@@ -25,15 +25,13 @@
       "mealCapBasis": "单餐可食量上限：取 RACC 蔬菜类 85 g 鲜蘑菇，按干物质折算，再按每件物品自己的含水折回（干蘑菇片约 7 g）。【数值凭记忆写入，待 L2 核对】"
     }
   },
-  "review": null,
-  "errors": [
-    "Invalid contradictions JSON: The expression evaluated to a falsy value:\n\n  assert.ok(['hard','soft','style'].includes(issue.severity))\n"
-  ],
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
   "warnings": [],
-  "feedback": [
-    "Invalid contradictions JSON: The expression evaluated to a falsy value:\n\n  assert.ok(['hard','soft','style'].includes(issue.severity))\n"
-  ],
-  "errorCode": "REVIEW_FORMAT",
+  "feedback": null,
+  "errorCode": null,
   "frozenCandidate": {
     "entryHash": "f896a2317d834b33a6959b18bc16fa76a2341b554fe1137f77795b2540797a7e",
     "draftHash": "b4b2023b6c1cabc1b7f1c7705253c040834e16d19e88b3d2b79f303883a31a18"
@@ -42,10 +40,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "11e05d27-6a76-4049-a641-d2f702a94537",
-      "file": "budget-responses/11e05d27-6a76-4049-a641-d2f702a94537.json",
-      "requestHash": "f053a3650b133dcfdeaeef32ac2ef14cd2903aab51cbbe2d8591e806ab4f5f51",
-      "responseHash": "e52c7a38ed9171ee517892aefe34606609770821666edffd947104f2c49d40bb"
+      "requestId": "ae2b2e11-ac8d-484b-b689-496f121edf93",
+      "file": "budget-responses/ae2b2e11-ac8d-484b-b689-496f121edf93.json",
+      "requestHash": "70c92c3cfbbe2cface5ccf718b24feff71b7c0e4ac0a31058c26b6a8ec768b31",
+      "responseHash": "62930c503dd80b3d92070c0da4f1e36d1e6dcff5a587032422ba6f66bc6ba02b"
     }
   ],
   "measurements": [
@@ -54,22 +52,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1256,
-        "completion_tokens": 256,
-        "total_tokens": 1512,
+        "prompt_tokens": 1267,
+        "completion_tokens": 236,
+        "total_tokens": 1503,
         "prompt_tokens_details": {
-          "cached_tokens": 512
+          "cached_tokens": 128
         },
-        "prompt_cache_hit_tokens": 512,
-        "prompt_cache_miss_tokens": 744
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1139
       },
-      "costUpperYuan": 0.00355648,
-      "cumulativeUpperYuan": 0.00355648,
-      "latencyMs": 2100.6551,
-      "timestamp": "2026-11-09T17:53:18.396Z"
+      "costUpperYuan": 0.0041711199999999995,
+      "cumulativeUpperYuan": 0.007727599999999999,
+      "latencyMs": 2119.2859,
+      "timestamp": "2026-11-09T17:56:53.905Z"
     }
-  ],
-  "errorHistory": [
-    "REVIEW_FORMAT"
   ]
 }
