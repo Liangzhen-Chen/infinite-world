@@ -7,7 +7,7 @@ import path from 'node:path';
 import {loadRuntimeWorld as runtimeWorld} from '../tools/load-world.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {entriesFor, checkFrozenVerified, verifiedBaseline, verifiedSourcesFile, backfillSnapshots, contextChange, manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {entriesFor, l1, checkFrozenVerified, verifiedBaseline, verifiedSourcesFile, backfillSnapshots, contextChange, manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
