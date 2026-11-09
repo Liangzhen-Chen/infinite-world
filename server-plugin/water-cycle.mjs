@@ -6,6 +6,7 @@ import {derived} from './derived.mjs';
 import {hypot} from './det-math.mjs';
 import {registerSubsistenceResources} from './household-subsistence.mjs';
 import {stateMemo} from './storage.mjs';
+import {settlementMouths} from './primitives-body.mjs';
 
 const DAY=1440,clone=v=>structuredClone(v),record=id=>['state','records',`water-cycle:${id}`];
 const initialWater=(r,capacity)=>({capacityMl:capacity,waterMl:Math.floor(capacity*r.initialShare),saltMg:0,toxinUg:0,turbidity:0,pathogenRisk:0,odor:'原水'});
@@ -205,7 +206,7 @@ export function advanceWaterCycle(d,engine,day){
   const settlements=Object.entries(d.get('state','settlements')??{}).filter(([id])=>basinForLocation(engine,id,basins)?.id===b.id);
   for(const [id,s] of settlements){
    const frozen=(w.frozenUntil??0)>(day+1)*DAY;
-   const need=s.population*rules.drinkingMlPerPerson,drunk=withdraw(w,frozen?0:need);ledger.consumed+=drunk.waterMl;
+   const need=Math.ceil(settlementMouths(engine,d.get('state'),id,s.population,'hydration')*rules.drinkingMlPerPerson),drunk=withdraw(w,frozen?0:need);ledger.consumed+=drunk.waterMl;
    ledger.drinking[id]={settlement:id,day,requiredMl:need,takenMl:drunk.waterMl,pathogenRisk:drunk.pathogenRisk,toxinUgPerMl:drunk.toxinUg/Math.max(1,drunk.waterMl)};
    const farm=engine.rules.agriculture?.settlements.find(p=>p.settlement===id),crop=engine.rules.agriculture?.crop;
    const area=farm?(d.get('state','records',`agriculture:${id}`)?.field?.areaUnits??farm.areaUnits):

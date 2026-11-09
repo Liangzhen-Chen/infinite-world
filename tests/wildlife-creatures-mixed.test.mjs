@@ -33,7 +33,8 @@ const habitatOf=s=>world.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habit
 // T102/T157等后续批次在本批之后追加物品、地点、路线与首领；剔除本批再合并会把本批排到末尾，同样按编号比较。
 const sortId=rows=>[...rows].sort((a,b)=>a.id.localeCompare(b.id));
 // K1在本批发布后给全体物种补了性状标签tags；本批候选不含该字段，比较时只对本批物种剔除tags（正式目录须有tags另行核对）。
-const untag=m=>newIds.monsters.has(m.id)?(({tags,...row})=>row)(m):m;
+// nature.metabolism（物种代谢系数）同 tags 是发布后补的结构化字段：骨架与候选刻意不含，登记在正式目录；比较时只对本批物种剔除该键，nature 其余键仍逐键比较。
+const untag=m=>newIds.monsters.has(m.id)?(({tags,...row})=>row.nature?{...row,nature:(({metabolism,...n})=>n)(row.nature)}:row)(m):m;
 const norm=w=>({...w,monsters:sortId(w.monsters.map(untag)),items:sortId(w.items),locations:sortId(w.locations),routes:sortId(w.routes),bosses:sortId(w.bosses),rules:{...w.rules,wildlife:{...w.rules.wildlife,habitats:sortId(w.rules.wildlife.habitats)}}});
 const insideHours=([a,b])=>a<b?a+30:(a+30)%1440;
 function setup(seed,mutate){
@@ -60,7 +61,7 @@ test('本批正式发布：中西各九的设计，已过L2者入正式目录，
  assert.deepEqual([...published.map(m=>m.id),...held].sort(),[...batchIds.species].sort());
  assert.ok(published.filter(m=>m.template<=2).length>=12);
  for(const m of published)assert.ok(Array.isArray(m.tags)&&m.tags.length,`${m.id}.tags`);
- for(const m of published){const d=designed.find(s=>s.id===m.id);for(const k of Object.keys(d))assert.deepEqual(m[k],d[k],`${m.id}.${k}`);}
+ for(const m of published){const d=designed.find(s=>s.id===m.id),u=untag(m);for(const k of Object.keys(d))assert.deepEqual(u[k],d[k],`${m.id}.${k}`);}// 与 norm 同口径剔发布后补字段（tags、nature.metabolism），骨架其余键逐键比较
  assert.deepEqual(norm(mergeMixedPublication(before,publication)),norm(world));assert.deepEqual(mergeMixedPublication(world,publication),world);
  const bad=structuredClone(world);bad.monsters.find(m=>m.id===published[0].id).habits+='异文';assert.throws(()=>mergeMixedPublication(bad,publication),/冲突/);
  // Old reviewed species keep their exact text.
