@@ -15,8 +15,8 @@ const world = await loadWorld();
 const seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
 const ecology = JSON.parse(await fs.readFile('world/design/kc-site-ecology.json', 'utf8'));
 
-function fixture() {
-  const engine = new WorldEngine(structuredClone(world));
+function fixture(w = world) {
+  const engine = new WorldEngine(structuredClone(w));
   let document = engine.createCharacter(seed, {}, 'monster-production');
   document = applyPatches(document, planBossMigration(document, world.rules, world.bosses, world));
   Object.assign(document.state.player, {coins: 1000, hp: 500, maxHp: 500});
@@ -78,33 +78,46 @@ test('怪物据点生产数据完整：居民的采集职业与本聚落产地�
     'loc_ms_yugen:item_dried_fruit', 'loc_ms_yugen:item_hazelnut', 'loc_ms_yugen:item_tool_handle', 'loc_ms_yugen:item_walnut']);
 });
 
-// 公共据点允许任何人进入：采集只因取走的资源归属记一条采集侵犯（受害者是产地所有人），不另记擅入。怪物聚落所有与人类派系所有的公共据点是同一规律。
+// 公共据点允许任何人进入：采集只因取走的资源归属记一条采集侵犯（受害者是资源的所有人）；资源自己登记 owner:null 的是无主公共资源，采集不违约（sites.mjs ownerOf）。
+// 怪物聚落所有与人类派系所有的公共据点是同一规律，两面都测。
+const resourceOwner = (place, resource) => Object.hasOwn(resource, 'owner') ? resource.owner : ownerOf(place);
 async function gatherOnce(f, place, resource) {
   const doc = structuredClone(f.document); doc.state.location = place.id;
   const before = doc.state.inventory[resource.item]?.quantity ?? 0;
   const enterId = `mprod-enter-${place.id}`, gatherId = `mprod-gather-${place.id}`;
-  // 采集前须先进入据点（进入公共据点本就不记违约）；整个进入加采集的流程只应记一条采集侵犯
+  // 采集前须先进入据点（进入公共据点本就不记违约）
   const entered = await f.run(doc, 'world_site', {operation: 'enter'}, enterId);
   const out = await f.run(entered.document, 'world_site', {operation: 'gather', target: resource.id}, gatherId);
   assert.equal(out.document.state.inventory[resource.item]?.quantity ?? 0, before + 1, `${place.id} 采到一份`);
   const offenses = Object.values(out.document.state.records).filter(r => r.category === 'offense' && [enterId, gatherId].includes(r.sourceEvent));
-  assert.equal(offenses.length, 1, `${place.id} 进入加采集只应记一条（采集侵犯），实际 ${offenses.map(o => o.act)}`);
+  const owner = resourceOwner(place, resource);
+  if (!owner) return assert.equal(offenses.length, 0, `${place.id}/${resource.id} 无主公共资源，采集不应违约，实际 ${offenses.map(o => o.act)}`);
+  assert.equal(offenses.length, 1, `${place.id}/${resource.id} 进入加采集只应记一条（采集侵犯），实际 ${offenses.map(o => o.act)}`);
   assert.equal(offenses[0].act, 'gather');
-  assert.equal(offenses[0].victim, ownerOf(place));
+  assert.equal(offenses[0].victim, owner);
   assert.equal(offenses[0].offender, 'player');
 }
 const openPlain = place => (place.site?.resources ?? []).find(r => !r.gather && !r.requires?.length && !r.mechanisms?.length);
+const humanPublic = (e, homes) => e.world.locations.filter(l => l.access?.mode === 'public' && ownerOf(l) && ownerOf(l) !== 'player' && !homes.has(ownerOf(l)) && !/^faction_ms_/.test(ownerOf(l)) && !(l.site?.entryMechanisms ?? []).length && openPlain(l));
 
 test('玩家在怪物公共产地采集：只记一条采集侵犯，受害者是产地所有人；不另记擅入', async () => {
   const f = fixture(), e = f.engine, homes = new Set(societies(e).map(s => s.id));
   const places = e.world.locations.filter(l => !l.monsterSociety && l.access?.mode === 'public' && homes.has(ownerOf(l)) && openPlain(l));
   assert.ok(places.length >= 4);
-  for (const place of places) await gatherOnce(f, place, openPlain(place));
+  for (const place of places) {assert.ok(resourceOwner(place, openPlain(place))); await gatherOnce(f, place, openPlain(place));}
 });
 
-test('回归：人类派系所有的公共据点采集，同一口径（一条采集侵犯，受害者是所有人）', async () => {
+test('回归：人类派系所有的公共据点，无主公共资源采集不违约；同一资源改为随据点归派系所有后，同样只记一条采集侵犯', async () => {
   const f = fixture(), e = f.engine, homes = new Set(societies(e).map(s => s.id));
-  const places = e.world.locations.filter(l => l.access?.mode === 'public' && ownerOf(l) && ownerOf(l) !== 'player' && !homes.has(ownerOf(l)) && !/^faction_ms_/.test(ownerOf(l)) && !(l.site?.entryMechanisms ?? []).length && openPlain(l));
-  assert.ok(places.length >= 1, '世界里应有人类公共据点');
-  for (const place of places) await gatherOnce(f, place, openPlain(place));
+  const commons = humanPublic(e, homes).filter(l => !resourceOwner(l, openPlain(l)));
+  assert.ok(commons.length >= 1, '世界里应有资源登记为无主的人类公共据点');
+  for (const place of commons) await gatherOnce(f, place, openPlain(place));
+  // 另一面：数据里找不到“据点所有、公共、无机关”的人类资源，就把同一资源去掉 owner:null 的登记，让它随据点归派系
+  const w = structuredClone(world);
+  for (const place of commons) delete w.locations.find(l => l.id === place.id).site.resources.find(r => r.id === openPlain(place).id).owner;
+  const g = fixture(w);
+  for (const place of commons) {
+    const owned = g.engine.byId.get(place.id), resource = owned.site.resources.find(r => r.id === openPlain(place).id);
+    assert.ok(resourceOwner(owned, resource)); await gatherOnce(g, owned, resource);
+  }
 });
