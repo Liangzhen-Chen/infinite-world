@@ -297,6 +297,26 @@ export function checkVerifiedValues(table,entries){
  }
  return errors;
 }
+// 冻结清单（李白：已按官方出处核过的数据不得回退）：world/meta/mechanics/verified-sources.json 逐条记录已按 FDC 核对的出处（条目 id、出处名、FDC 编号、含水、kcal、核对日期），
+// 只增不删。L1：清单里每一项在表中必须仍是「已核对」，编号与数值一致；seq 须从 1 连续；条目数不得少于基线 verifiedBaseline.count，前 count 条的内容摘要须等于 verifiedBaseline.digest
+// （改清单里的旧数值或删条目都会对不上；追加新条目不受影响）。「近似」只允许用在清单之外的出处（清单内的出处降级为近似即报错）。降级或删除需人工批准：代码里没有这条路径，要改须人工改基线并留痕。
+export const verifiedSourcesFile='world/meta/mechanics/verified-sources.json';
+export const verifiedBaseline={count:50,digest:'d3f78f9e40cfdbd971b2f064a1ca0e195f5201de27d304dc39315090e1f2dd2c'};
+export function checkFrozenVerified(doc,table,entries,baseline=verifiedBaseline){
+ const errors=[],list=doc?.entries;
+ if(!Array.isArray(list))return ['冻结清单 verified-sources.json 缺 entries'];
+ if(list.length<baseline.count)errors.push(`冻结清单条数 ${list.length} 少于基线 ${baseline.count}（只增不删）`);
+ list.forEach((x,i)=>{if(x.seq!==i+1)errors.push(`冻结清单 seq 须从 1 连续：第 ${i+1} 项 seq=${x.seq}`);});
+ if(list.length>=baseline.count&&hashContent(list.slice(0,baseline.count))!==baseline.digest)errors.push('冻结清单前 '+baseline.count+' 条与基线摘要不符（旧条目被改动）');
+ for(const x of list){
+  const w=`${x.entry}.${x.source}`,e=entries.find(y=>y.id===x.entry),src=e?.row?.sources?.find(y=>y.name===x.source),r=table.sourceIds?.[x.entry]?.[x.source];
+  if(!e||!src){errors.push(`冻结清单的已核对出处在表中不存在（被删除？）：${w}`);continue;}
+  if(r?.status!=='已核对')errors.push(`已核对出处不得降级（现状态 ${r?.status}）：${w}`);
+  else if(String(r.id)!==String(x.fdcId))errors.push(`已核对出处的编号与冻结清单不一致：${w}（表 ${r.id}，清单 ${x.fdcId}）`);
+  for(const [k,v] of [['moistureFraction',x.moistureFraction],['kcalPer100gWet',x.kcalPer100gWet]])if(!(v===null?src[k]===undefined:typeof src[k]==='number'&&Math.abs(src[k]-v)<1e-9))errors.push(`已核对出处的 ${k} 与冻结清单不一致：${w}（表 ${src[k]}，清单 ${v}）`);
+ }
+ return errors;
+}
 export function checkSmallChangeParam(table){
  const v=table.smallChangeTolerance;
  return (v>0&&v<1&&typeof table.smallChangeBasis==='string'&&/calibrate/.test(table.smallChangeBasis)&&/小出入口径/.test(table.smallChangeBasis))?[]:['表头 smallChangeTolerance 须为 0–1 之间的正数，并有 smallChangeBasis（标 calibrate，来源写「亮圳 19:24 小出入口径」）'];
@@ -318,7 +338,7 @@ export function checkSourceIds(table,entries){
 export async function l1(){
  const entries=await entriesFor(),world=await runtime(),errors=[];
  errors.push(...validateMaterialProps(world));
- errors.push(...checkSourceIds(await readJSON(tableFile),entries),...checkSmallChangeParam(await readJSON(tableFile)));
+ errors.push(...checkSourceIds(await readJSON(tableFile),entries),...checkSmallChangeParam(await readJSON(tableFile)),...checkFrozenVerified(await readJSON(verifiedSourcesFile).catch(()=>null),await readJSON(tableFile),entries));
  for(const e of entries)errors.push(...(await validateDraft(draftFor(e),e)).map(x=>`${e.id}: ${x}`));
  const overrides=entries.filter(e=>e.kind==='material-props-item').length;
  if(overrides/world.items.length>maxOverrideRatio)errors.push(`覆盖行占物品总数 ${overrides}/${world.items.length} 超过 ${maxOverrideRatio*100}%：类别划得不对，回头改类别`);

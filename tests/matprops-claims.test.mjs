@@ -7,7 +7,7 @@ import path from 'node:path';
 import {loadRuntimeWorld as runtimeWorld} from '../tools/load-world.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
-import {backfillSnapshots, contextChange, manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
+import {checkFrozenVerified, verifiedBaseline, verifiedSourcesFile, backfillSnapshots, contextChange, manualLabels, checkManual, fingerprintOf, smallChange, carryOverRecord, checkVerifiedValues, checkSmallChangeParam, worldTags, condimentGrants, grantCondimentMaxRequests, condimentInitialLedger, skipUnverified, condimentEntries, condimentCard, cardProfiles, condimentBudget, checkReviewCap, revision, extractReview, runReview, reviewStops, reaskGate, misjudgeStats, factPendingStats, checkSourceIds, programClaim, legacyExtractReview} from '../world/design/matprops-approval.mjs';
 
 // 苹果醋形的单出处行：含水 0.939、21 kcal/100g、kcalPerSatiety 24 → 推算 moisture 0.939、energyDensity 143（21×10÷0.061÷24=143.4）
 const src = {name: '苹果醋', citation: 'USDA FoodData Central 苹果醋', moistureFraction: 0.939, kcalPer100gWet: 21, mealGrams: 15};
@@ -393,4 +393,37 @@ test('--backfill-snapshots：指纹一致才回填（标「指纹一致回填」
   assert.equal(client.calls.length, 1); assert.deepEqual(client.calls.map(l => l.includes('item_b')), [true]);
   assert.equal(JSON.parse(await fs.readFile(path.join(dir, 'item_a.json'), 'utf8')).carriedOver.note, '小改动沿用（±10%）');
   assert.equal(client.bodies.length, 1);
+});
+
+test('冻结清单：已核对出处降级为近似、改清单内数值、删条目都被 L1 拦住；清单外新增近似出处可以通过', async () => {
+  const doc = JSON.parse(await fs.readFile(verifiedSourcesFile, 'utf8')), table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8')), entries = await entriesFor();
+  assert.equal(doc.entries.length, 50); assert.equal(verifiedBaseline.count, 50);
+  assert.deepEqual(checkFrozenVerified(doc, table, entries), []);   // 现行数据与清单一致
+  assert.deepEqual(await l1().then(r => r.L1), 'passed');
+  // 清单 = 当前全部「已核对」出处
+  const verified = Object.entries(table.sourceIds).flatMap(([id, m]) => Object.entries(m).filter(([, r]) => r.status === '已核对').map(([name]) => id + '.' + name));
+  assert.deepEqual(doc.entries.map(x => x.entry + '.' + x.source).sort(), verified.sort());
+  // 绕过路径：把已核对出处改成 {id:null,status:'近似'} 再改数值
+  const down = structuredClone(table); down.sourceIds.class_spice_seed.香芹籽 = {id: null, status: '近似', note: '凭记忆'};
+  const tampered = structuredClone(entries.find(e => e.id === 'class_spice_seed')); tampered.row.sources[2].kcalPer100gWet = 340;
+  assert.deepEqual(checkSourceIds(down, [tampered]).filter(x => /偏离 FDC/.test(x)), []);   // 旧校验确实绕得过去
+  const errs = checkFrozenVerified(doc, down, entries.map(e => e.id === 'class_spice_seed' ? tampered : e));
+  assert.ok(errs.some(x => /不得降级（现状态 近似）.*香芹籽/.test(x))); assert.ok(errs.some(x => /kcalPer100gWet 与冻结清单不一致/.test(x)));
+  // 数值被改（状态仍是已核对，citation 也一并改掉的情形）
+  const edited = structuredClone(entries.find(e => e.id === 'item_carrot')); edited.row.sources[0].moistureFraction = 0.9;
+  assert.match(checkFrozenVerified(doc, table, entries.map(e => e.id === 'item_carrot' ? edited : e)).join('\n'), /moistureFraction 与冻结清单不一致.*item_carrot/);
+  // 编号改了
+  const wrongId = structuredClone(table); wrongId.sourceIds.item_carrot.胡萝卜.id = '999999';
+  assert.match(checkFrozenVerified(doc, wrongId, entries).join('\n'), /编号与冻结清单不一致.*item_carrot/);
+  // 只增不删：删条目、改清单旧数值、seq 断号都报错；追加新条目不报错
+  assert.match(checkFrozenVerified({entries: doc.entries.slice(0, 49)}, table, entries).join('\n'), /少于基线 50/);
+  const forged = structuredClone(doc); forged.entries[0].fdcId = '1'; assert.match(checkFrozenVerified(forged, table, entries).join('\n'), /基线摘要不符/);
+  const gap = structuredClone(doc); gap.entries[5].seq = 99; assert.match(checkFrozenVerified(gap, table, entries).join('\n'), /seq 须从 1 连续/);
+  const sub = structuredClone(doc); sub.entries.splice(10, 1); assert.ok(checkFrozenVerified(sub, table, entries).length > 0);
+  const appended = {entries: [...doc.entries, {seq: 51, entry: 'class_meat', source: '猪里脊', fdcId: '167901', moistureFraction: null, kcalPer100gWet: null, verifiedAt: '2026-11-10'}]};
+  assert.ok(checkFrozenVerified(appended, table, entries).every(x => /class_meat/.test(x)));   // 追加项自己与表对不上才报，旧 50 条不受影响
+  // 清单外新增近似出处：通过（猪里脊是近似、不在清单里）
+  assert.equal(table.sourceIds.class_meat.猪里脊.status, '近似');
+  assert.deepEqual(checkSourceIds(table, entries.filter(e => e.id === 'class_meat')), []);
+  assert.deepEqual(checkFrozenVerified(doc, table, entries.filter(e => e.id === 'class_meat')).filter(x => /class_meat/.test(x)), []);
 });
