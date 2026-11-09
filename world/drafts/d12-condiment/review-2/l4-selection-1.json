@@ -1,0 +1,31 @@
+{
+  "batch": 1,
+  "fingerprint": "04636c2d5dc5e2bb6ef15255f182b2f29fce8f981f43b3413cdf02bd1d56386f",
+  "wave": [
+    "class_spice_seed",
+    "class_edible_fat",
+    "item_garlic",
+    "item_butter",
+    "item_mustard_seed",
+    "item_oats",
+    "class_cheese",
+    "item_dried_fruit",
+    "item_caraway_seed",
+    "class_cream"
+  ],
+  "read": [
+    "item_poppy_seed",
+    "class_condiment_sauce",
+    "item_oats",
+    "class_salt",
+    "class_cream",
+    "class_edible_fat",
+    "class_spice_seed",
+    "item_garlic",
+    "item_butter",
+    "item_mustard_seed",
+    "class_cheese",
+    "item_dried_fruit",
+    "item_caraway_seed"
+  ]
+}
