@@ -331,7 +331,7 @@ test('--rejudge 对授权条目额外评估 retryEligible 并写入记录（不�
 });
 
 test('garlic 一次性授权：仅 item_garlic、仅 1 次、须 retryEligible', async () => {
-  assert.deepEqual([retryGrants.length, garlicRetry.entry, garlicRetry.extraReviews, garlicRetry.limitYuan, garlicRetry.maxTokens], [1, 'item_garlic', 1, 0.01, 350]);
+  assert.deepEqual([retryGrants.length, garlicRetry.entry, garlicRetry.extraReviews, garlicRetry.limitYuan, garlicRetry.maxTokens], [1, 'item_garlic', 1, 0.015, 350]);
   const sent = n => ({requests: Object.fromEntries(Array.from({length: n}, (_, i) => [`r${i}`, {label: 'content-review-2-item_garlic-review0', status: 'settled'}]))});
   const cheap = {rates: {hit: 0, miss: 0, output: 1}}, body = {max_tokens: 1200, messages: []};
   assertRetryAllowed({id: 'item_garlic', eligible: true, ledger: sent(3), body, client: cheap});   // 第 4 次放行
@@ -342,16 +342,16 @@ test('garlic 一次性授权：仅 item_garlic、仅 1 次、须 retryEligible',
   const gate = capReviewsFor({budgetRoot: '.', client: cheap, retry: garlicRetry, eligible: true});
   await assert.rejects(() => gate({body, entry: {id: 'item_onion'}, phase: 'review', record: {}}), e => e.code === 'RETRY_DENIED');
 });
-test('garlic 金额上限：按账本同一预留口径，用授权的 max_tokens 核算；上界 ≤0.01 放行，>0.01 拒绝并报出数', () => {
+test('garlic 金额上限：按账本同一预留口径，用授权的 max_tokens 核算；上界 ≤0.015 放行，>0.015 拒绝并报出数', () => {
   const ledger = {requests: Object.fromEntries([0, 1, 2].map(i => [`r${i}`, {label: 'content-review-2-item_garlic-review0', status: 'settled'}]))};
   const body = {max_tokens: 1200, messages: [{role: 'user', content: 'x'.repeat(1000)}]};
   // 预留上界 = (UTF-8 字节 × miss + max_tokens × output) / 1e6；字节数含 model 等默认字段，这里只验大小关系与 max_tokens 覆盖
   const exact = rates => reserveCeilingYuan({rates}, retryBody(garlicRetry, body));
   const lo = {hit: 0, miss: 0.001, output: 1}, hi = {hit: 0, miss: 0.001, output: 100};
-  assert.ok(exact(lo) <= 0.01 && exact(hi) > 0.01);
+  assert.ok(exact(lo) <= 0.015 && exact(hi) > 0.015);
   assert.ok(exact(lo) < reserveCeilingYuan({rates: lo}, body));   // 350 < 1200，覆盖生效
   assertRetryAllowed({id: 'item_garlic', eligible: true, ledger, body, client: {rates: lo}});
-  assert.throws(() => assertRetryAllowed({id: 'item_garlic', eligible: true, ledger, body, client: {rates: hi}}), e => e.code === 'RETRY_DENIED' && /预留上界 \d+\.\d+ 元超过上限 0\.01/.test(e.message));
+  assert.throws(() => assertRetryAllowed({id: 'item_garlic', eligible: true, ledger, body, client: {rates: hi}}), e => e.code === 'RETRY_DENIED' && /预留上界 \d+\.\d+ 元超过上限 0\.015/.test(e.message));
 });
 test('--retry-garlic：流水线只收到授权条目，请求带授权的 max_tokens，其他条目记录不动；不符条件时发请求前拒绝且不归档', async t => {
   const budgetRoot = await mkRoot(t), root = path.join(budgetRoot, 'review-2'), entries = fakeEntries(['item_garlic', 'item_other']);

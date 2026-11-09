@@ -16,7 +16,7 @@
 // 审查解析失败即停：extractReview 抛出任何错误（REVIEW_FORMAT、没有 code 的意外异常）都使本次 --review 立即停止后续所有条目的请求（reviewStops，经流水线通用参数 stopOnReviewError），
 // 已发请求的记录照常写盘，输出报明条目与错误；REVIEW_INCONSISTENT 沿用上面"重试 1 次"的既定规则，不算解析失败。
 // --rejudge [--dry-run]：d3228afb 的 extractReview 作用域错误使 2026-11-09T15:19:49Z 之后的审查回复全被丢弃；按已保存的原始回复离线重放判定（0 新调用，不动账本）。
-// --retry-garlic：一次性授权（retryGrants），仅 item_garlic 在 --rejudge 评估为 retryEligible（当前 revision 内全部已保存审查回复都解析不出判定）后可多发 1 次审查，金额上限 0.01 元（用较小的 max_tokens 压低预留上界）。
+// --retry-garlic：一次性授权（retryGrants），仅 item_garlic 在 --rejudge 评估为 retryEligible（当前 revision 内全部已保存审查回复都解析不出判定）后可多发 1 次审查，单次金额上限 0.015 元（李白 16:1x 原定 0.01 元，按账本口径预留上界约 0.0145 元超限，李白 2026-11-09 选 A 仅此一条这一次提到 0.015 元；其他条目单次上限仍 0.01 元，卡总额仍 1.5 元；用较小的 max_tokens 压低预留上界）。用完即无余量（次数按账本标签计），不留可复用的放宽。
 // 用法：node world/design/matprops-approval.mjs --l1 [--show id,..] | --review [--redo id,..] | --rejudge [--dry-run] | --retry-garlic | --sample | --l4 <json> | --verify   （--review/--retry-garlic 需环境变量 DEEPSEEK_API_KEY）
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -223,7 +223,7 @@ export const grantId=grants[0].id;
 // max_tokens 取值依据：item_garlic 在 review-2 内三次请求的 usage.completion_tokens 实测为 174、104、140，最大 174；174×2=348，向上取整到 50 → 350（原审查请求为 1200）。
 // 预留上界按账本同一口径（content-budget.mjs reserveCeilingYuan：UTF-8 字节×miss 费率 + max_tokens×output 费率）核算，超 limitYuan 即拒绝，不自动放宽。
 export const retryGrants=[
- {id:'d12-matprops-2-garlic-retry',entry:'item_garlic',extraReviews:1,limitYuan:0.01,maxTokens:350,source:'李白 2026-11-09 16:1x：garlic 原始回复解析不出判定时只允许单条重问 1 次，上限 0.01 元，其余不追加调用'}];
+ {id:'d12-matprops-2-garlic-retry',entry:'item_garlic',extraReviews:1,limitYuan:0.015,maxTokens:350,source:'李白 2026-11-09 16:1x：garlic 原始回复解析不出判定时只允许单条重问 1 次，其余不追加调用；单次上限原定 0.01 元，因预留上界约 0.0145 元超限，李白随后选 A 仅此一条这一次提到 0.015 元，到额自动停，其他条目仍 0.01 元，卡总额仍 1.5 元'}];
 export const garlicRetry=retryGrants[0];
 export const retryBody=(grant,body)=>({...body,max_tokens:grant.maxTokens});
 // 触发条件（纯函数）：授权条目，且当前 revision 内全部已保存审查回复（saved=[{requestId,response}]，调用方已核对哈希，不限时间）都解析不出判定
