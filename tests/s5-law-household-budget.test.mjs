@@ -382,19 +382,30 @@ test('a real local seller opening defines access, while an unknown remote accoun
  const f=fixture({members:[owner,other],shared:false}),planner=other;
  f.state.minute=300;f.state.npcs[planner].coins=100;
  f.state.npcs[planner].location=f.state.npcs[owner].location;f.sync();
- // In the seed's season the existing counter first trades at minute540.
- // No identity-based clock:
- // the kernel reads its actual schedule; the NPC without an offer knows0.
- const known=householdBudget(f.d,f.engine,planner,{kernel:true});
- assert.equal(known.resources.market.nextFoodAt,540);
- assert.ok(known.resources.market.coverage.satiety>0);
- // Cash-backed access has not put a single meal into the shopper's empty bag.
- assert.equal(known.resources.procurementShortfall.satiety,10);
- assert.equal(reserveShortfall(f.d,f.engine,planner).satiety,10);
- const subjective=householdBudget(f.d,f.engine,planner);
- assert.equal(subjective.resources.market.coverage.satiety,0);
+ // The seller's stock is split by need with a daily lottery for the remainders, so whether this small household draws a unit
+ // from the owner's counter depends on the seed. Across many seeds the draw must be neither always nor never: a small household
+ // is no longer deterministically shut out. Whenever it does draw, the access is the real one: the counter's own opening
+ // (minute 540, no identity-based clock), the shopper's bag stays empty (cash-backed access is not a meal in hand), and a
+ // subjective view that was never offered the counter reads nothing. When the seller is ill, no seed draws from the owner.
+ const from=b=>b.resources.market.purchases.filter(p=>p.seller===owner&&p.item===item);
+ const seeds=[...Array(200).keys()].map(s=>`share-${s}`),hitSeeds=[];
+ for(const seed of seeds){
+  f.d.document.randomSeed=seed;
+  const known=householdBudget(f.d,f.engine,planner,{kernel:true}),got=from(known);
+  assert.ok(got.length<=1,`one purchase line per seller and item (${seed})`);
+  if(got.length){
+   hitSeeds.push(seed);
+   assert.equal(known.resources.procurementShortfall.satiety,10,seed);
+   assert.equal(reserveShortfall(f.d,f.engine,planner).satiety,10,seed);
+   assert.equal(householdBudget(f.d,f.engine,planner).resources.market.coverage.satiety,0,`${seed}: a view never offered the counter has no access`);
+   assert.equal(got[0].at,540,`${seed}: the counter's real opening`);
+   assert.ok(known.resources.market.nextFoodAt<=540&&known.resources.market.coverage.satiety>0,seed);
+  }
+ }
+ assert.ok(hitSeeds.length>0,'a small household must draw from the counter on some seeds');
+ assert.ok(hitSeeds.length<seeds.length,'a draw is a lottery, not a certainty, when the stock is scarce');
  f.state.npcs[owner].status='患病';
- assert.equal(householdBudget(f.d,f.engine,planner,{kernel:true}).resources.market.coverage.satiety,0);
+ for(const seed of hitSeeds){f.d.document.randomSeed=seed;assert.equal(from(householdBudget(f.d,f.engine,planner,{kernel:true})).length,0,`${seed}: an ill seller sells nothing`);}
 });
 
 test('cash-backed purchases and contractual balances remain separate scenarios',()=>{

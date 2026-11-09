@@ -37,20 +37,37 @@ const credited=(f,id,d=f.d)=>householdResources(d,f.engine,id).market.purchases.
 const sellable=f=>Math.floor(householdResources(f.d,f.engine,f.seller,{marketSubstitution:false}).rows.find(r=>r.holder===f.seller&&r.item===item).available);
 const sum=a=>a.reduce((n,x)=>n+x,0);
 
-test('shareByNeed: unequal needs split in proportion, remainders go to the largest fractions, ties by code point',()=>{
- const rows=[{id:'a',need:3},{id:'b',need:1},{id:'c',need:1}],total=7,need=sum(rows.map(r=>r.need));
- const got=shareByNeed(total,rows);
- assert.equal(sum([...got.values()]),total);
- for(const r of rows){const exact=total*r.need/need;assert.ok([Math.floor(exact),Math.ceil(exact)].includes(got.get(r.id)),`${r.id}:${got.get(r.id)} vs ${exact}`);}
- // A unit beyond the floor goes to a larger fractional part, never to a smaller one.
- for(const x of rows)for(const y of rows){
-  const ex=total*x.need/need,ey=total*y.need/need,fx=ex-Math.floor(ex),fy=ey-Math.floor(ey);
-  if(got.get(x.id)>Math.floor(ex)&&got.get(y.id)===Math.floor(ey)&&Math.floor(ey)<ey)assert.ok(fx>=fy,`${x.id} took a unit ahead of ${y.id}`);
+// A seed-derived uniform in [0,1) for the unit test; any fixed deterministic generator serves, the function only takes u.
+const uniform=seed=>{let x=(seed*2654435761+12345)>>>0;x^=x<<13;x>>>=0;x^=x>>>17;x^=x<<5;x>>>=0;x=Math.imul(x^(x>>>15),2246822519)>>>0;x^=x>>>13;return (x>>>0)/4294967296;};
+test('shareByNeed: each household gets floor or floor+1, the total is conserved, and the expected share is total*need/sum',()=>{
+ const cases=[
+  {total:7,rows:[{id:'a',need:3},{id:'b',need:1},{id:'c',need:1}]},
+  {total:10,rows:[{id:'big',need:300},...Array.from({length:17},(_,i)=>({id:`h${i}`,need:i===0?10:1+i%5*3}))]},// scarce: 18 households, 10 loaves
+  {total:1,rows:[{id:'a',need:1},{id:'B',need:1}]},
+ ],SEEDS=2000;
+ for(const {total,rows} of cases){
+  const need=sum(rows.map(r=>r.need)),acc=new Map(rows.map(r=>[r.id,0]));
+  for(let seed=0;seed<SEEDS;seed++){
+   const u=uniform(seed),got=shareByNeed(total,rows,u);
+   assert.equal(sum([...got.values()]),total,`seed ${seed}: total conserved`);
+   for(const r of rows){const exact=total*r.need/need,v=got.get(r.id);
+    assert.ok(v===Math.floor(exact)||v===Math.floor(exact)+1,`seed ${seed} ${r.id}: ${v} vs ${exact}`);
+    acc.set(r.id,acc.get(r.id)+v);}
+   assert.deepEqual([...shareByNeed(total,rows,u)],[...got],`seed ${seed}: same u, same shares`);
+  }
+  // The extra unit of a household is a Bernoulli(f) trial with f=frac(total*need/sum), so over SEEDS draws the mean share
+  // differs from total*need/sum by at most 5*sqrt(f(1-f)/SEEDS) (plus a float epsilon); a fixed bug of one unit would be far outside.
+  for(const r of rows){const exact=total*r.need/need,f=exact-Math.floor(exact),tol=5*Math.sqrt(f*(1-f)/SEEDS)+1e-9;
+   assert.ok(Math.abs(acc.get(r.id)/SEEDS-exact)<=tol,`${r.id}: mean ${acc.get(r.id)/SEEDS} vs ${exact} (tol ${tol})`);}
  }
- // Equal fractions tie by code point: 'B' (66) precedes 'a' (97) although a locale collation would put 'a' first.
- const tie=shareByNeed(1,[{id:'a',need:1},{id:'B',need:1}]);
- assert.equal(tie.get('B'),1);assert.equal(tie.get('a'),0);
- assert.equal(shareByNeed(5,[]).size,0);assert.equal(shareByNeed(0,rows).size,0);
+ // Scarcity: a household whose floor is 0 is no longer shut out on every seed.
+ const scarce=cases[1],small=scarce.rows[1];let wins=0;
+ for(let seed=0;seed<SEEDS;seed++)if(shareByNeed(scarce.total,scarce.rows,uniform(seed)).get(small.id)>0)wins++;
+ assert.ok(wins>0&&wins<SEEDS,`small household drew ${wins}/${SEEDS}`);
+ // Both order-independent of the row array: the cumulative layout follows code-point order of ids, not input order.
+ const rows=cases[0].rows,reversed=[...rows].reverse();
+ for(let seed=0;seed<50;seed++)assert.deepEqual([...shareByNeed(7,rows,uniform(seed))].sort(),[...shareByNeed(7,reversed,uniform(seed))].sort());
+ assert.equal(shareByNeed(5,[],0.3).size,0);assert.equal(shareByNeed(0,cases[0].rows,0.3).size,0);
 });
 
 test('shop branch: buyers sharing a shop keeper are credited no more than the keeper can sell, in near-equal parts',()=>{
@@ -79,7 +96,7 @@ test('unequal needs: a two-person household is credited in proportion to a one-p
  assert.ok(nb>nx,'the larger household has the larger need');
  // Each part is the floor or ceiling of total*need/sum, so credited/need ratios agree within one unit per household.
  assert.ok(Math.abs(gb-gx*nb/nx)<=1+nb/nx,`credited ${gb} vs ${gx} for needs ${nb}:${nx}`);
- assert.ok(gb>=gx);
+ assert.ok(gb+1>=gx,`larger household ${gb} vs ${gx}`);
 });
 
 test('the seller household is not a competing buyer and buys nothing from its own member',()=>{
