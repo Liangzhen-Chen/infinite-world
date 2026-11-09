@@ -92,3 +92,21 @@ test('烙饼、鱼汤、炖菜不再手写饱腹，由配方派生；能量密�
   assert.ok(eOf(flat)>ed.ref*0.6&&eOf(flat)<ed.ref*1.4);
   assert.ok(eOf(broth)<ed.ref*0.5,'汤的能量密度远低于主食');
 });
+
+test('多个维度叠加后，系数整体仍夹在 [min,max] 内', () => {
+  const w=structuredClone(engine.world),crafting=structuredClone(crafting0);
+  const p=crafting.params.find(x=>x.id==='nutrition.satietyFactor');
+  // 含水、可食部分两个现有维度各自最大放大 2.5 倍，叠加（连同能量密度）远超上限
+  p.value.dimensions={moisture:{k:-3,ref:0.5,min:0.1,max:3},edibleFraction:{k:-3,ref:0.5,min:0.1,max:3}};
+  w.balance={...w.balance,crafting};
+  const item=engine.byId.get('item_oats');
+  const mp=materialProps({world:w,byId:engine.byId},item.id);
+  assert.ok(mp.moisture.known);
+  for(const sat of [0.5,5,50,500]){
+    const f=satietyFactor(w,item,sat);
+    assert.ok(f>=ed.min-1e-12&&f<=ed.max+1e-12,`${sat}: ${f}`);
+  }
+  // 极稀（能量密度因子已到 max）再叠加含水因子大于 1：仍封顶在 max
+  p.value.dimensions={moisture:{k:-3,ref:0.9,min:0.1,max:3}};
+  assert.equal(satietyFactor(w,item,1e-4*item.weight),ed.max);
+});

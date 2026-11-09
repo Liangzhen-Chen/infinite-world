@@ -654,5 +654,39 @@
   "tags": [
    "condiment_sauce"
   ]
+ },
+ "item_bread": {
+  "props": {
+   "basis": "白面包：含水与热量凭记忆写入（USDA 白面包量级），量级已判合理，待 L2 核对。",
+   "sources": [
+    {
+     "name": "白面包",
+     "citation": "凭记忆：白面包含水约 0.36 g/g，约 266 kcal/100g（USDA FoodData Central 白面包条目量级，未核对编号）",
+     "moistureFraction": 0.36,
+     "kcalPer100gWet": 266
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "面包没有配方也没有合适的类别行（grain 是未加工干谷），按物品自己的出处推算"
+   }
+  }
+ },
+ "item_water": {
+  "props": {
+   "basis": "清水：含水 1、0 kcal/100g，凭记忆，量级已判合理。",
+   "sources": [
+    {
+     "name": "饮用水",
+     "citation": "凭记忆：饮用水含水 100%、不含热量（USDA FoodData Central 水条目量级，未核对编号）",
+     "moistureFraction": 1,
+     "kcalPer100gWet": 0
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "水没有合适的类别行，按物品自己的出处推算"
+   }
+  }
  }
 }
