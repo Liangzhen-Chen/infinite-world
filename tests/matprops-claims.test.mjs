@@ -252,7 +252,8 @@ test('依赖未核对出处的条目先不审：按出处状态判定，类别�
   assert.deepEqual(skipUnverified(entries, pending, overlay).skipped.map(x => x.id), ['class_veg', 'item_carrot']);
   const added = [...entries, cls('fish', ['鲤']), item('item_fish', ['鲤'])];
   const t2 = {sourceIds: {...table.sourceIds, class_fish: {鲤: {id: null, status: '未知'}}, item_fish: {鲤: ok}}};
-  assert.deepEqual(skipUnverified(added, t2, {...overlay, item_fish: ['fish']}).skipped.map(x => x.id).slice(-2), ['class_fish', 'item_fish']);
+  // 跳过清单先列类别行、后列物品行；这里只断言集合：新类别 fish 及其成员与原有 milk 一类都被跳过，其余不受影响
+  assert.deepEqual(skipUnverified(added, t2, {...overlay, item_fish: ['fish']}).skipped.map(x => x.id).sort(), ['class_fish', 'class_milk', 'item_fish', 'item_goat_milk', 'item_milk']);
 });
 
 test('标签只在基础世界、不在 items.json 覆盖层的物品，也随其类别行一并跳过（用运行时世界的实际标签）', async () => {
