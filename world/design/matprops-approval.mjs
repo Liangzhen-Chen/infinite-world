@@ -541,7 +541,15 @@ export async function run(args=process.argv.slice(2)){
  const condiment=args.includes('--card')&&args[args.indexOf('--card')+1]==='condiment';
  if(args.includes('--l1'))console.log(JSON.stringify(await l1()));
  if(condiment&&args.includes('--budget')){console.log(JSON.stringify(await condimentBudget()));return;}
- if(condiment&&args.includes('--review')){console.log(JSON.stringify(await condimentReview()));return;}
+ if(condiment&&args.includes('--review')){
+  // --redo <id,...>：同 D 卡，只归档本卡 review-1 里的 manual 记录（不删），不动账本；同条次数仍按本卡账本标签计（checkReviewCap）。
+  if(args.includes('--redo')){
+   const ids=args[args.indexOf('--redo')+1].split(','),own=new Set((await condimentEntries()).map(e=>e.id));
+   for(const id of ids)if(!own.has(id))throw Error(`--redo 只收调味卡条目：${id}`);
+   console.log(JSON.stringify({archived:await archiveForRedo(ids,{root:condimentCard.reviewRoot,archiveRoot:path.join(condimentCard.draftRoot,`${condimentCard.reviewDirName}-archive`)})}));
+  }
+  console.log(JSON.stringify(await condimentReview()));return;
+ }
  if(args.includes('--show'))console.log(await show(args[args.indexOf('--show')+1].split(',')));
  if(args.includes('--rejudge')){
   const rows=await rejudge({dry:args.includes('--dry-run')});
