@@ -1385,6 +1385,12 @@ M8分批路线：R16按3–9章随功能卡补现有PLAN的入口/测试/缺口�
 - MPROD 交回：数据覆盖层与 dry/shell 配方；退回两点——shell 产率/工时与 dry 产率借他物数值属拍系数，须由材料属性推导否则移出列缺口；需合入 t-m2 782cf3e7。
 - 李白要求的世界进度核查已按原记录回答（PT-AI E1–E4 原文 PLAN:1472 起；指南 v3 D 节路线；S5 收口未完成）。
 
+### 11-09 03:40 进展
+- MPROD（怪物据点产地，t-mprod）：mprod-3 两轮 approve；云上相关：ka1-overlay 3/0、sites 13/0、species-metabolism 9/0、kc-production 3/0；monster-production 新采集用例两次修测试（须先 enter；人类路祠资源 wt_incense 登记 owner:null 为无主公共资源，采集 0 条正确，测试改按资源归属推导两面都测）→ mprod-5 待两轮审。规则层：sites.mjs:280/:492 公共据点对所有操作免 enter 违约（人类公共据点同规律）。
+- K6 过时断言整类清理：t162:83 与 monster-society.test.mjs:90-100（基线即 9/2 失败的原因）改为 enterUnlicensed/enterLicensed（t-metab 6fad0aa4，metab-12 待审）；全仓已无对玩家 world_move 断言 rejects /许可/。monster-society-content 在 mprod-3 上 3600 s 超时（基线同超时），已跑部分仅 t162 #2 失败即此项。
+- GitHub：管理文档 master 补推 2026095c→94d36b39（82 个 PLAN 提交，推前密钥扫描仅变量名）；guard-commit.sh 本机跑 node 不再用；t-int 等分支是否推待李白定。
+- m2-2 全量运行中（03:22 时 6/529）。
+
 ### 阶段机（每批/每个被测目录都按此走；压缩恢复后先读本节+批次条目+跑 stage.sh，再决定下一步）
 | 阶段 | 判定 | 强制/判断 |
 |---|---|---|
