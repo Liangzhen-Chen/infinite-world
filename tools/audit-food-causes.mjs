@@ -6,7 +6,7 @@
 //
 // Definitions (docs/当前状态.md "S5 收尾清单" item 1), applied in this order:
 //  harvest    - saleable food within a day's walk is less than the town's demand that day;
-//  poverty    - household cash cannot buy the cheapest person-day of food within reach;
+//  poverty    - household cash in hand (all members) is less than the price of the cheapest meal within reach;
 //  allocation - food and cash exist, but the shelf was bought out first or the customer's own decision refused;
 //  chain      - food on sale in own settlement / within a day, shop open, household can pay, still no meal.
 // A household whose members have no simulated state (roster-only) owns no purse or stock in state;
@@ -46,7 +46,7 @@ async function srcLine(file,needle){
 }
 
 // Pure: facts of one missed meal from a plain snapshot.
-// snap: {supply,demand,refCost,cash(null = no purse in state),mouths,declined,townShops:{total,open},
+// snap: {supply,demand,refCost,cash(null = no purse in state),declined,townShops:{total,open},
 //        reach:[{shopId,sameSettlement,engineServes,toll,items:[{item,avail,cost,bought}]}]}
 //  cost = engine price of one person-day of that item; bought = units already sold there that day.
 export function buildFacts(snap){
@@ -56,7 +56,7 @@ export function buildFacts(snap){
   if(!best||cost<best.cost||(cost===best.cost&&r.shopId<best.shopId))best={shopId:r.shopId,item:it.item,cost,sameSettlement:r.sameSettlement,engineServes:r.engineServes,avail:it.avail,bought:it.bought??0};
  }
  return {supply:snap.supply,demand:snap.demand,refCost:snap.refCost,cashKnown:snap.cash!==null&&snap.cash!==undefined,
-  perCapitaCash:snap.cash===null||snap.cash===undefined?null:snap.cash/Math.max(1,snap.mouths),cash:snap.cash,
+  cash:snap.cash,
   best:best&&{cost:best.cost,sameSettlement:best.sameSettlement},
   soldOut:Boolean(best&&best.engineServes&&best.bought>0&&best.bought>=best.avail),declined:snap.declined??null,
   servedShops:(snap.reach??[]).filter(r=>r.engineServes).length,townShops:snap.townShops??{total:0,open:0}};
@@ -68,7 +68,7 @@ export function verdict(f){
  if(!f.cashKnown)return {cause:'undetermined',reason:'roster-only household: no member has simulated state, so no purse or stock exists to judge poverty, allocation or chain (the customer flow only walks in members of state.npcs)',
   clue:[['business.mjs','function walkIns(']]};
  const need=f.best?.cost??f.refCost;
- if(f.perCapitaCash<need)return {cause:'poverty',reason:`cash per person is less than the cheapest person-day of food${f.best?' within reach':' (none on sale; catalogue price)'}`,clue:[['household-budget.mjs','export function householdBudget(']]};
+ if(f.cash<need)return {cause:'poverty',reason:`household cash is less than the price of the cheapest meal (one person-day of food)${f.best?' within reach':' (none on sale; catalogue price)'}`,clue:[['household-budget.mjs','export function householdBudget(']]};
  if(!f.best){
   const own=f.townShops;
   const why=!own.total?'no food shop is registered in the own settlement':!own.open?'the own settlement\'s shop is not trading in it at noon (closed, or its keeper stands elsewhere)':'the own settlement\'s open shop has nothing edible on its shelf';
@@ -161,6 +161,18 @@ export async function runAudit({days=30,progress=()=>{}}={}){
    }
    shopRows.push({id:shop.id,keeper:shop.keeper,markup:shop.markup??1,registered:shop.settlement,settlement:open?placeSettlement(e,ps,location).value:shop.settlement,location,open,items});
   }
+  // Non-shop sellers: open NPC business records not already listed as a registered shop (business.openShops sells their carried goods).
+  for(const rec of Object.values(ps.records??{})){
+   if(rec?.category!=='business'||rec.owner==='player'||rec.suspended||rec.status!=='营业'||(rec.openedAt??Infinity)>noon)continue;
+   if(shopRows.some(s=>s.keeper===rec.owner&&s.location===rec.location))continue;
+   const slot=slotOf(rec.owner),open=openKeeper(rec.owner)&&slot.location===rec.location&&ps.buildings?.[rec.location]?.owner===rec.owner&&(ps.buildings?.[rec.location]?.condition??1)>0&&!ps.buildings?.[rec.location]?.burning;
+   const items=[];
+   if(open)for(const item of Object.keys(ps.npcs[rec.owner].inventory??{}).sort()){
+    const avail=saleableStock(rd,e,rec.owner,item,{business:true}).available;
+    if(avail>0&&gain(item)>0)items.push({item,avail});
+   }
+   shopRows.push({id:rec.id??rec.owner,keeper:rec.owner,markup:rec.markup??1,registered:null,settlement:open?placeSettlement(e,ps,rec.location).value:null,location:rec.location,open,items,nonShop:true});
+  }
   const townShopRows=shopRows.filter(s=>s.registered===sid);
   const quoteMemo=new Map();
   const unitPrice=(shop,item,units,buyer)=>{
@@ -208,9 +220,9 @@ export async function runAudit({days=30,progress=()=>{}}={}){
    }
    return out;
   };
-  // The town's saleable supply: edible shelf stock within a day's walk of the first resident whose home is known.
+  // The town's saleable supply: edible stock of every open seller (shops and non-shop traders) within a day's round trip (rules travel.dailyTravelMinutes, engine.route on foot) of the first resident whose home is known; without a known home, every open seller.
   const anchor=entities.find(en=>en.location);
-  const townReach=anchor?reachable(anchor.location):shopRows.filter(s=>s.open&&s.settlement===sid&&s.items.length).map(shop=>({shop}));
+  const townReach=anchor?reachable(anchor.location):shopRows.filter(s=>s.open&&s.items.length).map(shop=>({shop}));
   let shelfSatiety=0;for(const r of townReach)for(const it of r.shop.items)shelfSatiety+=it.avail*gain(it.item);
 
   const visitsOf=shopId=>es.records?.[`customer_flow:${shopId}:${day}`]?.visits??[];
@@ -232,7 +244,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
     items:r.shop.items.flatMap(it=>{const units=Math.max(1,Math.ceil(baseMeal/gain(it.item))),price=unitPrice(r.shop,it.item,units,en.owner);
      return price===null||price<1?[]:[{item:it.item,avail:it.avail,cost:price,bought:boughtAt(r.shop.id,it.item)}];})})).filter(r=>r.items.length);
    const mine=reach1.filter(r=>r.engineServes),declined=mine.flatMap(r=>visitsOf(r.shop.id)).find(v=>en.members.includes(v.npc)&&v.outcome!=='bought');
-   const facts=buildFacts({supply:shelfSatiety,demand:townDemand,refCost,cash:en.cash,mouths:people,declined:declined&&(declined.reason??declined.outcome),
+   const facts=buildFacts({supply:shelfSatiety,demand:townDemand,refCost,cash:en.cash,declined:declined&&(declined.reason??declined.outcome),
     townShops:{total:townShopRows.length,open:townShopRows.filter(s=>s.open&&s.settlement===sid).length},reach:reachRows});
    const v=verdict(facts),cause=v.cause;
    const clue=(await Promise.all(v.clue.map(([f,n])=>srcLine(f,n)))).join('; ');
@@ -258,6 +270,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
  for(const c of ALL)attribution[c]={incidents:tally[c].incidents,meals:round(tally[c].meals),households:tally[c].households.size,people:tally[c].people,reasons:tally[c].reasons};
  return {days,start:start.minute,end:end.minute,grainItem:grain??null,
   totals:{named:{incidents:total.named.incidents,meals:round(total.named.meals)},statistical:{incidents:total.roster.incidents,meals:round(total.roster.meals),note:'roster-only households (no member in state.npcs)'}},
+  rosterOnlyUndetermined:{households:attribution.undetermined.households,incidents:attribution.undetermined.incidents,meals:attribution.undetermined.meals,note:'not counted in harvest/poverty/allocation/chain'},
   attribution,daily,chainBreakFirst20:chainRows,undeterminedFirst5:undeterminedRows,
   producerChainBreak:{status:'undetermined',reason:'t-m3 has no producer-to-town grain sale mechanism (no food-supply module), so "surplus > 0, road open, buyer has money, 7 days zero transport" has no transport to count; granary surplus is listed per day, not counted as saleable'},
   conservation:{money:books.money,food:books.food,ledger:{audit:auditLedger(doc.ledger),drift:driftCounts(doc),transfers:doc.ledger?.transfers??0},mismatches:books.mismatches},
