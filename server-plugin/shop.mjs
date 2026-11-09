@@ -1,3 +1,4 @@
+import {rollDice} from './scheduler.mjs';
 import {registerMerchandiseResolver} from './household-budget.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {toRational,fromRational} from './det-math.mjs';
@@ -271,20 +272,39 @@ function buyerNeeds(d,engine,state,place,read){
 }
 // 买方名额的键：登记户用户编号，无户的人用本人编号。
 function buyerKey(engine,state,id){return personHousehold(engine,state,id).value?.id??id;}
-function sellerShare(d,engine,state,place,read,owner,seller,available){
+function sellerShare(d,engine,state,place,read,owner,seller,item,available){
  const total=Math.floor(available);if(!(total>0))return 0;
  const away=buyerKey(engine,state,seller);
  const rows=buyerNeeds(d,engine,state,place,read).filter(b=>b.id!==away),key=buyerKey(engine,state,owner);
  if(rows.find(b=>b.id===key)?.buyer!==owner)return 0;
- return shareByNeed(total,rows).get(key)??0;
+ // 余数抽签的随机数按日派生（世界种子、聚落、卖家、物品、日序）：同一天同一来源的份额稳定，隔天重抽。
+ const day=Math.floor(state.minute/1440),u=(rollDice(d.get('randomSeed'),`seller-share:${place}:${seller}:${item}`,'share',day*1440,0,4294967296)-1)/4294967296;
+ return shareByNeed(total,rows,u).get(key)??0;
 }
-// 按需求比例把 total 件整分给 rows（{id,need}），最大余数法；余数并列按编号的码点序（不用 localeCompare，跨环境一致）。
-export function shareByNeed(total,rows){
+// 按需求比例把 total 件整分给 rows（{id,need}）：每户先得 floor(total*need/sum)，剩余 left 件按小数部分做无放回加权抽签，
+// 每户至多多得 1 件，总量恰为 total。抽样法为系统抽样：按编号码点序（不用 localeCompare，跨环境一致）把各户小数部分 f_i 排成
+// 首尾相接的累计区间 [C_{i-1},C_i)（总长恰为整数 left），取一个均匀起点 u∈[0,1)，在 u,u+1,…,u+left-1 处各取一点，
+// 落进区间 i 的点数即该户多得的件数。f_i<1，区间长度不足 1，故至多落一个点；区间 i 被命中的概率恰为其长度 f_i
+// （点按 1 的间隔排布，u 均匀，一个长 f_i<1 的区间含点的概率就是 f_i），所以每户期望份额恰为 total*need/sum。
+// u 为 [0,1) 的随机数，由调用方按日种子给出，同 u 结果相同。
+export function shareByNeed(total,rows,u=0){
  const sum=rows.reduce((n,b)=>n+b.need,0),out=new Map();
  if(!(total>0)||!(sum>0))return out;
  const part=rows.map(b=>{const exact=total*b.need/sum;return {id:b.id,n:Math.floor(exact),rem:exact-Math.floor(exact)};});
- let left=total-part.reduce((n,r)=>n+r.n,0);
- for(const r of [...part].sort((a,b)=>b.rem-a.rem||(a.id<b.id?-1:a.id>b.id?1:0))){if(left<=0)break;r.n++;left--;}
+ const left=total-part.reduce((n,r)=>n+r.n,0);
+ part.sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+ let cum=0;
+ part.forEach((r,i)=>{
+  const next=i===part.length-1?left:Math.min(left,cum+r.rem);// 浮点累计的末端钉到精确整数 left，保证守恒
+  r.add=Math.min(1,Math.max(0,Math.ceil(next-u)-Math.ceil(cum-u)));r.n+=r.add;cum=next;
+ });
+ // 浮点累计漂移可能让某区间略长于 1 而被夹到 1，少分一件；把缺额补给尚未加件、小数部分最大的户（并列按码点序），
+ // 保持每户为 floor 或 floor+1、总量恰为 total。漂移量级为浮点误差，对期望的影响可忽略。
+ // 反向漂移（多分）同理：从已加件、小数部分最小的户收回（并列按码点序逆序）。累计值已夹在 left 以内，两种修正都只在浮点误差时触发。
+ let short=left-part.reduce((n,r)=>n+r.add,0);
+ const byRem=(a,b)=>b.rem-a.rem||(a.id<b.id?-1:a.id>b.id?1:0);
+ for(const r of [...part].filter(r=>!r.add).sort(byRem)){if(short<=0)break;r.n++;r.add=1;short--;}
+ for(const r of [...part].filter(r=>r.add).sort(byRem).reverse()){if(short>=0)break;r.n--;r.add=0;short++;}
  for(const r of part)out.set(r.id,r.n);
  return out;
 }
@@ -316,7 +336,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    const own=shop.keeper===owner;
    if(!own){
     physical??=physicalOf(d,engine,read,shop.keeper);
-    const stock=sellerShare(d,engine,state,place,read,owner,shop.keeper,physical.rows.find(r=>r.holder===shop.keeper&&r.item===row.item)?.available??0);
+    const stock=sellerShare(d,engine,state,place,read,owner,shop.keeper,row.item,physical.rows.find(r=>r.holder===shop.keeper&&r.item===row.item)?.available??0);
     if(!stock)continue;
     const at=Math.max(opening.minute,now+travel);
     const base=regionalTradeBase(d,engine,row.item,shop.settlement,now);
@@ -389,7 +409,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    const business={keeper:id,markup:1};
    for(const row of physical.rows){
     if(row.holder!==id||!(engine.byId.get(row.item)?.nutrition?.satiety>0)||!(row.available>0))continue;
-    const quantity=sellerShare(d,engine,state,place,read,owner,id,row.available);if(!quantity)continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
+    const quantity=sellerShare(d,engine,state,place,read,owner,id,row.item,row.available);if(!quantity)continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
     const base=regionalTradeBase(d,engine,row.item,place,now);
     const quote=marketQuote(d,engine,{item:row.item,location:first.location,seller:id,buyer:owner,business,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place,goods:goodsClass(engine,row.item),supply:0,demand:1}});
     out.push({source:`trader_${id}`,seller:id,item:row.item,at,cycleDays:0,quantity,unitPrice:Math.max(1,Math.ceil(quote.listPrice*(1+engine.world.marketRules.depthImpact))),priceBasis:'local-retail-ceiling'});
