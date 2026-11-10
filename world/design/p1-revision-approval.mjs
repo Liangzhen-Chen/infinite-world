@@ -22,7 +22,7 @@ const step=(value,part)=>typeof part==='string'?value?.[part]:value?.find?.(r=>r
 export const getPath=(row,parts)=>parts.reduce(step,row);
 export function setPath(row,parts,value){const parent=getPath(row,parts.slice(0,-1));assert.ok(parent&&typeof parts.at(-1)==='string','修订路径无效');parent[parts.at(-1)]=structuredClone(value);}
 const pathLabel=parts=>parts.map(p=>typeof p==='string'?p:`[id=${p.id}]`).join('.').replaceAll('.[','[');
-const rowOf=(world,file,id)=>(file.endsWith('items.json')?world.items:file.endsWith('recipes.json')?world.recipes:world.locations).find(r=>r.id===id);
+export const rowOf=(world,file,id)=>(file.endsWith('items.json')?world.items:file.endsWith('recipes.json')?world.recipes:world.locations).find(r=>r.id===id);
 
 // --- text-preserving edit: replace only the bytes of one JSON value --------
 // The formal files use several layouts (one-line items, two-space recipes);
@@ -118,13 +118,16 @@ export function validateDraft(d,e){
 export const isPublished=(world,entries)=>entries.every(e=>{try{assert.deepEqual(getPath(rowOf(world,e.file,e.target),e.path),e.after);return true;}catch{return false;}});
 // The verdict is a few tokens; a smaller ceiling keeps each reservation inside the card limit.
 // The skeleton carries only the change; basis and facts travel once, as context.
-const skeletonOf=({basis,facts,supersedes,...core})=>core;
-const reviewRequest=(e,d,c)=>({...defaultReviewRequest(skeletonOf(e),d,c),max_tokens:400});
+export const skeletonOf=({basis,facts,supersedes,...core})=>core;
+export const reviewRequest=(e,d,c)=>({...defaultReviewRequest(skeletonOf(e),d,c),max_tokens:400});
 
-export async function run(args=process.argv.slice(2)){
+// 修订批的通用流水线（--prepare 冻结候选并跑 L1，--review L2，--publish，--verify）。P1 与级联批共用，各自的差别全在 cfg：
+// cfg={revision,root,CARD,limitYuan,frozen,buildEntries(world),draftFor,contextFor,validateDraft,applyCandidate,isPublished,note}
+export async function runRevision(cfg,args=process.argv.slice(2)){
+ const {revision,root,CARD,frozen,draftFor,contextFor,validateDraft,applyCandidate,isPublished}=cfg;
  const {loadWorld}=await import('../../tools/load-world.mjs');
  const world=await loadWorld();
- const entries=frozen?.entries??buildEntries(world);
+ const entries=frozen?.entries??await cfg.buildEntries(world);
  if(args.includes('--prepare')){
   assert.ok(!frozen,'候选已冻结');
   const {validateWorld}=await import('../../tools/validate-world.mjs');
@@ -137,15 +140,15 @@ export async function run(args=process.argv.slice(2)){
   const ceilings=entries.map(e=>{const r=reviewRequest(e,draftFor(e),contextFor(e));return (Buffer.byteLength(JSON.stringify({model:'deepseek-flash',stream:false,...r}))*rates.miss+r.max_tokens*rates.output)/1e6;});
   await fs.writeFile(`${root}/candidate.json`,JSON.stringify({revision,entries,drafts:entries.map(draftFor),contexts:entries.map(contextFor)},null,2)+'\n');
   await fs.writeFile(`${root}/l1.json`,JSON.stringify({revision,entries:entries.length,addedErrors:added,removedErrors:removed,baselineErrors:baseline.errors.length,candidateErrors:candidate.errors.length,textEditsVerified:true,modelCalls:0,published:false},null,2)+'\n');
-  await fs.writeFile(`${root}/cost-estimate.json`,JSON.stringify({rates,requests:entries.length,perRequestCeilingYuan:ceilings,firstPassCeilingYuan:ceilings.reduce((a,b)=>a+b,0),cardLimitYuan:0.02,modelCalls:0},null,2)+'\n');
+  await fs.writeFile(`${root}/cost-estimate.json`,JSON.stringify({rates,requests:entries.length,perRequestCeilingYuan:ceilings,firstPassCeilingYuan:ceilings.reduce((a,b)=>a+b,0),cardLimitYuan:cfg.limitYuan,modelCalls:0},null,2)+'\n');
   const budgetFile=`${root}/budget.json`;
-  try{await fs.access(budgetFile);}catch{await fs.writeFile(budgetFile,JSON.stringify({spentYuan:0,reservedYuan:0,waveLimitYuan:0.02,note:'P1 已审内容修订（4 条）：亮圳 11-05 批准，单卡上限 0.02 元。',cards:{[CARD]:{limitYuan:0.02,spentYuan:0,reservedYuan:0,maxRequests:entries.length}},requests:{}},null,2)+'\n');}
+  try{await fs.access(budgetFile);}catch{await fs.writeFile(budgetFile,JSON.stringify({spentYuan:0,reservedYuan:0,waveLimitYuan:cfg.limitYuan,note:cfg.note,cards:{[CARD]:{limitYuan:cfg.limitYuan,spentYuan:0,reservedYuan:0,maxRequests:entries.length}},requests:{}},null,2)+'\n');}
   console.log(JSON.stringify({entries:entries.length,addedErrors:added.length,removedErrors:removed.length,ceilingYuan:ceilings.reduce((a,b)=>a+b,0),modelCalls:0}));
  }
  if(args.includes('--review')){
   assert.ok(frozen,'先 --prepare 冻结候选');
   const budget=await read(`${root}/budget.json`),card=budget.cards?.[CARD];
-  assert.ok(Number.isFinite(card?.limitYuan)&&card.limitYuan>0&&card.limitYuan<=0.02,'缺少 P1 预算账或超过 0.02 元');
+  assert.ok(Number.isFinite(card?.limitYuan)&&card.limitYuan>0&&card.limitYuan<=cfg.limitYuan,`缺少 ${CARD} 预算账或超过 ${cfg.limitYuan} 元`);
   const {summary}=await runContentPipeline({entries,root:`${root}/review`,budgetRoot:root,revision,contextFor,validateDraft,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,
    buildDraftRequest:()=>{throw Error('Frozen candidate');},buildReviewRequest:reviewRequest,client:new DeepSeekClient({budgetYuan:card.limitYuan,logFile:`${root}/usage.jsonl`}),cardId:CARD,
    allocation:{cardId:CARD,incrementLimitYuan:card.limitYuan,maxRequests:card.maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:entries.length});
@@ -170,4 +173,6 @@ export async function run(args=process.argv.slice(2)){
   console.log(JSON.stringify({published:true,verified:approved.length,modelCalls:0}));
  }
 }
+export const run=(args=process.argv.slice(2))=>runRevision({revision,root,CARD,limitYuan:0.02,frozen,buildEntries,draftFor,contextFor,validateDraft,applyCandidate,isPublished,
+ note:'P1 已审内容修订（4 条）：亮圳 11-05 批准，单卡上限 0.02 元。'},args);
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)await run();

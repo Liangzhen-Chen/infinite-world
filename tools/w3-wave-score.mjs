@@ -86,6 +86,13 @@ export async function publishedW3(world){
    entries.push({id:bone.id,kind,source:label,entity:official});
   }
  }
+ // 骨架是规则派生的（如成品价），上游修订后骨架本身已是新值，applySupersedes 无需更新；但正式条目现值相对评分时的旧值仍变了：
+ // 回执声明的 after 等于正式现值，也算已归因（旧值取回执的 before），供语料哈希回退。
+ for(const s of supersedes){
+  const x=entries.find(e=>e.id===s.targetId);
+  if(!x||explained.some(a=>a.id===s.targetId&&JSON.stringify(a.parts)===JSON.stringify(s.parts)))continue;
+  if(hashContent(getPath(x.entity,s.parts)??null)===hashContent(s.after))explained.push({id:s.targetId,parts:s.parts,old:s.before,source:`修订回执 ${s.revision}：${s.receiptFile}#${s.targetId} ${s.label}`});
+ }
  if(errors.length)throw new Error(errors.join('\n'));
  entries.sort((a,b)=>a.id.localeCompare(b.id));if(new Set(entries.map(x=>x.id)).size!==entries.length)throw new Error('W3条目重复');
  if(world.items.length<400||world.recipes.length<200)throw new Error('正式目录未达到400/200');
