@@ -58,7 +58,7 @@ export const ACTION_NEEDS = [
 // 词表分三类：加热动词（煮熬烘烤蒸炒……）、冶炼热处理（淬火退火回火熔炼熔化焊煅）、火候火位（文火武火炭火入灶）；烧+X 的结果补语形式逐个列（烧软烧开烧化烧干烧制烧结烧煮烧水）。
 const HEAT = /加热|烧至|烧红|烧透|烧沸|烧熟|烧热|烧软|烧开|烧化|烧干|烧制|烧结|烧煮|烧水|烧成|加温|融化|煅烧|煅|入炉|上炉|炉上|回炉|煮|熬|烙|焙|烘|煎|炒|锻|煨|炖|烤|焖|煲|烩|焯|炙|(?<!爆)炸(?!裂|开)|烫(?!手|伤|着|到|嘴)|蒸(?!发|汽|腾)|熔化|熔融|熔炼|熔铸|回火|退火|淬火|淬|焊|热合|热处理|生火|引火|引燃|升火|点火|起灶|坐灶|灶上|灶下|入灶|小灶|[小大中旺明文武温低稳微]火|炭火|柴火|微沸|沸腾/gu;
 // 复合词里的用火字不是动作（煮锅、锻锤、烘盘）。
-const HEAT_COMPOUND = /[煮煎炒熬烘烙焙炖烤锻煲烩焯炙煅焊炸][锅盘盆壶罐炉架锤砧工]|蒸[笼屉锅架盘]|[淬回退]火[炉池]/gu;
+const HEAT_COMPOUND = /[煮煎炒熬烘烙焙炖烤锻煲烩焯炙煅焊炸][锅盘盆壶罐炉架锤砧工]|烙[印痕]|蒸[笼屉锅架盘]|[淬回退]火[炉池]/gu;
 // 否定只管紧邻的动作/器具：把检查对象前面的文字（slice(0, 位置)）交给它，必须以“否定词(+情态/介词)”收尾才算否定。
 // 否定与后面的动作/器具之间可隔一个动作或性状词（不承重锤击、不受力敲打，至多两字）；“不断、不停、不久、不时、不已……”里的“不”不是否定，所以“不断加热”“不断用案板搅”仍要检查。
 // 按词形整体排除不表示否定的词：不断/不停/不久/不时/不住/不已/不止、不过/不然/不料/不足/不够/不免/不禁/不由/不觉/不知、不仅/不但/不论/不管/不如/不妨/不只/不光/不单，
@@ -71,7 +71,8 @@ const EXTERNAL = /另备|自备|自带|不随货|使用者(?:自)?备|须(?:由)
 const NOT_PROVIDED = /不(?:随)?附|不含|不带|不配/u;
 // 声明外购/不提供：只豁免被声明的那个器具或对象（见 declaredSpans），不是整句整个分句。
 // 用火动作前的否定还可以带一个火位/用火短语（不坐灶加热、不用火加热、不明火煮）：否定的是整个“用火加热”。
-const HEAT_NEGATION = new RegExp(`${NEGATION.source.slice(0, -1)}(?:坐灶|上灶|入灶|用火|生火|起火|点火|开火|置火|上火|入炉|上炉|明火|火|灶|炉)?$`, 'u');
+// 贮存安全写法（远离明火、忌见明火、避开炉灶、勿近火源）也是否定：否定词后可带火位词。
+const HEAT_NEGATION = new RegExp(`(?:${NEGATION.source.slice(0, -1)}(?:坐灶|上灶|入灶|用火|生火|起火|点火|开火|置火|上火|入炉|上炉|明火|火|灶|炉)?|(?:远离|避开?|忌见?|勿近|莫近|切勿近|严禁近)[炉灶明火热源]{0,4})$`, 'u');
 const DECL = new RegExp(`${EXTERNAL.source}|${NOT_PROVIDED.source}`, 'gu');
 const DECL_BOUNDARY = /[用以取将把再并然后即令使入至置放]/u;
 const DECL_FILLER = /^(?:的|提供|交付|供应|供给|随货|随附|附带|附)*$/u;
@@ -101,7 +102,8 @@ const QUANT_UNITS = {
 };
 const UNIT_DIM = Object.fromEntries(Object.entries(QUANT_UNITS).flatMap(([dim, units]) => Object.keys(units).map((unit) => [unit, dim])));
 const QUANT_RE = new RegExp(`(${NUMERAL})(${Object.keys(UNIT_DIM).sort((a, b) => b.length - a.length).join('|')})(?![火起高温A-Za-z])`, 'giu');
-const TEMP_CONTEXT = /(?:温|角|[热烧升降冷凉]至|达到?|升到|降到)[^，。；]{0,4}$/u;
+// 度算温度单位：数字紧接“度”，且数字前面是真正的温度表述（温度、水温、加热到、烧至、升到……）；“温水后一度翻动”“水温升高后一度翻动”是次数。角度写作“九十度角”。
+const TEMP_CONTEXT = /(?:温度|[水油炉火锅]温|火候|[热烧升降冷凉加]至|[热烧升降冷凉加]到|达到?|升到|降到)(?:约|为|在|是)?$/u;
 const TOTAL_WORD = /(?:全程|总耗时|总用时|总计|合计|共计|共|前后|整个过程|一共)(?:约|为|需|要|共)*$/u;
 const DEADLINE = /^(?:内|以内|之内|为限)/u;
 function numberOf(raw) {
@@ -116,7 +118,8 @@ function numberOf(raw) {
   return parsed.ok ? parsed.value : null;
 }
 // 文本里的全部“数字+单位”：{dim, base, raw, index}。第/每/隔 + 数 + 天（第二天、每三天）是序数/频率，不是数量。
-export function quantitiesIn(text) {
+// marked=true（检查正文）：天、日、周、月只在带期限标记（内、之内、以内、为限）时算数量，“半天、一天”不当期限；marked=false（收集骨架事实）全算。
+export function quantitiesIn(text, marked = false) {
   const found = [];
   for (const match of text.matchAll(QUANT_RE)) {
     if (/[第每隔]$/u.test(text.slice(0, match.index))) continue;
@@ -128,11 +131,12 @@ export function quantitiesIn(text) {
     if (match[2] === '两' && /^[个支只条根枚件块张片份名位次天日人]/u.test(text.slice(match.index + match[0].length))) continue;
     // 单位歧义：度只在温度/角度语境算（“一度、两度翻动”是次数）；寸步、尺规、合土、斗篷等同形词不算。
     const before = text.slice(0, match.index), after = text.slice(match.index + match[0].length);
-    if (match[2] === '度' && !TEMP_CONTEXT.test(before)) continue;
+    if (match[2] === '度' && !TEMP_CONTEXT.test(before) && !/^角/u.test(after)) continue;
     if (match[2] === '寸' && /^[步断劲]/u.test(after)) continue;
     if (match[2] === '尺' && /^[规子寸]/u.test(after)) continue;
-    if (match[2] === '合' && /^[土上拢并金成起好严适力理格作同]/u.test(after)) continue;
+    if (match[2] === '合' && (/^[土上拢并金成起好严适力理格作同欢]/u.test(after) || match[1] === '百')) continue; // 百合是植物名
     if (match[2] === '斗' && /^[篷笠]/u.test(after)) continue;
+    if (marked && UNIT_DIM[match[2]] === 'days' && !DEADLINE.test(after)) continue;
     const unit = /^[a-z]+$/iu.test(match[2]) ? match[2].toLowerCase() : match[2], dim = UNIT_DIM[unit];
     found.push({ dim, base: value * QUANT_UNITS[dim][unit], raw: match[0], index: match.index, end: match.index + match[0].length });
   }
@@ -355,7 +359,7 @@ function quantityIssues(text, entry, vocab, items) {
   if (typeof shelf === 'number') allowed.days.add(shelf);
   const errors = [];
   const seenRaw = new Set();
-  for (const quantity of quantitiesIn(text)) {
+  for (const quantity of quantitiesIn(text, true)) {
     if (seenRaw.has(quantity.raw)) continue;
     const near = (set) => [...set].some((value) => Math.abs(value - quantity.base) < 0.5);
     const context = text.slice(Math.max(0, quantity.index - 12), Math.min(text.length, quantity.end + 8)).trim();
