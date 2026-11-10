@@ -1,6 +1,6 @@
 {
   "rule": "人工核定条目不计入人工队列比例（needsSystemicRepair），其余检查同 readApprovedContent；规则解释待李白确认",
-  "total": 41,
+  "total": 43,
   "l2Passed": [
     "class_mushroom",
     "class_nut",
@@ -39,7 +39,9 @@
     "class_condiment_sauce",
     "item_butter",
     "item_mustard_seed",
-    "item_poppy_seed"
+    "item_poppy_seed",
+    "item_bread",
+    "item_water"
   ],
   "manualVerified": [
     "item_turnip",

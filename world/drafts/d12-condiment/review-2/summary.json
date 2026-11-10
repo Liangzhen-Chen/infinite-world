@@ -1,11 +1,11 @@
 {
-  "total": 41,
-  "passed": 38,
+  "total": 43,
+  "passed": 40,
   "manual": 3,
   "pending": 0,
-  "costUpperYuan": 0.286642,
+  "costUpperYuan": 0.28983168000000004,
   "budget": {
-    "spentYuan": 0.286642,
+    "spentYuan": 0.28983168000000004,
     "reservedYuan": 0,
     "limitYuan": 1,
     "waveLimitYuan": 1,
@@ -13,7 +13,7 @@
     "cards": {
       "D12-CONDIMENT": {
         "limitYuan": 1,
-        "spentYuan": 0.286642,
+        "spentYuan": 0.28983168000000004,
         "reservedYuan": 0,
         "maxRequests": 110
       }
@@ -2386,6 +2386,70 @@
           "latencyMs": 836.0921000000017,
           "timestamp": "2026-11-09T20:08:31.234Z"
         }
+      },
+      "c244ceda-c4cb-4216-b989-aeca75eb6357": {
+        "card": "D12-CONDIMENT",
+        "label": "content-review-2-item_bread-review0",
+        "requestHash": "967de857611c5babd24636b0efd3aefbf32a6b90caf5d9ec7ce96841a288b2e6",
+        "reservedYuan": 0.023096,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/c244ceda-c4cb-4216-b989-aeca75eb6357.json",
+          "requestHash": "967de857611c5babd24636b0efd3aefbf32a6b90caf5d9ec7ce96841a288b2e6",
+          "responseHash": "6616b0ced8b4dd39b9cbb12e883d2227bfee7c3a12c2280b21cc546899866769"
+        },
+        "costUpperYuan": 0.00159184,
+        "measurement": {
+          "label": "content-review-2-item_bread-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1646,
+            "completion_tokens": 7,
+            "total_tokens": 1653,
+            "prompt_tokens_details": {
+              "cached_tokens": 896
+            },
+            "prompt_cache_hit_tokens": 896,
+            "prompt_cache_miss_tokens": 750
+          },
+          "costUpperYuan": 0.00159184,
+          "cumulativeUpperYuan": 0.28823384,
+          "latencyMs": 907.3823,
+          "timestamp": "2026-11-10T00:41:05.233Z"
+        }
+      },
+      "53ce4d52-4c15-4c32-98fe-70e7a4a03431": {
+        "card": "D12-CONDIMENT",
+        "label": "content-review-2-item_water-review0",
+        "requestHash": "b7a90d01902d41e925a7f6a74af96bb83615ccd5390a5148c61b4a86bb8a5aba",
+        "reservedYuan": 0.023132,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/53ce4d52-4c15-4c32-98fe-70e7a4a03431.json",
+          "requestHash": "b7a90d01902d41e925a7f6a74af96bb83615ccd5390a5148c61b4a86bb8a5aba",
+          "responseHash": "d651689fef88e5894cde97b72ca53784dcd8d94625f7ee569a4170e708ee703c"
+        },
+        "costUpperYuan": 0.00159784,
+        "measurement": {
+          "label": "content-review-2-item_water-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1649,
+            "completion_tokens": 7,
+            "total_tokens": 1656,
+            "prompt_tokens_details": {
+              "cached_tokens": 896
+            },
+            "prompt_cache_hit_tokens": 896,
+            "prompt_cache_miss_tokens": 753
+          },
+          "costUpperYuan": 0.00159784,
+          "cumulativeUpperYuan": 0.28983168000000004,
+          "latencyMs": 628.9684000000002,
+          "timestamp": "2026-11-10T00:41:05.894Z"
+        }
       }
     },
     "historicalUnallocatedSpentYuan": 0,
@@ -2466,10 +2530,182 @@
         "class_legume"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "reviewer": "主会话人读",
+        "notes": [
+          {
+            "id": "class_nut",
+            "note": "榛仁 FDC 170581 5.31%/628、核桃仁 FDC 170187 4.07%/654，与 FDC 一致；均值能量密度 280 饱腹/kg 干物质量级合理"
+          },
+          {
+            "id": "item_pear",
+            "note": "梨 FDC 169118 84.0%/57，可食 0.9；推算 148 合理"
+          },
+          {
+            "id": "class_milk",
+            "note": "牛乳 FDC 171265 88.1%/61；羊乳为近似（凭记忆约 87%/69），量级合理；均值 217 合理"
+          },
+          {
+            "id": "class_grain",
+            "note": "硬红冬小麦 168890、黑麦粉 168885、燕麦 169705、珍珠大麦 170284 均已核对，含水 8–13%、325–389 kcal；均值 162 合理"
+          },
+          {
+            "id": "class_legume",
+            "note": "扁豆 172420、干豌豆 172428、蚕豆 175205 已核对，含水 8–11%、341–364 kcal；均值 162 合理"
+          },
+          {
+            "id": "item_leek",
+            "note": "韭葱 FDC 169246 83.0%/61；推算 150 合理"
+          },
+          {
+            "id": "class_mushroom",
+            "note": "白蘑菇 FDC 169251 92.4%/22；推算 121 合理"
+          },
+          {
+            "id": "item_cucumber",
+            "note": "黄瓜 FDC 168409 95.2%/15；推算 130 合理"
+          },
+          {
+            "id": "class_meat",
+            "note": "三种生肉为近似值（凭记忆 143–217 kcal、含水 64–71%），量级与常识一致（亮圳口径：大致合理即可）；均值 243 合理"
+          },
+          {
+            "id": "item_goat_milk",
+            "note": "羊乳近似（凭记忆约 87% 含水），推算 221 合理"
+          },
+          {
+            "id": "item_milk",
+            "note": "牛乳 FDC 171265；推算 214 合理"
+          },
+          {
+            "id": "item_parsnip",
+            "note": "欧防风 FDC 170417 79.5%/75；推算 152 合理"
+          }
+        ],
+        "wave": [
+          {
+            "id": "class_mushroom",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "白蘑菇 FDC 169251 92.4%/22；推算 121 合理"
+          },
+          {
+            "id": "item_cucumber",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "黄瓜 FDC 168409 95.2%/15；推算 130 合理"
+          },
+          {
+            "id": "class_meat",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "三种生肉为近似值（凭记忆 143–217 kcal、含水 64–71%），量级与常识一致（亮圳口径：大致合理即可）；均值 243 合理"
+          },
+          {
+            "id": "class_grain",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "硬红冬小麦 168890、黑麦粉 168885、燕麦 169705、珍珠大麦 170284 均已核对，含水 8–13%、325–389 kcal；均值 162 合理"
+          },
+          {
+            "id": "item_goat_milk",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "羊乳近似（凭记忆约 87% 含水），推算 221 合理"
+          },
+          {
+            "id": "item_milk",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "牛乳 FDC 171265；推算 214 合理"
+          },
+          {
+            "id": "item_leek",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "韭葱 FDC 169246 83.0%/61；推算 150 合理"
+          },
+          {
+            "id": "class_milk",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "牛乳 FDC 171265 88.1%/61；羊乳为近似（凭记忆约 87%/69），量级合理；均值 217 合理"
+          },
+          {
+            "id": "class_legume",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "扁豆 172420、干豌豆 172428、蚕豆 175205 已核对，含水 8–11%、341–364 kcal；均值 162 合理"
+          },
+          {
+            "id": "item_parsnip",
+            "scores": [
+              4,
+              4,
+              4,
+              4,
+              4,
+              4
+            ],
+            "note": "欧防风 FDC 170417 79.5%/75；推算 152 合理"
+          }
+        ]
       },
-      "costUpperYuan": 0.28143832,
+      "costUpperYuan": 0.286642,
       "manualRatio": 0.04,
       "needsSystemicRepair": false,
       "aiMisjudgedByProgram": {
@@ -2485,9 +2721,9 @@
     },
     {
       "index": 1,
-      "fingerprint": "04636c2d5dc5e2bb6ef15255f182b2f29fce8f981f43b3413cdf02bd1d56386f",
-      "count": 16,
-      "passed": 14,
+      "fingerprint": "e42f45449c9f354cf9434920b941c0b9ad2402fc9f86c499ea3a5705b41a81cc",
+      "count": 18,
+      "passed": 16,
       "ids": [
         "item_garlic",
         "item_oats",
@@ -2504,7 +2740,9 @@
         "item_butter",
         "item_mustard_seed",
         "item_poppy_seed",
-        "item_caraway_seed"
+        "item_caraway_seed",
+        "item_bread",
+        "item_water"
       ],
       "rewritten": 0,
       "manual": [
@@ -2516,18 +2754,18 @@
         "class_edible_fat"
       ],
       "sample": [
-        "item_poppy_seed",
-        "class_condiment_sauce",
-        "item_oats",
         "class_salt",
-        "class_cream"
+        "item_water",
+        "class_vinegar",
+        "item_butter",
+        "class_condiment_sauce"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 0.286642,
-      "manualRatio": 0.125,
+      "costUpperYuan": 0.28983168000000004,
+      "manualRatio": 0.1111111111111111,
       "needsSystemicRepair": true,
       "aiMisjudgedByProgram": {
         "count": 1,

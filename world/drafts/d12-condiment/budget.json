@@ -1,5 +1,5 @@
 {
-  "spentYuan": 0.286642,
+  "spentYuan": 0.28983168000000004,
   "reservedYuan": 0,
   "limitYuan": 1,
   "waveLimitYuan": 1,
@@ -7,7 +7,7 @@
   "cards": {
     "D12-CONDIMENT": {
       "limitYuan": 1,
-      "spentYuan": 0.286642,
+      "spentYuan": 0.28983168000000004,
       "reservedYuan": 0,
       "maxRequests": 110
     }
@@ -2379,6 +2379,70 @@
         "cumulativeUpperYuan": 0.286642,
         "latencyMs": 836.0921000000017,
         "timestamp": "2026-11-09T20:08:31.234Z"
+      }
+    },
+    "c244ceda-c4cb-4216-b989-aeca75eb6357": {
+      "card": "D12-CONDIMENT",
+      "label": "content-review-2-item_bread-review0",
+      "requestHash": "967de857611c5babd24636b0efd3aefbf32a6b90caf5d9ec7ce96841a288b2e6",
+      "reservedYuan": 0.023096,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/c244ceda-c4cb-4216-b989-aeca75eb6357.json",
+        "requestHash": "967de857611c5babd24636b0efd3aefbf32a6b90caf5d9ec7ce96841a288b2e6",
+        "responseHash": "6616b0ced8b4dd39b9cbb12e883d2227bfee7c3a12c2280b21cc546899866769"
+      },
+      "costUpperYuan": 0.00159184,
+      "measurement": {
+        "label": "content-review-2-item_bread-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1646,
+          "completion_tokens": 7,
+          "total_tokens": 1653,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 750
+        },
+        "costUpperYuan": 0.00159184,
+        "cumulativeUpperYuan": 0.28823384,
+        "latencyMs": 907.3823,
+        "timestamp": "2026-11-10T00:41:05.233Z"
+      }
+    },
+    "53ce4d52-4c15-4c32-98fe-70e7a4a03431": {
+      "card": "D12-CONDIMENT",
+      "label": "content-review-2-item_water-review0",
+      "requestHash": "b7a90d01902d41e925a7f6a74af96bb83615ccd5390a5148c61b4a86bb8a5aba",
+      "reservedYuan": 0.023132,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/53ce4d52-4c15-4c32-98fe-70e7a4a03431.json",
+        "requestHash": "b7a90d01902d41e925a7f6a74af96bb83615ccd5390a5148c61b4a86bb8a5aba",
+        "responseHash": "d651689fef88e5894cde97b72ca53784dcd8d94625f7ee569a4170e708ee703c"
+      },
+      "costUpperYuan": 0.00159784,
+      "measurement": {
+        "label": "content-review-2-item_water-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1649,
+          "completion_tokens": 7,
+          "total_tokens": 1656,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 753
+        },
+        "costUpperYuan": 0.00159784,
+        "cumulativeUpperYuan": 0.28983168000000004,
+        "latencyMs": 628.9684000000002,
+        "timestamp": "2026-11-10T00:41:05.894Z"
       }
     }
   },
