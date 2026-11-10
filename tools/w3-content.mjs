@@ -58,6 +58,8 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
   return {errors,warnings};
 }
 export function assembleW3(world,bones,lore) {
+  // 候选必须从 loadWorld 读出的原样世界装配（发布路径如此）：已被 materializeRuntimeWorld 合并过的世界覆盖层已消耗，后补进来的行拿不到覆盖，D12 整类校验会悄悄算错。
+  if(world.runtimeMaterialized)throw new Error('候选必须用原样世界装配（世界已被 materializeRuntimeWorld 物化，覆盖层已消耗）');
   const byId=new Map(lore.map(row=>[row.id,row])),candidate=structuredClone(world);
   // 已在世界里的行以正式（已审批、已发布）的形态为准：本批骨架只补世界还没有的行。否则重新装配会把后来经审批批次改过的字段（如 P1 修订批的羊皮纸价）按骨架旧值写回。
   const merge=(existing,rows)=>[...existing,...rows.filter(row=>!existing.some(old=>old.id===row.id))];

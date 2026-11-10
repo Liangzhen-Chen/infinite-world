@@ -63,12 +63,13 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
     // 引用被移出物品的配方（含后来生成的加工/抄书配方）一并移出，旧版不留悬空引用（withoutRecipesOfItems）。
     old.items=old.items.filter(row=>!addedItems.has(row.id));old.recipes=old.recipes.filter(row=>!addedRecipes.has(row.id));withoutRecipesOfItems(old,addedItems);
     for(const npc of old.npcs)for(const id of Object.keys(npc.inventory??{}))if(addedItems.has(id))delete npc.inventory[id];
-    const oldEngine=new WorldEngine(old),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');
+    // WorldEngine 会原地物化 old（覆盖层被消耗）。候选底版取物化之前的原样副本，与发布路径一致（发布用 loadWorld 的原样世界装配，assembleW3 拒绝物化过的世界）。
+    const pristineOld=structuredClone(old),oldEngine=new WorldEngine(old),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');
     document.worldHash=await registry.put(old);document.state.player.coins=319;
  document.state.npcs.npc_hw_duanyan.coins=731;document.state.npcs.npc_hw_duanyan.trust=19;
  delete document.state.npcs.npc_hw_duanyan.inventory.item_iron;
  document.state.npcs.npc_hw_duanyan.inventory.item_mining_pick=0;
-    const before=structuredClone(document.state),next=assembleTradesCandidate(old,bones,lore);next.version='w3-trades-candidate';next.rules.version=next.version;
+    const before=structuredClone(document.state),next=assembleTradesCandidate(pristineOld,bones,lore);next.version='w3-trades-candidate';next.rules.version=next.version;
  await store.create({id:'old',worldVersion:world.version,document});const nextHash=await registry.put(next);
  await store.transact('old',{id:'update',input:{type:'world_upgrade',worldHash:nextHash,eventId:'update'}},store.reducer);
  const after=(await store.read('old')).document,engine=await registry.get(after.worldHash);
