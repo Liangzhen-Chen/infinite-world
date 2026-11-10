@@ -100,11 +100,12 @@
     "rejection": {
       "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
       "at": "2026-11-10",
-      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。",
+      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。；recipe_w3c_pear_wheat_gruel：\"八十份钟\"错字（DURATION-DERIVE 全仓重扫新命中，正式 recipes.json 同错；依李白 f8282524\"新命中一并走 L4 退回重写\"，主会话补入）",
       "ids": [
         "recipe_w3c_mushroom_barley_pot",
         "recipe_w3c_parsnip_cream_pot",
-        "recipe_w3c_walnut_honey_bites"
+        "recipe_w3c_walnut_honey_bites",
+        "recipe_w3c_pear_wheat_gruel"
       ]
     }
   },
