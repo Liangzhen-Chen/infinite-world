@@ -9,7 +9,7 @@ export function topLevelStatements(src) {
   const CONT = /^(?:[}\])?:,.+\-*\/=&|]|else\b|catch\b|finally\b)/;
   const flush = () => { if (cur) { out.push(cur); cur = null; } };
   // 正则字面量可出现的位置：前一个有效字符是运算符/开括号，或前一个记号是 =>，或前一个词是 return/typeof 等关键字（这些词之后的 / 起正则，不是除号）。
-  const KW = /(?:^|[^w$.])(?:return|typeof|case|of|in|else|yield|void|delete|throw|new|do|instanceof|await)$/;
+  const KW = /(?:^|[^\w$.])(?:return|typeof|case|of|in|else|yield|void|delete|throw|new|do|instanceof|await)$/;
   const regexOk = () => {
     if (lastSig === '' || '(,=:[!&|?{};'.includes(lastSig)) return true;
     const tail = cur ? cur.text.trimEnd().slice(-16) : '';
