@@ -21,6 +21,22 @@ export function defaultReviewRequest(entry, draft, context) {
     ],
   };
 }
+// 起草型条目（既无冻结草稿也无离线草稿）在发起草请求前拿不到草稿，复核请求费用上界只能由规则推出：
+// 草稿是起草请求的模型输出，至多 max_tokens 个 token；复核请求 = 复核骨架 + 草稿。
+// 系数：每个输出 token 至多对应多少 UTF-8 字节。取实测值，不估：tools/measure-output-bytes-per-token.mjs 遍历
+// world/drafts/**/budget-responses/*.json（本仓库真实 DeepSeek 调用证据），字节 = message.content + tool_calls arguments，token = usage.completion_tokens，
+// 排除无 token 数、带 reasoning_content、输出为空的记录（本次均为 0 条）。2026-11-10 实测 2453 条：最大 4.623、p99 4.191、中位 3.0；
+// 其中起草类（label 不含 -review）仅 20 条，最大 3.720。取法：对全部样本的最大值向上取整 = 5。
+// tests/content-pipeline.test.mjs 会重跑该统计，实测最大值一旦超过本常量即失败，需重新取值。样本里起草类偏少，所以超界照样停（见 one()）。
+// 占位草稿用 '"' 填充：嵌进复核请求（JSON 套 JSON）每个引号最多转义成 4 字节，使占位草稿覆盖转义膨胀的最坏情形。
+// 起草请求必须是真正的模型请求（有 messages 数组）；人工稿等没有模型输出上界的请求无法推出上界，按原规定停。
+export const MAX_UTF8_BYTES_PER_OUTPUT_TOKEN=5;
+const DEFAULT_MAX_TOKENS=1800; // 与 content-budget 的 reserveCeilingYuan 默认值一致
+export function maxDraftBytes(draftBody){
+  if(!Array.isArray(draftBody?.messages))return NaN;
+  const tokens=draftBody.max_tokens??DEFAULT_MAX_TOKENS;
+  return Number.isInteger(tokens)&&tokens>0?tokens*MAX_UTF8_BYTES_PER_OUTPUT_TOKEN:NaN;
+}
 function reviewIssues(review) {
   if (!review || !Array.isArray(review.contradictions)) throw new Error('事实审查缺少 contradictions 数组');
   for (const row of review.contradictions) {
@@ -120,9 +136,15 @@ export async function runContentPipeline({
         if(frozen){const check=await validateDraft(frozen,entry,context);const errors=Array.isArray(check)?check:check.errors??[];if(errors.length)throw Error(errors.join('\n'));record.frozenCandidate={entryHash:hashContent(entry),draftHash:hashContent(frozen)};}
         const draftDetails={entry,context,phase:'draft',feedback,record,file};
         if(!offline&&!frozen)preparedDraft=await prepareRequest(await buildDraftRequest(entry,feedback,context),draftDetails);
-        if(expectedDraft===undefined)throw budget.stop('候选未定且无法证明完整审核请求上界，已停止');
+        let draftBytes=null,plannedDraft=expectedDraft;
+        if(expectedDraft===undefined){
+          // 起草型：用按 max_tokens 换算的最大占位草稿构造复核请求，求预留上界；其余路径不进入这里。
+          draftBytes=preparedDraft?maxDraftBytes(preparedDraft.body):NaN;
+          if(!Number.isFinite(draftBytes))throw budget.stop('候选未定且无法证明完整审核请求上界，已停止');
+          plannedDraft='"'.repeat(draftBytes);
+        }
         // Preflight on a copy so the future review has no emitted receipt yet.
-        const plannedReview=await prepareRequest(await buildReviewRequest(entry,expectedDraft,context),{entry,context,phase:'review',draft:expectedDraft,record:structuredClone(record),file});
+        const plannedReview=await prepareRequest(await buildReviewRequest(entry,plannedDraft,context),{entry,context,phase:'review',draft:plannedDraft,record:structuredClone(record),file});
         reservations=await budget.reserveRound([...(offline||frozen?[]:[{body:preparedDraft.body,label:draftLabel}]),{body:plannedReview.body,label:reviewLabel}]);
         if(!eligible&&!frozen)record.attempts=attempt+1;
         const response = frozen?null:offline??await request(preparedDraft,draftLabel,draftDetails,reservations[0]);
@@ -131,8 +153,10 @@ export async function runContentPipeline({
         if(!offline&&!frozen)record.responseEvidence.push({phase:'draft',attempt:attempt+1,requestId:reservations[0],...budget.ledger.requests[reservations[0]].responseEvidence});
         record.measurements??=[];if(!offline&&!frozen&&response.measurement)record.measurements.push(response.measurement);
         await writeJSON(file,record);
-        record.draft = frozen??await extractDraft(response, entry);
-        assert.deepEqual(record.draft,expectedDraft,'起草结果不符已预留的固定候选');
+        const extracted=frozen??await extractDraft(response, entry);
+        if(draftBytes!==null){if(Buffer.byteLength(JSON.stringify(extracted))>draftBytes)throw budget.stop('起草结果超过已预留的复核请求上界，已停止');}
+        record.draft = extracted;
+        if(draftBytes===null)assert.deepEqual(record.draft,expectedDraft,'起草结果不符已预留的固定候选');
         const validation = await validateDraft(record.draft, entry, context);
         record.errors = Array.isArray(validation) ? validation : validation.errors ?? [];
         record.warnings = Array.isArray(validation) ? [] : validation.warnings ?? [];

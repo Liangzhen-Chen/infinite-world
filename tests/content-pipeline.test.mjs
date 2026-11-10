@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import { runContentPipeline,hashContent,readApprovedContent } from '../tools/content-pipeline.mjs';
+import { runContentPipeline,hashContent,readApprovedContent,defaultReviewRequest,maxDraftBytes,MAX_UTF8_BYTES_PER_OUTPUT_TOKEN } from '../tools/content-pipeline.mjs';
+import { reserveCeilingYuan } from '../tools/content-budget.mjs';
+import { measure } from '../tools/measure-output-bytes-per-token.mjs';
+import { createHash } from 'node:crypto';
 import {extractDraft,buildDraftRequest} from '../tools/npc-depth-content.mjs';
 
 test('逐条审查、最多两次重写、失败不拒绝同批、通过条目断点续跑', async t => {
@@ -121,4 +124,88 @@ test('坏JSON的每次paid原文在extract前持久保存，后轮不覆盖',asy
  const ledger=result.summary.budget,rows=Object.values(ledger.requests).filter(r=>r.status==='settled');assert.equal(rows.length,3);
  for(const [i,row] of rows.entries()){const saved=JSON.parse(await fs.readFile(path.join(p.root,row.responseEvidence.file),'utf8'));assert.equal(saved.response.choices[0].message.content,`坏JSON第${i+1}轮`);assert.equal(saved.usage.completion_tokens,i+1);assert.equal(saved.responseHash,hashContent(saved.response));}
  assert.equal(ledger.reservedYuan,0);
+});
+
+// ---- 起草型条目（无冻结草稿、无 reviewDraftFor）：先预留“起草 + 按 max_tokens 构造的最大占位草稿复核”上界 ----
+function draftingFixture({maxTokens=100,descriptionBytes=20}={}){
+  const calls=[],bodies={};
+  const client={spent:0,budgetYuan:20,rates:{hit:.04,miss:2,output:8},async generate(body,label){
+    calls.push(label);bodies[label]=body;this.spent+=.001;
+    const review=label.includes('-review');
+    const out=review?{contradictions:[]}:{id:'item_draft',description:'x'.repeat(descriptionBytes)};
+    return{choices:[{message:{content:JSON.stringify(out)}}],usage:{completion_tokens:11},measurement:{costUpperYuan:.001}};
+  }};
+  const options={client,entries:[{id:'item_draft'}],buildDraftRequest:entry=>({max_tokens:maxTokens,messages:[{role:'system',content:'起草'},{role:'user',content:JSON.stringify(entry)}]}),validateDraft:()=>[],concurrency:1};
+  return{calls,bodies,client,options};
+}
+
+test('起草型条目：预留起草加复核上界后发起草、再发复核', async t=>{
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'content-pipeline-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const {calls,bodies,client,options}=draftingFixture({maxTokens:100});
+  const result=await runContentPipeline({...options,root});
+  assert.equal(result.summary.passed,1);
+  assert.deepEqual(calls,['content-'+path.basename(root)+'-item_draft-draft0','content-'+path.basename(root)+'-item_draft-review0']);
+  const ledger=JSON.parse(await fs.readFile(path.join(root,'budget.json'),'utf8'));
+  const rows=Object.values(ledger.requests),review=rows.find(r=>r.label.includes('-review'));
+  const bytes=100*MAX_UTF8_BYTES_PER_OUTPUT_TOKEN;
+  assert.equal(maxDraftBytes({max_tokens:100}),bytes);
+  // 预留的复核上界按最大占位草稿估价（至少覆盖其字节数），而不是按真实小草稿估价。
+  const planned=defaultReviewRequest({id:'item_draft'},'"'.repeat(bytes),null);
+  assert.equal(review.reservedYuan,reserveCeilingYuan(client,planned));
+  assert.ok(review.reservedYuan>bytes*client.rates.miss/1e6);
+  const actual=bodies[calls[1]];
+  assert.ok(reserveCeilingYuan(client,actual)<=review.reservedYuan);
+});
+
+test('起草型条目：真实草稿超过占位上界时停下，不发复核', async t=>{
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'content-pipeline-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const {calls,options}=draftingFixture({maxTokens:100,descriptionBytes:100*MAX_UTF8_BYTES_PER_OUTPUT_TOKEN+50});
+  const result=await runContentPipeline({...options,root});
+  assert.equal(calls.length,1);assert.ok(calls[0].endsWith('-draft0'));
+  assert.equal(result.summary.passed,0);assert.equal(result.summary.pending,1);
+  const record=JSON.parse(await fs.readFile(path.join(root,'item_draft.json'),'utf8'));
+  assert.match(record.budgetStop.message,/超过已预留的复核请求上界/);
+  assert.equal(record.draft,null);
+  const ledger=JSON.parse(await fs.readFile(path.join(root,'budget.json'),'utf8'));
+  assert.equal(Object.values(ledger.requests).find(r=>r.label.includes('-review')).status,'cancelled-unissued');
+});
+
+test('起草型条目：起草请求没有有效 max_tokens 时仍按原规则停止', async t=>{
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'content-pipeline-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const {calls,options}=draftingFixture();
+  const result=await runContentPipeline({...options,root,buildDraftRequest:()=>({max_tokens:'many',messages:[{role:'user',content:'x'}]})});
+  assert.equal(calls.length,0);assert.equal(result.summary.pending,1);
+});
+
+test('已有固定草稿的路径：复核请求、预留额、哈希等于按原公式直接算出的值（改动前后都应成立）', async t=>{
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'content-pipeline-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const {calls,bodies,options}=draftingFixture({maxTokens:100});
+  const expected={id:'item_draft',description:'x'.repeat(20)};
+  const result=await runContentPipeline({...options,root,reviewDraftFor:()=>expected});
+  assert.equal(result.summary.passed,1);
+  const review=bodies[calls[1]];
+  // 请求体：默认复核请求的字面结构，不经过被测代码。
+  assert.equal(review.messages[1].content,JSON.stringify({skeleton:{id:'item_draft'},publishedFacts:null,draft:expected}));
+  assert.deepEqual(Object.keys(review),['thinking','temperature','max_tokens','response_format','messages']);
+  assert.equal(review.max_tokens,1800);
+  // 预留额：content-budget 原公式 (请求 JSON 的 UTF-8 字节×miss + max_tokens×output)/1e6，请求补默认字段后序列化。
+  const encoded={model:'deepseek-flash',max_tokens:1800,stream:false,thinking:{type:'disabled'},...review};
+  const original=(Buffer.byteLength(JSON.stringify(encoded))*2+1800*8)/1e6;
+  const ledger=JSON.parse(await fs.readFile(path.join(root,'budget.json'),'utf8'));
+  const row=Object.values(ledger.requests).find(r=>r.label.includes('-review'));
+  assert.equal(row.reservedYuan,original);
+  assert.equal(row.requestHash,createHash('sha256').update(JSON.stringify(review)).digest('hex'));
+});
+
+test('起草请求不是模型请求（无 messages，如人工稿）时无法推上界，起草前即停', async t=>{
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'content-pipeline-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const {calls,options}=draftingFixture();
+  const result=await runContentPipeline({...options,root,buildDraftRequest:entry=>({localAuthoredDraft:entry})});
+  assert.equal(calls.length,0);assert.equal(result.summary.pending,1);
+});
+
+test('字节/输出 token 系数不低于仓库调用证据的实测最大值', ()=>{
+  const m=measure('world/drafts');
+  assert.ok(m.all.samples>0);
+  assert.ok(MAX_UTF8_BYTES_PER_OUTPUT_TOKEN>=m.all.max,`实测最大 ${m.all.max} 超过系数，需重新取值并更新 content-pipeline.mjs 注释`);
 });
