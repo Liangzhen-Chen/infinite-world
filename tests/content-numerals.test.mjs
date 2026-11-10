@@ -117,3 +117,37 @@ test('报错附修复建议：九十零、九十加分钟、七十整分钟、�
   assert.equal(repairNumeral('二十零五'), null);
   assert.deepEqual(repairNumeral('十十'), { text: '十', value: 10 });
 });
+
+test('L1 补强：总括时长带概数（多、余、来、几）而骨架 minutes 是确定值，判错', () => {
+  for(const bad of ['全程七十多分钟','全程约九十余分钟','总耗时二十来分钟','全程三十几分钟'])
+    assert.equal(durationIssues(bad,70).filter(x=>/概数/.test(x)).length,1,bad);
+  assert.deepEqual(durationIssues('全程约七十分钟左右',70),[]);
+  assert.deepEqual(durationIssues('浸泡约三十多分钟',70),[]); // 非总括词：分步时长，不判
+});
+
+test('L1 补强：数字与时间单位之间夹空白判错（中文数字与阿拉伯数字），无汉字文本不判', () => {
+  assert.equal(numeralIssues({id:'r',process:'全程九十 分钟'},{id:'r',minutes:90}).length,1);
+  assert.equal(numeralIssues({id:'r',process:'总耗时90 分钟'},{id:'r',minutes:90}).length,1);
+  assert.deepEqual(numeralIssues({id:'r',process:'全程九十分钟，Takes 90 minutes'},{id:'r',minutes:90}),[]);
+  assert.deepEqual(numeralIssues({id:'r',note:'it takes 90 minutes'},{id:'r',minutes:90}),[]);
+});
+
+test('L1 补强：数字与「钟」之间是错字（份钟）判错并给建议；点钟、座钟、个钟头不判', () => {
+  const r=numeralIssues({id:'r',process:'全程五十份钟'},{id:'r',minutes:50});
+  assert.equal(r.length,1);assert.match(r[0],/分钟/);
+  assert.equal(numeralIssues({id:'r',process:'全程90份钟'},{id:'r',minutes:90}).length,1);
+  assert.deepEqual(chineseNumeralIssues('三点钟敲钟，一座钟，两个钟头，五更钟'),[]);
+});
+
+test('总时长派生：删去模型自带的总时长（任何写法），追加「全程N分钟。」；无 minutes 不动；幂等', async () => {
+  const {applyDerivedDuration,stripOverallDuration}=await import('../tools/content-numerals.mjs');
+  const e={id:'r',minutes:70};
+  for(const bad of ['炒制翻面，全程九十 分钟。再晾干。','炒制翻面，整个过程约七十多分钟，再晾干。','炒制翻面，再晾干。全程五十份钟'])
+    assert.deepEqual(numeralIssues(applyDerivedDuration({id:'r',process:bad},e),e),[],bad);
+  const once=applyDerivedDuration({id:'r',process:'预热炉子。全程七十多分钟'},e);
+  assert.equal(once.process,'预热炉子。全程70分钟。');
+  assert.deepEqual(applyDerivedDuration(once,e),once);
+  assert.equal(applyDerivedDuration({id:'r',process:'只浸泡约30分钟'},e).process,'只浸泡约30分钟。全程70分钟。'); // 分步时长保留
+  assert.deepEqual(applyDerivedDuration({id:'i',process:'x'},{id:'i'}),{id:'i',process:'x'});
+  assert.equal(stripOverallDuration('全程约九十分钟左右。'),'');
+});
