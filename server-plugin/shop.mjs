@@ -11,7 +11,8 @@ import {advanceCustomerFlow} from './business.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {employmentActive} from './employment-state.mjs';
-import {householdResources,householdBudget,householdOptions,registerHouseholdFoodSources} from './household-budget.mjs';
+import {householdResources,householdBudget,householdOptions,registerHouseholdFoodSources,registerHouseholdFoodHabit} from './household-budget.mjs';
+import {foodHabit} from './food-habit.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {settlementStock,priceRead,bagStock} from './stock.mjs';
 // S1b/K2 补货：本地货架向本聚落持货人进货（distribution.mjs），外路到货只收真实运单，聚落库存补货从聚落库存转入店主行囊；都不从模拟范围外补进。
@@ -308,6 +309,7 @@ export function shareByNeed(total,rows,u=0){
  for(const r of part)out.set(r.id,r.n);
  return out;
 }
+registerHouseholdFoodHabit(foodHabit);
 registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const state=d.get('state'),now=state.minute,location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
  const members=personHousehold(engine,state,owner).value?.members??[owner];
