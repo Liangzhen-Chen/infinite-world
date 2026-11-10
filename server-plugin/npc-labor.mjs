@@ -220,9 +220,11 @@ function forgone(e,document,who,trip,taken={}){
  if(trade){
   const open=daySlots(e,state,who,day).reduce((n,r)=>n+(r.slot?.services?.includes('trade')?r.end-r.start:0),0);
   const since=trip.departAt-7*DAY,sales=salesOf(state,who).filter(r=>r.minute>=since&&r.minute<=state.minute);
-  const read=stateReader(marketState(state,who)),shelf=()=>Object.keys(state.npcs[who]?.inventory??{}).reduce((n,item)=>{
-   const q=shopRead(e,state,who,day,`q:${item}`,()=>saleableStock(read,e,who,item).available)-(taken[item]??0);
-   return q>0?n+(shopRead(e,state,who,day,`w:${item}:${q}`,()=>worth(e,state,{item,quantity:q,holder:who,location:state.npcs[who].location})??0)):n;},0);
+  const read=stateReader(marketState(state,who)),
+   // 铺上货值合计：同一状态、同一天、同一份“这趟带走”的货（taken）里只算一次；逐项读取仍走 shopRead，值与原先逐项算出的相同。
+   shelf=()=>shopRead(e,state,who,day,`shelf:${JSON.stringify(taken)}`,()=>Object.keys(state.npcs[who]?.inventory??{}).reduce((n,item)=>{
+    const q=shopRead(e,state,who,day,`q:${item}`,()=>saleableStock(read,e,who,item).available)-(taken[item]??0);
+    return q>0?n+(shopRead(e,state,who,day,`w:${item}:${q}`,()=>worth(e,state,{item,quantity:q,holder:who,location:state.npcs[who].location})??0)):n;},0));
   const daily=sales.length?sales.reduce((n,r)=>n+r.totalCoins,0)/7:shelf();
   loss+=Math.ceil(daily*trade/Math.max(open,1));
  }
