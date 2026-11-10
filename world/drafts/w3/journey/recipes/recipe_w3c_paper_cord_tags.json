@@ -1,13 +1,15 @@
 {
   "id": "recipe_w3c_paper_cord_tags",
   "fingerprint": "f18e68b97224b91072de85565ba47cdcfdbf440e1c9eb751afbb87f214dc0d1a",
-  "status": "pending",
+  "status": "passed",
   "attempts": 1,
   "draft": {
     "id": "recipe_w3c_paper_cord_tags",
     "process": "取刮薄羊皮纸铺于木工台面，以短锋修羽刀沿直边裁成等宽小片，逐片削去四角尖棱，使边缘齐整不勾手。再用缝革扁锥在每片一端刺出扁孔，孔位离边留出余量，避免撕裂。细捻麻线按吊签数量分成短段，逐段对折穿过扁孔，两端并拢打结固定。全程约七十零分钟；成组吊签合为一份交付，纸面留白，字迹由使用者自行填写。裁下的边角碎料与余线不作他用，随工序弃置；修羽刀与扁锥用后擦拭收存。"
   },
-  "review": null,
+  "review": {
+    "contradictions": []
+  },
   "errors": [],
   "warnings": [],
   "feedback": null,
@@ -78,6 +80,14 @@
       "file": "budget-responses/4d7e1acb-a585-4476-8537-d05cd4319e31.json",
       "requestHash": "0c4195231bfaaf17fd1bfecd1afae8ef6ca3382c6046c1589e5fad98596fa349",
       "responseHash": "27b51146dacb9e0f1be43da88802d92665fa88940e7055e49f57031f002dec42"
+    },
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "54c60063-fa01-4a84-89c8-9551e9ae6e46",
+      "file": "budget-responses/54c60063-fa01-4a84-89c8-9551e9ae6e46.json",
+      "requestHash": "4cf4b351dda8914967037f2da5e2018695a7044f6eb2bb271f89ad510d85bb54",
+      "responseHash": "222efd51248e9d9e6c7721ec1c45c3c3ecaa02914b6d01cf997ebbf1aaca0fc0"
     }
   ],
   "measurements": [
@@ -99,11 +109,35 @@
       "cumulativeUpperYuan": 5.264911200000007,
       "latencyMs": 2685.4579000000012,
       "timestamp": "2026-11-10T15:31:26.038Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_paper_cord_tags-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1225,
+        "completion_tokens": 7,
+        "total_tokens": 1232,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1097
+      },
+      "costUpperYuan": 0.0022551199999999998,
+      "cumulativeUpperYuan": 5.273706560000007,
+      "latencyMs": 863.6657000000005,
+      "timestamp": "2026-11-10T15:43:44.447Z"
     }
   ],
-  "budgetStop": {
-    "code": "CONTENT_BUDGET_STOP",
-    "message": "请求不符本轮预留，已停止",
-    "at": "2026-11-10T15:31:26.050Z"
-  }
+  "budgetStopHistory": [
+    {
+      "code": "CONTENT_BUDGET_STOP",
+      "message": "请求不符本轮预留，已停止",
+      "at": "2026-11-10T15:31:26.050Z",
+      "clearedAt": "2026-11-10T15:43:31.578Z",
+      "reason": "李白 6301b58b 批准的 w3-journey 4 条重审：DRAFT-BOUND 占位预留与发送哈希检查冲突，已由 DRAFT-BOUND2（607f0f69）修复并两轮审过（m2-6i），重跑复用已付费草稿",
+      "headCommit": "0dea6dbdc3ff9435effca42066a2e2be51a2c6e4"
+    }
+  ]
 }

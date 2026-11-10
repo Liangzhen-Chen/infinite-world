@@ -1,12 +1,12 @@
 {
   "total": 182,
-  "passed": 180,
+  "passed": 182,
   "manual": 0,
-  "pending": 2,
-  "costUpperYuan": 5.256867840000008,
+  "pending": 0,
+  "costUpperYuan": 5.268906320000007,
   "budget": {
-    "spentYuan": 5.256867840000008,
-    "reservedYuan": 1.3877787807814457e-17,
+    "spentYuan": 5.268906320000007,
+    "reservedYuan": 1.734723475976807e-17,
     "limitYuan": 5.43396,
     "requests": {
       "e41f0495-23bb-48fd-b2e3-8826e4cac8cd": {
@@ -86,6 +86,148 @@
         "requestHash": "28132f1770f1389a39d7b555fbb0977ef603907f787e7d7ef603a77415597486",
         "reservedYuan": 0.055494,
         "status": "cancelled-unissued"
+      },
+      "5c594a29-fb99-4bdf-8550-a7b02fa471ae": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_stitchbound_folio-draft0",
+        "requestHash": "8b9d0e7b653730b8f03d85e6550aa7f5b67f0f29895935046411b893535e9be8",
+        "reservedYuan": 0.016178,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/5c594a29-fb99-4bdf-8550-a7b02fa471ae.json",
+          "requestHash": "8b9d0e7b653730b8f03d85e6550aa7f5b67f0f29895935046411b893535e9be8",
+          "responseHash": "b2fe3ceb129065c2bc9bb98f55244c2ef31e26641d40f715019aa466ac9eea34"
+        },
+        "costUpperYuan": 0.004572,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_stitchbound_folio-draft0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1414,
+            "completion_tokens": 218,
+            "total_tokens": 1632,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 1414
+          },
+          "costUpperYuan": 0.004572,
+          "cumulativeUpperYuan": 5.2614398400000075,
+          "latencyMs": 2696.9762999999994,
+          "timestamp": "2026-11-10T15:31:23.347Z"
+        }
+      },
+      "b11af6a2-18b0-4ac8-8dc1-d243114c0e29": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_stitchbound_folio-review0",
+        "requestHash": "e5f535947ed6781a854a90c487d0daccee8083c2496de48edff835e63657edcf",
+        "reservedYuan": 0.057546,
+        "status": "cancelled-unissued"
+      },
+      "4d7e1acb-a585-4476-8537-d05cd4319e31": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_paper_cord_tags-draft0",
+        "requestHash": "0c4195231bfaaf17fd1bfecd1afae8ef6ca3382c6046c1589e5fad98596fa349",
+        "reservedYuan": 0.015272,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/4d7e1acb-a585-4476-8537-d05cd4319e31.json",
+          "requestHash": "0c4195231bfaaf17fd1bfecd1afae8ef6ca3382c6046c1589e5fad98596fa349",
+          "responseHash": "27b51146dacb9e0f1be43da88802d92665fa88940e7055e49f57031f002dec42"
+        },
+        "costUpperYuan": 0.0034713599999999997,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_paper_cord_tags-draft0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1276,
+            "completion_tokens": 209,
+            "total_tokens": 1485,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 892
+          },
+          "costUpperYuan": 0.0034713599999999997,
+          "cumulativeUpperYuan": 5.264911200000007,
+          "latencyMs": 2685.4579000000012,
+          "timestamp": "2026-11-10T15:31:26.038Z"
+        }
+      },
+      "cdfbfad5-bd2c-4ffd-9ad5-3085e42ab969": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_paper_cord_tags-review0",
+        "requestHash": "3fb771409f10477d071e4a6ec03e168ce4a231c7546c06fdb0a9c38d0d04ec84",
+        "reservedYuan": 0.056642,
+        "status": "cancelled-unissued"
+      },
+      "73aa16b3-84e6-428c-b71f-4c9497d53303": {
+        "card": null,
+        "label": "content-items-item_stitchbound_folio-review0",
+        "requestHash": "b6f63976525c1f0d8e01ce1fb5280429997f5e2d7f5487fb6ffa4f66c16eb72c",
+        "reservedYuan": 0.022624,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/73aa16b3-84e6-428c-b71f-4c9497d53303.json",
+          "requestHash": "b6f63976525c1f0d8e01ce1fb5280429997f5e2d7f5487fb6ffa4f66c16eb72c",
+          "responseHash": "37b5e4d8fd4e248d9c5cdcdf85467218087b386aaf556ddaa0efd26184ab4394"
+        },
+        "costUpperYuan": 0.002114,
+        "measurement": {
+          "label": "content-items-item_stitchbound_folio-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1029,
+            "completion_tokens": 7,
+            "total_tokens": 1036,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 1029
+          },
+          "costUpperYuan": 0.002114,
+          "cumulativeUpperYuan": 5.267025200000007,
+          "latencyMs": 677.4959999999999,
+          "timestamp": "2026-11-10T15:43:41.838Z"
+        }
+      },
+      "458e40fd-69e2-4a5a-8dc0-b648d335acc5": {
+        "card": null,
+        "label": "content-items-item_paper_cord_tags-review0",
+        "requestHash": "0f288e395801677f2a3eaf81dc695b4a68c6e5241c67ed7656a430569113f0fb",
+        "reservedYuan": 0.022808,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/458e40fd-69e2-4a5a-8dc0-b648d335acc5.json",
+          "requestHash": "0f288e395801677f2a3eaf81dc695b4a68c6e5241c67ed7656a430569113f0fb",
+          "responseHash": "805762f5a0904d5c7a3e93782a03f88ca2d1e0d3295f3a5219fe62cbbe433ab8"
+        },
+        "costUpperYuan": 0.0018811199999999998,
+        "measurement": {
+          "label": "content-items-item_paper_cord_tags-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1038,
+            "completion_tokens": 7,
+            "total_tokens": 1045,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 910
+          },
+          "costUpperYuan": 0.0018811199999999998,
+          "cumulativeUpperYuan": 5.268906320000007,
+          "latencyMs": 856.2395000000001,
+          "timestamp": "2026-11-10T15:43:42.702Z"
+        }
       }
     }
   },
@@ -196,7 +338,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.249508480000008,
+      "costUpperYuan": 5.264911200000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -304,7 +446,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.249508480000008,
+      "costUpperYuan": 5.264911200000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -404,7 +546,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.249508480000008,
+      "costUpperYuan": 5.264911200000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -503,15 +645,15 @@
           }
         ]
       },
-      "costUpperYuan": 5.249508480000008,
+      "costUpperYuan": 5.264911200000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
     {
       "index": 4,
-      "fingerprint": "f211df19fe9a323cf080c277d1e7119e2a3e0f8e5a4079373c4e2a1961d04621",
+      "fingerprint": "d96e71eab489f4b2c2989a84100481415f1ca60b79445dd5e357550a81349708",
       "count": 34,
-      "passed": 32,
+      "passed": 34,
       "ids": [
         "item_tin_inlay_strip",
         "item_forged_chain_short",
@@ -550,25 +692,22 @@
       ],
       "rewritten": 16,
       "manual": [],
-      "pending": [
-        "item_stitchbound_folio",
-        "item_paper_cord_tags"
-      ],
+      "pending": [],
       "flagged": [
         "item_horn_comb"
       ],
       "sample": [
-        "item_silver_open_ring",
-        "item_damp_sand_rub",
-        "item_bone_toggle_set",
-        "item_gate_hasps",
-        "item_bristle_handbrush"
+        "item_shell_button_set",
+        "item_paper_cord_tags",
+        "item_horsehair_dustbrush",
+        "item_horn_comb",
+        "item_slate_stylus"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 5.256867840000008,
+      "costUpperYuan": 5.268906320000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }

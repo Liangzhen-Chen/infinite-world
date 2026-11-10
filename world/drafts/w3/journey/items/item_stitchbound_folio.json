@@ -1,7 +1,7 @@
 {
   "id": "item_stitchbound_folio",
   "fingerprint": "64fe1a8723480a7bb1758f518018a3f451b7447682bae90db6b76f440bb61215",
-  "status": "pending",
+  "status": "passed",
   "attempts": 1,
   "draft": {
     "id": "item_stitchbound_folio",
@@ -9,7 +9,9 @@
     "inspection": "翻看各页是否齐整，指压书脊折痕，检查麻线有无松脱、针孔是否开裂，纸面有无潮斑。",
     "storage": "置于干燥木架，避潮避压；受潮后摊开阴干，勿近火烤。保存期365天。"
   },
-  "review": null,
+  "review": {
+    "contradictions": []
+  },
   "errors": [],
   "warnings": [],
   "feedback": null,
@@ -80,6 +82,14 @@
       "file": "budget-responses/e41f0495-23bb-48fd-b2e3-8826e4cac8cd.json",
       "requestHash": "3afdcf43e9676750846d2240cba700c969ef0d525035d40ed9549b2a0c4f9091",
       "responseHash": "9dc098b38dc00aad08a0d2939abd887298f27ae9e6364ca888f46b52a591e91f"
+    },
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "73aa16b3-84e6-428c-b71f-4c9497d53303",
+      "file": "budget-responses/73aa16b3-84e6-428c-b71f-4c9497d53303.json",
+      "requestHash": "b6f63976525c1f0d8e01ce1fb5280429997f5e2d7f5487fb6ffa4f66c16eb72c",
+      "responseHash": "37b5e4d8fd4e248d9c5cdcdf85467218087b386aaf556ddaa0efd26184ab4394"
     }
   ],
   "measurements": [
@@ -101,11 +111,35 @@
       "cumulativeUpperYuan": 5.253470480000008,
       "latencyMs": 2144.8044,
       "timestamp": "2026-11-10T15:31:17.773Z"
+    },
+    {
+      "label": "content-items-item_stitchbound_folio-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1029,
+        "completion_tokens": 7,
+        "total_tokens": 1036,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 1029
+      },
+      "costUpperYuan": 0.002114,
+      "cumulativeUpperYuan": 5.267025200000007,
+      "latencyMs": 677.4959999999999,
+      "timestamp": "2026-11-10T15:43:41.838Z"
     }
   ],
-  "budgetStop": {
-    "code": "CONTENT_BUDGET_STOP",
-    "message": "请求不符本轮预留，已停止",
-    "at": "2026-11-10T15:31:20.596Z"
-  }
+  "budgetStopHistory": [
+    {
+      "code": "CONTENT_BUDGET_STOP",
+      "message": "请求不符本轮预留，已停止",
+      "at": "2026-11-10T15:31:20.596Z",
+      "clearedAt": "2026-11-10T15:43:31.328Z",
+      "reason": "李白 6301b58b 批准的 w3-journey 4 条重审：DRAFT-BOUND 占位预留与发送哈希检查冲突，已由 DRAFT-BOUND2（607f0f69）修复并两轮审过（m2-6i），重跑复用已付费草稿",
+      "headCommit": "0dea6dbdc3ff9435effca42066a2e2be51a2c6e4"
+    }
+  ]
 }

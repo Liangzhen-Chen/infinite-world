@@ -1,8 +1,8 @@
 {
   "index": 4,
-  "fingerprint": "f211df19fe9a323cf080c277d1e7119e2a3e0f8e5a4079373c4e2a1961d04621",
+  "fingerprint": "d96e71eab489f4b2c2989a84100481415f1ca60b79445dd5e357550a81349708",
   "count": 34,
-  "passed": 32,
+  "passed": 34,
   "ids": [
     "item_tin_inlay_strip",
     "item_forged_chain_short",
@@ -41,25 +41,22 @@
   ],
   "rewritten": 16,
   "manual": [],
-  "pending": [
-    "item_stitchbound_folio",
-    "item_paper_cord_tags"
-  ],
+  "pending": [],
   "flagged": [
     "item_horn_comb"
   ],
   "sample": [
-    "item_silver_open_ring",
-    "item_damp_sand_rub",
-    "item_bone_toggle_set",
-    "item_gate_hasps",
-    "item_bristle_handbrush"
+    "item_shell_button_set",
+    "item_paper_cord_tags",
+    "item_horsehair_dustbrush",
+    "item_horn_comb",
+    "item_slate_stylus"
   ],
   "l4": {
     "approved": false,
     "notes": []
   },
-  "costUpperYuan": 5.256867840000008,
+  "costUpperYuan": 5.268906320000007,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }
