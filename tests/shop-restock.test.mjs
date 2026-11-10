@@ -65,8 +65,12 @@ test('周期补货：按店家周期在午夜向本聚落持货人补到上限�
     const holder='npc_hw_shendu';
     const f=fixture();
     // 合入 F 后的依据：F 让果粥也成为口粮，店主家户先拿果粥、牛奶顶到下次进货，面包就不必自留，“不会无限出售”的前提消失。
-    // 夹具让面包是店主家里唯一的口粮（拿走果粥与牛奶），自留才落在面包上；断言语义不变：家户要留的那几个面包不卖。
-    for(const item of ['item_fruit_porridge','item_milk'])delete f.doc.state.npcs[host].inventory[item];resyncBooks(f.engine,f.doc);
+    // 夹具让果粥不在店主家里，自留才落在面包上；断言语义不变：家户要留的那几个面包不卖。
+    // R1（t-sat，饱腹改由推导，item-class.mjs satietyFactor）后面包单件饱腹 30→16、牛奶 0→22：探针 tools/probe-rules-a.mjs shop 显示，
+    // 若沿用“面包是唯一口粮”（也拿走牛奶），家户要留 6 个，正好是全部 6 个面包，可售 0，买 2 个就被拒（旧：留 4，可售 2）；
+    // 牛奶现在自己提供饱腹，不能再拿走，否则“拿走牛奶以突出面包”不再是原来的情形。保留牛奶、只拿走果粥：
+    // 面包留 3、可售 3；买 2 个后剩 4 > 留 3，可售 1，多买 4 个仍被拒，之后各断言（补到 6、added=2、持货人 18…）探针逐项复演一致。
+    delete f.doc.state.npcs[host].inventory.item_fruit_porridge;resyncBooks(f.engine,f.doc);
     await f.act('world_trade',{seller:host,item:'item_bread',quantity:2},'buy-bread');
     assert.equal(qty(f.doc,host,'item_bread'),4);
     // Four remain; some bridge delivery, so all four exceed the saleable loaves.

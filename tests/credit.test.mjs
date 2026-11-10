@@ -7,6 +7,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {loanTerms} from '../server-plugin/credit.mjs';
 import {applyConsentEvent} from '../server-plugin/action-consent.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const inn='bld_hw_qingdeng',post='bld_hw_post',home='bld_hw_riverhome',court='bld_hw_council';
@@ -161,6 +162,11 @@ test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还�
     const personalEscrow=Object.values(f.doc.state.quests).filter(q=>q.personal&&q.publisher===worker).reduce((n,q)=>n+(q.escrow??0),0);
     assert.equal(f.doc.state.npcs[worker].coins+personalEscrow+(retailSpent(f.doc,worker)-shoppingBefore),200);assert.equal(cash(f.doc),total);
     f.doc.state.npcs[host].status='正常';// a day of npc life may have made her ill; the procurement below needs her awake
+    // 赊购进货的前提是供货人手里有面包可卖。居民的正午日常购粮（R5：t-foodsrc/t-alloc，口粮替代按需求分摊后居民真的向店主买）
+    // 一天内把店主开场的 6 个面包全部买走：探针 tools/probe-rules-a.mjs credit 在 st-5 与现状都读到过一天后 stock 0（开场 st-5 留存 2/现状 0）。
+    // 这不是本测试要考的（借款进货的账务），所以按真实前置给店主备货：补回 6 个面包（同开场数量，同时重对账本），
+    // 探针读到可售 6、留存 0，赊购 2 个成交 cost 2，其后各断言（principal、店主钱 before-cost、loan、escrow）逐项成立。
+    f.doc.state.npcs[host].inventory.item_bread={quality:'良',durability:100,weight:.15,quantity:6};resyncBooks(f.engine,f.doc);
     // D05 §5.1: even loan-funded procurement has a separate counter destination
     // for cancellation; zero opening capital preserves this loan's cash premise.
     await f.act('world_act',{action:'business:open_counter',slots:{business:lease.business,coins:0}},'credit-counter');

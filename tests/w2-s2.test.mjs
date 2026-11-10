@@ -24,8 +24,11 @@ const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.sk
 const before=withoutS2(formal,{keepOwnGenerated:true}),world=mergeS2Publication(before,publication);
 // 合入 F 后依据：家户每天吃饭、烧柴（F 的 npc-life）。炼丹导师家既没有别的口粮也没有柴：蜂蜜按类别成了口粮（每份饱腹 7），
 // 几天的饭就把他那 3 份吃完、也按口粮自留；没有柴就只能烧他的艾绒引火包。学成后便买不到炼丹要的蜂蜜与引火包。
-// 夹具（本测试的世界副本）给导师家备 60 个面包作口粮、60 份木柴作家用燃料，让“蜂蜜与引火包是他可出让的余货”这一前提成立；断言不变。
-const mentorHome=w=>{const n=w.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:60,item_wood:60};return w;};mentorHome(world);
+// 夹具（本测试的世界副本）给导师家备足面包作口粮、60 份木柴作家用燃料，让“蜂蜜与引火包是他可出让的余货”这一前提成立；断言不变。
+// 面包数按 R1 重推（t-sat：面包单件饱腹 30→16，item-class.mjs satietyFactor，同样的饭要吃近两倍的面包）。探针 tools/probe-rules-a.mjs w2
+// 复演丹路线至购买前（第 7 天）：st-5 导师 60 个面包吃到剩 18（吃掉 42，每天 6 个），现状 60 个吃光、再吃掉 2 份蜂蜜（蜂蜜留 1 且全部自留，可售 0，
+// 买蜂蜜被拒）；现状每天吃约 12 个（84/7），120 个到购买前剩 36、蜂蜜 3 份全部可售。120 = 7 天 × 12 个 + 余量，之后一天的认证/补课也够。
+const mentorHome=w=>{const n=w.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:120,item_wood:60};return w;};mentorHome(world);
 const engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));

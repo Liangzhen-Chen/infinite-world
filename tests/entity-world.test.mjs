@@ -63,9 +63,12 @@ test('迁店后补货产地、付款和新报价读取当前工作地；历史�
  assert.equal(smithCoins-d.get('state','npcs','npc_hw_duanyan','coins'),sickle.paidCopper);
  const history=structuredClone(d.get('state','records'));
  const moved=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999});
- // Updated baseline input999 *plentiful supply.5 *neutral grade/regard/
- // spread/depth/corrections1 *one =499.5, truncate once to499.
- assert.equal(moved.totalCoins,499);assert.equal(moved.settlement,'loc_bs');
+ // Updated baseline input999 *scarcity *neutral grade/regard/spread/depth/corrections1 *one, truncate once.
+ // 稀缺度 = 需求/供给（market.mjs stockSupply:219、marketQuote:303），不再是“供给充裕钳在 .5”：探针 tools/probe-rules-a.mjs ew（ONLY=1）
+ // 读到迁到 loc_bs 后同类食物供给 18、需求 12，12/18=0.6667，999×0.6667=666。旧值 499 对应供给 28、需求 4（钳在 .5，999×.5=499.5）。
+ // 对 git 历史二分（同一夹具，t-b1m → t-m26）：t-alloc f8e4a13b（R5：同一卖家可售存量按需求在买方间分摊，口粮替代）起供给 28→13、
+ // 需求 4→18（价 1383）；st-5（105d2730，同属 R5 及 t-foodsrc/t-staple 单餐额度）供给 18、需求 12（价 666）；现状与 st-5 相同，R1 在这一夹具里不再改变数。
+ assert.equal(moved.totalCoins,666);assert.equal(moved.settlement,'loc_bs');
  assert.notDeepEqual(moved,quote);assert.deepEqual(quote,oldQuote);
  assert.deepEqual(d.get('state','records'),history,'requoting cannot rewrite restock or transaction history');
  d.set(['state','minute'],DAY+600);
@@ -94,12 +97,14 @@ test('迁居改业、拘押、死亡使原店停止补货；接手原工作地�
  const none={...d,document:empty};advanceShops(none,engine,600,DAY);
  assert.equal(shelf(none,successor,'item_bread'),0);
  assert.match(none.get('state','records','shop:shop_hw_qingdeng').entries.find(e=>e.item==='item_bread'&&e.minute===DAY).reason,/没有人持有|余量/);
- // 正面：一位村民手里有 8 个面包，接手人从他那里补上货架，他的面包减少，货款进他的钱袋。
- const holder='npc_hw_shendu';d.set(['state','npcs',holder,'inventory','item_bread'],8);const holderCoins=d.get('state','npcs',holder,'coins');
+ // 正面：一位村民手里有 16 个面包，接手人从他那里补上货架，他的面包减少，货款进他的钱袋。
+ // 面包数按 R1 重推（t-sat：面包单件饱腹 30→16，各户口粮留存约翻倍）：探针 tools/probe-rules-a.mjs ew（ONLY=2）读到村民 shendu 手里 8 个面包时
+ // 留存 8、可售 0，货架补不上（旧：留存 4、8 个里可售 4）；16 个时留存 8、可售 8，进货后货架 6（added=6）、他剩 10，货款进钱袋。
+ const holder='npc_hw_shendu';d.set(['state','npcs',holder,'inventory','item_bread'],16);const holderCoins=d.get('state','npcs',holder,'coins');
  advanceShops(d,engine,600,DAY);assert.ok(shelf(d,successor,'item_bread')>0);assert.equal(shelf(d,host,'item_bread'),before);
  const bread=d.get('state','records','shop:shop_hw_qingdeng').entries.find(e=>e.item==='item_bread'&&e.minute===DAY&&e.added);
  const tax=Object.values(d.get('state','records')).filter(r=>r.category==='trade_tax'&&r.payer===holder).reduce((n,r)=>n+r.amount,0);
- assert.deepEqual(bread.from,[holder]);assert.equal(shelf(d,holder,'item_bread'),8-bread.added);assert.equal(shelf(d,successor,'item_bread'),bread.added);
+ assert.deepEqual(bread.from,[holder]);assert.equal(shelf(d,holder,'item_bread'),16-bread.added);assert.equal(shelf(d,successor,'item_bread'),bread.added);
  assert.equal(d.get('state','npcs',holder,'coins'),holderCoins+bread.paidCopper-tax);
 });
 
