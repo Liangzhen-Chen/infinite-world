@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createHash, randomInt } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {openContentBudget} from './content-budget.mjs';
+import {numeralIssues} from './content-numerals.mjs';
 
 export const hashContent = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function parseModelJSON(response) {
@@ -56,6 +57,27 @@ async function writeJSON(file, data) {
   await fs.writeFile(temp, `${JSON.stringify(data, null, 2)}\n`);
   await fs.rename(temp, file);
 }
+// L4 退回格式：批次文件 batch-N.json 的 l4.rejection = {by, at, reason, ids:[被退回条目 id…]}（approved 同时为 false）。
+// ids 必须是该批 ids 的非空子集；缺 ids 或含批外 id 即报错，不猜测退回范围。reason 是退回意见，重写时作为 feedback。
+// 返回 Map(id → {key,by,at,reason})；key 由 by/at/reason/id 哈希而来，用来判断某条记录是否已处理过这次退回。
+async function readL4Rejections(root, entries) {
+  const out = new Map();
+  let files;
+  try { files = (await fs.readdir(root)).filter(name => /^batch-d+.json$/.test(name)); }
+  catch (error) { if (error.code === 'ENOENT') return out; throw error; }
+  for (const name of files) {
+    const batch = await readJSON(path.join(root, name)), rejection = batch?.l4?.rejection;
+    if (!rejection) continue;
+    const { ids, reason } = rejection;
+    if (!Array.isArray(ids) || !ids.length || ids.some(id => typeof id !== 'string' || !batch.ids?.includes(id)) || typeof reason !== 'string' || !reason.trim())
+      throw new Error(`${name} 的 l4.rejection 格式不合法：需要 reason 与 ids（该批条目 id 的非空子集）`);
+    for (const id of ids) {
+      if (!entries.some(entry => entry.id === id)) throw new Error(`${name} 的 l4.rejection 含不在本次冻结条目中的 id ${id}`);
+      out.set(id, { key: hashContent({ by: rejection.by ?? null, at: rejection.at ?? null, reason, id }), by: rejection.by ?? null, at: rejection.at ?? null, reason });
+    }
+  }
+  return out;
+}
 function randomSample(rows, count) {
   const pool = [...rows];
   for (let i = pool.length - 1; i > 0; i--) { const j = randomInt(i + 1); [pool[i], pool[j]] = [pool[j], pool[i]]; }
@@ -90,7 +112,15 @@ export async function runContentPipeline({
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 16) throw new Error('并发必须为 1–16；正式波次使用 8–16');
   if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 50) throw new Error('批次必须为 1–50；正式波次使用 25–50');
   if (typeof validateDraft !== 'function' || typeof buildDraftRequest !== 'function') throw new Error('缺少起草或 L1 校验接口');
+  // 所有内容草稿共用的 L1 数字规则：对每个调用方自己的 validateDraft 结果统一追加（中文数字合法性、总括时长与 minutes 一致）。
+  const l1 = async (draft, entry, context) => {
+    const result = await validateDraft(draft, entry, context);
+    const errors = Array.isArray(result) ? result : result?.errors ?? [];
+    const extra = numeralIssues(draft, entry, context).filter(message => !errors.includes(message));
+    return extra.length ? { ...(Array.isArray(result) ? { warnings: [] } : result), errors: [...errors, ...extra] } : result;
+  };
   await fs.mkdir(root, { recursive: true });
+  const l4Rejections = await readL4Rejections(root, entries);
   const ledgerPath = path.join(budgetRoot, 'budget.json');
   if(!Array.isArray(protocolRecoveryIds)||protocolRecoveryIds.some(id=>!entries.some(e=>e.id===id)))throw Error('协议恢复 id 不在冻结条目中');
   const budget=await openContentBudget({file:ledgerPath,client,cardId,allocation});
@@ -112,16 +142,26 @@ export async function runContentPipeline({
     if(record?.budgetStop){budget.stop(record.budgetStop.message);return record;}
     if(halted)return record??{id:entry.id,fingerprint,status:'pending',attempts:0,draft:null,review:null,errors:[],warnings:[]}; // 已因审查解析错误停止：不发请求、不写盘
     if(reuseRecord&&record?.status==='passed'&&record.fingerprint!==fingerprint){const carried=await reuseRecord(record,entry,fingerprint,context);if(carried){await writeJSON(file,carried);recordsById.set(entry.id,carried);return carried;}}
+    // L4 退回：同指纹记录、该条在批次 l4.rejection.ids 内且这次退回尚未处理（记录里没有同 key 的 l4Rejection）→ 视为需要重写。
+    const rejection=l4Rejections.get(entry.id);
+    const l4Rewrite=!!rejection&&record?.fingerprint===fingerprint&&!record.l4Rejection?.some(row=>row.key===rejection.key);
     const recovering=protocolRecoveryIds.length>0;
     let eligible=recovering&&protocolRecoveryIds.includes(entry.id)&&entry.contract==='audit-patch-v1'&&record?.fingerprint===fingerprint&&record.status==='manual'&&!record.review&&!record.protocolRecovery&&
       hasWrapperEvidence(record,entry);
     if(eligible)eligible=await budget.claimProtocolRecovery(entry.id,fingerprint);
     if(recovering&&!eligible)return record??{id:entry.id,fingerprint,status:'pending',attempts:0,draft:null,review:null,errors:[],warnings:[]};
-    if (!eligible&&record?.fingerprint === fingerprint && (record.status === 'passed' || record.status === 'manual' && !retryManual)) return record;
+    if (!eligible&&!l4Rewrite&&record?.fingerprint === fingerprint && (record.status === 'passed' || record.status === 'manual' && !retryManual)) return record;
     let feedback = record?.fingerprint === fingerprint ? record.feedback : null;
     const priorAttempts = record?.fingerprint === fingerprint ? record.attempts ?? 0 : 0;
     if(eligible){record.protocolRecovery={kind:'audit-patch-v1-single-wrapper',startedAt:new Date().toISOString(),prior:structuredClone(record),status:'started'};record.status='pending';await writeJSON(file,record);}
     else record = record?.fingerprint===fingerprint?structuredClone(record):{ id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
+    if(l4Rewrite){
+      // 只重写被退回的条目：留下 l4Rejection 历史（含退回意见与被退回的旧稿/旧审查），退回意见作 feedback；
+      // 其后沿用本流水线的预留与预算机制（最多再发 2 轮起草+复核，attempts 与旧记录累加，标签不重名）。
+      feedback=[`L4 退回：${rejection.reason}`];
+      (record.l4Rejection??=[]).push({key:rejection.key,by:rejection.by,at:rejection.at,reason:rejection.reason,priorStatus:record.status,priorAttempts,attemptCap:priorAttempts+2,priorDraft:record.draft,priorReview:record.review});
+      record.draft=null;record.review=null;record.errors=[];record.warnings=[];record.feedback=feedback;
+    }
     record.status='pending';
     if(storeContext)record.contextSnapshot=JSON.parse(JSON.stringify(context??null));
     // 已付费草稿复用：同指纹旧记录为 pending、已有草稿、该草稿的起草请求已结算、其复核预留都未发出（cancelled-unissued）、
@@ -135,12 +175,12 @@ export async function runContentPipeline({
       if(drafts.length&&drafts.every(r=>r.status==='settled')&&reviews.length&&reviews.every(r=>r.status==='cancelled-unissued')){
         try{
           assert.deepEqual(await extractDraft(old.draftResponse,entry),old.draft);
-          const check=await validateDraft(old.draft,entry,context),errors=Array.isArray(check)?check:check.errors??[];
+          const check=await l1(old.draft,entry,context),errors=Array.isArray(check)?check:check.errors??[];
           if(!errors.length)reuse={attempt:n,draft:old.draft};
         }catch{reuse=null;}
       }
     }
-    for (let attempt = reuse?reuse.attempt:priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
+    for (let attempt = reuse?reuse.attempt:priorAttempts; attempt < (eligible?priorAttempts+1:Math.max(3,record.l4Rejection?.at(-1)?.attemptCap??0)); attempt++) {
       let reservations=[],preparedDraft;
       if(!eligible)record.errorCode=null; // 本次尝试开始前清上次的错误码，成功后不残留
       try {
@@ -150,7 +190,7 @@ export async function runContentPipeline({
         const draftLabel=`content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`,reviewLabel=`content-${path.basename(root)}-${entry.id}-review${attempt}`;
         const paid=!frozen&&!eligible&&reuse&&attempt===reuse.attempt?reuse.draft:null;
         const expectedDraft=frozen??paid??(offline?await extractDraft(offline,entry):await reviewDraftFor?.(entry,feedback,context));
-        if(frozen){const check=await validateDraft(frozen,entry,context);const errors=Array.isArray(check)?check:check.errors??[];if(errors.length)throw Error(errors.join('\n'));record.frozenCandidate={entryHash:hashContent(entry),draftHash:hashContent(frozen)};}
+        if(frozen){const check=await l1(frozen,entry,context);const errors=Array.isArray(check)?check:check.errors??[];if(errors.length)throw Error(errors.join('\n'));record.frozenCandidate={entryHash:hashContent(entry),draftHash:hashContent(frozen)};}
         const draftDetails={entry,context,phase:'draft',feedback,record,file};
         if(!offline&&!frozen&&!paid)preparedDraft=await prepareRequest(await buildDraftRequest(entry,feedback,context),draftDetails);
         let draftBytes=null,plannedDraft=expectedDraft;
@@ -174,7 +214,7 @@ export async function runContentPipeline({
         if(draftBytes!==null){if(Buffer.byteLength(JSON.stringify(extracted))>draftBytes)throw budget.stop('起草结果超过已预留的复核请求上界，已停止');}
         record.draft = extracted;
         if(draftBytes===null)assert.deepEqual(record.draft,expectedDraft,'起草结果不符已预留的固定候选');
-        const validation = await validateDraft(record.draft, entry, context);
+        const validation = await l1(record.draft, entry, context);
         record.errors = Array.isArray(validation) ? validation : validation.errors ?? [];
         record.warnings = Array.isArray(validation) ? [] : validation.warnings ?? [];
         // L2 covers every syntactically usable draft, even if L1 found errors.
@@ -250,6 +290,7 @@ export async function runContentPipeline({
       flagged: rows.filter(row => row.warnings.length).map(row => row.id),
       sample: prior?.fingerprint === fingerprint ? prior.sample : randomSample(passed, 5).map(row => row.id),
       l4: prior?.fingerprint === fingerprint ? prior.l4 : { approved: false, notes: [] },
+      ...(prior?.fingerprint !== fingerprint && prior?.l4?.rejection ? { l4History: [...(prior.l4History ?? []), prior.l4] } : prior?.l4History ? { l4History: prior.l4History } : {}),
       costUpperYuan: client.spent+(client.reserved??0),
     };
     batch.manualRatio = batch.manual.length / batch.count;

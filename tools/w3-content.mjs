@@ -1,6 +1,7 @@
 import { loreIssues } from './economy-content.mjs';
 import { hashContent } from './content-pipeline.mjs';
 import { validateWorld } from './validate-world.mjs';
+import { numeralIssues } from './content-numerals.mjs';
 
 const units = { '公斤': ['weight',1], '千克':['weight',1], '斤':['weight',.5], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
 const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+?)';
@@ -55,6 +56,8 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
       if(material&&Math.abs(chineseNumber(match[1])*units[match[2]][1]-material.amount*material.facts.weight)>.0001)errors.push(`投料${match[0]}与骨架重量${material.amount*material.facts.weight}公斤矛盾`);
     }
   }
+  // 共用 L1 数字规则（tools/content-numerals.mjs）：中文数字合法性、总括时长与 minutes 一致；runContentPipeline 也会统一追加，重复项去重。
+  for(const message of numeralIssues(draft,entry,context))if(!errors.includes(message))errors.push(message);
   return {errors,warnings};
 }
 export function assembleW3(world,bones,lore) {
