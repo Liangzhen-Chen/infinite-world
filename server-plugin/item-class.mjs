@@ -357,6 +357,18 @@ export function mealCapPools(engine,{days=[],saved=null,poolMemo=new Map()}={}){
 
 // L1：属性表校验。表头 dimensions 声明每维的单位与范围（分数 0–1）；precedence 必须恰好列全部类别键；
 // 每个类别行与物品 props 行必须带 basis；类别键必须是已存在标签（物品标签、用途标签或用途类别名）。
+// 饮品判据（action-router 的 isDrink）读 drinkable 标签；液态物品是否带标签由本整类规则保证，不靠逐件记忆。
+// 在派生后的副本上核对（nutrientContent 含生食，不受“生食不写 nutrition”影响）：
+//   水分>0 且热量(饱腹)==0 的物品是纯饮品，必须带 drinkable；带 drinkable 的物品必须有水分>0。有热量的饮品（如牛乳）带标签合法。
+export function validateDrinkable(world){
+ const w=structuredClone(world);deriveItemAttributes(w);const errors=[];
+ for(const item of w.items??[]){
+  const hyd=item.nutrientContent?.hydration??0,sat=item.nutrientContent?.satiety??0,tagged=(item.tags??[]).includes('drinkable');
+  if(hyd>0&&sat===0&&!tagged)errors.push(`饮品缺 drinkable 标签：${item.id}（派生后水分${hyd}、饱腹0）`);
+  if(tagged&&!(hyd>0))errors.push(`带 drinkable 标签的物品派生后水分须>0：${item.id}`);
+ }
+ return errors;
+}
 export function validateMaterialProps(world){
  const t=world.materialProps,errors=[];
  if(t===undefined)return errors;

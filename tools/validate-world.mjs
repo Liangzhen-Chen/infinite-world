@@ -34,7 +34,7 @@ import {validateWarDiplomacy}from'../server-plugin/war-diplomacy.mjs';
 import {validateNormBindings}from'../server-plugin/norm-stack.mjs';
 import {materializeWorkstations}from'../server-plugin/workstation-services.mjs';
 import {materializeRuntimeWorld}from'../server-plugin/runtime-world.mjs';
-import {validateMaterialProps}from'../server-plugin/item-class.mjs';
+import {validateMaterialProps,validateDrinkable}from'../server-plugin/item-class.mjs';
 const schema=JSON.parse(await fs.readFile(new URL('../schemas/world.schema.json',import.meta.url),'utf8'));
 const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
 const validate=new Ajv({allErrors:true,strict:true,allowUnionTypes:true}).compile(schema);
@@ -74,6 +74,7 @@ export function validateWorld(world,{stage='engine'}={}){
     errors.push(...validateWarDiplomacy(world));
     errors.push(...validateNpcProfiles(world));
     errors.push(...validateMaterialProps(world));
+    errors.push(...validateDrinkable(world));
     if(stage==='release'||stage==='final'){
         const depth=validateNpcDepth(world);
         errors.push(...depth.errors.map(error=>`完整人物深度：${error}`));
