@@ -268,7 +268,7 @@ const memoValue = Symbol('state memo value');
 // track entry membership and compare those descendants on parent replacement.
 // Explicit
 // query inputs remain in the key. Only unaffected groups survive cursor writes.
-export function stateMemo(state, scope, inputs, build, dependencies = null) {
+export function stateMemo(state, scope, inputs, build, dependencies = null, identity = null) {
     if (!recordIndexDepth || !state) return build();
     let groups = stateMemos.get(state);
     if (!groups) stateMemos.set(state, groups = new Map());
@@ -282,7 +282,7 @@ export function stateMemo(state, scope, inputs, build, dependencies = null) {
         cache = next;
     }
     if (!cache.has(memoValue)) cache.set(memoValue, build());
-    else if (indexCheck && !memoEqual(cache.get(memoValue), build())) stale('state memo');
+    else if (indexCheck && !(identity ? memoEqual(identity(cache.get(memoValue)), identity(build())) : memoEqual(cache.get(memoValue), build()))) stale('state memo');
     return cache.get(memoValue);
 }
 const memoPathMatch=(selector,key)=>selector===key||typeof selector==='string'&&selector.endsWith('*')&&key.startsWith(selector.slice(0,-1));
@@ -377,6 +377,18 @@ export function withRecordIndex(task) {
     recordIndexDepth++;
     try { return task(); } finally { if (!--recordIndexDepth) stateMemos = new WeakMap(); }
 }
+// A fixed-state, read-only entry (valuation, market supply, a planning read scope): outside an advance it
+// gets the same index/memo scope as an advance pass. Caller promise: nothing inside writes state, records
+// or ledger. Nested inside an advance (or another scope) it is just task(). readEpoch changes when an
+// outermost read scope opens and closes, so caches that outlive scopes (advanceCourses) are not trusted
+// across a read scope, whose state object may be mutated in place before the next scope.
+let readEpoch = 0;
+export const recordReadEpoch = () => readEpoch;
+export function withReadIndex(task) {
+    if (recordIndexDepth) return task();
+    readEpoch++;
+    try { return withRecordIndex(task); } finally { readEpoch++; }
+}
 function recordGroups(records, field, entries, value) {
     if (!INDEXED.has(field)) throw new Error(`records index field ${field}`);
     const name = entries ? `${field}:entries` : field;
@@ -401,7 +413,7 @@ function recordGroups(records, field, entries, value) {
 // the build (their union), or ignoreCategories/ignoreFields it never reads.
 // ignoreFields requires a projection excluding those fields;
 // terms, category/kind changes, insertions and deletions still invalidate it.
-export function recordsMemo(records, key, build, dependencies = null) {
+export function recordsMemo(records, key, build, dependencies = null, identity = null) {
     if (!recordIndexDepth || !records || typeof records !== 'object') return build();
     let cache = recordIndexes.get(records);
     if (!cache) { cache = new Map(); recordIndexes.set(records, cache); }
@@ -409,7 +421,7 @@ export function recordsMemo(records, key, build, dependencies = null) {
         const hit = cache.get(key);
         if (indexCheck) {
             recordIndexCheck.memoHits++;
-            if (!memoEqual(hit, build())) stale(`memo ${typeof key === 'object' ? 'object-key' : String(key)}`);
+            if (!(identity ? memoEqual(identity(hit), identity(build())) : memoEqual(hit, build()))) stale(`memo ${typeof key === 'object' ? 'object-key' : String(key)}`);
         }
         return hit;
     }
@@ -519,9 +531,9 @@ export class PatchCursor {
             if (!indexedRecords && path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
             else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);
         }
-        if (recordIndexDepth && path[0] === 'ledger' && path[1] === 'accounts') recordIndexes.delete(root.ledger?.accounts);
-        if (recordIndexDepth && path[0] === 'ledger') recordIndexes.delete(root.ledger);
-        if (recordIndexDepth && path[0] === 'holdings' && path[1] === 'rows') recordIndexes.delete(root.holdings?.rows);
+        if (path[0] === 'ledger' && path[1] === 'accounts') recordIndexes.delete(root.ledger?.accounts);
+        if (path[0] === 'ledger') recordIndexes.delete(root.ledger);
+        if (path[0] === 'holdings' && path[1] === 'rows') recordIndexes.delete(root.holdings?.rows);
         const value = patch.op === 'delete' ? undefined : clone ? cloneData(patch.value) : patch.value;
         this.onPatch?.(patch);
         const chain = this.chain;
@@ -804,4 +816,11 @@ export class CampaignStorage {
         this.cache.delete(id);
         return this.read(id);
     }
+}
+// For code that edits a plain (non-cursor) planning copy of state.records in place: call after the write so
+// this records object's index/memos and this state object's stateMemos are rebuilt on the next read.
+// Prefer copying or writing through the draft; this is for snapshots built and edited locally.
+export function invalidateRecordIndex(state) {
+    if (state?.records && typeof state.records === 'object') recordIndexes.delete(state.records);
+    if (state && typeof state === 'object') stateMemos.delete(state);
 }

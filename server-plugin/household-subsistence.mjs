@@ -3,7 +3,7 @@ import {personHousehold,personAge,personConstraint,personRoutine,personEmploymen
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
-import {recordsWhere,recordsMemo,canonicalEqual,stateMemo} from './storage.mjs';
+import {recordsWhere,recordsMemo,canonicalEqual,stateMemo,invalidateRecordIndex} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
 import {householdMealPlan,usageItemGrams} from './household-budget.mjs';
 import {householdUsage,isItemClass,heldOfClass} from './item-class.mjs';
@@ -556,6 +556,7 @@ export function prepareHouseholdSubsistence(d,e,day=Math.floor(d.get('state','mi
    const stock=forageStock(e,morning,source,day),quantity=Math.floor((source.minutes-source.travelMinutes)/source.minutesPerPortion);
    morning.records[stockKey(source.location)]={...(stock.row??morning.records[stockKey(source.location)]),reserve:Math.max(0,stock.reserve-quantity),updatedDay:day};
    context.stocks.set(source.location,{reserve:morning.records[stockKey(source.location)].reserve});
+   invalidateRecordIndex(morning);// morning.records 是本函数的浅拷贝，上一行原地写入，之前建过的索引与记忆作废
   }
   for(const [kind,duties] of [['duties',p.duties],['chores',p.chores]])for(const duty of duties){
    const worker=row.workers[duty.worker]??={duties:[],chores:[]};worker[kind].push(duty);

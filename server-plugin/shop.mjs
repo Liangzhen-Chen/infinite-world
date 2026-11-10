@@ -334,7 +334,8 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   // 非游标读取（规划用的只读作用域）原先每次调用都新建 read，于是店铺清单、买方名单、卖家份额表在同一状态下被每位询问者重算一遍。
   // read 里的东西只由 state 与 engine 定（店铺清单、客观口径的 householdResources、买方名单、份额表；主观视图只读 shops），不含询问者；
   // 与上面的 reach 同理按只读作用域的 memo（作用域内不写状态与账本，按 state、ledger、randomSeed 三者的对象身份分键）共享，换状态即换新的 read，故每个调用读到的值与新建时相同。
-  read=cursor?build():d.memo?d.memo(engine,[householdReadSymbol],build):build();
+  // 复核口径（FIELDS_INDEX_CHECK）：只比 shops 与 engine。physical/reach/buyers 是随询问逐步填入的缓存，命中值与新建值本来就不同，不是状态过期。
+  read=cursor?build():d.memo?d.memo(engine,[householdReadSymbol],build,v=>({engine:v.engine,shops:v.shops})):build();
   if(cursor)householdSourceReads.set(cursor,read);
  }
  const out=[];

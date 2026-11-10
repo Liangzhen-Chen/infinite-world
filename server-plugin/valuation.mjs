@@ -3,7 +3,7 @@
 // 本模块只是登记表和分派：各领域登记自己的估值依据（物品走市场估值投影，股份走组织净资产，地产走租金资本化），
 // 找不到依据的如实返回 unvaluable，由调用方明确处理——绝不静默当作 0。
 import {explainDerived} from './derived.mjs';
-import {stateMemo} from './storage.mjs';
+import {stateMemo,withReadIndex} from './storage.mjs';
 const valuers=new Map();
 // 脱离当地供需的物品基准估值，复用 economy:value 自身的基准与修正。
 // 不乘市场稀缺、货架深度或交易价差，也不再次应用该槽。
@@ -21,7 +21,8 @@ const reader=d=>typeof d.peek==='function'?{document:d.document,cursor:d.cursor,
 export function valuation(d,e,asset){
     const fn=valuers.get(asset.role);
     if(!fn)return {value:null,unvaluable:`没有登记「${asset.role}」的估值依据`};
-    const r=fn(reader(d),e,asset);
+    // 估值只读（见上）：固定状态下的只读入口，推进之外也走记录索引与状态记忆。
+    const r=withReadIndex(()=>fn(reader(d),e,asset));
     return Number.isFinite(r?.value)?{...r,value:Math.floor(r.value)}:{value:null,unvaluable:r?.unvaluable??'没有可派生的估值依据'};
 }
 // 持有（holdings 行）的估值：按持有种类选估值角色。无依据者返回 unvaluable。
@@ -45,5 +46,5 @@ export function goodsWorth(d,e,{item,quantity=1,location,holder=null,apart=false
 export function stateReader(state){
     const document={state,randomSeed:state.randomSeed};
     return {document,get:(...p)=>p.reduce((x,k)=>x?.[k],document),peek:(...p)=>p.reduce((x,k)=>x?.[k],document),
-        memo:(scope,inputs,build)=>stateMemo(state,scope,[stateReader,document.randomSeed,...inputs],build)};
+        memo:(scope,inputs,build,identity)=>stateMemo(state,scope,[stateReader,document.randomSeed,...inputs],build,null,identity)};
 }
