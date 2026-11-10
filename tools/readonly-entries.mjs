@@ -91,4 +91,7 @@ export const READONLY_ENTRIES = [
   ['tools/w5-clock-publication.mjs', '--batch', '1', '--check'],
   ['tools/w5-clock-publication.mjs', '--batch', '2', '--l1'],
   ['tools/w5-clock-publication.mjs', '--batch', '2', '--check'],
+  ['tools/probe-gucen-travel.mjs', '--table'],
+  ['tools/probe-gucen-travel.mjs', '--direct'],
+  ['tools/probe-gucen-travel.mjs', '--day', 'npc_hw_gucen'],
 ];

@@ -70,7 +70,7 @@ const N = {
 const OPT = {
   '--actions-only': 'flag', '--authored-background': 'path', '--authorization-hash': 'id', '--batch': 'id', '--batch-manifest': 'path',
   '--batches': 'list', '--budget': 'number', '--budget-proof': 'path', '--budget-root': 'path', '--budget-yuan': 'number', '--card': 'id',
-  '--catalog': 'path', '--combat': 'flag', '--compact-request': 'flag', '--concurrency': 'number', '--config': 'path',
+  '--catalog': 'path', '--combat': 'flag', '--compact-request': 'flag', '--compare': 'path', '--require-harvest': 'flag', '--concurrency': 'number', '--config': 'path',
   '--contact-routine-only': 'flag', '--controlled-revision': 'path', '--corpus': 'path', '--count': 'number', '--counties': 'number',
   '--days': 'number', '--deps': 'flag', '--depth': 'number', '--design': 'path', '--diagnostics': 'flag', '--dir': 'path', '--directory': 'path',
   '--facility-source-only': 'flag', '--fast': 'flag', '--file': 'path', '--files': 'path', '--help': 'flag', '--host-installation': 'path',
@@ -84,7 +84,10 @@ const OPT = {
   '--src': 'path', '--state': 'path', '--tier': 'enum:merge|full', '--timeout': 'number', '--turns': 'number', '--village': 'enum:yp|wt|lq|sb',
   '--why': 'flag', '--world': 'path', '--years': 'number',
 };
-export const RO_FLAGS = ['--verify', '--check', '--l1', '--list', '--summary', '--dry-run', '--dry-publish', '--show'];
+// --day / --table / --direct：probe-gucen-travel 的只打印模式（只读，已登记实跑）。
+// --compare / --require-harvest：trade-ledger-digest 的基线比对修饰参数（只读基线文件、结果打到 stdout，脚本不写盘）；该脚本没有只读开关，
+//   且基线只对 FX7 改前版本成立、220 天约需 1 小时，超出每条 120 秒的实跑上限，故按修饰参数登记、不进只读实跑入口。
+export const RO_FLAGS = ['--verify', '--check', '--l1', '--list', '--summary', '--dry-run', '--dry-publish', '--show', '--day', '--table', '--direct'];
 
 export const FLAGS = {
   ...Object.fromEntries(RO_FLAGS.map(f => [f, {kind: 'ro'}])),
