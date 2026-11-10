@@ -117,14 +117,16 @@
     "rejection": {
       "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
       "at": "2026-11-10",
-      "reason": "small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）",
+      "reason": "small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布",
       "ids": [
         "recipe_w3c_steel_gouge_tip",
         "recipe_w3c_small_bell_frame",
         "recipe_w3c_soap_wash_portion",
         "recipe_w3c_resin_cloth_patch",
         "recipe_w3c_ledger_cover",
-        "recipe_w3c_redwood_dye"
+        "recipe_w3c_redwood_dye",
+        "recipe_w3c_paste_cup_portion",
+        "recipe_w3c_horn_comb"
       ]
     }
   },
