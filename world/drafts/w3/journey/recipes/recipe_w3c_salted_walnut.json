@@ -1,16 +1,37 @@
 {
   "id": "recipe_w3c_salted_walnut",
   "fingerprint": "135029dc28b193b52162043927c68870d362c38fd731d2057bfe85b67d6e6763",
-  "status": "passed",
+  "status": "pending",
   "attempts": 1,
-  "draft": {
-    "id": "recipe_w3c_salted_walnut",
-    "process": "取粗盐小包，先查看有无沙粒，拣净后倒入厚底煮锅，加部分配额清水搅至溶散。净核桃仁逐块翻看，剔去夹带薄壳与哈喇味仁，倒入锅中与盐水拌匀。锅置小灶上，用偏柄木匙低火不停翻焙，待水汽收干、仁面泛干爽盐霜即离火。余水与废盐渣一并弃置，不返还。全程四十五分钟，得盐焙核桃仁一份，木匙与煮锅保留。"
-  },
-  "review": {
-    "contradictions": []
-  },
+  "draft": null,
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": [
+    "L4 退回：mustard_relish：“加盖静置”引入骨架外的锅盖；rendered_cooking_fat 与 caraway_oat_crust：“洗净”需骨架外清水；poppy_rye_crisp：“将稠糊舀出暂置”无容器与舀取工具；garlic_butter：黄油置锅旁却在锅中与蒜末压拌（未入锅），另“洗净保留”需外水；ash_walking_stick：“沿墨线”引入墨线；cheese_rye_panbread（L2：刨屑被排除出制作且火源无交代）、broadbean_garlic_mash（L2：“洗净”需骨架外水）、laundry_mesh_bag（L2：自添“仅作盛放衣物之用”）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，不洗涤、不引入新器具，工序前后连贯。；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_salted_walnut：用火未交代火源；recipe_w3c_beet_barley_pot：\"洗净\"需骨架外水（骨架水已全部入锅）；recipe_w3c_pear_vinegar_slice：\"洗净\"需骨架外水；recipe_w3c_bottle_divider_crate：\"沿墨线\"引入骨架外墨线；recipe_w3c_lentil_leek_stew：\"擦净\"需骨架外擦布；recipe_w3c_mutton_turnip_stew：\"擦净\"需骨架外擦布"
+  ],
+  "l4Rejection": [
+    {
+      "key": "94e899b36218d21d1ef7b3f2b2ce832bc2b972ae52def03b105e09de514b5a57",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "mustard_relish：“加盖静置”引入骨架外的锅盖；rendered_cooking_fat 与 caraway_oat_crust：“洗净”需骨架外清水；poppy_rye_crisp：“将稠糊舀出暂置”无容器与舀取工具；garlic_butter：黄油置锅旁却在锅中与蒜末压拌（未入锅），另“洗净保留”需外水；ash_walking_stick：“沿墨线”引入墨线；cheese_rye_panbread（L2：刨屑被排除出制作且火源无交代）、broadbean_garlic_mash（L2：“洗净”需骨架外水）、laundry_mesh_bag（L2：自添“仅作盛放衣物之用”）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，不洗涤、不引入新器具，工序前后连贯。；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_salted_walnut：用火未交代火源；recipe_w3c_beet_barley_pot：\"洗净\"需骨架外水（骨架水已全部入锅）；recipe_w3c_pear_vinegar_slice：\"洗净\"需骨架外水；recipe_w3c_bottle_divider_crate：\"沿墨线\"引入骨架外墨线；recipe_w3c_lentil_leek_stew：\"擦净\"需骨架外擦布；recipe_w3c_mutton_turnip_stew：\"擦净\"需骨架外擦布",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_salted_walnut",
+        "process": "取粗盐小包，先查看有无沙粒，拣净后倒入厚底煮锅，加部分配额清水搅至溶散。净核桃仁逐块翻看，剔去夹带薄壳与哈喇味仁，倒入锅中与盐水拌匀。锅置小灶上，用偏柄木匙低火不停翻焙，待水汽收干、仁面泛干爽盐霜即离火。余水与废盐渣一并弃置，不返还。全程四十五分钟，得盐焙核桃仁一份，木匙与煮锅保留。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T19:18:26.798Z"
+  }
 }

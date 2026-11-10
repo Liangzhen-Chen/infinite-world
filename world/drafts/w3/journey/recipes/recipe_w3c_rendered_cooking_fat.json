@@ -1,16 +1,37 @@
 {
   "id": "recipe_w3c_rendered_cooking_fat",
   "fingerprint": "10b39d8b65d05736d1778916c2f9170c3208e8b3e8f7058e8e4a83dd89a688e8",
-  "status": "passed",
+  "status": "pending",
   "attempts": 1,
-  "draft": {
-    "id": "recipe_w3c_rendered_cooking_fat",
-    "process": "将整块猪板脂置于案上，以切刀改小为均匀碎丁，使受热面尽量一致。厚底煮锅坐于小灶，倾入配额清水，再下碎脂，以偏柄木匙沿锅底推搅，防其贴底。灶下只添干木刨屑引火，保持缓火。待水汽蒸散、脂面渐清，继续以木匙轻推，见碎渣转黄即离火。稍静置，用木匙沿锅缘舀取上层澄清熟脂，注入自备容器。锅底焦渣不作交付，与余屑一并弃置。全程共七十五分钟，得熟猪脂一份，锅具与木匙洗净留存。"
-  },
-  "review": {
-    "contradictions": []
-  },
+  "draft": null,
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": [
+    "L4 退回：mustard_relish：“加盖静置”引入骨架外的锅盖；rendered_cooking_fat 与 caraway_oat_crust：“洗净”需骨架外清水；poppy_rye_crisp：“将稠糊舀出暂置”无容器与舀取工具；garlic_butter：黄油置锅旁却在锅中与蒜末压拌（未入锅），另“洗净保留”需外水；ash_walking_stick：“沿墨线”引入墨线；cheese_rye_panbread（L2：刨屑被排除出制作且火源无交代）、broadbean_garlic_mash（L2：“洗净”需骨架外水）、laundry_mesh_bag（L2：自添“仅作盛放衣物之用”）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，不洗涤、不引入新器具，工序前后连贯。；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_salted_walnut：用火未交代火源；recipe_w3c_beet_barley_pot：\"洗净\"需骨架外水（骨架水已全部入锅）；recipe_w3c_pear_vinegar_slice：\"洗净\"需骨架外水；recipe_w3c_bottle_divider_crate：\"沿墨线\"引入骨架外墨线；recipe_w3c_lentil_leek_stew：\"擦净\"需骨架外擦布；recipe_w3c_mutton_turnip_stew：\"擦净\"需骨架外擦布"
+  ],
+  "l4Rejection": [
+    {
+      "key": "4447c228c0d863a8ee76307c3e68739c6f45bc9350373b7a8c4a8bdd1cd13a42",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "mustard_relish：“加盖静置”引入骨架外的锅盖；rendered_cooking_fat 与 caraway_oat_crust：“洗净”需骨架外清水；poppy_rye_crisp：“将稠糊舀出暂置”无容器与舀取工具；garlic_butter：黄油置锅旁却在锅中与蒜末压拌（未入锅），另“洗净保留”需外水；ash_walking_stick：“沿墨线”引入墨线；cheese_rye_panbread（L2：刨屑被排除出制作且火源无交代）、broadbean_garlic_mash（L2：“洗净”需骨架外水）、laundry_mesh_bag（L2：自添“仅作盛放衣物之用”）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，不洗涤、不引入新器具，工序前后连贯。；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_salted_walnut：用火未交代火源；recipe_w3c_beet_barley_pot：\"洗净\"需骨架外水（骨架水已全部入锅）；recipe_w3c_pear_vinegar_slice：\"洗净\"需骨架外水；recipe_w3c_bottle_divider_crate：\"沿墨线\"引入骨架外墨线；recipe_w3c_lentil_leek_stew：\"擦净\"需骨架外擦布；recipe_w3c_mutton_turnip_stew：\"擦净\"需骨架外擦布",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_rendered_cooking_fat",
+        "process": "将整块猪板脂置于案上，以切刀改小为均匀碎丁，使受热面尽量一致。厚底煮锅坐于小灶，倾入配额清水，再下碎脂，以偏柄木匙沿锅底推搅，防其贴底。灶下只添干木刨屑引火，保持缓火。待水汽蒸散、脂面渐清，继续以木匙轻推，见碎渣转黄即离火。稍静置，用木匙沿锅缘舀取上层澄清熟脂，注入自备容器。锅底焦渣不作交付，与余屑一并弃置。全程共七十五分钟，得熟猪脂一份，锅具与木匙洗净留存。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T19:18:26.798Z"
+  }
 }

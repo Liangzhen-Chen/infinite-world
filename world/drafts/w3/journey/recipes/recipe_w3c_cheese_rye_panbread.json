@@ -1,39 +1,18 @@
 {
   "id": "recipe_w3c_cheese_rye_panbread",
   "fingerprint": "a08e94494cc5f33d200285f79ae3ee18aeffa7b8f80499d5b31e9b2084cb3c18",
-  "status": "manual",
-  "attempts": 3,
+  "status": "passed",
+  "attempts": 4,
   "draft": {
     "id": "recipe_w3c_cheese_rye_panbread",
-    "process": "用案上切刀刮去硬乳酪角外层污损，再切成薄片；细筛黑麦粉倒入清水，以长柄搅糊板拌成稠糊。厚底煮锅置火上，取无盐黄油小块入锅融化，转动锅身令黄油润遍锅底锅壁。稠糊倾入锅中摊开成饼，酪片铺在饼面，再覆一层稠糊裹住酪片，压合边缘。两面烙至饼皮定形、酪片受热软化即可出锅。干木刨屑不混入饼中。全程55分钟。"
+    "process": "取熟成硬乳酪角，用案上切刀刮去外层污损，再切成薄片。细筛黑麦粉倒入厚底煮锅，加清水一份，以长柄搅糊板搅成稠糊。干木刨屑作引火燃料，在小灶生火，锅置火上，取无盐黄油入锅融化润遍锅底。将稠糊分作两团，在锅中摊成厚饼，一面烙定后翻面，把酪片夹入两饼之间合拢，两面烙至饼皮干香、酪片受热贴合。烙成后整份取出，余下碎屑与刨屑弃置，工具保留。全程55分钟。"
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "干木刨屑不混入饼中",
-        "field": "materials",
-        "severity": "hard",
-        "reason": "骨架材料含干木刨屑一份，但引用事实仅说明其可引火或吸收漏液，正文既未交代其来源用途，又将其排除于制作之外，属于骨架外材料处理且未按骨架使用该材料；同时正文未说明木刨屑用于生火，却出现“置火上”，火源无交代。"
-      }
-    ]
+    "contradictions": []
   },
-  "errors": [
-    {
-      "quote": "干木刨屑不混入饼中",
-      "field": "materials",
-      "severity": "hard",
-      "reason": "骨架材料含干木刨屑一份，但引用事实仅说明其可引火或吸收漏液，正文既未交代其来源用途，又将其排除于制作之外，属于骨架外材料处理且未按骨架使用该材料；同时正文未说明木刨屑用于生火，却出现“置火上”，火源无交代。"
-    }
-  ],
+  "errors": [],
   "warnings": [],
-  "feedback": [
-    {
-      "quote": "干木刨屑不混入饼中",
-      "field": "materials",
-      "severity": "hard",
-      "reason": "骨架材料含干木刨屑一份，但引用事实仅说明其可引火或吸收漏液，正文既未交代其来源用途，又将其排除于制作之外，属于骨架外材料处理且未按骨架使用该材料；同时正文未说明木刨屑用于生火，却出现“置火上”，火源无交代。"
-    }
-  ],
+  "feedback": null,
   "l4Rejection": [
     {
       "key": "d39ad9b68362780e2711e067a5a333b63632368a71cef76ec9e8546f0ea7063b",
@@ -50,13 +29,36 @@
       "priorReview": {
         "contradictions": []
       }
+    },
+    {
+      "key": "a0ec37d19a15b9aba9b43536a0cfee57b31d99eb8b7751bfd14227368a9bc72f",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "mustard_relish：“加盖静置”引入骨架外的锅盖；rendered_cooking_fat 与 caraway_oat_crust：“洗净”需骨架外清水；poppy_rye_crisp：“将稠糊舀出暂置”无容器与舀取工具；garlic_butter：黄油置锅旁却在锅中与蒜末压拌（未入锅），另“洗净保留”需外水；ash_walking_stick：“沿墨线”引入墨线；cheese_rye_panbread（L2：刨屑被排除出制作且火源无交代）、broadbean_garlic_mash（L2：“洗净”需骨架外水）、laundry_mesh_bag（L2：自添“仅作盛放衣物之用”）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，不洗涤、不引入新器具，工序前后连贯。；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_salted_walnut：用火未交代火源；recipe_w3c_beet_barley_pot：\"洗净\"需骨架外水（骨架水已全部入锅）；recipe_w3c_pear_vinegar_slice：\"洗净\"需骨架外水；recipe_w3c_bottle_divider_crate：\"沿墨线\"引入骨架外墨线；recipe_w3c_lentil_leek_stew：\"擦净\"需骨架外擦布；recipe_w3c_mutton_turnip_stew：\"擦净\"需骨架外擦布",
+      "priorStatus": "manual",
+      "priorAttempts": 3,
+      "attemptCap": 5,
+      "priorDraft": {
+        "id": "recipe_w3c_cheese_rye_panbread",
+        "process": "用案上切刀刮去硬乳酪角外层污损，再切成薄片；细筛黑麦粉倒入清水，以长柄搅糊板拌成稠糊。厚底煮锅置火上，取无盐黄油小块入锅融化，转动锅身令黄油润遍锅底锅壁。稠糊倾入锅中摊开成饼，酪片铺在饼面，再覆一层稠糊裹住酪片，压合边缘。两面烙至饼皮定形、酪片受热软化即可出锅。干木刨屑不混入饼中。全程55分钟。"
+      },
+      "priorReview": {
+        "contradictions": [
+          {
+            "quote": "干木刨屑不混入饼中",
+            "field": "materials",
+            "severity": "hard",
+            "reason": "骨架材料含干木刨屑一份，但引用事实仅说明其可引火或吸收漏液，正文既未交代其来源用途，又将其排除于制作之外，属于骨架外材料处理且未按骨架使用该材料；同时正文未说明木刨屑用于生火，却出现“置火上”，火源无交代。"
+          }
+        ]
+      }
     }
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "541d4e15-8806-4883-97b7-85e4858a9d84",
+    "id": "fec0cea5-8449-4c73-b04b-74baa20f1143",
     "object": "chat.completion",
-    "created": 1794336944,
+    "created": 1794338270,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -67,11 +69,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_ZRRkuAe01cGDt8zcKoIH8926",
+              "id": "call_00_coZGzHV7d0noKzrAZnGV7743",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_cheese_rye_panbread\", \"process\": \"用案上切刀刮去硬乳酪角外层污损，再切成薄片；细筛黑麦粉倒入清水，以长柄搅糊板拌成稠糊。厚底煮锅置火上，取无盐黄油小块入锅融化，转动锅身令黄油润遍锅底锅壁。稠糊倾入锅中摊开成饼，酪片铺在饼面，再覆一层稠糊裹住酪片，压合边缘。两面烙至饼皮定形、酪片受热软化即可出锅。干木刨屑不混入饼中。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_cheese_rye_panbread\", \"process\": \"取熟成硬乳酪角，用案上切刀刮去外层污损，再切成薄片。细筛黑麦粉倒入厚底煮锅，加清水一份，以长柄搅糊板搅成稠糊。干木刨屑作引火燃料，在小灶生火，锅置火上，取无盐黄油入锅融化润遍锅底。将稠糊分作两团，在锅中摊成厚饼，一面烙定后翻面，把酪片夹入两饼之间合拢，两面烙至饼皮干香、酪片受热贴合。烙成后整份取出，余下碎屑与刨屑弃置，工具保留。\"}"
               }
             }
           ]
@@ -81,34 +83,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1872,
-      "completion_tokens": 182,
-      "total_tokens": 2054,
+      "prompt_tokens": 2195,
+      "completion_tokens": 205,
+      "total_tokens": 2400,
       "prompt_tokens_details": {
-        "cached_tokens": 1408
+        "cached_tokens": 640
       },
-      "prompt_cache_hit_tokens": 1408,
-      "prompt_cache_miss_tokens": 464
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 1555
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-draft2",
+      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-draft3",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1872,
-        "completion_tokens": 182,
-        "total_tokens": 2054,
+        "prompt_tokens": 2195,
+        "completion_tokens": 205,
+        "total_tokens": 2400,
         "prompt_tokens_details": {
-          "cached_tokens": 1408
+          "cached_tokens": 640
         },
-        "prompt_cache_hit_tokens": 1408,
-        "prompt_cache_miss_tokens": 464
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1555
       },
-      "costUpperYuan": 0.00244032,
-      "cumulativeUpperYuan": 5.469885040000006,
-      "latencyMs": 2363.7390000000014,
-      "timestamp": "2026-11-10T18:55:47.552Z"
+      "costUpperYuan": 0.0047756000000000005,
+      "cumulativeUpperYuan": 5.574575760000006,
+      "latencyMs": 2217.3791999999994,
+      "timestamp": "2026-11-10T19:17:53.399Z"
     }
   },
   "responseEvidence": [
@@ -143,6 +145,22 @@
       "file": "budget-responses/8991f290-1473-4678-87b4-e4ffad96217e.json",
       "requestHash": "1526013d042b1e1eeb13ce0b7e2c7d6aa892362d3dc1239255367eabe33e0d21",
       "responseHash": "57d4ec9f5e9497b8661b98a2b45573b0429cbf213c7e78336d64823f8b6e4d5d"
+    },
+    {
+      "phase": "draft",
+      "attempt": 4,
+      "requestId": "d75a0ae0-8dd8-4ca8-bf4b-1bad4b8fa763",
+      "file": "budget-responses/d75a0ae0-8dd8-4ca8-bf4b-1bad4b8fa763.json",
+      "requestHash": "70e23d54f3e54641cc2bae37c3c442c4465214aa87a95e91fcfbab984c9b58b6",
+      "responseHash": "8ac245f73b2e45b8b50e233a9be7e7785b56d74f3c787f058c25dc8177fc731a"
+    },
+    {
+      "phase": "review",
+      "attempt": 4,
+      "requestId": "b4fde0d2-6491-4bd9-a2a8-5574c1323f45",
+      "file": "budget-responses/b4fde0d2-6491-4bd9-a2a8-5574c1323f45.json",
+      "requestHash": "c6558f7c59977f93df8a2e6b7347b11aac0f9288090ee426b084b360a4d12a0a",
+      "responseHash": "a34e261de06cf5b05e71f589cd5f40afe5a4f42e893232ef01dc22fdfba9ec9c"
     }
   ],
   "measurements": [
@@ -221,6 +239,44 @@
       "cumulativeUpperYuan": 5.478671760000005,
       "latencyMs": 1728.8954999999987,
       "timestamp": "2026-11-10T18:55:55.423Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-draft3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2195,
+        "completion_tokens": 205,
+        "total_tokens": 2400,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1555
+      },
+      "costUpperYuan": 0.0047756000000000005,
+      "cumulativeUpperYuan": 5.574575760000006,
+      "latencyMs": 2217.3791999999994,
+      "timestamp": "2026-11-10T19:17:53.399Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-review3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2324,
+        "completion_tokens": 7,
+        "total_tokens": 2331,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1428
+      },
+      "costUpperYuan": 0.00294784,
+      "cumulativeUpperYuan": 5.580465440000006,
+      "latencyMs": 840.6733999999997,
+      "timestamp": "2026-11-10T19:17:55.044Z"
     }
   ]
 }

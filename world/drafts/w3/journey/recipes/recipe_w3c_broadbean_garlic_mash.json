@@ -1,37 +1,37 @@
 {
   "id": "recipe_w3c_broadbean_garlic_mash",
   "fingerprint": "b8e6ca83d2026322fa53aebd3b0e53554a62d62e2ec47d7a17fda1fa146d6e10",
-  "status": "manual",
-  "attempts": 3,
+  "status": "pending",
+  "attempts": 4,
   "draft": {
     "id": "recipe_w3c_broadbean_garlic_mash",
-    "process": "取干蚕豆瓣与规定清水，浸至瓣心松软，连水入厚底煮锅，小火煮到一捻即散。另将蒜头逐瓣剥去干皮，以案上切刀切成细末，投入锅中同煮至蒜末软熟。离火稍晾，持偏柄木匙沿锅壁反复压碾，把豆瓣压成泥，挑出未散残皮弃置。粗盐先筛去沙粒，再以刀背压碎，拌入泥中调匀。锅底焦屑刮下不用，木匙与切刀洗净收好，泥盛出即为一份。全程100分钟。"
+    "process": "取干蚕豆瓣一份，与规定清水一份同入厚底煮锅，浸至豆瓣发软。另将晒皮蒜头剥瓣去皮，用案上切刀切成细末。把余下清水一份倒入锅中，与豆瓣一并煮至豆粒一压即散，再下蒜末同煮至蒜味透出。撒入粗盐调味，以偏柄木匙沿锅壁反复压碾，将豆瓣压成稠泥。挑出未散尽的残皮弃置，锅底焦屑刮下弃置。小灶引火只用干木刨屑，煮制前后皆以此维持火源；成泥一份，木匙与切刀留用。全程100分钟。"
   },
   "review": {
     "contradictions": [
       {
-        "quote": "木匙与切刀洗净收好",
+        "quote": "小灶引火只用干木刨屑，煮制前后皆以此维持火源",
         "field": "processFacts",
         "severity": "hard",
-        "reason": "骨架未提供清洗用水，正文自添清水洗器具，属骨架外水量；且骨架材料水仅两份用于泡煮，未声明可另取水清洗。"
+        "reason": "骨架未声明小灶或火源，木刨屑的引用事实仅称可引火或吸收漏液，未说明可作煮制全程燃料；正文新增了骨架外的火源与器具（小灶），且将刨屑用途扩展为维持煮制火源。"
       }
     ]
   },
   "errors": [
     {
-      "quote": "木匙与切刀洗净收好",
+      "quote": "小灶引火只用干木刨屑，煮制前后皆以此维持火源",
       "field": "processFacts",
       "severity": "hard",
-      "reason": "骨架未提供清洗用水，正文自添清水洗器具，属骨架外水量；且骨架材料水仅两份用于泡煮，未声明可另取水清洗。"
+      "reason": "骨架未声明小灶或火源，木刨屑的引用事实仅称可引火或吸收漏液，未说明可作煮制全程燃料；正文新增了骨架外的火源与器具（小灶），且将刨屑用途扩展为维持煮制火源。"
     }
   ],
   "warnings": [],
   "feedback": [
     {
-      "quote": "木匙与切刀洗净收好",
+      "quote": "小灶引火只用干木刨屑，煮制前后皆以此维持火源",
       "field": "processFacts",
       "severity": "hard",
-      "reason": "骨架未提供清洗用水，正文自添清水洗器具，属骨架外水量；且骨架材料水仅两份用于泡煮，未声明可另取水清洗。"
+      "reason": "骨架未声明小灶或火源，木刨屑的引用事实仅称可引火或吸收漏液，未说明可作煮制全程燃料；正文新增了骨架外的火源与器具（小灶），且将刨屑用途扩展为维持煮制火源。"
     }
   ],
   "l4Rejection": [
@@ -50,13 +50,36 @@
       "priorReview": {
         "contradictions": []
       }
+    },
+    {
+      "key": "7b7ebcdb27b5ccdd7e82a6a7dccb9a153103ce9291801ed3cc59a1ad820b5ddc",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "mustard_relish：“加盖静置”引入骨架外的锅盖；rendered_cooking_fat 与 caraway_oat_crust：“洗净”需骨架外清水；poppy_rye_crisp：“将稠糊舀出暂置”无容器与舀取工具；garlic_butter：黄油置锅旁却在锅中与蒜末压拌（未入锅），另“洗净保留”需外水；ash_walking_stick：“沿墨线”引入墨线；cheese_rye_panbread（L2：刨屑被排除出制作且火源无交代）、broadbean_garlic_mash（L2：“洗净”需骨架外水）、laundry_mesh_bag（L2：自添“仅作盛放衣物之用”）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，不洗涤、不引入新器具，工序前后连贯。；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_salted_walnut：用火未交代火源；recipe_w3c_beet_barley_pot：\"洗净\"需骨架外水（骨架水已全部入锅）；recipe_w3c_pear_vinegar_slice：\"洗净\"需骨架外水；recipe_w3c_bottle_divider_crate：\"沿墨线\"引入骨架外墨线；recipe_w3c_lentil_leek_stew：\"擦净\"需骨架外擦布；recipe_w3c_mutton_turnip_stew：\"擦净\"需骨架外擦布",
+      "priorStatus": "manual",
+      "priorAttempts": 3,
+      "attemptCap": 5,
+      "priorDraft": {
+        "id": "recipe_w3c_broadbean_garlic_mash",
+        "process": "取干蚕豆瓣与规定清水，浸至瓣心松软，连水入厚底煮锅，小火煮到一捻即散。另将蒜头逐瓣剥去干皮，以案上切刀切成细末，投入锅中同煮至蒜末软熟。离火稍晾，持偏柄木匙沿锅壁反复压碾，把豆瓣压成泥，挑出未散残皮弃置。粗盐先筛去沙粒，再以刀背压碎，拌入泥中调匀。锅底焦屑刮下不用，木匙与切刀洗净收好，泥盛出即为一份。全程100分钟。"
+      },
+      "priorReview": {
+        "contradictions": [
+          {
+            "quote": "木匙与切刀洗净收好",
+            "field": "processFacts",
+            "severity": "hard",
+            "reason": "骨架未提供清洗用水，正文自添清水洗器具，属骨架外水量；且骨架材料水仅两份用于泡煮，未声明可另取水清洗。"
+          }
+        ]
+      }
     }
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "7cb88a76-c577-41fd-ae8e-4ffdc4b2c723",
+    "id": "f8ff9992-4450-4f46-ace5-1ba3b772ff8d",
     "object": "chat.completion",
-    "created": 1794336939,
+    "created": 1794338262,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -67,11 +90,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_l9nGFoAXeKVLGHJBdKmA1593",
+              "id": "call_00_hOW7PSpaWR26VD80C66Z0066",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_broadbean_garlic_mash\", \"process\": \"取干蚕豆瓣与规定清水，浸至瓣心松软，连水入厚底煮锅，小火煮到一捻即散。另将蒜头逐瓣剥去干皮，以案上切刀切成细末，投入锅中同煮至蒜末软熟。离火稍晾，持偏柄木匙沿锅壁反复压碾，把豆瓣压成泥，挑出未散残皮弃置。粗盐先筛去沙粒，再以刀背压碎，拌入泥中调匀。锅底焦屑刮下不用，木匙与切刀洗净收好，泥盛出即为一份。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_broadbean_garlic_mash\", \"process\": \"取干蚕豆瓣一份，与规定清水一份同入厚底煮锅，浸至豆瓣发软。另将晒皮蒜头剥瓣去皮，用案上切刀切成细末。把余下清水一份倒入锅中，与豆瓣一并煮至豆粒一压即散，再下蒜末同煮至蒜味透出。撒入粗盐调味，以偏柄木匙沿锅壁反复压碾，将豆瓣压成稠泥。挑出未散尽的残皮弃置，锅底焦屑刮下弃置。小灶引火只用干木刨屑，煮制前后皆以此维持火源；成泥一份，木匙与切刀留用。\"}"
               }
             }
           ]
@@ -81,34 +104,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1688,
-      "completion_tokens": 195,
-      "total_tokens": 1883,
+      "prompt_tokens": 2189,
+      "completion_tokens": 206,
+      "total_tokens": 2395,
       "prompt_tokens_details": {
-        "cached_tokens": 1408
+        "cached_tokens": 640
       },
-      "prompt_cache_hit_tokens": 1408,
-      "prompt_cache_miss_tokens": 280
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 1549
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft2",
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft3",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1688,
-        "completion_tokens": 195,
-        "total_tokens": 1883,
+        "prompt_tokens": 2189,
+        "completion_tokens": 206,
+        "total_tokens": 2395,
         "prompt_tokens_details": {
-          "cached_tokens": 1408
+          "cached_tokens": 640
         },
-        "prompt_cache_hit_tokens": 1408,
-        "prompt_cache_miss_tokens": 280
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1549
       },
-      "costUpperYuan": 0.0021763200000000003,
-      "cumulativeUpperYuan": 5.462889920000006,
-      "latencyMs": 2472.6347000000023,
-      "timestamp": "2026-11-10T18:55:41.954Z"
+      "costUpperYuan": 0.0047716,
+      "cumulativeUpperYuan": 5.554512720000005,
+      "latencyMs": 2054.5024000000003,
+      "timestamp": "2026-11-10T19:17:44.977Z"
     }
   },
   "responseEvidence": [
@@ -143,6 +166,22 @@
       "file": "budget-responses/a5e8aa91-9aec-4bc5-adb3-3f0e0edee8e0.json",
       "requestHash": "e5aec36ac56287ab548adeb304a2b9c89372dbe8c3633a33e57cf84cd2db84e2",
       "responseHash": "b93e8034a06b37dd9704c040e400310b6e7a04a0596f03cb08dcd5d15db2846f"
+    },
+    {
+      "phase": "draft",
+      "attempt": 4,
+      "requestId": "9559ea30-b01a-462a-9fd8-c7d3cb6d2772",
+      "file": "budget-responses/9559ea30-b01a-462a-9fd8-c7d3cb6d2772.json",
+      "requestHash": "e9e11c51aa330c1242b811b138d37b0bdd5def241408972930a80bc18ebb014e",
+      "responseHash": "95f663cc89c1ec0c8d14944cca278c5452c003ed10dcc1897b4c2b138c2416ed"
+    },
+    {
+      "phase": "review",
+      "attempt": 4,
+      "requestId": "326446ff-362d-4b71-ae4b-0d40ea621784",
+      "file": "budget-responses/326446ff-362d-4b71-ae4b-0d40ea621784.json",
+      "requestHash": "c844eb5599746e98d23b2d6d72e99f0850be6a2e46eb2ede9f5ecb292fe48b98",
+      "responseHash": "d7f37549e4c9d0ba6d3749e6351e7242476235dce4998196903859494135e104"
     }
   ],
   "measurements": [
@@ -221,6 +260,49 @@
       "cumulativeUpperYuan": 5.471508480000006,
       "latencyMs": 1123.4019000000044,
       "timestamp": "2026-11-10T18:55:48.706Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2189,
+        "completion_tokens": 206,
+        "total_tokens": 2395,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1549
+      },
+      "costUpperYuan": 0.0047716,
+      "cumulativeUpperYuan": 5.554512720000005,
+      "latencyMs": 2054.5024000000003,
+      "timestamp": "2026-11-10T19:17:44.977Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-review3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2316,
+        "completion_tokens": 102,
+        "total_tokens": 2418,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1420
+      },
+      "costUpperYuan": 0.00369184,
+      "cumulativeUpperYuan": 5.564968560000006,
+      "latencyMs": 1759.3011000000006,
+      "timestamp": "2026-11-10T19:17:49.008Z"
     }
-  ]
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T19:18:26.797Z"
+  }
 }

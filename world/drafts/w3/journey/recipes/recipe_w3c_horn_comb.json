@@ -1,16 +1,37 @@
 {
   "id": "recipe_w3c_horn_comb",
   "fingerprint": "d5249acfea0c333606a6863a31493b0903335b8d7d57c8d2ac323df18e170d0e",
-  "status": "passed",
+  "status": "pending",
   "attempts": 1,
-  "draft": {
-    "id": "recipe_w3c_horn_comb",
-    "process": "取空心角片坯一份置于木工台上，用细弓镂片锯沿坯面锯出短齿间隙，锯缝保持等距并留足齿根。换粗齿木锉，逐齿锉圆齿尖，并修顺齿列两侧边缘。再持短锋修羽刀，沿梳背轻刮至平直，刀锋只走浅层，遇细裂片即挑出弃置。全程总耗时二百一十分钟。完成后得短齿角梳一份，仅用于梳理发丝。所用锯、锉、刀擦拭后保留。"
-  },
-  "review": {
-    "contradictions": []
-  },
+  "draft": null,
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": [
+    "L4 退回：small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布"
+  ],
+  "l4Rejection": [
+    {
+      "key": "18d771aa198263e97cb95a5204f3375e337132b93eac98e04dce6358241aabee",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_horn_comb",
+        "process": "取空心角片坯一份置于木工台上，用细弓镂片锯沿坯面锯出短齿间隙，锯缝保持等距并留足齿根。换粗齿木锉，逐齿锉圆齿尖，并修顺齿列两侧边缘。再持短锋修羽刀，沿梳背轻刮至平直，刀锋只走浅层，遇细裂片即挑出弃置。全程总耗时二百一十分钟。完成后得短齿角梳一份，仅用于梳理发丝。所用锯、锉、刀擦拭后保留。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T19:18:26.890Z"
+  }
 }

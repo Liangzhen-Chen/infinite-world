@@ -1,18 +1,15 @@
 {
   "id": "recipe_w3c_ledger_cover",
   "fingerprint": "028d3fe285b97fe6508bfdd66d77948a56a6f86b6e05cbabcacabd695a67b1f8",
-  "status": "passed",
+  "status": "pending",
   "attempts": 2,
-  "draft": {
-    "id": "recipe_w3c_ledger_cover",
-    "process": "将整张薄鞣山羊革摊平，用短刃裁革剪沿直边合剪，取下一整片革料，不另裁两片。把革料沿中线对折，使毛面相对，折边压实。以缝革扁锥沿折边两侧刺出扁缝孔，孔距均匀，再用粗眼缝针穿细捻麻线逐孔缝合折边。取黄铜窄带，以弯柄金属剪短行程分次合剪，分出一组角片；每片对折成夹口，分别夹住封皮四角，逐角压合贴实。缝线与角片装齐后，抖去剪屑，检查折边与四角是否平整，即成一副封皮，账页另备。全程180分钟。"
-  },
-  "review": {
-    "contradictions": []
-  },
+  "draft": null,
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null,
+  "feedback": [
+    "L4 退回：small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布"
+  ],
   "manualCorrection": {
     "reason": "L4：缝革扁锥不能穿黄铜片；角片按骨架折夹，不另钻金属孔。"
   },
@@ -28,6 +25,22 @@
       "priorDraft": {
         "id": "recipe_w3c_ledger_cover",
         "process": "将薄鞣山羊革平铺，用短刃裁革剪沿折线裁出封皮两片，革面朝外对折。以缝革扁锥沿三边刺出扁孔，粗眼缝针穿细捻麻线逐孔缝合，针距均匀，收针藏于折边内。黄铜窄带用弯柄金属剪分作四段角片，逐片折夹四角，折边紧贴革角，利用弯折收口夹住革面，不在铜片上另打针孔。缝毕压平封皮，检查角片是否贴伏、线迹是否松脱。总耗时一百八十分钟。成品为一副封皮，账页另备；余料弃置，工具保留。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    },
+    {
+      "key": "50a75bdf2c63b3cdc9eab7abf0b44db6ffb22941c73b4d05d1fbdd791c13fb5c",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布",
+      "priorStatus": "passed",
+      "priorAttempts": 2,
+      "attemptCap": 4,
+      "priorDraft": {
+        "id": "recipe_w3c_ledger_cover",
+        "process": "将整张薄鞣山羊革摊平，用短刃裁革剪沿直边合剪，取下一整片革料，不另裁两片。把革料沿中线对折，使毛面相对，折边压实。以缝革扁锥沿折边两侧刺出扁缝孔，孔距均匀，再用粗眼缝针穿细捻麻线逐孔缝合折边。取黄铜窄带，以弯柄金属剪短行程分次合剪，分出一组角片；每片对折成夹口，分别夹住封皮四角，逐角压合贴实。缝线与角片装齐后，抖去剪屑，检查折边与四角是否平整，即成一副封皮，账页另备。全程180分钟。"
       },
       "priorReview": {
         "contradictions": []
@@ -150,5 +163,10 @@
       "latencyMs": 1013.6459999999934,
       "timestamp": "2026-11-10T18:56:09.938Z"
     }
-  ]
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T19:18:26.884Z"
+  }
 }

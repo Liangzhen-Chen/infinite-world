@@ -1,38 +1,14 @@
 {
   "id": "recipe_w3c_redwood_dye",
   "fingerprint": "33e41a0b43cb12f936e00ad6c0825c86504774b88050ebd9fac16d8446efffd8",
-  "status": "manual",
+  "status": "pending",
   "attempts": 3,
-  "draft": {
-    "id": "recipe_w3c_redwood_dye",
-    "process": "将两份清水与红染木碎片一并放入厚底煮锅，加热至水面持续微沸，煎出红色后离火。把宽口滤布搭在锅口，将染液经布滤入锅中暂存的一侧，滤去木屑与碎渣。趁染液尚温，把工艺明矾粒投入液中，持偏柄木匙沿锅壁缓慢搅动，直至明矾完全溶散、液色均匀。所得温煎红木染液仅供染色，不可入口，也不作药品使用。盛装容器由取用者自备，染液滤净后即可使用。全程100分钟。"
-  },
-  "review": {
-    "contradictions": [
-      {
-        "quote": "把宽口滤布搭在锅口，将染液经布滤入锅中暂存的一侧",
-        "field": "tools",
-        "severity": "hard",
-        "reason": "滤布用途是搭在已有容器上过滤，正文却搭在锅口并把滤液滤回同一口锅，缺少骨架或引用事实支持的承接容器，工序不连贯且自添容器用法。"
-      }
-    ]
-  },
-  "errors": [
-    {
-      "quote": "把宽口滤布搭在锅口，将染液经布滤入锅中暂存的一侧",
-      "field": "tools",
-      "severity": "hard",
-      "reason": "滤布用途是搭在已有容器上过滤，正文却搭在锅口并把滤液滤回同一口锅，缺少骨架或引用事实支持的承接容器，工序不连贯且自添容器用法。"
-    }
-  ],
+  "draft": null,
+  "review": null,
+  "errors": [],
   "warnings": [],
   "feedback": [
-    {
-      "quote": "把宽口滤布搭在锅口，将染液经布滤入锅中暂存的一侧",
-      "field": "tools",
-      "severity": "hard",
-      "reason": "滤布用途是搭在已有容器上过滤，正文却搭在锅口并把滤液滤回同一口锅，缺少骨架或引用事实支持的承接容器，工序不连贯且自添容器用法。"
-    }
+    "L4 退回：small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布"
   ],
   "l4Rejection": [
     {
@@ -49,6 +25,29 @@
       },
       "priorReview": {
         "contradictions": []
+      }
+    },
+    {
+      "key": "54325b056143483278050a7d5e34dde29df3f980c41b49e07d714a9654af524d",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布",
+      "priorStatus": "manual",
+      "priorAttempts": 3,
+      "attemptCap": 5,
+      "priorDraft": {
+        "id": "recipe_w3c_redwood_dye",
+        "process": "将两份清水与红染木碎片一并放入厚底煮锅，加热至水面持续微沸，煎出红色后离火。把宽口滤布搭在锅口，将染液经布滤入锅中暂存的一侧，滤去木屑与碎渣。趁染液尚温，把工艺明矾粒投入液中，持偏柄木匙沿锅壁缓慢搅动，直至明矾完全溶散、液色均匀。所得温煎红木染液仅供染色，不可入口，也不作药品使用。盛装容器由取用者自备，染液滤净后即可使用。全程100分钟。"
+      },
+      "priorReview": {
+        "contradictions": [
+          {
+            "quote": "把宽口滤布搭在锅口，将染液经布滤入锅中暂存的一侧",
+            "field": "tools",
+            "severity": "hard",
+            "reason": "滤布用途是搭在已有容器上过滤，正文却搭在锅口并把滤液滤回同一口锅，缺少骨架或引用事实支持的承接容器，工序不连贯且自添容器用法。"
+          }
+        ]
       }
     }
   ],
@@ -222,5 +221,10 @@
       "latencyMs": 1503.6057,
       "timestamp": "2026-11-10T18:56:32.529Z"
     }
-  ]
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T19:18:26.897Z"
+  }
 }

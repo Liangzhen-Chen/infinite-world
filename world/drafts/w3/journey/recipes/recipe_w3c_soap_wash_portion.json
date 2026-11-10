@@ -1,18 +1,15 @@
 {
   "id": "recipe_w3c_soap_wash_portion",
   "fingerprint": "f52583a90396b132c33dfb503fd6eabcaeb972348bd4d6f5c6b2d78ffc96d80c",
-  "status": "passed",
+  "status": "pending",
   "attempts": 2,
-  "draft": {
-    "id": "recipe_w3c_soap_wash_portion",
-    "process": "将一份刮片硬皂与两份清水一同放入厚底煮锅，置小灶上以微温加热，用偏柄木匙沿锅底缓慢搅动，使皂片逐渐化散于水中；全程只保持温热，不让液面沸腾翻溅。皂片完全散开后离火，继续搅至液体均匀，静置冷却。冷却后的皂洗液倒入自备容器，供洗布刷具使用，不作药物。干木刨屑不投入锅中，随余料弃置。全程25分钟。"
-  },
-  "review": {
-    "contradictions": []
-  },
+  "draft": null,
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null,
+  "feedback": [
+    "L4 退回：small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布"
+  ],
   "l4Rejection": [
     {
       "key": "a1ee4addb2b4ee5fcb98c1c27ae61c07c2198cd6b0807d260759d581f00ad468",
@@ -25,6 +22,22 @@
       "priorDraft": {
         "id": "recipe_w3c_soap_wash_portion",
         "process": "将刮片硬皂投入厚底煮锅，倒入配额清水，以偏柄木匙顺纹浅匙腹沿锅缘压搅，使皂片在微温中逐渐化散，不令水面翻滚飞溅。皂片全散后停火，仍用木匙搅动至温度下降，液面平稳无浮渣结块。冷却后倒入自备容器，锅壁与匙面残留一并刮入，不另添水冲兑。所得一份温搅皂洗液用于洗布刷具，不作药物。总耗时25分钟。干木刨屑未入锅，留作引火或吸液之用。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    },
+    {
+      "key": "072965a2e2b783a48b92366815e7c92881233c0891192ee5eaa9b35dfc60bdc3",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布",
+      "priorStatus": "passed",
+      "priorAttempts": 2,
+      "attemptCap": 4,
+      "priorDraft": {
+        "id": "recipe_w3c_soap_wash_portion",
+        "process": "将一份刮片硬皂与两份清水一同放入厚底煮锅，置小灶上以微温加热，用偏柄木匙沿锅底缓慢搅动，使皂片逐渐化散于水中；全程只保持温热，不让液面沸腾翻溅。皂片完全散开后离火，继续搅至液体均匀，静置冷却。冷却后的皂洗液倒入自备容器，供洗布刷具使用，不作药物。干木刨屑不投入锅中，随余料弃置。全程25分钟。"
       },
       "priorReview": {
         "contradictions": []
@@ -147,5 +160,10 @@
       "latencyMs": 1012.1205000000045,
       "timestamp": "2026-11-10T18:56:27.532Z"
     }
-  ]
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T19:18:26.897Z"
+  }
 }

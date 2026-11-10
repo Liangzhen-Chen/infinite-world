@@ -1,19 +1,234 @@
 {
   "id": "recipe_w3c_lentil_leek_stew",
   "fingerprint": "b91d6b1dcc9ea0289c2fa47ba3dd5a5a98789981c27a539a3a77bf02801acc56",
-  "status": "passed",
-  "attempts": 1,
+  "status": "pending",
+  "attempts": 2,
   "draft": {
     "id": "recipe_w3c_lentil_leek_stew",
-    "process": "取褐扁豆挑去砂粒，从配额清水中分取少量洗切用水，韭葱夹泥处先洗净，切刀将叶与葱白切成段。余下清水入厚底煮锅，下扁豆以小火煮至软透，其间用木匙沿锅底搅动防焦。后段加入韭葱段，继续煨至葱叶软熟、汤汁略稠，以粗盐调味，再搅匀即离火。总耗时70分钟。干木刨屑仅在灶内供火，废渣弃置；木匙、煮锅与切刀用毕擦净收存。"
+    "process": "取干木刨屑两份作灶火燃料，引燃后坐厚底煮锅。褐扁豆一份挑去砂粒，倾入配额清水两份，以旺火煮至豆粒按压即散。其间取青叶韭葱一束，用案上切刀将夹泥处外层剥去，余下切成长段。豆软后下葱段，撒粗盐小包调味，转小火以偏柄木匙沿锅底反复搅动，煨至葱叶软透、汤汁略稠即成，全程防焦。锅不另加盖，余热散尽后盛出。全程70分钟。"
   },
   "review": {
-    "contradictions": []
+    "contradictions": [
+      {
+        "quote": "取干木刨屑两份作灶火燃料，引燃后坐厚底煮锅",
+        "field": "processFacts",
+        "severity": "hard",
+        "reason": "骨架未声明灶或火源，木刨屑用途为引火或吸收漏液，但正文直接引燃并坐锅，引入骨架外火源/灶具，且未交代火源来自骨架燃料的合法使用方式（骨架无灶）。"
+      },
+      {
+        "quote": "倾入配额清水两份",
+        "field": "processFacts",
+        "severity": "hard",
+        "reason": "骨架清水为两份共500毫升，但processFacts要求洗切用水从同一配额分取；正文未交代洗切用水来源，且将全部两份水直接入锅，与“洗切用水从同一配额分取”矛盾。"
+      },
+      {
+        "quote": "用案上切刀将夹泥处外层剥去",
+        "field": "processFacts",
+        "severity": "hard",
+        "reason": "引用事实要求夹泥处先洗净，正文改为剥去外层，未使用配额水清洗，与引用事实的清洗要求相反。"
+      },
+      {
+        "quote": "余热散尽后盛出",
+        "field": "processFacts",
+        "severity": "hard",
+        "reason": "骨架未提供盛出容器，正文“盛出”引入骨架外容器。"
+      }
+    ]
   },
-  "errors": [],
+  "errors": [
+    {
+      "quote": "取干木刨屑两份作灶火燃料，引燃后坐厚底煮锅",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "骨架未声明灶或火源，木刨屑用途为引火或吸收漏液，但正文直接引燃并坐锅，引入骨架外火源/灶具，且未交代火源来自骨架燃料的合法使用方式（骨架无灶）。"
+    },
+    {
+      "quote": "倾入配额清水两份",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "骨架清水为两份共500毫升，但processFacts要求洗切用水从同一配额分取；正文未交代洗切用水来源，且将全部两份水直接入锅，与“洗切用水从同一配额分取”矛盾。"
+    },
+    {
+      "quote": "用案上切刀将夹泥处外层剥去",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "引用事实要求夹泥处先洗净，正文改为剥去外层，未使用配额水清洗，与引用事实的清洗要求相反。"
+    },
+    {
+      "quote": "余热散尽后盛出",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "骨架未提供盛出容器，正文“盛出”引入骨架外容器。"
+    }
+  ],
   "warnings": [],
-  "feedback": null,
+  "feedback": [
+    {
+      "quote": "取干木刨屑两份作灶火燃料，引燃后坐厚底煮锅",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "骨架未声明灶或火源，木刨屑用途为引火或吸收漏液，但正文直接引燃并坐锅，引入骨架外火源/灶具，且未交代火源来自骨架燃料的合法使用方式（骨架无灶）。"
+    },
+    {
+      "quote": "倾入配额清水两份",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "骨架清水为两份共500毫升，但processFacts要求洗切用水从同一配额分取；正文未交代洗切用水来源，且将全部两份水直接入锅，与“洗切用水从同一配额分取”矛盾。"
+    },
+    {
+      "quote": "用案上切刀将夹泥处外层剥去",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "引用事实要求夹泥处先洗净，正文改为剥去外层，未使用配额水清洗，与引用事实的清洗要求相反。"
+    },
+    {
+      "quote": "余热散尽后盛出",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "骨架未提供盛出容器，正文“盛出”引入骨架外容器。"
+    }
+  ],
   "manualCorrection": {
     "reason": "L4：木匙是保留工具，不会作为刨屑副产品交付。"
+  },
+  "l4Rejection": [
+    {
+      "key": "8bbb849c02fe3b142b97b9d4742cad7b704613929a5f7c1c4699f050888a0c11",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "mustard_relish：“加盖静置”引入骨架外的锅盖；rendered_cooking_fat 与 caraway_oat_crust：“洗净”需骨架外清水；poppy_rye_crisp：“将稠糊舀出暂置”无容器与舀取工具；garlic_butter：黄油置锅旁却在锅中与蒜末压拌（未入锅），另“洗净保留”需外水；ash_walking_stick：“沿墨线”引入墨线；cheese_rye_panbread（L2：刨屑被排除出制作且火源无交代）、broadbean_garlic_mash（L2：“洗净”需骨架外水）、laundry_mesh_bag（L2：自添“仅作盛放衣物之用”）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，不洗涤、不引入新器具，工序前后连贯。；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_salted_walnut：用火未交代火源；recipe_w3c_beet_barley_pot：\"洗净\"需骨架外水（骨架水已全部入锅）；recipe_w3c_pear_vinegar_slice：\"洗净\"需骨架外水；recipe_w3c_bottle_divider_crate：\"沿墨线\"引入骨架外墨线；recipe_w3c_lentil_leek_stew：\"擦净\"需骨架外擦布；recipe_w3c_mutton_turnip_stew：\"擦净\"需骨架外擦布",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_lentil_leek_stew",
+        "process": "取褐扁豆挑去砂粒，从配额清水中分取少量洗切用水，韭葱夹泥处先洗净，切刀将叶与葱白切成段。余下清水入厚底煮锅，下扁豆以小火煮至软透，其间用木匙沿锅底搅动防焦。后段加入韭葱段，继续煨至葱叶软熟、汤汁略稠，以粗盐调味，再搅匀即离火。总耗时70分钟。干木刨屑仅在灶内供火，废渣弃置；木匙、煮锅与切刀用毕擦净收存。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "db9b4201-361e-4bb7-9ece-0b138769efbf",
+    "object": "chat.completion",
+    "created": 1794338260,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_GAmPSTikoGIqCbIR1rXd6380",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_lentil_leek_stew\", \"process\": \"取干木刨屑两份作灶火燃料，引燃后坐厚底煮锅。褐扁豆一份挑去砂粒，倾入配额清水两份，以旺火煮至豆粒按压即散。其间取青叶韭葱一束，用案上切刀将夹泥处外层剥去，余下切成长段。豆软后下葱段，撒粗盐小包调味，转小火以偏柄木匙沿锅底反复搅动，煨至葱叶软透、汤汁略稠即成，全程防焦。锅不另加盖，余热散尽后盛出。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 2186,
+      "completion_tokens": 188,
+      "total_tokens": 2374,
+      "prompt_tokens_details": {
+        "cached_tokens": 128
+      },
+      "prompt_cache_hit_tokens": 128,
+      "prompt_cache_miss_tokens": 2058
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_lentil_leek_stew-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2186,
+        "completion_tokens": 188,
+        "total_tokens": 2374,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 2058
+      },
+      "costUpperYuan": 0.00562512,
+      "cumulativeUpperYuan": 5.5497411200000055,
+      "latencyMs": 2246.2820999999994,
+      "timestamp": "2026-11-10T19:17:42.904Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "bdb2600e-5605-4229-be98-23d0fc6ace1e",
+      "file": "budget-responses/bdb2600e-5605-4229-be98-23d0fc6ace1e.json",
+      "requestHash": "0783b24ed5f11e3c9e3519e7b10522289a517d0b9ac5d99aaa6262f2be96f573",
+      "responseHash": "5b84c89390fbee347037b78f585eba8a32df15d4a98d24a58f1a14d30174d5eb"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "4d889911-92ee-4267-b84b-06bd83623d36",
+      "file": "budget-responses/4d889911-92ee-4267-b84b-06bd83623d36.json",
+      "requestHash": "402f902781dae8a3e0f80831a0a3eac21cae6bbd49799752b466a788aa6df4d1",
+      "responseHash": "23e24d193aeaeb28009b225bd8e29319130aa86f6d377851c02bc752634955bc"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_lentil_leek_stew-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2186,
+        "completion_tokens": 188,
+        "total_tokens": 2374,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 2058
+      },
+      "costUpperYuan": 0.00562512,
+      "cumulativeUpperYuan": 5.5497411200000055,
+      "latencyMs": 2246.2820999999994,
+      "timestamp": "2026-11-10T19:17:42.904Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_lentil_leek_stew-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2294,
+        "completion_tokens": 272,
+        "total_tokens": 2566,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2294
+      },
+      "costUpperYuan": 0.006764,
+      "cumulativeUpperYuan": 5.561276720000006,
+      "latencyMs": 2218.0898000000016,
+      "timestamp": "2026-11-10T19:17:47.223Z"
+    }
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T19:18:26.798Z"
   }
 }
