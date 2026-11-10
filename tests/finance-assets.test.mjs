@@ -29,15 +29,16 @@ const profit=f=>{const d=f.draft(),n=operatingProfit(d,f.e,host);d.done();return
 test('抵押角色按整批清算估值，小额保留零售价值，私人持货不成为公共供给',()=>{
     const f=fixture(),d=f.draft(),snapshot=JSON.stringify(f.doc);
     const asset={item:'item_bread',location:post,holder:'player'},supply=supplyApart(d,f.e,{...asset,owner:'player'});
-    assert.deepEqual([supply.supply,supply.demand],[20,18]);
-    // q5 <= retailFloor5：5×2×18/20=9；q10整批清算：floor(2×18×ln(30/20))=14，低于零售18。
-    assert.equal(valuation(d,f.e,{role:'collateral',...asset,quantity:5}).value,9);
-    assert.equal(valuation(d,f.e,{role:'goods',...asset,quantity:5}).value,9);
-    assert.equal(valuation(d,f.e,{role:'collateral',...asset,quantity:10}).value,14);
-    assert.equal(valuation(d,f.e,{role:'goods',...asset,quantity:10}).value,18);
-    // 估值加法修正逐件生效：floor(36×ln(1.5)+10×1)=24，不能只给整批加1。
+    // R1（t-sat，饱腹改由推导：面包 30→16）后各户面包留存约翻倍：探针 tools/probe-rules-a.mjs fa 读到同类食物需求 24（旧 18）、供给 20，稀缺度 24/20=1.2。
+    assert.deepEqual([supply.supply,supply.demand],[20,24]);
+    // q5 <= retailFloor5：5×2×24/20=12；q10整批清算：floor(2×24×ln(30/20))=19（48×0.405465=19.46），低于零售24。
+    assert.equal(valuation(d,f.e,{role:'collateral',...asset,quantity:5}).value,12);
+    assert.equal(valuation(d,f.e,{role:'goods',...asset,quantity:5}).value,12);
+    assert.equal(valuation(d,f.e,{role:'collateral',...asset,quantity:10}).value,19);
+    assert.equal(valuation(d,f.e,{role:'goods',...asset,quantity:10}).value,24);
+    // 估值加法修正逐件生效：floor(48×ln(1.5)+10×1)=29（19.46+10），不能只给整批加1。
     const premium=new WorldEngine({...f.w,derived:{...f.w.derived,modifiers:[...f.w.derived.modifiers,{id:'collateral-add',pack:'business',target:'economy:value',stage:'add',value:1}]}});
-    assert.equal(valuation(d,premium,{role:'collateral',...asset,quantity:10}).value,24);
+    assert.equal(valuation(d,premium,{role:'collateral',...asset,quantity:10}).value,29);
     // 木料S28、D1：沿28→128整段在稀缺下限.5，基准4×.5×100=200。
     const timber=supplyApart(d,f.e,{item:'item_wood',location:post,owner:'player'});
     assert.deepEqual([timber.supply,timber.demand],[28,1]);
