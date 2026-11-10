@@ -70,10 +70,14 @@ test('N13 急事结束谈话并登记待办；未成年人和同意不能由玩�
 test('还价按轮数与让步表，确认后实际成交；只改成交价格，钱物仍守恒',async t=>{
  const ui=await setup(t,s=>{s.player.coins=5000;},w=>{w.items.find(i=>i.id==='item_bread').basePrice=100;});await primed(ui);
  const first=await ui.choose('trade.buy',{seller:NPC,item:'item_bread',quantity:1},{target:NPC});assert.ok(first.ok,first.error);
- // Food demand 14 / opening stock 133 clamps to .5; setup trust 20
- // gives relation 1-.15*.7*.2=.979. Baseline 100 × .5 × .979
- // × depth/grade/spread/corrections 1 = 48.95 → 48 copper.
- assert.equal(first.result.cost,48);
+ // Setup trust 20 gives relation 1-.15*.7*.2=.979. 稀缺度 = 需求/供给（market.mjs stockSupply:219、marketQuote:303），
+ // 不再被夹在 0.5 地板：探针 tools/probe-rules-a.mjs a2（uiSession 同一入口）读到同类食物供给 47、需求 28，28/47=0.5957 > 0.5。
+ // Baseline 100 × 0.5957 × .979 × depth/grade/spread/corrections 1 = 58.32 → 58 copper。
+ // 旧期望 48（需求 14/供给 133 或 16/43，夹到 .5，100×.5×.979=48.95）的变化链，对 git 历史逐段二分（同一探针）：
+ //  · t-alloc f8e4a13b（R5：同一卖家可售存量按需求在买方间分摊，口粮替代 shop.mjs foodSources）：需求 14→24、供给 46，稀缺度 .522，价 51；
+ //  · st-5（105d2730，同属 R5 及 t-foodsrc/t-staple 单餐额度）：供给 44、需求 24，.545，价 53；
+ //  · 现状（R1 t-sat 饱腹改由推导 + t-avail 买得起的来源）：供给 47、需求 28，.596，价 58（同类食物各户 retained 之和 36→40）。
+ assert.equal(first.result.cost,58);
  // S5-02 / 15 §15.2: a real purchase receipt is the observed price; the
  // conversation recomputes its own current projection instead of reading cache.
  const quote=first.result.pricing,offered=Math.ceil(quote.unitPrice*.95);
