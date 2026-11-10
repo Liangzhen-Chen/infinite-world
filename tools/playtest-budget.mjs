@@ -162,5 +162,6 @@ export async function openPlaytestTape({file,identity,api,client}){
   try{row.response=await client.generate(body,label,row.requestId);await save();return structuredClone(row.response);}
   catch(error){failed=true;tape.failures.push({index,error:error.message,at:new Date().toISOString()});await save();throw error;}
  }};
+ wrappedApi.seedMode=api.seedMode;
  return {api:wrappedApi,client:wrappedClient,tape,save};
 }

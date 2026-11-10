@@ -91,7 +91,7 @@ test('runner 首轮零调用后 required 补跑真实等待，叙述在结算之
   if(body.tool_choice==='none')return response({content:'你原地休息了十分钟。<回合 额外="0分" 地点="bld_hw_qingdeng" 在场=""/>'});
   return response({content:original});
  }};
- const api=async(name,body)=>{endpoints.push({name,body:structuredClone(body)});return server.api(name,body);};
+ const api=async(name,body)=>{endpoints.push({name,body:structuredClone(body)});return server.api(name,body);};api.seedMode=server.api.seedMode;
  const result=await runPlaytest({scenario:{id:'retry-wait',turns:[{input:'我原地休息十分钟。',assertions:[{kind:'elapsed',min:10,max:10}]}]},api,client,bundle:await loadPromptBundle(),countTokens:async()=>1});
  assert.deepEqual(result.turns[0].errors,[]);assert.equal(result.turns[0].toolRetry.calls,2);assert.equal(requests.length,3);
  assert.equal(result.turns[0].originalReply,original);assert.ok(!JSON.stringify(result.session).includes(original));

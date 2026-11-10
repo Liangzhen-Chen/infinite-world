@@ -32,7 +32,7 @@ async function http(t,edition=world){
         return{status:response.status,body:await response.json()};
     };
     const api=async(endpoint,body)=>{const response=await request(endpoint,body);
-        assert.equal(response.status,200,`${endpoint}: ${response.body.error}`);return response.body;};
+        assert.equal(response.status,200,`${endpoint}: ${response.body.error}`);return response.body;};api.seedMode='fixed';
     t.after(()=>assert.equal(providerCalls,0));
     return{api,request,root};
 }
@@ -150,7 +150,7 @@ test('G1正式暮纹术经购书、识字练习及实际学习后扣木炭/魔�
 
 test('M6–M8复用运行器真实reconcile/sync-index：修改输入撤销旧账、重生成幂等、删除并导入无漂移',async t=>{
     const server=await http(t),scenario=await script('reconcile'),endpoints=[];
-    const api=async(name,body)=>{endpoints.push({name,body});return server.api(name,body);};
+    const api=async(name,body)=>{endpoints.push({name,body});return server.api(name,body);};api.seedMode=server.api.seedMode;
     const client=scriptedClient(input=>{
         if(input.startsWith('（场外）'))return[];
         if(input.includes('走进'))return[['world_move',{destination:'青灯酒馆'}]];
