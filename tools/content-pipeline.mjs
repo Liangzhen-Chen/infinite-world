@@ -347,7 +347,8 @@ export async function readApprovedContent(root, entries, { contextFor = () => nu
   const allowed = new Set();
   for (const batch of summary.batches) {
     const current = await readJSON(path.join(root, `batch-${batch.index}.json`));
-    if (!current?.l4?.approved || current.fingerprint !== batch.fingerprint || current.needsSystemicRepair) throw approvalIncomplete(`批 ${batch.index} 尚未完成 L4 或人工队列超过 10%`);
+    if (!current?.l4?.approved || current.needsSystemicRepair) throw approvalIncomplete(`批 ${batch.index} 尚未完成 L4 或人工队列超过 10%`);
+    if (current.fingerprint !== batch.fingerprint) throw new Error(`批 ${batch.index} 指纹不符：批次文件与摘要不一致，内容可能已被改动`);
     if (!Array.isArray(current.ids)) throw new Error('批次缺少条目清单');
     const rows = await Promise.all(current.ids.map(id => readJSON(path.join(root, `${id}.json`))));
     if (rows.some(row => !row) || hashContent(rows.map(row => ({ id: row.id, draft: row.draft, review: row.review, status: row.status }))) !== current.fingerprint) throw new Error(`批 ${batch.index} 审查后内容已改变`);
