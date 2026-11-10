@@ -1,6 +1,6 @@
 {
   "index": 2,
-  "fingerprint": "9c78034fae221e7b50ea3c0b8233ff2b249a72cf6e6ad759e35f653a1766ff08",
+  "fingerprint": "f29bf69b574c5b9595e80d8ceaaefdeb952593f9df9fdacd92491b1104eeac98",
   "count": 33,
   "passed": 33,
   "ids": [
@@ -42,13 +42,27 @@
   "manual": [],
   "pending": [],
   "flagged": [
+    "item_belt_strap",
+    "item_coin_wrap",
+    "item_leather_thimble",
+    "item_scroll_wrap",
+    "item_boot_gaiter",
+    "item_leather_hinge",
+    "item_rein_patch",
+    "item_needle_case",
     "item_leather_grip",
-    "item_door_latch",
-    "item_bucket_handle",
+    "item_boot_scraper",
+    "item_stove_grid",
     "item_hinge_pin",
     "item_tent_stake",
-    "item_pot_lifter",
-    "item_wax_seal_blank"
+    "item_strap_eye",
+    "item_sack_pricker",
+    "item_gall_wash",
+    "item_polishing_powder",
+    "item_parchment_bookmark",
+    "item_waxed_thread",
+    "item_wax_seal_blank",
+    "item_wood_marking_kit"
   ],
   "sample": [
     "item_sack_pricker",
@@ -58,51 +72,88 @@
     "item_wax_seal_blank"
   ],
   "l4": {
-    "approved": true,
-    "notes": [
-      {
-        "id": "item_sack_pricker",
-        "note": "铁制钝口拆袋器与用途一致，不作匕首。"
-      },
-      {
-        "id": "item_sheath_pouch",
-        "note": "软革套只套钝口工具，250克与365天相符。"
-      },
-      {
-        "id": "item_leather_grip",
-        "note": "骨压片没有刀刃，使用给定工具的正确名称。"
-      },
-      {
-        "id": "item_copper_nameplate",
-        "note": "此件确为铜片制造，空白牌面不附刻字和身份功能。"
-      },
-      {
-        "id": "item_wax_seal_blank",
-        "note": "L4：删除未列的临时粘固用途，保存期null不表示永久完好。"
-      },
-      {
-        "id": "item_door_latch",
-        "note": "门闩铁材被误写铜材且公斤被写成斤，逐项恢复。"
-      },
-      {
-        "id": "item_bucket_handle",
-        "note": "铁提梁材质纠错并取消听声直接判定夹渣。"
-      },
-      {
-        "id": "item_hinge_pin",
-        "note": "铁边料锻成的销子误写铜质，按真实投料纠正。"
-      },
-      {
-        "id": "item_tent_stake",
-        "note": "铁帐钉误写铜材，检查方法恢复可见范围。"
-      },
-      {
-        "id": "item_pot_lifter",
-        "note": "铁坯锻成的夹臂误写铜材，逐词修正。"
-      }
-    ]
+    "approved": false,
+    "notes": []
   },
   "costUpperYuan": 2.6326176399999994,
   "manualRatio": 0,
-  "needsSystemicRepair": false
+  "needsSystemicRepair": false,
+  "l4History": [
+    {
+      "approved": true,
+      "notes": [
+        {
+          "id": "item_sack_pricker",
+          "note": "铁制钝口拆袋器与用途一致，不作匕首。"
+        },
+        {
+          "id": "item_sheath_pouch",
+          "note": "软革套只套钝口工具，250克与365天相符。"
+        },
+        {
+          "id": "item_leather_grip",
+          "note": "骨压片没有刀刃，使用给定工具的正确名称。"
+        },
+        {
+          "id": "item_copper_nameplate",
+          "note": "此件确为铜片制造，空白牌面不附刻字和身份功能。"
+        },
+        {
+          "id": "item_wax_seal_blank",
+          "note": "L4：删除未列的临时粘固用途，保存期null不表示永久完好。"
+        },
+        {
+          "id": "item_door_latch",
+          "note": "门闩铁材被误写铜材且公斤被写成斤，逐项恢复。"
+        },
+        {
+          "id": "item_bucket_handle",
+          "note": "铁提梁材质纠错并取消听声直接判定夹渣。"
+        },
+        {
+          "id": "item_hinge_pin",
+          "note": "铁边料锻成的销子误写铜质，按真实投料纠正。"
+        },
+        {
+          "id": "item_tent_stake",
+          "note": "铁帐钉误写铜材，检查方法恢复可见范围。"
+        },
+        {
+          "id": "item_pot_lifter",
+          "note": "铁坯锻成的夹臂误写铜材，逐词修正。"
+        }
+      ],
+      "rejection": {
+        "by": "行当批物品只读严格 L4 复读（docs/m27-trades-items-audit-a.md、-b.md）",
+        "at": "2026-11-10T22:xxZ",
+        "reason": "李白 11-10 决定 I1：L4 不通过的 76 件全部人工改写（第一批硬伤类、第二批尺寸类），口径见 L4 必查清单第 8 到 14 条（含李白确认的 storage 口径）。",
+        "ids": [
+          "item_belt_strap",
+          "item_boot_gaiter",
+          "item_boot_scraper",
+          "item_chalk_powder",
+          "item_coin_wrap",
+          "item_gall_wash",
+          "item_leather_grip",
+          "item_leather_thimble",
+          "item_needle_case",
+          "item_ochre_paint",
+          "item_parchment_bookmark",
+          "item_polishing_powder",
+          "item_scroll_wrap",
+          "item_soot_ink",
+          "item_stove_grid",
+          "item_wax_seal_blank",
+          "item_waxed_thread",
+          "item_wood_marking_kit",
+          "item_hinge_pin",
+          "item_leather_hinge",
+          "item_rein_patch",
+          "item_sack_pricker",
+          "item_strap_eye",
+          "item_tent_stake"
+        ]
+      }
+    }
+  ]
 }

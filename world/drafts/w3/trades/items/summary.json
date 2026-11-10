@@ -7,7 +7,7 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "855ff0af9d3c65a8bac8e829f7bd4dcd8d062f911f14ad609529cb25bd6829be",
+      "fingerprint": "155b6b8edc705eb46c74e704a0500dfc06ed5b65f20a6554fb67ccfb2010d321",
       "count": 34,
       "passed": 34,
       "ids": [
@@ -51,17 +51,34 @@
       "pending": [],
       "flagged": [
         "item_pearl_barley",
-        "item_turnip",
+        "item_dry_peas",
+        "item_leek",
         "item_onion",
         "item_hen_egg",
+        "item_hazelnut",
+        "item_carrot",
         "item_cabbage",
+        "item_rapeseed_oil",
+        "item_fresh_apple",
+        "item_rye_flour",
+        "item_pine_board",
         "item_willow_rod",
+        "item_hemp_thread",
+        "item_linseed_oil",
         "item_copper_sheet",
+        "item_red_ochre",
+        "item_lampblack",
+        "item_calcite_chalk",
         "item_parchment",
-        "item_wood_mallet",
+        "item_oak_gall",
+        "item_gum_grain",
+        "item_mortise_chisel",
         "item_hand_auger",
         "item_bench_plane",
-        "item_leather_shears"
+        "item_wood_rasp",
+        "item_leather_shears",
+        "item_stitching_awl",
+        "item_bone_folder"
       ],
       "sample": [
         "item_bone_folder",
@@ -71,77 +88,119 @@
         "item_parchment"
       ],
       "l4": {
-        "approved": true,
-        "notes": [
-          {
-            "id": "item_bone_folder",
-            "note": "骨制压片的压折用途、圆端检视及织坊来源相符。"
-          },
-          {
-            "id": "item_carrot",
-            "note": "300克一束与按根数估述相容，未承诺每根固定重量；弃坏根。"
-          },
-          {
-            "id": "item_bench_plane",
-            "note": "L4发现材质错读与虚构行商段砚，删去不实来源。"
-          },
-          {
-            "id": "item_oak_gall",
-            "note": "80克干瘿仅供淡染液，非食物，检查虫孔与霉变。"
-          },
-          {
-            "id": "item_parchment",
-            "note": "保存期不在购买时重置，修正日期基准。"
-          },
-          {
-            "id": "item_pearl_barley",
-            "note": "斤与公斤混写，改成500克，并取消收货日重新起算保存期。"
-          },
-          {
-            "id": "item_turnip",
-            "note": "修正重量单位与供货者姓名错字。"
-          },
-          {
-            "id": "item_onion",
-            "note": "修正斤公斤换算与未登记盐商身份。"
-          },
-          {
-            "id": "item_hen_egg",
-            "note": "四蛋一份含壳240克，原稿误用斤。"
-          },
-          {
-            "id": "item_cabbage",
-            "note": "纠正份量单位，不把份量强制写成整颗重量。"
-          },
-          {
-            "id": "item_willow_rod",
-            "note": "修正重量单位，把柔韧保证改为保存上限与检查。"
-          },
-          {
-            "id": "item_copper_sheet",
-            "note": "薄铜片一张为200克，修正重量单位。"
-          },
-          {
-            "id": "item_wood_mallet",
-            "note": "修正重量单位，删除有裂纹却保证受力的说法。"
-          },
-          {
-            "id": "item_hand_auger",
-            "note": "品质不代表材料；手钻恢复铁制，操作改为双手同时压转横柄。"
-          },
-          {
-            "id": "item_leather_shears",
-            "note": "把石品质错读成石刃，恢复普通金属剪。"
-          }
-        ]
+        "approved": false,
+        "notes": []
       },
       "costUpperYuan": 2.18948604,
       "manualRatio": 0,
-      "needsSystemicRepair": false
+      "needsSystemicRepair": false,
+      "l4History": [
+        {
+          "approved": true,
+          "notes": [
+            {
+              "id": "item_bone_folder",
+              "note": "骨制压片的压折用途、圆端检视及织坊来源相符。"
+            },
+            {
+              "id": "item_carrot",
+              "note": "300克一束与按根数估述相容，未承诺每根固定重量；弃坏根。"
+            },
+            {
+              "id": "item_bench_plane",
+              "note": "L4发现材质错读与虚构行商段砚，删去不实来源。"
+            },
+            {
+              "id": "item_oak_gall",
+              "note": "80克干瘿仅供淡染液，非食物，检查虫孔与霉变。"
+            },
+            {
+              "id": "item_parchment",
+              "note": "保存期不在购买时重置，修正日期基准。"
+            },
+            {
+              "id": "item_pearl_barley",
+              "note": "斤与公斤混写，改成500克，并取消收货日重新起算保存期。"
+            },
+            {
+              "id": "item_turnip",
+              "note": "修正重量单位与供货者姓名错字。"
+            },
+            {
+              "id": "item_onion",
+              "note": "修正斤公斤换算与未登记盐商身份。"
+            },
+            {
+              "id": "item_hen_egg",
+              "note": "四蛋一份含壳240克，原稿误用斤。"
+            },
+            {
+              "id": "item_cabbage",
+              "note": "纠正份量单位，不把份量强制写成整颗重量。"
+            },
+            {
+              "id": "item_willow_rod",
+              "note": "修正重量单位，把柔韧保证改为保存上限与检查。"
+            },
+            {
+              "id": "item_copper_sheet",
+              "note": "薄铜片一张为200克，修正重量单位。"
+            },
+            {
+              "id": "item_wood_mallet",
+              "note": "修正重量单位，删除有裂纹却保证受力的说法。"
+            },
+            {
+              "id": "item_hand_auger",
+              "note": "品质不代表材料；手钻恢复铁制，操作改为双手同时压转横柄。"
+            },
+            {
+              "id": "item_leather_shears",
+              "note": "把石品质错读成石刃，恢复普通金属剪。"
+            }
+          ],
+          "rejection": {
+            "by": "行当批物品只读严格 L4 复读（docs/m27-trades-items-audit-a.md、-b.md）",
+            "at": "2026-11-10T22:xxZ",
+            "reason": "李白 11-10 决定 I1：L4 不通过的 76 件全部人工改写（第一批硬伤类、第二批尺寸类），口径见 L4 必查清单第 8 到 14 条（含李白确认的 storage 口径）。",
+            "ids": [
+              "item_bench_plane",
+              "item_cabbage",
+              "item_carrot",
+              "item_copper_sheet",
+              "item_dry_peas",
+              "item_fresh_apple",
+              "item_gum_grain",
+              "item_hazelnut",
+              "item_hemp_thread",
+              "item_hen_egg",
+              "item_lampblack",
+              "item_linseed_oil",
+              "item_mortise_chisel",
+              "item_oak_gall",
+              "item_onion",
+              "item_parchment",
+              "item_pearl_barley",
+              "item_rapeseed_oil",
+              "item_red_ochre",
+              "item_rye_flour",
+              "item_willow_rod",
+              "item_wood_rasp",
+              "item_bone_folder",
+              "item_calcite_chalk",
+              "item_hand_auger",
+              "item_leather_shears",
+              "item_leek",
+              "item_pine_board",
+              "item_stitching_awl"
+            ]
+          }
+        }
+      ]
     },
     {
       "index": 1,
-      "fingerprint": "c343bd35e004ac7907ed0945a13855fce9bd07c0032f0a41a83137ad9533c2ad",
+      "fingerprint": "7b9dffe4a306388bd057de9d18c1426dc66db595d5e0aaa1a34a61253359a1bd",
       "count": 34,
       "passed": 34,
       "ids": [
@@ -185,15 +244,28 @@
       "pending": [],
       "flagged": [
         "item_grooving_wheel",
+        "item_flat_file",
+        "item_round_file",
         "item_iron_punch",
-        "item_stone_mortar",
+        "item_rivet_set",
+        "item_hand_bellows",
         "item_reed_pen",
-        "item_mining_pick",
+        "item_ink_brush",
+        "item_sheet_shears",
+        "item_leek_fish_pot",
+        "item_pea_spread",
         "item_turnip_oat_cake",
-        "item_honey_nut_cake",
+        "item_onion_egg_soup",
         "item_honey_curd_spread",
-        "item_lidded_seed_box",
-        "item_tool_tray"
+        "item_vinegar_carrot",
+        "item_cabbage_barley",
+        "item_three_leg_stool",
+        "item_foot_rest",
+        "item_thread_rack",
+        "item_walking_crutch",
+        "item_shutter_panel",
+        "item_tool_tray",
+        "item_book_trades_wood"
       ],
       "sample": [
         "item_foot_rest",
@@ -203,65 +275,101 @@
         "item_lidded_seed_box"
       ],
       "l4": {
-        "approved": true,
-        "notes": [
-          {
-            "id": "item_foot_rest",
-            "note": "倾斜木脚凳的用途与接合检视相符，没有宣称医疗纠正。"
-          },
-          {
-            "id": "item_rivet_set",
-            "note": "冲铆头工具仅整形，未新增材料转化功能。"
-          },
-          {
-            "id": "item_iron_punch",
-            "note": "修正冲子重量与已登记供货者姓名。"
-          },
-          {
-            "id": "item_reed_pen",
-            "note": "删除不合芦苇笔结构的两指宽口，空划只能检查勾纸。"
-          },
-          {
-            "id": "item_lidded_seed_box",
-            "note": "种子匣本来就是容器，删除还需另备容器的错误句。"
-          },
-          {
-            "id": "item_grooving_wheel",
-            "note": "把石品质错读成石制缝距轮，恢复金属轮，并按铁材检查锈蚀。"
-          },
-          {
-            "id": "item_stone_mortar",
-            "note": "石臼套装重量是1.8公斤，修正单位。"
-          },
-          {
-            "id": "item_mining_pick",
-            "note": "追加L4发现品质铜误写成铜头；手工恢复木柄铁镐，不新增修理工序或采矿能力。"
-          },
-          {
-            "id": "item_turnip_oat_cake",
-            "note": "不把重新加热写成过期食物的复原办法。"
-          },
-          {
-            "id": "item_honey_nut_cake",
-            "note": "蜜榛糕成品600克，修正单位。"
-          },
-          {
-            "id": "item_honey_curd_spread",
-            "note": "380克成品、当日食用和自备容器吻合；短存储句信息足够。"
-          },
-          {
-            "id": "item_tool_tray",
-            "note": "空木托盘不附工具，短存储句不损失保存要求。"
-          }
-        ]
+        "approved": false,
+        "notes": []
       },
       "costUpperYuan": 2.392922599999999,
       "manualRatio": 0,
-      "needsSystemicRepair": false
+      "needsSystemicRepair": false,
+      "l4History": [
+        {
+          "approved": true,
+          "notes": [
+            {
+              "id": "item_foot_rest",
+              "note": "倾斜木脚凳的用途与接合检视相符，没有宣称医疗纠正。"
+            },
+            {
+              "id": "item_rivet_set",
+              "note": "冲铆头工具仅整形，未新增材料转化功能。"
+            },
+            {
+              "id": "item_iron_punch",
+              "note": "修正冲子重量与已登记供货者姓名。"
+            },
+            {
+              "id": "item_reed_pen",
+              "note": "删除不合芦苇笔结构的两指宽口，空划只能检查勾纸。"
+            },
+            {
+              "id": "item_lidded_seed_box",
+              "note": "种子匣本来就是容器，删除还需另备容器的错误句。"
+            },
+            {
+              "id": "item_grooving_wheel",
+              "note": "把石品质错读成石制缝距轮，恢复金属轮，并按铁材检查锈蚀。"
+            },
+            {
+              "id": "item_stone_mortar",
+              "note": "石臼套装重量是1.8公斤，修正单位。"
+            },
+            {
+              "id": "item_mining_pick",
+              "note": "追加L4发现品质铜误写成铜头；手工恢复木柄铁镐，不新增修理工序或采矿能力。"
+            },
+            {
+              "id": "item_turnip_oat_cake",
+              "note": "不把重新加热写成过期食物的复原办法。"
+            },
+            {
+              "id": "item_honey_nut_cake",
+              "note": "蜜榛糕成品600克，修正单位。"
+            },
+            {
+              "id": "item_honey_curd_spread",
+              "note": "380克成品、当日食用和自备容器吻合；短存储句信息足够。"
+            },
+            {
+              "id": "item_tool_tray",
+              "note": "空木托盘不附工具，短存储句不损失保存要求。"
+            }
+          ],
+          "rejection": {
+            "by": "行当批物品只读严格 L4 复读（docs/m27-trades-items-audit-a.md、-b.md）",
+            "at": "2026-11-10T22:xxZ",
+            "reason": "李白 11-10 决定 I1：L4 不通过的 76 件全部人工改写（第一批硬伤类、第二批尺寸类），口径见 L4 必查清单第 8 到 14 条（含李白确认的 storage 口径）。",
+            "ids": [
+              "item_book_trades_wood",
+              "item_cabbage_barley",
+              "item_flat_file",
+              "item_hand_bellows",
+              "item_honey_curd_spread",
+              "item_ink_brush",
+              "item_leek_fish_pot",
+              "item_onion_egg_soup",
+              "item_pea_spread",
+              "item_reed_pen",
+              "item_sheet_shears",
+              "item_shutter_panel",
+              "item_thread_rack",
+              "item_three_leg_stool",
+              "item_turnip_oat_cake",
+              "item_vinegar_carrot",
+              "item_walking_crutch",
+              "item_foot_rest",
+              "item_grooving_wheel",
+              "item_iron_punch",
+              "item_rivet_set",
+              "item_round_file",
+              "item_tool_tray"
+            ]
+          }
+        }
+      ]
     },
     {
       "index": 2,
-      "fingerprint": "9c78034fae221e7b50ea3c0b8233ff2b249a72cf6e6ad759e35f653a1766ff08",
+      "fingerprint": "f29bf69b574c5b9595e80d8ceaaefdeb952593f9df9fdacd92491b1104eeac98",
       "count": 33,
       "passed": 33,
       "ids": [
@@ -303,13 +411,27 @@
       "manual": [],
       "pending": [],
       "flagged": [
+        "item_belt_strap",
+        "item_coin_wrap",
+        "item_leather_thimble",
+        "item_scroll_wrap",
+        "item_boot_gaiter",
+        "item_leather_hinge",
+        "item_rein_patch",
+        "item_needle_case",
         "item_leather_grip",
-        "item_door_latch",
-        "item_bucket_handle",
+        "item_boot_scraper",
+        "item_stove_grid",
         "item_hinge_pin",
         "item_tent_stake",
-        "item_pot_lifter",
-        "item_wax_seal_blank"
+        "item_strap_eye",
+        "item_sack_pricker",
+        "item_gall_wash",
+        "item_polishing_powder",
+        "item_parchment_bookmark",
+        "item_waxed_thread",
+        "item_wax_seal_blank",
+        "item_wood_marking_kit"
       ],
       "sample": [
         "item_sack_pricker",
@@ -319,53 +441,90 @@
         "item_wax_seal_blank"
       ],
       "l4": {
-        "approved": true,
-        "notes": [
-          {
-            "id": "item_sack_pricker",
-            "note": "铁制钝口拆袋器与用途一致，不作匕首。"
-          },
-          {
-            "id": "item_sheath_pouch",
-            "note": "软革套只套钝口工具，250克与365天相符。"
-          },
-          {
-            "id": "item_leather_grip",
-            "note": "骨压片没有刀刃，使用给定工具的正确名称。"
-          },
-          {
-            "id": "item_copper_nameplate",
-            "note": "此件确为铜片制造，空白牌面不附刻字和身份功能。"
-          },
-          {
-            "id": "item_wax_seal_blank",
-            "note": "L4：删除未列的临时粘固用途，保存期null不表示永久完好。"
-          },
-          {
-            "id": "item_door_latch",
-            "note": "门闩铁材被误写铜材且公斤被写成斤，逐项恢复。"
-          },
-          {
-            "id": "item_bucket_handle",
-            "note": "铁提梁材质纠错并取消听声直接判定夹渣。"
-          },
-          {
-            "id": "item_hinge_pin",
-            "note": "铁边料锻成的销子误写铜质，按真实投料纠正。"
-          },
-          {
-            "id": "item_tent_stake",
-            "note": "铁帐钉误写铜材，检查方法恢复可见范围。"
-          },
-          {
-            "id": "item_pot_lifter",
-            "note": "铁坯锻成的夹臂误写铜材，逐词修正。"
-          }
-        ]
+        "approved": false,
+        "notes": []
       },
       "costUpperYuan": 2.6326176399999994,
       "manualRatio": 0,
-      "needsSystemicRepair": false
+      "needsSystemicRepair": false,
+      "l4History": [
+        {
+          "approved": true,
+          "notes": [
+            {
+              "id": "item_sack_pricker",
+              "note": "铁制钝口拆袋器与用途一致，不作匕首。"
+            },
+            {
+              "id": "item_sheath_pouch",
+              "note": "软革套只套钝口工具，250克与365天相符。"
+            },
+            {
+              "id": "item_leather_grip",
+              "note": "骨压片没有刀刃，使用给定工具的正确名称。"
+            },
+            {
+              "id": "item_copper_nameplate",
+              "note": "此件确为铜片制造，空白牌面不附刻字和身份功能。"
+            },
+            {
+              "id": "item_wax_seal_blank",
+              "note": "L4：删除未列的临时粘固用途，保存期null不表示永久完好。"
+            },
+            {
+              "id": "item_door_latch",
+              "note": "门闩铁材被误写铜材且公斤被写成斤，逐项恢复。"
+            },
+            {
+              "id": "item_bucket_handle",
+              "note": "铁提梁材质纠错并取消听声直接判定夹渣。"
+            },
+            {
+              "id": "item_hinge_pin",
+              "note": "铁边料锻成的销子误写铜质，按真实投料纠正。"
+            },
+            {
+              "id": "item_tent_stake",
+              "note": "铁帐钉误写铜材，检查方法恢复可见范围。"
+            },
+            {
+              "id": "item_pot_lifter",
+              "note": "铁坯锻成的夹臂误写铜材，逐词修正。"
+            }
+          ],
+          "rejection": {
+            "by": "行当批物品只读严格 L4 复读（docs/m27-trades-items-audit-a.md、-b.md）",
+            "at": "2026-11-10T22:xxZ",
+            "reason": "李白 11-10 决定 I1：L4 不通过的 76 件全部人工改写（第一批硬伤类、第二批尺寸类），口径见 L4 必查清单第 8 到 14 条（含李白确认的 storage 口径）。",
+            "ids": [
+              "item_belt_strap",
+              "item_boot_gaiter",
+              "item_boot_scraper",
+              "item_chalk_powder",
+              "item_coin_wrap",
+              "item_gall_wash",
+              "item_leather_grip",
+              "item_leather_thimble",
+              "item_needle_case",
+              "item_ochre_paint",
+              "item_parchment_bookmark",
+              "item_polishing_powder",
+              "item_scroll_wrap",
+              "item_soot_ink",
+              "item_stove_grid",
+              "item_wax_seal_blank",
+              "item_waxed_thread",
+              "item_wood_marking_kit",
+              "item_hinge_pin",
+              "item_leather_hinge",
+              "item_rein_patch",
+              "item_sack_pricker",
+              "item_strap_eye",
+              "item_tent_stake"
+            ]
+          }
+        }
+      ]
     }
   ],
   "scope": "L1/L2 审核结果；尚须 L4 抽读与发布校验"
