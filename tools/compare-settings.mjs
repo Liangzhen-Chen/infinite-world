@@ -41,7 +41,7 @@ try{
             const bundle={...structuredClone(base),generation:generationSettings(options)};
             console.log(`对照开始 ${id} ${scenario.id}`);
             let result;
-            try{result=await runPlaytest({scenario,api:server.api,client,bundle,processMessages:host.process});}
+            try{result=await runPlaytest({scenario,api:server.api,seed,client,bundle,processMessages:host.process});}
             catch(error){result={id:scenario.id,assertions:1,passed:0,turns:[],error:error.message};}
             result.configuration=id;
             if(styleSamples.includes(scenario.id))result.review=await reviewPlaytest(client,result,scenario.rubric);

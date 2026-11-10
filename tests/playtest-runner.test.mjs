@@ -312,3 +312,11 @@ test('持久续跑从付款后的失败正文恢复，原失败保留且HTTP执�
     tape=await openPlaytestTape(options);await runPlaytest({scenario,api:tape.api,client:tape.client,bundle,stopOnFailure:true});
     assert.equal(executeCount,2);assert.equal(calls,3,'已成功续跑不会再次调用模型');
 });
+
+test('试玩守门只看实际存档种子：随机种子服务器手写 seedMode=fixed 也被拒绝',async t=>{
+    const server=await createPlaytestServer({seed:'random'});t.after(()=>server.close());
+    const api=async(name,body)=>server.api(name,body);api.seedMode='fixed';
+    await assert.rejects(runPlaytest({scenario:{id:'forged-seed',turns:[]},api,client:{},bundle:await loadPromptBundle()}),/实际种子不是确定种子/);
+    const custom=await createPlaytestServer({seed:'custom-fixed'});t.after(()=>custom.close());
+    await assert.rejects(runPlaytest({scenario:{id:'wrong-seed',turns:[]},api:custom.api,client:{},bundle:await loadPromptBundle()}),/实际种子不是确定种子/);
+});

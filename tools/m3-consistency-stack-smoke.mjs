@@ -26,7 +26,7 @@ export async function runConsistencyStackSmoke({client,outputDir='logs/m3-consis
   report.costUpperYuan=client.spent;await atomicJSON(file,report);return response;
  }};
  try{
-  const result=await runPlaytest({scenario:{id:'m3-consistency-stack',initial:{mode:'legacy'},turns:[{input:'我付两枚铜币，向林穗买一个面包，只买这一个，不做其他事情。',assertions:[{kind:'delta',path:'state.player.coins',value:-2},{kind:'quantity',path:'state.inventory.item_bread',value:1}]}]},api:server.api,client:narrator,bundle,processMessages:host.process});
+  const result=await runPlaytest({scenario:{id:'m3-consistency-stack',initial:{mode:'legacy'},turns:[{input:'我付两枚铜币，向林穗买一个面包，只买这一个，不做其他事情。',assertions:[{kind:'delta',path:'state.player.coins',value:-2},{kind:'quantity',path:'state.inventory.item_bread',value:1}]}]},api:server.api,seed:'m3-stack-paid-bread',client:narrator,bundle,processMessages:host.process});
   report.result=result;const turn=result.turns[0];
   const campaigns=await fs.readdir(path.join(server.directory,'infinite-fields'));
   const campaignId=campaigns.find(name=>name.startsWith('campaign_'));
