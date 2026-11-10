@@ -314,7 +314,8 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  }));
  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*horizons.get(id),...(view?{observer:owner,view}:{})}).value,0)]));
  // 单餐额度的池：现有累计额度 + 预算期内新增额度（各成员的预算天数），与日推进实际吃掉的量同一套（item-class.mealCapPools）。
- const capDays=[...horizons.values()],newCaps=()=>{const c=mealCapPools(engine,{days:capDays,saved});for(const r of rows)if(r.stock>0)c.markHeld(r.item);return c;};
+ // 两次 newCaps 共用同一份 poolMemo：池只由 engine 与物品定，与额度已用量无关；used/held 等状态仍各自独立。
+ const capDays=[...horizons.values()],poolMemo=new Map(),newCaps=()=>{const c=mealCapPools(engine,{days:capDays,saved,poolMemo});for(const r of rows)if(r.stock>0)c.markHeld(r.item);return c;};
  const baseline=rows.map(r=>({...r})),procurementShortfall=allocateMeals(baseline,needs,newCaps());
  // Shared food is allocated once in a stable order. My cash can release my
  // own retained goods, but cannot silently release another holder's reserve
@@ -345,9 +346,13 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   const group=pending.splice(0,n);
   if(wait>maxDays)continue;
   const due=payments.filter(r=>r.resource===COIN&&r.at<=at).reduce((m,r)=>m+r.amount,0);
+  // 性能：「到货前身体消耗」只取决于（成员、营养项、wait、状态、视角），本组内 wait 与状态都不变（循环只改 market/caps 局部量，
+  // 不写状态），每买一件重算得到的是同一个数；按营养项在本组内首次用到时算一次（惰性，抛错时机与原先一致），其后复用。
+  const drainBefore=new Map();
   while(group.length){
    const remaining=Object.fromEntries(Object.keys(needs).map(need=>{
-    const before=members.reduce((m,id)=>m+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*Math.min(wait,horizons.get(id)),...(view?{observer:owner,view}:{})}).value,0);
+    let before=drainBefore.get(need);
+    if(before===undefined){before=members.reduce((m,id)=>m+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*Math.min(wait,horizons.get(id)),...(view?{observer:owner,view}:{})}).value,0);drainBefore.set(need,before);}
     market.physicalFloor[need]=Math.max(market.physicalFloor[need],before-otherFood[need]-market.coverage[need]);
     return [need,Math.max(0,needs[need]-otherFood[need]-market.physicalFloor[need]-market.coverage[need])];
    }));
