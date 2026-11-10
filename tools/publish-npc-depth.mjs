@@ -164,7 +164,9 @@ async function preparedPublication({batchManifest,manifest,worldRoot}={}){
  return {preview:structuredClone(preview),apply:async()=>{
   const lockFile=file+'.depth-publication.lock';let lock,temp;
   try{
-   try{lock=await fs.open(lockFile,'wx');}catch(e){if(e.code==='EEXIST')throw Error('另一个人物发布正在提交');throw e;}
+   // 锁只保护真正的提交：没有任何要写的改动（已发布世界的幂等重发）时不加锁，也就不会在正式 world/people 旁落下锁文件，
+   // 否则并行的其他测试/工具复制或读取该目录时会撞上这把锁（“另一个人物发布正在提交”）。
+   if(changed.length)try{lock=await fs.open(lockFile,'wx');}catch(e){if(e.code==='EEXIST')throw Error('另一个人物发布正在提交');throw e;}
    await unchanged();
    if(batchManifest)assert.deepEqual(await read(batchManifest),plan,'批清单在预演后改变');
    for(const [index,manifest] of manifestFiles.entries()){const fresh=await prepareNpcDepth({manifest,worldRoot:target,world});assert.deepEqual([fresh.manifestHash,fresh.entries,fresh.drafts],[cards[index].manifestHash,cards[index].entries,cards[index].drafts],'审核凭证在预演后改变');}
