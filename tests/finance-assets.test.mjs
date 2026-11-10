@@ -87,13 +87,16 @@ test('商号入股实际转资，按真实成交扣成本和税后利润分红�
     // 15 §15.2：私人行囊不供给市场。林穗的正式薄饼货架提供同类公开食品存量，
     // 面包仍从零开始，经真实交易取得16份、每份成本1；原成本/正利润/分红断言全部保留。
     // 玩家只带本例所需20面包（3kg），不带无关的100木/100粮，买回12份后也不超30kg。
+    // R1 后薄饼单件饱腹 30→12（item-class.mjs satietyFactor），店主家户要留 29 份（旧约 4）。探针 fa：60 份只剩可售 31、同类需求 37，
+    // 收购 16 份超过日内深度（31×.3<16）被拒；要让稀缺度重新钳在 .5 并容纳 16+10+2 的日内总量，需可售 S ≥ 37/.5=74（且 28≤S×.5），
+    // 备 120 份即可售 91：收购 16 份仍是每份 1、总 16，卖 10 份 20，其后断言（利润 10、赊卖、分红 1、转让）探针逐项复演一致。
     const setup=applyIntentSetup(f.e,f.doc,{facts:[
         {path:['state','inventory'],value:{item_bread:{quantity:20}}},
-        {path:['state','npcs',host,'inventory'],value:{item_oat_flatbread:{quantity:60}}}
+        {path:['state','npcs',host,'inventory'],value:{item_oat_flatbread:{quantity:120}}}
     ]});
     assert.deepEqual(setup.setupUnmet,[]);f.doc=setup.document;
     const acquired=await f.act({buyer:host,seller:'player',item:'item_bread',quantity:16,unitPrice:1},'stock-acquired');
-    // 薄饼60份即便扣4份家户保留仍有S≥56，D≤28，稀缺钳在.5；16≤56×.3、日内总量16+10+2≤56×.5。
+    // 薄饼120份扣家户保留29份仍可售91：D=37，稀缺度37/91<.5 钳在.5；16≤91×.3、日内总量16+10+2≤91×.5。
     // 采购报价2×.5×收购价差.6=.6，合法整数价1，16×1=16；随后库存流入后的深度仍使合法整数卖价包含2。
     // 现金卖10、赊卖2后仍留4份面包，FIFO的实际取得成本按1计，不用目录成本2。
     assert.equal(acquired.cost,16);
