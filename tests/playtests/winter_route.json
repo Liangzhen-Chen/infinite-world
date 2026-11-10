@@ -344,12 +344,9 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player.coins"
+            "state.player.coins",
+            "state.inventory"
           ]
-        },
-        {
-          "kind": "holdingsUnchanged",
-          "path": "state.inventory"
         }
       ]
     },
