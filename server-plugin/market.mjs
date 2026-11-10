@@ -9,7 +9,7 @@ import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from '
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {recordsMemo} from './storage.mjs';
-import {householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
+import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
@@ -219,7 +219,17 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained-(r.upkeep??0)+r.committed,0),1);
  return {place,goods,supply,demand,rows};
 }
+// 同一状态版本内（游标 revision / 只读作用域内同一状态对象，任何状态与账本写入即换版本）marketSupply 是 (item, location, businessOwners)
+// 的纯函数：它只读 state、账本、引擎规则，不写任何东西、不抽随机数，且所读的 householdResources 本来就按同一版本记忆。
+// 估值、报价、经营者各自重复询问同一组参数（同一物品、同一地点），故按版本记忆整张结果；命中时返回的是同一份只读数据，调用方只读不改。
+// options 带有 businessOwners 以外的字段时不记忆（当前没有这样的调用）。
+const supplyMemo=Symbol('market supply');
 export function marketSupply(d,engine,item,location,options={}){
+ const keys=Object.keys(options);
+ if(keys.some(k=>k!=='businessOwners'))return readMarketSupply(d,engine,item,location,options);
+ return {...budgetRead(d,engine,[supplyMemo,item,location,JSON.stringify(options.businessOwners??[])],()=>readMarketSupply(d,engine,item,location,options))};
+}
+function readMarketSupply(d,engine,item,location,options){
  const current=stockSupply(d,engine,item,location,options);
  const forward=engine.world.items.filter(it=>goodsClass(engine,it.id)===current.goods).map(it=>forwardSupply(d,engine,it.id,location));
  const state=stateOf(d),horizon=rulesOf(engine).forward.timeDiscountMinutes??rulesOf(engine).forward.quarterMinutes,consignments=[];
