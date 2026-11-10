@@ -268,6 +268,12 @@ B 节补充：
   - 11-10 05:4x 审查进度。
   - 11-10 06:0x FX7 第一版（t-fx7）：adaf7c7c 让 marketSupply 在同一状态版本内经 budgetRead 记忆；71746443 让 shop 的非游标路径共用只读作用域 memo；5e112396 让 foodHabit 的 householdCash 也走 budgetRead；4cb6877d 新增 tests/household-cache-equivalence.test.mjs，用正式代码里本来就有的无缓存旁路 documentReader 作对照，抽样比对可买来源、惯常性和 householdResources 整份。细化后的根因：accessibleSources 的 328 秒几乎全在 foodSources 解析器里，其中 reachable 约 170 秒、physicalOf 约 38 秒、sellerShare 约 22 秒；症结是每个状态版本都要冷构建一次（买方名单和可达性按 revision 重建），并非某段算法本身慢。另外 marketSupply 在 3 天样本里约一半调用参数重复。本机噪声大，实测不出提速；开发者估计云上只能省几十到一百多秒，补不回 485 秒，达不到 +10% 目标。"实际成交逐项相等"在测试里做不到，因为无缓存旁路跑不完整个推进，加开关又违规。改为版本对比：新工具 trade-ledger-digest，对改前和改后两版的全部成交和过账做哈希比对。下一步要大幅提速，只能让 reachable 和买方名单跨状态版本复用，需要用现有的 stateMemo dependencies 机制声明读取依赖；漏声明会导致结果错。先只出设计和量化（F:/dnd-tmp/m26b/fx7-reuse-design.md），是否实施等李白定。
   - 11-10 06:1x 李白巡查意见：①同意用 trade-ledger-digest 对改前、改后做哈希比对，代替"成交逐项相等"，但必须和抽样等价测试一起过两轮审查；②FX7 第一版照常两轮审，与其他卡一起上 m2-6c，不等复用方案；③复用方案只做设计与量化，须写清读取字段、依赖清单、漏声明如何被发现、云上能省多少秒，做不做由李白定；④上传前报实测磁盘余量和这次上传要占多少。07:05 跟进。进展：FX7 的 digest 结果为改前与改后哈希、笔数逐项相等（full 30 天成交 99 笔，farm 100 天成交 209 笔），本机耗时 445→391、1195→1065（4 个任务并行跑，仅供参考）。复用估算只能省 80–150 秒，占 4–7%，开发者建议先不做。主会话追加了一个疑点：新代码多出的耗时，可能是写入更频繁、revision 增多，导致冷构建次数增多；正在对比旧代码、改前、改后三版的补丁数和 revision 数（结果写入 fx7-revisions.md）。06:1x 已把 t-fx1、t-fx3、t-fx4、t-fx7 合入 M26（HEAD 0647c9f3），无冲突，node --check 全部通过。已开四路 r1：FX1/FX3 的改后部分、FX4 的改后部分、FX6、FX7。
+  - 11-10 06:3x r1 重审结果。
+    - FX3：通过。
+    - FX1：要改两处，已改。61abf0f2：validateDrinkable 收到未物化世界时直接报错，因为自行物化会形成循环引用。b8c42318：带 drinkable 但没手写水分的物品，水分按 重量 × 含水率 × k 派生，k 由 item_water 推出（25 ÷ 0.25kg ÷ 1 = 100/kg，与 body.json drinkGain 一致），羊乳、兽乳都派生为 26，手写的 15 已删。遗留不一致：牛乳 0.5kg 手写 25，按派生应为 44。主会话决定本批不动手写值，以免波及口渴相关测试，另开后续卡 **HYD-DERIVE**：所有物品的水分统一从含水率派生，取消手写，连同相关测试一起重推。
+    - FX4：要改，已交 FX4c。批量参数要从数据推出（装料容量，或同类手写配方的最大份数），容差改为按产物份数的粒度表达；顶层语句切分器补 `=>`、`return`、`typeof` 后的正则判定，并加单元测试；禁网预加载加自测，拦不住的路径（dns、udp、子进程 curl）列为已知限制；修饰参数声明值类型，路径类不得越出临时副本；全量层耗时上云实测后再校准。
+    - FX7：要改，排在 revision 对比之后。等价测试补"写后重读"，抽样扩到每聚落 3 户（含玩家）、3 种食物、含店主，单次 15 分钟内；哈希基线落档，提供 --compare 模式；更新过时注释，评估给作用域加原地写入检查。
+    - FX6：r1 进行中。
     - FX5：r1、r2 均通过。
     - FX1：r1 通过，r2 要求修改。修改为 e4636d01 和 ebbfea41：温醋饮补 drinkable 标签；羊奶、兽奶补水分 15（按牛乳的水分密度类推）；新增整类校验 validateDrinkable（item-class.mjs:363，由 validate-world 调用）；派生后带水分的物品共 35 个。
     - FX3：r1 通过，r2 要求修改。修改为 4e8fb4eb（cherry-pick 6c87c12a）和 be8e2b9f：ka1-overlay 的 D12 对账改用 matprops-approval 的正式判定（summarizeApproval/verifyAll），探针核对结果为 D 卡 4/4、调味卡 40 条 L2 加 3 条人工核定，与 verifyAll 完全一致。
