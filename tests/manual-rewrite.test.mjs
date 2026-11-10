@@ -192,3 +192,16 @@ test('缺批次文件是完整性错误（非审批未齐）；已批准但 l4.r
   await fs.rm(file);
   await assert.rejects(publish(root), e => e.code !== 'APPROVAL_INCOMPLETE' && /缺少批次文件/.test(e.message));
 });
+
+test('与旧稿相同的判断与键序、首尾空白无关：换键序、首尾加空白的旧稿都拒绝零写盘', async t => {
+  const root = await fixture(t), before = await snapshot(root);
+  // 换键序（description 在前，id 在后）
+  await assert.rejects(run(root, [{ id: 'c_rej', draft: { description: '原稿丙丙丙丙', id: 'c_rej' } }]), /与旧稿相同/);
+  // 首尾加空白
+  await assert.rejects(run(root, [{ id: 'c_rej', draft: { id: 'c_rej', description: '  原稿丙丙丙丙\n' } }]), /与旧稿相同/);
+  // 两者叠加
+  await assert.rejects(run(root, [{ id: 'b_man', draft: { description: ' 原稿乙乙乙乙 ', id: 'b_man' } }]), /与旧稿相同/);
+  assert.deepEqual(await snapshot(root), before);
+  // 真正不同的稿子仍可改写
+  assert.deepEqual(await run(root, [good('b_man')]), ['b_man']);
+});
