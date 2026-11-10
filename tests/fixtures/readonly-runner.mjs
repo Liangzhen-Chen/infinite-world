@@ -30,17 +30,24 @@ export const timeoutOf = file => SLOW_ENTRY_TIMEOUT_MS[file] ?? ENTRY_TIMEOUT_MS
 //   超时、被信号终止、无法启动：崩溃。
 //   退出码 0：一律不算崩溃，不扫描文本（正常输出里出现 ENOENT 字样不是崩溃）。
 //   退出码非 0：输出含 ENOENT / MODULE_NOT_FOUND / ERR_MODULE_NOT_FOUND，或有未捕获异常（错误类型名 + 堆栈帧）才算崩溃；
-//     但错误类型是 AssertionError 时是检查命令的正常失败，不算崩溃。其余非 0 退出（如自己打印后 exit(1)、无堆栈）只记基线诊断。
+//     另：非 0 退出且输出含 UnhandledPromiseRejection / unhandled rejection 字样，不管有没有堆栈都算崩溃；
+//     只有 AssertionError 是检查命令的正常失败，不算崩溃；但输出里除断言外还有别的带栈异常则算崩溃。
+//     其余非 0 退出（如自己打印后 exit(1)/exit(2)、无异常栈）是入口主动报告的失败，只记基线诊断。
 // 返回崩溃原因字符串，没崩溃返回 null。纯函数，入参形如 spawnSync 的返回值。
 const MISSING_RE = /ENOENT|MODULE_NOT_FOUND|ERR_MODULE_NOT_FOUND/;
+const UNHANDLED_RE = /UnhandledPromiseRejection|ERR_UNHANDLED_REJECTION|unhandled(?:\s+promise)?\s+rejection/i; // 未处理的 Promise 拒绝（reason 不是 Error 时没有堆栈，也要抓）
 const STACK_RE = /^\s+at .+:\d+:\d+\)?\s*$/m; // 带堆栈帧
-const ERR_LINE_RE = /^(?:Uncaught )?([A-Za-z_$][\w$]*)(?: \[[A-Z_]+\])?: /; // "TypeError: msg" / "AssertionError [ERR_ASSERTION]: msg"
-function uncaughtErrorType(text) {
-  const lines = text.split(/\r?\n/);
-  const at = lines.findIndex(l => STACK_RE.test(l));
-  if (at < 0) return null;
-  for (let i = at - 1; i >= 0; i--) { const m = ERR_LINE_RE.exec(lines[i]); if (m) return m[1]; }
-  return null;
+const ERR_LINE_RE = /^(?:Uncaught )?([A-Z][\w$]*)(?: \[[A-Z_]+\])?: /; // "TypeError: msg" / "AssertionError [ERR_ASSERTION]: msg"；类名首字母大写，排除 "actual: 1" 之类的属性行
+// 输出里每一段堆栈对应的错误类型（按出现顺序，去重）：堆栈帧归属于它上面最近的 "类型名: " 行。
+function uncaughtErrorTypes(text) {
+  const types = [];
+  let last = null;
+  for (const l of text.split(/\r?\n/)) {
+    const m = ERR_LINE_RE.exec(l);
+    if (m) last = m[1];
+    else if (STACK_RE.test(l) && last && !types.includes(last)) types.push(last);
+  }
+  return types;
 }
 export function crashReason(r) {
   if (r.error?.code === 'ETIMEDOUT') return '超时';
@@ -50,8 +57,13 @@ export function crashReason(r) {
   const text = outText(r);
   const missing = MISSING_RE.exec(text);
   if (missing) return `输出含缺文件特征（${missing[0]}）`;
-  const type = uncaughtErrorType(text);
-  if (type && type !== 'AssertionError') return `未捕获异常（${type}）`;
+  const unhandled = UNHANDLED_RE.exec(text);
+  if (unhandled) return `未处理的 Promise 拒绝（${unhandled[0]}）`;
+  // 除断言外还有异常：先出 AssertionError、后面又有别的带栈异常，也算崩溃。
+  const other = uncaughtErrorTypes(text).find(t => t !== 'AssertionError');
+  if (other) return `未捕获异常（${other}）`;
+  // 其余非 0 退出不算崩溃，包括 exit(2)/exit(1) 并自己打印错误信息、无异常栈：这是入口主动报告的失败（内容校验不过），
+  // 只记基线诊断（runGroup 打印首行）。
   return null;
 }
 const outText = r => [r.stderr, r.stdout].filter(Boolean).join('\n');
