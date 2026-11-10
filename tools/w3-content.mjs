@@ -20,6 +20,13 @@ export function closestW3Similarity(draft, others) {
   return {score:maximum,id:other};
 }
 export function w3Context(world,bones,entry) {
+  const context=w3ContextFacts(world,bones,entry);
+  // 校验用的目录与配方表：不可枚举，不进入指纹、审核请求和落盘快照（见 w3-process-check.mjs）。
+  Object.defineProperty(context,'catalog',{value:[...world.items,...bones.items]});
+  Object.defineProperty(context,'catalogRecipes',{value:[...(world.recipes??[]),...(bones.recipes??[])]});
+  return context;
+}
+function w3ContextFacts(world,bones,entry) {
   const ids = new Map([...world.items,...bones.items,...world.npcs,...world.locations,...world.skills].map(row=>[row.id,row]));
   const fact = id => {const row=ids.get(id);if(!row)throw new Error(`引用丢失 ${id}`);return {id:row.id,name:row.name,weight:row.weight,basePrice:row.basePrice,use:row.use,shelfLifeDays:row.shelfLifeDays};};
   if(entry.id.startsWith('recipe_'))return {materials:entry.materials.map(row=>({...row,facts:fact(row.item)})),tools:entry.tools.map(fact),product:fact(entry.output.item),byproducts:entry.byproducts.map(row=>({...row,facts:fact(row.item)})),skill:fact(entry.skill),workplaces:world.locations.filter(row=>row.workstations?.some(s=>s.kind===entry.workstation)).map(row=>({id:row.id,name:row.name})),teachers:entry.teachers.map(fact)};

@@ -4,6 +4,7 @@ import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,readApprovedContent,defaultReviewRequest,PROCESS_DRAFT_RULES} from './content-pipeline.mjs';
 import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {w3Context,validateW3Draft,closestW3Similarity,assembleW3} from './w3-content.mjs';
+import {processIssues} from './w3-process-check.mjs';
 
 export const tradesRoot='world/drafts/w3/trades',tradesRevision='w3-trades-1';
 export function validateTradesDraft(draft,entry,blocklist,context){
@@ -13,6 +14,7 @@ export function validateTradesDraft(draft,entry,blocklist,context){
   if(/铜(?:制|质|头|坯|身|刃|面)|青铜/.test(prose)&&!facts.includes('铜'))result.errors.push('品质铜不等于铜材，说明新增铜材质');
   if(/石(?:制|质|头|刃|身)/.test(prose)&&!facts.includes('石'))result.errors.push('品质石不等于石材，说明新增石材质');
  }
+ if(entry.id.startsWith('recipe_')&&typeof draft?.process==='string')for(const message of processIssues(draft.process,entry,context))if(!result.errors.includes(message))result.errors.push(message);
  return result;
 }
 export function tradesReviewRequest(entry,draft,context){
