@@ -121,3 +121,10 @@ test('世界校验：水分>0且无饱腹的物品必须带drinkable，带drinka
     const wrongTag=structuredClone(world);const ration=wrongTag.items.find(i=>i.id==='item_ration');ration.tags=[...(ration.tags??[]),'drinkable'];
     assert.ok(validateWorld(wrongTag).errors.some(error=>error.includes('水分须>0')&&error.includes('item_ration')));
 });
+
+test('validateDrinkable：未物化的世界明确报错',async()=>{
+    const {validateDrinkable}=await import('../server-plugin/item-class.mjs');
+    const raw=await loadWorld();
+    assert.ok(raw.mechanics,'loadWorld 返回未物化的世界');
+    assert.throws(()=>validateDrinkable(raw),/已物化/);
+});

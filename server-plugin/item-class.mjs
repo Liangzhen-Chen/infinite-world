@@ -361,6 +361,8 @@ export function mealCapPools(engine,{days=[],saved=null,poolMemo=new Map()}={}){
 // 在派生后的副本上核对（nutrientContent 含生食，不受“生食不写 nutrition”影响）：
 //   水分>0 且热量(饱腹)==0 的物品是纯饮品，必须带 drinkable；带 drinkable 的物品必须有水分>0。有热量的饮品（如牛乳）带标签合法。
 export function validateDrinkable(world){
+ // 前置条件：传入已物化的世界（带 world.mechanics 说明标签尚未合入，温醋饮等会漏检）；未物化直接报错，不在此另写一份物化。
+ if(world.mechanics)throw new Error('validateDrinkable 需要已物化的世界（先 materializeRuntimeWorld）');
  const w=structuredClone(world);deriveItemAttributes(w);const errors=[];
  for(const item of w.items??[]){
   const hyd=item.nutrientContent?.hydration??0,sat=item.nutrientContent?.satiety??0,tagged=(item.tags??[]).includes('drinkable');
