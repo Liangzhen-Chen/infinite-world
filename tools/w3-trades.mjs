@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {runContentPipeline,readApprovedContent,defaultReviewRequest} from './content-pipeline.mjs';
+import {runContentPipeline,readApprovedContent,defaultReviewRequest,PROCESS_DRAFT_RULES} from './content-pipeline.mjs';
 import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {w3Context,validateW3Draft,closestW3Similarity,assembleW3} from './w3-content.mjs';
 
@@ -56,7 +56,7 @@ async function main(){
   await runContentPipeline({entries:bones[kind],root:`${tradesRoot}/${kind}`,budgetRoot:'world/drafts/w3',client,batchSize:kind==='items'?34:25,concurrency:12,revision:tradesRevision,
    contextFor:entry=>w3Context(world,bones,entry),validateDraft:(draft,entry,context)=>validateTradesDraft(draft,entry,blocklist,context),buildReviewRequest:tradesReviewRequest,
    buildDraftRequest:(entry,feedback,context)=>({temperature:.55,max_tokens:1000,tools:[{type:'function',function:{name:'submit_content',description:'只返回当前这一条说明。',parameters:{type:'object',additionalProperties:false,required:['id',...fields],properties:{id:{type:'string',enum:[entry.id]},...Object.fromEntries(fields.map(field=>[field,{type:'string',minLength:1}]))}}}}],tool_choice:{type:'function',function:{name:'submit_content'}},messages:[
-    {role:'system',content:`起草原创中世纪中文器物说明，只填当前条目的${fields.join('、')}，不得同时输出其他实体。description建议90–150字，inspection 45–90字，storage 35–65字，process 90–160字；长度只作软范围。每件选择具体结构、痕迹和有限检验动作，不按同一句式轮换名词。严格核对本条材料、工具、数量、用途与取得方式；不得添加釉料、调味料、缝线、刀剪和容器。容器另备时明确不随货提供。不得拿克数当份数，不把鲜乳写成乳粉。分步耗时只写阿拉伯数字加分钟，禁止换成息、时辰或小时；不写总耗时或全程多少分钟（总时长由程序按骨架补写）。绝不出现骨架、系统、主持人、玩家不能等开发语。工具清单中的工具必须实际使用，过程不添加清单外工具。食物损坏只作外观气味检查，不要求尝变质食物。${kind==='items'?'有保存期时storage必须准确写数字加天；null则不加期限。书本写识字100与指定阅读分钟。产地用给定中文名，出处未给的树种、人物和机构不得自行命名。':'工序按processFacts展开，原料配额需要分用时说明总量未变。无副产品就把废料弃置；燃料只入炉，不进食物。'}反馈只用于修正当前条目。`},
+    {role:'system',content:`起草原创中世纪中文器物说明，只填当前条目的${fields.join('、')}，不得同时输出其他实体。description建议90–150字，inspection 45–90字，storage 35–65字，process 90–160字；长度只作软范围。每件选择具体结构、痕迹和有限检验动作，不按同一句式轮换名词。严格核对本条材料、工具、数量、用途与取得方式；不得添加釉料、调味料、缝线、刀剪和容器。容器另备时明确不随货提供。不得拿克数当份数，不把鲜乳写成乳粉。分步耗时只写阿拉伯数字加分钟，禁止换成息、时辰或小时；不写总耗时或全程多少分钟（总时长由程序按骨架补写）。绝不出现骨架、系统、主持人、玩家不能等开发语。工具清单中的工具必须实际使用，过程不添加清单外工具。食物损坏只作外观气味检查，不要求尝变质食物。${kind==='items'?'有保存期时storage必须准确写数字加天；null则不加期限。书本写识字100与指定阅读分钟。产地用给定中文名，出处未给的树种、人物和机构不得自行命名。':'工序按processFacts展开，原料配额需要分用时说明总量未变。无副产品时材料全部进入成品、不弃置；燃料只入炉，不进食物。'+PROCESS_DRAFT_RULES}反馈只用于修正当前条目。`},
     {role:'user',content:JSON.stringify({skeleton:entry,referencedFacts:context,feedback})}]}),
    onBatch:async batch=>console.log(JSON.stringify({kind,index:batch.index,count:batch.count,passed:batch.passed,manual:batch.manual,pending:batch.pending,costUpperYuan:client.spent})),
   });
