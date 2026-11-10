@@ -13,7 +13,7 @@ import {habitatsOf, ecologyFor} from '../tools/kc-processing.mjs';
 
 const world = await loadWorld();
 const seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
-const ecology = JSON.parse(await fs.readFile('world/design/kc-site-ecology.json', 'utf8'));
+const ecology = JSON.parse(await fs.readFile('world/meta/mechanics/site-ecology.json', 'utf8'));
 
 function fixture(w = world) {
   const engine = new WorldEngine(structuredClone(w));

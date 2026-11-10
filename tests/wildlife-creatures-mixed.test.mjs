@@ -173,7 +173,7 @@ test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',a
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-t154-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  // A3 archives actions and ontology; carry those inputs into the isolated edition so the full-world equality still checks every field.
  // S5-06: retain the approved ecology catalog in the isolated edition and exact roundtrip.
- for(const folder of ['meta','people','geo','lore','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true}); await fs.mkdir(path.join(root,'design'),{recursive:true});await fs.copyFile(path.resolve('world/design/kc-site-ecology.json'),path.join(root,'design/kc-site-ecology.json'));/* 运行时视图的据点再生表 */
+ for(const folder of ['meta','people','geo','lore','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/creatures-mixed'),path.join(root,'drafts/creatures-mixed'),{recursive:true});
  const write=async(file,value)=>fs.writeFile(path.join(root,file),JSON.stringify(value));
  // This fixture writes hydrated rows back to source files; biome metadata

@@ -84,7 +84,6 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     const mechanics={};
     let mechanicsFiles;try{mechanicsFiles=(await fs.readdir(path.join(root,'meta/mechanics'))).filter(name=>name.endsWith('.json')).sort();}catch(error){if(error.code!=='ENOENT')throw error;mechanicsFiles=[];}
     for(const file of mechanicsFiles){const rows=await read(`meta/mechanics/${file}`);if(!Array.isArray(rows))mechanics[mechanicsKey(file)]=rows;}
-    const siteEcology=await optional('design/kc-site-ecology.json');if(!Array.isArray(siteEcology))mechanics.siteEcology=siteEcology;
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});

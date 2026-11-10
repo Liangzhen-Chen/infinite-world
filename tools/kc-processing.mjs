@@ -7,7 +7,7 @@
 // 已审行不改（A1）：生成器只写新增的行（recipe_kc_* 配方、两种新物品），作者原有的行一字不动；
 // 对作者行起作用的是本文件的运行时规律 applyChainLaws，由 tools/load-world.mjs 在加载期施加到运行时世界：
 //   据点：制成品（任何配方的产物）不再生；自然资源的储量与再生按"资源类 × 据点栖地"派生，并给每个据点补上本栖地原生的资源，
-//   参数表 world/design/kc-site-ecology.json；栖地不长的遗留物（废墟旧木料、积盐）不再生。
+//   参数表 world/meta/mechanics/site-ecology.json；栖地不长的遗留物（废墟旧木料、积盐）不再生。
 //   初加工类里没有师傅的作者配方不要求拜师；只由本类配方造出的东西，基准价不低于它最省那条配方的材料价。
 // 改不成规律的作者行更正（羊皮纸按链改价、冶炼不要锻锤、矿道口铁砂的物品登记）不在这里做，见 docs/审查/2026-11-05-已审内容改动盘点.md，走审批管线。
 // 用法：node tools/kc-processing.mjs [--write] [--root <树>]。改类参数或资源表后重跑 --write，生成的配方行不手改。
@@ -147,8 +147,8 @@ const TOOL_PARTS = {
 const BOOTSTRAP_ORDER = ['item_smith_hammer', 'item_smith_tongs', 'item_mason_chisel', 'item_whittling_knife', 'item_frame_saw', 'item_spindle', 'item_hide_scraper', 'item_cooking_pot', 'item_fine_sieve', 'item_stone_mortar'];
 
 // ---------- 据点自然资源 ----------
-// 储量与再生由"资源类 × 据点栖地"派生，参数在 world/design/kc-site-ecology.json；栖地由地形（或 biomes.json 群落标签）派生。
-const SITE_ECOLOGY = JSON.parse(fs.readFileSync(P('world/design/kc-site-ecology.json'), 'utf8'));
+// 储量与再生由"资源类 × 据点栖地"派生，参数在 world/meta/mechanics/site-ecology.json；栖地由地形（或 biomes.json 群落标签）派生。
+const SITE_ECOLOGY = JSON.parse(fs.readFileSync(P('world/meta/mechanics/site-ecology.json'), 'utf8'));
 
 const ceil = (x, step = 1) => Math.ceil(x / step - 1e-9) * step;
 const kg = (items, id) => {const w = items.get(id)?.weight; if (!(w > 0)) throw Error(`缺重量 ${id}`); return w;};
@@ -276,11 +276,19 @@ const MEMBER_PAIRS = PROCESSES.flatMap(p => p.members);
 export const teacherlessPrimary = r => !r.processing && !r.teachers?.length && MEMBER_PAIRS.some(([i, o]) => r.output?.item === o && r.materials?.some(m => m.item === i));
 
 // 本链对运行时世界的规律（tools/load-world.mjs 加载期调用；就地改加载出的行，盘上的已审行不动）。
-// 重复施加结果不变：再生规划幂等，拜师与价格底线只取一次。ecology 缺省（这一版世界没有据点资源表）时不派生据点。
+// 重复施加结果不变：再生规划幂等，拜师与价格底线只取一次。ecology（world/meta/mechanics/site-ecology.json，随运行时世界加载）缺省时不派生据点。
 export function applyChainLaws({locations, recipes, items}, {ecology, biomes = {}} = {}) {
   if (ecology) {
     const plan = regrowPlan(locations, recipes, null, biomes, ecology);
     locations.forEach((l, i) => {if (l.site) l.site = plan.locations[i].site;});
+  }
+  // 储量只能来自作者原值或这条规律；两者都没有时说清缺哪项数据，而不是留给下游校验报"有限库存无效"。
+  for (const l of locations) for (const r of l.site?.resources ?? []) {
+    if (r.quantity !== undefined) continue;
+    const why = ecology
+      ? `据点栖地 [${habitatsOf(l, biomes, ecology).join(',') || '无'}] 推不出这类资源的储量（缺该地 biome 群落标签、terrain 对应栖地或 siteHabitats 登记，或 resources 表无该物品）`
+      : '世界缺 meta/mechanics/site-ecology.json（据点资源表），无法派生';
+    throw new Error(`据点资源无储量：${l.id}/${r.id}（${r.item}）${why}`);
   }
   for (const r of recipes) if (teacherlessPrimary(r)) r.learningRequired = false;
   const byId = new Map(items.map(i => [i.id, i]));
