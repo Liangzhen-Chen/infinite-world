@@ -167,8 +167,9 @@ test('R2: confession preserves the legal entry and refuses to promote a witness 
  // 作息即前置条件：600 分时 gucen 的作息在村口（loc_hw_gate），yanzhe 的在白石镇（loc_bs），都不在青灯；
  // 摆在青灯的人会在下一次时钟节拍里被派出行（probe-gucen-travel），之后再摆位就报 travelling。
  // 所以现场只放当时就在青灯的 linsui，守卫到村口报案，yanzhe 到白石镇衙署时才入场。
- // 待定：yanzhe 的作息一整天都在 loc_bs，31 天内与 linsui 没有任何同地时刻（probe 实测），因此他作为盗窃现场目击者
- // 在现有作息下不可能合规入场；要保留目击者需改场景（例如盗窃发生在 loc_bs），由协调者决定。
+ // yanzhe 按作息整天在 loc_bs，31 天内与 linsui 没有同地时刻（probe 实测），所以不作为青灯盗窃的在场目击者；
+ // 他在案件受理处 bld_bs_watch 入场（loc_bs 内的建筑）。“严辙为证人”在这里只是叙述：下面的断言验证的是
+ // “这个具体的人（语料 proposal 的 confession 接收人）没有受理职权”，没有任何断言依赖他在盗窃现场，语料不改。
  let document=scene.document,crime;
  for(let i=0;i<30;i++){
   const out=await engine.reduce(document,{tool:'world_act',eventId:`R2-actual-theft-${i}`,args:{action:'core:crime.steal',slots:{target:'npc_hw_linsui',item:'item_bread'}}});
