@@ -67,7 +67,14 @@ export function crashReason(r) {
   return null;
 }
 const outText = r => [r.stderr, r.stdout].filter(Boolean).join('\n');
-export const firstLine = r => (outText(r).split('\n').find(l => l.trim()) ?? '').slice(0, 160);
+// 诊断行：首行（Node 未捕获异常时是 "文件:行号"）+ 异常消息行（第一条以 "Error: / TypeError: " 等错误类型名开头的行，判据同崩溃判定里的 ERR_LINE_RE）。
+// 只改记录的内容，不参与是否崩溃的判定。
+export const firstLine = r => {
+  const lines = outText(r).split(/\r?\n/);
+  const first = lines.find(l => l.trim()) ?? '';
+  const message = lines.find(l => ERR_LINE_RE.test(l));
+  return message && message !== first ? `${first.slice(0, 160)} | ${message.slice(0, 240)}` : first.slice(0, 160);
+};
 
 export function runGroup(group) {
   const entries = entriesOfGroup(group);
