@@ -346,6 +346,7 @@ B 节补充：
       - 戊类，d1-system-data 纯格式差异（值逐字段相同，非 m2-6）：用写命令重新生成 rules.json，只改排版；--check 的判据不放宽。
       - 待定：鱼汤配方 60 分钟还是 30 分钟。正式值 60 有 a3-world 审批，依据是"半个时辰=60 分钟"，历史上回退过一次，需主会话核实后再定。a3-score 超时等二分结果。
     - 11-10 14:2x 等李白批准甲类重审期间，开 FX12（F:/dnd-wt/FX12，t-fx12，基于 d8c613ae）做不花钱的乙、丁、戊三类：读取 P1 的 supersedes 回执的通用函数（只认已审批的回执）；叠加的用途标签必须在已审叠加层里找到来源，不凭"是子集"就放过；能识别回执的语料哈希重算（写命令，本卡不运行）；用写命令重新生成 rules.json，只改排版。误推的 t-fx9、t-fx10、t-prof-m26c 补扫干净（无密钥、无 >50MB 文件），是否删除由李白定。
+    - 11-10 14:3x FX11 完成。a3-score --summary：本机 HEAD 跑 580 秒只完成 5/120 条，d7676be9（m2-6 之前）一样慢，所以不是 m2-6 引起的。沿 first-parent 二分，变慢始于 60f061f1（10-29 合入 t-k05-law，只改了 server-plugin/business.mjs，+201 行）：之前全量约 10 分钟，之后第一条就要 60 秒。另开性能卡查清根因。FX11 运行中失败的命令（file URL 写法、DIAG_OUT 路径、重复打补丁、sed 分隔符、旧代码缺 priorEditions 导出）都已改正并重跑，不影响结论；鱼汤首次失效点定为 01423926，置信度中等（父提交在 item_bread 上先报错）。docs/m26-stale-approvals.md 已同步为最终版。
       - m2-6 引起的有 3 条：①a3-world-approval --verify，鱼汤推导饱腹后配方引用事实的指纹变了，即 R4，已批 L2 ≤0.1 元待跑；面包、燕麦饼、羊肉萝卜炖的已审引用要一起查。②s5-market-content-approval --verify，t-avail bb8dd96c 在 market.json 里加了 foodHabit 段，指纹覆盖整份文件，审批记录还是 10-25 的，需要重审。③w3-wave-score --check（推断），FX1 e4636d01 给温醋饮加了 drinkable，而骨架 economy-w3.mjs:89 没有这个标签。
       - 和 m2-6 无关、原来就有的 3 条：④d1-system-data --check 逐字节比较，rules.json 里有手写的紧凑行，所以一直过不了；data-coverage 按解析后的对象比较，能通过。⑤⑥w5-sites --batch 1/2 在当前世界上重放 10-15 批次，有地点冲突。
       - 没定的 2 条：⑦w3-journey、w5-festival 的指纹变了，可能和 11-05 的 K5/A1/P1 改动有关，下次云跑带上异常消息行后可以定。

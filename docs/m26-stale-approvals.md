@@ -86,7 +86,14 @@ rules.json 与 applyD1 输出的差异：值级逐字段比较 0 处不同，键
 修复：`node tools/d1-system-data.mjs`（无参数）会把 rules.json 重写为全展开，只改排版不改内容；或让 --check 比 JSON 值而不比字节（规则层）。注意文件在 Windows 检出为 CRLF，工具已先做 CRLF 归一，不是原因。
 
 ## 5. a3-score --summary
-A3SCORE_PLACEHOLDER
+本机（Windows，只读副本，禁网预加载）HEAD：580 秒到时被 timeout 杀掉，120 条语料只完成 5 条（第 1 条约 3.7 分钟含启动，第 2 条 229 秒，其后 3-4 条各 5-30 秒）。结论：本机 15 分钟内跑不完，按进度推算远超 600 秒。loadWorld 仅 1.4 秒，慢在逐条执行。
+m2-6 之前的 d7676be9：401 秒只完成 1 条，同样慢，故不是 m2-6 引起。
+二分（每点 90-100 秒探测，看首条出现时间与条数；沿 first-parent 链，14b1fc70 起）：
+- 14b1fc70（10-22）：281 秒完成 60 条，约 5 秒/条，全量约 10 分钟
+- 6bca04b0（10-27）、d47ec5c7（10-29）、52a48aa7（10-29，K02 fix）：首条 14-15 秒，100 秒 6-9 条，快
+- 60f061f1（10-29，合并 t-k05-law "K05 business lifecycle"）：首条 60 秒、100 秒只 1 条，慢；之后 dafae4cd、8fd5c006、69174ba6、9b105b45（10-30）、3a7ce601（11-05）均同样慢
+- 与上一个快点 52a48aa7 相比，该合并只改了 server-plugin/business.mjs（+201/-9 行）。
+慢化点定位到 60f061f1（K05 经营生命周期）合入，早于 m2-6；a3-score.mjs 本身最后改于 11-08（b316ab9e，只改退料上限）。未做进一步热点剖析。二分已完成，无剩余待测提交。
 
 ## 6. 复算脚本与产物位置
 scratchpad = F:/temp/claude/066df71e3594f148/91a2ffab-45cc-4033-adab-94b22866f267/scratchpad：mk.sh（git archive 某提交到副本并打诊断补丁）、run.sh、d-*.mjs（各集合的不抛错版逐条诊断）、cmp.mjs（新旧 entry/context 逐字段对比）、*-stale-*.json（原始结果，含新旧 context）。
