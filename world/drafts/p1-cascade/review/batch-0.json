@@ -1,0 +1,25 @@
+{
+  "index": 0,
+  "fingerprint": "1f0f51305cc5e2221269fab9ef02e0bda7678926583f6b73b79c81df83470099",
+  "count": 2,
+  "passed": 2,
+  "ids": [
+    "item_stitchbound_folio-basePrice",
+    "item_paper_cord_tags-basePrice"
+  ],
+  "rewritten": 0,
+  "manual": [],
+  "pending": [],
+  "flagged": [],
+  "sample": [
+    "item_stitchbound_folio-basePrice",
+    "item_paper_cord_tags-basePrice"
+  ],
+  "l4": {
+    "approved": false,
+    "notes": []
+  },
+  "costUpperYuan": 0.0033280000000000002,
+  "manualRatio": 0,
+  "needsSystemicRepair": false
+}

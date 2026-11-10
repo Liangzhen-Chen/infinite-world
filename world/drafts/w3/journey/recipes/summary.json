@@ -3,11 +3,11 @@
   "passed": 85,
   "manual": 0,
   "pending": 0,
-  "costUpperYuan": 5.273706560000007,
+  "costUpperYuan": 5.276429360000007,
   "budget": {
-    "spentYuan": 5.273706560000007,
+    "spentYuan": 5.276429360000007,
     "reservedYuan": 1.734723475976807e-17,
-    "limitYuan": 5.43396,
+    "limitYuan": 5.430633,
     "requests": {
       "e41f0495-23bb-48fd-b2e3-8826e4cac8cd": {
         "card": null,
@@ -292,6 +292,74 @@
           "latencyMs": 863.6657000000005,
           "timestamp": "2026-11-10T15:43:44.447Z"
         }
+      },
+      "599c6b0e-45b1-42e9-9b32-2898e86e6b1f": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_paper_cord_tags-draft1",
+        "requestHash": "e071dcb42daac106df5567582b9d32b07851161f6a9029de678301cc737a4005",
+        "reservedYuan": 0.01588,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/599c6b0e-45b1-42e9-9b32-2898e86e6b1f.json",
+          "requestHash": "e071dcb42daac106df5567582b9d32b07851161f6a9029de678301cc737a4005",
+          "responseHash": "fca90907437a61ce002a20a415a05c5cec2d75bd4beed853cbf7b4cd5d6d7363"
+        },
+        "costUpperYuan": 0.00180408,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_paper_cord_tags-draft1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1359,
+            "completion_tokens": 168,
+            "total_tokens": 1527,
+            "prompt_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "prompt_cache_hit_tokens": 1152,
+            "prompt_cache_miss_tokens": 207
+          },
+          "costUpperYuan": 0.00180408,
+          "cumulativeUpperYuan": 5.275510640000007,
+          "latencyMs": 1824.6091000000001,
+          "timestamp": "2026-11-10T16:09:33.078Z"
+        }
+      },
+      "12254313-4595-4c70-9ce0-544f431f8393": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_paper_cord_tags-review1",
+        "requestHash": "53b80b366b807b415aca425440f5c6e81284d492f58e67d0d2361a20c7d7b302",
+        "reservedYuan": 0.02353,
+        "status": "settled",
+        "replacedReservation": {
+          "requestHash": "3fb771409f10477d071e4a6ec03e168ce4a231c7546c06fdb0a9c38d0d04ec84",
+          "reservedYuan": 0.056642
+        },
+        "responseEvidence": {
+          "file": "budget-responses/12254313-4595-4c70-9ce0-544f431f8393.json",
+          "requestHash": "53b80b366b807b415aca425440f5c6e81284d492f58e67d0d2361a20c7d7b302",
+          "responseHash": "d2e94d3a6d974890894a897617011a020748b8c7e3bca6292c8460372a438530"
+        },
+        "costUpperYuan": 0.00091872,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_paper_cord_tags-review1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1184,
+            "completion_tokens": 7,
+            "total_tokens": 1191,
+            "prompt_tokens_details": {
+              "cached_tokens": 768
+            },
+            "prompt_cache_hit_tokens": 768,
+            "prompt_cache_miss_tokens": 416
+          },
+          "costUpperYuan": 0.00091872,
+          "cumulativeUpperYuan": 5.276429360000007,
+          "latencyMs": 1033.7635,
+          "timestamp": "2026-11-10T16:09:34.124Z"
+        }
       }
     }
   },
@@ -382,13 +450,13 @@
           }
         ]
       },
-      "costUpperYuan": 5.268906320000007,
+      "costUpperYuan": 5.273706560000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
     {
       "index": 1,
-      "fingerprint": "4cf31ab32d7ea8f902cb2a8f91f025d64ae4b08357b54a5b797a4deb7a348dc1",
+      "fingerprint": "8aa50c5549fc99328ad2a802f81aa56a56e56a641e17b58e891aa04bf2cc0e4d",
       "count": 42,
       "passed": 42,
       "ids": [
@@ -435,22 +503,67 @@
         "recipe_w3c_felt_polishing_pad",
         "recipe_w3c_resin_cloth_patch"
       ],
-      "rewritten": 0,
+      "rewritten": 1,
       "manual": [],
       "pending": [],
       "flagged": [],
       "sample": [
-        "recipe_w3c_soap_wash_portion",
-        "recipe_w3c_resin_cloth_patch",
-        "recipe_w3c_quill_pen_pair",
-        "recipe_w3c_slate_writing_tile",
-        "recipe_w3c_wire_mesh_patch"
+        "recipe_w3c_slate_stylus",
+        "recipe_w3c_horsehair_dustbrush",
+        "recipe_w3c_broad_steel_chisel",
+        "recipe_w3c_steel_gouge_tip",
+        "recipe_w3c_resin_cloth_patch"
       ],
       "l4": {
         "approved": false,
         "notes": []
       },
-      "costUpperYuan": 5.273706560000007,
+      "l4History": [
+        {
+          "approved": false,
+          "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 923fc031，11-10 w3-journey 重审后）",
+          "readAt": "2026-11-10",
+          "notes": [
+            {
+              "id": "recipe_w3c_soap_wash_portion",
+              "note": "已读 context（刮片硬皂1、水2、干木刨屑1；厚底煮锅+偏柄木匙；25分钟；成品重0.5=水2×0.25）。正文「微温搅散不煮沸、冷却装自备容器、用于洗布刷具不作药物、25分钟」与 processFacts 一致。保留意见：末句称干木刨屑「未入锅，留作引火或吸液之用」，而该料在配方里是被消耗的材料，写法略含糊但可读作用于吸漏液，不构成与数值的冲突，接受。"
+            },
+            {
+              "id": "recipe_w3c_resin_cloth_patch",
+              "note": "已读 context（麻帆布1、松脂1、木炭1；煮锅+木匙+裁革剪；100分钟）。正文「剪补片、炭入小灶、松脂低温软化、木匙背只涂一面、冷却、只备材料须另走修补工序、100分钟、工具保留」与 processFacts 对应，未写价格。无不符。"
+            },
+            {
+              "id": "recipe_w3c_quill_pen_pair",
+              "note": "已读 context（净鹅羽管组1，修羽刀；45分钟）。正文「挑无裂羽管、斜口、背面开细缝、整组一份、墨液另备、不增识字熟练度、45分钟」与 processFacts 一致，未添加墨液等未列料。无不符。"
+            },
+            {
+              "id": "recipe_w3c_slate_writing_tile",
+              "note": "已读 context（板岩片1、细砂1、水1，平齿铁锉；90分钟）。正文铁锉修边、湿砂磨边、牌面留白不附白垩笔与 processFacts 一致。小问题：「全程九十钟」措辞不通顺；「以清水冲去残砂」在配额水之外多一道冲洗，属措辞偏宽，未改变耗材清单，接受。无事实矛盾。"
+            },
+            {
+              "id": "recipe_w3c_wire_mesh_patch",
+              "note": "已读 context（退火铁线1；窄嘴饰线钳+平齿铁锉；180分钟；失败回收0.25、injury 2）。正文「分段交绕小格、钳收端头、锉去锐刺、不另加料、网孔拦粗物不作锁具或甲片、失败仅回收四分之一铁线」与骨架 failure 及 processFacts 一致。无不符。"
+            },
+            {
+              "id": "recipe_w3c_stitchbound_folio",
+              "note": "本轮重审条目。已读 context 与正文：羊皮纸3张对折修齐、平脊骨压片压折脊、缝革扁锥刺孔、麻线+粗眼缝针缝订、修羽刀修边、约110分钟、不教技能，工具与材料全部来自配方，无未列耗材。价格依据：骨架价按材料成本派生（羊皮纸 4、麻线 5），成品 37 来自材料 17 派生；正文不含价格，与新价无矛盾。无不符。"
+            },
+            {
+              "id": "recipe_w3c_paper_cord_tags",
+              "note": "本轮重审条目（补核）。正文：修羽刀裁等宽小片、削四角、缝革扁锥每片一端刺孔、麻线分段对折穿孔打结、成组一份、纸面留白字迹由使用者填写；与 context（羊皮纸1+麻线1，修羽刀+缝革扁锥）一致，未用未列工具。价格依据：骨架价按材料成本派生（羊皮纸 4、麻线 5），材料 4+5=9，成品定价 21；正文无价格说法，无矛盾。瑕疵：「全程约七十零分钟」措辞不通（应为七十分钟），时长数值 70 正确，属文字瑕疵，非事实矛盾；不改正文，记录于此。"
+            }
+          ],
+          "rejection": {
+            "ids": [
+              "recipe_w3c_paper_cord_tags"
+            ],
+            "by": "主会话 L4 复核（Claude Opus 5.5）",
+            "at": "2026-11-10",
+            "reason": "recipe_w3c_paper_cord_tags 本轮新生成的 process 写成\"全程约七十零分钟\"，中文数字不合法；L1/L2 均未拦下。按标杆标准不批准发布，待按整类规则（L1 数字合法性与时长一致检查、L4 退回重写路径）修好后重写本条再审。"
+          }
+        }
+      ],
+      "costUpperYuan": 5.276429360000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }
