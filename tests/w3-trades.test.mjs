@@ -68,7 +68,7 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
  document.state.npcs.npc_hw_duanyan.coins=731;document.state.npcs.npc_hw_duanyan.trust=19;
  delete document.state.npcs.npc_hw_duanyan.inventory.item_iron;
  document.state.npcs.npc_hw_duanyan.inventory.item_mining_pick=0;
-    const before=structuredClone(document.state),next=assembleTradesCandidate(old,bones,lore);next.version='w3-trades-candidate';next.rules.version=next.version;
+    const before=structuredClone(document.state),next=assembleTradesCandidate(old,bones,lore,{mechanics:world.mechanics});next.version='w3-trades-candidate';next.rules.version=next.version;
  await store.create({id:'old',worldVersion:world.version,document});const nextHash=await registry.put(next);
  await store.transact('old',{id:'update',input:{type:'world_upgrade',worldHash:nextHash,eventId:'update'}},store.reducer);
  const after=(await store.read('old')).document,engine=await registry.get(after.worldHash);

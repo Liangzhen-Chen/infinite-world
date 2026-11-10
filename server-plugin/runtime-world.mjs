@@ -39,7 +39,7 @@ function annotate(row,patch,where){
 }
 // A row this world edition does not carry (a fixture rebuilt without a later
 // batch) is not part of it, as with biome tags.
-function annotateRows(rows,overlay={},collection){
+export function annotateRows(rows,overlay={},collection){
  const byId=new Map((rows??[]).map(row=>[row.id,row]));
  for(const [id,patch] of Object.entries(overlay))if(byId.has(id))annotate(byId.get(id),patch,`${collection}.${id}`);
 }
