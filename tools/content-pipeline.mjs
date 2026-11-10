@@ -23,14 +23,18 @@ export function defaultReviewRequest(entry, draft, context) {
 }
 // 起草型条目（既无冻结草稿也无离线草稿）在发起草请求前拿不到草稿，复核请求费用上界只能由规则推出：
 // 草稿是起草请求的模型输出，至多 max_tokens 个 token；复核请求 = 复核骨架 + 草稿。
-// 系数：每个输出 token 至多对应多少 UTF-8 字节。常见汉字 3 字节、至多 1–2 字一个 token；英文/数字 token 极少超过 8 字符；
-// 取 8 字节/token 作保守上界（deepseek-client.mjs 计费口径是“UTF-8 字节 ≥ token 数”，即输入侧按 1 字节=1 token 高估；这里方向相反，
-// 需要的是字节数的上界，故单独取 8，且不是对分词器的断言）。该系数只决定预留额；真实草稿一旦超过就停（见 one() 内检查），不会超额发送。
+// 系数：每个输出 token 至多对应多少 UTF-8 字节。取实测值，不估：tools/measure-output-bytes-per-token.mjs 遍历
+// world/drafts/**/budget-responses/*.json（本仓库真实 DeepSeek 调用证据），字节 = message.content + tool_calls arguments，token = usage.completion_tokens，
+// 排除无 token 数、带 reasoning_content、输出为空的记录（本次均为 0 条）。2026-11-10 实测 2453 条：最大 4.623、p99 4.191、中位 3.0；
+// 其中起草类（label 不含 -review）仅 20 条，最大 3.720。取法：对全部样本的最大值向上取整 = 5。
+// tests/content-pipeline.test.mjs 会重跑该统计，实测最大值一旦超过本常量即失败，需重新取值。样本里起草类偏少，所以超界照样停（见 one()）。
 // 占位草稿用 '"' 填充：嵌进复核请求（JSON 套 JSON）每个引号最多转义成 4 字节，使占位草稿覆盖转义膨胀的最坏情形。
-export const MAX_UTF8_BYTES_PER_OUTPUT_TOKEN=8;
+// 起草请求必须是真正的模型请求（有 messages 数组）；人工稿等没有模型输出上界的请求无法推出上界，按原规定停。
+export const MAX_UTF8_BYTES_PER_OUTPUT_TOKEN=5;
 const DEFAULT_MAX_TOKENS=1800; // 与 content-budget 的 reserveCeilingYuan 默认值一致
 export function maxDraftBytes(draftBody){
-  const tokens=draftBody?.max_tokens??DEFAULT_MAX_TOKENS;
+  if(!Array.isArray(draftBody?.messages))return NaN;
+  const tokens=draftBody.max_tokens??DEFAULT_MAX_TOKENS;
   return Number.isInteger(tokens)&&tokens>0?tokens*MAX_UTF8_BYTES_PER_OUTPUT_TOKEN:NaN;
 }
 function reviewIssues(review) {
