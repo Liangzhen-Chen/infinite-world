@@ -191,6 +191,10 @@ test('否定只管紧邻的动作或器具：不断、不停不是否定', () =>
   assert.deepEqual(fx('不用案板，在锅中搅匀。'), []);
   assert.deepEqual(fx('不再用案板。'), []);
   assert.deepEqual(fx('糊料不经加热，静置即可。'), []);
+  assert.deepEqual(fx('全程只作手压承板，不承重锤击。'), [], '否定与器具字之间隔一个性状词仍是否定');
+  assert.deepEqual(fx('此板不受力敲打。'), []);
+  assert.match(fxJoin('不断用案板搅匀。'), /骨架外器具「板」/, '不断不是否定，不能因放宽隔字而漏判');
+  assert.match(fxJoin('不停用剪裁片。'), /骨架外器具「剪」/);
 });
 
 test('火源交代必须是肯定句并与燃料对上', () => {
