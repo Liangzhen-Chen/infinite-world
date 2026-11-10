@@ -8,6 +8,7 @@
 //
 // 设计取向：只在能确定是错的时候判错。拿不准（如「万一」「千里」这类以单位字开头的词，「万万」，「零件」里的零）一律不判。
 
+import { unitIssues } from './content-units.mjs';
 const DIGIT = '零〇一二两三四五六七八九';
 const UNIT = '十百千万';
 const RUN = new RegExp(`[${DIGIT}${UNIT}]+`, 'gu');
@@ -343,7 +344,7 @@ export function applyDerivedDuration(draft, entry, fields = ['process']) {
 // 共用入口：draft 为草稿对象，entry 为骨架，context 为引用事实。返回错误字符串数组（可能为空）。
 export function numeralIssues(draft, entry = null, context = null) {
   if (!draft || typeof draft !== 'object') return [];
-  const errors = [];
+  const errors = [...unitIssues(draft, entry, context)];
   const minutes = skeletonMinutes(entry, context);
   for (const text of stringsOf(draft)) {
     errors.push(...chineseNumeralIssues(text, minutes));
