@@ -84,7 +84,7 @@ const sameScheduleInputs=(...args)=>{const hook=advanceHook('sameScheduleInputs'
 const sameNpcScheduleInputs=(...args)=>{const hook=advanceHook('sameNpcScheduleInputs');return hook?hook(...args):false;};
 const facilityRuntime=()=>{const hook=advanceHook('facilityRuntime');return hook?hook():{hasUnattendedFurnace:()=>true,recordFurnaceDeparture:()=>{}};};
 const withScheduleCache=(engine,d,task)=>{const hook=advanceHook('withScheduleCache');return hook?hook(engine,d,task):task();};
-const prepareHouseholdSubsistence=(d,e,day)=>advanceHook('prepareHouseholdSubsistence')?.(d,e,day);
+const prepareHouseholdSubsistence=(d,e,day)=>{advanceHook('prepareHouseholdSubsistence')?.(d,e,day);advanceHook('prepareSellerShares')?.(d,e,day);};// 卖家份额的需求快照与每日口粮规划同一入口、同一时点
 // Next interval boundary: end of span, next midnight, or the earliest registered event.
 export function nextAdvanceMinute(engine,d,now,end){
     prepareHouseholdSubsistence(d,engine,Math.floor(now/1440));

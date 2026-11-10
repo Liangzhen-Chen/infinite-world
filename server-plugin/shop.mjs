@@ -1,4 +1,5 @@
 import {rollDice} from './scheduler.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
 import {registerMerchandiseResolver} from './household-budget.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {toRational,fromRational} from './det-math.mjs';
@@ -248,7 +249,11 @@ function physicalOf(d,engine,read,id){
  if(!physical){physical=householdResources(d,engine,id,{marketSubstitution:false});read.physical.set(id,physical);}
  return physical;
 }
-function buyerNeeds(d,engine,state,place,read){
+// 卖家份额的需求快照：每个（聚落、日）开市时（日推进入口 prepareHouseholdSubsistence 同一时点）只算一次，
+// 存在 state.family.sellerShares={day,places:{聚落:[[户键,买方编号,need],...]}}（行序即 buyerNeeds 的编号序，保证求和顺序一致），跨日由新快照整体替换。
+// 当天所有卖家、所有商品共用这一份权重；读取路径只读、不写状态。
+// 没有当日快照（新世界、导入存档、日推进之前的读取、快照日序不是今天）时退回下面的实时算法。
+function liveBuyerNeeds(d,engine,state,place,read){
  let list=read.buyers.get(place);
  if(!list){
   list=[];
@@ -270,6 +275,23 @@ function buyerNeeds(d,engine,state,place,read){
  }
  return list;
 }
+function buyerNeeds(d,engine,state,place,read){
+ const snap=state.family?.sellerShares;
+ if(snap&&snap.day===Math.floor(state.minute/1440))return (snap.places?.[place]??[]).map(([id,buyer,need])=>({id,buyer,need}));
+ return liveBuyerNeeds(d,engine,state,place,read);
+}
+// 日推进入口调用：为每个有人的聚落按当前状态算一次买方需求快照（只存 [户键,买方编号,need]），当日已有则不重算。
+export function prepareSellerShares(d,engine,day=Math.floor(d.get('state','minute')/1440)){
+ if(d.get('state','family','sellerShares')?.day===day)return;
+ const state=d.get('state'),read={revision:null,engine,shops:[],physical:new Map(),reach:new Map(),buyers:new Map()};
+ const places=new Set();
+ for(const n of Object.values(state.npcs??{}))if(n?.location){const p=placeSettlement(engine,state,n.location).value;if(p)places.add(p);}
+ if(state.location){const p=placeSettlement(engine,state,state.location).value;if(p)places.add(p);}
+ const out={};
+ for(const place of [...places].sort())out[place]=liveBuyerNeeds(d,engine,state,place,read).map(b=>[b.id,b.buyer,b.need]);
+ d.set(['state','family','sellerShares'],{day,places:out});
+}
+registerAdvanceHook('prepareSellerShares',prepareSellerShares);
 // 买方名额的键：登记户用户编号，无户的人用本人编号。
 function buyerKey(engine,state,id){return personHousehold(engine,state,id).value?.id??id;}
 function sellerShare(d,engine,state,place,read,owner,seller,item,available){
