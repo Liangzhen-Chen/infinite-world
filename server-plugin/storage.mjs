@@ -519,9 +519,9 @@ export class PatchCursor {
             if (!indexedRecords && path[1] === 'created' && path.length >= 3) recordIndexes.delete(root.state?.created);
             else if (path[1] === 'family' && path[2] === 'illnesses' && path.length >= 4) recordIndexes.delete(root.state?.family?.illnesses);
         }
-        if (recordIndexDepth && path[0] === 'ledger' && path[1] === 'accounts') recordIndexes.delete(root.ledger?.accounts);
-        if (recordIndexDepth && path[0] === 'ledger') recordIndexes.delete(root.ledger);
-        if (recordIndexDepth && path[0] === 'holdings' && path[1] === 'rows') recordIndexes.delete(root.holdings?.rows);
+        if (path[0] === 'ledger' && path[1] === 'accounts') recordIndexes.delete(root.ledger?.accounts);
+        if (path[0] === 'ledger') recordIndexes.delete(root.ledger);
+        if (path[0] === 'holdings' && path[1] === 'rows') recordIndexes.delete(root.holdings?.rows);
         const value = patch.op === 'delete' ? undefined : clone ? cloneData(patch.value) : patch.value;
         this.onPatch?.(patch);
         const chain = this.chain;
