@@ -12,6 +12,9 @@ const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
 const crafting = J('world/rules/tables/balance/crafting.json');
 const LOSS = crafting.params.find(x => x.id === 'nutrition.processLoss').value.unheated;
 const ITEMS = J('world/meta/items.json'), kgOf = id => ITEMS.find(i => i.id === id).weight;
+const TOL = crafting.params.find(x => x.id === 'processing.roundingTolerance').value;
+// 夹具里放一条作者配方，单种原料 8 份：批量上限 = 作者手写配方里单种原料的最大份数（world 里没有加工场所的装料数据）
+const FIXTURE_CAP = 8;
 const dimensions = {
   moisture: {unit: '质量分数', min: 0, max: 1}, edibleFraction: {unit: '质量分数', min: 0, max: 1},
   energyDensity: {unit: '饱腹/kg 干物质', min: 0, max: 100000}, heatValue: {unit: 'MJ/kg 干物质', min: 0, max: 60}, charYield: {unit: '质量分数', min: 0, max: 1},
@@ -19,12 +22,12 @@ const dimensions = {
 const CHAR = {recipe: 'recipe_kc_char_wood_charcoal', input: 'item_wood', output: 'item_charcoal', constant: 0.25};
 const MILL = {recipe: 'recipe_kc_mill_oats_oat_flour', input: 'item_oats', output: 'item_oat_flour', constant: 0.8};
 
-// 夹具树：正式物品表，空配方表（作者配方会让同对原料跳过生成），覆盖层只给被测原料的 props
+// 夹具树：正式物品表，只有一条与被测原料无关的作者配方（作者配方覆盖同对原料时会跳过生成），覆盖层只给被测原料的 props
 function fixtureRoot({props = {}, withTable = true} = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kcprops-'));
   const w = (rel, data) => {fs.mkdirSync(path.dirname(path.join(root, rel)), {recursive: true}); fs.writeFileSync(path.join(root, rel), JSON.stringify(data));};
   w('world/meta/items.json', ITEMS);
-  w('world/meta/recipes.json', []);
+  w('world/meta/recipes.json', [{id: 'recipe_fixture_big', output: {item: 'item_fixture_out', quantity: 1}, materials: [{item: 'item_fixture_in', amount: FIXTURE_CAP}]}]);
   w('world/meta/mechanics/items.json', Object.fromEntries(Object.entries(props).map(([id, p]) => [id, {props: {...p, basis: '夹具'}}])));
   if (withTable) w('world/meta/mechanics/material-props.json', {dimensions, precedence: [], classes: {}});
   w('world/rules/tables/balance/crafting.json', crafting);
@@ -39,12 +42,13 @@ const expectQty = (kind, units, y) => Math.floor(units * kgOf(kind.input) * y / 
 // 实际产率的倒数：每公斤成品耗多少公斤原料（取整后产率越低，这个数越大）
 const inPerOut = (kind, o) => o.units * kgOf(kind.input) / (o.qty * kgOf(kind.output));
 
-// 批量规则：取整后的实际产率不低于派生产率的 90%，且没有更小的批量也能做到；批量内都做不到时，实际产率是批量内最高的。
-const realYield = (kind, u, y) => Math.min(200, expectQty(kind, u, y)) * kgOf(kind.output) / (u * kgOf(kind.input));
+// 批量规则：取整丢掉的部分（理论份数 − 取整份数）不超过 roundingTolerance 份产物，且没有更小的批量也能做到；批量上限内都做不到时，丢得最少者（同则批量小）。
+const lost = (kind, u, y) => { const q = u * kgOf(kind.input) * y / kgOf(kind.output); return q - Math.floor(q + 1e-9); };
 function assertBatchRule(kind, o, y) {
-  const ok = u => realYield(kind, u, y) >= y * 0.9 - 1e-12 && expectQty(kind, u, y) >= 1;
+  const ok = u => lost(kind, u, y) <= TOL + 1e-12 && expectQty(kind, u, y) >= 1;
+  assert.ok(o.units <= FIXTURE_CAP || !ok(FIXTURE_CAP), `批量不超过上限 ${FIXTURE_CAP}：${JSON.stringify(o)}`);
   if (ok(o.units)) { for (let u = 1; u < o.units; u++) assert.ok(!ok(u), `批量 ${u} 已达标，不该取 ${o.units}`); }
-  else for (let u = 1; u <= 12; u++) assert.ok(realYield(kind, u, y) <= realYield(kind, o.units, y) + 1e-12, `批量内应取实际产率最高者 ${JSON.stringify(o)}`);
+  else for (let u = 1; u <= FIXTURE_CAP; u++) assert.ok(expectQty(kind, u, y) < 1 || lost(kind, u, y) >= lost(kind, o.units, y) - 1e-12, `上限内应取丢得最少者 ${JSON.stringify(o)}`);
 }
 
 test('磨粉：可食部分比例不同，同一类加工的投入与出粉量按公式变化', () => {
