@@ -163,14 +163,17 @@ test('R2: speech subclass 137 has a native consumer without fabricated agreement
 
 test('R2: confession preserves the legal entry and refuses to promote a witness into an official',async()=>{
  const row=corpus.find(r=>r.id==='A3V2-180');
- const scene=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui','npc_hw_gucen','npc_hw_yanzhe']});assert.deepEqual(scene.setupUnmet,[]);
+ const scene=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui']});assert.deepEqual(scene.setupUnmet,[]);
+ // 作息即前置条件：600 分时 gucen 的作息在村口（loc_hw_gate），yanzhe 的在白石镇（loc_bs），都不在青灯；
+ // 摆在青灯的人会在下一次时钟节拍里被派出行（probe-gucen-travel），之后再摆位就报 travelling。
+ // 所以现场只放当时就在青灯的 linsui，守卫到村口报案，yanzhe 到白石镇衙署时才入场。
  let document=scene.document,crime;
  for(let i=0;i<30;i++){
   const out=await engine.reduce(document,{tool:'world_act',eventId:`R2-actual-theft-${i}`,args:{action:'core:crime.steal',slots:{target:'npc_hw_linsui',item:'item_bread'}}});
   if(out.result.success){document=applyPatches(document,out.patches);crime=out.result.case;break;}
  }
  assert.ok(crime);
- document=applyIntentSetup(engine,document,{present:['npc_hw_gucen']}).document;
+ document=applyIntentSetup(engine,document,{location:'loc_hw_gate',present:['npc_hw_gucen']}).document;
  let out=await engine.reduce(document,{tool:'world_act',eventId:'R2-actual-report',args:{action:'core:law.confess',slots:{case:crime,authority:'npc_hw_gucen'}}});
  assert.equal(out.result.receipt.status,'committed');document=applyPatches(document,out.patches);
  document=officeScene(engine,document,{location:'bld_bs_watch',minute:document.state.minute,present:['npc_bs_035_1','npc_hw_yanzhe']});

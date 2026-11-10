@@ -117,7 +117,9 @@ async function filingPremises(n){
   // no grain sack or evidence is invented to match frozen corpus prose.
   row.proposal.effects[0].payload={...row.proposal.effects[0].payload,incident:source,stolen:'coin_river',evidence:[paper.id]};
  }else{
-  document=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui','npc_hw_gucen']}).document;
+  // 作息即前置条件：600 分时 linsui 在青灯前厅接待，gucen 在村口巡查（480-720），所以盗窃现场只放 linsui，
+  // gucen 在下面报案时才到他的岗位村口；先把他摆在青灯会让他在下一次时钟节拍里出发，到不了村口（probe-gucen-travel）。
+  document=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui']}).document;
   let source;
   for(let i=0;i<30;i++){
    const eventId=`native-53-theft-${i}`,out=await engine.reduce(document,{tool:'world_act',eventId,args:{action:'core:crime.steal',slots:{target:'npc_hw_linsui',item:'item_ration'}}});
