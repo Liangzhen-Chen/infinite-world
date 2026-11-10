@@ -94,12 +94,14 @@ test('迁居改业、拘押、死亡使原店停止补货；接手原工作地�
  const none={...d,document:empty};advanceShops(none,engine,600,DAY);
  assert.equal(shelf(none,successor,'item_bread'),0);
  assert.match(none.get('state','records','shop:shop_hw_qingdeng').entries.find(e=>e.item==='item_bread'&&e.minute===DAY).reason,/没有人持有|余量/);
- // 正面：一位村民手里有 8 个面包，接手人从他那里补上货架，他的面包减少，货款进他的钱袋。
- const holder='npc_hw_shendu';d.set(['state','npcs',holder,'inventory','item_bread'],8);const holderCoins=d.get('state','npcs',holder,'coins');
+ // 正面：一位村民手里有 16 个面包，接手人从他那里补上货架，他的面包减少，货款进他的钱袋。
+ // 面包数按 R1 重推（t-sat：面包单件饱腹 30→16，各户口粮留存约翻倍）：探针 tools/probe-rules-a.mjs ew（ONLY=2）读到村民 shendu 手里 8 个面包时
+ // 留存 8、可售 0，货架补不上（旧：留存 4、8 个里可售 4）；16 个时留存 8、可售 8，进货后货架 6（added=6）、他剩 10，货款进钱袋。
+ const holder='npc_hw_shendu';d.set(['state','npcs',holder,'inventory','item_bread'],16);const holderCoins=d.get('state','npcs',holder,'coins');
  advanceShops(d,engine,600,DAY);assert.ok(shelf(d,successor,'item_bread')>0);assert.equal(shelf(d,host,'item_bread'),before);
  const bread=d.get('state','records','shop:shop_hw_qingdeng').entries.find(e=>e.item==='item_bread'&&e.minute===DAY&&e.added);
  const tax=Object.values(d.get('state','records')).filter(r=>r.category==='trade_tax'&&r.payer===holder).reduce((n,r)=>n+r.amount,0);
- assert.deepEqual(bread.from,[holder]);assert.equal(shelf(d,holder,'item_bread'),8-bread.added);assert.equal(shelf(d,successor,'item_bread'),bread.added);
+ assert.deepEqual(bread.from,[holder]);assert.equal(shelf(d,holder,'item_bread'),16-bread.added);assert.equal(shelf(d,successor,'item_bread'),bread.added);
  assert.equal(d.get('state','npcs',holder,'coins'),holderCoins+bread.paidCopper-tax);
 });
 
