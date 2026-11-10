@@ -3,7 +3,7 @@
   "createdAt": "2026-10-10T14:42:54.315Z",
   "seed": "f39125cd99fef80af9242b3efdf2b8e6f5ea5e91aa55a38a4776bb9d4fc652ea",
   "algorithm": "按id排序后，以SHA256(seed:counter)拒绝采样执行Fisher-Yates，取前10；创建后不重抽",
-  "corpusHash": "f6c499f16dd8529879ae6a6068e586a8ace3ae7b1f0c53d2d9f9b156277ed2d8",
+  "corpusHash": "78059b1d785a2984a6685ed966b060c335b3b79978091c95b2302be880b344ad",
   "audit": {
     "publishedItems": 486,
     "publishedRecipes": 391,
@@ -598,6 +598,2106 @@
           "id": "item_clay_bowl",
           "field": "tags",
           "source": "liquid_container：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_parchment",
+          "field": "basePrice",
+          "source": "修订回执 p1-revision-1：world/drafts/w3/trades/bones.json#item_parchment basePrice"
+        },
+        {
+          "id": "item_frame_saw",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_mortise_chisel",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_leather_shears",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_stitching_awl",
+          "field": "tags",
+          "source": "pierce：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_mining_pick",
+          "field": "tags",
+          "source": "pry：a3w-props 已审叠加层（revision a3w-props-1）；soil_work：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_sheet_shears",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_iron_wire",
+          "field": "tags",
+          "source": "unlock：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_drawknife",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_jeweler_pliers",
+          "field": "tags",
+          "source": "grip：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_jeweler_saw",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_button_shank_tool",
+          "field": "tags",
+          "source": "grip：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_quill_knife",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_broad_steel_chisel",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_hooked_pruning_knife",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_leather_round_knife",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_carpenters_adze",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_steel_gouge_tip",
+          "field": "tags",
+          "source": "cut：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "item_stitchbound_folio",
+          "field": "basePrice",
+          "source": "修订回执 p1-cascade-1：world/drafts/w3/journey/bones.json#item_stitchbound_folio basePrice"
+        },
+        {
+          "id": "item_paper_cord_tags",
+          "field": "basePrice",
+          "source": "修订回执 p1-cascade-1：world/drafts/w3/journey/bones.json#item_paper_cord_tags basePrice"
+        },
+        {
+          "id": "item_stitchbound_folio",
+          "field": "description",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/items/item_stitchbound_folio.json#item_stitchbound_folio description"
+        },
+        {
+          "id": "item_stitchbound_folio",
+          "field": "inspection",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/items/item_stitchbound_folio.json#item_stitchbound_folio inspection"
+        },
+        {
+          "id": "item_stitchbound_folio",
+          "field": "storage",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/items/item_stitchbound_folio.json#item_stitchbound_folio storage"
+        },
+        {
+          "id": "item_paper_cord_tags",
+          "field": "description",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/items/item_paper_cord_tags.json#item_paper_cord_tags description"
+        },
+        {
+          "id": "item_paper_cord_tags",
+          "field": "inspection",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/items/item_paper_cord_tags.json#item_paper_cord_tags inspection"
+        },
+        {
+          "id": "item_paper_cord_tags",
+          "field": "storage",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/items/item_paper_cord_tags.json#item_paper_cord_tags storage"
+        },
+        {
+          "id": "recipe_w3c_cracked_wheat_pot",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_cracked_wheat_pot.json#recipe_w3c_cracked_wheat_pot process"
+        },
+        {
+          "id": "recipe_w3c_lentil_leek_stew",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_lentil_leek_stew.json#recipe_w3c_lentil_leek_stew process"
+        },
+        {
+          "id": "recipe_w3c_broadbean_garlic_mash",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_broadbean_garlic_mash.json#recipe_w3c_broadbean_garlic_mash process"
+        },
+        {
+          "id": "recipe_w3c_parsnip_cream_pot",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_parsnip_cream_pot.json#recipe_w3c_parsnip_cream_pot process"
+        },
+        {
+          "id": "recipe_w3c_beet_barley_pot",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_beet_barley_pot.json#recipe_w3c_beet_barley_pot process"
+        },
+        {
+          "id": "recipe_w3c_pear_wheat_gruel",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_pear_wheat_gruel.json#recipe_w3c_pear_wheat_gruel process"
+        },
+        {
+          "id": "recipe_w3c_cheese_rye_panbread",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_cheese_rye_panbread.json#recipe_w3c_cheese_rye_panbread process"
+        },
+        {
+          "id": "recipe_w3c_walnut_honey_bites",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_walnut_honey_bites.json#recipe_w3c_walnut_honey_bites process"
+        },
+        {
+          "id": "recipe_w3c_poppy_rye_crisp",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_poppy_rye_crisp.json#recipe_w3c_poppy_rye_crisp process"
+        },
+        {
+          "id": "recipe_w3c_caraway_oat_crust",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_caraway_oat_crust.json#recipe_w3c_caraway_oat_crust process"
+        },
+        {
+          "id": "recipe_w3c_mushroom_barley_pot",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_mushroom_barley_pot.json#recipe_w3c_mushroom_barley_pot process"
+        },
+        {
+          "id": "recipe_w3c_mutton_turnip_stew",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_mutton_turnip_stew.json#recipe_w3c_mutton_turnip_stew process"
+        },
+        {
+          "id": "recipe_w3c_plum_honey_spread",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_plum_honey_spread.json#recipe_w3c_plum_honey_spread process"
+        },
+        {
+          "id": "recipe_w3c_pear_vinegar_slice",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_pear_vinegar_slice.json#recipe_w3c_pear_vinegar_slice process"
+        },
+        {
+          "id": "recipe_w3c_mustard_relish",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_mustard_relish.json#recipe_w3c_mustard_relish process"
+        },
+        {
+          "id": "recipe_w3c_dill_cucumber",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_dill_cucumber.json#recipe_w3c_dill_cucumber process"
+        },
+        {
+          "id": "recipe_w3c_garlic_butter",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_garlic_butter.json#recipe_w3c_garlic_butter process"
+        },
+        {
+          "id": "recipe_w3c_rendered_cooking_fat",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_rendered_cooking_fat.json#recipe_w3c_rendered_cooking_fat process"
+        },
+        {
+          "id": "recipe_w3c_salted_walnut",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_salted_walnut.json#recipe_w3c_salted_walnut process"
+        },
+        {
+          "id": "recipe_w3c_beet_vinegar_dice",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_beet_vinegar_dice.json#recipe_w3c_beet_vinegar_dice process"
+        },
+        {
+          "id": "recipe_w3c_canvas_satchel",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_canvas_satchel.json#recipe_w3c_canvas_satchel process"
+        },
+        {
+          "id": "recipe_w3c_padded_work_collar",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_padded_work_collar.json#recipe_w3c_padded_work_collar process"
+        },
+        {
+          "id": "recipe_w3c_folding_haversack",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_folding_haversack.json#recipe_w3c_folding_haversack process"
+        },
+        {
+          "id": "recipe_w3c_tool_apron_panel",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_tool_apron_panel.json#recipe_w3c_tool_apron_panel process"
+        },
+        {
+          "id": "recipe_w3c_felt_knee_pad",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_felt_knee_pad.json#recipe_w3c_felt_knee_pad process"
+        },
+        {
+          "id": "recipe_w3c_horsehair_sieve_cloth",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_horsehair_sieve_cloth.json#recipe_w3c_horsehair_sieve_cloth process"
+        },
+        {
+          "id": "recipe_w3c_laundry_mesh_bag",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_laundry_mesh_bag.json#recipe_w3c_laundry_mesh_bag process"
+        },
+        {
+          "id": "recipe_w3c_travel_sewing_wallet",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_travel_sewing_wallet.json#recipe_w3c_travel_sewing_wallet process"
+        },
+        {
+          "id": "recipe_w3c_ash_walking_stick",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_ash_walking_stick.json#recipe_w3c_ash_walking_stick process"
+        },
+        {
+          "id": "recipe_w3c_beech_press_board",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_beech_press_board.json#recipe_w3c_beech_press_board process"
+        },
+        {
+          "id": "recipe_w3c_bottle_divider_crate",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_bottle_divider_crate.json#recipe_w3c_bottle_divider_crate process"
+        },
+        {
+          "id": "recipe_w3c_clamping_wood_jaw",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_clamping_wood_jaw.json#recipe_w3c_clamping_wood_jaw process"
+        },
+        {
+          "id": "recipe_w3c_peg_drying_rack",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_peg_drying_rack.json#recipe_w3c_peg_drying_rack process"
+        },
+        {
+          "id": "recipe_w3c_beech_spatula",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_beech_spatula.json#recipe_w3c_beech_spatula process"
+        },
+        {
+          "id": "recipe_w3c_ladle_rest",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_ladle_rest.json#recipe_w3c_ladle_rest process"
+        },
+        {
+          "id": "recipe_w3c_cork_stop_set",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_cork_stop_set.json#recipe_w3c_cork_stop_set process"
+        },
+        {
+          "id": "recipe_w3c_horn_spoon_blank",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_horn_spoon_blank.json#recipe_w3c_horn_spoon_blank process"
+        },
+        {
+          "id": "recipe_w3c_slate_writing_tile",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_slate_writing_tile.json#recipe_w3c_slate_writing_tile process"
+        },
+        {
+          "id": "recipe_w3c_folding_map_board",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_folding_map_board.json#recipe_w3c_folding_map_board process"
+        },
+        {
+          "id": "recipe_w3c_broad_steel_chisel",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_broad_steel_chisel.json#recipe_w3c_broad_steel_chisel process"
+        },
+        {
+          "id": "recipe_w3c_hooked_pruning_knife",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_hooked_pruning_knife.json#recipe_w3c_hooked_pruning_knife process"
+        },
+        {
+          "id": "recipe_w3c_leather_round_knife",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_leather_round_knife.json#recipe_w3c_leather_round_knife process"
+        },
+        {
+          "id": "recipe_w3c_carpenters_adze",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_carpenters_adze.json#recipe_w3c_carpenters_adze process"
+        },
+        {
+          "id": "recipe_w3c_steel_gouge_tip",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_steel_gouge_tip.json#recipe_w3c_steel_gouge_tip process"
+        },
+        {
+          "id": "recipe_w3c_small_trowel",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_small_trowel.json#recipe_w3c_small_trowel process"
+        },
+        {
+          "id": "recipe_w3c_wire_mesh_patch",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_wire_mesh_patch.json#recipe_w3c_wire_mesh_patch process"
+        },
+        {
+          "id": "recipe_w3c_folded_brass_cuff",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_folded_brass_cuff.json#recipe_w3c_folded_brass_cuff process"
+        },
+        {
+          "id": "recipe_w3c_small_bell_frame",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_small_bell_frame.json#recipe_w3c_small_bell_frame process"
+        },
+        {
+          "id": "recipe_w3c_tin_inlay_strip",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_tin_inlay_strip.json#recipe_w3c_tin_inlay_strip process"
+        },
+        {
+          "id": "recipe_w3c_forged_chain_short",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_forged_chain_short.json#recipe_w3c_forged_chain_short process"
+        },
+        {
+          "id": "recipe_w3c_gate_hasps",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_gate_hasps.json#recipe_w3c_gate_hasps process"
+        },
+        {
+          "id": "recipe_w3c_quill_pen_pair",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_quill_pen_pair.json#recipe_w3c_quill_pen_pair process"
+        },
+        {
+          "id": "recipe_w3c_paste_cup_portion",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_paste_cup_portion.json#recipe_w3c_paste_cup_portion process"
+        },
+        {
+          "id": "recipe_w3c_stitchbound_folio",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_stitchbound_folio.json#recipe_w3c_stitchbound_folio process"
+        },
+        {
+          "id": "recipe_w3c_ledger_cover",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_ledger_cover.json#recipe_w3c_ledger_cover process"
+        },
+        {
+          "id": "recipe_w3c_paper_cord_tags",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_paper_cord_tags.json#recipe_w3c_paper_cord_tags process"
+        },
+        {
+          "id": "recipe_w3c_ink_wiping_pad",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_ink_wiping_pad.json#recipe_w3c_ink_wiping_pad process"
+        },
+        {
+          "id": "recipe_w3c_slate_stylus",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_slate_stylus.json#recipe_w3c_slate_stylus process"
+        },
+        {
+          "id": "recipe_w3c_reed_pen_box",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_reed_pen_box.json#recipe_w3c_reed_pen_box process"
+        },
+        {
+          "id": "recipe_w3c_book_spine_tape",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_book_spine_tape.json#recipe_w3c_book_spine_tape process"
+        },
+        {
+          "id": "recipe_w3c_seal_thread_bundle",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_seal_thread_bundle.json#recipe_w3c_seal_thread_bundle process"
+        },
+        {
+          "id": "recipe_w3c_silver_open_ring",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_silver_open_ring.json#recipe_w3c_silver_open_ring process"
+        },
+        {
+          "id": "recipe_w3c_bone_toggle_set",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_bone_toggle_set.json#recipe_w3c_bone_toggle_set process"
+        },
+        {
+          "id": "recipe_w3c_horn_comb",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_horn_comb.json#recipe_w3c_horn_comb process"
+        },
+        {
+          "id": "recipe_w3c_bristle_handbrush",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_bristle_handbrush.json#recipe_w3c_bristle_handbrush process"
+        },
+        {
+          "id": "recipe_w3c_horsehair_dustbrush",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_horsehair_dustbrush.json#recipe_w3c_horsehair_dustbrush process"
+        },
+        {
+          "id": "recipe_w3c_cork_float_set",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_cork_float_set.json#recipe_w3c_cork_float_set process"
+        },
+        {
+          "id": "recipe_w3c_redwood_dye",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_redwood_dye.json#recipe_w3c_redwood_dye process"
+        },
+        {
+          "id": "recipe_w3c_leather_wax_grease",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_leather_wax_grease.json#recipe_w3c_leather_wax_grease process"
+        },
+        {
+          "id": "recipe_w3c_seam_pitch_cake",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_seam_pitch_cake.json#recipe_w3c_seam_pitch_cake process"
+        },
+        {
+          "id": "recipe_w3c_soap_wash_portion",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_soap_wash_portion.json#recipe_w3c_soap_wash_portion process"
+        },
+        {
+          "id": "recipe_w3c_damp_sand_rub",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_damp_sand_rub.json#recipe_w3c_damp_sand_rub process"
+        },
+        {
+          "id": "recipe_w3c_wick_coil",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_wick_coil.json#recipe_w3c_wick_coil process"
+        },
+        {
+          "id": "recipe_w3c_linen_cleaning_swab",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_linen_cleaning_swab.json#recipe_w3c_linen_cleaning_swab process"
+        },
+        {
+          "id": "recipe_w3c_felt_polishing_pad",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_felt_polishing_pad.json#recipe_w3c_felt_polishing_pad process"
+        },
+        {
+          "id": "recipe_w3c_resin_cloth_patch",
+          "field": "process",
+          "source": "修订回执 w3-journey-text-1：world/drafts/w3/journey/recipes/recipe_w3c_resin_cloth_patch.json#recipe_w3c_resin_cloth_patch process"
+        },
+        {
+          "id": "item_pearl_barley",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pearl_barley.json#item_pearl_barley description"
+        },
+        {
+          "id": "item_pearl_barley",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pearl_barley.json#item_pearl_barley inspection"
+        },
+        {
+          "id": "item_pearl_barley",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pearl_barley.json#item_pearl_barley storage"
+        },
+        {
+          "id": "item_dry_peas",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_dry_peas.json#item_dry_peas description"
+        },
+        {
+          "id": "item_dry_peas",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_dry_peas.json#item_dry_peas inspection"
+        },
+        {
+          "id": "item_dry_peas",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_dry_peas.json#item_dry_peas storage"
+        },
+        {
+          "id": "item_turnip",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_turnip.json#item_turnip description"
+        },
+        {
+          "id": "item_turnip",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_turnip.json#item_turnip inspection"
+        },
+        {
+          "id": "item_turnip",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_turnip.json#item_turnip storage"
+        },
+        {
+          "id": "item_leek",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leek.json#item_leek description"
+        },
+        {
+          "id": "item_leek",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leek.json#item_leek inspection"
+        },
+        {
+          "id": "item_leek",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leek.json#item_leek storage"
+        },
+        {
+          "id": "item_onion",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_onion.json#item_onion description"
+        },
+        {
+          "id": "item_onion",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_onion.json#item_onion storage"
+        },
+        {
+          "id": "item_hen_egg",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hen_egg.json#item_hen_egg description"
+        },
+        {
+          "id": "item_hen_egg",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hen_egg.json#item_hen_egg inspection"
+        },
+        {
+          "id": "item_hen_egg",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hen_egg.json#item_hen_egg storage"
+        },
+        {
+          "id": "item_hazelnut",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hazelnut.json#item_hazelnut description"
+        },
+        {
+          "id": "item_hazelnut",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hazelnut.json#item_hazelnut inspection"
+        },
+        {
+          "id": "item_hazelnut",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hazelnut.json#item_hazelnut storage"
+        },
+        {
+          "id": "item_carrot",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_carrot.json#item_carrot description"
+        },
+        {
+          "id": "item_carrot",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_carrot.json#item_carrot storage"
+        },
+        {
+          "id": "item_cabbage",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_cabbage.json#item_cabbage description"
+        },
+        {
+          "id": "item_cabbage",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_cabbage.json#item_cabbage storage"
+        },
+        {
+          "id": "item_honey",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey.json#item_honey description"
+        },
+        {
+          "id": "item_honey",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey.json#item_honey inspection"
+        },
+        {
+          "id": "item_honey",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey.json#item_honey storage"
+        },
+        {
+          "id": "item_rapeseed_oil",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rapeseed_oil.json#item_rapeseed_oil description"
+        },
+        {
+          "id": "item_rapeseed_oil",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rapeseed_oil.json#item_rapeseed_oil storage"
+        },
+        {
+          "id": "item_fresh_apple",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_fresh_apple.json#item_fresh_apple description"
+        },
+        {
+          "id": "item_fresh_apple",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_fresh_apple.json#item_fresh_apple inspection"
+        },
+        {
+          "id": "item_fresh_apple",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_fresh_apple.json#item_fresh_apple storage"
+        },
+        {
+          "id": "item_rye_flour",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rye_flour.json#item_rye_flour description"
+        },
+        {
+          "id": "item_rye_flour",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rye_flour.json#item_rye_flour inspection"
+        },
+        {
+          "id": "item_rye_flour",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rye_flour.json#item_rye_flour storage"
+        },
+        {
+          "id": "item_pine_board",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pine_board.json#item_pine_board description"
+        },
+        {
+          "id": "item_pine_board",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pine_board.json#item_pine_board inspection"
+        },
+        {
+          "id": "item_pine_board",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pine_board.json#item_pine_board storage"
+        },
+        {
+          "id": "item_willow_rod",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_willow_rod.json#item_willow_rod description"
+        },
+        {
+          "id": "item_willow_rod",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_willow_rod.json#item_willow_rod inspection"
+        },
+        {
+          "id": "item_willow_rod",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_willow_rod.json#item_willow_rod storage"
+        },
+        {
+          "id": "item_hemp_thread",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hemp_thread.json#item_hemp_thread description"
+        },
+        {
+          "id": "item_hemp_thread",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hemp_thread.json#item_hemp_thread inspection"
+        },
+        {
+          "id": "item_hemp_thread",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hemp_thread.json#item_hemp_thread storage"
+        },
+        {
+          "id": "item_linseed_oil",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_linseed_oil.json#item_linseed_oil description"
+        },
+        {
+          "id": "item_linseed_oil",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_linseed_oil.json#item_linseed_oil storage"
+        },
+        {
+          "id": "item_copper_sheet",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_copper_sheet.json#item_copper_sheet description"
+        },
+        {
+          "id": "item_copper_sheet",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_copper_sheet.json#item_copper_sheet inspection"
+        },
+        {
+          "id": "item_copper_sheet",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_copper_sheet.json#item_copper_sheet storage"
+        },
+        {
+          "id": "item_red_ochre",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_red_ochre.json#item_red_ochre description"
+        },
+        {
+          "id": "item_red_ochre",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_red_ochre.json#item_red_ochre inspection"
+        },
+        {
+          "id": "item_red_ochre",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_red_ochre.json#item_red_ochre storage"
+        },
+        {
+          "id": "item_lampblack",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_lampblack.json#item_lampblack description"
+        },
+        {
+          "id": "item_lampblack",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_lampblack.json#item_lampblack inspection"
+        },
+        {
+          "id": "item_lampblack",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_lampblack.json#item_lampblack storage"
+        },
+        {
+          "id": "item_calcite_chalk",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_calcite_chalk.json#item_calcite_chalk description"
+        },
+        {
+          "id": "item_calcite_chalk",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_calcite_chalk.json#item_calcite_chalk storage"
+        },
+        {
+          "id": "item_pumice",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pumice.json#item_pumice description"
+        },
+        {
+          "id": "item_pumice",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pumice.json#item_pumice inspection"
+        },
+        {
+          "id": "item_pumice",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pumice.json#item_pumice storage"
+        },
+        {
+          "id": "item_parchment",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_parchment.json#item_parchment description"
+        },
+        {
+          "id": "item_parchment",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_parchment.json#item_parchment storage"
+        },
+        {
+          "id": "item_oak_gall",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_oak_gall.json#item_oak_gall description"
+        },
+        {
+          "id": "item_oak_gall",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_oak_gall.json#item_oak_gall inspection"
+        },
+        {
+          "id": "item_oak_gall",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_oak_gall.json#item_oak_gall storage"
+        },
+        {
+          "id": "item_gum_grain",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_gum_grain.json#item_gum_grain description"
+        },
+        {
+          "id": "item_gum_grain",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_gum_grain.json#item_gum_grain inspection"
+        },
+        {
+          "id": "item_gum_grain",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_gum_grain.json#item_gum_grain storage"
+        },
+        {
+          "id": "item_frame_saw",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_frame_saw.json#item_frame_saw description"
+        },
+        {
+          "id": "item_frame_saw",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_frame_saw.json#item_frame_saw inspection"
+        },
+        {
+          "id": "item_frame_saw",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_frame_saw.json#item_frame_saw storage"
+        },
+        {
+          "id": "item_mortise_chisel",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_mortise_chisel.json#item_mortise_chisel description"
+        },
+        {
+          "id": "item_mortise_chisel",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_mortise_chisel.json#item_mortise_chisel storage"
+        },
+        {
+          "id": "item_wood_mallet",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_mallet.json#item_wood_mallet description"
+        },
+        {
+          "id": "item_wood_mallet",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_mallet.json#item_wood_mallet inspection"
+        },
+        {
+          "id": "item_wood_mallet",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_mallet.json#item_wood_mallet storage"
+        },
+        {
+          "id": "item_hand_auger",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hand_auger.json#item_hand_auger description"
+        },
+        {
+          "id": "item_hand_auger",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hand_auger.json#item_hand_auger inspection"
+        },
+        {
+          "id": "item_hand_auger",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hand_auger.json#item_hand_auger storage"
+        },
+        {
+          "id": "item_bench_plane",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bench_plane.json#item_bench_plane description"
+        },
+        {
+          "id": "item_bench_plane",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bench_plane.json#item_bench_plane inspection"
+        },
+        {
+          "id": "item_bench_plane",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bench_plane.json#item_bench_plane storage"
+        },
+        {
+          "id": "item_wood_rasp",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_rasp.json#item_wood_rasp description"
+        },
+        {
+          "id": "item_wood_rasp",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_rasp.json#item_wood_rasp inspection"
+        },
+        {
+          "id": "item_wood_rasp",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_rasp.json#item_wood_rasp storage"
+        },
+        {
+          "id": "item_leather_shears",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_shears.json#item_leather_shears description"
+        },
+        {
+          "id": "item_leather_shears",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_shears.json#item_leather_shears inspection"
+        },
+        {
+          "id": "item_leather_shears",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_shears.json#item_leather_shears storage"
+        },
+        {
+          "id": "item_stitching_awl",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stitching_awl.json#item_stitching_awl description"
+        },
+        {
+          "id": "item_stitching_awl",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stitching_awl.json#item_stitching_awl inspection"
+        },
+        {
+          "id": "item_stitching_awl",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stitching_awl.json#item_stitching_awl storage"
+        },
+        {
+          "id": "item_bone_folder",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bone_folder.json#item_bone_folder description"
+        },
+        {
+          "id": "item_bone_folder",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bone_folder.json#item_bone_folder inspection"
+        },
+        {
+          "id": "item_bone_folder",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bone_folder.json#item_bone_folder storage"
+        },
+        {
+          "id": "item_grooving_wheel",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_grooving_wheel.json#item_grooving_wheel description"
+        },
+        {
+          "id": "item_grooving_wheel",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_grooving_wheel.json#item_grooving_wheel storage"
+        },
+        {
+          "id": "item_flat_file",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_flat_file.json#item_flat_file description"
+        },
+        {
+          "id": "item_flat_file",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_flat_file.json#item_flat_file inspection"
+        },
+        {
+          "id": "item_flat_file",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_flat_file.json#item_flat_file storage"
+        },
+        {
+          "id": "item_round_file",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_round_file.json#item_round_file description"
+        },
+        {
+          "id": "item_round_file",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_round_file.json#item_round_file inspection"
+        },
+        {
+          "id": "item_round_file",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_round_file.json#item_round_file storage"
+        },
+        {
+          "id": "item_iron_punch",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_iron_punch.json#item_iron_punch description"
+        },
+        {
+          "id": "item_iron_punch",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_iron_punch.json#item_iron_punch storage"
+        },
+        {
+          "id": "item_rivet_set",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rivet_set.json#item_rivet_set description"
+        },
+        {
+          "id": "item_rivet_set",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rivet_set.json#item_rivet_set inspection"
+        },
+        {
+          "id": "item_rivet_set",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rivet_set.json#item_rivet_set storage"
+        },
+        {
+          "id": "item_hand_bellows",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hand_bellows.json#item_hand_bellows description"
+        },
+        {
+          "id": "item_hand_bellows",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hand_bellows.json#item_hand_bellows inspection"
+        },
+        {
+          "id": "item_hand_bellows",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hand_bellows.json#item_hand_bellows storage"
+        },
+        {
+          "id": "item_stone_mortar",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stone_mortar.json#item_stone_mortar description"
+        },
+        {
+          "id": "item_stone_mortar",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stone_mortar.json#item_stone_mortar inspection"
+        },
+        {
+          "id": "item_stone_mortar",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stone_mortar.json#item_stone_mortar storage"
+        },
+        {
+          "id": "item_fine_sieve",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_fine_sieve.json#item_fine_sieve description"
+        },
+        {
+          "id": "item_fine_sieve",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_fine_sieve.json#item_fine_sieve inspection"
+        },
+        {
+          "id": "item_fine_sieve",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_fine_sieve.json#item_fine_sieve storage"
+        },
+        {
+          "id": "item_reed_pen",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_reed_pen.json#item_reed_pen description"
+        },
+        {
+          "id": "item_reed_pen",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_reed_pen.json#item_reed_pen inspection"
+        },
+        {
+          "id": "item_reed_pen",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_reed_pen.json#item_reed_pen storage"
+        },
+        {
+          "id": "item_ink_brush",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_ink_brush.json#item_ink_brush description"
+        },
+        {
+          "id": "item_ink_brush",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_ink_brush.json#item_ink_brush inspection"
+        },
+        {
+          "id": "item_ink_brush",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_ink_brush.json#item_ink_brush storage"
+        },
+        {
+          "id": "item_mining_pick",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_mining_pick.json#item_mining_pick description"
+        },
+        {
+          "id": "item_mining_pick",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_mining_pick.json#item_mining_pick inspection"
+        },
+        {
+          "id": "item_mining_pick",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_mining_pick.json#item_mining_pick storage"
+        },
+        {
+          "id": "item_sheet_shears",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_sheet_shears.json#item_sheet_shears description"
+        },
+        {
+          "id": "item_sheet_shears",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_sheet_shears.json#item_sheet_shears inspection"
+        },
+        {
+          "id": "item_sheet_shears",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_sheet_shears.json#item_sheet_shears storage"
+        },
+        {
+          "id": "item_barley_pea_stew",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_barley_pea_stew.json#item_barley_pea_stew description"
+        },
+        {
+          "id": "item_barley_pea_stew",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_barley_pea_stew.json#item_barley_pea_stew inspection"
+        },
+        {
+          "id": "item_barley_pea_stew",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_barley_pea_stew.json#item_barley_pea_stew storage"
+        },
+        {
+          "id": "item_leek_fish_pot",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leek_fish_pot.json#item_leek_fish_pot description"
+        },
+        {
+          "id": "item_leek_fish_pot",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leek_fish_pot.json#item_leek_fish_pot storage"
+        },
+        {
+          "id": "item_pea_spread",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pea_spread.json#item_pea_spread description"
+        },
+        {
+          "id": "item_pea_spread",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pea_spread.json#item_pea_spread storage"
+        },
+        {
+          "id": "item_turnip_oat_cake",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_turnip_oat_cake.json#item_turnip_oat_cake description"
+        },
+        {
+          "id": "item_turnip_oat_cake",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_turnip_oat_cake.json#item_turnip_oat_cake storage"
+        },
+        {
+          "id": "item_honey_nut_cake",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey_nut_cake.json#item_honey_nut_cake description"
+        },
+        {
+          "id": "item_honey_nut_cake",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey_nut_cake.json#item_honey_nut_cake inspection"
+        },
+        {
+          "id": "item_honey_nut_cake",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey_nut_cake.json#item_honey_nut_cake storage"
+        },
+        {
+          "id": "item_onion_egg_soup",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_onion_egg_soup.json#item_onion_egg_soup description"
+        },
+        {
+          "id": "item_onion_egg_soup",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_onion_egg_soup.json#item_onion_egg_soup storage"
+        },
+        {
+          "id": "item_honey_curd_spread",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey_curd_spread.json#item_honey_curd_spread description"
+        },
+        {
+          "id": "item_honey_curd_spread",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey_curd_spread.json#item_honey_curd_spread inspection"
+        },
+        {
+          "id": "item_honey_curd_spread",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_honey_curd_spread.json#item_honey_curd_spread storage"
+        },
+        {
+          "id": "item_vinegar_carrot",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_vinegar_carrot.json#item_vinegar_carrot description"
+        },
+        {
+          "id": "item_vinegar_carrot",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_vinegar_carrot.json#item_vinegar_carrot storage"
+        },
+        {
+          "id": "item_cabbage_barley",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_cabbage_barley.json#item_cabbage_barley description"
+        },
+        {
+          "id": "item_cabbage_barley",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_cabbage_barley.json#item_cabbage_barley inspection"
+        },
+        {
+          "id": "item_cabbage_barley",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_cabbage_barley.json#item_cabbage_barley storage"
+        },
+        {
+          "id": "item_apple_rye_griddle",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_apple_rye_griddle.json#item_apple_rye_griddle description"
+        },
+        {
+          "id": "item_apple_rye_griddle",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_apple_rye_griddle.json#item_apple_rye_griddle inspection"
+        },
+        {
+          "id": "item_apple_rye_griddle",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_apple_rye_griddle.json#item_apple_rye_griddle storage"
+        },
+        {
+          "id": "item_book_trades_kitchen",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_kitchen.json#item_book_trades_kitchen description"
+        },
+        {
+          "id": "item_book_trades_kitchen",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_kitchen.json#item_book_trades_kitchen inspection"
+        },
+        {
+          "id": "item_book_trades_kitchen",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_kitchen.json#item_book_trades_kitchen storage"
+        },
+        {
+          "id": "item_lidded_seed_box",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_lidded_seed_box.json#item_lidded_seed_box description"
+        },
+        {
+          "id": "item_lidded_seed_box",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_lidded_seed_box.json#item_lidded_seed_box inspection"
+        },
+        {
+          "id": "item_lidded_seed_box",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_lidded_seed_box.json#item_lidded_seed_box storage"
+        },
+        {
+          "id": "item_three_leg_stool",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_three_leg_stool.json#item_three_leg_stool description"
+        },
+        {
+          "id": "item_three_leg_stool",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_three_leg_stool.json#item_three_leg_stool inspection"
+        },
+        {
+          "id": "item_three_leg_stool",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_three_leg_stool.json#item_three_leg_stool storage"
+        },
+        {
+          "id": "item_wall_shelf",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wall_shelf.json#item_wall_shelf description"
+        },
+        {
+          "id": "item_wall_shelf",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wall_shelf.json#item_wall_shelf inspection"
+        },
+        {
+          "id": "item_wall_shelf",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wall_shelf.json#item_wall_shelf storage"
+        },
+        {
+          "id": "item_foot_rest",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_foot_rest.json#item_foot_rest description"
+        },
+        {
+          "id": "item_foot_rest",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_foot_rest.json#item_foot_rest storage"
+        },
+        {
+          "id": "item_bread_board",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bread_board.json#item_bread_board description"
+        },
+        {
+          "id": "item_bread_board",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bread_board.json#item_bread_board inspection"
+        },
+        {
+          "id": "item_bread_board",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bread_board.json#item_bread_board storage"
+        },
+        {
+          "id": "item_thread_rack",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_thread_rack.json#item_thread_rack description"
+        },
+        {
+          "id": "item_thread_rack",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_thread_rack.json#item_thread_rack inspection"
+        },
+        {
+          "id": "item_thread_rack",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_thread_rack.json#item_thread_rack storage"
+        },
+        {
+          "id": "item_walking_crutch",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_walking_crutch.json#item_walking_crutch description"
+        },
+        {
+          "id": "item_walking_crutch",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_walking_crutch.json#item_walking_crutch inspection"
+        },
+        {
+          "id": "item_walking_crutch",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_walking_crutch.json#item_walking_crutch storage"
+        },
+        {
+          "id": "item_shutter_panel",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_shutter_panel.json#item_shutter_panel description"
+        },
+        {
+          "id": "item_shutter_panel",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_shutter_panel.json#item_shutter_panel inspection"
+        },
+        {
+          "id": "item_shutter_panel",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_shutter_panel.json#item_shutter_panel storage"
+        },
+        {
+          "id": "item_tool_tray",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_tool_tray.json#item_tool_tray description"
+        },
+        {
+          "id": "item_tool_tray",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_tool_tray.json#item_tool_tray storage"
+        },
+        {
+          "id": "item_willow_creel",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_willow_creel.json#item_willow_creel description"
+        },
+        {
+          "id": "item_willow_creel",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_willow_creel.json#item_willow_creel inspection"
+        },
+        {
+          "id": "item_willow_creel",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_willow_creel.json#item_willow_creel storage"
+        },
+        {
+          "id": "item_book_trades_wood",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_wood.json#item_book_trades_wood description"
+        },
+        {
+          "id": "item_book_trades_wood",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_wood.json#item_book_trades_wood inspection"
+        },
+        {
+          "id": "item_book_trades_wood",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_wood.json#item_book_trades_wood storage"
+        },
+        {
+          "id": "item_belt_strap",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_belt_strap.json#item_belt_strap description"
+        },
+        {
+          "id": "item_belt_strap",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_belt_strap.json#item_belt_strap inspection"
+        },
+        {
+          "id": "item_belt_strap",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_belt_strap.json#item_belt_strap storage"
+        },
+        {
+          "id": "item_coin_wrap",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_coin_wrap.json#item_coin_wrap description"
+        },
+        {
+          "id": "item_coin_wrap",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_coin_wrap.json#item_coin_wrap inspection"
+        },
+        {
+          "id": "item_coin_wrap",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_coin_wrap.json#item_coin_wrap storage"
+        },
+        {
+          "id": "item_leather_thimble",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_thimble.json#item_leather_thimble description"
+        },
+        {
+          "id": "item_leather_thimble",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_thimble.json#item_leather_thimble inspection"
+        },
+        {
+          "id": "item_leather_thimble",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_thimble.json#item_leather_thimble storage"
+        },
+        {
+          "id": "item_scroll_wrap",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_scroll_wrap.json#item_scroll_wrap description"
+        },
+        {
+          "id": "item_scroll_wrap",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_scroll_wrap.json#item_scroll_wrap inspection"
+        },
+        {
+          "id": "item_scroll_wrap",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_scroll_wrap.json#item_scroll_wrap storage"
+        },
+        {
+          "id": "item_boot_gaiter",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_boot_gaiter.json#item_boot_gaiter description"
+        },
+        {
+          "id": "item_boot_gaiter",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_boot_gaiter.json#item_boot_gaiter inspection"
+        },
+        {
+          "id": "item_boot_gaiter",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_boot_gaiter.json#item_boot_gaiter storage"
+        },
+        {
+          "id": "item_leather_hinge",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_hinge.json#item_leather_hinge description"
+        },
+        {
+          "id": "item_leather_hinge",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_hinge.json#item_leather_hinge storage"
+        },
+        {
+          "id": "item_rein_patch",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rein_patch.json#item_rein_patch description"
+        },
+        {
+          "id": "item_rein_patch",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_rein_patch.json#item_rein_patch storage"
+        },
+        {
+          "id": "item_needle_case",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_needle_case.json#item_needle_case description"
+        },
+        {
+          "id": "item_needle_case",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_needle_case.json#item_needle_case storage"
+        },
+        {
+          "id": "item_leather_grip",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_grip.json#item_leather_grip description"
+        },
+        {
+          "id": "item_leather_grip",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_grip.json#item_leather_grip inspection"
+        },
+        {
+          "id": "item_leather_grip",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_leather_grip.json#item_leather_grip storage"
+        },
+        {
+          "id": "item_book_trades_leather",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_leather.json#item_book_trades_leather description"
+        },
+        {
+          "id": "item_book_trades_leather",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_leather.json#item_book_trades_leather inspection"
+        },
+        {
+          "id": "item_book_trades_leather",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_leather.json#item_book_trades_leather storage"
+        },
+        {
+          "id": "item_drawer_pull",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_drawer_pull.json#item_drawer_pull description"
+        },
+        {
+          "id": "item_drawer_pull",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_drawer_pull.json#item_drawer_pull storage"
+        },
+        {
+          "id": "item_door_latch",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_door_latch.json#item_door_latch description"
+        },
+        {
+          "id": "item_door_latch",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_door_latch.json#item_door_latch inspection"
+        },
+        {
+          "id": "item_door_latch",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_door_latch.json#item_door_latch storage"
+        },
+        {
+          "id": "item_boot_scraper",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_boot_scraper.json#item_boot_scraper description"
+        },
+        {
+          "id": "item_boot_scraper",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_boot_scraper.json#item_boot_scraper inspection"
+        },
+        {
+          "id": "item_boot_scraper",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_boot_scraper.json#item_boot_scraper storage"
+        },
+        {
+          "id": "item_stove_grid",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stove_grid.json#item_stove_grid description"
+        },
+        {
+          "id": "item_stove_grid",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stove_grid.json#item_stove_grid inspection"
+        },
+        {
+          "id": "item_stove_grid",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_stove_grid.json#item_stove_grid storage"
+        },
+        {
+          "id": "item_bucket_handle",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bucket_handle.json#item_bucket_handle description"
+        },
+        {
+          "id": "item_bucket_handle",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bucket_handle.json#item_bucket_handle inspection"
+        },
+        {
+          "id": "item_bucket_handle",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_bucket_handle.json#item_bucket_handle storage"
+        },
+        {
+          "id": "item_hinge_pin",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hinge_pin.json#item_hinge_pin description"
+        },
+        {
+          "id": "item_hinge_pin",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_hinge_pin.json#item_hinge_pin storage"
+        },
+        {
+          "id": "item_tent_stake",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_tent_stake.json#item_tent_stake description"
+        },
+        {
+          "id": "item_tent_stake",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_tent_stake.json#item_tent_stake storage"
+        },
+        {
+          "id": "item_strap_eye",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_strap_eye.json#item_strap_eye description"
+        },
+        {
+          "id": "item_strap_eye",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_strap_eye.json#item_strap_eye storage"
+        },
+        {
+          "id": "item_pot_lifter",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pot_lifter.json#item_pot_lifter description"
+        },
+        {
+          "id": "item_pot_lifter",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_pot_lifter.json#item_pot_lifter storage"
+        },
+        {
+          "id": "item_sack_pricker",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_sack_pricker.json#item_sack_pricker description"
+        },
+        {
+          "id": "item_sack_pricker",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_sack_pricker.json#item_sack_pricker inspection"
+        },
+        {
+          "id": "item_sack_pricker",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_sack_pricker.json#item_sack_pricker storage"
+        },
+        {
+          "id": "item_book_trades_iron",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_iron.json#item_book_trades_iron description"
+        },
+        {
+          "id": "item_book_trades_iron",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_iron.json#item_book_trades_iron inspection"
+        },
+        {
+          "id": "item_book_trades_iron",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_iron.json#item_book_trades_iron storage"
+        },
+        {
+          "id": "item_ochre_paint",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_ochre_paint.json#item_ochre_paint description"
+        },
+        {
+          "id": "item_ochre_paint",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_ochre_paint.json#item_ochre_paint inspection"
+        },
+        {
+          "id": "item_ochre_paint",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_ochre_paint.json#item_ochre_paint storage"
+        },
+        {
+          "id": "item_soot_ink",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_soot_ink.json#item_soot_ink inspection"
+        },
+        {
+          "id": "item_soot_ink",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_soot_ink.json#item_soot_ink storage"
+        },
+        {
+          "id": "item_gall_wash",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_gall_wash.json#item_gall_wash description"
+        },
+        {
+          "id": "item_gall_wash",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_gall_wash.json#item_gall_wash inspection"
+        },
+        {
+          "id": "item_gall_wash",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_gall_wash.json#item_gall_wash storage"
+        },
+        {
+          "id": "item_chalk_powder",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_chalk_powder.json#item_chalk_powder description"
+        },
+        {
+          "id": "item_chalk_powder",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_chalk_powder.json#item_chalk_powder inspection"
+        },
+        {
+          "id": "item_chalk_powder",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_chalk_powder.json#item_chalk_powder storage"
+        },
+        {
+          "id": "item_polishing_powder",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_polishing_powder.json#item_polishing_powder description"
+        },
+        {
+          "id": "item_polishing_powder",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_polishing_powder.json#item_polishing_powder inspection"
+        },
+        {
+          "id": "item_polishing_powder",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_polishing_powder.json#item_polishing_powder storage"
+        },
+        {
+          "id": "item_parchment_bookmark",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_parchment_bookmark.json#item_parchment_bookmark description"
+        },
+        {
+          "id": "item_parchment_bookmark",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_parchment_bookmark.json#item_parchment_bookmark storage"
+        },
+        {
+          "id": "item_copper_nameplate",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_copper_nameplate.json#item_copper_nameplate description"
+        },
+        {
+          "id": "item_copper_nameplate",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_copper_nameplate.json#item_copper_nameplate inspection"
+        },
+        {
+          "id": "item_copper_nameplate",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_copper_nameplate.json#item_copper_nameplate storage"
+        },
+        {
+          "id": "item_waxed_thread",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_waxed_thread.json#item_waxed_thread description"
+        },
+        {
+          "id": "item_waxed_thread",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_waxed_thread.json#item_waxed_thread storage"
+        },
+        {
+          "id": "item_wax_seal_blank",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wax_seal_blank.json#item_wax_seal_blank description"
+        },
+        {
+          "id": "item_wax_seal_blank",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wax_seal_blank.json#item_wax_seal_blank inspection"
+        },
+        {
+          "id": "item_wax_seal_blank",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wax_seal_blank.json#item_wax_seal_blank storage"
+        },
+        {
+          "id": "item_wood_marking_kit",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_marking_kit.json#item_wood_marking_kit description"
+        },
+        {
+          "id": "item_wood_marking_kit",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_marking_kit.json#item_wood_marking_kit inspection"
+        },
+        {
+          "id": "item_wood_marking_kit",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_wood_marking_kit.json#item_wood_marking_kit storage"
+        },
+        {
+          "id": "item_book_trades_artisan",
+          "field": "description",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_artisan.json#item_book_trades_artisan description"
+        },
+        {
+          "id": "item_book_trades_artisan",
+          "field": "inspection",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_artisan.json#item_book_trades_artisan inspection"
+        },
+        {
+          "id": "item_book_trades_artisan",
+          "field": "storage",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/items/item_book_trades_artisan.json#item_book_trades_artisan storage"
+        },
+        {
+          "id": "recipe_w3b_barley_pea_stew",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_barley_pea_stew.json#recipe_w3b_barley_pea_stew process"
+        },
+        {
+          "id": "recipe_w3b_leek_fish_pot",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_leek_fish_pot.json#recipe_w3b_leek_fish_pot process"
+        },
+        {
+          "id": "recipe_w3b_pea_spread",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_pea_spread.json#recipe_w3b_pea_spread process"
+        },
+        {
+          "id": "recipe_w3b_honey_nut_cake",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_honey_nut_cake.json#recipe_w3b_honey_nut_cake process"
+        },
+        {
+          "id": "recipe_w3b_onion_egg_soup",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_onion_egg_soup.json#recipe_w3b_onion_egg_soup process"
+        },
+        {
+          "id": "recipe_w3b_honey_curd_spread",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_honey_curd_spread.json#recipe_w3b_honey_curd_spread process"
+        },
+        {
+          "id": "recipe_w3b_vinegar_carrot",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_vinegar_carrot.json#recipe_w3b_vinegar_carrot process"
+        },
+        {
+          "id": "recipe_w3b_apple_rye_griddle",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_apple_rye_griddle.json#recipe_w3b_apple_rye_griddle process"
+        },
+        {
+          "id": "recipe_w3b_lidded_seed_box",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_lidded_seed_box.json#recipe_w3b_lidded_seed_box process"
+        },
+        {
+          "id": "recipe_w3b_three_leg_stool",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_three_leg_stool.json#recipe_w3b_three_leg_stool process"
+        },
+        {
+          "id": "recipe_w3b_wall_shelf",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_wall_shelf.json#recipe_w3b_wall_shelf process"
+        },
+        {
+          "id": "recipe_w3b_bread_board",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_bread_board.json#recipe_w3b_bread_board process"
+        },
+        {
+          "id": "recipe_w3b_thread_rack",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_thread_rack.json#recipe_w3b_thread_rack process"
+        },
+        {
+          "id": "recipe_w3b_shutter_panel",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_shutter_panel.json#recipe_w3b_shutter_panel process"
+        },
+        {
+          "id": "recipe_w3b_tool_tray",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_tool_tray.json#recipe_w3b_tool_tray process"
+        },
+        {
+          "id": "recipe_w3b_willow_creel",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_willow_creel.json#recipe_w3b_willow_creel process"
+        },
+        {
+          "id": "recipe_w3b_scroll_wrap",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_scroll_wrap.json#recipe_w3b_scroll_wrap process"
+        },
+        {
+          "id": "recipe_w3b_boot_gaiter",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_boot_gaiter.json#recipe_w3b_boot_gaiter process"
+        },
+        {
+          "id": "recipe_w3b_rein_patch",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_rein_patch.json#recipe_w3b_rein_patch process"
+        },
+        {
+          "id": "recipe_w3b_needle_case",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_needle_case.json#recipe_w3b_needle_case process"
+        },
+        {
+          "id": "recipe_w3b_drawer_pull",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_drawer_pull.json#recipe_w3b_drawer_pull process"
+        },
+        {
+          "id": "recipe_w3b_door_latch",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_door_latch.json#recipe_w3b_door_latch process"
+        },
+        {
+          "id": "recipe_w3b_boot_scraper",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_boot_scraper.json#recipe_w3b_boot_scraper process"
+        },
+        {
+          "id": "recipe_w3b_stove_grid",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_stove_grid.json#recipe_w3b_stove_grid process"
+        },
+        {
+          "id": "recipe_w3b_bucket_handle",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_bucket_handle.json#recipe_w3b_bucket_handle process"
+        },
+        {
+          "id": "recipe_w3b_hinge_pin",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_hinge_pin.json#recipe_w3b_hinge_pin process"
+        },
+        {
+          "id": "recipe_w3b_tent_stake",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_tent_stake.json#recipe_w3b_tent_stake process"
+        },
+        {
+          "id": "recipe_w3b_strap_eye",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_strap_eye.json#recipe_w3b_strap_eye process"
+        },
+        {
+          "id": "recipe_w3b_pot_lifter",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_pot_lifter.json#recipe_w3b_pot_lifter process"
+        },
+        {
+          "id": "recipe_w3b_sack_pricker",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_sack_pricker.json#recipe_w3b_sack_pricker process"
+        },
+        {
+          "id": "recipe_w3b_ochre_paint",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_ochre_paint.json#recipe_w3b_ochre_paint process"
+        },
+        {
+          "id": "recipe_w3b_soot_ink",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_soot_ink.json#recipe_w3b_soot_ink process"
+        },
+        {
+          "id": "recipe_w3b_gall_wash",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_gall_wash.json#recipe_w3b_gall_wash process"
+        },
+        {
+          "id": "recipe_w3b_chalk_powder",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_chalk_powder.json#recipe_w3b_chalk_powder process"
+        },
+        {
+          "id": "recipe_w3b_polishing_powder",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_polishing_powder.json#recipe_w3b_polishing_powder process"
+        },
+        {
+          "id": "recipe_w3b_copper_nameplate",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_copper_nameplate.json#recipe_w3b_copper_nameplate process"
+        },
+        {
+          "id": "recipe_w3b_waxed_thread",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_waxed_thread.json#recipe_w3b_waxed_thread process"
+        },
+        {
+          "id": "recipe_w3b_wax_seal_blank",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_wax_seal_blank.json#recipe_w3b_wax_seal_blank process"
+        },
+        {
+          "id": "recipe_w3b_wood_marking_kit",
+          "field": "process",
+          "source": "修订回执 w3-trades-text-1：world/drafts/w3/trades/recipes/recipe_w3b_wood_marking_kit.json#recipe_w3b_wood_marking_kit process"
+        },
+        {
+          "id": "item_clay_bowl",
+          "field": "capacityMl",
+          "added": true,
+          "source": "a3cap-data 已审叠加层（revision a3cap-data-1）：capacityMl"
+        },
+        {
+          "id": "item_clay_oil_lamp",
+          "field": "lifecycle",
+          "added": true,
+          "source": "s507-life 已审叠加层（revision s507-life-1）：lifecycle"
+        }
+      ]
+    },
+    {
+      "at": "2026-11-10T23:15:53.261Z",
+      "beforeCorpusHash": "f6c499f16dd8529879ae6a6068e586a8ace3ae7b1f0c53d2d9f9b156277ed2d8",
+      "afterCorpusHash": "78059b1d785a2984a6685ed966b060c335b3b79978091c95b2302be880b344ad",
+      "sampleEntityHashesUnchanged": true,
+      "basis": [
+        {
+          "id": "item_clay_bowl",
+          "field": "tags",
+          "source": "liquid_container：a3w-props 已审叠加层（revision a3w-props-1）"
+        },
+        {
+          "id": "recipe_w3_fish_broth",
+          "field": "minutes",
+          "source": "a3-world 已审批整行回执（revision a3-world-approval-1）：recipe_w3_fish_broth.minutes"
+        },
+        {
+          "id": "recipe_w3_fish_broth",
+          "field": "process",
+          "source": "a3-world 已审批整行回执（revision a3-world-approval-1）：recipe_w3_fish_broth.process"
         },
         {
           "id": "item_parchment",
