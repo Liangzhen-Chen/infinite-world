@@ -116,9 +116,9 @@ export function checkOptArgs(args, root) {
       let real = p; try { real = fs.realpathSync(p); } catch { /* 不存在：只看字面路径 */ }
       const inside = q => q === base || q.startsWith(base + path.sep);
       if (!inside(p) || !inside(real)) bad.push(`${args[i - 1]} ${v}：路径越出临时副本`);
-    } else if (type === 'number') { if (!/^d+$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为非负整数`); }
-    else if (type === 'id') { if (!/^[w.-]+$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为单个标识`); }
-    else if (type === 'list') { if (!/^[w.-]+(,[w.-]+)*$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为逗号分隔的标识`); }
+    } else if (type === 'number') { if (!/^\d+$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为非负整数`); }
+    else if (type === 'id') { if (!/^[\w.-]+$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为单个标识`); }
+    else if (type === 'list') { if (!/^[\w.-]+(,[\w.-]+)*$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为逗号分隔的标识`); }
     else if (type === 'url') bad.push(`${args[i - 1]}：url 类参数不得出现在只读入口`);
     else if (type.startsWith('enum:')) { if (!type.slice(5).split('|').includes(v)) bad.push(`${args[i - 1]} ${v}：取值应为 ${type.slice(5)}`); }
     else bad.push(`${args[i - 1]}：未知类型 ${type}`);

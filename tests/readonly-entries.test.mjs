@@ -82,7 +82,7 @@ test('全量层分组：测试文件数等于 RUN_GROUPS，每组最坏耗时（
 });
 
 test('修饰参数（opt）都声明了值的类型；url 类不得出现在只读入口，类型有效', () => {
-  const valid = t => ['flag', 'path', 'number', 'id', 'list', 'url'].includes(t) || /^enum:[w|-]+$/.test(t);
+  const valid = t => ['flag', 'path', 'number', 'id', 'list', 'url'].includes(t) || /^enum:[\w|-]+$/.test(t);
   for (const [f, m] of Object.entries(FLAGS)) if (m.kind === 'opt') assert.ok(valid(m.type), `${f} 的值类型未声明或无效：${m.type}`);
   for (const [file, ...args] of READONLY_ENTRIES) for (const a of args) if (FLAGS[a]?.kind === 'opt') assert.notEqual(FLAGS[a].type, 'url', `${file} ${a}`);
 });
