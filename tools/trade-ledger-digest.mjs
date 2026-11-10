@@ -1,6 +1,7 @@
 // 确定性诊断：同一种子推进 N 天，把每一步产生的全部补丁（含成交记录 market-trade:*、账本过账 ledger.*）按顺序做链式哈希，输出笔数与哈希。
 // 用于证明性能改动不改变实际成交与账本：改前改后各跑一次，哈希与笔数必须完全相等。只用新旧版本都有的公开接口。
-// 用法：node tools/trade-ledger-digest.mjs [天数=30] [--world full|farm]   （farm：farm-pests 夹具世界，覆盖作物生长与收获）
+// 用法：node tools/trade-ledger-digest.mjs [天数=30] [--world full|farm] [--compare tools/trade-ledger-digest.baseline.json]
+// --compare：与基线文件里该世界的“期望”逐项比对（耗时等不参与），不一致退出码 1；基线与复现命令见 trade-ledger-digest.baseline.json。   （farm：farm-pests 夹具世界，覆盖作物生长与收获）
 import fs from 'node:fs/promises';
 import crypto from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
@@ -39,7 +40,7 @@ for(let day=0;day<days;day++){
   patchCount++;
   const path=p.path.join('.');
   if(path.startsWith('state.records.market-trade:'))tradePatches++;
-  if(path[0]==='l'&&path.startsWith('ledger'))ledgerPatches++;
+  if(p.path[0]==='ledger')ledgerPatches++;
   chain=hash(chain+JSON.stringify(canon(p)));
   // 路径分组：前两级；第三级对 records 取键名冒号前的前缀（记录类别），其余取原第三级。用于比较不同版本多出的写入来自哪里。
   group(groups2,groups3,p.path);
@@ -48,4 +49,15 @@ for(let day=0;day<days;day++){
 }
 const trades=Object.entries(document.state.records??{}).filter(([k,r])=>k.startsWith('market-trade:')||r?.category==='market_trade');
 const tradeHash=hash(JSON.stringify(canon(trades))),ledgerHash=hash(JSON.stringify(canon({accounts:document.ledger?.accounts,flows:document.ledger?.flows,lots:document.ledger?.lots})));
-console.log(JSON.stringify({world:mode,days,finalMinute:document.state.minute,耗时秒:Math.round((performance.now()-t0)/100)/10,补丁总数:patchCount,推进步数:steps,成交补丁数:tradePatches,账本过账补丁数:ledgerPatches,成交记录数:trades.length,补丁链哈希:chain,成交记录哈希:tradeHash,账本终态哈希:ledgerHash,游标写入次数_revision:revisions,输出补丁分组前两级:groups2,输出补丁分组含第三级:groups3,游标写入分组前两级:rev2,游标写入分组含第三级:rev3},null,1));
+const result={world:mode,days,finalMinute:document.state.minute,补丁总数:patchCount,成交补丁数:tradePatches,账本过账补丁数:ledgerPatches,成交记录数:trades.length,补丁链哈希:chain,成交记录哈希:tradeHash,账本终态哈希:ledgerHash,耗时秒:Math.round((performance.now()-t0)/100)/10,推进步数:steps,游标写入次数_revision:revisions,输出补丁分组前两级:groups2,输出补丁分组含第三级:groups3,游标写入分组前两级:rev2,游标写入分组含第三级:rev3};
+// 不参与比对：耗时秒、推进步数、游标写入次数与各分组统计（只作诊断）。
+const ignored=['耗时秒','推进步数','游标写入次数_revision','输出补丁分组前两级','输出补丁分组含第三级','游标写入分组前两级','游标写入分组含第三级'];
+console.log(JSON.stringify({...result,不参与比对:ignored},null,1));
+const compareAt=args.indexOf('--compare');
+if(compareAt>=0){
+ const baseline=JSON.parse(await fs.readFile(args[compareAt+1],'utf8')),expected=(baseline[`${mode}-${days}`]??baseline[mode])?.期望;
+ if(!expected){console.error(`基线里没有世界 ${mode}`);process.exit(2);}
+ const diffs=Object.entries(expected).filter(([k,v])=>result[k]!==v).map(([k,v])=>`${k}: 期望 ${v}，实际 ${result[k]}`);
+ if(diffs.length){console.error(['与基线不一致：',...diffs].join(String.fromCharCode(10)));process.exit(1);}
+ console.error('与基线一致');
+}
