@@ -22,6 +22,11 @@ const ZERO_WORD_NEXT = '件碎星散头用钱售食落工';
 // 「千」接在这些字前是国际单位前缀（一百千米、四百千克、二十千帕），不是数字里的千位。
 const SI_AFTER_KILO = '米克帕瓦焦赫伏安欧升卡';
 
+// 时间单位统一表（L1 各规则与总时长删除正则共用，不各写一套）。值为分钟数。
+// 小时、时辰：项目已定一时辰两小时（见规则 (b) 的换算依据）；钟头即小时（《现代汉语词典》「钟头」：小时）；刻钟：十五分钟（《现代汉语词典》「刻钟」）。
+const MINUTE_FACTOR = { 分钟: 1, 小时: 60, 时辰: 120, 钟头: 60, 刻钟: 15 };
+const UNIT_ALT = Object.keys(MINUTE_FACTOR).join('|');
+
 const fail = reason => ({ ok: false, reason });
 const good = value => ({ ok: true, value });
 
@@ -150,15 +155,16 @@ export function chineseNumeralIssues(text, minutes = null) {
     if (result.skip) continue;
     const between = BETWEEN_PATTERN.exec(text.slice(run.end, run.end + 5));
     const overall = new RegExp(`${OVERALL}$`, 'u').test(text.slice(0, run.index));
-    const directUnit = /^(分钟|小时|时辰)/u.exec(text.slice(run.end))?.[1];
+    const directUnit = new RegExp(`^(${UNIT_ALT})`, 'u').exec(text.slice(run.end))?.[1];
     if (result.ok === true && run.text !== '一' && between && !BETWEEN_OK.includes(between[1]) && !BETWEEN_UNSURE.includes(between[1]) && !(between[2] === '小时' && between[3] && '候代'.includes(between[3]))) {
       errors.push(`数字「${run.text}」与时间单位「${between[2]}」之间夹了「${between[1]}」，写法不合法，概数应写「${run.text}多${between[2]}」或「${run.text}来${between[2]}」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, between[2], overall, minutes)}`);
       continue;
     }
-    const gap = /^[ \t\u00a0\u3000]+(分钟|小时|时辰)/u.exec(text.slice(run.end));
+    const gap = new RegExp(`^[ \t\u00a0\u3000]+(${UNIT_ALT})`, 'u').exec(text.slice(run.end));
     if (result.ok === true && gap) { errors.push(`数字「${run.text}」与时间单位「${gap[1]}」之间夹了空白，中文正文里数字与单位必须紧连（原文「${around}」）${hintFor({ text: run.text, value: result.value }, gap[1], overall, minutes)}`); continue; }
     const typo = BETWEEN_ZHONG.exec(text.slice(run.end));
-    if (result.ok === true && typo && !ZHONG_OK.includes(typo[1])) { errors.push(`数字「${run.text}」与「钟」之间是「${typo[1]}」，应为「分」（错字），时长应写「分钟」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, '分钟', overall, minutes)}`); continue; }
+    if (result.ok === true && run.text !== '一' && typo && !ZHONG_OK.includes(typo[1])) { // 单字「一」常是词的一部分（一夜钟），与夹字规则一样整串跳过
+      errors.push(`数字「${run.text}」与「钟」之间是「${typo[1]}」，应为「分」（错字），时长应写「分钟」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, '分钟', overall, minutes)}`); continue; }
     if (result.ok === false) errors.push(`中文数字「${run.text}」不合法：${result.reason}（原文「${around}」）${hintFor(repairNumeral(run.text), directUnit, overall, minutes)}`);
     else if (text[run.end] === '钟' && /[十百千万]/.test(run.text)) errors.push(`数字「${run.text}」后直接接「钟」不合法，时长应写「分钟」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, '分钟', overall, minutes)}`);
   }
@@ -184,11 +190,13 @@ const BETWEEN_UNSURE = '人更点';
 //   刻：一刻钟（《现代汉语词典》「刻钟」：十五分钟）；
 //   个：两个钟头（《现代汉语词典》量词「个」，用于钟头）。
 //   量词（说的是钟这个物件，如「一座钟」，不是时长，拿不准，不判）：座、口、台、只、架、面。取自通行量词表中能修饰「钟」的量词（《现代汉语词典》座、口、台、只、架、面各条的钟表用法），不再扩充；
+//   动量词（敲钟的次数，如「敲了三下钟」「两声钟」「撞了一通钟」）：下、声、响、通、记、遍、次（《现代汉语词典》各字的动量词用法，用于敲、撞、响钟）；
+//   物量词（钟这个物件，如「一尊钟」「一副钟」「一套钟」「一对钟」「一枚钟」）：尊、枚、副、对、套（《现代汉语词典》量词条）；以上均不是时长，拿不准，不判；
 //   更：五更钟，更次（时辰）语境，不是时长，不判。
 // 夹两个及以上汉字的（如「三十个半钟」）形态太杂，维持不判。能推出数值时给出「分钟」的修复建议。
-const ZHONG_OK = '分点刻个座口台只架面更';
+const ZHONG_OK = '分点刻个座口台只架面下声响通记遍次尊枚副对套更';
 const BETWEEN_ZHONG = /^([\u4e00-\u9fff])钟/u;
-const BETWEEN_PATTERN = /^(\p{Script=Han})(分钟|小时|时辰)(.?)/u;
+const BETWEEN_PATTERN = new RegExp(`^([\u4e00-\u9fff])(${UNIT_ALT})(.?)`, 'u');
 
 // 规则 (b)：时长。
 // 换算依据：项目已定一时辰两小时，半个时辰=60分钟（world/design/a3-world-catalog.mjs 中 recipe_w3_fish_broth 的 boundary：
@@ -196,11 +204,11 @@ const BETWEEN_PATTERN = /^(\p{Script=Han})(分钟|小时|时辰)(.?)/u;
 // 只判带总括词的时长（全程、总耗时、总用时、总计、前后、整个过程、整件活计、全部；与 w3-content.mjs 原有的总耗时规则同一组词）：
 // 配方里「浸泡约30分钟」「反复回炉保温，共约20分钟」「合计约120分钟」多为分步小计，只是总耗时的一部分，对应关系不确定，不判。故「共」「合计」只作修饰语、不作总括词。
 // minutes 的来源只认条目自身的 minutes（或 facts/processFacts 对象里的 minutes）；有多个不同取值时视为不确定，不判。
-const MINUTE_FACTOR = { 分钟: 1, 小时: 60, 时辰: 120 };
 const NUM = '(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万]+)';
-const OVERALL = '(?:总耗时|总用时|总计|全程|前后|整个过程|整件活计|全部)(?:(?:约|大约|为|需要|需|要|一共|共|工时|计))*\\s*';
-// 第 4 组：概数助词（多、余、来、几）。骨架 minutes 是确定值，总括时长带概数即不一致。
-const DURATION = `${OVERALL}(?:(${NUM})个半|(半)个?|(${NUM})个?([多余来几])?)(分钟|小时|时辰)`;
+// 总括词可连写（全程总耗时二百一十分钟），故整体重复一次以上。
+const OVERALL = '(?:(?:总耗时|总用时|总计|全程|前后|整个过程|整件活计|全部)(?:(?:约|大约|为|需要|需|要|一共|共|工时|计))*\\s*)+';
+// 第 4、5 组：概数助词（多、余、来、几），可在「个」前后（二十余个时辰、三个多小时）；第 6 组：时间单位。骨架 minutes 是确定值，总括时长带概数即不一致。
+const DURATION = `${OVERALL}(?:(${NUM})个半|(半)个?|(${NUM})([多余来几])?个?([多余来几])?)(${UNIT_ALT})`;
 
 export function skeletonMinutes(entry, context = null) {
   const found = new Set();
@@ -215,8 +223,9 @@ export function durationIssues(text, minutes) {
   const errors = [];
   if (!Number.isFinite(minutes)) return errors;
   for (const m of text.matchAll(new RegExp(DURATION, 'gu'))) {
-    if (m[4]) { errors.push(`正文时长「${m[0].trim()}」是概数（「${m[4]}」），而骨架 minutes=${minutes} 是确定值，不一致；总时长应写作「${minutes}分钟」，以骨架为准`); continue; }
-    const factor = MINUTE_FACTOR[m[5]];
+    const approx = m[4] ?? m[5];
+    if (approx) { errors.push(`正文时长「${m[0].trim()}」是概数（「${approx}」），而骨架 minutes=${minutes} 是确定值，不一致；总时长应写作「${minutes}分钟」，以骨架为准`); continue; }
+    const factor = MINUTE_FACTOR[m[6]];
     let amount;
     if (m[2]) amount = 0.5;
     else {
@@ -226,7 +235,7 @@ export function durationIssues(text, minutes) {
       else { const p = parseChineseNumeral(raw); if (!p.ok) continue; n = p.value; } // 数字本身不合法由规则 (a) 报
       amount = m[1] !== undefined ? n + 0.5 : n;
     }
-    if (Math.abs(amount * factor - minutes) > 1e-9) errors.push(`正文时长「${m[0].trim()}」与骨架 minutes=${minutes} 不一致（时辰按一时辰两小时、半个时辰=60分钟换算）；应写作「${minutes}分钟」${minutes % factor === 0 && factor > 1 ? `或「${minutes / factor}${m[5]}」` : ''}，以骨架为准`);
+    if (Math.abs(amount * factor - minutes) > 1e-9) errors.push(`正文时长「${m[0].trim()}」与骨架 minutes=${minutes} 不一致（时辰按一时辰两小时、半个时辰=60分钟换算）；应写作「${minutes}分钟」${minutes % factor === 0 && factor > 1 ? `或「${minutes / factor}${m[6]}」` : ''}，以骨架为准`);
   }
   return errors;
 }
@@ -235,7 +244,7 @@ export function durationIssues(text, minutes) {
 export function arabicDurationIssues(text, minutes = null) {
   const errors = [];
   if (!/\p{Script=Han}/u.test(text)) return errors;
-  for (const m of text.matchAll(/([0-9]+(?:[.][0-9]+)?)(?:[ \u00a0\u3000]+(分钟|小时|时辰)|([\u4e00-\u9fff])钟)/gu)) {
+  for (const m of text.matchAll(new RegExp(`([0-9]+(?:[.][0-9]+)?)(?:[ \u00a0\u3000]+(${UNIT_ALT})|([\u4e00-\u9fff])钟)`, 'gu'))) {
     if (m[3] && ZHONG_OK.includes(m[3])) continue;
     const overall = new RegExp(`${OVERALL}$`, 'u').test(text.slice(0, m.index));
     const repaired = { text: m[1], value: Number(m[1]) };
@@ -252,13 +261,33 @@ export function arabicDurationIssues(text, minutes = null) {
 // 前者无论模型写成什么样（九十 分钟、五十份钟、七十多分钟），最终总时长都等于骨架，一类错误整体消失，不多花请求。
 // 数字统一写阿拉伯数字加「分钟」，紧连，无空格，不用中文数字：避开中文数字的合法性与写法分歧（九十、九零）。
 // 只处理总括词引导的时长；分步时长（浸泡约30分钟）不动。
-const STRIP_DURATION = new RegExp(`${OVERALL}(?:${NUM}|半)个?[ \u00a0\u3000]*[多余来几]?[ \u00a0\u3000]*[\u4e00-\u9fff]?(?:分钟|小时|时辰|钟)(?:左右|上下)?`, 'gu');
+// 删除只作用于「纯总时长分句」：分句里除总括词、约、左右和时长之外没有别的内容。
+// 混有其他内容的（全程需要30分钟浸泡、全程七十分钟内完成）删掉会连带删掉有用的话，不删，改由 L1 判错（impureDurationIssues），要求总时长单独成句，之后走重写。
+const SP = '[ \u00a0\u3000]';
+const DURATION_BODY = `(?:${NUM}|半)个?${SP}*[多余来几]?个?${SP}*[\u4e00-\u9fff]?(?:${UNIT_ALT}|钟)(?:左右|上下)?`;
+const STRIP_FIND = new RegExp(`${OVERALL}${DURATION_BODY}`, 'u');
+const STRIP_PURE = new RegExp(`^${SP}*${OVERALL}${DURATION_BODY}${SP}*$`, 'u');
+const CLAUSE_SPLIT = /([，、；。！？])/u;
 export function deriveDurationSentence(minutes) { return `全程${minutes}分钟。`; }
 export function stripOverallDuration(text) {
-  return text.replace(STRIP_DURATION, '')
+  const parts = text.split(CLAUSE_SPLIT);
+  let kept = '';
+  for (let i = 0; i < parts.length; i += 2) if (!STRIP_PURE.test(parts[i])) kept += parts[i] + (parts[i + 1] ?? '');
+  return kept
     .replace(/[，、；]\s*(?=[，、；。！？]|$)/gu, '') // 删除后遗留的孤立逗号
     .replace(/(^|[。！？])\s*[，、；]+/gu, '$1')
     .replace(/([。！？])[。！？]+/gu, '$1').replace(/^[。！？\s]+/u, '').trim();
+}
+// L1：总括时长混在其他内容的分句里。只在骨架 minutes 已知（派生会追加总时长句）时判。
+export function impureDurationIssues(text, minutes) {
+  const errors = [];
+  if (!Number.isFinite(minutes)) return errors;
+  const parts = text.split(CLAUSE_SPLIT);
+  for (let i = 0; i < parts.length; i += 2) {
+    const found = STRIP_FIND.exec(parts[i]);
+    if (found && !STRIP_PURE.test(parts[i])) errors.push(`总时长「${found[0].trim()}」混在其他内容里（原文「${parts[i].trim()}」）；总时长须单独成句，由系统按骨架生成，请删去这个总时长，只保留其他内容`);
+  }
+  return errors;
 }
 // 对草稿的 fields（默认 process）应用：骨架 minutes 为有限数时，删去模型自带的总时长并追加派生句。无 minutes 的条目原样返回。幂等。
 export function applyDerivedDuration(draft, entry, fields = ['process']) {
@@ -283,6 +312,7 @@ export function numeralIssues(draft, entry = null, context = null) {
     errors.push(...chineseNumeralIssues(text, minutes));
     errors.push(...durationIssues(text, minutes));
     errors.push(...arabicDurationIssues(text, minutes));
+    errors.push(...impureDurationIssues(text, minutes));
   }
   return [...new Set(errors)];
 }
