@@ -92,3 +92,14 @@ test('runContentPipeline 对任意工具的 validateDraft 统一追加数字规�
   assert.equal(byId.recipe_bad.status,'manual');
   assert.ok(byId.recipe_bad.errors.some(e=>String(e).includes('七十零')));
 });
+
+test('文末小时不被「候代」豁免误放过；岁小时候不判', () => {
+  assert.equal(chineseNumeralIssues('歇了三十再小时').length, 1);
+  assert.equal(chineseNumeralIssues('三十岁小时候的事').length, 0);
+});
+
+test('单字「一」常是词的一部分，不判；多字数字照判', () => {
+  assert.equal(chineseNumeralIssues('静置一整小时').length, 0);
+  assert.equal(chineseNumeralIssues('须一定时辰').length, 0);
+  assert.equal(chineseNumeralIssues('全程七十整分钟').length, 1);
+});
