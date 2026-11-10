@@ -2,6 +2,10 @@
 // 只用公共入口（loadWorld/WorldEngine/applyIntentSetup/reduce），与 tests/s4-filing.test.mjs 的 scene()+steal() 同序列。
 //   node tools/probe-gucen-travel.mjs [摆位人物 id ...]   缺省：gucen、linsui、hezhou（s4-filing 的摆位）；
 //   a3-owner2-R 的摆位是 npc_hw_linsui npc_hw_gucen npc_hw_yanzhe
+//   node tools/probe-gucen-travel.mjs --day <npc id> [...]   打印各人全天作息（开始 结束 地点）
+//   node tools/probe-gucen-travel.mjs --table              列表：测试文件 → NPC → 摆放地点与该时刻作息地点（只扫
+//       tests/ 里 {…location:'X'…present:[…]…} 形式的摆位；minute 取字面量，没写则按 600；不一致者标 MISMATCH；
+//       直接写 npcs[x].location= 的夹具不在此列，需另行 grep）
 // 输出：摆位时 gucen 的状态（含 coins）、推进中 engine.route 的每次调用（谁、从哪到哪、什么时刻、费用、当时的 coins），
 // 推进后 gucen 的 scheduleTravel 与路费账。
 import fs from 'node:fs/promises';
@@ -10,10 +14,34 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {applyIntentSetup} from './a3-score.mjs';
 import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
+import {readdirSync,readFileSync} from 'node:fs';
 
-const G='npc_hw_gucen',PRESENT=process.argv.length>2?process.argv.slice(2):[G,'npc_hw_linsui','npc_hw_hezhou'],root=new URL('../',import.meta.url);
+const MODE=process.argv[2]?.startsWith('--')?process.argv[2]:null;
+const G='npc_hw_gucen',PRESENT=MODE?[]:process.argv.length>2?process.argv.slice(2):[G,'npc_hw_linsui','npc_hw_hezhou'],root=new URL('../',import.meta.url);
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('tests/fixtures/legacy/seed.json',root),'utf8'));
 const engine=new WorldEngine(world),initial=engine.createCharacter(seed,{},'s406-filing');
+if(MODE==='--day'){
+ for(const id of process.argv.slice(3)){const rows=[];for(let m=0;m<1440;){const sl=scheduleAt(engine,id,m,initial.state);if(!sl){rows.push([m,'-','无作息']);break;}rows.push([m,sl.until,sl.location,sl.activity]);m=sl.until;}
+  console.log('day',id,JSON.stringify(rows));}
+ process.exit(0);
+}
+if(MODE==='--table'){
+ const dir=new URL('tests/',root),rows=[];
+ for(const f of readdirSync(dir).filter(n=>n.endsWith('.mjs')).sort()){
+  const text=readFileSync(new URL(f,dir),'utf8');
+  for(const m of text.matchAll(/\{[^{}]*present:\[([^\]]*)\][^{}]*\}/g)){
+   const loc=/location:\s*'([^']+)'/.exec(m[0])?.[1],min=/minute:\s*(\d+)/.exec(m[0])?.[1];
+   const line=text.slice(0,m.index).split(String.fromCharCode(10)).length;
+   if(!loc)continue;
+   for(const id of [...m[1].matchAll(/'(npc_[a-z0-9_]+)'/g)].map(x=>x[1])){
+    const at=min===undefined?600:Number(min),sl=engine.byId.get(id)?scheduleAt(engine,id,at,initial.state):null;
+    rows.push({file:f,line,npc:id,placed:loc,minute:min??'(600 假定)',scheduled:sl?.location??(engine.byId.get(id)?'无作息':'目录无此人'),mismatch:!!sl&&sl.location!==loc});
+   }
+  }
+ }
+ for(const r of rows)console.log(r.mismatch?'MISMATCH':'ok      ',r.file+':'+r.line,r.npc,'摆放',r.placed,'作息',r.scheduled,'minute',r.minute);
+ process.exit(0);
+}
 const loaded=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:PRESENT,coins:100});
 let document=loaded.document;
 const show=(tag,d)=>{for(const id of PRESENT){const n=d.state.npcs[id];console.log(tag,id,JSON.stringify({minute:d.state.minute,location:n.location,activity:n.activity,coins:n.coins,scheduleTravel:n.scheduleTravel??null}));}};
