@@ -61,5 +61,7 @@ export function materializeRuntimeWorld(world){
  // uses, SL's husbandry takes); it stays on the runtime world under its key.
  for(const [key,table] of Object.entries(m))if(!mechanicsCollections.includes(key)&&key!=='siteEcology')world[key]=table;
  delete world.mechanics;
+ // 不可枚举标记：这个世界的覆盖层已被合并并消耗（structuredClone 不带走它，只标原对象）；候选装配据此拒绝把它当原样世界用（tools/w3-content.mjs assembleW3）。
+ Object.defineProperty(world,'runtimeMaterialized',{value:true,enumerable:false,configurable:true});
  return world;
 }
