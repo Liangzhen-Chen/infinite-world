@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {deriveItemAttributes,drinkableByRule,validateDrinkable} from '../server-plugin/item-class.mjs';
+import {deriveItemAttributes,drinkableByRule,validateDrinkable,withDrinkable} from '../server-plugin/item-class.mjs';
 import {createTagSourceResolver} from '../tools/approved-revisions.mjs';
 import {loadRuntimeWorld} from '../tools/load-world.mjs';
 
@@ -61,6 +61,14 @@ test('validateDrinkable：手贴到不满足规则的物品上被拒；去掉规
  const ok=fixture();ok.items.find(i=>i.id==='brew').tags.push('drinkable');
  assert.deepEqual(validateDrinkable(ok),[]);
  assert.deepEqual(validateDrinkable(fixture()),[]);
+});
+
+test('推导出的 drinkable 按规范顺序排在 food 之前，等于原手贴顺序（指纹含 tags 顺序）', () => {
+ assert.deepEqual(withDrinkable(['milk','food']),['milk','drinkable','food']);
+ assert.deepEqual(withDrinkable(['food','water']),['drinkable','food','water']);
+ assert.deepEqual(withDrinkable(['x']),['x','drinkable']);
+ const w=fixture();w.items.find(i=>i.id==='m').tags=['milk','food'];deriveItemAttributes(w);
+ assert.deepEqual(w.items.find(i=>i.id==='m').tags,['milk','drinkable','food']);
 });
 
 test('整类不变量：正式物品表里带 drinkable 的物品都满足规则或来自已审叠加层，规则推出的也与运行时一致', async () => {
