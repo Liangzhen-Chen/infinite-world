@@ -1,8 +1,8 @@
 {
   "index": 1,
-  "fingerprint": "f2fa3e5703c9213fe17a1f92e78c74ae724d327b6f90ed555945661ee1403a5d",
+  "fingerprint": "7c96243d1cb127b2062778a5dc8b31d8175fb77371053f781d19c0cac9da8a67",
   "count": 42,
-  "passed": 42,
+  "passed": 41,
   "ids": [
     "recipe_w3c_horn_spoon_blank",
     "recipe_w3c_slate_writing_tile",
@@ -47,78 +47,22 @@
     "recipe_w3c_felt_polishing_pad",
     "recipe_w3c_resin_cloth_patch"
   ],
-  "rewritten": 4,
-  "manual": [],
+  "rewritten": 12,
+  "manual": [
+    "recipe_w3c_redwood_dye"
+  ],
   "pending": [],
   "flagged": [],
   "sample": [
-    "recipe_w3c_soap_wash_portion",
-    "recipe_w3c_felt_polishing_pad",
-    "recipe_w3c_reed_pen_box",
-    "recipe_w3c_damp_sand_rub",
-    "recipe_w3c_paste_cup_portion"
+    "recipe_w3c_shell_button_set",
+    "recipe_w3c_small_trowel",
+    "recipe_w3c_steel_gouge_tip",
+    "recipe_w3c_horn_comb",
+    "recipe_w3c_ink_wiping_pad"
   ],
   "l4": {
     "approved": false,
-    "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 34ad3e72，w3-journey 5 条重写后）",
-    "readAt": "2026-11-10",
-    "notes": [
-      {
-        "id": "recipe_w3c_soap_wash_portion",
-        "note": "不批准。核对骨架：硬皂片1、水2、木刨屑1；煮锅、木匙；25分钟。\"总耗时25分钟\"一致；但（1）\"以偏柄木匙顺纹浅匙腹沿锅缘压搅\"把匙的物品说明硬塞进动作，病句；（2）通篇没有点火，却写\"在微温中化散\"和\"皂片全散后停火\"，前后工序不连贯；（3）\"留作引火或吸液之用\"的\"吸液\"是自添用途。退回重写。"
-      },
-      {
-        "id": "recipe_w3c_felt_polishing_pad",
-        "note": "核对骨架：毛毡片1、窄幅麻布1、麻线1；裁革剪、缝针；65分钟。正文铺毡、剪圆、对折麻布覆边、粗眼缝针缝合、锁圆周边线、检查，工序连贯，两件工具齐用；\"总耗时65分钟\"一致；\"窄幅麻布\"为物品名；无副产品、工具保留，无自添设定。通过。"
-      },
-      {
-        "id": "recipe_w3c_reed_pen_box",
-        "note": "不批准。核对骨架：芦管束1、软木薄片1、麻线1；修羽刀、骨压片；100分钟。\"总耗时100分钟\"一致，工序（截筒、修塞片、麻线绕扎、骨片压伏、塞入）连贯，工具齐用；但\"取干直芦管束一根\"与骨架数量单位不符（骨架为束1份，束不能数作\"根\"），数量写法错误。退回重写。"
-      },
-      {
-        "id": "recipe_w3c_damp_sand_rub",
-        "note": "核对骨架：细砂1、水1；煮锅、木匙；20分钟；无前置技能要求。正文取砂加水、木匙翻拌成湿散粒、压开结团、握团轻触即散、只磨耐磨粗面、容器另备，工序连贯，两件工具齐用；\"全程二十分钟\"合法且与骨架一致（位于句中，不影响通顺）。通过。"
-      },
-      {
-        "id": "recipe_w3c_paste_cup_portion",
-        "note": "核对骨架：干浆粉1、水1、木刨屑1；煮锅、木匙；35分钟。正文水粉各一份、先下少量水再分次撒粉、小火糊化、搅至稠而痕短暂留存、刨屑只作引火、连锅放凉后倒入自备容器，工序连贯，两件工具齐用；\"总耗时三十五分钟\"合法且一致。通过。"
-      },
-      {
-        "id": "recipe_w3c_paper_cord_tags",
-        "note": "核对骨架：羊皮纸1、麻线1；修羽刀、缝革扁锥；70分钟。正文平铺、裁小片、削齐、锥孔、麻线分段穿系打结、整组一份、纸面留白，工序连贯（上轮\"叠好的小片\"断层已消除），两件工具齐用；\"全程70分钟\"一致，数字写法合法。通过。"
-      },
-      {
-        "id": "recipe_w3c_cork_float_set",
-        "note": "核对骨架：软木薄片1、麻线1；修羽刀、缝革扁锥；90分钟。正文剖分浮片、修圆、锥系孔、麻线逐片穿绕打结、整组一份，工序连贯，两件工具齐用；\"全程90分钟\"一致，上轮\"九十整分钟/多\"问题已消除。通过。"
-      },
-      {
-        "id": "recipe_w3c_slate_stylus",
-        "note": "核对骨架：板岩片1、细砂1、水1；平齿铁锉；90分钟。正文选窄段、铁锉修杆、湿细砂磨钝侧棱与尖端、指腹试棱，工序连贯，材料与工具齐；\"全程约90分钟\"与骨架一致（\"约\"为概数写法，沿用此前口径，不构成数值矛盾），\"九十加分钟\"错字已消除；\"夹稳\"按手持固定理解，未增设夹具。通过。"
-      },
-      {
-        "id": "recipe_w3c_slate_writing_tile",
-        "note": "核对骨架：板岩片1、细砂1、水1；平齿铁锉；90分钟。正文锉边、配额水润砂磨边、检查补磨、余砂水弃置、牌面空白不附白垩笔，工序连贯，无多余冲洗；\"全程九十分钟\"合法且一致，上轮\"九十钟\"缺字已消除。通过。"
-      },
-      {
-        "id": "recipe_w3c_stitchbound_folio",
-        "note": "核对骨架：羊皮纸3、麻线1；修羽刀、缝革扁锥、缝针、骨压片；110分钟。正文三张对折、修齐、骨片压折脊、叠齐成帖、锥孔、麻线缝订、修边，四工具齐用，工序连贯；\"全程约110分钟\"与骨架一致（\"约\"为概数，沿用此前口径）；不教授技能。通过。"
-      }
-    ],
-    "rejection": {
-      "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
-      "at": "2026-11-10T20:40Z",
-      "reason": "recipe_w3c_small_bell_frame：工序断层：框料未弯成框；recipe_w3c_redwood_dye：工序断层：滤液在自备容器却写沿锅缘搅；recipe_w3c_soap_wash_portion：病句；未点火却写停火；自添\"留作引火或吸液之用\"；recipe_w3c_resin_cloth_patch：措辞不通：\"取炭入厚底煮锅小灶\"；recipe_w3c_reed_pen_box：与骨架不符：一束写成一根；recipe_w3c_ink_wiping_pad：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_ledger_cover：疑似矛盾：裁出封皮两片又写对折；recipe_w3c_bristle_handbrush：工序断层：未开背槽却写鬃根露于背槽。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
-      "ids": [
-        "recipe_w3c_small_bell_frame",
-        "recipe_w3c_redwood_dye",
-        "recipe_w3c_soap_wash_portion",
-        "recipe_w3c_resin_cloth_patch",
-        "recipe_w3c_reed_pen_box",
-        "recipe_w3c_ink_wiping_pad",
-        "recipe_w3c_ledger_cover",
-        "recipe_w3c_bristle_handbrush"
-      ]
-    }
+    "notes": []
   },
   "l4History": [
     {
@@ -278,9 +222,71 @@
           "recipe_w3c_cork_float_set"
         ]
       }
+    },
+    {
+      "approved": false,
+      "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 34ad3e72，w3-journey 5 条重写后）",
+      "readAt": "2026-11-10",
+      "notes": [
+        {
+          "id": "recipe_w3c_soap_wash_portion",
+          "note": "不批准。核对骨架：硬皂片1、水2、木刨屑1；煮锅、木匙；25分钟。\"总耗时25分钟\"一致；但（1）\"以偏柄木匙顺纹浅匙腹沿锅缘压搅\"把匙的物品说明硬塞进动作，病句；（2）通篇没有点火，却写\"在微温中化散\"和\"皂片全散后停火\"，前后工序不连贯；（3）\"留作引火或吸液之用\"的\"吸液\"是自添用途。退回重写。"
+        },
+        {
+          "id": "recipe_w3c_felt_polishing_pad",
+          "note": "核对骨架：毛毡片1、窄幅麻布1、麻线1；裁革剪、缝针；65分钟。正文铺毡、剪圆、对折麻布覆边、粗眼缝针缝合、锁圆周边线、检查，工序连贯，两件工具齐用；\"总耗时65分钟\"一致；\"窄幅麻布\"为物品名；无副产品、工具保留，无自添设定。通过。"
+        },
+        {
+          "id": "recipe_w3c_reed_pen_box",
+          "note": "不批准。核对骨架：芦管束1、软木薄片1、麻线1；修羽刀、骨压片；100分钟。\"总耗时100分钟\"一致，工序（截筒、修塞片、麻线绕扎、骨片压伏、塞入）连贯，工具齐用；但\"取干直芦管束一根\"与骨架数量单位不符（骨架为束1份，束不能数作\"根\"），数量写法错误。退回重写。"
+        },
+        {
+          "id": "recipe_w3c_damp_sand_rub",
+          "note": "核对骨架：细砂1、水1；煮锅、木匙；20分钟；无前置技能要求。正文取砂加水、木匙翻拌成湿散粒、压开结团、握团轻触即散、只磨耐磨粗面、容器另备，工序连贯，两件工具齐用；\"全程二十分钟\"合法且与骨架一致（位于句中，不影响通顺）。通过。"
+        },
+        {
+          "id": "recipe_w3c_paste_cup_portion",
+          "note": "核对骨架：干浆粉1、水1、木刨屑1；煮锅、木匙；35分钟。正文水粉各一份、先下少量水再分次撒粉、小火糊化、搅至稠而痕短暂留存、刨屑只作引火、连锅放凉后倒入自备容器，工序连贯，两件工具齐用；\"总耗时三十五分钟\"合法且一致。通过。"
+        },
+        {
+          "id": "recipe_w3c_paper_cord_tags",
+          "note": "核对骨架：羊皮纸1、麻线1；修羽刀、缝革扁锥；70分钟。正文平铺、裁小片、削齐、锥孔、麻线分段穿系打结、整组一份、纸面留白，工序连贯（上轮\"叠好的小片\"断层已消除），两件工具齐用；\"全程70分钟\"一致，数字写法合法。通过。"
+        },
+        {
+          "id": "recipe_w3c_cork_float_set",
+          "note": "核对骨架：软木薄片1、麻线1；修羽刀、缝革扁锥；90分钟。正文剖分浮片、修圆、锥系孔、麻线逐片穿绕打结、整组一份，工序连贯，两件工具齐用；\"全程90分钟\"一致，上轮\"九十整分钟/多\"问题已消除。通过。"
+        },
+        {
+          "id": "recipe_w3c_slate_stylus",
+          "note": "核对骨架：板岩片1、细砂1、水1；平齿铁锉；90分钟。正文选窄段、铁锉修杆、湿细砂磨钝侧棱与尖端、指腹试棱，工序连贯，材料与工具齐；\"全程约90分钟\"与骨架一致（\"约\"为概数写法，沿用此前口径，不构成数值矛盾），\"九十加分钟\"错字已消除；\"夹稳\"按手持固定理解，未增设夹具。通过。"
+        },
+        {
+          "id": "recipe_w3c_slate_writing_tile",
+          "note": "核对骨架：板岩片1、细砂1、水1；平齿铁锉；90分钟。正文锉边、配额水润砂磨边、检查补磨、余砂水弃置、牌面空白不附白垩笔，工序连贯，无多余冲洗；\"全程九十分钟\"合法且一致，上轮\"九十钟\"缺字已消除。通过。"
+        },
+        {
+          "id": "recipe_w3c_stitchbound_folio",
+          "note": "核对骨架：羊皮纸3、麻线1；修羽刀、缝革扁锥、缝针、骨压片；110分钟。正文三张对折、修齐、骨片压折脊、叠齐成帖、锥孔、麻线缝订、修边，四工具齐用，工序连贯；\"全程约110分钟\"与骨架一致（\"约\"为概数，沿用此前口径）；不教授技能。通过。"
+        }
+      ],
+      "rejection": {
+        "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
+        "at": "2026-11-10T20:40Z",
+        "reason": "recipe_w3c_small_bell_frame：工序断层：框料未弯成框；recipe_w3c_redwood_dye：工序断层：滤液在自备容器却写沿锅缘搅；recipe_w3c_soap_wash_portion：病句；未点火却写停火；自添\"留作引火或吸液之用\"；recipe_w3c_resin_cloth_patch：措辞不通：\"取炭入厚底煮锅小灶\"；recipe_w3c_reed_pen_box：与骨架不符：一束写成一根；recipe_w3c_ink_wiping_pad：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_ledger_cover：疑似矛盾：裁出封皮两片又写对折；recipe_w3c_bristle_handbrush：工序断层：未开背槽却写鬃根露于背槽。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
+        "ids": [
+          "recipe_w3c_small_bell_frame",
+          "recipe_w3c_redwood_dye",
+          "recipe_w3c_soap_wash_portion",
+          "recipe_w3c_resin_cloth_patch",
+          "recipe_w3c_reed_pen_box",
+          "recipe_w3c_ink_wiping_pad",
+          "recipe_w3c_ledger_cover",
+          "recipe_w3c_bristle_handbrush"
+        ]
+      }
     }
   ],
-  "costUpperYuan": 5.373172400000007,
-  "manualRatio": 0,
+  "costUpperYuan": 5.544116000000005,
+  "manualRatio": 0.023809523809523808,
   "needsSystemicRepair": false
 }

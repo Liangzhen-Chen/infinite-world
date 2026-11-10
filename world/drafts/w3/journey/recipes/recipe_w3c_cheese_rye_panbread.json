@@ -1,16 +1,226 @@
 {
   "id": "recipe_w3c_cheese_rye_panbread",
   "fingerprint": "a08e94494cc5f33d200285f79ae3ee18aeffa7b8f80499d5b31e9b2084cb3c18",
-  "status": "passed",
-  "attempts": 1,
+  "status": "manual",
+  "attempts": 3,
   "draft": {
     "id": "recipe_w3c_cheese_rye_panbread",
-    "process": "取熟成硬乳酪角，以案上切刀刮去外层污损，再切成薄片备用。将细筛黑麦粉倾入厚底煮锅，加入清水一份，用长柄搅糊板顺向拌成无干粉稠糊。切下无盐黄油，以小灶加热厚底煮锅使其融化，转动锅身令内壁沾匀。把稠糊分作两团，在锅底摊平，铺上酪片，再覆另一团糊并压合边缘。以小火烙至底面定形，翻面续烙，两面皆熟后取出。干木刨屑仅用于引火，不混入饼中。总耗时五十五分钟。"
+    "process": "用案上切刀刮去硬乳酪角外层污损，再切成薄片；细筛黑麦粉倒入清水，以长柄搅糊板拌成稠糊。厚底煮锅置火上，取无盐黄油小块入锅融化，转动锅身令黄油润遍锅底锅壁。稠糊倾入锅中摊开成饼，酪片铺在饼面，再覆一层稠糊裹住酪片，压合边缘。两面烙至饼皮定形、酪片受热软化即可出锅。干木刨屑不混入饼中。全程55分钟。"
   },
   "review": {
-    "contradictions": []
+    "contradictions": [
+      {
+        "quote": "干木刨屑不混入饼中",
+        "field": "materials",
+        "severity": "hard",
+        "reason": "骨架材料含干木刨屑一份，但引用事实仅说明其可引火或吸收漏液，正文既未交代其来源用途，又将其排除于制作之外，属于骨架外材料处理且未按骨架使用该材料；同时正文未说明木刨屑用于生火，却出现“置火上”，火源无交代。"
+      }
+    ]
   },
-  "errors": [],
+  "errors": [
+    {
+      "quote": "干木刨屑不混入饼中",
+      "field": "materials",
+      "severity": "hard",
+      "reason": "骨架材料含干木刨屑一份，但引用事实仅说明其可引火或吸收漏液，正文既未交代其来源用途，又将其排除于制作之外，属于骨架外材料处理且未按骨架使用该材料；同时正文未说明木刨屑用于生火，却出现“置火上”，火源无交代。"
+    }
+  ],
   "warnings": [],
-  "feedback": null
+  "feedback": [
+    {
+      "quote": "干木刨屑不混入饼中",
+      "field": "materials",
+      "severity": "hard",
+      "reason": "骨架材料含干木刨屑一份，但引用事实仅说明其可引火或吸收漏液，正文既未交代其来源用途，又将其排除于制作之外，属于骨架外材料处理且未按骨架使用该材料；同时正文未说明木刨屑用于生火，却出现“置火上”，火源无交代。"
+    }
+  ],
+  "l4Rejection": [
+    {
+      "key": "d39ad9b68362780e2711e067a5a333b63632368a71cef76ec9e8546f0ea7063b",
+      "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
+      "at": "2026-11-10T20:40Z",
+      "reason": "recipe_w3c_cheese_rye_panbread：工序断层：糊已在锅中才润锅融黄油；recipe_w3c_walnut_honey_bites：工序断层：核桃仁切碎后未入锅却写碎仁裹糊；recipe_w3c_poppy_rye_crisp：工序断层：与 cheese_rye_panbread 同型；recipe_w3c_garlic_butter：工序断层：黄油置于锅旁从未入锅；自添\"需维修\"；recipe_w3c_pear_wheat_gruel：措辞不通：\"段入锅中\"；recipe_w3c_broadbean_garlic_mash：自添设定：\"木匙余料留作一份干刨屑\"；recipe_w3c_dill_cucumber：自添设定：\"须当日食用\"；recipe_w3c_ash_walking_stick：自添设定：\"不横切石料\"\"不劈铁\"；recipe_w3c_ladle_rest：与骨架不符：写了骨架没有的木槌；recipe_w3c_padded_work_collar：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_laundry_mesh_bag：疑似矛盾：麻绳既作口缘又穿口缘孔；recipe_w3c_parsnip_cream_pot：manual：某轮用未定义时间单位\"息\"，次数用尽；按新复核清单重写。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_cheese_rye_panbread",
+        "process": "取熟成硬乳酪角，以案上切刀刮去外层污损，再切成薄片备用。将细筛黑麦粉倾入厚底煮锅，加入清水一份，用长柄搅糊板顺向拌成无干粉稠糊。切下无盐黄油，以小灶加热厚底煮锅使其融化，转动锅身令内壁沾匀。把稠糊分作两团，在锅底摊平，铺上酪片，再覆另一团糊并压合边缘。以小火烙至底面定形，翻面续烙，两面皆熟后取出。干木刨屑仅用于引火，不混入饼中。总耗时五十五分钟。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "541d4e15-8806-4883-97b7-85e4858a9d84",
+    "object": "chat.completion",
+    "created": 1794336944,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_ZRRkuAe01cGDt8zcKoIH8926",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_cheese_rye_panbread\", \"process\": \"用案上切刀刮去硬乳酪角外层污损，再切成薄片；细筛黑麦粉倒入清水，以长柄搅糊板拌成稠糊。厚底煮锅置火上，取无盐黄油小块入锅融化，转动锅身令黄油润遍锅底锅壁。稠糊倾入锅中摊开成饼，酪片铺在饼面，再覆一层稠糊裹住酪片，压合边缘。两面烙至饼皮定形、酪片受热软化即可出锅。干木刨屑不混入饼中。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1872,
+      "completion_tokens": 182,
+      "total_tokens": 2054,
+      "prompt_tokens_details": {
+        "cached_tokens": 1408
+      },
+      "prompt_cache_hit_tokens": 1408,
+      "prompt_cache_miss_tokens": 464
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1872,
+        "completion_tokens": 182,
+        "total_tokens": 2054,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 464
+      },
+      "costUpperYuan": 0.00244032,
+      "cumulativeUpperYuan": 5.469885040000006,
+      "latencyMs": 2363.7390000000014,
+      "timestamp": "2026-11-10T18:55:47.552Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "b81b22c6-38e9-4845-89d6-0f4613bdcc1e",
+      "file": "budget-responses/b81b22c6-38e9-4845-89d6-0f4613bdcc1e.json",
+      "requestHash": "1c518ca662c3cd53fecbfb3207268c45db11518e67f054f13e188ac82b9482de",
+      "responseHash": "c82feb9dfde5cf49985386cc2d7884dac232e38e311ac92b25e0508d15d582d5"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "72157125-4033-4121-afaa-5c70fa1ed5ba",
+      "file": "budget-responses/72157125-4033-4121-afaa-5c70fa1ed5ba.json",
+      "requestHash": "d83b72a1f3a77225220e6dc6ae25a9c32186b506822a1130842e9e5d596750b8",
+      "responseHash": "a7ba8debb3136004bbad1d1b3a746a64db83b4e540d183297d785458549d6fbb"
+    },
+    {
+      "phase": "draft",
+      "attempt": 3,
+      "requestId": "747a1344-f1f2-4a41-bdd4-c3ae46cf7d21",
+      "file": "budget-responses/747a1344-f1f2-4a41-bdd4-c3ae46cf7d21.json",
+      "requestHash": "bc032917e1de9ee12123af8b96998d8a240e42f969141a3770815cd065d38905",
+      "responseHash": "048a516612076af27d0be8b90e702fb66d3be02a0425983ca023a042571f9a63"
+    },
+    {
+      "phase": "review",
+      "attempt": 3,
+      "requestId": "8991f290-1473-4678-87b4-e4ffad96217e",
+      "file": "budget-responses/8991f290-1473-4678-87b4-e4ffad96217e.json",
+      "requestHash": "1526013d042b1e1eeb13ce0b7e2c7d6aa892362d3dc1239255367eabe33e0d21",
+      "responseHash": "57d4ec9f5e9497b8661b98a2b45573b0429cbf213c7e78336d64823f8b6e4d5d"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2002,
+        "completion_tokens": 215,
+        "total_tokens": 2217,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1618
+      },
+      "costUpperYuan": 0.00497136,
+      "cumulativeUpperYuan": 5.388533760000007,
+      "latencyMs": 2331.99,
+      "timestamp": "2026-11-10T18:55:02.925Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2074,
+        "completion_tokens": 259,
+        "total_tokens": 2333,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1434
+      },
+      "costUpperYuan": 0.004965600000000001,
+      "cumulativeUpperYuan": 5.4069328800000065,
+      "latencyMs": 2465.6247000000003,
+      "timestamp": "2026-11-10T18:55:11.935Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1872,
+        "completion_tokens": 182,
+        "total_tokens": 2054,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 464
+      },
+      "costUpperYuan": 0.00244032,
+      "cumulativeUpperYuan": 5.469885040000006,
+      "latencyMs": 2363.7390000000014,
+      "timestamp": "2026-11-10T18:55:47.552Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_cheese_rye_panbread-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2041,
+        "completion_tokens": 105,
+        "total_tokens": 2146,
+        "prompt_tokens_details": {
+          "cached_tokens": 1536
+        },
+        "prompt_cache_hit_tokens": 1536,
+        "prompt_cache_miss_tokens": 505
+      },
+      "costUpperYuan": 0.0019114400000000001,
+      "cumulativeUpperYuan": 5.478671760000005,
+      "latencyMs": 1728.8954999999987,
+      "timestamp": "2026-11-10T18:55:55.423Z"
+    }
+  ]
 }

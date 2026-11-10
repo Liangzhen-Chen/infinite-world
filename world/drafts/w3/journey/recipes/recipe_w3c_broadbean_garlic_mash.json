@@ -1,16 +1,226 @@
 {
   "id": "recipe_w3c_broadbean_garlic_mash",
   "fingerprint": "b8e6ca83d2026322fa53aebd3b0e53554a62d62e2ec47d7a17fda1fa146d6e10",
-  "status": "passed",
-  "attempts": 1,
+  "status": "manual",
+  "attempts": 3,
   "draft": {
     "id": "recipe_w3c_broadbean_garlic_mash",
-    "process": "干蚕豆瓣一份与清水两份入厚底煮锅，浸至软后连水加热煮透，共耗一百分钟。晒皮蒜头一份剥瓣去皮，用案上切刀切细，投入锅中同煮至豆散。离火后以偏柄木匙沿锅缘反复压碾成泥，粗盐一份撒入拌匀。残皮、锅底焦屑与压不散的硬粒一并弃置，干木刨屑两份只作灶下引火，不与食物相混。木匙余料留作一份干刨屑，工具保留。成品一份趁热盛出，不加其他料。"
+    "process": "取干蚕豆瓣与规定清水，浸至瓣心松软，连水入厚底煮锅，小火煮到一捻即散。另将蒜头逐瓣剥去干皮，以案上切刀切成细末，投入锅中同煮至蒜末软熟。离火稍晾，持偏柄木匙沿锅壁反复压碾，把豆瓣压成泥，挑出未散残皮弃置。粗盐先筛去沙粒，再以刀背压碎，拌入泥中调匀。锅底焦屑刮下不用，木匙与切刀洗净收好，泥盛出即为一份。全程100分钟。"
   },
   "review": {
-    "contradictions": []
+    "contradictions": [
+      {
+        "quote": "木匙与切刀洗净收好",
+        "field": "processFacts",
+        "severity": "hard",
+        "reason": "骨架未提供清洗用水，正文自添清水洗器具，属骨架外水量；且骨架材料水仅两份用于泡煮，未声明可另取水清洗。"
+      }
+    ]
   },
-  "errors": [],
+  "errors": [
+    {
+      "quote": "木匙与切刀洗净收好",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "骨架未提供清洗用水，正文自添清水洗器具，属骨架外水量；且骨架材料水仅两份用于泡煮，未声明可另取水清洗。"
+    }
+  ],
   "warnings": [],
-  "feedback": null
+  "feedback": [
+    {
+      "quote": "木匙与切刀洗净收好",
+      "field": "processFacts",
+      "severity": "hard",
+      "reason": "骨架未提供清洗用水，正文自添清水洗器具，属骨架外水量；且骨架材料水仅两份用于泡煮，未声明可另取水清洗。"
+    }
+  ],
+  "l4Rejection": [
+    {
+      "key": "6948accda220490a0ae6d0f5fc78baae7cf48b72cf9bc0708e0a5acf8b4fcd53",
+      "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
+      "at": "2026-11-10T20:40Z",
+      "reason": "recipe_w3c_cheese_rye_panbread：工序断层：糊已在锅中才润锅融黄油；recipe_w3c_walnut_honey_bites：工序断层：核桃仁切碎后未入锅却写碎仁裹糊；recipe_w3c_poppy_rye_crisp：工序断层：与 cheese_rye_panbread 同型；recipe_w3c_garlic_butter：工序断层：黄油置于锅旁从未入锅；自添\"需维修\"；recipe_w3c_pear_wheat_gruel：措辞不通：\"段入锅中\"；recipe_w3c_broadbean_garlic_mash：自添设定：\"木匙余料留作一份干刨屑\"；recipe_w3c_dill_cucumber：自添设定：\"须当日食用\"；recipe_w3c_ash_walking_stick：自添设定：\"不横切石料\"\"不劈铁\"；recipe_w3c_ladle_rest：与骨架不符：写了骨架没有的木槌；recipe_w3c_padded_work_collar：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_laundry_mesh_bag：疑似矛盾：麻绳既作口缘又穿口缘孔；recipe_w3c_parsnip_cream_pot：manual：某轮用未定义时间单位\"息\"，次数用尽；按新复核清单重写。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_broadbean_garlic_mash",
+        "process": "干蚕豆瓣一份与清水两份入厚底煮锅，浸至软后连水加热煮透，共耗一百分钟。晒皮蒜头一份剥瓣去皮，用案上切刀切细，投入锅中同煮至豆散。离火后以偏柄木匙沿锅缘反复压碾成泥，粗盐一份撒入拌匀。残皮、锅底焦屑与压不散的硬粒一并弃置，干木刨屑两份只作灶下引火，不与食物相混。木匙余料留作一份干刨屑，工具保留。成品一份趁热盛出，不加其他料。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "7cb88a76-c577-41fd-ae8e-4ffdc4b2c723",
+    "object": "chat.completion",
+    "created": 1794336939,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_l9nGFoAXeKVLGHJBdKmA1593",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_broadbean_garlic_mash\", \"process\": \"取干蚕豆瓣与规定清水，浸至瓣心松软，连水入厚底煮锅，小火煮到一捻即散。另将蒜头逐瓣剥去干皮，以案上切刀切成细末，投入锅中同煮至蒜末软熟。离火稍晾，持偏柄木匙沿锅壁反复压碾，把豆瓣压成泥，挑出未散残皮弃置。粗盐先筛去沙粒，再以刀背压碎，拌入泥中调匀。锅底焦屑刮下不用，木匙与切刀洗净收好，泥盛出即为一份。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1688,
+      "completion_tokens": 195,
+      "total_tokens": 1883,
+      "prompt_tokens_details": {
+        "cached_tokens": 1408
+      },
+      "prompt_cache_hit_tokens": 1408,
+      "prompt_cache_miss_tokens": 280
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1688,
+        "completion_tokens": 195,
+        "total_tokens": 1883,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 280
+      },
+      "costUpperYuan": 0.0021763200000000003,
+      "cumulativeUpperYuan": 5.462889920000006,
+      "latencyMs": 2472.6347000000023,
+      "timestamp": "2026-11-10T18:55:41.954Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "53302f4b-245d-4c0f-a5a9-e918cd1351d8",
+      "file": "budget-responses/53302f4b-245d-4c0f-a5a9-e918cd1351d8.json",
+      "requestHash": "4ccf7492148805512c133b1d442ec1998be685df5369a33a2e24554442b05fb2",
+      "responseHash": "b391b153319a298fdc9b956d7b180e8ef832a1451270a968bcf4f72eef39b5a0"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "f0f11979-2136-48bd-be5e-0e149db3bd65",
+      "file": "budget-responses/f0f11979-2136-48bd-be5e-0e149db3bd65.json",
+      "requestHash": "451e468fc40a04b6a246a7dbf0b3562af9c550bae09b304b25b67125aa27d03a",
+      "responseHash": "e7d367eed7d29d0435db71915a5b2c0aa86ef96a757c684c94c7fc01e514b13f"
+    },
+    {
+      "phase": "draft",
+      "attempt": 3,
+      "requestId": "a6dd7832-d6cc-4ff0-9228-194427fc138a",
+      "file": "budget-responses/a6dd7832-d6cc-4ff0-9228-194427fc138a.json",
+      "requestHash": "fbc48cc2167e1603cd4ba6159e92d5be7ea6e871e4fd70216540e38f0bbbb762",
+      "responseHash": "cffe409d7d51969ac87a04dfa10524fcdfe6ee2cd0fb3dfb28e074cb254fa232"
+    },
+    {
+      "phase": "review",
+      "attempt": 3,
+      "requestId": "a5e8aa91-9aec-4bc5-adb3-3f0e0edee8e0",
+      "file": "budget-responses/a5e8aa91-9aec-4bc5-adb3-3f0e0edee8e0.json",
+      "requestHash": "e5aec36ac56287ab548adeb304a2b9c89372dbe8c3633a33e57cf84cd2db84e2",
+      "responseHash": "b93e8034a06b37dd9704c040e400310b6e7a04a0596f03cb08dcd5d15db2846f"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1996,
+        "completion_tokens": 200,
+        "total_tokens": 2196,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1612
+      },
+      "costUpperYuan": 0.004839360000000001,
+      "cumulativeUpperYuan": 5.378011760000007,
+      "latencyMs": 3108.3407000000007,
+      "timestamp": "2026-11-10T18:54:56.275Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2050,
+        "completion_tokens": 81,
+        "total_tokens": 2131,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 2050
+      },
+      "costUpperYuan": 0.004748,
+      "cumulativeUpperYuan": 5.396364080000007,
+      "latencyMs": 1303.2842000000019,
+      "timestamp": "2026-11-10T18:55:06.702Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1688,
+        "completion_tokens": 195,
+        "total_tokens": 1883,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 280
+      },
+      "costUpperYuan": 0.0021763200000000003,
+      "cumulativeUpperYuan": 5.462889920000006,
+      "latencyMs": 2472.6347000000023,
+      "timestamp": "2026-11-10T18:55:41.954Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2045,
+        "completion_tokens": 68,
+        "total_tokens": 2113,
+        "prompt_tokens_details": {
+          "cached_tokens": 1536
+        },
+        "prompt_cache_hit_tokens": 1536,
+        "prompt_cache_miss_tokens": 509
+      },
+      "costUpperYuan": 0.00162344,
+      "cumulativeUpperYuan": 5.471508480000006,
+      "latencyMs": 1123.4019000000044,
+      "timestamp": "2026-11-10T18:55:48.706Z"
+    }
+  ]
 }

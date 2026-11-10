@@ -2,15 +2,150 @@
   "id": "recipe_w3c_resin_cloth_patch",
   "fingerprint": "c31438f75134d68341fc1981d4775ccd89cea518a9637e451fb9929349efae0b",
   "status": "passed",
-  "attempts": 1,
+  "attempts": 2,
   "draft": {
     "id": "recipe_w3c_resin_cloth_patch",
-    "process": "将紧织麻帆布摊平，用短刃裁革剪逐段合剪成一方补片，剪口齐直；木炭小袋取炭入厚底煮锅小灶，炭屑不混入成品。松脂块置锅上低温软化，趁软以偏柄木匙背沿补片一面薄薄推开，只涂一面，脂层匀薄不见堆厚。涂毕摊开静置冷却，至指触不粘即收。全程一百分钟。只备材料，修补原物须另走实际工序；余料弃置，工具保留。"
+    "process": "将紧织麻帆布铺平，用短刃裁革剪逐段合剪出一块补片，边缘剪齐，不剪铁线。取木炭小袋中的炭放入厚底煮锅，在小灶上引燃，使锅微热；把熬稠松脂块投入锅中，借余温软化，不可烧至冒烟。松脂变软后，以偏柄木匙背蘸取，在补片一面薄薄涂开，涂匀即止，不浸透布面。涂好后将补片摊开，离火静置冷却，待脂面凝定不粘手，即得薄脂麻补片一份。此片只作备料，修补原物须另走实际工序。全程100分钟。"
   },
   "review": {
     "contradictions": []
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "l4Rejection": [
+    {
+      "key": "092cbbdc9618daebcbad5bbfd9e7a52f4d4327e22642b3273879d2a26f4e8180",
+      "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
+      "at": "2026-11-10T20:40Z",
+      "reason": "recipe_w3c_small_bell_frame：工序断层：框料未弯成框；recipe_w3c_redwood_dye：工序断层：滤液在自备容器却写沿锅缘搅；recipe_w3c_soap_wash_portion：病句；未点火却写停火；自添\"留作引火或吸液之用\"；recipe_w3c_resin_cloth_patch：措辞不通：\"取炭入厚底煮锅小灶\"；recipe_w3c_reed_pen_box：与骨架不符：一束写成一根；recipe_w3c_ink_wiping_pad：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_ledger_cover：疑似矛盾：裁出封皮两片又写对折；recipe_w3c_bristle_handbrush：工序断层：未开背槽却写鬃根露于背槽。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_resin_cloth_patch",
+        "process": "将紧织麻帆布摊平，用短刃裁革剪逐段合剪成一方补片，剪口齐直；木炭小袋取炭入厚底煮锅小灶，炭屑不混入成品。松脂块置锅上低温软化，趁软以偏柄木匙背沿补片一面薄薄推开，只涂一面，脂层匀薄不见堆厚。涂毕摊开静置冷却，至指触不粘即收。全程一百分钟。只备材料，修补原物须另走实际工序；余料弃置，工具保留。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "65a91941-399a-4fb1-8f74-1fa2a5703e6d",
+    "object": "chat.completion",
+    "created": 1794336984,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_bRVxxM2KehrdXrEDtf795376",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_resin_cloth_patch\", \"process\": \"将紧织麻帆布铺平，用短刃裁革剪逐段合剪出一块补片，边缘剪齐，不剪铁线。取木炭小袋中的炭放入厚底煮锅，在小灶上引燃，使锅微热；把熬稠松脂块投入锅中，借余温软化，不可烧至冒烟。松脂变软后，以偏柄木匙背蘸取，在补片一面薄薄涂开，涂匀即止，不浸透布面。涂好后将补片摊开，离火静置冷却，待脂面凝定不粘手，即得薄脂麻补片一份。此片只作备料，修补原物须另走实际工序。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1718,
+      "completion_tokens": 215,
+      "total_tokens": 1933,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 1334
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_resin_cloth_patch-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1718,
+        "completion_tokens": 215,
+        "total_tokens": 1933,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1334
+      },
+      "costUpperYuan": 0.00440336,
+      "cumulativeUpperYuan": 5.535208160000005,
+      "latencyMs": 2098.189699999988,
+      "timestamp": "2026-11-10T18:56:26.504Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "6bca524f-45be-4a3f-a474-c6098936d773",
+      "file": "budget-responses/6bca524f-45be-4a3f-a474-c6098936d773.json",
+      "requestHash": "b9f1d841ae401d3e6421084e2e56ec2b5c1192e07de980e9b076e5dfbfdf723e",
+      "responseHash": "3a4d9504740e6593ffc13896272df0617e5db25bf211342f9fd1cba8d2b56798"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "2357cf27-e3b9-4e6f-9f22-013e280480a5",
+      "file": "budget-responses/2357cf27-e3b9-4e6f-9f22-013e280480a5.json",
+      "requestHash": "afdd7298b38706bc776b9c2e42aea199484da046b3255d5d5dc31ef471660a30",
+      "responseHash": "eabc8d7edec2183acf0c4767ca44752f774cf4077471cdd25c1eabf001e73ac1"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_resin_cloth_patch-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1718,
+        "completion_tokens": 215,
+        "total_tokens": 1933,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1334
+      },
+      "costUpperYuan": 0.00440336,
+      "cumulativeUpperYuan": 5.535208160000005,
+      "latencyMs": 2098.189699999988,
+      "timestamp": "2026-11-10T18:56:26.504Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_resin_cloth_patch-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1862,
+        "completion_tokens": 7,
+        "total_tokens": 1869,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1222
+      },
+      "costUpperYuan": 0.0025256,
+      "cumulativeUpperYuan": 5.540015360000005,
+      "latencyMs": 988.7725999999966,
+      "timestamp": "2026-11-10T18:56:28.553Z"
+    }
+  ]
 }

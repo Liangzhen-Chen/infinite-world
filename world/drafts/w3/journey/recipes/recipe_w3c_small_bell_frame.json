@@ -2,15 +2,150 @@
   "id": "recipe_w3c_small_bell_frame",
   "fingerprint": "9c91449eb308c86772dbcffe07ff36e2a65050318cb21196b0a8b091fb8986ca",
   "status": "passed",
-  "attempts": 1,
+  "attempts": 2,
   "draft": {
     "id": "recipe_w3c_small_bell_frame",
-    "process": "将黄铜窄带用弯柄金属剪分次合剪，剪出悬片与弯框料，短行程以免刃口缺损。悬片与框料分别置于砧台，用短身冲子配锻工手锤冲出小孔，孔位对齐后修整边口。退火铁线以窄嘴饰线钳夹弯成挂环，穿过孔位把悬片悬在框内，环口收拢不使脱落。手持框体轻晃，凭悬片相碰发声判断悬挂是否松动，松动处再以钳夹紧。总耗时二百四十分钟。余料弃置，工具保留。"
+    "process": "将黄铜窄带在砧上理平，用弯柄金属剪短行程分次合剪，先分出一段作悬片，余下部分留作框料。悬片两端以短身冲子配锻工手锤冲小孔，孔位居中相对。框料用窄嘴饰线钳夹持，沿砧边逐段弯成闭合框，接口处轻敲贴合。退火铁线绕成挂环，穿过悬片小孔，再把挂环两端穿过框上冲孔并弯压固定，使悬片悬在框内且能自由晃动。晃动时悬片与框相碰发声，不警示远处敌情。全程240分钟。"
   },
   "review": {
     "contradictions": []
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "l4Rejection": [
+    {
+      "key": "68bd2d2456bc5b3f813118e40d67d8a59fdbca938ecfdce030cac0db4168fe82",
+      "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
+      "at": "2026-11-10T20:40Z",
+      "reason": "recipe_w3c_small_bell_frame：工序断层：框料未弯成框；recipe_w3c_redwood_dye：工序断层：滤液在自备容器却写沿锅缘搅；recipe_w3c_soap_wash_portion：病句；未点火却写停火；自添\"留作引火或吸液之用\"；recipe_w3c_resin_cloth_patch：措辞不通：\"取炭入厚底煮锅小灶\"；recipe_w3c_reed_pen_box：与骨架不符：一束写成一根；recipe_w3c_ink_wiping_pad：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_ledger_cover：疑似矛盾：裁出封皮两片又写对折；recipe_w3c_bristle_handbrush：工序断层：未开背槽却写鬃根露于背槽。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_small_bell_frame",
+        "process": "将黄铜窄带用弯柄金属剪分次合剪，剪出悬片与弯框料，短行程以免刃口缺损。悬片与框料分别置于砧台，用短身冲子配锻工手锤冲出小孔，孔位对齐后修整边口。退火铁线以窄嘴饰线钳夹弯成挂环，穿过孔位把悬片悬在框内，环口收拢不使脱落。手持框体轻晃，凭悬片相碰发声判断悬挂是否松动，松动处再以钳夹紧。总耗时二百四十分钟。余料弃置，工具保留。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "3a1b1d53-9cae-4cb2-bfb8-58580de38f6d",
+    "object": "chat.completion",
+    "created": 1794336961,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_YZ1zRa3JCYCpIZJCuctm2254",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_small_bell_frame\", \"process\": \"将黄铜窄带在砧上理平，用弯柄金属剪短行程分次合剪，先分出一段作悬片，余下部分留作框料。悬片两端以短身冲子配锻工手锤冲小孔，孔位居中相对。框料用窄嘴饰线钳夹持，沿砧边逐段弯成闭合框，接口处轻敲贴合。退火铁线绕成挂环，穿过悬片小孔，再把挂环两端穿过框上冲孔并弯压固定，使悬片悬在框内且能自由晃动。晃动时悬片与框相碰发声，不警示远处敌情。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1681,
+      "completion_tokens": 201,
+      "total_tokens": 1882,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 1297
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_small_bell_frame-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1681,
+        "completion_tokens": 201,
+        "total_tokens": 1882,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1297
+      },
+      "costUpperYuan": 0.004217360000000001,
+      "cumulativeUpperYuan": 5.488539040000005,
+      "latencyMs": 1889.311200000011,
+      "timestamp": "2026-11-10T18:56:03.506Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "4037308b-b675-4703-9ce3-52d50158a86f",
+      "file": "budget-responses/4037308b-b675-4703-9ce3-52d50158a86f.json",
+      "requestHash": "5e0966f80beb0e7808eb9da4d317064af3e17653786cd3ffac8148ae2d11b806",
+      "responseHash": "69dfe04f3da3d0beb89fc2c63391693414fa919a158e8dc0911dda637a454a52"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "9728a03b-3731-4674-a4f0-33e8f044c88d",
+      "file": "budget-responses/9728a03b-3731-4674-a4f0-33e8f044c88d.json",
+      "requestHash": "89c3c0c517c5ba8cf22cd78f3352129052f286b1b09844bd75fb7a389e3ced15",
+      "responseHash": "e071ef5e2e4be216287b549b5fbae17fa7c58be84510e7a3587c2a54318b0a11"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_small_bell_frame-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1681,
+        "completion_tokens": 201,
+        "total_tokens": 1882,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1297
+      },
+      "costUpperYuan": 0.004217360000000001,
+      "cumulativeUpperYuan": 5.488539040000005,
+      "latencyMs": 1889.311200000011,
+      "timestamp": "2026-11-10T18:56:03.506Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_small_bell_frame-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1787,
+        "completion_tokens": 7,
+        "total_tokens": 1794,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1147
+      },
+      "costUpperYuan": 0.0023756,
+      "cumulativeUpperYuan": 5.499563360000005,
+      "latencyMs": 670.8500000000058,
+      "timestamp": "2026-11-10T18:56:08.906Z"
+    }
+  ]
 }

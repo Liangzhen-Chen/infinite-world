@@ -2,15 +2,150 @@
   "id": "recipe_w3c_soap_wash_portion",
   "fingerprint": "f52583a90396b132c33dfb503fd6eabcaeb972348bd4d6f5c6b2d78ffc96d80c",
   "status": "passed",
-  "attempts": 1,
+  "attempts": 2,
   "draft": {
     "id": "recipe_w3c_soap_wash_portion",
-    "process": "将刮片硬皂投入厚底煮锅，倒入配额清水，以偏柄木匙顺纹浅匙腹沿锅缘压搅，使皂片在微温中逐渐化散，不令水面翻滚飞溅。皂片全散后停火，仍用木匙搅动至温度下降，液面平稳无浮渣结块。冷却后倒入自备容器，锅壁与匙面残留一并刮入，不另添水冲兑。所得一份温搅皂洗液用于洗布刷具，不作药物。总耗时25分钟。干木刨屑未入锅，留作引火或吸液之用。"
+    "process": "将一份刮片硬皂与两份清水一同放入厚底煮锅，置小灶上以微温加热，用偏柄木匙沿锅底缓慢搅动，使皂片逐渐化散于水中；全程只保持温热，不让液面沸腾翻溅。皂片完全散开后离火，继续搅至液体均匀，静置冷却。冷却后的皂洗液倒入自备容器，供洗布刷具使用，不作药物。干木刨屑不投入锅中，随余料弃置。全程25分钟。"
   },
   "review": {
     "contradictions": []
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "l4Rejection": [
+    {
+      "key": "a1ee4addb2b4ee5fcb98c1c27ae61c07c2198cd6b0807d260759d581f00ad468",
+      "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
+      "at": "2026-11-10T20:40Z",
+      "reason": "recipe_w3c_small_bell_frame：工序断层：框料未弯成框；recipe_w3c_redwood_dye：工序断层：滤液在自备容器却写沿锅缘搅；recipe_w3c_soap_wash_portion：病句；未点火却写停火；自添\"留作引火或吸液之用\"；recipe_w3c_resin_cloth_patch：措辞不通：\"取炭入厚底煮锅小灶\"；recipe_w3c_reed_pen_box：与骨架不符：一束写成一根；recipe_w3c_ink_wiping_pad：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_ledger_cover：疑似矛盾：裁出封皮两片又写对折；recipe_w3c_bristle_handbrush：工序断层：未开背槽却写鬃根露于背槽。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_soap_wash_portion",
+        "process": "将刮片硬皂投入厚底煮锅，倒入配额清水，以偏柄木匙顺纹浅匙腹沿锅缘压搅，使皂片在微温中逐渐化散，不令水面翻滚飞溅。皂片全散后停火，仍用木匙搅动至温度下降，液面平稳无浮渣结块。冷却后倒入自备容器，锅壁与匙面残留一并刮入，不另添水冲兑。所得一份温搅皂洗液用于洗布刷具，不作药物。总耗时25分钟。干木刨屑未入锅，留作引火或吸液之用。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "6bd796da-b277-47b6-b53a-976d6c7f23de",
+    "object": "chat.completion",
+    "created": 1794336979,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_wEXZOZXfkVozjRv2024e4501",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_soap_wash_portion\", \"process\": \"将一份刮片硬皂与两份清水一同放入厚底煮锅，置小灶上以微温加热，用偏柄木匙沿锅底缓慢搅动，使皂片逐渐化散于水中；全程只保持温热，不让液面沸腾翻溅。皂片完全散开后离火，继续搅至液体均匀，静置冷却。冷却后的皂洗液倒入自备容器，供洗布刷具使用，不作药物。干木刨屑不投入锅中，随余料弃置。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1646,
+      "completion_tokens": 166,
+      "total_tokens": 1812,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 1262
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_soap_wash_portion-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1646,
+        "completion_tokens": 166,
+        "total_tokens": 1812,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1262
+      },
+      "costUpperYuan": 0.0038673600000000002,
+      "cumulativeUpperYuan": 5.526219200000004,
+      "latencyMs": 2331.860400000005,
+      "timestamp": "2026-11-10T18:56:22.201Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "262b3810-30f9-478a-a4e8-685fbc715c97",
+      "file": "budget-responses/262b3810-30f9-478a-a4e8-685fbc715c97.json",
+      "requestHash": "26c69fad1bccd0665dd26f0dfc4c392d1f0408bb19c20986a47ebd6e5823b6db",
+      "responseHash": "72e0522082f7c562127800f7fde3ec8833d39cff990cbe21b82892fe7864b909"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "f0661bb7-6df0-4777-8d16-4e747f1689a6",
+      "file": "budget-responses/f0661bb7-6df0-4777-8d16-4e747f1689a6.json",
+      "requestHash": "15dc370901264a5a6d509282cd0a445e01b87f9116889210eeea46748fc150f9",
+      "responseHash": "5b35b58e8acfb89df9b87cf2357ee6edd66f6197987c97a76a5a47d585036380"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_soap_wash_portion-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1646,
+        "completion_tokens": 166,
+        "total_tokens": 1812,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1262
+      },
+      "costUpperYuan": 0.0038673600000000002,
+      "cumulativeUpperYuan": 5.526219200000004,
+      "latencyMs": 2331.860400000005,
+      "timestamp": "2026-11-10T18:56:22.201Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_soap_wash_portion-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1740,
+        "completion_tokens": 7,
+        "total_tokens": 1747,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1100
+      },
+      "costUpperYuan": 0.0022816,
+      "cumulativeUpperYuan": 5.537489760000005,
+      "latencyMs": 1012.1205000000045,
+      "timestamp": "2026-11-10T18:56:27.532Z"
+    }
+  ]
 }
