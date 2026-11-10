@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import crypto from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {applyPatches} from '../server-plugin/storage.mjs';
+import {applyPatches,PatchCursor} from '../server-plugin/storage.mjs';
 
 const args=process.argv.slice(2),days=Number(args.find(a=>/^\d+$/.test(a))??30),mode=args.includes('--world')?args[args.indexOf('--world')+1]:'full';
 const t0=performance.now(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -23,7 +23,15 @@ if(mode==='farm'){
 }
 // 键序规范化，避免对象插入顺序差异影响哈希；数组保持原序。
 const canon=v=>Array.isArray(v)?v.map(canon):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canon(v[k])])):v;
-let chain='',patchCount=0,tradePatches=0,ledgerPatches=0;
+let chain='',patchCount=0,tradePatches=0,ledgerPatches=0,steps=0;const groups2={},groups3={};const bump=(o,k)=>{o[k]=(o[k]??0)+1;};
+const group=(g2,g3,path)=>{
+ bump(g2,path.slice(0,2).join('.'));
+ bump(g3,path.slice(0,2).join('.')+(path[2]===undefined?'':'.'+(path[1]==='records'||path[1]==='obligations'?String(path[2]).split(':')[0].replace(/[0-9_-]+$/,''):path[0]==='state'&&path[1]==='npcs'?'<npc>.'+String(path[3]??''):path[1]==='family'||path[1]==='settlements'?path[2]:'*')));
+};
+// 游标写入次数 = 状态版本（revision）数：每次 PatchCursor.apply 使 revision 加一，按补丁路径分组。
+let revisions=0;const rev2={},rev3={};
+const applyOrig=PatchCursor.prototype.apply;
+PatchCursor.prototype.apply=function(patch,...rest){revisions++;group(rev2,rev3,patch.path);return applyOrig.call(this,patch,...rest);};
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 for(let day=0;day<days;day++){
  const output=await engine.reduce(document,{tool:'world_time',args:{minutes:1440},eventId:`digest_day_${day}`});
@@ -33,9 +41,11 @@ for(let day=0;day<days;day++){
   if(path.startsWith('state.records.market-trade:'))tradePatches++;
   if(path[0]==='l'&&path.startsWith('ledger'))ledgerPatches++;
   chain=hash(chain+JSON.stringify(canon(p)));
+  // 路径分组：前两级；第三级对 records 取键名冒号前的前缀（记录类别），其余取原第三级。用于比较不同版本多出的写入来自哪里。
+  group(groups2,groups3,p.path);
  }
- document=applyPatches(document,output.patches);
+ document=applyPatches(document,output.patches);steps++;
 }
 const trades=Object.entries(document.state.records??{}).filter(([k,r])=>k.startsWith('market-trade:')||r?.category==='market_trade');
 const tradeHash=hash(JSON.stringify(canon(trades))),ledgerHash=hash(JSON.stringify(canon({accounts:document.ledger?.accounts,flows:document.ledger?.flows,lots:document.ledger?.lots})));
-console.log(JSON.stringify({world:mode,days,finalMinute:document.state.minute,耗时秒:Math.round((performance.now()-t0)/100)/10,补丁总数:patchCount,成交补丁数:tradePatches,账本过账补丁数:ledgerPatches,成交记录数:trades.length,补丁链哈希:chain,成交记录哈希:tradeHash,账本终态哈希:ledgerHash},null,1));
+console.log(JSON.stringify({world:mode,days,finalMinute:document.state.minute,耗时秒:Math.round((performance.now()-t0)/100)/10,补丁总数:patchCount,推进步数:steps,成交补丁数:tradePatches,账本过账补丁数:ledgerPatches,成交记录数:trades.length,补丁链哈希:chain,成交记录哈希:tradeHash,账本终态哈希:ledgerHash,游标写入次数_revision:revisions,输出补丁分组前两级:groups2,输出补丁分组含第三级:groups3,游标写入分组前两级:rev2,游标写入分组含第三级:rev3},null,1));
