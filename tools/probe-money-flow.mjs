@@ -25,7 +25,7 @@ async function step(s,minutes,tag){
 
 // ---------------- 1. bounty ----------------
 const B={victim:'npc_hw_linsui',guard:'npc_hw_gucen',judge:'npc_hw_chenbai',hunter:'npc_hw_wushuo',ypGuard:'npc_yp_renbo',ypOfficer:'npc_yp_lisha',court:'bld_hw_council'};
-const bountyMoney=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,a)=>n+(a.coins??0),0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((n,r)=>n+r.coins,0);
+const bountyMoney=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,a)=>n+(a.coins??0),0)+Object.values(c.state.records).filter(r=>["legal_treasury","legal_deposit"].includes(r.category)).reduce((n,r)=>n+r.coins,0)+Object.values(c.state.records).filter(r=>r.category==="money_account").reduce((n,r)=>n+(r.coins??0),0);
 const counters=d=>Object.values(d.state.records).filter(r=>r.category==='money_account'&&r.coins).map(r=>`${r.account.split('|')[0]}=${r.coins}`).join('；')||'无';
 async function bountyFixture({randomSeed,minute=600,caseMinute=600}={}){
     const {victim,guard,judge,hunter,ypGuard,ypOfficer,court}=B;

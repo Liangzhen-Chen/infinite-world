@@ -10,7 +10,11 @@ import {shopStores} from '../server-plugin/shop.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,victim='npc_hw_linsui',guard='npc_hw_gucen',judge='npc_hw_chenbai',hunter='npc_hw_wushuo',ypGuard='npc_yp_renbo',ypOfficer='npc_yp_lisha';
 const court='bld_hw_council',villages=['law_hw_property','law_yp_property','law_wt_property','law_lq_property','law_sb_property'];
-const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,a)=>n+(a.coins??0),0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((n,r)=>n+r.coins,0);
+// 统计口径 = 玩家 + 全体 NPC 钱袋 + 法院库/交存 + 专用货币账户（money_account，如店主柜台）。
+// 店主为补货工钱备付，会把自己的钱从钱袋转进自己的柜台账户（探针 tools/probe-money-flow.mjs bounty：duanyan 钱袋 -200 → 柜台 +200，
+// 账本守恒、漂移 0）；这 200 仍是他的钱，只是换了账户，口径必须把所有专用货币账户一并算入，而不是只补某个人。
+const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,a)=>n+(a.coins??0),0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((n,r)=>n+r.coins,0)
+    +Object.values(c.state.records).filter(r=>r.category==='money_account').reduce((n,r)=>n+(r.coins??0),0);
 
 // Quiet world: people stay where the fixture puts them; the hunter keeps a full profile and a fixed day.
 function fixture({randomSeed}={}){
