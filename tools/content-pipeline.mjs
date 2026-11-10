@@ -60,7 +60,21 @@ export function maxDraftBytes(draftBody){
   const tokens=draftBody.max_tokens??DEFAULT_MAX_TOKENS;
   return Number.isInteger(tokens)&&tokens>0?tokens*MAX_UTF8_BYTES_PER_OUTPUT_TOKEN:NaN;
 }
+// 人工改写条目的 review 标记：不是 L2 结果，没有 contradictions，不得当作 L2 通过。
+export const MANUAL_REWRITE_REVIEW_KIND = 'manual-rewrite-no-l2';
+// 批次 fingerprint 的行形状。人工改写历史只在存在时纳入，机器条目的指纹保持不变。
+export const rowFingerprintShape = row => ({ id: row.id, draft: row.draft, review: row.review, status: row.status, ...(row.manualRewrite ? { manualRewrite: row.manualRewrite } : {}) });
+// 所有内容草稿共用的 L1：调用方自己的 validateDraft 加上通用数字规则。返回 {errors, warnings?}。流水线与人工改写工具共用。
+export function pipelineL1(validateDraft) {
+  return async (draft, entry, context) => {
+    const result = await validateDraft(draft, entry, context);
+    const errors = Array.isArray(result) ? result : result?.errors ?? [];
+    const extra = numeralIssues(draft, entry, context).filter(message => !errors.includes(message));
+    return extra.length ? { ...(Array.isArray(result) ? { warnings: [] } : result), errors: [...errors, ...extra] } : result;
+  };
+}
 function reviewIssues(review) {
+  if (review?.kind === MANUAL_REWRITE_REVIEW_KIND) return [];
   if (!review || !Array.isArray(review.contradictions)) throw new Error('事实审查缺少 contradictions 数组');
   for (const row of review.contradictions) {
     if (!['hard', 'soft', 'style'].includes(row.severity) || !['quote', 'field', 'reason'].every(key => typeof row[key] === 'string' && row[key].trim())) {
@@ -139,12 +153,7 @@ export async function runContentPipeline({
   const extractRaw = extractDraft;
   extractDraft = async (response, entry) => applyDerivedDuration(await extractRaw(response, entry), entry);
   // 所有内容草稿共用的 L1 数字规则：对每个调用方自己的 validateDraft 结果统一追加（中文数字合法性、总括时长与 minutes 一致）。
-  const l1 = async (draft, entry, context) => {
-    const result = await validateDraft(draft, entry, context);
-    const errors = Array.isArray(result) ? result : result?.errors ?? [];
-    const extra = numeralIssues(draft, entry, context).filter(message => !errors.includes(message));
-    return extra.length ? { ...(Array.isArray(result) ? { warnings: [] } : result), errors: [...errors, ...extra] } : result;
-  };
+  const l1 = pipelineL1(validateDraft);
   await fs.mkdir(root, { recursive: true });
   const l4Rejections = await readL4Rejections(root, entries);
   const ledgerPath = path.join(budgetRoot, 'budget.json');
@@ -305,7 +314,7 @@ export async function runContentPipeline({
     }));
     results.push(...rows);
     const index = batches.length, file = path.join(root, `batch-${index}.json`);
-    const prior = await readJSON(file), fingerprint = hashContent(rows.map(row => ({ id: row.id, draft: row.draft, review: row.review, status: row.status })));
+    const prior = await readJSON(file), fingerprint = hashContent(rows.map(rowFingerprintShape));
     const passed = rows.filter(row => row.status === 'passed');
     const batch = {
       index, fingerprint, count: rows.length, passed: passed.length,
@@ -330,6 +339,19 @@ export async function runContentPipeline({
   } finally {await budget.close();}
 }
 
+// 人工改写门禁：改写条目必须有本批 L4 阅读记录，且记录的审查者（note.by）不同于每一位改写者；
+// 带人工标记却没有改写历史的记录同样拒绝，机器条目不得借此标记绕过 L2。
+function assertManualRewriteReviewed(row, batch) {
+  const marked = row.review?.kind === MANUAL_REWRITE_REVIEW_KIND, history = row.manualRewrite;
+  if (!marked && history === undefined) return;
+  if (!marked || !Array.isArray(history) || !history.length || history.some(item => typeof item?.by !== 'string' || !item.by.trim())) throw new Error(`人工改写记录不完整 ${row.id}`);
+  const note = batch.l4?.notes?.find(item => item.id === row.id && typeof item.note === 'string' && item.note.trim());
+  if (!note) throw new Error(`人工改写条目缺少 L4 阅读记录 ${row.id}`);
+  const norm = value => String(value ?? '').trim().toLowerCase();
+  if (!norm(note.by)) throw new Error(`人工改写条目的 L4 阅读记录缺少审查者 ${row.id}`);
+  if (history.some(item => norm(item.by) === norm(note.by))) throw new Error(`人工改写条目的 L4 审查者与改写者相同 ${row.id}`);
+}
+
 export async function readApprovedContent(root, entries, { contextFor = () => null, revision = 'v2' } = {}) {
   const summary = await readJSON(path.join(root, 'summary.json'));
   if (!summary) throw new Error('缺少流水线摘要');
@@ -339,7 +361,8 @@ export async function readApprovedContent(root, entries, { contextFor = () => nu
     if (!current?.l4?.approved || current.fingerprint !== batch.fingerprint || current.needsSystemicRepair) throw new Error(`批 ${batch.index} 尚未完成 L4 或人工队列超过 10%`);
     if (!Array.isArray(current.ids)) throw new Error('批次缺少条目清单');
     const rows = await Promise.all(current.ids.map(id => readJSON(path.join(root, `${id}.json`))));
-    if (rows.some(row => !row) || hashContent(rows.map(row => ({ id: row.id, draft: row.draft, review: row.review, status: row.status }))) !== current.fingerprint) throw new Error(`批 ${batch.index} 审查后内容已改变`);
+    if (rows.some(row => !row) || hashContent(rows.map(rowFingerprintShape)) !== current.fingerprint) throw new Error(`批 ${batch.index} 审查后内容已改变`);
+    for (const row of rows) assertManualRewriteReviewed(row, current);
     for (const id of [...current.sample, ...current.flagged]) {
       if (!current.l4.notes?.some(row => row.id === id && typeof row.note === 'string' && row.note.trim())) throw new Error(`缺少 L4 阅读记录 ${id}`);
     }
