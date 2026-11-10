@@ -15,7 +15,8 @@ const readJson = async file => JSON.parse(await fs.readFile(file, 'utf8'));
 async function fixture(t, rejection) {
   const root = await fs.mkdtemp(path.join(tmpRoot(), 'l4-approve-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const rec = (entry, status) => ({ id: entry.id, fingerprint: hashContent({ entry, context: null, revision: 'v2' }), status, attempts: 1, draft: { id: entry.id, description: '原稿正文正文' }, review: { contradictions: [] }, errors: [], warnings: [] });
+  const rec = (entry, status) => ({ id: entry.id, fingerprint: hashContent({ entry, context: null, revision: 'v2' }), status, attempts: 1, draft: { id: entry.id, description: '原稿正文正文' }, review: { contradictions: [] }, errors: [], warnings: entry.id === 'c_flag' ? ['进 L4 抽读的警告'] : [] });
+  // c_flag 带警告：manualRewrite 重算批次时按“有警告即 flagged”得到 flagged=['c_flag']（与流水线同一规则），不靠手写。
   const rows = [rec(entries[0], 'passed'), rec(entries[1], 'manual'), rec(entries[2], 'passed')];
   for (const row of rows) await writeJson(path.join(root, `${row.id}.json`), row);
   const batch = { index: 0, fingerprint: hashContent(rows.map(rowFingerprintShape)), count: 3, passed: 2, ids: rows.map(r => r.id), manual: ['b_man'], pending: [], flagged: ['c_flag'], sample: ['a_ok'], l4: { approved: false, notes: [] } };
