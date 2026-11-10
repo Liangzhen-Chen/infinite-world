@@ -106,6 +106,9 @@ const QUANT_RE = new RegExp(`(${NUMERAL})(${Object.keys(UNIT_DIM).sort((a, b) =>
 const TEMP_CONTEXT = /(?:温度|[水油炉火锅]温|火候|[热烧升降冷凉加]至|[热烧升降冷凉加]到|达到?|升到|降到)(?:约|为|在|是)?$/u;
 const TOTAL_WORD = /(?:全程|总耗时|总用时|总计|合计|共计|共|前后|整个过程|一共)(?:约|为|需|要|共)*$/u;
 const DEADLINE = /^(?:内|以内|之内|为限)/u;
+// 期限语境词：保存七天、存放三日、保质十天、食用期五天、三天用完；单独的“晾半天”“一天之中”不是期限。
+const DEADLINE_WORD_BEFORE = /(?:保存|存放|储存|可放|可存|保质|放置|食用期|保鲜)(?:约|至|为|达|可|期|在|于)?$/u;
+const DEADLINE_WORD_AFTER = /^(?:用完|吃完|食用|后失效|后变质)/u;
 function numberOf(raw) {
   if (/^[\d.]+$/u.test(raw)) return Number(raw);
   if (raw === '半') return 0.5;
@@ -118,7 +121,7 @@ function numberOf(raw) {
   return parsed.ok ? parsed.value : null;
 }
 // 文本里的全部“数字+单位”：{dim, base, raw, index}。第/每/隔 + 数 + 天（第二天、每三天）是序数/频率，不是数量。
-// marked=true（检查正文）：天、日、周、月只在带期限标记（内、之内、以内、为限）时算数量，“半天、一天”不当期限；marked=false（收集骨架事实）全算。
+// marked=true（检查正文）：天、日、周、月只在带期限标记（内、之内、以内、为限）或紧邻期限语境词（保存、存放、可放、保质、用完、食用期、放置）时算数量，“半天、一天”不当期限；marked=false（收集骨架事实）全算。
 export function quantitiesIn(text, marked = false) {
   const found = [];
   for (const match of text.matchAll(QUANT_RE)) {
@@ -136,7 +139,7 @@ export function quantitiesIn(text, marked = false) {
     if (match[2] === '尺' && /^[规子寸]/u.test(after)) continue;
     if (match[2] === '合' && (/^[土上拢并金成起好严适力理格作同欢]/u.test(after) || match[1] === '百')) continue; // 百合是植物名
     if (match[2] === '斗' && /^[篷笠]/u.test(after)) continue;
-    if (marked && UNIT_DIM[match[2]] === 'days' && !DEADLINE.test(after)) continue;
+    if (marked && UNIT_DIM[match[2]] === 'days' && !DEADLINE.test(after) && !DEADLINE_WORD_AFTER.test(after) && !DEADLINE_WORD_BEFORE.test(before)) continue;
     const unit = /^[a-z]+$/iu.test(match[2]) ? match[2].toLowerCase() : match[2], dim = UNIT_DIM[unit];
     found.push({ dim, base: value * QUANT_UNITS[dim][unit], raw: match[0], index: match.index, end: match.index + match[0].length });
   }

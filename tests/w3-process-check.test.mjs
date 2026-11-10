@@ -371,8 +371,11 @@ test('骨架外时长：分段时长判错，只放行事实里的数字与系�
 test('骨架外期限：保存期以骨架为准', () => {
   assert.match(fxJoin('两日内用完。', fxFacts), /骨架外期限「两日」/);
   assert.match(fxJoin('五天内食用。', fxFacts), /骨架外期限「五天」/);
-  assert.deepEqual(fx('可保存七天。', fxFacts), [], '没有期限标记（内、之内、以内、为限）不当期限');
-  assert.deepEqual(fx('等半天，再晾一天。', fxFacts), [], '半天、一天不是期限');
+  assert.match(fxJoin('可保存七天。', fxFacts), /骨架外期限「七天」/);
+  assert.match(fxJoin('存放五日。', fxFacts), /骨架外期限「五日」/);
+  assert.match(fxJoin('五天用完。', fxFacts), /骨架外期限「五天」/);
+  assert.match(fxJoin('食用期十天。', fxFacts), /骨架外期限「十天」/);
+  assert.deepEqual(fx('晾半天，一天之中翻两次，再晾一天。', fxFacts), [], '晾半天、一天之中不是期限');
   assert.match(fxJoin('七天之内食用。', fxFacts), /骨架外期限「七天」/);
   assert.deepEqual(fx('三天内食用。', fxFacts), [], '等于骨架保存期');
 });
