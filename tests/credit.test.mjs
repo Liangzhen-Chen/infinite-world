@@ -165,6 +165,7 @@ test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还�
     // 赊购进货的前提是供货人手里有面包可卖。居民的正午日常购粮（R5：t-foodsrc/t-alloc，口粮替代按需求分摊后居民真的向店主买）
     // 一天内把店主开场的 6 个面包全部买走：探针 tools/probe-rules-a.mjs credit 在 st-5 与现状都读到过一天后 stock 0（开场 st-5 留存 2/现状 0）。
     // 这不是本测试要考的（借款进货的账务），所以按真实前置给店主备货：补回 6 个面包（同开场数量，同时重对账本），
+    // 诊断（F:/dnd-tmp/m26b/noon-buyout.md）：买光的是申渡一户（2 人、背包空、缺口 120，按规则补满），不是重复计需求；根因上游是开局口粮/现金为手写静态值、未按日需求派生（EC-1）。EC-1 修好后去掉这行补货重跑本测试，通过即删。
     // 探针读到可售 6、留存 0，赊购 2 个成交 cost 2，其后各断言（principal、店主钱 before-cost、loan、escrow）逐项成立。
     f.doc.state.npcs[host].inventory.item_bread={quality:'良',durability:100,weight:.15,quantity:6};resyncBooks(f.engine,f.doc);
     // D05 §5.1: even loan-funded procurement has a separate counter destination
