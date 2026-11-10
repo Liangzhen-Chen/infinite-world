@@ -1,6 +1,6 @@
 {
   "index": 0,
-  "fingerprint": "13d53923317eb800b5ddb686ebfd551e2a9ec9db06a04f81c97146cba62afdc2",
+  "fingerprint": "d0bedc72b641f853e941c5da9121000ab08a410c316073f3c93768d48cd7b3b6",
   "count": 43,
   "passed": 43,
   "ids": [
@@ -60,8 +60,187 @@
     "recipe_w3c_beech_press_board"
   ],
   "l4": {
-    "approved": false,
-    "notes": []
+    "approved": true,
+    "reviewer": "sonnet-l4-a3a9e74a",
+    "by": "sonnet-l4-a3a9e74a",
+    "reviewedAt": "2026-11-10T22:02:26.267Z",
+    "notes": [
+      {
+        "id": "recipe_w3c_parsnip_cream_pot",
+        "note": "核对：材料份数、用火点燃一份刨屑、锅刀匙、不加奶油、时长50，无骨架外内容；粗盐小包按第12条不算问题。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_poppy_rye_crisp",
+        "note": "核对：润锅用搅糊板推匀，工具只有锅和搅糊板，点燃两份刨屑，不加酵种，散落籽粒弃置，时长95。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_mustard_relish",
+        "note": "核对：压裂用刀背，翻两次属动作次数（第12条），成品留锅内交付，容器另备只在交付时，时长40。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_beet_vinegar_dice",
+        "note": "核对：配额水、一份刨屑点燃、匙压测软、离火拌醋、余汁弃置，时长85，无骨架外内容。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_canvas_satchel",
+        "note": "核对：闭合带取自余幅，锥定位后缝边，扣装在翻盖上，三件工具与骨架一致，不扩大负重，时长210。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_padded_work_collar",
+        "note": "核对：毡片被帆布包住，系带取自余下帆布，剪与针齐备，不提高承重，时长160。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_folding_haversack",
+        "note": "核对：绳道由反折口沿形成，三股麻绳穿入，空包交付，只用剪和针，时长150。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_tool_apron_panel",
+        "note": "核对：帆布作底、薄革作分袋面、余布作系带，剪锥针齐备，工具另备无额外容量与 processFacts 一致，时长240。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_felt_knee_pad",
+        "note": "核对：两片护垫来自 processFacts，余布缝绑带，用途限跪地作业，只用剪和针，时长150。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_horsehair_sieve_cloth",
+        "note": "核对：两份马尾毛束、结网梭编滤片、换缝针锁边，余下麻线前文用过，只分离粗渣，时长180。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_travel_sewing_wallet",
+        "note": "核对：四件工具都用到，毡页裁自毡片，脊折压平，成品为空夹，时长180。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_ash_walking_stick",
+        "note": "核对：锯、削、锉、涂油顺序与工具一致，无工具维护，无战斗加值和医疗保证，时长210。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_clamping_wood_jaw",
+        "note": "核对：锯剖、凿铰位、钻绑孔、嵌铰链、麻绳收紧，四件工具齐备，不承重吊运，时长230。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_peg_drying_rack",
+        "note": "核对：两块短板分侧架与横撑，六枚木楔，麻绳限张角，三件工具齐备，锯屑弃置，时长280。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_beech_spatula",
+        "note": "核对：锯、削、锉三件工具，生木面不涂油，已无清理齿缝一句，时长120。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_ladle_rest",
+        "note": "核对：已无划线标记动作，锯、凿、锉、涂油与工具材料一致，只托工具柄，时长130。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_lentil_leek_stew",
+        "note": "核对：成品名与骨架一致，配额水全部入锅，点燃两份刨屑，锅匙刀齐备，青叶韭葱后段放入，余料弃置，时长70。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_cheese_rye_panbread",
+        "note": "核对：成品名与骨架一致，黄油在锅中受热融化无抹具，点燃一份刨屑，对折夹酪片，工具为锅刀搅糊板，时长55。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_mushroom_barley_pot",
+        "note": "核对：成品名与骨架一致，三份水先用一份泡发后加余下，点燃两份刨屑，不加野菌肉汁，时长90。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_salted_walnut",
+        "note": "核对：盐用配额水溶散，点燃一份刨屑，核桃仁留锅中交付，弃置的只有挑出的薄壳与哈喇味仁，工具锅与偏柄木匙，时长45，无骨架外内容。",
+        "by": "sonnet-l4-ac18c399"
+      },
+      {
+        "id": "recipe_w3c_broadbean_garlic_mash",
+        "note": "对照骨架核对：点燃两份刨屑作火源，清水为全部配额2份，粗盐1份，蒜残皮与焦屑弃置不混入成品，全程100分钟，与骨架一致，无骨架外器具，无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_caraway_oat_crust",
+        "note": "对照骨架核对：器具只有煮锅、切刀刀背、搅糊板，点燃两份刨屑，全程80分钟与骨架一致，已无“案板”，碎屑弃置符合副产品为空，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_mutton_turnip_stew",
+        "note": "对照骨架核对：点燃三份刨屑，全程120分钟，清水配额、粗盐1份，不作药膳符合processFacts，无维修句与骨架外器具，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_plum_honey_spread",
+        "note": "对照骨架核对：无案板，只用切刀、煮锅、木匙，点燃刨屑作火源，全程65分钟与骨架一致，余料弃置，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_pear_vinegar_slice",
+        "note": "对照骨架核对：用切刀、煮锅、木匙，酸果醋2瓶与滤蜜1份，无加热，无拭布，容器另备只限交付，全程90分钟，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_dill_cucumber",
+        "note": "对照骨架核对：案板已去，盐、醋、莳萝、瓜均在骨架材料中，余液弃置，全程75分钟与骨架一致，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_garlic_butter",
+        "note": "对照骨架核对：全程不加热且骨架无燃料，蒜在回软期间切好，全程25分钟与骨架一致，无维修句，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_rendered_cooking_fat",
+        "note": "对照骨架核对：切刀、煮锅、木匙齐备，点燃两份刨屑，焦渣先拨出再弃置、不属成品，全程75分钟，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_laundry_mesh_bag",
+        "note": "对照骨架核对：结网梭、缝针、麻线2团、三股麻绳均与前文用法一致，无“余下”矛盾，量词重复已改，无火，全程170分钟，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_bottle_divider_crate",
+        "note": "对照骨架核对：锯、凿、槌均为骨架工具，软木片用锯而非剪，松板2块，全程260分钟，不附瓶有processFacts依据，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_cork_stop_set",
+        "note": "对照骨架核对：“若干小塞片”出自processFacts，已无“比瓶口”，只用修羽刀与木锉，全程55分钟，无骨架外器物，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_pear_wheat_gruel",
+        "note": "逐项核对：小灶加热并写明刨屑引火，清水2份全部注入，切刀、木匙均在骨架，不加蜂蜜出自processFacts，全程80分钟，无语病与前后矛盾，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_felt_insole_pair",
+        "note": "逐项核对：短刃裁革剪、粗眼缝针、麻线均在骨架，无火，总耗时90分钟与骨架一致，余料弃置，不增加数值出自processFacts，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_cracked_wheat_pot",
+        "note": "逐项核对：已无“案”与“可即食”，点燃两份刨屑，清水全部、粗盐全部调入与骨架份数一致，煮锅、切刀刀背、木匙均在骨架，全程85分钟，焦层弃置，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3c_beech_press_board",
+        "note": "逐项核对：已无楔片与清理齿缝，锯、刨、锉均在骨架，亚麻油1份，无火，只作手压承板出自processFacts，全程150分钟，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      }
+    ]
   },
   "l4History": [
     {
@@ -358,6 +537,37 @@
         "ids": [
           "recipe_w3c_cracked_wheat_pot",
           "recipe_w3c_beech_press_board"
+        ]
+      }
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "rejection": {
+        "by": "journey 其余 60 条按新口径只读严格复读（审查者 sonnet-l4-ac18c399、sonnet-l4-ad0f08b8）",
+        "at": "2026-11-10T22:xxZ",
+        "reason": "李白 11-10 口径（L4 必查清单第 8 到 14 条）下不批：骨架外数量与尺寸、模糊用量、骨架外器物与去处（废堆）、工具维护、锻造未写点燃木炭、前后矛盾、位置不清、语病。详见 F:/dnd-tmp/journey-reread-a.md、-b.md 与 docs/PLAN.md。",
+        "ids": [
+          "recipe_w3c_lentil_leek_stew",
+          "recipe_w3c_parsnip_cream_pot",
+          "recipe_w3c_cheese_rye_panbread",
+          "recipe_w3c_poppy_rye_crisp",
+          "recipe_w3c_mushroom_barley_pot",
+          "recipe_w3c_mustard_relish",
+          "recipe_w3c_salted_walnut",
+          "recipe_w3c_beet_vinegar_dice",
+          "recipe_w3c_canvas_satchel",
+          "recipe_w3c_padded_work_collar",
+          "recipe_w3c_folding_haversack",
+          "recipe_w3c_felt_knee_pad",
+          "recipe_w3c_horsehair_sieve_cloth",
+          "recipe_w3c_travel_sewing_wallet",
+          "recipe_w3c_ash_walking_stick",
+          "recipe_w3c_clamping_wood_jaw",
+          "recipe_w3c_peg_drying_rack",
+          "recipe_w3c_beech_spatula",
+          "recipe_w3c_ladle_rest",
+          "recipe_w3c_tool_apron_panel"
         ]
       }
     }

@@ -5,10 +5,13 @@
   "attempts": 3,
   "draft": {
     "id": "recipe_w3c_lentil_leek_stew",
-    "process": "取干木刨屑两份作燃料引燃，坐厚底煮锅。从配额清水中分取少量，将韭葱夹泥处洗净，余水留用。案上切刀把韭葱切段；褐扁豆挑去砂粒。余下清水入锅，下扁豆，以木匙搅动，煮至豆软。后段放入葱段，加粗盐，继续搅动防焦，煨至葱透、汤汁收浓。锅离火，余料弃置，工具保留。全程70分钟。"
+    "process": "把褐扁豆放入厚底煮锅，注入全部配额清水。点燃两份干木刨屑作火源，把煮锅置于火上，用偏柄木匙搅动，煮至豆软。后段用案上切刀把青叶韭葱切成段，直接放入锅中，加入粗盐，继续搅动防焦，煨至葱透、汤汁收浓。离火后即得一份葱叶扁豆烩。余料弃置，工具保留。全程70分钟。"
   },
   "review": {
-    "contradictions": []
+    "kind": "manual-rewrite-no-l2",
+    "l2": "not-run",
+    "by": "sonnet-writer-a8d49a7c",
+    "at": "2026-11-10T22:02:15.676Z"
   },
   "errors": [],
   "warnings": [],
@@ -213,6 +216,23 @@
       "clearedAt": "2026-11-10T19:25:48.378Z",
       "reason": "李白 11-10 决定（5 元授权）：配方重写本轮总上限 0.5→0.7 元，剩余 14 条一次性写完",
       "headCommit": "4e1569bd8300f67ce95eb24e7c1a600aee7e6197"
+    }
+  ],
+  "manualRewrite": [
+    {
+      "by": "sonnet-writer-a8d49a7c",
+      "at": "2026-11-10T22:02:15.676Z",
+      "reason": "李白 11-10 新口径（零花费）：复读不批的 journey 配方人工按骨架改写；独立严格 L4 已过（审查者 sonnet-l4-ac18c399、sonnet-l4-ad0f08b8）",
+      "headCommit": "4aaf38ea82fbfd8ab3ffafb455499ad17c30e424",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "recipe_w3c_lentil_leek_stew",
+        "process": "取干木刨屑两份作燃料引燃，坐厚底煮锅。从配额清水中分取少量，将韭葱夹泥处洗净，余水留用。案上切刀把韭葱切段；褐扁豆挑去砂粒。余下清水入锅，下扁豆，以木匙搅动，煮至豆软。后段放入葱段，加粗盐，继续搅动防焦，煨至葱透、汤汁收浓。锅离火，余料弃置，工具保留。全程70分钟。"
+      },
+      "priorReview": {
+        "contradictions": []
+      },
+      "priorAttempts": 3
     }
   ]
 }
