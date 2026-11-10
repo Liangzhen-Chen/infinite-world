@@ -418,9 +418,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player",
-            "state.inventory"
+            "state.player"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "replyContains",
@@ -499,9 +502,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player",
-            "state.inventory"
+            "state.player"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },

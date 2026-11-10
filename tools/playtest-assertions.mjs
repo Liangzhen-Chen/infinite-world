@@ -31,6 +31,12 @@ export function evaluateAssertions(assertions,{before,after,calls,reply,scene,hi
                 pass=actual.length>0&&actual.every(row=>row.available);break;
             }
             case'unchanged':actual=(rule.paths??['state']).filter(path=>!isDeepStrictEqual(at(before,path),at(after,path)));pass=!actual.length;break;
+            // 只比较“物品 id → 数量”：物品自身状态（耐久等）由磨损等规律管，跨午夜的等待里可以合法变化，数量不能变。
+            case'holdingsUnchanged':{
+                const counts=bag=>Object.fromEntries(Object.entries(bag??{}).map(([id,row])=>[id,typeof row==='number'?row:row?.quantity??0]).filter(([,n])=>n!==0));
+                const path=rule.path??'state.inventory',was=counts(at(before,path)),now=counts(at(after,path));
+                actual=[...new Set([...Object.keys(was),...Object.keys(now)])].filter(id=>(was[id]??0)!==(now[id]??0)).sort();pass=!actual.length;break;
+            }
             case'records':actual=Object.values(value??{}).filter(row=>matches(row,rule.where)&&(!rule.includes||Array.isArray(at(row,rule.includes.path))&&at(row,rule.includes.path).some(entry=>matches(entry,rule.includes.where)))).length;pass=actual>=(rule.min??1)&&actual<=(rule.max??Infinity);break;
             case'newRecordsDuringTurn':{
                 const from=before.state?.minute,to=after.state?.minute;

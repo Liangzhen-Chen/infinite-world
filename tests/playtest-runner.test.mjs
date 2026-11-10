@@ -320,3 +320,13 @@ test('试玩守门只看实际存档种子：随机种子服务器手写 seedMod
     const custom=await createPlaytestServer({seed:'custom-fixed'});t.after(()=>custom.close());
     await assert.rejects(runPlaytest({scenario:{id:'wrong-seed',turns:[]},api:custom.api,client:{},bundle:await loadPromptBundle()}),/实际种子不是确定种子/);
 });
+test('holdingsUnchanged 只比物品数量：数量变了判失败，只有耐久变了判通过',()=>{
+    const state=inventory=>({state:{inventory}}),rule=[{kind:'holdingsUnchanged',path:'state.inventory'}];
+    const before=state({item_clothes:{quantity:1,durability:100},item_bread:2,item_staff:{quantity:1}});
+    const worn=evaluateAssertions(rule,{before,after:state({item_clothes:{quantity:1,durability:99},item_bread:2,item_staff:{quantity:1}}),calls:[],reply:''});
+    assert.equal(worn[0].pass,true);
+    const lost=evaluateAssertions(rule,{before,after:state({item_clothes:{quantity:1,durability:99},item_bread:1,item_staff:{quantity:1}}),calls:[],reply:''});
+    assert.equal(lost[0].pass,false);assert.deepEqual(lost[0].actual,['item_bread']);
+    const gained=evaluateAssertions(rule,{before,after:state({item_clothes:{quantity:1,durability:100},item_bread:2,item_staff:{quantity:1},item_wooden_peg:1}),calls:[],reply:''});
+    assert.equal(gained[0].pass,false);assert.deepEqual(gained[0].actual,['item_wooden_peg']);
+});
