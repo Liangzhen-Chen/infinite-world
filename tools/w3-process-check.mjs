@@ -65,7 +65,7 @@ const HEAT_COMPOUND = /[煮煎炒熬烘烙焙炖烤锻煲烩焯炙煅焊炸][锅
 // 双重否定“不得不、不可不、不能不、不许不”（等于必须；“非…不可”由 negatedAt 处理），无论/无非，非常/非但，以及“分别、区别、特别、差别”里的“别”（按前一字整体排除）。
 const NEGATION = /(?:(?<!不[可能得许])不(?:(?![断停久时住已止仅但论管如妨只光单过然料足够免禁由觉知]|得不)[^，。；、：]{1,2}|(?:再|必|得|可|要|宜|另|需|能|会|应|许|准)?(?:用|以|取|作|为|拿|靠|将|把|经)?)|未(?:经)?|无(?!论|非)(?:需|须)?|勿(?:再|要|以|用|取)?|免(?:于)?|莫(?:要|以)?|(?<![分区差特辨告道类个另惜级性派送拜辞识])别(?:再|用)?|禁止?(?:以|用)?|切忌|切勿|严禁|避免|非(?!常|但|独|凡)(?:用|以)?)$/u;
 // “非用案板不可”：非…不可/不行/不成是“必须”，不是否定。其余否定检查都走这里，prefix 以“非/非用/非以”收尾且后面八字内有“不可”时不算否定。
-const negatedAt = (text, index) => NEGATION.test(text.slice(0, index)) && !(/非(?:用|以)?$/u.test(text.slice(0, index)) && /^[^，。；、：]{0,8}不(?:可|行|成)/u.test(text.slice(index)));
+export const negatedAt = (text, index) => NEGATION.test(text.slice(0, index)) && !(/非(?:用|以)?$/u.test(text.slice(0, index)) && /^[^，。；、：]{0,8}不(?:可|行|成)/u.test(text.slice(index)));
 const FIRE_ROLE = /炉用|灶用|引火|引燃|点燃|点火|生火|起火|升火|生炉|燃料|火源|供.{0,2}[火炉]|烧炉|烧尽|燃尽|烧完|烧旺|添炭|添柴|燃起|燃着/u;
 const EXTERNAL = /另备|自备|自带|不随货|使用者(?:自)?备|须(?:由)?使用者/u;
 const NOT_PROVIDED = /不(?:随)?附|不含|不带|不配/u;
@@ -154,7 +154,7 @@ const split = (text, pattern) => text.split(pattern).filter((part) => part.trim(
 
 // 一个分句里“被声明另备/不提供”的对象所在区间。声明词后面直到下一个动作/连接词（用、以、取、将、再……）之前是被声明的对象（另备案板用剪裁片 → 只有案板）；
 // 若声明词后面没有对象（容器须使用者另备、不随货提供），对象在声明词前面、上一个动作词之后。
-function declaredSpans(clause) {
+export function declaredSpans(clause) {
   const spans = [];
   const matches = [...clause.matchAll(DECL)];
   for (let i = 0; i < matches.length; i++) {
@@ -167,7 +167,7 @@ function declaredSpans(clause) {
   }
   return spans;
 }
-const within = (spans, index) => spans.some(([from, to]) => index >= from && index < to);
+export const within = (spans, index) => spans.some(([from, to]) => index >= from && index < to);
 
 // 中心词候选：末两字一律算；末一字只在器具类（非容器/布/陶）且不是日常常用字时算。
 export function utensilHeads(name, single = true) {
@@ -416,7 +416,7 @@ function affirmsFire(sentence, names) {
 }
 
 const cache = new WeakMap();
-function vocabularyFor(context) {
+export function vocabularyFor(context) {
   if (!cache.has(context.catalog)) cache.set(context.catalog, buildVocabulary(context.catalog, context.catalogRecipes ?? []));
   return cache.get(context.catalog);
 }
