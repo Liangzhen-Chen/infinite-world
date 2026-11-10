@@ -95,4 +95,6 @@ export const READONLY_ENTRIES = [
   ['tools/probe-gucen-travel.mjs', '--table'],
   ['tools/probe-gucen-travel.mjs', '--direct'],
   ['tools/probe-gucen-travel.mjs', '--day', 'npc_hw_gucen'],
+  // 审批未齐时以明确原因和非 0 退出码结束（见 reportApprovalIncomplete），不是崩溃。
+  ['world/design/w3-journey-text-revision.mjs', '--verify'],
 ];

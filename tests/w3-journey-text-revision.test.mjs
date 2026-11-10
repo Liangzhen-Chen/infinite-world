@@ -75,6 +75,7 @@ const cfgFor=(entries,verify)=>({revision,root:'rev',CARD:'W3JT',limitYuan:0,fro
 async function inTmp(fn){
  const dir=await tmp(),old=process.cwd();
  await fs.mkdir(path.join(dir,'world/meta'),{recursive:true});
+ await fs.mkdir(path.join(dir,'rev'),{recursive:true}); // 真实流程里 --prepare 已建好批目录（candidate.json 所在）；夹具注入 frozen，须自己建同一目录
  await fs.writeFile(path.join(dir,'world/meta/recipes.json'),JSON.stringify([{id:'r1',process:'旧正文',minutes:30}],null,2)+'\n');
  process.chdir(dir);
  try{await fn(dir);}finally{process.chdir(old);}

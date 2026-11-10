@@ -4,7 +4,7 @@ import {loadWorld} from './load-world.mjs';
 import {economyW3} from '../world/design/economy-w3.mjs';
 import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {economyW3Journey} from '../world/design/economy-w3-journey.mjs';
-import {readApprovedContent,hashContent} from './content-pipeline.mjs';
+import {readApprovedContent,hashContent,approvalIncomplete,reportApprovalIncomplete} from './content-pipeline.mjs';
 import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
 import {readApprovedSupersedes,applySupersedes,createTagSourceResolver,overlayFieldReverts} from './approved-revisions.mjs';
 import {w3Context,w3Revision,validateW3Draft} from './w3-content.mjs';
@@ -61,12 +61,12 @@ export async function publishedW3(world){
   ['远行细作','world/drafts/w3/journey',economyW3Journey(world),journeyRevision,journeyContext,validateTradesDraft],
  ])for(const kind of ['items','recipes']){
   const approved=await readApprovedContent(`${root}/${kind}`,bones[kind],{contextFor:e=>context(world,bones,e),revision});
-  if(approved.length!==bones[kind].length)throw new Error(`${label}/${kind}仍有待审`);
+  if(approved.length!==bones[kind].length)throw approvalIncomplete(`${label}/${kind}仍有待审`);
   // 设计源骨架上被已审批修订回执取代的值，按回执更新后再比对（读取在审批指纹核验之后，核验仍用审批时的骨架）。
   const effective=structuredClone(bones[kind]);
   for(const a of applySupersedes(effective,`${root}/bones.json`,supersedes))explained.push({id:a.id,parts:a.parts,old:a.before,source:`修订回执 ${a.revision}：${a.receiptFile}#${a.id} ${a.field}`});
   const summary=JSON.parse(await fs.readFile(`${root}/${kind}/summary.json`,'utf8'));
-  if(summary.manual||summary.pending||summary.passed!==bones[kind].length)throw new Error(`${label}/${kind}摘要仍有待审`);
+  if(summary.manual||summary.pending||summary.passed!==bones[kind].length)throw approvalIncomplete(`${label}/${kind}摘要仍有待审`);
   for(const b of summary.batches)batches.push({label,kind,index:b.index,count:b.count,fingerprint:b.fingerprint});
   for(const bone of bones[kind]){
    const draft=approved.find(x=>x.id===bone.id),official=world[kind].find(x=>x.id===bone.id);if(!official)throw new Error(`未发布 ${bone.id}`);
@@ -118,4 +118,4 @@ async function main(){
  catch(error){if(error.code!=='ENOENT')throw error;if(process.argv.includes('--check'))throw new Error(`${scorePath} 缺失：--check 只检查，不创建样本文件`);const seed=randomBytes(32).toString('hex');report={version:1,createdAt:new Date().toISOString(),seed,algorithm:'按id排序后，以SHA256(seed:counter)拒绝采样执行Fisher-Yates，取前10；创建后不重抽',corpusHash,audit,rubric:{range:'1欠缺、2明显不足、3合格但普通、4充分且有辨识、5有突出可核验细节',voiceScope:'物品配方仍评说话方式辨识度：看作者或使用者叙述视角、行业措辞、信息取舍及句式是否可辨认。没有NPC对白不免评；共同目录格式不是扣分本身，换名即可套用的通用话语不能得高分。',threshold:'60个单项平均至少4，任何单项至少3；同时列出逐条及逐维度均分，不能用总均分掩盖不足。'},samples:fixedSample(entries,seed).map(x=>({id:x.id,name:x.entity.name,kind:x.kind,source:x.source,entityHash:hashContent(x.entity),ratings:Object.fromEntries(dimensions.map(key=>[key,{score:null,quote:'',reason:''}]))}))};await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
  if(process.argv.includes('--check')){const result=validateScores(report,entries);console.log(JSON.stringify({audit,result}));if(!result.passed)process.exitCode=1;}else console.log(JSON.stringify({audit,seed:report.seed,samples:report.samples.map(row=>({id:row.id,name:row.name,entity:entries.find(x=>x.id===row.id).entity}))}));
 }
-if(process.argv[1]?.replaceAll('\\','/').endsWith('/w3-wave-score.mjs'))await main();
+if(process.argv[1]?.replaceAll('\\','/').endsWith('/w3-wave-score.mjs'))await reportApprovalIncomplete(main);
