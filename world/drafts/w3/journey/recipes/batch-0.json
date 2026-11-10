@@ -1,6 +1,6 @@
 {
   "index": 0,
-  "fingerprint": "c693059cc3e9b8355d9e62e8961893f2f5a8ea6f3d29078c6e12f6c6b6f1b1d3",
+  "fingerprint": "13d53923317eb800b5ddb686ebfd551e2a9ec9db06a04f81c97146cba62afdc2",
   "count": 43,
   "passed": 43,
   "ids": [
@@ -345,6 +345,19 @@
         "reason": "李白 11-10 决定：L4 不批与确定性检查命中的条目一律人工改写，再由独立审查者做严格 L4。问题包括骨架外器具（案板、剪、布）、用火未交代火源、前后矛盾、骨架外器物（瓶），各条详见 docs/PLAN.md 与 docs/m27-rewrite-scope.md。",
         "ids": [
           "recipe_w3c_cork_stop_set"
+        ]
+      }
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "rejection": {
+        "by": "独立严格 L4 抽样复读（sonnet-l4-a3a9e74a）",
+        "at": "2026-11-10T22:0xZ",
+        "reason": "李白 11-10 新口径：骨架外用途、器物、工具维护、尺寸不写，用火须写明燃料。抽样不批：cracked_wheat_pot（可即食、案）、beech_press_board（楔片调刀、清理齿缝）、seam_pitch_cake（火源未交代、灶炉不一、倾出无落处）、slate_stylus（夹具、三指）。",
+        "ids": [
+          "recipe_w3c_cracked_wheat_pot",
+          "recipe_w3c_beech_press_board"
         ]
       }
     }

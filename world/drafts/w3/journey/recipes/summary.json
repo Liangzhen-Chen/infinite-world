@@ -5576,7 +5576,7 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "c693059cc3e9b8355d9e62e8961893f2f5a8ea6f3d29078c6e12f6c6b6f1b1d3",
+      "fingerprint": "13d53923317eb800b5ddb686ebfd551e2a9ec9db06a04f81c97146cba62afdc2",
       "count": 43,
       "passed": 43,
       "ids": [
@@ -5923,6 +5923,19 @@
               "recipe_w3c_cork_stop_set"
             ]
           }
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "rejection": {
+            "by": "独立严格 L4 抽样复读（sonnet-l4-a3a9e74a）",
+            "at": "2026-11-10T22:0xZ",
+            "reason": "李白 11-10 新口径：骨架外用途、器物、工具维护、尺寸不写，用火须写明燃料。抽样不批：cracked_wheat_pot（可即食、案）、beech_press_board（楔片调刀、清理齿缝）、seam_pitch_cake（火源未交代、灶炉不一、倾出无落处）、slate_stylus（夹具、三指）。",
+            "ids": [
+              "recipe_w3c_cracked_wheat_pot",
+              "recipe_w3c_beech_press_board"
+            ]
+          }
         }
       ],
       "costUpperYuan": 5.682441120000004,
@@ -5931,7 +5944,7 @@
     },
     {
       "index": 1,
-      "fingerprint": "f4d24e3c8a9ac967f81452c89c06075c1fbfbcb70dd5bd6ee49c02b896aa68d1",
+      "fingerprint": "cca0ebb46aa4f6f78352350791717ae7c8eb5d3da2fe8567e7cd20de74c15a8c",
       "count": 42,
       "passed": 42,
       "ids": [
@@ -6297,6 +6310,19 @@
               "recipe_w3c_seal_thread_bundle",
               "recipe_w3c_forged_chain_short",
               "recipe_w3c_gate_hasps"
+            ]
+          }
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "rejection": {
+            "by": "独立严格 L4 抽样复读（sonnet-l4-a3a9e74a）",
+            "at": "2026-11-10T22:0xZ",
+            "reason": "李白 11-10 新口径：骨架外用途、器物、工具维护、尺寸不写，用火须写明燃料。抽样不批：cracked_wheat_pot（可即食、案）、beech_press_board（楔片调刀、清理齿缝）、seam_pitch_cake（火源未交代、灶炉不一、倾出无落处）、slate_stylus（夹具、三指）。",
+            "ids": [
+              "recipe_w3c_seam_pitch_cake",
+              "recipe_w3c_slate_stylus"
             ]
           }
         }

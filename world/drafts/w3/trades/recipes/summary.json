@@ -7,7 +7,7 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "be3707646aa66f94ba2d3838dd9d89b76060d980af45cda8bb6b0cbc1cd06e7f",
+      "fingerprint": "19a3c27c9bab2666dea7da8430b5fbc3f4d55748df9be52afc8ba8f489228763",
       "count": 25,
       "passed": 25,
       "ids": [
@@ -41,13 +41,7 @@
       "manual": [],
       "pending": [],
       "flagged": [
-        "recipe_w3b_pea_spread",
-        "recipe_w3b_honey_nut_cake",
-        "recipe_w3b_onion_egg_soup",
-        "recipe_w3b_apple_rye_griddle",
-        "recipe_w3b_three_leg_stool",
-        "recipe_w3b_wall_shelf",
-        "recipe_w3b_scroll_wrap"
+        "recipe_w3b_three_leg_stool"
       ],
       "sample": [
         "recipe_w3b_shutter_panel",
@@ -58,25 +52,7 @@
       ],
       "l4": {
         "approved": false,
-        "notes": [],
-        "rejection": {
-          "by": "行当批只读严格 L4 复读（Sonnet，docs/m27-trades-recipes-audit.md）与确定性工序检查（t-m27 w3-process-check）",
-          "at": "2026-11-10T21:5xZ",
-          "reason": "李白 11-10 决定 T1：L4 不批与确定性检查命中的行当批配方全部人工改写，再由独立审查者做严格 L4。问题包括骨架外数量（克、毫升、约N分钟分段、身体尺度）、骨架外器具、用火未交代火源、骨架外用途或期限、前后矛盾、语言，各条详见 docs/m27-trades-recipes-audit.md 与 docs/m27-rewrite-scope.md。",
-          "ids": [
-            "recipe_w3b_apple_rye_griddle",
-            "recipe_w3b_honey_curd_spread",
-            "recipe_w3b_honey_nut_cake",
-            "recipe_w3b_lidded_seed_box",
-            "recipe_w3b_onion_egg_soup",
-            "recipe_w3b_pea_spread",
-            "recipe_w3b_scroll_wrap",
-            "recipe_w3b_shutter_panel",
-            "recipe_w3b_thread_rack",
-            "recipe_w3b_tool_tray",
-            "recipe_w3b_wall_shelf"
-          ]
-        }
+        "notes": []
       },
       "costUpperYuan": 2.9468760400000003,
       "manualRatio": 0,
@@ -202,12 +178,34 @@
               "recipe_w3b_wall_shelf"
             ]
           }
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "rejection": {
+            "by": "行当批只读严格 L4 复读（Sonnet，docs/m27-trades-recipes-audit.md）与确定性工序检查（t-m27 w3-process-check）",
+            "at": "2026-11-10T21:5xZ",
+            "reason": "李白 11-10 决定 T1：L4 不批与确定性检查命中的行当批配方全部人工改写，再由独立审查者做严格 L4。问题包括骨架外数量（克、毫升、约N分钟分段、身体尺度）、骨架外器具、用火未交代火源、骨架外用途或期限、前后矛盾、语言，各条详见 docs/m27-trades-recipes-audit.md 与 docs/m27-rewrite-scope.md。",
+            "ids": [
+              "recipe_w3b_apple_rye_griddle",
+              "recipe_w3b_honey_curd_spread",
+              "recipe_w3b_honey_nut_cake",
+              "recipe_w3b_lidded_seed_box",
+              "recipe_w3b_onion_egg_soup",
+              "recipe_w3b_pea_spread",
+              "recipe_w3b_scroll_wrap",
+              "recipe_w3b_shutter_panel",
+              "recipe_w3b_thread_rack",
+              "recipe_w3b_tool_tray",
+              "recipe_w3b_wall_shelf"
+            ]
+          }
         }
       ]
     },
     {
       "index": 1,
-      "fingerprint": "713551ce8624ddbb48ddb040d1fb80e43c59475647c43fd80a99efbc5c01cf2b",
+      "fingerprint": "70a1a706ff78045961dd2a317df70e1d025591a7ecc6ef28bb0e375fe1fcf30e",
       "count": 25,
       "passed": 25,
       "ids": [
@@ -240,14 +238,7 @@
       "rewritten": 21,
       "manual": [],
       "pending": [],
-      "flagged": [
-        "recipe_w3b_boot_gaiter",
-        "recipe_w3b_boot_scraper",
-        "recipe_w3b_gall_wash",
-        "recipe_w3b_copper_nameplate",
-        "recipe_w3b_wax_seal_blank",
-        "recipe_w3b_wood_marking_kit"
-      ],
+      "flagged": [],
       "sample": [
         "recipe_w3b_boot_scraper",
         "recipe_w3b_bucket_handle",
@@ -257,28 +248,7 @@
       ],
       "l4": {
         "approved": false,
-        "notes": [],
-        "rejection": {
-          "by": "行当批只读严格 L4 复读（Sonnet，docs/m27-trades-recipes-audit.md）与确定性工序检查（t-m27 w3-process-check）",
-          "at": "2026-11-10T21:5xZ",
-          "reason": "李白 11-10 决定 T1：L4 不批与确定性检查命中的行当批配方全部人工改写，再由独立审查者做严格 L4。问题包括骨架外数量（克、毫升、约N分钟分段、身体尺度）、骨架外器具、用火未交代火源、骨架外用途或期限、前后矛盾、语言，各条详见 docs/m27-trades-recipes-audit.md 与 docs/m27-rewrite-scope.md。",
-          "ids": [
-            "recipe_w3b_boot_gaiter",
-            "recipe_w3b_boot_scraper",
-            "recipe_w3b_bucket_handle",
-            "recipe_w3b_chalk_powder",
-            "recipe_w3b_copper_nameplate",
-            "recipe_w3b_gall_wash",
-            "recipe_w3b_needle_case",
-            "recipe_w3b_ochre_paint",
-            "recipe_w3b_polishing_powder",
-            "recipe_w3b_rein_patch",
-            "recipe_w3b_soot_ink",
-            "recipe_w3b_tent_stake",
-            "recipe_w3b_wax_seal_blank",
-            "recipe_w3b_wood_marking_kit"
-          ]
-        }
+        "notes": []
       },
       "costUpperYuan": 3.251461159999998,
       "manualRatio": 0,
@@ -365,6 +335,31 @@
               "recipe_w3b_pot_lifter",
               "recipe_w3b_sack_pricker",
               "recipe_w3b_waxed_thread",
+              "recipe_w3b_boot_gaiter",
+              "recipe_w3b_boot_scraper",
+              "recipe_w3b_bucket_handle",
+              "recipe_w3b_chalk_powder",
+              "recipe_w3b_copper_nameplate",
+              "recipe_w3b_gall_wash",
+              "recipe_w3b_needle_case",
+              "recipe_w3b_ochre_paint",
+              "recipe_w3b_polishing_powder",
+              "recipe_w3b_rein_patch",
+              "recipe_w3b_soot_ink",
+              "recipe_w3b_tent_stake",
+              "recipe_w3b_wax_seal_blank",
+              "recipe_w3b_wood_marking_kit"
+            ]
+          }
+        },
+        {
+          "approved": false,
+          "notes": [],
+          "rejection": {
+            "by": "行当批只读严格 L4 复读（Sonnet，docs/m27-trades-recipes-audit.md）与确定性工序检查（t-m27 w3-process-check）",
+            "at": "2026-11-10T21:5xZ",
+            "reason": "李白 11-10 决定 T1：L4 不批与确定性检查命中的行当批配方全部人工改写，再由独立审查者做严格 L4。问题包括骨架外数量（克、毫升、约N分钟分段、身体尺度）、骨架外器具、用火未交代火源、骨架外用途或期限、前后矛盾、语言，各条详见 docs/m27-trades-recipes-audit.md 与 docs/m27-rewrite-scope.md。",
+            "ids": [
               "recipe_w3b_boot_gaiter",
               "recipe_w3b_boot_scraper",
               "recipe_w3b_bucket_handle",
