@@ -8,7 +8,7 @@ import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
-import {recordsMemo} from './storage.mjs';
+import {recordsMemo,withReadIndex} from './storage.mjs';
 import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
@@ -226,8 +226,9 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
 const supplyMemo=Symbol('market supply');
 export function marketSupply(d,engine,item,location,options={}){
  const keys=Object.keys(options);
- if(keys.some(k=>k!=='businessOwners'))return readMarketSupply(d,engine,item,location,options);
- return {...budgetRead(d,engine,[supplyMemo,item,location,JSON.stringify(options.businessOwners??[])],()=>readMarketSupply(d,engine,item,location,options))};
+ if(keys.some(k=>k!=='businessOwners'))return withReadIndex(()=>readMarketSupply(d,engine,item,location,options));
+// readMarketSupply 全程只读（没有写入）：固定状态下推进之外也走记录索引与状态记忆。
+ return {...withReadIndex(()=>budgetRead(d,engine,[supplyMemo,item,location,JSON.stringify(options.businessOwners??[])],()=>readMarketSupply(d,engine,item,location,options)))};
 }
 function readMarketSupply(d,engine,item,location,options){
  const current=stockSupply(d,engine,item,location,options);
