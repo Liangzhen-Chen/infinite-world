@@ -12,6 +12,7 @@ import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {affairs} from '../server-plugin/ui-affairs.mjs';
 import {collectChronicleFacts} from '../server-plugin/chronicle.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
+import {moveCoins as moneyMove,purse,sink,mirrorPartyCoins} from '../server-plugin/money.mjs';
 
 test('R2-E1 义务子项：两张真实当票分别到期，异地不冻结，未到期条款不改写',async t=>{
  const f=fixture();
@@ -29,7 +30,10 @@ test('R2-E3 义务子项：真实欠薪只减一次股份净值，清偿前不�
  const f=fixture(),equity=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'pharmacy-equity');
  f.doc.state.records[`finance_profit:${host}`]={category:'finance_profit',issuer:host,net:1000};
  const before=f.draft(),value=netAssets(before,f.e,host);before.done();
- f.doc.state.npcs[host].coins=0;
+ // 现金清零走正式入口：账本转移（钱袋→汇）并同步旧字段，写法同 business.serve 的付费；
+ // 直接写旧字段不动账本，而 netAssets 的现金读账本，那样并没有真的清零。
+ const broke=f.draft(),have=f.doc.state.npcs[host].coins;moneyMove(broke,{from:purse(f.e,host),to:sink('export','travel'),amount:have,writer:'shop',eventId:'clear-cash'});mirrorPartyCoins(broke,f.e,host,-have,'clear-cash','shop');broke.done();
+ assert.equal(f.doc.state.npcs[host].coins,0);assert.equal(f.doc.ledger.accounts[purse(f.e,host)]??0,0);
  const d=f.draft(),job={id:'pharmacy-job',category:'contract',kind:'workshop',owner:host,worker,wage:20,location:f.doc.state.location,createdAt:0,starts:0,deadline:30*DAY,status:'有效',paid:0,workedMinutes:0};
  d.set(['state','records',job.id],job);const earned=settleEmploymentPay(d,f.e,job,600,480);assert.equal(earned.arrears,20);d.done();
  const claim=Object.values(f.doc.state.records).find(r=>r.kind==='wage');assert.ok(claim.obligation);

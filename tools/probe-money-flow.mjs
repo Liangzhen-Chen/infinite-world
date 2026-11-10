@@ -141,7 +141,9 @@ async function s3(){
      dj.set(['state','records',jb.id],jb);dj.done();console.log(`  [二分] 仅登记雇佣合同(未结算)：${read(f2.doc)}`);
      const dk=f2.draft();settleEmploymentPay(dk,f2.e,jb,600,480);dk.done();console.log(`  [二分] 再结算工钱(记欠薪，host 现金账本不足以立即付?)：${read(f2.doc)}；host 旧字段现金 ${f2.doc.state.npcs[host].coins}，账本 ${f2.doc.ledger.accounts[partyAccount(f2.e,f2.doc.state,host)]}`);
      const tk=Object.values(f2.doc.state.records).filter(r=>r.category==='contract'||r.kind==='wage').map(r=>`${r.id??'?'}:${r.category}/${r.kind}`).slice(0,6);console.log(`  [二分] 记录：${tk.join(' ')}`);}
-    f.doc.state.npcs[host].coins=0;
+    {const {moveCoins,purse,sink,mirrorPartyCoins}=await import('../server-plugin/money.mjs');
+     const broke=f.draft(),have=f.doc.state.npcs[host].coins;moveCoins(broke,{from:purse(f.e,host),to:sink('export','travel'),amount:have,writer:'shop',eventId:'clear-cash'});mirrorPartyCoins(broke,f.e,host,-have,'clear-cash','shop');broke.done();
+     console.log(`  正式入口清零：旧字段 ${f.doc.state.npcs[host].coins}，账本 ${f.doc.ledger.accounts[purse(f.e,host)]??0}`);}
     const d=f.draft(),job={id:'pharmacy-job',category:'contract',kind:'workshop',owner:host,worker,wage:20,location:f.doc.state.location,createdAt:0,starts:0,deadline:30*D,status:'有效',paid:0,workedMinutes:0};
     d.set(['state','records',job.id],job);const earned=settleEmploymentPay(d,f.e,job,600,480);console.log(`  settleEmploymentPay 欠薪 ${earned.arrears}`);d.done();
     const q=f.draft();const B=parts(q,'后：旧字段现金清零 + 欠薪 20');
