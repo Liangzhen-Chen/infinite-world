@@ -4,6 +4,7 @@ import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,readApprovedContent,defaultReviewRequest,PROCESS_DRAFT_RULES} from './content-pipeline.mjs';
 import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {w3Context,validateW3Draft,closestW3Similarity,assembleW3} from './w3-content.mjs';
+import {processIssues} from './w3-process-check.mjs';
 
 export const tradesRoot='world/drafts/w3/trades',tradesRevision='w3-trades-1';
 export function validateTradesDraft(draft,entry,blocklist,context){
