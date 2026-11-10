@@ -48,6 +48,12 @@ export async function inspectTrades(world,bones,{requireL4=true}={}){
  const candidate=assembleTradesCandidate(world,bones,rows);
  return{candidate,rows};
 }
+// 人工改写工具（tools/manual-rewrite.mjs）取用的 L1 配置：与流水线同一个 validateTradesDraft，不另写规则；形状与 tools/w3-journey.mjs 的相同。
+export async function manualRewriteProfile(kind){
+ const world=await loadWorld(),bones=economyW3Trades(world),blocklist=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8'));
+ if(!bones[kind])throw new Error('--kind 须为 items 或 recipes');
+ return{entries:bones[kind],contextFor:entry=>w3Context(world,bones,entry),validateDraft:(draft,entry,context)=>validateTradesDraft(draft,entry,blocklist,context)};
+}
 async function main(){
  const world=await loadWorld(),bones=economyW3Trades(world),blocklist=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8'));
  if(process.argv.includes('--check')){const {candidate}=await inspectTrades(world,bones);console.log(JSON.stringify({candidateItems:candidate.items.length,candidateRecipes:candidate.recipes.length,sourceWritten:false,supply:bones.supply}));return;}
