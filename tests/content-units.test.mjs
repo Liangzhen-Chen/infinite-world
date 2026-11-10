@@ -23,3 +23,12 @@ test('反例：同单位、简称、材料名不以单位结尾、无引用材�
   assert.deepEqual(unitIssues({id: 'x', process: '取干直芦管束一根。'}, null, null), []);
   assert.deepEqual(unitIssues({id: 'x', process: '取干直芦管束一根。'}, null, {materials: []}), []);
 });
+test('同类单位互换不判（个体量词之间）', () => {
+  assert.deepEqual(unitIssues({id: 'x', process: '取干栽培蘑菇片三块。'}, null, ctx(['干栽培蘑菇片'])), []);
+  assert.deepEqual(unitIssues({id: 'x', process: '取面团一块。'}, null, ctx(['面团'])), []);
+  assert.deepEqual(unitIssues({id: 'x', process: '取厚毛毡片一张。'}, null, ctx(['厚毛毡片'])), []);
+});
+test('集合量与个体量互换仍判错', () => {
+  assert.equal(unitIssues({id: 'x', process: '取干直芦管束一根。'}, null, ctx(['干直芦管束'])).length, 1);
+  assert.equal(unitIssues({id: 'x', process: '取干栽培蘑菇片一捆。'}, null, ctx(['干栽培蘑菇片'])).length, 1);
+});
