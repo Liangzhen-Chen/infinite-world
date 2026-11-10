@@ -964,15 +964,17 @@
   "item_water": {
    "饮用水": {
     "id": null,
-    "status": "未知",
-    "note": "凭记忆、量级已判合理；无 FDC 编号。本分支尚无“近似”状态，合并时由协调者改为“近似”"
+    "status": "近似",
+    "verified": "未核对",
+    "note": "凭记忆、量级已判合理；无 FDC 编号"
    }
   },
   "item_bread": {
    "白面包": {
     "id": null,
-    "status": "未知",
-    "note": "凭记忆、量级已判合理；无 FDC 编号。t-l2fix 的“近似”状态在本分支尚无，合并时由协调者改为“近似”"
+    "status": "近似",
+    "verified": "未核对",
+    "note": "凭记忆、量级已判合理；无 FDC 编号"
    }
   },
   "item_milk": {
