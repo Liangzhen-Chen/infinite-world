@@ -9,6 +9,7 @@ import {spawnSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import {pathToFileURL} from 'node:url';
 import {tmpRoot} from '../../tools/tmp-root.mjs';
+import {checkOptArgs} from '../../tools/cli-flags.mjs';
 import {READONLY_ENTRIES, RUN_GROUPS, ENTRY_TIMEOUT_MS, SLOW_ENTRY_TIMEOUT_MS} from '../../tools/readonly-entries.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -42,6 +43,8 @@ export function runGroup(group) {
     for (const k of Object.keys(env)) if (/KEY|TOKEN|SECRET/i.test(k)) delete env[k];
     const changed = [];
     for (const [file, ...args] of entries) {
+      // 修饰参数按声明的类型校验；路径类只能指向副本内部，越界直接判失败（不运行）
+      assert.deepEqual(checkOptArgs(args, dest), [], `只读入口参数越界或类型不符 ${file} ${args.join(' ')}`);
       const r = spawnSync(process.execPath, [file, ...args], {cwd: dest, env, encoding: 'utf8', timeout: timeoutOf(file), maxBuffer: 1 << 26});
       const now = walk(dest);
       const diff = [];

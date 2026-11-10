@@ -3,9 +3,11 @@
 //   ro      只读开关（校验 / 检查 / 列出 / 演练）。脚本里出现 ro 开关，tools/readonly-entries.mjs 的 READONLY_ENTRIES 必须有一条带该开关的入口；
 //           全量检查（tests/readonly-entries-run-*.test.mjs）在仓库临时副本上实跑这些入口，逐字节比对。
 //   write   会写盘的开关；note 写明写哪些文件。不实跑。
-//   opt     修饰参数（路径、数量、过滤、输出格式、预算），自身不决定读写，随它所在命令走。
+//   opt     修饰参数（路径、数量、过滤、输出格式、预算），自身不决定读写，随它所在命令走。每个都声明值的类型（见 OPT 上方说明）；只读入口里的 opt 值由 checkOptArgs 校验，path 类只能指向实跑副本内部。
 //   nonflag 不是本脚本的开关：传给子进程 / node / git 的参数、SVG 与样式名里的 --xxx。
 // 同名开关在不同脚本里意义不同时，在 FILE_FLAG_OVERRIDES 里按“脚本 开关”单独归类。
+import fs from 'node:fs';
+import path from 'node:path';
 const W = {
   '--publish': '写 world/ 正式数据（meta、rules 等）与发布回执，各脚本不同',
   '--review': '写 world/drafts/<批>/ 下审阅记录、L2 账与 summary（联网调模型）',
@@ -63,18 +65,31 @@ const N = {
   '--cpu-prof': '传给 node 的参数', '--cpu-prof-dir': '传给 node 的参数',
   '--git-common-dir': '传给 git 的参数', '--exclude-standard': '传给 git 的参数', '--name-only': '传给 git 的参数', '--no-renames': '传给 git 的参数', '--others': '传给 git 的参数',
 };
-const OPT = ['--actions-only', '--authored-background', '--authorization-hash', '--batch', '--batch-manifest', '--batches', '--budget', '--budget-proof', '--budget-root', '--budget-yuan', '--card', '--catalog',
-  '--combat', '--compact-request', '--concurrency', '--config', '--contact-routine-only', '--controlled-revision', '--corpus', '--count', '--counties', '--days', '--deps', '--depth', '--design', '--diagnostics',
-  '--dir', '--directory', '--facility-source-only', '--fast', '--file', '--files', '--help', '--host-installation', '--id', '--ids', '--increment', '--input', '--jobs', '--json', '--l4-notes', '--lamp',
-  '--legacy-report', '--legacy-reserved', '--limit-minutes', '--manifest', '--manifest-hash', '--max-tasks', '--messages', '--milestone', '--months', '--no-month', '--no-remote', '--notes', '--only', '--only-month',
-  '--origin', '--pack', '--parallel', '--per-file', '--quick', '--remote-only', '--repeat', '--retest-only', '--review-seq', '--root', '--run-dir', '--run-id', '--seed', '--seeds', '--shard', '--shards', '--skip',
-  '--smoke', '--source-checkout-evidence', '--source-evidence', '--source-evidence-map', '--src', '--state', '--tier', '--timeout', '--turns', '--village', '--why', '--world', '--years'];
+// 修饰参数 opt：每个都声明值的类型。flag 不带值；path 路径（只读实跑时必须落在仓库临时副本内部，越界判失败）；number 非负整数；id 单个标识（字母数字、下划线、连字符、点）；
+// list 逗号分隔的标识或编号；url 只声明、不得出现在只读入口里；enum:a|b 取值限定。声明了类型，入口里的值才能被校验（checkOptArgs）。
+const OPT = {
+  '--actions-only': 'flag', '--authored-background': 'path', '--authorization-hash': 'id', '--batch': 'id', '--batch-manifest': 'path',
+  '--batches': 'list', '--budget': 'number', '--budget-proof': 'path', '--budget-root': 'path', '--budget-yuan': 'number', '--card': 'id',
+  '--catalog': 'path', '--combat': 'flag', '--compact-request': 'flag', '--concurrency': 'number', '--config': 'path',
+  '--contact-routine-only': 'flag', '--controlled-revision': 'path', '--corpus': 'path', '--count': 'number', '--counties': 'number',
+  '--days': 'number', '--deps': 'flag', '--depth': 'number', '--design': 'path', '--diagnostics': 'flag', '--dir': 'path', '--directory': 'path',
+  '--facility-source-only': 'flag', '--fast': 'flag', '--file': 'path', '--files': 'path', '--help': 'flag', '--host-installation': 'path',
+  '--id': 'id', '--ids': 'list', '--increment': 'number', '--input': 'path', '--jobs': 'number', '--json': 'flag', '--l4-notes': 'path',
+  '--lamp': 'flag', '--legacy-report': 'path', '--legacy-reserved': 'number', '--limit-minutes': 'number', '--manifest': 'path',
+  '--manifest-hash': 'id', '--max-tasks': 'number', '--messages': 'number', '--milestone': 'id', '--months': 'number', '--no-month': 'flag',
+  '--no-remote': 'flag', '--notes': 'path', '--only': 'list', '--only-month': 'flag', '--origin': 'url', '--pack': 'path', '--parallel': 'number',
+  '--per-file': 'flag', '--quick': 'flag', '--remote-only': 'flag', '--repeat': 'number', '--retest-only': 'list', '--review-seq': 'flag',
+  '--root': 'path', '--run-dir': 'path', '--run-id': 'id', '--seed': 'number', '--seeds': 'number', '--shard': 'number', '--shards': 'number',
+  '--skip': 'list', '--smoke': 'flag', '--source-checkout-evidence': 'path', '--source-evidence': 'path', '--source-evidence-map': 'path',
+  '--src': 'path', '--state': 'path', '--tier': 'enum:merge|full', '--timeout': 'number', '--turns': 'number', '--village': 'enum:yp|wt|lq|sb',
+  '--why': 'flag', '--world': 'path', '--years': 'number',
+};
 export const RO_FLAGS = ['--verify', '--check', '--l1', '--list', '--summary', '--dry-run', '--dry-publish', '--show'];
 
 export const FLAGS = {
   ...Object.fromEntries(RO_FLAGS.map(f => [f, {kind: 'ro'}])),
   ...Object.fromEntries(Object.entries(W).map(([f, note]) => [f, {kind: 'write', note}])),
-  ...Object.fromEntries(OPT.map(f => [f, {kind: 'opt'}])),
+  ...Object.fromEntries(Object.entries(OPT).map(([f, type]) => [f, {kind: 'opt', type}])),
   ...Object.fromEntries(Object.entries(N).map(([f, note]) => [f, {kind: 'nonflag', note}])),
 };
 
@@ -85,3 +100,28 @@ export const FILE_FLAG_OVERRIDES = {
 
 // 扫描用：脚本源码里出现的所有 --xxx 形态字样（前面不是字母数字、下划线或连字符）。
 export const FLAG_PATTERN = /(?<![A-Za-z0-9_-])--[a-z][a-z0-9-]+/g;
+
+// 校验只读入口的参数：每个修饰参数的值必须符合声明的类型；path 类必须落在 root（运行用的仓库副本）内部。返回违规说明数组。
+export function checkOptArgs(args, root) {
+  const bad = [], base = path.resolve(root);
+  for (let i = 0; i < args.length; i++) {
+    const meta = FLAGS[args[i]];
+    if (meta?.kind !== 'opt') continue;
+    const {type} = meta, v = args[i + 1];
+    if (type === 'flag') continue;
+    if (v === undefined || v.startsWith('--')) { bad.push(`${args[i]} 缺值`); continue; }
+    i++;
+    if (type === 'path') {
+      const p = path.resolve(base, v);
+      let real = p; try { real = fs.realpathSync(p); } catch { /* 不存在：只看字面路径 */ }
+      const inside = q => q === base || q.startsWith(base + path.sep);
+      if (!inside(p) || !inside(real)) bad.push(`${args[i - 1]} ${v}：路径越出临时副本`);
+    } else if (type === 'number') { if (!/^d+$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为非负整数`); }
+    else if (type === 'id') { if (!/^[w.-]+$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为单个标识`); }
+    else if (type === 'list') { if (!/^[w.-]+(,[w.-]+)*$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为逗号分隔的标识`); }
+    else if (type === 'url') bad.push(`${args[i - 1]}：url 类参数不得出现在只读入口`);
+    else if (type.startsWith('enum:')) { if (!type.slice(5).split('|').includes(v)) bad.push(`${args[i - 1]} ${v}：取值应为 ${type.slice(5)}`); }
+    else bad.push(`${args[i - 1]}：未知类型 ${type}`);
+  }
+  return bad;
+}

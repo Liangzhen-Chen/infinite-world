@@ -8,7 +8,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import {FLAGS, FILE_FLAG_OVERRIDES, FLAG_PATTERN} from '../tools/cli-flags.mjs';
+import {FLAGS, FILE_FLAG_OVERRIDES, FLAG_PATTERN, checkOptArgs} from '../tools/cli-flags.mjs';
 import {READONLY_ENTRIES, RUN_GROUPS, ENTRY_TIMEOUT_MS, COPY_ALLOWANCE_MS, SLOW_ENTRY_TIMEOUT_MS} from '../tools/readonly-entries.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -65,6 +65,7 @@ test('登记表不过期：开关、入口脚本都还在，入口里的 --开�
       const ok = ['ro', 'opt'].includes(kindOf(file, a)) || (kindOf(file, a) === 'write' && args.includes('--dry-run'));
       assert.ok(ok, `入口只能带只读或修饰开关（写类开关须同带 --dry-run）：${file} ${a} → ${kindOf(file, a)}`);
     }
+    assert.deepEqual(checkOptArgs(args, ROOT), [], `入口修饰参数的值不符声明类型，或路径越出仓库：${file} ${args.join(' ')}`);
   }
 });
 
@@ -78,4 +79,21 @@ test('全量层分组：测试文件数等于 RUN_GROUPS，每组最坏耗时（
   }
   const heavy = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/smoke-tests.json'), 'utf8')).nightlyOnly;
   for (const f of runFiles) assert.ok(heavy.includes(`tests/${f}`), `${f} 应列入 smoke-tests.json 的 nightlyOnly（合并层推迟到全量）`);
+});
+
+test('修饰参数（opt）都声明了值的类型；url 类不得出现在只读入口，类型有效', () => {
+  const valid = t => ['flag', 'path', 'number', 'id', 'list', 'url'].includes(t) || /^enum:[w|-]+$/.test(t);
+  for (const [f, m] of Object.entries(FLAGS)) if (m.kind === 'opt') assert.ok(valid(m.type), `${f} 的值类型未声明或无效：${m.type}`);
+  for (const [file, ...args] of READONLY_ENTRIES) for (const a of args) if (FLAGS[a]?.kind === 'opt') assert.notEqual(FLAGS[a].type, 'url', `${file} ${a}`);
+});
+
+test('checkOptArgs：路径越界、类型不符、缺值都判违规，合规的不报', () => {
+  assert.deepEqual(checkOptArgs(['--corpus', 'tests/fixtures/x.json', '--summary'], ROOT), []);
+  assert.deepEqual(checkOptArgs(['--fast', '--card', 'condiment'], ROOT), []);
+  assert.equal(checkOptArgs(['--root', '../outside'], ROOT).length, 1);
+  assert.equal(checkOptArgs(['--run-dir', path.resolve(ROOT, '..', 'elsewhere')], ROOT).length, 1);
+  assert.equal(checkOptArgs(['--years', 'abc'], ROOT).length, 1);
+  assert.equal(checkOptArgs(['--tier', 'weekly'], ROOT).length, 1);
+  assert.equal(checkOptArgs(['--card'], ROOT).length, 1);
+  assert.equal(checkOptArgs(['--origin', 'http://x'], ROOT).length, 1);
 });
