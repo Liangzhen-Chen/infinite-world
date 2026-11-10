@@ -817,10 +817,18 @@ export class CampaignStorage {
         return this.read(id);
     }
 }
-// For code that edits a plain (non-cursor) planning copy of state.records in place: call after the write so
-// this records object's index/memos and this state object's stateMemos are rebuilt on the next read.
-// Prefer copying or writing through the draft; this is for snapshots built and edited locally.
-export function invalidateRecordIndex(state) {
-    if (state?.records && typeof state.records === 'object') recordIndexes.delete(state.records);
-    if (state && typeof state === 'object') stateMemos.delete(state);
+// For code that edits a plain (non-cursor) planning copy of state.records in place (a snapshot built and edited
+// locally, e.g. the morning projection in prepareHouseholdSubsistence): write one row through here instead of
+// state.records[id] = row. It does what a cursor write does: only the classification buckets and memos the row can
+// affect are rebuilt (the bucket entry is swapped, unrelated buckets stay), so a loop of such writes does not rescan
+// every record after each one. Prefer writing through the draft when there is one.
+export function setRecordRow(state, id, row) {
+    const records = state.records, cache = recordIndexes.get(records), previous = records[id];
+    const path = ['state', 'records', id];
+    const retained = carryStateMemos(state, path, previous?.category, row?.category, previous?.kind, row?.kind, { op: 'set', path, value: row });
+    records[id] = row;
+    stateMemos.delete(state);
+    if (retained?.size) stateMemos.set(state, retained);
+    recordIndexes.delete(records);
+    if (cache) updateRecordGroups(cache, records, id, previous, { kind: previous?.kind, category: previous?.category }, path);
 }
