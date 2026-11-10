@@ -1,0 +1,15 @@
+{
+  "spentYuan": 0,
+  "reservedYuan": 0,
+  "waveLimitYuan": 0.02,
+  "note": "P1 级联修订：依赖 P1 修订的派生价，单卡上限 0.02 元（需李白批准后才跑 --review）。",
+  "cards": {
+    "P1C": {
+      "limitYuan": 0.02,
+      "spentYuan": 0,
+      "reservedYuan": 0,
+      "maxRequests": 2
+    }
+  },
+  "requests": {}
+}

@@ -3,9 +3,10 @@
 // 消费设计源的检查与合并（w3-wave-score 的 publishedW3、w5-sites 的 mergeSites）必须经此读取，把设计源值更新为已审批的修订值，
 // 不能各自写死某条目、某字段。只认通过审批核验的回执；回执格式不合法一律报错。
 import fs from 'node:fs/promises';
+import {existsSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
-import {revision as p1Revision,root as p1Root,frozenEntries,draftFor,contextFor,getPath,setPath} from '../world/design/p1-revision-approval.mjs';
+import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
 
 // 字段路径文本 -> 路径：`site.resources[id=adit_ore].item` -> ['site','resources',{id:'adit_ore'},'item']
 export function parseFieldPath(label){
@@ -33,23 +34,47 @@ export function parsePublication(pub){
    const m=/^([^\s#]+)#([^\s#]+)$/.exec(s.receipt);if(!m)bad(`receipt 须为“文件#条目”或“commit 提交号”：${s.receipt}`);
    if(m[2]!==e.target)bad(`取代声明的条目与修订目标不同：${s.receipt} / ${e.target}`);
    if(s.field!==e.field)bad(`取代声明的字段与修订字段不同：${s.field} / ${e.field}`);
-   out.push({entryId:e.id,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),before:e.before,after:e.after});
+   out.push({revision:pub.revision,entryId:e.id,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),before:e.before,after:e.after});
   }
  }
  return out;
 }
+// 已发布的修订批：约定每批的目录 world/drafts/<批目录>/ 下有 publication.json（发布回执）与 candidate.json（冻结候选，含 entries/drafts/contexts）。
+// 不点名批次：凡有 publication.json 且是修订批格式（有 candidate.json，两者 revision 相同，条目带 supersedes）的目录都算；
+// 回执文件格式不合法一律报错。新增修订批（如级联批）发布后自动被读取。
+export async function listRevisionBatches(draftsRoot='world/drafts'){
+ const out=[];
+ for(const dir of (await fs.readdir(draftsRoot,{withFileTypes:true})).filter(d=>d.isDirectory()).map(d=>d.name).sort()){
+  const root=`${draftsRoot}/${dir}`;
+  if(!existsSync(`${root}/publication.json`)||!existsSync(`${root}/candidate.json`))continue;
+  const pub=JSON.parse(await fs.readFile(`${root}/publication.json`,'utf8'));
+  if(!Array.isArray(pub?.entries)||!pub.entries.length||!pub.entries.every(e=>Array.isArray(e?.supersedes)))continue; // 非修订批（如 m2-people 的发布回执）
+  out.push({root,pub});
+ }
+ return out;
+}
 // 读取并核验已审批的修订回执。审批状态不是一个字段，而是回执目录的 L1/L2/L4 记录：
-// 用冻结候选逐条核对指纹、L2 无 hard、L4 已批，再核对 publication.json 与冻结候选逐字段相同。
-export async function readApprovedSupersedes(){
- const pub=JSON.parse(await fs.readFile(`${p1Root}/publication.json`,'utf8')),supersedes=parsePublication(pub);
- const frozen=frozenEntries();if(!frozen)throw new Error('修订回执缺少冻结候选，无法核验审批');
- if(pub.revision!==p1Revision)throw new Error(`修订回执版本不符：${pub.revision}`);
- const approved=await readApprovedContent(pub.receipt,frozen,{revision:p1Revision,contextFor});
- assert.equal(approved.length,frozen.length,'修订回执未全批通过审批');
- for(const e of frozen)assert.deepEqual(approved.find(d=>d.id===e.id),draftFor(e),`已审批正文与候选不符：${e.id}`);
+// 用冻结候选逐条核对指纹、L2 无 hard、L4 已批，再核对 publication.json 与冻结候选逐字段相同。逐批核验，全部通过才返回。
+export async function readApprovedBatch({root,pub}){
+ const supersedes=parsePublication(pub);
+ const candidate=JSON.parse(await fs.readFile(`${root}/candidate.json`,'utf8')),frozen=candidate.entries;
+ if(!Array.isArray(frozen)||!frozen.length)throw new Error(`修订回执缺少冻结候选，无法核验审批：${root}`);
+ if(pub.revision!==candidate.revision)throw new Error(`修订回执版本不符：${pub.revision} / ${candidate.revision}`);
+ // 冻结候选里记的正文与上下文就是审批时的原件；正文须等于由条目导出的标准形状。
+ const draftOf=e=>({id:e.id,target:e.target,field:e.field,value:e.after}),ctxById=new Map(frozen.map((e,i)=>[e.id,candidate.contexts?.[i]]));
+ if(frozen.some(e=>!ctxById.get(e.id)))throw new Error(`冻结候选缺少上下文：${root}`);
+ const contextFor=e=>ctxById.get(e.id);
+ const approved=await readApprovedContent(pub.receipt,frozen,{revision:pub.revision,contextFor});
+ assert.equal(approved.length,frozen.length,`修订回执未全批通过审批：${pub.revision}`);
+ for(const e of frozen)assert.deepEqual(approved.find(d=>d.id===e.id),draftOf(e),`已审批正文与候选不符：${e.id}`);
  const key=e=>hashContent({id:e.id,target:e.target,file:e.file,field:e.field,before:e.before,after:e.after,supersedes:e.supersedes});
- assert.deepEqual(pub.entries.map(key),frozen.map(key),'publication.json 与已审批候选不一致');
+ assert.deepEqual(pub.entries.map(key),frozen.map(key),`publication.json 与已审批候选不一致：${pub.revision}`);
  return supersedes;
+}
+export async function readApprovedSupersedes(draftsRoot='world/drafts'){
+ const batches=await listRevisionBatches(draftsRoot),out=[];
+ for(const b of batches)out.push(...await readApprovedBatch(b));
+ return out;
 }
 // 把设计源行（按 id 找）上被取代的值更新为已审批的修订值。rows 由调用者先克隆；返回实际更新的条目（供审计与语料哈希回退）。
 // 设计源值既不是回执的 before 也不是 after，说明设计源与回执对不上，报错而不是放过。
@@ -59,7 +84,7 @@ export function applySupersedes(rows,receiptFile,supersedes){
   if(s.receiptFile!==receiptFile)continue;
   const row=rows.find(r=>r.id===s.targetId);if(!row)continue;
   const cur=getPath(row,s.parts);
-  if(hashContent(cur??null)===hashContent(s.before)){setPath(row,s.parts,s.after);applied.push({id:s.targetId,field:s.label,parts:s.parts,before:s.before,after:s.after,receiptFile,revision:p1Revision});}
+  if(hashContent(cur??null)===hashContent(s.before)){setPath(row,s.parts,s.after);applied.push({id:s.targetId,field:s.label,parts:s.parts,before:s.before,after:s.after,receiptFile,revision:s.revision});}
   else if(hashContent(cur??null)!==hashContent(s.after))throw new Error(`设计源值与修订回执不符：${receiptFile}#${s.targetId} ${s.label} 现值 ${JSON.stringify(cur)}，回执 before ${JSON.stringify(s.before)} after ${JSON.stringify(s.after)}`);
  }
  return applied;

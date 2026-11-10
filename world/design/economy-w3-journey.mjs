@@ -14,7 +14,9 @@ const groups={
 const suppliers={npc_hw_linsui:'bld_hw_qingdeng',npc_hw_yanzhe:'loc_bs',npc_hw_meiling:'loc_hw_orchard',npc_hw_duanyan:'bld_hw_forge',npc_hw_ayan:'bld_hw_mill',npc_hw_sulan:'bld_hw_weaving',npc_hw_luqing:'bld_hw_school',npc_hw_wushuo:'loc_hw_northwood',npc_hw_zhengshuisheng:'loc_hw_dock'};
 const coldUpkeep=new Set(['damp_sand_rub','wick_coil','linen_cleaning_swab','felt_polishing_pad']);
 const metalProducts={broad_steel_chisel:6,hooked_pruning_knife:9,leather_round_knife:20,carpenters_adze:6,steel_gouge_tip:14,small_trowel:7};
-export function economyW3Journey(world){
+// 成品价的派生规则：价格 = 材料成本（各材料现价 x 用量之和）+ 工费。级联修订（tools/derived-cascade.mjs）经 trace 取得每件成品的算式，不另写一份规则。
+export const journeyPrice=(materials,byId,labor)=>{const cost=materials.reduce((n,m)=>n+byId.get(m.item).basePrice*m.amount,0);return{cost,labor,price:cost+labor};};
+export function economyW3Journey(world,trace=null){
  const items=[],recipes=[],supply=[];
  const stock=(npc,item,quantity)=>{let plan=supply.find(x=>x.npc===npc);if(!plan){plan={npc,stock:{},reason:'本批有限开市库存，售罄不自动补回'};supply.push(plan);}plan.stock[item]=quantity;};
  const base=(slug,name,basePrice,weight,shelfLifeDays,origin,quality='木',durability=100)=>({id:iid(slug),name,basePrice,weight,shelfLifeDays,origin,quality,durability,aliases:[],scope:null,seasonality:'集市按当季货源小批供应，现货售罄须等待另一次实际补货',tags:['w3_journey']});
@@ -27,13 +29,14 @@ export function economyW3Journey(world){
   for(const[slug,name,weight,shelfLifeDays,minutes,minimumProficiency,labor,inputs,toolList,processFacts]of rows){
    const materials=inputs.split(',').map(x=>{const[slug,count]=x.split(':');return{item:iid(slug),amount:Number(count)};});
    for(const m of materials)if(!byId.has(m.item))throw new Error(`缺原料 ${slug}/${m.item}`);
-   const cost=materials.reduce((n,m)=>n+byId.get(m.item).basePrice*m.amount,0),mass=materials.filter(m=>!['item_charcoal','item_wood_shavings'].includes(m.item)).reduce((n,m)=>n+byId.get(m.item).weight*m.amount,0);
+   const priced=journeyPrice(materials,byId,labor),cost=priced.cost,mass=materials.filter(m=>!['item_charcoal','item_wood_shavings'].includes(m.item)).reduce((n,m)=>n+byId.get(m.item).weight*m.amount,0);
    if(weight>mass+.0001)throw new Error(`产物超投料 ${slug}: ${weight}>${mass}`);
    const hot=slug==='redwood_dye'||slug==='paste_cup_portion';const cold=group==='upkeep'&&coldUpkeep.has(slug);
    const station=hot?'cooking':cold?'weaving':spec.station,origin=hot?'bld_hw_qingdeng':cold?'bld_hw_weaving':spec.origin;
    const quality=metalProducts[slug]?(minimumProficiency>=500?'银':'铁'):'木';
-   const recipe=`recipe_w3c_${slug}`,row={...base(slug,name,cost+labor,weight,shelfLifeDays,origin,quality,metalProducts[slug]?280:120),use:processFacts,acquisition:{recipe}};
+   const recipe=`recipe_w3c_${slug}`,row={...base(slug,name,priced.price,weight,shelfLifeDays,origin,quality,metalProducts[slug]?280:120),use:processFacts,acquisition:{recipe}};
    row.tags.push(['grain','preserve'].includes(group)?'food':metalProducts[slug]?'tool':'craft');if(metalProducts[slug])row.checkBonus={bonus:2,skills:[`skill_life_${metalProducts[slug]}_core`]};items.push(row);byId.set(row.id,row);
+   trace?.(row.id,{rule:'材料成本+工费',recipe,materials:materials.map(m=>({item:m.item,amount:m.amount,price:byId.get(m.item).basePrice})),cost,labor,price:priced.price});
    const tools=toolList.split(',').map(iid);for(const tool of tools)if(!byId.has(tool))throw new Error(`缺工具 ${slug}/${tool}`);
    const skill=`skill_life_${slug==='redwood_dye'?16:spec.skill}_core`;
    recipes.push({id:recipe,name:`制作${name}`,aliases:[],scope:null,skill,minimumProficiency,minutes,difficulty:minimumProficiency>=400?25:minimumProficiency>=200?20:minimumProficiency?15:10,materials,tools,workstation:station,output:{item:row.id,quantity:1},byproducts:[],learningRequired:true,learnFee:10,learnMinutes:120,teachers:[],toolWear:group==='metal'?2:1,failure:{recoverFraction:group==='metal'?.25:0,injury:group==='metal'?2:0},prerequisites:minimumProficiency?[{skill,minimum:minimumProficiency}]:[],processFacts});groupRecipeIds.push(recipe);
