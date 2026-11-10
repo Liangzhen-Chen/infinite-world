@@ -1,8 +1,8 @@
 {
   "index": 1,
-  "fingerprint": "38470aa4cf07dc425b2676727888acd29c039bc94be6ad4c60a4383a2ac21ac5",
+  "fingerprint": "6ad1bbcc436bc81a94417bf2ea77caa23671af0528eed0db328ee4eb4addbc46",
   "count": 42,
-  "passed": 40,
+  "passed": 42,
   "ids": [
     "recipe_w3c_horn_spoon_blank",
     "recipe_w3c_slate_writing_tile",
@@ -48,31 +48,19 @@
     "recipe_w3c_resin_cloth_patch"
   ],
   "rewritten": 4,
-  "manual": [
-    "recipe_w3c_slate_writing_tile",
-    "recipe_w3c_slate_stylus"
-  ],
+  "manual": [],
   "pending": [],
   "flagged": [],
   "sample": [
-    "recipe_w3c_carpenters_adze",
-    "recipe_w3c_soap_wash_portion",
-    "recipe_w3c_small_trowel",
-    "recipe_w3c_reed_pen_box",
-    "recipe_w3c_stitchbound_folio"
+    "recipe_w3c_leather_round_knife",
+    "recipe_w3c_broad_steel_chisel",
+    "recipe_w3c_redwood_dye",
+    "recipe_w3c_felt_polishing_pad",
+    "recipe_w3c_horsehair_dustbrush"
   ],
   "l4": {
     "approved": false,
-    "notes": [],
-    "rejection": {
-      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
-      "at": "2026-11-10T18:00Z",
-      "reason": "两条三次起草均写\"全程九十零分钟\"被 L1 拦下转 manual；NUMERAL-HINT（3b893ed8）已让 L1 反馈给出正确写法（九十分钟或90分钟，与骨架 minutes 一致），按新反馈重写。",
-      "ids": [
-        "recipe_w3c_slate_writing_tile",
-        "recipe_w3c_slate_stylus"
-      ]
-    }
+    "notes": []
   },
   "l4History": [
     {
@@ -163,9 +151,22 @@
           "recipe_w3c_cork_float_set"
         ]
       }
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "rejection": {
+        "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+        "at": "2026-11-10T18:00Z",
+        "reason": "两条三次起草均写\"全程九十零分钟\"被 L1 拦下转 manual；NUMERAL-HINT（3b893ed8）已让 L1 反馈给出正确写法（九十分钟或90分钟，与骨架 minutes 一致），按新反馈重写。",
+        "ids": [
+          "recipe_w3c_slate_writing_tile",
+          "recipe_w3c_slate_stylus"
+        ]
+      }
     }
   ],
-  "costUpperYuan": 5.3332655200000065,
-  "manualRatio": 0.047619047619047616,
+  "costUpperYuan": 5.3386913600000065,
+  "manualRatio": 0,
   "needsSystemicRepair": false
 }

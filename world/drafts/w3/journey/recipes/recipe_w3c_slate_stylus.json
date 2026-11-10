@@ -1,22 +1,18 @@
 {
   "id": "recipe_w3c_slate_stylus",
   "fingerprint": "925968af83b15202f06b47b72406ed3256c7c424c5319c561f7aa40545c958e4",
-  "status": "manual",
-  "attempts": 3,
+  "status": "passed",
+  "attempts": 4,
   "draft": {
     "id": "recipe_w3c_slate_stylus",
-    "process": "取平面板岩片，挑出窄长的一段作笔身，其余碎块弃置。手持平齿铁锉，沿窄长段两侧锉去崩口与薄棱，修出便于捏握的直杆，杆端逐渐收细成尖。将洗净细砂与清水调成湿砂，在尖头与侧棱上来回磨擦，把锋利处磨钝，避免划伤粗面。全程九十零分钟。只作粗面划记，非蘸墨书写笔。"
+    "process": "取平面板岩片，挑出窄长的一段作笔身，其余碎块弃置。将窄长段夹稳，用平齿铁锉顺长向锉去崩口与厚薄不均处，修出便于三指捏握的杆形，尖端逐渐收细但不可过薄。锉时留意两侧棱线，使杆身不偏斜。另取洗净细砂，与清水调成湿砂，在尖端与侧棱反复研磨，把锉后留下的锐边磨钝，只留粗面划记所需的涩尖。磨毕以指腹试棱，确认无刺手感。全程约90分钟，成品一份。"
   },
   "review": {
     "contradictions": []
   },
-  "errors": [
-    "中文数字「九十零」不合法：「零」只能出现在百、千、万之后用来补位，此处位置不合法（原文「全程九十零分钟」）"
-  ],
+  "errors": [],
   "warnings": [],
-  "feedback": [
-    "中文数字「九十零」不合法：「零」只能出现在百、千、万之后用来补位，此处位置不合法（原文「全程九十零分钟」）"
-  ],
+  "feedback": null,
   "l4Rejection": [
     {
       "key": "7de302bb735ca94246e17f88f1f9a826a6cc278c9fa409ef0beab80be7b152ed",
@@ -33,13 +29,29 @@
       "priorReview": {
         "contradictions": []
       }
+    },
+    {
+      "key": "97bfbc479c613f367caab779774df19afcb0c7298ff9664f4f2d101f0bd25c77",
+      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+      "at": "2026-11-10T18:00Z",
+      "reason": "两条三次起草均写\"全程九十零分钟\"被 L1 拦下转 manual；NUMERAL-HINT（3b893ed8）已让 L1 反馈给出正确写法（九十分钟或90分钟，与骨架 minutes 一致），按新反馈重写。",
+      "priorStatus": "manual",
+      "priorAttempts": 3,
+      "attemptCap": 5,
+      "priorDraft": {
+        "id": "recipe_w3c_slate_stylus",
+        "process": "取平面板岩片，挑出窄长的一段作笔身，其余碎块弃置。手持平齿铁锉，沿窄长段两侧锉去崩口与薄棱，修出便于捏握的直杆，杆端逐渐收细成尖。将洗净细砂与清水调成湿砂，在尖头与侧棱上来回磨擦，把锋利处磨钝，避免划伤粗面。全程九十零分钟。只作粗面划记，非蘸墨书写笔。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
     }
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "6426851a-70e2-47df-9113-92ba1859257b",
+    "id": "a99e492c-3f33-497d-a756-f8adc69fe971",
     "object": "chat.completion",
-    "created": 1794332437,
+    "created": 1794333121,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -50,11 +62,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_CeWFUZtFp20qJ4MzhUw62962",
+              "id": "call_00_IPsvHptCwEJVCEEajPrr1953",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_slate_stylus\", \"process\": \"取平面板岩片，挑出窄长的一段作笔身，其余碎块弃置。手持平齿铁锉，沿窄长段两侧锉去崩口与薄棱，修出便于捏握的直杆，杆端逐渐收细成尖。将洗净细砂与清水调成湿砂，在尖头与侧棱上来回磨擦，把锋利处磨钝，避免划伤粗面。全程九十零分钟。只作粗面划记，非蘸墨书写笔。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_slate_stylus\", \"process\": \"取平面板岩片，挑出窄长的一段作笔身，其余碎块弃置。将窄长段夹稳，用平齿铁锉顺长向锉去崩口与厚薄不均处，修出便于三指捏握的杆形，尖端逐渐收细但不可过薄。锉时留意两侧棱线，使杆身不偏斜。另取洗净细砂，与清水调成湿砂，在尖端与侧棱反复研磨，把锉后留下的锐边磨钝，只留粗面划记所需的涩尖。磨毕以指腹试棱，确认无刺手感。全程约90分钟，成品一份。\"}"
               }
             }
           ]
@@ -64,34 +76,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1320,
-      "completion_tokens": 164,
-      "total_tokens": 1484,
+      "prompt_tokens": 1349,
+      "completion_tokens": 198,
+      "total_tokens": 1547,
       "prompt_tokens_details": {
-        "cached_tokens": 1024
+        "cached_tokens": 1152
       },
-      "prompt_cache_hit_tokens": 1024,
-      "prompt_cache_miss_tokens": 296
+      "prompt_cache_hit_tokens": 1152,
+      "prompt_cache_miss_tokens": 197
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_slate_stylus-draft2",
+      "label": "content-recipes-recipe_w3c_slate_stylus-draft3",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1320,
-        "completion_tokens": 164,
-        "total_tokens": 1484,
+        "prompt_tokens": 1349,
+        "completion_tokens": 198,
+        "total_tokens": 1547,
         "prompt_tokens_details": {
-          "cached_tokens": 1024
+          "cached_tokens": 1152
         },
-        "prompt_cache_hit_tokens": 1024,
-        "prompt_cache_miss_tokens": 296
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 197
       },
-      "costUpperYuan": 0.0019449600000000001,
-      "cumulativeUpperYuan": 5.323745520000006,
-      "latencyMs": 2000.474900000001,
-      "timestamp": "2026-11-10T17:40:40.113Z"
+      "costUpperYuan": 0.0020240799999999997,
+      "cumulativeUpperYuan": 5.337895520000006,
+      "latencyMs": 2633.4181,
+      "timestamp": "2026-11-10T17:52:04.794Z"
     }
   },
   "responseEvidence": [
@@ -126,6 +138,22 @@
       "file": "budget-responses/bfcc7603-c7ba-4c90-9e15-730fd6212777.json",
       "requestHash": "86cc1d214730f92d976939e6554df82b73406de9ca87d79a876bffb471dbdd8c",
       "responseHash": "e88c87fa8e3098d8a4e64b3646be9fa56c0fe51881d3c5b5cadfe09cd2686e92"
+    },
+    {
+      "phase": "draft",
+      "attempt": 4,
+      "requestId": "fd145e7d-7cb8-43c6-b571-4d56394f603d",
+      "file": "budget-responses/fd145e7d-7cb8-43c6-b571-4d56394f603d.json",
+      "requestHash": "a9b29c5e011fe412a1499254f2186eeacb4088a30bd346794a967484db7ccdc5",
+      "responseHash": "28f353ae647b763a37db8186ea934cb35cc4cb14c268c5c292b703d857e280b4"
+    },
+    {
+      "phase": "review",
+      "attempt": 4,
+      "requestId": "bd3073a5-1a5d-4113-b1b7-c293c2ccc082",
+      "file": "budget-responses/bd3073a5-1a5d-4113-b1b7-c293c2ccc082.json",
+      "requestHash": "8dee8598614aec040cfe1d34344c6f36ed7a1b91d7034f44b300e405c8f4b623",
+      "responseHash": "83eea8a2ba0dfdeafb63804ea297440798fa1332eada3e8c57d45c6784c53a65"
     }
   ],
   "measurements": [
@@ -204,6 +232,44 @@
       "cumulativeUpperYuan": 5.324724240000006,
       "latencyMs": 900.2252999999982,
       "timestamp": "2026-11-10T17:40:41.039Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_slate_stylus-draft3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1349,
+        "completion_tokens": 198,
+        "total_tokens": 1547,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 197
+      },
+      "costUpperYuan": 0.0020240799999999997,
+      "cumulativeUpperYuan": 5.337895520000006,
+      "latencyMs": 2633.4181,
+      "timestamp": "2026-11-10T17:52:04.794Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_slate_stylus-review3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1248,
+        "completion_tokens": 7,
+        "total_tokens": 1255,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 352
+      },
+      "costUpperYuan": 0.00079584,
+      "cumulativeUpperYuan": 5.3386913600000065,
+      "latencyMs": 866.2939000000006,
+      "timestamp": "2026-11-10T17:52:05.681Z"
     }
   ]
 }
