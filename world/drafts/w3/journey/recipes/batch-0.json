@@ -104,12 +104,22 @@
       }
     ],
     "rejection": {
-      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 34ad3e72，w3-journey 5 条重写后）",
-      "at": "2026-11-10",
-      "reason": "recipe_w3c_walnut_honey_bites：核桃碎仁从未入锅却写\"碎仁均匀裹糊\"，工序断层；recipe_w3c_pear_wheat_gruel：\"后段入锅中\"措辞不通。须按新反馈重写，写法与骨架 minutes 一致、工序前后连贯。另：recipe_w3c_parsnip_cream_pot 为 manual（未通过），须人工处理。",
+      "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
+      "at": "2026-11-10T20:40Z",
+      "reason": "recipe_w3c_cheese_rye_panbread：工序断层：糊已在锅中才润锅融黄油；recipe_w3c_walnut_honey_bites：工序断层：核桃仁切碎后未入锅却写碎仁裹糊；recipe_w3c_poppy_rye_crisp：工序断层：与 cheese_rye_panbread 同型；recipe_w3c_garlic_butter：工序断层：黄油置于锅旁从未入锅；自添\"需维修\"；recipe_w3c_pear_wheat_gruel：措辞不通：\"段入锅中\"；recipe_w3c_broadbean_garlic_mash：自添设定：\"木匙余料留作一份干刨屑\"；recipe_w3c_dill_cucumber：自添设定：\"须当日食用\"；recipe_w3c_ash_walking_stick：自添设定：\"不横切石料\"\"不劈铁\"；recipe_w3c_ladle_rest：与骨架不符：写了骨架没有的木槌；recipe_w3c_padded_work_collar：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_laundry_mesh_bag：疑似矛盾：麻绳既作口缘又穿口缘孔；recipe_w3c_parsnip_cream_pot：manual：某轮用未定义时间单位\"息\"，次数用尽；按新复核清单重写。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
       "ids": [
+        "recipe_w3c_cheese_rye_panbread",
         "recipe_w3c_walnut_honey_bites",
-        "recipe_w3c_pear_wheat_gruel"
+        "recipe_w3c_poppy_rye_crisp",
+        "recipe_w3c_garlic_butter",
+        "recipe_w3c_pear_wheat_gruel",
+        "recipe_w3c_broadbean_garlic_mash",
+        "recipe_w3c_dill_cucumber",
+        "recipe_w3c_ash_walking_stick",
+        "recipe_w3c_ladle_rest",
+        "recipe_w3c_padded_work_collar",
+        "recipe_w3c_laundry_mesh_bag",
+        "recipe_w3c_parsnip_cream_pot"
       ]
     }
   },

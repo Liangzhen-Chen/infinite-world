@@ -105,12 +105,18 @@
       }
     ],
     "rejection": {
-      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 34ad3e72，w3-journey 5 条重写后）",
-      "at": "2026-11-10",
-      "reason": "recipe_w3c_soap_wash_portion：动作句把匙的说明塞入造成病句、全文无点火却写\"停火\"工序不连贯、\"吸液\"为自添用途；recipe_w3c_reed_pen_box：\"芦管束一根\"数量单位与骨架（束1份）不符。须重写。",
+      "by": "主会话依 85 条全量严格复读（docs/m26-journey-recipes-audit.md），李白 20:0x 决定一次性重写",
+      "at": "2026-11-10T20:40Z",
+      "reason": "recipe_w3c_small_bell_frame：工序断层：框料未弯成框；recipe_w3c_redwood_dye：工序断层：滤液在自备容器却写沿锅缘搅；recipe_w3c_soap_wash_portion：病句；未点火却写停火；自添\"留作引火或吸液之用\"；recipe_w3c_resin_cloth_patch：措辞不通：\"取炭入厚底煮锅小灶\"；recipe_w3c_reed_pen_box：与骨架不符：一束写成一根；recipe_w3c_ink_wiping_pad：疑似矛盾：\"留包边\"与\"沿毡片外缘剪\"；recipe_w3c_ledger_cover：疑似矛盾：裁出封皮两片又写对折；recipe_w3c_bristle_handbrush：工序断层：未开背槽却写鬃根露于背槽。按骨架与引用事实重写：工序须前后连贯，只用骨架内工具材料，不得自添用途或期限，单位与骨架一致，语句通顺；总时长由系统按骨架生成，正文不写。",
       "ids": [
+        "recipe_w3c_small_bell_frame",
+        "recipe_w3c_redwood_dye",
         "recipe_w3c_soap_wash_portion",
-        "recipe_w3c_reed_pen_box"
+        "recipe_w3c_resin_cloth_patch",
+        "recipe_w3c_reed_pen_box",
+        "recipe_w3c_ink_wiping_pad",
+        "recipe_w3c_ledger_cover",
+        "recipe_w3c_bristle_handbrush"
       ]
     }
   },
