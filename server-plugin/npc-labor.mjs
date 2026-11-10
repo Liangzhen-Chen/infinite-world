@@ -123,7 +123,13 @@ function naturalSources(e,state,id,labor){
  return rows;
 }
 // 有铺面、按引擎报价收货的人；运输去别的聚落，出售只在本聚落。
-function buyers(e,state,who,item){
+// 收货人只由状态与本人决定，与货无关：同一只读作用域里（状态、账本、种子的身份加引擎与本人）只列一次，一次决策里每件存货都要用。
+const buyersMemo=Symbol('labor buyers');
+function buyers(e,document,who){
+ const state=document.state,read=documentReader(document),build=()=>readBuyers(e,state,who);
+ return read.memo?read.memo(buyersMemo,[e,who],build):build();
+}
+function readBuyers(e,state,who){
  return e.world.npcs.filter(n=>n.id!==who&&(n.serviceCatalog??[]).some(s=>s.kind==='trade'&&s.price?.mode==='engineQuote')&&shopOfKeeper(e,n.id,state)&&state.npcs[n.id]&&isEffective(e,state,n.id))
   .flatMap(n=>{const at=state.npcs[n.id].workplace?.location??n.workplace?.location??(n.schedule?.default??[]).find(s=>s.services?.includes('trade'))?.location;return at?[{keeper:n.id,location:at}]:[];});
 }
@@ -310,7 +316,7 @@ function readLaborCandidates(e,view,document){
   const settlement=homeSettlement(e,state,who),inventory=state.npcs[who]?.inventory??{};
   for(const item of Object.keys(inventory).sort()){
    const available=saleableStock(read,e,who,item).available;if(!(available>0)||!e.byId.get(item)?.basePrice)continue;
-   for(const b of buyers(e,state,who,item)){
+   for(const b of buyers(e,document,who)){
     const remote=placeSettlement(e,state,b.location).value!==settlement;
     if(remote?!labor.includes('carry'):!labor.includes('sell'))continue;
     let quote;try{quote=keeperQuote(e,marketDocument(document,who),{seller:who,keeper:b.keeper,location:b.location,item,quantity:available});}catch{continue;}
@@ -405,9 +411,9 @@ function supplies(e,document,who,item,quantity,settlement,local){
 }
 // 本地能取得投入的地方，一次决策里只读一次：本人职业做得了的采集（据点、林木），本聚落有铺面的卖家（可售存货按卖家与物品记一次）。
 // 不做采集的手艺人缺料就向持货人买，分工照职业。
-function localSupply(e,state,who,settlement){
- const read=stateReader(marketState(state,who)),seen=new Map();
- return {natural:naturalSources(e,state,who,laborCategories(e,state,who)),keepers:buyers(e,state,who).filter(b=>placeSettlement(e,state,b.location).value===settlement),
+function localSupply(e,document,who,settlement){
+ const state=document.state,read=stateReader(marketState(state,who)),seen=new Map();
+ return {natural:naturalSources(e,state,who,laborCategories(e,state,who)),keepers:buyers(e,document,who).filter(b=>placeSettlement(e,state,b.location).value===settlement),
   stock:(keeper,item)=>{const key=`${keeper}|${item}`;if(!seen.has(key))seen.set(key,saleableStock(read,e,keeper,item,{business:true}).available);return seen.get(key);}};
 }
 // 同一状态里同一买卖双方、同一货与数量的报价只算一次（多道配方常要同一种料）。
@@ -434,7 +440,7 @@ function processCandidates(e,view,document){
  let places=null,local=null;const options=[];
  for(const r of recipes){
   if(r.workstation)places??=workPlaces(e,document,who,settlement,kinds);
-  local??=localSupply(e,state,who,settlement);
+  local??=localSupply(e,document,who,settlement);
   const sites=r.workstation?places.filter(p=>p.station.kind===r.workstation&&(!r.location||p.location===r.location)):[{location:r.location??here,station:null,factor:1,fee:0}];
   const totals=new Map();for(const m of r.materials)totals.set(m.item,(totals.get(m.item)??0)+m.amount);
   let unit=null;
