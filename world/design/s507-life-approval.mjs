@@ -8,6 +8,7 @@ import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent} from '../../tools/content-pipeline.mjs';
 
 const root='world/drafts/s507-life',revision='s507-life-1';
+export {revision};
 const files={rules:'world/meta/rules.json',items:'world/meta/items.json',locations:'world/geo/locations.json'};
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 const current=Object.fromEntries(await Promise.all(Object.entries(files).map(async([id,file])=>[id,await read(file)])));
@@ -48,6 +49,18 @@ const validateDraft=(d,e)=>{try{assert.deepEqual(d,draftFor(e));return [];}catch
 async function approved(){
  const rows=await readApprovedContent(`${root}/review`,entries,{revision,contextFor});
  assert.equal(rows.length,entries.length,'S507 生命周期规则尚未完成独立审核和人工批准');return rows;
+}
+// 叠加层接口（tools/approved-revisions.mjs 的 APPROVED_OVERLAYS 经此读取）：只含物品表里的 lifecycle，即 item_clay_oil_lamp 的已批值。
+// human（rules.json npcLife.lifecycle）与 building（locations.json bld_bs_temple.lifecycle）不在物品表，不属于这个物品字段叠加层。
+export async function itemLifecycles(){
+ const row=(await approved()).find(d=>d.id==='s507_lamp_lifecycle').row;
+ return {item_clay_oil_lamp:row};
+}
+export async function verifyPublished(items=undefined){
+ items??=await read(files.items);
+ const values=await itemLifecycles();
+ for(const [id,value] of Object.entries(values))assert.deepEqual(items.find(r=>r.id===id)?.lifecycle,value,`${id} 正式目录的 lifecycle 与 S507 已批值不符`);
+ return {published:Object.keys(values).length};
 }
 // Explicit --review uses only the S507C user authorization (0.30 yuan).
 export async function review({client,allocation}){
