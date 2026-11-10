@@ -1,15 +1,18 @@
 {
   "id": "recipe_w3c_redwood_dye",
   "fingerprint": "33e41a0b43cb12f936e00ad6c0825c86504774b88050ebd9fac16d8446efffd8",
-  "status": "pending",
-  "attempts": 3,
-  "draft": null,
-  "review": null,
+  "status": "passed",
+  "attempts": 4,
+  "draft": {
+    "id": "recipe_w3c_redwood_dye",
+    "process": "取厚底煮锅置于小灶，以干木刨屑引火，将规定份清水注入锅中，投入红染木碎片，以温火煎出颜色。煎毕，把宽口滤布搭在自备承接容器上，将染液滤过布面，去净碎屑。随后把工艺明矾粒溶入滤出的染液，用偏柄木匙沿锅缘搅匀，使明矾与染液充分混合。所得染液非食用、非药品，盛装容器须使用者另备，不随货提供。滤布上残渣与余下刨屑弃置，煮锅、木匙、滤布保留。全程100分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
   "errors": [],
   "warnings": [],
-  "feedback": [
-    "L4 退回：small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布"
-  ],
+  "feedback": null,
   "l4Rejection": [
     {
       "key": "cd712c9cf6bd184a658596a8b43464e813c2fc21508eaa2166de5e08df4c3000",
@@ -53,9 +56,9 @@
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "45142147-cd9b-4ed3-be79-243d8dbded23",
+    "id": "6045959d-57cb-4255-a263-5a558dde1dd6",
     "object": "chat.completion",
-    "created": 1794336988,
+    "created": 1794338800,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -66,11 +69,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_8eRv9IVy8ogba5BqHdtK3183",
+              "id": "call_00_A3H7pseeEPgnrrgwQ3rU5173",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_redwood_dye\", \"process\": \"将两份清水与红染木碎片一并放入厚底煮锅，加热至水面持续微沸，煎出红色后离火。把宽口滤布搭在锅口，将染液经布滤入锅中暂存的一侧，滤去木屑与碎渣。趁染液尚温，把工艺明矾粒投入液中，持偏柄木匙沿锅壁缓慢搅动，直至明矾完全溶散、液色均匀。所得温煎红木染液仅供染色，不可入口，也不作药品使用。盛装容器由取用者自备，染液滤净后即可使用。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_redwood_dye\", \"process\": \"取厚底煮锅置于小灶，以干木刨屑引火，将规定份清水注入锅中，投入红染木碎片，以温火煎出颜色。煎毕，把宽口滤布搭在自备承接容器上，将染液滤过布面，去净碎屑。随后把工艺明矾粒溶入滤出的染液，用偏柄木匙沿锅缘搅匀，使明矾与染液充分混合。所得染液非食用、非药品，盛装容器须使用者另备，不随货提供。滤布上残渣与余下刨屑弃置，煮锅、木匙、滤布保留。\"}"
               }
             }
           ]
@@ -80,34 +83,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1771,
-      "completion_tokens": 187,
-      "total_tokens": 1958,
+      "prompt_tokens": 2013,
+      "completion_tokens": 198,
+      "total_tokens": 2211,
       "prompt_tokens_details": {
-        "cached_tokens": 1280
+        "cached_tokens": 640
       },
-      "prompt_cache_hit_tokens": 1280,
-      "prompt_cache_miss_tokens": 491
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 1373
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_redwood_dye-draft2",
+      "label": "content-recipes-recipe_w3c_redwood_dye-draft3",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1771,
-        "completion_tokens": 187,
-        "total_tokens": 1958,
+        "prompt_tokens": 2013,
+        "completion_tokens": 198,
+        "total_tokens": 2211,
         "prompt_tokens_details": {
-          "cached_tokens": 1280
+          "cached_tokens": 640
         },
-        "prompt_cache_hit_tokens": 1280,
-        "prompt_cache_miss_tokens": 491
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1373
       },
-      "costUpperYuan": 0.0025291999999999997,
-      "cumulativeUpperYuan": 5.542544560000005,
-      "latencyMs": 2424.8318,
-      "timestamp": "2026-11-10T18:56:30.997Z"
+      "costUpperYuan": 0.0043556,
+      "cumulativeUpperYuan": 5.717734080000004,
+      "latencyMs": 1961.375899999999,
+      "timestamp": "2026-11-10T19:26:42.648Z"
     }
   },
   "responseEvidence": [
@@ -142,6 +145,22 @@
       "file": "budget-responses/fbc29863-8297-4718-9815-f301eaa259bf.json",
       "requestHash": "9c76fcca2ef49b647787d0c03553bd15c5a1ba5dc6a2ff43510d5c0769cdd54d",
       "responseHash": "1e25538c8348d3eedf3b8df2975760305a2f0a49575beeeea86590c9cc5d386b"
+    },
+    {
+      "phase": "draft",
+      "attempt": 4,
+      "requestId": "7acefb7d-1b13-4826-bbb5-8c3da05f5021",
+      "file": "budget-responses/7acefb7d-1b13-4826-bbb5-8c3da05f5021.json",
+      "requestHash": "c84886766eca649bc74d9f4bc463176093ac46e8a6804ab2a4a17411c7de5c9c",
+      "responseHash": "6bc182e5478d16adb044422e8125302812550bc02c6e5fe932d4da165ddabbce"
+    },
+    {
+      "phase": "review",
+      "attempt": 4,
+      "requestId": "9e437c29-8145-4142-b4ee-151e35095607",
+      "file": "budget-responses/9e437c29-8145-4142-b4ee-151e35095607.json",
+      "requestHash": "867217c8eabcb68975da9c687fe14d1dea8aac3362a9f18438cb1132d84ec688",
+      "responseHash": "20fdfe17c5edf94a4c326447cd186ee2e6e0089ce31b85b3d4412381c5e01ae8"
     }
   ],
   "measurements": [
@@ -220,11 +239,54 @@
       "cumulativeUpperYuan": 5.544116000000005,
       "latencyMs": 1503.6057,
       "timestamp": "2026-11-10T18:56:32.529Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_redwood_dye-draft3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2013,
+        "completion_tokens": 198,
+        "total_tokens": 2211,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1373
+      },
+      "costUpperYuan": 0.0043556,
+      "cumulativeUpperYuan": 5.717734080000004,
+      "latencyMs": 1961.375899999999,
+      "timestamp": "2026-11-10T19:26:42.648Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_redwood_dye-review3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2210,
+        "completion_tokens": 7,
+        "total_tokens": 2217,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1314
+      },
+      "costUpperYuan": 0.0027198400000000003,
+      "cumulativeUpperYuan": 5.726291360000005,
+      "latencyMs": 932.6433999999936,
+      "timestamp": "2026-11-10T19:26:46.467Z"
     }
   ],
-  "budgetStop": {
-    "code": "CONTENT_BUDGET_STOP",
-    "message": "共享或单卡费用上限，已停止",
-    "at": "2026-11-10T19:18:26.897Z"
-  }
+  "budgetStopHistory": [
+    {
+      "code": "CONTENT_BUDGET_STOP",
+      "message": "共享或单卡费用上限，已停止",
+      "at": "2026-11-10T19:18:26.897Z",
+      "clearedAt": "2026-11-10T19:25:48.378Z",
+      "reason": "李白 11-10 决定（5 元授权）：配方重写本轮总上限 0.5→0.7 元，剩余 14 条一次性写完",
+      "headCommit": "4e1569bd8300f67ce95eb24e7c1a600aee7e6197"
+    }
+  ]
 }

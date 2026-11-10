@@ -2,54 +2,36 @@
   "id": "recipe_w3c_mutton_turnip_stew",
   "fingerprint": "697cb87456cdf18fe1915c29c765ea19588ce879c88d05c67ed44f9ecec42de8",
   "status": "manual",
-  "attempts": 3,
+  "attempts": 5,
   "draft": {
     "id": "recipe_w3c_mutton_turnip_stew",
-    "process": "取出去骨羊肉与带皮芜菁，用案上切刀分别切成适口块状；芜菁先削去根须与坏斑再下刀。切毕把刀面擦净，生熟分开置放。厚底煮锅坐于小灶上，投入三份干木刨屑引火，倒入配额清水，下羊肉块与芜菁块，撒入粗盐，慢煨至肉熟根软。其间以偏柄木匙沿锅缘拨去浮沫，勿使粘底。余下刨屑与切剩废料弃置，锅、刀、匙留用。全程120分钟。"
+    "process": "取去骨羊肉与带皮芜菁，各在案上用切刀切成入口大小的块，芜菁的根须与坏斑先削去。切完生肉后，以干布面把刀面擦净，生熟分开。厚底煮锅置于小灶上，倾入配额清水，下羊肉与芜菁，投粗盐，取干木刨屑引火，慢煨至肉熟根软。其间用偏柄木匙沿锅缘翻动，拨去浮沫。锅壁破裂或内锈脱落时需维修。成煨一份，余料弃置，工具保留。全程120分钟。"
   },
   "review": {
     "contradictions": [
       {
-        "quote": "投入三份干木刨屑引火",
-        "field": "materials.item_wood_shavings.amount",
+        "quote": "锅壁破裂或内锈脱落时需维修。",
+        "field": "draft.process",
         "severity": "hard",
-        "reason": "骨架中干木刨屑为3份，但引用事实每份100克、共300克；正文写“三份”与骨架份数一致，但骨架processFacts未说明刨屑用于引火，且骨架未声明火源，正文却写引火，属于自添用途/火源。另骨架材料总量为3份，正文“三份”与骨架一致，但“引火”用途骨架未声明。"
-      },
-      {
-        "quote": "余下刨屑与切剩废料弃置",
-        "field": "byproducts",
-        "severity": "hard",
-        "reason": "骨架byproducts为空数组，弃置废料允许；但正文称“余下刨屑”弃置，而骨架材料干木刨屑3份全部用于引火，未声明有余下刨屑，且弃置刨屑与骨架未声明的余料状态不符。"
+        "reason": "自添维修需求；骨架与引用事实未声明该菜谱工序中需维修锅具，属(c)项禁止的维修需求。"
       }
     ]
   },
   "errors": [
     {
-      "quote": "投入三份干木刨屑引火",
-      "field": "materials.item_wood_shavings.amount",
+      "quote": "锅壁破裂或内锈脱落时需维修。",
+      "field": "draft.process",
       "severity": "hard",
-      "reason": "骨架中干木刨屑为3份，但引用事实每份100克、共300克；正文写“三份”与骨架份数一致，但骨架processFacts未说明刨屑用于引火，且骨架未声明火源，正文却写引火，属于自添用途/火源。另骨架材料总量为3份，正文“三份”与骨架一致，但“引火”用途骨架未声明。"
-    },
-    {
-      "quote": "余下刨屑与切剩废料弃置",
-      "field": "byproducts",
-      "severity": "hard",
-      "reason": "骨架byproducts为空数组，弃置废料允许；但正文称“余下刨屑”弃置，而骨架材料干木刨屑3份全部用于引火，未声明有余下刨屑，且弃置刨屑与骨架未声明的余料状态不符。"
+      "reason": "自添维修需求；骨架与引用事实未声明该菜谱工序中需维修锅具，属(c)项禁止的维修需求。"
     }
   ],
   "warnings": [],
   "feedback": [
     {
-      "quote": "投入三份干木刨屑引火",
-      "field": "materials.item_wood_shavings.amount",
+      "quote": "锅壁破裂或内锈脱落时需维修。",
+      "field": "draft.process",
       "severity": "hard",
-      "reason": "骨架中干木刨屑为3份，但引用事实每份100克、共300克；正文写“三份”与骨架份数一致，但骨架processFacts未说明刨屑用于引火，且骨架未声明火源，正文却写引火，属于自添用途/火源。另骨架材料总量为3份，正文“三份”与骨架一致，但“引火”用途骨架未声明。"
-    },
-    {
-      "quote": "余下刨屑与切剩废料弃置",
-      "field": "byproducts",
-      "severity": "hard",
-      "reason": "骨架byproducts为空数组，弃置废料允许；但正文称“余下刨屑”弃置，而骨架材料干木刨屑3份全部用于引火，未声明有余下刨屑，且弃置刨屑与骨架未声明的余料状态不符。"
+      "reason": "自添维修需求；骨架与引用事实未声明该菜谱工序中需维修锅具，属(c)项禁止的维修需求。"
     }
   ],
   "l4Rejection": [
@@ -68,13 +50,42 @@
       "priorReview": {
         "contradictions": []
       }
+    },
+    {
+      "key": "c0cc0688844341d34eff51ef4da90d36c59e03a8295e3639795515479a4691c5",
+      "by": "主会话（Claude Opus 5.5）按李白 11-10 决定（0.7 元上限，剩余 14 条一次性写完）",
+      "at": "2026-11-10T19:40Z",
+      "reason": "recipe_w3c_mutton_turnip_stew：上次复核两条 hard——木屑份数须与骨架一致（骨架 3 份，不得写成别的份数）；副产品为空，不得写木屑留作他用或另作他处，余料只可弃置且不引入骨架外容器。只用骨架里的材料、工具和燃料，不写骨架以外的用途。",
+      "priorStatus": "manual",
+      "priorAttempts": 3,
+      "attemptCap": 5,
+      "priorDraft": {
+        "id": "recipe_w3c_mutton_turnip_stew",
+        "process": "取出去骨羊肉与带皮芜菁，用案上切刀分别切成适口块状；芜菁先削去根须与坏斑再下刀。切毕把刀面擦净，生熟分开置放。厚底煮锅坐于小灶上，投入三份干木刨屑引火，倒入配额清水，下羊肉块与芜菁块，撒入粗盐，慢煨至肉熟根软。其间以偏柄木匙沿锅缘拨去浮沫，勿使粘底。余下刨屑与切剩废料弃置，锅、刀、匙留用。全程120分钟。"
+      },
+      "priorReview": {
+        "contradictions": [
+          {
+            "quote": "投入三份干木刨屑引火",
+            "field": "materials.item_wood_shavings.amount",
+            "severity": "hard",
+            "reason": "骨架中干木刨屑为3份，但引用事实每份100克、共300克；正文写“三份”与骨架份数一致，但骨架processFacts未说明刨屑用于引火，且骨架未声明火源，正文却写引火，属于自添用途/火源。另骨架材料总量为3份，正文“三份”与骨架一致，但“引火”用途骨架未声明。"
+          },
+          {
+            "quote": "余下刨屑与切剩废料弃置",
+            "field": "byproducts",
+            "severity": "hard",
+            "reason": "骨架byproducts为空数组，弃置废料允许；但正文称“余下刨屑”弃置，而骨架材料干木刨屑3份全部用于引火，未声明有余下刨屑，且弃置刨屑与骨架未声明的余料状态不符。"
+          }
+        ]
+      }
     }
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "f7f7cce3-3e81-4d75-922d-5a720f168122",
+    "id": "97ee0ec2-52a3-4cb5-8bbc-c881fd9d2483",
     "object": "chat.completion",
-    "created": 1794338300,
+    "created": 1794338782,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -85,11 +96,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_9UX3BsRzojcRB5fHDkwH2834",
+              "id": "call_00_NbzttHxluVyPXE7IEkCf7480",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_mutton_turnip_stew\", \"process\": \"取出去骨羊肉与带皮芜菁，用案上切刀分别切成适口块状；芜菁先削去根须与坏斑再下刀。切毕把刀面擦净，生熟分开置放。厚底煮锅坐于小灶上，投入三份干木刨屑引火，倒入配额清水，下羊肉块与芜菁块，撒入粗盐，慢煨至肉熟根软。其间以偏柄木匙沿锅缘拨去浮沫，勿使粘底。余下刨屑与切剩废料弃置，锅、刀、匙留用。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_mutton_turnip_stew\", \"process\": \"取去骨羊肉与带皮芜菁，各在案上用切刀切成入口大小的块，芜菁的根须与坏斑先削去。切完生肉后，以干布面把刀面擦净，生熟分开。厚底煮锅置于小灶上，倾入配额清水，下羊肉与芜菁，投粗盐，取干木刨屑引火，慢煨至肉熟根软。其间用偏柄木匙沿锅缘翻动，拨去浮沫。锅壁破裂或内锈脱落时需维修。成煨一份，余料弃置，工具保留。\"}"
               }
             }
           ]
@@ -99,34 +110,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1904,
+      "prompt_tokens": 1925,
       "completion_tokens": 191,
-      "total_tokens": 2095,
+      "total_tokens": 2116,
       "prompt_tokens_details": {
         "cached_tokens": 1664
       },
       "prompt_cache_hit_tokens": 1664,
-      "prompt_cache_miss_tokens": 240
+      "prompt_cache_miss_tokens": 261
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-draft2",
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-draft4",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1904,
+        "prompt_tokens": 1925,
         "completion_tokens": 191,
-        "total_tokens": 2095,
+        "total_tokens": 2116,
         "prompt_tokens_details": {
           "cached_tokens": 1664
         },
         "prompt_cache_hit_tokens": 1664,
-        "prompt_cache_miss_tokens": 240
+        "prompt_cache_miss_tokens": 261
       },
-      "costUpperYuan": 0.00207456,
-      "cumulativeUpperYuan": 5.639249520000004,
-      "latencyMs": 1764.994700000003,
-      "timestamp": "2026-11-10T19:18:22.295Z"
+      "costUpperYuan": 0.00211656,
+      "cumulativeUpperYuan": 5.679508000000004,
+      "latencyMs": 1690.8103999999985,
+      "timestamp": "2026-11-10T19:26:24.903Z"
     }
   },
   "responseEvidence": [
@@ -161,6 +172,38 @@
       "file": "budget-responses/96fdf672-81a6-45a4-8fd1-0bf89cde427e.json",
       "requestHash": "eca483531af94e6dfa0d2de2509e669724df1877be0c40e82471e32a4a683ae8",
       "responseHash": "9801707cb4ab5841e366e84052641e7d36c246e079ebc9c8e8d3713d1d30df47"
+    },
+    {
+      "phase": "draft",
+      "attempt": 4,
+      "requestId": "80a353f2-da38-4e9f-bc8b-9d847ce682ea",
+      "file": "budget-responses/80a353f2-da38-4e9f-bc8b-9d847ce682ea.json",
+      "requestHash": "db0121987b5e98754e2f82ee04e5474d793917b4aea0d9fded889aca4d064fb4",
+      "responseHash": "65827e64f2ae2a1ebda175fcf7d3a966cfae6bd8feee2b5db8ea40b01eb51175"
+    },
+    {
+      "phase": "review",
+      "attempt": 4,
+      "requestId": "91a71c54-3ac9-4869-8731-5419756b0efb",
+      "file": "budget-responses/91a71c54-3ac9-4869-8731-5419756b0efb.json",
+      "requestHash": "8966491477753dca7372f5bf2dcc20b87776194670985d95877d41db60230049",
+      "responseHash": "93b7f3cefaaa7836d60fa6b5ced0b8bbf13affeb74ed143c4352e976e34fcbb3"
+    },
+    {
+      "phase": "draft",
+      "attempt": 5,
+      "requestId": "61a3d278-b94f-4c59-9cb7-94e5500eecd1",
+      "file": "budget-responses/61a3d278-b94f-4c59-9cb7-94e5500eecd1.json",
+      "requestHash": "d7f6204a7f068e5f9105fcc5429828b341b7766be0d07f64b891a0a7adecb826",
+      "responseHash": "09c271df6715a660e5a274eb7459a71153d7f29a511e4414acd603d1def6ed4d"
+    },
+    {
+      "phase": "review",
+      "attempt": 5,
+      "requestId": "26860afc-72d2-44cb-bbe5-a87ff7c55761",
+      "file": "budget-responses/26860afc-72d2-44cb-bbe5-a87ff7c55761.json",
+      "requestHash": "b154097c5087e446be262e213bdcf6c12327cbc508fafb9b832b96d7074be46b",
+      "responseHash": "0afff4615a489c8610aaba0e65825342c1be73db9a83174f6d514e8f7b949c63"
     }
   ],
   "measurements": [
@@ -239,6 +282,82 @@
       "cumulativeUpperYuan": 5.642125200000004,
       "latencyMs": 1952.8600000000006,
       "timestamp": "2026-11-10T19:18:24.281Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-draft3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1903,
+        "completion_tokens": 197,
+        "total_tokens": 2100,
+        "prompt_tokens_details": {
+          "cached_tokens": 1664
+        },
+        "prompt_cache_hit_tokens": 1664,
+        "prompt_cache_miss_tokens": 239
+      },
+      "costUpperYuan": 0.00212056,
+      "cumulativeUpperYuan": 5.652354480000003,
+      "latencyMs": 2082.2816999999995,
+      "timestamp": "2026-11-10T19:26:08.825Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-review3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2312,
+        "completion_tokens": 117,
+        "total_tokens": 2429,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 520
+      },
+      "costUpperYuan": 0.00204768,
+      "cumulativeUpperYuan": 5.661479360000003,
+      "latencyMs": 1518.0252999999975,
+      "timestamp": "2026-11-10T19:26:15.585Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-draft4",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1925,
+        "completion_tokens": 191,
+        "total_tokens": 2116,
+        "prompt_tokens_details": {
+          "cached_tokens": 1664
+        },
+        "prompt_cache_hit_tokens": 1664,
+        "prompt_cache_miss_tokens": 261
+      },
+      "costUpperYuan": 0.00211656,
+      "cumulativeUpperYuan": 5.679508000000004,
+      "latencyMs": 1690.8103999999985,
+      "timestamp": "2026-11-10T19:26:24.903Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-review4",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2306,
+        "completion_tokens": 65,
+        "total_tokens": 2371,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 514
+      },
+      "costUpperYuan": 0.00161968,
+      "cumulativeUpperYuan": 5.682441120000004,
+      "latencyMs": 1086.5172999999995,
+      "timestamp": "2026-11-10T19:26:26.973Z"
     }
   ]
 }

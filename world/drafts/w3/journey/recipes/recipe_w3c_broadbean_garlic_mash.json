@@ -1,39 +1,18 @@
 {
   "id": "recipe_w3c_broadbean_garlic_mash",
   "fingerprint": "b8e6ca83d2026322fa53aebd3b0e53554a62d62e2ec47d7a17fda1fa146d6e10",
-  "status": "pending",
-  "attempts": 4,
+  "status": "passed",
+  "attempts": 5,
   "draft": {
     "id": "recipe_w3c_broadbean_garlic_mash",
-    "process": "取干蚕豆瓣一份，与规定清水一份同入厚底煮锅，浸至豆瓣发软。另将晒皮蒜头剥瓣去皮，用案上切刀切成细末。把余下清水一份倒入锅中，与豆瓣一并煮至豆粒一压即散，再下蒜末同煮至蒜味透出。撒入粗盐调味，以偏柄木匙沿锅壁反复压碾，将豆瓣压成稠泥。挑出未散尽的残皮弃置，锅底焦屑刮下弃置。小灶引火只用干木刨屑，煮制前后皆以此维持火源；成泥一份，木匙与切刀留用。全程100分钟。"
+    "process": "干蚕豆瓣置于厚底煮锅，注入规定清水浸泡至软，连水煮透。晒皮蒜头剥瓣去皮，以案上切刀切成细粒，投入锅中同煮。粗盐以刀背压碎后撒入，搅匀。煮至豆瓣轻压即散，用偏柄木匙沿锅缘翻压成泥，挑出残皮弃置；锅底焦屑刮下弃去，不混入泥中。木匙柄偏，便于贴锅壁舀取翻动。全程100分钟。"
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "小灶引火只用干木刨屑，煮制前后皆以此维持火源",
-        "field": "processFacts",
-        "severity": "hard",
-        "reason": "骨架未声明小灶或火源，木刨屑的引用事实仅称可引火或吸收漏液，未说明可作煮制全程燃料；正文新增了骨架外的火源与器具（小灶），且将刨屑用途扩展为维持煮制火源。"
-      }
-    ]
+    "contradictions": []
   },
-  "errors": [
-    {
-      "quote": "小灶引火只用干木刨屑，煮制前后皆以此维持火源",
-      "field": "processFacts",
-      "severity": "hard",
-      "reason": "骨架未声明小灶或火源，木刨屑的引用事实仅称可引火或吸收漏液，未说明可作煮制全程燃料；正文新增了骨架外的火源与器具（小灶），且将刨屑用途扩展为维持煮制火源。"
-    }
-  ],
+  "errors": [],
   "warnings": [],
-  "feedback": [
-    {
-      "quote": "小灶引火只用干木刨屑，煮制前后皆以此维持火源",
-      "field": "processFacts",
-      "severity": "hard",
-      "reason": "骨架未声明小灶或火源，木刨屑的引用事实仅称可引火或吸收漏液，未说明可作煮制全程燃料；正文新增了骨架外的火源与器具（小灶），且将刨屑用途扩展为维持煮制火源。"
-    }
-  ],
+  "feedback": null,
   "l4Rejection": [
     {
       "key": "6948accda220490a0ae6d0f5fc78baae7cf48b72cf9bc0708e0a5acf8b4fcd53",
@@ -77,9 +56,9 @@
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "f8ff9992-4450-4f46-ace5-1ba3b772ff8d",
+    "id": "fa7973e9-f2b9-4126-a87f-de2a52a9f96a",
     "object": "chat.completion",
-    "created": 1794338262,
+    "created": 1794338764,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -90,11 +69,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_hOW7PSpaWR26VD80C66Z0066",
+              "id": "call_00_9ycCAvyIOywHJSeBtxxD7177",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_broadbean_garlic_mash\", \"process\": \"取干蚕豆瓣一份，与规定清水一份同入厚底煮锅，浸至豆瓣发软。另将晒皮蒜头剥瓣去皮，用案上切刀切成细末。把余下清水一份倒入锅中，与豆瓣一并煮至豆粒一压即散，再下蒜末同煮至蒜味透出。撒入粗盐调味，以偏柄木匙沿锅壁反复压碾，将豆瓣压成稠泥。挑出未散尽的残皮弃置，锅底焦屑刮下弃置。小灶引火只用干木刨屑，煮制前后皆以此维持火源；成泥一份，木匙与切刀留用。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_broadbean_garlic_mash\", \"process\": \"干蚕豆瓣置于厚底煮锅，注入规定清水浸泡至软，连水煮透。晒皮蒜头剥瓣去皮，以案上切刀切成细粒，投入锅中同煮。粗盐以刀背压碎后撒入，搅匀。煮至豆瓣轻压即散，用偏柄木匙沿锅缘翻压成泥，挑出残皮弃置；锅底焦屑刮下弃去，不混入泥中。木匙柄偏，便于贴锅壁舀取翻动。\"}"
               }
             }
           ]
@@ -104,34 +83,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 2189,
-      "completion_tokens": 206,
-      "total_tokens": 2395,
+      "prompt_tokens": 1910,
+      "completion_tokens": 172,
+      "total_tokens": 2082,
       "prompt_tokens_details": {
-        "cached_tokens": 640
+        "cached_tokens": 1664
       },
-      "prompt_cache_hit_tokens": 640,
-      "prompt_cache_miss_tokens": 1549
+      "prompt_cache_hit_tokens": 1664,
+      "prompt_cache_miss_tokens": 246
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft3",
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft4",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 2189,
-        "completion_tokens": 206,
-        "total_tokens": 2395,
+        "prompt_tokens": 1910,
+        "completion_tokens": 172,
+        "total_tokens": 2082,
         "prompt_tokens_details": {
-          "cached_tokens": 640
+          "cached_tokens": 1664
         },
-        "prompt_cache_hit_tokens": 640,
-        "prompt_cache_miss_tokens": 1549
+        "prompt_cache_hit_tokens": 1664,
+        "prompt_cache_miss_tokens": 246
       },
-      "costUpperYuan": 0.0047716,
-      "cumulativeUpperYuan": 5.554512720000005,
-      "latencyMs": 2054.5024000000003,
-      "timestamp": "2026-11-10T19:17:44.977Z"
+      "costUpperYuan": 0.0019345599999999999,
+      "cumulativeUpperYuan": 5.650233920000003,
+      "latencyMs": 1866.3799999999992,
+      "timestamp": "2026-11-10T19:26:06.726Z"
     }
   },
   "responseEvidence": [
@@ -182,6 +161,22 @@
       "file": "budget-responses/326446ff-362d-4b71-ae4b-0d40ea621784.json",
       "requestHash": "c844eb5599746e98d23b2d6d72e99f0850be6a2e46eb2ede9f5ecb292fe48b98",
       "responseHash": "d7f37549e4c9d0ba6d3749e6351e7242476235dce4998196903859494135e104"
+    },
+    {
+      "phase": "draft",
+      "attempt": 5,
+      "requestId": "2a289163-8af4-41ff-beae-ea88e8a5d8ba",
+      "file": "budget-responses/2a289163-8af4-41ff-beae-ea88e8a5d8ba.json",
+      "requestHash": "4aabfc8d27011959f3ff2fce94805d6f0890aa99161821a04c09777f76af7704",
+      "responseHash": "15612bf129f7d9914579187fd8f15668cefc85920748f28fad088bf5aadc301c"
+    },
+    {
+      "phase": "review",
+      "attempt": 5,
+      "requestId": "8aa05b22-bbcd-4de9-9397-8164f3c004a1",
+      "file": "budget-responses/8aa05b22-bbcd-4de9-9397-8164f3c004a1.json",
+      "requestHash": "ce916cd2bee929434629129394e0c098b6a2468169d018f6effb29a576f66480",
+      "responseHash": "b5ac71fa7048fe507f9a55963b6a3a28b9bc47ee1b55ab5135e34716fb4db54a"
     }
   ],
   "measurements": [
@@ -298,11 +293,54 @@
       "cumulativeUpperYuan": 5.564968560000006,
       "latencyMs": 1759.3011000000006,
       "timestamp": "2026-11-10T19:17:49.008Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft4",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1910,
+        "completion_tokens": 172,
+        "total_tokens": 2082,
+        "prompt_tokens_details": {
+          "cached_tokens": 1664
+        },
+        "prompt_cache_hit_tokens": 1664,
+        "prompt_cache_miss_tokens": 246
+      },
+      "costUpperYuan": 0.0019345599999999999,
+      "cumulativeUpperYuan": 5.650233920000003,
+      "latencyMs": 1866.3799999999992,
+      "timestamp": "2026-11-10T19:26:06.726Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-review4",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2282,
+        "completion_tokens": 7,
+        "total_tokens": 2289,
+        "prompt_tokens_details": {
+          "cached_tokens": 1792
+        },
+        "prompt_cache_hit_tokens": 1792,
+        "prompt_cache_miss_tokens": 490
+      },
+      "costUpperYuan": 0.00110768,
+      "cumulativeUpperYuan": 5.659431680000003,
+      "latencyMs": 1126.4905999999992,
+      "timestamp": "2026-11-10T19:26:14.048Z"
     }
   ],
-  "budgetStop": {
-    "code": "CONTENT_BUDGET_STOP",
-    "message": "共享或单卡费用上限，已停止",
-    "at": "2026-11-10T19:18:26.797Z"
-  }
+  "budgetStopHistory": [
+    {
+      "code": "CONTENT_BUDGET_STOP",
+      "message": "共享或单卡费用上限，已停止",
+      "at": "2026-11-10T19:18:26.797Z",
+      "clearedAt": "2026-11-10T19:25:48.378Z",
+      "reason": "李白 11-10 决定（5 元授权）：配方重写本轮总上限 0.5→0.7 元，剩余 14 条一次性写完",
+      "headCommit": "4e1569bd8300f67ce95eb24e7c1a600aee7e6197"
+    }
+  ]
 }

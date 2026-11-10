@@ -1,15 +1,18 @@
 {
   "id": "recipe_w3c_resin_cloth_patch",
   "fingerprint": "c31438f75134d68341fc1981d4775ccd89cea518a9637e451fb9929349efae0b",
-  "status": "pending",
-  "attempts": 2,
-  "draft": null,
-  "review": null,
+  "status": "passed",
+  "attempts": 3,
+  "draft": {
+    "id": "recipe_w3c_resin_cloth_patch",
+    "process": "用短刃裁革剪将紧织麻帆布逐段合剪成补片，边缘齐整，剪下的碎布角弃置。取木炭小袋中的炭在炉内引火，火灰留在炉内。把松脂块放入厚底煮锅，借炉火低温软化至能摊开，不可烧沸。以偏柄木匙的匙背蘸取软脂，在补片一面薄薄涂匀，只涂一面。涂好后将补片摊开，待其自然冷却定形，即为薄脂麻补片。此物只备作补材，修补原物须另走实际工序。全程100分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
   "errors": [],
   "warnings": [],
-  "feedback": [
-    "L4 退回：small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）；DRAFT-PROMPT 专项扫描（docs/m26-journey-class-scan.md，主会话按\"弃置允许\"更正后重判）补入：recipe_w3c_paste_cup_portion：\"洗净\"需骨架外水；自备容器；recipe_w3c_horn_comb：\"擦拭\"需骨架外擦布"
-  ],
+  "feedback": null,
   "l4Rejection": [
     {
       "key": "092cbbdc9618daebcbad5bbfd9e7a52f4d4327e22642b3273879d2a26f4e8180",
@@ -46,9 +49,9 @@
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "65a91941-399a-4fb1-8f74-1fa2a5703e6d",
+    "id": "b1781e0e-4b1b-4aa8-93f3-516a65053895",
     "object": "chat.completion",
-    "created": 1794336984,
+    "created": 1794338806,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -59,11 +62,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_bRVxxM2KehrdXrEDtf795376",
+              "id": "call_00_MvpEx2VM6Dx4tQKil7Qt6664",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_resin_cloth_patch\", \"process\": \"将紧织麻帆布铺平，用短刃裁革剪逐段合剪出一块补片，边缘剪齐，不剪铁线。取木炭小袋中的炭放入厚底煮锅，在小灶上引燃，使锅微热；把熬稠松脂块投入锅中，借余温软化，不可烧至冒烟。松脂变软后，以偏柄木匙背蘸取，在补片一面薄薄涂开，涂匀即止，不浸透布面。涂好后将补片摊开，离火静置冷却，待脂面凝定不粘手，即得薄脂麻补片一份。此片只作备料，修补原物须另走实际工序。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_resin_cloth_patch\", \"process\": \"用短刃裁革剪将紧织麻帆布逐段合剪成补片，边缘齐整，剪下的碎布角弃置。取木炭小袋中的炭在炉内引火，火灰留在炉内。把松脂块放入厚底煮锅，借炉火低温软化至能摊开，不可烧沸。以偏柄木匙的匙背蘸取软脂，在补片一面薄薄涂匀，只涂一面。涂好后将补片摊开，待其自然冷却定形，即为薄脂麻补片。此物只备作补材，修补原物须另走实际工序。\"}"
               }
             }
           ]
@@ -73,34 +76,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1718,
-      "completion_tokens": 215,
-      "total_tokens": 1933,
+      "prompt_tokens": 1936,
+      "completion_tokens": 195,
+      "total_tokens": 2131,
       "prompt_tokens_details": {
-        "cached_tokens": 384
+        "cached_tokens": 640
       },
-      "prompt_cache_hit_tokens": 384,
-      "prompt_cache_miss_tokens": 1334
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 1296
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_resin_cloth_patch-draft1",
+      "label": "content-recipes-recipe_w3c_resin_cloth_patch-draft2",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1718,
-        "completion_tokens": 215,
-        "total_tokens": 1933,
+        "prompt_tokens": 1936,
+        "completion_tokens": 195,
+        "total_tokens": 2131,
         "prompt_tokens_details": {
-          "cached_tokens": 384
+          "cached_tokens": 640
         },
-        "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 1334
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1296
       },
-      "costUpperYuan": 0.00440336,
-      "cumulativeUpperYuan": 5.535208160000005,
-      "latencyMs": 2098.189699999988,
-      "timestamp": "2026-11-10T18:56:26.504Z"
+      "costUpperYuan": 0.0041776,
+      "cumulativeUpperYuan": 5.730468960000005,
+      "latencyMs": 1781.2727000000014,
+      "timestamp": "2026-11-10T19:26:48.273Z"
     }
   },
   "responseEvidence": [
@@ -119,6 +122,22 @@
       "file": "budget-responses/2357cf27-e3b9-4e6f-9f22-013e280480a5.json",
       "requestHash": "afdd7298b38706bc776b9c2e42aea199484da046b3255d5d5dc31ef471660a30",
       "responseHash": "eabc8d7edec2183acf0c4767ca44752f774cf4077471cdd25c1eabf001e73ac1"
+    },
+    {
+      "phase": "draft",
+      "attempt": 3,
+      "requestId": "68d33b8c-341f-43b8-aa16-04926bd6de36",
+      "file": "budget-responses/68d33b8c-341f-43b8-aa16-04926bd6de36.json",
+      "requestHash": "3151bb29434377ee5ad5c72b548768ab7c14e5b8b86bad9c1ad7cab9bebbf07b",
+      "responseHash": "1690971f008597f732c6b8117565e3a6c32b0b0d97d3f3f856615e4c8c353c1e"
+    },
+    {
+      "phase": "review",
+      "attempt": 3,
+      "requestId": "773de6ae-6760-4e39-a2b8-ac924928dbb2",
+      "file": "budget-responses/773de6ae-6760-4e39-a2b8-ac924928dbb2.json",
+      "requestHash": "56fb55d8bdb15d389ad99954c39691588be3bf37e3b81bbe40a7c40a34324437",
+      "responseHash": "a51409516dd10fbe23773e2a2a8be3dd6823ee08cd1a8904c0823eeab7561292"
     }
   ],
   "measurements": [
@@ -159,11 +178,54 @@
       "cumulativeUpperYuan": 5.540015360000005,
       "latencyMs": 988.7725999999966,
       "timestamp": "2026-11-10T18:56:28.553Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_resin_cloth_patch-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1936,
+        "completion_tokens": 195,
+        "total_tokens": 2131,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 1296
+      },
+      "costUpperYuan": 0.0041776,
+      "cumulativeUpperYuan": 5.730468960000005,
+      "latencyMs": 1781.2727000000014,
+      "timestamp": "2026-11-10T19:26:48.273Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_resin_cloth_patch-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 2102,
+        "completion_tokens": 7,
+        "total_tokens": 2109,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 1206
+      },
+      "costUpperYuan": 0.0025038400000000002,
+      "cumulativeUpperYuan": 5.735288640000005,
+      "latencyMs": 670.2070000000022,
+      "timestamp": "2026-11-10T19:26:50.052Z"
     }
   ],
-  "budgetStop": {
-    "code": "CONTENT_BUDGET_STOP",
-    "message": "共享或单卡费用上限，已停止",
-    "at": "2026-11-10T19:18:26.902Z"
-  }
+  "budgetStopHistory": [
+    {
+      "code": "CONTENT_BUDGET_STOP",
+      "message": "共享或单卡费用上限，已停止",
+      "at": "2026-11-10T19:18:26.902Z",
+      "clearedAt": "2026-11-10T19:25:48.378Z",
+      "reason": "李白 11-10 决定（5 元授权）：配方重写本轮总上限 0.5→0.7 元，剩余 14 条一次性写完",
+      "headCommit": "4e1569bd8300f67ce95eb24e7c1a600aee7e6197"
+    }
+  ]
 }

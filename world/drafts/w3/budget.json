@@ -1,6 +1,6 @@
 {
-  "spentYuan": 5.646038800000004,
-  "reservedYuan": 4.163336342344337e-17,
+  "spentYuan": 5.735288640000005,
+  "reservedYuan": 6.938893903907228e-17,
   "limitYuan": 20,
   "requests": {
     "e41f0495-23bb-48fd-b2e3-8826e4cac8cd": {
@@ -4512,6 +4512,1058 @@
       "requestHash": "c677fa324bdc58fe3d6a0cc33ebe89c9c19526bdfac9ee8bb1f7680ac12589ff",
       "reservedYuan": 0.062556,
       "status": "cancelled-unissued"
+    },
+    "7426f618-5b35-4acc-b23a-4ef8ed8f28e5": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_lentil_leek_stew-draft2",
+      "requestHash": "82b4973b7c0801b8d53ab1c7457a8ef36f2e8c8932846a58c38a222e935ae5ae",
+      "reservedYuan": 0.02147,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7426f618-5b35-4acc-b23a-4ef8ed8f28e5.json",
+        "requestHash": "82b4973b7c0801b8d53ab1c7457a8ef36f2e8c8932846a58c38a222e935ae5ae",
+        "responseHash": "99a5877d96684cd0b2aae6ed92d36073e4ac36d2a2da31bd1591293dbe53a395"
+      },
+      "costUpperYuan": 0.00226056,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_lentil_leek_stew-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2077,
+          "completion_tokens": 171,
+          "total_tokens": 2248,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 413
+        },
+        "costUpperYuan": 0.00226056,
+        "cumulativeUpperYuan": 5.648299360000004,
+        "latencyMs": 2045.8696,
+        "timestamp": "2026-11-10T19:26:04.841Z"
+      }
+    },
+    "67be696a-e3f3-43e6-a6be-31831431f34e": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_lentil_leek_stew-review2",
+      "requestHash": "5da3f95226cff56e18491b7129645528076375efb08052d73ae3535304fed99b",
+      "reservedYuan": 0.031786,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "a0ac852b4b3746ea06c5d3516a5f97971fbafe82a1cea5efb310e875602cd6b0",
+        "reservedYuan": 0.06489
+      },
+      "responseEvidence": {
+        "file": "budget-responses/67be696a-e3f3-43e6-a6be-31831431f34e.json",
+        "requestHash": "5da3f95226cff56e18491b7129645528076375efb08052d73ae3535304fed99b",
+        "responseHash": "dacbb7fc76193e893343bbb2d2c7e139949576cf5f5901dfd28caf6e99cb8159"
+      },
+      "costUpperYuan": 0.00109768,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_lentil_leek_stew-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2277,
+          "completion_tokens": 7,
+          "total_tokens": 2284,
+          "prompt_tokens_details": {
+            "cached_tokens": 1792
+          },
+          "prompt_cache_hit_tokens": 1792,
+          "prompt_cache_miss_tokens": 485
+        },
+        "costUpperYuan": 0.00109768,
+        "cumulativeUpperYuan": 5.653452160000003,
+        "latencyMs": 1059.9719999999998,
+        "timestamp": "2026-11-10T19:26:09.923Z"
+      }
+    },
+    "2a289163-8af4-41ff-beae-ea88e8a5d8ba": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft4",
+      "requestHash": "4aabfc8d27011959f3ff2fce94805d6f0890aa99161821a04c09777f76af7704",
+      "reservedYuan": 0.020072,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2a289163-8af4-41ff-beae-ea88e8a5d8ba.json",
+        "requestHash": "4aabfc8d27011959f3ff2fce94805d6f0890aa99161821a04c09777f76af7704",
+        "responseHash": "15612bf129f7d9914579187fd8f15668cefc85920748f28fad088bf5aadc301c"
+      },
+      "costUpperYuan": 0.0019345599999999999,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-draft4",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1910,
+          "completion_tokens": 172,
+          "total_tokens": 2082,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 246
+        },
+        "costUpperYuan": 0.0019345599999999999,
+        "cumulativeUpperYuan": 5.650233920000003,
+        "latencyMs": 1866.3799999999992,
+        "timestamp": "2026-11-10T19:26:06.726Z"
+      }
+    },
+    "8aa05b22-bbcd-4de9-9397-8164f3c004a1": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-review4",
+      "requestHash": "ce916cd2bee929434629129394e0c098b6a2468169d018f6effb29a576f66480",
+      "reservedYuan": 0.031862,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "d1a96732659c1e1c4596a08380b1ba77c858444063f421b216a8fe790c2fdc0b",
+        "reservedYuan": 0.064954
+      },
+      "responseEvidence": {
+        "file": "budget-responses/8aa05b22-bbcd-4de9-9397-8164f3c004a1.json",
+        "requestHash": "ce916cd2bee929434629129394e0c098b6a2468169d018f6effb29a576f66480",
+        "responseHash": "b5ac71fa7048fe507f9a55963b6a3a28b9bc47ee1b55ab5135e34716fb4db54a"
+      },
+      "costUpperYuan": 0.00110768,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_broadbean_garlic_mash-review4",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2282,
+          "completion_tokens": 7,
+          "total_tokens": 2289,
+          "prompt_tokens_details": {
+            "cached_tokens": 1792
+          },
+          "prompt_cache_hit_tokens": 1792,
+          "prompt_cache_miss_tokens": 490
+        },
+        "costUpperYuan": 0.00110768,
+        "cumulativeUpperYuan": 5.659431680000003,
+        "latencyMs": 1126.4905999999992,
+        "timestamp": "2026-11-10T19:26:14.048Z"
+      }
+    },
+    "80a353f2-da38-4e9f-bc8b-9d847ce682ea": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-draft3",
+      "requestHash": "db0121987b5e98754e2f82ee04e5474d793917b4aea0d9fded889aca4d064fb4",
+      "reservedYuan": 0.020002,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/80a353f2-da38-4e9f-bc8b-9d847ce682ea.json",
+        "requestHash": "db0121987b5e98754e2f82ee04e5474d793917b4aea0d9fded889aca4d064fb4",
+        "responseHash": "65827e64f2ae2a1ebda175fcf7d3a966cfae6bd8feee2b5db8ea40b01eb51175"
+      },
+      "costUpperYuan": 0.00212056,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_mutton_turnip_stew-draft3",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1903,
+          "completion_tokens": 197,
+          "total_tokens": 2100,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 239
+        },
+        "costUpperYuan": 0.00212056,
+        "cumulativeUpperYuan": 5.652354480000003,
+        "latencyMs": 2082.2816999999995,
+        "timestamp": "2026-11-10T19:26:08.825Z"
+      }
+    },
+    "91a71c54-3ac9-4869-8731-5419756b0efb": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-review3",
+      "requestHash": "8966491477753dca7372f5bf2dcc20b87776194670985d95877d41db60230049",
+      "reservedYuan": 0.032074,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "984bab9f1595c271d3b04e2a8d150a016b38007ea3838dc2ccd85b5fe1496a04",
+        "reservedYuan": 0.064986
+      },
+      "responseEvidence": {
+        "file": "budget-responses/91a71c54-3ac9-4869-8731-5419756b0efb.json",
+        "requestHash": "8966491477753dca7372f5bf2dcc20b87776194670985d95877d41db60230049",
+        "responseHash": "93b7f3cefaaa7836d60fa6b5ced0b8bbf13affeb74ed143c4352e976e34fcbb3"
+      },
+      "costUpperYuan": 0.00204768,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_mutton_turnip_stew-review3",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2312,
+          "completion_tokens": 117,
+          "total_tokens": 2429,
+          "prompt_tokens_details": {
+            "cached_tokens": 1792
+          },
+          "prompt_cache_hit_tokens": 1792,
+          "prompt_cache_miss_tokens": 520
+        },
+        "costUpperYuan": 0.00204768,
+        "cumulativeUpperYuan": 5.661479360000003,
+        "latencyMs": 1518.0252999999975,
+        "timestamp": "2026-11-10T19:26:15.585Z"
+      }
+    },
+    "b08a38f2-b889-4c41-aacd-17efcc8fb657": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_garlic_butter-review2",
+      "requestHash": "62ad767b2507b916a9a1b0c44b4f50165c4c83589fb04300668192387a9d21b2",
+      "reservedYuan": 0.029482,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b08a38f2-b889-4c41-aacd-17efcc8fb657.json",
+        "requestHash": "62ad767b2507b916a9a1b0c44b4f50165c4c83589fb04300668192387a9d21b2",
+        "responseHash": "f20dddc149543d7e70cd6d500b09825c80e079ac3ada3b178eaae910a8596b96"
+      },
+      "costUpperYuan": 0.0048718400000000005,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_garlic_butter-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1930,
+          "completion_tokens": 346,
+          "total_tokens": 2276,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1034
+        },
+        "costUpperYuan": 0.0048718400000000005,
+        "cumulativeUpperYuan": 5.658324000000003,
+        "latencyMs": 2960.2744000000002,
+        "timestamp": "2026-11-10T19:26:12.905Z"
+      }
+    },
+    "f71b4717-3735-47b0-ac4e-9c5b27e62a66": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_rendered_cooking_fat-draft1",
+      "requestHash": "e72e5845c1422742cc55d4c03d4bcc35a735583b709c66a238773822c2dadbd2",
+      "reservedYuan": 0.020702,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/f71b4717-3735-47b0-ac4e-9c5b27e62a66.json",
+        "requestHash": "e72e5845c1422742cc55d4c03d4bcc35a735583b709c66a238773822c2dadbd2",
+        "responseHash": "79d252d7e0f9b4d5bf6c2aeb1779441c0b60269902c27de5f03a41df4fe7c272"
+      },
+      "costUpperYuan": 0.0041656,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_rendered_cooking_fat-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2026,
+          "completion_tokens": 171,
+          "total_tokens": 2197,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1386
+        },
+        "costUpperYuan": 0.0041656,
+        "cumulativeUpperYuan": 5.665644960000003,
+        "latencyMs": 2040.406500000001,
+        "timestamp": "2026-11-10T19:26:17.641Z"
+      }
+    },
+    "25bd190f-3873-44dd-97fa-e3b822c204de": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_rendered_cooking_fat-review1",
+      "requestHash": "21cefc62d57815401e037b8892a03bc89967bf5ab14f92f5c37f856aa53ea333",
+      "reservedYuan": 0.03049,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "419e1a4749e37cc7a9715529ebc1d25b8d781815571fc96aebe39d4b79394748",
+        "reservedYuan": 0.063514
+      },
+      "responseEvidence": {
+        "file": "budget-responses/25bd190f-3873-44dd-97fa-e3b822c204de.json",
+        "requestHash": "21cefc62d57815401e037b8892a03bc89967bf5ab14f92f5c37f856aa53ea333",
+        "responseHash": "748b6d250214e1b8d378d2281289e03e68aaed671900823bf218469218c3a760"
+      },
+      "costUpperYuan": 0.00243984,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_rendered_cooking_fat-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2070,
+          "completion_tokens": 7,
+          "total_tokens": 2077,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1174
+        },
+        "costUpperYuan": 0.00243984,
+        "cumulativeUpperYuan": 5.672224400000004,
+        "latencyMs": 778.5727000000006,
+        "timestamp": "2026-11-10T19:26:20.242Z"
+      }
+    },
+    "0825a713-a49d-43af-9283-301f29dd5659": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_salted_walnut-draft1",
+      "requestHash": "4e8742d92ed9755761ac1e059b27da954fa82f62651f5e8ffd359f63eb47720d",
+      "reservedYuan": 0.020746,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/0825a713-a49d-43af-9283-301f29dd5659.json",
+        "requestHash": "4e8742d92ed9755761ac1e059b27da954fa82f62651f5e8ffd359f63eb47720d",
+        "responseHash": "79a816c79ade9792850278a651f94c5b5b4558426863b4b096636a16c19cc692"
+      },
+      "costUpperYuan": 0.0041396,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_salted_walnut-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2025,
+          "completion_tokens": 168,
+          "total_tokens": 2193,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1385
+        },
+        "costUpperYuan": 0.0041396,
+        "cumulativeUpperYuan": 5.669784560000004,
+        "latencyMs": 1759.2870000000003,
+        "timestamp": "2026-11-10T19:26:19.438Z"
+      }
+    },
+    "f7cd4070-48c2-40c2-8af8-cbd44c1e4d26": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_salted_walnut-review1",
+      "requestHash": "81859b5c549896d2f69a730d2c0ee43f985afe5cd71b1960462d5dbe71d0c3e4",
+      "reservedYuan": 0.030622,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "203240c4e88a2d6e1599aa41cc9858401e02c751ec8ae89ad05a635b528e0532",
+        "reservedYuan": 0.063726
+      },
+      "responseEvidence": {
+        "file": "budget-responses/f7cd4070-48c2-40c2-8af8-cbd44c1e4d26.json",
+        "requestHash": "81859b5c549896d2f69a730d2c0ee43f985afe5cd71b1960462d5dbe71d0c3e4",
+        "responseHash": "e8054c73ea2c20c1ee9f6b33b6c5598a3b501a9e2d9ebf79758ad1778c242d38"
+      },
+      "costUpperYuan": 0.0024818400000000003,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_salted_walnut-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2091,
+          "completion_tokens": 7,
+          "total_tokens": 2098,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1195
+        },
+        "costUpperYuan": 0.0024818400000000003,
+        "cumulativeUpperYuan": 5.677391440000004,
+        "latencyMs": 1053.7537999999986,
+        "timestamp": "2026-11-10T19:26:23.191Z"
+      }
+    },
+    "2a0ab1ec-ebc2-4a28-8861-9b1dfe6fe76c": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_garlic_butter-draft3",
+      "requestHash": "03bb3a899cbdcf2d176ba7cdf5a79d8e723d6d54127118352c8a02720a2af0fd",
+      "reservedYuan": 0.020186,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/2a0ab1ec-ebc2-4a28-8861-9b1dfe6fe76c.json",
+        "requestHash": "03bb3a899cbdcf2d176ba7cdf5a79d8e723d6d54127118352c8a02720a2af0fd",
+        "responseHash": "b4da51b06f2bd30799c20041caa4e60f412be941992305698bcb88def7d88b90"
+      },
+      "costUpperYuan": 0.0026852,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_garlic_butter-draft3",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1881,
+          "completion_tokens": 179,
+          "total_tokens": 2060,
+          "prompt_tokens_details": {
+            "cached_tokens": 1280
+          },
+          "prompt_cache_hit_tokens": 1280,
+          "prompt_cache_miss_tokens": 601
+        },
+        "costUpperYuan": 0.0026852,
+        "cumulativeUpperYuan": 5.674909600000004,
+        "latencyMs": 1846.8999000000003,
+        "timestamp": "2026-11-10T19:26:22.111Z"
+      }
+    },
+    "a3f47d87-a1ad-478a-af0a-5f58b4fae9d8": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_garlic_butter-review3",
+      "requestHash": "0284fada515356edcf1ca3a72df040f2586e92d740ce9d2d256e75507c89e2d1",
+      "reservedYuan": 0.02962,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "c677fa324bdc58fe3d6a0cc33ebe89c9c19526bdfac9ee8bb1f7680ac12589ff",
+        "reservedYuan": 0.062556
+      },
+      "responseEvidence": {
+        "file": "budget-responses/a3f47d87-a1ad-478a-af0a-5f58b4fae9d8.json",
+        "requestHash": "0284fada515356edcf1ca3a72df040f2586e92d740ce9d2d256e75507c89e2d1",
+        "responseHash": "8b94570166b9f93b10600254b976dd5c68de9fa5bab30c96e5adbaa2b9813978"
+      },
+      "costUpperYuan": 0.0013134400000000001,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_garlic_butter-review3",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1942,
+          "completion_tokens": 55,
+          "total_tokens": 1997,
+          "prompt_tokens_details": {
+            "cached_tokens": 1536
+          },
+          "prompt_cache_hit_tokens": 1536,
+          "prompt_cache_miss_tokens": 406
+        },
+        "costUpperYuan": 0.0013134400000000001,
+        "cumulativeUpperYuan": 5.680821440000003,
+        "latencyMs": 936.3119000000006,
+        "timestamp": "2026-11-10T19:26:25.864Z"
+      }
+    },
+    "61a3d278-b94f-4c59-9cb7-94e5500eecd1": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-draft4",
+      "requestHash": "d7f6204a7f068e5f9105fcc5429828b341b7766be0d07f64b891a0a7adecb826",
+      "reservedYuan": 0.020278,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/61a3d278-b94f-4c59-9cb7-94e5500eecd1.json",
+        "requestHash": "d7f6204a7f068e5f9105fcc5429828b341b7766be0d07f64b891a0a7adecb826",
+        "responseHash": "09c271df6715a660e5a274eb7459a71153d7f29a511e4414acd603d1def6ed4d"
+      },
+      "costUpperYuan": 0.00211656,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_mutton_turnip_stew-draft4",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1925,
+          "completion_tokens": 191,
+          "total_tokens": 2116,
+          "prompt_tokens_details": {
+            "cached_tokens": 1664
+          },
+          "prompt_cache_hit_tokens": 1664,
+          "prompt_cache_miss_tokens": 261
+        },
+        "costUpperYuan": 0.00211656,
+        "cumulativeUpperYuan": 5.679508000000004,
+        "latencyMs": 1690.8103999999985,
+        "timestamp": "2026-11-10T19:26:24.903Z"
+      }
+    },
+    "26860afc-72d2-44cb-bbe5-a87ff7c55761": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_mutton_turnip_stew-review4",
+      "requestHash": "b154097c5087e446be262e213bdcf6c12327cbc508fafb9b832b96d7074be46b",
+      "reservedYuan": 0.032038,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "984bab9f1595c271d3b04e2a8d150a016b38007ea3838dc2ccd85b5fe1496a04",
+        "reservedYuan": 0.064986
+      },
+      "responseEvidence": {
+        "file": "budget-responses/26860afc-72d2-44cb-bbe5-a87ff7c55761.json",
+        "requestHash": "b154097c5087e446be262e213bdcf6c12327cbc508fafb9b832b96d7074be46b",
+        "responseHash": "0afff4615a489c8610aaba0e65825342c1be73db9a83174f6d514e8f7b949c63"
+      },
+      "costUpperYuan": 0.00161968,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_mutton_turnip_stew-review4",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2306,
+          "completion_tokens": 65,
+          "total_tokens": 2371,
+          "prompt_tokens_details": {
+            "cached_tokens": 1792
+          },
+          "prompt_cache_hit_tokens": 1792,
+          "prompt_cache_miss_tokens": 514
+        },
+        "costUpperYuan": 0.00161968,
+        "cumulativeUpperYuan": 5.682441120000004,
+        "latencyMs": 1086.5172999999995,
+        "timestamp": "2026-11-10T19:26:26.973Z"
+      }
+    },
+    "1adc6442-35d7-445b-b7e6-3c3b87524671": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_steel_gouge_tip-draft1",
+      "requestHash": "925fedaeffdef73ed7edfa8abffd0ecf50c4292f15aa9ed4352968bdd66334c7",
+      "reservedYuan": 0.02107,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/1adc6442-35d7-445b-b7e6-3c3b87524671.json",
+        "requestHash": "925fedaeffdef73ed7edfa8abffd0ecf50c4292f15aa9ed4352968bdd66334c7",
+        "responseHash": "7339c41d0ed1e0ec9aa9b5744c656e0fe5618eabbec293e981130de94f8b5cee"
+      },
+      "costUpperYuan": 0.0045596000000000005,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_steel_gouge_tip-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2059,
+          "completion_tokens": 212,
+          "total_tokens": 2271,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1419
+        },
+        "costUpperYuan": 0.0045596000000000005,
+        "cumulativeUpperYuan": 5.687000720000004,
+        "latencyMs": 2128.7108000000007,
+        "timestamp": "2026-11-10T19:26:29.177Z"
+      }
+    },
+    "aa9072b5-1077-4119-be29-eb8feafbdc58": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_steel_gouge_tip-review1",
+      "requestHash": "2908edb8f1a38c0aa3d8c8e8f74b87c3c4cf4539047e190382808a0da4607357",
+      "reservedYuan": 0.03175,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "2b2d4da6e2b1cf371f4ddd3bbbe7d427cafca90f94d3c985d49ee11ef96a17b4",
+        "reservedYuan": 0.06459
+      },
+      "responseEvidence": {
+        "file": "budget-responses/aa9072b5-1077-4119-be29-eb8feafbdc58.json",
+        "requestHash": "2908edb8f1a38c0aa3d8c8e8f74b87c3c4cf4539047e190382808a0da4607357",
+        "responseHash": "cb4beff49cfdcc1f136b6a313deb9e948787643688cc3415ac86d69b6d72d06b"
+      },
+      "costUpperYuan": 0.00282984,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_steel_gouge_tip-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2265,
+          "completion_tokens": 7,
+          "total_tokens": 2272,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1369
+        },
+        "costUpperYuan": 0.00282984,
+        "cumulativeUpperYuan": 5.698201760000004,
+        "latencyMs": 704.0106000000014,
+        "timestamp": "2026-11-10T19:26:34.103Z"
+      }
+    },
+    "32bc7e1f-b076-47bb-ac89-91eb4c55ca63": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_small_bell_frame-draft2",
+      "requestHash": "e6dceb1f9d9291314f1de1ed8acf144c43551807e7d2d3fc20665ea2b169e82a",
+      "reservedYuan": 0.019864,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/32bc7e1f-b076-47bb-ac89-91eb4c55ca63.json",
+        "requestHash": "e6dceb1f9d9291314f1de1ed8acf144c43551807e7d2d3fc20665ea2b169e82a",
+        "responseHash": "64b6a088b74a507fbee3916d4eede38103fdd91a8bed2fc2f55aa86819f4de72"
+      },
+      "costUpperYuan": 0.0043276,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_small_bell_frame-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1899,
+          "completion_tokens": 223,
+          "total_tokens": 2122,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1259
+        },
+        "costUpperYuan": 0.0043276,
+        "cumulativeUpperYuan": 5.691328320000004,
+        "latencyMs": 2334.3162000000048,
+        "timestamp": "2026-11-10T19:26:31.527Z"
+      }
+    },
+    "5adf9bd0-6ea7-4a6b-9f92-0c8f35033ea7": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_small_bell_frame-review2",
+      "requestHash": "6a719b6305690ed353c01c5c2c7af610e6179c032f27d852dcff185b6a92451d",
+      "reservedYuan": 0.030294,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "0b7f52a945cd523fe75e27af89675e1179f9d4d3dc9f0b7216ccda6b49508672",
+        "reservedYuan": 0.063042
+      },
+      "responseEvidence": {
+        "file": "budget-responses/5adf9bd0-6ea7-4a6b-9f92-0c8f35033ea7.json",
+        "requestHash": "6a719b6305690ed353c01c5c2c7af610e6179c032f27d852dcff185b6a92451d",
+        "responseHash": "551820291a8e8d6f0dda38f63c0d35ae84149527c5d3df5f0cc21ec3de95774d"
+      },
+      "costUpperYuan": 0.00243784,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_small_bell_frame-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2069,
+          "completion_tokens": 7,
+          "total_tokens": 2076,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1173
+        },
+        "costUpperYuan": 0.00243784,
+        "cumulativeUpperYuan": 5.700639600000004,
+        "latencyMs": 1073.8009999999995,
+        "timestamp": "2026-11-10T19:26:35.195Z"
+      }
+    },
+    "5ec5ba6a-aa61-4f4c-990c-da7106ba7a69": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_paste_cup_portion-draft1",
+      "requestHash": "1eada8b0424a5caed52a2c90b75a2d134b70cd22a4e0c53bd239a725d0b8b611",
+      "reservedYuan": 0.019786,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/5ec5ba6a-aa61-4f4c-990c-da7106ba7a69.json",
+        "requestHash": "1eada8b0424a5caed52a2c90b75a2d134b70cd22a4e0c53bd239a725d0b8b611",
+        "responseHash": "2990adcb8bebd8cc6952c206491a7378d5c49ffc151c3a730f19283655b54cae"
+      },
+      "costUpperYuan": 0.0040436,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_paste_cup_portion-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1869,
+          "completion_tokens": 195,
+          "total_tokens": 2064,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1229
+        },
+        "costUpperYuan": 0.0040436,
+        "cumulativeUpperYuan": 5.695371920000004,
+        "latencyMs": 1819.694500000005,
+        "timestamp": "2026-11-10T19:26:33.374Z"
+      }
+    },
+    "faaec977-1af5-4ea9-ac60-b98645021890": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_paste_cup_portion-review1",
+      "requestHash": "81dfb6d317f68137adde6520ac636ebbce5a0a32441d0845ada56d1df97cf764",
+      "reservedYuan": 0.030286,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "66b47ac18d51042e61bc0def47c006847d01d8077198d2b2111497f161fbfa8c",
+        "reservedYuan": 0.063148
+      },
+      "responseEvidence": {
+        "file": "budget-responses/faaec977-1af5-4ea9-ac60-b98645021890.json",
+        "requestHash": "81dfb6d317f68137adde6520ac636ebbce5a0a32441d0845ada56d1df97cf764",
+        "responseHash": "d27fd5dd9e95ede02e25747cb19dab9df324db9b5f99b53b5a5e3d0ff95f2a28"
+      },
+      "costUpperYuan": 0.0023738400000000003,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_paste_cup_portion-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2037,
+          "completion_tokens": 7,
+          "total_tokens": 2044,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1141
+        },
+        "costUpperYuan": 0.0023738400000000003,
+        "cumulativeUpperYuan": 5.707127040000004,
+        "latencyMs": 791.1512999999977,
+        "timestamp": "2026-11-10T19:26:37.911Z"
+      }
+    },
+    "58b31c19-ee9f-4546-b42d-90c4c6230a88": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_ledger_cover-draft2",
+      "requestHash": "f63619e2cf6277043dfbca8e8510bbfc3969d8f70494fc1cc30f88b82bac99c9",
+      "reservedYuan": 0.020502,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/58b31c19-ee9f-4546-b42d-90c4c6230a88.json",
+        "requestHash": "f63619e2cf6277043dfbca8e8510bbfc3969d8f70494fc1cc30f88b82bac99c9",
+        "responseHash": "88146186788a4788947751fb8ec72fa9ad31eda33151065ae34aae3e5129c7eb"
+      },
+      "costUpperYuan": 0.0041136,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_ledger_cover-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1992,
+          "completion_tokens": 173,
+          "total_tokens": 2165,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1352
+        },
+        "costUpperYuan": 0.0041136,
+        "cumulativeUpperYuan": 5.704753200000004,
+        "latencyMs": 1876.0464999999967,
+        "timestamp": "2026-11-10T19:26:37.091Z"
+      }
+    },
+    "7c5dad2f-dc6f-44ca-b3cd-e800386a1fbd": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_ledger_cover-review2",
+      "requestHash": "4ae5ad69439eaa12c2c099c3d0ea8e136b71313946ab92c6ffb535a855783577",
+      "reservedYuan": 0.030766,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "191a30e93e2cb613fe4b9d859822473e8c3f0c193cc56d98eee44ab71028ecab",
+        "reservedYuan": 0.063864
+      },
+      "responseEvidence": {
+        "file": "budget-responses/7c5dad2f-dc6f-44ca-b3cd-e800386a1fbd.json",
+        "requestHash": "4ae5ad69439eaa12c2c099c3d0ea8e136b71313946ab92c6ffb535a855783577",
+        "responseHash": "19c56d5929bb81154cae64f3313cc01fc17a47050baee3b7a4d4b61d1b90bac6"
+      },
+      "costUpperYuan": 0.00257784,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_ledger_cover-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2139,
+          "completion_tokens": 7,
+          "total_tokens": 2146,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1243
+        },
+        "costUpperYuan": 0.00257784,
+        "cumulativeUpperYuan": 5.713378480000004,
+        "latencyMs": 855.2263000000021,
+        "timestamp": "2026-11-10T19:26:40.662Z"
+      }
+    },
+    "89619f82-be40-4de0-939e-61a70fb1ffb4": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_horn_comb-draft1",
+      "requestHash": "a49387bab94e5ad5341e9d4a60d5b0eb6ad80358961f58151531b3396972170e",
+      "reservedYuan": 0.018676,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/89619f82-be40-4de0-939e-61a70fb1ffb4.json",
+        "requestHash": "a49387bab94e5ad5341e9d4a60d5b0eb6ad80358961f58151531b3396972170e",
+        "responseHash": "19055cffa690f666e7f5d6b34a8df30090fb61bc1abe4af4a21081abec47759a"
+      },
+      "costUpperYuan": 0.0036736,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_horn_comb-draft1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1732,
+          "completion_tokens": 183,
+          "total_tokens": 1915,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1092
+        },
+        "costUpperYuan": 0.0036736,
+        "cumulativeUpperYuan": 5.710800640000004,
+        "latencyMs": 1838.6247000000003,
+        "timestamp": "2026-11-10T19:26:39.769Z"
+      }
+    },
+    "b6421e9c-51e1-4c64-be0d-3eadcd008d49": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_horn_comb-review1",
+      "requestHash": "baa03b244050f2489ebd80c0b3471f4a0aba8c95fd26529ec2dc9b2ac5f59f2f",
+      "reservedYuan": 0.02868,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "2da7038fdcd398c122353352b2c7e1950bef8de8652831dfaa86e5a09ce1285d",
+        "reservedYuan": 0.061694
+      },
+      "responseEvidence": {
+        "file": "budget-responses/b6421e9c-51e1-4c64-be0d-3eadcd008d49.json",
+        "requestHash": "baa03b244050f2489ebd80c0b3471f4a0aba8c95fd26529ec2dc9b2ac5f59f2f",
+        "responseHash": "9ba75ad8f4b58492f08504ba6cda357b65ab42813e0c94b3a4e64c6e3bc41c36"
+      },
+      "costUpperYuan": 0.00197184,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_horn_comb-review1",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1836,
+          "completion_tokens": 7,
+          "total_tokens": 1843,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 940
+        },
+        "costUpperYuan": 0.00197184,
+        "cumulativeUpperYuan": 5.719705920000004,
+        "latencyMs": 718.3762999999963,
+        "timestamp": "2026-11-10T19:26:43.394Z"
+      }
+    },
+    "7acefb7d-1b13-4826-bbb5-8c3da05f5021": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_redwood_dye-draft3",
+      "requestHash": "c84886766eca649bc74d9f4bc463176093ac46e8a6804ab2a4a17411c7de5c9c",
+      "reservedYuan": 0.020782,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/7acefb7d-1b13-4826-bbb5-8c3da05f5021.json",
+        "requestHash": "c84886766eca649bc74d9f4bc463176093ac46e8a6804ab2a4a17411c7de5c9c",
+        "responseHash": "6bc182e5478d16adb044422e8125302812550bc02c6e5fe932d4da165ddabbce"
+      },
+      "costUpperYuan": 0.0043556,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_redwood_dye-draft3",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2013,
+          "completion_tokens": 198,
+          "total_tokens": 2211,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1373
+        },
+        "costUpperYuan": 0.0043556,
+        "cumulativeUpperYuan": 5.717734080000004,
+        "latencyMs": 1961.375899999999,
+        "timestamp": "2026-11-10T19:26:42.648Z"
+      }
+    },
+    "9e437c29-8145-4142-b4ee-151e35095607": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_redwood_dye-review3",
+      "requestHash": "867217c8eabcb68975da9c687fe14d1dea8aac3362a9f18438cb1132d84ec688",
+      "reservedYuan": 0.031446,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "38930b8e6c46551e563e6e03f01b3cd07f9b3287564c6169f4a55412e3709931",
+        "reservedYuan": 0.064312
+      },
+      "responseEvidence": {
+        "file": "budget-responses/9e437c29-8145-4142-b4ee-151e35095607.json",
+        "requestHash": "867217c8eabcb68975da9c687fe14d1dea8aac3362a9f18438cb1132d84ec688",
+        "responseHash": "20fdfe17c5edf94a4c326447cd186ee2e6e0089ce31b85b3d4412381c5e01ae8"
+      },
+      "costUpperYuan": 0.0027198400000000003,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_redwood_dye-review3",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2210,
+          "completion_tokens": 7,
+          "total_tokens": 2217,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1314
+        },
+        "costUpperYuan": 0.0027198400000000003,
+        "cumulativeUpperYuan": 5.726291360000005,
+        "latencyMs": 932.6433999999936,
+        "timestamp": "2026-11-10T19:26:46.467Z"
+      }
+    },
+    "aca3f22d-9c38-421e-a262-2201e7f2e7aa": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_soap_wash_portion-draft2",
+      "requestHash": "1b7d361bd3a9b9677bcd6cf5cd28d3d2e8f9accbdc24f8725a6a3ec6ee1d1c5d",
+      "reservedYuan": 0.019714,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/aca3f22d-9c38-421e-a262-2201e7f2e7aa.json",
+        "requestHash": "1b7d361bd3a9b9677bcd6cf5cd28d3d2e8f9accbdc24f8725a6a3ec6ee1d1c5d",
+        "responseHash": "5d3d248f8c461f91fcaeb1ea48617f212ea5ce7db2e0571bda1387a2c3fa7eeb"
+      },
+      "costUpperYuan": 0.0038656,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_soap_wash_portion-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1864,
+          "completion_tokens": 174,
+          "total_tokens": 2038,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1224
+        },
+        "costUpperYuan": 0.0038656,
+        "cumulativeUpperYuan": 5.723571520000005,
+        "latencyMs": 2074.8566999999966,
+        "timestamp": "2026-11-10T19:26:45.492Z"
+      }
+    },
+    "75c05d50-763b-40ad-aed2-23e90afaeed9": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_soap_wash_portion-review2",
+      "requestHash": "37129b268f0b3d7859069cf89a8971c6b21ce8f506d7243a7ba5ef0425c9283d",
+      "reservedYuan": 0.03003,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "946ef420853afef3241abfc302a0be5bb6432e45f663c3370dc8a8bb26598430",
+        "reservedYuan": 0.06306
+      },
+      "responseEvidence": {
+        "file": "budget-responses/75c05d50-763b-40ad-aed2-23e90afaeed9.json",
+        "requestHash": "37129b268f0b3d7859069cf89a8971c6b21ce8f506d7243a7ba5ef0425c9283d",
+        "responseHash": "82a8387aba1e97260dfdd225e3fc867485075fb7055f81a0229561bd1a05bd3f"
+      },
+      "costUpperYuan": 0.00231584,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_soap_wash_portion-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2008,
+          "completion_tokens": 7,
+          "total_tokens": 2015,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1112
+        },
+        "costUpperYuan": 0.00231584,
+        "cumulativeUpperYuan": 5.732784800000005,
+        "latencyMs": 1055.6514000000025,
+        "timestamp": "2026-11-10T19:26:49.347Z"
+      }
+    },
+    "68d33b8c-341f-43b8-aa16-04926bd6de36": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_resin_cloth_patch-draft2",
+      "requestHash": "3151bb29434377ee5ad5c72b548768ab7c14e5b8b86bad9c1ad7cab9bebbf07b",
+      "reservedYuan": 0.020224,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/68d33b8c-341f-43b8-aa16-04926bd6de36.json",
+        "requestHash": "3151bb29434377ee5ad5c72b548768ab7c14e5b8b86bad9c1ad7cab9bebbf07b",
+        "responseHash": "1690971f008597f732c6b8117565e3a6c32b0b0d97d3f3f856615e4c8c353c1e"
+      },
+      "costUpperYuan": 0.0041776,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_resin_cloth_patch-draft2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1936,
+          "completion_tokens": 195,
+          "total_tokens": 2131,
+          "prompt_tokens_details": {
+            "cached_tokens": 640
+          },
+          "prompt_cache_hit_tokens": 640,
+          "prompt_cache_miss_tokens": 1296
+        },
+        "costUpperYuan": 0.0041776,
+        "cumulativeUpperYuan": 5.730468960000005,
+        "latencyMs": 1781.2727000000014,
+        "timestamp": "2026-11-10T19:26:48.273Z"
+      }
+    },
+    "773de6ae-6760-4e39-a2b8-ac924928dbb2": {
+      "card": null,
+      "label": "content-recipes-recipe_w3c_resin_cloth_patch-review2",
+      "requestHash": "56fb55d8bdb15d389ad99954c39691588be3bf37e3b81bbe40a7c40a34324437",
+      "reservedYuan": 0.03066,
+      "status": "settled",
+      "replacedReservation": {
+        "requestHash": "ae893e0d5dd2b510b1ff639a0476cd44546ced4e3f865e0e37771739fa19c907",
+        "reservedYuan": 0.063574
+      },
+      "responseEvidence": {
+        "file": "budget-responses/773de6ae-6760-4e39-a2b8-ac924928dbb2.json",
+        "requestHash": "56fb55d8bdb15d389ad99954c39691588be3bf37e3b81bbe40a7c40a34324437",
+        "responseHash": "a51409516dd10fbe23773e2a2a8be3dd6823ee08cd1a8904c0823eeab7561292"
+      },
+      "costUpperYuan": 0.0025038400000000002,
+      "measurement": {
+        "label": "content-recipes-recipe_w3c_resin_cloth_patch-review2",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 2102,
+          "completion_tokens": 7,
+          "total_tokens": 2109,
+          "prompt_tokens_details": {
+            "cached_tokens": 896
+          },
+          "prompt_cache_hit_tokens": 896,
+          "prompt_cache_miss_tokens": 1206
+        },
+        "costUpperYuan": 0.0025038400000000002,
+        "cumulativeUpperYuan": 5.735288640000005,
+        "latencyMs": 670.2070000000022,
+        "timestamp": "2026-11-10T19:26:50.052Z"
+      }
     }
   }
 }

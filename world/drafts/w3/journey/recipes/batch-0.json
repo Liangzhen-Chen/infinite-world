@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "9773b6cfc21b23e63ecfd8825f69fb925a61c123dc28fc68f1f119e0584bfadb",
+  "fingerprint": "235ff2f6d06a0c95755d4a7636c5fbe60de4669bf8f0eae9d6a0b37fd56e9ff1",
   "count": 43,
-  "passed": 37,
+  "passed": 41,
   "ids": [
     "recipe_w3c_cracked_wheat_pot",
     "recipe_w3c_lentil_leek_stew",
@@ -48,24 +48,19 @@
     "recipe_w3c_ladle_rest",
     "recipe_w3c_cork_stop_set"
   ],
-  "rewritten": 21,
+  "rewritten": 23,
   "manual": [
-    "recipe_w3c_mutton_turnip_stew"
+    "recipe_w3c_mutton_turnip_stew",
+    "recipe_w3c_garlic_butter"
   ],
-  "pending": [
-    "recipe_w3c_lentil_leek_stew",
-    "recipe_w3c_broadbean_garlic_mash",
-    "recipe_w3c_garlic_butter",
-    "recipe_w3c_rendered_cooking_fat",
-    "recipe_w3c_salted_walnut"
-  ],
+  "pending": [],
   "flagged": [],
   "sample": [
-    "recipe_w3c_tool_apron_panel",
-    "recipe_w3c_corklined_cup_wrap",
+    "recipe_w3c_cracked_wheat_pot",
     "recipe_w3c_pear_wheat_gruel",
+    "recipe_w3c_felt_insole_pair",
     "recipe_w3c_laundry_mesh_bag",
-    "recipe_w3c_travel_sewing_wallet"
+    "recipe_w3c_beech_press_board"
   ],
   "l4": {
     "approved": false,
@@ -311,9 +306,21 @@
           "recipe_w3c_mutton_turnip_stew"
         ]
       }
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "rejection": {
+        "by": "主会话（Claude Opus 5.5）按李白 11-10 决定（0.7 元上限，剩余 14 条一次性写完）",
+        "at": "2026-11-10T19:40Z",
+        "reason": "recipe_w3c_mutton_turnip_stew：上次复核两条 hard——木屑份数须与骨架一致（骨架 3 份，不得写成别的份数）；副产品为空，不得写木屑留作他用或另作他处，余料只可弃置且不引入骨架外容器。只用骨架里的材料、工具和燃料，不写骨架以外的用途。",
+        "ids": [
+          "recipe_w3c_mutton_turnip_stew"
+        ]
+      }
     }
   ],
-  "costUpperYuan": 5.646038800000004,
-  "manualRatio": 0.023255813953488372,
+  "costUpperYuan": 5.682441120000004,
+  "manualRatio": 0.046511627906976744,
   "needsSystemicRepair": false
 }

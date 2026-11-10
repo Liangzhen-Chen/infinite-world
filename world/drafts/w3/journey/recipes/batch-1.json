@@ -1,8 +1,8 @@
 {
   "index": 1,
-  "fingerprint": "e1c1d596877636d606ea8e4c317db208e42e5970123231bb3cdedec6bad5c3d2",
+  "fingerprint": "990eb366811c01c51281a5b22732bbb486a074c8239cab6355ae3f9391baf64a",
   "count": 42,
-  "passed": 34,
+  "passed": 42,
   "ids": [
     "recipe_w3c_horn_spoon_blank",
     "recipe_w3c_slate_writing_tile",
@@ -47,25 +47,16 @@
     "recipe_w3c_felt_polishing_pad",
     "recipe_w3c_resin_cloth_patch"
   ],
-  "rewritten": 12,
+  "rewritten": 15,
   "manual": [],
-  "pending": [
-    "recipe_w3c_steel_gouge_tip",
-    "recipe_w3c_small_bell_frame",
-    "recipe_w3c_paste_cup_portion",
-    "recipe_w3c_ledger_cover",
-    "recipe_w3c_horn_comb",
-    "recipe_w3c_redwood_dye",
-    "recipe_w3c_soap_wash_portion",
-    "recipe_w3c_resin_cloth_patch"
-  ],
+  "pending": [],
   "flagged": [],
   "sample": [
-    "recipe_w3c_damp_sand_rub",
-    "recipe_w3c_seal_thread_bundle",
-    "recipe_w3c_leather_wax_grease",
-    "recipe_w3c_quill_pen_pair",
-    "recipe_w3c_felt_polishing_pad"
+    "recipe_w3c_seam_pitch_cake",
+    "recipe_w3c_slate_stylus",
+    "recipe_w3c_cork_float_set",
+    "recipe_w3c_small_bell_frame",
+    "recipe_w3c_reed_whistle"
   ],
   "l4": {
     "approved": false,
@@ -363,7 +354,7 @@
       }
     }
   ],
-  "costUpperYuan": 5.646038800000004,
+  "costUpperYuan": 5.735288640000005,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }
