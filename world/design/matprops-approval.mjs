@@ -29,6 +29,7 @@ import {pathToFileURL} from 'node:url';
 import {randomInt} from 'node:crypto';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, hashContent, parseModelJSON,rowFingerprintShape} from '../../tools/content-pipeline.mjs';
+import {readApprovedSupersedes,revertSuperseded} from '../../tools/approved-revisions.mjs';
 import {reserveCeilingYuan} from '../../tools/content-budget.mjs';
 import {loadRuntimeWorld} from '../../tools/load-world.mjs';
 import {validateMaterialProps, deriveFromSources, memberValues, memberDeviations, MATERIAL_DIMENSIONS} from '../../server-plugin/item-class.mjs';
@@ -97,6 +98,9 @@ const runtime=async()=>worldCache??=await loadRuntimeWorld();
 // 类别行后来加了单餐量，不让物品条目的上下文（指纹）跟着变，已审的物品覆盖行结论不作废。
 const withoutCap=({mealCapBasis,...row})=>({...row,sources:row.sources?.map(({mealGrams,mealBasis,mealCitation,eatenMoistureFraction,...x})=>x)});
 const withoutCapDerived=({mealCap,mealDry,...d})=>d;
+// 审批当时的物品行：后来经审批的修订回执改了的字段（如正文）回退到 before；已核验的回执只读一次。
+let supersedesOnce=null;
+const itemAsApproved=async item=>revertSuperseded([item],'world/meta/items.json',await(supersedesOnce??=readApprovedSupersedes()))[0];
 export async function contextFor(entry){
  const world=await runtime(),table=await readJSON(tableFile);
  // mealCap（单餐可食量上限）是后加的维度：只在用到它的条目（出处写了 mealGrams 或类别里有它）的上下文里出现，
@@ -106,7 +110,7 @@ export async function contextFor(entry){
  if(usesCap)dimensions.mealsPerDay=`${table.mealsPerDay} 餐/人·日（把单餐上限换成一段时间总量的换算）`;
  const brief=i=>({id:i.id,name:i.name,weight:i.weight,tags:i.tags});
  if(entry.kind==='material-props-class')return {dimensions,note:table.note,kcalPerSatiety:table.kcalPerSatiety,derived:deriveFromSources(entry.row,table.kcalPerSatiety),members:world.items.filter(i=>(i.tags??[]).includes(entry.key)).map(brief)};
- const item=world.items.find(i=>i.id===entry.id);
+ const item=await itemAsApproved(world.items.find(i=>i.id===entry.id));
  return {dimensions,note:table.note,kcalPerSatiety:table.kcalPerSatiety,derived:deriveFromSources(entry.row,table.kcalPerSatiety),item:{...brief(item),use:item.use,description:item.description},classValues:Object.fromEntries((item.tags??[]).filter(t=>table.classes[t]).map(t=>[t,{row:withoutCap(table.classes[t]),derived:withoutCapDerived(deriveFromSources(table.classes[t],table.kcalPerSatiety))}]))};
 }
 export async function validateDraft(draft,entry){

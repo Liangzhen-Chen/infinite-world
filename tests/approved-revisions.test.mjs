@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseFieldPath,parsePublication,applySupersedes,createTagSourceResolver,overlayFieldReverts} from '../tools/approved-revisions.mjs';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {parseFieldPath,parsePublication,applySupersedes,createTagSourceResolver,overlayFieldReverts,revertSuperseded,revertedRows,APPROVAL_SOURCES} from '../tools/approved-revisions.mjs';
+import {verifyPublished as a3wVerify} from '../world/design/a3w-props-approval.mjs';
 import {fixedSample,recomputeCorpusHash} from '../tools/w3-wave-score.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 
@@ -54,4 +58,42 @@ test('语料哈希重算：变化可归因且样本未变才重算；有无法�
  const unexplained=structuredClone(now);unexplained.find(x=>x.id===other).entity.description+='改';assert.throws(()=>recomputeCorpusHash(report,unexplained,explained),/无法归因/);
  const sampleChanged=structuredClone(now);sampleChanged.find(x=>x.id===report.samples[0].id).entity.description+='改';assert.throws(()=>recomputeCorpusHash(report,sampleChanged,explained),/条目哈希已改变/);
  assert.throws(()=>recomputeCorpusHash(report,now,[]),/没有可归因/);
+});
+
+// ---- 下游审批层对已审批修订回执的回退（正文修订批发布后，早先审批的层仍能核验）
+const textSups=()=>parsePublication({revision:'t1',receipt:'dir/r',entries:[
+ {id:'item_a-description',target:'item_a',file:'world/meta/items.json',field:'description',before:'旧文',after:'新文',supersedes:[{receipt:'world/drafts/w3/items/item_a.json#item_a',field:'description'}]},
+ {id:'rec_a-process',target:'rec_a',file:'world/meta/recipes.json',field:'process',before:'旧法',after:'新法',supersedes:[{receipt:'world/drafts/w3/recipes/rec_a.json#rec_a',field:'process'}]},
+]});
+test('回退：现值等于回执 after 的字段回到 before；回执之外的值、其他文件、其他条目保持原样；不改入参',()=>{
+ const sups=textSups(),rows=[{id:'item_a',description:'新文',use:'u'},{id:'item_b',description:'新文'}];
+ const out=revertSuperseded(rows,'world/meta/items.json',sups);
+ assert.deepEqual(out,[{id:'item_a',description:'旧文',use:'u'},{id:'item_b',description:'新文'}]);
+ assert.equal(rows[0].description,'新文');
+ assert.deepEqual(revertSuperseded([{id:'item_a',description:'旧文'}],'world/meta/items.json',sups),[{id:'item_a',description:'旧文'}]);
+ assert.deepEqual(revertSuperseded([{id:'item_a',description:'有人另改的正文'}],'world/meta/items.json',sups),[{id:'item_a',description:'有人另改的正文'}]);
+ assert.deepEqual(revertSuperseded([{id:'item_a',description:'新文'}],'world/meta/recipes.json',sups),[{id:'item_a',description:'新文'}]);
+ assert.deepEqual(revertSuperseded([{id:'rec_a',process:'新法'}],'world/meta/recipes.json',sups),[{id:'rec_a',process:'旧法'}]);
+});
+test('回退走已核验的回执：审批来源未登记或缺冻结候选的回执不被认可；登记并核验通过才回退',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'rev-text-')),batch=path.join(dir,'tb');
+ try{
+  await fs.mkdir(batch,{recursive:true});
+  const e={id:'item_a-description',target:'item_a',file:'world/meta/items.json',field:'description',before:'旧文',after:'新文',supersedes:[{receipt:'world/drafts/w3/items/item_a.json#item_a',field:'description'}]};
+  await fs.writeFile(path.join(batch,'publication.json'),JSON.stringify({revision:'t1',receipt:'dir/r',entries:[e]}));
+  await assert.rejects(revertedRows([{id:'item_a',description:'新文'}],'world/meta/items.json',dir),/缺 candidate\.json/);
+  await fs.writeFile(path.join(batch,'candidate.json'),JSON.stringify({revision:'t1',approval:{via:'未登记来源'},entries:[e],drafts:[],contexts:[{}]}));
+  await assert.rejects(revertedRows([{id:'item_a',description:'新文'}],'world/meta/items.json',dir),/审批来源未登记/);
+  APPROVAL_SOURCES['未登记来源']=async()=>({verifyFrozen:async()=>{}});
+  try{assert.deepEqual(await revertedRows([{id:'item_a',description:'新文'}],'world/meta/items.json',dir),[{id:'item_a',description:'旧文'}]);}
+  finally{delete APPROVAL_SOURCES['未登记来源'];}
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});
+test('a3w-props 核验：正文修订批发布后正式目录仍通过；回执之外有人改了正文仍报错',async()=>{
+ const items=JSON.parse(await fs.readFile('world/meta/items.json','utf8'));
+ assert.deepEqual(await a3wVerify(),{published:29});
+ const reverted=await revertedRows(items,'world/meta/items.json');
+ assert.deepEqual(await a3wVerify(reverted),{published:29});
+ const tampered=structuredClone(reverted);tampered.find(x=>x.id==='item_mining_pick').description+='（有人另改）';
+ await assert.rejects(a3wVerify(tampered),/发布骨架或引用事实已改变 item_mining_pick|正式目录与历史审批回执不符/);
 });

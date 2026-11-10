@@ -35,7 +35,7 @@ export function parsePublication(pub){
    const m=/^([^\s#]+)#([^\s#]+)$/.exec(s.receipt);if(!m)bad(`receipt 须为“文件#条目”或“commit 提交号”：${s.receipt}`);
    if(m[2]!==e.target)bad(`取代声明的条目与修订目标不同：${s.receipt} / ${e.target}`);
    if(s.field!==e.field)bad(`取代声明的字段与修订字段不同：${s.field} / ${e.field}`);
-   out.push({revision:pub.revision,entryId:e.id,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),before:e.before,after:e.after});
+   out.push({revision:pub.revision,entryId:e.id,file:e.file,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),before:e.before,after:e.after});
   }
  }
  return out;
@@ -107,6 +107,21 @@ export function applySupersedes(rows,receiptFile,supersedes){
  }
  return applied;
 }
+
+// 下游审批层（a3w-props、a3cap-data、matprops、ka1 整行回执）的指纹/整行比对基于审批当时的正式行。
+// 后来经审批的修订回执（如正文修订批）改了正式文件里的字段：这类字段按回执回退到 before 再比对，才是“审批当时的行”。
+// 只回退“现值恰等于回执 after”的字段；现值既不是 before 也不是 after（回执之外的改动）保持原样，让下游指纹/整行比对照常报错。
+// supersedes 必须来自 readApprovedSupersedes（已核验审批）；rows 不被改动，返回克隆。file 为正式文件相对路径（如 world/meta/items.json）。
+export function revertSuperseded(rows,file,supersedes){
+ const out=structuredClone(rows),byId=new Map(out.map(r=>[r.id,r]));
+ for(const s of supersedes){
+  if(s.file!==file)continue;
+  const row=byId.get(s.targetId);if(!row)continue;
+  if(hashContent(getPath(row,s.parts)??null)===hashContent(s.after??null))setPath(row,s.parts,s.before);
+ }
+ return out;
+}
+export async function revertedRows(rows,file,draftsRoot){return revertSuperseded(rows,file,await readApprovedSupersedes(draftsRoot));}
 
 // ---------------------------------------------------------------- 已审叠加层登记表
 // 设计源（骨架）发布之后，后续已审批的层会给正式条目叠加字段（用途标签、容量……）。
