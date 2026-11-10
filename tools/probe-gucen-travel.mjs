@@ -25,6 +25,23 @@ if(MODE==='--day'){
   console.log('day',id,JSON.stringify(rows));}
  process.exit(0);
 }
+if(MODE==='--direct'){
+ // 直接写 state.npcs.<id>.location='X' 的夹具（id 与地点都是字面量者）：X 是否出现在该人全天作息里。
+ // 其余写法（id 或地点是变量，如 document.state.location）静态无法判定，只计数。
+ const dir=new URL('tests/',root),NL=String.fromCharCode(10);let dynamic=0;
+ for(const f of readdirSync(dir).filter(n=>n.endsWith('.mjs')).sort()){
+  const lines=readFileSync(new URL(f,dir),'utf8').split(NL);
+  lines.forEach((text,i)=>{
+   for(const m of text.matchAll(/npcs\.(npc_[a-z0-9_]+)\.location\s*=\s*'([^']+)'/g)){
+    const places=new Set();for(let t=0;t<1440;){const sl=scheduleAt(engine,m[1],t,initial.state);if(!sl)break;places.add(sl.location);t=sl.until;}
+    console.log(places.has(m[2])?'in-day  ':'NOT-IN-DAY',f+':'+(i+1),m[1],'写入',m[2],'全天作息',[...places].join(',')||'无作息');
+   }
+   if(/npcs(\[[^\]]+\]|\.[A-Za-z_0-9]+)\.location\s*=[^=]/.test(text)&&!/npcs\.npc_[a-z0-9_]+\.location\s*=\s*'/.test(text))dynamic++;
+  });
+ }
+ console.log('其余（id 或地点为变量）的行数',dynamic);
+ process.exit(0);
+}
 if(MODE==='--table'){
  const dir=new URL('tests/',root),rows=[];
  for(const f of readdirSync(dir).filter(n=>n.endsWith('.mjs')).sort()){
