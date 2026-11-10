@@ -31,8 +31,20 @@ export function runGroup(group) {
   assert.ok(entries.length > 0, `第 ${group + 1} 组没有入口`);
   const dest = fs.mkdtempSync(path.join(tmpRoot(), `readonly-entries-${group}-`));
   try {
-    const skip = new Set(['.git', 'node_modules', '.tmp', '测试报告']);
-    fs.cpSync(ROOT, dest, {recursive: true, filter: src => !skip.has(path.basename(src)) && !path.resolve(src).startsWith(path.resolve(tmpRoot()))});
+    // 只复制只读入口会读的部分（按登记表逐个入口的 import 闭包与路径引用核对）：
+    //   顶层：world、tools、server-plugin、schemas、extension、prompt、tests、docs、package.json、package-lock.json
+    //   排除：.git、node_modules（改用链接）、.tmp、docs/测试报告（体积大、入口不读）、world/drafts/w1（260MB，入口不读）、assets、dist、logs、跑团资料
+    // 复制范围内的每个文件都进后面的哈希快照，哈希比对范围 = 复制进去的全部文件。
+    const top = new Set(['world', 'tools', 'server-plugin', 'schemas', 'extension', 'prompt', 'tests', 'docs', 'package.json', 'package-lock.json']);
+    const skipRel = new Set(['docs/测试报告', 'world/drafts/w1']);
+    const tmp = path.resolve(tmpRoot());
+    fs.cpSync(ROOT, dest, {recursive: true, filter: src => {
+      const rel = path.relative(ROOT, src).split(path.sep).join('/');
+      if (rel === '') return true;
+      if (!top.has(rel.split('/')[0]) || skipRel.has(rel)) return false;
+      const base = path.basename(src);
+      return base !== '.git' && base !== 'node_modules' && base !== '.tmp' && !path.resolve(src).startsWith(tmp);
+    }});
     // 依赖包只读借用：副本里放一个指向真实 node_modules 的链接（walk 与哈希都跳过它）
     const nm = path.dirname(path.dirname(createRequire(import.meta.url).resolve('ajv/package.json')));
     fs.symlinkSync(nm, path.join(dest, 'node_modules'), 'junction');
