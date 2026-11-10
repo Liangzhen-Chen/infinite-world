@@ -1,18 +1,15 @@
 {
   "id": "recipe_w3c_walnut_honey_bites",
   "fingerprint": "15c65c55babf198d2a516babecfea2cc795c411548c9672af1df59497a5af2a3",
-  "status": "passed",
+  "status": "pending",
   "attempts": 3,
-  "draft": {
-    "id": "recipe_w3c_walnut_honey_bites",
-    "process": "取一百五十克净核桃仁，摊在案板上逐粒翻看，挑出夹带的薄壳碎屑，闻有哈喇味的仁弃置不用。用案上切刀将余下核桃仁切碎，颗粒粗细不必一致。取四枚鸡蛋逐枚磕开去壳，蛋壳弃置，蛋液倒入厚底煮锅。加入四百克燕麦粉与一百克滤过蜂蜜，以长柄搅糊板从锅底翻搅，拌至不见干粉、核桃碎分布均匀。小灶上低火加热，边烘边搅，待糊体凝厚、离锅壁成团即停火。趁热分成小块，摊开晾至不粘手。全程七十多分钟。干木刨屑用于引火，不混入成品。"
-  },
-  "review": {
-    "contradictions": []
-  },
+  "draft": null,
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null,
+  "feedback": [
+    "L4 退回：recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。；recipe_w3c_pear_wheat_gruel：\"八十份钟\"错字（DURATION-DERIVE 全仓重扫新命中，正式 recipes.json 同错；依李白 f8282524\"新命中一并走 L4 退回重写\"，主会话补入）"
+  ],
   "l4Rejection": [
     {
       "key": "cb3cf3e9340a3515095a6afd66a0682ccabc56ddf16626f2b56b9fcb7785b633",
@@ -25,6 +22,22 @@
       "priorDraft": {
         "id": "recipe_w3c_walnut_honey_bites",
         "process": "取一份净核桃仁，用案上切刀逐粒检查并剔去夹带薄壳，哈喇味仁弃置，再切成碎粒。四枚鸡蛋逐个去壳打入厚底煮锅，蛋壳弃置。将燕麦粉与滤蜜一并下锅，以长柄搅糊板搅至无干粉团块。锅置小灶上低火烘凝，其间持续搅动，待糊体厚实成团后离火。趁热用切刀分成小块。干木刨屑两份用于小灶引火，炉用炭屑不混入成品。全程七十整分钟。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    },
+    {
+      "key": "bb7c4364e566a3852bc51f3f90a7500119ea7fae0bf3fdc48d0d3d33cdbdca1c",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。；recipe_w3c_pear_wheat_gruel：\"八十份钟\"错字（DURATION-DERIVE 全仓重扫新命中，正式 recipes.json 同错；依李白 f8282524\"新命中一并走 L4 退回重写\"，主会话补入）",
+      "priorStatus": "passed",
+      "priorAttempts": 3,
+      "attemptCap": 5,
+      "priorDraft": {
+        "id": "recipe_w3c_walnut_honey_bites",
+        "process": "取一百五十克净核桃仁，摊在案板上逐粒翻看，挑出夹带的薄壳碎屑，闻有哈喇味的仁弃置不用。用案上切刀将余下核桃仁切碎，颗粒粗细不必一致。取四枚鸡蛋逐枚磕开去壳，蛋壳弃置，蛋液倒入厚底煮锅。加入四百克燕麦粉与一百克滤过蜂蜜，以长柄搅糊板从锅底翻搅，拌至不见干粉、核桃碎分布均匀。小灶上低火加热，边烘边搅，待糊体凝厚、离锅壁成团即停火。趁热分成小块，摊开晾至不粘手。全程七十多分钟。干木刨屑用于引火，不混入成品。"
       },
       "priorReview": {
         "contradictions": []
@@ -201,5 +214,10 @@
       "latencyMs": 1072.0179000000007,
       "timestamp": "2026-11-10T17:40:20.414Z"
     }
-  ]
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T18:18:55.869Z"
+  }
 }

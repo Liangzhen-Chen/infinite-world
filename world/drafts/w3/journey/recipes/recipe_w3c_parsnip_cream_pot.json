@@ -1,18 +1,20 @@
 {
   "id": "recipe_w3c_parsnip_cream_pot",
   "fingerprint": "942a3c0b06bac2001f87b75bd6b295c05c14976710b4f94f40f1bdb7c63084f5",
-  "status": "passed",
-  "attempts": 2,
+  "status": "pending",
+  "attempts": 4,
   "draft": {
     "id": "recipe_w3c_parsnip_cream_pot",
-    "process": "取一根白肉欧防风根，用案上切刀削去硬端，再切成薄片。厚底煮锅置小灶上，注入清水，放入薄片，以中火煨至根片软透。将鲜乳上层稠乳兑入锅中，继续加热至熟透，其间用偏柄木匙沿锅缘搅动，使根片与稠乳混匀。撒入粗盐调味，再搅一遍即离火。干木刨屑只用于灶下引火，不混入锅中。全程五十份钟，成品一份，趁热盛出。"
+    "process": "取白肉欧防风根，用案上切刀削去硬端，再切成薄片。厚底煮锅置小灶上，放入薄片与清水，煨至根片软透、以木匙轻压即散。兑入鲜乳上层稠乳，继续加热至熟透，撒入粗盐调味，用偏柄木匙沿锅缘搅匀，使稠乳与根片相合。全程不加未列的奶油。干木刨屑只作灶下引火，不混入锅中。煮成后连锅取下，一份稠乳白根煨即得，余料弃置，工具保留。全程50分钟。"
   },
   "review": {
     "contradictions": []
   },
   "errors": [],
   "warnings": [],
-  "feedback": null,
+  "feedback": [
+    "工序时间使用未定义的息，须改为分钟"
+  ],
   "l4Rejection": [
     {
       "key": "457879c5a8e1e06b1c54779745ad2ff98250a2216c61669bfe777a5027c5a84a",
@@ -29,13 +31,29 @@
       "priorReview": {
         "contradictions": []
       }
+    },
+    {
+      "key": "6db119104279cee8e6d49602190c9e4adba884a649699c7118e0c91220cfa0b0",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。；recipe_w3c_pear_wheat_gruel：\"八十份钟\"错字（DURATION-DERIVE 全仓重扫新命中，正式 recipes.json 同错；依李白 f8282524\"新命中一并走 L4 退回重写\"，主会话补入）",
+      "priorStatus": "passed",
+      "priorAttempts": 2,
+      "attemptCap": 4,
+      "priorDraft": {
+        "id": "recipe_w3c_parsnip_cream_pot",
+        "process": "取一根白肉欧防风根，用案上切刀削去硬端，再切成薄片。厚底煮锅置小灶上，注入清水，放入薄片，以中火煨至根片软透。将鲜乳上层稠乳兑入锅中，继续加热至熟透，其间用偏柄木匙沿锅缘搅动，使根片与稠乳混匀。撒入粗盐调味，再搅一遍即离火。干木刨屑只用于灶下引火，不混入锅中。全程五十份钟，成品一份，趁热盛出。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
     }
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "3ff8d798-8831-42a0-aa05-11a7e6a0e58d",
+    "id": "52c69aa0-9296-44a5-a352-dc4bbfdb3b07",
     "object": "chat.completion",
-    "created": 1794332405,
+    "created": 1794334733,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -46,11 +64,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_2M63INVFJP0TcBuNiwGD7357",
+              "id": "call_00_OoIkRDarGzEJJxX955MZ4620",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_parsnip_cream_pot\", \"process\": \"取一根白肉欧防风根，用案上切刀削去硬端，再切成薄片。厚底煮锅置小灶上，注入清水，放入薄片，以中火煨至根片软透。将鲜乳上层稠乳兑入锅中，继续加热至熟透，其间用偏柄木匙沿锅缘搅动，使根片与稠乳混匀。撒入粗盐调味，再搅一遍即离火。干木刨屑只用于灶下引火，不混入锅中。全程五十份钟，成品一份，趁热盛出。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_parsnip_cream_pot\", \"process\": \"取白肉欧防风根，用案上切刀削去硬端，再切成薄片。厚底煮锅置小灶上，放入薄片与清水，煨至根片软透、以木匙轻压即散。兑入鲜乳上层稠乳，继续加热至熟透，撒入粗盐调味，用偏柄木匙沿锅缘搅匀，使稠乳与根片相合。全程不加未列的奶油。干木刨屑只作灶下引火，不混入锅中。煮成后连锅取下，一份稠乳白根煨即得，余料弃置，工具保留。\"}"
               }
             }
           ]
@@ -60,34 +78,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1698,
-      "completion_tokens": 186,
-      "total_tokens": 1884,
+      "prompt_tokens": 1627,
+      "completion_tokens": 197,
+      "total_tokens": 1824,
       "prompt_tokens_details": {
-        "cached_tokens": 384
+        "cached_tokens": 1408
       },
-      "prompt_cache_hit_tokens": 384,
-      "prompt_cache_miss_tokens": 1314
+      "prompt_cache_hit_tokens": 1408,
+      "prompt_cache_miss_tokens": 219
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft1",
+      "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft3",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1698,
-        "completion_tokens": 186,
-        "total_tokens": 1884,
+        "prompt_tokens": 1627,
+        "completion_tokens": 197,
+        "total_tokens": 1824,
         "prompt_tokens_details": {
-          "cached_tokens": 384
+          "cached_tokens": 1408
         },
-        "prompt_cache_hit_tokens": 384,
-        "prompt_cache_miss_tokens": 1314
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 219
       },
-      "costUpperYuan": 0.004131360000000001,
-      "cumulativeUpperYuan": 5.280560720000007,
-      "latencyMs": 2392.919,
-      "timestamp": "2026-11-10T17:40:07.779Z"
+      "costUpperYuan": 0.00207032,
+      "cumulativeUpperYuan": 5.353950240000006,
+      "latencyMs": 2226.3060000000005,
+      "timestamp": "2026-11-10T18:18:55.855Z"
     }
   },
   "responseEvidence": [
@@ -106,6 +124,30 @@
       "file": "budget-responses/4c58b8c5-c6b4-4d48-a630-8a5611805dc9.json",
       "requestHash": "73cc71ee4e61283c888f3d9828748cc7e5da4943a3999ef67ec37195d430684b",
       "responseHash": "6119424310ce40d083273de26158181cac4ebdfd370934b19973fc65c3421db7"
+    },
+    {
+      "phase": "draft",
+      "attempt": 3,
+      "requestId": "72f5f453-8dce-4e42-a9aa-839e4025ea8d",
+      "file": "budget-responses/72f5f453-8dce-4e42-a9aa-839e4025ea8d.json",
+      "requestHash": "4e7f6e36ccc4d00a34c8e288d8c765f3cbf7af01de3e00726f16df2e3d61c294",
+      "responseHash": "61815241b478e59e6100ee7a71673c02fa9ffcb89234975d69c44b1edb8fb280"
+    },
+    {
+      "phase": "review",
+      "attempt": 3,
+      "requestId": "8a5d51d5-943f-440e-beee-225a7aa547af",
+      "file": "budget-responses/8a5d51d5-943f-440e-beee-225a7aa547af.json",
+      "requestHash": "30de26f5ae771a377aa4e1dc364f6770591e913cf2abb83fc6d034a7142d2f56",
+      "responseHash": "b9410cf3d33b59a13804a9838b5d9c213dd05cf0de9ae8696b0f049626fff2ef"
+    },
+    {
+      "phase": "draft",
+      "attempt": 4,
+      "requestId": "6730c5cc-719d-4210-998f-1d02cb778d8d",
+      "file": "budget-responses/6730c5cc-719d-4210-998f-1d02cb778d8d.json",
+      "requestHash": "7e59d36c106f8e5c8fbdbe5c7b3ae1d05fe5e1964bc4304c693d70916874b500",
+      "responseHash": "be759296f781858f6464170dbfabf7103e103d0b31d3c8de1987f77a003463f6"
     }
   ],
   "measurements": [
@@ -146,6 +188,68 @@
       "cumulativeUpperYuan": 5.287747200000006,
       "latencyMs": 1143.0361000000003,
       "timestamp": "2026-11-10T17:40:11.747Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1786,
+        "completion_tokens": 181,
+        "total_tokens": 1967,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 1786
+      },
+      "costUpperYuan": 0.00502,
+      "cumulativeUpperYuan": 5.343711360000007,
+      "latencyMs": 2315.4972,
+      "timestamp": "2026-11-10T18:18:49.275Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_parsnip_cream_pot-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1601,
+        "completion_tokens": 7,
+        "total_tokens": 1608,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 449
+      },
+      "costUpperYuan": 0.00100008,
+      "cumulativeUpperYuan": 5.344711440000006,
+      "latencyMs": 1099.8644000000004,
+      "timestamp": "2026-11-10T18:18:50.410Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1627,
+        "completion_tokens": 197,
+        "total_tokens": 1824,
+        "prompt_tokens_details": {
+          "cached_tokens": 1408
+        },
+        "prompt_cache_hit_tokens": 1408,
+        "prompt_cache_miss_tokens": 219
+      },
+      "costUpperYuan": 0.00207032,
+      "cumulativeUpperYuan": 5.353950240000006,
+      "latencyMs": 2226.3060000000005,
+      "timestamp": "2026-11-10T18:18:55.855Z"
     }
-  ]
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T18:18:55.911Z"
+  }
 }

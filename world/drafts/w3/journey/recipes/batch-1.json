@@ -1,8 +1,8 @@
 {
   "index": 1,
-  "fingerprint": "6ad1bbcc436bc81a94417bf2ea77caa23671af0528eed0db328ee4eb4addbc46",
+  "fingerprint": "f53cd65e478887676d01b320ed186d2b16addb281b5862aa3fbae4890e3bd37f",
   "count": 42,
-  "passed": 42,
+  "passed": 40,
   "ids": [
     "recipe_w3c_horn_spoon_blank",
     "recipe_w3c_slate_writing_tile",
@@ -49,70 +49,21 @@
   ],
   "rewritten": 4,
   "manual": [],
-  "pending": [],
+  "pending": [
+    "recipe_w3c_paper_cord_tags",
+    "recipe_w3c_cork_float_set"
+  ],
   "flagged": [],
   "sample": [
-    "recipe_w3c_leather_round_knife",
+    "recipe_w3c_ledger_cover",
     "recipe_w3c_broad_steel_chisel",
-    "recipe_w3c_redwood_dye",
-    "recipe_w3c_felt_polishing_pad",
-    "recipe_w3c_horsehair_dustbrush"
+    "recipe_w3c_reed_whistle",
+    "recipe_w3c_linen_cleaning_swab",
+    "recipe_w3c_book_spine_tape"
   ],
   "l4": {
     "approved": false,
-    "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
-    "readAt": "2026-11-10",
-    "notes": [
-      {
-        "id": "recipe_w3c_leather_round_knife",
-        "note": "核对骨架：钢条1、木炭4、水1、木柄1；锻锤、钳、平锉、刃磨石；280分钟。正文烧、锻、留柄舌、淬、回火、锉磨、装柄、试切，工序连贯，四工具齐用；\"280分钟\"一致；炭屑留炉。通过。"
-      },
-      {
-        "id": "recipe_w3c_broad_steel_chisel",
-        "note": "核对骨架：同上材料；300分钟。正文锻宽口与柄舌、配额水淬火、回火、锉、磨刃、装柄，连贯；\"三百分钟\"合法且一致；不凿硬石。通过。"
-      },
-      {
-        "id": "recipe_w3c_redwood_dye",
-        "note": "核对骨架：红染木碎片1、明矾1、水2、木刨屑2；煮锅、木匙、滤布；100分钟。正文清水两份煎、滤、加明矾搅匀，连贯；\"一百分钟\"合法且一致；非食用非药品、容器自备。通过。"
-      },
-      {
-        "id": "recipe_w3c_felt_polishing_pad",
-        "note": "核对骨架：毡片1、麻布1、麻线1；裁革剪、缝针；65分钟。正文剪圆、缝握边、锁边，连贯；\"65分钟\"一致；不附磨粉。通过。"
-      },
-      {
-        "id": "recipe_w3c_horsehair_dustbrush",
-        "note": "核对骨架：马尾毛1、木坯1、麻线1；框锯、手钻、修羽刀；170分钟。正文锯柄、钻孔、理毛、缠紧、修齐，连贯；\"一百七十分钟\"合法且一致；只扫浮尘。通过。"
-      },
-      {
-        "id": "recipe_w3c_paper_cord_tags",
-        "note": "核对骨架：羊皮纸1、麻线1；修羽刀、锥；70分钟。正文写\"全程七十多分钟\"，\"多\"与骨架70分钟矛盾，且该写法属已知数字类错误，必须退回（工序本身连贯）。不批。"
-      },
-      {
-        "id": "recipe_w3c_slate_stylus",
-        "note": "核对骨架：板岩1、细砂1、水1；平锉；90分钟。正文锉杆、湿砂磨钝，连贯，\"约90分钟\"与骨架一致（\"约\"为概写，不构成错误）；非墨笔。\"夹稳\"未写夹具，视为手持固定，接受。本条通过。"
-      },
-      {
-        "id": "recipe_w3c_slate_writing_tile",
-        "note": "核对骨架：同上；90分钟。正文锉边、配额水润砂磨边、余砂水弃置、表面空白，连贯；\"九十分钟\"合法且一致；不附白垩笔。通过。"
-      },
-      {
-        "id": "recipe_w3c_cork_float_set",
-        "note": "核对骨架：软木薄片1、麻线1；修羽刀、锥；90分钟。正文写\"九十多分钟\"，与骨架90分钟矛盾，必须退回（分片、修圆、锥孔、穿线工序连贯）。不批。"
-      },
-      {
-        "id": "recipe_w3c_stitchbound_folio",
-        "note": "核对骨架：羊皮纸3、麻线1；修羽刀、锥、缝针、骨片；110分钟。正文对折、压折脊、\"再叠齐成帖\"后才有\"书帖\"，前后连贯，无\"叠好\"类断层；锥孔缝订、修边；\"约110分钟\"与骨架一致；不教授技能。通过。"
-      }
-    ],
-    "rejection": {
-      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
-      "at": "2026-11-10",
-      "reason": "recipe_w3c_paper_cord_tags：\"七十多分钟\"与骨架70分钟矛盾；recipe_w3c_cork_float_set：\"九十多分钟\"与骨架90分钟矛盾。须重写，总耗时只写骨架数字加分钟，不用\"多\"。",
-      "ids": [
-        "recipe_w3c_paper_cord_tags",
-        "recipe_w3c_cork_float_set"
-      ]
-    }
+    "notes": []
   },
   "l4History": [
     {
@@ -216,9 +167,65 @@
           "recipe_w3c_slate_stylus"
         ]
       }
+    },
+    {
+      "approved": false,
+      "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+      "readAt": "2026-11-10",
+      "notes": [
+        {
+          "id": "recipe_w3c_leather_round_knife",
+          "note": "核对骨架：钢条1、木炭4、水1、木柄1；锻锤、钳、平锉、刃磨石；280分钟。正文烧、锻、留柄舌、淬、回火、锉磨、装柄、试切，工序连贯，四工具齐用；\"280分钟\"一致；炭屑留炉。通过。"
+        },
+        {
+          "id": "recipe_w3c_broad_steel_chisel",
+          "note": "核对骨架：同上材料；300分钟。正文锻宽口与柄舌、配额水淬火、回火、锉、磨刃、装柄，连贯；\"三百分钟\"合法且一致；不凿硬石。通过。"
+        },
+        {
+          "id": "recipe_w3c_redwood_dye",
+          "note": "核对骨架：红染木碎片1、明矾1、水2、木刨屑2；煮锅、木匙、滤布；100分钟。正文清水两份煎、滤、加明矾搅匀，连贯；\"一百分钟\"合法且一致；非食用非药品、容器自备。通过。"
+        },
+        {
+          "id": "recipe_w3c_felt_polishing_pad",
+          "note": "核对骨架：毡片1、麻布1、麻线1；裁革剪、缝针；65分钟。正文剪圆、缝握边、锁边，连贯；\"65分钟\"一致；不附磨粉。通过。"
+        },
+        {
+          "id": "recipe_w3c_horsehair_dustbrush",
+          "note": "核对骨架：马尾毛1、木坯1、麻线1；框锯、手钻、修羽刀；170分钟。正文锯柄、钻孔、理毛、缠紧、修齐，连贯；\"一百七十分钟\"合法且一致；只扫浮尘。通过。"
+        },
+        {
+          "id": "recipe_w3c_paper_cord_tags",
+          "note": "核对骨架：羊皮纸1、麻线1；修羽刀、锥；70分钟。正文写\"全程七十多分钟\"，\"多\"与骨架70分钟矛盾，且该写法属已知数字类错误，必须退回（工序本身连贯）。不批。"
+        },
+        {
+          "id": "recipe_w3c_slate_stylus",
+          "note": "核对骨架：板岩1、细砂1、水1；平锉；90分钟。正文锉杆、湿砂磨钝，连贯，\"约90分钟\"与骨架一致（\"约\"为概写，不构成错误）；非墨笔。\"夹稳\"未写夹具，视为手持固定，接受。本条通过。"
+        },
+        {
+          "id": "recipe_w3c_slate_writing_tile",
+          "note": "核对骨架：同上；90分钟。正文锉边、配额水润砂磨边、余砂水弃置、表面空白，连贯；\"九十分钟\"合法且一致；不附白垩笔。通过。"
+        },
+        {
+          "id": "recipe_w3c_cork_float_set",
+          "note": "核对骨架：软木薄片1、麻线1；修羽刀、锥；90分钟。正文写\"九十多分钟\"，与骨架90分钟矛盾，必须退回（分片、修圆、锥孔、穿线工序连贯）。不批。"
+        },
+        {
+          "id": "recipe_w3c_stitchbound_folio",
+          "note": "核对骨架：羊皮纸3、麻线1；修羽刀、锥、缝针、骨片；110分钟。正文对折、压折脊、\"再叠齐成帖\"后才有\"书帖\"，前后连贯，无\"叠好\"类断层；锥孔缝订、修边；\"约110分钟\"与骨架一致；不教授技能。通过。"
+        }
+      ],
+      "rejection": {
+        "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+        "at": "2026-11-10",
+        "reason": "recipe_w3c_paper_cord_tags：\"七十多分钟\"与骨架70分钟矛盾；recipe_w3c_cork_float_set：\"九十多分钟\"与骨架90分钟矛盾。须重写，总耗时只写骨架数字加分钟，不用\"多\"。",
+        "ids": [
+          "recipe_w3c_paper_cord_tags",
+          "recipe_w3c_cork_float_set"
+        ]
+      }
     }
   ],
-  "costUpperYuan": 5.3386913600000065,
+  "costUpperYuan": 5.353950240000006,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

@@ -1,18 +1,15 @@
 {
   "id": "recipe_w3c_paper_cord_tags",
   "fingerprint": "f18e68b97224b91072de85565ba47cdcfdbf440e1c9eb751afbb87f214dc0d1a",
-  "status": "passed",
+  "status": "pending",
   "attempts": 4,
-  "draft": {
-    "id": "recipe_w3c_paper_cord_tags",
-    "process": "取刮薄羊皮纸一张平铺于木工台面，以短锋修羽刀沿直边裁成若干小签，逐张削齐四角与毛边，使边缘齐整无翘。再用缝革扁锥在每签一端刺出扁孔，孔位距边留出一指宽，避免撕裂。细捻麻线团按签数分段剪开，每段对折穿过扁孔，两端并拢打结系牢，逐签拉紧检查不脱。全程七十多分钟，成组吊签合为一份交付，签面留白由使用者自行书写。"
-  },
-  "review": {
-    "contradictions": []
-  },
+  "draft": null,
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null,
+  "feedback": [
+    "L4 退回：recipe_w3c_paper_cord_tags：\"七十多分钟\"与骨架70分钟矛盾；recipe_w3c_cork_float_set：\"九十多分钟\"与骨架90分钟矛盾。须重写，总耗时只写骨架数字加分钟，不用\"多\"。"
+  ],
   "errorCode": null,
   "draftResponse": {
     "id": "a8fdb4cd-99a5-4753-8e8d-05834e8d8e1a",
@@ -334,6 +331,27 @@
       "priorReview": {
         "contradictions": []
       }
+    },
+    {
+      "key": "3e98b51e4a7520debff5652a599dd3e816715ca1c39bd58c28b8e59b7d8b99c3",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_paper_cord_tags：\"七十多分钟\"与骨架70分钟矛盾；recipe_w3c_cork_float_set：\"九十多分钟\"与骨架90分钟矛盾。须重写，总耗时只写骨架数字加分钟，不用\"多\"。",
+      "priorStatus": "passed",
+      "priorAttempts": 4,
+      "attemptCap": 6,
+      "priorDraft": {
+        "id": "recipe_w3c_paper_cord_tags",
+        "process": "取刮薄羊皮纸一张平铺于木工台面，以短锋修羽刀沿直边裁成若干小签，逐张削齐四角与毛边，使边缘齐整无翘。再用缝革扁锥在每签一端刺出扁孔，孔位距边留出一指宽，避免撕裂。细捻麻线团按签数分段剪开，每段对折穿过扁孔，两端并拢打结系牢，逐签拉紧检查不脱。全程七十多分钟，成组吊签合为一份交付，签面留白由使用者自行书写。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
     }
-  ]
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T18:18:55.941Z"
+  }
 }

@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "bec163188d4962b4eb2c8fe2cd4a2dc0d644860610a8ff926101200da332308e",
+  "fingerprint": "43e6f8a2711941de17c618581fefcdc0458104220a9a662d894ab89c06de87a7",
   "count": 43,
-  "passed": 43,
+  "passed": 40,
   "ids": [
     "recipe_w3c_cracked_wheat_pot",
     "recipe_w3c_lentil_leek_stew",
@@ -48,66 +48,24 @@
     "recipe_w3c_ladle_rest",
     "recipe_w3c_cork_stop_set"
   ],
-  "rewritten": 4,
+  "rewritten": 5,
   "manual": [],
-  "pending": [],
+  "pending": [
+    "recipe_w3c_parsnip_cream_pot",
+    "recipe_w3c_walnut_honey_bites",
+    "recipe_w3c_mushroom_barley_pot"
+  ],
   "flagged": [],
   "sample": [
-    "recipe_w3c_canvas_satchel",
-    "recipe_w3c_brush_roll",
-    "recipe_w3c_lentil_leek_stew",
-    "recipe_w3c_laundry_mesh_bag",
-    "recipe_w3c_reed_drying_mat"
+    "recipe_w3c_beet_vinegar_dice",
+    "recipe_w3c_folding_haversack",
+    "recipe_w3c_pear_wheat_gruel",
+    "recipe_w3c_reed_drying_mat",
+    "recipe_w3c_peg_drying_rack"
   ],
   "l4": {
     "approved": false,
-    "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
-    "readAt": "2026-11-10",
-    "notes": [
-      {
-        "id": "recipe_w3c_canvas_satchel",
-        "note": "核对骨架：麻帆布1、麻线1、腰带扣1；裁革剪、缝革扁锥、缝针；210分钟；织坊。正文工序连贯（折袋身与肩带、剪、锥孔、缝、装扣），三工具齐用，\"总耗时210分钟\"与骨架一致，数字写法合法，交付空袋未扩承重，无自增设定。通过。"
-      },
-      {
-        "id": "recipe_w3c_brush_roll",
-        "note": "核对骨架：麻布1、薄鞣山羊革1、麻线1；裁革剪、缝针、骨片；130分钟。正文裁布、缝隔格、骨片压平、卷合、余革作束带，工序连贯；\"一百三十分钟\"写法合法且与骨架一致；不随附笔刷。正文未明写裁革剪，但不构成矛盾。通过。"
-      },
-      {
-        "id": "recipe_w3c_lentil_leek_stew",
-        "note": "核对骨架：褐扁豆1、韭葱1、水2、盐1、干木刨屑2；煮锅、切刀、木匙；70分钟。正文洗切用水从配额分取、先煮豆后加葱、搅动防焦、木刨屑只作灶火，工序连贯；\"70分钟\"与骨架一致。通过。"
-      },
-      {
-        "id": "recipe_w3c_laundry_mesh_bag",
-        "note": "核对骨架：麻线2、麻绳1；结网梭、缝针；170分钟。正文编袋身、缝底与侧缝、穿绳收口，工序连贯；\"一百七十分钟\"合法且一致；不附洗剂。\"三股麻绳\"为细节，不与骨架冲突。通过。"
-      },
-      {
-        "id": "recipe_w3c_reed_drying_mat",
-        "note": "核对骨架：芦管3束、麻线1；削木刀、结网梭；160分钟；木作台。正文三束检视、削齐端口、结网梭引线穿成平帘，工序连贯；\"一百六十分钟\"合法且一致；不附支架、不承托人。通过。"
-      },
-      {
-        "id": "recipe_w3c_mushroom_barley_pot",
-        "note": "核对骨架：蘑菇片1、大麦1、水3、盐1、木刨屑2；煮锅、切刀、木匙；90分钟。末句写作\"全程九十 分钟\"，数字与\"分钟\"之间多出一个空格，属书写错误，按 L4 标准必须退回（工序、材料其余一致）。不批。"
-      },
-      {
-        "id": "recipe_w3c_parsnip_cream_pot",
-        "note": "核对骨架：欧防风根1、稠乳1、水1、盐1、木刨屑1；50分钟。末句写作\"全程五十份钟\"，\"分\"误写为\"份\"，属语言错误，必须退回（其余工序连贯）。不批。"
-      },
-      {
-        "id": "recipe_w3c_walnut_honey_bites",
-        "note": "核对骨架：核桃仁1、蜂蜜1、燕麦粉1、鸡蛋1、木刨屑2；70分钟。正文写\"全程七十多分钟\"，\"多\"表示超过70，与骨架70分钟矛盾，属数值不符，必须退回。另150克核桃、四枚蛋可由物品说明印证，400克燕麦粉与100克蜂蜜未能独立核对。不批。"
-      }
-    ],
-    "rejection": {
-      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
-      "at": "2026-11-10",
-      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。；recipe_w3c_pear_wheat_gruel：\"八十份钟\"错字（DURATION-DERIVE 全仓重扫新命中，正式 recipes.json 同错；依李白 f8282524\"新命中一并走 L4 退回重写\"，主会话补入）",
-      "ids": [
-        "recipe_w3c_mushroom_barley_pot",
-        "recipe_w3c_parsnip_cream_pot",
-        "recipe_w3c_walnut_honey_bites",
-        "recipe_w3c_pear_wheat_gruel"
-      ]
-    }
+    "notes": []
   },
   "l4History": [
     {
@@ -144,9 +102,59 @@
           "recipe_w3c_walnut_honey_bites"
         ]
       }
+    },
+    {
+      "approved": false,
+      "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+      "readAt": "2026-11-10",
+      "notes": [
+        {
+          "id": "recipe_w3c_canvas_satchel",
+          "note": "核对骨架：麻帆布1、麻线1、腰带扣1；裁革剪、缝革扁锥、缝针；210分钟；织坊。正文工序连贯（折袋身与肩带、剪、锥孔、缝、装扣），三工具齐用，\"总耗时210分钟\"与骨架一致，数字写法合法，交付空袋未扩承重，无自增设定。通过。"
+        },
+        {
+          "id": "recipe_w3c_brush_roll",
+          "note": "核对骨架：麻布1、薄鞣山羊革1、麻线1；裁革剪、缝针、骨片；130分钟。正文裁布、缝隔格、骨片压平、卷合、余革作束带，工序连贯；\"一百三十分钟\"写法合法且与骨架一致；不随附笔刷。正文未明写裁革剪，但不构成矛盾。通过。"
+        },
+        {
+          "id": "recipe_w3c_lentil_leek_stew",
+          "note": "核对骨架：褐扁豆1、韭葱1、水2、盐1、干木刨屑2；煮锅、切刀、木匙；70分钟。正文洗切用水从配额分取、先煮豆后加葱、搅动防焦、木刨屑只作灶火，工序连贯；\"70分钟\"与骨架一致。通过。"
+        },
+        {
+          "id": "recipe_w3c_laundry_mesh_bag",
+          "note": "核对骨架：麻线2、麻绳1；结网梭、缝针；170分钟。正文编袋身、缝底与侧缝、穿绳收口，工序连贯；\"一百七十分钟\"合法且一致；不附洗剂。\"三股麻绳\"为细节，不与骨架冲突。通过。"
+        },
+        {
+          "id": "recipe_w3c_reed_drying_mat",
+          "note": "核对骨架：芦管3束、麻线1；削木刀、结网梭；160分钟；木作台。正文三束检视、削齐端口、结网梭引线穿成平帘，工序连贯；\"一百六十分钟\"合法且一致；不附支架、不承托人。通过。"
+        },
+        {
+          "id": "recipe_w3c_mushroom_barley_pot",
+          "note": "核对骨架：蘑菇片1、大麦1、水3、盐1、木刨屑2；煮锅、切刀、木匙；90分钟。末句写作\"全程九十 分钟\"，数字与\"分钟\"之间多出一个空格，属书写错误，按 L4 标准必须退回（工序、材料其余一致）。不批。"
+        },
+        {
+          "id": "recipe_w3c_parsnip_cream_pot",
+          "note": "核对骨架：欧防风根1、稠乳1、水1、盐1、木刨屑1；50分钟。末句写作\"全程五十份钟\"，\"分\"误写为\"份\"，属语言错误，必须退回（其余工序连贯）。不批。"
+        },
+        {
+          "id": "recipe_w3c_walnut_honey_bites",
+          "note": "核对骨架：核桃仁1、蜂蜜1、燕麦粉1、鸡蛋1、木刨屑2；70分钟。正文写\"全程七十多分钟\"，\"多\"表示超过70，与骨架70分钟矛盾，属数值不符，必须退回。另150克核桃、四枚蛋可由物品说明印证，400克燕麦粉与100克蜂蜜未能独立核对。不批。"
+        }
+      ],
+      "rejection": {
+        "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+        "at": "2026-11-10",
+        "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。；recipe_w3c_pear_wheat_gruel：\"八十份钟\"错字（DURATION-DERIVE 全仓重扫新命中，正式 recipes.json 同错；依李白 f8282524\"新命中一并走 L4 退回重写\"，主会话补入）",
+        "ids": [
+          "recipe_w3c_mushroom_barley_pot",
+          "recipe_w3c_parsnip_cream_pot",
+          "recipe_w3c_walnut_honey_bites",
+          "recipe_w3c_pear_wheat_gruel"
+        ]
+      }
     }
   ],
-  "costUpperYuan": 5.3332655200000065,
+  "costUpperYuan": 5.353950240000006,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

@@ -1,18 +1,15 @@
 {
   "id": "recipe_w3c_cork_float_set",
   "fingerprint": "54c9a1e7998a43766d1a4b228f45fe2fe88a117f7bfb9f6b05a6ca950153f425",
-  "status": "passed",
+  "status": "pending",
   "attempts": 3,
-  "draft": {
-    "id": "recipe_w3c_cork_float_set",
-    "process": "取软木薄片，以短锋修羽刀沿边分成若干小浮片，逐片削去棱角、修圆外缘，使片缘齐整不挂线。再持缝革扁锥在每片中央偏侧刺出系孔，孔口两面修平。细捻麻线一端打结，按序逐片穿过系孔并绕线相隔，收束成串，留出系结余头。全程九十多分钟，整组一并交付，另需自配渔网，不保证捕鱼。"
-  },
-  "review": {
-    "contradictions": []
-  },
+  "draft": null,
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null,
+  "feedback": [
+    "L4 退回：recipe_w3c_paper_cord_tags：\"七十多分钟\"与骨架70分钟矛盾；recipe_w3c_cork_float_set：\"九十多分钟\"与骨架90分钟矛盾。须重写，总耗时只写骨架数字加分钟，不用\"多\"。"
+  ],
   "l4Rejection": [
     {
       "key": "c14292000d76982c7516a0120e7662b98c2f68dac30fbfd421795bcd208c4357",
@@ -25,6 +22,22 @@
       "priorDraft": {
         "id": "recipe_w3c_cork_float_set",
         "process": "取软木薄片，以短锋修羽刀沿纹理剖成小浮片，逐片修圆外缘，使棱角平顺。持缝革扁锥在每片中心偏侧刺出系孔，孔口不扩裂。细捻麻线团理出线头，逐片穿过系孔并依次绕结，片与片间距匀齐，收尾打结留短头。整组一次穿成，不再补料。总耗时九十整分钟。完成后需另配渔网方能下水试用，不保证捕鱼成效。余料弃置，两件工具保留。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    },
+    {
+      "key": "ff43c0bf439028308706e5921a5eca93fd75c73e0d5cc43c4313532e33997c8b",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_paper_cord_tags：\"七十多分钟\"与骨架70分钟矛盾；recipe_w3c_cork_float_set：\"九十多分钟\"与骨架90分钟矛盾。须重写，总耗时只写骨架数字加分钟，不用\"多\"。",
+      "priorStatus": "passed",
+      "priorAttempts": 3,
+      "attemptCap": 5,
+      "priorDraft": {
+        "id": "recipe_w3c_cork_float_set",
+        "process": "取软木薄片，以短锋修羽刀沿边分成若干小浮片，逐片削去棱角、修圆外缘，使片缘齐整不挂线。再持缝革扁锥在每片中央偏侧刺出系孔，孔口两面修平。细捻麻线一端打结，按序逐片穿过系孔并绕线相隔，收束成串，留出系结余头。全程九十多分钟，整组一并交付，另需自配渔网，不保证捕鱼。"
       },
       "priorReview": {
         "contradictions": []
@@ -201,5 +214,10 @@
       "latencyMs": 645.0954000000056,
       "timestamp": "2026-11-10T17:40:47.522Z"
     }
-  ]
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "共享或单卡费用上限，已停止",
+    "at": "2026-11-10T18:18:55.946Z"
+  }
 }

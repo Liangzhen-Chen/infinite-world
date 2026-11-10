@@ -2,15 +2,150 @@
   "id": "recipe_w3c_pear_wheat_gruel",
   "fingerprint": "e96f96ffbe3be8b0752e09886018e9602cbf94abe39515d751ddb583fab9ba9d",
   "status": "passed",
-  "attempts": 1,
+  "attempts": 2,
   "draft": {
     "id": "recipe_w3c_pear_wheat_gruel",
-    "process": "取净麦粒一份，以切刀刀背逐粒压裂，露出内里即可，不必碾成细粉。厚底煮锅坐灶，倒入清水两份，投入裂麦，中火煮至麦粒开花、汤水转稠，其间用偏柄木匙沿锅底推搅，免其粘壁。脆肉梨一份先剔去碰伤处，剖开去核，切成小块，待麦糊稠度已足时后段下锅，略煮至梨块透软、果味回甜，不再另加蜂蜜。全程约八十份钟，煮成后趁热盛出，得梨肉麦糊一份。锅底若结薄层，木匙刮起一并盛入，不另留余料；灶内炭屑弃置，不混入成品。"
+    "process": "取净麦粒置于案板，以切刀刀背逐批压裂，使粗粒与细屑并存；厚底煮锅坐灶，倾入清水两份，下压裂麦粒，中火搅煮至麦粒开花、汤汁转稠。脆肉梨先剔去碰伤处，纵剖去核，切成小块，待麦糊稠度稳定后段入锅中，用偏柄木匙沿锅底推搅，使梨块受热而不散。梨块转透、果味回甜即离火，不再另加蜂蜜。煮成后整锅作一份盛出，锅壁焦痕以木匙刮净，余料弃置。全程80分钟。"
   },
   "review": {
     "contradictions": []
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "l4Rejection": [
+    {
+      "key": "ef23dd02bb73190ab0c9e97926faa24d749546d06bf930b0e11d425eef1c3611",
+      "by": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 704e9e26）",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。；recipe_w3c_pear_wheat_gruel：\"八十份钟\"错字（DURATION-DERIVE 全仓重扫新命中，正式 recipes.json 同错；依李白 f8282524\"新命中一并走 L4 退回重写\"，主会话补入）",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_pear_wheat_gruel",
+        "process": "取净麦粒一份，以切刀刀背逐粒压裂，露出内里即可，不必碾成细粉。厚底煮锅坐灶，倒入清水两份，投入裂麦，中火煮至麦粒开花、汤水转稠，其间用偏柄木匙沿锅底推搅，免其粘壁。脆肉梨一份先剔去碰伤处，剖开去核，切成小块，待麦糊稠度已足时后段下锅，略煮至梨块透软、果味回甜，不再另加蜂蜜。全程约八十份钟，煮成后趁热盛出，得梨肉麦糊一份。锅底若结薄层，木匙刮起一并盛入，不另留余料；灶内炭屑弃置，不混入成品。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "def9557f-3000-44aa-a86b-ac4b23cd7d3e",
+    "object": "chat.completion",
+    "created": 1794334730,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_HdKn1nElwuzitlr9z0vv4080",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_pear_wheat_gruel\", \"process\": \"取净麦粒置于案板，以切刀刀背逐批压裂，使粗粒与细屑并存；厚底煮锅坐灶，倾入清水两份，下压裂麦粒，中火搅煮至麦粒开花、汤汁转稠。脆肉梨先剔去碰伤处，纵剖去核，切成小块，待麦糊稠度稳定后段入锅中，用偏柄木匙沿锅底推搅，使梨块受热而不散。梨块转透、果味回甜即离火，不再另加蜂蜜。全程八十 分钟。煮成后整锅作一份盛出，锅壁焦痕以木匙刮净，余料弃置。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1701,
+      "completion_tokens": 210,
+      "total_tokens": 1911,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 1317
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_pear_wheat_gruel-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1701,
+        "completion_tokens": 210,
+        "total_tokens": 1911,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1317
+      },
+      "costUpperYuan": 0.004329360000000001,
+      "cumulativeUpperYuan": 5.349040800000006,
+      "latencyMs": 2257.3946000000005,
+      "timestamp": "2026-11-10T18:18:52.688Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "29ec8052-b7c6-4749-8e1d-df0e4d9b2d8d",
+      "file": "budget-responses/29ec8052-b7c6-4749-8e1d-df0e4d9b2d8d.json",
+      "requestHash": "7a7c77c9df40d9c38a028f38d8198f4f08364e849d051355d482869b325ada79",
+      "responseHash": "8d14cf83d3e08a3cc2596029d34ec5bca8a58342fca0081a7a34c91c0731baff"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "af5b76ff-29f0-4293-b146-b223c0c47e81",
+      "file": "budget-responses/af5b76ff-29f0-4293-b146-b223c0c47e81.json",
+      "requestHash": "a62dfa80a2d4ae8376e9327098341e6e3b7524dfcf20e0fd55ffc22d3c015891",
+      "responseHash": "6a8e6fe7108caa8be4414801d2fd82aa2949d96f091076c689f4f854c4dcda79"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_pear_wheat_gruel-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1701,
+        "completion_tokens": 210,
+        "total_tokens": 1911,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1317
+      },
+      "costUpperYuan": 0.004329360000000001,
+      "cumulativeUpperYuan": 5.349040800000006,
+      "latencyMs": 2257.3946000000005,
+      "timestamp": "2026-11-10T18:18:52.688Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_pear_wheat_gruel-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1517,
+        "completion_tokens": 7,
+        "total_tokens": 1524,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1389
+      },
+      "costUpperYuan": 0.00283912,
+      "cumulativeUpperYuan": 5.351879920000006,
+      "latencyMs": 887.6587999999992,
+      "timestamp": "2026-11-10T18:18:53.606Z"
+    }
+  ]
 }
