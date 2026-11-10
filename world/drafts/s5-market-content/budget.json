@@ -1,11 +1,11 @@
 {
-  "spentYuan": 0.002408,
+  "spentYuan": 0.00592,
   "reservedYuan": 0,
   "waveLimitYuan": 0.3,
   "cards": {
     "S502C": {
       "limitYuan": 0.3,
-      "spentYuan": 0.002408,
+      "spentYuan": 0.00592,
       "reservedYuan": 0,
       "maxRequests": 5
     }
@@ -73,6 +73,38 @@
         "cumulativeUpperYuan": 0.002408,
         "latencyMs": 814.23,
         "timestamp": "2026-10-25T12:20:58.244Z"
+      }
+    },
+    "b2fd7d5e-8542-4cb4-bb67-8fd4555b36b9": {
+      "card": "S502C",
+      "label": "content-review-s5-market-parameters-review0",
+      "requestHash": "142728db2ad5ea9f3488dae5e06d37f0b0b5015cd8a7c4bb55d3d09e4530854a",
+      "reservedYuan": 0.027378,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/b2fd7d5e-8542-4cb4-bb67-8fd4555b36b9.json",
+        "requestHash": "142728db2ad5ea9f3488dae5e06d37f0b0b5015cd8a7c4bb55d3d09e4530854a",
+        "responseHash": "790657300221a3a7d7f953ebf459893795f7e11a62ec2668775b4dac171a3e15"
+      },
+      "costUpperYuan": 0.003512,
+      "measurement": {
+        "label": "content-review-s5-market-parameters-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1728,
+          "completion_tokens": 7,
+          "total_tokens": 1735,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1728
+        },
+        "costUpperYuan": 0.003512,
+        "cumulativeUpperYuan": 0.00592,
+        "latencyMs": 1092.4038,
+        "timestamp": "2026-11-10T15:01:52.019Z"
       }
     }
   }

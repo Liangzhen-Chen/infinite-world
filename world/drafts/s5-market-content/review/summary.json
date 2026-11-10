@@ -3,17 +3,17 @@
   "passed": 2,
   "manual": 0,
   "pending": 0,
-  "costUpperYuan": 0.002408,
+  "costUpperYuan": 0.00592,
   "budget": {
-    "spentYuan": 0.002408,
+    "spentYuan": 0.00592,
     "reservedYuan": 0,
     "waveLimitYuan": 0.3,
     "cards": {
       "S502C": {
         "limitYuan": 0.3,
-        "spentYuan": 0.002408,
+        "spentYuan": 0.00592,
         "reservedYuan": 0,
-        "maxRequests": 3
+        "maxRequests": 5
       }
     },
     "requests": {
@@ -80,13 +80,45 @@
           "latencyMs": 814.23,
           "timestamp": "2026-10-25T12:20:58.244Z"
         }
+      },
+      "b2fd7d5e-8542-4cb4-bb67-8fd4555b36b9": {
+        "card": "S502C",
+        "label": "content-review-s5-market-parameters-review0",
+        "requestHash": "142728db2ad5ea9f3488dae5e06d37f0b0b5015cd8a7c4bb55d3d09e4530854a",
+        "reservedYuan": 0.027378,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/b2fd7d5e-8542-4cb4-bb67-8fd4555b36b9.json",
+          "requestHash": "142728db2ad5ea9f3488dae5e06d37f0b0b5015cd8a7c4bb55d3d09e4530854a",
+          "responseHash": "790657300221a3a7d7f953ebf459893795f7e11a62ec2668775b4dac171a3e15"
+        },
+        "costUpperYuan": 0.003512,
+        "measurement": {
+          "label": "content-review-s5-market-parameters-review0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1728,
+            "completion_tokens": 7,
+            "total_tokens": 1735,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 1728
+          },
+          "costUpperYuan": 0.003512,
+          "cumulativeUpperYuan": 0.00592,
+          "latencyMs": 1092.4038,
+          "timestamp": "2026-11-10T15:01:52.019Z"
+        }
       }
     }
   },
   "batches": [
     {
       "index": 0,
-      "fingerprint": "4ef12d433b7295b5ab46c8d9599af124c9323442e6680de4e019d9753fab0583",
+      "fingerprint": "77c5085b1480db0e7f13aad07984afc62ab3e80dc53ff09c9c407a6d19601507",
       "count": 1,
       "passed": 1,
       "ids": [
@@ -100,15 +132,10 @@
         "s5-market-parameters"
       ],
       "l4": {
-        "approved": true,
-        "notes": [
-          {
-            "id": "s5-market-parameters",
-            "note": "2026-10-25 S502C 逐项阅读：零售阈值 max(5,供给×5%)、大宗30%、日深度与次日复位符合15.2/15.4的投影边界；方向价差0.6、品质1.25、水质阈值、篮子0.7/0.3均明确待标定；口粮天数1由身体速率/营养/户籍成员派生份数，不存报价。L2 DeepSeek 返回无矛盾，实测费用上界0.001488元，无新增人物、设定或权限。"
-          }
-        ]
+        "approved": false,
+        "notes": []
       },
-      "costUpperYuan": 0.001488,
+      "costUpperYuan": 0.00592,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -128,10 +155,15 @@
         "s5-regional-pricing"
       ],
       "l4": {
-        "approved": false,
-        "notes": []
+        "approved": true,
+        "notes": [
+          {
+            "id": "s5-regional-pricing",
+            "note": "2026-10-25 S502C 逐句阅读：基准与供需、品质、环境、立场、修正均属派生输入；次日复位对应成交日筛选；普通报价已删除 quotes 写入。现有周贸易签约保留整数单价与按合同交割/退款，240日目标仍仅用于采购需求。只同步 meta/rules 与 m5 作者源中的旧说明，无数值、税章或权限变更。真实 L2 无矛盾，本项0.000920元，累计上界0.002408元。"
+          }
+        ]
       },
-      "costUpperYuan": 0.002408,
+      "costUpperYuan": 0.00592,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }

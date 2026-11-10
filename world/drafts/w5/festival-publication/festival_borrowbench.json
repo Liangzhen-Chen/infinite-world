@@ -1,6 +1,6 @@
 {
   "id": "festival_borrowbench",
-  "fingerprint": "f437c7220cf40b421ab85c4da4d61bd840fae33fa4cc694aa1474343dffbade1",
+  "fingerprint": "74b9e2aba08560ce556242cfe49aa5a6eff56b586a7a456cf079e27ce1911d61",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -12,8 +12,7 @@
     },
     "effectReasons": [
       "参加借凳归途日"
-    ],
-    "hostRequirement": "须有白石归途殿常驻、能代殿方允许借用门廊的人主持；殿中尚无登记在册的值守人，在此之前不举办。"
+    ]
   },
   "review": {
     "contradictions": []
@@ -21,26 +20,19 @@
   "errors": [],
   "warnings": [],
   "feedback": null,
+  "errorCode": null,
   "frozenCandidate": {
-    "entryHash": "8f1c0ccfd5c859e5869ee8009ba52e7ddb4304d2423241347303ed6f6dadde20",
-    "draftHash": "0803f7d1dced41c19bb59dbdb26d5d93c163a1b49a178eee7dd4d2c2c6124034"
+    "entryHash": "f96be4a598cab14d4ddae65bb851570fd11f1110b91ac316808c62c66a1d2643",
+    "draftHash": "94f50dcc4a1c8db213869872bf52fa20d25f803707e79efb28143cfa44e02b87"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "228442a4-4ec4-4f5a-9027-cfeb226a02ac",
-      "file": "budget-responses/228442a4-4ec4-4f5a-9027-cfeb226a02ac.json",
-      "requestHash": "feaecd9d7bd3d8357d092f70ffba7767ce6a54e974e8d4f648c4ecb527d2725b",
-      "responseHash": "3a2e79bd5e87c5792f1af526031a92a50b48bf16e76e6dbc2475730ef1543f51"
-    },
-    {
-      "phase": "review",
-      "attempt": 1,
-      "requestId": "d1243a09-8c6d-4043-bbe5-f492154bd0cb",
-      "file": "budget-responses/d1243a09-8c6d-4043-bbe5-f492154bd0cb.json",
-      "requestHash": "feaecd9d7bd3d8357d092f70ffba7767ce6a54e974e8d4f648c4ecb527d2725b",
-      "responseHash": "2bbc4257beae70ccd0153135fc4f345db1eead8a18eeb950574022a0c18f3cef"
+      "requestId": "03383839-7fe6-4b9a-9296-a77ce3ecc299",
+      "file": "budget-responses/03383839-7fe6-4b9a-9296-a77ce3ecc299.json",
+      "requestHash": "49b69f58177d8bbca9e2edf6614ce8901603e2722f730190df503dcfb886c794",
+      "responseHash": "cb7f3208cf44f8a73e55339cce9594890e24b6bd20ffa0877ca5b2540d45c4aa"
     }
   ],
   "measurements": [
@@ -49,19 +41,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1349,
+        "prompt_tokens": 1380,
         "completion_tokens": 7,
-        "total_tokens": 1356,
+        "total_tokens": 1387,
         "prompt_tokens_details": {
-          "cached_tokens": 1152
+          "cached_tokens": 0
         },
-        "prompt_cache_hit_tokens": 1152,
-        "prompt_cache_miss_tokens": 197
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 1380
       },
-      "costUpperYuan": 0.00049608,
-      "cumulativeUpperYuan": 0.009088399999999998,
-      "latencyMs": 1454.4930000000168,
-      "timestamp": "2026-10-15T01:06:36.399Z"
+      "costUpperYuan": 0.002816,
+      "cumulativeUpperYuan": 0.06624192000000001,
+      "latencyMs": 884.3749,
+      "timestamp": "2026-11-10T15:02:12.566Z"
     }
   ]
 }
