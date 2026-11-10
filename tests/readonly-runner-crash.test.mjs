@@ -47,3 +47,22 @@ test('崩溃判定：真实子进程——退出 0 带 ENOENT 字样、assert �
     assert.ok(crashReason(run('throws.mjs', 'null.x;')));
   } finally { fs.rmSync(dir, {recursive: true, force: true}); }
 });
+
+test('崩溃判定：未处理 Promise 拒绝（有无堆栈）、先断言后异常判崩溃；exit(2) 自报错误无堆栈不判（入口主动报告的失败）', () => {
+  assert.ok(crashReason({status: 1, stdout: '', stderr: "[UnhandledPromiseRejection: This error originated either by throwing inside of an async function without a catch block...] {\n  code: 'ERR_UNHANDLED_REJECTION'\n}\n"}));
+  assert.ok(crashReason({status: 1, stdout: '', stderr: 'Unhandled rejection: boom\n'}));
+  assert.equal(crashReason({status: 0, stdout: '', stderr: 'UnhandledPromiseRejection'}), null); // 退出 0 不扫
+  assert.ok(crashReason({status: 1, stdout: '', stderr: 'AssertionError [ERR_ASSERTION]: x\n    at a (file:///a.mjs:1:7)\nTypeError: y\n    at b (file:///a.mjs:2:7)\n'}));
+  assert.equal(crashReason({status: 1, stdout: '', stderr: 'AssertionError [ERR_ASSERTION]: x\n    at a (file:///a.mjs:1:7)\n{\n  actual: 1,\n  expected: 2\n}\n'}), null);
+  assert.equal(crashReason({status: 2, stdout: '', stderr: '校验失败：3 处不一致\n'}), null);
+});
+
+test('崩溃判定：真实子进程——Promise.reject 非 Error、exit(2) 自报错误、先断言后抛 TypeError', () => {
+  const dir = fs.mkdtempSync(path.join(tmpRoot(), 'runner-crash-'));
+  try {
+    const run = (name, src) => { const f = path.join(dir, name); fs.writeFileSync(f, src); return spawnSync(process.execPath, [f], {cwd: dir, encoding: 'utf8'}); };
+    assert.ok(crashReason(run('reject.mjs', "Promise.reject('x');")));
+    assert.equal(crashReason(run('exit2.mjs', "console.error('校验失败'); process.exit(2);")), null);
+    assert.ok(crashReason(run('assert-then-throw.mjs', "console.error(new (await import('node:assert')).AssertionError({message:'a'}).stack); null.x;")));
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
+});
