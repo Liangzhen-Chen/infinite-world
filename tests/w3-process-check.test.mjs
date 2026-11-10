@@ -117,7 +117,9 @@ const recipe = id => SKELETONS[id];
 const issues = id => processIssues(MISSED[id] ?? CLEAN[id], recipe(id), CTX);
 
 test('词表从目录派生：器具、燃料不写死条目', () => {
-  const vocab = buildVocabulary(SKELETON_ITEMS, CTX.catalogRecipes);
+  const gauges = [{id: 'compass', name: '铁脚圆规', tags: ['tool']}, {id: 'ruler', name: '木直尺', tags: ['tool']}];
+  const vocab = buildVocabulary([...SKELETON_ITEMS, ...gauges], CTX.catalogRecipes);
+  assert.ok(vocab.heads.has('圆规') && vocab.heads.has('直尺') && !vocab.heads.has('规') && !vocab.heads.has('尺'), '日常常用字不单独当中心词，两字词形仍在');
   assert.ok(vocab.heads.has('厚底煮锅') && vocab.heads.has('煮锅'), '器具全名与两字中心词来自目录');
   assert.ok(vocab.heads.has('剪') && vocab.heads.has('锯'), '手工具的单字中心词来自目录');
   const fuelIds = SKELETON_ITEMS.filter(item => item.tags?.includes('fuel')).map(item => item.id);
@@ -414,4 +416,39 @@ test('数量单位：勺、杯、滴、寸、个时辰', () => {
 test('用火词：加温、融化、炸、烫算用火；溶化、炸裂、烫手不算', () => {
   for (const verb of ['加温', '融化', '炸', '烫']) assert.match(fxJoin('把料' + verb + '后取出。'), /用火/, verb);
   for (const text of ['盐在水里溶化后取出。', '锅壁炸裂时需维修。', '锅沿烫手，勿碰。']) assert.deepEqual(fx(text), [], text);
+});
+
+test('期限只认天日周月；分钟时长走时长分支', () => {
+  assert.match(fxJoin('二十分钟内收汁。', fxFacts), /骨架外时长「二十分钟」/);
+  assert.doesNotMatch(fxJoin('二十分钟内收汁。', fxFacts), /期限/);
+  assert.deepEqual(fx('三十分钟内收汁。', fxFacts), [], 'processFacts 写明 30 分钟');
+  assert.match(fxJoin('五日内食用。', fxFacts), /骨架外期限「五日」/);
+  assert.deepEqual(fx('三天内食用。', fxFacts), []);
+});
+
+test('度只在温度语境算单位；爆炸不是炸', () => {
+  assert.deepEqual(fx('糊料一度翻动，再两度翻动。', fxFacts), [], '一度、两度是次数');
+  assert.match(fxJoin('水温六十度。', fxFacts), /骨架外数量「六十度」/);
+  assert.match(fxJoin('糊料升至九十度。', fxFacts), /骨架外数量「九十度」/);
+  assert.deepEqual(fx('防止锅体爆炸。', fxFacts), []);
+  assert.match(fxJoin('把料炸熟。', fxFacts), /用火/);
+});
+
+test('双重否定不算否定：不可不用、不能不用、非…不可、不得不', () => {
+  for (const text of ['不可不用案板搅匀。', '不能不用案板搅匀。', '不得不用案板搅匀。', '非用案板不可。']) assert.match(fxJoin(text), /骨架外器具「板」/, text);
+  for (const text of ['不可用案板搅匀。', '非用案板搅匀。']) assert.deepEqual(fx(text), [], text);
+});
+
+test('单位补全：g、ml、kg、钱、斗、合、尺', () => {
+  assert.match(fxJoin('称取100g黑麦粉。', fxFacts), /骨架外数量「100g」/);
+  assert.match(fxJoin('倒入200ml水。', fxFacts), /骨架外数量「200ml」/);
+  assert.match(fxJoin('称取3kg黑麦粉。', fxFacts), /骨架外数量「3kg」/);
+  assert.match(fxJoin('加三钱盐。', fxFacts), /骨架外数量「三钱」/);
+  assert.match(fxJoin('倒一斗米。', fxFacts), /骨架外数量「一斗」/);
+  assert.match(fxJoin('倒三合米。', fxFacts), /骨架外数量「三合」/);
+  assert.match(fxJoin('裁长三尺。', fxFacts), /骨架外数量「三尺」/);
+  assert.deepEqual(fx('另加100ml水。', fxFacts), [], '等于 processFacts 的一百毫升');
+  assert.deepEqual(fx('取500g黑麦粉。', fxFacts), [], '等于材料重量');
+  assert.deepEqual(fx('用尺规量好，三合土垫底。', fxFacts), [], '尺规、三合土不是单位');
+  assert.deepEqual(fx('交付一件折口零钱夹。', fxFacts), [], '零钱夹里的零钱不是数量');
 });
