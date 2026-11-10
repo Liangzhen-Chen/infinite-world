@@ -344,6 +344,27 @@ export function processIssues(text, entry, context) {
   return errors;
 }
 
+// 五、物品正文：表示重量、容量、长度的数字必须带单位（“重0.35”“长三十”不行，“重240克”“长三十寸”可以）。纯函数，供物品正文的 L1 使用（w3-trades.mjs 的 validateTradesDraft）。
+// 量词前缀：重/重量/净重/单重/整器重……（重量），容/容量/容积，长/宽/高/厚/深/径/直径（长度，增长、提高、加厚等动词性前缀用 lookbehind 排除）。
+// 数字取最长匹配（贪婪、锚定在关键词后），因此“重240克”不会被截成“重24”；数字后紧跟单位才算带单位；紧跟个数量词（重叠三层、宽三指、长三节）不是度量，不判。
+const MEASURE_KEY = /(?:约重|重约|重量|净重|单重|共重|重|容量|容积|(?<=可)容|(?<![增生成延拉伸滋助家擅专特最])长度?|宽度?|(?<![提增升抬拔最])高度?|(?<![加增])厚度?|深度?|直径|口径)(?:约|为|是|达|在)?/gu;
+const MEASURE_NUMBER = /^(?:\d+(?:\.\d+)?|[零〇一二两三四五六七八九十百千半]+(?:点[零〇一二三四五六七八九]+)?)/u;
+const MEASURE_UNIT = /^\s*(?:千克|公斤|克|斤|两|磅|盎司|吨|毫升|公升|升|勺|杯|合|斗|厘米|毫米|公里|千米|米|寸|尺|丈|分|kg|g|ml|l|cm|mm|km|m)(?![A-Za-z])/iu;
+const MEASURE_COUNT = /^[层次遍道重回件个条根片块枚张只份倍折叠指掌步拃行列排圈环节瓣粒股束成头边端面侧臂肘]/u;
+export function unitlessMeasureIssues(text) {
+  const errors = [];
+  if (typeof text !== 'string') return errors;
+  for (const key of text.matchAll(MEASURE_KEY)) {
+    const rest = text.slice(key.index + key[0].length), number = rest.match(MEASURE_NUMBER);
+    if (!number) continue;
+    const after = rest.slice(number[0].length);
+    if (/^[0-9.]/u.test(after) || MEASURE_UNIT.test(after) || MEASURE_COUNT.test(after)) continue;
+    const raw = key[0] + number[0];
+    errors.push(`正文里的「${raw}」是重量、容量或长度，数字后面没有单位（${text.slice(Math.max(0, key.index - 6), key.index + raw.length + 6).trim()}）。修复：写成带单位的形式，如“重二百四十克”“长三十厘米”，或删去具体数字`);
+  }
+  return [...new Set(errors)];
+}
+
 // 已知残余（不在本卡改）：数量只按数值匹配，不分来源——正文里的 600 克若恰好等于骨架里别处某个数值（别的材料重量、processFacts 里无关的数字），也会放行；
 // 漏判由 L4 人读兜底。非…不可只处理“非/非用/非以”紧接器具的写法。
 // 四、骨架外数量：具体质量/容量、分段时长、期限，数值必须来自骨架或引用事实（processFacts、材料与成品的 use 与重量、minutes、保存期）。
