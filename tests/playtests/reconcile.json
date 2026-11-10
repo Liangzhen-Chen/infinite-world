@@ -205,5 +205,5 @@
     "language": "简体中文，正文不泄漏编号、工具或提示词",
     "continuity": "记住本会话发生的交易、约定和人物处境"
   },
-  "priceBasis": "R1/R5 重推（探针 tools/probe-rules-a.mjs a2/a3：青灯酒馆同类食物供给47、需求28，稀缺度28/47=0.596，不再钳在0.5地板）。lodging gives standing1, so bread base2 * scarcity.596 * relation.99895 = 1.19, trunc once to1 (旧：scarcity.5 -> .99895 -> 0). Edited two-unit bill trunc(2*2*.596*.99895)=trunc(2.38)=2 (旧：1). Upgrade second buy: 2*.596*(1+.2/126)*.9979 = 1.19 -> 1 (旧：<1 -> 0). Reconcile 173/172; upgrade173. Grade/corrections1."
+  "priceBasis": "R1/R5 重推，数字取自 playtest 同一入口复演（tools/probe-rules-a.mjs m3：uiSession 新档→青灯酒馆→住一晚 174）：买面包时同类食物供给47、需求26，稀缺度26/47=0.553（不再钳在0.5），relation 0.99895，品质/价差/深度1。First bread: 2 * 0.553 * 0.99895 = 1.105, trunc once to 1 (旧：scarcity.5 -> .99895 -> 0), coins 173. Edited two-unit bill trunc(2*2*0.553*0.99895)=trunc(2.21)=2 (旧：1), coins 172. Reconcile 173/172. Grade/corrections1."
 }

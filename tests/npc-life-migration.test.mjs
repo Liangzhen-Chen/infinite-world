@@ -109,6 +109,8 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  // （探针 tools/probe-money-flow.mjs migration：第 10 天正午 15120 付 1+7 铜，早于迁居预告 17580，且出发后到抵达没有任何钱流）。
  // 这笔日常购粮不是迁居造成的；事先多给口粮也固定不住（给 30 份口粮仍买 7 铜燕麦饼，余粮还会被店铺收购），
  // 所以“迁居本身不丢钱、不丢物”应比较出发后与抵达时的财产。
+ // 出发前的日常购粮属于正常生活，不在“迁居不丢钱”的断言范围内；时间点依据探针复跑（本次）：购粮发生在 t=15120（开场后 2 小时，
+ // 迁居预告 t=17580 之前 40 多小时），出发快照 t=17581 时 coins 49，抵达（t=19058，路费 0）时仍是 49、库存逐项相等，途中无任何钱流。
  const coins=npc(s,mover).coins,goods=structuredClone(npc(s,mover).inventory);
  assert.equal(go.status,'在途');assert.equal(go.origin,fromHome);assert.ok(go.routeMinutes>=600,`路程${go.routeMinutes}分钟`);
  assert.equal(go.routeMinutes,route.minutes);assert.equal(go.arriveAt,m.departAt+route.minutes);assert.deepEqual(go.routeEdges,route.edges);
