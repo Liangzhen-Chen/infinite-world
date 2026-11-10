@@ -71,7 +71,7 @@
       },
       {
         "id": "recipe_w3c_small_trowel",
-        "note": "核对骨架：铁料1、木炭3、木柄1；锻锤、铁钳、平锉；220分钟。正文“全程约二百二十分钟”用“约”，与骨架精确的220分钟不符，不批。"
+        "note": "核对骨架：铁料1、木炭3、木柄1；锻锤、铁钳、平锉；220分钟。正文“全程约二百二十分钟”用“约”，与骨架精确的220分钟不符，不批。 ｜主会话复核改判：按既定口径\"约\"+数值一致不算错，通过。"
       },
       {
         "id": "recipe_w3c_steel_gouge_tip",
@@ -117,9 +117,8 @@
     "rejection": {
       "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
       "at": "2026-11-10",
-      "reason": "small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。",
+      "reason": "small_trowel：“约二百二十分钟”与骨架220不符；steel_gouge_tip：淬口未交代骨架水1份；small_bell_frame：框上冲孔来源未交代；soap_wash_portion：刨屑被弃置、火源无交代；resin_cloth_patch：木炭放入锅中引燃再投松脂，工序不通，“不剪铁线”无依据；ledger_cover：“不另裁两片”“毛面相对”无依据；redwood_dye（L2：滤布搭锅口滤回同锅，缺承接容器）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，工序前后连贯。（主会话复核：small_trowel\"约二百二十分钟\"数值等于骨架 220，按既定 L4 口径\"约\"加一致数值不算错，移出退回名单）",
       "ids": [
-        "recipe_w3c_small_trowel",
         "recipe_w3c_steel_gouge_tip",
         "recipe_w3c_small_bell_frame",
         "recipe_w3c_soap_wash_portion",
