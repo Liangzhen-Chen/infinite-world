@@ -10,6 +10,10 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { pipelineL1, rowFingerprintShape, hashContent, requireFlagValue, MANUAL_REWRITE_REVIEW_KIND } from './content-pipeline.mjs';
 import { applyDerivedDuration } from './content-numerals.mjs';
+import { canonical } from '../server-plugin/storage.mjs';
+
+const trimDeep = value => typeof value === 'string' ? value.trim() : Array.isArray(value) ? value.map(trimDeep) : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key, item]) => [key, trimDeep(item)])) : value;
+export const sameContent = (a, b) => canonical(trimDeep(a)) === canonical(trimDeep(b));
 
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const write = (file, data) => { const tmp = `${file}.${process.pid}.tmp`; fs.writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`); fs.renameSync(tmp, file); };
@@ -44,7 +48,8 @@ export async function manualRewrite({ root, drafts, by, reason, headCommit, entr
     // 写入的 draft.id 必须等于条目 id：缺 id 时补上，不一致的上一行已拒绝。
     const draft = applyDerivedDuration({ id, ...structuredClone(rawDraft) }, entry);
     // 人工稿不得与旧稿相同（含套上派生时长之后）：否则原样提交旧稿也能清掉退回名单并换到免 L2 标记。
-    if (record.draft && [rawDraft, draft].some(candidate => hashContent(candidate) === hashContent(record.draft) || hashContent({ id, ...candidate }) === hashContent(record.draft))) throw new Error(`人工稿 ${id} 与旧稿相同，拒绝改写`);
+    // 比较与键序、字符串首尾空白无关：用 server-plugin/storage.mjs 的 canonical（键排序序列化）加递归 trim。
+    if (record.draft && [rawDraft, draft].some(candidate => sameContent({ id, ...candidate }, record.draft) || sameContent(candidate, record.draft))) throw new Error(`人工稿 ${id} 与旧稿相同，拒绝改写`);
     const result = await l1(draft, entry, await contextFor(entry));
     const errors = Array.isArray(result) ? result : result?.errors ?? [];
     if (errors.length) failures.push(`${id}: ${errors.join('；')}`);
