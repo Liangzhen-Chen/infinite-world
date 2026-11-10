@@ -134,6 +134,31 @@ export const APPROVED_OVERLAYS=[
  {name:'a3cap-data',load:async()=>{const m=await import('../world/design/a3cap-data-approval.mjs');return{revision:m.revision,fields:{capacityMl:m.capacities},verifyPublished:()=>m.verifyPublished()};}},
  {name:'s507-life',load:async()=>{const m=await import('../world/design/s507-life-approval.mjs');return{revision:m.revision,fields:{lifecycle:await m.itemLifecycles()},verifyPublished:()=>m.verifyPublished()};}},
 ];
+// ---------------------------------------------------------------- 已审批整行回执登记表
+// 有些正式行不是由某条内容流水线草稿独占，而是后来经另一张审批卡整行重审（批次 L4 已批、L2 通过）。
+// 消费方（w3-wave-score）比对“正式值与已审草稿”时，字段不同但等于这类已审批整行回执里的值，算已归因。
+// 每项 load(world) 给出 {revision, rows: Map<id, 已批整行>}；rows 必须来自该审批模块自己的核验（核验不通过即抛错，不当作无来源）。
+export const APPROVED_ROW_RECEIPTS=[
+ {name:'a3-world',load:async world=>{const m=await import('../world/design/a3-world-approval.mjs');return{revision:m.revision,rows:await m.approvedRowReceipts(world)};}},
+];
+// 返回 (id,key,value)=>来源说明或 null：该条目的已批整行回执里，字段 key 的值逐字等于 value 才有来源。回执只加载并核验一次。
+export function createRowReceiptResolver(world,{registry=APPROVED_ROW_RECEIPTS}={}){
+ const cache=new Map();
+ const layer=receipt=>{
+  if(!cache.has(receipt))cache.set(receipt,(async()=>{
+   try{return await receipt.load(world);}
+   catch(error){throw new Error(`已审批整行回执 ${receipt.name} 核验不通过：${error.message}`);}
+  })());
+  return cache.get(receipt);
+ };
+ return async(id,key,value)=>{
+  for(const receipt of registry){
+   const {revision,rows}=await layer(receipt),row=rows.get(id);
+   if(row&&Object.hasOwn(row,key)&&hashContent(row[key])===hashContent(value))return `${receipt.name} 已审批整行回执（revision ${revision}）：${id}.${key}`;
+  }
+  return null;
+ };
+}
 // 加载并核验一层；核验不通过抛错（不当作“没有来源”）。同一登记表内只核验一次。
 function overlayLoader(registry){
  const cache=new Map();

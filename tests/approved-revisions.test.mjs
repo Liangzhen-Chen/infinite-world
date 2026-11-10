@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {parseFieldPath,parsePublication,applySupersedes,createTagSourceResolver,overlayFieldReverts,revertSuperseded,revertedRows,APPROVAL_SOURCES} from '../tools/approved-revisions.mjs';
+import {parseFieldPath,parsePublication,applySupersedes,createTagSourceResolver,overlayFieldReverts,revertSuperseded,revertedRows,APPROVAL_SOURCES,createRowReceiptResolver} from '../tools/approved-revisions.mjs';
 import {verifyPublished as a3wVerify} from '../world/design/a3w-props-approval.mjs';
 import {verifyPublished as s507Verify} from '../world/design/s507-life-approval.mjs';
 import {fixedSample,recomputeCorpusHash} from '../tools/w3-wave-score.mjs';
@@ -110,4 +110,27 @@ test('s507-life 登记为已审叠加层：overlayFieldReverts 给出 clay_oil_l
  await assert.rejects(s507Verify(tampered),/S507 已批值不符/);
  // 现值不等于已批值：不归因
  assert.deepEqual(await overlayFieldReverts([{id:lamp.id,entity:{...lamp,lifecycle:{awaken:{}}}}]),[]);
+});
+
+// ---- 已审批整行回执（如 a3-world 重审）解释 w3 草稿与正式值的差异
+test('整行回执：字段等于已审批回执里的值才有来源；回执之外的值、回执没有的条目或字段无来源',async()=>{
+ const registry=[{name:'整行卡',load:async()=>({revision:'rv',rows:new Map([['recipe_x',{id:'recipe_x',minutes:60,process:'新工序'}]])})}];
+ const resolve=createRowReceiptResolver({},{registry});
+ assert.match(await resolve('recipe_x','minutes',60),/整行卡 已审批整行回执（revision rv）：recipe_x\.minutes/);
+ assert.equal(await resolve('recipe_x','minutes',45),null);
+ assert.equal(await resolve('recipe_x','process','有人另改的工序'),null);
+ assert.equal(await resolve('recipe_y','minutes',60),null);
+ assert.equal(await resolve('recipe_x','difficulty',3),null);
+});
+test('整行回执：未审批（核验不通过）的回执不被认可，直接报错而不是当作无来源',async()=>{
+ const registry=[{name:'整行卡',load:async()=>{throw new Error('批次 L4 未批');}}];
+ await assert.rejects(createRowReceiptResolver({},{registry})('recipe_x','minutes',60),/整行卡 核验不通过：批次 L4 未批/);
+});
+test('整行回执：登记表里的 a3-world 在真实数据上核验通过，且能解释 recipe_w3_fish_broth 的已批值',async()=>{
+ const {loadWorld}=await import('../tools/load-world.mjs');
+ const world=await loadWorld(),row=world.recipes.find(r=>r.id==='recipe_w3_fish_broth');
+ const resolve=createRowReceiptResolver(world);
+ assert.match(await resolve(row.id,'minutes',row.minutes),/a3-world 已审批整行回执/);
+ assert.equal(await resolve(row.id,'minutes',row.minutes+1),null);
+ assert.equal(await resolve(row.id,'process',row.process+'（另改）'),null);
 });

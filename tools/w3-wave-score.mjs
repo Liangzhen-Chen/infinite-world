@@ -6,7 +6,7 @@ import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {economyW3Journey} from '../world/design/economy-w3-journey.mjs';
 import {readApprovedContent,hashContent,approvalIncomplete,reportApprovalIncomplete} from './content-pipeline.mjs';
 import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
-import {readApprovedSupersedes,applySupersedes,createTagSourceResolver,overlayFieldReverts} from './approved-revisions.mjs';
+import {readApprovedSupersedes,applySupersedes,createTagSourceResolver,overlayFieldReverts,createRowReceiptResolver} from './approved-revisions.mjs';
 import {w3Context,w3Revision,validateW3Draft} from './w3-content.mjs';
 import {tradesRevision,validateTradesDraft} from './w3-trades.mjs';
 import {journeyContext,journeyRevision} from './w3-journey.mjs';
@@ -39,7 +39,8 @@ export function recomputeCorpusHash(report,entries,explained,{now=new Date()}={}
   if(e.remove){const key=e.parts.at(-1),parent=getPath(row.entity,e.parts.slice(0,-1));if(!parent||!Object.hasOwn(parent,key))throw new Error(`回退目标不存在 ${e.id}/${key}`);delete parent[key];}
   else setPath(row.entity,e.parts,e.old);
  }
- if(hashContent(before)!==report.corpusHash)throw new Error('仍有无法归因于已审批回执或已审叠加层的内容变化：回退已归因的变化后，语料哈希与评分时的不符');
+ // 评分时的语料哈希：已重算过的报告，corpusHash 是上一次重算后的值；全部归因变化回退后应回到最初评分时的哈希（第一次重算记下的 beforeCorpusHash）。
+ if(hashContent(before)!==(report.corpusRecomputations?.[0]?.beforeCorpusHash??report.corpusHash))throw new Error('仍有无法归因于已审批回执或已审叠加层的内容变化：回退已归因的变化后，语料哈希与评分时的不符');
  const next=structuredClone(report),afterHash=hashContent(entries);
  next.corpusRecomputations=[...(next.corpusRecomputations??[]),{at:now.toISOString(),beforeCorpusHash:report.corpusHash,afterCorpusHash:afterHash,sampleEntityHashesUnchanged:true,basis:explained.map(e=>({id:e.id,field:e.parts.map(p=>typeof p==='string'?p:`[id=${p.id}]`).join('.'),...(e.remove?{added:true}:{}),source:e.source}))}];
  next.corpusHash=afterHash;
@@ -54,7 +55,7 @@ export function fixedSample(entries,seed,count=10){
 }
 export async function publishedW3(world){
  const block=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8')),entries=[],batches=[],errors=[],explained=[];
- const supersedes=await readApprovedSupersedes(),resolveTag=createTagSourceResolver();
+ const supersedes=await readApprovedSupersedes(),resolveTag=createTagSourceResolver(),resolveRow=createRowReceiptResolver(world);
  for(const [label,root,bones,revision,context,validate]of [
   ['家用首批','world/drafts/w3',economyW3(world),w3Revision,w3Context,validateW3Draft],
   ['行商工艺','world/drafts/w3/trades',economyW3Trades(world),tradesRevision,w3Context,validateTradesDraft],
@@ -80,6 +81,9 @@ export async function publishedW3(world){
      if(extra.length&&sources.length===extra.length){explained.push({id:bone.id,parts:['tags'],old:value,source:sources.join('；')});continue;}
      if(extra.length)continue;
     }
+    // 字段不同于 w3 草稿，但等于已审批整行回执（如 a3-world 的重审）里的值：已归因，旧值取 w3 草稿值（评分时的值）。
+    const rowSource=await resolveRow(bone.id,key,official[key]);
+    if(rowSource){explained.push({id:bone.id,parts:[key],old:value,source:rowSource});continue;}
     errors.push(`正式条目不同于已审骨架/文字 ${bone.id}/${key}`);
    }
    const checks=validate(draft,bone,block,context(world,bones,bone));if(checks.errors.length)errors.push(`${bone.id}: ${checks.errors.join('；')}`);

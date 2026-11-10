@@ -320,6 +320,15 @@ export async function priorEditions(world, files = null) {
   return previousOfficeEdition(world, files);
 }
 export async function verifyPublished(world, files = null) {
+  const {entries} = await verifyPublishedDetailed(world, files);
+  return {entries};
+}
+// 已审批整行回执（供下游按“回执里的行”解释差异，如 w3-wave-score）：先走与 verifyPublished 相同的全部核验，通过才返回 id -> 已批整行。
+export async function approvedRowReceipts(world, files = null) {
+  const {drafts} = await verifyPublishedDetailed(world, files);
+  return new Map([...drafts].filter(([, d]) => d.row !== undefined && (d.row.id !== undefined)).map(([id, d]) => [id, structuredClone(d.row)]));
+}
+async function verifyPublishedDetailed(world, files = null) {
   files ??= await readFiles();
   ({world,files}=await priorEditions(world,files));
   const entries = contentEntries(files), candidate = previewWorld(world);
@@ -331,7 +340,7 @@ export async function verifyPublished(world, files = null) {
     const row = currentRow(files, entry);
     assert.ok(row !== undefined && same(row, drafts.get(entry.id).row), `${entry.id} 正式文件与已审批的行不同`);
   }
-  return {entries: entries.length};
+  return {entries: entries.length, drafts};
 }
 // 部分正式文件用 CRLF：按文件现有换行符定点替换。
 const patchText = (text, from, to, label) => {
