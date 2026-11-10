@@ -151,3 +151,10 @@ test('总时长派生：删去模型自带的总时长（任何写法），追�
   assert.deepEqual(applyDerivedDuration({id:'i',process:'x'},{id:'i'}),{id:'i',process:'x'});
   assert.equal(stripOverallDuration('全程约九十分钟左右。'),'');
 });
+
+test('「钟」前夹字白名单：时间成分、量词、更不判；错字判错', () => {
+  assert.deepEqual(chineseNumeralIssues('三点钟，一刻钟，两个钟头，五十分钟，一座钟，两口钟，三台钟，四只钟，五架钟，六面钟，五更钟'),[]);
+  for(const bad of ['全程五十份钟','全程五十纷钟'])assert.equal(chineseNumeralIssues(bad).length,1,bad);
+  assert.equal(numeralIssues({id:'r',process:'全程50纷钟'},{id:'r',minutes:50}).length,1);
+  assert.deepEqual(numeralIssues({id:'r',process:'3点钟，2口钟，1座钟'},{id:'r',minutes:50}),[]);
+});
