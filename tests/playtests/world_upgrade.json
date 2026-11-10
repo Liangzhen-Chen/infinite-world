@@ -16,7 +16,7 @@
         {
           "kind": "equals",
           "path": "state.player.coins",
-          "value": 174
+          "value": 173
         },
         {
           "kind": "quantity",
@@ -68,7 +68,7 @@
         {
           "kind": "equals",
           "path": "state.player.coins",
-          "value": 173
+          "value": 172
         },
         {
           "kind": "quantity",
@@ -87,7 +87,7 @@
         {
           "kind": "equals",
           "path": "state.player.coins",
-          "value": 173
+          "value": 172
         },
         {
           "kind": "quantity",
@@ -169,7 +169,7 @@
         {
           "kind": "equals",
           "path": "state.player.coins",
-          "value": 173
+          "value": 172
         },
         {
           "kind": "quantity",
@@ -200,5 +200,5 @@
     "language": "简体中文，正文不泄漏编号、工具或提示词",
     "continuity": "记住本会话发生的交易、约定和人物处境"
   },
-  "priceBasis": "S5-02 15.2/15.4: lodging gives standing1. First bread: base2 * scarcity.5 * relation.99895 = .99895 ->0. A zero-copper gift does not grant another paid-trade trust point. Second: 2*.5*(1+.2/126)*.99895 =1.000535634920635 ->1. Opening174, final173. Grade/corrections1."
+  "priceBasis": "R1/R5 重推（探针 tools/probe-rules-a.mjs a2/a3：青灯酒馆同类食物供给47、需求28，稀缺度0.596，不再钳在0.5地板）。lodging gives standing1. First bread: base2 * scarcity.596 * relation.99895 = 1.19 ->1 (旧：scarcity.5 -> .99895 ->0). Second: 2*.596*(1+.2/126)*relation ~1.19 ->1. Opening 173 (174 after lodging, minus the first bread 1), final172. Grade/corrections1."
 }
