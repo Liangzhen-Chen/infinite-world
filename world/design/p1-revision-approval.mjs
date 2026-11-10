@@ -123,8 +123,10 @@ export const reviewRequest=(e,d,c)=>({...defaultReviewRequest(skeletonOf(e),d,c)
 
 // 修订批的通用流水线（--prepare 冻结候选并跑 L1，--review L2，--publish，--verify）。P1 与级联批共用，各自的差别全在 cfg：
 // cfg={revision,root,CARD,limitYuan,frozen,buildEntries(world),draftFor,contextFor,validateDraft,applyCandidate,isPublished,note}
+// 可选 cfg.approval={via,receipt,verify(entries,world)}：本批不自带 L2/L4，审批证据来自别处已审批的记录（如 w3-journey 的 L1/L2/L4）。
+// 此时没有预算账与 --review；--publish/--verify 用 approval.verify 核验每条 after 等于该记录里已审批的正文；candidate.json 记 approval.via，供 approved-revisions 读取回执时复核。
 export async function runRevision(cfg,args=process.argv.slice(2)){
- const {revision,root,CARD,frozen,draftFor,contextFor,validateDraft,applyCandidate,isPublished}=cfg;
+ const {revision,root,CARD,frozen,draftFor,contextFor,validateDraft,applyCandidate,isPublished,approval}=cfg;
  const {loadWorld}=await import('../../tools/load-world.mjs');
  const world=await loadWorld();
  const entries=frozen?.entries??await cfg.buildEntries(world);
@@ -136,16 +138,19 @@ export async function runRevision(cfg,args=process.argv.slice(2)){
   assert.deepEqual(added,[],'候选新增 L1 错误');
   for(const file of new Set(entries.map(e=>e.file)))editJSONText(await fs.readFile(file,'utf8'),entries.filter(e=>e.file===file));
   await fs.mkdir(root,{recursive:true});
-  const rates=new DeepSeekClient().rates;
-  const ceilings=entries.map(e=>{const r=reviewRequest(e,draftFor(e),contextFor(e));return (Buffer.byteLength(JSON.stringify({model:'deepseek-flash',stream:false,...r}))*rates.miss+r.max_tokens*rates.output)/1e6;});
-  await fs.writeFile(`${root}/candidate.json`,JSON.stringify({revision,entries,drafts:entries.map(draftFor),contexts:entries.map(contextFor)},null,2)+'\n');
+  const rates=approval?null:new DeepSeekClient().rates;
+  const ceilings=approval?[]:entries.map(e=>{const r=reviewRequest(e,draftFor(e),contextFor(e));return (Buffer.byteLength(JSON.stringify({model:'deepseek-flash',stream:false,...r}))*rates.miss+r.max_tokens*rates.output)/1e6;});
+  await fs.writeFile(`${root}/candidate.json`,JSON.stringify({revision,...(approval?{approval:{via:approval.via}}:{}),entries,drafts:entries.map(draftFor),contexts:entries.map(contextFor)},null,2)+'\n');
   await fs.writeFile(`${root}/l1.json`,JSON.stringify({revision,entries:entries.length,addedErrors:added,removedErrors:removed,baselineErrors:baseline.errors.length,candidateErrors:candidate.errors.length,textEditsVerified:true,modelCalls:0,published:false},null,2)+'\n');
+  if(!approval){
   await fs.writeFile(`${root}/cost-estimate.json`,JSON.stringify({rates,requests:entries.length,perRequestCeilingYuan:ceilings,firstPassCeilingYuan:ceilings.reduce((a,b)=>a+b,0),cardLimitYuan:cfg.limitYuan,modelCalls:0},null,2)+'\n');
   const budgetFile=`${root}/budget.json`;
   try{await fs.access(budgetFile);}catch{await fs.writeFile(budgetFile,JSON.stringify({spentYuan:0,reservedYuan:0,waveLimitYuan:cfg.limitYuan,note:cfg.note,cards:{[CARD]:{limitYuan:cfg.limitYuan,spentYuan:0,reservedYuan:0,maxRequests:entries.length}},requests:{}},null,2)+'\n');}
-  console.log(JSON.stringify({entries:entries.length,addedErrors:added.length,removedErrors:removed.length,ceilingYuan:ceilings.reduce((a,b)=>a+b,0),modelCalls:0}));
+  }
+  console.log(JSON.stringify({entries:entries.length,addedErrors:added.length,removedErrors:removed.length,ceilingYuan:ceilings.reduce((a,b)=>a+b,0),modelCalls:0,...(approval?{approvalVia:approval.via}:{})}));
  }
  if(args.includes('--review')){
+  assert.ok(!approval,'本批不单独 L2：审批证据来自 '+approval?.via+' 的已审批记录');
   assert.ok(frozen,'先 --prepare 冻结候选');
   const budget=await read(`${root}/budget.json`),card=budget.cards?.[CARD];
   assert.ok(Number.isFinite(card?.limitYuan)&&card.limitYuan>0&&card.limitYuan<=cfg.limitYuan,`缺少 ${CARD} 预算账或超过 ${cfg.limitYuan} 元`);
@@ -156,19 +161,19 @@ export async function runRevision(cfg,args=process.argv.slice(2)){
  }
  if(args.includes('--publish')){
   assert.ok(frozen,'缺少冻结候选');
-  const approved=await readApprovedContent(`${root}/review`,entries,{revision,contextFor});
+  const approved=approval?(await approval.verify(entries,world),entries):await readApprovedContent(`${root}/review`,entries,{revision,contextFor});
   assert.equal(approved.length,entries.length);
-  for(const e of entries)assert.deepEqual(approved.find(d=>d.id===e.id),draftFor(e));
+  if(!approval)for(const e of entries)assert.deepEqual(approved.find(d=>d.id===e.id),draftFor(e));
   if(isPublished(world,entries)){console.log(JSON.stringify({published:true,verified:approved.length,modelCalls:0}));return;}
   // Check every target before writing any file.
   const out=new Map();
   for(const file of new Set(entries.map(e=>e.file)))out.set(file,editJSONText(await fs.readFile(file,'utf8'),entries.filter(e=>e.file===file)));
   for(const [file,text] of out)await fs.writeFile(file,text);
-  await fs.writeFile(`${root}/publication.json`,JSON.stringify({revision,publishedAt:new Date().toISOString(),entries:entries.map(e=>({id:e.id,target:e.target,file:e.file,field:e.field,before:e.before,after:e.after,supersedes:e.supersedes})),receipt:`${root}/review`},null,2)+'\n');
+  await fs.writeFile(`${root}/publication.json`,JSON.stringify({revision,publishedAt:new Date().toISOString(),entries:entries.map(e=>({id:e.id,target:e.target,file:e.file,field:e.field,before:e.before,after:e.after,supersedes:e.supersedes})),receipt:approval?approval.receipt:`${root}/review`},null,2)+'\n');
   console.log(JSON.stringify({published:approved.length}));
  }
  if(args.includes('--verify')){
-  const approved=await readApprovedContent(`${root}/review`,entries,{revision,contextFor});
+  const approved=approval?(await approval.verify(entries,world),entries):await readApprovedContent(`${root}/review`,entries,{revision,contextFor});
   assert.equal(approved.length,entries.length);assert.ok(isPublished(world,entries),'正式文件与回执不符');
   console.log(JSON.stringify({published:true,verified:approved.length,modelCalls:0}));
  }

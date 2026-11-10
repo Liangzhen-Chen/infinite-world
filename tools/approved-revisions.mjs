@@ -55,6 +55,11 @@ export async function listRevisionBatches(draftsRoot='world/drafts'){
  }
  return out;
 }
+// 以复用已审批记录为审批证据的修订批（candidate.json 的 approval.via）：来源模块须导出 verifyFrozen(entries)，
+// 核验每条 after 等于该来源里已审批（L1/L2/L4 通过）的正文；动态导入以免循环依赖。
+export const APPROVAL_SOURCES={
+ 'w3-journey-text':()=>import('../world/design/w3-journey-text-revision.mjs'),
+};
 // 读取并核验已审批的修订回执。审批状态不是一个字段，而是回执目录的 L1/L2/L4 记录：
 // 用冻结候选逐条核对指纹、L2 无 hard、L4 已批，再核对 publication.json 与冻结候选逐字段相同。逐批核验，全部通过才返回。
 export async function readApprovedBatch({root,pub}){
@@ -66,9 +71,16 @@ export async function readApprovedBatch({root,pub}){
  const draftOf=e=>({id:e.id,target:e.target,field:e.field,value:e.after}),ctxById=new Map(frozen.map((e,i)=>[e.id,candidate.contexts?.[i]]));
  if(frozen.some(e=>!ctxById.get(e.id)))throw new Error(`冻结候选缺少上下文：${root}`);
  const contextFor=e=>ctxById.get(e.id);
- const approved=await readApprovedContent(pub.receipt,frozen,{revision:pub.revision,contextFor});
- assert.equal(approved.length,frozen.length,`修订回执未全批通过审批：${pub.revision}`);
- for(const e of frozen)assert.deepEqual(approved.find(d=>d.id===e.id),draftOf(e),`已审批正文与候选不符：${e.id}`);
+ if(candidate.approval){
+  // 复用别处已审批的记录（如 w3-journey 正文修订批）：本批没有自己的 L2/L4，审批证据是那份记录的 L1/L2/L4；登记表里找不到来源一律报错。
+  const verifier=APPROVAL_SOURCES[candidate.approval.via];
+  if(!verifier)throw new Error(`修订回执的审批来源未登记：${candidate.approval.via}`);
+  await(await verifier()).verifyFrozen(frozen);
+ }else{
+  const approved=await readApprovedContent(pub.receipt,frozen,{revision:pub.revision,contextFor});
+  assert.equal(approved.length,frozen.length,`修订回执未全批通过审批：${pub.revision}`);
+  for(const e of frozen)assert.deepEqual(approved.find(d=>d.id===e.id),draftOf(e),`已审批正文与候选不符：${e.id}`);
+ }
  const key=e=>hashContent({id:e.id,target:e.target,file:e.file,field:e.field,before:e.before,after:e.after,supersedes:e.supersedes});
  assert.deepEqual(pub.entries.map(key),frozen.map(key),`publication.json 与已审批候选不一致：${pub.revision}`);
  return supersedes;
