@@ -216,6 +216,7 @@ registerMerchandiseResolver((engine,state,who)=>(shopOfKeeper(engine,who,state)?
 // bound the native retail formula; execution always obtains a fresh quote.
 const householdSourceReads=new WeakMap();
 const reachSymbol=Symbol('household food reachable traders');
+const householdReadSymbol=Symbol('household food source reads');
 // shop.location 缺省（非店铺卖家）= 第一个含 trade 的接待窗口在哪就在哪；店铺固定在自己的铺面。
 function nextFoodService(engine,state,shop,minute){
  for(let at=minute;at<minute+31*DAY;){
@@ -328,7 +329,11 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const cursor=d.cursor instanceof PatchCursor&&d.document===d.cursor.root?d.cursor:null;
  let read=cursor?householdSourceReads.get(cursor):null;
  if(!read||read.revision!==cursor?.revision||read.engine!==engine){
-  read={revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map(),reach:new Map(),buyers:new Map()};
+  const build=()=>({revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map(),reach:new Map(),buyers:new Map()});
+  // 非游标读取（规划用的只读作用域）原先每次调用都新建 read，于是店铺清单、买方名单、卖家份额表在同一状态下被每位询问者重算一遍。
+  // read 里的东西只由 state 与 engine 定（店铺清单、客观口径的 householdResources、买方名单、份额表；主观视图只读 shops），不含询问者；
+  // 与上面的 reach 同理按只读作用域的 memo（作用域内不写状态与账本，按状态对象、账本对象、种子分键）共享，换状态即换新的 read，故每个调用读到的值与新建时相同。
+  read=cursor?build():d.memo?d.memo(engine,[householdReadSymbol],build):build();
   if(cursor)householdSourceReads.set(cursor,read);
  }
  const out=[];

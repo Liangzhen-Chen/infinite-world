@@ -28,13 +28,15 @@ const householdCash=(d,engine,place)=>localHouseholds(d,engine).filter(r=>r.plac
 export const affordableShare=(budgets,price,share)=>budgets.length?budgets.filter(c=>c*share>=price).length/budgets.length:0;
 
 // 返回 {rich, sources}：sources 与入参一一对应，每项多出 habit（0..1）与 luxury（布尔）。规则表缺 foodHabit 时全部按日常品。
-export function foodHabit(d,engine,owner,sources,{view=null}={}){
+export function foodHabit(d,engine,owner,sources,{view=null,read=null}={}){
  const rule=engine.world.marketRules.foodHabit;
  if(!rule||!sources.length)return {rich:true,sources:sources.map(s=>({...s,habit:1,luxury:false}))};
  const state=d.get('state'),document=d.document??{state},location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
  const members=personHousehold(engine,state,owner).value?.members??[owner];
  const own=memberCash(d,engine,owner,view);
- const budgets=view?[own]:d.memo?d.memo(engine,['food-habit-cash',place],()=>householdCash(d,engine,place)):householdCash(d,engine,place);
+ // 本聚落各户现金只由状态（账本余额、成员名册）与聚落定。游标草稿没有 d.memo，原先每次都重算；
+// read 是调用方（household-budget 的 budgetRead）给的同版本记忆：游标按 revision、只读作用域按状态对象，任何状态与账本写入即失效，故值与重算相同。
+ const budgets=view?[own]:read?read(['food-habit-cash',place],()=>householdCash(d,engine,place)):d.memo?d.memo(engine,['food-habit-cash',place],()=>householdCash(d,engine,place)):householdCash(d,engine,place);
  const income=members.reduce((n,id)=>n+laborValue(engine,document,{worker:id,observer:null}).daily,0);
  const rich=own>=rule.richCashDays*income;
  const sellers=new Map();

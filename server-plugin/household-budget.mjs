@@ -46,7 +46,7 @@ const budgetReads=new WeakMap();
 const budgetValue=Symbol('budget value'),resourceMemo=Symbol('household resources');
 // Kernel reads share work only while this exact draft revision is unchanged.
 // Subjective views stay uncached: their observer and evidence are independent inputs.
-function budgetRead(d,engine,key,build){
+export function budgetRead(d,engine,key,build){
  const inputs=Array.isArray(key)?key:[key];
  if(!(d.cursor instanceof PatchCursor)||d.document!==d.cursor.root)return d.memo?d.memo(engine,[budgetValue,...inputs],build):build();
  let cache=budgetReads.get(d.cursor);
@@ -72,7 +72,7 @@ const foodHabit=(d,engine,owner,sources,opts)=>registerHouseholdFoodHabit.fn?.(d
 // 只补日常补不满的缺口。惯常性按本户看得到的全部来源算（卖家数不受现金影响），再按现金筛。
 function accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now}){
  const seen=foodSources(d,engine,owner,{view}).filter(r=>r.at>=now&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0);
- const {rich,sources}=foodHabit(d,engine,owner,seen,{view});
+ const {rich,sources}=foodHabit(d,engine,owner,seen,{view,read:(key,build)=>budgetRead(d,engine,key,build)});
  return sources.map(r=>({...r,deferred:r.luxury&&!rich})).filter(r=>r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0));
 }
 function bagEntries(d,engine,state,holder,view){
