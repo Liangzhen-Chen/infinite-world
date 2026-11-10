@@ -124,7 +124,23 @@ export async function runContentPipeline({
     else record = record?.fingerprint===fingerprint?structuredClone(record):{ id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
     record.status='pending';
     if(storeContext)record.contextSnapshot=JSON.parse(JSON.stringify(context??null));
-    for (let attempt = priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
+    // 已付费草稿复用：同指纹旧记录为 pending、已有草稿、该草稿的起草请求已结算、其复核预留都未发出（cancelled-unissued）、
+    // 草稿仍通过 L1 校验时，重跑直接用这份草稿进入复核，不重新起草；任一条件不满足则照常起草。
+    let reuse=null;
+    const old=recordsById.get(entry.id);
+    if(!eligible&&old?.fingerprint===fingerprint&&old.status==='pending'&&old.draft&&!old.review&&priorAttempts>0&&old.draftResponse){
+      const n=priorAttempts-1,rows=Object.values(budget.ledger.requests);
+      const dl=`content-${path.basename(root)}-${entry.id}-draft${n}`,rl=`content-${path.basename(root)}-${entry.id}-review${n}`;
+      const drafts=rows.filter(r=>r.label===dl),reviews=rows.filter(r=>r.label===rl);
+      if(drafts.length&&drafts.every(r=>r.status==='settled')&&reviews.length&&reviews.every(r=>r.status==='cancelled-unissued')){
+        try{
+          assert.deepEqual(await extractDraft(old.draftResponse,entry),old.draft);
+          const check=await validateDraft(old.draft,entry,context),errors=Array.isArray(check)?check:check.errors??[];
+          if(!errors.length)reuse={attempt:n,draft:old.draft};
+        }catch{reuse=null;}
+      }
+    }
+    for (let attempt = reuse?reuse.attempt:priorAttempts; attempt < (eligible?priorAttempts+1:3); attempt++) {
       let reservations=[],preparedDraft;
       if(!eligible)record.errorCode=null; // 本次尝试开始前清上次的错误码，成功后不残留
       try {
@@ -132,10 +148,11 @@ export async function runContentPipeline({
         const offline=eligible?record.protocolRecovery.prior.draftResponse:null;
         const frozen=reuseFrozenDrafts&&!eligible?(record.draft??await reviewDraftFor?.(entry,feedback,context)):null;
         const draftLabel=`content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`,reviewLabel=`content-${path.basename(root)}-${entry.id}-review${attempt}`;
-        const expectedDraft=frozen??(offline?await extractDraft(offline,entry):await reviewDraftFor?.(entry,feedback,context));
+        const paid=!frozen&&!eligible&&reuse&&attempt===reuse.attempt?reuse.draft:null;
+        const expectedDraft=frozen??paid??(offline?await extractDraft(offline,entry):await reviewDraftFor?.(entry,feedback,context));
         if(frozen){const check=await validateDraft(frozen,entry,context);const errors=Array.isArray(check)?check:check.errors??[];if(errors.length)throw Error(errors.join('\n'));record.frozenCandidate={entryHash:hashContent(entry),draftHash:hashContent(frozen)};}
         const draftDetails={entry,context,phase:'draft',feedback,record,file};
-        if(!offline&&!frozen)preparedDraft=await prepareRequest(await buildDraftRequest(entry,feedback,context),draftDetails);
+        if(!offline&&!frozen&&!paid)preparedDraft=await prepareRequest(await buildDraftRequest(entry,feedback,context),draftDetails);
         let draftBytes=null,plannedDraft=expectedDraft;
         if(expectedDraft===undefined){
           // 起草型：用按 max_tokens 换算的最大占位草稿构造复核请求，求预留上界；其余路径不进入这里。
@@ -145,15 +162,15 @@ export async function runContentPipeline({
         }
         // Preflight on a copy so the future review has no emitted receipt yet.
         const plannedReview=await prepareRequest(await buildReviewRequest(entry,plannedDraft,context),{entry,context,phase:'review',draft:plannedDraft,record:structuredClone(record),file});
-        reservations=await budget.reserveRound([...(offline||frozen?[]:[{body:preparedDraft.body,label:draftLabel}]),{body:plannedReview.body,label:reviewLabel}]);
+        reservations=await budget.reserveRound([...(offline||frozen||paid?[]:[{body:preparedDraft.body,label:draftLabel}]),{body:plannedReview.body,label:reviewLabel}]);
         if(!eligible&&!frozen)record.attempts=attempt+1;
-        const response = frozen?null:offline??await request(preparedDraft,draftLabel,draftDetails,reservations[0]);
+        const response = frozen||paid?null:offline??await request(preparedDraft,draftLabel,draftDetails,reservations[0]);
         if(response)record.draftResponse=response;
         record.responseEvidence??=[];
-        if(!offline&&!frozen)record.responseEvidence.push({phase:'draft',attempt:attempt+1,requestId:reservations[0],...budget.ledger.requests[reservations[0]].responseEvidence});
-        record.measurements??=[];if(!offline&&!frozen&&response.measurement)record.measurements.push(response.measurement);
+        if(!offline&&!frozen&&!paid)record.responseEvidence.push({phase:'draft',attempt:attempt+1,requestId:reservations[0],...budget.ledger.requests[reservations[0]].responseEvidence});
+        record.measurements??=[];if(!offline&&!frozen&&!paid&&response.measurement)record.measurements.push(response.measurement);
         await writeJSON(file,record);
-        const extracted=frozen??await extractDraft(response, entry);
+        const extracted=frozen??paid??await extractDraft(response, entry);
         if(draftBytes!==null){if(Buffer.byteLength(JSON.stringify(extracted))>draftBytes)throw budget.stop('起草结果超过已预留的复核请求上界，已停止');}
         record.draft = extracted;
         if(draftBytes===null)assert.deepEqual(record.draft,expectedDraft,'起草结果不符已预留的固定候选');
@@ -163,7 +180,11 @@ export async function runContentPipeline({
         // L2 covers every syntactically usable draft, even if L1 found errors.
         const reviewDetails={entry,context,phase:'review',draft:record.draft,record,file};
         const preparedReview=await prepareRequest(await buildReviewRequest(entry,record.draft,context),reviewDetails);
-        const reviewId=reservations.at(-1),reviewResponse=await request(preparedReview,reviewLabel,reviewDetails,reviewId);
+        const reviewId=reservations.at(-1);
+        // 起草型：预留时用的是占位草稿的复核请求，其哈希必与真实复核请求不同。草稿通过超界检查后，把这份复核预留换成真实请求
+        // （新估价必须不超过占位上界，只会减少预留）；发送时的 requestHash 相等检查保持原样。
+        if(draftBytes!==null)await budget.replaceReservation(reviewId,{body:preparedReview.body,label:reviewLabel});
+        const reviewResponse=await request(preparedReview,reviewLabel,reviewDetails,reviewId);
         record.responseEvidence.push({phase:'review',attempt:attempt+1,requestId:reviewId,...budget.ledger.requests[reviewId].responseEvidence});
         await writeJSON(file,record);
         if(reviewResponse.measurement)record.measurements.push(reviewResponse.measurement);

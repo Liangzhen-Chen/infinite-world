@@ -162,6 +162,20 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
   }
   await save(file,ledger);sync();
  });}
+ // 通用：把一条尚未发送的本进程预留换成另一份请求（同 id、同 label），新估价必须不超过原预留。
+ // 只会减少账本总额/单卡的已预留额，因此原预留已通过的次数、总额、单卡、重开额度检查依然成立；发送时 requestHash 相等检查不变。
+ function replaceReservation(id,{body,label}){return enqueue(async()=>{
+  guard();
+  const row=ledger.requests[id];
+  if(!ownedReservations.has(id)||row?.status!=='reserved'||row.label!==label)throw stop('待替换的预留不存在或已发送，已停止');
+  const next=estimate(body);
+  if(next>row.reservedYuan+1e-12)throw stop('真实请求估价超过已预留上界，已停止');
+  const card=row.card&&ledger.cards?.[row.card],delta=next-row.reservedYuan;
+  row.replacedReservation={requestHash:row.requestHash,reservedYuan:row.reservedYuan};
+  row.requestHash=hash(body);row.reservedYuan=next;
+  ledger.reservedYuan=Math.max(0,ledger.reservedYuan+delta);if(card)card.reservedYuan=Math.max(0,card.reservedYuan+delta);
+  await save(file,ledger);sync();return id;
+ });}
  async function request(body,label,{reservationId}={}){
   const id=reservationId??(await reserveRound([{body,label}]))[0];
   return enqueue(async()=>{
@@ -195,5 +209,5 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
   round.pilotId??=id;attempts.push({fingerprint,claimedAt:new Date().toISOString(),status:'started'});await save(file,ledger);return true;
  });}
  function finishReopenReview(id,fingerprint,status){return enqueue(async()=>{const round=ledger.reopenAuthorizations[reopenAuthorization.id].cards[cardId],attempt=round.attempts[id]?.find(a=>a.fingerprint===fingerprint);if(!attempt)throw Error('缺重开尝试凭证');attempt.status=status;attempt.finishedAt=new Date().toISOString();if(id===round.pilotId&&status==='passed-L1-L2')round.pilotPassed=true;await save(file,ledger);});}
- return{request,reserveRound,releaseRound,claimReopenReview,finishReopenReview,registerReopenAuthorization:()=>enqueue(async()=>{if(!reopenAuthorization)throw Error('缺重开授权');await save(file,ledger);}),stop,get stopped(){return stopped;},get ledger(){return structuredClone(ledger);},claimProtocolRecovery:(id,fingerprint)=>claimOnce('protocolRecoveries',id,fingerprint),claimReviewRecovery:(id,fingerprint)=>claimOnce('reviewRecoveries',id,fingerprint),close:async()=>{await queue;await fs.unlink(lock);}};
+ return{request,reserveRound,replaceReservation,releaseRound,claimReopenReview,finishReopenReview,registerReopenAuthorization:()=>enqueue(async()=>{if(!reopenAuthorization)throw Error('缺重开授权');await save(file,ledger);}),stop,get stopped(){return stopped;},get ledger(){return structuredClone(ledger);},claimProtocolRecovery:(id,fingerprint)=>claimOnce('protocolRecoveries',id,fingerprint),claimReviewRecovery:(id,fingerprint)=>claimOnce('reviewRecoveries',id,fingerprint),close:async()=>{await queue;await fs.unlink(lock);}};
 }

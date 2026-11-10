@@ -123,7 +123,7 @@ test('坏JSON的每次paid原文在extract前持久保存，后轮不覆盖',asy
  const result=await runContentPipeline(p.options);assert.equal(result.summary.manual,1);assert.equal(p.calls.length,3);
  const ledger=result.summary.budget,rows=Object.values(ledger.requests).filter(r=>r.status==='settled');assert.equal(rows.length,3);
  for(const [i,row] of rows.entries()){const saved=JSON.parse(await fs.readFile(path.join(p.root,row.responseEvidence.file),'utf8'));assert.equal(saved.response.choices[0].message.content,`坏JSON第${i+1}轮`);assert.equal(saved.usage.completion_tokens,i+1);assert.equal(saved.responseHash,hashContent(saved.response));}
- assert.equal(ledger.reservedYuan,0);
+ assert.ok(Math.abs(ledger.reservedYuan)<1e-9);
 });
 
 // ---- 起草型条目（无冻结草稿、无 reviewDraftFor）：先预留“起草 + 按 max_tokens 构造的最大占位草稿复核”上界 ----
@@ -149,12 +149,18 @@ test('起草型条目：预留起草加复核上界后发起草、再发复核',
   const rows=Object.values(ledger.requests),review=rows.find(r=>r.label.includes('-review'));
   const bytes=100*MAX_UTF8_BYTES_PER_OUTPUT_TOKEN;
   assert.equal(maxDraftBytes({max_tokens:100}),bytes);
-  // 预留的复核上界按最大占位草稿估价（至少覆盖其字节数），而不是按真实小草稿估价。
+  // 两段预留：第一段按最大占位草稿估价；发送前换成真实复核请求（同一行），哈希与真实请求一致，估价不超过第一段，且最终结算。
   const planned=defaultReviewRequest({id:'item_draft'},'"'.repeat(bytes),null);
-  assert.equal(review.reservedYuan,reserveCeilingYuan(client,planned));
-  assert.ok(review.reservedYuan>bytes*client.rates.miss/1e6);
   const actual=bodies[calls[1]];
-  assert.ok(reserveCeilingYuan(client,actual)<=review.reservedYuan);
+  assert.equal(review.status,'settled');
+  assert.equal(review.replacedReservation.requestHash,hashContent(planned));
+  assert.equal(review.replacedReservation.reservedYuan,reserveCeilingYuan(client,planned));
+  assert.ok(review.replacedReservation.reservedYuan>bytes*client.rates.miss/1e6);
+  assert.equal(review.requestHash,hashContent(actual));
+  assert.notEqual(review.requestHash,review.replacedReservation.requestHash);
+  assert.equal(review.reservedYuan,reserveCeilingYuan(client,actual));
+  assert.ok(review.reservedYuan<=review.replacedReservation.reservedYuan);
+  assert.ok(Math.abs(ledger.reservedYuan)<1e-9);
 });
 
 test('起草型条目：真实草稿超过占位上界时停下，不发复核', async t=>{
@@ -208,4 +214,52 @@ test('字节/输出 token 系数不低于仓库调用证据的实测最大值', 
   const m=measure('world/drafts');
   assert.ok(m.all.samples>0);
   assert.ok(MAX_UTF8_BYTES_PER_OUTPUT_TOKEN>=m.all.max,`实测最大 ${m.all.max} 超过系数，需重新取值并更新 content-pipeline.mjs 注释`);
+});
+
+// 复核构造器：草稿是字符串（占位）时请求很小，真实对象草稿时请求巨大，用来造“真实复核请求超过占位上界”。
+const paddedReview=(entry,draft,context)=>{const r=defaultReviewRequest(entry,draft,context);if(typeof draft==='object')r.messages[0].content+='p'.repeat(20000);return r;};
+
+test('起草型条目：真实复核请求估价超过占位上界时停下，复核不发，草稿保留', async t=>{
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'content-pipeline-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const {calls,options}=draftingFixture({maxTokens:100});
+  const result=await runContentPipeline({...options,root,buildReviewRequest:paddedReview});
+  assert.equal(calls.length,1);assert.ok(calls[0].endsWith('-draft0'));
+  assert.equal(result.summary.pending,1);
+  const record=JSON.parse(await fs.readFile(path.join(root,'item_draft.json'),'utf8'));
+  assert.match(record.budgetStop.message,/真实请求估价超过已预留上界/);
+  assert.equal(record.draft.id,'item_draft');
+  const ledger=JSON.parse(await fs.readFile(path.join(root,'budget.json'),'utf8'));
+  const review=Object.values(ledger.requests).find(r=>r.label.includes('-review'));
+  assert.equal(review.status,'cancelled-unissued');assert.ok(Math.abs(ledger.reservedYuan)<1e-9);
+});
+
+test('已付费草稿在重跑时被复用：只发复核，不再起草', async t=>{
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'content-pipeline-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const {calls,options}=draftingFixture({maxTokens:100});
+  await runContentPipeline({...options,root,buildReviewRequest:paddedReview});
+  assert.equal(calls.length,1);
+  // 运维清除上一轮的停止记录后重跑（记录里的 budgetStop 会让整条直接返回，这一步与复用规则无关）。
+  const file=path.join(root,'item_draft.json'),record=JSON.parse(await fs.readFile(file,'utf8'));
+  delete record.budgetStop;await fs.writeFile(file,JSON.stringify(record));
+  const result=await runContentPipeline({...options,root});
+  assert.equal(result.summary.passed,1);
+  assert.equal(calls.length,2);
+  assert.ok(calls[1].endsWith('-review0'));
+  assert.equal(calls.filter(l=>l.includes('-draft')).length,1);
+  const ledger=JSON.parse(await fs.readFile(path.join(root,'budget.json'),'utf8'));
+  const reviews=Object.values(ledger.requests).filter(r=>r.label.includes('-review'));
+  assert.deepEqual(reviews.map(r=>r.status).sort(),['cancelled-unissued','settled']);
+  assert.equal(JSON.parse(await fs.readFile(file,'utf8')).draft.id,'item_draft');
+});
+
+test('已付费草稿不再通过 L1 校验时不复用，重新起草', async t=>{
+  const root=await fs.mkdtemp(path.join(tmpRoot(),'content-pipeline-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const {calls,options}=draftingFixture({maxTokens:100});
+  await runContentPipeline({...options,root,buildReviewRequest:paddedReview});
+  const file=path.join(root,'item_draft.json'),record=JSON.parse(await fs.readFile(file,'utf8'));
+  delete record.budgetStop;await fs.writeFile(file,JSON.stringify(record));
+  let first=true;
+  const result=await runContentPipeline({...options,root,validateDraft:()=>{if(first){first=false;return['旧草稿不合规'];}return[];}});
+  assert.equal(result.summary.passed,1);
+  assert.equal(calls.filter(l=>l.includes('-draft')).length,2);
 });
