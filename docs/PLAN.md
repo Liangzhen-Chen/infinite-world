@@ -403,7 +403,7 @@ B 节补充：
       - [ ] DETCK 卡：整类确定性检查。器具和容器从物品目录派生，加上动作所需器具（剪、拭、盖、量等）；用火动作须有骨架燃料并在正文交代。要两轮审。
       - [ ] 10 条人工改写稿（执行者写，不调外部接口），再由独立审查者做严格 L4，主会话复核。
       - [ ] DETCK 合入后回扫全部已通过的配方和物品，不过的按同一流程处理。
-      - [ ] L4 必查清单加“前后矛盾”。
+      - [x] L4 必查清单加“前后矛盾”：新建 docs/L4-必查清单.md（七项，含骨架外器具、火源、前后矛盾），执行手册记忆已指向它。
       - [ ] m2-6o 两份只读诊断收齐，定修法和同并发实测条件。
     - 11-10 m2-6o 提速实测结果（腾讯，hash 1e5df5e8，18:44:18Z→19:44:21Z 跑完，48 个文件，结果 /work/m2-6o.full 3063 字节；基线 b1m-1 为 P=6 全量，这次全机负载约 12，两次并发不同，只能粗比）：**提速目标没达到**。原 10 个超时文件里只有 npc-autonomy 跑完（旧 >3600 s → 697 s，8 过 2 败，#1、#7 是旧败）；wildlife、s3-run001、ledger-price、farm-pests-hunt、farm-pests-clock、event-size、agriculture、a3-acceptance、record-index-check 仍在 3600 s 超时。其余较慢的反而更慢：farm-pests-harvest 2794→3170 s（1/0），ledger-stock 2222→2719 s（7/1→8/0），kd-labor-world 17→119 s，r06-bs-market 7→27 s，疑与这次并发更高有关，未证实。失败 11 个文件：旧败 4 个（npc-autonomy #1 #7、kd-self-supply、economy-supply 1/1 与基线同、arch-metrics 基线也 1 败）；t-m26 新测、没有基线的 7 个：content-l4-rejection 2、content-pipeline 2（#8 #12）、content-budget-queue #5、w3-journey-text-revision、readonly-entries #2 #3（p1-cascade --verify 登记但脚本里没有这个开关）、readonly-entries-run-1（a3-score 600 s 超时）、run-3。这 7 个多在 1 秒内失败，与 PERF-SCOPE 无关的可能性大，还要在当前 t-m26 HEAD 上查。**m2-6 暂不合入 master**。
     - 11-10 15:3x **PERF-LABOR 不合并**（t-perf-labor 保留：cbe588a9、00e1f31e、c0fad051）。三处缓存改对了，farm 30 天 digest 前后完全一致（补丁 95313、成交 96），但 150 次 advance 修前 47.6 秒、修后 48.5 秒，测不出提速。原因：同一次推进内同键重复只有 1–2%；真正的重复在 a3 预览，每个候选都从同一初始世界重推一整天，同一个"人加分钟"约被重算 37 倍。另外 storage.mjs:463 的游标副本会被原地改写，所以 recordsMemo 不能在 depth=0 时按对象身份缓存。这是该方向的第一次落空。下一步：对 9 个超时文件逐个做云上剖析，看是否同源，再决定是做预览复用（须先证明输入相同）还是找路搜索边界复用。
