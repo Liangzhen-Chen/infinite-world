@@ -98,6 +98,9 @@ export const FLAGS = {
 };
 
 export const FILE_FLAG_OVERRIDES = {
+  'tools/clear-budget-stop.mjs --root': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
+  'tools/clear-budget-stop.mjs --id': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
+  'tools/clear-budget-stop.mjs --reason': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
   'tools/rg-mutate.mjs --check': {kind: 'nonflag', note: '传给 node 的语法检查参数（node --check 变异后的文件），脚本本身没有这个开关'},
   'tools/s0-metrics.mjs --check': {kind: 'nonflag', note: '传给子脚本 export-actions 的参数；该子脚本的 --check 已登记实跑'},
 };
