@@ -107,12 +107,15 @@ async function filingPremises(n){
  const row=structuredClone(nativeRowFor(n));let document;
  if(n===51){
   const paper=await documentScene(engine,initial,{prefix:'native-51'});
-  document=officeScene(engine,paper.document,{location:'bld_hw_qingdeng',minute:paper.document.state.minute,present:['npc_hw_wushuo','npc_hw_linsui']});
+  // 作息即前置条件：wushuo 白天在 loc_hw_northwood，只有当日 1080-1200 在青灯（照料灰尾）；linsui 全天在青灯。
+  // 所以盗窃发生在当日 1100 分（两人都在岗），报案则在次日 540 分——衙署书吏 npc_bs_031_2 480-720 才在 bld_bs_watch 当值（1100 时他在家）。
+  const day=Math.floor(paper.document.state.minute/1440)*1440;
+  document=officeScene(engine,paper.document,{location:'bld_hw_qingdeng',minute:day+1100,present:['npc_hw_wushuo','npc_hw_linsui']});
   const d=engine.primitiveDraft(document),id=commitNpcCrime(d,engine,{actor:'npc_hw_wushuo',victim:'npc_hw_linsui',offense:'theft',need:'money',intelligence:2},document.state.minute);
   assert.ok(id);document=applyPatches(document,d.patches);
   const source=document.state.records[id].sourceEvent;
   assert.ok(document.state.records[`world_event:${source}`].witnesses.includes('player'));
-  document=officeScene(engine,document,{location:'bld_bs_watch',minute:document.state.minute,present:['npc_bs_031_2']});
+  document=officeScene(engine,document,{location:'bld_bs_watch',minute:day+1440+540,present:['npc_bs_031_2']});
   // Bind the existing request to the actual stolen money and original paper;
   // no grain sack or evidence is invented to match frozen corpus prose.
   row.proposal.effects[0].payload={...row.proposal.effects[0].payload,incident:source,stolen:'coin_river',evidence:[paper.id]};
