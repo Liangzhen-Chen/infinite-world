@@ -324,7 +324,7 @@ registerHouseholdFoodHabit(foodHabit);
 registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const state=d.get('state'),now=state.minute,location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
  const members=personHousehold(engine,state,owner).value?.members??[owner];
- // 缓存范围：游标按 revision；带 memo 的读取器（只读规划作用域 withReadScope，或 recordIndex 推进内的 stateReader）按状态对象。
+ // 缓存范围：游标按 revision；带 memo 的读取器（只读规划作用域 withReadScope，或 recordIndex 推进内的 stateReader）按 state、ledger、randomSeed 三者的对象身份分键。
  // 没有 memo 的朴素读取器（作用域外的 documentReader）每次重算，这是等价测试用的对照旁路。
  // 约定：带 memo 的非游标读取器所暴露的 state 不得被原地改写；没有运行时复核（命中时重建比对的做法未采用，理由见 read-scope.mjs 文件头），靠约定与等价测试保证。
  const cursor=d.cursor instanceof PatchCursor&&d.document===d.cursor.root?d.cursor:null;
@@ -333,7 +333,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   const build=()=>({revision:cursor?.revision,engine,shops:currentShops(engine,state),physical:new Map(),reach:new Map(),buyers:new Map()});
   // 非游标读取（规划用的只读作用域）原先每次调用都新建 read，于是店铺清单、买方名单、卖家份额表在同一状态下被每位询问者重算一遍。
   // read 里的东西只由 state 与 engine 定（店铺清单、客观口径的 householdResources、买方名单、份额表；主观视图只读 shops），不含询问者；
-  // 与上面的 reach 同理按只读作用域的 memo（作用域内不写状态与账本，按状态对象、账本对象、种子分键）共享，换状态即换新的 read，故每个调用读到的值与新建时相同。
+  // 与上面的 reach 同理按只读作用域的 memo（作用域内不写状态与账本，按 state、ledger、randomSeed 三者的对象身份分键）共享，换状态即换新的 read，故每个调用读到的值与新建时相同。
   read=cursor?build():d.memo?d.memo(engine,[householdReadSymbol],build):build();
   if(cursor)householdSourceReads.set(cursor,read);
  }

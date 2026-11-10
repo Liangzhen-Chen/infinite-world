@@ -1,8 +1,8 @@
 // 确定性诊断：同一种子推进 N 天，把每一步产生的全部补丁（含成交记录 market-trade:*、账本过账 ledger.*）按顺序做链式哈希，输出笔数与哈希。
 // 用于证明性能改动不改变实际成交与账本：改前改后各跑一次，哈希与笔数必须完全相等。只用新旧版本都有的公开接口。
-// 用法：node tools/trade-ledger-digest.mjs [天数=30] [--world full|farm] [--compare tools/trade-ledger-digest.baseline.json]
+// 用法：node tools/trade-ledger-digest.mjs [天数=30] [--world full|farm] [--compare tools/trade-ledger-digest.baseline.json [--require-harvest]]
 // 适用范围：基线只用来证明“FX7 改前（5b5d4589）与 t-fx7 结果相等”。合并分支（m2-6c）还含其他卡的行为改动（烧炭配方、饮品水分派生等），在其上做 --compare 本来就不会相等，不能当验收；世界行为变了就重新取基线。
-// 收获发生检查：每天推进后统计全部 state.records['agriculture:*'].ledger.harvested 之和，输出 收获发生天数（当天和增加的天数）、收获总量、首个收获日（1 起），一并进入基线比对；220 天的“已覆盖收获”证据由这三项给出。
+// 收获发生检查：每天推进后统计全部 state.records['agriculture:*'].ledger.harvested 之和，输出 收获发生天数（当天和增加的天数）、收获总量、首个收获日（1 起）；基线里有这三项时一并比对，--require-harvest 时强制要求；220 天的“已覆盖收获”证据由这三项给出。
 // --compare：与基线文件里该世界的“期望”逐项比对（耗时等不参与），不一致退出码 1；基线与复现命令见 trade-ledger-digest.baseline.json。   （farm：farm-pests 夹具世界，覆盖作物生长与收获）
 import fs from 'node:fs/promises';
 import crypto from 'node:crypto';
@@ -63,8 +63,22 @@ const compareAt=args.indexOf('--compare');
 if(compareAt>=0){
  const baseline=JSON.parse(await fs.readFile(args[compareAt+1],'utf8')),expected=(baseline[`${mode}-${days}`]??baseline[mode])?.期望;
  if(!expected){console.error(`基线里没有世界 ${mode}`);process.exit(2);}
- if(mode==='farm'&&days>=200&&!('收获发生天数' in expected))console.error('警告：基线缺“收获发生天数”，该项收获证据尚未写入基线，需在原版与新版各跑一次后补入。');
- const diffs=Object.entries(expected).filter(([k,v])=>result[k]!==v).map(([k,v])=>`${k}: 期望 ${v}，实际 ${result[k]}`);
- if(diffs.length){console.error(['与基线不一致：',...diffs].join(String.fromCharCode(10)));process.exit(1);}
+ const harvestKeys=['收获发生天数','收获总量','首个收获日'],requireHarvest=args.includes('--require-harvest'),errors=[];
+ // 字段集必须一致：基线有而结果没有、结果有而基线没有（不参与比对的诊断字段除外），都算错误。
+ const resultKeys=Object.keys(result).filter(k=>!ignored.includes(k)),expectedKeys=Object.keys(expected);
+ for(const k of expectedKeys)if(!(k in result))errors.push(`结果缺字段：${k}（基线有）`);
+ for(const k of resultKeys)if(!(k in expected)&&!(harvestKeys.includes(k)&&!expectedKeys.some(x=>harvestKeys.includes(x))))errors.push(`基线缺字段：${k}（结果有）`);
+ // 过渡状态“基线待补”：基线里一个收获计数都没有时（220 天基线尚未在原版与新版各跑一次补入），默认只警告、退出码仍为 0；
+ // 补完基线后应一律加 --require-harvest，届时缺失即报错。上面的“多出字段报错”对这三项做了同样的过渡豁免，仅限三项全缺的情形。
+ const harvestMissing=!expectedKeys.some(k=>harvestKeys.includes(k));
+ if(harvestMissing&&!requireHarvest&&mode==='farm'&&days>=200)console.error('警告：基线缺收获计数（收获发生天数、收获总量、首个收获日），属“基线待补”过渡状态：收获证据尚未写入基线，需在原版与新版各跑一次后补入；补入后请用 --require-harvest。');
+ // --require-harvest 断言：基线必须含全部三项收获计数；运行结果必须真发生收获（收获总量>0、收获发生天数>0）；
+ // 运行结果的收获计数与基线逐项严格相等（基线有值时必须等于，上面的逐项比对已覆盖，值不等即不一致）。
+ if(requireHarvest){
+  for(const k of harvestKeys)if(!(k in expected))errors.push(`--require-harvest：基线缺收获计数 ${k}`);
+  if(!(result.收获总量>0)||!(result.收获发生天数>0))errors.push(`--require-harvest：运行结果里没有发生收获（收获总量 ${result.收获总量}，收获发生天数 ${result.收获发生天数}）；天数不足或路径 state.records['agriculture:*'].ledger.harvested 不存在`);
+ }
+ const diffs=Object.entries(expected).filter(([k,v])=>k in result&&result[k]!==v).map(([k,v])=>`${k}: 期望 ${v}，实际 ${result[k]}`);
+ if(errors.length||diffs.length){console.error(['与基线不一致：',...errors,...diffs].join(String.fromCharCode(10)));process.exit(1);}
  console.error('与基线一致');
 }
