@@ -174,19 +174,40 @@ export function deriveItemAttributes(world){
  const producers=new Map();
  for(const r of [...world.recipes??[]].sort((a,b)=>a.id.localeCompare(b.id)))if(r.output?.item&&r.output.quantity>0)producers.set(r.output.item,[...producers.get(r.output.item)??[],r]);
  const heated=r=>(r.materials??[]).some(m=>has(m.item,useTags.heat.materialClass));
+ // 饮品（能喝）按属性派生，不靠逐件手贴 drinkable：食物 ∧ 液态 ∧ 一份的水分够解渴（参数 nutrition.drinkable）。
+ //   液态：没有产出配方的物品看类别标签（liquidTags）；有产出配方的物品看配方——投入除燃料外全是液态，且产出质量 ≥ liquidRetention × 液态投入质量
+ //   （兑制、温热保持液态；沥去乳清凝成块则质量大减，成了固态，不是饮品）。
+ //   够解渴：一份的水分 ≥ minHydrationShare × 参照水（标签 water 的手写水分物品）一份的水分，浓缩调味液（醋等）一份水分太少，不算饮品。
+ const drink=param(world,'nutrition.drinkable'),refWater=(world.items??[]).find(x=>(x.tags??[]).includes('water')&&x.nutrition?.hydration>0&&x.weight>0);
+ const drinkMin=refWater?drink.minHydrationShare*refWater.nutrition.hydration:Infinity;
+ const liquidMemo=new Map(),liquidBusy=new Set();
+ const isLiquid=id=>{
+  if(liquidMemo.has(id))return liquidMemo.get(id);
+  const item=byId.get(id);if(!item||liquidBusy.has(id))return false;
+  liquidBusy.add(id);
+  const recipes=producers.get(id)??[];
+  const v=recipes.length?recipes.some(r=>{
+   let mass=0;
+   const pure=(r.materials??[]).every(m=>{const x=byId.get(m.item);if(!x)return false;if(has(m.item,'fuel'))return true;if(!isLiquid(m.item))return false;mass+=(x.weight??0)*m.amount;return true;});
+   return pure&&mass>0&&(item.weight??0)*r.output.quantity>=drink.liquidRetention*mass;
+  }):(item.tags??[]).some(t=>drink.liquidTags.includes(t));
+  liquidBusy.delete(id);liquidMemo.set(id,v);return v;
+ };
+ const drinkLike=id=>has(id,'food')&&isLiquid(id);
  const cache=new Map(),busy=new Set();
  const base=item=>{
   const tags=item.tags??[],key=Object.keys(density).find(k=>k!=='default'&&tags.includes(k));
   // D12 卡 B：干物质能量密度与含水率都已知时，饱腹 = 重量(kg) × 能量密度(饱腹/kg 干物质) ×（1 − 含水率）×（可食部分比例，已知时）；任一未知走现行三档密度。
   const mp=materialProps({world,byId},item.id);
-  // 饮品水分（按类成立）：带 drinkable 标签、没有手写 nutrition.hydration 的物品，水分 = 重量(kg) × 含水率 × 每公斤水的水分值。
+  // 饮品水分（按类成立）：饮品（食物且液态）、没有手写 nutrition.hydration 的物品，水分 = 重量(kg) × 含水率 × 每公斤水的水分值；一份不够解渴的液体（见 drinkMin）不给水分。
   //   含水率：materialProps.moisture（物品自己的出处，或所属类别行）；未知则不派生（保持 0，由 validateDrinkable 报错）。
   //   每公斤水的水分值 = 参照水（world/meta/items.json 第 1 行 item_water：weight 0.25、手写 hydration 25，含水 1，见 world/meta/mechanics/material-props.json 的 item_water 行）
   //   的 hydration ÷（weight × 含水率）= 25 ÷ 0.25 = 100/kg；该一次饮水 25 与 world/rules/tables/balance/body.json:11 的 drinkGain 25 同值。常数不另编，从世界里的参照水推出。
-  const drinkHydration=(tags.includes('drinkable')&&mp.moisture.known&&item.nutrition?.hydration===undefined)?(()=>{
-   const ref=(world.items??[]).find(x=>(x.tags??[]).includes('water')&&x.nutrition?.hydration>0&&x.weight>0);
+  const drinkHydration=(drinkLike(item.id)&&mp.moisture.known&&item.nutrition?.hydration===undefined)?(()=>{
+   const ref=refWater;
    const rm=ref?materialProps({world,byId},ref.id).moisture:null;
-   return rm?.known&&rm.value>0?(item.weight??0)*mp.moisture.value*ref.nutrition.hydration/(ref.weight*rm.value):0;
+   const h=rm?.known&&rm.value>0?(item.weight??0)*mp.moisture.value*ref.nutrition.hydration/(ref.weight*rm.value):0;
+   return h>=drinkMin?h:0;
   })():0;
   // 可食部分比例已知时再乘（壳、核、骨不供能）；未知不乘，同现行。
   if(mp.energyDensity.known&&mp.moisture.known)return {satiety:(item.weight??0)*mp.energyDensity.value*(1-mp.moisture.value)*(mp.edibleFraction.known?mp.edibleFraction.value:1),hydration:drinkHydration,raw:has(item.id,'needsHeat')};
@@ -226,6 +247,8 @@ export function deriveItemAttributes(world){
   item.nutrientContent={satiety:sat,hydration:Math.floor(c.hydration)};
   // nutrientBase：未乘系数的“按热量基值”（配方的能量守恒在它上面成立；重复派生时也从它重算）。
   item.nutrientBase={satiety:c.satiety,hydration:c.hydration};
+  // 能喝由规则给出：饮品（食物且液态）一份的水分够解渴就带 drinkable（物品表手贴的同样要满足这条，见 validateDrinkable）。
+  if(drinkLike(item.id)&&c.hydration>=drinkMin&&!(item.tags??[]).includes('drinkable'))item.tags=[...item.tags??[],'drinkable'];
   if(c.raw)continue;
   const nutrition={...(sat>0?{satiety:sat}:{}),...(Math.floor(c.hydration)>0?{hydration:Math.floor(c.hydration)}:{})};
   if(Object.keys(nutrition).length)item.nutrition=nutrition;
@@ -369,13 +392,20 @@ export function mealCapPools(engine,{days=[],saved=null,poolMemo=new Map()}={}){
 // 饮品判据（action-router 的 isDrink）读 drinkable 标签；液态物品是否带标签由本整类规则保证，不靠逐件记忆。
 // 在派生后的副本上核对（nutrientContent 含生食，不受“生食不写 nutrition”影响）：
 //   水分>0 且热量(饱腹)==0 的物品是纯饮品，必须带 drinkable；带 drinkable 的物品必须有水分>0。有热量的饮品（如牛乳）带标签合法。
+export function drinkableByRule(world){
+ const w=structuredClone(world);
+ for(const item of w.items??[])if(item.tags)item.tags=item.tags.filter(t=>t!=='drinkable');
+ deriveItemAttributes(w);
+ return new Set((w.items??[]).filter(i=>(i.tags??[]).includes('drinkable')).map(i=>i.id));
+}
 export function validateDrinkable(world){
  // 前置条件：传入已物化的世界（带 world.mechanics 说明标签尚未合入，温醋饮等会漏检）；未物化直接报错，不在此另写一份物化。
  if(world.mechanics)throw new Error('validateDrinkable 需要已物化的世界（先 materializeRuntimeWorld）');
- const w=structuredClone(world);deriveItemAttributes(w);const errors=[];
+ const w=structuredClone(world);deriveItemAttributes(w);const errors=[],byRule=drinkableByRule(world);
  for(const item of w.items??[]){
   const hyd=item.nutrientContent?.hydration??0,sat=item.nutrientContent?.satiety??0,tagged=(item.tags??[]).includes('drinkable');
   if(hyd>0&&sat===0&&!tagged)errors.push(`饮品缺 drinkable 标签：${item.id}（派生后水分${hyd}、饱腹0）`);
+  if(tagged&&!byRule.has(item.id))errors.push(`带 drinkable 标签但不满足饮品规则（食物、液态、一份水分够解渴）：${item.id}`);
   if(tagged&&!(hyd>0))errors.push(`带 drinkable 标签的物品派生后水分须>0：${item.id}`);
  }
  return errors;

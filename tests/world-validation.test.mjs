@@ -114,9 +114,9 @@ test('release/final不接受所选32人、地区或skip过滤，未选任一full
 test('世界校验：水分>0且无饱腹的物品必须带drinkable，带drinkable的物品必须有水分',async()=>{
     const world=await loadWorld();
     assert.deepEqual(validateWorld(world).errors.filter(error=>error.includes('drinkable')),[]);
-    // 温果醋饮派生后水分>0、饱腹0：去掉标签即拒绝；牛乳有热量带标签合法，不报。
-    const noTag=structuredClone(world);const vinegar=noTag.items.find(i=>i.id==='item_warm_vinegar_drink');vinegar.tags=vinegar.tags.filter(t=>t!=='drinkable');
-    assert.ok(validateWorld(noTag).errors.some(error=>error.includes('饮品缺 drinkable 标签')&&error.includes('item_warm_vinegar_drink')));
+    // 温果醋饮是液态食物、一份水分够解渴：标签由规则（nutrition.drinkable）派生，不再手贴；去掉也不报错。牛乳有热量带标签合法，不报。
+    const noTag=structuredClone(world);const vinegar=noTag.items.find(i=>i.id==='item_warm_vinegar_drink');assert.ok(!vinegar.tags.includes('drinkable'));
+    assert.deepEqual(validateWorld(noTag).errors.filter(error=>error.includes('drinkable')),[]);
     // 干粮派生后无水分：误挂标签即拒绝。
     const wrongTag=structuredClone(world);const ration=wrongTag.items.find(i=>i.id==='item_ration');ration.tags=[...(ration.tags??[]),'drinkable'];
     assert.ok(validateWorld(wrongTag).errors.some(error=>error.includes('水分须>0')&&error.includes('item_ration')));
