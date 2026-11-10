@@ -427,6 +427,9 @@ B 节补充：
       - 执行顺序：journey 先改 cork，与 15 条一起写入，批 L4，发布；行当批 25 条改完过审，与 14 条一起写入（批次 L4 要求全批合格），再授权、发布；物品第一批与配方并行；P1 并行开卡。
       - m27-7（947b875f，hash 6c1ed39a…）两轮通过（r1 …214405Z-1022101），云测 6 个文件：w3-process-check 42/0、行当批修订批 8/0、readonly-entries 7/0、manual-rewrite 14/0、w3-journey 5/0，w3-trades 只有 #3 失败（线装册价格倒挂，归 P1）。已派：改写者写 cork_stop_set 和行当批 25 条（mrw-drafts-4、-5）；另一位改写者写物品第一批（mrw-items-1）；**P1 卡 = t-p1fix（F:/dnd-wt/P1F，基于 947b875f）**，查价格倒挂根因，加整类不变量测试。
       - **写入（t-m27 本机，零花费）**：journey 15 条写入（46ffa36d）。先在 batch-0/1 写 l4.rejection 共 14 条（含待改的 cork_stop_set；两条 manual 不用写），再用 manual-rewrite 写入，改写者记为 sonnet-writer-a8d49a7c。写入后 batch-0 退回名单只剩 cork_stop_set，两批 manual 都为 0。行当批 14 条写入（下一提交）：batch-0/1 先写 39 条退回名单，写入后剩 25 条（T1 待改）。批次 L4 批准和发布，要等 cork 和 25 条改完。
+      - 第二轮改写与 L4：cork_stop_set 加行当批 25 条（mrw-drafts-4、-5），独立 L4 首轮批 21 条、退回 5 条（needle_case 折边说不清；ochre_paint、soot_ink 没写先倒入筛；scroll_wrap 针穿线团、顺序颠倒；wall_shelf 提到骨架外“墙面固定件”），返工后又批 4 条，scroll_wrap 再次退回（“套口”前文没交代）。cork_stop_set 已写入（28553733），journey 退回名单清空。journey 批 L4 前，审查者给 16 条改写稿写阅读记录（与当前正文逐条一致），又读了 9 条抽样，**抽样 4 条不批**：cracked_wheat_pot、beech_press_board、seam_pitch_cake、slate_stylus（新口径下的骨架外用途、器物、工具维护、火源）。由此判断 journey 其余没改写过的配方多半也有同类问题，**主会话决定其余 60 条按新口径全部只读复读**（零花费），批 L4 前做完，不过的照同一流程改写。4 条加 scroll_wrap 已派回改写者。
+      - 物品第一批（mrw-items-1，57 件，硬伤类，尺寸问题一并改）L1 全过，两位新的独立审查者正分两半做 L4；第二批 19 件（只有尺寸类）在写。
+      - **P1 卡交回（t-p1fix daf84855）**：根因不是派生价公式，也不是级联边界。正式世界 391 条配方都不低于材料成本（只读核对）。问题出在 assembleW3 补装配新行时没有应用已发布修订批的取代声明（只有 publishedW3、w5-sites 应用了），把羊皮纸的骨架旧价 12 带回来（p1-revision 已改为 4），所以 3×12+5=41>37。修法：装配时按已发布的取代声明调用 applySupersedes，覆盖整类，没写 id。新增不变量测试 price-cost-invariant（仓库里没有亏本机制，不设豁免）。正式世界数据不变。注意：装配路径读取声明时不核验审批，要在审查中判断。
       - [ ] DETCK 合入后回扫全部已通过的配方和物品，不过的按同一流程处理。
       - [x] L4 必查清单加“前后矛盾”：新建 docs/L4-必查清单.md（七项，含骨架外器具、火源、前后矛盾），执行手册记忆已指向它。
       - [x] m2-6o 两份只读诊断已收齐（见下两条）。
