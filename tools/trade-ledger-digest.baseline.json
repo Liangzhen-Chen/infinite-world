@@ -50,6 +50,7 @@
    "补丁链哈希": "d840a18718d5462ae7655f1f24c49a60a99a120a59b2fe01f77a8ca565911954",
    "成交记录哈希": "e2831680b827b930712799a0b8fb8a601abe752d6bdfdae386baf588877be296",
    "账本终态哈希": "0008e7fd86dae78b1c1b81b65ea06eb27a15453525f29943ce0f896b7661c3a7"
-  }
+  },
+  "已覆盖收获": "证据：同种子同事件号逐日重放 220 天，记录 agriculture:loc_hw 的 ledger.harvested 在第 185 天从 0 变为 1652（potential 1656），第 188 天 6497，第 190 天 9843，第 195 天 11526；田间 cohorts 由 11 降到 5，入库批次 batches 由 1 增到 7，settlements.loc_hw.food 第 185 天 950 → 第 195 天 10380；该次 220 天哈希运行中 state.records.agriculture 的游标写入共 13467 条。第 16 到 184 天 harvested 恒为 0（重放脚本只在值变化时打印）。"
  }
 }
