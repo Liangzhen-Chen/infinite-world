@@ -65,7 +65,90 @@
   ],
   "l4": {
     "approved": false,
-    "notes": []
+    "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 02ef0478，逐条通读 draft.process 并对照 bones.json 与引用事实）",
+    "readAt": "2026-11-10",
+    "notes": [
+      {
+        "id": "recipe_w3c_mustard_relish",
+        "note": "核对骨架：黄芥籽1、果醋1、盐1；煮锅、切刀、木匙；40分钟。正文“加盖静置”引入锅盖，骨架工具外的器具，不批。"
+      },
+      {
+        "id": "recipe_w3c_brush_roll",
+        "note": "核对骨架：麻布1、薄革1、麻线1；裁革剪、缝针、骨片；130分钟。裁、缝格、压平、卷合、余革作束带连贯，一百三十分钟合法一致，不附笔刷。通过。"
+      },
+      {
+        "id": "recipe_w3c_dill_cucumber",
+        "note": "核对骨架：黄瓜1、莳萝1、盐1、醋1；煮锅、切刀、木匙；75分钟。刮刺切段、莳萝切碎、盐醋在锅中拌匀短浸，不发酵、余液弃置，工序连贯，无骨架外水或工具。通过。"
+      },
+      {
+        "id": "recipe_w3c_rendered_cooking_fat",
+        "note": "核对骨架：板脂1、水1、木刨屑2；煮锅、切刀、木匙；75分钟。正文末“锅具与木匙洗净留存”需额外清水，骨架水只有1份熬脂用，属骨架外水量，不批。"
+      },
+      {
+        "id": "recipe_w3c_caraway_oat_crust",
+        "note": "核对骨架：香芹籽1、燕麦粉1、水1、盐1、刨屑2；煮锅、切刀、搅糊板；80分钟。正文“工具洗净保留”需骨架外清水，不批。"
+      },
+      {
+        "id": "recipe_w3c_walnut_honey_bites",
+        "note": "核对骨架：核桃仁1、蜂蜜1、燕麦粉1、鸡蛋1份（四枚）、刨屑2；煮锅、切刀、搅糊板；70分钟。拣仁切碎、磕蛋入锅、拌蜜粉、低火烘凝、划块，蛋壳弃置，刨屑只引火，70分钟合法一致。通过。"
+      },
+      {
+        "id": "recipe_w3c_poppy_rye_crisp",
+        "note": "核对骨架：罂粟籽1、黑麦粉1、水1、菜籽油1、刨屑2；煮锅、搅糊板；95分钟。正文“将稠糊舀出暂置”未交代暂置容器与舀取工具，骨架无此容器，工序断层，不批。"
+      },
+      {
+        "id": "recipe_w3c_garlic_butter",
+        "note": "核对骨架：蒜头1、黄油1；煮锅、切刀、木匙；25分钟。正文黄油“置于锅旁”回软，之后蒜末移入锅中即“与黄油压拌”，黄油从未入锅，工序断层；另“洗净保留”需骨架外水。不批。"
+      },
+      {
+        "id": "recipe_w3c_pear_wheat_gruel",
+        "note": "核对骨架：梨1、净麦粒1、水2、刨屑2；煮锅、切刀、木匙；80分钟。刀背压裂、水全部入锅、煮稠后下梨块、不加蜂蜜、刨屑引火，80分钟一致。通过。"
+      },
+      {
+        "id": "recipe_w3c_ash_walking_stick",
+        "note": "核对骨架：白蜡直料1、亚麻油1；框锯、双耳削柄刀、木锉；210分钟。正文“沿墨线锯出”引入墨线（墨与划线工序骨架与前文均无），不批。"
+      },
+      {
+        "id": "recipe_w3c_ladle_rest",
+        "note": "核对骨架：山毛榉短坯1、亚麻油1；框锯、圆口雕花凿、木锉；130分钟。锯底座、凿浅槽、锉钝、薄涂油、只托工具柄，130分钟一致。通过。"
+      },
+      {
+        "id": "recipe_w3c_padded_work_collar",
+        "note": "核对骨架：帆布1、毛毡1、麻线1；裁革剪、缝针；160分钟。帆布包毡、缝长边、余布剪系带缝上，不提高承重，160分钟一致。通过。"
+      },
+      {
+        "id": "recipe_w3c_parsnip_cream_pot",
+        "note": "核对骨架：欧防风根1、稠乳1、水1、盐1、刨屑1；煮锅、切刀、木匙；50分钟。削切、水煨、兑稠乳加热、盐调味、刨屑引火、不加奶油，50分钟合法一致。通过。"
+      },
+      {
+        "id": "recipe_w3c_cheese_rye_panbread",
+        "note": "L2 转 manual，不算通过：L2 指出“干木刨屑不混入饼中”使骨架材料刨屑未按骨架使用，且“置火上”火源无交代。待重写。"
+      },
+      {
+        "id": "recipe_w3c_broadbean_garlic_mash",
+        "note": "L2 转 manual，不算通过：L2 指出“木匙与切刀洗净收好”需骨架外清水。待重写。"
+      },
+      {
+        "id": "recipe_w3c_laundry_mesh_bag",
+        "note": "L2 转 manual，不算通过：L2 指出“成品仅作盛放衣物之用”为自添用途限制。待重写。"
+      }
+    ],
+    "rejection": {
+      "by": "L4 补读（执行者 Claude Sonnet 5.5），依李白 f8282524 批复及主会话指令",
+      "at": "2026-11-10",
+      "reason": "mustard_relish：“加盖静置”引入骨架外的锅盖；rendered_cooking_fat 与 caraway_oat_crust：“洗净”需骨架外清水；poppy_rye_crisp：“将稠糊舀出暂置”无容器与舀取工具；garlic_butter：黄油置锅旁却在锅中与蒜末压拌（未入锅），另“洗净保留”需外水；ash_walking_stick：“沿墨线”引入墨线；cheese_rye_panbread（L2：刨屑被排除出制作且火源无交代）、broadbean_garlic_mash（L2：“洗净”需骨架外水）、laundry_mesh_bag（L2：自添“仅作盛放衣物之用”）为 manual 条目一并重写。重写须只用骨架材料/工具/水量，不洗涤、不引入新器具，工序前后连贯。",
+      "ids": [
+        "recipe_w3c_mustard_relish",
+        "recipe_w3c_rendered_cooking_fat",
+        "recipe_w3c_caraway_oat_crust",
+        "recipe_w3c_poppy_rye_crisp",
+        "recipe_w3c_garlic_butter",
+        "recipe_w3c_ash_walking_stick",
+        "recipe_w3c_cheese_rye_panbread",
+        "recipe_w3c_broadbean_garlic_mash",
+        "recipe_w3c_laundry_mesh_bag"
+      ]
+    }
   },
   "l4History": [
     {
