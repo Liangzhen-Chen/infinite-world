@@ -58,5 +58,44 @@ async function a3(){
     const e2=engine.byId.get(BREAD);console.log(`  物品 ${BREAD}: basePrice ${e2.basePrice} satiety ${e2.nutrition?.satiety}`);
     console.log(`  priceFactorLimits.region = ${JSON.stringify(engine.rules.economy.priceFactorLimits.region)}`);
 }
-const jobs={a3};
+async function shop(){
+    const {resyncBooks}=await import('../tests/helpers/ledger-sync.mjs');
+    const inn='bld_hw_qingdeng',forge='bld_hw_forge',town='loc_bs',host='npc_hw_linsui',smith='npc_hw_duanyan',merchant='npc_hw_yanzhe';
+    const placeOf={[host]:inn,[smith]:forge,[merchant]:town};
+    const w=structuredClone(original),engine=new WorldEngine(w);
+    let doc=engine.initialFromLegacy(seed,'shop-restock');
+    doc.state.minute=600;doc.state.location=inn;doc.state.player.coins=500;
+    for(const [id,loc]of Object.entries(placeOf))doc.state.npcs[id]={...doc.state.npcs[id],coins:200,location:loc,activity:'营业',status:'正常',goals:{},memoryStream:[]};
+    for(const [id,npc]of Object.entries(doc.state.npcs))if(!placeOf[id])npc.coins=0;
+    for(const npc of w.npcs.filter(n=>placeOf[n.id])){delete npc.tier;npc.schedule={default:[{start:0,end:1440,location:placeOf[npc.id],activity:'营业',services:['trade']}]};}
+    doc.state.settlements[town]={...structuredClone(doc.state.settlements.loc_hw),name:'白石镇',population:1000,treasury:900};
+    const drop=process.env.DROP?JSON.parse(process.env.DROP):['item_fruit_porridge','item_milk'];
+    for(const item of drop)delete doc.state.npcs[host].inventory[item];resyncBooks(engine,doc);
+    console.log('[shop-restock #2] 删除 '+drop.join(',')+'； 店主 linsui 的家户面包：stock、留存、可售（买 2 个应当可行，测试 70 行被拒）');
+    const d=engine.primitiveDraft(doc);
+    const {householdResources}=await import('../server-plugin/household-budget.mjs');
+    const r=householdResources(d,engine,host);
+    console.log(`  家户成员 ${JSON.stringify(r.members)} 共享伙食 ${r.sharedMeals}  市场替代: cash ${r.market.cash} spent ${r.market.spent} 购入 ${JSON.stringify(r.market.purchases.map(p=>`${p.item}x${p.quantity}@${p.unitPrice}`))} nextFoodAt ${r.market.nextFoodAt}`);
+    console.log(`  需求(满足缺口前) shortfall ${JSON.stringify(r.shortfall)} procurementShortfall ${JSON.stringify(r.procurementShortfall)}`);
+    for(const row of r.rows.filter(x=>x.holder===host))console.log(`    行 ${row.item}: stock ${row.stock} retained ${row.retained} upkeep ${row.upkeep??0} committed ${row.committed} available ${row.available} food ${row.food}`);
+    console.log('  家户口粮行（food>0）：'+r.rows.filter(x=>x.food>0).map(x=>`${x.holder.replace('npc_hw_','')}:${x.item} 留${x.food} 单件饱腹${engine.byId.get(x.item)?.nutrition?.satiety??0}`).join(' | '));
+    console.log('  needs.satiety(预算期总需) '+JSON.stringify(r.needs??null)+' 面包饱腹 '+engine.byId.get('item_bread').nutrition?.satiety);
+    const sb=saleableStock(d,engine,host,'item_bread',{business:true});console.log(`  saleableStock(item_bread): ${JSON.stringify(sb)}`);
+    quoteReport(d,engine,'item_bread',inn,host,1,'买1个');
+    // 复演测试 70-90 行的动作序列，打印被断言的量
+    const act=async(tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});doc=applyPatches(doc,out.patches);return out.result;};
+    const qty=(who,item)=>{const v=doc.state.npcs[who].inventory[item];return typeof v==='number'?v:v?.quantity??0;};
+    const holder='npc_hw_shendu';
+    await act('world_trade',{seller:host,item:'item_bread',quantity:2},'buy-bread');console.log(`  买2后店主面包 ${qty(host,'item_bread')}（断言 4）`);
+    try{await act('world_trade',{seller:host,item:'item_bread',quantity:4},'too-many');console.log('  too-many 未被拒（断言应拒绝）');}catch(e){console.log(`  too-many 被拒：${e.message}（断言 /库存不足/）`);}
+    doc.state.npcs[holder].inventory={...doc.state.npcs[holder].inventory,item_bread:20};resyncBooks(engine,doc);
+    doc.state.location=forge;await act('world_trade',{seller:smith,item:'item_kitchen_knife',quantity:2},'buy-knife');
+    const hc=doc.state.npcs[holder].coins;
+    await act('world_time',{minutes:DAY},'day1');
+    const inn1=doc.state.records['shop:shop_hw_qingdeng'].entries.find(e=>e.item==='item_bread');
+    console.log(`  day1：店主面包 ${qty(host,'item_bread')}（断言 6）；持货人面包 ${qty(holder,'item_bread')}（断言 20-added=${20-inn1.added}）；source/day ${inn1.source}/${inn1.day}（断言 local/1）；added ${inn1.added}（断言>=2）；paidCopper ${inn1.paidCopper}（断言>0），持货人钱 ${hc}->${doc.state.npcs[holder].coins}`);
+    console.log(`  origin ${JSON.stringify(inn1.origin)} from ${JSON.stringify(inn1.from)} cost ${JSON.stringify(inn1.cost)}`);
+    await act('world_time',{minutes:DAY},'day2');console.log(`  day2：店主面包 ${qty(host,'item_bread')}（断言 6）`);
+}
+const jobs={a3,shop};
 for(const [n,fn] of Object.entries(jobs))if(which===n||which==='all')await fn();
