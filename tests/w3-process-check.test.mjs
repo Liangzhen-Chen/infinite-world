@@ -1,11 +1,8 @@
-// w3-journey 配方工序的 L1 确定性检查：骨架外器具、用火须交代火源（tools/w3-process-check.mjs）。
-// 正文取自 L4 前后真实草稿（world/drafts/w3/journey/recipes），骨架由 economyW3Journey 生成；不联网、不调模型。
+// w3-journey 配方工序的 L1 确定性检查：骨架外器具、用火须交代火源、骨架外数量、泛称器具（tools/w3-process-check.mjs）。
+// 全部用例用内嵌的最小骨架与物品目录（下方 SKELETON_*，由真实骨架裁出所需字段），正文样例取自 L4 前后真实草稿；
+// 只有一条“接线”用例（validateTradesDraft 接入、context.catalog 不可枚举）要用真实 journeyContext，在用例内动态加载真实数据。不联网、不调模型。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {loadWorld} from '../tools/load-world.mjs';
-import {economyW3Journey} from '../world/design/economy-w3-journey.mjs';
-import {journeyContext} from '../tools/w3-journey.mjs';
-import {validateTradesDraft} from '../tools/w3-trades.mjs';
 import {processIssues,buildVocabulary,utensilHeads,WORKSTATION_FACILITIES} from '../tools/w3-process-check.mjs';
 
 // 漏判样例：L2 放过、L1 应拦下的真实正文。
@@ -29,22 +26,105 @@ const CLEAN = {
   steel_gouge_tip: "用长柄铁钳夹住钢条置于炉上，以木炭为火源加热至可锻，移上砧台，用锻工手锤反复锤打，把刃端锻成卷曲的圆口，柄舌一并留出成形。锻毕趁热将圆口浸入清水淬口，再回火使刃口略带韧性。冷却后用圆身孔锉沿孔轴推拉，修整内弧至圆顺，换细面刃磨石磨利刃口。最后把柄舌插入小工具木柄装牢，检查刃口与柄接合。锻打与淬火中掉落的氧化皮、锉屑与磨浆均弃置，工具保留。全程320分钟。",
 };
 
-const world = await loadWorld();
-const bones = economyW3Journey(world);
-const recipe = id => bones.recipes.find(row => row.id === 'recipe_w3c_' + id);
-const issues = id => processIssues((MISSED[id] ?? CLEAN[id]), recipe(id), journeyContext(world, bones, recipe(id)));
+const SKELETON_ITEMS = [
+  {id: 'item_cooking_pot', name: '厚底煮锅', tags: ['liquid_container', 'tool'], weight: 1.5},
+  {id: 'item_kitchen_knife', name: '案上切刀', tags: ['tool'], weight: 0.3},
+  {id: 'item_mixing_paddle', name: '长柄搅糊板', tags: [], weight: 0.24},
+  {id: 'item_caraway_seed', name: '香芹籽', tags: [], weight: 0.04, shelfLifeDays: 180},
+  {id: 'item_oat_flour', name: '燕麦粉', tags: [], weight: 0.4, shelfLifeDays: 30},
+  {id: 'item_water', name: '清水一份', tags: [], weight: 0.25, shelfLifeDays: 1},
+  {id: 'item_salt', name: '粗盐小包', tags: [], weight: 0.02},
+  {id: 'item_wood_shavings', name: '干木刨屑', tags: ['fuel'], weight: 0.1, shelfLifeDays: 30},
+  {id: 'item_caraway_oat_crust', name: '香籽燕麦硬片', tags: [], weight: 0.27, shelfLifeDays: 7},
+  {id: 'item_wood_spoon', name: '偏柄木匙', tags: [], weight: 0.08},
+  {id: 'item_pear', name: '脆肉梨', tags: [], weight: 0.3, shelfLifeDays: 7},
+  {id: 'item_fruit_vinegar', name: '酸果醋小瓶', tags: [], weight: 0.05, shelfLifeDays: 90},
+  {id: 'item_honey', name: '滤蜜小罐份', tags: [], weight: 0.1, shelfLifeDays: 180},
+  {id: 'item_pear_vinegar_slice', name: '醋浸梨片', tags: [], weight: 0.26, shelfLifeDays: 2},
+  {id: 'item_frame_saw', name: '窄框木锯', tags: ['tool'], weight: 1.1},
+  {id: 'item_mortise_chisel', name: '直口木凿', tags: ['tool'], weight: 0.35},
+  {id: 'item_wood_mallet', name: '枣木敲凿槌', tags: ['tool'], weight: 0.55},
+  {id: 'item_pine_board', name: '风干松木短板', tags: [], weight: 1},
+  {id: 'item_iron_nail', name: '小铁钉', tags: [], weight: 0.04},
+  {id: 'item_cork_sheet', name: '软木薄片', tags: [], weight: 0.12, shelfLifeDays: 365},
+  {id: 'item_bottle_divider_crate', name: '分格小瓶木箱', tags: [], weight: 1.25},
+  {id: 'item_broad_bean', name: '干蚕豆瓣', tags: [], weight: 0.3, shelfLifeDays: 180},
+  {id: 'item_garlic', name: '晒皮蒜头', tags: [], weight: 0.1, shelfLifeDays: 60},
+  {id: 'item_broadbean_garlic_mash', name: '蒜香蚕豆泥', tags: [], weight: 0.48, shelfLifeDays: 1},
+  {id: 'item_linen_filter', name: '宽口滤布', tags: [], weight: 0.27, shelfLifeDays: 180},
+  {id: 'item_red_dyewood', name: '红染木碎片', tags: [], weight: 0.1, shelfLifeDays: 180},
+  {id: 'item_alum_grain', name: '工艺明矾粒', tags: [], weight: 0.05, shelfLifeDays: 365},
+  {id: 'item_redwood_dye', name: '温煎红木染液', tags: [], weight: 0.25, shelfLifeDays: 3},
+  {id: 'item_bone_folder', name: '平脊骨压片', tags: ['tool'], weight: 0.08},
+  {id: 'item_quill_knife', name: '短锋修羽刀', tags: ['tool'], weight: 0.1},
+  {id: 'item_hemp_thread', name: '细捻麻线团', tags: [], weight: 0.15, shelfLifeDays: 365},
+  {id: 'item_beeswax', name: '滤净蜂蜡块', tags: [], weight: 0.05},
+  {id: 'item_seal_thread_bundle', name: '卷札封结线', tags: [], weight: 0.11, shelfLifeDays: 365},
+  {id: 'item_smith_hammer', name: '锻工手锤', tags: ['tool'], weight: 1.2},
+  {id: 'item_smith_tongs', name: '长柄铁钳', tags: ['tool'], weight: 0.7},
+  {id: 'item_round_file', name: '圆身孔锉', tags: ['tool'], weight: 0.28},
+  {id: 'item_iron', name: '铁料', tags: [], weight: 2},
+  {id: 'item_charcoal', name: '木炭小袋', tags: ['fuel'], weight: 0.25},
+  {id: 'item_forged_chain_short', name: '连扣铁短链', tags: [], weight: 1.4},
+  {id: 'item_mutton', name: '去骨羊肉', tags: [], weight: 0.4, shelfLifeDays: 1},
+  {id: 'item_turnip', name: '带皮芜菁', tags: [], weight: 0.4, shelfLifeDays: 10},
+  {id: 'item_mutton_turnip_stew', name: '羊肉芜菁煨', tags: [], weight: 0.83, shelfLifeDays: 1},
+  {id: 'item_mustard_seed', name: '黄芥籽', tags: [], weight: 0.05, shelfLifeDays: 180},
+  {id: 'item_mustard_relish', name: '粗粒芥醋酱', tags: [], weight: 0.085, shelfLifeDays: 3},
+  {id: 'item_poppy_seed', name: '食用罂粟籽', tags: [], weight: 0.05, shelfLifeDays: 120},
+  {id: 'item_rye_flour', name: '细筛黑麦粉', tags: [], weight: 0.4, shelfLifeDays: 30},
+  {id: 'item_rapeseed_oil', name: '菜籽油小份', tags: [], weight: 0.1, shelfLifeDays: 90},
+  {id: 'item_poppy_rye_crisp', name: '籽香黑麦脆饼', tags: [], weight: 0.48, shelfLifeDays: 7},
+  {id: 'item_beet', name: '红根甜菜', tags: [], weight: 0.4, shelfLifeDays: 10},
+  {id: 'item_pearl_barley', name: '脱壳大麦', tags: [], weight: 0.5, shelfLifeDays: 180},
+  {id: 'item_beet_barley_pot', name: '红根麦饭', tags: [], weight: 0.8, shelfLifeDays: 1},
+  {id: 'item_leather_shears', name: '短刃裁革剪', tags: ['tool'], weight: 0.4},
+  {id: 'item_stitching_awl', name: '缝革扁锥', tags: ['tool'], weight: 0.15},
+  {id: 'item_sewing_needle', name: '粗眼缝针', tags: ['tool'], weight: 0.005},
+  {id: 'item_sheet_shears', name: '弯柄金属剪', tags: ['tool'], weight: 0.85},
+  {id: 'item_goat_skin', name: '薄鞣山羊革', tags: [], weight: 0.5, shelfLifeDays: 365},
+  {id: 'item_brass_strip', name: '黄铜窄带', tags: [], weight: 0.2},
+  {id: 'item_ledger_cover', name: '包角账页封皮', tags: [], weight: 0.38, shelfLifeDays: 365},
+  {id: 'item_iron_punch', name: '短身冲子', tags: ['tool'], weight: 0.3},
+  {id: 'item_jeweler_pliers', name: '窄嘴饰线钳', tags: ['tool'], weight: 0.2},
+  {id: 'item_iron_wire', name: '退火铁线卷', tags: [], weight: 0.2},
+  {id: 'item_small_bell_frame', name: '悬片响铃架', tags: [], weight: 0.25},
+  {id: 'item_honing_stone', name: '细面刃磨石', tags: ['tool'], weight: 0.5},
+  {id: 'item_steel_bar', name: '淬用钢条', tags: [], weight: 1},
+  {id: 'item_tool_handle', name: '小工具木柄', tags: [], weight: 0.3, shelfLifeDays: 365},
+  {id: 'item_steel_gouge_tip', name: '套柄圆口钢凿', tags: ['tool'], weight: 0.56},
+];
+const SKELETONS = {
+  caraway_oat_crust: {id: 'recipe_w3c_caraway_oat_crust', workstation: 'cooking', tools: ['item_cooking_pot', 'item_kitchen_knife', 'item_mixing_paddle'], materials: [{item: 'item_caraway_seed', amount: 1}, {item: 'item_oat_flour', amount: 1}, {item: 'item_water', amount: 1}, {item: 'item_salt', amount: 1}, {item: 'item_wood_shavings', amount: 2}], output: {item: 'item_caraway_oat_crust'}, minutes: 80},
+  pear_vinegar_slice: {id: 'recipe_w3c_pear_vinegar_slice', workstation: 'cooking', tools: ['item_cooking_pot', 'item_kitchen_knife', 'item_wood_spoon'], materials: [{item: 'item_pear', amount: 1}, {item: 'item_fruit_vinegar', amount: 2}, {item: 'item_honey', amount: 1}], output: {item: 'item_pear_vinegar_slice'}, minutes: 90},
+  bottle_divider_crate: {id: 'recipe_w3c_bottle_divider_crate', workstation: 'woodworking', tools: ['item_frame_saw', 'item_mortise_chisel', 'item_wood_mallet'], materials: [{item: 'item_pine_board', amount: 2}, {item: 'item_iron_nail', amount: 8}, {item: 'item_cork_sheet', amount: 1}], output: {item: 'item_bottle_divider_crate'}, minutes: 260},
+  broadbean_garlic_mash: {id: 'recipe_w3c_broadbean_garlic_mash', workstation: 'cooking', tools: ['item_cooking_pot', 'item_kitchen_knife', 'item_wood_spoon'], materials: [{item: 'item_broad_bean', amount: 1}, {item: 'item_garlic', amount: 1}, {item: 'item_water', amount: 2}, {item: 'item_salt', amount: 1}, {item: 'item_wood_shavings', amount: 2}], output: {item: 'item_broadbean_garlic_mash'}, minutes: 100},
+  redwood_dye: {id: 'recipe_w3c_redwood_dye', workstation: 'cooking', tools: ['item_cooking_pot', 'item_wood_spoon', 'item_linen_filter'], materials: [{item: 'item_red_dyewood', amount: 1}, {item: 'item_alum_grain', amount: 1}, {item: 'item_water', amount: 2}, {item: 'item_wood_shavings', amount: 2}], output: {item: 'item_redwood_dye'}, minutes: 100},
+  seal_thread_bundle: {id: 'recipe_w3c_seal_thread_bundle', workstation: 'woodworking', tools: ['item_bone_folder', 'item_quill_knife'], materials: [{item: 'item_hemp_thread', amount: 1}, {item: 'item_beeswax', amount: 1}], output: {item: 'item_seal_thread_bundle'}, minutes: 55},
+  forged_chain_short: {id: 'recipe_w3c_forged_chain_short', workstation: 'smithing', tools: ['item_smith_hammer', 'item_smith_tongs', 'item_round_file'], materials: [{item: 'item_iron', amount: 1}, {item: 'item_charcoal', amount: 5}], output: {item: 'item_forged_chain_short'}, minutes: 330},
+  mutton_turnip_stew: {id: 'recipe_w3c_mutton_turnip_stew', workstation: 'cooking', tools: ['item_cooking_pot', 'item_kitchen_knife', 'item_wood_spoon'], materials: [{item: 'item_mutton', amount: 1}, {item: 'item_turnip', amount: 1}, {item: 'item_water', amount: 2}, {item: 'item_salt', amount: 1}, {item: 'item_wood_shavings', amount: 3}], output: {item: 'item_mutton_turnip_stew'}, minutes: 120},
+  mustard_relish: {id: 'recipe_w3c_mustard_relish', workstation: 'cooking', tools: ['item_cooking_pot', 'item_kitchen_knife', 'item_wood_spoon'], materials: [{item: 'item_mustard_seed', amount: 1}, {item: 'item_fruit_vinegar', amount: 1}, {item: 'item_salt', amount: 1}], output: {item: 'item_mustard_relish'}, minutes: 40},
+  poppy_rye_crisp: {id: 'recipe_w3c_poppy_rye_crisp', workstation: 'cooking', tools: ['item_cooking_pot', 'item_mixing_paddle'], materials: [{item: 'item_poppy_seed', amount: 1}, {item: 'item_rye_flour', amount: 1}, {item: 'item_water', amount: 1}, {item: 'item_rapeseed_oil', amount: 1}, {item: 'item_wood_shavings', amount: 2}], output: {item: 'item_poppy_rye_crisp'}, minutes: 95},
+  beet_barley_pot: {id: 'recipe_w3c_beet_barley_pot', workstation: 'cooking', tools: ['item_cooking_pot', 'item_kitchen_knife', 'item_wood_spoon'], materials: [{item: 'item_beet', amount: 1}, {item: 'item_pearl_barley', amount: 1}, {item: 'item_water', amount: 2}, {item: 'item_salt', amount: 1}, {item: 'item_wood_shavings', amount: 2}], output: {item: 'item_beet_barley_pot'}, minutes: 90},
+  ledger_cover: {id: 'recipe_w3c_ledger_cover', workstation: 'woodworking', tools: ['item_leather_shears', 'item_stitching_awl', 'item_sewing_needle', 'item_sheet_shears'], materials: [{item: 'item_goat_skin', amount: 1}, {item: 'item_brass_strip', amount: 1}, {item: 'item_hemp_thread', amount: 1}], output: {item: 'item_ledger_cover'}, minutes: 180},
+  small_bell_frame: {id: 'recipe_w3c_small_bell_frame', workstation: 'smithing', tools: ['item_sheet_shears', 'item_iron_punch', 'item_smith_hammer', 'item_jeweler_pliers'], materials: [{item: 'item_brass_strip', amount: 1}, {item: 'item_iron_wire', amount: 1}], output: {item: 'item_small_bell_frame'}, minutes: 240},
+  steel_gouge_tip: {id: 'recipe_w3c_steel_gouge_tip', workstation: 'smithing', tools: ['item_smith_hammer', 'item_smith_tongs', 'item_round_file', 'item_honing_stone'], materials: [{item: 'item_steel_bar', amount: 1}, {item: 'item_charcoal', amount: 4}, {item: 'item_water', amount: 1}, {item: 'item_tool_handle', amount: 1}], output: {item: 'item_steel_gouge_tip'}, minutes: 320},
+};
+const SKELETON_TOOLS = ['item_cooking_pot', 'item_kitchen_knife', 'item_wood_spoon', 'item_mixing_paddle', 'item_frame_saw', 'item_mortise_chisel', 'item_wood_mallet', 'item_smith_hammer', 'item_smith_tongs', 'item_round_file', 'item_honing_stone', 'item_sheet_shears', 'item_iron_punch', 'item_jeweler_pliers', 'item_leather_shears', 'item_stitching_awl', 'item_sewing_needle', 'item_bone_folder', 'item_quill_knife', 'item_linen_filter'];
+
+const CTX = {catalog: SKELETON_ITEMS, catalogRecipes: [{tools: SKELETON_TOOLS}]};
+const recipe = id => SKELETONS[id];
+const issues = id => processIssues(MISSED[id] ?? CLEAN[id], recipe(id), CTX);
 
 test('词表从目录派生：器具、燃料不写死条目', () => {
-  const catalog = [...world.items, ...bones.items];
-  const vocab = buildVocabulary(catalog, [...world.recipes, ...bones.recipes]);
+  const vocab = buildVocabulary(SKELETON_ITEMS, CTX.catalogRecipes);
   assert.ok(vocab.heads.has('厚底煮锅') && vocab.heads.has('煮锅'), '器具全名与两字中心词来自目录');
   assert.ok(vocab.heads.has('剪') && vocab.heads.has('锯'), '手工具的单字中心词来自目录');
-  assert.ok(!vocab.heads.has('规') && !vocab.heads.has('尺'), '日常常用字不单独当器具词');
-  const fuelIds = catalog.filter(item => item.tags?.includes('fuel')).map(item => item.id);
+  const fuelIds = SKELETON_ITEMS.filter(item => item.tags?.includes('fuel')).map(item => item.id);
   assert.deepEqual([...vocab.fuels.keys()].sort(), fuelIds.sort());
   assert.deepEqual(utensilHeads('平脊骨压片'), ['压片'], '量词尾字不单独当中心词');
   assert.ok(['cooking', 'smithing', 'woodworking', 'weaving'].every(kind => WORKSTATION_FACILITIES[kind]?.length));
-  for (const kind of new Set(bones.recipes.map(row => row.workstation))) assert.ok(WORKSTATION_FACILITIES[kind], '每种工作台都有设施表：' + kind);
+  for (const kind of new Set(Object.values(SKELETONS).map(row => row.workstation))) assert.ok(WORKSTATION_FACILITIES[kind], '每种工作台都有设施表：' + kind);
 });
 
 test('caraway_oat_crust：案板不在骨架里', () => {
@@ -94,45 +174,64 @@ test('redwood_dye：滤进另备容器后又沿锅缘搅匀', () => {
 
 for (const id of Object.keys(CLEAN)) test('正例不误报：' + id, () => assert.deepEqual(issues(id), []));
 
-test('另备容器如实说明不算引入：声明与装入在同一句', () => {
+test('另备容器如实说明不算引入：声明与装入在同一句；去掉声明后容器与盖都是引入', () => {
   const entry = recipe('mustard_relish');
   assert.ok(/另备/.test(CLEAN.mustard_relish) && /容器/.test(CLEAN.mustard_relish));
-  assert.deepEqual(processIssues(CLEAN.mustard_relish, entry, journeyContext(world, bones, entry)), []);
+  assert.deepEqual(processIssues(CLEAN.mustard_relish, entry, CTX), []);
   const bare = CLEAN.mustard_relish.replace('容器须使用者另备，不随货提供', '再盖好备用');
-  assert.ok(processIssues(bare, entry, journeyContext(world, bones, entry)).some(message => /动作「盖好」.*盖具/.test(message)), '去掉另备声明后，盖就是引入（骨架已有锅，容器本身不再是骨架外器具）');
+  const found = processIssues(bare, entry, CTX);
+  assert.ok(found.some(message => /泛称器具「容器」/.test(message)), '没声明另备的“待装容器”是骨架外器具（骨架的锅会写成锅）：' + found.join(' '));
+  assert.ok(found.some(message => /动作「盖好」.*盖具/.test(message)), '盖也是骨架外器具：' + found.join(' '));
 });
 
 test('骨架无燃料却写用火：错误', () => {
   const entry = recipe('mustard_relish');
   const fuelless = recipe('beet_barley_pot');
-  const stripped = {...fuelless, materials: fuelless.materials.filter(row => !world.items.concat(bones.items).find(item => item.id === row.item)?.tags?.includes('fuel'))};
+  const isFuel = row => SKELETON_ITEMS.find(item => item.id === row.item)?.tags?.includes('fuel');
+  const stripped = {...fuelless, materials: fuelless.materials.filter(row => !isFuel(row))};
   assert.ok(stripped.materials.length < fuelless.materials.length);
-  const found = processIssues(CLEAN.beet_barley_pot, stripped, journeyContext(world, bones, fuelless));
+  const found = processIssues(CLEAN.beet_barley_pot, stripped, CTX);
   assert.ok(found.some(message => /materials 里没有燃料/.test(message)));
-  assert.deepEqual(processIssues(CLEAN.mustard_relish, entry, journeyContext(world, bones, entry)), []);
+  assert.deepEqual(processIssues(CLEAN.mustard_relish, entry, CTX), []);
 });
 
-test('接入 validateTradesDraft：命中进 errors，正例无新增错误', () => {
-  const block = {names: [], realPeople: []};
-  const entry = recipe('caraway_oat_crust'), context = journeyContext(world, bones, entry);
-  const result = validateTradesDraft({id: entry.id, process: MISSED.caraway_oat_crust}, entry, block, context);
-  assert.ok(result.errors.some(message => /骨架外器具「板」/.test(message)));
-  const clean = recipe('steel_gouge_tip');
-  const ok = validateTradesDraft({id: clean.id, process: CLEAN.steel_gouge_tip}, clean, block, journeyContext(world, bones, clean));
-  assert.deepEqual(ok.errors, []);
-});
-
-test('context 的 catalog 不可枚举：不进指纹与审核请求', () => {
-  const entry = recipe('steel_gouge_tip'), context = journeyContext(world, bones, entry);
-  assert.ok(Array.isArray(context.catalog) && context.catalog.length > 0);
-  assert.ok(!Object.keys(JSON.parse(JSON.stringify(context))).includes('catalog'));
+test('否定的加热不算用火', () => {
+  const entry = recipe('mustard_relish');
+  const found = processIssues('蒜瓣切细，与软化黄油压拌，全程不加热，也不加酥油。', entry, CTX);
+  assert.ok(!found.some(message => /用火/.test(message)), found.join(' '));
+  assert.match(processIssues('蒜瓣切细，与软化黄油压拌，不断加热。', entry, CTX).join(' '), /用火/, '不断加热不是否定');
 });
 
 test('误报回归：架子、吸拭、翻折盖住、成品名里的动作字', () => {
-  const entry = recipe('redwood_dye'), context = journeyContext(world, bones, entry);
+  const entry = recipe('redwood_dye');
   const text = '干木刨屑两份引火，仅作灶下燃料与吸拭漏液之用。装好后把架子放平，包边翻折盖住毡边。';
-  const found = processIssues(text, entry, context);
+  const found = processIssues(text, entry, CTX);
   assert.ok(!found.some(message => /吸拭|架子|盖住|子」/.test(message)), found.join(' '));
+});
+
+// 接线用例：要用真实 context 构造器（journeyContext 附带不可枚举的 catalog），所以动态加载真实数据。
+test('接入 validateTradesDraft：命中进 errors，正例无新增错误；catalog 不可枚举', async () => {
+  const {loadWorld} = await import('../tools/load-world.mjs');
+  const {economyW3Journey} = await import('../world/design/economy-w3-journey.mjs');
+  const {journeyContext} = await import('../tools/w3-journey.mjs');
+  const {validateTradesDraft} = await import('../tools/w3-trades.mjs');
+  const world = await loadWorld(), bones = economyW3Journey(world);
+  const real = id => bones.recipes.find(row => row.id === 'recipe_w3c_' + id);
+  const block = {names: [], realPeople: []};
+  const entry = real('caraway_oat_crust');
+  const result = validateTradesDraft({id: entry.id, process: MISSED.caraway_oat_crust}, entry, block, journeyContext(world, bones, entry));
+  assert.ok(result.errors.some(message => /骨架外器具「板」/.test(message)));
+  const clean = real('steel_gouge_tip');
+  const context = journeyContext(world, bones, clean);
+  const ok = validateTradesDraft({id: clean.id, process: CLEAN.steel_gouge_tip}, clean, block, context);
+  assert.deepEqual(ok.errors, []);
+  assert.ok(Array.isArray(context.catalog) && context.catalog.length > 0);
+  assert.ok(!Object.keys(JSON.parse(JSON.stringify(context))).includes('catalog'), 'catalog 不可枚举：不进指纹与审核请求');
+});
+
+test('catalog 缺失：抛错，不静默跳过检查', () => {
+  assert.throws(() => processIssues('取案板，煮熟。', {id: 'recipe_x', tools: [], materials: []}, {}), /catalog/);
+  assert.throws(() => processIssues('取案板，煮熟。', {id: 'recipe_x', tools: [], materials: []}, undefined), /catalog/);
 });
 
 // ───────── 以下用例只依赖内嵌的最小目录与骨架，不读真实 recipe_w3c_* 数据 ─────────
@@ -290,4 +389,29 @@ test('泛称器具补全：碗盘盆罐与单字布', () => {
   assert.deepEqual(fx('把宽口滤布搭在锅上，滤布上摊开糊料。', withCloth), []);
   assert.doesNotMatch(fxJoin('取麻帆布包住。'), /泛称器具「布」/, '麻帆布是目录物品，缺骨架时报它的全名而不是泛称布');
   assert.match(fxJoin('取麻帆布包住。'), /骨架外器具「麻帆布」/);
+});
+
+test('否定排除表：不过、不然、不料、不足、不够、不得不、分别不是否定', () => {
+  for (const word of ['不过', '不然', '不料', '不足', '不够', '不得不', '不断', '不停'])
+    assert.match(fxJoin(word + '用案板搅匀。'), /骨架外器具「板」/, word);
+  assert.match(fxJoin('分别用剪裁片。'), /骨架外器具「剪」/, '“分别”里的别不是否定');
+  assert.match(fxJoin('特别用剪裁片。'), /骨架外器具「剪」/);
+  assert.match(fxJoin('分别煮熟后取出。'), /用火/);
+  // 反面：真正的否定仍然成立。
+  for (const text of ['不用案板搅匀。', '不得用案板搅匀。', '不必用案板搅匀。', '别用案板搅匀。', '别用剪裁片。']) assert.deepEqual(fx(text), [], text);
+});
+
+test('数量单位：勺、杯、滴、寸、个时辰', () => {
+  assert.match(fxJoin('加入两勺盐。', fxFacts), /骨架外数量「两勺」/);
+  assert.match(fxJoin('注入一杯水。', fxFacts), /骨架外数量「一杯」/);
+  assert.match(fxJoin('滴入五滴油。', fxFacts), /骨架外数量「五滴」/);
+  assert.match(fxJoin('裁成长五寸。', fxFacts), /骨架外数量「五寸」/);
+  assert.match(fxJoin('静置三个时辰。', fxFacts), /骨架外时长「三个时辰」/);
+  assert.deepEqual(fx('加盐两勺。', {...fxFacts, processFacts: '加盐两勺。'}), [], 'processFacts 写明');
+  assert.deepEqual(fx('静置二个时辰。', {...fxFacts, processFacts: '静置二个时辰。'}), []);
+});
+
+test('用火词：加温、融化、炸、烫算用火；溶化、炸裂、烫手不算', () => {
+  for (const verb of ['加温', '融化', '炸', '烫']) assert.match(fxJoin('把料' + verb + '后取出。'), /用火/, verb);
+  for (const text of ['盐在水里溶化后取出。', '锅壁炸裂时需维修。', '锅沿烫手，勿碰。']) assert.deepEqual(fx(text), [], text);
 });
