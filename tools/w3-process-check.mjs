@@ -350,7 +350,7 @@ export function processIssues(text, entry, context) {
 const MEASURE_KEY = /(?:约重|重约|重量|净重|单重|共重|重|容量|容积|(?<=可)容|(?<![增生成延拉伸滋助家擅专特最])长度?|宽度?|(?<![提增升抬拔最])高度?|(?<![加增])厚度?|深度?|直径|口径)(?:约|为|是|达|在)?/gu;
 const MEASURE_NUMBER = /^(?:\d+(?:\.\d+)?|[零〇一二两三四五六七八九十百千半]+(?:点[零〇一二三四五六七八九]+)?)/u;
 const MEASURE_UNIT = /^\s*(?:千克|公斤|克|斤|两|磅|盎司|吨|毫升|公升|升|勺|杯|合|斗|厘米|毫米|公里|千米|米|寸|尺|丈|分|kg|g|ml|l|cm|mm|km|m)(?![A-Za-z])/iu;
-const MEASURE_COUNT = /^[层次遍道重回件个条根片块枚张只份倍折叠指掌步拃行列排圈环节瓣粒股束成头边端面侧臂肘]/u;
+const MEASURE_COUNT = /^[层次遍道重回件个条根片块枚张只份倍折叠指掌步拃行列排圈环节瓣粒股束成头边端面侧臂肘点截些等许]/u;
 export function unitlessMeasureIssues(text) {
   const errors = [];
   if (typeof text !== 'string') return errors;
