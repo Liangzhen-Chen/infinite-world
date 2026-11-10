@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseFieldPath,parsePublication,applySupersedes,createTagSourceResolver} from '../tools/approved-revisions.mjs';
+import {fixedSample,recomputeCorpusHash} from '../tools/w3-wave-score.mjs';
+import {hashContent} from '../tools/content-pipeline.mjs';
 
 const pub=()=>({revision:'r1',receipt:'dir/review',entries:[
  {id:'a-basePrice',target:'item_a',file:'x.json',field:'basePrice',before:12,after:4,supersedes:[{receipt:'design/b.json#item_a',field:'basePrice'},{receipt:'design/items/item_a.json',field:'(说明文字，不变)'}]},
@@ -32,4 +34,17 @@ test('标签来源：无来源返回空；规则层 drinkable 需派生水分>0�
  assert.equal(await resolve({id:'item_y'},'grip'),null);
  const failing=createTagSourceResolver({world,verifyPropsLayer:async()=>{throw new Error('回执失效');}});
  assert.match((await failing({id:'item_y'},'cut')).error,/回执失效/);
+});
+test('语料哈希重算：变化可归因且样本未变才重算；有无法归因的变化仍判失效',()=>{
+ const seed='ab'.repeat(32),old=Array.from({length:20},(_,i)=>({id:`entry_${i}`,entity:{description:`文字${i}`,tags:['t'],basePrice:12}}));
+ const report={seed,corpusHash:hashContent(old),samples:fixedSample(old,seed).map(x=>({id:x.id,entityHash:hashContent(x.entity)}))};
+ const sample=new Set(report.samples.map(s=>s.id)),target=old.find(x=>!sample.has(x.id)).id,other=old.find(x=>!sample.has(x.id)&&x.id!==target).id;
+ const now=structuredClone(old),row=now.find(x=>x.id===target);row.entity.tags=['t','cut'];row.entity.basePrice=4;row.entity.capacityMl=250;
+ const explained=[{id:target,parts:['tags'],old:['t'],source:'叠加层'},{id:target,parts:['basePrice'],old:12,source:'回执'},{id:target,parts:['capacityMl'],remove:true,source:'a3cap'}];
+ const next=recomputeCorpusHash(report,now,explained,{now:new Date('2026-01-01T00:00:00Z')});
+ assert.equal(next.corpusHash,hashContent(now));assert.equal(next.corpusRecomputations[0].beforeCorpusHash,report.corpusHash);assert.equal(next.corpusRecomputations[0].basis.length,3);
+ assert.throws(()=>recomputeCorpusHash(report,now,explained.slice(0,2)),/无法归因/);
+ const unexplained=structuredClone(now);unexplained.find(x=>x.id===other).entity.description+='改';assert.throws(()=>recomputeCorpusHash(report,unexplained,explained),/无法归因/);
+ const sampleChanged=structuredClone(now);sampleChanged.find(x=>x.id===report.samples[0].id).entity.description+='改';assert.throws(()=>recomputeCorpusHash(report,sampleChanged,explained),/条目哈希已改变/);
+ assert.throws(()=>recomputeCorpusHash(report,now,[]),/没有可归因/);
 });

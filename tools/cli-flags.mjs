@@ -28,6 +28,7 @@ const W = {
   '--pilot': '试审，写 world/drafts/ 审阅目录',
   '--draft': '起草，写 world/drafts/<批>/',
   '--accept-fact-corrections': '改写 world/drafts/w3/wave-score.json',
+  '--recompute-corpus-hash': '按已审批回执重算并改写 world/drafts/w3/wave-score.json 的 corpusHash（须样本哈希未变且变化全部可归因；不与 --check 同用）',
   '--reopen-authorization': '写 npc-depth 批目录的授权记录',
   '--reopen-continue': '写 npc-depth 批目录',
   '--recover-protocol': '写 npc-depth 批目录',

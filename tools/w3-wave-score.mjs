@@ -5,6 +5,7 @@ import {economyW3} from '../world/design/economy-w3.mjs';
 import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {economyW3Journey} from '../world/design/economy-w3-journey.mjs';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
+import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
 import {readApprovedSupersedes,applySupersedes,createTagSourceResolver} from './approved-revisions.mjs';
 import {w3Context,w3Revision,validateW3Draft} from './w3-content.mjs';
 import {tradesRevision,validateTradesDraft} from './w3-trades.mjs';
@@ -23,6 +24,33 @@ export function acceptFactCorrections(report,entries,patches=factCorrections){
  const next=structuredClone(report);next.corrections=[...(next.corrections??[]),{at:new Date().toISOString(),beforeCorpusHash:report.corpusHash,afterCorpusHash:hashContent(entries),patches}];next.corpusHash=hashContent(entries);
  for(const row of next.samples)row.entityHash=hashContent(entries.find(x=>x.id===row.id).entity);
  return next;
+}
+// 语料哈希随正式条目变化而失效。若全部变化都来自已审批的修订回执或已审叠加层，且 10 个固定样本的 entityHash 都没变，
+// 则把这些变化回退后核对评分时的语料哈希，相符才按回执重算并记录依据；回退后仍不符说明还有无法归因的变化，照旧判失效。
+// explained：已指到来源的字段变化（publishedW3 给出的 tags 叠加与修订回执取代的值，加上 approvedOverlayReverts 给出的叠加字段）。
+export function recomputeCorpusHash(report,entries,explained,{now=new Date()}={}){
+ const sample=fixedSample(entries,report.seed);
+ if(JSON.stringify(report.samples.map(x=>x.id))!==JSON.stringify(sample.map(x=>x.id)))throw new Error('固定样本已改变');
+ for(const row of report.samples)if(row.entityHash!==hashContent(entries.find(x=>x.id===row.id).entity))throw new Error(`固定样本 ${row.id} 的条目哈希已改变，评分依据失效`);
+ if(!explained.length)throw new Error('没有可归因于已审批回执或叠加层的内容变化');
+ const before=structuredClone(entries);
+ for(const e of explained){
+  const row=before.find(x=>x.id===e.id);if(!row)throw new Error(`回退目标不存在 ${e.id}`);
+  if(e.remove){const key=e.parts.at(-1),parent=getPath(row.entity,e.parts.slice(0,-1));if(!parent||!Object.hasOwn(parent,key))throw new Error(`回退目标不存在 ${e.id}/${key}`);delete parent[key];}
+  else setPath(row.entity,e.parts,e.old);
+ }
+ if(hashContent(before)!==report.corpusHash)throw new Error('仍有无法归因于已审批回执或已审叠加层的内容变化：回退已归因的变化后，语料哈希与评分时的不符');
+ const next=structuredClone(report),afterHash=hashContent(entries);
+ next.corpusRecomputations=[...(next.corpusRecomputations??[]),{at:now.toISOString(),beforeCorpusHash:report.corpusHash,afterCorpusHash:afterHash,sampleEntityHashesUnchanged:true,basis:explained.map(e=>({id:e.id,field:e.parts.map(p=>typeof p==='string'?p:`[id=${p.id}]`).join('.'),...(e.remove?{added:true}:{}),source:e.source}))}];
+ next.corpusHash=afterHash;
+ return next;
+}
+// 叠加字段：publishedW3 不比对、但在语料里的键。a3cap-data 为四件容器登记了 capacityMl；先核验其审批回执。
+export async function approvedOverlayReverts(entries){
+ const m=await import('../world/design/a3cap-data-approval.mjs');
+ const hit=entries.filter(x=>Object.hasOwn(m.capacities,x.id)&&x.entity.capacityMl===m.capacities[x.id]);
+ if(hit.length)await m.verifyPublished();
+ return hit.map(x=>({id:x.id,parts:['capacityMl'],remove:true,source:'a3cap-data 已审叠加层（revision a3cap-data-1）：capacityMl'}));
 }
 export function fixedSample(entries,seed,count=10){
  if(!/^[0-9a-f]{64}$/.test(seed))throw new Error('无效抽样种子');
@@ -82,8 +110,11 @@ export function validateScores(report,entries){
  return{passed:mean>=4&&minimum>=3,mean,minimum,count:report.samples.length,scoreCount:values.length,entryMeans:means,dimensionMeans:Object.fromEntries(dimensions.map(key=>[key,report.samples.reduce((n,s)=>n+s.ratings[key].score,0)/report.samples.length]))};
 }
 async function main(){
- const {entries,audit,corpusHash}=await publishedW3(await loadWorld());let report;
- try{report=JSON.parse(await fs.readFile(scorePath,'utf8'));if(report.corpusHash!==corpusHash){if(!process.argv.includes('--accept-fact-corrections'))throw new Error('已固定样本的正式内容改变，不自动重抽');report=acceptFactCorrections(report,entries);report.audit=audit;await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}}
+ const {entries,audit,corpusHash,explained}=await publishedW3(await loadWorld());let report;
+ try{report=JSON.parse(await fs.readFile(scorePath,'utf8'));if(report.corpusHash!==corpusHash){
+  if(process.argv.includes('--recompute-corpus-hash')){if(process.argv.includes('--check'))throw new Error('--recompute-corpus-hash 会写 wave-score.json，不能与 --check 同用');report=recomputeCorpusHash(report,entries,[...explained,...await approvedOverlayReverts(entries)]);report.audit=audit;await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
+  else if(process.argv.includes('--accept-fact-corrections')){report=acceptFactCorrections(report,entries);report.audit=audit;await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
+  else throw new Error('已固定样本的正式内容改变，不自动重抽（变化全部来自已审批回执或叠加层时，可用 --recompute-corpus-hash 按回执重算）');}}
  catch(error){if(error.code!=='ENOENT')throw error;if(process.argv.includes('--check'))throw new Error(`${scorePath} 缺失：--check 只检查，不创建样本文件`);const seed=randomBytes(32).toString('hex');report={version:1,createdAt:new Date().toISOString(),seed,algorithm:'按id排序后，以SHA256(seed:counter)拒绝采样执行Fisher-Yates，取前10；创建后不重抽',corpusHash,audit,rubric:{range:'1欠缺、2明显不足、3合格但普通、4充分且有辨识、5有突出可核验细节',voiceScope:'物品配方仍评说话方式辨识度：看作者或使用者叙述视角、行业措辞、信息取舍及句式是否可辨认。没有NPC对白不免评；共同目录格式不是扣分本身，换名即可套用的通用话语不能得高分。',threshold:'60个单项平均至少4，任何单项至少3；同时列出逐条及逐维度均分，不能用总均分掩盖不足。'},samples:fixedSample(entries,seed).map(x=>({id:x.id,name:x.entity.name,kind:x.kind,source:x.source,entityHash:hashContent(x.entity),ratings:Object.fromEntries(dimensions.map(key=>[key,{score:null,quote:'',reason:''}]))}))};await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
  if(process.argv.includes('--check')){const result=validateScores(report,entries);console.log(JSON.stringify({audit,result}));if(!result.passed)process.exitCode=1;}else console.log(JSON.stringify({audit,seed:report.seed,samples:report.samples.map(row=>({id:row.id,name:row.name,entity:entries.find(x=>x.id===row.id).entity}))}));
 }
