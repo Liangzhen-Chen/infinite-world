@@ -54,6 +54,7 @@ const W = {
   '--resume': '续跑，写 playtests 运行目录',
   '--report': '写 m3-soak 报告',
   '--ledger': '写模型预算账文件',
+  '--dump': '写 .out/segment-doc.json（segment-timing 的推进后世界文档，.out 不计入门禁哈希）',
   '--live': '联网实跑并写预算账（population-live-check）',
 };
 const N = {
