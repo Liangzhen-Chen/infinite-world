@@ -99,7 +99,7 @@ test('另备容器如实说明不算引入：声明与装入在同一句', () =>
   assert.ok(/另备/.test(CLEAN.mustard_relish) && /容器/.test(CLEAN.mustard_relish));
   assert.deepEqual(processIssues(CLEAN.mustard_relish, entry, journeyContext(world, bones, entry)), []);
   const bare = CLEAN.mustard_relish.replace('容器须使用者另备，不随货提供', '再盖好备用');
-  assert.ok(processIssues(bare, entry, journeyContext(world, bones, entry)).some(message => /骨架外器具/.test(message)), '去掉另备声明后，容器与盖就是引入');
+  assert.ok(processIssues(bare, entry, journeyContext(world, bones, entry)).some(message => /动作「盖好」.*盖具/.test(message)), '去掉另备声明后，盖就是引入（骨架已有锅，容器本身不再是骨架外器具）');
 });
 
 test('骨架无燃料却写用火：错误', () => {
@@ -110,12 +110,6 @@ test('骨架无燃料却写用火：错误', () => {
   const found = processIssues(CLEAN.beet_barley_pot, stripped, journeyContext(world, bones, fuelless));
   assert.ok(found.some(message => /materials 里没有燃料/.test(message)));
   assert.deepEqual(processIssues(CLEAN.mustard_relish, entry, journeyContext(world, bones, entry)), []);
-});
-
-test('否定的加热不算用火', () => {
-  const entry = recipe('garlic_butter');
-  const found = processIssues('蒜瓣切细，与软化黄油压拌，全程不加热，也不加酥油。', entry, journeyContext(world, bones, entry));
-  assert.ok(!found.some(message => /用火/.test(message)));
 });
 
 test('接入 validateTradesDraft：命中进 errors，正例无新增错误', () => {
@@ -139,4 +133,161 @@ test('误报回归：架子、吸拭、翻折盖住、成品名里的动作字',
   const text = '干木刨屑两份引火，仅作灶下燃料与吸拭漏液之用。装好后把架子放平，包边翻折盖住毡边。';
   const found = processIssues(text, entry, context);
   assert.ok(!found.some(message => /吸拭|架子|盖住|子」/.test(message)), found.join(' '));
+});
+
+// ───────── 以下用例只依赖内嵌的最小目录与骨架，不读真实 recipe_w3c_* 数据 ─────────
+const FX_CATALOG = [
+  {id: 'pot', name: '厚底煮锅', tags: ['container']},
+  {id: 'spoon', name: '偏柄木匙', tags: []}, // 经 catalogRecipes 的 tools 入器具表
+  {id: 'board', name: '长柄搅糊板', tags: []}, // 同上，但不在测试骨架里
+  {id: 'shear', name: '短刃裁革剪', tags: ['tool']},
+  {id: 'jar', name: '陶罐', tags: ['container', 'ceramic']},
+  {id: 'pressplate', name: '平脊骨压片', tags: ['tool']},
+  {id: 'gauge', name: '直角量规', tags: ['tool']},
+  {id: 'wipe', name: '干净布巾', tags: ['cloth']},
+  {id: 'shaving', name: '干木刨屑', tags: ['fuel']},
+  {id: 'wire', name: '退火铁线卷', tags: []},
+  {id: 'flour', name: '黑麦粉', tags: [], weight: 0.5},
+  {id: 'cake', name: '黑麦饼', tags: [], shelfLifeDays: 3},
+  {id: 'basin', name: '宽口木盆', tags: ['container']},
+  {id: 'sieve', name: '宽口滤布', tags: ['cloth']},
+  {id: 'canvas', name: '麻帆布', tags: ['cloth']},
+];
+const fxContext = {catalog: FX_CATALOG, catalogRecipes: [{tools: ['spoon', 'board']}]};
+const fxEntry = {id: 'recipe_fx', workstation: 'cooking', tools: ['pot', 'spoon'], materials: [{item: 'flour'}, {item: 'shaving'}], output: {item: 'cake'}};
+const fxBare = {...fxEntry, tools: ['spoon']}; // 没有容器
+const fxFacts = {...fxEntry, minutes: 40, processFacts: '黑麦粉按规定份量，浸泡30分钟，另加水一百毫升。'};
+const fx = (text, entry = fxEntry) => processIssues(text, entry, fxContext);
+const fxJoin = (text, entry) => fx(text, entry).join(' ');
+
+test('夹具：词表从最小目录派生', () => {
+  const vocab = buildVocabulary(FX_CATALOG, fxContext.catalogRecipes);
+  assert.ok(vocab.heads.has('厚底煮锅') && vocab.heads.has('煮锅') && vocab.heads.has('剪'));
+  assert.ok(vocab.heads.has('压片') && !vocab.heads.has('片'), '量词尾字不单独当中心词');
+  assert.ok(vocab.heads.has('量规') && !vocab.heads.has('规'), '日常常用字不单独当中心词，但两字词形仍在');
+  assert.deepEqual([...vocab.fuels.keys()], ['shaving']);
+});
+
+test('另备声明只豁免被声明的对象：不再放过同分句或同句里的其他器具', () => {
+  assert.match(fxJoin('另备案板，用剪裁片。'), /骨架外器具「剪」/);
+  assert.match(fxJoin('另备案板用剪裁片。'), /骨架外器具「剪」/);
+  assert.doesNotMatch(fxJoin('另备案板用剪裁片。'), /「板」/, '被声明的案板本身不判');
+  assert.match(fxJoin('不含水用案板切开。'), /骨架外器具「板」/);
+  assert.match(fxJoin('不含水，用案板切开。'), /骨架外器具「板」/);
+  assert.match(fxJoin('另备案板，倒入陶罐中。'), /骨架外器具「陶罐」/, '只声明了案板，陶罐不被豁免');
+  assert.deepEqual(fx('另备案板，在案板上切开。'), [], '被声明的对象本句内再提到不算引入');
+  assert.deepEqual(fx('倒入使用者另备的陶罐。'), []);
+  assert.deepEqual(fx('盛入容器，容器须使用者另备，不随货提供。', fxBare), []);
+  assert.match(fxJoin('盛入容器。', fxBare), /泛称器具「容器」/);
+  assert.deepEqual(fx('空箱交付，不附陶罐。'), []);
+});
+
+test('否定只管紧邻的动作或器具：不断、不停不是否定', () => {
+  assert.match(fxJoin('用偏柄木匙不断加热锅内糊料。'), /用火/);
+  assert.match(fxJoin('用偏柄木匙不停加热锅内糊料。'), /用火/);
+  assert.match(fxJoin('不断用案板搅匀。'), /骨架外器具「板」/);
+  assert.deepEqual(fx('全程不加热。'), []);
+  assert.deepEqual(fx('不再加热，也不坐灶加热，更不用火加热。'), []);
+  assert.deepEqual(fx('不用案板，在锅中搅匀。'), []);
+  assert.deepEqual(fx('不再用案板。'), []);
+  assert.deepEqual(fx('糊料不经加热，静置即可。'), []);
+  assert.deepEqual(fx('全程只作手压承板，不承重锤击。'), [], '否定与器具字之间隔一个性状词仍是否定');
+  assert.deepEqual(fx('此板不受力敲打。'), []);
+  assert.match(fxJoin('不断用案板搅匀。'), /骨架外器具「板」/, '不断不是否定，不能因放宽隔字而漏判');
+  assert.match(fxJoin('不停用剪裁片。'), /骨架外器具「剪」/);
+});
+
+test('火源交代必须是肯定句并与燃料对上', () => {
+  const pot = '锅置小灶上煮至软烂。';
+  assert.deepEqual(fx('以干木刨屑引火，' + pot), []);
+  assert.match(fxJoin('不以干木刨屑引火，' + pot), /没有交代火源/);
+  assert.match(fxJoin('火源不取干木刨屑，' + pot), /没有交代火源/);
+  assert.match(fxJoin('干木刨屑不作燃料，' + pot), /没有交代火源/);
+  assert.match(fxJoin('以木炭引火，' + pot), /没有交代火源/, '火源用语有，但燃料不是骨架里的那份');
+  assert.match(fxJoin(pot), /没有交代火源/);
+});
+
+test('用火词表：淬火、退火、熔炼、烧软、烧开、蒸都算用火；物料状态词不算', () => {
+  for (const verb of ['淬火', '退火', '熔炼', '烧软', '烧开', '蒸', '回火', '焙']) assert.match(fxJoin('把料' + verb + '后取出。'), /用火/, verb);
+  assert.deepEqual(fx('静置待水分蒸发。'), []);
+  assert.deepEqual(fx('取退火铁线绕成环。'), [], '退火铁线是物料简称');
+  assert.match(fxJoin('把铁线退火后绕成环。'), /用火/);
+  assert.deepEqual(fx('以干木刨屑引火，把料淬火后取出。'), []);
+});
+
+test('身体部位擦拭不需要布巾；其他擦拭仍需要', () => {
+  for (const text of ['用拇指擦去浮粉。', '以手掌轻轻擦净台面。', '用手指擦拭台面。', '用指腹慢慢擦去浮粉。']) assert.deepEqual(fx(text), [], text);
+  assert.match(fxJoin('擦去浮粉。'), /动作「擦去」/);
+  assert.match(fxJoin('手持布擦去浮粉。'), /动作「擦去」/);
+  assert.match(fxJoin('用拇指压住，再擦去浮粉。'), /动作「擦去」/);
+  assert.match(fxJoin('擦拭锅沿。'), /动作「擦拭」/);
+});
+
+test('另备容器之后：只有继续加工才算错，煮锅保留、翻倒弃置不算', () => {
+  const end = /另备容器只作交付终点/;
+  assert.doesNotMatch(fxJoin('倒入使用者另备的容器，煮锅保留，翻倒弃置余渣。'), end);
+  assert.doesNotMatch(fxJoin('倒入使用者另备的容器，不再搅动。'), end);
+  assert.match(fxJoin('倒入使用者另备的容器，再沿锅缘搅匀。'), end);
+  assert.match(fxJoin('倒入使用者另备的容器，煮锅保留，再翻拌。'), end);
+});
+
+test('样例拟合的词表有反例：不会放过真错误', () => {
+  // WEAK_TAIL：量词尾字不当中心词，但两字词形照判。
+  assert.deepEqual(fx('取下薄片，再取一片碎片。'), []);
+  assert.match(fxJoin('用压片压平。'), /骨架外器具「压片」/);
+  // COMMON_CHARS：规定、规矩不当器具词，量规照判。
+  assert.deepEqual(fx('按规定份量称取。'), []);
+  assert.match(fxJoin('用量规比对。'), /骨架外器具「量规」/);
+  // (?<!吸)拭：只有“吸拭”（物料吸收）放过，其余拭、擦拭照判。
+  assert.deepEqual(fx('垫料吸拭漏液。'), []);
+  assert.match(fxJoin('拭去残汁。'), /动作「拭去」/);
+  assert.match(fxJoin('拭干锅沿。'), /动作「拭」/);
+});
+
+test('骨架外数量：质量容量须来自骨架或事实', () => {
+  assert.match(fxJoin('称取七百克黑麦粉。', fxFacts), /骨架外数量「七百克」/);
+  assert.match(fxJoin('倒入两升水。', fxFacts), /骨架外数量「两升」/);
+  assert.match(fxJoin('倒入250毫升水。', fxFacts), /骨架外数量「250毫升」/);
+  assert.deepEqual(fx('取五百克黑麦粉。', fxFacts), [], '等于材料重量×份数');
+  assert.deepEqual(fx('另加一百毫升水。', fxFacts), [], 'processFacts 写明的数量');
+  assert.match(fxJoin('取半斤黑麦粉。', fxFacts), /骨架外数量「半斤」/, '半斤=250克，不是骨架里的数');
+  assert.deepEqual(fx('取一斤黑麦粉。', fxFacts), [], '一斤=500克，等于材料重量');
+  assert.match(fxJoin('单片重零点一二千克。', fxFacts), /骨架外数量「零点一二千克」/, '小数按整体读，不截成一二千克');
+  assert.match(fxJoin('整器重二点八千克。', fxFacts), /骨架外数量「二点八千克」/);
+  assert.deepEqual(fx('行商偶尔带一两支现货，磨平四周。', fxFacts), [], '一两支是概数、四周是四边');
+  assert.match(fxJoin('四周内用完。', fxFacts), /骨架外期限「四周」/, '周只在期限语境才算数量');
+});
+
+test('骨架外时长：分段时长判错，只放行事实里的数字与系统追加的总时长', () => {
+  assert.match(fxJoin('约45分钟收汁。', fxFacts), /骨架外时长「45分钟」/);
+  assert.match(fxJoin('静置十分钟。', fxFacts), /骨架外时长「十分钟」/);
+  assert.match(fxJoin('全程约45分钟。', fxFacts), /骨架外时长「45分钟」/, '总括词后的数字也必须等于骨架 minutes');
+  assert.deepEqual(fx('浸泡约30分钟。', fxFacts), [], 'processFacts 写明');
+  assert.deepEqual(fx('全程40分钟。', fxFacts), [], '系统追加的总时长句');
+  assert.deepEqual(fx('第二天再取用。', fxFacts), []);
+});
+
+test('骨架外期限：保存期以骨架为准', () => {
+  assert.match(fxJoin('两日内用完。', fxFacts), /骨架外期限「两日」/);
+  assert.match(fxJoin('五天内食用。', fxFacts), /骨架外期限「五天」/);
+  assert.match(fxJoin('可保存七天。', fxFacts), /骨架外期限「七天」/);
+  assert.deepEqual(fx('三天内食用。', fxFacts), [], '等于骨架保存期');
+});
+
+test('泛称器具补全：碗盘盆罐与单字布', () => {
+  assert.match(fxJoin('蛋液盛入碗中。'), /泛称器具「碗」/);
+  assert.match(fxJoin('倒入陶碗。'), /泛称器具「陶碗」/);
+  assert.match(fxJoin('成品装盘即可。'), /泛称器具「盘」/);
+  assert.match(fxJoin('倒入盆内。'), /泛称器具「盆」/);
+  assert.match(fxJoin('用布擦去浮粉。'), /泛称器具「布」/);
+  assert.match(fxJoin('把糊摊在布上。'), /泛称器具「布」/);
+  assert.deepEqual(fx('倒入盆内。', {...fxEntry, tools: ['pot', 'spoon', 'basin']}), [], '骨架里有盆类物品');
+  assert.deepEqual(fx('倒入使用者另备的碗。'), [], '声明另备');
+  assert.deepEqual(fx('不用碗，直接在锅中搅匀。'), []);
+  assert.deepEqual(fx('盘绕成环，分布均匀，布置妥当。'), [], '盘绕、分布、布置不是器具');
+  // 物品全名里含布字的不误报：骨架有宽口滤布；滤布简称带前字，不是单字布。
+  const withCloth = {...fxEntry, tools: ['pot', 'spoon', 'sieve']};
+  assert.deepEqual(fx('把宽口滤布搭在锅上，滤布上摊开糊料。', withCloth), []);
+  assert.doesNotMatch(fxJoin('取麻帆布包住。'), /泛称器具「布」/, '麻帆布是目录物品，缺骨架时报它的全名而不是泛称布');
+  assert.match(fxJoin('取麻帆布包住。'), /骨架外器具「麻帆布」/);
 });

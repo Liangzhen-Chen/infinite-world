@@ -13,14 +13,22 @@
 const UTENSIL_TAGS = ['tool', 'container', 'liquid_container', 'cloth', 'ceramic'];
 const CONTAINER_TAGS = ['container', 'liquid_container'];
 // 名称末尾的量词/形态字：做中心词没有区分力，改取末两字。
+// 依据是汉语语法（不是照样例调的）：这些字是现代汉语的通用量词/类别词（一片、一段、一块、一条、一组、一份、一套、一副、一对、一粒、一束、一卷、一团）
+// 或表形态部位的泛字（具、头、体、面）；“名词+量词”里，量词前的名词才是物名（平脊骨压片 → 压片），量词字单独出现说明不了是哪件器具。
+// 取末两字后，“压片”仍会被判；单字“片”不会，所以正文里的“薄片、碎片”不误报（tests/w3-process-check.test.mjs 有正反两面用例）。
 const WEAK_TAIL = '片段块条组份具头体面套副对粒束卷团';
-// 单字中心词里，日常词也常用的字（规定、尺寸、对准、轮廓、柄……）：不单独当器具词，只认含它的两字及以上词形。
+// 单字中心词里，本身是高频通用语素、大量出现在非器具词里的字：不单独当器具词，只认含它的两字及以上词形（量规、画尺、对准器仍会判）。
+// 依据同样是语言学而非样例：规（规定）、尺（尺寸）、准（对准）、尖（尖端）、杆（杆状）、轮（轮廓）、轴（轴线）、柄（柄部）、记（记录）、说（说明）、本（本身）、
+// 灯（灯火）、石（石料）、器（器具）、斗（容量）、架（架子）、布（布料，另有 CLOTH_WORDS 专管）、刀（刀面、刀背）、子（后缀）。
+// 动作字类工具（剪、锯、凿、锉、钻、锥、锤、针、刷……）不在此列，仍按单字覆盖。
 const COMMON_CHARS = '规尺准尖杆轮轴柄记说本灯石器斗架布刀子';
 // 通用泛称里的布类词（单字“布”太常见，只认这些词）。
 const CLOTH_WORDS = ['干布', '湿布', '软布', '净布', '布巾', '抹布', '毛巾'];
 const TRIM_TAIL = /(?:小袋|小包|小罐|小瓶|小壶|小篮)?(?:一份|一段|一组|份)?$/u;
 
 // 工作台类型 → 台本身隐含的设施字词（正文可直接使用，不必在骨架里列）。
+import { parseChineseNumeral } from './content-numerals.mjs';
+
 export const WORKSTATION_FACILITIES = {
   cooking: ['灶', '炉', '案', '台'],
   smithing: ['炉', '砧', '台'],
@@ -33,28 +41,107 @@ const FACILITY_CHARS = [...new Set(Object.values(WORKSTATION_FACILITIES).flat().
 // 通用器具泛称 → 类别。
 const GENERIC_WORDS = Object.fromEntries([['容器', 'container'], ['器皿', 'container'], ['容具', 'container'], ...CLOTH_WORDS.map((word) => [word, 'cloth'])]);
 
+// 用身体部位做擦拭/揩抹不需要器具：“用/以/拿/凭/靠/借/徒/空”+身体部位词（拇指、指腹、手掌、手背、腕……），后面只隔副词就是擦拭动词。
+const BODY = '(?:[拇食中无名小]?指(?:腹|尖|背|甲|头)?|手(?:掌|背|心|指|腕)?|掌(?:心|根)?|腕|臂|肘)';
+const BODY_WIPE = new RegExp(`(?:[用以拿凭靠借]|徒|空)${BODY}(?:轻|慢|反复|再|一|来回|顺势|直接|就|轻轻|缓缓|逐|稍)*$`, 'u');
 // 动作 → 需要的器具类别。need(item) 判定骨架里某物品是否属于该类别。
 // 剪、锯、凿、锥、锉、钻、锤……这类动作字本身就是器具中心词，由中心词机制统一覆盖，不在此重复。
 export const ACTION_NEEDS = [
-  { id: '布巾', verbs: /擦拭|拭去|拭净|擦净|擦去|擦干|揩净|(?<!吸)拭/u, label: '布巾类（带 cloth 标签的物品）', need: (item) => item.tags?.includes('cloth') },
+  // (?<!吸)：“吸拭”是物料自身吸收（灶下燃料吸拭漏液），不是用布擦拭；单独的“拭”（拭干、拭去）仍判。用身体部位擦拭（用拇指擦去浮粉）见 BODY_WIPE。
+  { id: '布巾', verbs: /擦拭|拭去|拭净|擦净|擦去|擦干|揩净|(?<!吸)拭/u, exempt: (prefix) => BODY_WIPE.test(prefix), label: '布巾类（带 cloth 标签的物品）', need: (item) => item.tags?.includes('cloth') },
   { id: '盖', verbs: /加盖|盖好|盖严|扣盖|合盖/u, label: '盖具（名称以“盖”结尾的物品）', need: (item) => /盖$/u.test(item.name) },
   { id: '量具', verbs: /画线|划线|弹线|量线|标线/u, label: '墨线或量具（规、尺、准类工具，或墨料）', need: (item) => /[规尺准]$|墨/u.test(item.name) },
 ];
 
 // 用火动作与交代用语。
-const HEAT = /加热|烧至|烧红|烧透|烧沸|烧熟|烧热|入炉|上炉|炉上|煮|熬|烙|焙|烘|煎|炒|锻|煨|炖|烤|焖|熔化|熔融|回火|热合|热处理|生火|引火|引燃|升火|点火|坐灶|灶上|灶下|入灶|小灶|小火|文火|温火|低火|稳火|微火|微沸|沸腾/gu;
+// 词表分三类：加热动词（煮熬烘烤蒸炒……）、冶炼热处理（淬火退火回火熔炼熔化焊煅）、火候火位（文火武火炭火入灶）；烧+X 的结果补语形式逐个列（烧软烧开烧化烧干烧制烧结烧煮烧水）。
+const HEAT = /加热|烧至|烧红|烧透|烧沸|烧熟|烧热|烧软|烧开|烧化|烧干|烧制|烧结|烧煮|烧水|烧成|煅烧|煅|入炉|上炉|炉上|回炉|煮|熬|烙|焙|烘|煎|炒|锻|煨|炖|烤|焖|煲|烩|焯|炙|蒸(?!发|汽|腾)|熔化|熔融|熔炼|熔铸|回火|退火|淬火|淬|焊|热合|热处理|生火|引火|引燃|升火|点火|起灶|坐灶|灶上|灶下|入灶|小灶|[小大中旺明文武温低稳微]火|炭火|柴火|微沸|沸腾/gu;
 // 复合词里的用火字不是动作（煮锅、锻锤、烘盘）。
-const HEAT_COMPOUND = /[煮煎炒熬烘烙焙炖烤锻][锅盘盆壶罐炉架锤砧工]/gu;
-const NEGATION = /(?:不|无|勿|免|切忌|禁)[^，。；、]{0,4}$/u;
+const HEAT_COMPOUND = /[煮煎炒熬烘烙焙炖烤锻煲烩焯炙煅焊][锅盘盆壶罐炉架锤砧工]|蒸[笼屉锅架盘]|[淬回退]火[炉池]/gu;
+// 否定只管紧邻的动作/器具：把检查对象前面的文字（slice(0, 位置)）交给它，必须以“否定词(+情态/介词)”收尾才算否定。
+// 否定与后面的动作/器具之间可隔一个动作或性状词（不承重锤击、不受力敲打，至多两字）；“不断、不停、不久、不时、不已……”里的“不”不是否定，所以“不断加热”“不断用案板搅”仍要检查。
+const NEGATION = /(?:不(?![断停久时住已止仅但论管如妨只光单])[^，。；、：]{1,2}|不(?:再|必|得|可|要|宜|另|需|能|会|应|许|准)?(?:用|以|取|作|为|拿|靠|将|把|经)?|未(?:经)?|无(?:需|须)?|勿(?:再|要|以|用|取)?|免(?:于)?|莫(?:要|以)?|别(?:再|用)?|禁止?(?:以|用)?|切忌|切勿|严禁|避免|非(?:用|以)?)$/u;
 const FIRE_ROLE = /炉用|灶用|引火|引燃|点燃|点火|生火|起火|升火|生炉|燃料|火源|供.{0,2}[火炉]|烧炉|烧尽|燃尽|烧完|烧旺|添炭|添柴|燃起|燃着/u;
 const EXTERNAL = /另备|自备|自带|不随货|使用者(?:自)?备|须(?:由)?使用者/u;
 const NOT_PROVIDED = /不(?:随)?附|不含|不带|不配/u;
+// 声明外购/不提供：只豁免被声明的那个器具或对象（见 declaredSpans），不是整句整个分句。
+// 用火动作前的否定还可以带一个火位/用火短语（不坐灶加热、不用火加热、不明火煮）：否定的是整个“用火加热”。
+const HEAT_NEGATION = new RegExp(`${NEGATION.source.slice(0, -1)}(?:坐灶|上灶|入灶|用火|生火|起火|点火|开火|置火|上火|入炉|上炉|明火|火|灶|炉)?$`, 'u');
+const DECL = new RegExp(`${EXTERNAL.source}|${NOT_PROVIDED.source}`, 'gu');
+const DECL_BOUNDARY = /[用以取将把再并然后即令使入至置放]/u;
+const DECL_FILLER = /^(?:的|提供|交付|供应|供给|随货|随附|附带|附)*$/u;
 const POUR = /滤过|滤入|滤进|倒入|倒进|注入|舀入|舀进|盛入|盛进|装入|灌入|承接/u;
-const PROCESS = /搅|拌|煮|熬|煎|烘|烙|焙|炒|溶入|混合|加热|翻|揉|捣/u;
+const PROCESS = /搅|拌|煮|熬|煎|烘|烙|焙|炒|溶入|混合|加热|翻|揉|捣/gu;
+// 加工动词字做复合词（煮锅保留、搅匙）或表示倒掉（翻倒弃置）时不是加工动作。
+const PROCESS_COMPOUND = /[搅拌煮熬煎烘烙焙炒翻捣揉][锅盘盆壶罐炉架锤砧匙板棒勺铲杵碗]|翻倒|翻覆|倒翻/gu;
+
+// 泛称容器字（碗盘盆罐壶瓶桶杯盒缸篮碟钵）与单字“布”：正文里出现而骨架（tools、materials、设施）里没有名字含该字的物品，就是引入了骨架外器具。
+// 与物品全名区分：先把目录里所有物品名、别名整体遮掉（宽口滤布、麻帆布、小罐份……），遮完之后剩下的才是泛称。
+// 不是容器的同形词（盘绕、盘算、瓶颈、公布、分布、布置……）排除。
+const VESSEL = /[陶瓷木铁铜锡石]?[碗盘盆罐壶瓶桶杯盒缸篮碟钵](?![绕结卷起成曲旋扣算问点颈好回])/gu;
+const BARE_CLOTH_PREV = '用以把将取拿垫铺盖蒙裹包再块条片张方在于对';
+const BARE_CLOTH_NEXT_NOT = '置局告料线满遍面边纹质匹幅'; // 布面、布边、布料……多指物品自身的织物，不是另取的一块布
+const NON_VESSEL_PREV = /[图围底转圆]$/u;
+
+// 数量：质量、容量、时长、期限。单位换算成基本单位：克、毫升、分钟、天。
+const NUMERAL = '(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千半]+(?:点[零〇一二三四五六七八九]+)?)';
+const QUANT_UNITS = {
+  mass: { 千克: 1000, 公斤: 1000, 克: 1, 斤: 500, 两: 50, 磅: 454, 盎司: 28 },
+  volume: { 毫升: 1, 公升: 1000, 升: 1000 },
+  time: { 分钟: 1, 小时: 60, 时辰: 120, 钟头: 60, 刻钟: 15 },
+  days: { 天: 1, 日: 1, 周: 7, 个月: 30 },
+};
+const UNIT_DIM = Object.fromEntries(Object.entries(QUANT_UNITS).flatMap(([dim, units]) => Object.keys(units).map((unit) => [unit, dim])));
+const QUANT_RE = new RegExp(`(${NUMERAL})(${Object.keys(UNIT_DIM).sort((a, b) => b.length - a.length).join('|')})(?![火起高温])`, 'gu');
+const TOTAL_WORD = /(?:全程|总耗时|总用时|总计|合计|共计|共|前后|整个过程|一共)(?:约|为|需|要|共)*$/u;
+const DEADLINE = /^(?:内|以内|之内|为限)/u;
+function numberOf(raw) {
+  if (/^[\d.]+$/u.test(raw)) return Number(raw);
+  if (raw === '半') return 0.5;
+  if (raw.includes('点')) {
+    const [whole, decimals] = raw.split('点'), integer = whole ? parseChineseNumeral(whole) : { ok: true, value: 0 };
+    const digits = [...decimals].map((digit) => '零一二三四五六七八九'.indexOf(digit === '〇' ? '零' : digit)).join('');
+    return integer.ok ? Number(`${integer.value}.${digits}`) : null;
+  }
+  const parsed = parseChineseNumeral(raw);
+  return parsed.ok ? parsed.value : null;
+}
+// 文本里的全部“数字+单位”：{dim, base, raw, index}。第/每/隔 + 数 + 天（第二天、每三天）是序数/频率，不是数量。
+export function quantitiesIn(text) {
+  const found = [];
+  for (const match of text.matchAll(QUANT_RE)) {
+    if (/[第每隔]$/u.test(text.slice(0, match.index))) continue;
+    const value = numberOf(match[1]);
+    if (value === null) continue;
+    // 周只在期限语境算数量（磨平四周是四边）；两后接量词是“一两支”（一二支）的概数，不是重量单位。
+    if (match[2] === '周' && !DEADLINE.test(text.slice(match.index + match[0].length))) continue;
+    if (match[2] === '两' && /^[个支只条根枚件块张片份名位次天日人]/u.test(text.slice(match.index + match[0].length))) continue;
+    const dim = UNIT_DIM[match[2]];
+    found.push({ dim, base: value * QUANT_UNITS[dim][match[2]], raw: match[0], index: match.index, end: match.index + match[0].length });
+  }
+  return found;
+}
 
 const unique = (list) => [...new Set(list)];
 const esc = (text) => text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 const split = (text, pattern) => text.split(pattern).filter((part) => part.trim());
+
+// 一个分句里“被声明另备/不提供”的对象所在区间。声明词后面直到下一个动作/连接词（用、以、取、将、再……）之前是被声明的对象（另备案板用剪裁片 → 只有案板）；
+// 若声明词后面没有对象（容器须使用者另备、不随货提供），对象在声明词前面、上一个动作词之后。
+function declaredSpans(clause) {
+  const spans = [];
+  const matches = [...clause.matchAll(DECL)];
+  for (let i = 0; i < matches.length; i++) {
+    let start = matches[i].index, end = start + matches[i][0].length;
+    while (i + 1 < matches.length && matches[i + 1].index === end) { i++; end += matches[i][0].length; }
+    const rest = clause.slice(end), cut = rest.search(DECL_BOUNDARY), after = cut < 0 ? rest : rest.slice(0, cut);
+    if (!DECL_FILLER.test(after)) { spans.push([end, end + after.length]); continue; }
+    const head = clause.slice(0, start), prior = [...head.matchAll(new RegExp(DECL_BOUNDARY.source, 'gu'))].at(-1);
+    spans.push([prior ? prior.index + 1 : 0, start]);
+  }
+  return spans;
+}
+const within = (spans, index) => spans.some(([from, to]) => index >= from && index < to);
 
 // 中心词候选：末两字一律算；末一字只在器具类（非容器/布/陶）且不是日常常用字时算。
 export function utensilHeads(name, single = true) {
@@ -98,7 +185,18 @@ export function buildVocabulary(catalog, recipes = []) {
   const plainRe = plain.length ? new RegExp(plain.map(esc).join('|'), 'gu') : null;
   const names = catalog.map((item) => item.name).filter((name) => name.length >= 3).sort((a, b) => b.length - a.length);
   const nameRe = names.length ? new RegExp(names.map(esc).join('|'), 'gu') : null;
-  return { heads, fuels, byId, nameRe, plainRe };
+  // 用火检查专用的遮罩：全名之外再认长度不少于 4 字的名字片段（退火铁线卷 → 退火铁线、可弯退火铁线 → 退火铁线）：
+  // 正文常用简称称呼物料，简称里的退火、烧制等是物料状态，不是用火动作。
+  const shortNames = catalog.flatMap((item) => [item.name, ...(item.aliases ?? [])]).flatMap((name) => {
+    const parts = [name];
+    for (let from = 0; from < name.length; from++) for (let to = from + 4; to <= name.length && to - from < name.length; to++) parts.push(name.slice(from, to));
+    return parts;
+  }).filter((name) => name.length >= 3);
+  const maskNames = unique(shortNames).sort((a, b) => b.length - a.length);
+  const maskRe = maskNames.length ? new RegExp(maskNames.map(esc).join('|'), 'gu') : null;
+  const everyName = unique(catalog.flatMap((item) => [item.name, ...(item.aliases ?? [])]).filter((name) => name.length >= 2)).sort((a, b) => b.length - a.length);
+  const allNameRe = everyName.length ? new RegExp(everyName.map(esc).join('|'), 'gu') : null;
+  return { heads, fuels, byId, nameRe, plainRe, maskRe, allNameRe };
 }
 
 // 主入口：返回错误字符串数组。context.catalog 缺失时（旧调用方）不检查。
@@ -116,40 +214,78 @@ export function processIssues(text, entry, context) {
 
   // 一、骨架外器具：名词直接出现 + 动作隐含。
   for (const sentence of sentences) {
-    const externalSentence = EXTERNAL.test(sentence);
-    for (const rawClause of split(sentence, /[，、：]/u)) {
-      // 非器具物品的全名（干木刨屑、软木薄片）整体遮掉，免得名里的字（刨、片）被当成器具词。
-      const clause = vocab.plainRe ? rawClause.replace(vocab.plainRe, '〇') : rawClause;
-      if (EXTERNAL.test(clause) || NOT_PROVIDED.test(clause)) continue;
+    // 非器具物品的全名（干木刨屑、软木薄片）整体遮掉，免得名里的字（刨、片）被当成器具词。
+    const clauses = split(sentence, /[，、：]/u).map((raw) => {
+      const text = vocab.plainRe ? raw.replace(vocab.plainRe, '〇') : raw;
+      return { raw, text, spans: declaredSpans(text) };
+    });
+    // 本句声明另备/不提供的对象；声明里含容器，则本句其他分句可以装入它（舀入待装容器，容器须使用者另备）。
+    const declared = clauses.flatMap((c) => c.spans.map(([from, to]) => c.text.slice(from, to))).join('|');
+    // 声明了泛称容器（容器、器皿）：本句其他分句可装入任意容器；只声明了某个具体容器（陶罐）：只豁免这个词。
+    const declaresGeneric = /容器|器皿|容具/u.test(declared);
+    const declaresContainer = declaresGeneric || [...vocab.heads].some(([term, info]) => info.container && declared.includes(term));
+    for (const { raw: rawClause, text: clause, spans } of clauses) {
       for (const [term, info] of vocab.heads) {
         if (seen.has(term) || !clause.includes(term)) continue;
         const at = [...clause.matchAll(new RegExp(esc(term), 'gu'))].map((match) => match.index).find((index) => {
+          if (within(spans, index) || declared.includes(term)) return false; // 被声明另备/不提供的对象，本句内再提到也不算引入
           if (!info.strict) { if (allowedText.includes(term)) return false; }
           else if (!(index > 0 && FACILITY_CHARS.includes(clause[index - 1])) || allowedText.includes(clause.slice(index - 1, index + 1))) return false;
-          return !NEGATION.test(clause.slice(0, index));
+          return !NEGATION.test(clause.slice(0, info.strict ? index - 1 : index)); // 设施字+器具字（案板）：否定落在设施字前面
         });
         if (at === undefined) continue;
-        if (info.container && externalSentence) continue;
+        if (info.container && declaresGeneric) continue;
         seen.add(term);
         errors.push(`正文出现骨架外器具「${term}」（${rawClause.trim()}）：器具须来自骨架 tools、materials 或工作台设施。修复：改用骨架已有的器具，或删去这一步；确需此器具就改骨架补进 tools/materials，不要只在正文里添加`);
       }
       for (const [word, type] of Object.entries(GENERIC_WORDS)) {
         if (!clause.includes(word) || seen.has(word)) continue;
-        if (type === 'container' ? externalSentence || hasContainer : hasCloth) continue;
+        const at = [...clause.matchAll(new RegExp(esc(word), 'gu'))].map((match) => match.index).find((index) => !within(spans, index) && !declared.includes(word) && !NEGATION.test(clause.slice(0, index)));
+        if (at === undefined) continue;
+        if (type === 'container' ? declaresContainer || hasContainer : hasCloth) continue;
         seen.add(word);
         errors.push(`正文提到泛称器具「${word}」（${rawClause.trim()}）但骨架没有对应的${type === 'container' ? '容器' : '布巾'}。修复：写明“容器须使用者另备，不随货提供”，或改用骨架已有器具`);
       }
     }
+    for (const { raw: rawClause, text: plainClause, spans } of clauses) {
+      const clause = vocab.allNameRe ? plainClause.replace(vocab.allNameRe, '〇') : plainClause;
+      // 遮罩会改变长度，声明区间与否定都按遮罩后的分句重算。
+      const maskedSpans = declaredSpans(clause);
+      const exempt = (word, index) => within(maskedSpans, index) || declared.includes(word) || NEGATION.test(clause.slice(0, index));
+      for (const match of clause.matchAll(VESSEL)) {
+        const word = match[0], kind = word.at(-1);
+        if (seen.has('泛:' + word) || allowedText.includes(kind) || exempt(word, match.index) || (kind === '罐' || kind === '盘') && NON_VESSEL_PREV.test(clause.slice(0, match.index))) continue;
+        if (declaresGeneric) continue;
+        seen.add('泛:' + word);
+        errors.push(`正文提到泛称器具「${word}」（${rawClause.trim()}）但骨架 tools、materials 和工作台设施里没有${kind}类物品。修复：改用骨架已有器具；确需盛装就写明“容器须使用者另备，不随货提供”`);
+      }
+      for (const match of clause.matchAll(/布/gu)) {
+        const prev = clause[match.index - 1], next = clause[match.index + 1];
+        const bare = prev === undefined || !/\p{Script=Han}/u.test(prev) || BARE_CLOTH_PREV.includes(prev);
+        if (!bare || (next && BARE_CLOTH_NEXT_NOT.includes(next)) || prev === '〇' || seen.has('泛:布') || hasCloth || allowedText.includes('布') || exempt('布', match.index)) continue;
+        seen.add('泛:布');
+        errors.push(`正文提到泛称器具「布」（${rawClause.trim()}）但骨架没有布巾类物品。修复：改用骨架已有器具，或删去这一步`);
+      }
+    }
     for (const rule of ACTION_NEEDS) {
-      const match = sentence.match(rule.verbs);
-      if (!match || seen.has(rule.id) || items.some(rule.need)) continue;
+      if (seen.has(rule.id) || items.some(rule.need)) continue;
+      // 逐个命中检查：紧邻否定（不再擦拭）或用身体部位做的（用拇指擦去）不算。
+      const match = [...sentence.matchAll(new RegExp(rule.verbs.source, 'gu'))].find((hit) => {
+        const prefix = sentence.slice(0, hit.index).split(/[，、：]/u).at(-1);
+        return !NEGATION.test(prefix) && !rule.exempt?.(prefix);
+      });
+      if (!match) continue;
       seen.add(rule.id);
       errors.push(`正文动作「${match[0]}」（${sentence.trim()}）需要${rule.label}，骨架 tools/materials 里没有。修复：删去该动作，或改骨架补入对应物品`);
     }
   }
 
   // 二、另备容器是交付终点：装入之后不得再对内容物加工（如滤进另备容器后又沿锅缘搅匀）。
-  const stirAfter = (sentence) => PROCESS.test(sentence) && !NEGATION.test(sentence.slice(0, sentence.search(PROCESS)));
+  // 复合词（煮锅保留）与“翻倒”不是加工；其余加工动词逐个看，紧邻否定（不再搅动）的不算。
+  const stirAfter = (clause) => {
+    const bare = clause.replace(PROCESS_COMPOUND, '');
+    return [...bare.matchAll(PROCESS)].some((match) => !NEGATION.test(bare.slice(0, match.index)));
+  };
   let delivered = false;
   for (const raw of sentences) {
     const sentence = vocab.nameRe ? raw.replace(vocab.nameRe, '〇') : raw; // 物品全名（温搅皂洗液）里的动作字不是加工动作
@@ -164,19 +300,67 @@ export function processIssues(text, entry, context) {
   }
 
   // 三、用火须交代火源。
-  const masked = (vocab.nameRe ? text.replace(vocab.nameRe, '') : text).replace(HEAT_COMPOUND, '');
+  const masked = (vocab.maskRe ? text.replace(vocab.maskRe, '') : text).replace(HEAT_COMPOUND, '');
   const heats = [];
-  for (const match of masked.matchAll(HEAT)) if (!NEGATION.test(masked.slice(Math.max(0, match.index - 8), match.index))) heats.push(match[0]);
+  for (const match of masked.matchAll(HEAT)) if (!HEAT_NEGATION.test(masked.slice(0, match.index))) heats.push(match[0]);
   if (heats.length) {
     const fuelMaterial = items.filter((item) => vocab.fuels.has(item.id) && (entry.materials ?? []).some((row) => row.item === item.id));
     const verbs = unique(heats).join('、');
     if (!fuelMaterial.length) {
       errors.push(`正文写了用火（${verbs}）但骨架 materials 里没有燃料（带 fuel 标签的物品）。修复：改骨架补入燃料物品，或把加热步骤改成不用火的做法`);
-    } else if (!sentences.some((sentence) => FIRE_ROLE.test(sentence) && fuelMaterial.some((item) => vocab.fuels.get(item.id).some((name) => sentence.includes(name))))) {
+    } else if (!sentences.some((sentence) => affirmsFire(sentence, fuelMaterial.flatMap((item) => vocab.fuels.get(item.id))))) {
       errors.push(`正文写了用火（${verbs}）但没有交代火源。修复：补一句“以${fuelMaterial[0].name}引火/作火源”，且燃料只入炉灶、不混入成品`);
     }
   }
+  errors.push(...quantityIssues(text, entry, vocab, items));
   return errors;
+}
+
+// 四、骨架外数量：具体质量/容量、分段时长、期限，数值必须来自骨架或引用事实（processFacts、材料与成品的 use 与重量、minutes、保存期）。
+function quantityIssues(text, entry, vocab, items) {
+  const allowed = { mass: new Set(), volume: new Set(), time: new Set(), days: new Set() };
+  const take = (list) => { for (const quantity of list) allowed[quantity.dim].add(quantity.base); };
+  take(quantitiesIn([entry.processFacts, entry.use, ...items.map((item) => item.use)].filter((value) => typeof value === 'string').join('。')));
+  const output = vocab.byId.get(entry.output?.item) ?? entry;
+  for (const item of [output, ...(entry.materials ?? []).map((row) => vocab.byId.get(row.item))]) if (typeof item?.weight === 'number') allowed.mass.add(Math.round(item.weight * 1000));
+  for (const row of entry.materials ?? []) {
+    // 材料 use 里写的每份数量（五十毫升）乘份数，也是骨架给出的总量。
+    if (typeof row.amount === 'number') take(quantitiesIn(vocab.byId.get(row.item)?.use ?? '').map((quantity) => ({ ...quantity, base: quantity.base * row.amount })));
+    const weight = vocab.byId.get(row.item)?.weight;
+    if (typeof weight === 'number' && typeof row.amount === 'number') allowed.mass.add(Math.round(weight * row.amount * 1000));
+  }
+  const total = entry.minutes ?? entry.book?.readingMinutes;
+  const shelf = output.shelfLifeDays ?? entry.shelfLifeDays;
+  if (typeof shelf === 'number') allowed.days.add(shelf);
+  const errors = [];
+  const seenRaw = new Set();
+  for (const quantity of quantitiesIn(text)) {
+    if (seenRaw.has(quantity.raw)) continue;
+    const near = (set) => [...set].some((value) => Math.abs(value - quantity.base) < 0.5);
+    const deadline = DEADLINE.test(text.slice(quantity.end)) || /(?:保存|存放|储存|保质|限期|期限|存期|可存|可放)[^，。；]{0,2}$/u.test(text.slice(0, quantity.index));
+    const context = text.slice(Math.max(0, quantity.index - 12), Math.min(text.length, quantity.end + 8)).trim();
+    let bad = null;
+    if (quantity.dim === 'mass' || quantity.dim === 'volume') {
+      if (!near(allowed[quantity.dim])) bad = `正文出现骨架外数量「${quantity.raw}」（${context}）：质量、容量数值须来自骨架材料份数与重量或 processFacts。修复：删去具体数量，改写成“规定份量”“全部”`;
+    } else if (quantity.dim === 'days' || deadline) {
+      if (!near(allowed[quantity.dim])) bad = `正文出现骨架外期限「${quantity.raw}」（${context}）：期限只能是骨架保存期或 processFacts 写明的。修复：删去期限（如“两日内用完”），保存期以骨架为准`;
+    } else if (!near(allowed.time)) {
+      const isTotal = TOTAL_WORD.test(text.slice(Math.max(0, quantity.index - 8), quantity.index)) && total !== undefined && quantity.base === total;
+      if (!isTotal) bad = `正文出现骨架外时长「${quantity.raw}」（${context}）：分段时长须来自 processFacts，总时长只由系统追加“全程N分钟”。修复：删去这类约N分钟的分段时长`;
+    }
+    if (bad) { seenRaw.add(quantity.raw); errors.push(bad); }
+  }
+  return errors;
+}
+
+// 火源交代必须是肯定句：同一句里有火源用语（引火、燃料、火源……）和骨架燃料的名字，且两者都没有被紧邻否定（不以干木刨屑引火、火源不取木炭）。
+// 燃料名取最长匹配（干木刨屑），免得“不以干木刨屑”被里面的短名“刨屑”绕过。
+function affirmsFire(sentence, names) {
+  const roles = [...sentence.matchAll(new RegExp(FIRE_ROLE.source, 'gu'))];
+  if (!roles.some((match) => !NEGATION.test(sentence.slice(0, match.index)))) return false;
+  const sorted = unique(names).sort((a, b) => b.length - a.length);
+  if (!sorted.length) return false;
+  return [...sentence.matchAll(new RegExp(sorted.map(esc).join('|'), 'gu'))].some((match) => !NEGATION.test(sentence.slice(0, match.index)));
 }
 
 const cache = new WeakMap();
