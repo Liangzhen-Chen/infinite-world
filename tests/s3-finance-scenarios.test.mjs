@@ -35,17 +35,20 @@ test('E18/E3: 规范工资债与旧投影只减一次股值，到期债权先于
     let d=f.draft();const before=netAssets(d,f.e,host);d.done();
     const amount=f.doc.state.npcs[host].coins;
     // Bread base 2, physical supply 20, no backed forwards: effective supply 20.
-    // K02 household buffers give demand 2+4+4+4+4=18; the keeper retains 0
-    // with local market access. Stock value = 20*2*18/20=36.
-    assert.equal(amount,634);assert.equal(before,634+36);
+    // 面包饱腹改由推导（R1，t-sat：30→16，item-class.mjs satietyFactor）后，各户面包留存约翻倍。探针 tools/probe-rules-a.mjs s3fin：
+    // 注资前 netAssets(host)=548=现金500+面包20*2*需求24/供给20=48；需求 24 = 玩家3+shendu4+ayan8+chenbai4+gucen5（旧：2+4+4+4+4=18）。
+    // 持股价格 = 注资前净资产/4（20 股占四分之一）= 548/4 = 137（旧：536/4=134；st-5 为 528/4=132，需求被货架上限 14 夹住），所以 amount=500+137=637，
+    // 注资后库存估值 48，before = 637+48 = 685（探针 netAssets=685）。
+    assert.equal(amount,637);assert.equal(before,637+48);
     f.doc.state.records.wages={category:'debt',kind:'wage',debtor:host,creditor:worker,amount,paid:0,createdAt:600,deadline:at,status:'待偿还'};
     // The known wage extends the creditor's income horizon: his bread reserve
-    // rises 4->20. The keeper's market budget cannot release another holder's
-    // food. Demand = 2+4+20+4+4=34; supply stays 20; stock value = 68.
-    // Assets = cash634 + 20*2*34/20 - wage634 = 68, both before/after adoption.
+    // rises 8->20. The keeper's market budget cannot release another holder's
+    // food. 债权人 ayan 的 20 个面包全部自留，其余四人再没有可买的面包来源，退回各自完整储备（R1 后每人约 8，而不是旧的 4）：
+    // 探针：玩家4+shendu8+ayan20+chenbai8+gucen8 = 需求 48；supply stays 20；stock value = 20*2*48/20 = 96（旧：2+4+20+4+4=34 → 68）。
+    // Assets = cash637 + 96 - wage637 = 96, both before/after adoption（探针：记债后 96，采纳旧投影后仍 96）。
     // A duplicated canonical+legacy liability would instead hit the floor of 1.
-    d=f.draft();assert.equal(netAssets(d,f.e,host),68);
-    adoptLegacyObligation(d,f.e,'wages');assert.equal(netAssets(d,f.e,host),68);d.done();
+    d=f.draft();assert.equal(netAssets(d,f.e,host),96);
+    adoptLegacyObligation(d,f.e,'wages');assert.equal(netAssets(d,f.e,host),96);d.done();
     const total=cash(f.doc);f.tick(at);
     assert.equal(f.doc.state.records[equity.contract].distributed,0);assert.equal(dueObligation(f.doc.state,'wages').owed,amount);assert.equal(cash(f.doc),total);
 });
