@@ -1,39 +1,21 @@
 {
   "id": "recipe_w3c_garlic_butter",
   "fingerprint": "08146c9ad8f2572c3c64d7b5fb3a39538e4d3a6fea28e09cb50b970da45e2945",
-  "status": "manual",
+  "status": "passed",
   "attempts": 4,
   "draft": {
     "id": "recipe_w3c_garlic_butter",
-    "process": "取晒皮蒜头剥瓣去皮，在案板上以案上切刀将蒜瓣切细成末。无盐黄油已软化，与蒜末同置厚底煮锅内，持偏柄木匙沿锅底反复压拌，使蒜末均匀嵌入黄油。拌好后留在锅内等待回软，全程不额外加热，也不加酥油或奶油。连切带拌与等待回软合计二十五分钟，拌成一份蒜末拌黄油。锅内不残留余料，木匙与切刀保留，锅壁破裂或内锈脱落时需维修。全程25分钟。"
+    "process": "把无盐黄油放入厚底煮锅，静置回软，全程不加热。回软期间，取晒皮蒜头剥瓣去皮，用案上切刀切成细末。待黄油回软，把蒜末放入锅中，用偏柄木匙沿锅底反复压拌，使蒜末均匀嵌入黄油，即得一份蒜末拌黄油。锅内不留余料，切刀与木匙保留。全程25分钟。"
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "锅壁破裂或内锈脱落时需维修",
-        "field": "draft.process",
-        "severity": "hard",
-        "reason": "自添维修需求，骨架与引用事实未声明锅具维修要求，违反(c)项"
-      }
-    ]
+    "kind": "manual-rewrite-no-l2",
+    "l2": "not-run",
+    "by": "sonnet-writer-a8d49a7c",
+    "at": "2026-11-10T21:46:43.702Z"
   },
-  "errors": [
-    {
-      "quote": "锅壁破裂或内锈脱落时需维修",
-      "field": "draft.process",
-      "severity": "hard",
-      "reason": "自添维修需求，骨架与引用事实未声明锅具维修要求，违反(c)项"
-    }
-  ],
+  "errors": [],
   "warnings": [],
-  "feedback": [
-    {
-      "quote": "锅壁破裂或内锈脱落时需维修",
-      "field": "draft.process",
-      "severity": "hard",
-      "reason": "自添维修需求，骨架与引用事实未声明锅具维修要求，违反(c)项"
-    }
-  ],
+  "feedback": null,
   "l4Rejection": [
     {
       "key": "ac515b94403afabb021a8f71cbb16a95be286151013e044395cd761151bc8b5d",
@@ -301,6 +283,30 @@
       "clearedAt": "2026-11-10T19:25:48.378Z",
       "reason": "李白 11-10 决定（5 元授权）：配方重写本轮总上限 0.5→0.7 元，剩余 14 条一次性写完",
       "headCommit": "4e1569bd8300f67ce95eb24e7c1a600aee7e6197"
+    }
+  ],
+  "manualRewrite": [
+    {
+      "by": "sonnet-writer-a8d49a7c",
+      "at": "2026-11-10T21:46:43.702Z",
+      "reason": "李白 11-10 决定（零花费）：L4 不批、确定性检查命中、manual 条目改为人工按骨架改写；独立严格 L4 已过（审查者 sonnet-l4-a3a9e74a，主会话复核）",
+      "headCommit": "947b875f4d98c299dda239e13d442b0bf21757ac",
+      "priorStatus": "manual",
+      "priorDraft": {
+        "id": "recipe_w3c_garlic_butter",
+        "process": "取晒皮蒜头剥瓣去皮，在案板上以案上切刀将蒜瓣切细成末。无盐黄油已软化，与蒜末同置厚底煮锅内，持偏柄木匙沿锅底反复压拌，使蒜末均匀嵌入黄油。拌好后留在锅内等待回软，全程不额外加热，也不加酥油或奶油。连切带拌与等待回软合计二十五分钟，拌成一份蒜末拌黄油。锅内不残留余料，木匙与切刀保留，锅壁破裂或内锈脱落时需维修。全程25分钟。"
+      },
+      "priorReview": {
+        "contradictions": [
+          {
+            "quote": "锅壁破裂或内锈脱落时需维修",
+            "field": "draft.process",
+            "severity": "hard",
+            "reason": "自添维修需求，骨架与引用事实未声明锅具维修要求，违反(c)项"
+          }
+        ]
+      },
+      "priorAttempts": 4
     }
   ]
 }

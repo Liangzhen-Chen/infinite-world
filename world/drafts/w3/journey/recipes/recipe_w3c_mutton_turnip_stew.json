@@ -1,39 +1,21 @@
 {
   "id": "recipe_w3c_mutton_turnip_stew",
   "fingerprint": "697cb87456cdf18fe1915c29c765ea19588ce879c88d05c67ed44f9ecec42de8",
-  "status": "manual",
+  "status": "passed",
   "attempts": 5,
   "draft": {
     "id": "recipe_w3c_mutton_turnip_stew",
-    "process": "取去骨羊肉与带皮芜菁，各在案上用切刀切成入口大小的块，芜菁的根须与坏斑先削去。切完生肉后，以干布面把刀面擦净，生熟分开。厚底煮锅置于小灶上，倾入配额清水，下羊肉与芜菁，投粗盐，取干木刨屑引火，慢煨至肉熟根软。其间用偏柄木匙沿锅缘翻动，拨去浮沫。锅壁破裂或内锈脱落时需维修。成煨一份，余料弃置，工具保留。全程120分钟。"
+    "process": "取去骨羊肉与带皮芜菁，用案上切刀分别切成入口大小的块。厚底煮锅中倾入配额清水，放入羊肉块与芜菁块，撒入粗盐。点燃三份干木刨屑作火源，把煮锅置于火上，慢煨至肉熟根软。其间用偏柄木匙沿锅缘翻动，拨去浮沫，即得一份羊肉芜菁煨。切配中的余料弃置，工具保留。成品只是一份煨菜，不作药膳之用。全程120分钟。"
   },
   "review": {
-    "contradictions": [
-      {
-        "quote": "锅壁破裂或内锈脱落时需维修。",
-        "field": "draft.process",
-        "severity": "hard",
-        "reason": "自添维修需求；骨架与引用事实未声明该菜谱工序中需维修锅具，属(c)项禁止的维修需求。"
-      }
-    ]
+    "kind": "manual-rewrite-no-l2",
+    "l2": "not-run",
+    "by": "sonnet-writer-a8d49a7c",
+    "at": "2026-11-10T21:46:43.702Z"
   },
-  "errors": [
-    {
-      "quote": "锅壁破裂或内锈脱落时需维修。",
-      "field": "draft.process",
-      "severity": "hard",
-      "reason": "自添维修需求；骨架与引用事实未声明该菜谱工序中需维修锅具，属(c)项禁止的维修需求。"
-    }
-  ],
+  "errors": [],
   "warnings": [],
-  "feedback": [
-    {
-      "quote": "锅壁破裂或内锈脱落时需维修。",
-      "field": "draft.process",
-      "severity": "hard",
-      "reason": "自添维修需求；骨架与引用事实未声明该菜谱工序中需维修锅具，属(c)项禁止的维修需求。"
-    }
-  ],
+  "feedback": null,
   "l4Rejection": [
     {
       "key": "80d747b9611153ea1252bff5dd423aed825075efd4b0c5e4bbc4081f16acc81f",
@@ -358,6 +340,30 @@
       "cumulativeUpperYuan": 5.682441120000004,
       "latencyMs": 1086.5172999999995,
       "timestamp": "2026-11-10T19:26:26.973Z"
+    }
+  ],
+  "manualRewrite": [
+    {
+      "by": "sonnet-writer-a8d49a7c",
+      "at": "2026-11-10T21:46:43.702Z",
+      "reason": "李白 11-10 决定（零花费）：L4 不批、确定性检查命中、manual 条目改为人工按骨架改写；独立严格 L4 已过（审查者 sonnet-l4-a3a9e74a，主会话复核）",
+      "headCommit": "947b875f4d98c299dda239e13d442b0bf21757ac",
+      "priorStatus": "manual",
+      "priorDraft": {
+        "id": "recipe_w3c_mutton_turnip_stew",
+        "process": "取去骨羊肉与带皮芜菁，各在案上用切刀切成入口大小的块，芜菁的根须与坏斑先削去。切完生肉后，以干布面把刀面擦净，生熟分开。厚底煮锅置于小灶上，倾入配额清水，下羊肉与芜菁，投粗盐，取干木刨屑引火，慢煨至肉熟根软。其间用偏柄木匙沿锅缘翻动，拨去浮沫。锅壁破裂或内锈脱落时需维修。成煨一份，余料弃置，工具保留。全程120分钟。"
+      },
+      "priorReview": {
+        "contradictions": [
+          {
+            "quote": "锅壁破裂或内锈脱落时需维修。",
+            "field": "draft.process",
+            "severity": "hard",
+            "reason": "自添维修需求；骨架与引用事实未声明该菜谱工序中需维修锅具，属(c)项禁止的维修需求。"
+          }
+        ]
+      },
+      "priorAttempts": 5
     }
   ]
 }

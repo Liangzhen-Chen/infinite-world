@@ -5,10 +5,13 @@
   "attempts": 2,
   "draft": {
     "id": "recipe_w3c_pear_vinegar_slice",
-    "process": "取脆肉梨一份，用案上切刀剖开、剔去果核，再切成薄片。将滤蜜小罐份与两瓶酸果醋倒入厚底煮锅，持偏柄木匙搅至蜜散匀，随即下梨片短浸，使片片沾匀蜜醋。浸好后以木匙沿锅缘舀取梨片，装入使用者另备的容器；锅内余汁弃置，不随货交付。切刀与木匙用后拭去残汁收存。全程90分钟。"
+    "process": "取脆肉梨，用案上切刀剖开，剔去果核，再切成薄片。把滤蜜小罐份与酸果醋小瓶的醋倒入厚底煮锅，用偏柄木匙搅至蜜与醋匀合，随即下梨片短浸，用木匙翻动，使片片沾匀蜜醋，即得一份醋浸梨片。锅内余汁弃置，不随货交付。盛装容器须使用者另备，不随货提供。全程90分钟，其中含切配。"
   },
   "review": {
-    "contradictions": []
+    "kind": "manual-rewrite-no-l2",
+    "l2": "not-run",
+    "by": "sonnet-writer-a8d49a7c",
+    "at": "2026-11-10T21:46:43.702Z"
   },
   "errors": [],
   "warnings": [],
@@ -146,6 +149,23 @@
       "cumulativeUpperYuan": 5.621710080000005,
       "latencyMs": 817.7777999999962,
       "timestamp": "2026-11-10T19:18:13.834Z"
+    }
+  ],
+  "manualRewrite": [
+    {
+      "by": "sonnet-writer-a8d49a7c",
+      "at": "2026-11-10T21:46:43.702Z",
+      "reason": "李白 11-10 决定（零花费）：L4 不批、确定性检查命中、manual 条目改为人工按骨架改写；独立严格 L4 已过（审查者 sonnet-l4-a3a9e74a，主会话复核）",
+      "headCommit": "947b875f4d98c299dda239e13d442b0bf21757ac",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "recipe_w3c_pear_vinegar_slice",
+        "process": "取脆肉梨一份，用案上切刀剖开、剔去果核，再切成薄片。将滤蜜小罐份与两瓶酸果醋倒入厚底煮锅，持偏柄木匙搅至蜜散匀，随即下梨片短浸，使片片沾匀蜜醋。浸好后以木匙沿锅缘舀取梨片，装入使用者另备的容器；锅内余汁弃置，不随货交付。切刀与木匙用后拭去残汁收存。全程90分钟。"
+      },
+      "priorReview": {
+        "contradictions": []
+      },
+      "priorAttempts": 2
     }
   ]
 }

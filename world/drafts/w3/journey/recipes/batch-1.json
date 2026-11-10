@@ -1,6 +1,6 @@
 {
   "index": 1,
-  "fingerprint": "990eb366811c01c51281a5b22732bbb486a074c8239cab6355ae3f9391baf64a",
+  "fingerprint": "f4d24e3c8a9ac967f81452c89c06075c1fbfbcb70dd5bd6ee49c02b896aa68d1",
   "count": 42,
   "passed": 42,
   "ids": [
@@ -350,6 +350,22 @@
           "recipe_w3c_redwood_dye",
           "recipe_w3c_paste_cup_portion",
           "recipe_w3c_horn_comb"
+        ]
+      }
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "rejection": {
+        "by": "主会话严格 L4 复读（Claude Opus 5.5）与确定性工序检查（t-m27 w3-process-check）",
+        "at": "2026-11-10T21:5xZ",
+        "reason": "李白 11-10 决定：L4 不批与确定性检查命中的条目一律人工改写，再由独立审查者做严格 L4。问题包括骨架外器具（案板、剪、布）、用火未交代火源、前后矛盾、骨架外器物（瓶），各条详见 docs/PLAN.md 与 docs/m27-rewrite-scope.md。",
+        "ids": [
+          "recipe_w3c_horn_comb",
+          "recipe_w3c_redwood_dye",
+          "recipe_w3c_seal_thread_bundle",
+          "recipe_w3c_forged_chain_short",
+          "recipe_w3c_gate_hasps"
         ]
       }
     }

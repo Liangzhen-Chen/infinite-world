@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "235ff2f6d06a0c95755d4a7636c5fbe60de4669bf8f0eae9d6a0b37fd56e9ff1",
+  "fingerprint": "10b008cc4cff780ce3721a61210a2d9adbc6d4aa5473a3836768708e529306fe",
   "count": 43,
-  "passed": 41,
+  "passed": 43,
   "ids": [
     "recipe_w3c_cracked_wheat_pot",
     "recipe_w3c_lentil_leek_stew",
@@ -49,10 +49,7 @@
     "recipe_w3c_cork_stop_set"
   ],
   "rewritten": 23,
-  "manual": [
-    "recipe_w3c_mutton_turnip_stew",
-    "recipe_w3c_garlic_butter"
-  ],
+  "manual": [],
   "pending": [],
   "flagged": [],
   "sample": [
@@ -64,7 +61,15 @@
   ],
   "l4": {
     "approved": false,
-    "notes": []
+    "notes": [],
+    "rejection": {
+      "by": "主会话严格 L4 复读（Claude Opus 5.5）与确定性工序检查（t-m27 w3-process-check）",
+      "at": "2026-11-10T21:5xZ",
+      "reason": "李白 11-10 决定：L4 不批与确定性检查命中的条目一律人工改写，再由独立审查者做严格 L4。问题包括骨架外器具（案板、剪、布）、用火未交代火源、前后矛盾、骨架外器物（瓶），各条详见 docs/PLAN.md 与 docs/m27-rewrite-scope.md。",
+      "ids": [
+        "recipe_w3c_cork_stop_set"
+      ]
+    }
   },
   "l4History": [
     {
@@ -318,9 +323,29 @@
           "recipe_w3c_mutton_turnip_stew"
         ]
       }
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "rejection": {
+        "by": "主会话严格 L4 复读（Claude Opus 5.5）与确定性工序检查（t-m27 w3-process-check）",
+        "at": "2026-11-10T21:5xZ",
+        "reason": "李白 11-10 决定：L4 不批与确定性检查命中的条目一律人工改写，再由独立审查者做严格 L4。问题包括骨架外器具（案板、剪、布）、用火未交代火源、前后矛盾、骨架外器物（瓶），各条详见 docs/PLAN.md 与 docs/m27-rewrite-scope.md。",
+        "ids": [
+          "recipe_w3c_caraway_oat_crust",
+          "recipe_w3c_laundry_mesh_bag",
+          "recipe_w3c_pear_vinegar_slice",
+          "recipe_w3c_bottle_divider_crate",
+          "recipe_w3c_broadbean_garlic_mash",
+          "recipe_w3c_rendered_cooking_fat",
+          "recipe_w3c_plum_honey_spread",
+          "recipe_w3c_dill_cucumber",
+          "recipe_w3c_cork_stop_set"
+        ]
+      }
     }
   ],
   "costUpperYuan": 5.682441120000004,
-  "manualRatio": 0.046511627906976744,
+  "manualRatio": 0,
   "needsSystemicRepair": false
 }
