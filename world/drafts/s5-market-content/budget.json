@@ -7,7 +7,7 @@
       "limitYuan": 0.3,
       "spentYuan": 0.002408,
       "reservedYuan": 0,
-      "maxRequests": 3
+      "maxRequests": 5
     }
   },
   "requests": {

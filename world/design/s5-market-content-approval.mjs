@@ -37,7 +37,8 @@ export async function run(args=process.argv.slice(2)){
    client:new DeepSeekClient({budgetYuan:0.3,logFile:`${root}/usage.jsonl`}),cardId:'S502C',
    // The shared allocator accepts its original wave denomination; the actual
    // ledger and this card both remain capped at 0.3, never at that denomination.
-   allocation:{cardId:'S502C',incrementLimitYuan:0.3,maxRequests:3,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:1});
+   // 11-10 李白批复（5 元内小额授权）：S502C 次数上限 3→5，金额仍 0.3 元；只限本账本、只限 s5-market-parameters 这一轮重审。
+   allocation:{cardId:'S502C',incrementLimitYuan:0.3,maxRequests:5,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:1});
   console.log(JSON.stringify({passed:summary.passed,manual:summary.manual,pending:summary.pending,budget:summary.budget.cards.S502C}));
  }
  if(args.includes('--prepare')){
