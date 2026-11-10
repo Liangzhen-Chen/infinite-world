@@ -104,7 +104,9 @@ const UNIT_DIM = Object.fromEntries(Object.entries(QUANT_UNITS).flatMap(([dim, u
 const QUANT_RE = new RegExp(`(${NUMERAL})(${Object.keys(UNIT_DIM).sort((a, b) => b.length - a.length).join('|')})(?![火起高温A-Za-z])`, 'giu');
 // 度算温度单位：数字紧接“度”，且数字前面是真正的温度表述（温度、水温、加热到、烧至、升到……）；“温水后一度翻动”“水温升高后一度翻动”是次数。角度写作“九十度角”。
 const TEMP_CONTEXT = /(?:温度|[水油炉火锅]温|火候|[热烧升降冷凉加]至|[热烧升降冷凉加]到|达到?|升到|降到)(?:约|为|在|是)?$/u;
-const TOTAL_WORD = /(?:全程|总耗时|总用时|总计|合计|共计|共|前后|整个过程|一共)(?:约|为|需|要|共)*$/u;
+// 总括性时长句：总括词（全程、总耗时、总计、共耗时、前后共、一共用……）与数字之间可隔同一分句内至多 12 个非标点字（全程含加热与冷却等待约150分钟、全程用四十五分钟）。
+// 数值等于骨架 minutes 才放行（“约N分钟”且 N 等于骨架也放行）；不等于，或没有总括词的分段时长，照判。
+const TOTAL_WORD = /(?:全程|总耗时|总用时|总时长|总计|总共|合计|共计|共|前后|整个过程|整件活计|一共)[^，。；、：]{0,12}$/u;
 const DEADLINE = /^(?:内|以内|之内|为限)/u;
 // 期限语境词：保存七天、存放三日、保质十天、食用期五天、三天用完；单独的“晾半天”“一天之中”不是期限。
 const DEADLINE_WORD_BEFORE = /(?:保存|存放|储存|可放|可存|保质|放置|食用期|保鲜)(?:约|至|为|达|可|期|在|于)?$/u;
@@ -374,7 +376,7 @@ function quantityIssues(text, entry, vocab, items) {
     } else if (quantity.dim === 'days') { // 期限只认天、日、周、月，按天比较；“三十分钟内”是时长，走下面的时长分支
       if (!near(allowed[quantity.dim])) bad = `正文出现骨架外期限「${quantity.raw}」（${context}）：期限只能是骨架保存期或 processFacts 写明的。修复：删去期限（如“两日内用完”），保存期以骨架为准`;
     } else if (!near(allowed.time)) {
-      const isTotal = TOTAL_WORD.test(text.slice(Math.max(0, quantity.index - 8), quantity.index)) && total !== undefined && quantity.base === total;
+      const isTotal = TOTAL_WORD.test(text.slice(Math.max(0, quantity.index - 16), quantity.index)) && total !== undefined && quantity.base === total;
       if (!isTotal) bad = `正文出现骨架外时长「${quantity.raw}」（${context}）：分段时长须来自 processFacts，总时长只由系统追加“全程N分钟”。修复：删去这类约N分钟的分段时长`;
     }
     if (bad) { seenRaw.add(quantity.raw); errors.push(bad); }

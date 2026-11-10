@@ -470,3 +470,12 @@ test('第5轮误报：度的温度语境、贮存安全写法、百合、烙印'
   assert.deepEqual(fx('在革面压出烙印。'), [], '烙印不是用火');
   assert.match(fxJoin('把料烙熟。'), /用火/);
 });
+
+test('总时长句的写法变体：等于 minutes 放行，不等于或分段仍判错', () => {
+  for (const text of ['共耗时四十分钟。', '全程用四十分钟。', '总计四十分钟。', '前后共四十分钟。', '一共用四十分钟。', '全程含等待约40分钟。', '全程约40分钟。'])
+    assert.deepEqual(fx(text, fxFacts), [], text);
+  for (const text of ['共耗时四十五分钟。', '全程用四十五分钟。', '一共用五十分钟。', '全程含等待约45分钟。'])
+    assert.match(fxJoin(text, fxFacts), /骨架外时长/, text);
+  assert.match(fxJoin('熬煮约25分钟。', fxFacts), /骨架外时长「25分钟」/, '分段时长照判');
+  assert.match(fxJoin('先静置，再约40分钟收汁。', fxFacts), /骨架外时长「40分钟」/, '没有总括词的“约N分钟”即使等于 minutes 也是分段');
+});
