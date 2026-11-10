@@ -265,6 +265,19 @@ B 节补充：
   - **11-10 05:0x 剖析定位到根因。** prof-4b（t-m4+脚本）：ledger-stock 2117 秒，farm-pests-harvest 2561 秒；prof-nb（m2-6b+脚本）：2601 秒（+23%），2952 秒（+15%）。剖析文件在 F:/dnd-tmp/prof-cloud/{old,new}，对比脚本是 profdiff.py。新增耗时几乎都来自 t-avail 的 accessibleSources（household-budget.mjs）：它在 ledger 里累计 328 秒，在 farm 里累计 424 秒，旧代码里没有这一项；同时它让 marketSupply/quoteSupply 的累计耗时多出 374 秒和 408 秒（自身 +172/+150 秒）。另有 cachedSchedule 自身 +53/+64 秒、storage take +60 秒、materialProps/householdUsage 各约 +12 秒。所以变慢的主因是可得性那组改动在逐户逐次重新报价，不是 staple/alloc 的份额。份额快照规则改动（t-perf 64aa47ba）确认没有用处，建议撤回、不合入，请李白定。修复卡 FX7（F:/dnd-wt/FX7）已开：不改语义，用现有作用域缓存消除重复报价，修完照规矩两轮审查，再在云上用同样的剖析隔离复测。
   - FX6 完成（t-fx6）：573b0047 bounty 的 money() 计入全部 money_account，期望值不变；c37d1114 s3-probe-integration 改用 moveCoins 清零现金，netAssets 685→52，确实下降。A 类逐项重推（断言类型和强度不变，注释里写推导链）：a3-legacy-primitives 8→9（稀缺度 28/48）；shop-restock 面包饱腹 30→16，留存 4→6；w2-s2 导师家面包 60→120（按每天约 12 个推算）；a2-dialogue 48→58；credit 进货前给店主补回 6 个面包（居民中午就把面包买光）；entity-world 8→16、499→666；finance-assets 估值重推、薄饼 60→120；s3-finance-scenarios 634→637；m3-acceptance 174/173→173/172（依据：稀缺度 0.596 加云上实测值，本机没有复现，审查时重点核对）。主会话已抽查 w2-s2、credit、m3-acceptance 的改动。05:2x 在 M26 依次合入 t-fx1 9834cd16、t-fx3 e5de6511、t-fx4 c747de13、t-fx5 96e48c8b、t-fx6 710c83bc，全部无冲突，改动过的 mjs 都通过 node --check（40 个文件，+1920/−277）。等 FX7 合入后，再整体做两轮审查（逐卡审），然后上传为 m2-6c。
   - 11-10 05:1x 李白决定与要求：①份额快照 t-perf 64aa47ba 撤回、不合入，分支和记录保留不删。FX7 必须附测试证明：去掉重复报价后，各户可买来源和实际成交与缓存前逐项一致（已转告 FX7，用正式代码里本来就有的不缓存旁路作对照，不为测试新增开关）；两轮审查后上腾讯云，同条件、同隔离剖析 ledger-stock 与 farm-pests-harvest，目标是耗时比旧版多不超过 10%，并贴出 profdiff 原始输出。②FX6 的每条重推，两轮审查要逐项归类：合理连带 / 真错 / 过期断言 / 说不清。"居民中午买光面包"要查清是不是真缺粮、是否和 EC-1 开局缺粮同一根源，不能靠补面包盖过去（已开只读诊断，结论写 F:/dnd-tmp/m26b/noon-buyout.md）。m3-acceptance 要附云上实测原值。③只读入口：本机只实跑了 45/79 条，不算验收；审查要写清没跑的入口和 a3-score、s0-metrics 怎么覆盖；上云后实测新测试让全量慢了多少，再按分层验证决定它放日常检查还是全量检查。FX1、FX3、FX4、FX5、FX6、FX7 每张卡各两轮审完，才上传 m2-6c。④06:05 跟进：报 FX7 的改动与审查进度、M26 合入后的审查进度、上云前的磁盘余量。
+  - 11-10 05:4x 审查进度。
+    - FX5：r1、r2 均通过。
+    - FX1：r1 通过，r2 要求修改。修改为 e4636d01 和 ebbfea41：温醋饮补 drinkable 标签；羊奶、兽奶补水分 15（按牛乳的水分密度类推）；新增整类校验 validateDrinkable（item-class.mjs:363，由 validate-world 调用）；派生后带水分的物品共 35 个。
+    - FX3：r1 通过，r2 要求修改。修改为 4e8fb4eb（cherry-pick 6c87c12a）和 be8e2b9f：ka1-overlay 的 D12 对账改用 matprops-approval 的正式判定（summarizeApproval/verifyAll），探针核对结果为 D 卡 4/4、调味卡 40 条 L2 加 3 条人工核定，与 verifyAll 完全一致。
+    - FX4：r1 要求修改。修改为 3f2b0b11、2378fe53、d27af67d、76a0104e、20877a9c：
+      - 属性派生类加工改为选批量，使取整后的产率不低于派生值的 90%；只有烧炭一条变化，木料 3 份出木炭 5 袋，产率 12.5%→20.8%（派生值 22.5%）。
+      - 守卫检查改为逐条检查顶层语句。
+      - 174 个 --开关全部登记，分只读、写、修饰、非开关四类；只读入口 80 个。
+      - s0-metrics --fast、a3-score 小语料改为实跑。
+      - wave-score 的 --check 不再写盘。
+      - 测试拆分：日常层 readonly-entries，秒级；全量层 readonly-entries-run-1..4，每组 20 条，最坏约 3180 秒，耗时尚未实测。
+    - FX6、FX7 尚未开审（FX7 正在补等价测试）。改过的卡要重走两轮审查。
+    - 磁盘：prof-4b、prof-nb 的 run.sh 备份检查报 MISMATCH（打包时没有包含大剖析文件），已手工全量备份 5/5 份文件，sha256 与远端一致，证据在 F:/dnd-tmp/server-cleanup-1110-05/manual-rm.txt；之后删除，余量 3.3G→5.4G。m2-6b 等 m2-6c 上传后，再按三证据流程清理。
 - D7 浏览器测试：在既有腾讯云装无界面 Chrome/Chromium（不增购、不本机跑）；测试改为按环境变量找浏览器路径；18 个文件跑出结果后按失败归类。改测试代码/脚本仍两轮审。
 - D12 怪物据点含水率/可食仁比例：开整类材料属性卡（按物料类别给属性，不给单个物品写特例），走审批管线；要花 API 钱先报价给亮圳。
 - D3 城镇包：S5 保留"缺粮归因链断为 0"，不降门槛。先只把审计工具 t-audit 随下一个合并候选并入 t-int，在 t-int 当前代码上跑 30 日审计拿现状；城镇包是否整体并入等审计结果再定，现在不合。
