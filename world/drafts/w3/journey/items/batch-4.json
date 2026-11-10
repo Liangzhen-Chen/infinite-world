@@ -1,8 +1,8 @@
 {
   "index": 4,
-  "fingerprint": "2d5fd97db0362d046cd36fd25f959dd71df1dff6d3e15356bbf3a165c58f008b",
+  "fingerprint": "f211df19fe9a323cf080c277d1e7119e2a3e0f8e5a4079373c4e2a1961d04621",
   "count": 34,
-  "passed": 34,
+  "passed": 32,
   "ids": [
     "item_tin_inlay_strip",
     "item_forged_chain_short",
@@ -41,52 +41,25 @@
   ],
   "rewritten": 16,
   "manual": [],
-  "pending": [],
+  "pending": [
+    "item_stitchbound_folio",
+    "item_paper_cord_tags"
+  ],
   "flagged": [
-    "item_horn_comb",
-    "item_resin_cloth_patch"
+    "item_horn_comb"
   ],
   "sample": [
-    "item_shell_button_set",
+    "item_silver_open_ring",
+    "item_damp_sand_rub",
+    "item_bone_toggle_set",
     "item_gate_hasps",
-    "item_book_spine_tape",
-    "item_book_journey_metal",
-    "item_silver_open_ring"
+    "item_bristle_handbrush"
   ],
   "l4": {
-    "approved": true,
-    "notes": [
-      {
-        "id": "item_shell_button_set",
-        "note": "贝片针孔与磨边相符，整组一份不附线，没有宝石附魔。"
-      },
-      {
-        "id": "item_gate_hasps",
-        "note": "一千一百克等于1.1公斤，翻舌底片可活动，需另配锁芯。"
-      },
-      {
-        "id": "item_book_spine_tape",
-        "note": "帆布护脊带锁边，黏料另备，365天；普通材料没有书本学习能力。"
-      },
-      {
-        "id": "item_book_journey_metal",
-        "note": "中级工谱12配方、识字100、阅读450分钟，未把阅读时间当页数。"
-      },
-      {
-        "id": "item_silver_open_ring",
-        "note": "材料确为银丝，开口钳收与磨石修边相符，装饰无加护。"
-      },
-      {
-        "id": "item_horn_comb",
-        "note": "短齿角梳只梳发，齿尖及背面检查相符，短存储句仍含防磕压。"
-      },
-      {
-        "id": "item_resin_cloth_patch",
-        "note": "L1：保存上限90天改为明确数字。"
-      }
-    ]
+    "approved": false,
+    "notes": []
   },
-  "costUpperYuan": 4.697241600000005,
+  "costUpperYuan": 5.256867840000008,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

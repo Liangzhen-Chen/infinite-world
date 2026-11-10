@@ -1,16 +1,109 @@
 {
   "id": "recipe_w3c_paper_cord_tags",
-  "fingerprint": "59ad158dd518effd56059ab4a18e730194141942797432bff58e8d0750e291d8",
-  "status": "passed",
+  "fingerprint": "f18e68b97224b91072de85565ba47cdcfdbf440e1c9eb751afbb87f214dc0d1a",
+  "status": "pending",
   "attempts": 1,
   "draft": {
     "id": "recipe_w3c_paper_cord_tags",
-    "process": "取一张刮薄羊皮纸平铺于木工台面，以短锋修羽刀沿直边将皮纸裁成若干等宽小片，再逐片削齐四角与毛边，使边缘平顺不挂手。取缝革扁锥在每片靠近一端处刺出单个穿绳孔，孔位居中，避免撕裂纸面。将细捻麻线团解开，按吊签数量分段截取，每段对折后穿过锥孔并打结固定，使签片悬于绳端。全部签片处理完毕后归拢为一组，整组作为一份交付；纸面字迹留待使用者自行填写。总耗时70分钟。"
+    "process": "取刮薄羊皮纸铺于木工台面，以短锋修羽刀沿直边裁成等宽小片，逐片削去四角尖棱，使边缘齐整不勾手。再用缝革扁锥在每片一端刺出扁孔，孔位离边留出余量，避免撕裂。细捻麻线按吊签数量分成短段，逐段对折穿过扁孔，两端并拢打结固定。全程约七十零分钟；成组吊签合为一份交付，纸面留白，字迹由使用者自行填写。裁下的边角碎料与余线不作他用，随工序弃置；修羽刀与扁锥用后擦拭收存。"
   },
-  "review": {
-    "contradictions": []
-  },
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "errorCode": null,
+  "draftResponse": {
+    "id": "6a84b1c1-adf4-4311-865f-99ba2dad7a18",
+    "object": "chat.completion",
+    "created": 1794324683,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_FIjcCfkSkEaQ2btBFwCp7820",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_paper_cord_tags\", \"process\": \"取刮薄羊皮纸铺于木工台面，以短锋修羽刀沿直边裁成等宽小片，逐片削去四角尖棱，使边缘齐整不勾手。再用缝革扁锥在每片一端刺出扁孔，孔位离边留出余量，避免撕裂。细捻麻线按吊签数量分成短段，逐段对折穿过扁孔，两端并拢打结固定。全程约七十零分钟；成组吊签合为一份交付，纸面留白，字迹由使用者自行填写。裁下的边角碎料与余线不作他用，随工序弃置；修羽刀与扁锥用后擦拭收存。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1276,
+      "completion_tokens": 209,
+      "total_tokens": 1485,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 892
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_paper_cord_tags-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1276,
+        "completion_tokens": 209,
+        "total_tokens": 1485,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 892
+      },
+      "costUpperYuan": 0.0034713599999999997,
+      "cumulativeUpperYuan": 5.264911200000007,
+      "latencyMs": 2685.4579000000012,
+      "timestamp": "2026-11-10T15:31:26.038Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 1,
+      "requestId": "4d7e1acb-a585-4476-8537-d05cd4319e31",
+      "file": "budget-responses/4d7e1acb-a585-4476-8537-d05cd4319e31.json",
+      "requestHash": "0c4195231bfaaf17fd1bfecd1afae8ef6ca3382c6046c1589e5fad98596fa349",
+      "responseHash": "27b51146dacb9e0f1be43da88802d92665fa88940e7055e49f57031f002dec42"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_paper_cord_tags-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1276,
+        "completion_tokens": 209,
+        "total_tokens": 1485,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 892
+      },
+      "costUpperYuan": 0.0034713599999999997,
+      "cumulativeUpperYuan": 5.264911200000007,
+      "latencyMs": 2685.4579000000012,
+      "timestamp": "2026-11-10T15:31:26.038Z"
+    }
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "请求不符本轮预留，已停止",
+    "at": "2026-11-10T15:31:26.050Z"
+  }
 }

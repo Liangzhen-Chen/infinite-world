@@ -1,18 +1,111 @@
 {
   "id": "item_stitchbound_folio",
-  "fingerprint": "d2f314a3063a7f7c46ae1273b9e82c63de7151cd8085ae180e073a08583d6814",
-  "status": "passed",
+  "fingerprint": "64fe1a8723480a7bb1758f518018a3f451b7447682bae90db6b76f440bb61215",
+  "status": "pending",
   "attempts": 1,
   "draft": {
     "id": "item_stitchbound_folio",
-    "description": "三张羊皮纸对折齐边，骨片压出折痕，书脊锥孔后以麻线穿订，修羽刀修去毛边。册页空白，未录文字，故不教授任何技能。封面略糙，纸面可见折叠与压痕，装订处麻线外露。出自旧磨坊，集市按当季货源小批供应，售罄须等实际补货。",
-    "inspection": "翻看册页是否齐整，检查书脊麻线有无松脱、断股，纸面有无破洞或水渍。空白册无可读内容。",
-    "storage": "置于干燥处平放，避潮避压，勿使书脊受扯；自制成起保存期365天。"
+    "description": "三张羊皮纸对折后齐边叠合，书脊处骨片压出折痕，锥子穿孔、麻线穿订成册，修羽刀刮去毛边。册页未划行格，翻开可见纸面纤维与针孔排列，重0.13千克，出自旧磨坊。",
+    "inspection": "翻看各页是否齐整，指压书脊折痕，检查麻线有无松脱、针孔是否开裂，纸面有无潮斑。",
+    "storage": "置于干燥木架，避潮避压；受潮后摊开阴干，勿近火烤。保存期365天。"
   },
-  "review": {
-    "contradictions": []
-  },
+  "review": null,
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "errorCode": null,
+  "draftResponse": {
+    "id": "b9a6f791-f183-498c-a8e3-c7a7caca3c9b",
+    "object": "chat.completion",
+    "created": 1794324675,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_VG9a8jcEdxBjwW8rAtuy8323",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"item_stitchbound_folio\", \"description\": \"三张羊皮纸对折后齐边叠合，书脊处骨片压出折痕，锥子穿孔、麻线穿订成册，修羽刀刮去毛边。册页未划行格，翻开可见纸面纤维与针孔排列，重0.13千克，出自旧磨坊。\", \"inspection\": \"翻看各页是否齐整，指压书脊折痕，检查麻线有无松脱、针孔是否开裂，纸面有无潮斑。\", \"storage\": \"置于干燥木架，避潮避压；受潮后摊开阴干，勿近火烤。保存期365天。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1129,
+      "completion_tokens": 213,
+      "total_tokens": 1342,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 1129
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-items-item_stitchbound_folio-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1129,
+        "completion_tokens": 213,
+        "total_tokens": 1342,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 1129
+      },
+      "costUpperYuan": 0.003962,
+      "cumulativeUpperYuan": 5.253470480000008,
+      "latencyMs": 2144.8044,
+      "timestamp": "2026-11-10T15:31:17.773Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 1,
+      "requestId": "e41f0495-23bb-48fd-b2e3-8826e4cac8cd",
+      "file": "budget-responses/e41f0495-23bb-48fd-b2e3-8826e4cac8cd.json",
+      "requestHash": "3afdcf43e9676750846d2240cba700c969ef0d525035d40ed9549b2a0c4f9091",
+      "responseHash": "9dc098b38dc00aad08a0d2939abd887298f27ae9e6364ca888f46b52a591e91f"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-items-item_stitchbound_folio-draft0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1129,
+        "completion_tokens": 213,
+        "total_tokens": 1342,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "prompt_cache_hit_tokens": 0,
+        "prompt_cache_miss_tokens": 1129
+      },
+      "costUpperYuan": 0.003962,
+      "cumulativeUpperYuan": 5.253470480000008,
+      "latencyMs": 2144.8044,
+      "timestamp": "2026-11-10T15:31:17.773Z"
+    }
+  ],
+  "budgetStop": {
+    "code": "CONTENT_BUDGET_STOP",
+    "message": "请求不符本轮预留，已停止",
+    "at": "2026-11-10T15:31:20.596Z"
+  }
 }

@@ -3715,7 +3715,7 @@
     {
       "id": "item_stitchbound_folio",
       "name": "麻订空白册",
-      "basePrice": 61,
+      "basePrice": 37,
       "weight": 0.13,
       "shelfLifeDays": 365,
       "origin": "bld_hw_mill",
@@ -3757,7 +3757,7 @@
     {
       "id": "item_paper_cord_tags",
       "name": "穿绳皮纸吊签",
-      "basePrice": 29,
+      "basePrice": 21,
       "weight": 0.055,
       "shelfLifeDays": 365,
       "origin": "bld_hw_mill",

@@ -45,17 +45,7 @@
   "rewritten": 17,
   "manual": [],
   "pending": [],
-  "flagged": [
-    "item_horn_blank",
-    "item_red_dyewood",
-    "item_alum_grain",
-    "item_clean_lard",
-    "item_flour_paste_powder",
-    "item_drawknife",
-    "item_jeweler_saw",
-    "item_fuller",
-    "item_mason_chisel"
-  ],
+  "flagged": [],
   "sample": [
     "item_jeweler_pliers",
     "item_alum_grain",
@@ -112,7 +102,7 @@
       }
     ]
   },
-  "costUpperYuan": 3.910433840000003,
+  "costUpperYuan": 5.249508480000008,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

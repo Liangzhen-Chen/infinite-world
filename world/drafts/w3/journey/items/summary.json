@@ -1,9 +1,94 @@
 {
   "total": 182,
-  "passed": 182,
+  "passed": 180,
   "manual": 0,
-  "pending": 0,
-  "costUpperYuan": 5.249508480000008,
+  "pending": 2,
+  "costUpperYuan": 5.256867840000008,
+  "budget": {
+    "spentYuan": 5.256867840000008,
+    "reservedYuan": 1.3877787807814457e-17,
+    "limitYuan": 5.43396,
+    "requests": {
+      "e41f0495-23bb-48fd-b2e3-8826e4cac8cd": {
+        "card": null,
+        "label": "content-items-item_stitchbound_folio-draft0",
+        "requestHash": "3afdcf43e9676750846d2240cba700c969ef0d525035d40ed9549b2a0c4f9091",
+        "reservedYuan": 0.014284,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/e41f0495-23bb-48fd-b2e3-8826e4cac8cd.json",
+          "requestHash": "3afdcf43e9676750846d2240cba700c969ef0d525035d40ed9549b2a0c4f9091",
+          "responseHash": "9dc098b38dc00aad08a0d2939abd887298f27ae9e6364ca888f46b52a591e91f"
+        },
+        "costUpperYuan": 0.003962,
+        "measurement": {
+          "label": "content-items-item_stitchbound_folio-draft0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1129,
+            "completion_tokens": 213,
+            "total_tokens": 1342,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 1129
+          },
+          "costUpperYuan": 0.003962,
+          "cumulativeUpperYuan": 5.253470480000008,
+          "latencyMs": 2144.8044,
+          "timestamp": "2026-11-10T15:31:17.773Z"
+        }
+      },
+      "a05a66f2-29bf-4343-a999-02c2272361c9": {
+        "card": null,
+        "label": "content-items-item_stitchbound_folio-review0",
+        "requestHash": "52b8669b74708646c72b56818cff4c2e270ba5b2bb1f25e8f188873bca14b21e",
+        "reservedYuan": 0.055574,
+        "status": "cancelled-unissued"
+      },
+      "12ccd7dd-c72b-4d41-be69-7b2d3ecee71b": {
+        "card": null,
+        "label": "content-items-item_paper_cord_tags-draft0",
+        "requestHash": "22e3b28cdd61f24b7b542cc5aaa6ed20622531447be1a5c99e592d2d5b6df3b9",
+        "reservedYuan": 0.0142,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/12ccd7dd-c72b-4d41-be69-7b2d3ecee71b.json",
+          "requestHash": "22e3b28cdd61f24b7b542cc5aaa6ed20622531447be1a5c99e592d2d5b6df3b9",
+          "responseHash": "0e72a7e4c2875f3120460ca5a4988f15f49e9a44afbf071bfaac6907e8074d7c"
+        },
+        "costUpperYuan": 0.00339736,
+        "measurement": {
+          "label": "content-items-item_paper_cord_tags-draft0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1107,
+            "completion_tokens": 242,
+            "total_tokens": 1349,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 723
+          },
+          "costUpperYuan": 0.00339736,
+          "cumulativeUpperYuan": 5.256867840000008,
+          "latencyMs": 2776.5645999999997,
+          "timestamp": "2026-11-10T15:31:20.558Z"
+        }
+      },
+      "988aebc1-633f-4daf-b698-07072e27c01f": {
+        "card": null,
+        "label": "content-items-item_paper_cord_tags-review0",
+        "requestHash": "28132f1770f1389a39d7b555fbb0977ef603907f787e7d7ef603a77415597486",
+        "reservedYuan": 0.055494,
+        "status": "cancelled-unissued"
+      }
+    }
+  },
   "batches": [
     {
       "index": 0,
@@ -53,14 +138,7 @@
       "manual": [],
       "pending": [],
       "flagged": [
-        "item_plum",
-        "item_garlic",
-        "item_dill",
-        "item_butter",
-        "item_walnut",
-        "item_brass_strip",
-        "item_cork_sheet",
-        "item_reed_bundle"
+        "item_dill"
       ],
       "sample": [
         "item_brass_strip",
@@ -118,7 +196,7 @@
           }
         ]
       },
-      "costUpperYuan": 3.663444840000001,
+      "costUpperYuan": 5.249508480000008,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -169,17 +247,7 @@
       "rewritten": 17,
       "manual": [],
       "pending": [],
-      "flagged": [
-        "item_horn_blank",
-        "item_red_dyewood",
-        "item_alum_grain",
-        "item_clean_lard",
-        "item_flour_paste_powder",
-        "item_drawknife",
-        "item_jeweler_saw",
-        "item_fuller",
-        "item_mason_chisel"
-      ],
+      "flagged": [],
       "sample": [
         "item_jeweler_pliers",
         "item_alum_grain",
@@ -236,7 +304,7 @@
           }
         ]
       },
-      "costUpperYuan": 3.910433840000003,
+      "costUpperYuan": 5.249508480000008,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -287,17 +355,7 @@
       "rewritten": 22,
       "manual": [],
       "pending": [],
-      "flagged": [
-        "item_war_pick",
-        "item_oak_cudgel",
-        "item_practice_sword",
-        "item_lentil_leek_stew",
-        "item_broadbean_garlic_mash",
-        "item_beet_barley_pot",
-        "item_cheese_rye_panbread",
-        "item_mushroom_barley_pot",
-        "item_rendered_cooking_fat"
-      ],
+      "flagged": [],
       "sample": [
         "item_practice_sword",
         "item_cheese_rye_panbread",
@@ -346,7 +404,7 @@
           }
         ]
       },
-      "costUpperYuan": 4.183401360000006,
+      "costUpperYuan": 5.249508480000008,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -399,8 +457,7 @@
       "pending": [],
       "flagged": [
         "item_canvas_satchel",
-        "item_steel_gouge_tip",
-        "item_small_bell_frame"
+        "item_steel_gouge_tip"
       ],
       "sample": [
         "item_laundry_mesh_bag",
@@ -446,15 +503,15 @@
           }
         ]
       },
-      "costUpperYuan": 4.454696800000006,
+      "costUpperYuan": 5.249508480000008,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
     {
       "index": 4,
-      "fingerprint": "2d5fd97db0362d046cd36fd25f959dd71df1dff6d3e15356bbf3a165c58f008b",
+      "fingerprint": "f211df19fe9a323cf080c277d1e7119e2a3e0f8e5a4079373c4e2a1961d04621",
       "count": 34,
-      "passed": 34,
+      "passed": 32,
       "ids": [
         "item_tin_inlay_strip",
         "item_forged_chain_short",
@@ -493,52 +550,25 @@
       ],
       "rewritten": 16,
       "manual": [],
-      "pending": [],
+      "pending": [
+        "item_stitchbound_folio",
+        "item_paper_cord_tags"
+      ],
       "flagged": [
-        "item_horn_comb",
-        "item_resin_cloth_patch"
+        "item_horn_comb"
       ],
       "sample": [
-        "item_shell_button_set",
+        "item_silver_open_ring",
+        "item_damp_sand_rub",
+        "item_bone_toggle_set",
         "item_gate_hasps",
-        "item_book_spine_tape",
-        "item_book_journey_metal",
-        "item_silver_open_ring"
+        "item_bristle_handbrush"
       ],
       "l4": {
-        "approved": true,
-        "notes": [
-          {
-            "id": "item_shell_button_set",
-            "note": "贝片针孔与磨边相符，整组一份不附线，没有宝石附魔。"
-          },
-          {
-            "id": "item_gate_hasps",
-            "note": "一千一百克等于1.1公斤，翻舌底片可活动，需另配锁芯。"
-          },
-          {
-            "id": "item_book_spine_tape",
-            "note": "帆布护脊带锁边，黏料另备，365天；普通材料没有书本学习能力。"
-          },
-          {
-            "id": "item_book_journey_metal",
-            "note": "中级工谱12配方、识字100、阅读450分钟，未把阅读时间当页数。"
-          },
-          {
-            "id": "item_silver_open_ring",
-            "note": "材料确为银丝，开口钳收与磨石修边相符，装饰无加护。"
-          },
-          {
-            "id": "item_horn_comb",
-            "note": "短齿角梳只梳发，齿尖及背面检查相符，短存储句仍含防磕压。"
-          },
-          {
-            "id": "item_resin_cloth_patch",
-            "note": "L1：保存上限90天改为明确数字。"
-          }
-        ]
+        "approved": false,
+        "notes": []
       },
-      "costUpperYuan": 4.697241600000005,
+      "costUpperYuan": 5.256867840000008,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }

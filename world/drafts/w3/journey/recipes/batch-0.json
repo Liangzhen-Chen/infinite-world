@@ -51,9 +51,7 @@
   "rewritten": 1,
   "manual": [],
   "pending": [],
-  "flagged": [
-    "recipe_w3c_lentil_leek_stew"
-  ],
+  "flagged": [],
   "sample": [
     "recipe_w3c_tool_apron_panel",
     "recipe_w3c_lentil_leek_stew",
@@ -86,7 +84,7 @@
       }
     ]
   },
-  "costUpperYuan": 4.980806080000007,
+  "costUpperYuan": 5.256867840000008,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

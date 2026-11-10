@@ -46,14 +46,7 @@
   "manual": [],
   "pending": [],
   "flagged": [
-    "item_plum",
-    "item_garlic",
-    "item_dill",
-    "item_butter",
-    "item_walnut",
-    "item_brass_strip",
-    "item_cork_sheet",
-    "item_reed_bundle"
+    "item_dill"
   ],
   "sample": [
     "item_brass_strip",
@@ -111,7 +104,7 @@
       }
     ]
   },
-  "costUpperYuan": 3.663444840000001,
+  "costUpperYuan": 5.249508480000008,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

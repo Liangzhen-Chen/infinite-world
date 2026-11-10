@@ -1,9 +1,172 @@
 {
   "total": 85,
-  "passed": 85,
+  "passed": 83,
   "manual": 0,
-  "pending": 0,
-  "costUpperYuan": 5.246626640000008,
+  "pending": 2,
+  "costUpperYuan": 5.264911200000007,
+  "budget": {
+    "spentYuan": 5.264911200000007,
+    "reservedYuan": 1.3877787807814457e-17,
+    "limitYuan": 5.43396,
+    "requests": {
+      "e41f0495-23bb-48fd-b2e3-8826e4cac8cd": {
+        "card": null,
+        "label": "content-items-item_stitchbound_folio-draft0",
+        "requestHash": "3afdcf43e9676750846d2240cba700c969ef0d525035d40ed9549b2a0c4f9091",
+        "reservedYuan": 0.014284,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/e41f0495-23bb-48fd-b2e3-8826e4cac8cd.json",
+          "requestHash": "3afdcf43e9676750846d2240cba700c969ef0d525035d40ed9549b2a0c4f9091",
+          "responseHash": "9dc098b38dc00aad08a0d2939abd887298f27ae9e6364ca888f46b52a591e91f"
+        },
+        "costUpperYuan": 0.003962,
+        "measurement": {
+          "label": "content-items-item_stitchbound_folio-draft0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1129,
+            "completion_tokens": 213,
+            "total_tokens": 1342,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 1129
+          },
+          "costUpperYuan": 0.003962,
+          "cumulativeUpperYuan": 5.253470480000008,
+          "latencyMs": 2144.8044,
+          "timestamp": "2026-11-10T15:31:17.773Z"
+        }
+      },
+      "a05a66f2-29bf-4343-a999-02c2272361c9": {
+        "card": null,
+        "label": "content-items-item_stitchbound_folio-review0",
+        "requestHash": "52b8669b74708646c72b56818cff4c2e270ba5b2bb1f25e8f188873bca14b21e",
+        "reservedYuan": 0.055574,
+        "status": "cancelled-unissued"
+      },
+      "12ccd7dd-c72b-4d41-be69-7b2d3ecee71b": {
+        "card": null,
+        "label": "content-items-item_paper_cord_tags-draft0",
+        "requestHash": "22e3b28cdd61f24b7b542cc5aaa6ed20622531447be1a5c99e592d2d5b6df3b9",
+        "reservedYuan": 0.0142,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/12ccd7dd-c72b-4d41-be69-7b2d3ecee71b.json",
+          "requestHash": "22e3b28cdd61f24b7b542cc5aaa6ed20622531447be1a5c99e592d2d5b6df3b9",
+          "responseHash": "0e72a7e4c2875f3120460ca5a4988f15f49e9a44afbf071bfaac6907e8074d7c"
+        },
+        "costUpperYuan": 0.00339736,
+        "measurement": {
+          "label": "content-items-item_paper_cord_tags-draft0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1107,
+            "completion_tokens": 242,
+            "total_tokens": 1349,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 723
+          },
+          "costUpperYuan": 0.00339736,
+          "cumulativeUpperYuan": 5.256867840000008,
+          "latencyMs": 2776.5645999999997,
+          "timestamp": "2026-11-10T15:31:20.558Z"
+        }
+      },
+      "988aebc1-633f-4daf-b698-07072e27c01f": {
+        "card": null,
+        "label": "content-items-item_paper_cord_tags-review0",
+        "requestHash": "28132f1770f1389a39d7b555fbb0977ef603907f787e7d7ef603a77415597486",
+        "reservedYuan": 0.055494,
+        "status": "cancelled-unissued"
+      },
+      "5c594a29-fb99-4bdf-8550-a7b02fa471ae": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_stitchbound_folio-draft0",
+        "requestHash": "8b9d0e7b653730b8f03d85e6550aa7f5b67f0f29895935046411b893535e9be8",
+        "reservedYuan": 0.016178,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/5c594a29-fb99-4bdf-8550-a7b02fa471ae.json",
+          "requestHash": "8b9d0e7b653730b8f03d85e6550aa7f5b67f0f29895935046411b893535e9be8",
+          "responseHash": "b2fe3ceb129065c2bc9bb98f55244c2ef31e26641d40f715019aa466ac9eea34"
+        },
+        "costUpperYuan": 0.004572,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_stitchbound_folio-draft0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1414,
+            "completion_tokens": 218,
+            "total_tokens": 1632,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 1414
+          },
+          "costUpperYuan": 0.004572,
+          "cumulativeUpperYuan": 5.2614398400000075,
+          "latencyMs": 2696.9762999999994,
+          "timestamp": "2026-11-10T15:31:23.347Z"
+        }
+      },
+      "b11af6a2-18b0-4ac8-8dc1-d243114c0e29": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_stitchbound_folio-review0",
+        "requestHash": "e5f535947ed6781a854a90c487d0daccee8083c2496de48edff835e63657edcf",
+        "reservedYuan": 0.057546,
+        "status": "cancelled-unissued"
+      },
+      "4d7e1acb-a585-4476-8537-d05cd4319e31": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_paper_cord_tags-draft0",
+        "requestHash": "0c4195231bfaaf17fd1bfecd1afae8ef6ca3382c6046c1589e5fad98596fa349",
+        "reservedYuan": 0.015272,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/4d7e1acb-a585-4476-8537-d05cd4319e31.json",
+          "requestHash": "0c4195231bfaaf17fd1bfecd1afae8ef6ca3382c6046c1589e5fad98596fa349",
+          "responseHash": "27b51146dacb9e0f1be43da88802d92665fa88940e7055e49f57031f002dec42"
+        },
+        "costUpperYuan": 0.0034713599999999997,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_paper_cord_tags-draft0",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1276,
+            "completion_tokens": 209,
+            "total_tokens": 1485,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 892
+          },
+          "costUpperYuan": 0.0034713599999999997,
+          "cumulativeUpperYuan": 5.264911200000007,
+          "latencyMs": 2685.4579000000012,
+          "timestamp": "2026-11-10T15:31:26.038Z"
+        }
+      },
+      "cdfbfad5-bd2c-4ffd-9ad5-3085e42ab969": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_paper_cord_tags-review0",
+        "requestHash": "3fb771409f10477d071e4a6ec03e168ce4a231c7546c06fdb0a9c38d0d04ec84",
+        "reservedYuan": 0.056642,
+        "status": "cancelled-unissued"
+      }
+    }
+  },
   "batches": [
     {
       "index": 0,
@@ -58,9 +221,7 @@
       "rewritten": 1,
       "manual": [],
       "pending": [],
-      "flagged": [
-        "recipe_w3c_lentil_leek_stew"
-      ],
+      "flagged": [],
       "sample": [
         "recipe_w3c_tool_apron_panel",
         "recipe_w3c_lentil_leek_stew",
@@ -93,15 +254,15 @@
           }
         ]
       },
-      "costUpperYuan": 4.980806080000007,
+      "costUpperYuan": 5.256867840000008,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
     {
       "index": 1,
-      "fingerprint": "53f69c6fb0f6364afb7f5498a4cb200059099eae4deb011c8e7fa738d9b99843",
+      "fingerprint": "369c5d54695a6de4f52cf5f056ae28bc34762677e71851a174285c39d95fd177",
       "count": 42,
-      "passed": 42,
+      "passed": 40,
       "ids": [
         "recipe_w3c_horn_spoon_blank",
         "recipe_w3c_slate_writing_tile",
@@ -148,43 +309,23 @@
       ],
       "rewritten": 0,
       "manual": [],
-      "pending": [],
-      "flagged": [
-        "recipe_w3c_ledger_cover"
+      "pending": [
+        "recipe_w3c_stitchbound_folio",
+        "recipe_w3c_paper_cord_tags"
       ],
+      "flagged": [],
       "sample": [
-        "recipe_w3c_wick_coil",
-        "recipe_w3c_small_bell_frame",
-        "recipe_w3c_forged_chain_short",
+        "recipe_w3c_horn_spoon_blank",
+        "recipe_w3c_hooked_pruning_knife",
         "recipe_w3c_reed_pen_box",
-        "recipe_w3c_ledger_cover"
+        "recipe_w3c_small_bell_frame",
+        "recipe_w3c_carpenters_adze"
       ],
       "l4": {
-        "approved": true,
-        "notes": [
-          {
-            "id": "recipe_w3c_wick_coil",
-            "note": "灯芯剪段压平，多个短段仍是一份，不附灯油与发光能力，40分钟。"
-          },
-          {
-            "id": "recipe_w3c_small_bell_frame",
-            "note": "铜片与铁线配合剪、冲、锤、钳制成响片架，240分钟，发声未写成远程警报。"
-          },
-          {
-            "id": "recipe_w3c_forged_chain_short",
-            "note": "两公斤铁料分环锻接，冷锉接缝，330分钟，木炭仅为燃料，不作吊人保证。"
-          },
-          {
-            "id": "recipe_w3c_reed_pen_box",
-            "note": "芦管选一根制带节筒，软木塞和麻线扎口，剩余配额弃置，100分钟，不附笔尖。"
-          },
-          {
-            "id": "recipe_w3c_ledger_cover",
-            "note": "L4：缝革扁锥不能穿黄铜片；角片按骨架折夹，不另钻金属孔。"
-          }
-        ]
+        "approved": false,
+        "notes": []
       },
-      "costUpperYuan": 5.227914240000006,
+      "costUpperYuan": 5.264911200000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }

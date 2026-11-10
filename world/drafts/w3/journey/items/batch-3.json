@@ -47,8 +47,7 @@
   "pending": [],
   "flagged": [
     "item_canvas_satchel",
-    "item_steel_gouge_tip",
-    "item_small_bell_frame"
+    "item_steel_gouge_tip"
   ],
   "sample": [
     "item_laundry_mesh_bag",
@@ -94,7 +93,7 @@
       }
     ]
   },
-  "costUpperYuan": 4.454696800000006,
+  "costUpperYuan": 5.249508480000008,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

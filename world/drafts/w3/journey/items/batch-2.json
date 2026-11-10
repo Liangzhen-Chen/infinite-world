@@ -45,17 +45,7 @@
   "rewritten": 22,
   "manual": [],
   "pending": [],
-  "flagged": [
-    "item_war_pick",
-    "item_oak_cudgel",
-    "item_practice_sword",
-    "item_lentil_leek_stew",
-    "item_broadbean_garlic_mash",
-    "item_beet_barley_pot",
-    "item_cheese_rye_panbread",
-    "item_mushroom_barley_pot",
-    "item_rendered_cooking_fat"
-  ],
+  "flagged": [],
   "sample": [
     "item_practice_sword",
     "item_cheese_rye_panbread",
@@ -104,7 +94,7 @@
       }
     ]
   },
-  "costUpperYuan": 4.183401360000006,
+  "costUpperYuan": 5.249508480000008,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }
