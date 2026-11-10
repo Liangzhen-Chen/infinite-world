@@ -50,8 +50,10 @@ test('readApprovedSupersedes 按目录发现全部修订批，不写死批次名
  await mk('a-first',{revision:'r1',receipt:'a/review',entries:[e('1')]});
  await mk('b-second',{revision:'r2',receipt:'b/review',entries:[e('2')]});
  await mk('c-not-revision',{revision:'m2',receipt:'c',entries:[{id:'p'}]});
- await mk('d-no-candidate',{revision:'r3',receipt:'d',entries:[e('3')]},false);
  assert.deepEqual((await listRevisionBatches(dir)).map(b=>b.pub.revision),['r1','r2']);
+ // 修订批格式的回执缺冻结候选：报错，不静默跳过
+ await mk('d-no-candidate',{revision:'r3',receipt:'d',entries:[e('3')]},false);
+ await assert.rejects(listRevisionBatches(dir),/缺 candidate\.json/);
  await fs.rm(dir,{recursive:true});
 });
 test('发布后：真实回执目录里每个修订批都被读取并带各自版本号',async()=>{

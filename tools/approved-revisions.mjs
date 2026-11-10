@@ -46,9 +46,11 @@ export async function listRevisionBatches(draftsRoot='world/drafts'){
  const out=[];
  for(const dir of (await fs.readdir(draftsRoot,{withFileTypes:true})).filter(d=>d.isDirectory()).map(d=>d.name).sort()){
   const root=`${draftsRoot}/${dir}`;
-  if(!existsSync(`${root}/publication.json`)||!existsSync(`${root}/candidate.json`))continue;
+  if(!existsSync(`${root}/publication.json`))continue;
   const pub=JSON.parse(await fs.readFile(`${root}/publication.json`,'utf8'));
   if(!Array.isArray(pub?.entries)||!pub.entries.length||!pub.entries.every(e=>Array.isArray(e?.supersedes)))continue; // 非修订批（如 m2-people 的发布回执）
+  // 修订批格式的回执缺冻结候选：无法核验审批，不得静默忽略（误删或篡改 candidate.json 会让回执失效而不报错）。
+  if(!existsSync(`${root}/candidate.json`))throw Error(`修订批 ${dir} 有发布回执却缺 candidate.json，无法核验`);
   out.push({root,pub});
  }
  return out;

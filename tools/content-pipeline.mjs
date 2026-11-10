@@ -63,7 +63,7 @@ async function writeJSON(file, data) {
 async function readL4Rejections(root, entries) {
   const out = new Map();
   let files;
-  try { files = (await fs.readdir(root)).filter(name => /^batch-d+.json$/.test(name)); }
+  try { files = (await fs.readdir(root)).filter(name => /^batch-\d+\.json$/.test(name)); }
   catch (error) { if (error.code === 'ENOENT') return out; throw error; }
   for (const name of files) {
     const batch = await readJSON(path.join(root, name)), rejection = batch?.l4?.rejection;
