@@ -5,7 +5,7 @@
   "attempts": 3,
   "draft": {
     "id": "item_shutter_panel",
-    "description": "旧磨坊出品的松木拼条窗扇，重1.65。2块松木板刨平后拼成短窗扇，背面横档用6枚铁钉钉住。成品不自带窗框，铰链和安装作业另算，不随货提供。",
+    "description": "旧磨坊出品的松木拼条窗扇，重1.65公斤。2块松木板刨平后拼成短窗扇，背面横档用6枚铁钉钉住。成品不自带窗框，铰链和安装作业另算，不随货提供。",
     "inspection": "逐条查看拼缝是否透光，过宽的缝隙说明拼合不严；用手掌压扇面两端，听有无松动异响；翻看背面横档，确认6枚铁钉无外露钉尖、无劈裂木纹。",
     "storage": "置于干燥处，避潮，避免重压。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 3
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_shutter_panel",
+        "description": "旧磨坊出品的松木拼条窗扇，重1.65。2块松木板刨平后拼成短窗扇，背面横档用6枚铁钉钉住。成品不自带窗框，铰链和安装作业另算，不随货提供。",
+        "inspection": "逐条查看拼缝是否透光，过宽的缝隙说明拼合不严；用手掌压扇面两端，听有无松动异响；翻看背面横档，确认6枚铁钉无外露钉尖、无劈裂木纹。",
+        "storage": "置于干燥处，避潮，避免重压。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 3
     }

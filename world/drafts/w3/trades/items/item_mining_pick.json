@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_mining_pick",
-    "description": "铁匠铺备售的普通矿镐，木柄铁镐，重2.8。用于挖掘已松裂的土石与矿脉表层，使用会磨损；不是武器或自动找矿器。作坊与行商按订单补货，现货有限。",
+    "description": "铁匠铺备售的普通矿镐，木柄铁镐，重2.8公斤。用于挖掘已松裂的土石与矿脉表层，使用会磨损；不是武器或自动找矿器。作坊与行商按订单补货，现货有限。",
     "inspection": "握住木柄轻晃镐头，查看结合处是否松动，再查镐头有无卷口、缺角与可见裂纹。柄身顺纹裂口扩大时应停用。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:08:00.329Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_mining_pick",
+        "description": "铁匠铺备售的普通矿镐，木柄铁镐，重2.8。用于挖掘已松裂的土石与矿脉表层，使用会磨损；不是武器或自动找矿器。作坊与行商按订单补货，现货有限。",
+        "inspection": "握住木柄轻晃镐头，查看结合处是否松动，再查镐头有无卷口、缺角与可见裂纹。柄身顺纹裂口扩大时应停用。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:08:00.329Z"
       },
       "priorAttempts": 1
     }

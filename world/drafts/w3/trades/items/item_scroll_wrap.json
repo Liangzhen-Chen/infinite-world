@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_scroll_wrap",
-    "description": "织坊出品的束带卷稿套，重0.41。皮内衬麻布，包边缝合，余皮剪成束带，卷起后系紧，遮尘防磨。不保证纸稿浸水不湿。",
+    "description": "织坊出品的束带卷稿套，重0.41公斤。皮内衬麻布，包边缝合，余皮剪成束带，卷起后系紧，遮尘防磨。不保证纸稿浸水不湿。",
     "inspection": "先展开套身，看皮面有无裂口、霉斑，再翻查麻布衬里是否脱线、包边针脚有无崩散。束带应完整无断口。",
     "storage": "置于干燥处，避免潮湿与曝晒。可存365天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为56，进入L4抽读",
+    "description长度为58，进入L4抽读",
     "storage长度为21，进入L4抽读"
   ],
   "feedback": null,
@@ -36,6 +36,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_scroll_wrap",
+        "description": "织坊出品的束带卷稿套，重0.41。皮内衬麻布，包边缝合，余皮剪成束带，卷起后系紧，遮尘防磨。不保证纸稿浸水不湿。",
+        "inspection": "先展开套身，看皮面有无裂口、霉斑，再翻查麻布衬里是否脱线、包边针脚有无崩散。束带应完整无断口。",
+        "storage": "置于干燥处，避免潮湿与曝晒。可存365天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

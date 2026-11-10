@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_cabbage_barley",
-    "description": "青灯酒馆当日小批供应的烩食。先以两份木刨花引火，将珍珠麦粒以定量清水煮软；甘蓝去硬根与虫损叶后切成细丝，于后段入锅，加盐，用木匙翻匀。硬根与虫损叶弃置。按当季原料制作，每份重0.78。",
+    "description": "青灯酒馆当日小批供应的烩食。先以两份木刨花引火，将珍珠麦粒以定量清水煮软；甘蓝去硬根与虫损叶后切成细丝，于后段入锅，加盐，用木匙翻匀。硬根与虫损叶弃置。按当季原料制作，每份重0.78公斤。",
     "inspection": "先看菜丝是否仍青绿、麦粒有无发黏结块，再闻有无酸败或霉味；若表面发暗、气味刺鼻即弃置，不试尝变质部分。",
     "storage": "置阴凉处，1天内食用。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_cabbage_barley",
+        "description": "青灯酒馆当日小批供应的烩食。先以两份木刨花引火，将珍珠麦粒以定量清水煮软；甘蓝去硬根与虫损叶后切成细丝，于后段入锅，加盐，用木匙翻匀。硬根与虫损叶弃置。按当季原料制作，每份重0.78。",
+        "inspection": "先看菜丝是否仍青绿、麦粒有无发黏结块，再闻有无酸败或霉味；若表面发暗、气味刺鼻即弃置，不试尝变质部分。",
+        "storage": "置阴凉处，1天内食用。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

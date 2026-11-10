@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_turnip",
-    "description": "南田晚秋至初冬采收的带皮芜菁，一份400克，外皮灰白微带紫晕，根身紧实。可切片烩煮，根须与坏斑需削去。",
+    "description": "南田晚秋至初冬采收的带皮芜菁，一份0.4公斤，外皮灰白微带紫晕，根身紧实。可切片烩煮，根须与坏斑需削去。",
     "inspection": "翻看根身有无软陷、裂口与黑斑，指压应回弹；闻近根蒂处，若有酸腐气即弃去坏处。",
     "storage": "置阴凉通风处，避潮，防压。可存10天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:08:00.329Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为51，进入L4抽读",
+    "description长度为52，进入L4抽读",
     "storage长度为19，进入L4抽读"
   ],
   "feedback": null,
@@ -39,6 +39,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_turnip",
+        "description": "南田晚秋至初冬采收的带皮芜菁，一份400克，外皮灰白微带紫晕，根身紧实。可切片烩煮，根须与坏斑需削去。",
+        "inspection": "翻看根身有无软陷、裂口与黑斑，指压应回弹；闻近根蒂处，若有酸腐气即弃去坏处。",
+        "storage": "置阴凉通风处，避潮，防压。可存10天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:08:00.329Z"
       },
       "priorAttempts": 1
     }

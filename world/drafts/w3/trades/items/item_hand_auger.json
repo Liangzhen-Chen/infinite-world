@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_hand_auger",
-    "description": "横柄手钻，重0.65，钻杆顶端横装一根柄。双手握横柄向下轻压并旋转，即可在木板上开孔，遇节疤须减力退屑。作坊与行商按订单补货，现货有限。",
+    "description": "横柄手钻，重0.65公斤，钻杆顶端横装一根柄。双手握横柄向下轻压并旋转，即可在木板上开孔，遇节疤须减力退屑。作坊与行商按订单补货，现货有限。",
     "inspection": "先看钻头刃口有无卷缺，再转横柄听杆内有无异响，最后在木板上试钻一孔，观察排屑是否顺畅、孔壁是否齐整。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_hand_auger",
+        "description": "横柄手钻，重0.65，钻杆顶端横装一根柄。双手握横柄向下轻压并旋转，即可在木板上开孔，遇节疤须减力退屑。作坊与行商按订单补货，现货有限。",
+        "inspection": "先看钻头刃口有无卷缺，再转横柄听杆内有无异响，最后在木板上试钻一孔，观察排屑是否顺畅、孔壁是否齐整。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

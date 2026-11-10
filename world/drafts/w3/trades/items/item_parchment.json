@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_parchment",
-    "description": "白石镇的刮薄羊皮纸，一张处理好的羊皮纸，呈米黄半透，可书写或裁作书签，并非食用或包药材料。重0.06。",
+    "description": "白石镇的刮薄羊皮纸，一张处理好的羊皮纸，呈米黄半透，可书写或裁作书签，并非食用或包药材料。重0.06公斤。",
     "inspection": "对光看纸面有无透光沙眼与未刮净的毛根；指背抚过两面，粗涩起毛处即为刮薄不均；再抖一抖听声，发脆易裂者不宜下笔。",
     "storage": "置于干燥处，避潮，避免直晒与重压。可存365天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为51，进入L4抽读",
+    "description长度为53，进入L4抽读",
     "storage长度为24，进入L4抽读"
   ],
   "feedback": null,
@@ -39,6 +39,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_parchment",
+        "description": "白石镇的刮薄羊皮纸，一张处理好的羊皮纸，呈米黄半透，可书写或裁作书签，并非食用或包药材料。重0.06。",
+        "inspection": "对光看纸面有无透光沙眼与未刮净的毛根；指背抚过两面，粗涩起毛处即为刮薄不均；再抖一抖听声，发脆易裂者不宜下笔。",
+        "storage": "置于干燥处，避潮，避免直晒与重压。可存365天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

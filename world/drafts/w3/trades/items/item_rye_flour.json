@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_rye_flour",
-    "description": "旧磨坊的细筛黑麦粉，每份400克，色灰褐。可和水作烙饼；不含现成酵种。秋冬新粉多，雨季防结块。",
+    "description": "旧磨坊的细筛黑麦粉，每份0.4公斤，色灰褐。可和水作烙饼；不含现成酵种。秋冬新粉多，雨季防结块。",
     "inspection": "看粉面是否结块、有无灰绿霉点，闻有无酸败或霉味。若成硬粒或黏手，即受潮。",
     "storage": "置阴凉干燥处，避潮。可存30天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为47，进入L4抽读",
+    "description长度为48，进入L4抽读",
     "storage长度为16，进入L4抽读"
   ],
   "feedback": null,
@@ -36,6 +36,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_rye_flour",
+        "description": "旧磨坊的细筛黑麦粉，每份400克，色灰褐。可和水作烙饼；不含现成酵种。秋冬新粉多，雨季防结块。",
+        "inspection": "看粉面是否结块、有无灰绿霉点，闻有无酸败或霉味。若成硬粒或黏手，即受潮。",
+        "storage": "置阴凉干燥处，避潮。可存30天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_walking_crutch",
-    "description": "旧磨坊出品的腋托木拐，重1.3。松木板锯成拐身和腋托，做穿接榫，托部以亚麻布条包住，木面经木锉修整。按固定尺寸制作，不声明医疗矫正效果。",
+    "description": "旧磨坊出品的腋托木拐，重1.3公斤。松木板锯成拐身和腋托，做穿接榫，托部以亚麻布条包住，木面经木锉修整。按固定尺寸制作，不声明医疗矫正效果。",
     "inspection": "先看拐身有无顺纹开裂或节疤贯穿，再看穿接榫处是否松动、榫肩有无错位。托部布条应包紧无散头。轻压拐身，听有无异响。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_walking_crutch",
+        "description": "旧磨坊出品的腋托木拐，重1.3。松木板锯成拐身和腋托，做穿接榫，托部以亚麻布条包住，木面经木锉修整。按固定尺寸制作，不声明医疗矫正效果。",
+        "inspection": "先看拐身有无顺纹开裂或节疤贯穿，再看穿接榫处是否松动、榫肩有无错位。托部布条应包紧无散头。轻压拐身，听有无异响。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

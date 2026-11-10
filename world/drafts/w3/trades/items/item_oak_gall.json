@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_oak_gall",
-    "description": "北林边秋季采集后晾干的干树瘿，一小包重80克，瘿体多为圆鼓状，表面坑洼坚硬，外皮灰褐至深褐。用于鞣色和调制深色写液，须按具体配方加工，不是可食坚果。有限库存出售。",
+    "description": "北林边秋季采集后晾干的干树瘿，一小包重0.08公斤，瘿体多为圆鼓状，表面坑洼坚硬，外皮灰褐至深褐。用于鞣色和调制深色写液，须按具体配方加工，不是可食坚果。有限库存出售。",
     "inspection": "取出查看：瘿体应干燥硬实，无软陷、无霉斑，掰开断面不见活虫与蛀粉。若有潮软、白毛或虫孔，整份弃用；气味发闷酸腐者同样不可收。",
     "storage": "置阴凉干燥处，避潮。可存180天。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_oak_gall",
+        "description": "北林边秋季采集后晾干的干树瘿，一小包重80克，瘿体多为圆鼓状，表面坑洼坚硬，外皮灰褐至深褐。用于鞣色和调制深色写液，须按具体配方加工，不是可食坚果。有限库存出售。",
+        "inspection": "取出查看：瘿体应干燥硬实，无软陷、无霉斑，掰开断面不见活虫与蛀粉。若有潮软、白毛或虫孔，整份弃用；气味发闷酸腐者同样不可收。",
+        "storage": "置阴凉干燥处，避潮。可存180天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_red_ochre",
-    "description": "白石镇旱季采磨、筛过的赤色土粉，限量出售，每份重0.1。用于木牌着色，须配黏结材料，不是药物。雨季只售干粉。",
+    "description": "白石镇旱季采磨、筛过的赤色土粉，限量出售，每份重0.1公斤。用于木牌着色，须配黏结材料，不是药物。雨季只售干粉。",
     "inspection": "看粉是否结块、有无霉斑与潮腥气；用指腹搓开，察色泽是否均匀。结块受潮者不宜着色。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为54，进入L4抽读",
+    "description长度为56，进入L4抽读",
     "storage长度为9，进入L4抽读"
   ],
   "feedback": null,
@@ -36,6 +36,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_red_ochre",
+        "description": "白石镇旱季采磨、筛过的赤色土粉，限量出售，每份重0.1。用于木牌着色，须配黏结材料，不是药物。雨季只售干粉。",
+        "inspection": "看粉是否结块、有无霉斑与潮腥气；用指腹搓开，察色泽是否均匀。结块受潮者不宜着色。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

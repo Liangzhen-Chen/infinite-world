@@ -5,7 +5,7 @@
   "attempts": 2,
   "draft": {
     "id": "item_boot_scraper",
-    "description": "铁匠铺以一块铁料和三份木炭锻出的门前刮泥架，重0.82。锻平刮泥边，弯出两脚，接触鞋底的边用扁锉锉钝。固定在门前木台上刮鞋底，台座另备，不随货提供。",
+    "description": "铁匠铺以一块铁料和三份木炭锻出的门前刮泥架，重0.82公斤。锻平刮泥边，弯出两脚，接触鞋底的边用扁锉锉钝。固定在门前木台上刮鞋底，台座另备，不随货提供。",
     "inspection": "先看刮泥边是否平直、两脚弯度是否一致，再摸接触边有无毛刺；表面若见裂纹、缺角或脚部松动，即为锻打或使用留下的损伤。",
     "storage": "置于干燥处，避免雨淋。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 2
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_boot_scraper",
+        "description": "铁匠铺以一块铁料和三份木炭锻出的门前刮泥架，重0.82。锻平刮泥边，弯出两脚，接触鞋底的边用扁锉锉钝。固定在门前木台上刮鞋底，台座另备，不随货提供。",
+        "inspection": "先看刮泥边是否平直、两脚弯度是否一致，再摸接触边有无毛刺；表面若见裂纹、缺角或脚部松动，即为锻打或使用留下的损伤。",
+        "storage": "置于干燥处，避免雨淋。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 2
     }

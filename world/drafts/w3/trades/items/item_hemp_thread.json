@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_hemp_thread",
-    "description": "织坊的细捻麻线团，重0.15，单股细而匀，表面留有短纤毛刺。用于缝革、结网，可涂少量蜂蜡减摩；不等同于承重缆索。",
+    "description": "织坊的细捻麻线团，重0.15公斤，单股细而匀，表面留有短纤毛刺。用于缝革、结网，可涂少量蜂蜡减摩；不等同于承重缆索。",
     "inspection": "解开外层数圈，看线股是否均匀、有无并股松脱或明显粗细突变；指腹顺捻向捋过，察觉毛刺与断纤；闻之应有干麻草气，若带霉闷味或见暗斑霉点即弃。",
     "storage": "置于干燥通风处，避潮。可存365天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为56，进入L4抽读",
+    "description长度为58，进入L4抽读",
     "storage长度为18，进入L4抽读"
   ],
   "feedback": null,
@@ -36,6 +36,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_hemp_thread",
+        "description": "织坊的细捻麻线团，重0.15，单股细而匀，表面留有短纤毛刺。用于缝革、结网，可涂少量蜂蜡减摩；不等同于承重缆索。",
+        "inspection": "解开外层数圈，看线股是否均匀、有无并股松脱或明显粗细突变；指腹顺捻向捋过，察觉毛刺与断纤；闻之应有干麻草气，若带霉闷味或见暗斑霉点即弃。",
+        "storage": "置于干燥通风处，避潮。可存365天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

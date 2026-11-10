@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_foot_rest",
-    "description": "按订单制成的倾面脚凳，重1.15。取松木板削成前低后高的侧板，横板嵌入侧板榫槽，两枚木楔楔紧，脚跟常碰的前缘以木锉修圆。木料缺货时暂停交付。",
+    "description": "按订单制成的倾面脚凳，重1.15公斤。取松木板削成前低后高的侧板，横板嵌入侧板榫槽，两枚木楔楔紧，脚跟常碰的前缘以木锉修圆。木料缺货时暂停交付。",
     "inspection": "查看侧板与横板接合处是否松动，木楔有无退出或劈裂；手抚前缘，确认锉圆处无毛刺、无起翘木丝；轻摇凳身听有无异响，观察板面是否出现顺纹裂缝。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_foot_rest",
+        "description": "按订单制成的倾面脚凳，重1.15。取松木板削成前低后高的侧板，横板嵌入侧板榫槽，两枚木楔楔紧，脚跟常碰的前缘以木锉修圆。木料缺货时暂停交付。",
+        "inspection": "查看侧板与横板接合处是否松动，木楔有无退出或劈裂；手抚前缘，确认锉圆处无毛刺、无起翘木丝；轻摇凳身听有无异响，观察板面是否出现顺纹裂缝。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

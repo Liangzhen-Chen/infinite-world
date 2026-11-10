@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_turnip_oat_cake",
-    "description": "青灯酒馆当日现做的小饼，以芜菁细末连汁水拌燕麦粉与盐成糊，以一份木刨花引火，菜籽油薄铺锅底烙熟，用搅糊板翻动，焦屑已弃置。表面留有搅糊板压出的浅痕，入口带芜菁清甜与燕麦粗香。重0.54，当日小批供应。",
+    "description": "青灯酒馆当日现做的小饼，以芜菁细末连汁水拌燕麦粉与盐成糊，以一份木刨花引火，菜籽油薄铺锅底烙熟，用搅糊板翻动，焦屑已弃置。表面留有搅糊板压出的浅痕，入口带芜菁清甜与燕麦粗香。重0.54公斤，当日小批供应。",
     "inspection": "翻看饼面有无霉斑、发黏或异味，边缘焦黑过甚者不宜入口；轻按应略有弹性，塌软渗水即已坏。",
     "storage": "放阴凉通风处，1天内吃完。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_turnip_oat_cake",
+        "description": "青灯酒馆当日现做的小饼，以芜菁细末连汁水拌燕麦粉与盐成糊，以一份木刨花引火，菜籽油薄铺锅底烙熟，用搅糊板翻动，焦屑已弃置。表面留有搅糊板压出的浅痕，入口带芜菁清甜与燕麦粗香。重0.54，当日小批供应。",
+        "inspection": "翻看饼面有无霉斑、发黏或异味，边缘焦黑过甚者不宜入口；轻按应略有弹性，塌软渗水即已坏。",
+        "storage": "放阴凉通风处，1天内吃完。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_pearl_barley",
-    "description": "白石镇秋季收下的脱壳大麦粒，每份500克。已去壳，不是麦芽，不直接当酿酒曲，可熬浓汤。秋收后充足，春末多为存粮。",
+    "description": "白石镇秋季收下的脱壳大麦粒，每份0.5公斤。已去壳，不是麦芽，不直接当酿酒曲，可熬浓汤。秋收后充足，春末多为存粮。",
     "inspection": "抓一把摊开，看颗粒是否完整、有无虫蛀小孔与霉斑；凑近闻有无酸败或闷仓味。若结块、发黏或气味刺鼻，整份弃用，不作煮前试吃。",
     "storage": "置于干燥通风处，避潮。可存180天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为56，进入L4抽读",
+    "description长度为57，进入L4抽读",
     "storage长度为18，进入L4抽读"
   ],
   "feedback": null,
@@ -39,6 +39,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_pearl_barley",
+        "description": "白石镇秋季收下的脱壳大麦粒，每份500克。已去壳，不是麦芽，不直接当酿酒曲，可熬浓汤。秋收后充足，春末多为存粮。",
+        "inspection": "抓一把摊开，看颗粒是否完整、有无虫蛀小孔与霉斑；凑近闻有无酸败或闷仓味。若结块、发黏或气味刺鼻，整份弃用，不作煮前试吃。",
+        "storage": "置于干燥通风处，避潮。可存180天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

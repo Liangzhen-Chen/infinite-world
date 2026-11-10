@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_willow_rod",
-    "description": "旧渡口一带春季修枝后收来的细柳条，已去叶，扎成一束，每份重0.35。趁柔韧时编小筐；干裂条不宜强弯。",
+    "description": "旧渡口一带春季修枝后收来的细柳条，已去叶，扎成一束，每份重0.35公斤。趁柔韧时编小筐；干裂条不宜强弯。",
     "inspection": "摊开，逐根弯折中段，听有无脆响，看节处是否起毛开裂。再查条身有无霉斑、虫蛀小孔，以及被水泡过后的灰暗软烂段。抖去浮土，拣出断口发白的死条。",
     "storage": "置于阴凉通风处，避免日晒与雨淋。可存90天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为50，进入L4抽读",
+    "description长度为52，进入L4抽读",
     "storage长度为22，进入L4抽读"
   ],
   "feedback": null,
@@ -39,6 +39,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_willow_rod",
+        "description": "旧渡口一带春季修枝后收来的细柳条，已去叶，扎成一束，每份重0.35。趁柔韧时编小筐；干裂条不宜强弯。",
+        "inspection": "摊开，逐根弯折中段，听有无脆响，看节处是否起毛开裂。再查条身有无霉斑、虫蛀小孔，以及被水泡过后的灰暗软烂段。抖去浮土，拣出断口发白的死条。",
+        "storage": "置于阴凉通风处，避免日晒与雨淋。可存90天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

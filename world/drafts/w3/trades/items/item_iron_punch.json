@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_iron_punch",
-    "description": "短身冲子，杆身粗短，重0.3。配锻锤在热铁片上冲孔，需砧台承托。作坊与行商按订单补货，现货有限。",
+    "description": "短身冲子，杆身粗短，重0.3公斤。配锻锤在热铁片上冲孔，需砧台承托。作坊与行商按订单补货，现货有限。",
     "inspection": "查看冲头刃口有无卷边、崩口或退火发蓝，杆身是否有裂纹与弯折；尾端锤击面若塌陷起毛，应修整后再用。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为48，进入L4抽读",
+    "description长度为50，进入L4抽读",
     "storage长度为9，进入L4抽读"
   ],
   "feedback": null,
@@ -39,6 +39,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_iron_punch",
+        "description": "短身冲子，杆身粗短，重0.3。配锻锤在热铁片上冲孔，需砧台承托。作坊与行商按订单补货，现货有限。",
+        "inspection": "查看冲头刃口有无卷边、崩口或退火发蓝，杆身是否有裂纹与弯折；尾端锤击面若塌陷起毛，应修整后再用。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

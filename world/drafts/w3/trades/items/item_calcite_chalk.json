@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_calcite_chalk",
-    "description": "石料车带来的软白垩块，重0.2，色近灰白，断口呈细粉状，指压能留下浅痕。可在木板与布料上划出白线，用于临时作记号，不能当生石灰。少量到货，库存有限。",
+    "description": "石料车带来的软白垩块，重0.2公斤，色近灰白，断口呈细粉状，指压能留下浅痕。可在木板与布料上划出白线，用于临时作记号，不能当生石灰。少量到货，库存有限。",
     "inspection": "取块在干木板上试划一道，看白线是否连续、粉屑是否成细末。再翻看棱角有无贯穿裂纹与夹砂，受潮的块体发暗、捏之成团，不宜带走。",
     "storage": "置于干燥处，避潮，防压。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_calcite_chalk",
+        "description": "石料车带来的软白垩块，重0.2，色近灰白，断口呈细粉状，指压能留下浅痕。可在木板与布料上划出白线，用于临时作记号，不能当生石灰。少量到货，库存有限。",
+        "inspection": "取块在干木板上试划一道，看白线是否连续、粉屑是否成细末。再翻看棱角有无贯穿裂纹与夹砂，受潮的块体发暗、捏之成团，不宜带走。",
+        "storage": "置于干燥处，避潮，防压。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

@@ -5,7 +5,7 @@
   "attempts": 3,
   "draft": {
     "id": "item_hinge_pin",
-    "description": "长头铰销，重0.14。以一份铁边料为材，以一份木炭作燃料加热，拉细后锻出长扁销头，再冷锉杆身，便于穿入铰耳。不附整副铰链。按订单制作，材料缺货时暂停交付。",
+    "description": "长头铰销，重0.14公斤。以一份铁边料为材，以一份木炭作燃料加热，拉细后锻出长扁销头，再冷锉杆身，便于穿入铰耳。不附整副铰链。按订单制作，材料缺货时暂停交付。",
     "inspection": "查看长扁销头有无卷边、裂纹，杆身是否平直；用指腹沿锉纹摸过，确认无毛刺与弯折。轻敲杆身听声，闷响处可能内部有夹渣。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 3
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_hinge_pin",
+        "description": "长头铰销，重0.14。以一份铁边料为材，以一份木炭作燃料加热，拉细后锻出长扁销头，再冷锉杆身，便于穿入铰耳。不附整副铰链。按订单制作，材料缺货时暂停交付。",
+        "inspection": "查看长扁销头有无卷边、裂纹，杆身是否平直；用指腹沿锉纹摸过，确认无毛刺与弯折。轻敲杆身听声，闷响处可能内部有夹渣。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 3
     }

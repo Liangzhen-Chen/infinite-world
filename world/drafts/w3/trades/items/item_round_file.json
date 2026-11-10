@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_round_file",
-    "description": "圆身孔锉，重0.28，锉身呈圆柱形。用于修整金属孔缘，沿孔轴推拉磨削，使孔口圆顺；不当撬棒使用。作坊与行商按订单补货，现货有限。",
+    "description": "圆身孔锉，重0.28公斤，锉身呈圆柱形。用于修整金属孔缘，沿孔轴推拉磨削，使孔口圆顺；不当撬棒使用。作坊与行商按订单补货，现货有限。",
     "inspection": "先看齿纹是否齐整，有无断齿、糊齿或锈斑；再以指腹顺锉身摸过，凭涩感判断齿锋尚存几成。轻转锉身对光，检视圆柱是否弯曲。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_round_file",
+        "description": "圆身孔锉，重0.28，锉身呈圆柱形。用于修整金属孔缘，沿孔轴推拉磨削，使孔口圆顺；不当撬棒使用。作坊与行商按订单补货，现货有限。",
+        "inspection": "先看齿纹是否齐整，有无断齿、糊齿或锈斑；再以指腹顺锉身摸过，凭涩感判断齿锋尚存几成。轻转锉身对光，检视圆柱是否弯曲。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

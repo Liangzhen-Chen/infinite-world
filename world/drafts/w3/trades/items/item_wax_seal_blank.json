@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_wax_seal_blank",
-    "description": "青灯酒馆按订单制作的无字蜡饼，重45克。先以一份木炭作燃料，小火软化蜂蜡，再用木匙压成扁圆饼，冷却。用时再软化，不带刻字，不具官方印记，也无身份凭证效力。",
+    "description": "青灯酒馆按订单制作的无字蜡饼，重0.045公斤。先以一份木炭作燃料，小火软化蜂蜡，再用木匙压成扁圆饼，冷却。用时再软化，不带刻字，不具官方印记，也无身份凭证效力。",
     "inspection": "取蜡饼置于亮处，看两面是否平整、有无裂口与夹杂黑点；闻之应有淡淡蜜蜡气，无焦臭或霉味。若发白起粉或易断，说明蜡质已老化。",
     "storage": "置于阴凉处，避日晒与高温，防压。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_wax_seal_blank",
+        "description": "青灯酒馆按订单制作的无字蜡饼，重45克。先以一份木炭作燃料，小火软化蜂蜡，再用木匙压成扁圆饼，冷却。用时再软化，不带刻字，不具官方印记，也无身份凭证效力。",
+        "inspection": "取蜡饼置于亮处，看两面是否平整、有无裂口与夹杂黑点；闻之应有淡淡蜜蜡气，无焦臭或霉味。若发白起粉或易断，说明蜡质已老化。",
+        "storage": "置于阴凉处，避日晒与高温，防压。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

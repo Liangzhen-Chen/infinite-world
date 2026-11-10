@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_onion",
-    "description": "白石镇夏末收下的黄皮洋葱，晒干外皮，每份250克。剥去薄皮后烹煮，切开会出辛味汁液。春季芽多。",
+    "description": "白石镇夏末收下的黄皮洋葱，晒干外皮，每份0.25公斤。剥去薄皮后烹煮，切开会出辛味汁液。春季芽多。",
     "inspection": "翻看外层干皮是否完整，有无霉斑或软塌处；捏球体应坚硬，顶部无绿芽。剥开一颗闻气味，辛味冲鼻者为佳，发酸或腐臭即弃。不尝变质洋葱。",
     "storage": "置阴凉通风处，避潮，避免挤压。可存30天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为47，进入L4抽读",
+    "description长度为49，进入L4抽读",
     "storage长度为21，进入L4抽读"
   ],
   "feedback": null,
@@ -39,6 +39,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_onion",
+        "description": "白石镇夏末收下的黄皮洋葱，晒干外皮，每份250克。剥去薄皮后烹煮，切开会出辛味汁液。春季芽多。",
+        "inspection": "翻看外层干皮是否完整，有无霉斑或软塌处；捏球体应坚硬，顶部无绿芽。剥开一颗闻气味，辛味冲鼻者为佳，发酸或腐臭即弃。不尝变质洋葱。",
+        "storage": "置阴凉通风处，避潮，避免挤压。可存30天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

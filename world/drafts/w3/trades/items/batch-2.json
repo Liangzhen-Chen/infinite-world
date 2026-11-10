@@ -1,6 +1,6 @@
 {
   "index": 2,
-  "fingerprint": "d9235f0db4a1bc0876f5ad14ed681a6899c4a7d6b379613c8f2325d66a92beaf",
+  "fingerprint": "42c2e04289313946aeb34daa1011620c33387b052402b32fad3c594cfd3fc410",
   "count": 33,
   "passed": 33,
   "ids": [
@@ -83,7 +83,7 @@
     "approved": true,
     "reviewer": "sonnet-l4-a849fd89",
     "by": "sonnet-l4-a849fd89",
-    "reviewedAt": "2026-11-10T22:32:21.168Z",
+    "reviewedAt": "2026-11-10T22:49:04.000Z",
     "notes": [
       {
         "id": "item_belt_strap",
@@ -91,13 +91,13 @@
         "by": "sonnet-l4-a8e3953b"
       },
       {
-        "id": "item_boot_gaiter",
-        "note": "一对共重0.42与骨架一致；挡泥不增护甲出自骨架；storage皮革类可推，365天",
+        "id": "item_needle_case",
+        "note": "空夹出售针另备出自骨架；缝短边底边出自骨架；storage皮革类可推，365天一致",
         "by": "sonnet-l4-a8e3953b"
       },
       {
-        "id": "item_boot_scraper",
-        "note": "一块铁三份木炭与配方一致；台座另备出自骨架；storage金属避雨可推",
+        "id": "item_leather_grip",
+        "note": "首尾系孔附麻线出自骨架；工具另备；storage皮革类可推，365天一致",
         "by": "sonnet-l4-a8e3953b"
       },
       {
@@ -107,107 +107,37 @@
       },
       {
         "id": "item_coin_wrap",
-        "note": "重0.2；交付不含钱币出自骨架；storage皮革类可推，365天一致",
-        "by": "sonnet-l4-a8e3953b"
-      },
-      {
-        "id": "item_gall_wash",
-        "note": "一枚干瘿、两份水、一份木炭与配方一致；炊锅石臼滤布均在骨架tools；容器另备属交付说明，7天一致",
-        "by": "sonnet-l4-a8e3953b"
-      },
-      {
-        "id": "item_leather_grip",
-        "note": "首尾系孔附麻线出自骨架；工具另备；storage皮革类可推，365天一致",
-        "by": "sonnet-l4-a8e3953b"
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
       },
       {
         "id": "item_leather_thimble",
-        "note": "重0.06；裁小皮条绕指成套出自骨架；storage皮革类可推，365天一致",
-        "by": "sonnet-l4-a8e3953b"
-      },
-      {
-        "id": "item_needle_case",
-        "note": "空夹出售针另备出自骨架；缝短边底边出自骨架；storage皮革类可推，365天一致",
-        "by": "sonnet-l4-a8e3953b"
-      },
-      {
-        "id": "item_hinge_pin",
-        "note": "重0.14；一份铁边料一份木炭与配方一致；storage无期限说法",
-        "by": "sonnet-l4-a8e3953b"
-      },
-      {
-        "id": "item_leather_hinge",
-        "note": "重0.18；两端各锥孔属工序结构；安装钉另备出自骨架；365天一致",
-        "by": "sonnet-l4-a8e3953b"
-      },
-      {
-        "id": "item_ochre_paint",
-        "note": "材料清水树胶赤土、石臼细筛笔均在tools；s避日晒霜冻由水性胶浆推出，容器另备仅交付",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_parchment_bookmark",
-        "note": "器具均在tools；s365天合骨架；无骨架外处置",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_polishing_powder",
-        "note": "粗粒弃置照pf；容器另备仅交付；s避潮可由粉末推出",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
         "by": "sonnet-l4-a849fd89"
       },
       {
         "id": "item_scroll_wrap",
-        "note": "材料工序照pf，无“会透湿”断言；s365天合骨架",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_soot_ink",
-        "note": "器具均在tools；容器另备仅交付；s7天合骨架",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_stove_grid",
-        "note": "四份木炭交代火源；无水盆；s避潮可由铁推出",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_wax_seal_blank",
-        "note": "第三轮重审：无期限句已删；45克按weight折算；木炭木匙有依据",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_waxed_thread",
-        "note": "余蜡包纸照pf；s365天合骨架；无干裂后果句",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_wood_marking_kit",
-        "note": "第三轮重审：期限句已删；铁锉出自pf；余布弃置",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_rein_patch",
-        "note": "第三轮重审：缰绳接头护片即name；365天合骨架",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_sack_pricker",
-        "note": "第三轮重审：锻有一份木炭火源；无直柄等",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_strap_eye",
-        "note": "两孔照pf；带与固定钉另备出自pf；火源无加热句",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_tent_stake",
-        "note": "无加热句；碎岩句出自pf；s避潮可由铁推出",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
         "by": "sonnet-l4-a849fd89"
       },
       {
         "id": "item_sheath_pouch",
         "note": "材料鞣革麻线，无加热；250克按weight折算；365天合骨架；s防压折由皮革推出；无骨架外处置。逐句读无误。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_boot_gaiter",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_leather_hinge",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_rein_patch",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
         "by": "sonnet-l4-a849fd89"
       },
       {
@@ -217,22 +147,52 @@
       },
       {
         "id": "item_drawer_pull",
-        "note": "一份铁料两份木炭交代；平锉在tools",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
         "by": "sonnet-l4-a849fd89"
       },
       {
         "id": "item_door_latch",
-        "note": "一份铁料三份木炭交代；无骨架外结构",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_boot_scraper",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_stove_grid",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
         "by": "sonnet-l4-a849fd89"
       },
       {
         "id": "item_bucket_handle",
-        "note": "两份木炭交代；木桶另备照pf",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_hinge_pin",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_tent_stake",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_strap_eye",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
         "by": "sonnet-l4-a849fd89"
       },
       {
         "id": "item_pot_lifter",
-        "note": "三份木炭交代；容器另备仅交付",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_sack_pricker",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
         "by": "sonnet-l4-a849fd89"
       },
       {
@@ -241,8 +201,48 @@
         "by": "sonnet-l4-a849fd89"
       },
       {
+        "id": "item_ochre_paint",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_soot_ink",
+        "note": "器具均在tools；容器另备仅交付；s7天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_gall_wash",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_polishing_powder",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_parchment_bookmark",
+        "note": "器具均在tools；s365天合骨架；无骨架外处置",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
         "id": "item_copper_nameplate",
-        "note": "材料铜片1，无加热句；s防压由铜片推出",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_waxed_thread",
+        "note": "余蜡包纸照pf；s365天合骨架；无干裂后果句",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_wax_seal_blank",
+        "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_wood_marking_kit",
+        "note": "第三轮重审：期限句已删；铁锉出自pf；余布弃置",
         "by": "sonnet-l4-a849fd89"
       },
       {
@@ -531,6 +531,207 @@
           "item_book_trades_leather",
           "item_book_trades_iron",
           "item_book_trades_artisan"
+        ]
+      }
+    },
+    {
+      "approved": true,
+      "reviewer": "sonnet-l4-a849fd89",
+      "by": "sonnet-l4-a849fd89",
+      "reviewedAt": "2026-11-10T22:32:21.168Z",
+      "notes": [
+        {
+          "id": "item_belt_strap",
+          "note": "三字段对照骨架；无骨架外尺寸与配套物；storage 避日晒雨淋由皮革类推出，365天与骨架一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_boot_gaiter",
+          "note": "一对共重0.42与骨架一致；挡泥不增护甲出自骨架；storage皮革类可推，365天",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_boot_scraper",
+          "note": "一块铁三份木炭与配方一致；台座另备出自骨架；storage金属避雨可推",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_chalk_powder",
+          "note": "旧磨坊对应bld_hw_mill；弃置用词合规；storage细粉避风避潮可推；容器另备属交付说明",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_coin_wrap",
+          "note": "重0.2；交付不含钱币出自骨架；storage皮革类可推，365天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_gall_wash",
+          "note": "一枚干瘿、两份水、一份木炭与配方一致；炊锅石臼滤布均在骨架tools；容器另备属交付说明，7天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_leather_grip",
+          "note": "首尾系孔附麻线出自骨架；工具另备；storage皮革类可推，365天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_leather_thimble",
+          "note": "重0.06；裁小皮条绕指成套出自骨架；storage皮革类可推，365天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_needle_case",
+          "note": "空夹出售针另备出自骨架；缝短边底边出自骨架；storage皮革类可推，365天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_hinge_pin",
+          "note": "重0.14；一份铁边料一份木炭与配方一致；storage无期限说法",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_leather_hinge",
+          "note": "重0.18；两端各锥孔属工序结构；安装钉另备出自骨架；365天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_ochre_paint",
+          "note": "材料清水树胶赤土、石臼细筛笔均在tools；s避日晒霜冻由水性胶浆推出，容器另备仅交付",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_parchment_bookmark",
+          "note": "器具均在tools；s365天合骨架；无骨架外处置",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_polishing_powder",
+          "note": "粗粒弃置照pf；容器另备仅交付；s避潮可由粉末推出",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_scroll_wrap",
+          "note": "材料工序照pf，无“会透湿”断言；s365天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_soot_ink",
+          "note": "器具均在tools；容器另备仅交付；s7天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_stove_grid",
+          "note": "四份木炭交代火源；无水盆；s避潮可由铁推出",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_wax_seal_blank",
+          "note": "第三轮重审：无期限句已删；45克按weight折算；木炭木匙有依据",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_waxed_thread",
+          "note": "余蜡包纸照pf；s365天合骨架；无干裂后果句",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_wood_marking_kit",
+          "note": "第三轮重审：期限句已删；铁锉出自pf；余布弃置",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_rein_patch",
+          "note": "第三轮重审：缰绳接头护片即name；365天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_sack_pricker",
+          "note": "第三轮重审：锻有一份木炭火源；无直柄等",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_strap_eye",
+          "note": "两孔照pf；带与固定钉另备出自pf；火源无加热句",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_tent_stake",
+          "note": "无加热句；碎岩句出自pf；s避潮可由铁推出",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_sheath_pouch",
+          "note": "材料鞣革麻线，无加热；250克按weight折算；365天合骨架；s防压折由皮革推出；无骨架外处置。逐句读无误。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_book_trades_leather",
+          "note": "同上；十工序名逐一对照一致；s避潮、不久晒、不压由书页推出；365天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_drawer_pull",
+          "note": "一份铁料两份木炭交代；平锉在tools",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_door_latch",
+          "note": "一份铁料三份木炭交代；无骨架外结构",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_bucket_handle",
+          "note": "两份木炭交代；木桶另备照pf",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_pot_lifter",
+          "note": "三份木炭交代；容器另备仅交付",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_book_trades_iron",
+          "note": "同上；十件锻作名逐一对照一致；无骨架外内容；s避潮防压；365天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_copper_nameplate",
+          "note": "材料铜片1，无加热句；s防压由铜片推出",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_book_trades_artisan",
+          "note": "同上；十工序名逐一对照一致；s避潮避晒防压；365天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        }
+      ],
+      "rejection": {
+        "by": "波次评分重评时发现（sonnet-l4-a3a9e74a），主会话全量核对",
+        "at": "2026-11-10T23:xxZ",
+        "reason": "物品正文重量数字缺单位（62 件“重0.xx”），整类按 L4 清单第 7 条算错；统一补“公斤”，另 13 件克等值换算，数值等于骨架 weight，独立复核已过（sonnet-l4-a849fd89）。",
+        "ids": [
+          "item_boot_gaiter",
+          "item_boot_scraper",
+          "item_bucket_handle",
+          "item_coin_wrap",
+          "item_copper_nameplate",
+          "item_door_latch",
+          "item_drawer_pull",
+          "item_gall_wash",
+          "item_hinge_pin",
+          "item_leather_hinge",
+          "item_leather_thimble",
+          "item_ochre_paint",
+          "item_polishing_powder",
+          "item_pot_lifter",
+          "item_rein_patch",
+          "item_sack_pricker",
+          "item_scroll_wrap",
+          "item_stove_grid",
+          "item_strap_eye",
+          "item_tent_stake",
+          "item_wax_seal_blank"
         ]
       }
     }

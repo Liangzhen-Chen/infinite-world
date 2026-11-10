@@ -5,7 +5,7 @@
   "attempts": 2,
   "draft": {
     "id": "item_willow_creel",
-    "description": "旧磨坊出产的扁口柳条篓，重0.72。柔柳条交叉编底，竖经向上收口，篓沿用麻线扎紧；凸出的条头用骨压片压伏，篓口齐平，不带盖。",
+    "description": "旧磨坊出产的扁口柳条篓，重0.72公斤。柔柳条交叉编底，竖经向上收口，篓沿用麻线扎紧；凸出的条头用骨压片压伏，篓口齐平，不带盖。",
     "inspection": "查看篓沿麻线有无松脱，条股有无折断或翘头；轻按篓身，听有无脆裂声，并检查底部交叉处是否磨薄。",
     "storage": "置于干燥通风处，避免雨淋与重压，远离火源。可存180天。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:08:00.329Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [],
@@ -33,6 +33,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 2
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_willow_creel",
+        "description": "旧磨坊出产的扁口柳条篓，重0.72。柔柳条交叉编底，竖经向上收口，篓沿用麻线扎紧；凸出的条头用骨压片压伏，篓口齐平，不带盖。",
+        "inspection": "查看篓沿麻线有无松脱，条股有无折断或翘头；轻按篓身，听有无脆裂声，并检查底部交叉处是否磨薄。",
+        "storage": "置于干燥通风处，避免雨淋与重压，远离火源。可存180天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:08:00.329Z"
       },
       "priorAttempts": 2
     }

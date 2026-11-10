@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_pine_board",
-    "description": "风干松木短板，重1，冬伐料经风干后逐批下锯，未刨光，四边留着锯痕与毛刺。板面呈浅黄至淡褐，年轮疏密相间，节疤处颜色偏深。供小件木作取材；并非已拼好的家具。",
+    "description": "风干松木短板，重1公斤，冬伐料经风干后逐批下锯，未刨光，四边留着锯痕与毛刺。板面呈浅黄至淡褐，年轮疏密相间，节疤处颜色偏深。供小件木作取材；并非已拼好的家具。",
     "inspection": "翻看两面与四边，寻找贯通裂纹、活虫孔和腐朽软斑。指压节疤周围，听是否有空响；沿板面轻敲，声音发闷处多已受潮。毛边扎手属正常，若见蓝变或霉点则不宜使用。",
     "storage": "置于干燥通风处，避潮避雨。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_pine_board",
+        "description": "风干松木短板，重1，冬伐料经风干后逐批下锯，未刨光，四边留着锯痕与毛刺。板面呈浅黄至淡褐，年轮疏密相间，节疤处颜色偏深。供小件木作取材；并非已拼好的家具。",
+        "inspection": "翻看两面与四边，寻找贯通裂纹、活虫孔和腐朽软斑。指压节疤周围，听是否有空响；沿板面轻敲，声音发闷处多已受潮。毛边扎手属正常，若见蓝变或霉点则不宜使用。",
+        "storage": "置于干燥通风处，避潮避雨。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

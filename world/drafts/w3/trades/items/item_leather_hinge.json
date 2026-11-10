@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_leather_hinge",
-    "description": "鞣革与麻线制成的折页软革铰片，重0.18。裁出对称长条，压出弯折线，两端各锥出安装孔，孔缘用麻线锁边。用于轻木匣，安装钉另备，不随货附送。按订单制作，材料缺货时暂停交付。",
+    "description": "鞣革与麻线制成的折页软革铰片，重0.18公斤。裁出对称长条，压出弯折线，两端各锥出安装孔，孔缘用麻线锁边。用于轻木匣，安装钉另备，不随货附送。按订单制作，材料缺货时暂停交付。",
     "inspection": "逐片展平查看两叶是否对称，弯折线有无裂纹或发白；指压孔缘确认锁线紧实、无脱散。革面应干爽无霉斑，闻之无酸腐气。孔位偏移或边缘起毛者剔出。",
     "storage": "置于干燥处，避免潮湿与曝晒。可存365天。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_leather_hinge",
+        "description": "鞣革与麻线制成的折页软革铰片，重0.18。裁出对称长条，压出弯折线，两端各锥出安装孔，孔缘用麻线锁边。用于轻木匣，安装钉另备，不随货附送。按订单制作，材料缺货时暂停交付。",
+        "inspection": "逐片展平查看两叶是否对称，弯折线有无裂纹或发白；指压孔缘确认锁线紧实、无脱散。革面应干爽无霉斑，闻之无酸腐气。孔位偏移或边缘起毛者剔出。",
+        "storage": "置于干燥处，避免潮湿与曝晒。可存365天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

@@ -5,7 +5,7 @@
   "attempts": 3,
   "draft": {
     "id": "item_sack_pricker",
-    "description": "以铁边料和一份木炭锻出的开袋锥，重0.15。边料拉出短尖与厚握柄，锉平接缝，尖口保持钝锥状。用于拨开粗袋缝，避免割断整条缝线。按订单制作，材料缺货时暂停交付。",
+    "description": "以铁边料和一份木炭锻出的开袋锥，重0.15公斤。边料拉出短尖与厚握柄，锉平接缝，尖口保持钝锥状。用于拨开粗袋缝，避免割断整条缝线。按订单制作，材料缺货时暂停交付。",
     "inspection": "先看钝锥尖有无卷曲或崩缺，再沿柄身摸一遍接缝，确认无毛刺扎手。柄与锥体连接处若出现裂纹即停用，避免发力时折断。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 3
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_sack_pricker",
+        "description": "以铁边料和一份木炭锻出的开袋锥，重0.15。边料拉出短尖与厚握柄，锉平接缝，尖口保持钝锥状。用于拨开粗袋缝，避免割断整条缝线。按订单制作，材料缺货时暂停交付。",
+        "inspection": "先看钝锥尖有无卷曲或崩缺，再沿柄身摸一遍接缝，确认无毛刺扎手。柄与锥体连接处若出现裂纹即停用，避免发力时折断。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 3
     }

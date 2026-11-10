@@ -5,7 +5,7 @@
   "attempts": 2,
   "draft": {
     "id": "item_thread_rack",
-    "description": "旧磨坊出产的绕线立架，重1.05。锯出底座和立柱，钻孔装四根木楔作挂头，校正站稳。线团另备，架子没有纺线能力。按订单制作。",
+    "description": "旧磨坊出产的绕线立架，重1.05公斤。锯出底座和立柱，钻孔装四根木楔作挂头，校正站稳。线团另备，架子没有纺线能力。按订单制作。",
     "inspection": "先看底座与立柱接合是否平齐，四根木楔有无松动或歪斜；用指腹轻推挂头试其稳固；放在平地，看是否站稳。",
     "storage": "置于干燥通风处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 2
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_thread_rack",
+        "description": "旧磨坊出产的绕线立架，重1.05。锯出底座和立柱，钻孔装四根木楔作挂头，校正站稳。线团另备，架子没有纺线能力。按订单制作。",
+        "inspection": "先看底座与立柱接合是否平齐，四根木楔有无松动或歪斜；用指腹轻推挂头试其稳固；放在平地，看是否站稳。",
+        "storage": "置于干燥通风处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 2
     }

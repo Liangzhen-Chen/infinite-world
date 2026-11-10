@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_pot_lifter",
-    "description": "铁匠铺锻制的夹口提锅钩，重0.88。以一份铁料、三份木炭作燃料加热，分锻两支夹臂和铰销，卷耳对合，冷却后锉平夹口，试空合。只夹小锅卷边，不附耐热手套，容器另备，不随货提供。",
+    "description": "铁匠铺锻制的夹口提锅钩，重0.88公斤。以一份铁料、三份木炭作燃料加热，分锻两支夹臂和铰销，卷耳对合，冷却后锉平夹口，试空合。只夹小锅卷边，不附耐热手套，容器另备，不随货提供。",
     "inspection": "先看铰销是否松动、两臂开合是否顺畅，再看夹口有无卷刃或豁口，最后空合一次，确认两片夹口贴合、不留缝。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:08:00.329Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_pot_lifter",
+        "description": "铁匠铺锻制的夹口提锅钩，重0.88。以一份铁料、三份木炭作燃料加热，分锻两支夹臂和铰销，卷耳对合，冷却后锉平夹口，试空合。只夹小锅卷边，不附耐热手套，容器另备，不随货提供。",
+        "inspection": "先看铰销是否松动、两臂开合是否顺畅，再看夹口有无卷刃或豁口，最后空合一次，确认两片夹口贴合、不留缝。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:08:00.329Z"
       },
       "priorAttempts": 1
     }

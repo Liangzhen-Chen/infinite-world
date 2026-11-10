@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_door_latch",
-    "description": "铁匠铺出品的落杆门闩，重0.95。以一份铁料、三份木炭作燃料加热，分锻闩杆与两个套耳，套耳冲安装孔，冷却后试滑。只作内闩，无钥匙锁芯。按订单制作，材料缺货时暂停交付。",
+    "description": "铁匠铺出品的落杆门闩，重0.95公斤。以一份铁料、三份木炭作燃料加热，分锻闩杆与两个套耳，套耳冲安装孔，冷却后试滑。只作内闩，无钥匙锁芯。按订单制作，材料缺货时暂停交付。",
     "inspection": "先看闩杆是否平直，有无凹坑或裂纹；再查两个套耳是否开裂；将套耳套上闩杆来回推拉，听滑动是否顺畅、有无卡滞异响。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:08:00.329Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_door_latch",
+        "description": "铁匠铺出品的落杆门闩，重0.95。以一份铁料、三份木炭作燃料加热，分锻闩杆与两个套耳，套耳冲安装孔，冷却后试滑。只作内闩，无钥匙锁芯。按订单制作，材料缺货时暂停交付。",
+        "inspection": "先看闩杆是否平直，有无凹坑或裂纹；再查两个套耳是否开裂；将套耳套上闩杆来回推拉，听滑动是否顺畅、有无卡滞异响。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:08:00.329Z"
       },
       "priorAttempts": 1
     }

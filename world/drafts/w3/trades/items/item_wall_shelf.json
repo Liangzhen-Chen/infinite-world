@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_wall_shelf",
-    "description": "旧磨坊出产的短板壁架，重1.2。两块松木板分作架面和两支三角托，凿浅槽，以四枚铁钉钉接。成品需另选合适墙面安装，不能自立。",
+    "description": "旧磨坊出产的短板壁架，重1.2公斤。两块松木板分作架面和两支三角托，凿浅槽，以四枚铁钉钉接。成品需另选合适墙面安装，不能自立。",
     "inspection": "先看架面是否平直，有无翘曲或裂纹；再查两支三角托与架面接合处是否松脱、钉接是否紧固；检查木面有无霉斑与虫孔。",
     "storage": "置于干燥通风处，避潮，防压。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:08:00.329Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_wall_shelf",
+        "description": "旧磨坊出产的短板壁架，重1.2。两块松木板分作架面和两支三角托，凿浅槽，以四枚铁钉钉接。成品需另选合适墙面安装，不能自立。",
+        "inspection": "先看架面是否平直，有无翘曲或裂纹；再查两支三角托与架面接合处是否松脱、钉接是否紧固；检查木面有无霉斑与虫孔。",
+        "storage": "置于干燥通风处，避潮，防压。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:08:00.329Z"
       },
       "priorAttempts": 1
     }

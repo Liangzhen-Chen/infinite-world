@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_hen_egg",
-    "description": "南田出产的鸡蛋，按四枚一份出售，连壳重240克。春夏产蛋较多，冬日供应少。须煮熟后食用。此份只计鸡蛋，不附篮子，买家需自备容器。",
+    "description": "南田出产的鸡蛋，按四枚一份出售，连壳重0.24公斤。春夏产蛋较多，冬日供应少。须煮熟后食用。此份只计鸡蛋，不附篮子，买家需自备容器。",
     "inspection": "逐枚对光看壳面有无裂纹与暗斑，轻摇听内部是否晃动；有异味的蛋挑出不用。",
     "storage": "置于阴凉通风处，避免挤压。可存5天。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_hen_egg",
+        "description": "南田出产的鸡蛋，按四枚一份出售，连壳重240克。春夏产蛋较多，冬日供应少。须煮熟后食用。此份只计鸡蛋，不附篮子，买家需自备容器。",
+        "inspection": "逐枚对光看壳面有无裂纹与暗斑，轻摇听内部是否晃动；有异味的蛋挑出不用。",
+        "storage": "置于阴凉通风处，避免挤压。可存5天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

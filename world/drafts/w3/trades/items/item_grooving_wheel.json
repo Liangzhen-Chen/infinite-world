@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_grooving_wheel",
-    "description": "缝距齿轮柄，重0.16，柄端有一枚齿轮。沿皮边滚过只压出浅缝距记号，印痕只定位，不贯穿皮料。作坊与行商按订单补货，现货有限。",
+    "description": "缝距齿轮柄，重0.16公斤，柄端有一枚齿轮。沿皮边滚过只压出浅缝距记号，印痕只定位，不贯穿皮料。作坊与行商按订单补货，现货有限。",
     "inspection": "先看轮缘细齿是否齐整，缺齿或卷口便压不出匀称记号；再转轮轴，应能顺滑空转，卡滞则印距会乱。柄面若有横向裂纹，用力时易断，不宜收。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_grooving_wheel",
+        "description": "缝距齿轮柄，重0.16，柄端有一枚齿轮。沿皮边滚过只压出浅缝距记号，印痕只定位，不贯穿皮料。作坊与行商按订单补货，现货有限。",
+        "inspection": "先看轮缘细齿是否齐整，缺齿或卷口便压不出匀称记号；再转轮轴，应能顺滑空转，卡滞则印距会乱。柄面若有横向裂纹，用力时易断，不宜收。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

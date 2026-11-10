@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_rein_patch",
-    "description": "织坊出产的缰绳接头护片，重0.22。取鞣革折成包覆片，侧边以麻线穿孔缝合，中留一道穿带通道。是护片而非完整缰绳，不附坐骑。按订单制作，材料缺货时暂停交付。",
+    "description": "织坊出产的缰绳接头护片，重0.22公斤。取鞣革折成包覆片，侧边以麻线穿孔缝合，中留一道穿带通道。是护片而非完整缰绳，不附坐骑。按订单制作，材料缺货时暂停交付。",
     "inspection": "查看折边有无开裂，缝合麻线是否松脱，穿带通道内壁是否被磨薄起毛；再嗅闻有无霉味或酸败气，外观与气味异常者不作使用。",
     "storage": "置于干燥处，避免曝晒与潮湿。可存365天。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_rein_patch",
+        "description": "织坊出产的缰绳接头护片，重0.22。取鞣革折成包覆片，侧边以麻线穿孔缝合，中留一道穿带通道。是护片而非完整缰绳，不附坐骑。按订单制作，材料缺货时暂停交付。",
+        "inspection": "查看折边有无开裂，缝合麻线是否松脱，穿带通道内壁是否被磨薄起毛；再嗅闻有无霉味或酸败气，外观与气味异常者不作使用。",
+        "storage": "置于干燥处，避免曝晒与潮湿。可存365天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

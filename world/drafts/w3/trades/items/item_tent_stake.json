@@ -5,7 +5,7 @@
   "attempts": 3,
   "draft": {
     "id": "item_tent_stake",
-    "description": "铁质长钉，钉身由铁坯拉成，重0.72。头端弯出钩口；尖端经锉修，去掉脆薄毛边。按订单制作，材料缺货时暂停交付。用于锤入普通土层固定帐幕，遇碎岩则难以保证锚牢。",
+    "description": "铁质长钉，钉身由铁坯拉成，重0.72公斤。头端弯出钩口；尖端经锉修，去掉脆薄毛边。按订单制作，材料缺货时暂停交付。用于锤入普通土层固定帐幕，遇碎岩则难以保证锚牢。",
     "inspection": "先看钉身是否平直，弯钩处有无裂纹或折扁；再摸尖端，确认毛边已锉净、无倒刺。检查弯钩内侧和钉尖是否有可见裂口、锈蚀剥层；仅凭敲声无法断定内部状况。",
     "storage": "置于干燥处，避潮。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 3
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_tent_stake",
+        "description": "铁质长钉，钉身由铁坯拉成，重0.72。头端弯出钩口；尖端经锉修，去掉脆薄毛边。按订单制作，材料缺货时暂停交付。用于锤入普通土层固定帐幕，遇碎岩则难以保证锚牢。",
+        "inspection": "先看钉身是否平直，弯钩处有无裂纹或折扁；再摸尖端，确认毛边已锉净、无倒刺。检查弯钩内侧和钉尖是否有可见裂口、锈蚀剥层；仅凭敲声无法断定内部状况。",
+        "storage": "置于干燥处，避潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 3
     }

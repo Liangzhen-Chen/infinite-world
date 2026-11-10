@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_leather_thimble",
-    "description": "织坊出品的绕指护针套，裁小皮条绕指成套，内侧补折一层，在边缘穿孔，以麻线缝合。用于顶缝针，不挡刀刃。重0.06。",
+    "description": "织坊出品的绕指护针套，裁小皮条绕指成套，内侧补折一层，在边缘穿孔，以麻线缝合。用于顶缝针，不挡刀刃。重0.06公斤。",
     "inspection": "先看皮面有无裂纹、霉斑与硬结，再翻看内侧折层是否脱开，边缘缝线有无断股、跳针。以指试套，应贴合不勒。",
     "storage": "置于阴凉干燥处，避免曝晒与潮湿。可存365天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为56，进入L4抽读",
+    "description长度为58，进入L4抽读",
     "storage长度为23，进入L4抽读"
   ],
   "feedback": null,
@@ -36,6 +36,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_leather_thimble",
+        "description": "织坊出品的绕指护针套，裁小皮条绕指成套，内侧补折一层，在边缘穿孔，以麻线缝合。用于顶缝针，不挡刀刃。重0.06。",
+        "inspection": "先看皮面有无裂纹、霉斑与硬结，再翻看内侧折层是否脱开，边缘缝线有无断股、跳针。以指试套，应贴合不勒。",
+        "storage": "置于阴凉干燥处，避免曝晒与潮湿。可存365天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

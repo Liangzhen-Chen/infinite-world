@@ -5,7 +5,7 @@
   "attempts": 2,
   "draft": {
     "id": "item_rapeseed_oil",
-    "description": "白石镇夏季榨油后补货的小份菜籽油，色深黄带青。每份重0.1，食用，供少量煎烙，不作机械润滑。买者自备容器。",
+    "description": "白石镇夏季榨油后补货的小份菜籽油，色深黄带青。每份重0.1公斤，食用，供少量煎烙，不作机械润滑。买者自备容器。",
     "inspection": "先看油面是否清亮无絮状悬浮，再闻有无酸败哈喇气；若见分层浑浊或刺鼻异味即弃。油液挂壁应均匀，底部不应有沉淀物。",
     "storage": "容器自备，置于阴凉避光处。可存90天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为53，进入L4抽读",
+    "description长度为55，进入L4抽读",
     "storage长度为19，进入L4抽读"
   ],
   "feedback": null,
@@ -36,6 +36,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 2
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_rapeseed_oil",
+        "description": "白石镇夏季榨油后补货的小份菜籽油，色深黄带青。每份重0.1，食用，供少量煎烙，不作机械润滑。买者自备容器。",
+        "inspection": "先看油面是否清亮无絮状悬浮，再闻有无酸败哈喇气；若见分层浑浊或刺鼻异味即弃。油液挂壁应均匀，底部不应有沉淀物。",
+        "storage": "容器自备，置于阴凉避光处。可存90天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 2
     }

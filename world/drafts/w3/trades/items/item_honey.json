@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_honey",
-    "description": "南坡蜂场夏末取蜜后集中供应的滤过蜂蜜，每份100克，仍可能结晶，属正常变化。按蜜重售卖，容器由买者自备，不随货提供。",
+    "description": "南坡蜂场夏末取蜜后集中供应的滤过蜂蜜，每份0.1公斤，仍可能结晶，属正常变化。按蜜重售卖，容器由买者自备，不随货提供。",
     "inspection": "看色泽是否均匀、有无霉斑或异物；闻气味，正常者带花香与蜜甜，若有酸败、酒味或刺鼻异味则弃用。结晶呈细砂状属正常，不尝变质之蜜。",
     "storage": "容器自备，置于阴凉处，避水汽。可存180天。"
   },
@@ -13,11 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:08:00.329Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
-    "description长度为58，进入L4抽读",
+    "description长度为59，进入L4抽读",
     "storage长度为22，进入L4抽读"
   ],
   "feedback": null,
@@ -36,6 +36,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_honey",
+        "description": "南坡蜂场夏末取蜜后集中供应的滤过蜂蜜，每份100克，仍可能结晶，属正常变化。按蜜重售卖，容器由买者自备，不随货提供。",
+        "inspection": "看色泽是否均匀、有无霉斑或异物；闻气味，正常者带花香与蜜甜，若有酸败、酒味或刺鼻异味则弃用。结晶呈细砂状属正常，不尝变质之蜜。",
+        "storage": "容器自备，置于阴凉处，避水汽。可存180天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:08:00.329Z"
       },
       "priorAttempts": 1
     }

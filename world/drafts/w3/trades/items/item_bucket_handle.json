@@ -5,7 +5,7 @@
   "attempts": 3,
   "draft": {
     "id": "item_bucket_handle",
-    "description": "铁匠铺按订单打出的弯耳提桶梁，重0.7。以一份铁料、两份木炭作燃料加热，拉出半圆提梁，两端卷耳，冷却后锉平耳口，配已有桶耳安装。木桶另备，不随货提供。",
+    "description": "铁匠铺按订单打出的弯耳提桶梁，重0.7公斤。以一份铁料、两份木炭作燃料加热，拉出半圆提梁，两端卷耳，冷却后锉平耳口，配已有桶耳安装。木桶另备，不随货提供。",
     "inspection": "先看半圆弧度是否左右对称，再翻看两端卷耳有无裂口、耳口锉面是否平整；轻合桶耳检查活动是否顺畅。",
     "storage": "置于干燥处，避潮，防压。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:08:00.329Z"
+    "at": "2026-11-10T22:48:55.143Z"
   },
   "errors": [],
   "warnings": [
@@ -38,6 +38,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 3
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-10T22:48:55.143Z",
+      "reason": "物品重量数字缺单位整类修正（补公斤、克等值换算），独立复核已过（sonnet-l4-a849fd89）",
+      "headCommit": "4dc65b700128f4d61a15273bd6ad0b9770a71e3c",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_bucket_handle",
+        "description": "铁匠铺按订单打出的弯耳提桶梁，重0.7。以一份铁料、两份木炭作燃料加热，拉出半圆提梁，两端卷耳，冷却后锉平耳口，配已有桶耳安装。木桶另备，不随货提供。",
+        "inspection": "先看半圆弧度是否左右对称，再翻看两端卷耳有无裂口、耳口锉面是否平整；轻合桶耳检查活动是否顺畅。",
+        "storage": "置于干燥处，避潮，防压。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:08:00.329Z"
       },
       "priorAttempts": 3
     }
