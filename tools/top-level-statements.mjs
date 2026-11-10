@@ -1,5 +1,5 @@
 // 把 JS 源码切成顶层语句（括号深度为 0 且从行首（无缩进）开始的新语句）。
-// 只做结构检查用，不是完整解析器：识别行注释、块注释、单双引号字符串、模板字符串（含 ${} 嵌套）、正则字面量（按前一个有效字符判断）。
+// 只做结构检查用，不是完整解析器：识别行注释、块注释、单双引号字符串、模板字符串（含 ${} 嵌套）、正则字面量（按前一个有效字符、=>、return/typeof 等关键字判断）。
 // 行首以 } ) ] . ? : , && || + - * / = else catch finally 开头的行视为上一条语句的延续；
 // 上一条是 if/for/while 头（以 ) 结尾且没有语句体）或以 else 结尾时，下一行并入同一条。
 // 返回 [{text, line}]（line 为起始行号，从 1 起）；语句文本不含注释。
@@ -8,7 +8,13 @@ export function topLevelStatements(src) {
   let depth = 0, i = 0, line = 1, cur = null, lastSig = '', col0 = true;
   const CONT = /^(?:[}\])?:,.+\-*\/=&|]|else\b|catch\b|finally\b)/;
   const flush = () => { if (cur) { out.push(cur); cur = null; } };
-  const regexOk = () => lastSig === '' || '(,=:[!&|?{};'.includes(lastSig);
+  // 正则字面量可出现的位置：前一个有效字符是运算符/开括号，或前一个记号是 =>，或前一个词是 return/typeof 等关键字（这些词之后的 / 起正则，不是除号）。
+  const KW = /(?:^|[^w$.])(?:return|typeof|case|of|in|else|yield|void|delete|throw|new|do|instanceof|await)$/;
+  const regexOk = () => {
+    if (lastSig === '' || '(,=:[!&|?{};'.includes(lastSig)) return true;
+    const tail = cur ? cur.text.trimEnd().slice(-16) : '';
+    return tail.endsWith('=>') || KW.test(tail);
+  };
   const keep = t => { if (cur) cur.text += t; };
   const lines = t => (t.match(/\n/g) ?? []).length;
   while (i < src.length) {
