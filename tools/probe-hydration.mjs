@@ -1,4 +1,7 @@
-// 确定性探针：列出派生后 hydration>0 的物品（id、satiety、hydration、标签）。
+// 确定性探针：列出有 drinkable 标签的物品的含水率来源、重量、派生前后水分。
 import {loadRuntimeWorld}from'./load-world.mjs';
-const w=await loadRuntimeWorld();
-for(const i of w.items){const n=i.nutrition??{};if((n.hydration??0)>0)console.log([i.id,i.name,'sat='+(n.satiety??0),'hyd='+n.hydration,(i.tags??[]).join('|'),(i.use??'').slice(0,50)].join('\t'));}
+import {materialProps}from'../server-plugin/item-class.mjs';
+const w=await loadRuntimeWorld();const byId=new Map(w.items.map(i=>[i.id,i]));
+console.log('classes',Object.keys(w.materialProps?.classes??{}).join(','));
+for(const i of w.items)if((i.tags??[]).includes('drinkable')){const m=materialProps({world:w,byId},i.id);
+ console.log([i.id,'w='+i.weight,'moist='+JSON.stringify(m.moisture),'nutrition='+JSON.stringify(i.nutrition),'content='+JSON.stringify(i.nutrientContent),'props='+JSON.stringify(i.props)].join('\t'));}
