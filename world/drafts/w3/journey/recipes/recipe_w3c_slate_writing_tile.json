@@ -1,16 +1,209 @@
 {
   "id": "recipe_w3c_slate_writing_tile",
   "fingerprint": "e0abea74a182c2bc8df4d25f1723bf4102ec7025dadc02d8201455e7ec5b9882",
-  "status": "passed",
-  "attempts": 1,
+  "status": "manual",
+  "attempts": 3,
   "draft": {
     "id": "recipe_w3c_slate_writing_tile",
-    "process": "取平面板岩片一份置于木工台上，以平齿铁锉沿四边往复推锉，削去崩口与尖棱，使轮廓齐整。将洗净细砂一份与清水一份调成湿砂，趁湿按在边棱上打圈研磨，把锉痕磨细磨圆，直至手触不挂。磨毕以清水冲去残砂，拭干后逐边验看，见棱角圆钝、面无裂纹即成。余砂与浊水一并弃置，不回收再用。全程九十钟，得磨边板岩写牌一份，牌面留白，不附白垩笔。"
+    "process": "取平面板岩片置于木工台面，先以平齿铁锉沿四周边棱单向推锉，修去崩口尖角，使轮廓齐整、棱线不再割手。随后将洗净细砂用配额清水润湿成团，按在边棱上往复研磨，把锉痕磨匀、边角磨钝，磨至边线平顺无锐口。余砂与余水一并弃置，不得留作后用。全程九十零分钟。"
   },
   "review": {
     "contradictions": []
   },
-  "errors": [],
+  "errors": [
+    "中文数字「九十零」不合法：「零」只能出现在百、千、万之后用来补位，此处位置不合法（原文「全程九十零分钟」）"
+  ],
   "warnings": [],
-  "feedback": null
+  "feedback": [
+    "中文数字「九十零」不合法：「零」只能出现在百、千、万之后用来补位，此处位置不合法（原文「全程九十零分钟」）"
+  ],
+  "l4Rejection": [
+    {
+      "key": "351882045e9771e261149e67dff6c96ea7d93283a975bc3603dad3fad8699cba",
+      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_paper_cord_tags：\"叠好的小片\"前文没有交代折叠这一步；recipe_w3c_slate_stylus：\"全程九十加分钟\"多\"加\"字；recipe_w3c_slate_writing_tile：\"全程九十钟\"缺\"分\"字；recipe_w3c_cork_float_set：\"九十整分钟\"写法不合法。按新事实重写，时长写法须合法并与骨架 minutes 一致，工序前后须连贯。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_slate_writing_tile",
+        "process": "取平面板岩片一份置于木工台上，以平齿铁锉沿四边往复推锉，削去崩口与尖棱，使轮廓齐整。将洗净细砂一份与清水一份调成湿砂，趁湿按在边棱上打圈研磨，把锉痕磨细磨圆，直至手触不挂。磨毕以清水冲去残砂，拭干后逐边验看，见棱角圆钝、面无裂纹即成。余砂与浊水一并弃置，不回收再用。全程九十钟，得磨边板岩写牌一份，牌面留白，不附白垩笔。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "4b8aa855-62c5-4559-9d33-fbf3586de276",
+    "object": "chat.completion",
+    "created": 1794332431,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_ZLHCFI83kEDxB8F9LmpJ0115",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_slate_writing_tile\", \"process\": \"取平面板岩片置于木工台面，先以平齿铁锉沿四周边棱单向推锉，修去崩口尖角，使轮廓齐整、棱线不再割手。随后将洗净细砂用配额清水润湿成团，按在边棱上往复研磨，把锉痕磨匀、边角磨钝，磨至边线平顺无锐口。余砂与余水一并弃置，不得留作后用。全程九十零分钟。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1325,
+      "completion_tokens": 162,
+      "total_tokens": 1487,
+      "prompt_tokens_details": {
+        "cached_tokens": 1152
+      },
+      "prompt_cache_hit_tokens": 1152,
+      "prompt_cache_miss_tokens": 173
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_slate_writing_tile-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1325,
+        "completion_tokens": 162,
+        "total_tokens": 1487,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 173
+      },
+      "costUpperYuan": 0.00168808,
+      "cumulativeUpperYuan": 5.317995040000006,
+      "latencyMs": 1786.3178000000007,
+      "timestamp": "2026-11-10T17:40:33.388Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "8bfbc67a-90dd-4482-b2e3-836cbfa17cf6",
+      "file": "budget-responses/8bfbc67a-90dd-4482-b2e3-836cbfa17cf6.json",
+      "requestHash": "a45d52a0278660ebd74b4006f9666cc4e78da3158e6076cbfe16b63218e132ad",
+      "responseHash": "2ddcb5f132a6cf93da165658ef9d2edab6b7ebb5a42ac62d11a9b781a7d2e5de"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "5bd8a888-3315-4fe7-9f07-26a24cf1f43c",
+      "file": "budget-responses/5bd8a888-3315-4fe7-9f07-26a24cf1f43c.json",
+      "requestHash": "f104b47024b2da31f113c78b2fae4dc9e63e33bfefd0cf2da8f5ab6ecdee2855",
+      "responseHash": "e1501c43303b3288c30a72dd0ab91ac28d503ef2c2f1cabe21b9e5f432ca37ba"
+    },
+    {
+      "phase": "draft",
+      "attempt": 3,
+      "requestId": "13ebbf8a-17ec-4d6e-90b4-f7efe148374f",
+      "file": "budget-responses/13ebbf8a-17ec-4d6e-90b4-f7efe148374f.json",
+      "requestHash": "16235ca33164076d9fefc53fdf1182a98f9482344d48b47f32b9c5310ff465e9",
+      "responseHash": "49e67fb52eed8b4e746839e7e0a6515e6e168c813870a575b81c3f33c4189fd4"
+    },
+    {
+      "phase": "review",
+      "attempt": 3,
+      "requestId": "99581450-6810-4357-8162-60f5cf761348",
+      "file": "budget-responses/99581450-6810-4357-8162-60f5cf761348.json",
+      "requestHash": "7d325ee51849104508a957c7734b59dd46555b657f0f15fd4e5f5a0908929367",
+      "responseHash": "eda9b37dbbda93edf19940fcf81388b8a9c0c989ef26de32e425e361be3e0813"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_slate_writing_tile-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1400,
+        "completion_tokens": 168,
+        "total_tokens": 1568,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1016
+      },
+      "costUpperYuan": 0.0033913599999999995,
+      "cumulativeUpperYuan": 5.305046560000005,
+      "latencyMs": 2479.2364000000016,
+      "timestamp": "2026-11-10T17:40:22.959Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_slate_writing_tile-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1221,
+        "completion_tokens": 7,
+        "total_tokens": 1228,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1093
+      },
+      "costUpperYuan": 0.00224712,
+      "cumulativeUpperYuan": 5.307293680000005,
+      "latencyMs": 1180.295900000001,
+      "timestamp": "2026-11-10T17:40:24.193Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_slate_writing_tile-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1325,
+        "completion_tokens": 162,
+        "total_tokens": 1487,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 173
+      },
+      "costUpperYuan": 0.00168808,
+      "cumulativeUpperYuan": 5.317995040000006,
+      "latencyMs": 1786.3178000000007,
+      "timestamp": "2026-11-10T17:40:33.388Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_slate_writing_tile-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1215,
+        "completion_tokens": 7,
+        "total_tokens": 1222,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 319
+      },
+      "costUpperYuan": 0.00072984,
+      "cumulativeUpperYuan": 5.318724880000006,
+      "latencyMs": 991.3830999999991,
+      "timestamp": "2026-11-10T17:40:34.410Z"
+    }
+  ]
 }

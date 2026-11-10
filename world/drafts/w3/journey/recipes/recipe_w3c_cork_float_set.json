@@ -2,15 +2,204 @@
   "id": "recipe_w3c_cork_float_set",
   "fingerprint": "54c9a1e7998a43766d1a4b228f45fe2fe88a117f7bfb9f6b05a6ca950153f425",
   "status": "passed",
-  "attempts": 1,
+  "attempts": 3,
   "draft": {
     "id": "recipe_w3c_cork_float_set",
-    "process": "取软木薄片，以短锋修羽刀沿纹理剖成小浮片，逐片修圆外缘，使棱角平顺。持缝革扁锥在每片中心偏侧刺出系孔，孔口不扩裂。细捻麻线团理出线头，逐片穿过系孔并依次绕结，片与片间距匀齐，收尾打结留短头。整组一次穿成，不再补料。总耗时九十整分钟。完成后需另配渔网方能下水试用，不保证捕鱼成效。余料弃置，两件工具保留。"
+    "process": "取软木薄片，以短锋修羽刀沿边分成若干小浮片，逐片削去棱角、修圆外缘，使片缘齐整不挂线。再持缝革扁锥在每片中央偏侧刺出系孔，孔口两面修平。细捻麻线一端打结，按序逐片穿过系孔并绕线相隔，收束成串，留出系结余头。全程九十多分钟，整组一并交付，另需自配渔网，不保证捕鱼。"
   },
   "review": {
     "contradictions": []
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "l4Rejection": [
+    {
+      "key": "c14292000d76982c7516a0120e7662b98c2f68dac30fbfd421795bcd208c4357",
+      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_paper_cord_tags：\"叠好的小片\"前文没有交代折叠这一步；recipe_w3c_slate_stylus：\"全程九十加分钟\"多\"加\"字；recipe_w3c_slate_writing_tile：\"全程九十钟\"缺\"分\"字；recipe_w3c_cork_float_set：\"九十整分钟\"写法不合法。按新事实重写，时长写法须合法并与骨架 minutes 一致，工序前后须连贯。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_cork_float_set",
+        "process": "取软木薄片，以短锋修羽刀沿纹理剖成小浮片，逐片修圆外缘，使棱角平顺。持缝革扁锥在每片中心偏侧刺出系孔，孔口不扩裂。细捻麻线团理出线头，逐片穿过系孔并依次绕结，片与片间距匀齐，收尾打结留短头。整组一次穿成，不再补料。总耗时九十整分钟。完成后需另配渔网方能下水试用，不保证捕鱼成效。余料弃置，两件工具保留。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "bf6b98ee-e8c7-4be1-acb3-b00e4c1fa13f",
+    "object": "chat.completion",
+    "created": 1794332444,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_EJI2DoorTeq50kSt5eF42826",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_cork_float_set\", \"process\": \"取软木薄片，以短锋修羽刀沿边分成若干小浮片，逐片削去棱角、修圆外缘，使片缘齐整不挂线。再持缝革扁锥在每片中央偏侧刺出系孔，孔口两面修平。细捻麻线一端打结，按序逐片穿过系孔并绕线相隔，收束成串，留出系结余头。全程九十多分钟，整组一并交付，另需自配渔网，不保证捕鱼。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1329,
+      "completion_tokens": 172,
+      "total_tokens": 1501,
+      "prompt_tokens_details": {
+        "cached_tokens": 1024
+      },
+      "prompt_cache_hit_tokens": 1024,
+      "prompt_cache_miss_tokens": 305
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_cork_float_set-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1329,
+        "completion_tokens": 172,
+        "total_tokens": 1501,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 305
+      },
+      "costUpperYuan": 0.00202696,
+      "cumulativeUpperYuan": 5.332569680000007,
+      "latencyMs": 2189.0715000000055,
+      "timestamp": "2026-11-10T17:40:46.857Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "00e7631a-dd38-4738-a980-9f82c324c950",
+      "file": "budget-responses/00e7631a-dd38-4738-a980-9f82c324c950.json",
+      "requestHash": "a578cda7573d84c0d97bdd23ce8edd58df4fea1ae7be43501dd64985f4698532",
+      "responseHash": "3f1695f461d0e39089175da1318b202f350384a221c3bec4248c83f168367acc"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "d3874c2d-f7dc-4457-af52-9c77ec71ce04",
+      "file": "budget-responses/d3874c2d-f7dc-4457-af52-9c77ec71ce04.json",
+      "requestHash": "7078b47edfd1bd6a72ee68ce4f907baab30d6479f8d552b9e0ae3bd0c4b763cd",
+      "responseHash": "ebb36a65a50273700ae24a46355edca1a15bcfef11dfc1427bba81dff347d8c9"
+    },
+    {
+      "phase": "draft",
+      "attempt": 3,
+      "requestId": "a405fdd2-e817-447a-998a-47809b41ab26",
+      "file": "budget-responses/a405fdd2-e817-447a-998a-47809b41ab26.json",
+      "requestHash": "4f5b6e972c1e60e95d40fd2e84a316273ceef4112c98864e2e52dff832cecaae",
+      "responseHash": "28805d5a93ce2eea228f3922c69c5d814c329d2ac2a3c5501567a62e7d853da0"
+    },
+    {
+      "phase": "review",
+      "attempt": 3,
+      "requestId": "8e021b59-9410-4b42-9458-d5c2de626cc5",
+      "file": "budget-responses/8e021b59-9410-4b42-9458-d5c2de626cc5.json",
+      "requestHash": "6e4936c072f6141824e948e835946e59c3396bc23e29062f8f95eed3b50deb00",
+      "responseHash": "3b1140f87afb96d1b8b9d37ccf97d461cdba333729e516723891315c74566794"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_cork_float_set-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1397,
+        "completion_tokens": 192,
+        "total_tokens": 1589,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1013
+      },
+      "costUpperYuan": 0.0035773599999999995,
+      "cumulativeUpperYuan": 5.328301600000007,
+      "latencyMs": 2379.7716,
+      "timestamp": "2026-11-10T17:40:43.431Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_cork_float_set-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1218,
+        "completion_tokens": 7,
+        "total_tokens": 1225,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1090
+      },
+      "costUpperYuan": 0.00224112,
+      "cumulativeUpperYuan": 5.330542720000007,
+      "latencyMs": 1192.2698999999993,
+      "timestamp": "2026-11-10T17:40:44.644Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_cork_float_set-draft2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1329,
+        "completion_tokens": 172,
+        "total_tokens": 1501,
+        "prompt_tokens_details": {
+          "cached_tokens": 1024
+        },
+        "prompt_cache_hit_tokens": 1024,
+        "prompt_cache_miss_tokens": 305
+      },
+      "costUpperYuan": 0.00202696,
+      "cumulativeUpperYuan": 5.332569680000007,
+      "latencyMs": 2189.0715000000055,
+      "timestamp": "2026-11-10T17:40:46.857Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_cork_float_set-review2",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1198,
+        "completion_tokens": 7,
+        "total_tokens": 1205,
+        "prompt_tokens_details": {
+          "cached_tokens": 896
+        },
+        "prompt_cache_hit_tokens": 896,
+        "prompt_cache_miss_tokens": 302
+      },
+      "costUpperYuan": 0.00069584,
+      "cumulativeUpperYuan": 5.3332655200000065,
+      "latencyMs": 645.0954000000056,
+      "timestamp": "2026-11-10T17:40:47.522Z"
+    }
+  ]
 }

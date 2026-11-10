@@ -1,6 +1,6 @@
 {
   "index": 0,
-  "fingerprint": "1b3ebb8685b4c042d405acf97cf1dc3726177aa170e264eca705f3922220fc2d",
+  "fingerprint": "bec163188d4962b4eb2c8fe2cd4a2dc0d644860610a8ff926101200da332308e",
   "count": 43,
   "passed": 43,
   "ids": [
@@ -48,53 +48,59 @@
     "recipe_w3c_ladle_rest",
     "recipe_w3c_cork_stop_set"
   ],
-  "rewritten": 1,
+  "rewritten": 4,
   "manual": [],
   "pending": [],
   "flagged": [],
   "sample": [
-    "recipe_w3c_tool_apron_panel",
+    "recipe_w3c_canvas_satchel",
+    "recipe_w3c_brush_roll",
     "recipe_w3c_lentil_leek_stew",
-    "recipe_w3c_cheese_herb_mash",
-    "recipe_w3c_padded_work_collar",
-    "recipe_w3c_cracked_wheat_pot"
+    "recipe_w3c_laundry_mesh_bag",
+    "recipe_w3c_reed_drying_mat"
   ],
   "l4": {
     "approved": false,
-    "notes": [
-      {
-        "id": "recipe_w3c_tool_apron_panel",
-        "note": "帆布分底和系带，羊革分袋预孔缝合，三种工具都使用，240分钟，不附工具。"
-      },
-      {
-        "id": "recipe_w3c_lentil_leek_stew",
-        "note": "L4：木匙是保留工具，不会作为刨屑副产品交付。"
-      },
-      {
-        "id": "recipe_w3c_cheese_herb_mash",
-        "note": "三种原料全部按份取用，切碎拌油不用鲜乳，20分钟，余料弃置。"
-      },
-      {
-        "id": "recipe_w3c_padded_work_collar",
-        "note": "毡片入帆布层、余布作系带，缝线不返还，160分钟，不提高承重。"
-      },
-      {
-        "id": "recipe_w3c_cracked_wheat_pot",
-        "note": "一麦三水配额泡煮，刀背压裂、木匙防焦，炭屑只入灶，85分钟。"
-      }
-    ],
-    "rejection": {
-      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
-      "at": "2026-11-10",
-      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十钟\"缺\"分\"字；recipe_w3c_parsnip_cream_pot：\"五十整分钟\"写法不合法；recipe_w3c_walnut_honey_bites：\"七十整分钟\"写法不合法。按新事实重写，时长写法须合法并与骨架 minutes 一致，工序前后须连贯。",
-      "ids": [
-        "recipe_w3c_mushroom_barley_pot",
-        "recipe_w3c_parsnip_cream_pot",
-        "recipe_w3c_walnut_honey_bites"
-      ]
-    }
+    "notes": []
   },
-  "costUpperYuan": 5.273706560000007,
+  "l4History": [
+    {
+      "approved": false,
+      "notes": [
+        {
+          "id": "recipe_w3c_tool_apron_panel",
+          "note": "帆布分底和系带，羊革分袋预孔缝合，三种工具都使用，240分钟，不附工具。"
+        },
+        {
+          "id": "recipe_w3c_lentil_leek_stew",
+          "note": "L4：木匙是保留工具，不会作为刨屑副产品交付。"
+        },
+        {
+          "id": "recipe_w3c_cheese_herb_mash",
+          "note": "三种原料全部按份取用，切碎拌油不用鲜乳，20分钟，余料弃置。"
+        },
+        {
+          "id": "recipe_w3c_padded_work_collar",
+          "note": "毡片入帆布层、余布作系带，缝线不返还，160分钟，不提高承重。"
+        },
+        {
+          "id": "recipe_w3c_cracked_wheat_pot",
+          "note": "一麦三水配额泡煮，刀背压裂、木匙防焦，炭屑只入灶，85分钟。"
+        }
+      ],
+      "rejection": {
+        "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+        "at": "2026-11-10",
+        "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十钟\"缺\"分\"字；recipe_w3c_parsnip_cream_pot：\"五十整分钟\"写法不合法；recipe_w3c_walnut_honey_bites：\"七十整分钟\"写法不合法。按新事实重写，时长写法须合法并与骨架 minutes 一致，工序前后须连贯。",
+        "ids": [
+          "recipe_w3c_mushroom_barley_pot",
+          "recipe_w3c_parsnip_cream_pot",
+          "recipe_w3c_walnut_honey_bites"
+        ]
+      }
+    }
+  ],
+  "costUpperYuan": 5.301655200000005,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

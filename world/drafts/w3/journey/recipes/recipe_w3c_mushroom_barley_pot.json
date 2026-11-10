@@ -2,15 +2,150 @@
   "id": "recipe_w3c_mushroom_barley_pot",
   "fingerprint": "2fc114d201b3c59a769a155151ca652ce1fc558cbdccdec7fb62f071b5748bb5",
   "status": "passed",
-  "attempts": 1,
+  "attempts": 2,
   "draft": {
     "id": "recipe_w3c_mushroom_barley_pot",
-    "process": "干栽培蘑菇片置厚底煮锅内，用规定清水泡发至软，捞出以案上切刀切短，泡液澄清后留用，不掺野菌或肉汁。切料、泡液与脱壳大麦同入锅，小灶上煮至大麦透软，持偏柄木匙沿锅底搅动防粘。粗盐以刀背压碎，起锅前调入。干木刨屑供灶引火，炉用炭屑不混入成品。全程九十钟，得菌片大麦煨一份，余料弃置，三件工具保留。"
+    "process": "取干栽培蘑菇片，用规定清水浸泡至软；泡液留存，不弃。将泡软的菌片置案上，以切刀切短，刀背可顺带压碎粗盐结块。厚底煮锅上灶，倒入泡液与余下清水，下脱壳大麦，旺火煮沸后转小火，须煮至麦粒透软。全程以偏柄木匙沿锅底搅动，防麦粒粘底焦糊。干木刨屑用于灶下引火，不混入锅中。煮透后撒入粗盐调味，再搅匀即可离火，盛出即为一份菌片大麦煨。全程九十 分钟，不加入野菌或肉汁。"
   },
   "review": {
     "contradictions": []
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "l4Rejection": [
+    {
+      "key": "a4da0fdc7a8b2891d9eb91e235b072bf94d46b86d012234600eda92fd7fda614",
+      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十钟\"缺\"分\"字；recipe_w3c_parsnip_cream_pot：\"五十整分钟\"写法不合法；recipe_w3c_walnut_honey_bites：\"七十整分钟\"写法不合法。按新事实重写，时长写法须合法并与骨架 minutes 一致，工序前后须连贯。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_mushroom_barley_pot",
+        "process": "干栽培蘑菇片置厚底煮锅内，用规定清水泡发至软，捞出以案上切刀切短，泡液澄清后留用，不掺野菌或肉汁。切料、泡液与脱壳大麦同入锅，小灶上煮至大麦透软，持偏柄木匙沿锅底搅动防粘。粗盐以刀背压碎，起锅前调入。干木刨屑供灶引火，炉用炭屑不混入成品。全程九十钟，得菌片大麦煨一份，余料弃置，三件工具保留。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "2b963202-ffb6-40d8-b9db-e1adf2251b4f",
+    "object": "chat.completion",
+    "created": 1794332412,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_6F1SXGz6GZajr4scA8eW3945",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_mushroom_barley_pot\", \"process\": \"取干栽培蘑菇片，用规定清水浸泡至软；泡液留存，不弃。将泡软的菌片置案上，以切刀切短，刀背可顺带压碎粗盐结块。厚底煮锅上灶，倒入泡液与余下清水，下脱壳大麦，旺火煮沸后转小火，须煮至麦粒透软。全程以偏柄木匙沿锅底搅动，防麦粒粘底焦糊。干木刨屑用于灶下引火，不混入锅中。煮透后撒入粗盐调味，再搅匀即可离火，盛出即为一份菌片大麦煨。全程九十 分钟，不加入野菌或肉汁。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1700,
+      "completion_tokens": 214,
+      "total_tokens": 1914,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 1316
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_mushroom_barley_pot-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1700,
+        "completion_tokens": 214,
+        "total_tokens": 1914,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1316
+      },
+      "costUpperYuan": 0.0043593600000000005,
+      "cumulativeUpperYuan": 5.2951336800000055,
+      "latencyMs": 2447.3485,
+      "timestamp": "2026-11-10T17:40:15.247Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "e5ca28f1-bb2c-4337-8737-6559db638c04",
+      "file": "budget-responses/e5ca28f1-bb2c-4337-8737-6559db638c04.json",
+      "requestHash": "356dd249dcdd717f3d23c91e6bff74cb3cc71eeb2c5d025495f772a02c089f23",
+      "responseHash": "7d90f64a5cc284eba465c359c557765f61660f1adefebf73ff52526ebf3a0ff3"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "2bda0838-ab8e-45af-8b98-b0d5519ba753",
+      "file": "budget-responses/2bda0838-ab8e-45af-8b98-b0d5519ba753.json",
+      "requestHash": "e10cd29332e8192eb9062dcee2d4dcaf8284b3dbc843ee0b86a9dfbd72dead83",
+      "responseHash": "791e9f6c36593aad54c31bde965f54efaac1191ad3e7cc406666fdb748a53505"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_mushroom_barley_pot-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1700,
+        "completion_tokens": 214,
+        "total_tokens": 1914,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1316
+      },
+      "costUpperYuan": 0.0043593600000000005,
+      "cumulativeUpperYuan": 5.2951336800000055,
+      "latencyMs": 2447.3485,
+      "timestamp": "2026-11-10T17:40:15.247Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_mushroom_barley_pot-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1637,
+        "completion_tokens": 7,
+        "total_tokens": 1644,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1509
+      },
+      "costUpperYuan": 0.00307912,
+      "cumulativeUpperYuan": 5.298212800000005,
+      "latencyMs": 1240.4303,
+      "timestamp": "2026-11-10T17:40:16.548Z"
+    }
+  ]
 }

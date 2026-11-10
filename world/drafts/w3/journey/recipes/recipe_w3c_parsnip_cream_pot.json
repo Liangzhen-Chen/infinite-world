@@ -2,15 +2,150 @@
   "id": "recipe_w3c_parsnip_cream_pot",
   "fingerprint": "942a3c0b06bac2001f87b75bd6b295c05c14976710b4f94f40f1bdb7c63084f5",
   "status": "passed",
-  "attempts": 1,
+  "attempts": 2,
   "draft": {
     "id": "recipe_w3c_parsnip_cream_pot",
-    "process": "取白肉欧防风根一份，用案上切刀削去硬端，改切薄片。厚底煮锅置灶上，注入清水一份，下薄片以中火煨至软透。兑入鲜乳上层稠乳一份，续加热至熟，撒粗盐小包调味。持偏柄木匙沿锅缘搅匀，使根片与稠乳相合，不另加奶油。干木刨屑一份仅供灶下引火，不落锅中。全程五十整分钟，得稠乳白根煨一份，趁热盛出。"
+    "process": "取一根白肉欧防风根，用案上切刀削去硬端，再切成薄片。厚底煮锅置小灶上，注入清水，放入薄片，以中火煨至根片软透。将鲜乳上层稠乳兑入锅中，继续加热至熟透，其间用偏柄木匙沿锅缘搅动，使根片与稠乳混匀。撒入粗盐调味，再搅一遍即离火。干木刨屑只用于灶下引火，不混入锅中。全程五十份钟，成品一份，趁热盛出。"
   },
   "review": {
     "contradictions": []
   },
   "errors": [],
   "warnings": [],
-  "feedback": null
+  "feedback": null,
+  "l4Rejection": [
+    {
+      "key": "457879c5a8e1e06b1c54779745ad2ff98250a2216c61669bfe777a5027c5a84a",
+      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十钟\"缺\"分\"字；recipe_w3c_parsnip_cream_pot：\"五十整分钟\"写法不合法；recipe_w3c_walnut_honey_bites：\"七十整分钟\"写法不合法。按新事实重写，时长写法须合法并与骨架 minutes 一致，工序前后须连贯。",
+      "priorStatus": "passed",
+      "priorAttempts": 1,
+      "attemptCap": 3,
+      "priorDraft": {
+        "id": "recipe_w3c_parsnip_cream_pot",
+        "process": "取白肉欧防风根一份，用案上切刀削去硬端，改切薄片。厚底煮锅置灶上，注入清水一份，下薄片以中火煨至软透。兑入鲜乳上层稠乳一份，续加热至熟，撒粗盐小包调味。持偏柄木匙沿锅缘搅匀，使根片与稠乳相合，不另加奶油。干木刨屑一份仅供灶下引火，不落锅中。全程五十整分钟，得稠乳白根煨一份，趁热盛出。"
+      },
+      "priorReview": {
+        "contradictions": []
+      }
+    }
+  ],
+  "errorCode": null,
+  "draftResponse": {
+    "id": "3ff8d798-8831-42a0-aa05-11a7e6a0e58d",
+    "object": "chat.completion",
+    "created": 1794332405,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "index": 0,
+              "id": "call_00_2M63INVFJP0TcBuNiwGD7357",
+              "type": "function",
+              "function": {
+                "name": "submit_content",
+                "arguments": "{\"id\": \"recipe_w3c_parsnip_cream_pot\", \"process\": \"取一根白肉欧防风根，用案上切刀削去硬端，再切成薄片。厚底煮锅置小灶上，注入清水，放入薄片，以中火煨至根片软透。将鲜乳上层稠乳兑入锅中，继续加热至熟透，其间用偏柄木匙沿锅缘搅动，使根片与稠乳混匀。撒入粗盐调味，再搅一遍即离火。干木刨屑只用于灶下引火，不混入锅中。全程五十份钟，成品一份，趁热盛出。\"}"
+              }
+            }
+          ]
+        },
+        "logprobs": null,
+        "finish_reason": "tool_calls"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1698,
+      "completion_tokens": 186,
+      "total_tokens": 1884,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 1314
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1698,
+        "completion_tokens": 186,
+        "total_tokens": 1884,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1314
+      },
+      "costUpperYuan": 0.004131360000000001,
+      "cumulativeUpperYuan": 5.280560720000007,
+      "latencyMs": 2392.919,
+      "timestamp": "2026-11-10T17:40:07.779Z"
+    }
+  },
+  "responseEvidence": [
+    {
+      "phase": "draft",
+      "attempt": 2,
+      "requestId": "cb2a66b5-b85b-4799-94fd-25756096c518",
+      "file": "budget-responses/cb2a66b5-b85b-4799-94fd-25756096c518.json",
+      "requestHash": "566420b06e1791d6839a45e505c4d8c01aa74695bdab84b95b9bba9a45671157",
+      "responseHash": "2a9d02f3c4d0f150571ed2d6e7c590bb0646faf7f250b0056d615c656d1f8a9c"
+    },
+    {
+      "phase": "review",
+      "attempt": 2,
+      "requestId": "4c58b8c5-c6b4-4d48-a630-8a5611805dc9",
+      "file": "budget-responses/4c58b8c5-c6b4-4d48-a630-8a5611805dc9.json",
+      "requestHash": "73cc71ee4e61283c888f3d9828748cc7e5da4943a3999ef67ec37195d430684b",
+      "responseHash": "6119424310ce40d083273de26158181cac4ebdfd370934b19973fc65c3421db7"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1698,
+        "completion_tokens": 186,
+        "total_tokens": 1884,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1314
+      },
+      "costUpperYuan": 0.004131360000000001,
+      "cumulativeUpperYuan": 5.280560720000007,
+      "latencyMs": 2392.919,
+      "timestamp": "2026-11-10T17:40:07.779Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_parsnip_cream_pot-review1",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1602,
+        "completion_tokens": 7,
+        "total_tokens": 1609,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1474
+      },
+      "costUpperYuan": 0.0030091199999999997,
+      "cumulativeUpperYuan": 5.287747200000006,
+      "latencyMs": 1143.0361000000003,
+      "timestamp": "2026-11-10T17:40:11.747Z"
+    }
+  ]
 }

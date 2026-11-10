@@ -3,11 +3,11 @@
   "passed": 182,
   "manual": 0,
   "pending": 0,
-  "costUpperYuan": 5.273706560000007,
+  "costUpperYuan": 5.276429360000007,
   "budget": {
-    "spentYuan": 5.273706560000007,
+    "spentYuan": 5.276429360000007,
     "reservedYuan": 1.734723475976807e-17,
-    "limitYuan": 5.430633,
+    "limitYuan": 5.430632,
     "requests": {
       "e41f0495-23bb-48fd-b2e3-8826e4cac8cd": {
         "card": null,
@@ -292,6 +292,74 @@
           "latencyMs": 863.6657000000005,
           "timestamp": "2026-11-10T15:43:44.447Z"
         }
+      },
+      "599c6b0e-45b1-42e9-9b32-2898e86e6b1f": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_paper_cord_tags-draft1",
+        "requestHash": "e071dcb42daac106df5567582b9d32b07851161f6a9029de678301cc737a4005",
+        "reservedYuan": 0.01588,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/599c6b0e-45b1-42e9-9b32-2898e86e6b1f.json",
+          "requestHash": "e071dcb42daac106df5567582b9d32b07851161f6a9029de678301cc737a4005",
+          "responseHash": "fca90907437a61ce002a20a415a05c5cec2d75bd4beed853cbf7b4cd5d6d7363"
+        },
+        "costUpperYuan": 0.00180408,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_paper_cord_tags-draft1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1359,
+            "completion_tokens": 168,
+            "total_tokens": 1527,
+            "prompt_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "prompt_cache_hit_tokens": 1152,
+            "prompt_cache_miss_tokens": 207
+          },
+          "costUpperYuan": 0.00180408,
+          "cumulativeUpperYuan": 5.275510640000007,
+          "latencyMs": 1824.6091000000001,
+          "timestamp": "2026-11-10T16:09:33.078Z"
+        }
+      },
+      "12254313-4595-4c70-9ce0-544f431f8393": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_paper_cord_tags-review1",
+        "requestHash": "53b80b366b807b415aca425440f5c6e81284d492f58e67d0d2361a20c7d7b302",
+        "reservedYuan": 0.02353,
+        "status": "settled",
+        "replacedReservation": {
+          "requestHash": "3fb771409f10477d071e4a6ec03e168ce4a231c7546c06fdb0a9c38d0d04ec84",
+          "reservedYuan": 0.056642
+        },
+        "responseEvidence": {
+          "file": "budget-responses/12254313-4595-4c70-9ce0-544f431f8393.json",
+          "requestHash": "53b80b366b807b415aca425440f5c6e81284d492f58e67d0d2361a20c7d7b302",
+          "responseHash": "d2e94d3a6d974890894a897617011a020748b8c7e3bca6292c8460372a438530"
+        },
+        "costUpperYuan": 0.00091872,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_paper_cord_tags-review1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1184,
+            "completion_tokens": 7,
+            "total_tokens": 1191,
+            "prompt_tokens_details": {
+              "cached_tokens": 768
+            },
+            "prompt_cache_hit_tokens": 768,
+            "prompt_cache_miss_tokens": 416
+          },
+          "costUpperYuan": 0.00091872,
+          "cumulativeUpperYuan": 5.276429360000007,
+          "latencyMs": 1033.7635,
+          "timestamp": "2026-11-10T16:09:34.124Z"
+        }
       }
     }
   },
@@ -402,7 +470,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.273706560000007,
+      "costUpperYuan": 5.276429360000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -510,7 +578,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.273706560000007,
+      "costUpperYuan": 5.276429360000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -610,7 +678,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.273706560000007,
+      "costUpperYuan": 5.276429360000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -709,7 +777,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.273706560000007,
+      "costUpperYuan": 5.276429360000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -798,7 +866,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.273706560000007,
+      "costUpperYuan": 5.276429360000007,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }
