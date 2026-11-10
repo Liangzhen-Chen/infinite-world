@@ -3,7 +3,7 @@
 // 只有一条“接线”用例（validateTradesDraft 接入、context.catalog 不可枚举）要用真实 journeyContext，在用例内动态加载真实数据。不联网、不调模型。
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {processIssues,buildVocabulary,utensilHeads,WORKSTATION_FACILITIES} from '../tools/w3-process-check.mjs';
+import {processIssues,unitlessMeasureIssues,buildVocabulary,utensilHeads,WORKSTATION_FACILITIES} from '../tools/w3-process-check.mjs';
 
 // 漏判样例：L2 放过、L1 应拦下的真实正文。
 const MISSED = {
@@ -478,4 +478,16 @@ test('总时长句的写法变体：等于 minutes 放行，不等于或分段�
     assert.match(fxJoin(text, fxFacts), /骨架外时长/, text);
   assert.match(fxJoin('熬煮约25分钟。', fxFacts), /骨架外时长「25分钟」/, '分段时长照判');
   assert.match(fxJoin('先静置，再约40分钟收汁。', fxFacts), /骨架外时长「40分钟」/, '没有总括词的“约N分钟”即使等于 minutes 也是分段');
+});
+
+test('物品正文：重量、容量、长度的数字必须带单位', () => {
+  for (const text of ['整器重0.35，质地轻软。', '约重0.5。', '单片重零点一二，质地轻软。', '重二点八，重心偏前。', '长三十，宽十二。', '可容0.5，盛汤。', '直径 12 厘米，重0.3。'])
+    assert.ok(unitlessMeasureIssues(text).length >= 1, text);
+  // 边界：数字取最长匹配，“重240克”不会被截成“重24”判错。
+  for (const text of ['重240克。', '重0.5千克。', '重二百五十克。', '重两千克。', '整器重二点八千克。', '长三十厘米，宽12cm。', '容0.5升。', '约重 300 g。', '长三尺。'])
+    assert.deepEqual(unitlessMeasureIssues(text), [], text);
+  // 同形词与量词：不是度量。
+  for (const text of ['重叠三层。', '重复三次。', '宽三指。', '增长三成。', '提高三成。', '加厚三层。', '重两件。', '长三节。', '长约两臂。', '内容一致。', '一头厚一头薄。'])
+    assert.deepEqual(unitlessMeasureIssues(text), [], text);
+  assert.match(unitlessMeasureIssues('整器重0.35，质地轻软。')[0], /重0.35.*没有单位/);
 });
