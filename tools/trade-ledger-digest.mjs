@@ -55,7 +55,7 @@ const ignored=['耗时秒','推进步数','游标写入次数_revision','输出�
 console.log(JSON.stringify({...result,不参与比对:ignored},null,1));
 const compareAt=args.indexOf('--compare');
 if(compareAt>=0){
- const baseline=JSON.parse(await fs.readFile(args[compareAt+1],'utf8')),expected=baseline[mode]?.期望;
+ const baseline=JSON.parse(await fs.readFile(args[compareAt+1],'utf8')),expected=(baseline[`${mode}-${days}`]??baseline[mode])?.期望;
  if(!expected){console.error(`基线里没有世界 ${mode}`);process.exit(2);}
  const diffs=Object.entries(expected).filter(([k,v])=>result[k]!==v).map(([k,v])=>`${k}: 期望 ${v}，实际 ${result[k]}`);
  if(diffs.length){console.error(['与基线不一致：',...diffs].join(String.fromCharCode(10)));process.exit(1);}
