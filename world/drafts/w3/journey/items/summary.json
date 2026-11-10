@@ -3,11 +3,11 @@
   "passed": 182,
   "manual": 0,
   "pending": 0,
-  "costUpperYuan": 5.3386913600000065,
+  "costUpperYuan": 5.353950240000006,
   "budget": {
-    "spentYuan": 5.3386913600000065,
-    "reservedYuan": 4.85722573273506e-17,
-    "limitYuan": 5.430632,
+    "spentYuan": 5.353950240000006,
+    "reservedYuan": 4.163336342344337e-17,
+    "limitYuan": 5.530632,
     "requests": {
       "e41f0495-23bb-48fd-b2e3-8826e4cac8cd": {
         "card": null,
@@ -1312,6 +1312,181 @@
           "latencyMs": 866.2939000000006,
           "timestamp": "2026-11-10T17:52:05.681Z"
         }
+      },
+      "72f5f453-8dce-4e42-a9aa-839e4025ea8d": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft2",
+        "requestHash": "4e7f6e36ccc4d00a34c8e288d8c765f3cbf7af01de3e00726f16df2e3d61c294",
+        "reservedYuan": 0.018784,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/72f5f453-8dce-4e42-a9aa-839e4025ea8d.json",
+          "requestHash": "4e7f6e36ccc4d00a34c8e288d8c765f3cbf7af01de3e00726f16df2e3d61c294",
+          "responseHash": "61815241b478e59e6100ee7a71673c02fa9ffcb89234975d69c44b1edb8fb280"
+        },
+        "costUpperYuan": 0.00502,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft2",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1786,
+            "completion_tokens": 181,
+            "total_tokens": 1967,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "prompt_cache_hit_tokens": 0,
+            "prompt_cache_miss_tokens": 1786
+          },
+          "costUpperYuan": 0.00502,
+          "cumulativeUpperYuan": 5.343711360000007,
+          "latencyMs": 2315.4972,
+          "timestamp": "2026-11-10T18:18:49.275Z"
+        }
+      },
+      "8a5d51d5-943f-440e-beee-225a7aa547af": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_parsnip_cream_pot-review2",
+        "requestHash": "30de26f5ae771a377aa4e1dc364f6770591e913cf2abb83fc6d034a7142d2f56",
+        "reservedYuan": 0.02635,
+        "status": "settled",
+        "replacedReservation": {
+          "requestHash": "1114d30493ae93afb70c78a32566705368e065674a11ed0282b05a33f7595cb5",
+          "reservedYuan": 0.05938
+        },
+        "responseEvidence": {
+          "file": "budget-responses/8a5d51d5-943f-440e-beee-225a7aa547af.json",
+          "requestHash": "30de26f5ae771a377aa4e1dc364f6770591e913cf2abb83fc6d034a7142d2f56",
+          "responseHash": "b9410cf3d33b59a13804a9838b5d9c213dd05cf0de9ae8696b0f049626fff2ef"
+        },
+        "costUpperYuan": 0.00100008,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_parsnip_cream_pot-review2",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1601,
+            "completion_tokens": 7,
+            "total_tokens": 1608,
+            "prompt_tokens_details": {
+              "cached_tokens": 1152
+            },
+            "prompt_cache_hit_tokens": 1152,
+            "prompt_cache_miss_tokens": 449
+          },
+          "costUpperYuan": 0.00100008,
+          "cumulativeUpperYuan": 5.344711440000006,
+          "latencyMs": 1099.8644000000004,
+          "timestamp": "2026-11-10T18:18:50.410Z"
+        }
+      },
+      "29ec8052-b7c6-4749-8e1d-df0e4d9b2d8d": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_pear_wheat_gruel-draft1",
+        "requestHash": "7a7c77c9df40d9c38a028f38d8198f4f08364e849d051355d482869b325ada79",
+        "reservedYuan": 0.018144,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/29ec8052-b7c6-4749-8e1d-df0e4d9b2d8d.json",
+          "requestHash": "7a7c77c9df40d9c38a028f38d8198f4f08364e849d051355d482869b325ada79",
+          "responseHash": "8d14cf83d3e08a3cc2596029d34ec5bca8a58342fca0081a7a34c91c0731baff"
+        },
+        "costUpperYuan": 0.004329360000000001,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_pear_wheat_gruel-draft1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1701,
+            "completion_tokens": 210,
+            "total_tokens": 1911,
+            "prompt_tokens_details": {
+              "cached_tokens": 384
+            },
+            "prompt_cache_hit_tokens": 384,
+            "prompt_cache_miss_tokens": 1317
+          },
+          "costUpperYuan": 0.004329360000000001,
+          "cumulativeUpperYuan": 5.349040800000006,
+          "latencyMs": 2257.3946000000005,
+          "timestamp": "2026-11-10T18:18:52.688Z"
+        }
+      },
+      "af5b76ff-29f0-4293-b146-b223c0c47e81": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_pear_wheat_gruel-review1",
+        "requestHash": "a62dfa80a2d4ae8376e9327098341e6e3b7524dfcf20e0fd55ffc22d3c015891",
+        "reservedYuan": 0.025702,
+        "status": "settled",
+        "replacedReservation": {
+          "requestHash": "82a23e5fd41ebed1e9ef54e02dbe9439f0c5393700f1bc068ee85ddc45b55bad",
+          "reservedYuan": 0.05859
+        },
+        "responseEvidence": {
+          "file": "budget-responses/af5b76ff-29f0-4293-b146-b223c0c47e81.json",
+          "requestHash": "a62dfa80a2d4ae8376e9327098341e6e3b7524dfcf20e0fd55ffc22d3c015891",
+          "responseHash": "6a8e6fe7108caa8be4414801d2fd82aa2949d96f091076c689f4f854c4dcda79"
+        },
+        "costUpperYuan": 0.00283912,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_pear_wheat_gruel-review1",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1517,
+            "completion_tokens": 7,
+            "total_tokens": 1524,
+            "prompt_tokens_details": {
+              "cached_tokens": 128
+            },
+            "prompt_cache_hit_tokens": 128,
+            "prompt_cache_miss_tokens": 1389
+          },
+          "costUpperYuan": 0.00283912,
+          "cumulativeUpperYuan": 5.351879920000006,
+          "latencyMs": 887.6587999999992,
+          "timestamp": "2026-11-10T18:18:53.606Z"
+        }
+      },
+      "6730c5cc-719d-4210-998f-1d02cb778d8d": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft3",
+        "requestHash": "7e59d36c106f8e5c8fbdbe5c7b3ae1d05fe5e1964bc4304c693d70916874b500",
+        "reservedYuan": 0.017744,
+        "status": "settled",
+        "responseEvidence": {
+          "file": "budget-responses/6730c5cc-719d-4210-998f-1d02cb778d8d.json",
+          "requestHash": "7e59d36c106f8e5c8fbdbe5c7b3ae1d05fe5e1964bc4304c693d70916874b500",
+          "responseHash": "be759296f781858f6464170dbfabf7103e103d0b31d3c8de1987f77a003463f6"
+        },
+        "costUpperYuan": 0.00207032,
+        "measurement": {
+          "label": "content-recipes-recipe_w3c_parsnip_cream_pot-draft3",
+          "model": "deepseek-flash",
+          "thinking": "disabled",
+          "usage": {
+            "prompt_tokens": 1627,
+            "completion_tokens": 197,
+            "total_tokens": 1824,
+            "prompt_tokens_details": {
+              "cached_tokens": 1408
+            },
+            "prompt_cache_hit_tokens": 1408,
+            "prompt_cache_miss_tokens": 219
+          },
+          "costUpperYuan": 0.00207032,
+          "cumulativeUpperYuan": 5.353950240000006,
+          "latencyMs": 2226.3060000000005,
+          "timestamp": "2026-11-10T18:18:55.855Z"
+        }
+      },
+      "be458216-7ac4-4a30-b631-70d05b00a1cf": {
+        "card": null,
+        "label": "content-recipes-recipe_w3c_parsnip_cream_pot-review3",
+        "requestHash": "1114d30493ae93afb70c78a32566705368e065674a11ed0282b05a33f7595cb5",
+        "reservedYuan": 0.05938,
+        "status": "cancelled-unissued"
       }
     }
   },
@@ -1422,7 +1597,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.3386913600000065,
+      "costUpperYuan": 5.353950240000006,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -1530,7 +1705,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.3386913600000065,
+      "costUpperYuan": 5.353950240000006,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -1630,7 +1805,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.3386913600000065,
+      "costUpperYuan": 5.353950240000006,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -1729,7 +1904,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.3386913600000065,
+      "costUpperYuan": 5.353950240000006,
       "manualRatio": 0,
       "needsSystemicRepair": false
     },
@@ -1818,7 +1993,7 @@
           }
         ]
       },
-      "costUpperYuan": 5.3386913600000065,
+      "costUpperYuan": 5.353950240000006,
       "manualRatio": 0,
       "needsSystemicRepair": false
     }

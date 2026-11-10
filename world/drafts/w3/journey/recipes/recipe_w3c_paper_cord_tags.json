@@ -1,20 +1,23 @@
 {
   "id": "recipe_w3c_paper_cord_tags",
   "fingerprint": "f18e68b97224b91072de85565ba47cdcfdbf440e1c9eb751afbb87f214dc0d1a",
-  "status": "pending",
-  "attempts": 4,
-  "draft": null,
-  "review": null,
+  "status": "passed",
+  "attempts": 5,
+  "draft": {
+    "id": "recipe_w3c_paper_cord_tags",
+    "process": "取一张刮薄羊皮纸平铺于木工台面，先依吊签尺寸用短锋修羽刀裁成若干小片，再逐片削齐四角与毛边，使边缘平直。随后以缝革扁锥在每片同一端刺出扁孔，孔位对齐，避免撕裂纸面。细捻麻线团分成等长线段，逐段穿过扁孔并打结系牢，线头留短。整组吊签归拢为一份交付，纸面留白，字迹由使用者自行填写。削下的纸屑与线头弃置，两件工具留存备用。全程70分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
   "errors": [],
   "warnings": [],
-  "feedback": [
-    "L4 退回：recipe_w3c_paper_cord_tags：\"七十多分钟\"与骨架70分钟矛盾；recipe_w3c_cork_float_set：\"九十多分钟\"与骨架90分钟矛盾。须重写，总耗时只写骨架数字加分钟，不用\"多\"。"
-  ],
+  "feedback": null,
   "errorCode": null,
   "draftResponse": {
-    "id": "a8fdb4cd-99a5-4753-8e8d-05834e8d8e1a",
+    "id": "5ebb434f-d565-4f8f-97a4-52a351f4670e",
     "object": "chat.completion",
-    "created": 1794332434,
+    "created": 1794334974,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -25,11 +28,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_iRJoSLNpFfN53UBlS6un8061",
+              "id": "call_00_jjHQXxLA8ubiie8YbQ6S5391",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_paper_cord_tags\", \"process\": \"取刮薄羊皮纸一张平铺于木工台面，以短锋修羽刀沿直边裁成若干小签，逐张削齐四角与毛边，使边缘齐整无翘。再用缝革扁锥在每签一端刺出扁孔，孔位距边留出一指宽，避免撕裂。细捻麻线团按签数分段剪开，每段对折穿过扁孔，两端并拢打结系牢，逐签拉紧检查不脱。全程七十多分钟，成组吊签合为一份交付，签面留白由使用者自行书写。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_paper_cord_tags\", \"process\": \"取一张刮薄羊皮纸平铺于木工台面，先依吊签尺寸用短锋修羽刀裁成若干小片，再逐片削齐四角与毛边，使边缘平直。随后以缝革扁锥在每片同一端刺出扁孔，孔位对齐，避免撕裂纸面。细捻麻线团分成等长线段，逐段穿过扁孔并打结系牢，线头留短。整组吊签归拢为一份交付，纸面留白，字迹由使用者自行填写。削下的纸屑与线头弃置，两件工具留存备用。\"}"
               }
             }
           ]
@@ -39,34 +42,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1320,
-      "completion_tokens": 186,
-      "total_tokens": 1506,
+      "prompt_tokens": 1353,
+      "completion_tokens": 191,
+      "total_tokens": 1544,
       "prompt_tokens_details": {
-        "cached_tokens": 1024
+        "cached_tokens": 384
       },
-      "prompt_cache_hit_tokens": 1024,
-      "prompt_cache_miss_tokens": 296
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 969
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_paper_cord_tags-draft3",
+      "label": "content-recipes-recipe_w3c_paper_cord_tags-draft4",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1320,
-        "completion_tokens": 186,
-        "total_tokens": 1506,
+        "prompt_tokens": 1353,
+        "completion_tokens": 191,
+        "total_tokens": 1544,
         "prompt_tokens_details": {
-          "cached_tokens": 1024
+          "cached_tokens": 384
         },
-        "prompt_cache_hit_tokens": 1024,
-        "prompt_cache_miss_tokens": 296
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 969
       },
-      "costUpperYuan": 0.00212096,
-      "cumulativeUpperYuan": 5.320845840000006,
-      "latencyMs": 2287.1250999999975,
-      "timestamp": "2026-11-10T17:40:36.711Z"
+      "costUpperYuan": 0.0034813599999999997,
+      "cumulativeUpperYuan": 5.367958480000007,
+      "latencyMs": 2166.5512,
+      "timestamp": "2026-11-10T18:22:56.440Z"
     }
   },
   "responseEvidence": [
@@ -133,6 +136,22 @@
       "file": "budget-responses/a8cf7c32-842c-4e41-998c-435840891f22.json",
       "requestHash": "1ccc6106b1c5cdc47ba12c2022835d04371f6d181898ae2b1d23c8fb616fdf39",
       "responseHash": "4ae1515bb0730488717f440a9aade08b16592da03322b2ed5c03a4b2f8f0f48f"
+    },
+    {
+      "phase": "draft",
+      "attempt": 5,
+      "requestId": "8f7450d0-6315-4fe7-9421-9be9a7d383b9",
+      "file": "budget-responses/8f7450d0-6315-4fe7-9421-9be9a7d383b9.json",
+      "requestHash": "931679da9a3015cf76ebcc79d7ce47070c98a1a195415f242aecc7e429f1a4f3",
+      "responseHash": "5f5f72a8821ecdc4f8eaa0d8033a437735e5c26ff479964177f939a70689bf39"
+    },
+    {
+      "phase": "review",
+      "attempt": 5,
+      "requestId": "e3c86bfd-eb01-4655-9aa1-4ebc034deedc",
+      "file": "budget-responses/e3c86bfd-eb01-4655-9aa1-4ebc034deedc.json",
+      "requestHash": "8394a99ba827df5995e25bbc7aab97338d812befa7ebd8fa2c285d31a4d17126",
+      "responseHash": "29bc9c73913f13980ebb0e00c5d560e68a074c2f320a92cdd86649551dbb14db"
     }
   ],
   "measurements": [
@@ -287,6 +306,44 @@
       "cumulativeUpperYuan": 5.321800560000006,
       "latencyMs": 1356.276300000005,
       "timestamp": "2026-11-10T17:40:38.093Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_paper_cord_tags-draft4",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1353,
+        "completion_tokens": 191,
+        "total_tokens": 1544,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 969
+      },
+      "costUpperYuan": 0.0034813599999999997,
+      "cumulativeUpperYuan": 5.367958480000007,
+      "latencyMs": 2166.5512,
+      "timestamp": "2026-11-10T18:22:56.440Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_paper_cord_tags-review4",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1211,
+        "completion_tokens": 7,
+        "total_tokens": 1218,
+        "prompt_tokens_details": {
+          "cached_tokens": 768
+        },
+        "prompt_cache_hit_tokens": 768,
+        "prompt_cache_miss_tokens": 443
+      },
+      "costUpperYuan": 0.00097272,
+      "cumulativeUpperYuan": 5.372430560000007,
+      "latencyMs": 1048.995499999999,
+      "timestamp": "2026-11-10T18:23:00.056Z"
     }
   ],
   "budgetStopHistory": [
@@ -297,6 +354,14 @@
       "clearedAt": "2026-11-10T15:43:31.578Z",
       "reason": "李白 6301b58b 批准的 w3-journey 4 条重审：DRAFT-BOUND 占位预留与发送哈希检查冲突，已由 DRAFT-BOUND2（607f0f69）修复并两轮审过（m2-6i），重跑复用已付费草稿",
       "headCommit": "0dea6dbdc3ff9435effca42066a2e2be51a2c6e4"
+    },
+    {
+      "code": "CONTENT_BUDGET_STOP",
+      "message": "共享或单卡费用上限，已停止",
+      "at": "2026-11-10T18:18:55.941Z",
+      "clearedAt": "2026-11-10T18:22:42.440Z",
+      "reason": "李白决定（5 元授权）：本轮配方时长重写总上限 0.2→0.3 元，只用于这 5 条；此前按预留上界到额自停",
+      "headCommit": "2773de444d762c72880f00b791de6ba3872dda5f"
     }
   ],
   "l4Rejection": [
@@ -348,10 +413,5 @@
         "contradictions": []
       }
     }
-  ],
-  "budgetStop": {
-    "code": "CONTENT_BUDGET_STOP",
-    "message": "共享或单卡费用上限，已停止",
-    "at": "2026-11-10T18:18:55.941Z"
-  }
+  ]
 }

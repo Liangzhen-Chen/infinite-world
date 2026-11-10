@@ -1,8 +1,8 @@
 {
   "index": 0,
-  "fingerprint": "43e6f8a2711941de17c618581fefcdc0458104220a9a662d894ab89c06de87a7",
+  "fingerprint": "a5861df8a6536ef964d22b23c0bfd7c09f343ff3c20b085a05cea926db60c511",
   "count": 43,
-  "passed": 40,
+  "passed": 42,
   "ids": [
     "recipe_w3c_cracked_wheat_pot",
     "recipe_w3c_lentil_leek_stew",
@@ -49,19 +49,17 @@
     "recipe_w3c_cork_stop_set"
   ],
   "rewritten": 5,
-  "manual": [],
-  "pending": [
-    "recipe_w3c_parsnip_cream_pot",
-    "recipe_w3c_walnut_honey_bites",
-    "recipe_w3c_mushroom_barley_pot"
+  "manual": [
+    "recipe_w3c_parsnip_cream_pot"
   ],
+  "pending": [],
   "flagged": [],
   "sample": [
-    "recipe_w3c_beet_vinegar_dice",
-    "recipe_w3c_folding_haversack",
-    "recipe_w3c_pear_wheat_gruel",
-    "recipe_w3c_reed_drying_mat",
-    "recipe_w3c_peg_drying_rack"
+    "recipe_w3c_rendered_cooking_fat",
+    "recipe_w3c_horsehair_sieve_cloth",
+    "recipe_w3c_garlic_butter",
+    "recipe_w3c_plum_honey_spread",
+    "recipe_w3c_beech_press_board"
   ],
   "l4": {
     "approved": false,
@@ -154,7 +152,7 @@
       }
     }
   ],
-  "costUpperYuan": 5.353950240000006,
-  "manualRatio": 0,
+  "costUpperYuan": 5.364477120000006,
+  "manualRatio": 0.023255813953488372,
   "needsSystemicRepair": false
 }

@@ -1,15 +1,18 @@
 {
   "id": "recipe_w3c_walnut_honey_bites",
   "fingerprint": "15c65c55babf198d2a516babecfea2cc795c411548c9672af1df59497a5af2a3",
-  "status": "pending",
-  "attempts": 3,
-  "draft": null,
-  "review": null,
+  "status": "passed",
+  "attempts": 4,
+  "draft": {
+    "id": "recipe_w3c_walnut_honey_bites",
+    "process": "净核桃仁先摊在案上挑去夹带薄壳与哈喇味仁，留足一份后用切刀切碎。四枚鸡蛋逐一磕开去壳，蛋液入厚底煮锅，蛋壳弃置。燕麦粉与滤蜜倒入锅中，以长柄搅糊板拌至不见干粉、碎仁均匀裹糊。锅置小灶低火烘凝，待糊体收稠成团即离火。趁热分成小块，晾至不粘手后收作一份。全程70分钟。"
+  },
+  "review": {
+    "contradictions": []
+  },
   "errors": [],
   "warnings": [],
-  "feedback": [
-    "L4 退回：recipe_w3c_mushroom_barley_pot：\"全程九十 分钟\"数字与\"分钟\"之间有多余空格；recipe_w3c_parsnip_cream_pot：\"五十份钟\"把\"分\"写成\"份\"；recipe_w3c_walnut_honey_bites：\"七十多分钟\"与骨架70分钟矛盾。均须重写，总耗时只写骨架数字加分钟，不用\"多\"。；recipe_w3c_pear_wheat_gruel：\"八十份钟\"错字（DURATION-DERIVE 全仓重扫新命中，正式 recipes.json 同错；依李白 f8282524\"新命中一并走 L4 退回重写\"，主会话补入）"
-  ],
+  "feedback": null,
   "l4Rejection": [
     {
       "key": "cb3cf3e9340a3515095a6afd66a0682ccabc56ddf16626f2b56b9fcb7785b633",
@@ -46,9 +49,9 @@
   ],
   "errorCode": null,
   "draftResponse": {
-    "id": "270309ec-9543-4716-a17b-6ec82231573b",
+    "id": "43c28e2e-4a9b-46fa-9390-524fff76e9fd",
     "object": "chat.completion",
-    "created": 1794332416,
+    "created": 1794334967,
     "model": "deepseek-flash",
     "choices": [
       {
@@ -59,11 +62,11 @@
           "tool_calls": [
             {
               "index": 0,
-              "id": "call_00_QjWTEABspRgFMHjRW2975193",
+              "id": "call_00_keZC5bjL5AiCuolgEAAL7902",
               "type": "function",
               "function": {
                 "name": "submit_content",
-                "arguments": "{\"id\": \"recipe_w3c_walnut_honey_bites\", \"process\": \"取一百五十克净核桃仁，摊在案板上逐粒翻看，挑出夹带的薄壳碎屑，闻有哈喇味的仁弃置不用。用案上切刀将余下核桃仁切碎，颗粒粗细不必一致。取四枚鸡蛋逐枚磕开去壳，蛋壳弃置，蛋液倒入厚底煮锅。加入四百克燕麦粉与一百克滤过蜂蜜，以长柄搅糊板从锅底翻搅，拌至不见干粉、核桃碎分布均匀。小灶上低火加热，边烘边搅，待糊体凝厚、离锅壁成团即停火。趁热分成小块，摊开晾至不粘手。全程七十多分钟。干木刨屑用于引火，不混入成品。\"}"
+                "arguments": "{\"id\": \"recipe_w3c_walnut_honey_bites\", \"process\": \"净核桃仁先摊在案上挑去夹带薄壳与哈喇味仁，留足一份后用切刀切碎。四枚鸡蛋逐一磕开去壳，蛋液入厚底煮锅，蛋壳弃置。燕麦粉与滤蜜倒入锅中，以长柄搅糊板拌至不见干粉、碎仁均匀裹糊。锅置小灶低火烘凝，待糊体收稠成团即离火。趁热分成小块，晾至不粘手后收作一份。\"}"
               }
             }
           ]
@@ -73,34 +76,34 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1648,
-      "completion_tokens": 227,
-      "total_tokens": 1875,
+      "prompt_tokens": 1785,
+      "completion_tokens": 168,
+      "total_tokens": 1953,
       "prompt_tokens_details": {
-        "cached_tokens": 1408
+        "cached_tokens": 384
       },
-      "prompt_cache_hit_tokens": 1408,
-      "prompt_cache_miss_tokens": 240
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 1401
     },
     "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
     "measurement": {
-      "label": "content-recipes-recipe_w3c_walnut_honey_bites-draft2",
+      "label": "content-recipes-recipe_w3c_walnut_honey_bites-draft3",
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1648,
-        "completion_tokens": 227,
-        "total_tokens": 1875,
+        "prompt_tokens": 1785,
+        "completion_tokens": 168,
+        "total_tokens": 1953,
         "prompt_tokens_details": {
-          "cached_tokens": 1408
+          "cached_tokens": 384
         },
-        "prompt_cache_hit_tokens": 1408,
-        "prompt_cache_miss_tokens": 240
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1401
       },
-      "costUpperYuan": 0.00235232,
-      "cumulativeUpperYuan": 5.300565120000005,
-      "latencyMs": 2748.7536999999993,
-      "timestamp": "2026-11-10T17:40:19.311Z"
+      "costUpperYuan": 0.00416136,
+      "cumulativeUpperYuan": 5.358111600000006,
+      "latencyMs": 2159.5336000000007,
+      "timestamp": "2026-11-10T18:22:49.605Z"
     }
   },
   "responseEvidence": [
@@ -135,6 +138,22 @@
       "file": "budget-responses/5b93ac8e-9600-405e-9c6e-372f188dc065.json",
       "requestHash": "2552cfc872d599cae26f9240e088e5da02202e404d7483be4667bbe3272731d5",
       "responseHash": "25b60dba1261df4e1e31b3c4150aff0e93f4952b72dc22696e9838aa42c28a4b"
+    },
+    {
+      "phase": "draft",
+      "attempt": 4,
+      "requestId": "4bafa5ba-64f9-4203-974f-9f74efdda043",
+      "file": "budget-responses/4bafa5ba-64f9-4203-974f-9f74efdda043.json",
+      "requestHash": "f90723843e11aea6af127e9df6e386496293e428d2be8b81b8ba49eb249f9bec",
+      "responseHash": "462a5c67df5c790b07f54a29fa4acf59a1d9a5e4847873401f5645bdb8da7697"
+    },
+    {
+      "phase": "review",
+      "attempt": 4,
+      "requestId": "e9cb8a28-b1ce-41cb-8cc0-88f55cad46b4",
+      "file": "budget-responses/e9cb8a28-b1ce-41cb-8cc0-88f55cad46b4.json",
+      "requestHash": "eb84eb659012ecbd126843ec858b52096084c6e57669787a4894c8e7eb58518b",
+      "responseHash": "5f8fa836b4b3f6e3acc853440ceaaabfe158594ea6174da8a6485de6c87e6afd"
     }
   ],
   "measurements": [
@@ -213,11 +232,54 @@
       "cumulativeUpperYuan": 5.301655200000005,
       "latencyMs": 1072.0179000000007,
       "timestamp": "2026-11-10T17:40:20.414Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_walnut_honey_bites-draft3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1785,
+        "completion_tokens": 168,
+        "total_tokens": 1953,
+        "prompt_tokens_details": {
+          "cached_tokens": 384
+        },
+        "prompt_cache_hit_tokens": 384,
+        "prompt_cache_miss_tokens": 1401
+      },
+      "costUpperYuan": 0.00416136,
+      "cumulativeUpperYuan": 5.358111600000006,
+      "latencyMs": 2159.5336000000007,
+      "timestamp": "2026-11-10T18:22:49.605Z"
+    },
+    {
+      "label": "content-recipes-recipe_w3c_walnut_honey_bites-review3",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1591,
+        "completion_tokens": 7,
+        "total_tokens": 1598,
+        "prompt_tokens_details": {
+          "cached_tokens": 1152
+        },
+        "prompt_cache_hit_tokens": 1152,
+        "prompt_cache_miss_tokens": 439
+      },
+      "costUpperYuan": 0.0009800800000000001,
+      "cumulativeUpperYuan": 5.363443040000006,
+      "latencyMs": 975.7296999999999,
+      "timestamp": "2026-11-10T18:22:52.916Z"
     }
   ],
-  "budgetStop": {
-    "code": "CONTENT_BUDGET_STOP",
-    "message": "共享或单卡费用上限，已停止",
-    "at": "2026-11-10T18:18:55.869Z"
-  }
+  "budgetStopHistory": [
+    {
+      "code": "CONTENT_BUDGET_STOP",
+      "message": "共享或单卡费用上限，已停止",
+      "at": "2026-11-10T18:18:55.869Z",
+      "clearedAt": "2026-11-10T18:22:42.440Z",
+      "reason": "李白决定（5 元授权）：本轮配方时长重写总上限 0.2→0.3 元，只用于这 5 条；此前按预留上界到额自停",
+      "headCommit": "2773de444d762c72880f00b791de6ba3872dda5f"
+    }
+  ]
 }
