@@ -69,7 +69,7 @@ export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,p
    // before the first game action; a crash here can only leave an empty branch.
    if(!tape.session){tape.session=task.checkpoint??await initialSession(task.persona);await save();}
    processMessages??=(await loadHostPromptProcessor()).process;
-   const result=await runPlaytest({scenario:{id:task.id,turns:[{input:task.input,anchor:task.id}]},session:tape.session,api,client:narrator,bundle,processMessages,countTokens,historyWindow});
+   const result=await runPlaytest({scenario:{id:task.id,turns:[{input:task.input,anchor:task.id}]},session:tape.session,api,seed:'m3-continuous-soak',client:narrator,bundle,processMessages,countTokens,historyWindow});
    tape.report=result;await save();const turn=result.turns[0];
    if(turn.errors.length||!turn.consistency?.reviewId)throw Error(`回合未验证：${turn.errors.join('；')||turn.consistency?.status}`);
    const records=await read(path.join(directory,'server','infinite-fields',result.session.campaignId,'consistency',`${turn.consistency.reviewId}.json`));

@@ -42,15 +42,18 @@ export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClie
     return{api,seedMode,seed:seedMode==='fixed'?seed:null,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
 }
 
-export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){
+export async function runPlaytest({scenario,api,client,bundle,seed=PLAYTEST_SEED,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){
     if(scenario.initial?.requiresSession&&!session)throw new Error(`${scenario.id} 必须先准备隔离 HTTP 会话，不能用新角色代替`);
-    if(api&&api.seedMode!=='fixed')throw new Error(api.seedMode==='random'?`${scenario.id} 试玩验收入口缺少确定种子（seed:'random' 不允许用于试玩验收）`:`${scenario.id} 无法确认试玩入口的种子模式（api.seedMode 缺失；包装层须透传）`);
     historyWindow={...scenario.historyWindow,...historyWindow};
     const settings=generationSettings(bundle.generation);
     countTokens??=await loadHistoryTokenizer();let historyCursor=structuredClone(session?.historyCursor??null);
     const tools=toolDefinitions(),allowed=new Set(tools.map(row=>row.function.name));
     let view=session?await api('read',{campaignId:session.campaignId}):await api('create',scenario.initial?.mode==='legacy'?{name:'试玩者'}:{character:{name:'试玩者'}});
     const opening=bundle.card.data.first_mes;
+    // 守门看实际进入推演的种子：存档 document.randomSeed 必须等于期望的确定种子（默认 PLAYTEST_SEED，自带确定种子的服务器由调用方传 seed）。
+    // 存档种子来自 /create 的 newCampaignSeed()（直接写入 document.randomSeed）；/import 原样保留导出包里的种子；/enable-copy 在测试服务器（baseRoot）被拒绝。
+    // api.seedMode 只是诊断标签，不参与放行。
+    if(view.document?.randomSeed!==seed)throw new Error(`${scenario.id} 试玩验收的实际种子不是确定种子（存档 randomSeed=${JSON.stringify(view.document?.randomSeed)}，期望 ${JSON.stringify(seed)}；api.seedMode=${api?.seedMode}）`);
     const campaignId=view.reference.campaignId,chat=structuredClone(session?.chat??[{is_user:false,name:bundle.card.data.name,mes:opening}]),history=structuredClone(session?.history??[{role:'assistant',content:opening}]),reports=[],frames=[],turnCalls={};
     const sync=()=>api('sync-index',{campaignId,start:0,messages:chat,total:chat.length});
     const fresh=async()=>{view=await api('read',{campaignId});return view.document;};
