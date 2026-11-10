@@ -46,5 +46,5 @@ export function goodsWorth(d,e,{item,quantity=1,location,holder=null,apart=false
 export function stateReader(state){
     const document={state,randomSeed:state.randomSeed};
     return {document,get:(...p)=>p.reduce((x,k)=>x?.[k],document),peek:(...p)=>p.reduce((x,k)=>x?.[k],document),
-        memo:(scope,inputs,build)=>stateMemo(state,scope,[stateReader,document.randomSeed,...inputs],build)};
+        memo:(scope,inputs,build,identity)=>stateMemo(state,scope,[stateReader,document.randomSeed,...inputs],build,null,identity)};
 }

@@ -268,7 +268,7 @@ const memoValue = Symbol('state memo value');
 // track entry membership and compare those descendants on parent replacement.
 // Explicit
 // query inputs remain in the key. Only unaffected groups survive cursor writes.
-export function stateMemo(state, scope, inputs, build, dependencies = null) {
+export function stateMemo(state, scope, inputs, build, dependencies = null, identity = null) {
     if (!recordIndexDepth || !state) return build();
     let groups = stateMemos.get(state);
     if (!groups) stateMemos.set(state, groups = new Map());
@@ -282,7 +282,7 @@ export function stateMemo(state, scope, inputs, build, dependencies = null) {
         cache = next;
     }
     if (!cache.has(memoValue)) cache.set(memoValue, build());
-    else if (indexCheck && !memoEqual(cache.get(memoValue), build())) stale('state memo');
+    else if (indexCheck && !(identity ? memoEqual(identity(cache.get(memoValue)), identity(build())) : memoEqual(cache.get(memoValue), build()))) stale('state memo');
     return cache.get(memoValue);
 }
 const memoPathMatch=(selector,key)=>selector===key||typeof selector==='string'&&selector.endsWith('*')&&key.startsWith(selector.slice(0,-1));
@@ -413,7 +413,7 @@ function recordGroups(records, field, entries, value) {
 // the build (their union), or ignoreCategories/ignoreFields it never reads.
 // ignoreFields requires a projection excluding those fields;
 // terms, category/kind changes, insertions and deletions still invalidate it.
-export function recordsMemo(records, key, build, dependencies = null) {
+export function recordsMemo(records, key, build, dependencies = null, identity = null) {
     if (!recordIndexDepth || !records || typeof records !== 'object') return build();
     let cache = recordIndexes.get(records);
     if (!cache) { cache = new Map(); recordIndexes.set(records, cache); }
@@ -421,7 +421,7 @@ export function recordsMemo(records, key, build, dependencies = null) {
         const hit = cache.get(key);
         if (indexCheck) {
             recordIndexCheck.memoHits++;
-            if (!memoEqual(hit, build())) stale(`memo ${typeof key === 'object' ? 'object-key' : String(key)}`);
+            if (!(identity ? memoEqual(identity(hit), identity(build())) : memoEqual(hit, build()))) stale(`memo ${typeof key === 'object' ? 'object-key' : String(key)}`);
         }
         return hit;
     }
