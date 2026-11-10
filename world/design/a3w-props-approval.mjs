@@ -5,6 +5,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, defaultReviewRequest, readApprovedContent, hashContent, parseModelJSON} from '../../tools/content-pipeline.mjs';
+import {revertedRows} from '../../tools/approved-revisions.mjs';
 
 export const revision='a3w-props-1';
 export const draftRoot='world/drafts/a3w-props';
@@ -88,7 +89,7 @@ async function requirePilot(entries){
  assert.ok(Array.isArray(record.review.contradictions));assert.deepEqual(record.errors,[]);
 }
 export async function verifyPublished(items=undefined){
- items??=await readItems();
+ items??=await revertedRows(await readItems(),'world/meta/items.json');
  // This receipt predates the later capacity field. Verify its exact historical
  // projection so the newer A3CAP receipt can be checked first and this gate
  // still protects the original tags publication and its tamper evidence.

@@ -8,6 +8,7 @@ import {execSync} from 'node:child_process';
 import {loadWorld, loadRuntimeWorld} from '../tools/load-world.mjs';
 import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/runtime-world.mjs';
 import {canonical} from '../server-plugin/storage.mjs';
+import {readApprovedSupersedes, revertSuperseded} from '../tools/approved-revisions.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {entriesFor as matpropsEntries, draftRoot as matpropsDraftRoot, condimentCard, cardProfiles, summarizeApproval, verifyAll} from '../world/design/matprops-approval.mjs';
 
@@ -17,6 +18,9 @@ const contains = (have, want) => Array.isArray(want) ? Array.isArray(have) && wa
   : want && typeof want === 'object' ? have && typeof have === 'object' && Object.entries(want).every(([k, v]) => contains(have[k], v)) : have === want;
 const rowFiles = ['meta/items.json', 'meta/recipes.json', 'geo/locations.json', 'meta/professions.json', 'meta/skills.json', 'meta/spells.json', 'people/baseline.json', 'people/residents.json', 'people/households.json'];
 const formal = new Map(rowFiles.flatMap(f => J(`world/${f}`).map(r => [r.id, r])));
+// 审批回执里是审批当时的行：后来经审批的修订回执（如正文修订批）取代过的字段回退到 before 再比；回执之外的改动不回退，仍会使整行比对失败。
+const supersedes = await readApprovedSupersedes();
+const formalAsApproved = new Map(rowFiles.flatMap(f => revertSuperseded(J(`world/${f}`), `world/${f}`, supersedes).map(r => [r.id, r])));
 const overlay = Object.fromEntries(mechanicsCollections.map(n => [n, J(`world/meta/mechanics/${n}.json`)]));
 const species = new Map(J('world/ecology/species.json').species.map(s => [s.id, s]));
 const careers = J('world/meta/careers.json');
@@ -41,7 +45,7 @@ test('每个审批批次里通过的整行回执，正式文件里的行与其�
     }
   }
   assert.ok(approved.size > 50);
-  const changed = [...approved].filter(([id, rows]) => !rows.includes(JSON.stringify(formal.get(id)))).map(([id]) => id);
+  const changed = [...approved].filter(([id, rows]) => !rows.includes(JSON.stringify(formalAsApproved.get(id)))).map(([id]) => id);
   assert.deepEqual(changed, []);
   // D12 的判定口径是 matprops-approval 的正式判定（L2 通过或人工核定），这里不另写规则：
   // ① 每个 D12 目录里出现的记录，entriesFor 没覆盖到的一律失败并列出；② 两张卡逐条用 summarizeApproval 的结论对账（未决为空，通过+人工 = 该卡条目数）；③ verifyAll 整体通过。
