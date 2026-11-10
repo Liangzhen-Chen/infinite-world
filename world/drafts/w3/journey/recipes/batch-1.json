@@ -93,6 +93,7 @@
       }
     ],
     "rejection": {
+      "ids": ["recipe_w3c_paper_cord_tags"],
       "by": "主会话 L4 复核（Claude Opus 5.5）",
       "at": "2026-11-10",
       "reason": "recipe_w3c_paper_cord_tags 本轮新生成的 process 写成\"全程约七十零分钟\"，中文数字不合法；L1/L2 均未拦下。按标杆标准不批准发布，待按整类规则（L1 数字合法性与时长一致检查、L4 退回重写路径）修好后重写本条再审。"
