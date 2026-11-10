@@ -15,7 +15,7 @@ const CONTAINER_TAGS = ['container', 'liquid_container'];
 // 名称末尾的量词/形态字：做中心词没有区分力，改取末两字。
 const WEAK_TAIL = '片段块条组份具头体面套副对粒束卷团';
 // 单字中心词里，日常词也常用的字（规定、尺寸、对准、轮廓、柄……）：不单独当器具词，只认含它的两字及以上词形。
-const COMMON_CHARS = '规尺准尖杆轮轴柄记说本灯石器斗架布刀';
+const COMMON_CHARS = '规尺准尖杆轮轴柄记说本灯石器斗架布刀子';
 // 通用泛称里的布类词（单字“布”太常见，只认这些词）。
 const CLOTH_WORDS = ['干布', '湿布', '软布', '净布', '布巾', '抹布', '毛巾'];
 const TRIM_TAIL = /(?:小袋|小包|小罐|小瓶|小壶|小篮)?(?:一份|一段|一组|份)?$/u;
@@ -36,8 +36,8 @@ const GENERIC_WORDS = Object.fromEntries([['容器', 'container'], ['器皿', 'c
 // 动作 → 需要的器具类别。need(item) 判定骨架里某物品是否属于该类别。
 // 剪、锯、凿、锥、锉、钻、锤……这类动作字本身就是器具中心词，由中心词机制统一覆盖，不在此重复。
 export const ACTION_NEEDS = [
-  { id: '布巾', verbs: /擦拭|拭去|拭净|擦净|擦去|擦干|揩净|拭/u, label: '布巾类（带 cloth 标签的物品）', need: (item) => item.tags?.includes('cloth') },
-  { id: '盖', verbs: /加盖|盖上|盖好|盖严|盖住|扣盖|合盖/u, label: '盖具（名称以“盖”结尾的物品）', need: (item) => /盖$/u.test(item.name) },
+  { id: '布巾', verbs: /擦拭|拭去|拭净|擦净|擦去|擦干|揩净|(?<!吸)拭/u, label: '布巾类（带 cloth 标签的物品）', need: (item) => item.tags?.includes('cloth') },
+  { id: '盖', verbs: /加盖|盖好|盖严|扣盖|合盖/u, label: '盖具（名称以“盖”结尾的物品）', need: (item) => /盖$/u.test(item.name) },
   { id: '量具', verbs: /画线|划线|弹线|量线|标线/u, label: '墨线或量具（规、尺、准类工具，或墨料）', need: (item) => /[规尺准]$|墨/u.test(item.name) },
 ];
 
@@ -151,7 +151,8 @@ export function processIssues(text, entry, context) {
   // 二、另备容器是交付终点：装入之后不得再对内容物加工（如滤进另备容器后又沿锅缘搅匀）。
   const stirAfter = (sentence) => PROCESS.test(sentence) && !NEGATION.test(sentence.slice(0, sentence.search(PROCESS)));
   let delivered = false;
-  for (const sentence of sentences) {
+  for (const raw of sentences) {
+    const sentence = vocab.nameRe ? raw.replace(vocab.nameRe, '〇') : raw; // 物品全名（温搅皂洗液）里的动作字不是加工动作
     const clauses = split(sentence, /[，、：]/u);
     const at = clauses.findIndex((clause) => EXTERNAL.test(clause) && POUR.test(clause) && /容器|器皿/u.test(clause));
     const after = at < 0 ? clauses : clauses.slice(at + 1);

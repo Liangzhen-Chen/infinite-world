@@ -133,3 +133,10 @@ test('context 的 catalog 不可枚举：不进指纹与审核请求', () => {
   assert.ok(Array.isArray(context.catalog) && context.catalog.length > 0);
   assert.ok(!Object.keys(JSON.parse(JSON.stringify(context))).includes('catalog'));
 });
+
+test('误报回归：架子、吸拭、翻折盖住、成品名里的动作字', () => {
+  const entry = recipe('redwood_dye'), context = journeyContext(world, bones, entry);
+  const text = '干木刨屑两份引火，仅作灶下燃料与吸拭漏液之用。装好后把架子放平，包边翻折盖住毡边。';
+  const found = processIssues(text, entry, context);
+  assert.ok(!found.some(message => /吸拭|架子|盖住|子」/.test(message)), found.join(' '));
+});

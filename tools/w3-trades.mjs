@@ -14,6 +14,7 @@ export function validateTradesDraft(draft,entry,blocklist,context){
   if(/铜(?:制|质|头|坯|身|刃|面)|青铜/.test(prose)&&!facts.includes('铜'))result.errors.push('品质铜不等于铜材，说明新增铜材质');
   if(/石(?:制|质|头|刃|身)/.test(prose)&&!facts.includes('石'))result.errors.push('品质石不等于石材，说明新增石材质');
  }
+ if(entry.id.startsWith('recipe_')&&typeof draft?.process==='string')for(const message of processIssues(draft.process,entry,context))if(!result.errors.includes(message))result.errors.push(message);
  return result;
 }
 export function tradesReviewRequest(entry,draft,context){
