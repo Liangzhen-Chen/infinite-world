@@ -1,6 +1,6 @@
 {
   "index": 1,
-  "fingerprint": "7b9dffe4a306388bd057de9d18c1426dc66db595d5e0aaa1a34a61253359a1bd",
+  "fingerprint": "82df62cab21b7d666f04a2e8ee4cc6680c8a55bee38b74e45b49ae10cc48fd04",
   "count": 34,
   "passed": 34,
   "ids": [
@@ -49,18 +49,28 @@
     "item_iron_punch",
     "item_rivet_set",
     "item_hand_bellows",
+    "item_stone_mortar",
+    "item_fine_sieve",
     "item_reed_pen",
     "item_ink_brush",
+    "item_mining_pick",
     "item_sheet_shears",
+    "item_barley_pea_stew",
     "item_leek_fish_pot",
     "item_pea_spread",
     "item_turnip_oat_cake",
+    "item_honey_nut_cake",
     "item_onion_egg_soup",
     "item_honey_curd_spread",
     "item_vinegar_carrot",
     "item_cabbage_barley",
+    "item_apple_rye_griddle",
+    "item_book_trades_kitchen",
+    "item_lidded_seed_box",
     "item_three_leg_stool",
+    "item_wall_shelf",
     "item_foot_rest",
+    "item_bread_board",
     "item_thread_rack",
     "item_walking_crutch",
     "item_shutter_panel",
@@ -75,8 +85,182 @@
     "item_lidded_seed_box"
   ],
   "l4": {
-    "approved": false,
-    "notes": []
+    "approved": true,
+    "reviewer": "sonnet-l4-a849fd89",
+    "by": "sonnet-l4-a849fd89",
+    "reviewedAt": "2026-11-10T22:08:07.478Z",
+    "notes": [
+      {
+        "id": "item_book_trades_wood",
+        "note": "十个工序、识字100、300分钟均与骨架一致；storage纸质避雨避晒防压，365天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_cabbage_barley",
+        "note": "两份木刨花与配方2一致，引火先于煮；弃置不入成品；storage 1天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_flat_file",
+        "note": "重0.42；废堆出自骨架use；storage避潮可推，无保养内容",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_hand_bellows",
+        "note": "白石镇对应loc_bs；重1.6；storage革囊避潮避晒可推",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_honey_curd_spread",
+        "note": "青灯酒馆对应qingdeng；重0.38；容器另备属交付说明；1天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_ink_brush",
+        "note": "小学堂对应school；颜料和水另备出自骨架；storage勿压笔头由笔头推出",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_leek_fish_pot",
+        "note": "一份木刨花与配方1一致；鱼刺保留与残渣弃置出自骨架；storage 1天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_foot_rest",
+        "note": "重1.15；两枚木楔对应配方木楔2；松木板对应pine_board；storage木制避潮可推",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_grooving_wheel",
+        "note": "重0.16；一枚齿轮；storage 避潮，无期限说法，符合第14条",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_iron_punch",
+        "note": "重0.3；锻锤与砧台出自骨架use；storage避潮可推",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_onion_egg_soup",
+        "note": "木刨花引火交代；四枚蛋照processFacts；1天内合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_pea_spread",
+        "note": "火源木刨花交代；盐在materials；容器另备仅交付",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_reed_pen",
+        "note": "小学堂为origin名；补货句同seasonality；s勿压笔尖可由开缝笔尖推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_sheet_shears",
+        "note": "铁匠铺为origin名；无骨架外结构；s避潮可由金属推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_shutter_panel",
+        "note": "2板6钉合骨架；无木架湿布；s避潮避重压可由木材推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_thread_rack",
+        "note": "第三轮重审：s期限句已删；四根木楔合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_three_leg_stool",
+        "note": "钻孔位置照pf（座面斜钻三孔）；亚麻油在materials；无干布",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_turnip_oat_cake",
+        "note": "木刨花引火；焦屑弃置；1天内合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_vinegar_carrot",
+        "note": "120分钟合骨架minutes；2天合shelfLifeDays",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_walking_crutch",
+        "note": "木锉与tools一致；无逐根量词错；s避潮可由木材推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_rivet_set",
+        "note": "手锤出自use；无骨架外结构",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_round_file",
+        "note": "沿孔轴推拉出自use；s避潮可由金属推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_tool_tray",
+        "note": "第三轮重审：削刀已删；四枚钉合materials；空盘出自pf",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_stone_mortar",
+        "note": "石杵合use；s防磕碰由石质推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_fine_sieve",
+        "note": "细尘句照use；s防压由筛网推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_mining_pick",
+        "note": "木柄铁镐照use；s避潮由铁镐推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_barley_pea_stew",
+        "note": "脱壳大麦名一致；两份木刨花引火合骨架；无盖；容器另备仅交付；1天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_honey_nut_cake",
+        "note": "四枚蛋、两份木刨花、蛋壳弃置照pf；2天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_apple_rye_griddle",
+        "note": "一份木刨花引火；1天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_book_trades_kitchen",
+        "note": "作者版本出自bones字段；300分钟合骨架；365天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_lidded_seed_box",
+        "note": "两板四钉合materials；s避潮防压由木匣推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_wall_shelf",
+        "note": "两板四钉；无骨架外用途",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_bread_board",
+        "note": "木锉在tools；s避潮由木板推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_willow_creel",
+        "note": "麻线骨压片照pf；180天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      }
+    ]
   },
   "costUpperYuan": 2.392922599999999,
   "manualRatio": 0,
@@ -162,6 +346,28 @@
           "item_rivet_set",
           "item_round_file",
           "item_tool_tray"
+        ]
+      }
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "rejection": {
+        "by": "行当批物品按新口径只读严格重读（审查者 sonnet-l4-a849fd89）",
+        "at": "2026-11-10T22:xxZ",
+        "reason": "李白 I1 与 storage 口径（L4 必查清单第 8 到 14 条）下不批：storage 具体处置做法、骨架外布巾器皿、错名、缺火源、木刨花误名等，详见 F:/dnd-tmp/l4-items-2c.md。",
+        "ids": [
+          "item_stone_mortar",
+          "item_fine_sieve",
+          "item_mining_pick",
+          "item_barley_pea_stew",
+          "item_honey_nut_cake",
+          "item_apple_rye_griddle",
+          "item_book_trades_kitchen",
+          "item_lidded_seed_box",
+          "item_wall_shelf",
+          "item_bread_board",
+          "item_willow_creel"
         ]
       }
     }

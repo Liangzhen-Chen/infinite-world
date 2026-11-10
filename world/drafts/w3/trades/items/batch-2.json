@@ -1,6 +1,6 @@
 {
   "index": 2,
-  "fingerprint": "f29bf69b574c5b9595e80d8ceaaefdeb952593f9df9fdacd92491b1104eeac98",
+  "fingerprint": "7d1abe55c7f0cfd9553818ba545a3db0f10a6bc528db864b41f36c53ce00d305",
   "count": 33,
   "passed": 33,
   "ids": [
@@ -51,18 +51,26 @@
     "item_rein_patch",
     "item_needle_case",
     "item_leather_grip",
+    "item_book_trades_leather",
+    "item_drawer_pull",
+    "item_door_latch",
     "item_boot_scraper",
     "item_stove_grid",
+    "item_bucket_handle",
     "item_hinge_pin",
     "item_tent_stake",
     "item_strap_eye",
+    "item_pot_lifter",
     "item_sack_pricker",
+    "item_book_trades_iron",
     "item_gall_wash",
     "item_polishing_powder",
     "item_parchment_bookmark",
+    "item_copper_nameplate",
     "item_waxed_thread",
     "item_wax_seal_blank",
-    "item_wood_marking_kit"
+    "item_wood_marking_kit",
+    "item_book_trades_artisan"
   ],
   "sample": [
     "item_sack_pricker",
@@ -72,8 +80,177 @@
     "item_wax_seal_blank"
   ],
   "l4": {
-    "approved": false,
-    "notes": []
+    "approved": true,
+    "reviewer": "sonnet-l4-a849fd89",
+    "by": "sonnet-l4-a849fd89",
+    "reviewedAt": "2026-11-10T22:08:07.875Z",
+    "notes": [
+      {
+        "id": "item_belt_strap",
+        "note": "三字段对照骨架；无骨架外尺寸与配套物；storage 避日晒雨淋由皮革类推出，365天与骨架一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_boot_gaiter",
+        "note": "一对共重0.42与骨架一致；挡泥不增护甲出自骨架；storage皮革类可推，365天",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_boot_scraper",
+        "note": "一块铁三份木炭与配方一致；台座另备出自骨架；storage金属避雨可推",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_chalk_powder",
+        "note": "旧磨坊对应bld_hw_mill；弃置用词合规；storage细粉避风避潮可推；容器另备属交付说明",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_coin_wrap",
+        "note": "重0.2；交付不含钱币出自骨架；storage皮革类可推，365天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_gall_wash",
+        "note": "一枚干瘿、两份水、一份木炭与配方一致；炊锅石臼滤布均在骨架tools；容器另备属交付说明，7天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_leather_grip",
+        "note": "首尾系孔附麻线出自骨架；工具另备；storage皮革类可推，365天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_leather_thimble",
+        "note": "重0.06；裁小皮条绕指成套出自骨架；storage皮革类可推，365天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_needle_case",
+        "note": "空夹出售针另备出自骨架；缝短边底边出自骨架；storage皮革类可推，365天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_hinge_pin",
+        "note": "重0.14；一份铁边料一份木炭与配方一致；storage无期限说法",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_leather_hinge",
+        "note": "重0.18；两端各锥孔属工序结构；安装钉另备出自骨架；365天一致",
+        "by": "sonnet-l4-a8e3953b"
+      },
+      {
+        "id": "item_ochre_paint",
+        "note": "材料清水树胶赤土、石臼细筛笔均在tools；s避日晒霜冻由水性胶浆推出，容器另备仅交付",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_parchment_bookmark",
+        "note": "器具均在tools；s365天合骨架；无骨架外处置",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_polishing_powder",
+        "note": "粗粒弃置照pf；容器另备仅交付；s避潮可由粉末推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_scroll_wrap",
+        "note": "材料工序照pf，无“会透湿”断言；s365天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_soot_ink",
+        "note": "器具均在tools；容器另备仅交付；s7天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_stove_grid",
+        "note": "四份木炭交代火源；无水盆；s避潮可由铁推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_wax_seal_blank",
+        "note": "第三轮重审：无期限句已删；45克按weight折算；木炭木匙有依据",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_waxed_thread",
+        "note": "余蜡包纸照pf；s365天合骨架；无干裂后果句",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_wood_marking_kit",
+        "note": "第三轮重审：期限句已删；铁锉出自pf；余布弃置",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_rein_patch",
+        "note": "第三轮重审：缰绳接头护片即name；365天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_sack_pricker",
+        "note": "第三轮重审：锻有一份木炭火源；无直柄等",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_strap_eye",
+        "note": "两孔照pf；带与固定钉另备出自pf；火源无加热句",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_tent_stake",
+        "note": "无加热句；碎岩句出自pf；s避潮可由铁推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_sheath_pouch",
+        "note": "材料鞣革麻线，无加热；250克按weight折算；365天合骨架；s防压折由皮革推出；无骨架外处置。逐句读无误。",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_book_trades_leather",
+        "note": "同书类；365天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_drawer_pull",
+        "note": "一份铁料两份木炭交代；平锉在tools",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_door_latch",
+        "note": "一份铁料三份木炭交代；无骨架外结构",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_bucket_handle",
+        "note": "两份木炭交代；木桶另备照pf",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_pot_lifter",
+        "note": "三份木炭交代；容器另备仅交付",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_book_trades_iron",
+        "note": "同书类；365天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_copper_nameplate",
+        "note": "材料铜片1，无加热句；s防压由铜片推出",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_book_trades_artisan",
+        "note": "同书类；365天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      }
+    ]
   },
   "costUpperYuan": 2.6326176399999994,
   "manualRatio": 0,
@@ -152,6 +329,25 @@
           "item_sack_pricker",
           "item_strap_eye",
           "item_tent_stake"
+        ]
+      }
+    },
+    {
+      "approved": false,
+      "notes": [],
+      "rejection": {
+        "by": "行当批物品按新口径只读严格重读（审查者 sonnet-l4-a849fd89）",
+        "at": "2026-11-10T22:xxZ",
+        "reason": "李白 I1 与 storage 口径（L4 必查清单第 8 到 14 条）下不批：storage 具体处置做法、骨架外布巾器皿、错名、缺火源、木刨花误名等，详见 F:/dnd-tmp/l4-items-2c.md。",
+        "ids": [
+          "item_book_trades_leather",
+          "item_drawer_pull",
+          "item_door_latch",
+          "item_bucket_handle",
+          "item_pot_lifter",
+          "item_book_trades_iron",
+          "item_copper_nameplate",
+          "item_book_trades_artisan"
         ]
       }
     }
