@@ -48,3 +48,23 @@ test('L4 退回：格式不合法（缺 ids、批外 id）时报错，不猜范�
   await reject(root,{by:'x',at:'y',reason:'r',ids:['recipe_zzz']});
   await assert.rejects(()=>runContentPipeline(options),/l4\.rejection 格式不合法/);
 });
+
+test('L4 退回：被点名的 manual 条目也重写，attempts 累加且有上限；未点名的 manual 不动', async t => {
+  const {root,texts,labels,options}=await fixture(t);
+  const bad='乙稿：全程约八十分钟。';texts.recipe_b=bad;texts.recipe_c=bad;
+  const opts={...options,validateDraft:(d)=>d.process.includes('八十')?['数字写错']:[]};
+  await runContentPipeline(opts);
+  const oldB=await readJSON(path.join(root,'recipe_b.json'));
+  assert.equal(oldB.status,'manual');assert.equal(oldB.attempts,3);
+  await reject(root,{by:'L4 复核',at:'2026-11-10',reason:'重写',ids:['recipe_b']});
+  labels.length=0;texts.recipe_b='乙稿新：全程约七十分钟。';
+  await runContentPipeline(opts);
+  const b=await readJSON(path.join(root,'recipe_b.json')),c=await readJSON(path.join(root,'recipe_c.json'));
+  assert.equal(b.status,'passed');assert.equal(b.l4Rejection[0].priorStatus,'manual');assert.equal(b.l4Rejection[0].attemptCap,5);
+  assert.ok(b.attempts>3&&b.attempts<=5);assert.equal(c.status,'manual');assert.ok(labels.every(l=>l.includes('recipe_b')));
+  // 再次点名且仍写不对：累加到上限即止
+  texts.recipe_b=bad;await reject(root,{by:'L4 复核',at:'2026-11-11',reason:'再重写',ids:['recipe_b']});
+  await runContentPipeline(opts);
+  const b2=await readJSON(path.join(root,'recipe_b.json'));
+  assert.equal(b2.status,'manual');assert.ok(b2.attempts<=b.attempts+2);
+});

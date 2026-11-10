@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {tmpRoot} from '../tools/tmp-root.mjs';
-import {parseChineseNumeral,numeralIssues,chineseNumeralIssues,durationIssues,skeletonMinutes} from '../tools/content-numerals.mjs';
+import {parseChineseNumeral,repairNumeral,numeralIssues,chineseNumeralIssues,durationIssues,skeletonMinutes} from '../tools/content-numerals.mjs';
 import {runContentPipeline} from '../tools/content-pipeline.mjs';
 import {validateW3Draft} from '../tools/w3-content.mjs';
 
@@ -102,4 +102,18 @@ test('单字「一」常是词的一部分，不判；多字数字照判', () =>
   assert.equal(chineseNumeralIssues('静置一整小时').length, 0);
   assert.equal(chineseNumeralIssues('须一定时辰').length, 0);
   assert.equal(chineseNumeralIssues('全程七十整分钟').length, 1);
+});
+
+test('报错附修复建议：九十零、九十加分钟、七十整分钟、十十；推不出来不给建议', () => {
+  const entry = { id: 'x', minutes: 90 };
+  const one = text => numeralIssues({ p: text }, entry, null)[0];
+  assert.match(one('全程九十零分钟'), /应写作「九十分钟」或「90分钟」/);
+  assert.match(one('全程九十加分钟'), /应写作「九十分钟」或「90分钟」/);
+  const zheng = one('全程七十整分钟'); // 改正值 70 与骨架 90 不一致：只给骨架写法
+  assert.match(zheng, /以骨架为准，应写作「90分钟」/); assert.doesNotMatch(zheng, /应写作「七十分钟」/);
+  assert.match(one('全程十十分钟'), /以骨架为准，应写作「90分钟」/);
+  assert.match(numeralIssues({ p: '浸泡九十零分钟' }, entry, null)[0], /应写作「九十分钟」或「90分钟」$/); // 非总括词：不与骨架比对
+  assert.doesNotMatch(one('全程二十零五分钟'), /应写作/); // 去零得 25、去十得 205，值不唯一，不猜
+  assert.equal(repairNumeral('二十零五'), null);
+  assert.deepEqual(repairNumeral('十十'), { text: '十', value: 10 });
 });

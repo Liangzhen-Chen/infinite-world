@@ -115,20 +115,46 @@ function stringsOf(value, out = [], depth = 0) {
   return out;
 }
 
-// 规则 (a)：返回错误字符串数组。
-export function chineseNumeralIssues(text) {
+// 修复建议：对不合法的数字串，逐个去掉一个「零」或单位字（位置错误的零、重复或缺数字的单位字）再解析；
+// 只有去掉后能得到合法值、且各种去法得到的值唯一时才返回 {text,value}，否则返回 null（不猜）。零优先于单位字。
+export function repairNumeral(str) {
+  const chars = [...str], found = [];
+  const order = [...chars.keys()].filter(i => isZero(chars[i])).concat([...chars.keys()].filter(i => UNIT.includes(chars[i])));
+  for (const i of order) {
+    const t = chars.filter((_, j) => j !== i).join('');
+    const r = parseChineseNumeral(t);
+    if (r.ok === true) found.push({ text: t, value: r.value });
+  }
+  if (!found.length || new Set(found.map(row => row.value)).size !== 1) return null;
+  return found[0];
+}
+// 把建议写成报错后缀。unit：数字之后的时间单位（可无）；overall：数字前是否有总括词（只有总括时长才与骨架 minutes 比对）。
+function hintFor(repaired, unit, overall, minutes) {
+  if (!repaired) return '';
+  const u = unit ?? '';
+  if (unit && overall && Number.isFinite(minutes)) {
+    if (Math.abs(repaired.value * MINUTE_FACTOR[unit] - minutes) < 1e-9) return `；应写作「${repaired.text}${u}」或「${repaired.value}${u}」（与骨架 minutes=${minutes} 一致）`;
+    return `；改正后的数值与骨架 minutes=${minutes} 不一致，以骨架为准，应写作「${minutes}分钟」`;
+  }
+  return `；应写作「${repaired.text}${u}」或「${repaired.value}${u}」`;
+}
+
+// 规则 (a)：返回错误字符串数组。minutes：骨架 minutes（可选，只用于给建议）。
+export function chineseNumeralIssues(text, minutes = null) {
   const errors = [];
   for (const run of numeralRuns(text)) {
     const result = parseChineseNumeral(run.text);
     const around = text.slice(Math.max(0, run.index - 2), Math.min(text.length, run.end + 2));
     if (result.skip) continue;
     const between = BETWEEN_PATTERN.exec(text.slice(run.end, run.end + 5));
+    const overall = new RegExp(`${OVERALL}$`, 'u').test(text.slice(0, run.index));
+    const directUnit = /^(分钟|小时|时辰)/u.exec(text.slice(run.end))?.[1];
     if (result.ok === true && run.text !== '一' && between && !BETWEEN_OK.includes(between[1]) && !BETWEEN_UNSURE.includes(between[1]) && !(between[2] === '小时' && between[3] && '候代'.includes(between[3]))) {
-      errors.push(`数字「${run.text}」与时间单位「${between[2]}」之间夹了「${between[1]}」，写法不合法，概数应写「${run.text}多${between[2]}」或「${run.text}来${between[2]}」（原文「${around}」）`);
+      errors.push(`数字「${run.text}」与时间单位「${between[2]}」之间夹了「${between[1]}」，写法不合法，概数应写「${run.text}多${between[2]}」或「${run.text}来${between[2]}」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, between[2], overall, minutes)}`);
       continue;
     }
-    if (result.ok === false) errors.push(`中文数字「${run.text}」不合法：${result.reason}（原文「${around}」）`);
-    else if (text[run.end] === '钟' && /[十百千万]/.test(run.text)) errors.push(`数字「${run.text}」后直接接「钟」不合法，时长应写「分钟」（原文「${around}」）`);
+    if (result.ok === false) errors.push(`中文数字「${run.text}」不合法：${result.reason}（原文「${around}」）${hintFor(repairNumeral(run.text), directUnit, overall, minutes)}`);
+    else if (text[run.end] === '钟' && /[十百千万]/.test(run.text)) errors.push(`数字「${run.text}」后直接接「钟」不合法，时长应写「分钟」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, '分钟', overall, minutes)}`);
   }
   return errors;
 }
@@ -182,7 +208,7 @@ export function durationIssues(text, minutes) {
       else { const p = parseChineseNumeral(raw); if (!p.ok) continue; n = p.value; } // 数字本身不合法由规则 (a) 报
       amount = m[1] !== undefined ? n + 0.5 : n;
     }
-    if (Math.abs(amount * factor - minutes) > 1e-9) errors.push(`正文时长「${m[0].trim()}」与骨架 minutes=${minutes} 不一致（时辰按一时辰两小时、半个时辰=60分钟换算）`);
+    if (Math.abs(amount * factor - minutes) > 1e-9) errors.push(`正文时长「${m[0].trim()}」与骨架 minutes=${minutes} 不一致（时辰按一时辰两小时、半个时辰=60分钟换算）；应写作「${minutes}分钟」${minutes % factor === 0 && factor > 1 ? `或「${minutes / factor}${m[4]}」` : ''}，以骨架为准`);
   }
   return errors;
 }
@@ -193,7 +219,7 @@ export function numeralIssues(draft, entry = null, context = null) {
   const errors = [];
   const minutes = skeletonMinutes(entry, context);
   for (const text of stringsOf(draft)) {
-    errors.push(...chineseNumeralIssues(text));
+    errors.push(...chineseNumeralIssues(text, minutes));
     errors.push(...durationIssues(text, minutes));
   }
   return [...new Set(errors)];
