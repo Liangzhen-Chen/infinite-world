@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createHash, randomInt } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {openContentBudget} from './content-budget.mjs';
-import {numeralIssues} from './content-numerals.mjs';
+import {numeralIssues,applyDerivedDuration} from './content-numerals.mjs';
 
 export const hashContent = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function parseModelJSON(response) {
@@ -112,6 +112,10 @@ export async function runContentPipeline({
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 16) throw new Error('并发必须为 1–16；正式波次使用 8–16');
   if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 50) throw new Error('批次必须为 1–50；正式波次使用 25–50');
   if (typeof validateDraft !== 'function' || typeof buildDraftRequest !== 'function') throw new Error('缺少起草或 L1 校验接口');
+  // 派生优先：骨架带 minutes 的条目，正文的总时长由代码写入（删去模型自带的总括时长，追加「全程N分钟。」），不交给模型。
+  // 挂在提取草稿这一步，所有工具的起草结果都经过；骨架无 minutes 时原样返回。规则与理由见 content-numerals.mjs 的 stripOverallDuration。
+  const extractRaw = extractDraft;
+  extractDraft = async (response, entry) => applyDerivedDuration(await extractRaw(response, entry), entry);
   // 所有内容草稿共用的 L1 数字规则：对每个调用方自己的 validateDraft 结果统一追加（中文数字合法性、总括时长与 minutes 一致）。
   const l1 = async (draft, entry, context) => {
     const result = await validateDraft(draft, entry, context);
