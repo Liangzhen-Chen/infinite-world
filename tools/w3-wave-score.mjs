@@ -6,7 +6,7 @@ import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {economyW3Journey} from '../world/design/economy-w3-journey.mjs';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
 import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
-import {readApprovedSupersedes,applySupersedes,createTagSourceResolver} from './approved-revisions.mjs';
+import {readApprovedSupersedes,applySupersedes,createTagSourceResolver,overlayFieldReverts} from './approved-revisions.mjs';
 import {w3Context,w3Revision,validateW3Draft} from './w3-content.mjs';
 import {tradesRevision,validateTradesDraft} from './w3-trades.mjs';
 import {journeyContext,journeyRevision} from './w3-journey.mjs';
@@ -27,7 +27,7 @@ export function acceptFactCorrections(report,entries,patches=factCorrections){
 }
 // 语料哈希随正式条目变化而失效。若全部变化都来自已审批的修订回执或已审叠加层，且 10 个固定样本的 entityHash 都没变，
 // 则把这些变化回退后核对评分时的语料哈希，相符才按回执重算并记录依据；回退后仍不符说明还有无法归因的变化，照旧判失效。
-// explained：已指到来源的字段变化（publishedW3 给出的 tags 叠加与修订回执取代的值，加上 approvedOverlayReverts 给出的叠加字段）。
+// explained：已指到来源的字段变化（publishedW3 给出的 tags 叠加与修订回执取代的值，加上 overlayFieldReverts 给出的叠加字段）。
 export function recomputeCorpusHash(report,entries,explained,{now=new Date()}={}){
  const sample=fixedSample(entries,report.seed);
  if(JSON.stringify(report.samples.map(x=>x.id))!==JSON.stringify(sample.map(x=>x.id)))throw new Error('固定样本已改变');
@@ -45,13 +45,6 @@ export function recomputeCorpusHash(report,entries,explained,{now=new Date()}={}
  next.corpusHash=afterHash;
  return next;
 }
-// 叠加字段：publishedW3 不比对、但在语料里的键。a3cap-data 为四件容器登记了 capacityMl；先核验其审批回执。
-export async function approvedOverlayReverts(entries){
- const m=await import('../world/design/a3cap-data-approval.mjs');
- const hit=entries.filter(x=>Object.hasOwn(m.capacities,x.id)&&x.entity.capacityMl===m.capacities[x.id]);
- if(hit.length)await m.verifyPublished();
- return hit.map(x=>({id:x.id,parts:['capacityMl'],remove:true,source:'a3cap-data 已审叠加层（revision a3cap-data-1）：capacityMl'}));
-}
 export function fixedSample(entries,seed,count=10){
  if(!/^[0-9a-f]{64}$/.test(seed))throw new Error('无效抽样种子');
  const rows=[...entries].sort((a,b)=>a.id.localeCompare(b.id));let counter=0;
@@ -61,7 +54,7 @@ export function fixedSample(entries,seed,count=10){
 }
 export async function publishedW3(world){
  const block=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8')),entries=[],batches=[],errors=[],explained=[];
- const supersedes=await readApprovedSupersedes(),resolveTag=createTagSourceResolver({world});
+ const supersedes=await readApprovedSupersedes(),resolveTag=createTagSourceResolver();
  for(const [label,root,bones,revision,context,validate]of [
   ['家用首批','world/drafts/w3',economyW3(world),w3Revision,w3Context,validateW3Draft],
   ['行商工艺','world/drafts/w3/trades',economyW3Trades(world),tradesRevision,w3Context,validateTradesDraft],
@@ -112,7 +105,7 @@ export function validateScores(report,entries){
 async function main(){
  const {entries,audit,corpusHash,explained}=await publishedW3(await loadWorld());let report;
  try{report=JSON.parse(await fs.readFile(scorePath,'utf8'));if(report.corpusHash!==corpusHash){
-  if(process.argv.includes('--recompute-corpus-hash')){if(process.argv.includes('--check'))throw new Error('--recompute-corpus-hash 会写 wave-score.json，不能与 --check 同用');report=recomputeCorpusHash(report,entries,[...explained,...await approvedOverlayReverts(entries)]);report.audit=audit;await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
+  if(process.argv.includes('--recompute-corpus-hash')){if(process.argv.includes('--check'))throw new Error('--recompute-corpus-hash 会写 wave-score.json，不能与 --check 同用');report=recomputeCorpusHash(report,entries,[...explained,...await overlayFieldReverts(entries)]);report.audit=audit;await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
   else if(process.argv.includes('--accept-fact-corrections')){report=acceptFactCorrections(report,entries);report.audit=audit;await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
   else throw new Error('已固定样本的正式内容改变，不自动重抽（变化全部来自已审批回执或叠加层时，可用 --recompute-corpus-hash 按回执重算）');}}
  catch(error){if(error.code!=='ENOENT')throw error;if(process.argv.includes('--check'))throw new Error(`${scorePath} 缺失：--check 只检查，不创建样本文件`);const seed=randomBytes(32).toString('hex');report={version:1,createdAt:new Date().toISOString(),seed,algorithm:'按id排序后，以SHA256(seed:counter)拒绝采样执行Fisher-Yates，取前10；创建后不重抽',corpusHash,audit,rubric:{range:'1欠缺、2明显不足、3合格但普通、4充分且有辨识、5有突出可核验细节',voiceScope:'物品配方仍评说话方式辨识度：看作者或使用者叙述视角、行业措辞、信息取舍及句式是否可辨认。没有NPC对白不免评；共同目录格式不是扣分本身，换名即可套用的通用话语不能得高分。',threshold:'60个单项平均至少4，任何单项至少3；同时列出逐条及逐维度均分，不能用总均分掩盖不足。'},samples:fixedSample(entries,seed).map(x=>({id:x.id,name:x.entity.name,kind:x.kind,source:x.source,entityHash:hashContent(x.entity),ratings:Object.fromEntries(dimensions.map(key=>[key,{score:null,quote:'',reason:''}]))}))};await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}

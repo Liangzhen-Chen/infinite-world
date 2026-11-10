@@ -5,7 +5,6 @@
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
-import {deriveItemAttributes} from '../server-plugin/item-class.mjs';
 import {revision as p1Revision,root as p1Root,frozenEntries,draftFor,contextFor,getPath,setPath} from '../world/design/p1-revision-approval.mjs';
 
 // 字段路径文本 -> 路径：`site.resources[id=adit_ore].item` -> ['site','resources',{id:'adit_ore'},'item']
@@ -66,21 +65,50 @@ export function applySupersedes(rows,receiptFile,supersedes){
  return applied;
 }
 
-// ---------------------------------------------------------------- 已审叠加层
+// ---------------------------------------------------------------- 已审叠加层登记表
 // 设计源（骨架）发布之后，后续已审批的层会给正式条目叠加字段（用途标签、容量……）。
-// 叠加层的多出内容必须能指到某个已审批层的记录；指不到来源的多出内容仍然报错。
-// 来源只有两类：
-//   1 已审批叠加批的记录（a3w-props 的用途标签；经该批 verifyPublished 核验回执）；
-//   2 规则层派生：水分>0 且饱腹为 0 的物品按 validateDrinkable（server-plugin/item-class.mjs）必须带 drinkable，标签由规则推出，没有逐条审批记录。
-// 来源核验按需惰性执行，核验失败则视为没有来源并带上失败原因。
-export function createTagSourceResolver({world,verifyPropsLayer=async()=>{const m=await import('../world/design/a3w-props-approval.mjs');await m.verifyPublished();return m.sources;}}){
- let layer,derived;const load=()=>layer??=verifyPropsLayer().then(sources=>({sources}),error=>({error:error.message}));
- // 派生属性（水分、饱腹）在运行时由 deriveItemAttributes 给出，已载入的世界行上没有；在副本上派生一次，与 validateDrinkable 同一口径。
- const derive=id=>{if(!derived){const w=structuredClone(world);deriveItemAttributes(w);derived=new Map(w.items.map(i=>[i.id,i.nutrientContent]));}return derived.get(id);};
- return async(item,tag)=>{
-  if(tag==='drinkable'){const n=derive(item.id);if((n?.hydration??0)>0&&(n?.satiety??0)===0)return{source:'规则层 validateDrinkable：派生水分>0且饱腹0的物品必须带 drinkable（无逐条审批记录）'};}
-  const l=await load();
-  if(l.error)return{error:`a3w-props 回执核验失败：${l.error}`};
-  return l.sources[item.id]?.includes(tag)?{source:`a3w-props 已审叠加层（revision a3w-props-1）`}:null;
+// 消费方不点名具体的叠加批：只遍历下面的登记表。登记表只收录“已有审批记录、verifyPublished 能通过”的叠加层；
+// 登记了但核验不通过一律报错。没有审批记录的变化（如 clay_oil_lamp 的 lifecycle）不得登记，照实判为无来源。
+// 每项经 load() 给出统一接口：{revision, fields:{<字段名>:{<物品id>:取值}}, verifyPublished}。
+// 各审批模块的导出形状不同，在这一层适配；审批模块与其审批数据不改。
+export const APPROVED_OVERLAYS=[
+ {name:'a3w-props',load:async()=>{const m=await import('../world/design/a3w-props-approval.mjs');return{revision:m.revision,fields:{tags:m.sources},verifyPublished:()=>m.verifyPublished()};}},
+ {name:'a3cap-data',load:async()=>{const m=await import('../world/design/a3cap-data-approval.mjs');return{revision:m.revision,fields:{capacityMl:m.capacities},verifyPublished:()=>m.verifyPublished()};}},
+];
+// 加载并核验一层；核验不通过抛错（不当作“没有来源”）。同一登记表内只核验一次。
+function overlayLoader(registry){
+ const cache=new Map();
+ return overlay=>{
+  if(!cache.has(overlay))cache.set(overlay,(async()=>{
+   const layer=await overlay.load();
+   try{await layer.verifyPublished();}catch(error){throw new Error(`已审叠加层 ${overlay.name}（${layer.revision}）核验不通过：${error.message}`);}
+   return layer;
+  })());
+  return cache.get(overlay);
  };
+}
+// 标签来源：只有已审叠加层。返回 {source} 或 null（无来源）。
+export function createTagSourceResolver({registry=APPROVED_OVERLAYS}={}){
+ const loadLayer=overlayLoader(registry);
+ return async(item,tag)=>{
+  for(const overlay of registry){
+   const layer=await loadLayer(overlay);
+   if(layer.fields.tags?.[item.id]?.includes(tag))return{source:`${overlay.name} 已审叠加层（revision ${layer.revision}）`};
+  }
+  return null;
+ };
+}
+// 语料哈希回退用：叠加层写入的标量字段（非 tags）。条目当前值等于叠加层登记值才算已归因；先核验该层。
+export async function overlayFieldReverts(entries,{registry=APPROVED_OVERLAYS}={}){
+ const loadLayer=overlayLoader(registry),out=[];
+ for(const overlay of registry){
+  const probe=await overlay.load();
+  for(const field of Object.keys(probe.fields).filter(f=>f!=='tags')){
+   const hit=entries.filter(x=>Object.hasOwn(probe.fields[field],x.id)&&JSON.stringify(x.entity[field])===JSON.stringify(probe.fields[field][x.id]));
+   if(!hit.length)continue;
+   const layer=await loadLayer(overlay);
+   for(const x of hit)out.push({id:x.id,parts:[field],remove:true,source:`${overlay.name} 已审叠加层（revision ${layer.revision}）：${field}`});
+  }
+ }
+ return out;
 }

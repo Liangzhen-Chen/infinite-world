@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseFieldPath,parsePublication,applySupersedes,createTagSourceResolver} from '../tools/approved-revisions.mjs';
+import {parseFieldPath,parsePublication,applySupersedes,createTagSourceResolver,overlayFieldReverts} from '../tools/approved-revisions.mjs';
 import {fixedSample,recomputeCorpusHash} from '../tools/w3-wave-score.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 
@@ -27,13 +27,20 @@ test('应用取代：设计源值等于 before 才更新，等于 after 保持�
  assert.throws(()=>applySupersedes([{id:'item_a',basePrice:7}],'design/b.json',sups),/设计源值与修订回执不符/);
  assert.deepEqual(applySupersedes([],'design/b.json',sups),[]);
 });
-test('标签来源：无来源返回空；规则层 drinkable 需派生水分>0且饱腹0；叠加层核验失败不当作来源',async()=>{
- const world={items:[{id:'item_x',tags:['food']}],recipes:[]};
- const resolve=createTagSourceResolver({world,verifyPropsLayer:async()=>({item_y:['cut']})});
+const layer=(tags,verify=async()=>{})=>({name:'层',load:async()=>({revision:'r',fields:{tags,capacityMl:{item_c:250}},verifyPublished:verify})});
+test('标签来源：只认登记表里已审叠加层；无来源返回空；层核验失败报错',async()=>{
+ const resolve=createTagSourceResolver({registry:[layer({item_y:['cut']})]});
  assert.equal(await resolve({id:'item_y'},'cut').then(r=>Boolean(r?.source)),true);
  assert.equal(await resolve({id:'item_y'},'grip'),null);
- const failing=createTagSourceResolver({world,verifyPropsLayer:async()=>{throw new Error('回执失效');}});
- assert.match((await failing({id:'item_y'},'cut')).error,/回执失效/);
+ assert.equal(await resolve({id:'item_y'},'drinkable'),null);
+ const failing=createTagSourceResolver({registry:[layer({item_y:['cut']},async()=>{throw new Error('回执失效');})]});
+ await assert.rejects(()=>failing({id:'item_y'},'cut'),/核验不通过.*回执失效/);
+});
+test('叠加字段回退：值与登记相符才归因；层核验失败报错；无登记的字段不归因',async()=>{
+ const entries=[{id:'item_c',entity:{capacityMl:250}},{id:'item_d',entity:{capacityMl:250}},{id:'item_c2',entity:{lifecycle:{}}}];
+ const r=await overlayFieldReverts(entries,{registry:[layer({})]});
+ assert.deepEqual(r.map(x=>[x.id,x.parts[0],x.remove]),[['item_c','capacityMl',true]]);
+ await assert.rejects(()=>overlayFieldReverts(entries,{registry:[layer({},async()=>{throw new Error('坏');})]}),/核验不通过/);
 });
 test('语料哈希重算：变化可归因且样本未变才重算；有无法归因的变化仍判失效',()=>{
  const seed='ab'.repeat(32),old=Array.from({length:20},(_,i)=>({id:`entry_${i}`,entity:{description:`文字${i}`,tags:['t'],basePrice:12}}));
