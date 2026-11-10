@@ -9,7 +9,7 @@ import {loadWorld, loadRuntimeWorld} from '../tools/load-world.mjs';
 import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/runtime-world.mjs';
 import {canonical} from '../server-plugin/storage.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {entriesFor as matpropsEntries, validateDraft as validateMatprops, draftRoot as matpropsDraftRoot, condimentCard} from '../world/design/matprops-approval.mjs';
+import {entriesFor as matpropsEntries, draftRoot as matpropsDraftRoot, condimentCard, cardProfiles, summarizeApproval, verifyAll} from '../world/design/matprops-approval.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
 // 覆盖层的值被运行时值包含：对象逐字段包含，数组的每个元素都在运行时数组里有一个包含它的元素
@@ -28,7 +28,6 @@ test('每个审批批次里通过的整行回执，正式文件里的行与其�
   // 这两张卡（matprops-approval 的 D 卡与调味佐餐卡）的记录按它自己的口径校验（validateDraft：候选须与 entriesFor() 给出的盘上条目完全一致且带 basis），其余照旧比整行。
   const d12Roots = [matpropsDraftRoot, condimentCard.draftRoot].map(r => r.split(path.sep).join('/') + '/');
   const d12Entries = new Map((await matpropsEntries()).map(e => [e.id, e]));
-  const d12Approved = new Map();
   for (const summary of execSync('git ls-files world/drafts', {encoding: 'utf8'}).trim().split('\n').filter(f => /(^|\/)summary\.json$/.test(f))) {
     const dir = path.dirname(summary);
     for (const batch of J(summary).batches ?? []) for (const id of batch.ids ?? []) {
@@ -36,7 +35,6 @@ test('每个审批批次里通过的整行回执，正式文件里的行与其�
       if (!fs.existsSync(file)) continue;
       const record = J(file);
       if (d12Roots.some(r => summary.startsWith(r))) {
-        if (record.status === 'passed' && d12Entries.has(id)) d12Approved.set(id, [...d12Approved.get(id) ?? [], (await validateMatprops(record.draft, d12Entries.get(id))).length === 0]);
         continue;
       }
       if (record.status === 'passed' && record.draft?.row && formal.has(id)) approved.set(id, [...approved.get(id) ?? [], JSON.stringify(record.draft.row)]);
@@ -45,8 +43,22 @@ test('每个审批批次里通过的整行回执，正式文件里的行与其�
   assert.ok(approved.size > 50);
   const changed = [...approved].filter(([id, rows]) => !rows.includes(JSON.stringify(formal.get(id)))).map(([id]) => id);
   assert.deepEqual(changed, []);
-  assert.ok(d12Approved.size > 50);
-  assert.deepEqual([...d12Approved].filter(([, oks]) => !oks.includes(true)).map(([id]) => id), []);
+  // D12 的判定口径是 matprops-approval 的正式判定（L2 通过或人工核定），这里不另写规则：
+  // ① 每个 D12 目录里出现的记录，entriesFor 没覆盖到的一律失败并列出；② 两张卡逐条用 summarizeApproval 的结论对账（未决为空，通过+人工 = 该卡条目数）；③ verifyAll 整体通过。
+  const d12Uncovered = [], d12Ids = new Set(d12Entries.keys());
+  for (const summary of execSync('git ls-files world/drafts', {encoding: 'utf8'}).trim().split('\n').filter(f => /(^|\/)summary\.json$/.test(f) && d12Roots.some(r => f.startsWith(r)))) {
+    for (const batch of J(summary).batches ?? []) for (const id of batch.ids ?? []) if (fs.existsSync(path.join(path.dirname(summary), `${id}.json`)) && !d12Ids.has(id)) d12Uncovered.push(`${path.dirname(summary)}/${id}`);
+  }
+  assert.deepEqual(d12Uncovered, []);
+  const judged = [];
+  for (const card of Object.values(cardProfiles)) {
+    const entries = await card.entries(), st = await summarizeApproval(entries, card);
+    assert.deepEqual(st.unresolved, [], `${card.name} 有未决条目`);
+    assert.equal(st.l2.length + st.manual.length, entries.length, `${card.name} 通过+人工核定 ≠ 条目数`);
+    judged.push(...entries.map(e => e.id));
+  }
+  assert.deepEqual([...judged].sort(), [...d12Ids].sort());
+  assert.equal((await verifyAll()).ok, true);
 });
 
 test('机制字段只在覆盖层：已审行不带覆盖层给的字段与条目，loadWorld 返回的行就是盘上的行', async () => {
