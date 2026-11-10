@@ -8,7 +8,7 @@
 // 是否值得去由真实报价与工时价值比较得出（按需求排班）。
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 import {registerAdvance} from './advance-registry.mjs';
-import {recordsWhere} from './storage.mjs';
+import {recordsWhere,recordsMemo} from './storage.mjs';
 import {bodyDrain} from './primitives-body.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {npcAgeAt,householdWorkTime} from './npc-state.mjs';
@@ -197,6 +197,11 @@ function dutyRate(e,document,who,day,place){
  const minutes=daySlots(e,document.state,who,day).reduce((n,r)=>n+(r.slot&&onDuty(r.slot,place)&&!r.slot.services?.includes('trade')?r.end-r.start:0),0);
  return minutes?laborValue(e,document,{worker:who,observer:who}).daily/minutes:0;
 }
+// 本人的市场成交行：state.records 里 category 为 market_trade 的行按卖家分组（行序与 recordsWhere 同序）。
+// 派生自 records 对象本身，只读 market_trade 一个类别：推进期（withRecordIndex）内按 records 身份缓存，写到 market_trade 行才失效；
+// 不在索引内（深度 0）时 recordsMemo 直接重建，结果相同。
+const tradeRowsBySeller=Symbol('market_trade rows by seller');
+const salesOf=(state,who)=>recordsMemo(state.records,tradeRowsBySeller,()=>{const rows=new Map();for(const r of recordsWhere(state.records,'category','market_trade')){let list=rows.get(r.seller);if(!list)rows.set(r.seller,list=[]);list.push(r);}return rows;},{categories:['market_trade']}).get(who)??[];
 function forgone(e,document,who,trip,taken={}){
  const state=document.state,day=Math.floor(trip.departAt/DAY)*DAY;let trade=0,work=0,duty=0;
  const job=personEmployment(e,state,who,trip.departAt)?.value,place=workplaceOf(e,state,who);
@@ -214,7 +219,7 @@ function forgone(e,document,who,trip,taken={}){
  let loss=0;
  if(trade){
   const open=daySlots(e,state,who,day).reduce((n,r)=>n+(r.slot?.services?.includes('trade')?r.end-r.start:0),0);
-  const since=trip.departAt-7*DAY,sales=recordsWhere(state.records,'category','market_trade').filter(r=>r.seller===who&&r.minute>=since&&r.minute<=state.minute);
+  const since=trip.departAt-7*DAY,sales=salesOf(state,who).filter(r=>r.minute>=since&&r.minute<=state.minute);
   const read=stateReader(marketState(state,who)),shelf=()=>Object.keys(state.npcs[who]?.inventory??{}).reduce((n,item)=>{
    const q=shopRead(e,state,who,day,`q:${item}`,()=>saleableStock(read,e,who,item).available)-(taken[item]??0);
    return q>0?n+(shopRead(e,state,who,day,`w:${item}:${q}`,()=>worth(e,state,{item,quantity:q,holder:who,location:state.npcs[who].location})??0)):n;},0);
