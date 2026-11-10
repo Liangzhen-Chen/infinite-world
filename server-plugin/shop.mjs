@@ -326,7 +326,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const members=personHousehold(engine,state,owner).value?.members??[owner];
  // 缓存范围：游标按 revision；带 memo 的读取器（只读规划作用域 withReadScope，或 recordIndex 推进内的 stateReader）按状态对象。
  // 没有 memo 的朴素读取器（作用域外的 documentReader）每次重算，这是等价测试用的对照旁路。
- // 约定：带 memo 的非游标读取器所暴露的 state 不得被原地改写；FIELDS_INDEX_CHECK=1 时 read-scope 的命中会重建复核（read-scope.mjs checkMemoHit）。
+ // 约定：带 memo 的非游标读取器所暴露的 state 不得被原地改写；没有运行时复核（命中时重建比对的做法未采用，理由见 read-scope.mjs 文件头），靠约定与等价测试保证。
  const cursor=d.cursor instanceof PatchCursor&&d.document===d.cursor.root?d.cursor:null;
  let read=cursor?householdSourceReads.get(cursor):null;
  if(!read||read.revision!==cursor?.revision||read.engine!==engine){
