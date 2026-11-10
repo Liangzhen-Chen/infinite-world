@@ -68,10 +68,10 @@ const N = {
   '--git-common-dir': '传给 git 的参数', '--exclude-standard': '传给 git 的参数', '--name-only': '传给 git 的参数', '--no-renames': '传给 git 的参数', '--others': '传给 git 的参数',
 };
 // 修饰参数 opt：每个都声明值的类型。flag 不带值；path 路径（只读实跑时必须落在仓库临时副本内部，越界判失败）；number 非负整数；id 单个标识（字母数字、下划线、连字符、点）；
-// list 逗号分隔的标识或编号；url 只声明、不得出现在只读入口里；enum:a|b 取值限定。声明了类型，入口里的值才能被校验（checkOptArgs）。
+// name 单个名字（可含中文，不含空白，不以 -- 开头）；list 逗号分隔的标识或编号；url 只声明、不得出现在只读入口里；enum:a|b 取值限定。声明了类型，入口里的值才能被校验（checkOptArgs）。
 const OPT = {
   '--actions-only': 'flag', '--authored-background': 'path', '--authorization-hash': 'id', '--batch': 'id', '--batch-manifest': 'path',
-  '--batches': 'list', '--by': 'id', '--budget': 'number', '--budget-proof': 'path', '--budget-root': 'path', '--budget-yuan': 'number', '--card': 'id',
+  '--batches': 'list', '--by': 'name', '--budget': 'number', '--budget-proof': 'path', '--budget-root': 'path', '--budget-yuan': 'number', '--card': 'id',
   '--catalog': 'path', '--combat': 'flag', '--compact-request': 'flag', '--compare': 'path', '--require-harvest': 'flag', '--concurrency': 'number', '--config': 'path',
   '--contact-routine-only': 'flag', '--controlled-revision': 'path', '--corpus': 'path', '--count': 'number', '--counties': 'number',
   '--days': 'number', '--deps': 'flag', '--depth': 'number', '--design': 'path', '--diagnostics': 'flag', '--dir': 'path', '--directory': 'path',
@@ -134,6 +134,7 @@ export function checkOptArgs(args, root) {
       if (!inside(p) || !inside(real)) bad.push(`${args[i - 1]} ${v}：路径越出临时副本`);
     } else if (type === 'number') { if (!/^\d+$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为非负整数`); }
     else if (type === 'id') { if (!/^[\w.-]+$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为单个标识`); }
+    else if (type === 'name') { if (!/^\S+$/u.test(v)) bad.push(`${args[i - 1]} ${v}：应为单个名字（可含中文，不含空白）`); }
     else if (type === 'list') { if (!/^[\w.-]+(,[\w.-]+)*$/.test(v)) bad.push(`${args[i - 1]} ${v}：应为逗号分隔的标识`); }
     else if (type === 'url') bad.push(`${args[i - 1]}：url 类参数不得出现在只读入口`);
     else if (type.startsWith('enum:')) { if (!type.slice(5).split('|').includes(v)) bad.push(`${args[i - 1]} ${v}：取值应为 ${type.slice(5)}`); }

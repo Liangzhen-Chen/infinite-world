@@ -4,7 +4,7 @@ import path from 'node:path';
 import {randomInt} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent,stampL4Notes} from './content-pipeline.mjs';
+import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent,stampL4Notes,requireFlagValue} from './content-pipeline.mjs';
 
 export const counts=[45,45,45,45,40,40];
 export const revision='w5-rumors-v1';
@@ -91,5 +91,5 @@ if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.fil
  else if(process.argv[2]==='--review')console.log(JSON.stringify(await reviewSequential(n,{retryManual:process.argv.includes('--retry-manual')})));
  else if(process.argv[2]==='--publish')console.log(JSON.stringify(await publish(n,{write:true})));
  else if(process.argv[2]==='--sample')console.log(JSON.stringify(await sampleL4(n)));
- else if(process.argv[2]==='--l4')console.log(JSON.stringify(await recordL4(n,process.argv[4],process.argv[process.argv.indexOf('--by')+1])));
+ else if(process.argv[2]==='--l4')console.log(JSON.stringify(await recordL4(n,process.argv[4],requireFlagValue(process.argv,'--by'))));
 }

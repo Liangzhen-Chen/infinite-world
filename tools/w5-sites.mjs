@@ -7,7 +7,7 @@ import {randomUUID} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent,stampL4Notes} from './content-pipeline.mjs';
+import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent,stampL4Notes,requireFlagValue} from './content-pipeline.mjs';
 import {readApprovedSupersedes,applySupersedes} from './approved-revisions.mjs';
 import {locationTraits} from '../server-plugin/traits.mjs';
 
@@ -264,6 +264,6 @@ if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.fil
  if(process.argv.includes('--review')){const ids=arg('--ids');const {summary:s}=await review(n,{retryManual:process.argv.includes('--retry-manual'),ids:ids?ids.split(','):null});
   console.log(JSON.stringify({total:s.total,passed:s.passed,manual:s.manual,pending:s.pending,card:s.budget?.cards?.[BATCHES[n].card]}));}
  if(process.argv.includes('--review-seq'))console.log(JSON.stringify(await reviewSequential(n,{retryManual:process.argv.includes('--retry-manual')})));
- if(process.argv.includes('--l4'))console.log(JSON.stringify(await recordL4(n,arg('--l4'),arg('--by'))));
+ if(process.argv.includes('--l4'))console.log(JSON.stringify(await recordL4(n,arg('--l4'),requireFlagValue(process.argv,'--by'))));
  if(process.argv.includes('--publish')||process.argv.includes('--dry-run'))console.log(JSON.stringify(await publish(n,{write:process.argv.includes('--publish')})));
 }

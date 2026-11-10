@@ -73,7 +73,7 @@ export function pipelineL1(validateDraft) {
     return extra.length ? { ...(Array.isArray(result) ? { warnings: [] } : result), errors: [...errors, ...extra] } : result;
   };
 }
-function reviewIssues(review) {
+export function reviewIssues(review) {
   if (review?.kind === MANUAL_REWRITE_REVIEW_KIND) return [];
   if (!review || !Array.isArray(review.contradictions)) throw new Error('事实审查缺少 contradictions 数组');
   for (const row of review.contradictions) {
@@ -354,6 +354,12 @@ export function assertL4Reviewer(row, by) {
 }
 // 写 L4 阅读记录的通用路径：给每条 note 记上审查者 by（--by 给出），人工改写条目的 by 在写入时就校验，不等到发布。
 // rows 是该批条目的当前记录（用来查改写历史）；notes 是 [{id, note, ...}]。返回新数组，不改入参。
+// 取命令行开关的值：开关不存在，或下一个参数缺失 / 以 -- 开头（那是另一个开关），都报错，不会误取别的参数当值。
+export function requireFlagValue(argv, flag) {
+  const at = argv.indexOf(flag), value = at < 0 ? undefined : argv[at + 1];
+  if (value === undefined || String(value).startsWith('--') || !String(value).trim()) throw new Error(`${flag} 缺值：必须紧跟一个不以 -- 开头的值`);
+  return value;
+}
 export function stampL4Notes(notes, by, rows = []) {
   if (!Array.isArray(notes)) throw new Error('L4 阅读记录须为数组');
   if (!normReviewer(by)) throw new Error('--by 不能为空：L4 阅读记录必须记录审查者');

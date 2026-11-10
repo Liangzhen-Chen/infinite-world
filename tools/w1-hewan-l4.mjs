@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
-import {hashContent,rowFingerprintShape,stampL4Notes} from './content-pipeline.mjs';
+import {hashContent,rowFingerprintShape,stampL4Notes,requireFlagValue} from './content-pipeline.mjs';
 const root='world/drafts/w1/hewan',read=async p=>JSON.parse(await fs.readFile(p,'utf8')),write=(p,x)=>fs.writeFile(p,JSON.stringify(x,null,2)+'\n');
 // 用法：node tools/w1-hewan-l4.mjs --by <L4审查者>
-const by=process.argv[process.argv.indexOf('--by')+1];
+const by=requireFlagValue(process.argv,'--by');
 // Notes record the actual fixed samples and flagged text read on 2026-10-10.
 const notes={
  npc_hw_miaozhen:'复读修正全文：公开描写与台词已删去本人视力秘密，记忆不再保证种粒未沤坏；年龄67、家庭成员与筛种地点一致。',

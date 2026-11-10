@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stampL4Notes, MANUAL_REWRITE_REVIEW_KIND } from './content-pipeline.mjs';
+import { stampL4Notes, requireFlagValue, reviewIssues, hashContent, rowFingerprintShape, MANUAL_REWRITE_REVIEW_KIND } from './content-pipeline.mjs';
 
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const write = (file, data) => { const tmp = `${file}.${process.pid}.tmp`; fs.writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`); fs.renameSync(tmp, file); };
@@ -25,6 +25,15 @@ export function approveL4({ root, batch: index, notes, by, approve = false, now 
   const stamped = stampL4Notes(notes.map(({ id, note }) => ({ id, note })), by, rows);
   const merged = [...(batch.l4?.notes ?? []).filter(old => !stamped.some(n => n.id === old.id)), ...stamped];
   if (approve) {
+    // 门槛与 npc-depth-l4 / w1-villages-l4 一致：退回名单清空、指纹一致、全部 passed、无 hard、无需系统性修复。
+    if (batch.l4?.rejection?.ids?.length) throw new Error(`批次仍有被 L4 退回未处理的条目：${batch.l4.rejection.ids.join(',')}`);
+    if (hashContent(rows.map(rowFingerprintShape)) !== batch.fingerprint) throw new Error('批次指纹与条目内容不一致');
+    const summaryRow = fs.existsSync(path.join(root, 'summary.json')) ? read(path.join(root, 'summary.json')).batches?.find(b => b.index === index) : null;
+    if (summaryRow && summaryRow.fingerprint !== batch.fingerprint) throw new Error('批次指纹与 summary.json 不一致');
+    if (batch.needsSystemicRepair) throw new Error('批次需要系统性修复（人工队列超过 10%）');
+    if ((batch.manual ?? []).length || (batch.pending ?? []).length) throw new Error('批次仍有 manual/pending 条目');
+    const notPassed = rows.filter(row => row.status !== 'passed' || row.errors?.length || reviewIssues(row.review).some(issue => issue.severity === 'hard')).map(row => row.id);
+    if (notPassed.length) throw new Error(`存在未通过或有 hard 矛盾的条目：${notPassed.join(',')}`);
     const manual = rows.filter(row => row.review?.kind === MANUAL_REWRITE_REVIEW_KIND || row.manualRewrite !== undefined).map(row => row.id);
     const missing = [...new Set([...(batch.sample ?? []), ...(batch.flagged ?? []), ...manual])].filter(id => !merged.some(n => n.id === id && typeof n.note === 'string' && n.note.trim()));
     if (missing.length) throw new Error(`批准前缺少阅读记录：${missing.join(',')}`);
@@ -39,13 +48,11 @@ export function approveL4({ root, batch: index, notes, by, approve = false, now 
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const args = process.argv.slice(2), opt = {};
+  const args = process.argv.slice(2), valued = ['--root', '--batch', '--notes', '--by'];
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === '--approve') opt.approve = true;
-    else if (['--root', '--batch', '--notes', '--by'].includes(args[i])) opt[args[i].slice(2)] = args[++i];
-    else throw new Error(`未知参数 ${args[i]}`);
+    if (valued.includes(args[i])) { requireFlagValue(args, args[i]); i++; }
+    else if (args[i] !== '--approve') throw new Error(`未知参数 ${args[i]}`);
   }
-  if (!opt.notes) throw new Error('需要 --notes');
-  const l4 = approveL4({ root: opt.root, batch: Number(opt.batch), notes: read(opt.notes), by: opt.by, approve: !!opt.approve });
+  const l4 = approveL4({ root: requireFlagValue(args, '--root'), batch: Number(requireFlagValue(args, '--batch')), notes: read(requireFlagValue(args, '--notes')), by: requireFlagValue(args, '--by'), approve: args.includes('--approve') });
   console.log(JSON.stringify({ approved: l4.approved, notes: l4.notes.length }));
 }
