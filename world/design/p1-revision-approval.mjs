@@ -20,7 +20,7 @@ const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 // A field path is a list of object keys and {id} selectors into arrays.
 const step=(value,part)=>typeof part==='string'?value?.[part]:value?.find?.(r=>r?.id===part.id);
 export const getPath=(row,parts)=>parts.reduce(step,row);
-function setPath(row,parts,value){const parent=getPath(row,parts.slice(0,-1));assert.ok(parent&&typeof parts.at(-1)==='string','修订路径无效');parent[parts.at(-1)]=structuredClone(value);}
+export function setPath(row,parts,value){const parent=getPath(row,parts.slice(0,-1));assert.ok(parent&&typeof parts.at(-1)==='string','修订路径无效');parent[parts.at(-1)]=structuredClone(value);}
 const pathLabel=parts=>parts.map(p=>typeof p==='string'?p:`[id=${p.id}]`).join('.').replaceAll('.[','[');
 const rowOf=(world,file,id)=>(file.endsWith('items.json')?world.items:file.endsWith('recipes.json')?world.recipes:world.locations).find(r=>r.id===id);
 

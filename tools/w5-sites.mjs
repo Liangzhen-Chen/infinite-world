@@ -8,6 +8,7 @@ import {loadWorld} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent} from './content-pipeline.mjs';
+import {readApprovedSupersedes,applySupersedes} from './approved-revisions.mjs';
 import {locationTraits} from '../server-plugin/traits.mjs';
 
 export const BATCHES={1:{card:'T113'},2:{card:'T114'},3:{card:'T115'}};
@@ -176,6 +177,8 @@ export async function loadBatch(n){
  const mod=await design(n),world=await loadWorld();
  const blocklist=JSON.parse(await fs.readFile(new URL('../world/meta/blocklist.json',import.meta.url),'utf8'));
  const batch=buildBatch(mod.sites,world);
+ // 已审批的修订回执（如 P1）声明取代了设计源的某些值：合并用的批次行按回执更新，评审用的骨架/上下文不动（它们的指纹绑定审批时的设计稿）。
+ applySupersedes([...batch.locations,...batch.patches],`world/design/w5-sites-${n}.mjs`,await readApprovedSupersedes());
  // Review context is the world without this batch, identical before and after publication.
  const base=withoutSites(world,batch,mod.priorNoMechanics);
  const revs=mod.ENTRY_REVISIONS??{};

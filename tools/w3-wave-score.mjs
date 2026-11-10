@@ -5,6 +5,7 @@ import {economyW3} from '../world/design/economy-w3.mjs';
 import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
 import {economyW3Journey} from '../world/design/economy-w3-journey.mjs';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
+import {readApprovedSupersedes,applySupersedes,createTagSourceResolver} from './approved-revisions.mjs';
 import {w3Context,w3Revision,validateW3Draft} from './w3-content.mjs';
 import {tradesRevision,validateTradesDraft} from './w3-trades.mjs';
 import {journeyContext,journeyRevision} from './w3-journey.mjs';
@@ -31,7 +32,8 @@ export function fixedSample(entries,seed,count=10){
  return rows.slice(0,count);
 }
 export async function publishedW3(world){
- const block=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8')),entries=[],batches=[];
+ const block=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8')),entries=[],batches=[],errors=[],explained=[];
+ const supersedes=await readApprovedSupersedes(),resolveTag=createTagSourceResolver({world});
  for(const [label,root,bones,revision,context,validate]of [
   ['家用首批','world/drafts/w3',economyW3(world),w3Revision,w3Context,validateW3Draft],
   ['行商工艺','world/drafts/w3/trades',economyW3Trades(world),tradesRevision,w3Context,validateTradesDraft],
@@ -39,20 +41,34 @@ export async function publishedW3(world){
  ])for(const kind of ['items','recipes']){
   const approved=await readApprovedContent(`${root}/${kind}`,bones[kind],{contextFor:e=>context(world,bones,e),revision});
   if(approved.length!==bones[kind].length)throw new Error(`${label}/${kind}仍有待审`);
+  // 设计源骨架上被已审批修订回执取代的值，按回执更新后再比对（读取在审批指纹核验之后，核验仍用审批时的骨架）。
+  const effective=structuredClone(bones[kind]);
+  for(const a of applySupersedes(effective,`${root}/bones.json`,supersedes))explained.push({id:a.id,parts:a.parts,old:a.before,source:`修订回执 ${a.revision}：${a.receiptFile}#${a.id} ${a.field}`});
   const summary=JSON.parse(await fs.readFile(`${root}/${kind}/summary.json`,'utf8'));
   if(summary.manual||summary.pending||summary.passed!==bones[kind].length)throw new Error(`${label}/${kind}摘要仍有待审`);
   for(const b of summary.batches)batches.push({label,kind,index:b.index,count:b.count,fingerprint:b.fingerprint});
   for(const bone of bones[kind]){
    const draft=approved.find(x=>x.id===bone.id),official=world[kind].find(x=>x.id===bone.id);if(!official)throw new Error(`未发布 ${bone.id}`);
-   const {processFacts,...mechanics}=bone,expected={...mechanics,...draft};
-   for(const [key,value]of Object.entries(expected))if(JSON.stringify(official[key])!==JSON.stringify(value))throw new Error(`正式条目不同于已审骨架/文字 ${bone.id}/${key}`);
-   const checks=validate(draft,bone,block,context(world,bones,bone));if(checks.errors.length)throw new Error(`${bone.id}: ${checks.errors.join('；')}`);
+   const {processFacts,...mechanics}=effective.find(x=>x.id===bone.id),expected={...mechanics,...draft};
+   for(const [key,value]of Object.entries(expected)){
+    if(JSON.stringify(official[key])===JSON.stringify(value))continue;
+    // 用途标签是后续已审叠加层写入的：正式值须包含骨架值，且多出的每个标签都能指到已审批来源；找不到来源的仍报错。
+    if(key==='tags'&&Array.isArray(value)&&Array.isArray(official.tags)&&value.every(t=>official.tags.includes(t))){
+     const extra=official.tags.filter(t=>!value.includes(t)),sources=[];
+     for(const tag of extra){const r=await resolveTag(official,tag);if(r?.source)sources.push(`${tag}：${r.source}`);else errors.push(`正式条目 ${bone.id}/tags 多出的标签 ${tag} 找不到已审批来源${r?.error?'（'+r.error+'）':''}`);}
+     if(extra.length&&sources.length===extra.length){explained.push({id:bone.id,parts:['tags'],old:value,source:sources.join('；')});continue;}
+     if(extra.length)continue;
+    }
+    errors.push(`正式条目不同于已审骨架/文字 ${bone.id}/${key}`);
+   }
+   const checks=validate(draft,bone,block,context(world,bones,bone));if(checks.errors.length)errors.push(`${bone.id}: ${checks.errors.join('；')}`);
    entries.push({id:bone.id,kind,source:label,entity:official});
   }
  }
+ if(errors.length)throw new Error(errors.join('\n'));
  entries.sort((a,b)=>a.id.localeCompare(b.id));if(new Set(entries.map(x=>x.id)).size!==entries.length)throw new Error('W3条目重复');
  if(world.items.length<400||world.recipes.length<200)throw new Error('正式目录未达到400/200');
- return{entries,audit:{publishedItems:world.items.length,publishedRecipes:world.recipes.length,w3Items:entries.filter(x=>x.kind==='items').length,w3Recipes:entries.filter(x=>x.kind==='recipes').length,approvedEntries:entries.length,pending:0,manual:0,batches:batches.length},corpusHash:hashContent(entries)};
+ return{entries,audit:{publishedItems:world.items.length,publishedRecipes:world.recipes.length,w3Items:entries.filter(x=>x.kind==='items').length,w3Recipes:entries.filter(x=>x.kind==='recipes').length,approvedEntries:entries.length,pending:0,manual:0,batches:batches.length},corpusHash:hashContent(entries),explained};
 }
 export function validateScores(report,entries){
  if(report.corpusHash!==hashContent(entries))throw new Error('正式内容已改变，评分依据失效');
