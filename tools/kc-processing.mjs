@@ -167,6 +167,8 @@ function recipeBase(id, name, {skill, workstation, tools, minutes, process, kind
 //   烧炭：得率 = 炭化得率 charYield（占投入干重）× 干重占比 (1 − 含水率)。
 //   属性任一必需维度未知，返回 null，调用方沿用该类的 yield 常数（正式表 classes 为空时即如此，生成结果不变）。
 //   晾干、脱壳类：现有 PROCESSES 里没有对应过程，本卡不新增（见汇报）。
+// 属性派生产率取整后的容差与可操作批量上限。
+const DERIVED_TOLERANCE = 0.10, DERIVED_MAX_UNITS = 12;
 export function processYield(p, props, loss) {
   const known = k => props?.[k]?.known ? props[k].value : null;
   if (p.yieldFrom === 'mill') { const e = known('edibleFraction'); return e === null ? null : e * (1 - loss); }
@@ -194,11 +196,23 @@ export function generate(root = ROOT) {
   for (const p of PROCESSES) for (const [input, product] of p.members) {
     if (!p.binder && covered(input, product)) continue; // 已有作者写的同类配方（例如筛磨燕麦粉、选矿冶炼），不重复
     const inKg = kg(items, input), outKg = kg(items, product);
-    const yld = (p.yieldFrom && processYield(p, materialProps(engine, input), loss)) ?? p.yield;
+    const derivedYld = p.yieldFrom ? processYield(p, materialProps(engine, input), loss) : null;
+    const yld = derivedYld ?? p.yield;
     if (!(yld > 0)) continue; // 属性推出零产率：这一对原料做不出东西，不生成配方
     // 一批取几份原料：至少够出 1 份产物；调墨这类加水成液的按份配（成品重量里有水，不按重量算产率）
     let units = p.batch ?? p.perOutput ?? 1;
     if (!p.batch) while (Math.floor(units * inKg * yld / outKg + 1e-9) < 1) units++;
+    // 属性派生的产率（yieldFrom）：产物按整份取整，单批取整会把产率压低（22.5% 取整后只剩 12.5%）。整类处理：选最小的可操作批量（≤ DERIVED_MAX_UNITS 份原料），
+    // 使取整后的实际产率不低于派生产率的 (1 − DERIVED_TOLERANCE)；批量内都达不到时取偏差最小者。常数产率的类不动。
+    if (!p.batch && derivedYld !== null) {
+      const real = u => Math.min(200, Math.floor(u * inKg * yld / outKg + 1e-9)) * outKg / (u * inKg);
+      let best = units;
+      for (let u = units; u <= Math.max(units, DERIVED_MAX_UNITS); u++) {
+        if (real(u) > real(best) + 1e-12) best = u;
+        if (real(u) >= yld * (1 - DERIVED_TOLERANCE) - 1e-12) { best = u; break; }
+      }
+      units = best;
+    }
     const qty = p.batch ? 1 : Math.min(200, Math.floor(units * inKg * yld / outKg + 1e-9));
     const binders = p.binder ?? [null];
     for (const binder of binders) {
