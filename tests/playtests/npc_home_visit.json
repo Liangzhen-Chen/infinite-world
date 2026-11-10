@@ -46,9 +46,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player.coins",
-            "state.inventory"
+            "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -92,10 +95,8 @@
           "value": "bld_hw_home_15"
         },
         {
-          "kind": "unchanged",
-          "paths": [
-            "state.inventory"
-          ]
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ],
       "expectedTools": [
@@ -108,9 +109,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -125,9 +129,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "calls",
@@ -167,9 +174,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },

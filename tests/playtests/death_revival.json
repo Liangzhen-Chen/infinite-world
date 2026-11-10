@@ -119,10 +119,13 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins",
             "state.player.level"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -138,10 +141,13 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins",
             "state.player.level"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -160,10 +166,13 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins",
             "state.player.level"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -199,10 +208,13 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins",
             "state.player.level"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -238,10 +250,13 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins",
             "state.player.level"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -308,10 +323,13 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins",
             "state.player.level"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -387,10 +405,13 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins",
             "state.player.level"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },

@@ -100,7 +100,8 @@
       "input": "我问林穗是否实际注意到墙上的记号；如果她没看见或不在场，就接受她不知道，不替她补记忆。",
       "assertions": [
         {"kind": "exists", "path": "state.npcs.npc_hw_linsui", "value": true},
-        {"kind": "unchanged", "paths": ["state.player.coins", "state.inventory"]}
+        {"kind": "unchanged", "paths": ["state.player.coins"]},
+        {"kind": "holdingsUnchanged", "path": "state.inventory"}
       ]
     },
     {

@@ -277,9 +277,12 @@
           "kind": "unchanged",
           "paths": [
             "state.player.coins",
-            "state.inventory",
             "state.quests"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -290,9 +293,12 @@
           "kind": "unchanged",
           "paths": [
             "state.player.coins",
-            "state.inventory",
             "state.quests"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },

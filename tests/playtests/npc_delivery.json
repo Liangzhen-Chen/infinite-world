@@ -123,9 +123,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "records",
@@ -143,9 +146,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player.coins",
-            "state.inventory"
+            "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "records",
