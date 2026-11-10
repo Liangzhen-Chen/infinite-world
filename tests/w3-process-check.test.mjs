@@ -372,6 +372,11 @@ test('骨架外期限：保存期以骨架为准', () => {
   assert.match(fxJoin('两日内用完。', fxFacts), /骨架外期限「两日」/);
   assert.match(fxJoin('五天内食用。', fxFacts), /骨架外期限「五天」/);
   assert.match(fxJoin('可保存七天。', fxFacts), /骨架外期限「七天」/);
+  assert.match(fxJoin('存放五日。', fxFacts), /骨架外期限「五日」/);
+  assert.match(fxJoin('五天用完。', fxFacts), /骨架外期限「五天」/);
+  assert.match(fxJoin('食用期十天。', fxFacts), /骨架外期限「十天」/);
+  assert.deepEqual(fx('晾半天，一天之中翻两次，再晾一天。', fxFacts), [], '晾半天、一天之中不是期限');
+  assert.match(fxJoin('七天之内食用。', fxFacts), /骨架外期限「七天」/);
   assert.deepEqual(fx('三天内食用。', fxFacts), [], '等于骨架保存期');
 });
 
@@ -451,4 +456,17 @@ test('单位补全：g、ml、kg、钱、斗、合、尺', () => {
   assert.deepEqual(fx('取500g黑麦粉。', fxFacts), [], '等于材料重量');
   assert.deepEqual(fx('用尺规量好，三合土垫底。', fxFacts), [], '尺规、三合土不是单位');
   assert.deepEqual(fx('交付一件折口零钱夹。', fxFacts), [], '零钱夹里的零钱不是数量');
+});
+
+test('第5轮误报：度的温度语境、贮存安全写法、百合、烙印', () => {
+  assert.deepEqual(fx('温水后一度翻动。', fxFacts), [], '一度是次数');
+  assert.deepEqual(fx('水温升高后一度翻动。', fxFacts), []);
+  assert.match(fxJoin('加热到九十度。', fxFacts), /骨架外数量「九十度」/);
+  assert.match(fxJoin('折成九十度角。', fxFacts), /骨架外数量「九十度」/);
+  for (const text of ['远离明火存放。', '忌见明火。', '避开明火，阴凉存放。']) assert.deepEqual(fx(text), [], text);
+  assert.match(fxJoin('置于明火上。'), /用火/);
+  assert.deepEqual(fx('取百合粉拌匀。', fxFacts), [], '百合不是数量');
+  assert.match(fxJoin('倒三合米。', fxFacts), /骨架外数量「三合」/);
+  assert.deepEqual(fx('在革面压出烙印。'), [], '烙印不是用火');
+  assert.match(fxJoin('把料烙熟。'), /用火/);
 });
