@@ -1,81 +1,81 @@
-// 只读入口一律不准写盘（审批 / 发布 / 内容工具里的 --verify、--check、--l1、--list、--summary、--dry-run、--dry-publish、--show）。
-// 做法：把仓库复制到临时目录，逐个运行 tools/readonly-entries.mjs 登记的入口，比较运行前后的文件哈希，一个字节都不许变；
-// 同时扫描 world/design 与 tools，凡出现只读开关而未登记（也不在 EXEMPT）的脚本，测试失败——新增只读入口必须登记，才会被覆盖。
-// 内容变了算改写；内容没变但文件被重写（mtime 变）也算——只读入口不该碰文件。
-// 运行进程带 no-network 预加载，任何联网尝试直接报错；入口的退出码不断言（内容校验可以失败），只断言没有任何文件被改。
+// 只读入口登记完整性与静态扫描（日常层，秒级，不运行任何入口）。
+// 在仓库临时副本上实跑入口、比较文件哈希的部分是全量层：tests/readonly-entries-run-{1..4}.test.mjs（已列入 tools/smoke-tests.json 的 nightlyOnly）。
+//   1. tools/ 与 world/design（含子目录）下每个脚本里出现的每个 --xxx 形态字样（含注释、拼接、不带引号写法），都必须在 tools/cli-flags.mjs 归类；没登记的失败。
+//   2. 凡出现“只读”类开关（ro）的脚本，READONLY_ENTRIES 里必须有带该开关的入口（按脚本逐条核对；同名开关在该脚本里另有归类的走 FILE_FLAG_OVERRIDES）。
+//   3. 登记表不许过期：每个登记的开关、每个入口脚本都要还在；入口里的每个 --开关 都必须真的出现在该脚本源码里（被脚本解析）。
+//   4. 写类开关必须写明写哪些文件；全量层的分组数与文件数一致，且每组最坏耗时 < 3600 秒。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
-import {spawnSync} from 'node:child_process';
-import {createRequire} from 'node:module';
-import {pathToFileURL} from 'node:url';
-import {tmpRoot} from '../tools/tmp-root.mjs';
-import {RO_FLAGS, READONLY_ENTRIES, EXEMPT} from '../tools/readonly-entries.mjs';
+import {FLAGS, FILE_FLAG_OVERRIDES, FLAG_PATTERN} from '../tools/cli-flags.mjs';
+import {READONLY_ENTRIES, RUN_GROUPS, ENTRY_TIMEOUT_MS, COPY_ALLOWANCE_MS, SLOW_ENTRY_TIMEOUT_MS} from '../tools/readonly-entries.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const WRITE_CALL = /writeFile|appendFile|writeFileSync|\brename\(|\bmkdir\(|copyFile|\brm\(|unlink|createWriteStream|writeJSON|writeText/;
-const toolFiles = () => ['world/design', 'tools'].flatMap(d => fs.readdirSync(path.join(ROOT, d)).filter(f => f.endsWith('.mjs')).map(f => `${d}/${f}`));
-
-test('只读入口登记完整：脚本里出现的每个只读开关都已登记或写明豁免', () => {
-  const missing = [];
-  for (const file of toolFiles()) {
-    const text = fs.readFileSync(path.join(ROOT, file), 'utf8');
-    if (!/process\.argv/.test(text)) continue;
-    for (const flag of RO_FLAGS) {
-      if (!new RegExp(`['"]${flag}['"]`).test(text)) continue;
-      if (EXEMPT[file] || READONLY_ENTRIES.some(([f, ...args]) => f === file && args.includes(flag))) continue;
-      missing.push(`${file} ${flag}`);
-    }
-  }
-  assert.deepEqual(missing, [], '新增的只读入口须登记到 tools/readonly-entries.mjs');
-  for (const [file] of READONLY_ENTRIES) assert.ok(fs.existsSync(path.join(ROOT, file)), `登记的入口不存在 ${file}`);
-  for (const [file, why] of Object.entries(EXEMPT)) {
-    assert.ok(why.trim(), `豁免须写原因 ${file}`);
-    assert.ok(!WRITE_CALL.test(fs.readFileSync(path.join(ROOT, file), 'utf8')), `豁免的入口文件里不得有写盘调用 ${file}`);
-  }
-});
-
-const hashOf = p => crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex');
-function walk(dir, out = new Map()) {
-  for (const e of fs.readdirSync(dir, {withFileTypes: true})) {
+const SELF = new Set(['tools/cli-flags.mjs', 'tools/readonly-entries.mjs']);
+function scripts(dir, out = []) {
+  for (const e of fs.readdirSync(path.join(ROOT, dir), {withFileTypes: true})) {
     if (e.name === 'node_modules') continue;
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, out);
-    else { const s = fs.statSync(p); out.set(p, {size: s.size, mtime: s.mtimeMs}); }
+    const rel = `${dir}/${e.name}`;
+    if (e.isDirectory()) scripts(rel, out);
+    else if (/\.(mjs|js|cjs)$/.test(e.name) && !SELF.has(rel)) out.push(rel);
   }
   return out;
 }
+const files = ['world/design', 'tools'].flatMap(d => scripts(d));
+const texts = new Map(files.map(f => [f, fs.readFileSync(path.join(ROOT, f), 'utf8')]));
+const flagsIn = text => [...new Set(text.match(FLAG_PATTERN) ?? [])];
+const kindOf = (file, flag) => (FILE_FLAG_OVERRIDES[`${file} ${flag}`] ?? FLAGS[flag])?.kind;
 
-test('只读入口在仓库副本上运行前后，所有文件逐字节不变', {timeout: 3600_000}, () => {
-  const dest = fs.mkdtempSync(path.join(tmpRoot(), 'readonly-entries-'));
-  try {
-    const skip = new Set(['.git', 'node_modules', '.tmp', '测试报告']);
-    fs.cpSync(ROOT, dest, {recursive: true, filter: src => !skip.has(path.basename(src)) && !path.resolve(src).startsWith(path.resolve(tmpRoot()))});
-    // 依赖包只读借用：副本里放一个指向真实 node_modules 的链接（walk 与哈希都跳过它）
-    const nm = path.dirname(path.dirname(createRequire(import.meta.url).resolve('ajv/package.json')));
-    fs.symlinkSync(nm, path.join(dest, 'node_modules'), 'junction');
-    let snap = walk(dest);
-    const base = new Map([...snap.keys()].map(p => [p, hashOf(p)]));
-    const env = {...process.env};
-    for (const k of Object.keys(env)) if (/KEY|TOKEN|SECRET/i.test(k)) delete env[k];
-    const preload = pathToFileURL(path.join(ROOT, 'tests/fixtures/no-network-preload.mjs')).href;
-    const changed = [];
-    for (const [file, ...args] of READONLY_ENTRIES) {
-      const r = spawnSync(process.execPath, ['--import', preload, file, ...args], {cwd: dest, env, encoding: 'utf8', timeout: 180_000, maxBuffer: 1 << 26});
-      const now = walk(dest);
-      const diff = [];
-      for (const [p, s] of now) {
-        const o = snap.get(p);
-        if (!o) { diff.push(`新增 ${path.relative(dest, p)}`); base.set(p, hashOf(p)); }
-        else if (o.size !== s.size || o.mtime !== s.mtime) { const h = hashOf(p); diff.push(`${h !== base.get(p) ? '改写' : '原样重写'} ${path.relative(dest, p)}`); base.set(p, h); }
-      }
-      for (const p of snap.keys()) if (!now.has(p)) diff.push(`删除 ${path.relative(dest, p)}`);
-      assert.ok(!r.error || r.error.code !== 'ETIMEDOUT', `只读入口超时 ${file} ${args.join(' ')}`);
-      if (diff.length) changed.push(`${file} ${args.join(' ')} → ${diff.slice(0, 5).join('；')}${diff.length > 5 ? `…共${diff.length}` : ''}`);
-      snap = now;
+test('命令行开关登记完整：脚本里出现的每个 --xxx 都已归类（只读 / 写 / 修饰 / 非开关）', () => {
+  const missing = [];
+  for (const [file, text] of texts) for (const flag of flagsIn(text)) if (!kindOf(file, flag)) missing.push(`${file} ${flag}`);
+  assert.deepEqual(missing, [], '新增或改名的开关须登记到 tools/cli-flags.mjs，并归类为 ro / write / opt / nonflag');
+});
+
+test('只读开关都有实跑入口登记：脚本里出现的每个 ro 开关，READONLY_ENTRIES 里必须有带它的入口', () => {
+  const missing = [];
+  for (const [file, text] of texts) for (const flag of flagsIn(text)) {
+    if (kindOf(file, flag) !== 'ro') continue;
+    if (!READONLY_ENTRIES.some(([f, ...args]) => f === file && args.includes(flag))) missing.push(`${file} ${flag}`);
+  }
+  assert.deepEqual(missing, [], '只读开关须登记到 tools/readonly-entries.mjs 才会被全量层实跑覆盖；确实不是本脚本的开关，改在 FILE_FLAG_OVERRIDES 里归为 nonflag 并写明原因');
+});
+
+test('登记表不过期：开关、入口脚本都还在，入口里的 --开关 真的出现在该脚本源码里，写类开关写明写哪些文件', () => {
+  const seen = new Set([...texts.values()].flatMap(flagsIn));
+  assert.deepEqual(Object.keys(FLAGS).filter(f => !seen.has(f)), [], '登记了但任何脚本里都没有的开关');
+  for (const [key, v] of Object.entries(FILE_FLAG_OVERRIDES)) {
+    const [file, flag] = key.split(' ');
+    assert.ok(texts.get(file)?.includes(flag), `覆盖项对应的脚本里没有该开关 ${key}`);
+    assert.ok(v.note?.trim(), `覆盖项须写原因 ${key}`);
+  }
+  for (const [flag, v] of Object.entries(FLAGS)) {
+    assert.ok(['ro', 'write', 'opt', 'nonflag'].includes(v.kind), `未知类别 ${flag}`);
+    if (v.kind === 'write' || v.kind === 'nonflag') assert.ok(v.note?.trim(), `${v.kind} 开关须写明写哪些文件 / 是什么参数 ${flag}`);
+  }
+  for (const [file, ...args] of READONLY_ENTRIES) {
+    const text = texts.get(file);
+    assert.ok(text, `登记的入口不存在 ${file}`);
+    const flags = args.filter(x => x.startsWith('--'));
+    assert.ok(flags.length, `入口至少带一个开关 ${file}`);
+    for (const a of flags) {
+      assert.ok(text.includes(a), `入口 ${file} ${a}：脚本源码里没有这个开关`);
+      // 写类开关只允许和 --dry-run 同用（演练不落盘，正是要验证这一点）
+      const ok = ['ro', 'opt'].includes(kindOf(file, a)) || (kindOf(file, a) === 'write' && args.includes('--dry-run'));
+      assert.ok(ok, `入口只能带只读或修饰开关（写类开关须同带 --dry-run）：${file} ${a} → ${kindOf(file, a)}`);
     }
-    assert.deepEqual(changed, [], '只读入口不得写盘：写入应移到显式写命令（--review / --l4 / --publish / --write-summary），或输出到 stdout');
-  } finally { fs.rmSync(dest, {recursive: true, force: true}); }
+  }
+});
+
+test('全量层分组：测试文件数等于 RUN_GROUPS，每组最坏耗时（单条超时之和 + 复制余量）小于 3600 秒，且已列入 nightlyOnly', () => {
+  const runFiles = fs.readdirSync(path.join(ROOT, 'tests')).filter(f => /^readonly-entries-run-\d+\.test\.mjs$/.test(f));
+  assert.equal(runFiles.length, RUN_GROUPS, '全量层测试文件数应等于 RUN_GROUPS');
+  for (let g = 0; g < RUN_GROUPS; g++) {
+    const worst = READONLY_ENTRIES.filter((_, i) => i % RUN_GROUPS === g).reduce((n, [f]) => n + (SLOW_ENTRY_TIMEOUT_MS[f] ?? ENTRY_TIMEOUT_MS), COPY_ALLOWANCE_MS);
+    assert.ok(worst < 3_500_000, `第 ${g + 1} 组最坏耗时 ${worst / 1000} 秒，超出预算`);
+    assert.match(fs.readFileSync(path.join(ROOT, 'tests', `readonly-entries-run-${g + 1}.test.mjs`), 'utf8'), new RegExp(`runGroup\\(${g}\\)`), `第 ${g + 1} 个文件应跑第 ${g} 组`);
+  }
+  const heavy = JSON.parse(fs.readFileSync(path.join(ROOT, 'tools/smoke-tests.json'), 'utf8')).nightlyOnly;
+  for (const f of runFiles) assert.ok(heavy.includes(`tests/${f}`), `${f} 应列入 smoke-tests.json 的 nightlyOnly（合并层推迟到全量）`);
 });

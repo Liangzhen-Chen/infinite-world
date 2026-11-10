@@ -33,11 +33,13 @@ const smoke = [];
 for (const [, list] of [...byFamily].sort((a, b) => a[0].localeCompare(b[0]))) smoke.push(...list.sort((a, b) => score(b) - score(a) || a.localeCompare(b)).slice(0, SMOKE_PER_FAMILY));
 smoke.sort();
 const worst = n => Math.max(...stat(n).map(r => r.secs));
-const heavy = names.filter(n => stat(n).some(r => r.exit === 124 || r.secs >= HEAVY_SECS));
+// 按设计放全量层的测试（不论日志耗时多少）：只读入口实跑比对，拆成 4 个文件并行，每个文件内最坏约 3000 秒。
+const NIGHTLY_BY_DESIGN = [1, 2, 3, 4].map(i => `tests/readonly-entries-run-${i}.test.mjs`);
+const heavy = [...new Set([...names.filter(n => stat(n).some(r => r.exit === 124 || r.secs >= HEAVY_SECS)), ...NIGHTLY_BY_DESIGN])].sort();
 console.log(JSON.stringify({
     basis: {smokeMaxSecs: SMOKE_MAX_SECS, perFamily: SMOKE_PER_FAMILY, heavySecs: HEAVY_SECS, logs: process.argv.slice(2),
         smokeSecsTotal: smoke.reduce((a, n) => a + worst(n), 0), smokeCount: smoke.length, families: byFamily.size,
-        nightlyOnlySecsTotal: heavy.reduce((a, n) => a + Math.max(...stat(n).map(r => r.secs)), 0)},
+        nightlyOnlySecsTotal: heavy.reduce((a, n) => a + Math.max(0, ...stat(n).map(r => r.secs)), 0)},
     tests: smoke,
     nightlyOnly: heavy
 }, null, 1));

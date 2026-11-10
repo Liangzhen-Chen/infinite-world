@@ -39,12 +39,20 @@ const expectQty = (kind, units, y) => Math.floor(units * kgOf(kind.input) * y / 
 // 实际产率的倒数：每公斤成品耗多少公斤原料（取整后产率越低，这个数越大）
 const inPerOut = (kind, o) => o.units * kgOf(kind.input) / (o.qty * kgOf(kind.output));
 
+// 批量规则：取整后的实际产率不低于派生产率的 90%，且没有更小的批量也能做到；批量内都做不到时，实际产率是批量内最高的。
+const realYield = (kind, u, y) => Math.min(200, expectQty(kind, u, y)) * kgOf(kind.output) / (u * kgOf(kind.input));
+function assertBatchRule(kind, o, y) {
+  const ok = u => realYield(kind, u, y) >= y * 0.9 - 1e-12 && expectQty(kind, u, y) >= 1;
+  if (ok(o.units)) { for (let u = 1; u < o.units; u++) assert.ok(!ok(u), `批量 ${u} 已达标，不该取 ${o.units}`); }
+  else for (let u = 1; u <= 12; u++) assert.ok(realYield(kind, u, y) <= realYield(kind, o.units, y) + 1e-12, `批量内应取实际产率最高者 ${JSON.stringify(o)}`);
+}
+
 test('磨粉：可食部分比例不同，同一类加工的投入与出粉量按公式变化', () => {
   const rows = [0.95, 0.6, 0.3].map(edibleFraction => {
     const o = build(MILL, {edibleFraction});
     const y = edibleFraction * (1 - LOSS);
     assert.equal(o.qty, expectQty(MILL, o.units, y));
-    assert.ok(expectQty(MILL, o.units - 1, y) < 1 || o.units === 1, '投入份数应为刚好够出一份的最小值');
+    assertBatchRule(MILL, o, y);
     return o;
   });
   assert.ok(inPerOut(MILL, rows[0]) < inPerOut(MILL, rows[2]), JSON.stringify(rows));
@@ -55,6 +63,7 @@ test('烧炭：含水率与炭化得率不同，同一类加工的投入与出�
   const rows = cases.map(p => {
     const o = build(CHAR, p);
     assert.equal(o.qty, expectQty(CHAR, o.units, p.charYield * (1 - p.moisture)));
+    assertBatchRule(CHAR, o, p.charYield * (1 - p.moisture));
     return o;
   });
   assert.ok(inPerOut(CHAR, rows[0]) < inPerOut(CHAR, rows[1]), JSON.stringify(rows));
