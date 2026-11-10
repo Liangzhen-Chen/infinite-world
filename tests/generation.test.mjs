@@ -55,7 +55,7 @@ test('对照种子由隔离服务器固定，请求正文不能改变生产随�
     const a=await fixed.api('create',{character:{name:'甲'},randomSeed:'forged'}),b=await fixed.api('create',{character:{name:'乙'}});
     assert.equal(a.document.randomSeed,'paired-sessions');assert.equal(b.document.randomSeed,'paired-sessions');
     assert.notEqual(a.reference.campaignId,b.reference.campaignId);
-    const normal=await createPlaytestServer();t.after(()=>normal.close());
+    const normal=await createPlaytestServer({seed:'random'});t.after(()=>normal.close());
     const c=await normal.api('create',{randomSeed:'forged'}),d=await normal.api('create',{randomSeed:'forged'});
     assert.notEqual(c.document.randomSeed,'forged');assert.notEqual(c.document.randomSeed,d.document.randomSeed);
 });
