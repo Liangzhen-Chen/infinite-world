@@ -22,8 +22,8 @@ export async function inspectJourney(world,bones,{requireL4=true}={}){
 }
 async function main(){
  const world=await loadWorld(),bones=economyW3Journey(world),block=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8'));
- await fs.mkdir(journeyRoot,{recursive:true});await fs.writeFile(`${journeyRoot}/bones.json`,JSON.stringify(bones,null,2)+'\n');
  if(process.argv.includes('--check')){const{candidate}=await inspectJourney(world,bones);console.log(JSON.stringify({items:candidate.items.length,recipes:candidate.recipes.length,published:false}));return;}
+ await fs.mkdir(journeyRoot,{recursive:true});await fs.writeFile(`${journeyRoot}/bones.json`,JSON.stringify(bones,null,2)+'\n');
  const client=new DeepSeekClient({budgetYuan:20});
  for(const kind of ['items','recipes']){
   const fields=kind==='items'?['description','inspection','storage']:['process'];
