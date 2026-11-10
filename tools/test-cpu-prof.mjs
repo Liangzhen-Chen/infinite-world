@@ -27,9 +27,10 @@ if(mode==='--child'){
  const runs=files.map(f=>new Promise(ok=>{
   const c=spawn(process.execPath,[process.argv[1],'--child',String(limit),f],{stdio:['ignore','pipe','pipe']});
   const log=fs.createWriteStream(path.resolve('.out',`prof-${path.basename(f,'.test.mjs')}.log`));
-  c.stdout.pipe(log);c.stderr.pipe(log);
+  // 两路输出写同一个日志：都不自动关闭日志，等子进程 close（两路都已读完）后再关，避免 write after end。
+  c.stdout.pipe(log,{end:false});c.stderr.pipe(log,{end:false});
   c.stdout.on('data',b=>{for(const l of String(b).split('\n'))if(l.startsWith('PROFILE '))console.log(l);});
-  c.on('exit',code=>{console.log(`CHILD ${f} exit=${code}`);ok();});
+  c.on('close',code=>{log.end();console.log(`CHILD ${f} exit=${code}`);ok();});
  }));
  await Promise.all(runs);
 }
