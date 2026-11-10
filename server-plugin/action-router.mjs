@@ -292,8 +292,8 @@ export function createRoutingContext(engine,document,{actor='player'}={}){
  const consumedLiquid=proposal=>(proposal.effects??[]).find(e=>{
   if(e.op!=='transfer'||owner(e.from)!==actor||owner(e.to)!=='sink:consume')return false;
   const resource=e.resource??(typeof e.from==='string'&&e.from.includes('|')?parseAccount(e.from).resource:null),item=engine.byId.get(resource);
-  // A drink carries water and no meal; a derived meal that kept its inputs' water is still a meal (K4).
-  return item?.nutrition?.hydration>0&&!(item.nutrition.satiety>0)&&item.weight>0;
+  // A drink is an item whose own form is drinkable (catalogue tag); a derived meal that kept its inputs' water is still a meal (K4), and satiety does not define it.
+  return item?.tags?.includes('drinkable')&&item.nutrition?.hydration>0&&item.weight>0;
  });
  const slotsFor=(action,proposal)=>{
   const slots={},target=proposal.participants?.target??proposal.target??proposal.effects?.find(e=>e.target!==undefined||e.entity!==undefined)?.target??proposal.effects?.find(e=>e.entity!==undefined)?.entity;
