@@ -20,7 +20,11 @@ const clerk='npc_bs_031_2',handler='npc_bs_035_1',guard='npc_hw_gucen',victim='n
 const cases=d=>Object.values(d.state.records).filter(r=>r.category==='legal_case');
 function scene(w=world){
  const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'s406-filing');
- const document=officeScene(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:[guard,victim,thief],coins:100});
+ // 前置条件按作息来：600 分时 linsui、hezhou 的作息就在青灯（前厅接待/预约接待），而 gucen 的作息在村口
+ // （loc_hw_gate 村口巡查，480-720）。把他摆在青灯是把一个当值守卫放在岗位之外；引擎只在下一次无关的时钟节拍里
+ // 才结算作息，节拍一出现他就出发（见 tools/probe-gucen-travel.mjs）。所以盗窃现场只放 victim、thief，
+ // 守卫在报案时到他的岗位（见 atPost）。
+ const document=officeScene(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:[victim,thief],coins:100});
  return {engine,document};
 }
 async function act(f,action,slots,id){
@@ -28,6 +32,8 @@ async function act(f,action,slots,id){
  assert.notEqual(out.result.receipt?.status,'rejected',JSON.stringify(out.result));
  f.document=applyPatches(f.document,out.patches);return {input,...out,detail:out.result.receipt?.legacy??out.result};
 }
+// 向守卫报案：玩家去守卫在岗的村口（600-720 作息），而不是把守卫拉到作息之外的地方。
+const atPost=f=>officeScene(f.engine,f.document,{location:'loc_hw_gate',minute:f.document.state.minute,present:[guard]});
 async function steal(f){
  const before=f.document;
  for(let i=0;i<30;i++){
@@ -38,7 +44,7 @@ async function steal(f){
 }
 async function submitted(f){
  const stolen=await steal(f);
- f.document=officeScene(f.engine,f.document,{location:f.document.state.location,minute:f.document.state.minute,present:[guard]});
+ f.document=atPost(f);
  const report=await act(f,'core:law.confess',{authority:guard,request:{kind:'confession',incident:stolen.input.eventId}},'filing-confession');
  f.document=officeScene(f.engine,f.document,{location:'bld_bs_watch',minute:f.document.state.minute,present:[clerk,handler]});
  return {stolen,report};
@@ -54,7 +60,7 @@ test('失窃先转财物，只留私密嫌疑；知情报案与有权受理分�
  assert.deepEqual(readStateSection({...f.document.state,records:{[id]:f.document.state.records[id]}},'记录'),{});
  assert.equal(f.document.state.records[`world_event:${stolen.input.eventId}`].visibility,'private');
  assert.ok(!Object.values(f.document.state.npcs).some(n=>n.legalKnowledge?.some(k=>k.case===id)));
- f.document=officeScene(f.engine,f.document,{location:f.document.state.location,minute:f.document.state.minute,present:[guard]});
+ f.document=atPost(f);
  const report=await act(f,'core:law.confess',{authority:guard,request:{kind:'confession',incident:stolen.input.eventId}},'separate-report');
  assert.equal(report.detail.accepted,null);assert.equal(cases(f.document).length,0);
  f.document=officeScene(f.engine,f.document,{location:'bld_bs_watch',minute:f.document.state.minute,present:[clerk,handler]});
