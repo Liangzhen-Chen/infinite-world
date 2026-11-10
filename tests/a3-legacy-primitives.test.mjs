@@ -56,9 +56,16 @@ test('A3 legacy receipt: buy preview/commit/reload use actual two-sided postings
  const out=await engine.reduce(document,input),after=applyPatches(document,out.patches),r=out.result.receipt;
  assert.deepEqual(preview.receipt.applied,r.applied);assert.equal(r.status,'committed');
  const money=r.applied.find(e=>e.resource==='coin_river'),goods=r.applied.find(e=>e.resource===BREAD);
- // S5-02 /15.2: authored baseline8 * plentiful supply floor.5 *two
- // originals *grade/spread/regard/depth/corrections1 =8, truncate once.
- assert.equal(money.from,accountKey('player','coin_river','purse'));assert.equal(money.to,accountKey(SELLER,'coin_river','purse'));assert.equal(money.qty,8);
+ // S5-02 /15.2: authored baseline 8 * scarcity * two originals * grade/spread/regard/depth/corrections 1, truncate once.
+ // 稀缺度 = 需求/供给（market.mjs stockSupply:219 / marketQuote:303），不再落在 0.5 地板上。探针 tools/probe-rules-a.mjs a3：
+ // 同类食物供给 48、需求 28 -> 稀缺度 28/48=0.5833（>0.5 地板，不夹）-> 单价 8*0.5833=4.667，两件精确 9.333，截断一次得 9；
+ // 品质、价差、深度、修正因子探针均为 1。
+ // 旧期望 8 对应旧口径：供给 45、需求 24（0.533，两件 8.533 截断 8）。st-5 与现状逐项对照：
+ // 供给 45→48：店主行面包留存 2→0（可售 4→6）、牛奶留存 3→2（可售 1→2）；需求 24→28：同类食物各户 retained 之和 40→44，
+ // 即 meiling 12→18、店主 linsui 10→7、玩家 1→2（货架上限 14 与 upkeep 0 不变，不是需求来源）。
+ // 这些变动来自 st-5 之后已批准的两类规则改动：R1（t-sat：饱腹改由推导，item-class.mjs satietyFactor；燕麦饼 30→12，户内口粮件数与单餐额度据此重算）
+ // 与同批 t-avail（household-budget.mjs accessibleSources：市场替代只算买得起的来源，影响户内留存）；st-5..HEAD 的服务端改动只有这两类（food-habit/household-budget/item-class/npc-autonomy/shop）。
+ assert.equal(money.from,accountKey('player','coin_river','purse'));assert.equal(money.to,accountKey(SELLER,'coin_river','purse'));assert.equal(money.qty,9);
  assert.equal(goods.from,accountKey(SELLER,BREAD,'inventory'));assert.equal(goods.to,accountKey('player',BREAD,'inventory'));assert.equal(goods.qty,2);
  r.applied.forEach((e,index)=>{assert.equal(e.index,index);assert.deepEqual(e.source,{kind:'catalog',id:'core:trade.buy'});assert.equal(e.role,'outcome');});
  postings(document,after,r);books(engine,after);
