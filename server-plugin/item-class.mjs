@@ -248,7 +248,7 @@ export function deriveItemAttributes(world){
   // nutrientBase：未乘系数的“按热量基值”（配方的能量守恒在它上面成立；重复派生时也从它重算）。
   item.nutrientBase={satiety:c.satiety,hydration:c.hydration};
   // 能喝由规则给出：饮品（食物且液态）一份的水分够解渴就带 drinkable（物品表手贴的同样要满足这条，见 validateDrinkable）。
-  if(drinkLike(item.id)&&c.hydration>=drinkMin&&!(item.tags??[]).includes('drinkable'))item.tags=[...item.tags??[],'drinkable'];
+  if(drinkLike(item.id)&&c.hydration>=drinkMin&&!(item.tags??[]).includes('drinkable'))item.tags=withDrinkable(item.tags??[]);
   if(c.raw)continue;
   const nutrition={...(sat>0?{satiety:sat}:{}),...(Math.floor(c.hydration)>0?{hydration:Math.floor(c.hydration)}:{})};
   if(Object.keys(nutrition).length)item.nutrition=nutrition;
@@ -392,6 +392,8 @@ export function mealCapPools(engine,{days=[],saved=null,poolMemo=new Map()}={}){
 // 饮品判据（action-router 的 isDrink）读 drinkable 标签；液态物品是否带标签由本整类规则保证，不靠逐件记忆。
 // 在派生后的副本上核对（nutrientContent 含生食，不受“生食不写 nutrition”影响）：
 //   水分>0 且热量(饱腹)==0 的物品是纯饮品，必须带 drinkable；带 drinkable 的物品必须有水分>0。有热量的饮品（如牛乳）带标签合法。
+// 推导出的标签按规范顺序放：形态标签 drinkable 紧排在 food 之前（与水、牛乳、鲜乳原手贴顺序一致；matprops 上下文指纹含 tags 顺序）；无 food 则追加末尾。
+export function withDrinkable(tags){const i=tags.indexOf('food');return i<0?[...tags,'drinkable']:[...tags.slice(0,i),'drinkable',...tags.slice(i)];}
 export function drinkableByRule(world){
  const w=structuredClone(world);
  for(const item of w.items??[])if(item.tags)item.tags=item.tags.filter(t=>t!=='drinkable');
