@@ -73,7 +73,7 @@ const OPT = {
   '--batches': 'list', '--budget': 'number', '--budget-proof': 'path', '--budget-root': 'path', '--budget-yuan': 'number', '--card': 'id',
   '--catalog': 'path', '--combat': 'flag', '--compact-request': 'flag', '--compare': 'path', '--require-harvest': 'flag', '--concurrency': 'number', '--config': 'path',
   '--contact-routine-only': 'flag', '--controlled-revision': 'path', '--corpus': 'path', '--count': 'number', '--counties': 'number',
-  '--days': 'number', '--deps': 'flag', '--depth': 'number', '--design': 'path', '--diagnostics': 'flag', '--dir': 'path', '--directory': 'path',
+  '--days': 'number', '--days-per-segment': 'number', '--segments': 'number', '--deps': 'flag', '--depth': 'number', '--design': 'path', '--diagnostics': 'flag', '--dir': 'path', '--directory': 'path',
   '--facility-source-only': 'flag', '--fast': 'flag', '--file': 'path', '--files': 'path', '--help': 'flag', '--host-installation': 'path',
   '--id': 'id', '--ids': 'list', '--increment': 'number', '--input': 'path', '--jobs': 'number', '--json': 'flag', '--l4-notes': 'path',
   '--lamp': 'flag', '--legacy-report': 'path', '--legacy-reserved': 'number', '--limit-minutes': 'number', '--manifest': 'path',
