@@ -282,6 +282,28 @@ async function credit(){
      console.log(`  赊购进货成功：cost ${cost.cost}，debt ${!!cost.debt}，principal==cost ${doc.state.records[cost.debt].principal===cost.cost}，host 钱 ${before}->${doc.state.npcs[host].coins}（断言 before-cost=${before-cost.cost}），loan ${doc.state.records[cost.contract].loan===cost.debt}，escrow==cost ${doc.state.records[cost.contract].escrow===cost.cost}`);
     }catch(e){console.log(`  赊购进货被拒：${e.message}`);}
 }
+async function m3(){
+    // 复演 tests/playtests/reconcile.json 与 world_upgrade.json 的净状态：uiSession 默认新档 -> 走到青灯酒馆 -> 住一晚(-6) -> 买面包
+    const {tradeQuote}=await import('../server-plugin/shop.mjs');
+    const {uiSession}=await import('../tests/helpers/ui-script.mjs');
+    const ui=await uiSession({after(){}},{world:original});
+    let doc=await ui.read();const engine=new WorldEngine(original);
+    const act=async(tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});doc=applyPatches(doc,out.patches);return out.result;};
+    const host='npc_hw_linsui',inn='bld_hw_qingdeng';
+    console.log(`[m3 playtest 复演] 开局 coins ${doc.state.player.coins} 位置 ${doc.state.location} minute ${doc.state.minute}`);
+    await act('world_move',{destination:inn},'m3-move');
+    await act('world_trade',{seller:host,service:'住宿',days:1},'m3-lodge');
+    console.log(`  住一晚后：coins ${doc.state.player.coins}（剧本期望 174）位置 ${doc.state.location} minute ${doc.state.minute}（日内 ${doc.state.minute%DAY}）`);
+    const quote=(qty,label)=>{const d=engine.primitiveDraft(doc);const sup=quoteSupply(d,engine,{item:'item_bread',location:inn});
+        const q=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',quantity:qty,location:inn,base:()=>regionalTradeBase(d,engine,'item_bread',inn)});const x=q.explanation;
+        console.log(`  [${label}] 买${qty}个：供给 ${sup.supply} 需求 ${sup.demand} 稀缺度 ${f3(x.scarcity)}（需求/供给=${f3(sup.demand/Math.max(1,sup.supply))}） relation ${x.relation} base ${x.base} 品质 ${f3(x.quality)} 价差 ${f3(x.spread)} 深度 ${f3(x.depth)} -> 精确 ${f3(q.exactTotal)} 截断 ${q.totalCoins}`);return q;};
+    quote(1,'reconcile 第8轮');quote(2,'reconcile 第9轮(改成两个)');
+    const snap=structuredClone(doc),coins0=doc.state.player.coins;
+    await act('world_trade',{seller:host,item:'item_bread',quantity:1},'m3-buy1');console.log(`  实买1个：coins ${coins0} -> ${doc.state.player.coins}（reconcile 第8轮新期望 173）`);
+    quote(1,'world_upgrade 第二个面包');
+    await act('world_trade',{seller:host,item:'item_bread',quantity:1},'m3-buy2');console.log(`  再买1个：coins -> ${doc.state.player.coins}（world_upgrade 新期望 172）`);
+    doc=snap;await act('world_trade',{seller:host,item:'item_bread',quantity:2},'m3-buy2b');console.log(`  （从住宿后重来）一次买2个：coins ${coins0} -> ${doc.state.player.coins}（reconcile 第9轮新期望 172）`);
+}
 // 通用：用 daily-b2 夹具（variant/scene）搭一个会话外的文档，只读报价
 async function daily(world,mutate){
     // 与测试同一入口：uiSession 创建游戏服务器、导出初始档、写夹具、导入；再读回文档，用同一世界建引擎只读报价
@@ -303,6 +325,6 @@ async function a2(){
     const q=tradeQuote(d,engine,{buyer:'player',seller:NPC,item:'item_bread',quantity:1,location:INN,base:()=>regionalTradeBase(d,engine,'item_bread',INN)});
     const x=q.explanation;console.log(`  报价：base ${f3(x.base)} 稀缺度 ${f3(x.scarcity)} 立场 relation ${f3(x.relation)} 品质 ${f3(x.quality)} 价差 ${f3(x.spread)} 深度 ${f3(x.depth)} 单价 ${f3(q.listPrice)} 精确 ${f3(q.exactTotal)} -> ${q.totalCoins}；供给 ${q.supply} 需求 ${q.demand} opening ${q.opening}`);
 }
-const jobs={a3,shop,w2,a2,s3fin,ew,fa,credit};
+const jobs={a3,shop,w2,a2,s3fin,ew,fa,credit,m3};
 for(const [n,fn] of Object.entries(jobs))if(which===n||which==='all')await fn();
 process.exit(0);
