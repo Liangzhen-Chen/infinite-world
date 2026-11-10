@@ -91,7 +91,27 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  const ids=Object.keys(s.doc.state.npcs).sort(),people=JSON.stringify(s.doc.state.family?.people??{}),created=JSON.stringify(s.doc.state.created??{});
  Object.assign(npc(s,mover),{coins:57,inventory:{[source.items[0].id]:2}});
  const hostCoins=npc(s,host).coins,hostGoods=structuredClone(npc(s,host).inventory);
+ // 条件(a)：出发前的日常购粮要在账本上记成一笔钱换货的成交。账本调试钩子只在这一段开启，用规则定位交易：
+ // 买方是迁居者、发生在出发之前（本段止于预告日夜里，早于 departAt）、物品属于食物类；不写死成交 id 或时间点。
+ const coins0=npc(s,mover).coins;
+ globalThis.__LEDGER_TRACE__=[];
  await until(s,firstNight+1,'a');
+ const trace=globalThis.__LEDGER_TRACE__;delete globalThis.__LEDGER_TRACE__;
+ const foodIds=new Set(source.items.filter(i=>i.tags?.includes('food')).map(i=>i.id));
+ const buys=trace.filter(t=>t.writer==='shop'&&t.from.startsWith(`${mover}|coin_river|`)&&t.amount>0&&foodIds.has(String(t.eventId).split(':').at(-1))&&String(t.eventId).endsWith(`:${mover}:${String(t.eventId).split(':').at(-1)}`));
+ assert.ok(buys.length>0,'出发前迁居者的日常购粮在账本上有成交记录');
+ let paid=0;
+ for(const b of buys){
+  const item=String(b.eventId).split(':').at(-1),seller=b.to.split('|')[0];
+  assert.ok(npc(s,seller),'钱付给了卖家（一个真实人物）');
+  const got=trace.filter(t=>t.writer==='items'&&t.from===`${seller}|${item}|inventory`&&t.to===`${mover}|${item}|inventory`).reduce((n,t)=>n+t.amount,0);
+  assert.ok(got>0,`${item}：货从卖家库存转到了迁居者手里，数量${got}`);
+  paid+=b.amount;
+ }
+ assert.equal(coins0-npc(s,mover).coins,paid,'迁居者出发前少掉的钱恰为这些成交的货款，没有别的去向');
+ // 探针（tools/probe-money-flow.mjs migration，本次）给出的这笔交易：t=15120，买方许苓，卖方林穗（悦灯客栈 shop_hw_qingdeng），
+ // 1 铜买面包 item_bread ×1，7 铜买燕麦薄饼 item_oat_flatbread ×4，共 8 铜（57→49）；货转移 writer=items，货款 writer=shop；
+ // 其中 4 张燕麦薄饼随后在 t=15840 被家里当晚饭吃掉（household-meal，早于出发），面包留在库存。
  const [m]=moves(s);
  assert.equal(moves(s).length,1);assert.equal(m.person,mover);assert.equal(m.reason,'谋生');assert.equal(m.host,host);assert.equal(m.status,'待出发');
  assert.deepEqual(m.to,{household:'house_yp_21',settlement:'loc_bs_yupo',home:toHome});
@@ -139,6 +159,7 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  assert.match(npc(s,mover).occupation,/迁居后帮衬冯雅家/);
  assert.equal(npc(s,mover).developments.at(-1).type,'迁居');
  // Property travels with the person; nobody is copied or newly created.
+ // 这里逐项比较出发快照与抵达时的铜币和库存是否相等，比李白条件(b)“从出发到抵达现金加货物合计价值不减”更严，因此已覆盖(b)。
  assert.equal(npc(s,mover).coins,coins-go.routeCost);assert.deepEqual(npc(s,mover).inventory,goods);
  assert.equal(npc(s,host).coins,hostCoins);assert.deepEqual(npc(s,host).inventory,hostGoods);
  onlyLifeAdditions(s,ids,JSON.parse(people),JSON.parse(created));
