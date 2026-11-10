@@ -171,3 +171,24 @@ test('批次指纹形状只有一处定义：tools 与 world/design 里没有脚
   walk('tools'); walk('world/design');
   assert.deepEqual(offenders, [], '批次指纹须用 content-pipeline 导出的 rowFingerprintShape');
 });
+
+test('人工稿与旧稿相同（含缺 id 写法）：整批拒绝零写盘，不能原样提交旧稿来清退回名单', async t => {
+  const root = await fixture(t), before = await snapshot(root);
+  const old = id => ({ id, draft: { id, description: id === 'b_man' ? '原稿乙乙乙乙' : '原稿丙丙丙丙' } });
+  await assert.rejects(run(root, [good('b_man'), old('c_rej')]), /人工稿 c_rej 与旧稿相同/);
+  await assert.rejects(run(root, [{ id: 'c_rej', draft: { description: '原稿丙丙丙丙' } }]), /与旧稿相同/);
+  assert.deepEqual(await snapshot(root), before);
+});
+
+test('缺批次文件是完整性错误（非审批未齐）；已批准但 l4.rejection.ids 非空时拒绝读取；未批准的退回批仍是审批未齐', async t => {
+  const root = await fixture(t);
+  await run(root, [good('b_man'), good('c_rej')]);
+  await approve(root, [note('b_man', '审查者乙'), note('c_rej', '审查者乙')]);
+  const file = path.join(root, 'batch-0.json'), batch = await readJson(file);
+  await writeJson(file, { ...batch, l4: { ...batch.l4, rejection: { by: 'x', at: 't', reason: '手改', ids: ['c_rej'] } } });
+  await assert.rejects(publish(root), e => e.code !== 'APPROVAL_INCOMPLETE' && /仍有被 L4 退回未处理/.test(e.message));
+  await writeJson(file, { ...batch, l4: { approved: false, notes: [], rejection: { by: 'x', at: 't', reason: 'r', ids: ['c_rej'] } } });
+  await assert.rejects(publish(root), e => e.code === 'APPROVAL_INCOMPLETE');
+  await fs.rm(file);
+  await assert.rejects(publish(root), e => e.code !== 'APPROVAL_INCOMPLETE' && /缺少批次文件/.test(e.message));
+});

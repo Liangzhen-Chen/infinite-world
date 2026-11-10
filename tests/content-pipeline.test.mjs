@@ -116,6 +116,19 @@ test('并发只因在途预留占额时排队，真到额后停止全批未发�
  const rows=Object.values(result.summary.budget.requests);assert.ok(rows.length>=2&&rows.every(r=>r.status==='settled'||r.status==='cancelled-unissued'));
  await runContentPipeline(p.options);assert.equal(p.calls.length,2);
 });
+test('额度小于单条 draft+review 的预留时整批零调用：全部 budgetStop，没有已发请求，所有请求行都是 cancelled-unissued（或根本没有）',async t=>{
+ // 单条需预留 0.2，额度只有 0.15：连第一条都放不下，且没有在途预留可等，立即真到额。
+ const p=await budgetFixture(t,{limit:.15,ids:['item_one','item_two','item_three']});
+ const result=await runContentPipeline(p.options);
+ assert.equal(p.calls.length,0);
+ assert.equal(result.results.length,3);
+ assert.ok(result.results.every(r=>r.status==='pending'&&r.attempts===0&&r.budgetStop?.code==='CONTENT_BUDGET_STOP'));
+ assert.equal(result.summary.passed,0);assert.equal(result.summary.manual,0);assert.equal(result.summary.pending,3);
+ const rows=Object.values(result.summary.budget.requests);
+ assert.ok(rows.every(r=>r.status==='cancelled-unissued'),'不得有已发或已结算的请求');
+ assert.equal(result.summary.budget.spentYuan,0);assert.equal(result.summary.budget.reservedYuan,0);
+ assert.equal(p.client.spent,0);
+});
 test('自由候选无法证明完整review上界时零调用',async t=>{
  const p=await budgetFixture(t,{limit:20,unknown:true}),result=await runContentPipeline(p.options);assert.equal(p.calls.length,0);assert.match(result.results[0].budgetStop.message,/无法证明/);assert.equal(result.results[0].attempts,0);
 });

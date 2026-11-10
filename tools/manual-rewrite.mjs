@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { pipelineL1, rowFingerprintShape, hashContent, MANUAL_REWRITE_REVIEW_KIND } from './content-pipeline.mjs';
+import { pipelineL1, rowFingerprintShape, hashContent, requireFlagValue, MANUAL_REWRITE_REVIEW_KIND } from './content-pipeline.mjs';
 import { applyDerivedDuration } from './content-numerals.mjs';
 
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -43,6 +43,8 @@ export async function manualRewrite({ root, drafts, by, reason, headCommit, entr
     if (!rawDraft || typeof rawDraft !== 'object' || (rawDraft.id !== undefined && rawDraft.id !== id)) throw new Error(`人工稿 ${id} 不是对象或 id 不符`);
     // 写入的 draft.id 必须等于条目 id：缺 id 时补上，不一致的上一行已拒绝。
     const draft = applyDerivedDuration({ id, ...structuredClone(rawDraft) }, entry);
+    // 人工稿不得与旧稿相同（含套上派生时长之后）：否则原样提交旧稿也能清掉退回名单并换到免 L2 标记。
+    if (record.draft && [rawDraft, draft].some(candidate => hashContent(candidate) === hashContent(record.draft) || hashContent({ id, ...candidate }) === hashContent(record.draft))) throw new Error(`人工稿 ${id} 与旧稿相同，拒绝改写`);
     const result = await l1(draft, entry, await contextFor(entry));
     const errors = Array.isArray(result) ? result : result?.errors ?? [];
     if (errors.length) failures.push(`${id}: ${errors.join('；')}`);
@@ -106,7 +108,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--root') root = args[++i];
     else if (args[i] === '--drafts') draftsFile = args[++i];
-    else if (args[i] === '--by') by = args[++i];
+    else if (args[i] === '--by') { by = requireFlagValue(args, '--by'); i++; }
     else if (args[i] === '--reason') reason = args[++i];
     else if (args[i] === '--profile') profile = args[++i];
     else if (args[i] === '--kind') kind = args[++i];

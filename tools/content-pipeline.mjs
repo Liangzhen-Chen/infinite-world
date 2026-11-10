@@ -394,11 +394,12 @@ export async function readApprovedContent(root, entries, { contextFor = () => nu
   for (const batch of summary.batches) {
     const current = await readJSON(path.join(root, `batch-${batch.index}.json`));
     // 先判完整性（指纹），再判审批是否齐全：指纹漂移同时 L4 未批时，必须报真错误，不能被“审批未齐”掩盖。
-    if (!current) throw approvalIncomplete(`批 ${batch.index} 缺少批次文件`);
+    if (!current) throw new Error(`批 ${batch.index} 缺少批次文件：完整性问题，不是审批未齐`);
     if (current.fingerprint !== batch.fingerprint) throw new Error(`批 ${batch.index} 指纹不符：批次文件与摘要不一致，内容可能已被改动`);
     if (!Array.isArray(current.ids)) throw new Error('批次缺少条目清单');
     const rows = await Promise.all(current.ids.map(id => readJSON(path.join(root, `${id}.json`))));
     if (rows.some(row => !row) || hashContent(rows.map(rowFingerprintShape)) !== current.fingerprint) throw new Error(`批 ${batch.index} 审查后内容已改变`);
+    if (current.l4?.approved && current.l4.rejection?.ids?.length) throw new Error(`批 ${batch.index} 仍有被 L4 退回未处理的条目 ${current.l4.rejection.ids.join(',')}，不能按已批准读取`);
     if (!current.l4?.approved || current.needsSystemicRepair) throw approvalIncomplete(`批 ${batch.index} 尚未完成 L4 或人工队列超过 10%`);
     for (const row of rows) assertManualRewriteReviewed(row, current);
     for (const id of [...current.sample, ...current.flagged]) {
