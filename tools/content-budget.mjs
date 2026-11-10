@@ -133,25 +133,42 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
  sync();let queue=Promise.resolve(),stopped=null;
  const ownedReservations=new Set();
  function enqueue(action){const pending=queue.then(action);queue=pending.catch(()=>{});return pending;}
- function stop(message){stopped??=Object.assign(Error(message),{code:'CONTENT_BUDGET_STOP'});return stopped;}
+ // 等待额度的预留请求：在队列内登记（与释放/结算同在串行队列里，不会漏掉唤醒），队列外等待，所以等待不占住队列。
+ let waiters=[];
+ function wake(){const list=waiters;waiters=[];for(const resolve of list)resolve();}
+ function inflight(){for(const id of ownedReservations){const status=ledger.requests[id]?.status;if(status==='reserved'||status==='sent')return true;}return false;}
+ function stop(message){stopped??=Object.assign(Error(message),{code:'CONTENT_BUDGET_STOP'});wake();return stopped;}
  function guard(){if(stopped)throw stopped;}
  function estimate(body){
   const ceiling=reserveCeilingYuan(client,body);
   if(!amount(ceiling))throw stop('缺少可验证的请求费用预留，已停止');
   return ceiling;
  }
- function reserveRound(requests){return enqueue(async()=>{
+ // 超限时不立即 stop：若“已结算花费 + 本轮上界”仍在总额与单卡额度内，说明只是本进程的在途预留占着额度，
+ // 排队等任何一笔预留释放/结算/缩小后重新检查；在途预留为 0 仍放不下才是真到额，stop。次数上限与其他检查仍立即判断。
+ async function reserveRound(requests){
+  for(;;){
+   const result=await tryReserve(requests);
+   if(result.ids)return result.ids;
+   await result.waitForRelease;
+  }
+ }
+ function tryReserve(requests){return enqueue(async()=>{
   guard();
   const rows=requests.map(({body,label})=>({card:cardId??null,label,requestHash:hash(body),reservedYuan:estimate(body),status:'reserved',...(reopenAuthorization?{authorizationId:reopenAuthorization.id,reopenId}:{})}));
   const ceiling=rows.reduce((n,r)=>n+r.reservedYuan,0);
   const card=cardId&&ledger.cards[cardId],limit=ledger.waveLimitYuan??ledger.limitYuan??client.budgetYuan;
   if(card?.maxRequests!==undefined&&Object.values(ledger.requests).filter(r=>r.card===cardId&&r.status!=='cancelled-unissued').length+rows.length>card.maxRequests)throw stop('单卡调用次数上限，已停止');
-  if(ledger.spentYuan+ledger.reservedYuan+ceiling>limit+1e-12||card&&card.spentYuan+card.reservedYuan+ceiling>card.limitYuan+1e-12)throw stop('共享或单卡费用上限，已停止');
+  if(ledger.spentYuan+ledger.reservedYuan+ceiling>limit+1e-12||card&&card.spentYuan+card.reservedYuan+ceiling>card.limitYuan+1e-12){
+   const fitsAfterRelease=ledger.spentYuan+ceiling<=limit+1e-12&&(!card||card.spentYuan+ceiling<=card.limitYuan+1e-12);
+   if(fitsAfterRelease&&inflight())return{waitForRelease:new Promise(resolve=>waiters.push(resolve))};
+   throw stop('共享或单卡费用上限，已停止');
+  }
   if(reopenAuthorization&&!continueReopen){const grant=reopenAuthorization.cards[cardId];if(card.spentYuan-grant.spentYuan+card.reservedYuan-grant.reservedYuan+ceiling>.5+1e-12)throw stop('首ID累计新调用及预留超过0.50元，已停止');}
   const ids=rows.map(row=>{const id=randomUUID();ledger.requests[id]=row;ownedReservations.add(id);return id;});
   ledger.reservedYuan+=ceiling;if(card)card.reservedYuan+=ceiling;
   await save(file,ledger);
-  sync();return ids;
+  sync();return{ids};
  });}
  function releaseRound(ids){return enqueue(async()=>{
   for(const id of ids){const row=ledger.requests[id];
@@ -160,7 +177,7 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
    ledger.reservedYuan=Math.max(0,ledger.reservedYuan-row.reservedYuan);if(cardId)ledger.cards[cardId].reservedYuan=Math.max(0,ledger.cards[cardId].reservedYuan-row.reservedYuan);
    row.status='cancelled-unissued';
   }
-  await save(file,ledger);sync();
+  await save(file,ledger);sync();wake();
  });}
  // 通用：把一条尚未发送的本进程预留换成另一份请求（同 id、同 label），新估价必须不超过原预留。
  // 只会减少账本总额/单卡的已预留额，因此原预留已通过的次数、总额、单卡、重开额度检查依然成立；发送时 requestHash 相等检查不变。
@@ -174,7 +191,7 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
   row.replacedReservation={requestHash:row.requestHash,reservedYuan:row.reservedYuan};
   row.requestHash=hash(body);row.reservedYuan=next;
   ledger.reservedYuan=Math.max(0,ledger.reservedYuan+delta);if(card)card.reservedYuan=Math.max(0,card.reservedYuan+delta);
-  await save(file,ledger);sync();return id;
+  await save(file,ledger);sync();wake();return id;
  });}
  async function request(body,label,{reservationId}={}){
   const id=reservationId??(await reserveRound([{body,label}]))[0];
@@ -196,9 +213,9 @@ export async function openContentBudget({file,client,cardId,allocation,reopenAut
    row.responseEvidence={file:path.relative(path.dirname(file),responseFile).replaceAll('\\','/'),requestHash:evidence.requestHash,responseHash:evidence.responseHash};
    if(!amount(cost)||cost>ceiling+1e-12)throw stop('最终用量超出预留或无法核实，已停止');
    ledger.spentYuan+=cost;ledger.reservedYuan=Math.max(0,ledger.reservedYuan-row.reservedYuan);if(card){card.spentYuan+=cost;card.reservedYuan=Math.max(0,card.reservedYuan-row.reservedYuan);}
-   Object.assign(row,{status:'settled',costUpperYuan:cost,measurement:response.measurement??null});await save(file,ledger);sync();
+   Object.assign(row,{status:'settled',costUpperYuan:cost,measurement:response.measurement??null});await save(file,ledger);sync();wake();
    return typeof client.processResponse==='function'?await client.processResponse(response,body):response;
-  }catch(e){if(row.status!=='settled')row.status='unknown';row.error=e.message;await save(file,ledger);sync();throw /费用上限/.test(e.message)?stop(e.message):e;}
+  }catch(e){if(row.status!=='settled')row.status='unknown';row.error=e.message;await save(file,ledger);sync();wake();throw /费用上限/.test(e.message)?stop(e.message):e;}
  });}
  function claimOnce(field,id,fingerprint){const pending=queue.then(async()=>{const owner=cardId?ledger.cards[cardId]:ledger;owner[field]??={};if(owner[field][id])return false;owner[field][id]={fingerprint,claimedAt:new Date().toISOString()};await save(file,ledger);return true;});queue=pending.catch(()=>{});return pending;}
  function claimReopenReview(id,fingerprint){return enqueue(async()=>{
