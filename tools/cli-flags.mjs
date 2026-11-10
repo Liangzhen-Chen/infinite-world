@@ -12,6 +12,7 @@ const W = {
   '--publish': '写 world/ 正式数据（meta、rules 等）与发布回执，各脚本不同',
   '--review': '写 world/drafts/<批>/ 下审阅记录、L2 账与 summary（联网调模型）',
   '--l4': '写 L4 人读记录到 world/drafts/<批>/（matprops 另补写 approval-summary.json）',
+  '--approve': '写审核记录目录下的 batch-N.json（l4 阅读记录与批准）及 summary.json 里该批的副本（tools/l4-approve.mjs），不调模型、不联网',
   '--prepare': '写 world/drafts/<批>/ 的批次预备文件（batch / manifest / bones）',
   '--candidate': '写 world/drafts/<批>/candidate.json',
   '--sample': '写 L4 抽样文件：matprops-approval 写其审阅目录下的 l4-selection 文件；w5-rumors 写 world/drafts/w5/<批>/l4-selection.json',
