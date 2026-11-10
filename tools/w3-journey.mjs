@@ -27,6 +27,8 @@ export async function manualRewriteProfile(kind){
  if(!bones[kind])throw new Error('--kind 须为 items 或 recipes');
  return{entries:bones[kind],contextFor:entry=>journeyContext(world,bones,entry),validateDraft:(draft,entry,context)=>validateTradesDraft(draft,entry,block,context)};
 }
+// 入口不用顶层 await：修订批模块（world/design/w3-*-text-revision.mjs）静态导入本模块，而 readApprovedSupersedes 会动态导入它们；
+// 本模块若还卡在顶层 await 里，两边互相等待、进程以退出码 13 结束。
 async function main(){
  const world=await loadWorld(),bones=economyW3Journey(world),block=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8'));
  if(process.argv.includes('--check')){const{candidate}=await inspectJourney(world,bones);console.log(JSON.stringify({items:candidate.items.length,recipes:candidate.recipes.length,published:false}));return;}
@@ -43,4 +45,4 @@ async function main(){
   });
  }
 }
-if(process.argv[1]?.replaceAll('\\','/').endsWith('/w3-journey.mjs'))await main();
+if(process.argv[1]?.replaceAll('\\','/').endsWith('/w3-journey.mjs'))main().catch(error=>{console.error(error);process.exitCode=1;});
