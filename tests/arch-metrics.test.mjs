@@ -48,3 +48,23 @@ test('派生黑名单：包目录模式并入包自己的黑名单字段',()=>{
  assert.deepEqual(r.hits.map(h=>h.field).sort(),['brewQuota','salary']);
  assert.ok(r.hits.every(h=>h.file==='tests/fixtures/packs/demo/brewing.mjs'&&h.line>0));
 });
+
+test('审批脚本：顶层读命令行参数的，命令分支必须带 main 守卫（被别的审批脚本 import 时不得执行）',()=>{
+ const files=[...fs.readdirSync('world/design').filter(f=>f.endsWith('.mjs')).map(f=>`world/design/${f}`),
+  ...fs.readdirSync('tools').filter(f=>/-approval/.test(f)&&f.endsWith('.mjs')).map(f=>`tools/${f}`)];
+ const guard=/import\.meta\.(url\s*===\s*pathToFileURL\(path\.resolve\(process\.argv\[1\]\)\)\.href|filename)/;
+ const bad=[];
+ for(const f of files){
+  const text=fs.readFileSync(f,'utf8');
+  if(!/process\.argv/.test(text))continue;
+  if(!guard.test(text)){bad.push(`${f}：读 process.argv 但没有 main 守卫`);continue;}
+  const lines=text.split(/\r?\n/),topArgs=/^(const|let|var)\s+args\s*=\s*process\.argv/m.test(text);
+  lines.forEach((line,i)=>{
+   // 顶层（行首无缩进）的命令分支：文件顶层定义了 args=process.argv，或直接读 process.argv 时须带守卫；函数参数里的 args 不算
+   if(/^if\s*\(.*(\bargs\b|process\.argv)/.test(line)&&(topArgs||/process\.argv/.test(line))&&!guard.test(line)&&!/\bmain\b/.test(line))bad.push(`${f}:${i+1}：顶层命令分支没有 main 守卫`);
+   // 顶层直接执行的 run() 调用也须带守卫
+   if(/^(await\s+)?run\(/.test(line))bad.push(`${f}:${i+1}：顶层无守卫调用 run()`);
+  });
+ }
+ assert.deepEqual(bad,[]);
+});
