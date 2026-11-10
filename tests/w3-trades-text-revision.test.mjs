@@ -44,10 +44,14 @@ const args=(dir,profile,entry,draft)=>({root:dir,drafts:[{id:entry.id,draft}],by
 test('manual-rewrite 用行当批 profile：L1 不过整批拒绝零写盘；L1 过则换入新稿并留历史', async t=>{
  // 确定性夹具：一条最小的合成配方骨架（不带 context.catalog，所以不依赖现行配方数据与工序检查词表），
  // 校验用的仍是行当批同一个 validateTradesDraft（与 manualRewriteProfile 里的是同一函数）。
- const entry={id:'recipe_fixture_stew',name:'夹具炖菜',minutes:40,workstation:'hearth',materials:[],tools:[],byproducts:[],output:{item:'item_fixture'}};
- const profile={entries:[entry],contextFor:()=>({}),validateDraft:(d,e,c)=>validateTradesDraft(d,e,{names:[],realPeople:[]},c)};
- const draft={id:entry.id,process:'先把切好的根菜放进锅里，加水煮开，再转小火慢炖，中途撇去浮沫，最后尝过咸淡即可盛出。'};
- assert.deepEqual(profile.validateDraft(applyDerivedDuration(draft,entry),entry,{}).errors,[],'夹具正文必须能过行当 L1');
+ // 工序检查要求 context.catalog（缺失即抛错）：给夹具挂一份最小物品目录，用法同 tools/w3-content.mjs 的 w3Context（catalog、catalogRecipes 为不可枚举属性）。
+ // 目录里有配方用到的工具（陶锅，容器类）、材料（根菜、清水）和一件燃料（木炭，带 fuel 标签，本配方不用火所以不入 materials）；正文不写用火动作。
+ const catalog=[{id:'item_fixture_pot',name:'陶锅',tags:['container','ceramic']},{id:'item_fixture_root',name:'根菜',tags:['food']},{id:'item_fixture_water',name:'清水',tags:['liquid']},{id:'item_fixture_charcoal',name:'木炭',tags:['fuel']}];
+ const entry={id:'recipe_fixture_stew',name:'夹具炖菜',minutes:40,workstation:'cooking',materials:[{item:'item_fixture_root',amount:1},{item:'item_fixture_water',amount:1}],tools:['item_fixture_pot'],byproducts:[],output:{item:'item_fixture'}};
+ const fixtureContext=()=>{const context={};Object.defineProperty(context,'catalog',{value:catalog});Object.defineProperty(context,'catalogRecipes',{value:[]});return context;};
+ const profile={entries:[entry],contextFor:fixtureContext,validateDraft:(d,e,c)=>validateTradesDraft(d,e,{names:[],realPeople:[]},c)};
+ const draft={id:entry.id,process:'先把切好的根菜放进陶锅里，加清水浸没，静置片刻让味道渗开，最后尝过咸淡即可盛出。'};
+ assert.deepEqual(profile.validateDraft(applyDerivedDuration(draft,entry),entry,fixtureContext()).errors,[],'夹具正文必须能过行当 L1');
  const context=profile.contextFor(entry);
  const bad=await rewriteFixture(t,entry,context),before=await snapshot(bad);
  await assert.rejects(manualRewrite(args(bad,profile,entry,{id:entry.id,process:'这里写了骨架措辞，不应通过'})),/L1 未通过/);
