@@ -5,7 +5,6 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import '../server-plugin/primitives-runtime.mjs';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
-import {presentPeople} from '../server-plugin/action-text.mjs';
 import {modelActionCatalog,estimateModelActionTokens,MODEL_ACTION_CATALOG_TOKEN_LIMIT} from '../extension/tools.mjs';
 import {createPlaytestServer,runPlaytest} from '../tools/playtest-runner.mjs';
 import {loadPromptBundle} from '../tools/build-card.mjs';
@@ -93,7 +92,7 @@ test('更多来源和选择不会撑破固定上限，也不会修改来源卡�
 
 test('试玩器真实 actions 返回与前端共用有界模型投影，不把完整玩家卡写进工具历史',async t=>{
  const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
- // 走到镇上之后，目标取移动后存档里在场的人（在场规则 = action-text.presentPeople，与 world_actions 判定同一条）；与具体是谁无关。
+ // 走到镇上之后，目标取 world_actions 对移动后存档自己列出的在场者（objects.people = presentPeople 再经可感知过滤，与带 target 时的判定同一条）；与具体是谁无关。
  // 该时刻地点上没有在场的人，说明前提不成立，明确报错，不能静默通过。
  let turn=0,seen,campaignId,target,premise;
  const api=Object.assign(async(endpoint,body)=>{campaignId=body?.campaignId??campaignId;return server.api(endpoint,body);},{seedMode:server.api.seedMode});
@@ -101,7 +100,7 @@ test('试玩器真实 actions 返回与前端共用有界模型投影，不把�
   if(turn++===0)return {choices:[{message:{tool_calls:[{id:'move-to-town',type:'function',function:{name:'world_move',arguments:JSON.stringify({destination:'loc_bs'})}}]}}]};
   if(turn===2){
    const document=(await server.api('read',{campaignId})).document,engine=new WorldEngine(structuredClone(world));
-   target=presentPeople(engine.scoped(document),document.state,document)[0]?.id;
+   target=worldActions(engine.scoped(document),document).objects.people[0]?.id;
    if(!target){premise=`前提不成立：移动后（${document.state.location}，第 ${document.state.minute} 分钟）地点上没有在场的人，无法验证目标人物的行动返回`;throw new Error(premise);}
    return {choices:[{message:{tool_calls:[{id:'look-at-seller',type:'function',function:{name:'world_actions',arguments:JSON.stringify({target})}}]}}]};
   }
