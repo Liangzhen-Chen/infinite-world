@@ -194,7 +194,11 @@ export async function runContentPipeline({
       // 只重写被退回的条目：留下 l4Rejection 历史（含退回意见与被退回的旧稿/旧审查），退回意见作 feedback；
       // 其后沿用本流水线的预留与预算机制（最多再发 2 轮起草+复核，attempts 与旧记录累加，标签不重名）。
       feedback=[`L4 退回：${rejection.reason}`];
-      (record.l4Rejection??=[]).push({key:rejection.key,by:rejection.by,at:rejection.at,reason:rejection.reason,priorStatus:record.status,priorAttempts,attemptCap:priorAttempts+2,priorDraft:record.draft,priorReview:record.review});
+      // 人工改写过的记录被退回：机器重写会产出真正的 L2 结果，门禁不能再按人工条目要求其改写历史与 L4 审查者，否则整批卡死。
+      // 所以把 manualRewrite 历史原样归档进本次 l4Rejection，再从记录上移除，让门禁按机器条目对待；审计痕迹留在 priorManualRewrite。
+      const archivedManual=record.manualRewrite;
+      (record.l4Rejection??=[]).push({key:rejection.key,by:rejection.by,at:rejection.at,reason:rejection.reason,priorStatus:record.status,priorAttempts,attemptCap:priorAttempts+2,priorDraft:record.draft,priorReview:record.review,...(archivedManual!==undefined?{priorManualRewrite:structuredClone(archivedManual)}:{})});
+      delete record.manualRewrite;
       record.draft=null;record.review=null;record.errors=[];record.warnings=[];record.feedback=feedback;
     }
     record.status='pending';
@@ -341,13 +345,27 @@ export async function runContentPipeline({
 
 // 人工改写门禁：改写条目必须有本批 L4 阅读记录，且记录的审查者（note.by）不同于每一位改写者；
 // 带人工标记却没有改写历史的记录同样拒绝，机器条目不得借此标记绕过 L2。
+const normReviewer = value => String(value ?? '').trim().toLowerCase();
+// 审查者必须非空，且不同于该条目的每一位人工改写者；没有人工改写历史的条目只要求非空。
+export function assertL4Reviewer(row, by) {
+  if (!normReviewer(by)) throw new Error(`L4 阅读记录缺少审查者 ${row?.id}`);
+  const history = Array.isArray(row?.manualRewrite) ? row.manualRewrite : [];
+  if (history.some(item => normReviewer(item?.by) === normReviewer(by))) throw new Error(`L4 审查者与人工改写者相同 ${row?.id}`);
+}
+// 写 L4 阅读记录的通用路径：给每条 note 记上审查者 by（--by 给出），人工改写条目的 by 在写入时就校验，不等到发布。
+// rows 是该批条目的当前记录（用来查改写历史）；notes 是 [{id, note, ...}]。返回新数组，不改入参。
+export function stampL4Notes(notes, by, rows = []) {
+  if (!Array.isArray(notes)) throw new Error('L4 阅读记录须为数组');
+  if (!normReviewer(by)) throw new Error('--by 不能为空：L4 阅读记录必须记录审查者');
+  return notes.map(item => { assertL4Reviewer(rows.find(row => row?.id === item.id) ?? { id: item.id }, by); return { ...item, by: String(by).trim() }; });
+}
 function assertManualRewriteReviewed(row, batch) {
   const marked = row.review?.kind === MANUAL_REWRITE_REVIEW_KIND, history = row.manualRewrite;
   if (!marked && history === undefined) return;
   if (!marked || !Array.isArray(history) || !history.length || history.some(item => typeof item?.by !== 'string' || !item.by.trim())) throw new Error(`人工改写记录不完整 ${row.id}`);
   const note = batch.l4?.notes?.find(item => item.id === row.id && typeof item.note === 'string' && item.note.trim());
   if (!note) throw new Error(`人工改写条目缺少 L4 阅读记录 ${row.id}`);
-  const norm = value => String(value ?? '').trim().toLowerCase();
+  const norm = normReviewer;
   if (!norm(note.by)) throw new Error(`人工改写条目的 L4 阅读记录缺少审查者 ${row.id}`);
   if (history.some(item => norm(item.by) === norm(note.by))) throw new Error(`人工改写条目的 L4 审查者与改写者相同 ${row.id}`);
 }
@@ -369,11 +387,13 @@ export async function readApprovedContent(root, entries, { contextFor = () => nu
   const allowed = new Set();
   for (const batch of summary.batches) {
     const current = await readJSON(path.join(root, `batch-${batch.index}.json`));
-    if (!current?.l4?.approved || current.needsSystemicRepair) throw approvalIncomplete(`批 ${batch.index} 尚未完成 L4 或人工队列超过 10%`);
+    // 先判完整性（指纹），再判审批是否齐全：指纹漂移同时 L4 未批时，必须报真错误，不能被“审批未齐”掩盖。
+    if (!current) throw approvalIncomplete(`批 ${batch.index} 缺少批次文件`);
     if (current.fingerprint !== batch.fingerprint) throw new Error(`批 ${batch.index} 指纹不符：批次文件与摘要不一致，内容可能已被改动`);
     if (!Array.isArray(current.ids)) throw new Error('批次缺少条目清单');
     const rows = await Promise.all(current.ids.map(id => readJSON(path.join(root, `${id}.json`))));
     if (rows.some(row => !row) || hashContent(rows.map(rowFingerprintShape)) !== current.fingerprint) throw new Error(`批 ${batch.index} 审查后内容已改变`);
+    if (!current.l4?.approved || current.needsSystemicRepair) throw approvalIncomplete(`批 ${batch.index} 尚未完成 L4 或人工队列超过 10%`);
     for (const row of rows) assertManualRewriteReviewed(row, current);
     for (const id of [...current.sample, ...current.flagged]) {
       if (!current.l4.notes?.some(row => row.id === id && typeof row.note === 'string' && row.note.trim())) throw approvalIncomplete(`缺少 L4 阅读记录 ${id}`);

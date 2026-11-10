@@ -28,7 +28,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {randomInt} from 'node:crypto';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
-import {runContentPipeline, hashContent, parseModelJSON} from '../../tools/content-pipeline.mjs';
+import {runContentPipeline, hashContent, parseModelJSON,rowFingerprintShape} from '../../tools/content-pipeline.mjs';
 import {reserveCeilingYuan} from '../../tools/content-budget.mjs';
 import {loadRuntimeWorld} from '../../tools/load-world.mjs';
 import {validateMaterialProps, deriveFromSources, memberValues, memberDeviations, MATERIAL_DIMENSIONS} from '../../server-plugin/item-class.mjs';
@@ -472,7 +472,7 @@ export async function verifyPublished(card=cardProfiles.d,{checkL1=true,approval
   const own=current.ids.filter(id=>entries.some(e=>e.id===id)),needL4=own.length>0; // 整批都已移交到别的卡的批，L4 由那张卡覆盖
   if(current.fingerprint!==b.fingerprint||needL4&&!current.l4?.approved)throw Error(`批 ${b.index} 尚未完成 L4 或批指纹与摘要不符`);
   const rows=await Promise.all(current.ids.map(id=>readJSON(path.join(reviewRoot,`${id}.json`))));
-  if(rows.some(r=>!r)||hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==current.fingerprint)throw Error(`批 ${b.index} 审查后内容已改变`);
+  if(rows.some(r=>!r)||hashContent(rows.map(rowFingerprintShape))!==current.fingerprint)throw Error(`批 ${b.index} 审查后内容已改变`);
   if(needL4){
    for(const id of [...current.sample,...current.flagged].filter(id=>own.includes(id)))if(!current.l4.notes?.some(r=>r.id===id&&typeof r.note==='string'&&r.note.trim()))throw Error(`缺少 L4 阅读记录 ${id}`);
    checkWave(current.l4.wave,own,waveSize(own.length));
@@ -780,7 +780,7 @@ export async function refreshBatches(root,records){
  if(!sum)return;
  const files=sum.batches.map(b=>path.join(root,`batch-${b.index}.json`)),byId=new Map(records.map(r=>[r.id,r]));
  for(const f of files){
-  const b=await readJSON(f),oldFp=b.fingerprint,rows=b.ids.map(id=>byId.get(id)),fp=hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})));
+  const b=await readJSON(f),oldFp=b.fingerprint,rows=b.ids.map(id=>byId.get(id)),fp=hashContent(rows.map(rowFingerprintShape));
   const passed=rows.filter(r=>r.status==='passed'),pool=[...passed];for(let i=pool.length-1;i>0;i--){const j=randomInt(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];}
   Object.assign(b,{fingerprint:fp,passed:passed.length,manual:rows.filter(r=>r.status==='manual').map(r=>r.id),pending:rows.filter(r=>r.status==='pending').map(r=>r.id),flagged:rows.filter(r=>r.warnings.length).map(r=>r.id),
    sample:fp===oldFp?b.sample:pool.slice(0,5).map(r=>r.id),l4:fp===oldFp?b.l4:{approved:false,notes:[]}});

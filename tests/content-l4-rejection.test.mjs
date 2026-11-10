@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {tmpRoot} from '../tools/tmp-root.mjs';
-import {runContentPipeline} from '../tools/content-pipeline.mjs';
+import {runContentPipeline,readApprovedContent} from '../tools/content-pipeline.mjs';
+import {manualRewrite} from '../tools/manual-rewrite.mjs';
 
 // L4 退回格式：batch-N.json 的 l4 = {approved:false, rejection:{by,at,reason,ids:[…]}}。
 async function fixture(t){
@@ -67,4 +68,30 @@ test('L4 退回：被点名的 manual 条目也重写，attempts 累加且有上
   await runContentPipeline(opts);
   const b2=await readJSON(path.join(root,'recipe_b.json'));
   assert.equal(b2.status,'manual');assert.ok(b2.attempts<=b.attempts+2);
+});
+
+test('人工改写后被 L4 退回再机器重写：manualRewrite 历史归档进 l4Rejection，记录按机器条目发布，不卡死', async t => {
+  const {root,texts,options}=await fixture(t);
+  await runContentPipeline(options);
+  await reject(root,{by:'L4 复核',at:'2026-11-10',reason:'乙稿不通',ids:['recipe_b']});
+  await manualRewrite({root,drafts:[{id:'recipe_b',draft:{id:'recipe_b',process:'乙稿人工版。'}}],by:'改写者甲',reason:'人工改写',headCommit:'abcdef1',entries:options.entries,validateDraft:options.validateDraft,now:()=>'2026-11-10T00:00:00.000Z'});
+  const manual=await readJSON(path.join(root,'recipe_b.json'));
+  assert.equal(manual.manualRewrite.length,1);assert.equal(manual.review.kind,'manual-rewrite-no-l2');
+  // 人工稿又被 L4 退回：机器重写，产出真正的 L2 结果
+  await reject(root,{by:'L4 复核',at:'2026-11-11',reason:'人工稿仍不通',ids:['recipe_b']});
+  texts.recipe_b='乙稿机器版。全程70分钟。';
+  await runContentPipeline(options);
+  const b=await readJSON(path.join(root,'recipe_b.json'));
+  assert.equal(b.status,'passed');assert.deepEqual(b.review,{contradictions:[]});
+  assert.equal(b.manualRewrite,undefined,'人工改写历史须从记录上移除，门禁才按机器条目对待');
+  const archived=b.l4Rejection.at(-1).priorManualRewrite;
+  assert.deepEqual(archived,manual.manualRewrite,'审计痕迹原样归档在本次 l4Rejection 里');
+  assert.equal(archived[0].by,'改写者甲');
+  // 批次 L4 批准（只补批次要求的抽读/标记记录，没有审查者 by）后可以发布，不报“记录不完整”
+  const file=path.join(root,'batch-0.json'),batch=await readJSON(file);
+  batch.l4={approved:true,notes:[...new Set([...batch.sample,...batch.flagged])].map(id=>({id,note:'已逐字阅读'}))};
+  await fs.writeFile(file,JSON.stringify(batch,null,2)+'\n');
+  const summary=await readJSON(path.join(root,'summary.json'));summary.batches=[batch];await fs.writeFile(path.join(root,'summary.json'),JSON.stringify(summary,null,2)+'\n');
+  const out=await readApprovedContent(root,options.entries);
+  assert.equal(out.find(d=>d.id==='recipe_b').process,'乙稿机器版。全程70分钟。');
 });

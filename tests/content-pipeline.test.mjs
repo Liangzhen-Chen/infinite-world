@@ -104,6 +104,10 @@ test('够draft但不够必要review时零调用，预算拒绝不覆盖旧attemp
 });
 test('并发只因在途预留占额时排队，真到额后停止全批未发队列，预留均已结算或可核实取消',async t=>{
  // 每条 draft+review 共预留 0.2；额度 0.3：第二条先排队等第一条结算，第一条结算后已花 0.2，再放 0.2 超限才是真到额。
+ // 为什么“恰好 2 次”是确定的（tools/content-budget.mjs）：所有预留判断都在同一条串行 promise 队列（enqueue）里依次执行，Node 单线程，
+ // 队列里第一个到达的条目拿到 0.2 预留（0.2<=0.3），此后任何条目再预留都是 在途0.2+0.2>0.3；等它的 draft、review 两次请求结算完，
+ // 已花 0.2，再预留 0.2 则 已花0.2+0.2>0.3，fitsAfterRelease 为假，直接 stop。fake client 没有真实计时，因此不论哪个条目先进队，
+ // 发出的调用恰是那一个条目的 draft+review 共 2 次；变的只是赢家是谁，下面没有断言是哪一条。
  const p=await budgetFixture(t,{limit:.3,ids:['item_one','item_two','item_three','item_four']});
  const result=await runContentPipeline(p.options);assert.equal(p.calls.length,2);assert.equal(result.summary.passed,1);assert.equal(result.summary.pending,3);assert.equal(result.summary.manual,0);
  const stopped=result.results.filter(r=>r.budgetStop);assert.equal(stopped.length,3);assert.ok(stopped.every(r=>r.status==='pending'&&r.attempts===0&&r.budgetStop.code==='CONTENT_BUDGET_STOP'));

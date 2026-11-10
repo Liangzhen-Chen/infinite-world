@@ -28,7 +28,27 @@ const flagsIn = text => [...new Set(text.match(FLAG_PATTERN) ?? [])];
 // 开关可能由脚本直接导入的共享模块解析（如级联批脚本导入 runRevision 来处理 --verify）：入口开关在脚本自身或它直接 import 的本地模块源码里出现即算被解析。
 const localImports = (file, text) => [...text.matchAll(/(?:from\s*|import\s*\(\s*)['"](\.{1,2}\/[^'"]+\.(?:mjs|js|cjs))['"]/g)]
   .map(m => path.posix.join(path.posix.dirname(file), m[1])).filter(f => texts.has(f));
-const parsesFlag = (file, flag) => texts.get(file).includes(flag) || localImports(file, texts.get(file)).some(f => texts.get(f).includes(flag));
+// 去掉 // 与 /* */ 注释（字符串与模板字面量里的内容保留；不处理正则字面量里的引号，够用于判断“开关是否出现在代码里”）。
+export function stripComments(text) {
+  let out = '', i = 0, quote = null;
+  while (i < text.length) {
+    const c = text[i], d = text[i + 1];
+    if (quote) {
+      out += c;
+      if (c === '\\') { out += d ?? ''; i += 2; continue; }
+      if (c === quote) quote = null;
+      i++;
+    } else if (c === '"' || c === "'" || c === '`') { quote = c; out += c; i++; }
+    else if (c === '/' && d === '/') { while (i < text.length && text[i] !== '\n') i++; }
+    else if (c === '/' && d === '*') { const end = text.indexOf('*/', i + 2); out += ' '; i = end < 0 ? text.length : end + 2; }
+    else { out += c; i++; }
+  }
+  return out;
+}
+const codes = new Map(files.map(f => [f, stripComments(texts.get(f))]));
+// 开关必须出现在代码里（注释不算被解析）：脚本自身或它直接导入的本地模块。
+const parsesFlag = (file, flag) => codes.get(file).includes(flag) || localImports(file, texts.get(file)).some(f => codes.get(f).includes(flag));
+
 const kindOf = (file, flag) => (FILE_FLAG_OVERRIDES[`${file} ${flag}`] ?? FLAGS[flag])?.kind;
 
 test('命令行开关登记完整：脚本里出现的每个 --xxx 都已归类（只读 / 写 / 修饰 / 非开关）', () => {
@@ -100,4 +120,11 @@ test('checkOptArgs：路径越界、类型不符、缺值都判违规，合规�
   assert.equal(checkOptArgs(['--tier', 'weekly'], ROOT).length, 1);
   assert.equal(checkOptArgs(['--card'], ROOT).length, 1);
   assert.equal(checkOptArgs(['--origin', 'http://x'], ROOT).length, 1);
+});
+
+test('stripComments：注释里的开关不算被解析，代码与字符串里的算', () => {
+  const text = "// --only-in-comment\n/* --block\n --block2 */\nconst a = '--in-string'; const u = 'http://x'; // tail --tail\nconst b = `--in-template`; if (argv.includes('--real')) {}\n";
+  const code = stripComments(text);
+  for (const flag of ['--only-in-comment', '--block', '--block2', '--tail']) assert.ok(!code.includes(flag), flag);
+  for (const flag of ['--in-string', 'http://x', '--in-template', '--real']) assert.ok(code.includes(flag), flag);
 });

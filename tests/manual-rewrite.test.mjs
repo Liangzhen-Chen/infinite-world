@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { tmpRoot } from '../tools/tmp-root.mjs';
-import { hashContent, readApprovedContent, rowFingerprintShape } from '../tools/content-pipeline.mjs';
+import { hashContent, readApprovedContent, rowFingerprintShape, stampL4Notes } from '../tools/content-pipeline.mjs';
 import { manualRewrite } from '../tools/manual-rewrite.mjs';
 
 const entries = [{ id: 'a_ok', k: 1 }, { id: 'b_man', k: 2 }, { id: 'c_rej', k: 3 }];
@@ -115,4 +115,59 @@ test('改写后改历史里的 by 同样被指纹拦下；带人工标记但无�
   await writeJson(bf, batch);
   const sf = path.join(root2, 'summary.json'), summary = await readJson(sf); summary.batches = [batch]; await writeJson(sf, summary);
   await assert.rejects(publish(root2), /人工改写记录不完整 a_ok/);
+});
+
+test('草稿缺 id 时补上条目 id，id 不一致拒绝且零写盘', async t => {
+  const root = await fixture(t);
+  await run(root, [{ id: 'b_man', draft: { description: '没写 id 的新稿正文' } }]);
+  const record = await readJson(path.join(root, 'b_man.json'));
+  assert.equal(record.draft.id, 'b_man');
+  assert.equal(record.draft.description, '没写 id 的新稿正文');
+  const root2 = await fixture(t), before = await snapshot(root2);
+  await assert.rejects(run(root2, [{ id: 'b_man', draft: { id: 'a_ok', description: '新稿正文足够长' } }]), /id 不符/);
+  assert.deepEqual(await snapshot(root2), before);
+});
+
+test('写 L4 阅读记录：必须带审查者 by；人工改写条目的 by 写入时就校验（与改写者相同、缺失都拒绝）', async t => {
+  const root = await fixture(t);
+  await run(root, [good('b_man')], 'Alice');
+  const rows = await Promise.all(['a_ok', 'b_man', 'c_rej'].map(id => readJson(path.join(root, `${id}.json`))));
+  const notes = [{ id: 'b_man', note: '已逐字阅读' }];
+  assert.throws(() => stampL4Notes(notes, '', rows), /--by 不能为空/);
+  assert.throws(() => stampL4Notes(notes, undefined, rows), /--by 不能为空/);
+  assert.throws(() => stampL4Notes(notes, ' alice ', rows), /审查者与人工改写者相同 b_man/);
+  assert.throws(() => stampL4Notes('x', 'Bob', rows), /须为数组/);
+  const stamped = stampL4Notes(notes, ' Bob ', rows);
+  assert.deepEqual(stamped, [{ id: 'b_man', note: '已逐字阅读', by: 'Bob' }]);
+  assert.equal(notes[0].by, undefined, '不改入参');
+  // 机器条目（无改写历史）只要求 by 非空
+  assert.equal(stampL4Notes([{ id: 'a_ok', note: '已读' }], 'Bob', rows)[0].by, 'Bob');
+  // 写出的记录能过发布门禁
+  await approve(root, stamped);
+  assert.equal((await publish(root)).length, 3);
+});
+
+test('检查顺序：指纹漂移时即使 L4 未批也报指纹错（真错误），不是“审批未齐”', async t => {
+  const root = await fixture(t);
+  const file = path.join(root, 'a_ok.json'), record = await readJson(file);
+  record.draft.description = '指纹漂移后的正文';
+  await writeJson(file, record);
+  await assert.rejects(publish(root), e => e.code !== 'APPROVAL_INCOMPLETE' && /审查后内容已改变/.test(e.message));
+  // 内容没动、L4 未批：才是审批未齐
+  const root2 = await fixture(t);
+  await assert.rejects(publish(root2), e => e.code === 'APPROVAL_INCOMPLETE' && /尚未完成 L4/.test(e.message));
+});
+
+test('批次指纹形状只有一处定义：tools 与 world/design 里没有脚本自己拼 {id,draft,review,status}', async () => {
+  const { default: nodeFs } = await import('node:fs');
+  const root = path.resolve(import.meta.dirname, '..');
+  const own = /\{\s*id\s*:\s*(\w+)\.id\s*,\s*draft\s*:\s*\1\.draft\s*,\s*review\s*:\s*\1\.review\s*,\s*status\s*:\s*\1\.status\s*\}|\(\{\s*id\s*,\s*draft\s*,\s*review\s*,\s*status\s*\}\)/;
+  const offenders = [];
+  const walk = dir => { for (const e of nodeFs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+    const rel = `${dir}/${e.name}`;
+    if (e.isDirectory()) { if (e.name !== 'node_modules') walk(rel); }
+    else if (/\.mjs$/.test(e.name) && rel !== 'tools/content-pipeline.mjs' && own.test(nodeFs.readFileSync(path.join(root, rel), 'utf8'))) offenders.push(rel);
+  } };
+  walk('tools'); walk('world/design');
+  assert.deepEqual(offenders, [], '批次指纹须用 content-pipeline 导出的 rowFingerprintShape');
 });

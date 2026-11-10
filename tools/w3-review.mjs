@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {economyW3} from '../world/design/economy-w3.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {hashContent,defaultReviewRequest,parseModelJSON} from './content-pipeline.mjs';
+import {hashContent,defaultReviewRequest,parseModelJSON,rowFingerprintShape} from './content-pipeline.mjs';
 import {w3Context,w3Revision,validateW3Draft,closestW3Similarity} from './w3-content.mjs';
 
 const root='world/drafts/w3',read=async file=>JSON.parse(await fs.readFile(file,'utf8')),write=async(file,data)=>fs.writeFile(file,JSON.stringify(data,null,2)+'\n');
@@ -47,7 +47,7 @@ for(const kind of ['items','recipes']){
   }
   for(let i=0;i<summary.batches.length;i++){
     const batch=await read(`${root}/${kind}/batch-${i}.json`),rows=batch.ids.map(id=>records.find(row=>row.id===id));
-    const fingerprint=hashContent(rows.map(row=>({id:row.id,draft:row.draft,review:row.review,status:row.status})));
+    const fingerprint=hashContent(rows.map(rowFingerprintShape));
     if(batch.fingerprint!==fingerprint)batch.l4={approved:false,notes:[]};
     batch.fingerprint=fingerprint;batch.passed=rows.filter(row=>row.status==='passed').length;batch.manual=rows.filter(row=>row.status==='manual').map(row=>row.id);batch.pending=[];
     batch.flagged=rows.filter(row=>row.warnings.length||row.manualCorrection).map(row=>row.id);batch.manualRatio=batch.manual.length/batch.count;batch.needsSystemicRepair=batch.manualRatio>.1;

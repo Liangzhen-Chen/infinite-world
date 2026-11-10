@@ -40,7 +40,7 @@ test('单失败id复审保留cards/requests/未知预留与失败历史，重绑
  const batch=await read(path.join(p.root,'batch-0.json')),summary=await read(path.join(p.root,'summary.json'));assert.equal(summary.passed,2);assert.equal(summary.manual,0);assert.equal(batch.l4.approved,false);assert.deepEqual(batch.l4History[0].notes,p.batch.l4.notes);assert.equal(summary.batches[0].fingerprint,batch.fingerprint);assert.equal(batch.foundationHash,hashContent(p.foundation));
  await assert.rejects(readApprovedContent(p.root,p.entries,{contextFor:e=>contextFor(e,p.world),revision:p.config.revision}),/L4/);
  const notes=await Promise.all(p.entries.map(async e=>{const r=await read(path.join(p.root,e.id+'.json'));return{id:e.id,note:'mock人工阅读',draftHash:hashContent(r.draft),reviewHash:hashContent(r.review)};}));const notesFile=path.join(p.dir,'notes.json');await p.write(notesFile,notes);
- await exec(process.execPath,[path.resolve('tools/npc-depth-l4.mjs'),'--design','mock-design.mjs','--root',p.root,'--notes',notesFile]);assert.equal((await readApprovedContent(p.root,p.entries,{contextFor:e=>contextFor(e,p.world),revision:p.config.revision})).length,2);
+ await exec(process.execPath,[path.resolve('tools/npc-depth-l4.mjs'),'--design','mock-design.mjs','--root',p.root,'--notes',notesFile,'--by','测试审查者']);assert.equal((await readApprovedContent(p.root,p.entries,{contextFor:e=>contextFor(e,p.world),revision:p.config.revision})).length,2);
  await runDepthReview(p.options,p.dependencies);assert.equal(p.calls.length,1);
 });
 test('复审硬错、格式错或未知请求只允许一次，保留原attempts与错误证据',async t=>{

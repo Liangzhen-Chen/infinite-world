@@ -7,7 +7,7 @@ import {randomUUID} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent} from './content-pipeline.mjs';
+import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent,stampL4Notes} from './content-pipeline.mjs';
 import {readApprovedSupersedes,applySupersedes} from './approved-revisions.mjs';
 import {locationTraits} from '../server-plugin/traits.mjs';
 
@@ -251,10 +251,10 @@ export async function publish(n,{write=false}={}){
  return{published:write,changed:changed.map(([f])=>f),ids:b.entries.map(e=>e.id)};
 }
 // L4: record the executor's reading notes and the wave scores into batch-0.json.
-export async function recordL4(n,file){
+export async function recordL4(n,file,by){
  const root=draftRoot(n),notes=JSON.parse(await fs.readFile(file,'utf8')),batchFile=path.join(root,'batch-0.json'),batch=JSON.parse(await fs.readFile(batchFile,'utf8'));
  for(const id of [...batch.sample,...batch.flagged])if(!notes.notes.some(r=>r.id===id))throw Error(`缺少 L4 阅读记录 ${id}`);
- batch.l4={approved:true,reviewer:`${BATCHES[n].card}执行会话`,notes:notes.notes,wave:notes.wave,waveMean:notes.wave.flatMap(r=>r.scores).reduce((a,c)=>a+c,0)/(notes.wave.length*6)};
+ batch.l4={approved:true,reviewer:`${BATCHES[n].card}执行会话`,notes:stampL4Notes(notes.notes,by),wave:notes.wave,waveMean:notes.wave.flatMap(r=>r.scores).reduce((a,c)=>a+c,0)/(notes.wave.length*6)};
  await fs.writeFile(batchFile,JSON.stringify(batch,null,2)+'\n');return batch.l4;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){
@@ -264,6 +264,6 @@ if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.fil
  if(process.argv.includes('--review')){const ids=arg('--ids');const {summary:s}=await review(n,{retryManual:process.argv.includes('--retry-manual'),ids:ids?ids.split(','):null});
   console.log(JSON.stringify({total:s.total,passed:s.passed,manual:s.manual,pending:s.pending,card:s.budget?.cards?.[BATCHES[n].card]}));}
  if(process.argv.includes('--review-seq'))console.log(JSON.stringify(await reviewSequential(n,{retryManual:process.argv.includes('--retry-manual')})));
- if(process.argv.includes('--l4'))console.log(JSON.stringify(await recordL4(n,arg('--l4'))));
+ if(process.argv.includes('--l4'))console.log(JSON.stringify(await recordL4(n,arg('--l4'),arg('--by'))));
  if(process.argv.includes('--publish')||process.argv.includes('--dry-run'))console.log(JSON.stringify(await publish(n,{write:process.argv.includes('--publish')})));
 }

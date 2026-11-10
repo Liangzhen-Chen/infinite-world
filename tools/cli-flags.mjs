@@ -70,7 +70,7 @@ const N = {
 // list 逗号分隔的标识或编号；url 只声明、不得出现在只读入口里；enum:a|b 取值限定。声明了类型，入口里的值才能被校验（checkOptArgs）。
 const OPT = {
   '--actions-only': 'flag', '--authored-background': 'path', '--authorization-hash': 'id', '--batch': 'id', '--batch-manifest': 'path',
-  '--batches': 'list', '--budget': 'number', '--budget-proof': 'path', '--budget-root': 'path', '--budget-yuan': 'number', '--card': 'id',
+  '--batches': 'list', '--by': 'id', '--budget': 'number', '--budget-proof': 'path', '--budget-root': 'path', '--budget-yuan': 'number', '--card': 'id',
   '--catalog': 'path', '--combat': 'flag', '--compact-request': 'flag', '--compare': 'path', '--require-harvest': 'flag', '--concurrency': 'number', '--config': 'path',
   '--contact-routine-only': 'flag', '--controlled-revision': 'path', '--corpus': 'path', '--count': 'number', '--counties': 'number',
   '--days': 'number', '--deps': 'flag', '--depth': 'number', '--design': 'path', '--diagnostics': 'flag', '--dir': 'path', '--directory': 'path',
@@ -101,6 +101,8 @@ export const FILE_FLAG_OVERRIDES = {
   'tools/clear-budget-stop.mjs --root': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
   'tools/clear-budget-stop.mjs --id': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
   'tools/clear-budget-stop.mjs --reason': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
+  'tools/w3-journey.mjs --kind': {kind: 'nonflag', note: '报错文字里提到的 manual-rewrite 的 --kind 开关（manualRewriteProfile 的参数说明），本脚本自己没有这个开关'},
+  'tools/w3-trades.mjs --kind': {kind: 'nonflag', note: '报错文字里提到的 manual-rewrite 的 --kind 开关（manualRewriteProfile 的参数说明），本脚本自己没有这个开关'},
   'tools/manual-rewrite.mjs --root': {kind: 'write', note: '写审核记录目录下的 <id>.json、所属 batch-*.json、summary.json（人工改写，不调模型、不联网）'},
   'tools/manual-rewrite.mjs --drafts': {kind: 'write', note: '写审核记录目录下的 <id>.json、所属 batch-*.json、summary.json（人工改写，不调模型、不联网）'},
   'tools/manual-rewrite.mjs --by': {kind: 'write', note: '写审核记录目录下的 <id>.json、所属 batch-*.json、summary.json（人工改写，不调模型、不联网）'},

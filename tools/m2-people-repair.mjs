@@ -2,7 +2,7 @@
 // changed manuscript receives a fresh L1 and L2 before the batch is rebuilt.
 import fs from 'node:fs/promises';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {defaultReviewRequest,parseModelJSON,hashContent} from './content-pipeline.mjs';
+import {defaultReviewRequest,parseModelJSON,hashContent,rowFingerprintShape} from './content-pipeline.mjs';
 import {validateDraft,contextFor,revision} from './m2-people-content.mjs';
 import {loadWorld} from './load-world.mjs';
 import {npcM2Foundation} from '../world/design/npc-m2.mjs';
@@ -41,6 +41,6 @@ try{
   row.l4Repair={id,status:row.status,priorDraftHash:before,note:refreshGoals?'补齐手工目标资源前提后逐条复核原有正文，未重新起草。':'L4逐条纠正虚构地理、人名、能力前提或服务承诺，保留其余已审核正文。'};
   notes.push(row.l4Repair);await write(id,row);await write('budget',{spentYuan:client.spent,reservedYuan:client.reserved,limitYuan:20});
  }
- const rows=await Promise.all(batch.ids.map(read));batch.fingerprint=hashContent(rows.map(row=>({id:row.id,draft:row.draft,review:row.review,status:row.status})));batch.passed=rows.filter(x=>x.status==='passed').length;batch.manual=rows.filter(x=>x.status==='manual').map(x=>x.id);batch.manualRatio=batch.manual.length/batch.count;batch.needsSystemicRepair=batch.manualRatio>0.1;batch.flagged=rows.filter(x=>x.warnings.length).map(x=>x.id);batch.costUpperYuan=client.spent;batch.l4={approved:false,notes:[]};
+ const rows=await Promise.all(batch.ids.map(read));batch.fingerprint=hashContent(rows.map(rowFingerprintShape));batch.passed=rows.filter(x=>x.status==='passed').length;batch.manual=rows.filter(x=>x.status==='manual').map(x=>x.id);batch.manualRatio=batch.manual.length/batch.count;batch.needsSystemicRepair=batch.manualRatio>0.1;batch.flagged=rows.filter(x=>x.warnings.length).map(x=>x.id);batch.costUpperYuan=client.spent;batch.l4={approved:false,notes:[]};
  await write('batch-0',batch);const summary=await read('summary');Object.assign(summary,{passed:batch.passed,manual:batch.manual.length,costUpperYuan:client.spent,batches:[batch]});await write('summary',summary);await write('terminal',{state:'finished',...summary});await write('l4-repair',{notes,costUpperYuan:client.spent});console.log(JSON.stringify({passed:batch.passed,manual:batch.manual,flagged:batch.flagged,costUpperYuan:client.spent}));
 }catch(error){await write('budget',{spentYuan:client.spent,reservedYuan:client.reserved,limitYuan:20});await write('terminal',{state:'error',error:String(error.message)});throw error;}

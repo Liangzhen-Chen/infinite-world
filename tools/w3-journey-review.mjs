@@ -4,7 +4,7 @@ import{economyW3Journey}from'../world/design/economy-w3-journey.mjs';
 import{closestW3Similarity}from'./w3-content.mjs';
 import{journeyRoot as root,journeyRevision as revision,journeyContext as w3Context}from'./w3-journey.mjs';
 import{validateTradesDraft,tradesReviewRequest}from'./w3-trades.mjs';
-import{hashContent,parseModelJSON}from'./content-pipeline.mjs';
+import{hashContent,parseModelJSON,rowFingerprintShape}from'./content-pipeline.mjs';
 import{DeepSeekClient}from'./deepseek-client.mjs';
 const read=async file=>JSON.parse(await fs.readFile(file,'utf8')),write=(file,value)=>fs.writeFile(file,JSON.stringify(value,null,2)+'\n');
 const world=await loadWorld(),bones=economyW3Journey(world),blocklist=await read('world/meta/blocklist.json');
@@ -35,7 +35,7 @@ for(const kind of['items','recipes']){
  const records=all.filter(row=>row.kind===kind).map(row=>row.record),summary=await read(`${root}/${kind}/summary.json`);
  for(const r of records){const similarity=closestW3Similarity(r.draft,[...records.map(row=>row.draft),...world[kind]]);if(similarity.score>=.35){r.errors.push(`相似度${similarity.score}：${similarity.id}`);r.status='manual';await write(`${root}/${kind}/${r.id}.json`,r);}}
  for(const prior of summary.batches){const batch=await read(`${root}/${kind}/batch-${prior.index}.json`),rows=batch.ids.map(id=>records.find(row=>row.id===id));
-  const fingerprint=hashContent(rows.map(row=>({id:row.id,draft:row.draft,review:row.review,status:row.status})));if(batch.fingerprint!==fingerprint)batch.l4={approved:false,notes:[]};batch.fingerprint=fingerprint;
+  const fingerprint=hashContent(rows.map(rowFingerprintShape));if(batch.fingerprint!==fingerprint)batch.l4={approved:false,notes:[]};batch.fingerprint=fingerprint;
   batch.passed=rows.filter(row=>row.status==='passed').length;batch.manual=rows.filter(row=>row.status==='manual').map(row=>row.id);batch.pending=rows.filter(row=>row.status==='pending').map(row=>row.id);batch.flagged=rows.filter(row=>row.warnings.length||row.manualCorrection).map(row=>row.id);batch.manualRatio=batch.manual.length/batch.count;batch.needsSystemicRepair=batch.manualRatio>.1;
   await write(`${root}/${kind}/batch-${batch.index}.json`,batch);summary.batches[batch.index]=batch;
  }summary.passed=records.filter(row=>row.status==='passed').length;summary.manual=records.filter(row=>row.status==='manual').length;summary.pending=records.filter(row=>row.status==='pending').length;summary.costUpperYuan=(await read('world/drafts/w3/budget.json')).spentYuan;

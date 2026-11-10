@@ -3,7 +3,7 @@
 // 模块须导出 manualRewriteProfile(kind) → {entries, validateDraft, contextFor?}，即该流水线自己的 L1 校验与冻结骨架（如 tools/w3-journey.mjs）。
 // 规则：只处理 status==='manual'，或在所属批次 l4.rejection.ids 里被点名退回的记录；任一条 L1 不过或不合格，整批拒绝且不写任何文件。
 // 写入：旧 draft/review/status/attempts 原样进 record.manualRewrite[]；新 draft 置 status 'passed'，review 为 {kind:'manual-rewrite-no-l2'}（不是 L2 结果）。
-// 所属批次文件与 summary.json 同步重算 fingerprint，l4 重置为未批准（旧 l4 进 l4History），须由独立于改写者的审查者重做 L4 并逐条写阅读记录（note.by）。
+// 所属批次文件与 summary.json 同步重算 fingerprint，l4 重置为未批准（旧 l4 进 l4History），须由独立于改写者的审查者重做 L4 并逐条写阅读记录（note.by，由写 L4 的命令 --by 给出）。
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -41,7 +41,8 @@ export async function manualRewrite({ root, drafts, by, reason, headCommit, entr
     const entry = entries.find(row => row.id === id);
     if (!entry) throw new Error(`条目 ${id} 不在冻结骨架中`);
     if (!rawDraft || typeof rawDraft !== 'object' || (rawDraft.id !== undefined && rawDraft.id !== id)) throw new Error(`人工稿 ${id} 不是对象或 id 不符`);
-    const draft = applyDerivedDuration(structuredClone(rawDraft), entry);
+    // 写入的 draft.id 必须等于条目 id：缺 id 时补上，不一致的上一行已拒绝。
+    const draft = applyDerivedDuration({ id, ...structuredClone(rawDraft) }, entry);
     const result = await l1(draft, entry, await contextFor(entry));
     const errors = Array.isArray(result) ? result : result?.errors ?? [];
     if (errors.length) failures.push(`${id}: ${errors.join('；')}`);

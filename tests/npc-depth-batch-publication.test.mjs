@@ -47,7 +47,7 @@ async function fixture(t,{shared=false,oneSided=false,firstSource=false}={}){
   }else result=await runContentPipeline({entries,root,budgetRoot:root,client,revision:config.revision,contextFor:e=>contextFor(e,world),buildDraftRequest,buildReviewRequest,reviewDraftFor:patchDraft,extractDraft,validateDraft,concurrency:1,batchSize:25});
   for(const record of result.results){assert.equal(record.status,'passed',JSON.stringify(record.errors));assert.deepEqual(record.errors,[]);}
   const notes=result.results.map(r=>({id:r.id,note:'测试替身按冻结原档逐条核对叶子。',draftHash:hashContent(r.draft),reviewHash:hashContent(r.review)})),notesFile=path.join(root,'human-notes.json');await write(notesFile,notes);
-  await execute(process.execPath,[path.resolve('tools/npc-depth-l4.mjs'),'--design',design,'--root',root,'--notes',notesFile]);cards.push(root);
+  await execute(process.execPath,[path.resolve('tools/npc-depth-l4.mjs'),'--design',design,'--root',root,'--notes',notesFile,'--by','测试审查者']);cards.push(root);
  }
  const batchManifest=path.join(worldRoot,'drafts/batch.json'),plan={contract:batchContract,worldRoot:'..',sourceHash:hashContent(await loadWorld(worldRoot)),expectedIds:ids,manifests:cards.map(root=>path.relative(worldRoot,path.join(root,'manifest.json')).replaceAll('\\','/'))};await write(batchManifest,plan);
  return {worldRoot,world,baseline,cards,batchManifest,plan};

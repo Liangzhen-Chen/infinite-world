@@ -9,7 +9,6 @@ import {applyDerivedDuration} from '../tools/content-numerals.mjs';
 import {manualRewrite} from '../tools/manual-rewrite.mjs';
 import {manualRewriteProfile,validateTradesDraft,tradesRoot,tradesRevision} from '../tools/w3-trades.mjs';
 import {manualRewriteProfile as journeyProfile} from '../tools/w3-journey.mjs';
-import {loadWorld} from '../tools/load-world.mjs';
 import {differences,buildEntries,readAuthorization,verifyApproval,runRevision,draftFor,contextFor,validateDraft,applyCandidate,isPublished,revision,root,via,authorizationFile} from '../world/design/w3-trades-text-revision.mjs';
 import {APPROVAL_SOURCES,readApprovedSupersedes} from '../tools/approved-revisions.mjs';
 
@@ -43,18 +42,15 @@ const snapshot=async dir=>Object.fromEntries(await Promise.all((await fs.readdir
 const args=(dir,profile,entry,draft)=>({root:dir,drafts:[{id:entry.id,draft}],by:'改写者甲',reason:'按骨架人工改写',headCommit:'abcdef1',entries:profile.entries,validateDraft:profile.validateDraft,contextFor:profile.contextFor,now:()=>'2026-11-10T00:00:00.000Z'});
 
 test('manual-rewrite 用行当批 profile：L1 不过整批拒绝零写盘；L1 过则换入新稿并留历史', async t=>{
- const profile=await manualRewriteProfile('recipes'),world=await loadWorld();
- // 找一条现行正文能过行当 L1 的配方（取当前正式正文作新稿）：同一个 profile 校验，不绕过。
- let pick;
- for(const entry of profile.entries){
-  const official=world.recipes.find(r=>r.id===entry.id);if(!official)continue;
-  const draft=applyDerivedDuration({id:entry.id,process:official.process},entry),result=profile.validateDraft(draft,entry,profile.contextFor(entry));
-  if(!result.errors.length){pick={entry,draft:{id:entry.id,process:official.process}};break;}
- }
- assert.ok(pick,'行当批里没有任何配方现行正文能过 L1，无法构造夹具');
- const {entry,draft}=pick,context=profile.contextFor(entry);
+ // 确定性夹具：一条最小的合成配方骨架（不带 context.catalog，所以不依赖现行配方数据与工序检查词表），
+ // 校验用的仍是行当批同一个 validateTradesDraft（与 manualRewriteProfile 里的是同一函数）。
+ const entry={id:'recipe_fixture_stew',name:'夹具炖菜',minutes:40,workstation:'hearth',materials:[],tools:[],byproducts:[],output:{item:'item_fixture'}};
+ const profile={entries:[entry],contextFor:()=>({}),validateDraft:(d,e,c)=>validateTradesDraft(d,e,{names:[],realPeople:[]},c)};
+ const draft={id:entry.id,process:'先把切好的根菜放进锅里，加水煮开，再转小火慢炖，中途撇去浮沫，最后尝过咸淡即可盛出。'};
+ assert.deepEqual(profile.validateDraft(applyDerivedDuration(draft,entry),entry,{}).errors,[],'夹具正文必须能过行当 L1');
+ const context=profile.contextFor(entry);
  const bad=await rewriteFixture(t,entry,context),before=await snapshot(bad);
- await assert.rejects(manualRewrite(args(bad,profile,entry,{id:entry.id,process:'太短'})),/L1 未通过/);
+ await assert.rejects(manualRewrite(args(bad,profile,entry,{id:entry.id,process:'这里写了骨架措辞，不应通过'})),/L1 未通过/);
  assert.deepEqual(await snapshot(bad),before);
  const dir=await rewriteFixture(t,entry,context);
  await manualRewrite(args(dir,profile,entry,draft));
