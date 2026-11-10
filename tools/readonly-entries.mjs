@@ -4,6 +4,7 @@
 // 要产出报告的只读命令输出到 stdout；要落盘的派生文件放到显式写命令（--review、--l4、--publish、--write-summary 等）里。
 export {RO_FLAGS} from './cli-flags.mjs';
 // 全量检查拆成几个测试文件并行跑（入口按序号取模分组），单文件最坏耗时 = ceil(入口数/RUN_GROUPS) × 单条超时，须小于 3600 秒。
+// 首次上云实测后校准分组：上面的 120 秒 / 600 秒 / 300 秒复制余量与 4 组都是估算（最坏值是理论上限，不是实测），本机不跑全量；云上跑一遍记录每条耗时后，按实测重定单条超时、分组数与是否缩小复制范围。
 export const RUN_GROUPS = 4, ENTRY_TIMEOUT_MS = 120_000, COPY_ALLOWANCE_MS = 300_000;
 // 依次运行多个度量脚本、本身较慢的入口单独放宽超时（含在上面的最坏耗时估算里）。
 export const SLOW_ENTRY_TIMEOUT_MS = {'tools/s0-metrics.mjs': 600_000, 'tools/a3-score.mjs': 600_000};
