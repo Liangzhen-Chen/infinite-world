@@ -10373,7 +10373,7 @@
       ],
       "field": "description",
       "before": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂。纸页按工序分栏，墨线旁留窄行记水量与火候；封面以薄木片作夹，边角磨圆，装订孔可见手工锥痕。全书讲解十二种麦豆主食的浸泡、收汁与夹馅顺序，识字100可读，通读约450分钟，各工序另需对应熟练度和工具。",
-      "after": "白石手艺人合抄的中级抄本《麦锅火候与稠度录》，河湾供货校对本，出自小学堂，重0.3公斤。全书讲解十二种麦豆主食的浸泡、收汁与夹馅顺序。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+      "after": "出自小学堂的《麦锅火候与稠度录》是十二种麦豆主食的做法汇编，白石手艺人合抄，属中级，为河湾供货校对本，重0.3公斤。篇目依次交代浸泡、收汁、夹馅的先后。读者需识字100，通读耗时450分钟；动手做某道主食，另要有对应熟练度和工具。",
       "basis": [
         "item_book_journey_grain.description 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_grain.json，指纹 f15f92ee54262fd8bf66ecd0c003d4e54621b27d3ee3675421203e260bf3380f）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -10410,7 +10410,7 @@
       ],
       "field": "inspection",
       "before": "翻页检查装订孔与折痕，看墨线是否洇开、栏注有无缺页，木夹有无开裂；不试制、不尝样。",
-      "after": "翻看各页是否齐全、字迹是否清楚，核对十二种工序是否都有记载；不试制、不尝样。",
+      "after": "翻到各篇，看十二种主食是否各有一篇，字迹是否辨得清；只读不做，不尝样。",
       "basis": [
         "item_book_journey_grain.inspection 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_grain.json，指纹 f15f92ee54262fd8bf66ecd0c003d4e54621b27d3ee3675421203e260bf3380f）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -10447,7 +10447,7 @@
       ],
       "field": "storage",
       "before": "置于干燥避潮处，平放或竖靠，勿压重物；自抄成起至多365天，逾期限内仍须防虫防霉。",
-      "after": "置于干燥避光处平放，避免受潮与重压；保存期365天。",
+      "after": "平放在干燥避光的地方，避免受潮与压重；保存期365天。",
       "basis": [
         "item_book_journey_grain.storage 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_grain.json，指纹 f15f92ee54262fd8bf66ecd0c003d4e54621b27d3ee3675421203e260bf3380f）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -11224,7 +11224,7 @@
       ],
       "field": "description",
       "before": "白石手艺人合抄的中级短藏小食辨味册，河湾供货校对本。木封薄册，纸页经压平，书脊以麻线穿孔固定，边角见裁切痕。内收十种短期加工食物的分量、余液处理与弃坏边界，各工序另需对应熟练度和工具。识字100可读，通读约450分钟。",
-      "after": "白石手艺人合抄的中级抄本《短藏小食辨味册》，河湾供货校对本，出自小学堂，重0.3公斤。内收十种短期加工食物的分量、余液处理与弃坏边界。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+      "after": "《短藏小食辨味册》，小学堂抄本，作者署白石手艺人合抄，河湾供货校对本，中级，重0.3公斤。讲十种短期加工食物：每样放多少分量、渗出的余液怎么处理、坏到什么程度要丢。识字达到100才读得懂，读完花450分钟，各道工序仍须另备对应熟练度与工具。",
       "basis": [
         "item_book_journey_preserve.description 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_preserve.json，指纹 807385ba9e738e65d8d298f7bc45a02a6d87c5be5801a68e910c692844956d5a）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -11261,7 +11261,7 @@
       ],
       "field": "inspection",
       "before": "翻看封面与书脊，确认麻线未松脱、纸页无霉斑水渍；抽查数页，核对字迹与工序是否清晰可辨。",
-      "after": "翻看各页是否齐全、字迹是否清楚，抽查数页，核对十种工序是否都有记载。",
+      "after": "逐篇核对十种食物的条目是否齐全，分量、余液、弃坏三类内容是否都读得到。",
       "basis": [
         "item_book_journey_preserve.inspection 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_preserve.json，指纹 807385ba9e738e65d8d298f7bc45a02a6d87c5be5801a68e910c692844956d5a）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -11298,7 +11298,7 @@
       ],
       "field": "storage",
       "before": "置于干燥避光处，平放或竖立皆可，避免受潮与重压；自制成起最多存365天。",
-      "after": "置于干燥避光处平放，避免受潮与重压；保存期365天。",
+      "after": "放在干燥避光处，勿受潮、勿重压；保存期365天。",
       "basis": [
         "item_book_journey_preserve.storage 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_preserve.json，指纹 807385ba9e738e65d8d298f7bc45a02a6d87c5be5801a68e910c692844956d5a）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -12334,7 +12334,7 @@
       ],
       "field": "description",
       "before": "白石手艺人合抄的中级裁缝图册，河湾供货校对本，由小学堂流出。全书讲解十二种袋套与衬垫的折叠次序、受力缝走线及空件交付，含翻盖帆布挎袋、贴底毛毡鞋垫、软衬扛物肩圈等。纸页木版印线，边角有翻阅折痕，装订线紧实。识字100方可读，通读约450分钟。",
-      "after": "白石手艺人合抄的中级裁缝图册，河湾供货校对本，出自小学堂，重0.3公斤。全书讲解十二种袋套与衬垫的折叠、受力缝与空件交付，含翻盖帆布挎袋、贴底毛毡鞋垫、软衬扛物肩圈等。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+      "after": "河湾供货校对本《帆布与软衬裁缝图》，白石手艺人合抄的中级图册，来自小学堂，重0.3公斤。内容是十二种袋套和衬垫：怎样折、受力处怎样缝、如何作为空件交付，例如翻盖帆布挎袋、贴底毛毡鞋垫、软衬扛物肩圈。需识字100，阅读450分钟，做活另要对应熟练度和工具。",
       "basis": [
         "item_book_journey_sewing.description 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_sewing.json，指纹 d951d62ce2861c0a36dc006823f7edaade88ffe1741aed22d224ffda0c7e88c2）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -12371,7 +12371,7 @@
       ],
       "field": "inspection",
       "before": "翻看封面与装订，页序完整，无缺页；抽查挎袋与鞋垫两节，图线清楚，折叠与受力缝步骤可辨。",
-      "after": "翻看各页是否齐全、字迹与图是否清楚，抽查挎袋与鞋垫两节，核对所列工序是否都有记载。",
+      "after": "翻看图与说明是否齐全，抽查挎袋、鞋垫两篇，看折法和受力缝的讲解是否读得通。",
       "basis": [
         "item_book_journey_sewing.inspection 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_sewing.json，指纹 d951d62ce2861c0a36dc006823f7edaade88ffe1741aed22d224ffda0c7e88c2）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -12408,7 +12408,7 @@
       ],
       "field": "storage",
       "before": "置干燥处平放，避潮避压；保存期365天，逾期纸页易脆，图线模糊。",
-      "after": "置于干燥处平放，避免受潮与重压；保存期365天。",
+      "after": "平放于干燥处，避开潮气与重压；保存期365天。",
       "basis": [
         "item_book_journey_sewing.storage 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_sewing.json，指纹 d951d62ce2861c0a36dc006823f7edaade88ffe1741aed22d224ffda0c7e88c2）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -13296,7 +13296,7 @@
       ],
       "field": "description",
       "before": "白石手艺人合抄的中级抄本，河湾供货校对本。书中讲解十二种木、角、芦及板岩器件的开料与边缘整修，含弯首白蜡木手杖、双面压纸木板、透风芦管晒帘、分格小瓶木箱、对合木夹口、折靠晾布架、薄舌翻食木铲、槽口木匙托、贴合软木塞组、弧面角片匙、磨边板岩写牌与折页行图板。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
-      "after": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂，重0.3公斤。书中讲解十二种木、角、芦及板岩器件的开料与边缘整修，含弯首白蜡木手杖、双面压纸木板、透风芦管晒帘、分格小瓶木箱、对合木夹口、折靠晾布架、薄舌翻食木铲、槽口木匙托、贴合软木塞组、弧面角片匙、磨边板岩写牌与折页行图板。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+      "after": "小学堂抄本《木角芦片杂工记》，中级，河湾供货校对本，白石手艺人合抄，重0.3公斤。木、角、芦与板岩器件的开料和边缘整修，共十二篇：弯首白蜡木手杖、双面压纸木板、透风芦管晒帘、分格小瓶木箱、对合木夹口、折靠晾布架、薄舌翻食木铲、槽口木匙托、贴合软木塞组、弧面角片匙、磨边板岩写牌、折页行图板。识字100，阅读450分钟，工序另需对应熟练度和工具。",
       "basis": [
         "item_book_journey_wood.description 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_wood.json，指纹 edf18197a4df2d557732d62cdcdab309e30b3f7a8ba84d86b4a88f0576085c3f）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -13333,7 +13333,7 @@
       ],
       "field": "inspection",
       "before": "翻看封面与装订，纸页受潮会起波纹，边角磨损不碍辨字；核对十二项工序名与图样是否齐全。",
-      "after": "翻看各页是否齐全、字迹是否清楚，核对十二项工序名与图样是否齐全。",
+      "after": "核对十二项工序名是否齐全，字迹是否可辨。",
       "basis": [
         "item_book_journey_wood.inspection 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_wood.json，指纹 edf18197a4df2d557732d62cdcdab309e30b3f7a8ba84d86b4a88f0576085c3f）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -13370,7 +13370,7 @@
       ],
       "field": "storage",
       "before": "置于干燥避光处，勿近水与火；自抄成起至多365天，逾期字迹与纸页易损。",
-      "after": "置于干燥避光处，避免受潮与重压；保存期365天。",
+      "after": "放在干燥避光处，勿潮勿重压；保存期365天。",
       "basis": [
         "item_book_journey_wood.storage 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_wood.json，指纹 edf18197a4df2d557732d62cdcdab309e30b3f7a8ba84d86b4a88f0576085c3f）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -14480,7 +14480,7 @@
       ],
       "field": "description",
       "before": "白石手艺人合抄的中级工谱，河湾供货校对本，出自小学堂。纸页以细麻线订入木片封皮，边角磨圆，封面墨书书名。内述十二种钢凿、金属连接件与软金属饰片的锻修次序，附尺寸与火候次序。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
-      "after": "白石手艺人合抄的中级工谱《钢刃热修与薄片工谱》，河湾供货校对本，出自小学堂，重0.3公斤。内述十二种钢凿、金属连接件与软金属饰片的锻修次序。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+      "after": "小学堂出的中级工谱《钢刃热修与薄片工谱》，白石手艺人合抄，河湾供货校对本，重0.3公斤。记十二种物件的锻修次序，涉及钢凿、金属连接件和软金属饰片三类。识字达到100方可读，阅读用时450分钟；真要动锤，还得有对应熟练度和工具。",
       "basis": [
         "item_book_journey_metal.description 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_metal.json，指纹 0561ae8e0e40059d48ec567a7813b68b8eadd9f0ee1cf37815f8a1e67143705a）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -14517,7 +14517,7 @@
       ],
       "field": "inspection",
       "before": "翻看封面与订线，纸页无缺；抽查数页字迹与图样清楚，边角略有翻旧痕，无受潮粘连。",
-      "after": "翻看各页是否齐全、字迹是否清楚，核对十二种工序是否都有记载。",
+      "after": "逐篇看钢凿、连接件、饰片三类条目有无缺漏，字迹是否清楚。",
       "basis": [
         "item_book_journey_metal.inspection 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_metal.json，指纹 0561ae8e0e40059d48ec567a7813b68b8eadd9f0ee1cf37815f8a1e67143705a）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -14554,7 +14554,7 @@
       ],
       "field": "storage",
       "before": "置于干燥木架或布囊内，避潮避水；远离火源与重压，勿与锐器同放。保存期365天。",
-      "after": "置于干燥处，避免受潮与重压；保存期365天。",
+      "after": "存放于干燥之处，防潮并避免重压；保存期365天。",
       "basis": [
         "item_book_journey_metal.storage 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_metal.json，指纹 0561ae8e0e40059d48ec567a7813b68b8eadd9f0ee1cf37815f8a1e67143705a）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -15553,7 +15553,7 @@
       ],
       "field": "description",
       "before": "白石手艺人合抄的中级作录，河湾供货校对本，由小学堂流出。书中依次讲解削口鹅羽笔组、纸工熟浆糊、麻订空白册、包角账页封皮、穿绳皮纸吊签、吸墨麻布垫、尖端板岩划笔、芦管笔尖匣、麻缝护脊带与卷札封结线共十种笔册辅料的裁口、穿脊、护边和空白交付。识字100可读，通读约450分钟，各工序另需对应熟练度和工具。",
-      "after": "白石手艺人合抄的中级作录，河湾供货校对本，出自小学堂，重0.3公斤。书中依次讲解削口鹅羽笔组、纸工熟浆糊、麻订空白册、包角账页封皮、穿绳皮纸吊签、吸墨麻布垫、尖端板岩划笔、芦管笔尖匣、麻缝护脊带与卷札封结线共十种笔册辅料的裁口、穿脊、护边和空白交付。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+      "after": "《书桌装订小作录》是中级作录，小学堂出，白石手艺人合抄的河湾供货校对本，重0.3公斤。十种笔册辅料依序成篇：削口鹅羽笔组、纸工熟浆糊、麻订空白册、包角账页封皮、穿绳皮纸吊签、吸墨麻布垫、尖端板岩划笔、芦管笔尖匣、麻缝护脊带、卷札封结线；每篇说裁口、穿脊、护边与空白交付。识字100可读，读完需450分钟，另要对应熟练度和工具。",
       "basis": [
         "item_book_journey_desk.description 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_desk.json，指纹 e068813fa9478b3de399c28f31bd5ae5019a41de2e0e2c3b9aa2708a9c217f29）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -15590,7 +15590,7 @@
       ],
       "field": "inspection",
       "before": "翻看封面与装订处，纸页齐整，麻缝护脊带压痕清楚，版口裁切平直；抽查数页，字迹与图示无缺页、无污损。",
-      "after": "翻看各页是否齐全、字迹与图示是否清楚，核对所列十种工序是否都有记载。",
+      "after": "对照所列十种辅料逐篇翻到，核对文字是否清晰。",
       "basis": [
         "item_book_journey_desk.inspection 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_desk.json，指纹 e068813fa9478b3de399c28f31bd5ae5019a41de2e0e2c3b9aa2708a9c217f29）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -15627,7 +15627,7 @@
       ],
       "field": "storage",
       "before": "平放于干燥木架，避潮避晒，远离火源与重压；勿折脊、勿卷页，防虫蛀。保存期365天。",
-      "after": "置于干燥处平放，避免受潮、暴晒与重压；保存期365天。",
+      "after": "平放在干燥处，避免受潮、暴晒与重压；保存期365天。",
       "basis": [
         "item_book_journey_desk.storage 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_desk.json，指纹 e068813fa9478b3de399c28f31bd5ae5019a41de2e0e2c3b9aa2708a9c217f29）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -16367,7 +16367,7 @@
       ],
       "field": "description",
       "before": "小学堂抄本，河湾供货校对本，白石手艺人合抄。纸页以麻线订合，木片夹板包边，书脊压出浅槽，边角见磨圆痕。内容记九种细作：绕合银开口环、双孔骨衣扣、细孔贝面扣组、短齿角梳、夹鬃小刷、软毛拂尘刷、单孔芦鸣哨、穿线软木浮子与温煎红木染液。识字100可读，通读需450分钟，各工序另需对应熟练度与工具。",
-      "after": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂，重0.3公斤。内容记九种细作：绕合银开口环、双孔骨衣扣、细孔贝面扣组、短齿角梳、夹鬃小刷、软毛拂尘刷、单孔芦鸣哨、穿线软木浮子与温煎红木染液，讲解各自的材料边界。识字100可读，阅读450分钟，各工序另需对应熟练度与工具。",
+      "after": "出自小学堂的《骨角饰线细作谱》，河湾供货校对本，中级，白石手艺人合抄，重0.3公斤。书中九种细作各有一篇：绕合银开口环、双孔骨衣扣、细孔贝面扣组、短齿角梳、夹鬃小刷、软毛拂尘刷、单孔芦鸣哨、穿线软木浮子、温煎红木染液，侧重各自的材料边界。识字100可读，要读450分钟，上手须另备对应熟练度与工具。",
       "basis": [
         "item_book_journey_smallcraft.description 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_smallcraft.json，指纹 3609b11618b3d0a6e67a2f1fb5164cd396c8490c1545e663cfc607d498ace8c6）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -16404,7 +16404,7 @@
       ],
       "field": "inspection",
       "before": "翻看订线有无松脱，夹板是否开裂；逐页核对九种工序的图样与字迹，确认无缺页、无洇墨。",
-      "after": "翻看各页是否齐全，逐项核对九种工序的图样与字迹是否清楚。",
+      "after": "逐一对照九种细作的内容与字迹，看有无缺页或看不清之处。",
       "basis": [
         "item_book_journey_smallcraft.inspection 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_smallcraft.json，指纹 3609b11618b3d0a6e67a2f1fb5164cd396c8490c1545e663cfc607d498ace8c6）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -16441,7 +16441,7 @@
       ],
       "field": "storage",
       "before": "置干燥处平放，避水避潮，勿重压书脊；自抄成起保存上限365天，逾期纸页易脆。",
-      "after": "置于干燥处平放，避免受潮与重压；保存期365天。",
+      "after": "放干燥地方，平放，不受潮不受压；保存期365天。",
       "basis": [
         "item_book_journey_smallcraft.storage 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_smallcraft.json，指纹 3609b11618b3d0a6e67a2f1fb5164cd396c8490c1545e663cfc607d498ace8c6）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -17144,7 +17144,7 @@
       ],
       "field": "description",
       "before": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂。纸页以麻线穿订，木片作封，边角留有裁切与压痕；内文分列八种护革、擦洗和灯芯耗材的配制步骤，并注明实际维修时的区别。识字100可读，通读约需450分钟，各工序另需对应熟练度和工具。",
-      "after": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂，重0.3公斤。内文分列八种护革、擦洗和灯芯耗材的配制，并讲明配制与实际维修的区别。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。",
+      "after": "小学堂抄本《器物养护备料手记》，中级，白石手艺人合抄，河湾供货校对本，重0.3公斤。八种耗材的配制是正文，包括护革、擦洗与灯芯类，并说明这些配制与实际维修的区别。识字100起读，通读450分钟，各工序另需对应熟练度和工具。",
       "basis": [
         "item_book_journey_upkeep.description 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_upkeep.json，指纹 4746831d9de5dbf61a94a74854e92ee4a7f54473c1062026a4f0154cc06c466c）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -17181,7 +17181,7 @@
       ],
       "field": "inspection",
       "before": "翻看封面与订线，检查有无脱页、水渍和虫蛀；再抽读护革与灯芯两节，确认字迹清楚、步骤连贯。",
-      "after": "翻看各页是否齐全、字迹是否清楚，抽读护革与灯芯两节，确认步骤连贯。",
+      "after": "数一数八种耗材是否都在，再抽读护革与灯芯的配制内容，看步骤前后是否接得上。",
       "basis": [
         "item_book_journey_upkeep.inspection 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_upkeep.json，指纹 4746831d9de5dbf61a94a74854e92ee4a7f54473c1062026a4f0154cc06c466c）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -17218,7 +17218,7 @@
       ],
       "field": "storage",
       "before": "置于干燥避光处，平放或以木片封面对压，远离潮气与炉火；保存期365天。",
-      "after": "置于干燥避光处，避免受潮与重压，远离热源；保存期365天。",
+      "after": "存放时避光避潮，勿压重物，远离热源；保存期365天。",
       "basis": [
         "item_book_journey_upkeep.storage 的正式正文与 journey 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费），6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md），2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/journey/items/item_book_journey_upkeep.json，指纹 4746831d9de5dbf61a94a74854e92ee4a7f54473c1062026a4f0154cc06c466c）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 journey 记录的 L1/L2/L4。"
@@ -21744,19 +21744,19 @@
       "id": "item_book_journey_grain-description",
       "target": "item_book_journey_grain",
       "field": "description",
-      "value": "白石手艺人合抄的中级抄本《麦锅火候与稠度录》，河湾供货校对本，出自小学堂，重0.3公斤。全书讲解十二种麦豆主食的浸泡、收汁与夹馅顺序。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。"
+      "value": "出自小学堂的《麦锅火候与稠度录》是十二种麦豆主食的做法汇编，白石手艺人合抄，属中级，为河湾供货校对本，重0.3公斤。篇目依次交代浸泡、收汁、夹馅的先后。读者需识字100，通读耗时450分钟；动手做某道主食，另要有对应熟练度和工具。"
     },
     {
       "id": "item_book_journey_grain-inspection",
       "target": "item_book_journey_grain",
       "field": "inspection",
-      "value": "翻看各页是否齐全、字迹是否清楚，核对十二种工序是否都有记载；不试制、不尝样。"
+      "value": "翻到各篇，看十二种主食是否各有一篇，字迹是否辨得清；只读不做，不尝样。"
     },
     {
       "id": "item_book_journey_grain-storage",
       "target": "item_book_journey_grain",
       "field": "storage",
-      "value": "置于干燥避光处平放，避免受潮与重压；保存期365天。"
+      "value": "平放在干燥避光的地方，避免受潮与压重；保存期365天。"
     },
     {
       "id": "item_pear_vinegar_slice-description",
@@ -21882,19 +21882,19 @@
       "id": "item_book_journey_preserve-description",
       "target": "item_book_journey_preserve",
       "field": "description",
-      "value": "白石手艺人合抄的中级抄本《短藏小食辨味册》，河湾供货校对本，出自小学堂，重0.3公斤。内收十种短期加工食物的分量、余液处理与弃坏边界。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。"
+      "value": "《短藏小食辨味册》，小学堂抄本，作者署白石手艺人合抄，河湾供货校对本，中级，重0.3公斤。讲十种短期加工食物：每样放多少分量、渗出的余液怎么处理、坏到什么程度要丢。识字达到100才读得懂，读完花450分钟，各道工序仍须另备对应熟练度与工具。"
     },
     {
       "id": "item_book_journey_preserve-inspection",
       "target": "item_book_journey_preserve",
       "field": "inspection",
-      "value": "翻看各页是否齐全、字迹是否清楚，抽查数页，核对十种工序是否都有记载。"
+      "value": "逐篇核对十种食物的条目是否齐全，分量、余液、弃坏三类内容是否都读得到。"
     },
     {
       "id": "item_book_journey_preserve-storage",
       "target": "item_book_journey_preserve",
       "field": "storage",
-      "value": "置于干燥避光处平放，避免受潮与重压；保存期365天。"
+      "value": "放在干燥避光处，勿受潮、勿重压；保存期365天。"
     },
     {
       "id": "item_canvas_satchel-description",
@@ -22062,19 +22062,19 @@
       "id": "item_book_journey_sewing-description",
       "target": "item_book_journey_sewing",
       "field": "description",
-      "value": "白石手艺人合抄的中级裁缝图册，河湾供货校对本，出自小学堂，重0.3公斤。全书讲解十二种袋套与衬垫的折叠、受力缝与空件交付，含翻盖帆布挎袋、贴底毛毡鞋垫、软衬扛物肩圈等。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。"
+      "value": "河湾供货校对本《帆布与软衬裁缝图》，白石手艺人合抄的中级图册，来自小学堂，重0.3公斤。内容是十二种袋套和衬垫：怎样折、受力处怎样缝、如何作为空件交付，例如翻盖帆布挎袋、贴底毛毡鞋垫、软衬扛物肩圈。需识字100，阅读450分钟，做活另要对应熟练度和工具。"
     },
     {
       "id": "item_book_journey_sewing-inspection",
       "target": "item_book_journey_sewing",
       "field": "inspection",
-      "value": "翻看各页是否齐全、字迹与图是否清楚，抽查挎袋与鞋垫两节，核对所列工序是否都有记载。"
+      "value": "翻看图与说明是否齐全，抽查挎袋、鞋垫两篇，看折法和受力缝的讲解是否读得通。"
     },
     {
       "id": "item_book_journey_sewing-storage",
       "target": "item_book_journey_sewing",
       "field": "storage",
-      "value": "置于干燥处平放，避免受潮与重压；保存期365天。"
+      "value": "平放于干燥处，避开潮气与重压；保存期365天。"
     },
     {
       "id": "item_ash_walking_stick-description",
@@ -22218,19 +22218,19 @@
       "id": "item_book_journey_wood-description",
       "target": "item_book_journey_wood",
       "field": "description",
-      "value": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂，重0.3公斤。书中讲解十二种木、角、芦及板岩器件的开料与边缘整修，含弯首白蜡木手杖、双面压纸木板、透风芦管晒帘、分格小瓶木箱、对合木夹口、折靠晾布架、薄舌翻食木铲、槽口木匙托、贴合软木塞组、弧面角片匙、磨边板岩写牌与折页行图板。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。"
+      "value": "小学堂抄本《木角芦片杂工记》，中级，河湾供货校对本，白石手艺人合抄，重0.3公斤。木、角、芦与板岩器件的开料和边缘整修，共十二篇：弯首白蜡木手杖、双面压纸木板、透风芦管晒帘、分格小瓶木箱、对合木夹口、折靠晾布架、薄舌翻食木铲、槽口木匙托、贴合软木塞组、弧面角片匙、磨边板岩写牌、折页行图板。识字100，阅读450分钟，工序另需对应熟练度和工具。"
     },
     {
       "id": "item_book_journey_wood-inspection",
       "target": "item_book_journey_wood",
       "field": "inspection",
-      "value": "翻看各页是否齐全、字迹是否清楚，核对十二项工序名与图样是否齐全。"
+      "value": "核对十二项工序名是否齐全，字迹是否可辨。"
     },
     {
       "id": "item_book_journey_wood-storage",
       "target": "item_book_journey_wood",
       "field": "storage",
-      "value": "置于干燥避光处，避免受潮与重压；保存期365天。"
+      "value": "放在干燥避光处，勿潮勿重压；保存期365天。"
     },
     {
       "id": "item_broad_steel_chisel-description",
@@ -22410,19 +22410,19 @@
       "id": "item_book_journey_metal-description",
       "target": "item_book_journey_metal",
       "field": "description",
-      "value": "白石手艺人合抄的中级工谱《钢刃热修与薄片工谱》，河湾供货校对本，出自小学堂，重0.3公斤。内述十二种钢凿、金属连接件与软金属饰片的锻修次序。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。"
+      "value": "小学堂出的中级工谱《钢刃热修与薄片工谱》，白石手艺人合抄，河湾供货校对本，重0.3公斤。记十二种物件的锻修次序，涉及钢凿、金属连接件和软金属饰片三类。识字达到100方可读，阅读用时450分钟；真要动锤，还得有对应熟练度和工具。"
     },
     {
       "id": "item_book_journey_metal-inspection",
       "target": "item_book_journey_metal",
       "field": "inspection",
-      "value": "翻看各页是否齐全、字迹是否清楚，核对十二种工序是否都有记载。"
+      "value": "逐篇看钢凿、连接件、饰片三类条目有无缺漏，字迹是否清楚。"
     },
     {
       "id": "item_book_journey_metal-storage",
       "target": "item_book_journey_metal",
       "field": "storage",
-      "value": "置于干燥处，避免受潮与重压；保存期365天。"
+      "value": "存放于干燥之处，防潮并避免重压；保存期365天。"
     },
     {
       "id": "item_quill_pen_pair-description",
@@ -22584,19 +22584,19 @@
       "id": "item_book_journey_desk-description",
       "target": "item_book_journey_desk",
       "field": "description",
-      "value": "白石手艺人合抄的中级作录，河湾供货校对本，出自小学堂，重0.3公斤。书中依次讲解削口鹅羽笔组、纸工熟浆糊、麻订空白册、包角账页封皮、穿绳皮纸吊签、吸墨麻布垫、尖端板岩划笔、芦管笔尖匣、麻缝护脊带与卷札封结线共十种笔册辅料的裁口、穿脊、护边和空白交付。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。"
+      "value": "《书桌装订小作录》是中级作录，小学堂出，白石手艺人合抄的河湾供货校对本，重0.3公斤。十种笔册辅料依序成篇：削口鹅羽笔组、纸工熟浆糊、麻订空白册、包角账页封皮、穿绳皮纸吊签、吸墨麻布垫、尖端板岩划笔、芦管笔尖匣、麻缝护脊带、卷札封结线；每篇说裁口、穿脊、护边与空白交付。识字100可读，读完需450分钟，另要对应熟练度和工具。"
     },
     {
       "id": "item_book_journey_desk-inspection",
       "target": "item_book_journey_desk",
       "field": "inspection",
-      "value": "翻看各页是否齐全、字迹与图示是否清楚，核对所列十种工序是否都有记载。"
+      "value": "对照所列十种辅料逐篇翻到，核对文字是否清晰。"
     },
     {
       "id": "item_book_journey_desk-storage",
       "target": "item_book_journey_desk",
       "field": "storage",
-      "value": "置于干燥处平放，避免受潮、暴晒与重压；保存期365天。"
+      "value": "平放在干燥处，避免受潮、暴晒与重压；保存期365天。"
     },
     {
       "id": "item_silver_open_ring-description",
@@ -22716,19 +22716,19 @@
       "id": "item_book_journey_smallcraft-description",
       "target": "item_book_journey_smallcraft",
       "field": "description",
-      "value": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂，重0.3公斤。内容记九种细作：绕合银开口环、双孔骨衣扣、细孔贝面扣组、短齿角梳、夹鬃小刷、软毛拂尘刷、单孔芦鸣哨、穿线软木浮子与温煎红木染液，讲解各自的材料边界。识字100可读，阅读450分钟，各工序另需对应熟练度与工具。"
+      "value": "出自小学堂的《骨角饰线细作谱》，河湾供货校对本，中级，白石手艺人合抄，重0.3公斤。书中九种细作各有一篇：绕合银开口环、双孔骨衣扣、细孔贝面扣组、短齿角梳、夹鬃小刷、软毛拂尘刷、单孔芦鸣哨、穿线软木浮子、温煎红木染液，侧重各自的材料边界。识字100可读，要读450分钟，上手须另备对应熟练度与工具。"
     },
     {
       "id": "item_book_journey_smallcraft-inspection",
       "target": "item_book_journey_smallcraft",
       "field": "inspection",
-      "value": "翻看各页是否齐全，逐项核对九种工序的图样与字迹是否清楚。"
+      "value": "逐一对照九种细作的内容与字迹，看有无缺页或看不清之处。"
     },
     {
       "id": "item_book_journey_smallcraft-storage",
       "target": "item_book_journey_smallcraft",
       "field": "storage",
-      "value": "置于干燥处平放，避免受潮与重压；保存期365天。"
+      "value": "放干燥地方，平放，不受潮不受压；保存期365天。"
     },
     {
       "id": "item_leather_wax_grease-description",
@@ -22842,19 +22842,19 @@
       "id": "item_book_journey_upkeep-description",
       "target": "item_book_journey_upkeep",
       "field": "description",
-      "value": "白石手艺人合抄的中级抄本，河湾供货校对本，出自小学堂，重0.3公斤。内文分列八种护革、擦洗和灯芯耗材的配制，并讲明配制与实际维修的区别。识字100可读，阅读450分钟，各工序另需对应熟练度和工具。"
+      "value": "小学堂抄本《器物养护备料手记》，中级，白石手艺人合抄，河湾供货校对本，重0.3公斤。八种耗材的配制是正文，包括护革、擦洗与灯芯类，并说明这些配制与实际维修的区别。识字100起读，通读450分钟，各工序另需对应熟练度和工具。"
     },
     {
       "id": "item_book_journey_upkeep-inspection",
       "target": "item_book_journey_upkeep",
       "field": "inspection",
-      "value": "翻看各页是否齐全、字迹是否清楚，抽读护革与灯芯两节，确认步骤连贯。"
+      "value": "数一数八种耗材是否都在，再抽读护革与灯芯的配制内容，看步骤前后是否接得上。"
     },
     {
       "id": "item_book_journey_upkeep-storage",
       "target": "item_book_journey_upkeep",
       "field": "storage",
-      "value": "置于干燥避光处，避免受潮与重压，远离热源；保存期365天。"
+      "value": "存放时避光避潮，勿压重物，远离热源；保存期365天。"
     },
     {
       "id": "recipe_w3c_cracked_wheat_pot-process",

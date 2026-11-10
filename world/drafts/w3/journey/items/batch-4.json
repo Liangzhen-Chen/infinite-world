@@ -1,6 +1,6 @@
 {
   "index": 4,
-  "fingerprint": "abc93ce4261e2b79f6045847a47d013df10679edb00616989c11c753032d07d2",
+  "fingerprint": "19f90c9bd30dc71ddadfcb5dd000319bc16c8858896088e03b9c304d4b7536f1",
   "count": 34,
   "passed": 34,
   "ids": [
@@ -49,6 +49,7 @@
     "item_book_journey_metal",
     "item_slate_stylus",
     "item_reed_pen_box",
+    "item_book_journey_desk",
     "item_bone_toggle_set",
     "item_shell_button_set",
     "item_horn_comb",
@@ -67,9 +68,9 @@
   ],
   "l4": {
     "approved": true,
-    "reviewer": "sonnet-l4-aba60b20",
-    "by": "sonnet-l4-aba60b20",
-    "reviewedAt": "2026-11-10T23:52:03.490Z",
+    "reviewer": "sonnet-l4-ac7cc8a9",
+    "by": "sonnet-l4-ac7cc8a9",
+    "reviewedAt": "2026-11-10T23:58:22.659Z",
     "notes": [
       {
         "id": "item_tin_inlay_strip",
@@ -83,11 +84,6 @@
       },
       {
         "id": "item_gate_hasps",
-        "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
-        "by": "sonnet-l4-aba60b20"
-      },
-      {
-        "id": "item_book_journey_metal",
         "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
         "by": "sonnet-l4-aba60b20"
       },
@@ -142,11 +138,6 @@
         "by": "sonnet-l4-aba60b20"
       },
       {
-        "id": "item_book_journey_desk",
-        "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
-        "by": "sonnet-l4-aba60b20"
-      },
-      {
         "id": "item_silver_open_ring",
         "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
         "by": "sonnet-l4-aba60b20"
@@ -192,11 +183,6 @@
         "by": "sonnet-l4-aba60b20"
       },
       {
-        "id": "item_book_journey_smallcraft",
-        "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
-        "by": "sonnet-l4-aba60b20"
-      },
-      {
         "id": "item_leather_wax_grease",
         "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
         "by": "sonnet-l4-aba60b20"
@@ -237,9 +223,24 @@
         "by": "sonnet-l4-aba60b20"
       },
       {
+        "id": "item_book_journey_metal",
+        "note": "逐句对骨架读过：书名、作者、版本、出处小学堂、重0.3公斤、识字100、450分钟、365天均与骨架一致，篇数与 teaches 相符，无骨架外内容与制作痕迹，名称均有出处，无语病。\"动锤\"所涉十二件配方工具含锻工手锤，有出处。",
+        "by": "sonnet-l4-ac7cc8a9"
+      },
+      {
         "id": "item_book_journey_upkeep",
-        "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
-        "by": "sonnet-l4-aba60b20"
+        "note": "复审整件重读：书名、作者、版本、出处小学堂、重0.3公斤、识字100、450分钟、365天与骨架一致，篇数与名称同 teaches，无图样等骨架外内容，无语病，storage 只有纸册一般建议。",
+        "by": "sonnet-l4-ac7cc8a9"
+      },
+      {
+        "id": "item_book_journey_smallcraft",
+        "note": "复审整件重读：书名、作者、版本、出处小学堂、重0.3公斤、识字100、450分钟、365天与骨架一致，篇数与名称同 teaches，无图样等骨架外内容，无语病，storage 只有纸册一般建议。",
+        "by": "sonnet-l4-ac7cc8a9"
+      },
+      {
+        "id": "item_book_journey_desk",
+        "note": "复审整件重读：书名、作者、版本、出处小学堂、重0.3公斤、识字100、450分钟、365天与骨架一致，篇数与名称同 teaches，无图样等骨架外内容，无语病，storage 只有纸册一般建议。",
+        "by": "sonnet-l4-ac7cc8a9"
       }
     ]
   },
@@ -351,6 +352,195 @@
           "item_damp_sand_rub",
           "item_felt_polishing_pad",
           "item_resin_cloth_patch",
+          "item_book_journey_upkeep"
+        ]
+      }
+    },
+    {
+      "approved": false,
+      "reviewer": "sonnet-l4-aba60b20",
+      "by": "sonnet-l4-aba60b20",
+      "reviewedAt": "2026-11-10T23:52:03.490Z",
+      "notes": [
+        {
+          "id": "item_tin_inlay_strip",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_forged_chain_short",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_gate_hasps",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_book_journey_metal",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_quill_pen_pair",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_paste_cup_portion",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_stitchbound_folio",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_ledger_cover",
+          "note": "批。J2 严格 L4 只读复读第4部分逐句对骨架读过，按第15条重判后仍批，未改写。",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_paper_cord_tags",
+          "note": "批。J2 严格 L4 只读复读第4部分逐句对骨架读过，按第15条重判后仍批，未改写。",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_ink_wiping_pad",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_slate_stylus",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_reed_pen_box",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_book_spine_tape",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_seal_thread_bundle",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_book_journey_desk",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_silver_open_ring",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_bone_toggle_set",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_shell_button_set",
+          "note": "三字段重读：孔口与外缘修平、碎裂坯弃置、不增饰物属性均在配方 processFacts 内；重量0.022公斤与骨架一致；inspection 已无居中；storage 仅材质一般建议；无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_horn_comb",
+          "note": "批。J2 严格 L4 只读复读第4部分逐句对骨架读过，按第15条重判后仍批，未改写。",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_bristle_handbrush",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_horsehair_dustbrush",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_reed_whistle",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_cork_float_set",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_redwood_dye",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_book_journey_smallcraft",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_leather_wax_grease",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_seam_pitch_cake",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_soap_wash_portion",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_damp_sand_rub",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_wick_coil",
+          "note": "批。J2 严格 L4 只读复读第4部分逐句对骨架读过，按第15条重判后仍批，未改写。",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_linen_cleaning_swab",
+          "note": "三字段逐句对照骨架与配方 processFacts：削圆端口、剪窄麻布缠头、麻线扎牢、擦拭小器物内面、不作医用拭子均一致；重0.09公斤、保存期180天与骨架一致；无骨架外尺寸数量，无数匝等模糊数；storage 仅避重压与干燥，无骨架外容器；无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_felt_polishing_pad",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_resin_cloth_patch",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        },
+        {
+          "id": "item_book_journey_upkeep",
+          "note": "description、inspection、storage 三字段逐句对照骨架与配方：重量、材料、工具、工序、痕迹均一致，无骨架外尺寸数量与用途，storage 仅材质一般建议，保存期与 shelfLifeDays 一致，无语病",
+          "by": "sonnet-l4-aba60b20"
+        }
+      ],
+      "rejection": {
+        "by": "主会话",
+        "at": "2026-11-10T23:58:13.636Z",
+        "reason": "w3-journey --check：journey 书类说明互相相似超限（两字 Jaccard 最高 0.53，上限 0.35），整件人工改写；独立严格 L4 已过。",
+        "ids": [
+          "item_book_journey_metal",
+          "item_book_journey_desk",
+          "item_book_journey_smallcraft",
           "item_book_journey_upkeep"
         ]
       }
