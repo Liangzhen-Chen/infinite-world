@@ -13,6 +13,8 @@ const court='bld_hw_council',villages=['law_hw_property','law_yp_property','law_
 // 统计口径 = 玩家 + 全体 NPC 钱袋 + 法院库/交存 + 专用货币账户（money_account，如店主柜台）。
 // 店主为补货工钱备付，会把自己的钱从钱袋转进自己的柜台账户（探针 tools/probe-money-flow.mjs bounty：duanyan 钱袋 -200 → 柜台 +200，
 // 账本守恒、漂移 0）；这 200 仍是他的钱，只是换了账户，口径必须把所有专用货币账户一并算入，而不是只补某个人。
+// 复跑探针（本次）：第 1 段（2 天）钱流 9 笔，其中 duanyan 钱袋→柜台 200（事由：锻铁店木炭补货工钱备付），聚落库→任务托管 4×60，居民→猎人 4×1；
+// 第 2 段悬赏 40 进法院库；两段后口径值均 12166（差 0），柜台 duanyan=200，账本漂移 0，auditLedger 为空；测试 3 各 seed 同样 200、押送后仍 12166。
 const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,a)=>n+(a.coins??0),0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((n,r)=>n+r.coins,0)
     +Object.values(c.state.records).filter(r=>r.category==='money_account').reduce((n,r)=>n+(r.coins??0),0);
 
