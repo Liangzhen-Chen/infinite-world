@@ -90,7 +90,7 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  const s=hungry(fixture());
  const ids=Object.keys(s.doc.state.npcs).sort(),people=JSON.stringify(s.doc.state.family?.people??{}),created=JSON.stringify(s.doc.state.created??{});
  Object.assign(npc(s,mover),{coins:57,inventory:{[source.items[0].id]:2}});
- const coins=npc(s,mover).coins,goods=structuredClone(npc(s,mover).inventory),hostCoins=npc(s,host).coins,hostGoods=structuredClone(npc(s,host).inventory);
+ const hostCoins=npc(s,host).coins,hostGoods=structuredClone(npc(s,host).inventory);
  await until(s,firstNight+1,'a');
  const [m]=moves(s);
  assert.equal(moves(s).length,1);assert.equal(m.person,mover);assert.equal(m.reason,'谋生');assert.equal(m.host,host);assert.equal(m.status,'待出发');
@@ -105,6 +105,11 @@ test('缺粮谋生：预告、沿实际路线走完全程，抵达后住户、�
  const route=s.engine.route(npc(s,mover).location===shop?fromHome:npc(s,mover).location,toHome,'walk',m.departAt,s.doc.randomSeed);
  await until(s,m.departAt+1,'c');
  const go=s.doc.state.family.migrations[m.id];
+ // 财产基准取在出发之后（在途、已离开作息与店铺），而不是开场：开场到出发之间的正午，许苓作为居民会照常到悦灯客栈买饭
+ // （探针 tools/probe-money-flow.mjs migration：第 10 天正午 15120 付 1+7 铜，早于迁居预告 17580，且出发后到抵达没有任何钱流）。
+ // 这笔日常购粮不是迁居造成的；事先多给口粮也固定不住（给 30 份口粮仍买 7 铜燕麦饼，余粮还会被店铺收购），
+ // 所以“迁居本身不丢钱、不丢物”应比较出发后与抵达时的财产。
+ const coins=npc(s,mover).coins,goods=structuredClone(npc(s,mover).inventory);
  assert.equal(go.status,'在途');assert.equal(go.origin,fromHome);assert.ok(go.routeMinutes>=600,`路程${go.routeMinutes}分钟`);
  assert.equal(go.routeMinutes,route.minutes);assert.equal(go.arriveAt,m.departAt+route.minutes);assert.deepEqual(go.routeEdges,route.edges);
  assert.equal(npc(s,mover).location,null);assert.equal(npc(s,mover).scheduleTravel.arrive,go.arriveAt);
