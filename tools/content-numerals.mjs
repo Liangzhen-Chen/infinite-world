@@ -157,8 +157,8 @@ export function chineseNumeralIssues(text, minutes = null) {
     }
     const gap = /^[ \t\u00a0\u3000]+(分钟|小时|时辰)/u.exec(text.slice(run.end));
     if (result.ok === true && gap) { errors.push(`数字「${run.text}」与时间单位「${gap[1]}」之间夹了空白，中文正文里数字与单位必须紧连（原文「${around}」）${hintFor({ text: run.text, value: result.value }, gap[1], overall, minutes)}`); continue; }
-    const typo = new RegExp(`^([${MISTYPED_FEN}])钟`, 'u').exec(text.slice(run.end));
-    if (result.ok === true && typo) { errors.push(`数字「${run.text}」与「钟」之间是「${typo[1]}」，应为「分」（错字），时长应写「分钟」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, '分钟', overall, minutes)}`); continue; }
+    const typo = BETWEEN_ZHONG.exec(text.slice(run.end));
+    if (result.ok === true && typo && !ZHONG_OK.includes(typo[1])) { errors.push(`数字「${run.text}」与「钟」之间是「${typo[1]}」，应为「分」（错字），时长应写「分钟」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, '分钟', overall, minutes)}`); continue; }
     if (result.ok === false) errors.push(`中文数字「${run.text}」不合法：${result.reason}（原文「${around}」）${hintFor(repairNumeral(run.text), directUnit, overall, minutes)}`);
     else if (text[run.end] === '钟' && /[十百千万]/.test(run.text)) errors.push(`数字「${run.text}」后直接接「钟」不合法，时长应写「分钟」（原文「${around}」）${hintFor({ text: run.text, value: result.value }, '分钟', overall, minutes)}`);
   }
@@ -178,8 +178,14 @@ export function chineseNumeralIssues(text, minutes = null) {
 // 不在白名单的单个汉字（加、整、再、又……）一律判错：九十加分钟、七十整分钟。
 const BETWEEN_OK = '多余来几个半';
 const BETWEEN_UNSURE = '人更点';
-// 「分钟」被写成别字：份、纷、芬、吩、氛、汾（读音或字形相近）。只认这几个已确定是错字的字；点钟、个钟头、座钟、口钟等合法写法不判。
-const MISTYPED_FEN = '份纷芬吩氛汾';
+// 数字与「钟」之间恰好夹一个汉字时，只有下列成分合法，其余一律判错（错字如份钟、纷钟，或别的不合时长写法）。白名单与依据：
+//   分：分钟（标准写法）；
+//   点：三点钟、钟点（《现代汉语词典》「点钟」：表示钟点的数量，如三点钟）；
+//   刻：一刻钟（《现代汉语词典》「刻钟」：十五分钟）；
+//   个：两个钟头（《现代汉语词典》量词「个」，用于钟头）。
+// 夹两个及以上汉字的（如「三十个半钟」）形态太杂，维持不判。能推出数值时给出「分钟」的修复建议。
+const ZHONG_OK = '分点刻个';
+const BETWEEN_ZHONG = /^([\u4e00-\u9fff])钟/u;
 const BETWEEN_PATTERN = /^(\p{Script=Han})(分钟|小时|时辰)(.?)/u;
 
 // 规则 (b)：时长。
@@ -227,7 +233,8 @@ export function durationIssues(text, minutes) {
 export function arabicDurationIssues(text, minutes = null) {
   const errors = [];
   if (!/\p{Script=Han}/u.test(text)) return errors;
-  for (const m of text.matchAll(new RegExp(`([0-9]+(?:[.][0-9]+)?)(?:[ \u00a0\u3000]+(分钟|小时|时辰)|([${MISTYPED_FEN}])钟)`, 'gu'))) {
+  for (const m of text.matchAll(/([0-9]+(?:[.][0-9]+)?)(?:[ \u00a0\u3000]+(分钟|小时|时辰)|([\u4e00-\u9fff])钟)/gu)) {
+    if (m[3] && ZHONG_OK.includes(m[3])) continue;
     const overall = new RegExp(`${OVERALL}$`, 'u').test(text.slice(0, m.index));
     const repaired = { text: m[1], value: Number(m[1]) };
     errors.push(m[2]
