@@ -3,6 +3,7 @@ import path from 'node:path';
 import { createHash, randomInt } from 'node:crypto';
 import assert from 'node:assert/strict';
 import {openContentBudget} from './content-budget.mjs';
+import {numeralIssues} from './content-numerals.mjs';
 
 export const hashContent = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 export function parseModelJSON(response) {
@@ -90,6 +91,13 @@ export async function runContentPipeline({
   if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 16) throw new Error('并发必须为 1–16；正式波次使用 8–16');
   if (!Number.isInteger(batchSize) || batchSize < 1 || batchSize > 50) throw new Error('批次必须为 1–50；正式波次使用 25–50');
   if (typeof validateDraft !== 'function' || typeof buildDraftRequest !== 'function') throw new Error('缺少起草或 L1 校验接口');
+  // 所有内容草稿共用的 L1 数字规则：对每个调用方自己的 validateDraft 结果统一追加（中文数字合法性、总括时长与 minutes 一致）。
+  const l1 = async (draft, entry, context) => {
+    const result = await validateDraft(draft, entry, context);
+    const errors = Array.isArray(result) ? result : result?.errors ?? [];
+    const extra = numeralIssues(draft, entry, context).filter(message => !errors.includes(message));
+    return extra.length ? { ...(Array.isArray(result) ? { warnings: [] } : result), errors: [...errors, ...extra] } : result;
+  };
   await fs.mkdir(root, { recursive: true });
   const ledgerPath = path.join(budgetRoot, 'budget.json');
   if(!Array.isArray(protocolRecoveryIds)||protocolRecoveryIds.some(id=>!entries.some(e=>e.id===id)))throw Error('协议恢复 id 不在冻结条目中');
@@ -135,7 +143,7 @@ export async function runContentPipeline({
       if(drafts.length&&drafts.every(r=>r.status==='settled')&&reviews.length&&reviews.every(r=>r.status==='cancelled-unissued')){
         try{
           assert.deepEqual(await extractDraft(old.draftResponse,entry),old.draft);
-          const check=await validateDraft(old.draft,entry,context),errors=Array.isArray(check)?check:check.errors??[];
+          const check=await l1(old.draft,entry,context),errors=Array.isArray(check)?check:check.errors??[];
           if(!errors.length)reuse={attempt:n,draft:old.draft};
         }catch{reuse=null;}
       }
@@ -150,7 +158,7 @@ export async function runContentPipeline({
         const draftLabel=`content-${path.basename(root)}-${entry.id}-${eligible?'protocol-recovery':'draft'+attempt}`,reviewLabel=`content-${path.basename(root)}-${entry.id}-review${attempt}`;
         const paid=!frozen&&!eligible&&reuse&&attempt===reuse.attempt?reuse.draft:null;
         const expectedDraft=frozen??paid??(offline?await extractDraft(offline,entry):await reviewDraftFor?.(entry,feedback,context));
-        if(frozen){const check=await validateDraft(frozen,entry,context);const errors=Array.isArray(check)?check:check.errors??[];if(errors.length)throw Error(errors.join('\n'));record.frozenCandidate={entryHash:hashContent(entry),draftHash:hashContent(frozen)};}
+        if(frozen){const check=await l1(frozen,entry,context);const errors=Array.isArray(check)?check:check.errors??[];if(errors.length)throw Error(errors.join('\n'));record.frozenCandidate={entryHash:hashContent(entry),draftHash:hashContent(frozen)};}
         const draftDetails={entry,context,phase:'draft',feedback,record,file};
         if(!offline&&!frozen&&!paid)preparedDraft=await prepareRequest(await buildDraftRequest(entry,feedback,context),draftDetails);
         let draftBytes=null,plannedDraft=expectedDraft;
@@ -174,7 +182,7 @@ export async function runContentPipeline({
         if(draftBytes!==null){if(Buffer.byteLength(JSON.stringify(extracted))>draftBytes)throw budget.stop('起草结果超过已预留的复核请求上界，已停止');}
         record.draft = extracted;
         if(draftBytes===null)assert.deepEqual(record.draft,expectedDraft,'起草结果不符已预留的固定候选');
-        const validation = await validateDraft(record.draft, entry, context);
+        const validation = await l1(record.draft, entry, context);
         record.errors = Array.isArray(validation) ? validation : validation.errors ?? [];
         record.warnings = Array.isArray(validation) ? [] : validation.warnings ?? [];
         // L2 covers every syntactically usable draft, even if L1 found errors.
