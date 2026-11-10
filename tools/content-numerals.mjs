@@ -40,7 +40,8 @@ function parseSection(str, { zeroOk = false, lead10 = false } = {}) {
     if (isNonZeroDigit(c)) {
       const next = str[i + 1];
       if (isNonZeroDigit(next)) { // 概数：三五、七八十、十二三。连续超过两个数字且夹在单位结构里则判错。
-        if (pairSeen) return fail('连续数字过多');
+        // 三个及以上数字连写（九九八十一、三七二十一、一五一十、一二三四）是乘法口诀、成语或逐位读法，形态上无法确定是错，不判（整串跳过）。
+        if (pairSeen) return { skip: true };
         pairSeen = true; i++; continue;
       }
       pairSeen = false;
@@ -120,11 +121,31 @@ export function chineseNumeralIssues(text) {
   for (const run of numeralRuns(text)) {
     const result = parseChineseNumeral(run.text);
     const around = text.slice(Math.max(0, run.index - 2), Math.min(text.length, run.end + 2));
+    if (result.skip) continue;
+    const between = BETWEEN_PATTERN.exec(text.slice(run.end, run.end + 5));
+    if (result.ok === true && between && !BETWEEN_OK.includes(between[1]) && !BETWEEN_UNSURE.includes(between[1]) && !(between[2] === '小时' && '候代'.includes(between[3]))) {
+      errors.push(`数字「${run.text}」与时间单位「${between[2]}」之间夹了「${between[1]}」，写法不合法，概数应写「${run.text}多${between[2]}」或「${run.text}来${between[2]}」（原文「${around}」）`);
+      continue;
+    }
     if (result.ok === false) errors.push(`中文数字「${run.text}」不合法：${result.reason}（原文「${around}」）`);
     else if (text[run.end] === '钟' && /[十百千万]/.test(run.text)) errors.push(`数字「${run.text}」后直接接「钟」不合法，时长应写「分钟」（原文「${around}」）`);
   }
   return errors;
 }
+
+// 数字与时间单位之间夹字。只认模块里已有的时间单位（分钟、小时、时辰，与规则 (b) 的 MINUTE_FACTOR 一致）。
+// 夹字只看「数字串之后恰好一个汉字、再紧接时间单位」这一种形态；夹了两个及以上汉字的（如「个人小时」「好几」）形态太杂，不判。
+// 合法的夹字白名单（现代汉语数量短语的常规成分，来源：《现代汉语词典》「多」「余」「来」「几」「个」「半」词条的数量用法）：
+//   多、余、来、几：概数助词，写在整数之后、单位之前（九十多分钟、三百余小时、二十来分钟、三十几分钟）；
+//   个：量词，用于时辰、小时之前（三个时辰、两个小时），口语也说「个分钟」，不判；
+//   半：「一个半小时」「一个半时辰」中「个半」连用（夹两个字，本就不判），单字「半」也可能是「个半」的省写，拿不准，不判。
+// 「左右」「上下」写在单位之后（九十分钟左右、二十分钟上下），不在数字与单位之间，不在此规则范围；它们若被写进中间（九十左右分钟）是两个字，按下面「夹两个字不判」处理。
+// 拿不准、不判的情形：「人」（人小时、人分钟，是工时单位「三人小时」）；「小时」后面接「候、代」（三十岁小时候的事）；
+//   「更」「点」（三更时辰、三点小时，是更次、钟点与时间单位的相邻，不是夹字）；夹两个及以上汉字；阿拉伯数字后夹字（90加分钟，不属中文数字规则的范围）；刻钟、钟头等模块里没有的单位。
+// 不在白名单的单个汉字（加、整、再、又……）一律判错：九十加分钟、七十整分钟。
+const BETWEEN_OK = '多余来几个半';
+const BETWEEN_UNSURE = '人更点';
+const BETWEEN_PATTERN = /^(\p{Script=Han})(分钟|小时|时辰)(.?)/u;
 
 // 规则 (b)：时长。
 // 换算依据：项目已定一时辰两小时，半个时辰=60分钟（world/design/a3-world-catalog.mjs 中 recipe_w3_fish_broth 的 boundary：

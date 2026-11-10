@@ -30,6 +30,22 @@ test('正文里的坏数字与「数字直接接钟」被抓出', () => {
   assert.deepEqual(chineseNumeralIssues('全程约七十分钟，两钟酒'),[]);
 });
 
+test('数字与时间单位之间夹非法字符判错：九十加分钟、七十整分钟', () => {
+  for(const bad of ['全程九十加分钟','全程约七十整分钟','三十再小时','一百加时辰'])assert.equal(chineseNumeralIssues(bad).length,1,bad);
+  assert.match(chineseNumeralIssues('全程九十加分钟')[0],/夹了「加」/);
+});
+
+test('合法的概数、量词、半个写法与拿不准的情形不判', () => {
+  for(const ok of ['全程九十多分钟','九十余分钟','约九十分钟左右','二十来分钟','三十几分钟','三百余小时','一个半时辰','半个时辰','一个半小时','三个时辰','两个小时','约九十分钟上下','四人小时的工量','三十岁小时候的事','九十左右分钟'])
+    assert.deepEqual(chineseNumeralIssues(ok),[],ok);
+});
+
+test('数字连写（乘法口诀、成语）形态上不确定，不判', () => {
+  assert.deepEqual(chineseNumeralIssues('九九八十一难，三七二十一，一五一十地说，一二三四五'),[]);
+  assert.ok(parseChineseNumeral('九九八十一').skip===true);
+  assert.equal(chineseNumeralIssues('全程七十零分钟').length,1); // 其他确定的错仍判
+});
+
 test('总括时长须与 minutes 一致；时辰按一时辰120分钟，半个时辰60分钟；分步时长不判', () => {
   assert.deepEqual(durationIssues('全程约七十分钟',70),[]);
   assert.deepEqual(durationIssues('全程约半个时辰',60),[]);
