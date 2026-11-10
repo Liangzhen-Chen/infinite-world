@@ -487,7 +487,8 @@ test('物品正文：重量、容量、长度的数字必须带单位', () => {
   for (const text of ['重240克。', '重0.5千克。', '重二百五十克。', '重两千克。', '整器重二点八千克。', '长三十厘米，宽12cm。', '容0.5升。', '约重 300 g。', '长三尺。'])
     assert.deepEqual(unitlessMeasureIssues(text), [], text);
   // 同形词与量词：不是度量。
-  for (const text of ['重叠三层。', '重复三次。', '宽三指。', '增长三成。', '提高三成。', '加厚三层。', '重两件。', '长三节。', '长约两臂。', '内容一致。', '一头厚一头薄。'])
+  for (const text of ['重叠三层。', '重复三次。', '宽三指。', '增长三成。', '提高三成。', '加厚三层。', '重两件。', '长三节。', '长约两臂。', '内容一致。', '一头厚一头薄。', '厚一点。', '长一截。', '高一些。', '深一点。', '宽一等。', '厚一倍。'])
     assert.deepEqual(unitlessMeasureIssues(text), [], text);
+  for (const text of ['厚2。', '长三。', '深0.5，', '高十二。']) assert.ok(unitlessMeasureIssues(text).length === 1, text); // 相对说法不判，无单位数字仍判
   assert.match(unitlessMeasureIssues('整器重0.35，质地轻软。')[0], /重0.35.*没有单位/);
 });
