@@ -1,7 +1,12 @@
 // 只读入口登记：这些命令名义上只读（校验 / 检查 / 列出 / 演练），一律不准写盘。
-// tests/readonly-entries.test.mjs 在仓库临时副本上逐个运行，比较运行前后的文件哈希；同一文件里出现 RO_FLAGS 里的开关却未登记于此，测试直接失败。
+// 日常检查（tests/readonly-entries.test.mjs）：脚本里出现的每个命令行开关须在 tools/cli-flags.mjs 归类，ro 开关须有入口登记于此。
+// 全量检查（tests/readonly-entries-run-*.test.mjs，按 RUN_GROUPS 分组）在仓库临时副本上实跑本表的入口，比较运行前后的文件哈希。
 // 要产出报告的只读命令输出到 stdout；要落盘的派生文件放到显式写命令（--review、--l4、--publish、--write-summary 等）里。
-export const RO_FLAGS = ['--verify', '--check', '--l1', '--list', '--summary', '--dry-run', '--dry-publish', '--show'];
+export {RO_FLAGS} from './cli-flags.mjs';
+// 全量检查拆成几个测试文件并行跑（入口按序号取模分组），单文件最坏耗时 = ceil(入口数/RUN_GROUPS) × 单条超时，须小于 3600 秒。
+export const RUN_GROUPS = 4, ENTRY_TIMEOUT_MS = 120_000, COPY_ALLOWANCE_MS = 300_000;
+// 依次运行多个度量脚本、本身较慢的入口单独放宽超时（含在上面的最坏耗时估算里）。
+export const SLOW_ENTRY_TIMEOUT_MS = {'tools/s0-metrics.mjs': 600_000, 'tools/a3-score.mjs': 600_000};
 
 // [脚本, ...参数]；脚本路径相对仓库根，工作目录为仓库副本根。
 export const READONLY_ENTRIES = [
@@ -38,8 +43,9 @@ export const READONLY_ENTRIES = [
   ['tools/monster-society-2-content.mjs', '--l1'],
   ['tools/monster-society-3-content.mjs', '--l1'],
   ['tools/monster-society-content.mjs', '--l1'],
-  ['tools/rg-mutate.mjs', '--check'],
   ['tools/rg-mutate.mjs', '--list'],
+  ['tools/s0-metrics.mjs', '--fast'],
+  ['tools/a3-score.mjs', '--corpus', 'tests/fixtures/a3-intents-v2-r5.json', '--summary'],
   ['tools/rw05-education-content.mjs', '--l1'],
   ['tools/rw07-faith-content.mjs', '--l1'],
   ['tools/rw09-family-content.mjs', '--l1'],
@@ -85,9 +91,3 @@ export const READONLY_ENTRIES = [
   ['tools/w5-clock-publication.mjs', '--batch', '2', '--l1'],
   ['tools/w5-clock-publication.mjs', '--batch', '2', '--check'],
 ];
-
-// 名义上带 RO_FLAGS 之一、但不在动态运行范围内的入口，必须写明原因；测试对它们改做静态检查（文件里不得有写盘调用）。
-export const EXEMPT = {
-  'tools/a3-score.mjs': '--summary：长时间的评分器，运行超过 60 秒；文件内无写盘调用（静态检查）。',
-  'tools/s0-metrics.mjs': '--check 被忽略（它依次运行各度量脚本，全是只读度量，运行超过 60 秒）；文件内无写盘调用（静态检查）。',
-};
