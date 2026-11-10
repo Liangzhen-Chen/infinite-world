@@ -330,18 +330,29 @@ export async function runContentPipeline({
   } finally {await budget.close();}
 }
 
+// 审批未齐（缺摘要、批次 L4 未批、缺阅读记录、条目未通过）是只读检查的结论而不是程序崩溃：带固定 code，供只读入口以明确原因和非 0 退出码结束。
+// 内容在审查后被改动、指纹不符等完整性问题不用这个 code，仍按真错误抛出。
+export const approvalIncomplete = message => Object.assign(new Error(message), { code: 'APPROVAL_INCOMPLETE' });
+export async function reportApprovalIncomplete(task) {
+  try { return await task(); }
+  catch (error) {
+    if (error?.code !== 'APPROVAL_INCOMPLETE') throw error;
+    console.error(`审批未齐，无法完成检查：${error.message}`);
+    process.exitCode = 2;
+  }
+}
 export async function readApprovedContent(root, entries, { contextFor = () => null, revision = 'v2' } = {}) {
   const summary = await readJSON(path.join(root, 'summary.json'));
-  if (!summary) throw new Error('缺少流水线摘要');
+  if (!summary) throw approvalIncomplete('缺少流水线摘要');
   const allowed = new Set();
   for (const batch of summary.batches) {
     const current = await readJSON(path.join(root, `batch-${batch.index}.json`));
-    if (!current?.l4?.approved || current.fingerprint !== batch.fingerprint || current.needsSystemicRepair) throw new Error(`批 ${batch.index} 尚未完成 L4 或人工队列超过 10%`);
+    if (!current?.l4?.approved || current.fingerprint !== batch.fingerprint || current.needsSystemicRepair) throw approvalIncomplete(`批 ${batch.index} 尚未完成 L4 或人工队列超过 10%`);
     if (!Array.isArray(current.ids)) throw new Error('批次缺少条目清单');
     const rows = await Promise.all(current.ids.map(id => readJSON(path.join(root, `${id}.json`))));
     if (rows.some(row => !row) || hashContent(rows.map(row => ({ id: row.id, draft: row.draft, review: row.review, status: row.status }))) !== current.fingerprint) throw new Error(`批 ${batch.index} 审查后内容已改变`);
     for (const id of [...current.sample, ...current.flagged]) {
-      if (!current.l4.notes?.some(row => row.id === id && typeof row.note === 'string' && row.note.trim())) throw new Error(`缺少 L4 阅读记录 ${id}`);
+      if (!current.l4.notes?.some(row => row.id === id && typeof row.note === 'string' && row.note.trim())) throw approvalIncomplete(`缺少 L4 阅读记录 ${id}`);
     }
   }
   const out = [];

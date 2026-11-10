@@ -102,12 +102,15 @@ test('够draft但不够必要review时零调用，预算拒绝不覆盖旧attemp
  // Even a changed in-memory limit is not authority to resume a stopped record.
  p.client.budgetYuan=20;await runContentPipeline(p.options);await runContentPipeline({...p.options,revision:'new-revision',entries:[{...entry,newField:'changed'}]});assert.equal(p.calls.length,0);
 });
-test('并发整轮拒绝后全批未发队列停止，已预留未发请求可核实取消',async t=>{
+test('并发只因在途预留占额时排队，真到额后停止全批未发队列，预留均已结算或可核实取消',async t=>{
+ // 每条 draft+review 共预留 0.2；额度 0.3：第二条先排队等第一条结算，第一条结算后已花 0.2，再放 0.2 超限才是真到额。
  const p=await budgetFixture(t,{limit:.3,ids:['item_one','item_two','item_three','item_four']});
- const result=await runContentPipeline(p.options);assert.equal(p.calls.length,0);assert.equal(result.summary.pending,4);assert.equal(result.summary.manual,0);
- assert.ok(result.results.every(r=>r.budgetStop&&r.attempts===0));assert.equal(result.summary.budget.reservedYuan,0);
- assert.ok(Object.values(result.summary.budget.requests).every(r=>r.status==='cancelled-unissued'));
- await runContentPipeline(p.options);assert.equal(p.calls.length,0);
+ const result=await runContentPipeline(p.options);assert.equal(p.calls.length,2);assert.equal(result.summary.passed,1);assert.equal(result.summary.pending,3);assert.equal(result.summary.manual,0);
+ const stopped=result.results.filter(r=>r.budgetStop);assert.equal(stopped.length,3);assert.ok(stopped.every(r=>r.status==='pending'&&r.attempts===0&&r.budgetStop.code==='CONTENT_BUDGET_STOP'));
+ assert.equal(result.results.filter(r=>r.status==='passed').length,1);
+ assert.equal(result.summary.budget.reservedYuan,0);assert.ok(result.summary.budget.spentYuan<=.3+1e-12);
+ const rows=Object.values(result.summary.budget.requests);assert.ok(rows.length>=2&&rows.every(r=>r.status==='settled'||r.status==='cancelled-unissued'));
+ await runContentPipeline(p.options);assert.equal(p.calls.length,2);
 });
 test('自由候选无法证明完整review上界时零调用',async t=>{
  const p=await budgetFixture(t,{limit:20,unknown:true}),result=await runContentPipeline(p.options);assert.equal(p.calls.length,0);assert.match(result.results[0].budgetStop.message,/无法证明/);assert.equal(result.results[0].attempts,0);
@@ -148,7 +151,7 @@ test('起草型条目：预留起草加复核上界后发起草、再发复核',
   const ledger=JSON.parse(await fs.readFile(path.join(root,'budget.json'),'utf8'));
   const rows=Object.values(ledger.requests),review=rows.find(r=>r.label.includes('-review'));
   const bytes=100*MAX_UTF8_BYTES_PER_OUTPUT_TOKEN;
-  assert.equal(maxDraftBytes({max_tokens:100}),bytes);
+  assert.equal(maxDraftBytes({max_tokens:100,messages:[]}),bytes);
   // 两段预留：第一段按最大占位草稿估价；发送前换成真实复核请求（同一行），哈希与真实请求一致，估价不超过第一段，且最终结算。
   const planned=defaultReviewRequest({id:'item_draft'},'"'.repeat(bytes),null);
   const actual=bodies[calls[1]];

@@ -73,7 +73,10 @@ test('不死锁：在途预留全部结算后仍放不下的等待者得到 stop
 test('次数上限仍立即判断，不排队', async t => {
   const root = await fs.mkdtemp(path.join(tmpRoot(), 'budget-queue-'));
   const client = { spent: 0, budgetYuan: 20, estimateCostYuan: () => 0.01, async generate() { return { measurement: { costUpperYuan: 0.01 } }; } };
-  const budget = await openContentBudget({ file: path.join(root, 'budget.json'), client, cardId: 'Q1', allocation: { cardId: 'Q1', incrementLimitYuan: 1, waveLimitYuan: 20, maxRequests: 1 } });
+  // 带 cardId 必须已有共享历史账（登记的历史花费与预留为 0）；先写入合法的共享账再打开。
+  const file = path.join(root, 'budget.json');
+  await fs.writeFile(file, JSON.stringify({ spentYuan: 0, reservedYuan: 0, limitYuan: 20, waveLimitYuan: 20, requests: {} }));
+  const budget = await openContentBudget({ file, client, cardId: 'Q1', allocation: { cardId: 'Q1', incrementLimitYuan: 1, waveLimitYuan: 20, maxRequests: 1, startingSpentYuan: 0, startingReservedYuan: 0 } });
   t.after(async () => { await budget.close().catch(() => {}); await fs.rm(root, { recursive: true, force: true }); });
   const first = await budget.reserveRound([{ body: { n: 1 }, label: 'l1' }]);
   assert.equal(first.length, 1);

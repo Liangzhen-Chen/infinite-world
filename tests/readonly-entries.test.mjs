@@ -25,6 +25,10 @@ function scripts(dir, out = []) {
 const files = ['world/design', 'tools'].flatMap(d => scripts(d));
 const texts = new Map(files.map(f => [f, fs.readFileSync(path.join(ROOT, f), 'utf8')]));
 const flagsIn = text => [...new Set(text.match(FLAG_PATTERN) ?? [])];
+// 开关可能由脚本直接导入的共享模块解析（如级联批脚本导入 runRevision 来处理 --verify）：入口开关在脚本自身或它直接 import 的本地模块源码里出现即算被解析。
+const localImports = (file, text) => [...text.matchAll(/(?:from\s*|import\s*\(\s*)['"](\.{1,2}\/[^'"]+\.(?:mjs|js|cjs))['"]/g)]
+  .map(m => path.posix.join(path.posix.dirname(file), m[1])).filter(f => texts.has(f));
+const parsesFlag = (file, flag) => texts.get(file).includes(flag) || localImports(file, texts.get(file)).some(f => texts.get(f).includes(flag));
 const kindOf = (file, flag) => (FILE_FLAG_OVERRIDES[`${file} ${flag}`] ?? FLAGS[flag])?.kind;
 
 test('命令行开关登记完整：脚本里出现的每个 --xxx 都已归类（只读 / 写 / 修饰 / 非开关）', () => {
@@ -60,7 +64,7 @@ test('登记表不过期：开关、入口脚本都还在，入口里的 --开�
     const flags = args.filter(x => x.startsWith('--'));
     assert.ok(flags.length, `入口至少带一个开关 ${file}`);
     for (const a of flags) {
-      assert.ok(text.includes(a), `入口 ${file} ${a}：脚本源码里没有这个开关`);
+      assert.ok(parsesFlag(file, a), `入口 ${file} ${a}：脚本源码（含它直接导入的本地模块）里没有这个开关`);
       // 写类开关只允许和 --dry-run 同用（演练不落盘，正是要验证这一点）
       const ok = ['ro', 'opt'].includes(kindOf(file, a)) || (kindOf(file, a) === 'write' && args.includes('--dry-run'));
       assert.ok(ok, `入口只能带只读或修饰开关（写类开关须同带 --dry-run）：${file} ${a} → ${kindOf(file, a)}`);

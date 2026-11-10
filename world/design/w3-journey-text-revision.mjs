@@ -12,7 +12,7 @@ import {pathToFileURL} from 'node:url';
 import {runRevision,getPath,rowOf,draftFor,contextFor,validateDraft,applyCandidate,isPublished} from './p1-revision-approval.mjs';
 import {economyW3Journey} from './economy-w3-journey.mjs';
 import {journeyRoot,journeyRevision,journeyContext} from '../../tools/w3-journey.mjs';
-import {readApprovedContent} from '../../tools/content-pipeline.mjs';
+import {readApprovedContent,approvalIncomplete,reportApprovalIncomplete} from '../../tools/content-pipeline.mjs';
 
 export const revision='w3-journey-text-1',root='world/drafts/w3-journey-text',CARD='W3JT',via='w3-journey-text';
 export {draftFor,contextFor,validateDraft,applyCandidate,isPublished};
@@ -28,7 +28,7 @@ export async function approvedDrafts(world){
  const bones=economyW3Journey(world),out=[];
  for(const kind of Object.keys(KINDS)){
   const rows=await readApprovedContent(`${journeyRoot}/${kind}`,bones[kind],{contextFor:e=>journeyContext(world,bones,e),revision:journeyRevision});
-  assert.equal(rows.length,bones[kind].length,`journey/${kind} 仍有条目未通过审批`);
+  if(rows.length!==bones[kind].length)throw approvalIncomplete(`journey/${kind} 仍有条目未通过审批`);
   out.push(...rows.map(draft=>({kind,draft})));
  }
  return out;
@@ -129,5 +129,6 @@ export async function compare(){
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
- if(process.argv.includes('--compare'))await compare();else await run();
+ // 审批未齐时 --verify/--publish 以明确原因和非 0 退出码结束（reportApprovalIncomplete），不抛栈。
+ await reportApprovalIncomplete(()=>process.argv.includes('--compare')?compare():run());
 }
