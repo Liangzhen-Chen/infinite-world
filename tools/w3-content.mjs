@@ -1,7 +1,6 @@
 import { loreIssues } from './economy-content.mjs';
 import { hashContent } from './content-pipeline.mjs';
 import { validateWorld } from './validate-world.mjs';
-import { annotateRows } from '../server-plugin/runtime-world.mjs';
 
 const units = { '公斤': ['weight',1], '千克':['weight',1], '斤':['weight',.5], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
 const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+?)';
@@ -58,10 +57,7 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
   }
   return {errors,warnings};
 }
-// mechanics：覆盖层（world.mechanics）。传入的世界还带着它时（loadWorld 的原样世界，发布路径），validateWorld 自己按运行时世界合并校验；
-// 世界已被 WorldEngine 合并过（覆盖层已被消耗，world.mechanics 不在）时，本批新补进来的行没有机会被合并，调用方须把覆盖层传进来，
-// 这里用运行时合并同一个函数（runtime-world.mjs 的 annotateRows）给新行补上覆盖，使 D12 整类校验看到的与发布后的运行时世界一致。
-export function assembleW3(world,bones,lore,{mechanics=world.mechanics}={}) {
+export function assembleW3(world,bones,lore) {
   const byId=new Map(lore.map(row=>[row.id,row])),candidate=structuredClone(world);
   // 已在世界里的行以正式（已审批、已发布）的形态为准：本批骨架只补世界还没有的行。否则重新装配会把后来经审批批次改过的字段（如 P1 修订批的羊皮纸价）按骨架旧值写回。
   const merge=(existing,rows)=>[...existing,...rows.filter(row=>!existing.some(old=>old.id===row.id))];
@@ -69,7 +65,6 @@ export function assembleW3(world,bones,lore,{mechanics=world.mechanics}={}) {
   const available=new Set([...world.items,...newItems].map(row=>row.id));
   const newRecipes=bones.recipes.filter(row=>byId.has(row.id)&&available.has(row.output.item)&&row.materials.every(m=>available.has(m.item))).map(({processFacts,...row})=>({...row,...byId.get(row.id)}));
   candidate.items=merge(world.items,newItems);candidate.recipes=merge(world.recipes,newRecipes);
-  if(!candidate.mechanics&&mechanics?.items){const added=new Set(newItems.map(row=>row.id)),fresh=candidate.items.filter(row=>added.has(row.id)&&!world.items.some(old=>old.id===row.id));annotateRows(fresh,structuredClone(mechanics.items),'items');}
   const validation=validateWorld(candidate,{stage:'engine'});if(!validation.ok)throw new Error(validation.errors.join('\n'));
   return candidate;
 }

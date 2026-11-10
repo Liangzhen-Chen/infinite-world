@@ -23,8 +23,8 @@ export function tradesReviewRequest(entry,draft,context){
  if(context?.materials){const payload=JSON.parse(body.messages[1].content);payload.materialUnits=context.materials.map(row=>({id:row.item,portions:row.amount,gramsPerPortion:row.facts.weight*1000,totalGrams:row.amount*row.facts.weight*1000}));body.messages[1].content=JSON.stringify(payload);}
  return body;
 }
-export function assembleTradesCandidate(world,bones,lore,options){
- const candidate=assembleW3(world,bones,lore,options);
+export function assembleTradesCandidate(world,bones,lore){
+ const candidate=assembleW3(world,bones,lore);
  for(const plan of bones.supply){const npc=candidate.npcs.find(row=>row.id===plan.npc);if(!npc)throw new Error(`供货者不存在 ${plan.npc}`);
   for(const[item,quantity]of Object.entries(plan.stock)){
    if(!candidate.items.some(row=>row.id===item))throw new Error(`供货物品尚未审核 ${item}`);
