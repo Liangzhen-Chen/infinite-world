@@ -6,12 +6,14 @@
 // 没有加运行时检查：普通对象没有 revision，进入时记身份、退出时核对只能发现“换了对象”，发现不了原地改写；全量哈希代价过高。
 // 唯一可行的是 FIELDS_INDEX_CHECK 式的命中重建复核（同 stateMemo），其代价在本机 1 天探针里超过 25 分钟仍未跑完，未采用；
 // 等价测试（tests/household-cache-equivalence.test.mjs）在作用域内换 state 对象后重读，覆盖“换对象”这一类。
+import {withReadIndex} from './storage.mjs';
 let scope=null;
 const value=Symbol('read scope value');
 export function withReadScope(task){
  if(scope)return task();
  scope=new Map();
- try{return task();}finally{scope=null;}
+ // Same read-only promise, so the record index and stateMemo apply too (stateReader memos are no-ops outside one).
+ try{return withReadIndex(task);}finally{scope=null;}
 }
 export function documentReader(document){
  const read={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)},active=scope;

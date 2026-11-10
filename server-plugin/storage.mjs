@@ -377,6 +377,18 @@ export function withRecordIndex(task) {
     recordIndexDepth++;
     try { return task(); } finally { if (!--recordIndexDepth) stateMemos = new WeakMap(); }
 }
+// A fixed-state, read-only entry (valuation, market supply, a planning read scope): outside an advance it
+// gets the same index/memo scope as an advance pass. Caller promise: nothing inside writes state, records
+// or ledger. Nested inside an advance (or another scope) it is just task(). readEpoch changes when an
+// outermost read scope opens and closes, so caches that outlive scopes (advanceCourses) are not trusted
+// across a read scope, whose state object may be mutated in place before the next scope.
+let readEpoch = 0;
+export const recordReadEpoch = () => readEpoch;
+export function withReadIndex(task) {
+    if (recordIndexDepth) return task();
+    readEpoch++;
+    try { return withRecordIndex(task); } finally { readEpoch++; }
+}
 function recordGroups(records, field, entries, value) {
     if (!INDEXED.has(field)) throw new Error(`records index field ${field}`);
     const name = entries ? `${field}:entries` : field;

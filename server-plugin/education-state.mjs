@@ -1,6 +1,6 @@
 import {temples} from './faith-catalog.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {recordsWhere,recordsMemo,stateMemo,recordIndexActive,canonicalEqual,recordIndexCheck} from './storage.mjs';
+import {recordsWhere,recordsMemo,stateMemo,recordIndexActive,canonicalEqual,recordIndexCheck,recordReadEpoch} from './storage.mjs';
 // Course agreements and completed study are facts. Seats, teachers and resident
 // skill distributions are projections of the current campaign.
 import {facilityView} from './facility-state.mjs';
@@ -294,13 +294,14 @@ export function educationCourses(e,s,minute=s.minute){
  if(e.educationCourseContext)return e.educationCourseContext;
  if(recordIndexActive()){
   const previous=advanceCourses.get(e);
-  if(previous&&minute>=previous.minute&&minute<previous.until&&sameCourseInputs(e,previous.state,s,minute)){
+  const epoch=recordReadEpoch();
+  if(previous&&previous.epoch===epoch&&minute>=previous.minute&&minute<previous.until&&sameCourseInputs(e,previous.state,s,minute)){
    if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(previous.courses,deriveEducationCourses(e,s,minute))){
     recordIndexCheck.violations.push('education courses');throw Error('education course cache mismatch');
    }
    previous.state=s;previous.minute=minute;return previous.courses;
   }
-  const courses=deriveEducationCourses(e,s,minute);advanceCourses.set(e,{state:s,minute,courses,until:courseCacheUntil(minute===s.minute?s:{...s,minute})});return courses;
+  const courses=deriveEducationCourses(e,s,minute);advanceCourses.set(e,{state:s,minute,courses,epoch,until:courseCacheUntil(minute===s.minute?s:{...s,minute})});return courses;
  }
  const memo=e.educationCourseMemo;if(minute!==s.minute||!memo||!s||typeof s!=='object')return deriveEducationCourses(e,s,minute);
  let hit=memo.get(s);if(!hit){hit=deriveEducationCourses(e,s);memo.set(s,hit);}
