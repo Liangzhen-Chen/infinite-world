@@ -9,6 +9,7 @@ import {loadWorld, loadRuntimeWorld} from '../tools/load-world.mjs';
 import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/runtime-world.mjs';
 import {canonical} from '../server-plugin/storage.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {entriesFor as matpropsEntries, validateDraft as validateMatprops, draftRoot as matpropsDraftRoot, condimentCard} from '../world/design/matprops-approval.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
 // 覆盖层的值被运行时值包含：对象逐字段包含，数组的每个元素都在运行时数组里有一个包含它的元素
@@ -21,20 +22,31 @@ const species = new Map(J('world/ecology/species.json').species.map(s => [s.id, 
 const careers = J('world/meta/careers.json');
 const fileRow = (collection, id) => collection === 'species' ? species.get(id) : collection === 'careers' ? careers[id] : formal.get(id);
 
-test('每个审批批次里通过的整行回执，正式文件里的行与其中一份（同一行后来再审的取最新）逐字一致', () => {
+test('每个审批批次里通过的整行回执，正式文件里的行与其中一份（同一行后来再审的取最新）逐字一致；D12 材料属性记录按其自己的口径校验', async () => {
   const approved = new Map();
+  // D12 材料属性的审批对象是类别行（class_*）与物品的 props 覆盖行（mechanics/items.json#id.props），不是 items.json 的整行：
+  // 这两张卡（matprops-approval 的 D 卡与调味佐餐卡）的记录按它自己的口径校验（validateDraft：候选须与 entriesFor() 给出的盘上条目完全一致且带 basis），其余照旧比整行。
+  const d12Roots = [matpropsDraftRoot, condimentCard.draftRoot].map(r => r.split(path.sep).join('/') + '/');
+  const d12Entries = new Map((await matpropsEntries()).map(e => [e.id, e]));
+  const d12Approved = new Map();
   for (const summary of execSync('git ls-files world/drafts', {encoding: 'utf8'}).trim().split('\n').filter(f => /(^|\/)summary\.json$/.test(f))) {
     const dir = path.dirname(summary);
     for (const batch of J(summary).batches ?? []) for (const id of batch.ids ?? []) {
       const file = path.join(dir, `${id}.json`);
       if (!fs.existsSync(file)) continue;
       const record = J(file);
+      if (d12Roots.some(r => summary.startsWith(r))) {
+        if (record.status === 'passed' && d12Entries.has(id)) d12Approved.set(id, [...d12Approved.get(id) ?? [], (await validateMatprops(record.draft, d12Entries.get(id))).length === 0]);
+        continue;
+      }
       if (record.status === 'passed' && record.draft?.row && formal.has(id)) approved.set(id, [...approved.get(id) ?? [], JSON.stringify(record.draft.row)]);
     }
   }
   assert.ok(approved.size > 50);
   const changed = [...approved].filter(([id, rows]) => !rows.includes(JSON.stringify(formal.get(id)))).map(([id]) => id);
   assert.deepEqual(changed, []);
+  assert.ok(d12Approved.size > 50);
+  assert.deepEqual([...d12Approved].filter(([, oks]) => !oks.includes(true)).map(([id]) => id), []);
 });
 
 test('机制字段只在覆盖层：已审行不带覆盖层给的字段与条目，loadWorld 返回的行就是盘上的行', async () => {
