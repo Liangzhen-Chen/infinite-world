@@ -11,7 +11,15 @@
 // 所以无缓存对照只取每个聚落的前 CACHE_EQUIVALENCE_REF 户（默认 1）与 player，且只在居民数 ≤ CACHE_EQUIVALENCE_REF_MAX_RESIDENTS（默认 60）的聚落做：
 // 本机实测一户无缓存读取，居民上百的大聚落约 360 秒，几十人的小聚落约 13 秒；大聚落与其余户只做“游标缓存 = 只读作用域”的交叉比较（仍覆盖写后重读）。
 // 无缓存对照的 marketSupply 只取第一种食物，写后重读的对照只取买方一户；缓存侧仍读 3 种食物与全部抽样户。
-// 默认 1 天：本机探针（三个重任务并行）实测 495 秒，2 天约 16 分钟会超出 15 分钟预算；夜间要更长用 CACHE_EQUIVALENCE_DAYS（每多一天约 +7 分钟）。
+// 时点：每个“天”取两个时点，中午（第 1 天推进 1560 分钟到 12:00，之后每天推进 1080 分钟）与傍晚（再推进 360 分钟到 18:00）。
+// 中午为完整比较（含无缓存对照 REF 户与写后重读）；傍晚只做“游标缓存（首次/命中）= 只读作用域”全体比较，加无缓存对照 2 户，不做写后重读。
+// 耗时估算（本机探针实测，单次读取）：抽样约 13 秒，游标缓存读全体约 57 秒，只读作用域读全体约 55 秒，小聚落一户无缓存读取约 12 秒（12 户约 300 秒），写后重读段约 180 秒；
+// 原单时点整测实测 495 秒（三个重任务并行）。现中午 ≈ 495 秒，傍晚 ≈ 13+57+55+约 40（2 户对照）≈ 165 秒，再加 businessOwners 判别读取（每时点约 30 秒）与两次推进（约 10 秒），合计约 750 秒（12.5 分钟），低于 15 分钟预算；
+// 夜间要更长用 CACHE_EQUIVALENCE_DAYS（每多一天约 +12 分钟，超出 15 分钟预算，仅供夜间）。
+//
+// businessOwners 判别（见 WITNESS）：businessOwners 是 marketSupply 缓存键的一部分。stockSupply 对商铺店主与 trade 身份者本来就计入经营者，加不加他们结果相同，测不出键漏项。
+// 所以取一个非店铺、持货的居民作“经营者”：探针实测第 1 天 12:00，npc_hw_meiling（位于 loc_hw_orchard）持有口粮，口粮供给 businessOwners=[] 时 35，=[npc_hw_meiling] 时 78（需求同为 41）。
+// 测试在每个时点用新游标与新作用域，先读“带经营者”再读“不带”（若键漏掉该参数，后读必拿到先读的结果），并断言两者不相同；至少一个时点必须出现差异。傍晚（18:00）探针实测该居民已不在聚落内（无位置），两者相同，只做游标=作用域的相等比较。
 // 写后重读：在同一游标上先暖缓存，再用正式入口写一笔账本（moveCoins，购买付款同款）与一笔库存（ledger transfer：卖家行囊 → 买方行囊），
 // 立刻在同一游标上重读，与“写后文档上的无缓存读取”比较；再在同一只读作用域里先读写前文档、再读写后文档（换 state 对象），与无缓存对照比较。
 import test from 'node:test';
@@ -28,6 +36,7 @@ import {moveCoins,purse} from '../server-plugin/money.mjs';
 import {bag} from '../server-plugin/stock.mjs';
 import {placeSettlement} from '../server-plugin/entity-view.mjs';
 
+const WITNESS={owner:'npc_hw_meiling',food:'item_ration'};
 const DAYS=Number(process.env.CACHE_EQUIVALENCE_DAYS??1),REF_MAX_RESIDENTS=Number(process.env.CACHE_EQUIVALENCE_REF_MAX_RESIDENTS??60),PER_SETTLEMENT=Number(process.env.CACHE_EQUIVALENCE_PER_SETTLEMENT??3),REF=Number(process.env.CACHE_EQUIVALENCE_REF??1),FOODS=Number(process.env.CACHE_EQUIVALENCE_FOODS??3);
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 declareLedgerWriter('cache-equivalence');
@@ -82,27 +91,37 @@ const scoped=(documents,engine,rows,foods)=>withReadScope(()=>documents.map(doc=
 
 test('缓存读取与无缓存旁路逐项相等，且写入后重读仍相等（游标、只读作用域换状态对象）',async()=>{
  const {engine,document:start}=setup();engineRef=engine;const foods=engine.world.items.filter(i=>(i.nutrition?.satiety??0)>0).map(i=>i.id).slice(0,FOODS);
- let document=start,compared=0,sources=0,writes=0;
- for(let day=0;day<DAYS;day++){
-  const output=await engine.reduce(document,{tool:'world_time',args:{minutes:1440},eventId:`cache_equivalence_day_${day}`});
+ let document=start,compared=0,sources=0,writes=0,witnessDiffered=0;
+ for(let day=0;day<DAYS;day++)for(const [pointName,advance] of [['中午',day===0?1560:1080],['傍晚',360]]){
+  const full=pointName==='中午',tag=`第 ${day+1} 天${pointName}`;
+  const output=await engine.reduce(document,{tool:'world_time',args:{minutes:advance},eventId:`cache_equivalence_day_${day}_${full?'noon':'evening'}`});
   document=applyPatches(document,output.patches);
   const rows=sample(engine,document.state);
   // 1. 同一状态：游标缓存（首次、倒序再读一次走命中路径）与作用域缓存对全体一致；无缓存对照取 refRows：
   // 每个聚落优先取当天确有可买来源的 REF 户（由游标缓存读取先筛，只决定抽谁，比较仍以无缓存为准），加 player。
   const cursor=engine.primitiveDraft(structuredClone(document)),first=readAll(cursor,engine,rows,foods),again=readAll(cursor,engine,[...rows].reverse(),foods);
-  const refRows=[...new Set(rows.map(r=>r.place))].flatMap(place=>{
+  let refRows=[...new Set(rows.map(r=>r.place))].flatMap(place=>{
    const here=rows.filter(r=>r.place===place&&r.owner!=='player'&&residents(document.state,place)<=REF_MAX_RESIDENTS),withSources=here.filter(r=>first[r.owner].sources.length);
    return [...withSources,...here.filter(r=>!withSources.includes(r))].slice(0,REF);
   }).concat(rows.filter(r=>r.owner==='player'&&residents(document.state,r.place)<=REF_MAX_RESIDENTS));
+  if(!full)refRows=refRows.slice(0,2);
   for(const r of rows)r.ref=refRows.includes(r);
   const scopedAll=scoped([document],engine,rows,foods),reference=plain(document,engine,refRows,foods);
-  assert.deepStrictEqual(again,first,`第 ${day+1} 天：游标缓存命中与首次读取不一致`);
-  assert.deepStrictEqual(scopedAll,first,`第 ${day+1} 天：只读作用域与游标缓存不一致`);
-  assert.deepStrictEqual(pick(first,refRows,foods.slice(0,1)),reference,`第 ${day+1} 天：缓存读取与无缓存对照不一致`);
+  assert.deepStrictEqual(again,first,`${tag}：游标缓存命中与首次读取不一致`);
+  assert.deepStrictEqual(scopedAll,first,`${tag}：只读作用域与游标缓存不一致`);
+  assert.deepStrictEqual(pick(first,refRows,foods.slice(0,1)),reference,`${tag}：缓存读取与无缓存对照不一致`);
   compared+=rows.length;for(const r of refRows)sources+=reference[r.owner].sources.length;
   // 2. 写后重读：同一游标上写一笔账本、一笔库存，立刻重读。买方取有可买来源的对照户（否则取第一户），卖家取本聚落店主。
   const sellable=refRows.filter(r=>keeperOf(engine,r.place)&&keeperOf(engine,r.place)!==r.owner),buyer=sellable.find(r=>reference[r.owner].sources.length)??sellable[0];
-  if(!buyer)continue;
+  // businessOwners 判别：新游标、新作用域各读一次，先“带经营者”后“不带”。
+  const wn=document.state.npcs[WITNESS.owner];
+  if(wn?.location){
+   const ask=d=>{const withOwner=marketSupply(d,engine,WITNESS.food,wn.location,{businessOwners:[WITNESS.owner]}),none=marketSupply(d,engine,WITNESS.food,wn.location);return {withOwner,none};};
+   const wc=ask(engine.primitiveDraft(structuredClone(document))),ws=withReadScope(()=>ask(documentReader(document)));
+   assert.deepStrictEqual(ws,wc,`${tag}：经营者判别读取，作用域与游标不一致`);
+   if(JSON.stringify(wc.withOwner)!==JSON.stringify(wc.none))witnessDiffered++;
+  }
+  if(!buyer||!full)continue;
   const keeper=keeperOf(engine,buyer.place);
   const cash=cursor.get('ledger','accounts',purse(engine,buyer.owner))??0;
   if(cash>0){moveCoins(cursor,{from:purse(engine,buyer.owner),to:purse(engine,keeper),amount:1,writer:'cache-equivalence'});writes++;}
@@ -110,13 +129,14 @@ test('缓存读取与无缓存旁路逐项相等，且写入后重读仍相等�
   if(food){transfer(cursor,{from:bag(engine,keeper,food),to:bag(engine,buyer.owner,food),amount:1,writer:'cache-equivalence'});writes++;}
   const after=cursor.document,checkRows=[buyer];
   const reread=readAll(cursor,engine,rows,foods),afterReference=plain(after,engine,checkRows,foods);
-  assert.deepStrictEqual(pick(reread,checkRows,foods.slice(0,1)),afterReference,`第 ${day+1} 天：写入后游标重读与无缓存对照不一致`);
+  assert.deepStrictEqual(pick(reread,checkRows,foods.slice(0,1)),afterReference,`${tag}：写入后游标重读与无缓存对照不一致`);
   // 作用域：同一 withReadScope 里先读写前文档（未被游标改过的 document），再读写后文档（另一个 state 对象）。
   const rescoped=scoped([document,after],engine,rows,foods);
-  assert.deepStrictEqual(rescoped,reread,`第 ${day+1} 天：作用域内换 state 对象后重读与游标重读不一致`);
-  assert.deepStrictEqual(pick(rescoped,checkRows,foods.slice(0,1)),afterReference,`第 ${day+1} 天：作用域换状态后与无缓存对照不一致`);
+  assert.deepStrictEqual(rescoped,reread,`${tag}：作用域内换 state 对象后重读与游标重读不一致`);
+  assert.deepStrictEqual(pick(rescoped,checkRows,foods.slice(0,1)),afterReference,`${tag}：作用域换状态后与无缓存对照不一致`);
  }
  assert.ok(compared>=DAYS,'比较了足够多的户日');
  assert.ok(sources>0,'比较里必须出现过可买来源，否则等于什么都没比');
+ assert.ok(witnessDiffered>0,'businessOwners 带非店铺持货经营者与不带必须出现不同结果，否则测不出缓存键漏掉该参数');
  assert.ok(writes>0,'必须真的写过账本或库存，否则没有测到写后重读');
 });
