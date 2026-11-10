@@ -1,0 +1,28 @@
+{
+ "说明": "trade-ledger-digest 的基线：改前 5b5d4589（t-m26）上跑出的期望值。比对只看各世界下的“期望”字段；耗时、推进步数、游标写入次数与路径分组不参与比对。",
+ "基线版本": "5b5d4589（t-m26）；t-fx7 的缓存提交（adaf7c7c、71746443、5e112396）在 full 30 天、farm 100 天上与之完全相等",
+ "复现": "在被测工作树根目录运行（旧版需先把 tools/trade-ledger-digest.mjs 拷入该工作树的 tools/，并保证 node_modules 可解析）：node tools/trade-ledger-digest.mjs 30 --world full --compare tools/trade-ledger-digest.baseline.json；node tools/trade-ledger-digest.mjs 100 --world farm --compare tools/trade-ledger-digest.baseline.json。不一致时退出码为 1。",
+ "覆盖说明": "farm 夹具 100 天只覆盖播种与生长（作物 growthDays=180、播种日 5/25），不含收获；要覆盖收获需 ≥200 天，耗时约为 100 天的两倍多。",
+ "full": {
+  "命令": "node tools/trade-ledger-digest.mjs 30 --world full",
+  "种子": "createCharacter 名字串 'trade-ledger-digest'（full：林穗店主常营业、玩家在青灯客栈、起始 600 分钟、2000 币）",
+  "期望": {
+   "world": "full", "days": 30, "finalMinute": 43800,
+   "补丁总数": 96832, "成交补丁数": 99, "账本过账补丁数": 4546, "成交记录数": 99,
+   "补丁链哈希": "aa399444afc020bc53f64bd75ad0410e2115c9b8cc8253c9fc36d3f101599e37",
+   "成交记录哈希": "b349e38144fde6c2571b80151120456ab63e00d032462818f8e835ba3a1cec75",
+   "账本终态哈希": "d3f4bdabd7461a50d96f155e3b8c818d7a206cea109080fd663f9f4546da6dae"
+  }
+ },
+ "farm": {
+  "命令": "node tools/trade-ledger-digest.mjs 100 --world farm",
+  "种子": "createCharacter 名字串 'trade-ledger-digest-farm'（farm：farm-pests 夹具世界 withFarmPests）",
+  "期望": {
+   "world": "farm", "days": 100, "finalMinute": 144540,
+   "补丁总数": 326311, "成交补丁数": 209, "账本过账补丁数": 14446, "成交记录数": 209,
+   "补丁链哈希": "d4d291c9e683cadc3345e06ae4683a18ccba075f51ad101bf4236fd15e158d46",
+   "成交记录哈希": "5fc4aa3bcd0cf7e88a97958b8009e5a04832c7a6d94eb26d5bf2f83d48d8c102",
+   "账本终态哈希": "c5bbac3deb98db671421daca0153002a762ee123767c1921804f06804406f17b"
+  }
+ }
+}
