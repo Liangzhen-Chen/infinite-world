@@ -1,0 +1,17 @@
+{
+  "approvedBy": "李白（5 元内小额授权，代亮圳）",
+  "ref": "6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）",
+  "at": "2026-11-10",
+  "ids": [
+    "item_stitchbound_folio",
+    "item_paper_cord_tags",
+    "recipe_w3c_stitchbound_folio",
+    "recipe_w3c_paper_cord_tags",
+    "recipe_w3c_slate_stylus",
+    "recipe_w3c_slate_writing_tile",
+    "recipe_w3c_mushroom_barley_pot",
+    "recipe_w3c_parsnip_cream_pot",
+    "recipe_w3c_walnut_honey_bites",
+    "recipe_w3c_cork_float_set"
+  ]
+}
