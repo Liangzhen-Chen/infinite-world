@@ -14,8 +14,13 @@ const CATALOG = [
   {id: 'wheat', name: '净麦粒', tags: [], shelfLifeDays: 180},
   {id: 'jar', name: '陶罐', tags: ['container', 'ceramic']},
   {id: 'box', name: '分格木箱', tags: [], shelfLifeDays: null},
+  {id: 'cork1', name: '软木塞甲', tags: [], use: '塞紧瓶口的软木塞'},
+  {id: 'cork2', name: '软木塞乙', tags: []},
+  {id: 'cork3', name: '软木塞丙', tags: []},
+  {id: 'bottle', name: '小口瓶', tags: ['container']},
 ];
-const RECIPES = [{id: 'recipe_chain', name: '制作连扣铁短链', workstation: 'smithing', tools: ['hammer', 'tongs'], materials: [{item: 'iron', amount: 1}, {item: 'charcoal', amount: 2}], output: {item: 'chain'}, processFacts: '铁料入炉烧红后锻打成环，穿接收拢。'}];
+const RECIPES = [{id: 'recipe_chain', name: '制作连扣铁短链', workstation: 'smithing', tools: ['hammer', 'tongs'], materials: [{item: 'iron', amount: 1}, {item: 'charcoal', amount: 2}], output: {item: 'chain'}, processFacts: '铁料入炉烧红后锻打成环，穿接收拢。'},
+  {id: 'recipe_bottle', name: '制作小口瓶', workstation: 'pottery', tools: [], materials: [{item: 'cork3', amount: 1}], output: {item: 'bottle'}, processFacts: '软木塞按入瓶口。'}];
 const CTX = {catalog: CATALOG, catalogRecipes: RECIPES};
 const entry = id => CATALOG.find(item => item.id === id);
 const check = (id, draft) => itemTextIssues(draft, entry(id), CTX);
@@ -60,7 +65,8 @@ test('制作痕迹：没有配方的物品不写；有配方须与配方一致',
   assert.match(join('wheat', {inspection: '粒面有刨面痕迹。'}), /制作痕迹「刨面」/);
   assert.deepEqual(check('chain', {description: '环口经锻打收拢，锤痕清晰。'}), [], '配方 processFacts 与工具里有锻、锤');
   assert.match(join('chain', {description: '链面刨面平整。'}), /制作痕迹「刨面」，配方骨架.*没有对应的「刨」/);
-  assert.match(join('chain', {inspection: '环口留有缝线。'}), /制作痕迹「缝线」/);
+  assert.match(join('chain', {inspection: '环口留有针脚。'}), /制作痕迹「针脚」/);
+  assert.deepEqual(check('chain', {description: '两刃并拢看缝，缝线应均匀。'}), [], '缝线在用途与检查里是名词，不是制作痕迹');
   assert.deepEqual(check('wheat', {description: '颗粒饱满，不经锻打。'}), [], '否定不算');
 });
 
@@ -73,4 +79,15 @@ test('骨架外器具（全名与两字以上词形）；单字器具词在物�
 test('catalog 缺失抛错；storageIssues 可单独使用', () => {
   assert.throws(() => itemTextIssues({storage: '避潮。'}, entry('wheat'), {}), /catalog/);
   assert.deepEqual(storageIssues('避潮。', {shelfLifeDays: null}), []);
+});
+
+test('用途表述：别的器物在物品自己的事实字段或它作为材料、工具的配方里有出处，才不判', () => {
+  // 出处一：物品自己的 use 字段写了瓶口。
+  assert.deepEqual(check('cork1', {description: '便于按入瓶口。'}), []);
+  // 出处二：物品作为 materials 出现在制作小口瓶的配方里，产出物名含瓶。
+  assert.deepEqual(check('cork3', {description: '便于按入瓶口。'}), []);
+  // 没有出处：照判，“用于……”句式不是整类豁免。
+  assert.match(join('cork2', {description: '便于按入瓶口。'}), /泛称器具「瓶」/);
+  assert.match(join('cork2', {description: '用于塞紧陶罐。'}), /陶罐/);
+  assert.match(join('cork1', {description: '用于塞紧陶罐。'}), /陶罐/, 'use 里写的是瓶，不是陶罐');
 });

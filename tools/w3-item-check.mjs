@@ -50,7 +50,7 @@ export function storageIssues(text, entry) {
 // 材质字+收纳字（布袋、木架、陶罐、木盒、皮囊……）与泛称（容器、器皿、包装）。物品全名、别名先整体遮掉（宽口滤布、小罐份、分格小瓶木箱）。
 const PACK = /(?:[布麻皮草木陶瓷铁铜竹藤纸油毡]{1,2})(?:袋|囊|架|箱|匣|筒|筐|篮|盒|罐|桶|盘|碗|盆|壶|瓶|缸|坛)|容器|器皿|包装|包裹布|垫布/gu;
 
-function packagingIssues(text, allowedText, vocab) {
+function packagingIssues(text, allowedText, vocab, evidence = '') {
   const errors = [];
   const masked = vocab.allNameRe ? text.replace(vocab.allNameRe, (name) => '〇'.repeat(name.length)) : text;
   for (const sentence of split(masked, /[。；！？\n]/u)) {
@@ -62,7 +62,7 @@ function packagingIssues(text, allowedText, vocab) {
         const word = match[0], kind = word.at(-1);
         // 依据：物品自己或配方骨架里有名字含该收纳词（或同一收纳字）的物品；泛称（容器、器皿、包装）只能靠“另备”声明。
         const isGeneric = /^(?:容器|器皿|包装)$/u.test(word);
-        if (!isGeneric && (allowedText.includes(word) || allowedText.includes(kind))) continue;
+        if (!isGeneric && (allowedText.includes(word) || allowedText.includes(kind) || evidence.includes(word))) continue;
         if (within(spans, match.index) || declared.includes(word) || (generic && isGeneric) || negatedAt(clause, match.index)) continue;
         if (isGeneric && /另备|自备|使用者/u.test(sentence)) continue;
         errors.push(`出现骨架外包装、收纳或容器「${word}」（${clause.trim()}）：物品和配方骨架里没有。修复：删去；确需写就如实说明“容器须使用者另备，不随货提供”`);
@@ -77,7 +77,7 @@ function packagingIssues(text, allowedText, vocab) {
 const TRACES = [
   ['锻', /锻打|锻造|锻成|锻制|锻痕|锻面/u], ['回火', /回火/u], ['淬', /淬火|淬口|淬过|淬硬/u], ['刨', /刨面|刨平|刨光|刨痕|刨制|刨出/u],
   ['锤', /锤痕|锤击|锤打|捶打|锤面|锤成/u], ['凿', /凿痕|凿出|凿成|凿制|凿槽/u], ['锯', /锯痕|锯口|锯成|锯制|锯出/u], ['锉', /锉痕|锉平|锉面|锉制|锉出/u],
-  ['削', /削成|削出|削制|削痕|削面/u], ['刻', /刻出|刻痕|刻制|雕刻/u], ['缝', /缝线|缝制|缝合|缝边|缝成|针脚/u], ['编', /编织|编成|编结|编制/u],
+  ['削', /削成|削出|削制|削痕|削面/u], ['刻', /刻出|刻痕|刻制|雕刻/u], ['缝', /缝制|缝合|缝成|针脚/u], ['编', /编织|编成|编结|编制/u],
   ['织', /织成|织造|织纹/u], ['烙', /烙印|烙痕|烙制/u], ['煮', /煮制|煮成/u], ['熬', /熬制|熬煮/u], ['煎', /煎制|煎成/u], ['炒', /炒制/u],
   ['烘', /烘烤|烘制|烘干/u], ['烧', /烧制|烧结|烧成/u], ['磨', /磨制|打磨|研磨|磨光|磨痕|磨成/u], ['捣', /捣碎|捣制/u], ['腌', /腌制/u], ['酿', /酿制/u],
   ['染', /染成|染制|染色/u], ['压', /压制|压印|压纹|压成/u], ['铸', /铸成|铸造|浇铸/u], ['焊', /焊接|焊缝|焊痕/u], ['钉', /钉痕|钉制|钉合|钉成/u], ['裁', /裁剪|裁成|裁制/u],
@@ -97,12 +97,25 @@ function traceIssues(text, recipe, vocab) {
 
 // 器具部分复用 processIssues（目录派生词表）。物品正文只取“骨架外器具”与“泛称器具”两类：
 // 动作隐含的器具（划线需要量具）在物品正文里多是成品的用途说明，交 L4；单字器具词（剪、筛、针）在物品正文里常是动词或部位（可剪作鞋垫、穿针），不判，只判全名与两字以上词形。
-function utensilIssues(text, skeleton, context) {
+function utensilIssues(text, skeleton, context, evidence) {
   return processIssues(text, skeleton, context).filter((message) => {
-    if (/^正文提到泛称器具/u.test(message)) return true;
+    const generic = message.match(/^正文提到泛称器具「([^」]+)」/u)?.[1];
+    if (generic !== undefined) return !evidence.includes(generic);
     const term = message.match(/^正文出现骨架外器具「([^」]+)」/u)?.[1];
-    return term !== undefined && term.length >= 2;
+    return term !== undefined && term.length >= 2 && !evidence.includes(term);
   });
+}
+
+// 用途表述的数据出处：物品自己的事实字段（use、seasonality、acquisition 里的文字），以及它作为 tools 或 materials 出现的那些配方
+// （配方名、产出物名、工具名、材料名）。正文里提到的别的器物，名字出现在这些出处里才算有依据；不整类放过“用于……”句式。
+function evidenceText(entry, context, vocab) {
+  const strings = (value) => typeof value === 'string' ? [value] : value && typeof value === 'object' ? Object.values(value).flatMap(strings) : [];
+  const named = (id) => { const item = vocab.byId.get(id); return item ? [item.name, ...(item.aliases ?? [])] : []; };
+  const used = (context.catalogRecipes ?? []).filter((row) => (row.tools ?? []).includes(entry.id) || (row.materials ?? []).some((material) => material.item === entry.id));
+  return [
+    ...strings(entry.use), ...strings(entry.seasonality), ...strings(entry.acquisition),
+    ...used.flatMap((row) => [row.name, ...named(row.output?.item), ...(row.tools ?? []).flatMap(named), ...(row.materials ?? []).flatMap((material) => named(material.item))]),
+  ].filter(Boolean).join('|');
 }
 
 // 主入口：返回错误字符串数组，每条带字段名。draft 为物品草稿，entry 为物品骨架行，context 须带 catalog、catalogRecipes（w3Context/journeyContext 附带）。
@@ -110,17 +123,20 @@ export function itemTextIssues(draft, entry, context) {
   const catalog = context?.catalog;
   if (!Array.isArray(catalog)) throw new Error('itemTextIssues: context.catalog 缺失（须由 w3Context/journeyContext 附带物品目录），物品正文检查不能静默跳过');
   const vocab = vocabularyFor(context);
-  const recipe = (context.catalogRecipes ?? []).find((row) => row.output?.item === entry.id);
+  // 同一产出可能同时有已发布配方（不带 processFacts）和骨架配方（带 processFacts）：取带 processFacts 的。
+  const producing = (context.catalogRecipes ?? []).filter((row) => row.output?.item === entry.id);
+  const recipe = producing.find((row) => typeof row.processFacts === 'string') ?? producing[0];
   const skeleton = {id: entry.id, workstation: recipe?.workstation, tools: recipe?.tools ?? [], materials: recipe?.materials ?? [], byproducts: recipe?.byproducts ?? [], output: {item: entry.id}};
   const ids = unique([...skeleton.tools, ...skeleton.materials.map((row) => row.item), ...skeleton.byproducts.map((row) => row.item), entry.id]);
   const allowedText = [...ids.map((id) => vocab.byId.get(id)).filter(Boolean).flatMap((item) => [item.name, ...(item.aliases ?? [])]), ...(WORKSTATION_FACILITIES[skeleton.workstation] ?? [])].join('');
+  const evidence = evidenceText(entry, context, vocab);
   const errors = [];
   for (const field of FIELDS) {
     const text = draft?.[field];
     if (typeof text !== 'string' || !text.trim()) continue;
     const found = [
-      ...utensilIssues(text, skeleton, context),
-      ...packagingIssues(text, allowedText, vocab),
+      ...utensilIssues(text, skeleton, context, evidence),
+      ...packagingIssues(text, allowedText, vocab, evidence),
       ...traceIssues(text, recipe, vocab),
       ...(field === 'storage' ? storageIssues(text, entry) : []),
     ];
