@@ -6,6 +6,7 @@ import path from'node:path';
 import{CampaignStorage}from'../server-plugin/storage.mjs';
 import{WorldRegistry}from'../server-plugin/world-registry.mjs';
 import{archivedReducer}from'../server-plugin/archived-reducer.mjs';
+import{readApprovedSupersedes}from'../tools/approved-revisions.mjs';
 import{loadWorld}from'../tools/load-world.mjs';
 import{economyW3Trades}from'../world/design/economy-w3-trades.mjs';
 import{assembleTradesCandidate,tradesReviewRequest}from'../tools/w3-trades.mjs';
@@ -69,7 +70,7 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
  document.state.npcs.npc_hw_duanyan.coins=731;document.state.npcs.npc_hw_duanyan.trust=19;
  delete document.state.npcs.npc_hw_duanyan.inventory.item_iron;
  document.state.npcs.npc_hw_duanyan.inventory.item_mining_pick=0;
-    const before=structuredClone(document.state),next=assembleTradesCandidate(pristineOld,bones,lore);next.version='w3-trades-candidate';next.rules.version=next.version;
+    const before=structuredClone(document.state),next=assembleTradesCandidate(pristineOld,bones,lore,await readApprovedSupersedes());next.version='w3-trades-candidate';next.rules.version=next.version;
  await store.create({id:'old',worldVersion:world.version,document});const nextHash=await registry.put(next);
  await store.transact('old',{id:'update',input:{type:'world_upgrade',worldHash:nextHash,eventId:'update'}},store.reducer);
  const after=(await store.read('old')).document,engine=await registry.get(after.worldHash);

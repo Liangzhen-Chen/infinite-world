@@ -3,6 +3,7 @@ import {loadWorld} from './load-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,readApprovedContent,defaultReviewRequest,PROCESS_DRAFT_RULES} from './content-pipeline.mjs';
 import {economyW3Trades} from '../world/design/economy-w3-trades.mjs';
+import {readApprovedSupersedes} from './approved-revisions.mjs';
 import {w3Context,validateW3Draft,closestW3Similarity,assembleW3} from './w3-content.mjs';
 import {processIssues} from './w3-process-check.mjs';
 
@@ -26,8 +27,8 @@ export function tradesReviewRequest(entry,draft,context){
  if(context?.materials){const payload=JSON.parse(body.messages[1].content);payload.materialUnits=context.materials.map(row=>({id:row.item,portions:row.amount,gramsPerPortion:row.facts.weight*1000,totalGrams:row.amount*row.facts.weight*1000}));body.messages[1].content=JSON.stringify(payload);}
  return body;
 }
-export function assembleTradesCandidate(world,bones,lore){
- const candidate=assembleW3(world,bones,lore);
+export function assembleTradesCandidate(world,bones,lore,supersedes=[]){
+ const candidate=assembleW3(world,bones,lore,supersedes);
  for(const plan of bones.supply){const npc=candidate.npcs.find(row=>row.id===plan.npc);if(!npc)throw new Error(`供货者不存在 ${plan.npc}`);
   for(const[item,quantity]of Object.entries(plan.stock)){
    if(!candidate.items.some(row=>row.id===item))throw new Error(`供货物品尚未审核 ${item}`);
@@ -45,7 +46,7 @@ export async function inspectTrades(world,bones,{requireL4=true}={}){
    const nearest=closestW3Similarity(row,[...lore,...world[kind]]);if(nearest.score>=.35)throw new Error(`${row.id}与${nearest.id}说明相似度${nearest.score}`);
   }rows.push(...lore);
  }
- const candidate=assembleTradesCandidate(world,bones,rows);
+ const candidate=assembleTradesCandidate(world,bones,rows,await readApprovedSupersedes());
  return{candidate,rows};
 }
 // 人工改写工具（tools/manual-rewrite.mjs）取用的 L1 配置：与流水线同一个 validateTradesDraft，不另写规则；形状与 tools/w3-journey.mjs 的相同。

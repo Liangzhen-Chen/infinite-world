@@ -2,7 +2,7 @@ import { loreIssues } from './economy-content.mjs';
 import { hashContent } from './content-pipeline.mjs';
 import { validateWorld } from './validate-world.mjs';
 import { numeralIssues } from './content-numerals.mjs';
-import { readPublishedSupersedesSync, applySupersedes } from './approved-revisions.mjs';
+import { applySupersedes } from './approved-revisions.mjs';
 
 const units = { '公斤': ['weight',1], '千克':['weight',1], '斤':['weight',.5], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
 const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+?)';
@@ -68,7 +68,8 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
   for(const message of numeralIssues(draft,entry,context))if(!errors.includes(message))errors.push(message);
   return {errors,warnings};
 }
-export function assembleW3(world,bones,lore) {
+// supersedes：调用方先经 readApprovedSupersedes（核验审批）取得的取代声明；本函数不自己读文件。
+export function assembleW3(world,bones,lore,supersedes=[]) {
   // 候选必须从 loadWorld 读出的原样世界装配（发布路径如此）：已被 materializeRuntimeWorld 合并过的世界覆盖层已消耗，后补进来的行拿不到覆盖，D12 整类校验会悄悄算错。
   if(world.runtimeMaterialized)throw new Error('候选必须用原样世界装配（世界已被 materializeRuntimeWorld 物化，覆盖层已消耗）');
   const byId=new Map(lore.map(row=>[row.id,row])),candidate=structuredClone(world);
@@ -77,7 +78,6 @@ export function assembleW3(world,bones,lore) {
   const newItems=bones.items.filter(row=>byId.has(row.id)).map(row=>({...row,...byId.get(row.id)}));
   // 骨架只补世界还没有的行，但骨架上的值若已被发布的修订取代（如 P1 的羊皮纸价），新行按修订值装配；
   // 否则回到旧版再装配时，旧价会和后来按修订价派生的成品并存，出现售价低于材料。
-  const supersedes=readPublishedSupersedesSync();
   for(const receiptFile of new Set(supersedes.map(s=>s.receiptFile).filter(f=>/^world\/drafts\/w3\/(?:[^/]+\/)?bones\.json$/.test(f))))applySupersedes(newItems,receiptFile,supersedes);
   const available=new Set([...world.items,...newItems].map(row=>row.id));
   const newRecipes=bones.recipes.filter(row=>byId.has(row.id)&&available.has(row.output.item)&&row.materials.every(m=>available.has(m.item))).map(({processFacts,...row})=>({...row,...byId.get(row.id)}));

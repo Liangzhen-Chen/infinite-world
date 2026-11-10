@@ -3,6 +3,7 @@ import {loadWorld} from './load-world.mjs';
 import {economyW3Journey} from '../world/design/economy-w3-journey.mjs';
 import {runContentPipeline,readApprovedContent,PROCESS_DRAFT_RULES} from './content-pipeline.mjs';
 import {w3Context,closestW3Similarity} from './w3-content.mjs';
+import {readApprovedSupersedes} from './approved-revisions.mjs';
 import {assembleTradesCandidate,validateTradesDraft,tradesReviewRequest} from './w3-trades.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 export const journeyRoot='world/drafts/w3/journey',journeyRevision='w3-journey-1';
@@ -18,7 +19,7 @@ export async function inspectJourney(world,bones,{requireL4=true}={}){
   for(const draft of lore){const entry=bones[kind].find(x=>x.id===draft.id),validation=validateTradesDraft(draft,entry,block,journeyContext(world,bones,entry));if(validation.errors.length)throw new Error(`${draft.id}: ${validation.errors.join('；')}`);const near=closestW3Similarity(draft,[...lore,...world[kind]]);if(near.score>=.35)throw new Error(`${draft.id}与${near.id}说明相似${near.score}`);}
   rows.push(...lore);
  }
- return{candidate:assembleTradesCandidate(world,bones,rows),rows};
+ return{candidate:assembleTradesCandidate(world,bones,rows,await readApprovedSupersedes()),rows};
 }
 // 人工改写工具（tools/manual-rewrite.mjs）取用的 L1 配置：与流水线同一个 validateTradesDraft，不另写规则。
 export async function manualRewriteProfile(kind){

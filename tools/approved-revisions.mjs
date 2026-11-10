@@ -3,7 +3,8 @@
 // 消费设计源的检查与合并（w3-wave-score 的 publishedW3、w5-sites 的 mergeSites）必须经此读取，把设计源值更新为已审批的修订值，
 // 不能各自写死某条目、某字段。只认通过审批核验的回执；回执格式不合法一律报错。
 import fs from 'node:fs/promises';
-import {existsSync,readdirSync,readFileSync} from 'node:fs';
+import {existsSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
 import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
@@ -42,7 +43,9 @@ export function parsePublication(pub){
 // 已发布的修订批：约定每批的目录 world/drafts/<批目录>/ 下有 publication.json（发布回执）与 candidate.json（冻结候选，含 entries/drafts/contexts）。
 // 不点名批次：凡有 publication.json 且是修订批格式（有 candidate.json，两者 revision 相同，条目带 supersedes）的目录都算；
 // 回执文件格式不合法一律报错。新增修订批（如级联批）发布后自动被读取。
-export async function listRevisionBatches(draftsRoot='world/drafts'){
+// 默认目录取仓库根目录的绝对路径，不依赖进程 cwd。
+const DRAFTS_ROOT=fileURLToPath(new URL('../world/drafts',import.meta.url));
+export async function listRevisionBatches(draftsRoot=DRAFTS_ROOT){
  const out=[];
  for(const dir of (await fs.readdir(draftsRoot,{withFileTypes:true})).filter(d=>d.isDirectory()).map(d=>d.name).sort()){
   const root=`${draftsRoot}/${dir}`;
@@ -52,19 +55,6 @@ export async function listRevisionBatches(draftsRoot='world/drafts'){
   // 修订批格式的回执缺冻结候选：无法核验审批，不得静默忽略（误删或篡改 candidate.json 会让回执失效而不报错）。
   if(!existsSync(`${root}/candidate.json`))throw Error(`修订批 ${dir} 有发布回执却缺 candidate.json，无法核验`);
   out.push({root,pub});
- }
- return out;
-}
-// 同步读取已发布修订回执的取代声明，只做格式解析、不核验审批（核验由 readApprovedSupersedes 在 publishedW3 等处做）。
-// 供不能异步的装配路径（assembleW3）使用：设计源骨架上被已发布修订取代的值，装配新行时须按修订值，不能把旧值带进候选。
-export function readPublishedSupersedesSync(draftsRoot='world/drafts'){
- const out=[];
- for(const dir of readdirSync(draftsRoot,{withFileTypes:true}).filter(d=>d.isDirectory()).map(d=>d.name).sort()){
-  const file=`${draftsRoot}/${dir}/publication.json`;
-  if(!existsSync(file))continue;
-  const pub=JSON.parse(readFileSync(file,'utf8'));
-  if(!Array.isArray(pub?.entries)||!pub.entries.length||!pub.entries.every(e=>Array.isArray(e?.supersedes)))continue;
-  out.push(...parsePublication(pub));
  }
  return out;
 }
@@ -99,7 +89,7 @@ export async function readApprovedBatch({root,pub}){
  assert.deepEqual(pub.entries.map(key),frozen.map(key),`publication.json 与已审批候选不一致：${pub.revision}`);
  return supersedes;
 }
-export async function readApprovedSupersedes(draftsRoot='world/drafts'){
+export async function readApprovedSupersedes(draftsRoot=DRAFTS_ROOT){
  const batches=await listRevisionBatches(draftsRoot),out=[];
  for(const b of batches)out.push(...await readApprovedBatch(b));
  return out;
