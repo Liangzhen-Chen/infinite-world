@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {parseFieldPath,parsePublication,applySupersedes,createTagSourceResolver,overlayFieldReverts,revertSuperseded,revertedRows,APPROVAL_SOURCES} from '../tools/approved-revisions.mjs';
 import {verifyPublished as a3wVerify} from '../world/design/a3w-props-approval.mjs';
+import {verifyPublished as s507Verify} from '../world/design/s507-life-approval.mjs';
 import {fixedSample,recomputeCorpusHash} from '../tools/w3-wave-score.mjs';
 import {hashContent} from '../tools/content-pipeline.mjs';
 
@@ -96,4 +97,17 @@ test('a3w-props 核验：正文修订批发布后正式目录仍通过；回执�
  assert.deepEqual(await a3wVerify(reverted),{published:29});
  const tampered=structuredClone(reverted);tampered.find(x=>x.id==='item_mining_pick').description+='（有人另改）';
  await assert.rejects(a3wVerify(tampered),/发布骨架或引用事实已改变 item_mining_pick|正式目录与历史审批回执不符/);
+});
+
+// ---- s507-life 已审叠加层（物品表的 lifecycle，即 item_clay_oil_lamp）
+test('s507-life 登记为已审叠加层：overlayFieldReverts 给出 clay_oil_lamp lifecycle 的回退项；篡改 lifecycle 后核验报错',async()=>{
+ const items=JSON.parse(await fs.readFile('world/meta/items.json','utf8')),lamp=items.find(x=>x.id==='item_clay_oil_lamp');
+ const reverts=await overlayFieldReverts([{id:lamp.id,entity:lamp}]);
+ assert.deepEqual(reverts.map(r=>[r.id,r.parts,r.remove]),[['item_clay_oil_lamp',['lifecycle'],true]]);
+ assert.match(reverts[0].source,/s507-life 已审叠加层（revision s507-life-1）/);
+ assert.deepEqual(await s507Verify(items),{published:1});
+ const tampered=structuredClone(items);tampered.find(x=>x.id==='item_clay_oil_lamp').lifecycle.awaken.annualRisk=0.5;
+ await assert.rejects(s507Verify(tampered),/S507 已批值不符/);
+ // 现值不等于已批值：不归因
+ assert.deepEqual(await overlayFieldReverts([{id:lamp.id,entity:{...lamp,lifecycle:{awaken:{}}}}]),[]);
 });

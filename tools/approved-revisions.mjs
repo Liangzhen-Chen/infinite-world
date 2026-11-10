@@ -126,12 +126,13 @@ export async function revertedRows(rows,file,draftsRoot){return revertSuperseded
 // ---------------------------------------------------------------- 已审叠加层登记表
 // 设计源（骨架）发布之后，后续已审批的层会给正式条目叠加字段（用途标签、容量……）。
 // 消费方不点名具体的叠加批：只遍历下面的登记表。登记表只收录“已有审批记录、verifyPublished 能通过”的叠加层；
-// 登记了但核验不通过一律报错。没有审批记录的变化（如 clay_oil_lamp 的 lifecycle）不得登记，照实判为无来源。
+// 登记了但核验不通过一律报错。没有审批记录的变化不得登记，照实判为无来源。s507-life 已审批（批 0 的 L4 已批、3 条 passed）并已登记，只含物品表的 lifecycle（item_clay_oil_lamp）；human 与 building 的 lifecycle 不在物品表，不属这个叠加层。
 // 每项经 load() 给出统一接口：{revision, fields:{<字段名>:{<物品id>:取值}}, verifyPublished}。
 // 各审批模块的导出形状不同，在这一层适配；审批模块与其审批数据不改。
 export const APPROVED_OVERLAYS=[
  {name:'a3w-props',load:async()=>{const m=await import('../world/design/a3w-props-approval.mjs');return{revision:m.revision,fields:{tags:m.sources},verifyPublished:()=>m.verifyPublished()};}},
  {name:'a3cap-data',load:async()=>{const m=await import('../world/design/a3cap-data-approval.mjs');return{revision:m.revision,fields:{capacityMl:m.capacities},verifyPublished:()=>m.verifyPublished()};}},
+ {name:'s507-life',load:async()=>{const m=await import('../world/design/s507-life-approval.mjs');return{revision:m.revision,fields:{lifecycle:await m.itemLifecycles()},verifyPublished:()=>m.verifyPublished()};}},
 ];
 // 加载并核验一层；核验不通过抛错（不当作“没有来源”）。同一登记表内只核验一次。
 function overlayLoader(registry){
