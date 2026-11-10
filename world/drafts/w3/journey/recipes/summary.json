@@ -6154,7 +6154,7 @@
     },
     {
       "index": 1,
-      "fingerprint": "a0066bf26040d712754fa7aa3e3271524874a71f2541654c5a40eaa46a91c14f",
+      "fingerprint": "65d86f38f8d50a90199de96b5cbd7cc163e3388739bfa291ac6529f2bdf55e0c",
       "count": 42,
       "passed": 42,
       "ids": [
@@ -6216,7 +6216,7 @@
         "approved": true,
         "reviewer": "sonnet-l4-a3a9e74a",
         "by": "sonnet-l4-a3a9e74a",
-        "reviewedAt": "2026-11-10T22:02:26.982Z",
+        "reviewedAt": "2026-11-10T22:40:12.505Z",
         "notes": [
           {
             "id": "recipe_w3c_horn_spoon_blank",
@@ -6229,13 +6229,13 @@
             "by": "sonnet-l4-ac18c399"
           },
           {
-            "id": "recipe_w3c_broad_steel_chisel",
-            "note": "点燃木炭引火、钢条入炉、钳锤砧锉磨石木柄均在骨架；清水一份、300分钟相符；锉屑弃置，无骨架外去处与数量。",
-            "by": "sonnet-l4-ad0f08b8"
+            "id": "recipe_w3c_hooked_pruning_knife",
+            "note": "核对：木炭小袋点燃作火源，铁钳夹钢条入炉，手锤锻内弯刃与柄舌，配额清水淬口后回火，锉背磨刃，柄舌装小工具木柄，四件工具齐备，不自动增加收成，余料只弃置，时长260，无骨架外内容。",
+            "by": "sonnet-l4-ac18c399"
           },
           {
-            "id": "recipe_w3c_hooked_pruning_knife",
-            "note": "点燃木炭，钢条、清水、木柄、四件工具均在骨架；260分钟相符；锉屑弃置，无废堆与骨架外数量。",
+            "id": "recipe_w3c_broad_steel_chisel",
+            "note": "点燃木炭引火、钢条入炉、钳锤砧锉磨石木柄均在骨架；清水一份、300分钟相符；锉屑弃置，无骨架外去处与数量。",
             "by": "sonnet-l4-ad0f08b8"
           },
           {
@@ -6760,6 +6760,207 @@
               "recipe_w3c_linen_cleaning_swab",
               "recipe_w3c_felt_polishing_pad",
               "recipe_w3c_resin_cloth_patch"
+            ]
+          }
+        },
+        {
+          "approved": true,
+          "reviewer": "sonnet-l4-a3a9e74a",
+          "by": "sonnet-l4-a3a9e74a",
+          "reviewedAt": "2026-11-10T22:02:26.982Z",
+          "notes": [
+            {
+              "id": "recipe_w3c_horn_spoon_blank",
+              "note": "核对：已无克数，镂片锯、木锉、修羽刀齐备，不加热不加黏料，余料弃置，时长130。",
+              "by": "sonnet-l4-ac18c399"
+            },
+            {
+              "id": "recipe_w3c_slate_writing_tile",
+              "note": "核对：湿砂在工作台面上润成，用配额清水，铁锉磨边，余砂水弃置，写牌空白，时长90，无骨架外器具。",
+              "by": "sonnet-l4-ac18c399"
+            },
+            {
+              "id": "recipe_w3c_broad_steel_chisel",
+              "note": "点燃木炭引火、钢条入炉、钳锤砧锉磨石木柄均在骨架；清水一份、300分钟相符；锉屑弃置，无骨架外去处与数量。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_hooked_pruning_knife",
+              "note": "点燃木炭，钢条、清水、木柄、四件工具均在骨架；260分钟相符；锉屑弃置，无废堆与骨架外数量。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_leather_round_knife",
+              "note": "点燃木炭，淬火用配额清水；软革仅作用途说明（来自processFacts）；280分钟相符；锉屑弃置。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_carpenters_adze",
+              "note": "点燃木炭，钢条、白蜡木直料、清水与双耳削柄刀均在骨架；套口与柄的顺序、位置一致；360分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_steel_gouge_tip",
+              "note": "先夹钢条再点燃木炭入炉，圆身孔锉、磨石、木柄在骨架；氧化皮、锉屑弃置；320分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_small_trowel",
+              "note": "点燃木炭入炉，铁料、钳锤砧锉木柄在骨架，无清水也未用水；回炉补热属工序；220分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_wire_mesh_patch",
+              "note": "铁线卷、窄嘴饰线钳、平齿铁锉均在骨架，无废堆，不写失败回收；180分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_folded_brass_cuff",
+              "note": "黄铜带、金属剪、饰线钳、铁锉均在骨架；边角余料与锉屑弃置；210分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_tin_inlay_strip",
+              "note": "锡片、金属剪、錾点杆、铆锤均在骨架；杆立于条面、锤击杆尾，位置交代清楚；160分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_quill_pen_pair",
+              "note": "鹅羽管、修羽刀在骨架；碎屑出自削口，弃置不引入去处；45分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_paste_cup_portion",
+              "note": "干浆粉、规定清水、木刨屑引火、煮锅木匙均在骨架；容器自备仅限交付；35分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_paper_cord_tags",
+              "note": "羊皮纸、麻线、修羽刀、扁锥在骨架；吊签件数写“若干”合规；70分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_reed_pen_box",
+              "note": "芦管、软木片、麻线、修羽刀、骨片在骨架；塞片与筒口位置一致；100分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_book_spine_tape",
+              "note": "帆布、麻线、裁革剪、缝针在骨架；无少许等模糊用量；65分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_silver_open_ring",
+              "note": "银丝束、饰线钳、磨石在骨架；已无油水；单只环对应成品；160分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_bone_toggle_set",
+              "note": "净骨坯、镂片锯、手钻、木锉在骨架；用手扶坯无垫具；“若干枚”合规，双孔由成品形制决定；130分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_horsehair_dustbrush",
+              "note": "山毛榉坯、马尾毛、麻线与锯、钻、修羽刀在骨架；毛束“若干”合规；170分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_leather_wax_grease",
+              "note": "工坊脂、蜂蜡、点燃木炭、煮锅木匙在骨架；设施只写火，名称一致；55分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_soap_wash_portion",
+              "note": "硬皂、配额清水、木刨屑引火在骨架，已无克数毫升；容器另备仅限交付；25分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_damp_sand_rub",
+              "note": "细砂、清水、煮锅、木匙在骨架，无弃置成品的矛盾；20分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_wick_coil",
+              "note": "麻灯芯、裁革剪、骨片在骨架；段数写“若干”合规；40分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_linen_cleaning_swab",
+              "note": "芦管、麻布、麻线、修羽刀、裁革剪在骨架；已无量具与数层数匝；75分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_felt_polishing_pad",
+              "note": "毡片、麻布、麻线、裁革剪、缝针在骨架；边角弃置，无“材料用尽”矛盾；65分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_resin_cloth_patch",
+              "note": "帆布、松脂、点燃木炭、煮锅、木匙、裁革剪在骨架；补片涂脂与冷却均手持，位置交代清楚；100分钟相符。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_folding_map_board",
+              "note": "松板、铰片、四钉与锯、刨、槌均在骨架；钉穿铰片入木，位置清楚，共四钉与骨架一致；无孔位等骨架外构件；240分钟相符；余料弃置无骨架外去处。",
+              "by": "sonnet-l4-ad0f08b8"
+            },
+            {
+              "id": "recipe_w3c_forged_chain_short",
+              "note": "对照骨架核对：取木炭小袋的木炭作火源，三件工具齐全，“每条卷成环”量词已改，全程330分钟与骨架一致，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_gate_hasps",
+              "note": "对照骨架核对：木炭作火源，锤、钳、冲子、锉四件工具齐全，配锁另买有processFacts依据，全程280分钟，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_seal_thread_bundle",
+              "note": "对照骨架核对：先压各线段后收拢成束，顺序无矛盾，只用修羽刀与骨压片，剩余蜡随线束交付有processFacts依据，全程55分钟，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_horn_comb",
+              "note": "对照骨架核对：锯、锉、修羽刀均在骨架，角屑与细裂片弃置不掺回成品，只梳理发丝出自processFacts，全程210分钟，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_redwood_dye",
+              "note": "对照骨架核对：滤布兜住碎片入锅、提起沥液的位置逻辑通顺，点燃两份刨屑，容器另备只限交付，全程100分钟，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_cork_float_set",
+              "note": "逐项核对：修羽刀与缝革扁锥均在骨架，“若干小浮片”出自processFacts，麻线打结收尾，无火，全程90分钟，无骨架外器物，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_small_bell_frame",
+              "note": "逐项核对：金属剪、冲子、锤、饰线钳均在骨架，铜带与铁线用法前后一致，不警示敌情出自processFacts，全程240分钟，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_reed_whistle",
+              "note": "逐项核对：芦管与软木塞片在骨架材料中，截与削用修羽刀，钻孔用手钻，无火，全程100分钟，无骨架外器物，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_seam_pitch_cake",
+              "note": "逐项核对：点燃木炭小袋的木炭作火源，已统一为锅，稠糊离火后留在锅内冷却成饼，不倾出，工具仅锅与木匙，全程65分钟，不保证高压水密出自processFacts，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            },
+            {
+              "id": "recipe_w3c_slate_stylus",
+              "note": "逐项核对：已无夹具与“三指”，手持锉修，湿砂磨钝，工具仅平齿铁锉，只作粗面划记出自processFacts，全程90分钟，批。",
+              "by": "sonnet-l4-a3a9e74a"
+            }
+          ],
+          "rejection": {
+            "by": "w3-journey 批量相似度检查（closestW3Similarity，上限 0.35）",
+            "at": "2026-11-10T23:0xZ",
+            "reason": "hooked_pruning_knife 与 leather_round_knife 相似度 0.440、与 broad_steel_chisel 0.379 超限，人工重写后全库最高 0.344，独立 L4 已过（sonnet-l4-ac18c399）。",
+            "ids": [
+              "recipe_w3c_hooked_pruning_knife"
             ]
           }
         }

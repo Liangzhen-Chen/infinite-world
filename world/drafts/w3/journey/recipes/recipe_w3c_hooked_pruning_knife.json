@@ -5,13 +5,13 @@
   "attempts": 1,
   "draft": {
     "id": "recipe_w3c_hooked_pruning_knife",
-    "process": "点燃木炭小袋中的木炭作火源，把淬用钢条放入炉中烧红，用长柄铁钳夹出放在砧上，以锻工手锤反复延展，趁热弯出内弧短刃，并收出柄舌。刃口留出淬口余量，浸入配额清水淬口，再回火减脆。冷后用平齿铁锉修背去毛边，以细面刃磨石磨开刃口。最后把柄舌装入小工具木柄。成品不自动增加收成。锉屑弃置，工具保留。全程260分钟。"
+    "process": "先点燃木炭小袋中的木炭作火源，再用长柄铁钳夹着淬用钢条送进炉火，烧到发红后移到砧面。锻工手锤边延展边把钢坯向内弯，打成内弧的短刃，另一头收细，留作柄舌。刃口先不打薄，留出淬口余量，再浸入配额清水一次淬硬，随后回火减脆。放凉后，用平齿铁锉修去刀背毛边，再以细面刃磨石磨开刃口，最后把柄舌装进小工具木柄。成品不自动增加收成。锉屑弃置，工具保留。全程260分钟。"
   },
   "review": {
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a8d49a7c",
-    "at": "2026-11-10T22:02:15.676Z"
+    "at": "2026-11-10T22:40:10.867Z"
   },
   "errors": [],
   "warnings": [],
@@ -29,6 +29,24 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a8d49a7c",
+      "at": "2026-11-10T22:40:10.867Z",
+      "reason": "w3-journey 批量相似度检查：hooked_pruning_knife 相似度超限，人工重写，全库最高 0.344；独立严格 L4 已过（sonnet-l4-ac18c399）",
+      "headCommit": "a7e8e9e2b55d9cc9bbf05b74bf5815b6149b1ec3",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "recipe_w3c_hooked_pruning_knife",
+        "process": "点燃木炭小袋中的木炭作火源，把淬用钢条放入炉中烧红，用长柄铁钳夹出放在砧上，以锻工手锤反复延展，趁热弯出内弧短刃，并收出柄舌。刃口留出淬口余量，浸入配额清水淬口，再回火减脆。冷后用平齿铁锉修背去毛边，以细面刃磨石磨开刃口。最后把柄舌装入小工具木柄。成品不自动增加收成。锉屑弃置，工具保留。全程260分钟。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a8d49a7c",
+        "at": "2026-11-10T22:02:15.676Z"
       },
       "priorAttempts": 1
     }
