@@ -63,7 +63,16 @@
   ],
   "l4": {
     "approved": false,
-    "notes": []
+    "notes": [],
+    "rejection": {
+      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+      "at": "2026-11-10T18:00Z",
+      "reason": "两条三次起草均写\"全程九十零分钟\"被 L1 拦下转 manual；NUMERAL-HINT（3b893ed8）已让 L1 反馈给出正确写法（九十分钟或90分钟，与骨架 minutes 一致），按新反馈重写。",
+      "ids": [
+        "recipe_w3c_slate_writing_tile",
+        "recipe_w3c_slate_stylus"
+      ]
+    }
   },
   "l4History": [
     {
