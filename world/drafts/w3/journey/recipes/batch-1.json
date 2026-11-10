@@ -91,7 +91,18 @@
         "id": "recipe_w3c_stitchbound_folio",
         "note": "补核。context：羊皮纸3、麻线1，修羽刀、缝革扁锥、粗眼缝针、平脊骨压片；110分钟。正文三张对折、修羽刀修边、骨片压折脊、扁锥刺孔、麻线缝订、再修边、\"约110分钟\"、不教技能，均与 processFacts 一致，无未列材料，未写价格，与新价37无矛盾。本条本身无错。"
       }
-    ]
+    ],
+    "rejection": {
+      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_paper_cord_tags：\"叠好的小片\"前文没有交代折叠这一步；recipe_w3c_slate_stylus：\"全程九十加分钟\"多\"加\"字；recipe_w3c_slate_writing_tile：\"全程九十钟\"缺\"分\"字；recipe_w3c_cork_float_set：\"九十整分钟\"写法不合法。按新事实重写，时长写法须合法并与骨架 minutes 一致，工序前后须连贯。",
+      "ids": [
+        "recipe_w3c_paper_cord_tags",
+        "recipe_w3c_slate_stylus",
+        "recipe_w3c_slate_writing_tile",
+        "recipe_w3c_cork_float_set"
+      ]
+    }
   },
   "l4History": [
     {

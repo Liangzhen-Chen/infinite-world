@@ -60,7 +60,7 @@
     "recipe_w3c_cracked_wheat_pot"
   ],
   "l4": {
-    "approved": true,
+    "approved": false,
     "notes": [
       {
         "id": "recipe_w3c_tool_apron_panel",
@@ -82,7 +82,17 @@
         "id": "recipe_w3c_cracked_wheat_pot",
         "note": "一麦三水配额泡煮，刀背压裂、木匙防焦，炭屑只入灶，85分钟。"
       }
-    ]
+    ],
+    "rejection": {
+      "by": "主会话 L4 复核（Claude Opus 5.5），依李白 f8282524 批复",
+      "at": "2026-11-10",
+      "reason": "recipe_w3c_mushroom_barley_pot：\"全程九十钟\"缺\"分\"字；recipe_w3c_parsnip_cream_pot：\"五十整分钟\"写法不合法；recipe_w3c_walnut_honey_bites：\"七十整分钟\"写法不合法。按新事实重写，时长写法须合法并与骨架 minutes 一致，工序前后须连贯。",
+      "ids": [
+        "recipe_w3c_mushroom_barley_pot",
+        "recipe_w3c_parsnip_cream_pot",
+        "recipe_w3c_walnut_honey_bites"
+      ]
+    }
   },
   "costUpperYuan": 5.273706560000007,
   "manualRatio": 0,
