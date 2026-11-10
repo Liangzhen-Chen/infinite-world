@@ -29,6 +29,8 @@ test('每个审批批次里通过的整行回执，正式文件里的行与其�
   const d12Roots = [matpropsDraftRoot, condimentCard.draftRoot].map(r => r.split(path.sep).join('/') + '/');
   const d12Entries = new Map((await matpropsEntries()).map(e => [e.id, e]));
   const d12Approved = new Map();
+  // 按目录对账：每个 D12 目录里出现的全部记录（不论状态）与其中通过的记录；条目表没覆盖到的记录不跳过，记入 d12Uncovered 判失败。
+  const d12Seen = new Map(), d12Passed = new Map(), d12Checked = new Map(), d12Uncovered = [];
   for (const summary of execSync('git ls-files world/drafts', {encoding: 'utf8'}).trim().split('\n').filter(f => /(^|\/)summary\.json$/.test(f))) {
     const dir = path.dirname(summary);
     for (const batch of J(summary).batches ?? []) for (const id of batch.ids ?? []) {
@@ -36,7 +38,14 @@ test('每个审批批次里通过的整行回执，正式文件里的行与其�
       if (!fs.existsSync(file)) continue;
       const record = J(file);
       if (d12Roots.some(r => summary.startsWith(r))) {
-        if (record.status === 'passed' && d12Entries.has(id)) d12Approved.set(id, [...d12Approved.get(id) ?? [], (await validateMatprops(record.draft, d12Entries.get(id))).length === 0]);
+        const add = (m, v) => m.set(dir, [...m.get(dir) ?? [], v]);
+        add(d12Seen, id);
+        if (!d12Entries.has(id)) { d12Uncovered.push(`${dir}/${id}（${record.status}）`); continue; }
+        if (record.status === 'passed') {
+          add(d12Passed, id);
+          d12Approved.set(id, [...d12Approved.get(id) ?? [], (await validateMatprops(record.draft, d12Entries.get(id))).length === 0]);
+          add(d12Checked, id);
+        }
         continue;
       }
       if (record.status === 'passed' && record.draft?.row && formal.has(id)) approved.set(id, [...approved.get(id) ?? [], JSON.stringify(record.draft.row)]);
@@ -45,7 +54,11 @@ test('每个审批批次里通过的整行回执，正式文件里的行与其�
   assert.ok(approved.size > 50);
   const changed = [...approved].filter(([id, rows]) => !rows.includes(JSON.stringify(formal.get(id)))).map(([id]) => id);
   assert.deepEqual(changed, []);
-  assert.ok(d12Approved.size > 50);
+  // D12 目录下 entriesFor 没覆盖到的记录一律失败；每个目录里通过的记录都必须逐条走过 validateMatprops（通过集 = 已校验集），且每个目录至少有一条。
+  assert.deepEqual(d12Uncovered, []);
+  assert.ok(d12Seen.size >= 2);
+  for (const [dir, ids] of d12Passed) assert.deepEqual([...ids].sort(), [...d12Checked.get(dir) ?? []].sort(), `${dir} 通过的记录未逐条校验`);
+  for (const dir of d12Seen.keys()) assert.ok(d12Passed.has(dir), `${dir} 没有通过的记录`);
   assert.deepEqual([...d12Approved].filter(([, oks]) => !oks.includes(true)).map(([id]) => id), []);
 });
 
