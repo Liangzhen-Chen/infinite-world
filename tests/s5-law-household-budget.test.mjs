@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdBudget,householdResources,householdBufferTarget,householdOptions,registerHouseholdFoodSources} from '../server-plugin/household-budget.mjs';
@@ -14,8 +14,8 @@ import {stateReader} from '../server-plugin/valuation.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const owner='npc_hw_linsui',other='npc_hw_duanyan',supplier='npc_hw_shendu',item='item_bread',DAY=1440;
-// 面包的饱腹读材料数据（items.json 里的手写营养），夹具不再覆盖成 1；手算锚点按它缩放：一个面包 = SAT 饱腹，每人每天需 10 个面包。
-const SAT=world.items.find(i=>i.id===item).nutrition.satiety;
+// 面包的饱腹由其出处（props）推导并乘饱腹系数，取引擎派生后的值，夹具不再覆盖成 1；手算锚点按它缩放：一个面包 = SAT 饱腹，每人每天需 10 个面包。
+const SAT=(await loadRuntimeWorld()).items.find(i=>i.id===item).nutrition.satiety;
 const satOf=(f,id)=>f.engine.byId.get(id).nutrition?.satiety??0;
 const near=(a,b,m)=>assert.ok(Math.abs(a-b)<1e-6,m??`${a} ≈ ${b}`);
 // 市场替代的独立复算（不拿引擎的结果去验引擎的结果）：
@@ -367,14 +367,15 @@ test('one affordable market meal cannot erase the remaining six-day income gap',
 });
 
 test('simultaneous sources: residents buy the food with the most effective satiety per coin, not the cheapest',()=>{
- // Intent (Li Bai's rule): among foods arriving together the household buys the best satiety per coin. Vinegar is cheapest but has no derived satiety,
- // cabbage is cheaper than bread but bread's derived satiety per coin is far higher; the expected winner is computed from derived values, not named.
+ // Intent (Li Bai's rule): among foods arriving together the household buys the best satiety per coin among those it can actually eat (single-meal cap room,
+ // as in marketCheck). Vinegar is cheapest but has no derived satiety; the expected winner is computed from derived satiety, price and cap room, not named.
  const before=registerHouseholdFoodSources.fn;
  try{
   const f=fixture();f.state.npcs[owner].coins=100;f.sync();
   const at=f.state.minute,offers=[['item_fruit_vinegar',1],['item_cabbage',2],[item,3]].map(([it,unitPrice])=>({source:`fx_${it}`,seller:'npc_fx_seller',item:it,at,quantity:50,unitPrice}));
   registerHouseholdFoodSources(()=>offers);
-  const b=householdBudget(f.d,f.engine,owner,{kernel:true}),expected=bestPerCoin(f,offers.filter(o=>satOf(f,o.item)>0));
+  const b=householdBudget(f.d,f.engine,owner,{kernel:true}),caps=mealCapPools(f.engine,{days:[b.target.days]}),minute=f.state.minute;
+  const expected=bestPerCoin(f,offers.filter(o=>satOf(f,o.item)>0&&caps.unitsRoom(o.item,(o.at-minute)/DAY)>=1));
   assert.equal(b.resources.market.purchases[0].item,expected);
   const cheapest=[...offers].sort((x,y)=>x.unitPrice-y.unitPrice).find(o=>satOf(f,o.item)>0).item;
   assert.notEqual(expected,cheapest,'premise: the best per coin is not the cheapest food');

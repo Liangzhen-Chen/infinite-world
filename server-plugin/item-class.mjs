@@ -150,8 +150,22 @@ export function usageGrams(engine,item,cls,grams){
  return heat===null?grams:grams*Math.max(0,heat)/ref;
 }
 
+// 饱腹系数 = Π 各因子（饱腹不等于热量：同样的热量，低能量密度的食物更饱，高能量密度的更不饱）。
+// 参数在 crafting.json nutrition.satietyFactor：energyDensity 因子 =（成品能量密度 ÷ ref）^k 夹在 [min,max]；
+// 整体乘积再夹到同一 [min,max]；dimensions 里每项 {k,ref,min,max} 是按材料属性维度追加的因子（如蛋白、纤维、含水），该物品该维度未知则因子取 1，现在为空。
+// 配方的能量守恒不动：系数只在最终写入 nutrition / nutrientContent 时乘一次。
+const factorOf=(spec,x)=>Math.min(spec.max,Math.max(spec.min,(x/spec.ref)**spec.k));
+export function satietyFactor(world,item,satiety){
+ const spec=param(world,'nutrition.satietyFactor'),kps=world?.materialProps?.kcalPerSatiety,dims=Object.entries(spec.dimensions??{});
+ let f=1;
+ if(spec.energyDensity&&kps>0&&item.weight>0&&satiety>0)f*=factorOf(spec.energyDensity,satiety*kps/(item.weight*1000));
+ if(dims.length){const mp=materialProps({world,byId:new Map((world.items??[]).map(i=>[i.id,i]))},item.id);for(const [dim,d] of dims){const v=mp[dim];if(v?.known)f*=factorOf(d,v.value);}}
+ // 全部因子的乘积整体再夹到 energyDensity 的 [min,max]，多个维度叠加也不会超出范围。
+ return spec.energyDensity?Math.min(spec.energyDensity.max,Math.max(spec.energyDensity.min,f)):f;
+}
+
 // —— 加载期派生营养与生熟 ——
-// 物品表写了 nutrition 的照用；没写的食物：有产出它的配方就按投入守恒派生，没有配方就按重量 × 类别密度。
+// 物品表写了 nutrition 的维度照用（视为按热量的基值，同样乘饱腹系数），没写的维度和没写 nutrition 的食物：有产出它的配方就按投入守恒派生，没有配方就按重量 × 类别密度。
 // 结果：可直接当一餐的食物写入 nutrition（消费方照旧读 nutrition）；全部食物写 nutrientContent（含生料）与 foodState。
 export function deriveItemAttributes(world){
  const byId=new Map((world.items??[]).map(i=>[i.id,i])),table=classTable(world);
@@ -173,7 +187,11 @@ export function deriveItemAttributes(world){
  const content=id=>{
   if(cache.has(id))return cache.get(id);
   const item=byId.get(id);if(!item)return null;
-  if(item.nutrition)return set(id,{satiety:item.nutrition.satiety??0,hydration:item.nutrition.hydration??0,raw:false,authored:true});
+  // 幂等：已派生过的物品（nutrition 与 nutrientContent 仍一致，说明没被人改过）按当时记下的“按热量基值” nutrientBase 重算，不把已乘过系数的值再当手写值乘一遍。
+  const prior=item.nutrition&&item.nutrientBase&&item.nutrientContent&&(item.nutrition.satiety??0)===item.nutrientContent.satiety&&(item.nutrition.hydration??0)===item.nutrientContent.hydration?item.nutrientBase:null;
+  if(prior)return set(id,{satiety:prior.satiety,hydration:prior.hydration,raw:false,authored:true});
+  const auth=item.nutrition;
+  if(auth&&auth.satiety!==undefined&&auth.hydration!==undefined)return set(id,{satiety:auth.satiety,hydration:auth.hydration,raw:false,authored:true});
   if(!has(id,'food'))return set(id,{satiety:0,hydration:0,raw:false,inedible:true});
   if(busy.has(id))return null;
   busy.add(id);
@@ -187,16 +205,20 @@ export function deriveItemAttributes(world){
    if(!best||row.satiety<best.satiety)best=row;
   }
   busy.delete(id);
-  return set(id,best??base(item));
+  // 物品表手写的营养按维度合并：写了哪个维度用手写值（作为“按热量的基值”，同样乘系数），没写的维度用推导值。
+  const d=best??base(item);
+  return set(id,auth?{...d,...(auth.satiety!==undefined?{satiety:auth.satiety}:{}),...(auth.hydration!==undefined?{hydration:auth.hydration}:{}),raw:false,authored:true}:d);
  };
  function set(id,v){cache.set(id,v);return v;}
  for(const item of world.items??[]){
   const c=content(item.id);if(!c||c.inedible)continue;
-  if(c.authored)continue;
   item.foodState=c.raw?'raw':'ready';
-  item.nutrientContent={satiety:Math.floor(c.satiety),hydration:Math.floor(c.hydration)};
+  const sat=Math.floor(c.satiety*satietyFactor(world,item,c.satiety));
+  item.nutrientContent={satiety:sat,hydration:Math.floor(c.hydration)};
+  // nutrientBase：未乘系数的“按热量基值”（配方的能量守恒在它上面成立；重复派生时也从它重算）。
+  item.nutrientBase={satiety:c.satiety,hydration:c.hydration};
   if(c.raw)continue;
-  const nutrition={...(Math.floor(c.satiety)>0?{satiety:Math.floor(c.satiety)}:{}),...(Math.floor(c.hydration)>0?{hydration:Math.floor(c.hydration)}:{})};
+  const nutrition={...(sat>0?{satiety:sat}:{}),...(Math.floor(c.hydration)>0?{hydration:Math.floor(c.hydration)}:{})};
   if(Object.keys(nutrition).length)item.nutrition=nutrition;
  }
  return world;
@@ -226,6 +248,8 @@ export function memberValues(x,kcalPerSatiety){
  if(m!==undefined)o.m=m;
  if(x?.refuseFraction!==undefined)o.edible=1-x.refuseFraction;
  if(x?.kcalPer100gWet!==undefined&&m!==undefined&&m<1&&kcalPerSatiety>0)o.e=x.kcalPer100gWet*10/(1-m)/kcalPerSatiety;
+ // 干物质为 0（含水 1）：没有可供能的物质，能量为 0（通用规则；有热量却无干物质是矛盾，不推算）。
+ else if(x?.kcalPer100gWet===0&&m===1&&kcalPerSatiety>0)o.e=0;
  // 单餐量按鲜重给（mealGrams）；mealBasis:'dryMatter' 的出处，惯常量是干物质量：mealGrams × (1 − 食用时的含水)（eatenMoistureFraction，没写取出处自己的含水；谷、豆按煮熟后食用），类别里存干物质量，到每件物品再按它自己的含水折回鲜重（鲜果与干果同一个类值）。
  if(x?.mealGrams!==undefined){if(x.mealBasis==='dryMatter'){const eaten=x.eatenMoistureFraction??m;if(eaten!==undefined)o.capDry=x.mealGrams*(1-eaten);}else o.cap=x.mealGrams;}
  return o;

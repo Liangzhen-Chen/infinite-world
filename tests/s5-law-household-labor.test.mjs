@@ -155,10 +155,10 @@ test('已签半班工时只排240分钟，不能被默认下午作息补成满�
 });
 
 test('营养事实判断缺食，非食物不能当饭',()=>{
- // 3份面包/口粮各90饱食，3份鱼汤/炖肉各105，都覆盖一天60；100份木材仍缺食。
+ // 每种食物备足一天 60 饱食所需的份数（份数 = 60 ÷ 引擎里该食物的饱腹，向上取整；饱腹由配方/出处推导，不写死）；100份木材仍缺食。
  const f=setup({duties:false,commute:0}),o=offer(f);f.w.households.find(h=>h.members.includes(worker)).members=[worker];
  const n=f.doc.state.npcs[worker];n.coins=10000;
- for(const item of ['item_bread','item_ration','item_fish_broth','item_mutton_turnip_stew']){n.inventory={[item]:{quantity:3}};assert.equal(laborApplication(f.e,f.doc.state,worker,o),null);}
+ for(const item of ['item_bread','item_ration','item_fish_broth','item_mutton_turnip_stew']){n.inventory={[item]:{quantity:Math.ceil(60/f.e.byId.get(item).nutrition.satiety)}};assert.equal(laborApplication(f.e,f.doc.state,worker,o),null);}
  n.inventory={item_wood:{quantity:100}};assert.ok(laborApplication(f.e,f.doc.state,worker,o));
  const before=structuredClone(f.doc);laborApplication(f.e,f.doc.state,worker,o);assert.deepEqual(f.doc,before);
 });

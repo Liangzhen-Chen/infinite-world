@@ -20,7 +20,6 @@ function fixture(){
  delete w.npcs.find(n=>n.id===seller).shopType;
  w.households=[{id:'meal-house-0',members:[A,B],settlement:'loc_hw',homeLocation:home},{id:'meal-seller',members:[seller],settlement:'loc_hw',homeLocation:home}];
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
- w.items.find(i=>i.id===item).nutrition={satiety:30};
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  for(const n of w.npcs.filter(n=>[A,seller].includes(n.id))){n.tier='full';n.schedule={default:[{start:0,end:1440,location:home,activity:'休息',services:n.id===seller?['trade']:[]}]};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'labor-household-read-scope');

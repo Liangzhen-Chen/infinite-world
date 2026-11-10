@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
@@ -10,6 +10,8 @@ import {PatchCursor} from '../server-plugin/storage.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const item='item_bread',shopSeller='npc_hw_linsui',traderSeller='npc_hw_meiling';
+// 面包的饱腹由材料数据推导，读引擎派生值；夹具把每人每天的饱食消耗设为 10 个面包的量（原先手写每个 1、每天 10）。
+const SAT=(await loadRuntimeWorld()).items.find(i=>i.id===item).nutrition.satiety;
 const buyers=['npc_hw_chenbai','npc_hw_xuling','npc_hw_wushuo'];
 // One seller's saleable stock is a single quantity. Every buyer household reads it as its own substitute food source,
 // so the quantities the buyers are credited with must add up to no more than the seller can really sell.
@@ -20,8 +22,7 @@ function fixture({seller,groups,coins={},stock=20}){
  const w=structuredClone(world),members=groups.flat();
  w.households=w.households.map(h=>({...h,members:h.members.filter(id=>!members.includes(id))})).filter(h=>h.members.length);
  groups.forEach((g,i)=>w.households.push({id:`house_share_fixture_${i}`,members:g,settlement:'loc_hw',homeLocation:'bld_hw_qingdeng',tenure:'沿用已发布住处，独立登记家计'}));
- for(const r of w.primitiveTables.body.rows)if(r.need==='satiety'&&r.selector==='person')r.drainPerHour.light=10/24;
- w.items.find(i=>i.id===item).nutrition={satiety:1};
+ for(const r of w.primitiveTables.body.rows)if(r.need==='satiety'&&r.selector==='person')r.drainPerHour.light=10*SAT/24;
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];
  const engine=new WorldEngine(w);let document=engine.initialFromLegacy(legacy,'seller-share');
  document.state.minute=300;

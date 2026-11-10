@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
-import {deriveItemAttributes,isItemClass,itemClasses,resolveMaterials,pickHeldOfClass} from '../server-plugin/item-class.mjs';
+import {materializeRuntimeWorld} from '../server-plugin/runtime-world.mjs';
+import {deriveItemAttributes,satietyFactor,isItemClass,itemClasses,resolveMaterials,pickHeldOfClass} from '../server-plugin/item-class.mjs';
 
 const world=await loadWorld();
 const seed=JSON.parse(fs.readFileSync('tests/fixtures/legacy/seed.json','utf8'));
@@ -18,15 +19,17 @@ test('营养由配方投入守恒派生：没写营养的食物照样有营养�
   assert.equal(authored.get('item_oat_crisp').nutrition,undefined);
   assert.ok(crisp.nutrition.satiety>0);
   const r=world.recipes.find(x=>x.output.item==='item_oat_crisp');
-  const sum=need=>r.materials.reduce((n,m)=>n+(item(m.item).nutrientContent?.[need]??item(m.item).nutrition?.[need]??0)*m.amount,0)/r.output.quantity;
-  assert.ok(crisp.nutrition.satiety<=sum('satiety')&&crisp.nutrition.hydration<=sum('hydration'),JSON.stringify(crisp.nutrition));
-  // 写了营养的照用，不被派生覆盖
-  assert.deepEqual(item('item_ration').nutrition,authored.get('item_ration').nutrition);
+  // 能量守恒在“按热量基值”（nutrientBase，未乘饱腹系数）上成立；系数只在最后乘一次。
+  const sum=need=>r.materials.reduce((n,m)=>n+(item(m.item).nutrientBase?.[need]??0)*m.amount,0)/r.output.quantity;
+  assert.ok(crisp.nutrientBase.satiety<=sum('satiety')&&crisp.nutrition.hydration<=sum('hydration'),JSON.stringify(crisp.nutrition));
+  // 写了营养的维度照用（作为按热量的基值），与推导值一样乘饱腹系数
+  const ration=authored.get('item_ration').nutrition.satiety;
+  assert.equal(item('item_ration').nutrition.satiety,Math.floor(ration*satietyFactor(engine.world,item('item_ration'),ration)));
   // 每种带营养的配方产物都不超过它的投入（营养不凭空产生）
   for(const f of engine.world.items.filter(i=>i.nutrientContent&&!authored.get(i.id).nutrition)){
     for(const rr of world.recipes.filter(x=>x.output.item===f.id)){
-      const input=rr.materials.reduce((n,m)=>n+(item(m.item).nutrientContent?.satiety??item(m.item).nutrition?.satiety??0)*m.amount,0)/rr.output.quantity;
-      assert.ok(f.nutrientContent.satiety<=input+1,`${f.id} ${f.nutrientContent.satiety} > ${input}`);
+      const input=rr.materials.reduce((n,m)=>n+(item(m.item).nutrientBase?.satiety??0)*m.amount,0)/rr.output.quantity;
+      assert.ok(f.nutrientBase.satiety<=input+1,`${f.id} ${f.nutrientBase.satiety} > ${input}`);
     }
   }
 });
@@ -41,7 +44,8 @@ test('生熟由加热派生：生谷与只磨不烧的粉是生料，烧火炒�
 });
 
 test('新物品、新配方不写营养也照样派生（规律不认 id）', () => {
-  const w=structuredClone(world);
+  // 用已装入材料属性（含各物品出处）、尚未派生的运行时世界：水等物品由出处推导为 0 饱腹，不落到默认档（未装材料属性的原始世界里水会按默认密度得到饱腹）。
+  const w=materializeRuntimeWorld(structuredClone(world));
   const base=w.items.find(i=>i.id==='item_oat_crisp');
   w.items.push({...structuredClone(base),id:'item_kf_soup',name:'试验汤',tags:['food']},{...structuredClone(base),id:'item_kf_root',name:'试验根',tags:['food'],weight:0.4});
   const tpl=w.recipes.find(r=>r.id==='recipe_w3_oat_crisp');
@@ -96,6 +100,8 @@ test('一份超过一餐上限的食物照样能吃：身体只吸收到上限�
   const r=out.result;assert.notEqual(r?.receipt?.status,'rejected',JSON.stringify(r?.receipt));
   assert.equal(doc.state.player.body.satiety.value,max);
   assert.equal(doc.state.inventory.item_ration.quantity,before-1);
-  assert.ok(r.wasted?.satiety>0&&Math.abs(r.nutrition.satiety+r.wasted.satiety-150)<0.01,JSON.stringify({n:r.nutrition,w:r.wasted}));
+  // 手写 150 是按热量的基值，派生后的一份饱腹 = floor(150 × 系数)；吸收 + 浪费 = 这一份
+  const portion=Math.floor(150*satietyFactor(e.world,e.byId.get('item_ration'),150));
+  assert.ok(r.wasted?.satiety>0&&Math.abs(r.nutrition.satiety+r.wasted.satiety-portion)<0.01,JSON.stringify({n:r.nutrition,w:r.wasted}));
   assert.deepEqual(auditLedger(doc.ledger??{accounts:{},flows:{}}),[]);
 });

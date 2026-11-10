@@ -21,7 +21,6 @@ function fixture({shop=true,open=true,away=null,sameHousehold=false,cash=10000}=
  w.households=[{id:'meal-house-0',members:sameHousehold?[A,B,seller]:[A,B],settlement:'loc_hw',homeLocation:home}];
  if(!sameHousehold)w.households.push({id:'meal-seller',members:[seller],settlement:'loc_hw',homeLocation:home});
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
- w.items.find(i=>i.id===item).nutrition={satiety:30};
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  const at=away??home;
  for(const n of w.npcs.filter(n=>[A,seller].includes(n.id))){n.tier='full';n.schedule={default:[{start:0,end:1440,location:n.id===seller?at:home,activity:'休息',services:n.id===seller&&open?['trade']:[]}]};}
@@ -42,10 +41,12 @@ test('a non-shop trader open in the same settlement is a food source and lowers 
  const res=householdResources(f.d,f.e,A),buys=boughtFrom(f,seller);
  assert.ok(buys.length>0,'trader stock must be purchasable');
  // Derived from the rule: coverage is what the purchases supply; the retained ration drops by units that coverage replaces.
- const coverage=buys.reduce((n,p)=>n+p.quantity*30,0);
+ // 面包的饱腹由材料数据推导，读引擎派生值（不再手写 30）
+ const SAT=f.e.byId.get(item).nutrition.satiety;
+ const coverage=buys.reduce((n,p)=>n+p.quantity*SAT,0);
  assert.ok(coverage>0&&res.market.coverage.satiety>0);
  assert.ok(withMarket<base,`retained ${withMarket} should fall below ${base}`);
- assert.ok((base-withMarket)*30<=res.market.coverage.satiety+30);
+ assert.ok((base-withMarket)*SAT<=res.market.coverage.satiety+SAT);
  assert.ok(buys.every(p=>p.cycleDays===0&&p.quantity<=100));
 });
 
