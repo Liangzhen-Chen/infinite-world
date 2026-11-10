@@ -81,13 +81,18 @@ export function runGroup(group) {
     const top = new Set(['world', 'tools', 'server-plugin', 'schemas', 'extension', 'prompt', 'tests', 'docs', 'package.json', 'package-lock.json']);
     const skipRel = new Set(['docs/测试报告', 'world/drafts/w1']);
     const tmp = path.resolve(tmpRoot());
-    fs.cpSync(ROOT, dest, {recursive: true, filter: src => {
+    // 逐个顶层条目复制：不能整仓 cpSync(ROOT, dest)，TMPDIR 在仓库内部时 Node 会在调用 filter 之前就以 ERR_FS_CP_EINVAL 拒绝“目标在源的子目录里”。
+    const filter = src => {
       const rel = path.relative(ROOT, src).split(path.sep).join('/');
-      if (rel === '') return true;
-      if (!top.has(rel.split('/')[0]) || skipRel.has(rel)) return false;
+      if (skipRel.has(rel)) return false;
       const base = path.basename(src);
       return base !== '.git' && base !== 'node_modules' && base !== '.tmp' && !path.resolve(src).startsWith(tmp);
-    }});
+    };
+    for (const name of top) {
+      const from = path.join(ROOT, name);
+      if (!fs.existsSync(from) || !filter(from)) continue;
+      fs.cpSync(from, path.join(dest, name), {recursive: true, filter});
+    }
     // 依赖包只读借用：副本里放一个指向真实 node_modules 的链接（walk 与哈希都跳过它）
     const nm = path.dirname(path.dirname(createRequire(import.meta.url).resolve('ajv/package.json')));
     fs.symlinkSync(nm, path.join(dest, 'node_modules'), 'junction');
