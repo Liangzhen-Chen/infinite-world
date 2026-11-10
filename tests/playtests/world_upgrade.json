@@ -200,5 +200,5 @@
     "language": "简体中文，正文不泄漏编号、工具或提示词",
     "continuity": "记住本会话发生的交易、约定和人物处境"
   },
-  "priceBasis": "R1/R5 重推，数字取自 playtest 同一入口复演（tools/probe-rules-a.mjs m3）：住一晚后 174。First bread: 供给47 需求26 稀缺度0.553 relation 0.99895，2*0.553*0.99895=1.105 -> 1（旧：scarcity.5 -> .99895 -> 0），coins 173。Second: 供给46 需求29 稀缺度0.630 深度1.004，精确1.265 -> 1，coins 172. Opening 173 after the first bread in the old-world fixture, final 172. Grade/corrections1."
+  "priceBasis": "R1/R5 重推，数字取自 playtest 同一入口复演（tools/probe-rules-a.mjs m3，固定种子 playtest-fixed-seed-v1）：住一晚后 174。First bread: 供给45 需求25 稀缺度0.556 relation 0.99895，2*0.556*0.99895=1.110 -> 1（旧：scarcity.5 -> .99895 -> 0），coins 173。Second: 供给44 需求25 稀缺度0.568 深度1.004，精确1.140 -> 1，coins 172. Opening 173 after the first bread in the old-world fixture, final 172. Grade/corrections1."
 }
