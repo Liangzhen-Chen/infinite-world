@@ -21,6 +21,7 @@ const WEAK_TAIL = '片段块条组份具头体面套副对粒束卷团';
 // 依据同样是语言学而非样例：规（规定）、尺（尺寸）、准（对准）、尖（尖端）、杆（杆状）、轮（轮廓）、轴（轴线）、柄（柄部）、记（记录）、说（说明）、本（本身）、
 // 灯（灯火）、石（石料）、器（器具）、斗（容量）、架（架子）、布（布料，另有 CLOTH_WORDS 专管）、刀（刀面、刀背）、子（后缀）。
 // 动作字类工具（剪、锯、凿、锉、钻、锥、锤、针、刷……）不在此列，仍按单字覆盖。
+// 已知残余（不在本卡改字表）：刀、尺、杆、斗、架、石在 COMMON_CHARS 里，骨架外的“用刀、用尺、用石”这类单字写法会漏判；全名与两字词形（切刀、量尺、磨石）照判。
 const COMMON_CHARS = '规尺准尖杆轮轴柄记说本灯石器斗架布刀子';
 // 通用泛称里的布类词（单字“布”太常见，只认这些词）。
 const CLOTH_WORDS = ['干布', '湿布', '软布', '净布', '布巾', '抹布', '毛巾'];
@@ -55,12 +56,14 @@ export const ACTION_NEEDS = [
 
 // 用火动作与交代用语。
 // 词表分三类：加热动词（煮熬烘烤蒸炒……）、冶炼热处理（淬火退火回火熔炼熔化焊煅）、火候火位（文火武火炭火入灶）；烧+X 的结果补语形式逐个列（烧软烧开烧化烧干烧制烧结烧煮烧水）。
-const HEAT = /加热|烧至|烧红|烧透|烧沸|烧熟|烧热|烧软|烧开|烧化|烧干|烧制|烧结|烧煮|烧水|烧成|煅烧|煅|入炉|上炉|炉上|回炉|煮|熬|烙|焙|烘|煎|炒|锻|煨|炖|烤|焖|煲|烩|焯|炙|蒸(?!发|汽|腾)|熔化|熔融|熔炼|熔铸|回火|退火|淬火|淬|焊|热合|热处理|生火|引火|引燃|升火|点火|起灶|坐灶|灶上|灶下|入灶|小灶|[小大中旺明文武温低稳微]火|炭火|柴火|微沸|沸腾/gu;
+const HEAT = /加热|烧至|烧红|烧透|烧沸|烧熟|烧热|烧软|烧开|烧化|烧干|烧制|烧结|烧煮|烧水|烧成|加温|融化|煅烧|煅|入炉|上炉|炉上|回炉|煮|熬|烙|焙|烘|煎|炒|锻|煨|炖|烤|焖|煲|烩|焯|炙|炸(?!裂|开)|烫(?!手|伤|着|到|嘴)|蒸(?!发|汽|腾)|熔化|熔融|熔炼|熔铸|回火|退火|淬火|淬|焊|热合|热处理|生火|引火|引燃|升火|点火|起灶|坐灶|灶上|灶下|入灶|小灶|[小大中旺明文武温低稳微]火|炭火|柴火|微沸|沸腾/gu;
 // 复合词里的用火字不是动作（煮锅、锻锤、烘盘）。
-const HEAT_COMPOUND = /[煮煎炒熬烘烙焙炖烤锻煲烩焯炙煅焊][锅盘盆壶罐炉架锤砧工]|蒸[笼屉锅架盘]|[淬回退]火[炉池]/gu;
+const HEAT_COMPOUND = /[煮煎炒熬烘烙焙炖烤锻煲烩焯炙煅焊炸][锅盘盆壶罐炉架锤砧工]|蒸[笼屉锅架盘]|[淬回退]火[炉池]/gu;
 // 否定只管紧邻的动作/器具：把检查对象前面的文字（slice(0, 位置)）交给它，必须以“否定词(+情态/介词)”收尾才算否定。
 // 否定与后面的动作/器具之间可隔一个动作或性状词（不承重锤击、不受力敲打，至多两字）；“不断、不停、不久、不时、不已……”里的“不”不是否定，所以“不断加热”“不断用案板搅”仍要检查。
-const NEGATION = /(?:不(?![断停久时住已止仅但论管如妨只光单])[^，。；、：]{1,2}|不(?:再|必|得|可|要|宜|另|需|能|会|应|许|准)?(?:用|以|取|作|为|拿|靠|将|把|经)?|未(?:经)?|无(?:需|须)?|勿(?:再|要|以|用|取)?|免(?:于)?|莫(?:要|以)?|别(?:再|用)?|禁止?(?:以|用)?|切忌|切勿|严禁|避免|非(?:用|以)?)$/u;
+// 按词形整体排除不表示否定的词：不断/不停/不久/不时/不住/不已/不止、不过/不然/不料/不足/不够/不免/不禁/不由/不觉/不知、不仅/不但/不论/不管/不如/不妨/不只/不光/不单，
+// 双重否定“不得不”（等于必须），无论/无非，非常/非但，以及“分别、区别、特别、差别”里的“别”（按前一字整体排除）。
+const NEGATION = /(?:(?<!不得)不(?:(?![断停久时住已止仅但论管如妨只光单过然料足够免禁由觉知]|得不)[^，。；、：]{1,2}|(?:再|必|得|可|要|宜|另|需|能|会|应|许|准)?(?:用|以|取|作|为|拿|靠|将|把|经)?)|未(?:经)?|无(?!论|非)(?:需|须)?|勿(?:再|要|以|用|取)?|免(?:于)?|莫(?:要|以)?|(?<![分区差特辨告道类个另惜级性派送拜辞识])别(?:再|用)?|禁止?(?:以|用)?|切忌|切勿|严禁|避免|非(?!常|但|独|凡)(?:用|以)?)$/u;
 const FIRE_ROLE = /炉用|灶用|引火|引燃|点燃|点火|生火|起火|升火|生炉|燃料|火源|供.{0,2}[火炉]|烧炉|烧尽|燃尽|烧完|烧旺|添炭|添柴|燃起|燃着/u;
 const EXTERNAL = /另备|自备|自带|不随货|使用者(?:自)?备|须(?:由)?使用者/u;
 const NOT_PROVIDED = /不(?:随)?附|不含|不带|不配/u;
@@ -88,7 +91,9 @@ const NUMERAL = '(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百
 const QUANT_UNITS = {
   mass: { 千克: 1000, 公斤: 1000, 克: 1, 斤: 500, 两: 50, 磅: 454, 盎司: 28 },
   volume: { 毫升: 1, 公升: 1000, 升: 1000 },
-  time: { 分钟: 1, 小时: 60, 时辰: 120, 钟头: 60, 刻钟: 15 },
+  time: { 分钟: 1, 小时: 60, 个小时: 60, 时辰: 120, 个时辰: 120, 钟头: 60, 个钟头: 60, 刻钟: 15 },
+  // 勺、杯、滴、寸、度没有统一换算，各自一类，只和同单位的数量比较。
+  spoon: { 勺: 1 }, cup: { 杯: 1 }, drop: { 滴: 1 }, inch: { 寸: 1 }, degree: { 度: 1 },
   days: { 天: 1, 日: 1, 周: 7, 个月: 30 },
 };
 const UNIT_DIM = Object.fromEntries(Object.entries(QUANT_UNITS).flatMap(([dim, units]) => Object.keys(units).map((unit) => [unit, dim])));
@@ -199,10 +204,11 @@ export function buildVocabulary(catalog, recipes = []) {
   return { heads, fuels, byId, nameRe, plainRe, maskRe, allNameRe };
 }
 
-// 主入口：返回错误字符串数组。context.catalog 缺失时（旧调用方）不检查。
+// 主入口：返回错误字符串数组。context.catalog 缺失是调用方的错误，直接抛出：检查不能因为少传参数就静默跳过。
 export function processIssues(text, entry, context) {
   const catalog = context?.catalog;
-  if (!catalog || typeof text !== 'string') return [];
+  if (!Array.isArray(catalog)) throw new Error('processIssues: context.catalog 缺失（须由 w3Context/journeyContext 附带物品目录），工序检查不能静默跳过');
+  if (typeof text !== 'string') return [];
   const vocab = vocabularyFor(context);
   const items = unique([...(entry.tools ?? []), ...(entry.materials ?? []).map((row) => row.item), entry.output?.item, ...(entry.byproducts ?? []).map((row) => row.item)].filter(Boolean)).map((id) => vocab.byId.get(id)).filter(Boolean);
   const allowedText = [...items.flatMap((item) => [item.name, ...(item.aliases ?? [])]), ...(WORKSTATION_FACILITIES[entry.workstation] ?? [])].join('');
@@ -242,7 +248,8 @@ export function processIssues(text, entry, context) {
         if (!clause.includes(word) || seen.has(word)) continue;
         const at = [...clause.matchAll(new RegExp(esc(word), 'gu'))].map((match) => match.index).find((index) => !within(spans, index) && !declared.includes(word) && !NEGATION.test(clause.slice(0, index)));
         if (at === undefined) continue;
-        if (type === 'container' ? declaresContainer || hasContainer : hasCloth) continue;
+        // 装入/倒入“容器”：骨架里的锅会直接写成锅，写泛称容器就是另一件盛装物，没声明另备就是引入；其他提到容器的句子，骨架有容器类物品就放行。
+        if (type === 'container' ? declaresContainer || (hasContainer && !POUR.test(clause)) : hasCloth) continue;
         seen.add(word);
         errors.push(`正文提到泛称器具「${word}」（${rawClause.trim()}）但骨架没有对应的${type === 'container' ? '容器' : '布巾'}。修复：写明“容器须使用者另备，不随货提供”，或改用骨架已有器具`);
       }
@@ -318,7 +325,7 @@ export function processIssues(text, entry, context) {
 
 // 四、骨架外数量：具体质量/容量、分段时长、期限，数值必须来自骨架或引用事实（processFacts、材料与成品的 use 与重量、minutes、保存期）。
 function quantityIssues(text, entry, vocab, items) {
-  const allowed = { mass: new Set(), volume: new Set(), time: new Set(), days: new Set() };
+  const allowed = Object.fromEntries(Object.keys(QUANT_UNITS).map((dim) => [dim, new Set()]));
   const take = (list) => { for (const quantity of list) allowed[quantity.dim].add(quantity.base); };
   take(quantitiesIn([entry.processFacts, entry.use, ...items.map((item) => item.use)].filter((value) => typeof value === 'string').join('。')));
   const output = vocab.byId.get(entry.output?.item) ?? entry;
@@ -342,6 +349,8 @@ function quantityIssues(text, entry, vocab, items) {
     let bad = null;
     if (quantity.dim === 'mass' || quantity.dim === 'volume') {
       if (!near(allowed[quantity.dim])) bad = `正文出现骨架外数量「${quantity.raw}」（${context}）：质量、容量数值须来自骨架材料份数与重量或 processFacts。修复：删去具体数量，改写成“规定份量”“全部”`;
+    } else if (!['time', 'days'].includes(quantity.dim)) {
+      if (!near(allowed[quantity.dim])) bad = `正文出现骨架外数量「${quantity.raw}」（${context}）：勺、杯、滴、寸、度等数量须来自骨架或 processFacts。修复：删去具体数量，改写成“规定份量”“适量”`;
     } else if (quantity.dim === 'days' || deadline) {
       if (!near(allowed[quantity.dim])) bad = `正文出现骨架外期限「${quantity.raw}」（${context}）：期限只能是骨架保存期或 processFacts 写明的。修复：删去期限（如“两日内用完”），保存期以骨架为准`;
     } else if (!near(allowed.time)) {
