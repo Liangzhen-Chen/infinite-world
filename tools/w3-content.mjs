@@ -2,6 +2,7 @@ import { loreIssues } from './economy-content.mjs';
 import { hashContent } from './content-pipeline.mjs';
 import { validateWorld } from './validate-world.mjs';
 import { numeralIssues } from './content-numerals.mjs';
+import { readPublishedSupersedesSync, applySupersedes } from './approved-revisions.mjs';
 
 const units = { '公斤': ['weight',1], '千克':['weight',1], '斤':['weight',.5], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
 const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+?)';
@@ -74,6 +75,10 @@ export function assembleW3(world,bones,lore) {
   // 已在世界里的行以正式（已审批、已发布）的形态为准：本批骨架只补世界还没有的行。否则重新装配会把后来经审批批次改过的字段（如 P1 修订批的羊皮纸价）按骨架旧值写回。
   const merge=(existing,rows)=>[...existing,...rows.filter(row=>!existing.some(old=>old.id===row.id))];
   const newItems=bones.items.filter(row=>byId.has(row.id)).map(row=>({...row,...byId.get(row.id)}));
+  // 骨架只补世界还没有的行，但骨架上的值若已被发布的修订取代（如 P1 的羊皮纸价），新行按修订值装配；
+  // 否则回到旧版再装配时，旧价会和后来按修订价派生的成品并存，出现售价低于材料。
+  const supersedes=readPublishedSupersedesSync();
+  for(const receiptFile of new Set(supersedes.map(s=>s.receiptFile).filter(f=>/^world\/drafts\/w3\/(?:[^/]+\/)?bones\.json$/.test(f))))applySupersedes(newItems,receiptFile,supersedes);
   const available=new Set([...world.items,...newItems].map(row=>row.id));
   const newRecipes=bones.recipes.filter(row=>byId.has(row.id)&&available.has(row.output.item)&&row.materials.every(m=>available.has(m.item))).map(({processFacts,...row})=>({...row,...byId.get(row.id)}));
   candidate.items=merge(world.items,newItems);candidate.recipes=merge(world.recipes,newRecipes);
