@@ -47,8 +47,8 @@ export async function inspectTrades(world,bones,{requireL4=true}={}){
 }
 async function main(){
  const world=await loadWorld(),bones=economyW3Trades(world),blocklist=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8'));
- await fs.mkdir(tradesRoot,{recursive:true});await fs.writeFile(`${tradesRoot}/bones.json`,JSON.stringify(bones,null,2)+'\n');
  if(process.argv.includes('--check')){const {candidate}=await inspectTrades(world,bones);console.log(JSON.stringify({candidateItems:candidate.items.length,candidateRecipes:candidate.recipes.length,sourceWritten:false,supply:bones.supply}));return;}
+ await fs.mkdir(tradesRoot,{recursive:true});await fs.writeFile(`${tradesRoot}/bones.json`,JSON.stringify(bones,null,2)+'\n');
  const client=new DeepSeekClient({budgetYuan:20});
  for(const kind of ['items','recipes']){
   const fields=kind==='items'?['description','inspection','storage']:['process'];

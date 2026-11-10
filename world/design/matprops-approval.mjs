@@ -444,6 +444,11 @@ export async function summarizeApproval(entries,card=cardProfiles.d){
  const recs=[];for(const e of entries){const r=await loadRecord(e.id);if(r&&r.fingerprint===await fingerprint(e))recs.push(r);}
  st.aiMisjudgedByProgram=misjudgeStats(recs);
  st.factPendingHuman=factPendingStats(recs);
+ return st;
+}
+// 显式写命令（--write-summary，另在 --l4 记录后调用）：把 summarizeApproval 的结果落成 approval-summary.json。verify/sample 等只读路径不写盘。
+export async function writeApprovalSummary(entries,card=cardProfiles.d){
+ const st=await summarizeApproval(entries,card);
  await fs.mkdir(card.reviewRoot,{recursive:true});
  await fs.writeFile(path.join(card.reviewRoot,'approval-summary.json'),JSON.stringify({rule:'人工核定条目不计入人工队列比例（needsSystemicRepair），其余检查同 readApprovedContent；规则解释待李白确认',total:entries.length,l2Passed:st.l2,manualVerified:st.manual,unresolved:st.unresolved,aiMisjudgedByProgram:st.aiMisjudgedByProgram,factPendingHuman:st.factPendingHuman},null,2)+'\n');
  return st;
@@ -884,7 +889,8 @@ export async function run(args=process.argv.slice(2)){
  const batchArg=args.includes('--batch')?Number(args[args.indexOf('--batch')+1]):null;
  if(batchArg!==null&&!Number.isInteger(batchArg))throw Error('--batch 须为整数');
  if(args.includes('--sample'))console.log(JSON.stringify(await sampleL4(card,{batch:batchArg})));
- if(args.includes('--l4'))console.log(JSON.stringify(await recordL4(args[args.indexOf('--l4')+1],'主会话人读',card,{batch:batchArg??0})));
+ if(args.includes('--l4')){console.log(JSON.stringify(await recordL4(args[args.indexOf('--l4')+1],'主会话人读',card,{batch:batchArg??0})));await writeApprovalSummary(await card.entries(),card);}
+ if(args.includes('--write-summary'))console.log(JSON.stringify(await writeApprovalSummary(await card.entries(),card)));
  if(args.includes('--verify'))console.log(JSON.stringify(args.includes('--card')?await verifyPublished(card):await verifyAll()));
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)await run();

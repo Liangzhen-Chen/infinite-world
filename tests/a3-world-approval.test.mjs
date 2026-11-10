@@ -6,10 +6,9 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {settlementGovernment} from '../server-plugin/entity-view.mjs';
 import {ensureHoldings, aliveHoldings} from '../server-plugin/holdings.mjs';
 import {reconcileHoldings, reconciled} from '../server-plugin/holding-sources.mjs';
-import {readFiles, contentEntries, checkEntry, previewWorld, verifyPublished as verifyOriginalPublished} from '../world/design/a3-world-approval.mjs';
+import {readFiles, contentEntries, checkEntry, previewWorld, priorEditions, verifyPublished as verifyOriginalPublished} from '../world/design/a3-world-approval.mjs';
 import {sources as useTagSources, verifyPublished as verifyUseTagsPublished} from '../world/design/a3w-props-approval.mjs';
 import * as G from '../world/design/a3-world-governance.mjs';
-import {previousOfficeEdition} from '../world/design/s4-offices-approval.mjs';
 
 // Gate for the Baishi grassroots judicial/security offices (report, fine collection, custody, case handling,
 // arrest, appeal, claim, town head) and for the catalogue entries (items, recipes, nutrition, rules rows) that
@@ -31,7 +30,7 @@ async function verifyPublished(candidateWorld,candidateFiles){
 }
 const world = await loadWorld(), files = await readFiles(), seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
 // The old preview owns the pre-S4 office edition; current charters are verified first.
-const priorWorld=(await previousOfficeEdition(world)).world;
+const priorWorld=(await priorEditions(world)).world;
 const make = () => { const engine = new WorldEngine(structuredClone(world)); return {engine, document: engine.createCharacter(seed, {}, 'fix3-world')}; };
 const entry = id => contentEntries(files).find(e => e.id === id);
 

@@ -77,6 +77,7 @@ export async function run(args=process.argv.slice(2)){
   const baseline=validateWorld(world),candidate=validateWorld(applyCandidate(world));
   const errors=candidate.errors.filter(e=>!baseline.errors.includes(e));
   assert.deepEqual(errors,[],'候选新增 L1 错误');
+  if(args.includes('--prepare')){ // --l1 只校验并打印，不写盘；落盘（成本估算、候选、l1 回执）只属于 --prepare
   await fs.mkdir(root,{recursive:true});
   const rates=new DeepSeekClient().rates;
   const requests=entries.map(e=>defaultReviewRequest(e,draftFor(e),contextFor(e)));
@@ -85,6 +86,7 @@ export async function run(args=process.argv.slice(2)){
   await fs.writeFile(`${root}/cost-estimate.json`,JSON.stringify({rates,requests:requests.length,firstPassCeilingYuan,reference:{file:'world/drafts/s4-offices/budget.json',spentYuan:referenceBudget.spentYuan},modelCalls:0},null,2)+'\n');
   await fs.writeFile(`${root}/candidate.json`,JSON.stringify({revision,entries,drafts:entries.map(draftFor),contexts:entries.map(contextFor)},null,2)+'\n');
   await fs.writeFile(`${root}/l1.json`,JSON.stringify({revision,entries:entries.length,errors,baselineErrors:baseline.errors,candidateErrors:candidate.errors,modelCalls:0,published:false},null,2)+'\n');
+  }
   console.log(JSON.stringify({entries:entries.length,errors:errors.length,baselineErrors:baseline.errors.length,modelCalls:0,published:false}));
  }
  if(args.includes('--review')){

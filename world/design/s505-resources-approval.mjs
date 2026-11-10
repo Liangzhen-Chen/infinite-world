@@ -1,5 +1,7 @@
 import fs from 'node:fs/promises';
 import assert from 'node:assert/strict';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent} from '../../tools/content-pipeline.mjs';
 
@@ -66,7 +68,8 @@ export async function previousResourceEdition(world,candidateFiles){
  return {world:priorWorld,files:priorFiles};
 }
 const args=process.argv.slice(2);
-if(args.includes('--review')){
+const main=process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href;
+if(main&&args.includes('--review')){
  await fs.mkdir(root,{recursive:true});if(!foundation)await fs.writeFile(`${root}/foundation.json`,JSON.stringify(before,null,2)+'\n');
  try{await fs.access(`${root}/budget.json`);}catch(error){if(error.code!=='ENOENT')throw error;await fs.writeFile(`${root}/budget.json`,JSON.stringify({spentYuan:0,reservedYuan:0,waveLimitYuan:0.3,cards:{S505C:{limitYuan:0.3,spentYuan:0,reservedYuan:0,maxRequests:8}},requests:{}}));}
  const client=new DeepSeekClient({budgetYuan:0.3,logFile:`${root}/usage.jsonl`});
@@ -76,7 +79,7 @@ if(args.includes('--review')){
   buildReviewRequest:defaultReviewRequest,client,cardId:'S505C',allocation:{cardId:'S505C',incrementLimitYuan:0.3,maxRequests:8,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:4});
  console.log(JSON.stringify({passed:result.summary.passed,manual:result.summary.manual,spentUpperYuan:client.spent}));
 }
-if(args.includes('--l4')){
+if(main&&args.includes('--l4')){
  const summary=await read(`${root}/review/summary.json`);
  for(const b of summary.batches){
   const file=`${root}/review/batch-${b.index}.json`,batch=await read(file);
@@ -85,7 +88,7 @@ if(args.includes('--l4')){
   await fs.writeFile(file,JSON.stringify(batch,null,2)+'\n');
  }
 }
-if(args.includes('--publish')){
+if(main&&args.includes('--publish')){
  const rows=await approved();assert.equal(rows.length,4);
  current.rules.extraction.fishing=bindings.fishing;current.rules.forestWater.forest=bindings.forest;current.domain.privateField=bindings.privateField;
  assert.ok(!current.items.some(i=>i.id===liveFish.id),'活鱼已发布，拒绝重复添加');current.items.push(liveFish);
@@ -94,7 +97,7 @@ if(args.includes('--publish')){
  for(const [k,file]of Object.entries(files))await fs.writeFile(file,JSON.stringify(current[k],null,2)+'\n');
  console.log(JSON.stringify({published:rows.length}));
 }
-if(args.includes('--verify')){
+if(main&&args.includes('--verify')){
  assert.equal((await approved()).length,4);const rules=await read(files.rules),domain=await read(files.domain),items=await read(files.items),actions=await read(files.actions);
  assert.deepEqual(rules.extraction.fishing,bindings.fishing);assert.deepEqual(rules.forestWater.forest,bindings.forest);assert.deepEqual(domain.privateField,bindings.privateField);
  assert.deepEqual(items.find(i=>i.id===liveFish.id),liveFish);assert.deepEqual(actions.actions.find(a=>a.id===release.id),release);assert.deepEqual(actions.actions.find(a=>a.id===sow.id),sow);
