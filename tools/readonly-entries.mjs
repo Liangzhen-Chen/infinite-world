@@ -26,6 +26,7 @@ export const READONLY_ENTRIES = [
   ['world/design/matprops-approval.mjs', '--verify'],
   ['world/design/matprops-approval.mjs', '--l1'],
   ['world/design/p1-revision-approval.mjs', '--verify'],
+  ['world/design/p1-cascade-approval.mjs', '--verify'],
   ['world/design/s4-law-bindings.mjs', '--verify'],
   ['world/design/s4-law-content-approval.mjs', '--verify'],
   ['world/design/s4-offices-approval.mjs', '--verify'],
