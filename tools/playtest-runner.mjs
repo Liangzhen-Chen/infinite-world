@@ -22,11 +22,13 @@ import {finishContractTurn,turnFactsPrompt} from '../extension/turn-contract.mjs
 // 但试玩验收与测试入口默认固定此常量，保证价格/稀缺度等数值逐次可复演；显式 seed:'random' 才随机。
 export const PLAYTEST_SEED='playtest-fixed-seed-v1';
 export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
+    const seedMode=seed==='random'?'random':(typeof seed==='string'&&seed?'fixed':null);
+    if(!seedMode)throw new Error("createPlaytestServer 的 seed 必须是非空字符串或 'random'");
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(tmpRoot(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
     // Same body limit as the SillyTavern host (src/server-main.js): exported bundles carry every world version they replay on.
     const app=express();app.use(express.json({limit:'500mb'}));const router=express.Router();
     const npcPlanner=plannerClient?(engine,document,options)=>planNpcAutonomy(engine,document,{...options,client:options.client??{generate:plannerClient.generate.bind(plannerClient)}}):undefined;
-    await init(router,{world,baseRoot:directory,newCampaignSeed:seed==='random'?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
+    await init(router,{world,baseRoot:directory,newCampaignSeed:seedMode==='random'?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');
     const origin=`http://127.0.0.1:${server.address().port}`;
     const api=async(endpoint,body={})=>{
@@ -35,13 +37,14 @@ export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClie
         const response=await fetch(`${origin}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close'},body:JSON.stringify(body)});
         const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`HTTP ${response.status}`);error.httpStatus=response.status;throw error;}return data;
     };
-    api.seed=seed==='random'?null:seed;
-    return{api,seed:api.seed,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
+    // seedMode：这次实际用的是确定种子('fixed')还是随机种子('random')；包装层必须透传，runPlaytest 据此守门。
+    api.seedMode=seedMode;
+    return{api,seedMode,seed:seedMode==='fixed'?seed:null,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
 }
 
 export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){
-    if(api&&api.seed===null)throw new Error(`${scenario.id} 试玩验收入口缺少确定种子（seed:'random' 不允许用于试玩验收）`);
     if(scenario.initial?.requiresSession&&!session)throw new Error(`${scenario.id} 必须先准备隔离 HTTP 会话，不能用新角色代替`);
+    if(api&&api.seedMode!=='fixed')throw new Error(api.seedMode==='random'?`${scenario.id} 试玩验收入口缺少确定种子（seed:'random' 不允许用于试玩验收）`:`${scenario.id} 无法确认试玩入口的种子模式（api.seedMode 缺失；包装层须透传）`);
     historyWindow={...scenario.historyWindow,...historyWindow};
     const settings=generationSettings(bundle.generation);
     countTokens??=await loadHistoryTokenizer();let historyCursor=structuredClone(session?.historyCursor??null);

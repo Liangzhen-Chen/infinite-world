@@ -59,6 +59,7 @@ export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,p
    try{response=await server.api(endpoint,body);}catch(error){if(error.httpStatus){row.error=error.message;await save();}else poison=error;throw error;}
    try{await afterHttp?.(endpoint,body,response);row.response=response;await save();return structuredClone(response);}catch(error){poison=error;throw error;}
   };
+  api.seedMode=server.api.seedMode;
   const narrator={async generate(body,label){
    const index=modelIndex++,key=digest([body,label]),old=tape.models[index];if(old&&old.key!==key)throw Error('恢复主持调用顺序发生变化');
    if(old?.response)return structuredClone(old.response);const row=old??{key};tape.models[index]=row;await save();row.response=await shared.generate(body,label);await save();return structuredClone(row.response);

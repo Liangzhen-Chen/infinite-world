@@ -237,7 +237,7 @@ test('试玩框架走真实HTTP存储、检索和回滚；场外写入拒绝，�
 
 test('试玩world_search沿真实HTTP绑定每回合token，伪造工具参数不能覆盖留证身份',async t=>{
     const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());const calls=[];
-    const api=async(endpoint,body)=>{calls.push({endpoint,body});return server.api(endpoint,body);};
+    const api=async(endpoint,body)=>{calls.push({endpoint,body});return server.api(endpoint,body);};api.seedMode=server.api.seedMode;
     let n=0;const client={async generate(){return ++n%2?{choices:[{message:{tool_calls:[{id:`search-${n}`,type:'function',function:{name:'world_search',arguments:JSON.stringify({query:'林穗',token:'fake',anchor:'fake',campaignId:'fake',expectedSequence:99})}}]}}]}:{choices:[{message:{content:'我已查到相关记录。'}}]};}};
     const result=await runPlaytest({scenario:{id:'search-capture',initial:{mode:'legacy'},turns:[{input:'（场外）查找旧事。'},{input:'（场外）再次查找旧事。'}]},api,client,bundle:await loadPromptBundle()});
     assert.equal(result.ledgerPass,true,JSON.stringify(result.turns));assert.equal(result.turns.length,2);
@@ -282,6 +282,7 @@ test('审查完成且允许提交的warning仍需复核，不能冒充整场验�
         return name==='review/reply'?{...result,verified:true,canCommit:true,status:'issues',issues:[warning]}:result;
     };
     const client={async generate(){return{choices:[{message:{role:'assistant',content:'已核对。'}}]};}};
+    api.seedMode=server.api.seedMode;
     const result=await runPlaytest({scenario:{id:'warning-review',turns:[{input:'（场外）只核对，不推进时间。',assertions:[{kind:'elapsed',min:0,max:0}]}]},api,client,bundle:await loadPromptBundle()});
     assert.equal(result.ledgerPass,true);assert.equal(result.consistencyVerified,true);
     assert.equal(result.consistencyPass,false);assert.equal(result.reviewRequired,true);assert.equal(result.acceptancePass,false);
@@ -298,7 +299,7 @@ test('持久续跑从付款后的失败正文恢复，原失败保留且HTTP执�
         const usage={prompt_tokens:10,completion_tokens:10};return {id:`resume-${calls}`,usage,measurement:{usage,costUpperYuan:.0001},choices:[{finish_reason:'stop',message}]};
     }};
     const budget=await openPlaytestBudget({registryDir:path.join(directory,'registry'),runId:'resume',cardId:'T17',increment:30,identity:{},client:provider});t.after(()=>budget.close());
-    const api=async(name,args)=>{if(name==='execute')executeCount++;return server.api(name,args);};
+    const api=async(name,args)=>{if(name==='execute')executeCount++;return server.api(name,args);};api.seedMode=server.api.seedMode;
     const scenario={id:'paid-resume',initial:{mode:'legacy'},turns:[{input:'付六铜住一晚',assertions:[{kind:'delta',path:'state.player.coins',value:-6}]}]},bundle=await loadPromptBundle();
     const options={file:path.join(directory,'tape.json'),identity:{scenario},api,client:budget};
     let tape=await openPlaytestTape(options);
