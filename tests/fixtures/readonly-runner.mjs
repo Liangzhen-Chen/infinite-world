@@ -26,17 +26,32 @@ function walk(dir, out = new Map()) {
 export const entriesOfGroup = group => READONLY_ENTRIES.filter((_, i) => i % RUN_GROUPS === group);
 export const timeoutOf = file => SLOW_ENTRY_TIMEOUT_MS[file] ?? ENTRY_TIMEOUT_MS;
 
-// 判断一次入口运行是否"崩溃"（缺文件、未捕获异常、被信号杀、超时）。退出码非 0 但不属于崩溃（如 --check 报数据不一致）不算崩溃。
+// 判断一次入口运行是否"崩溃"。判定不依赖 Node 版本的崩溃尾行格式（不看 "Node.js v.." 结尾行），只看退出码、文件缺失特征和"错误类型名 + 堆栈帧"。
+//   超时、被信号终止、无法启动：崩溃。
+//   退出码 0：一律不算崩溃，不扫描文本（正常输出里出现 ENOENT 字样不是崩溃）。
+//   退出码非 0：输出含 ENOENT / MODULE_NOT_FOUND / ERR_MODULE_NOT_FOUND，或有未捕获异常（错误类型名 + 堆栈帧）才算崩溃；
+//     但错误类型是 AssertionError 时是检查命令的正常失败，不算崩溃。其余非 0 退出（如自己打印后 exit(1)、无堆栈）只记基线诊断。
 // 返回崩溃原因字符串，没崩溃返回 null。纯函数，入参形如 spawnSync 的返回值。
-const CRASH_RE = /ENOENT|MODULE_NOT_FOUND|ERR_MODULE_NOT_FOUND|Uncaught|^Node\.js v\d+/m; // 末项：Node 打印未捕获异常时的结尾行
+const MISSING_RE = /ENOENT|MODULE_NOT_FOUND|ERR_MODULE_NOT_FOUND/;
 const STACK_RE = /^\s+at .+:\d+:\d+\)?\s*$/m; // 带堆栈帧
+const ERR_LINE_RE = /^(?:Uncaught )?([A-Za-z_$][\w$]*)(?: \[[A-Z_]+\])?: /; // "TypeError: msg" / "AssertionError [ERR_ASSERTION]: msg"
+function uncaughtErrorType(text) {
+  const lines = text.split(/\r?\n/);
+  const at = lines.findIndex(l => STACK_RE.test(l));
+  if (at < 0) return null;
+  for (let i = at - 1; i >= 0; i--) { const m = ERR_LINE_RE.exec(lines[i]); if (m) return m[1]; }
+  return null;
+}
 export function crashReason(r) {
   if (r.error?.code === 'ETIMEDOUT') return '超时';
   if (r.error) return `无法启动：${r.error.code ?? r.error.message}`;
   if (r.signal) return `被信号终止 ${r.signal}`;
+  if (r.status === 0) return null;
   const text = outText(r);
-  const m = CRASH_RE.exec(text) ?? (r.status !== 0 && /^\w*Error/m.test(text) ? STACK_RE.exec(text) : null);
-  if (m) return `输出含崩溃特征（${m[0].trim().slice(0, 40)}）`;
+  const missing = MISSING_RE.exec(text);
+  if (missing) return `输出含缺文件特征（${missing[0]}）`;
+  const type = uncaughtErrorType(text);
+  if (type && type !== 'AssertionError') return `未捕获异常（${type}）`;
   return null;
 }
 const outText = r => [r.stderr, r.stdout].filter(Boolean).join('\n');
