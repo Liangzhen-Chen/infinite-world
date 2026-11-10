@@ -21,12 +21,29 @@ test('模拟缺文件崩溃的入口被判失败', () => {
   } finally { fs.rmSync(dir, {recursive: true, force: true}); }
 });
 
-test('崩溃判定：信号、超时、未捕获异常判失败；正常的非 0 退出不判', () => {
+test('崩溃判定：信号、超时、未捕获异常判失败；正常的非 0 退出不判（判定不依赖 Node 版本的崩溃尾行格式）', () => {
   assert.ok(crashReason({signal: 'SIGKILL', status: null, stdout: '', stderr: ''}));
   assert.ok(crashReason({error: {code: 'ETIMEDOUT'}, status: null, stdout: '', stderr: ''}));
-  assert.ok(crashReason({status: 1, stdout: '', stderr: 'Uncaught TypeError: x'}));
   assert.ok(crashReason({status: 1, stdout: '', stderr: "Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'a'"}));
-  assert.ok(crashReason({status: 1, stdout: '', stderr: 'throw e\n  ^\nError: boom\n    at f (file:///a.mjs:1:7)\n\nNode.js v22.0.0\n'}));
+  assert.ok(crashReason({status: 1, stdout: '', stderr: 'throw e\n  ^\nTypeError: boom\n    at f (file:///a.mjs:1:7)\n'})); // 无 "Node.js v" 尾行也判崩溃
   assert.equal(crashReason({status: 1, stdout: '数据不一致：3 处\n', stderr: ''}), null);
   assert.equal(crashReason({status: 0, stdout: 'ok', stderr: ''}), null);
+});
+
+test('崩溃判定：退出 0 不扫文本；assert 失败与无堆栈 exit(1) 不判崩溃', () => {
+  assert.equal(crashReason({status: 0, stdout: '报告列出 ENOENT 与 MODULE_NOT_FOUND', stderr: 'TypeError: x\n    at f (file:///a.mjs:1:7)'}), null);
+  assert.equal(crashReason({status: 1, stdout: '', stderr: 'AssertionError [ERR_ASSERTION]: 数据不一致\n    at f (file:///a.mjs:1:7)\n'}), null);
+  assert.equal(crashReason({status: 1, stdout: '', stderr: 'boom: 自己打印的失败\n'}), null);
+});
+
+test('崩溃判定：真实子进程——退出 0 带 ENOENT 字样、assert 抛错、exit(1) 无堆栈、缺模块', () => {
+  const dir = fs.mkdtempSync(path.join(tmpRoot(), 'runner-crash-'));
+  try {
+    const run = (name, src) => { const f = path.join(dir, name); fs.writeFileSync(f, src); return spawnSync(process.execPath, [f], {cwd: dir, encoding: 'utf8'}); };
+    assert.equal(crashReason(run('ok.mjs', "console.log('ENOENT 仅是报告里的字样');")), null);
+    assert.equal(crashReason(run('assert.mjs', "import assert from 'node:assert/strict'; assert.equal(1, 2);")), null);
+    assert.equal(crashReason(run('exit1.mjs', "console.error('失败'); process.exit(1);")), null);
+    assert.ok(crashReason(run('missing.mjs', "import './none.mjs';")));
+    assert.ok(crashReason(run('throws.mjs', 'null.x;')));
+  } finally { fs.rmSync(dir, {recursive: true, force: true}); }
 });
