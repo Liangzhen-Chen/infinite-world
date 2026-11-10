@@ -261,44 +261,81 @@ export function arabicDurationIssues(text, minutes = null) {
 // 前者无论模型写成什么样（九十 分钟、五十份钟、七十多分钟），最终总时长都等于骨架，一类错误整体消失，不多花请求。
 // 数字统一写阿拉伯数字加「分钟」，紧连，无空格，不用中文数字：避开中文数字的合法性与写法分歧（九十、九零）。
 // 只处理总括词引导的时长；分步时长（浸泡约30分钟）不动。
-// 删除只作用于「纯总时长分句」：分句里除总括词、约、左右和时长之外没有别的内容。
+// 删除只作用于「纯总时长分句」：分句里除总括词、约、左右和时长之外没有别的内容（可后接一个括号注释，见下）。
 // 混有其他内容的（全程需要30分钟浸泡、全程七十分钟内完成）删掉会连带删掉有用的话，不删，改由 L1 判错（impureDurationIssues），要求总时长单独成句，之后走重写。
+// 括号注释（全角或半角）说明总时长包含哪些环节（前后约三十五分钟（含浸软等待）），属合理内容：括号里没有时长数字时，纯总时长分句后带一个括号注释不判错；括号里再出现时长数字则判错。
 const SP = '[ \u00a0\u3000]';
 const DURATION_BODY = `(?:${NUM}|半)个?${SP}*[多余来几]?个?${SP}*[\u4e00-\u9fff]?(?:${UNIT_ALT}|钟)(?:左右|上下)?`;
+const NOTE = '(?:[（(][^（）()]*[）)])';
 const STRIP_FIND = new RegExp(`${OVERALL}${DURATION_BODY}`, 'u');
 const STRIP_PURE = new RegExp(`^${SP}*${OVERALL}${DURATION_BODY}${SP}*$`, 'u');
-const CLAUSE_SPLIT = /([，、；。！？])/u;
+const STRIP_PURE_NOTE = new RegExp(`^${SP}*(${OVERALL}${DURATION_BODY})${SP}*(${NOTE})${SP}*$`, 'u');
+const NOTE_DURATION = new RegExp(`(?:${NUM}|半)个?${SP}*[多余来几]?个?${SP}*[\u4e00-\u9fff]?(?:${UNIT_ALT}|钟)`, 'u');
+// 按分句标点切分；括号内的标点不切（含浸软、等待）。返回 [{clause, delim}]。
+function splitClauses(text) {
+  const out = [];
+  let cur = '', depth = 0;
+  for (const ch of text) {
+    if ('（('.includes(ch)) depth++;
+    else if ('）)'.includes(ch)) depth = Math.max(0, depth - 1);
+    if (depth === 0 && '，、；。！？'.includes(ch)) { out.push({ clause: cur, delim: ch }); cur = ''; } else cur += ch;
+  }
+  out.push({ clause: cur, delim: '' });
+  return out;
+}
+// 纯总时长分句：返回 {body, note}（note 可为 null）；否则 null。
+function pureTotal(clause) {
+  if (STRIP_PURE.test(clause)) return { body: clause.trim(), note: null };
+  const m = STRIP_PURE_NOTE.exec(clause);
+  return m ? { body: m[1].trim(), note: m[2] } : null;
+}
+// 合规：纯总时长分句、括号里无时长数字、时长被识别且等于骨架 minutes、非概数、写法无错（空白、错字等）。
+function compliantTotal(clause, minutes) {
+  const pure = pureTotal(clause);
+  if (!pure || (pure.note && NOTE_DURATION.test(pure.note))) return false;
+  return new RegExp(DURATION, 'u').test(pure.body)
+    && !durationIssues(pure.body, minutes).length && !chineseNumeralIssues(pure.body, minutes).length && !arabicDurationIssues(pure.body, minutes).length;
+}
+const tidy = text => text
+  .replace(/[，、；]\s*(?=[，、；。！？]|$)/gu, '') // 删除后遗留的孤立逗号
+  .replace(/(^|[。！？])\s*[，、；]+/gu, '$1')
+  .replace(/([。！？])[。！？]+/gu, '$1').replace(/^[。！？\s]+/u, '').trim();
+const join = list => list.map(c => c.clause + c.delim).join('');
 export function deriveDurationSentence(minutes) { return `全程${minutes}分钟。`; }
 export function stripOverallDuration(text) {
-  const parts = text.split(CLAUSE_SPLIT);
-  let kept = '';
-  for (let i = 0; i < parts.length; i += 2) if (!STRIP_PURE.test(parts[i])) kept += parts[i] + (parts[i + 1] ?? '');
-  return kept
-    .replace(/[，、；]\s*(?=[，、；。！？]|$)/gu, '') // 删除后遗留的孤立逗号
-    .replace(/(^|[。！？])\s*[，、；]+/gu, '$1')
-    .replace(/([。！？])[。！？]+/gu, '$1').replace(/^[。！？\s]+/u, '').trim();
+  return tidy(join(splitClauses(text).filter(c => !pureTotal(c.clause))));
 }
-// L1：总括时长混在其他内容的分句里。只在骨架 minutes 已知（派生会追加总时长句）时判。
+// L1：总括时长混在其他内容的分句里，或括号注释里又出现时长。只在骨架 minutes 已知（派生会处理总时长句）时判。
 export function impureDurationIssues(text, minutes) {
   const errors = [];
   if (!Number.isFinite(minutes)) return errors;
-  const parts = text.split(CLAUSE_SPLIT);
-  for (let i = 0; i < parts.length; i += 2) {
-    const found = STRIP_FIND.exec(parts[i]);
-    if (found && !STRIP_PURE.test(parts[i])) errors.push(`总时长「${found[0].trim()}」混在其他内容里（原文「${parts[i].trim()}」）；总时长须单独成句，由系统按骨架生成，请删去这个总时长，只保留其他内容`);
+  for (const { clause } of splitClauses(text)) {
+    const found = STRIP_FIND.exec(clause);
+    if (!found) continue;
+    const pure = pureTotal(clause);
+    if (!pure) errors.push(`总时长「${found[0].trim()}」混在其他内容里（原文「${clause.trim()}」）；总时长须单独成句，由系统按骨架生成，请删去这个总时长，只保留其他内容`);
+    else if (pure.note && NOTE_DURATION.test(pure.note)) errors.push(`总时长「${found[0].trim()}」后的括号注释里不得再出现时长数字（原文「${clause.trim()}」）；括号里只能说明包含哪些环节`);
   }
   return errors;
 }
-// 对草稿的 fields（默认 process）应用：骨架 minutes 为有限数时，删去模型自带的总时长并追加派生句。无 minutes 的条目原样返回。幂等。
+// 对草稿的 fields（默认 process）应用：骨架 minutes 为有限数时处理总时长。无 minutes 的条目原样返回。幂等。
+//  - 正文里已有一句合规的纯总时长分句（L1 不报错、数值等于 minutes，可带括号注释）：保留这一句，不追加，其余纯总时长分句删去；
+//  - 否则：删去所有纯总时长分句，追加派生句「全程N分钟。」。
 export function applyDerivedDuration(draft, entry, fields = ['process']) {
   const minutes = skeletonMinutes(entry);
   if (!draft || typeof draft !== 'object' || !Number.isFinite(minutes)) return draft;
   const out = { ...draft };
   for (const field of fields) {
     if (typeof out[field] !== 'string' || !out[field].trim()) continue;
-    let body = stripOverallDuration(out[field]);
+    let kept = false;
+    const list = splitClauses(out[field]).filter(c => {
+      if (!pureTotal(c.clause)) return true;
+      if (!kept && compliantTotal(c.clause, minutes)) { kept = true; return true; }
+      return false;
+    });
+    let body = tidy(join(list));
     if (body && !/[。！？]$/u.test(body)) body += '。';
-    out[field] = body + deriveDurationSentence(minutes);
+    out[field] = kept ? body : body + deriveDurationSentence(minutes);
   }
   return out;
 }

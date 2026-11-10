@@ -186,3 +186,17 @@ test('总时长只删纯总时长分句；混有其他内容的不删，由 L1 �
   assert.deepEqual(impureDurationIssues('先浸泡，全程约七十分钟左右，再晾干。全程70分钟。',70),[]);
   assert.deepEqual(impureDurationIssues('全程需要30分钟浸泡',null),[]);
 });
+
+test('总时长括号注释：合规句保留不重复追加；不合规仍替换；括号里再出现时长判错', async () => {
+  const {applyDerivedDuration}=await import('../tools/content-numerals.mjs');
+  const e={id:'r',minutes:35},note='先浸软。前后约三十五分钟（含浸软、等待）。';
+  assert.deepEqual(numeralIssues({id:'r',process:note},e),[]);
+  assert.equal(applyDerivedDuration({id:'r',process:note},e).process,note);
+  const e90={id:'r',minutes:90};
+  assert.equal(applyDerivedDuration({id:'r',process:'炒制。全程九十 分钟。'},e90).process,'炒制。全程90分钟。');
+  const once=applyDerivedDuration({id:'r',process:'炒制。全程90分钟。'},e90);
+  assert.equal(once.process,'炒制。全程90分钟。');
+  assert.deepEqual(applyDerivedDuration(once,e90),once);
+  assert.ok(numeralIssues({id:'r',process:'前后约三十五分钟(含三十分钟浸软)。'},e).some(x=>/括号注释/.test(x)));
+  assert.equal(applyDerivedDuration({id:'r',process:'前后约三十分钟（含浸软）。收工。'},e).process,'收工。全程35分钟。');
+});
