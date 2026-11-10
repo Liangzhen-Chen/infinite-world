@@ -1,6 +1,6 @@
 {
   "index": 1,
-  "fingerprint": "48cc7d2c250e2ab678e2471edd85c6e6412a714f460d9527a3a4db19ba77aac4",
+  "fingerprint": "713551ce8624ddbb48ddb040d1fb80e43c59475647c43fd80a99efbc5c01cf2b",
   "count": 25,
   "passed": 25,
   "ids": [
@@ -35,18 +35,9 @@
   "pending": [],
   "flagged": [
     "recipe_w3b_boot_gaiter",
-    "recipe_w3b_leather_hinge",
-    "recipe_w3b_leather_grip",
-    "recipe_w3b_drawer_pull",
     "recipe_w3b_boot_scraper",
-    "recipe_w3b_strap_eye",
-    "recipe_w3b_ochre_paint",
-    "recipe_w3b_soot_ink",
     "recipe_w3b_gall_wash",
-    "recipe_w3b_chalk_powder",
-    "recipe_w3b_parchment_bookmark",
     "recipe_w3b_copper_nameplate",
-    "recipe_w3b_waxed_thread",
     "recipe_w3b_wax_seal_blank",
     "recipe_w3b_wood_marking_kit"
   ],
@@ -58,75 +49,131 @@
     "recipe_w3b_soot_ink"
   ],
   "l4": {
-    "approved": true,
-    "notes": [
-      {
-        "id": "recipe_w3b_boot_scraper",
-        "note": "一铁三炭，锻弯支脚、锉钝刮边，130分钟包括冷却，木台另备。"
-      },
-      {
-        "id": "recipe_w3b_bucket_handle",
-        "note": "一铁两炭，卷耳并锉孔，110分钟；已有桶耳试装不随货附桶。"
-      },
-      {
-        "id": "recipe_w3b_wood_marking_kit",
-        "note": "一白垩一麻布，锉修12分钟裹系8分钟均在40分钟总时长内，布自系无需新绳。"
-      },
-      {
-        "id": "recipe_w3b_leather_grip",
-        "note": "L4：材料麻线全部交付为系线及随条线束，不另留库存。"
-      },
-      {
-        "id": "recipe_w3b_soot_ink",
-        "note": "L4：全部原料已加入后不能再额外补墨粉和清水。"
-      },
-      {
-        "id": "recipe_w3b_boot_gaiter",
-        "note": "一皮两线分成一对，齿轮定位后锥孔缝边，110分钟，不增加护甲。"
-      },
-      {
-        "id": "recipe_w3b_leather_hinge",
-        "note": "L4：补全70分钟，麻线余料不作为返还物。"
-      },
-      {
-        "id": "recipe_w3b_drawer_pull",
-        "note": "90分钟分步加10分钟收尾符合100分钟，删除错误的全程90措辞。"
-      },
-      {
-        "id": "recipe_w3b_strap_eye",
-        "note": "铁边料200克、炭250克，四项工具用于锻冲锉，步骤总计61分钟未超70分钟。"
-      },
-      {
-        "id": "recipe_w3b_ochre_paint",
-        "note": "L4：追加清水超配额；各段正好40分钟却未给过筛留时间，改为完整总时长。"
-      },
-      {
-        "id": "recipe_w3b_gall_wash",
-        "note": "干瘿80克、水500毫升、炭250克，60分钟煮加20分钟晾置在90分钟内，无铁盐且不称铁胆墨。"
-      },
-      {
-        "id": "recipe_w3b_chalk_powder",
-        "note": "L4：0.14重量份是不明确单位，改为目录规定140克。"
-      },
-      {
-        "id": "recipe_w3b_parchment_bookmark",
-        "note": "L4：折首小段内无法距折边三指；余线不在材料扣除后另留缝革库存。"
-      },
-      {
-        "id": "recipe_w3b_copper_nameplate",
-        "note": "铜片以金属剪加工、冲孔锉圆，85分钟；空白交付不含刻字。"
-      },
-      {
-        "id": "recipe_w3b_waxed_thread",
-        "note": "原稿分步合计26分钟与30分钟骨架矛盾，恢复完整工时。"
-      },
-      {
-        "id": "recipe_w3b_wax_seal_blank",
-        "note": "50克蜂蜡加炉用炭，40分钟含冷却，45克成品考虑锅中残留，不附官方印记。"
-      }
-    ]
+    "approved": false,
+    "notes": [],
+    "rejection": {
+      "by": "行当批只读严格 L4 复读（Sonnet，docs/m27-trades-recipes-audit.md）与确定性工序检查（t-m27 w3-process-check）",
+      "at": "2026-11-10T21:5xZ",
+      "reason": "李白 11-10 决定 T1：L4 不批与确定性检查命中的行当批配方全部人工改写，再由独立审查者做严格 L4。问题包括骨架外数量（克、毫升、约N分钟分段、身体尺度）、骨架外器具、用火未交代火源、骨架外用途或期限、前后矛盾、语言，各条详见 docs/m27-trades-recipes-audit.md 与 docs/m27-rewrite-scope.md。",
+      "ids": [
+        "recipe_w3b_boot_gaiter",
+        "recipe_w3b_boot_scraper",
+        "recipe_w3b_bucket_handle",
+        "recipe_w3b_chalk_powder",
+        "recipe_w3b_copper_nameplate",
+        "recipe_w3b_gall_wash",
+        "recipe_w3b_needle_case",
+        "recipe_w3b_ochre_paint",
+        "recipe_w3b_polishing_powder",
+        "recipe_w3b_rein_patch",
+        "recipe_w3b_soot_ink",
+        "recipe_w3b_tent_stake",
+        "recipe_w3b_wax_seal_blank",
+        "recipe_w3b_wood_marking_kit"
+      ]
+    }
   },
   "costUpperYuan": 3.251461159999998,
   "manualRatio": 0,
-  "needsSystemicRepair": false
+  "needsSystemicRepair": false,
+  "l4History": [
+    {
+      "approved": true,
+      "notes": [
+        {
+          "id": "recipe_w3b_boot_scraper",
+          "note": "一铁三炭，锻弯支脚、锉钝刮边，130分钟包括冷却，木台另备。"
+        },
+        {
+          "id": "recipe_w3b_bucket_handle",
+          "note": "一铁两炭，卷耳并锉孔，110分钟；已有桶耳试装不随货附桶。"
+        },
+        {
+          "id": "recipe_w3b_wood_marking_kit",
+          "note": "一白垩一麻布，锉修12分钟裹系8分钟均在40分钟总时长内，布自系无需新绳。"
+        },
+        {
+          "id": "recipe_w3b_leather_grip",
+          "note": "L4：材料麻线全部交付为系线及随条线束，不另留库存。"
+        },
+        {
+          "id": "recipe_w3b_soot_ink",
+          "note": "L4：全部原料已加入后不能再额外补墨粉和清水。"
+        },
+        {
+          "id": "recipe_w3b_boot_gaiter",
+          "note": "一皮两线分成一对，齿轮定位后锥孔缝边，110分钟，不增加护甲。"
+        },
+        {
+          "id": "recipe_w3b_leather_hinge",
+          "note": "L4：补全70分钟，麻线余料不作为返还物。"
+        },
+        {
+          "id": "recipe_w3b_drawer_pull",
+          "note": "90分钟分步加10分钟收尾符合100分钟，删除错误的全程90措辞。"
+        },
+        {
+          "id": "recipe_w3b_strap_eye",
+          "note": "铁边料200克、炭250克，四项工具用于锻冲锉，步骤总计61分钟未超70分钟。"
+        },
+        {
+          "id": "recipe_w3b_ochre_paint",
+          "note": "L4：追加清水超配额；各段正好40分钟却未给过筛留时间，改为完整总时长。"
+        },
+        {
+          "id": "recipe_w3b_gall_wash",
+          "note": "干瘿80克、水500毫升、炭250克，60分钟煮加20分钟晾置在90分钟内，无铁盐且不称铁胆墨。"
+        },
+        {
+          "id": "recipe_w3b_chalk_powder",
+          "note": "L4：0.14重量份是不明确单位，改为目录规定140克。"
+        },
+        {
+          "id": "recipe_w3b_parchment_bookmark",
+          "note": "L4：折首小段内无法距折边三指；余线不在材料扣除后另留缝革库存。"
+        },
+        {
+          "id": "recipe_w3b_copper_nameplate",
+          "note": "铜片以金属剪加工、冲孔锉圆，85分钟；空白交付不含刻字。"
+        },
+        {
+          "id": "recipe_w3b_waxed_thread",
+          "note": "原稿分步合计26分钟与30分钟骨架矛盾，恢复完整工时。"
+        },
+        {
+          "id": "recipe_w3b_wax_seal_blank",
+          "note": "50克蜂蜡加炉用炭，40分钟含冷却，45克成品考虑锅中残留，不附官方印记。"
+        }
+      ],
+      "rejection": {
+        "by": "行当批只读严格 L4 复读（Sonnet，docs/m27-trades-recipes-audit.md）与确定性工序检查（t-m27 w3-process-check）",
+        "at": "2026-11-10T21:5xZ",
+        "reason": "李白 11-10 决定 T1：L4 不批与确定性检查命中的行当批配方全部人工改写，再由独立审查者做严格 L4。问题包括骨架外数量（克、毫升、约N分钟分段、身体尺度）、骨架外器具、用火未交代火源、骨架外用途或期限、前后矛盾、语言，各条详见 docs/m27-trades-recipes-audit.md 与 docs/m27-rewrite-scope.md。",
+        "ids": [
+          "recipe_w3b_drawer_pull",
+          "recipe_w3b_door_latch",
+          "recipe_w3b_stove_grid",
+          "recipe_w3b_hinge_pin",
+          "recipe_w3b_strap_eye",
+          "recipe_w3b_pot_lifter",
+          "recipe_w3b_sack_pricker",
+          "recipe_w3b_waxed_thread",
+          "recipe_w3b_boot_gaiter",
+          "recipe_w3b_boot_scraper",
+          "recipe_w3b_bucket_handle",
+          "recipe_w3b_chalk_powder",
+          "recipe_w3b_copper_nameplate",
+          "recipe_w3b_gall_wash",
+          "recipe_w3b_needle_case",
+          "recipe_w3b_ochre_paint",
+          "recipe_w3b_polishing_powder",
+          "recipe_w3b_rein_patch",
+          "recipe_w3b_soot_ink",
+          "recipe_w3b_tent_stake",
+          "recipe_w3b_wax_seal_blank",
+          "recipe_w3b_wood_marking_kit"
+        ]
+      }
+    }
+  ]
 }
