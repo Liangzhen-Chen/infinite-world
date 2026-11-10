@@ -12,12 +12,20 @@ export function parseModelJSON(response) {
   if (typeof raw !== 'string') throw new Error('模型没有返回 JSON 正文');
   return JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g, ''));
 }
+// 通用硬性检查清单：对所有条目适用，凡命中一律列为 severity=hard 的 contradictions，不得降为 soft/style。
+// 反例由真实复读错误改写；它们只示意错误形状，不是条目特判。工序类正文（配方、制作步骤）尤其要逐句过一遍。
+const REVIEW_CHECKLIST = ' 另须逐句过下列五项，命中即列 hard，不得因为读起来合理而放过：' +
+  '(a)工序连贯：正文中被使用、移动、加工的每样材料、容器、半成品，前文必须交代它从哪里来、放在哪里；“已叠好”“已入锅”“已弯成”一类状态，前文要有对应步骤。反例：只写把核桃仁切碎，随后就写“碎仁均匀裹糊”，碎仁从未入锅；又如只写取黄油“置于锅旁”，随后却写与锅里的蒜末相混；又如框料从未弯折，却写“把悬片悬在框内”。' +
+  '(b)工具与材料只能来自骨架或引用事实，不得出现骨架以外的工具、材料或水量。反例：骨架工具只有框锯、凿、锉，正文却写“配木槌轻敲”；骨架只有一份水，正文却写“再以清水冲去残砂”。' +
+  '(c)不得自添用途、保存期、食用期限、禁忌、维修需求，骨架和引用事实里没有的一律不行。反例：“所得一份，须当日食用”；“锅壁破裂时需维修”；“不横切石料”“刨屑留作引火之用”（骨架并无此用途或限制）。' +
+  '(d)数量与单位须与骨架一致。反例：骨架材料是“干直芦管束”一束，正文写“取芦管束一根”。' +
+  '(e)语句须通顺，不得有错字、病句、不通的动宾搭配、残缺的数词或单位。反例：“待麦糊稠度稳定后段入锅中”“全程约八十份钟”“取炭入厚底煮锅小灶”“皂片全散后停火”（全文并未点火）。';
 export function defaultReviewRequest(entry, draft, context) {
   return {
     thinking: { type: 'disabled' }, temperature: 0, max_tokens: 1800,
     response_format: { type: 'json_object' },
     messages: [
-      { role: 'system', content: '你是游戏内容事实审查员。逐句核对说明与骨架及引用事实，只返回 JSON {"contradictions":[{"quote":"说明原句","field":"骨架字段路径","severity":"hard|soft|style","reason":"具体原因"}]}。hard 表示数值、材料、用途、能力、食性、归属、时间、取得途径等与骨架相反或新增没有依据的功能。正常且相容的感官细节不是新增功能。不推测骨架没有声明的规则。不因没有重述全部骨架字段报错。无矛盾则空数组。' },
+      { role: 'system', content: '你是游戏内容事实审查员。逐句核对说明与骨架及引用事实，只返回 JSON {"contradictions":[{"quote":"说明原句","field":"骨架字段路径","severity":"hard|soft|style","reason":"具体原因"}]}。hard 表示数值、材料、用途、能力、食性、归属、时间、取得途径等与骨架相反或新增没有依据的功能。正常且相容的感官细节不是新增功能。不推测骨架没有声明的规则。不因没有重述全部骨架字段报错。无矛盾则空数组。' + REVIEW_CHECKLIST },
       { role: 'user', content: JSON.stringify({ skeleton: entry, publishedFacts: context ?? null, draft }) },
     ],
   };
