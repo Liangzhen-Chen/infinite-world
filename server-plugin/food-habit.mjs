@@ -35,7 +35,7 @@ export function foodHabit(d,engine,owner,sources,{view=null,read=null}={}){
  const members=personHousehold(engine,state,owner).value?.members??[owner];
  const own=memberCash(d,engine,owner,view);
  // 本聚落各户现金只由状态（账本余额、成员名册）与聚落定。游标草稿没有 d.memo，原先每次都重算；
-// read 是调用方（household-budget 的 budgetRead）给的同版本记忆：游标按 revision、只读作用域按状态对象，任何状态与账本写入即失效，故值与重算相同。
+// read 是调用方（household-budget 的 budgetRead）给的同版本记忆：游标按 revision、只读作用域按 state、ledger、randomSeed 三者的对象身份分键，任何状态与账本写入即失效，故值与重算相同。
  const budgets=view?[own]:read?read(['food-habit-cash',place],()=>householdCash(d,engine,place)):d.memo?d.memo(engine,['food-habit-cash',place],()=>householdCash(d,engine,place)):householdCash(d,engine,place);
  const income=members.reduce((n,id)=>n+laborValue(engine,document,{worker:id,observer:null}).daily,0);
  const rich=own>=rule.richCashDays*income;
