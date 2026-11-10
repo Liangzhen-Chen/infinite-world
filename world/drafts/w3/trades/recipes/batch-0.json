@@ -44,8 +44,137 @@
     "recipe_w3b_thread_rack"
   ],
   "l4": {
-    "approved": false,
-    "notes": []
+    "approved": true,
+    "reviewer": "sonnet-l4-a3a9e74a",
+    "by": "sonnet-l4-a3a9e74a",
+    "reviewedAt": "2026-11-10T21:57:47.566Z",
+    "notes": [
+      {
+        "id": "recipe_w3b_barley_pea_stew",
+        "note": "对照骨架逐句核对：点燃干木刨屑作火源（骨架有此燃料）；工具与材料均在骨架内、无骨架外器物；全程80分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_leek_fish_pot",
+        "note": "对照骨架逐句核对：点燃干木刨屑作火源（骨架有此燃料）；工具与材料均在骨架内、无骨架外器物；全程45分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_pea_spread",
+        "note": "对照骨架逐句核对：点燃干木刨屑作火源（骨架有此燃料）；工具与材料均在骨架内、无骨架外器物；全程90分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_honey_nut_cake",
+        "note": "对照骨架逐句核对：点燃干木刨屑作火源（骨架有此燃料）；工具与材料均在骨架内、无骨架外器物；全程70分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_onion_egg_soup",
+        "note": "对照骨架逐句核对：点燃干木刨屑作火源（骨架有此燃料）；工具与材料均在骨架内、无骨架外器物；全程35分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_honey_curd_spread",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程20分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_vinegar_carrot",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程120分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_apple_rye_griddle",
+        "note": "对照骨架逐句核对：点燃干木刨屑作火源（骨架有此燃料）；工具与材料均在骨架内、无骨架外器物；全程45分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_lidded_seed_box",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程160分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_three_leg_stool",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程180分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_wall_shelf",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程140分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_bread_board",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程90分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_thread_rack",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程150分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_shutter_panel",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程200分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_tool_tray",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程140分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_willow_creel",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程180分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_scroll_wrap",
+        "note": "对照骨架逐句核对：正文无用火，骨架也无燃料；工具与材料均在骨架内、无骨架外器物；全程120分钟与骨架一致；数量只用骨架份数或processFacts已有结构；弃置不引入骨架外去处；无语病，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_turnip_oat_cake",
+        "note": "按清单全文核对：切刀、煮锅、搅糊板均在骨架，写明干木刨屑送入灶膛供火，菜籽油、燕麦粉、粗盐各1份，无骨架外数量，全程55分钟一致，焦屑弃置，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_cabbage_barley",
+        "note": "按清单全文核对：清水两份与骨架2份一致，木刨屑入灶膛供火，工具均在骨架，连备料慢煮共75分钟一致，废叶硬根炉灰弃置，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_foot_rest",
+        "note": "按清单全文核对：两枚木楔与骨架2个一致，锯、凿、槌、锉均在骨架，无用火，全程120分钟一致，碎木锉屑弃置，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_walking_crutch",
+        "note": "按清单全文核对：锯、手钻、锉、削木小刀与麻布均在骨架，木楔由预留短料削成不引入骨架外材料，不声明医疗效果出自processFacts，全程180分钟一致，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_belt_strap",
+        "note": "按清单全文核对：裁革剪、扁锥、缝针、折舌腰带扣、麻线均在骨架，无用火，全程100分钟一致，零碎线料与碎皮弃置，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_coin_wrap",
+        "note": "按清单全文核对：骨压片、裁革剪、扁锥、缝针均在骨架，两层浅兜属工序自然成形，不含钱币出自processFacts，全程85分钟一致，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_leather_thimble",
+        "note": "按清单全文核对：裁革剪、扁锥、缝针与麻线均在骨架，内侧折入一层出自processFacts，无用火，全程55分钟一致，碎皮线屑弃置，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      },
+      {
+        "id": "recipe_w3b_sheath_pouch",
+        "note": "按清单全文核对：裁革剪、扁锥、缝针均在骨架，只套钝口小工具出自processFacts，无骨架外尺寸数量，全程100分钟一致，批。",
+        "by": "sonnet-l4-a3a9e74a"
+      }
+    ]
   },
   "costUpperYuan": 2.9468760400000003,
   "manualRatio": 0,
