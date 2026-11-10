@@ -13,7 +13,8 @@ test('普通多条顶层语句，函数体内的花括号不拆分', () => {
 });
 
 test('注释里的花括号和引号不影响深度，注释文本不进语句', () => {
-  const r = split('// } 不配平 {\nconst a = 1; /* { ( [ " */\n/* } */ const b = {\n  k: 1, // }\n};\nconst c = 3;\n');
+  const r = split('// } 不配平 {\nconst a = 1; /* { ( [ " */\n/* } */
+const b = {\n  k: 1, // }\n};\nconst c = 3;\n');
   assert.equal(r.length, 3);
   assert.ok(!r.some(t => t.includes('不配平')));
   assert.match(r[1], /k: 1/);
