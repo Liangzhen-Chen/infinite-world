@@ -1,0 +1,41 @@
+// 确定性诊断：同一种子推进 N 天，把每一步产生的全部补丁（含成交记录 market-trade:*、账本过账 ledger.*）按顺序做链式哈希，输出笔数与哈希。
+// 用于证明性能改动不改变实际成交与账本：改前改后各跑一次，哈希与笔数必须完全相等。只用新旧版本都有的公开接口。
+// 用法：node tools/trade-ledger-digest.mjs [天数=30] [--world full|farm]   （farm：farm-pests 夹具世界，覆盖作物生长与收获）
+import fs from 'node:fs/promises';
+import crypto from 'node:crypto';
+import {loadWorld} from './load-world.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+
+const args=process.argv.slice(2),days=Number(args.find(a=>/^\d+$/.test(a))??30),mode=args.includes('--world')?args[args.indexOf('--world')+1]:'full';
+const t0=performance.now(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+let engine,document;
+if(mode==='farm'){
+ const {withFarmPests}=await import('../world/design/farm-pests-foundation.mjs');
+ const source=await loadWorld();delete source.rules.wildlife.farmPests;
+ engine=new WorldEngine(withFarmPests(source));document=engine.createCharacter(legacy,{},'trade-ledger-digest-farm');
+}else{
+ const w=structuredClone(await loadWorld()),host='npc_hw_linsui',inn='bld_hw_qingdeng';
+ for(const npc of w.npcs.filter(n=>n.id===host))npc.schedule={default:[{start:0,end:1440,location:inn,activity:'营业',services:['trade']}]};
+ engine=new WorldEngine(w);document=engine.createCharacter(legacy,{},'trade-ledger-digest');
+ document.state.minute=600;document.state.location=inn;document.state.player.coins=2000;
+ Object.assign(document.state.npcs[host],{location:inn,activity:'营业',status:'正常'});
+}
+// 键序规范化，避免对象插入顺序差异影响哈希；数组保持原序。
+const canon=v=>Array.isArray(v)?v.map(canon):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canon(v[k])])):v;
+let chain='',patchCount=0,tradePatches=0,ledgerPatches=0;
+const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
+for(let day=0;day<days;day++){
+ const output=await engine.reduce(document,{tool:'world_time',args:{minutes:1440},eventId:`digest_day_${day}`});
+ for(const p of output.patches){
+  patchCount++;
+  const path=p.path.join('.');
+  if(path.startsWith('state.records.market-trade:'))tradePatches++;
+  if(path[0]==='l'&&path.startsWith('ledger'))ledgerPatches++;
+  chain=hash(chain+JSON.stringify(canon(p)));
+ }
+ document=applyPatches(document,output.patches);
+}
+const trades=Object.entries(document.state.records??{}).filter(([k,r])=>k.startsWith('market-trade:')||r?.category==='market_trade');
+const tradeHash=hash(JSON.stringify(canon(trades))),ledgerHash=hash(JSON.stringify(canon({accounts:document.ledger?.accounts,flows:document.ledger?.flows,lots:document.ledger?.lots})));
+console.log(JSON.stringify({world:mode,days,finalMinute:document.state.minute,耗时秒:Math.round((performance.now()-t0)/100)/10,补丁总数:patchCount,成交补丁数:tradePatches,账本过账补丁数:ledgerPatches,成交记录数:trades.length,补丁链哈希:chain,成交记录哈希:tradeHash,账本终态哈希:ledgerHash},null,1));
