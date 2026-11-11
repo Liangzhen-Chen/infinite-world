@@ -8,6 +8,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
+import {autonomyKind} from '../server-plugin/autonomy-candidates.mjs';
 import {advanceNpcAutonomy,applyNpcPlan,npcPlanFingerprint,npcPlanningContext,npcAutonomyBusy,npcLocalChanges,nextNpcAutonomyMinute} from '../server-plugin/npc-autonomy.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),actor='npc_hw_ayan';
 function draft(document){return {document,get(...p){return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);},remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);}};}
@@ -54,7 +55,7 @@ test('连续五分钟推进与一次跨日推进完全一致',async()=>{
  assert.deepEqual(a.d.document,b.d.document);assert.ok(Object.keys(a.d.get('state','npcAutonomy','actions')).length);
 });
 test('工作中离开或失能不能在完成时凭旧在场记录生产',async()=>{
- for(const change of seed.itinerary?['companion','status']:['location','status']){const {engine,d}=await setup();advance(d,engine,600);const task=Object.values(d.get('state','npcAutonomy','tasks')).find(t=>t.npc===actor);assert.ok(task);
+ for(const change of ['location','status']){const {engine,d}=await setup();advance(d,engine,600);const task=Object.values(d.get('state','npcAutonomy','tasks')).find(t=>t.npc===actor);assert.ok(task);
   const wood=count(d,actor,'item_wood');d.set(['state','npcs',actor,change],change==='location'?'loc_hw':'昏迷');advance(d,engine,task.finish);
   assert.equal(d.get('state','npcAutonomy','tasks',task.id,'status'),'失败');assert.equal(count(d,actor,'item_wood'),wood);assert.equal(d.get('state','npcAutonomy','actions',task.id),undefined);
  }
@@ -77,7 +78,7 @@ test('每种自主任务完成时都要执行者在场且清醒：移走或失�
   advance(d,engine,task.finish);return {d,task,materials};};
  for(const [kind,seed] of seen){
   const ok=await run(seed,null);assert.equal(ok.d.get('state','npcAutonomy','tasks',seed.id,'reason'),undefined,`${kind} 全程在场不应被拒`);assert.ok(ok.d.get('state','npcAutonomy','actions',seed.id),`${kind} 全程在场应有行动记录`);
-  for(const change of ['location','status']){
+  for(const change of autonomyKind(kind)?.itinerary?['companion','status']:['location','status']){
    const {d,task,materials}=await run(seed,change);
    // 昏迷：validateAction 第二道检查（isPhysicallyDead/状态清单，npc-autonomy.mjs 约 :91）先于完成时在场判定抛出。
    assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'reason'),{location:'工作完成时人物已离开或不能继续行动',companion:'人物不具备独立行动条件',status:'人物当前无法完成工作'}[change],`${kind} ${change} 失败原因`);assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
