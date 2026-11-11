@@ -107,7 +107,7 @@ test('接入 validateTradesDraft：命中进 errors，worldNames 不可枚举；
   const draft = {id: item.id, description: `${item.name}，取少许即可，约一掌长。`, inspection: '看外观。', storage: '避潮。'};
   const result = validateTradesDraft(draft, item, block, context);
   assert.ok(result.errors.some(m => /写了模糊用量「少许」/.test(m)), result.errors.join(' '));
-  assert.ok(result.errors.some(m => /写了身体尺度「一掌」/.test(m)));
+  assert.ok(result.errors.some(m => /写了身体尺度「一掌长」/.test(m)), result.errors.join(' '));
   // 名字不能被别的名字包含（避免遮蔽或出处串味）
   const stranger0 = (row, w) => w.npcs.some(other => other.id !== row.id && other.name.includes(row.name)) || w.locations.some(other => other.name.includes(row.name));
   const stranger = world.npcs.find(row => row.name && row.name.length >= 2 && !JSON.stringify(item).includes(row.id) && !context.catalog.some(entry => entry.name.includes(row.name)) && !stranger0(row, world));

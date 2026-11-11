@@ -73,7 +73,7 @@ test('制作痕迹：没有配方的物品不写；有配方须与配方一致',
 test('骨架外器具（全名与两字以上词形）；单字器具词在物品正文里不判', () => {
   assert.match(join('wheat', {description: '常用煮锅盛放。'}), /骨架外器具「煮锅」/);
   assert.deepEqual(check('wheat', {description: '可剪作垫片，穿针引线。'}), [], '剪、针单字是动词或部位，交 L4');
-  assert.deepEqual(check('chain', {description: '厚底煮锅旁放着一条长柄铁钳。'}).filter(m => /铁钳/.test(m)), [], '配方工具里有铁钳');
+  assert.deepEqual(check('chain', {description: '厚底煮锅旁放着一条长柄铁钳。'}).filter(m => /器具「[^」]*铁钳」/.test(m)), [], '配方工具里有铁钳（只看以铁钳为对象的报错；同句里的煮锅照判，见本测试第一条）');
 });
 
 test('catalog 缺失抛错；storageIssues 可单独使用', () => {
