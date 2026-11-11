@@ -15,6 +15,11 @@ import {tenderQuote,turnoverByResource,turnoverReference} from '../server-plugin
 import {obligationView} from '../server-plugin/obligation-state.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {sceneCard} from '../server-plugin/scene-card.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
+// 单笔可成交深度上限（引擎规则，运行时从引擎读，不写死）：非零售量 ≤ max(retailFloor, 现货供给×maxShare)；测试取整数下界 floor，保证落在上限之内。
+const depthLimit=(f,item='item_bread',location='bld_hw_qingdeng')=>{const s=marketSupply(f.draft(),f.engine,item,location),r=f.engine.world.marketRules;return Math.floor(Math.max(r.retailFloor,s.spotSupply*r.maxShare));};
+// 待探针占位（TODO）：下游断言值须由 tools/market-probe.mjs 的 s5-f-tender-N-after 输出填入，不得手写；填入前这些断言必然失败（null 不等于任何值）。
+const TODO_PROBE_S5F3_SECOND_WOOL=null,TODO_PROBE_S5F5_PLAYER_NOTES=null,TODO_PROBE_S5F5_HOST_NOTES=null,TODO_PROBE_S5F6_BY_RESOURCE=null,TODO_PROBE_S5F6_BASE_TOTAL=null,TODO_PROBE_S5F6_REFERENCE=null;
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const host='npc_hw_linsui',keeper='npc_hw_shendu',post='bld_hw_post',shop='bld_hw_qingdeng',NOTE='coin_hw_note';
@@ -97,10 +102,13 @@ test('S5F-3 实物计价：以羊毛付款，数量是整数斤，守恒',async(
  assert.deepEqual(r.paidWith,{resource:'item_wool',amount:5,name:'洗净羊毛束'});
  assert.equal(f.document.state.inventory.item_wool.quantity,35);assert.equal(f.document.state.npcs[host].inventory.item_wool.quantity,5);
  assert.equal(f.document.state.player.coins,3000);
- // 首笔后公开供给72，单笔上限floor(72×.3)=21。开市97、净卖25，深度1+.2×25/97；
- // 21×(1+.2×25/97)=22.082…，整单22文；商家已有5斤羊毛，羊毛价5×.5=2.5，ceil(22/2.5)=9斤。
- const r2=await f.trade({item:'item_bread',quantity:21,payCurrency:'item_wool'},'f3-wool-2');
- assert.equal(r2.paidWith.amount,9);assert.ok(Number.isInteger(r2.paidWith.amount));
+ // 场景前提改：第二笔的请求量取引擎此刻单笔上限的整数下界（旧手算：首笔后公开供给72、上限floor(72×.3)=21、请求21；
+ // 现在卖家家户留存上升，首笔后现货供给更低，上限 max(retailFloor, 现货供给×maxShare) 低于 21，21 件会被“市场今天没有那么多可成交深度”拒绝）。
+ // 数量由运行时的 depthLimit 推出，不写死；下游断言值（羊毛斤数）= ceil(整单文数÷羊毛价)，整单文数 = 数量×(1+.2×25/开市量)×.5×2 取整，待探针按该数量跑出。
+ // 对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值待 tools/market-probe.mjs 的 s5-f-tender-N-after 输出。
+ const limit=depthLimit(f);assert.ok(limit>=1);
+ const r2=await f.trade({item:'item_bread',quantity:limit,payCurrency:'item_wool'},'f3-wool-2');
+ assert.equal(r2.paidWith.amount,TODO_PROBE_S5F3_SECOND_WOOL);assert.ok(Number.isInteger(r2.paidWith.amount));
  clean(f);
 });
 
@@ -141,10 +149,13 @@ test('S5F-5 同一笔旧债用原币种还：数量就是冻结的数量，与�
  const f=fixture();
  await f.issue(10,'f5-issue');f.atShop();
  const owed=await f.trade({item:'item_bread',quantity:5,payment:'credit',creditMinutes:600},'f5-credit');
- await f.trade({item:'item_bread',quantity:25,payCurrency:NOTE},'f5-shock');
+ // 场景前提改：冲击笔的请求量取引擎此刻单笔上限的整数下界（旧为 25；赊账 5 件使卖家应收未履约，留存上升，现货供给更低，上限 <25，25 件会被深度拒绝）。
+ // 对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值待 tools/market-probe.mjs 的 s5-f-tender-N-after 输出。
+ const shockQty=depthLimit(f);assert.ok(shockQty>=1);
+ await f.trade({item:'item_bread',quantity:shockQty,payCurrency:NOTE},'f5-shock');
  const paid=await f.trade({payment:'repay',debt:owed.debt},'f5-repay');
- // 10 张 -3（冲击成交）-1（还债）= 6；债权人收到 3+1=4 张。
- assert.equal(paid.status,'已还清');assert.equal(f.notes('player'),6);assert.equal(f.notes(host),4);
+ // 券数 = 10 −（冲击成交张数，ceil(整单文数÷10)）−1（还债）；债权人收到 冲击张数+1。下游值待探针（冲击张数随请求量变）。
+ assert.equal(paid.status,'已还清');assert.equal(f.notes('player'),TODO_PROBE_S5F5_PLAYER_NOTES);assert.equal(f.notes(host),TODO_PROBE_S5F5_HOST_NOTES);
  clean(f);
 });
 
@@ -152,19 +163,23 @@ test('S5F-6 成交统计分币种：原始统计按实际结算资源分开，�
  const f=fixture();
  await f.issue(10,'f6-issue');f.atShop();
  await f.trade({item:'item_bread',quantity:10},'f6-cash');                       // 现钱：10 文
- await f.trade({item:'item_bread',quantity:25,payCurrency:NOTE},'f6-note');      // 券：3 张（基准账 25 文）
+ // 场景前提改：用券买的请求量取引擎此刻单笔上限的整数下界（旧为 25，现 25 件超过上限被深度拒绝）；对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值待 tools/market-probe.mjs 的 s5-f-tender-N-after 输出。
+ const noteQty=depthLimit(f);assert.ok(noteQty>=1);
+ await f.trade({item:'item_bread',quantity:noteQty,payCurrency:NOTE},'f6-note');      // 券：ceil(整单文数÷10) 张
  const place='loc_hw',state=f.document.state;
  // 河湾成交：10 文铜钱 + 3 张券；基准账（totalCoins）合计 35 文，未被改写。
- assert.deepEqual(turnoverByResource(state,{place}),{coin_river:10,[NOTE]:3});
- assert.equal(Object.values(state.records).filter(r=>r.category==='market_trade'&&r.place===place).reduce((n,r)=>n+r.totalCoins,0),35);
+ // 旧手算（请求25）：10 文铜钱 + 3 张券，基准账合计 35。新值待探针（请求量改为 noteQty 后）。
+ assert.deepEqual(turnoverByResource(state,{place}),TODO_PROBE_S5F6_BY_RESOURCE);
+ assert.equal(Object.values(state.records).filter(r=>r.category==='market_trade'&&r.place===place).reduce((n,r)=>n+r.totalCoins,0),TODO_PROBE_S5F6_BASE_TOTAL);
  // 折算比较，手算：基准账成交 10+25=35 文 → 成交量 35/10=3.5 张券当量；活跃券（玩家 7 + 店主 3）=10 张 → 充裕度 .35 → 兑换率 10 x .35 = 3.5 文/张。
  // 折算 = 10 + 3 x 3.5 = 20.5 = 41/2（精确分数）。
  const cmp=turnoverReference(f.draft(),f.engine,{place,location:shop});
- assert.deepEqual(cmp,{numerator:'41',denominator:'2'});
+ // 旧：41/2（请求25）。新值待探针；公式不变：折算 = 现钱 10 + 券张数×兑换率，兑换率 = 10×(基准账合计÷10÷活跃券张数)。
+ assert.deepEqual(cmp,TODO_PROBE_S5F6_REFERENCE);
  const snapshot=JSON.stringify(f.document.state.records);turnoverReference(f.draft(),f.engine,{place,location:shop});assert.equal(JSON.stringify(f.document.state.records),snapshot);
  // 通货估值解释里也带分币种统计。
  const view=currencyValue(f.draft(),f.engine,{currency:NOTE,location:shop});
- assert.deepEqual(view.explanation.turnoverByResource,{coin_river:10,[NOTE]:3});
+ assert.deepEqual(view.explanation.turnoverByResource,TODO_PROBE_S5F6_BY_RESOURCE);
 });
 
 test('S5F-7 账本格式不变：账户键仍是 owner|resource|purpose，顶层字段不增不减，对账为零',async()=>{

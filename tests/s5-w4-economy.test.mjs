@@ -79,11 +79,14 @@ test('F048 租金：房客与业主不在同处时不转账，形成应付且不
 test('F007 典当按整批清算估值而非目录基价，预支率 50%',async()=>{
     const f=fixture();await f.act({operation:'deposit',seller:clerk,coins:10},'dep');
     const p=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,days:1},'pawn');
-    // S=20、D=18，10>零售阈值5：清算值floor(2×18×ln(30/20))=14；预支floor(14×.5)=7。
-    // （目录基价口径会得到 2 × 10 × 0.5 = 10 铜。）
+    // S=20、D=24，10>零售阈值5：清算值floor(2×24×ln(30/20))=floor(19.46)=19；预支floor(19×.5)=9。
+    // （目录基价口径会得到 2 × 10 × 0.5 = 10 铜。旧锚点 D=18 → 14 → 7。）
+    // 新 D=24：同聚落非商家持有人的留存之和 玩家3+申杜4+阿衍8+陈柏4+顾岑5；变化来自面包饱腹改推导（30→16，每口留存 ceil(60/16)=4 份，c0a7ea22，PLAN.md:584、591③）。
+    // 供给 S=20（supplyApart 去掉持有人自己那批后，林穗店面包）不变。李白 11-11 (a)（PLAN.md:540）。
+    // 证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md（s5-w4-economy-3：principal 9、pledgeValue 19）。断言仍为精确相等。
     assert.equal(f.e.rules.economy.credit.pawn.advanceRatio,0.5);
-    assert.equal(p.principal,7);
-    assert.equal(f.doc.state.records[p.contract].pledgeRecord&&f.doc.state.records[f.doc.state.records[p.contract].pledgeRecord].value,14,'押品值 = 清算估值');
+    assert.equal(p.principal,9);
+    assert.equal(f.doc.state.records[p.contract].pledgeRecord&&f.doc.state.records[f.doc.state.records[p.contract].pledgeRecord].value,19,'押品值 = 清算估值');
 });
 
 // ---------------------------------------------------------------- F085
@@ -267,9 +270,12 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     const A='npc_hw_xuling',f=await openShop({coins:{[A]:40},campaignSeed:'w4-player-flow'});
     await waitPastMidnight(f,'w4-player-day');
     const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===f.business);
-    // 一人60饱食÷口粮30=2份；2×基价3×稀缺0.5=3铜，总额取整一次。
+    // 新值：一人60饱食÷口粮每份饱腹26（由配方能量推导，原手写30）=ceil(2.31)=3份；3份≤零售阈值5，单价=基价3×供需比26/47(=0.553191，已离开下限.5)，
+    // 总额 3×3×0.553191=4.9787，取整一次(截断)=4铜。注意 4.9787 离 5 很近（差 0.4%），对供需比敏感，但断言仍为精确相等、不放宽。
+    // 旧值：60÷30=2份，2×3×0.5=3铜。对应设计变化：口粮饱腹改推导（c0a7ea22，PLAN.md:584、591③）与卖家份额分摊使供需比离开下限（PLAN.md:316③、563②）；
+    // 李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md（s5-w4-economy-11：satietyEach 26、xulingCoins 29）。
     assert.equal(flow.length,1);
-    assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.tax,v.outcome]),[[A,'item_ration',2,3,0,'bought']]);
+    assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.tax,v.outcome]),[[A,'item_ration',3,4,0,'bought']]);
     const account=Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
     assert.equal(account.coins,103);assert.equal(f.document.state.npcs[A].coins,37);
     assert.equal(f.document.state.inventory.item_ration.quantity,1);assert.equal(f.document.state.inventory.item_bread.quantity,5);

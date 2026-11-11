@@ -99,10 +99,14 @@ test('L5 对方钱不够时部分收购：只转付得起的原货，不足一�
  assert.ok(menu.actions.find(a=>a.id==='core:trade.sell_to').slots.some(s=>s.name==='allowPartial'));
  const r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
  assert.ok(r.ok,r.error);assert.equal(r.result.partial,true);assert.equal(r.result.requestedQuantity,20);
- // Bread 2 × abundant-food floor .5 × shop buy spread .6 × 10 = 6;
- // other factors 1. Total truncation occurs after multiplying quantity.
- assert.equal(r.result.cost,6);
+ // 新值：成交 8 个、总价 5。面包 2 × 供需比 29/47(=0.617021，已离开供需下限 .5) × 店收购价差 .6 = 单价 0.740426；
+ // 成交数量 = min(20, floor(店主现金 6 ÷ 单价)) = floor(8.10) = 8（engine.mjs:707）；按 8 件重报价（非零售，沿供需曲线积分）
+ // 总额 0.740426×29×ln(55/47)÷0.617021 = 5.4701，整笔截断一次 = 5。旧值 6 = 面包 2×.5×.6×10（地板 .5、10 件）。
+ // 对应设计变化：面包饱腹改推导 + 卖家份额分摊使供需比离开地板（PLAN.md:584、591③、316③、563②）；李白 11-11 (a)（PLAN.md:540）。
+ // 证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md（a1-lt-scenarios-7，requote 与 result.pricing 差 0）。断言仍为精确相等。
+ assert.equal(r.result.cost,5);
  assert.ok(r.lines[0].includes(`${r.result.quantity}份`),'界面只报实际成交数量');
+ assert.equal(r.result.quantity,8); // floor(6÷0.740426)，见上；
  assert.ok(r.result.quantity>0&&r.result.quantity<20);const after=await ui.read();
  assert.equal(qty(after.state.inventory.item_bread),20-r.result.quantity);
  assert.equal(qty(after.state.npcs[LINSUI].inventory.item_bread)-qty(before.state.npcs[LINSUI].inventory.item_bread),r.result.quantity);
