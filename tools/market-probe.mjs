@@ -87,6 +87,18 @@ function quoteView(engine,doc,{item,location,seller,buyer='player',quantity=1}){
    depthCheck:{retailFloor:r.retailFloor,maxShare:r.maxShare,dailyShare:r.dailyShare,maxShareCap,branchA,used,dealsCounted:deals.length,dailyCap,branchB,assertMarketDepth:assertDepth}};
  }catch(e){return {item,quantity,error:errorOf(e)};}
 }
+// 机械标记：按步骤先后给每个输出量一个角色。第一处失败之前，kind 为 assertion 的量可作比较对象（assertion）、其余为 intermediate；
+// 第一处失败本身记 rejection-point；其后的步骤一律 downstream-after-rejection，不作期望值。ok 为该步是否成功。
+function fieldRoles(steps){
+ let rejected=false;const out={};
+ for(const st of steps){
+  if(rejected)out[st.path]='downstream-after-rejection';
+  else if(!st.ok){out[st.path]='rejection-point';rejected=true;}
+  else out[st.path]=st.kind;
+ }
+ out.fieldRoles=fieldRoles([{path:'issued',kind:'intermediate',ok:issued.ok},{path:'cash',kind:'intermediate',ok:cash.ok},{path:'note',kind:'intermediate',ok:note.ok},{path:'turnoverByResource',kind:'assertion',ok:true},{path:'baseLedgerTotalCoins',kind:'assertion',ok:true},{path:'turnoverReference',kind:'assertion',ok:true}]);
+ return out;
+}
 const itemFacts=(engine,id)=>{const it=engine.byId.get(id);return {id,basePrice:it?.basePrice,satiety:it?.nutrition?.satiety??null,tags:it?.tags??null};};
 const depthRule=engine=>{const r=engine.world.marketRules??{};return {depthImpact:r.depthImpact,retailFloor:r.retailFloor,retailShare:r.retailShare,maxShare:r.maxShare,dailyShare:r.dailyShare,spread:r.spread};};
 // 单笔可成交深度上限（market.mjs assertMarketDepth 的公式）：非零售量 ≤ max(retailFloor, 现货供给 × maxShare)。
@@ -177,7 +189,8 @@ async function tender3(){
  const second=await breadTrade(f,'第 2 笔 面包 21 付羊毛',{item:'item_bread',quantity:21,payCurrency:'item_wool'},'f3-wool-2');
  return {downstreamNote:'深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。',compares:'第二笔 paidWith.amount（tests/s5-f-tender.test.mjs:105）',
   setupUnmet:[...f.setupUnmet,...unmetShop,...wool.setupUnmet],item:itemFacts(f.engine,'item_bread'),depthRule:depthRule(f.engine),first,second,
-  woolMarket:marketView(f.engine,f.doc,'item_wool',TH.shop)};
+  woolMarket:marketView(f.engine,f.doc,'item_wool',TH.shop),
+  fieldRoles:fieldRoles([{path:'first',kind:'intermediate',ok:first.ok},{path:'second',kind:'assertion',ok:second.ok},{path:'woolMarket',kind:'intermediate',ok:true}])};
 }
 // S5F-5：tests/s5-f-tender.test.mjs:140-149。发行 10 张券、赊 5 个面包、再用券买 25 个面包、用原币种还债（比较玩家与店主的券数）。
 async function tender5(){
@@ -188,7 +201,7 @@ async function tender5(){
  const debtId=credit.debt??null;
  const repay=debtId?await f.trade('原币种还债',{debt:debtId,payment:'repay'},'f5-repay'):{ok:false,error:{message:'没有找到债（赊账未成立）'}};
  return {downstreamNote:'深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。',compares:'玩家与店主的券数（tests/s5-f-tender.test.mjs:147）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},credit,shock,
-  repay:{ok:repay.ok,error:repay.error,status:repay.result?.status},notes:{player:f.notes('player'),host:f.notes(TH.host)},rateNow:(()=>{try{return f.rate();}catch(e){return errorOf(e);}})()};
+  repay:{ok:repay.ok,error:repay.error,status:repay.result?.status},fieldRoles:fieldRoles([{path:'issued',kind:'intermediate',ok:issued.ok},{path:'credit',kind:'intermediate',ok:credit.ok},{path:'shock',kind:'intermediate',ok:shock.ok},{path:'repay',kind:'intermediate',ok:repay.ok},{path:'notes',kind:'assertion',ok:true},{path:'rateNow',kind:'intermediate',ok:true}]),notes:{player:f.notes('player'),host:f.notes(TH.host)},rateNow:(()=>{try{return f.rate();}catch(e){return errorOf(e);}})()};
 }
 // S5F-6：tests/s5-f-tender.test.mjs:155-173。发行 10 张券，现钱买 10 个面包，再用券买 25 个，比较分币种统计与折算。
 async function tender6(){
@@ -276,7 +289,7 @@ async function m3M9(){
   const file='tests/playtests/world_upgrade.json',json=JSON.parse(await fs.readFile(new URL('../'+file,import.meta.url),'utf8'));
   recorded={file,rows:json.turns.flatMap((t,i)=>t.assertions.filter(a=>['state.player.coins','state.inventory.item_bread'].includes(a.path)).map(a=>({turn:i,input:t.input,assertion:a})))};
  }catch(e){recorded={error:errorOf(e)};}
- return {notForExpectation:'不用于定 M9 期望值：M9 采用 world_upgrade.json 重推并记录的值（见 recordedInWorldUpgradeJson，运行时原样读出）；本输出只作旁证。',recordedInWorldUpgradeJson:recorded,expectationSourceCommits:['ad59698f','bb70871d'],approximate:'近似：原测试前两步在旧世界版本的服务器上做，再导出导入当前世界（写 world_update 记录、升级迁移），第三笔在导入后做；这里全程在当前世界、同一份文档上连做，不经导出导入。差别只在升级迁移是否影响面包价格，需复算者另行确认。',compares:'玩家最终铜钱 finalDocument.state.player.coins（tests/m3-acceptance.test.mjs:93）；第一笔后铜钱对应 world_upgrade.json 第一回合的 equals',
+ return {eventIdNote:'本场景的 eventId（m9-fixture-*、m9-turn-3）与真实流程（HTTP 服务器的 anchor 事件号）不同；价格不读 eventId，但不做精确重建。',notForExpectation:'不用于定 M9 期望值：M9 采用 world_upgrade.json 重推并记录的值（见 recordedInWorldUpgradeJson，运行时原样读出）；本输出只作旁证。',recordedInWorldUpgradeJson:recorded,expectationSourceCommits:['ad59698f','bb70871d'],approximate:'近似：原测试前两步在旧世界版本的服务器上做，再导出导入当前世界（写 world_update 记录、升级迁移），第三笔在导入后做；这里全程在当前世界、同一份文档上连做，不经导出导入。差别只在升级迁移是否影响面包价格，需复算者另行确认。',compares:'玩家最终铜钱 finalDocument.state.player.coins（tests/m3-acceptance.test.mjs:93）；第一笔后铜钱对应 world_upgrade.json 第一回合的 equals',
   startCoins:start,afterLodge,afterBread1:coins1,final:ctx.doc.state.player.coins,wage:wageView(engine,ctx.doc),
   bills:{lodge:start-afterLodge,bread1:afterLodge-coins1,bread2:coins1-ctx.doc.state.player.coins},
   steps:{move:{ok:move.ok,error:move.error},lodge:{ok:lodge.ok,error:lodge.error},bread1:{ok:bread1.ok,error:bread1.error,cost:bread1.result?.cost,pricing:bread1.result?.pricing},bread2:{ok:bread2.ok,error:bread2.error,cost:bread2.result?.cost,pricing:bread2.result?.pricing}},
