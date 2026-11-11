@@ -31,7 +31,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {marketSupply,marketQuote,goodsClass} from '../server-plugin/market.mjs';
+import {marketSupply,marketQuote,goodsClass,goodsWeight} from '../server-plugin/market.mjs';
 import {regionalTradeBase,regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {hazardPriceFactor,famineAt} from '../server-plugin/hazard-calendar.mjs';
 import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
@@ -54,7 +54,8 @@ const emit=obj=>console.log(JSON.stringify(obj,(k,v)=>typeof v==='bigint'?v.toSt
 
 // ---------------------------------------------------------------- 工具
 const classOf=id=>id.startsWith('famine:')?'winter':id==='price:loc_bs_liquan'?'drought':id.startsWith('price:')?'spring':id.startsWith('flood:')?'flood':id.startsWith('epidemic:')?'epidemic':'other';
-// 内存世界副本：按类去掉 price_shift；winter 类另整段删除 famine:loc_bs 的 tight 阶段；seasonfactor 类把 seasonFactors 置 1；closure 类只给洪水对照用。
+// 内存世界副本：按类去掉 price_shift（阶段因此没有任何效果的整段去掉；整个钟的阶段全被剥光则整钟去掉，不留 stages 为空的无效钟）；
+// winter 类若世界里仍有 famine:loc_bs 的 tight 阶段则整段删除（MKTW 实现后数据里已没有，此时不动作）；seasonfactor 类把 seasonFactors 置 1（实现后表里已无该字段，此时 seasonFactorsReset 为 false、seasonFactorsRemoved 为 true）；closure 类只给洪水对照用。
 function strip(w,classes){
  let removed=0;const stagesDeleted=[];
  for(const clock of w.rules.hazardClock?.clocks??[]){
@@ -68,18 +69,28 @@ function strip(w,classes){
   // 阶段只剩 price_shift 时去掉后成空 effects，规则校验拒绝（seasonal-hazards.mjs:179，drought-without/spring-without 第 1 天报错的原因）；这类阶段都在钟尾（旱情 rain、青黄不接 ease、疫病回落），整段去掉不改前面阶段的序号。
   while(clock.stages.length&&!clock.stages.at(-1).effects.length){stagesDeleted.push(`${clock.id}:${clock.stages.at(-1).id}:emptied`);clock.stages.pop();}
  }
+ // 阶段全被剥光的钟没有任何可推进的内容，规则校验会拒绝（stages 为空），整钟去掉（只去被剥的类；被别的钟用 hazard_phase 引用的不动，让校验把问题报出来）。
+ if(w.rules.hazardClock){
+  const referenced=new Set();
+  const walk=c=>{if(c?.kind==='all')c.conditions.forEach(walk);else if(c?.kind==='hazard_phase')referenced.add(c.clock);};
+  for(const clock of w.rules.hazardClock.clocks??[])for(const s of clock.stages??[])walk(s.condition);
+  w.rules.hazardClock.clocks=(w.rules.hazardClock.clocks??[]).filter(clock=>{
+   if(!classes.includes(classOf(clock.id))||clock.stages.length||referenced.has(clock.id))return true;
+   stagesDeleted.push(`${clock.id}:clock_emptied`);return false;
+  });
+ }
  if(classes.includes('closure'))for(const clock of w.rules.hazardClock?.clocks??[]){
   if(!clock.id.startsWith('flood:'))continue;
   for(const stage of clock.stages??[]){const before=stage.effects?.length??0;stage.effects=(stage.effects??[]).filter(e=>e.kind!=='route_closure');stagesDeleted.push(`${clock.id}:${stage.id}:route_closure×${before-stage.effects.length}`);}
  }
  let seasonFactorsReset=false;
  if(classes.includes('seasonfactor')&&w.rules.settlementTrade?.seasonFactors){w.rules.settlementTrade.seasonFactors=w.rules.settlementTrade.seasonFactors.map(()=>1);seasonFactorsReset=true;}
- return {removed,stagesDeleted,seasonFactorsReset};
+ return {removed,stagesDeleted,seasonFactorsReset,seasonFactorsRemoved:!w.rules.settlementTrade?.seasonFactors};
 }
 function buildWorld(withShift,classes=STRIP_DEFAULT){
  const w=structuredClone(world0);
  for(const n of w.npcs){delete n.schedule;delete n.tier;}
- const stripped=withShift?{removed:0,stagesDeleted:[],seasonFactorsReset:false}:strip(w,classes);
+ const stripped=withShift?{removed:0,stagesDeleted:[],seasonFactorsReset:false,seasonFactorsRemoved:!w.rules.settlementTrade?.seasonFactors}:strip(w,classes);
  let shiftCount=0;
  for(const clock of w.rules.hazardClock?.clocks??[])for(const stage of clock.stages??[])shiftCount+=(stage.effects??[]).filter(e=>e.kind==='price_shift').length;
  return {w,...stripped,shiftCount,strippedClasses:withShift?[]:classes};
@@ -132,7 +143,7 @@ function itemView(engine,doc,item,location){
   const d=draftOf(engine,doc),s=marketSupply(d,engine,item,location);
   const limits=engine.rules.economy.priceFactorLimits.region,ratio=s.demand/Math.max(1,s.supply);
   const base=regionalTradeBase(d,engine,item,location),q=marketQuote(d,engine,{item,location,seller:null,buyer:'player',quantity:1,base}),x=q.explanation??{};
-  return {item,goods:goodsClass(engine,item),supply:s.supply,spotSupply:s.spotSupply,demand:s.demand,ratio,ratioClamped:Math.min(Math.max(ratio,limits[0]),limits[1]),
+  return {item,goods:goodsClass(engine,item),poolWeight:goodsWeight(engine,item),supply:s.supply,spotSupply:s.spotSupply,demand:s.demand,ratio,ratioClamped:Math.min(Math.max(ratio,limits[0]),limits[1]),
    atFloor:ratio<=limits[0],catalogBase:engine.byId.get(item).basePrice,environment:x.environment,regionalBase:base,scarcity:x.scarcity,listPrice:q.listPrice,
    hazardFactor:hazardPriceFactor(engine,doc.state,item,location),magicFactor:magicPriceFactor(engine,doc.state,item,location),forestWaterFactor:forestWaterPriceFactor(engine,doc.state,item,location,d),regionalTradePrice:regionalTradePrice(d,engine,item,location)};
  }catch(e){return {item,error:errorOf(e)};}
@@ -160,13 +171,13 @@ async function cellRun(name,withShift,season,level,sid){
  const target=mouthsOf(engine,ctx.doc,sid)*reserveDaysOf(engine,sid);
  const set=setGranary(engine,ctx.doc,sid,Math.round(level*target));
  const head={kind:'cell',case:name,mode:modeName(withShift),settlement:sid,season,level,pairKey:`${sid}|${season}|${level}`,strippedClasses:b.strippedClasses,stripped:b.removed,stagesDeleted:b.stagesDeleted,
-  seasonFactorsReset:b.seasonFactorsReset,priceShiftEffectsInWorld:b.shiftCount,granarySet:set,jumped:ctx.jumped??false};
+  seasonFactorsReset:b.seasonFactorsReset,seasonFactorsRemoved:b.seasonFactorsRemoved,priceShiftEffectsInWorld:b.shiftCount,granarySet:set,jumped:ctx.jumped??false};
  const rows=[];
  const out=row=>{rows.push(row);emit(row);};
- out({...head,phase:'before-advance',seasonIndex:engine.calendar(ctx.doc.state.minute).season,seasonFactor:w.rules.settlementTrade.seasonFactors[engine.calendar(ctx.doc.state.minute).season],calendar:engine.calendar(ctx.doc.state.minute).text,granary:granaryView(engine,ctx.doc,sid),items:ITEMS.map(i=>itemView(engine,ctx.doc,i,sid))});
+ out({...head,phase:'before-advance',seasonIndex:engine.calendar(ctx.doc.state.minute).season,seasonFactor:w.rules.settlementTrade.seasonFactors?.[engine.calendar(ctx.doc.state.minute).season]??null,calendar:engine.calendar(ctx.doc.state.minute).text,granary:granaryView(engine,ctx.doc,sid),items:ITEMS.map(i=>itemView(engine,ctx.doc,i,sid))});
  const adv=await attempt(ctx,'world_time',{minutes:ADVANCE*DAY},'probe-advance');
  const cal=engine.calendar(ctx.doc.state.minute);
- out({...head,phase:'after-advance',seasonIndex:cal.season,seasonFactor:w.rules.settlementTrade.seasonFactors[cal.season],calendar:cal.text,fixtureUntrusted:ctx.fixtureUntrusted??(reached?null:{error:'未推进到目标日'}),
+ out({...head,phase:'after-advance',seasonIndex:cal.season,seasonFactor:w.rules.settlementTrade.seasonFactors?.[cal.season]??null,calendar:cal.text,fixtureUntrusted:ctx.fixtureUntrusted??(reached?null:{error:'未推进到目标日'}),
   advance:{days:ADVANCE,ok:adv.ok,error:adv.error},granary:granaryView(engine,ctx.doc,sid),items:ITEMS.map(i=>itemView(engine,ctx.doc,i,sid))});
  return rows;
 }
@@ -206,7 +217,10 @@ async function buyRun(name,withShift){
     const q=tradeQuote(d,engine,{buyer:'player',seller:KEEPER,item,quantity:1,location:INN,base:()=>regionalTradeBase(d,engine,item,INN)*wildlifePriceFactor(engine,d.document,item,INN)}),x=q.explanation??{};
     const ratio=s.demand/Math.max(1,s.supply);
     return {supply:s.supply,spotSupply:s.spotSupply,demand:s.demand,ratio,ratioClamped:clampR(ratio),atFloor:ratio<=limits[0],atTop:ratio>=limits[1],opening:q.opening,depth:x.depth,scarcity:x.scarcity,
-     quotedListPrice:q.listPrice,quotedExactTotal:q.exactTotal};}catch(e){return {error:errorOf(e)};}};
+     quotedListPrice:q.listPrice,quotedExactTotal:q.exactTotal,
+     // 只读诊断（R6 k=2 一致性误差，MKTW 卡 D）：价格公式里 value、price 两个槽的加法型修正（explainDerived 的 contributions）与各槽输入输出。
+     valueSlot:x.value?{base:x.value.base,value:x.value.value,contributions:x.value.contributions}:null,priceSlot:x.price?{base:x.price.base,value:x.price.value,contributions:x.price.contributions}:null,
+     explanationParts:{environment:x.environment,scarcity:x.scarcity,quality:x.quality,depth:x.depth,spread:x.spread,relation:x.relation,curve:x.curve,rounding:x.rounding}};}catch(e){return {error:errorOf(e)};}};
   let prev=null,last=null;
   for(let k=1;k<=BUYS;k++){
    const pre=view();
@@ -285,7 +299,7 @@ async function seasonRun(name,withShift){
   const doc=engine.createCharacter(legacy,{},'mktw-winter-probe'),ctx={engine,doc};
   const ok=await advanceTo(ctx,(360+season*90+10)*DAY+600,`sf${season}`);
   for(const lane of w.rules.settlementTrade.lanes){
-   try{const d=draftOf(engine,ctx.doc);emit({kind:'season',case:name,mode:modeName(withShift),buyer:lane.buyer,season,seasonFactors:w.rules.settlementTrade.seasonFactors,seasonFactorsReset:b.seasonFactorsReset,strippedClasses:b.strippedClasses,item,reached:ok,jumped:ctx.jumped??false,
+   try{const d=draftOf(engine,ctx.doc);emit({kind:'season',case:name,mode:modeName(withShift),buyer:lane.buyer,season,seasonFactors:w.rules.settlementTrade.seasonFactors??null,seasonFactorsReset:b.seasonFactorsReset,seasonFactorsRemoved:b.seasonFactorsRemoved,strippedClasses:b.strippedClasses,item,reached:ok,jumped:ctx.jumped??false,
     fixtureUntrusted:ctx.fixtureUntrusted??null,regionalBase:regionalTradeBase(d,engine,item,lane.buyer),regionalTradePrice:regionalTradePrice(d,engine,item,lane.buyer),view:itemView(engine,ctx.doc,item,lane.buyer)});}
    catch(e){emit({kind:'season',case:name,mode:modeName(withShift),buyer:lane.buyer,season,error:errorOf(e)});}
   }
