@@ -62,7 +62,10 @@ const tableFile='world/meta/mechanics/material-props.json', overlayFile='world/m
 export async function entriesFor(){
  const table=await readJSON(tableFile),overlay=await readJSON(overlayFile);
  const classes=Object.entries(table.classes).map(([key,row])=>({id:`class_${key}`,kind:'material-props-class',key,row,source:{path:`${tableFile}#classes.${key}`,detail:row.basis}}));
- const items=Object.entries(overlay).filter(([,patch])=>patch.props).map(([id,patch])=>({id,kind:'material-props-item',row:patch.props,source:{path:`${overlayFile}#${id}.props`,detail:patch.props.basis}}));
+ // 后加维度登记（FOODMETAL）：物品 props 行里的 appearance 是后加字段，审批条目按「投影掉它」的行算（已审条目的指纹不变）；
+ // 投影后只剩 basis 的行（只写外观的新行）不是 D12 条目，由 L1（validateMaterialProps）核对，L2、L4 另卡。
+ const items=Object.entries(overlay).filter(([,patch])=>patch.props).map(([id,patch])=>{const {appearance,...row}=patch.props;return {id,kind:'material-props-item',row,source:{path:`${overlayFile}#${id}.props`,detail:patch.props.basis}};})
+  .filter(e=>Object.keys(e.row).some(k=>k!=='basis'));
  return [...classes,...items];
 }
 // 条目分卡（显式范围，不看记录文件在不在）：D 卡条目 = D 卡已冻结批次 review-2/batch-*.json 的 ids 并集；调味佐餐卡条目 = 其余。

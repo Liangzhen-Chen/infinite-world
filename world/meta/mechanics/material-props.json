@@ -1200,7 +1200,10 @@
    "paper",
    "bone",
    "ceramic",
-   "iron"
+   "iron",
+   "salt",
+   "cheese",
+   "spice_seed"
   ],
   "classes": {
    "timber": {
@@ -1505,6 +1508,255 @@
      }
     ],
     "basis": "蜂蜡表观密度，Engineering ToolBox 表列 0.96（10³ kg/m³）。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "salt": {
+    "appearance": [
+     {
+      "term": "晶体色白，含杂质时微带蓝紫",
+      "citation": "Wikipedia「Salt」：crystals normally appear white but impurities may give them a blue or purple tinge"
+     },
+     {
+      "term": "晶体半透明",
+      "citation": "Wikipedia「Salt」：Salt crystals are translucent and cubic in shape"
+     },
+     {
+      "term": "晶体呈立方形",
+      "citation": "Wikipedia「Salt」：Salt crystals are translucent and cubic in shape"
+     }
+    ],
+    "basis": "食物类别外观词组（只写材料本身的颜色、形状、质地、气味），不写密度，不写成品菜。各条带页面与原句。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "cheese": {
+    "appearance": [
+     {
+      "term": "外层可有带香味的霉层（外皮）",
+      "citation": "Wikipedia「Cheese」：Some cheeses have aromatic molds on the outer layer or rind, while others have them throughout"
+     },
+     {
+      "term": "新制的硬质乳酪质地发韧如橡胶",
+      "citation": "Wikipedia「Cheese」：A newborn cheese is usually salty yet bland in flavor and, for harder varieties, rubbery in texture"
+     },
+     {
+      "term": "有的乳酪气味特别冲",
+      "citation": "Wikipedia「Cheese」：consumers may perceive some cheeses that are especially pungent-smelling"
+     }
+    ],
+    "basis": "食物类别外观词组（只写材料本身的颜色、形状、质地、气味），不写密度，不写成品菜。各条带页面与原句。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "spice_seed": {
+    "appearance": [
+     {
+      "term": "籽粒细小：罂粟籽不足 1 毫米，芥籽约 1–2 毫米，香芹籽约 3 毫米长",
+      "citation": "Wikipedia「Poppy seed」：Poppy seeds are less than a millimeter in length；Wikipedia「Mustard seed」：usually about 1 to 2 millimeters in diameter；Wikipedia「Caraway」：around 3 mm long"
+     },
+     {
+      "term": "形状因种而异：芥籽圆，罂粟籽肾形且表面有凹点，香芹籽月牙形带五条浅脊",
+      "citation": "Wikipedia「Mustard seed」：the small round seeds；Wikipedia「Poppy seed」：kidney-shaped, and have a pitted surface；Wikipedia「Caraway」：smooth, crescent-shaped, laterally compressed achenes with five pale ridges"
+     },
+     {
+      "term": "颜色因种而异：芥籽自黄白到黑，罂粟籽有石板蓝、灰、白",
+      "citation": "Wikipedia「Mustard seed」：may be colored from yellowish white to black；Wikipedia「Poppy seed」：slate-blue color；blue, gray, and white poppy seeds"
+     }
+    ],
+    "basis": "食物类别外观词组（只写材料本身的颜色、形状、质地、气味），不写密度，不写成品菜。三条都是三种代表籽粒（罂粟籽、芥籽、香芹籽）的并列词条，不是类别共性。各条带页面与原句。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   }
+  }
+ },
+ "physicalMetal": {
+  "note": "FOODMETAL 卡（2026-11-11）：金属细分（钢、铜、黄铜、锡、银）的密度与外观，另起数据块，不进 physical.precedence，materialProps 不读它，已批准物品的 physical 值不变；取值经 server-plugin/item-class.mjs metalProps 按材料归类（metalClass）取得。材料归类规则：带 excludeTags（工具、书、成品、货币）的物品不参与；标签优先；名称词形尾部锚定——名称须以「材料词 + 零到多个修饰字（modifiers，闭合词表：窄、细、薄、熟、退火）+ 形态字（forms）+ 零到多个形态字或连写尾字（tailForms：束、卷、叠）」结尾，材料词与形态字之间不得夹词表之外的字；多个材料词都匹配取最长；推不出为未知。密度不手写，由 sources 推出（kg/L = 出处 kg/m³ ÷ 1000，区间取中值并写 range）；appearance 每类 3 条，每条带页面与原句。铁沿用 physical.classes.iron（锻铁），不在本块重写。",
+  "dimensions": {
+   "densityKgPerL": {
+    "unit": "kg/L（材料表观密度，不含空隙堆积）",
+    "min": 0.05,
+    "max": 25
+   }
+  },
+  "precedence": [
+   "steel",
+   "copper",
+   "brass",
+   "tin",
+   "silver"
+  ],
+  "nameWords": {
+   "steel": [
+    "钢"
+   ],
+   "copper": [
+    "铜"
+   ],
+   "brass": [
+    "黄铜"
+   ],
+   "tin": [
+    "锡"
+   ],
+   "silver": [
+    "银"
+   ],
+   "iron": [
+    "铁"
+   ]
+  },
+  "forms": [
+   "条",
+   "带",
+   "片",
+   "丝",
+   "线",
+   "锭",
+   "料",
+   "坯",
+   "块"
+  ],
+  "modifiers": [
+   "窄",
+   "细",
+   "薄",
+   "熟",
+   "退火"
+  ],
+  "tailForms": [
+   "束",
+   "卷",
+   "叠"
+  ],
+  "excludeTags": [
+   "tool",
+   "book",
+   "craft",
+   "coin"
+  ],
+  "classes": {
+   "steel": {
+    "sources": [
+     {
+      "name": "钢",
+      "citation": "Engineering ToolBox《Metals and Alloys - Densities》（engineeringtoolbox.com/metal-alloys-densities-d_50.html）：Steel 7850 kg/m³",
+      "densityKgPerL": 7.85
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "表里只有钢一条（普通钢）"
+    },
+    "basis": "钢（普通钢）表观密度，Engineering ToolBox 表列 7850 kg/m³。钢页（Wikipedia「Steel」）没有颜色或光泽原句，不写外观，按未知。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "copper": {
+    "sources": [
+     {
+      "name": "铜",
+      "citation": "Engineering ToolBox《Metals and Alloys - Densities》（engineeringtoolbox.com/metal-alloys-densities-d_50.html）：Copper 8940 kg/m³",
+      "densityKgPerL": 8.94
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "表里只有铜一条"
+    },
+    "appearance": [
+     {
+      "term": "新鲜表面呈粉橙色",
+      "citation": "Wikipedia「Copper」：pinkish-orange color"
+     },
+     {
+      "term": "红橙色金属光泽",
+      "citation": "Wikipedia「Copper」：Red-orange metallic luster"
+     },
+     {
+      "term": "暴露在空气中会带上红色的失泽层",
+      "citation": "Wikipedia「Copper」：acquires a reddish tarnish when exposed to air"
+     },
+     {
+      "term": "建筑上的铜（多用于屋面）氧化后呈绿色铜绿",
+      "citation": "Wikipedia「Copper」：Copper used in buildings, usually for roofing, oxidizes to form a green patina"
+     }
+    ],
+    "basis": "铜表观密度，Engineering ToolBox 表列 8940 kg/m³。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "brass": {
+    "sources": [
+     {
+      "name": "黄铜",
+      "citation": "Wikipedia「Brass」：The density of brass is 8.4 to 8.73 g/cm3",
+      "densityKgPerL": 8.565,
+      "range": {
+       "densityKgPerL": [
+        8.4,
+        8.73
+       ]
+      }
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "区间内取中值 8.565；Engineering ToolBox 的 Brass - rolled and drawn 8430–8730 kg/m³、Yellow Brass 8470 kg/m³ 落在同一区间内"
+    },
+    "appearance": [
+     {
+      "term": "明亮的金黄色",
+      "citation": "Wikipedia「Brass」：Brass has long been popular for its bright, golden appearance"
+     },
+     {
+      "term": "含铜量高的黄铜更偏金色",
+      "citation": "Wikipedia「Brass」：Brasses with higher copper content are softer and more golden coloured"
+     },
+     {
+      "term": "含铜少、含锌多的黄铜更偏银色",
+      "citation": "Wikipedia「Brass」：those with less copper and more zinc are harder and more silvery"
+     },
+     {
+      "term": "铜与硫反应生成褐色以至黑色的硫化铜表层",
+      "citation": "Wikipedia「Brass」：the copper reacts with sulfur to form a brown and eventually black surface layer of copper sulfide"
+     },
+     {
+      "term": "硫化铜层若常接触弱酸性水（如城市雨水），可在空气中氧化成绿蓝色的碳酸铜铜绿",
+      "citation": "Wikipedia「Brass」：which if regularly exposed to slightly acidic water such as urban rainwater；can then oxidize in air to form a patina of green-blue copper carbonate"
+     }
+    ],
+    "basis": "黄铜表观密度区间 8.4–8.73 g/cm³，取中值 8.565 kg/L。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "tin": {
+    "sources": [
+     {
+      "name": "锡",
+      "citation": "Engineering ToolBox《Metals and Alloys - Densities》（engineeringtoolbox.com/metal-alloys-densities-d_50.html）：Tin 7280 kg/m³",
+      "densityKgPerL": 7.28
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "表里只有锡一条（Wikipedia 白锡 7.289 g/cm³ 与之相容）"
+    },
+    "basis": "锡表观密度，Engineering ToolBox 表列 7280 kg/m³。常温稳定的是 β 锡；Tin 页对外观有银白（silvery-white）与灰（metallic-gray）两种相互冲突的写法，α 锡（暗灰粉末）只在 13.2 °C 以下稳定、不适用常温，稳定的词条不足 3 条，故不写外观，按未知。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "silver": {
+    "sources": [
+     {
+      "name": "银",
+      "citation": "Engineering ToolBox《Metals and Alloys - Densities》（engineeringtoolbox.com/metal-alloys-densities-d_50.html）：Silver 10490 kg/m³",
+      "densityKgPerL": 10.49
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "表里只有银一条"
+    },
+    "appearance": [
+     {
+      "term": "白色，有明亮的金属光泽",
+      "citation": "Wikipedia「Silver」：a brilliant, white, metallic lustre"
+     },
+     {
+      "term": "可高度抛光",
+      "citation": "Wikipedia「Silver」：a brilliant, white, metallic lustre that can take a high polish"
+     },
+     {
+      "term": "遇硫在空气中变暗，生黑色硫化银",
+      "citation": "Wikipedia「Silver」：silver tarnishes in air to form the black silver sulfide"
+     }
+    ],
+    "basis": "银表观密度，Engineering ToolBox 表列 10490 kg/m³。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
    }
   }
  }
