@@ -17,7 +17,10 @@ import {tmpRoot} from './tmp-root.mjs';
 
 const sha256=text=>createHash('sha256').update(text).digest('hex');
 const READ_ONLY_TOOLS=new Set(['world_read','world_search','world_catalog','world_actions']);
-export const BINDING_FIELDS=Object.freeze(['commit','contentHash','model','seed']);
+// commit is recorded in the manifest as provenance only and never makes a fixture stale: otherwise every
+// commit would skip the text assertions, which would make them useless (coordinator ruling 2026-11-11,
+// amends AI-05 §4.3 which lists commit among the binding fields).
+export const BINDING_FIELDS=Object.freeze(['contentHash','model','seed']);
 
 export function gitCommit(){
  try{return execFileSync('git',['rev-parse','HEAD'],{cwd:path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),encoding:'utf8'}).trim();}catch{return null;}
@@ -99,7 +102,7 @@ export async function recordFixture({dir,client,steps,create={},seed=PLAYTEST_SE
   await fs.mkdir(dir,{recursive:true});
   await fs.cp(path.join(root,campaignDir,'sideband'),path.join(dir,'sideband'),{recursive:true});
  }finally{await fs.rm(root,{recursive:true,force:true});}
- const manifest={version:1,commit,contentHash:session.contentHash,model,seed,create,steps,initialStateHash:session.initialStateHash,
+ const manifest={version:1,commit,campaignId:session.campaignId,contentHash:session.contentHash,model,seed,create,steps,initialStateHash:session.initialStateHash,
   ruleStateDigest:ruleStateDigest(session.document),textDigest:digest(session.texts)};
  await fs.writeFile(path.join(dir,'manifest.json'),JSON.stringify(manifest,null,1));
  return manifest;

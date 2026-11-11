@@ -96,7 +96,7 @@ test('VAI-05-14：contentHash 改变后文字断言标 stale 并跳过，结算�
  assert.deepEqual(checked.stale,[]);assert.deepEqual(checked.text,{skipped:false,matches:false});assert.equal(checked.settlement.matches,true);
  const otherModel=await replayFixture(fixture,{current:{model:'another-model'}});
  assert.deepEqual(otherModel.stale,['model']);assert.equal(otherModel.text.skipped,true);
- assert.deepEqual(staleReasons({commit:'a',contentHash:'b',model:'c',seed:'d'},{commit:'a',contentHash:'x',model:'c',seed:'y'}),['contentHash','seed']);
+ assert.deepEqual(staleReasons({commit:'a',contentHash:'b',model:'c',seed:'d'},{commit:'z',contentHash:'x',model:'c',seed:'y'}),['contentHash','seed']);
 });
 
 test('轨迹格式与 ptai 对齐：header/turn(calls)/end；写世界调用可从轨迹转回回放步骤',async()=>{
@@ -111,4 +111,14 @@ test('轨迹格式与 ptai 对齐：header/turn(calls)/end；写世界调用可�
  assert.ok(turns.every(r=>Array.isArray(r.calls)&&typeof r.ts==='string'));
  const executes=steps.filter(s=>s.endpoint==='execute');
  assert.deepEqual(stepsFromTrace(rows).map(s=>[s.endpoint,s.body.tool,s.body.args,s.body.eventId]),executes.map(s=>[s.endpoint,s.body.tool,s.body.args,s.body.eventId]));
+});
+
+test('可证伪假设：不同战役编号、同种子同步骤，规则状态哈希相同；同步骤两次录制的 requestHash 序列相同（请求体无随机量）',async()=>{
+ const again=path.join(root,'again');
+ const second=await recordFixture({dir:again,client:{generate:client.generate},steps,model:'deepseek-flash'});
+ assert.notEqual(second.campaignId,manifest.campaignId);
+ assert.equal(second.ruleStateDigest,manifest.ruleStateDigest);
+ assert.equal(second.initialStateHash,manifest.initialStateHash);
+ const hashes=async dir=>(await readSideband(path.join(dir,'sideband'))).map(r=>r.requestHash);
+ assert.deepEqual(await hashes(again),await hashes(fixture));
 });
