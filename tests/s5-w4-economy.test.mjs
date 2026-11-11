@@ -274,8 +274,7 @@ test('F026 客流：陶枝单独在场（徐玲无钱不上门）：件数与应
 
 test('F026 客流：非原生 NPC 自营商户（玩家把店转让给产权人）不在家户计划来源里，居民仍按储备缺口在该店买口粮',async()=>{
     // 真实动作造出非原生自营商户：玩家租下青灯铺面开店后，把经营连同库存转让给铺面产权人（店主林穗），business.mjs 的转让分支产生 owner=林穗、非 native 的 business 记录。
-    // 店主林穗手里要有足够的面包：转让给他的库存只有 5 个，要先留够他自家的口粮储备，余量才可卖（saleableStock 扣自用与承诺），否则“没有可售”不是本例要测的。
-    const A='npc_hw_xuling',landlord='npc_hw_linsui',f=await openShop({coins:{[A]:40},bread:{[landlord]:300}});
+    const A='npc_hw_xuling',landlord='npc_hw_linsui',f=await openShop({coins:{[A]:40}});
     // 前提：买方（产权人）接受转让的决策与 business.mjs 转让分支同参数（subjectiveView、purchase、价款 1、reward=库存估值），种子确定；正午她在店内且提供交易服务。
     const stock=Object.fromEntries(Object.entries(f.document.state.inventory).map(([k,v])=>[k,typeof v==='number'?v:v.quantity]));
     const pd=f.engine.primitiveDraft(structuredClone(f.document));
@@ -289,13 +288,16 @@ test('F026 客流：非原生 NPC 自营商户（玩家把店转让给产权人�
     const before=structuredClone(f.document),plan=householdBudget(noonRead(f,before,A),f.engine,A).resources;
     // 该店不是家户计划的来源（来源只收原生店与交易人），所以走储备缺口路径：件数 = ceil(饱腹缺口 ÷ 面包饱腹)，期望从引擎读。
     assert.ok(!plan.market.offered.includes(shopId));
-    const breadSatiety=f.engine.byId.get('item_bread').nutrition.satiety,expected=Math.ceil(plan.procurementShortfall.satiety/breadSatiety);
-    assert.ok(expected>0);
+    assert.ok(plan.procurementShortfall.satiety>0);
     await waitPastMidnight(f,'w4-day-transfer');
     const flow=Object.values(f.document.state.records).find(r=>r.category==='customer_flow'&&r.shop===shopId);
     assert.ok(flow,'该店在当日营业店铺里，有客流记录');
-    const visit=flow.visits.find(v=>v.npc===A&&v.item==='item_bread');
-    assert.equal(visit.quantity,expected);assert.equal(visit.outcome,'bought');
+    // 不在计划来源里的店按“货架顺序逐件按储备缺口折份数”（WATER-1C 才并入单一次序），所以徐玲先在货架上第一件有营养的货下单，不一定是面包：
+    // 该件的份数 = min(ceil(饱腹缺口 ÷ 该件饱腹)，转让后店主手里该件的库存)；缺口、饱腹、库存都从引擎与前态读。
+    const visit=flow.visits.find(v=>v.npc===A);assert.ok(visit);
+    const held=before.state.npcs[landlord].inventory[visit.item],onShelf=typeof held==='number'?held:held?.quantity??0;
+    assert.equal(visit.quantity,Math.min(Math.ceil(plan.procurementShortfall.satiety/f.engine.byId.get(visit.item).nutrition.satiety),onShelf));
+    assert.equal(visit.outcome,'bought');
 });
 
 test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得着的居民上门；人数与成交按钱袋和缺口手算',async()=>{
