@@ -6,6 +6,22 @@ import {openContentBudget} from './content-budget.mjs';
 import {numeralIssues,applyDerivedDuration} from './content-numerals.mjs';
 
 export const hashContent = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+// 后加骨架字段登记表：这些字段是已批准存量之后才加进骨架 entry 的（派生事实，不由人工或模型撰写）。
+// 判定"早于生效"的方式：记录自带 skeletonFields（该记录的指纹所含的后加字段名）；没有该标记的记录早于生效。
+//   旧记录核对指纹时，先从 entry 投影掉登记过但记录未标记的字段，再算指纹；只剥登记过的字段，entry 其他任何变化照样判失效。
+//   新写入的记录（流水线新建）按含这些字段的完整 entry 记指纹，并标记 skeletonFields。
+// since 是生效标记名：记录的 skeletonFields 含该字段名即视为已生效。先例：world/design/a3w-props-approval.mjs 对 capacityMl 的历史投影。
+export const LATER_ENTRY_FIELDS = [{ field: 'physical', since: 'skeletonFields' }];
+export function projectEntryForRecord(entry, record) {
+  const marked = new Set(Array.isArray(record?.skeletonFields) ? record.skeletonFields : []);
+  const drop = LATER_ENTRY_FIELDS.filter(row => !marked.has(row.field) && entry && Object.hasOwn(entry, row.field));
+  if (!drop.length) return entry;
+  const copy = { ...entry };
+  for (const row of drop) delete copy[row.field];
+  return copy;
+}
+export const entryHasLaterFields = entry => LATER_ENTRY_FIELDS.map(row => row.field).filter(field => entry && Object.hasOwn(entry, field));
+export const recordFingerprint = (record, entry, context, revision) => hashContent({ entry: projectEntryForRecord(entry, record), context, revision });
 export function parseModelJSON(response) {
   const message = response.choices?.[0]?.message;
   const raw = message?.tool_calls?.[0]?.function?.arguments ?? message?.content;
@@ -203,9 +219,11 @@ export async function runContentPipeline({
   }
   async function one(entry) {
     const context = await contextFor(entry);
-    const fingerprint = hashContent({ entry, context, revision });
     const file = path.join(root, `${entry.id}.json`);
     let record = recordsById.get(entry.id);
+    // 旧记录（无 skeletonFields 标记）按投影掉后加字段的 entry 核对指纹；相符则沿用记录自己的指纹，不视为骨架改变。
+    const fullFingerprint = hashContent({ entry, context, revision });
+    const fingerprint = record && record.fingerprint !== fullFingerprint && record.fingerprint === recordFingerprint(record, entry, context, revision) ? record.fingerprint : fullFingerprint;
     if(record?.budgetStop){budget.stop(record.budgetStop.message);return record;}
     if(halted)return record??{id:entry.id,fingerprint,status:'pending',attempts:0,draft:null,review:null,errors:[],warnings:[]}; // 已因审查解析错误停止：不发请求、不写盘
     if(reuseRecord&&record?.status==='passed'&&record.fingerprint!==fingerprint){const carried=await reuseRecord(record,entry,fingerprint,context);if(carried){await writeJSON(file,carried);recordsById.set(entry.id,carried);return carried;}}
@@ -221,7 +239,7 @@ export async function runContentPipeline({
     let feedback = record?.fingerprint === fingerprint ? record.feedback : null;
     const priorAttempts = record?.fingerprint === fingerprint ? record.attempts ?? 0 : 0;
     if(eligible){record.protocolRecovery={kind:'audit-patch-v1-single-wrapper',startedAt:new Date().toISOString(),prior:structuredClone(record),status:'started'};record.status='pending';await writeJSON(file,record);}
-    else record = record?.fingerprint===fingerprint?structuredClone(record):{ id: entry.id, fingerprint, status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
+    else record = record?.fingerprint===fingerprint?structuredClone(record):{ id: entry.id, fingerprint, ...(entryHasLaterFields(entry).length ? { skeletonFields: entryHasLaterFields(entry) } : {}), status: 'pending', attempts: priorAttempts, draft: null, review: null, errors: [], warnings: [], feedback };
     if(l4Rewrite){
       // 只重写被退回的条目：留下 l4Rejection 历史（含退回意见与被退回的旧稿/旧审查），退回意见作 feedback；
       // 其后沿用本流水线的预留与预算机制（最多再发 2 轮起草+复核，attempts 与旧记录累加，标签不重名）。
@@ -444,7 +462,7 @@ export async function readApprovedContent(root, entries, { contextFor = () => nu
   for (const entry of entries) {
     const record = await readJSON(path.join(root, `${entry.id}.json`));
     if (record?.status === 'passed') {
-      if (record.fingerprint !== hashContent({ entry, context: await contextFor(entry), revision })) throw new Error(`发布骨架或引用事实已改变 ${entry.id}`);
+      if (record.fingerprint !== recordFingerprint(record, entry, await contextFor(entry), revision)) throw new Error(`发布骨架或引用事实已改变 ${entry.id}`);
       if (record.errors.length || reviewIssues(record.review).some(row => row.severity === 'hard')) throw new Error(`条目事实审查未通过 ${entry.id}`);
       if (!summary.batches.some(batch => batch.ids?.includes(entry.id))) throw new Error(`条目不在已审查批次 ${entry.id}`);
       if (allowed.has(entry.id)) throw new Error('发布编号重复'); allowed.add(entry.id); out.push(record.draft);

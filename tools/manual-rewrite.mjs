@@ -1,6 +1,6 @@
 // 写命令（不调模型、不联网）：人工改写通路。把人工按骨架写的正文换进审核记录，留下可审计历史。
 // 用法：node tools/manual-rewrite.mjs --profile <模块路径> [--kind <名>] --root <审核记录目录> --drafts <JSON：[{id, draft}]> --by <改写者> --reason <理由>
-// 模块须导出 manualRewriteProfile(kind) → {entries, validateDraft, contextFor?}，即该流水线自己的 L1 校验与冻结骨架（如 tools/w3-journey.mjs）。
+// 模块须导出 manualRewriteProfile(kind) → {entries, validateDraft, contextFor?, revision（骨架含后加字段时必须）}，即该流水线自己的 L1 校验与冻结骨架（如 tools/w3-journey.mjs）。
 // 规则：只处理 status==='manual'，或在所属批次 l4.rejection.ids 里被点名退回的记录；任一条 L1 不过或不合格，整批拒绝且不写任何文件。
 // 写入：旧 draft/review/status/attempts 原样进 record.manualRewrite[]；新 draft 置 status 'passed'，review 为 {kind:'manual-rewrite-no-l2'}（不是 L2 结果）。
 // 所属批次文件与 summary.json 同步重算 fingerprint，l4 重置为未批准（旧 l4 进 l4History；退回名单里未被本次改写的条目仍保留在 l4.rejection），须由独立于改写者的审查者重做 L4 并逐条写阅读记录（note.by，由写 L4 的命令 --by 给出）。
@@ -8,7 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { pipelineL1, rowFingerprintShape, hashContent, requireFlagValue, MANUAL_REWRITE_REVIEW_KIND } from './content-pipeline.mjs';
+import { pipelineL1, rowFingerprintShape, entryHasLaterFields, hashContent, requireFlagValue, MANUAL_REWRITE_REVIEW_KIND } from './content-pipeline.mjs';
 import { applyDerivedDuration } from './content-numerals.mjs';
 import { canonical } from '../server-plugin/storage.mjs';
 
@@ -18,7 +18,7 @@ export const sameContent = (a, b) => canonical(trimDeep(a)) === canonical(trimDe
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const write = (file, data) => { const tmp = `${file}.${process.pid}.tmp`; fs.writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`); fs.renameSync(tmp, file); };
 
-export async function manualRewrite({ root, drafts, by, reason, headCommit, entries, validateDraft, contextFor = () => null, now = () => new Date().toISOString() }) {
+export async function manualRewrite({ root, drafts, by, reason, headCommit, entries, validateDraft, contextFor = () => null, revision, now = () => new Date().toISOString() }) {
   if (typeof by !== 'string' || !by.trim()) throw new Error('--by 不能为空');
   if (typeof reason !== 'string' || !reason.trim()) throw new Error('--reason 不能为空');
   if (!root || !Array.isArray(drafts) || !drafts.length) throw new Error('需要 --root 和非空的 drafts');
@@ -50,10 +50,11 @@ export async function manualRewrite({ root, drafts, by, reason, headCommit, entr
     // 人工稿不得与旧稿相同（含套上派生时长之后）：否则原样提交旧稿也能清掉退回名单并换到免 L2 标记。
     // 比较与键序、字符串首尾空白无关：用 server-plugin/storage.mjs 的 canonical（键排序序列化）加递归 trim。
     if (record.draft && [rawDraft, draft].some(candidate => sameContent({ id, ...candidate }, record.draft) || sameContent(candidate, record.draft))) throw new Error(`人工稿 ${id} 与旧稿相同，拒绝改写`);
-    const result = await l1(draft, entry, await contextFor(entry));
+    const context = await contextFor(entry);
+    const result = await l1(draft, entry, context);
     const errors = Array.isArray(result) ? result : result?.errors ?? [];
     if (errors.length) failures.push(`${id}: ${errors.join('；')}`);
-    plans.push({ id, file, record, draft, warnings: Array.isArray(result) ? [] : result?.warnings ?? [], owner });
+    plans.push({ id, file, record, draft, entry, context, warnings: Array.isArray(result) ? [] : result?.warnings ?? [], owner });
   }
   if (failures.length) throw new Error(`L1 未通过，整批拒绝：\n${failures.join('\n')}`);
 
@@ -69,6 +70,15 @@ export async function manualRewrite({ root, drafts, by, reason, headCommit, entr
       status: 'passed', errors: [], warnings: plan.warnings, feedback: null,
     };
     delete plan.next.budgetStop;
+    // 后加骨架字段（physical）：改写稿的 L1/L4 是对着含它的骨架做的，按完整 entry 重算指纹并标记 skeletonFields；旧指纹留在 manualRewrite 历史。
+    // 没有这些字段的 entry 指纹不动；有而 profile 没给 revision 就报错，不猜。
+    const later = entryHasLaterFields(plan.entry);
+    if (later.length) {
+      if (typeof revision !== 'string' || !revision) throw new Error(`profile 须提供 revision：条目 ${plan.id} 带后加骨架字段，改写时要按完整骨架重算指纹`);
+      plan.next.manualRewrite.at(-1).priorFingerprint = record.fingerprint;
+      plan.next.fingerprint = hashContent({ entry: plan.entry, context: plan.context, revision });
+      plan.next.skeletonFields = later;
+    }
     if (!byBatch.has(plan.owner.file)) byBatch.set(plan.owner.file, { owner: plan.owner, plans: [] });
     byBatch.get(plan.owner.file).plans.push(plan);
   }

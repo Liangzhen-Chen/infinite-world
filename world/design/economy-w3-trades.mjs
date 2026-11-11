@@ -1,3 +1,4 @@
+import {attachPhysical} from "../../tools/item-physical-facts.mjs";
 // W3 second batch. Each row is a deliberately chosen supply or process.
 // Mechanical quantities are authored here; the model only drafts descriptions.
 const raw = [
@@ -140,5 +141,5 @@ export function economyW3Trades(world){
   items.push(book);stock('npc_hw_luqing',book.id,1);
  }
  for(const recipe of recipes)for(const tool of recipe.tools)if(!byId.has(tool)&&!world.items.some(row=>row.id===tool))throw new Error(`工具不存在 ${recipe.id}/${tool}`);
- return{items,recipes,supply};
+ return attachPhysical({items,recipes,supply},world);
 }

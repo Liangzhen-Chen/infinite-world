@@ -157,3 +157,12 @@ test('身体部位尺寸后缀要有边界：后面接动作、副词的不是�
   for (const text of ['掌心大小。', '巴掌大的一块。', '手掌宽，边口齐。', '粗细约如小指，表面光。', '摊开比手掌宽些。'])
     assert.match(check({description: text}), /写了身体尺度/, text);
 });
+
+test('骨架 physical：写了骨架里有的体积原值、尺寸档、外观词放行；骨架外的尺寸照判；身体尺度仍禁止', () => {
+  const withPhysical = {...entry, physical: {volumeL: 0.45, sizeClass: '小件', appearance: ['顺纹', '木色由浅黄到褐']}};
+  assert.equal(check({description: '体积约0.45升，属小件，顺纹清晰，木色由浅黄到褐。'}, withPhysical), '', '骨架 physical 里原样有的写法放行');
+  assert.match(check({description: '体积约0.45升。'}), /骨架外尺寸或用量「0.45升」/, '骨架没有 physical 时同一写法判错（反例）');
+  assert.match(check({description: '体积约0.9升。'}, withPhysical), /骨架外尺寸或用量「0.9升」/, '骨架外的体积照判');
+  assert.match(check({description: '长三十厘米。'}, withPhysical), /骨架外尺寸「三十厘米」/);
+  assert.match(check({description: '约一掌宽，顺纹清晰。'}, withPhysical), /写了身体尺度「一掌宽」/, '身体尺度仍禁止');
+});
