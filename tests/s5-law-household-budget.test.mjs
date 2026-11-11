@@ -278,7 +278,9 @@ test('double worlds: another household hidden money/stock/obligations do not cha
  const f=fixture({members:[owner,other],shared:false});f.sync();
  const a=householdBudget(f.d,f.engine,owner);
  // Hand anchor: hidden +900 cash/+200 bread belongs to the other person: delta0.
- f.state.npcs[other].coins=900;f.state.npcs[other].inventory[item]=200;
+ // 隐藏的存货用非食物（铁钉）：店主自家货架的补货预测按设计读本聚落持货人眼下可出让的食物余量（distribution.localSpare，卡 E/K2），另一户的面包会因此进到下次进货的时刻与数量；
+ // 那是既有的进货渠道，不是户内信息，所以隐藏存货取不进该渠道的物品。隐藏的钱与义务不变。
+ f.state.npcs[other].coins=900;f.state.npcs[other].inventory.item_iron_nail=200;
  f.state.obligations['hidden-wage']={id:'hidden-wage',debtor:'player',creditor:other,resource:'coin_river',amount:900,deadline:DAY,status:'pending'};f.sync();
  assert.deepEqual(householdBudget(f.d,f.engine,owner),a);
  const view=subjectiveView(f.engine,f.d.document,owner);view.knowledge.facts['expected-help']={value:900,kind:'belief'};

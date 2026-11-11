@@ -206,8 +206,9 @@ test('恢复后的原生店按正午作息结客流，不用结算时的睡眠�
  f.doc.state.npcs[landlord].inventory={item_bread:{quantity:10}};
  f.doc.state.npcs[buyer]={...f.e.initialFromLegacy(seed,'business-lifecycle').state.npcs[buyer],coins:40,location:place,activity:'休息',status:'正常',inventory:{},goals:{},memoryStream:[]};
  // EC-1b：客流时刻 = 店营业窗口与顾客清醒窗口的最早交集。店主全天营业（恢复须在日界 0 点有营业服务），顾客若全天醒着，最早交集就是 0 点，
- // 而结算区间是半开的 (day*1440,(day+1)*1440]，0 点属于前一刻；所以让顾客有真实起居：睡到 360 点，之后醒着。最早交集 = 360，落在区间内、晚于 0 点恢复。
- f.w.npcs.find(n=>n.id===buyer).schedule={default:[{start:0,end:360,location:place,activity:'睡眠',services:[]},{start:360,end:1440,location:place,activity:'休息',services:[]}]};
+ // 而结算区间是半开的 (day*1440,(day+1)*1440]，0 点属于前一刻；所以让顾客有真实起居：睡到 720 点，之后醒着。最早交集 = 720，落在区间内、晚于 0 点恢复，
+ // 也与原用例的结算时刻（正午 720）同一刻，其余条件（钱、库存、需求）与原用例一致。
+ f.w.npcs.find(n=>n.id===buyer).schedule={default:[{start:0,end:720,location:place,activity:'睡眠',services:[]},{start:720,end:1440,location:place,activity:'休息',services:[]}]};
  const cursor=new PatchCursor(f.doc),d={get document(){return cursor.root;},get:(...p)=>cursor.expose(p.reduce((v,k)=>v?.[k],cursor.root)),set:(path,value)=>cursor.apply({op:'set',path,value})};
  const spec=autonomyKind('business_lifecycle');spec.execute(d,f.e,landlord,{business:native.id,choice:'suspend'},{actionId:'pause'});
  d.set(['state','minute'],d.get('state','records',native.id).resumeNotBefore);

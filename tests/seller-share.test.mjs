@@ -150,11 +150,12 @@ test('a multi-person household takes one share, not one per member with cash',()
  assert.ok(credited(solo,'npc_hw_chenbai')>credited(one,'npc_hw_chenbai'),`alone ${credited(solo,'npc_hw_chenbai')} vs shared ${credited(one,'npc_hw_chenbai')}`);
 });
 
-test('cash is a personal purse: a household whose first member is penniless still buys through its member with cash, once',()=>{
- // chenbai sorts first but has no cash; taozhi has
+test('one household purse: a household whose first member is penniless still buys, once, through its first member (EC-1a)',()=>{
+ // chenbai sorts first and has no cash of his own; taozhi has. EC-1a 共用钱袋：预算现金按户池算，一户有钱就是有钱的户，
+ // 代买的是编号最前的成员（chenbai），付款时他的钱袋不够再从户内成员钱袋补足（householdPoolTopUp）。一户仍只占一个名额、只买一次。
  const f=fixture({seller:shopSeller,groups:[[shopSeller],['npc_hw_chenbai','npc_hw_taozhi'],['npc_hw_xuling']],coins:{npc_hw_chenbai:0,npc_hw_taozhi:100}});
  const fq=credited(f,'npc_hw_taozhi'),cb=credited(f,'npc_hw_chenbai'),xl=credited(f,'npc_hw_xuling');
- assert.ok(fq>0,'the member with cash buys for the household');
- assert.equal(cb,0,'the penniless member reads no share');
- assert.ok(fq+xl<=sellable(f),`credited ${fq}+${xl} against ${sellable(f)}`);
+ assert.ok(cb>0,'the household has cash, so its first member buys for the household');
+ assert.equal(fq,0,'the second member reads no share: one slot per household');
+ assert.ok(cb+xl<=sellable(f),`credited ${cb}+${xl} against ${sellable(f)}`);
 });
