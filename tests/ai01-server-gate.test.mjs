@@ -41,9 +41,13 @@ async function run(t,profile){
  await post('/execute',{campaignId,tool:'world_move',args:{destination:'loc_far_duanqi'},eventId:'g1'});
  await post('/execute',{campaignId,tool:'world_time',args:{minutes:1500},eventId:'g2'});
  await post('/scene',{campaignId,query:'兀烈·赭牙部，你好'});
- const view=await post('/read',{campaignId});
- const begin=await post('/review/begin',{campaignId,anchor:'a1',playerText:'你好',expectedSequence:view.reference.sequence,enabled:true});
- await post('/review/reply',{campaignId,token:begin.token,draft:'你环顾四周，什么也没有发生。',expectedSequence:view.reference.sequence,query:''});
+ // The review needs a settled action in the turn: a turn with no executed action stays 'pending' and never reaches the model (consistency-service.mjs:253-258).
+ const reviewCampaign=(await post('/create',{name:'审查旅人'})).reference.campaignId;
+ const created=await post('/read',{campaignId:reviewCampaign});
+ const begin=await post('/review/begin',{campaignId:reviewCampaign,anchor:'gate-bread',playerText:'买一个面包',expectedSequence:created.reference.sequence,enabled:true});
+ await post('/execute',{campaignId:reviewCampaign,anchor:'gate-bread',eventId:'gate-buy',tool:'world_act',args:{action:'core:trade.buy',slots:{seller:'林穗',item:'面包',quantity:1}},expectedSequence:created.reference.sequence});
+ const after=await post('/read',{campaignId:reviewCampaign});
+ await post('/review/reply',{campaignId:reviewCampaign,token:begin.token,draft:'你付了钱，拿到了面包。',query:'买一个面包',expectedSequence:after.reference.sequence});
  return {calls,begin};
 }
 for(const profile of [undefined,'T0','T1']){
