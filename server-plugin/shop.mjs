@@ -7,7 +7,8 @@ import {purse,treasury as treasuryAccount,moveCoins,coinRead,sink,dedicatedCoinA
 import {collectTransport} from './transport.mjs';
 import {transferItems} from './items.mjs';
 import {obligationTransaction} from './transition.mjs';
-import {advanceCustomerFlow} from './business.mjs';
+import {customerFlowTimes,settleCustomerFlow,tradeWindowStarts} from './business.mjs';
+import {settleSale} from './market-seller.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {employmentActive} from './employment-state.mjs';
@@ -258,7 +259,7 @@ function buyerNeeds(d,engine,state,place,read){
   const ids=Object.keys(state.npcs??{}).filter(id=>{const n=state.npcs[id];return n?.location&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(n.status)&&placeSettlement(engine,state,n.location).value===place;});
   if(state.location&&placeSettlement(engine,state,state.location).value===place)ids.push('player');
   // 一户只占一个名额：householdResources 的需求是整户的，按人逐个入列会让 k 人户以整户需求被计 k 次。
-  // 一户一次只由一名成员代为购买（编号最前的有钱成员，buyer）；该户份额只记在他名下。主观预算现已按户池算现金（成员钱袋不够时户内转账，household-budget.mjs householdPoolTopUp），客观读（这里 marketSubstitution:false，缺口与现金无关）仍按个人钱袋，二者并存见 EC-1b 前置。
+  // 一户一次只由一名成员代为购买（编号最前的有钱成员，buyer）；该户份额只记在他名下。预算现金现已不分主客观一律按户池算（household-budget.mjs pooledCash 与 objectiveCash，成员钱袋不够时户内转账 householdPoolTopUp）。
   const seen=new Set();
   for(const id of ids.sort()){
    const key=buyerKey(engine,state,id);
@@ -610,16 +611,16 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
         const funded=cost>counterCash(d,shop.keeper)?fundCounter(d,engine,{shop,minute,target:cost,eventId:`${eventId}:fund`,ctx}):null;
         if(funded&&counterCash(d,shop.keeper)<cost)return {...entry,reason:'店主不愿或不能向柜台注资',decision:funded.decision?.outcome};
         obligationTransaction(d,()=>{
-            transferItems(d,engine,q.seller,shop.keeper,row.item,quantity,null,{disposition:true,eventId});
-            const counter=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account,payer=counter??purse(engine,shop.keeper);
-            moveCoins(d,{from:payer,to:purse(engine,q.seller),amount:cost,writer:'shop',eventId});
-            // Without a counter account the keeper's own purse pays, and its mirrored coins move too.
-            if(!counter)mirrorPartyCoins(d,engine,shop.keeper,-cost,eventId,'shop');
-            mirrorPartyCoins(d,engine,q.seller,cost,eventId,'shop');
+            // 居民向店主卖货的账走 market-seller.settleSale（付款、转物、商税、财务销售、成交记录同一处）；这里只给出本店的付款方式：柜台优先，没有柜台由店主钱袋付。
             const quote=marketQuote(d,engine,{item:row.item,location:shop.location,seller:q.seller,buyer:shop.keeper,quantity});
-            recordMarketDeal(d,quote,cost,quantity,eventId);
-            const tax=taxableSale(engine,d.get('state'),q.seller,row.item)?assessTradeTax(d,engine,{seller:q.seller,cost,location:shop.location,sourceEvent:eventId}).amount:0;
-            recordFinanceSale(d,engine,{buyer:shop.keeper,seller:q.seller,item:row.item,quantity,cost,tax,eventId});
+            settleSale(d,engine,{seller:q.seller,buyer:shop.keeper,item:row.item,quantity,cost,bill:quote,eventId,location:shop.location,transferOptions:{disposition:true,eventId},
+                pay:()=>{
+                    const counter=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account,payer=counter??purse(engine,shop.keeper);
+                    moveCoins(d,{from:payer,to:purse(engine,q.seller),amount:cost,writer:'shop',eventId});
+                    // Without a counter account the keeper's own purse pays, and its mirrored coins move too.
+                    if(!counter)mirrorPartyCoins(d,engine,shop.keeper,-cost,eventId,'shop');
+                    mirrorPartyCoins(d,engine,q.seller,cost,eventId,'shop');
+                }});
             d.set(['state','records',offerKey],{category:'shop_offer_used',offer:source,seller:q.seller,buyer:shop.keeper,item:row.item,quantity:used+quantity,sourceEvent:eventId});
         });
         return {...entry,added:quantity,paidCopper:cost,referenceCopper,from:q.seller,offer:source,expectedNet:net,cost:{goods:cost,freight:0,duties:0},reason:'持货人已到场并按本人收到的报价成交'};
@@ -748,15 +749,25 @@ export function advanceShops(d,engine,before,after){
         const minute=Math.floor((after-720)/DAY)*DAY+720;
         for(const shop of currentShops(engine,d.get('state')))restockShop(d,engine,shop,minute,{receiveOnly:true,onSite:true});
     }
-    // Consumers settle at noon; dated restocking remains at midnight.
-    advanceCustomerFlow(d,engine,before,after);
-    const stores=currentShops(engine,d.get('state'));if(!stores.length)return;
-    assertRules(engine);
-    for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++){
-        for(const shop of stores)restockShop(d,engine,shop,day*DAY,{receiveOnly:day<shop.firstDay||(day-shop.firstDay)%shop.cycleDays!==0});
-        // 没有铺面的经营者同一天午夜向本聚落持货人补进卖掉的货（店主由上面的周期补货负责）。
-        advanceDealers(d,engine,day*DAY,{keepers:new Set(stores.map(s=>s.keeper))});
+    // 客流按营业窗口结算（business.mjs customerFlowTimes：每日正午 ∪ 各营业窗口起点），定期补货仍在午夜；两者按时间先后穿插：
+    // 同一时刻先补货后客流（午夜补货在前，当日各窗口的客流在后），客流读到的是刚补好的货架。
+    const times=customerFlowTimes(engine,d.get('state'),before,after);let next=0;
+    const flowUntil=limit=>{while(next<times.length&&times[next]<limit)settleCustomerFlow(d,engine,times[next++]);};
+    const stores=currentShops(engine,d.get('state'));
+    if(stores.length){
+        assertRules(engine);
+        for(let day=Math.floor(before/DAY)+1;day<=Math.floor(after/DAY);day++){
+            flowUntil(day*DAY);
+            for(const shop of stores)restockShop(d,engine,shop,day*DAY,{receiveOnly:day<shop.firstDay||(day-shop.firstDay)%shop.cycleDays!==0});
+            // 没有铺面的经营者同一天午夜向本聚落持货人补进卖掉的货（店主由上面的周期补货负责）。
+            advanceDealers(d,engine,day*DAY,{keepers:new Set(stores.map(s=>s.keeper))});
+        }
     }
+    flowUntil(Infinity);
+}
+// 本段推进 (before, after] 是否跨过店铺时钟边界：每 720 分钟的网格（含午夜与正午），或任一营业窗口的客流结算时刻（advance-registry 用它决定是否运行 shop_restock）。
+export function shopBoundaryCrossed(engine,d,before,after){
+    return Math.floor(after/720)>Math.floor(before/720)||customerFlowTimes(engine,d.get('state'),before,after).length>0;
 }
 // Force a clock boundary before afternoon receipts or deliveries can enter
 // the noon consumer budget. Restocking keeps its own midnight boundary.
@@ -765,7 +776,10 @@ export function nextShopMinute(engine,d,now){
     const deliveries=recordsWhere(state.records,'category','transport').filter(r=>r.status==='arrived'&&state.npcs?.[r.recipient]);
     const collecting=deliveries.length&&currentShops(engine,state).some(s=>deliveries.some(r=>r.recipient===s.keeper&&r.to===s.location));
     const interval=consumers||collecting?720:DAY;
-    return (Math.floor(now/interval)+1)*interval;
+    let boundary=(Math.floor(now/interval)+1)*interval;
+    // 有居民上门时，时钟也要在营业窗口的客流结算时刻停下（今天与明天的窗口起点，早于下一个网格点者取之）。
+    if(consumers||collecting)for(const day of [Math.floor(now/DAY),Math.floor(now/DAY)+1])for(const t of tradeWindowStarts(engine,state,day))if(t>now&&t<boundary)boundary=t;
+    return boundary;
 }
 
 // All ordinary quotes read current supply; only signed terms stay frozen.

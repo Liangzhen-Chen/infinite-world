@@ -10,6 +10,7 @@ import {holdGoods,releaseGoods} from './goods-escrow.mjs';
 import {claimUnit} from './claim-unit.mjs';
 import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,quoteSupply,recordMarketDeal,customerReachMinutes,assertMarketDepth,upkeepDemand} from './market.mjs';
 import {subjectiveView} from './subjective-view.mjs';
+import {residentSellers,settleSale} from './market-seller.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
 import {assertNpcService,scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
@@ -31,7 +32,7 @@ import {rollDice} from './scheduler.mjs';
 import {actionCostRule} from './action-costs.mjs';
 import {householdWorkTime} from './npc-state.mjs';
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
-import {recordsWhere,recordsMemo} from './storage.mjs';
+import {recordsWhere,recordsMemo,stateMemo} from './storage.mjs';
 import {toRational,fromRational} from './det-math.mjs';
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
@@ -650,7 +651,8 @@ export function businessAction(d,args,eventId){
 const DAY=1440,NOON=720;// 客流：每日正午
 const quantities1=v=>typeof v==='number'?v:v?.quantity??0;
 const SLEEPING=/睡眠|睡觉|熟睡/;
-const flowKey=(shop,day)=>['state','records',`customer_flow:${shop}:${day}`];
+// 同一店同一日可有多个营业窗口各结算一次：正午那一次沿用旧键（customer_flow:店:日），其余窗口键尾带窗口起点分钟。
+const flowKey=(shop,day,t)=>["state","records",t===undefined||t%DAY===NOON?`customer_flow:${shop}:${day}`:`customer_flow:${shop}:${day}:${t%DAY}`];
 
 // 本次营业的商铺：玩家已开张的店（店主在场、租约有效、柜台在铺内），以及作息里此刻接待交易的商铺。
 function openShops(d,engine,t){
@@ -677,10 +679,13 @@ function openShops(d,engine,t){
         if(!keeper||!isEffective(engine,state,shop.keeper)||['死亡','濒死','昏迷','患病'].includes(keeper.status)||!slot||keeper.scheduleTravel||keeper.cognitionTravel||!slot.services?.includes('trade'))continue;
         out.push({kind:'npc',id:shop.id,keeper:shop.keeper,location:slot.location,until:slot.until,settlement:placeSettlement(engine,state,slot.location).value,markup:shop.markup??1,goods:shop.restock.map(r=>r.item)});
     }
-    return out.sort((a,b)=>a.id.localeCompare(b.id));
+    // 居民卖方（有可售余量的居民）与店铺同走 serve：market-seller.residentSellers，已登记的店主不重复。
+    const keepers=new Set([...currentShops(engine,state).map(s=>s.keeper),...recordsWhere(state.records,'category','business').map(r=>r.owner)]);// 店主不论此刻开不开门，都不以居民身份卖店里的货
+    return [...out,...residentSellers(d,engine,t,keepers)].sort((a,b)=>a.id.localeCompare(b.id));
 }
 const shelfOf=(d,engine,shop)=>shop.kind==='player'
     ?Object.entries(d.get('state','inventory')??{}).filter(([item,v])=>quantities1(v)>0&&engine.byId.get(item)?.basePrice).map(([item])=>item)
+    :shop.kind==='resident'?shop.goods.filter(item=>saleableStock(d,engine,shop.keeper,item).available>=1)
     :shop.goods.filter(item=>engine.quantity(d,shop.keeper,item)>0);
 
 // 居民此刻想买的：口粮与饮水按户预算的购买计划（household-budget 的 market.purchases，每铜有效覆盖次序）取这件货的份数，
@@ -724,25 +729,19 @@ function walkMinutes(engine,from,to,t,seed,cache){
 }
 
 function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
-    const state=d.get('state'),cost=quote.totalCoins;
-    let tax=0;
-    if(shop.kind==='player'){
-        const counter=shop.counter;
-        moveCoins(d,{from:purse(engine,buyer),to:counter.account,amount:cost,writer:'business',eventId});
-        mirrorPartyCoins(d,engine,buyer,-cost,eventId,'business');
-        // 商税先由柜台划到店主钱袋，再由店主缴纳（与手动成交相同）。
-        const due=Math.floor(cost*tradeTax(engine,state,shop.location).bps/10000);
-        if(due){moveCoins(d,{from:counter.account,to:purse(engine,'player'),amount:due,writer:'business',eventId});mirrorPartyCoins(d,engine,'player',due,eventId,'business');}
-        tax=assessTradeTax(d,engine,{seller:'player',cost,location:shop.location,sourceEvent:eventId}).amount;
-        transferItems(d,engine,'player',buyer,item,quantity);
-    }else{
-        moveCoins(d,{from:purse(engine,buyer),to:purse(engine,shop.keeper),amount:cost,writer:'shop',eventId});
-        mirrorPartyCoins(d,engine,buyer,-cost,eventId,'shop');mirrorPartyCoins(d,engine,shop.keeper,cost,eventId,'shop');
-        transferItems(d,engine,shop.keeper,buyer,item,quantity);
-        tax=taxableSale(engine,d.get('state'),shop.keeper,item)?assessTradeTax(d,engine,{seller:shop.keeper,cost,location:shop.location,sourceEvent:eventId}).amount:0;
-    }
-    recordFinanceSale(d,engine,{buyer,seller:shop.keeper,item,quantity,cost,tax,eventId});
-    recordMarketDeal(d,quote,cost,quantity,eventId);
+    const state=d.get('state'),cost=quote.totalCoins,player=shop.kind==='player';
+    // 零售成交的账只走 market-seller.settleSale（店铺、玩家店、居民卖方同一处）；玩家店只有付款（进柜台、商税先由柜台划到店主钱袋）与应税判定是它自己的。
+    const {tax}=settleSale(d,engine,{seller:shop.keeper,buyer,item,quantity,cost,bill:quote,eventId,location:shop.location,writer:player?'business':'shop',
+        ...(player?{
+            pay:()=>{
+                const counter=shop.counter;
+                moveCoins(d,{from:purse(engine,buyer),to:counter.account,amount:cost,writer:'business',eventId});
+                mirrorPartyCoins(d,engine,buyer,-cost,eventId,'business');
+                const due=Math.floor(cost*tradeTax(engine,state,shop.location).bps/10000);
+                if(due){moveCoins(d,{from:counter.account,to:purse(engine,'player'),amount:due,writer:'business',eventId});mirrorPartyCoins(d,engine,'player',due,eventId,'business');}
+            },
+            tax:()=>assessTradeTax(d,engine,{seller:'player',cost,location:shop.location,sourceEvent:eventId}).amount
+        }:{})});
     if(shop.kind==='player'){
         // 与手动成交同口径的经营回执：现金、实物与成交，供店铺报表对账。
         holdingSet(d,null,path(`business_receipt_${eventId}`),{id:`business_receipt_${eventId}`,category:'business_receipt',businesses:[shop.id],source:eventId,tool:'customer_flow',operation:'customer_sale',minute:t,
@@ -772,14 +771,14 @@ function walkIns(d,engine,t){
 
 function serve(d,engine,shop,t,residents,gaps,routes){
     const state=d.get('state'),day=Math.floor(t/DAY),reach=customerReachMinutes(engine),seed=d.get('randomSeed');
-    if(d.get(...flowKey(shop.id,day)))return;
+    if(d.get(...flowKey(shop.id,day,t)))return;
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
-    const visits=[];
+    const visits=[],keeperHome=shop.kind==='resident'?new Set(personHousehold(engine,state,shop.keeper).value?.members??[]):null;// 居民卖方不向自己同户的人卖（同一灶，不是买卖）
     for(const {id,slot,settlement} of residents){
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
         const outbound=walkMinutes(engine,slot.location,shop.location,departAt,seed,routes);
-        if(id===shop.keeper||settlement!==shop.settlement||outbound.minutes>reach)continue;
+        if(id===shop.keeper||keeperHome?.has(id)||settlement!==shop.settlement||outbound.minutes>reach)continue;
         const inbound=walkMinutes(engine,shop.location,slot.location,departAt+outbound.minutes,seed,routes);
         const travelCoins=outbound.coins+inbound.coins;
         let travelled=false,atShop=departAt+outbound.minutes,tripRecord=null;
@@ -805,7 +804,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             const tripCost=travelled?0:travelCoins;
             const cap=Math.max(0,floor-tripCost-(engine.byId.get(item)?.nutrition?0:budget.resources.market.spent));
             if(cap<1)break;
-            const available=saleableStock(d,engine,shop.keeper,item,{business:true}).available;
+            const available=saleableStock(d,engine,shop.keeper,item,{business:shop.kind!=='resident'}).available;
             let quantity=Math.min(want.quantity,available),quote=null;
             // No write happens inside this descent: supply and base are read once for all quantities tried.
             const business={keeper:shop.keeper,markup:shop.markup};let supply=null,baseValue=null;
@@ -846,19 +845,49 @@ function serve(d,engine,shop,t,residents,gaps,routes){
         // after the basket, so an actor never conflicts with their own visit.
         if(tripRecord)holdingSet(d,null,path(tripRecord.id),tripRecord,'business');
     }
-    if(visits.length)holdingSet(d,null,flowKey(shop.id,day),{category:'customer_flow',shop:shop.id,keeper:shop.keeper,day,minute:t,visits},'business');
+    if(visits.length)holdingSet(d,null,flowKey(shop.id,day,t),{category:'customer_flow',shop:shop.id,keeper:shop.keeper,day,minute:t,visits},'business');
 }
 
-// Settle consumers at the actual noon boundary, before afternoon events.
-// The registry splits time here; no midnight reconstruction of budgets.
-export function advanceCustomerFlow(d,engine,before,after){
-    for(let day=Math.floor((before-NOON)/DAY)+1;day<=Math.floor((after-NOON)/DAY);day++){
-        const t=day*DAY+NOON;
-        if(t<0)continue;
-        const order=(purpose,id)=>rollDice(d.get('randomSeed'),`market:${purpose}`,id,t,0,4294967296);
-        const shops=openShops(d,engine,t).sort((a,b)=>order('shop-order',a.id)-order('shop-order',b.id)||a.id.localeCompare(b.id));
-        if(!shops.length)continue;
-        const residents=walkIns(d,engine,t).sort((a,b)=>order('customer-order',a.id)-order('customer-order',b.id)||a.id.localeCompare(b.id)),gaps=new Map(),routes=new Map();
-        for(const shop of shops)serve(d,engine,shop,t,residents,gaps,routes);
+// 营业窗口的结算时刻（EC-1b）：每个营业窗口各结算一次，而不是每天只在正午采样一次。
+// 窗口 = 营业店主（店铺清单 currentShops 与非玩家经营记录的店主）作息里含 trade 服务的时段，一段一段枚举（scheduleAt 的 slot.until 接着往下走）。
+// 含正午的窗口沿用旧的正午时刻（NOON，旧键与旧用例不变），不含正午的窗口取窗口起点分钟；每日另外恒含正午（玩家店与旧口径）。
+// 确定性：输入只有世界定义（作息）、当前状态与日历日，不含随机数与墙钟；返回升序去重的绝对分钟。缓存键 = [窗口符号, 日序]，按 state 对象（只读作用域内）
+// 与 scheduleAt 的 state 缓存同一约定：状态一变（作息被事件改写、店主迁移、患病）就换新状态对象，缓存随之失效。
+const windowMemo=Symbol('customer flow trade windows');
+export function tradeWindowStarts(engine,state,day){
+    return stateMemo(state,engine,[windowMemo,day],()=>{
+        const keepers=new Set(currentShops(engine,state).map(s=>s.keeper));
+        for(const r of recordsWhere(state.records,'category','business'))if(r.owner&&r.owner!=='player')keepers.add(r.owner);
+        const starts=new Set(),noon=day*DAY+NOON;
+        for(const id of [...keepers].sort()){
+            for(let at=day*DAY,guard=0;at<(day+1)*DAY&&guard<48;guard++){
+                const slot=scheduleAt(engine,id,at,state);
+                if(!slot)break;
+                const end=slot.until>at?slot.until:(day+1)*DAY;
+                if(slot.services?.includes('trade'))starts.add(at<=noon&&noon<end?noon:at);
+                at=end;
+            }
+        }
+        return [...starts].sort((a,b)=>a-b);
+    });
+}
+// (before, after] 内全部客流结算时刻，升序：每日正午 ∪ 当日营业窗口起点。shop.mjs 用它定时钟边界与补货/客流的先后。
+export function customerFlowTimes(engine,state,before,after){
+    const times=[];
+    for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
+        for(const t of new Set([day*DAY+NOON,...tradeWindowStarts(engine,state,day)]))if(t>before&&t<=after&&t>=0)times.push(t);
     }
+    return times.sort((a,b)=>a-b);
+}
+// 在 t 这一刻结算一次客流：此刻营业的店与卖方、此刻会上门的居民。
+export function settleCustomerFlow(d,engine,t){
+    const order=(purpose,id)=>rollDice(d.get('randomSeed'),`market:${purpose}`,id,t,0,4294967296);
+    const shops=openShops(d,engine,t).sort((a,b)=>order('shop-order',a.id)-order('shop-order',b.id)||a.id.localeCompare(b.id));
+    if(!shops.length)return;
+    const residents=walkIns(d,engine,t).sort((a,b)=>order('customer-order',a.id)-order('customer-order',b.id)||a.id.localeCompare(b.id)),gaps=new Map(),routes=new Map();
+    for(const shop of shops)serve(d,engine,shop,t,residents,gaps,routes);
+}
+// Settle consumers at every trade-window time in (before, after]; the registry splits the clock at these times (shop.mjs nextShopMinute).
+export function advanceCustomerFlow(d,engine,before,after){
+    for(const t of customerFlowTimes(engine,d.get('state'),before,after))settleCustomerFlow(d,engine,t);
 }

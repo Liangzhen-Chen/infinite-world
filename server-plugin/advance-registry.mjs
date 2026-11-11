@@ -32,7 +32,7 @@ import {accrueFoodProduction,advanceAgriculture,settleAgricultureExpiry,advanceF
 import {advanceSettlementTrade,nextSettlementTradeMinute}from'./settlement-trade.mjs';
 import {advanceTransport,nextTransportMinute} from './transport.mjs';
 import {advancePost,nextPostMinute} from './post.mjs';
-import {advanceShops,nextShopMinute}from'./shop.mjs';
+import {advanceShops,nextShopMinute,shopBoundaryCrossed}from'./shop.mjs';
 import {advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
 import {advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
 import {advanceFestivals,nextFestivalMinute,festivalCalendar}from'./festival.mjs';
@@ -274,7 +274,7 @@ const midnightSystems=new Set(['relation_evidence','daily','projects','public_pr
 const deadlineSystems=new Set(['world_clock','faction_clock','transport','notables','upper_appointments','society_news','effect_expiry','dying','agriculture_expiry']);
 const ledgerAudit=Symbol('tick ledger audit');
 function systemRunsAt(system,engine,d,ctx){
-    if(system.id==='shop_restock')return Math.floor(ctx.before/720)<Math.floor(ctx.after/720);
+    if(system.id==='shop_restock')return shopBoundaryCrossed(engine,d,ctx.before,ctx.after);// 每 720 分钟网格或任一营业窗口的客流结算时刻（EC-1b）
     if(midnightSystems.has(system.id))return ctx.days>0;
     if(system.id==='office_salaries')return Math.floor(ctx.before/(30*1440))<Math.floor(ctx.after/(30*1440));
     if(system.id==='season_effects')return Math.floor(ctx.before/(90*1440))<Math.floor(ctx.after/(90*1440));
@@ -427,7 +427,7 @@ const systems=[
  {id:'shop_restock',order:850,nextMinute:nextShopMinute,advance:(e,d,{before,after})=>{
     // Consumers need noon facts; restocking keeps the midnight boundary.
     // Unrelated school/travel ticks do not need to derive every shop.
-    if(Math.floor(after/720)>Math.floor(before/720))advanceShops(d,e,before,after);
+    if(shopBoundaryCrossed(e,d,before,after))advanceShops(d,e,before,after);
  }},
  {id:'facilities',order:890,nextMinute:(e,d,now)=>nextFacilityMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceFacilities(d,e,ctx)},
  {id:'projects',order:900,advance(e,d,{days,id}){

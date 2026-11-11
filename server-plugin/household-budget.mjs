@@ -1,4 +1,4 @@
-// Household budgets: reads never write, with one exception — householdPoolTopUp, the only transfer here, which moves coins between purses of one registered household (writer household-pool) just before a payer pays. A target is a preference, never a transfer. Subjective reads pool the household's items, purses and open obligations; the explicit kernel read stays per-person cash. householdResources' kernel/market callers (market.mjs and friends) keep personal cash by design (objective read, follow-up if a pooled objective read is wanted).
+// Household budgets: reads never write, with one exception — householdPoolTopUp, the only transfer here, which moves coins between purses of one registered household (writer household-pool) just before a payer pays. A target is a preference, never a transfer. One rule for cash: the household's pooled purses (effective members only) in both the subjective read (view.household) and the objective/kernel read (objectiveCash); a payer whose own purse is short tops up from the pool at payment time.
 import {bagStock,bag,priceRead,itemResource,crop as cropAccount} from './stock.mjs';
 import {coinRead,purse,COIN,moveCoins,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -104,6 +104,13 @@ function accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now}){
 const viewSide=(view,holder)=>holder===view.observer?view.self:view.household?.people?.[holder]??{inventory:{},accounts:{},coins:0,obligations:[]};
 // 同户钱袋合计：本人 + 同一登记户其他成员；成员账缺失时退回其现金字段，同本人口径。
 const pooledCash=(engine,owner,view)=>Object.entries(view.household?.people??{}).reduce((n,[id,p])=>n+(p.accounts?.[purse(engine,id)]?.balance??p.coins??0),view.self.accounts?.[purse(engine,owner)]?.balance??view.self.coins);
+// 客观读（kernel 与 market 的 householdResources）的户池现金：同一登记户共灶成员（本人必入，其余须在世有效、非濒死昏迷）的钱袋合计，与主观读 pooledCash 同一口径（EC-1b U7）。
+// 一人户与不共灶者就是本人钱袋。读取不写任何东西；付款人钱袋不够时由 householdPoolTopUp 落账。
+const objectiveCash=(d,engine,state,owner)=>{
+ const f=family(d,engine,owner),ids=f.shared?f.members:[owner];
+ return ids.filter(id=>id===owner||(id!=='player'&&state.npcs?.[id]&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status)))
+  .reduce((n,id)=>n+coinRead(d,{point:'assets.cash',account:purse(engine,id),legacy:()=>actor(state,id)?.coins??0}),0);
+};
 // 同户钱袋转账：主观预算按户池算现金，付款人自己的钱袋不够时，先从同一登记户的其他成员钱袋按编号序补足到 need，再由付款人付款。
 // 每笔一条 moveCoins 流水（writer 'household-pool'，eventId 带付款人与对方）并经 mirrorPartyCoins 同步现金字段；币总量不变，转出方只转其余额不会为负；
 // 已死亡、濒死、昏迷或不再有效的成员不转（与视图 household 同一条件）。返回实际转入额。
@@ -351,7 +358,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  // A quote is future access, never current food or cash. Earmark only this
  // person's cash, net of known payments before acquisition; no family purse.
  // 主观读一律按户算一次：本人加同户成员的钱袋合计（同户共灶，李白 11-11）；执行购买时钱不够的部分先在户内钱袋间转账（household-budget.mjs householdPoolTopUp）。
- const cash=view?pooledCash(engine,owner,view):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
+ const cash=view?pooledCash(engine,owner,view):objectiveCash(d,engine,state,owner);
  const payments=futureSources(d,engine,owner,view).payments;
  const sources=marketSubstitution&&cash>0&&commonRisk<1?accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now:state.minute}):[];
  const nextFood=sources.length?Math.min(...sources.map(r=>r.at)):null;
@@ -536,7 +543,7 @@ export function householdBudget(d,engine,owner,{kernel=false,view=null,risk=0,co
  const state=d.get('state'),document=d.document??{state};
  if(!kernel)view??=subjectiveView(engine,document,owner);
  if(view&&view.observer!==owner)throw Error('Household budget observer mismatch');
- const cash=view?pooledCash(engine,owner,view):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
+ const cash=view?pooledCash(engine,owner,view):objectiveCash(d,engine,state,owner);
  const {future,payments}=futureSources(d,engine,owner,view),reliable=future.find(r=>r.reliable),next=reliable??future.find(r=>r.source==='harvest'),until=next?.at??state.minute+engine.world.marketRules.personalReserveDays*DAY;
  const incomeRisk=future.length?future.filter(r=>!r.reliable).length/future.length:0;
  const purchasable=cash>0&&commonRisk<1?accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now:state.minute}):[];
