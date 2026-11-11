@@ -31,7 +31,7 @@ const PACKS={
 };
 const L3=['scene-card','prompt-scope','chronicle','state-notices','return-summary','consistency-review','consistency-service','consistency-evidence','consistency-outcome',
  'standing','reputation','reputation-registry','reputation-catalog','public-opinion','ui-affairs','ui-history','ui-map','ui-messages','ui-overview','ui-personal',
- 'applied-effects','action-text','action-affordances'/* A1 已应用效果、事件流模板、可做之事 */];
+ 'applied-effects','action-text','action-affordances'/* A1 已应用效果、事件流模板、可做之事 */,'ai-profile'/* AI-01 服务端档位门 */];
 const L4=['index','ui-routes','action-gateway'/* A1 world_act 翻译 */];
 
 const TABLE=new Map();

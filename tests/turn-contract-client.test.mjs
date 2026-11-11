@@ -8,7 +8,7 @@ import {loadPromptBundle} from '../tools/build-card.mjs';
 import {reviewResponse} from './helpers/consistency-response.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
 import {builderToolCall} from '../extension/tools.mjs';
-import {parseTurn,modelToolAllowed,actionCompletion,toolResultWithClock,modelToolResult} from '../extension/turn.mjs';
+import {actionModes,turnModelAccess,parseTurn,modelToolAllowed,actionCompletion,toolResultWithClock,modelToolResult} from '../extension/turn.mjs';
 import {isOutOfCharacter} from '../extension/prompt.mjs';
 
 const fixtures=JSON.parse(await fs.readFile(new URL('./fixtures/turn-gate-real-replies.json',import.meta.url),'utf8')).cases;
@@ -154,7 +154,8 @@ test('实际 afterReply 接点：等待改写时隐藏且隔离原稿，通过�
  const env={active:()=>true,get view(){return view;},set view(value){view=value;},mode:'normal',blocked:null,ctx:()=>context,turnStart:startMinute,reviewTurn:session,
   reviewing:new WeakMap(),reviewEdits:new WeakMap(),WAITING:'正在核对',reviewsPending:0,indexedMessages:[],
   document:{querySelector:()=>element},render:()=>{text.hidden=message.extra?.fields_narration_pending===true;},
-  getActionModes:()=>({intent:'propose',narration:'sync'}),getSettings:()=>({}),toolDefinitions,modelToolAllowed,parseTurn,isOutOfCharacter,
+  // AI-01: the harness names a real profile (T3) instead of the removed intent/narration pair; runtime.js reads turnModelAccess through the same settings.
+  getActionModes:()=>actionModes({aiProfile:'T3'}),getSettings:()=>({aiProfile:'T3'}),turnModelAccess,toolDefinitions,modelToolAllowed,parseTurn,isOutOfCharacter,
   anchor:()=>env.reviewTurn.anchor,finishContractTurn,publishedTurnText,controlledGenerate:()=>{throw Error('本测试已有裁决，不应补跑');},
   api:async(name,body)=>{endpoints.push({name,body});return server.api(name,body);},
   execute:async(tool,args,eventId,reviewId)=>{

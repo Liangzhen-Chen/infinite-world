@@ -171,7 +171,7 @@ const SYSTEMS=[
  // 玩家接口层
  {id:'ui_tools',layer:'ui',name:'模型工具',modules:['ext:tools.mjs']},
  {id:'ui_scene',layer:'ui',name:'场景卡与状态提示',modules:['scene-card.mjs','prompt-scope.mjs','state-notices.mjs','return-summary.mjs']},
- {id:'ui_server',layer:'ui',name:'服务与界面接口',modules:['index.mjs','ui-routes.mjs','ui-affairs.mjs','ui-history.mjs','ui-map.mjs','ui-messages.mjs','ui-overview.mjs','ui-personal.mjs']},
+ {id:'ui_server',layer:'ui',name:'服务与界面接口',modules:['index.mjs','ui-routes.mjs','ui-affairs.mjs','ui-history.mjs','ui-map.mjs','ui-messages.mjs','ui-overview.mjs','ui-personal.mjs','ai-profile.mjs']},
  {id:'ui_client',layer:'ui',name:'浏览器界面',modules:['ext:ui-shell.mjs','ext:ui-affairs.mjs','ext:ui-art.mjs','ext:ui-history.mjs','ext:ui-map.mjs','ext:ui-messages.mjs','ext:ui-personal.mjs','ext:ui-settings.mjs',
    'ext:affairs-panels.mjs','ext:background-view.mjs','ext:input-view.mjs','ext:ledger-view.mjs','ext:mail-view.mjs','ext:map-view.mjs','ext:message-view.mjs','ext:people-history.mjs',
    'ext:personal-panels.mjs','ext:topbar.mjs','ext:history-window.mjs','ext:ambient-audio.mjs','ext:state-read.mjs']},
