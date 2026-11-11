@@ -96,7 +96,6 @@ function fieldRoles(steps){
   else if(!st.ok){out[st.path]='rejection-point';rejected=true;}
   else out[st.path]=st.kind;
  }
- out.fieldRoles=fieldRoles([{path:'issued',kind:'intermediate',ok:issued.ok},{path:'cash',kind:'intermediate',ok:cash.ok},{path:'note',kind:'intermediate',ok:note.ok},{path:'turnoverByResource',kind:'assertion',ok:true},{path:'baseLedgerTotalCoins',kind:'assertion',ok:true},{path:'turnoverReference',kind:'assertion',ok:true}]);
  return out;
 }
 const itemFacts=(engine,id)=>{const it=engine.byId.get(id);return {id,basePrice:it?.basePrice,satiety:it?.nutrition?.satiety??null,tags:it?.tags??null};};
@@ -215,6 +214,7 @@ async function tender6(){
   out.baseLedgerTotalCoins=Object.values(state.records).filter(r=>r.category==='market_trade'&&r.place===place).reduce((n,r)=>n+r.totalCoins,0);
   out.turnoverReference=turnoverReference(f.engine.primitiveDraft(f.doc),f.engine,{place,location:TH.shop});
  }catch(e){out.derivedError=errorOf(e);}
+ out.fieldRoles=fieldRoles([{path:'issued',kind:'intermediate',ok:issued.ok},{path:'cash',kind:'intermediate',ok:cash.ok},{path:'note',kind:'intermediate',ok:note.ok},{path:'turnoverByResource',kind:'assertion',ok:true},{path:'baseLedgerTotalCoins',kind:'assertion',ok:true},{path:'turnoverReference',kind:'assertion',ok:true}]);
  return out;
 }
 
