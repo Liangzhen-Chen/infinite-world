@@ -120,3 +120,13 @@ test('readApprovedSupersedes 发现基础批修订批：走登记的 w3-househol
   await assert.rejects(readApprovedSupersedes(dir),/审批来源未登记/);
  }finally{APPROVAL_SOURCES[via]=saved;}
 });
+
+test('正式值来自已审批整行回执的差异不算本批差异（归因到回执的不发布、不被旧草稿覆盖）；没归因的照常列出', async()=>{
+ const resolveRow=async(id,field,value)=>id==='r2'&&field==='process'&&value==='旧二'?'a3-world 已批整行回执':null;
+ const diffs=await differences(world,rows,recOf,{resolveRow});
+ assert.deepEqual(diffs.map(d=>d.id),['r1']);
+ // 不传解析器时不按回执归因：r2 照常是差异，仍受授权清单约束。
+ assert.deepEqual((await differences(world,rows,recOf)).map(d=>d.id),['r1','r2']);
+ // 解析器核验失败抛错时整体失败，不当作有来源。
+ await assert.rejects(differences(world,rows,recOf,{resolveRow:async()=>{throw new Error('回执核验不通过');}}),/回执核验不通过/);
+});

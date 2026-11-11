@@ -37,14 +37,18 @@ export const entries=[
 ];
 const draftFor=e=>({id:e.id,row:e.row});
 const population=await read('world/rules/tables/balance/population.json');
-const anchorBefore=target=>{
- const row=structuredClone(target==='lamp'?current.items.find(r=>r.id==='item_clay_oil_lamp'):current.locations.find(r=>r.id==='bld_bs_temple'));
+// 审批时的引用事实是当时的油灯整行；之后经已审批正文修订（如 w3-household-text）改了说明文字，按回执撤回到审批时的值再核（只撤回逐字等于已审修订 after 的值，手改照拦）。
+// 延迟加载并缓存：本模块由 approved-revisions 的叠加层登记表动态导入，顶层不反向等待它。
+let sourceItems=null;
+const itemsAsApproved=async()=>sourceItems??=await (await import('../../tools/approved-revisions.mjs')).revertedRows(current.items,files.items);
+const anchorBefore=async target=>{
+ const row=structuredClone(target==='lamp'?(await itemsAsApproved()).find(r=>r.id==='item_clay_oil_lamp'):current.locations.find(r=>r.id==='bld_bs_temple'));
  if(before[target]===null)delete row.lifecycle;else row.lifecycle=structuredClone(before[target]);
  return row;
 };
-const contextFor=e=>({before:before[e.target],basis:e.basis,sourceFacts:e.target==='human'
+const contextFor=async e=>({before:before[e.target],basis:e.basis,sourceFacts:e.target==='human'
  ?{population,health:current.rules.npcLife.health}
- :{anchor:anchorBefore(e.target),species}});
+ :{anchor:await anchorBefore(e.target),species}});
 const validateDraft=(d,e)=>{try{assert.deepEqual(d,draftFor(e));return [];}catch(error){return [error.message];}};
 async function approved(){
  const rows=await readApprovedContent(`${root}/review`,entries,{revision,contextFor});

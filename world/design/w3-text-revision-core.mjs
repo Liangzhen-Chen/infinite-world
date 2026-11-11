@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {runRevision,getPath,draftFor,contextFor,validateDraft,applyCandidate,isPublished} from './p1-revision-approval.mjs';
 import {readApprovedContent,approvalIncomplete} from '../../tools/content-pipeline.mjs';
+import {createRowReceiptResolver} from '../../tools/approved-revisions.mjs';
 
 export const readJSON=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 // 已冻结的候选（--prepare 写下的 candidate.json）；不存在则为 undefined。
@@ -42,12 +43,16 @@ export function makeTextRevision(cfg){
   return out;
  }
  // 差异：对每个条目的每个正文字段，已审批草稿值与正式值不同则一条。
- async function differences(world,rows,recordOf=(kind,id)=>readJSON(`${sourceRoot}/${kind}/${id}.json`)){
+ // resolveRow：已审批整行回执解析器。正式入口（candidateEntries、compare）总是传入真实世界的解析器；未传时不按回执归因（用假世界的单元测试）。
+ async function differences(world,rows,recordOf=(kind,id)=>readJSON(`${sourceRoot}/${kind}/${id}.json`),{resolveRow=async()=>null}={}){
   const out=[];
   for(const {kind,draft} of rows)for(const field of KINDS[kind].fields){
    const official=world[kind].find(x=>x.id===draft.id);
    assert.ok(official,`正式文件缺少 ${label} 条目 ${draft.id}`);
    if(JSON.stringify(official[field])===JSON.stringify(draft[field]))continue;
+   // 正式值来自另一张卡的已审批整行回执（如 a3-world 重审的 fish_broth）：那是已批的现行值，不是本批要发布的差异，也不得被本批的旧草稿覆盖。
+   // 回执核验不通过时 resolver 抛错，不会被当作有来源。
+   if(await resolveRow(draft.id,field,official[field]))continue;
    const record=await recordOf(kind,draft.id);
    out.push({kind,id:draft.id,field,before:official[field],after:draft[field],evidence:{record:`${sourceRoot}/${kind}/${draft.id}.json`,fingerprint:record.fingerprint,attempts:record.attempts,l4Rejection:record.l4Rejection!==undefined}});
   }
@@ -102,7 +107,7 @@ export function makeTextRevision(cfg){
  }
  // 本批的候选：已冻结则用冻结值；否则必须由已审批记录现算。
  async function candidateEntries(world,file=authorizationFile){
-  const auth=await readAuthorization(file),diffs=await differences(world,await approvedDrafts(world));
+  const auth=await readAuthorization(file),diffs=await differences(world,await approvedDrafts(world),undefined,{resolveRow:createRowReceiptResolver(world)});
   return buildEntries(world,diffs,auth);
  }
  const run=(args=process.argv.slice(2))=>runRevision({revision,root,CARD,limitYuan:0,frozen,buildEntries:candidateEntries,draftFor,contextFor,validateDraft,applyCandidate,isPublished,
@@ -113,7 +118,7 @@ export function makeTextRevision(cfg){
   const {loadWorld}=await import('../../tools/load-world.mjs'),world=await loadWorld();
   let approved=true,blocked=null,rows;
   try{rows=await approvedDrafts(world);}catch(error){approved=false;blocked=error.message;rows=await rawDrafts();}
-  const diffs=await differences(world,rows),allowed=new Set(auth.ids??[]);
+  const diffs=await differences(world,rows,undefined,{resolveRow:createRowReceiptResolver(world)}),allowed=new Set(auth.ids??[]);
   const summary={approved,approvalBlocked:blocked,compared:rows.length,differences:diffs.length,authorization:auth.error?{error:auth.error}:{approvedBy:auth.approvedBy,ref:auth.ref,ids:auth.ids.length},
    unlisted:diffs.filter(d=>!allowed.has(d.id)).map(d=>d.id+'.'+d.field),listedWithoutDifference:auth.error?null:auth.ids.filter(id=>!diffs.some(d=>d.id===id)),
    examples:diffs.slice(0,10).map(d=>({id:d.id,field:d.field,attempts:d.evidence.attempts,l4Rejection:d.evidence.l4Rejection,before:d.before,after:d.after})),modelCalls:0};
