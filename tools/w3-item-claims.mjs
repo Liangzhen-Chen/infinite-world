@@ -24,11 +24,16 @@ const NUM = '(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千�
 const VAGUE_AMOUNT = /少许|些许|一些|一点儿|一点点|少量|适量|微量|略许|数[匝圈道层股滴片块根条粒枚段节]|几[匝圈道层股滴]/gu;
 // 身体尺度：数词 + 掌、拃、握、指、撮、捧、肘、臂、庹（一掌、两指、一拃、一握、三指宽）。
 const BODY_SCALE = new RegExp(`${NUM}(?:掌|拃|握|指|撮|捧|肘|臂|庹)(?:宽|长|高|厚|深)?`, 'gu');
+// 身体部位 + 大小、宽、长、粗细（掌心大小、巴掌大、手掌宽、小指粗细），以及“如/似/比 + 身体部位”（约如小指、比手掌宽些）。
+const BODY_PART = '(?:掌心|巴掌|手掌|手心|手背|手指|拇指|食指|中指|无名指|小指|指头|指腹|指尖|拳头|手臂|前臂)';
+const BODY_SIZE = new RegExp(`${BODY_PART}(?:大小|大|宽|长|高|厚|粗细|粗|深)|(?:如|似|比|约如|形如|同)${BODY_PART}`, 'gu');
 // 骨架外的度量写法：长度、小容量单位。质量与时长另有检查（validateW3Draft 的数字单位核对、numeralIssues）。
 const METRIC_LENGTH = new RegExp(`${NUM}\\s*(?:厘米|毫米|公分|公里)`, 'gu');
 const SMALL_VOLUME_DIMS = new Set(['length', 'inch', 'spoon', 'cup', 'drop', 'volume']);
 // “若干”：第 8 条只许用在工序形成的部件数目上（剪成若干分袋面）；前面紧跟取放加撒这类处理材料的动词，就是在写材料用量（取若干盐、撒若干），判错。
 const SEVERAL = /若干/gu;
+const SAMPLE_VERB_BEFORE = /(?:舀|取|挑|盛|蘸)$/u;
+const SAMPLE_VERB_AFTER = /^[^，。；]{0,2}(?:尝|看|闻|试|验|查)/u;
 const MATERIAL_VERB_BEFORE = /(?:取|加|放|撒|倒|滴|抹|涂|蘸|添|用|入|盛|舀|抓|掺|拌|施|敷|配|备|蘸取|取用)$/u;
 
 // 骨架与引用事实里的全部文字（物品骨架各字段、引用事实、配方骨架）。放行用：这里原样出现的写法不算骨架外。
@@ -49,7 +54,7 @@ function provenanceText(entry, context) {
   return [...strings(entry), ...strings(context), ...(recipe ? strings(recipe) : []), ...recipeIds.flatMap(named), ...teaches].filter(Boolean).join('|');
 }
 
-export function amountIssues(text, supplied = '') {
+export function amountIssues(text, supplied = '', options = {}) {
   const errors = [];
   if (typeof text !== 'string') return errors;
   const give = (raw, index, kind) => {
@@ -59,8 +64,13 @@ export function amountIssues(text, supplied = '') {
   // 不设“程度补语”豁免：分不出“回弹少许”和“放盐少许”的词形规则只能靠动词词表，属特判；骨架外的模糊幅度（回弹少许）同样是骨架没有的量，按第 8 条一并判。
   for (const match of text.matchAll(VAGUE_AMOUNT)) give(match[0], match.index, '写了模糊用量');
   for (const match of text.matchAll(BODY_SCALE)) give(match[0], match.index, '写了身体尺度');
+  for (const match of text.matchAll(BODY_SIZE)) give(match[0], match.index, '写了身体尺度');
   for (const match of text.matchAll(METRIC_LENGTH)) give(match[0], match.index, '写了骨架外尺寸');
-  for (const quantity of quantitiesIn(text)) if (SMALL_VOLUME_DIMS.has(quantity.dim)) give(quantity.raw, quantity.index, '写了骨架外尺寸或用量');
+  for (const quantity of quantitiesIn(text)) if (SMALL_VOLUME_DIMS.has(quantity.dim)) {
+    // 取样动作（查验时“舀一勺尝”）：骨架有匙具，一勺是确定量的取样动作，不是材料用量。
+    if (options.sampling && ['spoon', 'cup'].includes(quantity.dim) && /^[一1]/u.test(quantity.raw) && SAMPLE_VERB_BEFORE.test(text.slice(0, quantity.index)) && SAMPLE_VERB_AFTER.test(text.slice(quantity.end))) continue;
+    give(quantity.raw, quantity.index, '写了骨架外尺寸或用量');
+  }
   for (const match of text.matchAll(SEVERAL)) {
     if (MATERIAL_VERB_BEFORE.test(text.slice(0, match.index))) give(match[0], match.index, '“若干”只可用于工序形成的部件数目，这里是材料用量');
   }
@@ -108,6 +118,13 @@ export function nameIssues(text, entry, context) {
   return unique(errors);
 }
 
+// 骨架（配方工具）里有匙、勺类器具：取样时舀一勺是确定动作。
+function hasSpoonTool(entry, context) {
+  const byId = new Map((context?.catalog ?? []).map((item) => [item.id, item]));
+  const recipes = (context?.catalogRecipes ?? []).filter((row) => row.output?.item === entry.id);
+  return recipes.some((row) => (row.tools ?? []).some((id) => /[匙勺]/u.test(byId.get(id)?.name ?? '')));
+}
+
 // 主入口：返回错误字符串数组，每条带字段名。context 的 worldNames（w3Context 附带）缺失时只做词形检查。
 export function itemClaimIssues(draft, entry, context) {
   const supplied = strings(entry).join('|') + '|' + strings(context ?? {}).join('|') + '|' + (context?.recipe ? strings(context.recipe).join('|') : '') + '|' + ((context?.catalogRecipes ?? []).filter((row) => row.output?.item === entry.id).flatMap((row) => strings(row)).join('|'));
@@ -115,7 +132,8 @@ export function itemClaimIssues(draft, entry, context) {
   for (const field of FIELDS) {
     const text = draft?.[field];
     if (typeof text !== 'string' || !text.trim()) continue;
-    for (const message of [...amountIssues(text, supplied), ...nameIssues(text, entry, context)]) errors.push(`${field}：${message}`);
+    const sampling = field === 'inspection' && hasSpoonTool(entry, context);
+    for (const message of [...amountIssues(text, supplied, {sampling}), ...nameIssues(text, entry, context)]) errors.push(`${field}：${message}`);
   }
   return errors;
 }

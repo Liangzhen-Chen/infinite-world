@@ -135,3 +135,18 @@ test('两处起草提示词源码：物品路径引用 ITEM_DRAFT_RULES；不再
     assert.ok(/process 90(?:至|–)160字/.test(source), `${file} 的配方长度要求不在本卡改动范围，应保留`);
   }
 });
+
+test('身体尺度词形补全：身体部位加大小、宽、长、粗细；如、似、比加身体部位', () => {
+  for (const word of ['掌心大小', '巴掌大', '手掌宽', '小指粗细', '比手掌', '约如小指'])
+    assert.match(check({description: `削成${word}的椭圆。`}), /写了身体尺度/, word);
+  assert.deepEqual(check({description: '握在掌心，拇指轻按。'}), [], '只提身体部位、不带大小说法不判');
+});
+
+test('取样动作：骨架有匙具时 inspection 里“舀一勺尝”不算骨架外用量；其他情形照判', () => {
+  const spoon = {id: 'spoon', name: '偏柄木匙', tags: []};
+  const withSpoon = Object.defineProperties({}, {catalog: {value: [...CATALOG, spoon]}, catalogRecipes: {value: [{id: 'recipe_oil', output: {item: 'item_oil'}, tools: ['spoon']}]}, worldNames: {value: NAMES}});
+  assert.equal(check({inspection: '舀一勺尝，盐味应匀。'}, entry, withSpoon), '');
+  assert.match(check({description: '舀一勺尝，盐味应匀。'}, entry, withSpoon), /写了骨架外尺寸或用量「一勺」/, '只在 inspection 取样');
+  assert.match(check({inspection: '舀一勺尝，盐味应匀。'}), /写了骨架外尺寸或用量「一勺」/, '骨架没有匙具照判');
+  assert.match(check({inspection: '加入一勺盐拌匀。'}, entry, withSpoon), /一勺/, '不是取样动作');
+});

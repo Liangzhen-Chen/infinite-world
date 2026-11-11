@@ -492,3 +492,10 @@ test('物品正文：重量、容量、长度的数字必须带单位', () => {
   for (const text of ['厚2。', '长三。', '深0.5，', '高十二。']) assert.ok(unitlessMeasureIssues(text).length === 1, text); // 相对说法不判，无单位数字仍判
   assert.match(unitlessMeasureIssues('整器重0.35，质地轻软。')[0], /重0.35.*没有单位/);
 });
+
+test('盘：动词用法（盘压、盘绕）与部件名词（轮盘、转盘）不是器皿；器皿用法照判', () => {
+  for (const text of ['勿长期盘压成死结。', '线盘绕成圈。', '留有轮盘转过的旋纹。', '转盘上转动。'])
+    assert.deepEqual(fx(text), [], text);
+  assert.match(fxJoin('盛入盘中。'), /泛称器具「盘」/);
+  assert.match(fxJoin('倒入木盘。'), /泛称器具「木盘」/);
+});

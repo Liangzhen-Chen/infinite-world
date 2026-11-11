@@ -139,3 +139,59 @@ test('storage：同句里前一个处置词在回避或否定框架里，不放�
   assert.match(join('wheat', {storage: '避免浸水，定期翻面。'}), /具体处置做法「(?:定期|翻面)」/);
   assert.deepEqual(check('wheat', {storage: '勿浸水，避免暴晒与泡水。'}), []);
 });
+
+// ───────── 第 2 轮误报与漏检（household 回扫）─────────
+const CTX2 = {
+  catalog: [...CATALOG,
+    {id: 'bk', name: '陶作入门册', tags: [], book: {teaches: ['recipe_lamp', 'recipe_bowl']}},
+    {id: 'lamp', name: '浅腹油灯', tags: []}, {id: 'bowl', name: '敞口碗', tags: []},
+    {id: 'flt', name: '宽口滤布', tags: ['cloth'], use: '搭在已有容器上过滤'}],
+  catalogRecipes: [...RECIPES,
+    {id: 'recipe_lamp', name: '制作浅腹油灯', workstation: 'pottery', tools: [], materials: [], output: {item: 'lamp'}},
+    {id: 'recipe_bowl', name: '制作敞口碗', workstation: 'pottery', tools: [], materials: [], output: {item: 'bowl'}}],
+};
+const check2 = (id, draft) => itemTextIssues(draft, CTX2.catalog.find(item => item.id === id), CTX2);
+
+test('书的正文列出书里教的成品：取证文字并入 teaches 对应配方的产出物名', () => {
+  assert.deepEqual(check2('bk', {description: '匀壁的碗要收口，油灯要稳。'}), []);
+  assert.match(check2('wheat', {description: '匀壁的碗要收口。'}).join(' '), /泛称器具「碗」/, '不是书，没有 teaches，照判');
+});
+
+test('用途句里的泛称容器：物品自己的 use 写过才有出处；storage 仍严判', () => {
+  assert.deepEqual(check2('flt', {description: '搭在容器上倒水，滤去渣。'}), []);
+  assert.match(check2('flt', {storage: '收进容器内。'}).join(' '), /容器/, 'storage 里放进容器是引入');
+  assert.match(check2('wheat', {description: '搭在容器上倒水。'}).join(' '), /容器/, '没有 use 出处照判');
+});
+
+test('盘作动词或部件名词不是器皿；盘作器皿照判', () => {
+  assert.deepEqual(check('wheat', {storage: '勿长期盘压成死结。'}).filter(m => /盘/.test(m)), []);
+  assert.deepEqual(check('wheat', {description: '留有轮盘转过的细旋纹。'}).filter(m => /盘/.test(m)), []);
+  assert.deepEqual(check('wheat', {description: '线盘绕成圈。'}).filter(m => /盘/.test(m)), []);
+  assert.match(check('wheat', {storage: '盛入木盘中。'}).join(' '), /盘/);
+});
+
+test('使用磨损与条件检查不是制作痕迹；制作框架里的痕迹名词照判', () => {
+  for (const text of ['用久后留下磨痕。', '若舌面磨痕偏斜，说明不牢。', '补袜时针脚不易抽紧。', '日久会有磨痕。'])
+    assert.deepEqual(check('chain', {description: text}), [], text);
+  assert.match(join('chain', {description: '边口留有磨痕。'}), /制作痕迹「磨痕」/);
+  assert.match(join('chain', {inspection: '边口留有针脚。'}), /制作痕迹「针脚」/);
+});
+
+test('storage：回避框架里的期限词与器物不判；正面写照判', () => {
+  assert.deepEqual(check('wheat', {storage: '勿叠压久放。'}), []);
+  assert.deepEqual(check('wheat', {storage: '避免与湿布、盐渍物同放。'}), []);
+  assert.match(join('wheat', {storage: '盖湿布，可久放。'}), /湿布/);
+  assert.match(join('wheat', {storage: '盖湿布，可久放。'}), /期限类说法「久放」/);
+});
+
+test('包装收纳词补全：木柜、抽屉、棚、筐；柜台、橱窗不是', () => {
+  const found = join('wheat', {storage: '收在木柜或抽屉中，渔具棚亦可，放两筐。'});
+  for (const word of ['木柜', '抽屉', '渔具棚', '两筐']) assert.match(found, new RegExp(word), word);
+  assert.deepEqual(check('wheat', {description: '柜台前展示，橱窗明亮。'}), []);
+});
+
+test('storage 处置补齐：涂油、抹油、上油、套软皮、垫草；避免涂油不判', () => {
+  for (const text of ['可涂薄油防锈。', '表面抹油。', '定期上油。', '外套软皮保存。', '下垫草。'])
+    assert.match(join('wheat', {storage: text}), /具体处置做法/, text);
+  for (const text of ['避免涂油。', '表面油亮，避潮。']) assert.deepEqual(check('wheat', {storage: text}), [], text);
+});
