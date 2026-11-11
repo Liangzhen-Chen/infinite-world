@@ -64,7 +64,7 @@ test('制作痕迹：没有配方的物品不写；有配方须与配方一致',
   assert.match(join('wheat', {description: '颗粒经锻打回火，质地坚韧。'}), /制作痕迹「锻打」，但这件物品没有以它为产出的配方/);
   assert.match(join('wheat', {inspection: '粒面有刨面痕迹。'}), /制作痕迹「刨面」/);
   assert.deepEqual(check('chain', {description: '环口经锻打收拢，锤痕清晰。'}), [], '配方 processFacts 与工具里有锻、锤');
-  assert.match(join('chain', {description: '链面经刨面处理。'}), /制作痕迹「刨面」，配方骨架.*没有对应的「刨」/);
+  assert.match(join('chain', {description: '链面刨面平整。'}), /制作痕迹「刨面」，配方骨架.*没有对应的「刨」/);
   assert.match(join('chain', {inspection: '环口留有针脚。'}), /制作痕迹「针脚」/);
   assert.deepEqual(check('chain', {description: '两刃并拢看缝，缝线应均匀。'}), [], '缝线在用途与检查里是名词，不是制作痕迹');
   assert.deepEqual(check('wheat', {description: '颗粒饱满，不经锻打。'}), [], '否定不算');
@@ -116,4 +116,19 @@ test('如实说明容器不随货：不在范围内、不随货、另备、不�
     assert.deepEqual(check('wheat', {description: text}), [], text);
   assert.match(join('wheat', {description: '装在陶罐里出售。'}), /陶罐/);
   assert.match(join('wheat', {description: '盛入容器后带走。'}), /容器/);
+});
+
+test('制作痕迹：痕迹词后紧跟成形状态谓词也判；部件名词、用途句不判', () => {
+  for (const text of ['链面刨面平整。', '表面磨成光洁。', '边口削出齐整，棱角匀称。'])
+    assert.ok(check('chain', {description: text}).some(message => /制作痕迹/.test(message)), text);
+  assert.match(join('wheat', {description: '刨面平整，边口齐整。'}), /制作痕迹「刨面」，但这件物品没有以它为产出的配方/);
+  for (const text of ['钢制短喙与锤面对置。', '去核后可鲜食，也可煮制。', '果身饱满，缝合线清晰。'])
+    assert.deepEqual(check('wheat', {description: text}), [], text);
+});
+
+test('storage：回避词与处置词之间只能是被回避的并列对象', () => {
+  for (const text of ['防尘加盖。', '避晒，盖好。', '防虫盖严。', '勿暴晒，晾干后折叠。'])
+    assert.match(join('wheat', {storage: text}), /具体处置做法/, text);
+  for (const text of ['置干燥处，避免受潮、浸水与重压。', '避免暴晒与浸水。', '勿浸水。', '防压及浸水。'])
+    assert.deepEqual(check('wheat', {storage: text}), [], text);
 });
