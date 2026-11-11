@@ -1,0 +1,55 @@
+{
+ "version": 1,
+ "commit": "910c08d3c2ddb409bb2f077d3e735bdeff76f170",
+ "campaignId": "campaign_2a9cb764-afb3-4f46-aaa7-71b00df6fbf4",
+ "contentHash": "02cbd3c567bebf53d0f9ea2b22688d1b4764ead9d3e1a9be8ee19a6456f02393",
+ "model": "replay-record-stub",
+ "seed": "playtest-fixed-seed-v1",
+ "create": {},
+ "steps": [
+  {
+   "endpoint": "review/begin",
+   "body": {
+    "anchor": "replay-bread",
+    "playerText": "买一个面包"
+   }
+  },
+  {
+   "endpoint": "execute",
+   "body": {
+    "tool": "world_act",
+    "args": {
+     "action": "core:trade.buy",
+     "slots": {
+      "seller": "林穗",
+      "item": "面包",
+      "quantity": 1
+     }
+    },
+    "eventId": "replay-buy",
+    "anchor": "replay-bread"
+   }
+  },
+  {
+   "endpoint": "review/reply",
+   "body": {
+    "draft": "<q who=\"player\">我全都答应。</q>",
+    "query": "买一个面包"
+   }
+  },
+  {
+   "endpoint": "execute",
+   "body": {
+    "tool": "world_time",
+    "args": {
+     "minutes": 1440
+    },
+    "eventId": "replay-day-0",
+    "anchor": "replay-day-0"
+   }
+  }
+ ],
+ "initialStateHash": "5ca87ad7abd67c526217057df3f93df81c078104a68870351393bd39a3a35c1b",
+ "ruleStateDigest": "54d5e945eb2523e39227c537f688c4da9575e6af3b8db00de8644866b865f21f",
+ "textDigest": "d3643cbf56e70d90709ccf6bd2e2cb804caa89ab2ce1f32cb6aacb7455bf9556"
+}
