@@ -243,15 +243,6 @@
   },
   {
    "file": "npc-autonomy.mjs",
-   "kind": "seed-template",
-   "expr": "`unit_${digest([d.get('randomSeed'),actionId,item,i]).slice(0,24)}`",
-   "count": 1,
-   "prefix": "",
-   "role": "id",
-   "purpose": "人物自主制造的单件 id：种子+行动 id+物品+序号"
-  },
-  {
-   "file": "npc-autonomy.mjs",
    "kind": "wrapper:clockDiceKey",
    "expr": "d.get('randomSeed'),'npc_autonomy:daily',id,start",
    "count": 1,

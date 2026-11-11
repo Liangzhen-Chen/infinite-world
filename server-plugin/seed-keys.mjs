@@ -9,6 +9,9 @@ import {fileURLToPath} from 'node:url';
 // of world loading. The table never enters the world document, so the world
 // hash and every existing roll are unchanged.
 //
+// Counting rule: a hash call is one site. A template literal that merely wraps a
+// recorded site (e.g. `unit_${createHash(..).update(..)...}`) is not counted again.
+//
 // Known blind spots (not covered, no wildcard added):
 //  - a hash object kept in a variable and fed later (const h=createHash(..); h.update(..));
 //  - hash algorithms other than sha256, randomBytes, crypto.getRandomValues, Date.now() as entropy;
@@ -136,7 +139,7 @@ export function scanSource(source){
  // Any other template literal that interpolates a seed name.
  for(const [start,end] of templates){
   const text=src.slice(start,end);
-  if(![...text.matchAll(/\$\{[^}]*\}/g)].some(x=>SEEDISH.test(x[0]))||inside(start))continue;
+  if(![...text.matchAll(/\$\{[^}]*\}/g)].some(x=>SEEDISH.test(x[0]))||inside(start)||covered.some(([a,b])=>a>=start&&b<=end))continue;
   take('seed-template',start,end,text);
  }
  return sites.sort((a,b)=>a.line-b.line);
