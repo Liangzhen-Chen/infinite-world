@@ -29,7 +29,7 @@ test('营养由配方投入守恒派生：没写营养的食物照样有营养�
   assert.ok(crisp.nutrientBase.satiety<=sum('satiety'),JSON.stringify(crisp.nutrition));
   // 水分守恒（质量）：含水量不得超过产物自身质量（多余水分蒸发或滤出），水分 = 含水量×100/kg（参照水 25÷0.25），所以水分 ≤ 重量×100。
   assert.ok(crisp.nutrientBase.water<=crisp.weight+1e-12,String(crisp.nutrientBase.water));
-  assert.ok((crisp.nutrition.hydration??0)<=crisp.weight*100,JSON.stringify(crisp.nutrition));
+  assert.ok((crisp.nutrition.hydration??0)<=Math.floor(crisp.weight*100),JSON.stringify(crisp.nutrition));
   // 写了营养的维度照用（作为按热量的基值），与推导值一样乘饱腹系数
   const ration=authored.get('item_ration').nutrition.satiety;
   assert.equal(item('item_ration').nutrition.satiety,Math.floor(ration*satietyFactor(engine.world,item('item_ration'),ration)));

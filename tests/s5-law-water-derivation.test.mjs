@@ -30,7 +30,7 @@ test('整类不变量：食物含水量 ≤ 自身质量，水分 ≥ 0 且 ≤ 
   for(const it of foods){
     const b=engine.byId.get(it.id).nutrientBase,hyd=engine.byId.get(it.id).nutrition?.hydration??0;
     assert.ok(b.water<=it.weight+1e-12,`${it.id} 含水量 ${b.water} > 自重 ${it.weight}`);
-    assert.ok(hyd>=0&&hyd<=it.weight*100+1e-9,`${it.id} 水分 ${hyd}`);
+    assert.ok(hyd>=0&&hyd<=Math.floor(it.weight*100),`${it.id} 水分 ${hyd}`);
   }
 });
 
