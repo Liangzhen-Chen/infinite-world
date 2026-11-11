@@ -104,7 +104,7 @@ async function reviewedTurn(t,sidebandRoot){
   if(label.startsWith('consistency-rewrite:'))return {choices:[{finish_reason:'stop',message:{content:'<q who="player">我全都答应。</q>'}}]};
   return reviewResponse(body);
  }};
- const server=await createPlaytestServer({consistencyClient:client,sidebandRoot});t.after(()=>server.close());
+ const server=await createPlaytestServer({consistencyClient:client,sidebandRoot,aiProfile:'T2'});t.after(()=>server.close());
  const created=await server.api('create',{}),campaignId=created.reference.campaignId,anchor='sideband-bread';
  const begun=await server.api('review/begin',{campaignId,anchor,playerText:'买一个面包',expectedSequence:created.reference.sequence});
  await server.api('execute',{campaignId,anchor,eventId:'sideband-buy',tool:'world_act',args:{action:'core:trade.buy',slots:{seller:'林穗',item:'面包',quantity:1}},expectedSequence:created.reference.sequence});

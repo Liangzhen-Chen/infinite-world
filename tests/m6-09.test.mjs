@@ -116,7 +116,7 @@ test('M6-09 顶栏所用设置状态同步已打开的设置音量与静音，�
         assert.equal(inputs.find(input=>input.type==='range').value,17);assert.equal(inputs.filter(input=>input.type==='checkbox').at(-1).checked,true);
         const slider=inputs.find(input=>input.type==='range');slider.value='83';slider.oninput();assert.equal(getSettings().volume,83);assert.equal(audio.settings.volume,83);
         const muted=inputs.filter(input=>input.type==='checkbox').at(-1);muted.checked=false;muted.onchange();assert.equal(audio.settings.muted,false);
-        assert.deepEqual(Object.keys(getSettings()).sort(),['theme','fontSize','highContrast','reducedMotion','volume','muted'].sort());
+        assert.deepEqual(Object.keys(getSettings()).sort(),['theme','fontSize','highContrast','reducedMotion','volume','muted','aiProfile'].sort());
         container.isConnected=false;updateSettings({volume:60,muted:false});
     }finally{unsubscribe();Object.assign(globalThis,prior);}
 });

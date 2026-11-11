@@ -16,7 +16,7 @@ const response=value=>({choices:[{finish_reason:'stop',message:{content:JSON.str
 // This client supplies no provider measurement or real narrative score. It
 // tests the official HTTP paths and assertions, including actual learning.
 async function offlineRun(t){
-    const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());
     const client={async generate({messages},label){
         const index=Number(label.split('-')[2]),step=scenario.turns[index];
         const last=messages.findLastIndex(m=>m.role==='user'),receipts=messages.slice(last+1).filter(m=>m.role==='tool');

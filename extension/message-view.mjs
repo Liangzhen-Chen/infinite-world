@@ -89,7 +89,7 @@ export function renderMessages(context,labels={},events=[],debug=false){
         if(message.is_user||message.is_system)continue;
         const text=element.querySelector('.mes_text');
         if(text){
-            text.hidden=message.extra?.fields_no_narration===true||message.extra?.fields_narration_pending==='sync';
+            text.hidden=message.extra?.fields_no_narration===true||message.extra?.fields_narration_pending===true;
             text.replaceChildren();
             const appendProse=value=>{
                 if(!value.trim())return;
@@ -98,8 +98,7 @@ export function renderMessages(context,labels={},events=[],debug=false){
                 else prose.textContent=value;
                 text.append(prose);
             };
-            if(message.extra?.fields_narration_pending==='async')appendProse('叙述正在核对；是否完成及实际结果见事件流。');
-            else if(debug)appendProse(message.mes);
+            if(debug)appendProse(message.mes);
             else{
                 const raw=stripTurn(message.mes);let offset=0;
                 for(const match of raw.matchAll(dialoguePattern())){

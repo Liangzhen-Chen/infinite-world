@@ -41,7 +41,7 @@ test('审查证据带 applied，模型请求说明以已应用效果为据；旧
 });
 
 test('服务端审查的每条回执都带本次结算的 applied（重放逐事件计算，不用整回合差分）',async t=>{
- const server=await createPlaytestServer({consistencyEnabled:true});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:true});t.after(()=>server.close());
  const {reference}=await server.api('create',{}),campaignId=reference.campaignId;
  const begun=await server.api('review/begin',{campaignId,anchor:'a1',playerText:'买面包再等一会',expectedSequence:reference.sequence,enabled:false});
  await server.api('execute',{campaignId,tool:'world_act',args:{action:'trade.buy',slots:{seller:'林穗',item:'面包',quantity:1}},eventId:'a1-buy',anchor:'a1',expectedSequence:reference.sequence});

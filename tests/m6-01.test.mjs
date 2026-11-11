@@ -59,7 +59,7 @@ test('M6-01 同行者名字须有玩家经历，效果不泄漏他人私密或�
 });
 
 test('M6-01 设置范围、钱袋拆分与原铜账一致',()=>{
-    assert.deepEqual(normalizeSettings({fontSize:999,theme:'bogus',volume:999,highContrast:true}),{theme:'dark',fontSize:18,volume:100,highContrast:true,reducedMotion:false,muted:false});
+    assert.deepEqual(normalizeSettings({fontSize:999,theme:'bogus',volume:999,highContrast:true}),{theme:'dark',fontSize:18,volume:100,highContrast:true,reducedMotion:false,muted:false,aiProfile:'T0'});
     assert.equal(moneyText(123456),'12金 34银 56铜');assert.equal(moneyText(180),'0金 1银 80铜');
     assert.deepEqual(normalizeSettings(null??{}).fontSize,18);
 });
@@ -152,7 +152,7 @@ test('M6-01 浏览器：双主题、两行顶栏、全屏抽屉、字号持久�
     }
     await page.getByRole('button',{name:'面板',exact:true}).click();await page.getByRole('button',{name:'后续面板',exact:true}).first().click();assert.match(await page.locator('#fields-dialog').innerText(),/已挂载/);await page.keyboard.press('Escape');
     await page.evaluate(async()=>{const {updateSettings,initializeSettings}=await import('/ui-settings.mjs');updateSettings({theme:'light',fontSize:22,muted:true,volume:27});initializeSettings();});
-    assert.deepEqual(await page.evaluate(async()=>{const {getSettings}=await import('/ui-settings.mjs');return getSettings();}),{theme:'light',fontSize:22,highContrast:false,reducedMotion:false,volume:27,muted:true});
+    assert.deepEqual(await page.evaluate(async()=>{const {getSettings}=await import('/ui-settings.mjs');return getSettings();}),{theme:'light',fontSize:22,highContrast:false,reducedMotion:false,volume:27,muted:true,aiProfile:'T0'});
     await page.evaluate(()=>window.infiniteFieldsV2.refresh());assert.equal(await page.locator('#fields-mute').innerText(),'取消静音');assert.equal(await page.locator('#fields-volume').inputValue(),'27');
     assert.deepEqual(errors,[]);
 });

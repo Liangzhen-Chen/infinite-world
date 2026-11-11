@@ -29,7 +29,7 @@ test('27个工具入口（含 A1 动作目录两个）；合并操作保留真�
     const tools=toolDefinitions();assert.equal(tools.length,27);assert.ok(tools.every(row=>row.function.description.length<=60));
     assert.ok(!tools.some(row=>['world_turn','world_pet','world_farm','world_crime'].includes(row.function.name)));
     assert.throws(()=>resolveToolCall('world_field',{operation:'make_gold'}),/未知操作/);
-    const server=await createPlaytestServer();t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/});t.after(()=>server.close());
     const created=await server.api('create',{character:{name:'测试者'}}),campaignId=created.reference.campaignId;
     const engine=new WorldEngine(await loadWorld());
     for(const[tool,args,oldTool,oldArgs]of[
@@ -61,7 +61,7 @@ test('27个工具入口（含 A1 动作目录两个）；合并操作保留真�
 test('旧目录未启用首领时，新旧观察入口均拒绝且不改变存档',async t=>{
     // 旧目录没有首领，也就没有T157以智能首领为首的怪物聚居地。
     const world=await loadWorld();world.bosses=[];delete world.rules.bossEcology;for(const place of world.locations)delete place.monsterSociety;
-    const engine=new WorldEngine(world),server=await createPlaytestServer();t.after(()=>server.close());
+    const engine=new WorldEngine(world),server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/});t.after(()=>server.close());
     const {document}=await server.api('create',{character:{name:'旧目录测试者'}});document.state.location='loc_hw_northwood';
     const before=structuredClone(document);
     await assert.rejects(engine.reduce(document,{tool:'world_field',args:{operation:'lair_observe'},eventId:'observe'}),/没有启用首领巢穴/);

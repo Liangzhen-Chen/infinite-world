@@ -101,7 +101,7 @@ export async function recordFixture({dir,client,steps,create={},seed=PLAYTEST_SE
  await fs.rm(staging,{recursive:true,force:true});await fs.mkdir(root,{recursive:true});
  let session;
  try{
-  const server=await createPlaytestServer({seed,world,consistencyClient:client,sidebandRoot:root,directory:path.join(staging,'store')});
+  const server=await createPlaytestServer({seed,world,aiProfile:'T2',consistencyClient:client,sidebandRoot:root,directory:path.join(staging,'store')});
   try{session=await runSession(server.api,{create,steps});}finally{await server.close();}
   const [campaignDir]=await fs.readdir(root);
   if(!campaignDir)throw Error('E-REPLAY-EMPTY 录制没有产生旁路记录');
@@ -125,7 +125,7 @@ export async function replayFixture(dir,{tier='T2',current={},world,traceFile=nu
  if(!['T0','T2'].includes(tier))throw Error('E-REPLAY-TIER 回放档位只有 T0 与 T2');
  const client=tier==='T2'?replayClient(await readSideband(path.join(dir,'sideband'))):null;
  const steps=tier==='T2'?manifest.steps:manifest.steps.filter(step=>!step.endpoint.startsWith('review/'));
- const server=await createPlaytestServer({seed:manifest.seed,world,consistencyClient:client,consistencyEnabled:tier==='T2'});
+ const server=await createPlaytestServer({seed:manifest.seed,world,aiProfile:tier,consistencyClient:client,consistencyEnabled:tier==='T2'});
  let session;
  try{session=await runSession(server.api,{create:manifest.create,steps});}finally{await server.close();}
  if(client?.misses.length)throw Error(`E-REPLAY-MISS 回放有 ${client.misses.length} 次请求没有旁路记录：${client.misses.map(m=>m.label).join('、')}`);

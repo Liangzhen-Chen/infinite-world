@@ -9,7 +9,7 @@ import {CampaignStorage,digest,applyPatches} from '../server-plugin/storage.mjs'
 
 test('新角色菜单等待180日：完整导出小于50MB，确定性导入和纯补丁重放同哈希',async t=>{
     const world=await loadWorld();
-    const server=await createPlaytestServer({world,seed:'w8e10-event-size',consistencyEnabled:false});
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world,seed:'w8e10-event-size',consistencyEnabled:false});
     t.after(()=>server.close());
     const created=await server.api('create',{character:{name:'长候旅人'}}),id=created.reference.campaignId;
     const menu=await server.api('actions',{campaignId:id}),wait=menu.actions.find(a=>a.id==='core:time');

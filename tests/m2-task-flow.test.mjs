@@ -19,7 +19,7 @@ function totals(document){
 }
 
 async function setup(t){
-    const server=await createPlaytestServer({seed:'t62-task-flow'});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed:'t62-task-flow'});t.after(()=>server.close());
     const created=await server.api('create',{character:{name:'送粮旅人'}}),campaignId=created.reference.campaignId;
     let counter=0;
     const read=async()=>(await server.api('read',{campaignId})).document;

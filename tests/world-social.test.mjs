@@ -35,7 +35,7 @@ test('HTTP目录和搜索共用公开投影，内部目标与历史真相不外�
     const world=await socialWorld(),faction=world.factions[0],past=world.history[0];
     faction.privateGoal='密封赤苇暗号';faction.prose.internalLife+='密封赤苇暗号';faction.description=Object.values(faction.prose).join('\n');
     past.accounts.verified.claim='隐秘旧约原本';world.factionPeople[0].concern='密封赤苇暗号';
-    const server=await createPlaytestServer({world});t.after(server.close);
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world});t.after(server.close);
     const initial=await server.api('create',{character:{}}),campaignId=initial.reference.campaignId;
     const entry=await server.api('catalog',{campaignId,entity:faction.name});
     assert.equal(entry.description,faction.publicDescription);assert.equal(entry.contactAnchor,faction.contactAnchor);
@@ -65,11 +65,11 @@ test('旧战役升级加入社会资料不实例化名册或资源，导出往�
     delete old.rules.tribalAwakening;// So do U11 tribal-awakening dynamics.
     delete old.rules.hazardClock;delete old.rules.questSources;// U3/U17/D1 postdate the social-catalog fixture.
     delete old.rules.military;delete old.rules.warDiplomacy;// U12 relies on later factions and places.
-    const original=await createPlaytestServer({world:old});t.after(original.close);
+    const original=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world:old});t.after(original.close);
     const created=await original.api('create',{}),id=created.reference.campaignId;
     await original.api('execute',{campaignId:id,tool:'world_time',args:{minutes:10},eventId:'before-upgrade'});
     const before=(await original.api('read',{campaignId:id})).document,bundle=await original.api('export',{campaignId:id});
-    const next=withoutMonsterSociety2(withoutMonsterSociety(await socialWorld())),server=await createPlaytestServer({world:next});t.after(server.close);
+    const next=withoutMonsterSociety2(withoutMonsterSociety(await socialWorld())),server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world:next});t.after(server.close);
     const imported=await server.api('import',{bundle}),campaignId=imported.reference.campaignId;
     const after=(await server.api('read',{campaignId})).document;
     for(const key of['player','inventory','location','minute','settlements','animals'])assert.deepEqual(after.state[key],before.state[key]);

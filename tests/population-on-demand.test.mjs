@@ -41,7 +41,8 @@ async function server(t,root,{world=baseline,generator}={}){
     await init(router,{baseRoot:root,world,populationGenerator:generator,consistencyEnabled:false,npcPlanningEnabled:false});app.use(router);
     const listener=app.listen(0,'127.0.0.1');await once(listener,'listening');t.after(()=>listener.close());
     return async(endpoint,body)=>{
-        const response=await fetch(`http://127.0.0.1:${listener.address().port}${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        // AI-01: this scenario exercises a model-gated server entry, so its requests declare T3 (default is T0, no AI).
+        const response=await fetch(`http://127.0.0.1:${listener.address().port}${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','X-AI-Profile':'T3'},body:JSON.stringify(body)});
         const json=await response.json();if(response.status!==200)throw Error(`${endpoint} ${response.status} ${json.error}`);return json;
     };
 }

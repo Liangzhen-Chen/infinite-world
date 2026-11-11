@@ -4,7 +4,7 @@ import {createPlaytestServer}from'../tools/playtest-runner.mjs';
 import {recordedLifeChange} from './fixtures/life-population.mjs';
 
 async function campaign(t,mode,seed){
-    const server=await createPlaytestServer({seed});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed});t.after(()=>server.close());
     const initial=await server.api('create',mode==='new'?{character:{name:'试玩者'}}:{}),campaignId=initial.reference.campaignId;
     let sequence=0;
     return{initial,api:server.api,campaignId,read:async()=>(await server.api('read',{campaignId})).document,

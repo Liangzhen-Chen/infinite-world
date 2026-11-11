@@ -6,7 +6,7 @@ import {loadPromptBundle,presetFor}from'../tools/build-card.mjs';
 import {reviewResponse} from './helpers/consistency-response.mjs';
 
 test('预设与试玩默认4096且兼容1800，截断按实际配额失败且不重试',async t=>{
-    const server=await createPlaytestServer();t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/});t.after(()=>server.close());
     assert.equal(generationSettings().maxOutputTokens,4096);
     assert.equal(generationRequest().max_tokens,4096);assert.equal(generationPreset().openai_max_tokens,4096);
     for(const maxOutputTokens of [4096,1800]){
@@ -25,7 +25,7 @@ test('预设与试玩默认4096且兼容1800，截断按实际配额失败且不
 test('多动作回合在默认配额返回完整长正文和回合尾，不混入思考',async t=>{
     // 修订记录 2026-10-23 第3条：原文须经逐句审查才可发布。
     // 用离线审查夹具验证完整长正文，仍逐字断言正文、尾注与思考隔离。
-    const server=await createPlaytestServer({consistencyClient:{async generate(body){return reviewResponse(body);}}});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:{async generate(body){return reviewResponse(body);}}});t.after(()=>server.close());
     // 同样700次、超过4000字；每10次一句，覆盖逐句审查240句上限内的长正文。
     const bundle=await loadPromptBundle(),text=('我在这里等着'.repeat(10)+'。').repeat(70);
     const reply=`${text}<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>`;
@@ -51,11 +51,11 @@ test('多动作回合在默认配额返回完整长正文和回合尾，不混�
 });
 
 test('对照种子由隔离服务器固定，请求正文不能改变生产随机源',async t=>{
-    const fixed=await createPlaytestServer({seed:'paired-sessions'});t.after(()=>fixed.close());
+    const fixed=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed:'paired-sessions'});t.after(()=>fixed.close());
     const a=await fixed.api('create',{character:{name:'甲'},randomSeed:'forged'}),b=await fixed.api('create',{character:{name:'乙'}});
     assert.equal(a.document.randomSeed,'paired-sessions');assert.equal(b.document.randomSeed,'paired-sessions');
     assert.notEqual(a.reference.campaignId,b.reference.campaignId);
-    const normal=await createPlaytestServer({seed:'random'});t.after(()=>normal.close());
+    const normal=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed:'random'});t.after(()=>normal.close());
     const c=await normal.api('create',{randomSeed:'forged'}),d=await normal.api('create',{randomSeed:'forged'});
     assert.notEqual(c.document.randomSeed,'forged');assert.notEqual(c.document.randomSeed,d.document.randomSeed);
 });
