@@ -6,7 +6,7 @@ import {loadPromptBundle,presetFor}from'../tools/build-card.mjs';
 import {reviewResponse} from './helpers/consistency-response.mjs';
 
 test('预设与试玩默认4096且兼容1800，截断按实际配额失败且不重试',async t=>{
-    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/});t.after(()=>server.close());
     assert.equal(generationSettings().maxOutputTokens,4096);
     assert.equal(generationRequest().max_tokens,4096);assert.equal(generationPreset().openai_max_tokens,4096);
     for(const maxOutputTokens of [4096,1800]){

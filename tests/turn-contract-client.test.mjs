@@ -61,7 +61,7 @@ test('场外不补跑；补跑故障保留模板；无行动不能夹带写操�
 });
 
 test('gate 可重复读取、检索仍开放，真实工具结算后唯一封口；旧版本与撤销继续拒绝',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  let view=await server.api('create',{});const campaignId=view.reference.campaignId,anchor='gate-preflight';
  const before=structuredClone(view.document);
  const begin=await server.api('review/begin',{campaignId,anchor,playerText:'我买一个面包',expectedSequence:view.reference.sequence,captureSearch:true});
@@ -102,7 +102,7 @@ test('runner 首轮零调用后 required 补跑真实等待，叙述在结算之
 });
 
 test('runner 三条真实零调用原稿均被 pending 模板替换，无行动和零返回均只补跑一次',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  const bundle=await loadPromptBundle();
  for(const fixture of fixtures)for(const noAction of [true,false]){
   const synced=[];let calls=0;
@@ -120,7 +120,7 @@ test('runner 三条真实零调用原稿均被 pending 模板替换，无行动�
 });
 
 test('界面行动补叙严格绑定 eventId/sequence，禁止尾注与混入另一界面行动',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  let view=await server.api('create',{});const campaignId=view.reference.campaignId;
  const start=await server.api('review/begin',{campaignId,anchor:null,eventId:'ui-wait',playerText:'界面选择休息十分钟',expectedSequence:view.reference.sequence});
  await server.api('execute',{campaignId,anchor:null,eventId:'ui-wait',tool:'world_time',args:{minutes:10},expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});

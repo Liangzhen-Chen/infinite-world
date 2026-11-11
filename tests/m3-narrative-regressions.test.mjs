@@ -122,7 +122,7 @@ test('HTTP 真实逾期和还款后核对：纯文字改写保留扣钱和信任
 });
 
 test('检索合同缺口证据：真实 search 与未 search 均无账本事件，不能把事件缺席认定为未检索',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());const view=await server.api('create',{}),campaignId=view.reference.campaignId;
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());const view=await server.api('create',{}),campaignId=view.reference.campaignId;
  const begun=await begin(server,view,'（场外）查找旧事。','lookup');
  const before=await server.api('export',{campaignId}),found=await server.api('search',{campaignId,query:'林穗'}),after=await server.api('export',{campaignId});
  assert.ok(found.results.length>0);assert.deepEqual(after.events,before.events);
@@ -140,7 +140,7 @@ async function captured(server,anchor='lookup'){
 const readReview=async(server,row)=>JSON.parse(await fs.readFile(path.join(server.directory,'infinite-fields',row.campaignId,'consistency',`${row.token}.json`),'utf8'));
 
 test('真实HTTP检索命中/空结果/零调用独立留证；scene不冒名，封口后拒绝追加，账本与events全等',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  for(const mode of ['hit','empty','none']){
   const row=await captured(server,mode),before=await server.api('export',row),view=await server.api('read',row);
   await server.api('scene',{campaignId:row.campaignId,query:'林穗'});
@@ -162,7 +162,7 @@ test('真实HTTP检索命中/空结果/零调用独立留证；scene不冒名，
 });
 
 test('完整空检索可说查过，计划/玩家引述/疑问不误报；未知来源肯定断言只留warning',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  for(const draft of ['我已查过，未找到相关记录。','我打算检索旧事。','你刚才说“已查到”，需要核对。','是否已查到记录？','我上次检索到了相关记录。']){
   const row=await captured(server,draft);await server.api('search',{...row,query:'zzzzqvxxzz'});
   const result=await server.api('review/reply',{...row,draft});assert.equal(result.canCommit,true);assert.deepEqual(result.issues,[]);
@@ -183,7 +183,7 @@ test('完整空检索可说查过，计划/玩家引述/疑问不误报；未知
 });
 
 test('检索token拒绝跨回合/存档/回滚；绑定真实检索时sequence并跨服务器重启幂等',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  const row=await captured(server),second=await captured(server,'other-campaign');
  await assert.rejects(server.api('search',{...row,campaignId:second.campaignId,query:'林穗'}),/HTTP|404|ENOENT|当前回合/);
  await assert.rejects(server.api('search',{...row,anchor:'wrong',query:'林穗'}),/锚点/);
@@ -192,7 +192,7 @@ test('检索token拒绝跨回合/存档/回滚；绑定真实检索时sequence�
  const later=await server.api('read',row),request={...row,expectedSequence:later.reference.sequence,query:'林穗'};
  const found=await server.api('search',request);assert.ok(found.results.length);
  assert.equal((await readReview(server,row)).retrieval.calls[0].sequence,later.reference.sequence);
- const restarted=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,directory:server.directory,consistencyClient:null});t.after(()=>restarted.close());
+ const restarted=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,directory:server.directory,consistencyClient:null});t.after(()=>restarted.close());
  assert.deepEqual(await restarted.api('search',request),found);assert.equal((await readReview(restarted,row)).retrieval.calls.length,1);
  await restarted.api('reconcile',{campaignId:row.campaignId,validAnchors:[]});
  await assert.rejects(restarted.api('search',request),/撤销/);
@@ -233,12 +233,12 @@ test('检索断言只允许一次纯文字改写，成功/失败原文与warning
 });
 
 test('中断留下pending回执时保持unknown；重新开服务审查可读，不能据此断言未检索',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());const row=await captured(server);
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());const row=await captured(server);
  const file=path.join(server.directory,'infinite-fields',row.campaignId,'consistency',`${row.token}.json`),record=await readReview(server,row);
  // On-disk interruption fixture: intent was durable; the final receipt was not.
  record.retrieval.calls.push({key:'interrupted',campaignId:row.campaignId,token:row.token,anchor:row.anchor,sequence:0,revision:0,query:'林穗',status:'pending'});
  await fs.writeFile(file,JSON.stringify(record));
- const restarted=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,directory:server.directory,consistencyClient:null});t.after(()=>restarted.close());
+ const restarted=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,directory:server.directory,consistencyClient:null});t.after(()=>restarted.close());
  const result=await restarted.api('review/reply',{...row,draft:'我已查到相关记录。'});
  assert.equal(result.canCommit,true);assert.equal(result.retrieval.status,'unknown');assert.ok(result.retrieval.warnings.some(row=>row.includes('未完整保存')));
  assert.equal(result.issues[0].severity,'warning');assert.deepEqual((await readReview(restarted,row)).evidence.receipts,[]);
@@ -246,7 +246,7 @@ test('中断留下pending回执时保持unknown；重新开服务审查可读，
 });
 
 test('同campaign并发检索与审查由一个队列封口，原返回和回执一致',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());const row=await captured(server);
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());const row=await captured(server);
  const outcomes=await Promise.allSettled([server.api('search',{...row,query:'林穗'}),server.api('review/reply',{...row,draft:'我打算检索旧事。'})]);
  const review=outcomes[1];assert.equal(review.status,'fulfilled');assert.equal(review.value.canCommit,true);
  const record=await readReview(server,row);assert.equal(record.retrieval.status,'complete');assert.equal(record.retrieval.sealed,true);

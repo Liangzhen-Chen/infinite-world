@@ -66,7 +66,7 @@ test('唯一改写仍有严重问题时明确阻止尾注，原文和已支付�
 });
 
 test('缺少模型服务或关闭审查均不伪装通过，审查只采用服务端真实回执',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  const row=await acted(server),review=await server.api('review/reply',{...row.reviewRequest,draft:corrected,receipts:[{result:{coins:999}}]});
  assert.equal(review.status,'unverified');assert.equal(review.verified,false);assert.equal(review.canCommit,true);assert.match(review.feedback,/未完成/);
  const other=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>other.close());

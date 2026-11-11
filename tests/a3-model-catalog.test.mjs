@@ -91,7 +91,7 @@ test('更多来源和选择不会撑破固定上限，也不会修改来源卡�
 });
 
 test('试玩器真实 actions 返回与前端共用有界模型投影，不把完整玩家卡写进工具历史',async t=>{
- const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  // 走到镇上之后，目标取 world_actions 对移动后存档自己列出的在场者（objects.people = presentPeople 再经可感知过滤，与带 target 时的判定同一条）；与具体是谁无关。
  // 该时刻地点上没有在场的人，说明前提不成立，明确报错，不能静默通过。
  let turn=0,seen,campaignId,target,premise;
