@@ -103,7 +103,7 @@ test('S5F-3 实物计价：以羊毛付款，数量是整数斤，守恒',async(
  // 场景前提改：第二笔的请求量取引擎此刻单笔上限的整数下界（旧手算：首笔后公开供给72、上限floor(72×.3)=21、请求21；
  // 现在卖家家户留存上升，首笔后现货供给更低，上限 max(retailFloor, 现货供给×maxShare) 低于 21，21 件会被“市场今天没有那么多可成交深度”拒绝）。
  // 数量由运行时的 depthLimit 推出，不写死；下游断言值（羊毛斤数）= ceil(整单文数÷羊毛价)，整单文数 = 数量×(1+.2×25/开市量)×.5×2 取整，已由探针 mkt-7 按该数量跑出。
- // 对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值待 tools/market-probe.mjs 的 s5-f-tender-N-after 输出。
+ // 对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值已由探针 mkt-7（86a564e2）s5-f-tender-3-after 跑出。
  const limit=depthLimit(f);assert.ok(limit>=1);
  const r2=await f.trade({item:'item_bread',quantity:limit,payCurrency:'item_wool'},'f3-wool-2');
  // 值出处：探针 mkt-7（哈希 86a564e2，F:/dnd-tmp/mkt-7.probe.out）的 s5-f-tender-3-after 场景 placeholders，引擎实算，不手写。（第二笔 20 件，paidWith.amount=9）
@@ -149,7 +149,7 @@ test('S5F-5 同一笔旧债用原币种还：数量就是冻结的数量，与�
  await f.issue(10,'f5-issue');f.atShop();
  const owed=await f.trade({item:'item_bread',quantity:5,payment:'credit',creditMinutes:600},'f5-credit');
  // 场景前提改：冲击笔的请求量取引擎此刻单笔上限的整数下界（旧为 25；赊账 5 件使卖家应收未履约，留存上升，现货供给更低，上限 <25，25 件会被深度拒绝）。
- // 对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值待 tools/market-probe.mjs 的 s5-f-tender-N-after 输出。
+ // 对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值已由探针 mkt-7（86a564e2）s5-f-tender-3-after 跑出。
  const shockQty=depthLimit(f);assert.ok(shockQty>=1);
  await f.trade({item:'item_bread',quantity:shockQty,payCurrency:NOTE},'f5-shock');
  const paid=await f.trade({payment:'repay',debt:owed.debt},'f5-repay');
@@ -163,11 +163,11 @@ test('S5F-6 成交统计分币种：原始统计按实际结算资源分开，�
  const f=fixture();
  await f.issue(10,'f6-issue');f.atShop();
  await f.trade({item:'item_bread',quantity:10},'f6-cash');                       // 现钱：10 文
- // 场景前提改：用券买的请求量取引擎此刻单笔上限的整数下界（旧为 25，现 25 件超过上限被深度拒绝）；对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值待 tools/market-probe.mjs 的 s5-f-tender-N-after 输出。
+ // 场景前提改：用券买的请求量取引擎此刻单笔上限的整数下界（旧为 25，现 25 件超过上限被深度拒绝）；对应设计变化：面包饱腹改推导（30→16，c0a7ea22，PLAN.md:584、591③）使卖家家户留存份数上升（可售量下降），单笔深度上限 max(retailFloor, 现货供给×maxShare)（market.mjs assertMarketDepth）随之低于旧手算值；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md；前提改后的新值已由探针 mkt-7（86a564e2）s5-f-tender-3-after 跑出。
  const noteQty=depthLimit(f);assert.ok(noteQty>=1);
  await f.trade({item:'item_bread',quantity:noteQty,payCurrency:NOTE},'f6-note');      // 券：ceil(整单文数÷10) 张
  const place='loc_hw',state=f.document.state;
- // 河湾成交：10 文铜钱 + 3 张券；基准账（totalCoins）合计 35 文，未被改写。
+ // 河湾成交：10 文铜钱 + 3 张券；基准账（totalCoins）合计 34 文（探针 mkt-7），未被改写。
  // 旧手算（请求25）：10 文铜钱 + 3 张券，基准账合计 35。新值由探针 mkt-7 跑出（请求量改为 noteQty 后）。
  // 值出处：探针 mkt-7（哈希 86a564e2，F:/dnd-tmp/mkt-7.probe.out）的 s5-f-tender-6-after 场景 placeholders，引擎实算，不手写。（BY_RESOURCE）
  assert.deepEqual(turnoverByResource(state,{place}),{coin_river:10,[NOTE]:3});
