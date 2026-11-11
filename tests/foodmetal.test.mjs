@@ -145,7 +145,7 @@ const overlay = JSON.parse(fs.readFileSync(new URL('../world/meta/mechanics/item
 const withAppearance = Object.entries(overlay).filter(([, p]) => p.props?.appearance);
 
 test('物品自己的外观（无配方单件食材，写在 mechanics/items.json 的 props 行）：每条带页面与原句；materialProps 读到且来源为 item', () => {
-  assert.equal(withAppearance.length, 18);
+  assert.equal(withAppearance.length, 17);
   for (const [id, p] of withAppearance) {
     assert.ok(p.props.basis.trim(), `${id} 带 basis`);
     assert.deepEqual(itemAppearanceErrors(p.props.appearance, `items.${id}.props`), [], id);
@@ -170,9 +170,22 @@ test('物品外观的 L1：条数、词组、citation、字段都被检查；已
 });
 
 test('没有可引原句的食材不写（按未知）；类别内外观一致的仍按类别写', () => {
-  for (const id of ['item_wheat_grain', 'item_broad_bean', 'item_pear', 'item_cucumber', 'item_mutton', 'item_pork_fat', 'item_dry_mushroom', 'item_pearl_barley', 'item_rye_flour', 'item_rapeseed_oil'])assert.equal(overlay[id]?.props?.appearance, undefined, `${id} 缺项为未知`);
+  for (const id of ['item_wheat_grain', 'item_broad_bean', 'item_pear', 'item_cucumber', 'item_mutton', 'item_pork_fat', 'item_dry_mushroom', 'item_pearl_barley', 'item_rye_flour', 'item_rapeseed_oil', 'item_hazelnut'])assert.equal(overlay[id]?.props?.appearance, undefined, `${id} 缺项为未知`);
   assert.ok(overlay.item_dill.props.appearance.length >= 3, '莳萝自己的外观写在单件上');
   assert.ok(!overlay.item_dill.props.appearance.some(a => /米|高/.test(a.term)), '不写植株高度');
   for (const id of ['item_cream', 'item_hard_cheese', 'item_mustard_seed', 'item_poppy_seed', 'item_caraway_seed'])assert.equal(overlay[id]?.props?.appearance, undefined, `${id} 由类别外观提供，不另写`);
   for (const id of ['item_water', 'item_bread', 'item_ration', 'item_wild_food'])assert.equal(overlay[id]?.props?.appearance, undefined, `${id} 不写外观`);
+});
+
+test('第二轮审查的修正被锁住：榛仁（去壳仁）不写整颗坚果外观；莳萝是嫩叶束不写花；生蛋不写熟态；铜不加「渐」「久」；甜菜不并列深紫；洋葱不写带条件的外层和气味', () => {
+  const terms = id => overlay[id].props.appearance.map(a => a.term).join('|');
+  assert.equal(overlay.item_hazelnut.props, undefined, '榛仁只剩种皮一条，不足 2 条，按未知');
+  assert.ok(!/花/.test(terms('item_dill')));
+  assert.ok(!/煮|熟/.test(terms('item_hen_egg')));
+  assert.ok(!/紫/.test(terms('item_beet')));
+  assert.ok(!/辛辣|外层/.test(terms('item_onion')));
+  assert.ok(!/至|到/.test(terms('item_honey')), '蜂蜜并列写作「多为…或…」，不写成连续区间');
+  const cu = pm.classes.copper.appearance.map(a => a.term).join('|');
+  assert.ok(!/渐|久/.test(cu), '铜的词组不加原句没有的时间程度');
+  assert.ok(pm.classes.silver.appearance.some(a => a.term === '可高度抛光'));
 });

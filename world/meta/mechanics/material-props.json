@@ -1664,8 +1664,12 @@
       "citation": "Wikipedia「Copper」：Red-orange metallic luster"
      },
      {
-      "term": "在空气中渐生红色锈膜，屋面铜久成绿色铜绿",
-      "citation": "Wikipedia「Copper」：acquires a reddish tarnish when exposed to air；oxidizes to form a green patina"
+      "term": "暴露在空气中会带上红色的失泽层",
+      "citation": "Wikipedia「Copper」：acquires a reddish tarnish when exposed to air"
+     },
+     {
+      "term": "建筑上的铜（多用于屋面）氧化后呈绿色铜绿",
+      "citation": "Wikipedia「Copper」：Copper used in buildings, usually for roofing, oxidizes to form a green patina"
      }
     ],
     "basis": "铜表观密度，Engineering ToolBox 表列 8940 kg/m³。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
@@ -1724,7 +1728,7 @@
      "method": "single",
      "reason": "表里只有锡一条（Wikipedia 白锡 7.289 g/cm³ 与之相容）"
     },
-    "basis": "锡表观密度，Engineering ToolBox 表列 7280 kg/m³。常温稳定的是 β 锡（Wikipedia「Tin」：silvery-white）；页面里可作外观的只有银白色与可抛光两条，不足 3 条，α 锡（暗灰粉末）只在 13.2 °C 以下稳定、不适用常温，故不写外观，按未知。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+    "basis": "锡表观密度，Engineering ToolBox 表列 7280 kg/m³。常温稳定的是 β 锡；Tin 页对外观有银白（silvery-white）与灰（metallic-gray）两种相互冲突的写法，α 锡（暗灰粉末）只在 13.2 °C 以下稳定、不适用常温，稳定的词条不足 3 条，故不写外观，按未知。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
    },
    "silver": {
     "sources": [
@@ -1744,7 +1748,7 @@
       "citation": "Wikipedia「Silver」：a brilliant, white, metallic lustre"
      },
      {
-      "term": "可抛光到很亮",
+      "term": "可高度抛光",
       "citation": "Wikipedia「Silver」：a brilliant, white, metallic lustre that can take a high polish"
      },
      {

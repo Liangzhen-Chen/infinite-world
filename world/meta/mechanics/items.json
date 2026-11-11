@@ -102,8 +102,8 @@
      "citation": "Wikipedia「Egg as food」：resembles a prolate spheroid with one end larger than the other"
     },
     {
-     "term": "生蛋白无色透明，煮熟变白而不透明",
-     "citation": "Wikipedia「Egg as food」：Colorless and transparent initially, upon cooking it turns white and opaque"
+     "term": "生蛋白无色透明",
+     "citation": "Wikipedia「Egg as food」：Colorless and transparent initially"
     },
     {
      "term": "蛋黄颜色随母鸡饲料而异",
@@ -276,20 +276,7 @@
  "item_hazelnut": {
   "tags": [
    "nut"
-  ],
-  "props": {
-   "basis": "item_hazelnut 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
-   "appearance": [
-    {
-     "term": "坚果近球形至椭圆",
-     "citation": "Wikipedia「Hazelnut」：roughly spherical to oval"
-    },
-    {
-     "term": "外覆薄的深褐色皮",
-     "citation": "Wikipedia「Hazelnut」：thin, dark brown skin"
-    }
-   ]
-  }
+  ]
  },
  "item_walnut": {
   "tags": [
@@ -536,12 +523,12 @@
    "basis": "红甜菜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "appearance": [
     {
-     "term": "红甜菜根色自红到深红，切面可见环带",
-     "citation": "Wikipedia「Beetroot」：the root colors are shades of red and dark red, with different degrees of zoning noticeable in slices"
+     "term": "红甜菜根色为红到深红的各种色调",
+     "citation": "Wikipedia「Beetroot」：the root colors are shades of red and dark red"
     },
     {
-     "term": "甜菜根呈深紫色",
-     "citation": "Wikipedia「Beetroot」：the deep purple roots of beetroot"
+     "term": "切片可见深浅不一的环带",
+     "citation": "Wikipedia「Beetroot」：with different degrees of zoning noticeable in slices"
     }
    ]
   }
@@ -570,16 +557,8 @@
      "citation": "Wikipedia「Onion」：Yellow or brown onions；Red or purple onions"
     },
     {
-     "term": "外层鳞片干而脆",
-     "citation": "Wikipedia「Onion」：the outer scales of the bulb become dry and brittle"
-    },
-    {
      "term": "里层是肥厚的鳞叶，包着中央的芽",
      "citation": "Wikipedia「Onion」：fleshy modified scale (leaves) that envelop a central bud at the tip of the stem"
-    },
-    {
-     "term": "切开时气味辛辣",
-     "citation": "Wikipedia「Onion」：They are pungent when chopped"
     }
    ]
   }
@@ -814,7 +793,7 @@
    "basis": "item_honey 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
    "appearance": [
     {
-     "term": "色自淡黄到深褐",
+     "term": "多为淡黄或深褐",
      "citation": "Wikipedia「Honey」：Honey is generally pale yellow and dark brown in color"
     },
     {
@@ -856,10 +835,6 @@
     {
      "term": "茎细而中空",
      "citation": "Wikipedia「Dill」：Its stems are slender and hollow"
-    },
-    {
-     "term": "花小，白至黄色，有香气",
-     "citation": "Wikipedia「Dill」：small white to yellow scented"
     }
    ]
   }
