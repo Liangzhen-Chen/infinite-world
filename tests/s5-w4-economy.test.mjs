@@ -250,7 +250,8 @@ const noonRead=(f,doc,id)=>{
     return {document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
 };
 // 诊断（断言失败时随消息输出）：该居民正午投影上的预算来源与购买计划概况。
-const planDiag=(f,doc,id)=>{const r=noonRead(f,doc,id),m=householdBudget(r,f.engine,id).resources.market;return JSON.stringify({minute:r.document.state.minute,at:r.document.state.npcs[id].location,cash:m.cash,offered:m.offered,purchases:m.purchases.map(p=>[p.source,p.item,p.quantity,p.at,p.unitPrice]),free:m.freeWater});};
+const planDiag=(f,doc,id)=>{const r=noonRead(f,doc,id),m=householdBudget(r,f.engine,id).resources.market;const st=r.document.state,keeper='npc_hw_linsui',ks=scheduleAt(f.engine,keeper,720,st),shops=currentShops(f.engine,st).map(s=>[s.id,s.keeper,s.settlement,s.location]);
+    return JSON.stringify({minute:st.minute,at:st.npcs[id].location,keeperSlot:[ks?.location,ks?.services,ks?.until],keeperState:[st.npcs[keeper].location,st.npcs[keeper].activity,st.npcs[keeper].status],shops,reach:customerReachMinutes(f.engine),cash:m.cash,offered:m.offered,purchases:m.purchases.map(p=>[p.source,p.item,p.quantity,p.at,p.unitPrice]),free:m.freeWater});};
 const plannedAtShop=(f,doc,id,item)=>householdBudget(noonRead(f,doc,id),f.engine,id).resources.market.purchases
     .filter(p=>p.source===SHOP&&p.item===item&&p.at<=720+customerReachMinutes(f.engine)).reduce((n,p)=>n+p.quantity,0);
 const quoteAtShop=(f,doc,buyer,item,quantity)=>{
