@@ -54,12 +54,14 @@ test('subjective view exposes only the observer household: items, purses and own
  assert.deepEqual(Object.keys(subjectiveView(down.e,down.doc,A).household.people),[],'a dying housemate purse is not usable funds');
 });
 
-test('the one household budget counts housemates purses and bags once; the stranger household and kernel read stay as they were',()=>{
+test('the one household budget counts housemates purses and bags once; the stranger household stays apart and the kernel read pools the same purses',()=>{
  const f=fixture({coins:{[A]:3,[B]:40,[C]:500},bags:{[B]:{[item]:breadsFor(120)*3}}});
  assert.equal(householdBudget(f.d,f.e,A).cash,43,'own purse plus the housemate purse, never the stranger');
  assert.equal(householdBudget(f.d,f.e,B).cash,43,'every member reads the same household pool');
  assert.equal(householdBudget(f.d,f.e,C).cash,500);
- assert.equal(householdBudget(f.d,f.e,A,{kernel:true}).cash,3,'the explicit kernel read keeps the personal purse');
+ // 客观读（kernel）与主观读同一条现金规则（EC-1b U7，household-budget objectiveCash）：同户共灶成员钱袋合计 3+40，陌生户 C 不入。
+ assert.equal(householdBudget(f.d,f.e,A,{kernel:true}).cash,43,'the kernel read pools the same household purses once');
+ assert.equal(householdBudget(f.d,f.e,C,{kernel:true}).cash,500,'a one-person household kernel read is its own purse');
  // 手算锚点：B 背包里的面包是同一灶的存粮（3 天份），A 与 B 读到的采购缺口都是 0；陌生户 C 没有存粮，缺口大于 0。
  assert.equal(shortfall(f,A),0);assert.equal(shortfall(f,B),0);
  assert.ok(shortfall(f,C)>0);

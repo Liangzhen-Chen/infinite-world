@@ -26,6 +26,8 @@ function fixture({seller,groups,coins={},stock=20}){
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];
  const engine=new WorldEngine(w);let document=engine.initialFromLegacy(legacy,'seller-share');
  document.state.minute=300;
+ // EC-1a: 预算采购口径已扣聚落公粮（granary!==false 的聚落给登记户配给，买家的采购需求就是 0）；本文件检验的是“有需求的买家分一份有限存货”，所以夹具聚落设为无公共粮库（引擎既有的 granary:false，只影响配给）。
+ document.state.settlements.loc_hw.granary=false;
  for(const id of members){document.state.npcs[id].inventory={};document.state.npcs[id].coins=0;document.state.npcs[id].location=document.state.npcs[seller].location;}
  document.state.npcs[seller].inventory={[item]:stock};
  // The settlement's other households would be potential buyers of the same stock; leave them penniless so only the fixture's households claim it.

@@ -51,6 +51,9 @@ function fixture({members=[owner],shared=true}={}){
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];
  const engine=new WorldEngine(w);let document=engine.initialFromLegacy(legacy,'household-budget');
  document.state.minute=0;
+ // EC-1a: 预算采购口径已扣聚落公粮（household-subsistence 的 registerHouseholdPublicShare：granary!==false 的聚落给登记户配给）。
+ // 本文件的手算锚点是“每人每天 10 个面包全靠自家存粮”，所以夹具聚落设为无公共粮库（引擎既有的 granary:false，只影响配给），公粮扣减另有专测。
+ document.state.settlements.loc_hw.granary=false;
  for(const id of members){document.state.npcs[id].inventory={};document.state.npcs[id].coins=0;}
  document.state.npcs[owner].inventory={[item]:20};document.state.npcs[owner].coins=5;
  // This fixture starts from an unbooked legacy document. Open both real
@@ -204,12 +207,13 @@ test('signed employment sets the reserve horizon and unpaid harvest is future go
  assert.equal(grown.resources.rows.find(r=>r.item===item).stock,20);
 });
 
-test('shared meals reserve one bag once and never grant the other purse',()=>{
+test('shared meals reserve one bag once; the one household budget counts both purses once (EC-1a)',()=>{
  const f=fixture({members:[owner,other]});f.state.npcs[other].coins=900;f.sync();
  // Hand anchor: two residents *10 eat one bag20, no duplicate second bag.
  const a=saleableStock(f.d,f.engine,owner,item),b=saleableStock(f.d,f.engine,other,item);
  assert.equal(a.retained+b.retained,20);assert.equal(a.available,0);
- assert.equal(householdBudget(f.d,f.engine,owner,{kernel:true}).cash,5);
+ // EC-1a 共用钱袋：同户共灶成员的钱袋合计只算一次，5（本人）+ 900（同户成员）= 905；不再是 5。
+ assert.equal(householdBudget(f.d,f.engine,owner,{kernel:true}).cash,905);
  assert.equal(reserveShortfall(f.d,f.engine,owner).satiety,0);
 });
 
@@ -269,8 +273,9 @@ test('actual agreed dialogue gift changes the recipient budget only after physic
  assert.equal(householdBudget(f.d,f.engine,owner,{kernel:true}).cash,before.cash);
 });
 
-test('double worlds: hidden household money/stock/obligations do not change NPC subjective budget',()=>{
- const f=fixture({members:[owner,other]});f.sync();
+test('double worlds: another household hidden money/stock/obligations do not change NPC subjective budget',()=>{
+ // EC-1a：同户成员互知钱与包裹，所以“隐藏”的对象是另一户的人：两人各自一户（shared:false）。
+ const f=fixture({members:[owner,other],shared:false});f.sync();
  const a=householdBudget(f.d,f.engine,owner);
  // Hand anchor: hidden +900 cash/+200 bread belongs to the other person: delta0.
  f.state.npcs[other].coins=900;f.state.npcs[other].inventory[item]=200;
@@ -280,6 +285,16 @@ test('double worlds: hidden household money/stock/obligations do not change NPC 
  const believed=householdBudget(f.d,f.engine,owner,{view});assert.equal(believed.cash,5);assert.equal(believed.expectations['expected-help'].value,900);
  assert.equal(believed.mutualAidAvailable,0);
  assert.throws(()=>householdBudget(f.d,f.engine,other,{view}),/observer mismatch/);
+});
+
+test('housemates know the purse and bag of each other, counted once in the one household budget (EC-1a)',()=>{
+ const f=fixture({members:[owner,other]});f.sync();
+ const before=householdBudget(f.d,f.engine,owner);
+ f.state.npcs[other].coins=900;f.state.npcs[other].inventory[item]=200;f.sync();
+ const after=householdBudget(f.d,f.engine,owner);
+ // Hand anchor: the housemate's 900 coins join the owner's 5 once: 905. Their 200 breads are a bag the household knows.
+ assert.equal(before.cash,5);assert.equal(after.cash,905);
+ assert.equal(after.resources.rows.find(r=>r.holder===other&&r.item===item).stock,200);
 });
 
 test('stable seeded preferences include spendthrifts and thrifty targets without minting resources',()=>{
@@ -494,7 +509,8 @@ test('my future food purchase cannot release another household holder reserve be
  const own=householdResources(f.d,f.engine,owner),held=own.rows.find(r=>r.holder===other&&r.item===item);
  assert.equal(held.food,20);assert.equal(own.market.spent,0);
  assert.equal(saleableStock(f.d,f.engine,other,item).available,0);
- assert.equal(householdBudget(f.d,f.engine,other,{kernel:true}).cash,0);
+ // EC-1a 共用钱袋：同户预算现金 = 本人 900 + 同户成员 0，按户只算一次。
+ assert.equal(householdBudget(f.d,f.engine,other,{kernel:true}).cash,900);
 });
 
 test('configured edible public-stock access follows its actual account, not a stale legacy balance',()=>{

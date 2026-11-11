@@ -50,6 +50,9 @@ test('native noon boundary settles before afternoon income and stock; a daytime 
   f.doc.state.minute=700;f.doc.state.npcs[buyer].coins=late==='cash'?0:100;
   f.doc.state.npcs[owner].inventory={[item]:late==='stock'?0:100};
   f.doc.state.npcs[seller].inventory={[item]:100};
+  // EC-1b：客流时刻 = 店营业窗口 [480,800) 与顾客清醒窗口的最早交集。买家睡到 720 才醒，最早交集 = 720，仍在下午的收入与到货之前；
+  // 买家全天醒着时交集是 480，起点 700 的推进区间 (700,720] 不含它，原用例的“正午”时刻就不存在了。
+  f.w.npcs.find(n=>n.id===buyer).schedule.default=[{start:0,end:720,location:place,activity:'睡眠',services:[]},{start:720,end:1440,location:place,activity:'休息',services:[]}];
   f.w.npcs.find(n=>n.id===owner).schedule.default=[
    {start:0,end:480,location:home,activity:'睡眠',services:[]},
    {start:480,end:800,location:place,activity:'营业',services:['trade']},
@@ -332,7 +335,7 @@ test('吃用已足的顾客不会因为钱多就继续买；付不起已知义�
 test('营业表不能代替到场；实际带货到场的非集日商人可营业',()=>{
  for(const arrived of [false,true]){
   const f=fixture({food:true});f.doc.state.npcs[buyer].coins=100;f.doc.state.npcs[owner].inventory={[item]:100};
-  if(!arrived){f.doc.state.npcs[owner].location='loc_bs';f.w.npcs.find(n=>n.id===owner).schedule.default[0].location='loc_bs';}
+  if(!arrived){f.doc.state.npcs[owner].location='loc_bs';f.w.npcs.find(n=>n.id===owner).schedule.default.at(-1).location='loc_bs';}// 夹具里店主的营业段是最后一段（[720,1440) trade），不在场就是这一段的所在地不在本聚落
   const d=f.sync();advanceCustomerFlow(d,f.e,0,DAY);
   // 手算：有日程无到场，成交0；在场100份减保留10，有真实可售存量。
   assert.equal(visits(d).some(v=>v.npc===buyer&&v.outcome==='bought'),arrived);
@@ -351,7 +354,8 @@ test('真实往返路费进入账本和顾客预算；不足五分钟不能占�
  assert.equal(d.get('state','npcs',buyer,'coins'),100-v.paid-4);
  assert.equal(v.budget.maximum,96);assert.ok(v.travel.returnAt>v.travel.finishAt);
  const g=fixture({food:true});g.doc.state.npcs[buyer].coins=100;g.doc.state.npcs[owner].inventory={[item]:100};
- const n=g.w.npcs.find(n=>n.id===owner);n.schedule.default=[{start:0,end:722,location:place,activity:'营业',services:['trade']},{start:722,end:1440,location:place,activity:'休息',services:[]}];
+ const n=g.w.npcs.find(n=>n.id===owner);// 营业窗口只有 [720,722) 两分钟：买家全天醒着，最早交集就是窗口起点 720，到店后 5 分钟服务要到 725，超出窗口 722，不能占用店家服务。
+ n.schedule.default=[{start:0,end:720,location:place,activity:'休息',services:[]},{start:720,end:722,location:place,activity:'营业',services:['trade']},{start:722,end:1440,location:place,activity:'休息',services:[]}];
  const gd=g.sync();advanceCustomerFlow(gd,g.e,0,DAY);
  assert.equal(visits(gd).some(v=>v.outcome==='bought'),false);
 });

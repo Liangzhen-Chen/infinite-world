@@ -76,7 +76,12 @@ test('周期补货：按店家周期在午夜向本聚落持货人补到上限�
     // Four remain; some bridge delivery, so all four exceed the saleable loaves.
     // K2（卡 E）依据：店主家户只把“本聚落持货人眼下能出让的余量”算作下一次本地补货（shop.mjs 口粮来源）；
     // 村里还没人有多余面包时，自家面包要留着顶到下次真实进货，所以多买被拒。持货人在这之后才出现。
+    // EC-1a：预算采购口径已扣聚落公粮（household-subsistence registerHouseholdPublicShare：granary!==false 的聚落给登记户配给），
+    // 白石村有粮库时店主一家的口粮由公粮覆盖，自家面包不必自留、全部可售——这是已批准的新规律。本断言检验的是“没有公粮的户必须自留口粮”，
+    // 所以只在这一步让聚落暂无公共粮库（引擎既有的 granary:false，只影响配给），断言后原样恢复，其后午夜结算与各断言按原夹具运行。
+    const hw=f.doc.state.settlements.loc_hw,granaryBefore=hw.granary;hw.granary=false;
     await assert.rejects(f.act('world_trade',{seller:host,item:'item_bread',quantity:4},'too-many'),/库存不足/);
+    if(granaryBefore===undefined)delete f.doc.state.settlements.loc_hw.granary;else f.doc.state.settlements.loc_hw.granary=granaryBefore;
     f.doc.state.npcs[holder].inventory={...f.doc.state.npcs[holder].inventory,item_bread:20};resyncBooks(f.engine,f.doc);
     const total=everyone(f.doc)+boundary(f.doc);
     f.doc.state.location=forge;

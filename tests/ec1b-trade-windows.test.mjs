@@ -20,7 +20,7 @@ const at=(start,end,services=[],activity='休息')=>({start,end,location:home,ac
 // 店主只在 720 起营业（货架清空时只剩居民卖方可买）；用于居民卖方用例：有营业窗口才有客流结算时刻。
 const LATE=[at(0,720),at(720,1440,['trade'],'营业')];
 const SELLER_DAY=[at(0,480),at(480,720,['trade'],'营业'),at(720,780,[],'午饭'),at(780,1080,['trade'],'营业'),at(1080,1440)];
-function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,late=[],playerShop=false,breadPrice=null,keepSubsistence=false}={}){
+function fixture({sellerSchedule=SELLER_DAY,residentSale=false,housemateBread=0,emptyShop=false,late=[],playerShop=false,breadPrice=null,keepSubsistence=false}={}){
  const w=structuredClone(world);
  if(breadPrice)w.items.find(i=>i.id===item).basePrice=breadPrice;// 把面包价抬到买不起，使“只看不买”的场景确定
  if(!keepSubsistence)delete w.rules.householdSubsistence;
@@ -39,6 +39,8 @@ function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,l
  doc.state.npcs=Object.fromEntries([A,B,C,...late.map(l=>l.id),seller].map(id=>[id,{...doc.state.npcs[id],coins:id===A?1000:late.some(l=>l.id===id)?(late.find(l=>l.id===id).coins??1000):id===C?5:0,inventory:{},location:home,status:'正常',activity:'休息'}]));
 doc.state.npcs[seller].inventory=emptyShop?{}:{[item]:100};
  if(residentSale)doc.state.npcs[C].inventory={[item]:60};
+ // 背包要在 openLedger 之前给：账本开账时才按背包建物品账，开账后再写 inventory 读不到（物理账为准）。
+ if(housemateBread)doc.state.npcs[B].inventory={[item]:housemateBread};
  for(const l of late)if(l.bread)doc.state.npcs[l.id].inventory={[item]:l.bread};
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:4,granary:false,food:0,foodPerDay:0,woodPerDay:0}};
  if(playerShop){doc.state.records.biz_player_stall={id:'biz_player_stall',category:'business',owner:'player',location:home,status:'营业',suspended:false,openedAt:600};doc.state.visits={...doc.state.visits,places:{...doc.state.visits?.places,[home]:{arrivedAt:600}}};doc.state.location=home;}
@@ -107,8 +109,9 @@ assert.equal(f.d.get('state','npcs',C,'coins'),coinsC+paid-bought.reduce((n,r)=>
 });
 
 test('a resident never sells to the own household',()=>{
-  const f=fixture({sellerSchedule:LATE,emptyShop:true});
- f.d.set(['state','npcs',B,'inventory'],{[item]:600});// 同户 A 缺口大：B 的面包先算户内口粮，余量要远超两人份储备才是可售余量
+  const f=fixture({sellerSchedule:LATE,emptyShop:true,housemateBread:600});// B 的面包先算户内口粮，余量要远超两人份储备才是可售余量；开账前给
+ // 前置（从引擎读）：同户 A 的采购缺口仍大于 0（单餐额度限制了面包能吃下的量，面包吃不满整户的饱腹），否则 A 本来就不买、本用例空过。
+ assert.ok(Number(householdBudget(f.d,f.e,A).resources.procurementShortfall.satiety)>0,'precondition: A household still needs food, so only the same-household rule keeps it from buying the bread');
  assert.ok(residentSellers(f.d,f.e,720).some(s=>s.keeper===B&&s.goods.includes(item)),'precondition: the housemate is a valid resident seller, so only the same-household rule can stop the sale');
  f.d.set(['state','minute'],720);
  advanceCustomerFlow(f.d,f.e,719,720);
