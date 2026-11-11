@@ -1,6 +1,12 @@
 SillyTavern/
 tools/node_modules/
-logs/
+logs/*
+# Management records for project review: card bodies, hand-offs and design notes (not the golden-table dumps).
+!logs/sessions/
+logs/sessions/*
+!logs/sessions/*.md
+logs/sessions/*golden-table*.md
+!logs/arch/
 backups/
 跑团资料/安装前设置.json
 node_modules/
