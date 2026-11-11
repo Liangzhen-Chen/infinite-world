@@ -21,14 +21,14 @@ import {finishContractTurn,turnFactsPrompt} from '../extension/turn-contract.mjs
 // 试玩/测试层的确定种子：真实开档仍是 randomUUID（server-plugin/index.mjs），
 // 但试玩验收与测试入口默认固定此常量，保证价格/稀缺度等数值逐次可复演；显式 seed:'random' 才随机。
 export const PLAYTEST_SEED='playtest-fixed-seed-v1';
-export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
+export async function createPlaytestServer({sidebandRoot=null,world,seed=PLAYTEST_SEED,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
     const seedMode=seed==='random'?'random':(typeof seed==='string'&&seed?'fixed':null);
     if(!seedMode)throw new Error("createPlaytestServer 的 seed 必须是非空字符串或 'random'");
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(tmpRoot(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
     // Same body limit as the SillyTavern host (src/server-main.js): exported bundles carry every world version they replay on.
     const app=express();app.use(express.json({limit:'500mb'}));const router=express.Router();
     const npcPlanner=plannerClient?(engine,document,options)=>planNpcAutonomy(engine,document,{...options,client:options.client??{generate:plannerClient.generate.bind(plannerClient)}}):undefined;
-    await init(router,{world,baseRoot:directory,newCampaignSeed:seedMode==='random'?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
+    await init(router,{world,sidebandRoot,baseRoot:directory,newCampaignSeed:seedMode==='random'?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');
     const origin=`http://127.0.0.1:${server.address().port}`;
     const api=async(endpoint,body={})=>{

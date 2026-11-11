@@ -12,6 +12,7 @@ import {actionOfCall,findAction} from './action-registry.mjs';
 import {primitiveActionRuntime} from './primitives.mjs';
 import {constructIntent} from './action-constructor.mjs';
 import {createRoutingContext} from './action-router.mjs';
+import {sidebandClient} from './sideband.mjs';
 
 const safeError=error=>String(error.message).replaceAll(process.env.DEEPSEEK_API_KEY??'__no_key__','[凭据已屏蔽]').slice(0,1200);
 const readJSON=async file=>JSON.parse(await fs.readFile(file,'utf8'));
@@ -202,6 +203,8 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   }
   if(state.sequence!==expectedSequence||state.sequence!==sceneSequence||state.revision!==record.revision)throw Error('审查前存档或历史分支已变化');
   if(state.document.releaseVersion!==1)throw Error('当前存档尚未启用新版');
+  // Every review, format-correction and rewrite call below leaves one sideband row for this turn.
+  const audited=client&&(store.sidebandRoot?sidebandClient(client,{store,campaignId,turn:state.sequence,role:'consistency'}):client);
   const events=state.events.filter(e=>state.active.has(e.sequence)&&e.sequence>record.sequence);
   if(events.some(e=>!belongsToTurn(e,record)||e.input?.tool==='world_turn'))throw Error('审查必须在本回合尾注提交前，且不能混入另一回合行动');
   const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document);
@@ -265,8 +268,8 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   input.draft=protocol.text;
   let first,review,text=input.draft,rewritten=false,attempts=0,rewriteError=null;
   if(record.enabled){
-   first=review=await reviewConsistency(input,{client});
-   if(review.rewriteRequest&&client){
+   first=review=await reviewConsistency(input,{client:audited});
+   if(review.rewriteRequest&&audited){
     attempts=1;
     // Persist the attempt before calling the model. A dropped HTTP response
     // can be retried, but never buys a second rewrite after a process failure.
@@ -274,13 +277,13 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
     else{
      record.rewriteStarted=true;record.original=draft;await atomicJSON(file,record);
      try{
-      const response=await client.generate({messages:await rewriteMessages(input,review),max_tokens:1800,thinking:{type:'disabled'}},`consistency-rewrite:${token.slice(0,20)}`);
+      const response=await audited.generate({messages:await rewriteMessages(input,review),max_tokens:1800,thinking:{type:'disabled'}},`consistency-rewrite:${token.slice(0,20)}`);
       const choice=response.choices?.[0];let candidate=choice?.message?.content;
       if(choice?.finish_reason!=='stop'||choice?.message?.tool_calls?.length||typeof candidate!=='string'||!candidate.trim())throw Error('改写没有返回完整且不含工具调用的正文');
       const candidateProtocol=normalizeReplyProtocol(candidate,{...input,outOfCharacter:isOutOfCharacter(input.playerText)});
       const originalCandidate=candidate;candidate=candidateProtocol.text;
       if(!parseTurn(candidate,{...input.clock,outOfCharacter:isOutOfCharacter(input.playerText)}).valid)throw Error('唯一改写没有保留有效的回合尾注');
-      const checked=await reviewConsistency({...input,draft:candidate},{client,rewriteAttempt:1});
+      const checked=await reviewConsistency({...input,draft:candidate},{client:audited,rewriteAttempt:1});
       record.rewrite={original:originalCandidate,text:candidate,protocol:candidateProtocol,review:checked,measurement:response.measurement};
       if(checked.status==='verified'||checked.verified&&!checked.issues.some(i=>i.severity==='error')){text=candidate;rewritten=true;review=checked;}
       else{rewriteError='唯一一次改写仍有严重问题或未完成验证';review=checked;}
