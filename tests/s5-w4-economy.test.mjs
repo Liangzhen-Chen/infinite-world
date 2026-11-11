@@ -372,7 +372,7 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
     // 徐玲钱袋（断言放在最后）：初始钱 − 柜台那笔实付 − 原生店实付（若有），都从客流记录读，不写死。
     // 规律（WATER-1A）：徐玲住处往返 6 分钟，当日有水可免费取，水分缺口由免费水扣除；买完口粮后饱腹缺口为 0，她就没有任何需要用钱补的营养缺口，
-    // 烙饼虽带水分（item-class.mjs:233 配方派生，水分 >0），也不为水分买。旧版此处断言“她因水分另买烙饼”，那正是被修正的行为。
+    // 徐玲有免费水，水分缺口被扣光，不为水分买任何货（WATER-1B 后烙饼水分为 0，见下行）。旧版此处断言“她因水分另买烙饼”，那正是被修正的行为。
     const nativeVisits=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop!==f.business).flatMap(r=>r.visits.filter(v=>v.npc===A));
     // 前提（从引擎读）：徐玲正午有水分需求，且被免费水扣光（freeWater.hydration>0，水分缺口 0）；引擎里确有水分>0 的货（牛乳、清水等）。
     // 本店货架（面包、烙饼、口粮）WATER-1B 后都不供水分（烙饼 0.12kg 过不了 12.5 门槛），所以“不为水分买”不能靠烙饼验证；改为对引擎里每件水分>0 的货断言：
