@@ -29,19 +29,55 @@ const clamp=(v,limits)=>Math.max(limits[0],Math.min(limits[1],v));
 const stateOf=d=>d.get('state');
 const rulesOf=engine=>engine.world.marketRules;
 const itemValue=(engine,document,item,base,scarcity,quality)=>explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality});
-// A pure function of the catalog row and the goods-tag table; remembered per row
-// object and revalidated against both inputs, so no live state can go stale.
-const goodsClasses=new WeakMap();
-export function goodsClass(engine,item){
- const row=engine.byId.get(item),table=rulesOf(engine).goodsTags;
- const hit=row&&typeof row==='object'?goodsClasses.get(row):null;
- if(hit&&hit.table===table&&hit.tags===row.tags&&hit.count===row.tags?.length&&hit.item===item&&hit.satiety===row.nutrition?.satiety)return hit.value;
- const tags=row?.tags??[];
- const category=Object.entries(table).find(([tag])=>tags.includes(tag))?.[1];
- const value=tags.find(t=>t.startsWith('goods:'))??`goods:${category??(row?.nutrition?.satiety>0?'food':item)}`;
- if(row&&typeof row==='object')goodsClasses.set(row,{table,tags:row.tags,count:row.tags?.length,item,satiety:row.nutrition?.satiety,value});
- return value;
+// 可食物资池：能吃的货（自身 nutrition.satiety>0，或生料经现有配方链能加工成这样的货）同属一池，按饱腹计量；
+// 池内每件货的权重 = 它的饱腹（生料沿链折算）。不看物品 id、聚落、季节，也不手填任何饱腹数。
+const recipeConsumers=new WeakMap();
+function consumersOf(engine){
+ const recipes=engine.world.recipes;if(!Array.isArray(recipes))return new Map();
+ const hit=recipeConsumers.get(recipes);if(hit&&hit.count===recipes.length)return hit.map;
+ const map=new Map();
+ for(const r of recipes)for(const m of r.materials??[]){const rows=map.get(m.item);if(rows)rows.push(r);else map.set(m.item,[r]);}
+ recipeConsumers.set(recipes,{count:recipes.length,map});return map;
 }
+// 物品本身所含的能量（K4 加载期派生的 nutrientContent，含生料）：只用来判断一件原料是否真是配方里供能的成分（水、盐、刨花不供能），并在多种原料间分摊产物饱腹。
+const calories=(engine,id)=>engine.byId.get(id)?.nutrientContent?.satiety??0;
+// 一件货的饱腹当量：自身 satiety>0 取自身；否则取它经配方加工成可食产物后的饱腹 = 产物饱腹 × 配方产出份数 ×（本料能量 ÷ 配方全部原料能量），沿链递归；
+// 多条配方取最小（保守，与 deriveItemAttributes 取最小饱腹的配方一致）。没有任何可食去路则为 0。
+export function foodSatiety(engine,item,path=new Set()){
+ const row=engine.byId.get(item),own=row?.nutrition?.satiety;
+ if(own>0)return own;
+ if(!row||path.has(item)||!(calories(engine,item)>0))return 0;
+ path.add(item);
+ let best=0;
+ for(const r of consumersOf(engine).get(item)??[]){
+  const out=r.output;if(!(out?.quantity>0)||path.has(out.item))continue;
+  const product=foodSatiety(engine,out.item,path);if(!(product>0))continue;
+  const total=(r.materials??[]).reduce((n,m)=>n+m.amount*calories(engine,m.item),0);
+  if(!(total>0))continue;
+  const share=product*out.quantity*calories(engine,item)/total;
+  if(!best||share<best)best=share;
+ }
+ path.delete(item);
+ return best;
+}
+// A pure function of the catalog row, the goods-tag table and the recipe table;
+// remembered per row object and revalidated against those inputs, so no live state can go stale.
+const goodsClasses=new WeakMap();
+function goodsEntry(engine,item){
+ const row=engine.byId.get(item),table=rulesOf(engine).goodsTags,recipes=engine.world.recipes;
+ const hit=row&&typeof row==='object'?goodsClasses.get(row):null;
+ if(hit&&hit.table===table&&hit.tags===row.tags&&hit.count===row.tags?.length&&hit.item===item&&hit.satiety===row.nutrition?.satiety&&hit.calories===row.nutrientContent?.satiety&&hit.recipes===recipes)return hit.entry;
+ const tags=row?.tags??[],satiety=foodSatiety(engine,item);
+ const category=Object.entries(table).find(([tag])=>tags.includes(tag))?.[1];
+ // 能吃的货一律并入同一可食池；商品类标签只留给不能吃的货。
+ const entry={value:satiety>0?'goods:food':tags.find(t=>t.startsWith('goods:'))??`goods:${category??item}`,weight:satiety>0?satiety:1,edible:satiety>0};
+ if(row&&typeof row==='object')goodsClasses.set(row,{table,tags:row.tags,count:row.tags?.length,item,satiety:row.nutrition?.satiety,calories:row.nutrientContent?.satiety,recipes,entry});
+ return entry;
+}
+export function goodsClass(engine,item){return goodsEntry(engine,item).value;}
+// 池内计量权重：可食池 = 饱腹当量；其余货 = 1（按件）。
+export function goodsWeight(engine,item){return goodsEntry(engine,item).weight;}
+function goodsEdible(engine,item){return goodsEntry(engine,item).edible;}
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs?.[id]?.location??state.creatures?.[id]?.location;
 const settlementOf=(engine,state,location)=>placeSettlement(engine,state,location).value??location;
 const inventoryOf=(state,id)=>{
@@ -178,8 +214,11 @@ function cheapestOfClass(state,engine,place,cls){
 const cheapestMemo=new WeakMap();
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
- let personalDemand=0;
- const items=engine.world.items.filter(i=>goodsClass(engine,i.id)===goods);
+ // 供给与需求都按报价这件货的件数表达：池内每件货按权重（可食物资 = 饱腹）折算后再除以报价货的权重。
+ // 非可食池权重全为 1，等于按件数，与此前一致。
+ const unit=goodsWeight(engine,item),items=engine.world.items.filter(i=>goodsClass(engine,i.id)===goods),weight=new Map(items.map(i=>[i.id,goodsWeight(engine,i.id)]));
+ const edible=items.some(i=>goodsEdible(engine,i.id));
+ let personalDemand=0; // 池内单位（可食池为饱腹）
  const owners=new Set(businessOwners);
  for(const store of engine.rules.economy?.shops?.stores??[])owners.add(store.keeper);
  for(const npc of engine.world.npcs)if(npc.shopType||(npc.services??[]).includes('trade'))owners.add(npc.id);
@@ -193,30 +232,40 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // writes occur in the loop; repeated allocation cannot change the budget.
   const budget=householdResources(d,engine,id);
   // 同一户的柴（盐）缺口按被报价的这件货折件数计一次，不按同类每种货重复计。
-  personalDemand+=upkeepDemand(state,engine,id,item);
+  personalDemand+=upkeepDemand(state,engine,id,item)*unit;
+  // 需求 = 目标留存 + 未满足缺口 + 承诺（与货在谁手里无关）：缺口取预算的 procurementShortfall（饱腹单位），一户只记一次（记在户里编号最小的成员名下）。
+  // 买下一件货使持有的留存 +1、缺口 −1，需求不变，价格只随供给减少而动。
+  if(edible&&budget.members?.length&&[...budget.members].sort()[0]===id)personalDemand+=budget.procurementShortfall?.satiety??0;
   for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;
-   if(owners.has(id))rows.push(row);
+   if(owners.has(id))rows.push({...row,unit:weight.get(it.id)/unit});
    // 日用留存（row.upkeep）的需要已由上面的 upkeepDemand 表达（一户一次）；持有量不再叠加成需求，否则自给越多柴价越高。
-   else personalDemand+=row.retained-row.upkeep+row.committed; // 只排除私人供给，保留原有消费与承诺需求。
+   else personalDemand+=(row.retained-row.upkeep+row.committed)*weight.get(it.id); // 只排除私人供给，保留原有消费与承诺需求。
   }
  }
  const profile=engine.rules.agriculture?.settlements.find(p=>p.settlement===place),settlement=state.settlements?.[place];
  for(const it of items){
   const stockName=Object.entries(engine.rules.economy?.shops?.stockItems??{}).find(([,id])=>id===it.id)?.[0];
   if(!settlement||!stockName)continue;
+  // 没有公仓的聚落（D1 公库账）没有公仓行。
+  if(stockName==='food'&&settlement.granary===false)continue;
   const farm=state.records?.[`agriculture:${place}`],day=Math.floor(state.minute/DAY);
   const stock=stockName==='food'
    ?priceRead(d,{point:'region.grain',account:granary(engine,place),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0})
    :priceRead(d,{point:'region.material',account:settlementStock(engine,place,stockName),legacy:()=>settlement[stockName]??0});
-  const retained=stockName==='food'?Math.ceil(mealMouthsOf(engine,state,place,settlement.population??0)*(profile?.reserveDays??1)):0;
-  const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,retained,committed,available:Math.max(0,stock-retained-committed)});
+  // 公仓可售份额 = 库存 − 口粮储备（餐口 × reserveDays）− 承诺；需求里计入的公仓储备目标 = 餐口 × 一个交易周期（economy.tradeCycleDays），
+  // 不是 90 天整份储备（储备已在供给里扣过一次，不能再整份算进需求）。不在农事表里的聚落没有 reserveDays，其目标日数取周贸易规则的 targetDays
+  // （原 forest-water 的燕麦缺口因子：餐口 × targetDays ÷ 存粮，现并入这里，不再单独乘）。
+  const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0,cycle=engine.rules.economy?.tradeCycleDays??1;
+  const retained=stockName==='food'?Math.ceil(mouths*(profile?.reserveDays??1)):0;
+  const target=stockName==='food'?Math.ceil(mouths*(profile?cycle:engine.rules.settlementTrade?.targetDays??cycle)):undefined;
+  const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,retained,target,committed,available:Math.max(0,stock-retained-committed),unit:weight.get(it.id)/unit});
  }
- const supply=rows.reduce((n,r)=>n+r.available,0);
+ const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);
  // Shelf ceilings and household retention are actual demand inputs.
  // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店；居民口粮需求是每位持有人（含户内成员）的储备目标，
  // 已在上面 rows.retained 与 personalDemand 中逐户计入，聚落粮仓另计全村储备——这里不再重复计入口粮需求。
- const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+r.maximum+(r.reserve??0),0);
- const demand=Math.max(shelf,personalDemand+rows.reduce((n,r)=>n+r.retained-(r.upkeep??0)+r.committed,0),1);
+ const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight.get(r.item),0)/unit;
+ const demand=Math.max(shelf,personalDemand/unit+rows.reduce((n,r)=>n+((r.target??r.retained-(r.upkeep??0))+r.committed)*r.unit,0),1);
  return {place,goods,supply,demand,rows};
 }
 // 同一状态版本内（游标 revision / 只读作用域内同一状态对象，任何状态与账本写入即换版本）marketSupply 是 (item, location, businessOwners)
@@ -232,7 +281,7 @@ export function marketSupply(d,engine,item,location,options={}){
 }
 function readMarketSupply(d,engine,item,location,options){
  const current=stockSupply(d,engine,item,location,options);
- const forward=engine.world.items.filter(it=>goodsClass(engine,it.id)===current.goods).map(it=>forwardSupply(d,engine,it.id,location));
+ const unit=goodsWeight(engine,item),forward=engine.world.items.filter(it=>goodsClass(engine,it.id)===current.goods).map(it=>({...forwardSupply(d,engine,it.id,location),scale:goodsWeight(engine,it.id)/unit}));
  const state=stateOf(d),horizon=rulesOf(engine).forward.timeDiscountMinutes??rulesOf(engine).forward.quarterMinutes,consignments=[];
  for(const row of Object.values(state.records??{})){
   if(row.category!=='transport'||!['booked','moving','delayed','arrived'].includes(row.status)||settlementOf(engine,state,row.to)!==current.place)continue;
@@ -245,10 +294,10 @@ function readMarketSupply(d,engine,item,location,options){
    const capacity=Math.min(cargo.quantity,Math.max(0,held-(allocated.get(cargo.item)??0)));allocated.set(cargo.item,(allocated.get(cargo.item)??0)+capacity);
    const at=row.status==='arrived'?state.minute:Math.max(row.estimatedArrivalAt,row.transport?.nextAt??0);
    const timeDiscount=horizon/(horizon+Math.max(0,at-state.minute));
-   consignments.push({id:row.id,item:cargo.item,capacity,secured:capacity,paidRatio:1,reliability:0,timeDiscount,expected:capacity*timeDiscount});
+   consignments.push({id:row.id,item:cargo.item,capacity,secured:capacity,paidRatio:1,reliability:0,timeDiscount,expected:capacity*timeDiscount,scale:goodsWeight(engine,cargo.item)/unit});
   }
  }
- const expected=forward.reduce((sum,row)=>sum+row.expected,0)+consignments.reduce((n,r)=>n+r.expected,0);
+ const expected=forward.reduce((sum,row)=>sum+row.expected*row.scale,0)+consignments.reduce((n,r)=>n+r.expected*r.scale,0);
  // 15 §15.2: backed, discounted promises affect prices, not spot delivery.
  return {...current,spotSupply:current.supply,supply:current.supply+expected,expected,forwards:forward.flatMap(row=>row.rows),consignments};
 }
@@ -273,7 +322,7 @@ export function marketGrade(engine,document,item,{seller,instances=null,quantity
 export function quoteSupply(d,engine,{item,location,business=null}){return marketSupply(d,engine,item,location,{businessOwners:business?[business.keeper]:[]});}
 // 不含某持有人自己那批货的供给：海关估入境货值时，货物自身不压低入境地的价格。
 export function supplyApart(d,engine,{item,location,owner}){
- const all=quoteSupply(d,engine,{item,location}),own=all.rows.filter(r=>r.owner===owner).reduce((n,r)=>n+r.available,0);
+ const all=quoteSupply(d,engine,{item,location}),own=all.rows.filter(r=>r.owner===owner).reduce((n,r)=>n+r.available*(r.unit??1),0);
  return {...all,supply:all.supply-own,spotSupply:(all.spotSupply??all.supply)-own,rows:all.rows.filter(r=>r.owner!==owner)};
 }
 // Integrate the same clamped demand/supply curve for a trade or a liquidation.
@@ -310,7 +359,7 @@ export function marketQuote(d,engine,{item,location,seller,buyer,quantity:count=
  const supply=given??quoteSupply(d,engine,{item,location,business});
  const day=Math.floor(minute/DAY),deals=marketDeals(state).filter(row=>row.day===day&&row.place===supply.place&&row.goods===supply.goods);
  const spotSupply=supply.spotSupply??supply.supply;
- const net=deals.reduce((n,row)=>n+(row.side==='sell'?row.quantity:-row.quantity),0),opening=Math.max(1,spotSupply+net);
+ const unitQ=goodsWeight(engine,item),net=deals.reduce((n,row)=>n+(row.side==='sell'?row.quantity:-row.quantity)*goodsWeight(engine,row.item)/unitQ,0),opening=Math.max(1,spotSupply+net);
  const scarcity=clamp(supply.demand/Math.max(1,supply.supply),engine.rules.economy.priceFactorLimits.region);
  const depth=Math.max(0,1+r.depthImpact*net/opening),quality=marketGrade(engine,document,item,{seller,instances,quantity:count});
  const value=explainDerived(engine,document,'economy:value',item,{kind:'item',base:base*scarcity*quality,observer,view});

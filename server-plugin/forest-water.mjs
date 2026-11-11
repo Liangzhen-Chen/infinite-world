@@ -1,7 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {takePopulation,addPopulation} from './population-health.mjs';
-import {mealMouthsOf} from './primitives-body.mjs';
 // RW-04. Stocks are facts; species, capacity and catchments are derived views.
 import {locationHabitatTypes,rangeSpec} from './wildlife-habitats.mjs';
 import {locationTraits,itemTraits,featureTraits} from './traits.mjs';
@@ -11,7 +10,7 @@ import {reservedMigrationCapacity} from './seasonal-migration.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {derived} from './derived.mjs';
 import {registerAdvanceHook} from './advance-hooks.mjs';
-import {reserve as reserveAccount,settlementStock,granary as granaryAccount,moveStock,bookStock,priceRead,moveFishPopulation,logisticStock} from './stock.mjs';
+import {reserve as reserveAccount,settlementStock,moveStock,bookStock,priceRead,moveFishPopulation,logisticStock} from './stock.mjs';
 import {exp} from './det-math.mjs';
 import {registerSubsistenceResources} from './household-subsistence.mjs';
 // The one item the forest ledger accounts for; household subsistence reads it from here instead of naming a product.
@@ -197,12 +196,7 @@ export function forestWaterPriceFactor(engine,state,item,location,books=null){
  if(!engine.rules.forestWater)return 1;
  const settlement=resourceSettlement(engine,location,state);
  if(item==='item_water')return waterResourceFactor(engine,state,location);
- if(settlement&&item===engine.rules.settlementTrade?.item&&!engine.rules.agriculture?.settlements.some(p=>p.settlement===settlement)){
-  const s=state.settlements[settlement],limits=engine.rules.economy.priceFactorLimits.region;
-  if(s.granary===false||!(s.foodPerDay>0))return 1;
-  const food=priceRead(books,{point:'forest.food',account:granaryAccount(engine,settlement),legacy:()=>s.food});
-  return Math.max(limits[0],Math.min(limits[1],mealMouthsOf(engine,state,settlement,s.population)*engine.rules.settlementTrade.targetDays/Math.max(1,food)));
- }
+ // 非农事聚落的粮食缺口（餐口×目标日数÷存粮）已并入 market.stockSupply 的公仓目标留存，同一池内计价，这里不再单独乘因子。
  if(item!=='item_wood'&&!itemTraits(engine.byId.get(item)).tags.includes('wood'))return 1;
  const forests=settlement?settlementForests(engine,state,settlement):forestSites(engine).filter(s=>s.location===location);
  const capacity=forests.reduce((n,s)=>n+s.capacity,0),reserve=forests.reduce((n,s)=>n+forestView(engine,state,s.location,undefined,books).reserve,0);

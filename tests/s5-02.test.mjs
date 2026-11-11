@@ -164,7 +164,7 @@ test('retention and signed procurement commitments are subtracted once; goods cl
  assert.equal(business.stock,12);assert.equal(business.retained,3);assert.equal(business.committed,3);assert.equal(business.available,6);
  const personal=saleableStock(f.read(),f.engine,host,bread);
  assert.equal(personal.retained,3);assert.equal(personal.available,6);
- const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===6));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available,0));
+ const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===6));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available*r.unit,0));
  const before=structuredClone(f.document);
  // Public supply6 still has maxShare*.3 below retailFloor5; quantity6
  // is rejected by the existing depth gate before any physical transfer.

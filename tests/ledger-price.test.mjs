@@ -161,7 +161,7 @@ async function step(c,tool,args,eventId,{dual=true,allowFailure=false}={}){
 function surface(c,mode){
     return inMode(mode,()=>{
         const d=draft(structuredClone(c.doc)),state=c.doc.state,settlements=Object.keys(state.settlements??{}),out={};
-        // 非托管聚落的粮价系数只在聚落有日耗粮时才用到公仓粮（forest.food）；日耗只在克隆上补，粮仓存量不动。
+        // 非托管聚落的公仓粮缺口已并入 market.stockSupply（region.grain 读点）；这里仍给无日耗的聚落补日耗，让各聚落的粮价都有可比读数，粮仓存量不动。
         for(const row of Object.values(d.document.state.settlements??{})){if(!(row.foodPerDay>0))row.foodPerDay=5;if(row.granary===false)delete row.granary;}
         const items=['item_oats','item_wood','item_stone','item_iron','item_water','item_herb','item_bread','item_fish','item_rawhide'];
         for(const sid of settlements)for(const item of items)if(c.engine.byId.get(item))out[`${sid}/${item}`]=regionalTradePrice(d,c.engine,item,sid);

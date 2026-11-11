@@ -249,7 +249,6 @@ export function recordCraft(d,{recipe,batches=1,inputs={},outputs={},failure=nul
 export const PRICE_POINTS=Object.freeze({
     'region.material':'区域材料市场：聚落库存与已开采的本地供货人账户，不读地下储量',
     'region.grain':'settlement-trade.regionalTradePrice：托管聚落粮仓里未过期的 grain 批次（区域报价的需求系数）',
-    'forest.food':'forest-water.forestWaterPriceFactor：非托管聚落的公仓粮（粮价的存量系数）',
     'forest.reserve':'forest-water.forestWaterPriceFactor：林木存量账户（木料价的稀缺系数）',
     'medicine.herb':'medicine-state.medicinePriceFactor：诊所医者行囊里的草药（药价的供给量）',
     'tax.payer':'finance-tax.assessTradeTax：纳税人现款（商税能否缴清）',
