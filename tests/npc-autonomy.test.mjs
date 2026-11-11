@@ -54,7 +54,7 @@ test('连续五分钟推进与一次跨日推进完全一致',async()=>{
  assert.deepEqual(a.d.document,b.d.document);assert.ok(Object.keys(a.d.get('state','npcAutonomy','actions')).length);
 });
 test('工作中离开或失能不能在完成时凭旧在场记录生产',async()=>{
- for(const change of ['location','status']){const {engine,d}=await setup();advance(d,engine,600);const task=Object.values(d.get('state','npcAutonomy','tasks')).find(t=>t.npc===actor);assert.ok(task);
+ for(const change of seed.itinerary?['companion','status']:['location','status']){const {engine,d}=await setup();advance(d,engine,600);const task=Object.values(d.get('state','npcAutonomy','tasks')).find(t=>t.npc===actor);assert.ok(task);
   const wood=count(d,actor,'item_wood');d.set(['state','npcs',actor,change],change==='location'?'loc_hw':'昏迷');advance(d,engine,task.finish);
   assert.equal(d.get('state','npcAutonomy','tasks',task.id,'status'),'失败');assert.equal(count(d,actor,'item_wood'),wood);assert.equal(d.get('state','npcAutonomy','actions',task.id),undefined);
  }
@@ -71,6 +71,8 @@ test('每种自主任务完成时都要执行者在场且清醒：移走或失�
   // 先推进到完成前一分钟再改，作息来不及把人走回原处（npc-schedule.mjs:288/292）。
   advance(d,engine,task.finish-1);
   if(change==='location')d.set(['state','npcs',task.npc,'location'],d.get('state','npcs',task.npc,'location')==='loc_hw'?'loc_capital':'loc_hw');
+  // 行程类的位置由作息按 market_trip 记录每分钟重写（npc-schedule.mjs:315-322），直接改 location 不构成离开；作息尊重的离开是玩家同行（:309 break，位置不重写）。
+  if(change==='companion')d.set(['state','player','companions'],[task.npc]);
   if(change==='status')d.set(['state','npcs',task.npc,'status'],'昏迷');
   advance(d,engine,task.finish);return {d,task,materials};};
  for(const [kind,seed] of seen){
@@ -78,7 +80,7 @@ test('每种自主任务完成时都要执行者在场且清醒：移走或失�
   for(const change of ['location','status']){
    const {d,task,materials}=await run(seed,change);
    // 昏迷：validateAction 第二道检查（isPhysicallyDead/状态清单，npc-autonomy.mjs 约 :91）先于完成时在场判定抛出。
-   assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'reason'),change==='location'?'工作完成时人物已离开或不能继续行动':'人物当前无法完成工作',`${kind} ${change} 失败原因`);assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
+   assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'reason'),{location:'工作完成时人物已离开或不能继续行动',companion:'人物不具备独立行动条件',status:'人物当前无法完成工作'}[change],`${kind} ${change} 失败原因`);assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
    assert.equal(d.get('state','npcAutonomy','actions',seed.id),undefined,`${kind} 不应产生行动记录`);
    for(const [item,n] of materials)assert.equal(count(d,task.npc,item),n,`${kind} 不应扣料`);
   }
