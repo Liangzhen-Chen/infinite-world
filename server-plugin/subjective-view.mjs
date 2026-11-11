@@ -1,5 +1,6 @@
 // A2 / I25. No cross-world cache: every projection belongs to this document.
 import {personCareer,personHousehold} from './entity-view.mjs';
+import {isEffective} from './lifecycle-state.mjs';
 import {relationView} from './npc-state.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -90,10 +91,12 @@ export function subjectiveView(engine,document,observer){
  });
  const accounts=Object.fromEntries((byOwner.get(observer)??[]).map(([key,balance])=>[key,{balance,lots:(document.ledger?.lots?.[key]??[]).map(l=>l.purports?{...copy(l.purports),amount:l.amount}:copy(l))}]));
  // 同一登记户（共灶，成员多于一人）的成员互知物品与钱袋余额（李白 11-11 决定；理由：共灶合账吃，npc-life 的实际结算也按合账）。
- // 只暴露物品与钱袋余额，不暴露记忆、关系与义务；陌生人、分户同址不适用。预算只在 pooled 时读它（household-budget.mjs）。
+ // 只暴露物品、钱袋余额与成员自己的未了义务（欠债、已承诺付款，预算算可动用额要扣），不暴露记忆与关系；陌生人、分户同址不适用。预算按户池读它（household-budget.mjs，唯一口径）。
+ // 已死亡、濒死、昏迷或不再有效的成员不入视图：他们的钱不能被同户其他人当作可动用资金。
  const house=observer==='player'?null:personHousehold(engine,s,observer).value;
- const household={people:Object.fromEntries((house?.members?.length>1?house.members:[]).filter(id=>id!==observer&&id!=='player'&&actor(s,id)).sort()
-  .map(id=>[id,{coins:actor(s,id).coins??0,inventory:copy(actor(s,id).inventory??{}),accounts:Object.fromEntries((byOwner.get(id)??[]).map(([key,balance])=>[key,{balance}]))}]))};
+ const household={people:Object.fromEntries((house?.members?.length>1?house.members:[]).filter(id=>id!==observer&&id!=='player'&&actor(s,id)&&isEffective(engine,s,id)&&!['死亡','濒死','昏迷'].includes(actor(s,id).status)).sort()
+  .map(id=>[id,{coins:actor(s,id).coins??0,inventory:copy(actor(s,id).inventory??{}),accounts:Object.fromEntries((byOwner.get(id)??[]).map(([key,balance])=>[key,{balance}])),
+   obligations:Object.values(s.obligations??{}).filter(o=>active(o)&&[o.promisor,o.promisee,o.debtor,o.creditor].includes(id)).map(copy)}]))};
  const demonstrations=recordsWhere(s.records,'category','education_demonstration').filter(r=>r.actor===observer&&r.workstation===here&&r.fromMinute<=now&&r.toMinute>now&&n.demonstrating!==false);
  const busyUntil=Math.max(now,...demonstrations.map(r=>r.toMinute),...Object.values(s.npcAutonomy?.tasks??{}).filter(t=>t.status==='进行中'&&t.npc===observer&&t.start<=now).map(t=>t.finish));
  const self={id:observer,name:n.name??b.name??observer,status:n.status,location:here,coins:n.coins??0,inventory:copy(observer==='player'?s.inventory??{}:n.inventory??{}),

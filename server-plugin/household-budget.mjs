@@ -1,6 +1,7 @@
 // Read-only household budgets. A target is a preference, never a transfer.
 import {bagStock,bag,priceRead,itemResource,crop as cropAccount} from './stock.mjs';
-import {coinRead,purse,COIN} from './money.mjs';
+import {coinRead,purse,COIN,moveCoins,mirrorPartyCoins} from './money.mjs';
+import {declareLedgerWriter} from './ledger.mjs';
 import {personHousehold} from './entity-view.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {bodyDrain} from './primitives-body.mjs';
@@ -12,7 +13,7 @@ import {subjectiveView} from './subjective-view.mjs';
 import {employmentActive} from './employment-state.mjs';
 import {contractTerms,leaseState,tenancyRentAmount} from './contract-state.mjs';
 import {householdWorkTime} from './npc-state.mjs';
-import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {isPhysicallyDead,isEffective} from './lifecycle-state.mjs';
 import {physicalItem} from './items.mjs';
 import {isItemClass,householdUsage as usageDefinition,usageGrams,mealCapPools,itemMg} from './item-class.mjs';
 // Shop restock lists and the upkeep-shortage reader are household facts: they live here (L1) so market and the household packs read them without importing npc-life.
@@ -100,9 +101,28 @@ function accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now}){
  return out;
 }
 // 主观视图里某持有人的物品与账：观察者本人读 view.self，同户成员读 view.household（subjective-view.mjs，只含物品、钱袋余额与现金字段）。
-const viewSide=(view,holder)=>holder===view.observer?view.self:view.household?.people?.[holder]??{inventory:{},accounts:{},coins:0};
-// 同户钱袋合计（pooled 才用）：本人 + 同一登记户其他成员；成员账缺失时退回其现金字段，同本人口径。
+const viewSide=(view,holder)=>holder===view.observer?view.self:view.household?.people?.[holder]??{inventory:{},accounts:{},coins:0,obligations:[]};
+// 同户钱袋合计：本人 + 同一登记户其他成员；成员账缺失时退回其现金字段，同本人口径。
 const pooledCash=(engine,owner,view)=>Object.entries(view.household?.people??{}).reduce((n,[id,p])=>n+(p.accounts?.[purse(engine,id)]?.balance??p.coins??0),view.self.accounts?.[purse(engine,owner)]?.balance??view.self.coins);
+// 同户钱袋转账：主观预算按户池算现金，付款人自己的钱袋不够时，先从同一登记户的其他成员钱袋按编号序补足到 need，再由付款人付款。
+// 每笔一条 moveCoins 流水（writer 'household-pool'，eventId 带付款人与对方）并经 mirrorPartyCoins 同步现金字段；币总量不变，转出方只转其余额不会为负；
+// 已死亡、濒死、昏迷或不再有效的成员不转（与视图 household 同一条件）。返回实际转入额。
+declareLedgerWriter('household-pool');
+export function householdPoolTopUp(d,engine,payer,need,eventId){
+ const state=d.get('state'),balance=id=>coinRead(d,{point:'assets.cash',account:purse(engine,id),legacy:()=>d.get('state','npcs',id)?.coins??0});
+ const first=need-balance(payer);if(!(first>0))return 0;
+ let short=first;
+ const members=(personHousehold(engine,state,payer).value?.members??[]).filter(id=>id!==payer&&id!=='player'&&state.npcs?.[id]&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status)).sort();
+ for(const member of members){
+  if(short<=0)break;
+  const amount=Math.min(short,balance(member));if(!(amount>0))continue;
+  const key=`${eventId}:pool:${member}`;
+  moveCoins(d,{from:purse(engine,member),to:purse(engine,payer),amount,writer:'household-pool',eventId:key});
+  mirrorPartyCoins(d,engine,member,-amount,key,'household-pool');mirrorPartyCoins(d,engine,payer,amount,key,'household-pool');
+  short-=amount;
+ }
+ return first-short;
+}
 function bagEntries(d,engine,state,holder,view){
  const raw=view?viewSide(view,holder).inventory:inventory(state,holder),held=new Map();
  for(const [name,value]of Object.entries(raw)){
@@ -289,19 +309,19 @@ export function householdMealWithSources(plan,sourceNutrition={}){
  return {...plan,shortfall,capState:nextMealCapState(rows,saved),rows:rows.filter(r=>r.food>0||r.eatMg>0).map(({definition,...r})=>({...r,selection:r.selection.slice(0,r.food)}))};
 }
 
-export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true,pooled=false}={}){
+export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true}={}){
  // 免费水依赖日期与水体：随预算读同一缓存（见 freeWaterToday 注释），键里带日期。
- const read=()=>readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,pooled,free:freeWaterToday(d,engine,owner,view)});
+ const read=()=>readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,free:freeWaterToday(d,engine,owner,view)});
  return view?read():budgetRead(d,engine,[resourceMemo,owner,days,risk,commonRisk,marketSubstitution,Math.floor(d.get('state','minute')/DAY)],read);
 }
-function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,pooled=false,free}){
+function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,free}){
  const state=d.get('state'),f=family(d,engine,owner),subjective=Boolean(view);
  if(view&&view.observer!==owner)throw Error('Household budget observer mismatch');
  // Knowing the household's mouths does not grant access to their private
  // bags. Subjective needs use known derived facts, with the public body base
  // when another member's private modifiers are unknown.
- // pooled（李白 11-11：同一登记户成员互知物品与钱袋）：主观视图下同户成员的背包与钱袋并入这一户的预算，与客观读（f.holders）同一口径；默认仍只看本人。
- const pool=subjective&&pooled?Object.keys(view.household?.people??{}):[];
+ // 主观视图下同户成员的背包与钱袋并入这一户的预算，与客观读（f.holders）同一口径；
+ const pool=subjective?Object.keys(view.household?.people??{}):[];
  const holders=subjective?[owner,...pool]:f.holders,members=f.shared?f.members:[owner];
  const seeds=subjective?new Map():stateMemo(state,engine,[seedRecords,JSON.stringify(holders)],()=>seedNeeds(engine,state,holders),seedInputs);
  const promises=subjective?view.self.obligations??[]:[...obligationRows(state),...recordsMemo(state.records,promisedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='procurement'||r.category==='agreed_quote'))];
@@ -323,15 +343,15 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  }).sort((a,b)=>(a.definition?.shelfLifeDays??Infinity)-(b.definition?.shelfLifeDays??Infinity)||a.item.localeCompare(b.item)||a.holder.localeCompare(b.holder));
  const commitments=subjective?null:stateMemo(state,engine,[commitmentMemo],()=>commitmentAllocation(state),commitmentInputs);
  for(const r of rows){
-  r.committed=subjective?(r.holder!==owner?[]:view.self.obligations??[]).filter(o=>!obligationClosed(o)&&debtor(o)===owner&&(o.resource??o.item??o.subject)===r.item).reduce((n,o)=>n+unpaid(o),0):commitments.get(r.key)??0;
+  r.committed=subjective?(viewSide(view,r.holder).obligations??[]).filter(o=>!obligationClosed(o)&&debtor(o)===r.holder&&(o.resource??o.item??o.subject)===r.item).reduce((n,o)=>n+unpaid(o),0):commitments.get(r.key)??0;
   r.seedTarget=seeds.get(r.key)??0;
   r.seed=Math.min(Math.max(0,r.stock-r.committed),r.seedTarget);
   r.inUse=subjective?0:Object.values(state.npcAutonomy?.tasks??{}).some(t=>t.npc===r.holder&&t.status==='进行中'&&(engine.world.recipes.find(p=>p.id===t.action?.recipe)?.tools??[]).includes(r.item))?1:0;
  }
  // A quote is future access, never current food or cash. Earmark only this
  // person's cash, net of known payments before acquisition; no family purse.
- // pooled 时按户算一次：本人加同户成员的钱袋合计（同户共灶，李白 11-11）；执行购买时钱不够的部分先在户内钱袋间转账（business.mjs poolTopUp）。
- const cash=view?(pooled?pooledCash(engine,owner,view):view.self.accounts?.[purse(engine,owner)]?.balance??view.self.coins):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
+ // 主观读一律按户算一次：本人加同户成员的钱袋合计（同户共灶，李白 11-11）；执行购买时钱不够的部分先在户内钱袋间转账（household-budget.mjs householdPoolTopUp）。
+ const cash=view?pooledCash(engine,owner,view):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
  const payments=futureSources(d,engine,owner,view).payments;
  const sources=marketSubstitution&&cash>0&&commonRisk<1?accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now:state.minute}):[];
  const nextFood=sources.length?Math.min(...sources.map(r=>r.at)):null;
@@ -461,14 +481,16 @@ function futureSources(d,engine,owner,view){
  return view?buildFutureSources(d,engine,owner,view):budgetRead(d,engine,`future:${owner}`,()=>buildFutureSources(d,engine,owner,null));
 }
 function buildFutureSources(d,engine,owner,view){
- const s=d.get('state'),rows=view?view.self.obligations??[]:obligationRows(s),future=[],payments=[];
+ // 主观读：同户成员的未了义务（欠债、已承诺付款、应收工钱）并入这一户的收支，户池现金才扣得掉他们要付的账；客观读本来就读全部义务行。
+ const s=d.get('state'),house=new Set([owner,...Object.keys(view?.household?.people??{})]);
+ const once=new Set(),rows=view?[...(view.self.obligations??[]),...Object.values(view.household?.people??{}).flatMap(p=>p.obligations??[])].filter(r=>!r.id||!once.has(r.id)&&once.add(r.id)):obligationRows(s),future=[],payments=[];
  for(const r of rows){
   if(obligationClosed(r)||!Number.isFinite(r.deadline))continue;
   const resource=r.resource??r.item??(r.category==='debt'||r.debtor||r.coins!==undefined?COIN:null),amount=unpaid(r);
   if(!amount||!resource)continue;
   const at=Math.max(s.minute,r.dueAt??r.deadline),entry={id:r.id,resource,amount,at,day:at/DAY,source:r.kind??r.type,reliable:resource===COIN&&['wage','rent'].includes(r.kind??r.type)&&r.deadline>=s.minute};
-  if(creditor(r)===owner)future.push(entry);
-  if(debtor(r)===owner)payments.push(entry);
+  if(view?house.has(creditor(r)):creditor(r)===owner)future.push(entry);
+  if(view?house.has(debtor(r)):debtor(r)===owner)payments.push(entry);
  }
  for(const r of recordsMemo(s.records,futureRecords,()=>{
   const owners=new Map();
@@ -510,17 +532,17 @@ function buildFutureSources(d,engine,owner,view){
 }
 
 // Default is the actor's knowledge. Kernel consumers must opt in explicitly.
-export function householdBudget(d,engine,owner,{kernel=false,view=null,risk=0,commonRisk=0,creditCoverage=0,pooled=false}={}){
+export function householdBudget(d,engine,owner,{kernel=false,view=null,risk=0,commonRisk=0,creditCoverage=0}={}){
  const state=d.get('state'),document=d.document??{state};
  if(!kernel)view??=subjectiveView(engine,document,owner);
  if(view&&view.observer!==owner)throw Error('Household budget observer mismatch');
- const cash=view?(pooled?pooledCash(engine,owner,view):view.self.accounts?.[purse(engine,owner)]?.balance??view.self.coins):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
+ const cash=view?pooledCash(engine,owner,view):coinRead(d,{point:'assets.cash',account:purse(engine,owner),legacy:()=>actor(state,owner)?.coins??0});
  const {future,payments}=futureSources(d,engine,owner,view),reliable=future.find(r=>r.reliable),next=reliable??future.find(r=>r.source==='harvest'),until=next?.at??state.minute+engine.world.marketRules.personalReserveDays*DAY;
  const incomeRisk=future.length?future.filter(r=>!r.reliable).length/future.length:0;
  const purchasable=cash>0&&commonRisk<1?accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now:state.minute}):[];
  const foodDays=purchasable.length?Math.max(0,(Math.min(...purchasable.map(r=>r.at))-state.minute)/DAY):null;
  const target=householdBufferTarget(d,engine,owner,{incomeDays:(until-state.minute)/DAY,risk:risk+incomeRisk,commonRisk,creditCoverage,foodDays});
- const resources=householdResources(d,engine,owner,{days:target.days,view,risk,commonRisk,pooled});
+ const resources=householdResources(d,engine,owner,{days:target.days,view,risk,commonRisk});
  // Simultaneous contractual receipts precede payments in this projection;
  // nothing is spendable now until its actual transfer has occurred.
  const times=[...new Set([...future,...payments].filter(r=>r.resource===COIN&&r.at<=until).map(r=>r.at))].sort((a,b)=>a-b);

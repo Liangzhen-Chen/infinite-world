@@ -688,11 +688,20 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
  return {nutrition,sources};
 }
 const sourcesIndex=sources;
-// 预算侧的公粮份额（只读）：与午夜 mealDeficit 同一函数 publicShareOf；住处与聚落的取法同 householdSubsistencePlan。没有住处也没有户籍聚落的人没有公粮。
+// 公粮份额 = 当日农业实吃 ÷ 口数（午夜 npc-life 的 share 与预算的预测共用这一个换算）；没有口数就是 0。
+export function rationShare(ration){return ration?.mouths>0?ration.eaten/ration.mouths:0;}
+// 预算侧的公粮份额（只读预测）：与午夜 npc-life 同口径——只给登记户（group.registered）、没有公共粮库（granary:false）的聚落没有配给，
+// 受 householdSubsistence 规则门控（规则缺失则 plan 路径不发公粮，预算也不扣）。数值取最近一次真实结算的实吃/口数（农业记录 lastReport，
+// 即昨夜 advanceAgriculture 的 eaten 与 missingMeals）；还没有结算过（开局当日）才用 publicShareOf 按粮库存量折算的预测。
+// 注意：预算把今日份额按预算天数恒定外推，粮库见底后的回落不在预测里（乐观假设，由每夜实吃纠正）。
 registerHouseholdPublicShare((e,state,owner)=>{
- const h=personHousehold(e,state,owner).value,person=e.byId.get(owner),home=h?.homeLocation??person?.home?.location??person?.location??state.npcs?.[owner]?.location;
- if(!h?.settlement&&!home)return 0;
- return publicShareOf(e,state,owner,h?.settlement??placeSettlement(e,state,home).value);
+ if(!config(e))return 0;
+ const h=personHousehold(e,state,owner).value;if(!h)return 0;
+ const home=h.homeLocation??state.npcs?.[owner]?.location,settlement=h.settlement??(home?placeSettlement(e,state,home).value:null);
+ const s=settlement&&state.settlements?.[settlement];if(!s||s.granary===false)return 0;
+ const report=state.records?.[`agriculture:${settlement}`]?.lastReport,day=Math.floor(state.minute/DAY);
+ if(report&&report.day>=day-1&&Number.isFinite(report.eaten)&&Number.isFinite(report.missingMeals))return rationShare({mouths:report.eaten+report.missingMeals,eaten:report.eaten});
+ return publicShareOf(e,state,owner,settlement);
 });
 // 预算侧的免费水（只读）：与每日取水共用 journey('water') 的选址，毫升与水分的换算同 supplyHousehold；只扣当日份。
 // 客观读：真实 journey（含水质门槛），可取量 = min(当日需求对应毫升, 水体可取量)。

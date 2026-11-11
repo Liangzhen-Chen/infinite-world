@@ -4,7 +4,6 @@ import {obligationRows,obligationView} from './obligation-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,coinRead,dedicatedCoinAccount,dedicatedCoinKey,spendCounterCoins,mirrorPartyCoins,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('business');
-declareLedgerWriter('household-pool');
 import {chargeTrade,repayDebt,createBusinessContract,finishBusinessContract,refundContractEscrow,releaseBusinessLease} from './contracts.mjs';
 import {contractFreeze,claimCopper,REFERENCE} from './tender.mjs';
 import {holdGoods,releaseGoods} from './goods-escrow.mjs';
@@ -26,7 +25,7 @@ import {currentShops} from './shop.mjs';
 import {placeSettlement,personConstraint,personSimulation,personBusiness,personConstraints,personHousehold} from './entity-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {isEffective} from './lifecycle-state.mjs';
-import {householdBudget,householdOptions} from './household-budget.mjs';
+import {householdBudget,householdOptions,householdPoolTopUp} from './household-budget.mjs';
 import {stateReader,valuation} from './valuation.mjs';
 import {rollDice} from './scheduler.mjs';
 import {actionCostRule} from './action-costs.mjs';
@@ -198,6 +197,7 @@ export async function businessTrade(d,args,eventId){
         const budget=householdBudget(d,this,buyer);
         const capacity=Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance))-(this.byId.get(item)?.nutrition?0:budget.resources.market.spent));
         if(cost>capacity||!householdOptions(budget,{item,quantity,totalCoins:cost}).find(o=>o.operation==='buy').feasible)throw preconditionFailure(`顾客家庭当前采购预算不足：可付${capacity}铜`);
+        householdPoolTopUp(d,this,buyer,cost,eventId);
         const incomeBefore=this.actor(d,buyer).coins;
         const counter=counterFor(d,shop);
         if(this.actor(d,buyer).coins<cost)throw preconditionFailure('买方余额不足');
@@ -699,7 +699,7 @@ const shelfOf=(d,engine,shop)=>shop.kind==='player'
 function wants(d,engine,id,item,gaps,t,shop,read){
     const def=engine.byId.get(item),state=d.get('state'),out={quantity:0,severity:0};
     if(def?.nutrition){
-        if(!gaps.has(id))gaps.set(id,householdBudget(read,engine,id,{pooled:true}).resources);
+        if(!gaps.has(id))gaps.set(id,householdBudget(read,engine,id).resources);
         const plan=gaps.get(id);
         let units=0;
         if(plan.market.offered.includes(shop.id))units=plan.market.purchases.filter(p=>p.source===shop.id&&p.item===item&&p.at<=t+customerReachMinutes(engine)).reduce((n,p)=>n+p.quantity,0);
@@ -723,21 +723,6 @@ function walkMinutes(engine,from,to,t,seed,cache){
     cache.set(key,trip);return trip;
 }
 
-// 同户钱袋转账（同一登记户共灶，李白 11-11）：买家钱袋不足 need 时，从同户成员钱袋按编号序补足到 need，每笔一条 moveCoins 流水（writer 'household-pool'，
-// eventId 带买家与对方）并经 mirrorPartyCoins 同步现金字段；币总量不变，转出方不会为负（只转其余额）。预算按户池算过这笔钱够，这里把它落到买家钱袋上。
-function poolTopUp(d,engine,buyer,need,eventId){
-    const state=d.get('state'),balance=id=>coinRead(d,{point:'assets.cash',account:purse(engine,id),legacy:()=>d.get('state','npcs',id)?.coins??0});
-    let short=need-balance(buyer);if(!(short>0))return;
-    const house=personHousehold(engine,state,buyer).value;
-    for(const member of [...(house?.members??[])].filter(id=>id!==buyer&&id!=='player'&&state.npcs?.[id]).sort()){
-        if(short<=0)break;
-        const amount=Math.min(short,balance(member));if(!(amount>0))continue;
-        const key=`${eventId}:pool:${member}`;
-        moveCoins(d,{from:purse(engine,member),to:purse(engine,buyer),amount,writer:'household-pool',eventId:key});
-        mirrorPartyCoins(d,engine,member,-amount,key,'household-pool');mirrorPartyCoins(d,engine,buyer,amount,key,'household-pool');
-        short-=amount;
-    }
-}
 function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
     const state=d.get('state'),cost=quote.totalCoins;
     let tax=0;
@@ -812,8 +797,8 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             const read={document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
             const want=wants(d,engine,id,item,gaps,t,shop,read);if(!want.quantity)continue;
             const view=subjectiveView(engine,projected,id);
-            // 同一登记户共灶：预算按户池算一次（成员背包与钱袋并入，household-budget pooled）；成交时钱袋不够的部分先在户内转账（poolTopUp）。
-            const budget=householdBudget(read,engine,id,{view,pooled:true});
+            // 同一登记户共灶：预算按户池算一次（成员背包与钱袋并入，household-budget 唯一口径）；成交时钱袋不够的部分先在户内转账（householdPoolTopUp）。
+            const budget=householdBudget(read,engine,id,{view});
             // Food buys replace the buffer with provisions. Other purchases
             // also leave the planned food money and known obligations intact.
             const floor=Math.min(budget.cash,...budget.timeline.map(r=>r.balance));
@@ -845,7 +830,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             const decision=npcDecision(decisionView,{kind:'purchase',from:shop.keeper,cost:{coins:quote.totalCoins+tripCost,minutes:duration},reward:Math.floor(estimate.explanation.value.value*quantity),needSatisfaction:Math.trunc(want.severity*(1000+draw)/1000)});
             if(decision.outcome!=='agree'){visits.push({npc:id,item,quantity,quoted:quote.totalCoins,outcome:decision.outcome,reason:decision.reason});if(decision.outcome==='defer')break;continue;}
             const eventId=`customer:${shop.id}:${t}:${id}:${item}`;
-            poolTopUp(d,engine,id,tripCost+quote.totalCoins,eventId);
+            householdPoolTopUp(d,engine,id,tripCost+quote.totalCoins,eventId);
             if(tripCost){moveCoins(d,{from:purse(engine,id),to:sink('export','travel'),amount:tripCost,writer:'shop',eventId:`${eventId}:travel`});mirrorPartyCoins(d,engine,id,-tripCost,eventId,'shop');}
             const result=sell(d,engine,shop,id,item,quantity,t,quote,eventId);
             for(const member of personHousehold(engine,d.get('state'),id).value?.members??[id])gaps.delete(member);// 买到了东西，户里的储备缺口要重算（同户成员共用一份户池预算，一并作废）

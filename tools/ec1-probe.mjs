@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {stockItem} from '../server-plugin/stock.mjs';
-import {mealMouthsOf,bodyDrain} from '../server-plugin/primitives-body.mjs';
+import {mealMouthsOf,bodyDrain,bodyRule} from '../server-plugin/primitives-body.mjs';
 import {householdBudget,householdBufferTarget} from '../server-plugin/household-budget.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {personHousehold,placeSettlement,personSimulation} from '../server-plugin/entity-view.mjs';
@@ -29,8 +29,9 @@ const GRAINISH=/oat|grain|wheat|rice|millet|barley|flour|rye|food|bread|meal|cak
 // 1. 粮库：库存、保留量、可动用量；粮库物品是否可食。粮库“份”按人日计（保留量 = mealMouthsOf × reserveDays）。
 const foodItem=stockItem(engine,'food'),def=engine.byId.get(foodItem);
 out('粮库物品',{item:foodItem,name:def?.name??null,nutrition:def?.nutrition??null,basePrice:def?.basePrice??null,shelfLifeDays:def?.shelfLifeDays??null,
-  directlyEdible:edibleNow(foodItem),note:'粮库 1 份 = 1 人日公粮（保留量 = mealMouthsOf × reserveDays）；饱腹 60/人日'});
-const dayNeed=60;
+  directlyEdible:edibleNow(foodItem),note:'粮库 1 份 = 1 人日公粮（保留量 = mealMouthsOf × reserveDays）；每人日饱腹需求取自身体规则'});
+// 一人一日的饱腹需求：身体规则的基础代谢 × 24（与 household-subsistence 的取法同源，bodyRule 的 light 档），不手写常数。
+const dayNeed=bodyRule(engine,'satiety').drainPerHour.light*24;
 const granaries=[];
 for(const p of engine.rules.agriculture?.settlements??[]){
   const s=state.settlements?.[p.settlement];if(!s){granaries.push({settlement:p.settlement,missing:true});continue;}
@@ -46,18 +47,29 @@ out('无粮仓聚落（granary:false）',Object.entries(state.settlements??{}).f
 // 2. 可贩卖粮食物品核实（B1 前置）：店铺补货行、非店铺交易人手上的食物、聚落间贸易航线物品；
 //    逐项是否可直接食用，或有配方（至多三步）加工成可食物。
 const recipes=engine.world.recipes??[];
-function chain(item,depth=0,seen=new Set()){
-  if(edibleNow(item))return {steps:[]};
-  if(depth>=3||seen.has(item))return null;
+// 配方图上的路（graph）与居民实际可走的路（practical）分开：每一步输出 learningRequired、teachers、已会此配方的人数（knownBy）、工作台、工具、其他材料与阻碍项。
+// 阻碍：需要学习而 teachers 为空且没有任何人已会（无人能教/能做）→ learning_no_teacher；工作台、工具与其他材料只列出，是否到位另看库存与设施，不在这里假定。
+const knownBy=id=>Object.values(state.npcs??{}).filter(n=>n?.recipes&&n.recipes[id]).length;
+function stepInfo(r,from){
+  const learning=Boolean(r.learningRequired),teachers=r.teachers??[],known=knownBy(r.id);
+  const blockers=[];if(learning&&!teachers.length&&!known)blockers.push('learning_no_teacher');
+  return {recipe:r.id,from,output:r.output?.item,workstation:r.workstation??null,tools:r.tools??[],otherMaterials:(r.materials??[]).filter(m=>m.item!==from).map(m=>m.item),
+    minutes:r.minutes??null,learningRequired:learning,teachers,knownBy:known,minimumProficiency:r.minimumProficiency??0,blockers};
+}
+function chains(item,depth=0,seen=new Set()){
+  if(edibleNow(item))return [{steps:[]}];
+  if(depth>=3||seen.has(item))return [];
   seen.add(item);
+  const found=[];
   for(const r of recipes.filter(r=>(r.materials??[]).some(m=>m.item===item))){
     const o=r.output?.item;if(!o)continue;
-    const step={recipe:r.id,output:o,workstation:r.workstation??null,minutes:r.minutes??null};
-    if(edibleNow(o))return {steps:[step]};
-    const deeper=chain(o,depth+1,new Set(seen));if(deeper)return {steps:[step,...deeper.steps]};
+    const step=stepInfo(r,item);
+    if(edibleNow(o))found.push({steps:[step]});
+    else for(const deeper of chains(o,depth+1,new Set(seen)))found.push({steps:[step,...deeper.steps]});
   }
-  return null;
+  return found;
 }
+const practical=c=>c.steps.every(s=>!s.blockers.length);
 const sellable=new Map();
 const add=(item,source)=>{const row=sellable.get(item)??{item,name:engine.byId.get(item)?.name??null,sources:[]};if(!row.sources.includes(source))row.sources.push(source);sellable.set(item,row);};
 const shops=currentShops(engine,state);
@@ -73,11 +85,13 @@ for(const id of Object.keys(state.npcs??{}).sort()){
 const trade=engine.rules.settlementTrade;
 if(trade?.item)add(trade.item,`聚落间贸易航线:${(trade.lanes??[]).length} 条`);
 const verdict=[...sellable.values()].map(r=>{
-  const c=chain(r.item);
-  return {...r,directlyEdible:edibleNow(r.item),nutrition:nutrient(r.item),shelfLifeDays:engine.byId.get(r.item)?.shelfLifeDays??null,reachesEdible:Boolean(c),processing:c&&c.steps.length?c.steps:null};
+  const all=chains(r.item),ok=all.filter(practical);
+  return {...r,directlyEdible:edibleNow(r.item),nutrition:nutrient(r.item),shelfLifeDays:engine.byId.get(r.item)?.shelfLifeDays??null,
+    graphReachesEdible:all.length>0,practicalReachesEdible:ok.length>0,processing:all.length?(ok[0]??all[0]).steps:null};
 });
-out('可贩卖物品逐项：可直接食用 / 配方可加工成可食物（B1 前置核实）',verdict.filter(r=>r.directlyEdible||r.reachesEdible||GRAINISH.test(r.item)));
-out('B1 落空项：粮食类可贩卖物品既不可直接食用、也没有配方加工成可食物',verdict.filter(r=>!r.directlyEdible&&!r.reachesEdible&&GRAINISH.test(r.item)).map(r=>({item:r.item,name:r.name,sources:r.sources})));
+out('可贩卖物品逐项：可直接食用 / 配方图上可加工 / 居民实际可走（无学习阻碍）（B1 前置核实）',verdict.filter(r=>r.directlyEdible||r.graphReachesEdible||GRAINISH.test(r.item)));
+out('B1 落空项：粮食类可贩卖物品既不可直接食用，也没有居民实际可走的加工路（图上无路，或每条路都有“无人能教”之类阻碍）',
+  verdict.filter(r=>!r.directlyEdible&&!r.practicalReachesEdible&&GRAINISH.test(r.item)).map(r=>({item:r.item,name:r.name,sources:r.sources,graphReachesEdible:r.graphReachesEdible,blockers:[...new Set((r.processing??[]).flatMap(s=>s.blockers))]})));
 
 // 3. 本地主粮价：只取本聚落店铺补货行里的主食（shelfLife ≥ 3 天或无期限），每铜饱腹最优；regionalTradeBase 报价。没有店铺主粮的聚落标无价。
 const price={};

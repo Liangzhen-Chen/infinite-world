@@ -11,7 +11,7 @@ import {purse,moveCoins,mirrorPartyCoins,coinRead} from './money.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
-import {householdBudget} from './household-budget.mjs';
+import {householdBudget,householdPoolTopUp} from './household-budget.mjs';
 import {assessTradeTax,taxableSale} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
 import {recordsWhere} from './storage.mjs';
@@ -86,7 +86,7 @@ export function buyFromHolders(d,engine,{buyer,settlement,item,want,minute,event
   obligationTransaction(d,()=>{
    transferItems(d,engine,seller,buyer,item,low,null,{disposition:true,eventId});
    if(pay)pay({to:purse(engine,seller),amount:cost,eventId});
-   else{moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'distribution',eventId});mirrorPartyCoins(d,engine,buyer,-cost,eventId,'distribution');}
+   else{householdPoolTopUp(d,engine,buyer,cost,eventId);moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'distribution',eventId});mirrorPartyCoins(d,engine,buyer,-cost,eventId,'distribution');}
    mirrorPartyCoins(d,engine,seller,cost,eventId,'distribution');
    recordMarketDeal(d,quote,cost,low,eventId);
    const tax=taxableSale(engine,d.get('state'),seller,item)?assessTradeTax(d,engine,{seller,cost,location:sellerAt,sourceEvent:eventId}).amount:0;

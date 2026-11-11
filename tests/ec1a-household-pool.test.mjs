@@ -1,4 +1,5 @@
-// EC-1a：同一登记户共灶的预算按户池只算一次（成员背包与钱袋并入），钱袋不足时户内转账守恒；公粮覆盖的饱腹不进采购缺口。
+// EC-1a：同一登记户共灶的预算按户池只算一次（唯一口径：主观读一律并入同户成员的物品、钱袋与义务），钱袋不足时户内转账守恒；
+// 公粮覆盖的饱腹不进采购缺口（份额与午夜 npc-life 同一换算，受 householdSubsistence 规则门控）。
 // 夹具沿用 s5-law-household-meals.test.mjs 的两人户（A、B）与店主 seller；只用真实动作（客流）与公开读口，不加测试专用接口。
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,17 +10,19 @@ import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {householdBudget} from '../server-plugin/household-budget.mjs';
 import {advanceCustomerFlow} from '../server-plugin/business.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
+import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',C='npc_hw_shendu',seller='npc_hw_linsui',item='item_bread',home='bld_hw_qingdeng',DAY=1440;
 const SAT=(await loadRuntimeWorld()).items.find(i=>i.id===item).nutrition.satiety;
 const breadsFor=satiety=>Math.ceil(satiety/SAT);
-function fixture({coins={},bags={},granaryEnabled=false,publicFood=0,market=false}={}){
+// three:true 时 A、B、C 同户（三人分摊），否则 A、B 一户、C 另一户；keepSubsistence 保留 householdSubsistence 规则（公粮预算只在规则存在时扣）。
+function fixture({coins={},bags={},status={},granaryEnabled=false,publicFood=0,market=false,three=false,keepSubsistence=false}={}){
  const w=structuredClone(world);
- delete w.rules.householdSubsistence;
+ if(!keepSubsistence)delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
- // 两人一户（A、B），C 单独一户；店主 seller 另一户。
- w.households=[{id:'pool-house',members:[A,B],settlement:'loc_hw',homeLocation:home},{id:'pool-stranger',members:[C],settlement:'loc_hw',homeLocation:home}];
+ w.households=three?[{id:'pool-house',members:[A,B,C],settlement:'loc_hw',homeLocation:home}]
+  :[{id:'pool-house',members:[A,B],settlement:'loc_hw',homeLocation:home},{id:'pool-stranger',members:[C],settlement:'loc_hw',homeLocation:home}];
  if(market)w.households.push({id:'pool-seller',members:[seller],settlement:'loc_hw',homeLocation:home});
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
@@ -27,59 +30,96 @@ function fixture({coins={},bags={},granaryEnabled=false,publicFood=0,market=fals
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'ec1a-pool');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
  const ids=market?[A,B,C,seller]:[A,B,C];
- doc.state.npcs=Object.fromEntries(ids.map(id=>[id,{...doc.state.npcs[id],coins:coins[id]??0,inventory:bags[id]??{},location:home,status:'正常',activity:'休息'}]));
+ doc.state.npcs=Object.fromEntries(ids.map(id=>[id,{...doc.state.npcs[id],coins:coins[id]??0,inventory:bags[id]??{},location:home,status:status[id]??'正常',activity:'休息'}]));
  if(market)doc.state.npcs[seller].inventory={[item]:100};
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:3,granary:granaryEnabled,food:publicFood,foodPerDay:0,woodPerDay:0}};
  doc.ledger=openLedger(e,doc);
  return {e,doc,d:e.primitiveDraft(doc)};
 }
+const coinsOf=(f,id)=>f.d.get('state','npcs',id,'coins');
+const boughtBy=(f,id)=>Object.values(f.d.get('state','records')).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(r=>r.npc===id&&r.outcome==='bought');
+const spentBy=bought=>bought.reduce((n,r)=>n+r.paid+(r.travel?.paid??0),0);
+const shortfall=(f,id,options)=>Number(householdBudget(f.d,f.e,id,options).resources.procurementShortfall.satiety);
 
-test('subjective view exposes housemates items and purses only for the same registered household',()=>{
+test('subjective view exposes only the observer household: items, purses and own open obligations, never a stranger or a dead member',()=>{
  const f=fixture({coins:{[A]:3,[B]:40,[C]:500},bags:{[B]:{[item]:5}}});
  const view=subjectiveView(f.e,f.doc,A);
  assert.deepEqual(Object.keys(view.household.people),[B]);
  assert.equal(view.household.people[B].coins,40);
  assert.equal(view.household.people[B].inventory[item],5);
- assert.ok(!(C in view.household.people),'a stranger household is never exposed');
+ assert.deepEqual(view.household.people[B].obligations,[]);
+ assert.deepEqual(Object.keys(subjectiveView(f.e,f.doc,C).household.people),[],'a one-person household sees nobody else');
+ assert.ok(!('memoryStream' in view.household.people[B])&&!('relations' in view.household.people[B]),'no memories or relations of housemates');
+ const down=fixture({coins:{[A]:3,[B]:40},status:{[B]:'濒死'}});
+ assert.deepEqual(Object.keys(subjectiveView(down.e,down.doc,A).household.people),[],'a dying housemate purse is not usable funds');
 });
 
-test('pooled household budget counts housemates purses and bags once; default budget stays personal',()=>{
+test('the one household budget counts housemates purses and bags once; the stranger household and kernel read stay as they were',()=>{
  const f=fixture({coins:{[A]:3,[B]:40,[C]:500},bags:{[B]:{[item]:breadsFor(120)*3}}});
- const personal=householdBudget(f.d,f.e,A),pooled=householdBudget(f.d,f.e,A,{pooled:true});
- assert.equal(personal.cash,3);
- assert.equal(pooled.cash,43,'own purse plus the housemate purse, never the stranger');
- // 手算锚点：B 背包里的面包是同一灶的存粮，计入后这户的采购缺口不增反减；默认（个人）读不见它。
- assert.ok(pooled.resources.procurementShortfall.satiety<personal.resources.procurementShortfall.satiety);
- assert.equal(pooled.resources.procurementShortfall.satiety,0);
- assert.ok(personal.resources.procurementShortfall.satiety>0);
+ assert.equal(householdBudget(f.d,f.e,A).cash,43,'own purse plus the housemate purse, never the stranger');
+ assert.equal(householdBudget(f.d,f.e,B).cash,43,'every member reads the same household pool');
+ assert.equal(householdBudget(f.d,f.e,C).cash,500);
+ assert.equal(householdBudget(f.d,f.e,A,{kernel:true}).cash,3,'the explicit kernel read keeps the personal purse');
+ // 手算锚点：B 背包里的面包是同一灶的存粮（3 天份），A 与 B 读到的采购缺口都是 0；陌生户 C 没有存粮，缺口大于 0。
+ assert.equal(shortfall(f,A),0);assert.equal(shortfall(f,B),0);
+ assert.ok(shortfall(f,C)>0);
 });
 
-test('public ration covered satiety is not procurement demand; without a granary the demand stays',()=>{
- const without=fixture({coins:{[A]:50}});
- const covered=fixture({coins:{[A]:50},granaryEnabled:true,publicFood:1000});
- const need=householdBudget(without.d,without.e,A).resources.procurementShortfall.satiety;
+test('public ration share: full, partial and rule-gated, same exchange rate as the midnight meals',()=>{
+ const without=fixture({coins:{[A]:50},keepSubsistence:true}),need=shortfall(without,A);
  assert.ok(need>0);
- // 公粮份额 = min(1, 粮库存量 ÷ 人口) = 1：标准日耗已由公粮覆盖，采购缺口为 0；两种读法（个人/户池）一致。
- assert.equal(householdBudget(covered.d,covered.e,A).resources.procurementShortfall.satiety,0);
- assert.equal(householdBudget(covered.d,covered.e,A,{pooled:true}).resources.procurementShortfall.satiety,0);
+ const full=fixture({coins:{[A]:50},granaryEnabled:true,publicFood:1000,keepSubsistence:true});
+ assert.equal(shortfall(full,A),0,'a full ration (food ≥ mouths) covers the standard day');
+ // 部分份额：份额 = min(1, 粮库存量 ÷ ceil(口数))，采购缺口按 (1 − 份额) 缩小（两人户的需求是线性的）。
+ const probe=fixture({keepSubsistence:true}),mouths=Math.max(1,Math.ceil(mealMouthsOf(probe.e,probe.doc.state,'loc_hw',3))),food=Math.floor(mouths/2);
+ assert.ok(food>=1,'the population gives at least two mouths');
+ const partial=fixture({coins:{[A]:50},granaryEnabled:true,publicFood:food,keepSubsistence:true}),share=Math.min(1,food/mouths);
+ assert.ok(Math.abs(shortfall(partial,A)-need*(1-share))<1e-6,`partial share ${share} leaves ${need*(1-share)}`);
+ // 规则门控：夹具去掉 householdSubsistence 时 plan 路径不发公粮，预算也不扣，与没有粮库一致。
+ const gated=fixture({coins:{[A]:50},granaryEnabled:true,publicFood:1000});
+ assert.equal(shortfall(gated,A),shortfall(fixture({coins:{[A]:50}}),A));
+ assert.ok(shortfall(gated,A)>0);
 });
 
-test('customer flow tops the buyer purse up from the housemate purse and the ledger audits clean',()=>{
+test('customer flow: the poor member buys, the housemate purse tops it up, and the books balance exactly',()=>{
  const f=fixture({market:true,coins:{[A]:1,[B]:10000}});
  f.d.set(['state','minute'],720);advanceCustomerFlow(f.d,f.e,719,720);
- const bought=Object.values(f.d.get('state','records')).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(r=>r.npc===A&&r.outcome==='bought');
+ const bought=boughtBy(f,A);
  assert.ok(bought.length,'the pooled budget lets the poor member buy');
- assert.ok(f.d.get('state','npcs',B,'coins')<10000,'the housemate purse paid the shortfall');
+ const lostByB=10000-coinsOf(f,B);
+ assert.ok(lostByB>0,'the housemate purse paid the shortfall');
+ // 精确对账：A 的最终现金 = 起始 1 + 户内转入 − 自己花的（货款 + 路费）；转出方不为负。
+ assert.equal(coinsOf(f,A),1+lostByB-spentBy(bought));
+ assert.ok(coinsOf(f,A)>=0&&coinsOf(f,B)>=0);
  assert.ok(f.e.quantity(f.d,A,item)>0);
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
 });
 
-test('a second housemate does not buy the same day food again after the first purchase',()=>{
+test('customer flow: two housemates share the shortfall in a fixed order and the dying member is never drawn on',()=>{
+ const split=fixture({market:true,three:true,coins:{[A]:1,[B]:5,[C]:10000}});
+ split.d.set(['state','minute'],720);advanceCustomerFlow(split.d,split.e,719,720);
+ const bought=boughtBy(split,A);
+ assert.ok(bought.length);
+ const fromB=5-coinsOf(split,B),fromC=10000-coinsOf(split,C);
+ assert.equal(coinsOf(split,B),0,'the lower id is drained first, and only down to zero');
+ assert.ok(fromC>0,'the remainder comes from the next member');
+ assert.equal(coinsOf(split,A),1+fromB+fromC-spentBy(bought));
+ assert.deepEqual(auditLedger(split.d.get('ledger')),[]);
+ // 濒死成员的钱不并入预算也不转出：B 濒死时只剩 C 可补。
+ const dying=fixture({market:true,three:true,coins:{[A]:1,[B]:7,[C]:10000},status:{[B]:'濒死'}});
+ dying.d.set(['state','minute'],720);advanceCustomerFlow(dying.d,dying.e,719,720);
+ assert.equal(coinsOf(dying,B),7,'a dying member purse is untouched');
+ assert.deepEqual(auditLedger(dying.d.get('ledger')),[]);
+});
+
+test('after the household single purchase trip every member budget sees the day shortfall closed',()=>{
  const f=fixture({market:true,coins:{[A]:10000,[B]:10000}});
- // B 不是完整人物不会自己上门；户里只有 A 一人出门，买完后再次结算同一天也不重复买（户池缺口已补）。
  f.d.set(['state','minute'],720);advanceCustomerFlow(f.d,f.e,719,720);
- const first=f.e.quantity(f.d,A,item);
- assert.ok(first>0);
- const after=householdBudget(f.d,f.e,A,{pooled:true}).resources.procurementShortfall.satiety;
- assert.equal(after,0,'the day shortfall is closed by the first purchase');
+ assert.ok(boughtBy(f,A).length);
+ // 户里只有 A 一人出门；买完后 A 与 B（不出门的同户成员）读到的同一户池缺口都已补平，同日不会再买第二遍。
+ assert.equal(shortfall(f,A),0);
+ assert.equal(shortfall(f,B),0);
+ const stock=f.e.quantity(f.d,A,item);
+ advanceCustomerFlow(f.d,f.e,720,DAY+720);
+ assert.equal(f.e.quantity(f.d,A,item),stock,'no second purchase for the same day');
 });

@@ -17,7 +17,7 @@ import {digest,stateMemo,canonicalEqual} from './storage.mjs';
 import {householdMealPlan,householdMealWithSources,usageCost,registerMerchandiseResolver} from './household-budget.mjs';
 import {mouthWeight} from './household-subsistence.mjs';
 import {mealMouthsOf,metabolismFactor} from './primitives-body.mjs';
-import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups} from './household-subsistence.mjs';
+import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups,rationShare} from './household-subsistence.mjs';
 import {placeSettlement} from './entity-view.mjs';
 import {toRational} from './det-math.mjs';
 import {transition} from './transition.mjs';
@@ -123,7 +123,7 @@ export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
  for(const group of groups){
   const key=group.key,previous=d.get('state','family','meals',key);
   if(Math.max(d.get('state','family','mealDays',group.settlement??'unregistered')??-1,previous?.day??-1)>=day)continue;
-  const ration=publicMeals.get(group.settlement),share=group.registered&&ration?.mouths>0?ration.eaten/ration.mouths:0;
+  const ration=publicMeals.get(group.settlement),share=group.registered?rationShare(ration):0;
   const plan=householdMealPlan(d,engine,group.owner,{publicShare:share});
   if(plan.members.length)plans.push({...group,key,previous,share,...plan});
  }

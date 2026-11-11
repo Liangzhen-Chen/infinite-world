@@ -590,7 +590,7 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
         if(maximum<=0)continue;
         const bill=n=>Number(BigInt(rate.numerator)*BigInt(n)/BigInt(rate.denominator));
         const budget=householdBudget(d,engine,shop.keeper,{view});
-        const cap=counterCash(d,shop.keeper)+Math.max(0,Math.min(budget.cash,...budget.timeline.map(r=>r.balance)));
+        const cap=counterCash(d,shop.keeper)+Math.max(0,Math.min(budget.cash,view.self.coins,...budget.timeline.map(r=>r.balance)));
         let low=0,high=maximum;while(low<high){const mid=Math.ceil((low+high)/2);if(bill(mid)<=cap)low=mid;else high=mid-1;}
         const quantity=low,cost=bill(quantity);
         // Counter capital is already assigned to the business; only the extra
