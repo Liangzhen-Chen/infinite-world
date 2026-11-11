@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
-import {waterBasins,basinState,waterResourceFactor} from '../server-plugin/water-cycle.mjs';
+import {waterBasins,basinState} from '../server-plugin/water-cycle.mjs';
 import {householdResources,registerHouseholdFreeWater} from '../server-plugin/household-budget.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {PatchCursor} from '../server-plugin/storage.mjs';
@@ -61,9 +61,10 @@ test('有可达可用水源：当日水分缺口被免费水扣光，其余缺�
 
 test('水量只够部分缺口：免费水等于可取量折成的水分，不超过缺口',()=>{
  // 手算：一人一日饮水 X = rules.forestWater.water.drinkingMlPerPerson 毫升，对应一人一日水分 3×24=72（body 表 light 耗水 3/时）。
- // 水体只够 X 毫升（两人需要 2X）：免费水 = 一人份 72，缺口 144−72=72。
- const f=fixture(),basin=basinOf(f),X=f.e.rules.forestWater.water.drinkingMlPerPerson;
- const [key,row]=waterRecord(f,{waterMl:X*waterResourceFactor(f.e,f.d.get('state'),basin.location)*(1+1e-9)});f.d.set(['state','records',key],row);
+ // 水体可取量 = waterMl ÷ 水价因子，因子 = min(maximumPriceFactor, 容量×初始占比÷waterMl)（water-cycle.mjs waterResourceFactor，水越少越贵）；水量取极小时因子封顶为 maximumPriceFactor(=3)，
+ // 取 waterMl = X×3 就恰好可取 X 毫升（两人需要 2X）：免费水 = 一人份 72，缺口 144−72=72。
+ const f=fixture(),X=f.e.rules.forestWater.water.drinkingMlPerPerson,cap=f.e.rules.forestWater.water.maximumPriceFactor;
+ const [key,row]=waterRecord(f,{waterMl:X*cap*(1+1e-9)});f.d.set(['state','records',key],row);
  const r=read(f.d,f);
  assert.ok(Math.abs(r.market.freeWater.hydration-72)<1e-6,String(r.market.freeWater.hydration));
  assert.ok(Math.abs(r.procurementShortfall.hydration-72)<1e-6);
@@ -116,7 +117,8 @@ test('主观读：只凭住处往返分钟（near 分支）知道有水可取，
  // 远处水源：阈值保持真实值，换一个住处，其到水源地点的往返步行分钟确实大于 nearWaterRoundTripMinutes；主观读不扣，只买。
  const probe=fixture(),threshold=probe.e.rules.householdSubsistence.nearWaterRoundTripMinutes,source=basinOf(probe).location;
  const roundTrip=id=>{try{return 2*probe.e.route(id,source,'walk',0,probe.doc.randomSeed).minutes;}catch{return null;}};
- const home=probe.e.world.locations.map(l=>l.id).sort().find(id=>{const m=roundTrip(id);return m!==null&&m>threshold;});
+ // 取往返最远的地点（路网分钟与 near 判定用的距离口径可能不同，取最远者以拉开余量），前提由下面的 householdSubsistencePlan 断言核对。
+ const home=probe.e.world.locations.map(l=>l.id).sort().map(id=>[id,roundTrip(id)]).filter(([,m])=>m!==null&&m>threshold).sort((a,b)=>b[1]-a[1])[0]?.[0];
  assert.ok(home,'前提：世界里存在往返分钟大于 nearWaterRoundTripMinutes 的住处');
  const far=fixture({home});
  // 前提与实现同口径：householdSubsistencePlan 走 sourceGeography 候选与 2×ceil(distance×60/walkKmh) 的 near 判定（注册函数主观分支用的同一份）；远处住处不得走 near 分支。

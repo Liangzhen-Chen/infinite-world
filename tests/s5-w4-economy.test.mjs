@@ -238,6 +238,8 @@ async function openShop({coins={},bread={},campaignSeed='w4-flow'}={}){
     return f;
 }
 const counterCoins=f=>f.document.state.records['player|counter']?.coins??Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter')?.coins;
+// 正午客流前一分钟（719）：预算读取要用与客流时刻一致的真实状态（店主与居民的位置、状态已随作息推进），不能用开店当时（约 10 点）的状态投影。
+const toBeforeNoon=async(f,id='w4-to-noon')=>{const m=f.document.state.minute%DAY;if(m>=719)return;const out=await f.engine.reduce(f.document,{tool:'world_time',args:{minutes:719-m},eventId:id});f.document=applyPatches(f.document,out.patches);};
 const waitPastMidnight=async(f,id)=>{const m=f.document.state.minute,minutes=DAY-(m%DAY)+30;const out=await f.engine.reduce(f.document,{tool:'world_time',args:{minutes},eventId:id});f.document=applyPatches(f.document,out.patches);};
 
 // 正午客流的读法（business.mjs serve 同一链）：居民正午位置与分钟的投影文档上读预算购买计划与定价原语。
@@ -260,7 +262,8 @@ const quoteAtShop=(f,doc,buyer,item,quantity)=>{
 
 test('F026 客流：陶枝单独在场（徐玲无钱不上门）：件数与应付从预算购买计划与 marketQuote 在前态上推出，整表相等',async()=>{
     const A='npc_hw_xuling',B='npc_hw_wushuo',D='npc_hw_yanzhe',E='npc_hw_taozhi';
-    const f=await openShop({coins:{[A]:0,[B]:0,[D]:0,[E]:3}}),before=structuredClone(f.document);
+    const f=await openShop({coins:{[A]:0,[B]:0,[D]:0,[E]:3}});
+    await toBeforeNoon(f);const before=structuredClone(f.document);
     await waitPastMidnight(f,'w4-day-e-alone');
     const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===SHOP);
     // 货架顺序（restock）：面包、烙饼、口粮；每件货的件数 = 计划里这家店该货的数量，应付 = 前态 marketQuote（不同货互不影响供需）。
@@ -271,7 +274,8 @@ test('F026 客流：陶枝单独在场（徐玲无钱不上门）：件数与应
 
 test('F026 客流：非原生 NPC 自营商户（玩家把店转让给产权人）不在家户计划来源里，居民仍按储备缺口在该店买口粮',async()=>{
     // 真实动作造出非原生自营商户：玩家租下青灯铺面开店后，把经营连同库存转让给铺面产权人（店主林穗），business.mjs 的转让分支产生 owner=林穗、非 native 的 business 记录。
-    const A='npc_hw_xuling',landlord='npc_hw_linsui',f=await openShop({coins:{[A]:40}});
+    // 店主林穗手里要有足够的面包：转让给他的库存只有 5 个，要先留够他自家的口粮储备，余量才可卖（saleableStock 扣自用与承诺），否则“没有可售”不是本例要测的。
+    const A='npc_hw_xuling',landlord='npc_hw_linsui',f=await openShop({coins:{[A]:40},bread:{[landlord]:300}});
     // 前提：买方（产权人）接受转让的决策与 business.mjs 转让分支同参数（subjectiveView、purchase、价款 1、reward=库存估值），种子确定；正午她在店内且提供交易服务。
     const stock=Object.fromEntries(Object.entries(f.document.state.inventory).map(([k,v])=>[k,typeof v==='number'?v:v.quantity]));
     const pd=f.engine.primitiveDraft(structuredClone(f.document));
@@ -281,6 +285,7 @@ test('F026 客流：非原生 NPC 自营商户（玩家把店转让给产权人�
     const moved=await f.act('core:settlement.business_close',{business:f.business,choice:'transfer',member:landlord,coins:1},'w4-transfer');
     const shopId=moved.successor,record=f.document.state.records[shopId];
     assert.ok(record&&record.category==='business'&&record.owner===landlord&&!record.native);
+    await toBeforeNoon(f);
     const before=structuredClone(f.document),plan=householdBudget(noonRead(f,before,A),f.engine,A).resources;
     // 该店不是家户计划的来源（来源只收原生店与交易人），所以走储备缺口路径：件数 = ceil(饱腹缺口 ÷ 面包饱腹)，期望从引擎读。
     assert.ok(!plan.market.offered.includes(shopId));
@@ -298,6 +303,7 @@ test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得
     // A 钱袋 40、一口之家、手边没粮：会来。B 钱袋 40 但已备下两个面包（一口之家一天的饱食 60 = 2 × 30）：无需求。
     // C身无分文，D住在白石不在本聚落；E只有3铜，按K02缺口预算而非旧钱袋比例消费。
     const f=await openShop({coins:{[A]:40,[B]:40,[D]:200,[E]:3},bread:{[B]:2}});
+    await toBeforeNoon(f);
     const before=structuredClone(f.document),account=()=>Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
     assert.equal(account().coins,100);
     await waitPastMidnight(f,'w4-day');

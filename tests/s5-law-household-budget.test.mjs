@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {householdBudget,householdResources,householdBufferTarget,householdOptions,registerHouseholdFoodSources} from '../server-plugin/household-budget.mjs';
 import {mealCapPools} from '../server-plugin/item-class.mjs';
+import {bodyRule} from '../server-plugin/primitives-body.mjs';
 import {saleableStock,reserveShortfall} from '../server-plugin/market.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {applyPatches,PatchCursor,withRecordIndex} from '../server-plugin/storage.mjs';
@@ -23,15 +24,19 @@ const near=(a,b,m)=>assert.ok(Math.abs(a-b)<1e-6,m??`${a} ≈ ${b}`);
 //     只算买得起（现金扣到货前的应付款）、有派生饱腹、且单餐额度允许买满至少一件的来源；有效饱腹 = 派生饱腹，覆盖不超过缺口（这些夹具里缺口远大于一件）。物品名不写死，由来源与派生值算出。
 //  ② 覆盖量 = Σ 购买量 × 该物品的派生饱腹，独立相加后与引擎的 coverage 比较；
 //  ③ 缺口 = 需求（人数 × 天数 × 每人每天 10 个面包的饱腹）− 覆盖量 − 手里的存粮（面包 × SAT）。
-const bestPerCoin=(f,sources)=>{
- const first=Math.min(...sources.map(s=>s.at));
- return sources.filter(s=>s.at===first).sort((x,y)=>satOf(f,y.item)/y.unitPrice-satOf(f,x.item)/x.unitPrice||(x.item<y.item?-1:x.item>y.item?1:0))[0]?.item;
+// 购买次序的价值 = Σ 各营养（覆盖÷当前剩余缺口）÷ 单价（household-budget.mjs 的购买次序注释：多种营养按缺口占比相加，只有一种有缺口时即饱腹÷单价）。
+// R = 本次购买前的剩余缺口：饱腹 = 人数×天数×10×SAT − 手里存粮饱腹；水分 = 人数×天数×每人每天水分（body 表 light 耗水×24）。覆盖按单件算（这些夹具里缺口远大于一件）。
+// WATER-1B 后蔬果等也供水分，夹具里水分缺口存在，所以每铜价值要含水分一项，不再只看饱腹。
+const gapOf=(f,{members=1,days,held=0})=>({satiety:Math.max(0,members*days*10*SAT-held),hydration:members*days*bodyRule(f.engine,'hydration').drainPerHour.light*24});
+const bestPerCoin=(f,sources,R)=>{
+ const first=Math.min(...sources.map(s=>s.at)),value=s=>{const n=f.engine.byId.get(s.item).nutrition??{};return Object.keys(R).reduce((m,k)=>m+(R[k]>0?(n[k]??0)/R[k]:0),0)/s.unitPrice;};
+ return sources.filter(s=>s.at===first).sort((x,y)=>value(y)-value(x)||(x.item<y.item?-1:x.item>y.item?1:0))[0]?.item;
 };
 const marketCheck=(f,b,{members=1,days=b.target?.days,cash=b.resources?.market?.cash??b.market.cash,payments=0,held,minute=f.state.minute}={})=>{
  const m=b.resources?.market??b.market,res=b.resources??b;
  const caps=mealCapPools(f.engine,{days:Array(members).fill(days)});
  const buyable=registerHouseholdFoodSources.fn(f.d,f.engine,owner,{}).filter(s=>s.at>=minute&&s.quantity>0&&s.unitPrice>0&&s.unitPrice<=cash-payments&&satOf(f,s.item)>0&&caps.unitsRoom(s.item,(s.at-minute)/DAY)>=1);
- assert.equal(m.purchases[0]?.item,bestPerCoin(f,buyable),'first purchase is the best satiety-per-coin source among those arriving first');
+ assert.equal(m.purchases[0]?.item,bestPerCoin(f,buyable,gapOf(f,{members,days,held})),'first purchase is the best coverage-per-coin source among those arriving first');
  const coverage=m.purchases.reduce((n,p)=>n+p.quantity*satOf(f,p.item),0);
  near(m.coverage.satiety,coverage);
  near(res.shortfall.satiety,Math.max(0,members*days*10*SAT-coverage-held));
@@ -375,7 +380,7 @@ test('simultaneous sources: residents buy the food with the most effective satie
   const at=f.state.minute,offers=[['item_fruit_vinegar',1],['item_cabbage',2],[item,3]].map(([it,unitPrice])=>({source:`fx_${it}`,seller:'npc_fx_seller',item:it,at,quantity:50,unitPrice}));
   registerHouseholdFoodSources(()=>offers);
   const b=householdBudget(f.d,f.engine,owner,{kernel:true}),caps=mealCapPools(f.engine,{days:[b.target.days]}),minute=f.state.minute;
-  const expected=bestPerCoin(f,offers.filter(o=>satOf(f,o.item)>0&&caps.unitsRoom(o.item,(o.at-minute)/DAY)>=1));
+  const expected=bestPerCoin(f,offers.filter(o=>satOf(f,o.item)>0&&caps.unitsRoom(o.item,(o.at-minute)/DAY)>=1),gapOf(f,{days:b.target.days,held:20*SAT}));
   assert.equal(b.resources.market.purchases[0].item,expected);
   const cheapest=[...offers].sort((x,y)=>x.unitPrice-y.unitPrice).find(o=>satOf(f,o.item)>0).item;
   assert.notEqual(expected,cheapest,'premise: the best per coin is not the cheapest food');

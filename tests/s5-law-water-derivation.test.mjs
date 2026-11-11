@@ -54,7 +54,8 @@ test('有配方的食物：水分等于其被选配方（引擎记下的 nutrien
     const dry=r.materials.reduce((n,m)=>{const x=engine.byId.get(m.item);return n+(isItemClass(engine,m.item,'food')?Math.max(0,x.weight-(x.nutrientBase?.water??0))*m.amount:0);},0)/q;
     const kg=Math.min(wet,Math.max(0,it.weight-dry));
     assert.ok(Math.abs(b.water-kg)<1e-9,`${it.id}：含水量 ${b.water} ≠ ${kg}`);
-    const h=kg*100;assert.equal(engine.byId.get(it.id).nutrition?.hydration??0,h>=12.5?Math.floor(h):0,it.id);
+    // 生食（foodState 为 raw，需加热）不写 nutrition（item-class 派生循环对 raw 直接跳过），其含水量仍记在 nutrientBase.water，上面已核；这里只核可直接食用的。
+    if(engine.byId.get(it.id).foodState!=='raw'){const h=kg*100;assert.equal(engine.byId.get(it.id).nutrition?.hydration??0,h>=12.5?Math.floor(h):0,it.id);}
     checked++;
   }
   assert.ok(checked>0);
