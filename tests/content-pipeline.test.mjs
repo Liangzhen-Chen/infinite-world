@@ -313,3 +313,31 @@ test('L4 抽样按比例：46 条通过抽 12 条（25% 向上取整）；重跑
   assert.equal(third.summary.batches[0].fullRead, true);
   assert.equal(third.summary.batches[0].sample.length, 12);
 });
+
+test('指纹未变的已批准批次，即使历史抽读不过率超一成，重跑也不新写 fullRead，l4 与 sample 原样保留', async t => {
+  const root = await fs.mkdtemp(path.join(tmpRoot(), 'content-fullread-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const client = { spent: 0, budgetYuan: 20, estimateCostYuan: () => .01, async generate(body, label) {
+    this.spent += 0.01;
+    const out = label.includes('-review') ? { contradictions: [] } : { id: body.id, description: body.id };
+    return { choices: [{ message: { content: JSON.stringify(out) } }], usage: { completion_tokens: 11 }, measurement: { costUpperYuan: .01 } };
+  } };
+  const entries = Array.from({ length: 8 }, (_, i) => ({ id: `item_${i}` }));
+  const options = { root, client, entries, batchSize: 50, buildDraftRequest: entry => ({ id: entry.id }), reviewDraftFor: entry => ({ id: entry.id, description: entry.id }), validateDraft: () => [], concurrency: 4 };
+  await runContentPipeline(options);
+  const file = path.join(root, 'batch-0.json'), old = JSON.parse(await fs.readFile(file, 'utf8'));
+  const approvedL4 = { approved: true, reviewer: 'r', by: 'r', reviewedAt: 't', notes: old.sample.map(id => ({ id, note: '读过', by: 'r' })) };
+  old.l4 = approvedL4;
+  old.l4History = [{ approved: false, notes: [], rejection: { by: 'x', at: 't', reason: 'r', ids: old.sample.slice(0, 3) } }];
+  await fs.writeFile(file, JSON.stringify(old));
+  const again = await runContentPipeline(options);
+  const batch = again.summary.batches[0];
+  assert.equal(batch.fingerprint, old.fingerprint);
+  assert.equal(batch.fullRead, undefined, '指纹未变不新写 fullRead');
+  assert.deepEqual(batch.sample, old.sample);
+  assert.deepEqual(batch.l4, approvedL4);
+  // 已带标记、指纹未变的批次：标记保留。
+  const marked = JSON.parse(await fs.readFile(file, 'utf8')); marked.fullRead = true; await fs.writeFile(file, JSON.stringify(marked));
+  const kept = await runContentPipeline(options);
+  assert.equal(kept.summary.batches[0].fullRead, true, '已有标记不丢');
+});

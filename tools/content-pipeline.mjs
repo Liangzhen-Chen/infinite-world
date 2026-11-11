@@ -360,7 +360,8 @@ export async function runContentPipeline({
       pending: rows.filter(row => row.status === 'pending').map(row => row.id),
       flagged: rows.filter(row => row.warnings.length).map(row => row.id),
       sample: prior?.fingerprint === fingerprint ? prior.sample : randomSample(passed, l4SampleSize(passed.length)).map(row => row.id),
-      ...(prior && l4RequiresFullRead(prior) ? { fullRead: true } : {}),
+      // fullRead 只在批次内容变了（指纹改变、要重做 L4）时新写；指纹未变的批次原样保留（已批准的不因重跑被加标记，已有标记的也不丢）。
+      ...(prior && (prior.fingerprint === fingerprint ? prior.fullRead === true : l4RequiresFullRead(prior)) ? { fullRead: true } : {}),
       l4: prior?.fingerprint === fingerprint ? prior.l4 : { approved: false, notes: [] },
       ...(prior?.fingerprint !== fingerprint && prior?.l4?.rejection ? { l4History: [...(prior.l4History ?? []), prior.l4] } : prior?.l4History ? { l4History: prior.l4History } : {}),
       costUpperYuan: client.spent+(client.reserved??0),
