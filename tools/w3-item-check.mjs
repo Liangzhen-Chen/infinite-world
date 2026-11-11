@@ -18,10 +18,15 @@ const split = (text, pattern) => text.split(pattern).filter((part) => part.trim(
 
 // ── 一、storage ──
 // 具体处置动作：把东西怎么摆、怎么弄的做法。（避潮、避晒、避霜、阴凉、防压是一般建议，不在此列。）
-const DISPOSAL = /摊开|摊平|摊晾|阴干|晾干|晾晒|晾开|晒干|翻晾|翻动|翻面|翻松|拨松|拍松|镇着|冷水|泡水|浸水|浸泡|擦净|擦拭|擦干|拭去|拭干|抹油|涂油|上油|刷净|洗净|清洗|烘干|烘烤|煮沸|蒸煮|倒掉|丢弃|弃置|定期|常翻|勤翻|每隔|每日|每天|每周|每月|受潮后|发潮后|结块后|生霉后|变质后|潮后|湿后|加盖|盖好|盖严|覆盖|覆干布/u;
+const DISPOSAL = /摊开|摊平|摊晾|阴干|晾干|晾晒|晾开|晒干|翻晾|翻动|翻面|翻松|拨松|拍松|镇着|冷水|泡水|浸水|浸泡|擦净|擦拭|擦干|拭去|拭干|抹油|涂油|上油|刷净|洗净|清洗|烘干|烘烤|煮沸|蒸煮|倒掉|丢弃|弃置|定期|常翻|勤翻|每隔|每日|每天|每周|每月|受潮后|发潮后|结块后|生霉后|变质后|潮后|湿后|加盖|盖好|盖严|覆盖|覆干布|(?:涂|抹|上|刷|擦|打)(?:薄|厚|一层)?(?:油|蜡|脂)|(?:套|垫|裹)(?:软皮|软布|草|布|纸)/u;
 // 回避词与处置词之间只能是被回避的并列对象（用 、与和及 连起来的短项）：“避免受潮、浸水与重压”里的浸水是被避开的；“防尘加盖”“防虫盖严”里的加盖、盖严是另一个动作，照判。
 // 否定词“不”不在这里：否定由 negatedAt 处理。
-const AVOID = /(?:避免|避开|避|勿|切勿|防止|防|不要|不可|不宜|不得|忌|严禁|禁止)(?:[^，；。、与和及]{1,4}[、与和及])*$/u;
+const AVOID_WORD = '(?:避免|避开|避|勿|切勿|防止|防|不要|不可|不宜|不得|忌|严禁|禁止)';
+const AVOID = new RegExp(`${AVOID_WORD}[与和及同跟]?(?:[^，；。、与和及]{1,4}[、与和及])*$`, 'u');
+// 期限词（久放、久存）是状态描述：“勿叠压久放”里被回避的是“叠压久放”这个整体，中间没有并列连接词，所以期限词用宽松版（回避词后不超过 4 个非标点字）。
+const AVOID_SPAN = new RegExp(`${AVOID_WORD}[^，；。]{0,4}$`, 'u');
+// 回避框架里的器物（避免与湿布同放）是要避开的东西，不是引入的器具：取本分句里器物之前的文字判断。
+const avoidedAt = (clause, index) => AVOID.test(clause.slice(0, index));
 // 后果说法：否则会……、以免……、容易……。
 const CONSEQUENCE = /否则|不然|以免|免得|免致|一旦|就会|便会|必会|将会|(?:会|易|容易|极易|易于)(?:发霉|霉变|变质|腐烂|生锈|锈蚀|受潮|开裂|裂开|变形|结块|生虫|损坏|折断|劣化|变色|变软|发潮|变味|走味|失效|长霉|虫蛀|干裂|脆裂|发臭|酸败)/u;
 // 期限：词形（数字+天日周月年季）另由 quantitiesIn 取；这里是不带数字的期限与“永久”说法。
@@ -45,7 +50,8 @@ export function storageIssues(text, entry) {
   for (const quantity of bad) errors.push(typeof shelf === 'number'
     ? `storage 写了期限「${quantity.raw}」，与骨架保存期 ${shelf} 天不符。修复：改成骨架保存期，或删去期限`
     : `storage 写了期限「${quantity.raw}」，骨架没有保存期（shelfLifeDays 为空）。修复：删去期限；空字段不等于永不变质，也不写“无期限”`);
-  const words = text.match(PERIOD_WORDS) ?? text.match(PERIOD_YEAR);
+  const periodOf = (pattern) => [...text.matchAll(new RegExp(pattern.source, 'gu'))].find((hit) => !AVOID_SPAN.test(text.slice(0, hit.index).split(/[，；。]/u).at(-1)) && !negatedAt(text, hit.index));
+  const words = periodOf(PERIOD_WORDS) ?? periodOf(PERIOD_YEAR);
   if (words) errors.push(`storage 写了期限类说法「${words[0]}」：${typeof shelf === 'number' ? `保存期只能写骨架的 ${shelf} 天` : '骨架没有保存期，不写期限，也不写“无期限”“可久存”'}。修复：删去`);
   return errors;
 }
@@ -54,9 +60,9 @@ export function storageIssues(text, entry) {
 // 如实否定说明：容器另备、不随货、不在本件范围内、不含/不附/不带/不提供/不包括。写这类说明的句子里，泛称容器不是引入。
 const DECLARATION = /另备|自备|使用者|不随货|不在[^，。；]{0,8}范围|不含|不附|不带|不配|不提供|不包括|不包含|不供/u;
 // 材质字+收纳字（布袋、木架、陶罐、木盒、皮囊……）与泛称（容器、器皿、包装）。物品全名、别名先整体遮掉（宽口滤布、小罐份、分格小瓶木箱）。
-const PACK = /(?:[布麻皮草木陶瓷铁铜竹藤纸油毡]{1,2})(?:袋|囊|架|箱|匣|筒|筐|篮|盒|罐|桶|盘|碗|盆|壶|瓶|缸|坛)|容器|器皿|包装|包裹布|垫布/gu;
+const PACK = /(?:[布麻皮草木陶瓷铁铜竹藤纸油毡]{1,2})(?:袋|囊|架|箱|匣|筒|筐|篮|盒|罐|桶|盘|碗|盆|壶|瓶|缸|坛|柜|橱|棚|屉)|橱柜|柜格|抽屉|架格|工具匣|工具袋|渔具棚|草垫|[一二两三四五六七八九十几数]筐|容器|器皿|包装|包裹布|垫布/gu;
 
-function packagingIssues(text, allowedText, vocab, evidence = '') {
+function packagingIssues(text, allowedText, vocab, evidence = '', field = '') {
   const errors = [];
   const masked = vocab.allNameRe ? text.replace(vocab.allNameRe, (name) => '〇'.repeat(name.length)) : text;
   for (const sentence of split(masked, /[。；！？\n]/u)) {
@@ -69,6 +75,9 @@ function packagingIssues(text, allowedText, vocab, evidence = '') {
         // 依据：物品自己或配方骨架里有名字含该收纳词（或同一收纳字）的物品；泛称（容器、器皿、包装）只能靠“另备”声明。
         const isGeneric = /^(?:容器|器皿|包装)$/u.test(word);
         if (!isGeneric && (allowedText.includes(word) || allowedText.includes(kind) || evidence.includes(word))) continue;
+        // 用途句里的泛称容器（搭在容器上倒水）：物品自己的事实字段（use 等）里写过才算有出处；storage 里写“放进容器”是引入，仍严判。
+        if (isGeneric && field !== 'storage' && evidence.includes(word)) continue;
+        if (avoidedAt(clause, match.index)) continue;
         if (within(spans, match.index) || declared.includes(word) || (generic && isGeneric) || negatedAt(clause, match.index)) continue;
         if (isGeneric && DECLARATION.test(sentence)) continue;
         errors.push(`出现骨架外包装、收纳或容器「${word}」（${clause.trim()}）：物品和配方骨架里没有。修复：删去；确需写就如实说明“容器须使用者另备，不随货提供”`);
@@ -98,9 +107,14 @@ const TRACE_BEFORE = /(?:经过?|留有|留着|留下|保留|带有|遗留|可�
 // 后框架还有一类：痕迹词后紧跟成形状态谓词（刨面平整、表面光洁、边口齐整）——描述做成后的状态。
 const TRACE_AFTER = /^(?:时的|过的|后的|而成|所成|制成|成型|所留|留下|平整|平滑|光滑|光洁|齐整|匀整|均匀|匀称|圆润|紧实|整齐|平直|规整|细密)/u;
 const TRACE_NOUN = /(?:痕|针脚)$/u;
+// 使用磨损、条件检查不是制作痕迹：痕迹名词前面（同一句）有用久、日久、使用后、织补一类使用框架，或本分句有若、如果、是否、有无一类条件检查框架。
+// 制作框架里的痕迹名词（留有锤痕、边口留有针脚）照判。
+const USE_FRAME = /用久|久用|用旧|日久|经久|长期使用|反复使用|多次使用|使用后|使用中|使用时|磨损|织补|补袜|补衣|补鞋|穿久|用过/u;
+const CONDITION_FRAME = /(?:若|如果|倘若|倘|要是|假如|是否|有无)[^，。；！？\n]{0,8}$/u;
 function inTraceFrame(text, match) {
-  if (TRACE_NOUN.test(match[0])) return true;
+  const sentenceBefore = text.slice(0, match.index).split(/[。！？\n；]/u).at(-1);
   const before = text.slice(0, match.index).split(/[，。；！？\n、]/u).at(-1);
+  if (TRACE_NOUN.test(match[0])) return !USE_FRAME.test(sentenceBefore) && !CONDITION_FRAME.test(before);
   return TRACE_BEFORE.test(before) || TRACE_AFTER.test(text.slice(match.index + match[0].length));
 }
 
@@ -118,12 +132,16 @@ function traceIssues(text, recipe, vocab) {
 
 // 器具部分复用 processIssues（目录派生词表）。物品正文只取“骨架外器具”与“泛称器具”两类：
 // 动作隐含的器具（划线需要量具）在物品正文里多是成品的用途说明，交 L4；单字器具词（剪、筛、针）在物品正文里常是动词或部位（可剪作鞋垫、穿针），不判，只判全名与两字以上词形。
-function utensilIssues(text, skeleton, context, evidence) {
+function utensilIssues(text, skeleton, context, evidence, field = '') {
   return processIssues(text, skeleton, context).filter((message) => {
+    const clause = message.match(/（([^）]*)）/u)?.[1] ?? '';
     const generic = message.match(/^正文提到泛称器具「([^」]+)」/u)?.[1];
-    if (generic !== undefined) return !evidence.includes(generic) && !DECLARATION.test(message.match(/（([^）]*)）/u)?.[1] ?? '');
-    const term = message.match(/^正文出现骨架外器具「([^」]+)」/u)?.[1];
-    return term !== undefined && term.length >= 2 && !evidence.includes(term);
+    const term = generic ?? message.match(/^正文出现骨架外器具「([^」]+)」/u)?.[1];
+    if (term === undefined || (generic === undefined && term.length < 2)) return false;
+    // 泛称容器在 storage 里写“放进容器”是引入，不因 use 里写过容器就放过（用途句才按 use 取证）。
+    if (evidence.includes(term) && !(field === 'storage' && /^(?:容器|器皿)$/u.test(term))) return false;
+    if (clause.includes(term) && avoidedAt(clause, clause.indexOf(term))) return false;
+    return generic === undefined || !DECLARATION.test(clause);
   });
 }
 
@@ -133,8 +151,12 @@ function evidenceText(entry, context, vocab) {
   const strings = (value) => typeof value === 'string' ? [value] : value && typeof value === 'object' ? Object.values(value).flatMap(strings) : [];
   const named = (id) => { const item = vocab.byId.get(id); return item ? [item.name, ...(item.aliases ?? [])] : []; };
   const used = (context.catalogRecipes ?? []).filter((row) => (row.tools ?? []).includes(entry.id) || (row.materials ?? []).some((material) => material.item === entry.id));
+  // 书的正文列出书里教的成品：书骨架 teaches 对应配方的配方名、产出物名与别名并入取证文字。
+  const taught = (entry.book?.teaches ?? []).map((row) => typeof row === 'string' ? row : row?.id);
+  const taughtRecipes = (context.catalogRecipes ?? []).filter((row) => taught.includes(row.id));
   return [
     ...strings(entry.use), ...strings(entry.seasonality), ...strings(entry.acquisition),
+    ...taughtRecipes.flatMap((row) => [row.name, ...named(row.output?.item)]),
     ...used.flatMap((row) => [row.name, ...named(row.output?.item), ...(row.tools ?? []).flatMap(named), ...(row.materials ?? []).flatMap((material) => named(material.item))]),
   ].filter(Boolean).join('|');
 }
@@ -156,8 +178,8 @@ export function itemTextIssues(draft, entry, context) {
     const text = draft?.[field];
     if (typeof text !== 'string' || !text.trim()) continue;
     const found = [
-      ...utensilIssues(text, skeleton, context, evidence),
-      ...packagingIssues(text, allowedText, vocab, evidence),
+      ...utensilIssues(text, skeleton, context, evidence, field),
+      ...packagingIssues(text, allowedText, vocab, evidence, field),
       ...traceIssues(text, recipe, vocab),
       ...(field === 'storage' ? storageIssues(text, entry) : []),
     ];
