@@ -696,7 +696,14 @@ registerHouseholdFreeWater((d,e,owner,{view=null,hydrationNeed})=>{
   const near=sourceGeography(e,state,home,'water',state.minute).candidates.find(s=>sourceAccessible(e,state,s)&&2*Math.ceil(s.distance*60/e.rules.travel.walkKmh)<=(r.nearWaterRoundTripMinutes??0));
   return near?{hydration:hydrationNeed,source:near.id}:none;
  }
- const water=journey(e,state,home,'water',state.minute);
+ // 与午夜实取同一选择：当日已存的取水计划（supplyHousehold 读的同一行）里的水源，且须 executableSource（取水人可去、路未封）与 usableWater（水质）；
+ // 计划尚未生成时退回 journey('water') 的选址。
+ const day=Math.floor(state.minute/DAY),hit=planRecord(state,owner,day*DAY+480),p=hit?.households[state.family?.subsistence?.[1]?.[owner]?.[1]];
+ let water;
+ if(p){
+  const basin=p.water&&sources(e,state).waterById.get(p.water.id);
+  water=basin&&executableSource(e,state,{...basin,...p.water},day)&&usableWater(e,state,basin,day)?{...basin,...p.water}:null;
+ }else water=journey(e,state,home,'water',state.minute);
  if(!water)return none;
  const ml=Math.min(Math.ceil(hydrationNeed*rules.drinkingMlPerPerson/base),Math.floor(ecology.basinState(e,state,water).waterMl/ecology.waterResourceFactor(e,state,water.location)));
  return {hydration:Math.min(hydrationNeed,Math.max(0,ml)*base/rules.drinkingMlPerPerson),source:water.id};

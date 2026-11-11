@@ -76,10 +76,15 @@ const freeWater=(...a)=>{
  return registerHouseholdFreeWater.fn(...a);
 };
 // 本户当日水分缺口（与预算同一口径：成员日耗水 × 24，含个人修正），交给注册函数折成当日可免费取到的水分 {hydration,source}。
+// 客观读按状态对象身份记忆（stateMemo，与其内的 journey/waterSignature 同一机制：只在索引推进内生效，任何状态变化换键），缓存命中的预算读也不再重跑取水选址；主观读不缓存。
+const freeWaterMemo=Symbol('household free water');
 function freeWaterToday(d,engine,owner,view){
- const state=d.get('state'),f=family(d,engine,owner),members=f.shared?f.members:[owner];
- const hydrationNeed=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,'hydration')*24,...(view?{observer:owner,view}:{})}).value,0);
- return freeWater(d,engine,owner,{view,hydrationNeed});
+ const state=d.get('state'),read=()=>{
+  const f=family(d,engine,owner),members=f.shared?f.members:[owner];
+  const hydrationNeed=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,'hydration')*24,...(view?{observer:owner,view}:{})}).value,0);
+  return freeWater(d,engine,owner,{view,hydrationNeed});
+ };
+ return view?read():stateMemo(state,engine,[freeWaterMemo,owner,Math.floor(state.minute/DAY)],read);
 }
 // 本户眼下买得到的来源：到货未过、有量、有价、付得起；奢侈来源（惯常性低）在本户现金不宽裕时标 deferred：排在日常来源之后，
 // 只补日常补不满的缺口。惯常性按本户看得到的全部来源算（卖家数不受现金影响），再按现金筛。
