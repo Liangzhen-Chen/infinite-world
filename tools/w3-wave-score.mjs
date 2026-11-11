@@ -12,11 +12,37 @@ import {tradesRevision,validateTradesDraft} from './w3-trades.mjs';
 import {journeyContext,journeyRevision} from './w3-journey.mjs';
 export const scorePath='world/drafts/w3/wave-score.json';
 export const dimensions=['具体性','独特性','内在一致性','与世界的连接','可玩性','说话方式辨识度'];
-// 细则（SKELFACT 起）：具体性、独特性两项的每条评分除 quote 外须给 basis（该原句对应的骨架字段路径，如 physical.appearance、use、recipe.processFacts）；
-// 原句里有骨架外的具体（fabricated 非空），该项最高 2 分。只约束新写入的评分；门槛不变。
+// 细则（SKELFACT 起）：编造按整件作品判。每个样本带整件级 fabricated：数组，元素 {field, span}，span 是该样本正式正文 field 字段里的原文片段，
+// 列出整件正文里全部骨架外编造的具体；没有就写空数组，不得省略。整件 fabricated 非空时，具体性、独特性两项最高 2 分；
+// 任何维度的 quote 与某个 span 在原文里有重叠，该项判无效（编造的句子不能拿来得分）。
+// 具体性、独特性两项另须给 basis（该原句对应的骨架字段路径，如 physical.appearance、use、recipe.processFacts），路径须存在，
+// 且 quote 与该字段取值至少有一段 2 字以上的共同片段（核出处）。只约束新写入的评分；旧评分留在 rescorings 历史里，不改写；门槛不变。
 export const basisDimensions=['具体性','独特性'];
-export const basisRule='具体性、独特性两项的每条评分，除 quote 外必须给 basis，即该原句对应的骨架字段路径（如 physical.appearance、use、recipe.processFacts），路径必须在该样本的骨架或配方里存在；原句里有骨架外的具体，把这些原文片段列入 fabricated（须是 quote 的子串），该项最高 2 分。';
+export const basisRule='每个样本须带整件级 fabricated（数组，元素 {field, span}，span 是该样本正式正文 field 字段的原文片段）：列出整件正文里全部骨架外编造的具体，没有就写空数组，不得省略。整件 fabricated 非空时具体性、独特性两项最高 2 分；任何维度的 quote 与某个 span 有重叠，该项无效。具体性、独特性两项每条评分另给 basis（该原句对应的骨架字段路径，如 physical.appearance、use、recipe.processFacts），路径须在该样本的骨架或配方里存在，且 quote 与该字段取值至少有 2 字以上的共同片段。';
 export const fabricatedCap=2;
+export const textFields=['description','inspection','storage','process','name','use'];
+// 路径取值（字符串化：字符串、数字、数组与对象里的全部字符串和数字拼接）。
+export function basisText(root,path){
+ const out=[];const walk=v=>{if(typeof v==='string')out.push(v);else if(typeof v==='number')out.push(String(v));else if(Array.isArray(v))v.forEach(walk);else if(v&&typeof v==='object')Object.values(v).forEach(walk);};
+ let cur=root;for(const part of String(path).trim().split('.')){if(cur===null||typeof cur!=='object'||!Object.hasOwn(cur,part))return '';cur=cur[part];}
+ walk(cur);return out.join('|');
+}
+// 共同片段：quote 的某个连续两字（只取字母、数字、汉字，不含标点和空白）出现在 text 里。
+export function sharesFragment(quote,text){
+ for(let k=0;k+2<=quote.length;k++){const g=quote.slice(k,k+2);if(/^[\p{L}\p{N}]{2}$/u.test(g)&&text.includes(g))return true;}
+ return false;
+}
+// 文字区间：s 在 text 里每次出现的 [起,止)。
+const spans=(text,s)=>{const out=[];for(let at=text.indexOf(s);at>=0&&s;at=text.indexOf(s,at+1))out.push([at,at+s.length]);return out;};
+// quote 在正式正文里的任一出现处，与同字段任一 fabricated span 的出现处有重叠。
+export function overlapsFabricated(entity,quote,fabricated){
+ for(const f of fabricated){
+  const text=entity[f.field];if(typeof text!=='string')continue;
+  const q=spans(text,quote),w=spans(text,f.span);
+  if(q.some(([a,b])=>w.some(([c,d])=>a<d&&c<b)))return true;
+ }
+ return false;
+}
 // 样本的骨架根：物品取自身骨架并挂 recipe（以它为产出的配方）；配方条目的 recipe 就是自身。
 export function skeletonRoot(bone,recipe=null){return {...bone,recipe:bone.id?.startsWith('recipe_')?bone:recipe};}
 export function basisExists(root,path){
@@ -120,12 +146,14 @@ export function validateScores(report,entries,skeletons=null){
  const sample=fixedSample(entries,report.seed);if(JSON.stringify(report.samples.map(x=>x.id))!==JSON.stringify(sample.map(x=>x.id)))throw new Error('样本被替换或顺序不符');
  const values=[],means=[];
  for(const row of report.samples){const source=entries.find(e=>e.id===row.id);if(row.entityHash!==hashContent(source.entity))throw new Error('条目哈希改变');
-  const scores=[];for(const key of dimensions){const score=row.ratings[key];if(!score||!Number.isInteger(score.score)||score.score<1||score.score>5)throw new Error(`缺少有效评分 ${row.id}/${key}`);if(typeof score.reason!=='string'||score.reason.length<8)throw new Error('缺少评分理由');if(typeof score.quote!=='string'||score.quote.length<3||!['description','inspection','storage','process','name','use'].some(field=>source.entity[field]?.includes(score.quote)))throw new Error(`引文不在正式文本 ${row.id}/${key}`);if(basisDimensions.includes(key)){
+  const fabRow=row.fabricated;
+  if(!Array.isArray(fabRow))throw new Error(`缺少整件级 fabricated（须为数组，没有编造写空数组，不得省略）${row.id}`);
+  for(const f of fabRow)if(!f||typeof f.field!=='string'||!textFields.includes(f.field)||typeof f.span!=='string'||!f.span.trim()||typeof source.entity[f.field]!=='string'||!source.entity[f.field].includes(f.span))throw new Error(`fabricated 的 span 须是该样本正式正文对应字段的原文片段 ${row.id}`);
+  const scores=[];for(const key of dimensions){const score=row.ratings[key];if(!score||!Number.isInteger(score.score)||score.score<1||score.score>5)throw new Error(`缺少有效评分 ${row.id}/${key}`);if(typeof score.reason!=='string'||score.reason.length<8)throw new Error('缺少评分理由');if(typeof score.quote!=='string'||score.quote.length<3||!textFields.some(field=>source.entity[field]?.includes(score.quote)))throw new Error(`引文不在正式文本 ${row.id}/${key}`);if(Object.hasOwn(score,'fabricated'))throw new Error(`fabricated 只在整件级，维度评分里不得再写 ${row.id}/${key}`);if(overlapsFabricated(source.entity,score.quote,fabRow))throw new Error(`quote 与 fabricated 片段重叠，编造的句子不能拿来得分 ${row.id}/${key}`);if(basisDimensions.includes(key)){
    const root=skeletons?.get?.(row.id);if(!root)throw new Error(`缺少样本骨架，无法核对 basis ${row.id}/${key}`);
    if(!basisExists(root,score.basis))throw new Error(`缺少有效 basis（骨架或配方里不存在该字段路径）${row.id}/${key}`);
-   const fab=score.fabricated??[];
-   if(!Array.isArray(fab)||fab.some(x=>typeof x!=='string'||!x.trim()||!score.quote.includes(x)))throw new Error(`fabricated 须是 quote 内的原文片段数组 ${row.id}/${key}`);
-   if(fab.length&&score.score>fabricatedCap)throw new Error(`原句含骨架外的具体，最高 ${fabricatedCap} 分 ${row.id}/${key}`);
+   if(!sharesFragment(score.quote,basisText(root,score.basis)))throw new Error(`quote 与 basis 字段的取值没有 2 字以上的共同片段，basis 核不上出处 ${row.id}/${key}`);
+   if(fabRow.length&&score.score>fabricatedCap)throw new Error(`整件正文含骨架外的编造，具体性、独特性最高 ${fabricatedCap} 分 ${row.id}/${key}`);
   }
   values.push(score.score);scores.push(score.score);}
   means.push({id:row.id,mean:scores.reduce((a,b)=>a+b)/6});
@@ -139,7 +167,7 @@ async function main(){
   if(process.argv.includes('--recompute-corpus-hash')){if(process.argv.includes('--check'))throw new Error('--recompute-corpus-hash 会写 wave-score.json，不能与 --check 同用');report=recomputeCorpusHash(report,entries,[...explained,...await overlayFieldReverts(entries)]);report.audit=audit;await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
   else if(process.argv.includes('--accept-fact-corrections')){report=acceptFactCorrections(report,entries);report.audit=audit;await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
   else throw new Error('已固定样本的正式内容改变，不自动重抽（变化全部来自已审批回执或叠加层时，可用 --recompute-corpus-hash 按回执重算）');}}
- catch(error){if(error.code!=='ENOENT')throw error;if(process.argv.includes('--check'))throw new Error(`${scorePath} 缺失：--check 只检查，不创建样本文件`);const seed=randomBytes(32).toString('hex');report={version:1,createdAt:new Date().toISOString(),seed,algorithm:'按id排序后，以SHA256(seed:counter)拒绝采样执行Fisher-Yates，取前10；创建后不重抽',corpusHash,audit,rubric:{range:'1欠缺、2明显不足、3合格但普通、4充分且有辨识、5有突出可核验细节',voiceScope:'物品配方仍评说话方式辨识度：看作者或使用者叙述视角、行业措辞、信息取舍及句式是否可辨认。没有NPC对白不免评；共同目录格式不是扣分本身，换名即可套用的通用话语不能得高分。',basisRule,threshold:'60个单项平均至少4，任何单项至少3；同时列出逐条及逐维度均分，不能用总均分掩盖不足。'},samples:fixedSample(entries,seed).map(x=>({id:x.id,name:x.entity.name,kind:x.kind,source:x.source,entityHash:hashContent(x.entity),ratings:Object.fromEntries(dimensions.map(key=>[key,basisDimensions.includes(key)?{score:null,quote:'',basis:'',fabricated:[],reason:''}:{score:null,quote:'',reason:''}]))}))};await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
+ catch(error){if(error.code!=='ENOENT')throw error;if(process.argv.includes('--check'))throw new Error(`${scorePath} 缺失：--check 只检查，不创建样本文件`);const seed=randomBytes(32).toString('hex');report={version:1,createdAt:new Date().toISOString(),seed,algorithm:'按id排序后，以SHA256(seed:counter)拒绝采样执行Fisher-Yates，取前10；创建后不重抽',corpusHash,audit,rubric:{range:'1欠缺、2明显不足、3合格但普通、4充分且有辨识、5有突出可核验细节',voiceScope:'物品配方仍评说话方式辨识度：看作者或使用者叙述视角、行业措辞、信息取舍及句式是否可辨认。没有NPC对白不免评；共同目录格式不是扣分本身，换名即可套用的通用话语不能得高分。',basisRule,threshold:'60个单项平均至少4，任何单项至少3；同时列出逐条及逐维度均分，不能用总均分掩盖不足。'},samples:fixedSample(entries,seed).map(x=>({id:x.id,name:x.entity.name,kind:x.kind,source:x.source,entityHash:hashContent(x.entity),fabricated:[],ratings:Object.fromEntries(dimensions.map(key=>[key,basisDimensions.includes(key)?{score:null,quote:'',basis:'',reason:''}:{score:null,quote:'',reason:''}]))}))};await fs.writeFile(scorePath,JSON.stringify(report,null,2)+'\n');}
  if(process.argv.includes('--check')){const result=validateScores(report,entries,skeletons);console.log(JSON.stringify({audit,result}));if(!result.passed)process.exitCode=1;}else console.log(JSON.stringify({audit,seed:report.seed,samples:report.samples.map(row=>({id:row.id,name:row.name,entity:entries.find(x=>x.id===row.id).entity}))}));
 }
 if(process.argv[1]?.replaceAll('\\','/').endsWith('/w3-wave-score.mjs'))await reportApprovalIncomplete(main);
