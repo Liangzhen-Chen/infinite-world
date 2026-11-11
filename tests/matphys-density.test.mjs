@@ -77,6 +77,12 @@ test('正式数据：physical 通过 L1；每个出处原值的 citation 里能�
   for (const [k, row] of Object.entries(phys.classes)) {
     for (const s of row.sources ?? []) {
       const c = s.citation, v = s.densityKgPerL;
+      if (/^推导/.test(c)) { // 推导型出处：citation 须写明推导式，且式中的数代入后等于存值
+        const m = /(\d+\.\d+) × \(1 − (\d+\.\d+)\) = (\d+\.\d+)/.exec(c);
+        assert.ok(m, `${k}.${s.name} 推导型出处须写明推导式`);
+        assert.ok(Math.abs(Number(m[1]) * (1 - Number(m[2])) - v) < 1e-9 && Math.abs(Number(m[3]) - v) < 1e-9, `${k}.${s.name} 推导式与存值不符`);
+        continue;
+      }
       const nums = [...c.matchAll(/(\d+(?:\.\d+)?)\s*(?:-|–|—)\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)/g)];
       const kgm3 = /kg\/m³/.test(c), tenCubed = /10³ kg\/m³/.test(c);
       const scale = tenCubed ? 1 : kgm3 ? 1000 : null;
@@ -96,7 +102,7 @@ test('正式数据：推算值就是出处原值按规则的结果（木料五�
   assert.deepEqual(phys.classes.timber.sources.map(s => s.densityKgPerL), w);
   assert.equal(d('timber'), round3(mean(w)));
   assert.equal(d('wood'), d('timber'));
-  for (const [k, v] of Object.entries({iron: 7.75, ceramic: 1.85, leather: 0.86, paper: 0.925, bone: 1.85, wax: 0.96}))assert.equal(d(k), v, k);
+  for (const [k, v] of Object.entries({iron: 7.75, ceramic: round3(mean([1.85, 2.675 * 0.65])), leather: 0.86, paper: 0.925, bone: 1.85, wax: 0.96}))assert.equal(d(k), v, k);
 });
 
 test('正式数据：不做兜底——液体、食物类、混合材没有密度；缺项为未知', () => {

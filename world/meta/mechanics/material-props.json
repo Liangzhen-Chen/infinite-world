@@ -1245,7 +1245,7 @@
       "citation": "Wikipedia「Heartwood」：earlywood is usually lighter, latewood is usually darker；rings most clearly seen on the end of a log"
      },
      {
-      "term": "木色由草黄到深褐乃至红色（因树种而异）",
+      "term": "木色由草黄到深色乃至红色（因树种而异）",
       "citation": "Wikipedia「Heartwood」：hard pines 的 latewood deep-colored、earlywood straw-colored；coast redwood is distinctively red"
      },
      {
@@ -1297,7 +1297,7 @@
       "citation": "Wikipedia「Heartwood」：earlywood is usually lighter, latewood is usually darker；rings most clearly seen on the end of a log"
      },
      {
-      "term": "木色由草黄到深褐乃至红色（因树种而异）",
+      "term": "木色由草黄到深色乃至红色（因树种而异）",
       "citation": "Wikipedia「Heartwood」：hard pines 的 latewood deep-colored、earlywood straw-colored；coast redwood is distinctively red"
      },
      {
@@ -1339,7 +1339,7 @@
     "sources": [
      {
       "name": "陶土器（赤陶）",
-      "citation": "spotmaterial.com 材料库「earthenware terracotta」：Density 1600-2100 kg/m³（页面未注二级出处）",
+      "citation": "spotmaterial.com 材料库「earthenware terracotta」（https://spotmaterial.com/material/ceramic/earthenware-terracotta/）：Density 1600-2100 kg/m³（页面未注二级出处）",
       "densityKgPerL": 1.85,
       "range": {
        "densityKgPerL": [
@@ -1347,27 +1347,32 @@
         2.1
        ]
       }
+     },
+     {
+      "name": "陶土器（由理论密度与孔隙率推导）",
+      "citation": "推导（非直接值）：techniques-ingenieur.fr「Terracotta materials · Shard characteristics」（https://techniques-ingenieur.fr/en/resources/article/ti264/terracotta-materials-c906/v1/shard-characteristics-1）：theoretical density is around 2,600-2,750 kg/m3（取中值 2.675 kg/L）；the most common porosity is around 35%（范围约 15%–48%）。表观密度 = 理论密度 × (1 − 孔隙率) = 2.675 × (1 − 0.35) = 1.73875 kg/L",
+      "densityKgPerL": 1.73875
      }
     ],
     "selection": {
-     "method": "single",
-     "reason": "区间内取中值 1.85（世界里的陶是低温烧成的陶土器）"
+     "method": "mean",
+     "reason": "两条互相印证：spotmaterial 区间中值 1.85；理论密度与孔隙率推导 1.73875；逐条取平均"
     },
     "appearance": [
      {
       "term": "烧后胎色自白、米黄、橙、红、褐到黑，随黏土与烧成气氛而异",
-      "citation": "spotmaterial.com「earthenware terracotta」：The natural colour of clay after firing ranges from white through buff, orange, red, brown and black"
+      "citation": "spotmaterial.com「earthenware terracotta」（https://spotmaterial.com/material/ceramic/earthenware-terracotta/）：The natural colour of clay after firing ranges from white through buff, orange, red, brown and black"
      },
      {
       "term": "红陶色来自黏土中铁的氧化；还原焰烧成呈灰至黑",
-      "citation": "spotmaterial.com「earthenware terracotta」：colour from iron in the clay oxidising during firing；reduction firing produces dark colours, from grey through black"
+      "citation": "spotmaterial.com「earthenware terracotta」（https://spotmaterial.com/material/ceramic/earthenware-terracotta/）：colour from iron in the clay oxidising during firing；reduction firing produces dark colours, from grey through black"
      },
      {
-      "term": "无釉胎体多孔，吸水可达约一成",
-      "citation": "spotmaterial.com「earthenware terracotta」：Unglazed earthenware is porous and absorbs up to around 10% moisture"
+      "term": "无釉胎体多孔",
+      "citation": "spotmaterial.com「earthenware terracotta」（https://spotmaterial.com/material/ceramic/earthenware-terracotta/）：Unglazed earthenware is porous"
      }
     ],
-    "basis": "陶土器（低温烧成赤陶）表观密度区间 1600–2100 kg/m³，取中值 1.85 kg/L；该页面无二级出处，此项优先复核。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+    "basis": "陶土器（低温烧成赤陶）表观密度：出处一为 spotmaterial 区间 1600–2100 kg/m³ 取中值 1.85 kg/L（直接值，无二级出处）；出处二为推导印证，techniques-ingenieur 理论密度 2600–2750 kg/m³ 取中值、常见孔隙率 35%，按 2.675×(1−0.35)=1.73875 kg/L 推得；两者取平均。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
    },
    "leather": {
     "sources": [
