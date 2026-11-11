@@ -13,10 +13,8 @@ const seed=JSON.parse(fs.readFileSync('tests/fixtures/legacy/seed.json','utf8'))
 const engine=new WorldEngine(structuredClone(world));
 const item=id=>engine.byId.get(id);
 // 水分规则（WATER-1B）：食物水分 = 重量×含水率×参照水每公斤水分（item_water：25÷(0.25×含水1)=100/kg），一份低于参照水一份的一半（12.5）记 0；缺含水率为 0。手算锚点，不读被测实现。
-const ruleHydration=(e,it)=>{
-  const ref=e.byId.get('item_water'),rm=materialProps(e,ref.id).moisture.value,mp=materialProps(e,it.id).moisture;
-  if(!mp.known)return 0;
-  const h=it.weight*mp.value*ref.nutrition.hydration/(ref.weight*rm);
+const hydrationOfWater=(e,kg)=>{
+  const ref=e.byId.get('item_water'),h=kg*ref.nutrition.hydration/(ref.weight*materialProps(e,ref.id).moisture.value);
   return h>=0.5*ref.nutrition.hydration?Math.floor(h):0;
 };
 const authored=new Map(world.items.map(i=>[i.id,i]));
@@ -29,8 +27,7 @@ test('营养由配方投入守恒派生：没写营养的食物照样有营养�
   // 能量守恒在“按热量基值”（nutrientBase，未乘饱腹系数）上成立；系数只在最后乘一次。
   const sum=need=>r.materials.reduce((n,m)=>n+(item(m.item).nutrientBase?.[need]??0)*m.amount,0)/r.output.quantity;
   assert.ok(crisp.nutrientBase.satiety<=sum('satiety'),JSON.stringify(crisp.nutrition));
-  // 水分不再由投入继承，与所有食物同一条含水率规则。
-  assert.equal(crisp.nutrition.hydration??0,ruleHydration(engine,crisp));
+  // 水分按含水量规则派生（配方产物的含水量由原料推出，不再继承投入的水分值），逐件核对见 s5-law-water-derivation。
   // 写了营养的维度照用（作为按热量的基值），与推导值一样乘饱腹系数
   const ration=authored.get('item_ration').nutrition.satiety;
   assert.equal(item('item_ration').nutrition.satiety,Math.floor(ration*satietyFactor(engine.world,item('item_ration'),ration)));
@@ -62,8 +59,10 @@ test('新物品、新配方不写营养也照样派生（规律不认 id）', ()
   deriveItemAttributes(w);
   const soup=w.items.find(i=>i.id==='item_kf_soup'),root=w.items.find(i=>i.id==='item_kf_root');
   assert.ok(root.nutrition.satiety>0&&soup.nutrition.satiety>root.nutrition.satiety&&soup.nutrition.satiety<=2*root.nutrientContent.satiety);
-  // 水分与所有食物同一条含水率规则（试验汤由基物品复制，含水率数据随之；缺数据则为 0，不从投入继承）。
-  assert.equal(soup.nutrition?.hydration??0,ruleHydration({world:w,byId:new Map(w.items.map(i=>[i.id,i]))},soup));
+  // 试验汤的水分：含水量 = (2 个根的含水量 + 1 份水 0.25kg×含水1) × (1−加热损耗 0.1) ÷ 1，木炭为燃料不计；含水量×100/kg 过 12.5 门槛。根的含水率按其出处（未知则该项为 0）。
+  const E={world:w,byId:new Map(w.items.map(i=>[i.id,i]))},rootM=materialProps(E,root.id).moisture;
+  const kg=((rootM.known?2*root.weight*rootM.value:0)+0.25)*(1-0.1);
+  assert.equal(soup.nutrition?.hydration??0,hydrationOfWater(E,kg));
 });
 
 test('用途按类别：药、粮、饵、燃料、盐、日用品都看标签，不看 id', () => {

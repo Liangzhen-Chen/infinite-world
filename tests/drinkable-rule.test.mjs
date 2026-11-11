@@ -14,8 +14,7 @@ const fixture=()=>({
   item('m',0.3,['food','milk'],{moisture:0.87}),
   item('v',0.05,['food','vinegar'],{moisture:0.938}),
   item('fuel',0.1,['fuel']),
-  // 配方产物与其他物品同一条水分规则（含水率×100/kg，过同一门槛）：产物自己要有含水率数据才有水分（不再从投入继承）。
-  item('brew',0.25,['food'],{moisture:0.9}),
+  item('brew',0.25,['food']),
   item('curd',0.1,['food','milk']),
   item('stone',0.3,['mineral'],{moisture:0.9}),
   item('oil',0.2,['food'],{moisture:0.9}),
