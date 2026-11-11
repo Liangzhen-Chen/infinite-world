@@ -1074,7 +1074,6 @@
   {"id":"motif:immortal_seeking","family":"motif","source":"design","label":"求仙服食","broader":"motif:*","note":"yaoguai-defs MOTIFS"},
   {"id":"motif:bestiary","family":"motif","source":"design","label":"异兽记载","broader":"motif:*","note":"yaoguai-defs MOTIFS"},
   {"id":"motif:swap","family":"motif","source":"design","label":"偷换","broader":"motif:*","note":"03 §3.2 换生儿"},
-  {"id":"habitat:*","family":"habitat","source":"design","pattern":true,"note":"栖地族（03 §2.1 habitat 字段；架构 13:194）；栖地 id 在 rules.json wildlife.habitats，不在此逐条登记"},
   {"id":"family:*","family":"family","source":"design","pattern":true,"note":"技艺族（10 §3.1）：skills.json 的 family 字段取值；子族用 / 分隔，链 family:blade/footwork → family:blade → family:melee → family:*"},
   {"id":"family:melee","family":"family","source":"design","label":"近战","broader":"family:*","note":"10 §3.1:58、:169；原文仅明示 blade 在其下"},
   {"id":"family:blade","family":"family","source":"design","label":"剑刀短兵","broader":"family:melee","note":"10 §3.1:63"},

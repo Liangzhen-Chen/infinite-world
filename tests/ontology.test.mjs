@@ -56,7 +56,7 @@ test('WD-02 新词：有 family、id 前缀与族一致、无重复、上位词�
  const {entries}=JSON.parse(fs.readFileSync('world/ontology/tags.json','utf8'));
  const byId=new Map();
  for(const e of entries){assert.ok(!byId.has(e.id),`重复 ${e.id}`);byId.set(e.id,e);}
- const FAMILIES=['goods','material','super','form','anchor','drive','power','bound','ward','bane','motif','habitat','family'];
+ const FAMILIES=['goods','material','super','form','anchor','drive','power','bound','ward','bane','motif','family'];
  for(const fam of FAMILIES)assert.ok(byId.get(`${fam}:*`)?.pattern,`${fam}:* 族根未登记`);
  const wd02=entries.filter(e=>FAMILIES.includes(e.id.slice(0,e.id.indexOf(':'))));
  for(const e of wd02){
