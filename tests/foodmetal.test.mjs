@@ -88,7 +88,7 @@ test('physicalMetal：L1 通过；五类密度出处原值与推算一致；每�
       if (s.range)assert.equal(round3(mean(s.range.densityKgPerL)), s.densityKgPerL, `${k} 区间中值`);
       else assert.ok(new RegExp(`${String(Math.round(s.densityKgPerL * 1000))} kg/m³`).test(s.citation), `${k} citation 里须有原值 kg/m³`);
     }
-    if (k === 'steel') assert.equal(row.appearance, undefined, '钢不写外观');
+    if (k === 'steel' || k === 'tin') assert.equal(row.appearance, undefined, `${k} 不写外观（缺项为未知）`);
     else assert.ok(row.appearance.length >= 3 && row.appearance.length <= 6, `${k} 外观条数`);
   }
   const bad = f => { const x = structuredClone(pm); f(x); return validatePhysicalMetal(x, phys); };
@@ -97,7 +97,7 @@ test('physicalMetal：L1 通过；五类密度出处原值与推算一致；每�
   assert.ok(bad(x => { x.forms = ['条片']; }).some(m => /forms/.test(m)));
   assert.ok(bad(x => { x.excludeTags = []; }).some(m => /excludeTags/.test(m)));
   assert.ok(bad(x => { delete x.classes.tin.sources[0].citation; }).some(m => /缺 citation/.test(m)));
-  assert.ok(bad(x => { x.classes.tin.appearance.pop(); x.classes.tin.appearance.pop(); }).some(m => /3–6/.test(m)));
+  assert.ok(bad(x => { x.classes.brass.appearance.length = 2; }).some(m => /3–6/.test(m)));
 });
 
 test('食物外观：只给有可靠共同外观的类别写 appearance，不写密度、不写成品菜；每条带页面与原句', () => {

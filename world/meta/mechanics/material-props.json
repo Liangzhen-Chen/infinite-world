@@ -1706,8 +1706,8 @@
       "citation": "Wikipedia「Brass」：the copper reacts with sulfur to form a brown and eventually black surface layer of copper sulfide"
      },
      {
-      "term": "表层可在空气中氧化成绿蓝色的碳酸铜铜绿",
-      "citation": "Wikipedia「Brass」：can then oxidize in air to form a patina of green-blue copper carbonate"
+      "term": "硫化铜层若常接触弱酸性水（如城市雨水），可在空气中氧化成绿蓝色的碳酸铜铜绿",
+      "citation": "Wikipedia「Brass」：which if regularly exposed to slightly acidic water such as urban rainwater；can then oxidize in air to form a patina of green-blue copper carbonate"
      }
     ],
     "basis": "黄铜表观密度区间 8.4–8.73 g/cm³，取中值 8.565 kg/L。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
@@ -1724,21 +1724,7 @@
      "method": "single",
      "reason": "表里只有锡一条（Wikipedia 白锡 7.289 g/cm³ 与之相容）"
     },
-    "appearance": [
-     {
-      "term": "银白色",
-      "citation": "Wikipedia「Tin」：Tin is a soft, malleable, ductile and highly crystalline silvery-white metal"
-     },
-     {
-      "term": "可抛光",
-      "citation": "Wikipedia「Tin」：Tin can be highly polished"
-     },
-     {
-      "term": "α 锡（灰锡）为暗灰色粉末状",
-      "citation": "Wikipedia「Tin」：α-tin is a dull-gray powdery material"
-     }
-    ],
-    "basis": "锡表观密度，Engineering ToolBox 表列 7280 kg/m³。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+    "basis": "锡表观密度，Engineering ToolBox 表列 7280 kg/m³。常温稳定的是 β 锡（Wikipedia「Tin」：silvery-white）；页面里可作外观的只有银白色与可抛光两条，不足 3 条，α 锡（暗灰粉末）只在 13.2 °C 以下稳定、不适用常温，故不写外观，按未知。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
    },
    "silver": {
     "sources": [
