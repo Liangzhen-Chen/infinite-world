@@ -61,7 +61,24 @@
  "item_dry_peas": {
   "tags": [
    "legume"
-  ]
+  ],
+  "props": {
+   "basis": "item_dry_peas 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "种子近球形，色有白、灰、绿、褐",
+     "citation": "Wikipedia「Pea」：nearly spherical, and white, gray, green, or brown"
+    },
+    {
+     "term": "成熟种子子叶或绿或黄",
+     "citation": "Wikipedia「Pea」：seeds (peas), which can have green or yellow cotyledons when mature"
+    },
+    {
+     "term": "单粒重约 100–360 毫克",
+     "citation": "Wikipedia「Pea」：The average pea weighs between 100 and 360 milligrams"
+    }
+   ]
+  }
  },
  "item_hen_egg": {
   "tags": [
@@ -72,6 +89,27 @@
    "when": {
     "taxon": "chicken"
    }
+  },
+  "props": {
+   "basis": "item_hen_egg 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "壳色多为白或褐",
+     "citation": "Wikipedia「Egg as food」：shell colour may vary according to species and breed, from the more common white or brown to pink or speckled blue-green"
+    },
+    {
+     "term": "形如长球体，一端较大",
+     "citation": "Wikipedia「Egg as food」：resembles a prolate spheroid with one end larger than the other"
+    },
+    {
+     "term": "生蛋白无色透明",
+     "citation": "Wikipedia「Egg as food」：Colorless and transparent initially"
+    },
+    {
+     "term": "蛋黄颜色随母鸡饲料而异",
+     "citation": "Wikipedia「Egg as food」：Yolk color is dependent on the diet of the hen"
+    }
+   ]
   }
  },
  "item_rye_flour": {
@@ -132,7 +170,24 @@
  "item_lentil": {
   "tags": [
    "legume"
-  ]
+  ],
+  "props": {
+   "basis": "item_lentil 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "种子呈透镜形，直径约 5 毫米",
+     "citation": "Wikipedia「Lentil」：two seeds, about 5 millimetres (1⁄4 in) in diameter, in the characteristic lens shape"
+    },
+    {
+     "term": "种皮色有褐、灰、绿、棕褐、透明至黑",
+     "citation": "Wikipedia「Lentil」：Lentil seed coat colour can be broadly grouped into tan, grey, green, brown, clear or black"
+    },
+    {
+     "term": "种子可有斑点与杂色",
+     "citation": "Wikipedia「Lentil」：The seeds can also be mottled and speckled"
+    }
+   ]
+  }
  },
  "item_mutton": {
   "tags": [
@@ -226,7 +281,20 @@
  "item_walnut": {
   "tags": [
    "nut"
-  ]
+  ],
+  "props": {
+   "basis": "item_walnut 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "仁常分成两瓣，中隔膜质",
+     "citation": "Wikipedia「Walnut」：in two halves separated by a membranous partition"
+    },
+    {
+     "term": "仁外覆褐色种皮",
+     "citation": "Wikipedia「Walnut」：brown seed coat"
+    }
+   ]
+  }
  },
  "item_dry_mushroom": {
   "tags": [
@@ -250,7 +318,28 @@
  "item_fresh_apple": {
   "tags": [
    "fruit"
-  ]
+  ],
+  "props": {
+   "basis": "item_fresh_apple 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "形状多变，可近圆、长形、圆锥或短宽",
+     "citation": "Wikipedia「Apple」：The shape is quite variable and may be nearly round, elongated, conical, or short and wide"
+    },
+    {
+     "term": "直径一般 2.5–12 厘米",
+     "citation": "Wikipedia「Apple」：generally has a diameter between 2.5 and 12 cm"
+    },
+    {
+     "term": "熟果底色黄、绿、黄绿或淡黄白，面色橙红到棕红",
+     "citation": "Wikipedia「Apple」：The groundcolor of ripe apples is yellow, green, yellow-green or whitish yellow；The overcolor of ripe apples can be orange-red, pink-red, red, purple-red or brown-red"
+    },
+    {
+     "term": "果肉一般为淡黄白色",
+     "citation": "Wikipedia「Apple」：The flesh is generally pale yellowish-white"
+    }
+   ]
+  }
  },
  "item_pear": {
   "tags": [
@@ -291,7 +380,25 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "果近球形至椭圆，直径约 2–7 厘米",
+     "citation": "Wikipedia「Plum」：Fruits are usually of medium size, between 2–7 centimetres (0.79–2.76 in) in diameter, globose to oval"
+    },
+    {
+     "term": "果皮光滑，带天然蜡质",
+     "citation": "Wikipedia「Plum」：The fruit's peel is smooth, with a natural waxy surface that adheres to the flesh"
+    },
+    {
+     "term": "果核单个，坚硬",
+     "citation": "Wikipedia「Plum」：a single hard fruitstone which encloses the fruit's seed"
+    },
+    {
+     "term": "果肉紧实多汁",
+     "citation": "Wikipedia「Plum」：The flesh is firm and juicy"
+    }
+   ]
   }
  },
  "item_turnip": {
@@ -311,7 +418,21 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "芜菁：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "芜菁：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "常见的芜菁皮白，露出地面的上部可呈紫、红或带绿",
+     "citation": "Wikipedia「Turnip」：The most common type of turnip is white-skinned except for the upper part that protrudes above the ground；This part may be purple, red or greenish where exposed to sunlight"
+    },
+    {
+     "term": "根大致呈球形，直径 5–20 厘米，无侧根",
+     "citation": "Wikipedia「Turnip」：The root is roughly globular, from 5–20 cm (2–8 in) in diameter, and lacks side roots"
+    },
+    {
+     "term": "肉白色",
+     "citation": "Wikipedia「Turnip」：Inside it is white"
+    }
+   ]
   }
  },
  "item_carrot": {
@@ -331,7 +452,21 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "胡萝卜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "胡萝卜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "多为橙色（胡萝卜素）",
+     "citation": "Wikipedia「Carrot」：Carrots are typically orange in colour due to their beta-carotene content"
+    },
+    {
+     "term": "直根多为长圆锥形",
+     "citation": "Wikipedia「Carrot」：Taproots are typically long and conical, although cylindrical and nearly spherical cultivars are available"
+    },
+    {
+     "term": "根长多在 10–25 厘米",
+     "citation": "Wikipedia「Carrot」：most are between 10 and 25 cm (4 and 10 in)"
+    }
+   ]
   }
  },
  "item_parsnip": {
@@ -351,7 +486,21 @@
     "method": "single",
     "reason": "单一出处，覆盖蔬菜类别"
    },
-   "basis": "欧防风根含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "欧防风根含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "皮与肉都是浅奶油色",
+     "citation": "Wikipedia「Parsnip」：Its long taproot has light cream colored skin and flesh"
+    },
+    {
+     "term": "直根多呈窄圆锥形，也有品种偏球茎状",
+     "citation": "Wikipedia「Parsnip」：Most are narrowly conical, but some cultivars have a more bulbous shape"
+    },
+    {
+     "term": "根身一般光滑",
+     "citation": "Wikipedia「Parsnip」：The roots are generally smooth, although lateral roots sometimes form"
+    }
+   ]
   }
  },
  "item_beet": {
@@ -371,7 +520,17 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "红甜菜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "红甜菜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "红甜菜根色为红到深红的各种色调",
+     "citation": "Wikipedia「Beetroot」：the root colors are shades of red and dark red"
+    },
+    {
+     "term": "切片可见深浅不一的环带",
+     "citation": "Wikipedia「Beetroot」：with different degrees of zoning noticeable in slices"
+    }
+   ]
   }
  },
  "item_onion": {
@@ -391,7 +550,17 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "洋葱有黄褐与红紫等色",
+     "citation": "Wikipedia「Onion」：Yellow or brown onions；Red or purple onions"
+    },
+    {
+     "term": "里层是肥厚的鳞叶，包着中央的芽",
+     "citation": "Wikipedia「Onion」：fleshy modified scale (leaves) that envelop a central bud at the tip of the stem"
+    }
+   ]
   }
  },
  "item_cabbage": {
@@ -411,7 +580,21 @@
     "method": "single",
     "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
    },
-   "basis": "甘蓝：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "甘蓝：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "叶片密集成球形的叶球",
+     "citation": "Wikipedia「Cabbage」：grown as an annual vegetable crop for its dense-leaved heads"
+    },
+    {
+     "term": "叶向内包合成球",
+     "citation": "Wikipedia「Cabbage」：heads form through the leaves cupping inward"
+    },
+    {
+     "term": "最常见的是叶面光滑、球实的绿甘蓝",
+     "citation": "Wikipedia「Cabbage」：Smooth-leafed, firm-headed green cabbages are the most common"
+    }
+   ]
   }
  },
  "item_leek": {
@@ -431,7 +614,21 @@
     "method": "single",
     "reason": "单一出处，覆盖蔬菜类别"
    },
-   "basis": "韭葱含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "韭葱含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "可食部分是一束叶鞘",
+     "citation": "Wikipedia「Leek」：The edible part of the plant is a bundle of leaf sheaths"
+    },
+    {
+     "term": "叶基白，上部浅绿",
+     "citation": "Wikipedia「Leek」：The edible portions of the leek are the white base of the leaves (above the roots and stem base), the light green parts"
+    },
+    {
+     "term": "深绿的叶部质地粗韧",
+     "citation": "Wikipedia「Leek」：The dark green portion is usually discarded because it has a tough texture"
+    }
+   ]
   }
  },
  "item_cucumber": {
@@ -471,7 +668,25 @@
     "method": "single",
     "reason": "单一出处，覆盖蔬菜类别"
    },
-   "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "蒜头由 10 到 20 瓣蒜瓣组成",
+     "citation": "Wikipedia「Garlic」：The bulb has a strong odor and is typically made up of 10 to 20 cloves"
+    },
+    {
+     "term": "每瓣外有鞘叶，外面再包数层鞘叶",
+     "citation": "Wikipedia「Garlic」：Each clove is enclosed in an inner sheathing leaf surrounded by layers of outer sheathing leaves"
+    },
+    {
+     "term": "蒜头气味强烈",
+     "citation": "Wikipedia「Garlic」：The bulb has a strong odor"
+    },
+    {
+     "term": "外有纸质的薄皮",
+     "citation": "Wikipedia「Garlic」：The papery, protective layers of \"skin\" over various parts of the plant"
+    }
+   ]
   }
  },
  "item_oats": {
@@ -547,7 +762,17 @@
     "method": "single",
     "reason": "黄油含水约 18%，明显高于油脂类（近 0），用自己的出处覆盖类别值；单餐上限仍取油脂类"
    },
-   "basis": "黄油：含水与能量取 USDA 无盐黄油。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+   "basis": "黄油：含水与能量取 USDA 无盐黄油。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "色淡黄，自深黄到近白不等",
+     "citation": "Wikipedia「Butter」：It generally has a pale yellow color but varies from deep yellow to nearly white"
+    },
+    {
+     "term": "冷藏时坚实，室温下软到可涂抹",
+     "citation": "Wikipedia「Butter」：Butter remains a firm solid when refrigerated but softens to a spreadable consistency at room temperature"
+    }
+   ]
   }
  },
  "item_rendered_cooking_fat": {
@@ -563,7 +788,24 @@
  "item_honey": {
   "tags": [
    "sweetener"
-  ]
+  ],
+  "props": {
+   "basis": "item_honey 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "多为淡黄或深褐",
+     "citation": "Wikipedia「Honey」：Honey is generally pale yellow and dark brown in color"
+    },
+    {
+     "term": "黏稠，温度低时更稠滞",
+     "citation": "Wikipedia「Honey」：Honey is a sweet and viscous foodstuff；the honey becomes thick and sluggish with decreasing temperature"
+    },
+    {
+     "term": "室温下葡萄糖会析出成固体颗粒（结晶蜜）",
+     "citation": "Wikipedia「Honey」：At room temperature, honey is a supersaturated solution, in which the glucose precipitates into solid granules"
+    }
+   ]
+  }
  },
  "item_fruit_paste": {
   "tags": [
@@ -578,7 +820,24 @@
  "item_dill": {
   "tags": [
    "fresh_herb"
-  ]
+  ],
+  "props": {
+   "basis": "item_dill 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "叶如蕨，细裂而柔软",
+     "citation": "Wikipedia「Dill」：the fern-like leaves of dill are aromatic；finely divided, softly delicate leaves"
+    },
+    {
+     "term": "叶有香气",
+     "citation": "Wikipedia「Dill」：the fern-like leaves of dill are aromatic"
+    },
+    {
+     "term": "茎细而中空",
+     "citation": "Wikipedia「Dill」：Its stems are slender and hollow"
+    }
+   ]
+  }
  },
  "item_mustard_seed": {
   "tags": [

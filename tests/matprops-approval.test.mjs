@@ -12,7 +12,7 @@ test('条目 = 每个类别行 + 每个物品覆盖行；候选与盘上数据�
   const table = JSON.parse(await fs.readFile('world/meta/mechanics/material-props.json', 'utf8'));
   const overlay = JSON.parse(await fs.readFile('world/meta/mechanics/items.json', 'utf8'));
   const entries = await entriesFor();
-  assert.equal(entries.length, Object.keys(table.classes).length + Object.values(overlay).filter(r => r.props).length);
+  assert.equal(entries.length, Object.keys(table.classes).length + Object.values(overlay).filter(r => r.props && Object.keys(r.props).some(k => k !== 'basis' && k !== 'appearance')).length);
   for (const e of entries) assert.deepEqual(await validateDraft(draftFor(e), e), [], e.id);
   assert.notDeepEqual(await validateDraft({id: entries[0].id, row: {...entries[0].row, moisture: 0.5}}, entries[0]), []);
 });
