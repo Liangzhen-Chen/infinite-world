@@ -267,6 +267,24 @@ test('F026 客流：陶枝单独在场（徐玲无钱不上门）：件数与应
     assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),expected);
 });
 
+test('F026 客流：非原生 NPC 自营商户（玩家把店转让给产权人）不在家户计划来源里，居民仍按储备缺口在该店买口粮',async()=>{
+    // 真实动作造出非原生自营商户：玩家租下青灯铺面开店后，把经营连同库存转让给铺面产权人（店主林穗），business.mjs 的转让分支产生 owner=林穗、非 native 的 business 记录。
+    const A='npc_hw_xuling',landlord='npc_hw_linsui',f=await openShop({coins:{[A]:40}});
+    const moved=await f.act('core:settlement.business_close',{business:f.business,choice:'transfer',member:landlord,coins:1},'w4-transfer');
+    const shopId=moved.successor,record=f.document.state.records[shopId];
+    assert.ok(record&&record.category==='business'&&record.owner===landlord&&!record.native);
+    const before=structuredClone(f.document),plan=householdBudget(noonRead(f,before,A),f.engine,A).resources;
+    // 该店不是家户计划的来源（来源只收原生店与交易人），所以走储备缺口路径：件数 = ceil(饱腹缺口 ÷ 面包饱腹)，期望从引擎读。
+    assert.ok(!plan.market.offered.includes(shopId));
+    const breadSatiety=f.engine.byId.get('item_bread').nutrition.satiety,expected=Math.ceil(plan.procurementShortfall.satiety/breadSatiety);
+    assert.ok(expected>0);
+    await waitPastMidnight(f,'w4-day-transfer');
+    const flow=Object.values(f.document.state.records).find(r=>r.category==='customer_flow'&&r.shop===shopId);
+    assert.ok(flow,'该店在当日营业店铺里，有客流记录');
+    const visit=flow.visits.find(v=>v.npc===A&&v.item==='item_bread');
+    assert.deepEqual([visit.quantity,visit.outcome],[expected,'bought']);
+});
+
 test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得着的居民上门；人数与成交按钱袋和缺口手算',async()=>{
     const A='npc_hw_xuling',B='npc_hw_wushuo',C='npc_hw_anhuai',D='npc_hw_yanzhe',E='npc_hw_taozhi';
     // A 钱袋 40、一口之家、手边没粮：会来。B 钱袋 40 但已备下两个面包（一口之家一天的饱食 60 = 2 × 30）：无需求。
