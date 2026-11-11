@@ -67,25 +67,23 @@ export function npcAutonomyBusy(state,id,minute=state.minute){return Object.valu
 export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes=0}={}){
  for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw preconditionFailure('人物正在完成已经开始的自主工作');
 }
-// 行程类任务在完成时刻应在之处，只从它自己的 market_trip 记录（sourceEvent 即任务号）与作息读出：
-// 该刻所在段在路上则为 null（途中），否则是该段地点；已到达的路段取其终点。记录或该段不在则返回 undefined。
-function tripPlaceAtFinish(state,who,taskId){
- const trip=recordsWhere(state.records,'category','market_trip').find(r=>r.sourceEvent===taskId&&r.actor===who),finish=state.npcAutonomy?.tasks?.[taskId]?.finish;
- if(!trip||finish===undefined)return undefined;
- const at=Math.min(state.minute,finish),slot=marketScheduleAt(state,who,at-1);
- if(slot?.marketTrip!==trip.id)return undefined;
- return slot.travel?(slot.travel.arrive>at?null:slot.travel.to):slot.location;
+// 行程类任务此刻人应在之处，只从它自己的 market_trip 记录（sourceEvent 即任务号）与作息读出，且与身体取同一时刻（当前分钟）：
+// 行程未结束，取记录在该刻所在的段（途中为 null，否则段地点）；行程已结束（含当天往返的 firstDayEnd===returnAt），身体由常规作息接管，取作息在该刻的地点。
+// 推进可能越过任务 finish（按小时推进），身体已是之后的位置，所以不能拿 finish 时刻的段去比。记录不在或该刻的段不属于这趟行程则返回 undefined。
+function tripPlaceNow(engine,state,who,taskId){
+ const trip=recordsWhere(state.records,'category','market_trip').find(r=>r.sourceEvent===taskId&&r.actor===who);
+ if(!trip)return undefined;
+ if(state.minute>=trip.returnAt){const slot=scheduleAt(engine,who,state.minute,state);return slot?slot.location??null:undefined;}
+ const slot=marketScheduleAt(state,who,state.minute);
+ return slot?.marketTrip===trip.id?slot.location:undefined;
 }
 // 静止工作类比对开工时记下的在场处；行程类比对行程记录。两类都要求人在、能行动，不凭旧记录。
 function assertPresentAtCompletion(engine,state,who,presence,{taskId,at,itinerary}){
  const n=state.npcs[who],fail=()=>{throw preconditionFailure('工作完成时人物已离开或不能继续行动');};
  if(!n||isPhysicallyDead(engine,state,who)||['濒死','昏迷','患病'].includes(n.status)||personConstraint(engine,state,who,at)||state.player.companions?.includes(who))fail();
  if(!itinerary){if(!awake(engine,state,who,n)||n.location!==presence.npcs[who]?.location)fail();return;}
- const place=tripPlaceAtFinish(state,who,taskId);
- if(place===undefined)fail();
- // 当天往返的行程（完成时刻 firstDayEnd 即 returnAt）此刻已结束，身体由常规作息接管：回到作息所在处也算在场；被移到别处仍判离开。
- const trip=recordsWhere(state.records,'category','market_trip').find(r=>r.sourceEvent===taskId&&r.actor===who),home=trip&&Math.min(state.minute,state.npcAutonomy.tasks[taskId].finish)>=trip.returnAt?scheduleAt(engine,who,state.minute,state)?.location:undefined;
- if(!(n.location===place||home!==undefined&&n.location===home||place&&n.location===null&&n.scheduleTravel?.from===place))fail();
+ const place=tripPlaceNow(engine,state,who,taskId);
+ if(place===undefined||n.location!==place)fail();
 }
 function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false,taskId}={}){
  const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1));let furnace,work;

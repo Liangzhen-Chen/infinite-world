@@ -63,10 +63,11 @@ test('工作中离开或失能不能在完成时凭旧在场记录生产',async(
 // 整类不变量：完成时人在且清醒是统一判定，与任务种类无关。世界里真实出现的每一种自主任务（行程类与静止类各至少一种），
 // 执行中被移走或失能 -> 完成时判失败、无行动记录、不扣料；全程在场 -> 不因在场被拒（没有失败原因，行动记录在）。
 test('每种自主任务完成时都要执行者在场且清醒：移走或失能判失败，全程在场正常完成',async()=>{
- const seen=new Map();
+ const seen=new Map();let diag;
  for(let day=0;day<5;day++){const {engine,d}=await setup();advance(d,engine,day*1440+600);
   for(const t of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(t.status==='进行中'&&!seen.has(t.action.kind))seen.set(t.action.kind,{day,id:t.id,itinerary:Boolean(t.itinerary)});}
- assert.ok([...seen.values()].some(v=>v.itinerary),'世界里应出现行程类自主任务');assert.ok([...seen.keys()].some(k=>k.startsWith('labor_')),`世界里 5 天内应出现 labor_* 行程任务，实际只有：${[...seen.keys()].join(',')}`);assert.ok([...seen.values()].some(v=>!v.itinerary),'世界里应出现静止类自主任务');
+ {const {engine,d}=await setup();advance(d,engine,600);const t=Object.values(d.get('state','npcAutonomy','tasks')).find(t=>t.npc===actor);assert.ok(t,'诊断：#7 同场景 600 分时 actor 应有任务');diag=`诊断(#7 同场景 600 分 actor 任务)：kind=${t.action.kind} itinerary=${Boolean(t.itinerary)} autonomyKind.itinerary=${Boolean(autonomyKind(t.action.kind)?.itinerary)}`;}
+ assert.ok([...seen.values()].some(v=>v.itinerary),`世界里应出现行程类自主任务。${diag}`);assert.ok([...seen.keys()].some(k=>k.startsWith('labor_')),`世界里 5 天内应出现 labor_* 行程任务，实际只有：${[...seen.keys()].join(',')}。${diag}`);assert.ok([...seen.values()].some(v=>!v.itinerary),'世界里应出现静止类自主任务');
  const run=async({day,id},change)=>{const {engine,d}=await setup();advance(d,engine,day*1440+600);const task=d.get('state','npcAutonomy','tasks',id);assert.equal(task.status,'进行中');
   const materials=task.action.kind==='craft'?engine.byId.get(task.action.recipe).materials.map(m=>[m.item,count(d,task.npc,m.item)]):[];
   // 先推进到完成前一分钟再改，作息来不及把人走回原处（npc-schedule.mjs:288/292）。
