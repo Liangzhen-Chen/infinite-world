@@ -17,7 +17,7 @@ import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
 import {marketSupply,marketQuote,saleableStock,goodsClass,registerShopShelves,supplyApart,laborValue} from '../server-plugin/market.mjs';
 import {regionalTradeBase,regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {hazardPriceFactor} from '../server-plugin/hazard-calendar.mjs';
-import {exchangeRate} from '../server-plugin/currency.mjs';
+import {exchangeRate,currencyValue} from '../server-plugin/currency.mjs';
 import {turnoverByResource,turnoverReference} from '../server-plugin/tender.mjs';
 import {factionClockRules} from '../server-plugin/faction-clock.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
@@ -183,16 +183,20 @@ async function breadTrade(f,label,args,id){
 }
 // S5F-3：tests/s5-f-tender.test.mjs:91-108。私人羊毛 40，先买 25 个面包付羊毛，再买 21 个（比较第二笔的 paidWith.amount）。
 // 前提改后（MKTFIX）：第二笔/冲击笔/用券笔的请求量取引擎此刻单笔上限的整数下界 floor(max(retailFloor, 现货供给×maxShare))，与改后的测试 depthLimit 同公式。
-const depthLimitOf=(f)=>{const v=marketView(f.engine,f.doc,'item_bread',TH.shop),r=f.engine.world.marketRules;return Math.floor(Math.max(r.retailFloor,v.spotSupply*r.maxShare));};
+const BEFORE_NOTE='深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。';
+const AFTER_NOTE='前提改后场景：降量后的请求量取 floor(单笔上限)（见各步骤名里的数量）。fieldRoles 里没有 rejection-point 时，role 为 assertion 的量就是要填进测试待探针占位的值（见 placeholders）；若仍出现 rejection-point，说明降量后仍被拒，其后下游数字不可采用，placeholders 对应值置 null。';
+const noteFor=after=>after?AFTER_NOTE:BEFORE_NOTE;
+const depthLimitOf=(f)=>{const v=marketView(f.engine,f.doc,'item_bread',TH.shop),r=f.engine.world.marketRules;if(!Number.isFinite(v.spotSupply)||!Number.isFinite(r.retailFloor)||!Number.isFinite(r.maxShare))throw new Error('depthLimitOf：现货供给或深度规则不是有限数（spotSupply='+v.spotSupply+'），不给请求量；见 market 输出：'+JSON.stringify(v.error??null));return Math.floor(Math.max(r.retailFloor,v.spotSupply*r.maxShare));};
 async function tender3(after=false){
  const f=tenderFixture(),unmetShop=f.atShop();
  const wool=applyIntentSetup(f.engine,f.doc,{location:TH.shop,inventory:{item_wool:40}});f.doc=wool.document;
  const first=await breadTrade(f,'第 1 笔 面包 25 付羊毛',{item:'item_bread',quantity:25,payCurrency:'item_wool'},'f3-wool');
  const q2=after?depthLimitOf(f):21;
  const second=await breadTrade(f,`第 2 笔 面包 ${q2} 付羊毛`,{item:'item_bread',quantity:q2,payCurrency:'item_wool'},'f3-wool-2');
- return {downstreamNote:'深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。',compares:'第二笔 paidWith.amount（tests/s5-f-tender.test.mjs:105）',
+ return {downstreamNote:noteFor(after),compares:'第二笔 paidWith.amount（tests/s5-f-tender.test.mjs:105）',
   setupUnmet:[...f.setupUnmet,...unmetShop,...wool.setupUnmet],item:itemFacts(f.engine,'item_bread'),depthRule:depthRule(f.engine),first,second,
   woolMarket:marketView(f.engine,f.doc,'item_wool',TH.shop),
+  ...(after?{placeholders:{TODO_PROBE_S5F3_SECOND_WOOL:second.ok?second.paidWith?.amount??null:null}}:{}),
   fieldRoles:fieldRoles([{path:'first',kind:'intermediate',ok:first.ok},{path:'second',kind:'assertion',ok:second.ok},{path:'woolMarket',kind:'intermediate',ok:true}])};
 }
 // S5F-5：tests/s5-f-tender.test.mjs:140-149。发行 10 张券、赊 5 个面包、再用券买 25 个面包、用原币种还债（比较玩家与店主的券数）。
@@ -204,8 +208,8 @@ async function tender5(after=false){
  const shock=await breadTrade(f,`用券买 面包 ${qs}`,{item:'item_bread',quantity:qs,payCurrency:TH.NOTE},'f5-shock');
  const debtId=credit.debt??null;
  const repay=debtId?await f.trade('原币种还债',{debt:debtId,payment:'repay'},'f5-repay'):{ok:false,error:{message:'没有找到债（赊账未成立）'}};
- return {downstreamNote:'深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。',compares:'玩家与店主的券数（tests/s5-f-tender.test.mjs:147）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},credit,shock,
-  repay:{ok:repay.ok,error:repay.error,status:repay.result?.status},fieldRoles:fieldRoles([{path:'issued',kind:'intermediate',ok:issued.ok},{path:'credit',kind:'intermediate',ok:credit.ok},{path:'shock',kind:'intermediate',ok:shock.ok},{path:'repay',kind:'intermediate',ok:repay.ok},{path:'notes',kind:'assertion',ok:true},{path:'rateNow',kind:'intermediate',ok:true}]),notes:{player:f.notes('player'),host:f.notes(TH.host)},rateNow:(()=>{try{return f.rate();}catch(e){return errorOf(e);}})()};
+ return {downstreamNote:noteFor(after),compares:'玩家与店主的券数（tests/s5-f-tender.test.mjs:147）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},credit,shock,
+  repay:{ok:repay.ok,error:repay.error,status:repay.result?.status},...(after?{placeholders:{TODO_PROBE_S5F5_PLAYER_NOTES:shock.ok&&repay.ok?f.notes('player'):null,TODO_PROBE_S5F5_HOST_NOTES:shock.ok&&repay.ok?f.notes(TH.host):null}}:{}),fieldRoles:fieldRoles([{path:'issued',kind:'intermediate',ok:issued.ok},{path:'credit',kind:'intermediate',ok:credit.ok},{path:'shock',kind:'intermediate',ok:shock.ok},{path:'repay',kind:'intermediate',ok:repay.ok},{path:'notes',kind:'assertion',ok:true},{path:'rateNow',kind:'intermediate',ok:true}]),notes:{player:f.notes('player'),host:f.notes(TH.host)},rateNow:(()=>{try{return f.rate();}catch(e){return errorOf(e);}})()};
 }
 // S5F-6：tests/s5-f-tender.test.mjs:155-173。发行 10 张券，现钱买 10 个面包，再用券买 25 个，比较分币种统计与折算。
 async function tender6(after=false){
@@ -214,12 +218,17 @@ async function tender6(after=false){
  const cash=await breadTrade(f,'现钱 面包 10',{item:'item_bread',quantity:10},'f6-cash');
  const qn=after?depthLimitOf(f):25;
  const note=await breadTrade(f,`用券买 面包 ${qn}`,{item:'item_bread',quantity:qn,payCurrency:TH.NOTE},'f6-note');
- const place='loc_hw',state=f.doc.state,out={downstreamNote:'深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。',compares:'turnoverByResource / 基准账合计 / turnoverReference（tests/s5-f-tender.test.mjs:160-168）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},cash,note};
+ const place='loc_hw',state=f.doc.state,out={downstreamNote:noteFor(after),compares:'turnoverByResource / 基准账合计 / turnoverReference（tests/s5-f-tender.test.mjs:160-168）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},cash,note};
  try{
   out.turnoverByResource=turnoverByResource(state,{place});
   out.baseLedgerTotalCoins=Object.values(state.records).filter(r=>r.category==='market_trade'&&r.place===place).reduce((n,r)=>n+r.totalCoins,0);
   out.turnoverReference=turnoverReference(f.engine.primitiveDraft(f.doc),f.engine,{place,location:TH.shop});
  }catch(e){out.derivedError=errorOf(e);}
+ if(after){ // 测试 :180 比较 currencyValue 解释里的分币种统计
+  try{out.currencyValueTurnoverByResource=currencyValue(f.engine.primitiveDraft(f.doc),f.engine,{currency:TH.NOTE,location:TH.shop}).explanation.turnoverByResource;}catch(e){out.currencyValueError=errorOf(e);}
+  const okAll=note.ok&&cash.ok&&!out.derivedError;
+  out.placeholders={TODO_PROBE_S5F6_BY_RESOURCE:okAll?out.turnoverByResource??null:null,TODO_PROBE_S5F6_BASE_TOTAL:okAll?out.baseLedgerTotalCoins??null:null,TODO_PROBE_S5F6_REFERENCE:okAll?out.turnoverReference??null:null};
+ }
  out.fieldRoles=fieldRoles([{path:'issued',kind:'intermediate',ok:issued.ok},{path:'cash',kind:'intermediate',ok:cash.ok},{path:'note',kind:'intermediate',ok:note.ok},{path:'turnoverByResource',kind:'assertion',ok:true},{path:'baseLedgerTotalCoins',kind:'assertion',ok:true},{path:'turnoverReference',kind:'assertion',ok:true}]);
  return out;
 }
