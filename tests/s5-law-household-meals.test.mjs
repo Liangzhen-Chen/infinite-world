@@ -37,7 +37,7 @@ function fixture({publicFood=0,granaryEnabled=false,bread=breadsFor(60),shared=t
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
  if(drainMultiplier!==1)w.derived.modifiers.push({id:'meal-drain-premise',pack:'core',target:'body:drain',stage:'mul',value:drainMultiplier});
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
- if(market)for(const n of w.npcs.filter(n=>[A,seller].includes(n.id))){n.tier='full';n.schedule={default:[{start:0,end:1440,location:home,activity:'休息',services:n.id===seller?['trade']:[]}]};}
+ if(market)for(const n of w.npcs.filter(n=>[A,seller].includes(n.id))){n.tier='full';n.schedule={default:n.id===seller?[{start:0,end:720,location:home,activity:'休息',services:[]},{start:720,end:1440,location:home,activity:'休息',services:['trade']}]:[{start:0,end:1440,location:home,activity:'休息',services:[]}]};}// 客流按营业窗口起点结算：店主的营业窗口从 720 起（原为全天，起点会落在午夜）
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'household-meals');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
  doc.state.npcs=Object.fromEntries((market||guest?[A,B,seller]:members).map(id=>[id,{...doc.state.npcs[id],coins:id===A?10000:0,inventory:{},location:home,status:'正常',activity:'休息'}]));

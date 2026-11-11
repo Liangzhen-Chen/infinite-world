@@ -14,8 +14,10 @@ const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixture
 const A='npc_hw_luowei',B='npc_hw_duanyan',C='npc_hw_shendu',seller='npc_hw_linsui',item='item_bread',home='bld_hw_qingdeng',DAY=1440;
 const at=(start,end,services=[],activity='休息')=>({start,end,location:home,activity,services});
 // 店主林穗：早窗 480–720、午饭 720–780（不接待）、晚窗 780–1080（与诊断里 loc_bs 砚者同形）。
+// 店主只在 720 起营业（货架清空时只剩居民卖方可买）；用于居民卖方用例：有营业窗口才有客流结算时刻。
+const LATE=[at(0,720),at(720,1440,['trade'],'营业')];
 const SELLER_DAY=[at(0,480),at(480,720,['trade'],'营业'),at(720,780,[],'午饭'),at(780,1080,['trade'],'营业'),at(1080,1440)];
-function fixture({sellerSchedule=SELLER_DAY,residentSale=false}={}){
+function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false}={}){
  const w=structuredClone(world);
  delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
@@ -29,7 +31,7 @@ function fixture({sellerSchedule=SELLER_DAY,residentSale=false}={}){
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'ec1b-windows');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
  doc.state.npcs=Object.fromEntries([A,B,C,seller].map(id=>[id,{...doc.state.npcs[id],coins:id===A?1000:id===C?5:0,inventory:{},location:home,status:'正常',activity:'休息'}]));
- doc.state.npcs[seller].inventory={[item]:100};
+doc.state.npcs[seller].inventory=emptyShop?{}:{[item]:100};
  if(residentSale)doc.state.npcs[C].inventory={[item]:60};
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:4,granary:false,food:0,foodPerDay:0,woodPerDay:0}};
  doc.ledger=openLedger(e,doc);
@@ -38,19 +40,19 @@ function fixture({sellerSchedule=SELLER_DAY,residentSale=false}={}){
 const flowRecords=f=>Object.values(f.d.get('state','records')).filter(r=>r.category==='customer_flow');
 const boughtBy=(f,id)=>flowRecords(f).flatMap(r=>r.visits).filter(r=>r.npc===id&&r.outcome==='bought');
 
-test('trade windows come from the keepers schedule: every window uses its own start, noon is the extra fixed sampling time',()=>{
+test('trade windows come from the keepers schedule: every window uses its own start, no noon sampling and no double settlement',()=>{
  const f=fixture(),state=f.d.get('state');
  assert.ok(currentShops(f.e,state).some(s=>s.keeper===seller),'the keeper runs a registered shop');
  // 早窗 [480,720) 不含正午 → 起点 480；午饭不接待；晚窗 [780,1080) 起点 780。
  assert.deepEqual(tradeWindowStarts(f.e,state,0),[480,780]);
  assert.deepEqual(tradeWindowStarts(f.e,state,1),[DAY+480,DAY+780],'same schedule every day');
- // 客流结算时刻 = 每日正午 ∪ 窗口起点，升序；区间半开 (before, after]。
- assert.deepEqual(customerFlowTimes(f.e,state,-1,DAY-1),[480,720,780]);
- assert.deepEqual(customerFlowTimes(f.e,state,480,780),[720,780]);
+ // 客流结算时刻 = 各店营业窗口起点，升序；区间半开 (before, after]；没有正午固定采样。
+ assert.deepEqual(customerFlowTimes(f.e,state,-1,DAY-1),[480,780]);
+ assert.deepEqual(customerFlowTimes(f.e,state,480,780),[780]);
   // 全天营业的店（窗口 [0,1440) 含正午）也取窗口自己的起点 0，不折成正午；正午是每日另加的固定采样时刻（玩家店用）。
  const allDay=fixture({sellerSchedule:[at(0,1440,['trade'],'营业')]});
   assert.deepEqual(tradeWindowStarts(allDay.e,allDay.d.get('state'),0),[0]);
- assert.deepEqual(customerFlowTimes(allDay.e,allDay.d.get('state'),-1,DAY-1),[0,720]);
+ assert.deepEqual(customerFlowTimes(allDay.e,allDay.d.get('state'),-1,DAY-1),[0]);
 });
 
 test('the shop clock stops at every window start while residents are about',()=>{
@@ -77,7 +79,7 @@ test('customers are served in the morning window although the shop is closed at 
 
 test('a resident with a saleable surplus sells through the same customer flow and settleSale, never as a fake shop',()=>{
  // 店主整天不营业（作息里没有 trade 服务），只有邻居神渡（C）手上有 60 个面包的余量；洛薇（A）缺口户向他买。
- const f=fixture({sellerSchedule:[at(0,1440)],residentSale:true});
+  const f=fixture({sellerSchedule:LATE,residentSale:true,emptyShop:true});
  const coinsC=f.d.get('state','npcs',C,'coins'),coinsA=f.d.get('state','npcs',A,'coins');
  assert.ok(residentSellers(f.d,f.e,720).some(s=>s.keeper===C&&s.goods.includes(item)),'precondition: the neighbour is a valid resident seller with a saleable surplus');
  f.d.set(['state','minute'],720);
@@ -98,7 +100,7 @@ assert.equal(f.d.get('state','npcs',C,'coins'),coinsC+paid-bought.reduce((n,r)=>
 });
 
 test('a resident never sells to the own household',()=>{
- const f=fixture({sellerSchedule:[at(0,1440)]});
+  const f=fixture({sellerSchedule:LATE,emptyShop:true});
  f.d.set(['state','npcs',B,'inventory'],{[item]:60});
  assert.ok(residentSellers(f.d,f.e,720).some(s=>s.keeper===B&&s.goods.includes(item)),'precondition: the housemate is a valid resident seller, so only the same-household rule can stop the sale');
  f.d.set(['state','minute'],720);

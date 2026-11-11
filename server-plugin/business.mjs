@@ -649,7 +649,7 @@ export function businessAction(d,args,eventId){
 // Purchases use the household budget and actual round-trip reach.
 // 买不买由 NPC 决策路径（npc-decision）当场判定，成交走与手动交易相同的报价、商税、账本与成交记录。
 // 没有需求、没钱、太远、或决策不愿意的人不会出现在成交里（只有真正上门又没买的才留下“未购”记录）。
-const DAY=1440,NOON=720;// 客流：每日正午
+const DAY=1440;// 客流按各店营业窗口起点结算（tradeWindowStarts）
 const quantities1=v=>typeof v==='number'?v:v?.quantity??0;
 const SLEEPING=/睡眠|睡觉|熟睡/;
 // 同一店同一日可有多个营业窗口各结算一次：记录键 customer_flow:店:日:当日分钟（结算时刻），正午也不例外，规则只一版。
@@ -849,17 +849,23 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     if(visits.length)holdingSet(d,null,flowKey(shop.id,day,t),{category:'customer_flow',shop:shop.id,keeper:shop.keeper,day,minute:t,visits},'business');
 }
 
-// 营业窗口的结算时刻（EC-1b）：每个营业窗口各结算一次，而不是每天只在正午采样一次。
-// 窗口 = 营业店主（店铺清单 currentShops 与非玩家经营记录的店主）作息里含 trade 服务的时段，一段一段枚举（scheduleAt 的 slot.until 接着往下走）。
-// 窗口起点一律取窗口自己的起点分钟（含正午的窗口也不折成正午）；另外每日恒加正午一个结算时刻：玩家店没有作息窗口（按租约与在场判开门），只能在固定时刻采样，正午沿用此用途。
-// 确定性：输入只有世界定义（作息）、当前状态与日历日，不含随机数与墙钟；返回升序去重的绝对分钟。缓存键 = [窗口符号, 日序]，按 state 对象（只读作用域内）
+// 营业窗口的结算时刻（EC-1b）：每家店只按自己的营业窗口起点结算，每个窗口一次，没有正午固定采样、没有双重结算。
+// NPC 店：营业店主（店铺清单 currentShops 与非玩家经营记录的店主）作息里含 trade 服务的时段，一段一段枚举（scheduleAt 的 slot.until 接着往下走），取各段起点分钟。
+// 玩家店：营业窗口起点由玩家店自己的记录派生——开张分钟 openedAt（开张或恢复营业时写入，openShops 以它判“已开张”）的当日时刻，每天一次，
+// 直到租约到期（lease 的 deadline，openShops 的开门条件之一）；仍须玩家人在铺内、柜台与租约有效才算开门，这些由 openShops 在结算那一刻判定，不在这里重复。
+// 确定性：输入只有世界定义（作息）、当前状态（开张分钟、租约）与日历日，不含随机数与墙钟；返回升序去重的绝对分钟。缓存键 = [窗口符号, 日序]。
 // 缓存依据（storage.mjs stateMemo）：只在 recordIndex 作用域内生效，按 state 对象身份分键，作用域外每次重算；与 scheduleAt/currentShops 的约定相同——作用域内不原地改写已暴露的 state，状态一变即换对象、缓存失效。
 const windowMemo=Symbol('customer flow trade windows');
 export function tradeWindowStarts(engine,state,day){
     return stateMemo(state,engine,[windowMemo,day],()=>{
-        const keepers=new Set(currentShops(engine,state).map(s=>s.keeper));
-        for(const r of recordsWhere(state.records,'category','business'))if(r.owner&&r.owner!=='player')keepers.add(r.owner);
-        const starts=new Set(),noon=day*DAY+NOON;
+        const keepers=new Set(currentShops(engine,state).map(s=>s.keeper)),starts=new Set();
+        for(const r of recordsWhere(state.records,'category','business')){
+            if(r.owner&&r.owner!=='player')keepers.add(r.owner);
+            else if(r.owner==='player'&&!r.suspended&&r.status==='营业'&&Number.isFinite(r.openedAt)){
+                const start=day*DAY+r.openedAt%DAY,lease=r.lease&&state.records?.[r.lease],end=lease?contractTerms(lease,start).deadline:Infinity;
+                if(start>=r.openedAt&&start<(end??Infinity))starts.add(start);
+            }
+        }
         for(const id of [...keepers].sort()){
             for(let at=day*DAY,guard=0;at<(day+1)*DAY&&guard<48;guard++){
                 const slot=scheduleAt(engine,id,at,state);
@@ -872,11 +878,11 @@ export function tradeWindowStarts(engine,state,day){
         return [...starts].sort((a,b)=>a-b);
     });
 }
-// (before, after] 内全部客流结算时刻，升序：每日正午 ∪ 当日营业窗口起点。shop.mjs 用它定时钟边界与补货/客流的先后。
+// (before, after] 内全部客流结算时刻，升序：当日各店的营业窗口起点。shop.mjs 用它定时钟边界与补货/客流的先后。
 export function customerFlowTimes(engine,state,before,after){
     const times=[];
     for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
-        for(const t of new Set([day*DAY+NOON,...tradeWindowStarts(engine,state,day)]))if(t>before&&t<=after&&t>=0)times.push(t);
+        for(const t of tradeWindowStarts(engine,state,day))if(t>before&&t<=after&&t>=0)times.push(t);
     }
     return times.sort((a,b)=>a-b);
 }
