@@ -226,7 +226,7 @@ export function deriveItemAttributes(world){
   const item=byId.get(id);if(!item)return null;
   // 幂等：已派生过的物品（nutrition 与 nutrientContent 仍一致，说明没被人改过）按当时记下的“按热量基值” nutrientBase 重算，不把已乘过系数的值再当手写值乘一遍。
   const prior=item.nutrition&&item.nutrientBase&&item.nutrientContent&&(item.nutrition.satiety??0)===item.nutrientContent.satiety&&(item.nutrition.hydration??0)===item.nutrientContent.hydration?item.nutrientBase:null;
-  if(prior)return set(id,{satiety:prior.satiety,hydration:prior.hydration,...waterOf(item),raw:false,authored:true});
+  if(prior)return set(id,{satiety:prior.satiety,hydration:prior.hydration,...(prior.water!==undefined?{water:prior.water,waterKnown:prior.waterKnown}:waterOf(item)),recipe:prior.recipe,raw:false,authored:true});
   const auth=item.nutrition;
   if(auth&&auth.satiety!==undefined&&auth.hydration!==undefined)return set(id,{satiety:auth.satiety,hydration:auth.hydration,...waterOf(item),raw:false,authored:true});
   if(!has(id,'food'))return set(id,{satiety:0,hydration:0,water:0,waterKnown:false,raw:false,inedible:true});
@@ -237,7 +237,13 @@ export function deriveItemAttributes(world){
    const inputs=(r.materials??[]).map(m=>({m,c:content(m.item)}));
    if(inputs.some(x=>x.c===null))continue;
    const hot=heated(r),keep=1-(hot?loss.heated:loss.unheated),q=r.output.quantity;
-   const row={satiety:inputs.reduce((n,x)=>n+x.c.satiety*x.m.amount,0)*keep/q,...(()=>{const water=inputs.reduce((n,x)=>n+x.c.water*x.m.amount,0)*keep/q,waterKnown=inputs.some(x=>x.c.waterKnown);return {hydration:hydrationOf(water,waterKnown),water,waterKnown};})(),
+   const row={satiety:inputs.reduce((n,x)=>n+x.c.satiety*x.m.amount,0)*keep/q,...(()=>{
+     // 含水量不得超过成品自身质量（含水率 ≤ 1）：加工中多余的水分蒸发或滤出（沥乳清、熬汤收汁），质量守恒在规则层封顶，整类生效。
+     // 成品没有正的质量数据时含水量无从封顶：记为未知（水分 0），不沿用未封顶的原料推算值。
+     // 保留率 keep 沿用饱腹的加工损耗参数 nutrition.processLoss（crafting.json:16），同一加工口径；其出处原为营养守恒，用作水的保留率属延伸，待 WATER-1B 复核。
+     const known=inputs.some(x=>x.c.waterKnown)&&item.weight>0,water=known?Math.min(item.weight,inputs.reduce((n,x)=>n+x.c.water*x.m.amount,0)*keep/q):0;
+     return {hydration:hydrationOf(water,known),water,waterKnown:known};
+    })(),
     raw:!hot&&inputs.some(x=>x.c.raw),recipe:r.id,heated:hot};
    if(!best||row.satiety<best.satiety)best=row;
   }
@@ -253,7 +259,8 @@ export function deriveItemAttributes(world){
   const sat=Math.floor(c.satiety*satietyFactor(world,item,c.satiety));
   item.nutrientContent={satiety:sat,hydration:Math.floor(c.hydration)};
   // nutrientBase：未乘系数的“按热量基值”（配方的能量守恒在它上面成立；重复派生时也从它重算）。
-  item.nutrientBase={satiety:c.satiety,hydration:c.hydration};
+  // 含水量（kg）与选中的配方一并记下：再派生时（engine 对已派生世界再跑一遍）从这里取，结果与第一遍相同。
+  item.nutrientBase={satiety:c.satiety,hydration:c.hydration,water:c.water,waterKnown:c.waterKnown,...(c.recipe?{recipe:c.recipe}:{})};
   // 能喝由规则给出：饮品（食物且液态）一份的水分够解渴就带 drinkable（物品表手贴的同样要满足这条，见 validateDrinkable）。
   if(drinkLike(item.id)&&c.hydration>=drinkMin&&!(item.tags??[]).includes('drinkable'))item.tags=withDrinkable(item.tags??[]);
   if(c.raw)continue;

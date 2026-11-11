@@ -1,53 +1,59 @@
-// WATER-1B：食物水分按一条规则派生（液体与固体、有配方与无配方同一条），手写水分只剩参照水本身。
+// WATER-1B：食物水分按一条规则派生（液体与固体、有配方与无配方同一条），手写水分只剩参照水本身；含水量不超过自身质量；派生幂等。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import useTags from '../world/meta/item-use-tags.json' with {type:'json'};
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {isItemClass,materialProps,craftingParam} from '../server-plugin/item-class.mjs';
+import {isItemClass,craftingParam,deriveItemAttributes} from '../server-plugin/item-class.mjs';
 
 const raw=await loadWorld(),engine=new WorldEngine(structuredClone(raw));
-const ref=engine.byId.get('item_water'),refMoisture=materialProps(engine,ref.id).moisture.value;
-const loss=craftingParam(engine,'nutrition.processLoss');
-// 手算锚点：每公斤水的水分 = 参照水 25÷(0.25kg×含水1)=100/kg；一份水分 = 含水量(kg)×100；低于参照水一份的一半（12.5）记 0；缺含水率数据记 0。
-// 无配方的食物：含水量 = 重量×含水率。有配方的产物：含水量 = Σ(原料含水量×用量) × (1−保留损耗：加热 0.1、未加热 0.05) ÷ 产出份数，原料是配方产物时递归；有配方以配方为准。
-const producers=new Map();
-for(const r of engine.world.recipes??[])if(r.output?.item&&r.output.quantity>0)producers.set(r.output.item,[...producers.get(r.output.item)??[],r]);
-const water=id=>{
-  const it=engine.byId.get(id);
-  if(!it||!isItemClass(engine,id,'food'))return {kg:0,known:false};
-  const rs=producers.get(id)??[];
-  if(rs.length>1)return null;// 多个配方按饱腹最小者选，不在此复刻选择
-  if(rs.length===1){
-    const r=rs[0],inputs=r.materials.map(m=>({m,w:water(m.item)}));
-    if(inputs.some(x=>x.w===null))return null;
-    const heated=r.materials.some(m=>isItemClass(engine,m.item,useTags.heat.materialClass)),keep=1-(heated?loss.heated:loss.unheated);
-    return {kg:inputs.reduce((n,x)=>n+x.w.kg*x.m.amount,0)*keep/r.output.quantity,known:inputs.some(x=>x.w.known)};
-  }
-  const m=materialProps(engine,id).moisture;
-  return m.known?{kg:it.weight*m.value,known:true}:{kg:0,known:false};
-};
-const expected=id=>{
-  const w=water(id);if(w===null)return null;
-  if(!w.known)return 0;
-  const h=w.kg*ref.nutrition.hydration/(ref.weight*refMoisture);
-  return h>=0.5*ref.nutrition.hydration?Math.floor(h):0;
-};
+const foods=engine.world.items.filter(i=>isItemClass(engine,i.id,'food'));
+// 常数手算：每公斤水的水分 = 参照水 25÷(0.25kg×含水1)=100/kg；门槛 = 0.5×25=12.5；配方保留 = 1−加热损耗 0.1（未加热 0.05），crafting.json nutrition.processLoss。
 
 test('手写水分只剩参照水本身（其余食物的水分都由含水率派生）',()=>{
   assert.deepEqual(raw.items.filter(i=>i.nutrition?.hydration!==undefined).map(i=>i.id),['item_water']);
 });
 
-test('任一食物的水分 = 含水量×100/kg（配方产物的含水量由原料派生），低于 12.5 记 0；缺含水率且无配方可派生为 0（面包 5.4＜12.5 为门槛所致）',()=>{
-  let checked=0,derivedFromRecipe=0;
-  for(const it of engine.world.items.filter(i=>i.id!=='item_water'&&isItemClass(engine,i.id,'food'))){
-    const e=expected(it.id);if(e===null)continue;
-    assert.equal(engine.byId.get(it.id).nutrition?.hydration??0,e,it.id);
-    checked++;if((producers.get(it.id)??[]).length===1)derivedFromRecipe++;
-  }
-  assert.ok(checked>0&&derivedFromRecipe>0,'配方派生分支必须被覆盖');
+test('代表物品手推值（数据：items.json 重量，mechanics/items.json 与 material-props.json 含水率）',()=>{
+  const h=id=>engine.byId.get(id).nutrition?.hydration??0;
+  assert.equal(h('item_milk'),44);        // 0.5kg×0.881×100=44.05
+  assert.equal(h('item_goat_milk'),26);   // 0.3×0.87×100=26.1
+  assert.equal(h('item_animal_milk'),26); // 0.3×0.876×100=26.28
+  assert.equal(h('item_bread'),0);        // 0.15×0.36×100=5.4 ＜ 12.5（有含水率数据，门槛所致）
+  assert.equal(h('item_oat_flatbread'),0);// (燕麦粉 0.4kg×谷类含水≈0.106 + 水 0.25)×0.9÷4≈0.066kg → 6.6 ＜ 12.5
+  assert.equal(h('item_fresh_curd'),0);   // 派生含水量 (2 乳×0.5×0.881)×0.9÷2≈0.4kg 超过自重 0.1kg，封顶 0.1kg → 10 ＜ 12.5
+  assert.equal(h('item_mutton_turnip_stew'),83); // (羊肉 0.4×0.67 + 芜菁 0.4×0.919 + 水 0.5)×0.9≈1.02kg 超过自重 0.83kg，封顶 0.83kg → 83
 });
 
-test('牛乳不再手写水分：派生 floor(0.5×0.881×100)=44',()=>{
-  assert.equal(engine.byId.get('item_milk').nutrition.hydration,44);
+test('整类不变量：食物含水量 ≤ 自身质量，水分 ≥ 0 且 ≤ 自重×100',()=>{
+  assert.ok(foods.length>0);
+  for(const it of foods){
+    const b=engine.byId.get(it.id).nutrientBase,hyd=engine.byId.get(it.id).nutrition?.hydration??0;
+    assert.ok(b.water<=it.weight+1e-12,`${it.id} 含水量 ${b.water} > 自重 ${it.weight}`);
+    assert.ok(hyd>=0&&hyd<=it.weight*100+1e-9,`${it.id} 水分 ${hyd}`);
+  }
+});
+
+test('有配方的食物：水分等于其被选配方（引擎记下的 nutrientBase.recipe）按原料含水量推出的值，且不超过质量上限',()=>{
+  const loss=craftingParam(engine,'nutrition.processLoss');
+  let checked=0;
+  for(const it of foods){
+    const b=engine.byId.get(it.id).nutrientBase;if(!b.recipe||it.id==='item_water')continue;
+    const r=engine.world.recipes.find(x=>x.id===b.recipe),heated=r.materials.some(m=>isItemClass(engine,m.item,useTags.heat.materialClass));
+    const sum=r.materials.reduce((n,m)=>n+(engine.byId.get(m.item).nutrientBase?.water??0)*m.amount,0);
+    const kg=Math.min(it.weight,sum*(1-(heated?loss.heated:loss.unheated))/r.output.quantity);
+    assert.ok(Math.abs(b.water-kg)<1e-9,`${it.id}：含水量 ${b.water} ≠ ${kg}`);
+    const h=kg*100;assert.equal(engine.byId.get(it.id).nutrition?.hydration??0,h>=12.5?Math.floor(h):0,it.id);
+    checked++;
+  }
+  assert.ok(checked>0);
+});
+
+test('派生幂等：对已派生的世界再派生一次，逐物品 nutrition 与 nutrientBase 相等',()=>{
+  const once=structuredClone(engine.world),twice=structuredClone(engine.world);
+  deriveItemAttributes(twice);
+  for(const a of once.items){
+    const b=twice.items.find(i=>i.id===a.id);
+    assert.deepEqual(b.nutrition,a.nutrition,a.id);assert.deepEqual(b.nutrientBase,a.nutrientBase,a.id);
+  }
 });

@@ -27,7 +27,9 @@ test('营养由配方投入守恒派生：没写营养的食物照样有营养�
   // 能量守恒在“按热量基值”（nutrientBase，未乘饱腹系数）上成立；系数只在最后乘一次。
   const sum=need=>r.materials.reduce((n,m)=>n+(item(m.item).nutrientBase?.[need]??0)*m.amount,0)/r.output.quantity;
   assert.ok(crisp.nutrientBase.satiety<=sum('satiety'),JSON.stringify(crisp.nutrition));
-  // 水分按含水量规则派生（配方产物的含水量由原料推出，不再继承投入的水分值），逐件核对见 s5-law-water-derivation。
+  // 水分守恒（质量）：含水量不得超过产物自身质量（多余水分蒸发或滤出），水分 = 含水量×100/kg（参照水 25÷0.25），所以水分 ≤ 重量×100。
+  assert.ok(crisp.nutrientBase.water<=crisp.weight+1e-12,String(crisp.nutrientBase.water));
+  assert.ok((crisp.nutrition.hydration??0)<=crisp.weight*100,JSON.stringify(crisp.nutrition));
   // 写了营养的维度照用（作为按热量的基值），与推导值一样乘饱腹系数
   const ration=authored.get('item_ration').nutrition.satiety;
   assert.equal(item('item_ration').nutrition.satiety,Math.floor(ration*satietyFactor(engine.world,item('item_ration'),ration)));
@@ -61,7 +63,7 @@ test('新物品、新配方不写营养也照样派生（规律不认 id）', ()
   assert.ok(root.nutrition.satiety>0&&soup.nutrition.satiety>root.nutrition.satiety&&soup.nutrition.satiety<=2*root.nutrientContent.satiety);
   // 试验汤的水分：含水量 = (2 个根的含水量 + 1 份水 0.25kg×含水1) × (1−加热损耗 0.1) ÷ 1，木炭为燃料不计；含水量×100/kg 过 12.5 门槛。根的含水率按其出处（未知则该项为 0）。
   const E={world:w,byId:new Map(w.items.map(i=>[i.id,i]))},rootM=materialProps(E,root.id).moisture;
-  const kg=((rootM.known?2*root.weight*rootM.value:0)+0.25)*(1-0.1);
+  const kg=Math.min(soup.weight,((rootM.known?2*root.weight*rootM.value:0)+0.25)*(1-0.1));// 含水量封顶为成品自重
   assert.equal(soup.nutrition?.hydration??0,hydrationOfWater(E,kg));
 });
 
