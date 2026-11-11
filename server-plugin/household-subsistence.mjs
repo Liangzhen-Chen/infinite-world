@@ -5,7 +5,7 @@ import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo,setRecordRow} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
-import {householdMealPlan,usageItemGrams,registerHouseholdFreeWater} from './household-budget.mjs';
+import {householdMealPlan,usageItemGrams,registerHouseholdFreeWater,registerHouseholdPublicShare} from './household-budget.mjs';
 import {householdUsage,isItemClass,heldOfClass} from './item-class.mjs';
 import {warClosedRoutes} from './hazard-calendar.mjs';
 import {facilityRouteStates} from './facility-state.mjs';
@@ -255,10 +255,14 @@ function forageStock(e,state,source,day){
  }
  row.updatedDay=day;row.grown+=grown;return {row,reserve:row.reserve,grown};
 }
-function mealDeficit(e,state,owner,settlement,members){
+// 公粮份额（0..1）：登记居民按聚落粮库存量与人口折成的当日覆盖比例。午夜实际吃饭（mealDeficit）与预算采购口径（registerHouseholdPublicShare）共用这一处。
+function publicShareOf(e,state,owner,settlement){
  const s=state.settlements?.[settlement],h=personHousehold(e,state,owner).value;
  const resident=Boolean(h||state.npcs?.[owner]?.materialized?.settlement);
- const publicShare=resident&&s&&s.granary!==false?Math.min(1,Math.max(0,s.food??0)/Math.max(1,Math.ceil(mealMouthsOf(e,state,settlement,s.population??0)))):0;
+ return resident&&s&&s.granary!==false?Math.min(1,Math.max(0,s.food??0)/Math.max(1,Math.ceil(mealMouthsOf(e,state,settlement,s.population??0)))):0;
+}
+function mealDeficit(e,state,owner,settlement,members){
+ const publicShare=publicShareOf(e,state,owner,settlement);
  // A guaranteed complete public ration already covers native daily satiety.
  // No private unit, seed or promise can increase a zero food deficit. Keep
  // the full meal allocator for partial shares and installed drain modifiers.
@@ -684,6 +688,12 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
  return {nutrition,sources};
 }
 const sourcesIndex=sources;
+// 预算侧的公粮份额（只读）：与午夜 mealDeficit 同一函数 publicShareOf；住处与聚落的取法同 householdSubsistencePlan。没有住处也没有户籍聚落的人没有公粮。
+registerHouseholdPublicShare((e,state,owner)=>{
+ const h=personHousehold(e,state,owner).value,person=e.byId.get(owner),home=h?.homeLocation??person?.home?.location??person?.location??state.npcs?.[owner]?.location;
+ if(!h?.settlement&&!home)return 0;
+ return publicShareOf(e,state,owner,h?.settlement??placeSettlement(e,state,home).value);
+});
 // 预算侧的免费水（只读）：与每日取水共用 journey('water') 的选址，毫升与水分的换算同 supplyHousehold；只扣当日份。
 // 客观读：真实 journey（含水质门槛），可取量 = min(当日需求对应毫升, 水体可取量)。
 // 主观读（居民只知道事实、不知道水质与水量）：只看住处往返分钟 ≤ nearWaterRoundTripMinutes 的 near 分支，扣当日需求本身，不读水质与水量；取不到的差额由午夜实取记入缺口。

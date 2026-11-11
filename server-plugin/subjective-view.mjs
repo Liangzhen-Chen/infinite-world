@@ -1,5 +1,5 @@
 // A2 / I25. No cross-world cache: every projection belongs to this document.
-import {personCareer} from './entity-view.mjs';
+import {personCareer,personHousehold} from './entity-view.mjs';
 import {relationView} from './npc-state.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -89,6 +89,11 @@ export function subjectiveView(engine,document,observer){
   }return groups;
  });
  const accounts=Object.fromEntries((byOwner.get(observer)??[]).map(([key,balance])=>[key,{balance,lots:(document.ledger?.lots?.[key]??[]).map(l=>l.purports?{...copy(l.purports),amount:l.amount}:copy(l))}]));
+ // 同一登记户（共灶，成员多于一人）的成员互知物品与钱袋余额（李白 11-11 决定；理由：共灶合账吃，npc-life 的实际结算也按合账）。
+ // 只暴露物品与钱袋余额，不暴露记忆、关系与义务；陌生人、分户同址不适用。预算只在 pooled 时读它（household-budget.mjs）。
+ const house=observer==='player'?null:personHousehold(engine,s,observer).value;
+ const household={people:Object.fromEntries((house?.members?.length>1?house.members:[]).filter(id=>id!==observer&&id!=='player'&&actor(s,id)).sort()
+  .map(id=>[id,{coins:actor(s,id).coins??0,inventory:copy(actor(s,id).inventory??{}),accounts:Object.fromEntries((byOwner.get(id)??[]).map(([key,balance])=>[key,{balance}]))}]))};
  const demonstrations=recordsWhere(s.records,'category','education_demonstration').filter(r=>r.actor===observer&&r.workstation===here&&r.fromMinute<=now&&r.toMinute>now&&n.demonstrating!==false);
  const busyUntil=Math.max(now,...demonstrations.map(r=>r.toMinute),...Object.values(s.npcAutonomy?.tasks??{}).filter(t=>t.status==='进行中'&&t.npc===observer&&t.start<=now).map(t=>t.finish));
  const self={id:observer,name:n.name??b.name??observer,status:n.status,location:here,coins:n.coins??0,inventory:copy(observer==='player'?s.inventory??{}:n.inventory??{}),
@@ -98,7 +103,7 @@ export function subjectiveView(engine,document,observer){
   services:people.flatMap(p=>p.services.map(service=>({provider:p.id,name:p.name,service})))};
  const ownFacts=derivedFactValues(engine,document,observer);if(Object.keys(ownFacts).length)self.facts=ownFacts;
  const prior=copy(b.priors??{});
- return projectConsumerDerived(engine,document,{observer,minute:now,self,observable,knowledge:{memories,beliefs,facts},prior});
+ return projectConsumerDerived(engine,document,{observer,minute:now,self,household,observable,knowledge:{memories,beliefs,facts},prior});
 }
 registerDerivedViewResolver(subjectiveView);
 export function subjectiveFact(view,key){return view.knowledge.facts[key]??(Object.hasOwn(view.prior,key)?{value:view.prior[key],kind:'prior',credence:0.5}:null);}
