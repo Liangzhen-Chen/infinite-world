@@ -40,6 +40,18 @@ test('可食物资并池：自身有饱腹的货与可经配方加工成可食�
  for(const id of ['item_iron','item_water']){assert.notEqual(goodsClass(engine,id),pool,id);assert.equal(goodsWeight(engine,id),1,id);}
 });
 
+test('不可食但带 food 标签的货不进可食池，可食池的供需计量不受它影响',()=>{
+ const {engine,doc}=setup(),read=documentReader(doc),inn='bld_hw_qingdeng',pool='goods:food';
+ // 推导：item_salt 标签 mineral、food，没有饱腹，也无配方可加工成可食品（盐不供能）→ 不可食 → 不进 goods:food，
+ // 退回表中非 food 的映射（无）→ 以物品自己为类，权重按件 1。
+ assert.ok(engine.byId.get('item_salt').tags.includes('food'));
+ assert.ok(!(engine.byId.get('item_salt').nutrition?.satiety>0));
+ assert.equal(goodsClass(engine,'item_salt'),'goods:item_salt');assert.equal(goodsWeight(engine,'item_salt'),1);
+ // 池内的货都可食；因此可食池的供需只含饱腹单位，盐的库存与持有不会进来：面包报价的 rows 里没有盐。
+ const s=marketSupply(read,engine,'item_bread',inn);
+ assert.equal(s.goods,pool);assert.ok(s.rows.every(r=>r.item!=='item_salt'));
+});
+
 test('同一可食池内，公仓粮与干粮读同一份供需：各食物报价看到同一个池',()=>{
  const {engine,doc}=setup(),read=documentReader(doc),inn='bld_hw_qingdeng';
  // 推导：并池后 stockSupply 的供需用报价货的件数表达 = 池内饱腹总量 ÷ 该货权重。同一池、同一地点，

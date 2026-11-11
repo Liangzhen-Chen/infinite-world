@@ -68,9 +68,10 @@ function goodsEntry(engine,item){
  const hit=row&&typeof row==='object'?goodsClasses.get(row):null;
  if(hit&&hit.table===table&&hit.tags===row.tags&&hit.count===row.tags?.length&&hit.item===item&&hit.satiety===row.nutrition?.satiety&&hit.calories===row.nutrientContent?.satiety&&hit.recipes===recipes)return hit.entry;
  const tags=row?.tags??[],satiety=foodSatiety(engine,item);
- const category=Object.entries(table).find(([tag])=>tags.includes(tag))?.[1];
- // 能吃的货一律并入同一可食池；商品类标签只留给不能吃的货。
- const entry={value:satiety>0?'goods:food':tags.find(t=>t.startsWith('goods:'))??`goods:${category??item}`,weight:satiety>0?satiety:1,edible:satiety>0};
+ // 可食池只收能吃的货；不能吃的货即使标签或表映射到 food，也退回下一个非 food 的派生类：自身其他 goods: 标签，再表中非 food 的映射，最后用物品自己。
+ const goodsTag=tags.find(t=>t.startsWith('goods:')&&t!=='goods:food');
+ const category=Object.entries(table).find(([tag,cls])=>cls!=='food'&&tags.includes(tag))?.[1];
+ const entry={value:satiety>0?'goods:food':goodsTag??`goods:${category??item}`,weight:satiety>0?satiety:1,edible:satiety>0};
  if(row&&typeof row==='object')goodsClasses.set(row,{table,tags:row.tags,count:row.tags?.length,item,satiety:row.nutrition?.satiety,calories:row.nutrientContent?.satiety,recipes,entry});
  return entry;
 }
