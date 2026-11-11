@@ -13,6 +13,6 @@ export {w3Revision};
 export async function manualRewriteProfile(kind){
  const world=await loadWorld(),bones=economyW3(world),blocklist=JSON.parse(await fs.readFile('world/meta/blocklist.json','utf8'));
  if(!bones[kind])throw new Error('--kind 须为 items 或 recipes');
- return{entries:bones[kind],contextFor:entry=>w3Context(world,bones,entry),validateDraft:(draft,entry,context)=>validateTradesDraft(draft,entry,blocklist,context)};
+ return{entries:bones[kind],revision:w3Revision,contextFor:entry=>w3Context(world,bones,entry),validateDraft:(draft,entry,context)=>validateTradesDraft(draft,entry,blocklist,context)};
 }
 export {validateTradesDraft as validateDraft};

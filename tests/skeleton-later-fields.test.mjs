@@ -4,6 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {manualRewrite} from '../tools/manual-rewrite.mjs';
 import {tmpRoot} from '../tools/tmp-root.mjs';
 import {hashContent, readApprovedContent, rowFingerprintShape, runContentPipeline, LATER_ENTRY_FIELDS, projectEntryForRecord, recordFingerprint} from '../tools/content-pipeline.mjs';
 
@@ -81,4 +82,26 @@ test('流水线：旧记录不因 entry 加了 physical 而重写；新条目的
   assert.deepEqual(made.skeletonFields, ['physical']);
   assert.equal(made.fingerprint, hashContent({entry: fresh, context: null, revision: 'v2'}));
   assert.equal(JSON.parse(await fs.readFile(path.join(root, 'item_x.json'), 'utf8')).skeletonFields, undefined);
+});
+
+test('人工改写：带后加字段的 entry 按完整骨架重算指纹并标记，之后 physical 一变即失效；缺 revision 报错，无后加字段的 entry 指纹不动', async t => {
+  const root = await fixture(t, {...legacyRecord, status: 'manual', draft: null});
+  const args = extra => ({root, drafts: [{id: 'item_x', draft: {id: 'item_x', description: '人工新稿正文足够长'}}], by: '甲', reason: 'r', headCommit: 'abcdef1', entries: [next], validateDraft: () => ({errors: []}), ...extra});
+  const before = await fs.readFile(path.join(root, 'item_x.json'), 'utf8');
+  await assert.rejects(manualRewrite(args({})), /revision/);
+  assert.equal(await fs.readFile(path.join(root, 'item_x.json'), 'utf8'), before, '报错时零写盘');
+  await manualRewrite(args({revision: 'v2'}));
+  const record = JSON.parse(await fs.readFile(path.join(root, 'item_x.json'), 'utf8'));
+  assert.deepEqual(record.skeletonFields, ['physical']);
+  assert.equal(record.fingerprint, hashContent({entry: next, context: null, revision: 'v2'}));
+  assert.equal(record.manualRewrite.at(-1).priorFingerprint, legacyRecord.fingerprint);
+  const file = path.join(root, 'batch-0.json'), batch = JSON.parse(await fs.readFile(file, 'utf8'));
+  batch.l4 = {approved: true, notes: [{id: 'item_x', note: '已逐字阅读，与骨架一致', by: '乙'}]};
+  await writeJson(file, batch);
+  assert.equal((await readApprovedContent(root, [next], {revision: 'v2'})).length, 1);
+  await assert.rejects(readApprovedContent(root, [{...next, physical: {formFacts: ['密度修正后变了']}}], {revision: 'v2'}), /发布骨架或引用事实已改变/);
+  // 无后加字段的 entry：指纹不动，不需要 revision
+  const root2 = await fixture(t, {...legacyRecord, status: 'manual', draft: null});
+  await manualRewrite({...args({}), root: root2, entries: [old]});
+  assert.equal(JSON.parse(await fs.readFile(path.join(root2, 'item_x.json'), 'utf8')).fingerprint, legacyRecord.fingerprint);
 });
