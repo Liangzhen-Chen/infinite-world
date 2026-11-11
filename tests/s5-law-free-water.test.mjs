@@ -11,7 +11,7 @@ import {householdResources,registerHouseholdFreeWater} from '../server-plugin/ho
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {PatchCursor} from '../server-plugin/storage.mjs';
 import {advanceHouseholdMeals} from '../server-plugin/npc-life.mjs';
-import {prepareHouseholdSubsistence} from '../server-plugin/household-subsistence.mjs';
+import {prepareHouseholdSubsistence,householdSubsistencePlan} from '../server-plugin/household-subsistence.mjs';
 import {stateReader} from '../server-plugin/valuation.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -118,7 +118,9 @@ test('主观读：只凭住处往返分钟（near 分支）知道有水可取，
  const roundTrip=id=>{try{return 2*probe.e.route(id,source,'walk',0,probe.doc.randomSeed).minutes;}catch{return null;}};
  const home=probe.e.world.locations.map(l=>l.id).sort().find(id=>{const m=roundTrip(id);return m!==null&&m>threshold;});
  assert.ok(home,'前提：世界里存在往返分钟大于 nearWaterRoundTripMinutes 的住处');
- assert.ok(roundTrip(home)>threshold);
  const far=fixture({home});
+ // 前提与实现同口径：householdSubsistencePlan 走 sourceGeography 候选与 2×ceil(distance×60/walkKmh) 的 near 判定（注册函数主观分支用的同一份）；远处住处不得走 near 分支。
+ const farPlan=householdSubsistencePlan(far.e,far.d.get('state'),A,480);
+ assert.ok(!farPlan?.water?.near,'前提：该住处按 near 口径不在邻近范围');
  assert.equal(read(far.d,far,{view:subjectiveView(far.e,far.d.document,A)}).market.freeWater.hydration,0);
 });
