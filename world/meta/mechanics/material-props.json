@@ -1182,5 +1182,330 @@
   }
  },
  "smallChangeTolerance": 0.1,
- "smallChangeBasis": "calibrate：条目内容变化时，所有出处数值相对审查时快照在 ±10% 以内、结构未变则沿用原 L2 结论不重审；超过则重审。来源：亮圳 19:24 小出入口径（材料数值大致合理、不离谱即可，不为小出入反复重核）"
+ "smallChangeBasis": "calibrate：条目内容变化时，所有出处数值相对审查时快照在 ±10% 以内、结构未变则沿用原 L2 结论不重审；超过则重审。来源：亮圳 19:24 小出入口径（材料数值大致合理、不离谱即可，不为小出入反复重核）",
+ "physical": {
+  "note": "MATPHYS 卡（2026-11-11）：材料类别的物理与外观事实，按类别写，不针对任何物品；与上面的 classes 分开存放，使 classes 里已审批条目的指纹不变（后加维度，不进 D12 已审条目）。类别键同样须是现有标签；取值按 physical.precedence（从最具体到最一般）取第一个写了该维的类别；缺项为未知，不给默认值；液体、食物类、混合材（metal、cloth、clay、carbon、stone 等没有可靠单一密度者）不写。densityKgPerL 不手写，由行内 sources（出处原值，kg/L = 出处 kg/m³ ÷ 1000）按 selection（single/mean）推出，规则同 server-plugin/item-class.mjs deriveFromSources；出处给区间的取区间中值并写 range。appearance 是 3 到 6 条可核实的外观词组，每条带 term 与 citation，只写材料本身的颜色、纹理、质地、气味，不写个别物品、用途、功效或后果。",
+  "dimensions": {
+   "densityKgPerL": {
+    "unit": "kg/L（材料表观密度，不含空隙堆积）",
+    "min": 0.05,
+    "max": 25
+   }
+  },
+  "precedence": [
+   "timber",
+   "wood",
+   "wax",
+   "leather",
+   "paper",
+   "bone",
+   "ceramic",
+   "iron"
+  ],
+  "classes": {
+   "timber": {
+    "sources": [
+     {
+      "name": "美洲白栎",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Oak, American White 770 kg/m³",
+      "densityKgPerL": 0.77
+     },
+     {
+      "name": "欧洲白蜡",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Ash, European 710 kg/m³",
+      "densityKgPerL": 0.71
+     },
+     {
+      "name": "欧洲桦",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Birch, European 670 kg/m³",
+      "densityKgPerL": 0.67
+     },
+     {
+      "name": "苏格兰松",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Pine, Scots 510 kg/m³",
+      "densityKgPerL": 0.51
+     },
+     {
+      "name": "挪威云杉",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Spruce, Norway 430 kg/m³",
+      "densityKgPerL": 0.43
+     }
+    ],
+    "selection": {
+     "method": "mean",
+     "reason": "世界里木料不分树种，取北温带常见木工材阔叶（栎、白蜡、桦）与针叶（松、云杉）五种的风干密度，逐种取平均"
+    },
+    "appearance": [
+     {
+      "term": "心材色深于边材",
+      "citation": "Wikipedia「Heartwood」：the natural color of heartwood is usually darker than that of the sapwood"
+     },
+     {
+      "term": "早材色浅、晚材色深，现出年轮",
+      "citation": "Wikipedia「Heartwood」：earlywood is usually lighter, latewood is usually darker；rings most clearly seen on the end of a log"
+     },
+     {
+      "term": "木色由草黄到深色乃至红色（因树种而异）",
+      "citation": "Wikipedia「Heartwood」：hard pines 的 latewood deep-colored、earlywood straw-colored；coast redwood is distinctively red"
+     },
+     {
+      "term": "纹理绕节而过，节疤色深近圆",
+      "citation": "Wikipedia「Heartwood」：the grain of the surrounding wood flows around a knot；knots often appear as darker, roughly circular pieces"
+     }
+    ],
+    "basis": "木料表观密度：取五种风干木材的 Engineering ToolBox 表列值（kg/m³ 除以 1000 即 kg/L），逐种取平均。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "wood": {
+    "sources": [
+     {
+      "name": "美洲白栎",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Oak, American White 770 kg/m³",
+      "densityKgPerL": 0.77
+     },
+     {
+      "name": "欧洲白蜡",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Ash, European 710 kg/m³",
+      "densityKgPerL": 0.71
+     },
+     {
+      "name": "欧洲桦",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Birch, European 670 kg/m³",
+      "densityKgPerL": 0.67
+     },
+     {
+      "name": "苏格兰松",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Pine, Scots 510 kg/m³",
+      "densityKgPerL": 0.51
+     },
+     {
+      "name": "挪威云杉",
+      "citation": "Engineering ToolBox《Density of Wood Species》（engineeringtoolbox.com/wood-density-d_40.html，页内注明 seasoned & dry wood）：Spruce, Norway 430 kg/m³",
+      "densityKgPerL": 0.43
+     }
+    ],
+    "selection": {
+     "method": "mean",
+     "reason": "世界里木料不分树种，取北温带常见木工材阔叶（栎、白蜡、桦）与针叶（松、云杉）五种的风干密度，逐种取平均"
+    },
+    "appearance": [
+     {
+      "term": "心材色深于边材",
+      "citation": "Wikipedia「Heartwood」：the natural color of heartwood is usually darker than that of the sapwood"
+     },
+     {
+      "term": "早材色浅、晚材色深，现出年轮",
+      "citation": "Wikipedia「Heartwood」：earlywood is usually lighter, latewood is usually darker；rings most clearly seen on the end of a log"
+     },
+     {
+      "term": "木色由草黄到深色乃至红色（因树种而异）",
+      "citation": "Wikipedia「Heartwood」：hard pines 的 latewood deep-colored、earlywood straw-colored；coast redwood is distinctively red"
+     },
+     {
+      "term": "纹理绕节而过，节疤色深近圆",
+      "citation": "Wikipedia「Heartwood」：the grain of the surrounding wood flows around a knot；knots often appear as darker, roughly circular pieces"
+     }
+    ],
+    "basis": "木料表观密度：取五种风干木材的 Engineering ToolBox 表列值（kg/m³ 除以 1000 即 kg/L），逐种取平均。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "iron": {
+    "sources": [
+     {
+      "name": "锻铁",
+      "citation": "Engineering ToolBox《Metals and Alloys - Densities》（engineeringtoolbox.com/metal-alloys-densities-d_50.html）：Wrought Iron 7750 kg/m³",
+      "densityKgPerL": 7.75
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "世界里的铁件是锻造的熟铁，取锻铁一条"
+    },
+    "appearance": [
+     {
+      "term": "新断口呈青蓝色，有丝状光泽，纤维状",
+      "citation": "Wikipedia「Wrought iron」（Properties）：A fresh fracture shows a clear bluish color with a high silky luster and fibrous appearance"
+     },
+     {
+      "term": "含纤维状夹渣，蚀刻、锈蚀或折断处显木纹状纹理",
+      "citation": "Wikipedia「Wrought iron」：fibrous slag inclusions give a wood-like grain visible when etched, rusted, or bent to failure"
+     },
+     {
+      "term": "表面粗糙",
+      "citation": "Wikipedia「Wrought iron」（Properties）：The material has a rough surface"
+     }
+    ],
+    "basis": "锻铁（熟铁）表观密度，Engineering ToolBox 表列 7750 kg/m³；维基百科 Wrought iron 给比重 7.5–7.9，与之相容。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "ceramic": {
+    "sources": [
+     {
+      "name": "陶土器（赤陶）",
+      "citation": "spotmaterial.com 材料库「earthenware terracotta」（https://spotmaterial.com/material/ceramic/earthenware-terracotta/）：Density 1600-2100 kg/m³（页面未注二级出处）",
+      "densityKgPerL": 1.85,
+      "range": {
+       "densityKgPerL": [
+        1.6,
+        2.1
+       ]
+      }
+     },
+     {
+      "name": "陶土器（由理论密度与孔隙率推导）",
+      "citation": "推导（非直接值）：techniques-ingenieur.fr「Terracotta materials · Shard characteristics」（https://techniques-ingenieur.fr/en/resources/article/ti264/terracotta-materials-c906/v1/shard-characteristics-1）：theoretical density is around 2,600-2,750 kg/m3（取中值 2.675 kg/L）；the most common porosity is around 35%（范围约 15%–48%）。表观密度 = 理论密度 × (1 − 孔隙率) = 2.675 × (1 − 0.35) = 1.73875 kg/L",
+      "densityKgPerL": 1.73875
+     }
+    ],
+    "selection": {
+     "method": "mean",
+     "reason": "两条互相印证：spotmaterial 区间中值 1.85；理论密度与孔隙率推导 1.73875；逐条取平均"
+    },
+    "appearance": [
+     {
+      "term": "烧后胎色自白、米黄、橙、红、褐到黑，随黏土与烧成气氛而异",
+      "citation": "spotmaterial.com「earthenware terracotta」（https://spotmaterial.com/material/ceramic/earthenware-terracotta/）：The natural colour of clay after firing ranges from white through buff, orange, red, brown and black"
+     },
+     {
+      "term": "红陶色来自黏土中铁的氧化；还原焰烧成呈灰至黑",
+      "citation": "spotmaterial.com「earthenware terracotta」（https://spotmaterial.com/material/ceramic/earthenware-terracotta/）：colour from iron in the clay oxidising during firing；reduction firing produces dark colours, from grey through black"
+     },
+     {
+      "term": "无釉胎体多孔",
+      "citation": "spotmaterial.com「earthenware terracotta」（https://spotmaterial.com/material/ceramic/earthenware-terracotta/）：Unglazed earthenware is porous"
+     }
+    ],
+    "basis": "陶土器（低温烧成赤陶）表观密度：出处一为 spotmaterial 区间 1600–2100 kg/m³ 取中值 1.85 kg/L（直接值，无二级出处）；出处二为推导印证，techniques-ingenieur 理论密度 2600–2750 kg/m³ 取中值、常见孔隙率 35%，按 2.675×(1−0.35)=1.73875 kg/L 推得；两者取平均。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "leather": {
+    "sources": [
+     {
+      "name": "干革",
+      "citation": "Engineering ToolBox《Solids - Densities》（engineeringtoolbox.com/density-solids-d_1265.html）：Leather, dry 0.86 (10³ kg/m³)",
+      "densityKgPerL": 0.86
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "表里只有干革一条"
+    },
+    "appearance": [
+     {
+      "term": "植鞣革柔软，呈浅褐色",
+      "citation": "Wikipedia「Leather」：Vegetable-tanned leather is supple and light brown in color"
+     },
+     {
+      "term": "粒面（外层）纤维更细密",
+      "citation": "Wikipedia「Leather」：the grain is the outer layer, with finer, more densely packed fibers"
+     },
+     {
+      "term": "全粒面革久用生出古色（包浆）",
+      "citation": "Wikipedia「Leather」：Full-grain leather keeps its entire grain and develops a patina over time"
+     }
+    ],
+    "basis": "干革表观密度，Engineering ToolBox 表列 0.86（10³ kg/m³）。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "paper": {
+    "sources": [
+     {
+      "name": "纸",
+      "citation": "Engineering ToolBox《Solids - Densities》：Paper 0.7 - 1.15 (10³ kg/m³)",
+      "densityKgPerL": 0.925,
+      "range": {
+       "densityKgPerL": [
+        0.7,
+        1.15
+       ]
+      }
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "区间内取中值 0.925"
+    },
+    "appearance": [
+     {
+      "term": "由交织的纤维素纤维压成",
+      "citation": "Wikipedia「Paper」：matted cellulose fibers"
+     },
+     {
+      "term": "漂白浆纸为白色；机械浆纸久则发黄变脆",
+      "citation": "Wikipedia「Paper」：bleached pulp to produce white paper；mechanically pulped paper (lignin) turns yellow and becomes brittle over time"
+     },
+     {
+      "term": "手工纸边缘粗糙、毛茸",
+      "citation": "Wikipedia「Paper」：rough and feathery borders of handmade paper"
+     },
+     {
+      "term": "手工帘抄纸带帘纹，压光或抛光可使表面光滑",
+      "citation": "Wikipedia「Paper」：wove paper does not exhibit laid lines left by handmade moulds；surfaces polished by calendering or burnishing"
+     }
+    ],
+    "basis": "纸表观密度区间 0.7–1.15（10³ kg/m³），取中值 0.925 kg/L。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "bone": {
+    "sources": [
+     {
+      "name": "骨",
+      "citation": "Engineering ToolBox《Solids - Densities》：Bone 1.7 - 2.0 (10³ kg/m³)",
+      "densityKgPerL": 1.85,
+      "range": {
+       "densityKgPerL": [
+        1.7,
+        2
+       ]
+      }
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "区间内取中值 1.85"
+    },
+    "appearance": [
+     {
+      "term": "密质骨光滑、白色、坚实",
+      "citation": "Wikipedia「Bone」：cortical bone gives bone a smooth, white, and solid appearance"
+     },
+     {
+      "term": "外层致密坚硬",
+      "citation": "Wikipedia「Bone」：cortical bone is much denser than cancellous bone"
+     },
+     {
+      "term": "内部松质骨为开孔多孔网状",
+      "citation": "Wikipedia「Bone」：cancellous bone is an open-cell porous network"
+     }
+    ],
+    "basis": "骨表观密度区间 1.7–2.0（10³ kg/m³），取中值 1.85 kg/L。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   },
+   "wax": {
+    "sources": [
+     {
+      "name": "蜂蜡",
+      "citation": "Engineering ToolBox《Solids - Densities》：Beeswax 0.96 (10³ kg/m³)",
+      "densityKgPerL": 0.96
+     }
+    ],
+    "selection": {
+     "method": "single",
+     "reason": "世界里的蜡是蜂蜡，表里一条"
+    },
+    "appearance": [
+     {
+      "term": "色自近白到褐，多为黄色",
+      "citation": "Wikipedia「Beeswax」：colour varies from nearly white to brownish, but most often is a shade of yellow"
+     },
+     {
+      "term": "有蜂蜜般的香气",
+      "citation": "Wikipedia「Beeswax」：a fragrant solid at room temperature；genuine honey-scented aroma of pure beeswax"
+     },
+     {
+      "term": "室温下质脆，断口干而呈颗粒状",
+      "citation": "Wikipedia「Beeswax」：at room temperature it is brittle, and its fracture is dry and granular"
+     },
+     {
+      "term": "近体温即变软",
+      "citation": "Wikipedia「Beeswax」：it softens further at body temperature"
+     }
+    ],
+    "basis": "蜂蜡表观密度，Engineering ToolBox 表列 0.96（10³ kg/m³）。外观词组各带出处。【出处 2026-11-11 经公开页面查证；L2、L4 待审】"
+   }
+  }
+ }
 }
