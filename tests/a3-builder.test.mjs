@@ -20,7 +20,7 @@ import {executeLeaveMark} from '../server-plugin/mark-actions.mjs';
 import {withLedger,accountKey,auditLedger} from '../server-plugin/ledger.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {modelActionCatalog,builderToolCall} from '../extension/tools.mjs';
-import {actionModes,modelToolAllowed} from '../extension/turn.mjs';
+import {actionModes,modelToolAllowed,AI_PROFILES} from '../extension/turn.mjs';
 import {normalizeSettings} from '../extension/ui-settings.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -99,14 +99,14 @@ test('精确目录匹配的 limit=1 保留注册动作，开放路径附在后�
 });
 
 test('模式归一化和设置持久化字段：关闭/目录匹配不暴露旧写工具，纯本地构造始终可用',()=>{
- assert.deepEqual(actionModes(),{intent:'propose',narration:'sync'});
- for(const intent of ['off','match','propose'])for(const narration of ['off','async','sync']){
-  const settings=normalizeSettings({intent,narration});assert.deepEqual(actionModes(settings),{intent,narration});
+ assert.deepEqual(actionModes(),AI_PROFILES.T0);
+ for(const [aiProfile,{intent,narration}] of Object.entries(AI_PROFILES)){
+  const settings=normalizeSettings({aiProfile});assert.deepEqual(actionModes(settings),{intent,narration});
   for(const tool of ['world_move','world_trade','world_time'])assert.equal(modelToolAllowed(tool,settings),intent==='propose');
   assert.equal(modelToolAllowed('world_actions',settings),true);assert.equal(modelToolAllowed('world_act',settings),intent!=='off');
   assert.deepEqual(builderToolCall('open:proposal',{intent:'画画',effects:[]}),{tool:'world_propose',args:{intent:'画画',effects:[]}});
  }
- assert.deepEqual(actionModes({intent:'invalid',narration:'invalid'}),actionModes());
+ assert.deepEqual(actionModes({aiProfile:'invalid'}),actionModes());
  const slots={minutes:1},call=builderToolCall('core:time',slots);call.args.slots.minutes=5;assert.equal(slots.minutes,1);
 });
 function fixture(){

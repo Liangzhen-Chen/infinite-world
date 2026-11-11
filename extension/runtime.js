@@ -1,5 +1,5 @@
 import { getContext } from '../../../extensions.js';
-import { parseTurn, toolResultWithClock, modelToolResult, lookupToolResult, actionCompletion, modelToolAllowed, actionModes } from './turn.mjs';
+import { parseTurn, toolResultWithClock, modelToolResult, lookupToolResult, actionCompletion, modelToolAllowed, actionModes, turnModelAccess } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
 import { toolDefinitions, modelActionCatalog, builderToolCall } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
@@ -496,7 +496,7 @@ async function afterReply(index){
                 messages:[{role:'user',content:user?.mes??''}],
                 onMeasurement:row=>(session.measurements??=[]).push(row),
                 onRetryStart:async()=>{message.extra.fields_tool_retry={token:session.token,attempted:true};await ctx().saveChat();},
-                generate:getActionModes().intent==='off'?null:controlledGenerate,narrate:getActionModes().narration!=='off',
+                ...turnModelAccess(getSettings(),controlledGenerate),
                 execute:async(name,args)=>{
                     if(name==='world_read')return readStateSection(view.document.state,args.section,args.npc);
                     if(name==='world_search')return api('search',{...args,campaignId,token:session.token,anchor:session.anchor,expectedSequence:view.reference.sequence});
