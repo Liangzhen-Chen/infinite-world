@@ -278,13 +278,14 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.tax,v.outcome]),[[A,'item_ration',3,4,0,'bought']]);
     const account=Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
     // 柜台侧 4 处（柜台钱、口粮余量、回执、营业额）随上面已批准的到访变化（3 份口粮付 4）直接推出：柜台 100+4=104，口粮 3-3=0（卖光后键不存在按 0 计），回执 [4,{item_ration:-3}]，营业额 4；与探针 mkt-14（65b81c7a）s5-w4-economy-11 实算一致。
-    // 徐玲钱袋保留原期望 37，转 (b)：探针显示她买完口粮后饱腹缺口已为 0，仍在原生店买 4 份燕麦薄饼付 7（40-4-7=29）；按冻结判定规则（F:/dnd-tmp/mkt-11-verdict.md）对不上任何已批准设计变化，李白 (a) 条件下不改期望值，作行为问题另查。
-    assert.equal(account.coins,104);assert.equal(f.document.state.npcs[A].coins,37);
+    assert.equal(account.coins,104);
     assert.equal(f.document.state.inventory.item_ration?.quantity??0,0);assert.equal(f.document.state.inventory.item_bread.quantity,5);
     const receipt=Object.values(f.document.state.records).find(r=>r.category==='business_receipt'&&r.operation==='customer_sale');
     assert.deepEqual([receipt.coins,receipt.goods],[4,{item_ration:-3}]);
     const report=await f.act('core:settlement.business_report',{business:f.business},'w4-player-report');
     assert.equal(report.profit.revenue,4);assert.equal(report.cash.reconciled,true);
+    // 徐玲钱袋：已批准部分只推出 40-4=36（柜台付 4）；实际 29，多出的 7 来自她饱腹缺口已为 0 后在原生店买 4 份燕麦薄饼（水分缺口 72，薄饼无水分），按冻结判定规则（docs/审查记录/市场价格-s5w4-11-判定.md）对不上已批准设计变化，转 (b)，照实失败、另查。放在最后，不挡前面各断言的检验。
+    assert.equal(f.document.state.npcs[A].coins,36);
     assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
