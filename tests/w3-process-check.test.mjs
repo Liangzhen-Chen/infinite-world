@@ -499,3 +499,20 @@ test('盘：动词用法（盘压、盘绕）与部件名词（轮盘、转盘�
   assert.match(fxJoin('盛入盘中。'), /泛称器具「盘」/);
   assert.match(fxJoin('倒入木盘。'), /泛称器具「木盘」/);
 });
+
+test('器具词表只取器具类物品：书、食物、原料即使出现在配方 tools 里也不进词表', () => {
+  const catalog = [
+    {id: 'spoon', name: '偏柄木匙', tags: []},
+    {id: 'book', name: '役灵契纹入门', tags: ['paper', 'book'], book: {teaches: ['recipe_copy']}},
+    {id: 'grain', name: '带壳麦片', tags: ['food']},
+    {id: 'pot', name: '厚底煮锅', tags: ['container']},
+    {id: 'cake', name: '黑麦饼', tags: []},
+  ];
+  const recipes = [{id: 'recipe_copy', tools: ['book', 'grain', 'spoon']}];
+  const vocab = buildVocabulary(catalog, recipes);
+  assert.ok(vocab.heads.has('木匙') && vocab.heads.has('煮锅'), '无标签但出现在 tools 里的家用器具、容器类仍入表');
+  assert.ok(!vocab.heads.has('入门') && !vocab.heads.has('役灵契纹入门'), '书的名称及其子串不进词表');
+  assert.ok(!vocab.heads.has('麦片') && !vocab.heads.has('带壳麦片'), '食物不进词表');
+  const entry = {id: 'recipe_x', workstation: 'cooking', tools: ['spoon', 'pot'], materials: [], output: {item: 'cake'}};
+  assert.deepEqual(processIssues('塞入门缝，阻止门轻微摆动。', entry, {catalog, catalogRecipes: recipes}), [], '“塞入门缝”里的“入门”不是器具');
+});
