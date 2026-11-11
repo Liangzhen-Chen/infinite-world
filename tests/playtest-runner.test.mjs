@@ -182,7 +182,7 @@ test('quantity前置缺测或非数值不推断，机会读取actual而非采购
 });
 
 test('试玩world_read单人物定位读取真实库存，场外查询不转物扣钱或泄露认知',async t=>{
-    const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
     const bundle=await loadPromptBundle();let requests=0;
     const client={async generate({messages}){
         const index=messages.findLastIndex(m=>m.role==='user'),receipts=messages.slice(index).filter(m=>m.role==='tool');
@@ -204,7 +204,7 @@ test('试玩world_read单人物定位读取真实库存，场外查询不转物�
 });
 
 test('试玩框架走真实HTTP存储、检索和回滚；场外写入拒绝，重复扣款幂等',async t=>{
-    const server=await createPlaytestServer();t.after(()=>server.close());const bundle=await loadPromptBundle();let callId=0,sawSearch=false;
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/});t.after(()=>server.close());const bundle=await loadPromptBundle();let callId=0,sawSearch=false;
     const client={async generate({messages,tools}){
         assert.equal(messages[0].content,bundle.constitution);assert.ok(messages.some(m=>m.content?.includes('【时间】')));
         assert.ok(!tools.some(t=>t.function.name==='world_turn'));
@@ -236,7 +236,7 @@ test('试玩框架走真实HTTP存储、检索和回滚；场外写入拒绝，�
 });
 
 test('试玩world_search沿真实HTTP绑定每回合token，伪造工具参数不能覆盖留证身份',async t=>{
-    const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());const calls=[];
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());const calls=[];
     const api=async(endpoint,body)=>{calls.push({endpoint,body});return server.api(endpoint,body);};api.seedMode=server.api.seedMode;
     let n=0;const client={async generate(){return ++n%2?{choices:[{message:{tool_calls:[{id:`search-${n}`,type:'function',function:{name:'world_search',arguments:JSON.stringify({query:'林穗',token:'fake',anchor:'fake',campaignId:'fake',expectedSequence:99})}}]}}]}:{choices:[{message:{content:'我已查到相关记录。'}}]};}};
     const result=await runPlaytest({scenario:{id:'search-capture',initial:{mode:'legacy'},turns:[{input:'（场外）查找旧事。'},{input:'（场外）再次查找旧事。'}]},api,client,bundle:await loadPromptBundle()});
@@ -264,7 +264,7 @@ test('试玩失败不能因缺字段或空断言冒充成功；预设和测试�
 });
 
 test('工具已经扣款但正文生成失败时，仍核对所有原定账本断言并保留失败',async t=>{
-    const server=await createPlaytestServer();t.after(()=>server.close());let calls=0;
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/});t.after(()=>server.close());let calls=0;
     const client={async generate(){
         if(calls++)throw new Error('模拟正文请求中断');
         return{choices:[{message:{role:'assistant',tool_calls:[{id:'rent',type:'function',function:{name:'world_trade',arguments:JSON.stringify({seller:'林穗',service:'住宿',days:1})}}]}}]};
@@ -275,7 +275,7 @@ test('工具已经扣款但正文生成失败时，仍核对所有原定账本�
 });
 
 test('审查完成且允许提交的warning仍需复核，不能冒充整场验收通过',async t=>{
-    const server=await createPlaytestServer();t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/});t.after(()=>server.close());
     const warning={category:'meta',severity:'warning',quote:'测试原句',reason:'待复核'};
     const api=async(name,args)=>{
         const result=await server.api(name,args);
@@ -291,7 +291,7 @@ test('审查完成且允许提交的warning仍需复核，不能冒充整场验�
 
 test('持久续跑从付款后的失败正文恢复，原失败保留且HTTP执行不重发',async t=>{
     const directory=await fs.mkdtemp(path.join(tmpRoot(),'fields-runner-resume-'));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
-    const server=await createPlaytestServer({directory:path.join(directory,'server')});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,directory:path.join(directory,'server')});t.after(()=>server.close());
     let calls=0,executeCount=0;
     const provider={async generate(){
         calls++;if(calls===2)throw Error('付款后正文中断');
@@ -314,10 +314,10 @@ test('持久续跑从付款后的失败正文恢复，原失败保留且HTTP执�
 });
 
 test('试玩守门只看实际存档种子：随机种子服务器手写 seedMode=fixed 也被拒绝',async t=>{
-    const server=await createPlaytestServer({seed:'random'});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed:'random'});t.after(()=>server.close());
     const api=async(name,body)=>server.api(name,body);api.seedMode='fixed';
     await assert.rejects(runPlaytest({scenario:{id:'forged-seed',turns:[]},api,client:{},bundle:await loadPromptBundle()}),/实际种子不是确定种子/);
-    const custom=await createPlaytestServer({seed:'custom-fixed'});t.after(()=>custom.close());
+    const custom=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed:'custom-fixed'});t.after(()=>custom.close());
     await assert.rejects(runPlaytest({scenario:{id:'wrong-seed',turns:[]},api:custom.api,client:{},bundle:await loadPromptBundle()}),/实际种子不是确定种子/);
 });
 test('holdingsUnchanged 只比物品数量：数量变了判失败，只有耐久变了判通过',()=>{

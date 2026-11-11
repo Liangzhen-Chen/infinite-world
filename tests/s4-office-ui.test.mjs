@@ -45,7 +45,7 @@ test('事务面板真实发单、拒绝越额、取消退款，显示同一引�
 });
 
 test('S4 无模型任职委托界面：真实新战役经表单发单与退款，桌面与390宽度',{timeout:120000},async t=>{
- const server=await createPlaytestServer({consistencyEnabled:false});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>server.close());
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
  for(const viewport of [{width:390,height:844},{width:1280,height:900}]){
   const created=await server.api('create',{}),campaignId=created.reference.campaignId,page=await browser.newPage({viewport}),errors=[],requests=[];

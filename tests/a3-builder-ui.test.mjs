@@ -9,7 +9,7 @@ test('真实后端无模型构造器：手机/桌面四步、预览取消、确�
  const world=await loadWorld(),json=async path=>JSON.parse(await fs.readFile(path,'utf8'));
   // Use B's actual tables pinned with the world, never test-only UI vocabulary.
  Object.assign(world,{openActionRules:await json('world/rules/tables/open-actions.json'),openTagging:await json('world/rules/open-tagging.json'),openReactions:await json('world/rules/open-reactions.json')});
- const server=await createPlaytestServer({world,consistencyClient:{async generate(){throw Error('测试叙述模型离线');}}});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,world,consistencyClient:{async generate(){throw Error('测试叙述模型离线');}}});t.after(()=>server.close());
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
  for(const viewport of [{width:390,height:844},{width:1280,height:900}]){
   const created=await server.api('create',{}),campaignId=created.reference.campaignId;

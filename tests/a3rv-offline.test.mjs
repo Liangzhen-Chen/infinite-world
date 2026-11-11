@@ -116,7 +116,7 @@ test('调用回执断言校验拒绝说明、替代、兜底和整份存档零�
 });
 
 test('真实 HTTP 的非法 consent 返回统一拒绝，整份存档及事件序号零写入，门禁保持 pending',async t=>{
- const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
  const created=await server.api('create',{character:{name:'拒绝回归'}}),campaignId=created.reference.campaignId;
  const before=await server.api('read',{campaignId}),anchor='offline-consent';
  const turn=await server.api('review/begin',{campaignId,anchor,playerText:'我捧起池水许愿。',expectedSequence:before.reference.sequence});

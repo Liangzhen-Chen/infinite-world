@@ -22,10 +22,8 @@ import {finishContractTurn,turnFactsPrompt} from '../extension/turn-contract.mjs
 // 但试玩验收与测试入口默认固定此常量，保证价格/稀缺度等数值逐次可复演；显式 seed:'random' 才随机。
 export const PLAYTEST_SEED='playtest-fixed-seed-v1';
 export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null,aiProfile}={}){
-    // The profile is stated, never silent: an explicit value wins; otherwise a supplied model client (planner or consistency review) means T3, none means T0.
-    // The chosen profile is sent as X-AI-Profile on every request and returned on the server object so reports can record it.
-    if(aiProfile!==undefined&&!['T0','T1','T2','T3'].includes(aiProfile))throw new Error('aiProfile 须为 T0/T1/T2/T3');
-    aiProfile??=(plannerClient||(consistencyEnabled&&consistencyClient))?'T3':'T0';
+    // aiProfile is mandatory (T0-T3): the harness never infers it. It is sent as X-AI-Profile on every request and returned on the server object.
+    if(!['T0','T1','T2','T3'].includes(aiProfile))throw new Error('createPlaytestServer 须显式传 aiProfile（T0/T1/T2/T3），不做隐式推断');
     const seedMode=seed==='random'?'random':(typeof seed==='string'&&seed?'fixed':null);
     if(!seedMode)throw new Error("createPlaytestServer 的 seed 必须是非空字符串或 'random'");
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(tmpRoot(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
@@ -221,8 +219,8 @@ export async function preparePlaytestSession({scenario,api,world,directory}={}){
             const old=structuredClone(selected);
             old.version=`${old.version}-m3-old`;old.rules.version=old.version;
             old.skills[0].description+='；隔离旧版目录。';
-            source=await createPlaytestServer({world:old,consistencyEnabled:false});
-        }else source=await createPlaytestServer({world:selected,directory,consistencyEnabled:false});
+            source=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world:old,consistencyEnabled:false});
+        }else source=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world:selected,directory,consistencyEnabled:false});
         const sourceApi=source.api;
         let view=await sourceApi('create',scenario.id==='m3_memory'?{}:{character:{name:'试玩者'}});
         const campaignId=view.reference.campaignId;let sequence=0;

@@ -15,7 +15,7 @@ import {digest} from '../server-plugin/storage.mjs';
 
 const response=input=>reviewResponse(input);
 async function fixture(t,options={}){
- const server=await createPlaytestServer({consistencyClient:null,...options});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null,...options});t.after(()=>server.close());
  let view=await server.api('create',{});const campaignId=view.reference.campaignId;
  return {server,campaignId,get view(){return view;},async read(){return view=await server.api('read',{campaignId});},
   async begin(playerText='我想买一份面包。',anchor='gate',extra={}){return server.api('review/begin',{campaignId,anchor,playerText,expectedSequence:view.reference.sequence,...extra});},

@@ -61,7 +61,7 @@ test('场外不补跑；补跑故障保留模板；无行动不能夹带写操�
 });
 
 test('gate 可重复读取、检索仍开放，真实工具结算后唯一封口；旧版本与撤销继续拒绝',async t=>{
- const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
  let view=await server.api('create',{});const campaignId=view.reference.campaignId,anchor='gate-preflight';
  const before=structuredClone(view.document);
  const begin=await server.api('review/begin',{campaignId,anchor,playerText:'我买一个面包',expectedSequence:view.reference.sequence,captureSearch:true});
@@ -84,7 +84,7 @@ test('gate 可重复读取、检索仍开放，真实工具结算后唯一封口
 });
 
 test('runner 首轮零调用后 required 补跑真实等待，叙述在结算之后，原稿不进历史或索引',async t=>{
- const server=await createPlaytestServer({consistencyClient:{async generate(body){return reviewResponse(body);}}});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:{async generate(body){return reviewResponse(body);}}});t.after(()=>server.close());
  const requests=[],endpoints=[];const original='模型没有结算便宣称已等完。';
  const client={async generate(body){requests.push(body);
   if(body.tool_choice==='required')return response({tool_calls:[call('world_time',{minutes:10})]});
@@ -102,7 +102,7 @@ test('runner 首轮零调用后 required 补跑真实等待，叙述在结算之
 });
 
 test('runner 三条真实零调用原稿均被 pending 模板替换，无行动和零返回均只补跑一次',async t=>{
- const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
  const bundle=await loadPromptBundle();
  for(const fixture of fixtures)for(const noAction of [true,false]){
   const synced=[];let calls=0;
@@ -120,7 +120,7 @@ test('runner 三条真实零调用原稿均被 pending 模板替换，无行动�
 });
 
 test('界面行动补叙严格绑定 eventId/sequence，禁止尾注与混入另一界面行动',async t=>{
- const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyClient:null});t.after(()=>server.close());
  let view=await server.api('create',{});const campaignId=view.reference.campaignId;
  const start=await server.api('review/begin',{campaignId,anchor:null,eventId:'ui-wait',playerText:'界面选择休息十分钟',expectedSequence:view.reference.sequence});
  await server.api('execute',{campaignId,anchor:null,eventId:'ui-wait',tool:'world_time',args:{minutes:10},expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});
@@ -137,7 +137,7 @@ test('实际 afterReply 接点：等待改写时隐藏且隔离原稿，通过�
  const requests=[],endpoints=[];let release,entered;
  const held=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
  const final='<q who="npc_hw_linsui">面包给你。</q><回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>';
- const server=await createPlaytestServer({consistencyClient:{async generate(body,label){
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:{async generate(body,label){
   requests.push({body,label});
   if(label.startsWith('consistency-rewrite:')){entered();await held;return response({content:final});}
   return reviewResponse(body);
@@ -221,7 +221,7 @@ test('实际宿主传输接点：流式被阻止，原稿在交给宿主前隔�
 });
 
 test('实际 act 接点：先显示界面结算模板，异步补叙绑定该事件，不借聊天尾注',{timeout:15000},async t=>{
- const server=await createPlaytestServer({consistencyClient:{async generate(body){return reviewResponse(body);}}});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:{async generate(body){return reviewResponse(body);}}});t.after(()=>server.close());
  let view=await server.api('create',{}),release,requested,finished;
  const barrier=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{requested=resolve;}),done=new Promise(resolve=>{finished=resolve;});
  const context={chatId:'ui-fixture',chatMetadata:{},saveChat:async()=>{if(context.chatMetadata.fields_event_feed?.[0]?.narration)finished();}};

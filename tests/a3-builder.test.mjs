@@ -59,7 +59,7 @@ test('开放提案是动态目录职责，四步输入不需原语 JSON；只使
 });
 
 test('真实 HTTP 开放提案：四步预览不写、确认同编号结算、重放不重复产生事件、stale 不提交',async t=>{
- const server=await createPlaytestServer({world});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world});t.after(()=>server.close());
  const created=await server.api('create',{}),campaignId=created.reference.campaignId,initial=await server.api('read',{campaignId});
  const action=(await server.api('actions',{campaignId,query:'open:proposal'})).actions.find(a=>a.id==='open:proposal');
  let submits=0;
@@ -187,7 +187,7 @@ test('pending 不展示为成功；对抗失败回执不叙述成功，效果仍
 });
 
 test('真实 HTTP 两阶段：预览不写存档，确认写一次，重放幂等，旧序列拒绝且不扣款',async t=>{
- const server=await createPlaytestServer({world,consistencyEnabled:false});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world,consistencyEnabled:false});t.after(()=>server.close());
  const {reference}=await server.api('create',{}),campaignId=reference.campaignId;
  const read=()=>server.api('read',{campaignId}),before=await read();
  const menu=await server.api('actions',{campaignId,target:'林穗'}),action=menu.actions.find(a=>a.id==='core:trade.buy');
@@ -250,7 +250,7 @@ test('唯一改写失败后回落真实回执模板，不重执行、不追加�
   if(label.startsWith('consistency-rewrite:')){rewrites++;assert.equal(body.tools,undefined);return {choices:[{finish_reason:'stop',message:{content:'<q who="player">我全都答应。</q>'}}]};}
   return reviewResponse(body);
  }};
- const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,world,consistencyClient:client});t.after(()=>server.close());
  const created=await server.api('create',{}),campaignId=created.reference.campaignId,anchor='fallback-bread';
  const begun=await server.api('review/begin',{campaignId,anchor,playerText:'买一个面包',expectedSequence:created.reference.sequence});
  await server.api('execute',{campaignId,anchor,eventId:'fallback-buy',tool:'world_act',args:{action:'core:trade.buy',slots:{seller:'林穗',item:'面包',quantity:1}},expectedSequence:created.reference.sequence});
@@ -320,7 +320,7 @@ test('复合字段复用已有工具 schema；属性分配经构造器真实扣�
 
 test('未启用独立模型审查使用场内模板，场外问题不回落成游戏场景',async t=>{
  for(const playerText of ['看一看周围。','（场外）这是什么规则？']){
-  const server=await createPlaytestServer({world,consistencyClient:playerText.startsWith('（')?{async generate(){throw Error('离线');}}:null});t.after(()=>server.close());
+  const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,world,consistencyClient:playerText.startsWith('（')?{async generate(){throw Error('离线');}}:null});t.after(()=>server.close());
   const created=await server.api('create',{}),campaignId=created.reference.campaignId,view=await server.api('read',{campaignId});
   const begun=await server.api('review/begin',{campaignId,anchor:'review-only',playerText,expectedSequence:view.reference.sequence});
   const draft=playerText.startsWith('（')?'这是一段场外说明。':`你看着周围。<回合 额外="0分" 地点="${view.document.state.location}" 在场=""/>`;

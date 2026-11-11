@@ -5,7 +5,7 @@ import {digest} from '../../server-plugin/storage.mjs';
 
 // Optional mutate(state, world) prepares the scene (time, place, purse) on a copy of a freshly created campaign.
 export async function uiSession(t,{mutate=null,world,seed}={}){
- const server=await createPlaytestServer({seed,consistencyEnabled:false,...(world?{world}:{})});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed,consistencyEnabled:false,...(world?{world}:{})});t.after(()=>server.close());
  let {reference}=await server.api('create',{});
  if(mutate){
   const bundle=await server.api('export',{campaignId:reference.campaignId}),initial=structuredClone(bundle.initial);
@@ -48,7 +48,7 @@ export const qty=v=>typeof v==='number'?v:v?.quantity??0;
 // Start through the public character-creation endpoint, without importing a
 // prepared state. Existing legacy-fixture sessions above retain their behavior.
 export async function characterUiSession(t,{character={},world,seed}={}){
- const server=await createPlaytestServer({world,seed,consistencyEnabled:false});
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world,seed,consistencyEnabled:false});
  t.after(()=>server.close());
  const {reference}=await server.api('create',{character});
  const campaignId=reference.campaignId;let counter=0;

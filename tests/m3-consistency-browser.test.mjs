@@ -15,7 +15,7 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
   if(label.startsWith('consistency-rewrite:')){await barrier;return{choices:[{finish_reason:'stop',message:{content:final}}]};}
   return reviewResponse(body);
  }};
- const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());
  const created=await server.api('create',{});
  const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
  const page=await browser.newPage(),endpoints=[];
