@@ -91,3 +91,44 @@ test('用途表述：别的器物在物品自己的事实字段或它作为材�
   assert.match(join('cork2', {description: '用于塞紧陶罐。'}), /陶罐/);
   assert.match(join('cork1', {description: '用于塞紧陶罐。'}), /陶罐/, 'use 里写的是瓶，不是陶罐');
 });
+
+test('制作痕迹只在“被做成时留下的状态”框架里判；用途句、功能句、名词部件不判', () => {
+  for (const text of ['去核后可鲜食，也可煮制。', '用于剥瓣捣碎调味。', '供小型装饰压纹。', '供染色，煎取染液。', '刃面平整，削出木面凹弧，配木槌使用。', '用于轻收毛刺，不把崩缺刀刃磨成新刃。', '果身饱满，缝合线清晰。', '钢制短喙与锤面对置。', '每张裁成窄长片使用。'])
+    assert.deepEqual(check('wheat', {description: text}), [], text);
+  // 真例子：描述被做成时留下的状态，配方里没有对应工序，照判。
+  assert.match(join('chain', {description: '毡面保留压制时的细密纤维走向。'}), /制作痕迹「压制」，配方骨架.*没有对应的「压」/);
+  assert.match(join('wheat', {description: '粉粒以白垩捣制而成。'}), /制作痕迹「捣制」/);
+  assert.match(join('wheat', {description: '表面留有锻打后的细纹。'}), /制作痕迹「锻打」/);
+  assert.match(join('wheat', {inspection: '边口留有锤痕。'}), /制作痕迹「锤痕」/);
+});
+
+test('storage：回避框架里的动作不是处置做法；真处置照判', () => {
+  for (const text of ['置于干燥处，避免受潮、浸水与重压。', '置于干燥通风处，避免暴晒与浸水。', '勿暴晒，勿浸水。', '防压，防浸水。'])
+    assert.deepEqual(check('wheat', {storage: text}), [], text);
+  assert.match(join('wheat', {storage: '置于阴凉处，加盖遮尘。'}), /具体处置做法「加盖」/);
+  assert.match(join('wheat', {storage: '逾时弃置。'}), /具体处置做法「弃置」/);
+  assert.match(join('wheat', {storage: '置于阴凉处，盖好防尘防虫。'}), /具体处置做法「盖好」/);
+  assert.match(join('wheat', {storage: '晾干后折叠，置干燥处避潮。'}), /具体处置做法「晾干」/);
+});
+
+test('如实说明容器不随货：不在范围内、不随货、另备、不含都不算引入；正面写骨架外容器照判', () => {
+  for (const text of ['盛装容器不在本件范围内。', '容器不随货提供。', '盛装容器须使用者另备。', '不含容器，不附包装。'])
+    assert.deepEqual(check('wheat', {description: text}), [], text);
+  assert.match(join('wheat', {description: '装在陶罐里出售。'}), /陶罐/);
+  assert.match(join('wheat', {description: '盛入容器后带走。'}), /容器/);
+});
+
+test('制作痕迹：痕迹词后紧跟成形状态谓词也判；部件名词、用途句不判', () => {
+  for (const text of ['链面刨面平整。', '表面磨成光洁。', '边口削出齐整，棱角匀称。'])
+    assert.ok(check('chain', {description: text}).some(message => /制作痕迹/.test(message)), text);
+  assert.match(join('wheat', {description: '刨面平整，边口齐整。'}), /制作痕迹「刨面」，但这件物品没有以它为产出的配方/);
+  for (const text of ['钢制短喙与锤面对置。', '去核后可鲜食，也可煮制。', '果身饱满，缝合线清晰。'])
+    assert.deepEqual(check('wheat', {description: text}), [], text);
+});
+
+test('storage：回避词与处置词之间只能是被回避的并列对象', () => {
+  for (const text of ['防尘加盖。', '避晒，盖好。', '防虫盖严。', '勿暴晒，晾干后折叠。'])
+    assert.match(join('wheat', {storage: text}), /具体处置做法/, text);
+  for (const text of ['置干燥处，避免受潮、浸水与重压。', '避免暴晒与浸水。', '勿浸水。', '防压及浸水。'])
+    assert.deepEqual(check('wheat', {storage: text}), [], text);
+});
