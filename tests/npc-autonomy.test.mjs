@@ -8,6 +8,7 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
+import {autonomyKind} from '../server-plugin/autonomy-candidates.mjs';
 import {advanceNpcAutonomy,applyNpcPlan,npcPlanFingerprint,npcPlanningContext,npcAutonomyBusy,npcLocalChanges,nextNpcAutonomyMinute} from '../server-plugin/npc-autonomy.mjs';
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),actor='npc_hw_ayan';
 function draft(document){return {document,get(...p){return p.reduce((x,k)=>x?.[k],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);},remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);}};}
@@ -53,10 +54,40 @@ test('连续五分钟推进与一次跨日推进完全一致',async()=>{
  const a=await setup(),b=await setup();advance(a.d,a.engine,1440);for(let minute=545;minute<=1440;minute+=5)advance(b.d,b.engine,minute);
  assert.deepEqual(a.d.document,b.d.document);assert.ok(Object.keys(a.d.get('state','npcAutonomy','actions')).length);
 });
+// 'location' 轮的“离开”用玩家同行：600 分时 actor 的任务是 labor_process（行程类），作息按 market_trip 槽每分钟把位置写回（npc-schedule.mjs:315-322，云上探针实测 610 分被写回磨坊），
+// 直接 d.set location 不是世界里的离开；作息尊重的离开是同行（:310 break，位置不重写）。断言不变。
 test('工作中离开或失能不能在完成时凭旧在场记录生产',async()=>{
  for(const change of ['location','status']){const {engine,d}=await setup();advance(d,engine,600);const task=Object.values(d.get('state','npcAutonomy','tasks')).find(t=>t.npc===actor);assert.ok(task);
-  const wood=count(d,actor,'item_wood');d.set(['state','npcs',actor,change],change==='location'?'loc_hw':'昏迷');advance(d,engine,task.finish);
+  const wood=count(d,actor,'item_wood');if(change==='location')d.set(['state','player','companions'],[actor]);else d.set(['state','npcs',actor,'status'],'昏迷');advance(d,engine,task.finish);
   assert.equal(d.get('state','npcAutonomy','tasks',task.id,'status'),'失败');assert.equal(count(d,actor,'item_wood'),wood);assert.equal(d.get('state','npcAutonomy','actions',task.id),undefined);
+ }
+});
+// 整类不变量：完成时人在且清醒是统一判定，与任务种类无关。世界里真实出现的每一种自主任务（行程类与静止类各至少一种），
+// 执行中被移走或失能 -> 完成时判失败、无行动记录、不扣料；全程在场 -> 不因在场被拒（没有失败原因，行动记录在）。
+test('每种自主任务完成时都要执行者在场且清醒：移走或失能判失败，全程在场正常完成',async()=>{
+ const seen=new Map();let diag;
+ for(let day=0;day<5;day++){const {engine,d}=await setup();advance(d,engine,day*1440+600);
+  for(const t of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(t.status==='进行中'&&!seen.has(t.action.kind))seen.set(t.action.kind,{day,id:t.id,itinerary:Boolean(t.itinerary)});}
+ {const {engine,d}=await setup();advance(d,engine,600);const t=Object.values(d.get('state','npcAutonomy','tasks')).find(t=>t.npc===actor);assert.ok(t,'诊断：#7 同场景 600 分时 actor 应有任务');diag=`诊断(#7 同场景 600 分 actor 任务)：kind=${t.action.kind} itinerary=${Boolean(t.itinerary)} autonomyKind.itinerary=${Boolean(autonomyKind(t.action.kind)?.itinerary)}`;}
+ assert.ok([...seen.values()].some(v=>v.itinerary),`世界里应出现行程类自主任务。${diag}`);assert.ok([...seen.keys()].some(k=>k.startsWith('labor_')),`世界里 5 天内应出现 labor_* 行程任务，实际只有：${[...seen.keys()].join(',')}。${diag}`);assert.ok([...seen.values()].some(v=>!v.itinerary),'世界里应出现静止类自主任务');
+ const run=async({day,id},change)=>{const {engine,d}=await setup();advance(d,engine,day*1440+600);const task=d.get('state','npcAutonomy','tasks',id);assert.equal(task.status,'进行中');
+  const materials=task.action.kind==='craft'?engine.byId.get(task.action.recipe).materials.map(m=>[m.item,count(d,task.npc,m.item)]):[];
+  // 先推进到完成前一分钟再改，作息来不及把人走回原处（npc-schedule.mjs:288/292）。
+  advance(d,engine,task.finish-1);
+  if(change==='location')d.set(['state','npcs',task.npc,'location'],d.get('state','npcs',task.npc,'location')==='loc_hw'?'loc_capital':'loc_hw');
+  // 行程类的位置由作息按 market_trip 记录每分钟重写（npc-schedule.mjs:315-322），直接改 location 不构成离开；作息尊重的离开是玩家同行（:309 break，位置不重写）。
+  if(change==='companion')d.set(['state','player','companions'],[task.npc]);
+  if(change==='status')d.set(['state','npcs',task.npc,'status'],'昏迷');
+  advance(d,engine,task.finish);return {d,task,materials};};
+ for(const [kind,seed] of seen){
+  const ok=await run(seed,null);assert.equal(ok.d.get('state','npcAutonomy','tasks',seed.id,'reason'),undefined,`${kind} 全程在场不应被拒`);assert.ok(ok.d.get('state','npcAutonomy','actions',seed.id),`${kind} 全程在场应有行动记录`);
+  for(const change of autonomyKind(kind)?.itinerary?['companion','status']:['location','status']){
+   const {d,task,materials}=await run(seed,change);
+   // 昏迷：validateAction 第二道检查（isPhysicallyDead/状态清单，npc-autonomy.mjs 约 :91）先于完成时在场判定抛出。
+   assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'reason'),{location:'工作完成时人物已离开或不能继续行动',companion:'人物不具备独立行动条件',status:'人物当前无法完成工作'}[change],`${kind} ${change} 失败原因`);assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
+   assert.equal(d.get('state','npcAutonomy','actions',seed.id),undefined,`${kind} 不应产生行动记录`);
+   for(const [item,n] of materials)assert.equal(count(d,task.npc,item),n,`${kind} 不应扣料`);
+  }
  }
 });
 test('NPC 交易双方真实同场才成交，钱和物品守恒，买方无需开店',async()=>{
