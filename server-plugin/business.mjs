@@ -689,14 +689,17 @@ const shelfOf=(d,engine,shop)=>shop.kind==='player'
 // 跟进卡 WATER-1C：玩家柜台以注入方式登记为家户食物来源，并入单一购买次序。
 // 玩家店只在 business.mjs 的 openShops（本文件 :655-670，按租约柜台与 state.inventory 现算）里存在，shop.mjs 不能反向 import business（环），
 // 且玩家店的报价要走柜台、商税与主观报价，household-budget 的来源需要 unitPrice/at/quantity 的预算口径，没有现成读法。
-// 计划读取（read）与成交判定用同一份正午投影文档（居民正午位置、正午分钟）；NPC 店只认计划（计划里没有就不买），玩家店按店型走储备缺口，不随前一件货的结局切换。
+// 计划读取（read）与成交判定用同一份正午投影文档（居民正午位置、正午分钟）。判定只看“这家店是不是计划的来源”（market.offered，来源编号）：
+// 在则按 market.purchases 取这件货的份数（计划里没有就是 0），不在则按储备缺口折份数；不随前一件货的结局切换，也不按店型或编号特判。
+// 不在计划来源里的店目前有玩家店与非原生 NPC 自营商户（openShops :658-665，开门条件在本文件，shop.mjs 不能反向 import 本文件，复制一份开门判定会造成两处口径）；
+// 跟进卡 WATER-1C 覆盖玩家店与非原生自营商户，并入单一购买次序。
 function wants(d,engine,id,item,gaps,t,shop,read){
     const def=engine.byId.get(item),state=d.get('state'),out={quantity:0,severity:0};
     if(def?.nutrition){
         if(!gaps.has(id))gaps.set(id,householdBudget(read,engine,id).resources);
         const plan=gaps.get(id);
         let units=0;
-        if(shop.kind==='npc')units=plan.market.purchases.filter(p=>p.source===shop.id&&p.item===item&&p.at<=t+customerReachMinutes(engine)).reduce((n,p)=>n+p.quantity,0);
+        if(plan.market.offered.includes(shop.id))units=plan.market.purchases.filter(p=>p.source===shop.id&&p.item===item&&p.at<=t+customerReachMinutes(engine)).reduce((n,p)=>n+p.quantity,0);
         else for(const need of ['satiety','hydration']){
             const gain=def.nutrition[need]??0;if(gain<=0||!(plan.procurementShortfall[need]>0))continue;
             units=Math.max(units,Math.ceil(plan.procurementShortfall[need]/gain));

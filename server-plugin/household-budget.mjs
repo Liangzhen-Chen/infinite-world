@@ -342,7 +342,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  const caps=newCaps();
  for(const r of rows)if(r.eatMg>0)caps.take(r.item,{eatMg:r.eatMg,fromOpen:r.fromOpen});
  const otherFood=Object.fromEntries(Object.keys(needs).map(need=>[need,rows.reduce((n,r)=>n+credit(r,r.definition?.nutrition?.[need]??0),0)]));
- const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],freeWater:free,nextFoodAt:nextFood};
+ const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],offered:[...new Set(sources.map(r=>r.source))],freeWater:free,nextFoodAt:nextFood};
  const maxDays=Math.max(0,...horizons.values());
  const deliveries=sources.flatMap(source=>{
   const rows=[source];
