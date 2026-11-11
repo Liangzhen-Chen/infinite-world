@@ -6,20 +6,17 @@
   "draft": {
     "id": "item_fine_sand",
     "description": "旧渡口的洗净细砂，重0.3公斤，已晾干，颗粒匀净，触手松散，不结块，不带潮腥气。可作磨料或填重，不可当食盐使用。",
-    "inspection": "抓一撮捻开，看是否结块、混入草屑虫体，再闻有无腐臭或潮霉味。若砂粒黏手、气味刺鼻，弃之不用。",
+    "inspection": "用手捻开砂粒，看是否结块、混入草屑虫体，再闻有无腐臭或潮霉味。若砂粒黏手、气味刺鼻，弃之不用。",
     "storage": "置于干燥处，避免受潮。"
   },
   "review": {
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a68aa109",
-    "at": "2026-11-10T23:51:54.813Z"
+    "at": "2026-11-11T00:21:17.813Z"
   },
   "errors": [],
-  "warnings": [
-    "description长度为56，进入L4抽读",
-    "storage长度为11，进入L4抽读"
-  ],
+  "warnings": [],
   "feedback": null,
   "manualRewrite": [
     {
@@ -36,6 +33,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a68aa109",
+      "at": "2026-11-11T00:21:17.813Z",
+      "reason": "模糊用量与身体尺度检查（RCFIX）回扫存量命中，整件人工改写；独立严格 L4 已过（审查者 sonnet-l4-a849fd89）",
+      "headCommit": "f8824a7d666042b5506daa879687016d698e6afe",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_fine_sand",
+        "description": "旧渡口的洗净细砂，重0.3公斤，已晾干，颗粒匀净，触手松散，不结块，不带潮腥气。可作磨料或填重，不可当食盐使用。",
+        "inspection": "抓一撮捻开，看是否结块、混入草屑虫体，再闻有无腐臭或潮霉味。若砂粒黏手、气味刺鼻，弃之不用。",
+        "storage": "置于干燥处，避免受潮。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a68aa109",
+        "at": "2026-11-10T23:51:54.813Z"
       },
       "priorAttempts": 1
     }

@@ -1530,7 +1530,7 @@
       ],
       "field": "description",
       "before": "细捻麻线团由织坊以收麻季的韧皮纤维分缕、指捻加捻后绕成团，单股细而匀，捻向一致，表面留有短纤毛刺与轻微麻屑。团径约一掌，重0.15，色呈浅灰黄至土黄，因批次不同略有深浅。用于缝革、结网及细部捆扎，可涂少量蜂蜡减摩；线径与捻度不足以承重，不可替代缆索。",
-      "after": "织坊的细捻麻线团，重0.15公斤，单股细而匀，表面留有短纤毛刺。用于缝革、结网，可涂少量蜂蜡减摩；不等同于承重缆索。",
+      "after": "织坊的细捻麻线团，重0.15公斤，线身细而匀，表面留有短纤毛刺。用于缝革、结网，可涂少量蜂蜡减摩；不等同于承重缆索。",
       "basis": [
         "item_hemp_thread.description 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_hemp_thread.json，指纹 f19e373f473ec1a76f3eb243e92dfaefb5172ac3d5ebbe623554b659cae60814）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
@@ -1567,7 +1567,7 @@
       ],
       "field": "inspection",
       "before": "解开外层数圈，看线股是否均匀、有无并股松脱或明显粗细突变；指腹顺捻向捋过，察觉毛刺与断纤；闻之应有干麻草气，若带霉闷味或见暗斑霉点即弃。整团以手轻捏，应紧实回弹，松散塌陷者不宜用于缝革。",
-      "after": "解开外层数圈，看线股是否均匀、有无并股松脱或明显粗细突变；指腹顺捻向捋过，察觉毛刺与断纤；闻之应有干麻草气，若带霉闷味或见暗斑霉点即弃。",
+      "after": "查看线团外层，看线身是否均匀、有无明显粗细突变；指腹顺捻向捋过，察觉毛刺与断纤；闻之应有干麻草气，若带霉闷味或见暗斑霉点即弃。",
       "basis": [
         "item_hemp_thread.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_hemp_thread.json，指纹 f19e373f473ec1a76f3eb243e92dfaefb5172ac3d5ebbe623554b659cae60814）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
@@ -5069,6 +5069,43 @@
         {
           "receipt": "world/drafts/w3/trades/items/item_pea_spread.json#item_pea_spread",
           "field": "description"
+        }
+      ],
+      "boundary": "只改这一个已审正文字段；同一行的其余字段与其它条目一律不动。新值是 trades 已审批记录里的草稿原文，不新增物品、配方或地点。"
+    },
+    {
+      "id": "item_pea_spread-inspection",
+      "target": "item_pea_spread",
+      "file": "world/meta/items.json",
+      "path": [
+        "inspection"
+      ],
+      "field": "inspection",
+      "before": "取少量摊在木匙背上看色泽与颗粒，暗黄绿且粗细均匀为常。凑近闻有豆香和盐气，无酸馊或糊苦味。表面若起黏丝、渗水或长出霉点，即不可食。",
+      "after": "看泥面色泽与颗粒，暗黄绿且粗细均匀为常。凑近闻有豆香和盐气，无酸馊或糊苦味。表面若起黏丝、渗水或长出霉点，即不可食。",
+      "basis": [
+        "item_pea_spread.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_pea_spread.json，指纹 bdaa1f7eff0ac4f51a61e0662bf49ddb55b4aacbdc04d18697e105443642e260）。",
+        "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
+      ],
+      "facts": {
+        "trades": {
+          "revision": "w3-trades-1",
+          "kind": "items",
+          "record": "world/drafts/w3/trades/items/item_pea_spread.json",
+          "fingerprint": "bdaa1f7eff0ac4f51a61e0662bf49ddb55b4aacbdc04d18697e105443642e260",
+          "attempts": 1,
+          "l4Rejection": false
+        },
+        "authorization": {
+          "approvedBy": "李白（5 元以内纯技术授权，零花费）",
+          "ref": "李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布",
+          "at": "2026-11-10"
+        }
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/trades/items/item_pea_spread.json#item_pea_spread",
+          "field": "inspection"
         }
       ],
       "boundary": "只改这一个已审正文字段；同一行的其余字段与其它条目一律不动。新值是 trades 已审批记录里的草稿原文，不新增物品、配方或地点。"
@@ -9263,7 +9300,7 @@
       ],
       "field": "inspection",
       "before": "先看墨块表面是否开裂、有无霉斑，再闻有无酸败气味；取少量在废纸上试划，看墨线是否均匀、有无砂粒刮笔。",
-      "after": "先看墨面是否起皮、有无霉斑，再闻有无酸败气味；取少量在废纸上试划，看墨线是否均匀、有无砂粒刮笔。",
+      "after": "先看墨面是否起皮、有无霉斑，再闻有无酸败气味；看墨色是否均匀，有无砂粒颗粒感。",
       "basis": [
         "item_soot_ink.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_soot_ink.json，指纹 c292187405fd9b076f91a9782c2298a404d6607839450a12cb9b762638684e48）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
@@ -9337,7 +9374,7 @@
       ],
       "field": "description",
       "before": "青灯酒馆按单煮制的淡瘿染液，取干瘿一枚入石臼捣成粗粒，与两份清水、一份木炭同入炊锅，慢火煮至液色转浅褐，再以亚麻滤布滤去渣滓，得澄清染液一份，重约零点二四。此液只作淡染打底，未掺铁盐，故色浅而偏黄褐，不可与铁胆墨混称。材料缺货时暂停交付。",
-      "after": "青灯酒馆按单煮制的淡瘿染液，取干瘿一枚入石臼捣碎，与两份清水同入炊锅，以一份木炭作燃料慢火煮至液色转浅褐，再以亚麻滤布滤去渣滓，得染液一份，重0.24公斤。此液为淡染液，未加铁盐，色浅而偏黄褐，不称铁胆墨。材料缺货时暂停交付。",
+      "after": "青灯酒馆按单煮制的淡瘿染液，取干瘿入浅腹石臼捣碎，与规定清水同入厚底煮锅，以木炭作燃料慢火煮至液色转浅褐，再以宽口滤布滤去渣滓，得染液一份，重0.24公斤。此液为淡染液，未加铁盐，色浅而偏黄褐，不称铁胆墨。材料缺货时暂停交付。",
       "basis": [
         "item_gall_wash.description 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_gall_wash.json，指纹 79ecaa34b37f951702d3e0d8f9bda8aeb3f86f899d93c702af3bf85c2a92aa44）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
@@ -9374,7 +9411,7 @@
       ],
       "field": "inspection",
       "before": "先看液面有无浮渣与霉点，再嗅其气：正常者带涩木气，无酸腐味。倾少许于白瓷上对光观察，应为均匀浅褐，无沉淀结块。若液色发黑或生絮状物，即弃之不用。",
-      "after": "先看液面有无浮渣与霉点，再嗅其气：正常者带涩木气，无酸腐味。取少许对光观察，应为均匀浅褐，无沉淀结块。若液色发黑或生絮状物，即弃之不用。",
+      "after": "先看液面有无浮渣与霉点，再嗅其气：正常者带涩木气，无酸腐味。对光观察，应为均匀浅褐，无沉淀结块。若液色发黑或生絮状物，即弃之不用。",
       "basis": [
         "item_gall_wash.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_gall_wash.json，指纹 79ecaa34b37f951702d3e0d8f9bda8aeb3f86f899d93c702af3bf85c2a92aa44）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
@@ -9596,7 +9633,7 @@
       ],
       "field": "inspection",
       "before": "取少量摊于白纸，看是否夹杂粗粒、石屑或异色杂质；嗅之应无霉味、油味与酸败气。受潮结块或气味异常者不可用于木面与皮边。",
-      "after": "取少量摊开，看是否夹杂粗粒、石屑或异色杂质；嗅之应无霉味、油味与酸败气。受潮结块或气味异常者不可用于木面与皮边。",
+      "after": "看是否夹杂粗粒、石屑或异色杂质；嗅之应无霉味、油味与酸败气。受潮结块或气味异常者不可用于木面与皮边。",
       "basis": [
         "item_polishing_powder.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_polishing_powder.json，指纹 3e2491f779b1ac8c790761c705abc0048df10b9104ee196a8f51e86ce5b49505）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
@@ -11948,13 +11985,13 @@
       "id": "item_hemp_thread-description",
       "target": "item_hemp_thread",
       "field": "description",
-      "value": "织坊的细捻麻线团，重0.15公斤，单股细而匀，表面留有短纤毛刺。用于缝革、结网，可涂少量蜂蜡减摩；不等同于承重缆索。"
+      "value": "织坊的细捻麻线团，重0.15公斤，线身细而匀，表面留有短纤毛刺。用于缝革、结网，可涂少量蜂蜡减摩；不等同于承重缆索。"
     },
     {
       "id": "item_hemp_thread-inspection",
       "target": "item_hemp_thread",
       "field": "inspection",
-      "value": "解开外层数圈，看线股是否均匀、有无并股松脱或明显粗细突变；指腹顺捻向捋过，察觉毛刺与断纤；闻之应有干麻草气，若带霉闷味或见暗斑霉点即弃。"
+      "value": "查看线团外层，看线身是否均匀、有无明显粗细突变；指腹顺捻向捋过，察觉毛刺与断纤；闻之应有干麻草气，若带霉闷味或见暗斑霉点即弃。"
     },
     {
       "id": "item_hemp_thread-storage",
@@ -12519,6 +12556,12 @@
       "target": "item_pea_spread",
       "field": "description",
       "value": "青灯酒馆当日小批煮制的豌豆泥。干豌豆在规定清水内泡软，先以木刨花引火，再煮透，用木匙压成粗泥，刮净锅底焦点，加盐，不掺额外油脂。成品呈暗黄绿色，质地稠。"
+    },
+    {
+      "id": "item_pea_spread-inspection",
+      "target": "item_pea_spread",
+      "field": "inspection",
+      "value": "看泥面色泽与颗粒，暗黄绿且粗细均匀为常。凑近闻有豆香和盐气，无酸馊或糊苦味。表面若起黏丝、渗水或长出霉点，即不可食。"
     },
     {
       "id": "item_pea_spread-storage",
@@ -13202,7 +13245,7 @@
       "id": "item_soot_ink-inspection",
       "target": "item_soot_ink",
       "field": "inspection",
-      "value": "先看墨面是否起皮、有无霉斑，再闻有无酸败气味；取少量在废纸上试划，看墨线是否均匀、有无砂粒刮笔。"
+      "value": "先看墨面是否起皮、有无霉斑，再闻有无酸败气味；看墨色是否均匀，有无砂粒颗粒感。"
     },
     {
       "id": "item_soot_ink-storage",
@@ -13214,13 +13257,13 @@
       "id": "item_gall_wash-description",
       "target": "item_gall_wash",
       "field": "description",
-      "value": "青灯酒馆按单煮制的淡瘿染液，取干瘿一枚入石臼捣碎，与两份清水同入炊锅，以一份木炭作燃料慢火煮至液色转浅褐，再以亚麻滤布滤去渣滓，得染液一份，重0.24公斤。此液为淡染液，未加铁盐，色浅而偏黄褐，不称铁胆墨。材料缺货时暂停交付。"
+      "value": "青灯酒馆按单煮制的淡瘿染液，取干瘿入浅腹石臼捣碎，与规定清水同入厚底煮锅，以木炭作燃料慢火煮至液色转浅褐，再以宽口滤布滤去渣滓，得染液一份，重0.24公斤。此液为淡染液，未加铁盐，色浅而偏黄褐，不称铁胆墨。材料缺货时暂停交付。"
     },
     {
       "id": "item_gall_wash-inspection",
       "target": "item_gall_wash",
       "field": "inspection",
-      "value": "先看液面有无浮渣与霉点，再嗅其气：正常者带涩木气，无酸腐味。取少许对光观察，应为均匀浅褐，无沉淀结块。若液色发黑或生絮状物，即弃之不用。"
+      "value": "先看液面有无浮渣与霉点，再嗅其气：正常者带涩木气，无酸腐味。对光观察，应为均匀浅褐，无沉淀结块。若液色发黑或生絮状物，即弃之不用。"
     },
     {
       "id": "item_gall_wash-storage",
@@ -13256,7 +13299,7 @@
       "id": "item_polishing_powder-inspection",
       "target": "item_polishing_powder",
       "field": "inspection",
-      "value": "取少量摊开，看是否夹杂粗粒、石屑或异色杂质；嗅之应无霉味、油味与酸败气。受潮结块或气味异常者不可用于木面与皮边。"
+      "value": "看是否夹杂粗粒、石屑或异色杂质；嗅之应无霉味、油味与酸败气。受潮结块或气味异常者不可用于木面与皮边。"
     },
     {
       "id": "item_polishing_powder-storage",
@@ -17292,6 +17335,33 @@
         {
           "receipt": "world/drafts/w3/trades/items/item_pea_spread.json#item_pea_spread",
           "field": "description"
+        }
+      ]
+    },
+    {
+      "sourceFacts": [
+        "item_pea_spread.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_pea_spread.json，指纹 bdaa1f7eff0ac4f51a61e0662bf49ddb55b4aacbdc04d18697e105443642e260）。",
+        "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
+      ],
+      "referencedFacts": {
+        "trades": {
+          "revision": "w3-trades-1",
+          "kind": "items",
+          "record": "world/drafts/w3/trades/items/item_pea_spread.json",
+          "fingerprint": "bdaa1f7eff0ac4f51a61e0662bf49ddb55b4aacbdc04d18697e105443642e260",
+          "attempts": 1,
+          "l4Rejection": false
+        },
+        "authorization": {
+          "approvedBy": "李白（5 元以内纯技术授权，零花费）",
+          "ref": "李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布",
+          "at": "2026-11-10"
+        }
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/trades/items/item_pea_spread.json#item_pea_spread",
+          "field": "inspection"
         }
       ]
     },

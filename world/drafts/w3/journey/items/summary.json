@@ -4524,7 +4524,7 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "46aa785892723ef3a0ae27844996d13036c70178e31289535db2ecf4d011c2cd",
+      "fingerprint": "2bb4614e918c3045455ab642fa3ff432e97315e4d9f89bf89b25588c09f9ecce",
       "count": 37,
       "passed": 37,
       "ids": [
@@ -4578,7 +4578,6 @@
         "item_cucumber",
         "item_garlic",
         "item_dill",
-        "item_mutton",
         "item_butter",
         "item_cream",
         "item_hard_cheese",
@@ -4613,9 +4612,9 @@
       ],
       "l4": {
         "approved": true,
-        "reviewer": "sonnet-l4-a1f0bc43",
-        "by": "sonnet-l4-a1f0bc43",
-        "reviewedAt": "2026-11-10T23:52:01.727Z",
+        "reviewer": "sonnet-l4-a849fd89",
+        "by": "sonnet-l4-a849fd89",
+        "reviewedAt": "2026-11-11T00:21:18.227Z",
         "notes": [
           {
             "id": "item_wheat_grain",
@@ -4635,11 +4634,6 @@
           {
             "id": "item_parsnip",
             "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
-            "by": "sonnet-l4-a1f0bc43"
-          },
-          {
-            "id": "item_beet",
-            "note": "批。J2 严格 L4 只读复读第1部分逐句对骨架读过，按第15条重判后仍批，未改写。",
             "by": "sonnet-l4-a1f0bc43"
           },
           {
@@ -4665,11 +4659,6 @@
           {
             "id": "item_dill",
             "note": "批。J2 严格 L4 只读复读第1部分逐句对骨架读过，按第15条重判后仍批，未改写。",
-            "by": "sonnet-l4-a1f0bc43"
-          },
-          {
-            "id": "item_mutton",
-            "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
             "by": "sonnet-l4-a1f0bc43"
           },
           {
@@ -4801,6 +4790,16 @@
             "id": "item_bone_blank",
             "note": "北林边有出处",
             "by": "sonnet-l4-a1f0bc43"
+          },
+          {
+            "id": "item_beet",
+            "note": "批。整件读：公用果园合origin；带皮甜菜根、洗削后煮软、红汁可染布并非止血药出自 use；0.4公斤等于weight；“表皮暗红，根尾细长”为外观描写，i“捏根尾”呼应，无骨架外器具；storage 避堆压与潮湿，10天合骨架",
+            "by": "sonnet-l4-a849fd89"
+          },
+          {
+            "id": "item_mutton",
+            "note": "批。整件重读：细筋、薄脂、肌理已删；“生肉与熟食分放，煮透后食用”骨架 use 原文就有，有依据；青灯酒馆合origin；0.4公斤等于weight；“肉色鲜红”为外观描写按一致口径放过；storage 分放出自 use，1天合骨架",
+            "by": "sonnet-l4-a849fd89"
           }
         ]
       },
@@ -4897,12 +4896,214 @@
               "item_bone_blank"
             ]
           }
+        },
+        {
+          "approved": false,
+          "reviewer": "sonnet-l4-a1f0bc43",
+          "by": "sonnet-l4-a1f0bc43",
+          "reviewedAt": "2026-11-10T23:52:01.727Z",
+          "notes": [
+            {
+              "id": "item_wheat_grain",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_broad_bean",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_lentil",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_parsnip",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_beet",
+              "note": "批。J2 严格 L4 只读复读第1部分逐句对骨架读过，按第15条重判后仍批，未改写。",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_pear",
+              "note": "复读：已删“久放会转绵”，三字段逐句读过，重量、保存期7天与骨架一致，无骨架外器具、包装、制作痕迹",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_plum",
+              "note": "批。J2 严格 L4 只读复读第1部分逐句对骨架读过，按第15条重判后仍批，未改写。",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_cucumber",
+              "note": "梅绫与世界设定一致（npc_hw_meiling）；无尺寸与数量越界",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_garlic",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_dill",
+              "note": "批。J2 严格 L4 只读复读第1部分逐句对骨架读过，按第15条重判后仍批，未改写。",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_mutton",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_pork_fat",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_butter",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_cream",
+              "note": "容器须使用者另备，如实交代",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_hard_cheese",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_walnut",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_mustard_seed",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_poppy_seed",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_caraway_seed",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_dry_mushroom",
+              "note": "青灯后厨有出处；“卷边”为干片自然形态",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_steel_bar",
+              "note": "origin 为 bld_hw_forge，铁匠铺有出处",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_iron_wire",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_brass_strip",
+              "note": "origin 为 loc_bs，只写白石镇，无铁匠铺；“集市来的”口语稍生硬但不算病句",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_silver_wire",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_tin_sheet",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_ash_stave",
+              "note": "批。三字段逐句对骨架：重1.5公斤、风干、无横裂段制长柄、未制成武器均见 use；无骨架外尺寸、数量；storage 干燥通风、避雨避潮、远离炉火、避免受压弯曲，均由木材推出；shelfLifeDays 为空未写保存期；无包装与制作痕迹（第8、9、14、15条通过）",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_beech_blank",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_cork_sheet",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_linen_canvas",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_wool_felt_sheet",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_goat_skin",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_horsehair_bundle",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_bristle_bundle",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_quill_set",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_reed_bundle",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_shell_button_blank",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_bone_blank",
+              "note": "北林边有出处",
+              "by": "sonnet-l4-a1f0bc43"
+            }
+          ],
+          "rejection": {
+            "by": "主会话",
+            "at": "2026-11-11T00:21:15.970Z",
+            "reason": "新增确定性检查（模糊用量、身体尺度，L4 清单第 8 条）回扫存量命中，严格 L4 曾漏判；整件人工改写，独立严格 L4 已过。",
+            "ids": [
+              "item_beet",
+              "item_mutton"
+            ]
+          }
         }
       ]
     },
     {
       "index": 1,
-      "fingerprint": "4ea67c0ba56c51e180ec37aacfcc03558dd79bc2ae3576637d94f14962b97a52",
+      "fingerprint": "3e0e451b56a9b4c9b7fe55b5bd3c55c4e1ab9eeaba062816a230274ac6a28058",
       "count": 37,
       "passed": 37,
       "ids": [
@@ -4955,7 +5156,6 @@
         "item_pine_pitch",
         "item_soap_flake",
         "item_flour_paste_powder",
-        "item_fine_sand",
         "item_slate_splinter",
         "item_linen_wick",
         "item_steel_dividers",
@@ -4995,9 +5195,9 @@
       ],
       "l4": {
         "approved": true,
-        "reviewer": "sonnet-l4-a2176b4a",
-        "by": "sonnet-l4-a2176b4a",
-        "reviewedAt": "2026-11-10T23:52:02.115Z",
+        "reviewer": "sonnet-l4-a849fd89",
+        "by": "sonnet-l4-a849fd89",
+        "reviewedAt": "2026-11-11T00:21:18.905Z",
         "notes": [
           {
             "id": "item_horn_blank",
@@ -5031,11 +5231,6 @@
           },
           {
             "id": "item_flour_paste_powder",
-            "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
-            "by": "sonnet-l4-a1f0bc43"
-          },
-          {
-            "id": "item_fine_sand",
             "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
             "by": "sonnet-l4-a1f0bc43"
           },
@@ -5183,6 +5378,11 @@
             "id": "item_leather_strop",
             "note": "description/inspection/storage 逐句对骨架读：重量换算与骨架一致带单位，无骨架外尺寸、数量、器具、容器、制作痕迹，名称有出处，storage 仅干燥、避潮、避碰、避压等由材质推得的一般建议；熟革绷在木板上与骨架一致",
             "by": "sonnet-l4-a2176b4a"
+          },
+          {
+            "id": "item_fine_sand",
+            "note": "批。整件读：旧渡口合origin；洗净、晾干、可作磨料或填重、不当食盐出自 use；0.3公斤等于weight；i 只用手捻、闻，无器具；shelfLifeDays 为空，storage 未写期限",
+            "by": "sonnet-l4-a849fd89"
           }
         ]
       },
@@ -5280,6 +5480,207 @@
               "item_rope_fid",
               "item_honing_stone",
               "item_leather_strop"
+            ]
+          }
+        },
+        {
+          "approved": false,
+          "reviewer": "sonnet-l4-a2176b4a",
+          "by": "sonnet-l4-a2176b4a",
+          "reviewedAt": "2026-11-10T23:52:02.115Z",
+          "notes": [
+            {
+              "id": "item_horn_blank",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_red_dyewood",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_alum_grain",
+              "note": "严辙与设定一致",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_clean_lard",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_pine_pitch",
+              "note": "再复读：只留北林边、吴朔库存、每块0.1公斤、已熬稠成块、受热变软、接缝薄封、不保证高压密封；“熬稠松脂块”见名称，其余见 use，无气泡树皮等痕迹，保存期180天一致，三字段通过",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_soap_flake",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_flour_paste_powder",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_fine_sand",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_slate_splinter",
+              "note": "三字段逐句读过：名称、数量、保存期与骨架一致，无骨架外器具、包装、制作痕迹，storage 仅材质一般建议",
+              "by": "sonnet-l4-a1f0bc43"
+            },
+            {
+              "id": "item_linen_wick",
+              "note": "description/inspection/storage 逐句对骨架读：重量换算与骨架一致带单位，无骨架外尺寸、数量、器具、容器、制作痕迹，名称有出处，storage 仅干燥、避潮、避碰、避压等由材质推得的一般建议；保存期365天与骨架一致",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_steel_dividers",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_marking_gauge",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_try_square",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_drawknife",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_spokeshave",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_brace_drill",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_hollow_gouge",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_veining_chisel",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_chasing_punch",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_jeweler_pliers",
+              "note": "description/inspection/storage 逐句对骨架读：重量换算与骨架一致带单位，无骨架外尺寸、数量、器具、容器、制作痕迹，名称有出处，storage 仅干燥、避潮、避碰、避压等由材质推得的一般建议",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_jeweler_saw",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_ingot_mold",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置；inspection「砂眼」为待查缺陷，非声称制作痕迹，放行",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_swage_block",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_fuller",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_riveting_hammer",
+              "note": "复审整件重读：重量与骨架一致带单位，无骨架外尺寸、数量、器具、容器、制作痕迹，名称有出处，storage 仅为由材质推得的一般建议；已无柄与炉火表述，避潮防锈由钢材推得",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_stone_point",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_mason_chisel",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_plumb_bob",
+              "note": "description/inspection/storage 逐句对骨架读：重量换算与骨架一致带单位，无骨架外尺寸、数量、器具、容器、制作痕迹，名称有出处，storage 仅干燥、避潮、避碰、避压等由材质推得的一般建议",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_line_level",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置；已交代清水另备，无保存期断言",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_sighting_rule",
+              "note": "description/inspection/storage 逐句对骨架读：重量换算与骨架一致带单位，无骨架外尺寸、数量、器具、容器、制作痕迹，名称有出处，storage 仅干燥、避潮、避碰、避压等由材质推得的一般建议",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_button_shank_tool",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_fine_sewing_needle",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_loop_turner",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_netting_needle",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_rope_fid",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_honing_stone",
+              "note": "逐条读 description/inspection/storage：数字与骨架一致带单位，无骨架外器具、容器、尺寸、制作痕迹；名称（白石镇/织坊/铁匠铺/小学堂/青灯酒馆）有出处；storage 仅干燥、避潮、避碰、避重压等可由材质推得的一般建议，无期限处置",
+              "by": "sonnet-l4-a2176b4a"
+            },
+            {
+              "id": "item_leather_strop",
+              "note": "description/inspection/storage 逐句对骨架读：重量换算与骨架一致带单位，无骨架外尺寸、数量、器具、容器、制作痕迹，名称有出处，storage 仅干燥、避潮、避碰、避压等由材质推得的一般建议；熟革绷在木板上与骨架一致",
+              "by": "sonnet-l4-a2176b4a"
+            }
+          ],
+          "rejection": {
+            "by": "主会话",
+            "at": "2026-11-11T00:21:15.970Z",
+            "reason": "新增确定性检查（模糊用量、身体尺度，L4 清单第 8 条）回扫存量命中，严格 L4 曾漏判；整件人工改写，独立严格 L4 已过。",
+            "ids": [
+              "item_fine_sand"
             ]
           }
         }

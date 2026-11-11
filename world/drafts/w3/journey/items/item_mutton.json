@@ -5,7 +5,7 @@
   "attempts": 2,
   "draft": {
     "id": "item_mutton",
-    "description": "青灯酒馆经手的去骨羊肉，重0.4公斤，肉色鲜红，肌理间夹少量细筋，外层覆一层薄脂。生肉与熟食分放，煮透后食用。",
+    "description": "青灯酒馆经手的去骨羊肉，重0.4公斤，肉色鲜红。生肉与熟食分放，煮透后食用。",
     "inspection": "翻看肉块两面，确认无灰绿斑、无黏手汁液，指压后凹陷能回弹，闻之只有生肉淡腥，无异臭。",
     "storage": "置于阴凉处，生肉与熟食分放；保存期1天。"
   },
@@ -13,13 +13,10 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a68aa109",
-    "at": "2026-11-10T23:51:54.813Z"
+    "at": "2026-11-11T00:21:17.813Z"
   },
   "errors": [],
-  "warnings": [
-    "description长度为55，进入L4抽读",
-    "storage长度为20，进入L4抽读"
-  ],
+  "warnings": [],
   "feedback": null,
   "manualRewrite": [
     {
@@ -36,6 +33,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 2
+    },
+    {
+      "by": "sonnet-writer-a68aa109",
+      "at": "2026-11-11T00:21:17.813Z",
+      "reason": "模糊用量与身体尺度检查（RCFIX）回扫存量命中，整件人工改写；独立严格 L4 已过（审查者 sonnet-l4-a849fd89）",
+      "headCommit": "f8824a7d666042b5506daa879687016d698e6afe",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_mutton",
+        "description": "青灯酒馆经手的去骨羊肉，重0.4公斤，肉色鲜红，肌理间夹少量细筋，外层覆一层薄脂。生肉与熟食分放，煮透后食用。",
+        "inspection": "翻看肉块两面，确认无灰绿斑、无黏手汁液，指压后凹陷能回弹，闻之只有生肉淡腥，无异臭。",
+        "storage": "置于阴凉处，生肉与熟食分放；保存期1天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a68aa109",
+        "at": "2026-11-10T23:51:54.813Z"
       },
       "priorAttempts": 2
     }

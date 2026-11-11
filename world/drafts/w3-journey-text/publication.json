@@ -1,6 +1,6 @@
 {
   "revision": "w3-journey-text-1",
-  "publishedAt": "2026-11-11T00:07:02.478Z",
+  "publishedAt": "2026-11-11T00:21:34.837Z",
   "entries": [
     {
       "id": "item_wheat_grain-description",
@@ -157,6 +157,48 @@
       ]
     },
     {
+      "id": "item_beet-description",
+      "target": "item_beet",
+      "file": "world/meta/items.json",
+      "field": "description",
+      "before": "公用果园当季收下的带皮甜菜根，球身略扁，顶芽侧留着短叶柄残茬，根尾细长。表皮暗红带土色横纹，附少量干土。单颗四百克，洗削后煮软可食，红汁能染布，并非止血药。",
+      "after": "公用果园当季收下的带皮甜菜根，重0.4公斤，表皮暗红，根尾细长。洗削后煮软可食，红汁可染布，并非止血药。",
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/journey/items/item_beet.json#item_beet",
+          "field": "description"
+        }
+      ]
+    },
+    {
+      "id": "item_beet-inspection",
+      "target": "item_beet",
+      "file": "world/meta/items.json",
+      "field": "inspection",
+      "before": "翻看球身有无霉斑、软陷或虫蛀孔，捏根尾判断是否发硬；再看叶柄残茬是否干枯。",
+      "after": "翻看根身有无霉斑、软陷或虫蛀孔，捏根尾判断是否发硬。",
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/journey/items/item_beet.json#item_beet",
+          "field": "inspection"
+        }
+      ]
+    },
+    {
+      "id": "item_beet-storage",
+      "target": "item_beet",
+      "file": "world/meta/items.json",
+      "field": "storage",
+      "before": "置于阴凉通风处，避免堆压与潮湿；自采收起至多存放10天，超期弃用。",
+      "after": "置于阴凉通风处，避免堆压与潮湿；保存期10天。",
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/journey/items/item_beet.json#item_beet",
+          "field": "storage"
+        }
+      ]
+    },
+    {
       "id": "item_pear-description",
       "target": "item_pear",
       "file": "world/meta/items.json",
@@ -274,7 +316,7 @@
       "file": "world/meta/items.json",
       "field": "description",
       "before": "青灯酒馆经手的去骨羊肉，整块约四百克，取自当季集市货源。肉面留有剔骨刀走过的浅痕，肌理间夹少量细筋，边缘修整平齐，外层覆一层薄脂。生肉与熟食分放，煮透后食用。",
-      "after": "青灯酒馆经手的去骨羊肉，重0.4公斤，肉色鲜红，肌理间夹少量细筋，外层覆一层薄脂。生肉与熟食分放，煮透后食用。",
+      "after": "青灯酒馆经手的去骨羊肉，重0.4公斤，肉色鲜红。生肉与熟食分放，煮透后食用。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/journey/items/item_mutton.json#item_mutton",
@@ -1646,7 +1688,7 @@
       "file": "world/meta/items.json",
       "field": "inspection",
       "before": "解开袋口，抓一撮捻开，看是否结块、混入草屑虫体；再闻有无腐臭或潮霉味。若砂粒黏手、气味刺鼻，弃之不用。",
-      "after": "抓一撮捻开，看是否结块、混入草屑虫体，再闻有无腐臭或潮霉味。若砂粒黏手、气味刺鼻，弃之不用。",
+      "after": "用手捻开砂粒，看是否结块、混入草屑虫体，再闻有无腐臭或潮霉味。若砂粒黏手、气味刺鼻，弃之不用。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/journey/items/item_fine_sand.json#item_fine_sand",
