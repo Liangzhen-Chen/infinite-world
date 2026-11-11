@@ -352,7 +352,7 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     // 覆盖原有玩家自动成交保证；不改世界或货架。该固定种子下玩家/原生店排序骰值为
     // 3175393251 < 3453520749，玩家先服务；上一例保留原种子的原生店先服务分支。
     const A='npc_hw_xuling',f=await openShop({coins:{[A]:40},campaignSeed:'w4-player-flow'});
-    const startCoins=f.document.state.npcs[A].coins;
+    const startCoins=f.document.state.npcs[A].coins,pre=structuredClone(f.document);
     await waitPastMidnight(f,'w4-player-day');
     const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===f.business);
     // 新值：一人60饱食÷口粮每份饱腹26（由配方能量推导，原手写30）=ceil(2.31)=3份；3份≤零售阈值5，单价=基价3×供需比26/47(=0.553191，已离开下限.5)，
@@ -374,8 +374,12 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     // 规律（WATER-1A）：徐玲住处往返 6 分钟，当日有水可免费取，水分缺口由免费水扣除；买完口粮后饱腹缺口为 0，她就没有任何需要用钱补的营养缺口，
     // 烙饼虽带水分（item-class.mjs:233 配方派生，水分 >0），也不为水分买。旧版此处断言“她因水分另买烙饼”，那正是被修正的行为。
     const nativeVisits=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop!==f.business).flatMap(r=>r.visits.filter(v=>v.npc===A));
-    // WATER-1B 后烙饼水分与所有食物同一条规则：重量×含水率×100/kg 低于 12.5 的门槛记 0，烙饼不再带水分；她不买烙饼现在既因有免费水，也因烙饼本身不供水分。
-    assert.ok(!(f.engine.byId.get('item_oat_flatbread').nutrition?.hydration>0));
+    // 前提（从引擎读）：徐玲正午有水分需求，且被免费水扣光（freeWater.hydration>0，水分缺口 0）；引擎里确有水分>0 的货（牛乳、清水等）。
+    // 本店货架（面包、烙饼、口粮）WATER-1B 后都不供水分（烙饼 0.12kg 过不了 12.5 门槛），所以“不为水分买”不能靠烙饼验证；改为对引擎里每件水分>0 的货断言：
+    // 以她的预算缺口，任何店卖它们她都不会为水分下单（wants 对该货的数量 = ceil(水分缺口÷水分) = 0）。
+    const plan=householdBudget(noonRead(f,pre,A),f.engine,A).resources,hydrating=f.engine.world.items.filter(i=>i.nutrition?.hydration>0);
+    assert.ok(plan.market.freeWater.hydration>0&&hydrating.length>0);
+    for(const g of hydrating)assert.equal(Math.ceil(plan.procurementShortfall.hydration/g.nutrition.hydration),0,g.id);
     // 前提（从数据读）：徐玲住处到水源地点的往返步行分钟 ≤ nearWaterRoundTripMinutes，走 near 分支，当日有水可免费取。
     const leg=f.engine.world.routes.find(r=>[r.from,r.to].includes('bld_hw_riverhome')&&[r.from,r.to].includes('loc_hw'));
     assert.ok(2*Math.ceil(leg.lengthKm*60/f.engine.rules.travel.walkKmh)<=f.engine.rules.householdSubsistence.nearWaterRoundTripMinutes);

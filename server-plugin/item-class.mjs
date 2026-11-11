@@ -196,8 +196,8 @@ export function deriveItemAttributes(world){
  const drinkLike=id=>has(id,'food')&&isLiquid(id);
  // 食物的水分（液体与固体、有配方与无配方同一条规则；手写 nutrition.hydration 的物品不走这里，如参照水本身）：
  //   水分 = 重量(kg) × 含水率 × 每公斤水的水分值；一份不够解渴（低于 drinkMin）记 0，液体与固体同一门槛。
- //   含水率：materialProps.moisture（物品自己的出处，或所属类别行）；有配方的产物，含水量由原料派生：产物含水量(kg) = Σ(原料含水量×用量) × 配方保留率 ÷ 产出份数
- //   （保留率、产出份数与饱腹的配方口径同一份，见 content()），原料自己也是配方产物时递归取其含水量；再走同一条水分规则。有配方时以配方为准（与饱腹一致：content() 里“配方优先于 base()”的既有次序），没有配方才用物品自己的含水率；两者都没有则为 0（不造数据；清单见 tools/no-moisture-list.mjs）。
+ //   含水率：materialProps.moisture（物品自己的出处，或所属类别行）；有配方的产物，含水量由原料按质量守恒派生（见 content() 配方行：成品质量 − 原料干物质，不超过原料带入的水），
+ //   原料自己也是配方产物时递归取其含水量；再走同一条水分规则。有配方时以配方为准（与饱腹一致：content() 里“配方优先于 base()”的既有次序），没有配方才用物品自己的含水率；两者都没有则为 0（不造数据；清单见 tools/no-moisture-list.mjs）。
  //   含水率有数据而结果仍为 0（如面包 0.15kg×0.36×100=5.4＜12.5）是门槛所致，不是缺数据。
  //   每公斤水的水分值 = 参照水（world/meta/items.json 第 1 行 item_water：weight 0.25、手写 hydration 25，含水 1，见 world/meta/mechanics/material-props.json 的 item_water 行）
  //   的 hydration ÷（weight × 含水率）= 25 ÷ 0.25 = 100/kg；该一次饮水 25 与 world/rules/tables/balance/body.json:11 的 drinkGain 25 同值。常数不另编，从世界里的参照水推出。
@@ -238,10 +238,12 @@ export function deriveItemAttributes(world){
    if(inputs.some(x=>x.c===null))continue;
    const hot=heated(r),keep=1-(hot?loss.heated:loss.unheated),q=r.output.quantity;
    const row={satiety:inputs.reduce((n,x)=>n+x.c.satiety*x.m.amount,0)*keep/q,...(()=>{
-     // 含水量不得超过成品自身质量（含水率 ≤ 1）：加工中多余的水分蒸发或滤出（沥乳清、熬汤收汁），质量守恒在规则层封顶，整类生效。
-     // 成品没有正的质量数据时含水量无从封顶：记为未知（水分 0），不沿用未封顶的原料推算值。
-     // 保留率 keep 沿用饱腹的加工损耗参数 nutrition.processLoss（crafting.json:16），同一加工口径；其出处原为营养守恒，用作水的保留率属延伸，待 WATER-1B 复核。
-     const known=inputs.some(x=>x.c.waterKnown)&&item.weight>0,water=known?Math.min(item.weight,inputs.reduce((n,x)=>n+x.c.water*x.m.amount,0)*keep/q):0;
+     // 配方产物的含水量由质量守恒定：成品的干物质（原料干物质之和 ÷ 产出份数，原料干物质 = 原料质量 − 原料含水量，非食物原料如燃料不进成品）不会变，
+     // 成品质量 − 干物质 即为它至多含的水；再不超过原料带进来的水（不会凭空生水）：含水量 = clamp(成品质量 − Σ原料干物质÷份数, 0, Σ原料含水量÷份数)。
+     // 烤脆、风干的成品（投入质量远大于成品质量）因此近于干，汤、乳、凝块按成品自重守恒；不再借用营养损耗率 processLoss（那是营养守恒的依据，不是水的质量依据）。
+     // 成品没有正的质量数据，或原料含水量全未知时，含水量无从推出：记为未知（水分 0），不静默沿用别的推算值。
+     const dry=inputs.reduce((n,x)=>n+(x.c.inedible?0:Math.max(0,(byId.get(x.m.item)?.weight??0)-x.c.water)*x.m.amount),0)/q,wet=inputs.reduce((n,x)=>n+x.c.water*x.m.amount,0)/q;
+     const known=inputs.some(x=>x.c.waterKnown)&&item.weight>0,water=known?Math.min(wet,Math.max(0,item.weight-dry)):0;
      return {hydration:hydrationOf(water,known),water,waterKnown:known};
     })(),
     raw:!hot&&inputs.some(x=>x.c.raw),recipe:r.id,heated:hot};
