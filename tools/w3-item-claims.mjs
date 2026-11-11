@@ -39,18 +39,6 @@ function strings(value, out = []) {
   return out;
 }
 
-// 程度补语：模糊词紧跟在一般动词后、且在分句末（回弹少许。变软些许，），说的是变化的程度，不是材料用量（第 8 条只管材料用量、尺寸）。
-// 前面是取用、附着、含有类动词（取少许。附少量。含些许。）仍是在说用量，照判；前面没有字（“少许。”）也照判。
-const AMOUNT_VERB_BEFORE = /(?:取|加|放|撒|倒|滴|抹|涂|蘸|添|用|入|盛|舀|抓|掺|拌|施|敷|配|备|附|夹|带|含|有|剩|余|留|沾|粘|混|掺入|兑)$/u;
-function degreeComplement(text, match) {
-  // 只有程度义的词（少许、些许、少量、一些、一点……）能作补语；“数圈、几匝”是计数，不在此列。
-  if (/^[数几]/u.test(match[0])) return false;
-  const before = text.slice(0, match.index), after = text.slice(match.index + match[0].length);
-  if (!/^(?:[，。；！？、\n]|$)/u.test(after)) return false;
-  const prev = before.at(-1);
-  return prev !== undefined && /\p{Script=Han}/u.test(prev) && !AMOUNT_VERB_BEFORE.test(before);
-}
-
 function provenanceText(entry, context) {
   const catalog = context?.catalog ?? [];
   const byId = new Map(catalog.map((item) => [item.id, item]));
@@ -68,10 +56,8 @@ export function amountIssues(text, supplied = '') {
     if (supplied.includes(raw)) return;
     errors.push(`${kind}「${raw}」（${text.slice(Math.max(0, index - 6), index + raw.length + 6).trim()}）：骨架和引用事实里没有。修复：删去，不写模糊用量、身体尺度和骨架外尺寸；材料用量只写骨架份数或不写`);
   };
-  for (const match of text.matchAll(VAGUE_AMOUNT)) {
-    if (degreeComplement(text, match)) continue;
-    give(match[0], match.index, '写了模糊用量');
-  }
+  // 不设“程度补语”豁免：分不出“回弹少许”和“放盐少许”的词形规则只能靠动词词表，属特判；骨架外的模糊幅度（回弹少许）同样是骨架没有的量，按第 8 条一并判。
+  for (const match of text.matchAll(VAGUE_AMOUNT)) give(match[0], match.index, '写了模糊用量');
   for (const match of text.matchAll(BODY_SCALE)) give(match[0], match.index, '写了身体尺度');
   for (const match of text.matchAll(METRIC_LENGTH)) give(match[0], match.index, '写了骨架外尺寸');
   for (const quantity of quantitiesIn(text)) if (SMALL_VOLUME_DIMS.has(quantity.dim)) give(quantity.raw, quantity.index, '写了骨架外尺寸或用量');
@@ -85,7 +71,8 @@ export function amountIssues(text, supplied = '') {
 // 人名店名词形。姓只取不与常见名词同形的一批（不取石、米、马、羊、白、黄、林、谷、方、水、花、金、云、山、车、胡、杨 等）。
 const SURNAME = '赵钱孙李周吴郑王冯陈蒋沈韩朱秦许何吕施张曹严魏姜谢邹苏潘葛彭鲁韦昌苗俞任袁柳鲍唐费薛倪殷罗郝傅顾孟穆萧尹姚邵毛宋熊纪舒屈项祝董杜阮季贾童郭蔡凌霍卢莫丁邓崔龚程邢裴陆翁荀惠焦巴侯刘黎蒲卓蒙乔庄';
 const PERSON_SHOP = [
-  new RegExp(`[老小][${SURNAME}](?=[，。；、：的家铺店坊匠师说传做制打造曾]|$)`, 'gu'),
+  // “老/小+姓”只在后面紧跟人或店的语境字时算（老张家、老陈说、小李打造）；句末、标点、“的”后跟都不算，否则“切老姜”“付小钱”“老姜的辣味”会误报。
+  new RegExp(`[老小][${SURNAME}](?=[家铺店坊匠师说传做制打造曾])`, 'gu'),
   new RegExp(`[${SURNAME}](?:师傅|掌柜|老板|匠人|工匠|先生|大娘|大婶|大叔|大爷|婆婆|老伯|夫人|娘子)`, 'gu'),
   new RegExp(`[${SURNAME}](?:记|氏)(?:[\\u4e00-\\u9fa5]{0,2}(?:铺|店|行|坊|号|窑))?`, 'gu'),
   new RegExp(`[${SURNAME}]家(?:铺子|作坊|工坊|染坊|酒坊|油坊|铺|店|坊|窑)`, 'gu'),
