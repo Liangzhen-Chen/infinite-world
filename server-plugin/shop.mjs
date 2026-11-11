@@ -7,7 +7,7 @@ import {purse,treasury as treasuryAccount,moveCoins,coinRead,sink,dedicatedCoinA
 import {collectTransport} from './transport.mjs';
 import {transferItems} from './items.mjs';
 import {obligationTransaction} from './transition.mjs';
-import {customerFlowTimes,settleCustomerFlow,tradeWindowStarts} from './business.mjs';
+import {customerFlowTimes,settleCustomerFlow,flowTimesOfDay} from './business.mjs';
 import {settleSale,SALE_ORDER} from './market-seller.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
@@ -777,7 +777,7 @@ export function nextShopMinute(engine,d,now){
     const interval=consumers||collecting?720:DAY;
     let boundary=(Math.floor(now/interval)+1)*interval;
     // 有居民上门时，时钟也要在营业窗口的客流结算时刻停下（今天与明天的窗口起点，早于下一个网格点者取之）。
-    if(consumers||collecting)for(const day of [Math.floor(now/DAY),Math.floor(now/DAY)+1])for(const t of tradeWindowStarts(engine,state,day))if(t>now&&t<boundary)boundary=t;
+    if(consumers||collecting)for(const day of [Math.floor(now/DAY),Math.floor(now/DAY)+1])for(const t of flowTimesOfDay(engine,state,day))if(t>now&&t<boundary)boundary=t;
     return boundary;
 }
 
