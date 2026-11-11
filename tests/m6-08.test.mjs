@@ -138,7 +138,8 @@ test('M6-08 浏览器：背景联系表、真实出行切景、头像知情过�
     const unknownId=Object.keys(art.portraits).find(id=>id.startsWith('npc_sb_'));assert.ok(unknownId);
     await page.evaluate(({reference,unknownId})=>{window.fixtureContext={characters:[{name:'无限原野·世界主持人'}],characterId:0,chatId:'m6-08',chatMetadata:{infinite_fields:reference,fields_speakers:{[unknownId]:'自起称呼'}},chat:[{mes:`<q who="npc_hw_linsui">先把房钱记清。</q><q who="${unknownId}">未知来客。</q>`}],getRequestHeaders:()=>({'Content-Type':'application/json'}),saveChat:async()=>{},setExtensionPrompt:()=>{},registerFunctionTool:()=>{},stopGeneration:()=>{},eventTypes:{},eventSource:{on:()=>{}}};},{reference:created.body.reference,unknownId});
     await page.evaluate(()=>window.fixtureContext.chat.push({is_user:true,mes:'我去南田看一看。',extra:{fields_anchor:'art-travel-user'}}));
-    await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();await document.fonts.ready;});
+    // AI-01: this scenario needs the model path (tool calls / reviewed replies), so it opts into T3; the default is T0 (no AI). (world_move through the model tool path)
+    await page.evaluate(async()=>{await import('/runtime.js');(await import('/ui-settings.mjs')).updateSettings({aiProfile:'T3'});await window.infiniteFieldsV2.refresh();await document.fonts.ready;});
     await page.locator('#fields-scenery[data-background]').waitFor();
     await page.locator('[data-speaker-id="npc_hw_linsui"] img').waitFor();
     assert.equal(await page.locator(`[data-speaker-id="${unknownId}"] img`).count(),0);

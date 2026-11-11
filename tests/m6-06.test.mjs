@@ -131,7 +131,8 @@ test('M6-06 浏览器：创建→固定回复发送→保存→导入→继续�
         eventTypes:new Proxy({},{get:(_,key)=>key}),eventSource:{on:(key,fn)=>{const rows=handlers.get(key)??[];rows.push(fn);handlers.set(key,rows);}},
         openCharacterChat:async id=>{ctx.chatId=id;const saved=chats.get(id);ctx.chat=saved?structuredClone(saved.chat):[{is_user:false,mes:'默认旧开场'}];ctx.chatMetadata=saved?structuredClone(saved.metadata):{};for(const key of ['CHAT_CHANGED','CHAT_LOADED'])for(const fn of handlers.get(key)??[])await fn();document.querySelector('#chat').replaceChildren();for(const row of ctx.chat){const p=document.createElement('p');p.className='mes_text';p.textContent=row.mes;document.querySelector('#chat').append(p);}}};
         await ctx.saveChat();window.fixtureChats=chats;
-        await import('/scripts/extensions/third-party/infinite-fields/runtime.js');
+        // AI-01: this scenario needs the model path (tool calls / reviewed replies), so it opts into T3; the default is T0 (no AI).
+        await import('/scripts/extensions/third-party/infinite-fields/runtime.js');(await import('/scripts/extensions/third-party/infinite-fields/ui-settings.mjs')).updateSettings({aiProfile:'T3'});
         document.querySelector('#send_form').onsubmit=async event=>{event.preventDefault();const input=document.querySelector('#send_textarea'),anchor=crypto.randomUUID();ctx.chat.push({is_user:true,mes:input.value,extra:{fields_anchor:anchor}});
             const reply=await fetch('/api/backends/chat-completions/generate',{method:'POST',body:'{}'}).then(r=>r.json());
             const result=await window.infiniteFieldsV2.execute('world_remember',{subject:'player',key:'桥头',content:reply.text},crypto.randomUUID());if(result.ok===false)throw Error(result.error);

@@ -4,7 +4,7 @@ const KEY='infinite-fields-reading';
 const defaults={theme:'dark',fontSize:18,highContrast:false,reducedMotion:false,volume:60,muted:false,aiProfile:DEFAULT_AI_PROFILE};
 // Card text per profile; T0 wording is fixed by AI-01 section 8.
 const AI_PROFILE_CARDS=[['T0','无 AI','不用任何模型。所有玩法都能玩，用菜单、构造器和打字（打字由本地规则理解，不如模型准）。费用 0。'],
-    ['T1','轻理解','输入由本地规则匹配目录动作，需手动确认；不叙述。'],
+    ['T1','轻理解','模型只负责理解你的输入并推荐已登记的做法，需手动确认；不叙述，不提出开放动作。需要自备密钥并产生费用。'],
     ['T2','叙述','模型理解自由输入并提出开放动作，结算后补叙。需要自备密钥并产生费用。'],
     ['T3','全开','在叙述档之上开放更多模型辅助。需要自备密钥并产生费用。']];
 let settings={...defaults};

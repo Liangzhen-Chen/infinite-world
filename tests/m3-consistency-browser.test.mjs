@@ -42,7 +42,8 @@ test('浏览器 MESSAGE_RECEIVED 等待纯文字改写后再提交唯一尾注�
    getRequestHeaders:()=>({'Content-Type':'application/json'}),saveChat:async()=>{},setExtensionPrompt:()=>{},registerFunctionTool:()=>{},stopGeneration:()=>{},
    eventTypes:new Proxy({},{get:(_,key)=>key}),eventSource:{on:(event,handler)=>handlers.set(event,handler)}};
  },created.reference);
- await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();await window.fixtureHandlers.get('GENERATION_STARTED')('normal',{},false);
+ // AI-01: this scenario needs the model path (tool calls / reviewed replies), so it opts into T3; the default is T0 (no AI).
+ await page.evaluate(async()=>{await import('/runtime.js');(await import('/ui-settings.mjs')).updateSettings({aiProfile:'T3'});await window.infiniteFieldsV2.refresh();await window.fixtureHandlers.get('GENERATION_STARTED')('normal',{},false);
   window.fixtureContext.chat.push({is_user:true,mes:'我付钱买一个面包',extra:{fields_anchor:'browser-bread'}});await window.fixtureHandlers.get('MESSAGE_SENT')(1);
  });
  assert.equal(endpoints.filter(row=>row.endpoint==='review/begin').length,1);assert.equal(endpoints.find(row=>row.endpoint==='review/begin').body.playerText,'我付钱买一个面包');
