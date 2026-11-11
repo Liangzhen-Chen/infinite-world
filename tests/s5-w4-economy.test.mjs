@@ -323,6 +323,9 @@ test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得
     await toBeforeNoon(f);
     const before=structuredClone(f.document),account=()=>Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
     assert.equal(account().coins,100);
+    // 守恒只看正午客流本身：推进到客流刚结束的 721，取此刻文档；午夜日结另有入账（租金、工资、补货结算等），不属于客流，不能混进“成交收入”的守恒里。
+    {const out=await f.engine.reduce(f.document,{tool:'world_time',args:{minutes:2},eventId:'w4-after-noon'});f.document=applyPatches(f.document,out.patches);}
+    const afterNoon=structuredClone(f.document);
     await waitPastMidnight(f,'w4-day');
     const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===f.business);
     // K08 正午按种子决定商店先后；本种子原生客店先服务，玩家此日没有重复需求客流。
@@ -347,8 +350,8 @@ test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得
     assert.ok(eVisits.every(v=>v.outcome==='bought'));
     const ePaid=eVisits.reduce((n,v)=>n+v.paid,0);
     assert.ok(native[0].visits.every(v=>v.tax===0));
-    assert.equal(f.document.state.npcs[keeper].coins,before.state.npcs[keeper].coins+aVisits[0].paid+ePaid);
-    assert.equal(f.document.state.npcs[A].coins,before.state.npcs[A].coins-aVisits[0].paid);assert.equal(f.document.state.npcs[E].coins,before.state.npcs[E].coins-ePaid);assert.equal(account().coins,100);
+    assert.equal(afterNoon.state.npcs[keeper].coins,before.state.npcs[keeper].coins+aVisits[0].paid+ePaid);
+    assert.equal(afterNoon.state.npcs[A].coins,before.state.npcs[A].coins-aVisits[0].paid);assert.equal(afterNoon.state.npcs[E].coins,before.state.npcs[E].coins-ePaid);assert.equal(account().coins,100);
     assert.equal(f.document.state.inventory.item_ration.quantity,3);assert.equal(f.document.state.inventory.item_bread.quantity,5);
     const bought=f.document.state.npcs[A].inventory.item_bread;assert.equal(typeof bought==='number'?bought:bought.quantity,qA);
     // 不来的人：钱袋与存粮原样。
