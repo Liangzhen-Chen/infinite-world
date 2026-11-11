@@ -195,3 +195,9 @@ test('storage 处置补齐：涂油、抹油、上油、套软皮、垫草；避
     assert.match(join('wheat', {storage: text}), /具体处置做法/, text);
   for (const text of ['避免涂油。', '表面油亮，避潮。']) assert.deepEqual(check('wheat', {storage: text}), [], text);
 });
+
+test('书名切出的子串不是器具：塞入门缝', () => {
+  const ctx = {catalog: [...CATALOG, {id: 'bookx', name: '役灵契纹入门', tags: ['paper', 'book'], book: {teaches: []}}], catalogRecipes: [...RECIPES, {id: 'recipe_copy', tools: ['bookx'], materials: [], output: {item: 'wheat'}}]};
+  assert.deepEqual(itemTextIssues({description: '塞入门缝阻止门轻微摆动，不代替门锁。'}, entry('wheat'), ctx), []);
+  assert.match(itemTextIssues({description: '常用煮锅盛放。'}, entry('wheat'), ctx).join(' '), /骨架外器具「煮锅」/, '真器具仍判');
+});

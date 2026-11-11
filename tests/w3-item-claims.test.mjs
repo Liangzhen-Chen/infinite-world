@@ -150,3 +150,10 @@ test('取样动作：骨架有匙具时 inspection 里“舀一勺尝”不算�
   assert.match(check({inspection: '舀一勺尝，盐味应匀。'}), /写了骨架外尺寸或用量「一勺」/, '骨架没有匙具照判');
   assert.match(check({inspection: '加入一勺盐拌匀。'}, entry, withSpoon), /一勺/, '不是取样动作');
 });
+
+test('身体部位尺寸后缀要有边界：后面接动作、副词的不是尺寸', () => {
+  for (const text of ['用手指深按绳结。', '手指长时间握持。', '指尖大力按压。', '如手指按压发软。', '以拇指宽幅拉平。'])
+    assert.deepEqual(check({description: text}), [], text);
+  for (const text of ['掌心大小。', '巴掌大的一块。', '手掌宽，边口齐。', '粗细约如小指，表面光。', '摊开比手掌宽些。'])
+    assert.match(check({description: text}), /写了身体尺度/, text);
+});

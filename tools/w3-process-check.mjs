@@ -12,6 +12,9 @@
 
 const UTENSIL_TAGS = ['tool', 'container', 'liquid_container', 'cloth', 'ceramic'];
 const CONTAINER_TAGS = ['container', 'liquid_container'];
+// 只因出现在配方 tools 里而入器具表的物品（木匙、搅糊板、滤布这类目录里没有器具标签的家用器具），必须本身是器具：
+// 书（抄书配方把书列为“工具”）、食物、原料、纸张不是器具，名称及切出的子串（《役灵契纹入门》→“入门”）不进器具词表。按类别标签判断，不按词排除。
+const NON_UTENSIL_TAGS = ['book', 'food', 'material', 'paper', 'ingredient', 'fuel'];
 // 名称末尾的量词/形态字：做中心词没有区分力，改取末两字。
 // 依据是汉语语法（不是照样例调的）：这些字是现代汉语的通用量词/类别词（一片、一段、一块、一条、一组、一份、一套、一副、一对、一粒、一束、一卷、一团）
 // 或表形态部位的泛字（具、头、体、面）；“名词+量词”里，量词前的名词才是物名（平脊骨压片 → 压片），量词字单独出现说明不了是哪件器具。
@@ -186,7 +189,8 @@ export function buildVocabulary(catalog, recipes = []) {
   const asTool = new Set(recipes.flatMap((recipe) => recipe.tools ?? []));
   const heads = new Map();
   for (const item of catalog) {
-    if (!(item.tags?.some((tag) => UTENSIL_TAGS.includes(tag)) || asTool.has(item.id))) continue;
+    const nonUtensil = item.book !== undefined || item.tags?.some((tag) => NON_UTENSIL_TAGS.includes(tag));
+    if (nonUtensil || !(item.tags?.some((tag) => UTENSIL_TAGS.includes(tag)) || asTool.has(item.id))) continue;
     const container = item.tags?.some((tag) => CONTAINER_TAGS.includes(tag)) ?? false;
     const has = (list) => item.tags?.some((tag) => list.includes(tag));
     // 布类只认全名（“麻布”与“麻帆布”只差一字，不算引入新物）；容器、陶器只取两字词形；
