@@ -5,18 +5,19 @@
   "attempts": 1,
   "draft": {
     "id": "item_mortise_chisel",
-    "description": "铁匠铺锻成的直口木凿，柄端收成圆头，可承木槌敲击。刃口平直、两棱略收，配木槌凿出小榫眼。凿身中段留有锻打锤痕。重0.35公斤，下切须刃口朝离手方向。作坊与行商按订单补货，现货有限。",
-    "inspection": "先看刃口是否卷边或崩缺，再沿刃线斜视有无豁口；柄端圆头若被敲出翻边，说明受过重击。凿身弯折或与柄接合处松动者不宜再用。可轻敲木料试刃，听声是否发闷。",
+    "description": "铁匠铺出的直口木凿，重0.35公斤。配木槌凿出小榫眼，下切时刃口朝离手的方向。作坊与行商按订单补货，现货有限。",
+    "inspection": "先看刃口是否卷边或崩缺，再沿刃线斜视有无豁口；凿身弯折者不宜再用。可轻敲木料试刃，听声是否发闷。",
     "storage": "置于干燥处，避潮，防磕碰刃口。"
   },
   "review": {
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:48:55.143Z"
+    "at": "2026-11-11T00:02:09.841Z"
   },
   "errors": [],
   "warnings": [
+    "description长度为55，进入L4抽读",
     "storage长度为15，进入L4抽读"
   ],
   "feedback": null,
@@ -55,6 +56,26 @@
         "l2": "not-run",
         "by": "sonnet-writer-a7a946f6",
         "at": "2026-11-10T22:04:34.211Z"
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-11T00:02:09.841Z",
+      "reason": "L4 必查清单第 15 条回扫不过的 7 件（制作痕迹与配方不符、骨架外包装）加 ITEMCK 命中 sheath_pouch，整件人工改写；独立严格 L4 已过（审查者 sonnet-l4-a849fd89）",
+      "headCommit": "fae2f5e996ad62635b27c718ca93a536bde9f3bd",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_mortise_chisel",
+        "description": "铁匠铺锻成的直口木凿，柄端收成圆头，可承木槌敲击。刃口平直、两棱略收，配木槌凿出小榫眼。凿身中段留有锻打锤痕。重0.35公斤，下切须刃口朝离手方向。作坊与行商按订单补货，现货有限。",
+        "inspection": "先看刃口是否卷边或崩缺，再沿刃线斜视有无豁口；柄端圆头若被敲出翻边，说明受过重击。凿身弯折或与柄接合处松动者不宜再用。可轻敲木料试刃，听声是否发闷。",
+        "storage": "置于干燥处，避潮，防磕碰刃口。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:48:55.143Z"
       },
       "priorAttempts": 1
     }

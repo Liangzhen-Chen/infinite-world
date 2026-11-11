@@ -1,6 +1,6 @@
 {
   "approvedBy": "李白（5 元以内纯技术授权，零花费）",
-  "ref": "李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。",
+  "ref": "李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布",
   "at": "2026-11-10",
   "ids": [
     "item_apple_rye_griddle",
@@ -141,6 +141,7 @@
     "recipe_w3b_wax_seal_blank",
     "recipe_w3b_waxed_thread",
     "recipe_w3b_willow_creel",
-    "recipe_w3b_wood_marking_kit"
+    "recipe_w3b_wood_marking_kit",
+    "item_sheath_pouch"
   ]
 }

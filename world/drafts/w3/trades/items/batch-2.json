@@ -1,6 +1,6 @@
 {
   "index": 2,
-  "fingerprint": "42c2e04289313946aeb34daa1011620c33387b052402b32fad3c594cfd3fc410",
+  "fingerprint": "08578dd926784e3dd727966976f380e07eccc6ba23a4d59c86e313285fa798eb",
   "count": 33,
   "passed": 33,
   "ids": [
@@ -83,16 +83,11 @@
     "approved": true,
     "reviewer": "sonnet-l4-a849fd89",
     "by": "sonnet-l4-a849fd89",
-    "reviewedAt": "2026-11-10T22:49:04.000Z",
+    "reviewedAt": "2026-11-11T00:02:10.825Z",
     "notes": [
       {
         "id": "item_belt_strap",
         "note": "三字段对照骨架；无骨架外尺寸与配套物；storage 避日晒雨淋由皮革类推出，365天与骨架一致",
-        "by": "sonnet-l4-a8e3953b"
-      },
-      {
-        "id": "item_needle_case",
-        "note": "空夹出售针另备出自骨架；缝短边底边出自骨架；storage皮革类可推，365天一致",
         "by": "sonnet-l4-a8e3953b"
       },
       {
@@ -118,11 +113,6 @@
       {
         "id": "item_scroll_wrap",
         "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
-        "id": "item_sheath_pouch",
-        "note": "材料鞣革麻线，无加热；250克按weight折算；365天合骨架；s防压折由皮革推出；无骨架外处置。逐句读无误。",
         "by": "sonnet-l4-a849fd89"
       },
       {
@@ -248,6 +238,16 @@
       {
         "id": "item_book_trades_artisan",
         "note": "同上；十工序名逐一对照一致；s避潮避晒防压；365天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_needle_case",
+        "note": "整件读：对折浅夹、缝短边底边、外翻口、空夹针另备均合recipe的pf；材料鞣革麻线、无骨架外器具；365天合骨架",
+        "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_sheath_pouch",
+        "note": "整件重读：重0.25公斤等于weight；制作痕迹对折、预开缝孔、沿边缝合、口部留宽均合recipe pf，材料工具无骨架外项；s防压避潮避曝晒由皮革推出，365天合骨架，批",
         "by": "sonnet-l4-a849fd89"
       }
     ]
@@ -732,6 +732,188 @@
           "item_strap_eye",
           "item_tent_stake",
           "item_wax_seal_blank"
+        ]
+      }
+    },
+    {
+      "approved": false,
+      "reviewer": "sonnet-l4-a849fd89",
+      "by": "sonnet-l4-a849fd89",
+      "reviewedAt": "2026-11-10T22:49:04.000Z",
+      "notes": [
+        {
+          "id": "item_belt_strap",
+          "note": "三字段对照骨架；无骨架外尺寸与配套物；storage 避日晒雨淋由皮革类推出，365天与骨架一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_needle_case",
+          "note": "空夹出售针另备出自骨架；缝短边底边出自骨架；storage皮革类可推，365天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_leather_grip",
+          "note": "首尾系孔附麻线出自骨架；工具另备；storage皮革类可推，365天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_chalk_powder",
+          "note": "旧磨坊对应bld_hw_mill；弃置用词合规；storage细粉避风避潮可推；容器另备属交付说明",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_coin_wrap",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_leather_thimble",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_scroll_wrap",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_sheath_pouch",
+          "note": "材料鞣革麻线，无加热；250克按weight折算；365天合骨架；s防压折由皮革推出；无骨架外处置。逐句读无误。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_boot_gaiter",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_leather_hinge",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_rein_patch",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_book_trades_leather",
+          "note": "同上；十工序名逐一对照一致；s避潮、不久晒、不压由书页推出；365天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_drawer_pull",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_door_latch",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_boot_scraper",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_stove_grid",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_bucket_handle",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_hinge_pin",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_tent_stake",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_strap_eye",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_pot_lifter",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_sack_pricker",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_book_trades_iron",
+          "note": "同上；十件锻作名逐一对照一致；无骨架外内容；s避潮防压；365天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_ochre_paint",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_soot_ink",
+          "note": "器具均在tools；容器另备仅交付；s7天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_gall_wash",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_polishing_powder",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_parchment_bookmark",
+          "note": "器具均在tools；s365天合骨架；无骨架外处置",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_copper_nameplate",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_waxed_thread",
+          "note": "余蜡包纸照pf；s365天合骨架；无干裂后果句",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_wax_seal_blank",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_wood_marking_kit",
+          "note": "第三轮重审：期限句已删；铁锉出自pf；余布弃置",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_book_trades_artisan",
+          "note": "同上；十工序名逐一对照一致；s避潮避晒防压；365天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        }
+      ],
+      "rejection": {
+        "by": "主会话",
+        "at": "2026-11-11T00:02:02.149Z",
+        "reason": "L4 必查清单第 15 条回扫（docs/r15-trades-a.md、-b.md）7 件不过，加 ITEMCK 命中 sheath_pouch（storage 后果说法）；整件人工改写，独立严格 L4 已过。",
+        "ids": [
+          "item_sheath_pouch",
+          "item_needle_case"
         ]
       }
     }

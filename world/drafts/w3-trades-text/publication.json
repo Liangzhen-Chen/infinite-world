@@ -1,6 +1,6 @@
 {
   "revision": "w3-trades-text-1",
-  "publishedAt": "2026-11-10T22:49:16.547Z",
+  "publishedAt": "2026-11-11T00:02:32.359Z",
   "entries": [
     {
       "id": "item_pearl_barley-description",
@@ -624,11 +624,25 @@
       "file": "world/meta/items.json",
       "field": "description",
       "before": "白石镇秋后榨制的木用亚麻油，小瓶来货，油色偏琥珀，瓶底偶有细密沉屑。专供木器表面薄涂，不作食品销售。开瓶后气味带生青与微苦的油腥，涂在木面上收干较慢，需薄层多次。施工布料须摊开晾置，不可团堆。",
-      "after": "白石镇秋后榨制的木用亚麻油，小瓶来货，油色偏琥珀，瓶底偶有细密沉屑。专供木器表面薄涂，不作食品销售。开瓶后气味带生青与微苦的油腥。施工布料须摊开晾置，不可团堆。",
+      "after": "白石镇秋后榨制的木用亚麻油，小瓶来货，每份重0.1公斤。木器表面薄涂用油，不作为食品销售。施工布料须摊开晾置。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/trades/items/item_linseed_oil.json#item_linseed_oil",
           "field": "description"
+        }
+      ]
+    },
+    {
+      "id": "item_linseed_oil-inspection",
+      "target": "item_linseed_oil",
+      "file": "world/meta/items.json",
+      "field": "inspection",
+      "before": "取瓶对光看，油体应清亮无絮状悬物；嗅之无酸败刺鼻味。瓶口若有结皮，只可整片揭去，不可搅入油中。瓶塞松脱或油面浮膜者不收。",
+      "after": "对光看油体应清亮，无絮状悬物；嗅之无酸败刺鼻味；油面浮膜者不收。",
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/trades/items/item_linseed_oil.json#item_linseed_oil",
+          "field": "inspection"
         }
       ]
     },
@@ -652,7 +666,7 @@
       "file": "world/meta/items.json",
       "field": "description",
       "before": "雁渡河市随船运来的薄铜片，厚薄约如两层粗纸，表面留有辊压的细密纹路与暗红氧化斑。整张裁成方片，边缘尚见剪口毛刺。铜质偏软，可冷弯折角，常被匠人裁小做标牌、箱角包片与门饰衬底。单张重约200克，不作承重梁材，遇重压易起褶。",
-      "after": "雁渡随河运小批输入的薄铜片，重0.2公斤。一张可冷剪弯折的薄铜片，用于标牌与装饰包角，不作承重梁材。表面留有辊压的细密纹路。",
+      "after": "雁渡随河运小批输入的薄铜片，重0.2公斤。一张可冷剪弯折的薄铜片，用于标牌与装饰包角，不作承重梁材。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/trades/items/item_copper_sheet.json#item_copper_sheet",
@@ -857,6 +871,20 @@
       ]
     },
     {
+      "id": "item_parchment-inspection",
+      "target": "item_parchment",
+      "file": "world/meta/items.json",
+      "field": "inspection",
+      "before": "对光看纸面有无透光沙眼与未刮净的毛根；指背抚过两面，粗涩起毛处即为刮薄不均；再抖一抖听声，发脆易裂者不宜下笔。",
+      "after": "对光看纸面有无透光沙眼；指背抚过两面，粗涩起毛者不宜下笔；再抖一抖听声，发脆易裂者同样不宜下笔。",
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/trades/items/item_parchment.json#item_parchment",
+          "field": "inspection"
+        }
+      ]
+    },
+    {
       "id": "item_parchment-storage",
       "target": "item_parchment",
       "file": "world/meta/items.json",
@@ -1002,11 +1030,25 @@
       "file": "world/meta/items.json",
       "field": "description",
       "before": "铁匠铺锻成的直口木凿，整条凿身由一块碳钢打制，柄端收成圆头，可承木槌敲击。刃口平直、两棱略收，宽约一指，专用于在木料上开小榫眼。凿身中段留有锻打锤痕，柄部缠过旧布以防滑手。全长约一拃，重0.35，握持时重心靠前，下切须刃口朝离手方向。",
-      "after": "铁匠铺锻成的直口木凿，柄端收成圆头，可承木槌敲击。刃口平直、两棱略收，配木槌凿出小榫眼。凿身中段留有锻打锤痕。重0.35公斤，下切须刃口朝离手方向。作坊与行商按订单补货，现货有限。",
+      "after": "铁匠铺出的直口木凿，重0.35公斤。配木槌凿出小榫眼，下切时刃口朝离手的方向。作坊与行商按订单补货，现货有限。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/trades/items/item_mortise_chisel.json#item_mortise_chisel",
           "field": "description"
+        }
+      ]
+    },
+    {
+      "id": "item_mortise_chisel-inspection",
+      "target": "item_mortise_chisel",
+      "file": "world/meta/items.json",
+      "field": "inspection",
+      "before": "先看刃口是否卷边或崩缺，再沿刃线斜视有无豁口；柄端圆头若被敲出翻边，说明受过重击。凿身弯折或与柄接合处松动者不宜再用。可轻敲木料试刃，听声是否发闷。",
+      "after": "先看刃口是否卷边或崩缺，再沿刃线斜视有无豁口；凿身弯折者不宜再用。可轻敲木料试刃，听声是否发闷。",
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/trades/items/item_mortise_chisel.json#item_mortise_chisel",
+          "field": "inspection"
         }
       ]
     },
@@ -1156,7 +1198,7 @@
       "file": "world/meta/items.json",
       "field": "description",
       "before": "铁匠铺锻打的粗齿木锉，锉身以整块熟铁开齿，齿列疏而深，长约一掌半，尾端收成细颈插入短木柄。用于锉修木件曲面、削去锯口毛刺，也可在榫头略肥时逐层修薄。齿槽易嵌木屑，用后须顺齿剔净，否则再锉时打滑发热。作坊与行商按订单补货，现货有限。",
-      "after": "铁匠铺锻打的粗齿木锉，重0.3公斤。用于锉修木件曲面与粗毛刺，齿缝积屑后须清理。作坊与行商按订单补货，现货有限。",
+      "after": "铁匠铺出的粗齿木锉，重0.3公斤。用于锉修木件曲面与粗毛刺，齿缝积屑后须清理。作坊与行商按订单补货，现货有限。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/trades/items/item_wood_rasp.json#item_wood_rasp",
@@ -1282,7 +1324,7 @@
       "file": "world/meta/items.json",
       "field": "description",
       "before": "织坊里用剩的粗骨料磨成的压片，长约一掌，两端修成圆弧，正面平直，背面留着一道天然的浅槽。压在熟革折边或纸折线上，能把折痕定住而不割破表面。行商随货捎带，数量不多，按订单补。",
-      "after": "骨料磨成的压片，重0.08公斤，两端修成圆弧，正面平直。压在熟革折边或纸折线上，能把折痕定住，圆端不会把表面割开。作坊与行商按订单补货，现货有限。",
+      "after": "骨制压片，重0.08公斤，两端为圆端，正面平直。压在熟革折边或纸折线上，能把折痕定住，圆端不会把表面割开。作坊与行商按订单补货，现货有限。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/trades/items/item_bone_folder.json#item_bone_folder",
@@ -1296,7 +1338,7 @@
       "file": "world/meta/items.json",
       "field": "inspection",
       "before": "先看正面是否平直，再摸两端圆弧有无崩口。对着光看背面浅槽有没有裂纹延伸。压面若起毛刺，用指腹顺走一遍即可察觉。整片不应有贯通裂。",
-      "after": "先看正面是否平直，再摸两端圆弧有无崩口。压面若起毛刺，用指腹顺走一遍即可察觉。整片不应有贯通裂。",
+      "after": "先看正面是否平直，再摸两端圆端有无崩口。压面若起毛刺，用指腹顺走一遍即可察觉。整片不应有贯通裂。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/trades/items/item_bone_folder.json#item_bone_folder",
@@ -2789,6 +2831,34 @@
       ]
     },
     {
+      "id": "item_sheath_pouch-description",
+      "target": "item_sheath_pouch",
+      "file": "world/meta/items.json",
+      "field": "description",
+      "before": "织坊出品的对折式皮套，取一张鞣制皮革对折成袋，沿边预开缝孔后以麻线缝合，口部特意留宽，便于钝口小工具取放。成品约二百五十克，皮面保留鞣制后的浅褐本色，缝孔边缘略有起毛。只作钝口小工具的收纳套，口宽不足以卡住尖刀，不可当刀鞘使用。按订单制作，材料缺货时暂停交付。",
+      "after": "织坊出品的对折式皮套，取一张鞣制皮革对折成袋，沿边预开缝孔后以麻线缝合，口部特意留宽，便于钝口小工具取放。成品重0.25公斤，皮面保留鞣制后的浅褐本色，缝孔边缘略有起毛。只作钝口小工具的收纳套，口宽不足以卡住尖刀，不可当刀鞘使用。按订单制作，材料缺货时暂停交付。",
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/trades/items/item_sheath_pouch.json#item_sheath_pouch",
+          "field": "description"
+        }
+      ]
+    },
+    {
+      "id": "item_sheath_pouch-storage",
+      "target": "item_sheath_pouch",
+      "file": "world/meta/items.json",
+      "field": "storage",
+      "before": "置于干燥通风处，避免日晒与潮湿；勿长期压折，以免缝孔变形。自制成起保存365天。",
+      "after": "置于干燥通风处，避免曝晒与潮湿，防压。可存365天。",
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w3/trades/items/item_sheath_pouch.json#item_sheath_pouch",
+          "field": "storage"
+        }
+      ]
+    },
+    {
       "id": "item_boot_gaiter-description",
       "target": "item_boot_gaiter",
       "file": "world/meta/items.json",
@@ -2892,7 +2962,7 @@
       "file": "world/meta/items.json",
       "field": "description",
       "before": "织坊出品的扁皮长针夹，取一块鞣制好的皮料裁成长条，对折成浅夹，用麻线把短边与底边缝住，口沿外翻，收针时留出一小段翻边，可把针尖裹在里面。夹身压得扁平，长针横放其中不易戳穿。空夹出售，针需另备，容器亦不随货提供。",
-      "after": "织坊出品的扁皮长针夹，取一块鞣制好的皮料裁成长条，对折成浅夹，用麻线把短边与底边缝住，口沿外翻，可把针尖包在里面。夹身压得扁平。空夹出售，针需另备。",
+      "after": "织坊出品的扁皮长针夹，取一块鞣制好的皮料裁成长条，对折成浅夹，用麻线把短边与底边缝住，口沿外翻，可把针尖包在里面。空夹出售，针需另备。",
       "supersedes": [
         {
           "receipt": "world/drafts/w3/trades/items/item_needle_case.json#item_needle_case",

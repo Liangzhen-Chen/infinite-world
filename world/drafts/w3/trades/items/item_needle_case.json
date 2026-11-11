@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_needle_case",
-    "description": "织坊出品的扁皮长针夹，取一块鞣制好的皮料裁成长条，对折成浅夹，用麻线把短边与底边缝住，口沿外翻，可把针尖包在里面。夹身压得扁平。空夹出售，针需另备。",
+    "description": "织坊出品的扁皮长针夹，取一块鞣制好的皮料裁成长条，对折成浅夹，用麻线把短边与底边缝住，口沿外翻，可把针尖包在里面。空夹出售，针需另备。",
     "inspection": "先看皮面有无裂纹、霉斑与硬结，再摸缝线是否松脱，翻开口沿查看针尖位是否被磨穿，最后将夹身对折，看两侧是否对称、翻边能否贴住。",
     "storage": "置于干燥处，避免受潮与曝晒。可存365天。"
   },
@@ -13,7 +13,7 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:04:34.211Z"
+    "at": "2026-11-11T00:02:09.841Z"
   },
   "errors": [],
   "warnings": [
@@ -35,6 +35,26 @@
       },
       "priorReview": {
         "contradictions": []
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-11T00:02:09.841Z",
+      "reason": "L4 必查清单第 15 条回扫不过的 7 件（制作痕迹与配方不符、骨架外包装）加 ITEMCK 命中 sheath_pouch，整件人工改写；独立严格 L4 已过（审查者 sonnet-l4-a849fd89）",
+      "headCommit": "fae2f5e996ad62635b27c718ca93a536bde9f3bd",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_needle_case",
+        "description": "织坊出品的扁皮长针夹，取一块鞣制好的皮料裁成长条，对折成浅夹，用麻线把短边与底边缝住，口沿外翻，可把针尖包在里面。夹身压得扁平。空夹出售，针需另备。",
+        "inspection": "先看皮面有无裂纹、霉斑与硬结，再摸缝线是否松脱，翻开口沿查看针尖位是否被磨穿，最后将夹身对折，看两侧是否对称、翻边能否贴住。",
+        "storage": "置于干燥处，避免受潮与曝晒。可存365天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:04:34.211Z"
       },
       "priorAttempts": 1
     }

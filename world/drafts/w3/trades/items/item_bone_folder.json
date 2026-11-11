@@ -5,15 +5,15 @@
   "attempts": 1,
   "draft": {
     "id": "item_bone_folder",
-    "description": "骨料磨成的压片，重0.08公斤，两端修成圆弧，正面平直。压在熟革折边或纸折线上，能把折痕定住，圆端不会把表面割开。作坊与行商按订单补货，现货有限。",
-    "inspection": "先看正面是否平直，再摸两端圆弧有无崩口。压面若起毛刺，用指腹顺走一遍即可察觉。整片不应有贯通裂。",
+    "description": "骨制压片，重0.08公斤，两端为圆端，正面平直。压在熟革折边或纸折线上，能把折痕定住，圆端不会把表面割开。作坊与行商按订单补货，现货有限。",
+    "inspection": "先看正面是否平直，再摸两端圆端有无崩口。压面若起毛刺，用指腹顺走一遍即可察觉。整片不应有贯通裂。",
     "storage": "置于干燥处，避潮，避免磕碰。"
   },
   "review": {
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:48:55.143Z"
+    "at": "2026-11-11T00:02:09.841Z"
   },
   "errors": [],
   "warnings": [
@@ -55,6 +55,26 @@
         "l2": "not-run",
         "by": "sonnet-writer-a7a946f6",
         "at": "2026-11-10T22:04:34.211Z"
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-11T00:02:09.841Z",
+      "reason": "L4 必查清单第 15 条回扫不过的 7 件（制作痕迹与配方不符、骨架外包装）加 ITEMCK 命中 sheath_pouch，整件人工改写；独立严格 L4 已过（审查者 sonnet-l4-a849fd89）",
+      "headCommit": "fae2f5e996ad62635b27c718ca93a536bde9f3bd",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_bone_folder",
+        "description": "骨料磨成的压片，重0.08公斤，两端修成圆弧，正面平直。压在熟革折边或纸折线上，能把折痕定住，圆端不会把表面割开。作坊与行商按订单补货，现货有限。",
+        "inspection": "先看正面是否平直，再摸两端圆弧有无崩口。压面若起毛刺，用指腹顺走一遍即可察觉。整片不应有贯通裂。",
+        "storage": "置于干燥处，避潮，避免磕碰。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:48:55.143Z"
       },
       "priorAttempts": 1
     }

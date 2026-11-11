@@ -6,14 +6,14 @@
   "draft": {
     "id": "item_parchment",
     "description": "白石镇的刮薄羊皮纸，一张处理好的羊皮纸，呈米黄半透，可书写或裁作书签，并非食用或包药材料。重0.06公斤。",
-    "inspection": "对光看纸面有无透光沙眼与未刮净的毛根；指背抚过两面，粗涩起毛处即为刮薄不均；再抖一抖听声，发脆易裂者不宜下笔。",
+    "inspection": "对光看纸面有无透光沙眼；指背抚过两面，粗涩起毛者不宜下笔；再抖一抖听声，发脆易裂者同样不宜下笔。",
     "storage": "置于干燥处，避潮，避免直晒与重压。可存365天。"
   },
   "review": {
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:48:55.143Z"
+    "at": "2026-11-11T00:02:09.841Z"
   },
   "errors": [],
   "warnings": [
@@ -59,6 +59,26 @@
         "l2": "not-run",
         "by": "sonnet-writer-a7a946f6",
         "at": "2026-11-10T22:04:34.211Z"
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-11T00:02:09.841Z",
+      "reason": "L4 必查清单第 15 条回扫不过的 7 件（制作痕迹与配方不符、骨架外包装）加 ITEMCK 命中 sheath_pouch，整件人工改写；独立严格 L4 已过（审查者 sonnet-l4-a849fd89）",
+      "headCommit": "fae2f5e996ad62635b27c718ca93a536bde9f3bd",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_parchment",
+        "description": "白石镇的刮薄羊皮纸，一张处理好的羊皮纸，呈米黄半透，可书写或裁作书签，并非食用或包药材料。重0.06公斤。",
+        "inspection": "对光看纸面有无透光沙眼与未刮净的毛根；指背抚过两面，粗涩起毛处即为刮薄不均；再抖一抖听声，发脆易裂者不宜下笔。",
+        "storage": "置于干燥处，避潮，避免直晒与重压。可存365天。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:48:55.143Z"
       },
       "priorAttempts": 1
     }

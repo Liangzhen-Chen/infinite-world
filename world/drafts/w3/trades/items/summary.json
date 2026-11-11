@@ -7,7 +7,7 @@
   "batches": [
     {
       "index": 0,
-      "fingerprint": "17a6cc1f57a5c77725a8a29a0ca5236ee73164421aafd2b6b0551f4c53dd44cb",
+      "fingerprint": "68f68653761275deaa2ab9ab107807323996fd9d8ea0657f76b59b621f337d57",
       "count": 34,
       "passed": 34,
       "ids": [
@@ -96,13 +96,8 @@
         "approved": true,
         "reviewer": "sonnet-l4-a849fd89",
         "by": "sonnet-l4-a849fd89",
-        "reviewedAt": "2026-11-10T22:49:03.112Z",
+        "reviewedAt": "2026-11-11T00:02:10.307Z",
         "notes": [
-          {
-            "id": "item_linseed_oil",
-            "note": "白石镇秋后榨制出自骨架；storage油料避光远离火源可推，180天一致",
-            "by": "sonnet-l4-a8e3953b"
-          },
           {
             "id": "item_bench_plane",
             "note": "产地铁匠铺对应forge；无尺寸；storage 工具类避潮可推",
@@ -189,11 +184,6 @@
             "by": "sonnet-l4-a849fd89"
           },
           {
-            "id": "item_copper_sheet",
-            "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
-            "by": "sonnet-l4-a849fd89"
-          },
-          {
             "id": "item_red_ochre",
             "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
             "by": "sonnet-l4-a849fd89"
@@ -214,11 +204,6 @@
             "by": "sonnet-l4-a849fd89"
           },
           {
-            "id": "item_parchment",
-            "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
-            "by": "sonnet-l4-a849fd89"
-          },
-          {
             "id": "item_oak_gall",
             "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
             "by": "sonnet-l4-a849fd89"
@@ -234,22 +219,12 @@
             "by": "sonnet-l4-a849fd89"
           },
           {
-            "id": "item_mortise_chisel",
-            "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
-            "by": "sonnet-l4-a849fd89"
-          },
-          {
             "id": "item_wood_mallet",
             "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
             "by": "sonnet-l4-a849fd89"
           },
           {
             "id": "item_hand_auger",
-            "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
-            "by": "sonnet-l4-a849fd89"
-          },
-          {
-            "id": "item_wood_rasp",
             "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
             "by": "sonnet-l4-a849fd89"
           },
@@ -264,8 +239,33 @@
             "by": "sonnet-l4-a849fd89"
           },
           {
+            "id": "item_copper_sheet",
+            "note": "第1至15条整件读：雁渡、随河运小批输入合origin与seasonality；无制作痕迹；0.2公斤等于weight；s避潮防压由铜片推出；无期限",
+            "by": "sonnet-l4-a849fd89"
+          },
+          {
             "id": "item_bone_folder",
-            "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+            "note": "整件读：无锻、刮等制作痕迹；圆端、压熟革折边或纸折线出自use；骨制出自name；无包装；s避潮防磕碰由骨片推出",
+            "by": "sonnet-l4-a849fd89"
+          },
+          {
+            "id": "item_wood_rasp",
+            "note": "整件读：“铁匠铺出的”有origin bld_hw_forge出处，锻打已删；无骨架外结构；s避潮合钢锉；无期限",
+            "by": "sonnet-l4-a849fd89"
+          },
+          {
+            "id": "item_parchment",
+            "note": "整件读：毛根刮净等工序痕迹已删，只留name与use已有事实；白石镇合origin；365天合骨架；s避潮避晒防压由羊皮纸推出",
+            "by": "sonnet-l4-a849fd89"
+          },
+          {
+            "id": "item_mortise_chisel",
+            "note": "整件重读：圆头、两棱已删；铁匠铺出的合origin；榫眼、木槌、刃口朝离手方向出自use；0.35公斤等于weight；s避潮防磕碰由钢凿推出；无期限，批",
+            "by": "sonnet-l4-a849fd89"
+          },
+          {
+            "id": "item_linseed_oil",
+            "note": "整件重读：结皮处置、油色、气味、沉屑已删；白石镇秋后榨制、小瓶来货合origin与seasonality；施工布料摊开晾置出自use；s避光远离火源由油推出，180天合骨架，批",
             "by": "sonnet-l4-a849fd89"
           }
         ]
@@ -604,6 +604,197 @@
               "item_willow_rod",
               "item_wood_mallet",
               "item_wood_rasp"
+            ]
+          }
+        },
+        {
+          "approved": false,
+          "reviewer": "sonnet-l4-a849fd89",
+          "by": "sonnet-l4-a849fd89",
+          "reviewedAt": "2026-11-10T22:49:03.112Z",
+          "notes": [
+            {
+              "id": "item_linseed_oil",
+              "note": "白石镇秋后榨制出自骨架；storage油料避光远离火源可推，180天一致",
+              "by": "sonnet-l4-a8e3953b"
+            },
+            {
+              "id": "item_bench_plane",
+              "note": "产地铁匠铺对应forge；无尺寸；storage 工具类避潮可推",
+              "by": "sonnet-l4-a8e3953b"
+            },
+            {
+              "id": "item_pearl_barley",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_dry_peas",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_turnip",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_leek",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_onion",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_hen_egg",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_hazelnut",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_carrot",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_cabbage",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_honey",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_rapeseed_oil",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_fresh_apple",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_rye_flour",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_pine_board",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_willow_rod",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_hemp_thread",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_copper_sheet",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_red_ochre",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_lampblack",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_calcite_chalk",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_pumice",
+              "note": "雁渡有出处；无后果句；s避潮边缘情形按多孔石推导通过",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_parchment",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_oak_gall",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_gum_grain",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_frame_saw",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_mortise_chisel",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_wood_mallet",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_hand_auger",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_wood_rasp",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_leather_shears",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_stitching_awl",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_bone_folder",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            }
+          ],
+          "rejection": {
+            "by": "主会话",
+            "at": "2026-11-11T00:02:02.149Z",
+            "reason": "L4 必查清单第 15 条回扫（docs/r15-trades-a.md、-b.md）7 件不过，加 ITEMCK 命中 sheath_pouch（storage 后果说法）；整件人工改写，独立严格 L4 已过。",
+            "ids": [
+              "item_linseed_oil",
+              "item_copper_sheet",
+              "item_parchment",
+              "item_mortise_chisel",
+              "item_wood_rasp",
+              "item_bone_folder"
             ]
           }
         }
@@ -1380,7 +1571,7 @@
     },
     {
       "index": 2,
-      "fingerprint": "42c2e04289313946aeb34daa1011620c33387b052402b32fad3c594cfd3fc410",
+      "fingerprint": "08578dd926784e3dd727966976f380e07eccc6ba23a4d59c86e313285fa798eb",
       "count": 33,
       "passed": 33,
       "ids": [
@@ -1463,16 +1654,11 @@
         "approved": true,
         "reviewer": "sonnet-l4-a849fd89",
         "by": "sonnet-l4-a849fd89",
-        "reviewedAt": "2026-11-10T22:49:04.000Z",
+        "reviewedAt": "2026-11-11T00:02:10.825Z",
         "notes": [
           {
             "id": "item_belt_strap",
             "note": "三字段对照骨架；无骨架外尺寸与配套物；storage 避日晒雨淋由皮革类推出，365天与骨架一致",
-            "by": "sonnet-l4-a8e3953b"
-          },
-          {
-            "id": "item_needle_case",
-            "note": "空夹出售针另备出自骨架；缝短边底边出自骨架；storage皮革类可推，365天一致",
             "by": "sonnet-l4-a8e3953b"
           },
           {
@@ -1498,11 +1684,6 @@
           {
             "id": "item_scroll_wrap",
             "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
-            "by": "sonnet-l4-a849fd89"
-          },
-          {
-            "id": "item_sheath_pouch",
-            "note": "材料鞣革麻线，无加热；250克按weight折算；365天合骨架；s防压折由皮革推出；无骨架外处置。逐句读无误。",
             "by": "sonnet-l4-a849fd89"
           },
           {
@@ -1628,6 +1809,16 @@
           {
             "id": "item_book_trades_artisan",
             "note": "同上；十工序名逐一对照一致；s避潮避晒防压；365天合骨架",
+            "by": "sonnet-l4-a849fd89"
+          },
+          {
+            "id": "item_needle_case",
+            "note": "整件读：对折浅夹、缝短边底边、外翻口、空夹针另备均合recipe的pf；材料鞣革麻线、无骨架外器具；365天合骨架",
+            "by": "sonnet-l4-a849fd89"
+          },
+          {
+            "id": "item_sheath_pouch",
+            "note": "整件重读：重0.25公斤等于weight；制作痕迹对折、预开缝孔、沿边缝合、口部留宽均合recipe pf，材料工具无骨架外项；s防压避潮避曝晒由皮革推出，365天合骨架，批",
             "by": "sonnet-l4-a849fd89"
           }
         ]
@@ -2112,6 +2303,188 @@
               "item_strap_eye",
               "item_tent_stake",
               "item_wax_seal_blank"
+            ]
+          }
+        },
+        {
+          "approved": false,
+          "reviewer": "sonnet-l4-a849fd89",
+          "by": "sonnet-l4-a849fd89",
+          "reviewedAt": "2026-11-10T22:49:04.000Z",
+          "notes": [
+            {
+              "id": "item_belt_strap",
+              "note": "三字段对照骨架；无骨架外尺寸与配套物；storage 避日晒雨淋由皮革类推出，365天与骨架一致",
+              "by": "sonnet-l4-a8e3953b"
+            },
+            {
+              "id": "item_needle_case",
+              "note": "空夹出售针另备出自骨架；缝短边底边出自骨架；storage皮革类可推，365天一致",
+              "by": "sonnet-l4-a8e3953b"
+            },
+            {
+              "id": "item_leather_grip",
+              "note": "首尾系孔附麻线出自骨架；工具另备；storage皮革类可推，365天一致",
+              "by": "sonnet-l4-a8e3953b"
+            },
+            {
+              "id": "item_chalk_powder",
+              "note": "旧磨坊对应bld_hw_mill；弃置用词合规；storage细粉避风避潮可推；容器另备属交付说明",
+              "by": "sonnet-l4-a8e3953b"
+            },
+            {
+              "id": "item_coin_wrap",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_leather_thimble",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_scroll_wrap",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_sheath_pouch",
+              "note": "材料鞣革麻线，无加热；250克按weight折算；365天合骨架；s防压折由皮革推出；无骨架外处置。逐句读无误。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_boot_gaiter",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_leather_hinge",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_rein_patch",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_book_trades_leather",
+              "note": "同上；十工序名逐一对照一致；s避潮、不久晒、不压由书页推出；365天合骨架",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_drawer_pull",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_door_latch",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_boot_scraper",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_stove_grid",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_bucket_handle",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_hinge_pin",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_tent_stake",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_strap_eye",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_pot_lifter",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_sack_pricker",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_book_trades_iron",
+              "note": "同上；十件锻作名逐一对照一致；无骨架外内容；s避潮防压；365天合骨架",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_ochre_paint",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_soot_ink",
+              "note": "器具均在tools；容器另备仅交付；s7天合骨架",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_gall_wash",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_polishing_powder",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_parchment_bookmark",
+              "note": "器具均在tools；s365天合骨架；无骨架外处置",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_copper_nameplate",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_waxed_thread",
+              "note": "余蜡包纸照pf；s365天合骨架；无干裂后果句",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_wax_seal_blank",
+              "note": "在原整件严格 L4 基础上，核对了重量单位改动：克已等值换算为公斤，数值等于骨架 weight，句子通顺，无新增语病，结论为批。",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_wood_marking_kit",
+              "note": "第三轮重审：期限句已删；铁锉出自pf；余布弃置",
+              "by": "sonnet-l4-a849fd89"
+            },
+            {
+              "id": "item_book_trades_artisan",
+              "note": "同上；十工序名逐一对照一致；s避潮避晒防压；365天合骨架",
+              "by": "sonnet-l4-a849fd89"
+            }
+          ],
+          "rejection": {
+            "by": "主会话",
+            "at": "2026-11-11T00:02:02.149Z",
+            "reason": "L4 必查清单第 15 条回扫（docs/r15-trades-a.md、-b.md）7 件不过，加 ITEMCK 命中 sheath_pouch（storage 后果说法）；整件人工改写，独立严格 L4 已过。",
+            "ids": [
+              "item_sheath_pouch",
+              "item_needle_case"
             ]
           }
         }

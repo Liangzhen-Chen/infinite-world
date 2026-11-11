@@ -5,7 +5,7 @@
   "attempts": 1,
   "draft": {
     "id": "item_copper_sheet",
-    "description": "雁渡随河运小批输入的薄铜片，重0.2公斤。一张可冷剪弯折的薄铜片，用于标牌与装饰包角，不作承重梁材。表面留有辊压的细密纹路。",
+    "description": "雁渡随河运小批输入的薄铜片，重0.2公斤。一张可冷剪弯折的薄铜片，用于标牌与装饰包角，不作承重梁材。",
     "inspection": "取起对光看，正反两面应无贯穿裂口与绿锈坑；弯折处不应有脆响。若见大面积发黑起皮，则不宜再弯。",
     "storage": "置于干燥处，避潮，防压。"
   },
@@ -13,10 +13,11 @@
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a7a946f6",
-    "at": "2026-11-10T22:48:55.143Z"
+    "at": "2026-11-11T00:02:09.841Z"
   },
   "errors": [],
   "warnings": [
+    "description长度为50，进入L4抽读",
     "storage长度为12，进入L4抽读"
   ],
   "feedback": null,
@@ -58,6 +59,26 @@
         "l2": "not-run",
         "by": "sonnet-writer-a7a946f6",
         "at": "2026-11-10T22:04:34.211Z"
+      },
+      "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a7a946f6",
+      "at": "2026-11-11T00:02:09.841Z",
+      "reason": "L4 必查清单第 15 条回扫不过的 7 件（制作痕迹与配方不符、骨架外包装）加 ITEMCK 命中 sheath_pouch，整件人工改写；独立严格 L4 已过（审查者 sonnet-l4-a849fd89）",
+      "headCommit": "fae2f5e996ad62635b27c718ca93a536bde9f3bd",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_copper_sheet",
+        "description": "雁渡随河运小批输入的薄铜片，重0.2公斤。一张可冷剪弯折的薄铜片，用于标牌与装饰包角，不作承重梁材。表面留有辊压的细密纹路。",
+        "inspection": "取起对光看，正反两面应无贯穿裂口与绿锈坑；弯折处不应有脆响。若见大面积发黑起皮，则不宜再弯。",
+        "storage": "置于干燥处，避潮，防压。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a7a946f6",
+        "at": "2026-11-10T22:48:55.143Z"
       },
       "priorAttempts": 1
     }
