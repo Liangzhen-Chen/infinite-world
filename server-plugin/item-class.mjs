@@ -339,9 +339,10 @@ export function materialProps(engine,item){
  // MATPHYS：物理与外观事实（表头 physical，与 classes 分开存放，不进 D12 已审条目）。按 physical.precedence 取第一个写了该维的类别；缺项为未知。
  const ph=table?.physical,pchain=(ph?.precedence??[]).filter(k=>member.has(k)&&ph.classes?.[k]);
  const dcls=pchain.find(k=>rowValue(ph.classes[k],'densityKgPerL',kps)!==undefined);
- out.densityKgPerL=dcls?{known:true,value:rowValue(ph.classes[dcls],'densityKgPerL',kps),source:dcls}:{known:false};
+ // 物品自己的 props 覆盖类别值（与 MATERIAL_DIMENSIONS 同一口径，个别偏离写在 mechanics/items.json 的 props 行并带 basis），source 记 'item'。
+ out.densityKgPerL=Number.isFinite(own.densityKgPerL)?{known:true,value:own.densityKgPerL,source:'item'}:dcls?{known:true,value:rowValue(ph.classes[dcls],'densityKgPerL',kps),source:dcls}:{known:false};
  const acls=pchain.find(k=>Array.isArray(ph.classes[k].appearance)&&ph.classes[k].appearance.length);
- out.appearance=acls?{known:true,value:ph.classes[acls].appearance.map(a=>a.term),source:acls}:{known:false};
+ out.appearance=Array.isArray(own.appearance)&&own.appearance.length?{known:true,value:own.appearance.map(a=>a?.term??a),source:'item'}:acls?{known:true,value:ph.classes[acls].appearance.map(a=>a.term),source:acls}:{known:false};
  // 干物质基准的类别单餐量：按这件物品自己的含水折成鲜重（含水未知则没有上限，不猜）。
  if(!out.mealCap.known&&out.moisture.known&&out.moisture.value<1){
   const cls=chain.find(k=>rowValue(table.classes[k],'mealDry',kps)!==undefined);

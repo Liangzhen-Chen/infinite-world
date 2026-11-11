@@ -26,6 +26,12 @@ test('volumeL = weight ÷ 密度，两位有效数字；缺密度不写 volumeL 
 test('appearance 取自材料类别，类别没有该项就不写；取值经 materialProps（含 sources 推密度），物品所属类别按表头 precedence', () => {
   assert.deepEqual(itemPhysicalFacts(wood(0.3), {materialProps: props}).appearance, ['顺纹', '木色由浅黄到褐', '年轮可见']);
   assert.equal('appearance' in itemPhysicalFacts({id: 'x_b', weight: 0.6, tags: ['metal']}, {materialProps: props}), false);
+  // 物品自己的 props 覆盖类别值（密度、外观）；没写的维度仍取类别
+  assert.equal(itemPhysicalFacts({...wood(0.3), props: {densityKgPerL: 0.3}}, {materialProps: props}).volumeL, 1);
+  assert.deepEqual(itemPhysicalFacts({...wood(0.3), props: {appearance: [{term: '深色心材', citation: 'c'}]}}, {materialProps: props}).appearance, ['深色心材']);
+  assert.equal(itemPhysicalFacts({...wood(0.3), props: {appearance: [{term: '深色心材', citation: 'c'}]}}, {materialProps: props}).volumeL, 0.5);
+  // 金属混合类：类别没有外观，物品自己写了才有
+  assert.deepEqual(itemPhysicalFacts({id: 'x_b', weight: 0.6, tags: ['metal'], props: {appearance: [{term: '灰黑', citation: 'c'}]}}, {materialProps: props}).appearance, ['灰黑']);
 });
 
 test('sizeClass 只按体积分档：界值归入上一档的下一档，最后一档无上界', () => {
