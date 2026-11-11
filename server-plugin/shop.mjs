@@ -258,7 +258,7 @@ function buyerNeeds(d,engine,state,place,read){
   const ids=Object.keys(state.npcs??{}).filter(id=>{const n=state.npcs[id];return n?.location&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(n.status)&&placeSettlement(engine,state,n.location).value===place;});
   if(state.location&&placeSettlement(engine,state,state.location).value===place)ids.push('player');
   // 一户只占一个名额：householdResources 的需求是整户的，按人逐个入列会让 k 人户以整户需求被计 k 次。
-  // 钱是个人钱包（无家庭共用钱包），所以该户由编号最前的有钱成员代为购买（buyer）；该户份额只记在他名下。
+  // 一户一次只由一名成员代为购买（编号最前的有钱成员，buyer）；该户份额只记在他名下。主观预算现已按户池算现金（成员钱袋不够时户内转账，household-budget.mjs householdPoolTopUp），客观读（这里 marketSubstitution:false，缺口与现金无关）仍按个人钱袋，二者并存见 EC-1b 前置。
   const seen=new Set();
   for(const id of ids.sort()){
    const key=buyerKey(engine,state,id);
