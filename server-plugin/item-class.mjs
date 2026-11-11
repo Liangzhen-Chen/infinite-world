@@ -277,6 +277,7 @@ const meanOf=a=>a.reduce((n,x)=>n+x,0)/a.length,round3=x=>Math.round(x*1000)/100
 // 单个成员（出处）的推算量：m 含水、edible 可食部分、e 干基能量（饱腹/kg 干物质，未取整）。
 export function memberValues(x,kcalPerSatiety){
  const o={},m=x?.moistureFraction;
+ if(x?.densityKgPerL!==undefined)o.d=x.densityKgPerL; // MATPHYS：材料表观密度（kg/L），出处原值，不参与营养推算
  if(m!==undefined)o.m=m;
  if(x?.refuseFraction!==undefined)o.edible=1-x.refuseFraction;
  if(x?.kcalPer100gWet!==undefined&&m!==undefined&&m<1&&kcalPerSatiety>0)o.e=x.kcalPer100gWet*10/(1-m)/kcalPerSatiety;
@@ -295,6 +296,7 @@ export function deriveFromSources(row,kcalPerSatiety){
  const out={},m=avg('m'),edible=avg('edible'),e=avg('e'),cap=avg('cap'),capDry=avg('capDry');
  if(m!==undefined)out.moisture=round3(m);
  if(edible!==undefined)out.edibleFraction=round3(edible);
+ const dn=avg('d');if(dn!==undefined)out.densityKgPerL=round3(dn);
  if(e!==undefined)out.energyDensity=Math.round(e);
  if(cap!==undefined)out.mealCap=Math.round(cap*10)/10;
  // mealDry：干物质基准的单餐量（g 干物质/人·餐），不是存储维度；materialProps 按物品自己的含水折成 mealCap。
@@ -334,6 +336,12 @@ export function materialProps(engine,item){
   const cls=chain.find(k=>rowValue(table.classes[k],dim,kps)!==undefined);
   out[dim]=cls?{known:true,value:rowValue(table.classes[cls],dim,kps),source:cls}:{known:false};
  }
+ // MATPHYS：物理与外观事实（表头 physical，与 classes 分开存放，不进 D12 已审条目）。按 physical.precedence 取第一个写了该维的类别；缺项为未知。
+ const ph=table?.physical,pchain=(ph?.precedence??[]).filter(k=>member.has(k)&&ph.classes?.[k]);
+ const dcls=pchain.find(k=>rowValue(ph.classes[k],'densityKgPerL',kps)!==undefined);
+ out.densityKgPerL=dcls?{known:true,value:rowValue(ph.classes[dcls],'densityKgPerL',kps),source:dcls}:{known:false};
+ const acls=pchain.find(k=>Array.isArray(ph.classes[k].appearance)&&ph.classes[k].appearance.length);
+ out.appearance=acls?{known:true,value:ph.classes[acls].appearance.map(a=>a.term),source:acls}:{known:false};
  // 干物质基准的类别单餐量：按这件物品自己的含水折成鲜重（含水未知则没有上限，不猜）。
  if(!out.mealCap.known&&out.moisture.known&&out.moisture.value<1){
   const cls=chain.find(k=>rowValue(table.classes[k],'mealDry',kps)!==undefined);
@@ -409,6 +417,53 @@ export function validateDrinkable(world){
   if(hyd>0&&sat===0&&!tagged)errors.push(`饮品缺 drinkable 标签：${item.id}（派生后水分${hyd}、饱腹0）`);
   if(tagged&&!byRule.has(item.id))errors.push(`带 drinkable 标签但不满足饮品规则（食物、液态、一份水分够解渴）：${item.id}`);
   if(tagged&&!(hyd>0))errors.push(`带 drinkable 标签的物品派生后水分须>0：${item.id}`);
+ }
+ return errors;
+}
+// MATPHYS：表头 physical（物理与外观事实）的 L1 检查。类别行只许 sources、selection、appearance、basis；密度由 sources 推出（不手写）；
+// 出处须带 name、citation 与有限的正数 densityKgPerL（kg/L），区间给 range 时取值须在区间内；appearance 3–6 条 {term, citation}，词组不重复。
+export const PHYSICAL_DIMENSIONS=['densityKgPerL'];
+export function validatePhysical(ph,known,kps){
+ const errors=[];
+ if(ph===undefined)return errors;
+ const dims=ph.dimensions??{};
+ for(const d of PHYSICAL_DIMENSIONS){const h=dims[d];if(!h||typeof h.unit!=='string'||!h.unit||!(Number.isFinite(h.min)&&Number.isFinite(h.max)&&h.min<=h.max))errors.push(`材料物理属性表头缺单位或范围：${d}`);}
+ for(const d of Object.keys(dims))if(!PHYSICAL_DIMENSIONS.includes(d))errors.push(`材料物理属性维度未登记：${d}`);
+ const keys=Object.keys(ph.classes??{}),order=ph.precedence??[];
+ if(!Array.isArray(order)||order.length!==new Set(order).size||order.length!==keys.length||keys.some(k=>!order.includes(k)))errors.push('材料物理属性 precedence 必须恰好列出全部类别键且不重复（从最具体到最一般）');
+ const nonEmpty=x=>typeof x==='string'&&x.trim().length>0;
+ for(const k of keys){
+  const row=ph.classes[k],where=`physical.classes.${k}`;
+  if(!known.has(k))errors.push(`材料物理属性类别不是已有标签：${k}`);
+  for(const key of Object.keys(row??{}))if(!['sources','selection','appearance','basis'].includes(key))errors.push(`材料物理属性行字段未登记（密度不手写，由 sources 推出）：${where}.${key}`);
+  if(!nonEmpty(row?.basis))errors.push(`材料物理属性缺 basis：${where}`);
+  if(row?.sources===undefined&&row?.appearance===undefined)errors.push(`材料物理属性行没有密度出处也没有外观：${where}`);
+  if(row?.sources!==undefined){
+   const srcs=row.sources,sel=row.selection;
+   if(!Array.isArray(srcs)||!srcs.length){errors.push(`材料物理属性 sources 须为非空数组：${where}`);}
+   else{
+    if(!sel||!['single','mean'].includes(sel.method)||!nonEmpty(sel.reason))errors.push(`材料物理属性缺 selection（method 取 single/mean 并写 reason）：${where}`);
+    else if(sel.method==='single'&&srcs.length!==1)errors.push(`材料物理属性 single 只能有 1 个出处：${where}`);
+    else if(sel.method==='mean'&&srcs.length<2)errors.push(`材料物理属性 mean 至少 2 个出处：${where}`);
+    const names=new Set(),h=dims.densityKgPerL;
+    srcs.forEach((x,i)=>{
+     const w=`${where}.sources[${i}]`;
+     if(!nonEmpty(x?.name)||names.has(x.name))errors.push(`材料物理属性出处缺 name 或重名：${w}`);else names.add(x.name);
+     if(!nonEmpty(x?.citation))errors.push(`材料物理属性出处缺 citation：${w}`);
+     if(!(Number.isFinite(x?.densityKgPerL)&&x.densityKgPerL>0)||h&&(x.densityKgPerL<h.min||x.densityKgPerL>h.max))errors.push(`材料物理属性出处缺密度或越界：${w}.densityKgPerL=${x?.densityKgPerL}`);
+     for(const [key,r] of Object.entries(x?.range??{}))if(key!=='densityKgPerL'||!(Array.isArray(r)&&r.length===2&&r[0]<=r[1]&&x.densityKgPerL>=r[0]&&x.densityKgPerL<=r[1]))errors.push(`材料物理属性出处取值不在公认区间内：${w}.range.${key}`);
+    });
+   }
+  }
+  if(row?.appearance!==undefined){
+   const a=row.appearance;
+   if(!Array.isArray(a)||a.length<3||a.length>6)errors.push(`材料物理属性 appearance 须为 3–6 条：${where}`);
+   else{const terms=new Set();a.forEach((x,i)=>{
+    if(!nonEmpty(x?.term)||!nonEmpty(x?.citation))errors.push(`材料物理属性 appearance 每条须有 term 与 citation：${where}.appearance[${i}]`);
+    else if(terms.has(x.term))errors.push(`材料物理属性 appearance 词组重复：${where}.${x.term}`);else terms.add(x.term);
+    for(const key of Object.keys(x??{}))if(!['term','citation'].includes(key))errors.push(`材料物理属性 appearance 字段未登记：${where}.appearance[${i}].${key}`);
+   });}
+  }
  }
  return errors;
 }
@@ -499,5 +554,6 @@ export function validateMaterialProps(world){
  const order=t.precedence??[];
  if(!Array.isArray(order)||order.length!==new Set(order).size||order.length!==keys.length||keys.some(k=>!order.includes(k)))errors.push('材料属性 precedence 必须恰好列出全部类别键且不重复（从最具体到最一般）');
  for(const i of world.items??[])if(i.props!==undefined)check(i.props,`items.${i.id}.props`);
+ errors.push(...validatePhysical(t.physical,known,t.kcalPerSatiety));
  return errors;
 }
