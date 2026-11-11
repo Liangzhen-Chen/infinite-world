@@ -284,9 +284,9 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     assert.deepEqual([receipt.coins,receipt.goods],[4,{item_ration:-3}]);
     const report=await f.act('core:settlement.business_report',{business:f.business},'w4-player-report');
     assert.equal(report.profit.revenue,4);assert.equal(report.cash.reconciled,true);
-    // 徐玲钱袋：已批准部分只推出 40-4=36（柜台付 4）；实际 29，多出的 7 来自她饱腹缺口已为 0 后在原生店买 4 份燕麦薄饼（水分缺口 72，薄饼无水分），按冻结判定规则（docs/审查记录/市场价格-s5w4-11-判定.md）对不上已批准设计变化，转 (b)，照实失败、另查。放在最后，不挡前面各断言的检验。
-    assert.equal(f.document.state.npcs[A].coins,36);
     assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
+    // 徐玲钱袋：已批准部分只推出 40-4=36（柜台付 4）；实际 29，多出的 7 来自她饱腹缺口已为 0 后在原生店买 4 份燕麦薄饼（当时水分缺口 72；探针输出里薄饼只有饱腹值 12，未见水分值），按冻结判定规则（docs/审查记录/市场价格-s5w4-11-判定.md）对不上已批准设计变化，转 (b)，照实失败、另查。放在对账之后，不挡其余断言与对账的检验。
+    assert.equal(f.document.state.npcs[A].coins,36);
 });
 
 test('F026 客流：居民自己决定买不买——正忙的人（决策返回稍后）这一天不买',async()=>{
