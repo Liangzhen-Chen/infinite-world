@@ -9,15 +9,20 @@ import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {worldActions} from '../server-plugin/action-affordances.mjs';
 import {reconcile,conservation} from './helpers/ledger-audit.mjs';
+import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
 
-const engine=new WorldEngine(await loadWorld());
+// Private report fixtures explicitly place the issuer and unrelated witnesses.
+// Keep that presence while native receipt actions elapse, isolating errands;
+// source/full-world tests retain the household mechanism.
+const reportWorld=await loadWorld();delete reportWorld.rules.householdSubsistence;
+const engine=new WorldEngine(reportWorld);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const venue='bld_hw_council',host='npc_hw_chenbai',issuer='npc_hw_linsui';
 const input=(action,slots,eventId)=>({tool:'world_act',args:{action,slots},eventId});
 const puzzle={id:'riddle',question:'一口咬掉牛尾巴，打一字',answers:['告'],reward:{item:'item_lantern',quantity:1}};
-function scene(owner='player',title=true,location=venue){
+function scene(owner='player',title=true,location=venue,minute=600){
  const loaded=applyIntentSetup(engine,engine.createCharacter(seed,{},'a3-producers'),{
-  minute:600,location,present:[host,issuer,'npc_hw_wushuo'],coins:100,inventory:{item_wood:2},
+  minute,location,present:[host,issuer,'npc_hw_wushuo'],coins:100,inventory:{item_wood:2},
   itemInstances:[{id:'original-prize',template:'thing',kind:'item',item:'item_lantern',owner,location,carriedBy:owner}],
   ...(title?{holdings:[{id:'venue-title',kind:'owns',holder:owner,subject:location,terms:{share:1}}]}:{})
  });
@@ -41,8 +46,20 @@ function balanced(before,after){
  const r=reconcile(engine,after);for(const key of ['mismatches','drift','audit'])assert.deepEqual(r[key],[]);
  assert.deepEqual(conservation(engine,before,after),[]);
 }
-async function accepted(){
- const before=scene();
+// The issuer keeps her own schedule while the prelude's actions elapse (npc-schedule walks her back to her
+// counter). The private-report scenes are therefore set where and when her real schedule keeps her awake in
+// one place for the whole report window, read from scheduleAt, not a written minute or place.
+const REPORT_WINDOW=120;
+function issuerStay(){
+ const state=engine.createCharacter(seed,{},'a3-producers').state;
+ for(let minute=Math.max(state.minute,360);minute<1320;minute+=15){
+  const slot=scheduleAt(engine,issuer,minute,state);
+  if(slot?.location&&engine.world.locations.some(l=>l.id===slot.location)&&!/(睡|休息|赶路)/.test(slot.activity??'')&&slot.until-minute>=REPORT_WINDOW)return {minute,location:slot.location,until:slot.until};
+ }
+ assert.fail('发布人当日没有可整段在场的作息时段');
+}
+async function accepted(at=issuerStay()){
+ const before=at?scene('player',false,at.location,at.minute):scene();
  const loaded=await runPrelude(engine,before,[
   input('core:quest.publish',{publisher:issuer,personal:true,grade:'D',reward:20,content:'交付两份木材',objective:{type:'deliver',item:'item_wood',quantity:2}},'producer-quest'),
   input('core:quest.accept',{quest:'quest_producer-quest'},'producer-accept')
@@ -86,6 +103,10 @@ test('producers: report requires the actual taker, issuer, on-site recipient and
   await refused(document,input('core:quest.report',{quest,progress:.5,content:'进度',...patch},'bad-report'),/发布人|来源|结算|槽位/);
  const moved=await act(document,input('core:move',{destination:'loc_hw_gate'},'leave-issuer'));
  await refused(moved.document,input('core:quest.report',{quest,progress:.5,content:'隔空汇报'},'absent-issuer'),/在场/);
+ // Set at the council hall at 10:00 instead, the issuer's own schedule takes her away while the prelude
+ // elapses; the report is then refused because she is really not there.
+ const left=await accepted(null);assert.notEqual(left.state.npcs[issuer].location,left.state.location);
+ await refused(left,input('core:quest.report',{quest,progress:.5,content:'人已离开'},'issuer-left'),/在场/);
 });
 
 test('producers: player creates a public ordinary event through prelude without minting stock or leaking answers',async()=>{

@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {purse,treasury as treasuryAccount,transit,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -212,12 +213,18 @@ export function stripTitle(d,e,args,eventId){
     return {title:next};
 }
 function dueOf(r){return r.category==='title_petition'?r.due:Math.min(r.nextIncome,r.levy.due);}
-const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='title_petition'&&r.status==='待审定'||r.category==='title'&&!['已除爵','独立'].includes(r.status));
-export function nextTitleMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueOf).filter(m=>m>now));}
+const scheduled=(state,after)=>{
+ const eligible=r=>r.category==='title_petition'&&r.status==='待审定'||r.category==='title'&&!['已除爵','独立'].includes(r.status);
+ const due=r=>eligible(r)&&dueOf(r)<=after;
+ const candidates=[...recordsWhere(state.records,'category','title_petition'),...recordsWhere(state.records,'category','title')].filter(due);
+ // Multiple due rows retain the original enumeration order before stable sorting.
+ return candidates.length>1?Object.values(state.records??{}).filter(due):candidates;
+};
+export function nextTitleMinute(state,now){return Math.min(Infinity,...[...recordsWhere(state.records,'category','title_petition'),...recordsWhere(state.records,'category','title')].filter(r=>r.category==='title_petition'&&r.status==='待审定'||r.category==='title'&&!['已除爵','独立'].includes(r.status)).map(dueOf).filter(m=>m>now));}
 export function advanceTitles(d,engine,{after}){
     ensureNobleTitles(d,engine);
     for(let guard=0;guard<1000;guard++){
-        const r=scheduled(d.get('state')).filter(r=>dueOf(r)<=after).sort((a,b)=>dueOf(a)-dueOf(b))[0];
+        const r=scheduled(d.get('state'),after).sort((a,b)=>dueOf(a)-dueOf(b))[0];
         if(!r)return;
         if(r.category==='title_petition')decide(d,engine,r);
         else if(r.nextIncome<=r.levy.due)income(d,engine,r,r.nextIncome);

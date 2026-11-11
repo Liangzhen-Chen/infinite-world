@@ -107,7 +107,7 @@ export function returnChanges(engine,state,place,{from,to=state.minute,before={}
             else if(e.case&&!minor(engine,state,e.actor))add(55,`${name(e.actor)}欠债违约，已经立案`);
             continue;
         }
-        if(VERB[e.verb]&&eventRumorId(engine,state,e)&&![e.actor,e.target].some(id=>minor(engine,state,id)))add(60+Math.min(20,Math.abs(eventWeight(e))),`${name(e.actor)}${VERB[e.verb]}${name(e.target)}`);
+        if(VERB[e.verb]&&eventRumorId(engine,state,e)&&![e.actor,e.target].some(id=>minor(engine,state,id)))add(60+Math.min(20,Math.abs(eventWeight(e,engine,state))),`${name(e.actor)}${VERB[e.verb]}${name(e.target)}`);
     }
     // 当地人对你的看法：只说词，不说数。
     for(const [holder,value]of Object.entries(before.regard??{})){

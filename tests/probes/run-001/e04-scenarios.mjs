@@ -10,6 +10,7 @@ import {WorldEngine} from '../../../server-plugin/engine.mjs';
 import {legalCodeAt,miningJurisdiction,codePenalty} from '../../../server-plugin/law-codes.mjs';
 import {applyPatches} from '../../../server-plugin/storage.mjs';
 import {standing} from '../../../server-plugin/standing.mjs';
+import {applyIntentSetup} from '../../../tools/a3-score.mjs';
 
 function job(f,{location=f.doc.state.location,item='item_iron'}={}){
  const row={id:'e04-mining',category:'contract',kind:'workshop',owner:host,worker,location,item,task:'矿脉开采',
@@ -31,9 +32,14 @@ export async function materialScenario(){
  const secondJob={...row,id:'e04-second-miner',worker:clerk};f.doc.state.records[secondJob.id]=secondJob;
  f.doc.state.npcs[clerk].attributes=structuredClone(f.doc.state.npcs[worker].attributes);
  f.doc.state.npcs[clerk].inventory[f.e.rules.extraction.mining.tool]={quantity:1,durability:100};
- f.doc.state.npcs[host].inventory[item]={quantity:2};
+ // 15 §15.2: native iron now prices its own goods class. With only two
+ // bars, demand10/stock2 already hits the scarcity ceiling3, hiding later
+ // supply changes. Four is an unrelated opening-stock premise, not a quote.
+ const opening=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','npcs',host,'inventory'],value:{...f.doc.state.npcs[host].inventory,[item]:{quantity:4}}}]});
+ assert.deepEqual(opening.setupUnmet,[]);f.doc=opening.document;
  f.doc.state.settlements.loc_hw.iron=0;
- f.doc.state.inventory.item_charcoal={quantity:20};
+ // W8-E1 负重：通用夹具行囊的面包 15 + 木料 200 + 燕麦 50 公斤本情境不用（打铁只用铁、木炭与锤钳），去掉，只带木炭 20 份 = 5 公斤与下面的工具。
+ f.doc.state.inventory={item_charcoal:{quantity:20}};
  const smith='npc_hw_duanyan';
  f.doc.state.npcs[smith]={...f.doc.state.npcs[host],inventory:{},location,status:'正常'};
  for(const tool of recipe.tools)f.doc.state.inventory[tool]={quantity:1,durability:100};
@@ -47,6 +53,9 @@ export async function materialScenario(){
  assert.equal(mined.illegal,false);
  const low=regionalTradePrice(f.draft(),f.e,item,location),before=recipeInputCost(f.draft(),f.e,recipe);
  const first=await f.act({seller:host,item,quantity:1},'e04-first-iron');
+ // Shelf maximum8 + reserve2 gives D10; local iron S4. Published base12
+ // × scarcity2.5 × depth/quality/spread/regard/corrections1 = 30 copper.
+ assert.equal(first.cost,30);assert.equal(first.pricing.scarcity,2.5);
  let craft=await f.e.reduce(f.doc,{tool:'world_craft',args:{recipe:recipe.id},eventId:'e04-first-forge'});
  f.doc=applyPatches(f.doc,craft.patches);const crafted=craft.result;
  assert.equal(crafted.spent.materials.find(m=>m.item===item).quantity,1);
@@ -58,15 +67,34 @@ export async function materialScenario(){
  craft=await f.e.reduce(f.doc,{tool:'world_craft',args:{recipe:smelt.id},eventId:'e04-smelt-iron'});
  f.doc=applyPatches(f.doc,craft.patches);assert.equal(craft.result.success,true);assert.equal(craft.result.produced[0].item,item);
  await f.act({seller:'player',buyer:host,item,quantity:1},'e04-sell-smelted-iron');
+ // Smelting replaced the first consumed bar. Buy and actually forge one
+ // more bar so native effective supply falls from4 to3 (rather than merely
+ // moving an unchanged bar between holders). No expected-price function is
+ // used, and both original regional input-cost assertions above stay strict.
+ await f.act({seller:host,item,quantity:1},'e04-consume-iron');
+ const consumed=await f.e.reduce(f.doc,{tool:'world_craft',args:{recipe:recipe.id},eventId:'e04-consume-forge'});
+ f.doc=applyPatches(f.doc,consumed.patches);assert.equal(consumed.result.spent.materials.find(m=>m.item===item).quantity,1);
  const working=f.draft();working.set(['state','records',row.id,'status'],'生效');
  const continued=mineEmployment(working,f.e,row,1000,60);assert.equal(continued.obtained[0].quantity,1);
- const workingPrice=regionalTradePrice(working,f.e,item,location);d=f.draft();
+ // Unified goods pricing no longer recursively prices bars from ore. In
+ // the continuing-production fork, actually buy the mined ore and smelt it
+ // into a bar before comparing bar supply. Preserve the strict inequality.
+ const forkBuy=await f.e.reduce(working.document,{tool:'world_trade',args:{seller:host,item:'item_iron_ore',quantity:smelt.materials.find(m=>m.item==='item_iron_ore').amount},eventId:'e04-working-ore'});
+ const forkSmelt=await f.e.reduce(applyPatches(working.document,forkBuy.patches),{tool:'world_craft',args:{recipe:smelt.id},eventId:'e04-working-smelt'});
+ assert.equal(forkSmelt.result.success,true);
+ const smelted=applyPatches(applyPatches(working.document,forkBuy.patches),forkSmelt.patches);
+ // 私人新炼的铁尚未上市场；继续生产分支须真实售给商户，才增加公开供给。
+ const forkSale=await f.e.reduce(smelted,{tool:'world_trade',args:{seller:'player',buyer:host,item,quantity:1},eventId:'e04-working-sell'});
+ const fork=applyPatches(smelted,forkSale.patches),forkRead={document:fork,get:(...p)=>p.reduce((v,k)=>v?.[k],fork)};
+ const workingPrice=regionalTradePrice(forkRead,f.e,item,location);d=f.draft();
  const high=regionalTradePrice(d,f.e,item,location),after=recipeInputCost(d,f.e,recipe);
- assert.ok(high>low);assert.ok(high>workingPrice,'同样消耗下，继续生产的供给与价格须优于停工分支');assert.ok(after.copper>before.copper);d.done();
+ assert.ok(high>low);assert.ok(high>workingPrice,'同样消耗下，继续生产的供给与价格须优于停工分支');assert.ok(after.copper>before.copper,JSON.stringify({before,after,low,high,workingPrice}));d.done();
  const second=await f.act({seller:host,item,quantity:1},'e04-second-iron');
+ assert.equal(second.pricing.scarcity,3,'10/3 clamps at the published upper bound3');
  assert.ok(second.cost>first.cost,'同日成交必须读取新账户供给');
  assert.equal(first.receivingCases,undefined);assert.equal(second.receivingCases,undefined,'合法矿石交易不能产生收赃案');
- assert.equal(f.doc.state.records[`trade-quote:${Math.floor(f.doc.state.minute/1440)}:${host}:player:${item}`].deals.length,2,'动态报价须保留此前成交');
+ // 15 §15.2: preserve all three real sales as history, never saved quotes.
+ assert.equal(Object.values(f.doc.state.records).filter(r=>r.category==='market_trade'&&r.seller===host&&r.buyer==='player'&&r.item===item).length,3,'动态报价须保留此前成交');
  craft=await f.e.reduce(f.doc,{tool:'world_craft',args:{recipe:recipe.id},eventId:'e04-second-forge'});
  f.doc=applyPatches(f.doc,craft.patches);d=f.draft();const next=craft.result;
  assert.ok(d.get('state','crafted',next.receipt,'inputCost','copper')>d.get('state','crafted',crafted.receipt,'inputCost','copper'));
@@ -75,6 +103,8 @@ export async function materialScenario(){
 }
 export async function stolenScenario(){
  const location='site_ms_ll_adit',f=fixture({at:location}),county='county_xichui_huancheng';
+ // W8-E1 负重：通用夹具行囊 265 公斤（木料 200 + 燕麦 50 + 面包 15）超安全负重 30 公斤，买 1 份赃矿入囊被拒；本情境不用这些货，空囊前往矿口。
+ f.doc.state.inventory={};
  const skeleton=generateCounty(f.w,county,'e04-court');
  f.doc.state.remote??={};f.doc.state.remote[county]={county,skeleton,profiles:{}};
  for(const n of skeleton.people)f.doc.state.npcs[n.id]={status:'正常',location:n.location,activity:'办公',occupation:n.occupation,coins:1000,inventory:{}};

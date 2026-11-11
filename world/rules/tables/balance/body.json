@@ -2,6 +2,7 @@
   "schema": "balance/body@1",
   "title": "身体需求速率（数值方案 §2.14）",
   "params": [
+    {"id":"weather_exposure","value":{"shelteredDryMinutes":120,"clearDryMinutes":240},"bounds":{"shelteredDryMinutes":[60,240],"clearDryMinutes":[120,480]},"basis":"calibrate","source":"附录 A §A.18 暴露状态：遮蔽 ≥ 2h 或晴 ≥ 4h；未给界取 §A.9 缺省 ×[0.5, 2]；W8-E3","playDecision":false,"calibration":"pending","unit":"分钟","note":"core 反应 weather_exposure：户外雨或暴雨且无实际遮蔽时施加 wet；室内、穿着 rainproof 雨具、位于 shelter 设施半径内免淋湿。配置随 primitiveTables 归档。"},
     {"id":"wet.drainMul","value":1.2,"bounds":[1,1.5],"basis":"calibrate","source":"待仿真标定（日常题缺省值；数值方案 §2；附录 A §A.18）","playDecision":false,"calibration":"pending","unit":"×","note":"日常题 D09③：暴露状态 wet 对 body:drain 的修正项（附录 A §A.18 暴露状态行）；冒雨赶路体力消耗比晴天多"}
   ],
   "rows": [

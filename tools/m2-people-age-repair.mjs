@@ -4,7 +4,7 @@ import {DeepSeekClient} from './deepseek-client.mjs';
 import {loadWorld} from './load-world.mjs';
 import {npcM2Foundation,npcAgeCorrections} from '../world/design/npc-m2.mjs';
 import {validateFoundation,validateDraft,contextFor,revision} from './m2-people-content.mjs';
-import {defaultReviewRequest,parseModelJSON,hashContent} from './content-pipeline.mjs';
+import {defaultReviewRequest,parseModelJSON,hashContent,rowFingerprintShape} from './content-pipeline.mjs';
 const root='world/drafts/m2-people',read=async name=>JSON.parse(await fs.readFile(`${root}/${name}.json`,'utf8')),write=(name,x)=>fs.writeFile(`${root}/${name}.json`,JSON.stringify(x,null,2)+'\n');
 const ids=['npc_hw_duanyan','npc_hw_zhengshuisheng','npc_hw_gucen'];
 const source=await fs.readFile('tools/bootstrap-world.mjs','utf8');
@@ -34,7 +34,7 @@ try{
  }
  for(const [id,hash] of Object.entries(unaffectedBefore))assert.equal(hashContent(await read(id)),hash,`不得重写无关人物${id}`);
  const rows=await Promise.all(batch.ids.map(read));
- Object.assign(batch,{fingerprint:hashContent(rows.map(row=>({id:row.id,draft:row.draft,review:row.review,status:row.status}))),passed:rows.filter(x=>x.status==='passed').length,manual:rows.filter(x=>x.status==='manual').map(x=>x.id),flagged:rows.filter(x=>x.warnings.length).map(x=>x.id),costUpperYuan:client.spent,l4:{approved:false,notes:[]}});
+ Object.assign(batch,{fingerprint:hashContent(rows.map(rowFingerprintShape)),passed:rows.filter(x=>x.status==='passed').length,manual:rows.filter(x=>x.status==='manual').map(x=>x.id),flagged:rows.filter(x=>x.warnings.length).map(x=>x.id),costUpperYuan:client.spent,l4:{approved:false,notes:[]}});
  batch.manualRatio=batch.manual.length/batch.count;batch.needsSystemicRepair=batch.manualRatio>0.1;await write('batch-0',batch);
  const summary=await read('summary');Object.assign(summary,{passed:batch.passed,manual:batch.manual.length,costUpperYuan:client.spent,batches:[batch]});await write('summary',summary);await write('terminal',{state:'finished',...summary});
  await write('age-review',{ids,source:'tools/bootstrap-world.mjs:18',code:"age: name === '段禾' ? 16 : name === '林穗' ? 34 : 30",corrections:npcAgeCorrections.slice(1),unaffectedRecordHashes:unaffectedBefore,unchangedFields:['coins','inventory','skills','services','schedule'],costUpperYuan:client.spent});

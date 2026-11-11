@@ -4,7 +4,7 @@ import {src,ok,partial,wrong,missing} from '../harness.mjs';
 
 import assert from 'node:assert/strict';
 import {fixture,asset,finish,DRIVER,SECOND} from '../../helpers/transport.mjs';
-import {bookTransport,nextTransportMinute,advanceTransport,damageTransportCargo,compensateTransportLoss,collectTransport} from '../../../server-plugin/transport.mjs';
+import {bookTransport,transportAssetView,nextTransportMinute,advanceTransport,damageTransportCargo,compensateTransportLoss,collectTransport} from '../../../server-plugin/transport.mjs';
 import {settleClaim,lossView} from '../../../server-plugin/obligation-claims.mjs';
 import {openLedger,auditLedger} from '../../../server-plugin/ledger.mjs';
 import {dueObligation} from '../../../server-plugin/obligation-runtime.mjs';
@@ -16,7 +16,13 @@ function setup(){const f=fixture();f.d.document.ledger=openLedger(f.e,f.d.docume
 const transport=()=>src('server-plugin/transport.mjs');
 export default [
  {id:'E05-1',event:'E05',no:1,text:'货物超出船的载量要拒运或分批',async check(){
-  return /load\.kg>a\.capacityKg/.test(transport())&&/货舱重量、体积或座/.test(transport())?ok('重量、体积或座位超出即拒运（不分批）'):missing('无载量校验');}},
+  // Drives the real booking (the source-text probe broke when batching changed the expression to load+used>capacity).
+  const {d,e}=setup(),vehicle=asset(d,e),capacity=transportAssetView(e,d.document,vehicle).capacityKg;
+  d.set(['state','inventory','item_wood'],{quantity:5000});const untouched=structuredClone(d.document);
+  assert.throws(()=>bookTransport(d,e,{asset:vehicle,to:'loc_bs',cargo:[{item:'item_wood',quantity:5000}]},'overload'),/货舱重量、体积或座位容量不足/);
+  assert.deepEqual(d.document,untouched);
+  d.set(['state','inventory','item_wood'],{quantity:1});assert.ok(bookTransport(d,e,{asset:vehicle,to:'loc_bs',cargo:[{item:'item_wood',quantity:1}]},'fits').id);
+  return ok(`超过运力${capacity}kg的货单整笔拒运且不改动任何状态，未超的照常承运（不分批）`);}},
  {id:'E05-2',event:'E05',no:2,text:'滞留天数按天气结算，护卫工资按天累计',async check(){
  const {d,e,w}=setup(),vehicle=asset(d,e,DRIVER,'boat');
  const trip=bookTransport(d,e,{asset:vehicle,to:'loc_yp_path',escort:SECOND,escortDailyWage:12},'nine-days');
@@ -67,7 +73,10 @@ export default [
  assert.equal(d.get('state','records',trip.id,'status'),'arrived');assert.equal(e.quantity(d,'player','item_oats'),0);
  d.set(['state','location'],'loc_bs');collectTransport(d,e,trip.id);assert.equal(e.quantity(d,'player','item_oats'),7);
  const owner=d.get('state','player','coins'),carrier=d.get('state','npcs',DRIVER,'coins');
- assert.equal(loss.amount,3*e.byId.get('item_oats').basePrice);assert.ok(loss.amount>1);
+ // W8-D / 15 §15.2: loss uses local market value, not the catalog base.
+ // Spring base=3*0.9=2.7; spot S=(8000-5220)+50=2830, D=5220,
+ // quality/corrections=1: floor(3*2.7*5220/2830)=14 copper.
+ assert.equal(loss.amount,14);assert.ok(loss.amount>1);
  const part=Math.floor(loss.amount/2),paid=compensateTransportLoss(d,e,{loss:loss.id,amount:part,payer:DRIVER},'compensate');assert.equal(paid.transferred,part);assert.equal(lossView(d.get('state'),loss.id).remaining,loss.amount-part);assert.equal(dueObligation(d.get('state'),`${loss.id}:claim`).owed,loss.amount-part);
  compensateTransportLoss(d,e,{loss:loss.id,amount:loss.amount-part,payer:DRIVER},'compensate-rest');
  assert.equal(d.get('state','player','coins'),owner+loss.amount);

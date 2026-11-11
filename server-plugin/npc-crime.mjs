@@ -1,5 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {recordsWhere,recordEntriesWhere} from './storage.mjs';
 // U7 needs choose a bounded offscreen act. All acts use the ordinary legal case ledger.
 import {purse,fund as fundAccount,moveCoins,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -23,7 +25,7 @@ declareHoldingWriter('npc-crime',{kinds:['guest_of','wanted'],entities:['case']}
 const DAY=1440,path=id=>['state','records',id];
 const alive=(e,s,id,n)=>n&&!isPhysicallyDead(e,s,id)&&!['濒死','昏迷'].includes(n.status);
 const awake=(e,s,id,n)=>alive(e,s,id,n)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|熟睡|睡觉/.test(n.activity??'');
-const cases=state=>Object.values(state.records??{}).filter(r=>r.category==='legal_case'&&r.npcCrime);
+const cases=state=>recordsWhere(state.records,'category','legal_case').filter(r=>r.npcCrime);
 const available=(e,s,id)=>awake(e,s,id,s.npcs[id])&&npcAgeAt(e,s,id)>=18&&!personConstraint(e,s,id);
 function cargoAt(e,s,id){
  const n=s.npcs[id],cp=e.rules.smuggling?.checkpoints?.find(c=>c.location===n.location);if(!cp)return null;
@@ -67,15 +69,15 @@ export function commitNpcCrime(d,e,plan,minute){
  }else if(offense==='smuggling'){
   const cargo=cargoAt(e,state,actor);if(!cargo||cargo.item!==plan.item)return null;
   // Contraband really changes hands at the checkpoint; no sale proceeds are invented.
-  value=e.byId.get(plan.item).basePrice;transferItems(d,e,actor,victim,plan.item,1);stolen=null;
+  value=goodsWorth(d,e,{item:plan.item,quantity:1,location,holder:actor});transferItems(d,e,actor,victim,plan.item,1);stolen=null;
  }else throw preconditionFailure('未登记的NPC犯罪来源');
  const key=registerIncident(d,e,{offender:actor,victim:offense==='smuggling'?null:victim,offense,value,stolen,witnesses,eventId:id,location,minute,relationshipApplied:true});
  const code=legalCodeAt(e,location,d.get('state'));let reportAt=null,reportRoute=null;
- if(witnesses.length){try{reportRoute=e.route(location,code.court,'walk',minute,d.document.randomSeed);reportAt=minute+code.reportMinutes+reportRoute.minutes;}catch{}}
+ if(witnesses.length){try{reportRoute=e.route(location,code.court,'walk',minute,d.get('randomSeed'));reportAt=minute+code.reportMinutes+reportRoute.minutes;}catch{}}
  let flight=null;
  const destinations=plan.destination?[plan.destination]:plan.embezzlement?(e.rules.law.codes??[]).filter(c=>c.id!==code.id).map(c=>c.court).filter(Boolean).sort():[];
  for(const destination of destinations){
-  try{const route=e.route(location,destination,'walk',minute,d.document.randomSeed),coins=d.get('state','npcs',actor,'coins');
+  try{const route=e.route(location,destination,'walk',minute,d.get('randomSeed')),coins=d.get('state','npcs',actor,'coins');
    if(route.minutes>0&&Number.isFinite(route.minutes)&&(route.cost??0)<=coins){
     const cost=route.cost??0;if(cost){moveCoins(d,{from:purse(null,actor),to:sink('export','travel'),amount:cost,writer:'npc-crime',eventId:id});d.set(['state','npcs',actor,'coins'],coins-cost);}
     flight={from:location,to:destination,depart:minute,arrive:minute+route.minutes,edges:route.edges,cost};
@@ -126,7 +128,7 @@ export function advanceNpcJustice(d,e,after){
    if(evaluation.score<evaluation.threshold){if(row.status!=='证据不足')holdingSet(d,null,path(row.id),{...row,status:'证据不足'},'npc-crime');continue;}
    if(offender.location!==code.court){if(!wantedOfCase(d.get('state'),row.id)&&after-row.reportedAt>=e.rules.law.wanted.appearanceMinutes)issueWanted(d,e,row,WANTED_REASONS.unappeared,after);continue;}
    adjudicateLegalCase(d,e,row,code,judge,`${row.sourceEvent}:hearing`,presentWitnesses(d.get('state'),code.court));row=d.get(...path(row.id));
-   for(const[key,hold]of Object.entries(d.get('state','records')))if(hold.category==='legal_detention'&&hold.case===row.id&&hold.status==='生效'){
+   for(const[key,hold]of recordEntriesWhere(d.get('state','records'),'category','legal_detention'))if(hold.case===row.id&&hold.status==='生效'){
     const shops=businessSnapshot(e,d.get('state'));
     holdingSet(d,null,path(key),{...hold,status:'已结束',ended:after},'npc-crime');
     entityTransition(d,e,{id:`${key}:release`,verb:'release',actor:judge,target:row.offender,minute:after,location:hold.location,visibility:row.private?'private':row.visibility??hold.visibility??'public',summary:`${e.byId.get(row.offender)?.name??row.offender}审结后解除待审拘留`});
@@ -152,7 +154,7 @@ export function advanceNpcCrime(d,e,{before,after}){
   for(const id of Object.keys(state.npcs??{}).sort()){
    if(state.npcs[id].location===state.location)continue;
    const plan=npcCrimePlan(e,d.get('state'),id);if(!plan)continue;
-   if(clockRoll(d.document.randomSeed,`npc-crime:${id}`,Math.floor(at/DAY))>=e.rules.law.npcCrime.dailyChance)continue;
+   if(clockRoll(d.get('randomSeed'),`npc-crime:${id}`,Math.floor(at/DAY))>=e.rules.law.npcCrime.dailyChance)continue;
    commitNpcCrime(d,e,plan,at);
   }
  }

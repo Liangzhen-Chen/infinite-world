@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {readS1Publication,mergeS1Publication,publishS1} from '../tools/publish-w2-s1.mjs';
 import {spells,books,placements,channelFacts} from '../world/design/w2-s1.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
@@ -11,7 +11,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {initialThermalState} from '../server-plugin/magic-object.mjs';
 import {consumeMagicProtection} from '../server-plugin/magic-primitives.mjs';
-const formal=await loadWorld(),publication=await readS1Publication();
+const formal=await loadRuntimeWorld(),publication=await readS1Publication();
 // A later batch must survive this batch's removal/republication. Deliberately
 // append one valid spell so the regression covers both counts and row order.
 formal.spells.push({...structuredClone(formal.spells.find(s=>s.id==='spell_light')),id:'spell_after_s1_fixture',name:'后续批次照明夹具',aliases:[]});
@@ -142,15 +142,17 @@ test('未知法术、未持书/识字不足/认证不足、施法材料不足与
  doc=structuredClone(learned.get(s.id));doc.state.player.attributes.精神=1;let failed;for(let i=0;i<40;i++){const r=await run(doc,'world_cast',{spell:s.id,target:'player'});if(!r.result.success){failed=r;break;}}assert.ok(failed);assert.equal(failed.doc.state.player.mp,doc.state.player.mp-s.mp);assert.equal(failed.doc.state.inventory.item_charcoal.quantity,doc.state.inventory.item_charcoal.quantity-1);assert.equal(failed.doc.state.minute,doc.state.minute+s.minutes);assert.equal(failed.doc.state.effects[failed.id],undefined);
 });
 
-test('正常环境许可只由实际所有者签发，撤销/到期/超距保留原钱物，公共访问不授权生长',async()=>{
+test('环境许可只由实际所有者签发；无许可、撤销、到期施放照样发生并命中擅用，超距与公田无批次仍按物理理由拒绝',async()=>{
  const s=spells.find(s=>s.id==='spell_s1_warm_vessel');let doc=structuredClone(learned.get(s.id));doc.state.minute=540;doc.state.location='bld_hw_school';
  const args={spell:s.id,target:'feature_s1_hearth'};
- await assert.rejects(engine.reduce(doc,{tool:'world_cast',args,eventId:'private'}),/授权/);
+ // K6 依据（审查 C-b、D1 本文件:153）：所有者许可决定合法与否，不决定法术能否作用；缺许可时施放发生，命中擅用他人之物。
+ const unlicensed=async(d,a,id,victim)=>{const out=await engine.reduce(d,{tool:'world_cast',args:a,eventId:id}),after=applyPatches(d,out.patches),o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,`${id} 命中擅用`);assert.equal(after.state.records[o.record].sourceEvent,id);if(victim)assert.equal(o.victim,victim);assert.ok(after.state.player.mp<d.state.player.mp,`${id} 施放确实发生`);return o;};
+ await unlicensed(doc,args,'private','npc_hw_luqing');
  await assert.rejects(grant(doc,args.target,{owner:'npc_hw_xuling'}),/所有者/);
- const g=await grant(doc,args.target);const revoked=await run(g.doc,'world_promise',{operation:'revoke_access',promisor:'npc_hw_luqing',authorization:g.result.authorization});await assert.rejects(engine.reduce(revoked.doc,{tool:'world_cast',args:{...args,authorization:g.result.authorization},eventId:'revoked'}),/授权/);
- const expired=structuredClone(g.doc);expired.state.records[g.result.authorization].expires=expired.state.minute;await assert.rejects(engine.reduce(expired,{tool:'world_cast',args:{...args,authorization:g.result.authorization},eventId:'expired'}),/授权/);
+ const g=await grant(doc,args.target);const revoked=await run(g.doc,'world_promise',{operation:'revoke_access',promisor:'npc_hw_luqing',authorization:g.result.authorization});await unlicensed(revoked.doc,{...args,authorization:g.result.authorization},'revoked','npc_hw_luqing');
+ const expired=structuredClone(g.doc);expired.state.records[g.result.authorization].expires=expired.state.minute;await unlicensed(expired,{...args,authorization:g.result.authorization},'expired','npc_hw_luqing');
  const far=structuredClone(g.doc);far.state.records.local_player_position={location:far.state.location,point:[4,0]};await assert.rejects(engine.reduce(far,{tool:'world_cast',args:{...args,authorization:g.result.authorization},eventId:'far'}),/距离/);
- const grow=structuredClone(learned.get('spell_s1_field_growth'));grow.state.location='loc_hw_fields';await assert.rejects(engine.reduce(grow,{tool:'world_cast',args:{spell:'spell_s1_field_growth',target:'farm_hw_oats'},eventId:'public-field'}),/田主.*同意/);
+ const grow=structuredClone(learned.get('spell_s1_field_growth'));grow.state.location='loc_hw_fields';/* K6：许可闸门去掉后，公田上没有已下种的批次这一物理理由显出来，仍拒绝（理由是物理的） */await assert.rejects(engine.reduce(grow,{tool:'world_cast',args:{spell:'spell_s1_field_growth',target:'farm_hw_oats'},eventId:'public-field'}),/生长批次/);
 });
 
 test('旧战役逐键升级六本书，零库存/残本/钱物/记忆保留，升级后可购买学习',async()=>{
@@ -173,10 +175,11 @@ test('隔离发布只追加S1的30条法术并保留后续批次，重复零写�
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS1Publication(conflict,publication),/冲突/);
  const shared=world.skills.find(s=>s.learningProfessions&&batchRows.skills.some(r=>r.id===s.id));if(shared){const altered=structuredClone(world);altered.skills.find(s=>s.id===shared.id).stage+=1;assert.throws(()=>mergeS1Publication(altered,publication),/冲突/);}
  // A3's archived actions and ontology are inputs to the same edition; keep the complete-world roundtrip assertion unchanged.
- const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s1-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s1'),path.join(root,'drafts/w2-s1'),{recursive:true});
+ // S5-06: retain the approved ecology catalog in the isolated edition and exact roundtrip.
+ const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s1-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s1'),path.join(root,'drafts/w2-s1'),{recursive:true});
  for(const [f,v]of Object.entries({'meta/spells.json':before.spells,'meta/skills.json':before.skills,'meta/items.json':before.items,'people/baseline.json':before.npcs,'geo/locations.json':before.locations}))await fs.writeFile(path.join(root,f),JSON.stringify(v));
  const original=await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),preview=await publishS1({root});assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,before.spells.length+30);assert.equal(preview.changed.length,5);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
- const first=await publishS1({root,publish:true});assert.equal(first.changed.length,5);assert.deepEqual(await loadWorld(root),world);const times=await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS1({root,publish:true})).changed,[]);
+ const first=await publishS1({root,publish:true});assert.equal(first.changed.length,5);assert.deepEqual(await loadRuntimeWorld(root),world);const times=await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS1({root,publish:true})).changed,[]);
  for(const [file,mutate,pattern]of [['candidate.json',r=>{r.spells[0].failure+='免费';},/候选/],['spell_s1_ember_circle.json',r=>{r.draft.source.readingMinutes=1;},/内容已改变/],['batch-0.json',r=>{r.l4.approved=false;},/L4/],['batch-0.json',r=>{r.l4.wave[0].scores[0]=2;},/评分/]]){const f=path.join(root,'drafts/w2-s1',file),bytes=await fs.readFile(f,'utf8'),r=JSON.parse(bytes);mutate(r);await fs.writeFile(f,JSON.stringify(r));await assert.rejects(publishS1({root,publish:true}),pattern);await fs.writeFile(f,bytes);}
  assert.deepEqual(await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs))),times);
 });

@@ -11,7 +11,18 @@ const read=async file=>JSON.parse(await fs.readFile(new URL(`../world/drafts/m5-
 test('治理来源15–25条，覆盖上级职责、官职额度、地块费率、公库与九级爵位，发布与设计一致',()=>{
  assert.deepEqual(validateAll(world).errors,[]);
  assert.ok(entries.length>=15&&entries.length<=25);
- assert.deepEqual(authority,authorityRules());
+ // W8-E8 / 05 §5.7.3 extends the chief seat with public-property actions.
+ // Retain byte-for-byte coverage of every M5 field plus the exact extension;
+ // the old reviewed M5 skeleton and its receipts remain unchanged.
+ const expected=authorityRules(),head=expected.offices.office_village_head;
+ head.powers.push('public_property');
+ head.powerSources={public_property:'公产使用与出租；05:129、05 §5.7.3：聚落行为经首领或相关职位的现任持有人执行，财产仍归聚落。'};
+ head.seatPowers=['public_property'];
+ // K10b's seven-entry L2/L4 publication extends only the existing fiscal
+ // coverage to Hewan; keep every M5 amount and all other charter fields exact.
+ expected.treasury.settlements.push('loc_hw');
+ head.seatPowersSource='05 §5.7.3：首领职位持有人执行聚落行为；本项随席位保留，不受行政等级覆盖。';
+ assert.deepEqual(authority,expected);
  assert.deepEqual(authority.titles.map(t=>t.name),world.rules.governance.titles);
  assert.deepEqual(authority.titles.map(t=>t.ranks.length),world.rules.governance.titleRanks);
  assert.equal(authority.titles.find(t=>t.name==='男爵').monthlyQuotaD.at(-1),world.rules.quests.monthlyQuotaD.cityHeadFirstBaron);

@@ -28,13 +28,27 @@ test('E12-2: 一年十二期仅在真实期点尝试；远方不扣款，失败�
 });
 
 test('E18/E3: 规范工资债与旧投影只减一次股值，到期债权先于股东分红',async()=>{
-    const f=fixture(),equity=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'equity');
+    const f=fixture();
+    const equity=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'equity');
     f.doc.state.records[`finance_profit:${host}`]={category:'finance_profit',issuer:host,net:1000};
     const at=f.doc.state.records[equity.contract].nextDividend;
     let d=f.draft();const before=netAssets(d,f.e,host);d.done();
     const amount=f.doc.state.npcs[host].coins;
+    // Bread base 2, physical supply 20, no backed forwards: effective supply 20.
+    // 面包饱腹改由推导（R1，t-sat：30→16，item-class.mjs satietyFactor）后，各户面包留存约翻倍。探针 tools/probe-rules-a.mjs s3fin：
+    // 注资前 netAssets(host)=548=现金500+面包20*2*需求24/供给20=48；需求 24 = 玩家3+shendu4+ayan8+chenbai4+gucen5（旧：2+4+4+4+4=18）。
+    // 持股价格 = 注资前净资产/4（20 股占四分之一）= 548/4 = 137（旧：536/4=134；st-5 为 528/4=132，需求被货架上限 14 夹住），所以 amount=500+137=637，
+    // 注资后库存估值 48，before = 637+48 = 685（探针 netAssets=685）。
+    assert.equal(amount,637);assert.equal(before,637+48);
     f.doc.state.records.wages={category:'debt',kind:'wage',debtor:host,creditor:worker,amount,paid:0,createdAt:600,deadline:at,status:'待偿还'};
-    d=f.draft();adoptLegacyObligation(d,f.e,'wages');assert.equal(netAssets(d,f.e,host),Math.max(1,before-amount));d.done();
+    // The known wage extends the creditor's income horizon: his bread reserve
+    // rises 8->20. The keeper's market budget cannot release another holder's
+    // food. 债权人 ayan 的 20 个面包全部自留，其余四人再没有可买的面包来源，退回各自完整储备（R1 后每人约 8，而不是旧的 4）：
+    // 探针：玩家4+shendu8+ayan20+chenbai8+gucen8 = 需求 48；supply stays 20；stock value = 20*2*48/20 = 96（旧：2+4+20+4+4=34 → 68）。
+    // Assets = cash637 + 96 - wage637 = 96, both before/after adoption（探针：记债后 96，采纳旧投影后仍 96）。
+    // A duplicated canonical+legacy liability would instead hit the floor of 1.
+    d=f.draft();assert.equal(netAssets(d,f.e,host),96);
+    adoptLegacyObligation(d,f.e,'wages');assert.equal(netAssets(d,f.e,host),96);d.done();
     const total=cash(f.doc);f.tick(at);
     assert.equal(f.doc.state.records[equity.contract].distributed,0);assert.equal(dueObligation(f.doc.state,'wages').owed,amount);assert.equal(cash(f.doc),total);
 });
@@ -93,9 +107,9 @@ test('R3-E15: 入狱债务由真实到场第三人代偿，仍是原债；远方
 test('E18-2: NPC实际典当扣本人抵押并领取本人本金，冒充其他所有人零写拒绝',()=>{
     const f=fixture(),bank=f.e.rules.economy.credit.banks[0];f.doc.state.location='loc_bs';
     const total=cash(f.doc)+bank.reserveCopper,player=f.doc.state.player.coins,npc=f.doc.state.npcs[host].coins,stock=f.doc.state.npcs[host].inventory.item_bread.quantity;
-    let d=f.draft();const args={actor:host,owner:host,representative:host,keeper:clerk,bank:bank.id,item:'item_bread',quantity:10,coins:10,days:1,consent:true};
+    let d=f.draft();const args={actor:host,owner:host,representative:host,keeper:clerk,bank:bank.id,item:'item_bread',quantity:20,coins:10,days:1,consent:true};// F007: 20 loaves valued 1 copper each back the 10-copper advance at 50%
     const pawn=pawnForActor(d,f.e,args,'npc-pawn');d.done();
-    assert.equal(f.doc.state.player.coins,player);assert.equal(f.doc.state.npcs[host].coins,npc+10);assert.equal(f.doc.state.npcs[host].inventory.item_bread.quantity,stock-10);assert.equal(cash(f.doc),total);
+    assert.equal(f.doc.state.player.coins,player);assert.equal(f.doc.state.npcs[host].coins,npc+10);assert.equal(f.doc.state.npcs[host].inventory.item_bread?.quantity??0,stock-20);assert.equal(cash(f.doc),total);
     assert.equal(dueObligation(f.doc.state,pawn.contract).row.debtor,host);assert.equal(f.doc.state.records[pawn.pledge].owner,host);
     d=f.draft();const before=structuredClone(d.document);assert.throws(()=>pawnForActor(d,f.e,{...args,owner:worker},'forged'),/authority/);assert.deepEqual(d.document,before);d.done();
 });

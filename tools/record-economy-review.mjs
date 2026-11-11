@@ -15,7 +15,7 @@ for(const [batchString,judgements]of Object.entries(decisions.batches)){
     if(row.hash!==contentHash(byId.get(row.id)))throw new Error('样本文本被修改');
     Object.assign(row,decision,{mean:decision.scores.reduce((a,b)=>a+b,0)/6});
  }
- review.criteria=['具体性','独特性','内在一致性','与世界的连接','可玩性','说明文字辨识度'];
+ review.criteria=['具体性','独特性','内在一致性','与世界的连接','可玩性','说话方式辨识度'];
  review.approved=review.sample.every(row=>row.mean>=4&&row.scores.every(score=>score>=3));
  review.reviewer='Codex亲自精读随机样本，评分文件独立于生成器';review.decisionFile=file;
  await fs.writeFile(path,JSON.stringify(review,null,2)+'\n');console.log(`器物批${batch}：人工${review.approved?'合格':'不合格，整批重做'}`);

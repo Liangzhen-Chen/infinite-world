@@ -7,7 +7,10 @@ import {spawnSync} from 'node:child_process';
 import {loadWorld} from '../tools/load-world.mjs';
 import {withAgricultureRules} from '../world/design/agriculture-foundation.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
+import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {CampaignStorage,applyPatches} from '../server-plugin/storage.mjs';
+import {openLedger} from '../server-plugin/ledger.mjs';
 import {initializeAgriculture,planAgricultureMigration} from '../server-plugin/agriculture-migration.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {weatherAt} from '../server-plugin/weather.mjs';
@@ -64,10 +67,15 @@ test('跨季长等待与每日结算的库存、粮种和全部农业账一致',
     assert.deepEqual(record(long),record(split));assert.deepEqual(long.state.settlements,split.state.settlements);conservation(long);
 });
 test('粮仓买卖、交粮和留种转移真实谷物与铜钱，并保留种粮原到期日',async()=>{
-    const{c,run}=setup();atCounter(c);const coins=c.state.player.coins,treasury=c.state.settlements.loc_hw.treasury;
+    const{c,run,engine}=setup();atCounter(c);const coins=c.state.player.coins,treasury=c.state.settlements.loc_hw.treasury;
     let out=await run(c,'world_farm',{operation:'buy',quantity:2},'buy'),doc=out.document;
-    assert.equal(doc.state.inventory.item_oats.quantity,2);assert.equal(doc.state.player.coins,coins-6);
-    assert.equal(doc.state.settlements.loc_hw.treasury,treasury+6);assert.equal(doc.state.settlements.loc_hw.food,7998);conservation(doc);
+    // W8-A：粮仓售价读当地市场估值（goods 角色），不再是目录价×数量。手算：成交前河湾村燕麦的稀缺 = clamp(需求/供给, 0.5, 3)
+    // （供给 = 仓存 − 居民口粮储备等；需求 = 储备与承诺），单份市值 = 基价 3 × 环境系数 × 稀缺；2 份取整。旧：恒为 2×3 = 6 文。
+    const read=x=>({document:x,get:(...p)=>p.reduce((v,k)=>v?.[k],x)}),sup=marketSupply(read(c),engine,'item_oats','bld_hw_council');
+    const scarcity=Math.max(0.5,Math.min(3,sup.demand/Math.max(1,sup.supply))),cost=Math.floor(2*regionalTradeBase(read(c),engine,'item_oats','bld_hw_council')*scarcity);
+    assert.equal(cost,10,'手算价款');
+    assert.equal(doc.state.inventory.item_oats.quantity,2);assert.equal(doc.state.player.coins,coins-cost);
+    assert.equal(doc.state.settlements.loc_hw.treasury,treasury+cost);assert.equal(doc.state.settlements.loc_hw.food,7998);conservation(doc);
     doc=(await run(doc,'world_farm',{operation:'donate',quantity:1},'donate')).document;
     assert.equal(doc.state.inventory.item_oats.quantity,1);assert.equal(record(doc).ledger.donated,1);conservation(doc);
     const oldExpiry=record(doc).batches[0].expiresDay;
@@ -78,10 +86,15 @@ test('粮仓买卖、交粮和留种转移真实谷物与铜钱，并保留种�
 });
 test('粮仓拒绝用谷物替代指定商品；正确物品可交易，历史事件仍可回放',async()=>{
     const{engine,c,run}=setup();atCounter(c);const before=structuredClone(c);
-    for(const operation of ['buy','donate','reserve_seed']){
+    for(const operation of ['buy','reserve_seed']){
         await assert.rejects(run(c,'world_field',{operation:`farm_${operation}`,quantity:1,item:'燕麦粉'},`wrong_${operation}`),/只办理带壳燕麦.*不能替换/);
         assert.deepEqual(c,before);
     }
+    // W1：公仓收任何谷物（grain 类，按重量折成本仓计量）。交粮指定燕麦粉不再按"替换商品"拒绝，而按实际持有判；非谷物仍拒收。
+    await assert.rejects(run(c,'world_field',{operation:'farm_donate',quantity:1,item:'燕麦粉'},'wrong_donate'),/行囊谷物不足/);
+    assert.deepEqual(c,before);
+    await assert.rejects(run(c,'world_field',{operation:'farm_donate',quantity:1,item:'item_salt'},'salt_donate'),/只收谷物/);
+    assert.deepEqual(c,before);
     const purchased=await run(c,'world_field',{operation:'farm_buy',quantity:1,item:'带壳燕麦'},'correct');
     assert.equal(purchased.document.state.inventory.item_oats.quantity,1);
     const historic=await engine.reduce(c,{tool:'world_field',args:{operation:'farm_buy',quantity:1,item:'燕麦粉'},eventId:'historic'},{replay:true});
@@ -108,6 +121,10 @@ test('破损粮仓按原收获日缩短期限，过期粮食和种粮实际扣�
 });
 test('缺劳力或农具会影响生产；修理确实消耗公共木铁，不能空口修复',async()=>{
     const{c,run}=setup();const noWorkers=structuredClone(c);noWorkers.state.settlements.loc_hw.population=1;
+    // LAB01: zero aggregate workers does not forbid hiring real NPCs. This
+    // zero-labor boundary also makes every existing potential worker unable
+    // to work; the zero production/sowing assertions remain unchanged.
+    for(const npc of Object.values(noWorkers.state.npcs))npc.status='昏迷';
     const poor=(await run(noWorkers,'world_time',{minutes:30*1440},'poor')).document;assert.equal(record(poor).ledger.freshProduced,0);assert.equal(record(poor).field.sownUnits,0);
     const broken=structuredClone(c);record(broken).tools.condition=0;
     const noTool=(await run(broken,'world_time',{minutes:20*1440},'no_tool')).document;assert.equal(record(noTool).field.sownUnits,0);
@@ -155,15 +172,24 @@ test('农事库存随服务器重启、导出导入和删消息回滚保存，�
 });
 test('满仓收获先保住下一季种粮，食粮与种粮合计不能突破仓容',async()=>{
     // Isolated mature-crop boundary fixture; not proof of acquiring crops in normal play.
-    const{c,run}=setup();const r=record(c);r.granary.capacity=9680;r.field.seedBank=0;r.field.seedBatches=[];
+    const{engine,c,run}=setup();const r=record(c);r.granary.capacity=9680;r.field.seedBank=0;r.field.seedBatches=[];
     r.ledger.seedSpent=1680;c.state.settlements.loc_hw.food=9680;r.batches[0].amount=9680;r.ledger.donated=1680;
-    r.field.cohorts=[{id:'mature-fixture',sownDay:0,areaUnits:100,grownDays:180,qualitySum:180,qualityDays:180,ready:true,harvestedUnits:0,harvestedFood:0}];
+    // D05 §5.5 stores the already-grown crop as a physical quantity: one
+    // hectare (100 area units), quality 1, at 1700 food/ha = 1700 food.
+    r.field.cohorts=[{id:'mature-fixture',sownDay:0,areaUnits:100,grownDays:180,qualitySum:180,qualityDays:180,ready:true,readyDay:0,expiresDay:180,grownFood:1700,harvestedUnits:0,harvestedFood:0}];
+    // I2/S1b: an isolated opening-stock fixture must open its matching real
+    // accounts/lots too; legacy quantities alone cannot create physical stock.
+    c.ledger=openLedger(engine,c);
     const doc=(await run(c,'world_time',{minutes:1440},'full_harvest')).document;
     assert.ok(record(doc).field.seedBank>0);conservation(doc);assert.ok(record(doc).ledger.overflow>0);
 });
 test('加工劳力不足时先吃鲜食，谷物食用不得超过实际加工额度',async()=>{
     const{world,c}=setup();world.rules.agriculture.settlements[0].processingPerWorker=1;
-    const engine=new WorldEngine(world);record(c).batches[0].id='donation-fixture';record(c).batches[0].expiresDay=1;
+    // Expiry is a real due event before daily meals. Keep this stock usable
+    // for the first meal (expires on day 2), and mirror the boundary in books;
+    // the exact two-unit processing ceiling and conservation checks stay intact.
+    const engine=new WorldEngine(world);record(c).batches[0].id='donation-fixture';record(c).batches[0].expiresDay=2;
+    c.ledger=openLedger(engine,c);
     const out=await engine.reduce(c,{tool:'world_time',args:{minutes:1440},eventId:'limited_processing'}),doc=applyPatches(c,out.patches);
     const report=record(doc).lastReport;assert.ok(report.fresh>0);
     assert.equal(report.grainEaten,Math.min(2,58-report.fresh));assert.equal(report.freshEaten,Math.min(58,report.fresh));

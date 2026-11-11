@@ -277,13 +277,14 @@ test('果藏期限后恢复腐败速度；冷藏耗魔按隔热率，魔力不�
  await wait(poor,3);assert.equal(poor.doc.state.player.mp,0);assert.equal(poor.doc.state.effects[cold.effect],undefined);assert.equal(state(poor,'feature_cabinet').temperatureC,20);
  assert.equal(state(poor,'feature_cabinet').foodLots[0].amountGrams+state(poor,'feature_cabinet').foodLots[0].spoiledGrams,100000);
 });
-test('所有植物食物操作沿正常工具拒绝无权限、远距与遮挡，完成时再次核对',async()=>{
+test('所有植物食物操作沿正常工具拒绝远距与遮挡；无权限或完成前撤销照样施放并命中擅用',async()=>{
  const s=fixture();s.rows.find(r=>r.id==='feature_fruit').owner=npc;
- await refuse(s,'preserve_food','feature_fruit',/所有者/);
+ // K6 依据（审查 C-b，卡"许可是后果"）：他人果实无授权照样保鲜，命中擅用（在副本上看）。
+ {const probe={...s,serial:s.serial+1000};const r=await cast(probe,'preserve_food','feature_fruit');const o=r.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o);assert.equal(o.victim,npc);assert.equal(probe.doc.state.records[o.record].sourceEvent,r.eventId);}
  s.doc.state.records.permission={category:'authorization',subject:'feature_fruit',action:'environment_use',grantor:npc,grantee:'player',expires:s.doc.state.minute+100};
  const p=prepareMagic.call(s.engine,draft(s),spell(s,'preserve_food'),{target:'feature_fruit',authorization:'permission'});
  s.doc.state.records.permission.revoked=true;const before=structuredClone(state(s,'feature_fruit'));
- assert.match(applyMagic.call(s.engine,draft(s),p,'lost-consent').effectFailed,/授权/);assert.deepEqual(state(s,'feature_fruit'),before);
+ assert.equal(applyMagic.call(s.engine,draft(s),p,'lost-consent').effectFailed,undefined);/* 完成前许可撤销：照样完成，违背许可记为擅用（由引擎在本次事件提交） */
  const far=fixture();far.rows.find(r=>r.id==='feature_herb').position=[4,0];await refuse(far,'herb_sense','feature_herb',/实际距离/);
  const blocked=fixture();blocked.rows.find(r=>r.id==='feature_seedling').position=[2,0];blocked.rows.push({id:'feature_wall',kind:'wall',owner:'player',position:[1,0],state:{blocksSight:true,sightRadiusMeters:.1}});
  await refuse(blocked,'seedling','feature_seedling',/视线/);
@@ -298,7 +299,9 @@ test('garden候选复用T37田块水肥与种粮账，正常推进产生有限�
  const c=spell(s,'garden');s.doc.state.spells[c.id]={source:{type:'fixture'}};s.doc.state.skills[c.skill]={proficiency:1000,daily:{},breakthroughs:[]};s.doc.state.player.mp=10000;s.doc.state.player.maxMp=10000;s.doc.state.inventory.item_herb={quantity:10};
  s.doc.state.records.growth_permission={category:'authorization',subject:p.fieldId,action:'growth_magic',grantor:p.manager,grantee:'player',expires:100000};
  await wait(s,1440);p.farmWorkers=0;const r=s.doc.state.records[`agriculture:${p.settlement}`];assert.equal(r.field.cohorts.length,1);
- await refuse(s,'garden',p.fieldId,/田主有效同意/);await cast(s,'garden',p.fieldId,{authorization:'growth_permission'});
+ // K6 依据（审查 C-b magic-growth:51、D1 本文件:301）：田主同意决定合法与否；未经同意施放照样生效，命中擅用他人之物（在副本上看，主线仍走许可）。
+ {const probe={...s,serial:s.serial+1000};const r=await cast(probe,'garden',p.fieldId);const o=r.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,'未经田主同意的生长法术命中擅用');assert.equal(probe.doc.state.records[o.record].sourceEvent,r.eventId);}
+ await cast(s,'garden',p.fieldId,{authorization:'growth_permission'});
  const saved=reload({...s,location:p.fieldLocation});await wait(saved,1440);const farm=saved.doc.state.records[`agriculture:${p.settlement}`],resource=saved.doc.state.records['physical_feature:feature_garden'].state;
  assert.ok(farm.field.cohorts[0].growthBonusTicks>0);assert.equal(resource.waterMl+resource.growthConsumedWaterMl,1000000);assert.equal(resource.nutrientMg+resource.growthConsumedNutrientMg,100000);
  assert.equal(farm.field.seedBank+farm.ledger.seedSpent,12);

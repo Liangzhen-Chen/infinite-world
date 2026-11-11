@@ -1,12 +1,12 @@
 {
-  "spentYuan": 0.06342592000000001,
+  "spentYuan": 0.06624192000000001,
   "reservedYuan": 0.8200680000000002,
   "waveLimitYuan": 25,
   "note": "T108 独立预算账（用户指定）；不与其他卡共用",
   "cards": {
     "T108": {
       "limitYuan": 1.5,
-      "spentYuan": 0.06342592000000001,
+      "spentYuan": 0.06624192000000001,
       "reservedYuan": 0.8200680000000002,
       "maxRequests": 70,
       "note": "调用次数上限是执行会话自设；DeepSeek 503/超时期间的失败请求按上限预留计费并计入次数，2026-10-15 由50提到70，金额上限1.5元不变"
@@ -1086,6 +1086,38 @@
         "cumulativeUpperYuan": 0.06342592000000001,
         "latencyMs": 850.1322999999975,
         "timestamp": "2026-10-15T04:50:20.456Z"
+      }
+    },
+    "03383839-7fe6-4b9a-9296-a77ce3ecc299": {
+      "card": "T108",
+      "label": "content-festival-publication-festival_borrowbench-review0",
+      "requestHash": "49b69f58177d8bbca9e2edf6614ce8901603e2722f730190df503dcfb886c794",
+      "reservedYuan": 0.026326,
+      "status": "settled",
+      "responseEvidence": {
+        "file": "budget-responses/03383839-7fe6-4b9a-9296-a77ce3ecc299.json",
+        "requestHash": "49b69f58177d8bbca9e2edf6614ce8901603e2722f730190df503dcfb886c794",
+        "responseHash": "cb7f3208cf44f8a73e55339cce9594890e24b6bd20ffa0877ca5b2540d45c4aa"
+      },
+      "costUpperYuan": 0.002816,
+      "measurement": {
+        "label": "content-festival-publication-festival_borrowbench-review0",
+        "model": "deepseek-flash",
+        "thinking": "disabled",
+        "usage": {
+          "prompt_tokens": 1380,
+          "completion_tokens": 7,
+          "total_tokens": 1387,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "prompt_cache_hit_tokens": 0,
+          "prompt_cache_miss_tokens": 1380
+        },
+        "costUpperYuan": 0.002816,
+        "cumulativeUpperYuan": 0.06624192000000001,
+        "latencyMs": 884.3749,
+        "timestamp": "2026-11-10T15:02:12.566Z"
       }
     }
   },

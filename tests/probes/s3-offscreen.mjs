@@ -22,26 +22,32 @@ export const privateFarmScenario=once(async()=>{
   S.engine.byId.get(id).schedule=structuredClone(world.npcs.find(n=>n.id===id).schedule);
  let doc=S.doc;
  doc.state.buildings[p.fieldLocation]={...doc.state.buildings[p.fieldLocation],owner:'player',condition:100};
- doc.state.inventory.item_oats={quantity:100};
+ // W8-E1 负重：原夹具燕麦 100 份 = 50 公斤，开局即超安全负重 30 公斤，之后买木料被拒。播种只要 16 份，带 17 份（多 1 份让播后存量仍可核对）= 8.5 公斤。
+ doc.state.inventory.item_oats={quantity:17};
  // Published stock includes a soil_work pick, but no ready-made sickle.
  // Buy from the actual owners, then learn and forge the harvest tool: every
  // attempt applies its real fees, time, material consumption and tool wear.
  doc=(await S.run(doc,'world_move',{destination:'bld_hw_mill'},'private-tools-mill')).document;
- doc=(await S.run(doc,'world_trade',{seller:'npc_hw_ayan',item:'item_wood',quantity:6},'private-tools-wood')).document;
+ doc=(await S.run(doc,'world_trade',{seller:'npc_hw_ayan',item:'item_wood',quantity:5},'private-tools-wood')).document;
  doc=(await S.run(doc,'world_move',{destination:'bld_hw_forge'},'private-tools-forge')).document;
- for(const [item,quantity]of [['item_mining_pick',1],['item_smith_hammer',1],['item_smith_tongs',1],['item_iron_scrap',6],['item_charcoal',6]])
-  doc=(await S.run(doc,'world_trade',{seller:'npc_hw_duanyan',item,quantity},`private-tools-buy:${item}`)).document;
+ // S5-02: buy the same physical inputs in native retail lots (<=5), respecting each lot's market depth.
+ // W8-E1 负重：材料原各 6 套（6 次制作机会），连同燕麦与工具共 30.5 公斤超限；改各 5 套：
+ // 2.6 随身 + 燕麦 8.5 + 木料 5×2 + 镐 2.8 + 锤 1.2 + 钳 0.7 + 铁屑 5×0.2 + 木炭 5×0.25 = 28.05 公斤 ≤ 30。
+ for(const [item,total]of [['item_mining_pick',1],['item_smith_hammer',1],['item_smith_tongs',1],['item_iron_scrap',5],['item_charcoal',5]])
+  for(let left=total;left>0;left-=Math.min(5,left))doc=(await S.run(doc,'world_trade',{seller:'npc_hw_duanyan',item,quantity:Math.min(5,left)},`private-tools-buy:${item}:${left}`)).document;
  for(let attempt=0;!doc.state.recipes.recipe_sickle&&attempt<6;attempt++)
   doc=(await S.run(doc,'world_learn',{entity:'recipe_sickle',source:'npc_hw_duanyan'},`private-tools-learn:${attempt}`)).document;
  assert.ok(doc.state.recipes.recipe_sickle,'真实学习取得铁镰配方');
- for(let attempt=0;!doc.state.inventory.item_sickle&&attempt<6;attempt++)
+ for(let attempt=0;!doc.state.inventory.item_sickle&&attempt<5;attempt++)
   doc=(await S.run(doc,'world_craft',{recipe:'recipe_sickle'},`private-tools-craft:${attempt}`)).document;
  assert.ok(doc.state.inventory.item_sickle,'真实材料与工时制成收割工具');
  doc=(await S.run(doc,'world_move',{destination:p.fieldLocation},'private-tools-field')).document;
  if(doc.state.minute<crop.sowDays[0]*DAY)doc=await S.wait(doc,crop.sowDays[0]-doc.state.minute/DAY,'spring-private');
  const before=doc.state.inventory.item_oats.quantity;
- doc=(await S.run(doc,'world_farm',{operation:'private_sow',quantity:10},'private-sow')).document;
- const farm=doc.state.records[`private-farm:${p.fieldLocation}`];assert.equal(doc.state.inventory.item_oats.quantity,before-farm.seed);
+ // D05 §5.5 / 已审 S505：播种按亩选择真实种子。2亩÷15亩/ha×120份/ha=16份燕麦种；不能用 quantity 代替面积。
+ doc=(await S.run(doc,'world_farm',{operation:'private_sow',areaMu:2,item:'item_oats'},'private-sow')).document;
+ const farm=doc.state.records[`private-farm:${p.fieldLocation}`];assert.equal(farm.seed,16);assert.equal(doc.state.inventory.item_oats.quantity,before-16);
+ assert.equal(farm.areaUnits,13.333333333333334,'2亩×100面积单位/ha÷15亩/ha');
  assert.equal(doc.state.records['agriculture:loc_hw'].field.areaUnits+farm.capacityUnits,p.areaUnits,'公私田总面积守恒，不能重复耕作同一份土地');
  await assert.rejects(S.run(doc,'world_farm',{operation:'private_harvest'},'private-early'),/没有可收割/);
  doc=(await S.run(doc,'world_move',{destination:'loc_hw',mode:'walk'},'private-leave')).document;

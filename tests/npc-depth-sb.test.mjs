@@ -49,7 +49,8 @@ test('冻结原档首次预演不写入，正式发布闭合15事件30人且仅�
  const temp=await fs.mkdtemp(path.join(tmpRoot(),'t85-publication-'));t.after(()=>fs.rm(temp,{recursive:true,force:true}));
  const worldRoot=path.join(temp,'world');
  // A3 archives actions and ontology in loadWorld; the isolated edition must carry both for the unchanged full-world equality check.
- for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ // S5-06: ecology is an authored input of this edition; retain full-world equality.
+ for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(root,path.join(worldRoot,'drafts/w1/sb-depth'),{recursive:true});
  const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
  const manifest=path.join(worldRoot,'drafts/w1/sb-depth/first-review/manifest.json'),before=await fs.readFile(baseline);
@@ -308,7 +309,7 @@ test('T09官方零模型预检保留120份完整请求，最小性别附件逐�
   assert.equal(draftSum,measured.draftCeilingYuan);assert.equal(reviewSum,measured.reviewCeilingYuan);assert.ok(Math.abs(draftSum+reviewSum-measured.totalCeilingYuan)<1e-10);
   assert.ok(draftSum>3);assert.equal(measured.fitsOriginalCard,false);assert.equal(measured.fitsSharedCeilingSum,false);
  }
- assert.equal(report.sharedBudget.root,'F:/dnd/world/drafts/m4-object');assert.equal(report.sharedBudget.readOnly,true);assert.equal(report.sharedBudget.unchanged,true);assert.equal(report.sharedBudget.sha256,report.sharedBudget.sha256After);
+ assert.equal(report.sharedBudget.root.split(String.fromCharCode(92)).join('/').replace(/^.*?(?=world[/]drafts[/])/,''),'world/drafts/m4-object');assert.equal(report.sharedBudget.readOnly,true);assert.equal(report.sharedBudget.unchanged,true);assert.equal(report.sharedBudget.sha256,report.sharedBudget.sha256After);
  assert.ok(report.reservationEnvelopeYuan.lower>3);assert.ok(report.reservationEnvelopeYuan.upper>report.reservationEnvelopeYuan.lower);
  for(const name of ['budget.json','allocation.json','terminal.json','first-source-evidence.json'])await assert.rejects(fs.stat(path.join(firstReviewRoot,name)),/ENOENT/);
  // The historical zero-model request report remains unapproved. The later

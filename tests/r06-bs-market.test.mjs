@@ -93,9 +93,12 @@ test('玩家沿既有路线找到前厅居民，以真实私人库存成交并�
  await assert.rejects(run('world_trade',{seller:person.id,service:'征税'},'t92-unsupported'),/未登记/);assert.deepEqual(doc,prior);
 });
 
-test('休息日没有库存接洽，未获许可的住宅入口保留原拒绝',async()=>{
+test('休息日没有库存接洽；未获许可走进住宅照样进去并命中擅入私宅',async()=>{
  const engine=new WorldEngine(world),person=bundle.people[0],doc=engine.createCharacter(legacy,{},'t92-home');doc.state.minute=540;doc.state.location='loc_bs';
- const original=structuredClone(doc);await assert.rejects(engine.reduce(doc,{tool:'world_move',args:{destination:person.home.location},eventId:'t92-private-home'}),/成年住户/);assert.deepEqual(doc,original);
+ // K6 依据（审查 C-b location-access:23）：住户许可决定合法与否，不决定能否走进去；进入发生，命中擅入私宅，罪名挂本次事件。只看不落盘，后续休息日断言不变。
+ const original=structuredClone(doc);{const out=await engine.reduce(doc,{tool:'world_move',args:{destination:person.home.location},eventId:'t92-private-home'}),after=applyPatches(doc,out.patches);
+  assert.equal(after.state.location,person.home.location);const o=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o);assert.equal(after.state.records[o.record].sourceEvent,'t92-private-home');}
+ assert.deepEqual(doc,original);
  doc.state.minute=9*1440+540;doc.state.location=person.home.location;doc.state.npcs[person.id].location=person.home.location;doc.state.npcs[person.id].activity='家务';
  await assert.rejects(engine.reduce(doc,{tool:'world_trade',args:{seller:person.id,item:Object.keys(person.inventory)[0],quantity:1},eventId:'t92-rest'}),/服务|时段|作息|休息/);
 });

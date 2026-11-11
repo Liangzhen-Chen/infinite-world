@@ -1,19 +1,38 @@
 import { createHash } from 'node:crypto';
 import { seededRandom } from './combat.mjs';
 import { canonical } from './storage.mjs';
-import { hazardRouteClosed } from './hazard-calendar.mjs';
+import { hazardRouteClosed, hazardRouteHasClosures } from './hazard-calendar.mjs';
 import {obligationCalendar,obligationDate,DAY} from './obligation-calendar.mjs';
+import {sin,acos,tan} from './det-math.mjs';
 
 // Old campaigns retain their published 30-day display calendar. Explicit
 // campaign dates name a native calendar; no season/daylight override is stored.
+// The date part is a pure function of (rules.calendar, calendar id, day) for the two shipped
+// calendars (epoch 0); only hour/minute/text vary within a day, so it is memoized per day.
+const calendarDayMemo=new WeakMap();
+function calendarDay(engine,minute,calendar){
+    const rules=engine.rules.calendar,day=Math.floor(minute/DAY),memo=typeof calendar==='string';
+    let byKey=null,key=null;
+    if(memo){
+        byKey=calendarDayMemo.get(rules);if(!byKey){byKey=new Map();calendarDayMemo.set(rules,byKey);}
+        key=calendar+'|'+day;const hit=byKey.get(key);if(hit)return hit;
+    }
+    const date=calendar==='legacy:30-day'?{year:Math.floor(day/360)+1,month:String(Math.floor(day/30)%12+1),day:day%30+1,offset:minute%DAY,leap:false}:obligationDate(minute,calendar),month=Number(String(date.month).replace('leap:',''));
+    const ten=rules.tens?.[Math.floor((date.day-1)/10)];
+    const base={year:date.year,month,day:date.day,leap:date.leap,season:Math.floor((month-1)/3),ten,market:rules.marketDays?.includes(date.day)??false,
+        prefix:`${rules.epoch}${date.year===1?'元':date.year}年 ${date.leap?'闰':''}${rules.months[month-1]} ${date.day}日 `,epoch0:(calendar==='legacy:30-day'||(date.offset===minute%DAY))};
+    if(memo&&base.epoch0){if(byKey.size>4096)byKey.clear();byKey.set(key,base);}
+    return base;
+}
 export function calendarDateAt(engine,minute,calendar='legacy:30-day'){
     validMinute(minute);
-    const day=Math.floor(minute/DAY),date=calendar==='legacy:30-day'?{year:Math.floor(day/360)+1,month:String(Math.floor(day/30)%12+1),day:day%30+1,offset:minute%DAY,leap:false}:obligationDate(minute,calendar),month=Number(String(date.month).replace('leap:',''));
-    const hour=Math.floor(date.offset/60),clockMinute=date.offset%60;
-    return {year:date.year,month,day:date.day,hour,minute:clockMinute,leap:date.leap,calendar,
-        season:Math.floor((month-1)/3),...(engine.rules.calendar.tens?.[Math.floor((date.day-1)/10)]?{ten:engine.rules.calendar.tens[Math.floor((date.day-1)/10)]}:{}),
-        market:engine.rules.calendar.marketDays?.includes(date.day)??false,
-        text:`${engine.rules.calendar.epoch}${date.year===1?'元':date.year}年 ${date.leap?'闰':''}${engine.rules.calendar.months[month-1]} ${date.day}日 ${String(hour).padStart(2,'0')}:${String(clockMinute).padStart(2,'0')}`};
+    const base=calendarDay(engine,minute,calendar);
+    // offset within the day; for a non-zero-epoch calendar fall back to the calendar's own offset.
+    const offset=base.epoch0?minute%DAY:obligationDate(minute,calendar).offset,hour=Math.floor(offset/60),clockMinute=offset%60;
+    return {year:base.year,month:base.month,day:base.day,hour,minute:clockMinute,leap:base.leap,calendar,
+        season:base.season,...(base.ten?{ten:base.ten}:{}),
+        market:base.market,
+        text:base.prefix+String(hour).padStart(2,'0')+':'+String(clockMinute).padStart(2,'0')};
 }
 export function minuteForCalendarDate(engine,date){
     if(!date||Object.keys(date).some(k=>!['calendar','year','month','day','hour','minute','leap'].includes(k))||
@@ -63,9 +82,17 @@ function dailySequence(rules, seed, region, year) {
     cache.set(fingerprint, rows); if (cache.size > 64) cache.delete(cache.keys().next().value);
     return rows;
 }
+// Pure in (latitude, dayOfYear): the fixed-point trigonometry is computed once per pair, callers get a fresh copy.
+const daylightMemo = new Map();
 export function daylightAt(latitude, dayOfYear) {
-    const radians = Math.PI / 180, declination = 23.44 * radians * Math.sin(2*Math.PI*(dayOfYear-0)/360);
-    const angle = Math.acos(clamp(-Math.tan(latitude*radians)*Math.tan(declination),-1,1));
+    const key = `${latitude}:${dayOfYear}`;
+    let row = daylightMemo.get(key);
+    if (!row) { row = daylightCompute(latitude, dayOfYear); if (daylightMemo.size > 4096) daylightMemo.clear(); daylightMemo.set(key, row); }
+    return { ...row };
+}
+function daylightCompute(latitude, dayOfYear) {
+    const radians = Math.PI / 180, declination = 23.44 * radians * sin(2*Math.PI*(dayOfYear-0)/360);
+    const angle = acos(clamp(-tan(latitude*radians)*tan(declination),-1,1));
     const durationMinutes = Math.round(angle*1440/Math.PI);
     return { sunriseMinute: Math.round(720-durationMinutes/2), sunsetMinute: Math.round(720+durationMinutes/2), durationMinutes };
 }
@@ -74,6 +101,8 @@ export function daylightAt(latitude, dayOfYear) {
 // re-hashing the whole weather rule set for every edge. Keyed by the rules
 // object, seed, region and year, so it returns exactly what dailySequence does.
 export const WEATHER_SEQUENCES = Symbol('weather sequences');
+const WEATHER_LOCATIONS = Symbol('weather locations');
+const WEATHER_CACHE_CHECK = process.env.FIELDS_INDEX_CHECK === '1';
 const nested = (map, key) => { let next = map.get(key); if (!next) { next = new Map(); map.set(key, next); } return next; };
 function cachedSequence(memo, rules, seed, region, year) {
     if (!memo) return dailySequence(rules,seed,region,year);
@@ -83,10 +112,24 @@ function cachedSequence(memo, rules, seed, region, year) {
 }
 export function weatherAt(engine, seed, location, minute, sequenceCache = null, calendar=engine.calendarId??'legacy:30-day') {
     validMinute(minute);
-    const rules = engine.rules.weather, region = rules?.regions.find(row => row.locations.includes(location));
-    if (!region) return null;
-    const day = Math.floor(minute/1440),date=calendarDateAt(engine,minute,calendar),year=date.year-1,dayOfYear=(date.month-1)*30+date.day-1;
+    const rules = engine.rules.weather;
     const memo = sequenceCache ? nested(sequenceCache, WEATHER_SEQUENCES) : engine.weatherSequences ?? null;
+    // The same rules are fixed for the existing sequence-cache lifetime.
+    // First region wins, just like find, including overlapping legacy regions.
+    let locations = rules && memo ? nested(memo, WEATHER_LOCATIONS).get(rules) : null;
+    if (rules && memo && !locations) {
+        locations = new Map();
+        for (const row of rules.regions) for (const id of row.locations) if (!locations.has(id)) locations.set(id, row);
+        nested(memo, WEATHER_LOCATIONS).set(rules, locations);
+    }
+    const region = locations ? locations.get(location) : rules?.regions.find(row => row.locations.includes(location));
+    if (locations && WEATHER_CACHE_CHECK && region !== rules.regions.find(row => row.locations.includes(location))) throw Error('weather location cache mismatch');
+    if (!region) return null;
+    const day = Math.floor(minute/1440);
+    // The legacy display date is exactly a 360-day year; weather only needs
+    // these two integers, not the formatted date/market/clock projection.
+    const date=calendar==='legacy:30-day'?null:calendarDateAt(engine,minute,calendar);
+    const year=date?date.year-1:Math.floor(day/360),dayOfYear=date?(date.month-1)*30+date.day-1:day%360;
     const row = cachedSequence(memo,rules,seed,region,year)[dayOfYear], light = daylightAt(region.latitude,dayOfYear);
     const indoors = region.indoor.includes(location), effect = rules.states[row.kind];
     const clock=value=>`${String(Math.floor(value/60)).padStart(2,'0')}:${String(value%60).padStart(2,'0')}`;
@@ -134,7 +177,14 @@ export function weatherTravel(engine, seed, edge, mode, minute,cache=null) {
         region: row.region, weather: row.name, day: row.day };
     modeDays?.set(day,result);return result;
 }
-export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, movingBefore, speed,weatherCache=null) {
+// probe (optional, route-search reuse): narrows [probe.lo, probe.hi], the shifts of the departure
+// minute under which this result is unchanged. Travel conditions are fixed per day (weatherTravel),
+// so a shift that keeps every looked-up instant on its own day and moves no chunk across midnight
+// gives the same elapsed and moving minutes. A route a hazard clock can close pins the shift to 0.
+export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, movingBefore, speed,weatherCache=null,probe=null) {
+    const look=probe?at=>{const o=at%1440;if(-o>probe.lo)probe.lo=-o;if(1439-o<probe.hi)probe.hi=1439-o;}:null;
+    const pin=()=>{if(probe.lo<0)probe.lo=0;if(probe.hi>0)probe.hi=0;};
+    if(probe){look(departure+elapsedBefore);if(hazardRouteHasClosures(engine,edge.id))pin();}
     // U3: a seeded flood stage closes the route for its stated span.
     if (hazardRouteClosed(engine,seed,edge.id,departure+elapsedBefore)) return null;
     if (!edge.lengthKm) {
@@ -146,20 +196,21 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
         if(distance<=1e-9)return{elapsed,moving};
         const budget=mode==='boat'?1440:engine.rules.travel.dailyTravelMinutes;
         if(mode!=='boat'&&moving>0&&moving%budget===0)elapsed+=1440-budget;
-        const now=departure+elapsed,conditions=weatherTravel(engine,seed,edge,mode,now,weatherCache);
+        const now=departure+elapsed;look?.(now);const conditions=weatherTravel(engine,seed,edge,mode,now,weatherCache);
         if(edge.closedSeasons.length&&edge.closedSeasons.includes(engine.calendar(now).season))return null;
         if(conditions.closed||hazardRouteClosed(engine,seed,edge.id,now))return null;
         const rate=speed/conditions.multiplier/60;
         const remainingBudget=mode==='boat'?1440:budget-moving%budget;
         const toMidnight=1440-now%1440;
-        const chunk=Math.min(remainingBudget,toMidnight,Math.max(1,Math.ceil(distance/rate)));
+        const unclamped=Math.min(remainingBudget,Math.max(1,Math.ceil(distance/rate))),chunk=Math.min(unclamped,toMidnight);
+        if(probe){if(toMidnight<=unclamped)pin();else if(toMidnight-unclamped-1<probe.hi)probe.hi=toMidnight-unclamped-1;}
         distance=Math.max(0,distance-chunk*rate);moving+=chunk;elapsed+=chunk;
     }
     throw Error('天气路线超过规划步数限制');
 }
 export function cropProduction(engine, seed, settlement, minute, nominal) {
     const row = weatherAt(engine,seed,settlement,minute);
-    return row ? Math.max(0,Math.floor(nominal*engine.rules.weather.cropSeasonFactors[row.season]*row.cropMultiplier)) : nominal;
+    return row ? Math.max(0,nominal*engine.rules.weather.cropSeasonFactors[row.season]*row.cropMultiplier) : nominal;
 }
 export function validateWeatherRules(world) {
     const errors = [], r = world.rules.weather; if (!r) return errors;

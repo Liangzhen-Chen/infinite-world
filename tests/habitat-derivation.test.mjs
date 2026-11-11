@@ -7,7 +7,7 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {planWildlifeMigration} from '../server-plugin/wildlife-migration.mjs';
 import {planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {wildlifeEncounterAt} from '../server-plugin/wildlife.mjs';
-import {deriveHabitats,derivedHabitatId,speciesHabitatTypes} from '../server-plugin/wildlife-habitats.mjs';
+import {deriveHabitats,derivedHabitatId,speciesHabitatTypes,locationHabitatTypes} from '../server-plugin/wildlife-habitats.mjs';
 import {speciesInHabitat} from '../server-plugin/wildlife-range.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 
@@ -23,6 +23,16 @@ function withPine(world=source,extra={}){
 const conservation=c=>{for(const r of Object.values(c.state.records).filter(r=>r.category==='ecology'))for(const p of Object.values(r.populations)){
     assert.equal(p.initial+p.born+(p.arisen??0)+(p.immigrated??0)-(p.emigrated??0)-p.predated-p.starved-p.withdrawn,p.count);assert.ok(p.count>=0);}};
 const run=async(engine,doc,tool,args,id)=>applyPatches(doc,(await engine.reduce(doc,{tool,args,eventId:id})).patches);
+
+test('地点类型读取保留独立结果，并响应地形与原位群落文本变化',()=>{
+    const location={terrain:'平地',biome:['林']};
+    // Hand anchor: 林 supplies forest; replacing it with 苇塘 supplies only
+    // wetland. A later rocky terrain adds rock without retaining forest.
+    const first=locationHabitatTypes(location);first.push('salt');
+    assert.deepEqual(locationHabitatTypes(location),['forest']);
+    location.biome[0]='苇塘';assert.deepEqual(locationHabitatTypes(location),['wetland']);
+    location.terrain='碎石坡';assert.deepEqual(locationHabitatTypes(location),['rock','wetland']);
+});
 
 test('地形、群落标签与 traits 派生栖地类型；泛地形、人居和建筑不派生',()=>{
     const w=withPine();

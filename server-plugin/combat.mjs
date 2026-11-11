@@ -54,7 +54,7 @@ export function combatEscapeDestination(d,e,requested){
  }
  const destinations=paths.size?[...paths]:adjacent.filter(id=>known.has(id));
  const candidates=destinations.filter(id=>(!exact||id===exact)).filter(id=>{
-  try{return e.route(s.location,id,'walk',s.minute,d.document.randomSeed).edges.length>0;}catch{return false;}
+  try{return e.route(s.location,id,'walk',s.minute,d.get('randomSeed')).edges.length>0;}catch{return false;}
  });
  if(candidates.length!==1)throw Error('Escape requires one known passable path destination');
  return candidates[0];
@@ -73,16 +73,7 @@ export function derivedStats({level,attributes,profession=false,equipment={}},ru
         evasion:clamp((a.敏捷-10)*c.evasionPerDexterity+(equipment.evasion??0),0,0.45),
         castSeconds:Math.max(1,c.castBaseSeconds-(a.精神-10)*c.castPerSpirit),critical:c.critical};
 }
-export function monsterStats({level,template=2,bossTier=0},rules){
-    const row=rules.combat.monster,beast=template<=1,scale=beast?row.beast:row.standard;
-    const ordinary={level,maxHp:scale.hpBase+level*scale.hpPerLevel,attack:scale.attackBase+level*scale.attackPerLevel,
-        defense:scale.defensePerLevel*level,hit:row.hit,evasion:0,critical:row.critical,attacks:1,divine:template>=10};
-    if(bossTier){ordinary.maxHp*=rules.bossEcology?.hpMultiplier??row.bossHpMultiplier;ordinary.attack*=row.bossAttackMultiplier;
-        ordinary.attacks=row.bossAttacks;ordinary.defense*=row.bossDefenseMultiplier;ordinary.bossTier=bossTier;}
-    ordinary.maxHp=Math.max(1,Math.round(ordinary.maxHp));
-    if(template===0){ordinary.attack=0;ordinary.attacks=0;}
-    return ordinary;
-}
+export {monsterStats} from './combat-state.mjs';
 export function strike(attacker,defender,rng,rules,{damageMultiplier=1,hitModifier=0}={}){
     const hitChance=clamp(attacker.hit-(defender.evasion??0)+hitModifier,rules.combat.minimumHit,rules.combat.maximumHit);
     if(rng()>=hitChance)return {hit:false,damage:0,critical:false};

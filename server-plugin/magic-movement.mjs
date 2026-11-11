@@ -1,19 +1,24 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {prunePhysicalContacts} from './record-cleanup.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,localPlayerPoint,localSightClear}from'./environment.mjs';
 import {areaTargetFacts}from'./magic-area.mjs';
-import {assertLocationAccess}from'./location-access.mjs';
+import {unlicensedEntry}from'./location-access.mjs';
+import {noteOffense} from './offense-notes.mjs';
+// K6: arriving by magic in a home without consent is trespass, not impossible.
+const enterHome=(d,engine,place,options)=>{const entry=unlicensedEntry(d,engine,place,options);if(entry)noteOffense(d,{act:'enter',victim:entry.victim,subject:{id:place,kind:'dwelling'},actor:'player'});};
 import {assertNpcObligationAction}from'./npc-obligations.mjs';
 import {assertNpcAutonomyAction}from'./npc-autonomy.mjs';
 import {enforceLegalRestriction}from'./law.mjs';
 import {digest}from'./storage.mjs';
 import {assertWaterEarthMovement}from'./magic-water-earth.mjs';
 import {assertMindSpacePath,assertMindAwake}from'./magic-mind-space.mjs';
+import {hypot} from './det-math.mjs';
 export const movementKinds=Object.freeze(['anchor_sense','blink','teleport']);
 const validPoint=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const knownKey=id=>`known_anchor:${id}`;
 export function validateMovementCatalog(catalog){
  const s=catalog.effectSpec,errors=[];
@@ -33,7 +38,7 @@ function anchor(d,engine,row){
  if(row?.spaceAnchor!==true||typeof row.owner!=='string'||!validPoint(row.position))throw preconditionFailure('目标不是登记的空间锚点');
  if(stateOf(d,row)?.anchorIntact!==true)throw preconditionFailure('锚点损坏或状态未知');
  const offset=stateOf(d,row)?.anchorOffsetMeters;
- if(offset&&(!validPoint(offset)||distance(offset,[0,0])>.05))throw preconditionFailure('锚点偏移，须先取得许可校准');
+ if(offset&&(!validPoint(offset)||distance(offset,[0,0])>.05))throw preconditionFailure('锚点偏移超过5厘米容差，须先校准锚点');
  return row;
 }
 function assertKnown(d,row){
@@ -44,7 +49,7 @@ function assertKnown(d,row){
 function permits(d,row,args,companions,arrival){
  const keys=[args.permit,...args.authorizations??[]].filter(Boolean);
  const id=keys.find(key=>{const r=d.get('state','records',key);return r?.category==='authorization'&&r.action==='teleport_anchor'&&r.subject===row.id&&r.grantor===row.owner&&r.grantee==='player'&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>arrival&&companions.every(n=>r.guests?.includes(n));});
- if(!id)throw preconditionFailure('传送锚点需要所有者给本人及同行者的有效许可');
+ if(!id)return noteUnlicensedUse(d,row,{act:'enter',kind:'anchor'});
  return id;
 }
 function clearSpace(d,engine,location,from,to){
@@ -97,7 +102,7 @@ export function prepareMovement(d,catalog,args,{completion=false}={}){
   if(row.location!==location||stateOf(d,row)?.blinkLanding!==true)throw preconditionFailure('短移须使用同地点已登记的可用地形落脚点');
   if(row.owner!=='player'&&row.access!=='public'){
    const r=d.get('state','records',args.authorization);
-   if(r?.category!=='authorization'||r.action!=='environment_use'||r.subject!==row.id||r.grantor!==row.owner||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=arrival||companions.some(id=>!r.guests?.includes(id)))throw preconditionFailure('短移落脚点需要所有者有效许可');
+   if(r?.category!=='authorization'||r.action!=='environment_use'||r.subject!==row.id||r.grantor!==row.owner||r.grantee!=='player'||r.revoked||!Number.isSafeInteger(r.expires)||r.expires<=arrival||companions.some(id=>!r.guests?.includes(id)))noteUnlicensedUse(d,row,{act:'enter'});
   }
   metres=distance(point,row.position);
   if(!localSightClear(d,this,location,point,row.position))throw preconditionFailure('短移落脚点视线被遮挡');
@@ -110,12 +115,12 @@ export function prepareMovement(d,catalog,args,{completion=false}={}){
   if(sourceAnchor.id===row.id)throw preconditionFailure('传送需要不同的两个已知锚点');
   if(!localSightClear(d,this,location,point,sourceAnchor.position))throw preconditionFailure('出发锚点视线被遮挡');
   clearSpace(d,this,location,point,sourceAnchor.position);clearSpace(d,this,row.location,row.position,row.position);
-  const route=this.route(location,row.location,'walk',d.get('state','minute'),d.document.randomSeed);
+  const route=this.route(location,row.location,'walk',d.get('state','minute'),d.get('randomSeed'));
   metres=route.edges.reduce((sum,id)=>sum+this.world.routes.find(e=>e.id===id).lengthKm*1000,0)+distance(point,sourceAnchor.position)+(location===row.location?distance(sourceAnchor.position,row.position):distance(sourceAnchor.position,[0,0])+distance(row.position,[0,0]));
   permitIds=[permits(d,sourceAnchor,args,companions,arrival),permits(d,row,args,companions,arrival)];
  }
  if(metres>s.maxDistanceMeters)throw preconditionFailure('目标超过位移实际距离上限');
- assertLocationAccess(d,this,row.location,{authorization:args.authorization,companions,arrivalMinute:arrival});
+ enterHome(d,this,row.location,{authorization:args.authorization,companions,arrivalMinute:arrival});
  assertNpcObligationAction(d,this,['player',...companions],{minutes:completion?0:catalog.minutes,location:row.location,kind:'move'});
  assertNpcAutonomyAction(d.get('state'),companions,{minutes:completion?0:catalog.minutes});
  return{spec:s,catalog,args:{...args},row,location,point,companions,loadKg,metres,sourceAnchor,permitIds};
@@ -155,12 +160,12 @@ export function prepareAnchorCargo(d,catalog,args,{completion=false}={}){
  for(const row of [source,destination]){anchor(d,this,row);assertKnown(d,row);}
  if(source.id===destination.id||source.location!==location||distance(origin,source.position)>catalog.rangeMeters||!localSightClear(d,this,location,origin,source.position))throw preconditionFailure('货运需要两个不同已知锚点及实际近端距离');
  clearSpace(d,this,location,origin,source.position);clearSpace(d,this,destination.location,destination.position,destination.position);
- const route=this.route(location,destination.location,'walk',d.get('state','minute'),d.document.randomSeed);
+ const route=this.route(location,destination.location,'walk',d.get('state','minute'),d.get('randomSeed'));
  const metres=route.edges.reduce((n,id)=>n+this.world.routes.find(e=>e.id===id).lengthKm*1000,0);
  if(metres>100000)throw preconditionFailure('货运锚点超过100公里');
  const permissions=[permits(d,source,args,[],until),permits(d,destination,args,[],until)];
  // Entry permission remains distinct from an anchor-use grant.
- assertLocationAccess(d,this,destination.location,{authorization:args.authorization,arrivalMinute:until});
+ enterHome(d,this,destination.location,{authorization:args.authorization,arrivalMinute:until});
  return{source,destination,permissions,metres};
 }
 // Spell effect family (dispatched by magic.mjs through magic-effects.mjs).

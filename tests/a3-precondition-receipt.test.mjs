@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT01（保留原阶段边界）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {assertActionRejected} from './helpers/action-refusal.mjs';
@@ -19,6 +20,9 @@ import {commitNpcCrime} from '../server-plugin/npc-crime.mjs';
 import {nativeDefenceRow,nativeLegalRequestRow} from './helpers/trial-actions.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+// Legal request/receipt fixtures pin the original on-duty authority; unrelated
+// water/forage errands do not change those explicit action premises.
+delete world.rules.householdSubsistence;
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r5.json','utf8'));
 const nativeCorpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r7.json','utf8'));
 const ids=[15,17,18,25,27,28,32,34,39,43,51,52,53,55,56,58,63,64,68,69,71,95,96,97];
@@ -103,17 +107,22 @@ async function filingPremises(n){
  const row=structuredClone(nativeRowFor(n));let document;
  if(n===51){
   const paper=await documentScene(engine,initial,{prefix:'native-51'});
-  document=officeScene(engine,paper.document,{location:'bld_hw_qingdeng',minute:paper.document.state.minute,present:['npc_hw_wushuo','npc_hw_linsui']});
+  // 作息即前置条件：wushuo 白天在 loc_hw_northwood，只有当日 1080-1200 在青灯（照料灰尾）；linsui 全天在青灯。
+  // 所以盗窃发生在当日 1100 分（两人都在岗），报案则在次日 540 分——衙署书吏 npc_bs_031_2 480-720 才在 bld_bs_watch 当值（1100 时他在家）。
+  const day=Math.floor(paper.document.state.minute/1440)*1440;
+  document=officeScene(engine,paper.document,{location:'bld_hw_qingdeng',minute:day+1100,present:['npc_hw_wushuo','npc_hw_linsui']});
   const d=engine.primitiveDraft(document),id=commitNpcCrime(d,engine,{actor:'npc_hw_wushuo',victim:'npc_hw_linsui',offense:'theft',need:'money',intelligence:2},document.state.minute);
   assert.ok(id);document=applyPatches(document,d.patches);
   const source=document.state.records[id].sourceEvent;
   assert.ok(document.state.records[`world_event:${source}`].witnesses.includes('player'));
-  document=officeScene(engine,document,{location:'bld_bs_watch',minute:document.state.minute,present:['npc_bs_031_2']});
+  document=officeScene(engine,document,{location:'bld_bs_watch',minute:day+1440+540,present:['npc_bs_031_2']});
   // Bind the existing request to the actual stolen money and original paper;
   // no grain sack or evidence is invented to match frozen corpus prose.
   row.proposal.effects[0].payload={...row.proposal.effects[0].payload,incident:source,stolen:'coin_river',evidence:[paper.id]};
  }else{
-  document=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui','npc_hw_gucen']}).document;
+  // 作息即前置条件：600 分时 linsui 在青灯前厅接待，gucen 在村口巡查（480-720），所以盗窃现场只放 linsui，
+  // gucen 在下面报案时才到他的岗位村口；先把他摆在青灯会让他在下一次时钟节拍里出发，到不了村口（probe-gucen-travel）。
+  document=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui']}).document;
   let source;
   for(let i=0;i<30;i++){
    const eventId=`native-53-theft-${i}`,out=await engine.reduce(document,{tool:'world_act',eventId,args:{action:'core:crime.steal',slots:{target:'npc_hw_linsui',item:'item_ration'}}});
@@ -125,7 +134,7 @@ async function filingPremises(n){
  }
  return {row,document,setupUnmet:[]};
 }
-for(const n of legalRequests)([51,52,53,55,58].includes(n)?test:test.todo)(`A3 native legal ${n}: original premises submit only a request in routed and direct calls`,async()=>{
+for(const n of legalRequests)([51,52,53,55,58].includes(n)?test:test.todo)(`A3 native legal ${n}: original premises submit only a request in routed and direct calls${n===56?'〔归 S4：机构案件与货损原件前提；登记 docs/A3-后续阶段登记.md S5CT CT01〕':''}`,async()=>{
  // 05 §5.2.7: current native premises submit requests; the original r5 inputs
  // above still lack those premises and retain every atomic-refusal assertion.
  // 05 5.2.7: 052 submits an actual sourced original after judgment; 058 addresses the actual filing officer.
@@ -195,10 +204,12 @@ for(const module of ['repair','dialogue','manufacturing'])test(`A3 generic refus
   action='core:dialogue.accept';slots={subject};
   legacy={tool:'world_remember',args:{subject,key:'dialogue:accept',content:'接受条件'}};reason='没有待接受的条件';
  }else{
-  const recipe=world.recipes.find(r=>r.learningRequired);
-  assert.ok(recipe);delete document.state.recipes[recipe.id];
+  // 卡 Q：没学过配方不再拒绝（照做落低档）；业务前提改用物理的一条——不在有所需工作台的地方。
+  const here=world.locations.find(l=>l.id===document.state.location);
+  const recipe=world.recipes.find(r=>r.workstation&&!r.location&&!(here?.fixtures??[]).length&&!(here?.workstations??[]).some(w=>w.kind===r.workstation));
+  assert.ok(recipe);
   action='core:craft.manufacture';slots={recipe:recipe.id};
-  legacy={tool:'world_craft',args:{operation:'manufacture',...slots}};reason='尚未学会这个配方';
+  legacy={tool:'world_craft',args:{operation:'manufacture',...slots}};reason='当前位置没有所需工作台';
  }
  const before=structuredClone(document);
  // 06 §6.10.4: a business precondition rejects at its source with a stable code. The legacy

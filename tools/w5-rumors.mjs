@@ -4,7 +4,7 @@ import path from 'node:path';
 import {randomInt} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent} from './content-pipeline.mjs';
+import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent,stampL4Notes,requireFlagValue} from './content-pipeline.mjs';
 
 export const counts=[45,45,45,45,40,40];
 export const revision='w5-rumors-v1';
@@ -83,13 +83,13 @@ export async function sampleL4(n){const b=await batchContext(n),root=rootOf(n),b
  const selection={fingerprint:batch.fingerprint,wave:pool.slice(0,10),read:[...new Set([...batch.sample,...batch.flagged,...pool.slice(0,10)])]};
  await fs.writeFile(path.join(root,'l4-selection.json'),JSON.stringify(selection,null,2)+'\n');
  return selection.read.map(id=>{const e=b.entries.find(e=>e.id===id);return{...b.draftFor(e),truth:e.truth,wave:selection.wave.includes(id)};});}
-export async function recordL4(n,file){const root=rootOf(n),batchFile=path.join(root,'batch-0.json'),batch=JSON.parse(await fs.readFile(batchFile,'utf8')),selection=JSON.parse(await fs.readFile(path.join(root,'l4-selection.json'),'utf8')),notes=JSON.parse(await fs.readFile(file,'utf8'));
+export async function recordL4(n,file,by){const root=rootOf(n),batchFile=path.join(root,'batch-0.json'),batch=JSON.parse(await fs.readFile(batchFile,'utf8')),selection=JSON.parse(await fs.readFile(path.join(root,'l4-selection.json'),'utf8')),notes=JSON.parse(await fs.readFile(file,'utf8'));
  if(selection.fingerprint!==batch.fingerprint||selection.read.some(id=>!notes.notes.some(r=>r.id===id&&r.note?.trim()))||selection.wave.some(id=>!notes.wave.some(r=>r.id===id)))throw Error('L4缺少实际抽样阅读或评分');
- batch.l4={approved:true,reviewer:`T${116+n}执行会话`,...notes};await fs.writeFile(batchFile,JSON.stringify(batch,null,2)+'\n');return batch.l4;}
+ batch.l4={approved:true,reviewer:`T${116+n}执行会话`,...notes,notes:stampL4Notes(notes.notes,by)};await fs.writeFile(batchFile,JSON.stringify(batch,null,2)+'\n');return batch.l4;}
 if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(import.meta.filename)){
  const n=Number(process.argv[3]);if(process.argv[2]==='--l1'){const r=await l1(n);console.log(JSON.stringify(r));if(r.errors.length)process.exitCode=1;}
  else if(process.argv[2]==='--review')console.log(JSON.stringify(await reviewSequential(n,{retryManual:process.argv.includes('--retry-manual')})));
  else if(process.argv[2]==='--publish')console.log(JSON.stringify(await publish(n,{write:true})));
  else if(process.argv[2]==='--sample')console.log(JSON.stringify(await sampleL4(n)));
- else if(process.argv[2]==='--l4')console.log(JSON.stringify(await recordL4(n,process.argv[4])));
+ else if(process.argv[2]==='--l4')console.log(JSON.stringify(await recordL4(n,process.argv[4],requireFlagValue(process.argv,'--by'))));
 }

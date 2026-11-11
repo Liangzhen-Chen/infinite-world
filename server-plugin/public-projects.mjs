@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
@@ -11,15 +12,18 @@ declareLedgerWriter('public-projects',{sinks:['sink:consume']});
 export const holdProjectWorks=(d,engine,project,amounts,from,eventId)=>holdWorks(d,engine,project,amounts,{from,writer:'public-projects',eventId});
 export const settleProjectWorks=(d,engine,p,eventId)=>settleWorks(d,engine,p,{writer:'public-projects',eventId});
 import {entityTransition} from './entity-transitions.mjs';
-import {playerOffices,spendPublic,refundPublic,authorityOf} from './governance.mjs';
+import {playerOffices,spendPublic,refundPublic,authorityOf,publicSpent} from './governance.mjs';
 import {milestone} from './progression.mjs';
 import {npcHousehold,npcAgeAt} from './npc-life.mjs';
 import {changeItems} from './items.mjs';
-import {prepareFacilityProject} from './facility-state.mjs';
+import {prepareFacilityProject,within as facilityWithin,installFacilityRuntime,facilityRuntime,facilityDefinition,facilityView} from './facility-state.mjs';
 import {completeFacilityProject} from './facilities.mjs';
-import {currentEmployment,employmentReservation} from './employment-state.mjs';
+import {currentEmployment,projectAssignment,projectAssignmentId} from './employment-state.mjs';
 import {registerEarnedClaim} from './obligation-claims.mjs';
-import {personConstraint} from './entity-view.mjs';
+import {personOffices,personConstraint,questQuotaMonth} from './entity-view.mjs';
+import {currentControllers} from './action-authority.mjs';
+import {subjectiveView} from './subjective-view.mjs';
+import {npcDecision} from './npc-decision.mjs';
 
 // T125 public works. A sitting official (works deputy or village head) starts
 // a project in their own village: materials leave the village stock and the
@@ -33,20 +37,72 @@ const text=n=>{if(typeof n!=='string'||!n.trim()||n.length>80)throw precondition
 const int=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}须在${min}到${max}之间`);return n;};
 const able=n=>n&&!['濒死','昏迷','患病'].includes(n.status);
 const awake=n=>able(n)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
-function within(engine,location,place){const seen=new Set();while(location&&!seen.has(location)){if(location===place)return true;seen.add(location);location=engine.byId.get(location)?.parent;}return false;}
 
 export const isPublicProject=p=>p?.type==='工程'&&Boolean(p.public);
-export function startPublicProject(d,engine,args,eventId,settlement){
+// A manager is not an owner or a budget holder. Read the current collective
+// title and the current office separately, including native title overrides.
+export function publicMaintenanceResponsibility(engine,document,actor,building,{settlement=null}={}){
+    const owners=currentControllers({engine,document},building,{ownerOnly:true,principals:true});
+    const charter=facilityDefinition(engine,document.state,building)?.publicMaintenance;
+    return personOffices(engine,document.state,actor,{power:'public_project',settlement}).map(e=>e.value)
+        .find(o=>(owners.includes(o.settlement)||charter?.settlement===o.settlement&&owners.includes(charter.owner))&&facilityWithin(engine,document.state,building,o.settlement))??null;
+}
+// A manager discovers damage only while present and able to act. The ordinary
+// message channel enforces relationship, disclosure, occupation and travel.
+export function publicMaintenanceReport(engine,document,actor,building){
+    const state=document.state,base=facilityDefinition(engine,state,building),n=state.npcs[actor],view=facilityView(engine,state,building);
+    const manager=base?.site?.manager??base?.lodging?.host;
+    if(manager!==actor||!isEffective(engine,state,actor)||!awake(n)||n.location!==building||personConstraint(engine,state,actor)||!view||view.condition<=0||view.condition>=60||view.burning)return null;
+    const officer=(engine.byId.get(actor)?.relationships??[]).map(r=>r.with).find(id=>state.npcs[id]&&publicMaintenanceResponsibility(engine,document,id,building));
+    if(!officer)return null;
+    const memoryId=`maintenance_report:${building}:${Math.floor(state.minute/DAY)}:${actor}`;
+    if(n.memoryStream?.some(m=>m.id===memoryId))return null;
+    const report={officer,memory:{id:memoryId,kind:'facility_maintenance',sourceEvent:memoryId,minute:state.minute,location:building,entities:[building],participants:[actor],sourceType:'亲历',salience:3,content:`${base.name}失修，现场完好度${view.condition}，请有权者核办维修。`}};
+    // Quote the real channel on a disposable draft: failed travel/consent must
+    // neither start a reporting task nor leave a purported delivered memory.
+    const preview=engine.primitiveDraft(document);
+    preview.set(['state','npcs',actor,'memoryStream'],[...n.memoryStream??[],report.memory]);
+    try{facilityRuntime().shareMaintenanceMemory(preview,engine,{from:actor,to:officer,memoryId,channel:state.npcs[officer].location===building?'conversation':'carry',eventId:memoryId});}
+    catch(error){if(error.code?.startsWith('E-'))return null;throw error;}
+    return report;
+}
+export function reportPublicMaintenance(d,engine,actor,building,eventId){
+    const report=publicMaintenanceReport(engine,d.document,actor,building);if(!report)throw preconditionFailure('没有现场发现或可报知的在任负责人');
+    d.set(['state','npcs',actor,'memoryStream'],[...d.get('state','npcs',actor,'memoryStream')??[],report.memory]);
+    return facilityRuntime().shareMaintenanceMemory(d,engine,{from:actor,to:report.officer,memoryId:report.memory.id,channel:d.get('state','npcs',report.officer,'location')===building?'conversation':'carry',eventId});
+}
+export function publicMaintenanceInputs(engine,document,actor,building){
+    const office=publicMaintenanceResponsibility(engine,document,actor,building);if(!office)return null;
+    const rule=authorityOf(engine).treasury;
+    return {office,wage:rule.wagePerWorkerDayCopper,reserve:rule.reserveCopper,used:publicSpent(document.state,office.settlement,questQuotaMonth(engine,document.state))};
+}
+// The project owns adult/resident/employment validation below. Its on-site
+// offer uses the same L1 employment consent as ordinary hiring, rather than
+// treating a quoted market wage as an available alternative job.
+export function publicProjectWorkerDecision(engine,document,worker,{actor,location,wage}){
+    const state=document.state,n=state.npcs[worker];
+    if(!n||worker===actor||n.levy||n.caring||state.player.companions?.includes(worker)||personConstraint(engine,state,worker)||personOffices(engine,state,worker).length)return null;
+    let travel=0;
+    if(n.location!==location){try{travel=engine.route(n.location,location,'walk',state.minute,document.randomSeed).minutes;}catch{return null;}}
+    if(!Number.isFinite(travel)||travel>60)return null;
+    return npcDecision(subjectiveView(engine,document,worker),{kind:'employment',from:actor,cost:{minutes:travel*2},reward:wage,tags:['public_project']});
+}
+// Existing L1 facility runtime is the pack boundary: facilities do not import
+// governance or the economy pack to dispatch a public repair.
+installFacilityRuntime({publicMaintenanceInputs,publicProjectWorkerDecision,startPublicProject,publicMaintenanceReport,reportPublicMaintenance});
+export function startPublicProject(d,engine,args,eventId,settlement,{actor='player'}={}){
     if(args.funding!==undefined&&!['private','public'].includes(args.funding))throw preconditionFailure('工程出资须为private或public');
-    const state=d.get('state'),privateFunding=args.funding==='private',offices=playerOffices(state,{settlement,power:'public_project'},engine);
+    const state=d.get('state'),privateFunding=args.funding==='private',offices=actor==='player'?playerOffices(state,{settlement,power:'public_project'},engine):personOffices(engine,state,actor,{settlement,power:'public_project'}).map(e=>e.value);
+    if(actor!=='player'&&privateFunding)throw preconditionFailure('自治公共维护不能动用私人出资');
+    const actorLocation=actor==='player'?state.location:state.npcs[actor]?.location;
     if(!privateFunding&&!offices.length)throw preconditionFailure('没有在任官职授予本村公共工程权限');
     const name=text(args.name),days=int(args.days,1,365,'工期'),wood=int(args.wood??0,0,10000,'木料'),stone=int(args.stone??0,0,10000,'石料');
     const plan=prepareFacilityProject(engine,state,args,settlement),location=plan.location;
     if(privateFunding&&!plan.building&&plan.facilityType==='house')throw preconditionFailure('私人住宅新建须使用本人宅基批文');
     const owner=plan.building?(state.buildings?.[plan.building]?.owner??state.created?.[plan.building]?.owner??engine.byId.get(plan.building)?.owner):null;
-    if(plan.building&&owner!==(privateFunding?'player':settlement))throw preconditionFailure('工程出资方没有该建筑的修缮扩建权');
+    if(plan.building&&(privateFunding?owner!=='player':!publicMaintenanceResponsibility(engine,d.document,actor,plan.building,{settlement})))throw preconditionFailure('工程出资方没有该建筑的修缮扩建权');
     if(privateFunding&&!plan.building&&(state.created?.[location]??engine.byId.get(location))?.owner!=='player')throw preconditionFailure('私人新建须有本人名下场地；住宅使用宅基批文');
-    if(!within(engine,location,settlement))throw preconditionFailure('工程地点不在本村');
+    if(!facilityWithin(engine,state,location,settlement))throw preconditionFailure('工程地点不在本村');
     const beneficiaries=args.beneficiaries??[settlement];
     if(!privateFunding&&(!beneficiaries.includes(settlement)||beneficiaries.includes('player')))throw preconditionFailure('公款工程的受益人须为本村，不能是本人');
     const workers=[...new Set((args.workers??[]).map(w=>engine.resolve(w,'npc')))].sort();
@@ -54,15 +110,19 @@ export function startPublicProject(d,engine,args,eventId,settlement){
     if(days*workers.length<plan.requiredWork)throw preconditionFailure('工程实际工时不足');
     for(const id of workers){
         const n=state.npcs[id];
-        if(currentEmployment(state,id))throw preconditionFailure('做工的人已有未结束的雇佣排班');
-        if(!isEffective(engine,state,id)||!awake(n)||n.location!==state.location)throw preconditionFailure('做工的人须当面在场且清醒');
+        if(currentEmployment(state,id)||projectAssignment(state,id))throw preconditionFailure('做工的人已有未结束的雇佣排班');
+        if(!isEffective(engine,state,id)||!awake(n)||n.location!==actorLocation)throw preconditionFailure('做工的人须当面在场且清醒');
         if(npcHousehold(engine,state,id)?.settlement!==settlement||(npcAgeAt(engine,state,id)??0)<18)throw preconditionFailure('做工的人须是本村成年住户');
     }
-    if(args.consent!==true)throw preconditionFailure('做工的人须当面同意工期与工钱');
+    if(actor==='player'&&args.consent!==true)throw preconditionFailure('做工的人须当面同意工期与工钱');
     const row=state.settlements[settlement];
     if(privateFunding){for(const [item,n]of [['item_wood',wood],['item_stone',stone]])if(n&&bagStock(d,engine,{point:'projects.stock',id:'player',item,legacy:()=>engine.quantity(d,'player',item)})<n)throw preconditionFailure('自备工程材料不足');}
     else if(priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'wood'),legacy:()=>row.wood??0})<wood||priceRead(d,{point:'projects.supply',account:settlementStock(engine,settlement,'stone'),legacy:()=>row.stone??0})<stone)throw preconditionFailure('公共工程材料不足');
     const wage=authorityOf(engine).treasury.wagePerWorkerDayCopper,bill=wage*workers.length*days;
+    if(actor!=='player')for(const worker of workers){
+        const decision=publicProjectWorkerDecision(engine,d.document,worker,{actor,location,wage});
+        if(decision?.outcome!=='agree')throw preconditionFailure(`做工的人未同意实际工期与工钱：${decision?.reason??'没有可用求职者'}`);
+    }
     const project=`project_${eventId}`;
     let spend;
     if(privateFunding){
@@ -71,16 +131,20 @@ export function startPublicProject(d,engine,args,eventId,settlement){
         holdWorks(d,engine,project,{wood,stone},{from:{party:'player'},writer:'public-projects',eventId:project});
         moveCoins(d,{from:purse(engine,'player'),to:escrowAccount(project),amount:bill,writer:'public-projects',eventId:project});d.set(['state','player','coins'],state.player.coins-bill);
     }else{
-        spend=spendPublic(d,engine,{settlement,copper:bill,power:'public_project',purpose:`工程工钱 ${name}`,sourceEvent:project,books:{account:escrowAccount(project),writer:'public-projects',eventId:project}});
+        spend=spendPublic(d,engine,{settlement,copper:bill,power:'public_project',purpose:`工程工钱 ${name}`,sourceEvent:project,actor,books:{account:escrowAccount(project),writer:'public-projects',eventId:project}});
         d.set(['state','settlements',settlement,'wood'],row.wood-wood);if(stone)d.set(['state','settlements',settlement,'stone'],row.stone-stone);
         holdWorks(d,engine,project,{wood,stone},{from:{settlement},writer:'public-projects',eventId:project});
     }
     const office=offices[0];
-    const p={id:project,type:'工程',creator:'player',name,settlement,location,remainingDays:days,days,wood,stone,status:'施工中',beneficiaries,sourceEvent:eventId,...plan,
-        public:{office:office?.id,workers,wage,escrow:bill,...(privateFunding?{payer:'player'}:{month:spend.month,spend:spend.id}),workedDays:0,labor:{},paid:{},lostDays:0},
+    const p={id:project,type:'工程',creator:actor,name,settlement,location,remainingDays:days,days,wood,stone,status:'施工中',beneficiaries,sourceEvent:eventId,...plan,
+        public:{office:office?.id,workers,wage,escrow:bill,...(privateFunding?{payer:'player'}:{month:spend.month,spend:spend.id}),workedDays:0,labor:{},paid:{},lostDays:0,
+            // F083: progress and pay follow real on-site minutes. The plan is `days` days of 480 minutes: for work measured in
+            // worker-days (a facility's requiredWork) every crew member's minutes count, otherwise a day counts for its busiest worker.
+            requiredMinutes:days*(plan.requiredWork?workers.length:1)*480,minutesDone:0,minutes:{},attendance:{}},
         ...(!privateFunding?{civicApproval:{settlement,office:office.id,grantor:office.appointedBy,minute:state.minute,source:office.source}}:{}),
         ...(plan.requiredWork?{remainingWork:days*workers.length}:{})};
     d.set(['state','projects',project],p);
+    for(const worker of workers)holdingSet(d,null,['state','records',projectAssignmentId(project,worker)],{id:projectAssignmentId(project,worker),category:'project_assignment',project,worker,settlement,location,starts:state.minute,status:'有效',source:eventId},'public-projects');
     return {project,escrow:bill,note:privateFunding?'自备材料与本人工钱已投入，按实际人工支付。':'工钱已从公账押入工程，按实际做工日付给本人；材料已从公共库存拨出。'};
 }
 function settleLabor(d,p,minute){
@@ -93,21 +157,24 @@ function finish(d,engine,p,status,minute,eventId){
     const escrow=p.public.escrow;
     const next={...p,status,remainingDays:status==='已完成'?0:p.remainingDays,public:{...p.public,escrow:0},closedAt:minute};
     if(escrow){if(p.public.payer){moveCoins(d,{from:escrowAccount(p.id),to:purse(engine,'player'),amount:escrow,writer:'public-projects',eventId:`${p.id}:refund`});d.set(['state','player','coins'],d.get('state','player','coins')+escrow);}
-    else refundPublic(d,{settlement:p.settlement,copper:escrow,month:p.public.month,purpose:`工程结余退回 ${p.name}`,sourceEvent:`${p.id}:refund`,books:{account:escrowAccount(p.id),writer:'public-projects',eventId:`${p.id}:refund`}});}
+    else refundPublic(d,{settlement:p.settlement,copper:escrow,month:p.public.month,purpose:`工程结余退回 ${p.name}`,sourceEvent:`${p.id}:refund`,actor:p.creator,books:{account:escrowAccount(p.id),writer:'public-projects',eventId:`${p.id}:refund`}});}
     if(status==='已完成'){next.facility=completeFacilityProject(d,engine,p,minute);settleWorks(d,engine,p,{writer:'public-projects',eventId:`${p.id}:works`});}
     else{
         // Materials go in evenly over the planned days; the unused share returns.
-        const fraction=p.remainingWork===undefined?p.public.workedDays/p.days:1-p.remainingWork/(p.days*p.public.workers.length);
-        const used=k=>Math.floor(p[k]*fraction),back={wood:p.wood-used('wood'),stone:p.stone-used('stone')};
+        const used=k=>Math.floor(p[k]*p.public.minutesDone/p.public.requiredMinutes),back={wood:p.wood-used('wood'),stone:p.stone-used('stone')};
         const s=d.get('state','settlements',p.settlement);
         settleWorks(d,engine,p,{returned:back,to:p.public.payer?{party:p.public.payer}:{settlement:p.settlement},writer:'public-projects',eventId:`${p.id}:works`});
-        if(p.public.payer){for(const [item,n]of [['item_wood',back.wood],['item_stone',back.stone]])if(n)changeItems(d,engine,'player',item,n,{books:STOCK_BOOKED});}
+        if(p.public.payer){for(const [item,n]of [['item_wood',back.wood],['item_stone',back.stone]])if(n)changeItems(d,engine,'player',item,n,{books:STOCK_BOOKED,carryExempt:true});}
         else{d.set(['state','settlements',p.settlement,'wood'],s.wood+back.wood);if(back.stone)d.set(['state','settlements',p.settlement,'stone'],(s.stone??0)+back.stone);}
         next.returned={...back,copper:escrow};
     }
     if(!p.public.payer)settleLabor(d,next,minute);
     d.set(['state','projects',p.id],next);
-    if(status==='已完成'&&!p.public.payer)milestone(d,engine,'publicContribution',p.id,eventId);
+    for(const worker of p.public.workers){
+        const id=projectAssignmentId(p.id,worker),row=d.get('state','records',id);
+        if(row?.status==='有效')holdingSet(d,null,['state','records',id],{...row,status:'已结束',endedAt:minute},'public-projects');
+    }
+    if(status==='已完成'&&!p.public.payer&&(p.creator??'player')==='player')milestone(d,engine,'publicContribution',p.id,eventId);
     return next;
 }
 export function abortPublicProject(d,engine,args){
@@ -118,25 +185,37 @@ export function abortPublicProject(d,engine,args){
     const row=finish(d,engine,p,'已中止',d.get('state','minute'));
     return {project:p.id,status:row.status,returned:row.returned};
 }
-// One step per elapsed midnight: able workers are paid and the work advances.
+// One step per elapsed midnight (F083). The crew's day is what the schedule really measured at the site
+// (recordProjectAttendance): late arrival, absence, illness, levy or other duties cost exactly those minutes.
+// Pay is the signed day wage pro rata to credited minutes (cumulative, so rounding never loses or invents
+// copper); progress is the same credited minutes. Escrow was sized for the planned minutes, so it always covers it.
 export function advancePublicProjects(d,engine,{before,after,id}){
     for(let day=Math.floor(before/DAY);day<Math.floor(after/DAY);day++){
-        const worked=new Set(Object.values(d.get('state','projects')??{}).flatMap(p=>Object.entries(p.public?.lastPaidDay??{}).filter(([,at])=>at===day).map(([npc])=>npc)));
         for(const [key,p]of Object.entries(d.get('state','projects')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(!isPublicProject(p)||p.status!=='施工中')continue;
-            const state=d.get('state'),present=p.building&&state.buildings?.[p.building]?.burning?[]:p.public.workers.filter(w=>!worked.has(w)&&isEffective(engine,state,w)&&able(state.npcs[w])&&!personConstraint(engine,state,w)&&!state.npcs[w].scheduleTravel&&!state.npcs[w].cognitionTravel&&!state.npcs[w].levy&&!state.npcs[w].caring&&!employmentReservation(state,w,day*DAY+480,540,engine.byId.get(w)?.schedule?.restDays??[])).slice(0,p.remainingWork??20);
-            const pub=structuredClone(p.public);
-            if(!present.length){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
-            for(const w of present){
-                moveCoins(d,{from:escrowAccount(key),to:purse(engine,w),amount:pub.wage,writer:'public-projects',eventId:`${key}:${day}`});d.set(['state','npcs',w,'coins'],(state.npcs[w].coins??0)+pub.wage);
-                registerEarnedClaim(d,engine,{id:`public_wage:${key}:${day}:${w}`,kind:'wage',debtor:p.public.payer??p.settlement,creditor:w,amount:pub.wage,paid:pub.wage,status:'已还清',createdAt:(day+1)*DAY,deadline:(day+1)*DAY,location:p.location,source:key,project:key,minutes:480});
-                pub.escrow-=pub.wage;pub.paid[w]=(pub.paid[w]??0)+pub.wage;pub.labor[w]=(pub.labor[w]??0)+1;
-                (pub.lastPaidDay??={})[w]=day;worked.add(w);
-            }
-            pub.workedDays++;
-            const remainingWork=p.remainingWork===undefined?undefined:p.remainingWork-present.length;
-            const next={...p,public:pub,remainingDays:remainingWork===undefined?p.remainingDays-1:Math.ceil(remainingWork/p.public.workers.length),...(remainingWork===undefined?{}:{remainingWork})};
-            if(next.remainingDays<=0)finish(d,engine,next,'已完成',(day+1)*DAY,id);
+            const pub=structuredClone(p.public),crew=pub.workers.length,workerDays=p.remainingWork!==undefined;
+            const attended=pub.workers.map(w=>[w,pub.attendance?.[w]?.days?.[day]??0]).filter(([,m])=>m>0).sort((a,b)=>a[1]-b[1]||a[0].localeCompare(b[0]));
+            const left=pub.requiredMinutes-pub.minutesDone;
+            const progress=Math.min(left,workerDays?attended.reduce((n,[,m])=>n+m,0):Math.max(0,...attended.map(([,m])=>m)));
+            if(progress<=0){pub.lostDays++;d.set(['state','projects',key],{...p,public:pub});continue;}
+            // Workers share a final partial day equally (smallest claim first); a duration project credits each at most the day's progress.
+            let rest=progress;
+            attended.forEach(([w,m],i)=>{
+                const credit=Math.min(m,workerDays?Math.floor(rest/(attended.length-i)):progress);
+                if(workerDays)rest-=credit;
+                pub.minutes[w]=(pub.minutes[w]??0)+credit;
+                const pay=Math.min(pub.escrow,Math.floor(pub.wage*pub.minutes[w]/480)-(pub.paid[w]??0));
+                if(credit<=0||pay<=0)return;
+                const state=d.get('state');
+                moveCoins(d,{from:escrowAccount(key),to:purse(engine,w),amount:pay,writer:'public-projects',eventId:`${key}:${day}`});d.set(['state','npcs',w,'coins'],(state.npcs[w].coins??0)+pay);
+                registerEarnedClaim(d,engine,{id:`public_wage:${key}:${day}:${w}`,kind:'wage',debtor:p.public.payer??p.settlement,creditor:w,amount:pay,paid:pay,status:'已还清',createdAt:(day+1)*DAY,deadline:(day+1)*DAY,location:p.location,source:key,project:key,minutes:credit});
+                pub.escrow-=pay;pub.paid[w]=(pub.paid[w]??0)+pay;
+            });
+            for(const w of pub.workers)if((pub.minutes[w]??0)>=480)pub.labor[w]=Math.floor(pub.minutes[w]/480);
+            pub.workedDays++;pub.minutesDone+=progress;
+            const remaining=pub.requiredMinutes-pub.minutesDone;
+            const next={...p,public:pub,remainingDays:Math.ceil(remaining/(480*(workerDays?crew:1))),...(workerDays?{remainingWork:Math.ceil(remaining/480)}:{})};
+            if(remaining<=0)finish(d,engine,next,'已完成',(day+1)*DAY,id);
             else d.set(['state','projects',key],next);
         }
     }
@@ -244,11 +323,13 @@ function collectRent(d,p,at){
         holdingSet(d,null,rec(p.id),{...p,arrears:0,rentDue:p.rentDue+YEAR},'public-projects');
     }else holdingSet(d,null,rec(p.id),{...p,arrears:due,rentDue:p.rentDue+YEAR,lastUnpaid:at},'public-projects');
 }
-const housingDue=state=>Object.values(state.records??{}).flatMap(r=>r.category==='housing_application'&&r.status==='待管事办理'?[r.due]:r.category==='housing_permit'&&r.status!=='已收回'?[r.rentDue]:[]);
+const housingDue=state=>[...recordsWhere(state.records,'category','housing_application'),...recordsWhere(state.records,'category','housing_permit')].flatMap(r=>r.category==='housing_application'&&r.status==='待管事办理'?[r.due]:r.category==='housing_permit'&&r.status!=='已收回'?[r.rentDue]:[]);
 export function nextHousingMinute(state,now){return Math.min(Infinity,...housingDue(state).filter(m=>m>now));}
 export function advanceHousing(d,engine,{after}){
     for(let guard=0;guard<10000;guard++){
-        const rows=Object.values(d.get('state','records')??{}).filter(r=>r.category==='housing_application'&&r.status==='待管事办理'&&r.due<=after||r.category==='housing_permit'&&r.status!=='已收回'&&r.rentDue<=after)
+        const records=d.get('state','records')??{},due=r=>r.category==='housing_application'&&r.status==='待管事办理'&&r.due<=after||r.category==='housing_permit'&&r.status!=='已收回'&&r.rentDue<=after;
+        const candidates=[...recordsWhere(records,'category','housing_application'),...recordsWhere(records,'category','housing_permit')].filter(due);
+        const rows=(candidates.length>1?Object.values(records).filter(due):candidates)
             .sort((a,b)=>(a.due??a.rentDue)-(b.due??b.rentDue)||a.id.localeCompare(b.id));
         if(!rows.length)return;
         const r=rows[0];

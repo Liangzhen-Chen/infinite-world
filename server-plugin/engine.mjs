@@ -1,15 +1,18 @@
 import {advanceHook} from './advance-hooks.mjs';
-import {isPhysicallyDead} from './holdings.mjs';
+import {sellLivestock} from './livestock-sale.mjs';
+import {ensureHoldings} from './holdings.mjs';
+import {isPhysicallyDead,aliveHoldings} from './holdings.mjs';
 import {primitiveActionRuntime,PRIMITIVE_EVENT_VERBS} from './primitives.mjs';
 import {actionBoundary} from './action-boundary.mjs';
 import {reject} from './action-rejection.mjs';
 import {fixedUnits,fixedNumber,fixedInteger,FIXED_SCALE} from './rx.mjs';
-import {facilityView,facilityRouteStates,facilityRuntime} from './facility-state.mjs';
+import {facilityView,facilityRouteStates,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
 import {personTeaching,personCertified} from './entity-view.mjs';
 import {hiddenCheckBonus,passiveDomain} from './hidden-passives.mjs';
-import { applyPatches, canonical, canonicalEqual, PatchCursor } from './storage.mjs';
+import { applyPatches, canonical, canonicalEqual, diffPatches, PatchCursor, withRecordIndex } from './storage.mjs';
 import { EntityResolver, validateMemory, normalize } from './retrieval.mjs';
-import {assertLocationAccess,homePermission}from'./location-access.mjs';
+import {assertLocationAccess,unlicensedEntry,homePermission}from'./location-access.mjs';
+import {noteOffense} from './offense-notes.mjs';
 import {activities}from'./activities.mjs';
 import {actorId,actorPath}from'./npc-state.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
@@ -40,18 +43,19 @@ import {changeItems,transferItems,validateItemTransfer,validatePhysicalAction,ph
 import {environmentCatalog,environmentFeatures,localPlayerPoint,physicalSiteAction,recordLocalContact}from'./environment.mjs';
 import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mjs';
 import {advanceSummons,summonView}from'./summons.mjs';
-import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody}from'./law.mjs';
+import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody,commitOffenses}from'./law.mjs';
 import {localWeather,weatherEdge,calendarDateAt}from'./weather.mjs';
 import {initializeAgriculture}from'./agriculture-migration.mjs';
 import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
-import {advanceSettlementTrade,regionalTradePrice}from'./settlement-trade.mjs';
+import {advanceSettlementTrade,regionalTradeBase}from'./settlement-trade.mjs';
 import {transportAction,transportScene} from './transport.mjs';
 import {postAction} from './post.mjs';
-import {tradeQuote,recordDeal,agreedTradeQuote,consumeAgreedQuote,executeAgreedRemittance}from'./shop.mjs';
+import {tradeQuote,recordDeal,assertMarketDepth,marketExplanation,agreedTradeQuote,consumeAgreedQuote,executeAgreedRemittance}from'./shop.mjs';
 import {assertLodgingCapacity,assertRestBed,selectLodgingBed} from './facility-state.mjs';
 import {initializeWorldClocks}from'./world-clock.mjs';
 import {initializeFactionClocks,factionClockRules,materializeFaithClocks}from'./faction-clock.mjs';
 import {openSettlementLedgers}from'./quest-sources.mjs';
+import {hypot} from './det-math.mjs';
 
 import {warClosedRoutes}from'./hazard-calendar.mjs';
 import {validateFestivalRuntime}from'./festival.mjs';
@@ -77,7 +81,7 @@ import './boss-cognition.mjs';// world-event subscriber (registers itself)
 import {adjustStanding,standing} from './standing.mjs';// world-event subscriber (registers itself)
 import {evidenceBreakthrough,breakthroughPaths}from'./career-metrics.mjs';
 import {trickKey,adaptationBonus,noteTrick}from'./npc-intelligence.mjs';
-import {chargeTrade,validateTradeCharge,repayDebt}from'./contracts.mjs';
+import {chargeTrade,validateTradeCharge,repayDebt,lodgingFee,tradeInKindPlan,payTradeInKind,creditSaleTerms}from'./contracts.mjs';
 import {openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation} from './obligation-protocol.mjs';
 import {claimEnforceable} from './obligation-protocol.mjs';
 import {fileClosedObligation,advanceProcedure} from './obligation-protocol.mjs';
@@ -87,6 +91,9 @@ import {recordFinanceSale}from'./finance-assets.mjs';
 import {assessTradeTax,taxableSale}from'./finance-tax.mjs';
 import {initializeR1,planR1,planPreR1Partitions}from'./migrations/r1.mjs';
 import {materializeWildlifeHabitats}from'./wildlife-habitats.mjs';
+import {materializeWorkstations}from'./workstation-services.mjs';
+import {deriveItemAttributes}from'./item-class.mjs';
+import {materializeRuntimeWorld}from'./runtime-world.mjs';
 import {unfoldPopulationAt,acceptPopulationProfile,settlePopulationLayers,populationPlan}from'./population.mjs';
 import {remoteEngine,unfoldRemoteAt}from'./remote-generation.mjs';
 import {advanceRegistry,advanceNeedsSteps,nextAdvanceMinute,nextFromScheduleHeap,runAdvance,submitContest,catchUpLocal}from'./advance-registry.mjs';
@@ -106,6 +113,18 @@ declareHoldingWriter('engine',{kinds:['*'],entities:['*'],locations:true});
 for(const verb of PRIMITIVE_EVENT_VERBS)SOCIAL_VERBS.add(verb);
 declareLedgerWriter('engine',{sinks:['sink:export','sink:consume']});
 const clone = value => structuredClone(value);
+const ROUTE_PLACES = Symbol('route places');
+// Departure instants whose route searches are kept (oldest dropped first).
+const ROUTE_FRONTIERS = 8;
+const ROUTE_DAY_PLANS = 8;
+const ROUTE_CACHE_CHECK = process.env.FIELDS_INDEX_CHECK === '1';
+// Native read projection shared by dialogue, routing and evidence. No draft
+// writer is exposed, and the normal quote uses the same environmental inputs.
+installFacilityRuntime({currentTradeQuote(engine,document,args){
+ if(!engine.byId.has('player'))engine=engine.scoped(document);
+ const d={document,get:(...path)=>path.reduce((value,key)=>value?.[key],document)},location=args.location??document.state.location;
+ return tradeQuote(d,engine,{buyer:'player',quantity:1,...args,location,base:()=>regionalTradeBase(d,engine,args.item,location)*wildlifePriceFactor(engine,document,args.item,location)});
+}});
 const number = (value, min = 0, max = 1e9, label = '数值') => {
     if (!Number.isSafeInteger(value) || value < min || value > max) reject('E-ACTION-PRECONDITION',`${label}必须在${min}到${max}之间`);
     return value;
@@ -150,17 +169,22 @@ class Draft {
     // could reach it (release); then it holds a copy, exactly as set would.
     adopt(path, value) {
         if (!Array.isArray(path) || path.length !== 3 || path[0] !== 'state' || path[1] !== 'records' || typeof path[2] !== 'string') return this.set(path, value);
+        if(['__proto__','constructor','prototype'].includes(path[2]))return this.set(path,value);
         value=this.numberEvent(path,value);
-        const patch = { op: 'set', path, value };
+        if(canonicalEqual(this.peek(...path),value))return;
+        const patch = { op: 'set', path, value },stockWrite=advanceHook('prepareStockWrite')?.(this,this.engine,path);
         this.cursor.apply(patch, false); this.adopted.set(path[2], value); this.patches.push(patch);
+        stockWrite?.();
     }
     write(patch) {
         const path = patch.path, records = this.adopted.size && Array.isArray(path) && path[0] === 'state' && (path.length < 2 || path[1] === 'records');
         // Writing inside an adopted row first gives the draft its own copy.
         if (records && path.length > 3 && this.adopted.has(path[2])) this.materialize(path[2]);
+        const stockWrite=path[0]==='state'&&path[1]==='records'?advanceHook('prepareStockWrite')?.(this,this.engine,path):null;
         this.cursor.apply(patch); this.patches.push(patch);
         // A write at or above an adopted row replaces it.
         if (records && path.length <= 3) { if (path.length === 3) this.adopted.delete(path[2]); else this.adopted.clear(); }
+        stockWrite?.();
     }
     release(path) {
         if (!this.adopted.size) return;
@@ -222,6 +246,11 @@ export class WorldEngine {
         this.populationPlan=populationPlan;
         // K8: derived habitats join the authored ones before any consumer reads them.
         materializeWildlifeHabitats(world);
+        // A1: a reviewed world (tools/load-world loadWorld) gains its mechanism annotations and the laws on reviewed rows; idempotent.
+        materializeRuntimeWorld(world);
+        materializeWorkstations(world);
+        // K4: food nutrition and raw/cooked state are derived from recipes before any consumer reads them.
+        deriveItemAttributes(world);
         this.world = world; this.rules = world.rules;
         // An edition may lack people or venues that sites and festivals name; those rows stay idle instead of stopping the load (tools/validate-world reports them).
         const siteErrors=validateSites(world,{edition:true});if(siteErrors.length)throw Error(siteErrors.join('；'));
@@ -367,8 +396,10 @@ export class WorldEngine {
         const readOperations={weather:'inspect',environment:'inspect',pet:'inspect',summon:'inspect',farm:'inspect',wildlife:'observe',lair:'observe',site:'inspect'};
         const noTimeTurn=tool==='turn'&&(args.outOfCharacter||args.extraMinutes===0);
         if(noTimeTurn||(readOperations[tool]&&(args.operation??readOperations[tool])===readOperations[tool])){
-            const detail=await this.scoped(document)[tool](d,args,id);
-            return {patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,minute:d.get('state','minute'),messages:d.messages,notices:[]}};
+            const session=this.scoped(document),detail=await session[tool](d,args,id);
+            // An inspection that turns into an act (opening someone's door) commits its breach too (K6).
+            const offenses=commitOffenses(d,session,id);
+            return {patches:finishLedger(d.patches,books.opening),result:{ok:true,...detail,...(offenses.length?{offenses}:{}),minute:d.get('state','minute'),messages:d.messages,notices:[]}};
         }
         if(document.releaseVersion!==1){
             if(!options.replay)throw new Error('此战役尚未完成 R1 初始化，请先在副本上显式迁移');
@@ -383,7 +414,7 @@ export class WorldEngine {
         const session=this.scoped(document);session.airDraft=d;session.replaying=Boolean(options.replay);session.replayResult=options.result;session.npcObligationAction={tool,args};
         if(!['time','turn','revive','health'].includes(tool))assertMindAwake(d);
         if(tool==='combat'){
-            const target=session.resolve(args.target);
+            const target=d.get('holdings','entities',args.target)?.kind==='population'?args.target:session.resolve(args.target);
             for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(task.status==='进行中'&&[task.npc,task.action.seller].includes(target))d.set(['state','npcAutonomy','tasks',task.id],{...task,status:'中断',reason:'交锋打断了正在进行的工作',interruptedAt:d.get('state','minute'),sourceEvent:id});
         }
         settleMagicAreas(d,session);
@@ -398,6 +429,10 @@ export class WorldEngine {
         const detail = executeRoutingProgram(d,session,tool,callArgs,id)??physicalSiteAction(d,session,tool,callArgs,id)??await session[tool](d,callArgs,id);
         if(bookedWorkstation&&Number.isSafeInteger(args.batches)&&detail.batches!==undefined){detail.requestedBatches=args.batches;detail.clipped=args.batches-detail.batches;}
         if(sleep){const cost=primitiveActionRuntime().finishSleep(d,session,sleep);if(cost)detail.cost=cost;}
+        // K6: what the act did without licence is now a settled fact; the norm
+        // stack names the offenses under this act's own event id.
+        const offenses=commitOffenses(d,session,id);
+        if(offenses.length&&detail&&typeof detail==='object')detail.offenses=[...detail.offenses??[],...offenses];
         if(detail?.duplicate&&!d.patches.length)return {patches:[],result:{ok:true,...detail,minute:document.state.minute,messages:[],notices:[]}};
         if(document.state.location!==d.get('state','location')&&d.get('state','records','site_presence'))holdingRemove(d,null,['state','records','site_presence'],'engine');
         // 返场：记下离开各地的时间，久别回来时汇总当地变化。
@@ -437,9 +472,18 @@ export class WorldEngine {
         const result={ok:true,...detail,...(remote?{remote}:{}),...(population?{population}:{}),minute:d.get('state','minute'),messages:d.messages,
             notices:stateNotices(document.state,d.document.state,id=>session.byId.get(id)?.name)};
         if(legacyContext)primitiveActionRuntime().completeLegacy(session,books.document,d,{...legacyContext,result,persist:Boolean(options.legacyAction)});
-        return {patches:finishLedger(d.patches,books.opening),result};
+        // Clock steps still execute and publish their causal world events in
+        // order. Only the transaction's durable state delta is retained; the
+        // intermediate copies of records/accounts are not separate events.
+        // NPC rows already have one final patch per person (compactNpcPatches).
+        // Retain that contract: splitting their many changed fields is larger.
+        const npcPatch=p=>p.path[0]==='state'&&p.path[1]==='npcs';
+        const patches=tool==='time'?[...diffPatches(books.document,d.document).filter(p=>!npcPatch(p)),...d.patches.filter(npcPatch)]:d.patches;
+        return {patches:finishLedger(patches,books.opening),result};
     }
     primitiveDraft(document){return new Draft(document,this);}
+    primitiveCommitOffenses(d,eventId){return commitOffenses(d,this,eventId);}
+    primitiveRecordContact(d,target,eventId){return recordLocalContact(d,this,target,eventId);}
     primitiveNormalizeCall(tool,args){return resolveToolCall(tool,args);}
     primitiveLegacyRestriction(document,tool,args){
         // Read-only probe: the copy-on-write draft never mutates the original, so no clone.
@@ -486,7 +530,7 @@ export class WorldEngine {
             if(approach?.arrived===false)return {...approach,destination,arrived:false};
             localMinutes=approach?.minutes??0;start=d.get('state','minute');npc=d.get(...path);
         }
-        const route=this.route(npc.location,destination,mode,start,d.document.randomSeed);
+        const route=this.route(npc.location,destination,mode,start,d.get('randomSeed'));
         if(path[1]==='creatures'&&mode!=='walk')throw Error('Creature self-movement requires walking');
         if(path[1]==='npcs')try{preparePetTravel(d,this,mode,route.movingMinutes,entity);}catch(error){throw Object.assign(error,{code:'E-MOVE-MOUNT'});}
         if(mode==='horse'){const mounted=d.get(...path,'mount');assertMindAwake(d,mounted);assertWaterEarthMovement(d,mounted);assertLightMovement(d,this,mounted);}
@@ -529,7 +573,7 @@ export class WorldEngine {
         const location=d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
         const origin=areaTargetFacts(d,this,actor,location);if(!origin)return null;
         const other=areaTargetFacts(d,this,target,location,origin.point);if(!other)return null;
-        return {distanceMeters:Math.hypot(origin.point[0]-other.point[0],origin.point[1]-other.point[1]),lineOfSight:origin.lineOfSight&&other.lineOfSight};
+        return {distanceMeters:hypot(origin.point[0]-other.point[0],origin.point[1]-other.point[1]),lineOfSight:origin.lineOfSight&&other.lineOfSight};
     }
     primitiveMagicEffect(d,{target,spec,duration=0,source,actor},eventId){
         // Target preparation supplies existing body, divine barrier and derived
@@ -537,11 +581,15 @@ export class WorldEngine {
         // transaction, including the opposed path absent in the legacy adapter.
         const catalog={id:source,effectSpec:{kind:'damage',power:1,damageType:'physical'},duration:0};
         const location=actor==='player'?d.get('state','location'):d.get('state','npcs',actor,'location')??d.get('state','creatures',actor,'location');
-        const prepared=prepareMagic.call(this,d,catalog,{target},{source:actor,location});
+        // A body made in this same transaction (a head led out of a herd) is not
+        // in the catalogue the action started with; read it from the draft.
+        const made=!this.byId.get(target)&&d.get('state','created',target),byId=this.byId;
+        const self=made?Object.create(this,{byId:{value:{get:k=>k===target?{...made,id:target}:byId.get(k),has:k=>k===target||byId.has(k)}}}):this;
+        const prepared=prepareMagic.call(self,d,catalog,{target},{source:actor,location});
         delete prepared.completionArgs;
         prepared.spec={...spec};
         prepared.catalog={id:source,duration};
-        return applyMagic.call(this,d,prepared,eventId);
+        return applyMagic.call(self,d,prepared,eventId);
     }
     primitiveAdjustStanding(d,holder,target,delta,context){return adjustStanding(d,this,holder,target,delta,context);}
     primitiveValidateScheduledAction(d,{action,rule,slots},actor){return primitiveActionRuntime().validateScheduled(this,d.document,{action,rule,slots},actor);}
@@ -586,8 +634,8 @@ export class WorldEngine {
     actorPath(id) { return actorPath(this.world,id); }
     bagPath(id) { if(/^(estate_|liq_)/.test(id))return ['state','records',`protocol_assets:${id}`,'inventory']; return id==='player' ? ['state','inventory'] : [...this.actorPath(id),'inventory']; }
     quantity(d,id,item) { const value=d.get(...this.bagPath(id),item); return typeof value==='number'?value:value?.quantity ?? 0; }
-    itemDelta(d,id,item,delta,books) {
-        return changeItems(d,this,id,item,delta,{books});
+    itemDelta(d,id,item,delta,books,options={}) {
+        return changeItems(d,this,id,item,delta,{books,...options});
     }
     async trade(d,args,id) {
         if(args.operation==='transport')return transportAction(d,this,args,id);
@@ -604,7 +652,7 @@ export class WorldEngine {
         const playerLocation=d.get('state','location');
         for(const actor of [buyer,seller]) if(actor!=='player' && this.actor(d,actor).location!==playerLocation) reject('E-ACTION-PRECONDITION','交易对方不在场');
         assertSocietyTrade(d,this,buyer,seller);
-        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt,coins:args.coins},id):repayDebt(d,this,{buyer,seller,debt:args.debt},id);
+        if(args.payment==='repay')return isCreditDebt(d.get('state','records',args.debt))?repayCredit(d,this,{seller,debt:args.debt,coins:args.coins,payCurrency:args.payCurrency},id):repayDebt(d,this,{buyer,seller,debt:args.debt,payCurrency:args.payCurrency},id);
         // Any location registering lodging:{host,kind,rooms} rents rooms at the economy anchors.
         const place=args.service==='住宿'&&buyer==='player'?lodgingOf(this,seller,playerLocation):null;
         if(args.service==='住宿'&&!place)reject('E-ACTION-PRECONDITION','这个人没有登记住宿服务');
@@ -618,48 +666,74 @@ export class WorldEngine {
             const quoteResource=primitiveActionRuntime()?.registry(this).actions.find(a=>a.call?.tool==='world_trade'&&a.call.fixed?.service===args.service)?.signature?.quoteResource;
             const agreed=quoteResource?agreedTradeQuote(d.get('state'),{buyer,seller,item:quoteResource,quantity:days}):null;
             const cost=agreed?.totalCoins??(days===7?place.lodging.weeklyCopper??economy.rentalCopperPerWeek:days*(place.lodging.nightlyCopper??economy.rentalCopperPerNight));
-            if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','房钱不足');
-            const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`},id);
+            // S5-F2: outside coin_river the room fee freezes in the legal-tender unit (contracts.mjs lodgingFee); another currency converts at payment time.
+            const lodging=lodgingFee(d,this,{location:playerLocation,cost,buyer,payment:args.payment,payCurrency:args.payCurrency}),fee=lodging?.fee??null,feeName=lodging?.name;
+            if(!fee&&(args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','房钱不足');
+            const payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${place.name}房钱`,...(fee?{terms:fee,payCurrency:args.payCurrency}:{})},id);
             const starts=Math.max(d.get('state','minute'),...Object.values(d.get('state','records')).filter(row=>row.category==='contract'&&row.room===place.id&&row.parties?.includes('player')&&row.status==='有效').map(row=>row.expires));
             assertLodgingCapacity(this,d.document,place.id,starts,starts+days*1440);
             const bed=selectLodgingBed(this,d.document,place.id,starts,starts+days*1440);
             const contract=`contract_room_${id}`,access=grantLodgingAccess(d,this,place,seller,{starts,expires:starts+days*1440,eventId:id});
             holdingSet(d,null,['state','records',contract],{category:'contract',name:`${place.name}住宿`,parties:['player',seller],room:place.id,...(bed?{bed}:{}),
-                starts,expires:starts+days*1440,paid:payment.debt?0:cost,...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',content:payment.debt?`${host}同意赊账${cost}铜，允许旅人住${days}天。`:`${host}收到${cost}铜，允许旅人住${days}天。`},'engine');
+                starts,expires:starts+days*1440,paid:payment.debt?0:(fee?fee.amount:cost),...(fee?{resource:fee.resource,resourceName:feeName,cost:fee.amount,referenceCopper:cost}:{}),...(payment.debt?{debt:payment.debt}:{}),...(access?{authorization:access}:{}),status:'有效',
+                content:payment.debt?`${host}同意赊账${fee?fee.amount+feeName:cost+'铜'}，允许旅人住${days}天。`:`${host}收到${fee?fee.amount+feeName:cost+'铜'}，允许旅人住${days}天。`},'engine');
             consumeAgreedQuote(d,agreed,id);
-            this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${cost}铜`);return {contract,cost,days,...payment};
+            // The notice names what actually changed hands (paid in another currency: that currency), not a copper figure the bill was never in.
+            const shown=payment.paidWith?`${payment.paidWith.amount}${payment.paidWith.name??'铜'}`:fee?`${fee.amount}${feeName}`:`${cost}铜`;
+            this.advance(d,10,id);d.say(`住宿${days}天，${payment.debt?'赊账':'支付'}${shown}`);return {contract,cost:fee?fee.amount:cost,days,...(fee?{resource:fee.resource,resourceName:feeName,referenceCopper:cost}:{}),...payment};
         }
         if(!args.item)reject('E-ACTION-PRECONDITION','缺少交易项目；住宿请传 service="住宿" 与 days，购买物品请传 item 与 quantity');
+        // Living stock (an animal, a herd, a species) is not catalogue goods.
+        // What is not yours is refused as someone else's (K7); your own animal
+        // is valued by its species' body and produce (market.livestockValue) and changes hands (livestock-sale.mjs).
+        const beast=typeof args.item==='string'?d.get('state','creatures',args.item):null,herd=typeof args.item==='string'&&d.get('state','records',`husbandry:${args.item}`)?.category==='husbandry'?d.get('state','records',`husbandry:${args.item}`):null,species=!beast&&!herd?this.world.monsters.find(m=>m.id===args.item):null;
+        if(seller==='player'&&(beast||herd||species)){
+            if(herd)ensureHoldings(d,this);
+            const owner=beast?beast.owner:herd?aliveHoldings(d,{kind:'owns',subject:herd.id})[0]?.holder:null,name=beast?.name??herd?.name??species.name;
+            const mine=beast||herd?owner==='player':Object.values(d.get('state','creatures')??{}).some(c=>c.species===species.id&&c.owner==='player'&&!(c.hp<=0));
+            if(!mine)reject('E-ACTION-PRECONDITION',owner?`${name}是${this.byId.get(owner)?.name??owner}的，不属于你的牲畜不能拿来卖`:`你名下没有${name}，不属于你的牲畜不能拿来卖`);
+            const sold=sellLivestock(d,this,{buyer,seller,target:args.item,quantity:args.quantity??1,location:playerLocation,eventId:id});
+            this.advance(d,5,id);d.say(`${name}×${sold.quantity}，成交${sold.cost}铜`);return sold;
+        }
         const item=this.resolve(args.item,'item');
         let quantity=number(args.quantity,1,100000,'数量');const requestedQuantity=quantity,catalog=this.byId.get(item);
-        const quoteKey=`${Math.floor(d.get('state','minute')/1440)}_${seller}_${buyer}_${item}`;
-        const existing=d.get('state','quotes',quoteKey);
         // Day list price: region/transport/season x wildlife x shop markup x regard; bargaining moves it within rules.economy.priceFactorLimits.bargain.
-        const quote=tradeQuote(d,this,{buyer,seller,item,quantity,location:playerLocation,base:()=>Math.ceil(regionalTradePrice(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation))});
+        let quote=tradeQuote(d,this,{buyer,seller,item,quantity,instances:args.instances??null,location:playerLocation,base:()=>regionalTradeBase(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation)});
         const [bargainLow,bargainHigh]=this.rules.economy.priceFactorLimits.bargain;
         if(quote.agreed&&args.unitPrice!==undefined&&args.unitPrice*quantity!==quote.totalCoins)reject('E-ACTION-PRECONDITION','单价不符既定报价');
-        const price=quote.agreed?quote.listPrice:(!quote.dynamic?existing:undefined) ?? number(args.unitPrice ?? quote.listPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
+        const price=quote.agreed?quote.listPrice:args.unitPrice===undefined?quote.listPrice:number(args.unitPrice,Math.ceil(quote.listPrice*bargainLow),Math.ceil(quote.listPrice*bargainHigh),'单价');
         // Explicit seller consent to a smaller cash sale. Keep the normal
         // all-or-nothing path, agreed terms and selected unique units intact.
         if(args.allowPartial===true&&seller==='player'&&buyer!=='player'&&(args.payment??'cash')==='cash'&&!quote.agreed&&!args.instances){
             quantity=Math.min(quantity,Math.floor(this.actor(d,buyer).coins/price));
             if(quantity<1)reject('E-ACTION-PRECONDITION','买方余额不足，连一件也收不起');
         }
-        const cost=quote.agreed?quote.totalCoins:quantity*price;
-        if(this.quantity(d,seller,item)<quantity) reject('E-ACTION-PRECONDITION',`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
-        if((args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','买方余额不足');
-        validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
+        if(quantity!==quote.quantity&&!quote.agreed)quote=tradeQuote(d,this,{buyer,seller,item,quantity,location:playerLocation,base:()=>regionalTradeBase(d,this,item,playerLocation)*wildlifePriceFactor(this,d.document,item,playerLocation)});
+        const bargainFactor=quote.agreed||args.unitPrice===undefined?1:price/quote.listPrice;
+        // An explicit retail unit price is already an integer coin amount.
+        // Keep its exact product; a floating ratio can turn 254*3 into
+        // 761.9999999999999 just before the required total truncation.
+        const exactTotal=quote.retail&&args.unitPrice!==undefined&&!quote.agreed?price*quantity:quote.exactTotal*bargainFactor;
+        const cost=quote.agreed?quote.totalCoins:Math.trunc(exactTotal);
+        if(this.quantity(d,seller,item)<quantity) reject('E-ACTION-PRECONDITION',seller==='player'?`你名下的${catalog.name}只有${this.quantity(d,seller,item)}，不属于你的东西不能拿来卖`:`对方库存不足：${catalog.name}只剩${this.quantity(d,seller,item)}`);
+        // S5-F: a buyer may hand over a named resource instead of reference coins (contracts.mjs tradeInKindPlan, today's rate).
+        const plan=tradeInKindPlan(d,this,{buyer,payment:args.payment,payCurrency:args.payCurrency,copper:cost,location:playerLocation});
+        if(!plan&&(args.payment??'cash')==='cash'&&this.actor(d,buyer).coins<cost)reject('E-ACTION-PRECONDITION','买方余额不足');
+        if(!quote.agreed)assertMarketDepth(d,this,quote);
+        if(!plan)validateTradeCharge(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes},id);
+        // A credit sale freezes its terms in the place's tender unit (15 §15.3): the claim is that resource and quantity.
+        const terms=args.payment==='credit'&&buyer==='player'?creditSaleTerms(d,this,{location:playerLocation,copper:cost}):null;
         validateItemTransfer(d,this,seller,buyer,item,quantity,args.instances??null);
         let payment,moved,tax,rejected,receivingCases=[];
         const execute=()=>{
-        payment=chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`},id);
+        payment=plan?payTradeInKind(d,this,{buyer,seller,plan,eventId:id}):chargeTrade(d,this,{buyer,seller,cost,payment:args.payment,creditMinutes:args.creditMinutes,description:`${catalog.name}货款`,terms,referenceCopper:cost},id);
         moved=transferItems(d,this,seller,buyer,item,quantity,args.instances??null,{disposition:true,documentSource:true,eventId:id,authorityContext:primitiveActionRuntime()?.context?.(this,d.document)});
         receivingCases=registerStolenPurchase(d,this,{buyer,seller,item,instances:moved.instances,eventId:id,location:playerLocation});
         // Only trade owes commercial tax: resale stock or an organization's goods (finance-tax.mjs taxableSale).
         tax=payment.debt||!taxableSale(this,d.get('state'),seller,item)?{amount:0}:assessTradeTax(d,this,{seller,cost,location:playerLocation,sourceEvent:id});
         const basis=recordFinanceSale(d,this,{buyer,seller,item,quantity,cost,tax:tax.amount,eventId:id,paid:!payment.debt});
         if(payment.debt)holdingSet(d,null,['state','records',payment.debt],{...d.get('state','records',payment.debt),sale:{buyer,seller,item,quantity,cost,basis,location:playerLocation}},'engine');
-        if(!quote.agreed)d.set(['state','quotes',quoteKey],price);recordDeal(d,quote,price,quantity,id);
+        recordDeal(d,quote,cost,quantity,id,plan?{resource:plan.resource,amount:plan.amount}:terms);
         };
         if(d.scheduler){
             submitContest(d,{id,target:`goods:${seller}:${item}`,targetKind:'goods',ruleId:'trade',objectId:buyer,bid:price,quantity,capacity:this.quantity(d,seller,item),execute,reject:reason=>{rejected=reason;}});
@@ -668,8 +742,8 @@ export class WorldEngine {
             this.advance(d,0,id);
             if(rejected)return {ok:false,status:'rejected',reason:rejected,buyer,seller,item,quantity:0,cost:0};
         }else execute();
-        this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${cost}铜`);
-        return {buyer,seller,item,quantity,cost,...(quantity<requestedQuantity?{requestedQuantity,partial:true}:{}),instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...payment};
+        this.advance(d,5,id);d.say(`${catalog.name}×${quantity}，${payment.debt?'赊账':'成交'}${plan?`${plan.amount}${payment.paidWith.name??'铜'}`:terms?`${terms.amount}${payment.resourceName}`:`${cost}铜`}`);
+        return {buyer,seller,item,quantity,cost,...(!quote.agreed?{pricing:marketExplanation(quote,{bargainFactor,totalCoins:cost,unitPrice:args.unitPrice??quote.listPrice,exactTotal})}:{}),...(quantity<requestedQuantity?{requestedQuantity,partial:true}:{}),instances:moved.instances,...(moved.dispositions?.length?{dispositions:moved.dispositions}:{}),...(receivingCases.length?{receivingCases}:{}),...(tax.amount?{tax}:{}),...(plan||terms?{tender:quote.tender}:{}),...payment};
     }
     advance(d,minutes,id) {
         if(this.bookedWorkstation?.minutes===minutes)facilityRuntime().consumeWorkstationPrepayment(d,this.bookedWorkstation.receipt,id);
@@ -681,7 +755,7 @@ export class WorldEngine {
         this.weatherSequences=new Map();this.advanceGraphs=new Map();this.runtimeHabitats=[];
         this.advanceHouseholds=beginHouseholdReads(this);
         this.advanceFeatures=this.world.locations.flatMap(place=>(place.features??[]).map(feature=>({...feature,location:place.id})));
-        try{const result=withScheduleCache(this,d,()=>this.advanceElapsed(d,minutes,id));primitiveActionRuntime()?.settleRites?.(d,this);return result;}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
+        try{const result=withScheduleCache(this,d,()=>d.cursor instanceof PatchCursor?withRecordIndex(()=>this.advanceElapsed(d,minutes,id)):this.advanceElapsed(d,minutes,id));primitiveActionRuntime()?.settleRites?.(d,this);return result;}finally{this.weatherSequences=null;this.advanceGraphs=null;this.advanceHouseholds=null;this.advanceFeatures=null;this.runtimeHabitats=null;}
     }
     advanceElapsed(d,minutes,id) {
         minutes=number(minutes,0,43200,'耗时');
@@ -759,7 +833,7 @@ export class WorldEngine {
         if(d.get('state','records','mind_rest_activity'))holdingRemove(d,null,['state','records','mind_rest_activity'],'engine');
         if(args.activity==='睡眠'||args.activity==='休息') {
             const p=d.get('state','player');if(p.status==='正常'){
-                d.set(['state','player','hp'],Math.min(p.maxHp,p.hp+Math.floor(minutes/30)));
+                d.set(['state','player','hp'],advanceHook('restHealth')(d,this,minutes));
                 d.set(['state','player','mp'],Math.min(p.maxMp,p.mp+Math.floor(minutes/30)));
             }
         }
@@ -767,16 +841,17 @@ export class WorldEngine {
     }
     route(from,to,mode,minute,seed='default-campaign',weatherCache=null,graphCache=null) {
         // A facility completed by a public project stands inside its site: reach the site, then step in.
-        const built=id=>this.world.locations.some(l=>l.id===id)?null:this.byId?.get(id)?.builtProject?this.byId.get(id).parent:null;
+        graphCache=graphCache??this.advanceGraphs??null;
+        let places=graphCache?.get(ROUTE_PLACES);
+        if(graphCache&&!places){places=new Set(this.world.locations.map(l=>l.id));graphCache.set(ROUTE_PLACES,places);}
+        const built=id=>(places?places.has(id):this.world.locations.some(l=>l.id===id))?null:this.byId?.get(id)?.builtProject?this.byId.get(id).parent:null;
         if(built(to)||built(from)){
             const r=this.route(built(from)??from,built(to)??to,mode,minute,seed,weatherCache,graphCache),step=(built(to)?2:0)+(built(from)?2:0);
             r.minutes+=step;r.movingMinutes+=step;return r;
         }
-        const distances=new Map([[from,0]]), movingTimes=new Map([[from,0]]), previous=new Map(),costs=new Map([[from,0]]);
         const season=this.calendar(minute).season,key=`${mode}:${season}`;
         // Callers may reuse topology only within one synchronous schedule
-        // advance; weather and per-person departure times are never cached here.
-        graphCache=graphCache??this.advanceGraphs??null;
+        // advance. Physical search results below also key every live input.
         let graph=graphCache?.get(key);
         if(!graph){
             const order=new Map(this.world.locations.map((place,index)=>[place.id,index])),adjacent=new Map();
@@ -786,46 +861,113 @@ export class WorldEngine {
             }
             graph={order,adjacent,oriented:new Map()};graphCache?.set(key,graph);
         }
-        const {order,adjacent}=graph,settled=new Set(),oriented=graph.oriented??new Map(),airState=typeof this.airDraft?.peek==='function'?this.airDraft.peek('state'):this.airDraft?.get('state'),closedRoutes=warClosedRoutes(airState,minute),facilities=facilityRouteStates(this,airState); // R31: read-only look, so the draft is not made to recopy state and npcs on its next write
-        // P2: each edge as seen from one end, built once per topology (read-only).
-        const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
-        // P2: a binary heap of discovered nodes ordered by (distance, world
-        // location order). Equal distances retain the original world-location
-        // order, including its chosen path and toll total; an entry whose node
-        // has since been settled or improved is skipped.
-        const heap=[],before=(a,b)=>a[0]<b[0]||a[0]===b[0]&&a[1]<b[1];
-        const push=node=>{
-            const entry=[distances.get(node),order.get(node),node];let i=heap.push(entry)-1;
-            while(i>0){const parent=(i-1)>>1;if(!before(entry,heap[parent]))break;heap[i]=heap[parent];i=parent;}heap[i]=entry;
-        };
-        const pop=()=>{
-            const top=heap[0],last=heap.pop();if(!heap.length)return top;
-            let i=0;for(;;){const l=2*i+1,r=l+1;let next=i,best=last;
-                if(l<heap.length&&before(heap[l],best)){next=l;best=heap[l];}
-                if(r<heap.length&&before(heap[r],best)){next=r;}
-                if(next===i)break;heap[i]=heap[next];i=next;}
-            heap[i]=last;return top;
-        };
-        if(order.has(from))push(from);
-        while(heap.length){
-            const [nearest,,current]=pop();
-            if(settled.has(current)||nearest!==distances.get(current))continue;
-            settled.add(current);if(current===to)break;
-            for(const edge of adjacent.get(current)??[]){
-                if(closedRoutes.has(edge.id))continue;
-                if(facilities.get(edge.id)?.factor===0)continue;
-                const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
-                const speed=(edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1))*(facilities.has(edge.id)?1.25*facilities.get(edge.id).factor:1);
-                const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,minute,distances.get(current),movingTimes.get(current),speed,weatherCache):null;
-                if(this.rules.weather&&!travel)continue;
-                const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
-                if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);push(next);}
+        const {order,adjacent}=graph,oriented=graph.oriented??new Map(),airState=typeof this.airDraft?.peek==='function'?this.airDraft.peek('state'):this.airDraft?.get('state'),closedRoutes=warClosedRoutes(airState,minute),facilities=facilityRouteStates(this,airState); // R31: read-only look, so the draft is not made to recopy state and npcs on its next write
+        // Cache only the physical search, within the existing fixed-topology
+        // scope. Departure minute and seed retain cross-day weather/hazard
+        // boundaries; closures and facility factors retain live state changes.
+        // One source search serves all destinations. Air effects and per-action
+        // checkpoints are projected afresh below.
+        let factors=null;
+        if(graphCache){
+            graph.facilitySignatures??=new WeakMap();
+            factors=graph.facilitySignatures.get(facilities);
+            if(factors===undefined){
+                factors=JSON.stringify([...facilities].map(([id,row])=>[id,row.factor]).sort(([a],[b])=>a<b?-1:a>b?1:0));
+                graph.facilitySignatures.set(facilities,factors);
             }
         }
-        if(!distances.has(to))reject('E-ACTION-PRECONDITION','没有当前季节可通行的路线，不能瞬移');
-        const edges=[],segments=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);segments.unshift({id:step.edge.id,from:step.node,to:cursor,minutes:movingTimes.get(cursor)-movingTimes.get(step.node),elapsed:distances.get(cursor),moving:movingTimes.get(cursor),cost:costs.get(cursor)});cursor=step.node;}
-        const moving=movingTimes.get(to),daysRest=this.rules.weather||mode==='boat'?0:Math.floor((moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
-        const result={minutes:distances.get(to)+daysRest,movingMinutes:moving,cost:costs.get(to),edges};
+        // Searches are kept per departure day (a few recent days), so a return leg
+        // at another minute does not discard the outbound searches. Within the day a
+        // search made at minute m0 serves a departure at m0+shift when the shift lies
+        // in the range its edge evaluations recorded (weatherEdge probe: every looked-up
+        // instant stays on its own travel day, no chunk moves across midnight), which
+        // gives the same tree. A calendar whose day does not start at minute%1440===0
+        // keeps one frontier per departure minute.
+        if(graphCache){
+            const clock=this.calendar(minute),frontier=`${clock.hour*60+clock.minute===minute%1440?'d'+Math.floor(minute/1440):minute}|${seed}|${this.calendarId}`;
+            let searches=(graph.frontiers??=new Map()).get(frontier);
+            if(!searches){
+                if(graph.frontiers.size>=ROUTE_FRONTIERS)graph.frontiers.delete(graph.frontiers.keys().next().value);
+                graph.frontiers.set(frontier,searches=new Map());
+            }
+            graph.searches=searches;
+        }
+        const searchKey=graphCache?JSON.stringify([from,[...closedRoutes].sort(),factors]):null;
+        const search=prior=>{
+            const tree=prior??{departure:minute,lo:-Infinity,hi:Infinity,settled:new Set(),distances:new Map([[from,0]]),movingTimes:new Map([[from,0]]),previous:new Map(),costs:new Map([[from,0]]),heap:[],pending:null};
+            const {settled,distances,movingTimes,previous,costs,heap,departure}=tree;
+            // P2: each edge as seen from one end, built once per topology (read-only).
+            const from_=(edge,node)=>{let ends=oriented.get(edge);if(!ends){ends=new Map();oriented.set(edge,ends);}let row=ends.get(node);if(!row){row={...edge,from:node};ends.set(node,row);}return row;};
+            // P2: a binary heap of discovered nodes ordered by (distance, world
+            // location order). Equal distances retain the original world-location
+            // order, including its chosen path and toll total; an entry whose node
+            // has since been settled or improved is skipped.
+            const before=(a,b)=>a[0]<b[0]||a[0]===b[0]&&a[1]<b[1];
+            const push=node=>{
+                const entry=[distances.get(node),order.get(node),node];let i=heap.push(entry)-1;
+                while(i>0){const parent=(i-1)>>1;if(!before(entry,heap[parent]))break;heap[i]=heap[parent];i=parent;}heap[i]=entry;
+            };
+            const pop=()=>{
+                const top=heap[0],last=heap.pop();if(!heap.length)return top;
+                let i=0;for(;;){const l=2*i+1,r=l+1;let next=i,best=last;
+                    if(l<heap.length&&before(heap[l],best)){next=l;best=heap[l];}
+                    if(r<heap.length&&before(heap[r],best)){next=r;}
+                    if(next===i)break;heap[i]=heap[next];i=next;}
+                heap[i]=last;return top;
+            };
+            if(!prior&&order.has(from))push(from);
+            while((heap.length||tree.pending!==null)&&!settled.has(to)){
+                let current=tree.pending;tree.pending=null;
+                if(current===null){
+                    const [nearest,,node]=pop();current=node;
+                    if(settled.has(current)||nearest!==distances.get(current))continue;
+                    settled.add(current);
+                    // Stop before inspecting the destination's outgoing edges,
+                    // exactly as an uncached query does. Expand it only if a
+                    // later destination needs this frontier to continue.
+                    if(current===to){tree.pending=current;break;}
+                }
+                for(const edge of adjacent.get(current)??[]){
+                    if(closedRoutes.has(edge.id))continue;
+                    if(facilities.get(edge.id)?.factor===0)continue;
+                    const next=edge.from===current?edge.to:edge.to===current?edge.from:null;if(!next||!order.has(next)||settled.has(next))continue;
+                    const speed=(edge.speedKmh??(mode==='cart'?this.rules.travel.cartKmh:this.rules.travel.walkKmh*(mode==='horse'?this.rules.travel.horseMultiplier:1))*(edge.terrainMultiplier??1))*(facilities.has(edge.id)?1.25*facilities.get(edge.id).factor:1);
+                    const travel=this.rules.weather?weatherEdge(this,seed,from_(edge,current),mode,departure,distances.get(current),movingTimes.get(current),speed,weatherCache,tree):null;
+                    if(this.rules.weather&&!travel)continue;
+                    const elapsed=Math.max(1,Math.ceil(edge.lengthKm/speed*60)),candidate=travel?.elapsed??distances.get(current)+elapsed;
+                    if(candidate<(distances.get(next)??Infinity)){distances.set(next,candidate);movingTimes.set(next,travel?.moving??movingTimes.get(current)+elapsed);previous.set(next,{node:current,edge});costs.set(next,costs.get(current)+edge.toll);push(next);}
+                }
+            }
+            return tree;
+        };
+        const fits=tree=>{const shift=minute-tree.departure;return shift>=tree.lo&&shift<=tree.hi;};
+        let plan=graph.searches?.get(searchKey)?.find(fits);
+        if(plan&&!plan.settled.has(to)){
+            try{search(plan);}catch(error){graph.searches.delete(searchKey);throw error;}
+            // Extending looked at further instants; this departure may no longer share them.
+            if(!fits(plan))plan=null;
+        }
+        const hit=!!plan;
+        if(!plan){
+            plan=search();
+            if(graphCache){
+                graph.searches??=new Map();
+                if(graph.searches.size>=512)graph.searches.clear();
+                const plans=graph.searches.get(searchKey)??[];
+                if(plans.length>=ROUTE_DAY_PLANS)plans.shift();
+                plans.push(plan);graph.searches.set(searchKey,plans);
+            }
+        }
+        const project=tree=>{
+            const {distances,movingTimes,previous,costs}=tree;
+            if(!distances.has(to))reject('E-ACTION-PRECONDITION','没有当前季节可通行的路线，不能瞬移');
+            const edges=[],segments=[];let cursor=to;while(cursor!==from){const step=previous.get(cursor);edges.unshift(step.edge.id);segments.unshift({id:step.edge.id,from:step.node,to:cursor,minutes:movingTimes.get(cursor)-movingTimes.get(step.node),elapsed:distances.get(cursor),moving:movingTimes.get(cursor),cost:costs.get(cursor)});cursor=step.node;}
+            const moving=movingTimes.get(to),daysRest=this.rules.weather||mode==='boat'?0:Math.floor((moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
+            const result={minutes:distances.get(to)+daysRest,movingMinutes:moving,cost:costs.get(to),edges};
+            return {result,segments};
+        };
+        const {result,segments}=project(plan),edges=result.edges;
+        if(hit&&ROUTE_CACHE_CHECK&&!canonicalEqual({result,segments},project(search())))throw Error('route search cache mismatch');
         const adjusted=this.airDraft?adjustAirTravel(this.airDraft,this,result,mode,{minute,from,segments,sail:this.npcObligationAction?.tool==='move'}):result;
         if(this.npcObligationAction?.tool==='move')Object.defineProperty(adjusted,'checkpoints',{value:segments.map((segment,index)=>{
             const rest=this.rules.weather||mode==='boat'?0:Math.floor((segment.moving-1)/this.rules.travel.dailyTravelMinutes)*(1440-this.rules.travel.dailyTravelMinutes);
@@ -851,7 +993,7 @@ export class WorldEngine {
             if(approach?.arrived===false)return {...approach,destination,arrived:false};
             localMinutes=approach?.minutes??0;
         }
-        let route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.document.randomSeed);
+        let route=this.route(old,destination,args.mode??'walk',d.get('state','minute'),d.get('randomSeed'));
         const local=d.get('state','records','local_player_position'),mudMinutes=waterEarthWalkMinutes(d,this,local?.location===old?local.point:[0,0],local?.location===old?local.point:[0,0]);
         const attempts=[];let encounterAttempt=null;
         for(const checkpoint of route.checkpoints){
@@ -863,7 +1005,8 @@ export class WorldEngine {
         for(const edgeId of route.edges){const edge=this.world.routes.find(r=>r.id===edgeId);assertMindSpacePath(d,this,edge.from,[0,0],[0,0],{destination:edge.to,eventId:id,signal:true});}
         assertFireTravel(d,this,route);
         const entered=new Set(route.edges.flatMap(edgeId=>{const edge=this.world.routes.find(row=>row.id===edgeId);return[edge.from,edge.to];}));entered.delete(old);
-        for(const place of entered)assertLocationAccess(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});
+        // K6: walking into a home without its residents' consent happens; it is trespass.
+        for(const place of entered){const entry=unlicensedEntry(d,this,place,{authorization:args.authorization,companions:d.get('state','player','companions')??[],arrivalMinute:d.get('state','minute')+route.minutes});if(entry)noteOffense(d,{act:'enter',victim:entry.victim,subject:{id:place,kind:'dwelling'},actor:'player'});}
         assertNpcObligationAction(d,this,['player',...d.get('state','player','companions')??[]],{minutes:route.minutes,location:destination,kind:'move'});
         if(this.rules.petCare)preparePetTravel(d,this,args.mode??'walk',route.movingMinutes);
         if(d.get('state','player','coins')<route.cost)reject('E-ACTION-PRECONDITION','路费不足');
@@ -1069,7 +1212,7 @@ export class WorldEngine {
         let routePreview;
         if(type==='带路'){
             obligation.destination=this.resolve(args.destination);
-            const from=d.get('state','location'),calculatedAt=d.get('state','minute'),route=this.route(from,obligation.destination,'walk',calculatedAt,d.document.randomSeed);
+            const from=d.get('state','location'),calculatedAt=d.get('state','minute'),route=this.route(from,obligation.destination,'walk',calculatedAt,d.get('randomSeed'));
             routePreview={from,destination:obligation.destination,minutes:route.minutes,movingMinutes:route.movingMinutes,cost:route.cost,calculatedAt,estimate:true};
             if(promisor==='player'||d.get('state','npcs',promisor,'location')!==d.get('state','location'))reject('E-ACTION-PRECONDITION','带路者必须在场');
             obligation.status='进行中';holdingSet(d,null,['state','player','companions'],[...new Set([...d.get('state','player','companions'),promisor])],'engine');

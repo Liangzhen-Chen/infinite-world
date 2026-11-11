@@ -28,19 +28,46 @@ test('正式机制引用既存四村和文化势力；未知效果和缺消费�
 });
 test('真实周贸易到货后推进阶段并消费区域报价，不把常量阶段当演变',async()=>{
  const {engine,doc,wait}=setup(),before=structuredClone(doc);
+ // S5-02 §15.2/15.4：粮基准3×运输/春季环境项×D/S；未成交，深度/品质/立场/修正均1。
+ // 公仓实际粮扣人口×90天口粮；四村没有其他在售粮，D为口粮需求。
+ // 两次观察的 [环境后的基准, D, S=公仓粮-D] 分别为：
+ // S5-05 / 05 §5.5、RW-06/W1：农副产保留小数累计取整，先吃农副产，余下口粮才扣公仓粮。
+ // 原生推进在 minute=10080/20160 取价；无收割/腐坏，第二周四村各转出40粮、转入40粮，净转移0。
+ // 7/14天农副产手算：榆坡 floor(5×38.5+31.5+35)=259，259+35+6×21=420；
+ // 苇亭 floor(6×49.5+60.5)=357，floor(11×49.5+3×60.5)=726；
+ // 梨泉 floor(4×34.2+3×38)=250，floor(6×34.2+6×38+41.8+22.8)=497；
+ // 桑坂 floor(5×40.5+2×45)=292，floor(7×40.5+2×45+5×49.5)=621。
+ // 公仓粮=期初粮+上述农副产−人口×天数；D=人口×90；下列基准×(D/S) 手算得到独立字面量。
+ // 先除后乘，与市场先计算稀缺率的浮点运算顺序一致；保留严格相等断言。
+ // 榆坡 [3.443174013650245,7200,17699-7200]、[3.3518376618407357,7200,17300-7200]（期初18000，人口80）；
+ // 苇亭 [3.471578672022414,9000,21657-9000]、[3.5941049780937933,9000,21326-9000]（期初22000，人口100）；
+ // 梨泉 [3.7863854422265217,8640,21578-8640]、[3.6359916279324778,8640,21153-8640]（期初22000，人口96）；
+ // 桑坂 [3.4636753236814712,9900,24522-9900]、[3.551323048345333,9900,24081-9900]（期初25000，人口110）。
+ // 环境基准=3×春季0.9×(1+线路公里数×0.01)×实际运输风险；单价不取整。
+ // 独立金额字面量；历史观察不充当当前报价缓存。
+ // W5: persisted quote anchors are integer micro-copper numerators over 1_000_000 (old float -> round(float*1e6); max change 5e-7 copper).
+ // K16: farm hands also fetch household water, so real sowing/seed use shifts a few
+ // granary portions (yupo day 14: S=17291-7200 instead of 17300-7200). Check: 2389429*10100/10091 = 2391560.
+ const anchors={
+  loc_bs_yupo:[2362384,2391560],
+  loc_bs_weiting:[2469312,2625990],
+  loc_bs_liquan:[2528940,2511590],
+  loc_bs_sangban:[2345444,2479939],
+ };
  let c=(await wait(doc,14*DAY-doc.state.minute)).doc;
  assert.deepEqual(doc,before);
  for(const clock of clocks(c)){
   assert.equal(clock.phase,2);assert.equal(clock.history.length,2);
   assert.ok(clock.history[1].trigger.evidence.some(id=>c.state.records[id]?.deliveredFood>0));
-  for(const event of clock.history){
+  for(const [index,event] of clock.history.entries()){
    const sid=engine.rules.worldClock.clocks.find(r=>r.id===clock.id).settlement;
-   assert.equal(event.effect.price,c.state.quotes[`region:${event.minute/DAY}:${sid}:item_oats`]);
+   assert.deepEqual(event.effect.price,{numerator:anchors[sid][index],denominator:1000000});assert.ok(Number.isInteger(event.draw));
+   assert.equal(c.state.quotes[`region:${event.minute/DAY}:${sid}:item_oats`],undefined);
   }
  }
  assert.equal(worldClockScene(engine,c),'');
  const counter=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_bs_yupo').counter;
- const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/每份\d+铜/);
+ const visible=structuredClone(c);visible.state.location=counter;assert.match(worldClockScene(engine,visible),/\u6bcf\u4efd2\.391559921242027\u94dc/);
  assert.ok(Object.values(c.state.records).some(r=>r.category==='settlement_trade'&&r.status==='delivered'));
  assert.equal(c.state.player.coins,doc.state.player.coins);assert.deepEqual(c.state.created,doc.state.created);
  const beforeNpcs=Object.keys(doc.state.npcs);assert.deepEqual(Object.keys(c.state.npcs),beforeNpcs);

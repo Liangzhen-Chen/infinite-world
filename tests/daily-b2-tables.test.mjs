@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT08（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）表级验证：题面里由“参数表缺省值”决定的数值，用 balance 表的缺省行 + 题面场景量算一遍，必须恰好落在题面预期里。
 // 说明：引擎目前不读 balance 表（表只供 BalSim、指标库与将来的结算规则用），所以这里验证的是“缺省值 + 设计公式 = 题面预期”，
 // 引擎侧接线（A3 动作耗时、S1 身体需求量、S6 立场事件权重、S5 产出）后同一组数值由引擎结算。引擎侧能结算的条目在 daily-b2-*.test.mjs 里直接断言。
@@ -50,12 +51,12 @@ test('D05 / D06 / D09 / D12 / D20 / D04 / D33 身体需求量：吃面后不再�
  const hunger=70,s0=100-hunger;
  assert.ok(s0<=satiety.thresholds.hungry,'D05 饥饿度 70 = 饱食 30，处于饥饿');
  assert.ok(s0+satiety.mealGainLow>satiety.thresholds.hungry,'D05② 吃一餐后离开饥饿阈');
- // D06：题面自带步行速度 10 里/时辰 → 20 里 = 2 时辰 = 4 小时。
- const hours=20/10*2,drop=hours*bodyRate('stamina','travel');
+ // D06：按表 15 里/时辰，20 / 15 × 2 = 8/3 小时（160 分钟）。
+ const hours=20/param('transport','speed.walk').value*2,drop=hours*bodyRate('stamina','travel');
  assert.ok(drop>0&&100-drop>0,`D06③ 步行 ${hours} 小时体力 100→${100-drop}，下降但没到 0`);
  // D09：同一段路雨天 = 晴天耗时 ÷ 雨速系数，疲劳率再乘 wet.drainMul。
  const rainHours=hours/param('transport','speed.rain').value,rainDrop=rainHours*bodyRate('stamina','travel')*param('body','wet.drainMul').value;
- assert.ok(rainHours>4,`D09② 雨天 ${rainHours.toFixed(2)} 小时 > 4 小时`);assert.ok(rainDrop>drop&&100-rainDrop>0,`D09③ 雨天体力少 ${rainDrop.toFixed(1)} > 晴天 ${drop}，仍未到 0`);
+ assert.ok(rainHours>hours,`D09② 雨天 ${rainHours.toFixed(2)} 小时 > 晴天 ${hours.toFixed(2)} 小时`);assert.ok(rainDrop>drop&&100-rainDrop>0,`D09③ 雨天体力少 ${rainDrop.toFixed(1)} > 晴天 ${drop}，仍未到 0`);
  // D12：2 亩播种 = 0.5 工日/亩 × 2 = 1 工日 = 一个工作日的大半以上；重活体力下降。
  const sowMinutes=row('yields','field:wheat').laborSow*2*WORKDAY;
  within(sowMinutes,[360,720],'D12③ 耕种耗时占一天的大半');assert.ok(sowMinutes/60*bodyRate('stamina','heavy')<100,'D12④ 体力下降但不为 0');
@@ -103,9 +104,15 @@ test('D25 / D26 / D32 / D37 价与率：驿传费 8、托运费 30、休息回�
  assert.deepEqual(tables.tax.params.find(p=>p.id==='exemption.default').value,['口粮','生计工具'],'D37⑤ 缺省免税项不含货物');
 });
 
-test('冲突登记：D06 题面步行速度 10 里/时辰低于速度表界下沿，表按 15 里/时辰算',()=>{
+test('D06 步速口径：采用界内的15里/时辰，保留原10低于下界的校核',()=>{
  const walk=param('transport','speed.walk');
- assert.ok(10<walk.bounds[0],'题面速度 10 里/时辰在界 [12, 18] 之外');
- const hoursAtTable=20/walk.value*2;assert.ok(hoursAtTable<3,`按表 20 里只要 ${hoursAtTable.toFixed(2)} 小时，卯时出发不会到巳时`);
+ assert.ok(10<walk.bounds[0],'原题10里/时辰低于界下沿，故按主会话决定改题面');
+ assert.equal(walk.value,15);within(walk.value,walk.bounds,'步速在界内');
+ const hoursAtTable=20/walk.value*2;assert.ok(hoursAtTable<3,'按表20里不到3小时');
 });
-test.todo('D06 ① 题面“步行 10 里/时辰、20 里约 4 小时、卯时出发约巳时到”与数值方案冲突：transport.json speed.walk 缺省 15 里/时辰（界 [12, 18]，日行 60 里），20 里只要约 2.7 小时、辰时初到；需用户在改题面（速度改 15 里/时辰或距离改 30 里）与改速度界之间决定');
+test('D06 ① 步行15里/时辰，20里160分钟；05:00出发，辰时07:40到',()=>{
+ // 手算：20 / 15 × 120 = 160 分钟；05:00 + 02:40 = 07:40。
+ const minutes=20/param('transport','speed.walk').value*SHICHEN;
+ assert.equal(minutes,160);assert.equal(Number((minutes/60).toFixed(1)),2.7);
+ assert.equal(5*60+minutes,7*60+40,'卯初出发，辰时 07:40 到达');
+});

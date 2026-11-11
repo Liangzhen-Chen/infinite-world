@@ -259,7 +259,17 @@ test('physical: illegal bodies stay unmet instead of clamping, reviving or overr
  for(const body of [{stamina:-1},{fatigue:101},{mp:initial.state.player.maxMp+1},{hpDeficit:-4},{conscious:'yes'},{level:1.5}]){
   const out=setup({body:{player:body}});assert.ok(out.setupUnmet.length);assert.deepEqual(out.document.state.player,initial.state.player);
  }
- for(const body of [{player:{safeCarryKg:3}},{[npc]:{age:1000}},{player:{conscious:false}},{unknown:{mp:1}}])assert.ok(setup({body}).setupUnmet.length);
+ // W8C：safeCarryKg 不再是覆盖值，而是“还能多背多少”；剩余负重要求超过派生上限(30 公斤)时无法凭空造出，仍为 unmet。
+ for(const body of [{player:{safeCarryKg:100}},{[npc]:{safeCarryKg:3}},{[npc]:{age:1000}},{player:{conscious:false}},{unknown:{mp:1}}])assert.ok(setup({body}).setupUnmet.length);
+});
+
+test('physical: safeCarryKg premise is met by real pack items, never by overriding the derived cap (A3V2-048)',()=>{
+ // 力量 10 → 安全负重 10 + 2×10 = 30 公斤。前提“还能多背 3 公斤”→ 需要背上 30 − 已背 − 3 公斤的真实物品。
+ const out=setup({body:{player:{safeCarryKg:3}}}),state=out.document.state;
+ assert.deepEqual(out.setupUnmet,[]);
+ const weight=Object.entries(state.inventory).reduce((sum,[item,row])=>sum+(typeof row==='number'?row:row.quantity??0)*(engine.byId.get(item)?.weight??0),0);
+ assert.ok(Math.abs(30-weight-3)<1e-9,`已背 ${weight} 公斤，剩余应为 3`);
+ assert.equal(state.player.attributes.力量,10,'上限没有被改写，只是行囊变重');
 });
 
 test('physical: actor initial activity and location use native writes without granting services',()=>{

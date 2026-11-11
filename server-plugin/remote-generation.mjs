@@ -1,6 +1,6 @@
 import {purse,treasury as treasuryAccount,source,moveCoins} from './money.mjs';
-import {declareLedgerWriter} from './ledger.mjs';
-import {genesisBag,genesisSettlement} from './stock.mjs';
+import {declareLedgerWriter,parseAccount,accountKey,ledgerActive} from './ledger.mjs';
+import {genesisSettlement,bag,itemResource,stockSource,moveStock,registerLegacyStock,moveFishPopulation} from './stock.mjs';
 // S1b: 远方生成的聚落库存与人物行囊同样从 src:genesis 入账。
 declareLedgerWriter('remote-generation',{sources:{'src:genesis':{coin_river:1000000,'*':10000000}}});
 import {createHash} from 'node:crypto';
@@ -10,9 +10,36 @@ import {originSettlement} from './shop.mjs';
 import {materializeWildlifeHabitats} from './wildlife-habitats.mjs';
 import {planWildlifeMigration} from './wildlife-migration.mjs';
 import {legalTemplate,courtFacilities,legalStaffing} from './law-codes.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,holdingRemove,runLifecycleProtocol,isPhysicallyDead} from './holdings.mjs';
 import {syncHoldingSource} from './holding-sources.mjs';
+import {pinnedBy,pinnedEntities} from './holding-kinds.mjs';
+import {addPopulation,populationHealth} from './population-health.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+import {obligationClosed} from './obligation-protocol.mjs';
+import {hypot,cos,sin} from './det-math.mjs';
+import {registerSubsistenceResources} from './household-subsistence.mjs';
 declareHoldingWriter('remote-generation',{kinds:['holds_office','tamed_by','resides','resident_of','household_member','kin','devotee_of','certified','member_of'],entities:['office','wreck'],locations:true});
+
+// Read-only outline projection. Advancing time never opens a county ledger,
+// residents or ecology. Only already represented places can supply real stock.
+const sourceSkeletons=new WeakMap();
+registerSubsistenceResources({remoteSkeleton(engine,state,home,seed){
+ const county=remoteCountyOf(engine.world,home);
+ if(!county||state.remote?.[county])return null;
+ const base=engine.remoteBase?.world??engine.world;
+ let rows=sourceSkeletons.get(base);if(!rows){rows=new Map();sourceSkeletons.set(base,rows);}
+ const key=`${county}:${seed}`;
+ if(!rows.has(key))rows.set(key,generateCounty(base,county,seed));
+ return rows.get(key);
+}});
+
+// Private aggregate stock is distinct from the settlement's public treasury.
+// Money already enumerates money_account rows; items use the same owner here.
+const aggregateStock=(engine,settlement,item)=>accountKey(settlement,itemResource(engine,item),'aggregate');
+registerLegacyStock('remote-generation',(engine,state,add)=>{
+    for(const row of Object.values(state.records??{}))if(row.category==='money_account'&&row.remoteStock)
+        for(const [item,n] of Object.entries(row.inventory))add(aggregateStock(engine,row.owner,item),n);
+});
 
 // T143: far counties are generated when the player first arrives. The world
 // keeps only the T142 outline (world/geo/regions.json); the skeleton of a
@@ -44,7 +71,7 @@ function apportion(total,weights){
     return out;
 }
 const round2=n=>Math.round(n*100)/100;
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 
 // ---------------------------------------------------------------- outline access
 const regionIndex=new WeakMap();
@@ -360,7 +387,7 @@ export function generateCounty(world,countyId,campaignSeed){
         const stems=[...NAME_ROOTS,...chars].flatMap(a=>PLACE_PARTS.map(b=>a+b)).filter(stem=>own(stem)&&!usedStems.has(stem));
         const name=fresh(n=>kind==='human'?(()=>{const stem=pick(rng,stems);usedStems.add(stem);return `${stem}${pick(rng,role==='town'?TOWN_SUFFIX:VILLAGE_SUFFIX)}`;})()
             :kind==='orc'?`${pick(rng,clans[`culture_far_orc:${SPECIES.orc}`])}营地`:kind==='lignum'?`${seatShort}${pick(rng,SLOPES)}`:`${pick(rng,clans['culture_beast:'])}穴`);
-        plans.push({role,id:`loc_rg_${short}_s${i+1}`,name,coordinates:[round2(seat.coordinates[0]+Math.cos(angle)*r),round2(seat.coordinates[1]+Math.sin(angle)*r)]});
+        plans.push({role,id:`loc_rg_${short}_s${i+1}`,name,coordinates:[round2(seat.coordinates[0]+cos(angle)*r),round2(seat.coordinates[1]+sin(angle)*r)]});
     });
     const trades=industryTrades(county),fixed=[];let personIndex=0;
     const nameFor=(cult,species,clan)=>{const spec=names[`${cult}:${species??''}`]??names[`${cult}:`];return fresh(i=>composeName(rng,spec,clan,i),96);};
@@ -412,7 +439,7 @@ export function generateCounty(world,countyId,campaignSeed){
             }
         }
         const districtIds=districts.map((dist,j)=>{const id=`loc_rg_${short}_${isSeat?'s0':plan.id.split('_').at(-1)}_d${j+1}`;
-            place({id,name:dist.name,parent:sid,scope:sid,owner:sid,coordinates:[round2(plan.coordinates[0]+0.2*Math.cos(j)),round2(plan.coordinates[1]+0.2*Math.sin(j))],purpose:'住区',
+            place({id,name:dist.name,parent:sid,scope:sid,owner:sid,coordinates:[round2(plan.coordinates[0]+0.2*cos(j)),round2(plan.coordinates[1]+0.2*sin(j))],purpose:'住区',
                 description:`${dist.name}是${plan.name}的住区，${dist.work.join('、')}多住在这里。街巷可以通行，入户须先招呼。`},{settlement:sid,name:plan.name});
             route(sid,id,0.3);dist.id=id;return id;});
         // Buildings: office/council, shops, shrine or workshop.
@@ -549,6 +576,24 @@ export function generateCounty(world,countyId,campaignSeed){
         const p=profiles[0];p.residentIds.push(row.id);p.registeredPopulation++;p.registeredHouseholdCount++;p.population++;p.householdCount++;settlements[0].population++;
     }
     if(people.some(p=>p.remoteRole==='festival_host'))profiles[0].facts=[`${seat.name}按种子登记${profiles[0].population}名、${profiles[0].householdCount}户；具名${profiles[0].registeredPopulation}名（含纲要人物与节日主办），其余${profiles[0].pendingPopulation}名${profiles[0].pendingHouseholdCount}户在到访住区时才生成，不计入完整档。`];
+    // A generated shop's road channel needs a finite physical upstream too.
+    // These are founding consignments already brought to the counter, just as
+    // the keeper's opening shelf is founding stock. No later date creates more.
+    // Append after the original draws so existing people/places keep their seed.
+    for(const settlement of settlements)for(const shop of settlement.shops){
+        const keeper=people.find(p=>p.id===shop.keeper),rows=keeper.shopRestock;
+        if(!rows.length)continue;
+        const supplier=person({name:nameFor(keeper.culture,keeper.species,clanFor(keeper.culture,keeper.species)),
+            age:keeper.age,sex:keeper.sex,culture:keeper.culture,...(keeper.species?{species:keeper.species}:{}),
+            settlement:settlement.id,location:shop.location,occupation:'行商',remoteRole:'supplier',
+            coins:0,inventory:Object.fromEntries(rows.map(r=>[r.item,r.maximum-r.amount])),
+            schedule:shopSchedule(shop.location,'merchant'),services:['trade'],
+            consignment:{keeper:keeper.id,origins:Object.fromEntries(rows.map(r=>[r.item,r.from]))}});
+        const profile=profiles.find(p=>p.id===settlement.id);
+        profile.residentIds.push(supplier.id);profile.registeredPopulation++;profile.registeredHouseholdCount++;
+        profile.population++;profile.householdCount++;settlement.population++;
+        profile.facts=[`${settlement.name}按种子登记${profile.population}名、${profile.householdCount}户；具名${profile.registeredPopulation}名（含到场行商），其余${profile.pendingPopulation}名${profile.pendingHouseholdCount}户在到访住区时才生成，不计入完整档。`];
+    }
     jurisdiction[countyId]={level:'郡',superior:province.id};
     const rostered=profiles.reduce((n,p)=>n+p.population,0);
     const {hazards,ledgers}=remoteHazards(county,seat,settlements,routes,profiles);
@@ -560,6 +605,141 @@ export function generateCounty(world,countyId,campaignSeed){
 }
 
 // ---------------------------------------------------------------- campaign state
+function openRemoteStock(d,engine,county,skeleton){
+    for(const sid of skeleton.settlements.map(s=>s.id)){
+        const people=skeleton.people.filter(p=>p.settlement===sid&&active(p,skeleton));
+        const owner=sid,account=accountKey(sid,'coin_river','aggregate'),inventory={};
+        let coins=0;
+        for(const p of people){coins+=p.coins??0;for(const [item,n] of Object.entries(p.inventory??{}))inventory[item]=(inventory[item]??0)+n;}
+        const row={category:'money_account',remoteStock:true,owner,purpose:'aggregate',account,coins,inventory,members:{}};
+        moveCoins(d,{from:source('genesis','remote'),to:account,amount:coins,writer:'remote-generation',eventId:`remote:${county}`});
+        for(const [item,n] of Object.entries(inventory))moveStock(d,{from:stockSource(engine,'genesis',item,'remote'),to:aggregateStock(engine,sid,item),amount:n,writer:'remote-generation',eventId:`remote:${county}`});
+        d.set(['state','records',`remote-stock:${sid}`],row);
+    }
+}
+
+const inventoryQuantity=value=>typeof value==='number'?value:value.quantity;
+function transferRemoteCoins(d,from,to,amount){
+    if(ledgerActive(d)&&(d.get('ledger','accounts',from)??0)<amount)throw Error('远方聚合钱款不足，拒绝重复借出');
+    moveCoins(d,{from,to,amount,writer:'remote-generation',eventId:`remote:accounts:${d.get('state','minute')}`});
+}
+function transferRemoteItem(d,from,to,amount){
+    if(ledgerActive(d)&&(d.get('ledger','accounts',from)??0)<amount)throw Error('远方聚合物资不足，拒绝重复借出');
+    moveStock(d,{from,to,amount,writer:'remote-generation',eventId:`remote:accounts:${d.get('state','minute')}`});
+}
+
+// Individual ownership is retained as exact shares, not re-apportioned on
+// return. Restore before native clocks: shops, wages and obligations must see
+// the same purses and bags as continuous individual simulation.
+export function restoreRemoteAccounts(d,engine,county=null){
+    // A skeleton is geography/identity, not evidence of a loan. Only actors
+    // with an outstanding share require restoration (including before books open).
+    // Index: only the generated counties' aggregate accounts that still list
+    // members (the outstanding shares) are visited; no NPC is scanned.
+    const look=(...path)=>typeof d.peek==='function'?d.peek(...path):d.get(...path);
+    const settlements=[];
+    for(const [c,rec] of Object.entries(look('state','remote')??{}))
+        if(!county||c===county)for(const s of rec.skeleton?.settlements??[])
+            if(Object.keys(look('state','records',`remote-stock:${s.id}`)?.members??{}).length)settlements.push(s.id);
+    for(const settlement of settlements){
+        const key=`remote-stock:${settlement}`,stored=d.get('state','records',key);
+        const row=structuredClone(stored);let changed=false;
+        for(const [id,share] of Object.entries(row.members)){
+            const n=d.get('state','npcs',id),mark=n?.materialized;
+            if(county&&mark?.county!==county)continue;
+            if(!mark?.folded||mark.settlement!==row.owner)throw Error('远方人物借出份额与身份不符');
+            if(n.coins||Object.keys(n.inventory).length)throw Error('远方人物并回期间出现未结算的个体钱物');
+            transferRemoteCoins(d,row.account,purse(null,id),share.coins);row.coins-=share.coins;
+            for(const [item,value] of Object.entries(share.inventory)){
+                const amount=inventoryQuantity(value);
+                transferRemoteItem(d,aggregateStock(engine,row.owner,item),bag(engine,id,item),amount);row.inventory[item]-=amount;
+            }
+            const {folded,...materialized}=mark;
+            d.set(['state','npcs',id,'coins'],share.coins);d.set(['state','npcs',id,'inventory'],share.inventory);
+            d.set(['state','npcs',id,'materialized'],materialized);delete row.members[id];changed=true;
+        }
+        if(changed)d.set(['state','records',key],row);
+    }
+}
+registerAdvanceHook('restoreRemoteAccounts',restoreRemoteAccounts);
+
+
+// Entities that must stay individual: in-flight tasks, owned item instances,
+// and anything an open obligation, an effect or a memory refers to (as value or key).
+function remoteBusyIds(d,state){
+    const ids=new Set(),collect=v=>{if(typeof v==='string')ids.add(v);else if(v&&typeof v==='object')for(const [k,x] of Object.entries(v)){ids.add(k);collect(x);}};
+    for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'){ids.add(t.npc);if(t.action?.seller)ids.add(t.action.seller);}
+    for(const u of Object.values(state.itemInstances??{}))if(u.owner)ids.add(u.owner);
+    for(const o of Object.values(state.obligations??{}))if(!obligationClosed(o))collect(o);
+    collect(state.effects);collect(d.document.memories);
+    return ids;
+}
+
+export function settleRemoteAccounts(d,engine){
+    const location=d.get('state','location'),county=remoteCountyOf(engine.world,location);
+    if(county)restoreRemoteAccounts(d,engine,county);
+    const state=d.get('state'),rows=new Map();let busy=null,pins=null;
+    for(const [id,n] of Object.entries(state.npcs??{})){
+        // Full profiles and household life can admit an already-rostered
+        // resident with a zero opening bag. Subsequent earnings are pooled by
+        // the same ownership conversion as the skeleton's original keepers.
+        const entity=state.created?.[id]??engine.byId.get(id),residentCounty=!n.materialized&&['remote','population'].includes(entity?.generated)&&state.records?.[`remote-stock:${entity.settlement}`]?.remoteStock?remoteCountyOf(engine.world,entity.settlement):null;
+        const mark=n.materialized??(residentCounty?{county:residentCounty,settlement:entity.settlement}:null);
+        if(!mark||mark.folded||mark.county===county||n.status&&n.status!=='正常'||(pins??=pinnedEntities(d)).has(id))continue;
+        if(n.scheduleTravel||n.cognitionTravel||n.residence||state.player.companions?.includes(id))continue;
+        // One pass per call builds the reference sets; the per-NPC test is a lookup.
+        busy??=remoteBusyIds(d,state);
+        if(busy.has(id))continue;
+        const key=`remote-stock:${mark.settlement}`;
+        let row=rows.get(key);if(!row){row=structuredClone(d.get('state','records',key));rows.set(key,row);}
+        if(!row||row.members[id])throw Error('远方人物重复并回或缺少聚合账户');
+        const share={coins:n.coins,inventory:structuredClone(n.inventory)};
+        transferRemoteCoins(d,purse(null,id),row.account,share.coins);row.coins+=share.coins;
+        for(const [item,value] of Object.entries(share.inventory)){
+            const amount=inventoryQuantity(value);
+            transferRemoteItem(d,bag(engine,id,item),aggregateStock(engine,row.owner,item),amount);row.inventory[item]=(row.inventory[item]??0)+amount;
+        }
+        row.members[id]=share;
+        d.set(['state','npcs',id,'coins'],0);d.set(['state','npcs',id,'inventory'],{});
+        d.set(['state','npcs',id,'materialized'],{...mark,folded:true});
+    }
+    for(const [key,row] of rows)d.set(['state','records',key],row);
+}
+
+// A contact materializes one body from its native pool. On leaving, return
+// only untouched, unpinned wildlife; owned, injured and awakened lives stay real.
+export function settleRemoteWildlife(d,engine,location){
+    const state=d.get('state'),references=(value,id)=>{
+        if(value===id)return true;
+        return value&&typeof value==='object'&&Object.entries(value).some(([key,v])=>key===id||references(v,id));
+    };
+    for(const [id,a] of Object.entries(state.creatures??{})){
+        if(!a.materialized||a.location===location||a.owner||a.mind||a.cultivation||a.hp!==a.maxHp||a.hp<=0||isPhysicallyDead(engine,d,id)||pinnedBy(d,id).length)continue;
+        // An encounter window owns its concrete sighting until expiry. A
+        // detour and return in that window must retain the same living body.
+        if(Object.values(state.records??{}).some(r=>r.category==='wildlifeEncounter'&&r.sighting?.target===id&&r.sighting.expires>state.minute))continue;
+        if(a.coins||Object.keys(a.inventory??{}).length||Object.values(state.itemInstances??{}).some(u=>u.owner===id))continue;
+        if(Object.entries(d.get('ledger','accounts')??{}).some(([key,n])=>{
+            const account=parseAccount(key);return n>0&&account.owner===id&&!(account.resource==='item_live_fish'&&account.purpose==='reserve'&&n===1);
+        }))continue;
+        if([state.obligations,state.effects,state.quests,state.scheduler,d.document.memories].some(v=>references(v,id)))continue;
+        const habitat=engine.rules.wildlife?.habitats.find(h=>h.id===a.ecology&&h.location===a.location);
+        if(!habitat)continue;
+        const path=['state','records',`ecology:${habitat.id}`,'populations',a.species],population=d.get(...path);
+        if(!population)continue;
+        const compartment=a.populationHealth??'S';
+        if(!['S','I','R'].includes(compartment))throw Error('种群 S/I/R 个体状态无效');
+        const returned=structuredClone(population);populationHealth(returned);
+        addPopulation(returned,{S:compartment==='S'?1:0,I:compartment==='I'?1:0,R:compartment==='R'?1:0});
+        returned.immigrated=(returned.immigrated??0)+1;
+        const eventId=`remote:merge:${id}:${state.minute}`;
+        moveFishPopulation(d,engine,a.species,id,habitat.location,1,eventId);
+        runLifecycleProtocol(d,engine,{entity:id,kind:'gone',basis:'aggregated',origin:'aggregated',eventId,location:a.location});
+        holdingRemove(d,engine,['state','creatures',id],'remote-generation',eventId);
+        holdingSet(d,engine,path,returned,'remote-generation',eventId);
+    }
+}
+
 export function unfoldRemoteAt(d,engine,location){
     const base=engine.remoteBase?.world??engine.world,county=remoteCountyOf(engine.world,location);
     // Existing U11 saves already contain the founding skeleton. First entry
@@ -574,8 +754,8 @@ export function unfoldRemoteAt(d,engine,location){
         return missingLedger||patches.length?{version:REMOTE_VERSION,kind:'tribal',settlement:s.id,habitats:habitats.map(h=>h.id)}:null;
     }
     if(!county||d.get('state','remote',county))return null;
-    const skeleton=generateCounty(base,county,d.document.randomSeed??'default-campaign');
-    const record={version:REMOTE_VERSION,county,seed:d.document.randomSeed??'default-campaign',minute:d.get('state','minute'),firstPlace:location,hash:digest(skeleton).slice(0,24),revision:0,profiles:{},skeleton};
+    const skeleton=generateCounty(base,county,d.get('randomSeed')??'default-campaign');
+    const record={version:REMOTE_VERSION,county,seed:d.get('randomSeed')??'default-campaign',minute:d.get('state','minute'),firstPlace:location,hash:digest(skeleton).slice(0,24),revision:0,profiles:{},skeleton};
     d.set(['state','remote',county],record);
     // K8: the county's wild land gets its derived habitat now, stocked in the
     // campaign as an edition update would, so remote wilds hold creatures on the first visit.
@@ -587,11 +767,28 @@ export function unfoldRemoteAt(d,engine,location){
     for(const [sid,ledger] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});genesisSettlement(d,engine,sid,ledger,{writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
     // Shopkeepers, officials (notice board) and festival hosts act from the day
     // they are registered; others act after a full profile.
+    openRemoteStock(d,engine,county,skeleton);
     for(const p of skeleton.people)if(active(p,skeleton)){
         if(d.get('state','npcs',p.id))throw Error(`远方人物编号已被占用：${p.id}`);
-        moveCoins(d,{from:source('genesis','remote'),to:purse(null,p.id),amount:p.coins??0,writer:'remote-generation',eventId:`remote:${county}`});
-        genesisBag(d,engine,p.id,p.inventory,{writer:'remote-generation',eventId:`remote:${county}`});
-        holdingSet(d,null,['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation},'remote-generation');
+        const key=`remote-stock:${p.settlement}`,row=structuredClone(d.get('state','records',key));
+        moveCoins(d,{from:row.account,to:purse(null,p.id),amount:p.coins??0,writer:'remote-generation',eventId:`remote:${county}`});
+        row.coins-=p.coins??0;
+        for(const [item,n] of Object.entries(p.inventory??{})){
+            moveStock(d,{from:aggregateStock(engine,row.owner,item),to:bag(engine,p.id,item),amount:n,writer:'remote-generation',eventId:`remote:${county}`});
+            row.inventory[item]-=n;
+        }
+        d.set(['state','records',key],row);
+        holdingSet(d,null,['state','npcs',p.id],{...initialNpcState(p),occupation:p.occupation,materialized:{county,settlement:p.settlement}},'remote-generation');
+    }
+    // The on-site holder tells this counter its landed asking price and finite
+    // lot. The ordinary K08 consumer still checks presence, stock, both parties'
+    // decisions and household reserves; this memory never credits the shelf.
+    for(const p of skeleton.people)if(p.consignment){
+        const keeper=p.consignment.keeper,at=d.get('state','minute'),key=['state','npcs',keeper,'memoryStream'];
+        const offers=Object.entries(p.inventory).map(([item,quantity])=>({id:`consignment:${p.id}:${item}`,minute:at,kind:'knowledge',
+            value:{seller:p.id,item,quantity,unitPrice:base.items.find(i=>i.id===item).basePrice,
+                at,expires:at+base.rules.calendar.daysPerMonth*1440,location:p.location,from:p.consignment.origins[item]}}));
+        d.set(key,[...d.get(...key)??[],...offers]);
     }
     syncHoldingSource(d,engine,'office',{writer:'remote-generation'});
     return {version:REMOTE_VERSION,county,name:skeleton.name,kind:skeleton.kind,settlements:skeleton.settlements.length,places:skeleton.locations.length,people:skeleton.people.length,habitats:fresh.map(h=>h.id),
@@ -601,7 +798,7 @@ export function unfoldRemoteAt(d,engine,location){
 // ---------------------------------------------------------------- overlay world
 const PROFILE_KEYS=['personality','voice','background','currentConcern','goals','fears','knowledge','relationships','visibleFeature','notes'];
 // Skeletons generated before D1 (no hazards field) keep their officials as roster entries.
-const active=(p,skeleton)=>p.remoteRole==='keeper'||Boolean(skeleton.hazards)&&['official','festival_host','advocate'].includes(p.remoteRole);
+const active=(p,skeleton)=>['keeper','supplier'].includes(p.remoteRole)||Boolean(skeleton.hazards)&&['official','festival_host','advocate'].includes(p.remoteRole);
 export function remoteKey(state){
     const remote=state?.remote??{};
     return [...Object.keys(remote).sort().map(k=>`${k}:${remote[k].hash}:${remote[k].revision}`),

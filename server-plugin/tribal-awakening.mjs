@@ -16,6 +16,7 @@ import {createHash} from 'node:crypto';
 import {awakeningEligible,awakeningTotal,sapient} from './wildlife-awakening.mjs';
 import {applyEffects,assertEffect} from './effects.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
+import {takePopulation} from './population-health.mjs';
 import {adjustStanding,standing} from './standing.mjs';
 import {worldEvents,publishTransitionEvent} from './world-events.mjs';
 import {groupView} from './entity-view.mjs';
@@ -28,6 +29,7 @@ import {registerQuestGenerator,postGeneratedQuest} from './quest-sources.mjs';
 import {growIntelligence,levelProfile,GROWTH_POINTS} from './npc-intelligence.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {syncHoldings} from './holding-sources.mjs';
+import {cos,sin} from './det-math.mjs';
 declareHoldingWriter('tribal-awakening',{kinds:['member_of','holds_office','tamed_by','allied_with','controls'],entities:['office','wreck'],locations:true});
 
 const DAY=1440,clone=v=>structuredClone(v);
@@ -171,7 +173,7 @@ function gather(d,engine,t,dyn,rec,members,from,at,sourceEvent){
 
 // ---- 批量开灵：沿用 wildlife-awakening 的听息、立意，经 K6 awakening 效果 -----------------
 function batchAwaken(d,engine,dyn,members,stageId,at,sourceEvent){
- const stage=engine.rules.wildlifeAwakening.stages.find(s=>s.id===stageId),seed=d.document.randomSeed,day=Math.floor(at/DAY),done=[];
+ const stage=engine.rules.wildlifeAwakening.stages.find(s=>s.id===stageId),seed=d.get('randomSeed'),day=Math.floor(at/DAY),done=[];
  for(const id of members){
   const actor=d.get('state','creatures',id);
   if(!awakeningEligible(engine,actor)||sapient(actor)||actor.owner&&actor.owner!=='player')continue;
@@ -192,7 +194,7 @@ function stanceFor(seed,dyn,id){
  return dyn.factions.at(-1).stance;
 }
 function placeMembers(d,engine,dyn,rec,members,at,sourceEvent){
- const seed=d.document.randomSeed;
+ const seed=d.get('randomSeed');
  for(const id of members){
   const actor=d.get('state','creatures',id);if(!sapient(actor))continue;
   if(rec.factions.some(org=>groupView(engine,d.get('state'),org)?.members.value[id])||rec.factions.some(org=>d.get('state','records',`organization:${org}`)?.removed?.[id]))continue;
@@ -227,7 +229,7 @@ function split(d,engine,t,dyn,rec,members,at,sourceEvent){
 
 // ---- 派别时钟与玩家选择 ---------------------------------------------------------------
 function advanceClocks(d,engine,t,dyn,rec,g,members,at,sourceEvent){
- const c=t.clock,cap=v=>Math.min(c.choiceCap,v),ch=g.choices,seed=d.document.randomSeed;
+ const c=t.clock,cap=v=>Math.min(c.choiceCap,v),ch=g.choices,seed=d.get('randomSeed');
  const decisive=ch.suppress>=c.suppressDecisive;
  const pressure={
   accord:dyn.drift.accord+cap(ch.teach)+cap(ch.trade)+cap(ch.mediate),
@@ -269,7 +271,7 @@ export function tribalSettlementSkeleton(seed,dyn,{population,leader,council,min
  const h=createHash('sha256').update(`${seed}:tribal:${dyn.id}:v${TRIBAL_AWAKENING_VERSION}`).digest();
  const name=dyn.settlementNames[h.readUInt32BE(0)%dyn.settlementNames.length],id=`loc_ta_${dyn.id}`;
  const districts=Math.max(1,Math.min(4,Math.ceil(population/40))),angle=h.readUInt32BE(4)/2**32*Math.PI*2,r=0.3+h.readUInt32BE(8)/2**32*0.6;
- const coordinates=home?.coordinates?[Math.round((home.coordinates[0]+Math.cos(angle)*r)*100)/100,Math.round((home.coordinates[1]+Math.sin(angle)*r)*100)/100]:null;
+ const coordinates=home?.coordinates?[Math.round((home.coordinates[0]+cos(angle)*r)*100)/100,Math.round((home.coordinates[1]+sin(angle)*r)*100)/100]:null;
  const work=['觅食','守洞','掘土','传话','照看幼崽','记事'];
  return {version:TRIBAL_AWAKENING_VERSION,id,name,generated:'tribal',dynamic:dyn.id,species:dyn.species,parent:home?.parent??null,near:dyn.home,coordinates,
   population,council,leader,foundedAt:minute,
@@ -295,13 +297,19 @@ function resolveOutcome(d,engine,t,dyn,rec,{stance,kind},at,sourceEvent){
   // The range keeps half its current (forest-derived) capacity, never below a
   // breeding pair, so weekly births can refill it instead of the species dying out.
   const joining=sustainableJoiners(d,engine,dyn);
-  const skeleton=tribalSettlementSkeleton(d.document.randomSeed,dyn,{population:joining+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
+  const skeleton=tribalSettlementSkeleton(d.get('randomSeed'),dyn,{population:joining+inhabitants.length,leader:groupView(engine,d.get('state'),accord)?.leader.value??null,council:accord,minute:at,home:engine.byId.get(dyn.home)});
   holdingSet(d,null,['state','records',`tribal_settlement:${dyn.id}`],{category:'tribal_settlement',dynamic:dyn.id,minute:at,sourceEvent:ev,hash:createHash('sha256').update(JSON.stringify(skeleton)).digest('hex').slice(0,24),skeleton,inhabitants},'tribal-awakening');
   d.set(['state','settlements',skeleton.id],{name:skeleton.name,population:skeleton.population,food:0,wood:0,stone:0,iron:0,treasury:0,...(resourceAware?{granary:false}:{})});
   for(const id of inhabitants)holdingSet(d,null,['state','creatures',id,'location'],skeleton.id,'tribal-awakening');
   // Unseen members now belong to the settlement census, not wild stock.
   const ecology=d.get('state','records',`ecology:${dyn.habitat}`)?.populations?.[dyn.species];
-  if(ecology){const moved=Math.min(ecology.count,joining);holdingSet(d,null,['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],{...ecology,count:ecology.count-moved,withdrawn:ecology.withdrawn+moved},'tribal-awakening');}
+  if(ecology){
+   const moved=Math.min(ecology.count,joining),population=structuredClone(ecology),health=takePopulation(population,moved);population.withdrawn+=moved;
+   holdingSet(d,null,['state','records',`ecology:${dyn.habitat}`,'populations',dyn.species],population,'tribal-awakening');
+   // Census accounts represent unseen members; materialized residents retain
+   // their own health, exactly as before the change of residence.
+   if(health.I||health.R)d.set(['state','settlements',skeleton.id,'populationHealth'],{species:dyn.species,...health});
+  }
   // Always derive from the authored base, including a second autonomy in this
   // same advance; using the previous overlay would append its households twice.
   if(resourceAware)engine.tribalBaseWorld??=engine.remoteBase?.world??engine.world;

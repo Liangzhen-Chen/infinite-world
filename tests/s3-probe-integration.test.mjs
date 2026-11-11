@@ -12,12 +12,14 @@ import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {affairs} from '../server-plugin/ui-affairs.mjs';
 import {collectChronicleFacts} from '../server-plugin/chronicle.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
+import {moveCoins as moneyMove,purse,sink,mirrorPartyCoins} from '../server-plugin/money.mjs';
 
 test('R2-E1 义务子项：两张真实当票分别到期，异地不冻结，未到期条款不改写',async t=>{
  const f=fixture();
- const first=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,coins:10,days:1},'ticket-one');
+ // F007: pledges are valued by the valuation role (bread 2 x floor .5 = 1 copper a loaf), so 20 loaves back each 10-copper advance at 50%.
+ const first=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:20,coins:10,days:1},'ticket-one');
  // 第15章典当沿用银行 loanMaximumDays=60，无典当期限例外；两张当票仍须有不同到期日。
- const second=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,coins:10,days:2},'ticket-two');
+ const second=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:20,coins:10,days:2},'ticket-two');
  const old=structuredClone(f.doc.state.records[second.contract]);
  f.doc.state.location='loc_bs';f.tick(600+10*DAY);
  assert.equal(f.doc.state.records[first.contract].status,'流当');
@@ -28,7 +30,10 @@ test('R2-E3 义务子项：真实欠薪只减一次股份净值，清偿前不�
  const f=fixture(),equity=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'pharmacy-equity');
  f.doc.state.records[`finance_profit:${host}`]={category:'finance_profit',issuer:host,net:1000};
  const before=f.draft(),value=netAssets(before,f.e,host);before.done();
- f.doc.state.npcs[host].coins=0;
+ // 现金清零走正式入口：账本转移（钱袋→汇）并同步旧字段，写法同 business.serve 的付费；
+ // 直接写旧字段不动账本，而 netAssets 的现金读账本，那样并没有真的清零。
+ const broke=f.draft(),have=f.doc.state.npcs[host].coins;moneyMove(broke,{from:purse(f.e,host),to:sink('export','travel'),amount:have,writer:'shop',eventId:'clear-cash'});mirrorPartyCoins(broke,f.e,host,-have,'clear-cash','shop');broke.done();
+ assert.equal(f.doc.state.npcs[host].coins,0);assert.equal(f.doc.ledger.accounts[purse(f.e,host)]??0,0);
  const d=f.draft(),job={id:'pharmacy-job',category:'contract',kind:'workshop',owner:host,worker,wage:20,location:f.doc.state.location,createdAt:0,starts:0,deadline:30*DAY,status:'有效',paid:0,workedMinutes:0};
  d.set(['state','records',job.id],job);const earned=settleEmploymentPay(d,f.e,job,600,480);assert.equal(earned.arrears,20);d.done();
  const claim=Object.values(f.doc.state.records).find(r=>r.kind==='wage');assert.ok(claim.obligation);
@@ -40,7 +45,10 @@ test('R2-N1 义务子项：真实签署保存签约法域，钱款不能冒充�
  const f=fixture();f.doc.ledger=openLedger(f.e,f.doc);const d=f.draft();
  const opened=openObligation(d,f.e,{id:'forward-grain',kind:'forward',debtor:'player',creditor:host,actor:'player',subject:'item_oats',resource:'item_oats',amount:10,deadline:600+30*DAY},'forward-sign');
  const row=obligationView(d.get('state'),opened.id).row;assert.equal(row.terms.signingPlace,f.doc.state.location);assert.ok(row.terms.signingLawVersion);
- const before=structuredClone(d.document);assert.throws(()=>settleObligation(d,f.e,{id:opened.id,amount:10},'fake-grain'),/Non-monetary/);assert.deepEqual(d.document,before);assert.deepEqual(auditLedger(d.get('ledger')),[]);
+ // S5-F2 (15 §15.3): a non-coin claim settles in kind. The 10 oats owed move as real oats from the player to the creditor; not one copper moves, so money cannot stand in for the grain.
+ const oats=[f.e.quantity(d,'player','item_oats'),f.e.quantity(d,host,'item_oats')],coins=[d.get('state','player','coins'),d.get('state','npcs',host,'coins')];assert.ok(oats[0]>=10);
+ const paid=settleObligation(d,f.e,{id:opened.id,amount:10},'fake-grain');assert.deepEqual(paid.payment.paidWith,{resource:'item_oats',amount:10,name:'带壳燕麦'});assert.equal(paid.remaining,0);
+ assert.deepEqual([f.e.quantity(d,'player','item_oats'),f.e.quantity(d,host,'item_oats')],[oats[0]-10,oats[1]+10]);assert.deepEqual([d.get('state','player','coins'),d.get('state','npcs',host,'coins')],coins);assert.deepEqual(auditLedger(d.get('ledger')),[]);
  t.diagnostic('仅覆盖签署快照与禁止凭空交粮；预付、短交、展期、继承及司法闭环未完成。');
 });
 test('R3-E15 义务子项：拘留不冻结分期，真实同城第三人代付不取得债务主体权利',async t=>{
@@ -92,7 +100,7 @@ test('R01: 当面可偿的未到期债权保留候选，远方不可点还款但
  assert.ok(affairs(f.e,f.doc).obligations.some(r=>r.id===obligationView(f.doc.state,loan.debt).row.id&&r.outstanding>0));
 });
 test('R09: 钱庄柜员只记一次实际经手的借约与还款，同屋旁人不获知私债',async()=>{
- const f=fixture(),bank=f.e.rules.economy.credit.banks[0],quantity=Math.ceil(50*bank.collateralRatio/f.e.byId.get('item_bread').basePrice);
+ const f=fixture(),bank=f.e.rules.economy.credit.banks[0],quantity=Math.ceil(50*bank.collateralRatio/1);// F007: a loaf is valued 1 copper (base 2 x scarcity floor .5), not the catalogue 2
  const loan=await f.act({operation:'borrow',seller:clerk,coins:50,days:10,item:'item_bread',quantity,consent:true},'clerk-loan');
  await f.act({seller:clerk,payment:'repay',debt:loan.debt},'clerk-repay');
  const memories=f.doc.state.npcs[clerk].memoryStream;

@@ -30,9 +30,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.learning"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -65,10 +68,8 @@
           "value": 2
         },
         {
-          "kind": "unchanged",
-          "paths": [
-            "state.inventory"
-          ]
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ],
       "expectedTools": [
@@ -129,10 +130,8 @@
           ]
         },
         {
-          "kind": "unchanged",
-          "paths": [
-            "state.inventory"
-          ]
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -190,10 +189,8 @@
           ]
         },
         {
-          "kind": "unchanged",
-          "paths": [
-            "state.inventory"
-          ]
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -238,10 +235,8 @@
           "success": true
         },
         {
-          "kind": "unchanged",
-          "paths": [
-            "state.inventory"
-          ]
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ]
     },
@@ -256,9 +251,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player.coins",
-            "state.inventory"
+            "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         }
       ],
       "expectedTools": [

@@ -1,3 +1,5 @@
+import {advanceRegistry,registerAdvance} from './advance-registration.mjs';
+export {advanceRegistry,registerAdvance};
 import {advanceUpperAppointments,advanceRoyalService} from './high-nobility.mjs';
 import {advanceNations} from './nation-founding.mjs';
 import {advanceEducation,nextEducationMinute,prepareEducation,educationCourses} from './education.mjs';
@@ -26,11 +28,11 @@ import {advanceSummons}from'./summons.mjs';
 import {advanceLaw}from'./law.mjs';
 import {advanceNpcCrime,nextNpcCrimeMinute}from'./npc-crime.mjs';
 import {cropProduction}from'./weather.mjs';
-import {advanceAgriculture,settleAgricultureExpiry,advanceForestWater,harvestSettlementWood,settleFuel,farmWaterFactor,bookLegacyFood}from'./agriculture.mjs';
+import {accrueFoodProduction,advanceAgriculture,settleAgricultureExpiry,advanceForestWater,harvestSettlementWood,settleFuel,farmWaterFactor,bookLegacyFood}from'./agriculture.mjs';
 import {advanceSettlementTrade,nextSettlementTradeMinute}from'./settlement-trade.mjs';
 import {advanceTransport,nextTransportMinute} from './transport.mjs';
 import {advancePost,nextPostMinute} from './post.mjs';
-import {advanceShops}from'./shop.mjs';
+import {advanceShops,nextShopMinute}from'./shop.mjs';
 import {advanceWorldClocks,nextWorldClockMinute}from'./world-clock.mjs';
 import {advanceFactionClocks,nextFactionClockMinute,factionClockRules}from'./faction-clock.mjs';
 import {advanceFestivals,nextFestivalMinute,festivalCalendar}from'./festival.mjs';
@@ -39,7 +41,8 @@ import {advanceBosses}from'./bosses.mjs';
 import {advanceNpcCognition,nextNpcCognitionMinute}from'./npc-cognition.mjs';
 import {advanceNpcAutonomy,nextNpcAutonomyMinute,catchUpFurnaces}from'./npc-autonomy.mjs';
 import {magicEffect}from'./magic-effects.mjs';
-import {advanceNpcLife,nextNpcLifeMinute}from'./npc-life.mjs';
+import {advanceNpcLife,nextNpcLifeMinute,advanceHouseholdMeals}from'./npc-life.mjs';
+import {toRational} from './det-math.mjs';
 import {advanceNpcObligations,nextNpcObligationMinute}from'./npc-obligations.mjs';
 import {advanceSocietyNews}from'./monster-society.mjs';
 import {advanceSeasonEffects,effectTable}from'./effects.mjs';
@@ -68,9 +71,10 @@ import {advanceLayerPlan,remoteScheduleBatch,ADVANCE_LAYERS}from'./advance-layer
 import {ScheduleHeap,resolveContest,schedulerWired,clockDiceKey,compareClock,compareDue,PHASE,protocolDueItems,nextProtocolMinute}from'./scheduler.mjs';
 import {publishTransitionEvent,beginReactionTick,drainWorldReactions}from'./world-events.mjs';
 import {advanceWanted}from'./bounty.mjs';
-import {auditLedger}from'./ledger.mjs';
+import {auditLedger,stampDriftReport}from'./ledger.mjs';
 import {holdingRemove,declareHoldingWriter} from './holdings.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
 export {registerAdvanceHook} from './advance-hooks.mjs';
 declareHoldingWriter('advance-registry',{kinds:[]});
 const fullNpcs=engine=>(engine.entities??engine.world.npcs).some(n=>n.id?.startsWith('npc_')&&personSimulation(engine,{},n.id).value);
@@ -80,16 +84,10 @@ const sameScheduleInputs=(...args)=>{const hook=advanceHook('sameScheduleInputs'
 const sameNpcScheduleInputs=(...args)=>{const hook=advanceHook('sameNpcScheduleInputs');return hook?hook(...args):false;};
 const facilityRuntime=()=>{const hook=advanceHook('facilityRuntime');return hook?hook():{hasUnattendedFurnace:()=>true,recordFurnaceDeparture:()=>{}};};
 const withScheduleCache=(engine,d,task)=>{const hook=advanceHook('withScheduleCache');return hook?hook(engine,d,task):task();};
-export const advanceRegistry=[];
-export function registerAdvance(system){
-    if(!system||typeof system.id!=='string'||!Number.isFinite(system.order)||typeof system.advance!=='function')throw new Error('推进系统需要 id、order 和 advance');
-    if(advanceRegistry.some(s=>s.id===system.id))throw new Error(`推进系统重复：${system.id}`);
-    if(system.nextMinute!==undefined&&typeof system.nextMinute!=='function')throw new Error(`推进系统${system.id}的 nextMinute 必须是函数`);
-    advanceRegistry.push(system);advanceRegistry.sort((a,b)=>a.order-b.order);
-    return ()=>{const i=advanceRegistry.indexOf(system);if(i>=0)advanceRegistry.splice(i,1);};
-}
+const prepareHouseholdSubsistence=(d,e,day)=>advanceHook('prepareHouseholdSubsistence')?.(d,e,day);
 // Next interval boundary: end of span, next midnight, or the earliest registered event.
 export function nextAdvanceMinute(engine,d,now,end){
+    prepareHouseholdSubsistence(d,engine,Math.floor(now/1440));
     let next=Math.min(end,(Math.floor(now/1440)+1)*1440);
     for(const system of advanceRegistry)if(system.nextMinute)next=Math.min(next,system.nextMinute(engine,d,now));
     return next;
@@ -97,14 +95,17 @@ export function nextAdvanceMinute(engine,d,now,end){
 export const advanceNeedsSteps=(engine,d,now)=>advanceRegistry.some(system=>system.active?.(engine,d,now));
 // R31: a draft whose every write goes through its PatchCursor can share a records-by-kind index across one pass (storage.mjs recordsWhere).
 export function runAdvance(engine,d,ctx){
+    advanceHook('restoreRemoteAccounts')?.(d,engine);
     return withScheduleCache(engine,d,()=>d?.cursor instanceof PatchCursor?withRecordIndex(()=>runAdvanceSystems(engine,d,ctx)):runAdvanceSystems(engine,d,ctx));
 }
 // Continuous local processes catch up to reads/actions without introducing a
 // clock tick or advancing lastSettled. Their own cursor prevents the next
 // scheduled settlement from charging the same elapsed minutes twice.
 export function catchUpLocal(engine,d,after){
+    advanceHook('restoreRemoteAccounts')?.(d,engine);
     const before=d.get('state','scheduler','localUntil')??d.scheduler.lastSettled;
     if(after<=before)return;
+    const scheduleBefore=d.get('state');
     // Roots can draw from a leaking source. Preserve minute order for that
     // shared resource; independent processes retain their existing batch loop.
     const roots=Object.values(d.get('state','effects')??{}).filter(x=>x.kind==='care'&&x.operation==='roots'&&x.expires>before);
@@ -128,6 +129,7 @@ export function catchUpLocal(engine,d,after){
     // These consumers have already restored temperature/returned reserved
     // water. Locally shortened lifetimes must not leave stale active effects.
     for(const [id,effect]of Object.entries(d.get('state','effects')??{}))if(['care','water_earth'].includes(effect.kind)&&effect.expires<=after)d.remove(['state','effects',id]);
+    advanceHook('catchUpSubsistenceSchedules')?.(d,engine,before,after,{...scheduleBefore,minute:before});
     d.set(['state','scheduler','localUntil'],after);
 }
 // S2b：推进路径接线开关（schedulerWired）。开启后同刻调度器按 §14.2 阶段与排序键重排推进系统，
@@ -138,7 +140,7 @@ function orderedSystems(d,ctx){
         const phase=(a.phase??PHASE.clock)-(b.phase??PHASE.clock);
         if(phase)return phase;
         if(a.phase===PHASE.due)return compareDue(a,b)||a.id.localeCompare(b.id);
-        return compareClock(d.document.randomSeed,ctx.after)({...a,ruleId:a.ruleId??a.id},{...b,ruleId:b.ruleId??b.id});
+        return compareClock(d.get('randomSeed'),ctx.after)({...a,ruleId:a.ruleId??a.id},{...b,ruleId:b.ruleId??b.id});
     });
 }
 // 接线后的刻集由日程堆唯一确定（14 §14.2）：只有到期项与时钟规则的刻才存在，
@@ -157,6 +159,7 @@ function scheduleOverrides(engine,constraints){
     return ids;
 }
 function buildScheduleHeap(engine,d,now,end){
+    prepareHouseholdSubsistence(d,engine,Math.floor(now/1440));
     const heap=new ScheduleHeap();
     const state=d.get('state'),previous=engine.educationCourseContext,prepared=d.scheduleEducation;
     engine.educationCourseContext=educationCourses(engine,state);
@@ -196,7 +199,7 @@ function buildScheduleHeap(engine,d,now,end){
     for(const [id,npc]of Object.entries(state.npcs??{})){
         npcOrder.set(id,npcOrder.size);
         if(constraints.has(id)||facilityRuntime().hasUnattendedFurnace(engine,id))pending.add(id);
-        due(npc.scheduleTravel?.arrive,['npc_obligations'],id);due(npc.cognitionTravel?.arrive,['npc_cognition']);
+        if(!npc.scheduleTravel?.subsistence)due(npc.scheduleTravel?.arrive,['npc_obligations'],id);due(npc.cognitionTravel?.arrive,['npc_cognition']);
         // The existing layer adapter settles eligible fixed-location skeletons
         // daily or on promotion. They do not own individual slot clocks.
         const group=regional?.persons.get(id);
@@ -216,7 +219,7 @@ function buildScheduleHeap(engine,d,now,end){
                 if(!canonicalEqual(slot,fresh))throw Error(`schedule heap cache mismatch: ${id} at ${now}: ${JSON.stringify({cached:slot,fresh})}`);
             }
             slots.set(id,slot);
-            due(slot?.until,['npc_obligations','education'],id);
+            due(slot?.boundaryUntil??slot?.until,['npc_obligations','education'],id);
             if(slot&&(npc.location!==slot.location||npc.activity!==slot.activity))pending.add(id);
             // A clock tick at the end of a slot is too late to start a trip
             // for the slot already in progress. Wake once at the first
@@ -249,11 +252,11 @@ function recordContestEvent(d,event){
 function resolveContestPool(d,ctx){
     if(!d.contestPool?.length)return;
     const proposals=d.contestPool.splice(0).sort((a,b)=>{
-        const key=p=>clockDiceKey(d.document.randomSeed,p.ruleId??'',p.objectId??'',ctx.after);
+        const key=p=>clockDiceKey(d.get('randomSeed'),p.ruleId??'',p.objectId??'',ctx.after);
         return key(a).localeCompare(key(b));
     });
     for(const proposal of proposals)proposal.seq=d.scheduler.nextSeq();
-    const outcomes=resolveContest(proposals,{seed:d.document.randomSeed,minute:ctx.after});
+    const outcomes=resolveContest(proposals,{seed:d.get('randomSeed'),minute:ctx.after});
     for(const outcome of outcomes){
         for(const winner of outcome.winners){
             // The callback owns the entire proposal, including money and goods.
@@ -267,10 +270,11 @@ function resolveContestPool(d,ctx){
 }
 // These handlers only loop over crossed midnight/day boundaries. Keep legacy
 // state-driven handlers running until their non-clock work has an explicit owner.
-const midnightSystems=new Set(['daily','shop_restock','projects','public_projects','hazard_clock','magic_economy','military','war_diplomacy','tribal_awakening','quest_sources']);
+const midnightSystems=new Set(['relation_evidence','daily','projects','public_projects','hazard_clock','magic_economy','military','war_diplomacy','tribal_awakening','quest_sources']);
 const deadlineSystems=new Set(['world_clock','faction_clock','transport','notables','upper_appointments','society_news','effect_expiry','dying','agriculture_expiry']);
 const ledgerAudit=Symbol('tick ledger audit');
 function systemRunsAt(system,engine,d,ctx){
+    if(system.id==='shop_restock')return Math.floor(ctx.before/720)<Math.floor(ctx.after/720);
     if(midnightSystems.has(system.id))return ctx.days>0;
     if(system.id==='office_salaries')return Math.floor(ctx.before/(30*1440))<Math.floor(ctx.after/(30*1440));
     if(system.id==='season_effects')return Math.floor(ctx.before/(90*1440))<Math.floor(ctx.after/(90*1440));
@@ -285,6 +289,8 @@ function systemRunsAt(system,engine,d,ctx){
     return true;
 }
 function runAdvanceSystems(engine,d,ctx){
+    // The state that day-sliced consumers (relation evidence from status transitions) compare against: this reduce's first segment start, then each midnight.
+    d.relationBase??=ctx.beforeState??d.get('state');
     const prior=engine.advanceLayerContext;
     engine.advanceLayerContext=Object.keys(d.get('state','remote')??{}).length?advanceLayerPlan(engine,d.get('state')):null;
     if(d.scheduler)beginReactionTick(d);
@@ -310,7 +316,10 @@ function runAdvanceSystems(engine,d,ctx){
             for(const system of systems.filter(s=>s.phase===PHASE.assertion))system.advance(engine,d,ctx);
             const ledger=d.get('ledger'),errors=recordsMemo(ledger,ledgerAudit,()=>auditLedger(ledger));
             if(errors.length)throw new Error(`刻末账本断言失败：${errors.join('; ')}`);
+            stampDriftReport(d);// 漂移只上报不拒绝（S6 入口再拒绝）
         }
+        if(d.get('state','scheduler','subsistence')?.until<=ctx.after)d.remove(['state','scheduler','subsistence']);
+        if(ctx.days>0)prepareHouseholdSubsistence(d,engine,Math.floor(ctx.after/1440));
     }finally{delete d.reactionTick;engine.advanceLayerContext=prior;delete engine.educationCourseContext;delete engine.educationAttendance;}
 }
 
@@ -382,16 +391,28 @@ const systems=[
  {id:'daily',order:500,advance(e,d,{before,after}){
     for(let day=Math.floor(before/1440);day<Math.floor(after/1440);day++){
       advanceForestWater(d,e,day);
+      advanceHook('advanceMineralStocks')?.(d,e,(day+1)*1440);
+      advanceHook('advanceSiteStocks')?.(d,e,(day+1)*1440);
+      const publicMeals=new Map();
       for(const [sid,source] of Object.entries(d.get('state','settlements'))) {
-        if(source.granary===false)continue;// public money only, no public granary (D1 town ledger)
+        if(source.granary===false)continue;// public money only, no public granary (D1 town ledger): no daily settlement ration; residents' households still eat their own stock
         const farming=advanceAgriculture(d,e,sid,source,day),s=farming?.settlement??clone(source);
-        const production=farming?0:Math.floor(cropProduction(e,d.document.randomSeed,sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
-        const missing=farming?.missingMeals??Math.max(0,s.population-available);
-        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,s.population),day);s.food=Math.max(0,available-s.population);}s.unmetMeals=(s.unmetMeals??0)+missing;
-        s.starvation=missing ? (s.starvation??0)+1 : Math.max(0,(s.starvation??0)-1);
-        if(s.starvation>=7){s.population=Math.max(0,s.population-1);s.starvation=0;d.say(`${s.name}发生饥荒死亡`);}
+        const production=farming?0:accrueFoodProduction(e,d,s,sid,cropProduction(e,d.get('randomSeed'),sid,day*1440,s.foodPerDay)*hazardYieldFactor(d.get('state'),sid,day*1440+720)*magicYieldFactor(d.get('state'),sid,day*1440+720)*farmWaterFactor(e,d.get('state'),sid,day)),available=s.food+production;
+        const levy=farming?(d.get('state','records',`levy:${sid}`)?.count??0):0,meals=Math.ceil(mealMouthsOf(e,d.get('state'),sid,s.population)),missing=farming?.missingMeals??Math.max(0,meals-available);
+        if(!farming){bookLegacyFood(d,e,sid,production,Math.min(available,meals),day);s.food=Math.max(0,available-meals);}
+        const mouths=farming?Math.ceil(mealMouthsOf(e,d.get('state'),sid,s.population,{levy})):meals;
+        publicMeals.set(sid,{mouths,eaten:mouths-missing,missing});
         const wood=farming?.woodProduced??harvestSettlementWood(d,e,sid,s.woodPerDay??0,(day+1)*1440);
         settleFuel(d,e,sid,s,wood,day);d.set(['state','settlements',sid],s);
+      }
+      const adjustments=advanceHouseholdMeals(d,e,day,publicMeals);
+      for(const [sid,ration] of publicMeals){
+        const s=clone(d.get('state','settlements',sid)),amount=toRational(ration.missing+(adjustments.get(sid)??0));
+        const missing=Math.max(0,Math.ceil(amount.numerator/amount.denominator));
+        s.unmetMeals=(s.unmetMeals??0)+missing;
+        s.starvation=missing?(s.starvation??0)+1:Math.max(0,(s.starvation??0)-1);
+        if(s.starvation>=7){s.population=Math.max(0,s.population-1);s.starvation=0;d.say(`${s.name}发生饥荒死亡`);}
+        d.set(['state','settlements',sid],s);
       }
       advancePets(d,e,(day+1)*1440);
       advanceWildlife(d,e,day);displaceForestWildlife(d,e,day);advanceBosses(d,e,day);
@@ -403,10 +424,10 @@ const systems=[
   advance:(e,d,{after})=>advanceSettlementTrade(d,e,after)},
  {id:'transport',order:790,nextMinute:(e,d,now)=>nextTransportMinute(d.get('state'),now),active:(e,d,now)=>nextTransportMinute(d.get('state'),now)!==Infinity,advance:(e,d,{after})=>advanceTransport(d,e,after)},
  {id:'post',order:820,nextMinute:(e,d,now)=>nextPostMinute(d.get('state'),now),advance:(e,d,{after})=>advancePost(d,e,after)},
- {id:'shop_restock',order:850,advance:(e,d,{before,after})=>{
-    // Restocking has no effects outside midnight boundaries. Deriving every
-    // shop during unrelated school/travel ticks repeatedly scans the world.
-    if(Math.floor(after/1440)>Math.floor(before/1440))advanceShops(d,e,before,after);
+ {id:'shop_restock',order:850,nextMinute:nextShopMinute,advance:(e,d,{before,after})=>{
+    // Consumers need noon facts; restocking keeps the midnight boundary.
+    // Unrelated school/travel ticks do not need to derive every shop.
+    if(Math.floor(after/720)>Math.floor(before/720))advanceShops(d,e,before,after);
  }},
  {id:'facilities',order:890,nextMinute:(e,d,now)=>nextFacilityMinute(d.get('state'),now),advance:(e,d,ctx)=>advanceFacilities(d,e,ctx)},
  {id:'projects',order:900,advance(e,d,{days,id}){
@@ -459,7 +480,7 @@ const systems=[
  {id:'festival',order:1600,active:e=>festivalCalendar(e).length>0,nextMinute:(e,d,now)=>nextFestivalMinute(d.get('state'),e,now),
   advance:(e,d,{after})=>advanceFestivals(d,e,after)},
  {id:'local_actor_positions',order:1700,nextMinute:(e,d,now)=>nextRecordDeadline(d.get('state'),now,['local_position'],['expires']),advance(e,d,{after}){
-    for(const[key,row]of Object.entries(d.get('state','records')??{}))if(key.startsWith('local_actor_position:')){
+    for(const[key,row]of recordEntriesWhere(d.get('state','records'),'category','local_position'))if(key.startsWith('local_actor_position:')){
         const actor=d.get('state',row.subject?.startsWith('npc_')?'npcs':'creatures',row.subject);
         if(!actor||actor.location!==row.location||actor.scheduleTravel||actor.cognitionTravel||!isEffective(e,d,row.subject)||row.expires<=after)holdingRemove(d,null,['state','records',key],'advance-registry');
     }
@@ -498,6 +519,11 @@ const systems=[
  }},
  {id:'wildlife_encounter',order:2800,active:(e,d,now)=>nextWildlifeEncounterMinute(d,e,now)!==Infinity,nextMinute:(e,d,now)=>nextWildlifeEncounterMinute(d,e,now),
   advance:(e,d,{before,after,id})=>{if(after===nextWildlifeEncounterMinute(d,e,before))settleWildlifeEncounter(d,e,wildlifeEncounterAt(d,e,d.get('state','location'),after),id);}},
+ // Day-sliced relation evidence: runs at every midnight crossing (the self-check below keeps it day-sliced on the unscheduled path too, which does not consult systemRunsAt) and is the last
+ // system of the clock phase (order 3000, kept by ruleId 3000:relation_evidence, above every system that changes a record or obligation status, deliveries 2700 included; rite_projects runs in
+ // the later assertion phase and does not touch them), so the transitions of the whole midnight round are registered at that midnight whatever the step length;
+ // the end-of-reduce call only repeats them (evidence keys make that a no-op). The base is this reduce's first segment start, then the previous midnight's state.
+ {id:'relation_evidence',order:3000,advance:(e,d,ctx)=>{if(!(ctx.days>0))return;advanceHook('settleRecordRelationEvidence')?.(d,e,d.relationBase);d.relationBase=d.get('state');}},
 ];
 // Preparatory rules remain before the rules that consume their attendance and
 // booking contexts. Stable rule ids preserve those existing dependencies.

@@ -32,6 +32,8 @@ const isFlow=owner=>isSource(owner)||isSink(owner);
 // purses and stocks retain their existing writers; this grants no authority.
 let transferProjection=null;
 export function registerTransferProjection(fn){transferProjection=fn;}
+const transferObservers=new Map();
+export function registerTransferObserver(id,fn){transferObservers.set(id,fn);}
 
 // ---- 源汇登记（写入权与每日预算） -------------------------------------------
 // 源汇词条（id 与含义）登记在 world/ontology/resources.json 的 sourcesAndSinks；
@@ -116,6 +118,8 @@ export function finishLedger(patches,opening){
 let lotPolicy=()=>false;
 export function registerLotPolicy(fn){lotPolicy=fn;}
 export const lotAccount=key=>{const {owner,resource,purpose}=parseAccount(key);return !isFlow(owner)&&lotPolicy({owner,resource,purpose});};
+// G0 第 3 条：转移不得丢原始事实——转出批次已有的入库日、保质到期、品质、来源不被转入方的批次说明覆盖（编号与类别可改，如种粮重编号）。
+const ORIGINAL_LOT_FACTS=['day','expiresDay','quality','origin'];
 const LOT_FIELDS=new Set(['id','qty','day','quality','origin','expiresDay','kind']);
 const byExpiry=(a,b)=>(a.expiresDay??Infinity)-(b.expiresDay??Infinity)||String(a.id).localeCompare(String(b.id));
 // 从批次列表取出 amount；pick = 批次编号列表，或 {kind} 过滤。返回 [剩余, 取出]。
@@ -183,6 +187,7 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
             const gap=amount-have,drift=accountKey('src:drift',a.resource,a.owner.replace(/[|\s]/g,'_'));
             d.set(['ledger','flows',drift],(read(d,'ledger','flows',drift)??0)+gap);
             d.set(['ledger','drift'],[...(read(d,'ledger','drift')??[]),{account:from,gap,writer,eventId,minute:read(d,'state','minute')??null}].slice(-50));
+            tallyDrift(d,'gap');
         }
         d.set(['ledger','accounts',from],Math.max(0,have-amount));
         if(lotAccount(from)){
@@ -200,7 +205,7 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
             let add;
             if(Array.isArray(lot)){add=lot;if(lot.reduce((n,l)=>n+l.qty,0)!==amount)throw Error('指定批次的数量与转移数量不符');}
             else{
-                const carried=(moved??[]).map(l=>({...l,...(lot??{}),qty:l.qty})),rest=amount-carried.reduce((n,l)=>n+l.qty,0);
+                const carried=(moved??[]).map(l=>{const o={...lot??{}};for(const k of ORIGINAL_LOT_FACTS)if(l[k]!==undefined)delete o[k];return {...l,...o,qty:l.qty};}),rest=amount-carried.reduce((n,l)=>n+l.qty,0);
                 add=[...carried,...(rest>0?[{id:eventId??`lot:${day}`,day,...(lot??{}),qty:rest}]:[])];
             }
             d.set(['ledger','lots',to],mergeLots(lotsOf(d,to),add));
@@ -208,6 +213,7 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
     }
     d.set(['ledger','transfers'],(read(d,'ledger','transfers')??0)+1);
     transferProjection?.(d,{from,to,fromAccount:a,toAccount:b,amount,eventId,writer});
+    for(const observe of transferObservers.values())observe(d,{from,to,fromAccount:a,toAccount:b,amount,eventId,writer});
     globalThis.__LEDGER_TRACE__?.push({from,to,amount,writer,eventId});// 调试：对账定位用
     return amount;
 }
@@ -238,6 +244,25 @@ export function ledgerTotals(ledger){
     for(const [key,n] of Object.entries(ledger?.accounts??{}))add(parseAccount(key).resource,'accounts',n);
     for(const [key,n] of Object.entries(ledger?.flows??{})){const {owner,resource}=parseAccount(key);add(resource,isSource(owner)?'sources':'sinks',n);}
     return out;
+}
+// 漂移上报（账本双写退出第一期，只统计不拒绝）：drift 清单只留最近 50 条，这里另记不封顶的累计次数。
+// 类别：gap（余额不足由 src:drift 补足）、unbooked（旧写入漏传对方账户）、holding（持有写入被注册形状拒绝）。
+// 刻末由 stampDriftReport 写入 ledger.driftReport 供查询；S6 入口再据此拒绝。
+export function tallyDrift(d,kind){
+    if(!ledgerActive(d))return;
+    d.set(['ledger','driftTally',kind],(read(d,'ledger','driftTally',kind)??0)+1);
+}
+export function driftCounts(document){
+    const t=document?.ledger?.driftTally??{};
+    return {gap:t.gap??0,unbooked:t.unbooked??0,holding:document?.holdings?.driftTally??0};
+}
+export function stampDriftReport(d){
+    if(!ledgerActive(d))return;
+    const c=driftCounts({ledger:{driftTally:read(d,'ledger','driftTally')},holdings:{driftTally:read(d,'holdings','driftTally')}});
+    if(c.gap+c.unbooked+c.holding===0)return;
+    const prev=read(d,'ledger','driftReport');
+    if(prev&&prev.gap===c.gap&&prev.unbooked===c.unbooked&&prev.holding===c.holding)return;
+    d.set(['ledger','driftReport'],{...c,minute:read(d,'state','minute')??null});
 }
 export function auditLedger(ledger){
     const errors=[];

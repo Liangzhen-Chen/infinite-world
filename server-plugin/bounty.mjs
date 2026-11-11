@@ -18,7 +18,7 @@ import {legalCodes,legalCodeAt,legalCodeById,legalCooperation,codePenalty} from 
 // confiscated bribe) and posted on the court's quest board, where NPC hunters
 // (rules.law.wanted.hunters) or the player take it.
 import {createHash} from 'node:crypto';
-import {digest} from './storage.mjs';
+import {digest,recordsWhere,recordEntriesWhere} from './storage.mjs';
 import {standing} from './standing.mjs';
 import {organization} from './organizations.mjs';
 import {awardExperience} from './progression.mjs';
@@ -62,9 +62,9 @@ export function integrityOf(engine,npc){
     for(const p of lawRules(engine).polities??[])if(p.integrity?.[npc]!==undefined)return p.integrity[npc];
     return lawRules(engine).bribery?.defaultIntegrity??60;
 }
-export const activeWanted=state=>Object.values(state.records??{}).filter(r=>r?.category==='legal_wanted'&&r.status===ACTIVE).sort((a,b)=>a.id.localeCompare(b.id));
+export const activeWanted=state=>recordsWhere(state.records,'category','legal_wanted').filter(r=>r?.category==='legal_wanted'&&r.status===ACTIVE).sort((a,b)=>a.id.localeCompare(b.id));
 export function wantedOfCase(state,caseId){const id=state.records?.[caseId]?.wanted,w=id&&state.records[id];return w?.category==='legal_wanted'&&w.status===ACTIVE?w:null;}
-export const activeHold=state=>Object.values(state.records??{}).find(r=>r?.category==='legal_custody'&&r.reason==='到案'&&r.status==='生效')??null;
+export const activeHold=state=>recordsWhere(state.records,'category','legal_custody').find(r=>r?.category==='legal_custody'&&r.reason==='到案'&&r.status==='生效')??null;
 // Whether the notice has reached this place, and whether this person knows of it.
 export function wantedReachedAt(engine,w,location,minute,state={}){const code=codeAt(engine,location,state),issuer=codeById(engine,w.law,state);return Boolean(code&&issuer&&legalCooperation(engine,state,issuer,code).extradition&&w.scope.includes(code.id)&&w.reach[code.id]!==undefined&&w.reach[code.id]<=minute);}
 function knows(engine,state,w,npc,minute){
@@ -102,7 +102,7 @@ export function issueWanted(d,engine,row,reason,minute){
     const scope=wantedScope(engine,code.id,d.get('state')),reach={};
     for(const law of scope){
         let travel=0;
-        if(law!==code.id){try{travel=engine.route(code.court,codeById(engine,law).court,'walk',minute,d.document.randomSeed).minutes;}catch{continue;}}
+        if(law!==code.id){try{travel=engine.route(code.court,codeById(engine,law).court,'walk',minute,d.get('randomSeed')).minutes;}catch{continue;}}
         reach[law]=minute+(rules.relayBaseMinutes??60)+travel;
     }
     const b=rules.bounty??{},declared=Math.min(b.maximum??2000,(b.base??0)+Math.ceil((row.judgment?.fine??row.value??0)*(b.perFine??1)));
@@ -145,7 +145,7 @@ export function closeWanted(d,engine,w,status,reason,minute){
 // A recognised or caught player is held where found and escorted to the issuing court.
 export function holdPlayer(d,engine,w,{captor,location,minute,surrendered=false}){
     const code=codeById(engine,w.law);let escort=60;
-    try{escort=Math.max(30,engine.route(location,code.court,'walk',minute,d.document.randomSeed).minutes);}catch{}
+    try{escort=Math.max(30,engine.route(location,code.court,'walk',minute,d.get('randomSeed')).minutes);}catch{}
     const key=`legal_custody:${w.id}:${minute}`;
     holdingSet(d,null,rec(key),{category:'legal_custody',case:w.case,wanted:w.id,reason:'到案',captor,location,status:'生效',started:minute,expires:minute+escort,surrendered},'bounty');
     const caseRow=d.get(...rec(w.case));
@@ -195,7 +195,7 @@ export function deliverFugitive(d,engine,w,by,minute){
 // the law step after every interval and settled action.
 export function advanceWanted(d,engine,after){
     const rules=lawRules(engine).wanted;if(!rules)return;
-    for(const [key,lock] of Object.entries(d.get('state','records')??{})){
+    for(const [key,lock] of recordEntriesWhere(d.get('state','records'),'category','legal_custody')){
         if(lock?.category!=='legal_custody'||lock.reason!=='到案'||lock.status!=='生效')continue;
         if(!isEffective(engine,d,'player')){changeLegacyHoldings(d,engine,{source:`custody:${key}`,kinds:['guest_of'],reason:'death',eventId:`${key}:gone`},()=>holdingSet(d,null,rec(key),{...lock,status:'已中止',ended:after,endReason:'death'},'bounty'));continue;}
         if(lock.expires<=after)arrivePlayer(d,engine,key,lock,lock.expires);
@@ -205,7 +205,7 @@ export function advanceWanted(d,engine,after){
         const row=d.get(...rec(w.case));
         if(!row||['已结案','服役中','已撤案','已到案'].includes(row.status)||row.appeal?.outcome==='overturned'){closeWanted(d,engine,w,'已销案',row?.status==='已撤案'?'案件撤销':'案件已结或改判',after);continue;}
         const scope=wantedScope(engine,w.law,d.get('state')),reach={...w.reach};
-        for(const law of scope)if(reach[law]===undefined){try{reach[law]=after+(rules.relayBaseMinutes??60)+engine.route(codeById(engine,w.law).court,codeById(engine,law).court,'walk',after,d.document.randomSeed).minutes;}catch{}}
+        for(const law of scope)if(reach[law]===undefined){try{reach[law]=after+(rules.relayBaseMinutes??60)+engine.route(codeById(engine,w.law).court,codeById(engine,law).court,'walk',after,d.get('randomSeed')).minutes;}catch{}}
         if(scope.some(law=>!w.scope.includes(law)))save(d,{...w,scope:[...new Set([...w.scope,...scope])],reach});
         relay(d,engine,d.get(...rec(w.id)),after);
         if(w.subject==='player')recognise(d,engine,rules,d.get(...rec(w.id)),after);
@@ -213,8 +213,8 @@ export function advanceWanted(d,engine,after){
 }
 function issue(d,engine,rules,after){
     const state=d.get('state');if(!isEffective(engine,state,'player'))return;
-    const custody=Object.entries(state.records??{}).filter(([,r])=>r?.category==='legal_custody').map(([key,r])=>({...r,key}));
-    for(const row of Object.values(state.records??{})){
+    const custody=recordEntriesWhere(state.records,'category','legal_custody').map(([key,r])=>({...r,key}));
+    for(const row of recordsWhere(state.records,'category','legal_case')){
         if(row?.category!=='legal_case'||row.offender!=='player'||wantedOfCase(state,row.id))continue;
         if(custody.some(l=>l.case===row.id&&l.status==='生效'))continue;
         const since=row.appearedAt??-Infinity,escaped=custody.find(l=>l.case===row.id&&l.status==='已中止'&&l.reason!=='到案'&&l.ended>since&&!l.wanted);

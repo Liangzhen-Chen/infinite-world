@@ -96,12 +96,20 @@ export function effective(d,id,{alive=()=>true,impaired=()=>false}={}){
     return !custody.length||custody.every(r=>(r.terms?.regime?.keepsEffective??[]).some(k=>k===h.kind||k===h.id));
 }
 // 钉住（§A.15.18 (b)）：实体处在某条声明 pins 的存活持有的被钉侧。
+const pinsOf=(r,x,role=null)=>{
+    const k=holdingKind(r.kind),pins=k?.variants?.[r.variant]?.pins??k?.pins??'none';
+    const hostPerson=r.kind==='guest_of'&&r.variant==='detained'&&String(r.subject).startsWith('npc_');
+    return (role!=='subject'&&r.holder===x&&(pins==='holder'||pins==='both'))||(role!=='holder'&&r.subject===x&&(pins==='subject'||pins==='both'||hostPerson));
+};
 export function pinnedBy(d,x){
-    return [...aliveHoldings(d,{holder:x}),...aliveHoldings(d).filter(r=>r.subject===x&&r.holder!==x)].filter(r=>{
-        const k=holdingKind(r.kind),pins=k?.variants?.[r.variant]?.pins??k?.pins??'none';
-        const hostPerson=r.kind==='guest_of'&&r.variant==='detained'&&String(r.subject).startsWith('npc_');
-        return (r.holder===x&&(pins==='holder'||pins==='both'))||(r.subject===x&&(pins==='subject'||pins==='both'||hostPerson));
-    }).map(r=>r.id);
+    return [...aliveHoldings(d,{holder:x}),...aliveHoldings(d).filter(r=>r.subject===x&&r.holder!==x)].filter(r=>pinsOf(r,x)).map(r=>r.id);
+}
+// Every entity pinned by some alive holding, in one pass over the alive rows
+// (same predicate as pinnedBy; use when many entities are tested together).
+export function pinnedEntities(d){
+    const set=new Set();
+    for(const r of aliveHoldings(d)){if(pinsOf(r,r.holder,'holder'))set.add(r.holder);if(r.holder!==r.subject&&pinsOf(r,r.subject,'subject'))set.add(r.subject);}
+    return set;
 }
 export const holdingKinds=()=>holdingKindIds().map(holdingKind);
 export {entityRow};

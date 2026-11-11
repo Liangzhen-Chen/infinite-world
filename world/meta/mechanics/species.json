@@ -1,0 +1,18 @@
+{
+ "monster_bent_horn_goat": {
+  "husbandry": {
+   "taxon": "goat",
+   "bodyMassKg": 40,
+   "coat": "hair",
+   "lactation": 0.001875
+  }
+ },
+ "monster_oat_pheasant": {
+  "husbandry": {
+   "taxon": "pheasant",
+   "bodyMassKg": 1.25,
+   "coat": "feather",
+   "layingIntervalDays": 4
+  }
+ }
+}

@@ -1,0 +1,73 @@
+{
+  "source": "15 §15.2、§15.4：首批市场参数，待标定",
+  "retailShare": 0.05,
+  "forward": {
+    "source": "D15 §15.6：预付门槛、违约禁入与取消权重的初始标定；可靠度由履约记录派生",
+    "paidThreshold": 0.5,
+    "timeDiscountMinutes": 129600,
+    "timeDiscountSource": "15 §15.2/§15.6: H/(H+minutes to delivery); H=90 days is an initial calibration",
+    "cancellationWeight": 1,
+    "defaultQuarters": 1,
+    "quarterMinutes": 129600
+  },
+  "retailFloor": 5,
+  "maxShare": 0.3,
+  "dailyShare": 1,
+  "depthImpact": 0.2,
+  "spread": {
+    "sell": 1,
+    "buy": 0.6
+  },
+  "qualityStep": 1.25,
+  "personalReserveDays": 1,
+  "customerChoice": {
+    "source": "05 §5.7 / 14 §14.5.1: seeded purchase noise, initial calibration; zero disables noise",
+    "noisePermille": 100
+  },
+  "householdBuffer": {
+    "source": "P initial bounded mixture: 5% spendthrift, 90% ordinary, 5% thrifty; cycles 0/1/2, not historical estimates",
+    "profiles": [
+      {"id": "spendthrift", "through": 1, "cycles": 0},
+      {"id": "ordinary", "through": 19, "cycles": 1},
+      {"id": "thrifty", "through": 20, "cycles": 2}
+    ]
+  },
+  "foodHabit": {
+    "source": "calibrate（可改；非历史估计）：惯常性 = 买得起的户占比（户现金 × dailyFoodShare ≥ 单价；收入无可读的有区分口径，现金暂代） × min(1,卖家数/habitualSellers)（稀缺已在手写 basePrice 里，不重复折价；marketSupply 在预算内调用会递归，故不用）；dailyFoodShare=一份食物单价占现金的日常上限（户内判定用买方本人钱包，聚落 p 在客观路径用各户成员钱包之和，主观视图只看本人钱包）（调研 F:/dnd-tmp/avail/report.md 口径：食物是贫户支出大头，单种单份取四分之一，初值）；luxuryBelow=惯常性低于此值即奢侈；richCashDays=本户现金超过本户 N 天日均收入才算宽裕，奢侈来源才参与购买；habitualSellers=算作广泛可得的卖家数；poorPurchaseLuxuryShareMax=审计：贫户预算期购买中奢侈来源花费占比上限",
+    "dailyFoodShare": 0.25,
+    "luxuryBelow": 0.1,
+    "richCashDays": 5,
+    "habitualSellers": 2,
+    "poorPurchaseLuxuryShareMax": 0.1
+  },
+  "water": {
+    "saltMgPerLitre": 1000,
+    "toxinUgPerLitre": 1,
+    "impairedFactor": 0.5,
+    "unsafeFactor": 0.1
+  },
+  "goodsTags": {
+    "grain": "grain",
+    "salt": "salt",
+    "iron": "iron",
+    "ore": "ore",
+    "wood": "timber",
+    "timber": "timber",
+    "herb": "herb",
+    "cloth": "cloth",
+    "meat": "meat",
+    "fish": "fish",
+    "water": "water",
+    "food": "food"
+  },
+  "basket": [
+    {
+      "tag": "grain",
+      "weight": 0.7
+    },
+    {
+      "tag": "food",
+      "weight": 0.3
+    }
+  ]
+}

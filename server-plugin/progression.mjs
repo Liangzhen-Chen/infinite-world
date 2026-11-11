@@ -1,6 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {derivedStats}from'./combat.mjs';
+import {pow} from './det-math.mjs';
 export const xpRequired=newLevel=>newLevel<10?newLevel*100:Math.ceil(newLevel**4/10);
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}不在允许范围`);return value;};
 
@@ -20,7 +21,7 @@ export function awardExperience(d,engine,{kind,subject,source,base,repeat=false}
     const now=d.get('state','minute'),player=d.get('state','player'),maximum=engine.rules.levels.maximum;
     const key=`${kind}:${subject}`,history=(d.get('state','experienceRepeats',key)??[]).filter(minute=>minute>now-1440);
     const repeatIndex=repeat?history.length:0;
-    let gain=player.level>=maximum?0:Math.floor(base*(repeat?engine.rules.levels.experience.repeatDecay**repeatIndex:1));
+    let gain=player.level>=maximum?0:Math.floor(base*(repeat?pow(engine.rules.levels.experience.repeatDecay,repeatIndex):1));
     const record={kind,subject,source,eventId,minute:now,base,amount:gain,repeatIndex};
     d.set(['state','experienceLedger',source],record);
     if(repeat)d.set(['state','experienceRepeats',key],[...history,now]);

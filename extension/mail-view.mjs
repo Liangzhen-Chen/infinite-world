@@ -10,7 +10,7 @@ export function renderDocumentCard(card,context){
     node.append(title,body);
     const now=globalThis.infiniteFieldsV2?.view?.document.state.minute;
     const deadline=card.deadline!==undefined&&Number.isFinite(now)?`期限${card.deadline>now?`还剩 ${card.deadline-now} 分钟`:'已到'}`:'';
-    const details=[card.from?`来自 ${card.from}`:'',card.status??'',card.cost!==undefined?`费用 ${card.cost}铜`:'',deadline].filter(Boolean);
+    const details=[card.from?`来自 ${card.from}`:'',card.status??'',card.cost!==undefined?`费用 ${card.cost}${card.unit??'铜'}`:'',deadline].filter(Boolean);
     if(details.length){const info=document.createElement('p');info.className='fields-note';info.textContent=details.join(' · ');node.append(info);}
     const button=document.createElement('button');
     const saved=()=>context.chatMetadata?.fields_mail?.includes(card.id);

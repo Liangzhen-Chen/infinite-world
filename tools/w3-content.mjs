@@ -1,7 +1,11 @@
 import { loreIssues } from './economy-content.mjs';
 import { hashContent } from './content-pipeline.mjs';
 import { validateWorld } from './validate-world.mjs';
+import { numeralIssues } from './content-numerals.mjs';
+import { applySupersedes } from './approved-revisions.mjs';
 
+// 物品正文不再以长度逼内容（骨架没写就不写，事实少就写短）：只有短到近乎空文本（少于 6 字）才提示 L4 抽读；配方 process 的长度提示不变。
+const ITEM_MIN_LENGTH = 6;
 const units = { '公斤': ['weight',1], '千克':['weight',1], '斤':['weight',.5], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
 const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+?)';
 export function chineseNumber(value){
@@ -19,6 +23,15 @@ export function closestW3Similarity(draft, others) {
   return {score:maximum,id:other};
 }
 export function w3Context(world,bones,entry) {
+  const context=w3ContextFacts(world,bones,entry);
+  // 校验用的目录与配方表：不可枚举，不进入指纹、审核请求和落盘快照（见 w3-process-check.mjs）。
+  Object.defineProperty(context,'catalog',{value:[...world.items,...bones.items]});
+  Object.defineProperty(context,'catalogRecipes',{value:[...(world.recipes??[]),...(bones.recipes??[])]});
+  // 世界里的人名、地名、店名：物品正文名称出处检查（w3-item-claims.mjs）用，同样不进指纹。
+  Object.defineProperty(context,'worldNames',{value:[...world.npcs,...world.locations].filter(row=>typeof row.name==='string'&&row.name.length>=2).map(row=>({id:row.id,name:row.name}))});
+  return context;
+}
+function w3ContextFacts(world,bones,entry) {
   const ids = new Map([...world.items,...bones.items,...world.npcs,...world.locations,...world.skills].map(row=>[row.id,row]));
   const fact = id => {const row=ids.get(id);if(!row)throw new Error(`引用丢失 ${id}`);return {id:row.id,name:row.name,weight:row.weight,basePrice:row.basePrice,use:row.use,shelfLifeDays:row.shelfLifeDays};};
   if(entry.id.startsWith('recipe_'))return {materials:entry.materials.map(row=>({...row,facts:fact(row.item)})),tools:entry.tools.map(fact),product:fact(entry.output.item),byproducts:entry.byproducts.map(row=>({...row,facts:fact(row.item)})),skill:fact(entry.skill),workplaces:world.locations.filter(row=>row.workstations?.some(s=>s.kind===entry.workstation)).map(row=>({id:row.id,name:row.name})),teachers:entry.teachers.map(fact)};
@@ -29,7 +42,7 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
   if(!draft||typeof draft!=='object'||Array.isArray(draft))return {errors:['说明必须为对象'],warnings};
   if(draft.id!==entry.id)errors.push('说明编号与骨架不一致');
   if(Object.keys(draft).some(key=>!['id',...fields].includes(key)))errors.push('说明覆盖了骨架或增加未授权字段');
-  for(const field of fields){if(typeof draft[field]!=='string'||!draft[field].trim())errors.push(`缺少 ${field}`);else if(draft[field].length<(field==='description'?60:25)||draft[field].length>240)warnings.push(`${field}长度为${draft[field].length}，进入L4抽读`);}
+  for(const field of fields){if(typeof draft[field]!=='string'||!draft[field].trim())errors.push(`缺少 ${field}`);else if(draft[field].length<(item?ITEM_MIN_LENGTH:field==='description'?60:25)||draft[field].length>240)warnings.push(`${field}长度为${draft[field].length}，进入L4抽读`);}
   if(errors.length)return {errors,warnings};
   const text=fields.map(field=>draft[field]).join('');
   for(const word of [...blocklist.names,...blocklist.realPeople])if(text.includes(word))errors.push(`原创屏蔽词 ${word}`);
@@ -55,12 +68,22 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
       if(material&&Math.abs(chineseNumber(match[1])*units[match[2]][1]-material.amount*material.facts.weight)>.0001)errors.push(`投料${match[0]}与骨架重量${material.amount*material.facts.weight}公斤矛盾`);
     }
   }
+  // 共用 L1 数字规则（tools/content-numerals.mjs）：中文数字合法性、总括时长与 minutes 一致；runContentPipeline 也会统一追加，重复项去重。
+  for(const message of numeralIssues(draft,entry,context))if(!errors.includes(message))errors.push(message);
   return {errors,warnings};
 }
-export function assembleW3(world,bones,lore) {
+// supersedes：调用方先经 readApprovedSupersedes（核验审批）取得的取代声明；本函数不自己读文件。
+export function assembleW3(world,bones,lore,supersedes=[]) {
+  // 候选必须从 loadWorld 读出的原样世界装配（发布路径如此）：已被 materializeRuntimeWorld 合并过的世界覆盖层已消耗，后补进来的行拿不到覆盖，D12 整类校验会悄悄算错。
+  if(world.runtimeMaterialized)throw new Error('候选必须用原样世界装配（世界已被 materializeRuntimeWorld 物化，覆盖层已消耗）');
   const byId=new Map(lore.map(row=>[row.id,row])),candidate=structuredClone(world);
-  const merge=(existing,rows)=>{const updates=new Map(rows.map(row=>[row.id,row]));return [...existing.map(row=>updates.get(row.id)??row),...rows.filter(row=>!existing.some(old=>old.id===row.id))];};
-  const newItems=bones.items.filter(row=>byId.has(row.id)).map(row=>({...row,...byId.get(row.id)}));
+  // 已在世界里的行以正式（已审批、已发布）的形态为准：本批骨架只补世界还没有的行。否则重新装配会把后来经审批批次改过的字段（如 P1 修订批的羊皮纸价）按骨架旧值写回。
+  const merge=(existing,rows)=>[...existing,...rows.filter(row=>!existing.some(old=>old.id===row.id))];
+  // physical 是骨架上的派生事实（起草、检查、评分取证用），不发布进正式物品目录。
+  const newItems=bones.items.filter(row=>byId.has(row.id)).map(({physical,...row})=>({...row,...byId.get(row.id)}));
+  // 骨架只补世界还没有的行，但骨架上的值若已被发布的修订取代（如 P1 的羊皮纸价），新行按修订值装配；
+  // 否则回到旧版再装配时，旧价会和后来按修订价派生的成品并存，出现售价低于材料。
+  for(const receiptFile of new Set(supersedes.map(s=>s.receiptFile).filter(f=>/^world\/drafts\/w3\/(?:[^/]+\/)?bones\.json$/.test(f))))applySupersedes(newItems,receiptFile,supersedes);
   const available=new Set([...world.items,...newItems].map(row=>row.id));
   const newRecipes=bones.recipes.filter(row=>byId.has(row.id)&&available.has(row.output.item)&&row.materials.every(m=>available.has(m.item))).map(({processFacts,...row})=>({...row,...byId.get(row.id)}));
   candidate.items=merge(world.items,newItems);candidate.recipes=merge(world.recipes,newRecipes);

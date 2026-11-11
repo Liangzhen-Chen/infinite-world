@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：现有引擎缺机制、整题无法结算的题。每条 todo 写明缺的机制与迁移阶段（docs/架构设计/10-现状映射与迁移路线.md §10.4）。
 // 参数表里这些题要的缺省值已补入 world/rules/tables/balance/（见 daily-b2-tables.test.mjs 的表级验证）；等机制落地后把 todo 改成可执行测试。
 import test from 'node:test';
@@ -11,14 +12,20 @@ test.todo('D07 问路 ①②③④⑤——引擎没有“向人打听地点”�
 
 // ---- D10 打工日结、D11 月结工钱（受雇，A2 / S3）----
 test.todo('D10 打工日结 ①–④——受雇须对方答应：world_act 列出但拒绝（“需要对方答应”，a1-daily-probes 的 D10 测试守着这条）；缺 NPC 决策规则骨架（A2）与 employed_by + wage 义务按日 30 文清偿（S3 义务统一：雇主账户转出）；体力下降缺 S1 body');
-test.todo('D10 打工日结 ⑤李员外的地里“已锄”进度增加——劳力只进产量派生，没有田地“已锄/耕作进度”事实（S1 田地作为资源点；S5 作物生长）');
+test('D10⑤ 自家真实锄播推进耕作面积，留有劳动来源',async t=>{
+ const {ui}=await privateField(t),sow=await ui.choose('farm.private_sow',{areaMu:2},{search:true,eventId:'d10-tillage'});assert.ok(sow.ok,sow.error);
+ // 2 亩 = 2 × 10000 / 15 = 4000/3 平方米；锄播 0.5 工日/亩 × 2 = 480 分钟。
+ const fact=(await ui.read()).state.records['cultivation:private-farm:loc_hw_fields'];
+ assert.deepEqual(fact.tilledAreaM2,{numerator:'4000',denominator:'3'});assert.equal(fact.sourceEvent,'d10-tillage');assert.equal(sow.result.laborMinutes,480);
+});
 test.todo('D11 月结工钱 ①–⑤——引擎只有按工时日结的受雇（labor-market），没有月薪雇佣：缺 wage 义务 per: anchor（每月初一）与 accruedTo 闭式（附录 A §A.15 期间与折算：八月满勤 → 600，钱柜 2000→1400，同一个月不领两次）、雇佣关系 settle 后继续有效（S3 义务统一）');
 
 // ---- D12 春播、D13 秋收、D14 采草药（农事与采集，S1 / S5）----
-async function privateField(t,tools=true){
+// D05 5.5 / S505C approved binding: wheat uses item_wheat_seed, yielding item_wheat_grain.
+ async function privateField(t,tools=true){
  const world=variant(w=>{delete w.rules.weather;w.rules.agriculture.crop.growthDays=2;w.rules.agriculture.crop.sowDays=[0,359];w.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').farmWorkers=0;});
  const ui=await uiSession(t,{world,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8,0),s=>{
-  s.buildings.loc_hw_fields={...s.buildings.loc_hw_fields,owner:'player',condition:100};s.inventory.item_oats=stack(20);if(tools){s.inventory.item_hoe=tool();s.inventory.item_sickle=tool();}
+  s.buildings.loc_hw_fields={...s.buildings.loc_hw_fields,owner:'player',condition:100};s.inventory.item_wheat_seed=stack(20);if(tools){s.inventory.item_hoe=tool();s.inventory.item_sickle=tool();}
  })});return {ui,world};
 }
 test('D12.3/.5 public sow: two mu use four seed units and 480 labor minutes, wear a real hoe; missing/broken tools roll back',async t=>{
@@ -26,8 +33,8 @@ test('D12.3/.5 public sow: two mu use four seed units and 480 labor minutes, wea
  const omitted=await ui.choose('farm.private_sow',{quantity:2},{search:true});assert.equal(omitted.ok,false);assert.deepEqual(await ui.read(),before);
  const sow=await ui.choose('farm.private_sow',{areaMu:2},{search:true,eventId:'d12-sow'});assert.ok(sow.ok,sow.error);const after=await ui.read(),farm=after.state.records['private-farm:loc_hw_fields'];
  assert.equal(farm.areaMu,2);assert.equal(farm.status,'growing');assert.equal(sow.result.laborMinutes,480);assert.equal(after.state.minute-before.state.minute,480);
- assert.equal(held(before.state.inventory,'item_oats')-held(after.state.inventory,'item_oats'),4);assert.equal(farm.seed,4);
- assert.equal(before.state.inventory.item_hoe.durability-after.state.inventory.item_hoe.durability,1);assert.equal(after.ledger.flows['sink:consume|item_oats|private_sow']-(before.ledger?.flows['sink:consume|item_oats|private_sow']??0),4);conserved(before,after,'D12',new WorldEngine(world));
+ assert.equal(held(before.state.inventory,'item_wheat_seed')-held(after.state.inventory,'item_wheat_seed'),4);assert.equal(farm.seed,4);
+ assert.equal(before.state.inventory.item_hoe.durability-after.state.inventory.item_hoe.durability,1);assert.equal(after.ledger.flows['sink:consume|item_wheat_seed|private_sow']-(before.ledger?.flows['sink:consume|item_wheat_seed|private_sow']??0),4);conserved(before,after,'D12',new WorldEngine(world));
  const retry=await ui.choose('farm.private_sow',{areaMu:2},{search:true,eventId:'d12-sow'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),after);
  const duplicate=await ui.choose('farm.private_sow',{areaMu:2},{search:true});assert.equal(duplicate.ok,false);assert.deepEqual(await ui.read(),after);
  {
@@ -35,20 +42,26 @@ test('D12.3/.5 public sow: two mu use four seed units and 480 labor minutes, wea
   const b=await primed(f.ui),bad=await f.ui.choose('farm.private_sow',{areaMu:2},{search:true});assert.equal(bad.ok,false);assert.deepEqual(await f.ui.read(),b);
  }
  const badWorld=variant(w=>{delete w.rules.weather;w.rules.agriculture.crop.sowDays=[0,359];});
- const broken=await uiSession(t,{world:badWorld,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8,0),s=>{s.buildings.loc_hw_fields={owner:'player',condition:100};s.inventory.item_oats=stack(20);s.inventory.item_hoe={...tool(),durability:0};})});
+ const broken=await uiSession(t,{world:badWorld,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8,0),s=>{s.buildings.loc_hw_fields={owner:'player',condition:100};s.inventory.item_wheat_seed=stack(20);s.inventory.item_hoe={...tool(),durability:0};})});
  const b=await primed(broken),bad=await broken.choose('farm.private_sow',{areaMu:2},{search:true});assert.equal(bad.ok,false);assert.deepEqual(await broken.read(),b);
 });
-test('D13.3/.4 public harvest: 960 labor minutes over one to two days, sickle wear, real stock source and no second harvest',async t=>{
+test('D13.3/.4 public harvest: first trip takes what the pack holds (50 of 300) for its 160-minute share of 960, sickle wear, real stock source; a full pack cannot harvest again',async t=>{
  const {ui,world}=await privateField(t),opening=await primed(ui),sow=await ui.choose('farm.private_sow',{areaMu:2},{search:true});assert.ok(sow.ok,sow.error);
  const grow=await ui.choose('time',{minutes:3*1440});assert.ok(grow.ok,grow.error);const before=await ui.read();assert.equal(before.state.records['private-farm:loc_hw_fields'].status,'ready');
  const forged=await ui.choose('farm.private_harvest',{areaMu:1},{search:true});assert.equal(forged.ok,false);assert.deepEqual(await ui.read(),before);
  const r=await ui.choose('farm.private_harvest',{},{search:true,eventId:'d13-harvest'});assert.ok(r.ok,r.error);const after=await ui.read(),elapsed=after.state.minute-before.state.minute;
- assert.equal(r.result.laborMinutes,960);assert.ok(elapsed>=1440&&elapsed<=2880,`elapsed ${elapsed}`);assert.equal(elapsed,r.result.elapsed);
- assert.equal(after.state.records['private-farm:loc_hw_fields'].status,'harvested');assert.ok(r.result.harvested>0);assert.equal(held(after.state.inventory,'item_oats')-held(before.state.inventory,'item_oats'),r.result.harvested);
+ // W8-E1 负重：整季 300 份 = 150 公斤一次进囊原靠 carryExempt；现只收背得动的。身上 = 新角色 2.6 + 麦种 16×0.1 + 锄 0.2 + 镰 0.2 = 4.6 公斤，
+ // 余 30 − 4.6 = 25.4 → floor(25.4/0.5) = 50 份，田里剩 250；工时按收下的份额：1 工日/亩 × 2 亩 × 480 × 50/300 = 160 分钟（当天做完，不跨夜）。
+ assert.equal(r.result.harvested,50);assert.equal(r.result.remaining,250);assert.equal(r.result.reason,'背不动');
+ assert.equal(r.result.laborMinutes,160);assert.equal(elapsed,160);assert.equal(elapsed,r.result.elapsed);
+ assert.equal(after.state.records['private-farm:loc_hw_fields'].status,'ready');assert.equal(after.state.records['private-farm:loc_hw_fields'].harvestedQty,50);assert.equal(held(after.state.inventory,'item_wheat_grain')-held(before.state.inventory,'item_wheat_grain'),r.result.harvested);
  // yields.json declares jin/mu/season, not kg. Retain the exact original
  // two-mu band (200–600 jin), converting the native food portions explicitly.
- const jin=r.result.harvested*world.rules.agriculture.foodUnitKg/.5;assert.ok(jin>=200&&jin<=600);
- assert.equal(after.ledger.flows['src:regrowth|item_oats|private_harvest']-(before.ledger.flows['src:regrowth|item_oats|private_harvest']??0),r.result.harvested);
+ const jin=after.state.records['private-farm:loc_hw_fields'].yield*world.items.find(i=>i.id==='item_wheat_grain').weight/.5;assert.ok(jin>=200&&jin<=600);
+ // D05 §5.5: harvest transfers the mature field stock; it cannot mint grain.
+ const field='loc_hw_fields|item_wheat_grain|crop';
+ assert.equal(before.ledger.accounts[field]-after.ledger.accounts[field],r.result.harvested);
+ assert.equal(after.ledger.flows['src:regrowth|item_wheat_grain|private_crop'],before.ledger.flows['src:regrowth|item_wheat_grain|private_crop']);
  assert.equal(before.state.inventory.item_sickle.durability-after.state.inventory.item_sickle.durability,1);conserved(before,after,'D13',new WorldEngine(world));
  const bad=await ui.choose('farm.private_harvest',{},{search:true});assert.equal(bad.ok,false);assert.deepEqual(await ui.read(),after);
  const again=await ui.choose('farm.private_harvest',{},{search:true,eventId:'d13-harvest'});assert.ok(again.ok,again.error);assert.deepEqual(await ui.read(),after);
@@ -65,7 +78,20 @@ test('D14 A3 two hours of local herb work transfer stock and train deterministic
  assert.equal(after.state.skills.skill_life_9_core.proficiency-before.state.skills.skill_life_9_core.proficiency,3);
  assert.equal(after.state.skills.skill_life_9_core.practiceCarry,.4);conserved(before,after,'D14',new WorldEngine(world));
 });
-test.todo('D14 S5: distinct herb species (plantain / honeysuckle), seasonal density and replenishment remain separate; A3 time, finite stock transfer and work learning now execute above');
+test('D14 S5 草药分种读取独立季节密度，并分别累计不足一份的采集量',async t=>{
+ const ui=await uiSession(t,{mutate:scene('loc_hw_northwood',monthDayMinute(3,10,9,0),s=>{s.skills.skill_life_9_core={proficiency:10,breakthroughs:[],daily:{}};})});
+ assert.ok((await ui.choose('site.enter',{}, {search:true})).ok);
+ const before=await primed(ui);
+ for(const target of ['nw_plantain','nw_honeysuckle']){const r=await ui.choose('site.gather_session',{target,minutes:120},{search:true});assert.ok(r.ok,r.error);}
+ const after=await ui.read(),site=after.state.records['site:loc_hw_northwood'];
+ // 20份/480分钟：春季车前密度1，120分钟=5份；金银花密度1/2，=2份余1/2。
+ assert.equal(held(after.state.inventory,'item_plantain')-held(before.state.inventory,'item_plantain'),5);
+ assert.equal(held(after.state.inventory,'item_honeysuckle')-held(before.state.inventory,'item_honeysuckle'),2);
+ assert.equal(site.remaining.nw_plantain,15);assert.equal(site.remaining.nw_honeysuckle,18);assert.equal(site.remaining.nw_herb,20);
+ const next=await ui.choose('site.gather_session',{target:'nw_honeysuckle',minutes:120},{search:true});assert.ok(next.ok,next.error);
+ assert.equal(next.result.quantity,3,'前次余半份+本次两份半=3份，且不借用车前的余数');
+ conserved(before,await ui.read(),'D14 S5',new WorldEngine(baseWorld));
+});
 
 // ---- D18 修理装备（服务，S3）----
 test('D18.2 public smith repair quotes 25 and a maximum before charging, restores the same sword to that maximum',async t=>{

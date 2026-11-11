@@ -1,7 +1,8 @@
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import{tmpRoot}from'../tools/tmp-root.mjs';
+import{tmpRoot,artifactPath}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once}from'node:events';
 import express from 'express';
@@ -13,10 +14,12 @@ import {applyPatches}from'../server-plugin/storage.mjs';
 test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩家账本，元数据只留引用',{timeout:60000},async t=>{
     const directory=await fs.mkdtemp(path.join(tmpRoot(),'infinite-fields-browser-'));
     t.after(()=>fs.rm(directory,{recursive:true,force:true}));
-    const app=express();app.use(express.json());const router=express.Router();await init(router,{baseRoot:directory});app.use('/api/plugins/infinite-fields',router);
+    // Exercise the runtime against one reproducible world without an ambient
+    // DEEPSEEK_API_KEY enabling unrelated NPC planner calls after execution.
+    const app=express();app.use(express.json());const router=express.Router();await init(router,{baseRoot:directory,newCampaignSeed:()=> 'runtime-browser',npcPlanningEnabled:false});app.use('/api/plugins/infinite-fields',router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
     const origin=`http://127.0.0.1:${server.address().port}`;
-    const response=await fetch(`${origin}/api/plugins/infinite-fields/create`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+    const response=await fetch(`${origin}/api/plugins/infinite-fields/create`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close'},body:'{}'});
     const created=await response.json();
     const browser=await chromium.launch({executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe',headless:true});t.after(()=>browser.close());
     const page=await browser.newPage(),pageErrors=[],consoleErrors=[];let failReconcile=false,generationRequests=0,preReleaseFixture=false;
@@ -32,7 +35,9 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     await page.route('**/api/plugins/infinite-fields/**',async route=>{
         const request=route.request(),url=new URL(request.url());
         if(failReconcile&&url.pathname.endsWith('/reconcile'))return route.fulfill({status:400,json:{ok:false,error:'故意损坏的回放夹具'}});
-        const actual=await fetch(origin+url.pathname,{method:request.method(),headers:{'Content-Type':'application/json'},body:request.postData()});
+        // As in playtest-runner: synchronous advances can delay idle-socket
+        // expiry, so the proxy must not reuse a connection being closed.
+        const actual=await fetch(origin+url.pathname,{method:request.method(),headers:{'Content-Type':'application/json','Connection':'close'},body:request.postData()});
         const json=await actual.json();
         if(preReleaseFixture&&url.pathname.endsWith('/read'))delete json.document.releaseVersion;
         await route.fulfill({status:actual.status,json});
@@ -130,7 +135,8 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
     assert.match(await page.locator('.fields-notices').innerText(),/欠林穗 6铜 · 待偿还/);
     await page.getByRole('button',{name:'世界账本',exact:true}).click();
     assert.match(await page.locator('#fields-dialog').innerText(),/欠款：林穗 · 未还 6铜 · 待偿还/);
-    const reportDirectory='docs/测试报告/最新';
+    // P3 / design section 9 and P3: relocate evidence only; retain all screenshot, ledger, layout and gameplay assertions.
+    const reportDirectory=artifactPath('测试报告','最新');
     await fs.mkdir(reportDirectory,{recursive:true});
     const consoleStart=consoleErrors.length;
     await page.setViewportSize({width:1440,height:900});
@@ -205,7 +211,8 @@ test('T41 浏览器：现有账本显示实际居民与分村贡献，重绘不�
     await run('world_settlement',{...args,operation:'civic_residence'},'residence');
     await run('world_settlement',{...args,operation:'civic_sponsor'},'sponsor');
     await run('world_settlement',{...args,operation:'civic_apply_resident'},'resident');
-    doc.state.inventory.item_oats={quantity:10};
+    // S5-01: declare the unrelated donation stock in the actual resource account, preserving its ten-unit contribution.
+    const staged=applyIntentSetup(engine,doc,{inventory:{item_oats:10}});assert.deepEqual(staged.setupUnmet,[]);doc=staged.document;
     const donation=await run('world_farm',{operation:'donate',settlement:'loc_hw',quantity:10},'grain');
     const other={category:'civic_contribution',subject:'npc_hw_luqing',settlement:'loc_bs_yupo',kind:'teaching',points:99};
     doc.state.records['civic_source:private-teacher']=other;

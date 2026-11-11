@@ -8321,6 +8321,8 @@
     },
     "coins": 200,
     "inventory": {
+      "item_silkworm_eggs": 4,
+      "item_mulberry_leaf": 16,
       "item_wool": 4,
       "item_tanned_leather": 2,
       "item_clay": 4,
@@ -9504,6 +9506,13 @@
         "trust": 45,
         "affection": 25,
         "note": "重视公开记录与私人邮件的边界"
+      },
+      {
+        "with": "npc_hw_chenbai",
+        "type": "公事报修",
+        "trust": 0,
+        "affection": 0,
+        "note": "设施当班发现失修可向现任河湾负责人报知；实际送达按消息渠道与路程，不披露私人邮件。"
       }
     ],
     "memorySeeds": [
@@ -11370,6 +11379,13 @@
         "trust": 40,
         "affection": 20,
         "note": "只提供获准公开的证据与时刻"
+      },
+      {
+        "with": "npc_hw_chenbai",
+        "type": "公事报修",
+        "trust": 0,
+        "affection": 0,
+        "note": "设施当班发现失修可向现任河湾负责人报知；实际送达按消息渠道与路程，不披露私人邮件。"
       }
     ],
     "memorySeeds": [
@@ -154608,7 +154624,59 @@
       "romanceable": false
     },
     "tier": "roster",
-    "schedule": {"default": [{"start":0,"end":420,"location":"bld_hw_mill","activity":"睡觉","services":[]},{"start":420,"end":480,"location":"loc_hw","activity":"去磨坊","services":[]},{"start":480,"end":720,"location":"bld_hw_mill","activity":"跟着师傅修理磨具","services":[]},{"start":720,"end":780,"location":"bld_hw_mill","activity":"吃午饭","services":[]},{"start":780,"end":1020,"location":"bld_hw_mill","activity":"继续做修理学徒","services":[]},{"start":1020,"end":1080,"location":"loc_hw","activity":"回家","services":[]},{"start":1080,"end":1440,"location":"loc_hw","activity":"休息","services":[]}]},
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 420,
+          "location": "bld_hw_mill",
+          "activity": "睡觉",
+          "services": []
+        },
+        {
+          "start": 420,
+          "end": 480,
+          "location": "loc_hw",
+          "activity": "去磨坊",
+          "services": []
+        },
+        {
+          "start": 480,
+          "end": 720,
+          "location": "bld_hw_mill",
+          "activity": "跟着师傅修理磨具",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 780,
+          "location": "bld_hw_mill",
+          "activity": "吃午饭",
+          "services": []
+        },
+        {
+          "start": 780,
+          "end": 1020,
+          "location": "bld_hw_mill",
+          "activity": "继续做修理学徒",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "loc_hw",
+          "activity": "回家",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "loc_hw",
+          "activity": "休息",
+          "services": []
+        }
+      ]
+    },
     "notes": "十五岁的修理学徒。",
     "description": "这名学徒还带着少年人的瘦长轮廓。听见哪里咯噔作响，他会先歪头寻声，接着蹲下去看接缝；一被人催促，原本想好的话又容易挤成半句。他想把修理的道理弄明白，偏又不大愿意承认自己没看懂。",
     "appearance": [
@@ -154658,7 +154726,59 @@
       "romanceable": false
     },
     "tier": "roster",
-    "schedule": {"default": [{"start":0,"end":420,"location":"bld_hw_herbs","activity":"睡觉","services":[]},{"start":420,"end":480,"location":"bld_hw_herbs","activity":"整理药材","services":[]},{"start":480,"end":720,"location":"bld_hw_herbs","activity":"辨认草药","services":[]},{"start":720,"end":780,"location":"bld_hw_herbs","activity":"吃午饭","services":[]},{"start":780,"end":1020,"location":"bld_hw_herbs","activity":"继续学药","services":[]},{"start":1020,"end":1080,"location":"bld_hw_herbs","activity":"收拾药柜","services":[]},{"start":1080,"end":1440,"location":"bld_hw_herbs","activity":"休息","services":[]}]},
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 420,
+          "location": "bld_hw_herbs",
+          "activity": "睡觉",
+          "services": []
+        },
+        {
+          "start": 420,
+          "end": 480,
+          "location": "bld_hw_herbs",
+          "activity": "整理药材",
+          "services": []
+        },
+        {
+          "start": 480,
+          "end": 720,
+          "location": "bld_hw_herbs",
+          "activity": "辨认草药",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 780,
+          "location": "bld_hw_herbs",
+          "activity": "吃午饭",
+          "services": []
+        },
+        {
+          "start": 780,
+          "end": 1020,
+          "location": "bld_hw_herbs",
+          "activity": "继续学药",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_hw_herbs",
+          "activity": "收拾药柜",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "bld_hw_herbs",
+          "activity": "休息",
+          "services": []
+        }
+      ]
+    },
     "notes": "十五岁的药铺学徒。父亲是监护人，叔叔不是监护人。",
     "description": "药铺学徒醒着时说话轻，辨东西却肯多看几遍。她会把相似的叶片翻到背面再比较，听人谈病情时也先等对方讲完。遇上拿不准的事，她宁愿把话停住；只是旁人一催，手指便不自觉地绞紧。",
     "appearance": [
@@ -154707,7 +154827,59 @@
       "romanceable": true
     },
     "tier": "roster",
-    "schedule": {"default": [{"start":0,"end":420,"location":"loc_bs","activity":"睡觉","services":[]},{"start":420,"end":480,"location":"loc_bs","activity":"起身用饭","services":[]},{"start":480,"end":720,"location":"loc_bs","activity":"处理白石镇日常","services":[]},{"start":720,"end":780,"location":"loc_bs","activity":"午饭","services":[]},{"start":780,"end":1020,"location":"loc_bs","activity":"料理家事","services":[]},{"start":1020,"end":1080,"location":"loc_bs","activity":"收拾住处","services":[]},{"start":1080,"end":1440,"location":"loc_bs","activity":"休息","services":[]}]},
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 420,
+          "location": "loc_bs",
+          "activity": "睡觉",
+          "services": []
+        },
+        {
+          "start": 420,
+          "end": 480,
+          "location": "loc_bs",
+          "activity": "起身用饭",
+          "services": []
+        },
+        {
+          "start": 480,
+          "end": 720,
+          "location": "loc_bs",
+          "activity": "处理白石镇日常",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 780,
+          "location": "loc_bs",
+          "activity": "午饭",
+          "services": []
+        },
+        {
+          "start": 780,
+          "end": 1020,
+          "location": "loc_bs",
+          "activity": "料理家事",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "loc_bs",
+          "activity": "收拾住处",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "loc_bs",
+          "activity": "休息",
+          "services": []
+        }
+      ]
+    },
     "notes": "药铺学徒的父亲，也是其监护人。",
     "description": "学徒的父亲问事有固定的次序：先问是谁亲眼看见，再问眼下究竟怎样。担心时他会把嘴唇抿得很紧，等别人停下才接话。有时同一处细节被他问过两遍，他自己也知道显得啰嗦，却怕漏掉要紧的一句。",
     "appearance": [
@@ -154756,7 +154928,59 @@
       "romanceable": true
     },
     "tier": "roster",
-    "schedule": {"default": [{"start":0,"end":420,"location":"bld_hw_herbs","activity":"睡觉","services":[]},{"start":420,"end":480,"location":"bld_hw_herbs","activity":"整理药材","services":[]},{"start":480,"end":720,"location":"bld_hw_herbs","activity":"帮忙采药铺杂务","services":[]},{"start":720,"end":780,"location":"bld_hw_herbs","activity":"午饭","services":[]},{"start":780,"end":1020,"location":"bld_hw_herbs","activity":"跑药铺杂务","services":[]},{"start":1020,"end":1080,"location":"bld_hw_herbs","activity":"收拾药材","services":[]},{"start":1080,"end":1440,"location":"bld_hw_herbs","activity":"休息","services":[]}]},
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 420,
+          "location": "bld_hw_herbs",
+          "activity": "睡觉",
+          "services": []
+        },
+        {
+          "start": 420,
+          "end": 480,
+          "location": "bld_hw_herbs",
+          "activity": "整理药材",
+          "services": []
+        },
+        {
+          "start": 480,
+          "end": 720,
+          "location": "bld_hw_herbs",
+          "activity": "帮忙采药铺杂务",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 780,
+          "location": "bld_hw_herbs",
+          "activity": "午饭",
+          "services": []
+        },
+        {
+          "start": 780,
+          "end": 1020,
+          "location": "bld_hw_herbs",
+          "activity": "跑药铺杂务",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "bld_hw_herbs",
+          "activity": "收拾药材",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "bld_hw_herbs",
+          "activity": "休息",
+          "services": []
+        }
+      ]
+    },
     "notes": "药铺学徒的叔叔，不是其监护人。",
     "description": "叔叔说话常比别人快半拍，听到孩子的事更容易抢着应声。真要他解释刚才那句话，他又会停下来摸摸下巴，把话重讲一遍。他愿意替家里人跑腿，但心急时总把“我来问问”说得像“这就办妥”。",
     "appearance": [
@@ -154806,7 +155030,59 @@
       "romanceable": true
     },
     "tier": "roster",
-    "schedule": {"default": [{"start":0,"end":300,"location":"loc_bs_nanshi","activity":"睡觉","services":[]},{"start":300,"end":360,"location":"loc_bs_nanshi","activity":"整装出门","services":[]},{"start":360,"end":720,"location":"loc_bs_nanshi","activity":"入山打猎","services":[]},{"start":720,"end":780,"location":"loc_bs_nanshi","activity":"午饭","services":[]},{"start":780,"end":1020,"location":"loc_bs_nanshi","activity":"整理猎获与器具","services":[]},{"start":1020,"end":1080,"location":"loc_bs_nanshi","activity":"回住处","services":[]},{"start":1080,"end":1440,"location":"loc_bs_nanshi","activity":"休息","services":[]}]},
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 300,
+          "location": "loc_bs_nanshi",
+          "activity": "睡觉",
+          "services": []
+        },
+        {
+          "start": 300,
+          "end": 360,
+          "location": "loc_bs_nanshi",
+          "activity": "整装出门",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 720,
+          "location": "loc_bs_nanshi",
+          "activity": "入山打猎",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 780,
+          "location": "loc_bs_nanshi",
+          "activity": "午饭",
+          "services": []
+        },
+        {
+          "start": 780,
+          "end": 1020,
+          "location": "loc_bs_nanshi",
+          "activity": "整理猎获与器具",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "loc_bs_nanshi",
+          "activity": "回住处",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "loc_bs_nanshi",
+          "activity": "休息",
+          "services": []
+        }
+      ]
+    },
     "notes": "猎户赵三。",
     "description": "赵三站着时不爱正面对人，常侧过一点身，让目光落在来客的手边。问到交易，他先听物件和条件，价钱没有说拢便不接下一句。他不是全无耐心，只是讨厌别人省去商量，直接替他定了主意。",
     "appearance": [
@@ -154856,7 +155132,59 @@
       "romanceable": true
     },
     "tier": "roster",
-    "schedule": {"default": [{"start":0,"end":360,"location":"loc_hw","activity":"睡觉","services":[]},{"start":360,"end":420,"location":"loc_hw","activity":"准备下田","services":[]},{"start":420,"end":720,"location":"loc_hw","activity":"田间劳作","services":[]},{"start":720,"end":780,"location":"loc_hw","activity":"午饭","services":[]},{"start":780,"end":1020,"location":"loc_hw","activity":"田间劳作与照料农具","services":[]},{"start":1020,"end":1080,"location":"loc_hw","activity":"回住处","services":[]},{"start":1080,"end":1440,"location":"loc_hw","activity":"休息","services":[]}]},
+    "schedule": {
+      "default": [
+        {
+          "start": 0,
+          "end": 360,
+          "location": "loc_hw",
+          "activity": "睡觉",
+          "services": []
+        },
+        {
+          "start": 360,
+          "end": 420,
+          "location": "loc_hw",
+          "activity": "准备下田",
+          "services": []
+        },
+        {
+          "start": 420,
+          "end": 720,
+          "location": "loc_hw",
+          "activity": "田间劳作",
+          "services": []
+        },
+        {
+          "start": 720,
+          "end": 780,
+          "location": "loc_hw",
+          "activity": "午饭",
+          "services": []
+        },
+        {
+          "start": 780,
+          "end": 1020,
+          "location": "loc_hw",
+          "activity": "田间劳作与照料农具",
+          "services": []
+        },
+        {
+          "start": 1020,
+          "end": 1080,
+          "location": "loc_hw",
+          "activity": "回住处",
+          "services": []
+        },
+        {
+          "start": 1080,
+          "end": 1440,
+          "location": "loc_hw",
+          "activity": "休息",
+          "services": []
+        }
+      ]
+    },
     "notes": "佃户老周。",
     "description": "老周谈地里的事时很少先看人，倒会低头看脚下的泥。讲到垄沟，他的鞋尖跟着比划出走向；轮到算账，又把话放得很慢。他能忍住许多急话，但一遇到自己认定说不清的数目，常闷着不答，让对面摸不准他的意思。",
     "appearance": [

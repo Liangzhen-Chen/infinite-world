@@ -14,6 +14,10 @@ const teacher='npc_hw_luqing',merchant='npc_hw_linsui';
 const slot=(start,end,location,activity,services=[])=>({start,end,location,activity,services});
 async function setup(){
     const world=await loadWorld();
+    // This fixture replaces the teacher's whole routine with a fixed service
+    // timetable. Source errands have their own real schedule tests in K16;
+    // the untouched formal-world month comparison below keeps them enabled.
+    delete world.rules.householdSubsistence;
     const engine=new WorldEngine(world),document=engine.initialFromLegacy(legacy,'npc-schedule-test');
     document.state.minute=540;
     const home=document.state.location,school='bld_hw_school';

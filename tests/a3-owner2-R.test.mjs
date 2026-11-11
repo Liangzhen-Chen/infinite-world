@@ -15,7 +15,11 @@ import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
 import {officeScene} from './helpers/office-actions.mjs';
 import {zoneOf} from '../server-plugin/place-layout.mjs';
 
-const world=await loadWorld(),engine=new WorldEngine(world);
+// This authority/private-document fixture fixes the on-duty recipient and
+// bystanders while its native actions advance time. Household errands belong
+// to the separate source/full-world tests; all duty/privacy assertions remain.
+const world=await loadWorld();delete world.rules.householdSubsistence;
+const engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const initial=engine.createCharacter(seed,{},'owner2-R');
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
@@ -27,6 +31,11 @@ function fixture(n){
  // 174 tests an incomplete proposal, so its old invented 30m measurement
  // supplies no premise; the routing and zero-write assertions stay intact.
  delete scene.positions;
+ // S5-02：题面“至少2份”设为8份：家庭口粮4、已承诺2，仍有2份可售。
+ if(n===122){
+  scene.accounts=scene.accounts.map(r=>({...r,balance:8}));
+  scene.history=scene.history.map(r=>r.verb==='opening_balance'?{...r,balance:8}:r);
+ }
  const setup=applyIntentSetup(engine,initial,scene);assert.deepEqual(setup.setupUnmet,[],`${n} premises`);
  let document=setup.document;
  for(const p of positions.filter(p=>p.distanceMeters<=3)){
@@ -49,8 +58,9 @@ test('R1: cash failure, missing spell and fusion prerequisites retain registered
  // 06 §6.10.3 / review 10-22 P0: a quantity is a structured proposal field (means.quantity), never parsed from
  // the intent's prose. The frozen 122 proposal names "两块面包" only in prose, so it buys the registered default of
  // one and is affordable (negative control below); the structured two-loaf order is the cash failure.
+ // S5-02: unmatched one-unit retail quote = trunc(base2 * scarcity.5)=1; signed two-unit total4 stays frozen.
  const prose=await run(122);assert.equal(prose.receipt.routed,'core:trade.buy');assert.equal(prose.receipt.status,'committed');
- assert.equal(prose.document.state.player.coins-prose.after.state.player.coins,2,'prose does not become a larger order');
+ assert.equal(prose.document.state.player.coins-prose.after.state.player.coins,1,'prose does not become a larger order');
  for(const [n,route,reason,adjust] of [[122,'core:trade.buy',/余额不足/,p=>{p.means={...p.means,quantity:2};}],[162,'core:cast',/尚未学会/],[166,'core:research',/没有掌握/]]){
   const r=await run(n,adjust);assert.equal(r.preview.receipt.status,'rejected');assert.equal(r.preview.receipt.routing.routed,route);
   assert.equal(r.receipt.routed,route);assert.match(r.receipt.reason,reason);assert.deepEqual(r.out.patches,[]);assert.deepEqual(r.receipt.applied,[]);
@@ -83,12 +93,16 @@ test('R1: capped practice binds the actual skill without a breakthrough, defense
  // Routing preserves the actual instance identity rather than renaming it. The executor used to refuse it
  // by id prefix (a historical restriction left to the executor's owner); an opponent is now the unowned
  // creature record of a catalogued monster, whatever its id (01 世界本体: ids are permanent labels, the kind
- // is the record's; 12 §本地 id: a prefix is only the initial judgement). An owned creature stays refused.
+ // is the record's; 12 §本地 id: a prefix is only the initial judgement). K7 (设计稿 §9 第 4 条): its owner may
+ // strike it. K6 依据（审查 C-a/C-b、K7 E 组由 K6 取代）：别人的牲畜也是同一下交锋，照样路由到交锋，后果是擅毁罪名。
  const accepted=await engine.previewAction(document,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance'});
  assert.equal(accepted.receipt.routed,'core:combat');assert.equal(accepted.receipt.status,'preview');
  const owned=structuredClone(document);owned.state.creatures.a3v2_169_boar.owner='player';
- const refused=await engine.previewAction(owned,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance-owned'});
- assert.equal(refused.receipt.routed,'core:combat');assert.equal(refused.receipt.status,'rejected');assert.match(refused.receipt.reason,/交锋对象/);
+ const own=await engine.previewAction(owned,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance-owned'});
+ assert.equal(own.receipt.routed,'core:combat');assert.equal(own.receipt.status,'preview');
+ const theirs=structuredClone(document);theirs.state.creatures.a3v2_169_boar.owner='npc_hw_linsui';
+ const struck=await engine.previewAction(theirs,{tool:'world_propose',args:row.proposal,eventId:'owner2-R-instance-theirs'});
+ assert.equal(struck.receipt.routed,'core:combat');assert.equal(struck.receipt.status,'preview');
 });
 
 test('R2: leaving and unavailable participants keep the original native safeguards',async()=>{
@@ -149,14 +163,20 @@ test('R2: speech subclass 137 has a native consumer without fabricated agreement
 
 test('R2: confession preserves the legal entry and refuses to promote a witness into an official',async()=>{
  const row=corpus.find(r=>r.id==='A3V2-180');
- const scene=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui','npc_hw_gucen','npc_hw_yanzhe']});assert.deepEqual(scene.setupUnmet,[]);
+ const scene=applyIntentSetup(engine,initial,{location:'bld_hw_qingdeng',minute:600,present:['npc_hw_linsui']});assert.deepEqual(scene.setupUnmet,[]);
+ // 作息即前置条件：600 分时 gucen 的作息在村口（loc_hw_gate），yanzhe 的在白石镇（loc_bs），都不在青灯；
+ // 摆在青灯的人会在下一次时钟节拍里被派出行（probe-gucen-travel），之后再摆位就报 travelling。
+ // 所以现场只放当时就在青灯的 linsui，守卫到村口报案，yanzhe 到白石镇衙署时才入场。
+ // yanzhe 按作息整天在 loc_bs，31 天内与 linsui 没有同地时刻（probe 实测），所以不作为青灯盗窃的在场目击者；
+ // 他在案件受理处 bld_bs_watch 入场（loc_bs 内的建筑）。“严辙为证人”在这里只是叙述：下面的断言验证的是
+ // “这个具体的人（语料 proposal 的 confession 接收人）没有受理职权”，没有任何断言依赖他在盗窃现场，语料不改。
  let document=scene.document,crime;
  for(let i=0;i<30;i++){
   const out=await engine.reduce(document,{tool:'world_act',eventId:`R2-actual-theft-${i}`,args:{action:'core:crime.steal',slots:{target:'npc_hw_linsui',item:'item_bread'}}});
   if(out.result.success){document=applyPatches(document,out.patches);crime=out.result.case;break;}
  }
  assert.ok(crime);
- document=applyIntentSetup(engine,document,{present:['npc_hw_gucen']}).document;
+ document=applyIntentSetup(engine,document,{location:'loc_hw_gate',present:['npc_hw_gucen']}).document;
  let out=await engine.reduce(document,{tool:'world_act',eventId:'R2-actual-report',args:{action:'core:law.confess',slots:{case:crime,authority:'npc_hw_gucen'}}});
  assert.equal(out.result.receipt.status,'committed');document=applyPatches(document,out.patches);
  document=officeScene(engine,document,{location:'bld_bs_watch',minute:document.state.minute,present:['npc_bs_035_1','npc_hw_yanzhe']});

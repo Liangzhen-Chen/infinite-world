@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {loadWorld} from '../tools/load-world.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {organization} from '../server-plugin/organizations.mjs';
@@ -30,21 +31,21 @@ const view=(f,id,value)=>f.doc.state.records[`standing:${id}:player`]={category:
 
 test('钓鱼按真实鱼种、时段和季节检定；渔获可售，种群扣减守恒，失败仍耗时磨刀',async()=>{
     const f=fixture(),h=f.engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water');f.doc.state.location=h.location;
-// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
-    f.put('item_fishing_bait',10);f.put('item_kitchen_knife');f.put('item_water',20);f.put('item_charcoal');const fish='monster_black_fin_perch',key=`ecology:${h.id}`;
+// D05 5.5 / approved S505C: real bamboo rod, finite earthworms and living item instances; keep all original catch, wear and conservation assertions.
+    f.put('item_earthworm_bait',10);f.put('item_bamboo_fishing_rod');f.put('item_water',20);f.put('item_charcoal');const fish='monster_black_fin_perch',key=`ecology:${h.id}`;
     const before=f.doc.state.records[key].populations[fish].count,minute=f.doc.state.minute;
     const out=await f.act('world_field',{operation:'wildlife_fish',species:fish},f.event(20,'fish'));
-    assert.equal(out.success,true);assert.equal(qty(f,'item_fish'),1);assert.equal(out.season,0);assert.equal(out.check.difficulty,10);
+    assert.equal(out.success,true);assert.equal(qty(f,'item_live_fish'),1);assert.equal(out.season,0);assert.equal(out.check.difficulty,10);
     const p=f.doc.state.records[key].populations[fish];assert.equal(p.count,before-1);assert.equal(p.initial+p.born+(p.immigrated??0)-(p.emigrated??0)-p.predated-p.starved-p.withdrawn,p.count);
     assert.equal(f.doc.state.skills.skill_life_2_core.proficiency,3);assert.equal(f.doc.state.minute,minute+30);
-    assert.equal(f.doc.state.inventory.item_kitchen_knife.durability,99);
+    assert.equal(f.doc.state.inventory.item_bamboo_fishing_rod.durability,99);
     f.doc.state.player.hp-=2;
-    const meal=await f.act('world_field',{operation:'wildlife_eat'},'eat_catch');assert.equal(meal.eaten,1);assert.equal(qty(f,'item_fish'),0);assert.equal(qty(f,'item_charcoal'),0);
+    const meal=await f.act('world_field',{operation:'wildlife_eat'},'eat_catch');assert.equal(meal.eaten,1);assert.equal(qty(f,'item_live_fish'),0);assert.equal(qty(f,'item_charcoal'),0);
     await f.act('world_field',{operation:'wildlife_fish',species:fish},f.event(20,'fish_for_sale'));
     // Initial supplies precede the first ledger opening; fund the later buyer
     // by a real transfer rather than overwriting an already booked purse.
     f.place(A);await f.act('world_propose',{intent:'赠送买鱼用的铜钱',effects:[{op:'transfer',resource:'coin',from:'player',to:A,qty:100}]},'fish-buyer-funds');
-    const total=coins(f);await f.act('world_trade',{seller:'player',buyer:A,item:'item_fish',quantity:1},'sell_fish');assert.equal(qty(f,'item_fish'),0);assert.equal(coins(f),total);
+    const total=coins(f);await f.act('world_trade',{seller:'player',buyer:A,item:'item_live_fish',quantity:1},'sell_fish');assert.equal(qty(f,'item_live_fish'),0);assert.equal(coins(f),total);
     const count=f.doc.state.records[key].populations[fish].count;
     const fail=await f.act('world_field',{operation:'wildlife_fish',species:fish},f.event(1,'fish_fail'));assert.equal(fail.success,false);assert.equal(f.doc.state.records[key].populations[fish].count,count);
     // Day-active fish cannot be summoned out of hours; all fish exhausted means no new catch.
@@ -53,11 +54,11 @@ test('钓鱼按真实鱼种、时段和季节检定；渔获可售，种群扣�
 });
 
 test('过度捕捞耗尽当地可用鱼群；无鱼时成功骰也不能凭空生成渔获',async()=>{
-// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
-    const f=fixture(),h=f.engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water'),species='monster_black_fin_perch';f.doc.state.location=h.location;f.put('item_fishing_bait',10);f.put('item_kitchen_knife');f.put('item_water',4);
+// D05 5.5 / approved S505C: real bamboo rod, finite earthworms and living item instances; keep all original catch, wear and conservation assertions.
+    const f=fixture(),h=f.engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water'),species='monster_black_fin_perch';f.doc.state.location=h.location;f.put('item_earthworm_bait',10);f.put('item_bamboo_fishing_rod');f.put('item_water',4);
     const p=f.doc.state.records[`ecology:${h.id}`].populations[species];p.count=1;p.withdrawn=p.initial-1;
     const first=await f.act('world_field',{operation:'wildlife_fish',species},f.event(20,'last_fish'));assert.equal(first.success,true);
-    const second=await f.act('world_field',{operation:'wildlife_fish',species},f.event(20,'empty_fish'));assert.equal(second.success,false);assert.equal(qty(f,'item_fish'),1);assert.equal(f.doc.state.records[`ecology:${h.id}`].populations[species].count,0);
+    const second=await f.act('world_field',{operation:'wildlife_fish',species},f.event(20,'empty_fish'));assert.equal(second.success,false);assert.equal(qty(f,'item_live_fish'),1);assert.equal(f.doc.state.records[`ecology:${h.id}`].populations[species].count,0);
 });
 
 test('开矿需要工具；储量与产出守恒，失败磨损，枯竭及缓慢恢复有边界',async()=>{
@@ -66,10 +67,18 @@ test('开矿需要工具；储量与产出守恒，失败磨损，枯竭及缓�
     const out=await f.act('world_field',{operation:'site_mine'},f.event(20,'mine'));assert.equal(out.success,true);assert.equal(qty(f,'item_iron_ore'),1);assert.equal(out.reserve,3);
     const key='mineral:loc_wild_lq_adit:item_iron_ore',p=f.doc.state.records[key];assert.equal(p.initial+p.recovered-p.extracted,p.reserve);assert.equal(f.doc.state.inventory.item_mining_pick.durability,98);assert.equal(f.doc.state.skills.skill_life_17_core.proficiency,3);
     await f.act('world_field',{operation:'site_mine'},f.event(1,'mine_fail'));assert.equal(f.doc.state.records[key].reserve,3);assert.equal(f.doc.state.inventory.item_mining_pick.durability,96);
-    f.doc.state.records[key]={...p,reserve:0,extracted:4};await assert.rejects(f.act('world_field',{operation:'site_mine'},'mine_dry'),/枯竭/);
-    // Advance the clock without harvesting: lazy recovery only runs at the next mine action.
-    await f.act('world_time',{minutes:DAY},'wait_mineral');await f.act('world_field',{operation:'site_mine'},f.event(20,'mine_return'));
-    const next=f.doc.state.records[key];assert.equal(next.recovered,1);assert.equal(next.reserve,0);assert.equal(next.initial+next.recovered-next.extracted,next.reserve);
+    // D05 5.5: depletion is a declared non-examined historical fact. A zero
+    // reserve cannot reproduce, even after time passes; rejection stays atomic.
+    Object.assign(f.doc,applyIntentSetup(f.engine,f.doc,{facts:[{path:['state','records',key],value:{...p,reserve:0,extracted:4,updatedAt:f.doc.state.minute}}]}).document);
+    await assert.rejects(f.act('world_field',{operation:'site_mine'},'mine_dry'),/枯竭/);
+    await f.act('world_time',{minutes:DAY},'wait_mineral');assert.equal(f.doc.state.records[key].reserve,0);
+    const dry=structuredClone(f.doc);await assert.rejects(f.act('world_field',{operation:'site_mine'},'still_dry'),/枯竭/);assert.deepEqual(f.doc,dry);
+    // Keep the original slow-recovery guarantee on a surviving stock: K=4,
+    // N=1,r=(1/4)/day; floor(4/(1+3*exp(-.25*5)))=2. One dig leaves 1.
+    Object.assign(f.doc,applyIntentSetup(f.engine,f.doc,{facts:[{path:['state','records',key],value:{...p,reserve:1,extracted:3,recovered:0,updatedAt:f.doc.state.minute}}]}).document);
+    await f.act('world_time',{minutes:5*DAY},'surviving_mineral');assert.equal(f.doc.state.records[key].reserve,2);
+    await f.act('world_field',{operation:'site_mine'},f.event(20,'mine_return'));
+    const next=f.doc.state.records[key];assert.equal(next.recovered,1);assert.equal(next.reserve,1);assert.equal(next.initial+next.recovered-next.extracted,next.reserve);
 });
 
 test('他人矿区盗采进入法律；在场矿主许可不制造罪名，许可有期限',async()=>{

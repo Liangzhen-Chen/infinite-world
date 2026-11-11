@@ -12,6 +12,8 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {planBossMigration} from '../server-plugin/boss-migration.mjs';
 import {planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {validateMonsterSocieties} from '../server-plugin/monster-society.mjs';
+import {homeResidents} from '../server-plugin/entity-view.mjs';
+import {saleableStock} from '../server-plugin/market.mjs';
 import {populationTemplate} from '../server-plugin/population.mjs';
 import {publicLore} from '../server-plugin/lore.mjs';
 import {buildBatch,ids,people,settlements,places,organizations} from '../world/design/monster-society-2.mjs';
@@ -23,11 +25,23 @@ const formal=await loadWorld();
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const byId=(w,key,id)=>w[key].find(r=>r.id===id);
 
+// K6（c60b2a62）：没有许可的进入照常发生，并记擅入；受害人是议事区负责人或该处成年住户。
+async function enterUnlicensed(f,d,place,eventId){
+ const out=await f.run(d,'world_move',{destination:place},eventId);
+ assert.equal(out.document.state.location,place,'未获许可也能走进去');
+ const rows=Object.values(out.document.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place);
+ assert.equal(rows.length,1,'恰好记一条擅入');assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');assert.equal(rows[0].sourceEvent,eventId);
+ const access=f.engine.byId.get(place).access;
+ if(access.mode==='council')assert.equal(rows[0].victim,access.authority);else assert.ok(homeResidents(f.engine,out.document.state,place).value.includes(rows[0].victim),rows[0].victim);
+ return out;
+}
+
 function fixture(world=formal,randomSeed='t159-content'){
  const engine=new WorldEngine(world);let document=engine.createCharacter(seed,{},randomSeed);
  document=applyPatches(document,planBossMigration(document,world.rules,world.bosses,world));
  Object.assign(document.state.player,{coins:1000,hp:500,maxHp:500});
- for(const item of ['item_salt','item_oats','item_ration','item_fish'])document.state.inventory[item]={quantity:40};
+ // W8C 负重：四样各 40 份共 40.8 公斤，已超出安全负重 30 公斤（10+2×10）；燕麦（0.5 公斤/份）减为 10 份、鱼（0.3 公斤/份）减为 20 份，合计 19.8 公斤，仍远多于各用例换出的数量。
+ for(const item of ['item_salt','item_oats','item_ration','item_fish'])document.state.inventory[item]={quantity:item==='item_oats'?10:item==='item_fish'?20:40};
  const run=async(doc,tool,args,eventId)=>{const out=await engine.reduce(doc,{tool,args,eventId});return{document:applyPatches(doc,out.patches),result:out.result};};
  return{world,engine,document,run};
 }
@@ -37,7 +51,12 @@ async function at(f,doc,location,minute){
  for(const n of f.world.npcs.filter(n=>n.society)){const slot=n.schedule.default.find(s=>s.start<=minute%DAY&&minute%DAY<s.end);Object.assign(d.state.npcs[n.id],{location:slot.location,activity:slot.activity});}
  const parent=f.world.locations.find(l=>l.id===location).parent;d.state.location=parent&&f.world.locations.some(l=>l.id===parent)?parent:location;
  if(d.state.location===location)return d;
- return(await f.run(d,'world_move',{destination:location},`go_${location}_${minute}`)).document;
+ const arrived=(await f.run(d,'world_move',{destination:location},`go_${location}_${minute}`)).document;
+ // Install this authored presence fixture after the player's real walk;
+ // keep its physical bodies and local settlement watermark in agreement.
+ for(const n of f.world.npcs.filter(n=>n.society)){const slot=n.schedule.default.find(s=>s.start<=arrived.state.minute%DAY&&arrived.state.minute%DAY<s.end);Object.assign(arrived.state.npcs[n.id],{location:slot.location,activity:slot.activity});delete arrived.state.npcs[n.id].scheduleTravel;}
+ arrived.state.scheduler??={};arrived.state.scheduler.localUntil=arrived.state.minute;delete arrived.state.scheduler.subsistence;
+ return arrived;
 }
 // Let real time pass to the next given minute of day, then walk there.
 async function goTo(f,d,location,minuteOfDay,id){
@@ -52,6 +71,7 @@ async function council(f,{grantAt,authority,meeting,minute,present,settlement}){
  const grant=await f.run(d,'world_promise',{operation:'grant_access',promisor:authority,location:meeting,content:'进议事处旁听议事',minutes:120},`grant_${meeting}`);
  d=(await f.run(grant.document,'world_move',{destination:meeting,authorization:grant.result.authorization},`enter_${meeting}`)).document;
  d.state.minute=minute;for(const id of present)Object.assign(d.state.npcs[id],{location:meeting,activity:'议事'});
+ d.state.scheduler??={};d.state.scheduler.localUntil=minute;delete d.state.scheduler.subsistence;
  const gov=async(doc,args,id)=>(await f.run(doc,'world_settlement',{settlement,...args},id));
  return{d,gov};
 }
@@ -122,18 +142,20 @@ test('混居物种配额与资源来源：按物种生成到各自住区，族�
  }
 });
 
-test('榆坡附近进入榆根里：白天与节苍换林产，夜里与须晓换铲柄；通行约覆盖公共处，私宅与议根洞要许可',async()=>{
+test('榆坡附近进入榆根里：白天与节苍换林产，夜里与须晓换铲柄；通行约覆盖公共处，私宅与议根洞进入记擅入',async()=>{
  const f=fixture();let d=await at(f,f.document,yg.gate,600);
  assert.match(f.engine.scene(d),/节苍/);
+ // 节榆木精不进食（物种代谢系数饱食为 0），节苍一户的榛仁没有饱食口粮预留：成交前可售量由引擎规则算出，须够卖 2 个。
  const before=qty(d,P.jiecang,'item_hazelnut');
+ assert.ok(saleableStock(f.engine.primitiveDraft(d),f.engine,P.jiecang,'item_hazelnut').available>=2);
  d=(await f.run(d,'world_trade',{seller:P.jiecang,item:'item_hazelnut',quantity:2},'buy_nut')).document;
  assert.equal(qty(d,'player','item_hazelnut'),2);assert.equal(qty(d,P.jiecang,'item_hazelnut'),before-2);
  const signed=await f.run(d,'world_lair',{operation:'negotiate',lair:'lair_ms_yugen',pact:'nonaggression',term:'passage',days:10},'yg_pass');
  assert.equal(signed.result.accepted,true,JSON.stringify(signed.result));
  for(const id of signed.document.state.records[signed.result.agreement].locations)assert.ok(!['private','council'].includes(byId(formal,'locations',id).access?.mode),id);
  for(const place of [yg.nursery,yg.shed,yg.ditch,yg.crown])d=(await f.run(d,'world_move',{destination:place},`walk_${place}`)).document;
- await assert.rejects(f.run(d,'world_move',{destination:yg.home1},'home'),/许可/);
- await assert.rejects(f.run(d,'world_move',{destination:yg.council},'council'),/许可/);
+ await enterUnlicensed(f,d,yg.home1,'home');
+ await enterUnlicensed(f,d,yg.council,'council');
  let n=await at(f,f.document,yg.shed,22*60);
  n=(await f.run(n,'world_trade',{seller:P.xuxiao,item:'item_tool_handle',quantity:1},'buy_handle')).document;
  assert.equal(qty(n,'player','item_tool_handle'),1);
@@ -150,7 +172,7 @@ test('砾泉矿道支路进入裂炉营：夜里与锉针换铁钉，白天可�
  const pass=await f.run(day,'world_lair',{operation:'negotiate',lair:'lair_ms_lielu',pact:'nonaggression',term:'passage',days:10},'ll_pass');
  assert.equal(pass.result.accepted,true,JSON.stringify(pass.result));day=pass.document;
  for(const place of [ll.adit,ll.yard,ll.tents,ll.huts])day=(await f.run(day,'world_move',{destination:place},`walk_${place}`)).document;
- await assert.rejects(f.run(day,'world_move',{destination:ll.council},'council'),/许可/);
+ await enterUnlicensed(f,day,ll.council,'council');
 });
 
 test('立约读取内部立场：守贡派营头不立贸易约；朝贡约记下工匠派反对；议事通过改贡后贸易可立、朝贡不再立',async()=>{
@@ -202,14 +224,29 @@ test('议题经势力时钟推进：裂炉营通过改贡则粮按工落到工�
   d=(await c.gov(d,{operation:'governance_close',proposal:key,authority:P.yayue},'close')).document;
   assert.equal(d.state.records[key].status,passed?'通过':'否决');
   const before={cuozhen:qty(d,P.cuozhen,'item_ration'),yayue:qty(d,P.yayue,'item_ration')};
+  // K15: due faction effects distribute before daily meals at the same
+  // midnight. Observe actual itemDelta transfers, not a final balance which
+  // already includes consumption; keep the original four-day advance.
+  const changes=[],itemDelta=f.engine.itemDelta;
+  f.engine.itemDelta=function(d,id,item,amount,books,...rest){
+   const result=itemDelta.call(this,d,id,item,amount,books,...rest);
+   if(item==='item_ration'&&[P.cuozhen,P.yayue].includes(id))changes.push({id,amount,writer:books.writer,quantity:this.quantity(d,id,item)});
+   return result;
+  };
   d=(await f.run(d,'world_time',{minutes:4*DAY},'wait')).document;
   const clock=d.state.records['faction-clock:clock_ms_lielu'],assets=d.state.records['faction-assets:faction_ms_lielu'],issue=d.state.records[`society_issue:${LL}:tribute`];
   assert.equal(clock.phase,3);assert.equal(issue.status,'照议定落实一期');assert.equal(issue.decidedBy,key);
-  return{d,before,assets,issue};
+  return{d,before,changes,assets,issue};
  };
  const yes=await outcome(true),no=await outcome(false);
  assert.equal(yes.issue.outcome,'改贡为按件贸易');assert.equal(no.issue.outcome,'照旧纳贡换通行');
- assert.equal(qty(yes.d,P.cuozhen,'item_ration'),yes.before.cuozhen+6);assert.equal(qty(no.d,P.yayue,'item_ration'),no.before.yayue+6);
+ assert.deepEqual(yes.changes.filter(r=>r.writer==='monster-society'),[{id:P.cuozhen,amount:6,writer:'monster-society',quantity:yes.before.cuozhen+6}]);
+ assert.deepEqual(no.changes.filter(r=>r.writer==='monster-society'),[{id:P.yayue,amount:6,writer:'monster-society',quantity:no.before.yayue+6}]);
+ // Five mouths need 5*60=300 satiety; six rations give 6*30=180.
+ // All six belong to the recipient after distribution and are eaten at the
+ // same midnight. The public-account checks below still prove its full debit.
+ for(const [out,id]of [[yes,P.cuozhen],[no,P.yayue]])assert.deepEqual(out.changes.filter(r=>r.writer==='npc-life'),[{id,amount:-6,writer:'npc-life',quantity:0}]);
+ assert.equal(qty(yes.d,P.cuozhen,'item_ration'),0);assert.equal(qty(no.d,P.yayue,'item_ration'),0);
  assert.equal(yes.assets.items.item_iron,6);assert.equal(no.assets.items.item_iron,10);
  assert.equal(yes.assets.items.item_ration,24-2-6);assert.equal(yes.assets.items.item_stone,40-4-6);
  assert.equal(yes.d.state.records[`stance:loc_bs_liquan:${LL}`]?.stance,'中立');assert.equal(no.d.state.records[`stance:loc_bs_liquan:${LL}`],undefined);
@@ -224,14 +261,24 @@ test('两地方案后果不同：榆根里同议则林产分给排水头与修�
   if(passed){d=(await persuade(c.gov,d,key,P.jieyin,'approve','沟是他们挖的')).document;d=(await persuade(c.gov,d,key,P.jiecang,'approve','刻上同议')).document;}
   d=(await c.gov(d,{operation:'governance_close',proposal:key,authority:P.jiecang},'close')).document;
   if(tweak)d=await tweak(f,d);
-  const before={gonghou:qty(d,P.gonghou,'item_hazelnut'),xuxiao:qty(d,P.xuxiao,'item_walnut'),jiecang:qty(d,P.jiecang,'item_hazelnut')};
+  // 与上一例同理（K15）：发放（faction_clock，1400）排在每日结算（daily，500）之后，吃饭发生在其后的午夜，等待后的库存可能已含消耗；改观察实际的 itemDelta 发放。
+  const changes=[],itemDelta=f.engine.itemDelta;
+  f.engine.itemDelta=function(d,id,item,amount,books,...rest){
+   const result=itemDelta.call(this,d,id,item,amount,books,...rest);
+   if(books.writer==='monster-society')changes.push({id,item,amount});
+   return result;
+  };
   d=(await f.run(d,'world_time',{minutes:4*DAY},'wait')).document;
-  return{f,d,before,issue:d.state.records[`society_issue:${YG}:forest_share`],assets:d.state.records['faction-assets:faction_ms_yugen'],clock:d.state.records['faction-clock:clock_ms_yugen']};
+  return{f,d,changes,issue:d.state.records[`society_issue:${YG}:forest_share`],assets:d.state.records['faction-assets:faction_ms_yugen'],clock:d.state.records['faction-clock:clock_ms_yugen']};
  };
  const yes=await run(true),no=await run(false);
  assert.equal(yes.issue.outcome,'树穴地窟同议分份');assert.equal(no.issue.outcome,'仍由木精按树分份');
- assert.equal(qty(yes.d,P.gonghou,'item_hazelnut'),yes.before.gonghou+6);assert.equal(qty(yes.d,P.xuxiao,'item_walnut'),yes.before.xuxiao+4);
- assert.equal(qty(no.d,P.jiecang,'item_hazelnut'),no.before.jiecang+6);
+ // 分份确实发放：议题记录写明明细，实际发放的入户物品变动与之逐项一致（数量精确）。
+ const granted=(r,rows)=>{
+  assert.deepEqual(r.issue.shares.map(x=>({id:x.to,item:x.item,amount:x.quantity})),rows);
+  assert.deepEqual(r.changes.filter(c=>c.amount>0),rows);
+ };
+ granted(yes,[{id:P.gonghou,item:'item_hazelnut',amount:6},{id:P.xuxiao,item:'item_walnut',amount:4}]);granted(no,[{id:P.jiecang,item:'item_hazelnut',amount:6}]);
  assert.equal(yes.assets.items.item_hazelnut,30-4-6);assert.equal(no.assets.items.item_hazelnut,30-4-6-6);
  assert.equal(yes.assets.items.item_wood,12-4-2);assert.equal(no.assets.items.item_wood,12-2);
  // 公账榛仁不足：决议阶段卡住，玩家在根门向林主供资后次日推进。

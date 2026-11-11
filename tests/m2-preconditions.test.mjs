@@ -6,6 +6,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {modelToolCall} from '../extension/tools.mjs';
 import {evaluateAssertions} from '../tools/playtest-assertions.mjs';
+import {homeResidents} from '../server-plugin/entity-view.mjs';
 
 const world=await loadWorld();
 const legacy=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
@@ -68,10 +69,17 @@ test('私宅许可路线可达；从观察结束起完整等60分钟，旧许可
         assert.equal(evaluateAssertions(s.script.turns[5].assertions.filter(r=>r.kind==='elapsed'),{before:waited.before,after:wrongAfter,calls:[],reply:''})[0].pass,false);
     }
     await s.turn(6,async()=>[await s.call('world_move',{destination:'河湾村'})]);
+    // K6 (ce314d2f, legality is a consequence): an expired permit no longer licenses the entry, but walking in
+    // is physically open; it happens and is trespass against an adult resident, under the move's own event.
+    // The script's "stays outside" premise (turn 7 location) follows that design; money and goods stay untouched.
+    const home=s.engine.world.locations.find(l=>l.name==='筛种院').id;
+    s.script.turns[7].assertions=s.script.turns[7].assertions.map(r=>r.kind==='equals'&&r.path==='state.location'?{...r,value:home}:r);
     await s.turn(7,async()=>{
-        const before=structuredClone(s.document);
-        await assert.rejects(s.call('world_move',{destination:'筛种院',authorization}),/有效许可/);
-        assert.deepEqual(s.document,before);return[];
+        const moved=await s.call('world_move',{destination:'筛种院',authorization});
+        assert.equal(s.document.state.location,home);
+        const rows=Object.values(s.document.state.records).filter(r=>r.category==='offense'&&r.subject?.id===home);
+        assert.equal(rows.length,1);assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');assert.ok(homeResidents(s.engine,s.document.state,home).value.includes(rows[0].victim),rows[0].victim);
+        assert.ok(rows[0].sourceEvent.startsWith('npc_home_visit_offline_'));return[moved];
     });
     await s.turn(8);
 });
@@ -120,7 +128,8 @@ test('燕麦从在场粮仓柜台购买，准确入袋及两端钱粮对账后�
     await assert.rejects(s.call('world_farm',{operation:'buy',settlement:'河湾村',quantity:10,item:'面包'}),/不能替换指定物品/);
     assert.deepEqual(s.document,exactBefore);
     const bought=await s.turn(5,async()=>[await s.call('world_farm',{operation:'buy',settlement:'loc_hw',quantity:10,item:'带壳燕麦'})]);
-    assert.equal(bought.after.state.player.coins,150);
+    // 手算：区域燕麦基准10文×稀缺下限0.5=5文/份；10份共50文；此前 180 文（W8-A 前按目录价 3 文/份付 30 文后余 150），现余 130 文。
+    assert.equal(bought.after.state.player.coins,130);
     await s.turn(6,async()=>[await s.call('world_move',{destination:'青灯酒馆'})],5);
     const beforeDelivery=s.document;
     await s.turn(7,async()=>[await s.call('world_quest',{operation:'complete',quest})],5);
@@ -128,7 +137,8 @@ test('燕麦从在场粮仓柜台购买，准确入袋及两端钱粮对账后�
     await s.turn(8,undefined,5);
     await s.turn(9,undefined,5);
     await s.turn(10);
-    assert.equal(s.document.state.player.coins,170);
+    // 130 文 + 委托酬金 20 = 150（W8-A 前为 150+20=170）。
+    assert.equal(s.document.state.player.coins,150);
 });
 
 test('已观察到的濒死样本不能硬走；实际死亡、登记点复活后仍可自认并审理',async t=>{

@@ -1,3 +1,4 @@
+import {claimUnit} from './claim-unit.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {settlementLocation} from './obligation-presence.mjs';
 import {parseAccount} from './ledger.mjs';
@@ -12,12 +13,27 @@ import {npcLifeNews}from'./npc-life.mjs';
 import {memoryGuardUntil,mindSleepUntil}from'./magic-mind-space.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personSimulation}from'./entity-view.mjs';
+import {registerAdvanceHook}from'./advance-hooks.mjs';
 
 export function memoryBlurMinute(d,npcId,memory,ttl,now){
  return Math.max(memory.minute+ttl*1440,memoryGuardUntil(d,npcId,memory.id,now));
 }
 
 const full=(engine,id)=>personSimulation(engine,{},id).value;
+// Deadline knowledge belongs to the deadline, before later conversations.
+// Waiting until the enclosing player command ends makes one long wait hear
+// different news than daily waits. Keep the legacy notice ID/content/privacy
+// so the outer action subscriber can recognize and reuse the same fact.
+function recordDebtOverdue(d,engine,id,debt){
+ const state=d.get('state'),memoryId=`debt_${id}:逾期`,participants=[...new Set([debt.debtor,debt.creditor].filter(Boolean))];
+ const name=id=>id==='player'?state.player.name:engine.byId.get(id)?.name??id;
+ for(const npcId of participants){
+  const npc=state.npcs?.[npcId];if(!npc||!full(engine,npcId)||npc.memoryStream?.some(m=>m.id===memoryId))continue;
+  d.set(['state','npcs',npcId,'memoryStream'],[...npc.memoryStream??[],{id:memoryId,sourceEvent:id,kind:'debt',minute:debt.overdueAt,location:null,participants,
+   content:`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}${claimUnit(debt)}现为${debt.status}`,sourceType:'约定核对',salience:4,emotion:'失望'}]);
+ }
+}
+registerAdvanceHook('recordNpcDebtOverdue',recordDebtOverdue);
 const awake=(state,id,npc)=>npc&&!isPhysicallyDead(null,state,id)&&!['濒死','昏迷','患病'].includes(npc.status)&&!/(睡眠|熟睡|睡觉)/.test(npc.activity??'');
 const present=(state,location=state.location)=>Object.entries(state.npcs).filter(([id,npc])=>npc.location===location&&awake(state,id,npc)).map(([id])=>id);
 function witnessedThroughout(engine,before,after,id){
@@ -93,7 +109,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
             // actual clerk also knows what they handled, but bystanders do not.
             if(seller&&![claim.debtor,claim.creditor].includes(seller))add(paid?'trade':`obligation_${claim.id}`,
                 paid?`${name(buyer)}经${name(seller)}实际偿还${paid.transferred}铜`:`${name(seller)}经手${name(claim.debtor)}的借约登记`,[buyer,seller],{observers:[],private:true,salience:3});
-        }else add('trade',`${name(buyer)}向${name(seller)}${args.payment==='repay'?'偿还':detail.payment==='credit'?'赊欠':'支付'}${detail.cost}铜${args.payment==='repay'?'欠款':`，办理${what}`}`, [buyer,seller],{salience:detail.debt?3:2,entities:detail.item?[detail.item]:[]});
+        }else add('trade',`${name(buyer)}向${name(seller)}${args.payment==='repay'?'偿还':detail.payment==='credit'?'赊欠':'支付'}${detail.paidWith?`${detail.paidWith.amount}${detail.paidWith.name??'铜'}`:detail.resourceName?`${detail.amount??detail.cost}${detail.resourceName}`:`${detail.cost}铜`}${args.payment==='repay'?'欠款':`，办理${what}`}`, [buyer,seller],{salience:detail.debt?3:2,entities:detail.item?[detail.item]:[]});
     }else if(verb==='learn'){
         const teacher=detail.teacher??(detail.source?.type==='teacher'?detail.source.id:null);
         add('learn',`${name('player')}${teacher?`向${name(teacher)}学习`:'研读'}${name(detail.entity)}，花费${detail.minutes}分钟、${detail.cost}铜，${detail.success?'学会了':'尚未学会'}`,['player',teacher],{salience:3});
@@ -101,7 +117,9 @@ export function recordNpcMemories(d,engine,before,events,...rest){
         const recipe=engine.byId.get(detail.recipe);
         if(recipe)add('craft',`${name('player')}尝试${recipe.name}，${detail.success?`制成${name(recipe.output.item)}${recipe.output.quantity}件`:'没有得到成品'}，花费${detail.spent.minutes}分钟`,['player'],{salience:3});
     }else if(verb==='repair'){
-        add('repair',`${name('player')}修整${name(detail.item)}，${detail.success?'完成':'未成功'}，耐久从${detail.before.durability}变为${detail.after.durability}`,['player'],{salience:3});
+        // A full workbench queues the job (W8-D): that is a waiting ticket, not a failed repair.
+        if(detail.queued)add('repair',`${name('player')}请匠人修整${name(detail.item)}，活计已满，排在第${detail.position}位`,['player'],{salience:2});
+        else add('repair',`${name('player')}修整${name(detail.item)}，${detail.success?'完成':'未成功'}，耐久从${detail.before.durability}变为${detail.after.durability}`,['player'],{salience:3});
     }else if(verb==='cast'||verb==='help'&&event.tags.includes('magic')){
         const spell=engine.byId.get(detail.spell??resolve(args.spell));
         if(spell)add('cast',`${name('player')}施放${spell.name}，${detail.success?'施法成功':'施法失败'}`,['player',resolve(args.target)],{salience:3});
@@ -139,7 +157,7 @@ export function recordNpcMemories(d,engine,before,events,...rest){
     // overdue; the memory is keyed by the record so event splits agree.
     for(const [id,debt]of Object.entries(after.records??{}))if(debt.category==='debt'&&(before.records?.[id]?.status??(debt.status==='逾期'?'待偿还':debt.status))!==debt.status){
         if(debt.obligation&&debt.status==='已还清'&&after.obligations?.[debt.obligation]?.events?.some(e=>e.transferred>0))continue;
-        add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}铜现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静',...(debt.status==='逾期'?{memoryId:`debt_${id}:逾期`,sourceEvent:id}:{})});
+        add(`debt_${id}`,`${name(debt.debtor)}对${name(debt.creditor)}的欠款${debt.amount}${claimUnit(debt)}现为${debt.status}`,[debt.debtor,debt.creditor],{observers:[],partyNotice:true,location:null,minute:debt.status==='逾期'?debt.overdueAt:debt.paidAt??after.minute,salience:4,emotion:debt.status==='逾期'?'失望':'平静',...(debt.status==='逾期'?{memoryId:`debt_${id}:逾期`,sourceEvent:id}:{})});
     }
     // The primary social fact of a witnessed, weighty event carries its rumor id.
     const rumorId=eventRumorId(engine,after,event);

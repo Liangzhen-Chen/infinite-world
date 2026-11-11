@@ -2,25 +2,36 @@ import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {magicMessagePermission}from'./magic-message.mjs';
 import {facilityView}from'./facility-state.mjs';
+import {fixtureStations,fixtureDefinition}from'./workstation-services.mjs';
 import {spellConsentPermission}from'./magic-consent.mjs';
 import {environmentFeatures}from'./environment.mjs';
 import {sitePermission}from'./sites.mjs';
 import {personAge,personSimulation,personConstraint,homeResidents}from'./entity-view.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 declareHoldingWriter('location-access',{kinds:['permit']});
-// Existing authorization records govern entry; the route alone is not consent.
-export function assertLocationAccess(d,engine,destination,{authorization,actor='player',companions=[],arrivalMinute=d.get('state','minute')}={}){
+// Existing authorization records govern lawful entry; the route alone is not
+// consent. K6: a closed door is physical, a missing consent is not; the entry
+// still happens and unlicensedEntry names whose home was entered (trespass).
+export function unlicensedEntry(d,engine,destination,{authorization,actor='player',companions=[],arrivalMinute=d.get('state','minute')}={}){
  if(facilityView(engine,d.get('state'),destination)?.factor===0)throw preconditionFailure('建筑已停用，不能居住或进入服务区');
  const place=engine.byId.get(destination),access=place?.access;
- if(!['private','council'].includes(access?.mode)||access.requiresConsent!==true)return;
+ if(!['private','council'].includes(access?.mode)||access.requiresConsent!==true)return null;
  const permissions=authorization?[d.get('state','records',authorization)]:actor==='player'?[]:Object.values(d.get('state','records')??{});
  const residents=new Set(access.mode==='council'?[access.authority]:homeResidents(engine,d.get('state'),destination).value);
- if(actor!=='player'&&residents.has(actor)&&companions.every(id=>residents.has(id)))return;
+ if(actor!=='player'&&residents.has(actor)&&companions.every(id=>residents.has(id)))return null;
  const allowed=permissions.some(permission=>permission?.category==='authorization'&&permission.subject===destination&&(permission.action===(access.mode==='council'?'enter_council':'enter_home')||place.site&&permission.action==='site_use'&&permission.operations?.includes('enter'))
   &&permission.grantee===actor&&residents.has(permission.grantor)&&(personAge(engine,d.get('state'),permission.grantor,arrivalMinute).value??0)>=18
   &&permission.revoked!==true&&Number.isSafeInteger(permission.expires)&&permission.expires>arrivalMinute
   &&companions.every(id=>residents.has(id)||permission.guests?.includes(id)));
- if(!allowed)throw preconditionFailure(`进入${place.name}需要成年住户给本人及同行者的有效许可；许可须覆盖抵达时刻，未进入或扣除路费`);
+ if(allowed)return null;
+ const adults=[...residents].filter(id=>(personAge(engine,d.get('state'),id,arrivalMinute).value??18)>=18);
+ return {place:destination,name:place.name,victim:adults[0]??[...residents][0]??null,residents:[...residents]};
+}
+// A traveller who will not trespass (NPC routing, carriers) still treats the
+// missing consent as a reason to stay out: that is their own choice.
+export function assertLocationAccess(d,engine,destination,options={}){
+ const entry=unlicensedEntry(d,engine,destination,options);
+ if(entry)throw preconditionFailure(`进入${entry.name}需要成年住户给本人及同行者的有效许可；许可须覆盖抵达时刻，未进入或扣除路费`);
 }
 
 // Register the host's NPC decision using the existing authorization ledger.
@@ -52,12 +63,16 @@ export function homePermission(d,engine,args,eventId){
  if(args.guests!==undefined&&(!Array.isArray(args.guests)||args.guests.length>8))throw preconditionFailure('获准同行者须为最多8人的名单');
  const guests=(args.guests??[]).map(name=>engine.resolve(name,'npc'));
  if(new Set(guests).size!==guests.length)throw preconditionFailure('获准同行者重复');
+ // K5: lending the home's equipment is part of the grant only when the
+ // resident names it (fixture kinds that are really in this place).
+ const fixtures=args.fixtures??[],present=fixtureStations(place).map(s=>s.fixture);
+ if(!Array.isArray(fixtures)||fixtures.length>8||new Set(fixtures).size!==fixtures.length||fixtures.some(f=>!present.includes(f)))throw preconditionFailure(`借用的设备须是这处私宅实有的设备${present.length?`（${present.map(f=>fixtureDefinition(f).label).join('、')}）`:'，这里没有可借的设备'}`);
  for(const id of guests){const guest=d.get('state','npcs',id);
   if(!guest||guest.location!==actor.location||!d.get('state','player','companions')?.includes(id))throw preconditionFailure('获准同行者必须是当前实际在场的同行人');
  }
  const authorization=`permission_${eventId}`;
  if(d.get('state','records',authorization))throw preconditionFailure('私宅许可编号已经存在');
- const permission={category:'authorization',action:council?'enter_council':'enter_home',subject:location,grantor,grantee:'player',guests,createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
+ const permission={category:'authorization',action:council?'enter_council':'enter_home',subject:location,grantor,grantee:'player',guests,...(fixtures.length?{fixtures}:{}),createdAt:now,expires:now+minutes,revoked:false,content:args.content.trim(),sourceEvent:eventId};
  holdingSet(d,null,['state','records',authorization],permission,'location-access');d.say(`${base.name}同意你${guests.length?'和已登记同行者':''}进入${place.name}，许可至${engine.formatCalendar(permission.expires)}`);
  return{authorization,permission};
 }

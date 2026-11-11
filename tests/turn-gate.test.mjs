@@ -110,10 +110,13 @@ test('营业事实使用作息同源状态，暂停至 12:00 不变成保证开�
 });
 
 test('现行交易报价来自真实报价记录；伪造来源和历史台词不能补造新报价',async t=>{
- const f=await fixture(t),begun=await f.begin('我买一份面包');
+ // 家户储备风格由种子决定；价格的严格手算用固定种子，避免随机UUID改变开市存量。
+ const f=await fixture(t,{seed:'turn-gate-price'}),begun=await f.begin('我买一份面包');
  await f.act('world_trade',{seller:'林穗',item:'面包',quantity:1});await f.review(begun,'交易已经完成。');
  const followup=await f.begin('现在面包的报价是多少？','followup'),reply=await f.review(followup,'她说从此只收一铜。');
- assert.equal(reply.status,'pending');const price=reply.facts.find(f=>f.kind==='price');assert.ok(price);assert.equal(price.value.listPrice,2);assert.match(reply.safeText,/现行报价.*每份2铜/);assert.doesNotMatch(reply.safeText,/从此只收一铜/);
+ // E6后公开开市量56：基准2×供需下限.5×(1+.2/56)×成交后立场.99895；品质/修正1。
+ // 首笔后公开供给55，加市场净卖出1重建开市56，私人行囊不计入供给。
+ assert.equal(reply.status,'pending');const price=reply.facts.find(f=>f.kind==='price');assert.ok(price);assert.equal(price.value.listPrice,1.0025176785714285);assert.match(reply.safeText,/现行报价.*每份1\.0025176785714285铜/);assert.doesNotMatch(reply.safeText,/从此只收一铜/);
  const doc=structuredClone(f.view.document),q={id:'fake',category:'agreed_quote',actor:'npc_hw_linsui',to:'player',resource:'item_bread',quantity:2,totalCoins:1,direction:'sell_to_player',at:doc.state.minute,expires:doc.state.minute+60,sourceEvent:'world_event:invented'};
  doc.state.records['agreed_quote:fake']=q;doc.state.records['agreed_quote:fake:source']={category:'agreed_quote_receipt',digest:digest(q)};
  const engine=new WorldEngine(await loadWorld()).scoped(doc);assert.ok(!reviewCurrentFacts(engine,doc).some(f=>f.id==='quote:fake'));

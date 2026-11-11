@@ -62,14 +62,19 @@ test('A3-fix3 displacement: a structured teleport move is refused (E-OPEN-MOVE) 
 });
 
 // ---- 3. combat opponent identity is the creature record, not an id prefix ----
-test('A3-fix3 combat: an unowned creature record of a catalogued monster is an opponent whatever its id; an owned one is not',async()=>{
+test('A3-fix3 combat: a creature record of a catalogued monster is an opponent whatever its id; its owner may strike it, and a beast owned by someone else is struck the same way (K6: the offense is the consequence)',async()=>{
  const row=rowFor(169),{document,setupUnmet}=applyIntentSetup(engine,initial,row.setup);assert.deepEqual(setupUnmet,[]);
  const id=row.proposal.means.opponent;assert.ok(!/^(monster_|boss_)/.test(id));
  const preview=receiptOf(await engine.previewAction(document,{tool:'world_propose',eventId:'fix3-combat',args:row.proposal}));
  assert.equal(preview.status,'preview');assert.equal(preview.routed,'core:combat');
+ // K7 (设计稿 §9 第 3 条): the owner's own beast is a lawful target of its owner.
  const owned=structuredClone(document);owned.state.creatures[id].owner='player';
- const refused=receiptOf(await engine.previewAction(owned,{tool:'world_propose',eventId:'fix3-combat-owned',args:row.proposal}));
- assert.equal(refused.status,'rejected');assert.match(refused.reason,/不是交锋对象/);
+ const own=receiptOf(await engine.previewAction(owned,{tool:'world_propose',eventId:'fix3-combat-owned',args:row.proposal}));
+ assert.equal(own.status,'preview');assert.equal(own.routed,'core:combat');
+ const theirs=structuredClone(document);theirs.state.creatures[id].owner='npc_hw_linsui';
+ // K6 依据（审查 C-a/C-b，K7 E 组由 K6 取代）：别人的牲畜挨的是同一下，照样路由到交锋；擅毁在提交时由规范栈命名（见 old-npc 测试）。
+ const struck=receiptOf(await engine.previewAction(theirs,{tool:'world_propose',eventId:'fix3-combat-theirs',args:row.proposal}));
+ assert.equal(struck.status,'preview');assert.equal(struck.routed,'core:combat');
 });
 
 // ---- 5. internal invariants are faults, business preconditions are refusals ----
@@ -77,12 +82,13 @@ test('A3-fix3 boundary: a damaged stored record is thrown unchanged; a player-re
  const row=rowFor(122);row.setup.coins=4;
  const {document}=applyIntentSetup(engine,initial,row.setup);
  const day=Math.floor(document.state.minute/1440);
- // Internal invariant: a trade-quote ledger row that is not a quote. The player did nothing wrong.
+ // S5-02: prices are projections; corruption protection now guards the
+ // consumed actual-deal rows, not an obsolete stored-quote format.
  const damaged=structuredClone(document);
- damaged.state.records[`trade-quote:${day}:npc_hw_linsui:player:item_water`]={category:'not_a_quote'};
+ damaged.state.records[`market-trade:damaged`]={category:'not_a_trade'};
  const bad={tool:'world_act',eventId:'fix3-damaged',args:{action:'core:trade.buy',slots:{seller:'npc_hw_linsui',item:'item_water',quantity:1}}};
  for(const run of [()=>engine.previewAction(damaged,bad),()=>engine.reduce(damaged,bad)])
-  await assert.rejects(run(),error=>error instanceof Error&&!(error instanceof ActionRejection)&&/当日报价账无效/.test(error.message));
+  await assert.rejects(run(),error=>error instanceof Error&&!(error instanceof ActionRejection)&&/市场成交账无效/.test(error.message));
  // Business precondition: same action, the player simply cannot pay.
  const poor=structuredClone(document);poor.state.player.coins=0;
  const pay={tool:'world_act',eventId:'fix3-poor',args:{action:'core:trade.buy',slots:{seller:'npc_hw_linsui',item:'item_bread',quantity:1}}};

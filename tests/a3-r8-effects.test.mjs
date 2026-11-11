@@ -36,7 +36,8 @@ const run=async(id,{die}={})=>{
     itemInstances:[{id:'r8-pawn-staff',template:'thing',kind:'item',item:'item_staff',owner:'player',location:'bld_hw_post',carriedBy:'player',condition:100}],
     holdings:[{id:'r8-pawn-title',kind:'owns',holder:'player',subject:'r8-pawn-staff',terms:{share:1}}]});
    assert.deepEqual(scene.setupUnmet,[]);
-   const loaded=await runPrelude(engine,scene.document,[act('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:2,days:1},'r8-pawn')]);
+   // F007: the pawn advance is 50% of the staff's valuation (4 x floor .5 = 2 copper), at most 1 copper (2 on the catalogue price).
+   const loaded=await runPrelude(engine,scene.document,[act('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:1,days:1},'r8-pawn')]);
    assert.deepEqual(loaded.unmet,[]);before=loaded.document;
    input=act('core:trade.redeem',{seller:'npc_hw_shendu',contract:'debt_loan_r8-pawn'},'r8-redeem');
   }

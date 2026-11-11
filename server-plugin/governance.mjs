@@ -8,7 +8,7 @@ import {knowledgeProficiency} from './education-state.mjs';
 import {personOffices,personRegistrar,settlementHead,personSimulation,institutionOffices,officeOnDuty,personAge,questQuotaMonth} from './entity-view.mjs';
 import {bookExaminationSeat,qualifiedExaminers} from './local-exams.mjs';
 import {organizationState} from './organization-state.mjs';
-import {digest} from './storage.mjs';
+import {digest,recordsWhere} from './storage.mjs';
 import {openObligation,closeObligation} from './obligation-runtime.mjs';
 import {npcPresenceAt} from './npc-cognition.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
@@ -385,7 +385,7 @@ export function advanceGovernance(d,engine,before,after,{beforeState}={}){
     const results=[];
     for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
         const at=day*DAY+600;if(at<=before||at>after||at<beforeState.minute)continue;
-        const presence=at===beforeState.minute?beforeState:at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
+        const presence=at===beforeState.minute?beforeState:at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.get('randomSeed'));
         for(const [id,r]of Object.entries(d.get('state','records')??{}).sort(([a],[b])=>a.localeCompare(b))){
             if(r.category!=='governance_request'||r.status!=='待办理'||r.due>at||presence.npcs[r.steward]?.location===presence.location)continue;
             const grant=d.get(...path(r.authorization));
@@ -520,7 +520,7 @@ export function appointOfficeRecord(d,engine,row,eventId){
 }
 export function consumeOfficeVacancies(d,engine,after=d.get('state','minute')){
     ensureHoldings(d,engine);
-    const events=Object.values(d.get('state','records')??{}).filter(r=>r.category==='world_event'&&r.verb==='succession'&&r.kind==='holds_office'&&r.minute<=after).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
+    const events=recordsWhere(d.get('state','records'),'kind','holds_office').filter(r=>r.category==='world_event'&&r.verb==='succession'&&r.kind==='holds_office'&&r.minute<=after).sort((a,b)=>a.minute-b.minute||a.id.localeCompare(b.id));
     for(const event of events){
         const key=`governance_vacancy:${event.id}`;if(d.get(...path(key)))continue;
         const facts=entityRow(d,event.subject)?.facts;if(!facts?.settlement||!facts.office)continue;
@@ -531,7 +531,7 @@ export function consumeOfficeVacancies(d,engine,after=d.get('state','minute')){
         holdingSet(d,engine,path(key),{category:'governance_vacancy',id:key,subject:event.subject,settlement,office,previousHolder:event.previousHolder,cause:event.id,
             status:filled?'已有继任':election?.settlements.includes(settlement)&&source?'补选中':'待原任免机构决定',due,source:successionRules.source,sourceEvent:event.id},'governance');
     }
-    for(const vacancy of Object.values(d.get('state','records')??{}).filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due<=after)){
+    for(const vacancy of recordsWhere(d.get('state','records'),'category','governance_vacancy').filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due<=after)){
         if(aliveHoldings(d,{kind:'holds_office',subject:vacancy.subject}).length){holdingSet(d,engine,path(vacancy.id),{...vacancy,status:'已有继任'},'governance');continue;}
         const state=d.get('state'),{g}=profile(engine,vacancy.settlement),electorate=eligible(engine,vacancy.settlement,state);
         const candidates=(g.coordinators??[]).filter(id=>id!==vacancy.previousHolder&&electorate.includes(id)&&isEffective(engine,d,id)&&!['濒死','昏迷','患病'].includes(state.npcs?.[id]?.status)&&
@@ -567,12 +567,18 @@ function review(d,engine,row,at){
     else holdingSet(d,null,path(row.id),{...row,nextReview:row.nextReview+charter.reviewEveryDays*DAY,reviews:[...(row.reviews??[]),at]},'governance');
 }
 const dueAt=r=>r.category==='governance_application'?r.due:Math.min(r.nextReview,r.until);
-const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任');
-export function nextOfficeMinute(state,now){return Math.min(Infinity,...scheduled(state).map(dueAt).filter(m=>m>now),...Object.values(state.records??{}).filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due>now).map(r=>r.due));}
+const scheduled=(state,after)=>{
+ const eligible=r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任';
+ const due=r=>eligible(r)&&dueAt(r)<=after;
+ const candidates=[...recordsWhere(state.records,'category','governance_application'),...recordsWhere(state.records,'category','governance_office')].filter(due);
+ // Multiple due rows retain the original enumeration order before stable sorting.
+ return candidates.length>1?Object.values(state.records??{}).filter(due):candidates;
+};
+export function nextOfficeMinute(state,now){return Math.min(Infinity,...[...recordsWhere(state.records,'category','governance_application'),...recordsWhere(state.records,'category','governance_office')].filter(r=>r.category==='governance_application'&&r.status==='待审定'||r.category==='governance_office'&&r.status==='在任').map(dueAt).filter(m=>m>now),...recordsWhere(state.records,'category','governance_vacancy').filter(r=>r.category==='governance_vacancy'&&r.status==='补选中'&&r.due>now).map(r=>r.due));}
 export function advanceOffices(d,engine,{after}){
     consumeOfficeVacancies(d,engine,after);
     for(;;){
-        const rows=scheduled(d.get('state')).filter(r=>dueAt(r)<=after).sort((a,b)=>dueAt(a)-dueAt(b)||a.id.localeCompare(b.id));
+        const rows=scheduled(d.get('state'),after).sort((a,b)=>dueAt(a)-dueAt(b)||a.id.localeCompare(b.id));
         if(!rows.length){consumeOfficeVacancies(d,engine,after);return;}
         const r=rows[0];
         if(r.category==='governance_application')decide(d,engine,r,r.due);else review(d,engine,r,dueAt(r));
@@ -590,9 +596,9 @@ export function publicSpent(state,settlement,month){
     return Object.values(state.records??{}).filter(r=>r.category==='governance_spend'&&r.settlement===settlement&&r.month===month).reduce((n,r)=>n+r.copper,0);
 }
 // S1a: books = 账本对方账户（工程或委托托管）。
-export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEvent,books}){
+export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEvent,books,actor='player'}){
     if(!Number.isSafeInteger(copper)||copper<0)throw preconditionFailure('公款数额无效');
-    const state=d.get('state'),offices=playerOffices(state,{settlement,power},engine);
+    const state=d.get('state'),offices=actor==='player'?playerOffices(state,{settlement,power},engine):personOffices(engine,state,actor,{settlement,power}).map(e=>e.value);
     if(!offices.length)throw preconditionFailure('没有在任官职授予此项公款权限');
     const cap=Math.max(...offices.map(o=>o.monthlyBudgetCopper)),month=questQuotaMonth(engine,state),used=publicSpent(state,settlement,month);
     if(used+copper>cap)throw preconditionFailure(`本月公款额度不足（已用${used}/${cap}铜）`);
@@ -603,15 +609,15 @@ export function spendPublic(d,engine,{settlement,copper,power,purpose,sourceEven
     if(d.get(...path(id)))throw preconditionFailure('公款支出编号已占用');
     bookSide(d,treasuryAccount(settlement),-copper,books);
     d.set(['state','settlements',settlement,'treasury'],treasury-copper);
-    const row={category:'governance_spend',id,settlement,holder:'player',office:offices[0].office,month,copper,purpose,minute:state.minute,sourceEvent};
+    const row={category:'governance_spend',id,settlement,holder:actor,office:offices[0].office,month,copper,purpose,minute:state.minute,sourceEvent};
     holdingSet(d,null,path(id),row,'governance');return row;
 }
 // Money returned to the treasury (refund, unused wages) nets against the month it was drawn in.
-export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent,books}){
+export function refundPublic(d,{settlement,copper,month,purpose,sourceEvent,books,actor='player'}){
     const id=`governance_spend:${sourceEvent}`;
     if(!copper||d.get(...path(id)))return d.get(...path(id))??null;
     bookSide(d,treasuryAccount(settlement),copper,books);
     d.set(['state','settlements',settlement,'treasury'],d.get('state','settlements',settlement,'treasury')+copper);
-    const row={category:'governance_spend',id,settlement,holder:'player',month,copper:-copper,purpose,minute:d.get('state','minute'),sourceEvent};
+    const row={category:'governance_spend',id,settlement,holder:actor,month,copper:-copper,purpose,minute:d.get('state','minute'),sourceEvent};
     holdingSet(d,null,path(id),row,'governance');return row;
 }

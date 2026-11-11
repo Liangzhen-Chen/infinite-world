@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {validateWorld} from '../tools/validate-world.mjs';
 import {entries,reviewDraftFor,validateDraft} from '../tools/creatures-mixed-content.mjs';
 import {readMixedPublication,mergeMixedPublication,publishMixed} from '../tools/publish-creatures-mixed.mjs';
@@ -33,7 +33,8 @@ const habitatOf=s=>world.rules.wildlife.habitats.find(h=>h.id===s.wildlife.habit
 // T102/T157等后续批次在本批之后追加物品、地点、路线与首领；剔除本批再合并会把本批排到末尾，同样按编号比较。
 const sortId=rows=>[...rows].sort((a,b)=>a.id.localeCompare(b.id));
 // K1在本批发布后给全体物种补了性状标签tags；本批候选不含该字段，比较时只对本批物种剔除tags（正式目录须有tags另行核对）。
-const untag=m=>newIds.monsters.has(m.id)?(({tags,...row})=>row)(m):m;
+// nature.metabolism（物种代谢系数）同 tags 是发布后补的结构化字段：骨架与候选刻意不含，登记在正式目录；比较时只对本批物种剔除该键，nature 其余键仍逐键比较。
+const untag=m=>newIds.monsters.has(m.id)?(({tags,...row})=>row.nature?{...row,nature:(({metabolism,...n})=>n)(row.nature)}:row)(m):m;
 const norm=w=>({...w,monsters:sortId(w.monsters.map(untag)),items:sortId(w.items),locations:sortId(w.locations),routes:sortId(w.routes),bosses:sortId(w.bosses),rules:{...w.rules,wildlife:{...w.rules.wildlife,habitats:sortId(w.rules.wildlife.habitats)}}});
 const insideHours=([a,b])=>a<b?a+30:(a+30)%1440;
 function setup(seed,mutate){
@@ -60,7 +61,7 @@ test('本批正式发布：中西各九的设计，已过L2者入正式目录，
  assert.deepEqual([...published.map(m=>m.id),...held].sort(),[...batchIds.species].sort());
  assert.ok(published.filter(m=>m.template<=2).length>=12);
  for(const m of published)assert.ok(Array.isArray(m.tags)&&m.tags.length,`${m.id}.tags`);
- for(const m of published){const d=designed.find(s=>s.id===m.id);for(const k of Object.keys(d))assert.deepEqual(m[k],d[k],`${m.id}.${k}`);}
+ for(const m of published){const d=designed.find(s=>s.id===m.id),u=untag(m);for(const k of Object.keys(d))assert.deepEqual(u[k],d[k],`${m.id}.${k}`);}// 与 norm 同口径剔发布后补字段（tags、nature.metabolism），骨架其余键逐键比较
  assert.deepEqual(norm(mergeMixedPublication(before,publication)),norm(world));assert.deepEqual(mergeMixedPublication(world,publication),world);
  const bad=structuredClone(world);bad.monsters.find(m=>m.id===published[0].id).habits+='异文';assert.throws(()=>mergeMixedPublication(bad,publication),/冲突/);
  // Old reviewed species keep their exact text.
@@ -171,7 +172,8 @@ test('L1拒绝写繁殖的亡灵、漏写弱点和把文明族群写成猎物材
 test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',async t=>{
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-t154-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
  // A3 archives actions and ontology; carry those inputs into the isolated edition so the full-world equality still checks every field.
- for(const folder of ['meta','people','geo','lore','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // S5-06: retain the approved ecology catalog in the isolated edition and exact roundtrip.
+ for(const folder of ['meta','people','geo','lore','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/creatures-mixed'),path.join(root,'drafts/creatures-mixed'),{recursive:true});
  const write=async(file,value)=>fs.writeFile(path.join(root,file),JSON.stringify(value));
  // This fixture writes hydrated rows back to source files; biome metadata
@@ -180,7 +182,7 @@ test('隔离正式发布与重发零写；候选与L4篡改在写入前拒绝',a
  const locations=before.locations.map(row=>{const out={...row};for(const key of Object.keys(biomes.locations?.[row.id]??{}))delete out[key];return out;});
  await write('meta/monsters.json',before.monsters);await write('meta/items.json',before.items);await write('geo/locations.json',locations);await write('geo/routes.json',before.routes);await write('meta/rules.json',before.rules);
  const preview=await publishMixed({root});assert.equal(preview.published,false);assert.equal(preview.changed.length,5);
- await publishMixed({root,publish:true});assert.deepEqual(norm(await loadWorld(root)),norm(world));assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
+ await publishMixed({root,publish:true});assert.deepEqual(norm(await loadRuntimeWorld(root)),norm(world));assert.deepEqual((await publishMixed({root,publish:true})).changed,[]);
  const stored=JSON.parse(await fs.readFile(path.join(root,'geo/locations.json'),'utf8'));
  for(const row of stored)for(const key of Object.keys(biomes.locations?.[row.id]??{}))assert.equal(Object.hasOwn(row,key),false,`${row.id}.${key}`);
  // Conflicting sources are still rejected; the publisher must preserve the

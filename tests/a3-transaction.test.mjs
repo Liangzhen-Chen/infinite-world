@@ -273,8 +273,14 @@ test('A3 scheduled rules: current preconditions/authority reject terminally and 
  const d=engine.primitiveDraft(next);engine.advance(d,2,'fail-rule-due');const final=applyPatches(next,d.patches);
  assert.equal(final.state.records[`primitive_schedule_result:${id}`].status,'rejected');assert.equal(final.state.player.coins,next.state.player.coins);assert.equal(final.state.npcs[npc].coins,next.state.npcs[npc].coins);assert.equal(final.state.records[id].status,'completed');assert.deepEqual(auditLedger(final.ledger),[]);
  rule.outcomes.pop();rule.preconditions=['false'];const d2=engine.primitiveDraft(next);engine.advance(d2,2,'precondition-rule-due');assert.equal(d2.get('state','records',`primitive_schedule_result:${id}`).code,'E-PRECONDITION');
- rule.preconditions=['true'];rule.outcomes[0].from=accountKey(npc,'coin_river','purse');rule.outcomes[0].to=a;const d3=engine.primitiveDraft(next);engine.advance(d3,2,'authority-rule-due');assert.equal(d3.get('state','records',`primitive_schedule_result:${id}`).code,'E-AUTHORITY');
- assert.equal(d3.get('state','player','coins'),next.state.player.coins);assert.equal(d3.get('state','npcs',npc,'coins'),next.state.npcs[npc].coins);
+ // K6 (76365571, legality is a consequence): when the due rule takes from the present NPC's purse, the
+ // current authority is still read at execution and finds none; the take physically happens and the
+ // schedule's own receipt carries the theft committed against that NPC (nothing is pre-authorized).
+ rule.preconditions=['true'];rule.outcomes[0].from=accountKey(npc,'coin_river','purse');rule.outcomes[0].to=a;const d3=engine.primitiveDraft(next);engine.advance(d3,2,'authority-rule-due');
+ const due=d3.get('state','records',`primitive_schedule_result:${id}`),offense=due.receipt?.consequences?.find(c=>c.type==='offense'),row=d3.get('state','records',offense?.record);
+ assert.equal(due.status,'committed');assert.ok(due.receipt.applied.every(e=>e.actedAs?.kind!=='theft'&&e.tags.includes('unlicensed')));
+ assert.equal(offense?.offense,'theft');assert.equal(offense.victim,npc);assert.equal(row.offender,'player');assert.deepEqual(row.stolen,{coins:1});assert.equal(next.state.records[offense.record],undefined);
+ assert.equal(d3.get('state','player','coins'),next.state.player.coins+1);assert.equal(d3.get('state','npcs',npc,'coins'),next.state.npcs[npc].coins-1);
 });
 
 test('A3 scheduled rules: an elapsed parent can schedule a child without reentry duplication or clock loss',()=>{
@@ -621,8 +627,15 @@ test('A3 adjudication: theft needs an actual successful catalog check and clips 
  const direct=commitPrimitives(proofDocument,[{op:'transfer',from,to:a,qty:15},{op:'transfer',from,to:a,qty:15}],nativeFrame);
  assert.equal(direct.receipt.applied.reduce((n,e)=>n+e.qty,0),20,'native frame also owns the cumulative cap');
  assert.throws(()=>commitPrimitives(proofDocument,[{op:'transfer',from:accountKey(f.npc,f.engine.world.items[0].id,'inventory'),to:accountKey('player',f.engine.world.items[0].id,'inventory'),qty:1}],nativeFrame),{code:'E-PRIMITIVE-CONNECTOR'});
+ // K6 (76365571, legality is a consequence): a raw open proposal does not become the checked theft action.
+ // Openly taking from the present NPC's purse happens as the same transfer, tagged unlicensed (not theft
+ // action authority), and is committed as theft against that NPC under the proposal's event.
  const raw=createRuntimePrimitiveFrame(f.engine,f.document,{eventId:'false-theft',source:{kind:'open',id:'player-proposal'}});
- assert.throws(()=>commitPrimitives(f.document,[{op:'transfer',from,to:a,qty:1}],raw),{code:'E-AUTHORITY'});
+ const open=commitPrimitives(f.document,[{op:'transfer',from,to:a,qty:1}],raw),taken=applyPatches(f.document,open.patches);
+ assert.ok(open.receipt.applied.every(e=>e.actedAs?.kind!=='theft'&&e.tags.includes('unlicensed')));
+ const offense=open.receipt.consequences.find(c=>c.type==='offense'),row=taken.state.records[offense?.record];
+ assert.equal(offense?.offense,'theft');assert.equal(offense.victim,f.npc);assert.equal(row.sourceEvent,'false-theft');assert.equal(row.offender,'player');
+ assert.equal(taken.state.npcs[f.npc].coins,99);assert.deepEqual(auditLedger(taken.ledger),[]);
 });
 
 test('A3 adjudication: NPC agreement is a purpose-scoped native event, never a caller boolean',async()=>{

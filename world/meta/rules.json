@@ -1,14 +1,50 @@
 {
   "version": "engine-rules-3",
+  "businessLifecycle": {
+    "horizonDays": 30,
+    "attachmentMaxPermille": 500,
+    "stubbornPermille": 50,
+    "tailAttachmentPermille": 10000,
+    "noisePermille": 250,
+    "source": "K05 / AS02、05 §5.1.2/§5.7、14 §14.5.1：经营计划期默认取当前 calendar.daysPerMonth=30天，不用一日生活储备期预测长期经营；历史窗口同长，不足按实际观察时长折算并标依据不足，正常情况下维持现状。开、关各用 generic.transferMinutes 计一次真实工时，恢复只计尚未发生的开张工时；无额外已知采购工序时不虚构备货时间。最早恢复不得早于下一计划期边界和下一既有补货周期。P待标定：一般经营依恋0–500‰、固执尾部50‰及正负权重10000‰、整期收入噪声±250‰。人格按主体固定种子恢复，噪声按主体/经营/计划期键固定，期内不重抽；差异与噪声参数置零可关闭。玩家只见经济比较，不替玩家抽签决定。"
+  },
+  "facilities": {
+    "maintenance": {
+      "delayMaxPermille": 500,
+      "stubbornPermille": 50,
+      "stubbornDelayPermille": 10000,
+      "noisePermille": 250,
+      "source": "K03 / 05 §5.1.2、§5.7、14 §14.5.1：按本地已知服务价格/容量及当前天气损耗率，在一个历月窗口内比较完工后的可避免服务损失与材料、剩余工时机会成本。窗口默认 calendar.daysPerMonth；不凭空计收入。P待标定：一般拖延成本权重0–500‰、固执尾部概率50‰/额外成本权重10000‰，单日决定收益噪声±250‰；人格按主体固定种子分配，真正开工修缮时保存，决定按主体/建筑/日键重放。零参数可关闭差异与噪声。"
+    },
+    "wear": {
+      "referenceLifeYears": 5,
+      "material": {
+        "wood": 3,
+        "stone": 1
+      },
+      "weather": {
+        "rain": 1,
+        "storm": 4
+      },
+      "occupied": 1,
+      "source": "W8-E8：07 §7.3 按天气与使用累计损耗。建筑寿命无现成定值；保守借用数值方案 §2.11 / balance/crafting durability.lifeYears 的普通耐用品五年基准，不声称文档规定建筑五年。保留旧木石3:1及天气/使用相对权重；干燥空置木建筑每日损耗100/(5×360)，占用加1/3，暴雨加4/3；满状态木建筑180天最坏损耗floor(180×100×8/(3×5×360))=26，不能一季自然毁灭。灾害直接损伤不缩放。"
+    }
+  },
   "forestWater": {
     "version": 1,
     "forest": {
       "defaultAreaKm2": 1,
       "stockPerKm2": 50000,
       "species": {
-        "broadleaf": {"growthPerDay": 0.0008},
-        "conifer": {"growthPerDay": 0.0006},
-        "wetwood": {"growthPerDay": 0.001}
+        "broadleaf": {
+          "growthPerDay": 0.0008
+        },
+        "conifer": {
+          "growthPerDay": 0.0006
+        },
+        "wetwood": {
+          "growthPerDay": 0.001
+        }
       },
       "minimumHabitatShare": 0.2,
       "shortageCover": 0.25,
@@ -20,13 +56,31 @@
       "maximumCut": 20,
       "minutes": 15,
       "difficulty": 10,
-      "wear": 1
+      "wear": 1,
+      "opening": [
+        {
+          "location": "loc_hw_northwood",
+          "ancient": 6000
+        }
+      ]
     },
     "water": {
-      "terrainElevationMeters": {"highland": 300, "hill": 100, "lowland": 10, "plain": 50},
+      "terrainElevationMeters": {
+        "highland": 300,
+        "hill": 100,
+        "lowland": 10,
+        "plain": 50
+      },
       "capacityMl": 500000000,
       "initialShare": 0.8,
-      "rainShare": {"clear": 0, "cloudy": 0, "rain": 0.12, "storm": 0.3, "snow": 0.02, "fog": 0.002},
+      "rainShare": {
+        "clear": 0,
+        "cloudy": 0,
+        "rain": 0.12,
+        "storm": 0.3,
+        "snow": 0.02,
+        "fog": 0.002
+      },
       "evaporationShare": 0.001,
       "dailyFlowShare": 0.08,
       "drinkingMlPerPerson": 2000,
@@ -192,7 +246,19 @@
     "walkKmh": 4,
     "horseMultiplier": 1.8,
     "cartKmh": 3,
-    "dailyTravelMinutes": 480
+    "dailyTravelMinutes": 480,
+    "carriers": {
+      "cart": {
+        "batching": {
+          "waitDays": 1,
+          "minLoadPermille": 1000
+        },
+        "dailyJourney": {
+          "nightTravel": false
+        },
+        "source": "CT07：满载按当前有效重量/体积/座位任一容量100%判定；最长等客一日为车行集中收货、并载后发车的P待标定缺省，非历史实测值，不按D26到达钟点倒推。日行从balance/transport.json的departure:cart.resume（07:00）开始，沿用travel.dailyTravelMinutes=480的八小时行程预算，故15:00停宿，次日07:00续行；车速仍读现有cartKmh及路况、天气。驿传与非车辆不套用本车行并载规则。"
+      }
+    }
   },
   "equipment": {
     "qualities": [
@@ -231,7 +297,20 @@
       180,
       200
     ],
+    "failureWear": {
+      "returnFraction": 1,
+      "gradeFactor": 0.6,
+      "note": "卡 Q：制作失败落在损耗（wear）时，材料按 returnFraction 退回（向上取整，至少一份），退回的每份品质 grade = 原投入品质 × gradeFactor；无损原样全退，报废按配方 failure.recoverFraction 回收残料"
+    },
     "workmanship": [
+      {
+        "name": "仿制",
+        "multiplier": 0.5
+      },
+      {
+        "name": "粗陋",
+        "multiplier": 0.7
+      },
       {
         "name": "粗糙",
         "multiplier": 0.8
@@ -965,8 +1044,16 @@
             "quest_publish",
             "housing",
             "tax",
-            "steward"
+            "steward",
+            "public_property"
           ],
+          "powerSources": {
+            "public_property": "公产使用与出租；05:129、05 §5.7.3：聚落行为经首领或相关职位的现任持有人执行，财产仍归聚落。"
+          },
+          "seatPowers": [
+            "public_property"
+          ],
+          "seatPowersSource": "05 §5.7.3：首领职位持有人执行聚落行为；本项随席位保留，不受行政等级覆盖。",
           "keeps": {
             "formerHead": "原头人仍按本村法典审理财物案、在登记柜台办户籍"
           },
@@ -1101,7 +1188,8 @@
           "loc_bs_yupo",
           "loc_bs_weiting",
           "loc_bs_liquan",
-          "loc_bs_sangban"
+          "loc_bs_sangban",
+          "loc_hw"
         ],
         "account": "各村公账",
         "income": [
@@ -1617,7 +1705,7 @@
           "item": null,
           "faceCopper": 1,
           "fineness": 1,
-          "note": "本地记账铜钱，即角色钱袋里的铜"
+          "note": "币值按实际含量、当地金属价、信用与活跃流通量派生；面值不作固定汇率。"
         },
         {
           "id": "coinage_civic",
@@ -1626,7 +1714,7 @@
           "item": "item_coin_civic",
           "faceCopper": 10,
           "fineness": 0.9,
-          "note": "面值十铜，含铜不足，钱庄按九成收兑"
+          "note": "币值按实际含量、当地金属价、信用与活跃流通量派生；面值不作固定汇率。"
         },
         {
           "id": "coinage_coast",
@@ -1635,7 +1723,16 @@
           "item": "item_coin_coast",
           "faceCopper": 100,
           "fineness": 0.85,
-          "note": "面值一银，掺锡，钱庄按八成五收兑"
+          "note": "币值按实际含量、当地金属价、信用与活跃流通量派生；面值不作固定汇率。"
+        },
+        {
+          "id": "coinage_hw_note",
+          "name": "河湾兑付券",
+          "polity": "bank_hw_post",
+          "item": "item_banknote_hw",
+          "fineness": 1,
+          "faceCopper": 100,
+          "note": "按兑付条款与实际准备金、流通量派生币值；不同于具名存单。"
         }
       ],
       "banks": [
@@ -1653,23 +1750,13 @@
           },
           "exchangeFeeRate": 0.03,
           "depositFeeCopper": 1,
-          "loanMonthlyInterest": 0.03,
           "loanMaximumCopper": 300,
           "loanMaximumDays": 60,
           "collateralRatio": 0.5
         }
       ],
       "depositInterest": {
-        "periodDays": 30,
-        "monthlyRate": 0.01,
-        "minimum": 0.001,
-        "maximum": 0.03,
-        "seasonal": [
-          1,
-          1.1,
-          0.9,
-          1.2
-        ]
+        "periodDays": 30
       },
       "derivedBanks": {
         "levels": [
@@ -1815,6 +1902,18 @@
           "cycleDays": 7,
           "firstDay": 1
         }
+      },
+      "additionalRestock": {
+        "shop_hw_forge": [
+          {
+            "after": "item_mining_pick",
+            "item": "item_sickle",
+            "source": "local",
+            "amount": 1,
+            "maximum": 2,
+            "basis": "W8-E8：乡村铁匠铺常备农具；铁镰已在目录（审批管线）"
+          }
+        ]
       },
       "stores": [
         {
@@ -2255,6 +2354,17 @@
           "costs": {
             "filingFee": 0
           }
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast",
+              "coin_hw_note"
+            ]
+          }
         }
       },
       {
@@ -2372,6 +2482,16 @@
           ],
           "minutes": 60,
           "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -2489,6 +2609,16 @@
           ],
           "minutes": 60,
           "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -2606,6 +2736,16 @@
           ],
           "minutes": 60,
           "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -2723,6 +2863,16 @@
           ],
           "minutes": 60,
           "source": "s4law-content；西陲王国诉讼章与环城郡署现任上级主官，原审回避"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       }
     ],
@@ -2978,6 +3128,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3079,6 +3239,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3180,6 +3350,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3281,6 +3461,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3382,6 +3572,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3483,6 +3683,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3584,6 +3794,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "村镇初审，继而郡府复审，继而王都终审"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3684,6 +3904,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "部营听断，继而部盟会火复议，继而大帐众部终议"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3784,6 +4014,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "林地邻席听诉，继而共同议会复议，继而异席合议终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3884,6 +4124,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "湾内船户听断，继而诸湾会复议，继而异湾合席终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -3984,6 +4234,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "扎根处听诉，继而联邑根席复议，继而异坡长根会终议"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4084,6 +4344,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "养育群听诉，继而猎林共席复议，继而异群合席终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4184,6 +4454,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "本帐听诉，继而邻帐轮议，继而诸帐会终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4284,6 +4564,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "街区审席，继而城邦复席，继而异业公议终席"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       },
       {
@@ -4384,6 +4674,16 @@
           },
           "sentencing": "本约受理偷盗、斗殴、欺诈、走私、盗采、奴役与人口买卖。罚款按罪名基额加涉案财值倍数计算，受害财值另作赔偿；不能缴罚者依法限期劳役或监禁，未经证实不得先罚。",
           "courts": "井旁听诉，继而缺杯水议席复议，继而异井合席终断"
+        },
+        "recognition": {
+          "legalTender": {
+            "unit": "coin_river",
+            "accepted": [
+              "coin_river",
+              "coin_civic",
+              "coin_coast"
+            ]
+          }
         }
       }
     ],
@@ -5288,6 +5588,31 @@
   },
   "agriculture": {
     "version": 1,
+    "fieldRent": {
+      "customaryShare": {
+        "numerator": 3,
+        "denominator": 10
+      },
+      "riskPreferences": [
+        {
+          "id": "risk_tolerant",
+          "weight": 1,
+          "riskPermille": 500
+        },
+        {
+          "id": "balanced",
+          "weight": 2,
+          "riskPermille": 1000
+        },
+        {
+          "id": "risk_averse",
+          "weight": 1,
+          "riskPermille": 1500
+        }
+      ],
+      "riskPreferenceSource": "K07：缺少历史租制风险偏好分布，三档权重及幅度均待标定；仅影响主体选择成本，使用 tenancy:preference 稳定主体骰值键，不改变已签合同、产出或减免权。",
+      "source": "W8-E8；数值方案 §1.4 NUM-W10、§2.6 field:wheat；现有 world/rules/tables/market.json spread.buy=0.6。未见已有佃租率。现金篮子假定全产出售出、再购入口粮与种粮：三口之家、两名劳力，21日播种窗×2÷0.5工日/亩=84亩（播收126工日，低于两人500工日/年）；180日作物在5..25单播种窗每年一季。燕麦1700/15份/亩，当地春季市场估值5.069784173文，年估值48264.345文；农户收购实收按0.6为28958.607文，不能把估值当现金收入。口粮3×360×估值、种粮84×ceil(120/15)×估值、住房35×4×12、布衣3×2×8、共用燃料3/40×360×2，必要支出10664.262文。目标中点1.15反推惯例租率0.6/1.15−10664.262/48264.345=0.30078，取3/10；28958.607/(10664.262+48264.345×3/10)=1.15173，落1.05–1.25。粮价3文时17136/(7038+8568)=1.09804。旧13/20漏计收购价差，已纠正；该算例为正常质量1的现金标定篮子，不宣称长期浸泡达标。"
+    },
     "foodUnitKg": 0.5,
     "grainItem": "item_oats",
     "farmingSkill": "skill_life_0_core",
@@ -6001,7 +6326,7 @@
     ],
     "accounting": "只扣已入公共仓的未过期谷物，保留90日储备及种粮；买方实际现金入在途预付账，到货货价转入卖方公库，其中5%分列税款。腐坏与拒收入仓的部分退预付款并记录粮损。",
     "labour": "运力上限是规则分配，实际取现有人口×workerFraction扣农田、农副产、加工及公共木料劳力后的空余；无空余不发货。同一源村未返的货运仍占运力，回程也沿现有道路耗时。",
-    "pricing": "燕麦基础价沿既有item_oats；实际谷物与240日目标的比例确定需求系数，登记来路距离及天气行程确定运输系数，乘季节系数。当日首次公共报价落quotes及出处账，同村同日复用。"
+    "pricing": "基价仅作市场基准；现价按可售供需、品质、环境、立场及修正派生，日深度次日复位，报价不入存档。周贸易冻结整数合同单价，交割退款依合同；240日仅为采购目标。"
   },
   "magicGrowth": {
     "version": 1,
@@ -7730,6 +8055,11 @@
     "uncertifiedMaximumProficiency": 1200,
     "qualificationRule": "同用当前职业及师承资格解析。NPC 非认证实作上限仍为1200，玩家未认证职业核心有效上限仍为299；个人技能历史不因改业删除。"
   },
+  "npcLabor": {
+    "tripMinutes": 240,
+    "saleMinutes": 10,
+    "gatePriorAttempts": 3
+  },
   "npcLife": {
     "adultAge": 18,
     "kinTypes": [
@@ -7907,6 +8237,9 @@
         "affection": 2,
         "cap": 60
       }
+    },
+    "lifecycle": {
+      "agingCatchUp": 1
     }
   },
   "effectTable": {
@@ -12423,7 +12756,7 @@
   },
   "extraction": {
     "fishing": {
-      "tool": "item_kitchen_knife",
+      "tool": "item_bamboo_fishing_rod",
       "minutes": 30,
       "difficultyBySeason": [
         10,
@@ -12432,9 +12765,10 @@
         20
       ],
       "bait": {
-        "item": "item_fishing_bait",
+        "item": "item_earthworm_bait",
         "quantity": 1
-      }
+      },
+      "product": "item_live_fish"
     },
     "mining": {
       "tool": "item_mining_pick",
@@ -12929,6 +13263,25 @@
       "item": "item_external_medicine",
       "quantity": 3,
       "days": 3
+    }
+  },
+  "householdSubsistence": {
+    "source": "K16 最小觅食模型，待标定；栖地面积限定存量，季节限定再生，不代替市场收入",
+    "foodItem": "item_wild_food",
+    "minimumAge": 12,
+    "waterMinutes": 15,
+    "nearWaterRoundTripMinutes": 30,
+    "nearWaterSource": "K16：近水步行往返至多半小时，连同15分钟汲水计入每日家务工时；沿用步行速度，阈值待标定。超过阈值的真实行程进入日程。",
+    "forageMinutes": 10,
+    "portionsPerKm2": 2000,
+    "dailyRegrowthPercent": 5,
+    "maximumSaltMgPerMl": 1,
+    "forageTypes": {
+      "forest": 1,
+      "open": 1,
+      "wetland": 1,
+      "rock": 0.25,
+      "ruin": 0.25
     }
   }
 }

@@ -1,17 +1,19 @@
 import {preconditionFailure} from './precondition.mjs';
 // Actual goods performance for signed forward and non-financial promises.
 // The canonical row is the claim; receipts contain evidence, never a balance.
-import {openObligation,amendObligation,dueObligation,settleObligation,assertObligationAuthority} from './obligation-runtime.mjs';
-import {obligationRow} from './obligation-state.mjs';
+import {openObligation,amendObligation,closeObligation,dueObligation,settleObligation,assertObligationAuthority} from './obligation-runtime.mjs';
+import {obligationRow,obligationClosed} from './obligation-state.mjs';
+import {requestContractConsent} from './action-consent.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {settlementLocation,settlementPresent} from './obligation-presence.mjs';
 import {transferItems} from './items.mjs';
 import {canonical} from './storage.mjs';
 import {ledgerActive} from './ledger.mjs';
+import {marketQuote} from './market.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,aliveHoldings,closeHolding} from './holdings.mjs';
 
-declareHoldingWriter('obligation-conditional',{kinds:[]});
+declareHoldingWriter('obligation-conditional',{kinds:['pledged']});
 
 const supported=new Set(['forward','delivery','pact','gratitude','vow']);
 const positive=n=>Number.isSafeInteger(n)&&n>0;
@@ -23,6 +25,7 @@ export function openGoodsObligation(d,e,args,eventId){
   if(kind!=='forward'&&prepayment)throw preconditionFailure('只有远期买卖可在本入口预付');
   const id=args.id??`conditional:${eventId}`,terms={...args.terms,performance:{item,location},onDebtorGone:args.terms?.onDebtorGone??(kind==='forward'?'assume_by_heirs':undefined)};
   if(terms.onDebtorGone===undefined)delete terms.onDebtorGone;
+  if(kind==='forward')terms.forward={consideration:Math.max(1,Math.ceil(marketQuote(d,e,{item,location,seller:debtor,buyer:creditor}).listPrice*quantity))};
   const result=openObligation(d,e,{...args,id,kind,debtor,creditor,resource:item,amount:quantity,deadline,terms},eventId);
   if(prepayment){
    const payment=`${id}:prepayment`;
@@ -64,4 +67,32 @@ export function extendGoodsObligation(d,e,args,eventId){
  const row=obligationRow(d.get('state'),args.id);
  if(!row?.terms?.performance||!supported.has(row.kind))throw preconditionFailure('没有可展期的交付义务');
  return amendObligation(d,e,{...args,changes:{deadline:args.deadline}},eventId);
+}
+export function cancelGoodsObligation(d,e,{id,actor='player'},eventId){
+ return obligationTransaction(d,()=>{
+  const key=`conditional_cancel:${id}:${eventId}`,prior=d.get('state','records',key);
+  if(prior){if(prior.actor!==actor)throw preconditionFailure('取消回执不属于本次当事人');return prior.result;}
+  const s=d.get('state'),row=obligationRow(s,id);
+  if(!eventId||row?.kind!=='forward'||!row.terms?.performance||!row.terms.forward||obligationClosed(row)||row.endedAt!==undefined)throw preconditionFailure('没有可合意取消的远期义务');
+  const initiatingDebtor=actor===row.debtor,party=initiatingDebtor?row.debtor:row.creditor,other=initiatingDebtor?row.creditor:row.debtor;
+  assertObligationAuthority(e,s,{actor,debtor:party},'contract');
+  if(!settlementPresent(e,s,row.debtor,row.creditor))throw preconditionFailure('双方须在场商议取消远期');
+  const remaining=dueObligation(s,row).owed,payment=s.obligations?.[`${row.id}:prepayment`];
+  const refund=Number(BigInt(payment?.paid??0)*BigInt(remaining)/BigInt(row.amount)),terms={quantity:remaining,prepayment:refund,deadline:row.deadline};
+  const releasedValue=row.terms.forward.consideration*remaining/row.amount;
+  const agreement=requestContractConsent(d,e,{from:other,to:party,scope:'amend',purpose:row.id,subject:row.id,terms,cost:initiatingDebtor?{value:releasedValue}:{coins:refund},reward:initiatingDebtor?refund:releasedValue,eventId});
+  if(!agreement.allowed)throw preconditionFailure('对方未同意本次取消及退款条款');
+  if(refund){
+   const claim=`${row.id}:refund`;
+   openObligation(d,e,{id:claim,kind:'promise',debtor:row.debtor,creditor:row.creditor,actor:row.debtor,amount:refund,deadline:s.minute,subject:row.id},`${eventId}:refund-open`);
+   settleObligation(d,e,{id:claim,payer:row.debtor,actor:row.debtor,amount:refund},`${eventId}:refund`);
+  }
+  closeObligation(d,e,{id:row.id,actor:initiatingDebtor?row.creditor:actor,party:row.creditor,reason:'creditor_waiver'},`${eventId}:close`);
+  for(const pledge of aliveHoldings(d,{kind:'pledged',holder:row.id}))closeHolding(d,{id:pledge.id,reason:'released',writer:'obligation-conditional',eventId});
+  const closed=d.get('state','obligations',row.id);
+  d.set(['state','obligations',row.id],{...closed,endReason:'mutual_cancellation',cancellation:{eventId,consent:agreement.source,refund}});
+  const result={id:row.id,cancelled:remaining,refund,consent:agreement.source};
+  holdingSet(d,null,['state','records',key],{category:'conditional_receipt',actor,obligation:row.id,minute:s.minute,result},'obligation-conditional');
+  return result;
+ });
 }

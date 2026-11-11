@@ -28,6 +28,8 @@ import {contractIllness,householdMembers} from './npc-life.mjs';
 import {famineAt} from './hazard-calendar.mjs';
 import {droughtRelief,purifiedWaterFactor} from './magic-economy.mjs';
 import {hazardClocks,hazardKey,hazardRoll,isPureClock,isHazardTick,pureHazardFires,pureHazardPhase,pureConditionMet,hazardRouteClosed,PURE_CONDITIONS} from './hazard-calendar.mjs';
+import {pow} from './det-math.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
 
 const DAY=1440,YEAR=360*DAY,int=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const KINDS=['flood','famine','epidemic','price'],WEATHER=['clear','cloudy','rain','storm','snow','fog'];
@@ -71,13 +73,17 @@ registerEffect('crop_damage',{
   const relief=e.cause==='drought'?droughtRelief(engine,d.get('state'),e.settlement,context.minute):0;
   if(relief)e={...e,percent:Math.round(e.percent*(1000-relief)/1000),irrigationReliefPermille:relief};
   const farm=d.get('state','records',`agriculture:${e.settlement}`),keep=(100-e.percent)/100;
+  let privateFields=0;
+  for(const [id,field] of Object.entries(d.get('state','records')??{}))if(field.category==='private_farm'&&field.settlement===e.settlement&&field.status==='growing'){
+   d.set(['state','records',id],{...field,qualitySum:field.qualitySum*keep});privateFields++;
+  }
   // Managed fields: the standing crop not yet cut loses quality, so its
   // harvest is lower; grain already harvested is never taken back.
   if(farm?.mode==='managed'){
    const r=structuredClone(farm);let cohorts=0;
    for(const row of r.field.cohorts)if(!row.harvestedUnits){row.qualitySum*=keep;cohorts++;}
    d.set(['state','records',`agriculture:${e.settlement}`],r);
-   return {applied:true,...e,managed:true,cohorts};
+   return {applied:true,...e,managed:true,cohorts,privateFields};
   }
   const key=`hazard-yield:${e.settlement}`,old=d.get('state','records',key);
   const shifts=Object.fromEntries(Object.entries(old?.shifts??{}).filter(([,s])=>s.until>context.minute));
@@ -111,7 +117,7 @@ const housesIn=(engine,settlement)=>(engine.world.households??[]).filter(h=>h.se
 registerEffect('epidemic',{
  validate(engine,e){if(!diseaseOf(engine,e.disease)||!locationKnown(engine,e.settlement)||!int(e.cases,1,10))throw Error('疫病效果病名、地点或病例数无效');},
  apply(d,engine,e,context){
-  const year=yearOf(context.minute),key=epidemicKey(shiftKey(context),year),seed=d.document.randomSeed,day=context.minute/DAY;
+  const year=yearOf(context.minute),key=epidemicKey(shiftKey(context),year),seed=d.get('randomSeed'),day=context.minute/DAY;
   if(d.get('state','records',key))return {applied:false,reason:'本年疫病已经起过'};
   const houses=housesIn(engine,e.settlement);if(!houses.length)return {applied:false,reason:'受灾聚落没有登记住户'};
   const ep={category:'epidemic',id:key,clock:context.clock??null,disease:e.disease,origin:e.settlement,since:context.minute,status:'流行',settlements:[e.settlement],households:{},measures:[],sourceEvent:context.sourceEvent};
@@ -198,12 +204,12 @@ export function validateHazardRules(world){
 
 // ---- Clocks -----------------------------------------------------------------
 function conditionMet(d,engine,rule,c,at){
- const state=d.get('state'),seed=d.document.randomSeed,year=yearOf(at);
+ const state=d.get('state'),seed=d.get('randomSeed'),year=yearOf(at);
  switch(c.kind){
  case 'always':case 'weather':return pureConditionMet(engine,seed,rule,c,at/DAY);
  case 'hunger':{const s=state.settlements?.[rule.settlement],value=s?.starvation??0;return {met:value>0||Boolean(famineAt(state,rule.settlement,at)),value,evidence:`settlement:${rule.settlement}`};}
  case 'all':{const parts=c.conditions.map(x=>conditionMet(d,engine,rule,x,at));return {met:parts.every(x=>x.met),value:parts.map(x=>x.value??null),evidence:parts.map(x=>x.evidence??null)};}
- case 'granary_short':{const s=state.settlements?.[rule.settlement];const value=s?.food??null;return {met:Boolean(s)&&s.population>0&&s.food<s.population*c.days,value,evidence:`settlement:${rule.settlement}`};}
+ case 'granary_short':{const s=state.settlements?.[rule.settlement];const value=s?.food??null;return {met:Boolean(s)&&s.population>0&&s.food<mealMouthsOf(engine,state,rule.settlement,s.population)*c.days,value,evidence:`settlement:${rule.settlement}`};}
  case 'hazard_phase':{const other=hazardClocks(engine).find(r=>r.id===c.clock),value=phaseOf(d,engine,other,at);return {met:value>=c.minimum,value,evidence:hazardKey(c.clock)};}
  case 'epidemic_cases':{const ep=state.records?.[epidemicKey(rule.id,year)],value=ep?Object.keys(ep.households).length:0;return {met:value>=c.minimum,value,evidence:ep?.id??null};}
  case 'epidemic_clear':{const ep=state.records?.[epidemicKey(rule.id,year)];return {met:ep?.status==='平息',value:ep?.status??null,evidence:ep?.id??null};}
@@ -213,11 +219,11 @@ function conditionMet(d,engine,rule,c,at){
 // Stages passed this year. A pure clock is read from its seeded history so
 // it agrees with route closures even before its record is written.
 export function phaseOf(d,engine,rule,at=d.get('state','minute')){
- if(isPureClock(rule))return pureHazardPhase(engine,d.document.randomSeed,rule,at);
+ if(isPureClock(rule))return pureHazardPhase(engine,d.get('randomSeed'),rule,at);
  const row=d.get('state','records',hazardKey(rule.id));return row?.year===yearOf(at)+1?row.phase:0;
 }
 function tick(d,engine,rule,at){
- const key=hazardKey(rule.id),seed=d.document.randomSeed,year=yearOf(at),day=at/DAY;
+ const key=hazardKey(rule.id),seed=d.get('randomSeed'),year=yearOf(at),day=at/DAY;
  let row=d.get('state','records',key);
  if(row?.lastTick>=at)return;
  const phase=row?.year===year+1?row.phase:0;
@@ -269,7 +275,7 @@ function endpoint(engine,location){
  return null;
 }
 function stepEpidemic(d,engine,rule,ep,at){
- const seed=d.document.randomSeed,day=at/DAY,disease=diseaseOf(engine,ep.disease);
+ const seed=d.get('randomSeed'),day=at/DAY,disease=diseaseOf(engine,ep.disease);
  // 1. Course: incubation ends, the sick recover.
  for(const id of Object.keys(ep.households).sort()){
   const h=ep.households[id];
@@ -290,7 +296,7 @@ function stepEpidemic(d,engine,rule,ep,at){
  for(const s of [...ep.settlements].sort()){
   const n=counts[s];if(!n)continue;
   // householdRate: households one sick household reaches per day, spread over the settlement.
-  const houses=housesIn(engine,s),beta=Math.min(1,disease.householdRate/houses.length)*measureFactor(engine,ep,s,at,'household',disease)*purifiedWaterFactor(engine,d.get('state'),s,at,'household',disease),p=1-(1-beta)**n;
+  const houses=housesIn(engine,s),beta=Math.min(1,disease.householdRate/houses.length)*measureFactor(engine,ep,s,at,'household',disease)*purifiedWaterFactor(engine,d.get('state'),s,at,'household',disease),p=1-pow(1-beta,n);
   for(const house of houses)if(!ep.households[house]&&hazardRoll(seed,`epi:${ep.id}:${house}`,day)<p)infect(engine,seed,ep,house,s,at,{source:'household'});
  }
  // 3. Along open routes to the next settlement.
@@ -300,7 +306,7 @@ function stepEpidemic(d,engine,rule,ep,at){
   if(!a||!b||a===b||edge.closedSeasons.includes(season)||hazardRouteClosed(engine,seed,edge.id,at))continue;
   for(const [from,to] of [[a,b],[b,a]]){
    const n=counts[from]??0;if(!n)continue;
-   const beta=disease.routeRate*Math.min(1,10/Math.max(1,edge.lengthKm))*measureFactor(engine,ep,from,at,'route',disease)*purifiedWaterFactor(engine,d.get('state'),from,at,'route',disease),p=1-(1-beta)**n;
+   const beta=disease.routeRate*Math.min(1,10/Math.max(1,edge.lengthKm))*measureFactor(engine,ep,from,at,'route',disease)*purifiedWaterFactor(engine,d.get('state'),from,at,'route',disease),p=1-pow(1-beta,n);
    if(hazardRoll(seed,`epi-route:${ep.id}:${edge.id}:${to}`,day)>=p)continue;
    const left=housesIn(engine,to).filter(h=>!ep.households[h]);if(!left.length)continue;
    infect(engine,seed,ep,left[Math.floor(hazardRoll(seed,`epi-pick:${ep.id}:${to}`,day)*left.length)],to,at,{source:'route',from,via:edge.id});
@@ -339,7 +345,7 @@ function exposeDrinkingWater(d,engine,day,at){
   const key=rule?epidemicKey(rule.id,yearOf(at)):`epidemic:water:${settlement}:${disease.id}:${yearOf(at)}`,old=d.get('state','records',key);
   const ep=structuredClone(old??{category:'epidemic',id:key,clock:rule?.id??null,waterExposure:!rule,disease:disease.id,origin:settlement,since:at,status:'流行',settlements:[settlement],households:{},measures:[],sourceEvent:`water:${settlement}:${day}`});
   const candidates=housesIn(engine,settlement).filter(h=>!ep.households[h]),chance=Math.min(1,r.exposureRate*water.pathogenRisk/100)*measureFactor(engine,ep,settlement,at,'household',disease);
-  for(const house of candidates)if(hazardRoll(d.document.randomSeed,`water:${settlement}:${house}`,day)<chance)infect(engine,d.document.randomSeed,ep,house,settlement,at,{source:'drinking_water',pathogenRisk:water.pathogenRisk});
+  for(const house of candidates)if(hazardRoll(d.get('randomSeed'),`water:${settlement}:${house}`,day)<chance)infect(engine,d.get('randomSeed'),ep,house,settlement,at,{source:'drinking_water',pathogenRisk:water.pathogenRisk});
   if(Object.keys(ep.households).length){ep.status='流行';d.set(['state','records',key],ep);}
  }
 }

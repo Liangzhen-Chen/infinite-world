@@ -6,12 +6,13 @@ import fs from 'node:fs/promises';
 import fc from 'fast-check';
 import { loadWorld } from '../tools/load-world.mjs';
 import { WorldEngine, xpRequired } from '../server-plugin/engine.mjs';
-import { applyPatches } from '../server-plugin/storage.mjs';
+import { applyPatches, canonicalEqual } from '../server-plugin/storage.mjs';
 import {planAgricultureMigration} from '../server-plugin/agriculture-migration.mjs';
 import {planWildlifeMigration} from '../server-plugin/wildlife-migration.mjs';
 import {planFarmPestsMigration} from '../server-plugin/farm-pests-migration.mjs';
 import { createCampaign } from './fixtures/legacy/core.js';
 import { parseTurn } from '../extension/turn.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 const seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const engine=new WorldEngine(await loadWorld());
 const fresh=()=>{const c=engine.initialFromLegacy(createCampaign(seed),'deterministic-test'),migrated=applyPatches(c,planAgricultureMigration(c,engine.rules)),wild=applyPatches(migrated,planWildlifeMigration(migrated,engine.rules,engine.world.monsters));return applyPatches(wild,planFarmPestsMigration(wild,engine.rules));};
@@ -19,6 +20,27 @@ const run=async(document,tool,args,eventId='test')=>{
     const output=await engine.reduce(document,{tool,args,eventId});
     return {document:applyPatches(document,output.patches),result:output.result};
 };
+test('物理过程相同事实不重复写入，后一真实分钟的变化仍记录且不改原文档',async()=>{
+    const initial=engine.createCharacter(seed,{},'adopt-equal-records');
+    const document=(await run(initial,'world_time',{minutes:1},'first-minute')).document;
+    const rows=Object.entries(document.state.records).filter(([,row])=>row.category==='physical_feature');
+    assert.ok(rows.length);
+    const original=structuredClone(document),draft=engine.primitiveDraft(document);
+    for(const [id,row]of rows)draft.adopt(['state','records',id],structuredClone(row));
+    // N copies of the same facts = zero changes; a later minute's changed fact = one write.
+    assert.deepEqual(draft.patches,[]);assert.deepEqual(draft.document,document);
+    // A no-op still rejects the same unsafe keys as the ordinary patch cursor.
+    for(const key of ['__proto__','constructor','prototype'])assert.throws(()=>draft.adopt(['state','records',key],draft.peek('state','records',key)),/不安全路径/);
+    assert.deepEqual(draft.patches,[]);
+    const next=(await run(document,'world_time',{minutes:1},'next-minute')).document;
+    const changed=rows.find(([id,row])=>!canonicalEqual(row,next.state.records[id]));
+    assert.ok(changed);
+    const id=changed[0],value=next.state.records[id];
+    draft.adopt(['state','records',id],structuredClone(value));
+    assert.equal(draft.patches.length,1);
+    assert.deepEqual(applyPatches(document,draft.patches).state.records[id],value);
+    assert.deepEqual(document,original);
+});
 test('编号迁移：原始人物财物与熟练度保留，名字用于显示',()=>{
     const c=fresh();assert.equal(c.state.player.coins,180);assert.equal(c.state.inventory.item_ration.quantity,3);
     assert.equal(c.state.npcs.npc_hw_linsui.name,'林穗');assert.equal(c.state.skills.skill_light.proficiency,10);
@@ -141,10 +163,16 @@ test('E15 施法增长熟练度，持续效果到期移除，不生成永久世�
     const later=await run(cast.document,'world_time',{minutes:120},'later');assert.deepEqual(later.document.state.effects,{});
 });
 test('E17 交易物品别名同一编号，双方钱与库存守恒，余额不足原子拒绝',async()=>{
-    const c=fresh();c.state.npcs.npc_hw_linsui.inventory.item_bread={quantity:3};
+    // S5-02: original saleable stock3 plus household reserve4 (two members
+    // *2.5/h *24 /30). Stock is an unrelated premise, not a passed action.
+    const prepared=applyIntentSetup(engine,fresh(),{facts:[{path:['state','npcs','npc_hw_linsui','inventory','item_bread'],value:{quantity:7}}]});assert.deepEqual(prepared.setupUnmet,[]);const c=prepared.document;
     const result=await run(c,'world_trade',{seller:'老板娘',item:'热面包',quantity:2});
-    assert.equal(result.document.state.inventory.item_bread.quantity,2);assert.equal(result.document.state.npcs.npc_hw_linsui.inventory.item_bread.quantity,1);
-    assert.equal(result.document.state.player.coins,176);assert.equal(result.document.state.npcs.npc_hw_linsui.coins,454);
+    assert.equal(result.document.state.inventory.item_bread.quantity,2);assert.equal(result.document.state.npcs.npc_hw_linsui.inventory.item_bread.quantity,5);
+    // 15 §15.2: food demand 14 / ample opening stock clamps to .5;
+    // baseline 2 × .5 × depth/grade/spread/regard/correction 1 × 2 = 2.
+    assert.equal(result.result.cost,2);
+    assert.equal(result.result.cost,Math.trunc(2*result.result.pricing.unitPrice));
+    assert.equal(result.document.state.player.coins,c.state.player.coins-result.result.cost);assert.equal(result.document.state.npcs.npc_hw_linsui.coins,c.state.npcs.npc_hw_linsui.coins+result.result.cost);
     assert.ok(result.document.state.inventory.item_bread.quality);assert.equal(result.document.state.inventory.item_bread.weight,0.15);
     c.state.player.coins=0;const before=JSON.stringify(c);await assert.rejects(run(c,'world_trade',{seller:'林穗',item:'面包',quantity:2}),/余额不足/);assert.equal(JSON.stringify(c),before);
 });
@@ -157,14 +185,16 @@ test('租房服务：报价来自引擎、实际扣款转入店主、期限保�
 });
 test('交易性质：任意可负担数量与铜币守恒',async()=>{
     await fc.assert(fc.asyncProperty(fc.integer({min:1,max:12}),async quantity=>{
-        const c=fresh();c.state.npcs.npc_hw_linsui.inventory.item_bread={quantity:12};
+        // Preserve the full generated range1..12; keep four household meals
+        // behind it rather than narrowing the property to the saleable two.
+        const prepared=applyIntentSetup(engine,fresh(),{facts:[{path:['state','npcs','npc_hw_linsui','inventory','item_bread'],value:{quantity:16}}]});assert.deepEqual(prepared.setupUnmet,[]);const c=prepared.document;
         const publicMoney=state=>Object.values(state.settlements).reduce((n,s)=>n+(s.treasury??0),0);
         const initial=c.state.player.coins+c.state.npcs.npc_hw_linsui.coins+publicMoney(c.state);
         const next=(await run(c,'world_trade',{seller:'林穗',item:'面包',quantity})).document;
         assert.equal(next.state.player.coins+next.state.npcs.npc_hw_linsui.coins+publicMoney(next.state),initial);
         const taxes=Object.values(next.state.records).filter(r=>r.category==='trade_tax').reduce((n,r)=>n+r.amount,0);
         assert.equal(publicMoney(next.state)-publicMoney(c.state),taxes);
-        assert.equal(next.state.inventory.item_bread.quantity+(next.state.npcs.npc_hw_linsui.inventory.item_bread?.quantity??0),12);
+        assert.equal(next.state.inventory.item_bread.quantity+(next.state.npcs.npc_hw_linsui.inventory.item_bread?.quantity??0),16);
     }),{numRuns:30,seed:20261010});
 });
 test('E18 任意职业与无认证条件拒绝，技能突破要求在场且有资格的导师',async()=>{

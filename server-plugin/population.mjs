@@ -1,8 +1,9 @@
 import {preconditionFailure} from './precondition.mjs';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
-import {initialNpcState,householdDefinition} from './npc-state.mjs';
-import {composeName,acceptRemoteProfile} from './remote-generation.mjs';
+import {initialNpcState,householdDefinition,lifeRoutine} from './npc-state.mjs';
+export {lifeRoutine} from './npc-state.mjs';
+import {composeName,acceptRemoteProfile,settleRemoteWildlife,settleRemoteAccounts} from './remote-generation.mjs';
 import {expandedEducation} from './education-cohorts.mjs';
 import {isDeepStrictEqual} from 'node:util';
 import {advanceLayerPlan} from './advance-layers.mjs';
@@ -244,6 +245,10 @@ export function populationRecord(state,settlementId){return state.population?.[s
 // District aggregates and the captured template/basis replay the same names,
 // ages, kinship and minor flags when the county comes back into range.
 export function settlePopulationLayers(d,engine){
+    // Only a movement transaction has a departure; standalone layer
+    // compaction also accepts a draft over the already-selected location.
+    if(d.original&&d.original.state.location!==d.get('state','location'))settleRemoteWildlife(d,engine,d.get('state','location'));
+    settleRemoteAccounts(d,engine);
     const state=d.get('state');if(!Object.keys(state.remote??{}).length)return;
     const plan=advanceLayerPlan(engine,state),far=[],near=[];
     for(const [sid,record] of Object.entries(state.population??{})){
@@ -453,10 +458,6 @@ export function profileBrief(document,person){
 // and they keep a plain home routine. A roster person has no authored view of
 // others, so their first view of each housemate or relative is the one that
 // person registered towards them.
-export function lifeRoutine(home,{minor=false,occupation=''}={}){
-    const day=minor?'在家中玩耍，由家人照看':`在家操持家务${occupation?`（${occupation}）`:''}`;
-    return {default:[{start:0,end:360,location:home,activity:'睡眠',services:[]},{start:360,end:1260,location:home,activity:day,services:[]},{start:1260,end:1440,location:home,activity:'睡眠',services:[]}]};
-}
 export function rosterLifeState(engine,state,id,minute,reason,{minor=false}={}){
     const entity=engine.byId.get(id);
     if(!entity||entity.tier!=='roster'||state.npcs?.[id]||!entity.householdId)return null;

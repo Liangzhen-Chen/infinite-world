@@ -5,9 +5,15 @@ import {once} from './harness.mjs';
 
 export const annualLoanScenario=once(async()=>{
  const f=fixture({coins:30000});
- // The host has 500 copper but the annual quote charges 507 in interest.
- // Pay for actual stock first so the live NPC decision can accept the terms.
- await f.act({seller:host,item:'item_bread',quantity:10},'annual-probe-buy-bread');
+ // W8-E1 负重：通用夹具行囊 265 公斤（木料 200 + 燕麦 50 + 面包 15）超安全负重 30 公斤，买面包入囊被拒。
+ // 本情境只向店家买 10 份面包，行囊原有货物都不用：只留面包 100 份 = 15 公斤。
+ f.doc.state.inventory={item_bread:{quantity:100}};
+ // The host starts with 500 copper. Actual stock purchases fund the interest
+ // under the live annual quote so the NPC can genuinely accept its terms.
+ // W8-E6 excludes private packs from public supply: S=20, so a ten-portion
+ // lot exceeds max(5,20*0.3)=6. Two native retail lots of five deliver the
+ // same ten portions; the second still fits max(5,15*0.3)=5.
+ for(let lot=0;lot<2;lot++)await f.act({seller:host,item:'item_bread',quantity:5},`annual-probe-buy-bread:${lot}`);
  const loan=await f.act({operation:'lend',seller:host,coins:1000,days:360,quantity:12,consent:true},'annual-probe');
  const row=f.doc.state.records[loan.debt];assert.equal(row.installments,12);assert.equal(row.deadline-row.createdAt,360*DAY);
  f.doc.state.npcs[host].coins=0;

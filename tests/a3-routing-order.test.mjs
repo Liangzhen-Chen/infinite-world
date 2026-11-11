@@ -7,6 +7,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {prepareOpenAction} from '../server-plugin/open-actions.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -28,7 +29,7 @@ test('A3 route order: trade and manufacture select programs before account/sink 
  assert.equal(trade.routed,'core:trade.buy');assert.equal(trade.slots.item,'item_bread');assert.equal(trade.slots.quantity,2);
  const craft={intent:'按配方削木楔',means:{recipe:'recipe_wooden_pegs'},effects:[{op:'transfer',resource:'item_wood',from:'self',to:'sink:craft',qty:999}]};
  const plan=prepareOpenAction(engine,document,craft);assert.equal(plan.routed,'core:craft.manufacture');assert.equal(plan.slots.recipe,'recipe_wooden_pegs');
- await assertActionRejected(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-recipe',args:craft}),/尚未学会这个配方/);
+ await assertActionRejected(engine.previewAction(document,{tool:'world_propose',eventId:'route-unknown-recipe',args:craft}),/当前位置没有所需工作台/);
  assert.deepEqual(document,before);
 });
 
@@ -54,8 +55,17 @@ test('A3 route order: loan consent and unauthored transfers retain real authorit
  assert.equal(refused.receipt.status,'rejected');assert.equal(refused.receipt.code,'E-ACTION-CONSENT');
  assert.equal(refused.receipt.routed,'core:trade.lend');assert.match(refused.receipt.reason,/明确同意/);
  assert.deepEqual(refused.receipt.applied,[]);assert.equal(refused.receipt.cost.time,0);
- assert.throws(()=>prepareOpenAction(engine,document,{intent:'xyzzy',effects:[{op:'transfer',resource:'coin',from:shop,to:'self',qty:5}]}),{code:'E-OPEN-TRANSFER'});
+ // K6 (76365571, legality is a consequence): an unauthored transfer out of a present person's purse is the
+ // same physical act and is committed as theft against her; out of reach it still refuses physically.
+ const take={intent:'xyzzy',effects:[{op:'transfer',resource:'coin',from:shop,to:'self',qty:5}]};
+ const taken=await engine.reduce(document,{tool:'world_propose',eventId:'route-unauthored-take',args:take}),after=applyPatches(document,taken.patches);
+ assert.equal(taken.result.receipt.status,'committed');assert.equal(after.state.player.coins,105);
+ const offense=taken.result.receipt.consequences.find(c=>c.type==='offense'),row=after.state.records[offense?.record];
+ assert.equal(offense?.offense,'theft');assert.equal(offense.victim,shop);assert.equal(row.sourceEvent,'route-unauthored-take');assert.deepEqual(row.stolen,{coins:5});
  assert.deepEqual(document,before);
+ const away=structuredClone(document);away.state.npcs[shop].location='loc_bs';
+ const far=await engine.reduce(away,{tool:'world_propose',eventId:'route-unauthored-far',args:take}).then(out=>({status:out.result.receipt?.status,patches:out.patches,reason:out.result.receipt?.reason}),error=>({status:'rejected',patches:[],reason:error.message}));
+ assert.equal(far.status,'rejected',JSON.stringify(far.reason));assert.deepEqual(far.patches,[]);assert.doesNotMatch(far.reason??'',/同意|授权|许可/);
 });
 
 test('A3 route order: sale direction wins over incidental buyer wording, price is not item quantity',()=>{
@@ -67,7 +77,7 @@ test('A3 route order: sale direction wins over incidental buyer wording, price i
 });
 
 test('A3 route order: request fields retain the missing teacher and unknown price requirements',async()=>{
- const {engine,document}=fixture();
+ const {engine,document:initial}=fixture();let document=initial;
  const certify=prepareOpenAction(engine,document,{intent:'申请职业认证',target:place,effects:[{op:'emit',verb:'request',actor:'self',target:place,payload:{kind:'certification',terms:{profession:'profession_life_6'}},visibility:'present'}]});
  // a3r-route3: complete candidates precede wording, so incomplete certification
  // cannot win here. Retain its requested profession and missing-teacher checks,
@@ -81,8 +91,13 @@ test('A3 route order: request fields retain the missing teacher and unknown pric
  await assertActionRejected(engine.previewAction(document,{tool:'world_act',eventId:'route-certify-no-teacher',args:{action:certification.id,slots:certification.slots}}),/未登记.*undefined/);
  const haggle={intent:'能便宜两铜吗',target:shop,effects:[{op:'emit',verb:'request',actor:'self',target:shop,payload:{kind:'haggle',terms:{discountCopper:2}},visibility:'present'}]};
  const unknown=prepareOpenAction(engine,document,haggle);assert.deepEqual(unknown.needsSlots,{action:'core:dialogue.haggle',missing:['content','source']});
- document.state.records.quote={category:'trade_quote',seller:shop,item:'item_bread',day:0,listPrice:5};
- const quoted=prepareOpenAction(engine,document,haggle);assert.equal(quoted.routed,'core:dialogue.haggle');assert.equal(quoted.slots.content,'3');assert.equal(quoted.slots.source,'item_bread');
+ // S5-02: establish the observed item with a native purchase. Only the item
+ // remains in history; its current quote is derived at routing time.
+ const purchase=await engine.reduce(document,{tool:'world_trade',args:{seller:shop,item:'item_bread',quantity:1},eventId:'route-observed-price'});document=applyPatches(document,purchase.patches);
+ // Opening 2 baseline × abundant-food .5 × all remaining factors 1 = 1.
+ assert.equal(purchase.result.cost,1);
+ const current=facilityRuntime().currentTradeQuote(engine,document,{seller:shop,item:'item_bread'});
+ const quoted=prepareOpenAction(engine,document,haggle);assert.equal(quoted.routed,'core:dialogue.haggle');assert.equal(quoted.slots.content,String(Math.round(current.listPrice)-2));assert.equal(quoted.slots.source,'item_bread');
 });
 
 test('A3 route order: scene observation is a read with no patches, costs or proposed effects',async()=>{
@@ -96,7 +111,13 @@ test('A3 route order: buy then eat uses fresh inventory, native nutrition, conse
  const plan=prepareOpenAction(engine,document,input.args);assert.equal(plan.status,'sequence');assert.deepEqual(plan.steps.map(s=>s.action),['core:trade.buy','core:eat.meal']);
  const preview=await engine.previewAction(document,input);assert.equal(preview.receipt.status,'preview');assert.equal(preview.receipt.steps.length,2);assert.deepEqual(document,before);
  const result=await engine.reduce(document,input),next=applyPatches(document,result.patches);
- assert.equal(next.state.inventory.item_bread.quantity,1);assert.equal(next.state.player.coins,before.state.player.coins-4);
+ // S5-02: the proposal's coin effect is not price authority; native retail
+ // derives the real bill while the buy/eat sequence keeps its original stock.
+ const expected=facilityRuntime().currentTradeQuote(engine,before,{seller:shop,item:'item_bread',quantity:2});
+ // No household food here; market food remains above twice demand 14.
+ // 2 baseline × .5 scarcity × all other factors 1 × 2 units = 2.
+ assert.equal(result.result.receipt.steps[0].legacy.cost,2);
+ assert.equal(next.state.inventory.item_bread.quantity,1);assert.equal(next.state.player.coins,before.state.player.coins-expected.totalCoins);
  assert.equal(result.result.receipt.steps[1].legacy.eaten,1);assert.ok(result.result.receipt.steps[1].legacy.nutrition.satiety<99);
  assert.deepEqual(auditLedger(next.ledger),[]);assert.deepEqual(reconcile(engine,next),{mismatches:[],lots:[],drift:[],audit:[]});
  const duplicate=await engine.reduce(JSON.parse(JSON.stringify(next)),input);assert.deepEqual(duplicate.patches,[]);assert.equal(duplicate.result.receipt.duplicate,true);assert.deepEqual(document,before);

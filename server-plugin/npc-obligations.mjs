@@ -10,8 +10,10 @@ import {scheduleAt,advanceNpcSchedules} from './npc-schedule.mjs';
 import {waterEarthHeldUntil}from'./magic-water-earth.mjs';
 import {personConstraint,personConstraints,personSimulation}from'./entity-view.mjs';
 import {employmentReservation} from './employment-state.mjs';
+import {marketTimeWindows,marketScheduleAt} from './npc-state.mjs';
 import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
+import {safeCarryKg,packItemKg} from './carry.mjs';
 declareHoldingWriter('npc-obligations',{kinds:['resides','devotee_of','certified']});
 
 const live=o=>o?.reservationVersion===1&&['待履行','进行中'].includes(o.status);
@@ -38,6 +40,7 @@ export function npcObligationAt(state,id,minute=state.minute){
  return liveNpcReservations(state).find(o=>reservedActors(o).includes(id)&&!released(o,id)&&(o.departures[id]??o.start)<=minute&&minute<o.deadline)??null;
 }
 export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','minute'),minutes=0,location,kind='action'}={}){
+ for(const actor of actors)if(marketTimeWindows(d.get('state'),actor).some(r=>r.start<start+Math.max(1,minutes)&&start<r.end))throw preconditionFailure('与实际赶集路程或服务时段冲突');
  const finish=start+minutes;
  if(kind!=='medicine'&&kind!=='employment')for(const actor of actors)if(medicineReservation(d.get('state'),actor,start,minutes))throw preconditionFailure('与诊疗预约冲突');
  if(kind!=='education')for(const actor of actors)if(educationReservation(engine,d.get('state'),actor,start,minutes,{automatic:kind==='autonomy'}))throw preconditionFailure('与已登记授业课时冲突');
@@ -51,7 +54,7 @@ export function assertNpcObligationAction(d,engine,actors,{start=d.get('state','
   const begin=o.departures[actor]??o.start;
   if(start<o.deadline&&(minutes?finish>begin:start>=begin))throw preconditionFailure(`与${o.id}的${o.type}时段冲突；需先取消约定`);
   if(kind==='move'&&finish<=begin&&location&&location!==o.location){
-   let route;try{route=engine.route(location,o.location,'walk',finish,d.document.randomSeed);}catch{throw preconditionFailure('行程结束后无法赶赴约定地点');}
+   let route;try{route=engine.route(location,o.location,'walk',finish,d.get('randomSeed'));}catch{throw preconditionFailure('行程结束后无法赶赴约定地点');}
    if(finish+route.minutes>o.start)throw preconditionFailure('行程结束后无法按时赴约');
   }
  }
@@ -86,7 +89,7 @@ export function createNpcObligation(d,engine,args,eventId){
   const row=engine.actor(d,actor);if(!capable(row)||/(睡眠|熟睡|睡觉)/.test(row.activity??''))throw preconditionFailure('义务当事人无法清醒履约');
   if(actor!=='player'&&(row.scheduleTravel||row.cognitionTravel||state.player.companions?.includes(actor)))throw preconditionFailure('在途或同行人物不能另占会面时段');
   const from=locationOf(state,actor);if(!from)throw preconditionFailure('当事人没有可用的出发地点');
-  const route=from===location?{minutes:0,cost:0}:engine.route(from,location,'walk',now,d.document.randomSeed);
+  const route=from===location?{minutes:0,cost:0}:engine.route(from,location,'walk',now,d.get('randomSeed'));
   if(now+route.minutes>start)throw preconditionFailure('剩余时间不足以按真实路线赴约');
   if(row.coins<route.cost)throw preconditionFailure('赴约路费不足');
   departures[actor]=start-route.minutes;
@@ -118,7 +121,13 @@ function createNpcDelivery(d,engine,args,eventId){
  if(typeof args.content!=='string'||!args.content.trim()||args.content.length>1200)throw preconditionFailure('约定内容为空或过长');
  const item=engine.resolve(args.item,'item'),quantity=integer(args.quantity,1,100000,'货物数量');
  if(engine.quantity(d,promisor,item)<quantity)throw preconditionFailure('承诺者当前缺少约定货物');
- const from=locationOf(state,promisor),route=from===location?{minutes:0,cost:0,edges:[]}:engine.route(from,location,'walk',start,d.document.randomSeed);
+ const from=locationOf(state,promisor),route=from===location?{minutes:0,cost:0,edges:[]}:engine.route(from,location,'walk',start,d.get('randomSeed'));
+ // Remote delivery is a walking courier, bounded by the same strength rule as
+ // combat.derivedStats. On-site handover does not occupy a remote route.
+ if(from!==location){
+  const weight=packItemKg(d,engine,promisor,item),capacity=safeCarryKg(d,engine,promisor);
+  if(!(weight>=0)||quantity*weight>capacity)throw preconditionFailure('送货数量超过送货者实际步行载重，须另约运具或分批');
+ }
  if(start+route.minutes>deadline)throw preconditionFailure('剩余时间不足以按真实路线送货');
  if(engine.actor(d,promisor).coins<route.cost)throw preconditionFailure('送货路费不足');
  assertCourierRouteAccess(engine,promisor,from,location,route);
@@ -131,7 +140,8 @@ function createNpcDelivery(d,engine,args,eventId){
 }
 function assertCourierAccess(engine,id,location){
  const access=engine.byId.get(location)?.access;
- if(access?.mode==='private'&&access.requiresConsent&&!access.residents?.includes(id))throw preconditionFailure('送货者不能擅入他人私宅，请约在公共地点交付');
+ // The deliverer's own choice: they will not walk into someone else's home.
+ if(access?.mode==='private'&&access.requiresConsent&&!access.residents?.includes(id))throw preconditionFailure('送货者不愿擅入他人私宅，请约在公共地点交付');
 }
 export function assertCourierRouteAccess(engine,id,from,to,route){
  assertCourierAccess(engine,id,to);
@@ -155,6 +165,15 @@ function simulateNpc(d,engine,id,before,after,bookings,beforeState){
   if(heldUntil>t){add(Math.min(after,heldUntil),capable(npc));if(t>=after)break;continue;}
   if(!capable(npc)){npc.activity=npc.status;add(after,false);break;}
   if(d.get('state','player','companions')?.includes(id)){npc.activity='同行';add(after,false);break;}
+  const market=marketScheduleAt(d.get('state'),id,t);
+  if(market){
+   npc.location=market.location;npc.activity=market.activity;
+   if(market.travel)npc.scheduleTravel=market.travel;else delete npc.scheduleTravel;
+   const end=Math.min(after,market.until);add(end,false);
+   if(end<market.until)break;
+   if(market.travel)npc.location=market.travel.to;
+   delete npc.scheduleTravel;if(t>=after)break;continue;
+  }
   if(npc.scheduleTravel){const trip=npc.scheduleTravel;
    if(trip.arrive>after){add(after,false);break;}
    add(Math.max(t,trip.arrive),false);npc.location=trip.to;delete npc.scheduleTravel;continue;
@@ -168,7 +187,7 @@ function simulateNpc(d,engine,id,before,after,bookings,beforeState){
   const end=Math.min(after,slot.until,visitEnd,...upcoming);
   if(npc.location!==slot.location){
    if(active?.deliveryVersion===1&&t>=active.deadline){npc.activity='未能按时送达';break;}
-   let route;try{route=engine.route(npc.location,slot.location,'walk',t,d.document.randomSeed);if(active?.deliveryVersion===1)assertCourierRouteAccess(engine,id,npc.location,slot.location,route);}catch{route=null;npc.activity='行程受阻';}
+   let route;try{route=engine.route(npc.location,slot.location,'walk',t,d.get('randomSeed'));if(active?.deliveryVersion===1)assertCourierRouteAccess(engine,id,npc.location,slot.location,route);}catch{route=null;npc.activity='行程受阻';}
    if(route&&npc.coins<route.cost){route=null;npc.activity='路费不足，暂留原处';}
    if(route){moveCoins(d,{from:purse(null,id),to:sink('export','travel'),amount:route.cost,writer:'npc-obligations',eventId:null});npc.coins-=route.cost;npc.scheduleTravel={from:npc.location,to:slot.location,depart:t,arrive:t+route.minutes,edges:route.edges};npc.location=null;npc.activity='赶路';continue;}
    if(end<=t)break;add(end,false);

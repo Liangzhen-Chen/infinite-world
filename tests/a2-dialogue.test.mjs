@@ -1,4 +1,7 @@
 import {relationView} from '../server-plugin/npc-state.mjs';
+import {WorldEngine} from '../server-plugin/engine.mjs';
+import {facilityRuntime} from '../server-plugin/facility-state.mjs';
+import bargainingTable from '../world/rules/tables/bargaining.json' with {type:'json'};
 // A3 causal2: compare the same trust changes through the single read model.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -68,14 +71,32 @@ test('N13 急事结束谈话并登记待办；未成年人和同意不能由玩�
  const fake=await ui.choose('promise.create',{promisor:NPC,type:'带路',destination:'loc_hw',content:'fake',consent:true},{search:true});assert.equal(fake.ok,false);
 });
 test('还价按轮数与让步表，确认后实际成交；只改成交价格，钱物仍守恒',async t=>{
- const ui=await setup(t,s=>{s.player.coins=5000;},w=>{w.items.find(i=>i.id==='item_bread').basePrice=100;});await primed(ui);
+ let patched;
+ const ui=await setup(t,s=>{s.player.coins=5000;},w=>{w.items.find(i=>i.id==='item_bread').basePrice=100;patched=w;});await primed(ui);
  const first=await ui.choose('trade.buy',{seller:NPC,item:'item_bread',quantity:1},{target:NPC});assert.ok(first.ok,first.error);
- const start=await ui.read(),quote=Object.values(start.state.records).find(r=>r.category==='trade_quote'&&r.seller===NPC&&r.item==='item_bread'),offered=Math.ceil(quote.listPrice*.95);
- assert.ok((await talk(ui,'haggle',{content:String(quote.listPrice),source:'item_bread'})).ok);
+ // Setup trust 20 gives relation 1-.15*.7*.2=.979. 稀缺度 = 需求/供给（market.mjs stockSupply:219、marketQuote:303），
+ // 不再被夹在 0.5 地板：探针 tools/probe-rules-a.mjs a2（uiSession 同一入口）读到同类食物供给 47、需求 28，28/47=0.5957 > 0.5。
+ // Baseline 100 × 0.5957 × .979 × depth/grade/spread/corrections 1 = 58.32 → 58 copper。
+ // 旧期望 48（需求 14/供给 133 或 16/43，夹到 .5，100×.5×.979=48.95）的变化链，对 git 历史逐段二分（同一探针）：
+ //  · t-alloc f8e4a13b（R5：同一卖家可售存量按需求在买方间分摊，口粮替代 shop.mjs foodSources）：需求 14→24、供给 46，稀缺度 .522，价 51；
+ //  · st-5（105d2730，同属 R5 及 t-foodsrc/t-staple 单餐额度）：供给 44、需求 24，.545，价 53；
+ //  · 现状（R1 t-sat 饱腹改由推导 + t-avail 买得起的来源）：供给 47、需求 28，.596，价 58（同类食物各户 retained 之和 36→40）。
+ assert.equal(first.result.cost,58);
+ // S5-02 / 15 §15.2: a real purchase receipt is the observed price; the
+ // conversation recomputes its own current projection instead of reading cache.
+ const quote=first.result.pricing;
+ // 出价取当前报价（原为首笔成交单价×.95=56）。原假设“买一件后价格不变”只在供需比被钳在下限 .5 时成立；现在供需比 29/47→买一件后 29/46，
+ // 在曲线上（离开下限），再叠加深度与关系变化，成交后的现价 61.916 比首笔 58.323 高约 6%，56 低于第 2 轮让步线 ceil(61.916×(1−.05))=59，被拒（dialogue.mjs:154-155 的既有判定，未改）。
+ // 本测试要检验的意图不变：还价按轮数与让步表（bargaining.json concession 第 2 轮 5%）判定，出价在让步线上则成交；这里让步线由引擎当前报价与让步表算出，不写死 56 或 59。
+ // 对应设计变化：面包饱腹改推导 + 卖家份额分摊使供需比离开下限（PLAN.md:584、591③、316③、563②）；李白 11-11 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md（a2-dialogue-7）。
+ const engine=new WorldEngine(patched),bargaining=engine.rules.bargaining??bargainingTable,rule=Array.isArray(bargaining)?bargaining.find(r=>!r.selector.culture)??bargaining[0]:bargaining;
+ const current=facilityRuntime().currentTradeQuote(engine,await ui.read(),{seller:NPC,item:'item_bread'});
+ const offered=Math.ceil(current.listPrice*(1-rule.concession[1]));
+ const opening=await talk(ui,'haggle',{content:String(Math.ceil(quote.unitPrice)),source:'item_bread'});assert.ok(opening.ok,opening.error);
  const bargain=await talk(ui,'haggle',{content:String(offered),source:'item_bread'});assert.ok(bargain.ok,bargain.error);assert.equal(bargain.result.dialogue.decision.outcome,'agree');
  const before=await ui.read(),accept=await talk(ui,'accept');assert.ok(accept.ok,accept.error);assert.equal(accept.result.cost,offered);
- const after=await ui.read(),later=Object.values(after.state.records).find(r=>r.category==='trade_quote'&&r.seller===NPC&&r.item==='item_bread');
- assert.equal(later.listPrice,quote.listPrice);assert.equal(later.deals.at(-1).unitPrice,offered);conserved(before,after,'还价成交');
+ const after=await ui.read(),later=Object.values(after.state.records).filter(r=>r.category==='market_trade'&&r.seller===NPC&&r.item==='item_bread').at(-1);
+ assert.equal(accept.result.pricing.baseline,100);assert.equal(later.totalCoins,offered);assert.equal(later.quantity,1);conserved(before,after,'还价成交');
 });
 test('告知引用已知来源；欺骗经对抗并写现有谎言账，不能把虚构说法冒充告知',async t=>{
  const ui=await setup(t,s=>{s.player.memoryStream=[{id:'bridge',sourceEvent:'bridge-built',kind:'help',content:'桥已经修好',sourceType:'亲历',minute:500,participants:['player']}];});await primed(ui);

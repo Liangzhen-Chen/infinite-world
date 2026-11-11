@@ -32,7 +32,7 @@ async function http(t,edition=world){
         return{status:response.status,body:await response.json()};
     };
     const api=async(endpoint,body)=>{const response=await request(endpoint,body);
-        assert.equal(response.status,200,`${endpoint}: ${response.body.error}`);return response.body;};
+        assert.equal(response.status,200,`${endpoint}: ${response.body.error}`);return response.body;};api.seedMode='fixed';
     t.after(()=>assert.equal(providerCalls,0));
     return{api,request,root};
 }
@@ -150,7 +150,7 @@ test('G1正式暮纹术经购书、识字练习及实际学习后扣木炭/魔�
 
 test('M6–M8复用运行器真实reconcile/sync-index：修改输入撤销旧账、重生成幂等、删除并导入无漂移',async t=>{
     const server=await http(t),scenario=await script('reconcile'),endpoints=[];
-    const api=async(name,body)=>{endpoints.push({name,body});return server.api(name,body);};
+    const api=async(name,body)=>{endpoints.push({name,body});return server.api(name,body);};api.seedMode=server.api.seedMode;
     const client=scriptedClient(input=>{
         if(input.startsWith('（场外）'))return[];
         if(input.includes('走进'))return[['world_move',{destination:'青灯酒馆'}]];
@@ -158,7 +158,7 @@ test('M6–M8复用运行器真实reconcile/sync-index：修改输入撤销旧�
         if(input.includes('买'))return[['world_trade',{seller:'林穗',item:'面包',quantity:input.includes('两个')?2:1}]];
         return[];
     });
-    const result=await runPlaytest({scenario,api,client,bundle:await loadPromptBundle()});
+    const result=await runPlaytest({scenario,api,client,bundle:await loadPromptBundle(),seed:'m1-history-preconditions'});// 本测试服务器用确定种子 'm1-history-preconditions'（第 25 行），守门按实际种子核对
     assert.equal(result.pass,true,failures(result));
     const edited=result.turns.find(row=>scenario.turns[row.index].historyAction==='edit-player-message');
     assert.ok(edited.assertions.some(row=>row.kind==='rollback'&&row.pass));
@@ -209,7 +209,7 @@ test('M9旧版本合成副本导入后真实world_upgrade仅一次，关系/库�
         if(input==='我沿原路回青灯酒馆。')return[['world_move',{destination:'青灯酒馆'}]];
         return[];
     });
-    const result=await runPlaytest({scenario,api:current.api,client,bundle:await loadPromptBundle(),session:{campaignId,chat:[],history:[]}});
+    const result=await runPlaytest({scenario,api:current.api,client,bundle:await loadPromptBundle(),seed:'m1-history-preconditions',session:{campaignId,chat:[],history:[]}});
     assert.equal(result.pass,true,failures(result));
     assert.deepEqual(result.finalDocument.memories,before.memories);
     assert.deepEqual(result.finalDocument.state.npcs.npc_hw_linsui.relationships,before.state.npcs.npc_hw_linsui.relationships);

@@ -37,6 +37,8 @@ async function scenario(s){
     const apply=await s.execute('world_settlement',{operation:'org_join',org,member:WORKER,feePayer:'player'},'apply');
     await s.execute('world_settlement',{operation:'org_vote',org,proposal:apply.proposal,opinion:'approve'},'approve');
     const shop=(await s.execute('world_trade',{operation:'lease',seller:LANDLORD,consent:true,days:3,deposit:3},'lease')).business;
+    // D05 §5.1: persist a genuinely funded counter rather than a purse alias.
+    await s.execute('world_act',{action:'business:open_counter',slots:{business:shop,coins:100}},'counter');
     const order=await s.execute('world_trade',{operation:'procure',business:shop,seller:LANDLORD,consent:true,item:'item_bread',quantity:2},'procure');
     await s.execute('world_trade',{operation:'fulfill',business:shop,seller:LANDLORD,contract:order.contract},'delivered');
     await s.execute('world_settlement',{operation:'business_open',business:shop},'open');

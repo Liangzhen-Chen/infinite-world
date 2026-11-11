@@ -1,4 +1,6 @@
 import {xpRequired} from './progression.mjs';
+import {carryLoad} from './carry.mjs';
+import {playerWeatherExposure} from './environment-state.mjs';
 import {skillGrade} from './engine.mjs';
 import {effectiveProficiency} from './professions.mjs';
 import {personName,personAge,personOccupation,personRelationships,personOffices,personView,groupView} from './entity-view.mjs';
@@ -6,6 +8,7 @@ import {personName,personAge,personOccupation,personRelationships,personOffices,
 // Project only the player's holdings and learned content, using the saved world.
 export function personal(engine,document){
     const s=document.state,p=s.player??{},roles=s.professions??{};
+    const exposures=playerWeatherExposure(s),status=[p.status??'未记录',...exposures.map(r=>r.name)].join(' · ');
     const professions={combat:roles.combat??'',life:roles.life??[],hidden:roles.hidden??[]};
     const reader={get:(...keys)=>keys.reduce((value,key)=>value?.[key],{state:{...s,professions}})};
     const name=(id,fallback='未知')=>engine.byId.get(id)?.name??fallback;
@@ -67,9 +70,9 @@ export function personal(engine,document){
         positions:personView(engine,s,'player').organizations.filter(r=>r.value.source!=='household').map(r=>({org:r.value.id,name:groupView(engine,s,r.value.id)?.organization.value.name??r.value.id,position:r.value.position}))};
     return {minute:s.minute,player:{name:personName(engine,s,'player').value??'旅人',...identity,level,xp:p.xp??0,nextLevelXp:level<levelMaximum?xpRequired(level+1):null,
         levelMaximum,freeAttributePoints:p.freeAttributePoints??0,hp:p.hp??null,maxHp:p.maxHp??null,mp:p.mp??null,maxMp:p.maxMp??null,
-        coins:p.coins??0,status:p.status??'未记录',attributes:Object.fromEntries(engine.rules.attributes.map(key=>[key,p.attributes?.[key]??null]))},
+        coins:p.coins??0,status,exposures,attributes:Object.fromEntries(engine.rules.attributes.map(key=>[key,p.attributes?.[key]??null]))},
         professions:careers,skills,spells,inventory,
-        load:{knownKg:inventory.reduce((sum,row)=>sum+(row.totalWeight??0),0),unknownStacks:inventory.filter(row=>row.weight===null).length}};
+        load:{knownKg:inventory.reduce((sum,row)=>sum+(row.totalWeight??0),0),unknownStacks:inventory.filter(row=>row.weight===null).length,...carryLoad(engine,document)}};
 }
 
 export function registerUIRoutes({post,readCampaign}){

@@ -1,0 +1,951 @@
+{
+ "item_wood": {
+  "tags": [
+   "fuel",
+   "timber"
+  ]
+ },
+ "item_herb": {
+  "tags": [
+   "herb",
+   "medicine"
+  ]
+ },
+ "item_salt": {
+  "tags": [
+   "salt"
+  ]
+ },
+ "item_milk": {
+  "animalProduct": {
+   "from": "lactation",
+   "when": {
+    "taxon": "cattle"
+   }
+  },
+  "props": {
+   "sources": [
+    {
+     "name": "牛乳",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171265，NDB 1077）：Milk, whole, 3.25% milkfat, with added vitamin D；含水 88.1 g/100g，61 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.881,
+     "kcalPer100gWet": 61
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "牛乳：类别 milk 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_wool": {
+  "animalProduct": {
+   "from": "coat",
+   "when": {
+    "coat": "wool"
+   }
+  }
+ },
+ "item_rawhide": {
+  "animalProduct": {
+   "from": "carcass",
+   "part": "hide"
+  }
+ },
+ "item_pearl_barley": {
+  "tags": [
+   "grain"
+  ]
+ },
+ "item_dry_peas": {
+  "tags": [
+   "legume"
+  ],
+  "props": {
+   "basis": "item_dry_peas 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "种子近球形，色有白、灰、绿、褐",
+     "citation": "Wikipedia「Pea」：nearly spherical, and white, gray, green, or brown"
+    },
+    {
+     "term": "成熟种子子叶或绿或黄",
+     "citation": "Wikipedia「Pea」：seeds (peas), which can have green or yellow cotyledons when mature"
+    },
+    {
+     "term": "单粒重约 100–360 毫克",
+     "citation": "Wikipedia「Pea」：The average pea weighs between 100 and 360 milligrams"
+    }
+   ]
+  }
+ },
+ "item_hen_egg": {
+  "tags": [
+   "egg"
+  ],
+  "animalProduct": {
+   "from": "laying",
+   "when": {
+    "taxon": "chicken"
+   }
+  },
+  "props": {
+   "basis": "item_hen_egg 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "壳色多为白或褐",
+     "citation": "Wikipedia「Egg as food」：shell colour may vary according to species and breed, from the more common white or brown to pink or speckled blue-green"
+    },
+    {
+     "term": "形如长球体，一端较大",
+     "citation": "Wikipedia「Egg as food」：resembles a prolate spheroid with one end larger than the other"
+    },
+    {
+     "term": "生蛋白无色透明",
+     "citation": "Wikipedia「Egg as food」：Colorless and transparent initially"
+    },
+    {
+     "term": "蛋黄颜色随母鸡饲料而异",
+     "citation": "Wikipedia「Egg as food」：Yolk color is dependent on the diet of the hen"
+    }
+   ]
+  }
+ },
+ "item_rye_flour": {
+  "tags": [
+   "grain"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "黑麦粉",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168885，NDB 20063）：Rye flour, dark；含水 10.8 g/100g，325 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.108,
+     "kcalPer100gWet": 325
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "黑麦粉：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_pine_board": {
+  "tags": [
+   "timber"
+  ]
+ },
+ "item_willow_rod": {
+  "tags": [
+   "timber"
+  ]
+ },
+ "item_wheat_grain": {
+  "tags": [
+   "grain"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "硬红冬小麦",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168890，NDB 20072）：Wheat, hard red winter；含水 13.1 g/100g，327 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.131,
+     "kcalPer100gWet": 327
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "硬红冬小麦：类别 grain 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_broad_bean": {
+  "tags": [
+   "legume"
+  ]
+ },
+ "item_lentil": {
+  "tags": [
+   "legume"
+  ],
+  "props": {
+   "basis": "item_lentil 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "种子呈透镜形，直径约 5 毫米",
+     "citation": "Wikipedia「Lentil」：two seeds, about 5 millimetres (1⁄4 in) in diameter, in the characteristic lens shape"
+    },
+    {
+     "term": "种皮色有褐、灰、绿、棕褐、透明至黑",
+     "citation": "Wikipedia「Lentil」：Lentil seed coat colour can be broadly grouped into tan, grey, green, brown, clear or black"
+    },
+    {
+     "term": "种子可有斑点与杂色",
+     "citation": "Wikipedia「Lentil」：The seeds can also be mottled and speckled"
+    }
+   ]
+  }
+ },
+ "item_mutton": {
+  "tags": [
+   "meat"
+  ],
+  "animalProduct": {
+   "from": "carcass",
+   "part": "meat",
+   "when": {
+    "taxon": [
+     "goat",
+     "sheep"
+    ]
+   }
+  },
+  "props": {
+   "sources": [
+    {
+     "name": "羊腿瘦肥混合",
+     "citation": "USDA FoodData Central 羊腿瘦肥混合生（凭记忆约 217 kcal、含水约 67%）",
+     "moistureFraction": 0.67,
+     "kcalPer100gWet": 217
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "羊腿瘦肥混合：类别 meat 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
+ },
+ "item_horsehair_bundle": {
+  "animalProduct": {
+   "from": "coat",
+   "when": {
+    "coat": "hair",
+    "taxon": "horse"
+   }
+  }
+ },
+ "item_fishing_bait": {
+  "tags": [
+   "bait"
+  ]
+ },
+ "item_goat_milk": {
+  "animalProduct": {
+   "from": "lactation",
+   "when": {
+    "taxon": "goat"
+   }
+  },
+  "props": {
+   "sources": [
+    {
+     "name": "羊乳",
+     "citation": "USDA FoodData Central 羊乳",
+     "moistureFraction": 0.87,
+     "kcalPer100gWet": 69
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "羊乳：类别 milk 的成员，与类别代表值偏差超过阈值，用自己的出处。【数值凭记忆写入，待 L2 核对】"
+  }
+ },
+ "item_raw_goat_hair": {
+  "animalProduct": {
+   "from": "coat",
+   "when": {
+    "coat": "hair",
+    "taxon": "goat"
+   }
+  }
+ },
+ "item_pheasant_egg": {
+  "animalProduct": {
+   "from": "laying",
+   "when": {
+    "taxon": "pheasant"
+   }
+  }
+ },
+ "item_hazelnut": {
+  "tags": [
+   "nut"
+  ]
+ },
+ "item_walnut": {
+  "tags": [
+   "nut"
+  ],
+  "props": {
+   "basis": "item_walnut 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "仁常分成两瓣，中隔膜质",
+     "citation": "Wikipedia「Walnut」：in two halves separated by a membranous partition"
+    },
+    {
+     "term": "仁外覆褐色种皮",
+     "citation": "Wikipedia「Walnut」：brown seed coat"
+    }
+   ]
+  }
+ },
+ "item_dry_mushroom": {
+  "tags": [
+   "mushroom"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "干香菇",
+     "citation": "USDA FoodData Central 干香菇",
+     "moistureFraction": 0.095
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "单一出处，干制品覆盖鲜菇类别的含水率"
+   },
+   "basis": "干蘑菇片：只覆盖含水率，能量用类别 mushroom。【数值凭记忆写入，待 L2 核对】"
+  }
+ },
+ "item_fresh_apple": {
+  "tags": [
+   "fruit"
+  ],
+  "props": {
+   "basis": "item_fresh_apple 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "形状多变，可近圆、长形、圆锥或短宽",
+     "citation": "Wikipedia「Apple」：The shape is quite variable and may be nearly round, elongated, conical, or short and wide"
+    },
+    {
+     "term": "直径一般 2.5–12 厘米",
+     "citation": "Wikipedia「Apple」：generally has a diameter between 2.5 and 12 cm"
+    },
+    {
+     "term": "熟果底色黄、绿、黄绿或淡黄白，面色橙红到棕红",
+     "citation": "Wikipedia「Apple」：The groundcolor of ripe apples is yellow, green, yellow-green or whitish yellow；The overcolor of ripe apples can be orange-red, pink-red, red, purple-red or brown-red"
+    },
+    {
+     "term": "果肉一般为淡黄白色",
+     "citation": "Wikipedia「Apple」：The flesh is generally pale yellowish-white"
+    }
+   ]
+  }
+ },
+ "item_pear": {
+  "tags": [
+   "fruit"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "梨",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169118，NDB 9252）：Pears, raw；含水 84.0 g/100g，57 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.84,
+     "kcalPer100gWet": 57,
+     "refuseFraction": 0.1
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "梨：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_plum": {
+  "tags": [
+   "fruit"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "李",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169949，NDB 9279）：Plums, raw；含水 87.2 g/100g，46 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.872,
+     "kcalPer100gWet": 46,
+     "refuseFraction": 0.06
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "李：类别 fruit 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "果近球形至椭圆，直径约 2–7 厘米",
+     "citation": "Wikipedia「Plum」：Fruits are usually of medium size, between 2–7 centimetres (0.79–2.76 in) in diameter, globose to oval"
+    },
+    {
+     "term": "果皮光滑，带天然蜡质",
+     "citation": "Wikipedia「Plum」：The fruit's peel is smooth, with a natural waxy surface that adheres to the flesh"
+    },
+    {
+     "term": "果核单个，坚硬",
+     "citation": "Wikipedia「Plum」：a single hard fruitstone which encloses the fruit's seed"
+    },
+    {
+     "term": "果肉紧实多汁",
+     "citation": "Wikipedia「Plum」：The flesh is firm and juicy"
+    }
+   ]
+  }
+ },
+ "item_turnip": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "芜菁",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170465，NDB 11564）：Turnips, raw；含水 91.9 g/100g，28 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.919,
+     "kcalPer100gWet": 28
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "芜菁：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "常见的芜菁皮白，露出地面的上部可呈紫、红或带绿",
+     "citation": "Wikipedia「Turnip」：The most common type of turnip is white-skinned except for the upper part that protrudes above the ground；This part may be purple, red or greenish where exposed to sunlight"
+    },
+    {
+     "term": "根大致呈球形，直径 5–20 厘米，无侧根",
+     "citation": "Wikipedia「Turnip」：The root is roughly globular, from 5–20 cm (2–8 in) in diameter, and lacks side roots"
+    },
+    {
+     "term": "肉白色",
+     "citation": "Wikipedia「Turnip」：Inside it is white"
+    }
+   ]
+  }
+ },
+ "item_carrot": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "胡萝卜",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170393，NDB 11124）：Carrots, raw；含水 88.3 g/100g，41 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.883,
+     "kcalPer100gWet": 41
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "胡萝卜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "多为橙色（胡萝卜素）",
+     "citation": "Wikipedia「Carrot」：Carrots are typically orange in colour due to their beta-carotene content"
+    },
+    {
+     "term": "直根多为长圆锥形",
+     "citation": "Wikipedia「Carrot」：Taproots are typically long and conical, although cylindrical and nearly spherical cultivars are available"
+    },
+    {
+     "term": "根长多在 10–25 厘米",
+     "citation": "Wikipedia「Carrot」：most are between 10 and 25 cm (4 and 10 in)"
+    }
+   ]
+  }
+ },
+ "item_parsnip": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "欧防风",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170417，NDB 11298）：Parsnips, raw；含水 79.5 g/100g，75 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.795,
+     "kcalPer100gWet": 75
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "单一出处，覆盖蔬菜类别"
+   },
+   "basis": "欧防风根含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "皮与肉都是浅奶油色",
+     "citation": "Wikipedia「Parsnip」：Its long taproot has light cream colored skin and flesh"
+    },
+    {
+     "term": "直根多呈窄圆锥形，也有品种偏球茎状",
+     "citation": "Wikipedia「Parsnip」：Most are narrowly conical, but some cultivars have a more bulbous shape"
+    },
+    {
+     "term": "根身一般光滑",
+     "citation": "Wikipedia「Parsnip」：The roots are generally smooth, although lateral roots sometimes form"
+    }
+   ]
+  }
+ },
+ "item_beet": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "红甜菜",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169145，NDB 11080）：Beets, raw；含水 87.6 g/100g，43 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.876,
+     "kcalPer100gWet": 43
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "红甜菜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "红甜菜根色为红到深红的各种色调",
+     "citation": "Wikipedia「Beetroot」：the root colors are shades of red and dark red"
+    },
+    {
+     "term": "切片可见深浅不一的环带",
+     "citation": "Wikipedia「Beetroot」：with different degrees of zoning noticeable in slices"
+    }
+   ]
+  }
+ },
+ "item_onion": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "洋葱",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170000，NDB 11282）：Onions, raw；含水 89.1 g/100g，40 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.891,
+     "kcalPer100gWet": 40
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "洋葱有黄褐与红紫等色",
+     "citation": "Wikipedia「Onion」：Yellow or brown onions；Red or purple onions"
+    },
+    {
+     "term": "里层是肥厚的鳞叶，包着中央的芽",
+     "citation": "Wikipedia「Onion」：fleshy modified scale (leaves) that envelop a central bud at the tip of the stem"
+    }
+   ]
+  }
+ },
+ "item_cabbage": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "甘蓝",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169975，NDB 11109）：Cabbage, raw；含水 92.2 g/100g，25 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.922,
+     "kcalPer100gWet": 25
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "甘蓝：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "叶片密集成球形的叶球",
+     "citation": "Wikipedia「Cabbage」：grown as an annual vegetable crop for its dense-leaved heads"
+    },
+    {
+     "term": "叶向内包合成球",
+     "citation": "Wikipedia「Cabbage」：heads form through the leaves cupping inward"
+    },
+    {
+     "term": "最常见的是叶面光滑、球实的绿甘蓝",
+     "citation": "Wikipedia「Cabbage」：Smooth-leafed, firm-headed green cabbages are the most common"
+    }
+   ]
+  }
+ },
+ "item_leek": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "韭葱",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169246，NDB 11246）：Leeks, (bulb and lower leaf-portion), raw；含水 83.0 g/100g，61 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.83,
+     "kcalPer100gWet": 61
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "单一出处，覆盖蔬菜类别"
+   },
+   "basis": "韭葱含水低于蔬菜类别均值，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "可食部分是一束叶鞘",
+     "citation": "Wikipedia「Leek」：The edible part of the plant is a bundle of leaf sheaths"
+    },
+    {
+     "term": "叶基白，上部浅绿",
+     "citation": "Wikipedia「Leek」：The edible portions of the leek are the white base of the leaves (above the roots and stem base), the light green parts"
+    },
+    {
+     "term": "深绿的叶部质地粗韧",
+     "citation": "Wikipedia「Leek」：The dark green portion is usually discarded because it has a tough texture"
+    }
+   ]
+  }
+ },
+ "item_cucumber": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "黄瓜",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 168409，NDB 11205）：Cucumber, with peel, raw；含水 95.2 g/100g，15 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.952,
+     "kcalPer100gWet": 15
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，按李白 13:1x 口径单独覆盖，用它自己的出处"
+   },
+   "basis": "黄瓜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_garlic": {
+  "tags": [
+   "vegetable"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "大蒜",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169230，NDB 11215）：Garlic, raw；含水 58.6 g/100g，149 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.586,
+     "kcalPer100gWet": 149
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "单一出处，覆盖蔬菜类别"
+   },
+   "basis": "蒜头含水明显低于蔬菜类别，覆盖类别值。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "蒜头由 10 到 20 瓣蒜瓣组成",
+     "citation": "Wikipedia「Garlic」：The bulb has a strong odor and is typically made up of 10 to 20 cloves"
+    },
+    {
+     "term": "每瓣外有鞘叶，外面再包数层鞘叶",
+     "citation": "Wikipedia「Garlic」：Each clove is enclosed in an inner sheathing leaf surrounded by layers of outer sheathing leaves"
+    },
+    {
+     "term": "蒜头气味强烈",
+     "citation": "Wikipedia「Garlic」：The bulb has a strong odor"
+    },
+    {
+     "term": "外有纸质的薄皮",
+     "citation": "Wikipedia「Garlic」：The papery, protective layers of \"skin\" over various parts of the plant"
+    }
+   ]
+  }
+ },
+ "item_oats": {
+  "props": {
+   "sources": [
+    {
+     "name": "燕麦（带壳整粒）",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 169705，NDB 20038）：Oats (Includes foods for USDA's Food Distribution Program)；含水 8.22 g/100g，389 kcal/100g；2026-11-09 已按 FDC API 核对；壳占谷粒质量 25–35%：Webster & Wood《Oats: Chemistry and Technology》AACC 2011",
+     "moistureFraction": 0.0822,
+     "kcalPer100gWet": 389,
+     "refuseFraction": 0.3,
+     "range": {
+      "refuseFraction": [
+       0.25,
+       0.35
+      ]
+     }
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，用自己的出处；壳占比取区间中值 30%（脱壳后仁占 70%）"
+   },
+   "basis": "带壳燕麦：含水、能量取燕麦（仁）的出处，可食部分由壳占比推出（壳不供能）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_dried_fruit": {
+  "props": {
+   "sources": [
+    {
+     "name": "干果",
+     "citation": "USDA FoodData Central：葡萄干 15.4%、干苹果 31.8%、李干 30.9%；传统晾晒干果为长期贮存多压到 25% 以下",
+     "moistureFraction": 0.25,
+     "range": {
+      "moistureFraction": [
+       0.15,
+       0.32
+      ]
+     }
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "区间内取传统晾晒贮存上限 25%；能量用类别 fruit（干基能量与状态无关）"
+   },
+   "basis": "干果：只覆盖含水率，其余用类别 fruit。【数值凭记忆写入，待 L2 核对】"
+  }
+ },
+ "item_rapeseed_oil": {
+  "tags": [
+   "edible_fat"
+  ]
+ },
+ "item_pork_fat": {
+  "tags": [
+   "edible_fat"
+  ]
+ },
+ "item_butter": {
+  "tags": [
+   "edible_fat"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "无盐黄油",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 173430，NDB 1145）：Butter, without salt；含水 16.2 g/100g，717 kcal/100g；2026-11-09 已按 FDC API 核对",
+     "moistureFraction": 0.162,
+     "kcalPer100gWet": 717
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "黄油含水约 18%，明显高于油脂类（近 0），用自己的出处覆盖类别值；单餐上限仍取油脂类"
+   },
+   "basis": "黄油：含水与能量取 USDA 无盐黄油。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
+   "appearance": [
+    {
+     "term": "色淡黄，自深黄到近白不等",
+     "citation": "Wikipedia「Butter」：It generally has a pale yellow color but varies from deep yellow to nearly white"
+    },
+    {
+     "term": "冷藏时坚实，室温下软到可涂抹",
+     "citation": "Wikipedia「Butter」：Butter remains a firm solid when refrigerated but softens to a spreadable consistency at room temperature"
+    }
+   ]
+  }
+ },
+ "item_rendered_cooking_fat": {
+  "tags": [
+   "edible_fat"
+  ]
+ },
+ "item_garlic_butter": {
+  "tags": [
+   "edible_fat"
+  ]
+ },
+ "item_honey": {
+  "tags": [
+   "sweetener"
+  ],
+  "props": {
+   "basis": "item_honey 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "多为淡黄或深褐",
+     "citation": "Wikipedia「Honey」：Honey is generally pale yellow and dark brown in color"
+    },
+    {
+     "term": "黏稠，温度低时更稠滞",
+     "citation": "Wikipedia「Honey」：Honey is a sweet and viscous foodstuff；the honey becomes thick and sluggish with decreasing temperature"
+    },
+    {
+     "term": "室温下葡萄糖会析出成固体颗粒（结晶蜜）",
+     "citation": "Wikipedia「Honey」：At room temperature, honey is a supersaturated solution, in which the glucose precipitates into solid granules"
+    }
+   ]
+  }
+ },
+ "item_fruit_paste": {
+  "tags": [
+   "sweetener"
+  ]
+ },
+ "item_plum_honey_spread": {
+  "tags": [
+   "sweetener"
+  ]
+ },
+ "item_dill": {
+  "tags": [
+   "fresh_herb"
+  ],
+  "props": {
+   "basis": "item_dill 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "叶如蕨，细裂而柔软",
+     "citation": "Wikipedia「Dill」：the fern-like leaves of dill are aromatic；finely divided, softly delicate leaves"
+    },
+    {
+     "term": "叶有香气",
+     "citation": "Wikipedia「Dill」：the fern-like leaves of dill are aromatic"
+    },
+    {
+     "term": "茎细而中空",
+     "citation": "Wikipedia「Dill」：Its stems are slender and hollow"
+    }
+   ]
+  }
+ },
+ "item_mustard_seed": {
+  "tags": [
+   "spice_seed"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "黄芥籽",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170929，NDB 2024）：Spices, mustard seed, ground；含水 5.27 g/100g，508 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 10 g",
+     "moistureFraction": 0.0527,
+     "kcalPer100gWet": 508
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，用自己的出处"
+   },
+   "basis": "成员偏差超过阈值，用自己的出处。黄芥籽取舍：USDA SR Legacy 没有整粒黄芥籽条目，NDB 2024 对应 Spices, mustard seed, ground（FDC 170929），这里用它近似世界里的整粒黄芥籽（磨粉不改变含水与能量的量级，已知取舍）。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_poppy_seed": {
+  "tags": [
+   "spice_seed"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "罂粟籽",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 171330，NDB 2033）：Spices, poppy seed；含水 5.95 g/100g，525 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 8.8 g",
+     "moistureFraction": 0.0595,
+     "kcalPer100gWet": 525
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，用自己的出处"
+   },
+   "basis": "成员偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_caraway_seed": {
+  "tags": [
+   "spice_seed"
+  ],
+  "props": {
+   "sources": [
+    {
+     "name": "香芹籽",
+     "citation": "USDA FoodData Central（SR Legacy，FDC 170918，NDB 2005）：Spices, caraway seed；含水 9.87 g/100g，333 kcal/100g；2026-11-09 已按 FDC API 核对；家用量：1 汤匙约 6.3 g",
+     "moistureFraction": 0.0987,
+     "kcalPer100gWet": 333
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "成员偏差超过阈值，用自己的出处"
+   },
+   "basis": "成员偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】"
+  }
+ },
+ "item_cream": {
+  "tags": [
+   "cream"
+  ]
+ },
+ "item_hard_cheese": {
+  "tags": [
+   "cheese"
+  ]
+ },
+ "item_mustard_relish": {
+  "tags": [
+   "condiment_sauce"
+  ]
+ },
+ "item_bread": {
+  "props": {
+   "basis": "白面包：含水与热量凭记忆写入（USDA 白面包量级），量级已判合理，待 L2 核对。",
+   "sources": [
+    {
+     "name": "白面包",
+     "citation": "凭记忆：白面包含水约 0.36 g/g，约 266 kcal/100g（USDA FoodData Central 白面包条目量级，未核对编号）",
+     "moistureFraction": 0.36,
+     "kcalPer100gWet": 266
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "面包没有配方也没有合适的类别行（grain 是未加工干谷），按物品自己的出处推算"
+   }
+  }
+ },
+ "item_water": {
+  "props": {
+   "basis": "清水：含水 1、0 kcal/100g，凭记忆，量级已判合理。",
+   "sources": [
+    {
+     "name": "饮用水",
+     "citation": "凭记忆：饮用水含水 100%、不含热量（USDA FoodData Central 水条目量级，未核对编号）",
+     "moistureFraction": 1,
+     "kcalPer100gWet": 0
+    }
+   ],
+   "selection": {
+    "method": "single",
+    "reason": "水没有合适的类别行，按物品自己的出处推算"
+   }
+  }
+ }
+}

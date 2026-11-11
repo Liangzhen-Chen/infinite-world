@@ -1,18 +1,14 @@
 {
   "index": 1,
-  "fingerprint": "590449d56d6985dfc0ee5298f66f4a92eef15b87e4dd7fa9c134e099cb19a17d",
-  "count": 14,
-  "passed": 14,
+  "fingerprint": "5f317b641a484cee214434b6a8af7cff54f019fcb5fbfcdcdc3e7037d4186ddd",
+  "count": 10,
+  "passed": 10,
   "ids": [
     "recipe_w3_fish_broth",
     "recipe_fishing_bait",
     "nutrition_item_ration",
-    "nutrition_item_bread",
     "nutrition_item_water",
     "nutrition_item_milk",
-    "nutrition_item_oat_flatbread",
-    "nutrition_item_fish_broth",
-    "nutrition_item_mutton_turnip_stew",
     "repair_clothes_seam",
     "repair_sword_service",
     "shop_hw_forge_mining_pick",
@@ -24,76 +20,40 @@
   "pending": [],
   "flagged": [],
   "sample": [
-    "nutrition_item_milk",
     "recipe_w3_fish_broth",
-    "medicine_takeHome",
     "shop_hw_forge_mining_pick",
-    "nutrition_item_ration"
+    "repair_clothes_seam",
+    "nutrition_item_ration",
+    "nutrition_item_water"
   ],
   "l4": {
     "approved": true,
-    "reader": "Claude (A3 数据修复 fix4-data)",
-    "readAt": "2026-10-22",
+    "reader": "L4 补读（执行者 Claude Sonnet 5.5，HEAD 17b66416，11-10 重审后）",
+    "readAt": "2026-11-10",
     "notes": [
       {
         "id": "recipe_w3_fish_broth",
-        "note": "通读清煮鱼汤配方：耗时恢复为60分钟，依据D16.5“时间过去约半个时辰”（一时辰两小时）；材料/工具/传授人林穗不变，process只把“全程30分钟”改为“全程60分钟”，其余原文不动。boundary写明只定点修正这一条。无硬问题。"
-      },
-      {
-        "id": "recipe_fishing_bait",
-        "note": "通读钓饵配方：传授人林穗厨师基础手艺180，一份燕麦、切刀、烹饪台10分钟出10份；与钓饵目录价相容。无硬问题。"
-      },
-      {
-        "id": "nutrition_item_ration",
-        "note": "通读干粮satiety 30：落在body表一餐30–40内。无硬问题。"
-      },
-      {
-        "id": "nutrition_item_bread",
-        "note": "通读面包satiety 30：落在一餐30–40内。无硬问题。"
-      },
-      {
-        "id": "nutrition_item_water",
-        "note": "通读清水hydration 25：等于body表一次饮水25。无硬问题。"
-      },
-      {
-        "id": "nutrition_item_milk",
-        "note": "通读牛奶：已删除手加的satiety 15，只留hydration 25，等于body表一次饮水25；body表没有半餐饮品规则，故不再给satiety。无硬问题。"
-      },
-      {
-        "id": "nutrition_item_oat_flatbread",
-        "note": "通读燕麦薄饼satiety 30：落在一餐30–40内。无硬问题。"
-      },
-      {
-        "id": "nutrition_item_fish_broth",
-        "note": "通读鱼汤satiety 35：落在一餐30–40内。无硬问题。"
-      },
-      {
-        "id": "nutrition_item_mutton_turnip_stew",
-        "note": "通读羊肉萝卜炖satiety 35：落在一餐30–40内。无硬问题。"
-      },
-      {
-        "id": "repair_clothes_seam",
-        "note": "通读衣物补缝：裁缝基础手艺100起，一团麻线加缝针，织作台20分钟、每次修复20点；仅其引用的同类修理方案（铁剑）工时更新，本条不变。无硬问题。"
-      },
-      {
-        "id": "repair_sword_service",
-        "note": "通读铁剑修整服务：铁匠基础手艺100起，工时改为60分钟，依据日常题D18.2“修理耗时按铁匠说的时间推进（如半个时辰）”；服务费保留25铜（D18.2报价）。无硬问题。"
+        "note": "本轮重审条目，已按新事实核对：配方行与 world/meta/recipes.json 逐字段一致（除 process 外全同）；材料 item_fish×1、item_water×2、item_salt×1、item_wood_shavings×1，工具厚底煮锅、案上切刀、偏柄木匙，60 分钟、产出 item_fish_broth×1，教师 npc_hw_linsui（林穗，青灯酒馆）。process 逐句对照：清水两份、干木刨屑引火、偏柄木匙撇沫、刀背压碎粗盐（案上切刀 use 明写「刀背用于压碎小粒盐」）、60 分钟、鱼刺仍留、清汤不含未列药草（与鱼汤 use 一致），没有出现配方外材料。鱼汤营养已改为由配方推导：items.json 中 item_fish_broth 不再写 nutrition，配方含鱼（需加热类）并烧掉刨屑（燃料类）即为加热加工，正文未写任何营养数值，不冲突。无不符。"
       },
       {
         "id": "shop_hw_forge_mining_pick",
-        "note": "通读铁匠铺补货矿镐：矿镐目录物origin即bld_hw_forge，铺内已有同类铁器补货；没有文本明写铺子出售矿镐，软问题，已在boundary写明并列入交主会话清单。"
+        "note": "核对：rules.json economy.shops.stores 的 shop_hw_forge（河湾铁匠铺，掌柜 npc_hw_duanyan）restock 行 item_mining_pick source local amount 1 maximum 2，与 row 一致；item_mining_pick 的 acquisition 写 seller npc_hw_duanyan、mode「有限备用工具库存」、origin bld_hw_forge，限量 1/最多 2 与「有限库存」相符。无不符。"
       },
       {
-        "id": "fishing_bait",
-        "note": "通读钓鱼耗饵：quantity 1对应目录物“每次抛竿消耗一份”。无硬问题。"
+        "id": "repair_clothes_seam",
+        "note": "核对：rules.json repairs[2] 与 row 逐字段一致。item_clothes 普通衣服（origin bld_hw_weaving，耐久 100）；技能 skill_life_4_core 与粗眼缝针 checkBonus（敏捷、skill_life_4_core）对上；材料细捻麻线团×1（用途缝革结网，可用于缝补）；工位 weaving 与衣服产地织坊一致；restore 20、maxLoss 0、20 分钟、工具磨损 1，数值未被正文改动。无不符。"
       },
       {
-        "id": "medicine_takeHome",
-        "note": "通读带回药：quantity 3/days 3对应目录物“每份为一天用量”与题面含三日份。无硬问题。"
+        "id": "nutrition_item_ration",
+        "note": "核对：items.json 中干粮（item_ration）nutrition {satiety:30}，与 row 一致；a3 校验口径 body 表一餐 30–40，30 在界内；干粮 200 克的烘干行粮定位与一餐 30 相称。无不符。"
+      },
+      {
+        "id": "nutrition_item_water",
+        "note": "核对：items.json 清水一份（item_water）nutrition {hydration:25}，与 row 一致；body 表一次饮水 25；250 毫升一份、带 drinkable 标签，数值与描述相符，没有给 satiety。无不符。"
       }
     ]
   },
-  "costUpperYuan": 0.14103688,
+  "costUpperYuan": 0.15025712,
   "manualRatio": 0,
   "needsSystemicRepair": false
 }

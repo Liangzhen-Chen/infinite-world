@@ -1,0 +1,207 @@
+{
+ "profession_life_0": {
+  "aliases": [
+   "农户",
+   "佃户",
+   "老农",
+   "农家家务",
+   "农家杂活",
+   "农忙雇工",
+   "农忙劳动",
+   "农忙杂工",
+   "菜圃农工",
+   "菜圃农户",
+   "退休农工",
+   "退休农人",
+   "退休佃农",
+   "学生与轻农活",
+   "家务与农活",
+   "家务与轻农活",
+   "农具搬运工"
+  ],
+  "labor": [
+   "farm",
+   "fell"
+  ]
+ },
+ "profession_life_1": {
+  "labor": [
+   "gather"
+  ]
+ },
+ "profession_life_2": {
+  "aliases": [
+   "渔工",
+   "渔家帮工",
+   "渔家雇工",
+   "照看水道"
+  ],
+  "labor": [
+   "fish",
+   "sell"
+  ]
+ },
+ "profession_life_3": {
+  "labor": [
+   "process",
+   "sell"
+  ],
+  "processing": [
+   "cooking"
+  ]
+ },
+ "profession_life_4": {
+  "labor": [
+   "process",
+   "sell"
+  ],
+  "processing": [
+   "ret",
+   "spin",
+   "felt",
+   "weave",
+   "weaving"
+  ],
+  "aliases": [
+   "织芦席",
+   "修绳换货"
+  ]
+ },
+ "profession_life_5": {
+  "labor": [
+   "process",
+   "sell"
+  ],
+  "processing": [
+   "smithing",
+   "cut",
+   "tool_metal",
+   "tool_cast"
+  ],
+  "aliases": [
+   "铸补匠",
+   "修矿具"
+  ]
+ },
+ "profession_life_6": {
+  "labor": [
+   "fell",
+   "gather",
+   "process"
+  ],
+  "processing": [
+   "woodworking",
+   "saw",
+   "char",
+   "pitch",
+   "tool_wood",
+   "tool_rod"
+  ],
+  "aliases": [
+   "烧炭"
+  ]
+ },
+ "profession_life_8": {
+  "labor": [
+   "gather",
+   "process"
+  ],
+  "processing": [
+   "pill_furnace"
+  ]
+ },
+ "profession_life_9": {
+  "aliases": [
+   "采药",
+   "照看药圃",
+   "采果",
+   "采叶工",
+   "采叶雇工",
+   "家务与采叶",
+   "菌床工",
+   "照看育苗根",
+   "育苗"
+  ],
+  "labor": [
+   "gather",
+   "farm"
+  ]
+ },
+ "profession_life_12": {
+  "aliases": [
+   "搬运",
+   "搬运帮工",
+   "搬料工",
+   "渡口搬运帮工"
+  ],
+  "labor": [
+   "sell",
+   "carry"
+  ]
+ },
+ "profession_life_14": {
+  "labor": [
+   "process"
+  ],
+  "processing": [
+   "pottery",
+   "ink",
+   "tool_stone",
+   "tool_bone"
+  ]
+ },
+ "profession_life_17": {
+  "aliases": [
+   "挖矿",
+   "带队挖矿"
+  ],
+  "labor": [
+   "mine",
+   "gather"
+  ]
+ },
+ "profession_life_18": {
+  "labor": [
+   "process"
+  ],
+  "processing": [
+   "woodworking"
+  ]
+ },
+ "profession_life_19": {
+  "labor": [
+   "gather"
+  ]
+ },
+ "profession_life_20": {
+  "labor": [
+   "process"
+  ],
+  "processing": [
+   "tan",
+   "parchment",
+   "glue"
+  ]
+ },
+ "profession_life_21": {
+  "labor": [
+   "process",
+   "sell"
+  ],
+  "processing": [
+   "cooking"
+  ]
+ },
+ "profession_life_22": {
+  "labor": [
+   "process"
+  ],
+  "processing": [
+   "copy",
+   "soot",
+   "paper",
+   "ink",
+   "tool_reed"
+  ]
+ }
+}

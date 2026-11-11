@@ -3,6 +3,9 @@ import {seededRandom} from './combat.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {sapient} from './wildlife-awakening.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {takePopulation} from './population-health.mjs';
+import {derived} from './derived.mjs';
+import {territoryCapacityFactor} from './ecology-dynamics.mjs';
 const path=h=>['state','records',`ecology:${h}`],alive=(d,id,a)=>a&&!isPhysicallyDead(null,d.get('state'),id)&&a.hp>0;
 const profiles=e=>e.rules.wildlife?.farmPests?.fields??[];
 export function farmPestProfile(engine,settlement){return profiles(engine).find(p=>p.settlement===settlement);}
@@ -15,16 +18,22 @@ function open(e,rule,season){return rule.path.every(id=>!e.world.routes.find(r=>
 export function crossPredatorFed(d,e,habitat,species,season){
     return profiles(e).some(p=>p.predators.some(r=>r.habitat===habitat&&r.species===species&&open(e,r,season)&&d.get(...path(p.habitat),'populations',r.prey)?.count>r.refugeCount));
 }
+export function crossPreyDensity(d,e,habitat,species,season){
+    let density=0;
+    for(const p of profiles(e))for(const r of p.predators)if(r.habitat===habitat&&r.species===species&&open(e,r,season))density+=Math.max(0,(d.get(...path(p.habitat),'populations',r.prey)?.count??0)-r.refugeCount)/Math.max(1,e.byId.get(r.prey).wildlife.capacity);
+    return density;
+}
 export function advanceFarmPredation(d,e,day){
     if(day%7!==6)return;const season=e.calendar(day*1440).season;
     for(const p of profiles(e))for(const rule of p.predators){
         if(!open(e,rule,season))continue;
         const hunters=count(d,e,rule.species,rule.habitat);if(!hunters)continue;
         const r=structuredClone(d.get(...path(p.habitat))),prey=r.populations[rule.prey],definition=e.byId.get(rule.prey);
-        const expected=hunters*rule.killsPerWeek*prey.count/definition.wildlife.capacity;
-        const rng=seededRandom(createHash('sha256').update(`${d.document.randomSeed}:${p.fieldId}:${rule.species}:${rule.prey}:${day}`).digest().readUInt32LE(0));
+        const rate=derived(e,d.document,'ecology:predation',e.rules.wildlife.habitats.find(h=>h.id===p.habitat).location,{base:rule.killsPerWeek,holder:rule.species,target:rule.prey});
+        const expected=hunters*rate*prey.count/definition.wildlife.capacity;
+        const rng=seededRandom(createHash('sha256').update(`${d.get('randomSeed')}:${p.fieldId}:${rule.species}:${rule.prey}:${day}`).digest().readUInt32LE(0));
         const eaten=Math.min(Math.max(0,prey.count-rule.refugeCount),Math.floor(expected)+(rng()<expected%1?1:0));
-        prey.count-=eaten;prey.predated+=eaten;d.set(path(p.habitat),r);
+        takePopulation(prey,eaten);prey.predated+=eaten;d.set(path(p.habitat),r);
     }
 }
 function exposureFractions(intervals,hours,day,notBefore){
@@ -37,9 +46,15 @@ function exposureFractions(intervals,hours,day,notBefore){
 }
 export function damageFarmCrops(d,e,r,settlement,day){
     const p=farmPestProfile(e,settlement);if(!p)return null;
+    const habitat=e.rules.wildlife.habitats.find(h=>h.id===p.habitat),habitatShare=territoryCapacityFactor(d,e,habitat);
     const intervals=r.field.pestProtection??[];let daily=0;
     for(const pest of p.pests){
-        const pressure=Math.min(1,Math.max(0,(count(d,e,pest.species,p.habitat)-pest.toleranceCount)/(pest.fullDamageCount-pest.toleranceCount)));
+        // The authored thresholds describe density in the full habitat. A
+        // territorial occupant compresses that space as well as its capacity;
+        // comparing the remaining animals with full-habitat counts would make
+        // pests harmless whenever the reduced capacity falls below tolerance.
+        const animals=count(d,e,pest.species,p.habitat),density=animals?animals/habitatShare:0;
+        const pressure=Math.min(1,Math.max(0,(density-pest.toleranceCount)/(pest.fullDamageCount-pest.toleranceCount)));
         const coverage=exposureFractions(intervals,e.byId.get(pest.species).wildlife.activeHours,day,r.field.pestInitializedMinute);
         daily+=pest.dailyDamageBps*pressure*(coverage.active-coverage.protected*p.guardReductionBps/10000);
     }

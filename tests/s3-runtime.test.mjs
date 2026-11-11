@@ -42,7 +42,8 @@ test('failed settlement and changed event input roll back the whole transaction'
 });
 test('cash settlement cannot erase a claim for another resource',()=>{
     const f=setup();open(f,{resource:'item_bread'});const before=JSON.stringify(f.d.document);
-    assert.throws(()=>settleObligation(f.d,f.engine,{id:'claim'},'wrong-resource'),/Non-monetary/);
+    // S5-F2: a bread claim settles only in bread (15 §15.3); the debtor holds none, so cash cannot erase it and nothing is written.
+    assert.throws(()=>settleObligation(f.d,f.engine,{id:'claim'},'wrong-resource'),/面包不足：需要100/);
     assert.equal(JSON.stringify(f.d.document),before);assert.equal(dueObligation(f.d.get('state'),'claim').owed,100);
 });
 test('cash settlement retains the supported explicit core resource namespace',()=>{

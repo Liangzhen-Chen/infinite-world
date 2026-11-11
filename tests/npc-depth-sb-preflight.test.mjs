@@ -14,7 +14,7 @@ const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-10,`${a} != ${b}`);
 test('T48正式全/compact逐ID整轮拒发、准确预留退款及原未知预算保留',async t=>{
  const outputRoot=await fs.mkdtemp(path.join(tmpRoot(),'t48-preflight-test-'));
  t.after(async()=>{assert.ok(outputRoot.startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(outputRoot,{recursive:true,force:true});});
- const sharedFile='F:/dnd/world/drafts/m4-object/budget.json',before=await fs.readFile(sharedFile);
+ const sharedFile=path.resolve(import.meta.dirname,'../world/drafts/m4-object/budget.json'),before=await fs.readFile(sharedFile);
  // A supplied amount is used only in the report arithmetic, never to change
  // allocation or obtain a model slot. Here the test uses the original 3 yuan.
  const report=await preflightT09({outputRoot,authorizedCardLimitYuan:3});

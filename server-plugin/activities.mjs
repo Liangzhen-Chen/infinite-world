@@ -1,5 +1,9 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isEffective,isPhysicallyDead} from './holdings.mjs';
+import {unlicensedProperty} from './action-authority.mjs';
+import {noteOffense} from './offense-notes.mjs';
+import {headOf} from './primitives-effects.mjs';
+import {advanceHook} from './advance-hooks.mjs';
 import {declareLedgerWriter,transfer,accountKey,LEDGER_COIN} from './ledger.mjs';
 declareLedgerWriter('activities',{sinks:['sink:export']});
 import {upperGovernanceAction,upperAppointment} from './high-nobility.mjs';
@@ -22,10 +26,11 @@ import {interactEnvironment,recordLocalContact}from'./environment.mjs';
 import {petAction}from'./pets.mjs';
 import {summonAction}from'./summons.mjs';
 import {crimeAction,lawAction,recordViolence}from'./law.mjs';
-import {transferItems,heldUnit,wearItem}from'./items.mjs';
+import {transferItems,heldUnit,wearItem,workmanshipTier,unitLacks}from'./items.mjs';
 import {localWeather}from'./weather.mjs';
 import {agricultureAction}from'./agriculture.mjs';
 import {wildlifeAction,resolveCreature,recordWildlifeDeath}from'./wildlife.mjs';
+import {husbandryAction}from'./husbandry.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {lairAction,bossCounter,rememberBossTactic,defeatBoss}from'./bosses.mjs';
 import {civicAction,recordDonationContribution,publicProjectApproval,donationReceipt,saveDonationReceipt}from'./civic.mjs';
@@ -51,10 +56,10 @@ import {registerResearchSpell}from'./spell-research.mjs';
 import {hiddenCombat}from'./hidden-passives.mjs';
 import {educationAction} from './education.mjs';
 import {medicineAction} from './medicine.mjs';
-import {fish,eatFish,mine,miningPermit}from'./extraction.mjs';
+import {fish,eatFish,releaseFish,mine,miningPermit}from'./extraction.mjs';
 import {duelAction,activeDuel,finishDuel}from'./duels.mjs';
 import {electionAction}from'./elections.mjs';
-import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {declareHoldingWriter,holdingSet,holdingRemove} from './holdings.mjs';
 declareHoldingWriter('activities',{kinds:['owns','resides','resident_of','devotee_of','certified']});
 const integer=(value,min=0,max=1e9)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`数值需在${min}到${max}之间`);return value;};
 const requiredText=value=>{if(typeof value!=='string'||!value.trim()||value.length>1200)throw preconditionFailure('记录文字无效');return value.trim();};
@@ -63,8 +68,10 @@ export const activities={
     settleOrganizationDuel(d,duel,winner,eventId){return settleOrganizationDuel(d,this,duel,winner,eventId);},
     site(d,args,id){return args.operation==='woodcut'?woodcut.call(this,d,args,id):args.operation==='mine'?mine.call(this,d,args,id):siteAction.call(this,d,args,id);},
     lair(d,args,id){return lairAction.call(this,d,args,id);},
-    wildlife(d,args,id){return args.operation==='fish'?fish.call(this,d,args,id):args.operation==='eat'?eatFish.call(this,d,args,id):wildlifeAction.call(this,d,args,id);},
+    wildlife(d,args,id){return args.operation==='fish'?fish.call(this,d,args,id):args.operation==='release'?releaseFish.call(this,d,args,id):args.operation==='eat'?eatFish.call(this,d,args,id):wildlifeAction.call(this,d,args,id);},
     farm(d,args,id){
+        // SL: an owner slaughtering their own beast is husbandry work, not an exchange.
+        if(args.operation==='husbandry_slaughter')return husbandryAction.call(this,d,args,id);
         const old=donationReceipt(d,this,args,id);if(old)return old;
         const result=agricultureAction.call(this,d,args,id),contribution=recordDonationContribution(d,this,result,id),receipt={...result,...(contribution?{contribution}:{})};
         saveDonationReceipt(d,receipt,id);return receipt;
@@ -82,13 +89,22 @@ export const activities={
     environment(d,args,id){return interactEnvironment.call(this,d,args,id);},
     combat(d,args,id){
         const attacker=args.actor&&args.actor!=='player'?this.resolve(args.actor,'npc'):'player',attackerPath=attacker==='player'?['state','player']:['state','npcs',attacker];
-        const target=resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??(isNpc?target:npc?.species??target)),isBoss=Boolean(npc?.boss);
+        // A herd is struck one head at a time: its owner first leads one animal
+        // out of the herd stock (individuation), then fights that individual.
+        const herd=typeof args.target==='string'&&d.get('holdings','entities',args.target)?.kind==='population'?d.get('state','records',`husbandry:${args.target}`):null;
+        if(herd&&herd.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
+        const target=herd?headOf(d,this,herd.id,id,attacker):resolveCreature(this,d,args.target),isNpc=target.startsWith('npc_'),partition=isNpc?'npcs':'creatures',npc=d.get('state',partition,target),base=this.byId.get(npc?.boss??(isNpc?target:npc?.species??target)),isBoss=Boolean(npc?.boss);
         const duel=isNpc?activeDuel(d,this,target,attacker):null,nonlethal=duel?.rule==='touch';
         if(attacker!=='player'&&(!duel||!isEffective(this,d,attacker)||d.get(...attackerPath,'location')!==d.get('state','location')))throw preconditionFailure('NPC 交锋须为本人已接受且见证人在场的约斗');
         // Catalog identities and campaign-created monster templates both need a
-        // present, unowned individual; an arbitrary entity row is not a creature.
+        // present individual; an arbitrary entity row is not a creature. The
+        // owner may kill an owned beast (K7, no wild XP: monsterReward); someone
+        // else's beast is refused as theirs.
         const creatureDefinition=!isNpc&&(this.world.monsters.some(row=>row.id===base?.id)||this.world.bosses?.some(row=>row.id===base?.id)||d.get('state','created',target)&&Number.isInteger(base?.template));
-        if(!isNpc&&!(npc&&!npc.owner&&creatureDefinition))throw preconditionFailure('这个实体不是交锋对象');
+        if(!isNpc&&!(npc&&creatureDefinition))throw preconditionFailure('这个实体不是交锋对象');
+        // Striking another's beast or a head led out of another's herd is the
+        // same blow; the primitive layer's property judgment names the breach (K6).
+        const breach=!isNpc?unlicensedProperty({engine:this,document:d.document},attacker,'vital',target):null;
         if(!npc||npc.location!==d.get('state','location'))throw preconditionFailure('对手不在场');
         if(isPhysicallyDead(this,d,target))throw preconditionFailure('对手已经死亡');
         const encounter=encounterForExchange(d,this,attacker,target);
@@ -105,8 +121,8 @@ export const activities={
         const opponentContext=this.magicStatusContext(d,target),opponent=withMagicStats(opponentBase,magicStatusStats(d,target,opponentContext));
         opponent.evasion=Math.max(0,opponent.evasion-waterEarthMudPenalty(d,this,target)*.05);
         if(opponent.divine&&!d.get('state','divinePermissions',target))throw preconditionFailure('神性屏障阻止普通攻击，需要交涉、逃离或取得特殊条件');
-        const rawWeaponStats=weapon?this.byId.get(weapon).combat??{}:{},held=weapon?heldUnit(d,this,attacker,weapon):null;
-        const workmanshipFactor=this.rules.equipment.workmanship?.find(row=>row.name===held?.workmanship)?.multiplier??1;
+        const held=weapon?heldUnit(d,this,attacker,weapon):null,rawWeaponStats=weapon&&!unitLacks(this,{item:weapon,...held},'combat')?this.byId.get(weapon).combat??{}:{};
+        const workmanshipFactor=workmanshipTier(this,held?.workmanship).multiplier;
         const weaponStats=Object.fromEntries(Object.entries(rawWeaponStats).map(([key,value])=>[key,value*workmanshipFactor])),careerStats=attacker==='player'?careerEquipment(d.get('state')):{};
         const hidden=hiddenCombat(this,d.get('state'),attacker,args.intent??'attack'),otherHidden=hiddenCombat(this,d.get('state'),target,'attack');
         opponent.defense+=otherHidden.defense;
@@ -174,11 +190,14 @@ export const activities={
         if(intent==='shove')d.set(['state',partition,target,'developments'],[...npc.developments??[],{type:'被推搡',source:id,minute:d.get('state','minute'),reaction:remaining<maxHp*0.25?'呼救':'还手'}]);
         if(escaped){
             d.set(['state','combatDisengaged',target],{minute:d.get('state','minute'),source:id});
-            if(d.get('state','records',`local_actor_position:${target}`))d.remove(['state','records',`local_actor_position:${target}`]);
+            if(d.get('state','records',`local_actor_position:${target}`))holdingRemove(d,null,['state','records',`local_actor_position:${target}`],'activities');
         }
         const corpse=!isNpc&&!remaining?recordWildlifeDeath(d,this,target,id):null;
+        if(breach&&(damage>0||!remaining))noteOffense(d,breach);
         const lair=!remaining?defeatBoss(d,this,target,id):null;
-        const experience=attacker==='player'&&!isNpc&&!remaining?monsterReward(d,this,target,id):{experience:0};
+        // Title is read as it stood when the blow fell: death closes the tamed_by
+        // projection, but an owned beast never yields wild XP (K7).
+        const experience=attacker==='player'&&!isNpc&&!remaining?(npc.owner?{experience:0,reason:'驯养动物不计野外战果'}:monsterReward(d,this,target,id)):{experience:0};
         const duelResult=duel&&(nonlethal&&(attack.hit||opponentTouched)||!remaining||attackerHp<=received||escaped)?finishDuel(d,this,duel,!remaining||nonlethal&&attack.hit?attacker:target,id,escaped?'脱离':nonlethal?'点到为止':'生死已分'):null;
         const incident=isNpc?recordViolence(d,this,{attacker,victim:target,damage,killed:!remaining,intent,eventId:id,duel}):null;
         if(duelResult)d.say(`决斗结束：${duelResult.reason}`);

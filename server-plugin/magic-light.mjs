@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {facilityRuntime,isFacility} from './facility-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
@@ -8,6 +9,7 @@ import {assertMagicTargeting}from'./magic-targeting.mjs';
 import {heldUnit,trackSingleItem}from'./items.mjs';
 import {weatherAt}from'./weather.mjs';
 import {modelToolCall}from'../extension/tools.mjs';
+import {hypot,sqrt,exp} from './det-math.mjs';
 
 // Fixed bounds for authoring candidates; this module publishes no world content.
 export const lightMechanisms=Object.freeze({
@@ -15,7 +17,7 @@ export const lightMechanisms=Object.freeze({
  light_screen:[1,10],waymark:[1,90],trace:[1440,0],fog_light:[2,30],reveal:[1,0],
  dim:[90,30],privacy:[1,30],bind_shadow:[1,2],decoy:[3,1],dark_area:[90,10],
 });
-const clone=x=>structuredClone(x),distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const clone=x=>structuredClone(x),distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const active=(d,op)=>Object.entries(d.get('state','effects')??{}).filter(([,e])=>e.kind==='optics'&&(!op||e.operation===op)&&e.started<=d.get('state','minute')&&e.expires>d.get('state','minute'));
 const numeric=(v,min,max,name)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${name}无效`);return v;};
 const stateOf=(d,row)=>{
@@ -33,7 +35,7 @@ function permission(d,engine,row,args){
  const ids=[args.authorization,...args.authorizations??[]];
  if(!ids.some(id=>{
   const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!isPhysicallyDead(engine,d,row.owner)&&d.get('state','npcs',row.owner,'status')!=='濒死');
- }))throw preconditionFailure('光学对象需要有效所有者授权');
+ }))noteUnlicensedUse(d,row);
 }
 function access(d,engine,row,args,range,read=false){
  if(distance(localPlayerPoint(d),row.position)>range||!localSightClear(d,engine,row.location,localPlayerPoint(d),row.position))throw preconditionFailure('光学对象超过实际距离或视线被遮挡');
@@ -115,7 +117,7 @@ export function lightAt(d,engine,location,point){
  for(const s of sources(d,engine,location)){
   const redirected=redirect.filter(([,e])=>e.medium===s.id).reduce((p,[,e])=>Math.max(p,e.power),0)/100;
   const metres=distance(s.point,point);
-  if(clearRay(d,engine,location,s.point,point)&&opticalSightClear(d,engine,location,s.point,point))lux+=s.lux*dimFactor(d,s.id)*(1-redirected)/(1+metres*metres)*Math.exp(-fog*metres/10);
+  if(clearRay(d,engine,location,s.point,point)&&opticalSightClear(d,engine,location,s.point,point))lux+=s.lux*dimFactor(d,s.id)*(1-redirected)/(1+metres*metres)*exp(-fog*metres/10);
  }
  for(const [,e]of redirect){
   let s;try{s=source(d,engine,e.medium,location);}catch{continue;}
@@ -124,8 +126,8 @@ export function lightAt(d,engine,location,point){
   if(e.operation==='reflect'&&ts.reflectivityPercent<=0)continue;
   if(e.operation==='reflect'&&distance(point,e.observerPoint)>1)continue;
   const metres=distance(e.point,point);
-  if(e.operation==='focus_light'&&metres>Math.sqrt(e.beamAreaM2/Math.PI))continue;
-  if(clearRay(d,engine,location,e.point,point)&&opticalSightClear(d,engine,location,e.point,point))lux+=s.lux*dimFactor(d,s.id)*e.power/100/(e.beamAreaM2??1)/(1+distance(s.point,e.point)**2)/(1+metres*metres)*Math.exp(-fog*(metres+distance(s.point,e.point))/10);
+  if(e.operation==='focus_light'&&metres>sqrt(e.beamAreaM2/Math.PI))continue;
+  if(clearRay(d,engine,location,e.point,point)&&opticalSightClear(d,engine,location,e.point,point))lux+=s.lux*dimFactor(d,s.id)*e.power/100/(e.beamAreaM2??1)/(1+distance(s.point,e.point)**2)/(1+metres*metres)*exp(-fog*(metres+distance(s.point,e.point))/10);
  }
  const dark=active(d,'dark_area').filter(([,e])=>e.location===location&&distance(e.point,point)<=e.radius).reduce((p,[,e])=>Math.max(p,e.power),0);
  lux*=1-dark/100;
@@ -207,7 +209,7 @@ export function prepareOptics(d,c,args){
   if(!route||![route.from,route.to].includes(location)||!d.get('state','discoveries',route.from)||!d.get('state','discoveries',route.to))throw preconditionFailure('光标只能标记已亲历两端的实际路线');
   // Reuse the normal route resolver; markers never grant access or reveal routes.
   const destination=route.from===location?route.to:route.from;
-  const usable=this.route(location,destination,'walk',d.get('state','minute'),d.document.randomSeed);
+  const usable=this.route(location,destination,'walk',d.get('state','minute'),d.get('randomSeed'));
   if(!usable.edges.includes(route.id))throw preconditionFailure('指定路线当前不可通行');
   return{...p,target:route.id,route:clone(route),point:localPlayerPoint(d)};
  }
@@ -222,7 +224,7 @@ export function prepareOptics(d,c,args){
  if(['focus_light','reflect','shadow_measure'].includes(op)){
   p.source=source(d,this,args.source,location);
   if(p.source.row)access(d,this,p.source.row,args,c.rangeMeters,op==='shadow_measure');
-  else if(op!=='shadow_measure'&&d.get('state','effects',p.source.id,'owner')!=='player')throw preconditionFailure('光源需要所有者授权');
+  else if(op!=='shadow_measure')noteUnlicensedUse(d,{id:p.source.id,owner:d.get('state','effects',p.source.id,'owner')},{kind:'light'});
   if(!localSightClear(d,this,location,p.source.point,p.point))throw preconditionFailure('已有光源到表面的光路被遮挡');
   if(['focus_light','reflect'].includes(op)&&active(d).some(([,e])=>e.medium===p.source.id&&['focus_light','reflect'].includes(e.operation)))throw preconditionFailure('光源已有分光，不能重复放大');
  }

@@ -5,11 +5,16 @@ registerIntentMenu(worldActions);
 import {primitiveRuleRegistry} from '../server-plugin/primitive-rules.mjs';
 import path from 'node:path';
 import {materializeWildlifeHabitats} from '../server-plugin/wildlife-habitats.mjs';
+import {materializeRuntimeWorld,mechanicsKey} from '../server-plugin/runtime-world.mjs';
+import {materializeWorkstations} from '../server-plugin/workstation-services.mjs';
+import {deriveItemAttributes} from '../server-plugin/item-class.mjs';
 import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
 import {requireBalanceTables} from './balance-tables.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {validateDomainRules} from '../server-plugin/domain-rules.mjs';
 import {validateNormBindings} from '../server-plugin/norm-stack.mjs';
+import {loadDerivedRegistry} from '../server-plugin/derived.mjs';
+import {installEcologyDefinitions} from '../server-plugin/ecology-dynamics.mjs';
 // Everything this loader derives (reverse relations, biome tags, habitats, faith
 // competition clocks) is idempotent: files written back from a loaded world
 // (publication previews, upgrade fixtures) reload to the same world.
@@ -68,6 +73,17 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         for(const key of Object.keys(row))if(place[key]!==undefined&&JSON.stringify(place[key])!==JSON.stringify(row[key]))throw new Error(`群落数据与地点自带字段重复：${id}`);
         Object.assign(place,row);
     }
+    // A1: reviewed rows change only through the approval pipeline, so this
+    // loader returns them as on disk. Mechanism annotations that laws read live
+    // apart in meta/mechanics/<collection>.json ({id:{field:value}}); with the
+    // production-chain site table they ride along as world.mechanics and are
+    // merged by materializeRuntimeWorld (loadRuntimeWorld, WorldEngine).
+    // Every meta/mechanics/<name>.json is carried: a row-annotation collection
+    // under its own name, any other file a law table under its camel-cased name
+    // (material-uses.json -> materialUses), placed on the runtime world.
+    const mechanics={};
+    let mechanicsFiles;try{mechanicsFiles=(await fs.readdir(path.join(root,'meta/mechanics'))).filter(name=>name.endsWith('.json')).sort();}catch(error){if(error.code!=='ENOENT')throw error;mechanicsFiles=[];}
+    for(const file of mechanicsFiles){const rows=await read(`meta/mechanics/${file}`);if(!Array.isArray(rows))mechanics[mechanicsKey(file)]=rows;}
     // K8 habitats derived from those tags are part of the loaded world, so an
     // engine built on it re-derives the same rows and leaves the world unchanged.
     const world=materializeWildlifeHabitats({version:rules.version,rules,npcs,locations,routes,items,professions,skills,spells,recipes,monsters,bosses,cultures,deities,factions,history,factionPeople,eras,...(festivals.length?{festivals}:{}),...(rumors.length===0?{}:{rumors}),residents,households,settlementProfiles,...(regions.length?{regions}:{}),...(Array.isArray(careers)?{}:{careers})});
@@ -93,11 +109,17 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
     try{narrativeTemplates=JSON.parse(await fs.readFile(path.join(root,'ontology/entity-templates.json'),'utf8')).entries.flatMap(e=>e.narrative??[]);}catch(error){if(error.code!=='ENOENT')throw error;}
     let primitiveFacts={};
     try{primitiveFacts=JSON.parse(await fs.readFile(path.join(root,'ontology/primitives.json'),'utf8')).entries.find(e=>e.id==='fact.set')?.writable??{};}catch(error){if(error.code!=='ENOENT')throw error;}
-    const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveFacts,primitiveTables:Object.fromEntries(['body','learning','action-costs','yields'].map(name=>[name,world.balance[name]]))};
-    for(const [key,file] of Object.entries({openActionRules:'rules/tables/open-actions.json',openTagging:'rules/open-tagging.json',openReactions:'rules/open-reactions.json',domainRules:'rules/tables/domain-rules.json'})){
+    const primitiveAssets={primitiveTemplates:narrativeTemplates,primitiveFacts,primitiveTables:Object.fromEntries(['body','learning','action-costs','yields','ecology','health'].map(name=>[name,world.balance[name]]))};
+    for(const [key,file] of Object.entries({currencyRules:'rules/tables/currency.json',marketRules:'rules/tables/market.json',openActionRules:'rules/tables/open-actions.json',openTagging:'rules/open-tagging.json',openReactions:'rules/open-reactions.json',domainRules:'rules/tables/domain-rules.json'})){
         try{world[key]=await read(file);}catch(error){if(error.code!=='ENOENT')throw error;}
     }
     validateDomainRules(world);
+    const slots=await optional('ontology/slots/core.json'),derivations=await optional('rules/derivations.json'),consumers=await optional('ontology/slots/consumers.json'),facts=await optional('ontology/facts.json'),modifiers=await optional('rules/modifiers.json');
+    // An optional source contributes only when present. Empty injected fields
+    // would otherwise change publication fingerprints of unrelated worlds.
+    if([slots,derivations,consumers].some(source=>!Array.isArray(source))||facts.length||facts.entries?.length||modifiers.length||modifiers.entries?.length)world.derived={slots:[...slots.slots??[],...derivations.slots??[]],modifiers:[...derivations.modifiers??[],...(Array.isArray(modifiers)?modifiers:modifiers.entries??[])],conduction:slots.conduction??{},facts:Array.isArray(facts)?facts:facts.entries??[],...(Array.isArray(consumers)?{}:{consumers})};
+    loadDerivedRegistry(world);
+    for(const row of world.derived?.facts??[])primitiveFacts[row.kind]={...primitiveFacts[row.kind],[row.field]:{type:row.type,min:row.range?.[0],max:row.range?.[1],default:row.default,maxLength:row.type==='string'?row.range[1]:undefined}};
     try{
         await fs.access(path.join(root,'actions'));
         const registry=loadActionRegistry(path.join(root,'actions'));
@@ -112,6 +134,17 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         primitiveRuleRegistry(world);
     }catch(error){if(error.code!=='ENOENT')throw error;}
     for(const [name,value] of Object.entries(primitiveAssets))Object.defineProperty(world,name,{value,enumerable:Boolean(world.actionDefinitions)||Boolean(world.primitiveRules),writable:true,configurable:true});
+    const ecology=await optional('ecology/species.json');if(!Array.isArray(ecology))installEcologyDefinitions(world,ecology);
+    if(Object.keys(mechanics).length)world.mechanics=mechanics;
+    return world;
+}
+
+// The world the engine runs: the reviewed world with its mechanism annotations
+// and the laws that act on reviewed rows, the station projection from fixtures
+// and the derived item attributes (what WorldEngine does on construction).
+export async function loadRuntimeWorld(root){
+    const world=materializeRuntimeWorld(await loadWorld(root));
+    materializeWorkstations(world);deriveItemAttributes(world);
     return world;
 }
 

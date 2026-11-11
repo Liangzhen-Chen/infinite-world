@@ -1,4 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
+import {createHash} from 'node:crypto';
+import {derived} from './derived.mjs';
 import {purse,sink} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {store,bookStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
@@ -8,7 +10,7 @@ export {faithConflictClocks} from './faith-catalog.mjs';
 import {faithOf,faithCulture,hostedRites} from './faith-state.mjs';
 import {organizationState} from './organization-state.mjs';
 import {ensureGroupAccount,groupAccountPath,groupAccountView,changeGroupCoins} from './group-account.mjs';
-import {actorPath} from './npc-state.mjs';
+import {actorPath,npcHousehold,npcAgeAt} from './npc-state.mjs';
 import {personConstraint} from './entity-view.mjs';
 import {adjustStanding,collectivesOf} from './standing.mjs';
 import {registerEffect,applyEffects,clockTransaction} from './effects.mjs';
@@ -24,6 +26,7 @@ import {isEffective} from './lifecycle-state.mjs';
 import {facilityView,facilityRepairMaterials,facilityRuntime} from './facility-state.mjs';
 import {recordsWhere} from './storage.mjs';
 import {consent} from './action-consent.mjs';
+import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
 
 // A hosted event is distinct from a temple office or a completed rite. It
 // confers only the declared host role for this one scheduled ceremony.
@@ -61,6 +64,35 @@ declareHoldingWriter('faith',{kinds:['member_of','holds_office','devotee_of','pe
 
 const DAY=1440,path=id=>['state','records',id],actor=(d,e,id)=>d.get(...actorPath(e.world,id));
 const int=(n,min=0,max=1e9)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure('信仰钱粮或时长无效');return n;};
+const rainRule=(e,id)=>e.rules.faith?.rites?.find(r=>r.id===id);
+const seasonAt=(e,minute)=>{const c=e.calendar(minute);return {year:c.year,season:c.season};};
+export function faithRainQuota(e,document,temple,rite,minute=document.state.minute){
+ const config=rainRule(e,rite)?.rainfall;if(!config)return null;
+ int(config.baseQuota);int(config.coinsPerQuota,1);int(config.gratitudeCoins);int(config.reserveCoins);
+ const current=seasonAt(e,minute),prior=current.season?{year:current.year,season:current.season-1}:{year:current.year-1,season:3};
+ const income=groupAccountView(e,document.state,temple).ledger.filter(r=>r.coins>0&&['香火捐献','祭仪供献','雨泽供献'].includes(r.kind)&&Number.isSafeInteger(r.minute)&&
+  seasonAt(e,r.minute).year===prior.year&&seasonAt(e,r.minute).season===prior.season).reduce((n,r)=>n+r.coins,0);
+ const limit=Math.floor(derived(e,document,'faith:miracleQuota',temple,{base:config.baseQuota+Math.floor(income/config.coinsPerQuota),target:rite}));
+ const key=`faith-rain-quota:${temple}:${rite}:${current.year}:${current.season}`,used=document.state.records?.[key]?.used??0;
+ return {key,limit,used,remaining:Math.max(0,limit-used),income,...current};
+}
+registerEffect('faith_rain',{sources:['world'],validate(e,v){
+ const rule=rainRule(e,v.rite),config=rule?.rainfall,t=templeById(e,v.temple);
+ if(!config||!t||t.deity!==rule.deity||!Array.isArray(config.footprints)||!config.footprints.length)throw preconditionFailure('求雨须有已登记的祭仪、寺观与落区');
+ int(config.minutes,1,360*DAY);
+ if(!Array.isArray(config.seasons)||!config.seasons.length||config.seasons.some(s=>!Number.isInteger(s)||s<0||s>3))throw preconditionFailure('求雨须声明可用季节');
+ for(const footprint of config.footprints)if(!Array.isArray(footprint)||!footprint.length||new Set(footprint.map(r=>r.location)).size!==footprint.length||footprint.some(r=>!e.world.locations.some(l=>l.id===r.location)||!Number.isFinite(r.share)||r.share<0||r.share>1))throw preconditionFailure('降雨落区须引用实际地点和零至一的覆盖份额');
+},apply(d,e,v,c){
+ const key=`faith-rain:${c.sourceEvent}`,old=d.get('state','records',key);
+ if(old){if(old.temple!==v.temple||old.rite!==v.rite)throw Error('求雨来源事件冲突');return {applied:true,rain:old};}
+ const quota=faithRainQuota(e,d.document,v.temple,v.rite,c.minute);
+ if(!quota.remaining)return {applied:false,reason:'本季求雨配额已用尽'};
+ const config=rainRule(e,v.rite).rainfall;
+ const choice=createHash('sha256').update(JSON.stringify([d.get('randomSeed'),quota.key,quota.used])).digest().readUInt32LE(0)%config.footprints.length;
+ const rain={category:'faith_rain',temple:v.temple,rite:v.rite,sourceEvent:c.sourceEvent,since:c.minute,expires:c.minute+config.minutes,coverage:structuredClone(config.footprints[choice])};
+ holdingSet(d,e,path(key),rain,'faith');holdingSet(d,e,path(quota.key),{category:'faith_rain_quota',temple:v.temple,rite:v.rite,year:quota.year,season:quota.season,used:quota.used+1},'faith');
+ return {applied:true,rain};
+}});
 const capable=n=>n&&!['濒死','昏迷','患病'].includes(n.status)&&!n.scheduleTravel&&!n.cognitionTravel&&!/睡眠|熟睡/.test(n.activity??'');
 function subject(d,e,name='player',{recipient=false}={}){
  const id=name==='player'?'player':e.resolve(name),n=actor(d,e,id);
@@ -186,11 +218,13 @@ function ritual(d,e,t,args,eventId){
  e.assertNpcAutonomyAction?.(d.get('state'),members,{minutes:spec.minutes});
  const all=members.map(id=>faithOf(e,d.get('state'),id).value),now=at+spec.minutes;
  const cooldown=d.get(...path(`faith_cooldown:${t.id}:${t.deity}`))?.until??0;
- const eligible=Boolean(r&&e.calendar(at).season===r.season&&cooldown<=at&&members.length>=r.collective&&all.every(f=>f?.deity===t.deity&&Number.isSafeInteger(f.observedSince)&&at-f.observedSince>=r.devotionDays*DAY&&(f.lastBreach??-1)<f.observedSince));
+ const rainQuota=r?.rainfall?faithRainQuota(e,d.document,t.id,r.id,at):null;
+ const inSeason=r&&(r.rainfall?r.rainfall.seasons.includes(e.calendar(at).season):e.calendar(at).season===r.season);
+ const eligible=Boolean(r&&(!rainQuota||rainQuota.remaining>0)&&inSeason&&cooldown<=at&&members.length>=r.collective&&all.every(f=>f?.deity===t.deity&&Number.isSafeInteger(f.observedSince)&&at-f.observedSince>=r.devotionDays*DAY&&(f.lastBreach??-1)<f.observedSince));
  pay(d,e,t,who,spec.coins,spec.offerings,{kind:'祭仪供献',sourceEvent:eventId,minute:at,party:who});
  spend(d,e,t,0,spec.offerings,{kind:'祭仪耗用',sourceEvent:eventId,minute:at,party:who},undefined,{flow:'sink:consume',purpose:'ritual',writer:'faith',eventId});advanceWithNpcParticipants(d,e,spec.minutes,eventId,[host,...members].filter(id=>id!=='player'));
- let response={applied:false,reason:'普通祭仪'};
- if(eligible){response=applyEffects(d,e,[{kind:'faith_omen',deity:t.deity,rite:r.id,minutes:r.responseMinutes}],{minute:now,sourceEvent:eventId,settlement:t.seat},'world');
+ let response={applied:false,reason:rainQuota&&!rainQuota.remaining?'本季求雨配额已用尽':'普通祭仪'};
+ if(eligible){response=applyEffects(d,e,[{kind:'faith_omen',deity:t.deity,rite:r.id,minutes:r.responseMinutes},...(r.rainfall?[{kind:'faith_rain',temple:t.id,rite:r.id}]:[])],{minute:now,sourceEvent:eventId,settlement:t.seat},'world');
   if(response.applied)holdingSet(d,null,path(`faith_cooldown:${t.id}:${t.deity}`),{category:'faith_cooldown',until:now+r.cooldownDays*DAY,sourceEvent:eventId},'faith');}
  const row={category:'faith_ritual',temple:t.id,subject:who,participants:members,minute:now,response,sourceEvent:eventId};holdingSet(d,null,path(`faith_ritual:${eventId}`),row,'faith');return row;
 }
@@ -252,7 +286,7 @@ export function faithAction(d,args,eventId){
  const t=temple(d,e,args.org,{local:args.operation!=='faith_pilgrim'});
  if(args.operation==='faith_inspect'){
   const state=d.get('state');return {temple:t,faith:faithOf(e,state,args.member??'player'),account:groupAccountView(e,state,t.id),policy:conversionPolicy(e,state,'player',t.seat),
-   availability:templeCapacity(e,state,t),uses:e.rules.faith?.uses,rites:e.rules.faith?.rites?.filter(r=>r.deity===t.deity),
+   availability:templeCapacity(e,state,t),uses:e.rules.faith?.uses,rites:e.rules.faith?.rites?.filter(r=>r.deity===t.deity).map(r=>({...r,...(r.rainfall?{quota:faithRainQuota(e,d.document,t.id,r.id)}:{})})),
    history:Object.values(state.records??{}).filter(r=>r.temple===t.id&&['faith_use','faith_ritual'].includes(r.category)),
    omens:Object.values(state.effects??{}).filter(r=>r.kind==='faith_omen'&&r.location===state.location&&r.expires>state.minute),
    conflicts:(e.rules.factionClock?.clocks??[]).filter(r=>r.id.startsWith('faith:')&&[r.faction,r.rival].includes(t.id)).map(r=>({clock:r.id,rival:r.faction===t.id?r.rival:r.faction,
@@ -309,6 +343,22 @@ registerWorldEventSubscriber({id:'faith_experience',order:65,on:(d,engine,events
 // or turning a private diagnosis into public knowledge.
 export function advanceFaith(d,e,{beforeState,id,before=beforeState?.minute??d.get('state','minute'),after=d.get('state','minute')}){
  if(!e.rules.faith)return;
+ for(const benefit of recordsWhere(d.peek?d.peek('state','records'):d.get('state','records'),'category','rain_benefit'))if(benefit.lastDay>=Math.floor((benefit.until-1)/DAY)&&after>=Math.ceil(benefit.until/DAY)*DAY){
+  const key=`rain-benefit:${benefit.sourceEvent}:${benefit.settlement}`;
+  const rule=rainRule(e,benefit.rite),config=rule?.rainfall,t=templeById(e,benefit.temple);if(!config||!t)continue;
+  const donors=new Set(benefit.donors??[]);
+  for(const [who,n] of Object.entries(d.get('state','npcs')??{})){
+   if(donors.has(who)||!capable(n)||!isEffective(e,d,who)||n.location!==t.seat||personConstraint(e,d.get('state'),who)||npcAgeAt(e,d.get('state'),who,after)<(e.rules.npcLife?.adultAge??18))continue;
+   const home=npcHousehold(e,d.get('state'),who)?.settlement??e.byId.get(who)?.settlement;
+   const faith=faithOf(e,d.get('state'),who).value;
+   if(home!==benefit.settlement||faith?.temple!==t.id||!Number.isSafeInteger(faith.observedSince)||faith.observedSince>benefit.until)continue;
+   const offered=Math.floor(derived(e,d.document,'faith:offering',who,{base:config.gratitudeCoins*Math.min(1,benefit.share),target:t.id}));
+   const coins=Math.max(0,Math.min(offered,(n.coins??0)-config.reserveCoins));
+   if(coins)pay(d,e,t,who,coins,{}, {kind:'雨泽供献',sourceEvent:benefit.sourceEvent,minute:after,party:who,settlement:home});
+   donors.add(who);
+  }
+  if(donors.size!==(benefit.donors??[]).length)holdingSet(d,e,path(key),{...benefit,donors:[...donors]},'faith');
+ }
  const records=typeof d.peek==='function'?d.peek('state','records'):d.get('state','records');
  for(const p of recordsWhere(records,'category','faith_repair'))if(p.status==='施工中'){
   const key=`faith_repair:${p.temple}`;
@@ -329,3 +379,40 @@ export function advanceFaith(d,e,{beforeState,id,before=beforeState?.minute??d.g
    participants:[ill.patient],location:d.get('state','npcs',ill.patient,'location'),tags:['faith','disaster','illness'],summary:'患病使当事人重新思量祈愿',sourceEvent:id});
  }
 }
+
+// ---- 来访者供奉（S5-04 香火）----
+// A temple's incense money is what its real visitors decide to give: a devout adult standing in the temple at the day's
+// autonomy hour weighs the customary coin (ordinaryRite) against his own purse and faith through npcDecision, then pays it
+// into the temple's account. Nothing is credited to a temple for a day without a visitor. One offering per person per day.
+const offeringKey=(who,day)=>`faith_offering:${who}:${day}`;
+// Only a building is a place one visits to worship: a church whose seat is a whole settlement has no hall to stand in.
+const visited=(e,state,who,location)=>temples(e).find(t=>t.seat===location&&/^(bld|site)_/.test(t.seat)&&t.teacher!==who&&faithOf(e,state,who).value?.temple===t.id);
+const customaryOffering=(e,document,who,t)=>Math.floor(derived(e,document,'faith:offering',who,{base:e.rules.faith.ordinaryRite.coins,target:t.id}));
+const offeringRelevant=(e,state,id,presence)=>Boolean(e.rules.faith?.ordinaryRite)&&/^(bld|site)_/.test(presence.location)&&temples(e).some(t=>t.seat===presence.location);
+registerAutonomyProvider('faith_offering',{
+ relevant:offeringRelevant,
+ candidateRelevant:(e,document,id,presence)=>offeringRelevant(e,document.state,id,presence),
+ candidates(e,view,document){
+  const state=document.state,who=view.observer,t=e.rules.faith?.ordinaryRite?visited(e,state,who,view.self.location):null;
+  if(!t||npcAgeAt(e,state,who,view.minute)<(e.rules.npcLife?.adultAge??18))return [];
+  const day=Math.floor(view.minute/DAY),coins=customaryOffering(e,document,who,t);
+  if(state.records?.[offeringKey(who,day)]||coins<1||view.self.coins<coins)return [];
+  // A believer who doubts gives nothing: the need for the rite is what outweighs the coin.
+  return [{id:`faith:offering:${who}:${day}`,kind:'faith_offering',legacy:{kind:'faith_offering',temple:t.id,coins},from:t.id,cost:{coins},needSatisfaction:faithOf(e,state,who).value.doubt?0:100,utility:1}];
+ }
+});
+registerAutonomyKind('faith_offering',{
+ minutes:e=>e.rules.faith.ordinaryRite.minutes,
+ validate(d,e,id,action,{at}){
+  const t=templeById(e,action.temple);
+  if(!t||visited(e,d.get('state'),id,d.get('state','npcs',id).location)?.id!==t.id)throw preconditionFailure('人物不在自己信奉的寺观里');
+  if(d.get('state','records',offeringKey(id,Math.floor(at/DAY))))throw preconditionFailure('今日已供奉过');
+  if(!Number.isSafeInteger(action.coins)||action.coins<1||d.get('state','npcs',id).coins<action.coins)throw preconditionFailure('钱袋不足以供奉');
+ },
+ execute(d,e,id,action,{at,start,actionId}){
+  const t=templeById(e,action.temple);
+  pay(d,e,t,id,action.coins,{},{kind:'香火捐献',sourceEvent:actionId,minute:at,party:id});
+  holdingSet(d,null,path(offeringKey(id,Math.floor(start/DAY))),{category:'faith_offering',subject:id,temple:t.id,coins:action.coins,sourceEvent:actionId,minute:at},'faith');
+  return {summary:`在${e.byId.get(t.seat)?.name??t.seat}向${t.name}供奉${action.coins}铜香火。`,spent:{coins:action.coins}};
+ }
+});

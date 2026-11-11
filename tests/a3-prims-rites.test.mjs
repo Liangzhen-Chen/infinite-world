@@ -14,6 +14,9 @@ import {registerEffect} from '../server-plugin/effects.mjs';
 import '../server-plugin/primitives-runtime.mjs';
 
 const source=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
+// Paid initiation and discipline are tested with the authored ritual providers
+// present; source errands are covered separately, not an extra ritual premise.
+delete source.rules.householdSubsistence;
 const NPC='npc_hw_linsui',WOOD='item_wood',TOOL='item_whittling_knife',OBJECT='item_a3_degree_target';
 declareHoldingWriter('a3-prims-test',{entities:['item'],locations:true,kinds:['owns']});
 function setup(mutate=()=>{}){

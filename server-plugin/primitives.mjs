@@ -1,11 +1,12 @@
 import {transfer,balance,parseAccount,isSource,isSink,declareLedgerWriter} from './ledger.mjs';
+import {noteOffense} from './offense-notes.mjs';
 import {updateEntity,declareHoldingWriter,ENTITY_KINDS,openHolding,closeHolding,transferHolding,rescaleHolding,holdingRow,holdingKind,runHoldingProtocol} from './holdings.mjs';
 import {PrimitiveRejected,validatePrimitive,writableFact,reject} from './primitive-policy.mjs';
 import {beginReactionTick,drainWorldReactions,publishTransitionEvent,presentWitnesses,SOCIAL_VERBS} from './world-events.mjs';
 import {submitContest} from './scheduler.mjs';
 import {isDomainRejection,refusalProjection} from './action-rejection.mjs';
 
-declareLedgerWriter('primitives',{sinks:['sink:consume']});
+declareLedgerWriter('primitives',{sinks:['sink:consume','sink:destroy']});
 // Static registration (load time only): every registered holding kind goes
 // through runHoldingProtocol after holdingKind()/authority checks, so the
 // writer covers all kinds by declaration rather than by execution history.
@@ -88,6 +89,9 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    const tags=[...capability.tags??[]];let actedAs=null,result;
    const requireAuthority=(op,target,options)=>{
     const a=policy.authority(d.document,frame.actor,op,target,options);if(!a?.allowed)reject('E-AUTHORITY',a?.reason??'没有动用权限');
+    // K6: an act allowed only as a breach of another's title is noted here and
+    // committed as an offense with this act (see below).
+    if(a.breach)noteOffense(d,{...a.breach,actor:frame.actor});
     tags.push(...a.tags??[]);actedAs=a.actedAs;
     if(actedAs?.kind==='resolution'){
      resolutions.add(actedAs.id);
@@ -99,6 +103,11 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     // Only a native frame can install this interpreter. Its caller has already
     // validated the source-specific program (K2/K6/M4); JSON never selects it.
     result=policy.applyNative(d,effect,{frame,index});
+   }else if(effect.op==='transfer'&&parseAccount(effect.to).owner==='sink:individuated'){
+    // A herd's head become individuals only through its stock adapter (01 §1.6).
+    requireAuthority('transfer',effect.from,{effect});
+    if(!policy.executePrimitive)reject('E-PRIMITIVE-CONNECTOR','Missing population stock adapter');
+    result=policy.executePrimitive(d,effect,{frame,index,requireAuthority,tags});
    }else if(effect.op==='transfer'){
     const a=parseAccount(effect.from),b=parseAccount(effect.to),qty=effect.qty;
     for(const key of [effect.from,...(isSink(b.owner)?[]:[effect.to])])if(policy.accountExists?.(d.document,key)&&!Object.hasOwn(d.get('ledger','accounts')??{},key))d.set(['ledger','accounts',key],0);
@@ -109,7 +118,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     if(d.get('ledger','version')!==1)reject('E-TRANSFER-BOOKS','账本尚未开立');
     if(/^(escrow|collected)(:|$)/.test(a.purpose))reject('E-TRANSFER-PURPOSE','托管资金不能由普通转移提案动用');
     requireAuthority('transfer',effect.from,{effect});
-    if(isSink(b.owner)&&(a.owner!==frame.actor||b.owner!=='sink:consume'))reject('E-TRANSFER-SINK','本接点只允许消耗自己账户中的资源');
+    if(isSink(b.owner)&&(a.owner!==frame.actor||!['sink:consume','sink:destroy'].includes(b.owner)))reject('E-TRANSFER-SINK','本接点只允许消耗或毁掉自己账户中的资源');
     if(!isSink(b.owner)){
      const from=policy.location(d.document,a.owner),to=policy.location(d.document,b.owner);
      if(!from||policy.location(d.document,frame.actor)!==from)reject('E-TRANSFER-REACH','Actor must be physically present at the source');
@@ -127,7 +136,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     if(!kind)reject('E-HOLDING-KIND','Unknown holding kind');
     if(effect.op==='holding.open'&&effect.terms!==undefined&&effect.terms!==null&&(typeof effect.terms!=='object'||Array.isArray(effect.terms)||Object.keys(effect.terms).some(field=>!kind.terms?.includes(field))))reject('E-HOLDING-TERMS','Holding terms must be declared by the holding kind');
     const subject=row?.subject??effect.subject;
-    requireAuthority(effect.op,subject,{holding:row,kind:kind.id,variant:effect.variant,holder:effect.holder,reason:effect.reason,shares:effect.shares,disposition:effect.op==='holding.transfer'||kind.id==='pledged'});
+    requireAuthority(effect.op,subject,{effect,holding:row,kind:kind.id,variant:effect.variant,holder:effect.holder,reason:effect.reason,shares:effect.shares,disposition:effect.op==='holding.transfer'||kind.id==='pledged'});
     const base={writer:'primitives',eventId:frame.eventId,engine:policy.engine};
     const mutate=(op,args,native)=>{
      const value=policy.engine?runHoldingProtocol(d,policy.engine,{...base,...args,op,eventId:`${frame.eventId}:${index}`}):native(d,{...base,...args});
@@ -156,7 +165,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
     const row=d.get('holdings','entities',effect.entity);if(!row)reject('E-FACT-ENTITY','实体不存在');
     requireAuthority('fact.set',effect.entity);
     if(Object.hasOwn(effect,'value')===Object.hasOwn(effect,'delta'))reject('E-FACT-VALUE','事实写入须指定 value 或 delta 之一');
-    const value=Object.hasOwn(effect,'delta')?(row.facts?.[effect.field]??0)+effect.delta:effect.value;
+    const value=Object.hasOwn(effect,'delta')?(row.facts?.[effect.field]??policy.factPolicy?.[row.kind]?.[effect.field]?.default??0)+effect.delta:effect.value;
     writableFact(policy.factPolicy,row.kind,effect.field,value);
     policy.validateFact?.(d,effect,{row,value});
     result=updateEntity(d,{id:effect.entity,facts:{[effect.field]:value},writer:'primitives',eventId:frame.eventId});
@@ -212,6 +221,7 @@ function execute(document,effects,frame,commit,{deferReactions=false,pending=nul
    const target=child.target??(party&&!isSink(party)?party:null)??(child.op==='learn'?child.result?.teacher:null)??child.entity??null;
    publishTransitionEvent(d,policy.engine,{id:child.id,parent:frame.eventId,verb,actor:frame.actor,target,minute:d.get('state','minute'),location,visibility,witnesses,tags:child.tags,primitive:child.op,result:child.result,...(child.op==='emit'?{payload:child.payload??{}}:{})});
   }
+  for(const offense of policy.engine.primitiveCommitOffenses?.(d,frame.eventId)??[])receipt.consequences.push({type:'offense',...offense});
   if(!deferReactions)drainWorldReactions(d);
   const interruptions=actionRuntime?.settleRites?.(d,policy.engine)??[];
   for(const plan of interruptions){

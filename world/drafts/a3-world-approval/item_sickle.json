@@ -1,6 +1,6 @@
 {
   "id": "item_sickle",
-  "fingerprint": "67308c97bd0c7fc6b877dc0a532a176ff1d44eb78a943a91f4d95dd894923370",
+  "fingerprint": "e8e322d4f190e04e41c0ecba0ffd614719e5f6891777370bc0df949f0e60cfab",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -16,7 +16,11 @@
       "scope": null,
       "origin": "loc_hw",
       "use": "收割成熟谷物的手工农具。",
-      "description": "收割成熟谷物的手工农具。"
+      "description": "收割成熟谷物的手工农具。",
+      "tags": [
+        "cut",
+        "harvest"
+      ]
     }
   },
   "review": {
@@ -25,18 +29,19 @@
   "errors": [],
   "warnings": [],
   "feedback": null,
+  "errorCode": null,
   "frozenCandidate": {
-    "entryHash": "bad5268f9799eefd97fdc1451cc5f35622932d69affe1b67bf259ab9020219db",
-    "draftHash": "0a3d199e8193f6ab511517c2479998b920a8bd0239639809c0fdca1592476bc0"
+    "entryHash": "73e9b7293664a548b2097a876977979cfc7dc206c776e47c0326602131b1f4e2",
+    "draftHash": "00e7a6408a54b38386f10d1eb92a3a8300dcf23bd5bb7deeb2b73fe7663100d0"
   },
   "responseEvidence": [
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "ab56054b-798d-4f98-bf20-aefb74cbd1eb",
-      "file": "budget-responses/ab56054b-798d-4f98-bf20-aefb74cbd1eb.json",
-      "requestHash": "3e3e1864d26ca498ea21532bb18520944c9a7903af03c8333adb542a81a60d88",
-      "responseHash": "ee8729af119dd2f8b7973a897befe84f74d7d9a4094041e9c172b570fef79c29"
+      "requestId": "de88e714-7f1e-469a-a0a4-62b3d5956f82",
+      "file": "budget-responses/de88e714-7f1e-469a-a0a4-62b3d5956f82.json",
+      "requestHash": "898efd4482e1e29555c24eca4d30fd6e8e452b0e33cb539ea8b6abd7b71d71a1",
+      "responseHash": "d94daf076c0b6247fbcc3a135496b1ddb5a1fca136e2c93cd1b9d32216f0949d"
     }
   ],
   "measurements": [
@@ -45,19 +50,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 1207,
+        "prompt_tokens": 1225,
         "completion_tokens": 7,
-        "total_tokens": 1214,
+        "total_tokens": 1232,
         "prompt_tokens_details": {
-          "cached_tokens": 256
+          "cached_tokens": 128
         },
-        "prompt_cache_hit_tokens": 256,
-        "prompt_cache_miss_tokens": 951
+        "prompt_cache_hit_tokens": 128,
+        "prompt_cache_miss_tokens": 1097
       },
-      "costUpperYuan": 0.00196824,
-      "cumulativeUpperYuan": 0.12646607999999998,
-      "latencyMs": 639.4227999999994,
-      "timestamp": "2026-10-22T22:40:55.419Z"
+      "costUpperYuan": 0.0022551199999999998,
+      "cumulativeUpperYuan": 0.146006,
+      "latencyMs": 890.0695000000005,
+      "timestamp": "2026-11-10T15:02:53.571Z"
     }
   ]
 }

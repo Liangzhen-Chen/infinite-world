@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT02（保留原阶段边界）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -15,7 +16,11 @@ import {closeHolding,ensureHoldings} from '../server-plugin/holdings.mjs';
 import {reconcile,conservation} from './helpers/ledger-audit.mjs';
 import {loadPromptBundle} from '../tools/build-card.mjs';
 
-const world=await loadWorld(),engine=new WorldEngine(world);
+// This authority/private-document fixture fixes the on-duty recipient and
+// bystanders while its native actions advance time. Household errands belong
+// to the separate source/full-world tests; all duty/privacy assertions remain.
+const world=await loadWorld();delete world.rules.householdSubsistence;
+const engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const corpus=JSON.parse(await fs.readFile('tests/fixtures/a3-intents-v2-r12.json','utf8'));
 const initial=()=>engine.createCharacter(seed,{},'a3-owner2-t');

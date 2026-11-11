@@ -71,13 +71,16 @@ export async function approved(world,{sourceRoot=root}={}){
  return{world:currentWorld,b};
 }
 export function integrate(world,b){
+ // K5: equipment is published by world/drafts/kg/apply.mjs, not by this skeleton; a re-integrated place keeps it.
+ const keepFixtures=l=>{const fixtures=world.locations.find(x=>x.id===l.id)?.fixtures;return fixtures?{...l,fixtures:structuredClone(fixtures)}:l;};
  const currentYan=world.npcs.find(p=>p.id===b.yan.id),yan={...currentYan,settlement:b.yan.settlement,householdId:b.yan.householdId,household:b.yan.household,home:{...currentYan.home,location:b.yan.home.location}};
  const currentTown=world.locations.find(l=>l.id==='loc_bs'),town={...currentTown,scope:b.town.scope,description:b.town.description};
  const fullIds=new Set(world.npcs.map(p=>p.id));
- const next={...world,npcs:merge(world.npcs,[yan]),residents:merge(world.residents,b.residents).filter(p=>!fullIds.has(p.id)),households:merge(world.households,b.households),locations:merge(world.locations,[town,...b.locations]),routes:merge(world.routes,b.routes),settlementProfiles:merge(world.settlementProfiles,[b.profile])};
+ const next={...world,npcs:merge(world.npcs,[yan]),residents:merge(world.residents,b.residents).filter(p=>!fullIds.has(p.id)),households:merge(world.households,b.households),locations:merge(world.locations,[town,...b.locations.map(keepFixtures)]),routes:merge(world.routes,b.routes),settlementProfiles:merge(world.settlementProfiles,[b.profile])};
  for(const n of world.npcs)if(n.id!==b.yan.id)assert.deepEqual(next.npcs.find(p=>p.id===n.id),n,'旧人物锁定');
  assert.deepEqual(next.locations.find(l=>l.id==='bld_bs_shrine'),world.locations.find(l=>l.id==='bld_bs_shrine'));
- assert.deepEqual(next.locations.find(l=>l.id==='loc_bs').workstations,world.locations.find(l=>l.id==='loc_bs').workstations);
+ // K5: the town's kiln is equipment; its station derives from these fixtures.
+ assert.deepEqual(next.locations.find(l=>l.id==='loc_bs').fixtures,world.locations.find(l=>l.id==='loc_bs').fixtures);
  return next;
 }
 export async function publish({contactRoutineOnly=false,facilitySourceOnly=null}={}){

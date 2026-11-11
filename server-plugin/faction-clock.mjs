@@ -1,3 +1,5 @@
+import {recordsWhere} from './storage.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {ensureGroupAccount} from './group-account.mjs';
 import {purse,treasury,sink,bookSide,BOOKED} from './money.mjs';
@@ -135,7 +137,7 @@ export function initializeFactionClocks(d,engine,minute,end=minute){
   holdingSet(d,null,clockPath(rule.id),{category:'faction_clock',id:rule.id,faction:rule.faction,phase:0,year:Math.floor(minute/DAY/360)+1,initializedAt:nextAt,nextAt,paused:false,history:[],interventions:[]},'faction-clock');
  }
 }
-export function nextFactionClockMinute(state,now){return Math.min(Infinity,...Object.values(state.records??{}).filter(r=>r.category==='faction_clock'&&r.nextAt>now).map(r=>r.nextAt));}
+export function nextFactionClockMinute(state,now){return Math.min(Infinity,...recordsWhere(state.records,'category','faction_clock').filter(r=>r.category==='faction_clock'&&r.nextAt>now).map(r=>r.nextAt));}
 function condition(d,rule,clock,assets){
  const c=rule.stages[clock.phase].condition;
  switch(c.kind){
@@ -188,14 +190,16 @@ export function advanceFactionClocks(d,engine,at){
   if(row.nextAt<at)throw Error('势力时钟越过未处理的日期');if(row.nextAt!==at)continue;
   const year=Math.floor(at/DAY/360)+1;
   row={...row,nextAt:at+rule.intervalDays*DAY,lastAt:at,...(rule.cycle==='year'&&row.year!==year?{phase:0,paused:false,interventions:[]}:{}),year};
-  const stage=rule.stages[row.phase],roll=clockRoll(d.document.randomSeed,rule.id,at/DAY);row.lastRoll=roll;
+  const stage=rule.stages[row.phase],roll=clockRoll(d.get('randomSeed'),rule.id,at/DAY);row.lastRoll=roll;
   if(stage&&!row.paused){
    const assets=ensureAccount(d,engine,rule.faction),met=condition(d,rule,row,assets);row.lastCondition=met;
    if(met&&roll<rule.probability){
     const sourceEvent=`faction-clock:${rule.id}:${at}`,context={faction:rule.faction,settlement:rule.settlement,minute:at,sourceEvent,scope:'regional',stage:stage.id};
     const receipt=clockTransaction(d,tx=>{
      if(!affordable(assets,stage.cost))return {applied:false,reason:'阶段资源不足'};
-     changeAssets(tx,engine,rule.faction,stage.cost??{},-1,{sourceEvent,minute:at,kind:'stage_cost',stage:stage.id},{account:sink('export','faction_stage'),writer:'faction-clock',eventId:sourceEvent},{flow:'sink:consume',purpose:'faction_stage',writer:'faction-clock',eventId:sourceEvent});
+     // 阶段耗用的物资在此刻按当地市场估值冻结进账（itemWorth），此后不随市价回改；无从估价的不计。
+     const itemWorth=Object.entries(stage.cost?.items??{}).reduce((n,[item,q])=>n+(goodsWorth(tx,engine,{item,quantity:q,location:rule.settlement,holder:null})??0),0);
+     changeAssets(tx,engine,rule.faction,stage.cost??{},-1,{sourceEvent,minute:at,kind:'stage_cost',stage:stage.id,itemWorth},{account:sink('export','faction_stage'),writer:'faction-clock',eventId:sourceEvent},{flow:'sink:consume',purpose:'faction_stage',writer:'faction-clock',eventId:sourceEvent});
      const results=[];
      for(const effect of stageEffects(engine,rule,stage)){const result=applyEffect(tx,engine,effect,context);if(!result.applied)return result;results.push(result);}
      return {applied:true,effects:results};

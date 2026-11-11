@@ -158,7 +158,7 @@ test('佛门正常入门与认证产生仪式资格，学书主持护体；实�
  assert.equal(s.doc.state.player.faith.lastBreach,breachedAt);await assert.rejects(grant(),/至少一天/);
 });
 
-test('机构施法许可真实发放、使用并到期回收；无权、越域、伪造和重复入门均原子拒绝',async()=>{
+test('机构施法许可真实发放、使用并到期回收；无权签发、越域和重复入门原子拒绝；持伪造或过期许可施放照样发生并命中擅施心术',async()=>{
  const t=teachingDesign.find(t=>t.route==='佛'),s=await schoolSession(t);await foundation(s,t,299);
  await s.morning();await s.call('world_practice',{skill:t.core,breakthroughSource:t.id},'breakthrough');await s.call('world_practice',{skill:t.core,target:'突破后的第一息'});
  await s.morning();await s.call('world_time',{until:{dayOffset:0,hour:13,minute:10}});await s.call('world_learn',{entity:'spell_mind_05',source:t.id},'success');
@@ -167,10 +167,12 @@ test('机构施法许可真实发放、使用并到期回收；无权、越域�
  await assert.rejects(s.call('world_law',{...request,location:'bld_bs_school'}),/法域/);assert.deepEqual(s.doc,original);
  await assert.rejects(s.call('world_law',{...request,authority:'npc_bs_076_1'}),/在场|权限/);assert.deepEqual(s.doc,original);
  const permit=await s.call('world_law',request),good=structuredClone(s.doc);s.doc.state.records[permit.permit].grantor='npc_bs_076_1';
- await assert.rejects(s.call('world_cast',{spell:'spell_mind_05',target:'player',permit:permit.permit}),/实际颁发/);s.doc=good;
+ // K6 依据（审查 C-d magic-targeting:37、D1 本文件:167–173）：精神施法许可决定合法与否，不决定能否施放。
+ const mental=r=>{const o=r.offenses?.find(o=>o.offense==='mental_magic');assert.ok(o,'命中擅施心术');assert.equal(s.doc.state.records[o.record].offender,'player');return o;};
+ const mp=s.doc.state.player.mp;mental(await s.call('world_cast',{spell:'spell_mind_05',target:'player',permit:permit.permit}));assert.ok(s.doc.state.player.mp<mp,'伪造许可下施放确实发生');s.doc=good;
  await s.call('world_cast',{spell:'spell_mind_05',target:'player',permit:permit.permit},'success');
  await s.call('world_time',{minutes:15});assert.equal(s.doc.state.records[permit.permit].status,'已到期');assert.equal(s.doc.state.records[permit.permit].revoked,true);
- const expired=structuredClone(s.doc);await assert.rejects(s.call('world_cast',{spell:'spell_mind_05',target:'player',permit:permit.permit}),/实际颁发/);assert.deepEqual(s.doc,expired);
+ s.doc.state.player.mp=s.doc.state.player.maxMp;/* 原断言是被拒、不耗魔力；改成施放后单独看这一次，先回满魔力 */mental(await s.call('world_cast',{spell:'spell_mind_05',target:'player',permit:permit.permit}));
 });
 
 test('师授失败照扣费和用时，贫穷、休息日与其他导师拒绝不写记录',async()=>{
@@ -266,9 +268,11 @@ test('玩家沿既有路线找到前厅居民，以真实私人库存成交并�
  await assert.rejects(run('world_trade',{seller:person.id,service:'征税'},'t93-unsupported'),/未登记/);assert.deepEqual(doc,prior);
 });
 
-test('休息日没有库存接洽，未获许可的住宅入口保留原拒绝',async()=>{
+test('休息日没有库存接洽；未获许可走进住宅照样进去并命中擅入私宅',async()=>{
  const engine=new WorldEngine(world),person=bundle.people[0],doc=engine.createCharacter(legacy,{},'t93-home');doc.state.minute=540;doc.state.location='loc_bs';
- const original=structuredClone(doc);await assert.rejects(engine.reduce(doc,{tool:'world_move',args:{destination:person.home.location},eventId:'t93-private-home'}),/成年住户/);assert.deepEqual(doc,original);
+ // K6 依据（审查 C-b location-access:23）：住户许可决定合法与否，不决定能否走进去。
+ {const out=await engine.reduce(doc,{tool:'world_move',args:{destination:person.home.location},eventId:'t93-private-home'}),after=applyPatches(doc,out.patches);
+  assert.equal(after.state.location,person.home.location);const o=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o);assert.equal(after.state.records[o.record].sourceEvent,'t93-private-home');}
  doc.state.minute=9*1440+540;doc.state.location=person.home.location;doc.state.npcs[person.id].location=person.home.location;doc.state.npcs[person.id].activity='家务';
  await assert.rejects(engine.reduce(doc,{tool:'world_trade',args:{seller:person.id,item:Object.keys(person.inventory)[0],quantity:1},eventId:'t93-rest'}),/服务|时段|作息|休息/);
 });

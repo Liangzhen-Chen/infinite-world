@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT01（保留原阶段边界）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -18,8 +19,13 @@ import {applyPatches,CampaignStorage} from '../server-plugin/storage.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {documentScene,documentCall} from './helpers/document-actions.mjs';
 import {documentAction} from '../server-plugin/documents.mjs';
+import {runPrelude} from '../tools/a3-setup/prelude.mjs';
 
-const world=await loadWorld(),engine=new WorldEngine(world);
+// This authority/private-document fixture fixes the on-duty recipient and
+// bystanders while its native actions advance time. Household errands belong
+// to the separate source/full-world tests; all duty/privacy assertions remain.
+const world=await loadWorld();delete world.rules.householdSubsistence;
+const engine=new WorldEngine(world);
 const seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const initial=engine.initialFromLegacy(seed,'a3-owner2-g');
 const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r12.json',import.meta.url),'utf8'));
@@ -162,28 +168,44 @@ test.todo('G4: invalid pawn ticket stays invalid and grants neither ownership no
  noDrift(document);
 });
 
-test.todo('G4: rent imports as rent, creditor waiver is local, unauthorised waiver fails; storage export/import and replay preserve source〔前提待真实动作：制作机构原件、NPC 宅地申请、匿名汇总票、公告、运损和失效当票原件及指定租契；归 S4〕',async t=>{
- const s=setup(220);
- // W provides the tenant identity; this protocol test uses a real world actor.
- s.instances=[];s.history[0].debtor='npc_hw_anhuai';s.obligations[0].debtor='npc_hw_anhuai';
- const r=run(s);assert.deepEqual(r.setupUnmet,[]);
- const rent=r.document.state.obligations.a3v2_220_rent;
- assert.equal(rent.kind,'rent');assert.equal(rent.terms.fieldAreaMu,10);assert.equal(obligationView(r.document.state,rent).owed,100);
+test('G4: real ten-mu rental creates rent; creditor waiver, storage and replay preserve the same source',async t=>{
+ // S5CT / A3V2-220: initial ownership/stock are premises; only the actual
+ // landlord's offer and tenant decision create the lease and earned claim.
+ const tenant='npc_hw_anhuai',field='loc_hw_fields',w=structuredClone(world);
+ w.npcs.find(n=>n.id===tenant).schedule={default:[{start:0,end:1440,location:field,activity:'休息',services:['trade']}]};
+ const e=new WorldEngine(w),initial=e.initialFromLegacy(seed,'s5ct-rent');
+ const r=applyIntentSetup(e,initial,{minute:600,location:field,present:[tenant],coins:1000,inventory:{item_oats:100},facts:[
+  {path:['state','buildings'],value:{...initial.state.buildings,[field]:{...initial.state.buildings[field],owner:'player',condition:100}}},
+  {path:['state','npcs'],value:{...initial.state.npcs,[tenant]:{...initial.state.npcs[tenant],location:field,status:'正常',activity:'休息',coins:1000,inventory:{item_oats:{quantity:100}}}}}
+ ]});assert.deepEqual(r.setupUnmet,[]);
+ const loaded=await runPrelude(e,r.document,[{tool:'world_act',eventId:'s5ct-real-rent',args:{action:'core:trade.rent_out',slots:{seller:tenant,location:field,quantity:10,coins:100,days:30,deadline:600+29*1440,deposit:0}}}]);
+ assert.deepEqual(loaded.unmet,[]);r.document=roundtrip(loaded.document);
+ const rent=Object.values(r.document.state.obligations).find(o=>o.kind==='rent'&&o.debtor===tenant&&o.creditor==='player');assert.ok(rent);
+ // Agreed fixed rent100 for10mu, zero paid now: owed100. Waiver moves no cash.
+ // The native producer keeps the area on its source lease, rather than the
+ // removed snapshot-only terms.fieldAreaMu; retain the same ten-mu assertion.
+ assert.equal(rent.kind,'rent');assert.equal(r.document.state.records[rent.contract].rentBasis.areaMu,10);assert.equal(obligationView(r.document.state,rent).owed,100);
  assert.throws(()=>closeObligation(engine.primitiveDraft(r.document),engine,{id:rent.id,actor:'npc_hw_yanzhe',party:'player',reason:'creditor_waiver'},'bad-waiver'),/authority/);
- assert.throws(()=>restoreObligationSnapshot(engine.primitiveDraft(r.document),engine,{...s.obligations[0],id:'other',sourceEvent:r.bindings.a3v2_220_event},{origin:'initial'}),/source/);
+ // Snapshot restoration was removed from the supported producer API. Preserve
+ // its old anti-forgery intent at the surviving setup boundary: a copied source
+ // cannot manufacture another debt, and does not change the real claim.
+ const forged=applyIntentSetup(e,r.document,{obligations:[{...rent,id:'other',sourceEvent:rent.source}]});
+ assert.ok(forged.setupUnmet.some(x=>x.item.startsWith('obligations')));
+ assert.equal(forged.document.state.obligations.other,undefined);
+ assert.deepEqual(forged.document.state.obligations[rent.id],rent);
  const directory=await fs.mkdtemp(new URL('../.a3-g-storage-',import.meta.url));t.after(()=>fs.rm(directory,{recursive:true,force:true}));
- const reducer=(document,input)=>{const d=engine.primitiveDraft(document),result=closeObligation(d,engine,input,'waiver');return {patches:d.patches,result};};
+ const reducer=(document,input)=>{const d=e.primitiveDraft(document),result=closeObligation(d,e,input,'waiver');return {patches:d.patches,result};};
  const store=new CampaignStorage(directory,{reducer,snapshotEvery:2});
  await store.create({id:'g',worldVersion:world.version,document:r.document});
  await store.transact('g',{id:'waiver',anchor:'g',input:{id:rent.id,actor:'player',party:'player',reason:'creditor_waiver'}},reducer);
  const saved=await store.export('g'),fresh=new CampaignStorage(directory,{reducer});
  const imported=await fresh.import(roundtrip(saved),'g-copy');
  assert.equal(obligationView(imported.document.state,rent.id).owed,0);
- assert.equal(imported.document.state.obligations[rent.id].source,r.bindings.a3v2_220_event);
+ assert.equal(imported.document.state.obligations[rent.id].source,rent.source);
  await fresh.reconcile('g-copy',[]);
  const replayed=await fresh.read('g-copy');assert.equal(obligationView(replayed.document.state,rent.id).owed,100);
  assert.equal(replayed.document.state.obligations[rent.id].kind,'rent');noDrift(replayed.document);
  // Native patches, rather than a second conclusion store, reproduce waiver.
- const d=engine.primitiveDraft(replayed.document);closeObligation(d,engine,{id:rent.id,actor:'player',party:'player',reason:'creditor_waiver'},'waiver');
+ const d=e.primitiveDraft(replayed.document);closeObligation(d,e,{id:rent.id,actor:'player',party:'player',reason:'creditor_waiver'},'waiver');
  assert.deepEqual(applyPatches(replayed.document,d.patches),d.document);noDrift(d.document);
 });

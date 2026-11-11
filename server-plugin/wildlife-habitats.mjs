@@ -23,7 +23,10 @@ export function wordTypes(text){
 // (平地/丘陵 only give "earth") carries no ecology and yields no type.
 // R31: depends only on terrain and biome text, so equal text gives the cached list (a fresh array each time).
 const habitatTypesByText=new Map();
+const habitatTypesByLocation=new WeakMap();
 export function locationHabitatTypes(location){
+ const prior=location&&habitatTypesByLocation.get(location),rawBiome=location?.biome;
+ if(prior&&prior.terrain===location.terrain&&prior.biome.length===[].concat(rawBiome??[]).length&&prior.biome.every((word,i)=>word===(Array.isArray(rawBiome)?rawBiome[i]:rawBiome)))return [...prior.types];
  const terrain=location?.terrain??'',biome=[].concat(location?.biome??[]),text=JSON.stringify([terrain,...biome]);
  let hit=habitatTypesByText.get(text);
  if(!hit){
@@ -31,6 +34,7 @@ export function locationHabitatTypes(location){
   for(const tag of locationTraits(location).tags)if(TRAIT_TYPES[tag])types.add(TRAIT_TYPES[tag]);
   hit=[...types].sort();habitatTypesByText.set(text,hit);
  }
+ if(location)habitatTypesByLocation.set(location,{terrain:location.terrain,biome:[...biome],types:hit});
  return [...hit];
 }
 // Species side: its own habitat tags, its home range, and a water body for fish.

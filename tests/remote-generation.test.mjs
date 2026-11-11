@@ -21,13 +21,16 @@ import {checkGeneratedProfile} from '../server-plugin/population.mjs';
 
 const WORLD_DIRS=['world/geo','world/lore','world/people','world/meta'];
 async function worldDigest(){
-    const files=[];for(const dir of WORLD_DIRS)for(const f of (await fs.readdir(dir)).sort())files.push(await fs.readFile(path.join(dir,f),'utf8'));
+    // world/meta now holds subdirectories (mechanics layers): digest every file beneath, not only the top level.
+    const walk=async dir=>{const out=[];for(const e of (await fs.readdir(dir,{withFileTypes:true})).sort((a,b)=>a.name<b.name?-1:1))out.push(...(e.isDirectory()?await walk(path.join(dir,e.name)):[await fs.readFile(path.join(dir,e.name),'utf8')]));return out;};
+    const files=[];for(const dir of WORLD_DIRS)files.push(...await walk(dir));
     return digest(files);
 }
 const digestBefore=await worldDigest();
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
-const worldBefore=digest(world);
 const engine=new WorldEngine(world);
+// WorldEngine merges the mechanism annotations into the loaded world in place (A1, 4a1aa099), so the baseline is taken once the engine holds it.
+const worldBefore=digest(world);
 const ZHEYA='county_hanlu_zheya',TONGJI='county_hanlu_tongji';
 
 async function walk(doc,destinations,prefix){
@@ -101,6 +104,15 @@ test('自动接入：派生商店与补货、交易事件、声望与立场传�
     let doc=engine.createCharacter(seed,{},'t143-systems');doc.state.location='loc_bs';
     doc=await walk(doc,['loc_far_tongji'],'s');
     const sk=doc.state.remote[TONGJI].skeleton,shop=sk.settlements[0].shops[0];
+    // K08：开局有限货源是同地行商的真实行囊，不是到集日刷库存。
+    // 手算：每种货的掌柜开架 amount + 行商(maximum-amount) = maximum。
+    const keeper=sk.people.find(p=>p.id===shop.keeper),supplier=sk.people.find(p=>p.consignment?.keeper===shop.keeper);
+    assert.ok(supplier&&doc.state.npcs[supplier.id]);
+    assert.equal(doc.state.npcs[supplier.id].location,shop.location);
+    for(const row of keeper.shopRestock){
+        assert.equal(keeper.inventory[row.item]+supplier.inventory[row.item],row.maximum);
+        assert.equal(supplier.consignment.origins[row.item],row.from);
+    }
     let overlay=engine.scoped(doc);
     // K10 shop derivation picks the keeper up by shopType; no hand registration.
     const store=shopStores(overlay.world).find(s=>s.keeper===shop.keeper);
@@ -116,10 +128,16 @@ test('自动接入：派生商店与补货、交易事件、声望与立场传�
     r=await engine.reduce(doc,{tool:'world_trade',args:{seller:shop.keeper,item,quantity:1},eventId:'s-buy'});doc=applyPatches(doc,r.patches);
     assert.equal(r.result.seller,shop.keeper);
     assert.equal(doc.state.records['world_event:s-buy'].location,shop.location);
-    assert.equal(doc.state.records[`trade-quote:${Math.floor(doc.state.minute/1440)}:${shop.keeper}:player:${item}`].shop,store.id);
+    // S5-02 / 15 §15.2: derived shop attribution is in the native receipt;
+    // the current quote is not a stored record.
+    assert.equal(r.result.pricing.shop,store.id);
     r=await engine.reduce(doc,{tool:'world_time',args:{minutes:1440*2},eventId:'s-days'});doc=applyPatches(doc,r.patches);
     const ledger=doc.state.records[`shop:${store.id}`];
     assert.ok(ledger.entries.some(e=>e.source==='route'&&e.from&&e.added>0),JSON.stringify(ledger.entries));
+    for(const row of keeper.shopRestock){
+        const delivered=ledger.entries.filter(e=>e.item===row.item&&e.from===supplier.id).reduce((n,e)=>n+e.added,0);
+        assert.ok(delivered<=supplier.inventory[row.item]);
+    }
     // K4 standing: what is done to a member reaches the generated settlement.
     overlay=engine.scoped(doc);
     assert.ok(collectivesOf(overlay,doc.state,shop.keeper).some(c=>c.holder===sk.seat));

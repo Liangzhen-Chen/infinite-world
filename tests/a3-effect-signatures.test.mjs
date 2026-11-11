@@ -107,12 +107,17 @@ test('A3 bank receipts: deposit liability and partial withdrawal match the nativ
  const input={tool:'world_act',eventId:'deposit-claim',args:{action:'core:trade.deposit',slots:{seller:keeper,coins:101}}};
  const out=await engine.reduce(document,input),after=applyPatches(document,out.patches),r=out.result.receipt,claim=r.applied.find(e=>e.op==='obligation.create');
  assert.ok(claim);assert.equal(claim.obligationKind,'deposit');assert.equal(claim.from,out.result.bank);assert.equal(claim.to,'player');
- assert.equal(claim.amount,100);assert.equal(claim.result.after,after.state.records[out.result.bank].accounts.player);
+ // 15 §15.5: 101 paid - 1 fee = one canonical 100-copper deposit debt;
+ // the receipt now describes that actual debt, rather than a scalar account alias.
+ assert.equal(claim.amount,100);assert.equal(claim.result.after.amount,100);assert.equal(claim.result.after.paid,0);
+ assert.equal(after.state.records[out.result.bank].accounts.player,100);
  assert.equal(after.state.player.coins,99);assert.equal(r.applied.filter(e=>e.op==='transfer').reduce((n,e)=>n+e.qty,0),101);
  const withdrawal=await engine.reduce(after,{tool:'world_act',eventId:'withdraw-claim',args:{action:'core:trade.withdraw',slots:{seller:keeper,coins:25}}}),withdrawn=applyPatches(after,withdrawal.patches);
  const settled=withdrawal.result.receipt.applied.find(e=>e.op==='obligation.settle');
- assert.equal(settled.id,claim.id);assert.equal(settled.amount,25);assert.equal(settled.result.after,75);assert.equal(withdrawn.state.player.coins,124);
- assert.equal(Object.values(withdrawn.state.obligations??{}).filter(row=>row.kind==='deposit').length,0);
+ // The same 100 debt paid25 leaves75; 99 purse +25 =124. No second debt.
+ assert.equal(settled.id,claim.id);assert.equal(settled.amount,25);assert.equal(settled.result.after.amount-settled.result.after.paid,75);assert.equal(withdrawn.state.player.coins,124);
+ assert.equal(Object.values(withdrawn.state.obligations??{}).filter(row=>row.kind==='deposit').length,1);
+ assert.equal(withdrawn.state.records[out.result.bank].accounts.player,75);
  books(engine,after);books(engine,withdrawn);
  const duplicate=await engine.reduce(after,input);assert.deepEqual(duplicate.patches,[]);
 });

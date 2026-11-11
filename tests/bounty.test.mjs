@@ -5,11 +5,18 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {lawView} from '../server-plugin/law.mjs';
+import {shopStores} from '../server-plugin/shop.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,victim='npc_hw_linsui',guard='npc_hw_gucen',judge='npc_hw_chenbai',hunter='npc_hw_wushuo',ypGuard='npc_yp_renbo',ypOfficer='npc_yp_lisha';
 const court='bld_hw_council',villages=['law_hw_property','law_yp_property','law_wt_property','law_lq_property','law_sb_property'];
-const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,a)=>n+(a.coins??0),0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((n,r)=>n+r.coins,0);
+// 统计口径 = 玩家 + 全体 NPC 钱袋 + 法院库/交存 + 专用货币账户（money_account，如店主柜台）。
+// 店主为补货工钱备付，会把自己的钱从钱袋转进自己的柜台账户（探针 tools/probe-money-flow.mjs bounty：duanyan 钱袋 -200 → 柜台 +200，
+// 账本守恒、漂移 0）；这 200 仍是他的钱，只是换了账户，口径必须把所有专用货币账户一并算入，而不是只补某个人。
+// 复跑探针（本次）：第 1 段（2 天）钱流 9 笔，其中 duanyan 钱袋→柜台 200（事由：锻铁店木炭补货工钱备付），聚落库→任务托管 4×60，居民→猎人 4×1；
+// 第 2 段悬赏 40 进法院库；两段后口径值均 12166（差 0），柜台 duanyan=200，账本漂移 0，auditLedger 为空；测试 3 各 seed 同样 200、押送后仍 12166。
+const money=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((n,a)=>n+(a.coins??0),0)+Object.values(c.state.records).filter(r=>['legal_treasury','legal_deposit'].includes(r.category)).reduce((n,r)=>n+r.coins,0)
+    +Object.values(c.state.records).filter(r=>r.category==='money_account').reduce((n,r)=>n+(r.coins??0),0);
 
 // Quiet world: people stay where the fixture puts them; the hunter keeps a full profile and a fixed day.
 function fixture({randomSeed}={}){
@@ -19,6 +26,14 @@ function fixture({randomSeed}={}){
     const engine=new WorldEngine(w);let doc=engine.createCharacter(seed,{},'bounty-test');
     if(randomSeed)doc.randomSeed=randomSeed;
     doc.state.minute=600;doc.state.location='loc_bs';doc.state.player.coins=500;
+    // This quiet legal fixture needs no imports. W8-E8 adds an initially empty
+    // sickle shelf (one costs 10 * scarcity 2 = 20); start all registered shelves
+    // full so unrelated stock purchases cannot leave the legal cash perimeter.
+    // The unchanged equality below still catches every lost bounty/refund coin.
+    for(const shop of shopStores(w))for(const row of shop.restock){
+        const bag=doc.state.npcs[shop.keeper].inventory,old=bag[row.item];
+        bag[row.item]=typeof old==='object'?{...old,quantity:row.maximum}:row.maximum;
+    }
     for(const id of Object.keys(doc.state.npcs))doc.state.npcs[id]={...doc.state.npcs[id],location:'loc_capital',activity:'休息',status:'正常'};
     const place=(id,location,activity='当值')=>{doc.state.npcs[id]={...doc.state.npcs[id],location,activity,status:'正常',coins:doc.state.npcs[id].coins??0};};
     place(victim,'bld_hw_qingdeng','营业');doc.state.npcs[victim].coins=200;
@@ -154,7 +169,10 @@ test('贿赂：价码按廉洁度与立场，出价不足拒收并记行贿未�
     await assert.rejects(base.act('world_law',{operation:'report',case:'legal_case:t_pending',authority:guard,reporter:victim},'dismissed'),/撤职/);
     // Player bounty: accept, wait for the notice to be posted here, seize, escort, hand in at the court.
     await base.act('world_quest',{operation:'accept',quest:w.quest},'take');
-    await assert.rejects(base.act('world_law',{operation:'arrest',case:exposed.corruptionCase},'too_soon'),/文书未到/);
+    // K6 依据（审查 C-c law.mjs:705、D1 本文件:166）：文书未到时拿人仍是一场真实的身体较量；拿下了就是非法拘禁，不进押解。
+    {const before=base.doc;let early;for(let i=0;i<30&&!early?.captured;i++){base.doc=before;early=await base.act('world_law',{operation:'arrest',case:exposed.corruptionCase},`too_soon_${i}`);}
+     assert.equal(early.captured,true);assert.equal(early.lawful,false);assert.ok(early.offenses?.some(o=>o.offense==='unlawful_detention'&&o.victim===guard));
+     assert.equal(base.doc.state.records[exposed.wanted].captive,undefined);base.doc=before;}
     await base.act('world_time',{minutes:61},'posted');
     let seized=false;
     for(let i=0;i<30&&!seized;i++){

@@ -7,7 +7,12 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {legacyTotal,flowDelta,reconcile} from './helpers/ledger-audit.mjs';
-import {uiSession,qty} from './helpers/ui-script.mjs';
+import {uiSession as createUISession,qty} from './helpers/ui-script.mjs';
+import {facilityRuntime} from '../server-plugin/facility-state.mjs';
+
+// Reuse the server's campaign seed interface: these scenarios test trade/time,
+// including L4 restocking with a healthy smith, rather than random illness.
+const uiSession=(t,options)=>createUISession(t,{...options,seed:'a1-lt-scenarios'});
 
 const engine=new WorldEngine(await loadWorld());
 const DAY=1440,INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',FORGE='bld_hw_forge',SMITH='npc_hw_duanyan';
@@ -18,6 +23,8 @@ function conserved(before,after,label){
  assert.equal(legacyTotal(engine,after.state)-legacyTotal(engine,before.state),flows.sources-flows.sinks,`${label}：铜钱守恒`);
  assert.deepEqual(reconcile(engine,after).mismatches,[],`${label}：账本与旧字段一致`);
 }
+// 前提由引擎现价推出，不手调钱数凑数：当前（买方、卖方、物品、数量）的报价，读自引擎同一报价路径（engine.mjs currentTradeQuote）。
+const quoteNow=(doc,args)=>facilityRuntime().currentTradeQuote(engine,doc,args);
 const at=(location,minute,extra=()=>{})=>(s,doc)=>{s.location=location;s.minute=minute;extra(s,doc);};
 
 test('L1 租房：扣钱、记住宿期限；次日早上仍可续住，续住接在原期限之后',async t=>{
@@ -41,19 +48,29 @@ test('L1 租房：扣钱、记住宿期限；次日早上仍可续住，续住�
 test('L2 余额不足：引擎拒绝，钱物与账本序号都不变，界面给世界内原因',async t=>{
  const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.player.coins=1;})});
  const before=await ui.read(),view=await ui.server.api('read',{campaignId:ui.campaignId});
+ assert.ok(quoteNow(before,{seller:LINSUI,item:'item_bread',quantity:3}).totalCoins>1,'前提：三个面包的总价超过玩家的 1 文'); // 前提由现价推出
  const r=await ui.choose('trade.buy',{item:'item_bread',quantity:3},{target:LINSUI});
  assert.equal(r.ok,false);assert.match(r.error,/不足/);
  const after=await ui.server.api('read',{campaignId:ui.campaignId});
  assert.equal(after.reference.sequence,view.reference.sequence);assert.deepEqual(after.document.state.inventory,before.state.inventory);assert.equal(after.document.state.player.coins,1);
 });
 
-test('L3 同一天再买同一件东西，报价一致（当日报价入账）',async t=>{
- const ui=await uiSession(t,{mutate:at(INN,10*60)});
+test('L3 同一天再买同一件东西，成交深度真实上升且总额一次取整',async t=>{
+ // S5-02: preserve the original three purchases beyond four household
+ // retained portions; only the non-examined opening shelf is declared.
+ const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].inventory.item_bread={quantity:8};})});
  const a=await ui.choose('trade.buy',{item:'item_bread',quantity:1},{target:LINSUI});
- await ui.choose('time',{minutes:120});
+ // Keep both same-day purchases outside the real noon market bookings now
+ // induced by household work. Ninety elapsed minutes still tests current depth.
+ await ui.choose('time',{minutes:90});
  const b=await ui.choose('trade.buy',{item:'item_bread',quantity:2},{target:LINSUI});
- assert.ok(a.ok&&b.ok);assert.equal(b.result.cost,2*a.result.cost,'单价不变');
- const d=await ui.read(),quote=d.state.records[`trade-quote:0:${LINSUI}:player:item_bread`];assert.equal(quote.listPrice,a.result.cost);
+ // S5-02 / 15 §15.2 replaces the daily lock with current market depth.
+ assert.ok(a.ok&&b.ok,[a.ok,a.error,b.ok,b.error].join(' | '));assert.ok(b.result.pricing.depth>a.result.pricing.depth);
+ // Opening saleable food exceeds28, demand14 → floor .5. All remaining factors
+ // are 1 on the first purchase: published bread 2 × .5 = 1 copper.
+ assert.equal(a.result.cost,1);
+ assert.equal(b.result.cost,Math.trunc(2*b.result.pricing.unitPrice));
+ const d=await ui.read(),deals=Object.values(d.state.records).filter(r=>r.category==='market_trade'&&r.seller===LINSUI&&r.item==='item_bread');assert.equal(deals.length,2);assert.equal(deals.at(-1).totalCoins,b.result.cost);
 });
 
 // 指南11.3 L4 指定镐；保留原刀场景全部断言，并对正式矿镐逐项执行同一验收。
@@ -72,18 +89,30 @@ for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐
 
 test('L5 卖给钱不够的 NPC：不凭空付款，整笔拒绝且钱物不动',async t=>{
  const ui=await uiSession(t,{mutate:at(INN,10*60,(s)=>{s.npcs[LINSUI].coins=1;s.inventory.item_bread={quantity:5};})});
- const before=await ui.read(),r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:5},{target:LINSUI});
+ const before=await ui.read();
+ assert.ok(quoteNow(before,{buyer:LINSUI,seller:'player',item:'item_bread',quantity:5}).totalCoins>1,'前提：五个面包的收购总价超过林穗的 1 文'); // 前提由现价推出
+ const r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:5},{target:LINSUI});
  assert.equal(r.ok,false);assert.match(r.error,/余额不足/);
  const after=await ui.read();assert.equal(after.state.npcs[LINSUI].coins,1);assert.equal(qty(after.state.inventory.item_bread),5);assert.deepEqual(after.state,before.state);
 });
 // 指南11.3 L5：卖方明确允许部分成交；原整笔拒绝断言保留。
 test('L5 对方钱不够时部分收购：只转付得起的原货，不足一件则回滚',async t=>{
- const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].coins=5;s.inventory.item_bread={quantity:20};})});
+ // 15 §15.2 truncates the bill once: 5 coins buys 8 at .6, charges 4
+ // and legitimately leaves purchasing capacity. Six buys 10 for exactly 6,
+ // retaining this scenario's original exhausted-purse refusal premise.
+ const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].coins=6;s.inventory.item_bread={quantity:20};})});
  const before=await ui.read(),menu=await ui.menu(LINSUI);
  assert.ok(menu.actions.find(a=>a.id==='core:trade.sell_to').slots.some(s=>s.name==='allowPartial'));
  const r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
  assert.ok(r.ok,r.error);assert.equal(r.result.partial,true);assert.equal(r.result.requestedQuantity,20);
+ // 新值：成交 8 个、总价 5。面包 2 × 供需比 29/47(=0.617021，已离开供需下限 .5) × 店收购价差 .6 = 单价 0.740426；
+ // 成交数量 = min(20, floor(店主现金 6 ÷ 单价)) = floor(8.10) = 8（engine.mjs:707）；按 8 件重报价（非零售，沿供需曲线积分）
+ // 总额 0.740426×29×ln(55/47)÷0.617021 = 5.4701，整笔截断一次 = 5。旧值 6 = 面包 2×.5×.6×10（地板 .5、10 件）。
+ // 对应设计变化：面包饱腹改推导 + 卖家份额分摊使供需比离开地板（PLAN.md:584、591③、316③、563②）；李白 11-11 (a)（PLAN.md:540）。
+ // 证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md（a1-lt-scenarios-7，requote 与 result.pricing 差 0）。断言仍为精确相等。
+ assert.equal(r.result.cost,5);
  assert.ok(r.lines[0].includes(`${r.result.quantity}份`),'界面只报实际成交数量');
+ assert.equal(r.result.quantity,8); // floor(6÷0.740426)，见上；
  assert.ok(r.result.quantity>0&&r.result.quantity<20);const after=await ui.read();
  assert.equal(qty(after.state.inventory.item_bread),20-r.result.quantity);
  assert.equal(qty(after.state.npcs[LINSUI].inventory.item_bread)-qty(before.state.npcs[LINSUI].inventory.item_bread),r.result.quantity);
@@ -92,8 +121,16 @@ test('L5 对方钱不够时部分收购：只转付得起的原货，不足一�
  assert.equal(after.state.minute-before.state.minute,5);conserved(before,after,'部分收购');
  assert.equal((await ui.retry('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},r.eventId,LINSUI)).duplicate,true);
  assert.deepEqual((await ui.read()).state,after.state);
- const denied=await ui.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
- assert.equal(denied.ok,false);assert.match(denied.error,/余额不足/);assert.deepEqual((await ui.read()).state,after.state);
+ // 原第二次拒绝依赖"第一次成交后林穗恰好用尽钱袋"（旧口径 6 文买 10 件恰好用尽）；现在成交 8 件付 5 后林穗还剩 1 文，仍买得起一件，前提不再成立。
+ // 保留原意图（买方余钱不足一件：整笔回滚、状态不变、提示余额不足）：另开一个会话，林穗的余钱设为"严格小于引擎现价的单件收购价的最大整数"，
+ // 价与余钱都由引擎现价运行时推出（不写死钱数），并断言该前提成立。
+ const unit=quoteNow(before,{buyer:LINSUI,seller:'player',item:'item_bread',quantity:1}).listPrice,poor=Math.ceil(unit)-1;
+ assert.ok(poor>=0&&poor<unit,'前提：余钱严格小于单件收购价');
+ const ui2=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].coins=poor;s.inventory.item_bread={quantity:20};})});
+ const before2=await ui2.read();
+ assert.ok(quoteNow(before2,{buyer:LINSUI,seller:'player',item:'item_bread',quantity:1}).listPrice>before2.state.npcs[LINSUI].coins,'前提：林穗余钱买不起一件（会话内实测现价）');
+ const denied=await ui2.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
+ assert.equal(denied.ok,false);assert.match(denied.error,/余额不足/);assert.deepEqual((await ui2.read()).state,before2.state);
 });
 
 test('L6 重试：同一次界面请求重复提交（同一事件编号）不重复扣款',async t=>{

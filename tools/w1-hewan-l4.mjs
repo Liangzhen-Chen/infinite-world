@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
-import {hashContent} from './content-pipeline.mjs';
+import {hashContent,rowFingerprintShape,stampL4Notes,requireFlagValue} from './content-pipeline.mjs';
 const root='world/drafts/w1/hewan',read=async p=>JSON.parse(await fs.readFile(p,'utf8')),write=(p,x)=>fs.writeFile(p,JSON.stringify(x,null,2)+'\n');
+// 用法：node tools/w1-hewan-l4.mjs --by <L4审查者>
+const by=requireFlagValue(process.argv,'--by');
 // Notes record the actual fixed samples and flagged text read on 2026-10-10.
 const notes={
  npc_hw_miaozhen:'复读修正全文：公开描写与台词已删去本人视力秘密，记忆不再保证种粒未沤坏；年龄67、家庭成员与筛种地点一致。',
@@ -22,9 +24,9 @@ const notes={
 };
 for(const kind of ['npcs','residents','locations']){const directory=`${root}/${kind}`,summary=await read(`${directory}/summary.json`);
  for(const batch of summary.batches){const rows=await Promise.all(batch.ids.map(id=>read(`${directory}/${id}.json`)));if(rows.some(r=>r.status!=='passed'||r.errors.length||r.review.contradictions.some(c=>c.severity==='hard')))throw new Error(`${kind}仍有未通过条目`);
-  if(hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==batch.fingerprint)throw new Error('审核指纹改变');
+  if(hashContent(rows.map(rowFingerprintShape))!==batch.fingerprint)throw new Error('审核指纹改变');
   const required=[...new Set([...batch.sample,...batch.flagged])];if(required.some(id=>!notes[id]))throw new Error(`缺少实际阅读笔记 ${required.filter(id=>!notes[id]).join(',')}`);
-  batch.l4={approved:true,reviewedAt:'2026-10-10',notes:required.map(id=>({id,note:notes[id]}))};await write(`${directory}/batch-${batch.index}.json`,batch);
+  batch.l4={approved:true,reviewedAt:'2026-10-10',notes:stampL4Notes(required.map(id=>({id,note:notes[id]})),by,rows)};await write(`${directory}/batch-${batch.index}.json`,batch);
  }await write(`${directory}/summary.json`,summary);
 }
 console.log('河湾固定抽样与全部标记项L4已记录；仍须候选校验，不写正式目录。');

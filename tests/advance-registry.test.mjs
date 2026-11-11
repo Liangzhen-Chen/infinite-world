@@ -42,6 +42,26 @@ test('unrelated ticks skip midnight clocks and retain undeclared legacy work',as
 // S4 refresh: the initial calendar and institution offices change the full
 // state and holding-transition event IDs. Both service-version fixtures are
 // regenerated; deterministic traces and complete hashes remain mandatory.
+// S5-02: restock uses derived market bills and writes factual market-trade records; refresh full snapshots without dropping any state/patch/message comparison.
+// S505 / D05 5.5: crop stock facts, exact production accruals and continuous
+// resource growth anchors deliberately change state/patch hashes. Regenerate
+// with the existing UPDATE_ADVANCE_GOLDEN workflow, then verify normally;
+// retain both deterministic traces and every complete-state hash assertion.
+// S506 / D05 §5.5: approved opening herd records and daily feed/produce dates,
+// birth/predation accruals and territory flows deliberately change state.
+// Refresh with UPDATE_ADVANCE_GOLDEN; keep paired traces and all hash checks.
+// S5-07 / 05 §5.5: daily NPC ageing anchors/attribute decay, the once-per-day
+// health clock and per-settlement rainShare water facts are now persisted.
+// Refresh through UPDATE_ADVANCE_GOLDEN;
+// keep the complete state/patch/message hashes and duplicate deterministic traces.
+// S5-04: paired baseline/current full and quiet traces differ only at the native mining
+// contract wage (including clauses and signedTerms): old half-day12*2=24,
+// D15 §15.2 stage0 income midpoint (20+40)/2=30. No other state or messages
+// change. Refresh the complete hashes; retain both traces and every assertion.
+// S5FIX / household subsistence law: a slot spent entirely on the road to or from another settlement is not errand time
+// (household-subsistence.mjs, onRoad). Full scenario day 4 is a market day: the Baishi merchant npc_hw_yanzhe walks loc_bs->loc_hw
+// (route_hw_bs 360 min = the whole 300-660 slot) and no longer starts a forage trip inside it; only the final two full-scenario hashes change.
+// Refreshed with UPDATE_ADVANCE_GOLDEN; the paired traces and every hash check stay.
 const GOLDEN=JSON.parse(await fs.readFile(new URL('./fixtures/advance-registry-golden.json',import.meta.url),'utf8'));
 const SCENARIOS={
  full:{steps:[...days(3),['world_time',{minutes:17*60+13}],['world_time',{minutes:5*DAY}]]},
@@ -65,7 +85,11 @@ test('新注册的系统会参与下一事件时刻计算并按order推进',asyn
   advance:(engine,d,{before,after})=>calls.push([before,after,d.get('state','minute')])});
  try{
   assert.equal(advanceRegistry.at(-1).id,'test_probe');
-  const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
+  const w=structuredClone(world);
+  // This probe isolates its 600-minute clock and midnight clock. Household
+  // source errands are real schedules, just like the NPC schedules removed below.
+  delete w.rules.householdSubsistence;
+  for(const n of w.npcs){delete n.schedule;delete n.tier;}
   const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'advance-probe'),start=doc.state.minute;
   await engine.reduce(doc,{tool:'world_time',args:{minutes:1500},eventId:'probe'});
   assert.ok(calls.length>=3,'一次长时间推进被新系统切成多段');

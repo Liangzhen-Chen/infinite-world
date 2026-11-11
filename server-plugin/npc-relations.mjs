@@ -3,18 +3,16 @@ import {relationView,relationDimensions as dimensions,applyRelationEvidence as a
 export {relationView,recordStandingEvidence} from './npc-state.mjs';
 import {debtDue,currentGrace} from './obligation-state.mjs';
 import {deriveWorldEvents,registerWorldEventSubscriber}from'./world-events.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
 
 const actor=(state,id)=>id==='player'?state.player:state.npcs[id];
 
-// Only the reducer calls this after a successful action. No narrator-supplied
-// story or arbitrary source string creates a ledger entry here.
-// Subscribes to world events by verb: harm/clash, steal, trade, learn, gift.
-export function recordNpcRelationEvidence(d,engine,before,events,...rest){
- // Direct callers may still pass (tool,args,detail,eventId); it becomes the same event.
- if(typeof events==='string')rest=[{args:rest[0]??{},detail:rest[1]??{},eventId:rest[2]}],events=deriveWorldEvents(engine,before,d.get('state'),{tool:events,...rest[0]});
- const {args={},detail={},eventId}=rest[0];
- const after=d.get('state'),pending=[];
- const add=(key,sourceEvent,eventType,from,to,minute,delta,extra={})=>pending.push({key,sourceEvent,eventType,from,to,minute,delta,...extra});
+// Evidence that comes from record/obligation status transitions (kept or breached promises, debts overdue or paid) depends only on the
+// before/after states, not on the action. It is registered per world day by the daily advance (settleRecordRelationEvidence), so a relation
+// that a transition creates exists from the next midnight on, whatever the step length of the reduce; the end-of-reduce call below finds the
+// same transitions again and the evidence key makes that a no-op.
+function transitionEvidence(engine,before,after){
+ const pending=[],add=(key,sourceEvent,eventType,from,to,minute,delta,extra={})=>pending.push({key,sourceEvent,eventType,from,to,minute,delta,...extra});
  for(const [id,o]of Object.entries(after.obligations??{})){
   const old=before.obligations?.[id];if(!old||old.status===o.status||!['已完成','违约'].includes(o.status))continue;
   const minute=o.resolvedAt??o.completion?.minute??(['付款','送货'].includes(o.type)?o.deadline:after.minute);
@@ -42,6 +40,22 @@ export function recordNpcRelationEvidence(d,engine,before,events,...rest){
    }
   }
  }
+ return pending;
+}
+export function settleRecordRelationEvidence(d,engine,before){
+ return transitionEvidence(engine,before,d.get('state')).sort((a,b)=>a.minute-b.minute||a.key.localeCompare(b.key)).map(e=>register(d,engine,e)).filter(Boolean);
+}
+registerAdvanceHook('settleRecordRelationEvidence',settleRecordRelationEvidence);
+// Only the reducer calls this after a successful action. No narrator-supplied
+// story or arbitrary source string creates a ledger entry here.
+// Subscribes to world events by verb: harm/clash, steal, trade, learn, gift.
+export function recordNpcRelationEvidence(d,engine,before,events,...rest){
+ // Direct callers may still pass (tool,args,detail,eventId); it becomes the same event.
+ if(typeof events==='string')rest=[{args:rest[0]??{},detail:rest[1]??{},eventId:rest[2]}],events=deriveWorldEvents(engine,before,d.get('state'),{tool:events,...rest[0]});
+ const {args={},detail={},eventId}=rest[0];
+ const after=d.get('state'),pending=[];
+ const add=(key,sourceEvent,eventType,from,to,minute,delta,extra={})=>pending.push({key,sourceEvent,eventType,from,to,minute,delta,...extra});
+ pending.push(...transitionEvidence(engine,before,after));
  const kind=engine.rules?.npcLife?.kindness;
  for(const e of events){
   if(e.verb==='status_applied'&&e.payload?.kind==='hostile_magic_status'&&e.actor==='player'){

@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：普通打斗、求医、入会、过关卡、离开几天再回来。
 // 夹具与口径同 daily-b2-trade.test.mjs；求医经 world_act（A1b：本人同意由动作派生）。
 import test from 'node:test';
@@ -44,6 +45,8 @@ async function treatmentD32(t){
  // 医师林大夫→陶芝（药草院）；诊金加药 30 文=半个日薪 24 + 药价 6（世界副本：初级日工钱 48，药 6）；秋季九月十九辰时；玩家 70 文，生命 60/80，咬伤。
  const CLINIC='bld_hw_herbs',DOCTOR='npc_hw_taozhi';
  const world=variant(w=>{
+  // 15 §15.2：医师耗材与普通人行囊不是公开在售草药，S=0、D=1，稀缺1。
+  // 保留题面“药价6、诊费30”的财务断言：模板基价设6，诊费=24+round(6×1)=30；不再用12补偿旧的私人供给折价。
   w.rules.economy.wageCopperPerHalfDay=[48,96];setPrice(w,'item_herb',6);
   const d=w.npcs.find(n=>n.id===DOCTOR);d.schedule={default:[{start:0,end:1440,location:CLINIC,activity:'坐诊配药'}]};d.proficiencies={...d.proficiencies,[MEDICAL_SKILL]:1500};
  });
@@ -79,7 +82,12 @@ test('D32.2 public medical service delivers three daily dressings from the actua
  const pre=await ui.read();await replayed(ui,pre);const retry=await ui.choose('settlement.medicine_seek',{},{search:true,eventId:'seek-d32'});assert.ok(retry.ok,retry.error);assert.deepEqual(await ui.read(),pre);
  const repeat=await ui.choose('settlement.medicine_seek',{},{search:true});assert.equal(repeat.ok,false);assert.deepEqual(await ui.read(),pre);
 });
-test.todo('D32 ⑤生命“几天逐步回升”的速率——引擎睡眠/休息每 30 分钟 +1 生命（engine.time），伤愈时钟 health.json wound:light 的病程未被消费：缺 health:recoveryRate 闭式（S5 health.json；缺省值见表）');
+test('D32⑤ 诊疗后的轻伤按病程与康复槽闭式逐夜恢复',async t=>{
+ const {ui}=await treatmentD32(t),doc=await ui.read();
+ // 轻伤 5 天 × 医疗愈合时间 0.6 = 3 天；两个八小时夜晚合计 2/3 日，
+ // 缺失生命 20，floor(20 - 20 × (1 - 1/3)^(2/3)) = 4，而非固定 +32。
+ assert.equal(doc.state.player.hp,64);assert.equal(doc.state.player.medical.recovery.restMinutes,960);
+});
 
 // ---- D36 加入组织 ----
 const ORG='org_d36',LEADER='npc_hw_luowei',orgRow=()=>({category:'organization',id:ORG,source:'created',name:'柳溪猎户会',kind:'行会',seat:'loc_hw',founder:LEADER,foundedAt:0,leader:LEADER,
@@ -169,5 +177,5 @@ test('D40 离开几天再回来 ①②④⑤：离开期间世界照常走（时
  assert.deepEqual(after.state.inventory,before.state.inventory,'④玩家的物品不变');assert.equal(after.state.player.coins,before.state.player.coins,'④铜钱不变');
  for(const id of [LINSUI,CHEN,XU,ZHENG])assert.ok(Math.abs(standing(baseEngine,after.state,id,'player')-regard(id))<=2,`⑤${id} 好感无故不大变`);
 });
-test.todo('D40 ①玩家家里的鸡照常下蛋、鸡窝里有积攒的蛋——引擎没有家禽产出（src:husbandry 闭式产出）：缺 yields.json 家禽行消费（S5 生态与再生；产蛋缺省值已补入 balance/yields.json）');
+// D40① 正式覆盖见 tests/s5-06.test.mjs：真实饲喂、两日积蛋、收集及余额归零。
 test.todo('D40 ③不同 NPC 回忆喜事的说法一致（日期都是九月初三）——引擎传闻没有 tell 版本与失真表的日期行：缺 distortion 的 date 行 p = 0（S6 失真表 core 行；附录 A §A.18 失真表行）');

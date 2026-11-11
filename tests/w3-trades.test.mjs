@@ -6,6 +6,7 @@ import path from'node:path';
 import{CampaignStorage}from'../server-plugin/storage.mjs';
 import{WorldRegistry}from'../server-plugin/world-registry.mjs';
 import{archivedReducer}from'../server-plugin/archived-reducer.mjs';
+import{readApprovedSupersedes}from'../tools/approved-revisions.mjs';
 import{loadWorld}from'../tools/load-world.mjs';
 import{economyW3Trades}from'../world/design/economy-w3-trades.mjs';
 import{assembleTradesCandidate,tradesReviewRequest}from'../tools/w3-trades.mjs';
@@ -18,6 +19,7 @@ import{validateWorld}from'../tools/validate-world.mjs';
 import {withoutMonsterSociety2} from '../tools/publish-monster-society-2.mjs';
 import {withoutT142} from '../tools/t142-merge.mjs';
 import {siteItemReferences} from '../server-plugin/sites.mjs';
+import {withoutRecipesOfItems} from '../tools/catalogue-order.mjs';
 const world=await loadWorld(),bones=economyW3Trades(world);
 const lore=[...bones.items.map(row=>({id:row.id,description:row.use,inspection:'检查可见磨损与裂口，记录不能确认之处。',storage:row.shelfLifeDays===null?'干燥放置并避开磕碰，实际破损另行检查。':`保存上限${row.shelfLifeDays}天。`})),...bones.recipes.map(row=>({id:row.id,process:row.processFacts}))];
 
@@ -42,7 +44,10 @@ test('候选矿镐从段岩真实有限库存购买，双方铜币与镐数量�
  const buy=async eventId=>{const step=await engine.reduce(c,{tool:'world_trade',args:{seller:'段岩',item:'普通矿镐',quantity:1},eventId});c=applyPatches(c,step.patches);return step.result;};
  await buy('pick-one');assert.equal(c.state.inventory.item_mining_pick.quantity,1);assert.equal(c.state.npcs.npc_hw_duanyan.inventory.item_mining_pick.quantity,1);
  await buy('pick-two');assert.equal(c.state.inventory.item_mining_pick.quantity,2);assert.equal(c.state.npcs.npc_hw_duanyan.inventory.item_mining_pick,undefined);
- assert.equal(c.state.player.coins,initialPlayer-56);assert.equal(c.state.npcs.npc_hw_duanyan.coins,initialNpc+56);
+ // 15 §15.2：买到玩家行囊里的镐不再是市场存量。首笔 S=2、D=1，56×.5=28；
+ // 次笔 S=1、net=1、opening=2：trunc(56×1×(1+.2/2)×.99895)=61，共89铜。
+ // 买方扣款与卖方入款仍须逐文守恒，售罄拒绝及无写入断言保留。
+ assert.equal(c.state.player.coins,initialPlayer-89);assert.equal(c.state.npcs.npc_hw_duanyan.coins,initialNpc+89);
  const before=structuredClone(c);await assert.rejects(buy('pick-three'),/库存不足/);assert.deepEqual(c,before);
 });
 
@@ -56,14 +61,16 @@ test('候选 world_upgrade 保留已交易库存和人物变化，新的书及�
     const old=withoutMonsterSociety2(withoutT142(world)),siteKept=siteItemReferences(world.locations),addedItems=new Set(bones.items.map(row=>row.id).filter(id=>!siteKept.has(id))),addedRecipes=new Set(bones.recipes.map(row=>row.id));
     delete old.festivals;// T108节日目录（材料引用本批物品）晚于本批。
     delete old.rules.tribalAwakening;// U11族群觉醒动态（挂靠魔物社会议事势力与各村人物）晚于本批，历史世界不含。
-    old.items=old.items.filter(row=>!addedItems.has(row.id));old.recipes=old.recipes.filter(row=>!addedRecipes.has(row.id));
+    // 引用被移出物品的配方（含后来生成的加工/抄书配方）一并移出，旧版不留悬空引用（withoutRecipesOfItems）。
+    old.items=old.items.filter(row=>!addedItems.has(row.id));old.recipes=old.recipes.filter(row=>!addedRecipes.has(row.id));withoutRecipesOfItems(old,addedItems);
     for(const npc of old.npcs)for(const id of Object.keys(npc.inventory??{}))if(addedItems.has(id))delete npc.inventory[id];
-    const oldEngine=new WorldEngine(old),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');
+    // WorldEngine 会原地物化 old（覆盖层被消耗）。候选底版取物化之前的原样副本，与发布路径一致（发布用 loadWorld 的原样世界装配，assembleW3 拒绝物化过的世界）。
+    const pristineOld=structuredClone(old),oldEngine=new WorldEngine(old),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8')),document=oldEngine.initialFromLegacy(seed,'w3-trades-upgrade');
     document.worldHash=await registry.put(old);document.state.player.coins=319;
  document.state.npcs.npc_hw_duanyan.coins=731;document.state.npcs.npc_hw_duanyan.trust=19;
  delete document.state.npcs.npc_hw_duanyan.inventory.item_iron;
  document.state.npcs.npc_hw_duanyan.inventory.item_mining_pick=0;
-    const before=structuredClone(document.state),next=assembleTradesCandidate(old,bones,lore);next.version='w3-trades-candidate';next.rules.version=next.version;
+    const before=structuredClone(document.state),next=assembleTradesCandidate(pristineOld,bones,lore,await readApprovedSupersedes());next.version='w3-trades-candidate';next.rules.version=next.version;
  await store.create({id:'old',worldVersion:world.version,document});const nextHash=await registry.put(next);
  await store.transact('old',{id:'update',input:{type:'world_upgrade',worldHash:nextHash,eventId:'update'}},store.reducer);
  const after=(await store.read('old')).document,engine=await registry.get(after.worldHash);
@@ -97,4 +104,21 @@ test('L2 请求按目录份数明确克数换算，仍保留原文与矛盾报�
  assert.deepEqual(payload.draft,draft);assert.deepEqual(payload.publishedFacts,JSON.parse(JSON.stringify(context)));
  assert.deepEqual(payload.materialUnits.find(row=>row.id==='item_hazelnut'),{id:'item_hazelnut',portions:1,gramsPerPortion:200,totalGrams:200});
  assert.match(request.messages[0].content,/须保留hard/);
+});
+
+test('L2 物品专用清单：物品请求没有“未声明但相容不列hard”口径且带 (g)–(m) 清单；配方请求口径不变',()=>{
+ const item=bones.items[0],recipe=bones.recipes.find(row=>row.id==='recipe_w3b_honey_curd_spread');
+ const itemRequest=tradesReviewRequest(item,{id:item.id,description:'x',inspection:'y',storage:'z'},w3Context(world,bones,item)).messages[0].content;
+ assert.ok(!/未声明但相容/.test(itemRequest),'物品路径删掉放行口径');
+ assert.ok(!/正常且相容的感官细节不是新增功能/.test(itemRequest),'物品路径不再放行相容的新增细节');
+ assert.match(itemRequest,/即使与骨架不相反、读起来相容，也算新增，列 hard/);
+ for(const mark of ['(g)尺寸','(h)包装','(i)storage','(j)骨架外的用途','(k)制作痕迹','(l)没有出处的人名','(m)骨架外的器具'])assert.ok(itemRequest.includes(mark),mark);
+ assert.match(itemRequest,/少许.*一掌.*两指.*数匝/);
+ assert.match(itemRequest,/“若干”只许用于工序形成的部件数目/);
+ assert.match(itemRequest,/shelfLifeDays 有值时写/);
+ const recipeRequest=tradesReviewRequest(recipe,{id:recipe.id,process:'p'},w3Context(world,bones,recipe)).messages[0].content;
+ assert.match(recipeRequest,/未声明但相容，就不应列hard/,'配方路径口径不在本卡改动范围，保持原样');
+ assert.match(recipeRequest,/正常且相容的感官细节不是新增功能/);
+ assert.match(recipeRequest,/优先于“未声明但相容不列hard”/);
+ assert.ok(!recipeRequest.includes('(g)尺寸'),'配方请求不带物品清单');
 });

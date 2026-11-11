@@ -71,6 +71,8 @@ export function hazardRouteClosure(engine,seed,routeId,minute){
  return null;
 }
 export const hazardRouteClosed=(engine,seed,routeId,minute)=>Boolean(hazardRouteClosure(engine,seed,routeId,minute));
+// Whether any pure hazard clock can close this route at all (its closures start and end on any minute).
+export const hazardRouteHasClosures=(engine,routeId)=>closuresOf(engine).has(routeId);
 
 // Region of a location: the nearest ancestor (or itself) among `ids`.
 export function regionWithin(engine,location,ids){
@@ -85,7 +87,7 @@ const ancestors=(engine,location)=>{const out=[],seen=new Set();while(location&&
 // clock; a later stage of the same clock replaces the earlier shift.
 export function hazardPriceFactor(engine,state,item,location,minute=state.minute){
  let factor=1;
- for(const r of Object.values(state.records??{}))if(r.category==='war_disruption'&&active(r,minute)&&r.locations.some(l=>ancestors(engine,location).includes(l)))factor*=r.factor;
+ for(const r of recordsWhere(state.records,'category','war_disruption'))if(active(r,minute)&&r.locations.some(l=>ancestors(engine,location).includes(l)))factor*=r.factor;
  for(const place of ancestors(engine,location)){
   const r=state.records?.[`hazard-price:${place}`];if(r?.category!=='hazard_price')continue;
   for(const s of Object.values(r.shifts))if(active(s,minute)&&(!s.items||s.items.includes(item)))factor*=s.factor;

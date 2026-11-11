@@ -6,7 +6,7 @@ import path from 'node:path';
 import {loadWorld} from '../tools/load-world.mjs';
 import {auditNpcDepth} from '../tools/audit-npc-depth.mjs';
 import {depthEntries,validatePatchResults,patchDraft,applyDepthDraft,verifyUnchanged,validateDraft,contextFor,getPath} from '../tools/npc-depth-content.mjs';
-import {hashContent,readApprovedContent} from '../tools/content-pipeline.mjs';
+import {hashContent,readApprovedContent,rowFingerprintShape} from '../tools/content-pipeline.mjs';
 import {fileURLToPath} from 'node:url';
 import * as original from '../world/design/w1-wt-depth.mjs';
 import * as design from '../world/drafts/w1/wt-depth/sourced/design.mjs';
@@ -44,7 +44,9 @@ test('冻结原档首次预演不写入，正式发布闭合7事件30人且仅�
  // 03 §3.2: the publication fixture must include the edition's A3 programs and
  // ontology. Preserve the complete loaded-world equality assertion.
  // S4 norm bindings are part of the current edition, even when only people change.
- for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
+ // S5-06: ecology is an approved source of this edition; include it in the
+ // isolated publication fixture and retain the complete-world equality below.
+ for(const dir of ['meta','geo','people','lore','law','design','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',dir),path.join(worldRoot,dir),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w1/wt-depth'),path.join(worldRoot,'drafts/w1/wt-depth'),{recursive:true});
  const baseline=path.join(worldRoot,'people/baseline.json');await fs.writeFile(baseline,JSON.stringify(world.npcs));
  const manifest=path.join(worldRoot,'drafts/w1/wt-depth/sourced/manifest.json'),before=await fs.readFile(baseline);
@@ -182,7 +184,15 @@ test('真实首批存在失败且未完成L4，发布读取必须拒绝',async t
  assert.ok(summary.manual>0);
  assert.ok(summary.batches.every(batch=>!batch.l4.approved));
  const frozen=await fs.mkdtemp(path.join(tmpRoot(),'wt-first-summary-'));t.after(()=>fs.rm(frozen,{recursive:true,force:true}));
- await fs.writeFile(path.join(frozen,'summary.json'),JSON.stringify(summary));for(const batch of summary.batches)await fs.writeFile(path.join(frozen,`batch-${batch.index}.json`),JSON.stringify(batch));
+ // 读取先判完整性（条目记录必须在、批次指纹必须与记录一致），再判 L4：把该批 ids 对应的条目记录原样复制进 frozen，
+ // 并按这些记录重算批次与 summary 的指纹，使读取能走到“L4 未完成”的判断（本用例要验证的就是这一步）。
+ for(const batch of summary.batches){
+  const rows=[];
+  for(const id of batch.ids){const text=await fs.readFile(path.join(root,`${id}.json`),'utf8');await fs.writeFile(path.join(frozen,`${id}.json`),text);rows.push(JSON.parse(text));}
+  batch.fingerprint=hashContent(rows.map(rowFingerprintShape));
+  await fs.writeFile(path.join(frozen,`batch-${batch.index}.json`),JSON.stringify(batch));
+ }
+ await fs.writeFile(path.join(frozen,'summary.json'),JSON.stringify(summary));
  await assert.rejects(()=>readApprovedContent(frozen,entries(),{revision:design.revision,contextFor:entry=>contextFor(entry,world)}),/尚未完成 L4|人工队列/);
 });
 

@@ -11,6 +11,8 @@ import {planBossMigration}from'../server-plugin/boss-migration.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
 import {readBossCognition}from'../server-plugin/boss-cognition.mjs';
 import {validateSites}from'../server-plugin/sites.mjs';
+import {quoteSupply}from'../server-plugin/market.mjs';
+import {homeResidents}from'../server-plugin/entity-view.mjs';
 
 const baseline=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const person='npc_hw_linsui',market='site_ms_market',council='site_ms_council',home='bld_hw_qingdeng',bossId='boss_ms_leader',lairKey='lair:lair_ms_market';
@@ -19,7 +21,8 @@ function fixture(){
  Object.assign(boss,{id:bossId,name:'测试非人首领',aliases:[],actor:person,lair:market,minions:[],cognition:{goal:'avoid_conflict',territory:[market]},negotiation:{stock:[{item:'item_ration',quantity:100}],accepts:['item_ration']},
   residence:{id:'lair_ms_market',name:'测试社会首领驻地',location:market}});
  world.bosses.push(boss);
- Object.assign(npc,{species:boss.monster,society:'loc_hw',settlement:'loc_hw',location:market,coins:37,inventory:{item_ration:2}});
+ // S5-02: the existing stew covers household retention, leaving both examined rations for trade.
+ Object.assign(npc,{species:boss.monster,society:'loc_hw',settlement:'loc_hw',location:market,coins:37,inventory:{item_ration:2,item_mutton_turnip_stew:4}});
  const slots=[{start:0,end:720,location:market,activity:'摊位接待',services:['trade']},{start:720,end:1440,location:home,activity:'睡眠',services:[]}];
  npc.schedule={default:slots,market:slots,rest:slots,restDays:[],seasonal:{}};
  for(const [id,access]of [[market,{mode:'public'}],[council,{mode:'council',requiresConsent:true,authority:person}]]){
@@ -41,6 +44,22 @@ function fixture(){
 }
 const move=(f,d,destination,args={})=>f.run(d,'world_move',{destination,...args},`move_${destination}`);
 const enter=(f,d,args={})=>f.run(d,'world_site',{operation:'enter',...args},'site_enter');
+// K6（c60b2a62）：没有有效许可的进入照常发生，并恰好记一条擅入；受害人是议事区负责人或该处成年住户。
+async function enterUnlicensed(f,d,place,args={}){
+ const eventId=`move_${place}`,out=await move(f,d,place,args);
+ assert.equal(out.document.state.location,place,'未获有效许可也能走进去');
+ const rows=Object.values(out.document.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place);
+ assert.equal(rows.length,1,'恰好记一条擅入');assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');assert.equal(rows[0].sourceEvent,eventId);
+ const access=f.engine.byId.get(place).access;
+ if(access.mode==='council')assert.equal(rows[0].victim,access.authority);else assert.ok(homeResidents(f.engine,out.document.state,place).value.includes(rows[0].victim),rows[0].victim);
+ return out;
+}
+// 有效授权进入：成功且不记擅入。
+async function enterLicensed(f,d,place,args){
+ const out=await move(f,d,place,args);assert.equal(out.document.state.location,place);
+ assert.equal(Object.values(out.document.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place).length,0,'有效授权不记擅入');
+ return out;
+}
 const negotiate=(f,d,args={},id='agreement')=>f.run(d,'world_lair',{operation:'negotiate',lair:'lair_ms_market',pact:'nonaggression',...args},id);
 
 test('物种、社会归属和身体引用通过实际世界校验，坏引用和野怪补刷被拒绝',()=>{
@@ -63,7 +82,12 @@ test('进入公共住区后看到按作息接待的成员，同一库存用于�
  const talk=await f.run(d,'world_remember',{subject:'player',source:person,key:f.rumor.id,rumor:f.rumor.id,content:f.rumor.claim},'talk');d=talk.document;
  assert.equal(talk.result.source,person);
  const coins=d.state.npcs[person].coins,playerCoins=d.state.player.coins;
+ const supply=quoteSupply(f.engine.primitiveDraft(d),f.engine.scoped(d),{item:'item_ration',location:d.state.location});
+ assert.equal(supply.supply,4);assert.equal(supply.demand,14);
  const trade=await f.run(d,'world_trade',{seller:bossId,item:'item_ration',quantity:1},'buy');d=trade.document;
+ // K16 r3 当前留存投影：口粮2−留存0，加炖菜4−留存2，公开S=4。
+ // D14/S4=3.5，经地区上限3截断；基价3×3=9铜，其他首笔因子均1。
+ assert.equal(trade.result.pricing.scarcity,3);assert.equal(trade.result.cost,9);
  assert.equal(d.state.npcs[person].inventory.item_ration.quantity,1);assert.ok(d.state.npcs[person].coins>coins);assert.ok(d.state.player.coins<playerCoins);
  const agreement=await negotiate(f,d,{offer:[{item:'item_ration',quantity:1}]});d=agreement.document;
  assert.equal(agreement.result.accepted,true);assert.equal(f.engine.quantity({get:(...p)=>p.reduce((v,k)=>v?.[k],d)},person,'item_ration'),2);
@@ -80,19 +104,22 @@ test('议事区与私巢分别签发许可，公共通行和议和均不授权�
  const f=fixture();let d=(await move(f,f.document,market)).document;d=(await enter(f,d)).document;
  d=(await negotiate(f,d)).document;
  const before=structuredClone(d);
- await assert.rejects(move(f,d,council),/许可/);await assert.rejects(move(f,d,home),/许可/);assert.deepEqual(d,before);
+ // 公共通行与议和均不授权议事区/私巢：无许可照常进入并各记一条擅入（K6 取代原先的拒绝）；输入文档不被改动。
+ await enterUnlicensed(f,d,council);await enterUnlicensed(f,d,home);assert.deepEqual(d,before);
  const grant=await f.run(d,'world_promise',{operation:'grant_access',promisor:person,location:council,content:'进入议事室商谈',minutes:60},'council_grant');
- const authorized=(await move(f,grant.document,council,{authorization:grant.result.authorization})).document;
+ const authorized=(await enterLicensed(f,grant.document,council,{authorization:grant.result.authorization})).document;
  assert.equal((await enter(f,authorized,{authorization:grant.result.authorization})).result.entered,true);
- await assert.rejects(move(f,grant.document,home,{authorization:grant.result.authorization}),/许可/);
+ // 议事区的许可不覆盖私巢：带着它进私巢仍是擅入。
+ await enterUnlicensed(f,grant.document,home,{authorization:grant.result.authorization});
  const homeGrant=await f.run(grant.document,'world_promise',{operation:'grant_access',promisor:person,location:home,content:'拜访住处',minutes:60},'home_grant');
- assert.equal((await move(f,homeGrant.document,home,{authorization:homeGrant.result.authorization})).document.state.location,home);
+ await enterLicensed(f,homeGrant.document,home,{authorization:homeGrant.result.authorization});
  const expired=structuredClone(homeGrant.document);expired.state.minute+=60;
- await assert.rejects(move(f,expired,home,{authorization:homeGrant.result.authorization}),/许可/);
+ await enterUnlicensed(f,expired,home,{authorization:homeGrant.result.authorization});
  const revoke=await f.run(homeGrant.document,'world_promise',{operation:'revoke_access',promisor:person,authorization:homeGrant.result.authorization},'revoke');
- await assert.rejects(move(f,revoke.document,home,{authorization:homeGrant.result.authorization}),/许可/);
+ await enterUnlicensed(f,revoke.document,home,{authorization:homeGrant.result.authorization});
  const guests=structuredClone(homeGrant.document);guests.state.player.companions=['npc_hw_zhouyan'];
- await assert.rejects(move(f,guests,home,{authorization:homeGrant.result.authorization}),/同行者/);
+ // 许可未覆盖同行者：同 home-permission.test 的 K6 口径，照常进入并记擅入（location-access.mjs:25-26）
+ await enterUnlicensed(f,guests,home,{authorization:homeGrant.result.authorization});
 });
 
 test('首领受伤和死亡同时影响接触、交谈、交易和巢穴，离开回来不补刷居民',async()=>{
@@ -207,7 +234,9 @@ test('通行朝贡只覆盖首领辖区与库存，按期交付守约改善态�
  assert.equal(view.result.occupant.cognition.society.stance,'戒备');assert.equal(view.result.occupant.cognition.society.agreements[0].id,key);
  const inStore=await f.run(await at(f,d,store),'world_field',{operation:'site_enter'},'enter_store');
  assert.equal(inStore.result.entered,true,'朝贡通行覆盖首领辖区的仓窟');
- await assert.rejects(f.run(inStore.document,'world_field',{operation:'site_gather',target:'grain'},'take'),/许可|物权|发现/);
+ // K6 依据：通行许可不含采集；粮已发现、就在眼前，拿取发生，再命中盗采（审查 C-b sites.mjs:250、D1）。
+ const took=await f.run(inStore.document,'world_field',{operation:'site_gather',target:'grain'},'take');
+ assert.equal(took.result.quantity,1);assert.ok(took.result.offenses.some(o=>o.offense==='illegal_harvest'&&took.document.state.records[o.record]?.offender==='player'));
  d=await at(f,inStore.document,market);
  const kept=await pact(f,d,{contract:key},'pay_1');d=kept.document;
  assert.equal(kept.result.kept,true);assert.equal(stance(f,d,seatId),'中立');assert.equal(d.state.records[key].nextDue,null);
@@ -231,17 +260,26 @@ test('背约：逾期未交朝贡记为玩家背约，态度转敌对，成员�
  await assert.rejects(f.run(d,'world_field',{operation:'site_enter'},'enter'),/敌对/);
 });
 
-test('未被发现的潜入耗时并实际检定，只开放调查；未登记据点与私宅不能潜入',async()=>{
+test('未被发现的潜入耗时并实际检定；未获许可明着进入被守卫当场发现并驱逐；没有潜入路径的私宅只能直接进入',async()=>{
  const f=society();let d=await at(f,f.document,store);
- await assert.rejects(f.run(d,'world_field',{operation:'site_enter'},'plain'),/占据者|许可/);
+ // K6 依据：守卫挡住的是许可不是身体（审查 C-b sites.mjs:327、D1 monster-society:251）；明着进去确实发生，
+ // 守卫当场看见，按族群态度作出被发现潜入的反应（驱逐、转敌对），同时记侵入。
+ const plain=await f.run(d,'world_field',{operation:'site_enter'},'plain');
+ assert.equal(plain.result.entered,true);assert.equal(plain.result.detected,true);assert.equal(plain.result.watcher,guardId);
+ assert.equal(plain.result.response,'驱逐');assert.equal(plain.document.state.location,seatId);
+ assert.equal(receipts(plain.document,'infiltration_detected')[0].sourceEvent,'plain');
+ assert.ok(plain.result.offenses.some(o=>o.offense==='trespass'&&plain.document.state.records[o.record].sourceEvent==='plain'));
  d.state.player.attributes=Object.fromEntries(f.engine.rules.attributes.map(k=>[k,1000]));
  let out;for(const id of ['quiet_a','quiet_b','quiet_c','quiet_d']){out=await sneak(f,d,id);if(out.result.covert)break;}
- assert.equal(out.result.covert,true);assert.equal(out.result.detected,false);assert.equal(out.result.check.opponent.npc,guardId);
+ assert.equal(out.result.covert,true);assert.equal(out.result.detected,false);assert.equal(out.result.check.opponent.npc,guardId); /* K6 依据（审查 C-b sites:265）：没被发现的潜入也是进了别人的地方，命中侵入；无人看见，也不留痕，不会被事后发现 */const sneaked=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(sneaked);assert.deepEqual(sneaked.witnesses,[]);assert.equal(out.document.state.records[sneaked.record].discoverers,undefined);
  assert.equal(out.document.state.minute,d.state.minute+30);assert.equal(stance(f,out.document,seatId),undefined);
  assert.equal(receipts(out.document,'infiltration')[0].detected,false);
  const clue=await f.run(out.document,'world_field',{operation:'site_investigate',target:'ledger'},'read_ledger');assert.equal(clue.result.discovered,true);
- await assert.rejects(f.run(clue.document,'world_field',{operation:'site_gather',target:'grain'},'steal'),/许可|物权/);
- const home=await at(f,f.document,market);await assert.rejects(sneak(f,home,'not_registered'),/登记可潜入/);
+ // 潜入后拿粮：拿取发生，命中盗采（同上依据）。
+ const stolen=await f.run(clue.document,'world_field',{operation:'site_gather',target:'grain'},'steal');
+ assert.equal(stolen.result.quantity,1);assert.ok(stolen.result.offenses.some(o=>o.offense==='illegal_harvest'));
+ // 没有登记隐蔽路径的地方，拒绝理由是物理的（无路可潜），并指明直接进入的后果。
+ const home=await at(f,f.document,market);await assert.rejects(sneak(f,home,'not_registered'),/没有可供隐蔽潜入的路径/);
  const bad=structuredClone(f.world);Object.assign(bad.locations.find(l=>l.id===council).site,{infiltration:{minutes:10,check:{attribute:'敏捷',difficulty:15}}});
  assert.match(validateSites(bad).join(),/私宅与议事区不能登记为可潜入/);
  const loose=structuredClone(f.world);loose.locations.find(l=>l.id===seatId).monsterSociety.neighbors.loc_hw='友好';assert.match(validateSites(loose).join(),/初始态度无效/);

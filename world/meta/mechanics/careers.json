@@ -1,0 +1,35 @@
+{
+ "profession_hidden_01": {
+  "labor": [
+   "gather"
+  ]
+ },
+ "profession_hidden_06": {
+  "labor": [
+   "farm"
+  ]
+ },
+ "profession_hidden_12": {
+  "labor": [
+   "gather",
+   "process"
+  ]
+ },
+ "profession_hidden_18": {
+  "labor": [
+   "process",
+   "sell"
+  ]
+ },
+ "profession_hidden_21": {
+  "labor": [
+   "gather"
+  ]
+ },
+ "profession_hidden_27": {
+  "labor": [
+   "gather",
+   "process"
+  ]
+ }
+}

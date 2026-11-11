@@ -1,5 +1,6 @@
 // NPC request execution belongs to the gameplay adapter, not shared routing ontology.
 import {reject} from './action-rejection.mjs';
+import {withReadScope} from './read-scope.mjs';
 import {canAct} from './action-capacity.mjs';
 import {MemoryIndex} from './retrieval.mjs';
 import {saveDialogue} from './dialogue.mjs';
@@ -10,30 +11,31 @@ let requestTokenizer;
 import {preconditionFailure} from './precondition.mjs';
 import {relationView} from './npc-relations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {currentWorkstationRecipes,stationLicence} from './workstation-services.mjs';
 import {purse,workshopFund,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
 // S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
 declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
-import {facilityView} from './facility-state.mjs';
-import {applyPatches,digest,withLegacyUndefinedActivity} from './storage.mjs';
-import {scheduleAt} from './npc-schedule.mjs';
+import {facilityView,facilityRuntime} from './facility-state.mjs';
+import {applyPatches,digest,withLegacyUndefinedActivity,PatchCursor,withRecordIndex} from './storage.mjs';
+import {scheduleAt,withScheduleCache} from './npc-schedule.mjs';
 import {npcPresenceAt,shareNpcMemory} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
-import {changeItems,transferItems,heldUnit,wearItem} from './items.mjs';
+import {changeItems,transferItems,heldUnit,wearItem,workmanshipTier,lostField,unitLacks} from './items.mjs';
+import {resolveMaterials} from './item-class.mjs';
 import {derivedStats} from './combat.mjs';
-import {wildlifePriceFactor} from './wildlife.mjs';
+import {recordMarketDeal,assertMarketDepth} from './market.mjs';
 import {advanceGovernance} from './governance.mjs';
 import {advanceQuestBoard,nextQuestBoardMinute} from './quest-board.mjs';
 import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
-import {kilnWorkResult} from './manufacturing.mjs';
+import {kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {subjectiveView,subjectiveFact,conversationLanguage} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
-import {autonomyCandidates,candidateAction,planFromCandidate} from './autonomy-candidates.mjs';
+import {autonomyCandidates,candidateAction,planFromCandidate,autonomyKind,autonomyRelevant} from './autonomy-candidates.mjs';
 export {applyDialogue,dialogueRequest} from './dialogue.mjs';
 export {npcDecision} from './npc-decision.mjs';
 export {scheduleNpcAutonomy} from './autonomy-candidates.mjs';
@@ -50,16 +52,33 @@ function draft(document,at){const d={document,patches:[],get(...p){if(at!==undef
 // S2a: 工作草稿没有引擎，不双写；回放到正式草稿时经持有写入包装双写。
 const commit=(target,work)=>{for(const p of work.patches)p.op==='set'?holdingSet(target,null,p.path,p.value,'npc-autonomy'):holdingRemove(target,null,p.path,'npc-autonomy');};
 const proficiency=npcProficiency;
-function duration(engine,action){if(action.kind==='craft')return engine.byId.get(action.recipe)?.minutes;if(action.kind==='audit_inventory')return 30;if(action.kind==='trade')return 5;return 0;}
-function tradeQuote(d,engine,buyer,action,location){const key=`${Math.floor(d.get('state','minute')/DAY)}_${action.seller}_${buyer}_${action.item}`,price=d.get('state','quotes',key)??Math.ceil(engine.byId.get(action.item).basePrice*wildlifePriceFactor(engine,d.document,action.item,location));return {key,price,cost:price*action.quantity};}
-export function npcAutonomyBusy(state,id,minute=state.minute){return Object.values(state.npcAutonomy?.tasks??{}).find(t=>t.status==='进行中'&&[t.npc,t.action.seller].includes(id)&&t.start<=minute&&minute<t.finish)??null;}
+function duration(engine,action){if(action.kind==='craft')return engine.byId.get(action.recipe)?.minutes;if(action.kind==='audit_inventory')return 30;if(action.kind==='trade')return 5;return autonomyKind(action.kind)?.minutes(engine,action)??0;}
+function tradeQuote(d,engine,buyer,action,location){
+ // The installed native quote adapter owns environment and shop policy; NPC
+ // execution supplies its actual task minute without crossing gameplay packs.
+ const document={...d.document,state:{...d.get('state'),minute:d.get('state','minute')}};
+ const quote=facilityRuntime().currentTradeQuote(engine,document,{buyer,seller:action.seller,item:action.item,quantity:action.quantity,location});
+ return {...quote,price:quote.listPrice,cost:quote.totalCoins};
+}
+// A moving task is occupied through market_trip, which must keep advancing
+// its body. Only stationary work freezes ordinary schedule settlement.
+export function npcAutonomyBusy(state,id,minute=state.minute){return Object.values(state.npcAutonomy?.tasks??{}).find(t=>!t.itinerary&&t.status==='进行中'&&[t.npc,t.action.seller].includes(id)&&t.start<=minute&&minute<t.finish)??null;}
 export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes=0}={}){
  for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw preconditionFailure('人物正在完成已经开始的自主工作');
 }
-function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false}={}){
+function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false,taskId}={}){
  const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1));let furnace,work;
  if(!full(engine,id)||!awake(engine,presence,id,actor)||personConstraint(engine,state,id,at)||state.player.companions?.includes(id))throw preconditionFailure('人物不具备独立行动条件');
  if(isPhysicallyDead(engine,state,id)||['濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw preconditionFailure('人物当前无法完成工作');
+ // Moving procurement uses the shared market itinerary rather than a fixed
+ // workplace window. The registered kind owns both route and service checks.
+ if(autonomyKind(action.kind)?.itinerary){
+  if(!safe(minutes)||minutes>480)throw preconditionFailure('行动耗时未登记或超过单日上限');
+  const spent=state.npcs[id].autonomy?.minutesByDay?.[String(Math.floor(at/DAY))]??0;
+  if(spent+minutes>Math.max(240,intelligenceOf(engine,state,id).dailyMinutes))throw preconditionFailure('每日自主工作时间已用尽');
+  autonomyKind(action.kind).validate(d,engine,id,action,{at,presence,actor,ignoreTask,taskId});
+  return {minutes,location:action.to};
+ }
  if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(engine,state,who,state.npcs[who])||personConstraint(engine,state,who,at)||state.npcs[who].location!==presence.npcs[who]?.location)throw preconditionFailure('工作完成时人物已离开或不能继续行动');
  if(!safe(minutes)||minutes>480)throw preconditionFailure('行动耗时未登记或超过单日上限');
  if(!ignoreTask)assertNpcAutonomyAction(state,[id,action.seller].filter(Boolean),{start:at,minutes});
@@ -73,16 +92,18 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(!goal||!auditGoal(goal)||goal.progress>=100)throw preconditionFailure('这项目标不能通过盘点本人库存直接完成');
  }else if(action.kind==='craft'){
   const recipe=engine.world.recipes.find(r=>r.id===action.recipe);if(!recipe)throw preconditionFailure('配方未登记');
-  if(recipe.learningRequired&&!recipe.teachers?.includes(id)&&!state.npcs[id].recipes?.[recipe.id]&&!currentWorkstationRecipes(engine,{...state,minute:at,npcs:presence.npcs},id).some(r=>r.id===recipe.id))throw preconditionFailure('人物没有学会该配方');
-  if(proficiency(engine,state,id,recipe.skill)<recipe.minimumProficiency)throw preconditionFailure('人物技能不足');
+  // 卡 Q：技能不足、没学过配方都不拒绝，照做落低档（npcCraft 经 manufacturing.craftOutcome，与玩家同一条）。
   if(recipe.location&&recipe.location!==actor.location)throw preconditionFailure('不在配方地点');
-  const totals=new Map();for(const m of recipe.materials)totals.set(m.item,(totals.get(m.item)??0)+m.amount);
+  // 材料按类别落到本人实际持有的同类物品（与玩家制作同一条 resolveMaterials）。
+  const totals=new Map();for(const m of resolveMaterials(d,engine,id,recipe.materials))totals.set(m.item,(totals.get(m.item)??0)+m.amount);
   for(const [item,amount] of totals)if(engine.quantity(d,id,item)<amount)throw preconditionFailure('实际制造材料不足');
   for(const item of recipe.tools??[]){if(recipe.materials.some(m=>m.item===item))throw preconditionFailure('工具不能同时消耗');if(engine.quantity(d,id,item)<1||(heldUnit(d,engine,id,item)?.durability??engine.byId.get(item)?.durability??0)<=0)throw preconditionFailure('没有完好的实际工具');}
-  const station=(facilityView(engine,state,actor.location)?.workstations??engine.byId.get(actor.location)?.workstations)?.find(s=>s.kind===recipe.workstation);
-  if(recipe.workstation&&!station||station&&station.access!=='public'&&station.owner!==id||facilityView(engine,state,actor.location)?.factor===0)throw preconditionFailure('没有可用且获准的工作台');
-  const fee=station?.owner===id?0:station?.fee??0;if(!safe(fee)||state.npcs[id].coins<fee)throw preconditionFailure('工坊费用不足');
-  if(station?.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||isPhysicallyDead(engine,state,station.owner)||state.npcs[station.owner].status==='濒死'))throw preconditionFailure('工坊收费人无法履约');
+  // A working person's own choice: they use a station they hold, rent, were
+  // lent or may pay for, and do not take over someone else's.
+  const station=facilityView(engine,state,actor.location)?.workstations.find(s=>s.kind===recipe.workstation),licence=station&&stationLicence(engine,d,station,id);
+  if(recipe.workstation&&(!station||!licence))throw preconditionFailure('没有可用且获准的工作台');
+  const fee=licence?.basis==='paid'?station.fee??0:0;if(!safe(fee)||state.npcs[id].coins<fee)throw preconditionFailure('工坊费用不足');
+  if(fee&&station.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||isPhysicallyDead(engine,state,station.owner)||state.npcs[station.owner].status==='濒死'))throw preconditionFailure('工坊收费人无法履约');
   npcToolBonus(d,engine,id,recipe);
   if(station?.thermalRequirement&&!ignoreTask){
    work=draft(d.document,at);work.set(['state','npcs',id,'location'],actor.location);
@@ -97,13 +118,16 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   if(!safe(action.quantity)||action.quantity<1||action.quantity>20||!item?.id.startsWith('item_'))throw preconditionFailure('交易品种或数量未登记');
   if(bagStock(d,engine,{point:'npc.stock',id:action.seller,item:action.item,legacy:()=>engine.quantity(d,action.seller,action.item)})<action.quantity||coinRead(d,{point:'npc.cash',account:purse(engine,id),legacy:()=>state.npcs[id].coins})<tradeQuote(d,engine,id,action,actor.location).cost)throw preconditionFailure('真实钱款或库存不足');
   for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw preconditionFailure('交易没有完整接待窗口');cursor=s.until;}
- }else throw preconditionFailure('自主行动类型未实现');
+ }else if(autonomyKind(action.kind))autonomyKind(action.kind).validate(d,engine,id,action,{at,presence,actor});
+ else throw preconditionFailure('自主行动类型未实现');
  return {minutes,location:actor.location,furnace,work};
 }
 // R25: a person whose state has no current activity yet (e.g. a fresh save before the first
 // schedule step) has no activity key; never write activity:undefined into the save.
 function presenceOf(n){return {location:n.location,...(n.activity===undefined?{}:{activity:n.activity}),status:n.status??'正常'};}
-function startTask(d,task,checked){
+function startTask(d,task,checked,engine){
+ if(autonomyKind(task.action.kind)?.itinerary)task.itinerary=true;
+ autonomyKind(task.action.kind)?.start?.(d,engine,task.npc,task.action,{actionId:task.id});
  if(checked.furnace){commit(d,checked.work);task.furnace={...checked.furnace,checkedUntil:task.start};}
  d.set(['state','npcAutonomy','tasks',task.id],task);
 }
@@ -116,8 +140,8 @@ export function catchUpFurnaces(d,engine,after){
 function advanceFurnace(d,engine,task,until){
  const actor=d.get('state','npcs',task.npc),location=task.presence.npcs[task.npc].location;
  if(!awake(engine,d.get('state'),task.npc,actor)||personConstraint(engine,d.get('state'),task.npc,until)||actor.location!==location||d.get('state','player','companions')?.includes(task.npc))throw preconditionFailure('照管炉火的人物已离岗或失能');
- const recipe=engine.byId.get(task.action.recipe),station=engine.byId.get(location)?.workstations?.find(s=>s.kind===recipe.workstation);
- if(!station||station.access!=='public'&&station.owner!==task.npc||facilityView(engine,d.get('state'),location)?.factor===0)throw preconditionFailure('炉火工坊已不可用');
+ const recipe=engine.byId.get(task.action.recipe),station=facilityView(engine,d.get('state'),location)?.workstations.find(s=>s.kind===recipe.workstation);
+ if(!station||!stationLicence(engine,d,station,task.npc))throw preconditionFailure('炉火工坊已不可用');
  const work=draft(d.document,task.furnace.checkedUntil);
  const row=engine.byId.get(location)?.features?.find(f=>f.id===task.furnace.plan.feature);
  if(!row||row.owner!==task.npc&&row.access!=='public')throw preconditionFailure('人物没有热源的使用权限');
@@ -131,19 +155,59 @@ function npcToolBonus(d,engine,id,recipe){
  const attribute=recipe.attribute??engine.byId.get(recipe.skill)?.attribute??'智力';let sum=0;
  for(const item of recipe.tools??[]){const definition=engine.byId.get(item),held=heldUnit(d,engine,id,item),grade=engine.rules.equipment.qualities.indexOf(held?.quality??definition.quality);
   if(grade<0||(d.get('state','npcs',id,'level')??engine.byId.get(id).level??1)<engine.rules.equipment.requiredLevels[grade])throw preconditionFailure('人物等级不足以使用工具');
-  const spec=definition.checkBonus;if(spec&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(recipe.skill)))sum+=spec.bonus;
+  const spec=definition.checkBonus;if(spec&&!unitLacks(engine,{item,...held},'checkBonus')&&(!spec.attributes?.length||spec.attributes.includes(attribute))&&(!spec.skills?.length||spec.skills.includes(recipe.skill)))sum+=spec.bonus;
  }return Math.min(engine.rules.check.maximumToolBonus??5,sum);
 }
-function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship){
+function produce(d,engine,id,item,quantity,actionId,recipe,at,workmanship,grade,inputs=null){
  const definition=engine.byId.get(item),instances=[];
- for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.document.randomSeed,actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
-  const factor=engine.rules.equipment.workmanship?.find(row=>row.name===workmanship)?.multiplier??1,maxDurability=Math.max(1,Math.round(definition.durability*factor));
-  holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship},'npc-autonomy');
+ for(let i=0;i<quantity;i++){const unit=`unit_${digest([d.get('randomSeed'),actionId,item,i]).slice(0,24)}`;if(d.get('state','itemInstances',unit))throw Error('重复制造单件');instances.push(unit);
+  const factor=workmanshipTier(engine,workmanship).multiplier,maxDurability=Math.max(1,Math.round(definition.durability*factor*(grade??1)));
+  holdingSet(d,null,['state','itemInstances',unit],{id:unit,item,owner:id,status:'持有',maker:id,makerName:engine.byId.get(id).name,recipe,source:actionId,minute:at,quality:definition.quality,durability:maxDurability,maxDurability,workmanship,...(grade===undefined||grade===null?{}:{grade}),...lostField(engine,item,workmanship,inputs)},'npc-autonomy');
  }
  changeItems(d,engine,id,item,quantity,{books:craftOutput('npc-autonomy',actionId)});d.set(['state','npcs',id,'inventory',item,'instances'],[...d.get('state','npcs',id,'inventory',item,'instances')??[],...instances]);return instances;
 }
+// One real batch of an NPC's craft at `location`: roll, station fee, furnace,
+// tool wear, products, ledger.crafts and skill growth. The caller has checked
+// the recipe, materials and station (validateAction) and keeps its own action
+// record and memories.
+// 人物是否学过这个配方：配方不需学、本人是传授者、学过，或所在工位的现行做法里有它。
+const knowsRecipe=(engine,state,id,r)=>!r.learningRequired||Boolean(r.teachers?.includes(id)||state.npcs?.[id]?.recipes?.[r.id]||currentWorkstationRecipes(engine,state,id).some(p=>p.id===r.id));
+export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnace,minutes}){
+ const base=engine.byId.get(id),spent={minutes};let outcome,summary,produced=[];
+ minutes??=Math.ceil(engine.byId.get(recipeId).minutes/(facilityView(engine,d.get('state'),location)?.factor||1));spent.minutes=minutes;
+  const r=engine.byId.get(recipeId),skill=proficiency(engine,d.get('state'),id,r.skill),die=parseInt(digest([d.get('randomSeed'),actionId,'npc-craft']).slice(0,8),16)%20+1;
+  const attribute=r.attribute??engine.byId.get(r.skill)?.attribute??'智力',score=d.get('state','npcs',id,'attributes',attribute)??base.attributes?.[attribute]??10;
+  const modifier=Math.floor((score-10)/2)+Math.floor(skill/(engine.rules.check.skillDivisor??150))+npcToolBonus(d,engine,id,r),total=die+modifier;
+  const degree=die===1||total<=r.difficulty-10?'大失败':die===20||total>=r.difficulty+10?'大成功':total<r.difficulty?'失败':total<r.difficulty+5?'勉强成功':'成功';
+  outcome={die,modifier,total,degree,difficulty:r.difficulty,success:['勉强成功','成功','大成功'].includes(degree)};
+  const thermal=kilnWorkResult(d,furnace?.plan,outcome,r.output.quantity,actionId,{endStress:furnace?.endStress});if(thermal)outcome.thermal=thermal;
+  const station=facilityView(engine,d.get('state'),location)?.workstations.find(s=>s.kind===r.workstation),fee=station&&stationLicence(engine,d,station,id)?.basis==='paid'?station.fee??0:0;
+  if(fee){moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
+  const materials=resolveMaterials(d,engine,id,r.materials).map(({item,amount})=>({item,amount}));
+  // 卡 Q：品质链输入（扣料、磨损前读）与技能状况，和玩家制作同一组函数。
+  const raw=d.get('state','npcs',id,'skills',r.skill)??base.skills?.[r.skill]??base.proficiencies?.[r.skill],standing=craftStanding(raw!==undefined&&raw!==null,skill,r.minimumProficiency,knowsRecipe(engine,d.get('state'),id,r));
+  const floor=materialFloor(d,engine,id,materials.map(m=>[m.item,m.amount])),floors=materialFloors(d,engine,id,materials.map(m=>[m.item,m.amount])),toolsFactor=toolFactor(d,engine,id,r.tools),stationFactor=r.workstation?facilityView(engine,d.get('state'),location)?.factor??1:1;
+  spent.fee=fee;spent.materials=clone(materials);if(furnace)spent.fuel=clone(furnace.fuel);
+  for(const m of materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
+  const crafted={recipe:r.id,batches:1,inputs:materials.reduce((o,m)=>({...o,[m.item]:(o[m.item]??0)+m.amount}),{}),outputs:{},writer:'npc-autonomy',eventId:actionId};
+  for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}
+  const result=craftOutcome(engine,{standing,degree,success:outcome.success,proficiency:skill,floor,tools:toolsFactor,station:stationFactor,recoverFraction:r.failure?.recoverFraction??0,seed:d.get('randomSeed'),key:actionId});
+  if(standing!=='skilled')outcome.standing=standing;if(result.failure)outcome.failure=result.failure;if(result.grade!==undefined)outcome.grade=result.grade;
+  if(outcome.success||result.failure==='partial'){outcome.workmanship=result.tier;produced=outcome.success?[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]]:[{item:r.output.item,amount:r.output.quantity}];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship,result.grade,materials.map(m=>m.item));crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
+  else{const back=returnMaterials(d,engine,id,materials.map(m=>[m.item,m.amount]),result,{floors,eventId:actionId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>changeItems(d,engine,id,item,n,{books:craftOutput('npc-autonomy',actionId)})});
+   // spent.materials is what the batch took in; a failed batch gives part back (spent.returned), so the net draw on the bag is materials - returned.
+   for(const m of back)crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+m.amount;
+   if(back.length)spent.returned=back.map(m=>({item:m.item,amount:m.amount}));
+   if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
+  }
+  if(!outcome.success)crafted.failure=result.failure??'ruin';
+  recordCraft(d,crafted);
+  const gained=npcWorkGrowth(d,engine,id,r.skill,outcome.success,start);if(gained)outcome.growth={skill:r.skill,gained};
+  summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:produced.length?`失败，只做出${produced[0].amount}份${outcome.workmanship}的${engine.byId.get(r.output.item).name}（部分用途不具备）`:'没有得到成品'}，工坊费${fee}铜${gained?`，手艺熟练度提高${gained}`:''}。`;
+ return {outcome,spent,produced,summary};
+}
 function executeAction(target,engine,id,action,{at,presence,actionId,start,ignoreTask=false,furnace}){
- const d=draft(target.document,at),checked=validateAction(d,engine,id,action,{at:start,presence,ignoreTask}),base=engine.byId.get(id),minutes=checked.minutes;
+ const d=draft(target.document,at),checked=validateAction(d,engine,id,action,{at:start,presence,ignoreTask,taskId:actionId}),base=engine.byId.get(id),minutes=checked.minutes;
  let outcome={success:true},summary,spent={minutes},produced=[];
  if(action.kind==='audit_inventory'){
   const inventory=Object.fromEntries(Object.keys(d.get('state','npcs',id,'inventory')??{}).sort().map(item=>[item,engine.quantity(d,id,item)]));
@@ -151,40 +215,27 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
   goal.progress=100;goal.status='已完成';goal.completedAt=at;goal.evidence=actionId;goal.steps=goal.steps.map(s=>({...s,status:'已完成',evidence:actionId}));
   d.set(['state','npcs',id,'goals'],goals);d.set(['state','npcs',id,'autonomy','inventoryAudit'],{minute:at,inventory,sourceEvent:actionId});summary=`盘点了本人现有库存，完成“${goal.content}”。`;
  }else if(action.kind==='trade'){
-  const {key,price,cost}=tradeQuote(d,engine,id,action,checked.location);transferItems(d,engine,action.seller,id,action.item,action.quantity);d.set(['state','quotes',key],price);
+  const quote=tradeQuote(d,engine,id,action,checked.location),{cost}=quote;
+  assertMarketDepth(d,engine,quote,{agreed:quote.agreed});transferItems(d,engine,action.seller,id,action.item,action.quantity);
   moveCoins(d,{from:purse(null,id),to:purse(null,action.seller),amount:cost,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-cost);d.set(['state','npcs',action.seller,'coins'],d.get('state','npcs',action.seller,'coins')+cost);spent.coins=cost;
+  recordMarketDeal(d,quote,cost,action.quantity,actionId);
   summary=`向${engine.byId.get(action.seller).name}支付${cost}铜，购得${engine.byId.get(action.item).name}${action.quantity}份。`;
+ }else if(autonomyKind(action.kind)){
+  const done=autonomyKind(action.kind).execute(d,engine,id,action,{at,start,actionId,location:checked.location});
+  summary=done.summary;Object.assign(spent,done.spent);
  }else{
-  const r=engine.byId.get(action.recipe),skill=proficiency(engine,d.get('state'),id,r.skill),die=parseInt(digest([d.document.randomSeed,actionId,'npc-craft']).slice(0,8),16)%20+1;
-  const attribute=r.attribute??engine.byId.get(r.skill)?.attribute??'智力',score=d.get('state','npcs',id,'attributes',attribute)??base.attributes?.[attribute]??10;
-  const modifier=Math.floor((score-10)/2)+Math.floor(skill/(engine.rules.check.skillDivisor??150))+npcToolBonus(d,engine,id,r),total=die+modifier;
-  const degree=die===1||total<=r.difficulty-10?'大失败':die===20||total>=r.difficulty+10?'大成功':total<r.difficulty?'失败':total<r.difficulty+5?'勉强成功':'成功';
-  outcome={die,modifier,total,degree,difficulty:r.difficulty,success:['勉强成功','成功','大成功'].includes(degree)};
-  const thermal=kilnWorkResult(d,furnace?.plan,outcome,r.output.quantity,actionId,{endStress:furnace?.endStress});if(thermal)outcome.thermal=thermal;
-  const station=engine.byId.get(checked.location)?.workstations?.find(s=>s.kind===r.workstation),fee=station?.owner===id?0:station?.fee??0;
-  if(fee){moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
-  spent.fee=fee;spent.materials=clone(r.materials);if(furnace)spent.fuel=clone(furnace.fuel);
-  for(const m of r.materials)changeItems(d,engine,id,m.item,-m.amount,{books:craftInput('npc-autonomy',actionId)});
-  const crafted={recipe:r.id,batches:1,inputs:Object.fromEntries(r.materials.map(m=>[m.item,m.amount])),outputs:{},writer:'npc-autonomy',eventId:actionId};
-  for(const item of r.tools??[]){changeItems(d,engine,id,item,0);wearItem(d,engine,id,item,r.toolWear??1);}
-  if(outcome.success){outcome.workmanship=degree==='勉强成功'?'粗糙':degree==='大成功'?(skill>=2100?'杰作':skill>=1500?'优秀':'精良'):'普通';produced=[{item:r.output.item,amount:r.output.quantity-(thermal?.crackedQuantity??0)},...r.byproducts??[]];for(const p of produced){produce(d,engine,id,p.item,p.amount,actionId,r.id,at,outcome.workmanship);crafted.outputs[p.item]=(crafted.outputs[p.item]??0)+p.amount;}}
-  else{for(const m of r.materials){const recovered=thermal?.crackedQuantity?0:Math.floor(m.amount*(r.failure?.recoverFraction??0));if(recovered){changeItems(d,engine,id,m.item,recovered,{books:craftOutput('npc-autonomy',actionId)});crafted.outputs[m.item]=(crafted.outputs[m.item]??0)+recovered;}}
-   if((die===1||die+modifier<=r.difficulty-10)&&r.failure?.injury){const max=d.get('state','npcs',id,'maxHp')??derivedStats({level:base.level??1,attributes:base.attributes,profession:Boolean(base.combatProfession)},engine.rules).maxHp;const hp=Math.max(0,(d.get('state','npcs',id,'hp')??max)-r.failure.injury);d.set(['state','npcs',id,'maxHp'],max);d.set(['state','npcs',id,'hp'],hp);if(!hp)d.set(['state','npcs',id,'status'],'濒死');}
-  }
-  recordCraft(d,crafted);
-  const gained=npcWorkGrowth(d,engine,id,r.skill,outcome.success,start);if(gained)outcome.growth={skill:r.skill,gained};
-  summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:'没有得到成品'}，工坊费${fee}铜${gained?`，手艺熟练度提高${gained}`:''}。`;
+  ({outcome,spent,produced,summary}=npcCraft(d,engine,id,action.recipe,{start,at,actionId,location:checked.location,furnace,minutes}));
  }
  const day=String(Math.floor(start/DAY)),autonomy=d.get('state','npcs',id,'autonomy')??{};
  d.set(['state','npcs',id,'autonomy','minutesByDay',day],(autonomy.minutesByDay?.[day]??0)+minutes);
  const record={id:actionId,npc:id,kind:action.kind,action:clone(action),start,minute:at,location:checked.location,summary,outcome,spent,produced};
  d.set(['state','npcAutonomy','actions',actionId],record);
- const participants=action.seller?[id,action.seller]:[id];
- for(const whom of participants)d.set(['state','npcs',whom,'memoryStream'],[...d.get('state','npcs',whom,'memoryStream')??[],{id:actionId,sourceEvent:actionId,kind:action.kind==='trade'?'trade':'autonomy',minute:at,location:checked.location,participants,content:`${base.name}${summary}`,sourceType:'亲历',salience:3,emotion:outcome.success?'踏实':'失望'}]);
+ const counterparty=action.seller??action.supplier,participants=counterparty?[id,counterparty]:[id];
+ for(const whom of participants)d.set(['state','npcs',whom,'memoryStream'],[...d.get('state','npcs',whom,'memoryStream')??[],{id:actionId,sourceEvent:actionId,kind:action.kind==='trade'||action.kind==='procure_inputs'?'trade':'autonomy',minute:at,location:checked.location,participants,content:`${base.name}${summary}`,sourceType:'亲历',salience:3,emotion:outcome.success?'踏实':'失望'}]);
  d.set(['state','npcs',id,'developments'],[...d.get('state','npcs',id,'developments')??[],{type:'自主行动',source:actionId,minute:at,content:summary}]);commit(target,d);return record;
 }
 
-export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={}){
+function advanceNpcAutonomyRead(d,engine,before,after,eventId,{beforeState}={}){
  const results=[...advanceGovernance(d,engine,before,after,{beforeState}),...advanceQuestBoard(d,engine,before,after,{beforeState})];
  const settle=()=>{for(const task of Object.values(d.get('state','npcAutonomy','tasks')??{}).sort((a,b)=>a.finish-b.finish||a.id.localeCompare(b.id))){
   if(task.status!=='进行中')continue;
@@ -197,20 +248,31 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
      if(complete&&d.get('state','autonomyCandidates',task.candidate))d.remove(['state','autonomyCandidates',task.candidate]);
     }
     results.push(row);};
-   if(d.scheduler&&task.action.kind==='trade'){
+   const contest=autonomyKind(task.action.kind)?.contest;
+   if(d.scheduler&&contest){
+    if(!d.contestPool.some(p=>p.id===task.id)){
+     validateAction(d,engine,task.npc,task.action,{at:task.start,presence:task.presence,ignoreTask:true,taskId:task.id});
+     submitContest(d,{id:task.id,...contest(d,engine,task.npc,task.action),ruleId:'npc_autonomy:trade',objectId:task.npc,execute,reject:reason=>{
+      d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],reason);
+      if(d.get('state','npcs',task.npc,'plan','candidate')===task.candidate)d.set(['state','npcs',task.npc,'plan'],null);
+     }});
+    }
+   }else if(d.scheduler&&task.action.kind==='trade'){
     if(!d.contestPool.some(p=>p.id===task.id)){
      validateAction(d,engine,task.npc,task.action,{at:task.start,presence:task.presence,ignoreTask:true});
      const {price}=tradeQuote(d,engine,task.npc,task.action,d.get('state','npcs',task.npc,'location'));
      submitContest(d,{id:task.id,target:`goods:${task.action.seller}:${task.action.item}`,targetKind:'goods',ruleId:'npc_autonomy:trade',objectId:task.npc,bid:price,quantity:task.action.quantity,capacity:engine.quantity(d,task.action.seller,task.action.item),execute,reject:reason=>{d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],reason);}});
     }
    }else execute();}
-  catch(error){d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],error.message);}
+  catch(error){d.set(['state','npcAutonomy','tasks',task.id,'status'],'失败');d.set(['state','npcAutonomy','tasks',task.id,'reason'],error.message);
+   if(task.candidate&&d.get('state','npcs',task.npc,'plan','candidate')===task.candidate)d.set(['state','npcs',task.npc,'plan'],null);
+  }
  }};settle();
  if(!beforeState)return results;
  for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
   const start=day*DAY+600;if(start<before||start>after)continue;
-  const presence=start===after?d.get('state'):npcPresenceAt(engine,beforeState,before,start,d.document.randomSeed);
-  const objectKey=id=>clockDiceKey(d.document.randomSeed,'npc_autonomy:daily',id,start);
+  const presence=start===after?d.get('state'):npcPresenceAt(engine,beforeState,before,start,d.get('randomSeed'));
+  const objectKey=id=>clockDiceKey(d.get('randomSeed'),'npc_autonomy:daily',id,start);
   for(const id of Object.keys(presence.npcs).sort((a,b)=>d.scheduler?objectKey(a).localeCompare(objectKey(b)):a.localeCompare(b))){
    const actor=presence.npcs[id],base=engine.byId.get(id),actionId=`npc_daily_${day}_${id}`;
    if(!full(engine,id)||!awake(engine,beforeState,id,actor)||actor.location===beforeState.location||beforeState.player.companions?.includes(id)||npcObligationAt(beforeState,id,start)||npcAutonomyBusy(beforeState,id,start))continue;
@@ -223,31 +285,62 @@ export function advanceNpcAutonomy(d,engine,before,after,eventId,{beforeState}={
    const currentPlan=d.get('state','npcs',id,'plan');
    // An empty candidate set cannot decide or abandon a plan. Avoid building
    // the full subjective projection for every resident with nothing to do.
-   if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length))continue;
-   const projected={...d.document,state:{...d.get('state'),minute:start,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),...presenceOf(actor)}}}};
+   let projected;
+   const projectDocument=()=>projected??=({...d.document,state:{...d.get('state'),minute:start,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),...presenceOf(actor)}}}});
+   if(!choices.length&&!queued.length&&!currentPlan&&!(engine.world.autonomy?.candidates?.length)&&!(engine.rules.npcAutonomy?.candidates?.length)&&!autonomyRelevant(engine,d.get('state'),id,actor,projectDocument))continue;
+   projectDocument();
    const view=subjectiveView(engine,projected,id);
-   const candidates=autonomyCandidates(engine,view,{scheduled:queued,fallback:choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i}))});
+   // Read-only planning (building-maintenance.mjs procurement/repairProcurement write nothing; constraints are written below, outside the scope): derived reads share one scope.
+   const procurement=withReadScope(()=>facilityRuntime().inputProcurement?.(engine,projected,view,choices));
+   for(const row of procurement?.constraints??[]){
+    const key=`input_constraint:${id}:${row.purpose}`;
+    d.set(['state','records',key],{category:'input_constraint',npc:id,minute:start,...row});
+   }
+   let candidates=autonomyCandidates(engine,view,{document:projected,scheduled:queued,fallback:[...choices.map((legacy,i)=>({id:`core:routine:${i}`,legacy,kind:legacy.kind,utility:-i})),...(procurement?.candidates??[])]});
+   candidates=facilityRuntime().continueInputPlan?.(view,candidates)??candidates;
    if(currentPlan&&currentPlan.status!=='completed'&&!candidates.some(c=>c.id===currentPlan.candidate)){
     d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'原先的主观前提或收益已不成立',basis:currentPlan.basis});
    }
-   for(const candidate of candidates){try{
-    let selected=candidate;
+   for(const candidate of candidates){let action;try{
+    let selected=candidate,planToStart=null;
     if((candidate.horizon??1)>1){
      let plan=d.get('state','npcs',id,'plan');
-     if(!plan){plan=planFromCandidate(view,candidate);d.set(['state','npcs',id,'plan'],plan);}
+     if(!plan||plan.status==='completed'||plan.candidate!==candidate.id)plan=planFromCandidate(view,candidate);
      if(plan.deadline<start){d.set(['state','npcs',id,'plan'],null);d.set(['state','records',`plan_abandoned:${actionId}`],{category:'plan_abandoned',npc:id,minute:start,reason:'期限已过',basis:candidate.decision.trace});continue;}
-     const step=plan.steps.find(s=>!s.done);if(!step)continue;selected={...candidate,...step};
+     const step=plan.steps.find(s=>!s.done);if(!step)continue;selected={...candidate,...step};planToStart=plan;
     }
-    const action=candidateAction(engine,selected);
+    action=candidateAction(engine,selected);
     const checked=validateAction(d,engine,id,action,{at:start,presence});
-    const actorPresence={npcs:{[id]:presenceOf(actor)}};
-    startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true,...(!candidate.legacy?{candidate:candidate.id,decision:candidate.decision}:{} )},checked);
+    // Native daily purchases need the same two-party presence snapshot as
+    // frozen NPC plans; otherwise settlement rejects every real seller.
+    const actorPresence={npcs:Object.fromEntries([id,action.seller].filter(Boolean).map(who=>[who,presenceOf(presence.npcs[who])]))};
+    startTask(d,{id:actionId,npc:id,action:clone(action),start,finish:start+checked.minutes,presence:actorPresence,status:'进行中',rule:true,...(!candidate.legacy?{candidate:candidate.id,decision:candidate.decision}:(candidate.horizon??1)>1?{candidate:candidate.id}:{} )},checked,engine);
+    // Procurement's saved explanation is its actual integer cost/noise and
+    // knowledge basis, not a duplicate of transient derived personality math.
+    if(planToStart&&autonomyKind(action.kind)?.itinerary)planToStart={...planToStart,basis:[{stage:'input_procurement',basis:{knownFrom:action.knownFrom,...action.basis}}]};
+    if(planToStart)d.set(['state','npcs',id,'plan'],planToStart);
     if((candidate.horizon??1)<=1&&queued.some(c=>c.id===candidate.id))d.remove(['state','autonomyCandidates',candidate.id]);break;
-   }catch{/* Missing resources or occupied time is a skipped action, never success. */}}
+   }catch(error){
+    // Keep the actual unmet input and failure, without freezing an unstarted
+    // itinerary into tomorrow's plan or reporting a successful transaction.
+    if(autonomyKind(action?.kind)?.itinerary){
+     // An itinerary that declares no input purpose (a profession labour trip) is recorded under its kind with an empty input list: a record never carries undefined fields, which do not survive a save.
+     const purpose=action.purpose??action.kind;
+     d.set(['state','records',`input_constraint:${id}:${purpose}`],{category:'input_constraint',npc:id,minute:start,purpose,missing:action.inputs??[],blocked:['feasibility'],reason:error.message});
+     if(d.get('state','npcs',id,'plan','candidate')===candidate.id)d.set(['state','npcs',id,'plan'],null);
+    }
+   }}
   }
   settle();
  }
  return results;
+}
+// Planning reads every candidate's schedule, and each schedule read derives the education courses of the whole
+// population. Engine advances already share that derivation through the record index and the schedule cache; a
+// direct call on a draft gets the same scopes (no-ops when already inside them), so results are identical.
+export function advanceNpcAutonomy(d,engine,before,after,eventId,options){
+ const run=()=>advanceNpcAutonomyRead(d,engine,before,after,eventId,options);
+ return d.cursor instanceof PatchCursor?withScheduleCache(engine,d,()=>withRecordIndex(run)):run();
 }
 export function npcPlanFingerprint(document){return digest({minute:document.state.minute,npcs:document.state.npcs,location:document.state.location,companions:document.state.player.companions,obligations:document.state.obligations,actions:document.state.npcAutonomy});}
 // R25: a plan frozen before the fix fingerprinted task presence with activity:undefined.
@@ -281,7 +374,7 @@ export function applyNpcPlan(d,engine,input,eventId){
    if(action.kind==='share'){const detail=shareNpcMemory(d,engine,{from:proposal.npc,to:action.to,memoryId:action.memoryId,channel:action.channel,eventId:id});results.push({id,status:detail.delivered?'已完成':'进行中',detail});continue;}
    const checked=validateAction(d,engine,proposal.npc,action),start=d.get('state','minute');
    const task={id,npc:proposal.npc,action:clone(action),start,finish:start+checked.minutes,presence:{npcs:Object.fromEntries([proposal.npc,action.seller].filter(Boolean).map(who=>{const n=d.get('state','npcs',who);return [who,presenceOf(n)];}))},status:'进行中',planEvent:eventId};
-   startTask(d,task,checked);results.push({id,status:'进行中',finish:task.finish});
+   startTask(d,task,checked,engine);results.push({id,status:'进行中',finish:task.finish});
   }catch(error){results.push({id,status:'拒绝',reason:error.message});}
  }}
  return {proposed:results.length,results};

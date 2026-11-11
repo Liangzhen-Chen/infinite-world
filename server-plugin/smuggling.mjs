@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins,coinRead} from './money.mjs';
 import {bagStock} from './stock.mjs';
@@ -29,7 +30,7 @@ export function smuggleTrade(d,args,id){
         const reserved=cargo(d.get('state')).filter(r=>r.item===item).reduce((n,r)=>n+r.quantity,0);
         if(this.quantity(d,'player',item)<quantity+reserved)throw preconditionFailure('没有足量未托运的货物');
         if(!awake(d.get('state'),buyer,d.get('state','npcs',buyer)))throw preconditionFailure('没有可履约的买方');
-        const mode=args.mode??'walk',route=this.route(d.get('state','location'),destination,mode,d.get('state','minute'),d.document.randomSeed);
+        const mode=args.mode??'walk',route=this.route(d.get('state','location'),destination,mode,d.get('state','minute'),d.get('randomSeed'));
         const checks=checkpoints(this,route,d.get('state')),banned=this.rules.smuggling.contraband.includes(item)||this.byId.get(item).tags?.includes('contraband');
         if(!checks.length||!banned&&!checks.some(c=>c.taxBps>0))throw preconditionFailure('路线没有违禁或逃税货物检查点');
         const bribe=args.coins??0;if(!Number.isSafeInteger(bribe)||bribe<0||bribe>1000000)throw preconditionFailure('贿金数额无效');
@@ -66,7 +67,7 @@ export function inspectSmuggling(d,engine,route,eventId){
             let passed=!guard||check.success,bribed=false,exposed=false,incident=null,corruption=null;
             const tag=`${eventId}_${row.id}_${cp.edge}`;
             if(!passed&&row.bribe){
-                const stake=Math.max(1,engine.byId.get(row.item).basePrice*row.quantity),price=bribePrice(engine,d.get('state'),guard,stake);
+                const stake=Math.max(1,goodsWorth(d,engine,{item:row.item,quantity:row.quantity,location:cp.location,holder:'player'})??0),price=bribePrice(engine,d.get('state'),guard,stake);
                 bribed=row.bribe>=price&&d.get('state','player','coins')>=row.bribe;
                 if(bribed){
                     moveCoins(d,{from:purse(engine,'player'),to:purse(engine,guard),amount:row.bribe,writer:'smuggling',eventId:tag});d.set(['state','player','coins'],d.get('state','player','coins')-row.bribe);d.set(['state','npcs',guard,'coins'],d.get('state','npcs',guard,'coins')+row.bribe);
@@ -84,7 +85,7 @@ export function inspectSmuggling(d,engine,route,eventId){
             let seizure=null;
             if(!passed){
                 transferItems(d,engine,'player',guard,row.item,row.quantity);
-                incident=registerIncident(d,engine,{victim:guard,offense:'smuggling',value:engine.byId.get(row.item).basePrice*row.quantity,witnesses:guards,eventId:tag,location:cp.location,optional:true})??incident;
+                incident=registerIncident(d,engine,{victim:guard,offense:'smuggling',value:goodsWorth(d,engine,{item:row.item,quantity:row.quantity,location:cp.location,holder:'player'}),witnesses:guards,eventId:tag,location:cp.location,optional:true})??incident;
                 seizure={custodian:guard,item:row.item,quantity:row.quantity,case:incident};
             }
             const latest=d.get(...path(row.id));

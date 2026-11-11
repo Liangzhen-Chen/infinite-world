@@ -35,6 +35,17 @@ const fixture=(configure=()=>{})=>{
 const run=async(engine,document,tool,args,eventId)=>{const output=await engine.reduce(document,{tool,args,eventId});return{document:applyPatches(document,output.patches),result:output.result};};
 const action=(engine,document,operation,args={},eventId=operation)=>run(engine,document,'world_site',{operation,...args},eventId);
 async function arrive(f){return(await run(f.engine,f.fresh(),'world_move',{destination:siteId},'arrive')).document;}
+// K6: an unlicensed act has happened; the norm stack names the offense and the
+// offense stands in the records with the victim and the witnesses who saw it;
+// a witnessing victim reacts at once (this test site has no executing court).
+const offended=(out,offense,victim)=>{
+    const row=out.result.offenses?.find(o=>o.offense===offense&&o.victim===victim);
+    assert.ok(row,`应命中${offense}（失主${victim}）：${JSON.stringify(out.result.offenses)}`);
+    const record=out.document.state.records[row.record];
+    assert.equal(record?.offense,offense);assert.equal(record.offender,'player');assert.equal(record.victim,victim);
+    if(row.witnesses.includes(victim))assert.ok(out.document.state.npcs[victim].developments.some(x=>x.type==='发现财物侵犯'));
+    return row;
+};
 async function open(f,document){
     document=(await action(f.engine,document,'investigate',{target:'door'},'see_door')).document;
     // This fixed event rolls 18; the attribute supplies the supported modifier.
@@ -127,15 +138,17 @@ test('调查检定失败没有发现记录和隐藏真相；数量与未知操�
     await assert.rejects(action(f.engine,c,'reset'),/操作须/);
 });
 
-test('实际占据者未离开或死亡时不能进入，不删除其身份和物权',async()=>{
+test('实际占据者在场时未获许可入内构成侵入并被其目击；获许可、离开或死亡后入内不构成侵入，不删除其身份和物权',async()=>{
     const f=fixture(s=>{s.entryMechanisms=[];s.occupants=['npc_hw_linsui'];});let c=await arrive(f);
     c.state.npcs.npc_hw_linsui.location=siteId;
-    await assert.rejects(action(f.engine,c,'enter'),/占据者/);
+    // K6 依据：在场的人挡住的是许可不是身体（审查 C-b、D1 本文件），入内先发生，再命中侵入。
+    const pushed=await action(f.engine,c,'enter',{},'pushed_in');
+    assert.equal(pushed.result.entered,true);assert.ok(offended(pushed,'trespass','npc_hw_linsui').witnesses.includes('npc_hw_linsui'));
     const permit=await run(f.engine,c,'world_promise',{operation:'grant_access',promisor:'林穗',location:siteId,content:'同意入内查看',minutes:60},'occupant_permit');c=permit.document;
     const entered=await action(f.engine,c,'enter',{authorization:permit.result.authorization},'permitted_entry');
-    assert.equal(entered.document.state.npcs.npc_hw_linsui.location,siteId);
+    assert.equal(entered.document.state.npcs.npc_hw_linsui.location,siteId);assert.equal(entered.result.offenses,undefined);
     c.state.npcs.npc_hw_linsui.location='loc_hw';
-    assert.equal((await action(f.engine,c,'enter',{},'vacated')).result.entered,true);
+    const vacated=await action(f.engine,c,'enter',{},'vacated');assert.equal(vacated.result.entered,true);assert.equal(vacated.result.offenses,undefined);
     c.state.npcs.npc_hw_linsui.location=siteId;c.state.npcs.npc_hw_linsui.status='死亡';
     assert.equal((await action(f.engine,c,'enter',{},'dead_occupant')).result.entered,true);
 });
@@ -143,18 +156,25 @@ test('实际占据者未离开或死亡时不能进入，不删除其身份和�
 test('所有者有效许可区别参观与采集；撤销、到期和缺状态的占据者不能绕过',async()=>{
     const f=fixture(s=>{s.owner='npc_hw_linsui';s.occupants=['npc_hw_linsui'];s.entryMechanisms=[];s.resources[0].requires=[];s.resources[0].mechanisms=[];});let c=await arrive(f);
     c.state.npcs.npc_hw_linsui.location=siteId;
-    await assert.rejects(action(f.engine,c,'enter'),/物权/);
+    // K6 依据：所有者许可决定合法与否，不决定能否做到（审查 C-b sites.mjs:327/:250，D1 本文件:146–157）。
+    const intruded=await action(f.engine,c,'enter',{},'unlicensed_enter');
+    assert.equal(intruded.result.entered,true);offended(intruded,'trespass','npc_hw_linsui');
     const permit=await run(f.engine,c,'world_promise',{operation:'grant_access',promisor:'林穗',location:siteId,type:'site_visit',content:'只参观',minutes:60},'visit_permission');c=permit.document;
     c=(await action(f.engine,c,'enter',{authorization:permit.result.authorization},'visit')).document;
-    await assert.rejects(action(f.engine,c,'gather',{target:'bundle',authorization:permit.result.authorization}),/物权/);
+    // 参观许可不含采集：拿走确实发生（存量减少、进了行囊），记盗采，案值为所取财物之值。
+    const pilfered=await action(f.engine,c,'gather',{target:'bundle',authorization:permit.result.authorization},'visit_gather');
+    assert.equal(pilfered.result.quantity,1);assert.equal(pilfered.document.state.records[`site:${siteId}`].remaining.bundle,1);
+    assert.equal(pilfered.document.state.inventory.item_ration.quantity,(c.state.inventory.item_ration?.quantity??0)+1);
+    const harvest=offended(pilfered,'illegal_harvest','npc_hw_linsui');
+    assert.ok(pilfered.document.state.records[harvest.record].value>0);assert.deepEqual(pilfered.document.state.records[harvest.record].stolen,{item:'item_ration',quantity:1});
     const gather=await run(f.engine,c,'world_promise',{operation:'grant_access',promisor:'林穗',location:siteId,type:'site_gather',content:'同意取一份干粮',minutes:60},'gather_permission');c=gather.document;
     c=(await action(f.engine,c,'gather',{target:'bundle',authorization:gather.result.authorization},'gather_owned')).document;
     assert.equal(c.state.records[`site:${siteId}`].remaining.bundle,1);
     c.state.npcs.npc_hw_linsui.location=siteId;
     const revoked=await run(f.engine,c,'world_promise',{operation:'revoke_access',promisor:'林穗',authorization:gather.result.authorization},'revoke');
-    await assert.rejects(action(f.engine,revoked.document,'gather',{target:'bundle',authorization:gather.result.authorization}),/物权/);
+    offended(await action(f.engine,revoked.document,'gather',{target:'bundle',authorization:gather.result.authorization},'revoked_gather'),'illegal_harvest','npc_hw_linsui');
     c.state.minute=gather.result.permission.expires;
-    await assert.rejects(action(f.engine,c,'enter',{authorization:gather.result.authorization}),/物权/);
+    offended(await action(f.engine,c,'enter',{authorization:gather.result.authorization},'expired_enter'),'trespass','npc_hw_linsui');
     const missing=fixture(s=>{s.entryMechanisms=[];s.occupants=['npc_hw_linsui'];});c=await arrive(missing);delete c.state.npcs.npc_hw_linsui;
     await assert.rejects(action(missing.engine,c,'enter'),/状态尚未落实/);
 });
@@ -164,7 +184,10 @@ test('资源另有所有者时不能凭据点所有者许可拿取；可合并�
     for(const id of ['npc_hw_linsui','npc_hw_chenbai'])c.state.npcs[id].location=siteId;
     const p=await run(f.engine,c,'world_promise',{operation:'grant_access',promisor:'林穗',location:siteId,type:'site_visit',content:'同意参观'},'owner_entry');c=p.document;
     c=(await action(f.engine,c,'enter',{authorization:p.result.authorization})).document;
-    await assert.rejects(action(f.engine,c,'gather',{target:'bundle',authorization:p.result.authorization}),/另有物权/);
+    // K6 依据：资源另有物主时，据点主人的许可不能转让它；拿取发生，命中对资源物主的盗采（D1 本文件:167）。
+    const taken=await action(f.engine,c,'gather',{target:'bundle',authorization:p.result.authorization},'other_owner_gather');
+    assert.equal(taken.result.quantity,1);
+    assert.deepEqual(taken.result.offenses.map(o=>[o.offense,o.victim]),[['illegal_harvest','npc_hw_chenbai']]);
     const q=await run(f.engine,c,'world_promise',{operation:'grant_access',promisor:'npc_hw_chenbai',location:siteId,type:'site_gather',content:'同意取粮'},'resource_permission');
     const got=await action(f.engine,q.document,'gather',{target:'bundle',authorizations:[p.result.authorization,q.result.authorization]},'multiple_permissions');
     assert.equal(got.result.remaining,1);
@@ -175,17 +198,20 @@ test('私宅据点仍须住户和同行许可；所有者可以在门外当面�
         s.owner='npc_hw_linsui';s.entryMechanisms=[];s.resources[0].requires=[];s.resources[0].mechanisms=[];
         world.locations.at(-1).access={mode:'private',requiresConsent:true,residents:['npc_hw_linsui']};
     });let c=f.fresh();
-    await assert.rejects(run(f.engine,c,'world_move',{destination:siteId},'no_consent'),/成年住户/);
+    // K6 依据（审查 C-b location-access:23）：住户许可决定合法与否，不决定能否走进去；进入发生，命中擅入私宅。
+    {const entered=await run(f.engine,c,'world_move',{destination:siteId},'no_consent');assert.equal(entered.document.state.location,siteId);
+     const o=entered.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o);assert.equal(o.victim,'npc_hw_linsui');assert.equal(entered.document.state.records[o.record].sourceEvent,'no_consent');}
     const grant=await run(f.engine,c,'world_promise',{operation:'grant_access',promisor:'林穗',location:siteId,type:'site_gather',content:'准许入内取粮'},'outside_permit');c=grant.document;
     const authorization=grant.result.authorization;
     c=(await run(f.engine,c,'world_move',{destination:siteId,authorization},'authorized_move')).document;
     c=(await action(f.engine,c,'enter',{authorization},'private_enter')).document;
     c.state.records[authorization].expires=c.state.minute+1;
-    const before=structuredClone(c);
-    await assert.rejects(action(f.engine,c,'gather',{target:'bundle',authorization},'expired_during_gather'),/许可/);
-    assert.deepEqual(c,before);
+    // K6 依据：许可在采集途中到期，采集照样完成，到期后的部分构成盗采（D1 本文件:185）。
+    const overrun=await action(f.engine,c,'gather',{target:'bundle',authorization},'expired_during_gather');
+    assert.equal(overrun.result.quantity,1);offended(overrun,'illegal_harvest','npc_hw_linsui');
+    // 许可未覆盖的同行者一同入内：入内发生，命中侵入。
     c.state.player.companions=['npc_hw_chenbai'];
-    await assert.rejects(action(f.engine,c,'enter',{authorization},'uninvited_guest'),/同行者/);
+    offended(await action(f.engine,c,'enter',{authorization},'uninvited_guest'),'trespass','npc_hw_linsui');
 });
 
 test('加载据点参数检查真实引用、有限数量与发现门槛，不改正式地点正文',()=>{
@@ -233,7 +259,9 @@ test('元素解法、随时间再生与机关复位按实际状态与流逝时�
         s.mechanisms.push({id:'pool',name:'门前积水',description:'门槛前积了一坑深水。',check:{attribute:'力量',difficulty:30},minutes:5,failureDamage:2,element:{feature:'feature_test_archive_pool',tags:['frozen']}});
         s.entryMechanisms=['door','pool'];s.resources[0].mechanisms=[];
         s.history=[{era:'百年前',text:'沿河人修起水站。'},{era:'如今',text:'水站空置。'}];
-        s.changes=[{id:'bundle_regrow',kind:'regrow',resource:'bundle',quantity:1,everyDays:10,max:2},{id:'pool_refill',kind:'rearm',mechanism:'pool',everyDays:3}];
+        // D05 §5.5 / RW-06：改用可观测的3份容量，保留1份才能再生；取空后不凭空重建。
+        s.resources[0].quantity=3;
+        s.changes=[{id:'bundle_regrow',kind:'regrow',resource:'bundle',quantity:1,everyDays:10,max:3},{id:'pool_refill',kind:'rearm',mechanism:'pool',everyDays:3}];
     });
     let c=await arrive(f);
     const view=await action(f.engine,c,'inspect');assert.equal(view.result.history,undefined);
@@ -250,18 +278,46 @@ test('元素解法、随时间再生与机关复位按实际状态与流逝时�
     c=frozen.document;c=await open(f,c);
     const inside=await action(f.engine,c,'inspect');assert.deepEqual(inside.result.history,['百年前：沿河人修起水站。','如今：水站空置。']);
     c=(await action(f.engine,c,'investigate',{target:'carving'},'carving')).document;
-    c=(await action(f.engine,c,'gather',{target:'bundle',quantity:2},'take')).document;
+    const beforeTake=structuredClone(c);
+    c=(await action(f.engine,c,'gather',{target:'bundle',quantity:3},'take')).document;
     await assert.rejects(action(f.engine,c,'gather',{target:'bundle'}),/有限资源不足/);
     // Nine days later nothing has regrown; the gate refilled after three days and must be cleared again to re-enter.
     c.state.minute+=9*1440;
     await assert.rejects(action(f.engine,c,'gather',{target:'bundle'}),/有限资源不足/);
     c.state.minute+=1440+1;
-    let out=await action(f.engine,c,'gather',{target:'bundle'},'regrown');assert.equal(out.result.remaining,0);c=out.document;
+    await assert.rejects(action(f.engine,c,'gather',{target:'bundle'},'regrown'),/有限资源不足/);
     c.state.minute+=30*1440;
-    assert.equal((await action(f.engine,c,'inspect')).result.resources.find(r=>r.id==='bundle').remaining,2,'再生不超过上限');
+    assert.equal((await action(f.engine,c,'inspect')).result.resources.find(r=>r.id==='bundle').remaining,0,'N₀=0，闭式再生始终为0');
+    // 部分采集：3−2=1；r=1/(3×10)=1/30每天，60天后 floor(3/(1+2×exp(-2)))=2。
+    // 这条分支仍验证实际再生与上限；上面的耗尽分支保留重复采集拒绝和零刷新检查。
+    let partial=(await action(f.engine,beforeTake,'gather',{target:'bundle',quantity:2},'partial')).document;
+    assert.equal(partial.state.records[`site:${siteId}`].remaining.bundle,1);
+    partial.state.minute+=60*1440;
+    const regrown=await action(f.engine,partial,'inspect');
+    assert.equal(regrown.result.resources.find(r=>r.id==='bundle').remaining,2);
+    // 保留原上限保证：累计360天，floor(3/(1+2×exp(-12)))=2（从下侧趋近3，不会超量）。
+    const longTerm=structuredClone(regrown.document);longTerm.state.minute+=300*1440;
+    const capped=await action(f.engine,longTerm,'inspect');
+    assert.equal(capped.result.resources.find(r=>r.id==='bundle').remaining,2,'长期再生仍不超过3份容量');
+    const collected=await action(f.engine,regrown.document,'gather',{target:'bundle'},'regrown-partial');
+    assert.equal(collected.result.remaining,1,'再生后取1份：2−1=1');
     c=(await run(f.engine,c,'world_move',{destination:'loc_hw'},'leave')).document;
     c=(await run(f.engine,c,'world_move',{destination:siteId},'back')).document;
     await assert.rejects(action(f.engine,c,'enter',{},'reenter'),/机关/);
     const broken=structuredClone(f.world);broken.locations.at(-1).site.changes[0].max=5;assert.throws(()=>new WorldEngine(broken),/site:/);
     const missing=structuredClone(f.world);missing.locations.at(-1).site.mechanisms.at(-1).element.feature='feature_nowhere';assert.throws(()=>new WorldEngine(missing),/site:/);
+});
+
+test('K6 没人看见的盗采：物主回来发现财物少了，记一条亲历记忆，挂原事件号，不知道是谁',async()=>{
+    const f=fixture(s=>{s.owner='npc_hw_linsui';s.entryMechanisms=[];s.resources[0].requires=[];s.resources[0].mechanisms=[];});let c=await arrive(f);
+    c.state.npcs.npc_hw_linsui.location='loc_capital';
+    c=(await action(f.engine,c,'enter',{},'k6-quiet-enter')).document;
+    const took=await action(f.engine,c,'gather',{target:'bundle'},'k6-quiet-take');c=took.document;
+    const o=took.result.offenses.find(o=>o.offense==='illegal_harvest');assert.ok(o);assert.deepEqual(o.witnesses,[]);
+    assert.ok(c.state.records[o.record].discoverers.includes('npc_hw_linsui'));
+    assert.ok(!(c.state.npcs.npc_hw_linsui.memoryStream??[]).some(m=>m.sourceEvent==='k6-quiet-take'),'物主不在场时不知道');
+    Object.assign(c.state.npcs.npc_hw_linsui,{location:siteId,activity:'查看',status:'正常'});delete c.state.npcs.npc_hw_linsui.scheduleTravel;
+    c=(await run(f.engine,c,'world_time',{minutes:10},'k6-owner-back')).document;
+    const memory=(c.state.npcs.npc_hw_linsui.memoryStream??[]).find(m=>m.sourceEvent==='k6-quiet-take');
+    assert.ok(memory,'物主回来发现了');assert.deepEqual(memory.participants,['npc_hw_linsui']);assert.equal(c.state.records[o.record].discoveredBy,'npc_hw_linsui');
 });

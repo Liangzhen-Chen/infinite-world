@@ -5,7 +5,7 @@ import {randomInt} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {openContentBudget,reopenBudgetTerms} from './content-budget.mjs';
-import {hashContent,parseModelJSON} from './content-pipeline.mjs';
+import {hashContent,parseModelJSON,rowFingerprintShape} from './content-pipeline.mjs';
 import {contextFor,buildReviewRequest,validateDraft,checkIncrementalReview,patchDraft,depthBackgroundSources} from './npc-depth-content.mjs';
 import {depthOptions,prepareDepth,prepareDepthRevision,loadDepthReopen,frozenDepthRecord,depthRevisionProof} from './npc-depth.mjs';
 import {loadEvidence,compactReviewRequest} from './npc-depth-source-evidence.mjs';
@@ -27,7 +27,7 @@ export function reviewOptions(argv=process.argv.slice(2)){
  const sourceAt=argv.indexOf('--source-evidence');
  return {...options,id,batch,root:modern?options.root:path.resolve(`world/drafts/w1/${batch}`),budgetRoot:modern?options.budgetRoot:path.resolve(positional[1]),sourceEvidence:sourceAt<0?undefined:path.resolve(argv[sourceAt+1]),compactRequest:argv.includes('--compact-request'),l4Notes:argv.includes('--l4-notes')?path.resolve(argv[argv.indexOf('--l4-notes')+1]):undefined};
 }
-const rowHash=rows=>hashContent(rows.map(({id,draft,review,status})=>({id,draft,review,status})));
+const rowHash=rows=>hashContent(rows.map(rowFingerprintShape));
 function checkReview(review){
  if(!Array.isArray(review?.contradictions)||review.contradictions.some(r=>!['hard','soft','style'].includes(r.severity)||!['quote','field','reason'].every(k=>typeof r[k]==='string'&&r[k].trim())))throw Error('无效复审结果');
  return review.contradictions;

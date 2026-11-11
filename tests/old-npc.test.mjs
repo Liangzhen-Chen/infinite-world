@@ -18,13 +18,23 @@ function setup(){
 const reader=document=>({document,get:(...path)=>path.reduce((value,key)=>value?.[key],document)});
 function writer(document){return {...reader(document),set(path,value){let row=document;for(const key of path.slice(0,-1))row=row[key]??={};row[path.at(-1)]=value;}};}
 
-test('目录身份和已创建模板可交锋，仍拒绝不在场、死亡、私有及伪实体',async()=>{
+test('目录身份和已创建模板可交锋，自有可处分，他人所有的照打并记擅毁；仍拒绝不在场、死亡及伪实体',async()=>{
  const {engine,document,run}=setup(),catalog=engine.world.monsters.find(row=>row.template===1).id,created='creature_old_npc';
  document.state.created[created]={id:created,name:'回归野兽',aliases:[],template:1,levelRange:[1,1]};
  for(const target of [catalog,created]){
   document.state.creatures[target]={location:document.state.location,hp:5000,maxHp:5000,level:1};
   assert.equal((await run(document,target,`valid_${target}`)).result.target,target);
-  for(const [change,reason] of [[{location:'loc_capital'},/不在场/],[{hp:0,status:'死亡'},/死亡/],[{owner:'player'},/不是交锋对象/]]){
+  // K7 owner's disposition: the owner may strike its own beast.
+  const own=structuredClone(document);own.state.creatures[target].owner='player';
+  const ownBlow=await run(own,target,`own_${target}`);assert.equal(ownBlow.result.target,target);assert.equal(ownBlow.result.offenses,undefined);
+  // K6 依据（审查 D1 本文件:33、C-a/C-b）：别人的牲畜挨的是同一下；打伤或打死它命中擅毁他人财物，失主有记录。
+  const theirs=structuredClone(document);theirs.state.creatures[target].owner='npc_hw_linsui';
+  let hit=false;for(let i=0;i<6;i++){const blow=await run(theirs,target,`theirs_${target}_${i}`);assert.equal(blow.result.target,target);
+   if(!blow.result.damage){assert.equal(blow.result.offenses,undefined);continue;}
+   const row=blow.document.state.records[blow.result.offenses.find(o=>o.offense==='property_damage')?.record];
+   assert.equal(row?.victim,'npc_hw_linsui');assert.equal(row.sourceEvent,`theirs_${target}_${i}`);hit=true;break;}
+  assert.ok(hit,'六次交锋应至少打中一次');
+  for(const [change,reason] of [[{location:'loc_capital'},/不在场/],[{hp:0,status:'死亡'},/死亡/]]){
    const invalid=structuredClone(document);Object.assign(invalid.state.creatures[target],change);
    await assert.rejects(run(invalid,target,`invalid_${target}`),reason);
   }

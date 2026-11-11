@@ -15,6 +15,9 @@ import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 function fixture(){
  const engine=new WorldEngine(structuredClone(world));
+ // These causal-evidence cases enumerate the initial observers. Source
+ // errands are outside that premise; their real movement is tested by K16.
+ delete engine.rules.householdSubsistence;
  return {engine,document:engine.createCharacter(seed,{},'a3-causal')};
 }
 async function act(f,tool,args,eventId){

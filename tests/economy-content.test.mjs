@@ -50,7 +50,12 @@ test('候选目录的书本学习和铁件制造确实执行，缺锤不扣料�
  for(let n=0;n<100;n++){const result=await engine.reduce(c,{tool:'world_craft',args:{recipe:'recipe_forge_nails'},eventId:`nails_${n}`});if(result.result.success){made={document:applyPatches(c,result.patches),result:result.result};break;}}
  assert.ok(made);assert.equal(made.document.state.inventory.item_iron_nail.quantity,40);assert.equal(made.result.instances.length,40);assert.equal(made.result.spent.feePaid,4);
  assert.equal(made.document.state.player.coins,c.state.player.coins-4);assert.equal(made.document.state.inventory.item_iron,undefined);assert.equal(made.document.state.inventory.item_charcoal,undefined);
- assert.equal(made.document.state.minute,c.state.minute+80);assert.equal(made.document.state.npcs.npc_hw_duanyan.coins,c.state.npcs.npc_hw_duanyan.coins+4);
+ assert.equal(made.document.state.minute,c.state.minute+80);
+ // K2/F（卡 E）依据：制作这 80 分钟里，段岩按自家日用需求去青灯赶集，是真实成交；断言改为：他的钱 = 原有 + 工坊费 4 + 本人这段时间的真实成交净额（卖得为正、买付为负、缴税为负），仍严格相等。
+ const fresh=(k,r)=>!c.state.records[k];
+ const net=Object.entries(made.document.state.records).filter(([k,r])=>r.category==='market_trade'&&fresh(k)).reduce((n,[,r])=>n+(r.seller==='npc_hw_duanyan'?r.totalCoins:0)-(r.buyer==='npc_hw_duanyan'?r.totalCoins:0),0)
+  -Object.entries(made.document.state.records).filter(([k,r])=>r.category==='trade_tax'&&r.payer==='npc_hw_duanyan'&&fresh(k)).reduce((n,[,r])=>n+r.amount,0);
+ assert.equal(made.document.state.npcs.npc_hw_duanyan.coins,c.state.npcs.npc_hw_duanyan.coins+4+net);
 });
 test('旧草稿的新事实校验会失败，人工评分不足或哈希改变也拒绝，不重写原输出',async()=>{
  const world=await loadWorld(),bones=economyFoundation(world);
@@ -72,15 +77,17 @@ test('重复编译经济目录稳定且不丢后续器物、配方或其他工�
  const once=assembleEconomy(world,bones,lore),extended=structuredClone(once);
  extended.items.push({...extended.items.find(row=>row.id==='item_wood'),id:'item_future_wood',name:'测试后续木料',aliases:[]});
  extended.recipes.push({...extended.recipes[0],id:'recipe_future_pegs',name:'测试后续木楔',aliases:[]});
- extended.locations.find(row=>row.id==='bld_hw_mill').workstations.push({id:'station_future_bench',kind:'woodworking',owner:'loc_hw',fee:7,access:'public'});
+ // K5：工位来自设备；一处地点每类工位只有一件，后续另加的是另一类设备（原为同类第二张手写木工台）。
+ extended.locations.find(row=>row.id==='bld_hw_mill').fixtures.push({fixture:'forge',id:'station_future_forge',fee:7});
  const rebuilt=economyFoundation(extended);assert.deepEqual(rebuilt,bones);
  const twice=assembleEconomy(extended,rebuilt,lore);
  assert.deepEqual(twice,extended);assert.equal(twice.items.length,world.items.length+1);assert.equal(twice.recipes.length,world.recipes.length+1);
  assert.equal(new Set(twice.items.map(row=>row.id)).size,twice.items.length);
  assert.equal(new Set(twice.recipes.map(row=>row.id)).size,twice.recipes.length);
  // Existing stations must receive the current hand-authored fee too.
- extended.locations.find(row=>row.id==='bld_hw_mill').workstations[0].fee=99;
- assert.equal(assembleEconomy(extended,bones,lore).locations.find(row=>row.id==='bld_hw_mill').workstations[0].fee,2);
+ const bench=place=>place.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(row=>row.id==='station_hw_mill_bench');
+ bench(extended).fee=99;
+ assert.equal(bench(assembleEconomy(extended,bones,lore)).fee,2);
 });
 test('保存上限逐项进入说明，null不凭空加期限，开发保证措辞拒绝',async()=>{
  const bones=economyFoundation(await loadWorld()),resin=bones.items.find(row=>row.id==='item_resin'),staff=bones.items.find(row=>row.id==='item_staff');

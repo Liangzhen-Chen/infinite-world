@@ -17,7 +17,7 @@
 已有效的验收证据复用；新变化或具体失败才补查，不为此 Skill 新增清单、manifest、验证器或审核会话。等价阻碍只处理一次规划，不通过不断拆新卡重复同一修复。摘要报告提交、实际验收、改动和未解问题；验收后主合并、CORE、更新文档、清理干净 worktree，并归档确定不再续用的会话。
 
 1. 主会话是 Claude，负责调度、验收、合并与检查；规划（Astra）与执行（Sol）会话由主会话通过 codex 工具启动，不再启动其他会话或子代理。
-2. 只跑相关测试；提交前加跑 `node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs`。不跑全量测试，不调用真实模型，除非卡片要求。本文以下称这条命令为 CORE；每张执行卡的验收都包含 CORE。
+2. 只跑相关测试；提交前加跑 `node --test tests/engine.test.mjs tests/storage.test.mjs tests/plugin.test.mjs tests/invariants/i01-conservation.test.mjs tests/invariants/i02-non-negative.test.mjs tests/invariants/i15-single-account.test.mjs tests/invariants/i16-event-primary-write.test.mjs`。不跑全量测试，不调用真实模型，除非卡片要求。本文以下称这条命令为 CORE；每张执行卡的验收都包含 CORE。
 3. 输出过长只截取报错部分；读过的文件只看相关行。用 `rg` 定位，不通读仓库。
 4. 同一个错误两种修法仍失败：停止，提交已通过测试的部分，在不超过 10 行的摘要里写明现象、已试方法和判断。主会话派规划客户端会话处理一次；仍不行标记卡住，继续其他块。
 5. 执行客户端会话 在自己的 worktree 和分支工作，完成后提交并回不超过 10 行摘要。`docs/PROGRESS.md` 和 `docs/CHANGELOG.md` 只由主会话更新；PLAN 由主会话维护或委派规划客户端会话修改。

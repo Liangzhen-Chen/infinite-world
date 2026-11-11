@@ -230,8 +230,8 @@ test('推进系统阶段归序键：未声明 phase 的系统保持原 order（�
 const world = await loadWorld();
 const LEGACY = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
 const DAY = 1440;
-const freshDoc = seed => {
-    const engine = new WorldEngine(structuredClone(world));
+const freshDoc = (seed,edition=world) => {
+    const engine = new WorldEngine(structuredClone(edition));
     const doc = engine.createCharacter(LEGACY, {}, seed);
     doc.state.scheduler = { wireAdvance: true };
     return { engine, doc };
@@ -253,15 +253,18 @@ const seqEvents = doc => {
 };
 
 test('local continuous objects catch up without adding a scheduled tick',async()=>{
-    const initial=freshDoc('i31-local');
+    // This case isolates continuous catch-up with no scheduled tick in540..577.
+    // K16 chores create real boundaries there; the other I31 cases retain them.
+    const localWorld=structuredClone(world);delete localWorld.rules.householdSubsistence;
+    const initial=freshDoc('i31-local',localWorld);
     const before=initial.doc.state.minute;
     const short=await step(initial,1);
     assert.equal(short.state.scheduler.lastSettled,before);
     assert.equal(short.state.scheduler.localUntil,before+1);
     const food=short.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0];
     assert.ok(food.spoiledGrams>0,'food decays even when the span has no scheduled tick');
-    const split=await step({engine:new WorldEngine(structuredClone(world)),doc:JSON.parse(JSON.stringify(short))},36);
-    const whole=await step(freshDoc('i31-local'),37);
+    const split=await step({engine:new WorldEngine(structuredClone(localWorld)),doc:JSON.parse(JSON.stringify(short))},36);
+    const whole=await step(freshDoc('i31-local',localWorld),37);
     assert.deepEqual(split.state,whole.state);
     assert.deepEqual(seqEvents(split),seqEvents(whole));
 });
@@ -393,15 +396,21 @@ test('真实引擎 I31：两 NPC 同刻争夺同一稀缺标的，结果可重�
 });
 
 test('真实引擎 I31：同刻争购最后一份面包按骰值键裁决，整笔钱货守恒，任务 id 与枚举顺序不偏置',async()=>{
-    const buyers=['npc_hw_ayan','npc_hw_duanyan'],seller='npc_hw_linsui',item='item_bread',place='bld_hw_qingdeng';
+    // S5-02：原买家阿砚享亲属折价，价格争夺会合法优先选择全价买家。
+    // 改用两位对林穗均为中性的真实完整档人物，保留“同价按骰键裁决”的考查对象。
+    const buyers=['npc_hw_shendu','npc_hw_duanyan'],seller='npc_hw_linsui',item='item_bread',place='bld_hw_qingdeng';
     const run=async(seed,reverse=false,insolvent=null)=>{
         const w=structuredClone(world);
+        // S5-02: base20*.5 gives 10 copper for both neutral buyers; zero cash is still insolvent.
+        w.items.find(row=>row.id===item).basePrice=20;
         for(const id of [...buyers,seller])w.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location:place,activity:'日常活动',services:id===seller?['trade']:[]}]};
         const engine=new WorldEngine(w),doc=engine.createCharacter(LEGACY,{},seed);
         doc.state.scheduler={wireAdvance:true};doc.state.minute=600;doc.state.location='loc_capital';
         for(const id of [...buyers,seller])Object.assign(doc.state.npcs[id],{location:place,activity:'日常活动',coins:1000});
         if(insolvent)doc.state.npcs[insolvent].coins=0;
         delete doc.state.npcs[seller].scheduleTravel;
+        // Four stew portions cover household120 satiety; only the examined last loaf is saleable.
+        doc.state.npcs[seller].inventory.item_mutton_turnip_stew={quantity:4};
         doc.state.npcs[seller].inventory[item]=1;
         const quantity=(d,id)=>{const n=d.state.npcs[id].inventory[item];return typeof n==='number'?n:n?.quantity??0;};
         const tasks=buyers.map((id,i)=>({id:reverse?`z_${1-i}`:`a_${i}`,npc:id,action:{kind:'trade',seller,item,quantity:1},start:600,finish:605,status:'进行中',presence:{npcs:Object.fromEntries([id,seller].map(who=>[who,{location:place,activity:'日常活动',status:doc.state.npcs[who].status}]))}}));
@@ -414,6 +423,7 @@ test('真实引擎 I31：同刻争购最后一份面包按骰值键裁决，整�
         assert.equal(Object.values(after.state.npcAutonomy.tasks).filter(t=>t.status==='失败').length,1);
         assert.equal(quantity(after,seller),0);assert.equal(coins(after),coins(doc));assert.equal(goods(after),goods(doc));
         const winner=finished[0].npc,loser=buyers.find(id=>id!==winner);
+        assert.equal(doc.state.npcs[winner].coins-after.state.npcs[winner].coins,10);
         assert.equal(quantity(after,winner),quantity(doc,winner)+1);assert.equal(quantity(after,loser),quantity(doc,loser));
         assert.equal(after.state.npcs[loser].coins,doc.state.npcs[loser].coins,'败者整个提案未扣款');
         seqEvents(after);

@@ -3,12 +3,13 @@
  "kind": "offenses",
  "namespace": "core",
  "version": 1,
- "note": "罪名词汇表（事件标签 offense:<id>）。template = rules.law.templates[*].penalties 的键；code = 代码中出现的 offense 字面量；design = 设计文档、run-001 与意图语料需要的罪名，S0 只登记不接线（法典条款仍在 rules.law）。",
+ "note": "罪名词汇表（事件标签 offense:<id>）。template = rules.law.templates[*].penalties 的键；code = 代码中出现的 offense 字面量；design = 设计文档、run-001 与意图语料需要的罪名，S0 只登记不接线（法典条款仍在 rules.law）。 act = 构成该罪的行为类别（K6 合法性是后果：物理上可行的行为先发生，缺他人或官府许可时由 act 与行为对象属性 against 命中罪名；against 越具体越优先）；broader = 上位罪名，法典未登记本罪罚则时按上位罪名比附量刑。",
  "entries": [
   {
    "id": "theft",
    "label": "盗窃",
-   "source": "template"
+   "source": "template",
+   "act": "take"
   },
   {
    "id": "theft_attempt",
@@ -58,7 +59,11 @@
   {
    "id": "mental_magic",
    "label": "擅施心术",
-   "source": "template"
+   "source": "template",
+   "act": "cast",
+   "against": {
+    "permit": "mental_magic"
+   }
   },
   {
    "id": "bribery",
@@ -128,7 +133,44 @@
   {
    "id": "trespass",
    "label": "擅入私宅",
-   "source": "design"
+   "source": "design",
+   "act": "enter",
+   "broader": "offense:theft_attempt"
+  },
+  {
+   "id": "property_damage",
+   "label": "擅毁他人财物",
+   "source": "code",
+   "act": "destroy",
+   "broader": "offense:theft"
+  },
+  {
+   "id": "illegal_harvest",
+   "label": "盗采",
+   "source": "code",
+   "act": "gather",
+   "broader": "offense:theft"
+  },
+  {
+   "id": "unauthorized_use",
+   "label": "擅用他人之物",
+   "source": "code",
+   "act": "use",
+   "broader": "offense:theft_attempt"
+  },
+  {
+   "id": "unlicensed_magic",
+   "label": "无证施法",
+   "source": "code",
+   "act": "cast",
+   "broader": "offense:unconsented_magic"
+  },
+  {
+   "id": "unlawful_detention",
+   "label": "非法拘禁",
+   "source": "code",
+   "act": "detain",
+   "broader": "offense:assault"
   },
   {
    "id": "defamation",

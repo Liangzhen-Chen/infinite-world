@@ -1,11 +1,12 @@
 import {preconditionFailure} from './precondition.mjs';
-// Native sleep boundary for A's time executor. Call begin after validating the
-// actual duration, finish after the existing advance/HP/MP recovery. Neither
-// function advances time or touches money, HP or NPC schedules.
+// Native sleep boundary: body needs settle after the time executor.
 import {beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {bodyRule,readBodyState,writeBodyNeed} from './primitives-body.mjs';
 import {fixedUnits,fixedNumber,fixedMultiply} from './rx.mjs';
 import {aliveHoldings} from './holdings.mjs';
+import {derived} from './derived.mjs';
+import {pow} from './det-math.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
 
 export function beginSleep(d,engine,actor='player'){
  const span=beginActionActivity(d,engine,'rest',actor),s=d.get('state');
@@ -43,3 +44,26 @@ export function finishSleep(d,engine,span){
  }
  return {...finishActionActivity(d,engine,span),sleep:{minutes,lodging:span.lodgingKind??'camp',coveredMinutes:covered,recovery}};
 }
+
+// The time executor owns the single HP write. Damage during advance is included.
+export function restHealth(d,engine,minutes){
+ const p=d.get('state','player'),wounds=p.medical?.wounds??[];
+ if(!wounds.length)return Math.min(p.maxHp,p.hp+Math.floor(minutes/30));
+ const table=engine.world.primitiveTables.health;
+ const days=Math.max(...wounds.map(w=>{
+  const key=w.fracture||w.kind==='fracture'?'wound:fracture':w.infected||w.depthMm>3?'wound:severe':'wound:light';
+  return table.rows.find(r=>r.key===key).healDays*(w.treatments?.some(t=>t.correct)?table.params.find(r=>r.id==='medicine.healMul').value:1);
+ }));
+ const rate=derived(engine,d.document,'health:recoveryRate','player',{base:1/days});
+ const signature=JSON.stringify([rate,wounds.map(w=>[w.id,w.depthMm,w.infected,w.fracture,w.kind,w.treatments])]);
+ let fact=structuredClone(p.medical.recovery??{});
+ if(fact.hp!==p.hp||fact.maxHp!==p.maxHp||fact.wounds!==signature)fact={hp:p.hp,maxHp:p.maxHp,missing:p.maxHp-p.hp,wounds:signature,restMinutes:0,gained:0};
+ fact.restMinutes+=minutes;
+ // Anchor the full segment so splitting/restoring does not discard fractions.
+ const gained=Math.floor(fact.missing-fact.missing*pow(1-rate,fact.restMinutes/1440));
+ fact.hp=p.hp+Math.min(p.maxHp-p.hp,gained-fact.gained);fact.gained=gained;
+ d.set(['state','player','medical','recovery'],fact);
+ return fact.hp;
+}
+
+registerAdvanceHook('restHealth',restHealth);

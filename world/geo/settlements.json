@@ -180,7 +180,14 @@
         "parent": "npc_hw_yinqiu",
         "child": "npc_hw_yinzhi"
       }
-    ]
+    ],
+    "publicMaintenance": {
+      "budgetFrom": "ranked_office",
+      "powers": [
+        "public_project"
+      ],
+      "source": "K10b village public maintenance charter"
+    }
   },
   {
     "id": "loc_bs_yupo",

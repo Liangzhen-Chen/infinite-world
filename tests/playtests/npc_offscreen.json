@@ -27,9 +27,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player.coins",
-            "state.inventory"
+            "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "present",
@@ -125,10 +128,8 @@
           "min": 1
         },
         {
-          "kind": "unchanged",
-          "paths": [
-            "state.inventory"
-          ]
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "present",
@@ -144,9 +145,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.inventory",
             "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "present",

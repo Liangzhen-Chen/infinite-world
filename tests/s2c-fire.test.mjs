@@ -21,6 +21,8 @@ import {advanceNpcSchedules} from '../server-plugin/npc-schedule.mjs';
 import {fixture as faithFixture,draft as faithDraft,SEAT,T,HOST} from './helpers/faith.mjs';
 
 import {fireScene as fixture} from './probes/run-001/e06.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
+import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 
 test('E06-1 真实风向、间距、石材与雨水对照',()=>{
  const {engine,d,forge,warehouse,ignite,w}=fixture();ignite();advanceFacilityFire(d,engine,{after:660});
@@ -31,17 +33,21 @@ test('E06-1 真实风向、间距、石材与雨水对照',()=>{
  advanceFacilityFire(d,engine,{after:720});assert.equal(facilityView(engine,d.get('state'),forge).burning,false);
 });
 
-test('E06-2 仓损逐批进 sink，保护种粮、别仓与承诺报价；补货恢复报价',()=>{
+test('E06-2 仓损逐批进 sink，保护种粮与别仓，未签约报价立即重派生',()=>{
  const {engine,d,warehouse}=fixture(),before=d.get('state','settlements','loc_hw','food'),seed=structuredClone(d.get('state','records','agriculture:loc_hw','field'));
  const price=regionalTradePrice(d,engine,'item_oats','loc_hw',600);
+ // E6排除私人12份粮食：S=8000−5220=2780，D5220；3×春季.9×5220/2780=5.069784172661871。
+ assert.equal(price,5.069784172661871);
  damageFacility(d,engine,warehouse,75,{cause:'火灾',sourceEvent:'grain',minute:660});
  assert.equal(d.get('state','settlements','loc_hw','food'),before-4500);
  assert.equal(d.get('ledger','flows','sink:destroy|item_oats|fire'),4500);
  assert.deepEqual(d.get('state','records','agriculture:loc_hw','field'),seed);
  assert.equal(d.get('state','records','agriculture:loc_hw','batches').find(b=>b.id==='safe_grain').amount,2000);
  damageFacility(d,engine,warehouse,75,{cause:'火灾',sourceEvent:'grain',minute:660});assert.equal(d.get('ledger','flows','sink:destroy|item_oats|fire'),4500);
- assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',700),price,'已承诺报价不改');
- assert.ok(regionalTradePrice(d,engine,'item_oats','loc_hw',DAY+600)>price);
+ // 未签约的读价不是承诺；失火后公粮3500全属保留，公开供给0，供需封顶3。
+ // 新价3×0.9×3=8.1，同日立即反映，次日没有成交压力仍为8.1。
+ assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',700),8.100000000000001);
+ assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',DAY+600),8.100000000000001);
  assert.deepEqual(reconcile(engine,d.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
@@ -87,9 +93,14 @@ test('E06-5 失火事实与证人经法院判决赔偿；无过失、无证据�
  const origin='unattended_furnace:court:600';d.set(['state','records',origin],{category:'unattended_furnace',responsible:offender,building:forge,burning:true,attendants:[],witnesses:[officer],minute:600});
  const playerBefore=d.get('state','player','coins'),before=d.get('state','npcs',offender,'coins');
  damageFacility(d,engine,warehouse,25,{cause:'火灾',sourceEvent:'negligence',minute:660,fireOrigin:origin});
+ // 立案时（烧毁的粮已扣、建筑已受损）当地的供需与环境系数：
+ const supply=marketSupply(d,engine,'item_oats',warehouse),scarcity=Math.max(0.5,Math.min(3,supply.demand/Math.max(1,supply.supply))),regional=regionalTradeBase(d,engine,'item_oats',warehouse);
  const row=Object.values(d.get('state','records')).find(r=>r.category==='legal_case'&&r.offense==='negligent_fire');assert.ok(row);
  const code=legalCodeAt(engine,warehouse,d.get('state')),judge=code.judges[0];
- const judgment=adjudicateLegalCase(d,engine,row,code,judge,'fire:judgment');assert.equal(judgment.convicted,true);assert.equal(judgment.judgment.compensation,1500*engine.byId.get('item_oats').basePrice);
+ const judgment=adjudicateLegalCase(d,engine,row,code,judge,'fire:judgment');assert.equal(judgment.convicted,true); // W8-A：赔偿额读市场估值。手算——烧毁燕麦 1500 份：基价 3 × 环境系数（regionalTradeBase，此处 0.9）× 稀缺（= clamp(需求/供给, 0.5, 3)，取该处当下的供需）× 1500；
+ // 仓库损毁 25%：月租 35×4=140 文，按月息中值 (0.01+0.08)/2=0.045 资本化 = 3111（取整），受损前完整价值 × 25% = 777（取整）。旧：1500×3=4500，建筑项恒为 0。
+ assert.equal(judgment.judgment.compensation,Math.floor(1500*regional*scarcity)+Math.floor(Math.floor(140/0.045)*25/100));
+
  d.set(['state','location'],code.court);d.set(['state','npcs',officer,'location'],code.court);d.set(['state','npcs',officer,'activity'],'执勤');
  const paid=lawAction.call(engine,d,{operation:'pay',case:row.id,authority:officer},'fire:payment');assert.equal(paid.remaining,0);assert.equal(d.get('state','player','coins')-playerBefore,paid.recovered);assert.equal(before-d.get('state','npcs',offender,'coins'),paid.recovered);
  const again=lawAction.call(engine,d,{operation:'pay',case:row.id,authority:officer},'fire:payment:repeat');assert.equal(again.recovered,0);
@@ -144,5 +155,6 @@ test('拘押死亡、逃脱与到期关闭持有，未服刑罚与赔偿保留',
 test('E06 长等待与逐小时火势、库存、协议一致；磨损归零进入毁灭协议',()=>{
  const a=fixture(),b=fixture();a.ignite();b.ignite();advanceFacilityFire(a.d,a.engine,{after:840});for(const after of [660,720,780,840])advanceFacilityFire(b.d,b.engine,{after});
  assert.deepEqual(a.d.get('state','buildings'),b.d.get('state','buildings'));assert.deepEqual(a.d.get('state','records','agriculture:loc_hw'),b.d.get('state','records','agriculture:loc_hw'));assert.deepEqual(a.d.get('ledger'),b.d.get('ledger'));
- const id=a.place('bld_worn',100,100);a.d.set(['state','buildings',id],{condition:1,wearUnits:9});advanceFacilities(a.d,a.engine,{before:0,after:DAY});assert.equal(isGone(a.engine,a.d,id),true);
+ // 现有仓库的磨损分母为5400；用真实建筑并置于归零前一个磨损单位，保留毁灭协议断言。
+ const id=a.place(a.warehouse,100,100);a.d.set(['state','buildings',id],{condition:1,wearUnits:5399,wearDenominator:5400});advanceFacilities(a.d,a.engine,{before:0,after:DAY});assert.equal(isGone(a.engine,a.d,id),true);
 });

@@ -23,9 +23,13 @@ const world=await loadWorld(),engine=new WorldEngine(world),seed=JSON.parse(fs.r
 const fresh=()=>engine.initialFromLegacy(seed,'a1-registry');
 
 test('注册表：数据声明、带命名空间、与 S0 动作清单一一对应且为最新同步',()=>{
+ // S5-04 adds business:open_counter / business:spend_counter; retain the exact
+ // namespace set (including rejection of undeclared namespaces) and S0 equality.
  // S4 adds the institutional lifecycle catalogue. Keep the exact namespace
  // and S0-set assertions, including rejection of any undeclared namespace.
- assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['core','documents','institutions','law','open']);
+ // D15 ?15.6 / 06 ?6.4: forward sign/cancel add one declared transport namespace;
+ // retain exhaustive namespace and unchanged S0-set checks.
+ assert.deepEqual(registry.errors,[]);assert.deepEqual(registry.namespaces,['business','core','documents','institutions','law','open','transport']);
  const s0=registry.actions.filter(a=>a.source==='s0');
  assert.deepEqual(s0.map(a=>a.id).sort(),catalog.map(a=>a.id).sort());
  assert.ok(registry.actions.length>catalog.length,'注册表在 S0 别名之外还有模板动作');
@@ -68,6 +72,18 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
    assert.deepEqual(translateCall('world_act',{action:a.id,slots}),{tool:'world_act',args:{action:a.id,slots},action:a});
    if(['open:leave_mark','open:question','open:waive_debt'].includes(a.id)){assert.equal(a.call,undefined);continue;}
    assert.deepEqual(a.call,{tool:'world_practice',operation:'session'});
+  }
+  // D05 §5.5 / S5-05：放归动作保留已审来源，现已纳入 S0 导出；仍逐项核对唯一入口、必填目标和实际分派。
+  if(a.id==='core:wildlife.release'){
+   assert.ok(!tools.get('world_field').properties.operation.enum.includes('wildlife_release'),'已审批的目录动作不应重复进入 S0 静态别名');
+   assert.equal(a.source,'s505-resources');
+   assert.deepEqual(a.call,{tool:'world_field',operation:'wildlife_release'});
+   assert.deepEqual(a.slots,[{name:'target',kind:'text',required:true}]);
+   assert.deepEqual(a.preconditions,['outdoors(here)']);
+   assert.deepEqual(a.visibility,{catalog:'here',witness:'present'});
+   assert.deepEqual(translateCall('world_act',{action:a.id,slots:{target:'live-fish'}}),{tool:'world_field',args:{target:'live-fish',operation:'wildlife_release'},action:a});
+   assert.deepEqual(resolveToolCall(a.call.tool,{operation:'wildlife_release',target:'live-fish'}),{tool:'world_wildlife',args:{operation:'release',target:'live-fish'}});
+   continue;
   }
   // a3qy adds a catalog-only operation that calls the existing internal
   // environment handler directly. It must not widen the static tool surface.
@@ -113,6 +129,12 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
     // catalogue without widening the static field-tool operation enum.
     'core:farm.private_sow':{tool:'world_farm',args:{operation:'private_sow'}},
     'core:farm.private_harvest':{tool:'world_farm',args:{operation:'private_harvest'}},
+    // D05 §5.5: catalog livestock actions reuse native farm handlers without
+    // increasing the static tool schema or weakening the exact routing check.
+    'core:husbandry.inspect':{tool:'world_farm',args:{operation:'husbandry_inspect'}},
+    'core:husbandry.collect':{tool:'world_farm',args:{operation:'husbandry_collect'}},
+    // SL: slaughtering one's own beasts reuses the same native farm handler.
+    'core:husbandry.slaughter':{tool:'world_farm',args:{operation:'husbandry_slaughter'}},
     // 指南11.3 F5：取出施法后的原水须走目录入口，仍核对精确分派。
     'core:environment.take_contents':{tool:'world_environment',args:{operation:'take_contents'}}
    };
@@ -128,6 +150,17 @@ test('静态别名与 S0 一致，目录专有动作独立声明槽位并路由�
   // and manufacture batches to their native programs. Check the complete slot
   // shapes, retaining rejection of every unlisted addition to a static alias.
   const catalogAdditions={
+   // K07 / 05 §5.1.1: exact tenancy clauses belong to the dynamic catalogue.
+   ...Object.fromEntries(['rent_in','rent_out'].map(op=>[`core:trade.${op}`,[
+    {name:'rentMode',kind:'choice',options:['fixed','share']},
+    {name:'outputBasis',kind:'choice',options:['gross','net']},
+    {name:'rentPayment',kind:'choice',options:['cash','kind']},
+    {name:'shareNumerator',kind:'quantity'},{name:'shareDenominator',kind:'quantity'},
+    {name:'inputPayer',kind:'choice',options:['tenant','owner','shared']},
+    {name:'ownerInputNumerator',kind:'quantity'},{name:'ownerInputDenominator',kind:'quantity'},
+    {name:'unharvestedCrops',kind:'choice',options:['tenant','owner']},{name:'rentAdvance',kind:'quantity'},
+    {name:'farmOperator',kind:'choice',options:['tenant','owner']}
+   ]])),
    // S4: sponsorship belongs to org_join's catalog form; keep the static prompt budget.
    'core:settlement.org_join':[{name:'feePayer',kind:'choice',options:['player']}],
    // a3qy: disarm declares an item tool slot; undeclared additions still fail below.

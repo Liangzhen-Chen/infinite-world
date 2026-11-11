@@ -1,7 +1,9 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {environmentFeatures,featureRecordMatches,localPlayerPoint,localSightClear} from './environment.mjs';
+import {hypot} from './det-math.mjs';
 
 const unit=1440000,clone=x=>structuredClone(x);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}无效或缺失`);return n;};
@@ -44,10 +46,14 @@ export function validateGrowthWorld(world){
  }
  return errors;
 }
-function permission(d,p,f,args,minute){
+// K6: growing another's field without the holder's consent still grows it;
+// the casting is an unlicensed use of their land, noted when cast, and that
+// lease runs its natural course. A consented lease ends with the consent: the
+// caster who asked for it stops when it is withdrawn.
+function permission(d,p,f,args,minute,{cast=false}={}){
  if(f.owner==='player')return null;
  const a=d.get('state','records',args.authorization);
- if(a?.category!=='authorization'||a.action!=='growth_magic'||a.subject!==p.fieldId||a.grantor!==(f.owner===p.settlement?p.manager:f.owner)||a.grantee!=='player'||a.revoked||!Number.isSafeInteger(a.expires)||a.expires<=minute)throw preconditionFailure('田块生长需要田主有效同意；公用访问不授权施法');
+ if(a?.category!=='authorization'||a.action!=='growth_magic'||a.subject!==p.fieldId||a.grantor!==(f.owner===p.settlement?p.manager:f.owner)||a.grantee!=='player'||a.revoked||!Number.isSafeInteger(a.expires)||a.expires<=minute){if(!cast)throw preconditionFailure('田块生长的同意已失效');noteUnlicensedUse(d,{id:p.fieldId,owner:f.owner},{kind:'field'});return {unlicensed:true};}
  const owner=d.get('state','npcs',a.grantor);
  if(!owner||isPhysicallyDead(null,d,a.grantor)||owner.status==='濒死')throw preconditionFailure('田主无法继续履约');
  return a;
@@ -98,8 +104,8 @@ export function prepareGrowthMagic(d,catalog,args){
  if(!limit||catalog.effectSpec.power>limit.power||catalog.duration>limit.duration)throw preconditionFailure('超过本阶段生长界限');
  const {p,f,key}=binding(this,args.target),r=d.get('state','records',key),now=d.get('state','minute');
  if(r?.mode!=='managed'||r.field.id!==p.fieldId)throw preconditionFailure('旧账或缺失农事状态不能补发生长');
- if(d.get('state','location')!==f.location||!Array.isArray(f.position)||f.position.length!==2||f.position.some(x=>!Number.isFinite(x))||Math.hypot(...f.position.map((x,i)=>x-localPlayerPoint(d)[i]))>catalog.rangeMeters||!localSightClear(d,this,f.location,localPlayerPoint(d),f.position))throw preconditionFailure('生长目标不在实际距离或视线内');
- permission(d,p,f,args,now);const rows=cohorts(r,f),s=readResource(d,f);
+ if(d.get('state','location')!==f.location||!Array.isArray(f.position)||f.position.length!==2||f.position.some(x=>!Number.isFinite(x))||hypot(...f.position.map((x,i)=>x-localPlayerPoint(d)[i]))>catalog.rangeMeters||!localSightClear(d,this,f.location,localPlayerPoint(d),f.position))throw preconditionFailure('生长目标不在实际距离或视线内');
+ const licence=permission(d,p,f,args,now,{cast:true});const rows=cohorts(r,f),s=readResource(d,f);
  if(s.waterMl<1||s.nutrientMg<1)throw preconditionFailure('缺少实际水或营养资源');
  const leases=r.field.growthLeases??[];
  for(const l of leases)auditLease(l,this);
@@ -107,14 +113,14 @@ export function prepareGrowthMagic(d,catalog,args){
  if(leases.some(l=>l.until>now||l.started+config.cooldownMinutes>now))throw preconditionFailure('同田生长不可叠加，尚在持续或冷却额度内');
  const maximum=Math.floor(this.rules.agriculture.crop.growthDays*unit*config.maximumBonusPermille/1000);
  if(rows.every(c=>(c.growthBonusTicks??0)>=maximum))throw preconditionFailure('本批次累计生长额度已用尽');
- return{target:args.target,spec:catalog.effectSpec,catalog,growthArgs:{...args},key,resource:f.id};
+ return{target:args.target,spec:catalog.effectSpec,catalog,growthArgs:{...args},key,resource:f.id,unlicensed:licence?.unlicensed===true};
 }
 export function applyGrowthMagic(d,prepared,eventId){
  let valid;try{valid=prepareGrowthMagic.call(this,d,prepared.catalog,prepared.growthArgs);}catch(e){return{target:prepared.target,effectFailed:e.message};}
  const {p,f}=binding(this,valid.target),r=clone(d.get('state','records',valid.key)),started=d.get('state','minute'),config=rules(this);
  r.field.growthLeases??=[];if(r.field.growthLeases.some(l=>l.source===eventId))throw preconditionFailure('生长来源编号冲突');
  const lease={source:eventId,spell:valid.catalog.id,resource:f.id,started,until:started+valid.catalog.duration,power:valid.spec.power,
-  authorization:valid.growthArgs.authorization??null,cohorts:cohorts(r,f).map(c=>c.id),maximumTicks:Math.floor(this.rules.agriculture.crop.growthDays*unit*config.maximumBonusPermille/1000),
+  authorization:valid.growthArgs.authorization??null,...(valid.unlicensed?{unlicensed:true}:{}),cohorts:cohorts(r,f).map(c=>c.id),maximumTicks:Math.floor(this.rules.agriculture.crop.growthDays*unit*config.maximumBonusPermille/1000),
   waterMlPerAreaDay:config.waterMlPerAreaDay,nutrientMgPerAreaDay:config.nutrientMgPerAreaDay,usedTicks:0,waterMl:0,nutrientMg:0,entries:[]};
  r.field.growthLeases.push(lease);d.set(['state','records',valid.key],r);
  return{target:valid.target,field:p.fieldId,sourceEvent:eventId,expires:lease.until,bonusPermille:lease.power,note:'已登记有限加速；农事日结按实际水和营养消费，不直接发放收成'};
@@ -127,7 +133,7 @@ export function consumeGrowthDay(d,engine,r,p,day,weather){
   const start=Math.max(day*1440,l.started),end=Math.min((day+1)*1440,l.until);
   if(end<=start)continue;
   const {f}=binding(engine,l.resource);let cutoff=end;
-  try{const a=permission(d,p,f,{authorization:l.authorization},start);if(a)cutoff=Math.min(cutoff,a.expires);}catch(e){l.entries.push({day,reason:e.message,ticks:0});continue;}
+  if(!l.unlicensed)try{const a=permission(d,p,f,{authorization:l.authorization},start);if(a)cutoff=Math.min(cutoff,a.expires);}catch(e){l.entries.push({day,reason:e.message,ticks:0});continue;}
   if((weather?.temperatureC??10)<engine.rules.agriculture.crop.minimumTemperatureC){l.entries.push({day,reason:'低温停止生长',ticks:0});continue;}
   integer(l.power,1,250,'已登记比例');integer(l.maximumTicks,1,Math.floor(engine.rules.agriculture.crop.growthDays*unit*.2),'已登记批次额度');
   integer(l.waterMlPerAreaDay,1,1000000,'已登记水耗');integer(l.nutrientMgPerAreaDay,1,1000000,'已登记营养耗');

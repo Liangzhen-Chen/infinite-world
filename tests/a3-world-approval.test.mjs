@@ -6,10 +6,9 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {settlementGovernment} from '../server-plugin/entity-view.mjs';
 import {ensureHoldings, aliveHoldings} from '../server-plugin/holdings.mjs';
 import {reconcileHoldings, reconciled} from '../server-plugin/holding-sources.mjs';
-import {readFiles, contentEntries, checkEntry, previewWorld, verifyPublished as verifyOriginalPublished} from '../world/design/a3-world-approval.mjs';
+import {readFiles, contentEntries, checkEntry, previewWorld, priorEditions, verifyPublished as verifyOriginalPublished} from '../world/design/a3-world-approval.mjs';
 import {sources as useTagSources, verifyPublished as verifyUseTagsPublished} from '../world/design/a3w-props-approval.mjs';
 import * as G from '../world/design/a3-world-governance.mjs';
-import {previousOfficeEdition} from '../world/design/s4-offices-approval.mjs';
 
 // Gate for the Baishi grassroots judicial/security offices (report, fine collection, custody, case handling,
 // arrest, appeal, claim, town head) and for the catalogue entries (items, recipes, nutrition, rules rows) that
@@ -31,14 +30,15 @@ async function verifyPublished(candidateWorld,candidateFiles){
 }
 const world = await loadWorld(), files = await readFiles(), seed = JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json', 'utf8'));
 // The old preview owns the pre-S4 office edition; current charters are verified first.
-const priorWorld=(await previousOfficeEdition(world)).world;
+const priorWorld=(await priorEditions(world)).world;
 const make = () => { const engine = new WorldEngine(structuredClone(world)); return {engine, document: engine.createCharacter(seed, {}, 'fix3-world')}; };
 const entry = id => contentEntries(files).find(e => e.id === id);
 
 test('fix3-world 条目：每一行都有 L1/L2/L4 回执且与正式文件逐字相同', async () => {
   const result = await verifyPublished(world, files);
   assert.equal(result.entries, contentEntries(files).length);
-  assert.equal(result.entries, 34);
+  // 34 条减去面包、烙饼、鱼汤、炖菜四条已不再手写的营养条目
+  assert.equal(result.entries, 30);
 });
 
 test('手改已审批的行会使回执失效：职位职权、目录价、营养值、拘禁室、人物归属', async () => {
@@ -53,12 +53,16 @@ test('手改已审批的行会使回执失效：职位职权、目录价、营�
   price.items.find(i => i.id === 'item_hoe').basePrice = 30;
   await assert.rejects(() => verifyPublished(world, price), /发布骨架或引用事实已改变|正式文件/);
   const food = structuredClone(files);
-  food.items.find(i => i.id === 'item_bread').nutrition.satiety = 60;
+  food.items.find(i => i.id === 'item_ration').nutrition.satiety = 60;
   await assert.rejects(() => verifyPublished(world, food), /发布骨架或引用事实已改变|正式文件/);
   // The historical projection must never conceal an unapproved new tag.
   const tags=structuredClone(files);
   tags.items.find(i=>i.id==='item_hoe').tags.push('unapproved_use');
   await assert.rejects(()=>verifyPublished(world,tags),/发布骨架或引用事实已改变|正式目录/);
+  // S5-05 后续审批替换鱼饵：先验证新回执，历史投影仍不得遮住未审的鱼饵改动。
+  const bait=structuredClone(files);
+  bait.rules.extraction.fishing.bait.quantity=2;
+  await assert.rejects(()=>verifyPublished(world,bait),/正式文件与已审批的行不同/);
   const room = structuredClone(files);
   room.locations.find(l => l.id === 'bld_bs_watch').rooms.pop();
   await assert.rejects(() => verifyPublished(world, room), /正式文件与已审批的行不同/);

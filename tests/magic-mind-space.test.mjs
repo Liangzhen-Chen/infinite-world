@@ -81,6 +81,9 @@ async function denied(s,op,target,pattern,extra={}){
  await assert.rejects(s.engine.reduce(s.doc,{...publicCall('world_cast',{spell:catalog(s,op).id,target,...extra}),eventId:`denied-${++s.serial}`}),pattern);
  assert.deepEqual(s.doc,before);
 }
+// K6: an act that lacked only a licence happens; the norm stack names the offense under the act's own event.
+const k6Offended=(doc,out,eventId,offense)=>{const after=applyPatches(doc,out.patches),all=[...out.result.offenses??[],...(out.result.receipt?.consequences??[]).filter(c=>c.type==="offense")],o=all.find(o=>o.offense===offense);assert.ok(o,`${eventId} 应命中${offense}：${JSON.stringify(all)}`);assert.equal(after.state.records[o.record].sourceEvent,eventId);assert.equal(after.state.records[o.record].offender,'player');return {after,result:out.result,offense:o};};
+async function k6Cast(s,op,target,offense,extra={}){const n=++s.serial;for(let i=0;i<100;i++){const eventId=`unlicensed-${n}-${i}`,out=await s.engine.reduce(s.doc,{...publicCall('world_cast',{spell:catalog(s,op).id,target,...extra}),eventId});if(out.result.success)return k6Offended(s.doc,out,eventId,offense);}assert.fail(`没有成功种子:${op}`);}
 const mentalArgs={authorization:'mental_consent',permit:'mental_permit'};
 const wait=(s,minutes,activity)=>run(s,'world_time',{minutes,...(activity?{activity}:{})});
 function contract(s,power=10){
@@ -113,7 +116,7 @@ test('自有感受封在持有单件，不接触他人记忆，超长文字及�
 test('自愿精神观察只返回干扰存在，不泄露思想；缺同意、许可、实际视线拒绝',async()=>{
  const s=fixture();
  await denied(s,'sense_mind',npc,/同意/,{permit:'mental_permit'});
- await denied(s,'sense_mind',npc,/许可/,{authorization:'mental_consent'});
+ /* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：无证精神施法照样施放，命中擅施心术 */await k6Cast(s,'sense_mind',npc,'mental_magic',{authorization:'mental_consent'});
  const r=await cast(s,'sense_mind',npc,mentalArgs);assert.equal(r.interference,true);assert.equal(r.interferenceCount,1);assert.ok(!JSON.stringify(r).includes('secret_thought'));
  // Let real time expire contact. S4 still sees the zone, beyond this spell's range.
  await wait(s,s.doc.state.records[`local_actor_position:${npc}`].expires-s.doc.state.minute);
@@ -226,22 +229,22 @@ test('空间封界也阻断真实短移，公开标示可从正常观察读取',
  const v=await run(s,'world_environment',{operation:'inspect',target:'feature_door'});assert.match(v.mindSpace.publicSign,/空间封界/);
  await denied(s,'blink','feature_point',/封界/);
 });
-test('锚点偏移影响真实货运，需原所有者许可校准，货物在目的地归属守恒',async()=>{
+test('锚点偏移影响真实货运，自有锚点无需自签许可即可校准，货物在目的地归属守恒',async()=>{
  const s=fixture();known(s,'feature_source');known(s,'feature_destination');change(s,'feature_source',{anchorOffsetMeters:[.2,0]});
  await denied(s,'anchor_cargo','item_charcoal',/偏移/,cargoArgs);
- await denied(s,'calibrate_anchor','feature_source',/许可/);
+ /* K6/K7 依据：锚点是你自己的，处分自有物不需要向自己讨许可；原先要求“自签许可”是把许可当前提，去掉后照常施放且不构成任何罪名 */{const probe={...s,doc:structuredClone(s.doc)};const r=await cast(probe,'calibrate_anchor','feature_source');assert.equal(r.offenses,undefined);}
  await cast(s,'calibrate_anchor','feature_source',{permit:'permission_feature_source'});assert.deepEqual(state(s,'feature_source').anchorOffsetMeters,[0,0]);
  const r=await cast(s,'anchor_cargo','item_charcoal',cargoArgs);assert.equal(s.doc.state.inventory.item_charcoal,undefined);assert.equal(s.doc.state.location,s.location);assert.equal(s.doc.state.itemInstances[r.instance].location,far);assert.equal(s.doc.state.itemInstances[r.instance].owner,'player');
  await run(s,'world_move',{destination:far});await cast(s,'retrieve',r.instance);assert.equal(s.doc.state.inventory.item_charcoal.quantity,1);
 });
-test('货运拒绝未知锚点、许可撤销、真实载荷超限、施法末端损坏和私人落地',async()=>{
+test('货运拒绝未知锚点、真实载荷超限、施法末端损坏；自有锚点许可撤销不影响发货，落进未许可私宅照样落地并命中擅入',async()=>{
  const s=fixture();await denied(s,'anchor_cargo','item_charcoal',/未知/,cargoArgs);
  known(s,'feature_source');known(s,'feature_destination');s.doc.state.records.permission_feature_destination.revoked=true;
- await denied(s,'anchor_cargo','item_charcoal',/许可/,cargoArgs);s.doc.state.records.permission_feature_destination.revoked=false;
+ /* K6/K7 依据：锚点是你自己的，处分自有物不需要向自己讨许可；原先要求“自签许可”是把许可当前提，去掉后照常施放且不构成任何罪名 */{const probe={...s,doc:structuredClone(s.doc)};const r=await cast(probe,'anchor_cargo','item_charcoal',cargoArgs);assert.equal(r.offenses,undefined);}s.doc.state.records.permission_feature_destination.revoked=false;
  const def=s.engine.byId.get('item_charcoal'),weight=def.weight;def.weight=3;await denied(s,'anchor_cargo','item_charcoal',/载荷/,cargoArgs);def.weight=weight;
  const p=prepareMagic.call(s.engine,draft(s),catalog(s,'anchor_cargo'),{target:'item_charcoal',...cargoArgs});change(s,'feature_destination',{anchorIntact:false});assert.throws(()=>applyMagic.call(s.engine,draft(s),p,'completion-cargo'),/损坏/);
  change(s,'feature_destination',{anchorIntact:true});s.engine.byId.get(far).access={mode:'private',requiresConsent:true,residents:[npc]};
- await denied(s,'anchor_cargo','item_charcoal',/成年住户/,cargoArgs);
+ /* K6 依据（审查 C-b location-access:23）：把货送进未许可的私宅照样落地，命中擅入私宅 */await k6Cast(s,'anchor_cargo','item_charcoal','trespass',cargoArgs);
 });
 test('小型异常修补解除实际空间阻断，神性及大型裂隙不能缝合',async()=>{
  const s=fixture();

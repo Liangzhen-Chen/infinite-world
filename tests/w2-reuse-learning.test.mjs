@@ -118,7 +118,10 @@ test('真实行走到教师付费认证后可到学堂买一阶书并研读',asy
 });
 
 for(const spell of spells) test(`${spell.name}：购买、失败成本、重试学会与零熟练施法`,async()=>{
- const {document,run}=setup();
+ const {document:initial,run}=setup();
+ // K08：先真实等待午间采购完成，再买书。最长两次研读为 2×480=960
+ // 分钟，从13点以后开始，结束仍早于次日正午；教师钱袋没有其他采购混入。
+ const {document}=await run(initial,'world_time',{until:{dayOffset:0,hour:13}},`${spell.id}_prelude`);
  // A previously certified character; certification acquisition is exercised
  // above. No spell or spell skill is injected into this document.
  document.state.professions.combat='profession_mage';

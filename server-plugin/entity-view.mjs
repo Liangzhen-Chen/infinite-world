@@ -1,10 +1,11 @@
 // Every field is {value, source, override}. Source names the authoritative
 // catalog/state path; override marks an explicit campaign or authored override.
-// These projections never persist or cache results. They grant no capabilities.
+// These projections never persist results. Advance-only memos are invalidated
+// by cursor writes; the projections grant no capabilities.
 import {actorId,actorPath} from './npc-state.mjs';
 import {npcHousehold,npcAgeAt,npcSchedule,npcServices,activeRental,beginHouseholdReads} from './npc-state.mjs';
 import {currentEmployment,employmentActive} from './employment-state.mjs';
-import {recordsWhere,recordEntriesWhere,recordsMemo,cloneData} from './storage.mjs';
+import {recordsWhere,recordEntriesWhere,recordsMemo,stateMemo,cloneData} from './storage.mjs';
 import {organizationState,memberOrganizations,organizationOffices} from './organization-state.mjs';
 import {rankedOffice,adminLevel} from './promotion-view.mjs';
 import {upperOffice} from './noble-state.mjs';
@@ -13,6 +14,7 @@ import {hiddenPassives} from './hidden-passives.mjs';
 import {isEffective,isLiving} from './lifecycle-state.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {currentWorkstationRecipes} from './workstation-services.mjs';
+import {teachingAtStation} from './education-state.mjs';
 import {obligationCalendar,obligationDate} from './obligation-calendar.mjs';
 
 const fact=(value,source,override=false)=>({value:cloneData(value??null),source,override});
@@ -51,11 +53,15 @@ function officeFact(engine,state,key,row,override=true){
     if(!def)return fact({...row,powers:[],monthlyQuotaD:0,monthlyBudgetCopper:0,monthlySalaryCopper:0},`state.records.${key}`,true);
     const ranked=upperOffice(engine,state,row,rankedOffice(engine,state,row.settlement,def)),gov=settlementGovernment(engine,state,row.settlement);
     const head=row.office==='office_village_head';
+    const maintenance=head?engine.world.settlementProfiles?.find(p=>p.id===row.settlement)?.publicMaintenance:null;
+    // A founding identity alone grants no budget. An authored charter may
+    // reference the existing ranked office cap; the treasury is checked on spend.
+    const maintenanceCharter=maintenance?.budgetFrom==='ranked_office'&&maintenance?.powers?.includes('public_project')&&engine.rules.governance.authority.treasury.settlements?.includes(row.settlement);
     const foundingName=!override&&!state.records?.[`settlement_rank:${row.settlement}`]?baseOf(engine,state,row.holder)?.occupation:null;
-    return fact({...row,name:foundingName??ranked.name,monthlyQuotaD:ranked.monthlyQuotaD??0,monthlyBudgetCopper:override?ranked.monthlyBudgetCopper??0:0,
-        taxBps:override?ranked.taxBps??null:null,powers:override?[...ranked.powers??[],...(head?['chair','register']:[])]:['quest_publish','chair','register'],workplace:row.workplace??gov.seat.value,
+    return fact({...row,name:foundingName??ranked.name,monthlyQuotaD:ranked.monthlyQuotaD??0,monthlyBudgetCopper:override||maintenanceCharter?ranked.monthlyBudgetCopper??0:0,
+        taxBps:override?ranked.taxBps??null:null,powers:[...new Set([...(override?[...ranked.powers??[],...(head?['chair','register']:[])]:['quest_publish','chair','register']),...(maintenanceCharter?['public_project']:[]),...def.seatPowers??[]])],workplace:row.workplace??gov.seat.value,
         monthlySalaryCopper:engine.rules.governance?.salaries?.monthlyCopper?.[row.office]?.[adminLevel(engine,state,row.settlement)?.level??'村']??0},
-        `${override?`state.records.${key}`:gov.head.source} + rules.governance.authority.offices.${row.office} + promotion + rules.governance.salaries`,override);
+        `${override?`state.records.${key}`:gov.head.source} + rules.governance.authority.offices.${row.office} + promotion + rules.governance.salaries${maintenanceCharter?` + catalog.${row.settlement}.publicMaintenance + rules.governance.authority.treasury`:''}`,override);
 }
 // Appointment records hold facts. Names, quotas, powers and pay are read from
 // the office definition at the settlement's current administrative level.
@@ -72,8 +78,8 @@ export function personOffices(engine,state,requested,{settlement=null,power=null
         }
         const entry=officeFact(engine,state,key,row);if(entry)out.push(entry);
     }
-    for(const [key,row] of records(state)){
-        if(row.category!=='housing_steward'||row.steward!==id||row.revoked||row.expires<=(state.minute??0)||row.createdAt>(state.minute??0))continue;
+    for(const [key,row] of recordEntriesWhere(state.records,'category','housing_steward')){
+        if(row.steward!==id||row.revoked||row.expires<=(state.minute??0)||row.createdAt>(state.minute??0))continue;
         out.push(officeFact(engine,state,key,{...row,office:'office_village_steward',holder:id,status:'在任',since:row.createdAt,until:row.expires,workplace:row.hall}));
     }
     const settlements=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement),...Object.values(state.remote??{}).flatMap(r=>(r.skeleton?.offices??[]).map(o=>o.settlement))]);
@@ -121,6 +127,8 @@ export function personCertified(engine,state,id,skill){
 export function personTeaching(engine,state,id,entity,{stage=null}={}){
     if(!living(engine,state,id)||personConstraint(engine,state,id))return false;
     if(entity.startsWith('recipe_')&&currentWorkstationRecipes(engine,state,id).some(r=>r.id===entity))return true;
+    // K5: a master present and free at a station of the recipe's kind teaches it.
+    if(entity.startsWith('recipe_')&&teachingAtStation(engine,state,id,engine.byId.get(entity)??state.created?.[entity]))return true;
     const c=personCareer(engine,state,id).value,base=baseOf(engine,state,id),catalog=engine.byId.get(entity);
     if(c.services.includes(entity))return true;
     // Certification/skill instruction does not grant every recipe of that skill.
@@ -144,7 +152,7 @@ export function personEmployment(engine,state,id,minute=state.minute,constraints
 }
 // Public-facing roles exclude household membership and private associations.
 export function personPublicRole(engine,state,id){
-    const occupation=personOccupation(engine,state,id),roles=memberOrganizations(engine,state,actorId(engine.world,id))
+    const occupation=personOccupation(engine,state,id),roles=memberOrganizations(engine,state,actorId(engine.world,id),{source:'faction'})
         .filter(o=>o.source==='faction'&&o.members[actorId(engine.world,id)]?.position!=='成员')
         .map(o=>`${o.name}${o.members[actorId(engine.world,id)].position}`);
     return fact([...new Set([occupation.value,...roles].filter(Boolean))].join('、'),`${occupation.source} + current public organization positions`,occupation.override||roles.length>0);
@@ -225,12 +233,13 @@ export function personQuestRights(engine,state,id,{cultural=false}={}){
 // A changed job gets a fresh baseline; promises are overlaid by npc-schedule.
 // No old schedule is copied into an appointment or a vocation record.
 export function personRoutine(engine,state,id,constraints=null){
+    const shared=constraints??personConstraints(engine,state);
     const actor=state.npcs?.[id],base=baseOf(engine,state,id);
-    const rows=constraints?.offices??officeRows(state),ownRows=rows.some(([,r])=>r.holder===id);
+    const rows=shared.offices??officeRows(state),ownRows=rows.some(([,r])=>r.holder===id);
     const displaced=(engine.world.settlementProfiles??[]).some(p=>p.details?.governance?.head===id&&settlementHead(engine,state,p.id).value!==id);
     const removed=constraints?.dismissals?constraints.dismissals.has(id):dismissed(state,id);
-    const delegated=(constraints?.stewards??Object.values(state.records??{}).filter(r=>r.category==='housing_steward')).some(r=>r.steward===id);
-    const orgRow=(constraints?.organizations??Object.values(state.records??{}).filter(r=>r.category==='organization')).find(r=>r.members?.[id]&&r.members[id].position!=='成员'&&!r.removed?.[id]);
+    const delegated=(shared.stewards??recordsWhere(state.records,'category','housing_steward')).some(r=>r.steward===id);
+    const orgRow=(shared.organizations??recordsWhere(state.records,'category','organization')).find(r=>r.members?.[id]&&r.members[id].position!=='成员'&&!r.removed?.[id]);
     if(!actor?.vocation&&!ownRows&&!displaced&&!removed&&!orgRow&&!delegated)return null;
     const career=personCareer(engine,state,id).value;
     const offices=personOffices(engine,state,id).filter(e=>e.override),office=offices.sort((a,b)=>(b.value.since??0)-(a.value.since??0))[0]?.value;
@@ -268,7 +277,12 @@ export function personRelationships(engine,state,id){
         'catalog.relationships + current actor relationships + state.family.marriages + state.careers',Boolean(state.family?.marriages||actor?.relationships));
 }
 
+const householdViewMemo=Symbol('household view');
+const householdViewInputs=[['family','households'],['created'],['minute'],{path:['records'],kinds:['asset_lease']}];
 function householdView(engine,state,id){
+    return stateMemo(state,engine,[householdViewMemo,id],()=>readHouseholdView(engine,state,id),householdViewInputs);
+}
+function readHouseholdView(engine,state,id){
     const h=npcHousehold(engine,state,id);
     const changed=Object.values(state.family?.households??{}).some(r=>r.members?.includes(id)||r.left?.includes(id));
     const generated=state.created?.[id]?.householdId===h?.id;
@@ -312,9 +326,10 @@ export function personSimulation(engine,state,id){
 }
 // A caller may build this index for a single read-only movement pass. It is
 // never retained on engine/state, so later legal writes are read immediately.
+export const personConstraintRecordDependencies={categories:['governance_office','organization','housing_steward','legal_dismissal','festival','legal_detention','legal_custody','legal_case'],kinds:['workshop','asset_lease']};
 export function personConstraints(engine,state){
     // Only categories this projection reads invalidate its derived constraints.
-    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),['physical_feature','education_study','education_pay','world_event','bank','debt','office_salary','knowledge']);
+    return recordsMemo(state.records,engine.world,()=>buildPersonConstraints(engine,state),personConstraintRecordDependencies);
 }
 function buildPersonConstraints(engine,state){
     const out=new Map();
@@ -414,8 +429,15 @@ export function groupRepresentative(engine,state,id,requested){
 }
 
 // Current physical state is inside the record, never the record envelope.
+// Catalogue feature id -> its place, built once per locations array (the catalogue is fixed for a loaded world); created places are searched per call.
+const featurePlaces=new WeakMap();
+function catalogueFeaturePlace(locations,id){
+    let index=featurePlaces.get(locations);
+    if(!index||index.length!==locations.length){index={length:locations.length,byId:new Map()};for(const p of locations)for(const f of p.features??[])if(!index.byId.has(f.id))index.byId.set(f.id,p);featurePlaces.set(locations,index);}
+    return index.byId.get(id);
+}
 export function physicalFeature(engine,state,id){
-    const place=[...engine.world.locations,...Object.values(state.created??{})].find(p=>p.features?.some(f=>f.id===id));
+    const place=catalogueFeaturePlace(engine.world.locations,id)??Object.values(state.created??{}).find(p=>p.features?.some(f=>f.id===id));
     const definition=place?.features.find(f=>f.id===id);if(!definition)return null;
     const row=state.records?.[`physical_feature:${id}`];
     return {definition:fact({...definition,location:place.id},`catalog.${place.id}.features.${id}`),
@@ -430,7 +452,12 @@ export function personBody(engine,state,requested){
         form:fact(actor?.form?.until>(state.minute??0)?actor.form:null,`${path.join('.')}.form`,Boolean(actor?.form)),
         boss:fact(boss,`catalog.${boss?.id}`),status:fact(actor?.status,`${path.join('.')}.status`,Boolean(actor))};
 }
+const placeSettlementMemo=Symbol('place settlement'),personBusinessMemo=Symbol('person business');
+const placeSettlementInputs=[['created'],['settlements']];
 export function placeSettlement(engine,state,location){
+    return stateMemo(state,engine,[placeSettlementMemo,location],()=>readPlaceSettlement(engine,state,location),placeSettlementInputs);
+}
+function readPlaceSettlement(engine,state,location){
     const seen=new Set(),ids=new Set([...(engine.world.settlementProfiles??[]).map(p=>p.id),...Object.keys(state.settlements??{})]);
     while(location&&!seen.has(location)){if(ids.has(location))return fact(location,'current place ancestry');seen.add(location);location=(state.created?.[location]??engine.byId.get(location))?.parent;}
     return fact(null,'current place ancestry');
@@ -438,8 +465,13 @@ export function placeSettlement(engine,state,location){
 // A read-only pass over many people (shop derivation) hands in one legal index
 // (personConstraints) instead of rebuilding it per person.
 export function personBusiness(engine,state,id,constraints=null){
+    return stateMemo(state,engine,[personBusinessMemo,id,constraints],()=>readPersonBusiness(engine,state,id,constraints));
+}
+function readPersonBusiness(engine,state,id,constraints){
     const base=baseOf(engine,state,id),actor=state.npcs?.[id]??state.creatures?.[id];if(!base)return null;
-    const vocation=actor?.vocation,rule=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id),schedule=npcSchedule(engine,state,id,undefined,constraints)??actor?.residence?.schedule;
+    // Only a changed livelihood/home reads trading slots. Authored businesses
+    // take both their service and workplace straight from the catalogue.
+    const vocation=actor?.vocation,rule=engine.rules.npcGrowth?.vocations?.find(v=>v.id===vocation?.id),schedule=vocation||actor?.residence||actor?.workplace?npcSchedule(engine,state,id,undefined,constraints)??actor?.residence?.schedule:null;
     const slots=Object.values(schedule??{}).filter(Array.isArray).flat().filter(s=>s.services?.includes('trade'));
     const changed=Boolean(vocation||actor?.residence||actor?.workplace),trades=vocation?npcServices(engine,state,id).includes('trade')||slots.length>0:
         (base.services??[]).includes('trade')||(base.serviceCatalog??[]).some(s=>s.kind==='trade');
@@ -456,7 +488,11 @@ export function personBusiness(engine,state,id,constraints=null){
 // index. Someone with neither a trading catalogue nor a changed livelihood
 // (vocation) can never be open, so the pass skips them: the same result as
 // computing their view, without the per-person record scans.
+const personBusinessesMemo=Symbol('person businesses');
 export function personBusinesses(engine,state,keepers=[]){
+    return stateMemo(state,engine,[personBusinessesMemo,JSON.stringify(keepers)],()=>readPersonBusinesses(engine,state,keepers));
+}
+function readPersonBusinesses(engine,state,keepers){
     const constraints=personConstraints(engine,state),out=new Map(),always=new Set(keepers);
     for(const id of new Set([...engine.world.npcs.map(n=>n.id),...Object.keys(state.npcs??{}),...keepers])){
         const base=baseOf(engine,state,id);if(!base)continue;
@@ -500,6 +536,12 @@ export function settlementGovernment(engine,state,id){
     // expired or removed successor leaves a vacancy rather than restoring a predecessor.
     const active=row?.status==='在任'&&(row.until??Infinity)>(state.minute??0)&&eligible(row.holder)&&!priorOffice(state,row.holder,current?.[0],row);
     const office=engine.rules.governance?.authority?.offices?.[row?.office];
+    // Catalog governance stores a head's identity, not an office id. The
+    // authority catalog has one chief-seat definition, office_village_head;
+    // rankedOffice supplies its administrative-level title and powers. This
+    // matches personOffices' founding catalog rows (05 §5.7.3); appointments
+    // instead read their own recorded office definition.
+    const foundingOffice=engine.rules.governance?.authority?.offices?.office_village_head;
     let head=fact(row?active?actorId(engine.world,row.holder):null:eligible(originalHead)&&!priorOffice(state,originalHead,null,null)?actorId(engine.world,originalHead):null,
         current?`state.records.${current[0]}`:g?.head?`catalog.${id}.details.governance.head`:ag?.manager?`rules.agriculture.${id}.manager`:generated?.source??`catalog.${id}.details.governance.head`,Boolean(current));
     if(!current&&!originalHead){
@@ -509,7 +551,7 @@ export function settlementGovernment(engine,state,id){
     const seat=row?.workplace??g?.meetingPlace??ag?.counter??baseOf(engine,state,remote?.holder)?.location??id;
     const seatSource=row?.workplace?`state.records.${current[0]}.workplace`:g?.meetingPlace?`catalog.${id}.details.governance.meetingPlace`:ag?.counter?`rules.agriculture.${id}.counter`:generated?.source??`catalog.${id}`;
     return {head,
-        powers:fact(active?office?.powers??[]:head.value?g?.permissions?.head??[]:[],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions`,Boolean(current)),
+        powers:fact([...new Set([...(active?office?.powers??[]:head.value?g?.permissions?.head??[]:[]),...(head.value?(active?office:foundingOffice)?.seatPowers??[]:[])])],active?'rules.governance.authority.offices':`catalog.${id}.details.governance.permissions + rules.governance.authority.offices`,Boolean(current)),
         appointment:fact(row??g?.appointment,current?`state.records.${current[0]}`:`catalog.${id}.details.governance.appointment`,Boolean(current)),
         enforcers:fact((g?.enforcers??[]).filter(eligible),`catalog.${id}.details.governance + legal dismissals`),
         seat:fact(seat,seatSource,Boolean(row?.workplace)),source:fact(row?.source??g?.appointment?.source??generated?.source??head.source,head.source,Boolean(current))};
@@ -526,6 +568,9 @@ export function placeView(engine,state,id){
     const facility=facilityView(engine,state,id);
     if(facility)for(const field of ['condition','material','status','services','capacity','workstations'])view[field]=fact(facility[field],'current construction + condition',false);
     view.serviceCapacity=fact(facility?Object.fromEntries(facility.services.map(s=>[s,facility.capacity])):facilityServices(engine,state,id),'current facilities + condition');
+    // 该地各项服务眼下排队等候的人数（讲堂座位、诊疗等），来自实际登记的排队号。
+    const waiting={};for(const r of recordsWhere(state.records,'category','service_ticket'))if(r.provider===id&&r.status==='排队')waiting[r.service]=(waiting[r.service]??0)+1;
+    view.serviceQueue=fact(waiting,'state.records service_ticket');
     return view;
 }
 export function populationView(engine,state,habitat,species){

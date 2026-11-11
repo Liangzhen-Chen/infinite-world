@@ -1,12 +1,18 @@
+import {recordsWhere} from './storage.mjs';
 import {createHash} from 'node:crypto';
 import {weatherAt} from './weather.mjs';
+import {facilityRuntime} from './facility-state.mjs';
 import {assertEffect,applyEffect,clockTransaction,assertEffectTable} from './effects.mjs';
 export {clockTransaction};
 
 const DAY=1440,path=id=>['state','records',`world-clock:${id}`];
 // Rolls are keyed by campaign, clock and absolute tick. Tool IDs and the number
 // of calls never change the random stream or weather's own seeded sequence.
-export function clockRoll(seed,id,day){return createHash('sha256').update(JSON.stringify([seed,id,day])).digest().readUInt32LE(0)/2**32;}
+// W5: the persisted draw is the integer uint32 itself; clockRoll is the same draw as an exact binary fraction (n/2^32),
+// used only transiently. Probabilities compare as draw < ceil(p*2^32), which is exactly draw/2^32 < p.
+export function clockDraw(seed,id,day){return createHash('sha256').update(JSON.stringify([seed,id,day])).digest().readUInt32LE(0);}
+export function clockRoll(seed,id,day){return clockDraw(seed,id,day)/2**32;}
+const drawLimit=probability=>Math.ceil(probability*2**32);
 // K6: stage effects are validated and applied by the unified effect table.
 export function assertClockEffect(engine,effect){return assertEffect(engine,effect,'world');}
 export function applyClockEffect(d,engine,effect,context){return applyEffect(d,engine,effect,context,'world');}
@@ -24,7 +30,7 @@ function condition(d,engine,c,rule,at,clock){
   const value=state.records?.[`ecology:${c.habitat}`]?.populations?.[c.species]?.count;
   return {met:Number.isFinite(value)&&value>=c.minimum,value:value??null,evidence:`ecology:${c.habitat}`};
  }
- case 'weather':{const w=weatherAt(engine,d.document.randomSeed,rule.settlement,at);return {met:w?.kind===c.kindIs,value:w?.kind??null,evidence:'seeded-weather'};}
+ case 'weather':{const w=weatherAt(engine,d.get('randomSeed'),rule.settlement,at);return {met:w?.kind===c.kindIs,value:w?.kind??null,evidence:'seeded-weather'};}
  default:throw Error(`世界时钟不支持触发条件：${c.kind}`);
  }
 }
@@ -58,11 +64,11 @@ export function initializeWorldClocks(d,engine,minute,end=minute){
 export function worldClockScene(engine,document){
  const profile=engine.rules.agriculture?.settlements.find(p=>p.counter===document.state.location);
  if(!profile)return '';
- const day=Math.floor(document.state.minute/DAY),item=engine.rules.settlementTrade?.item;
- const quote=document.state.records?.[`quote:region:${day}:${profile.settlement}:${item}`];
- return quote?.category==='regional_quote'?`本日登记粮价：${engine.byId.get(item)?.name??item}每份${quote.price}铜；按现有余粮和路线核价。`:'';
+ const item=engine.rules.settlementTrade?.item;if(!item)return '';
+ const quote=facilityRuntime().currentTradeQuote(engine,document,{item,location:profile.settlement});
+ return `本日登记粮价：${engine.byId.get(item)?.name??item}每份${quote.listPrice}铜；按现有余粮和路线核价。`;
 }
-export function nextWorldClockMinute(state,now){return Math.min(Infinity,...Object.values(state.records??{}).filter(r=>r.category==='world_clock'&&r.nextAt>now).map(r=>r.nextAt));}
+export function nextWorldClockMinute(state,now){return Math.min(Infinity,...recordsWhere(state.records,'category','world_clock').filter(r=>r.category==='world_clock'&&r.nextAt>now).map(r=>r.nextAt));}
 export function advanceWorldClocks(d,engine,at){
  for(const r of engine.rules.worldClock?.clocks??[]){
   let row=d.get(...path(r.id));if(!row)continue;
@@ -73,13 +79,13 @@ export function advanceWorldClocks(d,engine,at){
   row={...row,phase:row.year===year?row.phase:0,harvestBaseline:row.year===year?row.harvestBaseline??harvested:harvested,year,nextAt:at+r.intervalDays*DAY,lastAt:at};
   const stage=r.stages[row.phase];
   if(stage){
-   const trigger=condition(d,engine,stage.condition,r,at,row),roll=clockRoll(d.document.randomSeed,r.id,at/DAY);
-   if(trigger.met&&roll<r.probability){
+   const trigger=condition(d,engine,stage.condition,r,at,row),draw=clockDraw(d.get('randomSeed'),r.id,at/DAY);
+   if(trigger.met&&draw<drawLimit(r.probability)){
     const sourceEvent=`world-clock:${r.id}:${at}`;
     const effect=clockTransaction(d,tx=>applyClockEffect(tx,engine,stage.effect,{settlement:r.settlement,faction:r.faction,minute:at,sourceEvent}));
-    if(effect.applied)row={...row,phase:row.phase+1,history:[...row.history,{minute:at,phase:row.phase+1,name:stage.name,trigger,roll,sourceEvent,effect:{...stage.effect,...effect}}]};
+    if(effect.applied)row={...row,phase:row.phase+1,history:[...row.history,{minute:at,phase:row.phase+1,name:stage.name,trigger,draw,sourceEvent,effect:{...stage.effect,...effect}}]};
    }
-   row.lastTrigger=trigger;row.lastRoll=roll;
+   row.lastTrigger=trigger;row.lastDraw=draw;
   }
   d.set(path(r.id),row);
  }

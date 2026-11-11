@@ -215,7 +215,9 @@ function prepareOpenPlan(engine,document,proposal,native){
  }
  // Only the unmatched primitive path consumes the proposal's accounts. A
  // registered program owns its own endpoints, consent, stock and cost checks.
- proposal={...proposal,effects:proposal.effects.map(effect=>resolvePrimitiveTransfer(engine,document,effect,{actor:native.routing.actor}))};
+ // A creature led out of a herd takes its facts from the species and herd.
+ const ledOut=effect=>effect.op==='create'&&effect.kind==='creature'&&effect.facts===undefined?{...effect,facts:{}}:effect;
+ proposal={...proposal,effects:proposal.effects.map(effect=>ledOut(resolvePrimitiveTransfer(engine,document,effect,{actor:native.routing.actor})))};
  for(const effect of proposal.effects??[]){
   if(effect.op==='move'&&effect.mode==='teleport')reject('E-OPEN-MOVE','普通搬动不能隔空取物，请先靠近或使用真实的传送来源');
   if(effect.op==='obligation.create'&&effect.obligationKind==='loan')reject('E-OPEN-OBLIGATION','借款须先取得真实同意并通过贷款或债务登记动作');

@@ -94,7 +94,8 @@ test('真实温顺趋光动物移动到施术者身旁，归属与种群不变',
  const s=fixture(),id='monster_moth_real';s.doc.state.creatures[id]={name:'灯蛾',species:'monster_copper_moth',hp:5,maxHp:5,status:'正常',location:altar,position:[2,0],behavior:{phototaxis:true,hostile:false}};
  contact(s,id);const proof=s.doc.state.records[s.doc.state.records[`local_actor_position:${id}`].source];proof.point=[2,0];proof.visibleFrom=[0,0];s.doc.state.records[`local_actor_position:${id}`].point=[2,0];
  const result=await cast(s,'lure',id);assert.equal(result.guided,true);assert.deepEqual(s.doc.state.creatures[id].position,[0,0]);assert.equal(s.doc.state.creatures[id].owner,undefined);assert.equal(s.doc.state.pets[id],undefined);
- s.doc.state.creatures[id].owner=npc;await denied(s,'lure',id,/无主/);
+ // K6 依据（审查 C-b，卡"许可是后果"）：引导他人的动物照样引导，命中擅用他人之物（K7 已允许引导自有动物）。
+ s.doc.state.creatures[id].owner=npc;{const r=await cast(s,'lure',id);assert.equal(r.guided,true);const o=r.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o);assert.equal(o.victim,npc);}
 });
 test('清扫只转移浮尘，厚重垃圾保留，耗魔和契约维持真实发生',async()=>{
  const s=fixture(),before=s.doc.state.player.mp,r=await cast(s,'clean_servant','feature_dust');
@@ -171,7 +172,7 @@ test('祷标绑定本人已登记完整祭坛，正常复活回执能辨认且�
 test('祷标不会绕过损毁祭坛',async()=>{
  const s=fixture();await cast(s,'revival_mark','feature_altar',{authorization:'altar_use'});s.doc.state.buildings[altar]={condition:0};
  s.doc.state.player.status='死亡';s.doc.state.player.revivalAnchor=altar;
- await assert.rejects(s.engine.reduce(s.doc,{tool:'world_revive',args:{},eventId:'broken-revive'}),/已登记复活点/);
+ const out=await s.engine.reduce(s.doc,{tool:'world_revive',args:{},eventId:'broken-revive'});assert.equal(out.result.prayerMark,null);assert.notEqual(out.result.location,altar);assert.match(out.result.notice,/已不可用/);
 });
 test('持续守戒防护实际吸收，破戒与撤销本人同意立刻失效',async()=>{
  const s=fixture(),r=await cast(s,'discipline',npc,{authorization:'support'});let hit=consumeMagicProtection(draft(s),npc,4,'physical');assert.equal(hit.absorbed,4);

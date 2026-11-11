@@ -1,5 +1,6 @@
 // L1 composition of primitive transactions with the existing resource and
 // obligation protocols. Only native callers supply frames and runtime options.
+import {goodsWorth} from './valuation.mjs';
 import {createActionPrimitiveFrame,authority,validMandateScope,mandateParent} from './action-authority.mjs';
 import {canAct,legacyCanAct,legacyActionFamily,movementCapacityTarget} from './action-capacity.mjs';
 import {commitPrimitives,commitPrimitiveConsequences,planPrimitives,queuePrimitiveProposal,registerPrimitiveActionRuntime,createPrimitiveFrame,recordResourceCosts} from './primitives.mjs';
@@ -30,6 +31,7 @@ import {checkActor,checkDerivedActor} from './primitives-checks.mjs';
 import {learnNpc,studyBook} from './primitives-learning.mjs';
 import {primitiveRuleRegistry} from './primitive-rules.mjs';
 import {subjectiveView} from './subjective-view.mjs';
+import {assertDerivedFactWriter} from './derived.mjs';
 import {applyMarkPrimitive,executeLeaveMark,prepareMarkEffects,markMaterialCosts} from './mark-actions.mjs';
 import {reactToMark} from './mark-reactions.mjs';
 import {executeRite,riteProjectInterruptions,settleRiteInterruptions} from './action-rite.mjs';
@@ -80,8 +82,11 @@ export function primitiveClaims(engine,document,effects){
    const kind=holdingKind(effect.holdingKind),variant=kind?.variants?.[effect.variant];
    if(!kind)reject('E-HOLDING-KIND','Unknown holding kind');
    if(!kind.exclusive&&!kind.capacity&&!variant?.contest)continue;
-   const total=kind.exclusive?1:engine.byId.get(effect.subject)?.[kind.capacity]??document.state.created?.[effect.subject]?.[kind.capacity];
-   if(!Number.isSafeInteger(total))reject('E-PRIMITIVE-CONNECTOR','Missing holding capacity');
+   // A contested hold with no capacity field (one person holding another)
+   // takes its capacity from the host's body: one pair of hands holds one.
+   const bodily=!kind.capacity&&variant?.contest&&(effect.subject==='player'||document.state.npcs?.[effect.subject]||document.state.creatures?.[effect.subject])?1:undefined;
+   const total=kind.exclusive?1:bodily??engine.byId.get(effect.subject)?.[kind.capacity]??document.state.created?.[effect.subject]?.[kind.capacity];
+   if(!Number.isSafeInteger(total))reject('E-PRIMITIVE-CONNECTOR','这里没有能容纳或看管这么多人的条件');
    const target=`holding:${kind.id}:${effect.subject}`,old=claims.get(target),needed=(occupancy.get(target)??0)+1;
    occupancy.set(target,needed);
    claims.set(target,{target,targetKind:kind.id,contest:variant?.contest??kind.contest,quantity:Math.max(old?.quantity??0,needed),capacity:Math.max(0,total-aliveHoldings(d,{kind:kind.id,subject:effect.subject}).length)});
@@ -192,9 +197,10 @@ export function createRuntimePrimitiveFrame(engine,document,{actor='player',even
  const factUsage=new Map();
  return createActionPrimitiveFrame(context,{actor,eventId,source,createDraft,factPolicy,verbs,validate,finish,identity,consequence,
   validateFact:(d,effect,{row,value})=>{
+   assertDerivedFactWriter(engine,row.kind,effect.field,source,value);
    if(typeof value!=='number')return;
    const bound=(typeof limits==='function'?limits(d.document):limits).fact?.[effect.field];
-   const change=Math.abs(value-(row.facts?.[effect.field]??0)),used=(factUsage.get(effect.field)??0)+change;
+   const change=Math.abs(value-(row.facts?.[effect.field]??factPolicy?.[row.kind]?.[effect.field]?.default??0)),used=(factUsage.get(effect.field)??0)+change;
    if(!Number.isSafeInteger(bound)||bound<0||!Number.isSafeInteger(used)||used>bound)reject('E-FACT-BOUND','Fact work exceeds its native source bound');
    factUsage.set(effect.field,used);
   },
@@ -385,7 +391,10 @@ function adjudicateAction(d,engine,action,slots,actor,eventId,effects,receipt,{d
    if(!permission.allowed&&from!=='player'&&d.get('state','npcs',from)){
     // A declaration asks the other party; it cannot supply their answer. A2
     // receives only that NPC's subjective projection and a native request.
-    const transferred=effects.filter(e=>e.op==='transfer'),money=transferred.filter(e=>parseAccount(e.from).owner===from).reduce((n,e)=>n+e.qty*(parseAccount(e.from).resource===LEDGER_COIN?1:engine.byId.get(parseAccount(e.from).resource)?.basePrice??0),0),reward=transferred.filter(e=>parseAccount(e.to).owner===from).reduce((n,e)=>n+e.qty*(parseAccount(e.to).resource===LEDGER_COIN?1:engine.byId.get(parseAccount(e.to).resource)?.basePrice??0),0);
+    const transferred=effects.filter(e=>e.op==='transfer'),
+     // 对方付出/收到的价值：币按面值，物品按当前所在地的市场估值（goods 角色），不读目录基价；无从估价者计 0。
+     worthOf=(account,qty)=>{const resource=parseAccount(account).resource;return resource===LEDGER_COIN?qty:(goodsWorth(d,engine,{item:resource,quantity:qty,holder:from})??0);},
+     money=transferred.filter(e=>parseAccount(e.from).owner===from).reduce((n,e)=>n+worthOf(e.from,e.qty),0),reward=transferred.filter(e=>parseAccount(e.to).owner===from).reduce((n,e)=>n+worthOf(e.to,e.qty),0);
     const library=createRXLibrary(engine,d.document,{observer:actor,context:primitiveContext(engine,d.document)}),decision=library.functions.npcDecision(from,{kind:scope,purpose:action.id,cost:{minutes:duration,coins:money},reward});
     receipt.decisions??=[];receipt.decisions.push({from,scope,...decision});
     if(decision.outcome==='agree'){

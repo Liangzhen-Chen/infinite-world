@@ -9,6 +9,7 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {localWeather} from './weather.mjs';
 import {layoutView,zoneOf,placeLayout} from './place-layout.mjs';
 import {visibleEntity,localSounds} from './perception.mjs';
+import {hypot,atan2} from './det-math.mjs';
 
 const LOCALES=fileURLToPath(new URL('../world/actions/locale/',import.meta.url));
 export const BASE_LOCALE='zh-CN';
@@ -41,11 +42,11 @@ const LOCAL_KM=1;
 export function bearing(engine,from,to,templates=loadTemplates()){
  const a=placeOf(engine,from),b=placeOf(engine,to),d=templates.directions;
  if(!a||!b)return {word:'',km:null};
- const [ax,ay]=a.coordinates??[0,0],[bx,by]=b.coordinates??[0,0],dx=bx-ax,dy=by-ay,km=Math.hypot(dx,dy);
+ const [ax,ay]=a.coordinates??[0,0],[bx,by]=b.coordinates??[0,0],dx=bx-ax,dy=by-ay,km=hypot(dx,dy);
  // Containment reads as stepping out/in only within a settlement; a far place filed under a village is still a journey.
  if(a.parent===b.id&&km<LOCAL_KM)return {word:d.out,km,relation:'out'};
  if(km<1e-9)return {word:b.parent===a.id?d.in:d.here,km:0,relation:b.parent===a.id?'in':'here'};
- const sector=['e','ne','n','nw','w','sw','s','se'][Math.round(((Math.atan2(dy,dx)*180/Math.PI+360)%360)/45)%8];
+ const sector=['e','ne','n','nw','w','sw','s','se'][Math.round(((atan2(dy,dx)*180/Math.PI+360)%360)/45)%8];
  return {word:d[sector],km,relation:b.parent===a.id&&km<LOCAL_KM?'in':'route'};
 }
 // Distances are 里 (0.5 km) rounded for reading; under 0.1 km is "a few steps".
@@ -96,6 +97,7 @@ function effectLines(engine,before,after,effects,templates,counterparties=new Se
   else if(e.op==='time')lines.push(fill(t.time,{duration:durationText(e.minutes,templates),clock:clockText(e.minute)}));
   else if(e.op==='vital')lines.push(e.holder==='player'?fill(t[`${e.need}${e.delta>0?'Up':'Down'}`],{amount:Math.abs(e.delta)}):fill(t[`other${e.need==='hp'?'Hp':'Mp'}${e.delta>0?'Up':'Down'}`],{holder:nameOf(engine,s,e.holder),amount:Math.abs(e.delta)}));
   else if(e.op==='status')lines.push(e.holder==='player'?fill(t.status,{to:e.to}):fill(e.to==='死亡'?t.otherDead:t.otherStatus,{holder:nameOf(engine,s,e.holder),to:e.to}));
+   else if(e.op==='exposure'&&e.status==='wet')lines.push(e.to?'雨水打湿了衣物，你已淋湿。':'衣物已经干燥，淋湿状态消退。');
   else if(e.op==='xp')lines.push(fill(e.delta>0?t.xpUp:t.xpDown,{amount:Math.abs(e.delta)}));
   else if(e.op==='level')lines.push(fill(e.to>e.from?t.levelUp:t.levelDown,{level:e.to}));
   else if(e.op==='durability')lines.push(fill(t.durability,{item:nameOf(engine,s,e.item),from:e.from,to:e.to}));

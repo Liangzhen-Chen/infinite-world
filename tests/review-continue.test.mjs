@@ -28,6 +28,7 @@ test('拒绝后继续完整十回合，保留原文及付款，拒绝尾注不�
    {finish_reason:'stop',message:{content:label.startsWith('continue-1-0-')?'已核对。<回合 额外="0分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>':'已核对。'}}]};
  }};
  const scenario={id:'continue',initial:{mode:'legacy'},turns:Array.from({length:10},(_,index)=>({input:index?'（场外）只核对。':'我付六铜住一晚。',assertions:[index?{kind:'elapsed',min:0,max:0}:{kind:'delta',path:'state.player.coins',value:-6}]}))};
+ api.seedMode=server.api.seedMode;
  const result=await runPlaytest({scenario,api,client,bundle:await loadPromptBundle(),countTokens:()=>20,stopOnFailure:true});
  assert.equal(result.turns.length,10);assert.equal(generated,11);assert.equal(result.failedTurns,1);assert.equal(result.turns[0].errors.length,0);
  // 修订记录 2026-10-23 第3条：拒审原文保留供诊断，只发布来源模板。

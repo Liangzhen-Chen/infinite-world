@@ -15,6 +15,8 @@ import {npcRumorSeeds,rumorChainView} from './npc-rumors.mjs';
 import {personSimulation,personConstraint}from'./entity-view.mjs';
 import {transportServices,quoteTransport} from './transport.mjs';
 import {sendPost} from './post.mjs';
+import {installFacilityRuntime} from './facility-state.mjs';
+installFacilityRuntime({shareMaintenanceMemory:shareNpcMemory});
 
 const DAY=1440,clone=value=>cloneData(value); // P2: same result as structuredClone, faster
 const awake=(engine,state,id,n)=>n&&n.location&&!n.scheduleTravel&&!n.cognitionTravel&&!isPhysicallyDead(engine,state,id)&&!['濒死','昏迷','患病'].includes(n.status)&&!/睡眠|睡觉|熟睡/.test(n.activity??'');
@@ -80,7 +82,7 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
  // The ordinary walking path remains available when no paid service can run.
  if(b.location&&a.location!==b.location){
   const existing=state.records?.[`post:${messageId}`];if(existing)return {duplicate:true,messageId:existing.id};
-  for(const service of transportServices(engine,state,a.location).filter(s=>s.driver!==from)){
+  for(const service of transportServices(engine,d.document,a.location).filter(s=>s.driver!==from)){
    let quote;try{quote=quoteTransport(d,engine,{asset:service.asset,from:a.location,to:b.location,departAt:service.nextDeparture});}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;continue;}
    if(a.coins<quote.total)continue;
    const posted=sendPost(d,engine,{from,to,memoryId,legs:[{asset:service.asset,to:b.location}],receipt:false},messageId);
@@ -91,7 +93,7 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
  if(occupied(state,from,at,at+1))throw preconditionFailure('携信者正受同行或义务占用');
  if(!b.location)throw preconditionFailure('收件人正在途中，没有可确认的投递地址');
  const messages=state.npcCognition?.messages??{};if(messages[messageId])return {duplicate:true,messageId};
- const route=engine.route(a.location,b.location,'walk',at,d.document.randomSeed);
+ const route=engine.route(a.location,b.location,'walk',at,d.get('randomSeed'));
  assertNpcObligationAction(d,engine,[from],{start:at,minutes:route.minutes,location:b.location,kind:'move'});
  if(a.coins<route.cost)throw preconditionFailure('携信者路费不足');
  if(occupied(state,from,at,at+route.minutes+1))throw preconditionFailure('携信路线与既有义务冲突');
@@ -112,10 +114,15 @@ export function settleNpcReflection(d,engine,npcId,now){
  const guarded=Object.values(effects??{}).some(e=>e.kind==='mind_space'&&e.operation==='memory_guard'&&e.target===npcId);
  if(!guarded&&prior?.old===old&&prior.stream===stream&&now>=prior.minute&&now<prior.until)return;
  const cacheable=scope&&!guarded&&!stream.some(row=>row.participants?.includes('player'));
- const next=clone(old);next.blurred??={};next.reflections??=[];
+ // Most clock ticks neither blur a memory nor add a reflection. Delay the
+ // copy until a real change; old cognition and the evidence stream stay read-only.
+ let next=old;
+ const edit=()=>{if(next===old)next=clone(old);return next;};
+ if(next.blurred==null)edit().blurred={};
+ if(next.reflections==null)edit().reflections=[];
  for(const memory of stream){
   const ttl=({1:7,2:30,3:90})[memory.salience];if(!ttl||now<memoryBlurMinute(d,npcId,memory,ttl,now)||next.blurred[memory.id])continue;
-  next.blurred[memory.id]={minute:memory.minute+ttl*DAY,content:`记得${memory.kind==='trade'?'曾有财物往来':memory.kind==='learn'?'曾有学习经历':'曾发生过一件事'}，细节已经模糊。`};
+  edit().blurred[memory.id]={minute:memory.minute+ttl*DAY,content:`记得${memory.kind==='trade'?'曾有财物往来':memory.kind==='learn'?'曾有学习经历':'曾发生过一件事'}，细节已经模糊。`};
  }
  const player=stream.filter(row=>row.participants?.includes('player')&&row.minute<=now&&['亲历','目击','约定核对'].includes(row.sourceType));
  const payments=player.filter(row=>['trade','debt'].includes(row.kind)&&(row.payer===undefined||row.payer==='player')&&/支付|偿还/.test(row.content)),breaches=player.filter(row=>/违约|逾期|偷取/.test(row.content));
@@ -124,9 +131,9 @@ export function settleNpcReflection(d,engine,npcId,now){
   const state=d.get('state'),unpaid=obligationRows(state).filter(r=>r.debtor==='player'&&r.creditor===npcId&&obligationView(state,r,now).overdueCount>0).map(r=>[r.id,r]);
   const caution=Boolean(bad||unpaid.length),evidence=[...new Set([...(bad?[...payments.slice(-3),bad]:payments.slice(-3)).map(row=>row.id),...unpaid.map(([id])=>id)])];
   const reflection={id:`reflection_${key(npcId,evidence)}`,minute:Math.max(bad?.minute??0,latest.minute,...unpaid.map(([,r])=>r.overdueAt??r.deadline)),about:'player',content:caution?'近期付款没有抹去失信经历或未清欠款，我仍怀疑他能否按约付清。':'几次付款都实际发生，我对他按约结款比较放心。',sourceType:'反思',certainty:'个人判断，可被新证据推翻',evidence};
-  if(!next.reflections.some(row=>row.id===reflection.id))next.reflections.push(reflection);
+  if(!next.reflections.some(row=>row.id===reflection.id))edit().reflections.push(reflection);
  }
- if(JSON.stringify(old)!==JSON.stringify(next))d.set(['state','npcs',npcId,'cognition'],next);
+ if(next!==old&&JSON.stringify(old)!==JSON.stringify(next))d.set(['state','npcs',npcId,'cognition'],next);
  if(cacheable){
   const current=typeof d.peek==='function'?d.peek('state','npcs',npcId):d.get('state','npcs',npcId);
   let until=Infinity;
@@ -158,7 +165,7 @@ export function advanceNpcCognition(d,engine,before,after,eventId,{beforeState}=
  }
  if(beforeState)for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
   const at=day*DAY+600;if(at<=before||at>after)continue;
-  const presence=at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.document.randomSeed);
+  const presence=at===after?d.get('state'):npcPresenceAt(engine,beforeState,before,at,d.get('randomSeed'));
   const sourceStreams=d.get('state','npcs');
   for(const from of Object.keys(presence.npcs).sort()){
    if(!awake(engine,presence,from,presence.npcs[from])||occupied(beforeState,from,at,at+1))continue;

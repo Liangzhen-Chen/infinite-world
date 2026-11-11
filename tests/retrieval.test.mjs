@@ -6,7 +6,7 @@ import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {once} from 'node:events';
 import express from 'express';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {init} from '../server-plugin/index.mjs';
 const entities = [{ id: 'npc_hw_linsui', name: '林穗', aliases: ['林穗姐', '老板娘', '林老板', '穗姐'], scope: 'loc_hw' }];
 test('别名首字符索引与完整扫描的顺序、歧义及当前作用域一致，扩展不污染父解析器',()=>{
@@ -74,7 +74,7 @@ test('不精确物品名只推荐同类候选，短实物名称不被工序册�
 });
 
 test('world_search 真实HTTP入口检索四村公开资料，获知前不返回传闻，查询不改世界',async t=>{
-    const world=await loadWorld(),original=structuredClone(world),root=await fs.mkdtemp(path.join(tmpRoot(),'fields-village-search-'));
+    const world=await loadRuntimeWorld(),original=structuredClone(world),root=await fs.mkdtemp(path.join(tmpRoot(),'fields-village-search-'));
     t.after(()=>fs.rm(root,{recursive:true,force:true}));
     const app=express();app.use(express.json());const router=express.Router();
     await init(router,{baseRoot:root,world,npcPlanningEnabled:false,consistencyEnabled:false});app.use(router);

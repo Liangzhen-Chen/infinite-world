@@ -91,9 +91,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player.coins",
-            "state.inventory"
+            "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "present",
@@ -111,9 +114,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player.coins",
-            "state.inventory"
+            "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "present",
@@ -131,9 +137,12 @@
         {
           "kind": "unchanged",
           "paths": [
-            "state.player.coins",
-            "state.inventory"
+            "state.player.coins"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "present",
@@ -152,9 +161,12 @@
           "kind": "unchanged",
           "paths": [
             "state.player.coins",
-            "state.inventory",
             "state.projects"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "present",
@@ -173,9 +185,12 @@
           "kind": "unchanged",
           "paths": [
             "state.player.coins",
-            "state.inventory",
             "state.quests"
           ]
+        },
+        {
+          "kind": "holdingsUnchanged",
+          "path": "state.inventory"
         },
         {
           "kind": "present",

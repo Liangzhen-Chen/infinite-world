@@ -1,7 +1,7 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-declareLedgerWriter('npc-life',{sinks:['sink:export']});
+declareLedgerWriter('npc-life',{sinks:['sink:export','sink:consume']});
 import {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 import {entityTransition,businessSnapshot,businessTransitions} from './entity-transitions.mjs';
 export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
@@ -13,9 +13,18 @@ export {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
 // Authored people and their static past are never rewritten; changes live in
 // state.family plus ordinary memories, which then spread only through the
 // existing NPC conversation and message channels.
-import {digest} from './storage.mjs';
+import {digest,stateMemo,canonicalEqual} from './storage.mjs';
+import {householdMealPlan,householdMealWithSources,usageCost,registerMerchandiseResolver} from './household-budget.mjs';
+import {mouthWeight} from './household-subsistence.mjs';
+import {mealMouthsOf,metabolismFactor} from './primitives-body.mjs';
+import {supplyHousehold,prepareHouseholdSubsistence,householdSubsistenceGroups} from './household-subsistence.mjs';
+import {placeSettlement} from './entity-view.mjs';
+import {toRational} from './det-math.mjs';
 import {transition} from './transition.mjs';
 import {clockRoll} from './world-clock.mjs';
+import {derived} from './derived.mjs';
+import populationBalance from '../world/rules/tables/balance/population.json' with {type:'json'};
+import attributeBalance from '../world/rules/tables/balance/attributes.json' with {type:'json'};
 import {relationView,recordLifeRelation} from './npc-relations.mjs';
 import {npcSchedule} from './npc-state.mjs';
 import {validateNpcSchedules,scheduleAt} from './npc-schedule.mjs';
@@ -31,9 +40,126 @@ import {marriagePolitics,advanceFamilyAlliances} from './family-diplomacy.mjs';
 import {familyEdges} from './family-state.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {holdingSet,holdingRemove} from './holding-sources.mjs';
+import {pow} from './det-math.mjs';
+import {heldUnit,wearItem} from './items.mjs';
+import {isItemClass,heldOfClass,craftingParam,householdUsage,usageGrams} from './item-class.mjs';
 declareHoldingWriter('npc-life',{kinds:['kin','household_member','resides','resident_of','companion','tamed_by','owns','employed_by','leases','operates','lodges','devotee_of','certified'],entities:['estate','wreck','office'],locations:true});
 
 const DAY=1440,YEAR=360*DAY,unable=['濒死'];
+
+// —— K4：日用品按耐用寿命磨损，家户炊事、取暖烧燃料，调味与保存用盐（都按类别，用量见 balance/crafting） ——
+const UPKEEP={flow:'sink:consume',writer:'npc-life'};
+const grams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
+// 在用的一件日用品每天按 耐久上限 ÷ 寿命天数 磨损（小数部分按确定的随机取整），另有 1 ÷ 寿命天数 的意外损坏；
+// 磨到 0 或损坏即离手（进 sink:consume，用途 wear），同种的下一件接着用。手里没了的工具由 business 的"本行当要用而没有完好工具"需求去买。
+function wearHeld(d,engine,who,day,items){
+ const lifeDays=craftingParam(engine,'durability.lifeYears')*360,seed=d.get('randomSeed');
+ for(const item of items){
+  if(engine.quantity(d,who,item)<1)continue;
+  const def=engine.byId.get(item),max=def?.durability;if(!(max>0))continue;
+  const path=[...engine.bagPath(who),item];
+  if(typeof d.get(...path)==='number')d.set(path,{quantity:d.get(...path),quality:def.quality,durability:max,weight:def.weight});
+  const rate=max/lifeDays,points=Math.floor(rate)+(clockRoll(seed,`wear:${who}:${item}`,day)<rate-Math.floor(rate)?1:0);
+  const broken=clockRoll(seed,`wear-break:${who}:${item}`,day)<1/lifeDays;
+  const held=heldUnit(d,engine,who,item),current=held?.durability??max;
+  const left=broken?0:Math.max(0,current-points);
+  if(left===current)continue;
+  if(left>0){wearItem(d,engine,who,item,current-left);continue;}
+  const rest=engine.quantity(d,who,item)-1;
+  engine.itemDelta(d,who,item,-1,{...UPKEEP,purpose:'wear',eventId:`wear:${day}:${who}:${item}`},held?.instance?{selection:[held.instance]}:{});
+  if(rest>0&&typeof d.get(...path)==='object'&&!d.get(...path).instances?.length)d.set([...path,'durability'],max);
+ }
+}
+// 店主货架上待售的货（本店补货清单里的物品）不是在用的日用品，也不是家里的柴盐：不磨损，家户炊事先用自家的，货架上的最后才动。
+const merchandise=(engine,state,who)=>new Set(registerMerchandiseResolver.fn?.(engine,state,who)??[]);
+export function advanceDurableWear(d,engine,day){
+ if((d.get('state','family','wearDay')??-1)>=day)return;
+ const state=d.get('state');
+ for(const who of Object.keys(state.npcs??{}).sort()){
+  if(isPhysicallyDead(engine,state,who))continue;
+  const stock=merchandise(engine,state,who);
+  wearHeld(d,engine,who,day,Object.keys(d.get(...engine.bagPath(who))??{}).sort().filter(item=>isItemClass(engine,item,'durable')&&!stock.has(item)));
+ }
+ // 玩家：随身衣物（apparel 类）穿着就磨；工具只在真实使用时磨（制作、采集各自的 toolWear）。
+ wearHeld(d,engine,'player',day,Object.keys(d.get(...engine.bagPath('player'))??{}).sort().filter(item=>isItemClass(engine,item,'apparel')));
+ d.set(['state','family','wearDay'],day);
+}
+// 家户每日燃料与盐：从户里各人持有的同类物品按重量扣整份；不足一份的用量记成欠量，下一日累计；手里没有就记短缺日。
+function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId,purpose){
+ let debt=debtG+needG,short=false;
+ const state=d.get('state'),stock=new Map(holders.map(h=>[h,merchandise(engine,state,h)]));
+ // 先用户里同类中最便宜的（household-budget.usageCost：价格 ÷ 热值，无热值按 价格 ÷ 克），不按物品编号；家用的先于店主货架上的货。
+ const cheapest=rows=>rows.sort((a,b)=>usageCost(engine,a.item)-usageCost(engine,b.item)||a.item.localeCompare(b.item)||a.h.localeCompare(b.h))[0]??null;
+ const held=merchandiseToo=>holders.flatMap(h=>heldOfClass(d,engine,h,cls).filter(r=>usageGrams(engine,r.item,cls,grams(engine,r.item))>0&&(merchandiseToo||!stock.get(h).has(r.item))).map(r=>({h,item:r.item})));
+ for(;;){
+  const pick=cheapest(held(false))??cheapest(held(true));
+  if(!pick){short=debt>0;debt=Math.min(debt,needG);break;}
+  const unit=usageGrams(engine,pick.item,cls,grams(engine,pick.item));if(debt<unit)break;
+  engine.itemDelta(d,pick.h,pick.item,-1,{...UPKEEP,purpose,eventId});debt-=unit;
+ }
+ return {debt,short};
+}
+function householdUpkeep(d,engine,day,p){
+ const state=d.get('state'),holders=[...new Set([p.owner,...p.members])].filter(id=>state.npcs?.[id]).sort();if(!holders.length)return;
+ // 用度按 item-class 的 householdUsage（唯一一份定义）逐类扣：欠量、短缺日按 `${cls}DebtG`、`${cls}ShortDays` 记。
+ const usage=householdUsage(engine,day*DAY,p.members),key=['state','family','upkeep',p.key],eventId=`household-upkeep:${day}:${p.household??p.owner}`;
+ const zero=Object.fromEntries([...usage.map(u=>[`${u.cls}DebtG`,0]),...usage.map(u=>[`${u.cls}ShortDays`,0])]),old={...zero,...d.get(...key)};
+ const done=usage.map(u=>({u,...consumeByWeight(d,engine,holders,u.cls,Math.round(u.gramsPerDay),old[`${u.cls}DebtG`],eventId,u.purpose)}));
+ const row={...Object.fromEntries(done.map(r=>[`${r.u.cls}DebtG`,r.debt])),...Object.fromEntries(done.map(r=>[`${r.u.cls}ShortDays`,r.short?old[`${r.u.cls}ShortDays`]+1:0]))};
+ if(!canonicalEqual(old,row))d.set(key,row);
+}
+
+// Plan all meals against the same revision, then consume physical holdings.
+export function advanceHouseholdMeals(d,engine,day,publicMeals=new Map()){
+ advanceDurableWear(d,engine,day);
+ const groups=householdSubsistenceGroups(engine,d.get('state'));
+ // Public population portions cover registered residents, not an extra
+ // portion for each unregistered visitor present. A stale aggregate count
+ // also cannot distribute more portions than agriculture actually consumed.
+ const represented=new Map();
+ for(const g of groups)if(g.registered)represented.set(g.settlement,(represented.get(g.settlement)??0)+g.mouths);
+ for(const [sid,ration]of publicMeals){ration.mouths=Math.max(ration.mouths,represented.get(sid)??0);ration.missing=ration.mouths-ration.eaten;}
+ const plans=[],waterCohorts=new Map();
+ for(const group of groups){
+  const key=group.key,previous=d.get('state','family','meals',key);
+  if(Math.max(d.get('state','family','mealDays',group.settlement??'unregistered')??-1,previous?.day??-1)>=day)continue;
+  const ration=publicMeals.get(group.settlement),share=group.registered&&ration?.mouths>0?ration.eaten/ration.mouths:0;
+  const plan=householdMealPlan(d,engine,group.owner,{publicShare:share});
+  if(plan.members.length)plans.push({...group,key,previous,share,...plan});
+ }
+ // Replayed/past meal days must not replace today's persisted plan.
+ if(plans.length)prepareHouseholdSubsistence(d,engine,day);
+ for(const p of plans){
+  p.supplied=supplyHousehold(d,engine,p.owner,day,p,{...p,waterCohorts});
+  if(p.supplied.sources.length)Object.assign(p,householdMealWithSources(p,p.supplied.nutrition));
+ }
+ const adjustments=new Map();
+ const saved=v=>Number.isInteger(v)?v:toRational(v);
+ const nutrients=values=>Object.fromEntries(Object.entries(values).map(([k,v])=>[k,saved(v)]));
+ for(const p of plans){
+  const consumed=[];
+  for(const row of p.rows){
+   if(!(row.food>0))continue;// 只吃开封余量的行不动背包
+   engine.itemDelta(d,row.holder,row.item,-row.food,{flow:'sink:consume',purpose:'meal',writer:'npc-life',eventId:`household-meal:${day}:${p.household??p.owner}`},{selection:row.selection});
+   consumed.push({holder:row.holder,item:row.item,quantity:row.food});
+  }
+  const mouths=mouthWeight(engine,d.get('state'),p.members),missing=p.needs.satiety>0?mouths*p.shortfall.satiety/p.needs.satiety:0;
+  if(p.registered){const adjustment=adjustments.get(p.settlement)??0;adjustments.set(p.settlement,adjustment+missing-mouths*(1-p.share));}
+  const record={household:p.household,owner:p.owner,settlement:p.settlement,members:p.members,
+   needs:nutrients(p.needs),publicNutrition:nutrients(p.publicNutrition),consumed,shortfall:nutrients(p.shortfall),missingMeals:saved(missing),
+   unmetMealDays:(p.previous?.unmetMealDays??0)+(missing>0?1:0),
+   // Stable fields precede optional supply receipts. A short-step diff may
+   // append newly available receipts; its byte order must match a long wait.
+   ...(p.supplied.sources.length?{sources:p.supplied.sources,sourceNutrition:nutrients(p.supplied.nutrition)}:{})};
+  if(!canonicalEqual(p.previous,record))d.set(['state','family','meals',p.key],record);
+  // 单餐额度（item-class.mealCapPools）：吃完后的累计额度与开封余量写进存档，下一天接着用；与预算读的是同一个位置。
+  const capKey=['state','family','mealCap',p.key],capOld=d.get(...capKey),capNew=p.capState;
+  if(capNew&&!canonicalEqual(capOld??{open:{}},capNew))d.set(capKey,capNew);
+  householdUpkeep(d,engine,day,p);
+ }
+ for(const settlement of new Set(plans.map(p=>p.settlement??'unregistered')))d.set(['state','family','mealDays',settlement],day);
+ return adjustments;
+}
 const rules=engine=>engine.rules.npcLife;
 const key=(...parts)=>digest(parts).slice(0,16);
 const pairKey=(a,b)=>[a,b].sort().join('|');
@@ -207,7 +333,7 @@ function deliver(d,engine,pregnancy,minute){
  const house=npcHousehold(engine,state,pregnancy.mother)??{id:pregnancy.household,...engine.world.households.find(h=>h.id===pregnancy.household)};
  const ledger=state.settlements?.[house.settlement];
  if(!Number.isSafeInteger(ledger?.population)){holdingSet(d,null,['state','family','pregnancies',pregnancy.id],{...pregnancy,status:'中止',endedAt:minute,reason:'聚落人口账不存在'},'npc-life');return;}
- const seed=d.document.randomSeed,day=minute/DAY,sex=clockRoll(seed,`${pregnancy.id}:sex`,day)<0.5?'女':'男';
+ const seed=d.get('randomSeed'),day=minute/DAY,sex=clockRoll(seed,`${pregnancy.id}:sex`,day)<0.5?'女':'男';
  const given=r.givenNames[Math.floor(clockRoll(seed,`${pregnancy.id}:name`,day)*r.givenNames.length)];
  const child=`npc_born_${key(pregnancy.id)}`,name=`${nameOf(engine,state,pregnancy.father).slice(0,1)}${given}`,birthId=`birth_${key(pregnancy.id)}`;
  holdingSet(d,null,['state','family','people',child],{id:child,name,sex,birth:calendarDate(minute),bornAt:minute,parents:{mother:pregnancy.mother,father:pregnancy.father},
@@ -230,7 +356,7 @@ function deliver(d,engine,pregnancy,minute){
 }
 
 function familyDay(d,engine,minute){
- const r=rules(engine),seed=d.document.randomSeed,day=minute/DAY;
+ const r=rules(engine),seed=d.get('randomSeed'),day=minute/DAY;
  for(const m of Object.values(d.get('state','family','marriages')??{}).sort((x,y)=>x.id.localeCompare(y.id))){
   const state=d.get('state');
   if(m.status==='在婚'&&m.partners.some(p=>!alive(state,p)))holdingSet(d,null,['state','family','marriages',m.id],{...m,status:'丧偶',endedAt:minute},'npc-life');
@@ -267,8 +393,61 @@ function familyDay(d,engine,minute){
 const incapable=['濒死','昏迷','患病'];
 const incapacitated=(state,id)=>isPhysicallyDead(null,state,id)||incapable.includes(state.npcs[id]?.status);
 const healthRules=engine=>rules(engine)?.health;
-const perDay=perYear=>1-(1-Math.min(1,perYear))**(1/360);
+const perDay=perYear=>1-pow(1-Math.min(1,perYear),1/360);
 function ageBand(h,age){let band=null;for(const row of h.bands)if(age>=row.fromAge)band=row;return band;}
+const humanLifespan=engine=>(engine.world.balance?.population??populationBalance).params.find(r=>r.id==='lifespan.human').value;
+const agingRates=engine=>(engine.world.balance?.attributes??attributeBalance).params.find(r=>r.id==='attr.aging').value;
+function lifecycle(engine,state,id){
+ const actor=state.npcs?.[id]??state.creatures?.[id],base=state.created?.[id]??engine.byId.get(id);
+ return actor?.lifecycle??base?.lifecycle??engine.byId.get(actor?.species??base?.species)?.lifecycle??rules(engine).lifecycle??{};
+}
+function lifeAge(engine,state,id,minute){
+ const actor=state.npcs?.[id]??state.creatures?.[id],base=state.family?.people?.[id]??state.created?.[id]??engine.byId.get(id);
+ if(Number.isSafeInteger(actor?.bornAt??base?.bornAt))return Math.max(0,(minute-(actor?.bornAt??base.bornAt))/YEAR);
+ if(base?.birth){const b=base.birth;return Math.max(0,((1-b.year)*360-(b.month-1)*30-(b.day-1)+minute/DAY)/360);}
+ return Number.isFinite(base?.age)?base.age+minute/YEAR:null;
+}
+// The existing age-band curve is expressed in human-equivalent years. Above
+// its last band, continuing its survival hazard tends to 1 without a death age.
+function annualLifeRisk(h,age){
+ const band=ageBand(h,age);if(!band)return 0;
+ const last=h.bands.at(-1),exposure=last.fromAge>0?Math.max(1,age/last.fromAge):1;
+ return 1-pow(1-band.suddenDeathPerYear,exposure);
+}
+function ageDay(d,engine,id,minute,path){
+ // These reads produce only numbers and copied attributes before writing;
+ // they must not expose the whole NPC dictionary on every daily clock tick.
+ const document=d.peek?d.peek():d.document,state=document.state,actor=path.reduce((v,k)=>v?.[k],document),spec=lifecycle(engine,state,id);
+ if(Object.hasOwn(spec,'lifespan')&&spec.lifespan===null){
+  const result={minute,lifespan:null,riskAge:actor.aging?.riskAge??0,catchUpRemaining:0,annualRisk:0};
+  d.set([...path,'aging'],result);return result;
+ }
+ const human=humanLifespan(engine),rates=agingRates(engine),base=spec.lifespan??human;
+ if(!Number.isFinite(base)||base<=0)throw Error('物种寿命须为正数或不老的 null');
+ const lifespan=derived(engine,document,'life:lifespan',id,{base}),age=lifeAge(engine,state,id,minute);
+ if(age===null)return null;
+ const previous=actor.aging,elapsed=previous?(minute-previous.minute)/YEAR:1/360;
+ if(elapsed<0)throw Error('衰老时钟不能倒退');
+ if(previous&&elapsed===0)return previous;
+ const rate=derived(engine,document,'life:aging',id,{base:1}),target=age*human/lifespan;
+ let remaining=previous?.catchUpRemaining??0;
+ if(previous&&(previous.lifespan===null||lifespan<previous.lifespan)){
+  if(!Number.isFinite(spec.agingCatchUp)||spec.agingCatchUp<=0)throw Error('寿命骤降须由物种声明 agingCatchUp 年数');
+  remaining=spec.agingCatchUp;
+ }
+ const naturalElapsed=elapsed*human/lifespan,ordinary=naturalElapsed*rate,from=previous?.riskAge??Math.max(0,target-naturalElapsed);
+ let riskAge=from+ordinary;
+ if(previous&&previous.lifespan!==null&&lifespan>previous.lifespan)riskAge=Math.min(target,riskAge);
+ if(remaining>0){const used=Math.min(remaining,elapsed*rate);riskAge+=Math.max(0,target-riskAge)*used/remaining;remaining-=used;}
+ const attributes={...actor.attributes},baseline=state.created?.[id]??engine.byId.get(id);
+ for(const [names,start,loss] of [[['力量','敏捷','体质'],rates.bodyFromYear,rates.bodyPerYear],[['智力','精神'],rates.mindFromYear,rates.mindPerYear]]){
+  const years=Math.max(0,riskAge-start)-Math.max(0,from-start);
+  if(years>0)for(const name of names)attributes[name]=Math.max(1,(attributes[name]??baseline?.attributes?.[name]??10)-years*loss);
+ }
+ if(Object.keys(attributes).length)d.set([...path,'attributes'],attributes);
+ const result={minute,lifespan,riskAge,catchUpRemaining:remaining,annualRisk:annualLifeRisk(healthRules(engine),riskAge)};
+ d.set([...path,'aging'],result);return result;
+}
 // People away with the player are on screen; off-screen life events wait.
 const settled=(state,id)=>{const n=state.npcs[id];return Boolean(n?.location)&&!n.scheduleTravel&&!n.cognitionTravel&&!state.player?.companions?.includes(id);};
 // Someone travelling with the player still ages and may fall ill at night,
@@ -327,7 +506,7 @@ function assignCare(d,engine,illness,minute){
 }
 
 function fallIll(d,engine,id,minute,band){
- const h=healthRules(engine),seed=d.document.randomSeed,day=minute/DAY,state=d.get('state'),npc=state.npcs[id];
+ const h=healthRules(engine),seed=d.get('randomSeed'),day=minute/DAY,state=d.get('state'),npc=state.npcs[id];
  const graveChance=Math.min(1,band.graveShare*(weakened(npc)?h.weakenedGraveMultiplier:1));
  const severity=clockRoll(seed,`illness-severity:${id}`,day)<graveChance?'重':'轻',[low,high]=severity==='重'?h.graveDays:h.mildDays;
  const days=low+Math.floor(clockRoll(seed,`illness-days:${id}`,day)*(high-low+1));
@@ -429,8 +608,12 @@ function recordLegacyEntityDeath(d,engine,id,minute,cause,illness=null){
 }
 
 function healthDay(d,engine,minute){
+ // A repeated interval must not age someone retroactively after their arrival.
+ // The daily health decision uses presence at the original midnight, once.
+ const clock=['state','records','npc_life:health'];
+ if((d.get(...clock)?.minute??-1)>=minute)return;
  const h=healthRules(engine);if(!h)return;
- const seed=d.document.randomSeed,day=minute/DAY,ended=new Set();
+ const seed=d.get('randomSeed'),day=minute/DAY,ended=new Set();
  for(const illness of Object.values(d.get('state','family','illnesses')??{}).filter(r=>r.status==='患病中').sort((a,b)=>a.id.localeCompare(b.id))){
   if(illness.patient==='player')continue;
   const npc=d.get('state','npcs',illness.patient);
@@ -439,17 +622,24 @@ function healthDay(d,engine,minute){
   if(illness.severity!=='重'||npc.status!=='患病'||withPlayer(d.get('state'),illness.patient))continue;
   const carer=assignCare(d,engine,illness,minute);
   if(minute<=illness.since)continue;
-  const odds=illness.fatality??h.graveFatality,fatality=carer?odds.cared:odds.alone,daily=1-(1-fatality)**(DAY/(illness.endsAt-illness.since));
+  const odds=illness.fatality??h.graveFatality,fatality=carer?odds.cared:odds.alone,daily=1-pow(1-fatality,DAY/(illness.endsAt-illness.since));
   if(clockRoll(seed,`illness-death:${illness.id}`,day)<daily)recordEntityDeath(d,engine,illness.patient,minute,'病故',illness);
  }
  for(const id of Object.keys(d.get('state','npcs')).sort()){
-  const state=d.get('state'),npc=state.npcs[id];
+  const state=d.peek?d.peek('state'):d.get('state'),npc=state.npcs[id];
   const along=withPlayer(state,id);
   if(!lifeActor(engine,state,id)||incapacitated(state,id)||!(settled(state,id)||along)||ended.has(id))continue;
+  const aging=ageDay(d,engine,id,minute,['state','npcs',id]);
   const age=npcAgeAt(engine,state,id,minute),band=age===null?null:ageBand(h,age);if(!band)continue;
-  if(clockRoll(seed,`natural-death:${id}`,day)<perDay(band.suddenDeathPerYear)&&!along){recordEntityDeath(d,engine,id,minute,'寿终');continue;}
+  if(clockRoll(seed,`natural-death:${id}`,day)<perDay(aging?.annualRisk??0)&&!along){recordEntityDeath(d,engine,id,minute,'寿终');continue;}
   if(clockRoll(seed,`illness:${id}`,day)<Math.min(1,band.illnessPerYear/360))fallIll(d,engine,id,minute,band);
  }
+ for(const [id,actor] of Object.entries(d.get('state','creatures')??{})){
+  if(isPhysicallyDead(engine,d,id)||!(actor.hp>0)||!Object.hasOwn(lifecycle(engine,d.get('state'),id),'lifespan'))continue;
+  const aging=ageDay(d,engine,id,minute,['state','creatures',id]);
+  if(aging&&clockRoll(seed,`natural-death:${id}`,day)<perDay(aging.annualRisk??0))recordEntityDeath(d,engine,id,minute,'寿终');
+ }
+ holdingSet(d,engine,clock,{category:'npc_life_clock',minute},'npc-life');
 }
 
 // ---- Moving house -----------------------------------------------------------
@@ -493,7 +683,7 @@ function strangerHost(engine,state,id,from,minute){
  for(const house of engine.world.households??[]){
   if(house.settlement===from?.settlement||hungry(engine,state,house.settlement))continue;
   const ledger=state.settlements?.[house.settlement];
-  if(!Number.isSafeInteger(ledger?.population)||!((ledger.food??0)>=(ledger.population+1)*s.foodDays))continue;
+  if(!Number.isSafeInteger(ledger?.population)||!((ledger.food??0)>=(mealMouthsOf(engine,state,house.settlement,ledger.population)+metabolismFactor(engine,state,id,'satiety'))*s.foodDays))continue;
   const members=householdMembers(engine,state,house.id).filter(x=>present(engine,state,x));
   const coming=Object.values(state.family?.migrations??{}).filter(m=>m.to.household===house.id&&m.status!=='中止');
   if(members.length+coming.filter(m=>['待出发','在途'].includes(m.status)).length>=s.maxHousehold||coming.filter(m=>m.stranger&&!m.with).length>=s.perHousehold)continue;
@@ -583,7 +773,7 @@ function migrationDay(d,engine,minute){
  const constraints=personConstraints(engine,d.get('state'));
  for(const id of Object.keys(d.get('state','npcs')).sort()){
   const state=d.get('state');if(!mobile(engine,state,id,constraints))continue;
-  const why=migrationReason(engine,state,id,minute,d.document.randomSeed);if(!why)continue;
+  const why=migrationReason(engine,state,id,minute,d.get('randomSeed'));if(!why)continue;
   const from=npcHousehold(engine,state,id,constraints),mid=`migration_${key(id,minute)}`;
   const row={id:mid,person:id,reason:why.reason,cause:why.cause,...(why.fleeing?{fleeing:why.fleeing}:{}),...(why.stranger?{stranger:true}:{}),host:why.host,
    from:{household:from.id,settlement:from.settlement,home:from.homeLocation},to:{household:why.house.id,settlement:why.house.settlement,home:why.house.homeLocation},
@@ -639,7 +829,7 @@ function depart(d,engine,m,at){
  if(!alive(state,m.person)){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'本人已不在',endedAt:at},'npc-life');return;}
  if(!alive(state,m.host)||npcHousehold(engine,state,m.host)?.id!==m.to.household){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'投奔的人家已不在原处',endedAt:at},'npc-life');return;}
  if(!settled(state,m.person)||incapacitated(state,m.person)||npc.caring||engine.npcAutonomyBusy?.(state,m.person,at)){postpone(d,engine,m,'动身时不得空');return;}
- let route;try{route=engine.route(npc.location,m.to.home,'walk',at,d.document.randomSeed);}catch{postpone(d,engine,m,'路线暂不可通行');return;}
+ let route;try{route=engine.route(npc.location,m.to.home,'walk',at,d.get('randomSeed'));}catch{postpone(d,engine,m,'路线暂不可通行');return;}
  if((npc.coins??0)<route.cost){postpone(d,engine,m,'路费不足');return;}
  const arriveAt=at+route.minutes,{schedule,changed}=residenceSchedule(engine,state,m);
  const early=endObligations(d,engine,m.person,o=>(o.start??o.due??0)<arriveAt,`${name}迁居途中，无法赴约`,m.id,at);
@@ -793,6 +983,10 @@ export function advanceNpcLife(d,engine,before,after){
 
 export function validateNpcLifeRules(world){
  const r=world.rules.npcLife,errors=[];if(!r)return errors;
+ for(const row of [r,...world.npcs??[],...world.monsters??[]])if(row.lifecycle!==undefined){
+  const l=row.lifecycle;
+  if(!l||typeof l!=='object'||Array.isArray(l)||Object.hasOwn(l,'lifespan')&&l.lifespan!==null&&(!Number.isFinite(l.lifespan)||l.lifespan<=0)||l.agingCatchUp!==undefined&&(!Number.isFinite(l.agingCatchUp)||l.agingCatchUp<=0))errors.push('lifecycle 须声明正数寿命或 null，agingCatchUp 须为正年数');
+ }
  const chance=v=>Number.isFinite(v)&&v>0&&v<=1,whole=v=>Number.isSafeInteger(v)&&v>0,level=v=>Number.isSafeInteger(v)&&v>=-100&&v<=100;
  if(!whole(r.adultAge)||r.adultAge<18)errors.push('npcLife.adultAge须为不小于18的整数');
  if(!Array.isArray(r.kinTypes)||!r.kinTypes.includes('配偶'))errors.push('npcLife.kinTypes须列出亲属关系类型');

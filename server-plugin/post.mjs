@@ -1,6 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {bookTransport,quoteTransport,transportServices,transportTrace,transportPosition} from './transport.mjs';
+import {bookTransport,quoteTransport,transportServices,transportTrace,transportPosition,settleWreckedShipment} from './transport.mjs';
 import {memoryFor,permitted,appendHeard} from './npc-cognition.mjs';
 import {publishTransitionEvent} from './world-events.mjs';
 import {financeBalance} from './finance-bank.mjs';
@@ -18,7 +18,7 @@ export function sendPost(d,e,{from,to,memoryId,legs,sealed=true,receipt=true},ev
  const memory=from==='player'?{id:`letter:${eventId}`,sourceEvent:eventId,kind:'letter',minute:s.minute,content:memoryId,sourceType:'亲历',participants:['player'],private:true,permittedRecipients:[to]}:memoryFor(e,s,from,memoryId,s.minute);if(!permitted(memory,to))throw preconditionFailure('这条私密记忆未许可收件人');
  if(!Array.isArray(legs)||!legs.length||legs.at(-1).to!==recipient.location)throw preconditionFailure('驿传接力须有通往收件地址的真实各段');
  let location=sender.location,at=s.minute,postage=0;
- for(const leg of legs){const quote=quoteTransport(d,e,{asset:leg.asset,from:location,to:leg.to,departAt:Math.ceil(at/60)*60});location=leg.to;at=quote.estimatedArrivalAt;postage+=quote.total;}
+ for(const leg of legs){const quote=quoteTransport(d,e,{asset:leg.asset,from:location,to:leg.to,departAt:at});location=leg.to;at=quote.estimatedArrivalAt;postage+=quote.total;}
  if(financeBalance(d,e,from)<postage*(receipt?2:1))throw preconditionFailure('邮资不足以覆盖接力与回执');
  const id=`post:${eventId}`;if(d.get(...path(id)))throw preconditionFailure('信件编号已存在');
  const row={category:'post',id,from,to,memoryId,payload:clone(memory),sealed,sealBroken:false,receiptRequested:receipt,origin:sender.location,destination:recipient.location,legs:clone(legs),legIndex:0,chain:[],createdAt:s.minute,status:'in-transit'};
@@ -30,6 +30,14 @@ export function advancePost(d,e,minute){
  for(const old of all(d.get('state'))){
   if(['delivered','lost','returned'].includes(old.status))continue;
   const row=clone(old),trip=d.get(...path(row.shipment));
+  if(trip?.status==='wrecked'){
+   // The carrier's asset was destroyed: settle the shipment (freight refund, notice to the sender), then end the letter.
+   // A lost receipt leg leaves the original letter delivered; any earlier leg means the letter never arrived.
+   settleWreckedShipment(d,e,trip.id,minute);
+   if(['receipt-in-transit','receipt-waiting'].includes(row.status)){row.status='delivered';row.receiptLost=true;row.reason='回执随车船损毁';}
+   else{row.status='lost';row.lostAt=minute;row.lastLocation=trip.transport.location;row.reason='承运车船在途中损毁';}
+   index(d,row.id,false);d.set(path(row.id),row);continue;
+  }
   if(trip?.status==='intercepted'){row.status='intercepted';row.custodian=trip.custodian;d.set(path(row.id),row);continue;}
   if(trip?.status!=='delivered')continue;
   const last=row.chain.at(-1);last.arrivedAt??=trip.arrivedAt;
@@ -38,7 +46,7 @@ export function advancePost(d,e,minute){
    else row.status='receipt-waiting';d.set(path(row.id),row);continue;
   }
   if(row.legIndex<row.legs.length-1){
-   const next=row.legs[row.legIndex+1],services=transportServices(e,d.get('state'),trip.to),service=services.find(s=>s.asset===next.asset);
+   const next=row.legs[row.legIndex+1],services=transportServices(e,d.document,trip.to),service=services.find(s=>s.asset===next.asset);
    if(!service){row.status='waiting';row.reason='接力承运人或资产尚未到站';d.set(path(row.id),row);continue;}
    try{
     const nextTrip=bookTransport(d,e,{owner:row.from,recipient:row.from,asset:next.asset,from:trip.to,to:next.to,post:row.id},`${row.id}:leg:${row.legIndex+1}`);

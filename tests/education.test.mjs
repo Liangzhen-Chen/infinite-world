@@ -1,15 +1,138 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {educationStatistics,educationCourses} from '../server-plugin/education-state.mjs';
+import {educationStatistics,educationCourses,knowledgeProficiency} from '../server-plugin/education-state.mjs';
+import {npcAgeAt} from '../server-plugin/npc-state.mjs';
+import {prepareEducation,advanceEducation} from '../server-plugin/education.mjs';
+import {advanceNpcSchedules,scheduleAt,withScheduleCache} from '../server-plugin/npc-schedule.mjs';
 import {organizationState} from '../server-plugin/organization-state.mjs';
 import {personCertified} from '../server-plugin/entity-view.mjs';
 import {fixture,run,open,world,seed} from './fixtures/education.mjs';
-import {applyPatches} from '../server-plugin/storage.mjs';
+import {applyPatches,PatchCursor,withRecordIndex,digest} from '../server-plugin/storage.mjs';
 import {scaleFixture,fixtureDraft} from '../tools/scale-bench.mjs';
 import {advanceLayerPlan} from '../server-plugin/advance-layers.mjs';
 import {settlePopulationLayers,rosterLifeState} from '../server-plugin/population.mjs';
 import {cohortRoster,expandedEducation} from '../server-plugin/education-cohorts.mjs';
+
+test('course query minute shares real state indexes and preserves copied-clock results',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc),snapshot=structuredClone(f.doc);
+ // A480-minute opening and the1440-minute day boundary must use the query
+ // clock, without writing it into the real state or changing class output.
+ for(const minute of [0,479,480,720,1439,1440,1441,30*1440]){
+  const expected=educationCourses(f.e,{...cursor.root.state,minute});
+  withRecordIndex(()=>assert.deepEqual(educationCourses(f.e,cursor.expose(cursor.root.state),minute),expected));
+ }
+ assert.deepEqual(cursor.root,snapshot);
+});
+
+test('live water volume does not rewrite classes derived from fixed daily duties',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc);
+ withRecordIndex(()=>{
+  const read=()=>educationCourses(f.e,cursor.expose(cursor.root.state)),before=read();
+  // No work allocation changes: these are only real-time river volume and
+  // potability facts. Execution still checks them when collecting/drinking.
+  cursor.apply({op:'set',path:['state','records','water_cycle:course-water'],value:{category:'water_cycle',location:'loc_hw',water:{waterMl:1000,saltMg:0,toxinUg:0}}});
+  assert.equal(read(),before);
+  cursor.apply({op:'set',path:['state','records','water_cycle:course-water','water','waterMl'],value:0});assert.equal(read(),before);
+  cursor.apply({op:'set',path:['state','records','physical_feature:course-water'],value:{category:'physical_feature',location:'loc_hw',state:{waterMl:1000,toxinUg:1000}}});assert.equal(read(),before);
+ });
+});
+
+test('meal receipts and bag consumption preserve courses; lost teacher literacy still removes school teaching',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc);
+ withRecordIndex(()=>{
+  const read=()=>educationCourses(f.e,cursor.expose(cursor.root.state));
+  const before=read();assert.ok(before.some(c=>c.school&&c.teacher===f.teacher));
+  const adult=Object.keys(cursor.root.state.npcs).find(id=>id!==f.student&&id!==f.teacher&&npcAgeAt(f.e,cursor.root.state,id)>17&&knowledgeProficiency(f.e,cursor.root.state,id,'skill_literacy')<=100&&!Object.values(cursor.root.state.itemInstances??{}).some(u=>u.owner===id&&u.book));
+  assert.ok(adult);
+  // A non-pupil, non-teacher adult's sword practice is not an input to a
+  // literacy class. Keep the cached class, while the lost-literacy assertion
+  // below still proves that an actual teacher input invalidates it.
+  cursor.apply({op:'set',path:['state','npcs',adult,'skills','skill_sword'],value:77});assert.equal(read(),before);
+  cursor.apply({op:'set',path:['state','records','irrelevant-forage'],value:{category:'household_forage',reserve:3}});assert.equal(read(),before);
+  // Mortality risk can advance every clock without changing the teacher's
+  // calendar age or any class. Actual literacy still invalidates below.
+  cursor.apply({op:'set',path:['state','npcs',f.teacher,'aging'],value:{riskAge:99}});assert.equal(read(),before);
+  // Meal metadata and an empty bread bag have no effect on literacy teaching.
+  cursor.apply({op:'set',path:['state','family','meals','home'],value:{missingMeals:0}});
+  cursor.apply({op:'set',path:['state','family','mealDays','loc_hw'],value:0});
+  assert.equal(read(),before);
+  cursor.apply({op:'set',path:['state','npcs',f.teacher,'inventory'],value:{}});assert.equal(read(),before);
+  // A teacher's physical commute can change attendance without cancelling a
+  // declared class. This fixture has a complete public ration and near water,
+  // so moving the chore window cannot introduce a forage teaching conflict.
+  const from=cursor.root.state.npcs[f.teacher].location,to='loc_hw_northwood',at=cursor.root.state.minute;
+  const route=f.e.route(from,to,'walk',at,f.doc.randomSeed);
+  cursor.apply({op:'set',path:['state','npcs',f.teacher,'scheduleTravel'],value:{from,to,depart:at,arrive:at+route.minutes,edges:route.edges}});
+  assert.equal(read(),before);
+  cursor.apply({op:'delete',path:['state','npcs',f.teacher,'scheduleTravel']});assert.equal(read(),before);
+  cursor.apply({op:'set',path:['state','npcs',f.teacher,'skills','skill_literacy'],value:0});
+  const changed=read();assert.ok(changed.every(c=>!c.school||c.teacher!==f.teacher));
+ });
+});
+test('course dependencies follow the original appointment event rather than retaining an invalid teaching booking',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc),event='course-source';
+ withRecordIndex(()=>{
+  const read=()=>educationCourses(f.e,cursor.expose(cursor.root.state)),before=read();
+  const source={category:'world_event',id:event,verb:'appointment_agreed',actor:f.teacher,minute:480,payload:{service:'teach'}};
+  const appointment={category:'service_appointment',id:'course-booking',actor:f.teacher,sourceEvent:event,start:480,end:720,location:'loc_hw',services:['teach']};
+  cursor.apply({op:'set',path:['state','records',`world_event:${event}`],value:source});
+  cursor.apply({op:'set',path:['state','records','service_appointment:course-booking'],value:appointment});
+  cursor.apply({op:'set',path:['state','records','service_appointment:course-booking:source'],value:{category:'service_appointment_receipt',digest:digest(appointment)}});
+  // The240-minute outside booking removes that interval from school work.
+  assert.ok(read().filter(c=>c.teacher===f.teacher&&c.location==='bld_hw_school').every(c=>c.end<=480||c.start>=720));
+  cursor.apply({op:'set',path:['state','records',`world_event:${event}`,'actor'],value:f.student});
+  assert.deepEqual(read(),before);
+ });
+});
+
+test('a subsistence worker local presence reaches the education tick exactly once',async()=>{
+ const f=fixture(),course=await open(f),d=f.e.primitiveDraft(f.doc),beforeState={...d.get('state'),minute:600};
+ d.set(['state','minute'],660);
+ // A real local read already walked this teacher through600–660. The
+ // next ordinary clock must use those60 presence minutes, not erase them
+ // in prepareEducation or walk/credit the same interval a second time.
+ d.set(['state','scheduler','subsistence'],{from:600,until:660,actors:[f.teacher],attendance:{[f.teacher]:[{start:600,end:660,location:'bld_hw_school'}]}});
+ const ctx={before:600,after:660,beforeState};
+ withRecordIndex(()=>{
+  try{
+   prepareEducation(d,f.e,ctx);advanceNpcSchedules(d,f.e,600,660,{beforeState});
+   assert.deepEqual(f.e.educationAttendance.get(f.teacher),[{start:600,end:660,location:'bld_hw_school'}]);
+   advanceEducation(d,f.e,ctx);
+   // Sixty attended minutes are pending: a lesson completes only at its
+   // 120-minute requirement and dismissal. Preserve both accounting checks.
+   assert.equal(d.get('state','records',`education_study:${course.course}:${f.student}`,'minutes'),60);
+   assert.equal(d.get('state','records',`education_study:${course.course}:${f.student}`,'completedMinutes'),0);
+   assert.equal(d.get('state','npcs',f.student,'skills','skill_literacy'),0);
+  }finally{delete f.e.educationCourseContext;delete f.e.educationAttendance;}
+ });
+});
+
+test('course pupil age memo follows the actual birth partition rather than the NPC risk-age accumulator',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc);
+ withRecordIndex(()=>{
+  const read=()=>educationCourses(f.e,cursor.expose(cursor.root.state)),before=read();
+  const pupil=before.find(c=>c.school&&c.teacher===f.teacher)?.students[0];assert.ok(pupil);
+  // Moving this existing pupil's recorded birth to91 years ago removes a
+  // seat candidate; changing a mortality accumulator alone did not above.
+  cursor.apply({op:'set',path:['state','family','people',pupil],value:{...f.e.byId.get(pupil),birth:{year:-90,month:1,day:1}}});
+  assert.ok(read().filter(c=>c.school).every(c=>!c.students.includes(pupil)));
+ });
+});
+
+test('course master memo follows an edited relationship object and retains the actual recipe prerequisite',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc),recipe=f.w.recipes.find(r=>!(r.teachers??[]).includes(f.student));assert.ok(recipe);
+ assert.ok(!f.e.byId.get(f.student).relationships?.some(r=>r.type==='师父'));
+ withRecordIndex(()=>{
+  const read=()=>educationCourses(f.e,cursor.expose(cursor.root.state));
+  cursor.apply({op:'set',path:['state','npcs',f.teacher,'recipes',recipe.id],value:{learnedAt:480}});
+  cursor.apply({op:'set',path:['state','npcs',f.student,'relationships',f.teacher],value:{type:'师父'}});
+  assert.ok(read().some(c=>c.apprentice&&c.teacher===f.teacher&&c.students.includes(f.student)&&c.entity===recipe.id));
+  cursor.apply({op:'set',path:['state','npcs',f.student,'relationships',f.teacher,'type'],value:'朋友'});
+  assert.ok(read().every(c=>!c.apprentice||c.teacher!==f.teacher||!c.students.includes(f.student)));
+ });
+});
+
 test('开班、组织、公库雇师按实际课时离屏结算；技能与识字率从当前居民派生',async()=>{
  const f=fixture(),o=await open(f,{coins:100,wage:48});assert.equal(organizationState(f.e,f.doc.state,o.org).seat,'bld_hw_school');
  const money=f.doc.state.npcs[f.teacher].coins,treasury=organizationState(f.e,f.doc.state,o.org).treasury;
@@ -96,6 +219,10 @@ test('行会和门派地方考核沿真实职业任务认证，失败不生成�
   const entry=mode==='sect'?f.w.rules.training.institutions.find(t=>f.doc.state.npcs[t.teacher]):null;
   const p=entry?f.w.professions.find(p=>p.id===entry.profession):f.w.professions.find(p=>p.kind==='combat'&&p.entry&&f.w.npcs.some(n=>n.services?.includes(p.id)&&f.doc.state.npcs[n.id]));
   const teacher=entry?.teacher??f.w.npcs.find(n=>n.services?.includes(p.id)).id;
+  // This exam deliberately isolates the tutor's authored routine. Keep the
+  // derived household errands isolated too; profession/task eligibility and
+  // every success/failure/certificate assertion remain the subject here.
+  delete f.w.rules.householdSubsistence;
   const b=f.w.npcs.find(n=>n.id===teacher);delete b.schedule;f.e=new WorldEngine(f.w);f.doc.state.npcs[teacher].location=f.doc.state.location;f.doc.state.player.level=p.minimumLevel;f.doc.state.player.attributes[p.attribute]=40;
   f.doc.state.skills[p.entry.skill]={proficiency:p.entry.minimumProficiency};
   const args={operation:'examine',profession:p.id,teacher,institution:'loc_hw',choice:mode};
@@ -124,4 +251,54 @@ test('统计层按种子人口与学馆容量授业，分段与重放一致，�
  assert.equal(f.doc.state.created[kept].skills.skill_literacy,120);
  const active=rosterLifeState(scale.engine.scoped(f.doc),f.doc.state,id,f.doc.state.minute,'近处入学',{minor:true});assert.equal(active.skills.skill_literacy,120);assert.equal(active.growth.skills.skill_literacy.teach,120);
  const after=structuredClone(f.doc);settlePopulationLayers(fixtureDraft(f.doc),e);assert.deepEqual(f.doc,after);assert.equal(educationStatistics(e,f.doc.state,sid).literate,stats.literate);
+});
+
+// Course derivation reads the settlement profile list exactly once per derivation, so its access count is a real count of derivations.
+function countDerivations(e,run){
+ const profiles=e.world.settlementProfiles;let n=0;
+ Object.defineProperty(e.world,'settlementProfiles',{configurable:true,get(){n++;return profiles;}});
+ try{run();}finally{Object.defineProperty(e.world,'settlementProfiles',{configurable:true,writable:true,value:profiles});}
+ return n;
+}
+
+test('cached education courses equal a direct derivation after births, deaths, age crossings, course and skill writes and day changes',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc),pupil=educationCourses(f.e,f.doc.state).find(c=>c.school&&c.teacher===f.teacher)?.students[0];
+ assert.ok(pupil);
+ const writes=[
+  ()=>{},
+  ()=>cursor.apply({op:'set',path:['state','family','people',pupil],value:{...f.e.byId.get(pupil),birth:{year:-90,month:1,day:1}}}),
+  ()=>cursor.apply({op:'set',path:['state','family','people',pupil],value:{...f.e.byId.get(pupil),birth:{year:-10,month:1,day:1}}}),
+  ()=>cursor.apply({op:'set',path:['state','npcs',f.teacher,'status'],value:'死亡'}),
+  ()=>cursor.apply({op:'set',path:['state','npcs',f.teacher,'status'],value:'正常'}),
+  ()=>cursor.apply({op:'set',path:['state','npcs',f.teacher,'skills','skill_literacy'],value:0}),
+  ()=>cursor.apply({op:'set',path:['state','npcs',f.teacher,'skills','skill_literacy'],value:200}),
+  ()=>cursor.apply({op:'set',path:['state','minute'],value:cursor.root.state.minute+1440}),
+  ()=>cursor.apply({op:'set',path:['state','minute'],value:cursor.root.state.minute+30*1440}),
+ ];
+ const steps=[];
+ withRecordIndex(()=>{
+  for(const write of writes){
+   write();
+   steps.push({cached:JSON.stringify(educationCourses(f.e,cursor.expose(cursor.root.state))),plain:structuredClone(cursor.root.state)});
+  }
+ });
+ // The direct side re-derives from each plain copy outside the index; both sides must agree byte for byte.
+ for(const {cached,plain} of steps)assert.equal(cached,JSON.stringify(educationCourses(f.e,plain)));
+ assert.ok(new Set(steps.map(s=>s.cached)).size>1,'the writes must actually change the courses');
+});
+
+test('repeated schedule queries on one state derive the courses once; the unscoped path derives for every query',()=>{
+ const f=fixture(),cursor=new PatchCursor(f.doc),state=cursor.expose(cursor.root.state),minute=state.minute;
+ const ids=[...new Set(educationCourses(f.e,state).flatMap(c=>[c.teacher,...c.students]).filter(Boolean))].slice(0,8);
+ assert.ok(ids.length>=2);
+ const query=()=>ids.map(id=>scheduleAt(f.e,id,minute,state));
+ const direct=[];const unscoped=countDerivations(f.e,()=>direct.push(...query(),...query()));
+ const cached=[];
+ const scoped=countDerivations(f.e,()=>withScheduleCache(f.e,{cursor},()=>withRecordIndex(()=>cached.push(...query(),...query()))));
+ assert.equal(JSON.stringify(cached),JSON.stringify(direct));
+ assert.ok(scoped<unscoped,`scoped ${scoped} must derive fewer times than unscoped ${unscoped}`);
+ // One more full round on the same state adds no derivation.
+ let extra;
+ const once=countDerivations(f.e,()=>withScheduleCache(f.e,{cursor},()=>withRecordIndex(()=>{query();extra=countDerivations(f.e,query);})));
+ assert.equal(extra,0);assert.ok(once>0);
 });

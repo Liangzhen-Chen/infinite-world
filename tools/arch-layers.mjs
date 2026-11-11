@@ -9,7 +9,7 @@ const L0=['precondition','action-rejection','action-boundary','rx','primitives',
  'agriculture-migration','boss-migration','farm-pests-migration',/* 迁移归存档 */
  'engine','activities'/* 工具分派适配器，随 engine */,'ledger'/* S1a 账本：账户与转移 */,'holdings'/* S2a 持有存储：持有、实体化对象与位置事实 */,'scheduler'/* S2b 同刻调度器：阶段、排序键、序号、争夺池 */,'advance-registry','advance-hooks','advance-layers','effect-registry','effects','magic-effects','magic-primitives','checks','world-events',
  'compat/v2-phase1-activities','compat/v2-phase1-engine','legacy/core'];
-const L1=['domain-rules'/* 场景数据表访问器 */,'book-gates'/* 书籍阅读共用门槛 */,'record-cleanup'/* 追加型记录的清理 */,'action-authority','action-consent','action-capacity','action-degrees','obligation-state','obligation-calendar','obligation-presence','obligation-runtime','obligation-conditional','obligation-claims','service-queue','lifecycle-state','contract-state','obligation-kinds','transition','identity','subjective-view','npc-decision','autonomy-candidates','entity-view','organization-state','employment-state','facility-state','noble-state','faith-state','education-state','family-state','npc-state','medicine-state','workstation-services'/* *-state 选择器 */,
+const L1=['domain-rules'/* 场景数据表访问器 */,'valuation'/* S5 W4 估值角色登记表：质押、典当、遗产共用，各领域登记自己的估值依据 */,'book-gates'/* 书籍阅读共用门槛 */,'record-cleanup'/* 追加型记录的清理 */,'read-scope'/* 规划期只读作用域：读取器按状态/账本/种子共享备忘 */,'action-authority','action-consent','action-capacity','action-degrees','obligation-state','obligation-calendar','obligation-presence','obligation-runtime','obligation-conditional','obligation-claims','service-queue','lifecycle-state','contract-state','obligation-kinds','transition','identity','subjective-view','npc-decision','autonomy-candidates','entity-view','organization-state','employment-state','facility-state','noble-state','faith-state','education-state','family-state','npc-state','medicine-state','workstation-services'/* *-state 选择器 */,
  'entity-transitions','group-account','money'/* S1a 货币适配器：旧字段 → 账户 */,'stock'/* S1b 物品、粮与库存适配器：旧字段 → 账户 */,'holding-kinds'/* S2a 持有种类注册表 */,'holding-sources'/* S2a 持有适配器：旧字段 → 持有 */,'items','finance-operations','law-codes','traits','interactions','location-access','regions','catalog','retrieval','retrieval-lexicon','lore','character','progression','action-registry'/* A1 动作注册表（数据） */];
 const PACKS={
  economy:['business','shop','settlement-trade','finance-bank','finance-assets','finance-tax','credit','contracts','labor-market','transport','transport-route','post','smuggling','extraction','manufacturing','repair','works','magic-economy'],
@@ -17,7 +17,7 @@ const PACKS={
  governance:['governance','civic','promotion','promotion-view','elections','titles','high-nobility','nation-founding','public-projects','office-salary','notables','settlement-profile'],
  family:['npc-life','family-inheritance','family-law','family-politics','family-diplomacy'],
  organizations:['organizations','faction-clock','faith','festival','world-clock'/* * 时钟阶段，与势力时钟同组 */],
- ecology:['seasonal-hazards','agriculture','wildlife','wildlife-habitats','wildlife-range','wildlife-migration','wildlife-awakening','wildlife-society','seasonal-migration','farm-pests',
+ ecology:['husbandry','ecology-dynamics','seasonal-hazards','agriculture','wildlife','wildlife-habitats','wildlife-range','wildlife-migration','wildlife-awakening','wildlife-society','seasonal-migration','farm-pests',
   'bosses','boss-abilities','boss-cognition','boss-negotiation','creature-nature','environment','monster-society','tribal-awakening','sites','forest-water','water-cycle'/* RW-04 林水 */],
  magic:['magic','magic-air','magic-area','magic-care','magic-consent','magic-context','magic-growth','magic-light','magic-marks','magic-message','magic-mind-space','magic-movement','magic-object','magic-ritual','magic-status','magic-targeting','magic-water-earth','spell-research','summons'],
  character:['combat','revival','professions','career-metrics','hidden-passives','training','local-exams','learning','education','education-cohorts'],
@@ -27,7 +27,7 @@ const PACKS={
  remote:['remote-generation','population','population-service'],
  medicine:['medicine'/* * RW-06 日常诊疗 */],
  quests:['quest-board','quest-sources','quest-wildlife'/* * 委托 */],
- facilities:['facilities'/* * 03 §3.4 设施包（火灾） */],
+ facilities:['facilities','building-maintenance'/* * 03 §3.4 设施包（火灾、业主修缮） */],
 };
 const L3=['scene-card','prompt-scope','chronicle','state-notices','return-summary','consistency-review','consistency-service','consistency-evidence','consistency-outcome',
  'standing','reputation','reputation-registry','reputation-catalog','public-opinion','ui-affairs','ui-history','ui-map','ui-messages','ui-overview','ui-personal',
@@ -38,10 +38,26 @@ const TABLE=new Map();
 const put=(names,layer,pack=null)=>{for(const n of names){const f=`server-plugin/${n}.${n.startsWith('legacy/')?'js':'mjs'}`;if(TABLE.has(f))throw Error(`重复归层：${f}`);TABLE.set(f,{layer,pack});}};
 put(L0,'L0');put([...L1,'combat-state'],'L1');for(const [pack,names]of Object.entries(PACKS))put(names,'L2',pack);put(L3,'L3');put(L4,'L4');
 // Conserved liquid arithmetic and read-only intent matching are shared logic.
-put(['water-volume','documents'],'L1');
+put(['water-volume','documents','population-health','finance-liabilities'],'L1');
 put(['action-constructor'],'L1');
 export const PACK_NAMES=Object.keys(PACKS);
-put(['perception','norm-stack','place-layout'],'L1');
+put(['currency','market','household-budget','household-subsistence','perception','norm-stack','place-layout','derived','derived-consumers'],'L1');
+// t-avail 饮食惯常（只读 market/money/entity-view，被 household-budget 与 shop 读）；RG 可再生存量（只读 stock 与 det-math，被工具读）。
+put(['food-habit','renewable'],'L1');
+// W8D 队伍威慑（承运报价与遭遇/劫掠候选共读）。
+put(['deterrence'],'L1');
+// S5-F/F2 legal-tender pricing and goods escrow sit beside currency and money; W5 deterministic math and the claim-unit label are leaves every layer may read.
+put(['tender','goods-escrow'],'L1');
+put(['det-math','claim-unit'],'L0');
+// SL / K-line modules. Leaves read by the composition root and every layer: the breach-noting transaction hook, the species-trait
+// derivation (husbandry products from physiology, no per-species list) and the runtime-world assembler that applies it.
+put(['offense-notes','husbandry-traits','runtime-world','item-class','advance-registration'],'L0');
+// Household-tool rule: the same law for the player and NPCs; husbandry and professions read it. item-class (above) is a pure leaf read by engine and items alike.
+put(['household-tools'],'L1');
+// Dealer restocking, livestock sale and profession-driven labour trade goods through the existing market and shop.
+put(['distribution','livestock-sale'],'L2','economy');put(['npc-labor'],'L2','npc');
+// W8C: body-derived safe carry load (attr.carry), read by item transfers.
+put(['carry'],'L1');
 // Time-slot resolution and request programs belong to the shared action ontology.
 put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','primitive-accounts','legacy-primitives','faith-catalog','weather','hazard-calendar','environment-state','map-state','rx-library','action-authority-sources','action-router','action-limits','open-actions','action-rite','mark-actions','mark-reactions','action-costs','action-time','routing-programs','body-needs'],'L1');
 

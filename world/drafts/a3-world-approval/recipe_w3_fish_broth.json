@@ -1,6 +1,6 @@
 {
   "id": "recipe_w3_fish_broth",
-  "fingerprint": "ea48136b4e9a1972900d80ab14cc91853dc6d602c231325d93e09e39bb267a77",
+  "fingerprint": "d77aaa88e08e0b195b298b792ad2c4718f631083655ddcdc9ace4f35d8501ace",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -64,6 +64,7 @@
   "errors": [],
   "warnings": [],
   "feedback": null,
+  "errorCode": null,
   "frozenCandidate": {
     "entryHash": "cbd2786ba58f6f142f97ac8f1143344edf2309ddcfb053b2d676c36532c6d281",
     "draftHash": "7810c8f6627681f1be445e74c2d941e7be2fd90f2a666b651f0d407d912838ab"
@@ -72,10 +73,10 @@
     {
       "phase": "review",
       "attempt": 1,
-      "requestId": "e5a452f9-9c28-4109-bb9f-7b44a56ccb9f",
-      "file": "budget-responses/e5a452f9-9c28-4109-bb9f-7b44a56ccb9f.json",
-      "requestHash": "dec4beadc78e2d3fb461d26345d87e73d268aebe16ffbd850788943d07f97ba3",
-      "responseHash": "1430c5c4fc54c309aac78ac45f4269421e0ffe1e191598768e330fb19c0e495d"
+      "requestId": "6eda8257-b701-475e-b778-ed0a2e844def",
+      "file": "budget-responses/6eda8257-b701-475e-b778-ed0a2e844def.json",
+      "requestHash": "cd07af2f5a4919565b27d1e1eb30cac38c58afc930fef96111d7fcf08dba3cda",
+      "responseHash": "812db843b42704b318f102d24b2ebb400b86e223bfa4979d6116d1f4568d8f11"
     }
   ],
   "measurements": [
@@ -84,19 +85,19 @@
       "model": "deepseek-flash",
       "thinking": "disabled",
       "usage": {
-        "prompt_tokens": 2231,
+        "prompt_tokens": 2223,
         "completion_tokens": 7,
-        "total_tokens": 2238,
+        "total_tokens": 2230,
         "prompt_tokens_details": {
           "cached_tokens": 128
         },
         "prompt_cache_hit_tokens": 128,
-        "prompt_cache_miss_tokens": 2103
+        "prompt_cache_miss_tokens": 2095
       },
-      "costUpperYuan": 0.00426712,
-      "cumulativeUpperYuan": 0.13681880000000002,
-      "latencyMs": 926.2345000000005,
-      "timestamp": "2026-10-22T22:40:59.145Z"
+      "costUpperYuan": 0.00425112,
+      "cumulativeUpperYuan": 0.15025712,
+      "latencyMs": 810.8837000000003,
+      "timestamp": "2026-11-10T15:02:54.408Z"
     }
   ]
 }

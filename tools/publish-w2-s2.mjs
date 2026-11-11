@@ -4,7 +4,8 @@ import {randomUUID} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {siteItemReferences} from '../server-plugin/sites.mjs';
-import {formalOrder} from './catalogue-order.mjs';
+import {fixtureAffording} from '../server-plugin/workstation-services.mjs';
+import {formalOrder,withoutRecipesOfItems} from './catalogue-order.mjs';
 import {hashContent,readApprovedContent} from './content-pipeline.mjs';
 import {entries,contextFor,revision,validateDraft,reviewDraftFor,buildCandidate} from './w2-s2-content.mjs';
 import {spells,books,items,recipes,mentors,placements,stations} from '../world/design/w2-s2.mjs';
@@ -52,17 +53,19 @@ export function mergeS2Publication(world,publication){
   for(const [item,quantity] of Object.entries(inventory))if(!Object.hasOwn(p.inventory,item))p.inventory[item]=quantity;
  }
  for(const [location,rows] of Object.entries(publication.placements)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.features=mergeRows(place.features??[],rows,'环境对象',`features:${location}`);}
- for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);place.workstations=mergeRows(place.workstations??[],rows,'工作台',`workstations:${location}`);}
+// K5：工位由地点 fixtures 派生；地点的 fixtures 已能承担该类工位（或已有同类工位）时，草案手写的工位行不再并入，合并因此幂等。
+ for(const [location,rows] of Object.entries(publication.stations)){const place=next.locations.find(l=>l.id===location);if(!place)throw Error(`地点不存在：${location}`);const add=rows.filter(r=>!place.workstations?.some(w=>w.kind===r.kind)&&!(place.fixtures??[]).some(f=>(f.fixture??f)===fixtureAffording(r.kind)));if(add.length)place.workstations=mergeRows(place.workstations??[],add,'工作台',`workstations:${location}`);}
  return next;
 }
 // The edition before this batch, rebuilt from any world that may contain it.
 // Older batch tests compare their own reviewed rows against this view.
-export function withoutS2(source){
+export function withoutS2(source,{keepOwnGenerated=false}={}){
  const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
  const w=structuredClone(source);
  // Items that later sites still hold or use stay in the catalogue (server-plugin/sites.mjs).
  for(const id of siteItemReferences(w.locations))ids.items.delete(id);
  for(const k of Object.keys(ids))w[k]=w[k].filter(r=>!ids[k].has(r.id));
+ if(!keepOwnGenerated)withoutRecipesOfItems(w,ids.items);// 本批书的抄书配方是生成行：作为"本批之前"的底本时留着（合并后与正式一致），作为更早批次的夹具时随书移出，不留悬空引用
  const seller=w.npcs.find(n=>n.id==='npc_hw_luqing');for(const b of books)if(seller?.inventory)delete seller.inventory[b.id];
  for(const [id,{teach,inventory}] of Object.entries(mentors)){
   const p=w.npcs.find(n=>n.id===id);if(!p)continue;const skills=new Set(teach.map(t=>source.spells.find(s=>s.id===t)?.skill).filter(Boolean));

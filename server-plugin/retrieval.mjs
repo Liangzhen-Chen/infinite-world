@@ -3,6 +3,7 @@ import * as OpenCC from 'opencc-js';
 import {RETRIEVAL_DICTIONARY,expandRetrievalText,prepareRetrievalRecord,isSystemMemoryText} from './retrieval-lexicon.mjs';
 import {publicSettlementEntries} from './settlement-profile.mjs';
 import {siteKnowledge} from './sites.mjs';
+import {ln,exp} from './det-math.mjs';
 const convert = OpenCC.Converter({ from: 'tw', to: 'cn' });
 // Pure text results cannot become stale when an entity moves or changes name.
 // The bound covers the 35k-resident fixture without retaining unlimited chats.
@@ -90,9 +91,16 @@ export class EntityResolver {
 // The engine's own resolver indexes exactly engine.entities (sessions extend it alongside entities).
 export const engineIndexOptions = engine => ({ entities: engine.entities, resolver: engine.resolver && engine.byId === engine.resolver.entities ? engine.resolver : null });
 // Shared by memory retrieval and action routing; callers choose normalization.
+// The deterministic logarithm is a pure function of (df, count) and dominates a search over many documents: evaluate it once per pair.
+const idfMemo=new Map();
+function idf(df,count){
+    const key=count*1048576+df;let value=idfMemo.get(key);
+    if(value===undefined){if(idfMemo.size>=8192)idfMemo.clear();idfMemo.set(key,value=ln(1+(count-df+0.5)/(df+0.5)));}
+    return value;
+}
 export function bm25TermScore(tf,df,count,length,average){
     if(!tf)return 0;
-    return Math.log(1+(count-df+0.5)/(df+0.5))*tf*2.2/(tf+1.2*(0.25+0.75*length/Math.max(1,average)));
+    return idf(df,count)*tf*2.2/(tf+1.2*(0.25+0.75*length/Math.max(1,average)));
 }
 export class MemoryIndex {
     constructor({ entities = [], dictionary = [], resolver = null } = {}) {
@@ -178,7 +186,7 @@ export class MemoryIndex {
         for (const term of terms) for (const id of this.postings.get(term) ?? []) candidates.add(id);
         const entities = new Set([...this.resolver.mentions(query, scope), ...present]);
         for (const document of this.documents.values()) if (document.entities?.some(id => entities.has(id))) candidates.add(document.id);
-        const n = this.documents.size, average = this.totalLength / Math.max(1, n), rows = [];
+        const n = this.documents.size, average = this.totalLength / Math.max(1, n), rows = [], ageDecay = new Map();
         for (const id of candidates) {
             const doc = this.documents.get(id); let relevance = 0;
             for (const term of terms) {
@@ -187,7 +195,10 @@ export class MemoryIndex {
                 relevance += bm25TermScore(tf,df,n,doc.length,average);
             }
             if (doc.entities?.some(id => entities.has(id))) relevance += 2;
-            const decay = doc.guardUntil>now?1:0.5 + 0.5 * Math.exp(-Math.max(0, now - doc.minute) / (1440 * 30));
+            const age = Math.max(0, now - doc.minute);
+            // The deterministic exponential is costly and depends only on the age: documents of one age share one evaluation.
+            let aged = ageDecay.get(age); if (aged === undefined) ageDecay.set(age, aged = 0.5 + 0.5 * exp(-age / (1440 * 30)));
+            const decay = doc.guardUntil>now?1:aged;
             const score = relevance * (0.5 + doc.salience / 5) * decay;
             if (score > 0) rows.push({ id, source: doc.source, eventId: doc.eventId, minute: doc.minute, text: doc.text, score });
         }

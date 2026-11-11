@@ -114,8 +114,9 @@ test('多日推演对账：交易、借贷利息、受雇工钱、钱庄、商�
     await step(c,'world_trade',{seller:host,item:'item_bread',quantity:2},'buy',log);
     assert.ok(c.doc.ledger.accounts[purse(null,'player')]>0);
     const opened=[...legacyMoney(c.engine,c.doc.state)].length;assert.ok(opened>250,'开账覆盖全部旧余额');
-    // 店主转卖外路进货：商税从卖方钱袋转入聚落公账。
-    await step(c,'world_trade',{seller:host,item:'item_ration',quantity:40},'buy-ration',log);
+    // E6后公开食品S90，单笔上限floor(90×.3)=27，原40超限。按合法议价2买25份，
+    // 整单50铜，商税floor(50×500/10000)=2，保留真实商税与逐账户对账断言。
+    await step(c,'world_trade',{seller:host,item:'item_ration',quantity:25,unitPrice:2},'buy-ration',log);
     assert.ok(Object.values(c.doc.state.records).some(r=>r.category==='trade_tax'&&r.amount>0),'商税经账本入公账');
     // A3 真实同意只补借款前提；原资金流、逐账户对账与守恒断言全部保留。
     c.doc=grantLoanConsent(c.engine,c.doc,{lender:host,principal:40,days:10,eventId:'ledger-loan-consent'});

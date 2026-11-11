@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {readReusePublication,mergeReusePublication,publishReuse} from '../tools/publish-w2-reuse.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 
-const formal=await loadWorld(),publication=await readReusePublication(),before=structuredClone(formal);
+const formal=await loadRuntimeWorld(),publication=await readReusePublication(),before=structuredClone(formal);
 for(const [category,rows]of Object.entries({spells:publication.spells,skills:publication.sources.mappings.map(row=>row.skill),items:publication.items})){
  const ids=new Set(rows.map(row=>row.id));before[category]=before[category].filter(row=>!ids.has(row.id)||category==='skills'&&row.learningProfessions);
 }
@@ -21,13 +21,14 @@ test('隔离预演不写入，只追加T19的14条法术且重复零写入；正
  const root=await fs.mkdtemp(path.join(tmpRoot(),'fields-w2-reuse-'));
  t.after(async()=>{assert.ok(path.resolve(root).startsWith(path.resolve(tmpRoot())+path.sep));await fs.rm(root,{recursive:true,force:true});});
  // A3 archives actions and ontology in loadWorld; preserve them in this publication roundtrip, including its full-world equality assertion.
- for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // S5-06: copy the approved ecology source too; no roundtrip assertion is relaxed.
+ for(const folder of ['meta','people','geo','lore','law','rules','templates','actions','ontology','ecology'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  for(const [file,value]of Object.entries({'meta/spells.json':before.spells,'meta/skills.json':before.skills,'meta/items.json':before.items,'people/baseline.json':before.npcs}))await fs.writeFile(path.join(root,file),JSON.stringify(value));
  await fs.mkdir(path.join(root,'drafts'),{recursive:true});
  await fs.cp(path.resolve('world/drafts/w2-reuse'),path.join(root,'drafts/w2-reuse'),{recursive:true});
  const bytes=await fs.readFile(path.join(root,'meta/spells.json'),'utf8');
  const preview=await publishReuse({root});assert.equal(preview.published,false);assert.equal(publication.spells.length,14);assert.equal(preview.formalSpellCount,before.spells.length+14);assert.equal(preview.changed.length,4);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),bytes);
- const first=await publishReuse({root,publish:true});assert.equal(first.changed.length,4);assert.deepEqual(await loadWorld(root),next);
+ const first=await publishReuse({root,publish:true});assert.equal(first.changed.length,4);assert.deepEqual(await loadRuntimeWorld(root),next);
  const times=await Promise.all(first.changed.map(file=>fs.stat(path.join(root,file)).then(row=>row.mtimeMs)));
  assert.deepEqual((await publishReuse({root,publish:true})).changed,[]);
  for(const [file,mutate,reason]of [

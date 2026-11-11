@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {cloneData}from'./storage.mjs';
@@ -10,6 +11,7 @@ import {resolveCreature}from'./wildlife.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {assertSpellConsent}from'./magic-consent.mjs';
+import {hypot} from './det-math.mjs';
 
 // Authoring bounds only. The formal catalog is not changed by these consumers.
 export const careMechanisms=Object.freeze({
@@ -21,7 +23,7 @@ export const careMechanisms=Object.freeze({
 const medicalOps=new Set(['hemostasis','close_wound','clean_wound','disease_sense','pain','stabilize','parasite','restore_tendon']);
 const clone=x=>cloneData(x),key=id=>`physical_feature:${id}`;
 const number=(v,min,max,label)=>{if(!Number.isFinite(v)||v<min||v>max)throw preconditionFailure(`${label}无效或未登记`);return v;};
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 const actorPath=target=>target==='player'?['state','player']:['state',target.startsWith('npc_')?'npcs':'creatures',target];
 const active=(d,target,op,minute=d.get('state','minute'))=>Object.values(d.get('state','effects')??{}).filter(e=>e.kind==='care'&&e.target===target&&e.operation===op&&e.started<=minute&&e.expires>minute);
 const strongest=(d,target,op,minute)=>active(d,target,op,minute).reduce((n,e)=>Math.max(n,e.power),0);
@@ -46,7 +48,7 @@ function featureAccess(d,engine,row,args,range,read=false){
  if(!ids.some(id=>{
   const r=d.get('state','records',id);
   return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&r.grantee==='player'&&!r.revoked&&Number.isSafeInteger(r.expires)&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));
- }))throw preconditionFailure('照护对象需要所有者有效授权');
+ }))noteUnlicensedUse(d,row);
 }
 function medical(d,target){
  const m=clone(d.get(...actorPath(target),'medical'));

@@ -1,6 +1,6 @@
 {
   "id": "t155_wt_soul",
-  "fingerprint": "ad9fee9c680f8cd7d3fcdbb02774575e9a2ac81d8c23518504c1e30983fc6ffd",
+  "fingerprint": "f8a44d4ba15408665d21a48e64564f96fcff1782b57cd6df1bdb2e3d0179147f",
   "status": "passed",
   "attempts": 0,
   "draft": {
@@ -46,6 +46,18 @@
       "cumulativeUpperYuan": 0.017160239999999997,
       "latencyMs": 878.4904000000001,
       "timestamp": "2026-10-15T09:24:25.142Z"
+    }
+  ],
+  "fingerprintRebind": [
+    {
+      "reason": "物种代谢 t-metab 新增 nature.metabolism，规则派生字段，内容未变",
+      "oldFingerprint": "ad9fee9c680f8cd7d3fcdbb02774575e9a2ac81d8c23518504c1e30983fc6ffd",
+      "newFingerprint": "f8a44d4ba15408665d21a48e64564f96fcff1782b57cd6df1bdb2e3d0179147f",
+      "diffFields": [
+        "references.3.nature.metabolism"
+      ],
+      "date": "2026-11-09",
+      "source": "李白 2026-11-09 15:1x"
     }
   ]
 }

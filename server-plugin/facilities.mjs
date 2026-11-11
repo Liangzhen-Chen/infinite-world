@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import './building-maintenance.mjs';
 // RW-03. Construction facts live in created/buildings; availability and service
 // capacity are read from those facts. No second stored service/road status.
 import {traitsOf} from './traits.mjs';
@@ -9,8 +10,9 @@ import {advanceLayerPlan} from './advance-layers.mjs';
 import {transition} from './transition.mjs';
 import {isGone} from './lifecycle-state.mjs';
 
-import {FACILITY_TYPES,facilityDefinition,facilityView,allFacilities,within,facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
+import {FACILITY_TYPES,facilityDefinition,facilityView,allFacilities,within,facilityRuntime,installFacilityRuntime,facilityWearScale,facilityWearRemainder} from './facility-state.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {hypot} from './det-math.mjs';
 declareHoldingWriter('facilities',{kinds:['owns']});
 const DAY=1440,HOUR=60;
 function event(d,engine,id,verb,building,summary,{minute=d.get('state','minute'),actor,sourceEvent=id,...facts}={}){
@@ -64,7 +66,7 @@ function distance(a,b){
  if(a.neighbours?.includes(b.id))return a.neighbourDistances?.[b.id]??5;
  if(a.parent!==b.parent)return Infinity;
  const p=a.position??a.coordinates,q=b.position??b.coordinates;
- return p&&q?Math.hypot((p.x??p[0])-(q.x??q[0]),(p.y??p[1])-(q.y??q[1]))*(a.position&&b.position?1:1000):Infinity;
+ return p&&q?hypot((p.x??p[0])-(q.x??q[0]),(p.y??p[1])-(q.y??q[1]))*(a.position&&b.position?1:1000):Infinity;
 }
 export function advanceFacilityFire(d,engine,{after}){
  // Settle all fires in time order, including newly ignited neighbours. A long
@@ -77,7 +79,7 @@ export function advanceFacilityFire(d,engine,{after}){
    if(rain){applyFacilityInteraction(d,engine,id,resolveInteraction('rain',traitsOf(engine,d.get('state'),id)),{minute:at});continue;}
    if(!row.fireSpread&&(row.fireDepth??0)<2){
     const air=facilityDefinition(engine,d.get('state'),base.parent)?.features?.find(f=>f.airModel?.windVector),vector=base.windVector??air?.airModel?.windVector;
-    const wind=base.windKmh??w?.windKmh??(vector?Math.hypot(...vector)*3.6:0),reach=8+Math.min(12,wind/2);
+    const wind=base.windKmh??w?.windKmh??(vector?hypot(...vector)*3.6:0),reach=8+Math.min(12,wind/2);
     const neighbours=allFacilities(engine,d.get('state')).filter(b=>b.id!==id&&!facilityView(engine,d.get('state'),b.id).burning&&downwindReach(base,b,vector,reach)&&resolveInteraction('fire',traitsOf(engine,d.get('state'),b.id)).add.includes('burning')).sort((a,b)=>distance(base,a)-distance(base,b)||a.id.localeCompare(b.id)).slice(0,2);
     for(const b of neighbours){const outcome=resolveInteraction('fire',traitsOf(engine,d.get('state'),b.id));applyFacilityInteraction(d,engine,b.id,outcome,{minute:at,sourceEvent:`fire:${id}:${at}`,depth:(row.fireDepth??0)+1,fireOrigin:row.fireOrigin});}
    }
@@ -91,9 +93,9 @@ function downwindReach(a,b,vector,reach){
  const metres=distance(a,b);if(metres>reach)return false;
  const p=a.position??a.coordinates,q=b.position??b.coordinates;
  // No direction is invented for authored adjacency without coordinates.
- if(!vector||!p||!q||!Math.hypot(...vector))return metres<=reach;
+ if(!vector||!p||!q||!hypot(...vector))return metres<=reach;
  const dx=(q.x??q[0])-(p.x??p[0]),dy=(q.y??q[1])-(p.y??p[1]);
- const along=(dx*vector[0]+dy*vector[1])/(Math.hypot(dx,dy)*Math.hypot(...vector)||1);
+ const along=(dx*vector[0]+dy*vector[1])/(hypot(dx,dy)*hypot(...vector)||1);
  return metres<=Math.max(2,8+(reach-8)*along);
 }
 export function nextFacilityMinute(state,now){
@@ -103,6 +105,7 @@ export function advanceFacilities(d,engine,{before,after}){
  advanceFacilityFire(d,engine,{after});
  if(Math.floor(before/DAY)===Math.floor(after/DAY))return;
  const plan=engine.advanceLayerContext??advanceLayerPlan(engine,d.get('state'));
+ const {rule,denominator,numerator}=facilityWearScale(engine);
  for(let day=Math.floor(before/DAY);day<Math.floor(after/DAY);day++){
   const at=(day+1)*DAY,state=d.get('state'),occupied=new Set(Object.values(state.npcs??{}).map(n=>n.location));occupied.add(state.location);
   const distant=new Map();
@@ -114,22 +117,25 @@ export function advanceFacilities(d,engine,{before,after}){
    // A building finished at this midnight has not yet experienced a day's wear.
    if((row.builtAt??-1)>=at||(row.lastWearDay??-1)>=day)continue;
    const view=facilityView(engine,lookState(d),base.id);if(view.condition<=0)continue;
-   const w=weather(engine,d,base.id,day*DAY+720),weatherWear=w?.kind==='storm'?4:w?.kind==='rain'?1:0;
-   const usage=occupied.has(base.id)?1:0,wear=(row.wearUnits??0)+(view.material==='stone'?1:3)+weatherWear+usage;
-   const loss=Math.floor(wear/10);
+   const w=weather(engine,d,base.id,day*DAY+720),weatherWear=rule?(rule.weather[w?.kind]??0):w?.kind==='storm'?4:w?.kind==='rain'?1:0;
+   const regional=row.condition===undefined&&base.generated==='remote'?d.get('state','records',`facility_region:${base.region}`):null;
+   const remainder=regional?Math.floor((regional.wear?.[view.material]??0)*denominator/(regional.wearDenominator??10))%denominator:facilityWearRemainder(row,denominator);
+   const usage=occupied.has(base.id)?(rule?.occupied??1):0,wear=remainder+((rule?.material[view.material]??(view.material==='stone'?1:3))+weatherWear+usage)*numerator;
+   const loss=Math.floor(wear/denominator);
    // Store the fractional wear; integer arithmetic makes partitioned advances
    // and one long advance agree. Ordinary wear emits only at a use threshold.
    const condition=Math.max(0,view.condition-loss);
    if(condition===0)damageFacility(d,engine,base.id,loss,{cause:'损耗',minute:at,sourceEvent:`wear:${base.id}:${day}`});
-   const worn={...d.get('state','buildings',base.id),...row,condition,wearUnits:wear%10,lastWearDay:day};
+   const worn={...d.get('state','buildings',base.id),...row,condition,wearUnits:wear%denominator,wearDenominator:denominator,lastWearDay:day};
    holdingSet(d,null,['state','buildings',base.id],worn,'facilities');
    const next=facilityView(engine,lookState(d),base.id);
    if(view.status!==next.status)event(d,engine,`wear:${base.id}:${day}`,'harm',base.id,`${base.name}年久失修，用途${next.status}`,{minute:at,cause:'损耗'});
   }
   for(const [county,representative] of distant){
    const key=`facility_region:${county}`,old=d.get('state','records',key);if((old?.throughDay??-1)>=day)continue;
-   const w=weather(engine,d,representative,day*DAY+720),extra=w?.kind==='storm'?4:w?.kind==='rain'?1:0;
-   d.set(['state','records',key],{category:'facility_region',county,throughDay:day,wear:{wood:(old?.wear?.wood??0)+3+extra,stone:(old?.wear?.stone??0)+1+extra}});
+   const w=weather(engine,d,representative,day*DAY+720),extra=rule?(rule.weather[w?.kind]??0):w?.kind==='storm'?4:w?.kind==='rain'?1:0;
+   const scale=denominator/(old?.wearDenominator??10);
+   d.set(['state','records',key],{category:'facility_region',county,throughDay:day,wearDenominator:denominator,wear:Object.fromEntries(['wood','stone'].map(material=>[material,Math.floor((old?.wear?.[material]??0)*scale)+((rule?.material[material]??(material==='wood'?3:1))+extra)*numerator]))});
   }
  }
 }

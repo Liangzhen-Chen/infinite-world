@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {loadWorld} from '../tools/load-world.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {currentShops,advanceShops,tradeQuote} from '../server-plugin/shop.mjs';
@@ -26,22 +27,51 @@ function fixture(){
 const shelf=(d,id,item)=>{const v=d.get('state','npcs',id,'inventory',item);return typeof v==='number'?v:v?.quantity??0;};
 const rolled=(doc,label)=>{for(let n=0;;n++){const id=`${label}_${n}`;if(createHash('sha256').update(`${doc.randomSeed}:${id}:d20`).digest().readUInt32LE(0)%20+1===20)return id;}};
 
-test('迁店后补货产地、付款和新报价读取当前工作地；旧报价与成交事实保持原样',()=>{
+test('迁店后补货产地、付款和新报价读取当前工作地；历史事实不变、报价重派生',()=>{
  const {engine,d}=fixture(),state=d.get('state');
  state.settlements.loc_bs={population:1000,treasury:900,food:100,iron:100};
  state.npcs[host].coins=100;state.npcs[host].inventory.item_bread=0;
  const quote=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:inn,base:()=>2});
+ // S5-02 /15.2: abundant food clamps to .5; baseline2 *other factors1
+ // *one portion =1. Quote objects are observations, never saved daily truth.
+ assert.equal(quote.totalCoins,1);const oldQuote=structuredClone(quote);
  d.set(['state','npcs',host,'residence'],{settlement:'loc_bs',home:'loc_bs',since:600,workChanged:false,schedule:{default:[{start:0,end:1440,location:'loc_bs',activity:'营业',services:['trade']}]}});
  const shop=currentShops(engine,d.get('state')).find(s=>s.keeper===host);
  assert.equal(shop.settlement,'loc_bs');assert.equal(shop.location,'loc_bs');
  assert.equal(shop.restock.find(r=>r.item==='item_bread').source,'route');
+ assert.equal(shop.restock.find(r=>r.item==='item_bread').from,'loc_hw','迁店后的来源产地仍须正确派生，未到货不改变来源');
+ // K2（卡 E）依据：铁匠铺的铁镰货架不再从模拟范围外进货，改向本聚落真实持货人进货；夹具安排一位村民手里有 3 把铁镰。
+ const holder='npc_hw_shendu';d.set(['state','npcs',holder,'inventory','item_sickle'],3);
+ const holderCoins=d.get('state','npcs',holder,'coins'),smithCoins=d.get('state','npcs','npc_hw_duanyan','coins');
  const cash=d.get('state','npcs',host,'coins'),treasury=d.get('state','settlements','loc_hw','treasury');
  advanceShops(d,engine,600,DAY);
  const ledger=d.get('state','records','shop:shop_hw_qingdeng'),row=ledger.entries.find(e=>e.item==='item_bread');
- assert.equal(ledger.settlement,'loc_bs');assert.equal(row.from,'loc_hw');assert.ok(row.added>0);
+ // K08/K12：迁店把本地面包改为远途来源，但没有到场持货人/到站运单，不能按日期生成现货。
+ assert.equal(ledger.settlement,'loc_bs');assert.equal(row.source,'route');assert.equal(row.added,0);assert.equal(row.paidCopper,0);assert.deepEqual(row.shipments,[]);
+ assert.equal(row.from,undefined);assert.equal(shelf(d,host,'item_bread'),0);
  assert.equal(d.get('state','npcs',host,'coins'),cash-row.paidCopper);
- assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+row.paidCopper);
- assert.deepEqual(tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999}),quote);
+ // K08没有远途现货或运费流；铁镰的真实本地补货单独记账。
+ // K2（卡 E）依据：原断言是铁镰 1 把、20 铜付进公库（模拟范围外进货）；现在货架补上的铁镰来自那位村民，
+ // 他的铁镰相应减少，货款进他的钱袋（扣去他自己缴的商税），公库只多出这笔商税。
+ const sickle=d.get('state','records','shop:shop_hw_forge').entries.find(e=>e.item==='item_sickle');
+ const tax=Object.values(d.get('state','records')).filter(r=>r.category==='trade_tax'&&r.payer===holder).reduce((n,r)=>n+r.amount,0);
+ assert.equal(sickle.added,1);assert.ok(sickle.paidCopper>0);assert.deepEqual(sickle.from,[holder]);
+ assert.equal(shelf(d,'npc_hw_duanyan','item_sickle'),1);assert.equal(shelf(d,holder,'item_sickle'),2);
+ assert.equal(d.get('state','npcs',holder,'coins'),holderCoins+sickle.paidCopper-tax);
+ assert.equal(d.get('state','settlements','loc_hw','treasury'),treasury+tax);assert.equal(row.cost,undefined);
+ // 守恒：铁匠付出的正是村民收到的加商税（本夹具不开账本，按钱袋与公账核对）。
+ assert.equal(smithCoins-d.get('state','npcs','npc_hw_duanyan','coins'),sickle.paidCopper);
+ const history=structuredClone(d.get('state','records'));
+ const moved=tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>999});
+ // Updated baseline input999 *scarcity *neutral grade/regard/spread/depth/corrections1 *one, truncate once.
+ // 稀缺度 = 需求/供给（market.mjs stockSupply:219、marketQuote:303），不再是“供给充裕钳在 .5”：探针 tools/probe-rules-a.mjs ew（ONLY=1）
+ // 读到迁到 loc_bs 后同类食物供给 18、需求 12，12/18=0.6667，999×0.6667=666。旧值 499 对应供给 28、需求 4（钳在 .5，999×.5=499.5）。
+ // 对 git 历史二分（同一夹具，t-b1m → t-m26）：t-alloc f8e4a13b（R5：同一卖家可售存量按需求在买方间分摊，口粮替代）起供给 28→13、
+ // 需求 4→18（价 1383）；st-5（105d2730，同属 R5 及 t-foodsrc/t-staple 单餐额度）供给 18、需求 12（价 666）；现状与 st-5 相同，R1 在这一夹具里不再改变数。
+ // 复跑（本机，约 3 分 45 秒）：探针 ew ONLY=1 再次读到 供给 18、需求 12、稀缺度 0.667、单价 666；二分脚本含 advanceShops 一天，同样 666。
+ assert.equal(moved.totalCoins,666);assert.equal(moved.settlement,'loc_bs');
+ assert.notDeepEqual(moved,quote);assert.deepEqual(quote,oldQuote);
+ assert.deepEqual(d.get('state','records'),history,'requoting cannot rewrite restock or transaction history');
  d.set(['state','minute'],DAY+600);
  assert.equal(tradeQuote(d,engine,{buyer:'player',seller:host,item:'item_bread',location:'loc_bs',base:()=>2}).settlement,'loc_bs');
 });
@@ -62,7 +92,21 @@ test('迁居改业、拘押、死亡使原店停止补货；接手原工作地�
  const successor='npc_hw_ayan',base=engine.byId.get(successor);base.shopType='tavern';base.services=['trade'];base.workplace={location:inn};
  d.set(['state','npcs',successor,'inventory','item_bread'],0);
  const shop=currentShops(engine,d.get('state')).find(s=>s.id==='shop_hw_qingdeng');assert.equal(shop.keeper,successor);
+ // K2（卡 E）依据：接手人的面包货架向本聚落持货人进货（原先凭空补上）。先看反面：村里除了已故原店主没人有面包，补不上，回执说明原因。
+ const empty=structuredClone(d.document);
+ for(const [id,n]of Object.entries(empty.state.npcs))if(id!==host&&n.inventory?.item_bread)n.inventory.item_bread=0;
+ const none={...d,document:empty};advanceShops(none,engine,600,DAY);
+ assert.equal(shelf(none,successor,'item_bread'),0);
+ assert.match(none.get('state','records','shop:shop_hw_qingdeng').entries.find(e=>e.item==='item_bread'&&e.minute===DAY).reason,/没有人持有|余量/);
+ // 正面：一位村民手里有 16 个面包，接手人从他那里补上货架，他的面包减少，货款进他的钱袋。
+ // 面包数按 R1 重推（t-sat：面包单件饱腹 30→16，各户口粮留存约翻倍）：探针 tools/probe-rules-a.mjs ew（ONLY=2）读到村民 shendu 手里 8 个面包时
+ // 留存 8、可售 0，货架补不上（旧：留存 4、8 个里可售 4）；16 个时留存 8、可售 8，进货后货架 6（added=6）、他剩 10，货款进钱袋。
+ const holder='npc_hw_shendu';d.set(['state','npcs',holder,'inventory','item_bread'],16);const holderCoins=d.get('state','npcs',holder,'coins');
  advanceShops(d,engine,600,DAY);assert.ok(shelf(d,successor,'item_bread')>0);assert.equal(shelf(d,host,'item_bread'),before);
+ const bread=d.get('state','records','shop:shop_hw_qingdeng').entries.find(e=>e.item==='item_bread'&&e.minute===DAY&&e.added);
+ const tax=Object.values(d.get('state','records')).filter(r=>r.category==='trade_tax'&&r.payer===holder).reduce((n,r)=>n+r.amount,0);
+ assert.deepEqual(bread.from,[holder]);assert.equal(shelf(d,holder,'item_bread'),16-bread.added);assert.equal(shelf(d,successor,'item_bread'),bread.added);
+ assert.equal(d.get('state','npcs',holder,'coins'),holderCoins+bread.paidCopper-tax);
 });
 
 test('树木居民与运行时改换物种从实际身体派生，借形到期与单件读取不写存档',()=>{
@@ -93,8 +137,10 @@ test('聚落公开人口、家户与主官权限跟随当前迁居与任免；�
 
 test('K6冻结记录在钓鱼实际结算中阻止捕获，解冻后鱼群扣减且产出一份鱼',async()=>{
  const {engine,d,act}=fixture(),h=engine.rules.wildlife.habitats.find(h=>h.id==='habitat_hw_water');
-// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
- d.set(['state','inventory','item_fishing_bait'],{quantity:10});d.set(['state','location'],h.location);d.set(['state','inventory','item_water'],{quantity:10});d.set(['state','inventory','item_kitchen_knife'],{quantity:1,durability:100});
+ // D05 5.5 / approved S505C: the actual bamboo rod and finite earthworms
+ // replace the cleaning knife as fishing inputs; retain freeze and pool assertions.
+ const arranged=applyIntentSetup(engine,d.document,{location:h.location,inventory:{item_earthworm_bait:10,item_bamboo_fishing_rod:1,item_water:10}});
+ assert.deepEqual(arranged.setupUnmet,[]);d.document=arranged.document;
  const feature=engine.byId.get(h.location).features.find(f=>f.kind==='water');assert.ok(feature);
  applyEffects(d,engine,[{kind:'environment',locations:[h.location],state:'frozen',minutes:300}],{minute:600,sourceEvent:'freeze'},'world');
  assert.equal(physicalFeature(engine,d.get('state'),feature.id).state.value.frozenUntil,900);

@@ -2,18 +2,24 @@ import {preconditionFailure} from './precondition.mjs';
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {heldUnit,wearItem} from './items.mjs';
-import {digest} from './storage.mjs';
+import {digest,recordsWhere,stateMemo} from './storage.mjs';
 import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity,learnFromWork} from './action-costs.mjs';
 import {consumeMagicProtection} from './magic-primitives.mjs';
-import {assertLocationAccess} from './location-access.mjs';
+import {unlicensedEntry} from './location-access.mjs';
+import {registerOffense} from './law.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {actorPath} from './npc-state.mjs';
 import {validateMonsterSocieties,passageAllows,assertSocietyEntry,infiltrationDetected,infiltrationSucceeded,societyAt} from './monster-society.mjs';
 import {traitsOf} from './traits.mjs';
 import {personAge,personConstraint}from'./entity-view.mjs';
 import {forestView,harvestForest,forestSites}from'./forest-water.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {reserve as reserveAccount,bag,moveStock,registerLegacyStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
+import {reserve as reserveAccount,bag,moveStock,registerLegacyStock,accrueStock,logisticStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+import {derived} from './derived.mjs';
+import {derivedStats} from './combat.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {registerSubsistenceResources} from './household-subsistence.mjs';
 declareHoldingWriter('sites',{kinds:['permit']});
 // S1b: 据点的有限资源是资源点账户 site:<据点>:<资源>|<物品>|reserve：首次建账按世界数据（resource.quantity）经 src:genesis 开户，
 // 定期再生来自 src:regrowth，采集转入采集者行囊；机关消耗材料、续约供品进 sink:consume。
@@ -57,6 +63,16 @@ function putSite(d,engine,place,row,{to=null,eventId=null}={}){
 // the same place whose current trait (burning/wet/frozen/hot) clears it.
 const clone=value=>structuredClone(value);
 const DAY=1440,ELEMENT_STATES=['burning','wet','frozen','hot'];
+const herbDensity=(engine,resource,season)=>resource?.gather?.density
+    ?(engine.world.primitiveTables?.yields??engine.world.balance.yields).params.find(p=>p.id===resource.gather.density)?.value?.[season]
+    :1;
+// Calendar quarters are the rule calendar's three 30-day months. Integrate
+// only at season boundaries, retaining each resource's own stock/carry anchor.
+function seasonalSpans(engine,from,to){
+    const spans=[];
+    for(let at=from;at<to;){const end=Math.min(to,(Math.floor(at/(90*DAY))+1)*90*DAY);spans.push({from:at,to:end,season:engine.calendar(at).season});at=end;}
+    return spans;
+}
 const siteKey=id=>`site:${id}`;
 const discoveryKey=(site,clue)=>`site_discovery:${site}:${clue}`;
 const observationKey=(site,mechanism)=>`site_observation:${site}:${mechanism}`;
@@ -139,6 +155,8 @@ export function validateSites(world,{edition=false}={}){
             if(kind==='resources'){
                 ownership(ownerOf(place,row));
                 if(row.gather&&(!world.skills.some(s=>s.id===row.gather.skill)||row.gather.yield!=='gather:herb'||!Array.isArray(row.gather.seasons)||!row.gather.seasons.length||row.gather.seasons.some(s=>!Number.isInteger(s)||s<0||s>3)))fail(`${row.id}持续采集须有有效技能、产量表和季节`);
+                if(row.gather?.density){const values=(world.primitiveTables?.yields??world.balance?.yields)?.params.find(p=>p.id===row.gather.density)?.value;
+                    if(!Array.isArray(values)||values.length!==4||values.some(v=>!Number.isFinite(v)||v<0||v>1))fail(`${row.id}须引用四季密度表`);}
                 if(!world.items.some(x=>x.id===row.item)||!Number.isSafeInteger(row.quantity)||row.quantity<0||row.quantity>100000)fail(`${row.id}有限库存无效`);
             }
             if(kind==='clues'&&(typeof row.text!=='string'||!row.text.trim()))fail(`${row.id}缺少发现正文`);
@@ -176,7 +194,7 @@ export function siteKnowledge(world,document){
         }));
 }
 
-function assertOccupants(d,engine,place,authorization){
+function assertOccupants(d,engine,place,authorization,breach){
     const s=place.site,ids=new Set(s.occupants??[]);
     for(const boss of engine.world.bosses??[])if(boss.residence?.location===place.id){
         const occupant=d.get('state','records',`lair:${boss.residence.id}`)?.occupant?.actor;
@@ -188,74 +206,124 @@ function assertOccupants(d,engine,place,authorization){
         if(actor.location!==place.id||!living(engine,d,id,actor))continue;
         if(isNpc&&place.access?.mode==='public')continue;
         const managed=s.manager&&ownerOf(place)&&allowed(d.document,place,ownerOf(place),authorization);
-        if(!isNpc||!managed&&!allowed(d.document,place,id,authorization))throw preconditionFailure('占据者仍在场，需取得许可或实际解决占据关系');
+        // A creature holding its lair bars the way bodily; a person standing in
+        // their place does not, and walking past them is entering unlicensed (K6).
+        if(!isNpc)throw preconditionFailure('占据者仍守在这里挡住去路，须先实际解决占据关系（驱离、击败或谈妥）');
+        if(!managed&&!allowed(d.document,place,id,authorization))breach('enter',id,{id:place.id,kind:'site'});
     }
 }
 
 // Time-driven changes settle from the stored anchors; nothing refreshes on revisit.
-function settle(place,row,minute){
+function settle(place,row,minute,engine,document){
     if(!place.site.changes?.length)return row;
     row.changes??={};
     for(const c of place.site.changes){
         const period=c.everyDays*DAY,mark=row.changes[c.id];
         if(mark===undefined){row.changes[c.id]=minute;continue;}
-        const n=Math.floor((minute-mark)/period);if(n<1)continue;
-        row.changes[c.id]=mark+n*period;
-        if(c.kind==='regrow'){const left=row.remaining[c.resource]??0;row.remaining[c.resource]=Math.max(left,Math.min(c.max,left+n*c.quantity));}
-        else{const m=row.mechanisms[c.mechanism];
+        if(c.kind==='regrow'){
+            if(minute<=mark)continue;
+            const resource=place.site.resources.find(r=>r.id===c.resource);
+            for(const span of seasonalSpans(engine,mark,minute))row.remaining[c.resource]=logisticStock(row,c.id,{reserve:row.remaining[c.resource]??0,capacity:c.max,
+                rate:derived(engine,document,'economy:yield',place.id,{base:c.quantity/(c.max*c.everyDays)*herbDensity(engine,resource,span.season)}),from:span.from,to:span.to});
+            row.changes[c.id]=minute;
+        }else{const n=Math.floor((minute-mark)/period);if(n<1)continue;row.changes[c.id]=mark+n*period;const m=row.mechanisms[c.mechanism];
             if(m?.status==='已解除'&&minute-m.minute>=period)row.mechanisms[c.mechanism]={status:'未解除',rearmed:true,minute:m.minute+period,sourceEvent:m.sourceEvent};
         }
     }
     return row;
 }
-function ledger(d,place){
+function ledger(d,place,engine){
     const old=d.get('state','records',siteKey(place.id)),row=clone(old??{category:'site',site:place.id,remaining:{},mechanisms:{}});
     for(const resource of place.site.resources??[])if(!Object.hasOwn(row.remaining,resource.id))row.remaining[resource.id]=resource.quantity;
-    return settle(place,row,d.get('state','minute'));
+    return settle(place,row,d.get('state','minute'),engine,d.document);
 }
+registerAdvanceHook('advanceSiteStocks',(d,engine,minute)=>{
+ for(const old of recordsWhere(d.get('state','records'),'category','site')){
+  const place=engine.byId.get(old.site);if(!place?.site?.changes?.length)continue;
+  const row=settle(place,clone(old),minute,engine,d.document);
+  if(JSON.stringify(row)!==JSON.stringify(old))putSite(d,engine,place,row);
+ }
+});
 const unblocked=(row,gates)=>{if(gates.some(id=>row.mechanisms[id]?.status!=='已解除'))throw preconditionFailure('机关尚未解除');};
 const inside=(d,place)=>d.get('state','records','site_presence')?.site===place.id&&d.get('state','records','site_presence')?.actor==='player';
 const covert=(d,place)=>inside(d,place)&&d.get('state','records','site_presence').covert===true;
-export function assertSiteHarvest(d,engine,place,args){
+// K6: the owner's licence decides whether an act is lawful, not whether it can
+// happen. A missing licence is noted as a breach (act, owner) and committed as
+// an offense once the act has actually taken place (commitBreaches).
+function noteBreaches(){
+ const pending=new Map();
+ // One act on one thing is one offense; its first unlicensing holder is the victim.
+ const breach=(act,owner,subject)=>{const key=`${act}:${subject?.id}`;if(owner&&owner!=='player'&&!pending.has(key))pending.set(key,{act,owner,subject});};
+ breach.any=()=>pending.size>0;
+ return {pending,breach};
+}
+function commitBreaches(d,engine,pending,result,eventId,taken=null,place=null){
+ if(!pending.size||result?.duplicate)return result;
+ // Whoever keeps the place notices later what nobody saw (law.mjs discovery).
+ const discoverers=place?.site?keepers(engine,d,place):undefined;
+ const offenses=[...pending.values()].map(b=>{
+  const stolen=b.act==='gather'&&taken?.quantity>0?taken:null;
+  return registerOffense(d,engine,{act:b.act,subject:b.subject,victim:b.owner,eventId,value:stolen?goodsWorth(d,engine,{item:stolen.item,quantity:stolen.quantity,holder:b.owner})??0:0,stolen,...(discoverers?{discoverers:[...new Set([b.owner,...discoverers])]}:{}),...(b.subject?.covert?{witnesses:[]}:{})});
+ });
+ return {...result,offenses};
+}
+function entryBreach(d,engine,place,authorizations,breach){
+ if(!['private','council'].includes(place.access?.mode)||!place.access.requiresConsent)return;
+ const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
+ const entry=unlicensedEntry(d,engine,place.id,{authorization,companions:d.get('state','player','companions')??[]});
+ if(entry)breach('enter',entry.victim,{id:place.id,kind:'dwelling'});
+}
+export function assertSiteHarvest(d,engine,place,args,breach=noteBreaches().breach){
  const authorizations=[args.authorization,...args.authorizations??[]];
  assertSocietyEntry(d,engine,place);
- if(['private','council'].includes(place.access?.mode)&&place.access.requiresConsent){
-  const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
-  assertLocationAccess(d,engine,place.id,{authorization,companions:d.get('state','player','companions')??[]});
- }
- if(!allowed(d.document,place,ownerOf(place),authorizations,'enter')||!allowed(d.document,place,ownerOf(place),authorizations,'gather'))throw preconditionFailure('采伐需所有者的采集许可');
- assertOccupants(d,engine,place,authorizations);
+ entryBreach(d,engine,place,authorizations,breach);
+ if(place.access?.mode!=='public'&&!allowed(d.document,place,ownerOf(place),authorizations,'enter'))breach('enter',ownerOf(place),{id:place.id,kind:'site'});
+ if(!allowed(d.document,place,ownerOf(place),authorizations,'gather'))breach('gather',ownerOf(place),{id:place.id,kind:'site'});
+ assertOccupants(d,engine,place,authorizations,breach);
  // 06 §6.3 existence-and-presence: an action needs the actor at the target's node, which woodcut
  // already requires. A separate site-menu visit is not part of that rule; property, occupants and
  // every entrance mechanism still gate harvesting here and after elapsed time.
- unblocked(ledger(d,place),place.site.entryMechanisms??[]);
+ unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
+}
+// The adults who keep a site: its occupants, its society's members, its
+// manager and owner. Watchers are those of them awake on the spot.
+function keepers(engine,d,place){
+    const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
+    return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(personAge(engine,d.get('state'),n.id).value??0)>=18).map(n=>n.id).sort();
 }
 function watchers(d,engine,place){
-    const society=societyAt(engine,place.id)?.id,occupants=new Set(place.site.occupants??[]);
-    return engine.world.npcs.filter(n=>(occupants.has(n.id)||society&&n.society===society||[place.site.manager,ownerOf(place)].includes(n.id))&&(personAge(engine,d.get('state'),n.id).value??0)>=18).map(n=>n.id).sort().filter(id=>{
+    return keepers(engine,d,place).filter(id=>{
         const a=d.get('state','npcs',id);return a?.location===place.id&&!isPhysicallyDead(engine,d,id)&&!['濒死','昏迷','患病'].includes(a.status)&&(a.hp===undefined||a.hp>0)&&!a.scheduleTravel&&!a.cognitionTravel&&!/睡眠|睡觉|熟睡/.test(a.activity??'');
     });
 }
-function infiltrate(d,engine,place,eventId){
+function infiltrate(d,engine,place,eventId,breach){
     const plan=place.site.infiltration;
-    if(!plan)throw preconditionFailure('这里不是登记可潜入的据点；私宅与其他据点仍须许可');
+    if(!plan)throw preconditionFailure('这里没有可供隐蔽潜入的路径，只能从正门直接进入');
     if(inside(d,place))return{...siteView(engine,d.document),duplicate:true};
     if(d.get('state','player','companions')?.length)throw preconditionFailure('潜入不能带同行者');
-    unblocked(ledger(d,place),place.site.entryMechanisms??[]);
+    unblocked(ledger(d,place,engine),place.site.entryMechanisms??[]);
     engine.advance(d,plan.minutes,eventId);
     if(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常')return{entered:false,note:'潜入途中失去行动能力或离开此地'};
     const watcher=watchers(d,engine,place)[0],{difficulty,...rest}=plan.check;
     const check=engine.check(d,watcher?{...rest,opponent:{npc:watcher,attribute:'精神'}}:plan.check,eventId);
     if(check.success){
-        putSite(d,engine,place,ledger(d,place),{eventId});
+        putSite(d,engine,place,ledger(d,place,engine),{eventId});
         holdingSet(d,null,['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',covert:true,minute:d.get('state','minute'),sourceEvent:eventId},'sites');
         infiltrationSucceeded(d,engine,place,eventId);
+        // Slipping in unseen is still entering someone's place (K6).
+        breach('enter',ownerOf(place)??societyAt(engine,place.id)?.id,{id:place.id,kind:'site',covert:true});
         return{...siteView(engine,d.document),covert:true,detected:false,check,minutes:plan.minutes};
     }
-    if(!watcher)return{entered:false,detected:false,check,minutes:plan.minutes,note:'未能找到潜入路径，无人察觉'};
+    // A failed attempt says so: nothing was entered (the time is still spent).
+    if(!watcher)return{success:false,entered:false,detected:false,check,minutes:plan.minutes,note:'未能找到潜入路径，无人察觉'};
+    return{success:false,entered:false,check,minutes:plan.minutes,...caught(d,engine,place,watcher,eventId,plan.damage??0)};
+}
+// A society's watcher who sees an intruder responds by its stance: expulsion
+// (a real walk out) or a fight. Shared by covert and open unlicensed entry.
+function caught(d,engine,place,watcher,eventId,harm=0){
     const outcome=infiltrationDetected(d,engine,place,watcher,eventId);let damage=0;
     if(outcome.response==='交锋'){
-        damage=consumeMagicProtection(d,'player',plan.damage??0,'physical').damage;
+        damage=consumeMagicProtection(d,'player',harm,'physical').damage;
         if(damage)engine.health(d,{delta:-damage},eventId);
     }
     let expelled=null;
@@ -264,12 +332,12 @@ function infiltrate(d,engine,place,eventId){
         const action=engine.npcObligationAction;engine.npcObligationAction={tool:'move',args:{destination:place.parent}};
         try{expelled=engine.move(d,{destination:place.parent},eventId).destination;}finally{engine.npcObligationAction=action;}
     }
-    return{entered:false,detected:true,watcher,check,...outcome,damage,expelled,minutes:plan.minutes};
+    return{detected:true,watcher,...outcome,damage,expelled};
 }
 
 export function siteView(engine,document){
     const place=engine.byId.get(document.state.location);if(!place?.site)return null;
-    const stored=document.state.records?.[siteKey(place.id)],row=stored?settle(place,clone(stored),document.state.minute):stored,entered=document.state.records?.site_presence?.site===place.id;
+    const stored=document.state.records?.[siteKey(place.id)],row=stored?settle(place,clone(stored),document.state.minute,engine,document):stored,entered=document.state.records?.site_presence?.site===place.id;
     const view={site:place.id,name:place.name,owner:ownerOf(place),entered,occupants:(place.site.occupants??[]).filter(id=>{
         const path=actorPath(engine.world,id),actor=document.state[path[1]]?.[path[2]];return actor?.location===place.id&&living(engine,document,id,actor);
     }),mechanisms:(place.site.mechanisms??[]).filter(m=>entered||(place.site.entryMechanisms??[]).includes(m.id)).map(m=>({id:m.id,name:m.name,description:m.description??'',status:row?.mechanisms[m.id]?.status??'未解除'}))};
@@ -281,7 +349,131 @@ export function siteView(engine,document){
     return view;
 }
 
+// 计时采集（resource.gather）的产量：产量表每工日的份数乘季节密度，按实际工时累计。玩家与 NPC 劳动同一折算。
+function gatherRates(engine,target){
+    const yields=(engine.world.primitiveTables?.yields??engine.world.balance?.yields)?.rows.find(r=>r.selector===target.gather.yield)?.perUnit?.qty;
+    const day=engine.world.primitiveTables?.['action-costs']?.params.find(r=>r.id==='workday.minutes')?.value;
+    if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw preconditionFailure('采集产量与工日未登记');
+    return {yields,day};
+}
+function timedYield(engine,document,place,row,target,{holder,from,minutes,channel}){
+    const {yields,day}=gatherRates(engine,target);let quantity=0;
+    for(const span of seasonalSpans(engine,from,from+minutes))quantity+=accrueStock(row,channel,derived(engine,document,'economy:yield',place.id,{holder,base:yields*herbDensity(engine,target,span.season)}),span.to-span.from,day);
+    return quantity;
+}
+const inSeason=(engine,target,from,to)=>!target.gather||target.gather.seasons.includes(engine.calendar(from).season)&&target.gather.seasons.includes(engine.calendar(to).season);
+// K3：据点资源向住在附近的劳动者开放的同一条规律。一趟劳动行程走得到的据点是劳动者的本地据点，
+// 本地人认得它、知道门道，所以发现前提只挡外来者（玩家入口不变）。机关是实物：锁、栅门对谁都起作用，
+// 劳动者要么具备条件真去解开（工具、材料、检定，工时计入行程），要么不去。物权与许可照常：
+// 无主、本人或本人聚落所有的是合法采集；其余的照样发生，按 K6 记盗采（与玩家同一罪名入口）。
+const gatesOf=(place,r)=>[...new Set([...(place.site.entryMechanisms??[]),...(r.mechanisms??[])])].map(id=>(place.site.mechanisms??[]).find(m=>m.id===id)).filter(Boolean);
+const gateScore=(engine,state,holder,attribute)=>state.npcs?.[holder]?.attributes?.[attribute]??engine.byId.get(holder)?.attributes?.[attribute]??10;
+// 本人对一道机关的尝试记忆（memoryStream 里 kind 为 site_gate 的条目，随记忆一同淡忘）。
+const gateKey=(place,m)=>`${place.id}:${m.id}`;
+const gateAttempts=(state,holder,key)=>(state.npcs?.[holder]?.memoryStream??[]).filter(r=>r.kind==='site_gate'&&r.gate===key);
+// 本人估的成功率：先验取客观成功率，按本人亲历的成功与尝试次数更新，(成功 + 先验×k)/(尝试 + k)，k 见 rules.npcLabor.gatePriorAttempts。
+// 连败的人自然少去，偶尔得手的会再去。
+function gateBelief(engine,state,holder,key,chance){
+    const k=engine.rules.npcLabor?.gatePriorAttempts;
+    if(!(k>0))throw Error('rules.npcLabor.gatePriorAttempts 须为正数');
+    const tried=gateAttempts(state,holder,key);
+    return (tried.filter(r=>r.success).length+chance*k)/(tried.length+k);
+}
+// 一道未解除的机关对这个劳动者的条件：元素状态（燃烧、浸湿等）替代工具与检定；否则须持完好工具与足量材料，
+// 客观成功率按 d20 + 属性调整值 ≥ 难度（chance），本人据此和自己的尝试记忆估成功率（odds）。不具备条件（或怎么掷都过不了）返回 null。
+function gateTerms(engine,state,holder,m,place){
+    const d={document:{state},get:(...p)=>p.reduce((v,k)=>v?.[k],{state})};
+    const element=m.element&&traitsOf(engine,state,m.element.feature)?.tags.find(t=>m.element.tags.includes(t));
+    if(element)return {id:m.id,minutes:m.minutes,odds:1,element};
+    if(m.tool&&!(engine.quantity(d,holder,m.tool)>0&&(heldUnit(d,engine,holder,m.tool)?.durability??engine.byId.get(m.tool)?.durability??0)>0))return null;
+    const costs=new Map();for(const c of m.materials??[])costs.set(c.item,(costs.get(c.item)??0)+c.quantity);
+    for(const [item,quantity] of costs)if(engine.quantity(d,holder,item)<quantity)return null;
+    const modifier=Math.floor((gateScore(engine,state,holder,m.check.attribute)-10)/2),chance=Math.max(0,Math.min(20,21-(m.check.difficulty-modifier)))/20;
+    return chance>0?{id:m.id,minutes:m.minutes,chance,odds:gateBelief(engine,state,holder,gateKey(place,m),chance),modifier,...(m.tool?{tool:m.tool}:{}),materials:[...costs].map(([item,quantity])=>({item,quantity}))}:null;
+}
+const openGates=(place,row,r)=>gatesOf(place,r).filter(m=>row.mechanisms[m.id]?.status!=='已解除');
+const lawfulFor=(place,r,holder,settlement)=>{const owner=ownerOf(place,r);return (!owner||owner===holder||owner===settlement)&&(!place.access?.requiresConsent||owner===holder);};
+// 一份资源眼下每份要多少工时（采集类按季节与工日折算，当季不产为 null）。
+function unitMinutes(engine,state,r){
+    if(!r.gather)return r.minutes;
+    const {yields,day}=gatherRates(engine,r),rate=yields*herbDensity(engine,r,engine.calendar(state.minute).season);
+    return inSeason(engine,r,state.minute,state.minute)&&rate>0?Math.ceil(day/rate):null;
+}
+// 公共自然来源（家户自给用）：无主、无需许可、世界数据里没有挡路机关的据点资源。不评估也不去解机关，谁都可取；
+// remaining 是据点账当前存量，minutesPerUnit 是眼下当季每份工时（当季不产为 null）。
+export function commonsResources(engine,state,accept=()=>true,publicPlace=()=>true){// publicPlace: the caller's one commons rule for the place itself
+    return engine.world.locations.filter(p=>p.site?.resources?.length&&!p.access?.requiresConsent&&publicPlace(p)).flatMap(place=>
+        place.site.resources.filter(r=>accept(r.item)&&!ownerOf(place,r)&&!gatesOf(place,r).length).map(r=>({site:place.id,resource:r.id,item:r.item})));
+}
+// Today's live figures of one commons resource: the site's own ledger only (never the whole world). Keyed by the exact
+// minute and the site records, so a draw by any household invalidates it.
+const commonsLiveMemo=Symbol('commons live'),commonsLiveInputs=[{path:['records'],categories:['site']}];
+export function commonsLive(engine,state,siteId,resourceId){
+    return stateMemo(state,engine,[commonsLiveMemo,siteId,resourceId,state.minute],()=>{
+        const place=engine.byId.get(siteId),r=place?.site?.resources?.find(x=>x.id===resourceId);
+        if(!r)return {remaining:0,minutesPerUnit:null};
+        const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+        return {remaining:ledger(d,place,engine).remaining[r.id]??0,minutesPerUnit:unitMinutes(engine,state,r)};
+    },commonsLiveInputs);
+}
+registerSubsistenceResources({commonsResources,commonsLive,siteTake});
+export function siteResources(engine,state,{holder,settlement=null}){
+    const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
+    return engine.world.locations.filter(p=>p.site?.resources?.length).flatMap(place=>{
+        const row=ledger(d,place,engine);
+        return place.site.resources.map(r=>{
+            const minutesPerUnit=unitMinutes(engine,state,r);
+            const gates=openGates(place,row,r).map(m=>gateTerms(engine,state,holder,m,place));
+            return {site:place.id,resource:r.id,item:r.item,minutesPerUnit,remaining:row.remaining[r.id]??0,lawful:lawfulFor(place,r,holder,settlement),
+                gates:gates.includes(null)?null:gates};
+        });
+    });
+}
+// 劳动者到场后先解开挡着这份资源的机关：消耗材料、按确定性的 d20 检定，失败照机关登记的伤害受伤。返回是否全部解开。
+export function siteUnlock(d,engine,siteId,resourceId,{holder,eventId}){
+    const place=engine.byId.get(siteId),target=place?.site?.resources?.find(r=>r.id===resourceId);
+    if(!target)throw preconditionFailure('没有这个据点资源');
+    const row=ledger(d,place,engine),state=d.get('state');let open=true;
+    for(const m of openGates(place,row,target)){
+        const terms=gateTerms(engine,state,holder,m,place);if(!terms){open=false;break;}
+        for(const c of terms.materials??[])engine.itemDelta(d,holder,c.item,-c.quantity,{flow:'sink:consume',purpose:'mechanism',writer:'sites',eventId});
+        const die=terms.element?null:parseInt(digest([d.get('randomSeed'),eventId,m.id,'site-gate']).slice(0,8),16)%20+1,success=terms.element?true:die+terms.modifier>=m.check.difficulty;
+        row.mechanisms[m.id]={status:success?'已解除':'未解除',...(terms.element?{method:terms.element}:{die,total:die+terms.modifier}),actor:holder,sourceEvent:eventId,minute:d.get('state','minute')};
+        // 亲手试过的机关记进本人记忆：成败都记，下次估成功率时用。
+        if(!terms.element&&state.npcs?.[holder]){const stream=d.get('state','npcs',holder,'memoryStream')??[],id=`${eventId}:gate:${m.id}`;
+            if(!stream.some(r=>r.id===id))d.set(['state','npcs',holder,'memoryStream'],[...stream,{id,sourceEvent:eventId,kind:'site_gate',gate:gateKey(place,m),success,minute:d.get('state','minute'),location:place.id,participants:[holder],
+                content:`在${place.name??place.id}${success?'解开了':'没能解开'}${m.name??m.id}`,sourceType:'亲历',salience:success?2:3,emotion:success?'平静':'失望',private:true}]);}
+        if(!success){
+            const n=state.npcs?.[holder],harm=m.failureDamage??0;
+            if(n&&harm>0){const max=n.maxHp??derivedStats({level:engine.byId.get(holder)?.level??1,attributes:engine.byId.get(holder)?.attributes,profession:Boolean(engine.byId.get(holder)?.combatProfession)},engine.rules).maxHp,hp=Math.max(0,(n.hp??max)-harm);
+                d.set(['state','npcs',holder,'maxHp'],max);d.set(['state','npcs',holder,'hp'],hp);if(!hp)d.set(['state','npcs',holder,'status'],'濒死');}
+            open=false;break;
+        }
+    }
+    putSite(d,engine,place,row,{eventId});
+    return open;
+}
+// 劳动结束时结算：按在场工时折算产量（不超过存量与所求），经据点账转入 to，返回实际取得的份数。
+export function siteTake(d,engine,siteId,resourceId,{minutes,quantity=Infinity,holder,settlement=null,to,eventId,settledAt=null}){ // settledAt: when the backing forest ledger is settled, if later than the state clock (a daily close draws at the day's end).
+    const place=engine.byId.get(siteId),target=place?.site?.resources?.find(r=>r.id===resourceId);
+    if(!target||!Number.isSafeInteger(minutes)||minutes<1)throw preconditionFailure('没有这个据点资源或工时无效');
+    const now=d.get('state','minute'),row=ledger(d,place,engine);
+    if(openGates(place,row,target).length)return 0;
+    let n=target.gather?(inSeason(engine,target,now-minutes,now)?timedYield(engine,d.document,place,row,target,{holder,from:now-minutes,minutes,channel:`gather:${target.id}:${holder}`}):0):Math.floor(minutes/target.minutes);
+    n=Math.max(0,Math.min(n,quantity,row.remaining[target.id]??0));
+    const wood=n>0&&forestBacked(engine,place,target);
+    if(wood&&harvestForest(d,engine,place.id,n,Math.max(now,settledAt??now),{to,eventId})!==n)throw preconditionFailure('林木存量不足');
+    row.remaining[target.id]-=n;putSite(d,engine,place,row,{eventId,to:wood||!n?null:{account:to,taken:{[target.id]:n}}});
+    const owner=ownerOf(place,target);
+    if(!lawfulFor(place,target,holder,settlement)&&owner)registerOffense(d,engine,{actor:holder,act:'gather',subject:{id:target.id,kind:'resource'},victim:owner,eventId,stolen:n?{item:target.item,quantity:n}:null});
+    return n;
+}
 export function siteAction(d,args,eventId){
+ const {pending,breach}=noteBreaches(),place=this.byId.get(d.get('state','location'));
+ const result=siteOperation.call(this,d,args,eventId,breach);
+ return commitBreaches(d,this,pending,result,eventId,result?.item&&Number.isSafeInteger(result.quantity)?{item:result.item,quantity:result.quantity}:null,place);
+}
+function siteOperation(d,args,eventId,breach){
  initialKnowledgeAction(d,this,'site',args);
     const receiptKey=`gather-session:${eventId}`,identity=digest(args),prior=args.operation==='gather'?d.get('state','records',receiptKey):null;
     if(prior){if(prior.identity!==identity)throw preconditionFailure('同一事件编号不能更换采集参数');return {...prior.result,duplicate:true};}
@@ -291,24 +483,31 @@ export function siteAction(d,args,eventId){
     if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw preconditionFailure('据点许可名单最多8项');
     const authorizations=[args.authorization,...args.authorizations??[]];
     if(operation==='inspect')return siteView(this,d.document);
-    if(operation==='infiltrate')return infiltrate(d,this,place,eventId);
+    if(operation==='infiltrate')return infiltrate(d,this,place,eventId,breach);
     if(!['enter','investigate','disarm','gather'].includes(operation))throw preconditionFailure('据点操作须为inspect、enter、investigate、disarm、gather或infiltrate');
     const assertAccess=()=>{
         if(operation==='investigate'&&covert(d,place))return;
         assertSocietyEntry(d,this,place);
-        if(['private','council'].includes(place.access?.mode)&&place.access.requiresConsent){
-            const authorization=authorizations.find(id=>d.get('state','records',id)?.subject===place.id&&['site_use','enter_home','enter_council'].includes(d.get('state','records',id)?.action));
-            assertLocationAccess(d,this,place.id,{authorization,companions:d.get('state','player','companions')??[]});
-        }
-        if(!(place.access?.mode==='public'&&['enter','investigate'].includes(operation))&&!allowed(d.document,place,ownerOf(place),authorizations,operation==='disarm'?'disarm':'enter'))throw preconditionFailure('据点物权要求所有者的有效许可');
-        assertOccupants(d,this,place,authorizations);
+        entryBreach(d,this,place,authorizations,breach);
+        if(place.access?.mode!=='public'&&!allowed(d.document,place,ownerOf(place),authorizations,'enter'))breach('enter',ownerOf(place),{id:place.id,kind:'site'});
+        if(operation==='disarm'&&!allowed(d.document,place,ownerOf(place),authorizations,'disarm'))breach('destroy',ownerOf(place),{id:place.id,kind:'mechanism'});
+        assertOccupants(d,this,place,authorizations,breach);
     };
-    const advance=minutes=>{this.advance(d,minutes,eventId);assertAccess();};
+    const advance=minutes=>{this.advance(d,minutes,eventId);assertAccess();
+        // The clock may have regenerated this opened site during the work.
+        // Keep the effort just accumulated by this action, refresh physical stock.
+        const fresh=ledger(d,place,this);row.remaining=fresh.remaining;
+        if(fresh.changes)row.changes=fresh.changes;if(fresh.growthAnchors)row.growthAnchors=fresh.growthAnchors;
+    };
     assertAccess();
-    const row=ledger(d,place);
+    const row=ledger(d,place,this);
     if(operation==='enter'){
         unblocked(row,s.entryMechanisms??[]);
         putSite(d,this,place,row,{eventId});
+        // Walking openly into a society's ground unlicensed is seen at once by
+        // its watcher, who answers as it would a detected infiltration (K6).
+        const watcher=breach.any()&&societyAt(this,place.id)?watchers(d,this,place)[0]:null;
+        if(watcher)return{entered:true,...caught(d,this,place,watcher,eventId,s.infiltration?.damage??0)};
         holdingSet(d,null,['state','records','site_presence'],{category:'site_presence',site:place.id,actor:'player',minute:d.get('state','minute'),sourceEvent:eventId},'sites');
         return{...siteView(this,d.document),truths:siteKnowledge(this.world,d.document).filter(t=>t.site===place.id)};
     }
@@ -351,7 +550,7 @@ export function siteAction(d,args,eventId){
     unblocked(row,target.mechanisms??[]);
     if(operation==='gather'){
         if(!(target.requires??[]).every(id=>discovered(d.document,place.id,id)))throw preconditionFailure('尚未实际发现这个资源');
-        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw preconditionFailure('资源另有物权，入内许可不能转让财物');
+        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))breach('gather',ownerOf(place,target),{id:target.id,kind:'resource'});
         const timed=Boolean(target.gather)||args.minutes!==undefined,rule=timed?actionCostRule(this,'gather.*'):null;
         let minutes=target.minutes,quantity=args.quantity??1;
         if(timed){
@@ -360,19 +559,18 @@ export function siteAction(d,args,eventId){
             if(!Number.isSafeInteger(minutes)||minutes<rule.durationMin||minutes>rule.durationMax)throw preconditionFailure('采集时长须在30至480分钟之间');
             if(args.quantity!==undefined)throw preconditionFailure('持续采集产量由实际工时与资源存量决定');
             if(!target.gather.seasons.includes(this.calendar(d.get('state','minute')).season)||!target.gather.seasons.includes(this.calendar(d.get('state','minute')+minutes).season))throw preconditionFailure('当前季节没有可采的药草');
-            const yields=(this.world.primitiveTables?.yields??this.world.balance?.yields)?.rows.find(r=>r.selector===target.gather.yield)?.perUnit?.qty;
-            const day=this.world.primitiveTables?.['action-costs']?.params.find(r=>r.id==='workday.minutes')?.value;
-            if(!Number.isFinite(yields)||!Number.isFinite(day)||day<=0)throw preconditionFailure('采集产量与工日未登记');
-            quantity=Math.min(row.remaining[target.id],Math.floor(yields*minutes/day));
-            if(quantity<1)throw preconditionFailure('资源存量或本次工时不足以采得一株');
+            gatherRates(this,target);
+            if(row.remaining[target.id]<1)throw preconditionFailure('资源存量不足');
+            quantity=timedYield(this,d.document,place,row,target,{holder:'player',from:d.get('state','minute'),minutes,channel:`gather:${target.id}`});
+            quantity=Math.min(row.remaining[target.id],quantity);
             assertActionTime(d,this,minutes);
         }
-        if(!Number.isSafeInteger(quantity)||quantity<1||quantity>100000)throw preconditionFailure('采集数量须为正整数');
+        if(!Number.isSafeInteger(quantity)||quantity<(timed?0:1)||quantity>100000)throw preconditionFailure('采集数量须为正整数；计时劳动可累计不足一份的产量');
         if(row.remaining[target.id]<quantity)throw preconditionFailure('有限资源不足，不会因重访刷新');
         const span=timed?beginActionActivity(d,this,rule.activity):null;
         advance(minutes);
         if(timed&&(d.get('state','location')!==place.id||d.get('state','player','status')!=='正常'))throw preconditionFailure('采集完成前已离开或失去行动能力');
-        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))throw preconditionFailure('资源许可已到期');
+        if(!allowed(d.document,place,ownerOf(place,target),authorizations,'gather'))breach('gather',ownerOf(place,target),{id:target.id,kind:'resource'});
         const wood=target.item==='item_wood'&&forestView(this,d.get('state'),place.id);
         if(wood&&harvestForest(d,this,place.id,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId})!==quantity)throw preconditionFailure('林木存量不足');
         row.remaining[target.id]-=quantity;putSite(d,this,place,row,{eventId,to:wood?null:{account:bag(this,'player',target.item),taken:{[target.id]:quantity}}});
@@ -432,8 +630,10 @@ export function woodcut(d,args,id){
  if(!forest||!rules)throw preconditionFailure('此地没有可采林木');
  const quantity=args.quantity??1;if(!Number.isSafeInteger(quantity)||quantity<1||quantity>rules.maximumCut)throw preconditionFailure('单次采伐量越界');
  const place=this.byId.get(location);
- // A new harvesting entry cannot bypass a site's property or consent boundary.
- const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args);else if(place.owner&&place.owner!=='player')throw preconditionFailure('采伐需所有者的采集许可');};
+ // A new harvesting entry passes the same property boundary as a site: cutting
+ // another's wood happens and is committed as an offense (K6).
+ const {pending,breach}=noteBreaches();
+ const access=()=>{if(place.site)assertSiteHarvest(d,this,place,args,breach);else if(place.owner&&place.owner!=='player')breach('gather',place.owner,{id:place.id,kind:'woodland'});};
  access();
  usableTool(d,this,rules.tool);
  const check=this.check(d,{attribute:'力量',difficulty:rules.difficulty,tools:[rules.tool]},id);
@@ -441,6 +641,7 @@ export function woodcut(d,args,id){
  access();
  const taken=check.success&&d.get('state','player','status')==='正常'&&d.get('state','location')===location?harvestForest(d,this,location,quantity,d.get('state','minute'),{to:bag(this,'player','item_wood'),eventId:id}):0;
  if(taken)this.itemDelta(d,'player','item_wood',taken,STOCK_BOOKED);
- return {success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
+ const result={success:taken>0,check,obtained:taken?[{item:'item_wood',quantity:taken}]:[],reserve:forestView(this,d.get('state'),location).reserve,
   reason:taken<quantity?'林木不足或采伐未成':null,actionScope:{kind:'woodcut',clockManaged:true,minutes:rules.minutes*quantity}};
+ return commitBreaches(d,this,pending,result,id,result.obtained[0]??null,place);
 }

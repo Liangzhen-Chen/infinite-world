@@ -59,6 +59,7 @@ export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,p
    try{response=await server.api(endpoint,body);}catch(error){if(error.httpStatus){row.error=error.message;await save();}else poison=error;throw error;}
    try{await afterHttp?.(endpoint,body,response);row.response=response;await save();return structuredClone(response);}catch(error){poison=error;throw error;}
   };
+  api.seedMode=server.api.seedMode;
   const narrator={async generate(body,label){
    const index=modelIndex++,key=digest([body,label]),old=tape.models[index];if(old&&old.key!==key)throw Error('恢复主持调用顺序发生变化');
    if(old?.response)return structuredClone(old.response);const row=old??{key};tape.models[index]=row;await save();row.response=await shared.generate(body,label);await save();return structuredClone(row.response);
@@ -68,7 +69,7 @@ export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,p
    // before the first game action; a crash here can only leave an empty branch.
    if(!tape.session){tape.session=task.checkpoint??await initialSession(task.persona);await save();}
    processMessages??=(await loadHostPromptProcessor()).process;
-   const result=await runPlaytest({scenario:{id:task.id,turns:[{input:task.input,anchor:task.id}]},session:tape.session,api,client:narrator,bundle,processMessages,countTokens,historyWindow});
+   const result=await runPlaytest({scenario:{id:task.id,turns:[{input:task.input,anchor:task.id}]},session:tape.session,api,seed:'m3-continuous-soak',client:narrator,bundle,processMessages,countTokens,historyWindow});
    tape.report=result;await save();const turn=result.turns[0];
    if(turn.errors.length||!turn.consistency?.reviewId)throw Error(`回合未验证：${turn.errors.join('；')||turn.consistency?.status}`);
    const records=await read(path.join(directory,'server','infinite-fields',result.session.campaignId,'consistency',`${turn.consistency.reviewId}.json`));

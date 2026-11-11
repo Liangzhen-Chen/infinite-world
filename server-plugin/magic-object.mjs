@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {reject} from './action-rejection.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -17,6 +18,8 @@ import {resolveInteraction,applyInteraction,assertLiquidWater} from './interacti
 
 import {isEffective,isLiving} from './lifecycle-state.mjs';
 import {facilityRuntime,installFacilityRuntime} from './facility-state.mjs';
+import {hypot} from './det-math.mjs';
+import {fixtureStations} from './workstation-services.mjs';
 const ops=new Set(['ignite','extinguish','heat','cool','dry','sense_heat','fuel','forge_heat','craft_heat']);
 const integer=(n,min,max,label)=>{if(!Number.isSafeInteger(n)||n<min||n>max)throw preconditionFailure(`${label}无效`);return n;};
 const clone=x=>structuredClone(x),recordKey=id=>`physical_feature:${id}`;
@@ -59,7 +62,7 @@ export function validateObjectWorld(world){
    for(const f of row.thermalModel.fuels){const item=items.get(f.item);if(!item||Math.round(item.weight*1000000)!==f.milligramsPerUnit)throw Error('燃料物品引用或目录重量不符');}
   }catch(error){errors.push(`${row.id}: ${error.message}`);}
  }
- for(const location of world.locations)for(const station of location.workstations??[])if(station.thermalRequirement){
+ for(const location of world.locations)for(const station of fixtureStations(location))if(station.thermalRequirement){
   const r=station.thermalRequirement,f=features.get(r.feature);
   if(!f||f.location!==location.id)errors.push(`${station.id}: 热源引用不存在或不在工坊所在地`);
   if(r.minimumC>r.maximumC||f&&r.maximumC>f.thermalModel.maximumC)errors.push(`${station.id}: 工序温度界限不符`);
@@ -175,11 +178,11 @@ const ignites=(d,row,state)=>resolveInteraction('fire',featureTraits(row,state,d
 function access(d,row,args,range){
  if(row.location!==d.get('state','location'))throw preconditionFailure('物件不在所在地');
  const position=d.get('state','records','local_player_position'),point=position?.location===row.location?position.point:[0,0];
- if(!Array.isArray(row.position)||!Array.isArray(point)||row.position.length!==2||point.length!==2||[...row.position,...point].some(x=>!Number.isFinite(x))||Math.hypot(point[0]-row.position[0],point[1]-row.position[1])>range)throw preconditionFailure('未接触物件或超出实际距离');
+ if(!Array.isArray(row.position)||!Array.isArray(point)||row.position.length!==2||point.length!==2||[...row.position,...point].some(x=>!Number.isFinite(x))||hypot(point[0]-row.position[0],point[1]-row.position[1])>range)throw preconditionFailure('未接触物件或超出实际距离');
  if(row.owner==='player'||row.access==='public')return;
  if(args.authorizations!==undefined&&(!Array.isArray(args.authorizations)||args.authorizations.length>8))throw preconditionFailure('环境授权编号列表无效');
  const p=[args.authorization,...args.authorizations??[]].map(id=>d.get('state','records',id)).find(p=>p?.subject===row.id);
- if(!p||p.category!=='authorization'||p.subject!==row.id||p.action!=='environment_use'||p.grantor!==row.owner||p.revoked||p.expires!==undefined&&p.expires<=d.get('state','minute'))throw preconditionFailure('物件需要有效所有者授权');
+ if(!p||p.category!=='authorization'||p.subject!==row.id||p.action!=='environment_use'||p.grantor!==row.owner||p.revoked||p.expires!==undefined&&p.expires<=d.get('state','minute'))return noteUnlicensedUse(d,row);
  if(row.owner?.startsWith('npc_')&&(!isEffective(null,d,row.owner)||d.get('state','npcs',row.owner,'status')==='濒死'))throw preconditionFailure('物件所有者无法继续履约');
 }
 export function inspectObjectProcess(d,engine,target,args={}){const row=locate(engine,target,d.get('state','location'));access(d,row,args,3);const state=read(d,row),s=state.thermal;return{target:row.id,temperatureC:s.energyJ/row.thermalModel.heatCapacityJPerC,burning:s.burning,fuelMg:s.fuelMg,burnedFuelMg:s.burnedFuelMg,moistureMg:s.moistureMg,energyJ:s.energyJ};}
@@ -285,7 +288,9 @@ export function prepareThermalWorkstation(d,engine,station,minutes,{location=d.g
 export function prepareNpcFurnace(d,engine,station,minutes,npc,reserved=new Map()){
  const location=d.get('state','npcs',npc,'location'),requirement=station?.thermalRequirement;if(!requirement)return null;
  const row=locate(engine,requirement.feature,location);
- if(row.location!==location||row.owner!==npc&&row.access!=='public')throw preconditionFailure('人物没有同地热源的使用权限');
+ if(row.location!==location)throw preconditionFailure('人物身边没有这处热源');
+ // A working person's own choice: they do not take over another's hearth.
+ if(row.owner!==npc&&row.access!=='public')throw preconditionFailure('这人不会擅用别人家的热源');
  advanceMagicObjects(d,engine,d.get('state','minute'));
  const state=read(d,row),s=state.thermal,m=row.thermalModel;store(d,row,state);
  const options={location};
@@ -352,7 +357,7 @@ function livingHand(d,engine,args,catalog){
  if(!isLiving(engine,d,target)||!actor||target!=='player'&&(actor.location!==d.get('state','location')||actor.scheduleTravel||actor.cognitionTravel))throw preconditionFailure('暖掌目标不在场或已经死亡');
  if(target!=='player'){
   const facts=areaTargetFacts(d,engine,target,d.get('state','location'),localPlayerPoint(d));
-  if(!facts?.lineOfSight||Math.hypot(facts.point[0]-localPlayerPoint(d)[0],facts.point[1]-localPlayerPoint(d)[1])!==0)throw preconditionFailure('暖掌须真实接触活体');
+  if(!facts?.lineOfSight||hypot(facts.point[0]-localPlayerPoint(d)[0],facts.point[1]-localPlayerPoint(d)[1])!==0)throw preconditionFailure('暖掌须真实接触活体');
   assertSpellConsent(d,engine,catalog,args,target,'support_magic');
  }
  return{target,path,actor};
@@ -369,7 +374,7 @@ export function prepareHeatMagic(d,catalog,args){
   if(d.get('state','player','mp')<spec.upkeepMp)throw preconditionFailure('缺少维持封焰的魔力');
  }else{
   const end=row.fireLine?.end,state=read(d,row),s=state.thermal;
-  if(!Array.isArray(end)||end.length!==2||end.some(x=>!Number.isFinite(x))||Math.abs(Math.hypot(end[0]-row.position[0],end[1]-row.position[1])-2)>1e-6)throw preconditionFailure('火线需要登记的两米地面路径');
+  if(!Array.isArray(end)||end.length!==2||end.some(x=>!Number.isFinite(x))||Math.abs(hypot(end[0]-row.position[0],end[1]-row.position[1])-2)>1e-6)throw preconditionFailure('火线需要登记的两米地面路径');
   if(!ignites(d,row,{...state,thermal:s})||s.fuelMg<1||s.fuelMg>Math.min(spec.power,row.thermalModel.ignitionMaximumMg))throw preconditionFailure('火线需要有限、干燥且未燃的真实地面燃料');
  }
  return{target:row.id,catalog,spec,heatArgs:{...args,target:row.id}};

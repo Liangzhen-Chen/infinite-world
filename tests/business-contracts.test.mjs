@@ -6,6 +6,8 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {toolDefinitions} from '../extension/tools.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
+import {dedicatedCoinAccount} from '../server-plugin/money.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const landlord='npc_hw_linsui',worker='npc_hw_ayan',customer='npc_hw_luowei',place='bld_hw_qingdeng';
@@ -21,10 +23,13 @@ function fixture({coins=200,inventory={},deposit=0,credit=false}={}){
     const inputs=[],results=[];
     const act=async(tool,args,eventId)=>{const input={tool,args,eventId};const result=await engine.reduce(document,input);document=applyPatches(document,result.patches);inputs.push(input);results.push(result.result);return result.result;};
     return {engine,w,act,inputs,results,get doc(){return document;},set doc(value){document=value;},
-        lease:()=>act('world_trade',{operation:'lease',seller:landlord,consent:true,days:1,deposit,...(credit?{payment:'credit',creditMinutes:120}:{})},'lease'),
+        // D05 §5.1: operating cash must be transferred into its own counter;
+        // retain20 personal copper for the separately examined ordinary trades.
+        lease:async()=>{const leased=await act('world_trade',{operation:'lease',seller:landlord,consent:true,days:1,deposit,...(credit?{payment:'credit',creditMinutes:120}:{})},'lease');const capital=Math.max(0,document.state.player.coins-20);await act('world_act',{action:'business:open_counter',slots:{business:leased.business,coins:capital}},'counter-open');return {...leased,capital};},
         manage:(operation,business,eventId=operation)=>act('world_settlement',{operation:`business_${operation}`,business},eventId)};
 }
-const coinTotal=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((sum,n)=>sum+n.coins,0)+Object.values(c.state.records).filter(r=>r.category==='contract'&&r.version===1).reduce((sum,r)=>sum+r.escrow,0);
+// F010: shopkeepers now pay the source settlement's treasury for their restock (local production and route arrivals), so conservation counts the treasuries too.
+const coinTotal=c=>c.state.player.coins+Object.values(c.state.npcs).reduce((sum,n)=>sum+n.coins,0)+Object.values(c.state.settlements??{}).reduce((sum,s)=>sum+(s.treasury??0),0)+Object.values(c.state.records).filter(r=>r.category==='contract'&&r.version===1).reduce((sum,r)=>sum+r.escrow,0)+Object.values(c.state.records).filter(r=>r.category==='money_account').reduce((sum,r)=>sum+r.coins,0);
 const amount=(c,actor,item)=>{const row=actor==='player'?c.state.inventory[item]:c.state.npcs[actor].inventory[item];return typeof row==='number'?row:row?.quantity??0;};
 const procurement=(f,business,eventId='procure',quantity=2)=>f.act('world_trade',{operation:'procure',business,seller:landlord,consent:true,item:'item_bread',quantity},eventId);
 const fulfill=(f,business,contract,eventId='fulfill')=>f.act('world_trade',{operation:'fulfill',business,seller:landlord,contract},eventId);
@@ -51,8 +56,11 @@ test('真实工具链租铺、托管进货、到货开店、付盘点报酬、�
     const beforeWait=f.doc.state.player.coins;await f.act('world_time',{minutes:30,activity:'工作'},'wait');assert.equal(f.doc.state.player.coins,beforeWait);
     await f.manage('close',shop,'close');assert.equal(coinTotal(f.doc),total);
     const report=await f.manage('report',shop,'report');
-    assert.equal(report.cash.reconciled,true);assert.equal(report.cash.net,sold.cost-order.cost-lease.cost-hire.cost);
-    assert.deepEqual(report.cash.sources.map(r=>r.source),['lease','lease','procure','hire','sale','close']);
+    // D05 §5.1: the cash report covers the counter, including real capital;
+    // initial rent/deposit were personally funded before counter opening.
+    assert.equal(report.cash.reconciled,true);assert.equal(report.cash.net,lease.capital+sold.cost-order.cost-hire.cost);
+    assert.deepEqual(report.cash.sources.map(r=>r.source),['lease','counter-open','procure','hire','sale']);
+    assert.equal(report.cash.closing,dedicatedCoinAccount(f.doc.state,'player','counter').coins);
     assert.equal(report.goods.item_bread.reconciled,true);assert.equal(report.goods.item_bread.closing,1);
     assert.deepEqual(report.goods.item_bread.sources.map(r=>[r.source,r.quantity]),[['fulfill',2],['sale',-1]]);
     assert.equal(report.profit.revenue,sold.cost);assert.equal(report.profit.stockCostOfSales,order.cost/2);
@@ -130,10 +138,19 @@ test('合法出租与明确同意、实际清醒在场、整段雇工空档和�
 });
 
 test('NPC 顾客只花已有钱且一天消费有限；卖空、赊购和重复交货无副作用',async()=>{
-    const f=fixture({inventory:{item_bread:{quantity:30}}}),lease=await f.lease(),shop=lease.business;await f.manage('open',shop);
-    const sell={operation:'sell',business:shop,seller:'player',buyer:customer,consent:true,item:'item_bread',quantity:10};
-    await f.act('world_trade',sell,'first-sale');const before=structuredClone(f.doc);
-    await assert.rejects(f.act('world_trade',sell,'excess-sale'),/当日店铺消费上限/);assert.deepEqual(f.doc,before);
+    const f=fixture({inventory:{item_bread:{quantity:30}}});
+    // K08 / K02: ordinary three-person household needs180 satiety, bread30
+    // gives6 portions. Cash10 minus the known rent4 buys6 at1 copper,
+    // retaining4. This exceeds the removed quarter-purse cap2; even a
+    // subsequent one-portion private purchase cannot spend the rent reserve.
+    f.w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];
+    const prepared=applyIntentSetup(f.engine,f.doc,{facts:[{path:['state','npcs',customer,'coins'],value:10}]});assert.deepEqual(prepared.setupUnmet,[]);f.doc=prepared.document;
+    f.doc.state.obligations['customer-rent']={id:'customer-rent',kind:'rent',debtor:customer,creditor:landlord,resource:'coin_river',amount:4,paid:0,status:'pending',deadline:1440};
+    const lease=await f.lease(),shop=lease.business;await f.manage('open',shop);
+    const sell={operation:'sell',business:shop,seller:'player',buyer:customer,consent:true,item:'item_bread',quantity:6};
+    const first=await f.act('world_trade',sell,'first-sale');assert.equal(first.cost,6);assert.equal(f.doc.state.npcs[customer].coins,4);const before=structuredClone(f.doc);
+    await assert.rejects(f.act('world_trade',sell,'excess-sale'),/家庭当前采购预算不足/);assert.deepEqual(f.doc,before);
+    await assert.rejects(f.act('world_trade',{...sell,quantity:1},'reserved-cash'),/家庭当前采购预算不足/);assert.deepEqual(f.doc,before);
     await assert.rejects(f.act('world_trade',{...sell,quantity:1,payment:'credit'},'credit-sale'),/现有现金/);
     await assert.rejects(f.act('world_trade',{...sell,quantity:100},'sold-out'),/现有库存不足/);
     const order=await procurement(f,shop,'order-once');await fulfill(f,shop,order.contract,'deliver-once');const once=structuredClone(f.doc);
@@ -144,7 +161,9 @@ test('NPC 顾客只花已有钱且一天消费有限；卖空、赊购和重复�
 });
 
 test('已托管雇工在履约前失去库存不能完成；营业期其他工具花费和实物都进入同一来源账',async()=>{
-    const f=fixture({inventory:{item_bread:{quantity:1}}}),lease=await f.lease(),shop=lease.business;
+    // S5-02: two native perishable stews *35 cover the player's60/day
+    // satiety, leaving the examined bread available for the real sale.
+    const f=fixture({inventory:{item_bread:{quantity:1},item_mutton_turnip_stew:{quantity:2}}}),lease=await f.lease(),shop=lease.business;
     const hire=await f.act('world_trade',{operation:'hire',business:shop,seller:worker,consent:true,task:'stocktake',item:'item_bread',quantity:1},'hire-pending');
     await f.act('world_trade',{buyer:customer,seller:'player',item:'item_bread',quantity:1},'ordinary-sale');
     await assert.rejects(f.act('world_trade',{operation:'fulfill',business:shop,contract:hire.contract,seller:worker},'missing-goods'),/尚未到货或已不足/);
@@ -153,7 +172,8 @@ test('已托管雇工在履约前失去库存不能完成；营业期其他工�
     const report=await f.manage('report',shop);
     assert.equal(report.cash.reconciled,true);assert.equal(report.goods.item_bread.reconciled,true);
     assert.deepEqual(report.goods.item_bread.sources.map(r=>r.source),['ordinary-sale','ordinary-buy']);
-    assert.ok(report.cash.sources.some(r=>r.source==='ordinary-buy'));assert.equal(report.profit.revenue,0);
+    // Personal purchases still explain the shared goods, but never the counter.
+    assert.ok(!report.cash.sources.some(r=>r.source==='ordinary-buy'));assert.equal(report.profit.revenue,0);
     await assert.rejects(f.manage('bankrupt',shop),/足以偿债/);
 });
 
@@ -182,15 +202,24 @@ test('正式世界的新角色沿真实路线采购和携货雇工，使用原�
     const act=async(tool,args,eventId)=>{const step=await engine.reduce(c,{tool,args,eventId});c=applyPatches(c,step.patches);return step.result;};
     await act('world_move',{destination:place},'real-enter');
     const lease=await act('world_trade',{operation:'lease',seller:landlord,consent:true,days:1},'real-lease');
+    await act('world_act',{action:'business:open_counter',slots:{business:lease.business,coins:Math.max(0,c.state.player.coins-20)}},'real-counter');
     const order=await act('world_trade',{operation:'procure',business:lease.business,seller:landlord,consent:true,item:'item_bread',quantity:2},'real-procure');
     await act('world_trade',{operation:'fulfill',business:lease.business,seller:landlord,contract:order.contract},'real-deliver');
-    await act('world_settlement',{operation:'business_open',business:lease.business},'real-open');
     const travelled=await act('world_move',{destination:'bld_hw_herbs'},'real-carry');assert.ok(travelled.minutes>0);
+    const counterBefore=dedicatedCoinAccount(c.state,'player','counter').coins,purseBefore=c.state.player.coins;
     const hire=await act('world_trade',{operation:'hire',business:lease.business,seller:'npc_hw_fanrong',consent:true,task:'stocktake',item:'item_bread',quantity:2,minutes:30},'real-hire');
+    // D05 §5.1 / D15 §15.1.1: cash stays where it is. Off-site hiring is an
+    // actual personal advance; it cannot teleport money from the inn counter.
+    assert.equal(c.state.records[hire.contract].fundingAccount,'player|coin_river|purse');
+    assert.equal(dedicatedCoinAccount(c.state,'player','counter').coins,counterBefore);assert.equal(c.state.player.coins,purseBefore-hire.cost);
     const worked=await act('world_trade',{operation:'fulfill',business:lease.business,seller:'npc_hw_fanrong',contract:hire.contract},'real-work');
     assert.equal(worked.audit.quantity,2);assert.equal(worked.audit.finish-worked.audit.start,30);
     await act('world_move',{destination:place},'real-return');
     await act('world_time',{until:{dayOffset:0,hour:18,minute:20}},'real-customer-arrive');
+    // K08 settles real noon customers before this evening service. Keep the
+    // two audit portions in preparation until the separately tested manual
+    // sale window, rather than assuming no one can buy them during the day.
+    await act('world_settlement',{operation:'business_open',business:lease.business},'real-open');
     const beforeCustomerCoins=c.state.npcs[customer].coins,beforeCustomerStock=amount(c,customer,'item_bread');
     const sold=await act('world_trade',{operation:'sell',business:lease.business,seller:'player',buyer:customer,consent:true,item:'item_bread',quantity:1},'real-sale');
     assert.equal(c.state.npcs[customer].coins,beforeCustomerCoins-sold.cost);assert.equal(amount(c,customer,'item_bread'),beforeCustomerStock+1);

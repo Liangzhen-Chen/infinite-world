@@ -7,7 +7,7 @@ import {randomUUID} from 'node:crypto';
 import {loadWorld} from './load-world.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
-import {runContentPipeline,defaultReviewRequest,hashContent} from './content-pipeline.mjs';
+import {runContentPipeline,defaultReviewRequest,hashContent,rowFingerprintShape} from './content-pipeline.mjs';
 import {validateDraft as validateBossDraft} from './m4-batch2-content.mjs';
 import {validateBossEcology} from '../server-plugin/bosses.mjs';
 import {validateBossCognition} from '../server-plugin/boss-cognition.mjs';
@@ -70,7 +70,7 @@ export async function bossBatch(batch){
   for(const [i,b]of batches.entries()){
    if(!b?.l4?.approved||b.fingerprint!==summary.batches[i].fingerprint||!Array.isArray(b.ids))throw Error(`批 ${i} 尚未完成 L4`);
    const rows=await Promise.all(b.ids.map(id=>read(`${id}.json`)));
-   if(rows.some(r=>!r)||hashContent(rows.map(r=>({id:r.id,draft:r.draft,review:r.review,status:r.status})))!==b.fingerprint)throw Error(`批 ${i} 审查后内容已改变`);
+   if(rows.some(r=>!r)||hashContent(rows.map(rowFingerprintShape))!==b.fingerprint)throw Error(`批 ${i} 审查后内容已改变`);
    for(const id of [...b.sample,...b.flagged,...b.manual])if(!b.l4.notes?.some(n=>n.id===id&&typeof n.note==='string'&&n.note.trim()))throw Error(`缺少 L4 阅读记录 ${id}`);
    const unresolved=rows.filter(r=>r.status==='manual'&&!(r.errors.length&&r.errors.every(h=>h?.severity==='hard'&&ruled(b,r.id,h.quote))));
    if(rows.some(r=>r.status==='pending')||unresolved.length/b.count>.1)throw Error(`批 ${i} 人工队列超过 10%`);

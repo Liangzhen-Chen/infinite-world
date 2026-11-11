@@ -14,7 +14,7 @@
 //                                 <记录键>|coin_river|escrow      records.<id>.escrow / state.quests.<id>.escrow / state.projects.<id>.public.escrow /
 //                                                                 records.organization_proposal.escrow / records.settlement_trade.escrowCopper
 // 源汇（world/ontology/resources.json 的 sourcesAndSinks）带用途，用途即流量类别（wage、tax、trade、interest、bounty、fee……）。
-import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,registerTransferProjection,LEDGER_COIN} from './ledger.mjs';
+import {accountKey,transfer,declareLedgerWriter,registerLedgerOpening,ledgerActive,registerUpgradeBooking,registerTransferProjection,tallyDrift,LEDGER_COIN} from './ledger.mjs';
 import {actorId} from './npc-state.mjs';
 import {groupAccountView,changeGroupCoins} from './group-account.mjs';
 import {holdingSet,declareHoldingWriter,isEffective,aliveHoldings} from './holdings.mjs';
@@ -111,7 +111,8 @@ export function legacyMoney(engine,state){
         else if(c==='settlement_trade')add(escrow(key),row.escrowCopper);
         // 议案的入会费只在议事中托管；议决后记录保留原数额作凭据，钱已入公库或退回。
         else if(c==='organization_proposal'){if(row.status==='议事中')add(escrow(row.feePayer?`motion_${key}`:key),row.escrow);}
-        else if(c!=='quest_receipt'&&typeof row.escrow==='number')add(escrow(key),row.escrow);
+        // S5-F2: a contract frozen in a tender-unit resource holds that resource in kind (goods-escrow.mjs), not coin_river.
+        else if(c!=='quest_receipt'&&typeof row.escrow==='number'&&!(c==='contract'&&row.resource&&row.resource!==COIN))add(escrow(key),row.escrow);
     }
     // 未开户的政体国库与钱庄库银取世界数据（与 military.polityRow、credit.bankRow 的缺省一致）。
     for(const id of polities)add(polityTreasury(id),(engine.rules.military?.polities??[]).find(p=>p.id===id)?.treasuryCopper);
@@ -142,7 +143,7 @@ export const BOOKED=Object.freeze({booked:true});
 export function bookSide(d,account,delta,books){
     if(books===BOOKED||!delta)return 0;
     if(!books?.account||!books?.writer){
-        if(ledgerActive(d))d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));
+        if(ledgerActive(d)){d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));tallyDrift(d,'unbooked');}
         return 0;
     }
     return delta>0?moveCoins(d,{from:books.account,to:account,amount:delta,writer:books.writer,eventId:books.eventId??null})
@@ -198,4 +199,47 @@ export function spendCounterCoins(d,engine,{owner,actor,to,amount,eventId}){
     const result={from:row.account,amount};
     holdingSet(d,engine,['state','records',receipt],{category:'counter_payment',owner,actor,to,amount,result},'money');
     return result;
+}
+
+// 15 §15.1.1: a business pays its running costs (wages, stock) from its counter, never from the owner's own purse.
+// The balance a payment may use: the recorded counter, capped by the ledger, and nothing while it is frozen.
+export function counterCash(d,owner){
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter');
+    if(!row||aliveHoldings(d,{kind:'frozen',subject:row.account}).length)return 0;
+    return Math.max(0,Math.min(row.coins,d.get('ledger','accounts',row.account)??0));
+}
+// The owner puts working capital in. The first deposit opens the account at the shop's seat (provenance: the
+// opening event); later deposits are the same real purse -> counter transfer as business:fund_counter.
+export function depositCounter(d,engine,{owner,seat,business,amount,eventId,writer='money'}){
+    if(!Number.isSafeInteger(amount)||amount<1||!ledgerActive(d))throw Error('Counter deposit requires a positive amount and open books');
+    const state=d.get('state');
+    if(!dedicatedCoinAccount(state,owner,'counter'))holdingSet(d,engine,['state','records',dedicatedCoinKey(owner,'counter')],
+        {category:'money_account',owner,purpose:'counter',account:accountKey(owner,COIN,'counter'),coins:0,seat,business,sourceEvent:eventId,openedBy:eventId},'money',eventId);
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter');
+    moveCoins(d,{from:purse(engine,owner),to:row.account,amount,writer,eventId});
+    mirrorPartyCoins(d,engine,owner,-amount,eventId,writer);
+    return {account:row.account,amount};
+}
+// A business outlay: the counter pays first (up to what it holds), whatever it lacks comes from the owner's own purse (up to what the purse
+// holds); both legs are real transfers and the purse leg mirrors its legacy coins. Short in total -> fails loudly before anything is written.
+// The caller books the receiving side (mirrorPartyCoins) as for any moveCoins payment.
+export function payCounterThenPurse(d,engine,{owner,to,amount,writer,eventId}){
+    if(!Number.isSafeInteger(amount)||amount<1)throw Error('Payment requires a positive whole amount');
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter'),fromCounter=row?Math.min(counterCash(d,owner),amount):0,fromPurse=amount-fromCounter;
+    // Pre-check against the legacy coins only: the legacy field is the authority while both books run (ledger.mjs transfer books a shortfall of the ledger account as drift and
+    // never refuses a legacy settlement), and mirrorPartyCoins below is what really throws Invalid party balance. Checking the ledger balance as well would turn a tolerated drift
+    // into a refused payment while the shop budget (which reads the legacy coins) still allows it, and abort the whole advance.
+    const purseCoins=d.get(...engine.actorPath(owner),'coins')??0;
+    if(fromPurse>purseCoins)throw Error(`Payment ${amount} exceeds the counter (${fromCounter}) plus the purse (${purseCoins})`);
+    if(fromCounter)moveCoins(d,{from:row.account,to,amount:fromCounter,writer,eventId});
+    if(fromPurse){moveCoins(d,{from:purse(engine,owner),to,amount:fromPurse,writer,eventId});mirrorPartyCoins(d,engine,owner,-fromPurse,eventId,writer);}
+    return {fromCounter,fromPurse};
+}
+// A payment out of the counter to any money party, limited to what the counter holds.
+export function payFromCounter(d,engine,{owner,to,amount,writer,eventId}){
+    const row=dedicatedCoinAccount(d.get('state'),owner,'counter');
+    if(!row||!Number.isSafeInteger(amount)||amount<1||amount>counterCash(d,owner))throw Error('Counter payment exceeds the counter cash');
+    moveCoins(d,{from:row.account,to:partyAccount(engine,d.get('state'),to),amount,writer,eventId});
+    mirrorPartyCoins(d,engine,to,amount,eventId,writer);
+    return {from:row.account,amount};
 }

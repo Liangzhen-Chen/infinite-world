@@ -1,4 +1,5 @@
 // Only observable player state becomes UI feedback. Private records and hidden luck stay private.
+import {claimUnit} from './claim-unit.mjs';
 import {relationView} from './npc-state.mjs';
 export function stateNotices(before,after,resolveName=id=>id){
     const result=[],push=(type,text,card)=>result.push({type,text,...(card?{card}:{})});
@@ -53,7 +54,7 @@ export function stateNotices(before,after,resolveName=id=>id){
         if(row.category==='repair'&&row.mechanic==='player'&&!before.records?.[id])push('repair',`${name(row.item)}修整${row.success?'完成':'未成功'}${row.completionFailure?`：${row.completionFailure}`:''}`);
         if(row.category==='debt'&&row.debtor==='player'){
             const old=before.records?.[id];
-            if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${row.amount-row.paid}铜 · ${row.status}`);
+            if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${row.amount-row.paid}${claimUnit(row)} · ${row.status}`);
         }
         if(row.category!=='contract'||!row.parties?.includes('player'))continue;
         const old=before.records?.[id];
@@ -61,7 +62,7 @@ export function stateNotices(before,after,resolveName=id=>id){
     }
     for(const row of obligationRows(after).filter(r=>after.obligations?.[r.id]&&r.debtor==='player'&&!r.legacyRecord&&!r.reservationVersion)){
         const old=obligationRow(before,row.id),current=obligationView(after,row);
-        if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${current.owed}铜 · ${row.status}`);
+        if(!old||old.status!==row.status||old.paid!==row.paid)push('debt',`欠${name(row.creditor)} ${current.owed}${claimUnit(row)} · ${row.status}`);
     }
     for(const [id,row] of Object.entries(after.learning??{}))if(!before.learning?.[id]&&row.success===false)push('learning',`${name(row.entity)}尚未学会，本次已花费 ${row.cost??0}铜、${row.end-row.start} 分钟`);
     for(const [id,skill] of Object.entries(after.skills??{})){
@@ -109,7 +110,7 @@ export function playerDocuments(state,resolveName=id=>id){
     const cards=[],name=id=>id==='player'?state.player.name:resolveName(id)??'路人';
     for(const [id,row]of Object.entries(state.records??{})){
         if(row.category==='contract'&&row.parties?.includes('player'))cards.push({id:`record:${id}`,kind:'contract',title:row.name??'契约',text:row.content??`${row.parties.map(name).join('、')} · ${row.status}`,status:row.status,
-            ...(row.cost!==undefined?{cost:row.cost}:{}),...((row.deadline??row.expires)!==undefined?{deadline:row.deadline??row.expires}:{})});
+            ...(row.cost!==undefined?{cost:row.cost,...(row.resource&&row.resource!=='coin_river'?{unit:claimUnit(row)}:{})}:{}),...((row.deadline??row.expires)!==undefined?{deadline:row.deadline??row.expires}:{})});
         if(row.category==='announcement'&&row.knownBy?.includes('player'))cards.push({id:`record:${id}`,kind:'announcement',title:row.name??'公告',text:row.content??''});
         if(row.category==='letter'&&row.to==='player'&&row.status==='已交付')cards.push({id:`record:${id}`,kind:'letter',title:row.name??'来信',text:row.content??'',from:name(row.from)});
     }

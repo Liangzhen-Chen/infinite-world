@@ -10,6 +10,8 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {regionalTradePrice,armySupplyQuote} from '../server-plugin/settlement-trade.mjs';
+import {quoteSupply} from '../server-plugin/market.mjs';
+import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
 import {PRICE_POINTS,probePriceReads,setPriceReadMode,priceRead} from '../server-plugin/stock.mjs';
 import {createPriceProbe} from './helpers/price-probe.mjs';
@@ -42,27 +44,48 @@ const SRC=new URL('../server-plugin/',import.meta.url);
 const sources=Object.fromEntries(readdirSync(SRC).filter(f=>f.endsWith('.mjs')).map(f=>[f,readFileSync(new URL(f,SRC),'utf8')]));
 // 含价格、报价、估值字样的模块的归类。read = 价格输入已读账户；其余是“不读存量或货币量”的原因。
 const SURVEY={
-    // A3 daily22: these are valuations of declared gifts/prizes, not price
-    // formulas driven by stock. Keep the exhaustive module/reader checks below.
-    'dialogue.mjs':'赠礼事件标值取目录基价，物品仍经真实转移核验，不以估值读取库存或现款',
-    'festival.mjs':'NPC授权成本取登记物资和奖品数量乘目录基价；数量来自节庆条款，不读库存或现款计算价格',
-    'primitives-runtime.mjs':'NPC同意的成本和报酬估值取拟转移数量乘目录基价；支付能力另由真实转移事务核验，不以库存或现款定价',
+    // K04: household budgets read inventory and cash via registered points;
+    // meal offers use the catalog base as an opportunity-cost anchor.
+    'household-budget.mjs':'read',
+    // W8-E6: baseline valuation only checks the catalog base, then delegates
+    // to economy:value; current goods prices still use the market projection.
+    'valuation.mjs':'基准估值只校验目录基价并转交 economy:value，不读取存量；goods 估值由市场账户投影提供',
+    // S5-02: unified projection reads actual holder and settlement accounts.
+    'market.mjs':'read',
+    // S5-03 / 15 §15.3: currency supply is read directly from ledger.accounts;
+    // metal goods use the registered market projection, never legacy inventory.
+    'currency.mjs':'货币存量直接读取 ledger.accounts；金属商品报价转调已登记的 marketQuote，不另读旧库存定价',
+    // S5-01 / 15 §15.2: this is the primitive baseline/correction slot,
+    // not another inventory-priced consumer. Market callers read the books.
+    'derived.mjs':'economy:value 缺省基准取主体 basePrice 事实；只计算上下文基准与修正项，不自行读取库存或现款，供需由市场调用方经已登记账户读取',
+    // W8-A：dialogue / festival / primitives-runtime 的礼物、奖品、同意成本估值已改走估值角色（valuation.mjs 的 goods 市场估值投影），
+    // 不再含价格字样，按本测试的规则从归类表删除。
     'manufacturing.mjs':'配方投入重置成本经 regionalTradePrice 统一估值，不自行读取库存',
-    'settlement-trade.mjs':'read','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-tax.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
-    'labor-market.mjs':'read','smuggling.mjs':'read','business.mjs':'read','npc-autonomy.mjs':'read',
-    'credit.mjs':'公式 = 基价 × 抵押数量，数量来自借据与参数，不读库存',
-    'transition.mjs':'遗产估值 = 基价 × 已转移账户或持有数量；清偿与分配数量来自账本，不使用估值决定可支付库存',
-    'finance-bank.mjs':'当铺估价 = 基价 × 参数数量；存款利率读区域报价缓存与灾害系数，都不读库存或现款',
+    // S5-02: obsolete regionalMaterialSupply has no callers and is removed;
+    // the regional wrapper delegates inventory pricing to registered market.
+    'settlement-trade.mjs':'区域价只转调 market 已登记账户读取；保留路线/环境输入，不另读存量定价','shop.mjs':'read','forest-water.mjs':'read','medicine-state.mjs':'read','finance-assets.mjs':'read','military.mjs':'read',
+    'smuggling.mjs':'read',
+    // K08 delegates customer cash to household budgets (assets.cash); market
+    // quotes likewise use the registered projection rather than a local read.
+    'business.mjs':'顾客现金经家户预算已登记账户读取；报价转交市场投影','npc-autonomy.mjs':'read',
+    // S5 W4 F007/F058：押品、典当物、遗产与责任上限不再自己拿目录基价乘数量，统一经估值角色（valuation.mjs）取市场估值投影；
+    // credit / transition / finance-bank 因此不再含价格字样，按本测试的规则从归类表删除。
+    // W8-D/W8-E6: medicine, transport and labor-market likewise delegate to
+    // market/baseline valuation and no longer contain PRICE_WORDS. The point
+    // scan still checks labor.stock/labor.cash at their actual read sites.
     'bounty.mjs':'贿赂价码 = 涉案金额 × 廉洁度 × 立场，不读存量',
-    'law.mjs':'偷窃涉案值取物品基价或参数金额，不读存量',
-    'npc-crime.mjs':'涉案值取物品基价','extraction.mjs':'采得物价值取物品基价','boss-negotiation.mjs':'谈判礼物估值取参数数量 × 基价',
-    'world-events.mjs':'事件价值取承诺数量 × 基价','elections.mjs':'赠礼拉票取礼物基价','transport.mjs':'关税与运费按托运单上的货物数量，不读库存（单据在 transport:* 账户）',
+    // W8-A：案值、采得物价值、关税税基、事件价值、赠礼拉票改走估值角色（goods 市场估值 / property 租金资本化），law / npc-crime / extraction / world-events / elections / finance-tax 不再读目录基价。
+    // law.mjs 仍含 bribePrice 字样（贿赂价码，本表原有口径）。
+    'law.mjs':'贿赂价码取涉案金额；案值走估值角色，不读目录基价',
+    'boss-negotiation.mjs':'首领谈判按物品本身的目录价值衡量交换（巢穴无市场，非现价），保留',
     'hazard-calendar.mjs':'灾害价格系数读时钟记录','magic-economy.mjs':'法术减价系数读月度记录','settlement-profile.mjs':'价格系数说明文字','war-diplomacy.mjs':'战时价格系数取规则常量',
-    'medicine.mjs':'诊费 = 工钱参照 + 草药基价 × 预约占用率，不读存量',
     'water-cycle.mjs':'水价读水体水量，水不是账户资源（S5 生态）','wildlife.mjs':'野味价格读生灵种群数，种群账户化属 S5（R24 在改 wildlife）',
-    'agriculture.mjs':'粮仓售粮 buy 属农业实现（R27 在改 agriculture），未动',
+    'agriculture.mjs':'含 PriceFactor 字样（农业价格系数）；粮仓售粮 buy 已改走估值角色',
     'engine.mjs':'成交闸门 engine.quantity 与余额检查在 L0 引擎，L0 不能引用 L1 账户（会新增向上违例）；报价由 settlement-trade 与 shop 提供',
     'effects.mjs':'时钟效果转调 regionalTradePrice','stock.mjs':'价格输入读取接口本身（PRICE_POINTS）',
+    // S5-01 / 15 §15.2: this is the primitive baseline/correction slot,
+    // not another inventory-priced consumer. Market callers read the books.
+    'derived.mjs':'economy:value 缺省基准取主体 basePrice 事实；只计算上下文基准与修正项，不自行读取库存或现款，供需由市场调用方经已登记账户读取',
 };
 const PRICE_WORDS=/basePrice|priceFactor|PriceFactor|regionalTradePrice|armySupplyQuote|tradeQuote|bribePrice/;
 test('价格输入点登记：每个读取点有调用处，每处调用都已登记；含价格字样的模块都已归类',()=>{
@@ -156,12 +179,27 @@ function assertSurface(c,label){
 
 test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推进（周贸易、俸禄、军队、补货、自治），读账户与读旧字段结算完全相同',{timeout:1800000},async()=>{
     const c=campaignMoney();
+    // S5-02: four portions feed Lin Sui's two-person household (120/30),
+    // and three must still be available for the original buy/resale chain.
+    // This opening shelf is not under examination; both read modes share it.
+    const prepared=applyIntentSetup(c.engine,c.doc,{facts:[{path:['state','npcs',host,'inventory','item_bread'],value:8}]});assert.deepEqual(prepared.setupUnmet,[]);c.doc=prepared.document;
     assertSurface(c,'开局（尚未开账，读旧字段）');
-    await step(c,'world_trade',{seller:host,item:'item_bread',quantity:2},'buy');
+    // S5-02 / 15 §15.2: retain one day's food before reselling. Buying three
+    // through the native action leaves the two reserved portions plus one sale;
+    // the ledger-vs-mirror equality and all following conservation checks stay.
+    await step(c,'world_trade',{seller:host,item:'item_bread',quantity:3},'buy');
     assert.ok(c.doc.ledger,'第一次归约开账');
     assertSurface(c,'交易之后');
     await step(c,'world_trade',{seller:'player',buyer:host,item:'item_bread',quantity:1},'sell-bread');// 玩家卖给店主：成交前库存进成本基准
-    await step(c,'world_trade',{seller:host,item:'item_ration',quantity:40},'buy-ration');
+    // W8-E6 excludes private packs from public supply. Deliver the same forty
+    // portions in the largest legal spot lots: max(retailFloor, floor(S*0.3)).
+    // Unlike all-five-portion lots, this retains real one-coin tax assessment
+    // instead of rounding every small bill's tax to zero. Every lot is dual.
+    for(let left=40,lot=0;left>0;lot++){
+        const supply=quoteSupply(draft(c.doc),c.engine,{item:'item_ration',location:inn}),rules=c.engine.world.marketRules;
+        const quantity=Math.min(left,Math.max(rules.retailFloor,Math.floor((supply.spotSupply??supply.supply)*rules.maxShare)));
+        await step(c,'world_trade',{seller:host,item:'item_ration',quantity},`buy-ration:${lot}`);left-=quantity;
+    }
     assert.ok(Object.values(c.doc.state.records).some(r=>r.category==='trade_tax'&&r.amount>0),'商税照常收取');
     // A3CR (3def293f), 产品原则二.4：借款须有出借人对实际报价条款
     // 的真实同意，调用者 consent:true 不再能代答。复用原生同意夹具，
@@ -182,17 +220,25 @@ test('价格双读对照：交易、借贷商税、受雇、钱庄、离屏推�
 });
 
 test('价格双读对照：制作、采集（钓鱼）之后的报价；农业季逐日推进（播种、生长、收获、腐坏、吃粮）与离屏推进',{timeout:3600000},async()=>{
-    const c=campaignStock(),w=c.engine.world;
-    const put=(item,quantity,durability=100)=>c.doc.state.inventory[item]={quantity,quality:w.items.find(i=>i.id===item).quality,durability,weight:w.items.find(i=>i.id===item).weight};
-// D15.2 requires real bait for each cast; keep all original catch, wear and conservation assertions.
-    put('item_wood',6);put('item_whittling_knife',1,80);put('item_fishing_bait',10);put('item_kitchen_knife',1);put('item_water',10);put('item_oats',5);
-    c.doc.state.skills.skill_life_6_core={proficiency:120,daily:{},breakthroughs:[]};c.doc.state.recipes.recipe_wooden_pegs={source:{type:'teacher',id:'npc_hw_ayan'}};
+    const c=campaignStock();
+    // D05 §5.5 / S5-05：正式钓具、蚯蚓及非考查的制作条件经 setup 声明，不直接改库存/技能事实。
+    const prepared=applyIntentSetup(c.engine,c.doc,{
+        inventory:{item_wood:6,item_whittling_knife:1,item_bamboo_fishing_rod:1,item_earthworm_bait:10,item_kitchen_knife:1,item_water:10,item_oats:5},
+        abilities:{skills:{skill_life_6_core:120},recipes:['recipe_wooden_pegs']},
+        facts:[{path:['state','inventory','item_whittling_knife','durability'],value:80}],
+    });
+    assert.deepEqual(prepared.setupUnmet,[]);c.doc=prepared.document;
     await step(c,'world_trade',{seller:host,item:'item_bread',quantity:2},'buy');
     assertSurface(c,'交易之后');
-    c.doc={...c.doc,state:{...c.doc.state,location:'bld_hw_mill'}};
+    // D05 身体慢事实保留真实工时：移动、等待都走生产归约，不能瞬移或倒拨身体事实的 asOf。
+    await step(c,'world_move',{destination:'bld_hw_mill'},'walk-craft');
     for(let i=0;i<3;i++)await step(c,'world_craft',{recipe:'recipe_wooden_pegs'},`craft-${i}`);
-    c.doc={...c.doc,state:{...c.doc.state,location:'loc_hw_dock',minute:Math.floor(c.doc.state.minute/DAY)*DAY+600}};
-    for(let i=0;i<4;i++)await step(c,'world_field',{operation:'wildlife_fish'},`fish-${i}`,{allowFailure:true});
+    const fishingAt=Math.floor(c.doc.state.minute/DAY)*DAY+600;
+    await step(c,'world_time',{minutes:(fishingAt>c.doc.state.minute?fishingAt:fishingAt+DAY)-c.doc.state.minute},'wait-fishing');
+    await step(c,'world_move',{destination:'loc_hw_dock'},'walk-fishing');
+    for(let i=0;i<4;i++)await step(c,'world_field',{operation:'wildlife_fish'},`fish-${i}`);
+    // 4竿各耗1份正式蚯蚓，10−4=6；不吞掉钓具/饵料等前提错误，保证采集对照确实执行。
+    assert.equal(c.doc.state.inventory.item_earthworm_bait.quantity,6);
     const afterGather=assertSurface(c,'采集之后');
     // 农业季：逐日推进；每 10 天并在收获窗口附近把同一天用两种模式各归约一遍，并核对整张价格面。
     const harvested=()=>c.doc.state.records['agriculture:loc_hw']?.ledger?.harvested??0;
@@ -267,7 +313,8 @@ test('定点：补货工读供货人库存与雇主现款；自治交易读卖�
     const labor=()=>{
         const f=financeFixture({at:mill});f.doc.state.npcs[worker].coins=0;f.doc.state.npcs[worker].proficiencies={skill_life_6_core:600};f.doc.state.npcs[host].coins=5000;
         f.doc.state.npcs[host].inventory={item_bread:{quantity:20},item_wood:{quantity:100},item_whittling_knife:{quantity:1,durability:100}};
-        f.e.byId.get(mill).workstations.find(x=>x.kind==='woodworking').fee=0;
+        // K5：工位收费是设备属性上的主人报价，改设备而不是派生出的工位。
+        f.e.byId.get(mill).fixtures.find(x=>x.fixture==='workbench').fee=0;
         f.w.households.find(h=>h.members.includes(worker)).homeLocation=mill;
         f.doc.state.npcs[host].workplace={location:mill};f.doc.state.npcs[worker].inventory={item_whittling_knife:{quantity:1,durability:100}};
         f.doc.state.npcs[clerk].inventory.item_bread={quantity:40};f.e.byId.get(clerk).services=['trade'];
@@ -306,8 +353,9 @@ test('定点：公共工程读村公库与公仓材料（公款）、玩家现�
         const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}delete w.rules.weather;
         const engine=new WorldEngine(w),doc=engine.createCharacter(seed,{},'ledger-price-projects'),d=draft(doc);
         engine.airDraft=d;d.set(['state','location'],site);d.set(['state','minute'],600);
-        const workers=w.settlementProfiles.find(p=>p.id===sid).details.governance.coordinators.slice(0,2);
-        for(const id of workers)d.set(['state','npcs',id],{...d.get('state','npcs',id),location:site,status:'正常',activity:'议事'});
+        // F083: one person can be on only one works crew, so the private project gets the third villager as its own crew.
+        const coordinators=w.settlementProfiles.find(p=>p.id===sid).details.governance.coordinators,workers=coordinators.slice(0,2),privateCrew=coordinators.slice(2,3);
+        for(const id of coordinators)d.set(['state','npcs',id],{...d.get('state','npcs',id),location:site,status:'正常',activity:'议事'});
         d.set(['state','records','governance_office:fixture'],{category:'governance_office',holder:'player',office:'office_village_head',settlement:sid,status:'在任',appointedAt:0,until:100*DAY,appointedBy:'fixture'});
         d.set(['state','settlements',sid,'treasury'],100000);d.set(['state','settlements',sid,'wood'],1000);d.set(['state','settlements',sid,'stone'],1000);
         const add=(id,extra={})=>{const base={id,name:id,type:'bld',parent:site,scope:sid,owner:sid,facilityType:'house',material:'wood',position:[0,0],access:{mode:'public'},...extra};d.set(['state','created',id],base);return id;};
@@ -316,7 +364,7 @@ test('定点：公共工程读村公库与公仓材料（公款）、玩家现�
         damageFacility(d,engine,pub,80,{sourceEvent:'ruin'});d.set(['state','buildings',own],{owner:'player',condition:10});d.set(['state','player','coins'],500);
         d.set(['state','inventory','item_wood'],{quantity:50});d.set(['state','inventory','item_stone'],{quantity:50});
         d.document.ledger=openLedger(engine,d.document);// 夹具设好之后开账
-        const a=start({building:pub,action:'repair'},'public'),b=start({funding:'private',building:own,action:'repair'},'private');
+        const a=start({building:pub,action:'repair'},'public'),b=start({funding:'private',building:own,action:'repair',workers:privateCrew,days:12},'private');
         return {a:a.project,b:b.project,state:d.document.state,ledger:d.document.ledger};
     };
     const done=bothModes(run);assert.ok(done.a&&done.b,'公款与私资两个工程都立项');
@@ -325,6 +373,11 @@ test('定点：公共工程读村公库与公仓材料（公款）、玩家现�
 test('定点：组织股份估值读发行方现款与库存；成本基准读买方成交前的库存',async()=>{
     const run=async()=>{
         const f=financeFixture(),issuer=f.w.factions[0],buyer=f.w.factions[1],rep=issuer.leader;
+        // W8-C pack intake: the generic fixture carries 265 kg (wood 200,
+        // oats 50, bread 15), so buying bread cannot reach the cost-basis read.
+        // Only bread is used here: retain its original 100 portions (15 kg),
+        // leaving room for the same three-portion purchase in both read modes.
+        f.doc.state.inventory={item_bread:{quantity:100}};
         delete f.e.byId.get(rep).schedule;f.doc.state.npcs[rep]={coins:50,status:'正常',location:'bld_hw_post',activity:'营业',memoryStream:[]};
         issuer.resources.items??={};issuer.resources.items.item_wood=20;
         const setup=f.draft();ensureGroupAccount(setup,f.e,buyer.id);setup.done();
@@ -360,8 +413,7 @@ test('探针汇总：开账之后每个价格输入点的新旧读数逐点相�
     assert.deepEqual(probe.mismatches,[],'新旧读数分叉');
     const covered=Object.keys(PRICE_POINTS).filter(p=>(probe.open[p]??0)>0),missing=Object.keys(PRICE_POINTS).filter(p=>!covered.includes(p));
     if(process.env.PRICE_DEBUG)console.log(JSON.stringify({hits:probe.hits,open:probe.open,missing}));
-    // 铺面经营的顾客预算要先租铺面开张，夹具太重，由 tests/business-contracts.test.mjs 在探针预加载下逐点核对（4 次读取，0 分叉）。
-    const ELSEWHERE=new Set(['business.cash']);
-    for(const p of ELSEWHERE)assert.ok(Object.hasOwn(PRICE_POINTS,p));
-    assert.deepEqual(missing.filter(p=>!ELSEWHERE.has(p)),[],`这些价格输入点在推演中没有被开账读到：${missing}`);
+    // K08 replaced the standalone business.cash read with household budgets'
+    // assets.cash. Every remaining registered point must be exercised here.
+    assert.deepEqual(missing,[],`这些价格输入点在推演中没有被开账读到：${missing}`);
 });

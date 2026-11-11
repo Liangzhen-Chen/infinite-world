@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordEntityDeath}from'./npc-life.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
@@ -7,13 +8,14 @@ import {assertMagicTargeting} from './magic-targeting.mjs';
 import {areaTargetFacts} from './magic-area.mjs';
 import {derivedStats,monsterStats}from'./combat.mjs';
 import {waterEarthSoundLoss,assertWaterEarthMovement,cutWaterMedium}from'./magic-water-earth.mjs';
+import {hypot} from './det-math.mjs';
 
 // All quantities below are stored in the save, including transferred pollution.
 export const airMechanisms=Object.freeze({airflow:[2000,5],smoke:[2000,5],clean_air:[1000,0],sense_air:[1,0],carry_voice:[80,0],quiet:[80,5],dry_grain:[1000,10],slow_fall:[80,2],lift:[2000,2],sail:[30,5],air_bubble:[600,1],deflect:[60,2],area_wind:[100,5]});
 const key=id=>`physical_feature:${id}`,clone=x=>structuredClone(x);
 const finite=(x,min,max,label)=>{if(!Number.isFinite(x)||x<min||x>max)throw preconditionFailure(`${label}无效`);return x;};
 const integer=(x,min,max,label)=>{if(!Number.isSafeInteger(x)||x<min||x>max)throw preconditionFailure(`${label}无效`);return x;};
-const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const dist=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 function carriedKg(d,engine,target='player'){
  const inventory=target==='player'?d.get('state','inventory'):d.get('state',target.startsWith('npc_')?'npcs':'creatures',target,'inventory')??{};
  return Object.entries(inventory).reduce((sum,[id,held])=>sum+(typeof held==='number'?held:held.quantity??0)*(engine.byId.get(id)?.weight??held.weight??0),0);
@@ -33,7 +35,7 @@ function access(d,engine,row,args,range,readOnly=false,acoustic=false){
  if(readOnly||row.owner==='player'||row.access==='public')return;
  const ids=[args.authorization,...args.authorizations??[]];
  const allowed=ids.some(id=>{const r=d.get('state','records',id);return r?.category==='authorization'&&r.subject===row.id&&r.action==='environment_use'&&r.grantor===row.owner&&!r.revoked&&r.expires>d.get('state','minute')&&(!row.owner?.startsWith('npc_')||!['死亡','濒死'].includes(d.get('state','npcs',row.owner,'status')));});
- if(!allowed)throw preconditionFailure('空气对象需要有效所有者授权');
+ if(!allowed)noteUnlicensedUse(d,row);
 }
 export function validateAirCatalog(c){
  const s=c.effectSpec,m=airMechanisms[s?.operation];
@@ -112,7 +114,7 @@ export function prepareAirMagic(d,c,args){
   const route=this.world.routes.find(r=>r.id===row.links.route);
   if(!route?.modes.includes('boat')||![route.from,route.to].includes(row.location))throw preconditionFailure('船帆未连接可航行路线');
   const air=locate(this,d,row.links.air);const v=air.airModel?.windVector,b=route.bearing;
-  if(!Array.isArray(v)||!Array.isArray(b)||v.length!==2||b.length!==2||![...v,...b].every(Number.isFinite)||Math.hypot(...v)===0||Math.hypot(...b)===0)throw preconditionFailure('缺少船帆真实风向和航向');
+  if(!Array.isArray(v)||!Array.isArray(b)||v.length!==2||b.length!==2||![...v,...b].every(Number.isFinite)||hypot(...v)===0||hypot(...b)===0)throw preconditionFailure('缺少船帆真实风向和航向');
  }
  if(op==='area_wind'&&(row.kind!=='road'||!row.links?.route||!this.world.routes.some(r=>r.id===row.links.route)||!Number.isFinite(s.resistanceMinutes)))throw preconditionFailure('道路风阻需要真实道路与通行时长');
  return{target:row.id,row,rows,catalog:c,spec:c.effectSpec,args:{...args}};

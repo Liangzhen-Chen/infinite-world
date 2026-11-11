@@ -12,6 +12,7 @@ import {runContentPipeline, defaultReviewRequest, readApprovedContent, hashConte
 import * as G from './a3-world-governance.mjs';
 import * as C from './a3-world-catalog.mjs';
 import {previousOfficeEdition} from './s4-offices-approval.mjs';
+import {previousResourceEdition} from './s505-resources-approval.mjs';
 
 export const revision = G.revision, draftRoot = G.draftRoot;
 const read = async file => JSON.parse(await fs.readFile(file, 'utf8'));
@@ -312,9 +313,24 @@ function currentRow(files, entry) {
     default: return undefined;
   }
 }
+// 审批历史核验：先逐项验证后续正式发布，再把世界与文件还原到本批审批时的版本（先 S505 资源版、再 S4 职位版）。
+// 无 files 时只还原职位版（旧测试的口径）。命令行 --l1/--review 与 verifyPublished 共用，避免两处各写一遍而漂移。
+export async function priorEditions(world, files = null) {
+  if (files) ({world, files} = await previousResourceEdition(world, files));
+  return previousOfficeEdition(world, files);
+}
 export async function verifyPublished(world, files = null) {
+  const {entries} = await verifyPublishedDetailed(world, files);
+  return {entries};
+}
+// 已审批整行回执（供下游按“回执里的行”解释差异，如 w3-wave-score）：先走与 verifyPublished 相同的全部核验，通过才返回 id -> 已批整行。
+export async function approvedRowReceipts(world, files = null) {
+  const {drafts} = await verifyPublishedDetailed(world, files);
+  return new Map([...drafts].filter(([, d]) => d.row !== undefined && (d.row.id !== undefined)).map(([id, d]) => [id, structuredClone(d.row)]));
+}
+async function verifyPublishedDetailed(world, files = null) {
   files ??= await readFiles();
-  ({world,files}=await previousOfficeEdition(world,files));
+  ({world,files}=await priorEditions(world,files));
   const entries = contentEntries(files), candidate = previewWorld(world);
   const approved = await readApprovedContent(draftRoot, entries, {revision, contextFor: entry => contextFor(candidate, entry)});
   assert.equal(approved.length, entries.length, '仍有未审条目');
@@ -324,7 +340,7 @@ export async function verifyPublished(world, files = null) {
     const row = currentRow(files, entry);
     assert.ok(row !== undefined && same(row, drafts.get(entry.id).row), `${entry.id} 正式文件与已审批的行不同`);
   }
-  return {entries: entries.length};
+  return {entries: entries.length, drafts};
 }
 // 部分正式文件用 CRLF：按文件现有换行符定点替换。
 const patchText = (text, from, to, label) => {
@@ -373,8 +389,9 @@ export async function publishContent(world) {
 }
 
 export async function run(args = process.argv.slice(2)) {
-  const world = await loadWorld(), candidate = previewWorld(world);
-  const files = await readFiles(), allEntries = contentEntries(files);
+  const current = await loadWorld(), currentFiles = await readFiles();
+  const {world, files} = await priorEditions(current, currentFiles), candidate = previewWorld(world);
+  const allEntries = contentEntries(files);
   const at = args.indexOf('--id');
   const entries = at < 0 ? allEntries : allEntries.filter(e => e.id === args[at + 1]);
   assert.ok(entries.length, '指定条目不在本批');
@@ -418,7 +435,7 @@ export async function run(args = process.argv.slice(2)) {
     });
     console.log(JSON.stringify({passed: summary.passed, manual: summary.manual, pending: summary.pending, budget: summary.budget.cards.A3FW}));
   }
-  if (args.includes('--publish')) console.log(JSON.stringify(await publishContent(world)));
+  if (args.includes('--publish')) console.log(JSON.stringify(await publishContent(current)));
   if (args.includes('--verify')) console.log(JSON.stringify(await verifyPublished(await loadWorld(), await readFiles())));
 }
 

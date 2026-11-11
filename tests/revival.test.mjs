@@ -57,8 +57,35 @@ test('复活只到已登记祭坛，恢复一半生命魔力；同伴留在死�
     assert.equal(revived.document.state.npcs.npc_hw_wushuo.location,'loc_hw_northwood');
     c.state.buildings.bld_bs_shrine={condition:0};
     const fallback=await run(c,'world_time',{minutes:1},'fallback');assert.equal(fallback.document.state.location,'bld_hw_altar');
-    c.state.buildings.bld_hw_altar={condition:0};const old=structuredClone(c);
-    await assert.rejects(run(c,'world_time',{minutes:1},'none'),/没有仍可使用/);assert.deepEqual(c,old);
+    c.state.buildings.bld_hw_altar={condition:0};
+    const ruins=await run(c,'world_time',{minutes:1},'none');assert.equal(ruins.document.state.player.status,'正常');
+    assert.equal(ruins.document.state.location,'bld_hw_altar');
+});
+async function dieAt(location,edit){
+    const{document,run}=await setup();document.state.location='bld_bs_shrine';document.state.player.level=5;
+    let c=(await run(document,'world_revival',{},'register')).document;
+    c.state.location=location;edit(c);
+    c=(await run(c,'world_health',{delta:-100},'fatal')).document;assert.equal(c.state.player.status,'死亡');
+    return run(c,'world_time',{minutes:1},'wake');
+}
+test('没有登记点时复活到离死亡地最近的可用点，而不是规则表里第一个；同档同输入结果一致',async()=>{
+    const edit=c=>{c.state.player.revivalAnchor=null;};
+    const a=await dieAt('bld_bs_shrine',edit),b=await dieAt('bld_bs_shrine',edit);
+    assert.equal(a.document.state.location,'bld_bs_shrine');assert.deepEqual(a.document,b.document);
+    assert.equal((await dieAt('loc_hw_northwood',edit)).document.state.location,'bld_hw_altar');
+});
+test('登记点被毁时去最近的可用点，并说明登记点被改写',async()=>{
+    const r=await dieAt('loc_hw_northwood',c=>{c.state.buildings.bld_bs_shrine={condition:0};});
+    assert.equal(r.document.state.location,'bld_hw_altar');assert.equal(r.document.state.player.revivalAnchor,'bld_hw_altar');
+    assert.match(JSON.stringify(r),/已不可用.*登记点改为/);
+});
+test('没有可用复活点时仍不会永久死亡，如实说明是未登记还是废墟，且不改写登记点',async()=>{
+    const unreg=await dieAt('bld_bs_shrine',c=>{c.state.revivalPoints={};});
+    assert.equal(unreg.document.state.player.status,'正常');assert.equal(unreg.document.state.location,'bld_bs_shrine');
+    assert.equal(unreg.document.state.player.revivalAnchor,'bld_bs_shrine');assert.match(JSON.stringify(unreg),/尚未登记/);
+    const ruined=await dieAt('loc_hw_northwood',c=>{c.state.buildings.bld_bs_shrine={condition:0};c.state.buildings.bld_hw_altar={condition:0};});
+    assert.equal(ruined.document.state.player.status,'正常');assert.equal(ruined.document.state.location,'bld_hw_altar');
+    assert.match(JSON.stringify(ruined),/废墟中醒来/);
 });
 test('永久死亡居民不能交易、发布或接收任务物品，资金和库存不改动',async()=>{
     const{document,run}=await setup();

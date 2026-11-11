@@ -81,7 +81,8 @@ test('试玩沿正式提示和 HTTP 审查改写，再只提交一次尾注',asy
   assert.ok(messages[0].content.includes('无限原野'));assert.ok(tools.length>10);requests++;
   return requests===1?{choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:'bread',type:'function',function:{name:'world_trade',arguments:JSON.stringify({seller:'林穗',item:'面包',quantity:1})}}]}}]}:{choices:[{finish_reason:'stop',message:{content:draft}}]};
  }};
- const result=await runPlaytest({scenario:{id:'review-pipeline',initial:{mode:'legacy'},turns:[{input:'我付钱买一个面包',assertions:[{kind:'delta',path:'state.player.coins',value:-2}]}]},api:server.api,client:narrator,bundle:await loadPromptBundle()});
+ // S5-02: first bread bill trunc(base2 * scarcity.5)=1 copper.
+ const result=await runPlaytest({scenario:{id:'review-pipeline',initial:{mode:'legacy'},turns:[{input:'我付钱买一个面包',assertions:[{kind:'delta',path:'state.player.coins',value:-1}]}]},api:server.api,client:narrator,bundle:await loadPromptBundle()});
  assert.equal(result.pass,true,JSON.stringify(result.turns[0]));assert.equal(result.turns[0].originalReply,draft);assert.equal(result.turns[0].reply,corrected);
  assert.equal(result.turns[0].consistency.status,'verified');assert.equal(result.turns[0].calls.length,1);assert.ok(result.turns[0].turnResult);assert.equal(requests,2);assert.equal(reviewClient.calls.length,3);
 });
@@ -160,13 +161,20 @@ test('N17 服务端实际十天结算只允许一次文字改写，不重做、�
     rewriteCalls++;assert.equal(body.tools,undefined);
     const payload=JSON.parse(body.messages.at(-1).content),recall=JSON.parse(payload.evidence.find(row=>row.id==='recall:npc_hw_ayan').text),totals=recall.totals;
     assert.equal(recall.speaker,'npc_hw_ayan');assert.ok(totals.failures>0);assert.ok(totals.attempts>2);assert.equal(totals.fee,totals.attempts*2);assert.equal(totals.materials.item_wood,totals.attempts);
+    // Ten days minus market day 5 and rest day 10 = eight mill attempts;
+    // each consumes one wood and costs two copper, including failures: 8*2=16.
+    assert.equal(totals.fee,16);assert.equal(totals.materials.item_wood,8);
     for(const row of payload.evidence.filter(row=>['before','after'].includes(row.id)))assert.equal(JSON.parse(row.text).quests,undefined);
     const content=badRewrite?recalledFailure:'<q who="npc_hw_ayan">这十天试了'+totals.attempts+'次，有'+totals.successes+'次成功，'+totals.failures+'次失败，工坊费合计'+totals.fee+'铜，用了'+totals.materials.item_wood+'份木料。失败也付了工坊费。</q><回合 额外="5分" 地点="bld_hw_mill" 在场="npc_hw_ayan"/>';
     return {choices:[{finish_reason:'stop',message:{content}}]};
    }
    reviewCalls++;const payload=JSON.parse(body.messages[1].content);assert.ok(payload.evidence.some(row=>row.id==='scene'&&row.text.includes('旧磨坊')));return issuesResponse([], body);
   }};
-  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+  // N17 examines recall of real failed work, not the chance of drawing a failure.
+  // The UUID default can yield all successes (s507d-recall-547). A fixed seed
+  // keeps both rewrite branches on identical native work, dice and payments;
+  // no outcome is injected and every failure/fee/privacy assertion remains.
+  const server=await createPlaytestServer({consistencyClient:client,seed:'s507d-recall-0'});t.after(()=>server.close());
   let view=await server.api('create',{});const campaignId=view.reference.campaignId;
   async function act(tool,args,id){await server.api('execute',{campaignId,anchor:id,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});}
   await act('world_move',{destination:'旧磨坊'},'mill');await act('world_move',{destination:'白石镇'},'leave');

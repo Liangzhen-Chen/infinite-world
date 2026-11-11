@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT01（保留原阶段边界）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -15,6 +16,8 @@ import {capacity,canAct} from '../server-plugin/action-capacity.mjs';
 import {institutionOffices,officeOnDuty} from '../server-plugin/entity-view.mjs';
 import {officeCall,appointedClaimClerk} from './helpers/office-actions.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
+import {runPrelude} from '../tools/a3-setup/prelude.mjs';
+import {nativeDeposit} from './helpers/credit-actions.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const signatureMatches=(expected,effects,receipt,requested,document)=>matchSignature(expected,effects,receipt,requested,world,document);
@@ -211,12 +214,9 @@ const branchOptions=action=>{
  return {...options,world:branchWorld};
 };
 
-test.todo('A3 signature r9: role endpoints use resolved counterparties and exact account purposes〔前提待真实动作：建立具名存单、质押及机构罚款的真实组合前提；归 S5〕',async()=>{
- // r9 added explicit endpoints to the live corpus; this regression exercises
- // the earlier role-only signatures and must keep that original contract.
- const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
- for(const number of ['031','032','037','038','039','054','095']){
-  const row=corpus.find(r=>r.id===`A3V2-${number}`),run=await executeIntent(charterEngine,initial,row),receipt=run.receipt;
+// r9 角色端点检查：对每条 A3V2 行执行真实路由并核对解析后的对手方与账户用途。
+const checkR9Roles=async(number,row,run)=>{
+ const receipt=run.receipt;
   assert.equal(run.actual.committed,true,row.id);
   const signatures=row.expected.signature.filter(s=>s.includes('->'));
   for(const signature of signatures){
@@ -249,12 +249,55 @@ test.todo('A3 signature r9: role endpoints use resolved counterparties and exact
     assert.equal(signatureMatches([`transfer(self->${role})`],[{...effect,to:`${receipt.legacy.payment.collector}|coin_river|purse`}],receipt),false);
    }
   }
+};
+
+test('A3 signature r9: role endpoints use resolved counterparties and exact account purposes',async()=>{
+ // r9 added explicit endpoints to the live corpus; this regression exercises
+ // the earlier role-only signatures and must keep that original contract.
+ const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
+ const call=(action,slots,eventId)=>({tool:'world_act',args:{action,slots},eventId});
+ const pick=number=>corpus.find(r=>r.id===`A3V2-${number}`);
+ // 031/038 前提已可由原生装载器满足，直接按原行执行。
+ for(const number of ['031','038']){const row=pick(number),run=await executeIntent(charterEngine,initial,row);assert.equal(run.actual.committed,true,row.id);await checkR9Roles(number,row,run);}
+ // 032 存单：真实存款与具名存单签发，取代存款债权/凭据/金库快照；取款意图和签名原样检查。
+ {
+  const row=pick('032'),f=await nativeDeposit(charterEngine,initial,{prefix:'r9-032',vaultCash:50});
+  const native={...row,setup:{appointments:row.setup.appointments.map(a=>({...a,start:f.document.state.minute,end:f.document.state.minute+180})),history:row.setup.history.filter(e=>e.verb==='appointment_agreed').map(e=>({...e,at:f.document.state.minute-1}))}};
+  const run=await executeIntent(charterEngine,f.document,native);assert.deepEqual(run.setupUnmet,[]);assert.equal(run.actual.committed,true,row.id);await checkR9Roles('032',row,run);
+ }
+ // 039/095：买家钱袋的精确余额快照不是真实动作；与 a3-r8-effects 同样改用买家正常钱袋并保留足额付款前提。
+ for(const number of ['039','095']){
+  const row=structuredClone(pick(number)),buyer='npc_hw_yanzhe',need=number==='039'?12:3;assert.ok(initial.state.npcs[buyer].coins>=need);
+  row.setup.accounts=row.setup.accounts.filter(a=>a.resource!=='coin_river');row.setup.history=row.setup.history.filter(e=>e.id!==`a3v2_${number}_account_0`);
+  const run=await executeIntent(charterEngine,initial,row);assert.deepEqual(run.setupUnmet,[]);assert.equal(run.actual.committed,true,row.id);await checkR9Roles(number,row,run);
  }
  const receipt={routed:'core:trade.buy',legacy:{seller:'npc_hw_linsui'}};
  const effect={op:'transfer',from:'player|coin_river|purse',to:'npc_hw_linsui|coin_river|purse'};
  assert.equal(signatureMatches(['transfer(self->seller)'],[effect],receipt),true);
  assert.equal(signatureMatches(['transfer(self->seller_extra)'],[effect],receipt),false);
  assert.equal(signatureMatches(['transfer(self->seller)'],[{...effect,to:'npc_hw_wushuo|coin_river|purse'}],receipt),false);
+});
+
+test('A3 signature r9: pawn redemption resolves the pawnshop endpoint from the real redeem receipt',async()=>{
+ const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
+ const call=(action,slots,eventId)=>({tool:'world_act',args:{action,slots},eventId});
+ const pick=number=>corpus.find(r=>r.id===`A3V2-${number}`);
+ {
+  const row=pick('037'),scene=applyIntentSetup(charterEngine,initial,{minute:600,location:'bld_hw_post',present:['npc_hw_shendu'],coins:1,inventory:{item_staff:0},
+   itemInstances:[{id:'r9-pawn-staff',template:'thing',kind:'item',item:'item_staff',owner:'player',location:'bld_hw_post',carriedBy:'player',condition:100}],
+   holdings:[{id:'r9-pawn-title',kind:'owns',holder:'player',subject:'r9-pawn-staff',terms:{share:1}}]});assert.deepEqual(scene.setupUnmet,[]);
+  const pawned=await runPrelude(charterEngine,scene.document,[call('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:1,days:1},'r9-pawn')]);assert.deepEqual(pawned.unmet,[]);
+  const at=pawned.document.state.minute,native={...row,setup:{appointments:row.setup.appointments.map(a=>({...a,start:at,end:at+180})),history:row.setup.history.filter(e=>e.verb==='appointment_agreed').map(e=>({...e,at:at-1}))}};
+  const run=await executeIntent(charterEngine,pawned.document,native);assert.deepEqual(run.setupUnmet,[]);assert.equal(run.actual.committed,true,row.id);await checkR9Roles('037',row,run);
+ }
+});
+
+test.todo('A3 signature r9: authorized-collector fine payment uses the resolved court/creditor and exact account purpose〔前提待真实动作：A3V2-054 需镇巡值房在岗机构身份、已立案判决及公库债权（白石章程无裁判权）；归 S4〕',async()=>{
+ // r9 added explicit endpoints to the live corpus; this regression exercises
+ // the earlier role-only signatures and must keep that original contract.
+ const corpus=JSON.parse(await fs.readFile(new URL('./fixtures/a3-intents-v2-r7.json',import.meta.url),'utf8'));
+ const row=corpus.find(r=>r.id==='A3V2-054'),run=await executeIntent(charterEngine,initial,row);assert.equal(run.actual.committed,true,row.id);
+ await checkR9Roles('054',row,run);
 });
 
 test('A3 signature r11: role endpoints require a native counterparty even when literal endpoints match',()=>{

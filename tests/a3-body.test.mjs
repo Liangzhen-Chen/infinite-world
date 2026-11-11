@@ -74,7 +74,8 @@ test('A3 eating: real food goes to sink:consume, nutrition changes lazy satiety 
  assert.equal(f.engine.quantity(f.engine.primitiveDraft(after),'player',item),0);
  assert.equal(after.ledger.accounts[key],before.ledger.accounts[key]-1);
  assert.equal(after.ledger.flows[accountKey('sink:consume',item,'meal')],1);
- assert.ok(Math.abs(readBodyNeed(f.engine,after,'player','satiety')-(20-25/60+35))<.0002);
+ // 鱼汤的饱腹由配方推导，期望读引擎里的值（原先手写 35）。
+ assert.ok(Math.abs(readBodyNeed(f.engine,after,'player','satiety')-(20-25/60+f.engine.byId.get(item).nutrition.satiety))<.0002);
  assert.ok(readBodyNeed(f.engine,after,'player','satiety')>30,'hungry threshold is no longer reached');
  assert.equal(after.state.player.coins,coins);assert.equal(after.state.player.hp,before.state.player.hp);
  assert.deepEqual(auditLedger(after.ledger),[]);

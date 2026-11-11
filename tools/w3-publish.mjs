@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {economyW3,economyW3Supply} from '../world/design/economy-w3.mjs';
 import {readApprovedContent} from './content-pipeline.mjs';
+import {readApprovedSupersedes} from './approved-revisions.mjs';
 import {assembleW3,w3Context,w3Revision,validateW3Draft,closestW3Similarity} from './w3-content.mjs';
 import {validateWorld} from './validate-world.mjs';
 import {atomicJSON} from '../server-plugin/storage.mjs';
@@ -18,7 +19,7 @@ for(const kind of ['items','recipes']){
   }
   lore.push(...rows);
 }
-const candidate=assembleW3(world,bones,lore);
+const candidate=assembleW3(world,bones,lore,await readApprovedSupersedes());
 for(const plan of economyW3Supply){
   const npc=candidate.npcs.find(row=>row.id===plan.npc);if(!npc)throw new Error('供货者不存在');
   for(const [id,quantity]of Object.entries(plan.stock)){

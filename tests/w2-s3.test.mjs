@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS3Publication,mergeS3Publication,publishS3,withoutS3,files as publishedFiles} from '../tools/publish-w2-s3.mjs';
 import {withoutS4} from '../tools/publish-w2-s4.mjs';
@@ -19,11 +19,11 @@ import {recordLocalContact} from '../server-plugin/environment.mjs';
 import {skipTo} from './fixtures/skip-clock.mjs';
 
 // Later batches (T104 onward) are removed first so this batch is compared on its own edition.
-const formal=withoutS4(await loadWorld()),publication=await readS3Publication();
+const formal=withoutS4(await loadRuntimeWorld()),publication=await readS3Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
-const before=withoutS3(formal),world=mergeS3Publication(before,publication),engine=new WorldEngine(world);
+const before=withoutS3(formal,{keepOwnGenerated:true}),world=mergeS3Publication(before,publication),engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const JI='npc_bs_076_3',SHU='npc_bs_078_2',MIAO='npc_bs_080_3';
@@ -35,6 +35,9 @@ const writer=doc=>({...reader(doc),set:(p,value)=>{let n=doc;for(const k of p.sl
 const lux=(doc,point)=>lightAt(reader(doc),engine,doc.state.location,point).lux;
 let serial=0;
 async function run(doc,tool,args){const out=await engine.reduce(doc,{tool,args,eventId:`s3-${++serial}`});return {doc:applyPatches(doc,out.patches),result:out.result};}
+// K6: an act that lacked only a licence happens; the norm stack names the offense,
+// recorded under the act's own event (legality is a consequence).
+async function offended(engine,doc,args,eventId,offense){const out=await engine.reduce(doc,{tool:'world_cast',args,eventId}),after=applyPatches(doc,out.patches),o=out.result.offenses?.find(o=>o.offense===offense);assert.ok(o,`${eventId} 命中${offense}：${JSON.stringify(out.result.offenses)}`);assert.equal(after.state.records[o.record].sourceEvent,eventId);assert.equal(after.state.records[o.record].offender,'player');assert.ok(after.state.player.mp<doc.state.player.mp,`${eventId} 施放确实发生`);return {after,result:out.result,offense:o};}
 // Select a reproducible successful dice event without editing dice or state.
 async function success(doc,tool,args,key='success'){for(let i=0;i<60;i++){const r=await run(doc,tool,args).catch(e=>{e.message+=` @${tool} ${JSON.stringify(args)} t=${doc.state.minute}`;throw e;});if(r.result.effectFailed)assert.fail(r.result.effectFailed);if(r.result[key])return r;}assert.fail(`未取得成功检定：${tool} ${JSON.stringify(args)}`);}
 async function wait(doc,minutes){return (await run(doc,'world_time',{minutes,activity:'等待'})).doc;}
@@ -92,7 +95,7 @@ test('止波寺禅定与医护：观心、护念、寄念、护身、抚伤、�
  const base=learnedByRoute.佛??await routeSession('佛');assert.ok(base,'需先完成路线学习');const fresh=()=>structuredClone(base);
  // Mental spells need the institution's real permit; consent of others stays required.
  let {doc,permit:p}=await permit(fresh(),JI,'bld_bs_still_temple');
- await assert.rejects(engine.reduce(fresh(),{tool:'world_cast',args:{spell:id('still_mind'),target:'player'},eventId:'no-permit'}),/许可/);
+ await offended(engine,fresh(),{spell:id('still_mind'),target:'player'},'no-permit','mental_magic');/* K6 依据：审查 C-d、D4 1457de49：无证精神施法是犯罪，不是做不到 */
  let seen=await cast(doc,{spell:id('still_mind'),target:'player',permit:p});assert.equal(seen.result.interference,false);
  const troubled=structuredClone(doc);troubled.state.effects.fixture_illusion={kind:'status',target:'player',status:'illusion',power:2,expires:troubled.state.minute+10,remainingUses:1,source:'fixture_illusion'};
  seen=await cast(troubled,{spell:id('still_mind'),target:'player',permit:p});assert.equal(seen.result.interferenceCount,1);
@@ -130,7 +133,7 @@ test('止波寺禅定与医护：观心、护念、寄念、护身、抚伤、�
  // Compress cloth gives up 2000 J and stops at 15 C.
  c=await grant(fresh(),JI,fid('compress_cloth'));const chill=await cast(c.doc,{spell:id('cool_cloth'),target:fid('compress_cloth'),authorization:c.authorization});
  assert.equal(chill.result.heatRemovedJ,2000);assert.equal(chill.result.temperatureC,15);
- await assert.rejects(engine.reduce(fresh(),{tool:'world_cast',args:{spell:id('herb_cool'),target:fid('herb_cabinet')},eventId:'no-owner'}),/授权/);
+ /* K6 依据（审查 C-b）：他人药柜无授权照样施放，命中擅用 */await offended(engine,fresh(),{spell:id('herb_cool'),target:fid('herb_cabinet')},'no-owner','unauthorized_use');
 });
 
 test('灯祠巫祝安抚：收惊、安神、避阴、雾灯、归路灯标、避风寒按真实条件生效',async()=>{
@@ -140,17 +143,16 @@ test('灯祠巫祝安抚：收惊、安神、避阴、雾灯、归路灯标、�
  doc.state.effects.fixture_push={kind:'status',target:'player',status:'compulsion',power:2,expires:doc.state.minute+30,source:'fixture_push'};
  const eased=await cast(doc,{spell:id('startle_ease'),target:'player',permit:p});assert.equal(eased.result.relieved,3);
  assert.equal(eased.doc.state.effects.fixture_fear,undefined);assert.equal(eased.doc.state.effects.fixture_push.power,1);
- await assert.rejects(engine.reduce(doc,{tool:'world_cast',args:{spell:id('startle_ease'),target:'player'},eventId:'ease-no-permit'}),/许可/);
+ await offended(engine,doc,{spell:id('startle_ease'),target:'player'},'ease-no-permit','mental_magic');/* K6 依据：同上 */
  // Additional counterexample on another mind: 06 §6.10.4 makes the registered
  // action return an atomic refusal, including on an explicit force attempt.
  await import('../server-plugin/primitives-runtime.mjs');
  const other=structuredClone(doc);other.state.npcs[SHU].location=other.state.location;
  assert.equal(recordLocalContact(writer(other),engine,SHU,'s3-relief-contact'),true);
- const unchanged=structuredClone(other),denied=await engine.reduce(other,{tool:'world_act',args:{action:'core:cast',slots:{spell:id('startle_ease'),target:SHU,force:true}},eventId:'ease-other-no-permit'});
- assert.equal(denied.result.ok,false);assert.equal(denied.result.receipt.status,'rejected');
- assert.match(denied.result.receipt.reason,/许可/);assert.deepEqual(denied.result.receipt.applied,[]);
- assert.deepEqual(denied.result.receipt.cost,{time:0,resources:[]});assert.deepEqual(denied.patches,[]);
- assert.ok(denied.result.receipt.missing.length);assert.ok(denied.result.receipt.repair.length);assert.deepEqual(other,unchanged);
+ // K6 依据（审查 C-d magic-targeting:37）：对他人施精神术缺行政许可，施放照样发生，命中擅施心术，记在本次事件上。
+ const cast2=await engine.reduce(other,{tool:'world_act',args:{action:'core:cast',slots:{spell:id('startle_ease'),target:SHU,force:true}},eventId:'ease-other-no-permit'});
+ const found=[...cast2.result.offenses??[],...(cast2.result.receipt?.consequences??[]).filter(c=>c.type==='offense')].find(o=>o.offense==='mental_magic');
+ assert.ok(found,JSON.stringify(cast2.result.receipt?.reason??cast2.result.offenses));assert.ok(cast2.patches.length);
  const scared=structuredClone(doc);delete scared.state.effects.fixture_push;const plain=magicStatusStats(reader(scared),'player').hit;
  const calm=await cast(scared,{spell:id('calm_guard'),target:'player'});assert.equal(plain,-.04);assert.equal(magicStatusStats(reader(calm.doc),'player').hit,0);assert.ok(calm.doc.state.effects.fixture_fear);
  const ward=await cast(fresh(),{spell:id('shade_ward'),target:'player'});assert.equal(magicStatusStats(reader(ward.doc),'player').shadowResistance,.3);
@@ -162,7 +164,7 @@ test('灯祠巫祝安抚：收惊、安神、避阴、雾灯、归路灯标、�
  const seen=await run(mark.doc,'world_environment',{operation:'inspect',target:route});assert.equal(seen.result.markers.length,1);
  const guard=await cast(fresh(),{spell:id('wind_cold_guard'),target:'player'}),w=writer(guard.doc);
  assert.equal(consumeMagicProtection(w,'player',4,'cold').absorbed,4);assert.equal(consumeMagicProtection(w,'player',4,'wind').absorbed,2);assert.equal(consumeMagicProtection(w,'player',4,'physical').absorbed,0);
- await assert.rejects(engine.reduce(fresh(),{tool:'world_cast',args:{spell:id('fog_lamp'),target:fid('fog_stand')},eventId:'fog-no-owner'}),/授权/);
+ /* K6 依据（审查 C-b）：他人灯架无授权照样施放，命中擅用 */await offended(engine,fresh(),{spell:id('fog_lamp'),target:fid('fog_stand')},'fog-no-owner','unauthorized_use');
 });
 
 test('灯祠祭礼光事：聚灯、铜镜回光、帷暗、灯前帘只改光路不添亮',async()=>{
@@ -177,7 +179,7 @@ test('灯祠祭礼光事：聚灯、铜镜回光、帷暗、灯前帘只改光�
  assert.ok(Math.abs(lux(dark.doc,[-1,0])-couch*.3)<1e-9);assert.equal(lux(dark.doc,[2,1]),lux(g.doc,[2,1]));
  g=await grant(fresh(),MIAO,fid('side_passage'));const screen=await cast(g.doc,{spell:id('lamp_screen'),target:fid('side_passage'),authorization:g.authorization});
  assert.equal(opticalSightClear(reader(screen.doc),engine,'bld_bs_temple',[0,0],[0,-2]),false);assert.equal(opticalSightClear(reader(screen.doc),engine,'bld_bs_temple',[0,-2],[0,0]),true);
- await assert.rejects(engine.reduce(fresh(),{tool:'world_cast',args:{spell:id('veil_dark'),target:fid('rest_couch')},eventId:'dark-no-owner'}),/授权/);
+ await offended(engine,fresh(),{spell:id('veil_dark'),target:fid('rest_couch')},'dark-no-owner','unauthorized_use');/* K6 依据：审查 C-b magic-light:37：所有者授权决定合法与否 */
 });
 
 test('书铺两册有限库存：购买、阅读学会法师与看护术式，并在灯祠实地施放',async()=>{
@@ -232,7 +234,8 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const zero=structuredClone(world);zero.npcs.find(n=>n.id==='npc_hw_luqing').inventory[books[0].id]=0;zero.npcs.find(n=>n.id===SHU).inventory.item_s3_rice=0;assert.deepEqual(mergeS3Publication(zero,publication).npcs,zero.npcs);
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS3Publication(conflict,publication),/冲突/);
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s3-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // W8-E3的药草季节密度来自rules；隔离世界须携带同一规则及法域绑定，不改正式数据。
+ for(const folder of ['meta','people','geo','lore','law','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s3'),path.join(root,'drafts/w2-s3'),{recursive:true});
  const key={'meta/spells.json':'spells','meta/skills.json':'skills','meta/items.json':'items','meta/recipes.json':'recipes','people/baseline.json':'npcs','geo/locations.json':'locations'};
  for(const f of publishedFiles)await fs.writeFile(path.join(root,f),JSON.stringify(before[key[f]]));
@@ -240,7 +243,7 @@ test('隔离发布只追加本批，保留其他条目，重复发布零写入�
  const changedFiles=publishedFiles.filter(f=>f!=='meta/recipes.json');
  assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,before.spells.length+spells.length);assert.deepEqual(preview.changed,changedFiles);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
  const first=await publishS3({root,publish:true});assert.deepEqual(first.changed,changedFiles);
- const reloaded=await loadWorld(root);for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
+ const reloaded=await loadRuntimeWorld(root);for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
  const times=await Promise.all(publishedFiles.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS3({root,publish:true})).changed,[]);
  for(const [file,mutate,pattern] of [['candidate.json',r=>{r.spells[0].failure+='免费';},/候选/],[`${spells[0].id}.json`,r=>{r.draft.prose.theory+='另外';},/内容已改变|不符/],['batch-0.json',r=>{r.l4.approved=false;},/L4/],['batch-0.json',r=>{r.l4.wave[0].scores[0]=2;},/评分/]]){
   const f=path.join(root,'drafts/w2-s3',file),bytes=await fs.readFile(f,'utf8'),r=JSON.parse(bytes);mutate(r);await fs.writeFile(f,JSON.stringify(r));await assert.rejects(publishS3({root,publish:true}),pattern);await fs.writeFile(f,bytes);

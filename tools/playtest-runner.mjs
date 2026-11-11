@@ -18,12 +18,17 @@ import {loadWorld}from'./load-world.mjs';
 import {summarizeConsistency,consistencyTurnFailed}from'../server-plugin/consistency-outcome.mjs';
 import {finishContractTurn,turnFactsPrompt} from '../extension/turn-contract.mjs';
 
-export async function createPlaytestServer({world,seed,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
+// 试玩/测试层的确定种子：真实开档仍是 randomUUID（server-plugin/index.mjs），
+// 但试玩验收与测试入口默认固定此常量，保证价格/稀缺度等数值逐次可复演；显式 seed:'random' 才随机。
+export const PLAYTEST_SEED='playtest-fixed-seed-v1';
+export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
+    const seedMode=seed==='random'?'random':(typeof seed==='string'&&seed?'fixed':null);
+    if(!seedMode)throw new Error("createPlaytestServer 的 seed 必须是非空字符串或 'random'");
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(tmpRoot(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
     // Same body limit as the SillyTavern host (src/server-main.js): exported bundles carry every world version they replay on.
     const app=express();app.use(express.json({limit:'500mb'}));const router=express.Router();
     const npcPlanner=plannerClient?(engine,document,options)=>planNpcAutonomy(engine,document,{...options,client:options.client??{generate:plannerClient.generate.bind(plannerClient)}}):undefined;
-    await init(router,{world,baseRoot:directory,newCampaignSeed:seed===undefined?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
+    await init(router,{world,baseRoot:directory,newCampaignSeed:seedMode==='random'?undefined:()=>seed,npcPlanningEnabled:Boolean(plannerClient),npcPlanner,consistencyClient,consistencyEnabled});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');
     const origin=`http://127.0.0.1:${server.address().port}`;
     const api=async(endpoint,body={})=>{
@@ -32,10 +37,12 @@ export async function createPlaytestServer({world,seed,plannerClient,consistency
         const response=await fetch(`${origin}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close'},body:JSON.stringify(body)});
         const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`HTTP ${response.status}`);error.httpStatus=response.status;throw error;}return data;
     };
-    return{api,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
+    // seedMode：这次实际用的是确定种子('fixed')还是随机种子('random')；包装层必须透传，runPlaytest 据此守门。
+    api.seedMode=seedMode;
+    return{api,seedMode,seed:seedMode==='fixed'?seed:null,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
 }
 
-export async function runPlaytest({scenario,api,client,bundle,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){
+export async function runPlaytest({scenario,api,client,bundle,seed=PLAYTEST_SEED,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){
     if(scenario.initial?.requiresSession&&!session)throw new Error(`${scenario.id} 必须先准备隔离 HTTP 会话，不能用新角色代替`);
     historyWindow={...scenario.historyWindow,...historyWindow};
     const settings=generationSettings(bundle.generation);
@@ -43,6 +50,10 @@ export async function runPlaytest({scenario,api,client,bundle,attempt=1,processM
     const tools=toolDefinitions(),allowed=new Set(tools.map(row=>row.function.name));
     let view=session?await api('read',{campaignId:session.campaignId}):await api('create',scenario.initial?.mode==='legacy'?{name:'试玩者'}:{character:{name:'试玩者'}});
     const opening=bundle.card.data.first_mes;
+    // 守门看实际进入推演的种子：存档 document.randomSeed 必须等于期望的确定种子（默认 PLAYTEST_SEED，自带确定种子的服务器由调用方传 seed）。
+    // 存档种子来自 /create 的 newCampaignSeed()（直接写入 document.randomSeed）；/import 原样保留导出包里的种子；/enable-copy 在测试服务器（baseRoot）被拒绝。
+    // api.seedMode 只是诊断标签，不参与放行。
+    if(view.document?.randomSeed!==seed)throw new Error(`${scenario.id} 试玩验收的实际种子不是确定种子（存档 randomSeed=${JSON.stringify(view.document?.randomSeed)}，期望 ${JSON.stringify(seed)}；api.seedMode=${api?.seedMode}）`);
     const campaignId=view.reference.campaignId,chat=structuredClone(session?.chat??[{is_user:false,name:bundle.card.data.name,mes:opening}]),history=structuredClone(session?.history??[{role:'assistant',content:opening}]),reports=[],frames=[],turnCalls={};
     const sync=()=>api('sync-index',{campaignId,start:0,messages:chat,total:chat.length});
     const fresh=async()=>{view=await api('read',{campaignId});return view.document;};
@@ -224,7 +235,8 @@ export async function preparePlaytestSession({scenario,api,world,directory}={}){
         }else{
             await act('world_trade',{seller:'林穗',service:'住宿',days:1});
             await act('world_trade',{seller:'林穗',item:'面包',quantity:1});
-            await act('world_remember',{subject:'玩家',key:'旧版住宿',content:'我在青灯酒馆向林穗付六铜住宿，又花两铜买了一个面包',source:'亲历'});
+            // S5-02：住宿后的立场折价使面包整单截断为0；亲历记忆不再捏造旧固定两铜。
+            await act('world_remember',{subject:'玩家',key:'旧版住宿',content:'我在青灯酒馆向林穗付六铜住宿，又按当时报价买了一个面包',source:'亲历'});
         }
         if(scenario.id==='world_upgrade')view=await api('import',{bundle:await sourceApi('export',{campaignId})});
         view=await api('read',{campaignId:view.reference.campaignId});

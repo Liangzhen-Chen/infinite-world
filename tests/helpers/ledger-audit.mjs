@@ -5,9 +5,10 @@
 //  conservation(engine, a, b)        → 逐资源 Δ总量 − (源 − 汇) 不为零的资源
 // 作为 --import 预加载（LEDGER_AUDIT_LOG=<文件>）时包装 WorldEngine.reduce，把每个事件的差异追加到日志，供定位漏掉的写入点。
 import fs from 'node:fs';
+import assert from 'node:assert/strict';
 import {legacyMoney} from '../../server-plugin/money.mjs';
 import {legacyStock} from '../../server-plugin/stock.mjs';
-import {parseAccount,isSource,isSink,auditLedger} from '../../server-plugin/ledger.mjs';
+import {parseAccount,isSource,isSink,auditLedger,driftCounts} from '../../server-plugin/ledger.mjs';
 
 export function legacyBooks(engine,state){
     const money=legacyMoney(engine,state),{balances,lots}=legacyStock(engine,state);
@@ -22,7 +23,15 @@ export function reconcile(engine,document){
         if(old!==now)out.push({account:key,legacy:old,ledger:now});
     }
     for(const [key,list] of lots){const a=lotShape(list),b=lotShape(document.ledger?.lots?.[key]);if(a!==b)lotMismatches.push({account:key,legacy:a,ledger:b});}
-    return {mismatches:out.sort((a,b)=>a.account<b.account?-1:1),lots:lotMismatches,drift:document.ledger?.drift??[],audit:auditLedger(document.ledger)};
+    const result={mismatches:out.sort((a,b)=>a.account<b.account?-1:1),lots:lotMismatches,drift:document.ledger?.drift??[],audit:auditLedger(document.ledger)};
+    assertNoDrift(document);
+    return result;
+}
+// F011：对账即查漂移——账本漂移（src:drift 补足、unbooked 漏传对方账户）与持有被拒（HoldingRejected）任何一条都使调用它的测试失败。
+// 没有放行名单：设计内不产生漂移；确需构造漂移的反例直接读 document.ledger.drift，不经 reconcile。
+export function assertNoDrift(document){
+    const counts=driftCounts(document),list=[...(document.ledger?.drift??[]),...(document.holdings?.drift??[])];
+    assert.ok(!list.length&&!counts.gap&&!counts.unbooked&&!counts.holding,`账本/持有漂移：${JSON.stringify({counts,recent:list.slice(-5)})}`);
 }
 export function eventDiscrepancies(engine,before,after){
     const lb=legacyBooks(engine,before.state).balances,la=legacyBooks(engine,after.state).balances,ab=before.ledger?.accounts??{},aa=after.ledger?.accounts??{},out=[];

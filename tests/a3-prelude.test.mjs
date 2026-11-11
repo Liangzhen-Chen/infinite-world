@@ -28,7 +28,8 @@ const clean=(before,after)=>{
 const pawnScene=(carriedBy='player')=>applyIntentSetup(engine,initial,{minute:600,location:'bld_hw_post',present:['npc_hw_shendu'],coins:1,inventory:{item_staff:0},
  itemInstances:[{id:'prelude-pawn-staff',template:'thing',kind:'item',item:'item_staff',owner:'player',location:'bld_hw_post',carriedBy,condition:100}],
  holdings:[{id:'prelude-pawn-title',kind:'owns',holder:'player',subject:'prelude-pawn-staff',terms:{share:1}}]});
-const pawn=act('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:2,days:1},'prelude-pawn');
+// F007: the advance is 50% of the staff's valuation (4 x floor .5 = 2 copper), so the most it can fetch is 1 (it was 2 on the catalogue price).
+const pawn=act('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:1,days:1},'prelude-pawn');
 
 // 产品原则三.2：存款和部分支取必须真实扣钱、收取手续费并推进时间，
 // 不用历史存款快照或另造债权。与玩家逐次 preview/reduce 的结果逐字段一致。
@@ -115,7 +116,7 @@ test('O: real pawn redemption returns the exact original, clears canonical and c
  const loaded=await runPrelude(engine,before,[pawn]);assert.deepEqual(loaded.unmet,[]);
  const document=JSON.parse(JSON.stringify(loaded.document)),debt='debt_loan_prelude-pawn',row=document.state.records[debt],pledge=row.pledgeRecord;
  assert.equal(document.state.inventory.item_staff?.quantity??0,0);
- assert.equal(row.principal,2);assert.equal(row.amount,row.principal+row.interest);assert.equal(row.amount,3);
+ assert.equal(row.principal,1);assert.equal(row.amount,row.principal+row.interest);assert.equal(row.amount,2);
  assert.equal(document.state.player.coins,row.amount);
  assert.equal(obligationView(document.state,debt).owed,row.amount);
  assert.deepEqual(document.state.records[pledge].instances,[unit]);
@@ -145,7 +146,7 @@ test('O: mismatched collateral custody, expired redemption and invalid paid amou
  const loaded=await runPrelude(engine,setup.document,[pawn]);assert.deepEqual(loaded.unmet,[]);
  const document=loaded.document,debt='debt_loan_prelude-pawn',row=document.state.records[debt];
  const invalid=await runPrelude(engine,document,[act('core:trade.repay',{seller:'npc_hw_shendu',debt,coins:row.amount+1},'prelude-overpay')]);
- assert.equal(invalid.unmet.length,1);assert.match(invalid.unmet[0].reason,/还款金额必须在1到3之间/);
+ assert.equal(invalid.unmet.length,1);assert.match(invalid.unmet[0].reason,/还款金额必须在1到2之间/);
  assert.deepEqual(invalid.document,document);
  const wrong=pawnScene('npc_hw_shendu');assert.deepEqual(wrong.setupUnmet,[]);
  const rejected=await runPrelude(engine,wrong.document,[pawn]);

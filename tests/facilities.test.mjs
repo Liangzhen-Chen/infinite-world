@@ -6,7 +6,8 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {facilityView,granaryCapacity} from '../server-plugin/facility-state.mjs';
 import {advanceFacilities,advanceFacilityFire,completeFacilityProject,damageFacility} from '../server-plugin/facilities.mjs';
-import {startPublicProject,advancePublicProjects,abortPublicProject,startHouse,advanceHouses} from '../server-plugin/public-projects.mjs';
+import {startPublicProject,advancePublicProjects,abortPublicProject,startHouse,advanceHouses,isPublicProject} from '../server-plugin/public-projects.mjs';
+import {recordProjectAttendance} from '../server-plugin/employment-state.mjs';
 import {placeView} from '../server-plugin/entity-view.mjs';
 import {traitsOf} from '../server-plugin/traits.mjs';
 import {applyInteraction} from '../server-plugin/interactions.mjs';
@@ -27,31 +28,43 @@ function fixture(){
  const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}delete w.rules.weather;
  const engine=new WorldEngine(w),doc=engine.createCharacter(seed,{},'facilities');
  const d={document:doc,get(...p){return p.reduce((v,k)=>v?.[k],this.document);},set(path,value){this.document=applyPatches(this.document,[{op:'set',path,value}]);},remove(path){this.document=applyPatches(this.document,[{op:'delete',path}]);},say(){}};
- engine.airDraft=d;d.set(['state','location'],site);d.set(['state','minute'],600);
+ // F083: the crew starts at the opening of the work window (08:00), so every later working day is a full 480 minutes.
+ engine.airDraft=d;d.set(['state','location'],site);d.set(['state','minute'],480);
  const workers=w.settlementProfiles.find(p=>p.id===sid).details.governance.coordinators.slice(0,2);
  for(const id of workers)d.set(['state','npcs',id],{...d.get('state','npcs',id),location:site,status:'正常',activity:'议事'});
  d.set(['state','records','governance_office:fixture'],{category:'governance_office',holder:'player',office:'office_village_head',settlement:sid,status:'在任',appointedAt:0,until:100*DAY,appointedBy:'fixture'});
  d.set(['state','settlements',sid,'treasury'],100000);d.set(['state','settlements',sid,'wood'],1000);d.set(['state','settlements',sid,'stone'],1000);
  const add=(id,extra={})=>{const base={id,name:id,type:'bld',parent:site,scope:sid,owner:sid,facilityType:'house',material:'wood',position:[0,0],access:{mode:'public'},...extra};d.set(['state','created',id],base);return id;};
  const start=(extra={},id='work')=>startPublicProject(d,engine.scoped(d.document),{name:'设施工程',days:3,wood:12,stone:8,workers,consent:true,plot:site,...extra},id,sid);
- const finish=(days=3)=>{const before=d.get('state','minute'),after=before+days*DAY;advancePublicProjects(d,engine,{before,after,id:'advance'});d.set(['state','minute'],after);};
- return {engine,d,w,workers,add,start,finish};
+ // F083: progress and pay come from minutes really spent on site. The walk of the day (home to site and back) is covered by
+ // governance-projects' real clock advance; these facility tests only declare that every crew member who is able to work
+ // stood at the site through both work windows (08:00-12:00, 13:00-17:00) of each elapsed day. Sick, levied or detained
+ // people are skipped by recordProjectAttendance itself, exactly as in the real schedule walk.
+ const attend=(before,after)=>{
+  for(let day=Math.floor(before/DAY);day<Math.floor(after/DAY);day++)for(const p of Object.values(d.get('state','projects')??{}))if(isPublicProject(p)&&p.status==='施工中')
+   for(const w of p.public.workers)for(const [lo,hi]of [[480,720],[780,1020]])recordProjectAttendance(d,w,Math.max(before,day*DAY+lo),day*DAY+hi,site);
+ };
+ const finish=(days=3)=>{const before=d.get('state','minute'),after=before+days*DAY;attend(before,after);advancePublicProjects(d,engine,{before,after,id:'advance'});d.set(['state','minute'],after);};
+ return {engine,d,w,workers,add,start,finish,attend};
 }
 
 test('材质进入K1，日常使用和天气损耗按日结算；汛期与K6灾害损毁幂等',()=>{
  const {engine,d,add,w}=fixture(),wood=add('bld_test_wood'),stone=add('bld_test_stone',{material:'stone',position:[30,0]});
  assert.ok(traitsOf(engine,d.get('state'),wood).tags.includes('flammable'));
  assert.ok(!traitsOf(engine,d.get('state'),stone).tags.includes('flammable'));
- d.set(['state','location'],wood);advanceFacilities(d,engine,{before:0,after:10*DAY});
+ // W8-E8: five-year base => 5400 weighted hundredths/condition point.
+ // 54 dry occupied wood days: 54*4*100/5400=4; stone:54*100/5400=1.
+ d.set(['state','location'],wood);advanceFacilities(d,engine,{before:0,after:54*DAY});
  assert.equal(facilityView(engine,d.get('state'),wood).condition,96);
  assert.equal(facilityView(engine,d.get('state'),stone).condition,99);
- const before=structuredClone(d.get('state','buildings'));advanceFacilities(d,engine,{before:0,after:10*DAY});assert.deepEqual(d.get('state','buildings'),before);
- applyEffect(d,engine,{kind:'flood',locations:[site],minutes:DAY},{minute:10*DAY,sourceEvent:'flood'},'world');
+ const before=structuredClone(d.get('state','buildings'));advanceFacilities(d,engine,{before:0,after:54*DAY});assert.deepEqual(d.get('state','buildings'),before);
+ applyEffect(d,engine,{kind:'flood',locations:[site],minutes:DAY},{minute:54*DAY,sourceEvent:'flood'},'world');
  assert.equal(facilityView(engine,d.get('state'),wood).condition,76);
- applyEffect(d,engine,{kind:'flood',locations:[site],minutes:DAY},{minute:10*DAY,sourceEvent:'flood'},'world');assert.equal(facilityView(engine,d.get('state'),wood).condition,76);
- applyEffect(d,engine,{kind:'facility',action:'damage',locations:[site],amount:20},{minute:11*DAY,sourceEvent:'disaster'},'world');assert.equal(facilityView(engine,d.get('state'),wood).status,'降级');
+ applyEffect(d,engine,{kind:'flood',locations:[site],minutes:DAY},{minute:54*DAY,sourceEvent:'flood'},'world');assert.equal(facilityView(engine,d.get('state'),wood).condition,76);
+ applyEffect(d,engine,{kind:'facility',action:'damage',locations:[site],amount:20},{minute:55*DAY,sourceEvent:'disaster'},'world');assert.equal(facilityView(engine,d.get('state'),wood).status,'降级');
  w.rules.weather=structuredClone(world.rules.weather);w.rules.weather.regions=[{...w.rules.weather.regions[0],locations:[site],indoor:[]}];w.rules.weather.seasonalWeights=w.rules.weather.seasonalWeights.map(()=>[0,0,0,1,0,0]);
- const storm=add('bld_test_storm');advanceFacilities(d,engine,{before:10*DAY,after:20*DAY});assert.equal(facilityView(engine,d.get('state'),storm).condition,93);
+ // Same seven-point weather assertion, over54 days at (wood3+storm4).
+ const storm=add('bld_test_storm');advanceFacilities(d,engine,{before:54*DAY,after:108*DAY});assert.equal(facilityView(engine,d.get('state'),storm).condition,93);
 });
 
 test('用途阈值即时派生；受损住宅不能进入，燃烧工坊立即停止工作台服务',()=>{
@@ -67,14 +80,14 @@ test('用途阈值即时派生；受损住宅不能进入，燃烧工坊立即�
 });
 
 test('公款修缮消耗材料与实际人工，病工不领薪，完工恢复用途；扩建容量跟随损毁',()=>{
- const {engine,d,add,start,finish,workers}=fixture(),id=add('bld_test_clinic',{facilityType:'clinic'});
+ const {engine,d,add,start,finish,workers,attend}=fixture(),id=add('bld_test_clinic',{facilityType:'clinic'});
  damageFacility(d,engine,id,80,{sourceEvent:'ruin'});
  const treasury=d.get('state','settlements',sid,'treasury'),wood=d.get('state','settlements',sid,'wood'),coins=workers.map(w=>d.get('state','npcs',w,'coins'));
  const p=start({building:id,action:'repair',days:2});assert.equal(d.get('state','settlements',sid,'wood'),wood-12);
  d.set(['state','npcs',workers[1],'status'],'患病');finish(2);assert.equal(d.get('state','projects',p.project,'status'),'施工中');
  assert.equal(d.get('state','npcs',workers[1],'coins'),coins[1]);
- advancePublicProjects(d,engine,{before:2*DAY,after:4*DAY,id:'finish'});
- d.set(['state','minute'],4*DAY+600);
+ attend(2*DAY,4*DAY);advancePublicProjects(d,engine,{before:2*DAY,after:4*DAY,id:'finish'});
+ d.set(['state','minute'],4*DAY+480);
  assert.equal(d.get('state','projects',p.project,'status'),'已完成');assert.equal(facilityView(engine,d.get('state'),id).capacity,4);
  const wage=engine.rules.governance.authority.treasury.wagePerWorkerDayCopper;assert.equal(d.get('state','settlements',sid,'treasury'),treasury-4*wage);assert.equal(d.get('state','npcs',workers[0],'coins'),coins[0]+4*wage);
  d.set(['state','npcs',workers[1],'status'],'正常');start({building:id,action:'expand'},'expand');finish();assert.equal(placeView(engine,d.get('state'),id).capacity.value,8);
@@ -124,7 +137,8 @@ test('新增仓容实际接收入仓粮，扩建和灾损改变可用仓容，�
 });
 
 test('火只蔓延到有限邻居，石材不燃，远处不燃，水与雨阻断火势',()=>{
- const {engine,d,add,w}=fixture(),root=add('bld_fire_root'),near=add('bld_fire_near',{position:[5,0]}),far=add('bld_fire_far',{position:[30,0]}),stone=add('bld_fire_stone',{position:[6,0],material:'stone'});
+ const {engine,d,add,w}=fixture();d.set(['state','minute'],600);// 本例的起火钟点仍是10:00（与工班无关）
+ const root=add('bld_fire_root'),near=add('bld_fire_near',{position:[5,0]}),far=add('bld_fire_far',{position:[30,0]}),stone=add('bld_fire_stone',{position:[6,0],material:'stone'});
  applyInteraction(d,engine,{agent:'fire',target:root});advanceFacilityFire(d,engine,{after:660});
  assert.equal(facilityView(engine,d.get('state'),root).condition,75);assert.equal(facilityView(engine,d.get('state'),near).burning,true);assert.equal(facilityView(engine,d.get('state'),far).burning,false);assert.equal(facilityView(engine,d.get('state'),stone).burning,false);
  d.set(['state','location'],site);d.set(['state','inventory','item_water'],{quantity:1});const originalAdvance=engine.advance;engine.advance=()=>{};
@@ -140,13 +154,16 @@ test('火只蔓延到有限邻居，石材不燃，远处不燃，水与雨阻�
 });
 
 test('同距建筑受真实风速影响，重复工人不能虚增工时，同一人一天只做一处工程',()=>{
- const {engine,d,add,start,workers}=fixture(),calm=add('bld_calm',{position:[200,0]}),a=add('bld_calm_next',{position:[212,0]}),wind=add('bld_wind',{position:[300,0],windKmh:20}),b=add('bld_wind_next',{position:[312,0]});
+ const {engine,d,add,start,workers,attend}=fixture(),calm=add('bld_calm',{position:[200,0]}),a=add('bld_calm_next',{position:[212,0]}),wind=add('bld_wind',{position:[300,0],windKmh:20}),b=add('bld_wind_next',{position:[312,0]});
  applyInteraction(d,engine,{agent:'fire',target:calm});applyInteraction(d,engine,{agent:'fire',target:wind});advanceFacilityFire(d,engine,{after:660});
  assert.equal(facilityView(engine,d.get('state'),a).burning,false);assert.equal(facilityView(engine,d.get('state'),b).burning,true);
  assert.throws(()=>start({facilityType:'clinic',days:1,workers:[workers[0],workers[0],workers[0]]},'duplicate_workers'),/实际工时/);
- start({facilityType:'clinic',days:2},'first');start({facilityType:'school',days:2},'second');
- advancePublicProjects(d,engine,{before:0,after:DAY,id:'shared_work'});
- assert.equal(d.get('state','projects','project_first','remainingWork'),2);assert.equal(d.get('state','projects','project_second','remainingWork'),4);
+ start({facilityType:'clinic',days:2},'first');
+ // F083: one person is on one works crew. The same two villagers cannot be put on a second project at the same time (they were
+ // simply skipped for the second one before); the refusal now comes at assignment, and the first project gets the full day.
+ assert.throws(()=>start({facilityType:'school',days:2},'second'),/排班/);
+ attend(480,DAY+480);advancePublicProjects(d,engine,{before:480,after:DAY+480,id:'shared_work'});
+ assert.equal(d.get('state','projects','project_first','remainingWork'),2);assert.equal(d.get('state','projects','project_second'),undefined);
 });
 
 test('损毁与修缮进入世界事件、可传播传闻和返场汇总；重放不重复结算',()=>{
@@ -168,20 +185,22 @@ test('U12战役掠村损坏当地建筑；与战役账共用来源事件，不�
 test('远方骨架设施按县统计磨损，到访后物化当前耐久，随后修缮不受旧统计重复扣减',()=>{
  const {engine,d,w,add}=fixture(),plan=advanceLayerPlan(engine,d.get('state')),county=[...plan.layers].find(([,layer])=>layer==='statistics')[0];
  const id=add('bld_remote_wear',{generated:'remote',region:county});w.locations.push(d.get('state','created',id));
- advanceFacilities(d,engine,{before:0,after:30*DAY});assert.equal(d.get('state','buildings',id),undefined);assert.equal(facilityView(engine,d.get('state'),id).condition,91);
- d.set(['state','location'],id);advanceFacilities(d,engine,{before:30*DAY,after:31*DAY});assert.equal(d.get('state','buildings',id,'condition'),91);
+ // New rate: floor(30*3*100/5400)=1; visiting keeps the3600-unit remainder.
+ advanceFacilities(d,engine,{before:0,after:30*DAY});assert.equal(d.get('state','buildings',id),undefined);assert.equal(facilityView(engine,d.get('state'),id).condition,99);
+ d.set(['state','location'],id);advanceFacilities(d,engine,{before:30*DAY,after:31*DAY});assert.equal(d.get('state','buildings',id,'condition'),99);
+ assert.equal(d.get('state','buildings',id,'wearUnits'),4000);
  completeFacilityProject(d,engine,{id:'remote_repair',building:id,projectWork:'repair'},31*DAY);assert.equal(facilityView(engine,d.get('state'),id).condition,100);
 });
 
 test('已有world_settlement工具可完成类型化工程和修缮，回执重放保持补丁一致',async()=>{
- const {engine,d,workers}=fixture();
+ const {engine,d,workers,attend}=fixture();
  const act=async(args,eventId)=>{const input=d.document,out=await engine.reduce(input,{tool:'world_settlement',args:{settlement:sid,...args},eventId});
   const replay=await engine.reduce(input,{tool:'world_settlement',args:{settlement:sid,...args},eventId},{replay:true,result:out.result});assert.deepEqual(replay.patches,out.patches);d.document=applyPatches(input,out.patches);return out.result;};
  const built=await act({operation:'start_project',facilityType:'clinic',name:'乡医馆',plot:site,wood:10,stone:4,days:2,workers,consent:true},'typed');
- advancePublicProjects(d,engine,{before:0,after:2*DAY,id:'typed_complete'});const building=d.get('state','projects',built.project,'facility');
+ attend(0,2*DAY);advancePublicProjects(d,engine,{before:0,after:2*DAY,id:'typed_complete'});const building=d.get('state','projects',built.project,'facility');
  damageFacility(d,engine,building,80,{sourceEvent:'typed_damage'});
  await act({operation:'start_project',action:'repair',plot:building,name:'修医馆',wood:8,stone:4,days:2,workers,consent:true},'typed_repair');
- advancePublicProjects(d,engine,{before:2*DAY,after:4*DAY,id:'typed_restored'});assert.equal(placeView(engine,d.get('state'),building).capacity.value,4);
+ attend(2*DAY,4*DAY);advancePublicProjects(d,engine,{before:2*DAY,after:4*DAY,id:'typed_restored'});assert.equal(placeView(engine,d.get('state'),building).capacity.value,4);
 });
 
 test('NPC按本人宅基批文自备材料建房，复用设施用途和耐久入口',()=>{

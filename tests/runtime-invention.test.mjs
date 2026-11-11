@@ -9,6 +9,7 @@ import {CampaignStorage,applyPatches}from'../server-plugin/storage.mjs';
 import {catalogDefinition}from'../server-plugin/catalog.mjs';
 import {toolDefinitions}from'../extension/tools.mjs';
 import Ajv from'ajv';
+import {fixtureDefinition} from '../server-plugin/workstation-services.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const engine=new WorldEngine(world),fresh=()=>{
@@ -85,7 +86,8 @@ test('新配方仅登记规则；学会后使用原制造链扣真实材料、�
     const definition=catalogDefinition(engine,created.document,{entity:'试制木楔法',kind:'recipe'});
     assert.equal(definition.materials[0].item,'item_wood');assert.equal(definition.learningRequired,true);
     assert.ok(catalogDefinition(engine,created.document,{kind:'recipe'}).count>world.recipes.length);
-    await assert.rejects(run(created.document,'world_craft',{recipe:id},'unknown'),/尚未学会/);
+    // 卡 Q：登记了还没学的配方照做落低档（技能状况 underProficient），不再拒绝。
+    {const naive=await run(created.document,'world_craft',{recipe:id},'unknown');assert.equal(naive.result.standing,'underProficient');}
     const learned=await observed(created.document,'world_learn',{entity:id,kind:'recipe',source:'research_study'},true,'recipe_learn');
     const out=await observed(learned.document,'world_craft',{recipe:'试制木楔法'},true,'make'),made=out.document;
     assert.equal(made.state.inventory.item_wood.quantity,learned.document.state.inventory.item_wood.quantity-2);
@@ -99,7 +101,7 @@ test('新配方仅登记规则；学会后使用原制造链扣真实材料、�
     assert.deepEqual((await run(learned.document,'world_craft',{recipe:'试制木楔法'},out.id)).document,made);
 });
 
-test('自创配方失败仍扣费耗时并按比例回收；缺料、坏工具、缺工作台或许可均不改变账本',async()=>{
+test('自创配方失败仍扣费耗时并按比例回收；缺料、坏工具、缺工作台均不改变账本；缺工作台许可照做并命中擅用',async()=>{
     const created=await register(await researched(),'recipe');
     const learned=await observed(created.document,'world_learn',{entity:created.result.entity,source:'research_study'},true,'recipe_learn');
     const out=await observed(learned.document,'world_craft',{recipe:created.result.entity},false,'failure'),c=out.document;
@@ -111,14 +113,22 @@ test('自创配方失败仍扣费耗时并按比例回收；缺料、坏工具�
     assert.equal(c.state.player.hp,learned.document.state.player.hp-(out.result.degree==='大失败'?2:0));
     for(const change of[
         doc=>doc.state.inventory.item_wood.quantity=1,doc=>doc.state.inventory.item_whittling_knife.durability=0,
-        doc=>doc.state.location='bld_hw_qingdeng',doc=>delete doc.state.skills.skill_life_6_core,
+        doc=>doc.state.location='bld_hw_qingdeng',
     ]){
         const bad=structuredClone(learned.document);change(bad);const before=structuredClone(bad);
         await assert.rejects(run(bad,'world_craft',{recipe:created.result.entity},'bad'));assert.deepEqual(bad,before);
     }
-    const privateWorld=structuredClone(world),station=privateWorld.locations.find(row=>row.id==='bld_hw_mill').workstations.find(row=>row.kind===data().workstation);
-    station.access='consent';
-    await assert.rejects(new WorldEngine(privateWorld).reduce(learned.document,{tool:'world_craft',args:{recipe:created.result.entity},eventId:'no_permit'}),/使用许可/);
+    // 卡 Q 依据（Q-2 63f94080、Q-7 42f8ddcb）：缺技能不再拒绝，照做、耗时耗料，出品落外行档（仿制），也不因此生出技能。
+    {const unskilled=structuredClone(learned.document);delete unskilled.state.skills.skill_life_6_core;
+        const out=await observed(unskilled,'world_craft',{recipe:created.result.entity},true,'no_skill'),c2=out.document;
+        assert.equal(out.result.standing,'noSkill');assert.equal(out.result.workmanship,'仿制');assert.equal(c2.state.skills.skill_life_6_core,undefined);
+        assert.equal(c2.state.minute,learned.document.state.minute+60);assert.equal(c2.state.inventory.item_wood.quantity,learned.document.state.inventory.item_wood.quantity-data().materials[0].amount);
+        assert.ok(out.result.instances.length>0);for(const id of out.result.instances)assert.equal(c2.state.itemInstances[id].workmanship,'仿制');}
+    // K5：去掉主人公开的收费，磨坊的设备就只供主人及其许可的人使用（原为手写 access='consent'）。
+    const privateWorld=structuredClone(world),station=privateWorld.locations.find(row=>row.id==='bld_hw_mill').fixtures.find(row=>fixtureDefinition(row.fixture).affords===data().workstation);
+    delete station.fee;
+    // K6 依据（审查 C-b manufacturing:86、D1 本文件:121）：没有工作台许可照样能做，命中擅用他人之物。
+    {const out=await new WorldEngine(privateWorld).reduce(learned.document,{tool:'world_craft',args:{recipe:created.result.entity},eventId:'no_permit'});const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,'命中擅用他人之物');assert.equal(o.victim,'loc_hw');}
 });
 
 test('未完成研究、过高阶段、无关知识、空耗材、未知产物和非法工序在登记时拒绝；不能直接造物或覆盖规则',async()=>{
@@ -161,4 +171,23 @@ test('公开工具及共享schema能表示自创配方，重启、导入与回�
     assert.deepEqual((await store.reconcile('invention',[])).document,created.document);
     assert.equal(new WorldEngine(world).scoped(view.document).resolve('试制木楔法','recipe'),id);
     assert.throws(()=>engine.scoped(fresh()).resolve(id,'recipe'),/未登记/);
+});
+
+test('F050 配方守恒：同一种东西无转化地多出来被拒并给世界内原因；不同材料的转化按工序裁决，不设估值产出上限',async()=>{
+    const c=await researched();
+    // 1 木 -> 200 木: 投入1份、产出200份同一种东西，没有任何转化。拒绝并写明世界内原因，零写入。
+    for(const input of[
+        {...data(),materials:[{item:'item_wood',amount:1}],output:{item:'item_wood',quantity:200}},
+        {...data(),materials:[{item:'item_wood',amount:5}],output:{item:'item_wood',quantity:5}},
+        {...data(),materials:[{item:'item_wood',amount:2}],byproducts:[{item:'item_wood',amount:2}]},
+    ]){
+        const before=structuredClone(c);
+        await assert.rejects(register(c,'recipe','木生木',input),/凭空多出同一种东西/);assert.deepEqual(c,before);
+    }
+    // 同一种东西投入5份、产出4份是有损耗的加工，不是增殖，仍可登记；不同材料之间的转化倍率由材料数量、
+    // 工具、工时与技能阶段裁决，不设按估值算的上限：1 木料 -> 200 木楔（单次成品数量本就最多200）照常登记。
+    const loss=await register(c,'recipe','削耗',{...data(),materials:[{item:'item_wood',amount:5}],output:{item:'item_wood',quantity:4},byproducts:[]});
+    assert.ok(loss.result.entity);
+    const big=await register(c,'recipe','千楔法',{...data(),materials:[{item:'item_wood',amount:1}],output:{item:'item_wooden_peg',quantity:200}});
+    assert.equal(catalogDefinition(engine,big.document,{entity:'千楔法',kind:'recipe'}).output.quantity,200);
 });

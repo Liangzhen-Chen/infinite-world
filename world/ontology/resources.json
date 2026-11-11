@@ -22,7 +22,8 @@
     "metal": "copper",
     "fineness": 1,
     "issuer": "西陲河谷",
-    "coinage": "coinage_river"
+    "coinage": "coinage_river",
+    "weight": 0.005
    },
    "ledger": true,
    "note": "rules.economy.credit.coinages 的 coinage_river；角色钱袋、公账、公库、托管里的铜钱都是它。账户键 <实体>|coin_river|<用途>。"
@@ -38,7 +39,8 @@
     "fineness": 0.9,
     "issuer": "中陆诸邦",
     "coinage": "coinage_civic",
-    "item": "item_coin_civic"
+    "item": "item_coin_civic",
+    "weight": 0.005
    },
    "note": "S1b 起入账本：行囊里的 item_coin_civic 与钱庄库存都记为本资源（账户 <实体>|coin_civic|inventory / vault）。",
    "ledger": true
@@ -54,7 +56,8 @@
     "fineness": 0.85,
     "issuer": "琥珀海岸",
     "coinage": "coinage_coast",
-    "item": "item_coin_coast"
+    "item": "item_coin_coast",
+    "weight": 0.005
    },
    "note": "S1b 起入账本：行囊里的 item_coin_coast 与钱庄库存都记为本资源（账户 <实体>|coin_coast|inventory / vault）。",
    "ledger": true
@@ -139,6 +142,26 @@
    "pattern": true,
    "ledger": true,
    "note": "S1b 起入账本：资源键即物品模板 id；粮（item_oats）在聚落公仓、种粮与在途账户按批次记。"
+  },
+  {
+   "id": "coin_hw_note",
+   "label": "河湾兑付券",
+   "family": "currency",
+   "unit": "券",
+   "broader": "coin",
+   "ledger": true,
+   "money": {
+    "metal": "none",
+    "weight": 0.001,
+    "fineness": 1,
+    "issuer": "bank_hw_post",
+    "coinage": "coinage_hw_note",
+    "item": "item_banknote_hw",
+    "backedBy": {
+     "coin": "coin_river",
+     "ratio": 100
+    }
+   }
   }
  ],
  "sourcesAndSinks": [
@@ -187,6 +210,10 @@
    "label": "死亡（无人承接的遗留）"
   },
   {
+   "id": "sink:individuated",
+   "label": "个体化（种群一头成为生灵个体，与 src:aggregated 成对，01 §1.6）"
+  },
+  {
    "id": "sink:export",
    "label": "离开模拟范围（付给未模拟的承运人、行会、市场、兵丁等）"
   },
@@ -213,6 +240,14 @@
   {
    "id": "sink:melt",
    "label": "回炉退出流通的铸币（与 src:mint 构成改铸守恒对）"
+  },
+  {
+   "id": "src:issue",
+   "label": "有准备金约束的信用货币发行"
+  },
+  {
+   "id": "sink:redeem",
+   "label": "信用货币实际兑付销毁"
   }
  ]
 }

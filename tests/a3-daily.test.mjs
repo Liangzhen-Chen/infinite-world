@@ -19,16 +19,19 @@ const stack=quantity=>({quantity,quality:'木',durability:100,weight:.2});
 function fixture(){
  const world=structuredClone(original);
  for(const n of world.npcs){n.tier='fixture';delete n.schedule;}
- for(const key of ['weather','settlementTrade','worldClock','hazardClock','factionClock'])delete world.rules[key];
+ // Like the removed NPC schedules, household errands must not displace the
+ // explicitly placed speakers in these isolated action-cost anchors.
+ for(const key of ['weather','settlementTrade','worldClock','hazardClock','factionClock','householdSubsistence'])delete world.rules[key];
  for(const f of world.factions)delete f.clock;
  const seller=world.npcs.find(n=>n.id===SELLER);
  seller.schedule={default:[{start:0,end:1440,location:INN,activity:'营业',services:['trade']}]};
+ // S5-02: reserve ceil(2*60/35)=4 stew; fifth portion remains saleable. Meal = trunc(8*.5)+trunc(15*.5*depth)=4+7=11.
  world.items.find(r=>r.id===BREAD).basePrice=8;world.items.find(r=>r.id===STEW).basePrice=15;
  const engine=new WorldEngine(world),document=engine.initialFromLegacy(seed,'a3-daily');
  document.state.location=INN;document.state.player.coins=60;
  document.state.player.body={satiety:{value:30,asOf:document.state.minute,activity:'rest'}};
  Object.assign(document.state.npcs[SELLER],{location:INN,status:'正常',activity:'营业',goals:{}});
- document.state.npcs[SELLER].inventory[BREAD]=stack(4);document.state.npcs[SELLER].inventory[STEW]=stack(4);
+ document.state.npcs[SELLER].inventory[BREAD]=stack(4);document.state.npcs[SELLER].inventory[STEW]=stack(5);
  return {world,engine,document};
 }
 function book(f){f.document=withLedger(f.engine,f.document).document;f.document.holdings=openHoldings(f.engine,f.document);return f;}
@@ -38,16 +41,16 @@ async function act(f,action,slots,eventId){
 }
 const qty=(f,d,owner,item)=>f.engine.quantity(f.engine.primitiveDraft(d),owner,item);
 
-test('A3 D05: ordering real cooked dishes costs 23 coins and 25 minutes, eats purchased food and preserves old supplies',async()=>{
+test('A3 D05: ordering real cooked dishes costs 11 coins and 25 minutes, eats purchased food and preserves old supplies',async()=>{
  const f=fixture();f.document.state.inventory[BREAD]=stack(1);book(f);
  const registration=f.engine.primitiveDraft(f.document),unit=trackSingleItem(registration,f.engine,'player',BREAD,'old-bread');
  f.document=applyPatches(f.document,registration.patches);const before=structuredClone(f.document);
  const slots={subject:SELLER,item:BREAD,side:STEW},input='a3-order-meal';
  const {out,after}=await act(f,'core:eat.order',slots,input);
- assert.equal(out.result.paid,23);assert.equal(after.state.player.coins,37);
+ assert.equal(out.result.paid,11);assert.equal(after.state.player.coins,49);
  const event=after.state.records[`world_event:${input}`];
- assert.equal(event.verb,'trade');assert.equal(event.target,SELLER);assert.equal(event.value,23);
- assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,23);
+ assert.equal(event.verb,'trade');assert.equal(event.target,SELLER);assert.equal(event.value,11);
+ assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,11);
  assert.equal(after.state.minute-before.state.minute,25);assert.equal(out.result.cost.time,25);
  for(const item of [BREAD,STEW]){
   assert.equal(qty(f,after,'player',item),qty(f,before,'player',item));
@@ -65,7 +68,7 @@ test('A3 D05: ordering real cooked dishes costs 23 coins and 25 minutes, eats pu
 test('A3 D05: a second unavailable dish or insufficient cash rolls back the entire order; raw meat is not a cooked meal',async()=>{
  for(const fault of ['stock','coins','raw']){
   const f=fixture();if(fault==='stock')delete f.document.state.npcs[SELLER].inventory[STEW];
-  if(fault==='coins')f.document.state.player.coins=20;
+  if(fault==='coins')f.document.state.player.coins=10;
   book(f);const before=structuredClone(f.document);
   await assertActionRejected(act(f,'core:eat.order',{subject:SELLER,item:BREAD,side:fault==='raw'?'item_mutton':STEW},`order-${fault}`));
   assert.deepEqual(f.document,before);
@@ -117,12 +120,13 @@ test('A3 D16: the actual fish broth recipe takes half a shichen, consumes exact 
 test('A3 D22: buying a drink really gives it to the speaker; 15 minutes includes purchase, with versioned rumor and conserved money',async()=>{
  const f=fixture(),speaker='npc_hw_hezhou',rumor={id:'rumor_a3_ox',claim:'东头丢了一头牛。',source:speaker,carriers:[speaker],fact:'不能告诉玩家的作者真相'};
  f.world.rumors.push(rumor);f.world.items.find(r=>r.id==='item_milk').basePrice=5;
- f.document.state.npcs[SELLER].inventory.item_milk=stack(2);
+ // S5-02: hydration reserve ceil(2*72/25)=6 milk; seventh is saleable, trunc(5*.5)=2.
+ f.document.state.npcs[SELLER].inventory.item_milk=stack(7);
  Object.assign(f.document.state.npcs[speaker],{location:INN,status:'正常',activity:'交谈',goals:{}});
  book(f);const before=structuredClone(f.document),slots={subject:speaker,seller:SELLER,item:'item_milk',rumor:rumor.id};
  const {out,after}=await act(f,'core:dialogue.treat_rumor',slots,'a3-treat');
- assert.equal(before.state.player.coins-after.state.player.coins,5);
- assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,5);
+ assert.equal(before.state.player.coins-after.state.player.coins,2);
+ assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,2);
  assert.equal(qty(f,after,'player','item_milk'),qty(f,before,'player','item_milk'));
  assert.equal(qty(f,after,speaker,'item_milk')-qty(f,before,speaker,'item_milk'),1);
  assert.equal(qty(f,before,SELLER,'item_milk')-qty(f,after,SELLER,'item_milk'),1);
@@ -264,19 +268,34 @@ test('A3 D14: two hours at the real local herb reserve transfers five herbs and 
  const capped=await act(f,'core:site.gather_session',slots,'a3-herbs-cap');
  assert.equal(capped.out.result.training.gain,0);assert.equal(capped.out.result.quantity,5);
 });
-test('A3 D14: duration, local presence, season, permission, stock and prior commitments remain real gates',async()=>{
- for(const fault of ['short','long','quantity','legacy_quantity','stock','winter','permission','busy','elsewhere']){
+test('A3 D14: duration, local presence, season, stock and prior commitments remain real gates',async()=>{
+ for(const fault of ['short','long','quantity','legacy_quantity','stock','winter','busy','elsewhere']){
   const f=await gatherFixture(),slots={target:'nw_herb',minutes:120},state=f.document.state;
   if(fault==='short')slots.minutes=29;if(fault==='long')slots.minutes=481;if(fault==='quantity')slots.quantity=100;
   if(fault==='legacy_quantity'){delete slots.minutes;slots.quantity=20;}
   if(fault==='stock')state.records['site:loc_hw_northwood'].remaining.nw_herb=0;
   if(fault==='winter')scene('loc_hw_northwood',(9*30+3)*1440+9*60)(state,f.document);
-  if(fault==='permission')f.world.locations.find(p=>p.id==='loc_hw_northwood').site.owner=SELLER;
   if(fault==='elsewhere')state.location=INN;
   if(fault==='busy')state.obligations.busy={id:'busy',reservationVersion:1,type:'等待',promisor:'player',promisee:SELLER,start:state.minute,deadline:state.minute+180,departures:{player:state.minute,[SELLER]:state.minute},status:'待履行',location:state.location};
   const before=structuredClone(f.document);await assertActionRejected(act(f,fault==='legacy_quantity'?'core:site.gather':'core:site.gather_session',slots,`a3-herbs-${fault}`));
   assert.deepEqual(f.document,before);
  }
+});
+// K6 (c60b2a62, legality is a consequence): the owner's permission is a legal gate, not a physical one.
+// Gathering in another's reserve still happens with the same real time and stock, and is committed as
+// illegal harvest against the owner under this act's event.
+test('A3 D14: gathering in a reserve without the owner permission happens and is committed as illegal harvest',async()=>{
+ const f=await gatherFixture(),slots={target:'nw_herb',minutes:120};
+ f.world.locations.find(p=>p.id==='loc_hw_northwood').site.owner=SELLER;
+ const before=structuredClone(f.document),{out,after}=await act(f,'core:site.gather_session',slots,'a3-herbs-permission');
+ assert.equal(after.state.minute-before.state.minute,120);assert.equal(qty(f,after,'player','item_herb')-qty(f,before,'player','item_herb'),5);
+ assert.equal(after.state.records['site:loc_hw_northwood'].remaining.nw_herb,15);
+ const rows=Object.values(after.state.records).filter(r=>r.category==='offense'&&r.sourceEvent==='a3-herbs-permission');
+ // Going onto the private site is its entry breach too (sites.mjs entryBreach): trespass and illegal harvest.
+ assert.deepEqual(rows.map(r=>r.offense).sort(),['illegal_harvest','trespass']);
+ for(const r of rows){assert.equal(r.victim,SELLER);assert.equal(r.offender,'player');}
+ const harvest=rows.find(r=>r.offense==='illegal_harvest');assert.deepEqual(harvest.stolen,{item:'item_herb',quantity:5});assert.ok(harvest.value>0);
+ assert.deepEqual(auditLedger(after.ledger),[]);assert.deepEqual(reconcile(f.engine,after).mismatches,[]);
 });
 test('A3 D14: both duration endpoints execute, and depleted herbs stay empty through the old alias',async()=>{
  for(const [minutes,quantity]of [[30,1],[480,20]]){
@@ -356,7 +375,8 @@ test('A3 D35: watching a real held festival advances to its actual endsAt and ca
  const watched=await act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch');
  assert.equal(watched.after.state.minute,event.endsAt);assert.equal(watched.out.result.cost.time,event.endsAt-before.state.minute);
  assert.equal(watched.after.state.minute%1440,21*60);assert.equal(watched.out.result.cost.time,120);
- assert.equal(qty(f,watched.after,'player',BREAD),2);assert.equal(watched.after.state.player.coins,38);
+ // S5-02: festival base6 * scarcity.5 * neutral factors * 2 = 6; purse50-6=44.
+ assert.equal(qty(f,watched.after,'player',BREAD),2);assert.equal(watched.after.state.player.coins,44);
  assert.deepEqual(watched.after.state.inventory,before.state.inventory);assert.equal(watched.after.state.player.coins,before.state.player.coins);
  assert.equal(watched.after.state.records[f.id].paidCopper,event.paidCopper);assert.deepEqual(auditLedger(watched.after.ledger),[]);
  f.document=JSON.parse(JSON.stringify(watched.after));assert.deepEqual((await act(f,'core:settlement.festival_watch',{festival:f.id},'a3-watch')).out.patches,[]);

@@ -27,14 +27,64 @@ import {opticalSightClear,opticalVisibility,inspectLight,normalLightAction,asser
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};
 const key=id=>`physical_feature:${id}`;
-import {environmentFeatures,localPlayerPoint} from './environment-state.mjs';
+import {environmentFeatures,localPlayerPoint,playerWeatherExposure} from './environment-state.mjs';
 import {zoneContactPending} from './place-layout.mjs';
 import {visibleEntity,installPerceptionRuntime} from './perception.mjs';
 installPerceptionRuntime({localSightClear,lightAt,waterEarthSoundLoss,mindSleepUntil});
 import {initialKnowledgeAction} from './primitives-learning.mjs';
 import {transferWaterState} from './water-volume.mjs';
 import {applyBodyVital} from './primitives-body.mjs';
+import {hypot} from './det-math.mjs';
+import {registerWorldEventSubscriber} from './world-events.mjs';
+import {weatherAt} from './weather.mjs';
+import {derived} from './derived.mjs';
 export {environmentFeatures,localPlayerPoint,featureRecordMatches} from './environment-state.mjs';
+// A.18 weather_exposure: only real protection counts. Merely carrying a coat
+// or writing mark:shelter does not create a roof or put rain gear on the body.
+function rainSheltered(d,engine,state,location,travel=false){
+ const weather=weatherAt(engine,d.get('randomSeed'),location,state.minute);
+ if(!travel&&(weather?.indoors||!weather&&isFacility(engine.byId.get(location))))return true;
+ const reader={get:(...p)=>p.reduce((v,k)=>v?.[k],{...d.document,state})};
+ if(Object.values(wornItems(reader,engine,'player')).some(id=>{
+  const item=physicalItem(reader,engine,id);
+  return item.tags?.includes('rainproof')&&item.condition!==0&&item.durability!==0;
+ }))return true;
+ if(travel)return false;
+ const at=state.records?.local_player_position?.location===location?state.records.local_player_position.point:[0,0];
+ return environmentFeatures(engine,{...d.document,state},f=>f.location===location&&f.tags?.includes('shelter')).some(f=>{
+  const facts=state.records?.[`physical_feature:${f.id}`]?.state??f.state??{};
+  return facts.condition!==0&&facts.integrity!==0&&Number.isFinite(facts.radiusMeters)&&hypot(at[0]-f.position[0],at[1]-f.position[1])<=facts.radiusMeters;
+ });
+}
+registerWorldEventSubscriber({id:'weather_exposure',order:5,priorityClass:'core',on(d,engine,events,context){
+ const before=context.before,rule=engine.world.primitiveTables?.body?.params.find(r=>r.id==='weather_exposure')?.value;
+ if(context.legacy||!before||!rule||context.detail?.duplicate)return;
+ const end=d.get('state','minute');if(end<=before.minute)return;
+ const location=before.location,travel=context.tool==='move'&&(context.detail.movingMinutes??0)>0;
+ const sheltered=rainSheltered(d,engine,before,location,travel),key='weather_exposure:player';
+ let row=structuredClone(d.get('state','records',key)??{category:'weather_exposure',actor:'player',wet:false,shelteredMinutes:0,clearMinutes:0});
+ if(row.asOf>=end)return; // Multiple outcomes of one tool call share one span.
+ const wasWet=row.wet;
+ // Weather changes daily. Integrate constant environments by day, never by minute.
+ for(let at=before.minute;at<end;){
+  const until=Math.min(end,(Math.floor(at/1440)+1)*1440),w=weatherAt(engine,d.get('randomSeed'),location,at);
+  const precipitation=w&&['rain','storm'].includes(w.kind)?derived(engine,{...d.document,state:{...before,minute:at}},'weather:precipitation',location,{base:engine.rules.forestWater?.water.rainShare[w.kind]??0}):0;
+  const rain=!sheltered&&w&&(travel||!w.indoors)&&precipitation>0;
+  // Provenance is the clock fact (this place's weather on this day), not the
+  // outer call id: one long advance and its daily split must store the same
+  // state and event sequence (14 I31). The receipt still names the call.
+  if(rain){row.wet=true;row.shelteredMinutes=0;row.clearMinutes=0;row.since??=at;row.sourceEvent=`weather:${location}:${Math.floor(at/1440)}`;}
+  else if(row.wet){
+   row.shelteredMinutes=sheltered?row.shelteredMinutes+until-at:0;
+   row.clearMinutes=w?.kind==='clear'?row.clearMinutes+until-at:0;
+   const excess=Math.max(row.shelteredMinutes-rule.shelteredDryMinutes,row.clearMinutes-rule.clearDryMinutes);
+   if(excess>=0){row.wet=false;row.driedAt=until-excess;delete row.since;}
+  }
+  at=until;
+ }
+ if(row.wet||wasWet){row.asOf=end;d.set(['state','records',key],row);
+  context.detail.weatherExposure={status:row.wet?'wet':null,name:row.wet?playerWeatherExposure(d.get('state'))[0].name:'已干燥',sourceEvent:row.sourceEvent,eventId:context.eventId,asOf:end};}
+}});
 // Native restoration of a catalog object's current placement and state. The
 // source is retained as provenance; restoring it does not replay the event.
 export function writeEnvironmentPremise(d,engine,id,{location,carriedBy,state,source}={}){
@@ -184,11 +234,11 @@ export function localSightClear(d,engine,location,from,to,{waterCurtain=true,opt
         if(!Number.isFinite(radius)||radius<0)return false;
         const dx=to[0]-from[0],dy=to[1]-from[1],length=dx*dx+dy*dy;
         const t=length?Math.max(0,Math.min(1,((row.position[0]-from[0])*dx+(row.position[1]-from[1])*dy)/length)):0;
-        if(Math.hypot(row.position[0]-from[0]-t*dx,row.position[1]-from[1]-t*dy)<=radius)return false;
+        if(hypot(row.position[0]-from[0]-t*dx,row.position[1]-from[1]-t*dy)<=radius)return false;
     }
     return true;
 }
-const distance=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const distance=(a,b)=>hypot(a[0]-b[0],a[1]-b[1]);
 function inReach(d,row,range,{spell=false}={}){
     if(row.location!==d.get('state','location'))throw preconditionFailure('环境对象不在当前位置');
     if(!spell&&Number.isFinite(range)&&zoneContactPending(d))throw preconditionFailure('尚未走近对象；到同一分区不等于可以接触');

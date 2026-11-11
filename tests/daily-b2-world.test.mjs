@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT04/CT05（保留原阶段边界）。
 // 日常题集第二批（DAILY 卡）：赶路天气、传闻、任务、入会、过卡、战斗、诊疗、短离屏。
 // 夹具与口径同 daily-b2-trade.test.mjs：题面数值落到世界副本/开局存档，断言来自题面；做不到的条目写 test.todo 并注明缺的机制与阶段。
 import test from 'node:test';
@@ -38,8 +39,16 @@ test('D09 下雨天赶路：雨天走同一段路比晴天慢（雨速系数）�
  assert.equal(weatherAt(baseEngine,SEED9,TOWN,depart).kind,wet.arrival.result.weather.kind,'⑤同一天同一区域，出门前与到达后读到同一天气');
  assert.deepEqual(wet.after.state.player.coins,wet.before.state.player.coins,'路上没有花费');
 });
-test.todo('D09 ③体力消耗比晴天多——引擎没有玩家体力（只有生命）：缺 body.stamina 闭式消耗（S1 vital 原语；A3 move 的 cost.body 读 body.json drainPerHour.travel 与雨天修正项）');
-test.todo('D09 ④出现“淋湿”状态——引擎没有暴露状态：缺 core 反应规则 weather_exposure 与状态 wet（S5 修正槽与反应；附录 A §A.18 暴露状态行）');
+test.todo('D09 ③体力消耗比晴天多——body.stamina 表与原语已实现，但 core:move 的跨地点赶路未接 travel 身体消费，432分钟实测损失0；仍缺雨晴体力对照（A3 move 消费；登记：docs/A3-后续阶段登记.md S5CT）');
+test('D09④ 冒雨等待产生可追溯的淋湿状态与回执',async t=>{
+ const ui=await uiSession(t,{mutate:scene(VILLAGE,monthDayMinute(6,20,7,0),(s,doc)=>{doc.randomSeed='daily-b2-d09-98';})});
+ // 已有 D09 种子在此日为雨；户外无遮蔽，真实经过一分钟即 wet。
+ const out=await ui.choose('time',{minutes:1});assert.ok(out.ok,out.error);
+ const exposure=(await ui.read()).state.records['weather_exposure:player'];
+ // Traceable to the clock fact that wet the player: the rain at this place on this
+ // day (14 I31: split and long advances share it); the receipt names the call.
+ assert.equal(exposure.wet,true);assert.equal(exposure.sourceEvent,`weather:${VILLAGE}:${Math.floor(monthDayMinute(6,20,7,0)/1440)}`);assert.equal(out.result.weatherExposure.eventId,out.eventId);assert.equal(out.result.weatherExposure.name,'淋湿');
+});
 
 // ---- D22 打听消息 / D38 听传闻：传闻种子按讲述者登记，听传闻是受校验的交谈（world_remember），固定 10 分钟 ----
 const rumorWorld=(extra=[])=>variant(w=>{
@@ -50,10 +59,11 @@ const rumorWorld=(extra=[])=>variant(w=>{
 });
 const hear=(ui,rumor,speaker)=>ui.choose('remember',{subject:'player',key:rumor.id,rumor:rumor.id,source:speaker,content:rumor.claim},{search:true});
 
+// S5-02: two household members retain ceil(2*72/25)=6 milk; seventh sells for trunc(5*.5)=2.
 async function treatForNews(t){
  // 小六→伙计贺舟（npc_hw_hezhou，青灯酒馆）；酒一碗 5 文→牛乳一份改价 5 文；夏季六月十二酉时；玩家 50 文。
  const world=rumorWorld(),rumor=world.rumors.find(r=>r.id==='rumor_d22_ox'),thief=world.rumors.find(r=>r.id==='rumor_d22_thief');
- const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(6,12,18,0),s=>{s.player.coins=50;Object.assign(s.npcs[HEZHOU],{location:INN,activity:'前厅接待',status:'正常'});})});
+ const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(6,12,18,0),s=>{s.player.coins=50;s.npcs[LINSUI].inventory.item_milk=stack(7);Object.assign(s.npcs[HEZHOU],{location:INN,activity:'前厅接待',status:'正常'});})});
  const before=await primed(ui);
  const menu=await ui.server.api('actions',{campaignId:ui.campaignId,query:'dialogue.treat_rumor',target:HEZHOU});
  assert.ok(menu.actions.some(a=>a.id==='core:dialogue.treat_rumor'),'目录搜索可找到请客动作');
@@ -62,7 +72,7 @@ async function treatForNews(t){
 }
 test('D22 打听消息 ①②③④：请小六喝酒5文，讲出丢牛版本、不透露偷牛者，真实交付饮品',async t=>{
  const {world,rumor,thief,ui,before,told,after}=await treatForNews(t),mid=after;
- assert.equal(before.state.player.coins-mid.state.player.coins,5,'①铜钱 −5');assert.equal(mid.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,5,'①酒肆 +5');
+ assert.equal(before.state.player.coins-mid.state.player.coins,2,'①铜钱 −5');assert.equal(mid.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,2,'①酒肆 +5');
  assert.ok(told.result.content.includes(rumor.claim),'②小六讲出东头丢了牛');
  assert.ok(!told.result.content.includes('脚夫')&&!told.result.content.includes(rumor.fact),'③不说出偷牛者');
  const memory=after.memories[`player::${rumor.id}::${HEZHOU}`];

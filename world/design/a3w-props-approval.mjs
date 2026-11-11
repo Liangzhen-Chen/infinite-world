@@ -5,6 +5,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 import {runContentPipeline, defaultReviewRequest, readApprovedContent, hashContent, parseModelJSON} from '../../tools/content-pipeline.mjs';
+import {revertedRows} from '../../tools/approved-revisions.mjs';
 
 export const revision='a3w-props-1';
 export const draftRoot='world/drafts/a3w-props';
@@ -88,7 +89,8 @@ async function requirePilot(entries){
  assert.ok(Array.isArray(record.review.contradictions));assert.deepEqual(record.errors,[]);
 }
 export async function verifyPublished(items=undefined){
- items??=await readItems();
+ // 调用方传入正式文件（测试、a3-world 门禁）或不传，一律先撤回已审批正文修订（只在当前值逐字等于某次已审修订的 after 时撤回，手改不撤回、照样拦下），再核对历史回执。
+ items=await revertedRows(items??await readItems(),'world/meta/items.json');
  // This receipt predates the later capacity field. Verify its exact historical
  // projection so the newer A3CAP receipt can be checked first and this gate
  // still protects the original tags publication and its tamper evidence.

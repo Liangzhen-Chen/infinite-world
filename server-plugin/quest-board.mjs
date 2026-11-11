@@ -112,7 +112,7 @@ function acceptNpc(d,engine,q,id,now,state=d.get('state')){
  if(id===q.publisher||actor.location!==q.location)throw preconditionFailure('承接者没有实际看到该地点告示');
  const target=q.objective.type==='build'?(construction(engine,d,q,id).location??d.get('state','projects',q.objective.project,'settlement')):q.objective.location;
  if(!engine.world.locations.some(l=>l.id===target))throw preconditionFailure('委托目的地必须已登记');
- const route=actor.location===target?{minutes:0,cost:0,edges:[]}:engine.route(actor.location,target,'walk',now,d.document.randomSeed);
+ const route=actor.location===target?{minutes:0,cost:0,edges:[]}:engine.route(actor.location,target,'walk',now,d.get('randomSeed'));
  assertCourierRouteAccess(engine,id,actor.location,target,route);
  const work=q.objective.type==='build'?30:1,finish=now+route.minutes+work;
  if(finish>q.deadline)throw preconditionFailure('无法在期限内按实际路线履约');

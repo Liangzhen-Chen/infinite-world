@@ -7,12 +7,17 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {loanTerms} from '../server-plugin/credit.mjs';
 import {applyConsentEvent} from '../server-plugin/action-consent.mjs';
+import {resyncBooks} from './helpers/ledger-sync.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const inn='bld_hw_qingdeng',post='bld_hw_post',home='bld_hw_riverhome',court='bld_hw_council';
 const host='npc_hw_linsui',clerk='npc_hw_shendu',mage='npc_hw_xuling',worker='npc_hw_ayan',judge='npc_hw_chenbai',officer='npc_hw_gucen';
 const placeOf={[host]:inn,[clerk]:post,[mage]:home,[worker]:inn,[judge]:court,[officer]:court};
 const DAY=1440;
+// 05 §5.1.4: the noon retail consumer can buy real goods while a credit
+// contract is advancing. These independently recorded purchases are separate
+// from the wage/partnership transfer; keep exact balance equations for both.
+const retailSpent=(doc,id)=>Object.values(doc.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(v=>v.npc===id&&v.outcome==='bought').reduce((n,v)=>n+v.paid+(v.travel?.paid??0),0);
 function fixture({at=inn,coins=300}={}){
     const w=structuredClone(world),engine=new WorldEngine(w);
     let doc=engine.initialFromLegacy(seed,'credit');
@@ -67,7 +72,8 @@ test('借款到期过宽限不还：抵押归债主、按签约地法典立案�
     await f.act('world_time',{minutes:DAY},'wait2');
     const debt=f.doc.state.records[loan.debt],key=`legal_case:default:${loan.debt}`,row=f.doc.state.records[key];
     assert.equal(debt.defaulted.case,key);assert.equal(debt.defaulted.pledge.item,'item_bread');
-    assert.equal(debt.paid,world.items.find(i=>i.id==='item_bread').basePrice);assert.equal(debt.defaulted.remaining,debt.amount-debt.paid);
+    // F007: the forfeited pledge is credited at its valuation (bread 2 x scarcity floor .5 = 1 copper), not the catalogue price 2.
+    assert.equal(debt.paid,1);assert.equal(debt.defaulted.remaining,debt.amount-debt.paid);
     assert.equal(f.doc.state.records[loan.pledge].status,'已没收');
     assert.equal(row.law,'law_hw_property');assert.equal(row.offense,'debt_default');assert.equal(row.status,'已报案');assert.equal(row.victim,host);assert.equal(row.value,debt.defaulted.remaining);
     const breach=Object.values(f.doc.state.records).find(r=>r.category==='world_event'&&r.verb==='breach');
@@ -92,16 +98,28 @@ test('钱庄存取收手续费，按成色与汇费兑换他国铸币，柜面�
     await assert.rejects(f.act('world_trade',{operation:'withdraw',seller:clerk,coins:60},'over'),/支取铜钱/);
     await f.act('world_trade',{operation:'withdraw',seller:clerk,coins:20},'wd');assert.equal(f.doc.state.player.coins,370);
     const sold=await f.act('world_trade',{operation:'exchange',seller:clerk,item:'item_coin_civic',quantity:10},'sell');
-    assert.equal(sold.received,Math.floor(10*10*0.9*(1-bank.exchangeFeeRate)));assert.equal(f.doc.state.inventory.item_coin_civic,undefined);
-    const bought=await f.act('world_trade',{operation:'exchange',seller:clerk,buyer:'player',item:'item_coin_coast',quantity:2},'buy');
-    assert.equal(bought.paid,Math.ceil(2*100*0.85*(1+bank.exchangeFeeRate)));assert.equal(f.doc.state.inventory.item_coin_coast.quantity,2);
+    // 15 §15.3: both copper coins weigh5g; .9 fineness => rate .9,
+    // independent of the old stamped face10. floor(10*.9*.97)=8.
+    assert.equal(sold.received,8);assert.equal(f.doc.state.inventory.item_coin_civic,undefined);
+    const bought=await f.act('world_trade',{operation:'exchange',seller:clerk,buyer:'player',item:'item_coin_coast',quantity:3},'buy');
+    // Copper14/.2kg * .005kg * scarcity.5=.175; silver38/.05kg
+    // * .005kg * fineness.85 * scarcity1=3.23. Three coins at that
+    // current value cover the 50-copper pledge; ceil(3*3.23/.175*1.03)=58.
+    assert.equal(bought.paid,58);assert.equal(f.doc.state.inventory.item_coin_coast.quantity,3);
     assert.equal(f.doc.state.records[bank.id].goods.item_coin_civic,bank.reserveCoins.item_coin_civic+10);
     assert.equal(cash(f.doc),total);
-    const loan=await f.act('world_trade',{operation:'borrow',seller:clerk,coins:100,days:30,item:'item_coin_coast',quantity:2},'bankloan');
-    assert.equal(loan.monthlyInterest,bank.loanMonthlyInterest);assert.equal(f.doc.state.records[loan.debt].creditor,bank.id);
+    // 15 §15.3: two current silver coins value floor(2*3.23/.175)=36,
+    // below the required50; the old nominal face must not secure this loan.
+    const beforePledge=structuredClone(f.doc);
+    await assert.rejects(f.act('world_trade',{operation:'borrow',seller:clerk,coins:100,days:30,item:'item_coin_coast',quantity:2},'undervalued-coin-pledge'),/抵押/);
+    assert.deepEqual(f.doc,beforePledge);
+    const loan=await f.act('world_trade',{operation:'borrow',seller:clerk,coins:100,days:30,item:'item_coin_coast',quantity:3},'bankloan');
+    // 15 §15.5: cash1500+50-20-8+58=1580; deposits29 reserve5.8
+    // protects6 copper, loanable1574; .015*(1+100/1574).
+    assert.equal(loan.monthlyInterest,0.015952986022871662);assert.equal(f.doc.state.records[loan.debt].creditor,bank.id);
     await assert.rejects(f.act('world_trade',{operation:'borrow',seller:clerk,coins:300,days:30},'nopledge'),/抵押/);
     await f.act('world_trade',{seller:clerk,payment:'repay',debt:loan.debt},'bankrepay');
-    assert.equal(f.doc.state.inventory.item_coin_coast.quantity,2);assert.equal(cash(f.doc),total);
+    assert.equal(f.doc.state.inventory.item_coin_coast.quantity,3);assert.equal(cash(f.doc),total);
 });
 
 test('登记客房或空屋的旅店民房都能租，房钱沿用原锚点，原酒馆合同不变',async()=>{
@@ -117,18 +135,18 @@ test('登记客房或空屋的旅店民房都能租，房钱沿用原锚点，�
 });
 
 test('受雇打工：雇主托管工钱，做满工时后结算并涨雇主营生技能',async()=>{
-    const f=fixture(),skill='skill_life_6_core';
+    const f=fixture(),skill='skill_life_6_core',shoppingBefore=retailSpent(f.doc,worker);
     f.doc.state.skills[skill]={proficiency:10,grade:'初级1等',breakthroughs:[],daily:{}};
     await assert.rejects(f.act('world_trade',{operation:'work',seller:worker,consent:true,minutes:240,coins:999},'greedy'),/工钱/);
     const job=await f.act('world_trade',{operation:'work',seller:worker,consent:true,minutes:240},'job');
     assert.equal(job.wage,world.rules.economy.wageCopperPerHalfDay[0]);assert.equal(f.doc.state.player.coins,300+job.wage);
-    assert.equal(f.doc.state.npcs[worker].coins,200-job.wage);assert.equal(f.doc.state.records[job.contract].status,'已完成');
+    assert.equal(f.doc.state.npcs[worker].coins,200-job.wage-(retailSpent(f.doc,worker)-shoppingBefore));assert.equal(f.doc.state.records[job.contract].status,'已完成');
     assert.equal(job.skill,skill);assert.ok(job.skillGain>0);assert.equal(f.doc.state.skills[skill].proficiency,10+job.skillGain);
     assert.equal(f.doc.state.minute,600+240);
 });
 
 test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还清后结束；赊购货款改为向供货人借款',async()=>{
-    const f=fixture(),total=cash(f.doc);
+    const f=fixture(),total=cash(f.doc),shoppingBefore=retailSpent(f.doc,worker);
     const lease=await f.act('world_trade',{operation:'lease',seller:host,consent:true,days:5},'lease');
     const part=await f.act('world_trade',{operation:'partner',business:lease.business,seller:worker,consent:true,coins:30,quantity:50,days:1},'partner');
     assert.equal(f.doc.state.npcs[worker].coins,170);
@@ -142,8 +160,17 @@ test('合伙：伙伴出资入店，期满按盈亏分成生成应付款，还�
     assert.equal(f.doc.state.npcs[worker].coins,partnerCoins+owed.amount);
     // U17 may escrow the partner's private plea for an ill housemate during the day.
     const personalEscrow=Object.values(f.doc.state.quests).filter(q=>q.personal&&q.publisher===worker).reduce((n,q)=>n+(q.escrow??0),0);
-    assert.equal(f.doc.state.npcs[worker].coins+personalEscrow,200);assert.equal(cash(f.doc),total);
+    assert.equal(f.doc.state.npcs[worker].coins+personalEscrow+(retailSpent(f.doc,worker)-shoppingBefore),200);assert.equal(cash(f.doc),total);
     f.doc.state.npcs[host].status='正常';// a day of npc life may have made her ill; the procurement below needs her awake
+    // 赊购进货的前提是供货人手里有面包可卖。居民的正午日常购粮（R5：t-foodsrc/t-alloc，口粮替代按需求分摊后居民真的向店主买）
+    // 一天内把店主开场的 6 个面包全部买走：探针 tools/probe-rules-a.mjs credit 在 st-5 与现状都读到过一天后 stock 0（开场 st-5 留存 2/现状 0）。
+    // 这不是本测试要考的（借款进货的账务），所以按真实前置给店主备货：补回 6 个面包（同开场数量，同时重对账本），
+    // 诊断（F:/dnd-tmp/m26b/noon-buyout.md）：买光的是申渡一户（2 人、背包空、缺口 120，按规则补满），不是重复计需求；根因上游是开局口粮/现金为手写静态值、未按日需求派生（EC-1）。EC-1 修好后去掉这行补货重跑本测试，通过即删。
+    // 探针读到可售 6、留存 0，赊购 2 个成交 cost 2，其后各断言（principal、店主钱 before-cost、loan、escrow）逐项成立。
+    f.doc.state.npcs[host].inventory.item_bread={quality:'良',durability:100,weight:.15,quantity:6};resyncBooks(f.engine,f.doc);
+    // D05 §5.1: even loan-funded procurement has a separate counter destination
+    // for cancellation; zero opening capital preserves this loan's cash premise.
+    await f.act('world_act',{action:'business:open_counter',slots:{business:lease.business,coins:0}},'credit-counter');
     const before=f.doc.state.npcs[host].coins,cost=await f.act('world_trade',{operation:'procure',business:lease.business,seller:host,consent:true,item:'item_bread',quantity:2,payment:'credit',creditMinutes:3*DAY},'procure');
     assert.ok(cost.debt);assert.equal(f.doc.state.records[cost.debt].principal,cost.cost);assert.equal(f.doc.state.npcs[host].coins,before-cost.cost);
     assert.equal(f.doc.state.records[cost.contract].loan,cost.debt);assert.equal(f.doc.state.records[cost.contract].escrow,cost.cost);

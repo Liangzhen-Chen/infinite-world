@@ -110,3 +110,26 @@ test('release/final不接受所选32人、地区或skip过滤，未选任一full
  unselected.notes='主持人不要让玩家查看木料账。';
  for(const stage of ['release','final'])assert.ok(validateWorld(world,{stage}).errors.some(e=>e.includes(`${unselected.id}/notes`)));
 });
+
+test('世界校验：水分>0且无饱腹的物品必须带drinkable，带drinkable的物品必须有水分',async()=>{
+    const world=await loadWorld();
+    assert.deepEqual(validateWorld(world).errors.filter(error=>error.includes('drinkable')),[]);
+    // 温果醋饮是液态食物、一份水分够解渴：标签由规则（nutrition.drinkable）派生，不再手贴；去掉也不报错。牛乳有热量带标签合法，不报。
+    const noTag=structuredClone(world);const vinegar=noTag.items.find(i=>i.id==='item_warm_vinegar_drink');assert.ok(!vinegar.tags.includes('drinkable'));
+    assert.deepEqual(validateWorld(noTag).errors.filter(error=>error.includes('drinkable')),[]);
+    // 干粮派生后无水分：误挂标签即拒绝。
+    const wrongTag=structuredClone(world);const ration=wrongTag.items.find(i=>i.id==='item_ration');ration.tags=[...(ration.tags??[]),'drinkable'];
+    assert.ok(validateWorld(wrongTag).errors.some(error=>error.includes('水分须>0')&&error.includes('item_ration')));
+});
+
+test('validateDrinkable：未物化的世界明确报错；羊乳、兽乳水分由含水率×重量×参照水系数派生',async()=>{
+    const {validateDrinkable}=await import('../server-plugin/item-class.mjs');
+    const raw=await loadWorld();
+    assert.ok(raw.mechanics,'loadWorld 返回未物化的世界');
+    assert.throws(()=>validateDrinkable(raw),/已物化/);
+    // 派生：羊乳 0.3kg×含水0.87×(参照水 25÷0.25÷含水1=100/kg)=26.1→26，兽乳 0.3×0.876×100→26；水与牛乳手写值不变。
+    const {loadRuntimeWorld}=await import('../tools/load-world.mjs');
+    const w=await loadRuntimeWorld(),h=id=>w.items.find(i=>i.id===id).nutrition.hydration;
+    assert.deepEqual([h('item_goat_milk'),h('item_animal_milk'),h('item_water'),h('item_milk')],[26,26,25,25]);
+    assert.deepEqual(validateDrinkable(w),[]);
+});

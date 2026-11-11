@@ -36,6 +36,7 @@ export function validateCreatureNature(world){
         if(n.civilized&&(s.drops.length||s.taming?.possible||s.tamingRule))bad('文明族群不能进入猎物掉落或驯服');
         if(n.civilized&&(!Array.isArray(n.exchange)||!n.exchange.length||n.exchange.some(id=>!items.has(id))))bad('文明族群须以已登记物品表达交换产物');
         if(!n.civilized&&n.exchange!==undefined)bad('非文明物种不登记交换产物');
+        if(n.metabolism!==undefined&&(!n.metabolism||typeof n.metabolism!=='object'||Array.isArray(n.metabolism)||!Object.keys(n.metabolism).length||Object.entries(n.metabolism).some(([k,v])=>!['satiety','hydration'].includes(k)||typeof v!=='number'||!Number.isFinite(v)||v!==0&&v<0.01||v>4)))bad('代谢系数只能含饱食与水分两项，取值为 0 或 0.01 到 4');
         const a=n.affinity;
         if(!a||!Array.isArray(a.weak)||!Array.isArray(a.resist)||[...a.weak,...a.resist].some(t=>!affinityTactics.includes(t))||new Set([...a.weak,...a.resist]).size!==a.weak.length+a.resist.length)bad('弱点或抗性战术无效');
         if(n.spirit!==undefined&&(!['malevolent','benign'].includes(n.spirit.nature)||!Number.isInteger(n.spirit.rank)||n.spirit.rank<0||n.spirit.rank>3))bad('灵体属性无效');

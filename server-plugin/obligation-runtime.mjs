@@ -13,15 +13,18 @@ import {obligationRow,obligationRows,obligationView} from './obligation-state.mj
 import {settlementPresent,settlementLocation} from './obligation-presence.mjs';
 import {publishTransitionEvent,SOCIAL_VERBS} from './world-events.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
-import {legalCodeAt,legalCodeById} from './law-codes.mjs';
+import {legalCodeAt,legalCodeById,legalCivilAt} from './law-codes.mjs';
 import {groupView,lawAuthorities,personConstraint} from './entity-view.mjs';
 import {identities} from './identity.mjs';
 import {npcAgeAt} from './npc-state.mjs';
 import {transferItems} from './items.mjs';
+import {currencyRow} from './currency.mjs';
+import {repaymentPlan,payInKind} from './tender.mjs';
+import {releaseGoods} from './goods-escrow.mjs';
 import {pledged} from './stock.mjs';
 import {consent as nativeConsent} from './action-consent.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
-import {contractSigningFacts} from './contract-state.mjs';
+import {contractSigningFacts,contractTerms,receiveLeaseGrain} from './contract-state.mjs';
 
 registerAdvanceHook('obligationSigningFacts',(before,after)=>Object.fromEntries(Object.entries(after.state.obligations??{})
     .filter(([id])=>!before.state.obligations?.[id]).map(([id,row])=>[id,contractSigningFacts(row.terms??{})])));
@@ -60,14 +63,23 @@ function receipt(d,e,id,eventId,verb,args,fn){
 function write(d,e,row){
 
     d.set(['state','obligations',row.id],row);
+    if(row.kind==='deposit'){
+        const bank=read(d,'state','records',row.debtor);
+        if(bank?.category==='bank'){
+            const balance=obligationRows(read(d,'state')).filter(o=>o.kind==='deposit'&&o.debtor===row.debtor&&o.creditor===row.creditor)
+                .reduce((n,o)=>n+obligationView(read(d,'state'),o).owed,0);
+            holdingSet(d,e,['state','records',row.debtor],{...bank,accounts:{...bank.accounts,[row.creditor]:balance}},W);
+        }
+    }
     if(row.legacyRecord){
+        // G0 第 3 条：业务子类型（pawn / player_loan 等）是旧记录的原始事实，规范种类只是适配映射，写回不覆盖 kind。
         const old=read(d,'state','records',row.legacyRecord)??{};
         if(old.category&&old.category!=='debt')return read(d,'state','obligations',row.id);
         const status=row.status==='settled'?'已还清':['void','cancelled'].includes(row.status)?'已取消':old.status??'履行中';
         holdingSet(d,e,['state','records',row.legacyRecord],clean({...old,id:row.legacyRecord,category:'debt',obligation:row.id,
             debtor:row.debtor,creditor:row.creditor,amount:row.remaining!==undefined?(row.paid??0)+row.remaining:row.amount,
             ...(row.remaining!==undefined?{contractualAmount:row.amount}:{}),paid:row.paid??0,status,
-            createdAt:row.createdAt,deadline:row.deadline,kind:row.kind,terms:row.terms,
+            createdAt:row.createdAt,deadline:row.deadline,kind:old.kind??row.kind,terms:row.terms,
             ...(row.endedAt!==undefined?{endedAt:row.endedAt}:{}),...(row.amendments?{amendments:row.amendments}:{})}),W);
     }
     return read(d,'state','obligations',row.id);
@@ -124,6 +136,7 @@ export function obligationInstrument(e,s,row,payer){
         (typeof required!=='string'||id===required)&&
         [row.id,row.legacyRecord].filter(Boolean).includes(item.represents));
     for(const [id,item]of items){
+        if(row.kind==='deposit'&&(!item.document||item.document.valid!==true||item.document.issuer!==row.debtor||item.document.namedHolder!==row.creditor||item.document.describes!==row.id||item.document.sourceEvent!==`world_event:${row.terms.sourceEvent}`||item.durability<=0))continue;
         if(item.status!==undefined&&!['valid','持有','有效'].includes(item.status)||(item.expires??Infinity)<=s.minute)continue;
         const owner=item.owner;
         if(!owner||!row.terms?.bearer&&owner!==row.creditor)continue;
@@ -297,13 +310,52 @@ export function performObligation(d,e,{id,actor},eventId){
         return {id,transferred:0,delivered:row.quantity,item:row.item,remaining:0,evidence:eventId};
     });
 }
+// S5-F: a claim whose terms froze a resource and quantity (15 §15.3) is cleared by that quantity. A debtor who pays in
+// another resource hands over ceil(quantity x value(claim) / value(payment)) at today's rate; the claim never changes.
+function settleResourceClaim(d,e,{row,args,s,eventId,authorize,payer,actor,claimResource}){
+    const id=row.id,view=obligationView(s,row),amount=integer(args.amount??view.owed,'settlement amount'),creditor=row.creditor;
+    if(args.judicial||args.fundingContract||args.automatic||row.terms?.accrual||row.terms?.requiresInstrument)throw Error('Resource claims are settled by direct payment only');
+    if(args.escrowContract){
+        // S5-F2: a deposit held in the same resource pays a rent debt in that resource, exact units, no conversion and no presence needed (as the coin escrow route).
+        const c=s.records?.[args.escrowContract];
+        if(c?.category!=='contract'||![id,row.legacyRecord].includes(c.debt)||c.resource!==claimResource||(c.parties?.[0]??c.owner)!==payer||payer!==row.debtor||!amount||amount>(c.escrow??0)||amount>view.owed)throw Error('Escrow is not pledged to this debt');
+        releaseGoods(d,e,{contract:args.escrowContract,to:creditor,resource:claimResource,amount,writer:W,eventId});
+        holdingSet(d,e,['state','records',args.escrowContract],{...c,escrow:c.escrow-amount},W);
+        const remaining=view.owed-amount;
+        write(d,e,{...row,paid:(row.paid??0)+amount,...(row.remaining!==undefined?{remaining}:{}),status:remaining?'pending':'settled',...(remaining?{}:{settledAt:s.minute}),
+            events:[...row.events??[],{eventId,minute:s.minute,payer,actor,transferred:amount,paidWith:{resource:claimResource,amount,escrow:args.escrowContract}}]});
+        return {id,transferred:amount,remaining,evidence:eventId,payment:{payer,actor,debtor:row.debtor,creditor,location:c.location??settlementLocation(e,s,creditor),paidWith:{resource:claimResource,amount}}};
+    }
+    assertObligationAuthority(e,s,{...args,actor,debtor:payer},'payment',authorize);
+    if(actor!==payer&&!settlementPresent(e,s,actor,payer))throw Error('Payment representative must be at the assets');
+    if(!amount||amount>view.owed)throw Error('Payment exceeds outstanding claim');
+    if(payer!==row.debtor)throw Error('Only the debtor settles a resource claim');
+    const publicRent=row.kind==='rent'&&s.settlements?.[creditor];
+    if(!publicRent&&!settlementPresent(e,s,payer,creditor))throw Error('Settlement requires physical presence or delivered remittance');
+    if(e.obligationClaimEnforceable&&!e.obligationClaimEnforceable(d,row,s.minute))throw Error('Claim is not enforceable under current procedure');
+    let paidWith;
+    if(publicRent){
+        const lease=s.records?.[row.contract],terms=contractTerms(lease??{},s.minute);
+        if(lease?.kind!=='asset_lease'||terms.owner!==creditor||terms.tenant!==payer||terms.tenancy?.rentPayment!=='kind'||terms.rentBasis?.crop!==claimResource)throw Error('Public grain rent requires its signed lease');
+        paidWith=receiveLeaseGrain(d,e,{owner:creditor,payer,resource:claimResource,amount,eventId,payWith:args.payWith});
+    }else{
+        const plan=repaymentPlan(d,e,{resource:claimResource,quantity:amount,payWith:args.payWith,location:settlementLocation(e,s,payer)});
+        paidWith=payInKind(d,e,{payer,payee:creditor,plan,eventId,writer:W});
+    }
+    const remaining=view.owed-amount;
+    write(d,e,{...row,paid:(row.paid??0)+amount,...(row.remaining!==undefined?{remaining}:{}),status:remaining?'pending':'settled',...(remaining?{}:{settledAt:s.minute}),
+        events:[...row.events??[],{eventId,minute:s.minute,payer,actor,transferred:amount,paidWith}]});
+    return {id,transferred:amount,remaining,evidence:eventId,payment:{payer,actor,debtor:row.debtor,creditor,location:settlementLocation(e,s,actor),paidWith}};
+}
 export function settleObligation(d,e,args,eventId,{authorize=null}={}){
     if(!ledgerActive(d))throw Error('Settlement requires an opened ledger transaction');
     const resolved=requireRow(d,args.id),id=resolved.id;
     args={...args,id};
     return receipt(d,e,id,eventId,'obligation_settled',args,()=>{
         const row=requireRow(d,id),s=read(d,'state'),payer=args.payer??row.debtor,actor=args.actor??payer;
-        if(row.resource&&resourceKey(row.resource)!=='coin_river')throw Error('Non-monetary claim requires its performance adapter');
+        const claimResource=row.resource?resourceKey(row.resource):'coin_river';
+        if(claimResource!=='coin_river'&&!currencyRow(e,claimResource)&&!e.byId.get(claimResource))throw Error('Non-monetary claim requires its performance adapter');
+        if(claimResource!=='coin_river'||args.payWith&&args.payWith!=='coin_river')return settleResourceClaim(d,e,{row,args,s,eventId,authorize,payer,actor,claimResource});
         const view=obligationView(s,row),amount=integer(args.amount??view.owed,'settlement amount');
         if([args.judicial,args.fundingContract,args.escrowContract,args.automatic].filter(Boolean).length>1)throw Error('Conflicting payment authority');
         const funding=settlementFunding(e,s,row,args,amount),escrow=args.escrowContract&&s.records?.[args.escrowContract];
@@ -427,4 +479,4 @@ export function receiveObligationCollection(d,e,{id,actor,...facts},eventId){
 export {obligationView as dueObligation,obligationRows,syncObligationClaims};
 
 registerObligationProtocol({openObligation,settleObligation,closeObligation,performObligation,receiveObligationCollection,dueObligation:obligationView,automaticObligationItems});
-registerObligationCivilGrace((engine,state,row,minute)=>legalCodeAt(engine,row.location??state.location,{...state,minute})?.civil?.grace??null);
+registerObligationCivilGrace((engine,state,row,minute)=>legalCivilAt(engine,row.location??state.location,{...state,minute})?.grace??null);

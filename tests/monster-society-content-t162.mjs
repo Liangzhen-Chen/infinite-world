@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
+import {saleableStock} from '../server-plugin/market.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches,digest,CampaignStorage} from '../server-plugin/storage.mjs';
 import {planBossMigration} from '../server-plugin/boss-migration.mjs';
@@ -17,9 +18,20 @@ import {FILES,mergeMonsterSociety3,withoutMonsterSociety3} from '../tools/publis
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
 import {loadPromptBundle} from '../tools/build-card.mjs';
+import {scheduleAt,assertNpcService} from '../server-plugin/npc-schedule.mjs';
+import {homeResidents} from '../server-plugin/entity-view.mjs';
 const {HX,GS,hx,gs,P}=ids,DAY=1440,batch=buildBatch(),formal=await loadWorld();
 const world=mergeMonsterSociety3(formal,batch),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const qty=(doc,id,item)=>{const x=id==='player'?doc.state.inventory[item]:doc.state.npcs[id].inventory[item];return typeof x==='number'?x:x?.quantity??0;};
+// K6（c60b2a62）：没有许可的进入照常发生，并记一条擅入（同 t159、content.test 的 enterUnlicensed 口径）。
+async function enterUnlicensed(s,place){
+ await s.call('world_move',{destination:place});
+ assert.equal(s.doc.state.location,place,'未获许可也能走进去');
+ const rows=Object.values(s.doc.state.records).filter(r=>r.category==='offense'&&r.subject?.id===place);
+ assert.equal(rows.length,1,'恰好记一条擅入');assert.equal(rows[0].offense,'trespass');assert.equal(rows[0].offender,'player');assert.equal(rows[0].sourceEvent,`t162_${s.serial}`);
+ const access=s.engine.byId.get(place).access;
+ if(access.mode==='council')assert.equal(rows[0].victim,access.authority);else assert.ok(homeResidents(s.engine,s.doc.state,place).value.includes(rows[0].victim),rows[0].victim);
+}
 function session(w=world,seed='t162'){
  const engine=new WorldEngine(w);let doc=engine.createCharacter(legacy,{},seed),serial=0;
  doc=applyPatches(doc,planBossMigration(doc,w.rules,w.bosses,w));
@@ -27,7 +39,22 @@ function session(w=world,seed='t162'){
  const call=async(tool,args,key)=>{for(let i=0;i<(key?80:1);i++){const eventId=`t162_${++serial}`,out=await engine.reduce(doc,{tool,args,eventId}).catch(e=>{e.message+=` @${tool} ${JSON.stringify(args)} t=${doc.state.minute}`;throw e;});if(!key||out.result[key]){doc=applyPatches(doc,out.patches);return out.result;}}throw Error(`检定无成功：${tool}`);};
  const next=async(minute=510)=>{let t=(Math.floor(doc.state.minute/DAY)+1)*DAY+minute;while([10,20,30].includes(engine.calendar(t).day))t+=DAY;await call('world_time',{minutes:t-doc.state.minute});};
  const locate=(location,minute=600)=>{skipTo(engine,doc,minute);doc.state.location=location;for(const n of w.npcs){const slot=n.schedule?.default.find(s=>s.start<=minute%DAY&&minute%DAY<s.end);if(slot)Object.assign(doc.state.npcs[n.id],{location:slot.location,activity:slot.activity});}};
- return{engine,call,next,locate,get doc(){return doc;},set doc(d){doc=d;}};
+ const present=async(teacher,institution,minutes,service='teach')=>{
+  if(doc.state.location!==institution)await call('world_move',{destination:institution});
+  // Walk and wait through the real household chores and the teacher's travel;
+  // a timetable quote alone does not place a travelling person in the temple.
+  for(let i=0;i<100;i++){
+   const active=engine.scoped(doc);
+   try{assertNpcService(active.primitiveDraft(doc),active,teacher,service,minutes);if(doc.state.npcs[teacher].location===institution)return;}catch(e){if(e.code!=='E-ACTION-PRECONDITION'&&!/不在|服务|作息|赶路|接待|时间|授课|教|忙|清醒/.test(e.message))throw e;}
+   const now=doc.state.minute,n=doc.state.npcs[teacher],slot=scheduleAt(active,teacher,now,doc.state);
+   let at=slot?.until??(Math.floor(now/DAY)+1)*DAY;
+   if(n.scheduleTravel?.arrive>now)at=Math.min(at,n.scheduleTravel.arrive);
+   else if(slot?.location===institution&&slot.services.includes(service)&&slot.until-now>=minutes&&n.location!==institution)at=now+1;
+   await call('world_time',{minutes:Math.max(1,at-now)});
+  }
+  throw Error('导师在真实日程中没有足够的接待窗口');
+ };
+ return{engine,call,next,locate,present,get serial(){return serial;},get doc(){return doc;},set doc(d){doc=d;}};
 }
 
 test('T162 正式发布、人口深度、四种精怪本相与旧物种隔离',async()=>{
@@ -48,10 +75,22 @@ test('T162 六处聚居地均有路线和实际交易，私宅与议事处许可
  ['loc_ms_yugen','loc_bs_yupo','site_ms_yg_gate','npc_ms_yg_jiecang','item_hazelnut',600],['loc_ms_lielu','loc_bs_liquan','site_ms_ll_shop','npc_ms_ll_cuozhen','item_iron_nail',1140],
  [HX,'loc_bs_weiting',hx.garden,P.xianpu,'item_herb',600],[GS,'loc_bs_sangban',gs.gate,P.shenge,'item_flax_cord',600]];
  for(const[seat,parent,shop,seller,item,time]of all){const s=session();assert.ok(s.engine.route(parent,seat,'walk',time,'t162-six').minutes>0);const slot=world.npcs.find(n=>n.id===seller).schedule.default.find(x=>x.start<=time&&time<x.end);s.locate(slot.location,time);
+  // 食物受家庭口粮预留约束（李白口径）：按引擎事实判定——可售量够就成交，不够就拒卖；烟苔一户进食，干蘑菇设计库存不足自用，须拒卖（与不进食的木精户对照）。
+  if(s.engine.byId.get(item).tags?.includes('food')){
+   const stock=qty(s.doc,seller,item),sale=saleableStock(s.engine.primitiveDraft(s.doc),s.engine,seller,item),player=qty(s.doc,'player',item);
+   assert.equal(sale.stock,stock);
+   if(item==='item_dry_mushroom')assert.equal(sale.available,0,'烟苔进食，库存不足口粮');
+   if(item==='item_hazelnut')assert.ok(sale.available>=1,'节榆木精不进食，榛仁没有饱食口粮预留，应可成交');
+   if(!(sale.available>=1)){
+    assert.ok(sale.retained>=sale.stock,`自留${sale.retained}应不少于库存${sale.stock}`);
+    await assert.rejects(s.call('world_trade',{seller,item,quantity:1}),e=>e.code==='E-ACTION-PRECONDITION'&&/扣除自用和已承诺存量后不够出售/.test(e.message));
+    assert.equal(qty(s.doc,seller,item),stock);assert.equal(qty(s.doc,'player',item),player);continue;
+   }
+  }
   const before=qty(s.doc,seller,item),buy=await s.call('world_trade',{seller,item,quantity:1});assert.ok(buy.cost>=0);assert.equal(qty(s.doc,seller,item),before-1);assert.ok(qty(s.doc,'player',item)>=1);
  }
  for(const st of settlements){const s=session();for(const p of places.filter(p=>p.settlement===st.id))assert.ok(s.engine.route(st.parent,p.id,'walk',600,'t162').minutes>=0);
-  s.locate(st.id);const home=places.find(p=>p.settlement===st.id&&p.kind==='home');await assert.rejects(s.call('world_move',{destination:home.id}),/许可/);await assert.rejects(s.call('world_move',{destination:st.society.meetingPlace}),/许可/);
+  s.locate(st.id);const home=places.find(p=>p.settlement===st.id&&p.kind==='home');await enterUnlicensed(s,home.id);await enterUnlicensed(s,st.society.meetingPlace);
  }
 });
 
@@ -68,8 +107,21 @@ test('T162 两地议题闭合后实际扣公账并分物，公开检索不泄私
   assert.equal(s.doc.state.records[key].status,st.id===HX?'通过':'否决');
   const before=s.doc.state.npcs[st.id===HX?P.xianpu:P.shenge].inventory;
   const item=st.id===HX?'item_ration':'item_flax_cord',was=typeof before[item]==='number'?before[item]:before[item]?.quantity??0;
+  // K15: per advance-registry, daily (500) runs before faction_clock (1400); the faction effect is paid after that midnight's daily step, and meals are eaten at later midnights.
+  // Capture actual inventory writes so the original +4/+2 delivery guarantee
+  // remains checked even when the food is eaten within this four-day wait.
+  const recipient=st.id===HX?P.xianpu:P.shenge,changes=[],itemDelta=s.engine.itemDelta;
+  s.engine.itemDelta=function(d,id,changed,amount,books,...rest){
+   const result=itemDelta.call(this,d,id,changed,amount,books,...rest);
+   if(id===recipient&&changed===item)changes.push({amount,writer:books.writer,quantity:this.quantity(d,id,item)});
+   return result;
+  };
   await s.call('world_time',{minutes:4*DAY});
-  assert.equal(qty(s.doc,st.id===HX?P.xianpu:P.shenge,item),was+(st.id===HX?4:2));
+  assert.deepEqual(changes.filter(r=>r.writer==='monster-society'),[{amount:st.id===HX?4:2,writer:'monster-society',quantity:was+(st.id===HX?4:2)}]);
+  // HX: three mouths need 3*60=180, four rations supply 4*30=120,
+  // so all four private portions are eaten. GS's cord is not food.
+  assert.equal(qty(s.doc,st.id===HX?P.xianpu:P.shenge,item),st.id===HX?0:was+2);
+  assert.deepEqual(changes.filter(r=>r.writer==='npc-life'),st.id===HX?[{amount:-4,writer:'npc-life',quantity:0}]:[]);
   const account=s.doc.state.records[`faction-assets:${o.id}`];assert.ok(account);
   assert.ok(account.items[item]<o.items[item]);
   s.locate(st.id,s.doc.state.minute);const inspect=await s.call('world_settlement',{settlement:st.id,operation:'governance_inspect'});assert.equal(inspect.organization.privateGoal,undefined);
@@ -79,13 +131,17 @@ test('T162 两地议题闭合后实际扣公账并分物，公开检索不泄私
 test('T162 正式取得路线：导师入门认证、药草、听息立意、逐日修习、借形与自愿定居',async t=>{
  const s=session(),institution='bld_bs_reed_dao',teacher='npc_bs_077_1',role=world.professions.find(p=>p.id==='profession_taoist'),entry=world.rules.training.institutions.find(e=>e.institution===institution&&e.teacher===teacher);
  s.locate('loc_bs',510);await s.call('world_move',{destination:institution});
+ await s.present(teacher,institution,entry.initiationMinutes);
  await s.call('world_profession',{operation:'initiate',profession:role.id,teacher,institution});
+ await s.present(teacher,institution,world.skills.find(x=>x.id===role.entry.skill).learnMinutes??120);
  await s.call('world_learn',{entity:role.entry.skill,source:teacher,kind:'skill'},'success');
  while(s.doc.state.skills[role.entry.skill].proficiency<240){await s.call('world_practice',{skill:role.entry.skill,gain:100,target:'每日基础动作'});if(s.doc.state.skills[role.entry.skill].proficiency<240)await s.next();}
- await s.next();await s.call('world_profession',{operation:'certify',profession:role.id,teacher},'certified');await s.next();
+ await s.next();await s.present(teacher,institution,role.entry.minutes??120);await s.call('world_profession',{operation:'certify',profession:role.id,teacher},'certified');await s.next();
+ await s.present(teacher,institution,entry.ritualMinutes);
  const grant=await s.call('world_profession',{operation:'ritual_officiate',profession:role.id,teacher,institution,deity:entry.deity,minutes:10080});assert.ok(grant.permit);
  await s.call('world_move',{destination:hx.garden});
  if(s.doc.state.minute%DAY>900)await s.next(600);
+ await s.present(P.xianpu,hx.garden,5,'trade');
  const herbs=await s.call('world_trade',{seller:P.xianpu,item:'item_herb',quantity:12});assert.ok(herbs.cost>0);
  await s.call('world_move',{destination:'loc_hw_northwood'});
  let night=Math.floor(s.doc.state.minute/DAY)*DAY+1200;if(night<s.doc.state.minute)night+=DAY;await s.call('world_time',{minutes:night-s.doc.state.minute});
@@ -106,6 +162,7 @@ test('T162 正式取得路线：导师入门认证、药草、听息立意、逐
  let borrowPermit=grant.permit;
  if(s.doc.state.records[borrowPermit].expires<=s.doc.state.minute+120){
   await s.call('world_move',{destination:institution});await s.next();
+  await s.present(teacher,institution,entry.ritualMinutes);
   borrowPermit=(await s.call('world_profession',{operation:'ritual_officiate',profession:role.id,teacher,institution,deity:entry.deity,minutes:10080})).permit;
  }
  const acquired=await s.call('world_wildlife',{operation:'borrow_form',target,permit:borrowPermit});assert.equal(acquired.acquired,true);
@@ -149,7 +206,8 @@ test('T162 world_upgrade 加入两地，旧账与野生身体不补发；发布�
  const {publishMonsterSociety3,batchIds}=await import('../tools/publish-monster-society-3.mjs');assert.deepEqual((await publishMonsterSociety3()).changed,[]);
  // A first publication must remain reloadable with D1's separate biome catalog and K8 derivation.
  const root=await fs.mkdtemp(path.join(tmpRoot(),'t162-publish-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- for(const folder of ['geo','meta','people','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // Re-publishing E3 resources must retain the referenced density tables/programs.
+ for(const folder of ['geo','meta','people','lore','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  const mine=batchIds();for(const[file]of FILES){const target=path.join(root,file),rows=JSON.parse(await fs.readFile(target,'utf8'));await fs.writeFile(target,JSON.stringify(rows.filter(r=>!mine.has(r.id))));}
  const rf=path.join(root,'meta/rules.json'),rawRules=JSON.parse(await fs.readFile(rf,'utf8'));rawRules.wildlifeAwakening.society.homes=rawRules.wildlifeAwakening.society.homes.filter(x=>x!==HX);rawRules.wildlifeAwakening.spiritLands=rawRules.wildlifeAwakening.spiritLands.filter(x=>x.location!==hx.garden);await fs.writeFile(rf,JSON.stringify(rawRules));
  await publishMonsterSociety3({root,publish:true,batch});const reload=await loadWorld(root);assert.deepEqual(validateWorld(reload,{stage:'release'}).errors,[]);

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {readFileSync} from 'node:fs';
 import Ajv from 'ajv';
 import {loadWorld} from '../tools/load-world.mjs';
 import {baishiSkeleton} from '../world/design/w1-baishi-skeleton.mjs';
@@ -10,6 +11,9 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {compatibleWorld,planWorldUpgrade} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 const world=await loadWorld(),original=JSON.parse(await fs.readFile(`${root}/original-contacts.json`,'utf8'));
+// 严哲的现行世界数据 = R06 原始联系人 + 经审批管线发布的 s504-silk-1 蚕丝备货（W2b）；除此之外不得多出钱物。
+const silk=JSON.parse(await fs.readFile('world/drafts/s504-silk/candidate.json','utf8')),silkStock=silk.entries.find(e=>e.id==='sb-yanzhe-silk-stock').row;
+const yanApproved={...original.yan,inventory:{...original.yan.inventory,...silkStock.inventory}};
 const base={...world,npcs:world.npcs.map(p=>p.id===original.yan.id?original.yan:p),locations:world.locations.map(l=>l.id==='loc_bs'?original.town:l.id==='bld_bs_shrine'?original.shrine:l)};
 const bones=baishiSkeleton(base),ids=new Set(bones.residents.map(p=>p.id)),locationIds=new Set(bones.locations.map(l=>l.id));
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -50,34 +54,41 @@ test('六街区与18处行业公共建筑及逐户住宅均可寻路，原官道
  for(const l of world.locations.filter(l=>locationIds.has(l.id)))assert.ok(e.route('loc_bs',l.id,'walk',540,'t90').minutes>0,l.id);
  assert.equal(e.route('loc_hw','loc_bs','walk',540,'t90').minutes,old.route('loc_hw','loc_bs','walk',540,'t90').minutes);
  assert.deepEqual(world.locations.find(l=>l.id==='bld_bs_shrine'),original.shrine);
- assert.deepEqual(world.locations.find(l=>l.id==='loc_bs').workstations,original.town.workstations);
+ // K5：原手写窑位改由设备派生，编号、类别、收费不变。
+ const station=s=>({id:s.id,kind:s.kind,fee:s.fee,access:s.access});
+ // 原始联系人里的手写名单要从文件读：引擎构造会把传入地点的名单换成派生视图。
+ const authored=JSON.parse(readFileSync(`${root}/original-contacts.json`,'utf8')).town.workstations;
+ assert.deepEqual(world.locations.find(l=>l.id==='loc_bs').workstations.map(station),authored.map(station));
  assert.ok(e.route('loc_bs_dongxue','bld_bs_shrine','walk',540,'t90').minutes>0);
 });
-test('玩家实际走到街区和前厅，私宅无许可拒绝；严辙在场许可可入户且不转移库存',async()=>{
+test('玩家实际走到街区和前厅，私宅无许可照样进门并命中擅入；严辙在场许可可入户且不转移库存',async()=>{
  const e=new WorldEngine(world);let doc=e.createCharacter(legacy,{},'t90-entry');doc.state.location='loc_bs';doc.state.minute=540;
  doc.state.npcs[original.yan.id].location='loc_bs';doc.state.npcs[original.yan.id].activity='核对货单';delete doc.state.npcs[original.yan.id].scheduleTravel;
  const run=async(tool,args,id)=>{const out=await e.reduce(doc,{tool,args,eventId:id});doc=applyPatches(doc,out.patches);return out.result;};
  await run('world_move',{destination:'loc_bs_zhanxi'},'street');await run('world_move',{destination:'bld_bs_guild'},'front');assert.equal(doc.state.location,'bld_bs_guild');
  await run('world_move',{destination:'loc_bs'},'back');doc.state.npcs[original.yan.id].location='loc_bs';doc.state.npcs[original.yan.id].activity='核对货单';delete doc.state.npcs[original.yan.id].scheduleTravel;
  const home=bones.households[0].homeLocation,before=structuredClone(doc);
- await assert.rejects(run('world_move',{destination:home},'no-consent'),/成年住户/);assert.deepEqual(doc,before);
+ // K6 依据（审查 C-b location-access:23）：无住户许可照样走得进去，命中擅入私宅，罪名挂本次事件；只看不落盘，后续仍走许可入户。
+ {const out=await e.reduce(doc,{tool:'world_move',args:{destination:home},eventId:'no-consent'}),after=applyPatches(doc,out.patches);assert.equal(after.state.location,home);
+  const o=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o);assert.equal(after.state.records[o.record].sourceEvent,'no-consent');}
+ assert.deepEqual(doc,before);
  const permission=(await run('world_promise',{operation:'grant_access',promisor:original.yan.id,location:home,minutes:60,content:'独自进屋看共用起居间，不取用物品'},'consent')).authorization;
  const inventory=structuredClone(doc.state.npcs[original.yan.id].inventory),playerInventory=structuredClone(doc.state.inventory);
  await run('world_move',{destination:home,authorization:permission},'enter');assert.equal(doc.state.location,home);assert.deepEqual(doc.state.npcs[original.yan.id].inventory,inventory);assert.deepEqual(doc.state.inventory,playerInventory);
 });
 test('聚落经济引用实有商货和小窑，职责与争议有来源和边界，登记不凭空发钱物',()=>{
  const p=world.settlementProfiles.find(p=>p.id==='loc_bs'),d=p.details,y=world.npcs.find(p=>p.id===original.yan.id);
- assert.deepEqual(y.inventory,original.yan.inventory);assert.equal(y.coins,original.yan.coins);assert.deepEqual(y.schedule,original.yan.schedule);assert.equal(y.occupation,'商旅行会代理');
+ assert.deepEqual([silk.status,silkStock.npc],['published',original.yan.id]);assert.deepEqual(y.inventory,yanApproved.inventory);assert.equal(y.coins,original.yan.coins);assert.deepEqual(y.schedule,original.yan.schedule);assert.equal(y.occupation,'商旅行会代理');
  assert.ok(d.economy.tradePartners.includes('loc_hw'));assert.match(d.economy.reason,/5铜/);assert.match(d.economy.reason,/每五天/);assert.equal(d.economy.production,null);assert.equal(d.economy.publicStock,null);
  assert.ok(d.governance.customs.some(s=>s.includes('户籍')));assert.ok(d.governance.customs.some(s=>s.includes('巡更')));assert.ok(d.governance.customs.some(s=>s.includes('行会')));
  assert.equal(d.problems.length,6);for(const p of d.problems){assert.equal(p.status,'unresolved');assert.ok(p.options.length>=2);assert.ok(p.stakeholders.every(s=>[...world.npcs,...world.residents].some(x=>x.id===s.person&&x.age>=18)));}
  for(const r of d.rumors)assert.equal(r.propagation,'pending-event');
  assert.deepEqual(d.calendar.marketDays,world.rules.calendar.marketDays);
- for(const l of bones.locations){assert.deepEqual(l.inventory,{});assert.equal(l.workstations,undefined);}
+ for(const l of bones.locations){assert.deepEqual(l.inventory,{});assert.deepEqual(l.workstations??[],[]);/* K5：工位由设备派生，骨架不带设备即没有工位 */}
  const e=new WorldEngine(world),doc=e.createCharacter(legacy,{},'t90-no-grants');for(const p of bones.residents){if(world.npcs.some(n=>n.id===p.id))assert.ok(doc.state.npcs[p.id]);else assert.equal(doc.state.npcs[p.id],undefined);}
 });
 test('提升名册保留同ID和原事实，升级不覆盖已运行的现金库存关系记忆，重复升级无差异',()=>{
- const old={...world,npcs:world.npcs.map(p=>p.id===original.yan.id?original.yan:p)},person=bones.residents.find(p=>p.age>=18);
+ const old={...world,npcs:world.npcs.map(p=>p.id===original.yan.id?yanApproved:p)},person=bones.residents.find(p=>p.age>=18);
  const full={...person,tier:'full',coins:12,inventory:{},trust:0,affection:0,skills:[],services:[],notes:person.currentConcern};
  const proposed={...world,npcs:[...world.npcs,full],residents:world.residents.filter(p=>p.id!==full.id)};
  const {world:next}=compatibleWorld(old,proposed);assert.equal(next.residents.some(p=>p.id===full.id),false);assert.equal(next.npcs.filter(p=>p.id===full.id).length,1);

@@ -1,3 +1,4 @@
+import {recordsWhere} from './storage.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {entityTransition} from './entity-transitions.mjs';
 import {settlementHead,personRegistrar} from './entity-view.mjs';
@@ -139,7 +140,7 @@ export function promotionAction(d,args,eventId){
     throw preconditionFailure('未知升格事务');
 }
 const scheduled=state=>Object.values(state.records??{}).filter(r=>r.category==='promotion_petition'&&r.status==='待审定');
-export function nextPromotionMinute(state,now){return Math.min(Infinity,...scheduled(state).map(r=>r.due).filter(m=>m>now));}
+export function nextPromotionMinute(state,now){return Math.min(Infinity,...[...recordsWhere(state.records,'category','promotion_petition')].filter(r=>r.category==='promotion_petition'&&r.status==='待审定').map(r=>r.due).filter(m=>m>now));}
 export function advancePromotion(d,engine,{before,after}){
     const rules=promotionRules(engine);if(!rules)return;
     for(let guard=0;guard<1000;guard++){

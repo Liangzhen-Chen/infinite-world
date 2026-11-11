@@ -119,12 +119,16 @@ async function farm(t,replacement){
  const world=variant(w=>{
   delete w.rules.weather;w.rules.agriculture.crop.growthDays=2;w.rules.agriculture.crop.sowDays=[0,359];
   w.rules.agriculture.settlements.find(x=>x.settlement==='loc_hw').farmWorkers=0;
+  // W8-E1 负重：2 亩整季 300 份 = 150 公斤背不动（此前靠收割豁免）。本用例考查的是替代工具，不是负重：用已安装的
+  // economy:yield 修正 ×0.1（同 s5-05）让整季 30 份 = 15 公斤 ≤ 两种工具组下的余力（≥25 公斤），一趟收完，工时仍为整块田 960 分钟。
+  w.derived.modifiers.push({id:'a3-domain-field-yield',pack:'core',target:'economy:yield',stage:'mul',value:0.1,when:"subject == 'loc_hw_fields'"});
   if(replacement){w.items.find(x=>x.id==='item_staff').tags=['soil_work'];w.items.find(x=>x.id==='item_kitchen_knife').tags=['harvest'];}
  });
  const sowTool=replacement?'item_staff':'item_hoe',harvestTool=replacement?'item_kitchen_knife':'item_sickle';
  const ui=await uiSession(t,{world,mutate:scene('loc_hw_fields',monthDayMinute(1,8,8),s=>{
   s.buildings.loc_hw_fields={...s.buildings.loc_hw_fields,owner:'player',condition:100};
-  s.inventory.item_oats=stack(20);s.inventory[sowTool]=tool();s.inventory[harvestTool]=tool();
+  // D05 5.5 / S505C approved binding: wheat uses item_wheat_seed, yielding item_wheat_grain.
+ s.inventory.item_wheat_seed=stack(20);s.inventory[sowTool]=tool();s.inventory[harvestTool]=tool();
  })});
  const before=await primed(ui),sow=await ui.choose('farm.private_sow',{areaMu:2},{search:true,eventId:'domain-sow'});
  assert.ok(sow.ok,sow.error);const sown=await ui.read();
@@ -135,8 +139,9 @@ async function farm(t,replacement){
  assert.ok(harvest.ok,harvest.error);const after=await ui.read();
  assert.equal(ripe.state.inventory[harvestTool].durability-after.state.inventory[harvestTool].durability,1);
  assert.equal(harvest.result.laborMinutes,960);conserved(ripe,after,'harvest',new WorldEngine(world));
- return {seed:held(before.state.inventory,'item_oats')-held(sown.state.inventory,'item_oats'),yield:harvest.result.harvested,sowTime:sown.state.minute-before.state.minute,harvestTime:after.state.minute-ripe.state.minute,
-  seedFlow:sown.ledger.flows['sink:consume|item_oats|private_sow'],harvestFlow:after.ledger.flows['src:regrowth|item_oats|private_harvest']};
+ return {seed:held(before.state.inventory,'item_wheat_seed')-held(sown.state.inventory,'item_wheat_seed'),yield:harvest.result.harvested,sowTime:sown.state.minute-before.state.minute,harvestTime:after.state.minute-ripe.state.minute,
+  // D05 §5.5: equivalent tools must transfer the same existing field stock.
+  seedFlow:sown.ledger.flows['sink:consume|item_wheat_seed|private_sow'],harvestFlow:ripe.ledger.accounts['loc_hw_fields|item_wheat_grain|crop']-after.ledger.accounts['loc_hw_fields|item_wheat_grain|crop']};
 }
 test('substitute farming tools preserve real seed/grain ledgers, work time, harvest yield and tool wear',async t=>{
  const original=await farm(t,false),substitute=await farm(t,true);assert.deepEqual(substitute,original);

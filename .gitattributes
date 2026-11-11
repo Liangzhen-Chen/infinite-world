@@ -1,3 +1,13 @@
 docs/测试报告/*.txt whitespace=-blank-at-eol
 assets/** -text
 world/art/** -text
+
+# yp-depth-rest 重开冻结哈希按 CRLF 原字节计算，这 8 个文件须保持 CRLF 入库、检出与归档
+world/drafts/w1/yp-depth-rest/README.md -text
+world/drafts/w1/yp-depth-rest/author.mjs -text
+world/drafts/w1/yp-depth-rest/final-l4.mjs -text
+world/drafts/w1/yp-depth-rest/final-tanghuan-revision.mjs -text
+world/drafts/w1/yp-depth-rest/read-first10.mjs -text
+world/drafts/w1/yp-depth-rest/read-next5.mjs -text
+world/drafts/w1/yp-depth-rest/rebind-verified-once.mjs -text
+world/drafts/w1/yp-depth-rest/review-failed-once.mjs -text

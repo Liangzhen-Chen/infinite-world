@@ -7,10 +7,12 @@ import {effectiveProficiency}from'./professions.mjs';
 import {toolBonuses}from'./checks.mjs';
 import {heldUnit,wearItem,trackSingleItem}from'./items.mjs';
 import {workstation}from'./manufacturing.mjs';
+import {stationLicence}from'./workstation-services.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {knowledgeProficiency} from './education-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {facilityView} from './facility-state.mjs';
+import {serviceCapacityView,deskRequest,deskServed,queueReceipt} from './service-queue.mjs';
 declareHoldingWriter('repair',{kinds:[],locations:true});
 
 const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min||value>max)throw preconditionFailure(`${label}无效`);return value;};
@@ -18,15 +20,19 @@ const integer=(value,min,max,label)=>{if(!Number.isSafeInteger(value)||value<min
 // Repair is an action on an existing unit. No inventory output or new maker is created.
 export function repair(d,args,eventId){
     if(args.recipe!==undefined)throw preconditionFailure('维修不能同时提交制造配方');
-    const registered=args.instance?d.get('state','itemInstances',args.instance):null;
+    // An item slot may name the registered unit itself.
+    const named=!args.instance&&typeof args.item==='string'?d.get('state','itemInstances',args.item):null;
+    const registered=args.instance?d.get('state','itemInstances',args.instance):named;
     if(args.instance&&!registered)throw preconditionFailure('维修单件编号不存在；instance 只能取自所持物品的 instances 列表。若只有一件且没有单件编号，请省略 instance，仅传 item 物品名称或类型编号');
-    const item=args.item?this.resolve(args.item,'item'):registered?.item;
+    // Someone else's unit is refused as theirs (K7), not as a stock mismatch.
+    if(registered?.owner&&registered.owner!=='player')throw preconditionFailure(`这件${this.byId.get(registered.item)?.name??'物件'}归属${this.byId.get(registered.owner)?.name??d.get('state','npcs',registered.owner,'name')??registered.owner}，不是你的，你没有处分别人东西的权利`);
+    const item=named?named.item:args.item?this.resolve(args.item,'item'):registered?.item;
     if(!item)throw preconditionFailure('维修需要物品或单件编号');
     if(registered&&registered.item!==item)throw preconditionFailure('维修物品与单件编号不一致');
     const quantity=this.quantity(d,'player',item),held=d.get(...this.bagPath('player'),item),definition=this.byId.get(item);
     if(quantity<1)throw preconditionFailure('没有持有这件维修物品');
-    if(!args.instance&&quantity!==1)throw preconditionFailure('有多件同类物品，维修须明确单件编号');
-    const instance=args.instance??held?.instances?.[0],unit=instance?d.get('state','itemInstances',instance):null;
+    if(!args.instance&&!named&&quantity!==1)throw preconditionFailure('有多件同类物品，维修须明确单件编号');
+    const instance=args.instance??named?.id??held?.instances?.[0],unit=instance?d.get('state','itemInstances',instance):null;
     if(instance&&(!unit||unit.owner!=='player'||unit.item!==item||unit.status!=='持有'||!held?.instances?.includes(instance)))throw preconditionFailure('维修单件归属与库存不符');
     const plans=(this.rules.repairs??[]).filter(row=>row.item===item);
     const plan=args.repairPlan?plans.find(row=>row.id===args.repairPlan):plans.length===1?plans[0]:null;
@@ -43,13 +49,20 @@ export function repair(d,args,eventId){
     if(plan.service){
         const maker=this.resolve(args.maker,'npc'),spec=plan.service;
         const facility=facilityView(this,d.get('state'),d.get('state','location'));
-        const station=(facility?.workstations??this.byId.get(d.get('state','location'))?.workstations)?.find(s=>s.kind===plan.workstation&&(s.owner===maker||s.access==='public'));
+        const station=facility?.workstations.find(s=>s.kind===plan.workstation&&stationLicence(this,d,s,maker));
         if(!station||facility?.factor===0)throw preconditionFailure('修理者没有此处可用的登记工坊');
         if(knowledgeProficiency(this,d.get('state'),maker,plan.skill)<plan.minimumProficiency)throw preconditionFailure('修理者没有所需技艺');
         this.assertNpcService(d,maker,'trade',args.quote?0:plan.minutes);
         const restored=Math.min(newMaximum,before.durability+restore);
         const quote={item,instance:instance??null,maker,fee:spec.fee,minutes:plan.minutes,before,after:{durability:restored,maxDurability:newMaximum}};
-        if(args.quote)return{quote};
+        // 匠人日接活数受槽 service:capacity 约束（手艺阶 × 工坊完好度）；满了排队而不是拒绝。急用（耐久已不足四分之一）优先。
+        const capacitySource=serviceCapacityView(this,d,{provider:maker,service:'craft',proficiency:knowledgeProficiency(this,d.get('state'),maker,plan.skill),factor:facility?.factor??1});
+        quote.capacitySource=capacitySource;
+        const desk={service:'craft',provider:maker,requester:'player',subject:instance??item,urgency:before.durability*4<=before.maxDurability?2:1,
+            capacity:capacitySource.capacity};
+        const place=deskRequest(d,this,desk,{write:!args.quote});
+        if(args.quote)return place.admitted?{quote}:{quote,queue:queueReceipt(place)};
+        if(!place.admitted)return{operation:'repair',item,instance:instance??null,success:false,before,after:before,...queueReceipt(place),capacitySource,maker,quote,note:`匠人今日活计已满（日容量${desk.capacity}）：已登记排队号，排第${place.position}位，预计${this.calendar(place.eta).text}可受理；届时再来，不收费、不耗时`};
         if(d.get('state','player','coins')<spec.fee)throw preconditionFailure('修理费不足');
         const target=instance??trackSingleItem(d,this,'player',item,eventId);
         moveCoins(d,{from:purse(null,'player'),to:purse(null,maker),amount:spec.fee,writer:'repair',eventId});
@@ -61,7 +74,7 @@ export function repair(d,args,eventId){
         holdingSet(d,null,['state','itemInstances',target,'durability'],restored,'repair');holdingSet(d,null,['state','itemInstances',target,'maxDurability'],newMaximum,'repair');
         if(quantity===1){d.set([...this.bagPath('player'),item,'durability'],restored);d.set([...this.bagPath('player'),item,'maxDurability'],newMaximum);}
         const result={operation:'repair',success:true,item,instance:target,maker,quote,before,after:quote.after,spent:{feePaid:spec.fee,minutes:plan.minutes,materials:[],toolWear:[]}};
-        d.set(['state','records',`repaired_${eventId}`],{category:'repair',...result,minute:d.get('state','minute')});return result;
+        d.set(['state','records',`repaired_${eventId}`],{category:'repair',...result,minute:d.get('state','minute')});deskServed(d,{...desk,eventId});return result;
     }
     const skillName=this.byId.get(plan.skill)?.name??plan.skill;
     if(!d.get('state','skills',plan.skill))throw preconditionFailure(`尚未掌握维修所需技能：${skillName}（${plan.skill}）；工序 ${plan.id} 要求熟练度至少${plan.minimumProficiency}。请先通过学习掌握该技能；协助者不能替代本人掌握技能的前提`);

@@ -376,6 +376,65 @@
               2
             ]
           }
+        },
+        {
+          "id": "nw_plantain",
+          "name": "林缘车前",
+          "item": "item_plantain",
+          "quantity": 20,
+          "minutes": 120,
+          "gather": {
+            "yield": "gather:herb",
+            "skill": "skill_life_9_core",
+            "seasons": [
+              0,
+              1,
+              2
+            ],
+            "density": "herb.plantain.seasonDensity"
+          },
+          "calibration": "pending",
+          "source": "D14 分种；库存和工时沿用 nw_herb，calibrate-pending"
+        },
+        {
+          "id": "nw_honeysuckle",
+          "name": "林缘金银花",
+          "item": "item_honeysuckle",
+          "quantity": 20,
+          "minutes": 120,
+          "gather": {
+            "yield": "gather:herb",
+            "skill": "skill_life_9_core",
+            "seasons": [
+              0,
+              1
+            ],
+            "density": "herb.honeysuckle.seasonDensity"
+          },
+          "calibration": "pending",
+          "source": "D14 分种；库存和工时沿用 nw_herb，calibrate-pending"
+        }
+      ],
+      "changes": [
+        {
+          "id": "nw_plantain_regrow",
+          "kind": "regrow",
+          "resource": "nw_plantain",
+          "quantity": 1,
+          "everyDays": 20,
+          "max": 20,
+          "calibration": "pending",
+          "source": "D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"
+        },
+        {
+          "id": "nw_honeysuckle_regrow",
+          "kind": "regrow",
+          "resource": "nw_honeysuckle",
+          "quantity": 1,
+          "everyDays": 20,
+          "max": 20,
+          "calibration": "pending",
+          "source": "D14；再生量和周期借用 site_root_hollow 的 rh_regrow，上限沿用 nw_herb；calibrate-pending"
         }
       ],
       "truths": []
@@ -1148,7 +1207,8 @@
         },
         "careProcess": "food"
       }
-    ]
+    ],
+    "owner": "loc_hw"
   },
   {
     "id": "loc_hw_apiary",
@@ -1221,6 +1281,12 @@
       "host": "npc_hw_shendu",
       "kind": "客房",
       "rooms": 1
+    },
+    "owner": "faction_bs_government",
+    "publicMaintenance": {
+      "owner": "faction_bs_government",
+      "settlement": "loc_hw",
+      "source": "K10b public postal building maintenance delegation"
     }
   },
   {
@@ -15028,7 +15094,14 @@
           "pollutionKind": "ordinary"
         }
       }
-    ]
+    ],
+    "lifecycle": {
+      "awaken": {
+        "minimumYears": 100,
+        "annualRisk": 0.01,
+        "species": "monster_tile_lamp_wraith"
+      }
+    }
   },
   {
     "id": "bld_bs_home_001",
@@ -19983,7 +20056,7 @@
         {
           "id": "adit_ore",
           "name": "坑底散落的铁砂块",
-          "item": "item_iron_scrap",
+          "item": "item_iron_ore",
           "quantity": 5,
           "minutes": 20,
           "mechanisms": [
@@ -27189,7 +27262,7 @@
         {
           "id": "ll_ore",
           "name": "封墙后的铁砂",
-          "item": "item_iron_scrap",
+          "item": "item_iron_ore",
           "quantity": 4,
           "minutes": 25,
           "mechanisms": [

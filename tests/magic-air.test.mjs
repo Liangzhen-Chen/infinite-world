@@ -63,6 +63,9 @@ async function refuse(s,op,target,pattern,extra={}){
  const before=structuredClone(s.doc),spell=s.candidates.find(r=>r.mechanism===op);
  await assert.rejects(s.engine.reduce(s.doc,{tool:'world_cast',args:{spell:spell.id,target,...extra},eventId:`refuse-${op}`}),pattern);assert.deepEqual(s.doc,before);
 }
+// K6: an act that lacked only a licence happens; the norm stack names the offense under the act's own event.
+const k6Offended=(doc,out,eventId,offense)=>{const after=applyPatches(doc,out.patches),all=[...out.result.offenses??[],...(out.result.receipt?.consequences??[]).filter(c=>c.type==="offense")],o=all.find(o=>o.offense===offense);assert.ok(o,`${eventId} 应命中${offense}：${JSON.stringify(all)}`);assert.equal(after.state.records[o.record].sourceEvent,eventId);assert.equal(after.state.records[o.record].offender,'player');return {after,result:out.result,offense:o};};
+async function k6Cast(s,op,target,offense,extra={}){const spell=s.candidates.find(r=>r.mechanism===op),eventId=`unlicensed-${op}`,out=await s.engine.reduce(s.doc,{tool:'world_cast',args:{spell:spell.id,target,...extra},eventId});return k6Offended(s.doc,out,eventId,offense);}
 function contact(s,target,x=0){
  const document=s.doc,d={get:(...p)=>p.reduce((v,k)=>v?.[k],document),set:(p,value)=>{let node=document;for(const k of p.slice(0,-1))node=node[k]??={};node[p.at(-1)]=structuredClone(value);}};
  s.doc.state.npcs[target].location=s.location;s.doc.state.npcs[target].scheduleTravel=null;s.doc.state.npcs[target].cognitionTravel=null;
@@ -106,7 +109,7 @@ test('拂尘把松尘送入实际空气，牢固污渍留下；空表面、远�
  const s=fixture();const out=await cast(s,'clean_air',s.cloth.id);assert.equal(out.removedDustMg,1000);assert.equal(dynamic(s,s.cloth).looseDustMg,1000);assert.equal(dynamic(s,s.cloth).stainMg,500);assert.equal(air(s).dustMg,1000);
  await cast(s,'clean_air',s.cloth.id);await refuse(s,'clean_air',s.cloth.id,/松散尘土/);
  const remote=fixture();remote.cloth.position=[100,0];await refuse(remote,'clean_air',remote.cloth.id,/距离/);
- const privateObject=fixture();privateObject.cloth.owner='npc_hw_linsui';await refuse(privateObject,'clean_air',privateObject.cloth.id,/授权/);
+ const privateObject=fixture();privateObject.cloth.owner='npc_hw_linsui';/* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：他人之物无授权照样施放，命中擅用 */await k6Cast(privateObject,'clean_air',privateObject.cloth.id,'unauthorized_use');
  assert.equal(dynamic(reload(s),s.cloth).looseDustMg,0);
 });
 test('听风返回登记风向和回声，墙或缺失观测不能凭空穿透',async()=>{
@@ -148,7 +151,7 @@ test('轻物托举真实升高并卷动周边松物，超重及他人财物拒�
  const s=fixture(),out=await cast(s,'lift',s.light.id);assert.equal(dynamic(s,s.light).heightMeters,1);assert.ok(out.scattered.includes(s.loose.id));assert.equal(dynamic(s,s.loose).displacementMeters,1);
  const saved=reload(s);await wait(saved,3);assert.equal(dynamic(saved,s.light).heightMeters,0);
  const heavy=fixture();heavy.light.state.massMg=3000000;await refuse(heavy,'lift',heavy.light.id,/质量|超重/);
- const privateLoose=fixture();privateLoose.loose.owner='npc_hw_linsui';await refuse(privateLoose,'lift',privateLoose.light.id,/授权/);
+ const privateLoose=fixture();privateLoose.loose.owner='npc_hw_linsui';/* K6 依据（审查 C-b/C-d，K6 卡"许可是后果"）：同上 */await k6Cast(privateLoose,'lift',privateLoose.light.id,'unauthorized_use');
  await refuse(s,'lift',s.light.id,/叠加/);
 });
 test('气囊从现有洁净空气取氧，实际呼吸最多一分钟，重载保留有限余量',async()=>{

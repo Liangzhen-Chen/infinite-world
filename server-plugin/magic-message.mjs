@@ -6,6 +6,7 @@ import {areaTargetFacts}from'./magic-area.mjs';
 import {heldUnit}from'./items.mjs';
 import {enforceLegalRestriction}from'./law.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
+import {hypot} from './det-math.mjs';
 declareHoldingWriter('magic-message',{kinds:['permit']});
 export const messageKinds=Object.freeze(['message','mind_message','consent_link','team_link']);
 const moods=Object.freeze(['平静','紧张','高兴','难过']),rhythms=Object.freeze(['前进','撤退','防守','合围','停步']);
@@ -38,9 +39,9 @@ export function messageDistance(d,engine,target){
  if(actor.location===location){
   const point=localPlayerPoint(d),facts=areaTargetFacts(d,engine,target,location,point);
   if(!facts)throw preconditionFailure('缺少收者实际距离事实，须先实际接触');
-  return{meters:Math.hypot(point[0]-facts.point[0],point[1]-facts.point[1]),basis:'local_contact',edges:[]};
+  return{meters:hypot(point[0]-facts.point[0],point[1]-facts.point[1]),basis:'local_contact',edges:[]};
  }
- const route=engine.route(location,actor.location,'walk',d.get('state','minute'),d.document.randomSeed);
+ const route=engine.route(location,actor.location,'walk',d.get('state','minute'),d.get('randomSeed'));
  let meters=0;
  for(const id of route.edges){const edge=engine.world.routes.find(e=>e.id===id);if(!edge||!Number.isFinite(edge.lengthKm)||edge.lengthKm<0)throw preconditionFailure('消息路线缺少真实距离');meters+=edge.lengthKm*1000;}
  if(!route.edges.length||!Number.isFinite(meters)||meters<=0)throw preconditionFailure('消息路线缺少真实距离');
@@ -53,7 +54,7 @@ export function messageConsent(d,target,key,kind,until){
  return r;
 }
 function routeDistance(d,engine,from,to){
- const route=engine.route(from,to,'walk',d.get('state','minute'),d.document.randomSeed);
+ const route=engine.route(from,to,'walk',d.get('state','minute'),d.get('randomSeed'));
  let meters=0;for(const id of route.edges){const edge=engine.world.routes.find(e=>e.id===id);if(!edge||!Number.isFinite(edge.lengthKm)||edge.lengthKm<0)throw preconditionFailure('消息路线缺少真实距离');meters+=edge.lengthKm*1000;}
  if(!route.edges.length||meters<=0)throw preconditionFailure('消息路线缺少真实距离');return{meters,basis:'route_length',edges:[...route.edges]};
 }
@@ -64,7 +65,7 @@ function participantDistance(d,engine,from,to){
  if(!awake(d,from,a)||!awake(d,to,b)||!a.location||!b.location)throw preconditionFailure('连接成员缺少清醒状态或实际位置');
  if(a.location!==b.location)return routeDistance(d,engine,a.location,b.location);
  const x=areaTargetFacts(d,engine,from,a.location),y=areaTargetFacts(d,engine,to,b.location);
- if(!x||!y)throw preconditionFailure('缺少连接成员实际距离事实');return{meters:Math.hypot(x.point[0]-y.point[0],x.point[1]-y.point[1]),basis:'local_contact',edges:[]};
+ if(!x||!y)throw preconditionFailure('缺少连接成员实际距离事实');return{meters:hypot(x.point[0]-y.point[0],x.point[1]-y.point[1]),basis:'local_contact',edges:[]};
 }
 function assertMark(d,engine,key,spec,until){
  if(spec.kind!=='mind_message'&&!spec.markRequired)return;

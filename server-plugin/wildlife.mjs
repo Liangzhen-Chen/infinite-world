@@ -1,10 +1,18 @@
+import {moveFishPopulation,logisticStock,accrueStock} from './stock.mjs';
+import {takePopulation,addPopulation,advancePopulationDisease} from './population-health.mjs';
+import {populationCapacity,populationBirthFactor,settlePopulationPredation,validateEcologyDefinitions,territoryCapacityFactor} from './ecology-dynamics.mjs';
+import {advanceHusbandry} from './husbandry.mjs';
+import {creatureTraits} from './traits.mjs';
+import {derived} from './derived.mjs';
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse,noteOffense} from './offense-notes.mjs';
 import {isPhysicallyDead,isLiving} from './lifecycle-state.mjs';
 import {createHash} from 'node:crypto';
-import {forestHabitatCapacity,forestView} from './forest-water.mjs';
+import {forestHabitatCapacity,forestView,nearbyResourceLocations} from './forest-water.mjs';
 export {displaceForestWildlife} from './forest-water.mjs';
 import {monsterStats,seededRandom} from './combat.mjs';
-import {heldUnit,wearItem} from './items.mjs';
+import {heldUnit,wearItem,produceItems} from './items.mjs';
+import {carryRoomKg} from './carry.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 // S1b: 尸体取材是死亡转化的产物（src:harvest，按物种掉落表），取材耗材进 sink:consume。
 declareLedgerWriter('wildlife',{sources:{'src:harvest':{'*':10000}},sinks:['sink:consume']});
@@ -12,7 +20,7 @@ import {canonical} from './storage.mjs';
 import {speciesInHabitat} from './wildlife-range.mjs';
 import {rangeSpec,initialIn,wildlifeHabitats,validateHabitatDerivation} from './wildlife-habitats.mjs';
 import {reservedMigrationCapacity,advanceSeasonalMigration} from './seasonal-migration.mjs';
-import {crossPredatorFed,advanceFarmPredation} from './farm-pests.mjs';
+import {crossPreyDensity,advanceFarmPredation} from './farm-pests.mjs';
 import {spiritStateFor,manifestArisals} from './creature-nature.mjs';
 import {recordLocalContact} from './environment.mjs';
 import {recordCreatureResolution} from './quest-wildlife.mjs';
@@ -56,8 +64,8 @@ export function nextWildlifeEncounterMinute(d,engine,now){
     const habitat=engine.rules.wildlife?.habitats.find(h=>h.location===d.get('state','location'));
     if(!habitat)return Infinity;
     let window=Math.floor(now/WINDOW);
-    let minute=window*WINDOW+1+Math.floor(random(engine,d.document.randomSeed,`encounter-time:${habitat.id}:${window}`)()*(WINDOW-1));
-    if(minute<=now){window++;minute=window*WINDOW+1+Math.floor(random(engine,d.document.randomSeed,`encounter-time:${habitat.id}:${window}`)()*(WINDOW-1));}
+    let minute=window*WINDOW+1+Math.floor(random(engine,d.get('randomSeed'),`encounter-time:${habitat.id}:${window}`)()*(WINDOW-1));
+    if(minute<=now){window++;minute=window*WINDOW+1+Math.floor(random(engine,d.get('randomSeed'),`encounter-time:${habitat.id}:${window}`)()*(WINDOW-1));}
     return minute;
 }
 export function wildlifeEncounterAt(d,engine,location,minute){
@@ -66,7 +74,7 @@ export function wildlifeEncounterAt(d,engine,location,minute){
     if(!habitat)return null;
     const window=Math.floor(minute/WINDOW),old=d.get(...encounterPath(habitat.id));
     if(old?.checkedWindow>=window)return null;
-    const rng=random(engine,d.document.randomSeed,`encounter:${habitat.id}:${window}`),chance=rng();
+    const rng=random(engine,d.get('randomSeed'),`encounter:${habitat.id}:${window}`),chance=rng();
     const here=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===location&&!a.owner&&!sapient(a)&&alive(a,d,id));
     const populations=d.get(...path(habitat.id),'populations');
     const ward=warded(d,location,minute),eligible=speciesAt(engine,habitat).filter(s=>populations?.[s.id]?.count>0&&activeAt(s.wildlife.activeHours,minute%1440)&&!(ward&&s.nature?.spirit));
@@ -81,12 +89,13 @@ export function wildlifeEncounterAt(d,engine,location,minute){
 function createWildlifeInstance(d,engine,habitat,s,eventId,rng){
     const latest=clone(d.get(...path(habitat.id))),p=latest.populations[s.id];
     if(!p.count||!activeAt(s.wildlife.activeHours,d.get('state','minute')%1440))return null;
-    const hash=createHash('sha256').update(`${d.document.randomSeed}:${eventId}`).digest('hex').slice(0,16),id=`monster_instance_${hash}`;
+    const hash=createHash('sha256').update(`${d.get('randomSeed')}:${eventId}`).digest('hex').slice(0,16),id=`monster_instance_${hash}`;
     if(d.get('state','created',id)||d.get('state','creatures',id))throw preconditionFailure('个体编号已存在，拒绝重复接触');
     const level=s.levelRange[0]+Math.floor(rng()*(s.levelRange[1]-s.levelRange[0]+1)),stats=monsterStats({level,template:s.template},engine.rules),name=`${s.name}·${hash.slice(0,4)}`;
-    p.count--;p.withdrawn++;d.set(path(habitat.id),latest);
+    moveFishPopulation(d,engine,s.id,habitat.location,id,1,eventId);
+    const health=takePopulation(p,1);p.withdrawn++;holdingSet(d,engine,path(habitat.id),latest,'wildlife',eventId);
     holdingSet(d,null,['state','created',id],{id,name,aliases:[],monster:s.id,template:s.template,scope:habitat.location},'wildlife');
-    holdingSet(d,null,['state','creatures',id],{name,species:s.id,ecology:habitat.id,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...spiritStateFor(s),...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})},'wildlife');
+    holdingSet(d,null,['state','creatures',id],{name,species:s.id,ecology:habitat.id,materialized:true,location:habitat.location,level,hp:stats.maxHp,maxHp:stats.maxHp,status:'正常',owner:null,...(health.I?{populationHealth:'I'}:health.R?{populationHealth:'R'}:{}),...spiritStateFor(s),...(engine.rules.wildlifeAwakening?{since:d.get('state','minute')}:{})},'wildlife');
     return{id,name,species:s.name,level,hp:stats.maxHp};
 }
 export function settleWildlifeEncounter(d,engine,attempt,eventId){
@@ -101,12 +110,12 @@ export function settleWildlifeEncounter(d,engine,attempt,eventId){
         const available=d.get(...path(habitat.id),'populations',s.id,'count')>0&&activeAt(s.wildlife.activeHours,minute%1440);
         if(attempt.kind==='present'&&!target&&available&&engine.npcObligationAction?.tool!=='time'){
             const here=Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===habitat.location&&alive(a,d,id)).map(([,a])=>a);
-            if(here.length<engine.rules.wildlife.maximumPresent)target=createWildlifeInstance(d,engine,habitat,s,`encounter:${habitat.id}:${window}`,random(engine,d.document.randomSeed,`encounter-instance:${habitat.id}:${window}`))?.id;
+            if(here.length<engine.rules.wildlife.maximumPresent)target=createWildlifeInstance(d,engine,habitat,s,`encounter:${habitat.id}:${window}`,random(engine,d.get('randomSeed'),`encounter-instance:${habitat.id}:${window}`))?.id;
         }
         if(target||available)sighting={kind:target?'present':'trace',habitat:habitat.id,location:habitat.location,species:s.id,name:s.name,
             ...(target?{target}:{}),minute,expires:(window+1)*WINDOW,source:eventId,description:target?`看见${s.name}，尚未开战`:`${s.name}的活动踪迹；辨认依据：${s.wildlife.distinction}`};
     }
-    d.set(encounterPath(habitat.id),{category:'wildlifeEncounter',checkedWindow:window,sighting});
+    holdingSet(d,engine,encounterPath(habitat.id),{category:'wildlifeEncounter',checkedWindow:window,sighting},'wildlife',eventId);
     return sighting;
 }
 export function wildlifeEncounterView(document){
@@ -139,10 +148,13 @@ export function validateWildlife(world){
         }
         if(cursor!==to.location)errors.push(`迁徙道路未到达目标栖地：${r.id}`);
     }
-    return [...errors,...validateHabitatDerivation(world),...validateWildlifeAwakening(world)];
+    return [...errors,...validateHabitatDerivation(world),...validateWildlifeAwakening(world),...validateEcologyDefinitions(world)];
 }
 // R31: a read-only look for views that copy out primitives at once; it does not make the draft recopy state and records on its next write.
 const lookState=d=>typeof d.peek==='function'?d.peek('state'):d.get('state');
+// One absolute daily step: only the opening infected cohort can die/recover.
+// Infection uses infectious density I/K; corrections supply exposure, hygiene,
+// treatment and species susceptibility through the same S5-01 registry.
 export function advanceWildlife(d,engine,day){
     if(!engine.rules.wildlife)return;
     // Ranges founded during this advance (tribal-awakening.mjs) join the day's settlement at once.
@@ -150,32 +162,93 @@ export function advanceWildlife(d,engine,day){
         const r=clone(d.get(...path(habitat.id)));if(!r)throw Error('生态记录未迁移');
         if(r.lastDay!==day-1)throw Error(`生态日结不连续，拒绝重算过往种群：${habitat.id} 上次 ${r.lastDay} 本次 ${day}`);
         const species=speciesAt(engine,habitat),forest=forestView(engine,lookState(d),habitat.location);
+        const season=engine.calendar(day*1440).season;
+        const community=Object.fromEntries(Object.entries(r.populations).map(([id,p])=>[id,{count:p.count}]));
+        const territory=territoryCapacityFactor(d,engine,habitat);
+        const capacity=s=>populationCapacity(d,engine,habitat,s,species,community,forestHabitatCapacity(engine,lookState(d),habitat,s,forest)*territory,season);
+        for(const s of species)if(!rangeSpec(habitat,s).manifest)advancePopulationDisease(d,engine,r.populations[s.id],habitat.location,s,capacity(s));
+        for(const s of species.filter(s=>creatureTraits(s).tags.includes('fish'))){
+            const p=r.populations[s.id],spec=rangeSpec(habitat,s);if(spec.manifest)continue;
+            const present=wildPresent(d,s.id,habitat.location),total=p.count+present;
+            const availableCapacity=Math.max(0,capacity(s)-reservedMigrationCapacity(d,habitat.id,s.id));
+            const crossFood=crossPreyDensity(d,engine,habitat.id,s.id,season),fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossFood>0;
+            // Normalize the published weekly quantity by capacity and seven days.
+            // Keep existing food/pair constraints; births use the continuous
+            // anchor, not weekly randomized rounding of a fixed quantity.
+            const rate=total>=2&&fed&&availableCapacity>0?derived(engine,d.document,'economy:yield',habitat.location,{base:spec.recoveryPerWeek*engine.rules.wildlife.seasonRecovery[season]*populationBirthFactor(d,engine,habitat,s,species,community,season,crossFood)/(spec.capacity*7)}):0;
+            const born=logisticStock(r,`fish:${s.id}`,{reserve:total,capacity:availableCapacity,rate,from:day*1440,to:(day+1)*1440})-total;
+            addPopulation(p,{S:born,I:0,R:0});p.born+=born;
+        }
         if(day%7===6){
-            const rng=random(engine,d.document.randomSeed,`${habitat.id}:${day}`),season=engine.calendar(day*1440).season;
             for(const s of species){
-                const p=r.populations[s.id],spec={...rangeSpec(habitat,s),capacity:forestHabitatCapacity(engine,lookState(d),habitat,s,forest)},present=wildPresent(d,s.id,habitat.location),total=p.count+present;
+                const p=r.populations[s.id],spec={...rangeSpec(habitat,s),capacity:capacity(s)},present=wildPresent(d,s.id,habitat.location),total=p.count+present;
                 // T154: undead/elementals arise by their registered condition, not by pairing or prey.
                 if(spec.manifest){const arisen=manifestArisals(spec===s.wildlife?s:{...s,wildlife:spec},total,reservedMigrationCapacity(d,habitat.id,s.id),season);if(arisen&&consecrated(d,habitat.id,s,day)){p.suppressed=(p.suppressed??0)+arisen;continue;}if(arisen){p.count+=arisen;p.arisen=(p.arisen??0)+arisen;}continue;}
-                const fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossPredatorFed(d,engine,habitat.id,s.id,season);
-                if(!fed){const lost=Math.min(p.count,Math.max(1,Math.floor(total/4)));p.count-=lost;p.starved+=lost;continue;}
-                const expected=spec.recoveryPerWeek*engine.rules.wildlife.seasonRecovery[season];
-                const born=total>=2?Math.min(Math.max(0,spec.capacity-total-reservedMigrationCapacity(d,habitat.id,s.id)),Math.floor(expected)+(rng()<expected%1?1:0)):0;
-                p.count+=born;p.born+=born;
+                const crossFood=crossPreyDensity(d,engine,habitat.id,s.id,season),fed=spec.predatorOf.length===0||spec.predatorOf.some(id=>r.populations[id]?.count>0)||crossFood>0;
+                if(!fed){const lost=Math.min(p.count,Math.max(1,Math.floor(total/4)));takePopulation(p,lost);p.starved+=lost;continue;}
+                if(creatureTraits(s).tags.includes('fish'))continue;
+                const expected=spec.recoveryPerWeek*engine.rules.wildlife.seasonRecovery[season]*populationBirthFactor(d,engine,habitat,s,species,community,season,crossFood);
+                const born=total>=2?Math.min(Math.max(0,spec.capacity-total-reservedMigrationCapacity(d,habitat.id,s.id)),accrueStock(p,'birth',expected)):0;
+                addPopulation(p,{S:born,I:0,R:0});p.born+=born;
             }
         }
-        r.lastDay=day;d.set(path(habitat.id),r);
+        r.lastDay=day;holdingSet(d,engine,path(habitat.id),r,'wildlife',`wildlife:${habitat.id}:${day}`);
     }
     if(day%7===6)for(const habitat of engine.rules.wildlife.habitats){
             const r=clone(d.get(...path(habitat.id)));
-            for(const s of speciesAt(engine,habitat)){const p=r.populations[s.id],total=p.count+wildPresent(d,s.id,habitat.location);
-                let need=total>0?Math.max(1,Math.floor(total/4)):0;
-                for(const prey of s.wildlife.predatorOf){const food=r.populations[prey];if(!food)continue;const eaten=Math.min(need,food.count);food.count-=eaten;food.predated+=eaten;need-=eaten;}
-            }
-        d.set(path(habitat.id),r);
+            settlePopulationPredation(d,engine,habitat,speciesAt(engine,habitat),r,engine.calendar(day*1440).season,id=>wildPresent(d,id,habitat.location));
+        holdingSet(d,engine,path(habitat.id),r,'wildlife',`predation:${habitat.id}:${day}`);
     }
     advanceFarmPredation(d,engine,day);
+    advanceTerritoryMigration(d,engine,day);
     advanceSeasonalMigration(d,engine,day);
     advanceWildlifeAwakening(d,engine,day);
+    advanceHusbandry(d,engine,day);
+}
+// Displacement transfers actual animals to nearby compatible populations.
+// Closing controls only restores room; return traffic remains rate limited.
+export function advanceTerritoryMigration(d,engine,day){
+ const habitats=[...engine.rules.wildlife.habitats,...engine.runtimeHabitats??[]],season=engine.calendar(day*1440).season;
+ const limits=(h,s)=>{
+  const record=d.get(...path(h.id)),catalog=speciesAt(engine,h);
+  return populationCapacity(d,engine,h,s,catalog,record.populations,forestHabitatCapacity(engine,lookState(d),h,s)*territoryCapacityFactor(d,engine,h),season);
+ };
+ const room=(h,s,count=d.get(...path(h.id),'populations',s.id,'count')??0)=>Math.max(0,limits(h,s)-count-wildPresent(d,s.id,h.location)-reservedMigrationCapacity(d,h.id,s.id));
+ for(const h of habitats){
+  const controlled=territoryCapacityFactor(d,engine,h)<1,prior=d.get(...path(h.id));
+  if(!controlled&&!Object.keys(prior.territoryDisplaced??{}).length)continue;
+  const r=clone(prior);
+  if(controlled){
+   const near=nearbyResourceLocations(engine,h.location,engine.rules.forestWater?.forest.maximumRouteEdges??2,lookState(d));
+   for(const s of speciesAt(engine,h)){
+    const p=r.populations[s.id];let excess=Math.max(0,p.count+wildPresent(d,s.id,h.location)-limits(h,s));
+    if(!excess)continue;
+    for(const destination of habitats){
+     if(destination.id===h.id||!near.has(destination.location)||!d.get(...path(destination.id),'populations',s.id))continue;
+     const amount=Math.min(excess,p.count,room(destination,s));if(!amount)continue;
+     const target=clone(d.get(...path(destination.id))),q=target.populations[s.id];
+     moveFishPopulation(d,engine,s.id,h.location,destination.location,amount,`territory:${h.id}:${day}`);
+     addPopulation(q,takePopulation(p,amount));p.emigrated=(p.emigrated??0)+amount;q.immigrated=(q.immigrated??0)+amount;
+     const key=`${destination.id}|${s.id}`;r.territoryDisplaced??={};r.territoryDisplaced[key]=(r.territoryDisplaced[key]??0)+amount;
+     holdingSet(d,engine,path(destination.id),target,'wildlife',`territory:${h.id}:${day}`);excess-=amount;if(!excess)break;
+    }
+   }
+  }else for(const [key,claim]of Object.entries(r.territoryDisplaced??{})){
+   const [sourceId,species]=key.split('|'),source=habitats.find(a=>a.id===sourceId),s=engine.byId.get(species);
+   if(!source||!s)throw Error('领地回迁缺来源种群');
+   const original=d.get(...path(sourceId),'populations',species),p=r.populations[species];
+   const annual=engine.world.primitiveTables.ecology.params.find(p=>p.id==='immigration').value;
+   const rate=derived(engine,d.document,'ecology:immigration',h.location,{base:annual,holder:source.location,target:species});
+   // Keep the year/day and K ratio rational, so 450 * (.1*8/360)
+   // reaches exactly one body rather than depending on floating evaluation.
+   const amount=Math.min(claim,original.count,room(h,s,p.count),accrueStock(r,`return:${key}`,rate,rangeSpec(h,s).capacity*original.count,360*Math.max(1,rangeSpec(source,s).capacity)));if(!amount)continue;
+   const origin=clone(d.get(...path(sourceId))),q=origin.populations[species];
+   moveFishPopulation(d,engine,species,source.location,h.location,amount,`return:${h.id}:${day}`);
+   addPopulation(p,takePopulation(q,amount));q.emigrated=(q.emigrated??0)+amount;p.immigrated=(p.immigrated??0)+amount;
+   r.territoryDisplaced[key]-=amount;if(!r.territoryDisplaced[key])delete r.territoryDisplaced[key];holdingSet(d,engine,path(sourceId),origin,'wildlife',`return:${h.id}:${day}`);
+  }
+  holdingSet(d,engine,path(h.id),r,'wildlife',`territory:${h.id}:${day}`);
+ }
 }
 export function resolveCreature(engine,d,name){
     if(typeof name!=='string'||!name.trim())throw preconditionFailure('需要实际动物名称或实例编号');
@@ -185,10 +258,12 @@ export function resolveCreature(engine,d,name){
     return candidates.length===1?candidates[0][0]:engine.resolve(name);
 }
 export function recordWildlifeDeath(d,engine,target,eventId){
-    const actor=d.get('state','creatures',target);if(!actor?.ecology||actor.corpse)return null;
+    const actor=d.get('state','creatures',target);if(!(actor?.ecology||actor?.herd)||actor.corpse)return null;
     const bone=engine.byId.get(actor.boss??actor.species);if(!bone)throw Error('生态个体缺物种定义');
+    // Death closes the living title projection; the carcass stays its owner's.
+    const title=actor.owner??Object.values(d.get('holdings','rows')??{}).filter(h=>h.subject===target&&['tamed_by','owns'].includes(h.kind)).sort((a,b)=>(b.until??Infinity)-(a.until??Infinity))[0]?.holder??null;
     recordCreatureResolution(d,engine,{target,outcome:'death',eventId,location:actor.location});
-    const corpse={status:'未取材',killedBy:'player',source:eventId,expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
+    const corpse={status:'未取材',killedBy:'player',source:eventId,...(title?{owner:title}:{}),expires:d.get('state','minute')+engine.rules.wildlife.corpseMinutes,
         items:clone(bone.drops)};holdingSet(d,null,['state','creatures',target,'corpse'],corpse,'wildlife');
     return{target,expires:corpse.expires,hasMaterials:corpse.items.length>0,note:'仍在尸体中，尚未进入行囊'};
 }
@@ -205,13 +280,29 @@ export function wildlifePriceFactor(engine,document,item,location){
     },0);
     return Math.min(engine.rules.wildlife.scarcityMaximum,Math.max(1,initial/Math.max(1,current)));
 }
-const mindOf=(engine,d,id,a)=>{const mind=awakeningView(engine,d.document.randomSeed,id,a,d.get('state','minute'));return mind?{mind}:{};};
+const mindOf=(engine,d,id,a)=>{const mind=awakeningView(engine,d.get('randomSeed'),id,a,d.get('state','minute'));return mind?{mind}:{};};
+function takeDressedParts(d,target,corpse,eventId){
+    const owner=corpse.owner??d.get('state','creatures',target,'owner');
+    if(owner!=='player')throw preconditionFailure(`这具分割好的尸体是${d.get('state','npcs',owner,'name')??this.byId.get(owner)?.name??owner??'别人'}的，不能拿走`);
+    if(corpse.expires<=d.get('state','minute'))throw preconditionFailure('留下的分割部分已经腐坏');
+    let room=carryRoomKg(d,this,'player');const obtained=[],left=[];
+    for(const row of corpse.items){
+        const weight=this.byId.get(row.item).weight,n=Math.min(row.amount,weight>0?Math.floor((room+1e-9)/weight):row.amount);room-=n*weight;
+        if(n)obtained.push({item:row.item,quantity:n,instances:produceItems(d,this,row.item,n,{eventId:`${eventId}:${row.item}`,recipe:corpse.dressed?.recipe,maker:corpse.dressed?.maker,workmanship:corpse.dressed?.workmanship,grade:corpse.dressed?.grade,books:{flow:'src:harvest',purpose:'butcher',writer:'wildlife',eventId}})});
+        if(row.amount>n)left.push({item:row.item,amount:row.amount-n});
+    }
+    if(!obtained.length)throw preconditionFailure('背不动，留下的分割部分一件也拿不走');
+    holdingSet(d,null,['state','creatures',target,'corpse'],{...corpse,items:left,status:left.length?'已分割':'已取材'},'wildlife');
+    return{success:true,obtained,left,note:'只拿走已分割好的部分，不再检定、不耗刀'};
+}
 export function wildlifeAction(d,args,eventId){
     if(!this.rules.wildlife)throw preconditionFailure('当前世界没有启用野外生态');
     const operation=args.operation??'observe';
     if(awakeningOperations.includes(operation))return awakeningAction.call(this,d,args,eventId,resolveCreature(this,d,args.target));
     const habitat=this.rules.wildlife.habitats.find(h=>h.location===d.get('state','location'));
-    if(!habitat)throw preconditionFailure('这里没有登记可接触的野外栖地');
+    // Butchering needs a carcass at hand, not a wild habitat: a beast killed in
+    // a yard is cut up there. Wild encounters and their XP stay with habitats.
+    if(!habitat&&operation!=='gather')throw preconditionFailure('这里没有登记可接触的野外栖地');
     if(operation==='observe')return{habitat:habitat.name,animals:Object.entries(d.get('state','creatures')??{}).filter(([,a])=>a.location===habitat.location).map(([id,a])=>({id,name:a.name,status:a.status,hp:a.hp,owner:a.owner??null,...mindOf(this,d,id,a),
         ...(a.corpse?{corpse:{status:a.corpse.status,expires:a.corpse.expires,hasMaterials:a.corpse.items.length>0}}:{})})),traces:wildlifeEncounterView(d.document).filter(r=>r.kind==='trace'),actionScope:{kind:'instant',instantaneous:true}};
     if(operation==='track'){
@@ -223,7 +314,7 @@ export function wildlifeAction(d,args,eventId){
         const skill='skill_life_1_core',known=d.get('state','skills',skill),check=this.check(d,{attribute:'敏捷',...(known?{skill}:{}),difficulty:10},eventId);
         this.advance(d,this.rules.wildlife.trackMinutes,eventId);if(!check.success)return{success:false,...check,found:null,note:'已花追踪时间，没有接触动物'};
         if(d.get('state','location')!==habitat.location||d.get('state','player','status')!=='正常')return{success:false,found:null,note:'完成追踪前已失去行动能力或离开栖地'};
-        const latest=clone(d.get(...path(habitat.id))),rng=random(this,d.document.randomSeed,eventId),s=eligible[Math.floor(rng()*eligible.length)],p=latest.populations[s.id];
+        const latest=clone(d.get(...path(habitat.id))),rng=random(this,d.get('randomSeed'),eventId),s=eligible[Math.floor(rng()*eligible.length)],p=latest.populations[s.id];
         if(!p.count||!activeAt(s.wildlife.activeHours,d.get('state','minute')%1440))return{success:false,found:null,note:'线索在追踪期间消失或活动时段已结束'};
         const found=createWildlifeInstance(d,this,habitat,s,eventId,rng);
         // Tracking ends at arm's length: the found individual is in sight for the next few minutes.
@@ -232,17 +323,23 @@ export function wildlifeAction(d,args,eventId){
     }
     if(operation!=='gather')throw preconditionFailure('未知野外操作');
     const target=resolveCreature(this,d,args.target),actor=d.get('state','creatures',target),s=this.byId.get(actor?.species),corpse=actor?.corpse;
-    if(!actor||actor.location!==habitat.location||!isPhysicallyDead(this,d,target)||!corpse)throw preconditionFailure('没有这里已死亡且可验证的尸体');
+    const here=d.get('state','location');
+    if(!actor||actor.location!==here||!isPhysicallyDead(this,d,target)||!corpse)throw preconditionFailure('没有这里已死亡且可验证的尸体');
+    // SL: a body its owner has already cut up keeps the parts the pack could not
+    // take; picking them up is no new dressing (no check, no knife). Another's is theirs (K6).
+    if(corpse.status==='已分割')return takeDressedParts.call(this,d,target,corpse,eventId);
     if(corpse.status!=='未取材'||corpse.expires<=d.get('state','minute'))throw preconditionFailure('尸体已处理或已经腐坏');
-    if(actor.owner&&actor.owner!=='player')throw preconditionFailure('动物归其他所有者，不能擅自取材');
+    // Butchering another's carcass takes what is theirs (K6); noted once the parts are in hand.
     const recipe=s.wildlife.gather;if(!corpse.items.length)throw preconditionFailure('这个物种没有登记可加工材料');
     if(recipe.tool&&(!this.quantity(d,'player',recipe.tool)||heldUnit(d,this,'player',recipe.tool).durability<=0))throw preconditionFailure('需要实际完好的取材刀具');
     for(const m of recipe.consumes)if(this.quantity(d,'player',m.item)<m.amount)throw preconditionFailure('取材实际耗材不足');
     for(const m of recipe.consumes)this.itemDelta(d,'player',m.item,-m.amount,{flow:'sink:consume',purpose:'butcher',writer:'wildlife',eventId});
     const known=d.get('state','skills','skill_life_1_core'),check=this.check(d,{attribute:'敏捷',...(known?{skill:'skill_life_1_core'}:{}),difficulty:10},eventId);
     if(recipe.tool)wearItem(d,this,'player',recipe.tool,1);this.advance(d,recipe.minutes,eventId);
-    const current=d.get('state','creatures',target,'corpse'),success=check.success&&current.status==='未取材'&&current.expires>d.get('state','minute')&&d.get('state','player','status')==='正常'&&d.get('state','location')===habitat.location;
+    const current=d.get('state','creatures',target,'corpse'),success=check.success&&current.status==='未取材'&&current.expires>d.get('state','minute')&&d.get('state','player','status')==='正常'&&d.get('state','location')===here;
     holdingSet(d,null,['state','creatures',target,'corpse'],{...current,status:success?'已取材':'已损坏',processedBy:'player',processedAt:d.get('state','minute'),processingEvent:eventId},'wildlife');
     if(success)for(const drop of current.items)this.itemDelta(d,'player',drop.item,drop.amount,{flow:'src:harvest',purpose:'butcher',writer:'wildlife',eventId});
+    const owner=corpse.owner??actor.owner;
+    if(owner&&owner!=='player')for(const drop of success?current.items:[{}])noteOffense(d,{act:'take',victim:owner,subject:{id:target,kind:'carcass'},actor:'player',...(drop.item?{stolen:{item:drop.item,quantity:drop.amount}}:{})});
     return{success,obtained:success?current.items:[],spent:{minutes:recipe.minutes,materials:recipe.consumes,tool:recipe.tool,toolWear:recipe.tool?1:0},note:'失败仍耗时耗材；仅obtained实际进入行囊，尸体不可反复刷取'};
 }

@@ -34,7 +34,8 @@ const scenario=once(async()=>{
  for(const [i,worker]of workers.entries()){
   Object.assign(doc.state.npcs[worker],{location:shopLocation,activity:'酒坊清扫与搬运',status:'正常'});
   const id=`workshop:e02:${i}`,nextWork=Math.floor(doc.state.minute/DAY)*DAY+1020;
-  doc.state.records[id]=snapshotContractTerms({id,category:'contract',kind:'workshop',laborMarket:1,owner:head,worker,parties:[worker,head],location:shopLocation,task:'酒坊清扫与搬运',wage:20,starts:doc.state.minute,createdAt:doc.state.minute,deadline:doc.state.minute+40*DAY,nextWork,status:'有效',paid:0,produced:0,targetQuantity:100000,workedMinutes:0,attendance:{},shifts:[],source:'e02-distillery'});
+  // 雇佣合同签约时必登记 wage 与 workMinutes（labor-market.mjs:78 发布岗位、:221 签约条款都写 workMinutes:480，npc-labor.mjs:226 缺则按数据错误抛出，不用缺省顶替）；夹具按真实合同的日工时口径补 480。
+  doc.state.records[id]=snapshotContractTerms({id,category:'contract',kind:'workshop',laborMarket:1,owner:head,worker,parties:[worker,head],location:shopLocation,task:'酒坊清扫与搬运',wage:20,workMinutes:480,starts:doc.state.minute,createdAt:doc.state.minute,deadline:doc.state.minute+40*DAY,nextWork,status:'有效',paid:0,produced:0,targetQuantity:100000,workedMinutes:0,attendance:{},shifts:[],source:'e02-distillery'});
  }
  // 监护：赵枫代管河湾 16 岁的段禾（替代“10 岁侄子”）
  doc.state.records['guardianship:probe']={category:'guardianship',id:'guardianship:probe',ward:ward,guardian:head,status:'代管中',since:doc.state.minute-DAY,expires:null,source:'probe'};

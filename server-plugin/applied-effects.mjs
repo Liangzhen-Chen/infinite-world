@@ -26,6 +26,8 @@ export function appliedEffects(beforeDocument,afterDocument,{result=null}={}){
  if((a.minute??0)!==(b.minute??0))effects.push({op:'time',minutes:(a.minute??0)-(b.minute??0),minute:a.minute});
  for(const key of ['hp','mp']){const delta=(a.player?.[key]??0)-(b.player?.[key]??0);if(delta)effects.push({op:'vital',holder:'player',need:key,delta});}
  if(a.player?.status!==b.player?.status)effects.push({op:'status',holder:'player',from:b.player?.status,to:a.player?.status});
+  const wasWet=Boolean(b.records?.['weather_exposure:player']?.wet),exposure=a.records?.['weather_exposure:player'];
+  if(wasWet!==Boolean(exposure?.wet))effects.push({op:'exposure',holder:'player',status:'wet',from:wasWet,to:Boolean(exposure?.wet),sourceEvent:exposure?.sourceEvent});
  for(const [id,row]of Object.entries(a.records??{}).sort(([x],[y])=>x.localeCompare(y)))
   if(!b.records?.[id]&&['contract','debt','loan'].includes(row?.category??row?.kind))effects.push({op:'obligation.create',id,category:row.category??row.kind,...(row.amount!==undefined?{amount:row.amount}:{}),...(row.expires!==undefined?{expires:row.expires}:{})});
  growthEffects(b,a,effects,result);

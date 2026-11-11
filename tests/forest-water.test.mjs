@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {applyPatches,canonical} from '../server-plugin/storage.mjs';
+import {applyPatches,canonical,withRecordIndex,PatchCursor} from '../server-plugin/storage.mjs';
 import {forestSites,forestView,harvestForest,harvestSettlementWood,settleFuel,advanceForestWater,forestHabitatCapacity,displaceForestWildlife} from '../server-plugin/forest-water.mjs';
-import {waterBasins,waterConnections,advanceWaterCycle,farmWaterFactor,waterExposure} from '../server-plugin/water-cycle.mjs';
+import {waterBasins,waterConnections,advanceWaterCycle,farmWaterFactor,waterExposure,waterResourceFactor} from '../server-plugin/water-cycle.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {advanceHazardClocks} from '../server-plugin/seasonal-hazards.mjs';
 import {advanceAgriculture} from '../server-plugin/agriculture.mjs';
@@ -25,7 +25,7 @@ function setup(mutate=()=>{}){
 const water=(id,volume,risk=0)=>({id,name:id,kind:'water',owner:'player',access:'public',position:[0,0],state:{capacityMl:1000000,waterMl:volume,pathogenRisk:risk,saltMg:1000,toxinUg:100,turbidity:10,odor:'原水'}});
 function river({use=0,pollution=0,rain=0}={}){
  const x=setup(w=>{
-  for(const l of w.locations){delete l.site;delete l.features;delete l.biome;l.terrain='平地';}
+  for(const l of w.locations){delete l.site;delete l.features;delete l.biome;l.terrain='平地';} for(const o of Object.values(w.mechanics?.locations??{}))delete o.site;/* 夹具要无据点的世界：连机制覆盖层的据点一并去掉，否则覆盖层把无 quantity 的据点加回而 biome 已删、无从派生 */
   const down=w.locations.find(l=>l.id==='loc_hw');down.features=[water('feature_rw_down',10000)];down.elevationMeters=0;
   w.locations.push({id:'loc_rw_up',name:'上游测试地',parent:null,coordinates:[0,100],terrain:'丘陵',elevationMeters:100,features:[water('feature_rw_up',900000,pollution)]});
   w.rules.weather.regions[0].locations.push('loc_rw_up');
@@ -40,6 +40,26 @@ function river({use=0,pollution=0,rain=0}={}){
  return x;
 }
 const feature=(d,id)=>d.get('state','records',`physical_feature:${id}`)?.state;
+
+test('流域目录随真实产粮名册变化，日内水量改变仍立即影响资源系数',()=>withRecordIndex(()=>{
+ const location={id:'loc_water_producer',terrain:'平地'},engine={world:{locations:[location],routes:[]},byId:new Map([[location.id,location]]),rules:{forestWater:{water:source.rules.forestWater.water},agriculture:{settlements:[]}}};
+ const cursor=new PatchCursor({state:{settlements:{[location.id]:{granary:false,foodPerDay:1}},records:{}}});
+ const read=()=>cursor.expose(cursor.root.state),set=(path,value)=>{cursor.apply({op:'set',path:['state',...path],value});return read();};
+ let state=read();
+ assert.deepEqual(waterBasins(engine,state),[]);
+ state=set(['settlements',location.id,'food'],100);assert.deepEqual(waterBasins(engine,state),[]);
+ state=set(['settlements',location.id,'granary'],true);
+ const basin=waterBasins(engine,state)[0];assert.equal(basin.id,`basin:${location.id}`);
+ const opening=Math.floor(basin.capacity*engine.rules.forestWater.water.initialShare);
+ state=set(['records',`water-cycle:${basin.id}`],{category:'water_cycle',water:{waterMl:opening}});
+ assert.equal(waterResourceFactor(engine,state,location.id),1);
+ // Hand anchor: withdrawing half the real opening water doubles scarcity,
+ // even within the same day; no daily cache may hide this physical change.
+ state=set(['records',`water-cycle:${basin.id}`,'water','waterMl'],opening/2);
+ assert.equal(waterResourceFactor(engine,state,location.id),2);
+ state=set(['settlements',location.id,'foodPerDay'],0);
+ assert.deepEqual(waterBasins(engine,state),[]);
+}));
 function assertWaterLedger(d){
  for(const r of Object.values(d.get('state','records')).filter(r=>r.category==='water_cycle')){
   assert.ok(Math.abs(r.initial+r.rain+r.inflow+r.externalDelta-r.outflow-r.consumed-r.evaporated-r.overflow-r.water.waterMl)<0.001,r.location);
@@ -61,8 +81,15 @@ test('林种由K8地形性状派生；耗尽后缺柴、涨价和事件，休伐
  assert.ok(regionalTradePrice(d,engine,'item_wood','loc_hw')>price);
  assert.ok(Object.values(d.get('state','records')).some(r=>r.category==='world_event'&&r.tags.includes('fuel_shortage')&&r.tags.includes('entity-transition')&&r.summary.includes('缺柴')));
  advanceForestWater(d,engine,day+400);
- const r=d.get('state','records',`forest:${id}`);assert.ok(r.reserve>site.capacity*0.25);assert.equal(r.initial+r.grown-r.harvested,r.reserve);
- assert.ok(r.updatedAt>d.get('state','minute'));assert.ok(Object.values(d.get('state','records')).some(r=>r.category==='world_event'&&r.tags.includes('forest_recovered')));
+ // D05 5.5: zero stock cannot reproduce. Keep shortage/price/event coverage
+ // above, and test recovery separately from surviving 20% stocks below.
+ const empty=d.get('state','records',`forest:${id}`);assert.equal(empty.reserve,0);assert.equal(empty.initial+empty.grown-empty.harvested,0);
+ const recovering=setup();for(const s of forestSites(recovering.engine))harvestForest(recovering.d,recovering.engine,s.location,Math.floor(s.capacity*0.8));
+ // Published broadleaf r=.0008/day: ordinary N=6000,K=54000 plus 6000
+ // old wood crosses 15000 after about 600 days, rather than a linear 400.
+ advanceForestWater(recovering.d,recovering.engine,day+600);
+ const r=recovering.d.get('state','records',`forest:${id}`);assert.ok(r.reserve>site.capacity*0.25);assert.equal(r.initial+r.grown-r.harvested,r.reserve);
+ assert.ok(r.updatedAt>recovering.d.get('state','minute'));assert.ok(Object.values(recovering.d.get('state','records')).some(r=>r.category==='world_event'&&r.tags.includes('forest_recovered')));
 });
 
 test('过伐收窄真实栖地容量，野物沿既有路移往有余量的兼容栖地，数量守恒',()=>{
@@ -132,17 +159,25 @@ test('实际伐木与据点木料采集同扣林木；无许可不能绕过据�
  const before=forestView(engine,d.get('state'),location).reserve,result=woodcut.call(engine,d,{quantity:2},'cut');
  assert.equal(result.obtained[0].quantity,2);assert.equal(forestView(engine,d.get('state'),location).reserve,before-2);
  const place=engine.byId.get(location);place.site={owner:'npc_hw_miller',mechanisms:[],entryMechanisms:[],resources:[{id:'rw_wood',name:'木料',item:'item_wood',quantity:5,minutes:1}],clues:[],changes:[]};
- assert.throws(()=>woodcut.call(engine,d,{},'private'),/许可/);
+ // K6 (c60b2a62, legality is a consequence): the owner's permission is a legal gate. Cutting in another's
+ // wood still physically happens from the same forest stock and is committed as illegal harvest against him.
+ // Going onto the private site to cut is itself the site's entry breach (sites.mjs entryBreach), so the
+ // one act commits trespass and illegal harvest, both against the owner.
+ const cut=woodcut.call(engine,d,{},'private');
+ assert.equal(cut.obtained[0].quantity,1);assert.equal(forestView(engine,d.get('state'),location).reserve,before-3);
+ assert.deepEqual(cut.offenses.map(o=>o.offense).sort(),['illegal_harvest','trespass']);
+ for(const o of cut.offenses){const row=d.get('state','records',o.record);assert.equal(o.victim,'npc_hw_miller');assert.equal(row.sourceEvent,'private');assert.equal(row.offender,'player');}
+ assert.deepEqual(d.get('state','records',cut.offenses.find(o=>o.offense==='illegal_harvest').record).stolen,{item:'item_wood',quantity:1});
  // 06 §6.3: physical presence does not bypass property or entrance gates.
  // A public outdoor forest needs no menu visit, but a blocked entrance still
  // rejects before harvesting or spending time; retain the private-owner case.
  place.site.owner=null;place.site.entryMechanisms=['rw_gate'];
  const blockedMinute=d.get('state','minute');
  assert.throws(()=>woodcut.call(engine,d,{},'blocked'),/机关/);
- assert.equal(d.get('state','minute'),blockedMinute);assert.equal(forestView(engine,d.get('state'),location).reserve,before-2);
+ assert.equal(d.get('state','minute'),blockedMinute);assert.equal(forestView(engine,d.get('state'),location).reserve,before-3);
  place.site.entryMechanisms=[];d.set(['state','records','site_presence'],{site:location,actor:'player'});
  const gathered=siteAction.call(engine,d,{operation:'gather',target:'rw_wood',quantity:1},'gather');assert.equal(gathered.quantity,1);
- assert.equal(forestView(engine,d.get('state'),location).reserve,before-3);
+ assert.equal(forestView(engine,d.get('state'),location).reserve,before-4);
 });
 
 test('无本卡规则的旧世界仍按原结算；长推进与逐日日结资源事实一致',()=>{
@@ -162,7 +197,9 @@ test('P3远方林木按周聚合，实际采伐前补齐该地生长；水体预
  const day=Math.floor(start/DAY);advanceForestWater(d,engine,day);
  assert.equal(d.get('state','records',`forest:${location}`).updatedAt,start);
  const time=start+3*DAY;d.set(['state','minute'],time);
- const expected=site.capacity-10000+Math.floor(site.capacity*site.growthPerDay*3);
+ // D05 5.5 / S505C: 6000 old wood remains full; ordinary K=54000,N=44000.
+ // floor(54000/(1+(54000/44000-1)*exp(-.0008*3)))+6000=50019.
+ const expected=50019;
  assert.equal(forestView(engine,d.get('state'),location).reserve,expected);
  assert.equal(harvestForest(d,engine,location,5),5);assert.equal(d.get('state','records',`forest:${location}`).reserve,expected-5);
  const x=river({rain:0.8,use:100}),b=waterBasins(x.engine).find(b=>b.id==='feature_rw_down'),w=structuredClone(b.feature.state);

@@ -1,3 +1,4 @@
+// todo 的阶段与真实前提逐条登记：docs/A3-后续阶段登记.md S5CT CT01/CT02（保留原阶段边界）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -8,6 +9,8 @@ import {setupLoaderFields,registerSetupLoader} from '../tools/a3-setup/index.mjs
 import {consent} from '../server-plugin/action-consent.mjs';
 import {obligationRows,obligationView} from '../server-plugin/obligation-state.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+import {dedicatedCoinAccount} from '../server-plugin/money.mjs';
 import {purseAccount} from '../server-plugin/items.mjs';
 import {serviceAppointments} from '../server-plugin/npc-state.mjs';
 import {currentAgreedQuotes} from '../server-plugin/shop.mjs';
@@ -98,19 +101,35 @@ test('accounts: stock opening stays plain inventory; coin premises require real 
  const result=run(setup);assert.deepEqual(errors(result,'accounts').map(e=>e.item),['accounts[0]']);assert.match(errors(result,'accounts')[0].reason,/setup\.prelude/);assert.equal(result.document.state.npcs.npc_hw_linsui.coins,initial.state.npcs.npc_hw_linsui.coins);clean(result);
 });
 
-test.todo('accounts: native counter opening is separate from purse; invalid/container and mismatched sources stay unmet〔前提待真实动作：独立柜台账户开户；归 S5〕',()=>{
+test('accounts: native counter opening is separate from purse; invalid sources and mismatched balances stay unmet',async()=>{
  const setup=fixture('002');setup.accounts[0].balance=-1;assert.equal(errors(run(setup),'accounts').length,1);
  setup.accounts[0].balance=3;assert.match(errors(run(setup),'accounts')[0].reason,/does not match/);
- // N is implemented: 01 §1.6 requires a distinct native counter, not an unmet placeholder.
- const counter=run(fixture('082'));assert.deepEqual(errors(counter,'accounts'),[]);
- assert.equal(counter.document.ledger.accounts['npc_hw_linsui|coin_river|counter'],100);
- assert.equal(counter.document.state.npcs.npc_hw_linsui.coins,initial.state.npcs.npc_hw_linsui.coins);clean(counter);
- // The physical M adapter now binds the original purse (01 §1.2/1.6), not a second coin store.
+ const missing=fixture('002');missing.accounts[0].sourceEvent='missing';assert.match(errors(run(missing),'accounts')[0].reason,/unresolved sourceEvent/);
+ // 01 §1.6 / 产品原则三.2：独立柜台由真实租约与 business:open_counter 开户，不用余额快照。
+ // A3V2-082 的题面（林穗柜台 100 铜、钱袋不变）经真实动作得到，且声明式快照仍须被拒。
+ assert.deepEqual(errors(run(fixture('082')),'accounts').map(e=>e.item),['accounts[0]']);
+ const prepared=run({minute:600,location:'bld_hw_qingdeng',coins:300,inventory:{item_bread:5},present:['npc_hw_linsui']});assert.deepEqual(prepared.setupUnmet,[]);
+ const act=async(document,call)=>{const out=await engine.reduce(document,call);assert.notEqual(out.result.receipt?.status,'rejected',JSON.stringify(out.result));return {document:applyPatches(document,out.patches),result:out.result};};
+ const leased=await act(prepared.document,{tool:'world_trade',args:{operation:'lease',seller:'npc_hw_linsui',consent:true,days:1},eventId:'inst-counter-lease'});
+ const purse=leased.document.state.player.coins,npcPurse=leased.document.state.npcs.npc_hw_linsui.coins;
+ const opened=await act(leased.document,{tool:'world_act',args:{action:'business:open_counter',slots:{business:leased.result.business,coins:100}},eventId:'inst-counter-open'});
+ const document=opened.document;
+ assert.equal(document.ledger.accounts['player|coin_river|counter'],100);assert.equal(dedicatedCoinAccount(document.state,'player','counter').coins,100);
+ assert.equal(document.state.player.coins,purse-100);assert.equal(document.state.npcs.npc_hw_linsui.coins,npcPurse);clean({document});
+ // 无效来源：负数资金、未登记用途、他人作主、重复开户都不得初始化账户。
+ for(const [slots,id] of [[{coins:-1},'neg'],[{sourceEvent:'missing'},'src'],[{purpose:'unregistered'},'purpose'],[{owner:'npc_hw_linsui'},'owner']]){
+  const out=await engine.reduce(leased.document,{tool:'world_act',args:{action:'business:open_counter',slots:{business:leased.result.business,coins:100,...slots}},eventId:`inst-bad-${id}`});
+  assert.equal(out.result.receipt?.status,'rejected',id);assert.deepEqual(applyPatches(leased.document,out.patches),leased.document,id);
+ }
+ const again=await engine.reduce(document,{tool:'world_act',args:{action:'business:open_counter',slots:{business:leased.result.business,coins:100}},eventId:'inst-counter-reopen'});
+ assert.equal(again.result.receipt?.status,'rejected');assert.deepEqual(applyPatches(document,again.patches),document);
+});
+
+test.todo('accounts: a native original purse bound by container is unmet when the container is missing〔前提待真实动作：A3V2-096 同时要求 npc 注意力/警觉初态与题面声明的 1 米站位（原生 6 米），且钱袋硬币账户须由前置动作产生；归 S4（空间与感知）〕',()=>{
  const container=run(fixture('096'));assert.deepEqual(errors(container,'accounts'),[]);
  const account=purseAccount(engine.primitiveDraft(container.document),engine,container.bindings.a3v2_096_purse);
  assert.equal(container.document.ledger.accounts[account],10);assert.equal(container.document.state.npcs.npc_hw_yanzhe.coins,10);clean(container);
  const badContainer=fixture('096');badContainer.accounts[0].container='missing:purse';assert.equal(errors(run(badContainer),'accounts').length,1);
- const missing=fixture('002');missing.accounts[0].sourceEvent='missing';assert.match(errors(run(missing),'accounts')[0].reason,/unresolved sourceEvent/);
 });
 
 // Product principle III.2: retain amount/time/one-claim checks on genuinely funded loans,
@@ -144,8 +163,44 @@ test('obligations: native old loans retain amount/time and share one compatibili
  }
 });
 
-test.todo('obligations: native old deposits/pawns/fines/delivery/upkeep preserve claims without fresh funding〔前提待真实动作：建立具名存单、质押、罚款、货损及维持债权的真实组合前提；归 S5〕',()=>{
- for(const id of ['032','037','054','056','073']){
+// 产品原则三.2：存单、质押、维持债权由真实动作（存款、当物、施法召唤）产生；
+// 保留“金额、已还、单一债权、不重新出资、账本一致”的断言，不再读历史快照。
+test('obligations: real deposit, pawn and upkeep claims are single, unpaid and never freshly funded',async()=>{
+ const call=(action,slots,eventId)=>({tool:'world_act',args:{action,slots},eventId});
+ const claimsOf=(document,kind)=>obligationRows(document.state).filter(o=>o.kind===kind);
+ const cleanDoc=document=>clean({document});
+ // 032 存单：存入 101 铜得到 100 铜的唯一存款债权，钱袋被真实扣除，没有凭空入账。
+ const post=run({minute:600,location:'bld_hw_post',present:['npc_hw_shendu'],coins:101});assert.deepEqual(post.setupUnmet,[]);
+ const deposit=await runPrelude(engine,post.document,[call('core:trade.deposit',{seller:'npc_hw_shendu',coins:101},'inst-deposit')]);assert.deepEqual(deposit.unmet,[]);
+ let claims=claimsOf(deposit.document,'deposit');assert.equal(claims.length,1);
+ assert.equal(claims[0].amount,fixture('032').obligations[0].amount);assert.equal(claims[0].paid,0);assert.equal(claims[0].creditor,'player');assert.equal(claims[0].debtor,'bank_hw_post');
+ assert.equal(obligationView(deposit.document.state,claims[0].id).owed,100);assert.equal(deposit.document.state.player.coins,0);cleanDoc(deposit.document);
+ // 037 质押：当出旧木杖得到 2 铜，唯一债权 2 铜。
+ const pawnScene=run({minute:600,location:'bld_hw_post',present:['npc_hw_shendu'],coins:1,inventory:{item_staff:0},
+  itemInstances:[{id:'inst-pawn-staff',template:'thing',kind:'item',item:'item_staff',owner:'player',location:'bld_hw_post',carriedBy:'player',condition:100}],
+  holdings:[{id:'inst-pawn-title',kind:'owns',holder:'player',subject:'inst-pawn-staff',terms:{share:1}}]});assert.deepEqual(pawnScene.setupUnmet,[]);
+ const pawned=await runPrelude(engine,pawnScene.document,[call('core:trade.pawn',{seller:'npc_hw_shendu',item:'item_staff',quantity:1,coins:1,days:1},'inst-pawn')]);assert.deepEqual(pawned.unmet,[]);
+ const loans=obligationRows(pawned.document.state).filter(o=>o.creditor==='bank_hw_post'&&o.debtor==='player');assert.equal(loans.length,1);
+ const pawnRow=pawned.document.state.records[Object.keys(pawned.document.state.records).find(k=>k.startsWith('debt_loan_inst-pawn'))];
+ // W4 F007：当物按估值角色作价——旧木杖基价4 × 本地供需系数下限0.5 = 2 铜，当铺按5成放款，最多借 1 铜（题面的 2 铜是旧目录价口径）。
+ // 真实当票本金 1 铜，另含一铜利息；钱袋只多了本金（1+1），没有重复出资。
+ assert.equal(pawnRow.principal,1);assert.equal(loans[0].paid,0);assert.equal(pawned.document.state.player.coins,2);
+ assert.equal(obligationView(pawned.document.state,loans[0].id).owed,pawnRow.principal+pawnRow.interest);cleanDoc(pawned.document);
+ // 073 维持债权：真实施法召唤水盏，产生唯一的维持义务，不另收开办费。
+ const spell=engine.byId.get('spell_summon_04'),scene=run({minute:600,location:'bld_hw_school',present:[],coins:0,inventory:Object.fromEntries(spell.materials.map(m=>[m.item,m.amount])),abilitiesByActor:{player:{spells:[spell.id],skills:{[spell.skill]:2699}}}});assert.deepEqual(scene.setupUnmet,[]);
+ let summoned=null;
+ for(let n=0;n<20&&!summoned;n++){
+  const id=`inst-summon-${n}`,out=await runPrelude(engine,scene.document,[call('core:cast',{spell:spell.id,target:'player'},id)]);assert.deepEqual(out.unmet,[]);
+  if(out.document.state.effects[id])summoned=out;
+ }
+ assert.ok(summoned,'a successful native summon is required');
+ claims=claimsOf(summoned.document,'upkeep');assert.equal(claims.length,1);
+ assert.equal(claims[0].amount,fixture('073').obligations[0].amount);assert.equal(claims[0].paid,0);assert.equal(claims[0].debtor,'player');
+ assert.equal(summoned.document.state.player.coins,0);cleanDoc(summoned.document);
+});
+
+test.todo('obligations: native old fines and delivery claims preserve claims without fresh funding; overpaid/unresolved-source snapshots are rejected〔前提待真实动作：A3V2-054 需镇巡值房在岗机构身份与已立案判决（白石章程无裁判权），A3V2-056 需在岗机构与已签收货损文书；二者均属机构/案件阶段；归 S4〕',()=>{
+ for(const id of ['054','056']){
   const setup=fixture(id),result=run(setup);assert.deepEqual(errors(result,'obligations'),[],id);
   assert.equal(result.document.state.player.coins,setup.coins,id);
   // O imports existing obligations (01 §1.4, 06 §6.3); it must not open or fund them again.

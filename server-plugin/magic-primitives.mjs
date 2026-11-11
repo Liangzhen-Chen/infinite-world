@@ -4,6 +4,7 @@ import {ritualProtectionValid}from'./magic-ritual.mjs';
 import {nativePrimitiveTransaction}from'./native-primitives.mjs';
 // Shared numerical handlers; callers own targeting, consent, costs and death effects.
 import {SPELL_DAMAGE_TYPES}from'./traits.mjs';
+import {hypot} from './det-math.mjs';
 // Spell damage types are the first eight entries of the unified element list.
 export const damageTypes=SPELL_DAMAGE_TYPES;
 const fields={ritual:['operation','destination','group'],mind_space:['operation'],care:['operation'],damage:['damageType','armorFactor','coldDecay','windBlade','stoneProjectile','lightDecay','shadowDecay'],optics:['operation'],water_earth:['operation'],air:['operation'],heal:[],repair:[],dry:[],status:['status'],relief:['statuses'],mark:['medium','visibility'],light:[],environment:['operation','unit'],summon:['summonType','upkeepMp','upkeepMinutes'],summon_contract:['operation','offering'],protection:['damageTypes','stacking'],object:['operation','limitC','surface'],heat:['operation','limitC','upkeepMp'],area:['radiusMeters','intervalMinutes','trigger','effect']};
@@ -75,7 +76,7 @@ export function consumeMagicProtection(d,target,amount,damageType='physical'){
    if(s.waterFeature){
     const water=d.get('state','records',`physical_feature:${s.waterFeature}`)?.state?.waterMl??s.initialWaterMl;
     const p=d.get('state','records','local_player_position'),point=p?.location===s.location?p.point:[0,0];
-    if(!Number.isFinite(water)||water<2000||!Array.isArray(s.waterPoint)||Math.hypot(point[0]-s.waterPoint[0],point[1]-s.waterPoint[1])>1)continue;
+    if(!Number.isFinite(water)||water<2000||!Array.isArray(s.waterPoint)||hypot(point[0]-s.waterPoint[0],point[1]-s.waterPoint[1])>1)continue;
    }
   }
   const errors=validateEffectSpec({kind:'protection',power:e.power,damageTypes:e.damageTypes,stacking:e.stacking});

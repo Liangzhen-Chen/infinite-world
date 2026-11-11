@@ -19,9 +19,18 @@ function monthsOf(calendar,year){
     if(months.some(m=>!Number.isSafeInteger(m.days)||m.days<1))throw Error('Invalid obligation calendar month');
     return months;
 }
+// The date of a day is a pure function of (calendar, day index); only the offset within the day varies by minute.
+const dateMemo=new WeakMap();
 export function obligationDate(minute,calendar){
     calendar=obligationCalendar(calendar);
     if(!Number.isSafeInteger(minute)||minute<(calendar.epochMinute??0))throw Error('Invalid obligation calendar minute');
+    const epoch=calendar.epochMinute??0,dayIndex=Math.floor((minute-epoch)/DAY);
+    let byDay=dateMemo.get(calendar);if(!byDay){byDay=new Map();dateMemo.set(calendar,byDay);}
+    let row=byDay.get(dayIndex);
+    if(!row){row=computeObligationDate(epoch+dayIndex*DAY,calendar);if(byDay.size>4096)byDay.clear();byDay.set(dayIndex,row);}
+    return {...row,offset:(minute-epoch)%DAY};
+}
+function computeObligationDate(minute,calendar){
     let days=Math.floor((minute-(calendar.epochMinute??0))/DAY),year=1,start=calendar.epochMinute??0;
     for(;;year++){
         const months=monthsOf(calendar,year),length=months.reduce((n,m)=>n+m.days,0);
@@ -69,6 +78,7 @@ const decimal=value=>{
     const [digits,exponent='0']=String(value).toLowerCase().split('e'),[whole,decimals='']=digits.split('.'),power=Number(exponent)-decimals.length;
     return power>=0?fraction(BigInt(whole+decimals)*10n**BigInt(power)):fraction(BigInt(whole+decimals),10n**BigInt(-power));
 };
+export {decimal as decimalFraction};
 const multiply=(a,b)=>fraction(a.numerator*b.numerator,a.denominator*b.denominator);
 export const addAccrual=(a,b,sign=1n)=>fraction(a.numerator*b.denominator+sign*b.numerator*a.denominator,a.denominator*b.denominator);
 // Exact accumulator for mutations: fractional money survives amendments and
@@ -86,4 +96,13 @@ export function accrualFraction({from,to,calendar,per='anchor',value,proration='
     const basis=c.rateBasis?.month??30;
     const units=per==='day'?fraction(BigInt(to-from),BigInt(DAY)):addAccrual(fraction(BigInt(span.full)),proration==='none'?fraction(0n):fraction(BigInt(Math.round(span.remDays*DAY)),BigInt(DAY*basis)));
     return multiply(v,units);
+}
+// Signed decimal rates use the same calendar engine without first converting
+// to floating basis points. Money is rounded once, after the entire interval.
+export function interestFraction({principal,rate,from,to,per='anchor',calendar}){
+    return multiply(multiply(decimal(principal),decimal(rate)),accrualFraction({from,to,per,calendar,value:1}));
+}
+export function interestAmount(args,{round='ceil'}={}){
+    const f=interestFraction(args);if(!['ceil','trunc'].includes(round))throw Error('Invalid interest rounding');
+    return Number(round==='ceil'?(f.numerator+f.denominator-1n)/f.denominator:f.numerator/f.denominator);
 }

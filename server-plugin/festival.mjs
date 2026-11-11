@@ -1,9 +1,10 @@
 import {preconditionFailure} from './precondition.mjs';
+import {goodsWorth} from './valuation.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('festival',{sinks:['sink:consume']});
-import {digest} from './storage.mjs';
+import {digest,recordsWhere} from './storage.mjs';
 import {assertActionTime,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {npcObligationAt} from './npc-obligations.mjs';
 import {npcAutonomyBusy} from './npc-autonomy.mjs';
@@ -49,7 +50,7 @@ function planOrdinaryFestival(d,engine,args,eventId){
  }
  let decision=null;
  if(host!=='player'){
-  const coins=riddles.reduce((sum,p)=>sum+(engine.byId.get(p.reward.item)?.basePrice??0),0);
+  const coins=riddles.reduce((sum,p)=>sum+(goodsWorth(d,engine,{item:p.reward.item,quantity:1,holder:host})??0),0);
   decision=npcDecision(subjectiveView(engine,d.document,host),{kind:'festival',from:'player',reward:fee,cost:{coins,minutes:endsAt-due}});
   if(decision.outcome!=='agree')throw preconditionFailure(`主办者尚未同意：${decision.reason}`);
  }
@@ -91,11 +92,17 @@ export function localFestivalCalendar(engine){
   ...f,id:`custom:${p.id}:${i}`,settlement:p.id,source:`world/geo/settlements.json#${p.id}/calendar/${i}`,kind:'local-custom'
  })));
 }
+// The native-calendar date search is a pure function of (calendar, year, month, day, start offset): remembered per key.
+const whenMemo=new Map();
 const when=(f,year,engine)=>{
  if(!engine?.calendarId)return ((year-1)*360+(f.month-1)*30+f.day-1)*DAY+(f.runtime?.startMinute??720);
- const offset=f.runtime?.startMinute??720;
- try{return minuteForCalendarDate(engine,{calendar:engine.calendarId,year,month:f.month,day:f.day,hour:Math.floor(offset/60),minute:offset%60});}
- catch{return null;} // A short month does not invent a missing festival date.
+ const offset=f.runtime?.startMinute??720,key=`${engine.calendarId}|${year}|${f.month}|${f.day}|${offset}`;
+ if(whenMemo.has(key))return whenMemo.get(key);
+ let value;
+ try{value=minuteForCalendarDate(engine,{calendar:engine.calendarId,year,month:f.month,day:f.day,hour:Math.floor(offset/60),minute:offset%60});}
+ catch{value=null;} // A short month does not invent a missing festival date.
+ if(whenMemo.size>8192)whenMemo.clear();
+ whenMemo.set(key,value);return value;
 };
 const occurrence=(f,year)=>`festival:${f.id}:${year}`;
 // Published runtime contract: active, host, kind (market/ritual), startMinute,
@@ -151,7 +158,16 @@ function generatedHost(engine,f){
  if(f.runtime?.status!=='awaiting_host')return null;
  return engine.world.npcs.find(n=>n.generated==='remote'&&n.remoteRole==='festival_host'&&n.festivalHost===f.id&&n.location===f.venue?.location)?.id??null;
 }
+// The calendar is derived only from the world's fixed tables and engine.byId. Remote generation replaces
+// those arrays (new identities), so the cached rows are valid exactly while every input identity is unchanged.
+const calendarMemo=new WeakMap();
 export function festivalCalendar(engine){
+ const w=engine.world,inputs=[w,w.festivals,w.npcs,w.residents,w.settlementProfiles,w.locations,engine.byId];
+ const hit=calendarMemo.get(engine);
+ if(hit&&hit.inputs.every((x,i)=>x===inputs[i]))return hit.rows;
+ const rows=deriveFestivalCalendar(engine);calendarMemo.set(engine,{inputs,rows});return rows;
+}
+function deriveFestivalCalendar(engine){
  // A festival outside this world edition (editionFestival) is never held.
  const hosted=(engine.world.festivals??[]).filter(f=>editionFestival(engine.world,f)).map(f=>{if(f.runtime?.status==='active')return f;const host=generatedHost(engine,f);return host?{...f,runtime:{...f.runtime,status:'active',host}}:null;}).filter(Boolean);
  const official=hosted.map(f=>({...f,
@@ -299,8 +315,8 @@ export function festivalAction(d,args,eventId){
  }
  let decision=null;
  if(args.consent!==true&&args.operation==='festival_authorize'&&who!=='player'){
-  const items=row.resources.filter(n=>n.owner===who).reduce((sum,n)=>sum+n.quantity*(this.byId.get(n.item)?.basePrice??0),0);
-  const prizes=who===row.host?(f.runtime.riddles??[]).reduce((sum,p)=>sum+p.reward.quantity*(this.byId.get(p.reward.item)?.basePrice??0),0):0;
+  const items=row.resources.filter(n=>n.owner===who).reduce((sum,n)=>sum+(goodsWorth(d,this,{item:n.item,quantity:n.quantity,holder:who})??0),0);
+  const prizes=who===row.host?(f.runtime.riddles??[]).reduce((sum,p)=>sum+(goodsWorth(d,this,{item:p.reward.item,quantity:p.reward.quantity,holder:who})??0),0):0;
   decision=npcDecision(subjectiveView(this,d.document,who),{kind:'festival',from:'player',cost:{coins:(who===row.host?row.cost:0)+items+prizes,minutes:f.runtime.durationMinutes}});
   if(decision.outcome!=='agree')throw preconditionFailure(`节庆当事人未同意：${decision.reason}`);
  }else if(args.consent!==true)throw preconditionFailure('需要本人明确同意，不为未到场者代答');
@@ -321,14 +337,14 @@ export function festivalAction(d,args,eventId){
  throw preconditionFailure('未知节俗操作');
 }
 export function nextFestivalMinute(state,engine,now){
- const pending=Object.values(state.records??{}).filter(r=>r.category==='festival'&&r.status==='planned'&&r.due>now).map(r=>r.due);
+ const pending=recordsWhere(state.records,'category','festival').filter(r=>r.category==='festival'&&r.status==='planned'&&r.due>now).map(r=>r.due);
  const year=engine.calendar(now).year;
  for(const f of festivalCalendar(engine)){const at=when(f,year,engine),next=at!==null&&at>now?at:when(f,year+1,engine);if(next!==null)pending.push(next);}
- for(const r of Object.values(state.records??{}))if(r.category==='festival'&&r.status==='held'&&r.endsAt>now)pending.push(r.endsAt);
+ for(const r of recordsWhere(state.records,'category','festival'))if(r.category==='festival'&&r.status==='held'&&r.endsAt>now)pending.push(r.endsAt);
  return Math.min(Infinity,...pending);
 }
 export function advanceFestivals(d,engine,at){
- for(const row of Object.values(d.get('state','records')??{}))if(row.category==='festival'&&row.ordinary){
+ for(const row of recordsWhere(d.get('state','records'),'category','festival'))if(row.category==='festival'&&row.ordinary){
   if((row.status==='planned'||row.status==='held')&&row.endsAt<=at)
    holdingSet(d,engine,path(row.id),{...row,status:'ended',resolvedAt:row.endsAt},'festival');
   else if(row.status==='planned'&&row.due<=at)
@@ -336,7 +352,7 @@ export function advanceFestivals(d,engine,at){
  }
  const year=engine.calendar(at).year;
  const calendar=festivalCalendar(engine);
- for(const old of Object.values(d.get('state','records')??{}))if(old.category==='festival'&&!old.ordinary&&old.status==='planned'&&old.due===at&&!calendar.some(f=>f.id===old.custom)){
+ for(const old of recordsWhere(d.get('state','records'),'category','festival'))if(old.category==='festival'&&!old.ordinary&&old.status==='planned'&&old.due===at&&!calendar.some(f=>f.id===old.custom)){
   d.set(path(old.id),{...old,status:'unavailable',reason:'已预约节日不再有正式运行来源',resolvedAt:at,resultEvent:`festival-result:${old.id}`});
  }
  for(const f of calendar){

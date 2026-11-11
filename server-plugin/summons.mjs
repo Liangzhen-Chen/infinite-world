@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {noteUnlicensedUse} from './offense-notes.mjs';
 import {vocabulary} from './domain-rules.mjs';
 import {registerMagicEffect}from'./magic-effects.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -9,6 +10,7 @@ import {applyProtectionPrimitive}from'./magic-primitives.mjs';
 import{effectiveProficiency}from'./professions.mjs';
 import {obligationRow,obligationView} from './obligation-state.mjs';
 import {closeObligation,endSummonUpkeep,openSummonUpkeep} from './obligation-runtime.mjs';
+import {hypot} from './det-math.mjs';
 
 export const summonTemplates=Object.freeze({
  dust_servant:{tasks:['clean'],maximumPower:100,maximumDuration:30,upkeepMp:1,upkeepMinutes:5,work:true},
@@ -41,9 +43,9 @@ function waterSite(d,engine,target,authorization){
  if(!row||!['water','container'].includes(row.kind))throw preconditionFailure('水中守卫需要所在地真实水体');
  const state=d.get('state','records',`physical_feature:${row.id}`)?.state??row.state;
  const position=d.get('state','records','local_player_position');const point=position?.location===row.location?position.point:[0,0];
- if(!Number.isFinite(state.waterMl)||state.waterMl<2000||!Array.isArray(row.position)||row.position.length!==2||row.position.some(x=>!Number.isFinite(x))||!Array.isArray(point)||point.some(x=>!Number.isFinite(x))||Math.hypot(point[0]-row.position[0],point[1]-row.position[1])>1)throw preconditionFailure('水中守卫须接触至少两升现有水体');
+ if(!Number.isFinite(state.waterMl)||state.waterMl<2000||!Array.isArray(row.position)||row.position.length!==2||row.position.some(x=>!Number.isFinite(x))||!Array.isArray(point)||point.some(x=>!Number.isFinite(x))||hypot(point[0]-row.position[0],point[1]-row.position[1])>1)throw preconditionFailure('水中守卫须接触至少两升现有水体');
  if(row.owner!=='player'&&row.access!=='public'){
-  const a=d.get('state','records',authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))throw preconditionFailure('水体所有者未授权');
+  const a=d.get('state','records',authorization);if(a?.category!=='authorization'||a.subject!==row.id||a.action!=='environment_use'||a.grantor!==row.owner||a.revoked||a.expires!==undefined&&a.expires<=d.get('state','minute'))noteUnlicensedUse(d,row);
  }
  return{waterFeature:row.id,initialWaterMl:state.waterMl,waterPoint:[...row.position]};
 }

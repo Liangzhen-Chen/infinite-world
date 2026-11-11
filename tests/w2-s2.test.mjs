@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import{tmpRoot}from'../tools/tmp-root.mjs';
 import path from 'node:path';
-import {loadWorld} from '../tools/load-world.mjs';
+import {loadWorld,loadRuntimeWorld} from '../tools/load-world.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {readS2Publication,mergeS2Publication,publishS2,withoutS2,files as publishedFiles} from '../tools/publish-w2-s2.mjs';
 import {withoutS3} from '../tools/publish-w2-s3.mjs';
@@ -17,11 +17,23 @@ import {projectileAirPenalty} from '../server-plugin/magic-air.mjs';
 import {skipTo} from './fixtures/skip-clock.mjs';
 
 // Later batches (T103 onward) are removed first so this batch is compared on its own edition.
-const formal=withoutS3(withoutS4(await loadWorld())),publication=await readS2Publication();
+const formal=withoutS3(withoutS4(await loadRuntimeWorld())),publication=await readS2Publication();
 const ids={spells:new Set(spells.map(s=>s.id)),skills:new Set(spells.map(s=>s.skill)),items:new Set([...books,...items].map(i=>i.id)),recipes:new Set(recipes.map(r=>r.id))};
 // The edition before this batch is rebuilt from the formal world, so the test
 // works before and after publication and never pins catalogue totals.
-const before=withoutS2(formal),world=mergeS2Publication(before,publication),engine=new WorldEngine(world);
+const before=withoutS2(formal,{keepOwnGenerated:true}),world=mergeS2Publication(before,publication);
+// 合入 F 后依据：家户每天吃饭、烧柴（F 的 npc-life）。炼丹导师家既没有别的口粮也没有柴：蜂蜜按类别成了口粮（每份饱腹 7），
+// 几天的饭就把他那 3 份吃完、也按口粮自留；没有柴就只能烧他的艾绒引火包。学成后便买不到炼丹要的蜂蜜与引火包。
+// 夹具（本测试的世界副本）给导师家备足面包作口粮、60 份木柴作家用燃料，让“蜂蜜与引火包是他可出让的余货”这一前提成立；断言不变。
+// 面包数按 R1 重推（t-sat：面包单件饱腹 30→16，item-class.mjs satietyFactor，同样的饭要吃近两倍的面包），由探针推出，不是估算。
+// 探针 tools/probe-rules-a.mjs w2（复演丹路线至购买前，第 7 天 minute 10940，只改导师面包数 BREAD）：
+//  · st-5：60 个吃掉 42 剩 18（每天约 6 个）；现状 60 个吃光后再吃 2 份蜂蜜，蜂蜜留 1 且全自留，可售 0，买蜂蜜被拒。
+//  · 现状购买前一共消耗 84 个（BREAD=96 剩 12、108 剩 24、120 剩 36，三次差值都是 84）；84÷7.24 天≈11.6，取每天 12 个。
+//  · 购买之后本测试不再向这位导师买东西（学成缓存的存档只用于施法与炼丹），所以“购买后还要用的量”为 0，只需撑到购买那一刻。
+//  · 临界：BREAD=84 时面包刚好吃完，蜂蜜 3 份留 2、可售 1，勉强买得到；BREAD=96（8 天×12，即 7 天消耗 84 再留 1 天口粮 12）时蜂蜜留 0、可售 3，
+//    六样购买全部成交（火绒 2 份仍 1 铜）。取 96：最小需求 84 + 一天的口粮余量。
+const mentorHome=w=>{const n=w.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:96,item_wood:60};return w;};mentorHome(world);
+const engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAO='npc_bs_077_1',WU='npc_bs_079_1',DAN='npc_bs_078_1';
@@ -64,7 +76,13 @@ async function routeSession(route){
   assert.equal(doc.state.spells[s.id].source.id,teacher);assert.equal(doc.state.spells[s.id].source.type,'teacher');
   assert.equal(doc.state.player.coins,coins-s.learnFee);assert.equal(doc.state.npcs[teacher].coins,teacherCoins+s.learnFee);
  }
- const buy=async(item,quantity)=>{const t=await run(doc,'world_trade',{seller:teacher,item,quantity});assert.ok(t.result.cost>0);doc=t.doc;};
+ const buy=async(item,quantity)=>{
+  const t=await run(doc,'world_trade',{seller:teacher,item,quantity});
+  // E6后导师私有火绒不算公开供给：S0、D1，稀缺因子1；先前真实采购使立场因子.99895。
+  // 两份的零售额trunc(1×1×1×.99895×2)=1铜，其他采购仍须付款，材料消耗断言保持。
+  if(item==='item_s2_tinder')assert.equal(t.result.cost,1,item);else assert.ok(t.result.cost>0,item);
+  doc=t.doc;
+ };
  if(route==='道'){
   doc=await attend(doc,teacher,place,800);
   for(const [item,q] of [['item_s2_yellow_paper',1],['item_s2_cinnabar',1],['item_ink_brush',1],['item_s2_talisman',4]])await buy(item,q);
@@ -166,7 +184,7 @@ test('道门符术：镇火、火线、静声、阻风、水帘、固堤、整�
  assert.equal(rec(seal.doc,fid('clay_heap')).clayGrams,99800);const basin=rec(seal.doc,fid('vat_basin')).waterMl;assert.equal(rec(await wait(seal.doc,2),fid('vat_basin')).waterMl,basin);
  assert.ok(rec(await wait(fresh(),2),fid('vat_basin')).waterMl>0);
  // Private objects need the owner's permission; refusals keep money and materials.
- const refused=fresh();await assert.rejects(engine.reduce(refused,{tool:'world_cast',args:{spell:'spell_s2_altar_level',target:fid('altar_ground')},eventId:'no-permit'}),/授权/);
+ /* K6 依据（审查 C-b，所有者授权是后果）：他人之物无授权照样施放，命中擅用他人之物，罪名挂本次事件 */{const before=fresh(),out=await engine.reduce(before,{tool:'world_cast',args:{spell:'spell_s2_altar_level',target:fid('altar_ground')},eventId:'no-permit'}),after=applyPatches(before,out.patches);const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,JSON.stringify(out.result.offenses));assert.equal(after.state.records[o.record].sourceEvent,'no-permit');assert.ok(after.state.player.mp<before.state.player.mp,'施放确实发生');}
 });
 
 test('武者器用：拨矢、落叶身、闭息、听风、暖掌、开石、水索、陷足按真实条件生效',async()=>{
@@ -185,7 +203,7 @@ test('武者器用：拨矢、落叶身、闭息、听风、暖掌、开石、�
  g=await grant(fresh(),WU,fid('rope_post'),fid('wash_trough'));const rope=await cast(g.doc,{spell:'spell_s2_water_rope',target:fid('rope_post'),source:fid('wash_trough'),authorization:g.authorization,authorizations:g.authorizations});
  assert.equal(rope.result.reservedWaterMl,2000);assert.equal(rec(rope.doc,fid('wash_trough')).waterMl,18000);assert.equal(rec(await wait(rope.doc,2),fid('wash_trough')).waterMl,20000);
  g=await grant(fresh(),WU,fid('mud_pit'));const mud=await cast(g.doc,{spell:'spell_s2_mire_step',target:fid('mud_pit'),authorization:g.authorization});assert.ok(Object.values(mud.doc.state.effects).some(e=>e.operation==='mud_trap'&&e.target===fid('mud_pit')));
- await assert.rejects(engine.reduce(fresh(),{tool:'world_cast',args:{spell:'spell_s2_stone_wedge',target:fid('trial_stone')},eventId:'no-permit-stone'}),/授权/);
+ /* K6 依据（审查 C-b，所有者授权是后果）：他人之物无授权照样施放，命中擅用他人之物，罪名挂本次事件 */{const before=fresh(),out=await engine.reduce(before,{tool:'world_cast',args:{spell:'spell_s2_stone_wedge',target:fid('trial_stone')},eventId:'no-permit-stone'}),after=applyPatches(before,out.patches);const o=out.result.offenses?.find(o=>o.offense==='unauthorized_use');assert.ok(o,JSON.stringify(out.result.offenses));assert.equal(after.state.records[o.record].sourceEvent,'no-permit-stone');assert.ok(after.state.player.mp<before.state.player.mp,'施放确实发生');}
 });
 
 test('书铺三册有限库存：购买、阅读学会法师与通用术式，并在学馆实地施放',async()=>{
@@ -232,19 +250,22 @@ test('旧战役升级逐键加入书、材料与导师课目，售空不回补�
 test('隔离发布只追加本批，保留其他条目，重复发布零写入，篡改或冲突拒绝且不回补库存',async t=>{
  assert.equal(world.spells.length,before.spells.length+spells.length);
  for(const k of ['spells','skills','items','recipes'])assert.deepEqual(world[k].filter(r=>!ids[k].has(r.id)),before[k].filter(r=>!ids[k].has(r.id)));
- if(published)assert.deepEqual(world,formal);
+ // K5：工位由地点 fixtures 派生（引擎构造时就地物化）。对照项带同一导师家夹具，并经同一物化；草案手写的工位行按类别、热源要求、收费与主人核对其派生结果，不按旧 id。
+ if(published){const expected=mentorHome(structuredClone(formal));new WorldEngine(expected);assert.deepEqual(world,expected);}
+ for(const [place,rows] of Object.entries(stations))for(const row of rows){const got=world.locations.find(l=>l.id===place).workstations?.find(w=>w.kind===row.kind);assert.ok(got,`${place} 的 ${row.kind} 工位由 fixtures 派生`);assert.deepEqual({owner:got.owner,fee:got.fee,access:got.access,thermalRequirement:got.thermalRequirement},{owner:row.owner,fee:row.fee,access:row.access,thermalRequirement:row.thermalRequirement});}
  assert.deepEqual(mergeS2Publication(world,publication),world);
  const zero=structuredClone(world);zero.npcs.find(n=>n.id==='npc_hw_luqing').inventory[books[0].id]=0;zero.npcs.find(n=>n.id===DAN).inventory.item_charcoal=0;assert.deepEqual(mergeS2Publication(zero,publication).npcs,zero.npcs);
  const conflict=structuredClone(world);conflict.spells.find(s=>s.id===spells[0].id).name+='异文';assert.throws(()=>mergeS2Publication(conflict,publication),/冲突/);
  const root=await fs.mkdtemp(path.join(tmpRoot(),'dnd-s2-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
- for(const folder of ['meta','people','geo','lore'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
+ // 隔离世界保留地点依赖的四季采集密度规则及法域绑定，和S4发布夹具一致；不改发布内容或断言。
+ for(const folder of ['meta','people','geo','lore','law','rules'])await fs.cp(path.resolve('world',folder),path.join(root,folder),{recursive:true});
  await fs.mkdir(path.join(root,'drafts'));await fs.cp(path.resolve('world/drafts/w2-s2'),path.join(root,'drafts/w2-s2'),{recursive:true});
  const key={'meta/spells.json':'spells','meta/skills.json':'skills','meta/items.json':'items','meta/recipes.json':'recipes','people/baseline.json':'npcs','geo/locations.json':'locations'};
  for(const f of publishedFiles)await fs.writeFile(path.join(root,f),JSON.stringify(before[key[f]]));
  const original=await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),preview=await publishS2({root});
  assert.equal(preview.published,false);assert.equal(preview.formalSpellCount,before.spells.length+spells.length);assert.equal(preview.changed.length,publishedFiles.length);assert.equal(await fs.readFile(path.join(root,'meta/spells.json'),'utf8'),original);
  const first=await publishS2({root,publish:true});assert.equal(first.changed.length,publishedFiles.length);
- const reloaded=await loadWorld(root);for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
+ const reloaded=mentorHome(await loadRuntimeWorld(root));new WorldEngine(reloaded);/* 对照项带同一导师家夹具并经同一引擎物化 */for(const k of Object.values(key))assert.deepEqual(reloaded[k],world[k]);
  const times=await Promise.all(first.changed.map(f=>fs.stat(path.join(root,f)).then(s=>s.mtimeMs)));assert.deepEqual((await publishS2({root,publish:true})).changed,[]);
  for(const [file,mutate,pattern] of [['candidate.json',r=>{r.spells[0].failure+='免费';},/候选/],[`${spells[0].id}.json`,r=>{r.draft.prose.theory+='另外';},/内容已改变|不符/],['batch-0.json',r=>{r.l4.approved=false;},/L4/],['batch-0.json',r=>{r.l4.wave[0].scores[0]=2;},/评分/]]){
   const f=path.join(root,'drafts/w2-s2',file),bytes=await fs.readFile(f,'utf8'),r=JSON.parse(bytes);mutate(r);await fs.writeFile(f,JSON.stringify(r));await assert.rejects(publishS2({root,publish:true}),pattern);await fs.writeFile(f,bytes);

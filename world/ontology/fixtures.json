@@ -1,0 +1,14 @@
+{
+ "kind": "fixtures",
+ "namespace": "core",
+ "version": 1,
+ "note": "K5 设施词汇：地点或建筑上的固定设备（location.fixtures[].fixture，或已建设施类型自带的设备）派生出工位。affords 是该设备能承担的配方工位类别（recipes[].workstation），label 是显示用的中文名。工位的主人、开放与否从地点推出，收费是设备上主人的报价；借用许可在授予时以 fixtures 写明借的是哪类设备。见 server-plugin/workstation-services.mjs。",
+ "entries": [
+  {"id":"hearth","label":"灶","affords":"cooking"},
+  {"id":"workbench","label":"木作台","affords":"woodworking"},
+  {"id":"forge","label":"锻炉与铁砧","affords":"smithing"},
+  {"id":"loom","label":"织机","affords":"weaving"},
+  {"id":"kiln","label":"窑","affords":"pottery"},
+  {"id":"pill_furnace","label":"丹炉","affords":"pill_furnace"}
+ ]
+}

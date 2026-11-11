@@ -1,5 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
+import {takePopulation,addPopulation} from './population-health.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
 // RW-04. Stocks are facts; species, capacity and catchments are derived views.
 import {locationHabitatTypes,rangeSpec} from './wildlife-habitats.mjs';
 import {locationTraits,itemTraits,featureTraits} from './traits.mjs';
@@ -7,11 +9,18 @@ import {entityTransition} from './entity-transitions.mjs';
 import {advanceWaterCycle,waterResourceFactor} from './water-cycle.mjs';
 import {reservedMigrationCapacity} from './seasonal-migration.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {reserve as reserveAccount,settlementStock,granary as granaryAccount,moveStock,bookStock,priceRead} from './stock.mjs';
+import {derived} from './derived.mjs';
+import {registerAdvanceHook} from './advance-hooks.mjs';
+import {reserve as reserveAccount,settlementStock,granary as granaryAccount,moveStock,bookStock,priceRead,moveFishPopulation,logisticStock} from './stock.mjs';
+import {exp} from './det-math.mjs';
+import {registerSubsistenceResources} from './household-subsistence.mjs';
+// The one item the forest ledger accounts for; household subsistence reads it from here instead of naming a product.
+const FOREST_ITEM='item_wood',forestItem=()=>FOREST_ITEM;
+registerSubsistenceResources({forestSites,forestView,harvestForest,forestItem});
 // S1b: 林木存量是资源点账户 forest:<地点>|item_wood|reserve：首次触及时按世界数据（site.capacity）经 src:genesis 开户，
 // 生长来自 src:regrowth，采伐转入聚落木料或采伐者行囊；聚落烧柴进 sink:consume。没有林木规则时聚落日产木料来自 src:regrowth。
 declareLedgerWriter('forest-water',{sources:{'src:genesis':{item_wood:10000000},'src:regrowth':{item_wood:10000000}},sinks:['sink:consume']});
-const forestAccount=(engine,location)=>reserveAccount(engine,`forest:${location}`,'item_wood');
+const forestAccount=(engine,location)=>reserveAccount(engine,`forest:${location}`,FOREST_ITEM);
 function bookForest(d,engine,location,old,row,eventId){
  const account=forestAccount(engine,location);
  if(!old)moveStock(d,{from:'src:genesis|item_wood|forest',to:account,amount:row.initial,writer:'forest-water',eventId});
@@ -19,9 +28,36 @@ function bookForest(d,engine,location,old,row,eventId){
 }
 
 const DAY=1440,clone=v=>structuredClone(v),path=id=>['state','records',`forest:${id}`];
-// Absolute growth quanta telescope across intervals, including non-integral
-// area/rate combinations; daily and P3 weekly rounding therefore agree.
-const growth=(site,start,days)=>Math.floor(site.capacity*site.growthPerDay*(start+days*DAY)/DAY)-Math.floor(site.capacity*site.growthPerDay*start/DAY);
+// Ancient wood is an age-class subset of the same reserve, never another copy
+// of the forest. Its capacity share comes from the opening stock facts; r is
+// the published annual ecology rate. Keep the continuous anchor across clock
+// steps so flooring the visible reserve cannot erase fractional regrowth.
+function ancientProjection(engine,document,site,row,minute){
+ const a=row.ancient;if(!a)return null;
+ const annual=(engine.world.balance?.ecology??engine.world.primitiveTables?.ecology)?.rows.find(r=>r.key==='r:ancientTree')?.r;
+ if(!Number.isFinite(annual))throw Error('古树再生缺少已发布的年率');
+ const capacity=site.capacity*a.initial/row.initial,rate=derived(engine,document,'economy:yield',site.location,{base:annual/360});
+ const at=(anchor,time)=>{
+  if(anchor.reserve<=0||anchor.capacity<=0)return 0;
+  return anchor.capacity/(1+(anchor.capacity/anchor.reserve-1)*exp(-anchor.rate*(time-anchor.minute)/DAY));
+ };
+ let anchor=a.growthAnchor??{minute:row.updatedAt,reserve:a.reserve,capacity,rate};
+ if(anchor.capacity!==capacity||anchor.rate!==rate)anchor={minute:row.updatedAt,reserve:at(anchor,row.updatedAt),capacity,rate};
+ a.growthAnchor=anchor;
+ return {capacity,rate,reserve:Math.max(a.reserve,at(anchor,minute))};
+}
+function projectForest(engine,document,site,row,minute){
+ if(minute<row.updatedAt)throw Error('林木更新时间倒退');
+ const days=(minute-row.updatedAt)/DAY;if(!days)return row;
+ const a=row.ancient,ancient=ancientProjection(engine,document,site,row,row.updatedAt+days*DAY);
+ if(a&&(a.initial+a.grown-a.harvested!==a.reserve||a.reserve<0||a.reserve>row.reserve||a.initial>row.initial))throw Error('古树子存量不守恒');
+ const normalCapacity=site.capacity-(ancient?.capacity??0),normalReserve=row.reserve-(a?.reserve??0);
+ const ordinary=logisticStock(row,'ordinary',{reserve:normalReserve,capacity:normalCapacity,
+  rate:derived(engine,document,'economy:yield',site.location,{base:site.growthPerDay}),from:row.updatedAt,to:row.updatedAt+days*DAY})-normalReserve;
+ const slow=ancient?Math.max(0,Math.floor(ancient.reserve)-a.reserve):0;
+ if(a){a.reserve+=slow;a.grown+=slow;}
+ row.reserve+=ordinary+slow;row.grown+=ordinary+slow;row.updatedAt+=days*DAY;return row;
+}
 const present=(d,species,location)=>Object.entries(d.get('state','creatures')??{}).filter(([id,a])=>a.location===location&&a.species===species&&!a.owner&&!a.mind?.awakened&&a.hp>0&&!isPhysicallyDead(null,d,id)).length;
 export function resourceSettlement(engine,location,state={}){
  const seen=new Set(),settlements=new Set([...Object.keys(state.settlements??{}),...(engine.rules.agriculture?.settlements??[]).map(p=>p.settlement)]);
@@ -35,7 +71,7 @@ export function forestSites(engine){
  const list=engine.world.locations,hit=siteCache.get(list);
  if(hit?.rules===r&&hit.length===list.length)return hit.rows;
  const rows=list.filter(l=>locationHabitatTypes(l).includes('forest')||
-  (l.features??[]).some(f=>featureTraits(f).tags.includes('wood'))&&(l.site?.resources??[]).some(resource=>resource.item==='item_wood'&&l.site.changes?.some(c=>c.kind==='regrow'&&c.resource===resource.id))).map(l=>{
+  (l.features??[]).some(f=>featureTraits(f).tags.includes('wood'))&&(l.site?.resources??[]).some(resource=>resource.item===FOREST_ITEM&&l.site.changes?.some(c=>c.kind==='regrow'&&c.resource===resource.id))).map(l=>{
   const tags=locationTraits(l).tags,kind=tags.includes('frost')||/针|松|杉/.test(l.terrain)?'conifer':tags.includes('wet')?'wetwood':'broadleaf';
   const species=r.forest.species[kind],area=l.areaKm2??r.forest.defaultAreaKm2;
   return {location:l.id,kind,capacity:Math.max(1,Math.floor(area*r.forest.stockPerKm2)),growthPerDay:species.growthPerDay};
@@ -45,29 +81,31 @@ export function forestSites(engine){
 function stock(d,engine,site,minute){
  const old=d.get(...path(site.location));
  if(old&&(old.category!=='forest'||old.location!==site.location||old.initial+old.grown-old.harvested!==old.reserve||old.reserve<0))throw Error('林木存量账不守恒');
- const row=clone(old??{category:'forest',location:site.location,initial:site.capacity,reserve:site.capacity,grown:0,harvested:0,updatedAt:minute});
- if(minute<row.updatedAt)throw Error('林木更新时间倒退');
- const days=Math.floor((minute-row.updatedAt)/DAY);
- if(days){const grown=Math.min(Math.max(0,site.capacity-row.reserve),growth(site,row.updatedAt,days));row.reserve+=grown;row.grown+=grown;row.updatedAt+=days*DAY;}
- return row;
+ const row=clone(old??{category:'forest',location:site.location,initial:site.capacity,reserve:site.capacity,grown:0,harvested:0,updatedAt:minute,...(engine.rules.forestWater.forest.opening?.find(r=>r.location===site.location)?.ancient?{ancient:{initial:engine.rules.forestWater.forest.opening.find(r=>r.location===site.location).ancient,reserve:engine.rules.forestWater.forest.opening.find(r=>r.location===site.location).ancient,grown:0,harvested:0}}:{})});
+  return projectForest(engine,d.document,site,row,minute);
 }
 // books（草稿或文档）给出时，林木存量读林木账户（S1c 价格输入）；没有时读旧记录。
 export function forestView(engine,state,location,site=forestSites(engine).find(s=>s.location===location),books=null){
  if(!site)return null;
  const row=state.records?.[`forest:${location}`];
- const days=row?Math.max(0,Math.floor(((state.minute??row.updatedAt)-row.updatedAt)/DAY)):0;
- const initial=row&&books?priceRead(books,{point:'forest.reserve',account:forestAccount(engine,location),legacy:()=>row.reserve}):row?.reserve??site.capacity,reserve=initial+Math.min(Math.max(0,site.capacity-initial),growth(site,row?.updatedAt??0,days));
+  const initial=row&&books?priceRead(books,{point:'forest.reserve',account:forestAccount(engine,location),legacy:()=>row.reserve}):row?.reserve??site.capacity;
+  const projected=row?projectForest(engine,books?.document??{state},site,{...clone(row),reserve:initial},Math.max(state.minute??row.updatedAt,row.updatedAt)):null,reserve=projected?.reserve??initial;
  return {...site,reserve,cover:Math.min(1,reserve/site.capacity),updatedAt:row?.updatedAt??null};
 }
 export function forestHabitatCapacity(engine,state,habitat,species,forest=forestView(engine,state,habitat.location)){
  const capacity=rangeSpec(habitat,species).capacity;
  return forest?Math.floor(capacity*(engine.rules.forestWater.forest.minimumHabitatShare+(1-engine.rules.forestWater.forest.minimumHabitatShare)*forest.cover)):capacity;
 }
+registerAdvanceHook('wildlifeCapacity',forestHabitatCapacity);
 // S1b: to = 采得木料的去处（聚落木料或采伐者行囊的账户键）。
 export function harvestForest(d,engine,location,quantity,minute=d.get('state','minute'),{to,eventId=null}={}){
  if(!Number.isSafeInteger(quantity)||quantity<0)throw preconditionFailure('采伐量须为非负整数');
  const site=forestSites(engine).find(s=>s.location===location);if(!site)return 0;
  const old=d.get(...path(location)),row=stock(d,engine,site,minute),taken=Math.min(quantity,row.reserve),before=row.reserve;
+  if(row.ancient){
+   const a=row.ancient,used=Math.max(0,taken-(row.reserve-a.reserve));
+   if(used){const projected=ancientProjection(engine,d.document,site,row,minute);a.reserve-=used;a.harvested+=used;a.growthAnchor={minute,reserve:Math.max(0,projected.reserve-used),capacity:projected.capacity,rate:projected.rate};}
+  }
  row.reserve-=taken;row.harvested+=taken;bookForest(d,engine,location,old,row,eventId);
  // 未给去处的直接调用（测试夹具）不拦旧结算，记未入账漂移。
  if(to)moveStock(d,{from:forestAccount(engine,location),to,amount:taken,writer:'forest-water',eventId});else bookStock(d,engine,forestAccount(engine,location),-taken,undefined);d.set(path(location),row);
@@ -130,11 +168,11 @@ export function displaceForestWildlife(d,engine,day){
     const target=clone(d.get('state','records',`ecology:${to.id}`)),q=target?.populations[s.id];if(!q)continue;
     const actors=present(d,s.id,to.location),transit=reservedMigrationCapacity(d,to.id,s.id);
     const amount=Math.min(excess,p.count,Math.max(0,forestHabitatCapacity(engine,d.get('state'),to,s,forests.get(to.location)??null)-q.count-actors-transit));
-    if(!amount)continue;p.count-=amount;p.emigrated=(p.emigrated??0)+amount;q.count+=amount;q.immigrated=(q.immigrated??0)+amount;excess-=amount;moved+=amount;
+    if(!amount)continue;moveFishPopulation(d,engine,s.id,h.location,to.location,amount,`forest-move:${day}`);addPopulation(q,takePopulation(p,amount));p.emigrated=(p.emigrated??0)+amount;q.immigrated=(q.immigrated??0)+amount;excess-=amount;moved+=amount;
     d.set(['state','records',`ecology:${to.id}`],target);if(!excess)break;
    }
    const starved=day%7===6?Math.min(excess,p.count):0;
-   if(starved){p.count-=starved;p.starved+=starved;}
+   if(starved){takePopulation(p,starved);p.starved+=starved;}
    if(moved||starved){d.set(['state','records',`ecology:${h.id}`],source);event(d,engine,h.location,day,`wildlife_migration:${s.id}`,{species:s.id,moved,starved});}
   }
  }
@@ -163,7 +201,7 @@ export function forestWaterPriceFactor(engine,state,item,location,books=null){
   const s=state.settlements[settlement],limits=engine.rules.economy.priceFactorLimits.region;
   if(s.granary===false||!(s.foodPerDay>0))return 1;
   const food=priceRead(books,{point:'forest.food',account:granaryAccount(engine,settlement),legacy:()=>s.food});
-  return Math.max(limits[0],Math.min(limits[1],s.population*engine.rules.settlementTrade.targetDays/Math.max(1,food)));
+  return Math.max(limits[0],Math.min(limits[1],mealMouthsOf(engine,state,settlement,s.population)*engine.rules.settlementTrade.targetDays/Math.max(1,food)));
  }
  if(item!=='item_wood'&&!itemTraits(engine.byId.get(item)).tags.includes('wood'))return 1;
  const forests=settlement?settlementForests(engine,state,settlement):forestSites(engine).filter(s=>s.location===location);

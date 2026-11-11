@@ -46,8 +46,12 @@ test('私密权限与接力路线在扣费前核对，开封只有实际持信�
 });
 test('截获信件保留实物与封缄，未开封者未知内容；资产不能同时重复发班',()=>{
  const {e,d,vehicle}=setup(),sent=sendPost(d,e,{from:SENDER,to:RECIPIENT,memoryId:'letter-fact',legs:[{asset:vehicle,to:'loc_bs'}],receipt:false},'intercept');
+ // W8D：信件按驿站班次发车（辰初，次日 07:00），寄出当刻还是待发运单，不在途、劫不了。旧前提「寄出即在途」改为先走到发车钟点再劫。
+ const departAt=d.get('state','records',sent.shipment,'departAt');assert.equal(departAt,1860);
+ assert.throws(()=>transportIncident(d,e,{shipment:sent.shipment,actor:SECOND},'too-early'),/不在可追查的途中/);
+ d.set(['state','minute'],departAt);advanceTransport(d,e,departAt);
  transportIncident(d,e,{shipment:sent.shipment,actor:SECOND},'raid');advancePost(d,e,d.get('state','minute'));
- assert.equal(d.get('state','records',sent.id,'status'),'intercepted');assert.equal(d.get('state','npcs',SECOND,'memoryStream'),undefined);assert.equal(transportServices(e,d.get('state'),'loc_hw').length,0);
+ assert.equal(d.get('state','records',sent.id,'status'),'intercepted');assert.equal(d.get('state','npcs',SECOND,'memoryStream'),undefined);assert.equal(transportServices(e,d.document,'loc_hw').length,0);
  assert.equal(openPost(d,e,{letter:sent.id,actor:SECOND},'read').content,'收到三十铜，打算下月再来。');assert.equal(d.get('state','npcs',RECIPIENT,'memoryStream'),undefined);
 });
 test('玩家通过现有post入口寄自己的文字，查信不能冒充他人',()=>{
