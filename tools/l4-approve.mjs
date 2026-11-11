@@ -3,11 +3,12 @@
 // 写入 batch-N.json 的 l4：{approved, reviewer, by, reviewedAt, notes:[{id,note,by}]}（reviewer/reviewedAt 与现有批次格式一致；退回意见 rejection 仅在未批准时保留）。
 // 规则：by 必填；每条 note 记上 by；人工改写条目的 by 不能等于任何改写者（stampL4Notes/assertL4Reviewer）；只能写本批 ids 里的条目。
 // --approve：sample、flagged 里每条、以及每个人工改写条目都必须已有阅读记录（本次或此前写入的），否则整体拒绝、零写盘。
+// 抽读不过率（退回名单落在 sample 内的比例）超过 10%，或批次带 fullRead 标记：本批每一条都必须有阅读记录，只有抽样记录的批准拒绝。
 // summary.json 里该批的副本同步更新（若存在）。
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { stampL4Notes, requireFlagValue, reviewIssues, hashContent, rowFingerprintShape, MANUAL_REWRITE_REVIEW_KIND } from './content-pipeline.mjs';
+import { stampL4Notes, requireFlagValue, reviewIssues, hashContent, rowFingerprintShape, MANUAL_REWRITE_REVIEW_KIND, l4RequiresFullRead, l4SampleRejectionRate } from './content-pipeline.mjs';
 
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const write = (file, data) => { const tmp = `${file}.${process.pid}.tmp`; fs.writeFileSync(tmp, `${JSON.stringify(data, null, 2)}\n`); fs.renameSync(tmp, file); };
@@ -37,6 +38,11 @@ export function approveL4({ root, batch: index, notes, by, approve = false, now 
     const manual = rows.filter(row => row.review?.kind === MANUAL_REWRITE_REVIEW_KIND || row.manualRewrite !== undefined).map(row => row.id);
     const missing = [...new Set([...(batch.sample ?? []), ...(batch.flagged ?? []), ...manual])].filter(id => !merged.some(n => n.id === id && typeof n.note === 'string' && n.note.trim()));
     if (missing.length) throw new Error(`批准前缺少阅读记录：${missing.join(',')}`);
+    // 抽读不过率超过一成（或批次已标 fullRead）：本批每一条都要有阅读记录，只有抽样阅读记录的批准一律拒绝。
+    if (l4RequiresFullRead(batch)) {
+      const unread = ids.filter(id => !merged.some(n => n.id === id && typeof n.note === 'string' && n.note.trim()));
+      if (unread.length) throw new Error(`抽读不过率${(l4SampleRejectionRate(batch) * 100).toFixed(0)}%（超过10%）或批次标记全读：本批须逐条全读，缺少阅读记录：${unread.join(',')}`);
+    }
   }
   const next = { ...batch, l4: { ...(approve || !batch.l4?.rejection ? {} : { rejection: batch.l4.rejection }), approved: approve, reviewer: String(by).trim(), by: String(by).trim(), reviewedAt: now(), notes: merged } };
   const summaryFile = path.join(root, 'summary.json');

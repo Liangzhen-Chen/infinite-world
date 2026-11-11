@@ -105,3 +105,20 @@ test('L2 请求按目录份数明确克数换算，仍保留原文与矛盾报�
  assert.deepEqual(payload.materialUnits.find(row=>row.id==='item_hazelnut'),{id:'item_hazelnut',portions:1,gramsPerPortion:200,totalGrams:200});
  assert.match(request.messages[0].content,/须保留hard/);
 });
+
+test('L2 物品专用清单：物品请求没有“未声明但相容不列hard”口径且带 (g)–(m) 清单；配方请求口径不变',()=>{
+ const item=bones.items[0],recipe=bones.recipes.find(row=>row.id==='recipe_w3b_honey_curd_spread');
+ const itemRequest=tradesReviewRequest(item,{id:item.id,description:'x',inspection:'y',storage:'z'},w3Context(world,bones,item)).messages[0].content;
+ assert.ok(!/未声明但相容/.test(itemRequest),'物品路径删掉放行口径');
+ assert.ok(!/正常且相容的感官细节不是新增功能/.test(itemRequest),'物品路径不再放行相容的新增细节');
+ assert.match(itemRequest,/即使与骨架不相反、读起来相容，也算新增，列 hard/);
+ for(const mark of ['(g)尺寸','(h)包装','(i)storage','(j)骨架外的用途','(k)制作痕迹','(l)没有出处的人名','(m)骨架外的器具'])assert.ok(itemRequest.includes(mark),mark);
+ assert.match(itemRequest,/少许.*一掌.*两指.*数匝/);
+ assert.match(itemRequest,/“若干”只许用于工序形成的部件数目/);
+ assert.match(itemRequest,/shelfLifeDays 有值时写/);
+ const recipeRequest=tradesReviewRequest(recipe,{id:recipe.id,process:'p'},w3Context(world,bones,recipe)).messages[0].content;
+ assert.match(recipeRequest,/未声明但相容，就不应列hard/,'配方路径口径不在本卡改动范围，保持原样');
+ assert.match(recipeRequest,/正常且相容的感官细节不是新增功能/);
+ assert.match(recipeRequest,/优先于“未声明但相容不列hard”/);
+ assert.ok(!recipeRequest.includes('(g)尺寸'),'配方请求不带物品清单');
+});

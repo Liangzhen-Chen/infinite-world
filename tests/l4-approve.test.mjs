@@ -108,3 +108,57 @@ test('requireFlagValue：开关缺失、没有下一个参数、下一个以 -- 
   assert.throws(() => requireFlagValue(['--by', '--approve'], '--by'), /--by 缺值/);
   assert.throws(() => requireFlagValue(['--by', ' '], '--by'), /--by 缺值/);
 });
+
+// ── 按比例抽读与全读门槛（RCFIX）──
+import { l4SampleSize, l4SampleRejectionRate, l4RequiresFullRead } from '../tools/content-pipeline.mjs';
+
+test('L4 抽读条数：不少于 25%（向上取整）且不少于 5，不超过本批通过数', () => {
+  assert.equal(l4SampleSize(40), 10);
+  assert.equal(l4SampleSize(37), 10, '37 的 25% = 9.25，向上取整 10');
+  assert.equal(l4SampleSize(34), 9, '34 的 25% = 8.5，向上取整 9');
+  assert.equal(l4SampleSize(20), 5);
+  assert.equal(l4SampleSize(21), 6, '21 的 25% = 5.25，向上取整 6');
+  assert.equal(l4SampleSize(12), 5, '不足时取下限 5');
+  assert.equal(l4SampleSize(3), 3, '不超过通过数');
+  assert.equal(l4SampleSize(0), 0);
+});
+
+test('抽读不过率：退回名单（历次加当前）落在 sample 内的比例，严格大于 10% 才要求全读', () => {
+  const sample = Array.from({ length: 10 }, (_, i) => `s${i}`);
+  const rej = ids => ({ approved: false, rejection: { by: 'x', at: 't', reason: 'r', ids }, notes: [] });
+  assert.equal(l4SampleRejectionRate({ sample, l4: { approved: false, notes: [] } }), 0);
+  assert.equal(l4SampleRejectionRate({ sample, l4History: [rej(['s0'])], l4: { approved: false, notes: [] } }), 0.1);
+  assert.equal(l4RequiresFullRead({ sample, l4History: [rej(['s0'])], l4: { approved: false, notes: [] } }), false, '10% 整不算超过');
+  assert.equal(l4RequiresFullRead({ sample, l4History: [rej(['s0'])], l4: rej(['s1']) }), true, '历次与当前合计 20%');
+  assert.equal(l4RequiresFullRead({ sample, l4: rej(['zz', 'yy', 'xx']) }), false, '退回的是 sample 之外的条目，不算抽读不过');
+  assert.equal(l4RequiresFullRead({ sample, fullRead: true, l4: { approved: false, notes: [] } }), true, '批次已标全读');
+  assert.equal(l4RequiresFullRead({ sample: [], l4: rej(['a']) }), false, 'sample 为空不除零');
+});
+
+async function plainBatch(t, { sample, l4History, fullRead }) {
+  const root = await fs.mkdtemp(path.join(tmpRoot(), 'l4-full-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const ids = ['p1', 'p2', 'p3', 'p4'];
+  const rows = ids.map(id => ({ id, fingerprint: hashContent({ entry: { id }, context: null, revision: 'v2' }), status: 'passed', attempts: 1, draft: { id, description: '正文' }, review: { contradictions: [] }, errors: [], warnings: [] }));
+  for (const row of rows) await writeJson(path.join(root, `${row.id}.json`), row);
+  const batch = { index: 0, fingerprint: hashContent(rows.map(rowFingerprintShape)), count: 4, passed: 4, ids, manual: [], pending: [], flagged: [], sample, ...(fullRead ? { fullRead: true } : {}), l4: { approved: false, notes: [] }, ...(l4History ? { l4History } : {}) };
+  await writeJson(path.join(root, 'batch-0.json'), batch);
+  await writeJson(path.join(root, 'summary.json'), { total: 4, passed: 4, manual: 0, pending: 0, batches: [batch] });
+  return root;
+}
+const rejected = ids => [{ approved: false, rejection: { by: '审查员', at: 't', reason: '不通顺', ids }, notes: [] }];
+
+test('抽读不过率超过一成：只有抽样阅读记录的批准被拒绝（零写盘），全读后可批准', async t => {
+  const root = await plainBatch(t, { sample: ['p1', 'p2'], l4History: rejected(['p1']) }), before = await snapshot(root);
+  assert.throws(() => approveL4({ root, batch: 0, notes: [n('p1'), n('p2')], by: 'Bob', approve: true, now: at }), /抽读不过率50%.*全读.*p3,p4/);
+  assert.deepEqual(await snapshot(root), before);
+  const l4 = approveL4({ root, batch: 0, notes: [n('p1'), n('p2'), n('p3'), n('p4')], by: 'Bob', approve: true, now: at });
+  assert.equal(l4.approved, true);
+});
+
+test('批次带 fullRead 标记同样要求全读；退回落在 sample 之外、没有标记时，抽样记录即可批准', async t => {
+  const marked = await plainBatch(t, { sample: ['p1'], fullRead: true });
+  assert.throws(() => approveL4({ root: marked, batch: 0, notes: [n('p1')], by: 'Bob', approve: true, now: at }), /须逐条全读.*p2,p3,p4/);
+  const outside = await plainBatch(t, { sample: ['p1', 'p2'], l4History: rejected(['p4']) });
+  assert.equal(approveL4({ root: outside, batch: 0, notes: [n('p1'), n('p2')], by: 'Bob', approve: true, now: at }).approved, true);
+});

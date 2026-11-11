@@ -81,3 +81,14 @@ test('world_upgrade引入W3目录且既有财物保留，升级后新工序可�
   assert.equal(made.state.inventory.item_wood.quantity,1);assert.equal(result.result.produced.find(row=>row.item==='item_wood_spoon').amount,1);
   assert.equal(made.state.crafted[result.result.receipt].maker,'player');assert.equal(result.result.spent.feePaid,2);
 });
+
+test('物品正文不以长度逼内容：不设字数下限，只有近乎空文本才提示；配方 process 的长度提示不变',()=>{
+  const entry=bones.items[0],block={names:[],realPeople:[]};
+  const short={id:entry.id,description:'燕麦薄片，质地干。',inspection:'检查有无霉点。',storage:`保存上限${entry.shelfLifeDays}天。`};
+  const result=validateW3Draft(short,entry,block);
+  assert.deepEqual(result.errors,[]);assert.deepEqual(result.warnings,[],'description 9 字、inspection 7 字都不再因短而提示');
+  assert.ok(validateW3Draft({...short,inspection:'看。'},entry,block).warnings.some(x=>x.includes('inspection长度为2')),'近乎空文本仍提示');
+  assert.ok(validateW3Draft({...short,description:'长'.repeat(241)},entry,block).warnings.some(x=>x.includes('description长度为241')),'过长仍提示');
+  const recipe=bones.recipes[0];
+  assert.ok(validateW3Draft({id:recipe.id,process:'照配方做完。'},recipe,block).warnings.some(x=>x.includes('process长度为6')),'配方 process 的短文提示保持');
+});

@@ -283,3 +283,33 @@ test('已付费草稿不再通过 L1 校验时不复用，重新起草', async t
   assert.equal(result.summary.passed,1);
   assert.equal(calls.filter(l=>l.includes('-draft')).length,2);
 });
+
+test('L4 抽样按比例：46 条通过抽 12 条（25% 向上取整）；重跑同一指纹不重抽；抽读不过率超一成的旧批次重做后标 fullRead', async t => {
+  const root = await fs.mkdtemp(path.join(tmpRoot(), 'content-sample-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const client = { spent: 0, budgetYuan: 20, estimateCostYuan: () => .01, async generate(body, label) {
+    this.spent += 0.01;
+    const out = label.includes('-review') ? { contradictions: [] } : { id: body.id, description: body.id };
+    return { choices: [{ message: { content: JSON.stringify(out) } }], usage: { completion_tokens: 11 }, measurement: { costUpperYuan: .01 } };
+  } };
+  const entries = Array.from({ length: 46 }, (_, i) => ({ id: `item_${String(i).padStart(2, '0')}` }));
+  const options = { root, client, entries, batchSize: 50, buildDraftRequest: entry => ({ id: entry.id }), reviewDraftFor: entry => ({ id: entry.id, description: entry.id }), validateDraft: () => [], concurrency: 4 };
+  const first = await runContentPipeline(options);
+  const batch = first.summary.batches[0];
+  assert.equal(batch.passed, 46);
+  assert.equal(batch.sample.length, 12);
+  assert.equal(new Set(batch.sample).size, 12);
+  assert.ok(batch.sample.every(id => entries.some(entry => entry.id === id)));
+  assert.equal(batch.fullRead, undefined);
+  const second = await runContentPipeline(options);
+  assert.deepEqual(second.summary.batches[0].sample, batch.sample, '同一指纹的 sample 不重抽');
+  // 旧批次文件：抽读里被退回的比例超过一成，条目内容改变后重算批次，新批次带 fullRead 标记。
+  const file = path.join(root, 'batch-0.json'), old = JSON.parse(await fs.readFile(file, 'utf8'));
+  old.l4History = [{ approved: false, notes: [], rejection: { by: 'x', at: 't', reason: 'r', ids: [old.sample[0], old.sample[1]] } }];
+  await fs.writeFile(file, JSON.stringify(old));
+  const recordFile = path.join(root, `${entries[0].id}.json`), record = JSON.parse(await fs.readFile(recordFile, 'utf8'));
+  record.draft.description = '改写后的正文'; await fs.writeFile(recordFile, JSON.stringify(record));
+  const third = await runContentPipeline(options);
+  assert.equal(third.summary.batches[0].fullRead, true);
+  assert.equal(third.summary.batches[0].sample.length, 12);
+});
