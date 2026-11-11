@@ -1,6 +1,6 @@
 {
   "approvedBy": "李白（5 元内小额授权，代亮圳）；李白 J2（纯技术、零花费）",
-  "ref": "6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md）",
+  "ref": "6301b58b：w3-journey 4 条重审（线装册、纸绳签及其配方）通过后发布新正文与派生价；f8282524：重写 recipe_w3c_slate_stylus、已发布的 recipe_w3c_slate_writing_tile 与 recipe_w3c_mushroom_barley_pot、纸绳签前文无交代，并将整类重扫的新命中一并退回重写后正式 --publish/--verify（新命中：recipe_w3c_parsnip_cream_pot、recipe_w3c_walnut_honey_bites、recipe_w3c_cork_float_set，见 docs/m26-numeral-scan2.md）；DURATION-DERIVE 全仓重扫新命中 recipe_w3c_pear_wheat_gruel（八十份钟），按同一批复并入；李白 11-10 20:0x 决定（5 元授权，0.5 元上限）：85 条全量严格复读不过的条目一次性重写后发布（docs/m26-journey-recipes-audit.md）；严格 L4 补读（a4c8beb9）与 DRAFT-PROMPT 专项扫描新查出的不过条目，按李白 20:0x 决定一并重写后发布；李白 11-10 决定 d2952b39（J1：cork_stop_set 人工改写）与 ② “回扫已通过的全部条目，不过的按同一流程处理”：按新口径（L4 必查清单第 8 到 14 条）复读不过的 journey 配方（抽样 4 条、其余 60 条中 47 条）及确定性检查命中条目，人工改写加独立严格 L4 后发布；李白 J2：journey 物品 J2 严格 L4 复读不批者整件人工改写（硬伤批 154、尺寸批 13），独立严格 L4 全过后发布（docs/j2-audit-1..4.md）；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中、严格 L4 漏判的 broadbean_garlic_mash、plum_honey_spread、laundry_mesh_bag 人工改写，独立严格 L4 过后发布",
   "at": "2026-11-10",
   "ids": [
     "item_stitchbound_folio",
@@ -246,6 +246,9 @@
     "item_linen_cleaning_swab",
     "item_felt_polishing_pad",
     "item_resin_cloth_patch",
-    "item_book_journey_upkeep"
+    "item_book_journey_upkeep",
+    "item_broadbean_garlic_mash",
+    "item_plum_honey_spread",
+    "item_laundry_mesh_bag"
   ]
 }
