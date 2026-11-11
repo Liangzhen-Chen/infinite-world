@@ -8,6 +8,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {standing} from '../server-plugin/standing.mjs';
 import {legacyTotal,flowDelta,reconcile} from './helpers/ledger-audit.mjs';
 import {uiSession as createUISession,qty} from './helpers/ui-script.mjs';
+import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 
 // Reuse the server's campaign seed interface: these scenarios test trade/time,
 // including L4 restocking with a healthy smith, rather than random illness.
@@ -22,6 +23,8 @@ function conserved(before,after,label){
  assert.equal(legacyTotal(engine,after.state)-legacyTotal(engine,before.state),flows.sources-flows.sinks,`${label}：铜钱守恒`);
  assert.deepEqual(reconcile(engine,after).mismatches,[],`${label}：账本与旧字段一致`);
 }
+// 前提由引擎现价推出，不手调钱数凑数：当前（买方、卖方、物品、数量）的报价，读自引擎同一报价路径（engine.mjs currentTradeQuote）。
+const quoteNow=(doc,args)=>facilityRuntime().currentTradeQuote(engine,doc,args);
 const at=(location,minute,extra=()=>{})=>(s,doc)=>{s.location=location;s.minute=minute;extra(s,doc);};
 
 test('L1 租房：扣钱、记住宿期限；次日早上仍可续住，续住接在原期限之后',async t=>{
@@ -45,6 +48,7 @@ test('L1 租房：扣钱、记住宿期限；次日早上仍可续住，续住�
 test('L2 余额不足：引擎拒绝，钱物与账本序号都不变，界面给世界内原因',async t=>{
  const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.player.coins=1;})});
  const before=await ui.read(),view=await ui.server.api('read',{campaignId:ui.campaignId});
+ assert.ok(quoteNow(before,{seller:LINSUI,item:'item_bread',quantity:3}).totalCoins>1,'前提：三个面包的总价超过玩家的 1 文'); // 前提由现价推出
  const r=await ui.choose('trade.buy',{item:'item_bread',quantity:3},{target:LINSUI});
  assert.equal(r.ok,false);assert.match(r.error,/不足/);
  const after=await ui.server.api('read',{campaignId:ui.campaignId});
@@ -85,7 +89,9 @@ for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐
 
 test('L5 卖给钱不够的 NPC：不凭空付款，整笔拒绝且钱物不动',async t=>{
  const ui=await uiSession(t,{mutate:at(INN,10*60,(s)=>{s.npcs[LINSUI].coins=1;s.inventory.item_bread={quantity:5};})});
- const before=await ui.read(),r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:5},{target:LINSUI});
+ const before=await ui.read();
+ assert.ok(quoteNow(before,{buyer:LINSUI,seller:'player',item:'item_bread',quantity:5}).totalCoins>1,'前提：五个面包的收购总价超过林穗的 1 文'); // 前提由现价推出
+ const r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:5},{target:LINSUI});
  assert.equal(r.ok,false);assert.match(r.error,/余额不足/);
  const after=await ui.read();assert.equal(after.state.npcs[LINSUI].coins,1);assert.equal(qty(after.state.inventory.item_bread),5);assert.deepEqual(after.state,before.state);
 });
@@ -115,8 +121,16 @@ test('L5 对方钱不够时部分收购：只转付得起的原货，不足一�
  assert.equal(after.state.minute-before.state.minute,5);conserved(before,after,'部分收购');
  assert.equal((await ui.retry('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},r.eventId,LINSUI)).duplicate,true);
  assert.deepEqual((await ui.read()).state,after.state);
- const denied=await ui.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
- assert.equal(denied.ok,false);assert.match(denied.error,/余额不足/);assert.deepEqual((await ui.read()).state,after.state);
+ // 原第二次拒绝依赖"第一次成交后林穗恰好用尽钱袋"（旧口径 6 文买 10 件恰好用尽）；现在成交 8 件付 5 后林穗还剩 1 文，仍买得起一件，前提不再成立。
+ // 保留原意图（买方余钱不足一件：整笔回滚、状态不变、提示余额不足）：另开一个会话，林穗的余钱设为"严格小于引擎现价的单件收购价的最大整数"，
+ // 价与余钱都由引擎现价运行时推出（不写死钱数），并断言该前提成立。
+ const unit=quoteNow(before,{buyer:LINSUI,seller:'player',item:'item_bread',quantity:1}).listPrice,poor=Math.ceil(unit)-1;
+ assert.ok(poor>=0&&poor<unit,'前提：余钱严格小于单件收购价');
+ const ui2=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].coins=poor;s.inventory.item_bread={quantity:20};})});
+ const before2=await ui2.read();
+ assert.ok(quoteNow(before2,{buyer:LINSUI,seller:'player',item:'item_bread',quantity:1}).listPrice>before2.state.npcs[LINSUI].coins,'前提：林穗余钱买不起一件（会话内实测现价）');
+ const denied=await ui2.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
+ assert.equal(denied.ok,false);assert.match(denied.error,/余额不足/);assert.deepEqual((await ui2.read()).state,before2.state);
 });
 
 test('L6 重试：同一次界面请求重复提交（同一事件编号）不重复扣款',async t=>{
