@@ -75,7 +75,8 @@ test('每种自主任务完成时都要执行者在场且清醒：移走或失�
   const ok=await run(seed,null);assert.equal(ok.d.get('state','npcAutonomy','tasks',seed.id,'reason'),undefined,`${kind} 全程在场不应被拒`);assert.ok(ok.d.get('state','npcAutonomy','actions',seed.id),`${kind} 全程在场应有行动记录`);
   for(const change of ['location','status']){
    const {d,task,materials}=await run(seed,change);
-   assert.match(d.get('state','npcAutonomy','tasks',seed.id,'reason')??'',/工作完成时人物已离开或不能继续行动/,`${kind} 失败原因应是完成时在场判定`);assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
+   // 昏迷：validateAction 第二道检查（isPhysicallyDead/状态清单，npc-autonomy.mjs 约 :91）先于完成时在场判定抛出。
+   assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'reason'),change==='location'?'工作完成时人物已离开或不能继续行动':'人物当前无法完成工作',`${kind} ${change} 失败原因`);assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
    assert.equal(d.get('state','npcAutonomy','actions',seed.id),undefined,`${kind} 不应产生行动记录`);
    for(const [item,n] of materials)assert.equal(count(d,task.npc,item),n,`${kind} 不应扣料`);
   }
