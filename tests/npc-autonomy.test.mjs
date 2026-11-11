@@ -54,9 +54,11 @@ test('连续五分钟推进与一次跨日推进完全一致',async()=>{
  const a=await setup(),b=await setup();advance(a.d,a.engine,1440);for(let minute=545;minute<=1440;minute+=5)advance(b.d,b.engine,minute);
  assert.deepEqual(a.d.document,b.d.document);assert.ok(Object.keys(a.d.get('state','npcAutonomy','actions')).length);
 });
+// 'location' 轮的“离开”用玩家同行：600 分时 actor 的任务是 labor_process（行程类），作息按 market_trip 槽每分钟把位置写回（npc-schedule.mjs:315-322，云上探针实测 610 分被写回磨坊），
+// 直接 d.set location 不是世界里的离开；作息尊重的离开是同行（:310 break，位置不重写）。断言不变。
 test('工作中离开或失能不能在完成时凭旧在场记录生产',async()=>{
  for(const change of ['location','status']){const {engine,d}=await setup();advance(d,engine,600);const task=Object.values(d.get('state','npcAutonomy','tasks')).find(t=>t.npc===actor);assert.ok(task);
-  const wood=count(d,actor,'item_wood');d.set(['state','npcs',actor,change],change==='location'?'loc_hw':'昏迷');advance(d,engine,task.finish);
+  const wood=count(d,actor,'item_wood');if(change==='location')d.set(['state','player','companions'],[actor]);else d.set(['state','npcs',actor,'status'],'昏迷');advance(d,engine,task.finish);
   assert.equal(d.get('state','npcAutonomy','tasks',task.id,'status'),'失败');assert.equal(count(d,actor,'item_wood'),wood);assert.equal(d.get('state','npcAutonomy','actions',task.id),undefined);
  }
 });
