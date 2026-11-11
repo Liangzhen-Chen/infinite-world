@@ -201,3 +201,15 @@ test('书名切出的子串不是器具：塞入门缝', () => {
   assert.deepEqual(itemTextIssues({description: '塞入门缝阻止门轻微摆动，不代替门锁。'}, entry('wheat'), ctx), []);
   assert.match(itemTextIssues({description: '常用煮锅盛放。'}, entry('wheat'), ctx).join(' '), /骨架外器具「煮锅」/, '真器具仍判');
 });
+
+test('第14条：没有保存期类断言（无固定保存期、不设固定保存期、保存期不限）算错', () => {
+  for (const text of ['置阴凉处，无固定保存期。', '不设固定保存期。', '没有保存期，避潮。', '保存期不限。', '保质期不定。'])
+    assert.match(join('chain', {storage: text}), /期限类说法/, text);
+  assert.deepEqual(check('chain', {storage: '避潮，防压，放阴凉处。'}), []);
+});
+
+test('第9条后果说法：易生裂纹、易起霉、容易生锈、难复原', () => {
+  for (const text of ['易生裂纹。', '受潮易起霉。', '容易生锈。', '会长霉斑。', '压久则卷形难复原。'])
+    assert.match(join('wheat', {storage: text}), /后果说法/, text);
+  assert.deepEqual(check('wheat', {storage: '避潮，勿重压，放阴凉处。'}), []);
+});
