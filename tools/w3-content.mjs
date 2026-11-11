@@ -4,6 +4,8 @@ import { validateWorld } from './validate-world.mjs';
 import { numeralIssues } from './content-numerals.mjs';
 import { applySupersedes } from './approved-revisions.mjs';
 
+// 物品正文不再以长度逼内容（骨架没写就不写，事实少就写短）：只有短到近乎空文本（少于 6 字）才提示 L4 抽读；配方 process 的长度提示不变。
+const ITEM_MIN_LENGTH = 6;
 const units = { '公斤': ['weight',1], '千克':['weight',1], '斤':['weight',.5], '克':['weight',.001], '铜币':['basePrice',1], '分钟':['minutes',1], '小时':['minutes',60], '天':['shelfLifeDays',1] };
 const numeral='(?:\\d+(?:\\.\\d+)?|[零〇一二两三四五六七八九十百千万点半]+?)';
 export function chineseNumber(value){
@@ -25,6 +27,8 @@ export function w3Context(world,bones,entry) {
   // 校验用的目录与配方表：不可枚举，不进入指纹、审核请求和落盘快照（见 w3-process-check.mjs）。
   Object.defineProperty(context,'catalog',{value:[...world.items,...bones.items]});
   Object.defineProperty(context,'catalogRecipes',{value:[...(world.recipes??[]),...(bones.recipes??[])]});
+  // 世界里的人名、地名、店名：物品正文名称出处检查（w3-item-claims.mjs）用，同样不进指纹。
+  Object.defineProperty(context,'worldNames',{value:[...world.npcs,...world.locations].filter(row=>typeof row.name==='string'&&row.name.length>=2).map(row=>({id:row.id,name:row.name}))});
   return context;
 }
 function w3ContextFacts(world,bones,entry) {
@@ -38,7 +42,7 @@ export function validateW3Draft(draft,entry,blocklist,context=null) {
   if(!draft||typeof draft!=='object'||Array.isArray(draft))return {errors:['说明必须为对象'],warnings};
   if(draft.id!==entry.id)errors.push('说明编号与骨架不一致');
   if(Object.keys(draft).some(key=>!['id',...fields].includes(key)))errors.push('说明覆盖了骨架或增加未授权字段');
-  for(const field of fields){if(typeof draft[field]!=='string'||!draft[field].trim())errors.push(`缺少 ${field}`);else if(draft[field].length<(field==='description'?60:25)||draft[field].length>240)warnings.push(`${field}长度为${draft[field].length}，进入L4抽读`);}
+  for(const field of fields){if(typeof draft[field]!=='string'||!draft[field].trim())errors.push(`缺少 ${field}`);else if(draft[field].length<(item?ITEM_MIN_LENGTH:field==='description'?60:25)||draft[field].length>240)warnings.push(`${field}长度为${draft[field].length}，进入L4抽读`);}
   if(errors.length)return {errors,warnings};
   const text=fields.map(field=>draft[field]).join('');
   for(const word of [...blocklist.names,...blocklist.realPeople])if(text.includes(word))errors.push(`原创屏蔽词 ${word}`);

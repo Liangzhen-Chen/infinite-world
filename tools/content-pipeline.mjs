@@ -21,6 +21,17 @@ const PROCESS_SHARED_RULES = [
   '副产品为空时，余料、废料弃置是允许的；但弃置不得引入骨架外的容器或去处。',
   '不写骨架和引用事实以外的用途、期限或禁忌。',
 ].join('');
+// 物品正文（description、inspection、storage）的起草约束：journey 与 trades 两处起草提示共用这一处来源，改动只在此处。与 docs/L4-必查清单.md 第 8 至 15 条一致。
+// 不属于审核指纹（指纹只算 entry、context、revision），改字不使已通过记录失效。
+// 总则在前：只写骨架和引用事实里已有的内容，没有就不写。不设字数下限，事实少就写短；不为凑“具体”“结构”“痕迹”编细节。
+export const ITEM_DRAFT_RULES = '总则：只写骨架和引用事实里已有的内容，没有就不写；事实少就写短，宁短勿编，不为凑字数或凑“具体”而添细节。骨架和引用事实没有的下列内容一律不写：' +
+  '①尺寸、数量、模糊用量和身体尺度（一掌、两指、一拃、一握、一撮、少许、些许、少量、一些、数匝；“若干”只可用于工序形成的部件数目，不可用于材料用量）；' +
+  '②包装和收纳器物（布袋、木架、陶罐、木盒、容器等）；容器须使用者另备时，只如实写“另备、不随货提供”；' +
+  '③storage 里的具体处置做法（摊开阴干、受潮后怎么办）、后果（否则会……）和期限；storage 只许写能由本件材质推出的一般存放建议（避潮、避晒、避霜冻、阴凉、防压），不同材质不套同一句；保存期只有骨架 shelfLifeDays 有值时才写，且与之一致，没有就不写，也不写“无期限”“可久存”；' +
+  '④骨架外的用途、功效、维护保养、禁忌；' +
+  '⑤制作痕迹（锻打、刨面、缝线、编织、压制等）只在本件有配方、且与配方的材料、工具、工序一致时才写；购得物、原料、没有配方的物品不写制作痕迹；' +
+  '⑥没有出处的人名、地名、店名和工匠专名，只用骨架和引用事实给出的名称，写法与之一致。' +
+  'inspection 只写由本件材质与用途可直接看、闻、摸得出的检查，不添骨架外的器具和动作细节。';
 // 起草用：总时长句由系统按骨架 minutes 写入正文末尾（runContentPipeline 的 extractDraft 派生），模型不写。
 export const PROCESS_DRAFT_RULES = PROCESS_SHARED_RULES + '不写总时长（全程多少分钟之类），由系统按骨架生成。';
 // 复核用：复核看到的草稿已含系统写入的总时长句，所以只查一致性，不能因“写了总时长”判错。
@@ -34,12 +45,22 @@ const REVIEW_CHECKLIST = ' 另须逐句过下列六项，命中即列 hard，不
   '(d)数量与单位须与骨架一致。反例：骨架材料是“干直芦管束”一束，正文写“取芦管束一根”。' +
   '(e)语句须通顺，不得有错字、病句、不通的动宾搭配、残缺的数词或单位。反例：“待麦糊稠度稳定后段入锅中”“全程约八十份钟”“取炭入厚底煮锅小灶”“皂片全散后停火”（全文并未点火）。' +
   '(f)工序类正文另须符合下列约束，违反者列 hard：' + PROCESS_REVIEW_RULES;
-export function defaultReviewRequest(entry, draft, context) {
+// 物品正文（description、inspection、storage）的 L2 专用清单，对照 docs/L4-必查清单.md 第 8 至 15 条。只用于物品路径（defaultReviewRequest 的 itemMode），配方口径不变。
+// 与配方清单(a)–(f)不同：骨架和引用事实里没有的新增事实一律列 hard，“新增但不相反”“相容”不是放行理由。
+export const ITEM_REVIEW_CHECKLIST = ' 物品说明另须逐项过下列清单，命中一律列 hard；骨架和引用事实里没有的事实（结构、部件、做法、来源、颜色气味等具体性状）即使与骨架不相反、读起来相容，也算新增，列 hard：' +
+  '(g)尺寸、数量、模糊用量、身体尺度：少许、些许、少量、一些、一掌、两指、一拃、一握、一撮、数匝、克数毫升、骨架外的分段时长都算；“若干”只许用于工序形成的部件数目，不许用于材料用量；“约N”且N等于骨架值才不算。' +
+  '(h)包装和收纳器物（布袋、木架、陶罐、木盒、容器等）：骨架没有就算新增；只如实说明“容器须使用者另备、不随货提供”不算。' +
+  '(i)storage：只许写能由本件材质推出的一般存放建议（避潮、避晒、避霜冻、阴凉、防压）；具体处置做法（摊开阴干、受潮后怎么办）、后果（否则会……）、期限、与材质不符的建议都列 hard；保存期只在骨架 shelfLifeDays 有值时写且与之一致，字段为空时写“无期限”“可久存”也列 hard。' +
+  '(j)骨架外的用途、功效、维护保养、禁忌。' +
+  '(k)制作痕迹（锻打、刨面、缝线、编织、压制等）：与本件配方（引用事实 recipe 的材料、工具、processFacts）不符，或本件没有配方却写制作痕迹，列 hard；购得物、原料不写制作痕迹。' +
+  '(l)没有出处的人名、地名、店名和工匠专名：只能用骨架和引用事实给出的名称，写法一致；物品自身名称、别名、材料和工具名不算。' +
+  '(m)骨架外的器具、容器、垫具、布巾、水。';
+export function defaultReviewRequest(entry, draft, context, { itemMode = false } = {}) {
   return {
     thinking: { type: 'disabled' }, temperature: 0, max_tokens: 1800,
     response_format: { type: 'json_object' },
     messages: [
-      { role: 'system', content: '你是游戏内容事实审查员。逐句核对说明与骨架及引用事实，只返回 JSON {"contradictions":[{"quote":"说明原句","field":"骨架字段路径","severity":"hard|soft|style","reason":"具体原因"}]}。hard 表示数值、材料、用途、能力、食性、归属、时间、取得途径等与骨架相反或新增没有依据的功能。正常且相容的感官细节不是新增功能。不推测骨架没有声明的规则。不因没有重述全部骨架字段报错。无矛盾则空数组。' + REVIEW_CHECKLIST },
+      { role: 'system', content: '你是游戏内容事实审查员。逐句核对说明与骨架及引用事实，只返回 JSON {"contradictions":[{"quote":"说明原句","field":"骨架字段路径","severity":"hard|soft|style","reason":"具体原因"}]}。hard 表示数值、材料、用途、能力、食性、归属、时间、取得途径等与骨架相反或新增没有依据的功能。' + (itemMode ? '' : '正常且相容的感官细节不是新增功能。') + '不推测骨架没有声明的规则。不因没有重述全部骨架字段报错。无矛盾则空数组。' + REVIEW_CHECKLIST + (itemMode ? ITEM_REVIEW_CHECKLIST : '') },
       { role: 'user', content: JSON.stringify({ skeleton: entry, publishedFacts: context ?? null, draft }) },
     ],
   };
@@ -114,6 +135,17 @@ async function readL4Rejections(root, entries) {
   }
   return out;
 }
+// L4 抽读：按比例抽，不少于 25%（向上取整）且不少于 5 条；抽读里被退回的比例超过 10%，本批必须全读。
+export const L4_SAMPLE_RATIO_DENOMINATOR = 4, L4_SAMPLE_MINIMUM = 5, L4_FULL_READ_THRESHOLD = 0.1;
+export const l4SampleSize = passedCount => Math.min(passedCount, Math.max(L4_SAMPLE_MINIMUM, Math.ceil(passedCount / L4_SAMPLE_RATIO_DENOMINATOR)));
+// 抽读不过率 = 历次与当前退回名单里落在本批 sample 内的条目数 ÷ sample 条数。退回名单取 l4History 各次与当前 l4 的 rejection.ids。
+export function l4SampleRejectionRate(batch) {
+  const sample = new Set(batch?.sample ?? []);
+  if (!sample.size) return 0;
+  const rejected = new Set([...(batch.l4History ?? []), batch.l4].flatMap(l4 => l4?.rejection?.ids ?? []));
+  return [...rejected].filter(id => sample.has(id)).length / sample.size;
+}
+export const l4RequiresFullRead = batch => batch?.fullRead === true || l4SampleRejectionRate(batch) > L4_FULL_READ_THRESHOLD;
 function randomSample(rows, count) {
   const pool = [...rows];
   for (let i = pool.length - 1; i > 0; i--) { const j = randomInt(i + 1); [pool[i], pool[j]] = [pool[j], pool[i]]; }
@@ -327,7 +359,8 @@ export async function runContentPipeline({
       manual: rows.filter(row => row.status === 'manual').map(row => row.id),
       pending: rows.filter(row => row.status === 'pending').map(row => row.id),
       flagged: rows.filter(row => row.warnings.length).map(row => row.id),
-      sample: prior?.fingerprint === fingerprint ? prior.sample : randomSample(passed, 5).map(row => row.id),
+      sample: prior?.fingerprint === fingerprint ? prior.sample : randomSample(passed, l4SampleSize(passed.length)).map(row => row.id),
+      ...(prior && l4RequiresFullRead(prior) ? { fullRead: true } : {}),
       l4: prior?.fingerprint === fingerprint ? prior.l4 : { approved: false, notes: [] },
       ...(prior?.fingerprint !== fingerprint && prior?.l4?.rejection ? { l4History: [...(prior.l4History ?? []), prior.l4] } : prior?.l4History ? { l4History: prior.l4History } : {}),
       costUpperYuan: client.spent+(client.reserved??0),
