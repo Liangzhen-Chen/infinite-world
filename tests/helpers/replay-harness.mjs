@@ -5,31 +5,40 @@ import https from 'node:https';
 import net from 'node:net';
 import childProcess from 'node:child_process';
 import {tmpRoot} from '../../tools/tmp-root.mjs';
+import {fileURLToPath} from 'node:url';
 import {recordFixture} from '../../tools/replay.mjs';
-import {reviewResponse} from './consistency-response.mjs';
+import {stepsFor,stubClient} from '../../tools/replay-record.mjs';
 
 // 回放测试的共用部分：步骤、可注入的录制客户端、外联拦截、夹具拷贝与篡改。
 export const makeRoot=()=>fs.mkdtemp(path.join(tmpRoot(),'ai21-replay-'));
-export const stepsFor=days=>[
- {endpoint:'review/begin',body:{anchor:'replay-bread',playerText:'买一个面包'}},
- {endpoint:'execute',body:{tool:'world_act',args:{action:'core:trade.buy',slots:{seller:'林穗',item:'面包',quantity:1}},eventId:'replay-buy',anchor:'replay-bread'}},
- {endpoint:'review/reply',body:{draft:'<q who="player">我全都答应。</q>',query:'买一个面包'}},
- ...Array.from({length:days},(_,d)=>({endpoint:'execute',body:{tool:'world_time',args:{minutes:1440},eventId:`replay-day-${d}`,anchor:`replay-day-${d}`}}))
-];
-// 夹具由真实调用路径录一次：可注入的模型客户端回答一致性审查与改写，服务端旁路写盘；之后全部回放。
+export {stepsFor};
+// 夹具由真实调用路径录一次：确定性客户端（tools/replay-record.mjs 的 stubClient）回答一致性审查与改写，服务端旁路写盘；之后全部回放。
 export function makeRecorder(root){
- const recording={calls:0};
- const client={async generate(body,label){
-  recording.calls++;
-  if(label.startsWith('consistency-rewrite:'))return {choices:[{finish_reason:'stop',message:{content:'<q who="player">我全都答应。</q>'}}]};
-  return reviewResponse(body);
- }};
+ const recording={calls:0},inner=stubClient();
+ const client={async generate(body,label){recording.calls++;return inner.generate(body,label);}};
  const record=async(name,options)=>{
   const before=recording.calls,dir=path.join(root,name);
   const manifest=await recordFixture({dir,client,model:'deepseek-flash',...options});
   return {dir,manifest,calls:recording.calls-before};
  };
  return {recording,record};
+}
+// 入库夹具（tools/replay-fixtures/<name>，由 tools/replay-record.mjs 在云上生成）；缺失时明确报错。
+export const FIXTURE_ROOT=path.join(path.dirname(fileURLToPath(import.meta.url)),'..','..','tools','replay-fixtures');
+export async function loadFixture(name){
+ const dir=path.join(FIXTURE_ROOT,name);
+ let manifest;
+ try{manifest=JSON.parse(await fs.readFile(path.join(dir,'manifest.json'),'utf8'));}
+ catch(error){if(error.code==='ENOENT')throw Error(`E-REPLAY-FIXTURE-MISSING 入库夹具缺失：${dir}（先在云上运行 node tools/replay-record.mjs <输出目录> 生成，再取回入库到 tools/replay-fixtures/）`);throw error;}
+ return {dir,manifest};
+}
+// 夹具 contentHash 与当前世界不符时文字断言标 stale 并跳过，结算断言照跑。
+export function assertReplayMatches(assert,result){
+ assert.equal(result.settlement.matches,true);
+ if(result.tier==='T2'){
+  if(result.stale.includes('contentHash'))assert.deepEqual(result.text,{skipped:true,reason:'stale'});
+  else assert.deepEqual(result.text,{skipped:false,matches:true});
+ }
 }
 export const copyFixture=async(root,source,name)=>{const dir=path.join(root,name);await fs.cp(source,dir,{recursive:true});return dir;};
 export const editManifest=async(dir,edit)=>{const file=path.join(dir,'manifest.json'),m=JSON.parse(await fs.readFile(file,'utf8'));edit(m);await fs.writeFile(file,JSON.stringify(m));};

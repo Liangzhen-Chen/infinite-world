@@ -8,8 +8,8 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {CampaignStorage,applyPatches} from '../server-plugin/storage.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const owner='npc_hw_miaozhen',house='bld_hw_home_15';
-// K6 依据（审查 C-b location-access:23）：住户许可决定合法与否，不决定能否走进去；进入发生，命中擅入私宅，罪名挂本次事件
-const trespassed=(out,eventId)=>{const o=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o,`${eventId} 命中擅入私宅`);assert.equal(o.victim,owner);assert.equal(out.doc.state.records[o.record].sourceEvent,eventId);assert.equal(out.doc.state.location,house);return o;};
+// K6 依据（审查 C-b location-access:23）：住户许可决定合法与否，不决定能否走进去；进入发生，命中擅入私宅，罪名挂本次事件
+const trespassed=(out,eventId)=>{const o=out.result.offenses?.find(o=>o.offense==='trespass');assert.ok(o,`${eventId} 命中擅入私宅`);assert.equal(o.victim,owner);assert.equal(out.doc.state.records[o.record].sourceEvent,eventId);assert.equal(out.doc.state.location,house);return o;};
 const grant={operation:'grant_access',promisor:owner,location:house,content:'进屋查看旧筛架，不取用家中物品',minutes:60};
 async function setup(){
  const engine=new WorldEngine(world);let doc=engine.createCharacter(legacy,{},'permission');

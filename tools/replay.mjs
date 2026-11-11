@@ -5,7 +5,6 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {digest} from '../server-plugin/storage.mjs';
 import {ruleStateDigest} from '../server-plugin/digest-exclude.mjs';
 import {createPlaytestServer,PLAYTEST_SEED} from './playtest-runner.mjs';
-import {tmpRoot} from './tmp-root.mjs';
 
 // AI-21 录制回放（AI-05 §4.1、§4.3）。夹具目录：
 //   manifest.json  绑定（commit、contentHash、model、seed）、create 请求、steps、规则状态哈希、文字哈希
@@ -97,19 +96,22 @@ async function runSession(api,{create,steps}){
 // real play, an injectable one in tests); the sideband the server writes becomes the fixture.
 export async function recordFixture({dir,client,steps,create={},seed=PLAYTEST_SEED,model,world,commit=gitCommit()}){
  if(typeof model!=='string'||!model)throw Error('录制夹具需要模型 id');
- const root=await fs.mkdtemp(path.join(tmpRoot(),'replay-record-'));
- const server=await createPlaytestServer({seed,world,consistencyClient:client,sidebandRoot:root});
+ // 录制期间的存档与旁路只放在 dir/.staging（结束即删），整个录制只写到 dir 之内。
+ const staging=path.join(dir,'.staging'),root=path.join(staging,'sideband');
+ await fs.rm(staging,{recursive:true,force:true});await fs.mkdir(root,{recursive:true});
  let session;
- try{session=await runSession(server.api,{create,steps});}finally{await server.close();}
  try{
+  const server=await createPlaytestServer({seed,world,consistencyClient:client,sidebandRoot:root,directory:path.join(staging,'store')});
+  try{session=await runSession(server.api,{create,steps});}finally{await server.close();}
   const [campaignDir]=await fs.readdir(root);
   if(!campaignDir)throw Error('E-REPLAY-EMPTY 录制没有产生旁路记录');
-  await fs.mkdir(dir,{recursive:true});
   await fs.cp(path.join(root,campaignDir,'sideband'),path.join(dir,'sideband'),{recursive:true});
- }finally{await fs.rm(root,{recursive:true,force:true});}
+ }finally{await fs.rm(staging,{recursive:true,force:true});}
  const manifest={version:1,commit,campaignId:session.campaignId,contentHash:session.contentHash,model,seed:session.seed,create,steps,initialStateHash:session.initialStateHash,
   ruleStateDigest:ruleStateDigest(session.document),textDigest:digest(session.texts)};
  await fs.writeFile(path.join(dir,'manifest.json'),JSON.stringify(manifest,null,1));
+ session.rows[0]={...session.rows[0],runId:path.basename(dir),gitHead:commit,model,tier:'T2'};
+ await fs.writeFile(path.join(dir,'trace.jsonl'),session.rows.map(row=>JSON.stringify({ts:new Date().toISOString(),...row})).join('\n')+'\n');
  return manifest;
 }
 

@@ -6,10 +6,11 @@ import net from 'node:net';
 import http from 'node:http';
 import childProcess from 'node:child_process';
 import {replayFixture,replayClient,readSideband,stepsFromTrace,staleReasons} from '../tools/replay.mjs';
-import {makeRoot,stepsFor,makeRecorder,copyFixture as copy,editManifest,withoutOutbound} from './helpers/replay-harness.mjs';
+import {makeRoot,stepsFor,makeRecorder,copyFixture as copy,editManifest,withoutOutbound,loadFixture,assertReplayMatches} from './helpers/replay-harness.mjs';
 
 // 预计时长（未实测）：全文件只用 4 步短会话（审查、购买、审查回复、推进 1 日），约 10 次，合计远小于 30 日会话。
 // 30 日会话（VAI-00-4）拆在 replay-vai00-4-t2.test.mjs 与 replay-vai00-4-t0.test.mjs，每文件各一次录制加一次回放。
+const inRepo=await loadFixture('short');// 入库短夹具；缺失时报 E-REPLAY-FIXTURE-MISSING
 const root=await makeRoot();
 after(()=>fs.rm(root,{recursive:true,force:true}));
 const shortSteps=stepsFor(1).slice(0,4);
@@ -59,6 +60,18 @@ test('同一存档 T0 与 T2 推进后规则状态哈希相同（短会话直接
  assert.equal(t0.modelCalls,0);assert.equal(t2.hits,shortA.calls);
  assert.equal(t0.ruleStateDigest,t2.ruleStateDigest);
  assert.equal(t0.settlement.matches,true);assert.equal(t2.settlement.matches,true);
+});
+
+test('入库短夹具：T2 回放（零外联）与 T0 回放的规则状态哈希都等于夹具期望值；缩短步骤哈希必变',async()=>{
+ const {result:t2,external:e2}=await withoutOutbound(()=>replayFixture(inRepo.dir,{tier:'T2'}));
+ const {result:t0,external:e0}=await withoutOutbound(()=>replayFixture(inRepo.dir,{tier:'T0'}));
+ assert.deepEqual([...e0,...e2],[]);
+ assertReplayMatches(assert,t2);assertReplayMatches(assert,t0);
+ assert.equal(t2.ruleStateDigest,inRepo.manifest.ruleStateDigest);assert.equal(t0.ruleStateDigest,inRepo.manifest.ruleStateDigest);
+ assert.equal(t0.modelCalls,0);assert.equal(t2.hits,t2.modelCalls);
+ const shorter=await copy(root,inRepo.dir,'inrepo-shorter');
+ await editManifest(shorter,m=>{m.steps.pop();});
+ assert.notEqual((await replayFixture(shorter,{tier:'T0'})).ruleStateDigest,inRepo.manifest.ruleStateDigest);
 });
 
 test('未命中即报错：缺一条旁路记录则回放失败并点名，不回落真实调用；空记录与未知请求同样报错',async()=>{
