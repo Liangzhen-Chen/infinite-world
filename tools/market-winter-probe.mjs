@@ -57,6 +57,11 @@ function strip(w,classes){
    removed+=before-stage.effects.length;
   }
  }
+ // closure 类（只给洪水反事实对照用）：去掉 flood 钟里的 route_closure 效果，其余（flood、price_shift）不动。
+ if(classes.includes('closure'))for(const clock of w.rules.hazardClock?.clocks??[]){
+  if(!clock.id.startsWith('flood:'))continue;
+  for(const stage of clock.stages??[]){const before=stage.effects?.length??0;stage.effects=(stage.effects??[]).filter(e=>e.kind!=='route_closure');stagesDeleted.push(`${clock.id}:${stage.id}:route_closure×${before-stage.effects.length}`);}
+ }
  let seasonFactorsReset=false;
  if(classes.includes('seasonfactor')&&w.rules.settlementTrade?.seasonFactors){w.rules.settlementTrade.seasonFactors=w.rules.settlementTrade.seasonFactors.map(()=>1);seasonFactorsReset=true;}
  return {removed,stagesDeleted,seasonFactorsReset};
@@ -191,7 +196,7 @@ const CASES={
  spring:{label:'春季青黄不接粮价钟（河湾 loc_hw：rise/peak/ease，待替换项）',settlement:'loc_hw',clocks:['price:loc_hw'],season:1,items:ITEMS,level:1.0,strip:['spring']},
  'spring-bs':{label:'春季青黄不接粮价钟（镇 loc_bs，待替换项）',settlement:'loc_bs',clocks:['price:loc_bs'],season:1,items:ITEMS,strip:['spring']},
  drought:{label:'久晴旱情（泉村 loc_bs_liquan：crop_damage 与 price 同阶段）',settlement:'loc_bs_liquan',clocks:['price:loc_bs_liquan'],season:1,items:ITEMS,level:1.0,strip:['drought']},
- flood:{label:'洪水断路（镇 loc_bs：route_closure 与 price 同阶段；有无源头原因待此探针结论）',settlement:'loc_bs',clocks:['flood:loc_bs'],season:1,items:ITEMS,strip:['flood']},
+ flood:{label:'洪水断路（镇 loc_bs：route_closure 与 price 同阶段；有无源头原因待此探针结论）',settlement:'loc_bs',clocks:['flood:loc_bs'],season:1,items:ITEMS,strip:['flood'],controlStrip:['flood','closure']},
  epidemic:{label:'疫病药草（河湾 loc_hw：cases、spread 条件整体强制成立；待替换项）',settlement:'loc_hw',clocks:['epidemic:loc_hw'],season:1,items:['item_herb','item_ration'],forceCases:true,strip:['epidemic']},
  'bs-tight':{label:'镇 loc_bs 删除 tight 阶段后缺粮回退检查（famine:loc_bs 与其依赖的 sangban、tanjie 钟，保持原条件）',settlement:'loc_bs',clocks:['famine:loc_bs','famine:loc_bs_sangban','famine:loc_ms_tanjie'],season:3,items:ITEMS,keepConditions:true,sangbanLevel:0.2,strip:['winter'],extraSettlements:['loc_bs_sangban']},
 };
@@ -208,8 +213,9 @@ function forceClocks(w,spec){
   }
  }
 }
-async function caseRun(withShift,spec,days){
- const b=buildWorld(withShift,spec.strip);
+// control=true：反事实对照（flood 情形：去掉 price_shift 与 route_closure，其余完全相同），输出 mode 记为 'control'。
+async function caseRun(withShift,spec,days,control=false){
+ const b=control?buildWorld(false,spec.controlStrip):buildWorld(withShift,spec.strip);
  forceClocks(b.w,spec);
  const w=b.w,engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'mktw-winter-probe'),ctx={engine,doc};
  // 目标季节第 10 日；冬季 bs-tight 取种子后的冬季（推进 2 天）。真实推进，不直接改分钟。
@@ -225,7 +231,7 @@ async function caseRun(withShift,spec,days){
  const series=[snap(0)];
  const total=spec.keepConditions?Math.max(days,20):days; // bs-tight 保持原条件，钟间隔 7 天，至少看 20 天
  for(let d=1;d<=total;d++){const adv=await attempt(ctx,'world_time',{minutes:DAY},`probe-case-${d}`);const s=snap(d);if(!adv.ok)s.advanceError=adv.error;series.push(s);if(!adv.ok)break;}
- return {case:spec.label,settlement:spec.settlement,clocks:spec.clocks,mode:withShift?'with':'without',strippedClasses:b.strippedClasses,stripped:b.removed,stagesDeleted:b.stagesDeleted,priceShiftEffectsInWorld:b.shiftCount,
+ return {case:spec.label,settlement:spec.settlement,clocks:spec.clocks,mode:control?'control':withShift?'with':'without',strippedClasses:b.strippedClasses,stripped:b.removed,stagesDeleted:b.stagesDeleted,priceShiftEffectsInWorld:b.shiftCount,
   granarySet,fixtureUntrusted:ctx.fixtureUntrusted??(reached?null:{error:'未推进到目标日'}),series};
 }
 // 周贸易季节系数：每条受粮线的买方聚落，燕麦区域基价在四个季节各取一次（真实推进到各季第 10 日后读，不跳日期）；with 含 seasonFactors，without 全为 1。
@@ -262,9 +268,15 @@ if(WANT.has('buys')&&!NOBUYS)for(const withShift of modes)for(const item of ['it
  try{out.buySeries.push(await buySeries(withShift,item));}
  catch(e){out.buySeries.push({mode:withShift?'with':'without',item,error:errorOf(e),stack:String(e?.stack??'').split('\n').slice(0,6)});}
 }
-for(const name of Object.keys(CASES))if(WANT.has(name))for(const withShift of modes){
- try{out.cases.push(await caseRun(withShift,CASES[name],CASEDAYS));}
- catch(e){out.cases.push({case:CASES[name].label,mode:withShift?'with':'without',error:errorOf(e),stack:String(e?.stack??'').split('\n').slice(0,6)});}
+for(const name of Object.keys(CASES))if(WANT.has(name)){
+ for(const withShift of modes){
+  try{out.cases.push(await caseRun(withShift,CASES[name],CASEDAYS));}
+  catch(e){out.cases.push({case:CASES[name].label,mode:withShift?'with':'without',error:errorOf(e),stack:String(e?.stack??'').split('\n').slice(0,6)});}
+ }
+ if(CASES[name].controlStrip){ // 反事实对照只跑一份（mode=control），与 without 同日逐项比较
+  try{out.cases.push(await caseRun(false,CASES[name],CASEDAYS,true));}
+  catch(e){out.cases.push({case:CASES[name].label,mode:'control',error:errorOf(e),stack:String(e?.stack??'').split('\n').slice(0,6)});}
+ }
 }
 if(WANT.has('seasonfactor'))for(const withShift of modes){
  try{out.cases.push(await seasonFactorRun(withShift));}
