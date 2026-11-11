@@ -12,7 +12,10 @@ import {borrowerTerms} from '../server-plugin/finance-bank.mjs';
 import {settleFinancialClaim} from '../server-plugin/finance-bank.mjs';
 import {transfer,declareLedgerWriter,emptyLedger} from '../server-plugin/ledger.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
-import {customerPurseShare} from '../server-plugin/market.mjs';
+import {customerPurseShare,marketQuote,quoteSupply} from '../server-plugin/market.mjs';
+import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
+import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
+import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
 import {valuation,holdingValuation} from '../server-plugin/valuation.mjs';
 import {creatureTraits} from '../server-plugin/traits.mjs';
 
@@ -252,8 +255,16 @@ test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得
     assert.deepEqual(native.map(r=>[r.shop,r.day,r.minute]),[['shop_hw_qingdeng',0,720]]);
     const breadSatiety=f.engine.byId.get('item_bread').nutrition.satiety,shelfBread=6;
     const aVisits=native[0].visits.filter(v=>v.npc===A),eVisits=native[0].visits.filter(v=>v.npc===E);
-    assert.deepEqual(aVisits.map(v=>[v.item,v.quantity,v.outcome]),[['item_bread',Math.ceil(60/breadSatiety),'bought']]);
-    assert.ok(aVisits[0].paid>=1);
+    // 徐玲应付从定价原语推出（与 business.mjs serve 同一参数链）：前态克隆、正午、青灯酒馆店主当时所在地、
+    // quoteSupply 供需 + regionalTradeBase×wildlifePriceFactor 为基价，marketQuote 取 ceil(60÷面包饱腹) 个的总价；她是当日第一位成交者（客流顺序不变），所以前态即其报价态。
+    const qA=Math.ceil(60/breadSatiety),keeper='npc_hw_linsui',pre=structuredClone(before);pre.state.minute=720;
+    const pd=f.engine.primitiveDraft(pre),where=scheduleAt(f.engine,keeper,720,pre.state).location,business={keeper,markup:1};
+    const supply=quoteSupply(pd,f.engine,{item:'item_bread',location:where,business});
+    const base=regionalTradeBase(pd,f.engine,'item_bread',where,720)*wildlifePriceFactor(f.engine,pd.document,'item_bread',where);
+    const quoteA=marketQuote(pd,f.engine,{seller:keeper,buyer:A,item:'item_bread',quantity:qA,location:where,minute:720,base,business,supply}).totalCoins;
+    assert.deepEqual(aVisits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),[[A,'item_bread',qA,quoteA,'bought']]);
+    // 陶枝的实付（及第二种货是否买）取决于徐玲成交后的店主库存/供需（market.mjs quoteSupply 读的状态）、预算次序与成交决策骰（business.mjs serve 的 rollDice 噪声与 npcDecision）；
+    // 要在克隆上复现须重写 business.mjs 未导出的 sell()（moveCoins、transferItems、recordFinanceSale、recordMarketDeal 全套）并重放决策，等于在测试里再造一遍客流，故此处只断言件数与守恒，实付精确值待裁定。
     // 陶枝：有水源，不为水分买；先买面包（余量 = 货架 − 徐玲所买），余下现金才可能按次序买别的，总付款不超过她的 3 铜。
     assert.equal(eVisits[0].item,'item_bread');assert.equal(eVisits[0].quantity,shelfBread-aVisits[0].quantity);
     assert.ok(eVisits.every(v=>v.outcome==='bought'&&v.paid>=1));

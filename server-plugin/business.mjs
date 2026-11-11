@@ -686,6 +686,7 @@ const shelfOf=(d,engine,shop)=>shop.kind==='player'
 // 与预算同一口径，不再逐件独立折算；本行当要用而手边没有完好的工具买一件。
 // 计划只认得它读到的来源（NPC 店铺货架、有交易服务的人）；计划之外的货架（玩家自己的店）没有来源条目，按这户的储备缺口折成份数。
 // 未能并入同一次序的阻碍：来源由 shop.mjs:323-396 的 registerHouseholdFoodSources 按 currentShops（NPC 店，shop.mjs 的店铺清单）生成；
+// 跟进卡 WATER-1C：玩家柜台以注入方式登记为家户食物来源，并入单一购买次序。
 // 玩家店只在 business.mjs 的 openShops（本文件 :655-670，按租约柜台与 state.inventory 现算）里存在，shop.mjs 不能反向 import business（环），
 // 且玩家店的报价要走柜台、商税与主观报价，household-budget 的来源需要 unitPrice/at/quantity 的预算口径，没有现成读法。
 function wants(d,engine,id,item,gaps,t,shop){
