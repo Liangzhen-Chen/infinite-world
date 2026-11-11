@@ -196,7 +196,7 @@ async function buyRun(name,withShift){
 }
 
 // ---------------------------------------------------------------- 3. 其它手写倍数情形（逐日，每天立即输出）
-// 夹具：只保留该情形的钟、目标季节、间隔 1 天、阶段概率 1、天气条件改 always；疫病情形把 all 条件整体换成 always、epidemic_cases 换成 always
+// 夹具：skipTo 到季节第一个 tick 前一天（(360+季*90-1)*DAY+600），之后真实逐日推进 6 天，使钟触发与阶段推进都走真实 tick；只保留该情形的钟、目标季节、间隔 1 天、阶段概率 1、天气条件改 always；疫病情形把 all 条件整体换成 always、epidemic_cases 换成 always
 // （不取 all 的第一项，也不把被 hazard_phase 引用的钟过滤成不存在）。spring、epidemic 为"待替换"项，只量大小。
 const CASES={
  spring:{label:'春季青黄不接粮价钟（河湾 loc_hw：rise/peak/ease，待替换项）',settlement:'loc_hw',clocks:['price:loc_hw'],season:1,items:ITEMS,level:1.0,strip:['spring']},
@@ -225,7 +225,7 @@ async function caseRun(name,withShift,spec,days,control=false){
  const b=control?buildWorld(false,FLOOD_CONTROL_STRIP):buildWorld(withShift,spec.strip);
  forceClocks(b.w,spec);
  const w=b.w,engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'mktw-winter-probe'),ctx={engine,doc};
- const target=spec.season===3?doc.state.minute+2*DAY:(360+spec.season*90+10)*DAY+600;
+ const target=spec.season===3?doc.state.minute+2*DAY:(360+spec.season*90-1)*DAY+600;
  const reached=await advanceTo(ctx,target,'case');
  const granarySet=spec.level!==undefined?setGranary(engine,ctx.doc,spec.settlement,Math.round(spec.level*mouthsOf(engine,ctx.doc,spec.settlement)*reserveDaysOf(engine,spec.settlement))):null;
  if(spec.sangbanLevel!==undefined)setGranary(engine,ctx.doc,'loc_bs_sangban',Math.round(spec.sangbanLevel*mouthsOf(engine,ctx.doc,'loc_bs_sangban')*reserveDaysOf(engine,'loc_bs_sangban')));
