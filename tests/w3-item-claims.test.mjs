@@ -139,7 +139,7 @@ test('两处起草提示词源码：物品路径引用 ITEM_DRAFT_RULES；不再
 test('身体尺度词形补全：身体部位加大小、宽、长、粗细；如、似、比加身体部位', () => {
   for (const word of ['掌心大小', '巴掌大', '手掌宽', '小指粗细', '比手掌', '约如小指'])
     assert.match(check({description: `削成${word}的椭圆。`}), /写了身体尺度/, word);
-  assert.deepEqual(check({description: '握在掌心，拇指轻按。'}), [], '只提身体部位、不带大小说法不判');
+  assert.equal(check({description: '握在掌心，拇指轻按。'}), '', '只提身体部位、不带大小说法不判');
 });
 
 test('取样动作：骨架有匙具时 inspection 里“舀一勺尝”不算骨架外用量；其他情形照判', () => {
@@ -153,7 +153,7 @@ test('取样动作：骨架有匙具时 inspection 里“舀一勺尝”不算�
 
 test('身体部位尺寸后缀要有边界：后面接动作、副词的不是尺寸', () => {
   for (const text of ['用手指深按绳结。', '手指长时间握持。', '指尖大力按压。', '如手指按压发软。', '以拇指宽幅拉平。'])
-    assert.deepEqual(check({description: text}), [], text);
+    assert.equal(check({description: text}), '', text);
   for (const text of ['掌心大小。', '巴掌大的一块。', '手掌宽，边口齐。', '粗细约如小指，表面光。', '摊开比手掌宽些。'])
     assert.match(check({description: text}), /写了身体尺度/, text);
 });
