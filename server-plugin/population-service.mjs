@@ -1,6 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {checkGeneratedProfile,profileBrief,MAX_PROFILE_FAILURES,PROFILE_FIELDS} from './population.mjs';
 import {remotePeopleAt,remoteProfileBrief} from './remote-generation.mjs';
+import {sidebandClient} from './sideband.mjs';
 
 // First conversation with a seeded resident: draft once, check the hard
 // constraints in code, self-check once, check again, then store through the
@@ -30,10 +31,11 @@ export function selfCheckRequest(brief,draft,codeErrors){
 
 // Real entry: two model calls per person (draft, self-check).
 export function modelProfileGenerator(client,{labelPrefix='population'}={}){
-    return async function generate(brief,{template}={}){
-        const draft=clean(parseJSON(await client.generate(draftRequest(brief),`${labelPrefix}-draft-${brief.identity.id}`)));
+    return async function generate(brief,{template,sideband}={}){
+        const model=sideband?sidebandClient(client,{...sideband,role:'population'}):client;
+        const draft=clean(parseJSON(await model.generate(draftRequest(brief),`${labelPrefix}-draft-${brief.identity.id}`)));
         const before=checkGeneratedProfile(identityFromBrief(brief),draft,{template});
-        const review=parseJSON(await client.generate(selfCheckRequest(brief,draft,before),`${labelPrefix}-selfcheck-${brief.identity.id}`));
+        const review=parseJSON(await model.generate(selfCheckRequest(brief,draft,before),`${labelPrefix}-selfcheck-${brief.identity.id}`));
         return {profile:clean(review.profile??draft),selfCheck:{issues:Array.isArray(review.issues)?review.issues.slice(0,10).map(String):[],codeFindingsBeforeReview:before},calls:2,model:'deepseek-flash'};
     };
 }
@@ -69,7 +71,7 @@ export async function ensurePopulationProfiles(store,campaignId,{engineFor,query
         const brief=remote?remoteProfileBrief(scoped,view.document,person):profileBrief(view.document,person),template=remote?null:view.document.state.population[brief.settlement].template;
         let input;
         try{
-            const generated=await generator(brief,{template});
+            const generated=await generator(brief,{template,sideband:{store,campaignId,turn:view.reference.sequence}});
             const errors=checkGeneratedProfile(remote?scoped.byId.get(person):view.document.state.created[person],generated?.profile,{template});
             input=errors.length?{type:'population_profile',person,outcome:'failed',reason:`硬约束未通过：${errors.join('；')}`}
                 :{type:'population_profile',person,outcome:'accepted',profile:generated.profile,generator:{model:generated.model??'injected',calls:generated.calls??0}};
