@@ -268,6 +268,7 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     // 覆盖原有玩家自动成交保证；不改世界或货架。该固定种子下玩家/原生店排序骰值为
     // 3175393251 < 3453520749，玩家先服务；上一例保留原种子的原生店先服务分支。
     const A='npc_hw_xuling',f=await openShop({coins:{[A]:40},campaignSeed:'w4-player-flow'});
+    const startCoins=f.document.state.npcs[A].coins;
     await waitPastMidnight(f,'w4-player-day');
     const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===f.business);
     // 新值：一人60饱食÷口粮每份饱腹26（由配方能量推导，原手写30）=ceil(2.31)=3份；3份≤零售阈值5，单价=基价3×供需比26/47(=0.553191，已离开下限.5)，
@@ -285,8 +286,14 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     const report=await f.act('core:settlement.business_report',{business:f.business},'w4-player-report');
     assert.equal(report.profit.revenue,4);assert.equal(report.cash.reconciled,true);
     assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
-    // 徐玲钱袋：已批准部分只推出 40-4=36（柜台付 4）；实际 29，多出的 7 来自她饱腹缺口已为 0 后在原生店买 4 份燕麦薄饼（当时水分缺口 72；探针输出里薄饼只有饱腹值 12，未见水分值），按冻结判定规则（docs/审查记录/市场价格-s5w4-11-判定.md）对不上已批准设计变化，转 (b)，照实失败、另查。放在对账之后，不挡其余断言与对账的检验。
-    assert.equal(f.document.state.npcs[A].coins,36);
+    // 徐玲钱袋（断言放在最后）：初始钱 − 柜台那笔实付 − 原生店那笔实付，两笔都从客流记录读，不写死。
+    // 根因：基线里烙饼（item_oat_flatbread）手写 nutrition={satiety:30}，item-class.mjs 对手写物品跳过派生，没有水分；提交 c0a7ea22（2026-11-09，面包等手写饱腹改为推导，
+    // PLAN.md:584、591③、595-596，李白 11-09 批准）去掉手写后，烙饼由配方派生（item-class.mjs:233：配方水分×保留率÷产出份数），运行时带水分 >0。徐玲买完口粮后饱腹缺口为 0，
+    // 水分缺口仍在，business.mjs:691-695 wants() 对每项 gain>0 且缺口>0 的需求下单，所以她另在原生店买了烙饼。详见 F:/dnd-tmp/xuling-rootcause.md。
+    const nativeVisits=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop!==f.business).flatMap(r=>r.visits.filter(v=>v.npc===A));
+    assert.equal(nativeVisits.length,1);assert.equal(nativeVisits[0].item,'item_oat_flatbread');assert.ok(nativeVisits[0].quantity>0);
+    assert.ok(f.engine.byId.get('item_oat_flatbread').nutrition?.hydration>0,'前提：烙饼运行时带水分，徐玲才会因水分缺口买它');
+    assert.equal(f.document.state.npcs[A].coins,startCoins-flow[0].visits[0].paid-nativeVisits[0].paid);
 });
 
 test('F026 客流：居民自己决定买不买——正忙的人（决策返回稍后）这一天不买',async()=>{

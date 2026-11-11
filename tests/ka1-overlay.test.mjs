@@ -10,7 +10,7 @@ import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/ru
 import {canonical} from '../server-plugin/storage.mjs';
 import {readApprovedSupersedes, revertSuperseded} from '../tools/approved-revisions.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {drinkableByRule, satietyFactor} from '../server-plugin/item-class.mjs';
+import {drinkableByRule} from '../server-plugin/item-class.mjs';
 import {entriesFor as matpropsEntries, draftRoot as matpropsDraftRoot, condimentCard, cardProfiles, summarizeApproval, verifyAll} from '../world/design/matprops-approval.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
@@ -112,15 +112,14 @@ test('运行时世界带上全部机制字段；据点不再生制成品；重�
   // 盘上直接读出的已审世界经引擎同一步合并，得到同一份运行时行
   const reviewed = materializeRuntimeWorld(await loadWorld());
   // （运行时世界另有 F 派生的营养与生熟，这里只比合并出来的字段）
-  // nutrition 例外：盘上已审行里的 nutrition 是作者给的"按热量基值"，运行时按 item-class.mjs 的 satietyFactor（c0a7ea22：饱腹不等于热量，按成品能量密度乘系数，
-  // 饱腹 = floor(基值 × 系数)，水分 = floor(基值)；PLAN.md:584、591③，李白 11-09 批准）派生，所以口粮盘上 30、运行时 26。期望值由同一公式在运行时算出（不写死 26），断言仍为精确相等。
-  const expectedNutrition = (rt, base) => {
-    const sat = Math.floor((base.satiety ?? 0) * satietyFactor(runtime, rt, base.satiety ?? 0)), hyd = Math.floor(base.hydration ?? 0);
-    return {...(sat > 0 ? {satiety: sat} : {}), ...(hyd > 0 ? {hydration: hyd} : {})};
-  };
-  for (const [i, row] of reviewed.items.entries()) for (const key of Object.keys(row)) {
-    if (key === 'nutrition') assert.equal(canonical(expectedNutrition(runtime.items[i], row.nutrition)), canonical(runtime.items[i].nutrition), `${row.id}.nutrition`);
-    else assert.equal(canonical(row[key]), canonical(runtime.items[i][key]), `${row.id}.${key}`);
+  // nutrition.satiety 由加载期规律派生（item-class.mjs deriveItemAttributes：satiety = floor(热量基值 × satietyFactor)，基值来自手写、配方守恒或类别密度/热量；c0a7ea22，PLAN.md:584、591③），
+  // 所以盘上口粮 30、运行时 26；牛乳盘上无饱腹、运行时由热量推出 22。按 M27REG 处理 drinkable 的先例：派生出的字段两边都剥掉，其余字段逐字比较；
+  // 判断依据是引擎的派生标记——运行时行带 nutrientBase（deriveItemAttributes 给全部可食物品写入，item-class.mjs:249）。派生值本身由 tests/satiety-factor.test.mjs 管
+  // （系数、手写视为基值、配方派生、重复派生不变），不在这里比。未带标记的行 nutrition 整体逐字比较。
+  const dropDerivedSatiety = (rt, row) => rt.nutrientBase !== undefined && row.nutrition ? {...row, nutrition: Object.fromEntries(Object.entries(row.nutrition).filter(([k]) => k !== 'satiety'))} : row;
+  for (const [i, row] of reviewed.items.entries()) {
+    const rt = runtime.items[i];
+    for (const key of Object.keys(row)) assert.equal(canonical(dropDerivedSatiety(rt, row)[key]), canonical(dropDerivedSatiety(rt, rt)[key]), `${row.id}.${key}`);
   }
   assert.equal(canonical(reviewed.locations.map(l => [l.id, l.fixtures, l.site])), canonical(runtime.locations.map(l => [l.id, l.fixtures, l.site])));
   assert.throws(() => materializeRuntimeWorld({items: [{id: 'item_x', basePrice: 3, tags: ['a']}], locations: [], recipes: [], mechanics: {items: {item_x: {basePrice: 5}}}}), /不能改写已审字段/);
