@@ -63,6 +63,7 @@ export async function listRevisionBatches(draftsRoot=DRAFTS_ROOT){
 export const APPROVAL_SOURCES={
  'w3-journey-text':()=>import('../world/design/w3-journey-text-revision.mjs'),
  'w3-trades-text':()=>import('../world/design/w3-trades-text-revision.mjs'),
+ 'w3-household-text':()=>import('../world/design/w3-household-text-revision.mjs'),
 };
 // 读取并核验已审批的修订回执。审批状态不是一个字段，而是回执目录的 L1/L2/L4 记录：
 // 用冻结候选逐条核对指纹、L2 无 hard、L4 已批，再核对 publication.json 与冻结候选逐字段相同。逐批核验，全部通过才返回。
