@@ -68,6 +68,8 @@ test('每种自主任务完成时都要执行者在场且清醒：移走或失�
  assert.ok([...seen.values()].some(v=>v.itinerary),'世界里应出现行程类自主任务');assert.ok([...seen.keys()].some(k=>k.startsWith('labor_')),`世界里 5 天内应出现 labor_* 行程任务，实际只有：${[...seen.keys()].join(',')}`);assert.ok([...seen.values()].some(v=>!v.itinerary),'世界里应出现静止类自主任务');
  const run=async({day,id},change)=>{const {engine,d}=await setup();advance(d,engine,day*1440+600);const task=d.get('state','npcAutonomy','tasks',id);assert.equal(task.status,'进行中');
   const materials=task.action.kind==='craft'?engine.byId.get(task.action.recipe).materials.map(m=>[m.item,count(d,task.npc,m.item)]):[];
+  // 先推进到完成前一分钟再改，作息来不及把人走回原处（npc-schedule.mjs:288/292）。
+  advance(d,engine,task.finish-1);
   if(change==='location')d.set(['state','npcs',task.npc,'location'],d.get('state','npcs',task.npc,'location')==='loc_hw'?'loc_capital':'loc_hw');
   if(change==='status')d.set(['state','npcs',task.npc,'status'],'昏迷');
   advance(d,engine,task.finish);return {d,task,materials};};
