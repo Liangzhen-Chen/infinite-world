@@ -244,16 +244,24 @@ test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得
     const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===f.business);
     // K08 正午按种子决定商店先后；本种子原生客店先服务，玩家此日没有重复需求客流。
     assert.equal(flow.length,0);
-    // 一人每日需求：2.5×24=60饱食；面包每份30，所以A采购2份。
-    // A仍缺60饱食，买2面包×1=2铜；E的K02家户缓冲也有缺口，3铜不再被旧钱袋1/4截成0：
-    // 先买2面包2铜，再买1燕饼，整单trunc(1×1.5)=1铜。原生店补货前只有6面包/4燕饼可售。
+    // 一人每日需求：2.5×24=60饱食、水分 3×24=72。徐玲住 bld_hw_riverhome，往返 6 分钟 ≤ nearWaterRoundTripMinutes，当日有水可免费取，
+    // 水分缺口被免费水扣光，只剩 60 饱食缺口，只买面包：数量 = ceil(60 ÷ 引擎面包饱腹)（期望值从引擎读，不写死；面包饱腹由配方能量推导，不再是手写 30）。
+    // 陶枝（house_hw_06：陶枝+樊荣两人，钱 3 铜；bld_hw_herbs 往返 10 分钟 ≤30，同样有水可取）也只为饱腹买：原生店货架只有 6 面包，徐玲先拿走 ceil(60÷面包饱腹)，
+    // 陶枝再买余下的面包；买法由预算次序（每铜有效覆盖）决定，不是为水分买。她的件数与实付由现价与现金决定，这里按规律断言结构与守恒，不照搬旧值。
     const native=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow');
     assert.deepEqual(native.map(r=>[r.shop,r.day,r.minute]),[['shop_hw_qingdeng',0,720]]);
-    assert.deepEqual(native[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),[[A,'item_bread',2,2,'bought'],[E,'item_bread',2,2,'bought'],[E,'item_oat_flatbread',1,1,'bought']]);
-    assert.deepEqual(native[0].visits.map(v=>v.tax),[0,0,0]);
-    assert.equal(f.document.state.npcs[A].coins,38);assert.equal(f.document.state.npcs[E].coins,0);assert.equal(account().coins,100);
+    const breadSatiety=f.engine.byId.get('item_bread').nutrition.satiety,shelfBread=6;
+    const aVisits=native[0].visits.filter(v=>v.npc===A),eVisits=native[0].visits.filter(v=>v.npc===E);
+    assert.deepEqual(aVisits.map(v=>[v.item,v.quantity,v.outcome]),[['item_bread',Math.ceil(60/breadSatiety),'bought']]);
+    assert.ok(aVisits[0].paid>=1);
+    // 陶枝：有水源，不为水分买；先买面包（余量 = 货架 − 徐玲所买），余下现金才可能按次序买别的，总付款不超过她的 3 铜。
+    assert.equal(eVisits[0].item,'item_bread');assert.equal(eVisits[0].quantity,shelfBread-aVisits[0].quantity);
+    assert.ok(eVisits.every(v=>v.outcome==='bought'&&v.paid>=1));
+    const ePaid=eVisits.reduce((n,v)=>n+v.paid,0);assert.ok(ePaid<=3);
+    assert.ok(native[0].visits.every(v=>v.tax===0));
+    assert.equal(f.document.state.npcs[A].coins,40-aVisits[0].paid);assert.equal(f.document.state.npcs[E].coins,3-ePaid);assert.equal(account().coins,100);
     assert.equal(f.document.state.inventory.item_ration.quantity,3);assert.equal(f.document.state.inventory.item_bread.quantity,5);
-    const bought=f.document.state.npcs[A].inventory.item_bread;assert.equal(typeof bought==='number'?bought:bought.quantity,2);
+    const bought=f.document.state.npcs[A].inventory.item_bread;assert.equal(typeof bought==='number'?bought:bought.quantity,Math.ceil(60/breadSatiety));
     // 不来的人：钱袋与存粮原样。
     for(const id of [B,C,D])assert.equal(f.document.state.npcs[id].coins,before.state.npcs[id].coins,id);
     // 玩家无成交：柜台、库存、营业回执和报表必须共同保持零收入，账本仍守恒。
@@ -286,14 +294,13 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     const report=await f.act('core:settlement.business_report',{business:f.business},'w4-player-report');
     assert.equal(report.profit.revenue,4);assert.equal(report.cash.reconciled,true);
     assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
-    // 徐玲钱袋（断言放在最后）：初始钱 − 柜台那笔实付 − 原生店那笔实付，两笔都从客流记录读，不写死。
-    // 根因：基线里烙饼（item_oat_flatbread）手写 nutrition={satiety:30}，item-class.mjs 对手写物品跳过派生，没有水分；提交 c0a7ea22（2026-11-09，面包等手写饱腹改为推导，
-    // PLAN.md:584、591③、595-596，李白 11-09 批准）去掉手写后，烙饼由配方派生（item-class.mjs:233：配方水分×保留率÷产出份数），运行时带水分 >0。徐玲买完口粮后饱腹缺口为 0，
-    // 水分缺口仍在，business.mjs:691-695 wants() 对每项 gain>0 且缺口>0 的需求下单，所以她另在原生店买了烙饼。详见 F:/dnd-tmp/xuling-rootcause.md。
+    // 徐玲钱袋（断言放在最后）：初始钱 − 柜台那笔实付 − 原生店实付（若有），都从客流记录读，不写死。
+    // 规律（WATER-1A）：徐玲住处往返 6 分钟，当日有水可免费取，水分缺口由免费水扣除；买完口粮后饱腹缺口为 0，她就没有任何需要用钱补的营养缺口，
+    // 烙饼虽带水分（item-class.mjs:233 配方派生，水分 >0），也不为水分买。旧版此处断言“她因水分另买烙饼”，那正是被修正的行为。
     const nativeVisits=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop!==f.business).flatMap(r=>r.visits.filter(v=>v.npc===A));
-    assert.equal(nativeVisits.length,1);assert.equal(nativeVisits[0].item,'item_oat_flatbread');assert.ok(nativeVisits[0].quantity>0);
-    assert.ok(f.engine.byId.get('item_oat_flatbread').nutrition?.hydration>0,'前提：烙饼运行时带水分，徐玲才会因水分缺口买它');
-    assert.equal(f.document.state.npcs[A].coins,startCoins-flow[0].visits[0].paid-nativeVisits[0].paid);
+    assert.ok(f.engine.byId.get('item_oat_flatbread').nutrition?.hydration>0,'前提：烙饼运行时带水分，却不会被有免费水的徐玲为水分买走');
+    assert.equal(nativeVisits.length,0,'有可达免费水且饱腹已满：原生店不再有她的成交');
+    assert.equal(f.document.state.npcs[A].coins,startCoins-flow[0].visits[0].paid-nativeVisits.reduce((n,v)=>n+v.paid,0));
 });
 
 test('F026 客流：居民自己决定买不买——正忙的人（决策返回稍后）这一天不买',async()=>{

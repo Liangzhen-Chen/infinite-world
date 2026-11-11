@@ -682,17 +682,21 @@ const shelfOf=(d,engine,shop)=>shop.kind==='player'
     ?Object.entries(d.get('state','inventory')??{}).filter(([item,v])=>quantities1(v)>0&&engine.byId.get(item)?.basePrice).map(([item])=>item)
     :shop.goods.filter(item=>engine.quantity(d,shop.keeper,item)>0);
 
-// 居民此刻想买的：口粮与饮水按户里储备缺口折成份数；本行当要用而手边没有完好的工具买一件。
-function wants(d,engine,id,item,gaps){
+// 居民此刻想买的：口粮与饮水按户预算的购买计划（household-budget 的 market.purchases，每铜有效覆盖次序）取这件货的份数，
+// 与预算同一口径，不再逐件独立折算；本行当要用而手边没有完好的工具买一件。
+// 计划只认得它读到的来源（NPC 店铺货架、有交易服务的人）；计划之外的货架（如玩家自己的店）没有可比的来源条目，按这户的储备缺口折成份数。
+function wants(d,engine,id,item,gaps,t,shop){
     const def=engine.byId.get(item),state=d.get('state'),out={quantity:0,severity:0};
     if(def?.nutrition){
-        if(!gaps.has(id))gaps.set(id,householdBudget(d,engine,id).resources.procurementShortfall);
-        const gap=gaps.get(id);
-        for(const need of ['satiety','hydration']){
-            const gain=def.nutrition[need]??0;if(gain<=0||!(gap[need]>0))continue;
-            const units=Math.ceil(gap[need]/gain);
-            if(units>out.quantity){out.quantity=units;out.severity=100;}
+        if(!gaps.has(id))gaps.set(id,householdBudget(d,engine,id).resources);
+        const plan=gaps.get(id);
+        let units=0;
+        if(plan.market.offered.includes(`${shop.id}|${item}`))units=plan.market.purchases.filter(p=>p.source===shop.id&&p.item===item&&p.at<=t+customerReachMinutes(engine)).reduce((n,p)=>n+p.quantity,0);
+        else for(const need of ['satiety','hydration']){
+            const gain=def.nutrition[need]??0;if(gain<=0||!(plan.procurementShortfall[need]>0))continue;
+            units=Math.max(units,Math.ceil(plan.procurementShortfall[need]/gain));
         }
+        if(units>out.quantity){out.quantity=units;out.severity=100;}
     }
     // 家户日用欠量（柴、盐……，market.upkeepDemand 读 F 卡的 householdUpkeepGap）也是要买的量。
     const upkeep=upkeepDemand(state,engine,id,item);
@@ -778,7 +782,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
                 engine.assertNpcObligationAction(d,[shop.keeper],{start:serviceAt,minutes:serviceMinutes,location:shop.location,kind:'trade'});
             }catch(error){if(error.code==='E-ACTION-PRECONDITION')continue;throw error;}
             // Recompute the current household budget after every real purchase.
-            const want=wants(d,engine,id,item,gaps);if(!want.quantity)continue;
+            const want=wants(d,engine,id,item,gaps,t,shop);if(!want.quantity)continue;
             const projected={...d.document,state:{...d.get('state'),minute:t,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),location:slot.location,activity:slot.activity}}}};
             const view=subjectiveView(engine,projected,id),read={document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
             const budget=householdBudget(read,engine,id,{view});
@@ -788,7 +792,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             const tripCost=travelled?0:travelCoins;
             const cap=Math.max(0,floor-tripCost-(engine.byId.get(item)?.nutrition?0:budget.resources.market.spent));
             if(cap<1)break;
-            gaps.set(id,budget.resources.procurementShortfall);
+            gaps.set(id,budget.resources);
             const available=saleableStock(d,engine,shop.keeper,item,{business:true}).available;
             let quantity=Math.min(want.quantity,available),quote=null;
             // No write happens inside this descent: supply and base are read once for all quantities tried.

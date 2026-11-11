@@ -68,6 +68,19 @@ const foodSources=(...a)=>registerHouseholdFoodSources.fn?.(...a)??[];
 // 食物来源的惯常性（food-habit.mjs）：给每个来源标 luxury；没有注册时全部按日常品。
 export function registerHouseholdFoodHabit(fn){registerHouseholdFoodHabit.fn=fn;}
 const foodHabit=(d,engine,owner,sources,opts)=>registerHouseholdFoodHabit.fn?.(d,engine,owner,sources,opts)??{rich:true,sources};
+// 免费水（journey('water') 的只读判断，household-subsistence.mjs 在模块体内注册）：本户当日取水能补的水分。
+// 未注册就是装配错误，直接抛错，不回退为 0（否则会静默退回“全额买水”）。
+export function registerHouseholdFreeWater(fn){registerHouseholdFreeWater.fn=fn;}
+const freeWater=(...a)=>{
+ if(!registerHouseholdFreeWater.fn)throw Error('household free water not registered: household-subsistence.mjs must call registerHouseholdFreeWater');
+ return registerHouseholdFreeWater.fn(...a);
+};
+// 本户当日水分缺口（与预算同一口径：成员日耗水 × 24，含个人修正），交给注册函数折成当日可免费取到的水分 {hydration,source}。
+function freeWaterToday(d,engine,owner,view){
+ const state=d.get('state'),f=family(d,engine,owner),members=f.shared?f.members:[owner];
+ const hydrationNeed=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,'hydration')*24,...(view?{observer:owner,view}:{})}).value,0);
+ return freeWater(d,engine,owner,{view,hydrationNeed});
+}
 // 本户眼下买得到的来源：到货未过、有量、有价、付得起；奢侈来源（惯常性低）在本户现金不宽裕时标 deferred：排在日常来源之后，
 // 只补日常补不满的缺口。惯常性按本户看得到的全部来源算（卖家数不受现金影响），再按现金筛。
 function accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now}){
@@ -262,10 +275,12 @@ export function householdMealWithSources(plan,sourceNutrition={}){
 }
 
 export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true}={}){
- const read=()=>readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution});
- return view?read():budgetRead(d,engine,[resourceMemo,owner,days,risk,commonRisk,marketSubstitution],read);
+ // 免费水依赖日期与水源：键里带日期、所选水源与可取水分（水体变化后换键）；主观读不缓存。
+ const free=freeWaterToday(d,engine,owner,view);
+ const read=()=>readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,free});
+ return view?read():budgetRead(d,engine,[resourceMemo,owner,days,risk,commonRisk,marketSubstitution,Math.floor(d.get('state','minute')/DAY),free.source,free.hydration],read);
 }
-function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution}){
+function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,free}){
  const state=d.get('state'),f=family(d,engine,owner),subjective=Boolean(view);
  if(view&&view.observer!==owner)throw Error('Household budget observer mismatch');
  // Knowing the household's mouths does not grant access to their private
@@ -313,6 +328,8 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
   return [id,days??householdBufferTarget(d,engine,planner,{incomeDays,risk:risk+incomeRisk,commonRisk,foodDays:nextFood===null?null:(nextFood-state.minute)/DAY}).days];
  }));
  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,need)*24*horizons.get(id),...(view?{observer:owner,view}:{})}).value,0)]));
+ // 当日可免费取到的水从水分需求里扣（只扣当日份、不超过需求）；第 2…N 天的水分仍由存量与购买覆盖。
+ needs.hydration=Math.max(0,needs.hydration-Math.min(free.hydration,needs.hydration));
  // 单餐额度的池：现有累计额度 + 预算期内新增额度（各成员的预算天数），与日推进实际吃掉的量同一套（item-class.mealCapPools）。
  // 两次 newCaps 共用同一份 poolMemo：池只由 engine 与物品定，与额度已用量无关；used/held 等状态仍各自独立。
  const capDays=[...horizons.values()],poolMemo=new Map(),newCaps=()=>{const c=mealCapPools(engine,{days:capDays,saved,poolMemo});for(const r of rows)if(r.stock>0)c.markHeld(r.item);return c;};
@@ -324,7 +341,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  const caps=newCaps();
  for(const r of rows)if(r.eatMg>0)caps.take(r.item,{eatMg:r.eatMg,fromOpen:r.fromOpen});
  const otherFood=Object.fromEntries(Object.keys(needs).map(need=>[need,rows.reduce((n,r)=>n+credit(r,r.definition?.nutrition?.[need]??0),0)]));
- const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],nextFoodAt:nextFood};
+ const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],offered:[...new Set(sources.map(r=>`${r.source}|${r.item}`))],freeWater:free,nextFoodAt:nextFood};
  const maxDays=Math.max(0,...horizons.values());
  const deliveries=sources.flatMap(source=>{
   const rows=[source];
