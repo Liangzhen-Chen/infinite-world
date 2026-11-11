@@ -2,7 +2,9 @@
 // 目的：在同一世界里取"平时（秋）"与"冬季"、不同粮仓缺口程度，输出干粮类物品的价格、供给、需求、供需比与成交价，
 // 并输出连续购买时每件的涨幅；可切换"有/无 price_shift"（读入世界后在内存副本里去掉各时钟阶段的 price_shift 效果，不改任何文件）。
 // 只读：不写盘、不开服务器、不调模型、不 import 任何测试文件；所有改动只在内存里的文档与世界副本上。
-// 用法：node tools/market-winter-probe.mjs [--mode=with|without|both] [--advance=N] [--levels=a,b,c] [--buys=N] [--no-buys]
+// 覆盖全部手写价格倍数情形（李白 11-11 16:5x 扩大范围）：冬荒、青黄不接粮价钟（season 1）、旱情、洪水断路、疫病药草、周贸易季节系数；
+// --cases 选择情形（winter,buys,spring,spring-bs,drought,flood,epidemic,seasonfactor），--days 为各 cases 逐日推进天数（默认 6）。
+// 用法：node tools/market-winter-probe.mjs [--mode=with|without|both] [--cases=...] [--days=N] [--advance=N] [--levels=a,b,c] [--buys=N] [--no-buys]
 //   --mode      with=现状（保留 price_shift），without=内存副本去掉全部 price_shift，both=两者都跑（默认）。
 //   --advance   设好粮仓后用 world_time 推进的天数（默认 8，超过冬荒时钟间隔 7 天，使时钟按真实规则自行触发或不触发；0=不推进，只读规律层静态值）。
 //   --levels    粮仓存量 = 档位 × (聚落餐口 × reserveDays)；默认 1.5,0.9,0.6,0.4,0.2,0.05（>1 为满仓，<1 进入 tight 阈值，<0.5 进入 famine 阈值）。
@@ -45,6 +47,8 @@ function stripPriceShift(w){
   stage.effects=(stage.effects??[]).filter(e=>e.kind!=='price_shift');
   removed+=before-stage.effects.length;
  }
+ // 周贸易季节系数（settlement-trade.mjs:97）同属手写倍数，一并取消（全设为 1，记 1 条）。
+ if(w.rules.settlementTrade?.seasonFactors){w.rules.settlementTrade.seasonFactors=w.rules.settlementTrade.seasonFactors.map(()=>1);removed+=1;}
  return removed;
 }
 function buildWorld(withShift){
@@ -155,18 +159,80 @@ async function buySeries(withShift,item){
  return {mode:withShift?'with':'without',item,rows};
 }
 
+// ---------------------------------------------------------------- 3. 其它手写倍数情形（春季粮价钟、旱情、洪水断路、疫病药草、周贸易季节系数）
+// 每个情形都在内存里做"有倍数 / 无倍数"两份对照。为让按概率或天气触发的时钟在探针里确定地走完，沿用 tests/seasonal-hazards.test.mjs 的夹具思路：
+// 只保留该情形的钟、改成目标季节、间隔 1 天、阶段概率 1、天气条件改 always；疫病病例条件按需强制成立。这些只改内存里的世界副本。
+// 只读时间序列：逐日（推进 1 天后）记各物品的倍数、供给、需求、供需比、列价与聚落粮仓，不判通过。价格方向由供需变化决定，不与旧倍数比较。
+const CASES={
+ spring:{label:'春季青黄不接粮价钟（河湾 loc_hw：rise/peak/ease）',settlement:'loc_hw',clock:'price:loc_hw',season:1,items:ITEMS,level:1.0},
+ 'spring-bs':{label:'春季青黄不接粮价钟（镇 loc_bs）',settlement:'loc_bs',clock:'price:loc_bs',season:1,items:ITEMS},
+ drought:{label:'久晴旱情（泉村 loc_bs_liquan：crop_damage 与 price 同阶段）',settlement:'loc_bs_liquan',clock:'price:loc_bs_liquan',season:1,items:ITEMS,level:1.0},
+ flood:{label:'洪水断路（镇 loc_bs：route_closure 与 price 同阶段）',settlement:'loc_bs',clock:'flood:loc_bs',season:1,items:ITEMS},
+ epidemic:{label:'疫病药草（河湾 loc_hw：spread 病例条件强制成立，只看药草价是否随病例而动）',settlement:'loc_hw',clock:'epidemic:loc_hw',season:1,items:['item_herb','item_ration'],forceCases:true},
+};
+function forceClock(w,spec){
+ w.rules.hazardClock.clocks=w.rules.hazardClock.clocks.filter(r=>r.id===spec.clock);
+ for(const r of w.rules.hazardClock.clocks){
+  r.seasons=[spec.season];r.intervalDays=1;
+  for(const s of r.stages){
+   s.probability=1;
+   if(s.condition.kind==='all')s.condition=s.condition.conditions[0];
+   if(s.condition.kind==='weather')s.condition={kind:'always'};
+   if(spec.forceCases&&s.condition.kind==='epidemic_cases')s.condition={kind:'always'};
+  }
+ }
+}
+async function caseRun(withShift,spec,days){
+ const {w,removed,shiftCount}=buildWorld(withShift);
+ forceClock(w,spec);
+ const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'mktw-winter-probe'),ctx={engine,doc};
+ skipTo(engine,ctx.doc,(360+spec.season*90+10)*DAY+600);
+ const target=mouthsOf(engine,ctx.doc,spec.settlement)*reserveDaysOf(engine,spec.settlement);
+ if(spec.level!==undefined)setGranary(engine,ctx.doc,spec.settlement,Math.round(spec.level*target));
+ const snap=day=>({day,calendar:engine.calendar(ctx.doc.state.minute).text,granary:granaryView(engine,ctx.doc,spec.settlement),
+  clockHistory:ctx.doc.state.records?.[`hazard-clock:${spec.clock}`]?.history?.map(h=>h.stage)??null,
+  items:spec.items.map(i=>itemView(engine,ctx.doc,i,spec.settlement)),
+  epidemic:Object.values(ctx.doc.state.records??{}).filter(r=>r?.category==='epidemic').map(r=>({id:r.id,status:r.status,households:Object.keys(r.households??{}).length}))});
+ const series=[snap(0)];
+ for(let d=1;d<=days;d++){const adv=await attempt(ctx,'world_time',{minutes:DAY},`probe-case-${d}`);const s=snap(d);if(!adv.ok)s.advanceError=adv.error;series.push(s);if(!adv.ok)break;}
+ return {case:spec.label,settlement:spec.settlement,clock:spec.clock,mode:withShift?'with':'without',stripped:removed,priceShiftEffectsInWorld:shiftCount,series};
+}
+// 周贸易季节系数：每条受粮线的买方聚落，燕麦区域基价在四个季节各取一次（只跳日期，不推进时间）；with 含 seasonFactors，without 全为 1。
+async function seasonFactorRun(withShift){
+ const {w,removed}=buildWorld(withShift);
+ const engine=new WorldEngine(w),rows=[],item=w.rules.settlementTrade.item;
+ for(const lane of w.rules.settlementTrade.lanes)for(const season of [0,1,2,3]){
+  const doc=engine.createCharacter(legacy,{},'mktw-winter-probe');
+  skipTo(engine,doc,(360+season*90+10)*DAY+600);
+  try{const d=draftOf(engine,doc);rows.push({buyer:lane.buyer,season,seasonFactors:w.rules.settlementTrade.seasonFactors,item,
+   regionalBase:regionalTradeBase(d,engine,item,lane.buyer),regionalTradePrice:regionalTradePrice(d,engine,item,lane.buyer),view:itemView(engine,doc,item,lane.buyer)});}
+  catch(e){rows.push({buyer:lane.buyer,season,error:errorOf(e)});}
+ }
+ return {case:'周贸易季节系数',mode:withShift?'with':'without',stripped:removed,rows};
+}
+
 // ---------------------------------------------------------------- 入口
 const modes=MODE==='both'?[true,false]:MODE==='with'?[true]:MODE==='without'?[false]:null;
 if(!modes){console.error('--mode 只能是 with、without 或 both');process.exit(2);}
-const out={probe:'market-winter-probe',args:{mode:MODE,advance:ADVANCE,levels:LEVELS,buys:BUYS,items:ITEMS,settlement:SID},
+const WANT=new Set(arg('cases','winter,buys,spring,spring-bs,drought,flood,epidemic,seasonfactor').split(','));
+const CASEDAYS=Number(arg('days','6'));
+const out={probe:'market-winter-probe',args:{mode:MODE,advance:ADVANCE,levels:LEVELS,buys:BUYS,items:ITEMS,settlement:SID,cases:[...WANT],caseDays:CASEDAYS},
  limits:world0.rules?.economy?.priceFactorLimits?.region??null,
- note:'平时=第二年秋（无粮价时钟），冬=种子之后的冬季；两者同世界同规则。with=现状含全部 price_shift，without=内存副本去掉全部 price_shift（其它效果如 famine 保留）。',matrix:[],buySeries:[]};
-for(const withShift of modes)for(const season of ['normal','winter'])for(const level of LEVELS){
+ note:'with=现状（保留全部 price_shift 与 seasonFactors），without=内存副本去掉全部 price_shift 并把 seasonFactors 设为 1（famine、crop_damage、route_closure 等源头效果保留）。冬/平时见 matrix；其它情形见 cases。',matrix:[],buySeries:[],cases:[]};
+if(WANT.has('winter'))for(const withShift of modes)for(const season of ['normal','winter'])for(const level of LEVELS){
  try{out.matrix.push(await cell(withShift,season,level));}
  catch(e){out.matrix.push({mode:withShift?'with':'without',season,level,error:errorOf(e),stack:String(e?.stack??'').split('\n').slice(0,6)});}
 }
-if(!NOBUYS)for(const withShift of modes)for(const item of ['item_bread','item_ration']){
+if(WANT.has('buys')&&!NOBUYS)for(const withShift of modes)for(const item of ['item_bread','item_ration']){
  try{out.buySeries.push(await buySeries(withShift,item));}
  catch(e){out.buySeries.push({mode:withShift?'with':'without',item,error:errorOf(e),stack:String(e?.stack??'').split('\n').slice(0,6)});}
+}
+for(const name of Object.keys(CASES))if(WANT.has(name))for(const withShift of modes){
+ try{out.cases.push(await caseRun(withShift,CASES[name],CASEDAYS));}
+ catch(e){out.cases.push({case:CASES[name].label,mode:withShift?'with':'without',error:errorOf(e),stack:String(e?.stack??'').split('\n').slice(0,6)});}
+}
+if(WANT.has('seasonfactor'))for(const withShift of modes){
+ try{out.cases.push(await seasonFactorRun(withShift));}
+ catch(e){out.cases.push({case:'周贸易季节系数',mode:withShift?'with':'without',error:errorOf(e),stack:String(e?.stack??'').split('\n').slice(0,6)});}
 }
 console.log(JSON.stringify(out,(k,v)=>typeof v==='bigint'?v.toString():v,1));
