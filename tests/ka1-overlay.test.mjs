@@ -10,7 +10,7 @@ import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/ru
 import {canonical} from '../server-plugin/storage.mjs';
 import {readApprovedSupersedes, revertSuperseded} from '../tools/approved-revisions.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {drinkableByRule} from '../server-plugin/item-class.mjs';
+import {drinkableByRule, satietyFactor} from '../server-plugin/item-class.mjs';
 import {entriesFor as matpropsEntries, draftRoot as matpropsDraftRoot, condimentCard, cardProfiles, summarizeApproval, verifyAll} from '../world/design/matprops-approval.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
@@ -112,7 +112,16 @@ test('运行时世界带上全部机制字段；据点不再生制成品；重�
   // 盘上直接读出的已审世界经引擎同一步合并，得到同一份运行时行
   const reviewed = materializeRuntimeWorld(await loadWorld());
   // （运行时世界另有 F 派生的营养与生熟，这里只比合并出来的字段）
-  for (const [i, row] of reviewed.items.entries()) for (const key of Object.keys(row)) assert.equal(canonical(row[key]), canonical(runtime.items[i][key]), `${row.id}.${key}`);
+  // nutrition 例外：盘上已审行里的 nutrition 是作者给的"按热量基值"，运行时按 item-class.mjs 的 satietyFactor（c0a7ea22：饱腹不等于热量，按成品能量密度乘系数，
+  // 饱腹 = floor(基值 × 系数)，水分 = floor(基值)；PLAN.md:584、591③，李白 11-09 批准）派生，所以口粮盘上 30、运行时 26。期望值由同一公式在运行时算出（不写死 26），断言仍为精确相等。
+  const expectedNutrition = (rt, base) => {
+    const sat = Math.floor((base.satiety ?? 0) * satietyFactor(runtime, rt, base.satiety ?? 0)), hyd = Math.floor(base.hydration ?? 0);
+    return {...(sat > 0 ? {satiety: sat} : {}), ...(hyd > 0 ? {hydration: hyd} : {})};
+  };
+  for (const [i, row] of reviewed.items.entries()) for (const key of Object.keys(row)) {
+    if (key === 'nutrition') assert.equal(canonical(expectedNutrition(runtime.items[i], row.nutrition)), canonical(runtime.items[i].nutrition), `${row.id}.nutrition`);
+    else assert.equal(canonical(row[key]), canonical(runtime.items[i][key]), `${row.id}.${key}`);
+  }
   assert.equal(canonical(reviewed.locations.map(l => [l.id, l.fixtures, l.site])), canonical(runtime.locations.map(l => [l.id, l.fixtures, l.site])));
   assert.throws(() => materializeRuntimeWorld({items: [{id: 'item_x', basePrice: 3, tags: ['a']}], locations: [], recipes: [], mechanics: {items: {item_x: {basePrice: 5}}}}), /不能改写已审字段/);
   const joined = materializeRuntimeWorld({items: [{id: 'item_x', tags: ['a']}], locations: [], recipes: [], mechanics: {items: {item_x: {tags: ['a', 'b'], animalProduct: {from: 'coat'}}}}});

@@ -125,7 +125,7 @@ function budgetDiag(engine,doc,id,kernel=false){
    rows:(r.rows??[]).filter(x=>(x.stock??0)>0||(x.food??0)>0||(x.eatMg??0)>0).map(x=>({item:x.item,holder:x.holder,stock:x.stock,food:x.food,eatMg:x.eatMg,fromOpen:x.fromOpen,retained:x.retained,committed:x.committed}))};
  }catch(e){return {error:errorOf(e)};}
 }
-const itemFacts=(engine,id)=>{const it=engine.byId.get(id);return {id,basePrice:it?.basePrice,satiety:it?.nutrition?.satiety??null,tags:it?.tags??null};};
+const itemFacts=(engine,id)=>{const it=engine.byId.get(id);return {id,basePrice:it?.basePrice,satiety:it?.nutrition?.satiety??null,hydration:it?.nutrition?.hydration??null,tags:it?.tags??null};};
 const depthRule=engine=>{const r=engine.world.marketRules??{};return {depthImpact:r.depthImpact,retailFloor:r.retailFloor,retailShare:r.retailShare,maxShare:r.maxShare,dailyShare:r.dailyShare,spread:r.spread};};
 // 单笔可成交深度上限（market.mjs assertMarketDepth 的公式）：非零售量 ≤ max(retailFloor, 现货供给 × maxShare)。
 const skipTo=(engine,doc,minute)=>{ // 同 tests/fixtures/skip-clock.mjs 的思路：直接跳分钟时，势力日钟也跳到下一个边界
