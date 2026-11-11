@@ -536,15 +536,11 @@
    "basis": "红甜菜：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "appearance": [
     {
-     "term": "根色自红到深红，切面可见环带",
+     "term": "红甜菜根色自红到深红，切面可见环带",
      "citation": "Wikipedia「Beetroot」：the root colors are shades of red and dark red, with different degrees of zoning noticeable in slices"
     },
     {
-     "term": "红色来自甜菜红素",
-     "citation": "Wikipedia「Beetroot」：The red colour compound betanin is a betalain in the category of betacyanins"
-    },
-    {
-     "term": "根色深紫",
+     "term": "甜菜根呈深紫色",
      "citation": "Wikipedia「Beetroot」：the deep purple roots of beetroot"
     }
    ]
@@ -570,7 +566,7 @@
    "basis": "洋葱：类别 vegetable 的成员，与类别代表值偏差超过阈值，用自己的出处。【出处含水与能量已按 FDC API 核对 2026-11-09；其余数值（单餐量、可食部分、热值等）仍凭记忆，待 L2 核对】",
    "appearance": [
     {
-     "term": "外皮有黄褐、红紫等色",
+     "term": "洋葱有黄褐与红紫等色",
      "citation": "Wikipedia「Onion」：Yellow or brown onions；Red or purple onions"
     },
     {
@@ -618,10 +614,6 @@
     {
      "term": "最常见的是叶面光滑、球实的绿甘蓝",
      "citation": "Wikipedia「Cabbage」：Smooth-leafed, firm-headed green cabbages are the most common"
-    },
-    {
-     "term": "叶球重约 500–1000 克",
-     "citation": "Wikipedia「Cabbage」：A cabbage generally weighs between 500 and 1,000 grams"
     }
    ]
   }
@@ -650,8 +642,8 @@
      "citation": "Wikipedia「Leek」：The edible part of the plant is a bundle of leaf sheaths"
     },
     {
-     "term": "叶基发白，往上渐成浅绿",
-     "citation": "Wikipedia「Leek」：The edible portions of the leek are the white base of the leaves, the light green parts"
+     "term": "叶基白，上部浅绿",
+     "citation": "Wikipedia「Leek」：The edible portions of the leek are the white base of the leaves (above the roots and stem base), the light green parts"
     },
     {
      "term": "深绿的叶部质地粗韧",
@@ -800,10 +792,6 @@
     {
      "term": "冷藏时坚实，室温下软到可涂抹",
      "citation": "Wikipedia「Butter」：Butter remains a firm solid when refrigerated but softens to a spreadable consistency at room temperature"
-    },
-    {
-     "term": "室温下是半固体乳化物，约含 81% 乳脂",
-     "citation": "Wikipedia「Butter」：It is a semi-solid emulsion at room temperature, consisting of approximately 81% butterfat"
     }
    ]
   }
@@ -836,10 +824,6 @@
     {
      "term": "室温下葡萄糖会析出成固体颗粒（结晶蜜）",
      "citation": "Wikipedia「Honey」：At room temperature, honey is a supersaturated solution, in which the glucose precipitates into solid granules"
-    },
-    {
-     "term": "滤过的蜜去掉了大部分细颗粒、花粉粒和气泡",
-     "citation": "Wikipedia「Honey」：Filtered honey has had all or most of the fine particles, pollen grains, air bubbles removed"
     }
    ]
   }
@@ -857,7 +841,28 @@
  "item_dill": {
   "tags": [
    "fresh_herb"
-  ]
+  ],
+  "props": {
+   "basis": "item_dill 的外观词组（个别写在物品 props 行：只对应这一种食材本身，每条带页面与原句；不写用途、功效、后果）。【出处 2026-11-11 经公开页面查证；L2、L4 待审】",
+   "appearance": [
+    {
+     "term": "叶如蕨，细裂而柔软",
+     "citation": "Wikipedia「Dill」：the fern-like leaves of dill are aromatic；finely divided, softly delicate leaves"
+    },
+    {
+     "term": "叶有香气",
+     "citation": "Wikipedia「Dill」：the fern-like leaves of dill are aromatic"
+    },
+    {
+     "term": "茎细而中空",
+     "citation": "Wikipedia「Dill」：Its stems are slender and hollow"
+    },
+    {
+     "term": "花小，白至黄色，有香气",
+     "citation": "Wikipedia「Dill」：small white to yellow scented"
+    }
+   ]
+  }
  },
  "item_mustard_seed": {
   "tags": [
