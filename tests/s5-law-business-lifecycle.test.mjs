@@ -4,7 +4,8 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches,PatchCursor} from '../server-plugin/storage.mjs';
-import {cashFlowWindow,operatingOptions,businessLifecycle,advanceCustomerFlow} from '../server-plugin/business.mjs';
+import {cashFlowWindow,operatingOptions,businessLifecycle,advanceCustomerFlow,flowTimesOfDay,shopWindows,customerWindows} from '../server-plugin/business.mjs';
+import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
 import {autonomyCandidates,autonomyKind,registerAutonomyProvider} from '../server-plugin/autonomy-candidates.mjs';
 import {advanceNpcAutonomy} from '../server-plugin/npc-autonomy.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
@@ -206,9 +207,9 @@ test('恢复后的原生店按正午作息结客流，不用结算时的睡眠�
  f.doc.state.npcs[landlord].inventory={item_bread:{quantity:10}};
  f.doc.state.npcs[buyer]={...f.e.initialFromLegacy(seed,'business-lifecycle').state.npcs[buyer],coins:40,location:place,activity:'休息',status:'正常',inventory:{},goals:{},memoryStream:[]};
  // EC-1b：客流时刻 = 店营业窗口与顾客清醒窗口的最早交集。店主全天营业（恢复须在日界 0 点有营业服务），顾客若全天醒着，最早交集就是 0 点，
- // 而结算区间是半开的 (day*1440,(day+1)*1440]，0 点属于前一刻；所以让顾客有真实起居：睡到 720 点，之后醒着。最早交集 = 720，落在区间内、晚于 0 点恢复，
- // 也与原用例的结算时刻（正午 720）同一刻，其余条件（钱、库存、需求）与原用例一致。
- f.w.npcs.find(n=>n.id===buyer).schedule={default:[{start:0,end:720,location:place,activity:'睡眠',services:[]},{start:720,end:1440,location:place,activity:'休息',services:[]}]};
+ // 而结算区间是半开的 (day*1440,(day+1)*1440]，0 点属于前一刻；所以让顾客有真实起居：睡到 360 点，之后醒着。最早交集 = 360，落在区间内、晚于 0 点恢复。
+ // 云上 360 不成交，静态读码未能定根因（候选：买家 360 的生计槽位 subsistenceScheduleAt、家务工时 unattended、结算时刻的预算）；断言保持原样，失败时在 message 里输出诊断，下一轮据此定。
+ f.w.npcs.find(n=>n.id===buyer).schedule={default:[{start:0,end:360,location:place,activity:'睡眠',services:[]},{start:360,end:1440,location:place,activity:'休息',services:[]}]};
  const cursor=new PatchCursor(f.doc),d={get document(){return cursor.root;},get:(...p)=>cursor.expose(p.reduce((v,k)=>v?.[k],cursor.root)),set:(path,value)=>cursor.apply({op:'set',path,value})};
  const spec=autonomyKind('business_lifecycle');spec.execute(d,f.e,landlord,{business:native.id,choice:'suspend'},{actionId:'pause'});
  d.set(['state','minute'],d.get('state','records',native.id).resumeNotBefore);
@@ -223,7 +224,13 @@ test('恢复后的原生店按正午作息结客流，不用结算时的睡眠�
  const open=flow("营业"),asleep=flow("睡眠"),prefix=`customer_flow:${native.id}:${day}:`;
  // 记录键统一带结算时刻（每个营业窗口一条）：取该店当天全部窗口的记录一并比较。
  const recordsOf=doc=>Object.fromEntries(Object.entries(doc.state.records).filter(([k])=>k.startsWith(prefix)));
- assert.ok(Object.values(recordsOf(open)).some(r=>r.visits.some(v=>v.outcome==="bought")));
+ const diagnose=()=>{try{
+  const st=open.state,at=t=>{const x=scheduleAt(f.e,buyer,day*1440+t,st);return x&&`${x.location}/${x.activity}/[${(x.services??[]).join()}]/until${x.until}`;};
+  return JSON.stringify({day,flowTimes:flowTimesOfDay(f.e,st,day),shopWindows:[...shopWindows(f.e,st,day).entries()].map(([k,v])=>[k,v.windows]),buyerWindows:customerWindows(f.e,st,day).get(buyer)??null,
+   buyerSlot360:at(360),buyerSlot720:at(720),buyer:{coins:st.npcs[buyer]?.coins,status:st.npcs[buyer]?.status,location:st.npcs[buyer]?.location},keeperSlot360:(x=>x&&`${x.location}/${x.activity}/[${(x.services??[]).join()}]`)(scheduleAt(f.e,landlord,day*1440+360,st)),
+   records:Object.entries(recordsOf(open)).map(([k,r])=>[k,r.visits]),shop:{suspended:st.records[native.id]?.suspended,status:st.records[native.id]?.status,openedAt:st.records[native.id]?.openedAt}});
+ }catch(error){return `diagnostic failed: ${error.message}`;}};
+ assert.ok(Object.values(recordsOf(open)).some(r=>r.visits.some(v=>v.outcome==="bought")),diagnose());
  assert.deepEqual(recordsOf(asleep),recordsOf(open));assert.deepEqual(asleep.ledger,open.ledger);
 });
 
