@@ -27,10 +27,10 @@ export function validateDigestExclude(table){
 }
 export function loadDigestExclude(file=DIGEST_EXCLUDE_FILE){return validateDigestExclude(JSON.parse(fs.readFileSync(file,'utf8')));}
 
-const under=(path,prefix)=>path.length>=prefix.length&&prefix.every((s,i)=>s==='*'||s===path[i]);
+const under=(path,prefix)=>path.length===prefix.length&&prefix.every((s,i)=>s==='*'||s===path[i]);
 
 // A copy of the document without the excluded string values. layers: which
-// layers apply (default all). A key is dropped only when it sits at or below
+// layers apply (default all). A key is dropped only when its object sits exactly at
 // a rule's prefix AND its value is a string.
 export function excludeFromDigest(document,{table=loadDigestExclude(),layers=Object.keys(table.layers)}={}){
  const rules=table.rules.filter(r=>layers.includes(r.layer));

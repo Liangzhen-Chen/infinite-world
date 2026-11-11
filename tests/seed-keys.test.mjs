@@ -62,3 +62,21 @@ test('扫描：定义不计、调用计；模板种子与 stream/seededRandom �
   ['seed-template','`${s.name}:${s.id}`']
  ]);
 });
+
+test('扫描器：注释不计；正则字面量与双引号、换行链式 createHash 正常处理',()=>{
+ const rows=scanSource([
+  "// stream(`${seed}:comment`) 与 Math.imul( 只在注释里",
+  "/* seededRandom(1) */",
+  "const ok=/['\"(]/.test(x);",
+  "const h=createHash(\"sha256\")",
+  "  .update(`${seed}:chain`).digest();",
+  "const r=stream(`${seed}:real`);"
+ ].join('\n'));
+ assert.deepEqual(rows.map(r=>[r.kind,r.expr,r.line]),[['sha256','`${seed}:chain`',4],['stream','`${seed}:real`',6]]);
+});
+
+test('已知盲区（不造通配，仅记录）：变量持有的哈希对象、非 sha256 算法、不含种子名的手写 PRNG 不被扫描',()=>{
+ assert.deepEqual(scanSource("const h=createHash('md5');h.update(`${seed}:x`);const v=Math.floor(Date.now()/7);"),[
+  {kind:'seed-template',expr:'`${seed}:x`',line:1}
+ ]);
+});

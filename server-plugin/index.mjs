@@ -25,7 +25,7 @@ import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,
 
 import {primitiveRuntime} from './primitives-runtime.mjs';
 export const info={id:'infinite-fields',name:'无限原野本地战役存储',description:'本项目自有的存档、账本与检索服务器插件'};
-export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={}, consistencyEnabled=true, consistencyClient, consistencyBudgetYuan=20, populationGenerator, populationProfilesEnabled=Boolean(process.env.DEEPSEEK_API_KEY)||Boolean(populationGenerator) }={}){
+export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=randomUUID, npcPlanner, npcPlanningEnabled=Boolean(process.env.DEEPSEEK_API_KEY), npcPlanningOptions={}, consistencyEnabled=true, consistencyClient, consistencyBudgetYuan=20, populationGenerator, populationProfilesEnabled=Boolean(process.env.DEEPSEEK_API_KEY)||Boolean(populationGenerator), sidebandRoot=null }={}){
     world ??= await loadWorld();
     const actionRegistry=loadActionRegistry();if(actionRegistry.errors.length)throw Error(actionRegistry.errors.join('; '));
     const engine=new WorldEngine(world),stores=new Map(),indexes=new Map(),registries=new Map(),modelClients=new Map();
@@ -39,7 +39,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
         if(!stores.has(root)){
             const registry=new WorldRegistry(path.join(root,'infinite-fields-worlds'));registries.set(root,registry);
             const reducer=archivedReducer(registry,engine);
-            const store=new CampaignStorage(path.join(root,'infinite-fields'),{reducer});store.worldRegistry=registry;stores.set(root,store);
+            const store=new CampaignStorage(path.join(root,'infinite-fields'),{reducer,sidebandRoot});store.worldRegistry=registry;stores.set(root,store);
         }
         return stores.get(root);
     };

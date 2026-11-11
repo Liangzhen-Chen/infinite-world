@@ -12,7 +12,6 @@ import {materializeFaithClocks} from '../server-plugin/faction-clock.mjs';
 import {requireBalanceTables} from './balance-tables.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {validateDomainRules} from '../server-plugin/domain-rules.mjs';
-import {validateSeedKeys} from '../server-plugin/seed-keys.mjs';
 import {validateNormBindings} from '../server-plugin/norm-stack.mjs';
 import {loadDerivedRegistry} from '../server-plugin/derived.mjs';
 import {installEcologyDefinitions} from '../server-plugin/ecology-dynamics.mjs';
@@ -115,7 +114,6 @@ export async function loadWorld(root = path.resolve(import.meta.dirname, '..', '
         try{world[key]=await read(file);}catch(error){if(error.code!=='ENOENT')throw error;}
     }
     validateDomainRules(world);
-    validateSeedKeys();
     const slots=await optional('ontology/slots/core.json'),derivations=await optional('rules/derivations.json'),consumers=await optional('ontology/slots/consumers.json'),facts=await optional('ontology/facts.json'),modifiers=await optional('rules/modifiers.json');
     // An optional source contributes only when present. Empty injected fields
     // would otherwise change publication fingerprints of unrelated worlds.

@@ -5,8 +5,15 @@ import {fileURLToPath} from 'node:url';
 // Seed-key registry (AI-04 §6.1). Every place in server-plugin that turns the
 // campaign seed into a draw, a stream or a derived id is listed in
 // world/rules/tables/seed-keys.json; E-SEED-KEY compares code and table both
-// ways. The table is read here only: it never enters the world document, so
-// the world hash and every existing roll are unchanged.
+// ways. This is a static code check run by tests/seed-keys.test.mjs, not part
+// of world loading. The table never enters the world document, so the world
+// hash and every existing roll are unchanged.
+//
+// Known blind spots (not covered, no wildcard added):
+//  - a hash object kept in a variable and fed later (const h=createHash(..); h.update(..));
+//  - hash algorithms other than sha256, randomBytes, crypto.getRandomValues, Date.now() as entropy;
+//  - hand-written PRNGs/hashes whose input does not mention a seed name (seededRandom's xorshift itself);
+//  - seed variables not named seed/randomSeed/campaignSeed/template.seed (e.g. rootSeed).
 const HERE=path.dirname(fileURLToPath(import.meta.url));
 export const SEED_KEYS_FILE=path.join(HERE,'..','world','rules','tables','seed-keys.json');
 export const SEED_KEY_ROLES=Object.freeze(['seed','id','fingerprint','entropy']);
@@ -18,7 +25,7 @@ const HASH_HELPERS=['digest','hash','sha256','hashText'];
 const SEEDISH=/(?<![\w$.])seed\b|\brandomSeed\b|\bcampaignSeed\b|\btemplate\.seed\b/;
 const call=name=>new RegExp(`(?<![.\\w$])${name}\\(`,'g');
 const FORMS=[
- {kind:'sha256',re:/createHash\('sha256'\)\.update\(/g},
+ {kind:'sha256',re:/createHash\(\s*['"]sha256['"]\s*\)\s*\.update\(/g},
  {kind:'stream',re:call('stream')},
  {kind:'seededRandom',re:call('seededRandom'),skipIf:arg=>arg.includes('createHash')},
  ...WRAPPERS.map(name=>({kind:`wrapper:${name}`,re:call(name)})),
@@ -27,6 +34,55 @@ const FORMS=[
  {kind:'math-random',re:/Math\.random\(/g}
 ];
 
+// A "/" starts a regex literal when the last significant character cannot end an expression.
+const REGEX_AFTER=new Set(['','(',',','=',':','[','!','&','|','?','{','}',';','+','-','*','%','<','>','~','^']);
+function regexEnd(src,i){
+ let inClass=false;
+ for(i++;i<src.length;i++){
+  const c=src[i];
+  if(c==='\\'){i++;continue;}
+  if(c==='\n')return i;
+  if(c==='[')inClass=true;else if(c===']')inClass=false;
+  else if(c==='/'&&!inClass){i++;while(/[a-z]/i.test(src[i]??''))i++;return i;}
+ }
+ return i;
+}
+
+// One pass over a source text: comments become blanks (newlines kept, so
+// offsets and line numbers stay), and the outermost template literals are listed.
+function lex(src){
+ const out=[...src],templates=[];let prev='';
+ const blank=(a,b)=>{for(let k=a;k<b;k++)if(out[k]!=='\n')out[k]=' ';};
+ function template(i){
+  for(i++;i<src.length;i++){
+   const c=src[i];
+   if(c==='\\'){i++;continue;}
+   if(c==='$'&&src[i+1]==='{'){i=code(i+2,true)-1;continue;}
+   if(c==='`'){prev='`';return i+1;}
+  }
+  return i;
+ }
+ function code(i,inBrace){
+  let depth=0;
+  while(i<src.length){
+   const c=src[i];
+   if(c==='/'&&src[i+1]==='/'){const e=src.indexOf('\n',i),end=e<0?src.length:e;blank(i,end);i=end;continue;}
+   if(c==='/'&&src[i+1]==='*'){const e=src.indexOf('*/',i+2),end=e<0?src.length:e+2;blank(i,end);i=end;continue;}
+   if(c==="'"||c==='"'){let j=i+1;while(j<src.length&&src[j]!==c){if(src[j]==='\\')j++;j++;}i=j+1;prev=c;continue;}
+   if(c==='`'){const start=i;i=template(i);if(!inBrace)templates.push([start,i]);continue;}
+   if(c==='/'&&REGEX_AFTER.has(prev)){i=regexEnd(src,i);prev='a';continue;}
+   if(c==='{')depth++;
+   if(c==='}'){if(inBrace&&depth===0)return i+1;depth--;}
+   if(!/\s/.test(c))prev=c;
+   i++;
+  }
+  return i;
+ }
+ code(0,false);
+ return {masked:out.join(''),templates};
+}
+
+// Text-level helpers on comment-free source.
 function skipQuoted(src,i){
  const q=src[i];
  for(i++;i<src.length;i++){
@@ -39,14 +95,14 @@ function skipQuoted(src,i){
 }
 // src[i] is an opening bracket; returns the index just after its partner.
 function skipGroup(src,i){
- let depth=0;
+ let depth=0,prev='';
  for(;i<src.length;i++){
   const c=src[i];
-  if(c==="'"||c==='"'||c==='`'){i=skipQuoted(src,i)-1;continue;}
-  if(c==='/'&&src[i+1]==='/'){const n=src.indexOf('\n',i);i=n<0?src.length:n;continue;}
-  if(c==='/'&&src[i+1]==='*'){const n=src.indexOf('*/',i+2);i=n<0?src.length:n+1;continue;}
+  if(c==="'"||c==='"'||c==='`'){i=skipQuoted(src,i)-1;prev=c;continue;}
+  if(c==='/'&&REGEX_AFTER.has(prev)){i=regexEnd(src,i)-1;prev='a';continue;}
   if(c==='('||c==='['||c==='{')depth++;
   else if(c===')'||c===']'||c==='}'){depth--;if(depth===0)return i+1;}
+  if(!/\s/.test(c))prev=c;
  }
  throw Error('E-SEED-KEY 源码括号未闭合');
 }
@@ -59,8 +115,8 @@ function isDefinition(src,start,end){
 }
 
 // Pure: the seed-related sites of one source text, as {kind,expr,line}.
-export function scanSource(src){
- const sites=[],covered=[];
+export function scanSource(source){
+ const {masked:src,templates}=lex(source),sites=[],covered=[];
  const take=(kind,start,end,expr)=>{sites.push({kind,expr:squash(expr),line:lineOf(src,start)});covered.push([start,end]);};
  for(const form of FORMS){
   form.re.lastIndex=0;
@@ -78,9 +134,10 @@ export function scanSource(src){
   const end=skipQuoted(src,open);take('seed-template',open,end,src.slice(open,end));
  }
  // Any other template literal that interpolates a seed name.
- for(const m of src.matchAll(/`(?:[^`\\]|\\.)*`/g)){
- if(![...m[0].matchAll(/\$\{[^}]*\}/g)].some(x=>SEEDISH.test(x[0]))||inside(m.index))continue;
-  take('seed-template',m.index,m.index+m[0].length,m[0]);
+ for(const [start,end] of templates){
+  const text=src.slice(start,end);
+  if(![...text.matchAll(/\$\{[^}]*\}/g)].some(x=>SEEDISH.test(x[0]))||inside(start))continue;
+  take('seed-template',start,end,text);
  }
  return sites.sort((a,b)=>a.line-b.line);
 }
@@ -125,13 +182,8 @@ export function checkSeedKeys(table,sites){
  return errors;
 }
 
-// World-load check. The scan is cached per process; sources absent (a
-// packaged build without server-plugin) means there is nothing to compare.
-let checked=null;
+// Throws every E-SEED-KEY message at once; used by tests/seed-keys.test.mjs.
 export function validateSeedKeys({table,sites}={}){
- if(!table&&!sites&&checked)return;
- if(!sites&&!fs.existsSync(HERE))return;
  const errors=checkSeedKeys(table??loadSeedKeys(),sites??scanSeedSites());
  if(errors.length)throw Error(errors.slice(0,20).join('\n')+(errors.length>20?`\n…另有 ${errors.length-20} 条`:''));
- if(!table&&!sites)checked=true;
 }

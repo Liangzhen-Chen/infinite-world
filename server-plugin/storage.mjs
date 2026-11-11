@@ -578,7 +578,9 @@ export class PatchCursor {
 }
 
 export class CampaignStorage {
-    constructor(root, { snapshotEvery = 200, segmentSize = 1000, reducer = null } = {}) {
+    constructor(root, { snapshotEvery = 200, segmentSize = 1000, reducer = null, sidebandRoot = null } = {}) {
+        // Sideband audit rows are written only when this directory is configured explicitly.
+        this.sidebandRoot = sidebandRoot ? path.resolve(sidebandRoot) : null;
         this.root = path.resolve(root); this.snapshotEvery = snapshotEvery; this.segmentSize = segmentSize;
         this.cache = new Map(); this.queues = new Map(); this.snapshots = new Map(); this.reducer = reducer;
     }

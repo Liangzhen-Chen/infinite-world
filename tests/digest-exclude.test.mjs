@@ -24,12 +24,12 @@ test('排除口径表：加载校验通过；每条有层、前缀、键与数�
 
 test('只删限定路径下的字符串值：对象、数组、数字同名键与路径外同名键一律保留',()=>{
  const document={state:{
-  created:{p1:{id:'p1',name:'甲',background:'旧背景',currentConcern:{text:'对象值保留'},visibleFeature:['数组值保留'],notes:7,personality:{background:'嵌套同名也在前缀之下，字符串被删'}}},
+  created:{p1:{id:'p1',name:'甲',background:'旧背景',currentConcern:{text:'对象值保留'},visibleFeature:['数组值保留'],notes:7,personality:{background:'深层同名字符串不被删'}}},
   npcs:{n1:{name:'乙',background:'路径外的字符串保留',coins:3}},
   population:{s1:{profiles:{p1:{status:'full',profileHash:'abc',generator:{model:'m1',calls:2}}}}}
  }};
  const out=excludeFromDigest(document,{table,layers:['narration']});
- assert.deepEqual(out.state.created.p1,{id:'p1',name:'甲',currentConcern:{text:'对象值保留'},visibleFeature:['数组值保留'],notes:7,personality:{}});
+ assert.deepEqual(out.state.created.p1,{id:'p1',name:'甲',currentConcern:{text:'对象值保留'},visibleFeature:['数组值保留'],notes:7,personality:{background:'深层同名字符串不被删'}});
  assert.equal(out.state.npcs.n1.background,'路径外的字符串保留');assert.equal(out.state.npcs.n1.name,'乙');
  assert.deepEqual(out.state.population.s1.profiles.p1,{status:'full',generator:{calls:2}});
  assert.equal(document.state.created.p1.background,'旧背景');

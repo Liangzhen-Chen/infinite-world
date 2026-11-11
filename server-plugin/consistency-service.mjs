@@ -204,7 +204,7 @@ export async function reviewConsistencyReply(store,campaignId,{token,draft,expec
   if(state.sequence!==expectedSequence||state.sequence!==sceneSequence||state.revision!==record.revision)throw Error('审查前存档或历史分支已变化');
   if(state.document.releaseVersion!==1)throw Error('当前存档尚未启用新版');
   // Every review, format-correction and rewrite call below leaves one sideband row for this turn.
-  const audited=client&&sidebandClient(client,{store,campaignId,turn:state.sequence,role:'consistency'});
+  const audited=client&&(store.sidebandRoot?sidebandClient(client,{store,campaignId,turn:state.sequence,role:'consistency'}):client);
   const events=state.events.filter(e=>state.active.has(e.sequence)&&e.sequence>record.sequence);
   if(events.some(e=>!belongsToTurn(e,record)||e.input?.tool==='world_turn'))throw Error('审查必须在本回合尾注提交前，且不能混入另一回合行动');
   const engine=(await store.worldRegistry.get(state.document.worldHash)).scoped(state.document);
