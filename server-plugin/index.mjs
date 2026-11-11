@@ -20,6 +20,7 @@ import {translateCall,narrateExecution,timeSegments,SPAN_CAP,CLIENT_READS} from 
 import {loadActionRegistry,actionCall,catalogRow,searchActions,consentIsOwn,CONSENT_PENDING} from './action-registry.mjs';
 import {worldActions} from './action-affordances.mjs';
 import {actionBoundary} from './action-boundary.mjs';
+import {aiAllows} from './ai-profile.mjs';
 import {ensurePopulationProfiles,modelProfileGenerator}from'./population-service.mjs';
 import {beginConsistencyTurn,captureConsistencySearch,captureConsistencyFailure,reconcileConsistencyTurn,reviewConsistencyReply,gateConsistencyTurn,assertConsistencyCommit,sharedModelClient}from'./consistency-service.mjs';
 
@@ -128,14 +129,14 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             return {reference:store.reference(state),revision:state.revision,anchors};
         });
     }));
-    router.post('/review/begin',handle(req=>beginConsistencyTurn(getStore(req),req.body.campaignId,{anchor:req.body.anchor,eventId:req.body.eventId,playerText:req.body.playerText,expectedSequence:req.body.expectedSequence,enabled:consistencyEnabled&&req.body.enabled!==false,captureSearch:req.body.captureSearch===true})));
+    router.post('/review/begin',handle(req=>beginConsistencyTurn(getStore(req),req.body.campaignId,{anchor:req.body.anchor,eventId:req.body.eventId,playerText:req.body.playerText,expectedSequence:req.body.expectedSequence,enabled:consistencyEnabled&&req.body.enabled!==false&&aiAllows(req,'narrate'),captureSearch:req.body.captureSearch===true})));
     router.post('/review/gate',handle(req=>gateConsistencyTurn(getStore(req),req.body.campaignId,{token:req.body.token,expectedSequence:req.body.expectedSequence})));
     router.post('/review/reply',handle(async req=>{
         const store=getStore(req),{campaignId,token,draft,expectedSequence}=req.body;
         const view=await store.read(campaignId),index=await getIndex(store,campaignId,view.document);
         const selected=(await store.worldRegistry.get(view.document.worldHash)).scoped(view.document);
         const scene=selected.scene(view.document,String(req.body.query??'').slice(0,20000),index);
-        return reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat:index.chatMessages,sceneSequence:view.reference.sequence,client:getModelClient(store)});
+        return reviewConsistencyReply(store,campaignId,{token,draft,expectedSequence,scene,chat:index.chatMessages,sceneSequence:view.reference.sequence,client:aiAllows(req,'narrate')?getModelClient(store):null});
     }));
     router.post('/propose',handle(async req=>{
         const {campaignId,eventId,args}=req.body,store=getStore(req),view=await store.read(campaignId);
@@ -222,7 +223,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
             narration=narrateExecution({engine:scoped,before:view.document,after,tool,args,result:saved.result,action:translated.action});
         }catch{narration=undefined;}
         const crossedDay=Math.floor(after.state.minute/1440)>Math.floor(view.document.state.minute/1440);
-        if(!saved.duplicate&&npcPlanningEnabled&&(crossedDay||after.state.location!==view.document.state.location)){
+        if(!saved.duplicate&&npcPlanningEnabled&&aiAllows(req,'npcPlanning')&&(crossedDay||after.state.location!==view.document.state.location)){
             let planning;
             try{planning=await settleNpcPlanning(store,campaignId,{anchor,enabled:true,...(npcPlanner?{planner:npcPlanner}:{}),options:{...npcPlanningOptions,client:getModelClient(store)??npcPlanningOptions.client}});}
             catch(error){planning={status:'failed',reason:'本次人物规划未能保存，已完成的玩家行动仍保留'};}
@@ -256,7 +257,7 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
     router.post('/scene',handle(async req=>{
         // Naming a seeded resident in conversation drafts their full profile once.
         let populationProfiles=[];
-        if(populationProfilesEnabled&&typeof req.body.query==='string'&&req.body.query){
+        if(populationProfilesEnabled&&aiAllows(req,'profileDraft')&&typeof req.body.query==='string'&&req.body.query){
             const store=getStore(req),client=populationGenerator?null:getModelClient(store),generator=populationGenerator??(client?modelProfileGenerator(client):null);
             try{populationProfiles=await ensurePopulationProfiles(store,req.body.campaignId,{engineFor:document=>store.worldRegistry.get(document.worldHash),query:req.body.query,generator});}
             catch(error){populationProfiles=[{status:'skipped',reason:String(error.message).slice(0,200)}];}

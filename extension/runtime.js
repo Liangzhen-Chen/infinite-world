@@ -1,5 +1,5 @@
 import { getContext } from '../../../extensions.js';
-import { parseTurn, toolResultWithClock, modelToolResult, lookupToolResult, actionCompletion, modelToolAllowed, actionModes, turnModelAccess } from './turn.mjs';
+import { parseTurn, toolResultWithClock, modelToolResult, lookupToolResult, actionCompletion, modelToolAllowed, actionModes, turnModelAccess, aiProfile } from './turn.mjs';
 import { readStateSection } from './state-read.mjs';
 import { toolDefinitions, modelActionCatalog, builderToolCall } from './tools.mjs';
 import { renderMessages } from './message-view.mjs';
@@ -62,7 +62,7 @@ registerPanel({id:'ledger',title:'世界账本',render:(container,data)=>{
 }});
 initializeSettings();
 const api=async(endpoint,body={})=>{
-    const response=await fetch(`/api/plugins/infinite-fields/${endpoint}`,{method:'POST',headers:ctx().getRequestHeaders(),body:JSON.stringify(body)});
+    const response=await fetch(`/api/plugins/infinite-fields/${endpoint}`,{method:'POST',headers:{...ctx().getRequestHeaders(),'X-AI-Profile':aiProfile(getSettings())},body:JSON.stringify(body)});
     const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`本地存档请求失败${response.status}`);error.rejected=response.status>=400&&response.status<500;throw error;}return data;
 };
 const anchor=()=>{
@@ -247,6 +247,15 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
 // 删改消息的对账不会撤销它。主持人正在回应或审查本回合时先不动手，免得混进那一回合的证据。
 let generating=false,reviewsPending=0;
 const FEED='fields_event_feed',FEED_LIMIT=40;
+// T0: no model is called, so typed text is matched by the local action catalog (AI-01 section 8) instead of being sent to a chat model.
+const noModelProfile=()=>active()&&!!view&&getActionModes().intent==='off'&&getActionModes().narration==='off';
+async function localTyping(){
+    const text=[...ctx().chat].reverse().find(message=>message.is_user)?.mes?.trim();if(!text)return;
+    const found=await api('actions',{campaignId:view.reference.campaignId,query:text,limit:5});
+    const options=(found.actions??[]).filter(a=>!a.readOnly&&a.id!=='open:proposal').map(a=>a.label??a.id);
+    recordFeed(options.length?['本地规则找到这些做法：'+options.join('、')+'。请在可做之事面板选择并确认。']:['本地规则没有找到对应的做法。请打开可做之事面板，或用构造器组合。'],'look');
+    await ctx().saveChat();
+}
 function recordFeed(lines,kind='action'){
     const metadata=ctx().chatMetadata,rows=Array.isArray(metadata[FEED])?metadata[FEED]:[];
     const entry={minute:view?.document.state.minute??null,kind,lines:lines.slice(0,12)};
@@ -521,7 +530,7 @@ async function afterReply(index){
                 text:finished.text,issues:(review.issues??[]).map(({category,severity})=>({category,severity})),...(review.protocol?{protocol:{changed:review.protocol.changed}}:{})};
             message.extra.fields_tool_retry={token:session.token,...finished.retry,attempted:session.retryStarted===true,measurements:session.measurements??[]};
             if(getActionModes().narration==='off')message.extra.fields_no_narration=true;
-            if(review.canCommit&&!review.fallback&&getActionModes().intent==='propose'&&getActionModes().narration==='sync'){
+            if(review.canCommit&&!review.fallback&&getActionModes().intent==='propose'){// World time is committed from the reviewed turn tail in every proposing profile; narration timing (async/sync) does not decide it.
                 const state=view.document.state;
                 const parsed=parseTurn(finished.text,{location:state.location,startMinute:turnStart,minute:state.minute,
                     present:Object.entries(state.npcs).filter(([,npc])=>npc.location===state.location&&!npc.scheduleTravel&&!npc.cognitionTravel).map(([id])=>id),outOfCharacter:isOutOfCharacter(user?.mes??'')});
@@ -579,8 +588,8 @@ context.eventSource.on(context.eventTypes.APP_READY,()=>queue(refresh).catch(fai
 context.eventSource.on(context.eventTypes.CHAT_CHANGED,()=>{ambientAudio.stop();if(!startTransition)return queue(refresh).catch(fail);});
 context.eventSource.on(context.eventTypes.CHAT_LOADED,()=>{ambientAudio.stop();if(!startTransition)return queue(refresh).catch(fail);});
 context.eventSource.on(context.eventTypes.GENERATION_STARTED,reconcile);
-context.eventSource.on(context.eventTypes.GENERATION_AFTER_COMMANDS,()=>{if(blocked)ctx().stopGeneration();});
-context.eventSource.on(context.eventTypes.MESSAGE_SENT,()=>{if(active()&&view&&loadedChat===ctx().chatId)return queue(async()=>{await ensureReviewTurn();await refresh();}).catch(fail);});
+context.eventSource.on(context.eventTypes.GENERATION_AFTER_COMMANDS,()=>{if(blocked||noModelProfile())ctx().stopGeneration();});
+context.eventSource.on(context.eventTypes.MESSAGE_SENT,()=>{if(active()&&view&&loadedChat===ctx().chatId)return queue(async()=>{if(noModelProfile())await localTyping();else await ensureReviewTurn();await refresh();}).catch(fail);});
 context.eventSource.on(context.eventTypes.MESSAGE_DELETED,onDeleted);
 context.eventSource.on(context.eventTypes.MESSAGE_EDITED,onEdited);
 context.eventSource.on(context.eventTypes.MESSAGE_RECEIVED,afterReply);
