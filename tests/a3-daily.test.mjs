@@ -120,7 +120,8 @@ test('A3 D16: the actual fish broth recipe takes half a shichen, consumes exact 
 test('A3 D22: buying a drink really gives it to the speaker; 15 minutes includes purchase, with versioned rumor and conserved money',async()=>{
  const f=fixture(),speaker='npc_hw_hezhou',rumor={id:'rumor_a3_ox',claim:'东头丢了一头牛。',source:speaker,carriers:[speaker],fact:'不能告诉玩家的作者真相'};
  f.world.rumors.push(rumor);f.world.items.find(r=>r.id==='item_milk').basePrice=5;
- // S5-02: hydration reserve ceil(2*72/25)=6 milk; seventh is saleable, trunc(5*.5)=2.
+ // S5-02: 牛乳水分改为按含水率派生 floor(0.5kg×0.881×100)=44（原手写 25）：hydration reserve ceil(2*72/44)=4 milk；其余可售（仍买 1 件）。
+ // 价格 trunc(5*.5)=2 的供需比随可售量变，是否仍为 2 待云上核对，按规律后果判断，不放宽。
  f.document.state.npcs[SELLER].inventory.item_milk=stack(7);
  Object.assign(f.document.state.npcs[speaker],{location:INN,status:'正常',activity:'交谈',goals:{}});
  book(f);const before=structuredClone(f.document),slots={subject:speaker,seller:SELLER,item:'item_milk',rumor:rumor.id};

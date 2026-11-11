@@ -194,21 +194,25 @@ export function deriveItemAttributes(world){
   liquidBusy.delete(id);liquidMemo.set(id,v);return v;
  };
  const drinkLike=id=>has(id,'food')&&isLiquid(id);
+ // 食物的水分（液体与固体、有配方与无配方同一条规则；手写 nutrition.hydration 的物品不走这里，如参照水本身）：
+ //   水分 = 重量(kg) × 含水率 × 每公斤水的水分值；一份不够解渴（低于 drinkMin）记 0，液体与固体同一门槛。
+ //   含水率：materialProps.moisture（物品自己的出处，或所属类别行）；未知则为 0（不造数据；清单见 tools/no-moisture-list.mjs）。含水率有数据而结果仍为 0（如面包 0.15kg×0.36×100=5.4＜12.5）是门槛所致，不是缺数据。
+ //   每公斤水的水分值 = 参照水（world/meta/items.json 第 1 行 item_water：weight 0.25、手写 hydration 25，含水 1，见 world/meta/mechanics/material-props.json 的 item_water 行）
+ //   的 hydration ÷（weight × 含水率）= 25 ÷ 0.25 = 100/kg；该一次饮水 25 与 world/rules/tables/balance/body.json:11 的 drinkGain 25 同值。常数不另编，从世界里的参照水推出。
+ //   例：牛乳 0.5kg×0.881×100≈44（手写 25 已删）、山羊乳 0.3×0.87×100≈26。
+ const waterHydration=item=>{
+  if(!refWater||!has(item.id,'food'))return 0;
+  const mp=materialProps({world,byId},item.id),rm=materialProps({world,byId},refWater.id).moisture;
+  if(!mp.moisture.known||!(rm?.known&&rm.value>0))return 0;
+  const h=(item.weight??0)*mp.moisture.value*refWater.nutrition.hydration/(refWater.weight*rm.value);
+  return h>=drinkMin?h:0;
+ };
  const cache=new Map(),busy=new Set();
  const base=item=>{
   const tags=item.tags??[],key=Object.keys(density).find(k=>k!=='default'&&tags.includes(k));
   // D12 卡 B：干物质能量密度与含水率都已知时，饱腹 = 重量(kg) × 能量密度(饱腹/kg 干物质) ×（1 − 含水率）×（可食部分比例，已知时）；任一未知走现行三档密度。
   const mp=materialProps({world,byId},item.id);
-  // 饮品水分（按类成立）：饮品（食物且液态）、没有手写 nutrition.hydration 的物品，水分 = 重量(kg) × 含水率 × 每公斤水的水分值；一份不够解渴的液体（见 drinkMin）不给水分。
-  //   含水率：materialProps.moisture（物品自己的出处，或所属类别行）；未知则不派生（保持 0，由 validateDrinkable 报错）。
-  //   每公斤水的水分值 = 参照水（world/meta/items.json 第 1 行 item_water：weight 0.25、手写 hydration 25，含水 1，见 world/meta/mechanics/material-props.json 的 item_water 行）
-  //   的 hydration ÷（weight × 含水率）= 25 ÷ 0.25 = 100/kg；该一次饮水 25 与 world/rules/tables/balance/body.json:11 的 drinkGain 25 同值。常数不另编，从世界里的参照水推出。
-  const drinkHydration=(drinkLike(item.id)&&mp.moisture.known&&item.nutrition?.hydration===undefined)?(()=>{
-   const ref=refWater;
-   const rm=ref?materialProps({world,byId},ref.id).moisture:null;
-   const h=rm?.known&&rm.value>0?(item.weight??0)*mp.moisture.value*ref.nutrition.hydration/(ref.weight*rm.value):0;
-   return h>=drinkMin?h:0;
-  })():0;
+  const drinkHydration=waterHydration(item);
   // 可食部分比例已知时再乘（壳、核、骨不供能）；未知不乘，同现行。
   if(mp.energyDensity.known&&mp.moisture.known)return {satiety:(item.weight??0)*mp.energyDensity.value*(1-mp.moisture.value)*(mp.edibleFraction.known?mp.edibleFraction.value:1),hydration:drinkHydration,raw:has(item.id,'needsHeat')};
   const perKg=key?density[key]:density.default;
@@ -230,7 +234,7 @@ export function deriveItemAttributes(world){
    const inputs=(r.materials??[]).map(m=>({m,c:content(m.item)}));
    if(inputs.some(x=>x.c===null))continue;
    const hot=heated(r),keep=1-(hot?loss.heated:loss.unheated),q=r.output.quantity;
-   const row={satiety:inputs.reduce((n,x)=>n+x.c.satiety*x.m.amount,0)*keep/q,hydration:inputs.reduce((n,x)=>n+x.c.hydration*x.m.amount,0)*keep/q,
+   const row={satiety:inputs.reduce((n,x)=>n+x.c.satiety*x.m.amount,0)*keep/q,hydration:waterHydration(item),
     raw:!hot&&inputs.some(x=>x.c.raw),recipe:r.id,heated:hot};
    if(!best||row.satiety<best.satiety)best=row;
   }

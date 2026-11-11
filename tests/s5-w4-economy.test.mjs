@@ -374,7 +374,8 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     // 规律（WATER-1A）：徐玲住处往返 6 分钟，当日有水可免费取，水分缺口由免费水扣除；买完口粮后饱腹缺口为 0，她就没有任何需要用钱补的营养缺口，
     // 烙饼虽带水分（item-class.mjs:233 配方派生，水分 >0），也不为水分买。旧版此处断言“她因水分另买烙饼”，那正是被修正的行为。
     const nativeVisits=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop!==f.business).flatMap(r=>r.visits.filter(v=>v.npc===A));
-    assert.ok(f.engine.byId.get('item_oat_flatbread').nutrition?.hydration>0,'前提：烙饼运行时带水分，却不会被有免费水的徐玲为水分买走');
+    // WATER-1B 后烙饼水分与所有食物同一条规则：重量×含水率×100/kg 低于 12.5 的门槛记 0，烙饼不再带水分；她不买烙饼现在既因有免费水，也因烙饼本身不供水分。
+    assert.ok(!(f.engine.byId.get('item_oat_flatbread').nutrition?.hydration>0));
     // 前提（从数据读）：徐玲住处到水源地点的往返步行分钟 ≤ nearWaterRoundTripMinutes，走 near 分支，当日有水可免费取。
     const leg=f.engine.world.routes.find(r=>[r.from,r.to].includes('bld_hw_riverhome')&&[r.from,r.to].includes('loc_hw'));
     assert.ok(2*Math.ceil(leg.lengthKm*60/f.engine.rules.travel.walkKmh)<=f.engine.rules.householdSubsistence.nearWaterRoundTripMinutes);
