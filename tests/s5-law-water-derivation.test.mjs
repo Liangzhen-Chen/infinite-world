@@ -10,13 +10,13 @@ const foods=engine.world.items.filter(i=>isItemClass(engine,i.id,'food'));
 // 常数手算：每公斤水的水分 = 参照水 25÷(0.25kg×含水1)=100/kg；门槛 = 0.5×25=12.5。
 // 配方产物含水量按质量守恒：= clamp(成品质量 − Σ原料干物质÷份数, 0, Σ原料含水量÷份数)，原料干物质 = 质量 − 含水量，非食物原料（燃料、刨花）不进成品。
 
-test('手写水分只剩参照水本身（其余食物的水分都由含水率派生）',()=>{
-  assert.deepEqual(raw.items.filter(i=>i.nutrition?.hydration!==undefined).map(i=>i.id),['item_water']);
+test('手写水分只剩参照水与牛乳（牛乳手写水分待 WATER-1D 修订批改为派生；其余食物的水分都由含水率派生）',()=>{
+  assert.deepEqual(raw.items.filter(i=>i.nutrition?.hydration!==undefined).map(i=>i.id),['item_water','item_milk']);
 });
 
 test('代表物品手推值（数据：items.json 重量，mechanics/items.json 与 material-props.json 含水率）',()=>{
   const h=id=>engine.byId.get(id).nutrition?.hydration??0;
-  assert.equal(h('item_milk'),44);        // 0.5kg×0.881×100=44.05
+  assert.equal(h('item_milk'),25);        // 手写值保留（按规则应为 0.5kg×0.881×100=44.05→44，待 WATER-1D 修订批）
   assert.equal(h('item_goat_milk'),26);   // 0.3×0.87×100=26.1
   assert.equal(h('item_animal_milk'),26); // 0.3×0.876×100=26.28
   assert.equal(h('item_bread'),0);        // 0.15×0.36×100=5.4 ＜ 12.5（有含水率数据，门槛所致）
@@ -59,6 +59,10 @@ test('有配方的食物：水分等于其被选配方（引擎记下的 nutrien
     checked++;
   }
   assert.ok(checked>0);
+});
+
+test('牛乳手写水分 25 保留（待 WATER-1D）：手写维度优先于派生',()=>{
+  assert.equal(engine.byId.get('item_milk').nutrition.hydration,25);
 });
 
 test('派生幂等：对已派生的世界再派生一次，逐物品 nutrition 与 nutrientBase 相等',()=>{

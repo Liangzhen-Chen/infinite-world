@@ -37,8 +37,8 @@ const entry = id => contentEntries(files).find(e => e.id === id);
 test('fix3-world 条目：每一行都有 L1/L2/L4 回执且与正式文件逐字相同', async () => {
   const result = await verifyPublished(world, files);
   assert.equal(result.entries, contentEntries(files).length);
-  // 34 条减去面包、烙饼、鱼汤、炖菜、牛乳五条已不再手写的营养条目
-  assert.equal(result.entries, 29);
+  // 34 条减去面包、烙饼、鱼汤、炖菜四条已不再手写的营养条目
+  assert.equal(result.entries, 30);
 });
 
 test('手改已审批的行会使回执失效：职位职权、目录价、营养值、拘禁室、人物归属', async () => {

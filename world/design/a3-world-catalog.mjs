@@ -30,8 +30,9 @@ const RECIPE_SOURCES = {
   recipe_fishing_bait: {path: 'world/meta/recipes.json；tests/daily-b2-exact2.test.mjs（日常题D15.2）', detail: '林穗传授，用案上切刀把一份燕麦粗粒揉成十份钓饵团，烹饪台十分钟。',
     boundary: '传授人林穗是酒馆老板，其技能须不低于配方技能；产出数量与耗时为日常题所定。'},
 };
-// 仍手写营养的物品（已审批行）。面包、烙饼、鱼汤、炖菜、牛乳的手写营养已删，改由配方或出处推导（饱腹不等于热量；牛乳水分按含水率×重量×100/kg 派生），不再属于此目录。
-export const NUTRITION_IDS = ['item_ration', 'item_water'];
+// 仍手写营养的物品（已审批行）。面包、烙饼、鱼汤、炖菜的手写营养已删，改由配方或出处推导（饱腹不等于热量），不再属于此目录。
+// 牛乳的手写水分 25 暂保留（已审批回执 a3w-props、a3-world-approval 含该整行）：改派生须走修订批，待 WATER-1D。
+export const NUTRITION_IDS = ['item_ration', 'item_water', 'item_milk'];
 const RULE_SOURCES = {
   repair_clothes_seam: {path: 'world/meta/rules.json#repairs；A3V2-028题面', detail: '裁缝基础手艺用细捻麻线和缝针补缝普通衣服，织作台二十分钟，每次修复20点，不够百点。',
     boundary: '修理方案参数沿repair_tool_handle_trim等既有修理方案（20分钟、20点）；耗材为一团麻线。'},
