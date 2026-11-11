@@ -10,6 +10,8 @@ import {advanceCustomerFlow,flowTimesOfDay,customerFlowTimes} from '../server-pl
 import {currentShops,nextShopMinute} from '../server-plugin/shop.mjs';
 import {residentSellers,SALE_ORDER} from '../server-plugin/market-seller.mjs';
 import {actionCostRule} from '../server-plugin/action-costs.mjs';
+import {marketQuote} from '../server-plugin/market.mjs';
+import {householdBudget} from '../server-plugin/household-budget.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',C='npc_hw_shendu',D='npc_hw_xuling',seller='npc_hw_linsui',item='item_bread',home='bld_hw_qingdeng',DAY=1440;
@@ -18,8 +20,9 @@ const at=(start,end,services=[],activity='休息')=>({start,end,location:home,ac
 // 店主只在 720 起营业（货架清空时只剩居民卖方可买）；用于居民卖方用例：有营业窗口才有客流结算时刻。
 const LATE=[at(0,720),at(720,1440,['trade'],'营业')];
 const SELLER_DAY=[at(0,480),at(480,720,['trade'],'营业'),at(720,780,[],'午饭'),at(780,1080,['trade'],'营业'),at(1080,1440)];
-function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,late=[],playerShop=false}={}){
+function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,late=[],playerShop=false,breadPrice=null}={}){
  const w=structuredClone(world);
+ if(breadPrice)w.items.find(i=>i.id===item).basePrice=breadPrice;// 把面包价抬到买不起，使“只看不买”的场景确定
  delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
  w.households=[{id:'win-a',members:[A,B],settlement:'loc_hw',homeLocation:home},{id:'win-c',members:[C],settlement:'loc_hw',homeLocation:home},{id:'win-seller',members:[seller],settlement:'loc_hw',homeLocation:home}];
@@ -133,13 +136,17 @@ test('each customer makes at most one trip per shop per day, even when later cus
 });
 
 test('a customer who looked and bought nothing is not evaluated again the same day at the same shop',()=>{
- // 徐凌（D）800 起床、只有 1 铜：800 到店评估（成交或没买成都记当日访问，各至多一条）；陈白（E）1000 起床是第三个结算时刻，此时 D 仍醒着，但今天已来过，不再评估。
+ // 徐凌（D）800 起床、只有 1 铜，面包被抬到 100 铜：800 到店评估，必然买不起，只看不买（记一条 looked）；陈白（E）1000 起床是第三个结算时刻，此时 D 仍醒着，但今天已来过，不再评估。
  const E='npc_hw_chenbai';
- const f=fixture({late:[{id:D,wake:800,coins:1},{id:E,wake:1000}]}),state=f.d.get('state');
+ const f=fixture({late:[{id:D,wake:800,coins:1},{id:E,wake:1000}],breadPrice:100}),state=f.d.get('state');
+ // 前置（从引擎读）：D 只有 1 铜且缺口大于 0（有需求）；面包一件的报价大于 1 铜（买不起）——所以结果必然是只看不买。
+ assert.equal(f.d.get('state','npcs',D,'coins'),1);
+ assert.ok(Number(householdBudget(f.d,f.e,D).resources.procurementShortfall.satiety)>0,'precondition: D has a need');
+ assert.ok(marketQuote(f.d,f.e,{item,location:home,seller,buyer:D,quantity:1,business:{keeper:seller,markup:1},minute:800}).totalCoins>1,'precondition: one bread costs more than D can pay');
  assert.deepEqual(flowTimesOfDay(f.e,state,0),[480,800,1000]);
  advanceCustomerFlow(f.d,f.e,-1,DAY);
  const visitsOfD=flowRecords(f).filter(r=>r.day===0).flatMap(r=>r.visits.filter(v=>v.npc===D));
- assert.equal(visitsOfD.length,1,'D is evaluated exactly once that day');
+ assert.deepEqual(visitsOfD,[{npc:D,outcome:'looked'}],'D is evaluated exactly once that day, looked and bought nothing');
  const at1000=flowRecords(f).find(r=>r.minute===1000);
  assert.ok(at1000&&at1000.visits.some(v=>v.npc===E&&v.outcome==='bought'),'the third customer is served at 1000');
  assert.ok(!at1000.visits.some(v=>v.npc===D),'D is awake at 1000 but has already been evaluated today');

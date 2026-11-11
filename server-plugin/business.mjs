@@ -877,7 +877,7 @@ function daySegments(engine,state,id,day,keep){
     }
     return out;
 }
-function shopWindows(engine,state,day){
+export function shopWindows(engine,state,day){
     const shops=new Map();// 店主编号（玩家店用记录编号）→ {keeper,windows}
     const add=(key,keeper,w)=>{const row=shops.get(key)??{keeper,windows:[]};row.windows.push(w);shops.set(key,row);};
     const keepers=new Set(currentShops(engine,state).map(s=>s.keeper));
@@ -891,7 +891,7 @@ function shopWindows(engine,state,day){
     for(const id of [...keepers].sort())for(const w of daySegments(engine,state,id,day,slot=>slot.services?.includes('trade')))add(id,id,w);
     return shops;
 }
-function customerWindows(engine,state,day){
+export function customerWindows(engine,state,day){
     const out=new Map();
     for(const id of Object.keys(state.npcs??{}).sort()){
         if(!personSimulation(engine,{},id).value||(engine.byId.get(id)?.age??engine.rules.npcLife.adultAge)<engine.rules.npcLife.adultAge)continue;
