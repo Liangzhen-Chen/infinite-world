@@ -86,9 +86,11 @@ function freeWaterToday(d,engine,owner,view){
 // 本户眼下买得到的来源：到货未过、有量、有价、付得起；奢侈来源（惯常性低）在本户现金不宽裕时标 deferred：排在日常来源之后，
 // 只补日常补不满的缺口。惯常性按本户看得到的全部来源算（卖家数不受现金影响），再按现金筛。
 function accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now}){
- const seen=foodSources(d,engine,owner,{view}).filter(r=>r.at>=now&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0);
+ const all=foodSources(d,engine,owner,{view}),seen=all.filter(r=>r.at>=now&&Math.floor(r.quantity*Math.max(0,1-commonRisk))>0&&r.unitPrice>0);
  const {rich,sources}=foodHabit(d,engine,owner,seen,{view,read:(key,build)=>budgetRead(d,engine,key,build)});
- return sources.map(r=>({...r,deferred:r.luxury&&!rich})).filter(r=>r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0));
+ const out=sources.map(r=>({...r,deferred:r.luxury&&!rich})).filter(r=>r.unitPrice<=cash-payments.filter(p=>p.resource===COIN&&p.at<=r.at).reduce((n,p)=>n+p.amount,0));
+ out.considered=all.considered??[];
+ return out;
 }
 function bagEntries(d,engine,state,holder,view){
  const raw=view?view.self.inventory:inventory(state,holder),held=new Map();
@@ -342,7 +344,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  const caps=newCaps();
  for(const r of rows)if(r.eatMg>0)caps.take(r.item,{eatMg:r.eatMg,fromOpen:r.fromOpen});
  const otherFood=Object.fromEntries(Object.keys(needs).map(need=>[need,rows.reduce((n,r)=>n+credit(r,r.definition?.nutrition?.[need]??0),0)]));
- const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],offered:[...new Set(sources.map(r=>r.source))],freeWater:free,nextFoodAt:nextFood};
+ const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],offered:[...new Set([...(sources.considered??[]),...sources.map(r=>r.source)])],freeWater:free,nextFoodAt:nextFood};
  const maxDays=Math.max(0,...horizons.values());
  const deliveries=sources.flatMap(source=>{
   const rows=[source];

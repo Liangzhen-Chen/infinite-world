@@ -17,11 +17,10 @@ import {stateReader} from '../server-plugin/valuation.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan';
 const receipt=f=>f.d.get('state','family','meals','water-house');
-function fixture({near,bread=0}={}){
+function fixture({home='loc_hw',bread=0}={}){
  const w=structuredClone(world);
- w.households=[{id:'water-house',members:[A,B],homeLocation:'loc_hw',settlement:'loc_hw'}];
+ w.households=[{id:'water-house',members:[A,B],homeLocation:home,settlement:'loc_hw'}];
  for(const n of w.npcs){delete n.tier;n.schedule={default:[[0,480],[480,720],[720,780],[780,1020],[1020,1440]].map(([start,end])=>({start,end,location:'loc_hw',activity:start===720?'午饭':start===0||start===1020?'睡眠':'日常起居',services:[]}))};}
- if(near!==undefined)w.rules.householdSubsistence.nearWaterRoundTripMinutes=near;
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'free-water');
  doc.state.minute=0;doc.state.npcs=Object.fromEntries([A,B].map(id=>[id,{...doc.state.npcs[id],location:'loc_hw',inventory:id===A&&bread?{item_bread:bread}:{},coins:0,status:'正常'}]));
  delete doc.state.records['agriculture:loc_hw'];
@@ -114,7 +113,12 @@ test('主观读：只凭住处往返分钟（near 分支）知道有水可取，
  assert.equal(seen.market.freeWater.hydration,144);assert.equal(seen.procurementShortfall.hydration,0);
  // 同一状态的客观读看得到水被污染：免费水为 0（主观与客观的差额由午夜实取记入缺口，不在读时预知）。
  assert.equal(read(f.d,f).market.freeWater.hydration,0);
- // 远处水源：把邻近阈值降到不可达，主观读不扣，只买。
- const far=fixture({near:-1});
+ // 远处水源：阈值保持真实值，换一个住处，其到水源地点的往返步行分钟确实大于 nearWaterRoundTripMinutes；主观读不扣，只买。
+ const probe=fixture(),threshold=probe.e.rules.householdSubsistence.nearWaterRoundTripMinutes,source=basinOf(probe).location;
+ const roundTrip=id=>{try{return 2*probe.e.route(id,source,'walk',0,probe.doc.randomSeed).minutes;}catch{return null;}};
+ const home=probe.e.world.locations.map(l=>l.id).sort().find(id=>{const m=roundTrip(id);return m!==null&&m>threshold;});
+ assert.ok(home,'前提：世界里存在往返分钟大于 nearWaterRoundTripMinutes 的住处');
+ assert.ok(roundTrip(home)>threshold);
+ const far=fixture({home});
  assert.equal(read(far.d,far,{view:subjectiveView(far.e,far.d.document,A)}).market.freeWater.hydration,0);
 });

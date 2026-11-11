@@ -240,6 +240,7 @@ function nonShopTraders(engine){
  }
  return list;
 }
+// 跟进卡 WATER-1B：权重只看饱腹缺口，纯水分货（清水、乳，见 feeds）的份额因此按饱腹需求分配；权重应含水分缺口。本卡不改。
 // 同一卖家的同一件可售食物只有一份存量，却会被本聚落所有付得起钱的买方各自当作替代来源。
 // 买方户的“口粮替代”读到的 quantity 因此不是卖家的全部可售量，而是这位买方在全部潜在买方之间应得的一份：
 // 潜在买方 = 本聚落里手上有钱、且不靠自家存粮就有口粮缺口或要占用存粮的人（卖家同户的人不算，他们不向自家买）；
@@ -340,7 +341,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   read=cursor?build():d.memo?d.memo(engine,[householdReadSymbol],build,v=>({engine:v.engine,shops:v.shops})):build();
   if(cursor)householdSourceReads.set(cursor,read);
  }
- const out=[];
+ const out=[],considered=new Set();
  for(const shop of read.shops){
   if(shop.settlement!==place||shop.keeper!==owner&&members.includes(shop.keeper)||view&&shop.keeper!==owner)continue;
   let travel=0;
@@ -350,6 +351,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   // reaches the shelf on the delivery cycle regardless of one's own hours.
   const opening=shop.keeper===owner?{minute:now+travel,location:shop.location}:nextFoodService(engine,state,shop,now+travel);
   if(!opening||opening.location!==shop.location)continue;
+  considered.add(shop.id);
   const ledger=state.records?.[`shop:${shop.id}`];
   let physical=null;
   for(const row of shop.restock){
@@ -425,6 +427,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   else candidates=d.memo?d.memo(engine,[reachSymbol,reachKey],reachable):reachable();
   for(const {id,location:serviceAt,at} of candidates){
    if(id===owner||members.includes(id)||taken.has(id))continue;
+   considered.add(`trader_${id}`);
    const first={location:serviceAt};
    const physical=physicalOf(d,engine,read,id);
    const business={keeper:id,markup:1};
@@ -453,6 +456,8 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine)||at>q.expires)continue;
   out.push({source:fact.source??shop.id,seller:q.seller,item:q.item,at,quantity:q.quantity,unitPrice:q.unitPrice,priceBasis:'received-offer',expires:q.expires});
  }
+ // 过滤前（到店可达、营业）考虑过的来源编号：预算据此判断“这家店在不在计划来源里”，份额为 0 或付不起而被滤掉的原生店不算在计划之外。
+ out.considered=[...considered];
  return out;
 });
 // The settlement an item is produced in: walk its origin up the location tree.

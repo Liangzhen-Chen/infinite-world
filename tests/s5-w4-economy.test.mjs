@@ -14,6 +14,8 @@ import {transfer,declareLedgerWriter,emptyLedger} from '../server-plugin/ledger.
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {customerPurseShare,marketQuote,quoteSupply,customerReachMinutes} from '../server-plugin/market.mjs';
 import {householdBudget} from '../server-plugin/household-budget.mjs';
+import {npcDecision} from '../server-plugin/npc-decision.mjs';
+import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {currentShops} from '../server-plugin/shop.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
@@ -270,6 +272,12 @@ test('F026 客流：陶枝单独在场（徐玲无钱不上门）：件数与应
 test('F026 客流：非原生 NPC 自营商户（玩家把店转让给产权人）不在家户计划来源里，居民仍按储备缺口在该店买口粮',async()=>{
     // 真实动作造出非原生自营商户：玩家租下青灯铺面开店后，把经营连同库存转让给铺面产权人（店主林穗），business.mjs 的转让分支产生 owner=林穗、非 native 的 business 记录。
     const A='npc_hw_xuling',landlord='npc_hw_linsui',f=await openShop({coins:{[A]:40}});
+    // 前提：买方（产权人）接受转让的决策与 business.mjs 转让分支同参数（subjectiveView、purchase、价款 1、reward=库存估值），种子确定；正午她在店内且提供交易服务。
+    const stock=Object.fromEntries(Object.entries(f.document.state.inventory).map(([k,v])=>[k,typeof v==='number'?v:v.quantity]));
+    const pd=f.engine.primitiveDraft(structuredClone(f.document));
+    const reward=Object.entries(stock).reduce((n,[item,quantity])=>{const q=valuation(pd,f.engine,{role:'goods',holder:'player',location:'bld_hw_qingdeng',item,quantity});return n+(q.value??0);},0);
+    assert.equal(npcDecision(subjectiveView(f.engine,f.document,landlord),{kind:'purchase',from:'player',cost:{coins:1},reward,needSatisfaction:0}).outcome,'agree');
+    const noon=scheduleAt(f.engine,landlord,720,f.document.state);assert.equal(noon.location,'bld_hw_qingdeng');assert.ok(noon.services?.includes('trade'));
     const moved=await f.act('core:settlement.business_close',{business:f.business,choice:'transfer',member:landlord,coins:1},'w4-transfer');
     const shopId=moved.successor,record=f.document.state.records[shopId];
     assert.ok(record&&record.category==='business'&&record.owner===landlord&&!record.native);
@@ -282,7 +290,7 @@ test('F026 客流：非原生 NPC 自营商户（玩家把店转让给产权人�
     const flow=Object.values(f.document.state.records).find(r=>r.category==='customer_flow'&&r.shop===shopId);
     assert.ok(flow,'该店在当日营业店铺里，有客流记录');
     const visit=flow.visits.find(v=>v.npc===A&&v.item==='item_bread');
-    assert.deepEqual([visit.quantity,visit.outcome],[expected,'bought']);
+    assert.equal(visit.quantity,expected);assert.equal(visit.outcome,'bought');
 });
 
 test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得着的居民上门；人数与成交按钱袋和缺口手算',async()=>{
@@ -313,6 +321,14 @@ test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得
     assert.deepEqual(aVisits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),[[A,'item_bread',qA,quoteAtShop(f,before,A,'item_bread',qA),'bought']]);
     // 不变量 8：成交的每件货都在预算购买计划里（NPC 店只认计划）。
     for(const v of native[0].visits)assert.ok(plannedAtShop(f,before,v.npc,v.item)>0,v.item);
+    // 不变量 8（多店）：同一居民在所有店的各货成交总件数 ≤ 预算购买计划里该货总件数（计划来源 = 家户来源，不分店）。
+    {
+        const allFlow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits.filter(v=>v.outcome==='bought'));
+        for(const id of new Set(allFlow.map(v=>v.npc)))for(const item of new Set(allFlow.filter(v=>v.npc===id).map(v=>v.item))){
+            const planned=householdBudget(noonRead(f,before,id),f.engine,id).resources.market.purchases.filter(p=>p.item===item&&p.at<=720+customerReachMinutes(f.engine)).reduce((n,p)=>n+p.quantity,0);
+            assert.ok(allFlow.filter(v=>v.npc===id&&v.item===item).reduce((n,v)=>n+v.quantity,0)<=planned,`${id}:${item}`);
+        }
+    }
     // 陶枝：有水源，不为水分买；先买面包（货架 6 − 徐玲所买），买法由预算次序决定。守恒：店主钱袋增量 = 徐玲实付 + 陶枝实付；各自钱袋减少同额。
     assert.ok(eVisits.length>0);assert.equal(eVisits[0].item,'item_bread');assert.equal(eVisits[0].quantity,shelfBread-qA);
     assert.ok(eVisits.every(v=>v.outcome==='bought'));
