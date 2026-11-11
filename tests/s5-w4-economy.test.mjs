@@ -12,7 +12,9 @@ import {borrowerTerms} from '../server-plugin/finance-bank.mjs';
 import {settleFinancialClaim} from '../server-plugin/finance-bank.mjs';
 import {transfer,declareLedgerWriter,emptyLedger} from '../server-plugin/ledger.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
-import {customerPurseShare,marketQuote,quoteSupply} from '../server-plugin/market.mjs';
+import {customerPurseShare,marketQuote,quoteSupply,customerReachMinutes} from '../server-plugin/market.mjs';
+import {householdBudget} from '../server-plugin/household-budget.mjs';
+import {currentShops} from '../server-plugin/shop.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
 import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
@@ -236,6 +238,35 @@ async function openShop({coins={},bread={},campaignSeed='w4-flow'}={}){
 const counterCoins=f=>f.document.state.records['player|counter']?.coins??Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter')?.coins;
 const waitPastMidnight=async(f,id)=>{const m=f.document.state.minute,minutes=DAY-(m%DAY)+30;const out=await f.engine.reduce(f.document,{tool:'world_time',args:{minutes},eventId:id});f.document=applyPatches(f.document,out.patches);};
 
+// 正午客流的读法（business.mjs serve 同一链）：居民正午位置与分钟的投影文档上读预算购买计划与定价原语。
+const SHOP='shop_hw_qingdeng';
+const noonRead=(f,doc,id)=>{
+    const state=doc.state,slot=scheduleAt(f.engine,id,720,state);
+    const projected={...doc,state:{...state,minute:720,npcs:{...state.npcs,[id]:{...state.npcs[id],location:slot.location,activity:slot.activity}}}};
+    return {document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
+};
+const plannedAtShop=(f,doc,id,item)=>householdBudget(noonRead(f,doc,id),f.engine,id).resources.market.purchases
+    .filter(p=>p.source===SHOP&&p.item===item&&p.at<=720+customerReachMinutes(f.engine)).reduce((n,p)=>n+p.quantity,0);
+const quoteAtShop=(f,doc,buyer,item,quantity)=>{
+    const pre=structuredClone(doc);pre.state.minute=720;
+    const shop=currentShops(f.engine,pre.state).find(s=>s.id===SHOP),pd=f.engine.primitiveDraft(pre);
+    const where=scheduleAt(f.engine,shop.keeper,720,pre.state).location,business={keeper:shop.keeper,markup:shop.markup??1};
+    const supply=quoteSupply(pd,f.engine,{item,location:where,business});
+    const base=regionalTradeBase(pd,f.engine,item,where,720)*wildlifePriceFactor(f.engine,pd.document,item,where);
+    return marketQuote(pd,f.engine,{seller:shop.keeper,buyer,item,quantity,location:where,minute:720,base,business,supply}).totalCoins;
+};
+
+test('F026 客流：陶枝单独在场（徐玲无钱不上门）：件数与应付从预算购买计划与 marketQuote 在前态上推出，整表相等',async()=>{
+    const A='npc_hw_xuling',B='npc_hw_wushuo',D='npc_hw_yanzhe',E='npc_hw_taozhi';
+    const f=await openShop({coins:{[A]:0,[B]:0,[D]:0,[E]:3}}),before=structuredClone(f.document);
+    await waitPastMidnight(f,'w4-day-e-alone');
+    const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===SHOP);
+    // 货架顺序（restock）：面包、烙饼、口粮；每件货的件数 = 计划里这家店该货的数量，应付 = 前态 marketQuote（不同货互不影响供需）。
+    const expected=['item_bread','item_oat_flatbread','item_ration'].flatMap(item=>{const q=plannedAtShop(f,before,E,item);return q>0?[[E,item,q,quoteAtShop(f,before,E,item,q),'bought']]:[];});
+    assert.ok(expected.length>0);
+    assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),expected);
+});
+
 test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得着的居民上门；人数与成交按钱袋和缺口手算',async()=>{
     const A='npc_hw_xuling',B='npc_hw_wushuo',C='npc_hw_anhuai',D='npc_hw_yanzhe',E='npc_hw_taozhi';
     // A 钱袋 40、一口之家、手边没粮：会来。B 钱袋 40 但已备下两个面包（一口之家一天的饱食 60 = 2 × 30）：无需求。
@@ -253,26 +284,26 @@ test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得
     // 陶枝再买余下的面包；买法由预算次序（每铜有效覆盖）决定，不是为水分买。她的件数与实付由现价与现金决定，这里按规律断言结构与守恒，不照搬旧值。
     const native=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow');
     assert.deepEqual(native.map(r=>[r.shop,r.day,r.minute]),[['shop_hw_qingdeng',0,720]]);
-    const breadSatiety=f.engine.byId.get('item_bread').nutrition.satiety,shelfBread=6;
+    const breadSatiety=f.engine.byId.get('item_bread').nutrition.satiety,shelfBread=6,keeper='npc_hw_linsui';
     const aVisits=native[0].visits.filter(v=>v.npc===A),eVisits=native[0].visits.filter(v=>v.npc===E);
-    // 徐玲应付从定价原语推出（与 business.mjs serve 同一参数链）：前态克隆、正午、青灯酒馆店主当时所在地、
-    // quoteSupply 供需 + regionalTradeBase×wildlifePriceFactor 为基价，marketQuote 取 ceil(60÷面包饱腹) 个的总价；她是当日第一位成交者（客流顺序不变），所以前态即其报价态。
-    const qA=Math.ceil(60/breadSatiety),keeper='npc_hw_linsui',pre=structuredClone(before);pre.state.minute=720;
-    const pd=f.engine.primitiveDraft(pre),where=scheduleAt(f.engine,keeper,720,pre.state).location,business={keeper,markup:1};
-    const supply=quoteSupply(pd,f.engine,{item:'item_bread',location:where,business});
-    const base=regionalTradeBase(pd,f.engine,'item_bread',where,720)*wildlifePriceFactor(f.engine,pd.document,'item_bread',where);
-    const quoteA=marketQuote(pd,f.engine,{seller:keeper,buyer:A,item:'item_bread',quantity:qA,location:where,minute:720,base,business,supply}).totalCoins;
-    assert.deepEqual(aVisits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),[[A,'item_bread',qA,quoteA,'bought']]);
-    // 陶枝的实付（及第二种货是否买）取决于徐玲成交后的店主库存/供需（market.mjs quoteSupply 读的状态）、预算次序与成交决策骰（business.mjs serve 的 rollDice 噪声与 npcDecision）；
-    // 要在克隆上复现须重写 business.mjs 未导出的 sell()（moveCoins、transferItems、recordFinanceSale、recordMarketDeal 全套）并重放决策，等于在测试里再造一遍客流，故此处只断言件数与守恒，实付精确值待裁定。
-    // 陶枝：有水源，不为水分买；先买面包（余量 = 货架 − 徐玲所买），余下现金才可能按次序买别的，总付款不超过她的 3 铜。
-    assert.equal(eVisits[0].item,'item_bread');assert.equal(eVisits[0].quantity,shelfBread-aVisits[0].quantity);
-    assert.ok(eVisits.every(v=>v.outcome==='bought'&&v.paid>=1));
-    const ePaid=eVisits.reduce((n,v)=>n+v.paid,0);assert.ok(ePaid<=3);
+    // 徐玲是当日第一位成交者（客流顺序由种子定），所以前态克隆在正午的投影就是她下单时的状态；陶枝的实付取决于徐玲成交后的店主库存与供需（见下，由守恒与单独在场变体覆盖）。
+    assert.equal(native[0].visits[0].npc,A,'前提：徐玲先于陶枝成交');
+    // 徐玲：件数 = 预算购买计划里这家店面包的数量（与 serve 的 wants 同一读法：正午投影文档上的 householdBudget market.purchases）；
+    // 无约束的需求是 ceil(60÷面包饱腹)，计划再受卖家份额、现金、单餐额度约束，这里两者都断言。应付 = marketQuote（serve 同一参数链）。
+    const qA=plannedAtShop(f,before,A,'item_bread');
+    assert.equal(qA,Math.ceil(60/breadSatiety));
+    assert.deepEqual(aVisits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),[[A,'item_bread',qA,quoteAtShop(f,before,A,'item_bread',qA),'bought']]);
+    // 不变量 8：成交的每件货都在预算购买计划里（NPC 店只认计划）。
+    for(const v of native[0].visits)assert.ok(plannedAtShop(f,before,v.npc,v.item)>0,v.item);
+    // 陶枝：有水源，不为水分买；先买面包（货架 6 − 徐玲所买），买法由预算次序决定。守恒：店主钱袋增量 = 徐玲实付 + 陶枝实付；各自钱袋减少同额。
+    assert.ok(eVisits.length>0);assert.equal(eVisits[0].item,'item_bread');assert.equal(eVisits[0].quantity,shelfBread-qA);
+    assert.ok(eVisits.every(v=>v.outcome==='bought'));
+    const ePaid=eVisits.reduce((n,v)=>n+v.paid,0);
     assert.ok(native[0].visits.every(v=>v.tax===0));
-    assert.equal(f.document.state.npcs[A].coins,40-aVisits[0].paid);assert.equal(f.document.state.npcs[E].coins,3-ePaid);assert.equal(account().coins,100);
+    assert.equal(f.document.state.npcs[keeper].coins,before.state.npcs[keeper].coins+aVisits[0].paid+ePaid);
+    assert.equal(f.document.state.npcs[A].coins,before.state.npcs[A].coins-aVisits[0].paid);assert.equal(f.document.state.npcs[E].coins,before.state.npcs[E].coins-ePaid);assert.equal(account().coins,100);
     assert.equal(f.document.state.inventory.item_ration.quantity,3);assert.equal(f.document.state.inventory.item_bread.quantity,5);
-    const bought=f.document.state.npcs[A].inventory.item_bread;assert.equal(typeof bought==='number'?bought:bought.quantity,Math.ceil(60/breadSatiety));
+    const bought=f.document.state.npcs[A].inventory.item_bread;assert.equal(typeof bought==='number'?bought:bought.quantity,qA);
     // 不来的人：钱袋与存粮原样。
     for(const id of [B,C,D])assert.equal(f.document.state.npcs[id].coins,before.state.npcs[id].coins,id);
     // 玩家无成交：柜台、库存、营业回执和报表必须共同保持零收入，账本仍守恒。
@@ -310,6 +341,9 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     // 烙饼虽带水分（item-class.mjs:233 配方派生，水分 >0），也不为水分买。旧版此处断言“她因水分另买烙饼”，那正是被修正的行为。
     const nativeVisits=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop!==f.business).flatMap(r=>r.visits.filter(v=>v.npc===A));
     assert.ok(f.engine.byId.get('item_oat_flatbread').nutrition?.hydration>0,'前提：烙饼运行时带水分，却不会被有免费水的徐玲为水分买走');
+    // 前提（从数据读）：徐玲住处到水源地点的往返步行分钟 ≤ nearWaterRoundTripMinutes，走 near 分支，当日有水可免费取。
+    const leg=f.engine.world.routes.find(r=>[r.from,r.to].includes('bld_hw_riverhome')&&[r.from,r.to].includes('loc_hw'));
+    assert.ok(2*Math.ceil(leg.lengthKm*60/f.engine.rules.travel.walkKmh)<=f.engine.rules.householdSubsistence.nearWaterRoundTripMinutes);
     assert.equal(nativeVisits.length,0,'有可达免费水且饱腹已满：原生店不再有她的成交');
     assert.equal(f.document.state.npcs[A].coins,startCoins-flow[0].visits[0].paid-nativeVisits.reduce((n,v)=>n+v.paid,0));
 });

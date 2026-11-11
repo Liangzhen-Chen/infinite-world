@@ -76,15 +76,12 @@ const freeWater=(...a)=>{
  return registerHouseholdFreeWater.fn(...a);
 };
 // 本户当日水分缺口（与预算同一口径：成员日耗水 × 24，含个人修正），交给注册函数折成当日可免费取到的水分 {hydration,source}。
-// 客观读按状态对象身份记忆（stateMemo，与其内的 journey/waterSignature 同一机制：只在索引推进内生效，任何状态变化换键），缓存命中的预算读也不再重跑取水选址；主观读不缓存。
-const freeWaterMemo=Symbol('household free water');
+// 免费水在 readHouseholdResources 内计算（budgetRead 的 build 里）：缓存命中的预算读不再重算。缓存本身的范围不变：游标读按草稿 revision（任何写入、含水体与日期变化即换键），
+// 非游标读按 d.memo（只读作用域/状态读取器，按 state 对象身份）；没有 memo 的朴素读取器与整份预算一样每次重算（这是等价测试用的对照旁路，不是新增开销）。主观读不缓存。
 function freeWaterToday(d,engine,owner,view){
- const state=d.get('state'),read=()=>{
-  const f=family(d,engine,owner),members=f.shared?f.members:[owner];
-  const hydrationNeed=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,'hydration')*24,...(view?{observer:owner,view}:{})}).value,0);
-  return freeWater(d,engine,owner,{view,hydrationNeed});
- };
- return view?read():stateMemo(state,engine,[freeWaterMemo,owner,Math.floor(state.minute/DAY)],read);
+ const state=d.get('state'),f=family(d,engine,owner),members=f.shared?f.members:[owner];
+ const hydrationNeed=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,'hydration')*24,...(view?{observer:owner,view}:{})}).value,0);
+ return freeWater(d,engine,owner,{view,hydrationNeed});
 }
 // 本户眼下买得到的来源：到货未过、有量、有价、付得起；奢侈来源（惯常性低）在本户现金不宽裕时标 deferred：排在日常来源之后，
 // 只补日常补不满的缺口。惯常性按本户看得到的全部来源算（卖家数不受现金影响），再按现金筛。
@@ -280,10 +277,9 @@ export function householdMealWithSources(plan,sourceNutrition={}){
 }
 
 export function householdResources(d,engine,owner,{days=null,view=null,risk=0,commonRisk=0,marketSubstitution=true}={}){
- // 免费水依赖日期与水源：键里带日期、所选水源与可取水分（水体变化后换键）；主观读不缓存。
- const free=freeWaterToday(d,engine,owner,view);
- const read=()=>readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,free});
- return view?read():budgetRead(d,engine,[resourceMemo,owner,days,risk,commonRisk,marketSubstitution,Math.floor(d.get('state','minute')/DAY),free.source,free.hydration],read);
+ // 免费水依赖日期与水体：随预算读同一缓存（见 freeWaterToday 注释），键里带日期。
+ const read=()=>readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,free:freeWaterToday(d,engine,owner,view)});
+ return view?read():budgetRead(d,engine,[resourceMemo,owner,days,risk,commonRisk,marketSubstitution,Math.floor(d.get('state','minute')/DAY)],read);
 }
 function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,marketSubstitution,free}){
  const state=d.get('state'),f=family(d,engine,owner),subjective=Boolean(view);
@@ -346,7 +342,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  const caps=newCaps();
  for(const r of rows)if(r.eatMg>0)caps.take(r.item,{eatMg:r.eatMg,fromOpen:r.fromOpen});
  const otherFood=Object.fromEntries(Object.keys(needs).map(need=>[need,rows.reduce((n,r)=>n+credit(r,r.definition?.nutrition?.[need]??0),0)]));
- const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],offered:[...new Set(sources.map(r=>`${r.source}|${r.item}`))],freeWater:free,nextFoodAt:nextFood};
+ const market={cash,spent:0,coverage:{satiety:0,hydration:0},physicalFloor:{satiety:0,hydration:0},purchases:[],freeWater:free,nextFoodAt:nextFood};
  const maxDays=Math.max(0,...horizons.values());
  const deliveries=sources.flatMap(source=>{
   const rows=[source];

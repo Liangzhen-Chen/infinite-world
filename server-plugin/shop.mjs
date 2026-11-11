@@ -320,6 +320,8 @@ export function shareByNeed(total,rows,u=0){
  for(const r of part)out.set(r.id,r.n);
  return out;
 }
+// 家户来源收录一切补任一营养维度（饱腹或水分）的货：预算次序按每铜有效覆盖在它们之间选，纯水分货（清水、乳）也在其内，店内成交与预算同一口径。
+const feeds=(engine,item)=>{const n=engine.byId.get(item)?.nutrition;return n?.satiety>0||n?.hydration>0;};
 registerHouseholdFoodHabit(foodHabit);
 registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const state=d.get('state'),now=state.minute,location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
@@ -351,7 +353,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   const ledger=state.records?.[`shop:${shop.id}`];
   let physical=null;
   for(const row of shop.restock){
-   if(!(engine.byId.get(row.item)?.nutrition?.satiety>0))continue;
+   if(!feeds(engine,row.item))continue;
    const own=shop.keeper===owner;
    if(!own){
     physical??=physicalOf(d,engine,read,shop.keeper);
@@ -427,7 +429,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    const physical=physicalOf(d,engine,read,id);
    const business={keeper:id,markup:1};
    for(const row of physical.rows){
-    if(row.holder!==id||!(engine.byId.get(row.item)?.nutrition?.satiety>0)||!(row.available>0))continue;
+    if(row.holder!==id||!feeds(engine,row.item)||!(row.available>0))continue;
     const quantity=sellerShare(d,engine,state,place,read,owner,id,row.item,row.available);if(!quantity)continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
     const base=regionalTradeBase(d,engine,row.item,place,now);
     const quote=marketQuote(d,engine,{item:row.item,location:first.location,seller:id,buyer:owner,business,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place,goods:goodsClass(engine,row.item),supply:0,demand:1}});
@@ -441,7 +443,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   const q=fact.value;
   if(fact.kind==='belief'||!q||!Number.isSafeInteger(q.quantity)||q.quantity<=0||!(q.unitPrice>0)||!Number.isFinite(q.at)||!Number.isFinite(q.expires)||q.at>q.expires||q.expires<now||members.includes(q.seller))continue;
   const shop=shopStores(engine.world).find(s=>s.keeper===q.seller&&s.settlement===place&&s.restock.some(r=>r.item===q.item));
-  if(!shop||!(engine.byId.get(q.item)?.nutrition?.satiety>0))continue;
+  if(!shop||!feeds(engine,q.item))continue;
   // The received offer carries its pickup window; do not query the seller's
   // private current schedule, stock or status to silently correct that offer.
   const pickup=q.location??shop.location??engine.byId.get(shop.keeper)?.workplace?.location??engine.byId.get(shop.keeper)?.location;

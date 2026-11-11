@@ -10,10 +10,13 @@ import {waterBasins,basinState,waterResourceFactor} from '../server-plugin/water
 import {householdResources,registerHouseholdFreeWater} from '../server-plugin/household-budget.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {PatchCursor} from '../server-plugin/storage.mjs';
+import {advanceHouseholdMeals} from '../server-plugin/npc-life.mjs';
+import {prepareHouseholdSubsistence} from '../server-plugin/household-subsistence.mjs';
 import {stateReader} from '../server-plugin/valuation.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan';
+const receipt=f=>f.d.get('state','family','meals','water-house');
 function fixture({near,bread=0}={}){
  const w=structuredClone(world);
  w.households=[{id:'water-house',members:[A,B],homeLocation:'loc_hw',settlement:'loc_hw'}];
@@ -58,14 +61,30 @@ test('有可达可用水源：当日水分缺口被免费水扣光，其余缺�
 });
 
 test('水量只够部分缺口：免费水等于可取量折成的水分，不超过缺口',()=>{
- const f=fixture(),basin=basinOf(f),rules=f.e.rules.forestWater.water;
- const ml=1000,waterMl=Math.ceil(ml*waterResourceFactor(f.e,f.d.get('state'),basin.location));
- const [key,row]=waterRecord(f,{waterMl});f.d.set(['state','records',key],row);
- const available=Math.floor(waterMl/waterResourceFactor(f.e,f.d.get('state'),basin.location));
+ // 手算：一人一日饮水 X = rules.forestWater.water.drinkingMlPerPerson 毫升，对应一人一日水分 3×24=72（body 表 light 耗水 3/时）。
+ // 水体只够 X 毫升（两人需要 2X）：免费水 = 一人份 72，缺口 144−72=72。
+ const f=fixture(),basin=basinOf(f),X=f.e.rules.forestWater.water.drinkingMlPerPerson;
+ const [key,row]=waterRecord(f,{waterMl:X*waterResourceFactor(f.e,f.d.get('state'),basin.location)*(1+1e-9)});f.d.set(['state','records',key],row);
  const r=read(f.d,f);
- assert.ok(available>0&&available<2*rules.drinkingMlPerPerson);
- assert.equal(r.market.freeWater.hydration,available*72/rules.drinkingMlPerPerson);
- assert.equal(r.procurementShortfall.hydration,144-available*72/rules.drinkingMlPerPerson);
+ assert.ok(Math.abs(r.market.freeWater.hydration-72)<1e-6,String(r.market.freeWater.hydration));
+ assert.ok(Math.abs(r.procurementShortfall.hydration-72)<1e-6);
+});
+
+test('已有当日取水计划时免费水读计划（与午夜实取同一选择）：预算免费水 ≤ 午夜实取，且等于 144 的手算值',()=>{
+ // 手算：两口 × 每人每日水分 72 = 144；水源就在住处（往返 0 分钟）、水量充足、水质可用，午夜实取也是 144。
+ const f=fixture();prepareHouseholdSubsistence(f.d,f.e,0);
+ const free=read(f.d,f).market.freeWater.hydration;
+ advanceHouseholdMeals(f.d,f.e,0,new Map([['loc_hw',{mouths:2,eaten:2}]]));
+ const actual=receipt(f).sourceNutrition?.hydration??0;
+ assert.equal(free,144);assert.equal(actual,144);assert.ok(free<=actual);
+});
+
+test('已有取水计划但取水人患病（executableSource 不通过）：预算免费水为 0，午夜也实取不到',()=>{
+ const f=fixture();prepareHouseholdSubsistence(f.d,f.e,0);
+ for(const id of [A,B])f.d.set(['state','npcs',id,'status'],'患病');
+ assert.equal(read(f.d,f).market.freeWater.hydration,0);
+ advanceHouseholdMeals(f.d,f.e,0,new Map([['loc_hw',{mouths:2,eaten:2}]]));
+ assert.equal(receipt(f).sourceNutrition?.hydration??0,0);
 });
 
 for(const failure of Object.keys(FAILURES)){
