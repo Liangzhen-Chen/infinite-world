@@ -129,9 +129,12 @@ async function a1Partial7(){
  const engine=new WorldEngine(structuredClone(world)),doc=engine.initialFromLegacy(legacy,'a1-lt-scenarios');
  doc.state.location=INN;doc.state.minute=10*60;doc.state.npcs[LINSUI].coins=6;doc.state.inventory.item_bread={quantity:20};
  const ctx={engine,doc},before={market:marketView(engine,doc,'item_bread',INN),quote:quoteView(engine,doc,{item:'item_bread',location:INN,seller:'player',buyer:LINSUI,quantity:20}),item:itemFacts(engine,'item_bread')};
+ const docBefore=ctx.doc; // 卖之前的文档状态，供按实际成交量重新报价
  const sell=await attempt(ctx,'卖面包 20，允许部分','world_act',{action:'core:trade.sell_to',slots:{buyer:LINSUI,item:'item_bread',quantity:20,allowPartial:true}},'ui-1');
  const r=sell.result??{};
- return {compares:'result.cost 与 result.quantity（tests/a1-lt-scenarios.test.mjs:104）',before,
+ const requote=r.quantity?quoteView(engine,docBefore,{item:'item_bread',location:INN,seller:'player',buyer:LINSUI,quantity:r.quantity}):null;
+ return {compares:'result.cost 与 result.quantity（tests/a1-lt-scenarios.test.mjs:104）',before:{...before,quoteNote:'before.quote 按请求量 20 报价，部分成交缩量后不与 result.pricing 核对；核对用 requoteAtFilledQuantity'},requoteAtFilledQuantity:requote,
+  requoteVsPricing:requote&&r.pricing?{requoteListPrice:requote.listPrice,pricingUnitPrice:r.pricing.unitPrice,pricingListPrice:r.pricing.listPrice,unitDiff:r.pricing.unitPrice===undefined?null:r.pricing.unitPrice-requote.listPrice,requoteExactTotal:requote.exactTotal,pricingUnroundedTotal:r.pricing.unroundedTotal,totalDiff:r.pricing.unroundedTotal===undefined?null:r.pricing.unroundedTotal-requote.exactTotal}:null,
   sell:{ok:sell.ok,error:sell.error,cost:r.cost,quantity:r.quantity,partial:r.partial,requestedQuantity:r.requestedQuantity,pricing:r.pricing},
   after:{playerCoins:ctx.doc.state.player.coins,linsuiCoins:ctx.doc.state.npcs[LINSUI].coins,market:marketView(engine,ctx.doc,'item_bread',INN)}};
 }
@@ -172,7 +175,7 @@ async function tender3(){
  const wool=applyIntentSetup(f.engine,f.doc,{location:TH.shop,inventory:{item_wool:40}});f.doc=wool.document;
  const first=await breadTrade(f,'第 1 笔 面包 25 付羊毛',{item:'item_bread',quantity:25,payCurrency:'item_wool'},'f3-wool');
  const second=await breadTrade(f,'第 2 笔 面包 21 付羊毛',{item:'item_bread',quantity:21,payCurrency:'item_wool'},'f3-wool-2');
- return {compares:'第二笔 paidWith.amount（tests/s5-f-tender.test.mjs:105）',
+ return {downstreamNote:'深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。',compares:'第二笔 paidWith.amount（tests/s5-f-tender.test.mjs:105）',
   setupUnmet:[...f.setupUnmet,...unmetShop,...wool.setupUnmet],item:itemFacts(f.engine,'item_bread'),depthRule:depthRule(f.engine),first,second,
   woolMarket:marketView(f.engine,f.doc,'item_wool',TH.shop)};
 }
@@ -184,7 +187,7 @@ async function tender5(){
  const shock=await breadTrade(f,'用券买 面包 25',{item:'item_bread',quantity:25,payCurrency:TH.NOTE},'f5-shock');
  const debtId=credit.debt??null;
  const repay=debtId?await f.trade('原币种还债',{debt:debtId,payment:'repay'},'f5-repay'):{ok:false,error:{message:'没有找到债（赊账未成立）'}};
- return {compares:'玩家与店主的券数（tests/s5-f-tender.test.mjs:147）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},credit,shock,
+ return {downstreamNote:'深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。',compares:'玩家与店主的券数（tests/s5-f-tender.test.mjs:147）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},credit,shock,
   repay:{ok:repay.ok,error:repay.error,status:repay.result?.status},notes:{player:f.notes('player'),host:f.notes(TH.host)},rateNow:(()=>{try{return f.rate();}catch(e){return errorOf(e);}})()};
 }
 // S5F-6：tests/s5-f-tender.test.mjs:155-173。发行 10 张券，现钱买 10 个面包，再用券买 25 个，比较分币种统计与折算。
@@ -193,7 +196,7 @@ async function tender6(){
  const issued=await f.issue(10,'f6-issue');const setupUnmet=f.atShop();
  const cash=await breadTrade(f,'现钱 面包 10',{item:'item_bread',quantity:10},'f6-cash');
  const note=await breadTrade(f,'用券买 面包 25',{item:'item_bread',quantity:25,payCurrency:TH.NOTE},'f6-note');
- const place='loc_hw',state=f.doc.state,out={compares:'turnoverByResource / 基准账合计 / turnoverReference（tests/s5-f-tender.test.mjs:160-168）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},cash,note};
+ const place='loc_hw',state=f.doc.state,out={downstreamNote:'深度拒绝只指步骤条目里 error 为“可成交深度”的那一笔（见各 breadTrade 的 pre.quote.depthCheck）；其后各步（还债、券数、统计、折算等）是在该笔被拒的前提下继续算出的下游数字，不作期望值。',compares:'turnoverByResource / 基准账合计 / turnoverReference（tests/s5-f-tender.test.mjs:160-168）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},cash,note};
  try{
   out.turnoverByResource=turnoverByResource(state,{place});
   out.baseLedgerTotalCoins=Object.values(state.records).filter(r=>r.category==='market_trade'&&r.place===place).reduce((n,r)=>n+r.totalCoins,0);
@@ -268,7 +271,7 @@ async function m3M9(){
  const coins1=ctx.doc.state.player.coins;
  const b2pre={market:marketView(engine,ctx.doc,'item_bread',inn),quote:quoteView(engine,ctx.doc,{item:'item_bread',location:inn,seller:'npc_hw_linsui',quantity:1})};
  const bread2=await attempt(ctx,'买面包 1（升级后回合）','world_trade',{seller:'林穗',item:'面包',quantity:1},'m9-turn-3');
- return {approximate:'近似：原测试前两步在旧世界版本的服务器上做，再导出导入当前世界（写 world_update 记录、升级迁移），第三笔在导入后做；这里全程在当前世界、同一份文档上连做，不经导出导入。差别只在升级迁移是否影响面包价格，需复算者另行确认。',compares:'玩家最终铜钱 finalDocument.state.player.coins（tests/m3-acceptance.test.mjs:93）；第一笔后铜钱对应 world_upgrade.json 第一回合的 equals',
+ return {notForExpectation:'不用于定 M9 期望值：M9 采用 tests/playtests/world_upgrade.json 重推的值（最终铜钱 172、面包 2；出处提交 ad59698f、bb70871d）。本输出只作该值的旁证。',expectationSource:{file:'tests/playtests/world_upgrade.json',commits:['ad59698f','bb70871d']},approximate:'近似：原测试前两步在旧世界版本的服务器上做，再导出导入当前世界（写 world_update 记录、升级迁移），第三笔在导入后做；这里全程在当前世界、同一份文档上连做，不经导出导入。差别只在升级迁移是否影响面包价格，需复算者另行确认。',compares:'玩家最终铜钱 finalDocument.state.player.coins（tests/m3-acceptance.test.mjs:93）；第一笔后铜钱对应 world_upgrade.json 第一回合的 equals',
   startCoins:start,afterLodge,afterBread1:coins1,final:ctx.doc.state.player.coins,wage:wageView(engine,ctx.doc),
   bills:{lodge:start-afterLodge,bread1:afterLodge-coins1,bread2:coins1-ctx.doc.state.player.coins},
   steps:{move:{ok:move.ok,error:move.error},lodge:{ok:lodge.ok,error:lodge.error},bread1:{ok:bread1.ok,error:bread1.error,cost:bread1.result?.cost,pricing:bread1.result?.pricing},bread2:{ok:bread2.ok,error:bread2.error,cost:bread2.result?.cost,pricing:bread2.result?.pricing}},
