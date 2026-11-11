@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {digest} from '../server-plugin/storage.mjs';
@@ -13,9 +12,14 @@ import {tmpRoot} from './tmp-root.mjs';
 //   sideband/      <turn>-<seq>.json，格式即 server-plugin/sideband.mjs 的写入格式
 // 回放以旁路记录替代模型调用：按 requestHash 命中返回记录的响应，未命中即报错，永不回落真实调用。
 // 存档不入夹具：同一 create 请求加确定种子可重建初态，initialStateHash 校验重建一致。
-// 轨迹行沿用 tools/ptai/driver.mjs 的 trace.jsonl 形状（header / turn+calls / end）。
+// initialStateHash 口径 = ruleStateDigest(初态文档)（排除叙述与显示名字符串，同 AI-05 §4.2），不是全文哈希，
+// 所以初态里以后混入的叙述类文字不会误报；种子（document.randomSeed）在文档内，种子不同则哈希必不同。
+// 种子绑定：binding.seed 取自重建出的存档文档 randomSeed，与 manifest.seed 比对，不是 manifest 自证。
+// 轨迹只对齐 tools/ptai/driver.mjs trace.jsonl 的最小子集：行类型 header/turn/end，ts；
+//   header: runId、campaignId、worldSeed(=document.randomSeed)、initialStateHash(口径与 ptai 不同，见上)、gitHead、model；
+//   turn: turn、calls[{tool,args,result,isError}]（另有 endpoint、eventId）；end: reason、turns。
+// 缺 header 的 initialReference/driverHash/toolsHash/limits/prices，缺 turn 的 usage/usd/text/minute，下游按 ptai 工具读须容忍缺字段。
 
-const sha256=text=>createHash('sha256').update(text).digest('hex');
 const READ_ONLY_TOOLS=new Set(['world_read','world_search','world_catalog','world_actions']);
 // commit is recorded in the manifest as provenance only and never makes a fixture stale: otherwise every
 // commit would skip the text assertions, which would make them useless (coordinator ruling 2026-11-11,
@@ -50,6 +54,7 @@ export function replayClient(rows){
    if(row.status!=='ok')throw Object.assign(Error(row.error??`录制时调用${row.status}`),row.status==='timeout'?{name:'TimeoutError'}:{});
    return structuredClone(row.response);
   }};
+ client.unused=()=>[...queues.values()].flat().map(row=>`${row.turn}-${row.seq}:${row.label}`);
  return client;
 }
 
@@ -72,7 +77,7 @@ export function stepsFromTrace(rows){
 async function runSession(api,{create,steps}){
  const created=await api('create',create),campaignId=created.reference.campaignId;
  const first=(await api('read',{campaignId})).document;
- const rows=[{type:'header',campaignId,seed:first.randomSeed??null,initialStateHash:sha256(JSON.stringify(first)),contentHash:first.worldHash??null}];
+ const rows=[{type:'header',campaignId,worldSeed:first.randomSeed??null,initialStateHash:ruleStateDigest(first),contentHash:first.worldHash??null}];
  let token=null;
  const texts=[];
  for(const [n,step] of steps.entries()){
@@ -85,7 +90,7 @@ async function runSession(api,{create,steps}){
  }
  const document=(await api('read',{campaignId})).document;
  rows.push({type:'end',reason:'replayed',turns:steps.length});
- return {campaignId,document,rows,texts,initialStateHash:rows[0].initialStateHash,contentHash:rows[0].contentHash};
+ return {campaignId,document,rows,texts,seed:first.randomSeed??null,initialStateHash:rows[0].initialStateHash,contentHash:rows[0].contentHash};
 }
 
 // Records a fixture from a real call path: client is whatever answers the model calls (a live client in
@@ -102,7 +107,7 @@ export async function recordFixture({dir,client,steps,create={},seed=PLAYTEST_SE
   await fs.mkdir(dir,{recursive:true});
   await fs.cp(path.join(root,campaignDir,'sideband'),path.join(dir,'sideband'),{recursive:true});
  }finally{await fs.rm(root,{recursive:true,force:true});}
- const manifest={version:1,commit,campaignId:session.campaignId,contentHash:session.contentHash,model,seed,create,steps,initialStateHash:session.initialStateHash,
+ const manifest={version:1,commit,campaignId:session.campaignId,contentHash:session.contentHash,model,seed:session.seed,create,steps,initialStateHash:session.initialStateHash,
   ruleStateDigest:ruleStateDigest(session.document),textDigest:digest(session.texts)};
  await fs.writeFile(path.join(dir,'manifest.json'),JSON.stringify(manifest,null,1));
  return manifest;
@@ -122,13 +127,15 @@ export async function replayFixture(dir,{tier='T2',current={},world,traceFile=nu
  let session;
  try{session=await runSession(server.api,{create:manifest.create,steps});}finally{await server.close();}
  if(client?.misses.length)throw Error(`E-REPLAY-MISS 回放有 ${client.misses.length} 次请求没有旁路记录：${client.misses.map(m=>m.label).join('、')}`);
- const binding={commit:gitCommit(),contentHash:session.contentHash,model:manifest.model,seed:manifest.seed,...current};
+ if(client?.unused().length)throw Error(`E-REPLAY-UNUSED 录制的旁路记录有 ${client.unused().length} 条没有被回放用到（回放步骤与录制不一致）：${client.unused().join('、')}`);
+ // contentHash 与 seed 取自重建出的存档；model 离线无法观测，只有调用方传入 current.model 才可能 stale。
+ const binding={contentHash:session.contentHash,model:manifest.model,seed:session.seed,...current};
  const stale=staleReasons(manifest,binding),hash=ruleStateDigest(session.document);
  const result={tier,stale,hits:client?.hits??0,modelCalls:client?.calls??0,ruleStateDigest:hash,
   settlement:{matches:session.initialStateHash===manifest.initialStateHash&&hash===manifest.ruleStateDigest},
   text:tier==='T2'&&!stale.length?{skipped:false,matches:digest(session.texts)===manifest.textDigest}:{skipped:true,reason:tier==='T2'?'stale':'T0 无叙述'}};
  if(traceFile){
-  session.rows[0]={...session.rows[0],runId:path.basename(dir),gitHead:binding.commit,model:manifest.model,tier};
+  session.rows[0]={...session.rows[0],runId:path.basename(dir),gitHead:gitCommit(),model:manifest.model,tier};
   await fs.writeFile(traceFile,session.rows.map(row=>JSON.stringify({ts:new Date().toISOString(),...row})).join('\n')+'\n');
  }
  return result;
