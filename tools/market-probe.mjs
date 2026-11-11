@@ -109,7 +109,7 @@ function sourcesDiag(engine,doc,id,cash){
  try{
   const d=engine.primitiveDraft(doc),view=subjectiveView(engine,d.document??doc,id);
   const compact=r=>({item:r.item,seller:r.seller??r.owner??null,at:r.at,quantity:r.quantity,unitPrice:r.unitPrice,luxury:r.luxury??null,deferred:r.deferred??null,habit:r.habit??null});
-  const raw=(registerHouseholdFoodSources.fn?.(d,engine,id,{view})??[]),seen=raw.filter(r=>r.at>=d.get('state').minute&&r.unitPrice>0);
+  const raw=(registerHouseholdFoodSources.fn?.(d,engine,id,{view})??[]),seen=raw.filter(r=>r.at>=d.get('state').minute&&Math.floor(r.quantity)>0&&r.unitPrice>0);
   const hab=registerHouseholdFoodHabit.fn?.(d,engine,id,seen,{view,read:(key,build)=>build()})??{rich:true,sources:seen};
   const key=r=>[r.item,r.seller??r.owner??'',r.at].join('|'),kept=new Set(hab.sources.map(key));
   return {cash,rawCount:raw.length,beforeHabit:seen.map(compact),habitRich:hab.rich,afterHabit:hab.sources.map(compact),droppedByHabit:seen.filter(r=>!kept.has(key(r))).map(compact)};
