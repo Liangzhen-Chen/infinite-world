@@ -51,13 +51,17 @@ test('灾害时钟另表登记且通过校验；坏规则拒绝',()=>{
  assert.deepEqual(validateHazardRules(world),[]);
  // Water-borne disease follows a flood only where people already go hungry.
  assert.deepEqual(world.rules.hazardClock.clocks.find(r=>r.kind==='epidemic').stages[0].condition.conditions.map(c=>c.kind),['hazard_phase','hunger']);
+ // hazard_phase names the referenced stage (not its position): 河湾疫病等的是汛期时钟的洪峰阶段。
+ assert.deepEqual(world.rules.hazardClock.clocks.find(r=>r.kind==='epidemic').stages[0].condition.conditions[0],{kind:'hazard_phase',clock:'flood:loc_hw',stage:'crest'});
  const kinds=new Set(world.rules.hazardClock.clocks.map(r=>r.kind));assert.deepEqual([...kinds].sort(),['epidemic','famine','flood','price']);
  for(const change of [
   t=>t.clocks[1].stages[0].effects.push({kind:'route_closure',routes:['route_hw_bs'],minutes:DAY}), // closure only from pure clocks
   t=>t.clocks[1].disease='disease_missing',
   t=>t.clocks[0].stages[0].effects.push({kind:'flood',locations:['loc_missing'],minutes:DAY}),
   t=>t.clocks[1].interventions[0].phases=[9],
-  t=>t.clocks[3].stages[0].effects[0].factor=9,
+  t=>t.clocks[2].stages[0].effects[0].factor=9,
+  t=>{t.clocks[1].stages[0].condition.conditions[0].stage='no_such_stage';}, // a reference to a stage the clock does not have
+  t=>{const c=t.clocks[1].stages[0].condition.conditions[0];delete c.stage;c.minimum=2;}, // positions are no longer a valid reference
   t=>t.diseases[0].fatality={cared:0.5,alone:0.1},
   t=>t.clocks[0].seasons=[0,2],
  ]){const bad=structuredClone(world);change(bad.rules.hazardClock);assert.ok(validateHazardRules(bad).length,String(change));}
@@ -118,12 +122,14 @@ test('冬荒：存粮不足时粮价上涨，出现迁居与偷盗动机',async(
  const row=rec(c,'hazard-clock:famine:loc_hw');assert.deepEqual(row.history.map(h=>h.stage),['tight','famine']);
  assert.equal(row.history[0].trigger.evidence,'settlement:loc_hw');
  assert.ok(famineAt(c.state,'loc_hw'));
- // The famine stage replaces its own earlier shift (1.2 -> 1.6).
- assert.equal(hazardPriceFactor(engine,c.state,'item_oats','loc_hw'),1.6);
- assert.ok(hazardPriceFactor(engine,c.state,'item_oats','bld_hw_qingdeng')>=1.6);
+ // 冬荒不再写手工价格倍数：粮价的上涨来自市场自己的供需（公仓缺粮、缺口户的需求），
+ // 所以冬荒期间事件价格因子对粮食与非粮食都是 1；冬荒记录（famineAt）与迁居、偷盗动机仍在。
+ assert.equal(hazardPriceFactor(engine,c.state,'item_oats','loc_hw'),1);
+ assert.equal(hazardPriceFactor(engine,c.state,'item_oats','bld_hw_qingdeng'),1);
  assert.equal(hazardPriceFactor(engine,c.state,'item_staff','loc_hw'),1);
+ // 【待云上实跑重推】以下锚点值是删除灾荒倍数（原 1.6）与并池、改需求口径之前的旧值，期望必须按新公式独立手算后替换，不得用被测函数算。
  // S5-02 §15.2：基准3×灾荒1.6×供需比；首笔深度、品质、立场和修正均为1。
- // 新值 2.9617021276595747 = 3×1.6×(29/47)：供需比 需求29÷供给47=0.617021（>0.5，已离开供需下限，不再被钳在 0.5；旧值 2.4=3×1.6×0.5 是被钳住的结果）。
+ // 旧值 2.9617021276595747 = 3×1.6×(29/47)：供需比 需求29÷供给47=0.617021（>0.5，已离开供需下限，不再被钳在 0.5；旧值 2.4=3×1.6×0.5 是被钳住的结果）。
  // 供给47 = 林穗店面包等同类食物可售行相加（库存−留存−承诺）；需求29 = 林穗自留存7 + 同聚落非商家持有人留存22。
  // 对应设计变化：面包饱腹改推导（饱腹 30→16，各户留存份数升，c0a7ea22，PLAN.md:584、591③）与卖家份额分摊（f8e4a13b，PLAN.md:316③、563②）；
  // 李白 11-11 选 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md。断言仍为精确相等。
@@ -149,7 +155,7 @@ test('物价波动：接周贸易区域报价与商店报价的季节系数，�
  const quote=d.get('state','records',`quote:region:${Math.floor(peak.state.minute/DAY)}:loc_bs_yupo:item_oats`);
  // S5-02：报价不存档；灾害/季节仍为派生组成，不能再读取已删除的报价真相。
  assert.equal(quote,undefined);assert.equal(hazardPriceFactor(engine,peak.state,'item_oats','loc_bs_yupo'),1.3);
- assert.equal(engine.rules.settlementTrade.seasonFactors[engine.calendar(peak.state.minute).season],engine.rules.settlementTrade.seasonFactors[0]);assert.ok(price>=1);
+ assert.equal(engine.rules.settlementTrade.seasonFactors,undefined,'周贸易区域价不再有手写季节系数');assert.ok(price>=1);
  // 基准3×灾害1.3×供需0.5×其余1，不对展示单价取整。
  assert.equal(regionalTradePrice(d,engine,'item_ration','loc_bs'),1.9500000000000002);
  // A shop's day quote starts from the same figure.

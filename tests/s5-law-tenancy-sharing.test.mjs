@@ -29,7 +29,7 @@ async function setup({out=false,collective=false,mode='share',basis='gross',paym
  Object.assign(p,{areaUnits:100,farmWorkers:0,workerFraction:0,processingWorkers:0,freshWorkers:0});
  // One mu = 1/15 ha: output1500/15=100, seed150/15=10.
  Object.assign(w.rules.agriculture.crop,{seedPerHa:150,growthDays:2,yieldPerHa:1500});
- w.rules.economy.priceFactorLimits.region=[1,1];w.rules.economy.priceFactorLimits.transport=[1,1];w.rules.settlementTrade.seasonFactors=[1,1,1,1];
+ w.rules.economy.priceFactorLimits.region=[1,1];w.rules.economy.priceFactorLimits.transport=[1,1];
  const e=new WorldEngine(w);e.byId.get(item).basePrice=1;
  for(const npc of [host,worker])e.byId.get(npc).schedule={default:[{start:0,end:1440,location:field,activity:'休息',services:['trade']}]};
  let doc=e.createCharacter(seed,{},'tenancy-sharing');

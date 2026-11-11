@@ -39,8 +39,8 @@ test('灾害时钟：每个核心聚落有汛期、疫病、冬荒、物价四�
  const days=id=>clock(`famine:${id}`).stages[0].condition.days;
  assert.ok(days('loc_bs_liquan')>days('loc_bs_yupo')&&days('loc_bs_weiting')<days('loc_bs_yupo'));
  // Monster settlements follow their own food source, not a village granary.
- assert.deepEqual(clock('famine:loc_ms_tanjie').stages[0].condition,{kind:'hazard_phase',clock:'famine:loc_bs',minimum:1});
- assert.deepEqual(clock('famine:loc_ms_lielu').stages[0].condition,{kind:'hazard_phase',clock:'famine:loc_bs_liquan',minimum:1});
+ assert.deepEqual(clock('famine:loc_ms_tanjie').stages[0].condition,{kind:'hazard_phase',clock:'famine:loc_bs',stage:'famine'});
+ assert.deepEqual(clock('famine:loc_ms_lielu').stages[0].condition,{kind:'hazard_phase',clock:'famine:loc_bs_liquan',stage:'tight'});
 });
 
 test('公告栏与公账：核心聚落各有主事人与公账，聚居地用组织公库',()=>{

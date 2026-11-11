@@ -10,7 +10,7 @@
 // effects}] reset each year. Conditions: always, weather (pure, seeded
 // weather at the settlement), granary_short (food below population x days),
 // hunger (people going without meals, or a declared famine), hazard_phase
-// (another clock this year), epidemic_cases, epidemic_clear, all (every one of
+// (a named stage of another clock this year), epidemic_cases, epidemic_clear, all (every one of
 // `conditions`). Disease householdRate is households a sick household reaches
 // per day (spread over its settlement); routeRate per day along a 10 km road.
 // Water-borne disease breaks out after the flood only where people already go
@@ -23,11 +23,9 @@ const famine=(settlement,carriers,{tight=90,short=45}={})=>({
  id:`famine:${settlement}`,kind:'famine',name:'冬荒',settlement,seasons:[3],intervalDays:7,
  stages:[
   {id:'tight',name:'存粮告紧',probability:1,condition:{kind:'granary_short',days:tight},
-   effects:[{kind:'price_shift',settlement,items:grain,factor:1.2,minutes:120*DAY,reason:'冬季存粮告紧'},
-    {kind:'rumor',id:'famine_tight',claim:'今冬仓里的粮撑不到开春，粮价已经往上走了。',carriers,salience:2}]},
+   effects:[{kind:'rumor',id:'famine_tight',claim:'今冬仓里的粮撑不到开春，粮价已经往上走了。',carriers,salience:2}]},
   {id:'famine',name:'冬荒',probability:1,condition:{kind:'granary_short',days:short},
-   effects:[{kind:'price_shift',settlement,items:grain,factor:1.6,minutes:120*DAY,reason:'冬荒缺粮'},
-    {kind:'famine',settlement,minutes:120*DAY},
+   effects:[{kind:'famine',settlement,minutes:120*DAY},
     {kind:'rumor',id:'famine_hunger',claim:'冬荒了，有人家已经断顿，有人说要去外乡投亲，也有人盯上了别家的粮囤。',carriers,salience:3}]},
  ],
 });
@@ -105,7 +103,7 @@ const coreClocks=[
  // 苇汀
  flood('loc_bs_weiting',{seasons:[0,1],intervalDays:4,rise:0.5,crest:0.5,low:['loc_wt_bank'],soaked:['loc_wt_bank','loc_wt_reeds','loc_wt_garden'],
   closures:['route_loc_wt_bank','route_loc_wt_reeds','route_loc_wild_wt_mist'],days:6,crop:35}),
- epidemic('loc_bs_weiting',{disease:flux,seasons:[1,2],first:{kind:'hazard_phase',clock:'flood:loc_bs_weiting',minimum:2},probability:0.25,routes:['route_bs_wt'],
+ epidemic('loc_bs_weiting',{disease:flux,seasons:[1,2],first:{kind:'hazard_phase',clock:'flood:loc_bs_weiting',stage:'crest'},probability:0.25,routes:['route_bs_wt'],
   quarantine:{location:'bld_wt_hall',representative:'npc_wt_zhengxi'}}),
  famine('loc_bs_weiting',['npc_wt_zhengxi','npc_wt_xiangzhen'],{tight:75,short:35}),
  price('loc_bs_weiting',{rise:0.3,peak:0.2,up:1.08,high:1.15}),
@@ -117,11 +115,9 @@ const coreClocks=[
  {id:'price:loc_bs_liquan',kind:'price',name:'旱情粮价',settlement:'loc_bs_liquan',seasons:[1],intervalDays:8,
   stages:[
    {id:'dry',name:'久晴少雨',probability:0.35,condition:{kind:'weather',kinds:['clear']},
-    effects:[{kind:'crop_damage',settlement:'loc_bs_liquan',percent:15,minutes:30*DAY},{kind:'price_shift',settlement:'loc_bs_liquan',items:grain,factor:1.15,minutes:60*DAY,reason:'久晴少雨，坡田缺水'}]},
+    effects:[{kind:'crop_damage',settlement:'loc_bs_liquan',percent:15,minutes:30*DAY}]},
    {id:'drought',name:'旱情',probability:0.3,condition:{kind:'weather',kinds:['clear']},
-    effects:[{kind:'crop_damage',settlement:'loc_bs_liquan',percent:25,minutes:30*DAY},{kind:'price_shift',settlement:'loc_bs_liquan',items:grain,factor:1.35,minutes:60*DAY,reason:'旱情加重，泉水减量'}]},
-   {id:'rain',name:'雨水回来',probability:0.6,condition:{kind:'weather',kinds:['rain','storm']},
-    effects:[{kind:'price_shift',settlement:'loc_bs_liquan',items:grain,factor:1,minutes:1,reason:'下了透雨，粮价回落'}]},
+    effects:[{kind:'crop_damage',settlement:'loc_bs_liquan',percent:25,minutes:30*DAY}]},
   ]},
  // 桑坂
  flood('loc_bs_sangban',{intervalDays:6,rise:0.25,crest:0.3,peak:['storm'],low:['loc_sb_garden'],soaked:['loc_sb_fields','loc_sb_garden'],closures:['route_loc_sb_fields'],days:2,crop:20}),
@@ -135,21 +131,19 @@ const coreClocks=[
   quarantine:{location:'bld_bs_office',representative:'npc_bs_031_1'}}),
  {id:'famine:loc_bs',kind:'famine',name:'冬荒',settlement:'loc_bs',seasons:[3],intervalDays:7,
   stages:[
-   {id:'tight',name:'粮价告紧',probability:0.3,condition:{kind:'always'},
-    effects:[{kind:'price_shift',settlement:'loc_bs',items:grain,factor:1.25,minutes:120*DAY,reason:'冬季粮源见少'}]},
-   {id:'famine',name:'冬荒',probability:1,condition:{kind:'hazard_phase',clock:'famine:loc_bs_sangban',minimum:1},
-    effects:[{kind:'price_shift',settlement:'loc_bs',items:grain,factor:1.6,minutes:120*DAY,reason:'产粮村存粮告紧，镇上断了粮源'},{kind:'famine',settlement:'loc_bs',minutes:120*DAY}]},
+   {id:'famine',name:'冬荒',probability:1,condition:{kind:'hazard_phase',clock:'famine:loc_bs_sangban',stage:'tight'},
+    effects:[{kind:'famine',settlement:'loc_bs',minutes:120*DAY}]},
   ]},
  // Monster settlements (T156/T159): 炭阶地宫 buys grain in 白石镇; 苔灯坞 forages
  // and trades fruit for salt with 河湾; 榆根里 lives off forest yield; 裂炉营
  // takes grain from 砾泉 for tribute and labour.
- lean('loc_ms_tanjie','faction_ms_tanjie',{tight:{condition:{kind:'hazard_phase',clock:'famine:loc_bs',minimum:1}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs',minimum:2}},neighbour:'loc_bs',habitat:'habitat_bs_west_kiln'}),
+ lean('loc_ms_tanjie','faction_ms_tanjie',{tight:{condition:{kind:'hazard_phase',clock:'famine:loc_bs',stage:'famine'}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs',stage:'famine'}},neighbour:'loc_bs',habitat:'habitat_bs_west_kiln'}),
  epidemic('loc_ms_tanjie',{disease:cough,seasons:[3],intervalDays:4,first:{kind:'weather',kinds:['snow','fog'],location:'loc_bs'},probability:0.15,cases:1,minimum:2,routes:['route_t157_loc_ms_tanjie'],herbs:'loc_bs'}),
- lean('loc_ms_taideng','faction_ms_taideng',{tight:{probability:0.3,condition:{kind:'weather',kinds:['snow'],location:'loc_hw'}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_hw',minimum:1}},neighbour:'loc_hw',habitat:'habitat_hw_wood'}),
+ lean('loc_ms_taideng','faction_ms_taideng',{tight:{probability:0.3,condition:{kind:'weather',kinds:['snow'],location:'loc_hw'}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_hw',stage:'tight'}},neighbour:'loc_hw',habitat:'habitat_hw_wood'}),
  epidemic('loc_ms_taideng',{disease:cough,seasons:[3],intervalDays:4,first:{kind:'weather',kinds:['snow'],location:'loc_hw'},probability:0.1,cases:1,minimum:2,routes:['route_t157_loc_ms_taideng'],herbs:'loc_hw'}),
- lean('loc_ms_yugen','faction_ms_yugen',{tight:{probability:0.3,condition:{kind:'weather',kinds:['snow'],location:'loc_bs_yupo'}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_yupo',minimum:1}},neighbour:'loc_bs_yupo',habitat:'habitat_yp_north_grove'}),
+ lean('loc_ms_yugen','faction_ms_yugen',{tight:{probability:0.3,condition:{kind:'weather',kinds:['snow'],location:'loc_bs_yupo'}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_yupo',stage:'tight'}},neighbour:'loc_bs_yupo',habitat:'habitat_yp_north_grove'}),
  epidemic('loc_ms_yugen',{disease:flux,seasons:[1],intervalDays:4,first:{kind:'weather',kinds:['rain','storm'],location:'loc_bs_yupo'},probability:0.12,cases:1,minimum:2,routes:['route_t159_loc_ms_yugen'],herbs:'loc_bs_yupo'}),
- lean('loc_ms_lielu','faction_ms_lielu',{tight:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_liquan',minimum:1}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_liquan',minimum:2}},neighbour:'loc_bs_liquan',habitat:'habitat_lq_old_adit'}),
+ lean('loc_ms_lielu','faction_ms_lielu',{tight:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_liquan',stage:'tight'}},short:{condition:{kind:'hazard_phase',clock:'famine:loc_bs_liquan',stage:'famine'}},neighbour:'loc_bs_liquan',habitat:'habitat_lq_old_adit'}),
  epidemic('loc_ms_lielu',{disease:cough,seasons:[3],intervalDays:4,first:{kind:'weather',kinds:['snow'],location:'loc_bs_liquan'},probability:0.12,cases:1,minimum:2,routes:['route_t159_loc_ms_lielu'],herbs:'loc_bs_liquan'}),
 ];
 export const hazardClockRules={version:1,source:'U3 季节与灾害世界时钟；指南3.14季节影响农事、行路、价格，4.9世界时钟（汛期、冬荒、瘟疫、物价波动）',
@@ -183,7 +177,7 @@ export const hazardClockRules={version:1,source:'U3 季节与灾害世界时钟�
   {id:'epidemic:loc_hw',kind:'epidemic',name:'疫病流行',settlement:'loc_hw',seasons:[1,2],intervalDays:3,disease:'disease_river_flux',
    spread:{routes:['route_hw_bs','route_bs_yp','route_bs_wt','route_bs_lq','route_bs_sb']},
    stages:[
-    {id:'cases',name:'零星病例',probability:0.3,condition:{kind:'all',conditions:[{kind:'hazard_phase',clock:'flood:loc_hw',minimum:2},{kind:'hunger'}]},
+    {id:'cases',name:'零星病例',probability:0.3,condition:{kind:'all',conditions:[{kind:'hazard_phase',clock:'flood:loc_hw',stage:'crest'},{kind:'hunger'}]},
      effects:[{kind:'epidemic',disease:'disease_river_flux',settlement:'loc_hw',cases:2},
       {kind:'rumor',id:'epidemic_cases',claim:'退水后河湾有人家上吐下泻发热，药草院陶芷说是喝了脏水。',carriers:['npc_hw_taozhi','npc_hw_linsui'],salience:3}]},
     {id:'spread',name:'疫病流行',probability:1,condition:{kind:'epidemic_cases',minimum:5},

@@ -24,7 +24,7 @@ export async function leaseCycle({poor=false,mode='share'}={}){
  for(const r of w.rules.weather.regions)r.temperatures=[20,20,20,20];
  Object.assign(w.rules.agriculture.settlements.find(r=>r.fieldLocation===field),{areaUnits:100,farmWorkers:0,workerFraction:0,processingWorkers:0,freshWorkers:0});
  Object.assign(w.rules.agriculture.crop,{seedPerHa:150,growthDays:2,yieldPerHa:1500});
- w.rules.economy.priceFactorLimits.region=[1,1];w.rules.economy.priceFactorLimits.transport=[1,1];w.rules.settlementTrade.seasonFactors=[1,1,1,1];
+ w.rules.economy.priceFactorLimits.region=[1,1];w.rules.economy.priceFactorLimits.transport=[1,1];
  w.items.find(i=>i.id===item).basePrice=1;
  for(const id of [owner,buyer])w.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location:field,activity:'休息',services:['trade']}]};
  const e=new WorldEngine(w),legacy=JSON.parse(await fs.readFile(new URL('../legacy/seed.json',import.meta.url),'utf8'));

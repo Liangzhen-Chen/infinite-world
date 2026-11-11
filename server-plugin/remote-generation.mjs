@@ -337,12 +337,11 @@ function remoteHazards(county,seat,settlements,routes,profiles){
             {id:'recede',name:'退水',probability:0.6,condition:{kind:'always'},effects:[{kind:'environment',state:'dry',locations:soaked}]}]});
         const water=h.wet&&!h.cold,disease=water?'disease_river_flux':'disease_cold_cough';
         hazards.push({id:`epidemic:${sid}`,kind:'epidemic',name:'疫病流行',settlement:sid,seasons:water?[1,2]:[3],intervalDays:4,disease,spread:{routes:[link.id]},stages:[
-            {id:'cases',name:'零星病例',probability:water?0.2:0.06,condition:water?{kind:'hazard_phase',clock:`flood:${sid}`,minimum:2}:{kind:'always'},effects:[{kind:'epidemic',disease,settlement:sid,cases:1}]},
+            {id:'cases',name:'零星病例',probability:water?0.2:0.06,condition:water?{kind:'hazard_phase',clock:`flood:${sid}`,stage:'crest'}:{kind:'always'},effects:[{kind:'epidemic',disease,settlement:sid,cases:1}]},
             {id:'spread',name:'疫病流行',probability:1,condition:{kind:'epidemic_cases',minimum:3},effects:[{kind:'price_shift',settlement:sid,items:['item_herb'],factor:1.4,minutes:30*DAY,reason:'疫病流行，药草紧缺'}]},
             {id:'wane',name:'疫退',probability:1,condition:{kind:'epidemic_clear'},effects:[{kind:'price_shift',settlement:sid,items:['item_herb'],factor:1,minutes:1,reason:'疫退，药价回落'}]}]});
         hazards.push({id:`famine:${sid}`,kind:'famine',name:'冬荒',settlement:sid,seasons:[3],intervalDays:7,stages:[
-            {id:'tight',name:'存粮告紧',probability:1,condition:{kind:'granary_short',days:90},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:1.2,minutes:120*DAY,reason:'冬季存粮告紧'}]},
-            {id:'famine',name:'冬荒',probability:1,condition:{kind:'granary_short',days:45},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:1.6,minutes:120*DAY,reason:'冬荒缺粮'},{kind:'famine',settlement:sid,minutes:120*DAY}]}]});
+            {id:'famine',name:'冬荒',probability:1,condition:{kind:'granary_short',days:45},effects:[{kind:'famine',settlement:sid,minutes:120*DAY}]}]});
         const [up,high]=h.farm?[1.1,1.2]:[1.2,1.4];
         hazards.push({id:`price:${sid}`,kind:'price',name:'青黄不接粮价波动',settlement:sid,seasons:[1],intervalDays:10,stages:[
             {id:'rise',name:'粮价看涨',probability:0.35,condition:{kind:'always'},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:up,minutes:60*DAY,reason:'青黄不接，陈粮见少'}]},

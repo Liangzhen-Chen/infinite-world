@@ -49,6 +49,10 @@ export function pureHazardFires(engine,seed,rule,year){
 export function pureHazardPhase(engine,seed,rule,minute){
  const year=Math.floor(minute/YEAR);return pureHazardFires(engine,seed,rule,year).filter(f=>f.minute<=minute).length;
 }
+// Stage ids a pure clock has fired this year up to `minute` (a set, so a reference names a stage, never its position).
+export function pureHazardStages(engine,seed,rule,minute){
+ const year=Math.floor(minute/YEAR);return new Set(pureHazardFires(engine,seed,rule,year).filter(f=>f.minute<=minute).map(f=>f.stage));
+}
 // A flooded route is closed for the closure's minutes after the stage fired.
 // Closures may outlast the year boundary, so the previous year is consulted.
 // Route -> [{stage, effect}] for the pure clocks of one rules table, built once.

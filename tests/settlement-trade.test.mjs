@@ -214,17 +214,17 @@ test('收货仓容被其他真实粮占满则拒收并退款，粮损只记在�
     const cash=snapshotCash(c);c=(await wait(engine,c,o.estimatedArrivalAt)).doc;
     const ended=c.state.records[key(lane)];assert.equal(ended.status,'rejected');assert.equal(ended.deliveredFood,0);assert.equal(ended.rejectedFood,40);assert.equal(ended.refundCopper,40*ended.unitPriceCopper);assert.equal(ended.taxCopper,0);assert.equal(snapshotCash(c),cash);conservation(c);
 });
-test('公共报价只读且随真实供给重派生，距离与季节进入环境基准；未知仓不生成库存',()=>{
+test('公共报价只读且随真实供给重派生，距离与运输风险进入环境基准；未知仓不生成库存',()=>{
     const {engine,doc}=setup(),lane=lanes[0],d=draft(doc),minute=DEPART;
     const before=structuredClone(d.document),first=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute);
     assert.deepEqual(d.document,before,'15.2/15.4: quotes are projections, not saved truth');
     // Independent environmental calculation from authored road distances,
-    // actual travel time and spring .9. No market price computes this oracle.
+    // actual travel time; no hand-written season coefficient exists any more. No market price computes this oracle.
     const distance=world.routes.filter(e=>lane.routes.includes(e.id)).reduce((n,e)=>n+e.lengthKm,0);
     const route=engine.route(world.rules.agriculture.settlements.find(p=>p.settlement===lane.seller).counter,world.rules.agriculture.settlements.find(p=>p.settlement===lane.buyer).counter,lane.mode,minute,doc.randomSeed);
     const risk=Math.max(1,route.movingMinutes/(distance/engine.rules.travel.walkKmh*60));
     const limits=engine.rules.economy.priceFactorLimits.transport,transport=Math.max(limits[0],Math.min(limits[1],(1+distance*.01)*risk));
-    assert.ok(transport>1);assert.equal(regionalTradeBase(d,engine,'item_oats',lane.buyer,minute),3*transport*.9);
+    assert.ok(transport>1);assert.equal(regionalTradeBase(d,engine,'item_oats',lane.buyer,minute),3*transport);
     // Changed stock is a non-examined premise; synchronize the existing books.
     setGrain(d.document,lane.buyer,100);resyncBooks(engine,d.document);assert.ok(regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+1)>first);
     const next=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+DAY);assert.ok(next>first);

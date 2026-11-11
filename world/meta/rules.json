@@ -6267,12 +6267,6 @@
     "targetDays": 240,
     "workersMaximum": 2,
     "carryKgPerWorker": 10,
-    "seasonFactors": [
-      0.9,
-      1,
-      1.1,
-      1.2
-    ],
     "distanceFactorPerKm": 0.01,
     "lanes": [
       {
@@ -8516,7 +8510,7 @@
                 {
                   "kind": "hazard_phase",
                   "clock": "flood:loc_hw",
-                  "minimum": 2
+                  "stage": "crest"
                 },
                 {
                   "kind": "hunger"
@@ -8823,22 +8817,6 @@
             },
             "effects": [
               {
-                "kind": "price_shift",
-                "settlement": "loc_hw",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.2,
-                "minutes": 172800,
-                "reason": "冬季存粮告紧"
-              },
-              {
                 "kind": "rumor",
                 "id": "famine_tight",
                 "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
@@ -8859,22 +8837,6 @@
               "days": 45
             },
             "effects": [
-              {
-                "kind": "price_shift",
-                "settlement": "loc_hw",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.6,
-                "minutes": 172800,
-                "reason": "冬荒缺粮"
-              },
               {
                 "kind": "famine",
                 "settlement": "loc_hw",
@@ -9199,22 +9161,6 @@
             },
             "effects": [
               {
-                "kind": "price_shift",
-                "settlement": "loc_bs_yupo",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.2,
-                "minutes": 172800,
-                "reason": "冬季存粮告紧"
-              },
-              {
                 "kind": "rumor",
                 "id": "famine_tight",
                 "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
@@ -9235,22 +9181,6 @@
               "days": 45
             },
             "effects": [
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs_yupo",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.6,
-                "minutes": 172800,
-                "reason": "冬荒缺粮"
-              },
               {
                 "kind": "famine",
                 "settlement": "loc_bs_yupo",
@@ -9476,7 +9406,7 @@
             "condition": {
               "kind": "hazard_phase",
               "clock": "flood:loc_bs_weiting",
-              "minimum": 2
+              "stage": "crest"
             },
             "effects": [
               {
@@ -9581,22 +9511,6 @@
             },
             "effects": [
               {
-                "kind": "price_shift",
-                "settlement": "loc_bs_weiting",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.2,
-                "minutes": 172800,
-                "reason": "冬季存粮告紧"
-              },
-              {
                 "kind": "rumor",
                 "id": "famine_tight",
                 "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
@@ -9617,22 +9531,6 @@
               "days": 35
             },
             "effects": [
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs_weiting",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.6,
-                "minutes": 172800,
-                "reason": "冬荒缺粮"
-              },
               {
                 "kind": "famine",
                 "settlement": "loc_bs_weiting",
@@ -9955,22 +9853,6 @@
             },
             "effects": [
               {
-                "kind": "price_shift",
-                "settlement": "loc_bs_liquan",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.2,
-                "minutes": 172800,
-                "reason": "冬季存粮告紧"
-              },
-              {
                 "kind": "rumor",
                 "id": "famine_tight",
                 "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
@@ -9991,22 +9873,6 @@
               "days": 60
             },
             "effects": [
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs_liquan",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.6,
-                "minutes": 172800,
-                "reason": "冬荒缺粮"
-              },
               {
                 "kind": "famine",
                 "settlement": "loc_bs_liquan",
@@ -10052,22 +9918,6 @@
                 "settlement": "loc_bs_liquan",
                 "percent": 15,
                 "minutes": 43200
-              },
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs_liquan",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.15,
-                "minutes": 86400,
-                "reason": "久晴少雨，坡田缺水"
               }
             ]
           },
@@ -10087,52 +9937,6 @@
                 "settlement": "loc_bs_liquan",
                 "percent": 25,
                 "minutes": 43200
-              },
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs_liquan",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.35,
-                "minutes": 86400,
-                "reason": "旱情加重，泉水减量"
-              }
-            ]
-          },
-          {
-            "id": "rain",
-            "name": "雨水回来",
-            "probability": 0.6,
-            "condition": {
-              "kind": "weather",
-              "kinds": [
-                "rain",
-                "storm"
-              ]
-            },
-            "effects": [
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs_liquan",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1,
-                "minutes": 1,
-                "reason": "下了透雨，粮价回落"
               }
             ]
           }
@@ -10354,22 +10158,6 @@
             },
             "effects": [
               {
-                "kind": "price_shift",
-                "settlement": "loc_bs_sangban",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.2,
-                "minutes": 172800,
-                "reason": "冬季存粮告紧"
-              },
-              {
                 "kind": "rumor",
                 "id": "famine_tight",
                 "claim": "今冬仓里的粮撑不到开春，粮价已经往上走了。",
@@ -10390,22 +10178,6 @@
               "days": 45
             },
             "effects": [
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs_sangban",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.6,
-                "minutes": 172800,
-                "reason": "冬荒缺粮"
-              },
               {
                 "kind": "famine",
                 "settlement": "loc_bs_sangban",
@@ -10737,57 +10509,15 @@
         "intervalDays": 7,
         "stages": [
           {
-            "id": "tight",
-            "name": "粮价告紧",
-            "probability": 0.3,
-            "condition": {
-              "kind": "always"
-            },
-            "effects": [
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.25,
-                "minutes": 172800,
-                "reason": "冬季粮源见少"
-              }
-            ]
-          },
-          {
             "id": "famine",
             "name": "冬荒",
             "probability": 1,
             "condition": {
               "kind": "hazard_phase",
               "clock": "famine:loc_bs_sangban",
-              "minimum": 1
+              "stage": "tight"
             },
             "effects": [
-              {
-                "kind": "price_shift",
-                "settlement": "loc_bs",
-                "items": [
-                  "item_oats",
-                  "item_ration",
-                  "item_oat_flour",
-                  "item_oat_flatbread",
-                  "item_pearl_barley",
-                  "item_rye_flour",
-                  "item_wheat_grain"
-                ],
-                "factor": 1.6,
-                "minutes": 172800,
-                "reason": "产粮村存粮告紧，镇上断了粮源"
-              },
               {
                 "kind": "famine",
                 "settlement": "loc_bs",
@@ -10814,7 +10544,7 @@
             "condition": {
               "kind": "hazard_phase",
               "clock": "famine:loc_bs",
-              "minimum": 1
+              "stage": "famine"
             },
             "effects": [
               {
@@ -10839,7 +10569,7 @@
             "condition": {
               "kind": "hazard_phase",
               "clock": "famine:loc_bs",
-              "minimum": 2
+              "stage": "famine"
             },
             "effects": [
               {
@@ -10983,7 +10713,7 @@
             "condition": {
               "kind": "hazard_phase",
               "clock": "famine:loc_hw",
-              "minimum": 1
+              "stage": "tight"
             },
             "effects": [
               {
@@ -11126,7 +10856,7 @@
             "condition": {
               "kind": "hazard_phase",
               "clock": "famine:loc_bs_yupo",
-              "minimum": 1
+              "stage": "tight"
             },
             "effects": [
               {
@@ -11243,7 +10973,7 @@
             "condition": {
               "kind": "hazard_phase",
               "clock": "famine:loc_bs_liquan",
-              "minimum": 1
+              "stage": "tight"
             },
             "effects": [
               {
@@ -11268,7 +10998,7 @@
             "condition": {
               "kind": "hazard_phase",
               "clock": "famine:loc_bs_liquan",
-              "minimum": 2
+              "stage": "famine"
             },
             "effects": [
               {

@@ -27,7 +27,7 @@ import {waterExposure} from './water-cycle.mjs';
 import {contractIllness,householdMembers} from './npc-life.mjs';
 import {famineAt} from './hazard-calendar.mjs';
 import {droughtRelief,purifiedWaterFactor} from './magic-economy.mjs';
-import {hazardClocks,hazardKey,hazardRoll,isPureClock,isHazardTick,pureHazardFires,pureHazardPhase,pureConditionMet,hazardRouteClosed,PURE_CONDITIONS} from './hazard-calendar.mjs';
+import {hazardClocks,hazardKey,hazardRoll,isPureClock,isHazardTick,pureHazardFires,pureHazardPhase,pureHazardStages,pureConditionMet,hazardRouteClosed,PURE_CONDITIONS} from './hazard-calendar.mjs';
 import {pow} from './det-math.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
 
@@ -156,7 +156,7 @@ function assertCondition(engine,r,c,ids,nested=false){
  for(const x of c.conditions??[])assertCondition(engine,r,x,ids,true);
  if(c.kind==='weather'&&(!Array.isArray(c.kinds)||!c.kinds.length||c.kinds.some(k=>!WEATHER.includes(k))||c.location!==undefined&&!locationKnown(engine,c.location)))throw Error(`灾害时钟天气条件无效：${r.id}`);
  if(c.kind==='granary_short'&&!int(c.days,1,3600))throw Error(`灾害时钟存粮条件无效：${r.id}`);
- if(c.kind==='hazard_phase'&&(!ids.has(c.clock)||c.clock===r.id||!int(c.minimum,1,20)))throw Error(`灾害时钟前置时钟无效：${r.id}`);
+ if(c.kind==='hazard_phase'&&(!ids.has(c.clock)||c.clock===r.id||typeof c.stage!=='string'||!ids.get(c.clock).has(c.stage)))throw Error(`灾害时钟前置时钟无效：${r.id}`);
  if(['epidemic_cases','epidemic_clear'].includes(c.kind)&&(r.kind!=='epidemic'||c.kind==='epidemic_cases'&&!int(c.minimum,1,1000)))throw Error(`疫情条件只用于疫病时钟：${r.id}`);
 }
 const checked=new WeakSet();
@@ -169,7 +169,7 @@ export function assertHazardRules(engine){
   diseases.add(x.id);
  }
  for(const [k,m] of Object.entries(t.measures??{}))if(!MEASURES.includes(k)||Object.entries(m).some(([f,v])=>f==='routes'?!Array.isArray(v)||v.some(r=>!ROUTES.includes(r)):!(Number.isFinite(v)&&v>0&&v<=1)))throw Error(`防疫办法无效：${k}`);
- const ids=new Set(t.clocks.map(r=>r.id));if(ids.size!==t.clocks.length)throw Error('灾害时钟编号重复');
+ const ids=new Map(t.clocks.map(r=>[r.id,new Set(Array.isArray(r.stages)?r.stages.map(s=>s?.id):[])]));if(ids.size!==t.clocks.length)throw Error('灾害时钟编号重复');
  for(const r of t.clocks){
   if(!r.id||!KINDS.includes(r.kind)||!r.name||!locationKnown(engine,r.settlement)||!Array.isArray(r.seasons)||!r.seasons.length||r.seasons.some((s,i)=>!int(s,0,3)||i&&s!==r.seasons[i-1]+1)||!int(r.intervalDays,1,90)||!Array.isArray(r.stages)||!r.stages.length)throw Error(`灾害时钟地点、季节或间隔无效：${r.id}`);
   if(r.kind==='epidemic'&&(!diseases.has(r.disease)||!Array.isArray(r.spread?.routes)||r.spread.routes.some(id=>!engine.world.routes.some(e=>e.id===id))))throw Error(`疫病时钟病名或传播路线无效：${r.id}`);
@@ -210,11 +210,17 @@ function conditionMet(d,engine,rule,c,at){
  case 'hunger':{const s=state.settlements?.[rule.settlement],value=s?.starvation??0;return {met:value>0||Boolean(famineAt(state,rule.settlement,at)),value,evidence:`settlement:${rule.settlement}`};}
  case 'all':{const parts=c.conditions.map(x=>conditionMet(d,engine,rule,x,at));return {met:parts.every(x=>x.met),value:parts.map(x=>x.value??null),evidence:parts.map(x=>x.evidence??null)};}
  case 'granary_short':{const s=state.settlements?.[rule.settlement];const value=s?.food??null;return {met:Boolean(s)&&s.population>0&&s.food<mealMouthsOf(engine,state,rule.settlement,s.population)*c.days,value,evidence:`settlement:${rule.settlement}`};}
- case 'hazard_phase':{const other=hazardClocks(engine).find(r=>r.id===c.clock),value=phaseOf(d,engine,other,at);return {met:value>=c.minimum,value,evidence:hazardKey(c.clock)};}
+ case 'hazard_phase':{const other=hazardClocks(engine).find(r=>r.id===c.clock),value=phaseOf(d,engine,other,at);return {met:stageReached(d,engine,other,c.stage,at),value,evidence:hazardKey(c.clock)};}
  case 'epidemic_cases':{const ep=state.records?.[epidemicKey(rule.id,year)],value=ep?Object.keys(ep.households).length:0;return {met:value>=c.minimum,value,evidence:ep?.id??null};}
  case 'epidemic_clear':{const ep=state.records?.[epidemicKey(rule.id,year)];return {met:ep?.status==='平息',value:ep?.status??null,evidence:ep?.id??null};}
  default:throw Error(`灾害时钟不支持条件：${c.kind}`);
  }
+}
+// Whether the named stage of another clock has happened this year: a stateful clock by the stage ids in its
+// applied history, a pure clock by its seeded fires. Stages are named, never counted, so adding or removing a stage elsewhere cannot shift a reference.
+export function stageReached(d,engine,rule,stage,at=d.get('state','minute')){
+ if(isPureClock(rule))return pureHazardStages(engine,d.get('randomSeed'),rule,at).has(stage);
+ const row=d.get('state','records',hazardKey(rule.id));return row?.year===yearOf(at)+1&&(row.history??[]).some(h=>h.stage===stage&&h.applied);
 }
 // Stages passed this year. A pure clock is read from its seeded history so
 // it agrees with route closures even before its record is written.
