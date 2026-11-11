@@ -108,7 +108,7 @@ assert.equal(f.d.get('state','npcs',C,'coins'),coinsC+paid-bought.reduce((n,r)=>
 
 test('a resident never sells to the own household',()=>{
   const f=fixture({sellerSchedule:LATE,emptyShop:true});
- f.d.set(['state','npcs',B,'inventory'],{[item]:60});
+ f.d.set(['state','npcs',B,'inventory'],{[item]:600});// 同户 A 缺口大：B 的面包先算户内口粮，余量要远超两人份储备才是可售余量
  assert.ok(residentSellers(f.d,f.e,720).some(s=>s.keeper===B&&s.goods.includes(item)),'precondition: the housemate is a valid resident seller, so only the same-household rule can stop the sale');
  f.d.set(['state','minute'],720);
  advanceCustomerFlow(f.d,f.e,719,720);

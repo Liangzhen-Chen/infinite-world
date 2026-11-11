@@ -777,7 +777,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
     // 每位顾客每天对每家店至多一趟（到店评估即算一趟，买没买都算）：本店今天的客流记录里已有这位顾客的访问（任何结局）就不再评估。
     // 按“日”字段的记录索引取当日已有的本店客流记录（不依赖当前时刻集合反推键：玩家离铺再到铺、店停业等使时刻集合变化时，已写的访问照样查得到；索引每日有界，不全表扫）。
-    const tripped=new Set(recordsWhere(state.records,'day',day).filter(r=>r.category==='customer_flow'&&r.shop===shop.id).flatMap(r=>r.visits).map(v=>v.npc));
+    const tripped=new Set(recordsWhere(state.records,'category','customer_flow').filter(r=>r.day===day&&r.shop===shop.id).flatMap(r=>r.visits).map(v=>v.npc));
     const visits=[],keeperHome=shop.kind==='resident'?new Set(personHousehold(engine,state,shop.keeper).value?.members??[]):null;// 居民卖方不向自己同户的人卖（同一灶，不是买卖）
     for(const {id,slot,settlement} of residents){
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
@@ -925,7 +925,7 @@ export function flowTimesOfDay(engine,state,day){
 // (before, after] 内全部客流结算时刻，升序。shop.mjs 用它定时钟边界与补货/客流的先后。
 export function customerFlowTimes(engine,state,before,after){
     const times=[];
-    for(let day=Math.floor(before/DAY);day<=Math.floor(after/DAY);day++){
+    for(let day=Math.max(0,Math.floor(before/DAY));day<=Math.floor(after/DAY);day++){
         for(const t of flowTimesOfDay(engine,state,day))if(t>before&&t<=after&&t>=0)times.push(t);
     }
     return times;
