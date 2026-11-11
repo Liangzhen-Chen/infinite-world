@@ -104,6 +104,7 @@ export const FILE_FLAG_OVERRIDES = {
   'tools/clear-budget-stop.mjs --reason': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
   'tools/w3-journey.mjs --kind': {kind: 'nonflag', note: '报错文字里提到的 manual-rewrite 的 --kind 开关（manualRewriteProfile 的参数说明），本脚本自己没有这个开关'},
   'tools/w3-trades.mjs --kind': {kind: 'nonflag', note: '报错文字里提到的 manual-rewrite 的 --kind 开关（manualRewriteProfile 的参数说明），本脚本自己没有这个开关'},
+  'tools/w3-household.mjs --kind': {kind: 'nonflag', note: '报错文字里提到的 manual-rewrite 的 --kind 开关（manualRewriteProfile 的参数说明），本脚本自己没有这个开关'},
   'tools/manual-rewrite.mjs --root': {kind: 'write', note: '写审核记录目录下的 <id>.json、所属 batch-*.json、summary.json（人工改写，不调模型、不联网）'},
   'tools/manual-rewrite.mjs --drafts': {kind: 'write', note: '写审核记录目录下的 <id>.json、所属 batch-*.json、summary.json（人工改写，不调模型、不联网）'},
   'tools/manual-rewrite.mjs --by': {kind: 'write', note: '写审核记录目录下的 <id>.json、所属 batch-*.json、summary.json（人工改写，不调模型、不联网）'},
