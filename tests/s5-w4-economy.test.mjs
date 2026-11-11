@@ -281,7 +281,7 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     const account=Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
     // 以下 5 处（柜台钱、徐玲钱袋、口粮余量、回执、营业额）旧值 103/37/1/[3,{item_ration:-2}]/3 已不成立；新值待探针（徐玲买完 3 份口粮后另在原生店买燕麦薄饼，见 F:/dnd-tmp/mkt-mapping.md）。
     assert.equal(account.coins,TODO_PROBE_S5W4_11_ACCOUNT_COINS);assert.equal(f.document.state.npcs[A].coins,TODO_PROBE_S5W4_11_XULING_COINS);
-    assert.equal(f.document.state.inventory.item_ration.quantity,TODO_PROBE_S5W4_11_RATION_QTY);assert.equal(f.document.state.inventory.item_bread.quantity,5);
+    assert.equal(f.document.state.inventory.item_ration?.quantity??0,TODO_PROBE_S5W4_11_RATION_QTY); // 卖光后键可能不存在，按 0 计assert.equal(f.document.state.inventory.item_bread.quantity,5);
     const receipt=Object.values(f.document.state.records).find(r=>r.category==='business_receipt'&&r.operation==='customer_sale');
     assert.deepEqual([receipt.coins,receipt.goods],TODO_PROBE_S5W4_11_RECEIPT);
     const report=await f.act('core:settlement.business_report',{business:f.business},'w4-player-report');

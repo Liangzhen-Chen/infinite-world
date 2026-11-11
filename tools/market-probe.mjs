@@ -105,20 +105,22 @@ function fieldRoles(steps){
 }
 // 家户采购预算诊断（household-budget.householdBudget；members/shortfall/procurementShortfall/market/rows 在 .resources 下，与 business.mjs wants() 同读法）。
 // 食物来源筛前/筛后（只读副本上调同一对注册函数，household-budget.mjs:66-72 accessibleSources 的两步）：筛前 = registerHouseholdFoodSources，筛后 = registerHouseholdFoodHabit。
-function sourcesDiag(engine,doc,id,cash){
+function sourcesDiag(engine,doc,id,cash,kernel=false){
  try{
-  const d=engine.primitiveDraft(doc),view=subjectiveView(engine,d.document??doc,id);
+  const d=engine.primitiveDraft(doc),view=kernel?null:subjectiveView(engine,d.document??doc,id);
   const compact=r=>({item:r.item,seller:r.seller??r.owner??null,at:r.at,quantity:r.quantity,unitPrice:r.unitPrice,luxury:r.luxury??null,deferred:r.deferred??null,habit:r.habit??null});
   const raw=(registerHouseholdFoodSources.fn?.(d,engine,id,{view})??[]),seen=raw.filter(r=>r.at>=d.get('state').minute&&Math.floor(r.quantity)>0&&r.unitPrice>0);
   const hab=registerHouseholdFoodHabit.fn?.(d,engine,id,seen,{view,read:(key,build)=>build()})??{rich:true,sources:seen};
   const key=r=>[r.item,r.seller??r.owner??'',r.at].join('|'),kept=new Set(hab.sources.map(key));
-  return {cash,rawCount:raw.length,beforeHabit:seen.map(compact),habitRich:hab.rich,afterHabit:hab.sources.map(compact),droppedByHabit:seen.filter(r=>!kept.has(key(r))).map(compact)};
+  return {view:kernel?'null(kernel)':'subjective',affordFilterApplied:false,note:'只到惯常性这一步，未做 accessibleSources 最后一步“买得起”过滤（unitPrice ≤ 现金扣已知支出）',cash,rawCount:raw.length,beforeHabit:seen.map(compact),habitRich:hab.rich,afterHabit:hab.sources.map(compact),droppedByHabit:seen.filter(r=>!kept.has(key(r))).map(compact)};
  }catch(e){return {error:errorOf(e)};}
 }
-function budgetDiag(engine,doc,id){
+// kernel=false：引擎购买路径的口径——business.mjs:689 wants() 调 householdBudget(d,engine,id)，household-budget.mjs:477 在非 kernel 时 view??=subjectiveView（主观视角）；
+// kernel=true：view=null 的内核口径，仅作对照。缺口与来源（筛前/筛后）取同一口径。
+function budgetDiag(engine,doc,id,kernel=false){
  try{
-  const b=householdBudget(engine.primitiveDraft(doc),engine,id),r=b.resources;
-  return {minute:doc.state.minute,sources:sourcesDiag(engine,doc,id,b.cash),cash:b.cash,target:b.target,until:b.until,horizonSource:b.horizonSource,members:r.members,shortfall:r.shortfall,procurementShortfall:r.procurementShortfall,
+  const b=householdBudget(engine.primitiveDraft(doc),engine,id,{kernel}),r=b.resources;
+  return {view:b.scope,minute:doc.state.minute,sources:sourcesDiag(engine,doc,id,b.cash,kernel),cash:b.cash,target:b.target,until:b.until,horizonSource:b.horizonSource,members:r.members,shortfall:r.shortfall,procurementShortfall:r.procurementShortfall,
    marketCash:r.market?.cash,marketPurchases:r.market?.purchases,marketCoverage:r.market?.coverage,marketNextFoodAt:r.market?.nextFoodAt,
    rows:(r.rows??[]).filter(x=>(x.stock??0)>0||(x.food??0)>0||(x.eatMg??0)>0).map(x=>({item:x.item,holder:x.holder,stock:x.stock,food:x.food,eatMg:x.eatMg,fromOpen:x.fromOpen,retained:x.retained,committed:x.committed}))};
  }catch(e){return {error:errorOf(e)};}
@@ -306,11 +308,11 @@ async function flow11(){
    out.advanced={ok:to719.ok,error:to719.error,minute:c2.doc.state.minute};
    out.mealCap={ration:mealCapOf(engine,'item_ration'),flatbread:mealCapOf(engine,'item_oat_flatbread'),bread:mealCapOf(engine,'item_bread')};
    out.itemMg={ration:itemMg(engine,'item_ration'),flatbread:itemMg(engine,'item_oat_flatbread'),bread:itemMg(engine,'item_bread')};
-   out.at719Before=budgetDiag(engine,c2.doc,A);
+   out.at719Before=budgetDiag(engine,c2.doc,A);out.at719Before_kernelNullView=budgetDiag(engine,c2.doc,A,true);
    // 合成对照（不是引擎推进的结果）：在副本里给她 3 份口粮并扣 4 铜，等于柜台买完之后，再取一次缺口。
    const n=c2.doc.state.npcs[A],held=quantityOf(n.inventory?.item_ration);
    n.inventory={...(n.inventory??{}),item_ration:{quantity:held+3,quality:'木'}};n.coins-=4;
-   out.at719AfterThreeRations_synthetic=budgetDiag(engine,c2.doc,A);
+   out.at719AfterThreeRations_synthetic=budgetDiag(engine,c2.doc,A);out.at719AfterThreeRations_synthetic_kernelNullView=budgetDiag(engine,c2.doc,A,true);
   }catch(e){out.error=errorOf(e);}
   return out;
  })();
@@ -343,7 +345,7 @@ async function flow11(){
   items:{flatbread:itemFacts(engine,'item_oat_flatbread')},budgetDiagnosis:diag,splitRunVersusMain:splitDiff,inventoryRationRaw:ctx.doc.state.inventory.item_ration??'(键不存在)',
   placeholders:(()=>{ // 测试 :280-285 的 5 处断言所比较的量，运行时从状态读，不手写
    const receipt=Object.values(ctx.doc.state.records).find(r=>r.category==='business_receipt'&&r.operation==='customer_sale');
-   return {TODO_PROBE_S5W4_11_ACCOUNT_COINS:acctCoins,TODO_PROBE_S5W4_11_XULING_COINS:ctx.doc.state.npcs[A].coins,TODO_PROBE_S5W4_11_RATION_QTY:ctx.doc.state.inventory.item_ration?quantityOf(ctx.doc.state.inventory.item_ration):null,
+   return {TODO_PROBE_S5W4_11_ACCOUNT_COINS:acctCoins,TODO_PROBE_S5W4_11_XULING_COINS:ctx.doc.state.npcs[A].coins,TODO_PROBE_S5W4_11_RATION_QTY:quantityOf(ctx.doc.state.inventory.item_ration),
     TODO_PROBE_S5W4_11_RECEIPT:receipt?[receipt.coins,receipt.goods]:null,TODO_PROBE_S5W4_11_REVENUE:report.ok?report.result?.profit?.revenue??null:null};
   })(),reportError:report.ok?null:report.error};
 }
