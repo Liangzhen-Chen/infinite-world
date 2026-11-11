@@ -21,7 +21,9 @@ import {exchangeRate,currencyValue} from '../server-plugin/currency.mjs';
 import {turnoverByResource,turnoverReference} from '../server-plugin/tender.mjs';
 import {factionClockRules} from '../server-plugin/faction-clock.mjs';
 import {householdBudget} from '../server-plugin/household-budget.mjs';
-import {mealCapOf} from '../server-plugin/item-class.mjs';
+import {mealCapOf,itemMg} from '../server-plugin/item-class.mjs';
+import {registerHouseholdFoodSources,registerHouseholdFoodHabit} from '../server-plugin/household-budget.mjs';
+import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 
 const DAY=1440;
@@ -102,10 +104,21 @@ function fieldRoles(steps){
  return out;
 }
 // 家户采购预算诊断（household-budget.householdBudget；members/shortfall/procurementShortfall/market/rows 在 .resources 下，与 business.mjs wants() 同读法）。
+// 食物来源筛前/筛后（只读副本上调同一对注册函数，household-budget.mjs:66-72 accessibleSources 的两步）：筛前 = registerHouseholdFoodSources，筛后 = registerHouseholdFoodHabit。
+function sourcesDiag(engine,doc,id,cash){
+ try{
+  const d=engine.primitiveDraft(doc),view=subjectiveView(engine,d.document??doc,id);
+  const compact=r=>({item:r.item,seller:r.seller??r.owner??null,at:r.at,quantity:r.quantity,unitPrice:r.unitPrice,luxury:r.luxury??null,deferred:r.deferred??null,habit:r.habit??null});
+  const raw=(registerHouseholdFoodSources.fn?.(d,engine,id,{view})??[]),seen=raw.filter(r=>r.at>=d.get('state').minute&&r.unitPrice>0);
+  const hab=registerHouseholdFoodHabit.fn?.(d,engine,id,seen,{view,read:(key,build)=>build()})??{rich:true,sources:seen};
+  const key=r=>[r.item,r.seller??r.owner??'',r.at].join('|'),kept=new Set(hab.sources.map(key));
+  return {cash,rawCount:raw.length,beforeHabit:seen.map(compact),habitRich:hab.rich,afterHabit:hab.sources.map(compact),droppedByHabit:seen.filter(r=>!kept.has(key(r))).map(compact)};
+ }catch(e){return {error:errorOf(e)};}
+}
 function budgetDiag(engine,doc,id){
  try{
   const b=householdBudget(engine.primitiveDraft(doc),engine,id),r=b.resources;
-  return {minute:doc.state.minute,cash:b.cash,target:b.target,until:b.until,horizonSource:b.horizonSource,members:r.members,shortfall:r.shortfall,procurementShortfall:r.procurementShortfall,
+  return {minute:doc.state.minute,sources:sourcesDiag(engine,doc,id,b.cash),cash:b.cash,target:b.target,until:b.until,horizonSource:b.horizonSource,members:r.members,shortfall:r.shortfall,procurementShortfall:r.procurementShortfall,
    marketCash:r.market?.cash,marketPurchases:r.market?.purchases,marketCoverage:r.market?.coverage,marketNextFoodAt:r.market?.nextFoodAt,
    rows:(r.rows??[]).filter(x=>(x.stock??0)>0||(x.food??0)>0||(x.eatMg??0)>0).map(x=>({item:x.item,holder:x.holder,stock:x.stock,food:x.food,eatMg:x.eatMg,fromOpen:x.fromOpen,retained:x.retained,committed:x.committed}))};
  }catch(e){return {error:errorOf(e)};}
@@ -292,6 +305,7 @@ async function flow11(){
    const to719=await attempt(c2,'推进到 719','world_time',{minutes:719-c2.doc.state.minute},'w4-diag-719');
    out.advanced={ok:to719.ok,error:to719.error,minute:c2.doc.state.minute};
    out.mealCap={ration:mealCapOf(engine,'item_ration'),flatbread:mealCapOf(engine,'item_oat_flatbread'),bread:mealCapOf(engine,'item_bread')};
+   out.itemMg={ration:itemMg(engine,'item_ration'),flatbread:itemMg(engine,'item_oat_flatbread'),bread:itemMg(engine,'item_bread')};
    out.at719Before=budgetDiag(engine,c2.doc,A);
    // 合成对照（不是引擎推进的结果）：在副本里给她 3 份口粮并扣 4 铜，等于柜台买完之后，再取一次缺口。
    const n=c2.doc.state.npcs[A],held=quantityOf(n.inventory?.item_ration);
@@ -300,7 +314,21 @@ async function flow11(){
   }catch(e){out.error=errorOf(e);}
   return out;
  })();
+ const preWait=structuredClone(ctx.doc);
  const m=ctx.doc.state.minute,waited=await attempt(ctx,'等过午夜','world_time',{minutes:DAY-(m%DAY)+30},'w4-player-day');
+ // 719 诊断副本与主线的差异：主线一次推到底（eventId w4-player-day），副本分两段（w4-diag-719 + w4-diag-rest）；这里另取一份不含合成改动的分段副本，推到与主线相同的分钟，逐项比对。
+ const splitDiff=await (async()=>{
+  try{
+   const c3={engine,doc:structuredClone(preWait)};
+   await step(c3,'world_time',{minutes:719-c3.doc.state.minute},'w4-diag-719');
+   await step(c3,'world_time',{minutes:ctx.doc.state.minute-c3.doc.state.minute},'w4-diag-rest');
+   const pick=doc=>({minute:doc.state.minute,xulingCoins:doc.state.npcs[A].coins,xulingInventory:doc.state.npcs[A].inventory,playerInventory:doc.state.inventory,
+    flows:Object.values(doc.state.records).filter(r=>r.category==='customer_flow').map(r=>({shop:r.shop,day:r.day,minute:r.minute,visits:r.visits})),
+    marketTrades:Object.values(doc.state.records).filter(r=>r.category==='market_trade'&&r.day===0).map(r=>({seller:r.seller,buyer:r.buyer,item:r.item,quantity:r.quantity,totalCoins:r.totalCoins}))});
+   const a=pick(ctx.doc),b=pick(c3.doc);
+   return {main:a,splitRun:b,identical:JSON.stringify(a)===JSON.stringify(b),differingKeys:Object.keys(a).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k]))};
+  }catch(e){return {error:errorOf(e)};}
+ })();
  const flows=Object.values(ctx.doc.state.records).filter(r=>r.category==='customer_flow'&&r.shop===business);
  const acct=Object.values(ctx.doc.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
  const acctCoins=acct?.coins??null; // 与测试顺序一致：先读柜台钱，再调营业报表
@@ -312,7 +340,7 @@ async function flow11(){
   counterCoins:acct?.coins??null,xulingCoins:ctx.doc.state.npcs[A].coins,playerRation:quantityOf(ctx.doc.state.inventory.item_ration),playerBread:quantityOf(ctx.doc.state.inventory.item_bread),
   rationsNeededForSixtySatiety:(()=>{const s=engine.byId.get('item_ration')?.nutrition?.satiety;return s?{satietyEach:s,count:Math.ceil(60/s)}:null;})(),
   after:{ration:marketView(engine,ctx.doc,'item_ration',place)},
-  items:{flatbread:itemFacts(engine,'item_oat_flatbread')},budgetDiagnosis:diag,inventoryRationRaw:ctx.doc.state.inventory.item_ration??'(键不存在)',
+  items:{flatbread:itemFacts(engine,'item_oat_flatbread')},budgetDiagnosis:diag,splitRunVersusMain:splitDiff,inventoryRationRaw:ctx.doc.state.inventory.item_ration??'(键不存在)',
   placeholders:(()=>{ // 测试 :280-285 的 5 处断言所比较的量，运行时从状态读，不手写
    const receipt=Object.values(ctx.doc.state.records).find(r=>r.category==='business_receipt'&&r.operation==='customer_sale');
    return {TODO_PROBE_S5W4_11_ACCOUNT_COINS:acctCoins,TODO_PROBE_S5W4_11_XULING_COINS:ctx.doc.state.npcs[A].coins,TODO_PROBE_S5W4_11_RATION_QTY:ctx.doc.state.inventory.item_ration?quantityOf(ctx.doc.state.inventory.item_ration):null,
