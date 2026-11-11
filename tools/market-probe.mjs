@@ -11,6 +11,8 @@ import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {applyIntentSetup} from './a3-score.mjs';
+import {tradeQuote,assertMarketDepth} from '../server-plugin/shop.mjs';
+import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
 import {marketSupply,marketQuote,saleableStock,goodsClass,registerShopShelves,supplyApart,laborValue} from '../server-plugin/market.mjs';
 import {regionalTradeBase,regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {hazardPriceFactor} from '../server-plugin/hazard-calendar.mjs';
@@ -60,7 +62,7 @@ function marketView(engine,doc,item,location){
  }catch(e){return {item,location,error:errorOf(e)};}
 }
 // 单次报价分解：基准、稀缺度（夹取后）、品质、价差、深度、关系、单价、精确总价、取整总价。
-function quoteView(engine,doc,{item,location,seller,buyer='player',quantity=1,business=null,relation=1}){
+function regionalQuoteView(engine,doc,{item,location,seller,buyer='player',quantity=1,business=null,relation=1}){
  try{
   const d=engine.primitiveDraft(doc),q=marketQuote(d,engine,{item,location,seller,buyer,quantity,business,relation,base:regionalTradeBase(d,engine,item,location)}),x=q.explanation;
   return {item,quantity,side:q.side,retail:q.retail,opening:q.opening,spotSupply:q.spotSupply,supply:q.supply,demand:q.demand,baseline:x.baseline,environment:x.environment,base:x.base,
@@ -69,10 +71,25 @@ function quoteView(engine,doc,{item,location,seller,buyer='player',quantity=1,bu
 }
 // 平民日工资口径（合理性抽查用）：技能阶 0 的典型日收入表区间中点，经 economy:wage 派生；另给表本身。
 const wageView=(engine,doc)=>{try{const w=laborValue(engine,doc,{worker:'player'});return {dailyCopper:w.daily,value:w.value,table:engine.rules.economy.dailyIncomeBySkillStage};}catch(e){return {error:errorOf(e)};}};
+// 真实交易用的报价（engine.mjs:701 同参数）：shop.tradeQuote，带店铺 business、关系系数、野生因子；并给出 assertMarketDepth 两个分支的全部输入。
+// buyer/seller 按动作方向给：玩家买 = buyer 'player'、seller 为 NPC；玩家卖 = 反之。
+function quoteView(engine,doc,{item,location,seller,buyer='player',quantity=1}){
+ try{
+  const d=engine.primitiveDraft(doc),q=tradeQuote(d,engine,{buyer,seller,item,quantity,location,base:()=>regionalTradeBase(d,engine,item,location)*wildlifePriceFactor(engine,d.document,item,location)}),x=q.explanation??{};
+  const r=engine.world.marketRules??{},state=d.get('state');
+  const deals=Object.values(state.records??{}).filter(row=>row.category==='market_trade'&&row.day===q.day&&row.goods===q.goods&&(q.business?row.business===q.business:row.seller===q.seller&&row.buyer===q.buyer));
+  const used=deals.reduce((n,row)=>n+row.quantity,0),spot=q.spotSupply??q.supply;
+  const maxShareCap=Math.max(r.retailFloor,spot*r.maxShare),branchA=!q.retail&&q.quantity>maxShareCap;
+  const dailyCap=q.business?Math.max(r.retailFloor,q.opening*r.dailyShare):null,branchB=Boolean(q.business)&&used+q.quantity>dailyCap;
+  let assertDepth=null;try{assertMarketDepth(d,engine,q);assertDepth={passed:true};}catch(e){assertDepth={passed:false,error:errorOf(e)};}
+  return {item,quantity:q.quantity,buyer,seller,business:q.business??null,agreed:q.agreed??false,side:q.side,retail:q.retail,opening:q.opening,spotSupply:q.spotSupply,supply:q.supply,demand:q.demand,
+   baseline:x.baseline,environment:x.environment,base:x.base,scarcity:x.scarcity,quality:x.quality,depth:x.depth,spread:x.spread,relation:x.relation,listPrice:q.listPrice,exactTotal:q.exactTotal,totalCoins:q.totalCoins,
+   depthCheck:{retailFloor:r.retailFloor,maxShare:r.maxShare,dailyShare:r.dailyShare,maxShareCap,branchA,used,dealsCounted:deals.length,dailyCap,branchB,assertMarketDepth:assertDepth}};
+ }catch(e){return {item,quantity,error:errorOf(e)};}
+}
 const itemFacts=(engine,id)=>{const it=engine.byId.get(id);return {id,basePrice:it?.basePrice,satiety:it?.nutrition?.satiety??null,tags:it?.tags??null};};
 const depthRule=engine=>{const r=engine.world.marketRules??{};return {depthImpact:r.depthImpact,retailFloor:r.retailFloor,retailShare:r.retailShare,maxShare:r.maxShare,dailyShare:r.dailyShare,spread:r.spread};};
 // 单笔可成交深度上限（market.mjs assertMarketDepth 的公式）：非零售量 ≤ max(retailFloor, 现货供给 × maxShare)。
-const depthCap=(engine,view)=>{const r=engine.world.marketRules??{};return view.spotSupply===undefined?null:{spotSupply:view.spotSupply,cap:Math.max(r.retailFloor,view.spotSupply*r.maxShare)};};
 const skipTo=(engine,doc,minute)=>{ // 同 tests/fixtures/skip-clock.mjs 的思路：直接跳分钟时，势力日钟也跳到下一个边界
  doc.state.minute=minute;
  for(const rule of factionClockRules(engine)){
@@ -101,7 +118,7 @@ async function seasonalHazards4(){
   famineStages:ctx.doc.state.records?.['hazard-clock:famine:loc_hw']?.history?.map(h=>h.stage)??null,
   hazardFactor:hazardPriceFactor(engine,ctx.doc.state,item,loc),
   item:itemFacts(engine,item),regionalTradeBase:regionalTradeBase(d,engine,item,loc),regionalTradePrice:regionalTradePrice(d,engine,item,loc),
-  market:marketView(engine,ctx.doc,item,loc),quote:quoteView(engine,ctx.doc,{item,location:loc,seller:null,quantity:1}),priceFactorLimitsRegion:engine.rules.economy.priceFactorLimits.region};
+  market:marketView(engine,ctx.doc,item,loc),quote:regionalQuoteView(engine,ctx.doc,{item,location:loc,seller:null,quantity:1}),priceFactorLimitsRegion:engine.rules.economy.priceFactorLimits.region};
 }
 
 // ---------------------------------------------------------------- 2. a1-lt-scenarios #7 L5 部分收购
@@ -111,7 +128,7 @@ async function a1Partial7(){
  const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui';
  const engine=new WorldEngine(structuredClone(world)),doc=engine.initialFromLegacy(legacy,'a1-lt-scenarios');
  doc.state.location=INN;doc.state.minute=10*60;doc.state.npcs[LINSUI].coins=6;doc.state.inventory.item_bread={quantity:20};
- const ctx={engine,doc},before={market:marketView(engine,doc,'item_bread',INN),item:itemFacts(engine,'item_bread')};
+ const ctx={engine,doc},before={market:marketView(engine,doc,'item_bread',INN),quote:quoteView(engine,doc,{item:'item_bread',location:INN,seller:'player',buyer:LINSUI,quantity:20}),item:itemFacts(engine,'item_bread')};
  const sell=await attempt(ctx,'卖面包 20，允许部分','world_act',{action:'core:trade.sell_to',slots:{buyer:LINSUI,item:'item_bread',quantity:20,allowPartial:true}},'ui-1');
  const r=sell.result??{};
  return {compares:'result.cost 与 result.quantity（tests/a1-lt-scenarios.test.mjs:104）',before,
@@ -144,8 +161,8 @@ function tenderFixture(){
 async function breadTrade(f,label,args,id){
  const e=f.engine,view=marketView(e,f.doc,'item_bread',TH.shop),today=Math.floor(f.doc.state.minute/DAY),
   dealsToday=Object.values(f.doc.state.records??{}).filter(r=>r.category==='market_trade'&&r.day===today&&r.goods===view.goods).map(r=>({seller:r.seller,buyer:r.buyer,side:r.side,item:r.item,quantity:r.quantity,totalCoins:r.totalCoins})),
-  pre={market:view,depthCap:depthCap(e,view),dealsToday,dealsTodayQuantity:dealsToday.reduce((n,r)=>n+(r.quantity??0),0),
-  quote:quoteView(e,f.doc,{item:'item_bread',location:TH.shop,seller:TH.host,quantity:args.quantity,business:null})};
+  pre={market:view,dealsToday,dealsTodayQuantity:dealsToday.reduce((n,r)=>n+(r.quantity??0),0),
+  quote:quoteView(e,f.doc,{item:'item_bread',location:TH.shop,seller:TH.host,quantity:args.quantity})};
  const row=await f.trade(label,args,id),r=row.result??{};
  return {label,args,pre,ok:row.ok,error:row.error,debt:r.debt,cost:r.cost,paidWith:r.paidWith,tender:r.tender,pricing:r.pricing};
 }
@@ -155,28 +172,28 @@ async function tender3(){
  const wool=applyIntentSetup(f.engine,f.doc,{location:TH.shop,inventory:{item_wool:40}});f.doc=wool.document;
  const first=await breadTrade(f,'第 1 笔 面包 25 付羊毛',{item:'item_bread',quantity:25,payCurrency:'item_wool'},'f3-wool');
  const second=await breadTrade(f,'第 2 笔 面包 21 付羊毛',{item:'item_bread',quantity:21,payCurrency:'item_wool'},'f3-wool-2');
- return {compares:'第二笔 paidWith.amount（tests/s5-f-tender.test.mjs:105）；本场景在云上于 :102 的第二笔被“市场今天没有那么多可成交深度”拒绝',
+ return {compares:'第二笔 paidWith.amount（tests/s5-f-tender.test.mjs:105）',
   setupUnmet:[...f.setupUnmet,...unmetShop,...wool.setupUnmet],item:itemFacts(f.engine,'item_bread'),depthRule:depthRule(f.engine),first,second,
   woolMarket:marketView(f.engine,f.doc,'item_wool',TH.shop)};
 }
 // S5F-5：tests/s5-f-tender.test.mjs:140-149。发行 10 张券、赊 5 个面包、再用券买 25 个面包、用原币种还债（比较玩家与店主的券数）。
 async function tender5(){
  const f=tenderFixture();
- const issued=await f.issue(10,'f5-issue');f.atShop();
+ const issued=await f.issue(10,'f5-issue');const setupUnmet=f.atShop();
  const credit=await breadTrade(f,'赊账 面包 5',{item:'item_bread',quantity:5,payment:'credit',creditMinutes:600},'f5-credit');
  const shock=await breadTrade(f,'用券买 面包 25',{item:'item_bread',quantity:25,payCurrency:TH.NOTE},'f5-shock');
  const debtId=credit.debt??null;
  const repay=debtId?await f.trade('原币种还债',{debt:debtId,payment:'repay'},'f5-repay'):{ok:false,error:{message:'没有找到债（赊账未成立）'}};
- return {compares:'玩家与店主的券数（tests/s5-f-tender.test.mjs:147）',issued:{ok:issued.ok,error:issued.error},credit,shock,
+ return {compares:'玩家与店主的券数（tests/s5-f-tender.test.mjs:147）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},credit,shock,
   repay:{ok:repay.ok,error:repay.error,status:repay.result?.status},notes:{player:f.notes('player'),host:f.notes(TH.host)},rateNow:(()=>{try{return f.rate();}catch(e){return errorOf(e);}})()};
 }
 // S5F-6：tests/s5-f-tender.test.mjs:155-173。发行 10 张券，现钱买 10 个面包，再用券买 25 个，比较分币种统计与折算。
 async function tender6(){
  const f=tenderFixture();
- const issued=await f.issue(10,'f6-issue');f.atShop();
+ const issued=await f.issue(10,'f6-issue');const setupUnmet=f.atShop();
  const cash=await breadTrade(f,'现钱 面包 10',{item:'item_bread',quantity:10},'f6-cash');
  const note=await breadTrade(f,'用券买 面包 25',{item:'item_bread',quantity:25,payCurrency:TH.NOTE},'f6-note');
- const place='loc_hw',state=f.doc.state,out={compares:'turnoverByResource / 基准账合计 / turnoverReference（tests/s5-f-tender.test.mjs:160-168）',issued:{ok:issued.ok,error:issued.error},cash,note};
+ const place='loc_hw',state=f.doc.state,out={compares:'turnoverByResource / 基准账合计 / turnoverReference（tests/s5-f-tender.test.mjs:160-168）',setupUnmet:[...f.setupUnmet,...setupUnmet],issued:{ok:issued.ok,error:issued.error},cash,note};
  try{
   out.turnoverByResource=turnoverByResource(state,{place});
   out.baseLedgerTotalCoins=Object.values(state.records).filter(r=>r.category==='market_trade'&&r.place===place).reduce((n,r)=>n+r.totalCoins,0);
@@ -251,7 +268,7 @@ async function m3M9(){
  const coins1=ctx.doc.state.player.coins;
  const b2pre={market:marketView(engine,ctx.doc,'item_bread',inn),quote:quoteView(engine,ctx.doc,{item:'item_bread',location:inn,seller:'npc_hw_linsui',quantity:1})};
  const bread2=await attempt(ctx,'买面包 1（升级后回合）','world_trade',{seller:'林穗',item:'面包',quantity:1},'m9-turn-3');
- return {compares:'玩家最终铜钱 finalDocument.state.player.coins（tests/m3-acceptance.test.mjs:93）；第一笔后铜钱对应 world_upgrade.json 第一回合的 equals',
+ return {approximate:'近似：原测试前两步在旧世界版本的服务器上做，再导出导入当前世界（写 world_update 记录、升级迁移），第三笔在导入后做；这里全程在当前世界、同一份文档上连做，不经导出导入。差别只在升级迁移是否影响面包价格，需复算者另行确认。',compares:'玩家最终铜钱 finalDocument.state.player.coins（tests/m3-acceptance.test.mjs:93）；第一笔后铜钱对应 world_upgrade.json 第一回合的 equals',
   startCoins:start,afterLodge,afterBread1:coins1,final:ctx.doc.state.player.coins,wage:wageView(engine,ctx.doc),
   bills:{lodge:start-afterLodge,bread1:afterLodge-coins1,bread2:coins1-ctx.doc.state.player.coins},
   steps:{move:{ok:move.ok,error:move.error},lodge:{ok:lodge.ok,error:lodge.error},bread1:{ok:bread1.ok,error:bread1.error,cost:bread1.result?.cost,pricing:bread1.result?.pricing},bread2:{ok:bread2.ok,error:bread2.error,cost:bread2.result?.cost,pricing:bread2.result?.pricing}},
@@ -266,7 +283,7 @@ async function haggle7(){
  const w=structuredClone(world);
  w.npcs.find(n=>n.id===NPC).schedule={default:[{start:0,end:1440,location:INN,activity:'营业',services:['trade']}]};
  w.items.find(i=>i.id==='item_bread').basePrice=100;
- const engine=new WorldEngine(w),doc=engine.initialFromLegacy(legacy,SEED);
+ const engine=new WorldEngine(w),doc=engine.initialFromLegacy(legacy,'playtest-fixed-seed-v1'); // 服务器默认创建种子（tools/playtest-runner.mjs:23），scene() 之后才改种子
  doc.randomSeed=SEED;doc.state.location=INN;
  for(const row of Object.values(doc.state.records??{}))if(Number.isSafeInteger(row.lastDay))row.lastDay=Math.floor(540/DAY)-1;
  skipTo(engine,doc,540);
@@ -282,7 +299,7 @@ async function haggle7(){
  const opening=unit===undefined?null:await attempt(ctx,'还价第 1 轮（按首笔单价上取整）','world_act',{action:'core:dialogue.haggle',slots:{subject:NPC,content:String(Math.ceil(unit)),source:'item_bread'}},'ui-3');
  const obs1=observe();
  const second=offered===null?null:await attempt(ctx,'还价第 2 轮（首笔单价 ×0.95 上取整）','world_act',{action:'core:dialogue.haggle',slots:{subject:NPC,content:String(offered),source:'item_bread'}},'ui-4');
- return {compares:'第二轮 result.dialogue.decision.outcome（tests/a2-dialogue.test.mjs:85）；首笔 cost（:77，云上通过）',
+ return {compares:'第二轮 result.dialogue.decision.outcome（tests/a2-dialogue.test.mjs:85）；首笔 cost（:77）',
   wage:wageView(engine,ctx.doc),pre,buy:{ok:buy.ok,error:buy.error,cost:buy.result?.cost,pricing:buy.result?.pricing},firstUnitPrice:unit??null,offered,
   observedListPriceBeforeRound1:obs0,observedListPriceBeforeRound2:obs1,bargainingRule:bargaining,
   afterBuyMarket:marketView(engine,ctx.doc,'item_bread',INN),
