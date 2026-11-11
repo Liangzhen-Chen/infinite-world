@@ -17,8 +17,9 @@ import {stateReader} from '../server-plugin/valuation.mjs';
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan';
 const receipt=f=>f.d.get('state','family','meals','water-house');
-function fixture({home='loc_hw',bread=0}={}){
+function fixture({home='loc_hw',bread=0,near}={}){
  const w=structuredClone(world);
+ if(near!==undefined)w.rules.householdSubsistence.nearWaterRoundTripMinutes=near;
  w.households=[{id:'water-house',members:[A,B],homeLocation:home,settlement:'loc_hw'}];
  for(const n of w.npcs){delete n.tier;n.schedule={default:[[0,480],[480,720],[720,780],[780,1020],[1020,1440]].map(([start,end])=>({start,end,location:'loc_hw',activity:start===720?'午饭':start===0||start===1020?'睡眠':'日常起居',services:[]}))};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'free-water');
@@ -114,13 +115,13 @@ test('主观读：只凭住处往返分钟（near 分支）知道有水可取，
  assert.equal(seen.market.freeWater.hydration,144);assert.equal(seen.procurementShortfall.hydration,0);
  // 同一状态的客观读看得到水被污染：免费水为 0（主观与客观的差额由午夜实取记入缺口，不在读时预知）。
  assert.equal(read(f.d,f).market.freeWater.hydration,0);
- // 远处水源：阈值保持真实值，换一个住处，其到水源地点的往返步行分钟确实大于 nearWaterRoundTripMinutes；主观读不扣，只买。
- const probe=fixture(),threshold=probe.e.rules.householdSubsistence.nearWaterRoundTripMinutes,source=basinOf(probe).location;
- const roundTrip=id=>{try{return 2*probe.e.route(id,source,'walk',0,probe.doc.randomSeed).minutes;}catch{return null;}};
- // 取往返最远的地点（路网分钟与 near 判定用的距离口径可能不同，取最远者以拉开余量），前提由下面的 householdSubsistencePlan 断言核对。
- const home=probe.e.world.locations.map(l=>l.id).sort().map(id=>[id,roundTrip(id)]).filter(([,m])=>m!==null&&m>threshold).sort((a,b)=>b[1]-a[1])[0]?.[0];
- assert.ok(home,'前提：世界里存在往返分钟大于 nearWaterRoundTripMinutes 的住处');
- const far=fixture({home});
+ // 远处水源：世界里每个聚落都有自己派生的水池，没有哪个住处离所有水源都超过 30 分钟，所以“远”只能由阈值与住处距离的关系造出：
+ // 住处 bld_hw_herbs 到水源地点 loc_hw 的往返步行分钟（数据：路网 0.283km，走速 walkKmh，2×ceil(0.283×60÷4)=10）大于夹具里把 nearWaterRoundTripMinutes 调成的 0（规则参数，不造地点）；
+ // 阈值 0 的含义是“只有住处就在水源上才算邻近”。主观读不扣，只买。
+ const home='bld_hw_herbs',probe=fixture({home,near:0});
+ const leg=probe.e.world.routes.find(r=>[r.from,r.to].includes(home)&&[r.from,r.to].includes(basinOf(probe).location));
+ assert.ok(2*Math.ceil(leg.lengthKm*60/probe.e.rules.travel.walkKmh)>probe.e.rules.householdSubsistence.nearWaterRoundTripMinutes,'前提：住处往返分钟大于阈值');
+ const far=probe;
  // 前提与实现同口径：householdSubsistencePlan 走 sourceGeography 候选与 2×ceil(distance×60/walkKmh) 的 near 判定（注册函数主观分支用的同一份）；远处住处不得走 near 分支。
  const farPlan=householdSubsistencePlan(far.e,far.d.get('state'),A,480);
  assert.ok(!farPlan?.water?.near,'前提：该住处按 near 口径不在邻近范围');

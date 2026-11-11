@@ -249,6 +249,8 @@ const noonRead=(f,doc,id)=>{
     const projected={...doc,state:{...state,minute:720,npcs:{...state.npcs,[id]:{...state.npcs[id],location:slot.location,activity:slot.activity}}}};
     return {document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
 };
+// 诊断（断言失败时随消息输出）：该居民正午投影上的预算来源与购买计划概况。
+const planDiag=(f,doc,id)=>{const r=noonRead(f,doc,id),m=householdBudget(r,f.engine,id).resources.market;return JSON.stringify({minute:r.document.state.minute,at:r.document.state.npcs[id].location,cash:m.cash,offered:m.offered,purchases:m.purchases.map(p=>[p.source,p.item,p.quantity,p.at,p.unitPrice]),free:m.freeWater});};
 const plannedAtShop=(f,doc,id,item)=>householdBudget(noonRead(f,doc,id),f.engine,id).resources.market.purchases
     .filter(p=>p.source===SHOP&&p.item===item&&p.at<=720+customerReachMinutes(f.engine)).reduce((n,p)=>n+p.quantity,0);
 const quoteAtShop=(f,doc,buyer,item,quantity)=>{
@@ -268,7 +270,7 @@ test('F026 客流：陶枝单独在场（徐玲无钱不上门）：件数与应
     const flow=Object.values(f.document.state.records).filter(r=>r.category==='customer_flow'&&r.shop===SHOP);
     // 货架顺序（restock）：面包、烙饼、口粮；每件货的件数 = 计划里这家店该货的数量，应付 = 前态 marketQuote（不同货互不影响供需）。
     const expected=['item_bread','item_oat_flatbread','item_ration'].flatMap(item=>{const q=plannedAtShop(f,before,E,item);return q>0?[[E,item,q,quoteAtShop(f,before,E,item,q),'bought']]:[];});
-    assert.ok(expected.length>0);
+    assert.ok(expected.length>0,planDiag(f,before,E));
     assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),expected);
 });
 
@@ -325,7 +327,7 @@ test('F026 客流：玩家开店营业一天，只有有需求、有钱、够得
     // 徐玲：件数 = 预算购买计划里这家店面包的数量（与 serve 的 wants 同一读法：正午投影文档上的 householdBudget market.purchases）；
     // 无约束的需求是 ceil(60÷面包饱腹)，计划再受卖家份额、现金、单餐额度约束，这里两者都断言。应付 = marketQuote（serve 同一参数链）。
     const qA=plannedAtShop(f,before,A,'item_bread');
-    assert.equal(qA,Math.ceil(60/breadSatiety));
+    assert.equal(qA,Math.ceil(60/breadSatiety),planDiag(f,before,A));
     assert.deepEqual(aVisits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.outcome]),[[A,'item_bread',qA,quoteAtShop(f,before,A,'item_bread',qA),'bought']]);
     // 不变量 8：成交的每件货都在预算购买计划里（NPC 店只认计划）。
     for(const v of native[0].visits)assert.ok(plannedAtShop(f,before,v.npc,v.item)>0,v.item);

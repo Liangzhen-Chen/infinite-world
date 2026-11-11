@@ -48,9 +48,11 @@ test('A3 D05: ordering real cooked dishes costs the two quoted prices and 25 min
  f.document=applyPatches(f.document,registration.patches);const before=structuredClone(f.document);
  const slots={subject:SELLER,item:BREAD,side:STEW},input='a3-order-meal';
  const {out,after}=await act(f,'core:eat.order',slots,input);
- // 应付 = 两道菜各一份的现价之和（引擎同一报价路径 currentTradeQuote，前态读取）。WATER-1B 后炖菜水分按质量守恒派生（64，原继承 45），
- // 水分供给进入价格链，总价由旧值 11 变为现价；期望从引擎报价读，不手改数字。
- const quoted=[BREAD,STEW].reduce((n,item)=>n+facilityRuntime().currentTradeQuote(f.engine,before,{buyer:'player',seller:SELLER,item,quantity:1,location:INN}).totalCoins,0);
+ // 应付 = 两道菜依次各买一份的现价之和：第一道取前态现价，第二道取“第一道成交后”的现价（同一卖家的供需随成交变化，不能都按前态报价；
+ // 第一道成交后的状态由只点第一道的真实订餐得到）。WATER-1B/卖家预留随炖菜水分派生而变，总价由旧值 11 变为现价；期望从引擎报价读，不手改数字。
+ const quoteOf=(doc,item)=>facilityRuntime().currentTradeQuote(f.engine,doc,{buyer:'player',seller:SELLER,item,quantity:1,location:INN}).totalCoins;
+ const firstOnly=await act(f,'core:eat.order',{subject:SELLER,item:BREAD},'a3-order-first');
+ const quoted=quoteOf(before,BREAD)+quoteOf(firstOnly.after,STEW);
  assert.equal(out.result.paid,quoted);assert.equal(after.state.player.coins,before.state.player.coins-quoted);
  const event=after.state.records[`world_event:${input}`];
  assert.equal(event.verb,'trade');assert.equal(event.target,SELLER);assert.equal(event.value,quoted);
