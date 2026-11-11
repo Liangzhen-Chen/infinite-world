@@ -299,30 +299,17 @@ async function flow11(){
  const opened=await attempt(ctx,'营业','world_act',{action:'core:settlement.business_open',slots:{business}},'w4-open');
  const before={ration:marketView(engine,ctx.doc,'item_ration',place),bread:marketView(engine,ctx.doc,'item_bread',place),items:[itemFacts(engine,'item_ration'),itemFacts(engine,'item_bread')]};
  // 徐玲日前的家户采购预算（解释她为何在柜台买完后还去原生店买）：采购缺口、预算期内采购计划。
- // 徐玲客流前一刻（minute 719，客流在 720 决定）的家户采购预算诊断；在文档副本上推进，不影响主运行。
- const diag=await (async()=>{
-  const out={};
-  try{
-   const c2={engine,doc:structuredClone(ctx.doc)};
-   const to719=await attempt(c2,'推进到 719','world_time',{minutes:719-c2.doc.state.minute},'w4-diag-719');
-   out.advanced={ok:to719.ok,error:to719.error,minute:c2.doc.state.minute};
-   out.mealCap={ration:mealCapOf(engine,'item_ration'),flatbread:mealCapOf(engine,'item_oat_flatbread'),bread:mealCapOf(engine,'item_bread')};
-   out.itemMg={ration:itemMg(engine,'item_ration'),flatbread:itemMg(engine,'item_oat_flatbread'),bread:itemMg(engine,'item_bread')};
-   out.at719Before=budgetDiag(engine,c2.doc,A);out.at719Before_kernelNullView=budgetDiag(engine,c2.doc,A,true);
-   // 合成对照（不是引擎推进的结果）：在副本里给她 3 份口粮并扣 4 铜，等于柜台买完之后，再取一次缺口。
-   const n=c2.doc.state.npcs[A],held=quantityOf(n.inventory?.item_ration);
-   n.inventory={...(n.inventory??{}),item_ration:{quantity:held+3,quality:'木'}};n.coins-=4;
-   out.at719AfterThreeRations_synthetic=budgetDiag(engine,c2.doc,A);out.at719AfterThreeRations_synthetic_kernelNullView=budgetDiag(engine,c2.doc,A,true);
-  }catch(e){out.error=errorOf(e);}
-  return out;
- })();
  const preWait=structuredClone(ctx.doc);
  const m=ctx.doc.state.minute,waited=await attempt(ctx,'等过午夜','world_time',{minutes:DAY-(m%DAY)+30},'w4-player-day');
  // 719 诊断副本与主线的差异：主线一次推到底（eventId w4-player-day），副本分两段（w4-diag-719 + w4-diag-rest）；这里另取一份不含合成改动的分段副本，推到与主线相同的分钟，逐项比对。
+ // 客流决策时刻与徐玲两笔购买从主线的客流记录读出（不写死 720/719、不写死份数与金额）。
+ const aFlows=Object.values(ctx.doc.state.records).filter(r=>r.category==='customer_flow').flatMap(r=>(r.visits??[]).filter(v=>v.npc===A).map(v=>({shop:r.shop,minute:r.minute,...v})));
+ const counterVisit=aFlows.find(v=>v.shop===business)??null,nativeVisit=aFlows.find(v=>v.shop!==business)??null,probeMinute=counterVisit?counterVisit.minute-1:null;
  const splitDiff=await (async()=>{
   try{
+   if(probeMinute===null)return {skipped:'前提未满足：主线 customer_flow 里找不到徐玲在柜台（business）那一笔'};
    const c3={engine,doc:structuredClone(preWait)};
-   await step(c3,'world_time',{minutes:719-c3.doc.state.minute},'w4-diag-719');
+   await step(c3,'world_time',{minutes:probeMinute-c3.doc.state.minute},'w4-diag-719');
    await step(c3,'world_time',{minutes:ctx.doc.state.minute-c3.doc.state.minute},'w4-diag-rest');
    const pick=doc=>({minute:doc.state.minute,xulingCoins:doc.state.npcs[A].coins,xulingInventory:doc.state.npcs[A].inventory,playerInventory:doc.state.inventory,
     flows:Object.values(doc.state.records).filter(r=>r.category==='customer_flow').map(r=>({shop:r.shop,day:r.day,minute:r.minute,visits:r.visits})),
@@ -330,6 +317,24 @@ async function flow11(){
    const a=pick(ctx.doc),b=pick(c3.doc);
    return {main:a,splitRun:b,identical:JSON.stringify(a)===JSON.stringify(b),differingKeys:Object.keys(a).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k]))};
   }catch(e){return {error:errorOf(e)};}
+ })();
+ // 徐玲客流前一刻（客流记录的 minute−1）的家户采购预算诊断；在文档副本上推进，不影响主线。合成对照的份数与现金取主线柜台那一笔的 quantity、paid。
+ const diag=await (async()=>{
+  const out={counterVisit,nativeVisit,probeMinute};
+  try{
+   if(!counterVisit){out.syntheticSkipped='前提未满足：主线 customer_flow 里找不到徐玲在柜台（business）那一笔，不做合成对照';return out;}
+   const c2={engine,doc:structuredClone(preWait)};
+   const to719=await attempt(c2,'推进到客流前一刻','world_time',{minutes:probeMinute-c2.doc.state.minute},'w4-diag-719');
+   out.advanced={ok:to719.ok,error:to719.error,minute:c2.doc.state.minute};
+   out.mealCap={ration:mealCapOf(engine,'item_ration'),flatbread:mealCapOf(engine,'item_oat_flatbread'),bread:mealCapOf(engine,'item_bread')};
+   out.itemMg={ration:itemMg(engine,'item_ration'),flatbread:itemMg(engine,'item_oat_flatbread'),bread:itemMg(engine,'item_bread')};
+   out.at719Before=budgetDiag(engine,c2.doc,A);out.at719Before_kernelNullView=budgetDiag(engine,c2.doc,A,true);
+   // 合成对照（不是引擎推进的结果）：在副本里给她柜台那一笔的份数并扣那一笔的金额，等于柜台买完之后，再取一次缺口。
+   const n=c2.doc.state.npcs[A],held=quantityOf(n.inventory?.[counterVisit.item]);
+   n.inventory={...(n.inventory??{}),[counterVisit.item]:{quantity:held+counterVisit.quantity,quality:'木'}};n.coins-=counterVisit.paid;
+   out.at719AfterThreeRations_synthetic=budgetDiag(engine,c2.doc,A);out.at719AfterThreeRations_synthetic_kernelNullView=budgetDiag(engine,c2.doc,A,true);
+  }catch(e){out.error=errorOf(e);}
+  return out;
  })();
  const flows=Object.values(ctx.doc.state.records).filter(r=>r.category==='customer_flow'&&r.shop===business);
  const acct=Object.values(ctx.doc.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
