@@ -10,6 +10,7 @@ import {materializeRuntimeWorld, mechanicsCollections} from '../server-plugin/ru
 import {canonical} from '../server-plugin/storage.mjs';
 import {readApprovedSupersedes, revertSuperseded} from '../tools/approved-revisions.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {drinkableByRule} from '../server-plugin/item-class.mjs';
 import {entriesFor as matpropsEntries, draftRoot as matpropsDraftRoot, condimentCard, cardProfiles, summarizeApproval, verifyAll} from '../world/design/matprops-approval.mjs';
 
 const J = rel => JSON.parse(fs.readFileSync(rel, 'utf8'));
@@ -45,7 +46,11 @@ test('每个审批批次里通过的整行回执，正式文件里的行与其�
     }
   }
   assert.ok(approved.size > 50);
-  const changed = [...approved].filter(([id, rows]) => !rows.includes(JSON.stringify(formalAsApproved.get(id)))).map(([id]) => id);
+  // 能喝（drinkable）一律由规则派生（item-class.mjs drinkableByRule），不手贴：规则派生出的 id，已审回执里的手贴 drinkable 与派生结果一致即视为满足，
+  // 两边都去掉该标签再逐字比对；其余字段与不由规则派生的 id 仍逐字比。
+  const derivedDrinkable = drinkableByRule(await loadRuntimeWorld());
+  const dropDerived = r => derivedDrinkable.has(r?.id) && Array.isArray(r.tags) ? {...r, tags: r.tags.filter(t => t !== 'drinkable')} : r;
+  const changed = [...approved].filter(([id, rows]) => !rows.map(x => JSON.stringify(dropDerived(JSON.parse(x)))).includes(JSON.stringify(dropDerived(formalAsApproved.get(id))))).map(([id]) => id);
   assert.deepEqual(changed, []);
   // D12 的判定口径是 matprops-approval 的正式判定（L2 通过或人工核定），这里不另写规则：
   // ① 每个 D12 目录里出现的记录，entriesFor 没覆盖到的一律失败并列出；② 两张卡逐条用 summarizeApproval 的结论对账（未决为空，通过+人工 = 该卡条目数）；③ verifyAll 整体通过。

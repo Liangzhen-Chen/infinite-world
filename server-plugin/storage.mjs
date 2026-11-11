@@ -198,7 +198,7 @@ function deadPatchValues(patches) {
 // memo hit also recompute the answer from the records and compare; a mismatch throws and
 // is also kept in recordIndexCheck.violations (a caller's try/catch cannot hide it).
 const INDEXED = new Set(['kind', 'category']);
-const recordIndexes = new WeakMap();
+let recordIndexes = new WeakMap();
 const memoIgnores = Symbol('memo ignored categories');
 // Carry only classification buckets across a cursor write. Derived memos may
 // depend on any field and must be rebuilt; unrelated buckets retain identity.
@@ -386,6 +386,11 @@ let readEpoch = 0;
 export const recordReadEpoch = () => readEpoch;
 export function withReadIndex(task) {
     if (recordIndexDepth) return task();
+    // Outside an advance nothing guarantees records were only written through a cursor or setRecordRow (a planner or
+    // fixture may have edited a plain state in place since the last scope), and indexes/memos live in a WeakMap keyed
+    // by the records object, so they outlive their scope. Start every outermost read scope from empty indexes: a read
+    // then reflects the current rows. Indexes are still shared inside the scope and kept current by cursor writes.
+    recordIndexes = new WeakMap();
     readEpoch++;
     try { return withRecordIndex(task); } finally { readEpoch++; }
 }

@@ -18,8 +18,11 @@ import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const clerk='npc_bs_031_2',handler='npc_bs_035_1',guard='npc_hw_gucen',victim='npc_hw_linsui',thief='npc_hw_hezhou';
 const cases=d=>Object.values(d.state.records).filter(r=>r.category==='legal_case');
-function scene(w=world){
- const engine=new WorldEngine(w),initial=engine.createCharacter(seed,{},'s406-filing');
+// posted：作息里此刻在某地办公的人（如 600 分时在公署的镇长），要在第一次时钟节拍之前就摆到他的岗位；
+// 节拍之后再摆位，他已按作息出发（scheduleTravel），摆位报 travelling。
+function scene(w=world,{posted=[]}={}){
+ const engine=new WorldEngine(w);let initial=engine.createCharacter(seed,{},'s406-filing');
+ if(posted.length)initial=officeScene(engine,initial,{location:'bld_bs_office',minute:600,present:posted});
  // 前置条件按作息来：600 分时 linsui、hezhou 的作息就在青灯（前厅接待/预约接待），而 gucen 的作息在村口
  // （loc_hw_gate 村口巡查，480-720）。把他摆在青灯是把一个当值守卫放在岗位之外；引擎只在下一次无关的时钟节拍里
  // 才结算作息，节拍一出现他就出发（见 tools/probe-gucen-travel.mjs）。所以盗窃现场只放 victim、thief，
@@ -208,8 +211,9 @@ test('罪名未登记时由经办规则拒收；调用方不能代填经办人�
 });
 
 test('玩家须经过真实任命并在岗，才可自行受理或给出拒绝理由',async()=>{
- const f=scene(),{report}=await submitted(f),name='office_bs_case_handler';
- f.document=officeScene(f.engine,f.document,{location:'bld_bs_office',minute:f.document.state.minute,present:['npc_bs_townhead']});
+ const f=scene(world,{posted:['npc_bs_townhead']}),{report}=await submitted(f),name='office_bs_case_handler';
+ // 镇长 600 分时作息在公署（480-720），已在 scene 里按作息摆位；此处只是玩家去公署，不再替他摆位。
+ f.document=officeScene(f.engine,f.document,{location:'bld_bs_office',minute:f.document.state.minute});
  let step=await officeCall(f.engine,f.document,'apply',{name},'player-filing-apply');f.document=step.document;
  const application=step.result.application;
  await act(f,'core:time',{minutes:60},'player-filing-review-wait');
