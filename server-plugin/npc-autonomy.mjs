@@ -83,7 +83,9 @@ function assertPresentAtCompletion(engine,state,who,presence,{taskId,at,itinerar
  if(!itinerary){if(!awake(engine,state,who,n)||n.location!==presence.npcs[who]?.location)fail();return;}
  const place=tripPlaceAtFinish(state,who,taskId);
  if(place===undefined)fail();
- if(!(n.location===place||place&&n.location===null&&n.scheduleTravel?.from===place))fail();
+ // 当天往返的行程（完成时刻 firstDayEnd 即 returnAt）此刻已结束，身体由常规作息接管：回到作息所在处也算在场；被移到别处仍判离开。
+ const trip=recordsWhere(state.records,'category','market_trip').find(r=>r.sourceEvent===taskId&&r.actor===who),home=trip&&Math.min(state.minute,state.npcAutonomy.tasks[taskId].finish)>=trip.returnAt?scheduleAt(engine,who,state.minute,state)?.location:undefined;
+ if(!(n.location===place||home!==undefined&&n.location===home||place&&n.location===null&&n.scheduleTravel?.from===place))fail();
 }
 function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false,taskId}={}){
  const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1));let furnace,work;

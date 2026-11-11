@@ -65,7 +65,7 @@ test('每种自主任务完成时都要执行者在场且清醒：移走或失�
  const seen=new Map();
  for(let day=0;day<5;day++){const {engine,d}=await setup();advance(d,engine,day*1440+600);
   for(const t of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(t.status==='进行中'&&!seen.has(t.action.kind))seen.set(t.action.kind,{day,id:t.id,itinerary:Boolean(t.itinerary)});}
- assert.ok([...seen.values()].some(v=>v.itinerary),'世界里应出现行程类自主任务');assert.ok([...seen.values()].some(v=>!v.itinerary),'世界里应出现静止类自主任务');
+ assert.ok([...seen.values()].some(v=>v.itinerary),'世界里应出现行程类自主任务');assert.ok([...seen.keys()].some(k=>k.startsWith('labor_')),`世界里 5 天内应出现 labor_* 行程任务，实际只有：${[...seen.keys()].join(',')}`);assert.ok([...seen.values()].some(v=>!v.itinerary),'世界里应出现静止类自主任务');
  const run=async({day,id},change)=>{const {engine,d}=await setup();advance(d,engine,day*1440+600);const task=d.get('state','npcAutonomy','tasks',id);assert.equal(task.status,'进行中');
   const materials=task.action.kind==='craft'?engine.byId.get(task.action.recipe).materials.map(m=>[m.item,count(d,task.npc,m.item)]):[];
   if(change==='location')d.set(['state','npcs',task.npc,'location'],d.get('state','npcs',task.npc,'location')==='loc_hw'?'loc_capital':'loc_hw');
@@ -75,7 +75,7 @@ test('每种自主任务完成时都要执行者在场且清醒：移走或失�
   const ok=await run(seed,null);assert.equal(ok.d.get('state','npcAutonomy','tasks',seed.id,'reason'),undefined,`${kind} 全程在场不应被拒`);assert.ok(ok.d.get('state','npcAutonomy','actions',seed.id),`${kind} 全程在场应有行动记录`);
   for(const change of ['location','status']){
    const {d,task,materials}=await run(seed,change);
-   assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
+   assert.match(d.get('state','npcAutonomy','tasks',seed.id,'reason')??'',/工作完成时人物已离开或不能继续行动/,`${kind} 失败原因应是完成时在场判定`);assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
    assert.equal(d.get('state','npcAutonomy','actions',seed.id),undefined,`${kind} 不应产生行动记录`);
    for(const [item,n] of materials)assert.equal(count(d,task.npc,item),n,`${kind} 不应扣料`);
   }
