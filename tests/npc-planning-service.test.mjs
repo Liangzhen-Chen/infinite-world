@@ -14,7 +14,8 @@ test('智能规划在动作后冻结入账；同日、重复请求和导入回�
     const planner=async(engine,document)=>{calls++;return{status:'ready',input:{type:'npc_plan',plan:{kind:'npc-plan',version:1,minute:document.state.minute,stateFingerprint:npcPlanFingerprint(document),proposals:[]}}};};
     const app=express();app.use(express.json({limit:'50mb'}));const router=express.Router();await init(router,{baseRoot:root,npcPlanner:planner,npcPlanningEnabled:true});app.use(router);
     const server=app.listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>server.close());
-    const api=async(endpoint,body)=>{const r=await fetch(`http://127.0.0.1:${server.address().port}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();assert.equal(r.status,200,data.error);return data;};
+// AI-01: this scenario exercises a model-gated server entry, so its requests declare T3 (default is T0, no AI).
+    const api=async(endpoint,body)=>{const r=await fetch(`http://127.0.0.1:${server.address().port}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','X-AI-Profile':'T3'},body:JSON.stringify(body)});const data=await r.json();assert.equal(r.status,200,data.error);return data;};
     const initial=await api('create',{name:'规划测试'}),campaignId=initial.reference.campaignId;
     const moved=await api('execute',{campaignId,tool:'world_move',args:{destination:'loc_hw'},eventId:'leave',anchor:'move-anchor'});
     assert.equal(calls,1);assert.equal(moved.npcPlanning.status,'applied');assert.equal(moved.document.state.npcPlanning.day,0);

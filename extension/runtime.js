@@ -480,7 +480,7 @@ async function afterReply(index){
     if(session&&message.extra?.fields_tool_retry?.token===session.token&&message.extra.fields_tool_retry.attempted)session.retryStarted=true;
     message.extra??={};message.mes=WAITING;
     if(Array.isArray(message.swipes)&&Number.isInteger(message.swipe_id))message.swipes[message.swipe_id]=WAITING;
-    message.extra.fields_narration_pending='sync';
+    message.extra.fields_narration_pending=true;
     const element=document.querySelector(`.mes[mesid="${index}"]`);element?.classList.remove('fields-review-visible');
     const current=()=>ctx().chatId===chatId&&session===reviewTurn&&ctx().chat[index]===message&&message.mes===WAITING&&!message.extra?.fields_invalidated&&(reviewEdits.get(message)??0)===editVersion&&session?.anchor===anchor();
     const publish=text=>{

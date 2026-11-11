@@ -21,7 +21,11 @@ import {finishContractTurn,turnFactsPrompt} from '../extension/turn-contract.mjs
 // 试玩/测试层的确定种子：真实开档仍是 randomUUID（server-plugin/index.mjs），
 // 但试玩验收与测试入口默认固定此常量，保证价格/稀缺度等数值逐次可复演；显式 seed:'random' 才随机。
 export const PLAYTEST_SEED='playtest-fixed-seed-v1';
-export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null}={}){
+export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClient,consistencyClient=plannerClient??null,consistencyEnabled=true,directory:persistentDirectory=null,aiProfile}={}){
+    // The profile is stated, never silent: an explicit value wins; otherwise a supplied model client (planner or consistency review) means T3, none means T0.
+    // The chosen profile is sent as X-AI-Profile on every request and returned on the server object so reports can record it.
+    if(aiProfile!==undefined&&!['T0','T1','T2','T3'].includes(aiProfile))throw new Error('aiProfile 须为 T0/T1/T2/T3');
+    aiProfile??=(plannerClient||(consistencyEnabled&&consistencyClient))?'T3':'T0';
     const seedMode=seed==='random'?'random':(typeof seed==='string'&&seed?'fixed':null);
     if(!seedMode)throw new Error("createPlaytestServer 的 seed 必须是非空字符串或 'random'");
     const directory=persistentDirectory?path.resolve(persistentDirectory):await fs.mkdtemp(path.join(tmpRoot(),'fields-playtests-'));await fs.mkdir(directory,{recursive:true});
@@ -34,12 +38,12 @@ export async function createPlaytestServer({world,seed=PLAYTEST_SEED,plannerClie
     const api=async(endpoint,body={})=>{
         // Long synchronous world advances delay the local server's idle-socket
         // timers. A subsequent request must not reuse a socket being closed.
-        const response=await fetch(`${origin}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close'},body:JSON.stringify(body)});
+        const response=await fetch(`${origin}/${endpoint}`,{method:'POST',headers:{'Content-Type':'application/json','Connection':'close','X-AI-Profile':aiProfile},body:JSON.stringify(body)});
         const data=await response.json();if(!response.ok||data.ok===false){const error=new Error(data.error??`HTTP ${response.status}`);error.httpStatus=response.status;throw error;}return data;
     };
     // seedMode：这次实际用的是确定种子('fixed')还是随机种子('random')；包装层必须透传，runPlaytest 据此守门。
     api.seedMode=seedMode;
-    return{api,seedMode,seed:seedMode==='fixed'?seed:null,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
+    return{api,aiProfile,seedMode,seed:seedMode==='fixed'?seed:null,directory,close:async()=>{await new Promise(resolve=>server.close(resolve));if(!persistentDirectory)await fs.rm(directory,{recursive:true,force:true});}};
 }
 
 export async function runPlaytest({scenario,api,client,bundle,seed=PLAYTEST_SEED,attempt=1,processMessages=messages=>messages,countTokens=null,historyWindow={},session=null,stopOnFailure=false}={}){

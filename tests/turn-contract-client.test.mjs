@@ -153,7 +153,7 @@ test('实际 afterReply 接点：等待改写时隐藏且隔离原稿，通过�
  const element={setAttribute:()=>{},classList:{remove:name=>classes.delete(name),add:name=>classes.add(name)},querySelector:()=>null};
  const env={active:()=>true,get view(){return view;},set view(value){view=value;},mode:'normal',blocked:null,ctx:()=>context,turnStart:startMinute,reviewTurn:session,
   reviewing:new WeakMap(),reviewEdits:new WeakMap(),WAITING:'正在核对',reviewsPending:0,indexedMessages:[],
-  document:{querySelector:()=>element},render:()=>{text.hidden=message.extra?.fields_narration_pending==='sync';},
+  document:{querySelector:()=>element},render:()=>{text.hidden=message.extra?.fields_narration_pending===true;},
   getActionModes:()=>({intent:'propose',narration:'sync'}),getSettings:()=>({}),toolDefinitions,modelToolAllowed,parseTurn,isOutOfCharacter,
   anchor:()=>env.reviewTurn.anchor,finishContractTurn,publishedTurnText,controlledGenerate:()=>{throw Error('本测试已有裁决，不应补跑');},
   api:async(name,body)=>{endpoints.push({name,body});return server.api(name,body);},
