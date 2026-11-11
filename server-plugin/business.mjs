@@ -689,6 +689,8 @@ const shelfOf=(d,engine,shop)=>shop.kind==='player'
 // 跟进卡 WATER-1C：玩家柜台以注入方式登记为家户食物来源，并入单一购买次序。
 // 玩家店只在 business.mjs 的 openShops（本文件 :655-670，按租约柜台与 state.inventory 现算）里存在，shop.mjs 不能反向 import business（环），
 // 且玩家店的报价要走柜台、商税与主观报价，household-budget 的来源需要 unitPrice/at/quantity 的预算口径，没有现成读法。
+// 实测（探针取证）：serve 里 NPC 顾客读到的是主观预算，主观来源只含本人店（shop.mjs:346 view&&shop.keeper!==owner，已批准的知识规则），
+// 所以真实客流里原生店也不在计划来源里，成交实际全走下面的储备缺口路径；“同序”（所有货架共用预算购买次序）待 WATER-1C：让顾客在店内可观察该店货价，并连同玩家店、非原生店一并并入。
 // 计划读取（read）与成交判定用同一份正午投影文档（居民正午位置、正午分钟）。判定只看“这家店是不是计划的来源”（market.offered，来源编号）：
 // 在则按 market.purchases 取这件货的份数（计划里没有就是 0），不在则按储备缺口折份数；不随前一件货的结局切换，也不按店型或编号特判。
 // 不在计划来源里的店目前有玩家店与非原生 NPC 自营商户（openShops :658-665，开门条件在本文件，shop.mjs 不能反向 import 本文件，复制一份开门判定会造成两处口径）；
