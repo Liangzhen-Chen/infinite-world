@@ -775,8 +775,8 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     if(d.get(...flowKey(shop.id,day,t)))return;
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
-    // 每位顾客每天对每家店至多一趟：本店今天已有 market_trip 记录（只有真正出门才写）的顾客不再来。
-    const tripped=new Set(recordsWhere(state.records,'category','market_trip').filter(r=>r.id.startsWith(`market_trip:${shop.id}:`)&&Math.floor(r.departAt/DAY)===day).map(r=>r.actor));
+    // 每位顾客每天对每家店至多一趟（到店评估即算一趟，买没买都算）：本店今天的客流记录里已有这位顾客的访问（任何结局）就不再评估。
+    const tripped=new Set(recordsWhere(state.records,'category','customer_flow').filter(r=>r.shop===shop.id&&r.day===day).flatMap(r=>r.visits.map(v=>v.npc)));
     const visits=[],keeperHome=shop.kind==='resident'?new Set(personHousehold(engine,state,shop.keeper).value?.members??[]):null;// 居民卖方不向自己同户的人卖（同一灶，不是买卖）
     for(const {id,slot,settlement} of residents){
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
@@ -784,7 +784,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
         if(id===shop.keeper||tripped.has(id)||keeperHome?.has(id)||settlement!==shop.settlement||outbound.minutes>reach)continue;
         const inbound=walkMinutes(engine,shop.location,slot.location,departAt+outbound.minutes,seed,routes);
         const travelCoins=outbound.coins+inbound.coins;
-        let travelled=false,atShop=departAt+outbound.minutes,tripRecord=null;
+        let travelled=false,atShop=departAt+outbound.minutes,tripRecord=null,evaluated=false;
         for(const item of shelf){
             const serviceAt=Math.max(atShop,routes.get(`shop-free:${shop.id}`)??t),finishAt=serviceAt+serviceMinutes,returnAt=finishAt+inbound.minutes;
             if(returnAt>(slot.until??(day+1)*DAY)||finishAt>(shop.until??(day+1)*DAY))break;
@@ -797,6 +797,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             // Recompute the current household budget after every real purchase.
             const projected={...d.document,state:{...d.get('state'),minute:t,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),location:slot.location,activity:slot.activity}}}};
             const read={document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
+            evaluated=true;// 已到店、可以逐件评估：这一趟算数（买没买都记当日访问）
             const want=wants(d,engine,id,item,gaps,t,shop,read);if(!want.quantity)continue;
             const view=subjectiveView(engine,projected,id);
             // 同一登记户共灶：预算按户池算一次（成员背包与钱袋并入，household-budget 唯一口径）；成交时钱袋不够的部分先在户内转账（householdPoolTopUp）。
@@ -847,6 +848,7 @@ function serve(d,engine,shop,t,residents,gaps,routes){
         // One visit may buy several needed goods. Commit its full interval
         // after the basket, so an actor never conflicts with their own visit.
         if(tripRecord)holdingSet(d,null,path(tripRecord.id),tripRecord,'business');
+        if(evaluated&&!visits.some(v=>v.npc===id))visits.push({npc:id,outcome:'looked'});// 到店看过没买：只记当日访问，供同日不再评估
     }
     if(visits.length)holdingSet(d,null,flowKey(shop.id,day,t),{category:'customer_flow',shop:shop.id,keeper:shop.keeper,day,minute:t,visits},'business');
 }

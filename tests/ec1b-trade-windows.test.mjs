@@ -17,24 +17,25 @@ const at=(start,end,services=[],activity='休息')=>({start,end,location:home,ac
 // 店主只在 720 起营业（货架清空时只剩居民卖方可买）；用于居民卖方用例：有营业窗口才有客流结算时刻。
 const LATE=[at(0,720),at(720,1440,['trade'],'营业')];
 const SELLER_DAY=[at(0,480),at(480,720,['trade'],'营业'),at(720,780,[],'午饭'),at(780,1080,['trade'],'营业'),at(1080,1440)];
-function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,lateCustomer=false}={}){
+function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,late=[]}={}){
  const w=structuredClone(world);
  delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
  w.households=[{id:'win-a',members:[A,B],settlement:'loc_hw',homeLocation:home},{id:'win-c',members:[C],settlement:'loc_hw',homeLocation:home},{id:'win-seller',members:[seller],settlement:'loc_hw',homeLocation:home}];
- if(lateCustomer)w.households.push({id:'win-d',members:[D],settlement:'loc_hw',homeLocation:home});
+ for(const l of late)w.households.push({id:`win-${l.id}`,members:[l.id],settlement:'loc_hw',homeLocation:home});
  for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  const awake={default:[at(0,360,[],'睡眠'),at(360,1440,[],'闲居')]};// 居民真实起居：睡到 6 点，之后醒着
  for(const n of w.npcs.filter(n=>n.id===A)){n.tier='full';n.schedule=awake;}
  for(const n of w.npcs.filter(n=>[B,C].includes(n.id))){n.schedule=awake;}
  for(const n of w.npcs.filter(n=>n.id===seller)){n.tier='full';n.schedule={default:sellerSchedule};}
- if(lateCustomer)for(const n of w.npcs.filter(n=>n.id===D)){n.tier='full';n.schedule={default:[at(0,800,[],'睡眠'),at(800,1440,[],'闲居')]};}
+ for(const l of late)for(const n of w.npcs.filter(n=>n.id===l.id)){n.tier='full';n.schedule={default:[at(0,l.wake,[],'睡眠'),at(l.wake,1440,[],'闲居')]};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'ec1b-windows');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
- doc.state.npcs=Object.fromEntries((lateCustomer?[A,B,C,D,seller]:[A,B,C,seller]).map(id=>[id,{...doc.state.npcs[id],coins:id===A||id===D?1000:id===C?5:0,inventory:{},location:home,status:'正常',activity:'休息'}]));
+ doc.state.npcs=Object.fromEntries([A,B,C,...late.map(l=>l.id),seller].map(id=>[id,{...doc.state.npcs[id],coins:id===A||late.some(l=>l.id===id)?1000:id===C?5:0,inventory:{},location:home,status:'正常',activity:'休息'}]));
 doc.state.npcs[seller].inventory=emptyShop?{}:{[item]:100};
  if(residentSale)doc.state.npcs[C].inventory={[item]:60};
+ for(const l of late)if(l.bread)doc.state.npcs[l.id].inventory={[item]:l.bread};
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:4,granary:false,food:0,foodPerDay:0,woodPerDay:0}};
  doc.ledger=openLedger(e,doc);
  return {e,doc,d:e.primitiveDraft(doc)};
@@ -118,7 +119,7 @@ test('settleSale keeps each call site its original ledger order: retail, counter
 
 test('each customer makes at most one trip per shop per day, even when later customers add later flow times',()=>{
  // 第二位顾客（徐凌）睡到 800 才醒：晚窗 [780,1080) 与他醒着段的最早交集是 800，于是当天有两个结算时刻 480 与 800；洛薇在 800 仍醒着，但上午已来过，不再来第二趟。
- const f=fixture({lateCustomer:true}),state=f.d.get('state');
+ const f=fixture({late:[{id:D,wake:800}]}),state=f.d.get('state');
  assert.deepEqual(flowTimesOfDay(f.e,state,0),[480,800]);
  advanceCustomerFlow(f.d,f.e,-1,DAY);
  const shopId=currentShops(f.e,f.d.get('state')).find(s=>s.keeper===seller).id;
@@ -126,5 +127,20 @@ test('each customer makes at most one trip per shop per day, even when later cus
  assert.equal(trips(A).length,1,'the early customer came once');
  assert.equal(trips(D).length,1,'the late customer came once, at his own flow time');
  assert.equal(trips(D)[0].departAt>=800,true);
+ assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
+});
+
+test('a customer who looked and bought nothing is not evaluated again the same day at the same shop',()=>{
+ // 徐凌（D）800 起床，家里面包充足：800 到店评估后不买（记一次 looked）；陈白（E）1000 起床是第三个结算时刻，此时 D 仍醒着，但今天已来过，不再评估。
+ const E='npc_hw_chenbai';
+ const f=fixture({late:[{id:D,wake:800,bread:200},{id:E,wake:1000}]}),state=f.d.get('state');
+ assert.deepEqual(flowTimesOfDay(f.e,state,0),[480,800,1000]);
+ advanceCustomerFlow(f.d,f.e,-1,DAY);
+ const visitsOfD=flowRecords(f).filter(r=>r.day===0).flatMap(r=>r.visits.filter(v=>v.npc===D));
+ assert.equal(visitsOfD.length,1,'D is evaluated exactly once that day');
+ assert.equal(visitsOfD[0].outcome,'looked','D came, looked and bought nothing');
+ const at1000=flowRecords(f).find(r=>r.minute===1000);
+ assert.ok(at1000&&at1000.visits.some(v=>v.npc===E&&v.outcome==='bought'),'the third customer is served at 1000');
+ assert.ok(!at1000.visits.some(v=>v.npc===D),'D is awake at 1000 but has already been evaluated today');
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
 });
