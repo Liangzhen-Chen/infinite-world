@@ -247,6 +247,15 @@ async function execute(tool,args,eventId=crypto.randomUUID(),reviewId=null){
 // 删改消息的对账不会撤销它。主持人正在回应或审查本回合时先不动手，免得混进那一回合的证据。
 let generating=false,reviewsPending=0;
 const FEED='fields_event_feed',FEED_LIMIT=40;
+// T0: no model is called, so typed text is matched by the local action catalog (AI-01 section 8) instead of being sent to a chat model.
+function noModelProfile(){return active()&&!!view&&getActionModes().intent==='off'&&getActionModes().narration==='off';}
+async function localTyping(){
+    const text=[...ctx().chat].reverse().find(message=>message.is_user)?.mes?.trim();if(!text)return;
+    const found=await api('actions',{campaignId:view.reference.campaignId,query:text,limit:5});
+    const options=(found.actions??[]).filter(a=>!a.readOnly&&a.id!=='open:proposal').map(a=>a.label??a.id);
+    recordFeed(options.length?['本地规则找到这些做法：'+options.join('、')+'。请在可做之事面板选择并确认。']:['本地规则没有找到对应的做法。请打开可做之事面板，或用构造器组合。'],'look');
+    await ctx().saveChat();
+}
 function recordFeed(lines,kind='action'){
     const metadata=ctx().chatMetadata,rows=Array.isArray(metadata[FEED])?metadata[FEED]:[];
     const entry={minute:view?.document.state.minute??null,kind,lines:lines.slice(0,12)};
@@ -646,13 +655,3 @@ window.addEventListener('message',event=>{
 });
 window.infiniteFieldsV2={load,refresh,execute,act,preview:previewUIAction,reconcile,onEdited,onDeleted,historyInterceptor,startSnapshot,enterFromStart,unlockAudio,stopAudio:()=>ambientAudio.stop(),get view(){return view;},get blocked(){return blocked;}};
 if(window.parent!==window)window.parent.postMessage({type:'fields-start-ready'},location.origin);
-
-// T0: no model is called, so typed text is matched by the local action catalog (AI-01 section 8) instead of being sent to a chat model.
-function noModelProfile(){return active()&&!!view&&getActionModes().intent==='off'&&getActionModes().narration==='off';}
-async function localTyping(){
-    const text=[...ctx().chat].reverse().find(message=>message.is_user)?.mes?.trim();if(!text)return;
-    const found=await api('actions',{campaignId:view.reference.campaignId,query:text,limit:5});
-    const options=(found.actions??[]).filter(a=>!a.readOnly&&a.id!=='open:proposal').map(a=>a.label??a.id);
-    recordFeed(options.length?['本地规则找到这些做法：'+options.join('、')+'。请在可做之事面板选择并确认。']:['本地规则没有找到对应的做法。请打开可做之事面板，或用构造器组合。'],'look');
-    await ctx().saveChat();
-}
