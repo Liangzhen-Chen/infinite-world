@@ -59,6 +59,28 @@ test('工作中离开或失能不能在完成时凭旧在场记录生产',async(
   assert.equal(d.get('state','npcAutonomy','tasks',task.id,'status'),'失败');assert.equal(count(d,actor,'item_wood'),wood);assert.equal(d.get('state','npcAutonomy','actions',task.id),undefined);
  }
 });
+// 整类不变量：完成时人在且清醒是统一判定，与任务种类无关。世界里真实出现的每一种自主任务（行程类与静止类各至少一种），
+// 执行中被移走或失能 -> 完成时判失败、无行动记录、不扣料；全程在场 -> 不因在场被拒（没有失败原因，行动记录在）。
+test('每种自主任务完成时都要执行者在场且清醒：移走或失能判失败，全程在场正常完成',async()=>{
+ const seen=new Map();
+ for(let day=0;day<5;day++){const {engine,d}=await setup();advance(d,engine,day*1440+600);
+  for(const t of Object.values(d.get('state','npcAutonomy','tasks')??{}))if(t.status==='进行中'&&!seen.has(t.action.kind))seen.set(t.action.kind,{day,id:t.id,itinerary:Boolean(t.itinerary)});}
+ assert.ok([...seen.values()].some(v=>v.itinerary),'世界里应出现行程类自主任务');assert.ok([...seen.values()].some(v=>!v.itinerary),'世界里应出现静止类自主任务');
+ const run=async({day,id},change)=>{const {engine,d}=await setup();advance(d,engine,day*1440+600);const task=d.get('state','npcAutonomy','tasks',id);assert.equal(task.status,'进行中');
+  const materials=task.action.kind==='craft'?engine.byId.get(task.action.recipe).materials.map(m=>[m.item,count(d,task.npc,m.item)]):[];
+  if(change==='location')d.set(['state','npcs',task.npc,'location'],d.get('state','npcs',task.npc,'location')==='loc_hw'?'loc_capital':'loc_hw');
+  if(change==='status')d.set(['state','npcs',task.npc,'status'],'昏迷');
+  advance(d,engine,task.finish);return {d,task,materials};};
+ for(const [kind,seed] of seen){
+  const ok=await run(seed,null);assert.equal(ok.d.get('state','npcAutonomy','tasks',seed.id,'reason'),undefined,`${kind} 全程在场不应被拒`);assert.ok(ok.d.get('state','npcAutonomy','actions',seed.id),`${kind} 全程在场应有行动记录`);
+  for(const change of ['location','status']){
+   const {d,task,materials}=await run(seed,change);
+   assert.equal(d.get('state','npcAutonomy','tasks',seed.id,'status'),'失败',`${kind} 执行者${change}变动后不应完成`);
+   assert.equal(d.get('state','npcAutonomy','actions',seed.id),undefined,`${kind} 不应产生行动记录`);
+   for(const [item,n] of materials)assert.equal(count(d,task.npc,item),n,`${kind} 不应扣料`);
+  }
+ }
+});
 test('NPC 交易双方真实同场才成交，钱和物品守恒，买方无需开店',async()=>{
  const {world,engine,d}=await setup(),seller='npc_hw_linsui',item='item_bread';d.set(['state','minute'],600);
  for(const id of [actor,seller]){world.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location:'bld_hw_qingdeng',activity:'日常活动',services:id===seller?['trade']:[]}]};d.set(['state','npcs',id,'location'],'bld_hw_qingdeng');d.set(['state','npcs',id,'activity'],'日常活动');}

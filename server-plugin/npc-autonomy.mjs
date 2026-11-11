@@ -18,8 +18,9 @@ import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
 // S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
 declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {facilityView,facilityRuntime} from './facility-state.mjs';
-import {applyPatches,digest,withLegacyUndefinedActivity,PatchCursor,withRecordIndex} from './storage.mjs';
+import {recordsWhere,applyPatches,digest,withLegacyUndefinedActivity,PatchCursor,withRecordIndex} from './storage.mjs';
 import {scheduleAt,withScheduleCache} from './npc-schedule.mjs';
+import {marketScheduleAt} from './npc-state.mjs';
 import {npcPresenceAt,shareNpcMemory} from './npc-cognition.mjs';
 import {assertNpcObligationAction,npcObligationAt} from './npc-obligations.mjs';
 import {changeItems,transferItems,heldUnit,wearItem,workmanshipTier,lostField,unitLacks} from './items.mjs';
@@ -66,10 +67,30 @@ export function npcAutonomyBusy(state,id,minute=state.minute){return Object.valu
 export function assertNpcAutonomyAction(state,actors,{start=state.minute,minutes=0}={}){
  for(const t of Object.values(state.npcAutonomy?.tasks??{}))if(t.status==='进行中'&&actors.some(id=>[t.npc,t.action.seller].includes(id))&&start<t.finish&&start+Math.max(1,minutes)>t.start)throw preconditionFailure('人物正在完成已经开始的自主工作');
 }
+// 行程类任务在完成时刻应在之处，只从它自己的 market_trip 记录（sourceEvent 即任务号）与作息读出：
+// 该刻所在段在路上则为 null（途中），否则是该段地点；已到达的路段取其终点。记录或该段不在则返回 undefined。
+function tripPlaceAtFinish(state,who,taskId){
+ const trip=recordsWhere(state.records,'category','market_trip').find(r=>r.sourceEvent===taskId&&r.actor===who),finish=state.npcAutonomy?.tasks?.[taskId]?.finish;
+ if(!trip||finish===undefined)return undefined;
+ const at=Math.min(state.minute,finish),slot=marketScheduleAt(state,who,at-1);
+ if(slot?.marketTrip!==trip.id)return undefined;
+ return slot.travel?(slot.travel.arrive>at?null:slot.travel.to):slot.location;
+}
+// 静止工作类比对开工时记下的在场处；行程类比对行程记录。两类都要求人在、能行动，不凭旧记录。
+function assertPresentAtCompletion(engine,state,who,presence,{taskId,at,itinerary}){
+ const n=state.npcs[who],fail=()=>{throw preconditionFailure('工作完成时人物已离开或不能继续行动');};
+ if(!n||isPhysicallyDead(engine,state,who)||['濒死','昏迷','患病'].includes(n.status)||personConstraint(engine,state,who,at)||state.player.companions?.includes(who))fail();
+ if(!itinerary){if(!awake(engine,state,who,n)||n.location!==presence.npcs[who]?.location)fail();return;}
+ const place=tripPlaceAtFinish(state,who,taskId);
+ if(place===undefined)fail();
+ if(!(n.location===place||place&&n.location===null&&n.scheduleTravel?.from===place))fail();
+}
 function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=d.get('state'),ignoreTask=false,taskId}={}){
  const state=d.get('state'),actor=presence.npcs[id],base=engine.byId.get(id),minutes=Math.ceil(duration(engine,action)/(action.kind==='craft'?(facilityView(engine,state,actor?.location)?.factor||1):1));let furnace,work;
  if(!full(engine,id)||!awake(engine,presence,id,actor)||personConstraint(engine,state,id,at)||state.player.companions?.includes(id))throw preconditionFailure('人物不具备独立行动条件');
  if(isPhysicallyDead(engine,state,id)||['濒死','昏迷','患病'].includes(state.npcs[id]?.status))throw preconditionFailure('人物当前无法完成工作');
+ // 完成时刻的判定与任务种类无关：执行者（及卖方）当下清醒，且在任务自己的记录所指的位置。
+ if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))assertPresentAtCompletion(engine,state,who,presence,{taskId,at,itinerary:Boolean(autonomyKind(action.kind)?.itinerary)});
  // Moving procurement uses the shared market itinerary rather than a fixed
  // workplace window. The registered kind owns both route and service checks.
  if(autonomyKind(action.kind)?.itinerary){
@@ -79,7 +100,6 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   autonomyKind(action.kind).validate(d,engine,id,action,{at,presence,actor,ignoreTask,taskId});
   return {minutes,location:action.to};
  }
- if(ignoreTask)for(const who of [id,action.seller].filter(Boolean))if(!awake(engine,state,who,state.npcs[who])||personConstraint(engine,state,who,at)||state.npcs[who].location!==presence.npcs[who]?.location)throw preconditionFailure('工作完成时人物已离开或不能继续行动');
  if(!safe(minutes)||minutes>480)throw preconditionFailure('行动耗时未登记或超过单日上限');
  if(!ignoreTask)assertNpcAutonomyAction(state,[id,action.seller].filter(Boolean),{start:at,minutes});
  assertNpcObligationAction(d,engine,[id,action.seller].filter(Boolean),{start:at,minutes,location:actor.location,kind:'autonomy'});
