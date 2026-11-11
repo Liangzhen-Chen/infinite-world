@@ -25,7 +25,8 @@ function fixture({food=false}={}){
  for(const n of w.npcs)if(ids.includes(n.id)){
   delete n.tier;
   if(n.id===buyer&&food)n.tier='full';
-  n.schedule={default:[{start:0,end:1440,location:place,activity:'休息',services:n.id===owner?['trade']:[]}]};
+  // 客流按“店营业窗口 ∩ 顾客可外出时段”的最早交集结算：店主自 720 起接待（原为全天，最早交集会落在午夜），买家全天醒着，结算时刻因此仍是 720。
+  n.schedule={default:n.id===owner?[{start:0,end:720,location:place,activity:'休息',services:[]},{start:720,end:1440,location:place,activity:'休息',services:['trade']}]:[{start:0,end:1440,location:place,activity:'休息',services:[]}]};
  }
  w.households=w.households.map(h=>({...h,members:h.members.filter(id=>!ids.includes(id))})).filter(h=>h.members.length);
  for(const id of ids)w.households.push({id:`house_${id}`,members:[id],settlement:'loc_hw',homeLocation:place,tenure:'独立家计'});

@@ -13,7 +13,7 @@ import {subjectiveView} from './subjective-view.mjs';
 import {residentSellers,settleSale,SALE_ORDER} from './market-seller.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
-import {assertNpcService,scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
+import {assertNpcService,scheduleAt,baseScheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
 import {wildlifePriceFactor} from './wildlife.mjs';
 import {assessTradeTax,tradeTax,taxableSale} from './finance-tax.mjs';
@@ -776,7 +776,8 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
     // 每位顾客每天对每家店至多一趟（到店评估即算一趟，买没买都算）：本店今天的客流记录里已有这位顾客的访问（任何结局）就不再评估。
-    const tripped=new Set(recordsWhere(state.records,'category','customer_flow').filter(r=>r.shop===shop.id&&r.day===day).flatMap(r=>r.visits.map(v=>v.npc)));
+    // 按当日各结算时刻的记录键直接取（customer_flow:店:日:分钟，时刻集合是缓存的静态集合），不全表扫描。
+    const tripped=new Set(flowTimesOfDay(engine,state,day).filter(x=>x<t).flatMap(x=>state.records?.[`customer_flow:${shop.id}:${day}:${x-day*DAY}`]?.visits??[]).map(v=>v.npc));
     const visits=[],keeperHome=shop.kind==='resident'?new Set(personHousehold(engine,state,shop.keeper).value?.members??[]):null;// 居民卖方不向自己同户的人卖（同一灶，不是买卖）
     for(const {id,slot,settlement} of residents){
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
@@ -797,8 +798,8 @@ function serve(d,engine,shop,t,residents,gaps,routes){
             // Recompute the current household budget after every real purchase.
             const projected={...d.document,state:{...d.get('state'),minute:t,npcs:{...d.get('state','npcs'),[id]:{...d.get('state','npcs',id),location:slot.location,activity:slot.activity}}}};
             const read={document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
-            evaluated=true;// 已到店、可以逐件评估：这一趟算数（买没买都记当日访问）
             const want=wants(d,engine,id,item,gaps,t,shop,read);if(!want.quantity)continue;
+            evaluated=true;// 有需求、已到店逐件评估：这一趟算数（买没买都记当日访问；没有需求的人不记，不膨胀记录）
             const view=subjectiveView(engine,projected,id);
             // 同一登记户共灶：预算按户池算一次（成员背包与钱袋并入，household-budget 唯一口径）；成交时钱袋不够的部分先在户内转账（householdPoolTopUp）。
             const budget=householdBudget(read,engine,id,{view});
@@ -855,8 +856,9 @@ function serve(d,engine,shop,t,residents,gaps,routes){
 
 // 客流结算时刻（EC-1b）：一次客流 = 某顾客与某店的一个重叠时段；顾客到店的时刻取“店营业窗口 ∩ 顾客可外出时段”里最早的那个时刻，
 // 结算时刻集合 = 全部（顾客，店）对的这个最早时刻去重。每位顾客每天对每家店至多一趟（serve 里按 market_trip 记录去重）。
-// 店侧窗口 shopWindows：NPC 店 = 店主作息里含 trade 服务的各段；玩家店 = [max(当日零点, 开张分钟 openedAt), 租约 lease.deadline)（两者都是玩家店自己的记录，
-// openShops 的玩家店分支用同一批字段判开门；玩家在铺内、柜台与租约有效是动态事实，结算那一刻由 openShops 判，不进时刻集合）。
+// 店侧窗口 shopWindows：NPC 店 = 店主作息里含 trade 服务的各段；玩家店 = 玩家此刻人在铺内（state.location===店址，openShops 同一条件；推进期间玩家留在铺里）时，
+// [max(当日零点, 开张分钟 openedAt, 玩家到铺分钟 visits.places[店址].arrivedAt), 租约 lease.deadline)；顾客在店主到铺那一刻已醒着的，等柜台一次服务时长（trade.retail）后上门。柜台与租约有效仍由 openShops 在结算那一刻判。
+// 作息一律取基础作息（npc-schedule.baseScheduleAt，不含 market_trip 出行覆盖），所以当日成交写入的出行不改变当日时刻集合。
 // 顾客侧窗口 customerWindows：完整人物（personSimulation）、成年、作息各段里醒着（活动非睡眠）且没有别的服务岗位的段；与 walkIns 同一个段谓词 shoppingSlot。
 // 现金、状态、义务、家务工时、拘留与往返路程是动态条件，仍在结算那一刻由 walkIns/serve 判，不进集合；所以成交带来的变化不改变时刻集合，短步推进与一次长等待得到同一时刻序列。
 // 确定性：输入只有世界定义（作息、年龄、阶层）、当前状态里的店与租约记录与日历日，没有随机数、墙钟与新常数。
@@ -867,7 +869,7 @@ const windowMemo=Symbol('customer flow times');
 function daySegments(engine,state,id,day,keep){
     const out=[];
     for(let at=day*DAY,guard=0;at<(day+1)*DAY&&guard<48;guard++){
-        const slot=scheduleAt(engine,id,at,state);
+        const slot=baseScheduleAt(engine,id,at,state);
         if(!slot)break;
         const end=slot.until>at?slot.until:(day+1)*DAY;
         if(keep(slot))out.push({start:at,end:Math.min(end,(day+1)*DAY),settlement:placeSettlement(engine,state,slot.location).value});
@@ -881,9 +883,9 @@ function shopWindows(engine,state,day){
     const keepers=new Set(currentShops(engine,state).map(s=>s.keeper));
     for(const r of recordsWhere(state.records,'category','business')){
         if(r.owner&&r.owner!=='player')keepers.add(r.owner);
-        else if(r.owner==='player'&&!r.suspended&&r.status==='营业'&&Number.isFinite(r.openedAt)){
-            const lease=r.lease&&state.records?.[r.lease],start=Math.max(day*DAY,r.openedAt),end=Math.min((day+1)*DAY,lease?contractTerms(lease,start).deadline??Infinity:Infinity);
-            if(start<end)add(r.id,'player',{start,end,settlement:placeSettlement(engine,state,r.location).value});
+        else if(r.owner==='player'&&!r.suspended&&r.status==='营业'&&Number.isFinite(r.openedAt)&&state.location===r.location){// 玩家店只在玩家人在铺内时开门（openShops 同一条件）；推进期间玩家留在铺里
+            const lease=r.lease&&state.records?.[r.lease],arrived=state.visits?.places?.[r.location]?.arrivedAt,start=Math.max(day*DAY,r.openedAt,Number.isFinite(arrived)?arrived:0),end=Math.min((day+1)*DAY,lease?contractTerms(lease,start).deadline??Infinity:Infinity);
+            if(start<end)add(r.id,'player',{start,end,settlement:placeSettlement(engine,state,r.location).value,presence:true});
         }
     }
     for(const id of [...keepers].sort())for(const w of daySegments(engine,state,id,day,slot=>slot.services?.includes('trade')))add(id,id,w);
@@ -908,7 +910,8 @@ export function flowTimesOfDay(engine,state,day){
                 let first=Infinity;
                 for(const w of windows)for(const s of segments){
                     if(s.settlement!==w.settlement)continue;
-                    const t=Math.max(w.start,s.start);
+                    // 玩家店：顾客在店主到铺那一刻已经醒着的，要等店主柜台开出第一次服务（trade.retail 的服务分钟）才上门；其余顾客醒来即到。
+                    const t=w.presence&&s.start<=w.start?w.start+actionCostRule(engine,'trade.retail').timeMin:Math.max(w.start,s.start);
                     if(t<Math.min(w.end,s.end)&&t<first)first=t;
                 }
                 if(first<Infinity)times.add(first);

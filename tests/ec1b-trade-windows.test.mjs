@@ -9,6 +9,7 @@ import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {advanceCustomerFlow,flowTimesOfDay,customerFlowTimes} from '../server-plugin/business.mjs';
 import {currentShops,nextShopMinute} from '../server-plugin/shop.mjs';
 import {residentSellers,SALE_ORDER} from '../server-plugin/market-seller.mjs';
+import {actionCostRule} from '../server-plugin/action-costs.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',C='npc_hw_shendu',D='npc_hw_xuling',seller='npc_hw_linsui',item='item_bread',home='bld_hw_qingdeng',DAY=1440;
@@ -17,7 +18,7 @@ const at=(start,end,services=[],activity='休息')=>({start,end,location:home,ac
 // 店主只在 720 起营业（货架清空时只剩居民卖方可买）；用于居民卖方用例：有营业窗口才有客流结算时刻。
 const LATE=[at(0,720),at(720,1440,['trade'],'营业')];
 const SELLER_DAY=[at(0,480),at(480,720,['trade'],'营业'),at(720,780,[],'午饭'),at(780,1080,['trade'],'营业'),at(1080,1440)];
-function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,late=[]}={}){
+function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,late=[],playerShop=false}={}){
  const w=structuredClone(world);
  delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
@@ -32,11 +33,12 @@ function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,l
  for(const l of late)for(const n of w.npcs.filter(n=>n.id===l.id)){n.tier='full';n.schedule={default:[at(0,l.wake,[],'睡眠'),at(l.wake,1440,[],'闲居')]};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'ec1b-windows');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
- doc.state.npcs=Object.fromEntries([A,B,C,...late.map(l=>l.id),seller].map(id=>[id,{...doc.state.npcs[id],coins:id===A||late.some(l=>l.id===id)?1000:id===C?5:0,inventory:{},location:home,status:'正常',activity:'休息'}]));
+ doc.state.npcs=Object.fromEntries([A,B,C,...late.map(l=>l.id),seller].map(id=>[id,{...doc.state.npcs[id],coins:id===A?1000:late.some(l=>l.id===id)?(late.find(l=>l.id===id).coins??1000):id===C?5:0,inventory:{},location:home,status:'正常',activity:'休息'}]));
 doc.state.npcs[seller].inventory=emptyShop?{}:{[item]:100};
  if(residentSale)doc.state.npcs[C].inventory={[item]:60};
  for(const l of late)if(l.bread)doc.state.npcs[l.id].inventory={[item]:l.bread};
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:4,granary:false,food:0,foodPerDay:0,woodPerDay:0}};
+ if(playerShop){doc.state.records.biz_player_stall={id:'biz_player_stall',category:'business',owner:'player',location:home,status:'营业',suspended:false,openedAt:600};doc.state.visits={...doc.state.visits,places:{...doc.state.visits?.places,[home]:{arrivedAt:600}}};doc.state.location=home;}
  doc.ledger=openLedger(e,doc);
  return {e,doc,d:e.primitiveDraft(doc)};
 }
@@ -131,16 +133,41 @@ test('each customer makes at most one trip per shop per day, even when later cus
 });
 
 test('a customer who looked and bought nothing is not evaluated again the same day at the same shop',()=>{
- // 徐凌（D）800 起床，家里面包充足：800 到店评估后不买（记一次 looked）；陈白（E）1000 起床是第三个结算时刻，此时 D 仍醒着，但今天已来过，不再评估。
+ // 徐凌（D）800 起床、只有 1 铜：800 到店评估（成交或没买成都记当日访问，各至多一条）；陈白（E）1000 起床是第三个结算时刻，此时 D 仍醒着，但今天已来过，不再评估。
  const E='npc_hw_chenbai';
- const f=fixture({late:[{id:D,wake:800,bread:200},{id:E,wake:1000}]}),state=f.d.get('state');
+ const f=fixture({late:[{id:D,wake:800,coins:1},{id:E,wake:1000}]}),state=f.d.get('state');
  assert.deepEqual(flowTimesOfDay(f.e,state,0),[480,800,1000]);
  advanceCustomerFlow(f.d,f.e,-1,DAY);
  const visitsOfD=flowRecords(f).filter(r=>r.day===0).flatMap(r=>r.visits.filter(v=>v.npc===D));
  assert.equal(visitsOfD.length,1,'D is evaluated exactly once that day');
- assert.equal(visitsOfD[0].outcome,'looked','D came, looked and bought nothing');
  const at1000=flowRecords(f).find(r=>r.minute===1000);
  assert.ok(at1000&&at1000.visits.some(v=>v.npc===E&&v.outcome==='bought'),'the third customer is served at 1000');
  assert.ok(!at1000.visits.some(v=>v.npc===D),'D is awake at 1000 but has already been evaluated today');
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
+});
+
+test('flow times do not change when a purchase writes a market_trip: one long wait equals step-by-step advances',()=>{
+ // 成交会写 market_trip，scheduleAt 读它改写顾客当时的槽位；时刻集合按基础作息（baseScheduleAt）派生，不受当日新增出行影响，短步与长等待结果一致。
+ const params={late:[{id:D,wake:800},{id:'npc_hw_chenbai',wake:1000}]};
+ const whole=fixture(params);advanceCustomerFlow(whole.d,whole.e,-1,DAY);
+ const stepped=fixture(params);
+ for(let before=-1;before<DAY;){const after=Math.min(before+97,DAY);advanceCustomerFlow(stepped.d,stepped.e,before,after);before=after;}
+ const records=f=>Object.fromEntries(Object.entries(f.d.get('state','records')).filter(([k])=>k.startsWith('customer_flow:')||k.startsWith('market_trip:')));
+ assert.ok(Object.keys(records(whole)).length>=2,'precondition: purchases happened, so trips were written');
+ assert.deepEqual(records(stepped),records(whole));
+ assert.deepEqual(stepped.d.get('state','npcs'),whole.d.get('state','npcs'));
+ assert.deepEqual(auditLedger(stepped.d.get('ledger')),[]);
+});
+
+test('a player shop window needs the player in the shop: it starts at the later of opening and arrival, and the first awake customer waits one service interval',()=>{
+ const f=fixture({sellerSchedule:[at(0,1440)],playerShop:true}),state=f.d.get('state');
+ const svc=actionCostRule(f.e,'trade.retail').timeMin;
+ // 玩家 600 到铺：洛薇 360 起已醒着，要等一次服务时长后才上门；次日玩家仍在铺，洛薇 360 起床即上门（交集起点在顾客起床）。
+ assert.deepEqual(flowTimesOfDay(f.e,state,0),[600+svc]);
+ // 次日：洛薇 360 起床即上门；店主林穗（也是完整人物、全天醒着）在零点就醒着，等店主柜台一次服务时长后上门。
+ assert.deepEqual(flowTimesOfDay(f.e,state,1),[DAY+svc,DAY+360].sort((a,b)=>a-b));
+ // 玩家不在铺内：没有玩家店窗口，没有结算时刻。
+ f.d.set(['state','location'],'bld_hw_council');const away=f.d.get('state');
+ assert.deepEqual(flowTimesOfDay(f.e,away,0),[]);
+ assert.deepEqual(flowTimesOfDay(f.e,away,1),[]);
 });

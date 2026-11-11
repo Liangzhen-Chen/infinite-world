@@ -105,13 +105,24 @@ export function scheduleAt(engine,npcId,minute,state,constraints=null){
     }else if(!previous&&engine.scheduleReadCache&&state)engine.educationCourseContext=educationCourses(engine,state);
     try{return cachedSchedule(engine,npcId,minute,state,constraints,()=>scheduledSlot(engine,npcId,minute,state,constraints));}finally{engine.educationCourseContext=previous;}
 }
-function scheduledSlot(engine,npcId,minute,state,constraints=null){
+// 基础作息：与 scheduleAt 同一条解析链，但不含出行（market_trip）对当时槽位的覆盖。客流时刻集合（business.mjs flowTimesOfDay）按它派生：
+// 当日成交写入的 market_trip 不会改变当日的时刻集合，短步推进与一次长等待得到同一时刻序列。不走 cachedSchedule（缓存键不含这个开关）。
+export function baseScheduleAt(engine,npcId,minute,state){
+    const previous=engine.educationCourseContext;
+    if(!previous&&engine.educationScheduleCourses&&state){
+        const day=Math.floor(minute/1440);let courses=engine.educationScheduleCourses.get(day);
+        if(!courses){courses=educationCourses(engine,state,minute);engine.educationScheduleCourses.set(day,courses);}
+        engine.educationCourseContext=courses;
+    }else if(!previous&&engine.scheduleReadCache&&state)engine.educationCourseContext=educationCourses(engine,state);
+    try{return scheduledSlot(engine,npcId,minute,state,null,true);}finally{engine.educationCourseContext=previous;}
+}
+function scheduledSlot(engine,npcId,minute,state,constraints=null,ignoreMarket=false){
     if(state&&!isEffective(engine,state,npcId))return null;
     constraints??=state?personConstraints(engine,state):null;
     const hold=state&&personConstraint(engine,state,npcId,minute,constraints)?.value;
     if(hold?.category==='transition')return null;
     if(hold)return{location:hold.location,activity:'依法拘留',services:[],until:Math.min(hold.expires??Infinity,(Math.floor(minute/1440)+1)*1440)};
-    const market=marketScheduleAt(state,npcId,minute);if(market)return market;
+    const market=ignoreMarket?null:marketScheduleAt(state,npcId,minute);if(market)return market;
     const subsistence=state&&subsistenceScheduleAt(engine,state,npcId,minute);if(subsistence)return subsistence;
     const lesson=state&&educationSlot(engine,state,npcId,minute);
     if(lesson&&!state.npcs[npcId]?.levy&&!state.npcs[npcId]?.caring)return lesson;
