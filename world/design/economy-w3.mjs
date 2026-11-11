@@ -1,3 +1,4 @@
+import {attachPhysical} from "../../tools/item-physical-facts.mjs";
 // W3 batch 1: distinct domestic products with authored process and material
 // decisions. Numbers and links are fixed here; DeepSeek supplies prose only.
 const groups = {
@@ -106,5 +107,5 @@ export function economyW3(world) {
     book:{grade:'初级',author:'无署名陶工旧抄本',edition:'河湾器形校订本',origin:'bld_hw_school',teaches:recipes.filter(row=>row.workstation==='pottery').map(row=>row.id),readingMinutes:240,prerequisites:[]},
     acquisition:{seller:'npc_hw_luqing',mode:'有限抄本库存'},
   });
-  return {items,recipes};
+  return attachPhysical({items,recipes},world);
 }

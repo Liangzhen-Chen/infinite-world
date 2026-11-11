@@ -43,7 +43,11 @@ const MATERIAL_VERB_BEFORE = /(?:取|加|放|撒|倒|滴|抹|涂|蘸|添|用|入
 function strings(value, out = []) {
   if (typeof value === 'string') out.push(value);
   else if (Array.isArray(value)) for (const item of value) strings(item, out);
-  else if (value && typeof value === 'object') for (const [key, item] of Object.entries(value)) if (!['id', 'worldNames', 'catalog', 'catalogRecipes'].includes(key)) strings(item, out);
+  else if (value && typeof value === 'object') for (const [key, item] of Object.entries(value)) {
+    // 骨架 physical.volumeL 是数值：按“升”原值放行（写了该体积的原值不算骨架外尺寸）。
+    if (key === 'volumeL' && typeof item === 'number') out.push(`${item}升`);
+    else if (!['id', 'worldNames', 'catalog', 'catalogRecipes'].includes(key)) strings(item, out);
+  }
   return out;
 }
 

@@ -1,3 +1,4 @@
+import {attachPhysical} from "../../tools/item-physical-facts.mjs";
 import {journeySupplies,journeyTools,journeyArms} from './economy-w3-journey-supplies.mjs';
 import {journeyCraft} from './economy-w3-journey-craft.mjs';
 const iid=slug=>`item_${slug}`;
@@ -45,5 +46,5 @@ export function economyW3Journey(world,trace=null){
  }
  if(items.length!==182||recipes.length!==85)throw new Error(`本批目标不符：${items.length}/${recipes.length}`);
  const ids=items.map(x=>x.id);if(new Set(ids).size!==ids.length)throw new Error('本批物品编号重复');
- return{items,recipes,supply};
+ return attachPhysical({items,recipes,supply},world);
 }

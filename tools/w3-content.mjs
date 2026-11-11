@@ -79,7 +79,8 @@ export function assembleW3(world,bones,lore,supersedes=[]) {
   const byId=new Map(lore.map(row=>[row.id,row])),candidate=structuredClone(world);
   // 已在世界里的行以正式（已审批、已发布）的形态为准：本批骨架只补世界还没有的行。否则重新装配会把后来经审批批次改过的字段（如 P1 修订批的羊皮纸价）按骨架旧值写回。
   const merge=(existing,rows)=>[...existing,...rows.filter(row=>!existing.some(old=>old.id===row.id))];
-  const newItems=bones.items.filter(row=>byId.has(row.id)).map(row=>({...row,...byId.get(row.id)}));
+  // physical 是骨架上的派生事实（起草、检查、评分取证用），不发布进正式物品目录。
+  const newItems=bones.items.filter(row=>byId.has(row.id)).map(({physical,...row})=>({...row,...byId.get(row.id)}));
   // 骨架只补世界还没有的行，但骨架上的值若已被发布的修订取代（如 P1 的羊皮纸价），新行按修订值装配；
   // 否则回到旧版再装配时，旧价会和后来按修订价派生的成品并存，出现售价低于材料。
   for(const receiptFile of new Set(supersedes.map(s=>s.receiptFile).filter(f=>/^world\/drafts\/w3\/(?:[^/]+\/)?bones\.json$/.test(f))))applySupersedes(newItems,receiptFile,supersedes);
