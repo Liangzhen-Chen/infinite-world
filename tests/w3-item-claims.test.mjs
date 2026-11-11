@@ -47,6 +47,12 @@ test('反例：不是模糊用量的常见词不误报', () => {
   for (const text of ['数据记录齐全。', '几乎没有气味。', '翻动数次，听声。', '开合数遍。', '反复折叠两次。', '手指不沾油。', '握住柄部试重。', '表面平整，一块完整。', '双层，一对两只。', '重0.1公斤，价二铜币。', '全程约九十分钟。']) assert.equal(check({description: text}), '', text);
 });
 
+test('程度补语不是用量：一般动词后、分句末的少许/些许不判；取用、附着、含有类动词后的照判', () => {
+  for (const text of ['受压后能回弹少许。', '遇热变软些许，冷后复硬。']) assert.equal(check({description: text}), '', text);
+  for (const text of ['土色横纹，附少量干土。', '取少许。', '肌理间夹少量细筋，外层覆膜。', '少许。', '取少量摊开，看是否结块。', '解开外层数圈，看线股。'])
+    assert.match(check({description: text}), /写了模糊用量/, text);
+});
+
 test('名称出处：世界里的人名地名店名必须有出处；origin、seller 指向的名称、骨架文字里的名称放行', () => {
   assert.equal(check({description: '河湾村集市常见，由严辙出售。'}), '', 'origin 与 acquisition.seller 解析出的名称就是出处');
   assert.match(check({description: '由林穗出售。'}), /正文出现名称「林穗」/);

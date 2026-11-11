@@ -39,6 +39,18 @@ function strings(value, out = []) {
   return out;
 }
 
+// 程度补语：模糊词紧跟在一般动词后、且在分句末（回弹少许。变软些许，），说的是变化的程度，不是材料用量（第 8 条只管材料用量、尺寸）。
+// 前面是取用、附着、含有类动词（取少许。附少量。含些许。）仍是在说用量，照判；前面没有字（“少许。”）也照判。
+const AMOUNT_VERB_BEFORE = /(?:取|加|放|撒|倒|滴|抹|涂|蘸|添|用|入|盛|舀|抓|掺|拌|施|敷|配|备|附|夹|带|含|有|剩|余|留|沾|粘|混|掺入|兑)$/u;
+function degreeComplement(text, match) {
+  // 只有程度义的词（少许、些许、少量、一些、一点……）能作补语；“数圈、几匝”是计数，不在此列。
+  if (/^[数几]/u.test(match[0])) return false;
+  const before = text.slice(0, match.index), after = text.slice(match.index + match[0].length);
+  if (!/^(?:[，。；！？、\n]|$)/u.test(after)) return false;
+  const prev = before.at(-1);
+  return prev !== undefined && /\p{Script=Han}/u.test(prev) && !AMOUNT_VERB_BEFORE.test(before);
+}
+
 function provenanceText(entry, context) {
   const catalog = context?.catalog ?? [];
   const byId = new Map(catalog.map((item) => [item.id, item]));
@@ -56,7 +68,10 @@ export function amountIssues(text, supplied = '') {
     if (supplied.includes(raw)) return;
     errors.push(`${kind}「${raw}」（${text.slice(Math.max(0, index - 6), index + raw.length + 6).trim()}）：骨架和引用事实里没有。修复：删去，不写模糊用量、身体尺度和骨架外尺寸；材料用量只写骨架份数或不写`);
   };
-  for (const match of text.matchAll(VAGUE_AMOUNT)) give(match[0], match.index, '写了模糊用量');
+  for (const match of text.matchAll(VAGUE_AMOUNT)) {
+    if (degreeComplement(text, match)) continue;
+    give(match[0], match.index, '写了模糊用量');
+  }
   for (const match of text.matchAll(BODY_SCALE)) give(match[0], match.index, '写了身体尺度');
   for (const match of text.matchAll(METRIC_LENGTH)) give(match[0], match.index, '写了骨架外尺寸');
   for (const quantity of quantitiesIn(text)) if (SMALL_VOLUME_DIMS.has(quantity.dim)) give(quantity.raw, quantity.index, '写了骨架外尺寸或用量');
