@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {atomicJSON,digest} from '../server-plugin/storage.mjs';
 import {npcPlanningContext} from '../server-plugin/npc-autonomy.mjs';
+import {sidebandClient} from '../server-plugin/sideband.mjs';
 
 export const NPC_PLANNER_DEFAULTS=Object.freeze({limit:12,maxCallsPerDay:1,maxTokensPerDay:60000,maxTokens:3000,budgetYuan:20});
 const actionFields={craft:['kind','recipe'],audit_inventory:['kind','goal'],trade:['kind','seller','item','quantity'],share:['kind','to','memoryId','channel']};
@@ -58,12 +59,13 @@ export async function planNpcAutonomy(engine,document,options={}){
   const costCeiling=(Buffer.byteLength(JSON.stringify(body))*2+config.maxTokens*8)/1e6;
   if(day.calls>=config.maxCallsPerDay||day.tokens+tokenCeiling>config.maxTokensPerDay||ledger.spentYuan+costCeiling>config.budgetYuan)return {status:'limited',input:null,reason:'本游戏日调用、token 或累计费用额度不足',spentYuan:ledger.spentYuan};
   const client=options.client??new DeepSeekClient({budgetYuan:config.budgetYuan,logFile:path.join(path.dirname(ledgerFile),'usage.jsonl')});
+  const model=options.sideband?sidebandClient(client,{...options.sideband,role:'npc-planning'}):client;
   if(Number.isFinite(client.budgetYuan))client.budgetYuan=Math.min(client.budgetYuan,(client.spent??0)+config.budgetYuan-ledger.spentYuan);
   const attempt={id:digest([campaign,context.day,day.calls,context.stateFingerprint]).slice(0,24),minute:context.minute,status:'pending',costUpperYuan:costCeiling};
   day.calls++;day.tokens+=tokenCeiling;day.attempts.push(attempt);ledger.spentYuan+=costCeiling;
   await atomicJSON(ledgerFile,ledger);
   try{
-   const response=await client.generate(body,`npc-autonomy:${campaign}:day${context.day}`),usage=response.usage;
+   const response=await model.generate(body,`npc-autonomy:${campaign}:day${context.day}`),usage=response.usage;
    if(!usage||!Number.isSafeInteger(usage.prompt_tokens)||!Number.isSafeInteger(usage.completion_tokens))throw Error('模型没有返回可核验 token 用量');
    const measured=response.measurement?.costUpperYuan??(usage.prompt_tokens*2+usage.completion_tokens*8)/1e6;
    if(!Number.isFinite(measured)||measured<0)throw Error('模型费用记录无效');

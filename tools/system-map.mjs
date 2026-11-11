@@ -138,7 +138,8 @@ const SYSTEMS=[
  // 内核层
  {id:'kernel_engine',layer:'kernel',name:'结算引擎',modules:['engine.mjs','activities.mjs','runtime-world.mjs','campaign-reducer.mjs','archived-reducer.mjs','scheduler.mjs']},
  {id:'kernel_storage',layer:'kernel',name:'存档与迁移',modules:['storage.mjs','migrations.mjs','migrations/r1.mjs','rule-state-migration.mjs','world-registry.mjs','world-upgrade.mjs',
-   'agriculture-migration.mjs','boss-migration.mjs','farm-pests-migration.mjs','compat/v2-phase1-activities.mjs','compat/v2-phase1-engine.mjs','legacy/core.js']},
+   'agriculture-migration.mjs','boss-migration.mjs','farm-pests-migration.mjs','compat/v2-phase1-activities.mjs','compat/v2-phase1-engine.mjs','legacy/core.js',
+   'sideband.mjs'/* AI-18 模型调用旁路记录，与存档同目录约定 */,'digest-exclude.mjs'/* AI-18 规则状态哈希排除口径，包住 storage digest */,'seed-keys.mjs'/* AI-18 种子键登记与静态校验 */]},
  // 底座层 K1–K7
  {id:'base_traits',layer:'base',name:'性状标签',card:'K1',modules:['traits.mjs']},
  {id:'base_interactions',layer:'base',name:'交互规则',card:'K2',modules:['interactions.mjs']},
