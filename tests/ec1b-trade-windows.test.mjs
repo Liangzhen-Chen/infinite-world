@@ -20,10 +20,10 @@ const at=(start,end,services=[],activity='休息')=>({start,end,location:home,ac
 // 店主只在 720 起营业（货架清空时只剩居民卖方可买）；用于居民卖方用例：有营业窗口才有客流结算时刻。
 const LATE=[at(0,720),at(720,1440,['trade'],'营业')];
 const SELLER_DAY=[at(0,480),at(480,720,['trade'],'营业'),at(720,780,[],'午饭'),at(780,1080,['trade'],'营业'),at(1080,1440)];
-function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,late=[],playerShop=false,breadPrice=null}={}){
+function fixture({sellerSchedule=SELLER_DAY,residentSale=false,emptyShop=false,late=[],playerShop=false,breadPrice=null,keepSubsistence=false}={}){
  const w=structuredClone(world);
  if(breadPrice)w.items.find(i=>i.id===item).basePrice=breadPrice;// 把面包价抬到买不起，使“只看不买”的场景确定
- delete w.rules.householdSubsistence;
+ if(!keepSubsistence)delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
  w.households=[{id:'win-a',members:[A,B],settlement:'loc_hw',homeLocation:home},{id:'win-c',members:[C],settlement:'loc_hw',homeLocation:home},{id:'win-seller',members:[seller],settlement:'loc_hw',homeLocation:home}];
  for(const l of late)w.households.push({id:`win-${l.id}`,members:[l.id],settlement:'loc_hw',homeLocation:home});
@@ -155,7 +155,7 @@ test('a customer who looked and bought nothing is not evaluated again the same d
 
 test('flow times do not change when a purchase writes a market_trip: one long wait equals step-by-step advances',()=>{
  // 成交会写 market_trip，scheduleAt 读它改写顾客当时的槽位；时刻集合按基础作息（baseScheduleAt）派生，不受当日新增出行影响，短步与长等待结果一致。
- const params={late:[{id:D,wake:800},{id:'npc_hw_chenbai',wake:1000}]};
+ const params={late:[{id:D,wake:800},{id:'npc_hw_chenbai',wake:1000}],keepSubsistence:true};// 生计规则开着：生计分段读 market_trip，时刻集合仍不得随成交漂移
  const whole=fixture(params);advanceCustomerFlow(whole.d,whole.e,-1,DAY);
  const stepped=fixture(params);
  for(let before=-1;before<DAY;){const after=Math.min(before+97,DAY);advanceCustomerFlow(stepped.d,stepped.e,before,after);before=after;}
@@ -177,4 +177,20 @@ test('a player shop window needs the player in the shop: it starts at the later 
  f.d.set(['state','location'],'bld_hw_council');const away=f.d.get('state');
  assert.deepEqual(flowTimesOfDay(f.e,away,0),[]);
  assert.deepEqual(flowTimesOfDay(f.e,away,1),[]);
+});
+
+test('a visit already recorded that day is found by day and shop, even when its minute is no longer a flow time',()=>{
+ // 模拟“时刻集合变了”（玩家离铺再到铺、店停业等）：当日 530 有一条本店的旧访问记录（530 不在现在的时刻集合里），洛薇记在其中；
+ // 之后 800 的结算不得再评估洛薇——去重按日+店取记录，不靠当前时刻集合反推键。
+ const f=fixture({late:[{id:D,wake:800}]});
+ const shopId=currentShops(f.e,f.d.get('state')).find(s=>s.keeper===seller).id;
+ assert.deepEqual(flowTimesOfDay(f.e,f.d.get('state'),0),[480,800]);
+ assert.ok(![480,800].includes(530));
+ f.d.set(['state','records',`customer_flow:${shopId}:0:530`],{category:'customer_flow',shop:shopId,keeper:seller,day:0,minute:530,visits:[{npc:A,outcome:'looked'}]});
+ advanceCustomerFlow(f.d,f.e,500,801);
+ const at800=flowRecords(f).find(r=>r.minute===800);
+ assert.ok(at800&&at800.visits.some(v=>v.npc===D),'the late customer is served at 800');
+ assert.ok(!at800.visits.some(v=>v.npc===A),'A was already recorded that day and is not evaluated again');
+ assert.equal(f.e.quantity(f.d,A,item),0);
+ assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
 });

@@ -776,8 +776,8 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     const shelf=shelfOf(d,engine,shop);if(!shelf.length)return;
     const serviceMinutes=actionCostRule(engine,'trade.retail').timeMin;
     // 每位顾客每天对每家店至多一趟（到店评估即算一趟，买没买都算）：本店今天的客流记录里已有这位顾客的访问（任何结局）就不再评估。
-    // 按当日各结算时刻的记录键直接取（customer_flow:店:日:分钟，时刻集合是缓存的静态集合），不全表扫描。
-    const tripped=new Set(flowTimesOfDay(engine,state,day).filter(x=>x<t).flatMap(x=>state.records?.[`customer_flow:${shop.id}:${day}:${x-day*DAY}`]?.visits??[]).map(v=>v.npc));
+    // 按“日”字段的记录索引取当日已有的本店客流记录（不依赖当前时刻集合反推键：玩家离铺再到铺、店停业等使时刻集合变化时，已写的访问照样查得到；索引每日有界，不全表扫）。
+    const tripped=new Set(recordsWhere(state.records,'day',day).filter(r=>r.category==='customer_flow'&&r.shop===shop.id).flatMap(r=>r.visits).map(v=>v.npc));
     const visits=[],keeperHome=shop.kind==='resident'?new Set(personHousehold(engine,state,shop.keeper).value?.members??[]):null;// 居民卖方不向自己同户的人卖（同一灶，不是买卖）
     for(const {id,slot,settlement} of residents){
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
@@ -866,10 +866,10 @@ function serve(d,engine,shop,t,residents,gaps,routes){
 const shoppingSlot=slot=>Boolean(slot)&&!SLEEPING.test(slot.activity??'')&&!(slot.services??[]).some(service=>service!=='trade');
 const windowMemo=Symbol('customer flow times');
 // 某人当天作息的各段：[{start,end,settlement,slot}]，keep(slot) 为真的段（scheduleAt 的 slot.until 接着往下走，防死循环）。
-function daySegments(engine,state,id,day,keep){
+function daySegments(engine,state,id,day,keep,sched=state){
     const out=[];
     for(let at=day*DAY,guard=0;at<(day+1)*DAY&&guard<48;guard++){
-        const slot=baseScheduleAt(engine,id,at,state);
+        const slot=baseScheduleAt(engine,id,at,sched);
         if(!slot)break;
         const end=slot.until>at?slot.until:(day+1)*DAY;
         if(keep(slot))out.push({start:at,end:Math.min(end,(day+1)*DAY),settlement:placeSettlement(engine,state,slot.location).value});
@@ -877,7 +877,7 @@ function daySegments(engine,state,id,day,keep){
     }
     return out;
 }
-export function shopWindows(engine,state,day){
+export function shopWindows(engine,state,day,sched=state){
     const shops=new Map();// 店主编号（玩家店用记录编号）→ {keeper,windows}
     const add=(key,keeper,w)=>{const row=shops.get(key)??{keeper,windows:[]};row.windows.push(w);shops.set(key,row);};
     const keepers=new Set(currentShops(engine,state).map(s=>s.keeper));
@@ -888,14 +888,14 @@ export function shopWindows(engine,state,day){
             if(start<end)add(r.id,'player',{start,end,settlement:placeSettlement(engine,state,r.location).value,presence:true});
         }
     }
-    for(const id of [...keepers].sort())for(const w of daySegments(engine,state,id,day,slot=>slot.services?.includes('trade')))add(id,id,w);
+    for(const id of [...keepers].sort())for(const w of daySegments(engine,state,id,day,slot=>slot.services?.includes('trade'),sched))add(id,id,w);
     return shops;
 }
-export function customerWindows(engine,state,day){
+export function customerWindows(engine,state,day,sched=state){
     const out=new Map();
     for(const id of Object.keys(state.npcs??{}).sort()){
         if(!personSimulation(engine,{},id).value||(engine.byId.get(id)?.age??engine.rules.npcLife.adultAge)<engine.rules.npcLife.adultAge)continue;
-        const segments=daySegments(engine,state,id,day,shoppingSlot);
+        const segments=daySegments(engine,state,id,day,shoppingSlot,sched);
         if(segments.length)out.set(id,segments);
     }
     return out;
@@ -903,8 +903,10 @@ export function customerWindows(engine,state,day){
 // 某天的客流结算时刻（升序、去重、绝对分钟）。
 export function flowTimesOfDay(engine,state,day){
     return stateMemo(state,engine,[windowMemo,day],()=>{
-        const customers=customerWindows(engine,state,day),times=new Set();
-        for(const {keeper,windows} of shopWindows(engine,state,day).values()){
+        // 作息读不含 market_trip 的状态副本：当日成交写入的出行既不改 scheduleAt 的出行覆盖，也不改生计分段（household-subsistence 读 market_trip），时刻集合因此与当日成交无关。
+        const base={...state,records:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r?.category!=='market_trip'))};
+        const customers=customerWindows(engine,state,day,base),times=new Set();
+        for(const {keeper,windows} of shopWindows(engine,state,day,base).values()){
             for(const [id,segments] of customers){
                 if(id===keeper)continue;
                 let first=Infinity;
