@@ -14,7 +14,6 @@ import {processIssues, quantitiesIn, vocabularyFor, declaredSpans, negatedAt, wi
 
 const FIELDS = ['description', 'inspection', 'storage'];
 const unique = (list) => [...new Set(list)];
-const esc = (text) => text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
 const split = (text, pattern) => text.split(pattern).filter((part) => part.trim());
 
 // ── 一、storage ──
@@ -33,10 +32,10 @@ export function storageIssues(text, entry) {
   const errors = [];
   if (typeof text !== 'string' || !text.trim()) return errors;
   for (const sentence of split(text, /[。；！？\n]/u)) {
-    const disposal = sentence.match(DISPOSAL);
     // 回避框架（避免受潮、浸水与重压；勿暴晒；防压）里的动作对象是要避开的东西，不是处置做法：取本分句（以逗号、分号断开，顿号不断）里处置词之前的文字判断。
-    const avoided = disposal && AVOID.test(sentence.slice(0, disposal.index).split(/[，；]/u).at(-1));
-    if (disposal && !avoided && !negatedAt(sentence, disposal.index)) errors.push(`storage 出现具体处置做法「${disposal[0]}」（${sentence.trim()}）：只允许避潮、避晒、避霜、阴凉、防压这类一般存放建议。修复：删去处置做法`);
+    // 句内每个处置词逐个判：前一个落在回避或否定框架里，不能连带放过同句后面的真处置（“勿浸水，晾干后折叠”）。
+    const disposal = [...sentence.matchAll(new RegExp(DISPOSAL.source, 'gu'))].find((hit) => !AVOID.test(sentence.slice(0, hit.index).split(/[，；]/u).at(-1)) && !negatedAt(sentence, hit.index));
+    if (disposal) errors.push(`storage 出现具体处置做法「${disposal[0]}」（${sentence.trim()}）：只允许避潮、避晒、避霜、阴凉、防压这类一般存放建议。修复：删去处置做法`);
     const consequence = sentence.match(CONSEQUENCE);
     if (consequence) errors.push(`storage 出现后果说法「${consequence[0]}」（${sentence.trim()}）：骨架里没有的后果不写。修复：只留一般存放建议，删去“否则会……”这类说法`);
   }

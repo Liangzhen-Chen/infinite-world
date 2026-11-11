@@ -132,3 +132,10 @@ test('storage：回避词与处置词之间只能是被回避的并列对象', (
   for (const text of ['置干燥处，避免受潮、浸水与重压。', '避免暴晒与浸水。', '勿浸水。', '防压及浸水。'])
     assert.deepEqual(check('wheat', {storage: text}), [], text);
 });
+
+test('storage：同句里前一个处置词在回避或否定框架里，不放过后面的真处置', () => {
+  assert.match(join('wheat', {storage: '勿浸水，晾干后折叠。'}), /具体处置做法「晾干」/);
+  assert.match(join('wheat', {storage: '不要泡水，受潮后摊开阴干。'}), /具体处置做法「(?:受潮后|摊开|阴干)」/);
+  assert.match(join('wheat', {storage: '避免浸水，定期翻面。'}), /具体处置做法「(?:定期|翻面)」/);
+  assert.deepEqual(check('wheat', {storage: '勿浸水，避免暴晒与泡水。'}), []);
+});
