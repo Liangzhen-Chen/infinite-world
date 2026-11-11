@@ -271,7 +271,12 @@ async function m3M9(){
  const coins1=ctx.doc.state.player.coins;
  const b2pre={market:marketView(engine,ctx.doc,'item_bread',inn),quote:quoteView(engine,ctx.doc,{item:'item_bread',location:inn,seller:'npc_hw_linsui',quantity:1})};
  const bread2=await attempt(ctx,'买面包 1（升级后回合）','world_trade',{seller:'林穗',item:'面包',quantity:1},'m9-turn-3');
- return {notForExpectation:'不用于定 M9 期望值：M9 采用 tests/playtests/world_upgrade.json 重推的值（最终铜钱 172、面包 2；出处提交 ad59698f、bb70871d）。本输出只作该值的旁证。',expectationSource:{file:'tests/playtests/world_upgrade.json',commits:['ad59698f','bb70871d']},approximate:'近似：原测试前两步在旧世界版本的服务器上做，再导出导入当前世界（写 world_update 记录、升级迁移），第三笔在导入后做；这里全程在当前世界、同一份文档上连做，不经导出导入。差别只在升级迁移是否影响面包价格，需复算者另行确认。',compares:'玩家最终铜钱 finalDocument.state.player.coins（tests/m3-acceptance.test.mjs:93）；第一笔后铜钱对应 world_upgrade.json 第一回合的 equals',
+ let recorded=null;
+ try{ // 运行时只读打开剧本文件，原样输出它对玩家铜钱与面包的记录
+  const file='tests/playtests/world_upgrade.json',json=JSON.parse(await fs.readFile(new URL('../'+file,import.meta.url),'utf8'));
+  recorded={file,rows:json.turns.flatMap((t,i)=>t.assertions.filter(a=>['state.player.coins','state.inventory.item_bread'].includes(a.path)).map(a=>({turn:i,input:t.input,assertion:a})))};
+ }catch(e){recorded={error:errorOf(e)};}
+ return {notForExpectation:'不用于定 M9 期望值：M9 采用 world_upgrade.json 重推并记录的值（见 recordedInWorldUpgradeJson，运行时原样读出）；本输出只作旁证。',recordedInWorldUpgradeJson:recorded,expectationSourceCommits:['ad59698f','bb70871d'],approximate:'近似：原测试前两步在旧世界版本的服务器上做，再导出导入当前世界（写 world_update 记录、升级迁移），第三笔在导入后做；这里全程在当前世界、同一份文档上连做，不经导出导入。差别只在升级迁移是否影响面包价格，需复算者另行确认。',compares:'玩家最终铜钱 finalDocument.state.player.coins（tests/m3-acceptance.test.mjs:93）；第一笔后铜钱对应 world_upgrade.json 第一回合的 equals',
   startCoins:start,afterLodge,afterBread1:coins1,final:ctx.doc.state.player.coins,wage:wageView(engine,ctx.doc),
   bills:{lodge:start-afterLodge,bread1:afterLodge-coins1,bread2:coins1-ctx.doc.state.player.coins},
   steps:{move:{ok:move.ok,error:move.error},lodge:{ok:lodge.ok,error:lodge.error},bread1:{ok:bread1.ok,error:bread1.error,cost:bread1.result?.cost,pricing:bread1.result?.pricing},bread2:{ok:bread2.ok,error:bread2.error,cost:bread2.result?.cost,pricing:bread2.result?.pricing}},
