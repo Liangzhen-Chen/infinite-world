@@ -424,7 +424,7 @@ export function validateDrinkable(world){
 // MATPHYS：表头 physical（物理与外观事实）的 L1 检查。类别行只许 sources、selection、appearance、basis；密度由 sources 推出（不手写）；
 // 出处须带 name、citation 与有限的正数 densityKgPerL（kg/L），区间给 range 时取值须在区间内；appearance 3–6 条 {term, citation}，词组不重复。
 export const PHYSICAL_DIMENSIONS=['densityKgPerL'];
-export function validatePhysical(ph,known,kps){
+export function validatePhysical(ph,known,kps,{anyKey=false}={}){
  const errors=[];
  if(ph===undefined)return errors;
  const dims=ph.dimensions??{};
@@ -435,7 +435,7 @@ export function validatePhysical(ph,known,kps){
  const nonEmpty=x=>typeof x==='string'&&x.trim().length>0;
  for(const k of keys){
   const row=ph.classes[k],where=`physical.classes.${k}`;
-  if(!known.has(k))errors.push(`材料物理属性类别不是已有标签：${k}`);
+  if(!anyKey&&!known.has(k))errors.push(`材料物理属性类别不是已有标签：${k}`);
   for(const key of Object.keys(row??{}))if(!['sources','selection','appearance','basis'].includes(key))errors.push(`材料物理属性行字段未登记（密度不手写，由 sources 推出）：${where}.${key}`);
   if(!nonEmpty(row?.basis))errors.push(`材料物理属性缺 basis：${where}`);
   if(row?.sources===undefined&&row?.appearance===undefined)errors.push(`材料物理属性行没有密度出处也没有外观：${where}`);
@@ -466,6 +466,47 @@ export function validatePhysical(ph,known,kps){
    });}
   }
  }
+ return errors;
+}
+// FOODMETAL：金属细分（表头 physicalMetal，另起数据块，不进 physical.precedence，materialProps 不读它，已批准物品的 physical 值不变）。
+// 材料归类规则（按类的函数，不写物品 id；词表与形态字写在数据里 physicalMetal.nameWords / forms / excludeTags）：
+//  ①带 excludeTags（工具、书、成品、货币）的物品不参与；②标签优先：标签等于某金属类别键即取之；
+//  ③名称词形尾部锚定：名称以「材料词 + 形态字」结尾才算（材料词与形态字之间不得夹其他字），多个材料词都匹配取最长（黄铜带取黄铜，不取铜）；推不出为 undefined（未知）。
+const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+export function metalClass(item,metal){
+ if(!metal||!item)return undefined;
+ const tags=item.tags??[];
+ if((metal.excludeTags??[]).some(t=>tags.includes(t)))return undefined;
+ const keys=Object.keys(metal.nameWords??{}),byTag=keys.find(k=>tags.includes(k));
+ if(byTag)return byTag;
+ const name=String(item.name??''),forms=(metal.forms??[]).map(reEsc).join('|');
+ if(!forms)return undefined;
+ let best,len=0;
+ for(const k of keys)for(const w of metal.nameWords[k])if(w.length>len&&new RegExp(`${reEsc(w)}(?:${forms})$`).test(name)){best=k;len=w.length;}
+ return best;
+}
+// 取金属类别的密度与外观：类别行在 physicalMetal.classes，没有的（铁）回落到 physical.classes；缺项为未知。
+export function metalProps(table,item){
+ const cls=metalClass(item,table?.physicalMetal);
+ if(!cls)return {class:undefined,densityKgPerL:{known:false},appearance:{known:false}};
+ const row=table.physicalMetal.classes?.[cls]??table.physical?.classes?.[cls],kps=table.kcalPerSatiety;
+ const d=row?rowValue(row,'densityKgPerL',kps):undefined;
+ return {class:cls,densityKgPerL:d!==undefined?{known:true,value:d,source:cls}:{known:false},
+  appearance:Array.isArray(row?.appearance)&&row.appearance.length?{known:true,value:row.appearance.map(a=>a.term),source:cls}:{known:false}};
+}
+export function validatePhysicalMetal(pm,physical){
+ const errors=[];
+ if(pm===undefined)return errors;
+ errors.push(...validatePhysical(pm,new Set(),undefined,{anyKey:true}).map(e=>e.replace('材料物理属性','材料金属属性')));
+ const all=new Set([...Object.keys(pm.classes??{}),...Object.keys(physical?.classes??{})]);
+ for(const k of Object.keys(pm.classes??{}))if(physical?.classes?.[k])errors.push(`材料金属属性类别与 physical 重复（physicalMetal 不得改写已批准的 physical 类别）：${k}`);
+ const nw=pm.nameWords??{};
+ for(const [k,ws] of Object.entries(nw)){
+  if(!all.has(k))errors.push(`材料金属属性 nameWords 的类别不存在：${k}`);
+  if(!Array.isArray(ws)||!ws.length||ws.some(w=>typeof w!=='string'||!w.trim()))errors.push(`材料金属属性 nameWords.${k} 须为非空词数组`);
+ }
+ if(!Array.isArray(pm.forms)||!pm.forms.length||pm.forms.some(f=>typeof f!=='string'||[...f].length!==1))errors.push('材料金属属性 forms 须为非空的单字数组（材料形态字）');
+ if(!Array.isArray(pm.excludeTags)||!pm.excludeTags.length||pm.excludeTags.some(f=>typeof f!=='string'||!f.trim()))errors.push('材料金属属性 excludeTags 须为非空标签数组');
  return errors;
 }
 export function validateMaterialProps(world){
@@ -555,6 +596,6 @@ export function validateMaterialProps(world){
  const order=t.precedence??[];
  if(!Array.isArray(order)||order.length!==new Set(order).size||order.length!==keys.length||keys.some(k=>!order.includes(k)))errors.push('材料属性 precedence 必须恰好列出全部类别键且不重复（从最具体到最一般）');
  for(const i of world.items??[])if(i.props!==undefined)check(i.props,`items.${i.id}.props`);
- errors.push(...validatePhysical(t.physical,known,t.kcalPerSatiety));
+ errors.push(...validatePhysical(t.physical,known,t.kcalPerSatiety),...validatePhysicalMetal(t.physicalMetal,t.physical));
  return errors;
 }
