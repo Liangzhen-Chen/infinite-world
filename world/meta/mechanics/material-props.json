@@ -1625,7 +1625,7 @@
   }
  },
  "physicalMetal": {
-  "note": "FOODMETAL 卡（2026-11-11）：金属细分（钢、铜、黄铜、锡、银）的密度与外观，另起数据块，不进 physical.precedence，materialProps 不读它，已批准物品的 physical 值不变；取值经 server-plugin/item-class.mjs metalProps 按材料归类（metalClass）取得。材料归类规则：带 excludeTags（工具、书、成品、货币）的物品不参与；标签优先；名称词形尾部锚定——名称须以「材料词 + 形态字」结尾（nameWords、forms），多个材料词都匹配取最长；推不出为未知。密度不手写，由 sources 推出（kg/L = 出处 kg/m³ ÷ 1000，区间取中值并写 range）；appearance 每类 3 条，每条带页面与原句。铁沿用 physical.classes.iron（锻铁），不在本块重写。",
+  "note": "FOODMETAL 卡（2026-11-11）：金属细分（钢、铜、黄铜、锡、银）的密度与外观，另起数据块，不进 physical.precedence，materialProps 不读它，已批准物品的 physical 值不变；取值经 server-plugin/item-class.mjs metalProps 按材料归类（metalClass）取得。材料归类规则：带 excludeTags（工具、书、成品、货币）的物品不参与；标签优先；名称词形尾部锚定——名称须以「材料词 + 零到多个修饰字（modifiers，闭合词表：窄、细、薄、熟、退火）+ 形态字（forms）+ 零到多个形态字或连写尾字（tailForms：束、卷、叠）」结尾，材料词与形态字之间不得夹词表之外的字；多个材料词都匹配取最长；推不出为未知。密度不手写，由 sources 推出（kg/L = 出处 kg/m³ ÷ 1000，区间取中值并写 range）；appearance 每类 3 条，每条带页面与原句。铁沿用 physical.classes.iron（锻铁），不在本块重写。",
   "dimensions": {
    "densityKgPerL": {
     "unit": "kg/L（材料表观密度，不含空隙堆积）",
@@ -1670,6 +1670,18 @@
    "料",
    "坯",
    "块"
+  ],
+  "modifiers": [
+   "窄",
+   "细",
+   "薄",
+   "熟",
+   "退火"
+  ],
+  "tailForms": [
+   "束",
+   "卷",
+   "叠"
   ],
   "excludeTags": [
    "tool",

@@ -479,10 +479,12 @@ export function metalClass(item,metal){
  if((metal.excludeTags??[]).some(t=>tags.includes(t)))return undefined;
  const keys=Object.keys(metal.nameWords??{}),byTag=keys.find(k=>tags.includes(k));
  if(byTag)return byTag;
- const name=String(item.name??''),forms=(metal.forms??[]).map(reEsc).join('|');
+ const name=String(item.name??''),alt=a=>(a??[]).map(reEsc).join('|'),forms=alt(metal.forms);
  if(!forms)return undefined;
+ // 材料词 + 零个或多个修饰字（闭合词表 modifiers，如窄、细、薄）+ 形态字 + 零个或多个形态字或连写尾字（tailForms，如束、卷、叠），整体在名称结尾。
+ const mods=alt(metal.modifiers),tails=alt(metal.tailForms),mid=mods?`(?:${mods})*`:'',after=`(?:${forms}${tails?`|${tails}`:''})*`;
  let best,len=0;
- for(const k of keys)for(const w of metal.nameWords[k])if(w.length>len&&new RegExp(`${reEsc(w)}(?:${forms})$`).test(name)){best=k;len=w.length;}
+ for(const k of keys)for(const w of metal.nameWords[k])if(w.length>len&&new RegExp(`${reEsc(w)}${mid}(?:${forms})${after}$`).test(name)){best=k;len=w.length;}
  return best;
 }
 // 取金属类别的密度与外观：类别行在 physicalMetal.classes，没有的（铁）回落到 physical.classes；缺项为未知。
@@ -505,8 +507,22 @@ export function validatePhysicalMetal(pm,physical){
   if(!all.has(k))errors.push(`材料金属属性 nameWords 的类别不存在：${k}`);
   if(!Array.isArray(ws)||!ws.length||ws.some(w=>typeof w!=='string'||!w.trim()))errors.push(`材料金属属性 nameWords.${k} 须为非空词数组`);
  }
+ for(const key of ['modifiers','tailForms'])if(pm[key]!==undefined&&(!Array.isArray(pm[key])||pm[key].some(f=>typeof f!=='string'||!f.trim())))errors.push(`材料金属属性 ${key} 须为非空字符串数组`);
  if(!Array.isArray(pm.forms)||!pm.forms.length||pm.forms.some(f=>typeof f!=='string'||[...f].length!==1))errors.push('材料金属属性 forms 须为非空的单字数组（材料形态字）');
  if(!Array.isArray(pm.excludeTags)||!pm.excludeTags.length||pm.excludeTags.some(f=>typeof f!=='string'||!f.trim()))errors.push('材料金属属性 excludeTags 须为非空标签数组');
+ return errors;
+}
+export function itemAppearanceErrors(a,where){
+ const errors=[],nonEmpty=x=>typeof x==='string'&&x.trim().length>0;
+ if(!Array.isArray(a)||a.length<2||a.length>6)return [`材料属性物品 appearance 须为 2–6 条：${where}.appearance`];
+ const terms=new Set();
+ a.forEach((x,i)=>{
+  const w=`${where}.appearance[${i}]`;
+  if(!nonEmpty(x?.term)||!nonEmpty(x?.citation))errors.push(`材料属性物品 appearance 每条须有 term 与 citation：${w}`);
+  else if(terms.has(x.term))errors.push(`材料属性物品 appearance 词组重复：${w}`);else terms.add(x.term);
+  if(nonEmpty(x?.citation)&&!/Wikipedia「[^」]+」：./.test(x.citation))errors.push(`材料属性物品 appearance 的 citation 须写出处页面与原句（Wikipedia「页面」：原句）：${w}`);
+  for(const key of Object.keys(x??{}))if(!['term','citation'].includes(key))errors.push(`材料属性物品 appearance 字段未登记：${w}.${key}`);
+ });
  return errors;
 }
 export function validateMaterialProps(world){
@@ -568,6 +584,8 @@ export function validateMaterialProps(world){
   checkSources(row??{},where);
   for(const [k,v] of Object.entries(row??{})){
    if(k==='basis'||k==='sources'||k==='selection'||k==='mealCapBasis')continue;
+   // FOODMETAL：物品自己的外观（无配方的单件食材，个别偏离写在 props 行）：2–6 条 {term, citation}，citation 写页面与原句；只许物品行，不许类别行。
+   if(k==='appearance'&&where.startsWith('items.')){errors.push(...itemAppearanceErrors(v,where));continue;}
    if(!MATERIAL_DIMENSIONS.includes(k)){errors.push(`材料属性维度未登记：${where}.${k}`);continue;}
    const h=dims[k];if(!h)continue;
    if(typeof v!=='number'||!Number.isFinite(v)||v<h.min||v>h.max)errors.push(`材料属性越界：${where}.${k}=${v}（${h.min}–${h.max} ${h.unit}）`);

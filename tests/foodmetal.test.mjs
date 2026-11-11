@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {metalClass, metalProps, validatePhysical, validatePhysicalMetal, materialProps, deriveFromSources} from '../server-plugin/item-class.mjs';
+import {metalClass, metalProps, validatePhysical, validatePhysicalMetal, materialProps, deriveFromSources, itemAppearanceErrors, validateMaterialProps} from '../server-plugin/item-class.mjs';
 
 const table = JSON.parse(fs.readFileSync(new URL('../world/meta/mechanics/material-props.json', import.meta.url), 'utf8'));
 const pm = table.physicalMetal, phys = table.physical;
@@ -116,4 +116,60 @@ test('食物外观：只给有可靠共同外观的类别写 appearance，不写
   const e = {world: {items: [{id: 'i', tags: ['salt']}], recipes: [], materialProps: structuredClone(table)}, byId: new Map([['i', {id: 'i', tags: ['salt']}]])};
   assert.deepEqual(materialProps(e, 'i').densityKgPerL, {known: false});
   assert.equal(materialProps(e, 'i').appearance.known, true);
+});
+
+test('材料归类：放开修饰字与连写形态字（闭合词表），真实名称归得出；排除规则不变', () => {
+  assert.deepEqual(pm.modifiers, ['窄', '细', '薄', '熟', '退火']);
+  assert.deepEqual(pm.tailForms, ['束', '卷', '叠']);
+  assert.equal(metalClass(it('黄铜窄带', ['material']), pm), 'brass');
+  assert.equal(metalClass(it('细银丝束', ['material']), pm), 'silver');
+  assert.equal(metalClass(it('退火铁线卷', ['material']), pm), 'iron');
+  assert.equal(metalClass(it('锡片叠'), pm), 'tin', '形态字连写：片叠');
+  assert.equal(metalClass(it('薄铜片'), pm), 'copper');
+  assert.equal(metalClass(it('熟铁条'), pm), 'iron');
+  // 仍排除
+  for (const [n, tags] of [['金银花', []], ['钢刃热修书', ['book']], ['铁锭模', ['tool']], ['双槽铁锭模', []], ['铁线网片', ['craft']], ['交绕铁线网片', []], ['泊绳银片', ['coin']]])assert.equal(metalClass(it(n, tags), pm), undefined, n);
+  // 修饰字只认闭合词表；形态字之后只认形态字或连写尾字
+  assert.equal(metalClass(it('黄铜奇带'), pm), undefined, '修饰字不在词表');
+  assert.equal(metalClass(it('钢条夹'), pm), undefined, '尾字不在词表');
+  assert.equal(metalClass(it('钢束'), pm), undefined, '连写尾字之前必须先有形态字');
+  const custom = {nameWords: {x: ['甲']}, forms: ['乙'], modifiers: ['丙'], tailForms: ['丁'], excludeTags: []};
+  assert.equal(metalClass(it('甲丙丙乙丁'), custom), 'x');
+  assert.equal(metalClass(it('甲戊乙'), custom), undefined);
+  assert.ok(validatePhysicalMetal({...structuredClone(pm), modifiers: ['']}, phys).some(m => /modifiers/.test(m)));
+  assert.ok(validatePhysicalMetal({...structuredClone(pm), tailForms: [1]}, phys).some(m => /tailForms/.test(m)));
+});
+
+const overlay = JSON.parse(fs.readFileSync(new URL('../world/meta/mechanics/items.json', import.meta.url), 'utf8'));
+const withAppearance = Object.entries(overlay).filter(([, p]) => p.props?.appearance);
+
+test('物品自己的外观（无配方单件食材，写在 mechanics/items.json 的 props 行）：每条带页面与原句；materialProps 读到且来源为 item', () => {
+  assert.equal(withAppearance.length, 17);
+  for (const [id, p] of withAppearance) {
+    assert.ok(p.props.basis.trim(), `${id} 带 basis`);
+    assert.deepEqual(itemAppearanceErrors(p.props.appearance, `items.${id}.props`), [], id);
+    assert.ok(!p.props.appearance.some(a => /density|密度/.test(a.term)), `${id} 不写密度`);
+  }
+  const mk = id => { const o = overlay[id], item = {id, tags: o.tags ?? [], props: o.props}; return {world: {items: [item], recipes: [], materialProps: structuredClone(table)}, byId: new Map([[id, item]])}; };
+  const got = materialProps(mk('item_lentil'), 'item_lentil').appearance;
+  assert.equal(got.source, 'item');
+  assert.deepEqual(got.value, overlay.item_lentil.props.appearance.map(a => a.term));
+});
+
+test('物品外观的 L1：条数、词组、citation、字段都被检查；已有 props 行的 basis 原样保留', () => {
+  const bad = f => { const props = structuredClone(overlay.item_lentil.props); f(props); const item = {id: 'item_x', tags: ['x'], props}; return validateMaterialProps({items: [item], recipes: [], materialProps: {dimensions: structuredClone(table.dimensions), kcalPerSatiety: table.kcalPerSatiety, kcalPerSatietyBasis: table.kcalPerSatietyBasis, precedence: [], classes: {}}}); };
+  assert.deepEqual(bad(() => {}), []);
+  assert.ok(bad(p => { p.appearance = p.appearance.slice(0, 1); }).some(m => /2–6/.test(m)));
+  assert.ok(bad(p => { p.appearance[1].term = p.appearance[0].term; }).some(m => /重复/.test(m)));
+  assert.ok(bad(p => { p.appearance[0].citation = '凭记忆'; }).some(m => /页面与原句/.test(m)));
+  assert.ok(bad(p => { delete p.appearance[0].citation; }).some(m => /term 与 citation/.test(m)));
+  assert.ok(bad(p => { p.appearance[0].extra = 1; }).some(m => /字段未登记/.test(m)));
+  assert.ok(bad(p => { delete p.basis; }).some(m => /缺 basis/.test(m)));
+  for (const [id, p] of Object.entries(overlay))if (p.props?.sources) assert.ok(p.props.basis.trim(), `${id} 原 basis 保留`);
+});
+
+test('没有可引原句的食材不写（按未知）；类别内外观一致的仍按类别写', () => {
+  for (const id of ['item_wheat_grain', 'item_broad_bean', 'item_pear', 'item_cucumber', 'item_mutton', 'item_pork_fat', 'item_dry_mushroom', 'item_pearl_barley', 'item_rye_flour', 'item_rapeseed_oil'])assert.equal(overlay[id]?.props?.appearance, undefined, `${id} 缺项为未知`);
+  for (const id of ['item_dill', 'item_cream', 'item_hard_cheese', 'item_mustard_seed', 'item_poppy_seed', 'item_caraway_seed'])assert.equal(overlay[id]?.props?.appearance, undefined, `${id} 由类别外观提供，不另写`);
+  for (const id of ['item_water', 'item_bread', 'item_ration', 'item_wild_food'])assert.equal(overlay[id]?.props?.appearance, undefined, `${id} 不写外观`);
 });
