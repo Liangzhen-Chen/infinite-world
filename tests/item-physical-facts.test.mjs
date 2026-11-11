@@ -5,26 +5,33 @@ import fs from 'node:fs/promises';
 import {itemPhysicalFacts, sizeClassOf, volumeLiters, processSteps, formFacts, attachPhysical, PROCESS_VERBS} from '../tools/item-physical-facts.mjs';
 import {TRACES} from '../tools/w3-item-check.mjs';
 
-const props = {precedence: ['metal', 'wood'], classes: {wood: {densityKgPerL: 0.6, appearance: ['顺纹', '木色由浅黄到褐']}, metal: {densityKgPerL: 7.8}}};
+// 与真实表同形：表头 physical 块，密度由 sources 推出（不手写），appearance 是 {term, citation}。
+const cls = (density, terms = []) => ({sources: [{name: 'n', citation: 'c', densityKgPerL: density}], selection: {method: 'single', reason: 'r'}, ...(terms.length ? {appearance: terms.map(term => ({term, citation: 'c'}))} : {})});
+const props = {physical: {precedence: ['metal', 'wood'], classes: {wood: cls(0.6, ['顺纹', '木色由浅黄到褐', '年轮可见']), metal: cls(7.8)}}};
 const wood = weight => ({id: 'x_a', name: '甲', weight, tags: ['wood']});
 
 test('volumeL = weight ÷ 密度，两位有效数字；缺密度不写 volumeL 与 sizeClass', () => {
   assert.equal(itemPhysicalFacts(wood(0.27), {materialProps: props}).volumeL, 0.45);
   assert.equal(itemPhysicalFacts({id: 'x_b', weight: 0.6, tags: ['metal']}, {materialProps: props}).volumeL, 0.077);
   assert.equal(volumeLiters(1, 3), 0.33);
-  const noDensity = itemPhysicalFacts({id: 'x_c', weight: 0.5, tags: ['wood']}, {materialProps: {precedence: ['wood'], classes: {wood: {appearance: ['顺纹']}}}});
+  const noDensity = itemPhysicalFacts({id: 'x_c', weight: 0.5, tags: ['wood']}, {materialProps: {physical: {precedence: ['wood'], classes: {wood: {appearance: ['顺纹', '年轮可见', '木色浅黄'].map(term => ({term, citation: 'c'}))}}}}});
   assert.equal('volumeL' in noDensity, false);
   assert.equal('sizeClass' in noDensity, false);
-  assert.deepEqual(noDensity.appearance, ['顺纹']);
+  assert.deepEqual(noDensity.appearance, ['顺纹', '年轮可见', '木色浅黄']);
   assert.equal(itemPhysicalFacts({id: 'x_d', weight: 0.5, tags: ['wood']}, {}), undefined, '没有任何可核实事实时不返回对象');
   assert.equal(volumeLiters(0, 0.6), undefined);
   assert.equal(volumeLiters(1, 0), undefined);
 });
 
-test('appearance 取自材料类别，类别没有该项就不写；物品自己的 props 覆盖', () => {
-  assert.deepEqual(itemPhysicalFacts(wood(0.3), {materialProps: props}).appearance, ['顺纹', '木色由浅黄到褐']);
+test('appearance 取自材料类别，类别没有该项就不写；取值经 materialProps（含 sources 推密度），物品所属类别按表头 precedence', () => {
+  assert.deepEqual(itemPhysicalFacts(wood(0.3), {materialProps: props}).appearance, ['顺纹', '木色由浅黄到褐', '年轮可见']);
   assert.equal('appearance' in itemPhysicalFacts({id: 'x_b', weight: 0.6, tags: ['metal']}, {materialProps: props}), false);
+  // 物品自己的 props 覆盖类别值（密度、外观）；没写的维度仍取类别
   assert.equal(itemPhysicalFacts({...wood(0.3), props: {densityKgPerL: 0.3}}, {materialProps: props}).volumeL, 1);
+  assert.deepEqual(itemPhysicalFacts({...wood(0.3), props: {appearance: [{term: '深色心材', citation: 'c'}]}}, {materialProps: props}).appearance, ['深色心材']);
+  assert.equal(itemPhysicalFacts({...wood(0.3), props: {appearance: [{term: '深色心材', citation: 'c'}]}}, {materialProps: props}).volumeL, 0.5);
+  // 金属混合类：类别没有外观，物品自己写了才有
+  assert.deepEqual(itemPhysicalFacts({id: 'x_b', weight: 0.6, tags: ['metal'], props: {appearance: [{term: '灰黑', citation: 'c'}]}}, {materialProps: props}).appearance, ['灰黑']);
 });
 
 test('sizeClass 只按体积分档：界值归入上一档的下一档，最后一档无上界', () => {
@@ -45,6 +52,11 @@ test('processSteps：闭合动词词表（= TRACES 词干），按出现顺序�
   assert.deepEqual(processSteps('锻出短杆，再磨光。').map(s => s.verb), ['锻', '磨']);
   assert.deepEqual(processSteps('给皮革预穿缝孔，不能当凿石工具。'), [], '缝孔、凿石是名词或用途，不是工序');
   assert.deepEqual(processSteps('不削出刃口。'), [], '否定的工序不记');
+  assert.deepEqual(processSteps('先削椭圆再细修两端，把粗糙凸棱削平。').map(x => x.text), ['先削椭圆再细修两端', '把粗糙凸棱削平'], '句首、顺序词之后、把字结构里的工序动词');
+  assert.deepEqual(processSteps('用小刀削薄边口。').map(x => x.verb), ['削'], '用……工具短语之后');
+  assert.deepEqual(processSteps('磨坊工作时包住头发。'), [], '磨坊是名词');
+  assert.deepEqual(processSteps('用锉刀修边。'), [], '锉刀是名词');
+  assert.deepEqual(processSteps('备好刨屑。'), [], '刨屑是名词');
   assert.deepEqual(processSteps(undefined), []);
 });
 
