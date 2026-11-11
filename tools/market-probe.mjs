@@ -20,6 +20,7 @@ import {hazardPriceFactor} from '../server-plugin/hazard-calendar.mjs';
 import {exchangeRate,currencyValue} from '../server-plugin/currency.mjs';
 import {turnoverByResource,turnoverReference} from '../server-plugin/tender.mjs';
 import {factionClockRules} from '../server-plugin/faction-clock.mjs';
+import {householdBudget} from '../server-plugin/household-budget.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 
 const DAY=1440;
@@ -272,7 +273,10 @@ async function flow11(){
  const counter=await attempt(ctx,'开柜台','world_act',{action:'business:open_counter',slots:{business,coins:100}},'w4-counter');
  const opened=await attempt(ctx,'营业','world_act',{action:'core:settlement.business_open',slots:{business}},'w4-open');
  const before={ration:marketView(engine,ctx.doc,'item_ration',place),bread:marketView(engine,ctx.doc,'item_bread',place),items:[itemFacts(engine,'item_ration'),itemFacts(engine,'item_bread')]};
+ // 徐玲日前的家户采购预算（解释她为何在柜台买完后还去原生店买）：采购缺口、预算期内采购计划。
+ let budgetBefore=null;try{const b=householdBudget(engine.primitiveDraft(ctx.doc),engine,A);budgetBefore={members:b.members,procurementShortfall:b.procurementShortfall,shortfall:b.shortfall,cash:b.market?.cash,marketPurchases:b.market?.purchases,coverage:b.market?.coverage};}catch(e){budgetBefore={error:errorOf(e)};}
  const m=ctx.doc.state.minute,waited=await attempt(ctx,'等过午夜','world_time',{minutes:DAY-(m%DAY)+30},'w4-player-day');
+ const report=await attempt(ctx,'营业报表','world_act',{action:'core:settlement.business_report',slots:{business}},'w4-player-report');
  const flows=Object.values(ctx.doc.state.records).filter(r=>r.category==='customer_flow'&&r.shop===business);
  const acct=Object.values(ctx.doc.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
  return {compares:'flow[0].visits 的 [npc,item,quantity,paid,tax,outcome]（tests/s5-w4-economy.test.mjs:270）',
@@ -281,7 +285,13 @@ async function flow11(){
   allFlows:Object.values(ctx.doc.state.records).filter(r=>r.category==='customer_flow').map(r=>({shop:r.shop,day:r.day,minute:r.minute,visits:r.visits})),
   counterCoins:acct?.coins??null,xulingCoins:ctx.doc.state.npcs[A].coins,playerRation:quantityOf(ctx.doc.state.inventory.item_ration),playerBread:quantityOf(ctx.doc.state.inventory.item_bread),
   rationsNeededForSixtySatiety:(()=>{const s=engine.byId.get('item_ration')?.nutrition?.satiety;return s?{satietyEach:s,count:Math.ceil(60/s)}:null;})(),
-  after:{ration:marketView(engine,ctx.doc,'item_ration',place)}};
+  after:{ration:marketView(engine,ctx.doc,'item_ration',place)},
+  items:{flatbread:itemFacts(engine,'item_oat_flatbread')},budgetBeforeDay:budgetBefore,
+  placeholders:(()=>{ // 测试 :280-285 的 5 处断言所比较的量，运行时从状态读，不手写
+   const receipt=Object.values(ctx.doc.state.records).find(r=>r.category==='business_receipt'&&r.operation==='customer_sale');
+   return {TODO_PROBE_S5W4_11_ACCOUNT_COINS:acct?.coins??null,TODO_PROBE_S5W4_11_XULING_COINS:ctx.doc.state.npcs[A].coins,TODO_PROBE_S5W4_11_RATION_QTY:ctx.doc.state.inventory.item_ration?quantityOf(ctx.doc.state.inventory.item_ration):null,
+    TODO_PROBE_S5W4_11_RECEIPT:receipt?[receipt.coins,receipt.goods]:null,TODO_PROBE_S5W4_11_REVENUE:report.ok?report.result?.profit?.revenue??null:null};
+  })(),reportError:report.ok?null:report.error};
 }
 
 // ---------------------------------------------------------------- 8. m3-acceptance M9 旧世界导入

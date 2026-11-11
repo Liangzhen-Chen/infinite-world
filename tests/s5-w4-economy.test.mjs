@@ -16,6 +16,8 @@ import {customerPurseShare} from '../server-plugin/market.mjs';
 import {valuation,holdingValuation} from '../server-plugin/valuation.mjs';
 import {creatureTraits} from '../server-plugin/traits.mjs';
 
+// 待探针占位（TODO）：F026「玩家先服务」后 5 处断言的新值须由 tools/market-probe.mjs 的 s5-w4-economy-11 输出 placeholders 填入，不得手写；填入前这些断言必然失败（null 不等于任何值）。
+const TODO_PROBE_S5W4_11_ACCOUNT_COINS=null,TODO_PROBE_S5W4_11_XULING_COINS=null,TODO_PROBE_S5W4_11_RATION_QTY=null,TODO_PROBE_S5W4_11_RECEIPT=null,TODO_PROBE_S5W4_11_REVENUE=null;
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const mill='bld_hw_mill';
 const move=(f,destination,id)=>f.act({destination},id,'world_move');
@@ -277,12 +279,13 @@ test('F026 玩家先服务时，真实自动成交仍进入柜台、营业回执
     assert.equal(flow.length,1);
     assert.deepEqual(flow[0].visits.map(v=>[v.npc,v.item,v.quantity,v.paid,v.tax,v.outcome]),[[A,'item_ration',3,4,0,'bought']]);
     const account=Object.values(f.document.state.records).find(r=>r.category==='money_account'&&r.purpose==='counter');
-    assert.equal(account.coins,103);assert.equal(f.document.state.npcs[A].coins,37);
-    assert.equal(f.document.state.inventory.item_ration.quantity,1);assert.equal(f.document.state.inventory.item_bread.quantity,5);
+    // 以下 5 处（柜台钱、徐玲钱袋、口粮余量、回执、营业额）旧值 103/37/1/[3,{item_ration:-2}]/3 已不成立；新值待探针（徐玲买完 3 份口粮后另在原生店买燕麦薄饼，见 F:/dnd-tmp/mkt-mapping.md）。
+    assert.equal(account.coins,TODO_PROBE_S5W4_11_ACCOUNT_COINS);assert.equal(f.document.state.npcs[A].coins,TODO_PROBE_S5W4_11_XULING_COINS);
+    assert.equal(f.document.state.inventory.item_ration.quantity,TODO_PROBE_S5W4_11_RATION_QTY);assert.equal(f.document.state.inventory.item_bread.quantity,5);
     const receipt=Object.values(f.document.state.records).find(r=>r.category==='business_receipt'&&r.operation==='customer_sale');
-    assert.deepEqual([receipt.coins,receipt.goods],[3,{item_ration:-2}]);
+    assert.deepEqual([receipt.coins,receipt.goods],TODO_PROBE_S5W4_11_RECEIPT);
     const report=await f.act('core:settlement.business_report',{business:f.business},'w4-player-report');
-    assert.equal(report.profit.revenue,3);assert.equal(report.cash.reconciled,true);
+    assert.equal(report.profit.revenue,TODO_PROBE_S5W4_11_REVENUE);assert.equal(report.cash.reconciled,true);
     assert.deepEqual(reconcile(f.engine,f.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
