@@ -6673,9 +6673,9 @@
       ],
       "field": "description",
       "before": "旧磨坊出品的松木拼条窗扇，由2块松木板经手工刨削后拼成短扇面，背面以6枚铁钉固定横档。扇面宽窄适合小窗洞，拼条之间留有细缝以便随湿度伸缩。铰链、窗框与安装作业均不随货提供，需另行安排。成品重约1.65，表面仅刨光，未上漆。",
-      "after": "旧磨坊出品的松木拼条窗扇，重1.65公斤。2块松木板刨平后拼成短窗扇，背面横档用6枚铁钉钉住。成品不自带窗框，铰链和安装作业另算，不随货提供。",
+      "after": "旧磨坊按订单制作的松木拼条窗扇，重1.65公斤，体积2.7升，属中件，材料缺货时暂停交付。用窄框木锯与短底木刨处理2块风干松木短板，刨平板条后拼成短窗扇，背面横档以枣木敲凿槌敲入6枚铁钉钉住，制作约200分钟。木面心材色深于边材，早材色浅、晚材色深，现出年轮，纹理绕节而过，节疤色深近圆。成品不自带窗框，铰链和安装作业另算，不随货提供。",
       "basis": [
-        "item_shutter_panel.description 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e）。",
+        "item_shutter_panel.description 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
       ],
       "facts": {
@@ -6683,7 +6683,7 @@
           "revision": "w3-trades-1",
           "kind": "items",
           "record": "world/drafts/w3/trades/items/item_shutter_panel.json",
-          "fingerprint": "115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e",
+          "fingerprint": "960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3",
           "attempts": 3,
           "l4Rejection": false
         },
@@ -6710,9 +6710,9 @@
       ],
       "field": "inspection",
       "before": "逐条查看拼缝是否透光，过宽的缝隙说明拼合不严；用手掌压扇面两端，听有无松动异响；翻看背面横档，确认6枚铁钉无外露钉尖、无劈裂木纹；边缘若有毛刺，可用手背轻触判断。",
-      "after": "逐条查看拼缝是否透光，过宽的缝隙说明拼合不严；用手掌压扇面两端，听有无松动异响；翻看背面横档，确认6枚铁钉无外露钉尖、无劈裂木纹。",
+      "after": "逐条查看拼缝是否透光，过宽的缝隙说明拼合不严；翻看背面横档，确认6枚铁钉无外露钉尖、无劈裂木纹；看年轮与节疤处有无裂纹。",
       "basis": [
-        "item_shutter_panel.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e）。",
+        "item_shutter_panel.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
       ],
       "facts": {
@@ -6720,7 +6720,7 @@
           "revision": "w3-trades-1",
           "kind": "items",
           "record": "world/drafts/w3/trades/items/item_shutter_panel.json",
-          "fingerprint": "115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e",
+          "fingerprint": "960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3",
           "attempts": 3,
           "l4Rejection": false
         },
@@ -6749,7 +6749,7 @@
       "before": "平放于干燥木架上，扇面朝上，避免重物压覆；远离炉火与漏水处，勿靠墙斜立。存放环境保持通风，勿以湿布擦拭。",
       "after": "置于干燥处，避潮，避免重压。",
       "basis": [
-        "item_shutter_panel.storage 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e）。",
+        "item_shutter_panel.storage 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
       ],
       "facts": {
@@ -6757,7 +6757,7 @@
           "revision": "w3-trades-1",
           "kind": "items",
           "record": "world/drafts/w3/trades/items/item_shutter_panel.json",
-          "fingerprint": "115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e",
+          "fingerprint": "960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3",
           "attempts": 3,
           "l4Rejection": false
         },
@@ -12819,13 +12819,13 @@
       "id": "item_shutter_panel-description",
       "target": "item_shutter_panel",
       "field": "description",
-      "value": "旧磨坊出品的松木拼条窗扇，重1.65公斤。2块松木板刨平后拼成短窗扇，背面横档用6枚铁钉钉住。成品不自带窗框，铰链和安装作业另算，不随货提供。"
+      "value": "旧磨坊按订单制作的松木拼条窗扇，重1.65公斤，体积2.7升，属中件，材料缺货时暂停交付。用窄框木锯与短底木刨处理2块风干松木短板，刨平板条后拼成短窗扇，背面横档以枣木敲凿槌敲入6枚铁钉钉住，制作约200分钟。木面心材色深于边材，早材色浅、晚材色深，现出年轮，纹理绕节而过，节疤色深近圆。成品不自带窗框，铰链和安装作业另算，不随货提供。"
     },
     {
       "id": "item_shutter_panel-inspection",
       "target": "item_shutter_panel",
       "field": "inspection",
-      "value": "逐条查看拼缝是否透光，过宽的缝隙说明拼合不严；用手掌压扇面两端，听有无松动异响；翻看背面横档，确认6枚铁钉无外露钉尖、无劈裂木纹。"
+      "value": "逐条查看拼缝是否透光，过宽的缝隙说明拼合不严；翻看背面横档，确认6枚铁钉无外露钉尖、无劈裂木纹；看年轮与节疤处有无裂纹。"
     },
     {
       "id": "item_shutter_panel-storage",
@@ -18501,7 +18501,7 @@
     },
     {
       "sourceFacts": [
-        "item_shutter_panel.description 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e）。",
+        "item_shutter_panel.description 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
       ],
       "referencedFacts": {
@@ -18509,7 +18509,7 @@
           "revision": "w3-trades-1",
           "kind": "items",
           "record": "world/drafts/w3/trades/items/item_shutter_panel.json",
-          "fingerprint": "115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e",
+          "fingerprint": "960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3",
           "attempts": 3,
           "l4Rejection": false
         },
@@ -18528,7 +18528,7 @@
     },
     {
       "sourceFacts": [
-        "item_shutter_panel.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e）。",
+        "item_shutter_panel.inspection 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
       ],
       "referencedFacts": {
@@ -18536,7 +18536,7 @@
           "revision": "w3-trades-1",
           "kind": "items",
           "record": "world/drafts/w3/trades/items/item_shutter_panel.json",
-          "fingerprint": "115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e",
+          "fingerprint": "960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3",
           "attempts": 3,
           "l4Rejection": false
         },
@@ -18555,7 +18555,7 @@
     },
     {
       "sourceFacts": [
-        "item_shutter_panel.storage 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e）。",
+        "item_shutter_panel.storage 的正式正文与 trades 流程里已审批的草稿正文不同：该条目在授权清单里（李白（5 元以内纯技术授权，零花费），李白 11-10 决定 d2952b39（docs/m27-rewrite-scope.md）：T1 行当批配方 25 条人工改写加独立 L4 后另建授权清单发布；I1 行当批物品 76 件全部改（第一批硬伤类、第二批尺寸类）；29 条已过审稿照汇总顺序写入（其中行当批 14 条）；storage 口径确认 a368335c 后整类重审，原先通过的 24 件物品按新口径不过、人工改写。全部经独立严格 L4（审查者与改写者不同）与两批 L4 批准。；李白 J2（纯技术、零花费）：ITEMCK 回扫存量命中 item_sheath_pouch（storage 后果说法），人工改写、独立严格 L4 过后发布，2026-11-10），其草稿已经 L1、L2 与所在批次的 L4（记录 world/drafts/w3/trades/items/item_shutter_panel.json，指纹 960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3）。",
         "正文新值就是该已审批记录里的草稿，本批不另写正文、不另发 L2；审批核验复用 trades 记录的 L1/L2/L4。"
       ],
       "referencedFacts": {
@@ -18563,7 +18563,7 @@
           "revision": "w3-trades-1",
           "kind": "items",
           "record": "world/drafts/w3/trades/items/item_shutter_panel.json",
-          "fingerprint": "115104a8d188654188213099b7d81c1787c38b98feed3f37ad4f6955d5e01c7e",
+          "fingerprint": "960416dde85ea719d175b2a7ffae8dbaf535dfb726f4afdc21247d834053cbb3",
           "attempts": 3,
           "l4Rejection": false
         },

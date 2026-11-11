@@ -1,19 +1,19 @@
 {
   "id": "item_darning_egg",
-  "fingerprint": "f493fd058d3488ee4220c3d111241917628bb5909d2384bf96bdc9f8a94c73de",
+  "fingerprint": "7736c496fd6e6a98244629be52a6e25c8e2118aa508eb770294d598f292ae19b",
   "status": "passed",
   "attempts": 1,
   "draft": {
     "id": "item_darning_egg",
-    "description": "旧磨坊按工坊订单制作的补袜木卵，重0.15公斤，工具维修季交货可能推迟。取一段木料，只用一把削木小刀，先削出椭圆的整体，再细修两端，把粗糙凸棱削平，削制约40分钟。余料留作一份干刨屑。放在袜内托住破洞，便于重新织补。",
-    "inspection": "对光转动卵身，看整体是否呈椭圆、两端修得是否对称；指腹沿弧面与两端抚过，看粗糙凸棱是否已削平。",
+    "description": "旧磨坊按工坊订单制作的补袜木卵，重0.15公斤，体积0.24升，属小件，工具维修季交货可能推迟。取一段木料，只用一把削木小刀，先削椭圆再细修两端，把粗糙凸棱削平，削制约40分钟。木面心材色深于边材，早材色浅、晚材色深，现出年轮。余料留作一份干刨屑。放在袜内托住破洞，便于重新织补。",
+    "inspection": "对光转动卵身，看木面年轮是否清晰、心材与边材色差是否自然；看整体是否呈椭圆、两端修得是否对称，指腹沿弧面与两端抚过，看粗糙凸棱是否已削平。",
     "storage": "置于干燥处，避免受潮与重压，不宜暴晒。"
   },
   "review": {
     "kind": "manual-rewrite-no-l2",
     "l2": "not-run",
     "by": "sonnet-writer-a68aa109",
-    "at": "2026-11-11T01:50:15.180Z"
+    "at": "2026-11-11T02:18:50.071Z"
   },
   "errors": [],
   "warnings": [],
@@ -55,6 +55,30 @@
         "at": "2026-11-11T01:41:34.314Z"
       },
       "priorAttempts": 1
+    },
+    {
+      "by": "sonnet-writer-a68aa109",
+      "at": "2026-11-11T02:18:50.071Z",
+      "reason": "用骨架派生事实 physical 把波次样本写具体；独立严格 L4 已过（审查者 sonnet-l4-a1f0bc43）",
+      "headCommit": "3cce6d4e3bb35c10a2eb1b8b73777368b3cb953f",
+      "priorStatus": "passed",
+      "priorDraft": {
+        "id": "item_darning_egg",
+        "description": "旧磨坊按工坊订单制作的补袜木卵，重0.15公斤，工具维修季交货可能推迟。取一段木料，只用一把削木小刀，先削出椭圆的整体，再细修两端，把粗糙凸棱削平，削制约40分钟。余料留作一份干刨屑。放在袜内托住破洞，便于重新织补。",
+        "inspection": "对光转动卵身，看整体是否呈椭圆、两端修得是否对称；指腹沿弧面与两端抚过，看粗糙凸棱是否已削平。",
+        "storage": "置于干燥处，避免受潮与重压，不宜暴晒。"
+      },
+      "priorReview": {
+        "kind": "manual-rewrite-no-l2",
+        "l2": "not-run",
+        "by": "sonnet-writer-a68aa109",
+        "at": "2026-11-11T01:50:15.180Z"
+      },
+      "priorAttempts": 1,
+      "priorFingerprint": "f493fd058d3488ee4220c3d111241917628bb5909d2384bf96bdc9f8a94c73de"
     }
+  ],
+  "skeletonFields": [
+    "physical"
   ]
 }

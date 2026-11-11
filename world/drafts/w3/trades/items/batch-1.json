@@ -1,6 +1,6 @@
 {
   "index": 1,
-  "fingerprint": "f8d47f40c0de8eb6d6b36650e02c41cb3f8292867d8207e21b7fae5825d3f3b6",
+  "fingerprint": "8287c147e570e2d2f5b107a53c0292e0f44ff1e09810f76b427f1ec3adbe8010",
   "count": 34,
   "passed": 34,
   "ids": [
@@ -72,7 +72,6 @@
     "item_bread_board",
     "item_thread_rack",
     "item_walking_crutch",
-    "item_shutter_panel",
     "item_tool_tray",
     "item_book_trades_wood"
   ],
@@ -85,9 +84,9 @@
   ],
   "l4": {
     "approved": true,
-    "reviewer": "sonnet-l4-a849fd89",
-    "by": "sonnet-l4-a849fd89",
-    "reviewedAt": "2026-11-11T00:21:15.445Z",
+    "reviewer": "sonnet-l4-a1f0bc43",
+    "by": "sonnet-l4-a1f0bc43",
+    "reviewedAt": "2026-11-11T02:19:01.388Z",
     "notes": [
       {
         "id": "item_ink_brush",
@@ -240,11 +239,6 @@
         "by": "sonnet-l4-a849fd89"
       },
       {
-        "id": "item_shutter_panel",
-        "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
-        "by": "sonnet-l4-a849fd89"
-      },
-      {
         "id": "item_tool_tray",
         "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
         "by": "sonnet-l4-a849fd89"
@@ -258,6 +252,11 @@
         "id": "item_pea_spread",
         "note": "批。整件读：干豌豆规定清水泡软、木刨花引火、煮透、木匙压粗泥、刮净焦点、加盐、不掺油脂均合 pf；无模糊用量；容器另备如实；i 无器具；storage 阴凉与1天合骨架",
         "by": "sonnet-l4-a849fd89"
+      },
+      {
+        "id": "item_shutter_panel",
+        "note": "改后批。整件重读：器具与材料已用配方原名（窄框木锯、短底木刨、枣木敲凿槌、风干松木短板），2块板、6枚铁钉、约200分钟、重1.65公斤、体积2.7升、中件、seasonality 转述、physical 外观照抄均与骨架一致；storage 为木材一般建议，无保存期。",
+        "by": "sonnet-l4-a1f0bc43"
       }
     ]
   },
@@ -947,6 +946,192 @@
         "reason": "新增确定性检查（模糊用量、身体尺度，L4 清单第 8 条）回扫存量命中，严格 L4 曾漏判；整件人工改写，独立严格 L4 已过。",
         "ids": [
           "item_pea_spread"
+        ]
+      }
+    },
+    {
+      "approved": false,
+      "reviewer": "sonnet-l4-a849fd89",
+      "by": "sonnet-l4-a849fd89",
+      "reviewedAt": "2026-11-11T00:21:15.445Z",
+      "notes": [
+        {
+          "id": "item_ink_brush",
+          "note": "小学堂对应school；颜料和水另备出自骨架；storage勿压笔头由笔头推出",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_leek_fish_pot",
+          "note": "一份木刨花与配方1一致；鱼刺保留与残渣弃置出自骨架；storage 1天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_book_trades_wood",
+          "note": "十个工序、识字100、300分钟均与骨架一致；storage纸质避雨避晒防压，365天一致",
+          "by": "sonnet-l4-a8e3953b"
+        },
+        {
+          "id": "item_grooving_wheel",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_flat_file",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_round_file",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_iron_punch",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_rivet_set",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_hand_bellows",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_stone_mortar",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_fine_sieve",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_reed_pen",
+          "note": "小学堂为origin名；补货句同seasonality；s勿压笔尖可由开缝笔尖推出",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_mining_pick",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_sheet_shears",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_barley_pea_stew",
+          "note": "脱壳大麦名一致；两份木刨花引火合骨架；无盖；容器另备仅交付；1天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_turnip_oat_cake",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_honey_nut_cake",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_onion_egg_soup",
+          "note": "木刨花引火交代；四枚蛋照processFacts；1天内合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_honey_curd_spread",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_vinegar_carrot",
+          "note": "120分钟合骨架minutes；2天合shelfLifeDays",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_cabbage_barley",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_apple_rye_griddle",
+          "note": "一份木刨花引火；1天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_book_trades_kitchen",
+          "note": "作者版本等级小学堂均合book字段；十个工序名与teaches 10个recipe名逐一对照且顺序一致；识字100、300分钟、365天合骨架；s避潮避晒防压由书页推出",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_lidded_seed_box",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_three_leg_stool",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_wall_shelf",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_foot_rest",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_bread_board",
+          "note": "木锉在tools；s避潮由木板推出",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_thread_rack",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_walking_crutch",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_shutter_panel",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_tool_tray",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_willow_creel",
+          "note": "在原整件严格 L4 基础上，核对了重量单位改动：原无单位处补写“公斤”，数值等于骨架 weight，句子通顺，三字段其余未变，结论为批。",
+          "by": "sonnet-l4-a849fd89"
+        },
+        {
+          "id": "item_pea_spread",
+          "note": "批。整件读：干豌豆规定清水泡软、木刨花引火、煮透、木匙压粗泥、刮净焦点、加盐、不掺油脂均合 pf；无模糊用量；容器另备如实；i 无器具；storage 阴凉与1天合骨架",
+          "by": "sonnet-l4-a849fd89"
+        }
+      ],
+      "rejection": {
+        "by": "主会话",
+        "at": "2026-11-11T02:18:50.753Z",
+        "reason": "用骨架新增派生事实 physical（体积、尺寸档、材料外观、工序）把波次样本写具体（李白定方向）；独立严格 L4 已过。",
+        "ids": [
+          "item_shutter_panel"
         ]
       }
     }
