@@ -116,7 +116,12 @@ test('运行时世界带上全部机制字段；据点不再生制成品；重�
   // 所以盘上口粮 30、运行时 26；牛乳盘上无饱腹、运行时由热量推出 22。按 M27REG 处理 drinkable 的先例：派生出的字段两边都剥掉，其余字段逐字比较；
   // 判断依据是引擎的派生标记——运行时行带 nutrientBase（deriveItemAttributes 给全部可食物品写入，item-class.mjs:249）。派生值本身由 tests/satiety-factor.test.mjs 管
   // （系数、手写视为基值、配方派生、重复派生不变），不在这里比。未带标记的行 nutrition 整体逐字比较。
-  const dropDerivedSatiety = (rt, row) => rt.nutrientBase !== undefined && row.nutrition ? {...row, nutrition: Object.fromEntries(Object.entries(row.nutrition).filter(([k]) => k !== 'satiety'))} : row;
+  // drinkable 同理（M27REG 在第一项已按此口径处理）：规则派生出的 id（drinkableByRule），两边都去掉 drinkable 标签再比，其余标签逐字比。
+  const ruleDrinkable = drinkableByRule(runtime);
+  const dropDerivedSatiety = (rt, row0) => {
+    const row = ruleDrinkable.has(row0?.id) && Array.isArray(row0.tags) ? {...row0, tags: row0.tags.filter(t => t !== 'drinkable')} : row0;
+    return rt.nutrientBase !== undefined && row.nutrition ? {...row, nutrition: Object.fromEntries(Object.entries(row.nutrition).filter(([k]) => k !== 'satiety'))} : row;
+  };
   for (const [i, row] of reviewed.items.entries()) {
     const rt = runtime.items[i];
     for (const key of Object.keys(row)) assert.equal(canonical(dropDerivedSatiety(rt, row)[key]), canonical(dropDerivedSatiety(rt, rt)[key]), `${row.id}.${key}`);
