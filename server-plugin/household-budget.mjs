@@ -1,4 +1,4 @@
-// Read-only household budgets. A target is a preference, never a transfer.
+// Household budgets: reads never write, with one exception — householdPoolTopUp, the only transfer here, which moves coins between purses of one registered household (writer household-pool) just before a payer pays. A target is a preference, never a transfer. Subjective reads pool the household's items, purses and open obligations; the explicit kernel read stays per-person cash. householdResources' kernel/market callers (market.mjs and friends) keep personal cash by design (objective read, follow-up if a pooled objective read is wanted).
 import {bagStock,bag,priceRead,itemResource,crop as cropAccount} from './stock.mjs';
 import {coinRead,purse,COIN,moveCoins,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';

@@ -7,7 +7,7 @@ import {isEffective} from './lifecycle-state.mjs';
 import {placeSettlement,personHousehold} from './entity-view.mjs';
 import {marketQuote,recordMarketDeal,saleableStock} from './market.mjs';
 import {transferItems} from './items.mjs';
-import {purse,moveCoins,mirrorPartyCoins,coinRead} from './money.mjs';
+import {purse,moveCoins,mirrorPartyCoins,coinRead,counterCash} from './money.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
@@ -85,7 +85,7 @@ export function buyFromHolders(d,engine,{buyer,settlement,item,want,minute,event
   const eventId=`${eventPrefix}:${item}:${seller}`;
   obligationTransaction(d,()=>{
    transferItems(d,engine,seller,buyer,item,low,null,{disposition:true,eventId});
-   if(pay)pay({to:purse(engine,seller),amount:cost,eventId});
+   if(pay){householdPoolTopUp(d,engine,buyer,Math.max(0,cost-counterCash(d,buyer)),eventId);pay({to:purse(engine,seller),amount:cost,eventId});}
    else{householdPoolTopUp(d,engine,buyer,cost,eventId);moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'distribution',eventId});mirrorPartyCoins(d,engine,buyer,-cost,eventId,'distribution');}
    mirrorPartyCoins(d,engine,seller,cost,eventId,'distribution');
    recordMarketDeal(d,quote,cost,low,eventId);
