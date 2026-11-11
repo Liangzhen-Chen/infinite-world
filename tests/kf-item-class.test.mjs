@@ -6,12 +6,17 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {auditLedger} from '../server-plugin/ledger.mjs';
 import {materializeRuntimeWorld} from '../server-plugin/runtime-world.mjs';
-import {deriveItemAttributes,satietyFactor,isItemClass,itemClasses,resolveMaterials,pickHeldOfClass} from '../server-plugin/item-class.mjs';
+import {deriveItemAttributes,satietyFactor,isItemClass,itemClasses,resolveMaterials,pickHeldOfClass,materialProps} from '../server-plugin/item-class.mjs';
 
 const world=await loadWorld();
 const seed=JSON.parse(fs.readFileSync('tests/fixtures/legacy/seed.json','utf8'));
 const engine=new WorldEngine(structuredClone(world));
 const item=id=>engine.byId.get(id);
+// 水分规则（WATER-1B）：食物水分 = 重量×含水率×参照水每公斤水分（item_water：25÷(0.25×含水1)=100/kg），一份低于参照水一份的一半（12.5）记 0；缺含水率为 0。手算锚点，不读被测实现。
+const hydrationOfWater=(e,kg)=>{
+  const ref=e.byId.get('item_water'),h=kg*ref.nutrition.hydration/(ref.weight*materialProps(e,ref.id).moisture.value);
+  return h>=0.5*ref.nutrition.hydration?Math.floor(h):0;
+};
 const authored=new Map(world.items.map(i=>[i.id,i]));
 
 test('营养由配方投入守恒派生：没写营养的食物照样有营养，且不超过投入之和', () => {
@@ -21,7 +26,11 @@ test('营养由配方投入守恒派生：没写营养的食物照样有营养�
   const r=world.recipes.find(x=>x.output.item==='item_oat_crisp');
   // 能量守恒在“按热量基值”（nutrientBase，未乘饱腹系数）上成立；系数只在最后乘一次。
   const sum=need=>r.materials.reduce((n,m)=>n+(item(m.item).nutrientBase?.[need]??0)*m.amount,0)/r.output.quantity;
-  assert.ok(crisp.nutrientBase.satiety<=sum('satiety')&&crisp.nutrition.hydration<=sum('hydration'),JSON.stringify(crisp.nutrition));
+  assert.ok(crisp.nutrientBase.satiety<=sum('satiety'),JSON.stringify(crisp.nutrition));
+  // 水分守恒（质量）：含水量不得超过产物自身质量（多余水分蒸发或滤出），水分 = 含水量×100/kg（参照水 25÷0.25），所以水分 ≤ 重量×100。
+  assert.ok(crisp.nutrientBase.water<=crisp.weight+1e-12,String(crisp.nutrientBase.water));
+  // 手算精确值：燕麦粉干物质 0.4×(1−0.106)=0.358kg ＞ 成品 0.28kg，烤脆后含水 0（水 0.25kg 全部烤掉），水分 0。
+  assert.equal(crisp.nutrition.hydration??0,0);
   // 写了营养的维度照用（作为按热量的基值），与推导值一样乘饱腹系数
   const ration=authored.get('item_ration').nutrition.satiety;
   assert.equal(item('item_ration').nutrition.satiety,Math.floor(ration*satietyFactor(engine.world,item('item_ration'),ration)));
@@ -53,7 +62,10 @@ test('新物品、新配方不写营养也照样派生（规律不认 id）', ()
   deriveItemAttributes(w);
   const soup=w.items.find(i=>i.id==='item_kf_soup'),root=w.items.find(i=>i.id==='item_kf_root');
   assert.ok(root.nutrition.satiety>0&&soup.nutrition.satiety>root.nutrition.satiety&&soup.nutrition.satiety<=2*root.nutrientContent.satiety);
-  assert.ok(soup.nutrition.hydration>0&&soup.nutrition.hydration<=25);
+  // 试验汤的水分（质量守恒）：干物质 = 2×(根重 − 根含水量)（水 0.25kg 全是水，木炭为燃料不计），含水量 = clamp(成品重 − 干物质, 0, 2×根含水量 + 0.25)；×100/kg 过 12.5 门槛。根的含水率按其出处（未知则含水量 0、全计干物质）。
+  const E={world:w,byId:new Map(w.items.map(i=>[i.id,i]))},rootM=materialProps(E,root.id).moisture;
+  const rootWater=rootM.known?root.weight*rootM.value:0,kg=Math.min(2*rootWater+0.25,Math.max(0,soup.weight-2*(root.weight-rootWater)));
+  assert.equal(soup.nutrition?.hydration??0,hydrationOfWater(E,kg));
 });
 
 test('用途按类别：药、粮、饵、燃料、盐、日用品都看标签，不看 id', () => {

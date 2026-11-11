@@ -36,7 +36,14 @@ test('饮品规则：液态食物按类别标签、一份水分够解渴者能�
 test('饮品规则：配方产物投入全是液态且质量基本保留则能喝（兑制温饮）', () => {
  const it=derived();
  assert.ok(it.get('brew').tags.includes('drinkable'));
- assert.ok(it.get('brew').nutrition.hydration>0);
+ // 手算（质量守恒）：干物质 = 醋 0.05×(1−0.938)=0.0031kg（水全是水，燃料不进成品）；含水量 = 成品 0.25 − 0.0031 = 0.2469kg（不超过原料带入的 0.2969）；×100 = 24.69 → 24 ≥ 12.5。
+ assert.equal(it.get('brew').nutrition.hydration,24);
+});
+test('配方产物含水量由质量守恒定：凝块成品 0.1kg，干物质占去大半，含水 2.04 低于 12.5 门槛，水分 0', () => {
+ // 手算：干物质 = (4 份乳 4×0.3×(1−0.87)=0.156 + 醋 0.0031)÷2 份=0.0796kg；含水量 = 0.1 − 0.0796 = 0.0204kg → 2.04。
+ const curd=derived().get('curd');
+ assert.equal(curd.nutrition?.hydration,undefined);
+ assert.ok(curd.nutrientBase.water<=curd.weight+1e-12);
 });
 test('饮品规则反例：沥去液体后质量大减的凝块不是饮品', () => {
  assert.ok(!derived().get('curd').tags.includes('drinkable'));

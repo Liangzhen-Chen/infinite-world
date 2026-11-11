@@ -5,7 +5,7 @@ import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo,setRecordRow} from './storage.mjs';
 import {compileRX,evaluateRX} from './rx.mjs';
-import {householdMealPlan,usageItemGrams} from './household-budget.mjs';
+import {householdMealPlan,usageItemGrams,registerHouseholdFreeWater} from './household-budget.mjs';
 import {householdUsage,isItemClass,heldOfClass} from './item-class.mjs';
 import {warClosedRoutes} from './hazard-calendar.mjs';
 import {facilityRouteStates} from './facility-state.mjs';
@@ -684,3 +684,29 @@ export function supplyHousehold(d,e,owner,day,meal,{registered=false,settlement=
  return {nutrition,sources};
 }
 const sourcesIndex=sources;
+// 预算侧的免费水（只读）：与每日取水共用 journey('water') 的选址，毫升与水分的换算同 supplyHousehold；只扣当日份。
+// 客观读：真实 journey（含水质门槛），可取量 = min(当日需求对应毫升, 水体可取量)。
+// 主观读（居民只知道事实、不知道水质与水量）：只看住处往返分钟 ≤ nearWaterRoundTripMinutes 的 near 分支，扣当日需求本身，不读水质与水量；取不到的差额由午夜实取记入缺口。
+registerHouseholdFreeWater((d,e,owner,{view=null,hydrationNeed})=>{
+ const none={hydration:0,source:null},r=config(e),rules=e.rules.forestWater?.water,base=r&&bodyRule(e,'hydration').drainPerHour.light*24;
+ // 世界没有取水规则（无 householdSubsistence / forestWater）或没有水分代谢时，没有“免费水”这回事：明确返回无水（与 readJourney 缺规则时无水源同口径）。
+ if(!r||!rules||!(rules.drinkingMlPerPerson>0)||!(base>0)||!(hydrationNeed>0))return none;
+ if(!(r.nearWaterRoundTripMinutes>=0))throw Error('householdSubsistence.nearWaterRoundTripMinutes missing');
+ const state=d.get('state'),h=personHousehold(e,state,owner).value,person=e.byId.get(owner),home=h?.homeLocation??person?.home?.location??person?.location??state.npcs?.[owner]?.location;
+ if(!home)return none;
+ if(view){
+  const near=sourceGeography(e,state,home,'water',state.minute).candidates.find(s=>sourceAccessible(e,state,s)&&2*Math.ceil(s.distance*60/e.rules.travel.walkKmh)<=r.nearWaterRoundTripMinutes);
+  return near?{hydration:hydrationNeed,source:near.id}:none;
+ }
+ // 与午夜实取同一选择：当日已存的取水计划（supplyHousehold 读的同一行）里的水源，且须 executableSource（取水人可去、路未封）与 usableWater（水质）；
+ // 计划尚未生成时退回 journey('water') 的选址。
+ const day=Math.floor(state.minute/DAY),hit=planRecord(state,owner,day*DAY+480),p=hit?.households[state.family?.subsistence?.[1]?.[owner]?.[1]];
+ let water;
+ if(p){
+  const basin=p.water&&sources(e,state).waterById.get(p.water.id);
+  water=basin&&executableSource(e,state,{...basin,...p.water},day)&&usableWater(e,state,basin,day)?{...basin,...p.water}:null;
+ }else water=journey(e,state,home,'water',state.minute);
+ if(!water)return none;
+ const ml=Math.min(Math.ceil(hydrationNeed*rules.drinkingMlPerPerson/base),Math.floor(ecology.basinState(e,state,water).waterMl/ecology.waterResourceFactor(e,state,water.location)));
+ return {hydration:Math.min(hydrationNeed,Math.max(0,ml)*base/rules.drinkingMlPerPerson),source:water.id};
+});

@@ -240,6 +240,7 @@ function nonShopTraders(engine){
  }
  return list;
 }
+// 跟进卡 WATER-1B：权重只看饱腹缺口，纯水分货（清水、乳，见 feeds）的份额因此按饱腹需求分配；权重应含水分缺口。本卡不改。
 // 同一卖家的同一件可售食物只有一份存量，却会被本聚落所有付得起钱的买方各自当作替代来源。
 // 买方户的“口粮替代”读到的 quantity 因此不是卖家的全部可售量，而是这位买方在全部潜在买方之间应得的一份：
 // 潜在买方 = 本聚落里手上有钱、且不靠自家存粮就有口粮缺口或要占用存粮的人（卖家同户的人不算，他们不向自家买）；
@@ -320,6 +321,8 @@ export function shareByNeed(total,rows,u=0){
  for(const r of part)out.set(r.id,r.n);
  return out;
 }
+// 家户来源收录一切补任一营养维度（饱腹或水分）的货：预算次序按每铜有效覆盖在它们之间选，纯水分货（清水、乳）也在其内，店内成交与预算同一口径。
+const feeds=(engine,item)=>{const n=engine.byId.get(item)?.nutrition;return n?.satiety>0||n?.hydration>0;};
 registerHouseholdFoodHabit(foodHabit);
 registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
  const state=d.get('state'),now=state.minute,location=view?.self.location??(owner==='player'?state.location:state.npcs?.[owner]?.location),place=placeSettlement(engine,state,location).value;
@@ -338,7 +341,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   read=cursor?build():d.memo?d.memo(engine,[householdReadSymbol],build,v=>({engine:v.engine,shops:v.shops})):build();
   if(cursor)householdSourceReads.set(cursor,read);
  }
- const out=[];
+ const out=[],considered=new Set();
  for(const shop of read.shops){
   if(shop.settlement!==place||shop.keeper!==owner&&members.includes(shop.keeper)||view&&shop.keeper!==owner)continue;
   let travel=0;
@@ -348,10 +351,11 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   // reaches the shelf on the delivery cycle regardless of one's own hours.
   const opening=shop.keeper===owner?{minute:now+travel,location:shop.location}:nextFoodService(engine,state,shop,now+travel);
   if(!opening||opening.location!==shop.location)continue;
+  considered.add(shop.id);
   const ledger=state.records?.[`shop:${shop.id}`];
   let physical=null;
   for(const row of shop.restock){
-   if(!(engine.byId.get(row.item)?.nutrition?.satiety>0))continue;
+   if(!feeds(engine,row.item))continue;
    const own=shop.keeper===owner;
    if(!own){
     physical??=physicalOf(d,engine,read,shop.keeper);
@@ -423,11 +427,12 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   else candidates=d.memo?d.memo(engine,[reachSymbol,reachKey],reachable):reachable();
   for(const {id,location:serviceAt,at} of candidates){
    if(id===owner||members.includes(id)||taken.has(id))continue;
+   considered.add(`trader_${id}`);
    const first={location:serviceAt};
    const physical=physicalOf(d,engine,read,id);
    const business={keeper:id,markup:1};
    for(const row of physical.rows){
-    if(row.holder!==id||!(engine.byId.get(row.item)?.nutrition?.satiety>0)||!(row.available>0))continue;
+    if(row.holder!==id||!feeds(engine,row.item)||!(row.available>0))continue;
     const quantity=sellerShare(d,engine,state,place,read,owner,id,row.item,row.available);if(!quantity)continue;// householdResources 返回的行已去掉 definition，按物品表判食物（与店铺分支同）
     const base=regionalTradeBase(d,engine,row.item,place,now);
     const quote=marketQuote(d,engine,{item:row.item,location:first.location,seller:id,buyer:owner,business,base,relation:engine.rules.economy.priceFactorLimits.relation[1],supply:{place,goods:goodsClass(engine,row.item),supply:0,demand:1}});
@@ -441,7 +446,7 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   const q=fact.value;
   if(fact.kind==='belief'||!q||!Number.isSafeInteger(q.quantity)||q.quantity<=0||!(q.unitPrice>0)||!Number.isFinite(q.at)||!Number.isFinite(q.expires)||q.at>q.expires||q.expires<now||members.includes(q.seller))continue;
   const shop=shopStores(engine.world).find(s=>s.keeper===q.seller&&s.settlement===place&&s.restock.some(r=>r.item===q.item));
-  if(!shop||!(engine.byId.get(q.item)?.nutrition?.satiety>0))continue;
+  if(!shop||!feeds(engine,q.item))continue;
   // The received offer carries its pickup window; do not query the seller's
   // private current schedule, stock or status to silently correct that offer.
   const pickup=q.location??shop.location??engine.byId.get(shop.keeper)?.workplace?.location??engine.byId.get(shop.keeper)?.location;
@@ -451,6 +456,8 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
   if(!Number.isFinite(travel)||travel>customerReachMinutes(engine)||at>q.expires)continue;
   out.push({source:fact.source??shop.id,seller:q.seller,item:q.item,at,quantity:q.quantity,unitPrice:q.unitPrice,priceBasis:'received-offer',expires:q.expires});
  }
+ // 过滤前（到店可达、营业）考虑过的来源编号：预算据此判断“这家店在不在计划来源里”，份额为 0 或付不起而被滤掉的原生店不算在计划之外。
+ out.considered=[...considered];
  return out;
 });
 // The settlement an item is produced in: walk its origin up the location tree.

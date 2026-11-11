@@ -9,6 +9,7 @@ import {openHoldings} from '../server-plugin/holdings.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {readBodyNeed,bodyRule} from '../server-plugin/primitives-body.mjs';
 import {trackSingleItem} from '../server-plugin/items.mjs';
+import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 import {dieOf,scene} from './helpers/daily-b2.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import '../server-plugin/primitives-runtime.mjs';
@@ -41,16 +42,21 @@ async function act(f,action,slots,eventId){
 }
 const qty=(f,d,owner,item)=>f.engine.quantity(f.engine.primitiveDraft(d),owner,item);
 
-test('A3 D05: ordering real cooked dishes costs 11 coins and 25 minutes, eats purchased food and preserves old supplies',async()=>{
+test('A3 D05: ordering real cooked dishes costs the two quoted prices and 25 minutes, eats purchased food and preserves old supplies',async()=>{
  const f=fixture();f.document.state.inventory[BREAD]=stack(1);book(f);
  const registration=f.engine.primitiveDraft(f.document),unit=trackSingleItem(registration,f.engine,'player',BREAD,'old-bread');
  f.document=applyPatches(f.document,registration.patches);const before=structuredClone(f.document);
  const slots={subject:SELLER,item:BREAD,side:STEW},input='a3-order-meal';
  const {out,after}=await act(f,'core:eat.order',slots,input);
- assert.equal(out.result.paid,11);assert.equal(after.state.player.coins,49);
+ // 应付 = 两道菜依次各买一份的现价之和：第一道取前态现价，第二道取“第一道成交后”的现价（同一卖家的供需随成交变化，不能都按前态报价；
+ // 第一道成交后的状态由只点第一道的真实订餐得到）。WATER-1B/卖家预留随炖菜水分派生而变，总价由旧值 11 变为现价；期望从引擎报价读，不手改数字。
+ const quoteOf=(doc,item)=>facilityRuntime().currentTradeQuote(f.engine,doc,{buyer:'player',seller:SELLER,item,quantity:1,location:INN}).totalCoins;
+ const firstOnly=await act(f,'core:eat.order',{subject:SELLER,item:BREAD},'a3-order-first');
+ const quoted=quoteOf(before,BREAD)+quoteOf(firstOnly.after,STEW);
+ assert.equal(out.result.paid,quoted);assert.equal(after.state.player.coins,before.state.player.coins-quoted);
  const event=after.state.records[`world_event:${input}`];
- assert.equal(event.verb,'trade');assert.equal(event.target,SELLER);assert.equal(event.value,11);
- assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,11);
+ assert.equal(event.verb,'trade');assert.equal(event.target,SELLER);assert.equal(event.value,quoted);
+ assert.equal(after.state.npcs[SELLER].coins-before.state.npcs[SELLER].coins,quoted);
  assert.equal(after.state.minute-before.state.minute,25);assert.equal(out.result.cost.time,25);
  for(const item of [BREAD,STEW]){
   assert.equal(qty(f,after,'player',item),qty(f,before,'player',item));

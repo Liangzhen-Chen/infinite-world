@@ -55,6 +55,7 @@ const W = {
   '--report': '写 m3-soak 报告',
   '--ledger': '写模型预算账文件',
   '--live': '联网实跑并写预算账（population-live-check）',
+  '--md': '写指定的 markdown 输出文件（k8-guard）',
 };
 const N = {
   '--accent': 'system-map 的样式名', '--bg': 'system-map 的样式名', '--dim': 'system-map 的样式名', '--hi': 'system-map 的样式名', '--ink': 'system-map 的样式名',
@@ -65,7 +66,7 @@ const N = {
   '--l-sim': 'system-map 的样式名', '--l-ui': 'system-map 的样式名',
   '--test': '传给 node 的参数', '--test-isolation': '传给 node 的参数', '--test-reporter': '传给 node 的参数', '--import': '传给 node 的参数',
   '--cpu-prof': '传给 node 的参数', '--cpu-prof-dir': '传给 node 的参数',
-  '--git-common-dir': '传给 git 的参数', '--exclude-standard': '传给 git 的参数', '--name-only': '传给 git 的参数', '--no-renames': '传给 git 的参数', '--others': '传给 git 的参数',
+  '--git-common-dir': '传给 git 的参数', '--is-ancestor': '传给 git 的参数', '--format': '传给 git 的参数', '--no-ext-diff': '传给 git 的参数', '--no-textconv': '传给 git 的参数', '--unified': '传给 git 的参数', '--exclude-standard': '传给 git 的参数', '--name-only': '传给 git 的参数', '--no-renames': '传给 git 的参数', '--others': '传给 git 的参数',
 };
 // 修饰参数 opt：每个都声明值的类型。flag 不带值；path 路径（只读实跑时必须落在仓库临时副本内部，越界判失败）；number 非负整数；id 单个标识（字母数字、下划线、连字符、点）；
 // name 单个名字（可含中文，不含空白，不以 -- 开头）；list 逗号分隔的标识或编号；url 只声明、不得出现在只读入口里；enum:a|b 取值限定。声明了类型，入口里的值才能被校验（checkOptArgs）。
@@ -99,6 +100,8 @@ export const FLAGS = {
 };
 
 export const FILE_FLAG_OVERRIDES = {
+  'tools/test-impact/collect.mjs --map': {kind: 'write', note: '写（合并更新）影响映射文件 test-impact-map.json 或指定路径（collect.mjs）'},
+  'tools/test-impact/select.mjs --map': {kind: 'opt', type: 'path', note: '读影响映射文件（select.mjs，只读）'},
   'tools/clear-budget-stop.mjs --root': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
   'tools/clear-budget-stop.mjs --id': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
   'tools/clear-budget-stop.mjs --reason': {kind: 'write', note: '写审核记录目录下的 <id>.json（及带 budgetStop 的 summary.json / batch-*.json），不调模型、不联网'},
