@@ -68,7 +68,8 @@ export async function withoutOutbound(run){
  for(const [name,lib] of [['http',http],['https',https]])for(const key of ['request','get'])
   patch(lib,key,original=>function(...args){return guard(`${name}.${key}`,hostOf(args)??'localhost',original,this,args);});
  patch(net.Socket.prototype,'connect',original=>function(...args){
-  const [a,b]=args;
+  // net.connect/createConnection 调 socket.connect 时传入的是规范化后的参数数组 [options,cb]，要取 [0]。
+  const [first,b]=args,a=Array.isArray(first)?first[0]:first;
   const host=typeof a==='object'&&a!==null?(a.path!==undefined?`path:${a.path}`:a.host??'localhost'):/^\d+$/.test(String(a))?(typeof b==='string'?b:'localhost'):`path:${a}`;
   return guard('net.connect',host,original,this,args);
  });
