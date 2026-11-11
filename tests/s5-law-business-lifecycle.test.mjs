@@ -210,6 +210,10 @@ test('恢复后的原生店按正午作息结客流，不用结算时的睡眠�
  // 而结算区间是半开的 (day*1440,(day+1)*1440]，0 点属于前一刻；所以让顾客有真实起居：睡到 360 点，之后醒着。最早交集 = 360，落在区间内、晚于 0 点恢复。
  // 云上 360 不成交，静态读码未能定根因（候选：买家 360 的生计槽位 subsistenceScheduleAt、家务工时 unattended、结算时刻的预算）；断言保持原样，失败时在 message 里输出诊断，下一轮据此定。
  f.w.npcs.find(n=>n.id===buyer).schedule={default:[{start:0,end:360,location:place,activity:'睡眠',services:[]},{start:360,end:1440,location:place,activity:'休息',services:[]}]};
+ // EC-1a：预算采购口径已扣聚落公粮（household-budget.mjs:378-379 publicSatiety；household-subsistence.mjs:697 granary!==false 的聚落给登记户配给）。
+ // 夹具聚落 loc_hw 有粮库，买家一户的采购需求为 0，到店不评估、连 looked 记录也不写（business.mjs serve：wants 为 0 即 continue）。
+ // 本用例检验的是“有需求的顾客在恢复后的店里成交”，所以聚落设为无公共粮库（引擎既有的 granary:false，只影响配给），其余条件不变。
+ f.doc.state.settlements.loc_hw.granary=false;
  const cursor=new PatchCursor(f.doc),d={get document(){return cursor.root;},get:(...p)=>cursor.expose(p.reduce((v,k)=>v?.[k],cursor.root)),set:(path,value)=>cursor.apply({op:'set',path,value})};
  const spec=autonomyKind('business_lifecycle');spec.execute(d,f.e,landlord,{business:native.id,choice:'suspend'},{actionId:'pause'});
  d.set(['state','minute'],d.get('state','records',native.id).resumeNotBefore);

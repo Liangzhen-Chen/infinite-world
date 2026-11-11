@@ -12,7 +12,6 @@ import {residentSellers,SALE_ORDER} from '../server-plugin/market-seller.mjs';
 import {actionCostRule} from '../server-plugin/action-costs.mjs';
 import {marketQuote} from '../server-plugin/market.mjs';
 import {householdBudget} from '../server-plugin/household-budget.mjs';
-import {mealCapPools} from '../server-plugin/item-class.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',C='npc_hw_shendu',D='npc_hw_xuling',seller='npc_hw_linsui',item='item_bread',home='bld_hw_qingdeng',DAY=1440;
@@ -21,14 +20,14 @@ const at=(start,end,services=[],activity='休息')=>({start,end,location:home,ac
 // 店主只在 720 起营业（货架清空时只剩居民卖方可买）；用于居民卖方用例：有营业窗口才有客流结算时刻。
 const LATE=[at(0,720),at(720,1440,['trade'],'营业')];
 const SELLER_DAY=[at(0,480),at(480,720,['trade'],'营业'),at(720,780,[],'午饭'),at(780,1080,['trade'],'营业'),at(1080,1440)];
-function fixture({sellerSchedule=SELLER_DAY,residentSale=false,housemateBread=0,satietyDrain=2.5,emptyShop=false,late=[],playerShop=false,breadPrice=null,keepSubsistence=false}={}){
+function fixture({sellerSchedule=SELLER_DAY,residentSale=false,housemateBread=0,emptyShop=false,late=[],playerShop=false,breadPrice=null,keepSubsistence=false}={}){
  const w=structuredClone(world);
  if(breadPrice)w.items.find(i=>i.id===item).basePrice=breadPrice;// 把面包价抬到买不起，使“只看不买”的场景确定
  if(!keepSubsistence)delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
  w.households=[{id:'win-a',members:[A,B],settlement:'loc_hw',homeLocation:home},{id:'win-c',members:[C],settlement:'loc_hw',homeLocation:home},{id:'win-seller',members:[seller],settlement:'loc_hw',homeLocation:home}];
  for(const l of late)w.households.push({id:`win-${l.id}`,members:[l.id],settlement:'loc_hw',homeLocation:home});
- for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?satietyDrain:0;
+ for(const r of w.primitiveTables.body.rows)if(r.selector==='person')r.drainPerHour.light=r.need==='satiety'?2.5:0;
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  const awake={default:[at(0,360,[],'睡眠'),at(360,1440,[],'闲居')]};// 居民真实起居：睡到 6 点，之后醒着
  for(const n of w.npcs.filter(n=>n.id===A)){n.tier='full';n.schedule=awake;}
@@ -109,19 +108,18 @@ assert.equal(f.d.get('state','npcs',C,'coins'),coinsC+paid-bought.reduce((n,r)=>
  assert.equal(Object.values(f.d.get('state','records')).filter(r=>r.category==='business_receipt'&&r.businesses?.includes(record.shop)).length,0);
 });
 
-test('a resident never sells to the own household',()=>{
-  // 共用口粮池下，同户的面包就是 A 的口粮，A 本来就不缺：要让“同户不卖”规则真正起作用，缺口只能来自单餐额度（mealCapPools：每人每餐上限）——
-  // 面包吃不满整户的饱腹，所以整户有采购缺口，而 B 的面包远超额度能吃掉的量，是可售余量。数值全由引擎的额度推出：
-  // U = 两人一天最多吃掉的面包件数；每人每天需 1.5U 件的饱腹（整户 3U > U，缺口必在），B 持 100U 件（远超预算期内吃得掉的量，余量可售）。
-  const probe=new WorldEngine(structuredClone(world)),U=mealCapPools(probe,{days:[1,1]}).unitsRoom(item,0);
-  assert.ok(Number.isFinite(U)&&U>=1,'precondition: the single-meal cap is active, so bread cannot cover a household by itself');
-  const f=fixture({sellerSchedule:LATE,emptyShop:true,housemateBread:100*U,satietyDrain:1.5*U*probe.byId.get(item).nutrition.satiety/24});
- // 前置（从引擎读）：同户 A 的采购缺口大于 0，否则 A 本来就不买、本用例空过。
- assert.ok(Number(householdBudget(f.d,f.e,A).resources.procurementShortfall.satiety)>0,'precondition: A household still needs food, so only the same-household rule keeps it from buying the bread');
- assert.ok(residentSellers(f.d,f.e,720).some(s=>s.keeper===B&&s.goods.includes(item)),'precondition: the housemate is a valid resident seller, so only the same-household rule can stop the sale');
+test('a resident never sells to the own household: the housemate bread is the household own larder (EC-1a pool), no sale arises',()=>{
+ // 论证（EC-1a 共用口粮池）：同户成员的包裹并入同一份户预算，一件食物要么被户内口粮吃掉（预留，可售量为 0），要么有余量（户内缺口为 0）；
+ // 引擎里没有单餐额度生效的夹具时，“同户有可售余量而整户仍有采购缺口”不会同时出现，所以顾客与同户卖方之间没有“要买”的需求可言；
+ // 同户的人也不会被登记成顾客（serve 里 keeperHome 再把这一点写成硬规则）。异户邻居的买卖是上一条用例（C 卖给 A）。
+ // 本用例核对这条链：B 确是有效的居民卖方（有可售余量、在卖方窗口内）；A 的户预算把 B 的面包算作自家口粮，采购缺口为 0；于是同户内没有任何成交记录。
+ const f=fixture({sellerSchedule:LATE,emptyShop:true,housemateBread:600});// 面包要在 openLedger 之前给
+ assert.ok(residentSellers(f.d,f.e,720).some(s=>s.keeper===B&&s.goods.includes(item)),'precondition: the housemate is a valid resident seller with a saleable surplus');
+ assert.equal(Number(householdBudget(f.d,f.e,A).resources.procurementShortfall.satiety),0,'the housemate bread is the household own food: no procurement need');
  f.d.set(['state','minute'],720);
  advanceCustomerFlow(f.d,f.e,719,720);
  assert.ok(!flowRecords(f).some(r=>r.shop===`trader_${B}`),'the housemate bread is the household bread, not a sale');
+ assert.equal(boughtBy(f,A).length,0);
 });
 
 test('settleSale keeps each call site its original ledger order: retail, counter and wholesale',()=>{
