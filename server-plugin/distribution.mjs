@@ -11,8 +11,8 @@ import {purse,moveCoins,mirrorPartyCoins,coinRead,counterCash} from './money.mjs
 import {obligationTransaction} from './transition.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
-import {householdBudget,householdPoolTopUp} from './household-budget.mjs';
-import {settleSale} from './market-seller.mjs';
+import {householdBudget,householdPoolTopUp,householdCash} from './household-budget.mjs';
+import {settleSale,SALE_ORDER} from './market-seller.mjs';
 import {assessTradeTax,taxableSale} from './finance-tax.mjs';
 import {recordFinanceSale} from './finance-assets.mjs';
 import {recordsWhere} from './storage.mjs';
@@ -71,7 +71,7 @@ export function buyFromHolders(d,engine,{buyer,settlement,item,want,minute,event
   const can=Math.min(want-out.added,spare(d,engine,seller,item));if(can<1)continue;
   const sellerAt=d.get('state','npcs',seller,'location');
   const bill=n=>marketQuote(d,engine,{item,location:sellerAt,seller,buyer,quantity:n,business,minute});
-  const budget=cash?cash():coinRead(d,{point:'npc.cash',account:purse(engine,buyer),legacy:()=>d.get('state','npcs',buyer,'coins')??0});
+  const budget=cash?cash():householdCash(d,engine,buyer);
   let low=0,high=can;while(low<high){const mid=Math.ceil((low+high)/2);if(bill(mid).totalCoins<=budget)low=mid;else high=mid-1;}
   if(!low){out.reason??='进货钱不够';break;}
   const quote=bill(low),cost=quote.totalCoins;
@@ -86,7 +86,7 @@ export function buyFromHolders(d,engine,{buyer,settlement,item,want,minute,event
   const eventId=`${eventPrefix}:${item}:${seller}`;
   obligationTransaction(d,()=>{
    // 持货人向买方出让的账走 market-seller.settleSale；付款方式：调用方给了 pay（店铺柜台）就用它，否则买方钱袋付，钱袋不够先从同户池转账。
-   settleSale(d,engine,{seller,buyer,item,quantity:low,cost,bill:quote,eventId,location:sellerAt,writer:'distribution',transferOptions:{disposition:true,eventId},
+   settleSale(d,engine,{seller,buyer,item,quantity:low,cost,bill:quote,eventId,location:sellerAt,writer:'distribution',transferOptions:{disposition:true,eventId},order:SALE_ORDER.wholesale,
     pay:()=>{
      if(pay){householdPoolTopUp(d,engine,buyer,Math.max(0,cost-counterCash(d,buyer)),eventId);pay({to:purse(engine,seller),amount:cost,eventId});}
      else{householdPoolTopUp(d,engine,buyer,cost,eventId);moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'distribution',eventId});mirrorPartyCoins(d,engine,buyer,-cost,eventId,'distribution');}

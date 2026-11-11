@@ -36,18 +36,28 @@ export function residentSellers(d,engine,t,taken=new Set()){
   return out;
 }
 
-// 一笔零售成交的账：付款、转物、商税、财务销售记账、成交记录，只在这里写。调用方给出报价账单 bill、成交额 cost 与件数。
+// 一笔零售成交的账：付款、转物、商税、财务销售记账、成交记录，只在这里写。调用方给出报价账单 bill（可传函数，到成交记录那一步才取，
+// 使价按转物之后的供给读）、成交额 cost 与件数。
 // pay：默认买方钱袋 → 卖方钱袋（writer 默认 'shop'，两侧 mirrorPartyCoins）；柜台、同户转账等特殊付款由调用方传入闭包，闭包内自己动钱。
 // tax：默认卖方按 taxableSale 判是否应税并 assessTradeTax；调用方也可传闭包（玩家店柜台先划税再交）。
-export function settleSale(d,engine,{seller,buyer,item,quantity,cost,bill,eventId,location,writer='shop',pay=null,tax=null,transferOptions=undefined,instances=null}){
-  if(pay)pay();
-  else{
-    moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer,eventId});
-    mirrorPartyCoins(d,engine,buyer,-cost,eventId,writer);mirrorPartyCoins(d,engine,seller,cost,eventId,writer);
-  }
-  const moved=transferItems(d,engine,seller,buyer,item,quantity,instances,transferOptions);
-  const due=tax?tax():taxableSale(engine,d.get('state'),seller,item)?assessTradeTax(d,engine,{seller,cost,location,sourceEvent:eventId}).amount:0;
-  recordFinanceSale(d,engine,{buyer,seller,item,quantity,cost,tax:due,eventId});
-  recordMarketDeal(d,bill,cost,quantity,eventId);
+// order：五步的先后，默认 pay→transfer→tax→finance→deal（店铺客流的原顺序）；其余调用点各自保持原有的账序（手动售出 pay→tax→transfer→finance→deal；
+// 持货人出让与在场报价进货 transfer→pay→deal→tax→finance），所以 ledger 事件序、成交记录与价格史与合并前逐位一致，合并只去掉重复代码，不改行为。
+export const SALE_ORDER={retail:['pay','transfer','tax','finance','deal'],counter:['pay','tax','transfer','finance','deal'],wholesale:['transfer','pay','deal','tax','finance']};
+export function settleSale(d,engine,{seller,buyer,item,quantity,cost,bill,eventId,location,writer='shop',pay=null,tax=null,transferOptions=undefined,instances=null,order=SALE_ORDER.retail}){
+  let moved=null,due=0;
+  const steps={
+    pay:()=>{
+      if(pay)pay();
+      else{
+        moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer,eventId});
+        mirrorPartyCoins(d,engine,buyer,-cost,eventId,writer);mirrorPartyCoins(d,engine,seller,cost,eventId,writer);
+      }
+    },
+    transfer:()=>{moved=transferItems(d,engine,seller,buyer,item,quantity,instances,transferOptions);},
+    tax:()=>{due=tax?tax():taxableSale(engine,d.get('state'),seller,item)?assessTradeTax(d,engine,{seller,cost,location,sourceEvent:eventId}).amount:0;},
+    finance:()=>{recordFinanceSale(d,engine,{buyer,seller,item,quantity,cost,tax:due,eventId});},
+    deal:()=>{recordMarketDeal(d,typeof bill==='function'?bill():bill,cost,quantity,eventId);}
+  };
+  for(const step of order)steps[step]();
   return {cost,tax:due,moved};
 }

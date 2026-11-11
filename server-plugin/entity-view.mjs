@@ -588,3 +588,8 @@ export function itemView(engine,state,id){
     }
     return view;
 }
+
+// 同户共灶的“可动用资金成员”：在世有效、不是玩家、没有死亡/濒死/昏迷。预算（客观读 objectiveCash、主观视图 household）与户内转账（householdPoolTopUp）共用这一个谓词，防口径分叉（EC-1b U7）。
+export function poolMember(engine,state,id){
+    return id!=='player'&&Boolean(state.npcs?.[id])&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status);
+}

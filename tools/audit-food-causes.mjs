@@ -275,7 +275,7 @@ export async function runAudit({days=30,progress=()=>{}}={}){
   const supplyOf=reachRows=>supplySatiety(reachRows.map(r=>r.shop.items),gain);
   let shelfSatiety=0;for(const r of shopRows)for(const it of r.items)shelfSatiety+=it.avail*gain(it.item);// all open sellers, for the daily row only
 
-  const visitsOf=shopId=>es.records?.[`customer_flow:${shopId}:${day}`]?.visits??[];
+  const visitsOf=shopId=>Object.entries(es.records??{}).filter(([k])=>k.startsWith(`customer_flow:${shopId}:${day}:`)).flatMap(([,r])=>r.visits??[]);// 记录键带结算时刻，每个营业窗口一条
   const boughtAt=(shop,item)=>visitsOf(shop).filter(v=>v.outcome==='bought'&&v.item===item).reduce((n,v)=>n+v.quantity,0);
 
   // ---- missed meals of this day ----

@@ -217,9 +217,11 @@ test('恢复后的原生店按正午作息结客流，不用结算时的睡眠�
   const c=new PatchCursor(doc),draft={get document(){return c.root;},get:(...p)=>c.expose(p.reduce((v,k)=>v?.[k],c.root)),set:(path,value)=>c.apply({op:'set',path,value}),remove:path=>c.apply({op:'delete',path}),say:()=>{}};
   advanceCustomerFlow(draft,f.e,day*1440,(day+1)*1440);return c.root;
  };
- const open=flow('营业'),asleep=flow('睡眠'),key=`customer_flow:${native.id}:${day}`;
- assert.ok(open.state.records[key]?.visits.some(v=>v.outcome==='bought'));
- assert.deepEqual(asleep.state.records[key],open.state.records[key]);assert.deepEqual(asleep.ledger,open.ledger);
+ const open=flow("营业"),asleep=flow("睡眠"),prefix=`customer_flow:${native.id}:${day}:`;
+ // 记录键统一带结算时刻（每个营业窗口一条）：取该店当天全部窗口的记录一并比较。
+ const recordsOf=doc=>Object.fromEntries(Object.entries(doc.state.records).filter(([k])=>k.startsWith(prefix)));
+ assert.ok(Object.values(recordsOf(open)).some(r=>r.visits.some(v=>v.outcome==="bought")));
+ assert.deepEqual(recordsOf(asleep),recordsOf(open));assert.deepEqual(asleep.ledger,open.ledger);
 });
 
 test('退出后可凭新租约再开店，旧柜台须实际提清，新旧现金账不混记',async()=>{

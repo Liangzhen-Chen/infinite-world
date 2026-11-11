@@ -2,7 +2,7 @@
 import {bagStock,bag,priceRead,itemResource,crop as cropAccount} from './stock.mjs';
 import {coinRead,purse,COIN,moveCoins,mirrorPartyCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {personHousehold} from './entity-view.mjs';
+import {personHousehold,poolMember} from './entity-view.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {bodyDrain} from './primitives-body.mjs';
 import {explainDerived} from './derived.mjs';
@@ -108,7 +108,7 @@ const pooledCash=(engine,owner,view)=>Object.entries(view.household?.people??{})
 // 一人户与不共灶者就是本人钱袋。读取不写任何东西；付款人钱袋不够时由 householdPoolTopUp 落账。
 const objectiveCash=(d,engine,state,owner)=>{
  const f=family(d,engine,owner),ids=f.shared?f.members:[owner];
- return ids.filter(id=>id===owner||(id!=='player'&&state.npcs?.[id]&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status)))
+ return ids.filter(id=>id===owner||poolMember(engine,state,id))
   .reduce((n,id)=>n+coinRead(d,{point:'assets.cash',account:purse(engine,id),legacy:()=>actor(state,id)?.coins??0}),0);
 };
 // 同户钱袋转账：主观预算按户池算现金，付款人自己的钱袋不够时，先从同一登记户的其他成员钱袋按编号序补足到 need，再由付款人付款。
@@ -119,7 +119,7 @@ export function householdPoolTopUp(d,engine,payer,need,eventId){
  const state=d.get('state'),balance=id=>coinRead(d,{point:'assets.cash',account:purse(engine,id),legacy:()=>d.get('state','npcs',id)?.coins??0});
  const first=need-balance(payer);if(!(first>0))return 0;
  let short=first;
- const members=(personHousehold(engine,state,payer).value?.members??[]).filter(id=>id!==payer&&id!=='player'&&state.npcs?.[id]&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status)).sort();
+ const members=(personHousehold(engine,state,payer).value?.members??[]).filter(id=>id!==payer&&poolMember(engine,state,id)).sort();
  for(const member of members){
   if(short<=0)break;
   const amount=Math.min(short,balance(member));if(!(amount>0))continue;
@@ -626,3 +626,6 @@ export function householdLaborBudget(d,engine,owner,{minute=d.get('state','minut
  const noiseValue=Math.trunc(Math.max(alternative,cash)*noise/100);
  return {time,cash,food,foodValue,foodMissing,alternative,commuteCost,reservation,preferencePercent:percent,noisePercent:noise,noiseValue,net:cash+foodValue-reservation+noiseValue,feasible:time.workMinutes>0&&!time.unattended};
 }
+
+// 本户可动用现金（同户共灶成员钱袋合计，客观读口径）：持货人进货等“买得起几件”的二分用它，付款时钱袋不够再 householdPoolTopUp 落账。
+export const householdCash=(d,engine,owner)=>objectiveCash(d,engine,d.get('state'),owner);

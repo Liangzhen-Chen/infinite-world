@@ -8,6 +8,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
 import {advanceCustomerFlow,tradeWindowStarts,customerFlowTimes} from '../server-plugin/business.mjs';
 import {currentShops,nextShopMinute} from '../server-plugin/shop.mjs';
+import {residentSellers,SALE_ORDER} from '../server-plugin/market-seller.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_luowei',B='npc_hw_duanyan',C='npc_hw_shendu',seller='npc_hw_linsui',item='item_bread',home='bld_hw_qingdeng',DAY=1440;
@@ -23,7 +24,7 @@ function fixture({sellerSchedule=SELLER_DAY,residentSale=false}={}){
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];w.marketRules.customerChoice.noisePermille=0;
  const awake={default:[at(0,1440,[],'闲居')]};
  for(const n of w.npcs.filter(n=>n.id===A)){n.tier='full';n.schedule=awake;}
- for(const n of w.npcs.filter(n=>n.id===C)){n.schedule=awake;}
+ for(const n of w.npcs.filter(n=>[B,C].includes(n.id))){n.schedule=awake;}
  for(const n of w.npcs.filter(n=>n.id===seller)){n.tier='full';n.schedule={default:sellerSchedule};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'ec1b-windows');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
@@ -37,7 +38,7 @@ function fixture({sellerSchedule=SELLER_DAY,residentSale=false}={}){
 const flowRecords=f=>Object.values(f.d.get('state','records')).filter(r=>r.category==='customer_flow');
 const boughtBy=(f,id)=>flowRecords(f).flatMap(r=>r.visits).filter(r=>r.npc===id&&r.outcome==='bought');
 
-test('trade windows come from the keepers schedule: noon-containing windows keep the noon time, others use their start',()=>{
+test('trade windows come from the keepers schedule: every window uses its own start, noon is the extra fixed sampling time',()=>{
  const f=fixture(),state=f.d.get('state');
  assert.ok(currentShops(f.e,state).some(s=>s.keeper===seller),'the keeper runs a registered shop');
  // 早窗 [480,720) 不含正午 → 起点 480；午饭不接待；晚窗 [780,1080) 起点 780。
@@ -46,9 +47,10 @@ test('trade windows come from the keepers schedule: noon-containing windows keep
  // 客流结算时刻 = 每日正午 ∪ 窗口起点，升序；区间半开 (before, after]。
  assert.deepEqual(customerFlowTimes(f.e,state,-1,DAY-1),[480,720,780]);
  assert.deepEqual(customerFlowTimes(f.e,state,480,780),[720,780]);
- // 全天营业的店（含正午）只有正午一个时刻，与旧口径一致。
+  // 全天营业的店（窗口 [0,1440) 含正午）也取窗口自己的起点 0，不折成正午；正午是每日另加的固定采样时刻（玩家店用）。
  const allDay=fixture({sellerSchedule:[at(0,1440,['trade'],'营业')]});
- assert.deepEqual(tradeWindowStarts(allDay.e,allDay.d.get('state'),0),[720]);
+  assert.deepEqual(tradeWindowStarts(allDay.e,allDay.d.get('state'),0),[0]);
+ assert.deepEqual(customerFlowTimes(allDay.e,allDay.d.get('state'),-1,DAY-1),[0,720]);
 });
 
 test('the shop clock stops at every window start while residents are about',()=>{
@@ -77,6 +79,7 @@ test('a resident with a saleable surplus sells through the same customer flow an
  // 店主整天不营业（作息里没有 trade 服务），只有邻居神渡（C）手上有 60 个面包的余量；洛薇（A）缺口户向他买。
  const f=fixture({sellerSchedule:[at(0,1440)],residentSale:true});
  const coinsC=f.d.get('state','npcs',C,'coins'),coinsA=f.d.get('state','npcs',A,'coins');
+ assert.ok(residentSellers(f.d,f.e,720).some(s=>s.keeper===C&&s.goods.includes(item)),'precondition: the neighbour is a valid resident seller with a saleable surplus');
  f.d.set(['state','minute'],720);
  advanceCustomerFlow(f.d,f.e,719,720);
  const bought=boughtBy(f,A);
@@ -84,10 +87,10 @@ test('a resident with a saleable surplus sells through the same customer flow an
  const record=flowRecords(f).find(r=>r.visits.some(v=>v.npc===A&&v.outcome==='bought'));
  assert.equal(record.shop,`trader_${C}`,'the seller is a resident seller, not a registered shop');
  assert.equal(record.keeper,C);
- // 精确对账：C 的钱增加 = A 付出的货款；A 付出 = 货款 + 路费；商税另走税账（卖家应税时从 C 划出）。
+  // 精确对账：A 付出 = 货款 + 路费；C 收到货款并按应税判定缴商税（visit.tax 是实缴额，不应税时为 0）。
  const paid=bought.reduce((n,r)=>n+r.paid,0),fares=bought.reduce((n,r)=>n+(r.travel?.paid??0),0);
  assert.equal(coinsA-f.d.get('state','npcs',A,'coins'),paid+fares);
- assert.ok(f.d.get('state','npcs',C,'coins')>=coinsC+paid-bought.reduce((n,r)=>n+(r.tax??0),0));
+assert.equal(f.d.get('state','npcs',C,'coins'),coinsC+paid-bought.reduce((n,r)=>n+(r.tax??0),0),'the seller receives the payment less the sales tax, exactly');
  assert.ok(f.e.quantity(f.d,A,item)>0&&f.e.quantity(f.d,C,item)<60);
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
  // 居民卖方不产生经营回执与店铺记录。
@@ -97,7 +100,15 @@ test('a resident with a saleable surplus sells through the same customer flow an
 test('a resident never sells to the own household',()=>{
  const f=fixture({sellerSchedule:[at(0,1440)]});
  f.d.set(['state','npcs',B,'inventory'],{[item]:60});
+ assert.ok(residentSellers(f.d,f.e,720).some(s=>s.keeper===B&&s.goods.includes(item)),'precondition: the housemate is a valid resident seller, so only the same-household rule can stop the sale');
  f.d.set(['state','minute'],720);
  advanceCustomerFlow(f.d,f.e,719,720);
  assert.ok(!flowRecords(f).some(r=>r.shop===`trader_${B}`),'the housemate bread is the household bread, not a sale');
+});
+
+test('settleSale keeps each call site its original ledger order: retail, counter and wholesale',()=>{
+ // 合并只去掉重复代码，不改账序：店铺客流 付款→转物→税→财务→成交；玩家店柜台与手动售出 付款→税→转物→财务→成交；持货人出让与在场报价进货 转物→付款→成交→税→财务。
+ assert.deepEqual(SALE_ORDER.retail,['pay','transfer','tax','finance','deal']);
+ assert.deepEqual(SALE_ORDER.counter,['pay','tax','transfer','finance','deal']);
+ assert.deepEqual(SALE_ORDER.wholesale,['transfer','pay','deal','tax','finance']);
 });

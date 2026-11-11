@@ -8,7 +8,7 @@ import {collectTransport} from './transport.mjs';
 import {transferItems} from './items.mjs';
 import {obligationTransaction} from './transition.mjs';
 import {customerFlowTimes,settleCustomerFlow,tradeWindowStarts} from './business.mjs';
-import {settleSale} from './market-seller.mjs';
+import {settleSale,SALE_ORDER} from './market-seller.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {employmentActive} from './employment-state.mjs';
@@ -612,8 +612,7 @@ function receivedRouteStock(d,engine,shop,row,minute,want,ctx,{receiveOnly=false
         if(funded&&counterCash(d,shop.keeper)<cost)return {...entry,reason:'店主不愿或不能向柜台注资',decision:funded.decision?.outcome};
         obligationTransaction(d,()=>{
             // 居民向店主卖货的账走 market-seller.settleSale（付款、转物、商税、财务销售、成交记录同一处）；这里只给出本店的付款方式：柜台优先，没有柜台由店主钱袋付。
-            const quote=marketQuote(d,engine,{item:row.item,location:shop.location,seller:q.seller,buyer:shop.keeper,quantity});
-            settleSale(d,engine,{seller:q.seller,buyer:shop.keeper,item:row.item,quantity,cost,bill:quote,eventId,location:shop.location,transferOptions:{disposition:true,eventId},
+            settleSale(d,engine,{seller:q.seller,buyer:shop.keeper,item:row.item,quantity,cost,bill:()=>marketQuote(d,engine,{item:row.item,location:shop.location,seller:q.seller,buyer:shop.keeper,quantity}),eventId,location:shop.location,transferOptions:{disposition:true,eventId},order:SALE_ORDER.wholesale,
                 pay:()=>{
                     const counter=dedicatedCoinAccount(d.get('state'),shop.keeper,'counter')?.account,payer=counter??purse(engine,shop.keeper);
                     moveCoins(d,{from:payer,to:purse(engine,q.seller),amount:cost,writer:'shop',eventId});

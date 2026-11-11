@@ -10,7 +10,7 @@ import {holdGoods,releaseGoods} from './goods-escrow.mjs';
 import {claimUnit} from './claim-unit.mjs';
 import {laborValue,subjectiveMarketQuote,saleableStock,marketQuote,quoteSupply,recordMarketDeal,customerReachMinutes,assertMarketDepth,upkeepDemand} from './market.mjs';
 import {subjectiveView} from './subjective-view.mjs';
-import {residentSellers,settleSale} from './market-seller.mjs';
+import {residentSellers,settleSale,SALE_ORDER} from './market-seller.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
 import {assertNpcService,scheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
@@ -202,13 +202,14 @@ export async function businessTrade(d,args,eventId){
         const incomeBefore=this.actor(d,buyer).coins;
         const counter=counterFor(d,shop);
         if(this.actor(d,buyer).coins<cost)throw preconditionFailure('买方余额不足');
-        moveCoins(d,{from:purse(this,buyer),to:counter.account,amount:cost,writer:'business',eventId});
-        mirrorPartyCoins(d,this,buyer,-cost,eventId,'business');
-        fundSettlement(d,this,shop,Math.floor(cost*tradeTax(this,d.get('state'),shop.location).bps/10000),eventId);
-        const tax=assessTradeTax(d,this,{seller:'player',cost,location:shop.location,sourceEvent:eventId});
-        const moved=transferItems(d,this,'player',buyer,item,quantity,args.instances??null);
-        recordFinanceSale(d,this,{buyer,seller:'player',item,quantity,cost,tax:tax.amount,eventId});
-        recordMarketDeal(d,q.bill,cost,quantity,eventId);
+        // 零售成交的账只走 market-seller.settleSale（手动售出与客流同一处）；这里只给出玩家店的付款（进柜台、商税划给聚落）与应税判定。
+        const {moved}=settleSale(d,this,{seller:'player',buyer,item,quantity,cost,bill:q.bill,eventId,location:shop.location,writer:'business',instances:args.instances??null,order:SALE_ORDER.counter,
+            pay:()=>{
+                moveCoins(d,{from:purse(this,buyer),to:counter.account,amount:cost,writer:'business',eventId});
+                mirrorPartyCoins(d,this,buyer,-cost,eventId,'business');
+                fundSettlement(d,this,shop,Math.floor(cost*tradeTax(this,d.get('state'),shop.location).bps/10000),eventId);
+            },
+            tax:()=>assessTradeTax(d,this,{seller:'player',cost,location:shop.location,sourceEvent:eventId}).amount});
         const row=createBusinessContract(d,{kind:'sale',parties:['player',buyer],subject:item,quantity,deadline:d.get('state','minute')+5,business:shop.id,cost,unitPrice:q.price,quote:q.key,consentEvent:eventId,customerCashBefore:incomeBefore,customerBudget:capacity},eventId);
         finishBusinessContract(d,row,{status:'已完成',fulfilled:quantity,paid:cost,source:eventId});this.advance(d,5,eventId);
         return {business:shop.id,contract:row.id,buyer,seller:'player',item,quantity,cost,instances:moved.instances};
@@ -651,8 +652,8 @@ export function businessAction(d,args,eventId){
 const DAY=1440,NOON=720;// 客流：每日正午
 const quantities1=v=>typeof v==='number'?v:v?.quantity??0;
 const SLEEPING=/睡眠|睡觉|熟睡/;
-// 同一店同一日可有多个营业窗口各结算一次：正午那一次沿用旧键（customer_flow:店:日），其余窗口键尾带窗口起点分钟。
-const flowKey=(shop,day,t)=>["state","records",t===undefined||t%DAY===NOON?`customer_flow:${shop}:${day}`:`customer_flow:${shop}:${day}:${t%DAY}`];
+// 同一店同一日可有多个营业窗口各结算一次：记录键 customer_flow:店:日:当日分钟（结算时刻），正午也不例外，规则只一版。
+const flowKey=(shop,day,t)=>["state","records",`customer_flow:${shop}:${day}:${t-day*DAY}`];
 
 // 本次营业的商铺：玩家已开张的店（店主在场、租约有效、柜台在铺内），以及作息里此刻接待交易的商铺。
 function openShops(d,engine,t){
@@ -731,7 +732,7 @@ function walkMinutes(engine,from,to,t,seed,cache){
 function sell(d,engine,shop,buyer,item,quantity,t,quote,eventId){
     const state=d.get('state'),cost=quote.totalCoins,player=shop.kind==='player';
     // 零售成交的账只走 market-seller.settleSale（店铺、玩家店、居民卖方同一处）；玩家店只有付款（进柜台、商税先由柜台划到店主钱袋）与应税判定是它自己的。
-    const {tax}=settleSale(d,engine,{seller:shop.keeper,buyer,item,quantity,cost,bill:quote,eventId,location:shop.location,writer:player?'business':'shop',
+    const {tax}=settleSale(d,engine,{seller:shop.keeper,buyer,item,quantity,cost,bill:quote,eventId,location:shop.location,writer:player?'business':'shop',order:player?SALE_ORDER.counter:SALE_ORDER.retail,
         ...(player?{
             pay:()=>{
                 const counter=shop.counter;
@@ -850,9 +851,9 @@ function serve(d,engine,shop,t,residents,gaps,routes){
 
 // 营业窗口的结算时刻（EC-1b）：每个营业窗口各结算一次，而不是每天只在正午采样一次。
 // 窗口 = 营业店主（店铺清单 currentShops 与非玩家经营记录的店主）作息里含 trade 服务的时段，一段一段枚举（scheduleAt 的 slot.until 接着往下走）。
-// 含正午的窗口沿用旧的正午时刻（NOON，旧键与旧用例不变），不含正午的窗口取窗口起点分钟；每日另外恒含正午（玩家店与旧口径）。
+// 窗口起点一律取窗口自己的起点分钟（含正午的窗口也不折成正午）；另外每日恒加正午一个结算时刻：玩家店没有作息窗口（按租约与在场判开门），只能在固定时刻采样，正午沿用此用途。
 // 确定性：输入只有世界定义（作息）、当前状态与日历日，不含随机数与墙钟；返回升序去重的绝对分钟。缓存键 = [窗口符号, 日序]，按 state 对象（只读作用域内）
-// 与 scheduleAt 的 state 缓存同一约定：状态一变（作息被事件改写、店主迁移、患病）就换新状态对象，缓存随之失效。
+// 缓存依据（storage.mjs stateMemo）：只在 recordIndex 作用域内生效，按 state 对象身份分键，作用域外每次重算；与 scheduleAt/currentShops 的约定相同——作用域内不原地改写已暴露的 state，状态一变即换对象、缓存失效。
 const windowMemo=Symbol('customer flow trade windows');
 export function tradeWindowStarts(engine,state,day){
     return stateMemo(state,engine,[windowMemo,day],()=>{
@@ -864,7 +865,7 @@ export function tradeWindowStarts(engine,state,day){
                 const slot=scheduleAt(engine,id,at,state);
                 if(!slot)break;
                 const end=slot.until>at?slot.until:(day+1)*DAY;
-                if(slot.services?.includes('trade'))starts.add(at<=noon&&noon<end?noon:at);
+                if(slot.services?.includes('trade'))starts.add(at);
                 at=end;
             }
         }

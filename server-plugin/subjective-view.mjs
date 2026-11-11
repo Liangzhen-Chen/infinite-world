@@ -1,6 +1,5 @@
 // A2 / I25. No cross-world cache: every projection belongs to this document.
-import {personCareer,personHousehold} from './entity-view.mjs';
-import {isEffective} from './lifecycle-state.mjs';
+import {personCareer,personHousehold,poolMember} from './entity-view.mjs';
 import {relationView} from './npc-state.mjs';
 import {recordsWhere,recordsMemo} from './storage.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
@@ -94,7 +93,7 @@ export function subjectiveView(engine,document,observer){
  // 只暴露物品、钱袋余额与成员自己的未了义务（欠债、已承诺付款，预算算可动用额要扣），不暴露记忆与关系；陌生人、分户同址不适用。预算按户池读它（household-budget.mjs，唯一口径）。
  // 已死亡、濒死、昏迷或不再有效的成员不入视图：他们的钱不能被同户其他人当作可动用资金。
  const house=observer==='player'?null:personHousehold(engine,s,observer).value;
- const household={people:Object.fromEntries((house?.members?.length>1?house.members:[]).filter(id=>id!==observer&&id!=='player'&&actor(s,id)&&isEffective(engine,s,id)&&!['死亡','濒死','昏迷'].includes(actor(s,id).status)).sort()
+ const household={people:Object.fromEntries((house?.members?.length>1?house.members:[]).filter(id=>id!==observer&&poolMember(engine,s,id)).sort()
   .map(id=>[id,{coins:actor(s,id).coins??0,inventory:copy(actor(s,id).inventory??{}),accounts:Object.fromEntries((byOwner.get(id)??[]).map(([key,balance])=>[key,{balance}])),
    obligations:Object.values(s.obligations??{}).filter(o=>active(o)&&[o.promisor,o.promisee,o.debtor,o.creditor].includes(id)).map(copy)}]))};
  const demonstrations=recordsWhere(s.records,'category','education_demonstration').filter(r=>r.actor===observer&&r.workstation===here&&r.fromMinute<=now&&r.toMinute>now&&n.demonstrating!==false);
