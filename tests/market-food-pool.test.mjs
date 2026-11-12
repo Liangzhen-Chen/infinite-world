@@ -13,6 +13,8 @@ import {marketSupply,goodsClass,goodsWeight,foodSatiety} from '../server-plugin/
 import {stageReached} from '../server-plugin/seasonal-hazards.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
+import {recordCraft} from '../server-plugin/stock.mjs';
+import {craftUseWindowDays} from '../server-plugin/primitives-body.mjs';
 import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -290,17 +292,27 @@ test('没有日产粮的非农事聚落（觉醒部族骨架账）没有粮仓�
  assert.ok(s.rows.every(r=>r.owner!==f.P),'没有粮仓行');
 });
 
-test('非食物货的目标持有含一个补给间隔内的实际消耗：自主制造耗铁记录抬高铁的需求，无记录不抬',()=>{
- // 推导：目标持有 += 近一个补给间隔内聚落里 NPC 自主制造记录（state.npcAutonomy.actions，kind=craft，spent.materials）里这件货的净耗料。
- // 给 loc_hw 一条耗铁 5 的记录（时间在窗内）：铁的池权重 1、报价货就是铁，需求恰好 +5；记录里没有的货（燕麦以外的别的非食物货）不变。
- const {engine,doc}=setup('market-food-pool-consume'),inn='bld_hw_qingdeng',iron='item_iron',other='item_water';
- const read0=documentReader(doc),base=marketSupply(read0,engine,iron,inn),baseOther=marketSupply(read0,engine,other,inn);
- const rec=structuredClone(doc);
- rec.state.npcAutonomy={...rec.state.npcAutonomy,actions:{...rec.state.npcAutonomy?.actions,probe_a1:{id:'probe_a1',npc:Object.keys(doc.state.npcs)[0],kind:'craft',minute:doc.state.minute,location:inn,spent:{materials:[{item:iron,amount:5}]}}}};
- const withRec=marketSupply(documentReader(rec),engine,iron,inn),otherRec=marketSupply(documentReader(rec),engine,other,inn);
- assert.ok(Math.abs((withRec.consumption-base.consumption)-5*goodsWeight(engine,iron)/goodsWeight(engine,iron))<=1e-9);
- assert.ok(Math.abs((withRec.demand-base.demand)-5)<=1e-9);
- assert.equal(otherRec.demand,baseOther.demand);
+test('生产耗料经 recordCraft 按（聚落，物品）记日桶：不同写入方都计入、需求随之变化、窗口外的日桶过期',()=>{
+ // 推导：recordCraft 带 place 时把 inputs 记入 state.records['craft-use:<聚落>'].days[日][物品]；窗口 W = craftUseWindowDays（各聚落补给间隔上限向上取整）。
+ // 铁的池权重 1、报价货就是铁：给 loc_hw 先后由两个写入方（作坊、NPC 自主制造，writer 与行为人不同）各记耗铁 5 与 3，窗内消耗 = 8，需求恰好比没有记录时 +8；
+ // 过 W + 1 天后再记 2：旧日桶被丢掉（桶数有上界），窗内消耗 = 2，需求比无记录时 +2。记录里没有的货（水）需求不变。
+ const {engine,doc}=setup('market-food-pool-consume'),inn='bld_hw_qingdeng',iron='item_iron',other='item_water',d=engine.primitiveDraft(doc);
+ const base=marketSupply(d,engine,iron,inn),baseOther=marketSupply(d,engine,other,inn),day0=Math.floor(d.get('state','minute')/1440);
+ recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'probe_recipe_a',inputs:{[iron]:5},outputs:{},writer:'works',eventId:'probe-a'});
+ recordCraft(d,{engine,actor:Object.keys(doc.state.npcs)[0],place:'loc_hw',recipe:'probe_recipe_b',inputs:{[iron]:3},outputs:{},writer:'npc-autonomy',eventId:'probe-b'});
+ assert.equal(d.get('state','records','craft-use:loc_hw','days',String(day0),iron),8);
+ const a=marketSupply(d,engine,iron,inn);
+ assert.ok(Math.abs((a.consumption-base.consumption)-8)<=1e-9);assert.ok(Math.abs((a.demand-base.demand)-8)<=1e-9);
+ assert.equal(marketSupply(d,engine,other,inn).demand,baseOther.demand);
+ const W=craftUseWindowDays(engine,d.get('randomSeed'),Object.keys(d.get('state','settlements')));
+ d.set(['state','minute'],d.get('state','minute')+(W+1)*1440);
+ const later=marketSupply(d,engine,iron,inn);
+ recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'probe_recipe_a',inputs:{[iron]:2},outputs:{},writer:'works',eventId:'probe-c'});
+ const days=d.get('state','records','craft-use:loc_hw','days');
+ assert.equal(days[String(day0)],undefined,'窗口外的日桶已过期');
+ assert.ok(Object.keys(days).length<=W);
+ const b=marketSupply(d,engine,iron,inn);
+ assert.ok(Math.abs((b.consumption-later.consumption)-2)<=1e-9);
 });
 
 test('非食物货的户用日耗进目标持有：聚落各户日耗 × 补给间隔天数',()=>{

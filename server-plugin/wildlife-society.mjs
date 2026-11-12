@@ -2,6 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft} from './stock.mjs';
+import {settlementAt} from './reputation.mjs';
 // S1b: 灵物制作是 src:craft 制造守恒对；借形取用与施用的物品进 sink:consume。
 declareLedgerWriter('wildlife-society',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {registerWorldEventSubscriber}from'./world-events.mjs';
@@ -156,7 +157,8 @@ export function spiritManufacture(d,args,eventId,{workstation,kilnWorkResult,cra
         for(const row of made)if(row.amount)ids.push(...produceItems(d,this,row.item,row.amount,{eventId,recipe:recipe.id,workmanship,grade:result.grade,inputs:[...new Map(materials).keys()],books:craftOutput('wildlife-society',eventId)}));
         for(const unit of ids)holdingSet(d,null,['state','itemInstances',unit],{...d.get('state','itemInstances',unit),maker:id,makerName:name},'wildlife-society');
     }else salvage.push(...returnMaterials(d,this,'player',materials,result,{floors,eventId,cracked:Boolean(thermal?.crackedQuantity),give:(item,n)=>this.itemDelta(d,'player',item,n,craftOutput('wildlife-society',eventId))}));
-    recordCraft(d,{recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((made.length?made.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),...(!outcome.success?{failure:result.failure??'ruin'}:{}),writer:'wildlife-society',eventId});
+    // 行为人 = 制作的社会成员 id（料取自玩家行囊、在玩家所在地制作），发生地 = 玩家所在地的聚落（野外无聚落则为空，不计入聚落耗料）。
+    recordCraft(d,{engine:this,actor:id,place:settlementAt(this,d.get('state','location')),recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((made.length?made.filter(row=>row.amount):salvage).map(row=>[row.item,row.amount])),...(!outcome.success?{failure:result.failure??'ruin'}:{}),writer:'wildlife-society',eventId});
     const at=d.get('state','minute'),receipt={id:`crafted_${eventId}`,recipe:recipe.id,item:recipe.output.item,quantity:made[0]?.amount??0,
         maker:id,name,minute:at,station:station?.id??null,fee:station?.fee??0,degree,workmanship,...(result.grade!==undefined?{grade:result.grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),instances:ids,salvage,...(thermal?{thermal}:{})};
     d.set(['state','crafted',receipt.id],receipt);

@@ -54,7 +54,8 @@ function literate(d,engine){
 function spend(d,engine,rows,eventId,recipe){
     for(const[item,amount]of rows)if(engine.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${engine.byId.get(item)?.name??item}`);
     for(const[item,amount]of rows)engine.itemDelta(d,'player',item,-amount,craftInput('works',eventId));
-    recordCraft(d,{recipe,batches:1,inputs:Object.fromEntries(rows),outputs:{},writer:'works',eventId});
+    // 行为人 = 玩家（出书耗纸墨），发生地 = 玩家所在地的聚落。
+    recordCraft(d,{engine,actor:'player',place:placeOf(d,engine).settlement,recipe,batches:1,inputs:Object.fromEntries(rows),outputs:{},writer:'works',eventId});
 }
 // 成品入账并补全本次制造凭据的产出。
 function crafted(d,engine,item,quantity,{eventId,workmanship}){

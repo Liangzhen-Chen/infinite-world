@@ -460,7 +460,8 @@ export function agricultureAction(d,args,eventId){
             if(units<1)throw preconditionFailure(`${quantity}份${this.byId.get(given).name}折不满粮仓一份计量`);
             this.itemDelta(d,'player',given,-quantity,given===item?BOOKED:craftInput('agriculture',eventId));
             accepted=addBatch(r,s,p,units,{id:`donation:${eventId}`,day:Math.floor(d.get('state','minute')/1440),source:'玩家实际交粮',capacity:granaryCapacity(this,d.get('state'),p.settlement,r.granary.capacity),expiresDay:Math.floor(d.get('state','minute')/1440)+this.byId.get(given).shelfLifeDays,from:given===item?{account:bag(this,'player',item)}:craftOutput('agriculture',eventId)});r.ledger.donated+=accepted;// F043：粮仓放不下的部分在交割处损毁，捐赠账与贡献只计实收
-            if(given!==item)recordCraft(d,{recipe:'granary:intake',inputs:{[given]:quantity},outputs:{[item]:accepted},writer:'agriculture',eventId});
+            // 行为人 = 玩家（捐粮），发生地 = 受粮聚落 p.settlement（折算入仓，不是生产耗料，食物货不进非食物消耗）。
+            if(given!==item)recordCraft(d,{engine:this,actor:'player',place:p.settlement,recipe:'granary:intake',inputs:{[given]:quantity},outputs:{[item]:accepted},writer:'agriculture',eventId});
         }else if(operation==='reserve_seed'){
             if(r.batches.filter(b=>b.kind==='grain').reduce((n,b)=>n+b.amount,0)<quantity)throw preconditionFailure('实际谷物不足，不能把蔬果或未来收成当种粮');
             const moved=takeGrain(r,s,quantity,true,{account:seedAccount(this,id)},b=>({id:seedLotId(b),kind:'seed'}));r.field.seedBank+=quantity;r.field.seedBatches.push(...moved.parts.map(({amount,harvestDay,expiresDay})=>({amount,harvestDay,expiresDay})));

@@ -266,7 +266,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight.get(r.item),0)/unit;
  // 非食物货的目标持有还含"一个补给间隔内聚落对这件货的实际消耗"（行为显露的需求，聚落里公开可见的活动，符合 I12）：
  //  户用 = 聚落各户的日耗（householdDailyUse，household-budget.mjs；柴、盐等）× 补给间隔天数（resupplyDays，同粮的补给间隔口径）；
- //  生产投入 = 近一个补给间隔内聚落里 NPC 自主制造记录（state.npcAutonomy.actions，npc-autonomy.mjs:231 写入：kind=craft，spent.materials 耗料、spent.returned 失败退回，location、minute）里这件货的净耗料。
+ //  生产投入 = 近一个补给间隔内聚落里实际制造的耗料：recordCraft（stock.mjs）按（聚落，物品）滚动记日桶，所有制造写入方（玩家作坊、NPC 自主制造、雇工、野生社会等）统一写入。
  // 食物货另有粮仓目标，不在此叠加。没有任何消耗记录的货，目标持有就是货架目标加承诺，仍为 0 时按下限 1。
  let consumption=0;
  if(place&&settlement&&!items.some(i=>goodsEdible(engine,i.id))){
@@ -277,11 +277,9 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
    const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);
    for(const it of items)consumption+=householdDailyUse(engine,state,members,it.id)*days*weight.get(it.id);
   }
-  for(const a of Object.values(state.npcAutonomy?.actions??{})){
-   if(a.kind!=='craft'||!(a.minute>since)||settlementOf(engine,state,a.location)!==place)continue;
-   for(const m of a.spent?.materials??[])if(weight.has(m.item))consumption+=m.amount*weight.get(m.item);
-   for(const m of a.spent?.returned??[])if(weight.has(m.item))consumption-=m.amount*weight.get(m.item);
-  }
+  // 生产耗料读 recordCraft 的滚动日桶（state.records['craft-use:<聚落>']，stock.mjs accrueCraftUse）：所有制造写入方统一经它记账，这里不再读各写入方自己的记录。
+  for(const [k,bucket] of Object.entries(state.records?.[`craft-use:${place}`]?.days??{}))
+   if(Number(k)>=Math.floor(since/DAY))for(const [item,amount] of Object.entries(bucket))if(weight.has(item))consumption+=amount*weight.get(item);
   consumption=Math.max(0,consumption)/unit;
  }
  const demand=Math.max(shelf+consumption+rows.reduce((n,r)=>n+((r.target??0)+r.committed)*r.unit,0),1);

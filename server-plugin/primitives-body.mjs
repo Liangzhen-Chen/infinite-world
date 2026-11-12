@@ -115,6 +115,15 @@ export function resupplyDays(engine,seed,place){
  if(best===null)throw Error(`聚落 ${place} 到不了任何供粮（农事）聚落，推不出补给间隔`);
  const days=2*best/1440;memo.set(place,days);return days;
 }
+// 滚动耗料累计的窗口（天）= 各聚落补给间隔的上限（向上取整）；推不出补给间隔的聚落（到不了供粮聚落）不参与取上限（读它的需求时 resupplyDays 自会报错）。
+export function craftUseWindowDays(engine,seed,places){
+ let window=1;
+ for(const place of places){
+  try{window=Math.max(window,resupplyDays(engine,seed,place));}
+  catch(error){if(!error.message.startsWith('聚落 '))throw error;}
+ }
+ return Math.ceil(window);
+}
 // Mouths for a head count after `levy` of them left (soldiers keep the settlement's make-up).
 export function mealMouthsOf(engine,state,sid,population,{levy=0,need='satiety'}={}){
  const full=settlementMouths(engine,state,sid,population,need);

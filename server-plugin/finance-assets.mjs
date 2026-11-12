@@ -462,7 +462,8 @@ export function settleEmploymentProduction(d,e,row,at,plan){
         else if(employmentAccount(d,e,owner)||d.get('state','records',`protocol_assets:${owner}`))changeEmploymentStock(d,e,owner,p.item,p.quantity*batches,eventId,craftOutput('finance-assets',eventId));
         else instances.push(...produceItems(d,e,p.item,p.quantity*batches,{eventId,recipe:recipe.id,workmanship:quality,owner,maker:row.worker,books:craftOutput('finance-assets',eventId)}));
     }
-    recordCraft(d,{recipe:recipe.id,batches,inputs:Object.fromEntries(recipe.materials.map(m=>[m.item,m.amount*batches])),outputs:Object.fromEntries(products.map(p=>[p.item,p.quantity*batches])),writer:'finance-assets',eventId});
+    // 行为人 = 受雇工匠 row.worker（雇主 owner 出料），发生地 = 工场所在地 row.location 的聚落。
+    recordCraft(d,{engine:e,actor:row.worker,place:placeSettlement(e,d.get('state'),row.location).value,recipe:recipe.id,batches,inputs:Object.fromEntries(recipe.materials.map(m=>[m.item,m.amount*batches])),outputs:Object.fromEntries(products.map(p=>[p.item,p.quantity*batches])),writer:'finance-assets',eventId});
     return {minute:at,fee,batches,quality,skill,instances,quantity:recipe.output.quantity*batches};
 }
 function fairWage(e,s,worker,recipe){return laborValue(e,{state:s},{worker,observer:'player',proficiency:workerSkill(e,s,worker,recipe)}).daily;}
