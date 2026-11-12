@@ -132,6 +132,9 @@ function fixture(stock,{coins=0,grams=20}={}){
  w.marketRules.householdBuffer.profiles=[{id:'ordinary',through:20,cycles:1}];
  const engine=new WorldEngine(w);let document=engine.initialFromLegacy(legacy,'meal-cap');
  document.state.minute=0;
+ // EC-1a：预算采购口径扣聚落公粮（granary!==false 的聚落给登记户配给）；本文件检验的是自留与单餐额度，手算锚点是“每天需 10 饱腹全靠自家存粮”，
+ // 所以夹具聚落设为无公共粮库（引擎既有的 granary:false，只影响配给）。
+ document.state.settlements.loc_hw.granary=false;
  document.state.npcs[owner].inventory={...stock};document.state.npcs[owner].coins=coins;
  const sync=()=>{document.ledger=openLedger(engine,document);};sync();
  const d={get document(){return document;},get:(...p)=>p.reduce((v,k)=>v?.[k],document)};

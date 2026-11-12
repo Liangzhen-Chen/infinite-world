@@ -142,7 +142,8 @@ test('a multi-person household takes one share, not one per member with cash',()
  const parts=f=>buyers.map(id=>credited(f,id));
  assert.ok(parts(both).some(n=>n>0)&&credited(both,'npc_hw_chenbai')>0,'the household buyer is really credited');
  assert.deepEqual(parts(both),parts(one),'a second moneyed member does not change any household part');
- assert.equal(credited(both,'npc_hw_taozhi'),0,'only the household buyer (first member with cash) reads the share');
+ // EC-1a 一户一份预算：户的份额只有一个名额（上面各户份额之和仍受存货限制），户里每位成员读自家预算时读到的就是这同一份，而不是各取一份或只有一人读得到。
+ assert.equal(credited(both,'npc_hw_taozhi'),credited(both,'npc_hw_chenbai'),'the housemate reads the same single household share');
  assert.ok(sum(parts(both))<=sellable(both));
  // The stock must really bind, or both readings would equal the household's own demand and prove nothing:
  // the buyer gets strictly more when the other households hold no cash (it is then the only buyer).
@@ -150,12 +151,12 @@ test('a multi-person household takes one share, not one per member with cash',()
  assert.ok(credited(solo,'npc_hw_chenbai')>credited(one,'npc_hw_chenbai'),`alone ${credited(solo,'npc_hw_chenbai')} vs shared ${credited(one,'npc_hw_chenbai')}`);
 });
 
-test('one household purse: a household whose first member is penniless still buys, once, through its first member (EC-1a)',()=>{
+test('one household purse and budget: a household whose first member is penniless still buys, once; every member reads the one share (EC-1a)',()=>{
  // chenbai sorts first and has no cash of his own; taozhi has. EC-1a 共用钱袋：预算现金按户池算，一户有钱就是有钱的户，
  // 代买的是编号最前的成员（chenbai），付款时他的钱袋不够再从户内成员钱袋补足（householdPoolTopUp）。一户仍只占一个名额、只买一次。
  const f=fixture({seller:shopSeller,groups:[[shopSeller],['npc_hw_chenbai','npc_hw_taozhi'],['npc_hw_xuling']],coins:{npc_hw_chenbai:0,npc_hw_taozhi:100}});
  const fq=credited(f,'npc_hw_taozhi'),cb=credited(f,'npc_hw_chenbai'),xl=credited(f,'npc_hw_xuling');
  assert.ok(cb>0,'the household has cash, so its first member buys for the household');
- assert.equal(fq,0,'the second member reads no share: one slot per household');
- assert.ok(cb+xl<=sellable(f),`credited ${cb}+${xl} against ${sellable(f)}`);
+ assert.equal(fq,cb,'every member reads the one household share, so the member with cash sees the same budget as the first member');
+ assert.ok(cb+xl<=sellable(f),`credited ${cb}+${xl} against ${sellable(f)}: the household counts once`);
 });

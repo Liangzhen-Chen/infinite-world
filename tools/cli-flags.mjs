@@ -82,7 +82,7 @@ const OPT = {
   '--manifest-hash': 'id', '--max-tasks': 'number', '--messages': 'number', '--milestone': 'id', '--months': 'number', '--no-month': 'flag',
   '--no-remote': 'flag', '--notes': 'path', '--only': 'list', '--only-month': 'flag', '--origin': 'url', '--pack': 'path', '--parallel': 'number',
   '--per-file': 'flag', '--quick': 'flag', '--remote-only': 'flag', '--repeat': 'number', '--retest-only': 'list', '--review-seq': 'flag',
-  '--root': 'path', '--run-dir': 'path', '--run-id': 'id', '--seed': 'number', '--seeds': 'number', '--shard': 'number', '--shards': 'number',
+  '--root': 'path', '--rows': 'flag', '--run-dir': 'path', '--run-id': 'id', '--seed': 'number', '--seeds': 'number', '--shard': 'number', '--shards': 'number',
   '--skip': 'list', '--smoke': 'flag', '--source-checkout-evidence': 'path', '--source-evidence': 'path', '--source-evidence-map': 'path',
   '--src': 'path', '--state': 'path', '--tier': 'enum:merge|full', '--timeout': 'number', '--turns': 'number', '--village': 'enum:yp|wt|lq|sb',
   '--why': 'flag', '--world': 'path', '--years': 'number',

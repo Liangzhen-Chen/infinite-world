@@ -81,7 +81,9 @@ test('还价按轮数与让步表，确认后实际成交；只改成交价格�
  //  · t-alloc f8e4a13b（R5：同一卖家可售存量按需求在买方间分摊，口粮替代 shop.mjs foodSources）：需求 14→24、供给 46，稀缺度 .522，价 51；
  //  · st-5（105d2730，同属 R5 及 t-foodsrc/t-staple 单餐额度）：供给 44、需求 24，.545，价 53；
  //  · 现状（R1 t-sat 饱腹改由推导 + t-avail 买得起的来源）：供给 47、需求 28，.596，价 58（同类食物各户 retained 之和 36→40）。
- assert.equal(first.result.cost,58);
+ // EC-1a 之后（采购口径扣聚落公粮，household-budget.mjs:378-379）：登记户口粮由公粮覆盖，各户 retained 归 0，需求/供给 ≤ 0.5，稀缺度回到 0.5 地板：
+ // 100 × 0.5 × 0.979 × 1 = 48.95，截断一次 = 48（即上面“旧期望 48”的同一算式）。
+ assert.equal(first.result.cost,48);
  // S5-02 / 15 §15.2: a real purchase receipt is the observed price; the
  // conversation recomputes its own current projection instead of reading cache.
  const quote=first.result.pricing;

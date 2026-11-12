@@ -49,10 +49,12 @@ test('current stock net assets share market value and S5-01 corrections, not his
  // K02: minute600 -> daily delivery1440 leaves120*840/1440=70
  // satiety physical, ceil(70/30)=3 bread. Cash200 funds the later50.
  // D14, S10-3=7, price2*14/7=4; cost history remains irrelevant.
- assert.equal(netAssets(f.read(),f.engine,host),200+10*4);
- // Registered correction still changes current value:4+1=5.
+ // EC-1a 之后：采购口径扣聚落公粮（household-budget.mjs:378-379），白石村有粮库，店主一家口粮由公粮覆盖，面包不必自留：
+ // D14, S10-0=10, price2*14/10=2.8; cost history remains irrelevant. 净资产 200+10*2.8=228。
+ assert.equal(netAssets(f.read(),f.engine,host),200+10*2.8);
+ // Registered correction still changes current value:2.8+1=3.8.
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'asset-value',pack:'market',target:'economy:value',stage:'add',value:1}]}};
- assert.equal(netAssets(f.read(),new WorldEngine(w),host),200+10*5);
+ assert.equal(netAssets(f.read(),new WorldEngine(w),host),200+10*3.8);
 });
 
 test('independent bulk anchor integrates the actual neutral supply curve',async()=>{

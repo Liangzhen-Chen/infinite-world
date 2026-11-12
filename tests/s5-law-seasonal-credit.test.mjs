@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fixture,cash,host,worker,clerk,DAY,seed,post} from './helpers/finance.mjs';
+import {fixture as financeFixture,cash,host,worker,clerk,DAY,seed,post} from './helpers/finance.mjs';
+// EC-1a：借款用例里 host 与 worker 是两户人（见 helpers/finance.mjs separate），否则同户共用钱袋与口粮，host “没钱没粮”的前提不成立。
+const fixture=(options={})=>financeFixture({separate:true,...options});
 import {bankCredit,borrowerCashFlow,discloseCreditPlan,seasonalCredit,settleFinancialClaim,advanceBankFinance} from '../server-plugin/finance-bank.mjs';
 import {loanTerms,openLoan,householdFundingCandidates} from '../server-plugin/credit.mjs';
 import {openObligation,closeObligation} from '../server-plugin/obligation-runtime.mjs';

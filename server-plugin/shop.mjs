@@ -280,7 +280,9 @@ function sellerShare(d,engine,state,place,read,owner,seller,item,available){
  const total=Math.floor(available);if(!(total>0))return 0;
  const away=buyerKey(engine,state,seller);
  const rows=buyerNeeds(d,engine,state,place,read).filter(b=>b.id!==away),key=buyerKey(engine,state,owner);
- if(rows.find(b=>b.id===key)?.buyer!==owner)return 0;
+ // 一户一个名额、一份预算（EC-1a 共用钱袋与口粮池）：份额按户分配（rows 以户为键），户里任何成员读自家预算都读到这一份，
+ // 不再只有“代买者”读得到——否则编号靠后的成员（尤其是持钱的人）读到的户预算没有市场购买，与同户其他成员读到的不是同一份预算。
+ if(!rows.some(b=>b.id===key))return 0;
  // 性能：同一状态版本（read 与游标 revision 绑定，非游标时 read 每次新建）内，(聚落、卖家、物品、整件可售量) 相同则
  // rows（buyerNeeds 已按 read 缓存，away 由卖家定）、u（种子、聚落、卖家、物品、日序，rollDice 是纯哈希无状态）与 shareByNeed
  // 的结果都相同，各买方户只是在同一张分配表里取自己的一格。故按该键缓存整张表，rollDice 对同键只算一次；
