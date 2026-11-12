@@ -305,7 +305,7 @@ test('生产耗料经 recordCraft 按（聚落，物品）记日桶：不同写�
  const a=marketSupply(d,engine,iron,inn);
  assert.ok(Math.abs((a.consumption-base.consumption)-8)<=1e-9);assert.ok(Math.abs((a.demand-base.demand)-8)<=1e-9);
  assert.equal(marketSupply(d,engine,other,inn).demand,baseOther.demand);
- const W=craftUseWindowDays(engine,d.get('randomSeed'),Object.keys(d.get('state','settlements')));
+ const W=craftUseWindowDays(engine,d.get('state'),d.get('randomSeed'),Object.keys(d.get('state','settlements')));
  d.set(['state','minute'],d.get('state','minute')+(W+1)*1440);
  const later=marketSupply(d,engine,iron,inn);
  recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'probe_recipe_a',inputs:{[iron]:2},outputs:{item_iron_nail:2},writer:'works',eventId:'probe-c'});
@@ -346,14 +346,21 @@ test('捐粮是转移不是消耗：捐粮的守恒对凭据不带 place，不�
  assert.equal(after.demand,before.demand);assert.equal(after.supply,before.supply);
 });
 
-test('非食物货的户用日耗进目标持有：聚落各户日耗 × 补给间隔天数',()=>{
- // 推导：consumption = Σ 各户 householdDailyUse(该户成员, 该货) × 补给间隔天数 × 池权重 ÷ 报价货权重；
- // 补给间隔 = 2 × 最近的别的农事聚落的 walk 路程分钟 ÷ 1440（一年各月最快）；户按 personHousehold 的编号去重，居民按所在聚落取。
- const {engine,doc}=setup('market-food-pool-upkeep'),inn='bld_hw_qingdeng',state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
+// 手推：某货在某聚落的补给间隔（天）= 往返该货产地的天数；产地 = 目录 origin 所在聚落；产地就是本聚落取最短生产配方工时 ÷ 1440，无配方（或无产地）退回一个交易周期 economy.tradeCycleDays。
+function itemDaysAt(engine,state,seed,item,place){
+ const origin=engine.byId.get(item).origin,from=origin?placeSettlement(engine,state,origin).value:null,cycle=engine.rules.economy.tradeCycleDays;
+ if(!from)return cycle;
+ if(from===place){const ms=engine.world.recipes.filter(r=>r.output?.item===item).map(r=>r.minutes);return ms.length?Math.min(...ms)/1440:cycle;}
  let best=null;
- for(const p of engine.rules.agriculture.settlements){if(p.settlement==='loc_hw')continue;for(let m=0;m<12;m++){let r=null;try{r=engine.route(p.settlement,'loc_hw','walk',m*30*1440,seed);}catch(e){if(!e.message.startsWith('没有当前季节'))throw e;}if(r&&(best===null||r.minutes<best))best=r.minutes;}}
- assert.ok(best>0);
- const days=2*best/1440,households=new Map();
+ for(let m=0;m<12;m++){let r=null;try{r=engine.route(from,place,'walk',m*30*1440,seed);}catch(e){if(!e.message.startsWith('没有当前季节'))throw e;}if(r&&(best===null||r.minutes<best))best=r.minutes;}
+ assert.ok(best>0,`${item} 产地聚落到得了 ${place}`);
+ return 2*best/1440;
+}
+
+test('非食物货的户用日耗进目标持有：聚落各户日耗 × 补给间隔天数',()=>{
+ // 推导：consumption = Σ 各户 householdDailyUse(该户成员, 该货) × 该货补给间隔天数（itemDaysAt 手推）× 池权重 ÷ 报价货权重；户按 personHousehold 的编号去重，居民按所在聚落取。
+ const {engine,doc}=setup('market-food-pool-upkeep'),inn='bld_hw_qingdeng',state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
+ const households=new Map();
  for(const id of Object.keys(state.npcs)){
   if(placeSettlement(engine,state,state.npcs[id].location).value!=='loc_hw')continue;
   const h=personHousehold(engine,state,id).value,key=h?.id??id;
@@ -361,22 +368,36 @@ test('非食物货的户用日耗进目标持有：聚落各户日耗 × 补给�
  }
  const pick=engine.world.items.find(i=>!(foodSatiety(engine,i.id)>0)&&[...households.values()].some(ms=>householdDailyUse(engine,state,ms,i.id)>0));
  assert.ok(pick,'聚落里有户用耗用的非食物货（柴、盐等）');
- const expected=[...households.values()].reduce((n,ms)=>n+householdDailyUse(engine,state,ms,pick.id),0)*days*goodsWeight(engine,pick.id)/goodsWeight(engine,pick.id);
+ const expected=[...households.values()].reduce((n,ms)=>n+householdDailyUse(engine,state,ms,pick.id),0)*itemDaysAt(engine,state,seed,pick.id,'loc_hw');
  assert.ok(expected>0);
  const s=marketSupply(read,engine,pick.id,inn);
  assert.ok(Math.abs(s.consumption-expected)<=1e-6*expected);
 });
 
+test('单农事聚落的世界：给柴报价不崩溃，消耗 = 户用日耗 × 柴的补给间隔（与有没有别的农事聚落无关）',()=>{
+ // 推导：非食物货的补给间隔按该货产地（目录 origin）推，不再依赖"最近的别的农事聚落"；柴产地在 loc_hw 本地，间隔 = 本地生产周期（itemDaysAt 手推）。
+ const wood='item_wood',inn='bld_hw_qingdeng',{engine,doc}=setup('market-food-pool-single-farm');
+ engine.rules.agriculture.settlements=engine.rules.agriculture.settlements.filter(p=>p.settlement==='loc_hw');
+ const state=doc.state,read=documentReader(doc),seed=read.get('randomSeed'),households=new Map();
+ for(const id of Object.keys(state.npcs)){
+  if(placeSettlement(engine,state,state.npcs[id].location).value!=='loc_hw')continue;
+  const h=personHousehold(engine,state,id).value,key=h?.id??id;
+  if(!households.has(key))households.set(key,(h?.members??[id]).filter(m=>state.npcs?.[m]));
+ }
+ const daily=[...households.values()].reduce((n,ms)=>n+householdDailyUse(engine,state,ms,wood),0),days=itemDaysAt(engine,state,seed,wood,'loc_hw');
+ assert.ok(daily>0);
+ let s=null;assert.doesNotThrow(()=>{s=marketSupply(read,engine,wood,inn);});
+ assert.ok(Math.abs(s.consumption-daily*days)<=1e-6*daily*days);
+});
+
 test('柴：平时存量 = 目标持有（货架目标 + 承诺 + 户用日耗 × 补给间隔）时 cov = 1，稀缺度为 1',()=>{
- // 推导：目标持有 D = 货架目标 + 合同承诺 + 户用日耗 × 补给间隔天数（户用部分按上一条手推：各户 householdDailyUse 之和 × 2 × 最近别的农事聚落路程分钟 ÷ 1440）。
+ // 推导：目标持有 D = 货架目标 + 合同承诺 + 户用日耗 × 补给间隔天数（户用部分按上一条手推：各户 householdDailyUse 之和 × 柴的补给间隔，柴产地在 loc_hw 本地，itemDaysAt 取本地生产周期）。
  // 居民背包清空（卖方存货 0），聚落柴存 S = D：供给 = S，需求 = D，稀缺度 = 需求 ÷ 供给 = 1（在 [0.5, 3] 之内，不夹取）；目标与存量无关。
  const wood='item_wood',inn='bld_hw_qingdeng',{engine,doc}=setup('market-food-pool-wood');
  for(const n of Object.values(doc.state.npcs))n.inventory={};
  doc.ledger=openLedger(engine,doc);
  const state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
- let best=null;
- for(const p of engine.rules.agriculture.settlements){if(p.settlement==='loc_hw')continue;for(let m=0;m<12;m++){let r=null;try{r=engine.route(p.settlement,'loc_hw','walk',m*30*1440,seed);}catch(e){if(!e.message.startsWith('没有当前季节'))throw e;}if(r&&(best===null||r.minutes<best))best=r.minutes;}}
- const days=2*best/1440,households=new Map();
+ const days=itemDaysAt(engine,state,seed,wood,'loc_hw'),households=new Map();
  for(const id of Object.keys(state.npcs)){
   if(placeSettlement(engine,state,state.npcs[id].location).value!=='loc_hw')continue;
   const h=personHousehold(engine,state,id).value,key=h?.id??id;

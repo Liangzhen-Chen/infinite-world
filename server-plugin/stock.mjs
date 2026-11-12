@@ -253,7 +253,7 @@ export function recordCraft(d,{engine,actor=null,place=null,recipe,batches=1,inp
 // 写入时丢掉窗口外的日桶，所以每个聚落至多 窗口天数 个桶。耗用量按投入计；失败时回收的同一种料（outputs 里的同名物品）不算耗用。
 // 所有制造写入方（works、manufacturing、wildlife-society、finance-assets、npc-autonomy、agriculture）都经 recordCraft 写入，不各自累计。
 function accrueCraftUse(d,engine,place,inputs,outputs,failure){
-    const day=Math.floor((d.get('state','minute')??0)/1440),key=`craft-use:${place}`,old=d.get('state','records',key),keep=craftUseWindowDays(engine,d.get('randomSeed'),Object.keys(d.get('state','settlements')??{}));
+    const day=Math.floor((d.get('state','minute')??0)/1440),key=`craft-use:${place}`,old=d.get('state','records',key),keep=craftUseWindowDays(engine,d.get('state'),d.get('randomSeed'),Object.keys(d.get('state','settlements')??{}));
     const days={};for(const [k,v] of Object.entries(old?.days??{}))if(Number(k)>day-keep)days[k]=v;
     const row={...(days[day]??{})};
     for(const [item,amount] of Object.entries(inputs)){const net=amount-(failure?Math.min(amount,outputs[item]??0):0);if(net>0)row[item]=(row[item]??0)+net;}
