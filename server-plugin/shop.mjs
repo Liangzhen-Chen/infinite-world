@@ -380,7 +380,8 @@ registerHouseholdFoodSources((d,engine,owner,{view}={})=>{
    }
    let quantity=Math.min(row.amount,row.maximum);
    // K2：本地货架要向本聚落持货人进货，下一次补货最多补得到他们眼下能出让的余量；没人有余量就不是可指望的口粮来源。
-   if(row.source==='local'){quantity=Math.min(quantity,localSpare(d,engine,{settlement:shop.settlement,item:row.item,buyer:shop.keeper}));if(quantity<1)continue;}
+   // 主观视图（I12）：店主不知道他户眼下的余粮，只凭自己店铺记录里上次实际进到的量预测，没有记录就不指望（与下面 route 来源同口径）；客观读仍按持货人真实余量。
+   if(row.source==='local'){quantity=Math.min(quantity,view?(last?.added??0):localSpare(d,engine,{settlement:shop.settlement,item:row.item,buyer:shop.keeper}));if(quantity<1)continue;}
    if(row.source==='settlement'){
     if(view||row.stock==='food'&&managed(d,shop.settlement))continue;
     quantity=Math.min(quantity,Math.max(0,priceRead(d,{point:'shop.supply',account:settlementStock(engine,shop.settlement,row.stock),legacy:()=>state.settlements?.[shop.settlement]?.[row.stock]??0})-(row.reserve??0)));

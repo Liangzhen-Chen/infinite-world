@@ -12,6 +12,7 @@ import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {applyPatches,PatchCursor,withRecordIndex} from '../server-plugin/storage.mjs';
 import {settlementStock,bag} from '../server-plugin/stock.mjs';
 import {stateReader} from '../server-plugin/valuation.mjs';
+import {localSpare} from '../server-plugin/distribution.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const owner='npc_hw_linsui',other='npc_hw_duanyan',supplier='npc_hw_shendu',item='item_bread',DAY=1440;
@@ -278,11 +279,15 @@ test('double worlds: another household hidden money/stock/obligations do not cha
  const f=fixture({members:[owner,other],shared:false});f.sync();
  const a=householdBudget(f.d,f.engine,owner);
  // Hand anchor: hidden +900 cash/+200 bread belongs to the other person: delta0.
- // 隐藏的存货用非食物（铁钉）：店主自家货架的补货预测按设计读本聚落持货人眼下可出让的食物余量（distribution.localSpare，卡 E/K2），另一户的面包会因此进到下次进货的时刻与数量；
- // 那是既有的进货渠道，不是户内信息，所以隐藏存货取不进该渠道的物品。隐藏的钱与义务不变。
- f.state.npcs[other].coins=900;f.state.npcs[other].inventory.item_iron_nail=200;
+ // 另一户藏面包（I12：不在场的他户持有不经知情渠道不得进入主观视图）：主观预算的 nextFoodAt、physicalFloor 等整体不变；
+ // 客观读（localSpare 读的是真实持货人余量，执行进货时用它）仍看得到这批面包，证明数据存在，只是主观读不到。
+ const spareBefore=localSpare(f.d,f.engine,{settlement:'loc_hw',item,buyer:owner});
+ f.state.npcs[other].coins=900;f.state.npcs[other].inventory[item]=200;
  f.state.obligations['hidden-wage']={id:'hidden-wage',debtor:'player',creditor:other,resource:'coin_river',amount:900,deadline:DAY,status:'pending'};f.sync();
  assert.deepEqual(householdBudget(f.d,f.engine,owner),a);
+ assert.equal(householdBudget(f.d,f.engine,owner).resources.market.nextFoodAt,a.resources.market.nextFoodAt);
+ assert.deepEqual(householdBudget(f.d,f.engine,owner).resources.market.physicalFloor,a.resources.market.physicalFloor);
+ assert.ok(localSpare(f.d,f.engine,{settlement:'loc_hw',item,buyer:owner})>spareBefore,'the objective read still sees the hidden bread');
  const view=subjectiveView(f.engine,f.d.document,owner);view.knowledge.facts['expected-help']={value:900,kind:'belief'};
  const believed=householdBudget(f.d,f.engine,owner,{view});assert.equal(believed.cash,5);assert.equal(believed.expectations['expected-help'].value,900);
  assert.equal(believed.mutualAidAvailable,0);
@@ -403,6 +408,28 @@ test('simultaneous sources: residents buy the food with the most effective satie
   assert.notEqual(expected,cheapest,'premise: the best per coin is not the cheapest food');
   assert.ok(!b.resources.market.purchases.some(p=>satOf(f,p.item)===0),'a source with no satiety is never bought');
  }finally{registerHouseholdFoodSources(before);}
+});
+
+test('subjective restock forecast of the own local shelf: no record counts 0, a record counts its last real delivery, other households stock never moves it (I12)',()=>{
+ const f=marketFixture();
+ const purchased=b=>b.resources.market.purchases.reduce((n,p)=>n+p.quantity,0);
+ // 客观读：补货来源是供应者眼下真实可出让的面包，有购买。
+ const objective=householdBudget(f.d,f.engine,owner,{kernel:true});
+ assert.ok(purchased(objective)>0,'premise: the objective read sees the supplier bread');
+ const shopId=objective.resources.market.purchases[0].source;
+ // 无记录：主观读不指望本地货架补货（与 route 来源同口径），不买。
+ const none=householdBudget(f.d,f.engine,owner);
+ assert.equal(purchased(none),0);assert.equal(none.resources.market.coverage.satiety,0);
+ // 有记录：上次实际进到 3 件（付 3 文），下次补货预测就是 3 件，按每文一个的价码收进。
+ f.state.records[`shop:${shopId}`]={category:'shop_ledger',entries:[{item,added:3,paidCopper:3}]};f.sync();
+ const known=householdBudget(f.d,f.engine,owner);
+ assert.equal(purchased(known),3);near(known.resources.market.coverage.satiety,3*SAT);
+ // 供应者的面包大变（500→0）：客观读的买入变了，主观读（无记录与有记录两种）一点不变。
+ f.state.npcs[supplier].inventory[item]=0;f.sync();
+ assert.deepEqual(householdBudget(f.d,f.engine,owner),known);
+ assert.equal(purchased(householdBudget(f.d,f.engine,owner,{kernel:true})),0,'the objective read follows the real holders');
+ delete f.state.records[`shop:${shopId}`];f.sync();
+ assert.deepEqual(householdBudget(f.d,f.engine,owner),none);
 });
 
 test('missing business, failed supply and common loss cannot act as paid food access',()=>{
