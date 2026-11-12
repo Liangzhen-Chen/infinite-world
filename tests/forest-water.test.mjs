@@ -269,13 +269,17 @@ test('P3统计粮食产出也扣灌溉水，无详细农田的远方聚落遇旱
   x.d.set(['state','settlements',farmId],{name:'统计田地',population:pop,food:0,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
   const heldTarget=Math.ceil(mealMouthsOf(x.engine,x.d.get('state'),farmId,pop)*resupplyDays(x.engine,x.d.get('randomSeed'),farmId));
   assert.ok(heldTarget>0);
-  x.d.set(['state','settlements',farmId,'food'],heldTarget);
+  x.d.set(['state','settlements',farmId,'food'],heldTarget);x.heldTarget=heldTarget;
+  assert.equal(x.d.get('state','settlements',farmId,'food'),heldTarget,'前置：夹具存粮 = 目标持有');
   const day=Math.floor(x.d.get('state','minute')/DAY);x.d.set(['state','minute'],(day+1)*DAY);
   advanceRegistry.find(r=>r.id==='daily').advance(x.engine,x.d,{before:day*DAY,after:(day+1)*DAY});return x;
  };
  const dry=make(0),wet=make(0.3),key='water-cycle:basin:loc_rw_statfarm';
  assert.ok(dry.d.get('state','records',key).farms.loc_rw_statfarm.takenMl>0);
  assert.ok(dry.d.get('state','settlements','loc_rw_statfarm','food')<wet.d.get('state','settlements','loc_rw_statfarm','food'));
+ // 前置：旱湿两边推进一日后的存粮，相对目标持有的稀缺度（目标 ÷ 实存）都落在规则的夹取区间内，价格差才来自产量而不是被夹到同一端。
+ const [lo,hi]=dry.engine.rules.economy.priceFactorLimits.region;
+ for(const x of [dry,wet]){const s=x.heldTarget/x.d.get('state','settlements','loc_rw_statfarm','food');assert.ok(s>lo&&s<hi,`稀缺度 ${s} 须在 (${lo}, ${hi}) 内`);}
  const item=dry.engine.rules.settlementTrade.item;
  assert.ok(regionalTradePrice(dry.d,dry.engine,item,'loc_rw_statfarm')>regionalTradePrice(wet.d,wet.engine,item,'loc_rw_statfarm'));
  assertWaterLedger(dry.d);assertWaterLedger(wet.d);
