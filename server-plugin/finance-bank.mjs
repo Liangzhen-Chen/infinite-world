@@ -30,7 +30,7 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {canAct} from './action-capacity.mjs';
 import {consent as nativeConsent,agreedLoan,requestContractConsent} from './action-consent.mjs';
 import {authority} from './action-authority.mjs';
-import {householdBudget} from './household-budget.mjs';
+import {householdBudget,householdPoolTopUp} from './household-budget.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {subjectiveMarketQuote} from './market.mjs';
 import {rollDice} from './scheduler.mjs';
@@ -50,9 +50,18 @@ export function financeBalance(d,e,id){
     const estate=d.get('state','records',`protocol_assets:${id}`);if(estate)return estate.coins??0;
     const actor=d.get(...e.actorPath(id));if(!actor)throw preconditionFailure('资金当事人不存在');return actor.coins??0;
 }
+// EC-1a 共用钱袋：NPC 当事人付款前本人钱袋不够时，先从同一登记户其他成员的钱袋按编号序补足（household-budget.householdPoolTopUp，唯一的户内转账原语）。
+// 个人（玩家）、群体账户、组织库、遗产账户不是户内钱袋，不补；补足不够时照旧由下面的余额检查抛“当事人资金不足”。
+function poolTopUpFor(d,e,id,need,sourceEvent){
+    if(id==='player'||groupAccountView(e,d.get('state'),id))return;
+    if(d.get(...financePath(`organization:${id}`))?.category==='organization'||d.get('state','records',`protocol_assets:${id}`))return;
+    if(!d.get(...e.actorPath(id)))return;
+    householdPoolTopUp(d,e,id,need,`${sourceEvent??'finance'}:${id}`);
+}
 // S1a: books = 账本对方账户（money.bookSide），成对的另一边已记账时传 BOOKED。
 export function financeChange(d,e,id,delta,sourceEvent,books){
     if(!Number.isSafeInteger(delta))throw Error('资金变化无效');
+    if(delta<0&&books!==BOOKED)poolTopUpFor(d,e,id,-delta,sourceEvent);// 成对另一边已记账（BOOKED）时钱已动过，补足须在 financeTransfer 动钱之前
     const balance=financeBalance(d,e,id)+delta;if(!Number.isSafeInteger(balance)||balance<0)throw preconditionFailure('当事人资金不足');
     if(groupAccountView(e,d.get('state'),id))return changeGroupCoins(d,e,id,delta,{kind:'金融契约',sourceEvent,minute:d.get('state','minute')},books);
     bookSide(d,partyAccount(e,d.get('state'),id),delta,books);
@@ -63,6 +72,7 @@ export function financeChange(d,e,id,delta,sourceEvent,books){
 }
 export function financeTransfer(d,e,from,to,n,id,writer='finance-bank'){
     financeInt(n,1,1e9,'支付金额');const state=d.get('state');
+    poolTopUpFor(d,e,from,n,id);// 付款人本人钱袋不够时先户内补足，再动钱
     moveCoins(d,{from:partyAccount(e,state,from),to:partyAccount(e,state,to),amount:n,writer,eventId:id});
     financeChange(d,e,from,-n,id,BOOKED);financeChange(d,e,to,n,id,BOOKED);
 }
