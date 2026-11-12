@@ -62,13 +62,14 @@ export function foodSatiety(engine,item,path=new Set()){
  path.delete(item);
  return best;
 }
-// A pure function of the catalog row, the goods-tag table and the recipe table;
-// remembered per row object and revalidated against those inputs, so no live state can go stale.
+// A function of the catalog row (tags, weight, own props, nutrition), the goods-tag table, the recipe table, the material-property table
+// and the crafting balance params (household usage, fuel heat); no live state is read. Remembered per row object and revalidated
+// against every one of those inputs (identity of each table, values of the row's own fields), so a changed input never returns a stale entry.
 const goodsClasses=new WeakMap();
 function goodsEntry(engine,item){
- const row=engine.byId.get(item),table=rulesOf(engine).goodsTags,recipes=engine.world.recipes;
+ const row=engine.byId.get(item),table=rulesOf(engine).goodsTags,recipes=engine.world.recipes,props=engine.world.materialProps,balance=engine.world.balance?.crafting;
  const hit=row&&typeof row==='object'?goodsClasses.get(row):null;
- if(hit&&hit.table===table&&hit.tags===row.tags&&hit.count===row.tags?.length&&hit.item===item&&hit.satiety===row.nutrition?.satiety&&hit.calories===row.nutrientContent?.satiety&&hit.recipes===recipes)return hit.entry;
+ if(hit&&hit.table===table&&hit.tags===row.tags&&hit.count===row.tags?.length&&hit.item===item&&hit.satiety===row.nutrition?.satiety&&hit.calories===row.nutrientContent?.satiety&&hit.recipes===recipes&&hit.weight===row.weight&&hit.own===row.props&&hit.props===props&&hit.balance===balance&&hit.items===engine.world.items)return hit.entry;
  const tags=row?.tags??[],satiety=foodSatiety(engine,item);
  // 可食池只收能吃的货；不能吃的货即使标签或表映射到 food，也退回下一个非 food 的派生类：自身其他 goods: 标签，再表中非 food 的映射，最后用物品自己。
  const goodsTag=tags.find(t=>t.startsWith('goods:')&&t!=='goods:food');
@@ -77,7 +78,7 @@ function goodsEntry(engine,item){
  // 见 household-budget.usageItemGrams；缺热值时按重量）。类需求只在池里算一次，与全类供给比较，不按每件替代品各算一份。有效克数不为正（烧不出净热）的退回按件。
  const use=satiety>0?null:usageDefinition(engine,0,[]).map(u=>u.cls).find(cls=>isItemClass(engine,item,cls))??null,useGrams=use?usageItemGrams(engine,item,use):0;
  const entry=use&&useGrams>0?{value:`use:${use}`,weight:useGrams,edible:false,use}:{value:satiety>0?'goods:food':goodsTag??`goods:${category??item}`,weight:satiety>0?satiety:1,edible:satiety>0,use:null};
- if(row&&typeof row==='object')goodsClasses.set(row,{table,tags:row.tags,count:row.tags?.length,item,satiety:row.nutrition?.satiety,calories:row.nutrientContent?.satiety,recipes,entry});
+ if(row&&typeof row==='object')goodsClasses.set(row,{table,tags:row.tags,count:row.tags?.length,item,satiety:row.nutrition?.satiety,calories:row.nutrientContent?.satiety,recipes,weight:row.weight,own:row.props,props,balance,items:engine.world.items,entry});
  return entry;
 }
 export function goodsClass(engine,item){return goodsEntry(engine,item).value;}
@@ -286,16 +287,20 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // 率按名册户给出人均（名册户只给比例，没上名册的人口也要烧柴吃盐），乘聚落人口（公开量，与粮的餐口同一来源 settlement.population）。
   const use=goodsUse(engine,item);
   if(use){
-   const horizon=Math.min(...items.map(it=>daysOf(it.id))),seen=new Set();let rosterPersons=0,viaMarket=0;
+   // 不可达的成员（产地与本聚落不通，itemResupplyDays 报“聚落 …”）不是补货渠道，跳过；全不可达就走既有路径（按本件取，照常报错）。
+   const reachable=[];
+   for(const it of items)try{reachable.push(daysOf(it.id));}catch(error){if(!String(error.message).startsWith('聚落 '))throw error;}
+   const horizon=reachable.length?Math.min(...reachable):daysOf(item),seen=new Set();let rosterPersons=0,viaMarket=0,owed=0;
    for(const id of Object.keys(state.npcs??{})){
     if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
     const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
     const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);rosterPersons+=members.length;
     const need=householdUsage(engine,state,members).find(u=>u.cls===use)?.gramsPerDay??0,self=Math.min(need,upkeepSelfSupplyOf(engine,state,id)[use]??0);
-    viaMarket+=(need-self)*horizon+(state.family?.upkeep?.[key]?.[`${use}DebtG`]??0);
+    viaMarket+=(need-self)*horizon;owed+=state.family?.upkeep?.[key]?.[`${use}DebtG`]??0;
    }
    if(!(rosterPersons>0)){viaMarket=(householdUsage(engine,state,[null]).find(u=>u.cls===use)?.gramsPerDay??0)*horizon;rosterPersons=1;}
-   consumption+=viaMarket/rosterPersons*(settlement.population??0);
+   // 日用度与自给是速率，名册户人均可外推到聚落人口；欠量是名册户账上实际欠着的，只计实际量，不乘人口÷名册人数。
+   consumption+=viaMarket/rosterPersons*(settlement.population??0)+owed;
   }
   // 生产耗料读 recordCraft 的滚动日桶（state.records['craft-use:<聚落>']，stock.mjs accrueCraftUse）：所有制造写入方统一经它记账，这里不再读各写入方自己的记录。
   // 窗口按整数天取（ceil(补给间隔) 个日桶，含当天），跨午夜保持连续，不按当天截断。
