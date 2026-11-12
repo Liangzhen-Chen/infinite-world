@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {mealMouthsOf} from '../../server-plugin/primitives-body.mjs';
 import {foodSatiety} from '../../server-plugin/market.mjs';
 import {granaryCapacity} from '../../server-plugin/facility-state.mjs';
+import {placeSettlement} from '../../server-plugin/entity-view.mjs';
 
 // 农事聚落粮食目标持有 = min(ceil(餐口 × 目标日数), 粮仓容量 − 种粮)：
 //  · 目标日数 = 距下次收获天数 + reserveDays；收获日（年内第几日）= crop.sowDays[1] + crop.growthDays，一年 360 日，当日是收获日则距收获 0 天；
@@ -51,4 +52,22 @@ export function handSeasonYield(rules,place){
 export function handSatiety(engine,item){
     const own=engine.byId.get(item)?.nutrition?.satiety;
     return own>0?own:foodSatiety(engine,item);
+}
+// 聚落燕麦稀缺度手推 = 需求 ÷ 供给（不调用 marketSupply / goodsWeight / farmTargetFood），返回未夹取的比值；报价时再夹到 priceFactorLimits.region，价 = 目录基价 × 运输因子 × 夹取后的稀缺度。
+// 可食物资同属一池，每件货折成燕麦件数 = 自身饱腹 ÷ 燕麦饱腹（读法见 handSatiety）：
+//  · 供给 = 公仓燕麦存量 food（一件燕麦 = 1）+ 本聚落各经营者（店主与带 trade 服务的人）行囊里的食物类存货折算；玩家行囊与其他居民的私户行囊不计（I12）；
+//  · 需求 = 本聚落各店货架里食物类每行的 (maximum + reserve) 折算（货架目标）+ 公仓目标持有（handTarget：min(餐口 × (距收获天数 + reserveDays)，容量 − 种粮)，按 state.minute）。
+// food 由调用方给（夹具把公仓存量改了之后，不读被测的库存原语）。
+export function handOatsScarcity(engine,state,food,place='loc_hw'){
+    const sat=i=>handSatiety(engine,i),unit=i=>sat(i)/sat('item_oats'),stores=engine.rules.economy.shops.stores;
+    const owners=new Set([...stores.map(s=>s.keeper),...engine.world.npcs.filter(n=>n.shopType||(n.services??[]).includes('trade')).map(n=>n.id)]);
+    let held=food*unit('item_oats');
+    for(const id of owners){
+        const npc=state.npcs[id];if(!npc||placeSettlement(engine,state,npc.location).value!==place)continue;
+        for(const [item,q] of Object.entries(npc.inventory??{}))if(sat(item)>0)held+=(q?.quantity??q)*unit(item);
+    }
+    const shelf=stores.filter(s=>s.settlement===place).flatMap(s=>s.restock??[]).filter(r=>sat(r.item)>0).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*unit(r.item),0);
+    const profile=engine.rules.agriculture.settlements.find(p=>p.settlement===place);
+    const target=shelf+handTarget(engine,state,profile,state.minute)*unit('item_oats');
+    return {held,target,ratio:target/held};
 }

@@ -23,6 +23,8 @@ import {fixture as faithFixture,draft as faithDraft,SEAT,T,HOST} from './helpers
 import {fireScene as fixture} from './probes/run-001/e06.mjs';
 import {marketSupply} from '../server-plugin/market.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
+import {handOatsScarcity} from './helpers/hand-targets.mjs';
+
 
 test('E06-1 真实风向、间距、石材与雨水对照',()=>{
  const {engine,d,forge,warehouse,ignite,w}=fixture();ignite();advanceFacilityFire(d,engine,{after:660});
@@ -36,18 +38,22 @@ test('E06-1 真实风向、间距、石材与雨水对照',()=>{
 test('E06-2 仓损逐批进 sink，保护种粮与别仓，未签约报价立即重派生',()=>{
  const {engine,d,warehouse}=fixture(),before=d.get('state','settlements','loc_hw','food'),seed=structuredClone(d.get('state','records','agriculture:loc_hw','field'));
  const price=regionalTradePrice(d,engine,'item_oats','loc_hw',600);
- // E6排除私人12份粮食：S=8000−5220=2780，D5220；3×春季.9×5220/2780=5.069784172661871。
- assert.equal(price,5.069784172661871);
+ // 价 = 目录基价 3 × 运输因子 1（燕麦产自本聚落，无运费）× 稀缺度；稀缺度 = 需求 ÷ 供给（见 hand-targets.mjs 的 handOatsScarcity，手推，两边折成燕麦件数）。
+ // 开局日（年内第 0 日）离收获还有 205 天：公仓目标 = 餐口 58 × (205 + 90) = 17110，仓里 8000 低于目标——收获前粮就是紧的。
+ // 前置：库存低于目标，所以稀缺度 > 1，失火让价格更高才有意义。
+ const start=handOatsScarcity(engine,d.get('state'),before);assert.ok(start.target>before&&start.ratio>1&&start.ratio<3,'前置：收获前仓里粮低于目标，稀缺度在夹取区间内');
+ assert.ok(Math.abs(price-3*start.ratio)<=1e-9,`价 ${price} = 3 × ${start.ratio}`);
  damageFacility(d,engine,warehouse,75,{cause:'火灾',sourceEvent:'grain',minute:660});
  assert.equal(d.get('state','settlements','loc_hw','food'),before-4500);
  assert.equal(d.get('ledger','flows','sink:destroy|item_oats|fire'),4500);
  assert.deepEqual(d.get('state','records','agriculture:loc_hw','field'),seed);
  assert.equal(d.get('state','records','agriculture:loc_hw','batches').find(b=>b.id==='safe_grain').amount,2000);
  damageFacility(d,engine,warehouse,75,{cause:'火灾',sourceEvent:'grain',minute:660});assert.equal(d.get('ledger','flows','sink:destroy|item_oats|fire'),4500);
- // 未签约的读价不是承诺；失火后公粮3500全属保留，公开供给0，供需封顶3。
- // 新价3×0.9×3=8.1，同日立即反映，次日没有成交压力仍为8.1。
- assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',700),8.100000000000001);
- assert.equal(regionalTradePrice(d,engine,'item_oats','loc_hw',DAY+600),8.100000000000001);
+ // 未签约的读价不是承诺：失火后仓里只剩 8000 − 4500 = 3500，供给 ≈ 3541，需求仍 ≈ 17117（目标不随火灾变），需求 ÷ 供给 ≈ 4.83，超出上限 3，夹到 3；
+ // 新价 3 × 3 = 9，同日立即反映；次日没有成交压力，目标天数少一天（17052）但仍远超供给，仍夹在 3，价仍 9。
+ const burnt=handOatsScarcity(engine,d.get('state'),before-4500),[,cap]=engine.rules.economy.priceFactorLimits.region;
+ assert.ok(burnt.ratio>cap,'前置：失火后需求 ÷ 供给超出上限，被夹到上限');
+ for(const at of [700,DAY+600]){const now=regionalTradePrice(d,engine,'item_oats','loc_hw',at);assert.ok(Math.abs(now-3*cap)<=1e-9,`${at}：${now} = 3 × ${cap}`);}
  assert.deepEqual(reconcile(engine,d.document),{mismatches:[],lots:[],drift:[],audit:[]});
 });
 
