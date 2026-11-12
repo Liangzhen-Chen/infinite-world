@@ -148,10 +148,10 @@ function granaryFixture({food,population}){
 }
 
 test('稀缺度 = 目标持有 ÷ 实际持有，随覆盖率连续单调',()=>{
- const inn='bld_hw_qingdeng',oats='item_oats',population=300;
+ const inn='bld_hw_qingdeng',oats='item_oats',population=30;
  // 推导：覆盖率 c = 粮仓实际持有 ÷ 粮仓目标持有。农事聚落目标 = 餐口 × (距下次收获天数 + reserveDays)；
  // 收获日 = crop.sowDays[1] + crop.growthDays（年内第几日），一年 360 日，距下次收获 = (收获日 − 年内当日) mod 360。
- // 人口固定 300（餐口 300），目标 T = 300 × (距收获 + reserveDays)；存粮取 c × T：c=1.5、1.0、0.5、0.2、0 各一点（c=0 存粮 0）。
+ // 人口固定 30（餐口 30；目标远小于粮仓容量 − 种粮，容量限制不起作用），目标 T = 30 × (距收获 + reserveDays)；存粮取 c × T：c=1.5、1.0、0.5、0.2、0 各一点（c=0 存粮 0）。
  // 居民背包全清空，卖方存货为 0，所以 实际持有 = 存粮；需求 = T + K，K = 货架目标 + 合同承诺，与覆盖率无关（各点 demand−T 应相等）。
  // 稀缺度 = 夹取(需求 ÷ max(1, 供给)，priceFactorLimits.region)：
  //   c=1.5 → (T+K)/(1.5T) ≈ 0.667；c=1.0 → (T+K)/T ≈ 1；c=0.5 → (T+K)/(0.5T) ≈ 2；c=0.2 → (T+K)/(0.2T) ≈ 5 → 顶 3；c=0 → 供给 0，分母取 1，→ 顶 3。
@@ -186,19 +186,22 @@ test('稀缺度 = 目标持有 ÷ 实际持有，随覆盖率连续单调',()=>{
 
 test('农事聚落目标持有随季节：收获后撑到下次收获，收获前只剩结转储备；开局存粮 = 开局日目标，开局 cov = 1',()=>{
  // 推导：目标 = 餐口 × (距下次收获天数 + reserveDays)；收获日 H = crop.sowDays[1] + crop.growthDays（年内日），距下次收获 = (H − 年内当日) mod 360。
- // 取收获后一日（年内 H+1 日 → 距 359 天）与收获前 30 日（年内 H−30 日 → 距 30 天）；人口 300 → 目标 = 300 × (359 + R) 与 300 × (30 + R)，R = reserveDays。
+ // 取收获后一日（年内 H+1 日 → 距 359 天）与收获前 30 日（年内 H−30 日 → 距 30 天）；人口 30 → 目标 = 30 × (359 + R) 与 30 × (30 + R)，R = reserveDays（均小于容量 − 种粮）。
  const {engine}=setup('market-food-pool-farm'),crop=engine.rules.agriculture.crop,H=crop.sowDays[1]+crop.growthDays,R=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').reserveDays;
  const targetAt=day=>{
-  const f=granaryFixture({food:1000,population:300});f.doc.state.minute=day*1440;
+  const f=granaryFixture({food:1000,population:30});f.doc.state.minute=day*1440;
   return marketSupply(documentReader(f.doc),f.engine,'item_oats','bld_hw_qingdeng').rows.find(r=>r.owner==='loc_hw').target;
  };
- assert.equal(targetAt(360+H+1),300*(359+R));
- assert.equal(targetAt(360+H-30),300*(30+R));
- // 开局：每个农事聚落开账存粮 = ceil(餐口 × (距收获 + R))（第 0 日），粮仓行存量恰等于目标（cov = 1）。
+ assert.equal(targetAt(360+H+1),30*(359+R));
+ assert.equal(targetAt(360+H-30),30*(30+R));
+ // 容量限制：目标 = min(餐口 × 目标日数, 粮仓容量 − 种粮)。人口 1000 的 loc_hw：餐口 × 目标日数远超容量，目标 = granaryCapacity − initialSeed。
+ const hw=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw'),big=granaryFixture({food:1000,population:1000});
+ assert.equal(marketSupply(documentReader(big.doc),big.engine,'item_oats','bld_hw_qingdeng').rows.find(r=>r.owner==='loc_hw').target,hw.granaryCapacity-hw.initialSeed);
+ // 开局：每个农事聚落开账存粮 = min(ceil(餐口 × (距收获 + R)), 容量 − 种粮)（第 0 日），粮仓行存量恰等于目标（cov = 1）；容量受限的聚落同样 cov = 1。
  const {doc}=setup('market-food-pool-farm-open');
  for(const p of engine.rules.agriculture.settlements){
   const s=doc.state.settlements[p.settlement];if(!s)continue;
-  const expected=Math.ceil(mealMouthsOf(engine,doc.state,p.settlement,s.population)*((H%360)+p.reserveDays));
+  const expected=Math.min(Math.ceil(mealMouthsOf(engine,doc.state,p.settlement,s.population)*((H%360)+p.reserveDays)),p.granaryCapacity-p.initialSeed);
   assert.equal(s.food,expected,p.settlement);
   const row=marketSupply(documentReader(doc),engine,'item_oats',p.settlement).rows.find(r=>r.owner===p.settlement);
   assert.ok(row,p.settlement);assert.equal(row.target,expected);assert.equal(row.stock,expected);

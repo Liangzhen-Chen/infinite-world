@@ -12,7 +12,8 @@ import {recordsMemo,withReadIndex} from './storage.mjs';
 import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
-import {mealMouthsOf,resupplyDays,farmTargetDays} from './primitives-body.mjs';
+import {mealMouthsOf,resupplyDays} from './primitives-body.mjs';
+import {farmTargetFood} from './agriculture-migration.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
 // （商店成交、书籍出版的读者、店铺客流共用；不在代码里写字面）。
@@ -256,7 +257,8 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // 农事聚落：目标日数 = 距下次收获天数 + reserveDays（farmTargetDays：刚收完要撑到下次收获，再留结转储备，随季节变）。
   // 不在农事表里的聚落：粮靠外来补给，目标日数 = 实际补给间隔（resupplyDays：最近供粮聚落的往返路程天数）。
   const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0;
-  const target=stockName==='food'?Math.ceil(mouths*(profile?farmTargetDays(engine,state.minute,profile):resupplyDays(engine,d.get('randomSeed'),place))):0;
+  // 农事聚落的目标还受粮仓容量限制（farmTargetFood：min(餐口 × 目标日数, 容量 − 种粮)），所有农事聚落一律适用。
+  const target=stockName==='food'?(profile?farmTargetFood(engine,state,profile,state.minute):Math.ceil(mouths*resupplyDays(engine,d.get('randomSeed'),place))):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,target,committed,available:stock,unit:weight.get(it.id)/unit});
  }
  const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);
