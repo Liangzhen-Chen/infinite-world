@@ -126,7 +126,7 @@ test('independent copper anchors: neutral, second/third purchase, next day, qual
  const receipt=await native.act({seller:smith,item,quantity:3},'anchor-three-retail');
  assert.equal(receipt.result.cost,790);assert.equal(opening.state.player.coins-native.document.state.player.coins,790);
  // A permitted authored markup 1.001 yields 230 × 5/6 × 1.001 = 191.86. The negotiated
- // integer offer 190 is within ceil(191.86*.9)=173..ceil(191.86*1.1)=211.
+ // integer offer 190 is within ceil(191.86*.9)=173..ceil(191.86*1.1)=212.
  // Three originals cost exactly 190*3=570; converting through a floating
  // discount ratio must not turn 569.9999999999999 into a 569-copper bill.
  const negotiatedWorld=structuredClone(world);negotiatedWorld.rules.economy.shops.stores.find(s=>s.keeper===smith).markup=1.001;

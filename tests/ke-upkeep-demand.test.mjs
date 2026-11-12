@@ -76,7 +76,7 @@ test('short of firewood: the fuel quote rises and residents buy; once supplied t
  // 构造状态与 npc-life 记录缺柴的方式相同：state.family.upkeep[户].fuelDebtG；不经时间推进，所以没有居民成交带来的深度与库存变化，期望可以精确手推。
  // 开局要处于夹取区间内部，才表达得出"缺柴推高价"：自给为 0 时，需求 = 货架目标 + 一个补给间隔的全村日用度 = 目标持有；村里的柴都被清空时，供给（铁匠铺炭 40 + 公仓柴 28）远小于目标，
  // 开局比值就已超过上限 3，缺柴前后价都钉在 3 × 基价。所以价格步骤的开局状态把公仓木料补到"存量 = 目标持有"（供给折算后恰覆盖需求，向上取整到整件，比值略小于 1），
- // 这与"开局库存由目标持有推出"同一规律；目标持有由手推给出（probe.targetGrams），公仓木料 = ceil((目标克数 − 其他持有克数) ÷ 木基准克）。
+ // 这是构造状态（照"开局库存由目标持有推出"的思路手工补到目标持有，不是引擎推出的开局）；目标持有由手推给出（probe.targetGrams），公仓木料 = ceil((目标克数 − 其他持有克数) ÷ 木基准克）。
  // 缺柴一步每户欠 3N，需求多出 Σ欠量 ÷ unit，比值升到约 1.4，仍低于上限；补柴一步供给再增加。
  const opening=structuredClone(doc),probe=handQuote(opening);
  opening.state.settlements.loc_hw.wood=Math.ceil((probe.targetGrams-(probe.heldGrams-opening.state.settlements.loc_hw.wood*probe.wWood))/probe.wWood);
