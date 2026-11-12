@@ -8822,7 +8822,6 @@
                   },
                   "required": [
                     "openingDay",
-                    "food",
                     "seed",
                     "treasuryCopper",
                     "wood",
