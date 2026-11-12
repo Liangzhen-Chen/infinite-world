@@ -900,20 +900,22 @@ const coursesOfDay=(cache,engine,state,day)=>{
     if(!byDay.has(day))byDay.set(day,[educationCourses(engine,state,day*DAY),educationCourses(engine,state)]);
     return byDay.get(day);
 };
-const sameGlobalInputs=(cache,prev,state)=>{
+// 比较的是分段实际读取的那份状态 sched：客流时刻读不含 market_trip 的基础副本（flowTimesOfDay 的 base），所以成交写入的 market_trip 不会让基础分段的复用失效；
+// 读真实状态（sched===state）的调用仍把 market_trip 当输入（它在 scheduleRecordDependencies 里）。
+const sameGlobalInputs=(cache,prev,next)=>{
     const byPrev=cache.flowGlobal??=new WeakMap();let byNext=byPrev.get(prev);if(!byNext)byPrev.set(prev,byNext=new WeakMap());
-    let same=byNext.get(state);if(same===undefined){same=sameScheduleInputs({...prev,npcs:state.npcs},state);byNext.set(state,same);}
+    let same=byNext.get(next);if(same===undefined){same=sameScheduleInputs({...prev,npcs:next.npcs},next);byNext.set(next,same);}
     return same;
 };
 function cachedDaySegments(engine,state,id,day,kind,keep,sched,arrivalSeed){
     const compute=()=>daySegments(engine,state,id,day,keep,sched,arrivalSeed),cache=engine.scheduleReadCache;
     if(!cache?.draft?.cursor?.root||cache.draft.cursor.root.state!==state)return compute();
     const store=cache.flowSegments??=new Map(),key=`${kind}|${sched===state?'state':'base'}|${id}|${day}|${arrivalSeed}`,prev=store.get(key),actor=state.npcs?.[id],courses=coursesOfDay(cache,engine,state,day);
-    if(prev&&(prev.state===state||sameNpcScheduleInputs(prev.actor,actor)&&sameGlobalInputs(cache,prev.state,state)&&canonicalEqual(prev.courses,courses))){
+    if(prev&&(prev.state===state||sameNpcScheduleInputs(prev.actor,actor)&&sameGlobalInputs(cache,prev.sched,sched)&&canonicalEqual(prev.courses,courses))){
         if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(prev.segments,compute()))throw Error(`flow segments cache mismatch: ${id} day ${day}`);
         return prev.segments;
     }
-    const segments=compute();store.set(key,{state,actor,courses,segments});return segments;
+    const segments=compute();store.set(key,{state,sched,actor,courses,segments});return segments;
 }
 export function shopWindows(engine,state,day,sched=state){
     const shops=new Map();// 店主编号（玩家店用记录编号）→ {keeper,windows}
@@ -940,11 +942,19 @@ export function customerWindows(engine,state,day,sched=state,seed=seedOf(engine)
     }
     return out;
 }
+// 不含 market_trip 的记录表，按记录表对象记忆（同一份 records 反复取用同一个副本，缓存的比较才能走同一性捷径）。
+const tripFreeRecords=new WeakMap();
+function withoutTrips(records){
+    if(!records)return {};
+    let free=tripFreeRecords.get(records);
+    if(!free){free=Object.fromEntries(Object.entries(records).filter(([,r])=>r?.category!=='market_trip'));tripFreeRecords.set(records,free);}
+    return free;
+}
 // 某天的客流结算时刻（升序、去重、绝对分钟）。
 export function flowTimesOfDay(engine,state,day,seed=seedOf(engine)){
     return stateMemo(state,engine,[windowMemo,day,seed],()=>{
         // 作息读不含 market_trip 的状态副本：当日成交写入的出行既不改 scheduleAt 的出行覆盖，也不改生计分段（household-subsistence 读 market_trip），时刻集合因此与当日成交无关。
-        const base={...state,records:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r?.category!=='market_trip'))};
+        const base={...state,records:withoutTrips(state.records)};
         const customers=customerWindows(engine,state,day,base,seed),times=new Set();
         for(const {keeper,windows} of shopWindows(engine,state,day,base).values()){
             for(const [id,segments] of customers){
