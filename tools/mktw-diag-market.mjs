@@ -18,14 +18,14 @@
 import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {marketSupply,marketQuote,saleableStock} from '../server-plugin/market.mjs';
+import {marketSupply,marketQuote,saleableStock,reserveShortfall} from '../server-plugin/market.mjs';
 import {tradeQuote} from '../server-plugin/shop.mjs';
 import {netAssets} from '../server-plugin/finance-assets.mjs';
 import {handOatsScarcity} from '../tests/helpers/hand-targets.mjs';
 import {variant as dbVariant,scene as dbScene,setPrice,monthDayMinute,SEED as DB_SEED} from '../tests/helpers/daily-b2.mjs';
 import {farmTargetFood,openingStockFood} from '../server-plugin/farm-target.mjs';
 import {itemResupplyDays} from '../server-plugin/supply-interval.mjs';
-import {householdDailyUse,householdUsage,usageItemGrams,upkeepSelfSupplyOf,upkeepSelfTripsOf,householdBufferTarget,householdResources,reserveShortfall} from '../server-plugin/household-budget.mjs';
+import {householdDailyUse,householdUsage,usageItemGrams,upkeepSelfSupplyOf,upkeepSelfTripsOf,householdBufferTarget,householdResources} from '../server-plugin/household-budget.mjs';
 import {isItemClass} from '../server-plugin/item-class.mjs';
 import {placeSettlement,personHousehold} from '../server-plugin/entity-view.mjs';
 import {regionalTradePrice,regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
