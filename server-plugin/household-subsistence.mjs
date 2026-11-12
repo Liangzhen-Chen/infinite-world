@@ -1,5 +1,5 @@
 // Daily self-provisioning: bounded journeys, shared work time, finite stocks.
-import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities,awayFromHearth} from './entity-view.mjs';
+import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities,hearthPlace,hearthMates} from './entity-view.mjs';
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
@@ -280,8 +280,10 @@ function mealDeficit(e,state,owner,settlement,members){
 }
 export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoState=state,mealOverride=null,context=null){
  if(!config(e))return null;
+ // 外出的桌没有住处的取水/觅食计划（计划按户的住处与田地排）：吃自己背包里的粮，要买饭走白天的顾客流程。
+ if(hearthPlace(e,state,owner))return null;
  const h=personHousehold(e,state,owner).value,person=e.byId.get(owner),home=h?.homeLocation??person?.home?.location??person?.location??state.npcs?.[owner]?.location;
- const members=(h?.members??[owner]).filter(id=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded);
+ const members=hearthMates(e,state,owner,(h?.members??[owner]).filter(id=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded));
  const day=Math.floor(minute/DAY),r=config(e),settlement=h?.settlement??placeSettlement(e,state,home).value;
   const notBefore=context?.notBefore??(Math.floor(state.minute/DAY)===day?state.minute%DAY:0);
  const meal=mealOverride??mealDeficit(e,state,owner,settlement,members),portions=Math.ceil(meal.shortfall.satiety/(e.byId.get(r.foodItem)?.nutrition?.satiety??1));
@@ -515,13 +517,17 @@ export function householdSubsistencePlan(e,state,owner,minute=state.minute,memoS
 const planKey=settlement=>`subsistence-plan:${settlement??'unregistered'}`;
 // A mouth is weighted by the member's satiety metabolism (1 for a person, 0 for one who never eats); public rations and meal accounts count weight, not heads.
 export const mouthWeight=(e,state,ids)=>ids.reduce((n,id)=>n+metabolismFactor(e,state,id,'satiety'),0);
-const mealMember=(e,state,id)=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!awayFromHearth(e,state,id)&&!state.npcs?.[id]?.materialized?.folded;
+const mealMember=(e,state,id)=>id!=='player'&&!isPhysicallyDead(e,state,id)&&!state.npcs?.[id]?.levy&&!state.npcs?.[id]?.materialized?.folded;
+// 开饭的桌：同一户在灶边的成员一桌（key = 户编号，与以往相同），不在灶边的成员在所在聚落另成一桌（key = 户编号@所在聚落，同处同户成员同桌）。
+// 外出的桌是访客：不是所在聚落的登记户，不领所在地公粮（与“未登记访客不另占一份公粮”同口径），吃自己背包里的粮；要买饭走白天的顾客流程（预算与此同一判定，见 household-budget family）。
+// 不另写一套开饭逻辑：外出的桌与留守的桌走同一个 householdMealPlan/午夜消耗。
 export function householdSubsistenceGroups(e,state){
  const groups=new Map();
  for(const id of [...new Set([...Object.keys(state.npcs??{}),...(e.world.households??[]).flatMap(h=>h.members),...Object.values(state.family?.households??{}).flatMap(h=>h.members??[])])].sort()){
   if(!mealMember(e,state,id))continue;
-  const h=personHousehold(e,state,id).value,key=h?.id??id,remote=state.npcs?.[id]?.materialized?.settlement;
-  if(!groups.has(key))groups.set(key,{owner:id,key,registered:Boolean(h||remote),mouths:h?mouthWeight(e,state,h.members.filter(member=>mealMember(e,state,member))):(remote?mouthWeight(e,state,[id]):0),settlement:h?.settlement??remote??placeSettlement(e,state,state.npcs?.[id]?.location).value});
+  const h=personHousehold(e,state,id).value,place=hearthPlace(e,state,id),key=h?`${h.id}${place?`@${place}`:''}`:id,remote=state.npcs?.[id]?.materialized?.settlement;
+  const members=h?hearthMates(e,state,id,h.members.filter(member=>mealMember(e,state,member))):[id];
+  if(!groups.has(key))groups.set(key,{owner:id,key,members,registered:Boolean(h||remote)&&!place,mouths:h?mouthWeight(e,state,members):(remote?mouthWeight(e,state,[id]):0),settlement:place??h?.settlement??remote??placeSettlement(e,state,state.npcs?.[id]?.location).value});
  }
  return [...groups.values()].sort((a,b)=>a.key<b.key?-1:a.key>b.key?1:0);
 }
@@ -549,7 +555,7 @@ export function prepareHouseholdSubsistence(d,e,day=Math.floor(d.get('state','mi
  for(const g of householdSubsistenceGroups(e,morning)){
   const sid=g.settlement??'unregistered';let row=rows.get(sid);
   if(!row){row={category:'subsistence_plan',day,households:{},workers:{}};rows.set(sid,row);}
-  for(const id of personHousehold(e,morning,g.owner).value?.members??[g.owner])people[id]=[sid,g.key];
+  for(const id of g.members)people[id]=[sid,g.key];
   const p=householdSubsistencePlan(e,morning,g.owner,morning.minute,morning,null,context);
   if(!p){row.households[g.key]=null;continue;}
   const compact=source=>source&&Object.fromEntries(['id','location','home','near','capacity','minutesPerPortion','worker','minutes','travelMinutes','outboundEdges','inboundEdges','cls','kind','item','site','resource','unitGrams','units'].filter(key=>source[key]!==undefined).map(key=>[key,source[key]]));
@@ -695,7 +701,7 @@ export function rationShare(ration){return ration?.mouths>0?ration.eaten/ration.
 // 即昨夜 advanceAgriculture 的 eaten 与 missingMeals）；还没有结算过（开局当日）才用 publicShareOf 按粮库存量折算的预测。
 // 注意：预算把今日份额按预算天数恒定外推，粮库见底后的回落不在预测里（乐观假设，由每夜实吃纠正）。
 registerHouseholdPublicShare((e,state,owner)=>{
- if(!config(e))return 0;
+ if(!config(e)||hearthPlace(e,state,owner))return 0;// 外出者是所在聚落的访客，不领公粮（同午夜 group.registered=false）
  const h=personHousehold(e,state,owner).value;if(!h)return 0;
  const home=h.homeLocation??state.npcs?.[owner]?.location,settlement=h.settlement??(home?placeSettlement(e,state,home).value:null);
  const s=settlement&&state.settlements?.[settlement];if(!s||s.granary===false)return 0;
