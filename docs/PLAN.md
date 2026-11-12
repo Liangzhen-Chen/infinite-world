@@ -256,6 +256,15 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 04:3xZ】门禁提交流程重设方案（只写文档，未动任何钥匙、账号、权限、脚本）**
+    - **方案文件**：docs/门禁提交流程重设方案.md，227 行，sha256 be47200793607707182ba980b6833c2cafd820f73daf80dd1fcec9bab706196b。
+    - **两轮独立审查**：审查 A（docs/审查记录/门禁方案-审查A.md）、审查 B（-审查B.md），两人互不看对方，也都不是方案撰写者。初稿两人都判 changes：A 阻断"第一期让协调者用 tc_review 提交，等于代交、改钥匙使用权"；B 阻断"上传者与身份绑定矛盾、结论无签名可被改写"。修订稿 A、B 均 approve。
+    - **第一期（不动钥匙，可马上做；改本机四个门禁脚本，需李白或亮圳确认后实施，并照例两轮审）**：
+      ① 审查者本人提交，但写结论文件与提交拆成两次独立调用，协调者不提交、不转送、不改结论；
+      ② 去掉 python 读 stdin：review-submit.sh:12-18、manifest.sh:7、stage.sh:14 与 :19（含 --stdin-list 的替代），临时文件用 mktemp。
+    - **第二期（6 项，等亮圳批准；顺序 C→E→A→B→D→F，B 依赖 C）**：C 一人一把签名钥匙与公钥登记表（结论文件用 ssh-keygen -Y sign 签名、门禁验签），E gate.sh 核对逻辑（自算快照哈希、两轮、互异、非实施者、作废/单次/审计日志），A inbox，B 实施者由服务器登记，D /work/.reviews 权限，F deploy.sh 整改。**批准 C 时须同时选定私钥保管方案一或二**（B 的前提，否则签名只防误、不防恶）。
+    - **批准第二期前须补的细节（不改架构）**：A 列 7 点——changes 不应过期、cmd 绑定过细、快照与 runner 写权限冲突、符号链接描述、deploy 分号改 &&、测试副本不得用环境变量覆盖路径、签名双文件命名与 OpenSSH 版本预检；B 列 6 点——cmd 规范化、快照只读与 node_modules 重建冲突、硬件触碰盲签、inbox 上传钥匙列入批准清单、max_runs 粒度、A 先于 E。
+    - **现状**：新流程上线前，审查结论提交仍卡着。若有新卡需要上云，按第一期规范（分两次调用）由审查者本人提交；若分类器仍拦截，停下报亮圳，不变着法绕过。
   - **【11-12 04:2xZ】review-submit.sh 被判 Undermining Oversight：调查（李白要求，原文存 docs/审查记录/门禁提交流程调查.md）**
     - **李白决定**：不放行、不绕过、不由任何人代交；mktw-8 两轮审查作废（内容将变），本次不提交。
     - **拒绝原文**：Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Undermining Oversight]. If you have other tasks that don't depend on this action, continue working on those. ……（其余为通用说明：可用正当方式完成；不得恶意绕过；必要时停下由用户决定；用户可加权限规则）。
