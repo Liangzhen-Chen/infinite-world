@@ -17,7 +17,7 @@ const A='npc_hw_luowei',B='npc_hw_duanyan',C='npc_hw_shendu',seller='npc_hw_lins
 const SAT=(await loadRuntimeWorld()).items.find(i=>i.id===item).nutrition.satiety;
 const breadsFor=satiety=>Math.ceil(satiety/SAT);
 // three:true 时 A、B、C 同户（三人分摊），否则 A、B 一户、C 另一户；keepSubsistence 保留 householdSubsistence 规则（公粮预算只在规则存在时扣）。
-function fixture({coins={},bags={},status={},granaryEnabled=false,publicFood=0,market=false,three=false,keepSubsistence=false}={}){
+function fixture({coins={},bags={},status={},granaryEnabled=false,publicFood=0,market=false,three=false,keepSubsistence=false,sellerBread=100}={}){
  const w=structuredClone(world);
  if(!keepSubsistence)delete w.rules.householdSubsistence;
  for(const n of w.npcs){delete n.tier;delete n.schedule;}
@@ -31,7 +31,7 @@ function fixture({coins={},bags={},status={},granaryEnabled=false,publicFood=0,m
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
  const ids=market?[A,B,C,seller]:[A,B,C];
  doc.state.npcs=Object.fromEntries(ids.map(id=>[id,{...doc.state.npcs[id],coins:coins[id]??0,inventory:bags[id]??{},location:home,status:status[id]??'正常',activity:'休息'}]));
- if(market)doc.state.npcs[seller].inventory={[item]:100};
+ if(market)doc.state.npcs[seller].inventory={[item]:sellerBread};
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population:3,granary:granaryEnabled,food:publicFood,foodPerDay:0,woodPerDay:0}};
  doc.ledger=openLedger(e,doc);
  return {e,doc,d:e.primitiveDraft(doc)};
@@ -124,4 +124,62 @@ test('after the household single purchase trip every member budget sees the day 
  const stock=f.e.quantity(f.d,A,item);
  advanceCustomerFlow(f.d,f.e,720,DAY+720);
  assert.equal(f.e.quantity(f.d,A,item),stock,'no second purchase for the same day');
+});
+
+// ---- 有粮库聚落（granary!==false）的客流覆盖：公粮配给进采购缺口，缺口决定顾客买不买、买多少 ----
+// 手推依据：公粮份额 share = min(1, 粮库存量 ÷ ceil(口数))（household-subsistence publicShareOf；开局当日没有农业结算记录，预算取这条预测）；
+// 采购缺口（饱腹）= 户需求 ×（1 − share）；顾客的需求量 = ceil(缺口 ÷ 面包饱腹)（business.wants，店不在预算来源里时的储备缺口路径）；缺口为 0 则没有需求，不上门、不记客流。
+// 顾客读的是主观预算（subjectiveView），期望也用同一读口；时刻取 720（店主营业窗口起点），夹具里只有 A 出门、钱袋充足，所以买到的量就是需求量。
+const subjectiveShortfall=(f,id)=>shortfall(f,id,{view:subjectiveView(f.e,f.d.document,id)});
+const visitsOf=(f,id)=>Object.values(f.d.get('state','records')).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits).filter(r=>r.npc===id);
+const noon=f=>f.d.set(['state','minute'],720);
+const flow=f=>advanceCustomerFlow(f.d,f.e,719,720);
+const marketFixture=o=>fixture({market:true,keepSubsistence:true,sellerBread:600,coins:{[A]:10000},...o});
+
+test('granary ration, full: the shortfall is zero, nobody comes, no flow record (a no-granary control does come and buys)',()=>{
+ const control=marketFixture({});noon(control);
+ const need=subjectiveShortfall(control,A);
+ assert.ok(need>0,'precondition: without a granary the household has a satiety need');
+ flow(control);
+ assert.ok(boughtBy(control,A).length>0,'precondition: that need brings the customer to the shop');
+ const full=marketFixture({granaryEnabled:true,publicFood:1000});noon(full);
+ assert.equal(subjectiveShortfall(full,A),0,'food 1000 >= mouths: share is 1, the ration covers the standard day');
+ flow(full);
+ assert.equal(visitsOf(full,A).length,0,'no need, no trip, no record');
+ assert.equal(coinsOf(full,A),10000);
+ assert.deepEqual(auditLedger(full.d.get('ledger')),[]);
+});
+
+test('granary ration, partial: the shortfall is need minus the ration and the customer buys exactly that many',()=>{
+ const probe=marketFixture({}),mouths=Math.max(1,Math.ceil(mealMouthsOf(probe.e,probe.doc.state,'loc_hw',3))),food=Math.floor(mouths/2);
+ assert.ok(food>=1,'the population gives at least two mouths');
+ const share=Math.min(1,food/mouths);
+ const control=marketFixture({});noon(control);
+ const need=subjectiveShortfall(control,A);flow(control);
+ const full=boughtBy(control,A);assert.equal(full.length,1);
+ assert.equal(full[0].quantity,Math.ceil(need/SAT),'control: the whole need is bought');
+ const partial=marketFixture({granaryEnabled:true,publicFood:food});noon(partial);
+ const gap=subjectiveShortfall(partial,A);
+ assert.ok(Math.abs(gap-need*(1-share))<1e-6,`share ${share} leaves ${need*(1-share)}`);
+ assert.ok(gap>0,'precondition: a partial ration leaves a gap');
+ flow(partial);
+ const bought=boughtBy(partial,A);
+ assert.equal(bought.length,1,'the customer still comes for the gap');
+ assert.equal(bought[0].quantity,Math.ceil(gap/SAT),'bought by the gap, not by the whole need');
+ assert.ok(bought[0].quantity<full[0].quantity,'the ration saved part of the purchase');
+ assert.deepEqual(auditLedger(partial.d.get('ledger')),[]);
+});
+
+test('granary ration, empty store: no stock means no ration share, the household buys exactly as without a granary',()=>{
+ // publicShareOf 取库存量折算：food 0 -> share 0（不是“有粮库就有公粮”）
+ const control=marketFixture({});noon(control);
+ const need=subjectiveShortfall(control,A);flow(control);
+ const empty=marketFixture({granaryEnabled:true,publicFood:0});noon(empty);
+ assert.equal(subjectiveShortfall(empty,A),need,'an empty granary gives no ration');
+ flow(empty);
+ const a=boughtBy(control,A),b=boughtBy(empty,A);
+ assert.equal(a.length,1);assert.equal(b.length,1);
+ assert.equal(b[0].quantity,Math.ceil(need/SAT));
+ assert.equal(b[0].quantity,a[0].quantity);
+ assert.deepEqual(auditLedger(empty.d.get('ledger')),[]);
 });
