@@ -14,6 +14,7 @@ import {netAssets} from '../server-plugin/finance-assets.mjs';
 import {npcPlanFingerprint} from '../server-plugin/npc-autonomy.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
+import {handOatsScarcity} from './helpers/hand-targets.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const host='npc_hw_linsui',bread='item_bread',inn='bld_hw_qingdeng';
@@ -46,13 +47,16 @@ test('current stock net assets share market value and S5-01 corrections, not his
   {path:['state','npcs',host,'inventory'],value:{[bread]:{quantity:10,quality:world.items.find(i=>i.id===bread).quality}}},
   {path:['state','npcs',host,'coins'],value:200}
  ]});assert.deepEqual(prepared.setupUnmet,[]);f.replace(prepared.document);
- // K02: minute600 -> daily delivery1440 leaves120*840/1440=70
- // satiety physical, ceil(70/30)=3 bread. Cash200 funds the later50.
- // D14, S10-3=7, price2*14/7=4; cost history remains irrelevant.
- assert.equal(netAssets(f.read(),f.engine,host),200+10*4);
- // Registered correction still changes current value:4+1=5.
+ // 食物池稀缺度按农事目标持有规律手推（hand-targets.handOatsScarcity：需求 = 货架目标 + 公仓目标持有，供给 = 公仓存粮 + 经营者行囊里的食物，折成燕麦件数；供给按持有量口径，不先扣店主自用留存）。
+ // 开局公仓存粮 = 开局日的目标持有，所以此刻（开局日 10:00）比值略大于 1（目标持有按日变化，加上货架目标与店主行囊里的面包）。
+ // 价 = 目录基价 2 × 运输因子 1（面包产自本聚落）× 夹取后的稀缺度；10 份面包 = 10 × 价；现金 200 不随成本史变化。
+ const [floor,cap]=f.engine.rules.economy.priceFactorLimits.region,ratio=handOatsScarcity(f.engine,f.document.state,f.document.state.settlements.loc_hw.food).ratio,price=2*Math.min(cap,Math.max(floor,ratio));
+ assert.ok(ratio>floor&&ratio<cap,'前置：稀缺度在夹取区间内，价随供需连续变化');
+ const near=(a,b)=>Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(b));
+ assert.ok(near(netAssets(f.read(),f.engine,host),200+10*price));
+ // Registered correction still changes current value: price + 1.
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'asset-value',pack:'market',target:'economy:value',stage:'add',value:1}]}};
- assert.equal(netAssets(f.read(),new WorldEngine(w),host),200+10*5);
+ assert.ok(near(netAssets(f.read(),new WorldEngine(w),host),200+10*(price+1)));
 });
 
 test('independent bulk anchor integrates the actual neutral supply curve',async()=>{
