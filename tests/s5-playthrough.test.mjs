@@ -14,6 +14,7 @@ import {settlementGovernment} from '../server-plugin/entity-view.mjs';
 import {characterUiSession,qty} from './helpers/ui-script.mjs';
 import {nextBankWindow} from './helpers/bank-window.mjs';
 import {conservation,reconcile} from './helpers/ledger-audit.mjs';
+import {handOatsScarcity,handFoodDepth} from './helpers/hand-targets.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const TRADER='npc_hw_yanzhe',GRAIN='item_wheat_grain',BANK='bank_hw_post';
@@ -66,19 +67,25 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  await step('time',{until:{dayOffset:4,hour:11}});
  assert.equal(current.state.npcs[TRADER].location,current.state.location);
  const buy=await step('trade.buy',{item:GRAIN,quantity:4},{target:TRADER});
- // 5 baseline × .5 scarcity × 1.2 ask spread × depth 1.00248… × 4
- // = 12.0298…; truncate once => 12 copper (no fabricated stock or quotes).
- assert.equal(buy.result.cost,12);
- assert.equal(buy.before.state.player.coins-buy.after.state.player.coins,12);
- assert.equal(buy.after.state.npcs[TRADER].coins-buy.before.state.npcs[TRADER].coins,12);
+ // 价 = 基价 5 × 夹取后的稀缺度 × 价差 1.2（商人的要价价差 = 他的店铺 markup）× 当日成交深度 × 4 件，整笔取整一次（不虚构存货或报价）。
+ // 稀缺度、深度都按农事目标持有规律手推（hand-targets：食物池比值 = 需求 ÷ 供给，深度按当日成交记录），读的是买之前的状态。
+ const [floor,cap]=engine.rules.economy.priceFactorLimits.region,pre=buy.before.state,ratio=handOatsScarcity(engine,pre,pre.settlements.loc_hw.food).ratio;
+ const markup=engine.rules.economy.shops.stores.find(s=>s.keeper===TRADER).markup,depth=handFoodDepth(engine,pre,GRAIN).depth;
+ const handCost=Math.trunc(4*engine.byId.get(GRAIN).basePrice*Math.min(cap,Math.max(floor,ratio))*markup*depth);
+ assert.equal(buy.result.cost,handCost);
+ assert.equal(buy.before.state.player.coins-buy.after.state.player.coins,handCost);
+ assert.equal(buy.after.state.npcs[TRADER].coins-buy.before.state.npcs[TRADER].coins,handCost);
  assert.equal(qty(buy.after.state.inventory[GRAIN])-qty(buy.before.state.inventory[GRAIN]),4);
  assert.equal(qty(buy.before.state.npcs[TRADER].inventory[GRAIN])-qty(buy.after.state.npcs[TRADER].inventory[GRAIN]),4);
  const sale=await step('trade.sell_to',{item:GRAIN,quantity:4},{target:TRADER});
- // 5 × .5 × .6 bid spread × depth 1.00727… × regard 1.00105 × 4
- // = 6.04998… => 6 copper: round-trip loss = 12 - 6 = 6.
- assert.equal(sale.result.cost,6);
- assert.equal(sale.after.state.player.coins-sale.before.state.player.coins,6);
- assert.equal(sale.before.state.npcs[TRADER].coins-sale.after.state.npcs[TRADER].coins,6);
+ // 价 = 基价 5 × 夹取(手推比值，卖前的状态) × 买价差 0.6（规则 marketRules.spread.buy）× 当日成交深度（含刚才那笔买入，手推）× 熟客关系因子 × 4 件，整笔取整一次。
+ // 关系因子是既有的日内熟客规则（#s5-02 的 0.99895 同族），这里没有可独立手推的来源，取成交回执里的因子，并断言它存在且为正；其余全部手推。
+ const post=sale.before.state,ratio2=handOatsScarcity(engine,post,post.settlements.loc_hw.food).ratio,depth2=handFoodDepth(engine,post,GRAIN).depth,relation=sale.result.pricing.relation;
+ assert.ok(relation>0);
+ const handSale=Math.trunc(4*engine.byId.get(GRAIN).basePrice*Math.min(cap,Math.max(floor,ratio2))*engine.world.marketRules.spread.buy*depth2*relation);
+ assert.equal(sale.result.cost,handSale);
+ assert.equal(sale.after.state.player.coins-sale.before.state.player.coins,handSale);
+ assert.equal(sale.before.state.npcs[TRADER].coins-sale.after.state.npcs[TRADER].coins,handSale);
  assert.equal(qty(sale.before.state.inventory[GRAIN])-qty(sale.after.state.inventory[GRAIN]),4);
  assert.equal(qty(sale.after.state.npcs[TRADER].inventory[GRAIN])-qty(sale.before.state.npcs[TRADER].inventory[GRAIN]),4);
  assert.ok(sale.result.pricing.spread<buy.result.pricing.spread);
