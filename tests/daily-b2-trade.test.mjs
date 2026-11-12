@@ -8,6 +8,7 @@ import {standing} from '../server-plugin/standing.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 import {marketSupply} from '../server-plugin/market.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
+import {handOatsScarcity,handFoodDepth} from './helpers/hand-targets.mjs';
 import {variant,setPrice,scene,stack,tool,monthDayMinute,conserved,primed,held,safeEventId,SEED,DAY} from './helpers/daily-b2.mjs';
 
 const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',WEAVING='bld_hw_weaving',SULAN='npc_hw_sulan';
@@ -69,12 +70,15 @@ test('D05 酒馆买两种食物，按当前零售价各付各的；钱柜收到�
  const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(12,3,12,0),s=>{s.player.coins=60;})});
  const before=await primed(ui);
  const firstPrice=projected(world,before,LINSUI,'item_oat_flatbread'),noodle=await ui.choose('trade.buy',{item:'item_oat_flatbread',quantity:1},{target:LINSUI});
- const secondPrice=projected(world,await ui.read(),LINSUI,'item_mutton'),meat=await ui.choose('trade.buy',{item:'item_mutton',quantity:1},{target:LINSUI});
+ const mid=await ui.read(),secondPrice=projected(world,mid,LINSUI,'item_mutton'),meat=await ui.choose('trade.buy',{item:'item_mutton',quantity:1},{target:LINSUI});
  assert.ok(noodle.ok,noodle.error);assert.ok(meat.ok,meat.error);assert.equal(noodle.result.cost,firstPrice.totalCoins);assert.equal(meat.result.cost,secondPrice.totalCoins);
- // Food is abundant (D=14, S>28): 8*.5*1=4; 15*.5 times the
- // second-sale depth near 1 remains between 7 and 8, truncating to 7.
- // Quality, spread, regard and registered corrections are all 1.
- assert.equal(noodle.result.cost,4);assert.equal(meat.result.cost,7);
+ // 手推（农事目标持有规律；场景跳日用 skipTo，已按该日的目标持有补好公仓粮批次）：价 = 基价 × 夹取(食物池比值) × 深度 × 关系，品质、价差、修正均为 1。
+ // 第一笔：深度 1、关系 1：trunc(8 × 夹取(比值))；第二笔：深度 = 1 + 影响 × 刚卖出的 1 个燕麦薄饼（折羊肉件数）÷ 开盘存量（handFoodDepth，按当日成交记录），
+ // 关系 = 日内熟客因子 1 − 0.15 × 0.7 × 1 ÷ 100 = 0.99895（买方是玩家，npc 是卖方，符号 −；规则见 shop.mjs:789-795 与 npc-relations.mjs:88）。
+ const eng=new WorldEngine(world),[lo,hi]=world.rules.economy.priceFactorLimits.region,clampR=r=>Math.min(hi,Math.max(lo,r));
+ const ratio1=handOatsScarcity(eng,before.state,before.state.settlements.loc_hw.food).ratio,ratio2=handOatsScarcity(eng,mid.state,mid.state.settlements.loc_hw.food).ratio;
+ assert.equal(noodle.result.cost,Math.trunc(8*clampR(ratio1)));
+ assert.equal(meat.result.cost,Math.trunc(15*clampR(ratio2)*handFoodDepth(eng,mid.state,'item_mutton').depth*0.99895));
  const after=await ui.read();
  const total=firstPrice.totalCoins+secondPrice.totalCoins;
  assert.equal(before.state.player.coins,60);assert.equal(after.state.player.coins,60-total,'①两笔总额各自取整后扣款');
