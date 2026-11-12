@@ -14,6 +14,7 @@ import {stageReached} from '../server-plugin/seasonal-hazards.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {recordCraft} from '../server-plugin/stock.mjs';
+import {WORK_RULES} from '../server-plugin/works.mjs';
 import {craftUseWindowDays} from '../server-plugin/primitives-body.mjs';
 import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
@@ -316,13 +317,22 @@ test('生产耗料经 recordCraft 按（聚落，物品）记日桶：不同写�
 });
 
 test('recordCraft 不变量：带 place 的记录没有产物或产物与投入完全相同即抛错（转移不得计入耗料）；有不同产物则正常记账',()=>{
- // 推导：带 place = 声明"投入被消耗、转化成产物"。无产物、或产物与投入同物同量，都是转移，必须抛错且不留日桶；投入 5 铁、产出 5 铁钉是真转化，记 5。
+ // 推导：带 place = 声明"投入被消耗"。产物与投入同物同量是转移，必须抛错且不留日桶；投入 5 铁、产出 5 铁钉是真转化，记 5。（产物为空是非物品成果，照常计入，见抄录一条。）
  const {engine,doc}=setup('market-food-pool-invariant'),d=engine.primitiveDraft(doc),iron='item_iron',base={engine,actor:'player',place:'loc_hw',recipe:'probe_recipe',inputs:{[iron]:5},writer:'probe',eventId:'probe-inv'};
- assert.throws(()=>recordCraft(d,{...base,outputs:{}}),/转移不得计入耗料/);
  assert.throws(()=>recordCraft(d,{...base,outputs:{[iron]:5}}),/转移不得计入耗料/);
  assert.equal(d.get('state','records','craft-use:loc_hw'),undefined);
  recordCraft(d,{...base,outputs:{item_iron_nail:5}});
  assert.equal(d.get('state','records','craft-use:loc_hw','days',String(Math.floor(d.get('state','minute')/1440)),iron),5);
+});
+
+test('抄录耗纸墨计入该聚落的纸墨需求：产物是文书（无物品产物）也是真实耗料',()=>{
+ // 推导：works:copy 消耗纸 3、墨 1，产物是作品记录不是物品（outputs 为空），带 place 记入 loc_hw 的日桶；纸、墨的池权重 1，报价货就是它们，需求各恰好 +3、+1。
+ const {engine,doc}=setup('market-food-pool-copy'),inn='bld_hw_qingdeng',d=engine.primitiveDraft(doc),paper=WORK_RULES.paper,ink=WORK_RULES.ink;
+ const p0=marketSupply(d,engine,paper,inn),i0=marketSupply(d,engine,ink,inn);
+ recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'works:copy',inputs:{[paper]:3,[ink]:1},outputs:{},writer:'works',eventId:'probe-copy'});
+ const p1=marketSupply(d,engine,paper,inn),i1=marketSupply(d,engine,ink,inn);
+ assert.ok(Math.abs((p1.demand-p0.demand)-3*goodsWeight(engine,paper)/goodsWeight(engine,paper))<=1e-9);
+ assert.ok(Math.abs((i1.demand-i0.demand)-1)<=1e-9);
 });
 
 test('捐粮是转移不是消耗：捐粮的守恒对凭据不带 place，不改变受粮聚落的耗料与需求',()=>{

@@ -54,8 +54,8 @@ function literate(d,engine){
 function spend(d,engine,rows,eventId,recipe,outputs={}){
     for(const[item,amount]of rows)if(engine.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${engine.byId.get(item)?.name??item}`);
     for(const[item,amount]of rows)engine.itemDelta(d,'player',item,-amount,craftInput('works',eventId));
-    // 行为人 = 玩家，发生地 = 玩家所在地的聚落。只有产出物品（印成册的书）的工序带 place 记耗料；撰写、抄录、勘绘的产物是文书记录不是物品，没有物品产物，不计入耗料日桶。
-    recordCraft(d,{engine,actor:'player',...(Object.keys(outputs).length?{place:placeOf(d,engine).settlement}:{}),recipe,batches:1,inputs:Object.fromEntries(rows),outputs,writer:'works',eventId});
+    // 行为人 = 玩家，发生地 = 玩家所在地的聚落。撰写、抄录、勘绘消耗纸墨，产物是文书不是物品（outputs 为空），同样是真实耗料，照常带 place。
+    recordCraft(d,{engine,actor:'player',place:placeOf(d,engine).settlement,recipe,batches:1,inputs:Object.fromEntries(rows),outputs,writer:'works',eventId});
 }
 // 成品入账并补全本次制造凭据的产出。
 function crafted(d,engine,item,quantity,{eventId,workmanship}){

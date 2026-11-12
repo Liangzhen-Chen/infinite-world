@@ -237,11 +237,12 @@ export const craftInput=(writer,eventId)=>({flow:'sink:consume',purpose:CRAFT_PU
 export const craftOutput=(writer,eventId)=>({flow:'src:craft',purpose:CRAFT_PURPOSE,writer,eventId});
 // 行为人 actor（可空：野生社会的群体没有单个行为人时按所属群体/空）与发生地聚落 place 由各调用方传入；place 非空时耗料同时记入按（聚落，物品）的滚动日桶（accrueCraftUse）。place 只给"投入被实际消耗、转化成产物"的工序；转移、捐赠、存取这类不改变物料总量的记录不传 place（只留守恒对凭据）。
 export function recordCraft(d,{engine,actor=null,place=null,recipe,batches=1,inputs={},outputs={},failure=null,writer,eventId=null}){
-    // 不变量兜底：带 place 的记录是"投入被消耗、转化成产物"的工序——必须有产物，且产物不能与投入完全相同（同物同量）；否则是转移，不得计入耗料。
-    // 失败的工序（failure 非空）可以全额回收（产物 = 投入）或没有产物（报废），照常按净耗料记账，不受此限。
+    // 不变量兜底：带 place 的记录是"投入被消耗"的工序；产物与投入同物同量是转移，不得计入耗料，抛错。
+    // 产物为空（投入被消耗、产出的是非物品成果，如撰写、抄录、勘绘的文书）照常计入。
+    // 失败的工序（failure 非空）可以全额回收（产物 = 投入），照常按净耗料记账，不受此限。
     if(recipe&&place&&!failure){
-        const made=Object.entries(outputs).filter(([,n])=>n>0),sameAsInputs=made.length===Object.keys(inputs).length&&made.every(([item,n])=>inputs[item]===n);
-        if(!made.length||sameAsInputs)throw Error(`转移不得计入耗料：${recipe} 带 place 但没有产物或产物与投入完全相同（转移、捐赠、存取不传 place）`);
+        const made=Object.entries(outputs).filter(([,n])=>n>0),sameAsInputs=made.length>0&&made.length===Object.keys(inputs).length&&made.every(([item,n])=>inputs[item]===n);
+        if(sameAsInputs)throw Error(`转移不得计入耗料：${recipe} 带 place 但产物与投入同物同量（转移、捐赠、存取不传 place）`);
     }
     if(recipe&&place)accrueCraftUse(d,engine,place,inputs,outputs,failure);
     if(!ledgerActive(d))return;
