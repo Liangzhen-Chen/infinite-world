@@ -1,0 +1,272 @@
+{
+  "revision": "mktw-initialfood-1",
+  "approval": {
+    "via": "initfood-1"
+  },
+  "entries": [
+    {
+      "id": "mktw-initialfood-loc_bs_liquan",
+      "target": "loc_bs_liquan",
+      "file": "world/drafts/w1/village-ledgers/loc_bs_liquan.json",
+      "path": [
+        "charter",
+        "agriculture",
+        "initialFood"
+      ],
+      "field": "charter.agriculture.initialFood",
+      "before": 22000,
+      "after": {
+        "$remove": true
+      },
+      "followedBy": "initialHarvestDay",
+      "basis": [
+        "a1b94858 删除了规则行与 ledgerSeeds 里的 initialFood；该记录审查时的上下文 charter.agriculture 含 initialFood，值等于记录草稿登记的 economy.publicStock.food。",
+        "initfood-1 已批准整条删除 loc_bs_liquan 的公仓初粮登记（details.economy.publicStock.food，原值 22000）；上下文里这份拷贝随同删除。",
+        "本条只登记“审批当时的上下文含该事实、现已被已审批修订取代”，使指纹核验把上下文还原到审批当时的形状；不改正式文件，不改记录。"
+      ],
+      "facts": {
+        "initfood": "initfood-1",
+        "recordFile": "world/drafts/w1/village-ledgers/loc_bs_liquan.json",
+        "contextPath": "charter.agriculture.initialFood",
+        "followedBy": "initialHarvestDay",
+        "source": "a1b94858^:world/design/agriculture-foundation.mjs（initialFood 在 initialHarvestDay 之前）"
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_liquan.json#loc_bs_liquan",
+          "field": "charter.agriculture.initialFood",
+          "scope": "context"
+        }
+      ],
+      "boundary": "只登记上下文一侧被取代的这一个事实；记录、正式文件与其它字段一律不动。"
+    },
+    {
+      "id": "mktw-initialfood-loc_bs_sangban",
+      "target": "loc_bs_sangban",
+      "file": "world/drafts/w1/village-ledgers/loc_bs_sangban.json",
+      "path": [
+        "charter",
+        "agriculture",
+        "initialFood"
+      ],
+      "field": "charter.agriculture.initialFood",
+      "before": 25000,
+      "after": {
+        "$remove": true
+      },
+      "followedBy": "initialHarvestDay",
+      "basis": [
+        "a1b94858 删除了规则行与 ledgerSeeds 里的 initialFood；该记录审查时的上下文 charter.agriculture 含 initialFood，值等于记录草稿登记的 economy.publicStock.food。",
+        "initfood-1 已批准整条删除 loc_bs_sangban 的公仓初粮登记（details.economy.publicStock.food，原值 25000）；上下文里这份拷贝随同删除。",
+        "本条只登记“审批当时的上下文含该事实、现已被已审批修订取代”，使指纹核验把上下文还原到审批当时的形状；不改正式文件，不改记录。"
+      ],
+      "facts": {
+        "initfood": "initfood-1",
+        "recordFile": "world/drafts/w1/village-ledgers/loc_bs_sangban.json",
+        "contextPath": "charter.agriculture.initialFood",
+        "followedBy": "initialHarvestDay",
+        "source": "a1b94858^:world/design/agriculture-foundation.mjs（initialFood 在 initialHarvestDay 之前）"
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_sangban.json#loc_bs_sangban",
+          "field": "charter.agriculture.initialFood",
+          "scope": "context"
+        }
+      ],
+      "boundary": "只登记上下文一侧被取代的这一个事实；记录、正式文件与其它字段一律不动。"
+    },
+    {
+      "id": "mktw-initialfood-loc_bs_weiting",
+      "target": "loc_bs_weiting",
+      "file": "world/drafts/w1/village-ledgers/loc_bs_weiting.json",
+      "path": [
+        "charter",
+        "agriculture",
+        "initialFood"
+      ],
+      "field": "charter.agriculture.initialFood",
+      "before": 22000,
+      "after": {
+        "$remove": true
+      },
+      "followedBy": "initialHarvestDay",
+      "basis": [
+        "a1b94858 删除了规则行与 ledgerSeeds 里的 initialFood；该记录审查时的上下文 charter.agriculture 含 initialFood，值等于记录草稿登记的 economy.publicStock.food。",
+        "initfood-1 已批准整条删除 loc_bs_weiting 的公仓初粮登记（details.economy.publicStock.food，原值 22000）；上下文里这份拷贝随同删除。",
+        "本条只登记“审批当时的上下文含该事实、现已被已审批修订取代”，使指纹核验把上下文还原到审批当时的形状；不改正式文件，不改记录。"
+      ],
+      "facts": {
+        "initfood": "initfood-1",
+        "recordFile": "world/drafts/w1/village-ledgers/loc_bs_weiting.json",
+        "contextPath": "charter.agriculture.initialFood",
+        "followedBy": "initialHarvestDay",
+        "source": "a1b94858^:world/design/agriculture-foundation.mjs（initialFood 在 initialHarvestDay 之前）"
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_weiting.json#loc_bs_weiting",
+          "field": "charter.agriculture.initialFood",
+          "scope": "context"
+        }
+      ],
+      "boundary": "只登记上下文一侧被取代的这一个事实；记录、正式文件与其它字段一律不动。"
+    },
+    {
+      "id": "mktw-initialfood-loc_bs_yupo",
+      "target": "loc_bs_yupo",
+      "file": "world/drafts/w1/village-ledgers/loc_bs_yupo.json",
+      "path": [
+        "charter",
+        "agriculture",
+        "initialFood"
+      ],
+      "field": "charter.agriculture.initialFood",
+      "before": 18000,
+      "after": {
+        "$remove": true
+      },
+      "followedBy": "initialHarvestDay",
+      "basis": [
+        "a1b94858 删除了规则行与 ledgerSeeds 里的 initialFood；该记录审查时的上下文 charter.agriculture 含 initialFood，值等于记录草稿登记的 economy.publicStock.food。",
+        "initfood-1 已批准整条删除 loc_bs_yupo 的公仓初粮登记（details.economy.publicStock.food，原值 18000）；上下文里这份拷贝随同删除。",
+        "本条只登记“审批当时的上下文含该事实、现已被已审批修订取代”，使指纹核验把上下文还原到审批当时的形状；不改正式文件，不改记录。"
+      ],
+      "facts": {
+        "initfood": "initfood-1",
+        "recordFile": "world/drafts/w1/village-ledgers/loc_bs_yupo.json",
+        "contextPath": "charter.agriculture.initialFood",
+        "followedBy": "initialHarvestDay",
+        "source": "a1b94858^:world/design/agriculture-foundation.mjs（initialFood 在 initialHarvestDay 之前）"
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_yupo.json#loc_bs_yupo",
+          "field": "charter.agriculture.initialFood",
+          "scope": "context"
+        }
+      ],
+      "boundary": "只登记上下文一侧被取代的这一个事实；记录、正式文件与其它字段一律不动。"
+    }
+  ],
+  "drafts": [
+    {
+      "id": "mktw-initialfood-loc_bs_liquan",
+      "target": "loc_bs_liquan",
+      "field": "charter.agriculture.initialFood",
+      "value": {
+        "$remove": true
+      }
+    },
+    {
+      "id": "mktw-initialfood-loc_bs_sangban",
+      "target": "loc_bs_sangban",
+      "field": "charter.agriculture.initialFood",
+      "value": {
+        "$remove": true
+      }
+    },
+    {
+      "id": "mktw-initialfood-loc_bs_weiting",
+      "target": "loc_bs_weiting",
+      "field": "charter.agriculture.initialFood",
+      "value": {
+        "$remove": true
+      }
+    },
+    {
+      "id": "mktw-initialfood-loc_bs_yupo",
+      "target": "loc_bs_yupo",
+      "field": "charter.agriculture.initialFood",
+      "value": {
+        "$remove": true
+      }
+    }
+  ],
+  "contexts": [
+    {
+      "sourceFacts": [
+        "a1b94858 删除了规则行与 ledgerSeeds 里的 initialFood；该记录审查时的上下文 charter.agriculture 含 initialFood，值等于记录草稿登记的 economy.publicStock.food。",
+        "initfood-1 已批准整条删除 loc_bs_liquan 的公仓初粮登记（details.economy.publicStock.food，原值 22000）；上下文里这份拷贝随同删除。",
+        "本条只登记“审批当时的上下文含该事实、现已被已审批修订取代”，使指纹核验把上下文还原到审批当时的形状；不改正式文件，不改记录。"
+      ],
+      "referencedFacts": {
+        "initfood": "initfood-1",
+        "recordFile": "world/drafts/w1/village-ledgers/loc_bs_liquan.json",
+        "contextPath": "charter.agriculture.initialFood",
+        "followedBy": "initialHarvestDay",
+        "source": "a1b94858^:world/design/agriculture-foundation.mjs（initialFood 在 initialHarvestDay 之前）"
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_liquan.json#loc_bs_liquan",
+          "field": "charter.agriculture.initialFood",
+          "scope": "context"
+        }
+      ]
+    },
+    {
+      "sourceFacts": [
+        "a1b94858 删除了规则行与 ledgerSeeds 里的 initialFood；该记录审查时的上下文 charter.agriculture 含 initialFood，值等于记录草稿登记的 economy.publicStock.food。",
+        "initfood-1 已批准整条删除 loc_bs_sangban 的公仓初粮登记（details.economy.publicStock.food，原值 25000）；上下文里这份拷贝随同删除。",
+        "本条只登记“审批当时的上下文含该事实、现已被已审批修订取代”，使指纹核验把上下文还原到审批当时的形状；不改正式文件，不改记录。"
+      ],
+      "referencedFacts": {
+        "initfood": "initfood-1",
+        "recordFile": "world/drafts/w1/village-ledgers/loc_bs_sangban.json",
+        "contextPath": "charter.agriculture.initialFood",
+        "followedBy": "initialHarvestDay",
+        "source": "a1b94858^:world/design/agriculture-foundation.mjs（initialFood 在 initialHarvestDay 之前）"
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_sangban.json#loc_bs_sangban",
+          "field": "charter.agriculture.initialFood",
+          "scope": "context"
+        }
+      ]
+    },
+    {
+      "sourceFacts": [
+        "a1b94858 删除了规则行与 ledgerSeeds 里的 initialFood；该记录审查时的上下文 charter.agriculture 含 initialFood，值等于记录草稿登记的 economy.publicStock.food。",
+        "initfood-1 已批准整条删除 loc_bs_weiting 的公仓初粮登记（details.economy.publicStock.food，原值 22000）；上下文里这份拷贝随同删除。",
+        "本条只登记“审批当时的上下文含该事实、现已被已审批修订取代”，使指纹核验把上下文还原到审批当时的形状；不改正式文件，不改记录。"
+      ],
+      "referencedFacts": {
+        "initfood": "initfood-1",
+        "recordFile": "world/drafts/w1/village-ledgers/loc_bs_weiting.json",
+        "contextPath": "charter.agriculture.initialFood",
+        "followedBy": "initialHarvestDay",
+        "source": "a1b94858^:world/design/agriculture-foundation.mjs（initialFood 在 initialHarvestDay 之前）"
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_weiting.json#loc_bs_weiting",
+          "field": "charter.agriculture.initialFood",
+          "scope": "context"
+        }
+      ]
+    },
+    {
+      "sourceFacts": [
+        "a1b94858 删除了规则行与 ledgerSeeds 里的 initialFood；该记录审查时的上下文 charter.agriculture 含 initialFood，值等于记录草稿登记的 economy.publicStock.food。",
+        "initfood-1 已批准整条删除 loc_bs_yupo 的公仓初粮登记（details.economy.publicStock.food，原值 18000）；上下文里这份拷贝随同删除。",
+        "本条只登记“审批当时的上下文含该事实、现已被已审批修订取代”，使指纹核验把上下文还原到审批当时的形状；不改正式文件，不改记录。"
+      ],
+      "referencedFacts": {
+        "initfood": "initfood-1",
+        "recordFile": "world/drafts/w1/village-ledgers/loc_bs_yupo.json",
+        "contextPath": "charter.agriculture.initialFood",
+        "followedBy": "initialHarvestDay",
+        "source": "a1b94858^:world/design/agriculture-foundation.mjs（initialFood 在 initialHarvestDay 之前）"
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_yupo.json#loc_bs_yupo",
+          "field": "charter.agriculture.initialFood",
+          "scope": "context"
+        }
+      ]
+    }
+  ]
+}
