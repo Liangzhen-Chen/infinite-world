@@ -6,7 +6,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {openLedger,auditLedger} from '../server-plugin/ledger.mjs';
-import {advanceCustomerFlow,flowTimesOfDay,customerFlowTimes} from '../server-plugin/business.mjs';
+import {advanceCustomerFlow,flowTimesOfDay,customerFlowTimes,settleCustomerFlow,customerWindows} from '../server-plugin/business.mjs';
 import {currentShops,nextShopMinute} from '../server-plugin/shop.mjs';
 import {residentSellers,SALE_ORDER} from '../server-plugin/market-seller.mjs';
 import {actionCostRule} from '../server-plugin/action-costs.mjs';
@@ -33,7 +33,8 @@ function fixture({sellerSchedule=SELLER_DAY,residentSale=false,housemateBread=0,
  for(const n of w.npcs.filter(n=>n.id===A)){n.tier='full';n.schedule=awake;}
  for(const n of w.npcs.filter(n=>[B,C].includes(n.id))){n.schedule=awake;}
  for(const n of w.npcs.filter(n=>n.id===seller)){n.tier='full';n.schedule={default:sellerSchedule};}
- for(const l of late)for(const n of w.npcs.filter(n=>n.id===l.id)){n.tier='full';n.schedule={default:[at(0,l.wake,[],'睡眠'),at(l.wake,1440,[],'闲居')]};}
+ // late 的一项带 post/leave：0–leave 在别处（post）值守教书（有 teach 服务，不是顾客段），leave 起回家闲居（要走路）；否则睡到 wake 再闲居。
+ for(const l of late)for(const n of w.npcs.filter(n=>n.id===l.id)){n.tier='full';n.schedule={default:l.post?[{start:0,end:l.leave,location:l.post,activity:'教书',services:['teach']},at(l.leave,1440,[],'闲居')]:[at(0,l.wake,[],'睡眠'),at(l.wake,1440,[],'闲居')]};}
  const e=new WorldEngine(w),doc=e.createCharacter(legacy,{},'ec1b-windows');
  doc.state.minute=0;doc.state.location=home;delete doc.state.records['agriculture:loc_hw'];
  doc.state.npcs=Object.fromEntries([A,B,C,...late.map(l=>l.id),seller].map(id=>[id,{...doc.state.npcs[id],coins:id===A?1000:late.some(l=>l.id===id)?(late.find(l=>l.id===id).coins??1000):id===C?5:0,inventory:{},location:home,status:'正常',activity:'休息'}]));
@@ -180,6 +181,28 @@ test('flow times do not change when a purchase writes a market_trip: one long wa
  assert.deepEqual(records(stepped),records(whole));
  assert.deepEqual(stepped.d.get('state','npcs'),whole.d.get('state','npcs'));
  assert.deepEqual(auditLedger(stepped.d.get('ledger')),[]);
+});
+
+test('a customer who comes off a post elsewhere is available from the minute he arrives, not from the minute he sets out',()=>{
+ // 徐凌（D）0–600 在议事厅值守教书（有 teach 服务，不是顾客段），600 起回家闲居：作息一切到家的段他就出发，路程 m 分钟（engine.route，与 npc-schedule 的 scheduleTravel 同一条），赶路期间不是顾客。
+ // 手推：店窗 [480,720)；他的顾客段起点是 600+m（到家），交集最早 = 600+m；洛薇（A）与其他居民 480 起就在家醒着，时刻 480。所以当天时刻 = [480, 600+m]，不是 [480, 600]。
+ const post='bld_hw_council',leave=600,f=fixture({late:[{id:D,post,leave,wake:0}]}),state=f.d.get('state');
+ const m=f.e.route(post,home,'walk',leave,f.d.get('randomSeed')).minutes;
+ assert.ok(m>0&&leave+m<720,'precondition (engine): the walk home is a real trip and he is home before the shop window closes');
+ assert.deepEqual(customerWindows(f.e,state,0).get(D).map(s=>s.start),[leave+m],'his customer window opens on arrival');
+ assert.deepEqual(flowTimesOfDay(f.e,state,0),[480,leave+m]);
+ // 在路上不能被评估：600 他刚出发（scheduleTravel，位置空），结算后没有他的访问记录。
+ f.d.set(['state','minute'],leave);
+ f.d.set(['state','npcs',D],{...f.d.get('state','npcs',D),location:null,activity:'赶路',scheduleTravel:{from:post,to:home,depart:leave,arrive:leave+m,edges:[]}});
+ settleCustomerFlow(f.d,f.e,leave);
+ assert.ok(!flowRecords(f).some(r=>r.visits.some(v=>v.npc===D)),'a customer on the road is not evaluated');
+ // 到达后可以：到家（位置回家、行程清除），在他的时刻结算，他被评估并买到面包（有 1000 铜、缺口大于 0）。
+ const arrived={...f.d.get('state','npcs',D),location:home,activity:'闲居'};delete arrived.scheduleTravel;
+ f.d.set(['state','npcs',D],arrived);f.d.set(['state','minute'],leave+m);
+ settleCustomerFlow(f.d,f.e,leave+m);
+ assert.ok(flowRecords(f).some(r=>r.minute===leave+m&&r.visits.some(v=>v.npc===D)),'after arriving he is evaluated');
+ assert.equal(boughtBy(f,D).length,1,'and, having a need and money, he buys');
+ assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
 });
 
 test('a player shop window needs the player in the shop: it starts at the later of opening and arrival, and the first awake customer waits one service interval',()=>{

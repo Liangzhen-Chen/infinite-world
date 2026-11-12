@@ -752,7 +752,7 @@ export function advanceShops(d,engine,before,after){
     }
     // 客流按营业窗口结算（business.mjs customerFlowTimes：每日正午 ∪ 各营业窗口起点），定期补货仍在午夜；两者按时间先后穿插：
     // 同一时刻先补货后客流（午夜补货在前，当日各窗口的客流在后），客流读到的是刚补好的货架。
-    const times=customerFlowTimes(engine,d.get('state'),before,after);let next=0;
+    const times=customerFlowTimes(engine,d.get('state'),before,after,d.get('randomSeed'));let next=0;
     const flowUntil=limit=>{while(next<times.length&&times[next]<limit)settleCustomerFlow(d,engine,times[next++]);};
     const stores=currentShops(engine,d.get('state'));
     if(stores.length){
@@ -768,7 +768,7 @@ export function advanceShops(d,engine,before,after){
 }
 // 本段推进 (before, after] 是否跨过店铺时钟边界：每 720 分钟的网格（含午夜与正午），或任一营业窗口的客流结算时刻（advance-registry 用它决定是否运行 shop_restock）。
 export function shopBoundaryCrossed(engine,d,before,after){
-    return Math.floor(after/720)>Math.floor(before/720)||customerFlowTimes(engine,d.get('state'),before,after).length>0;
+    return Math.floor(after/720)>Math.floor(before/720)||customerFlowTimes(engine,d.get('state'),before,after,d.get('randomSeed')).length>0;
 }
 // Force a clock boundary before afternoon receipts or deliveries can enter
 // the noon consumer budget. Restocking keeps its own midnight boundary.
@@ -779,7 +779,7 @@ export function nextShopMinute(engine,d,now){
     const interval=consumers||collecting?720:DAY;
     let boundary=(Math.floor(now/interval)+1)*interval;
     // 有居民上门时，时钟也要在营业窗口的客流结算时刻停下（今天与明天的窗口起点，早于下一个网格点者取之）。
-    if(consumers||collecting)for(const day of [Math.floor(now/DAY),Math.floor(now/DAY)+1])for(const t of flowTimesOfDay(engine,state,day))if(t>now&&t<boundary)boundary=t;
+    if(consumers||collecting)for(const day of [Math.floor(now/DAY),Math.floor(now/DAY)+1])for(const t of flowTimesOfDay(engine,state,day,d.get('randomSeed')))if(t>now&&t<boundary)boundary=t;
     return boundary;
 }
 

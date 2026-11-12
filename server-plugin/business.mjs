@@ -867,13 +867,25 @@ function serve(d,engine,shop,t,residents,gaps,routes){
 const shoppingSlot=slot=>Boolean(slot)&&!SLEEPING.test(slot.activity??'')&&!(slot.services??[]).some(service=>service!=='trade');
 const windowMemo=Symbol('customer flow times');
 // 某人当天作息的各段：[{start,end,settlement,slot}]，keep(slot) 为真的段（scheduleAt 的 slot.until 接着往下走，防死循环）。
-function daySegments(engine,state,id,day,keep,sched=state){
+// arrivalSeed 非空 = 顾客侧：段的起点是“到达本段所在地”的时刻，不是作息切换的时刻。人在上一段的地点，作息一切到本段就出发
+// （npc-schedule.mjs 357 行 scheduleTravel：depart=段起点，arrive=段起点+路程分钟，赶路期间 walkIns 一律不选），所以可用窗从 段起点+路程 起算；路程超过段长则整段不可用。
+// 路程与 npc-schedule 同一条 engine.route(上一段地点→本段地点,'walk',段起点,seed)；上一段取 baseScheduleAt(段起点-1)，不含 market_trip。
+const arrivalStart=(engine,id,at,slot,sched,seed)=>{
+    if(at<=0)return at;
+    const previous=baseScheduleAt(engine,id,at-1,sched);
+    if(!previous?.location||previous.location===slot.location)return at;
+    try{return at+engine.route(previous.location,slot.location,'walk',at,seed).minutes;}catch{return Infinity;}
+};
+function daySegments(engine,state,id,day,keep,sched=state,arrivalSeed=null){
     const out=[];
     for(let at=day*DAY,guard=0;at<(day+1)*DAY&&guard<48;guard++){
         const slot=baseScheduleAt(engine,id,at,sched);
         if(!slot)break;
-        const end=slot.until>at?slot.until:(day+1)*DAY;
-        if(keep(slot))out.push({start:at,end:Math.min(end,(day+1)*DAY),settlement:placeSettlement(engine,state,slot.location).value});
+        const end=slot.until>at?slot.until:(day+1)*DAY,stop=Math.min(end,(day+1)*DAY);
+        if(keep(slot)){
+            const start=arrivalSeed===null?at:arrivalStart(engine,id,at,slot,sched,arrivalSeed);
+            if(start<stop)out.push({start,end:stop,settlement:placeSettlement(engine,state,slot.location).value});
+        }
         at=end;
     }
     return out;
@@ -892,21 +904,23 @@ export function shopWindows(engine,state,day,sched=state){
     for(const id of [...keepers].sort())for(const w of daySegments(engine,state,id,day,slot=>slot.services?.includes('trade'),sched))add(id,id,w);
     return shops;
 }
-export function customerWindows(engine,state,day,sched=state){
+// 可用窗从到达所在地起算（daySegments arrivalSeed）：迁居者下班后在路上的那几分钟不算顾客可用，到家才算。
+const seedOf=engine=>engine.scheduleReadCache?.seed??engine.physicalDocument?.randomSeed??engine.airDraft?.peek?.('randomSeed')??'default-campaign';
+export function customerWindows(engine,state,day,sched=state,seed=seedOf(engine)){
     const out=new Map();
     for(const id of Object.keys(state.npcs??{}).sort()){
         if(!personSimulation(engine,{},id).value||(engine.byId.get(id)?.age??engine.rules.npcLife.adultAge)<engine.rules.npcLife.adultAge)continue;
-        const segments=daySegments(engine,state,id,day,shoppingSlot,sched);
+        const segments=daySegments(engine,state,id,day,shoppingSlot,sched,seed);
         if(segments.length)out.set(id,segments);
     }
     return out;
 }
 // 某天的客流结算时刻（升序、去重、绝对分钟）。
-export function flowTimesOfDay(engine,state,day){
-    return stateMemo(state,engine,[windowMemo,day],()=>{
+export function flowTimesOfDay(engine,state,day,seed=seedOf(engine)){
+    return stateMemo(state,engine,[windowMemo,day,seed],()=>{
         // 作息读不含 market_trip 的状态副本：当日成交写入的出行既不改 scheduleAt 的出行覆盖，也不改生计分段（household-subsistence 读 market_trip），时刻集合因此与当日成交无关。
         const base={...state,records:Object.fromEntries(Object.entries(state.records??{}).filter(([,r])=>r?.category!=='market_trip'))};
-        const customers=customerWindows(engine,state,day,base),times=new Set();
+        const customers=customerWindows(engine,state,day,base,seed),times=new Set();
         for(const {keeper,windows} of shopWindows(engine,state,day,base).values()){
             for(const [id,segments] of customers){
                 if(id===keeper)continue;
@@ -924,10 +938,10 @@ export function flowTimesOfDay(engine,state,day){
     });
 }
 // (before, after] 内全部客流结算时刻，升序。shop.mjs 用它定时钟边界与补货/客流的先后。
-export function customerFlowTimes(engine,state,before,after){
+export function customerFlowTimes(engine,state,before,after,seed=seedOf(engine)){
     const times=[];
     for(let day=Math.max(0,Math.floor(before/DAY));day<=Math.floor(after/DAY);day++){
-        for(const t of flowTimesOfDay(engine,state,day))if(t>before&&t<=after&&t>=0)times.push(t);
+        for(const t of flowTimesOfDay(engine,state,day,seed))if(t>before&&t<=after&&t>=0)times.push(t);
     }
     return times;
 }
@@ -941,5 +955,5 @@ export function settleCustomerFlow(d,engine,t){
 }
 // Settle consumers at every trade-window time in (before, after]; the registry splits the clock at these times (shop.mjs nextShopMinute).
 export function advanceCustomerFlow(d,engine,before,after){
-    for(const t of customerFlowTimes(engine,d.get('state'),before,after))settleCustomerFlow(d,engine,t);
+    for(const t of customerFlowTimes(engine,d.get('state'),before,after,d.get('randomSeed')))settleCustomerFlow(d,engine,t);
 }
