@@ -9,6 +9,7 @@ import {standing} from '../server-plugin/standing.mjs';
 import {legacyTotal,flowDelta,reconcile} from './helpers/ledger-audit.mjs';
 import {uiSession as createUISession,qty} from './helpers/ui-script.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
 
 // Reuse the server's campaign seed interface: these scenarios test trade/time,
 // including L4 restocking with a healthy smith, rather than random illness.
@@ -75,7 +76,9 @@ test('L3 同一天再买同一件东西，成交深度真实上升且总额一�
 
 // 指南11.3 L4 指定镐；保留原刀场景全部断言，并对正式矿镐逐项执行同一验收。
 for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐']])test(`L4 库存有限：铁匠铺的${label}卖完后买不到，菜单说明下次进货的日子，到货后能再买`,async t=>{
- const ui=await uiSession(t,{mutate:at(FORGE,10*60,s=>{s.player.coins=2000;})});
+ // EC-1b：客流按营业窗口起点结算，补货后在玩家 10:00 到场之前，上门的居民就会买走到货（原来客流在正午，晚于 10:00）；
+ // 本用例检验的是库存有限、卖完后菜单说明下次进货日、到货后能再买，不是居民客流，所以与 shop-restock 夹具同法：其他居民没钱就不上门（walkIns 要求有钱）。
+ const ui=await uiSession(t,{mutate:at(FORGE,10*60,s=>{s.player.coins=2000;for(const [id,n] of Object.entries(s.npcs))if(id!==SMITH)n.coins=0;})});
  const stock=qty((await ui.read()).state.npcs[SMITH].inventory[item]);assert.ok(stock>0);
  const all=await ui.choose('trade.buy',{item,quantity:stock},{target:SMITH});assert.ok(all.ok,all.error);
  const none=await ui.choose('trade.buy',{item,quantity:1},{search:true,target:SMITH});
@@ -84,7 +87,8 @@ for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐
  assert.ok(note&&note.nextMinute>(await ui.read()).state.minute,'告诉玩家何时到货');assert.match(note.next,/年/);
  assert.ok(!menu.actions.find(a=>a.id==='core:trade.buy').slots.find(s=>s.name==='item').options.some(o=>o.value===item),'卖完的货不再出现在可选项');
  const now=(await ui.read()).state.minute;await ui.choose('time',{minutes:note.nextMinute+10*60-now});
- const again=await ui.choose('trade.buy',{item,quantity:1},{target:SMITH});assert.ok(again.ok,again.error);
+ const again=await ui.choose('trade.buy',{item,quantity:1},{target:SMITH});
+ assert.ok(again.ok,`${again.error} | customer_flow: ${JSON.stringify(Object.values((await ui.read()).state.records).filter(r=>r.category==='customer_flow').map(r=>[r.shop,r.day,r.minute,(r.visits??[]).map(v=>[v.npc,v.outcome,v.item])]))}`);
 });
 
 test('L5 卖给钱不够的 NPC：不凭空付款，整笔拒绝且钱物不动',async t=>{
@@ -102,6 +106,7 @@ test('L5 对方钱不够时部分收购：只转付得起的原货，不足一�
  // retaining this scenario's original exhausted-purse refusal premise.
  const ui=await uiSession(t,{mutate:at(INN,10*60,s=>{s.npcs[LINSUI].coins=6;s.inventory.item_bread={quantity:20};})});
  const before=await ui.read(),menu=await ui.menu(LINSUI);
+ const supplyBefore=marketSupply({document:before,get:(...p)=>p.reduce((v,k)=>v?.[k],before)},engine,'item_bread',INN);
  assert.ok(menu.actions.find(a=>a.id==='core:trade.sell_to').slots.some(s=>s.name==='allowPartial'));
  const r=await ui.choose('trade.sell_to',{item:'item_bread',quantity:20,allowPartial:true},{target:LINSUI});
  assert.ok(r.ok,r.error);assert.equal(r.result.partial,true);assert.equal(r.result.requestedQuantity,20);
@@ -110,9 +115,13 @@ test('L5 对方钱不够时部分收购：只转付得起的原货，不足一�
  // 总额 0.740426×29×ln(55/47)÷0.617021 = 5.4701，整笔截断一次 = 5。旧值 6 = 面包 2×.5×.6×10（地板 .5、10 件）。
  // 对应设计变化：面包饱腹改推导 + 卖家份额分摊使供需比离开地板（PLAN.md:584、591③、316③、563②）；李白 11-11 (a)（PLAN.md:540）。
  // 证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md（a1-lt-scenarios-7，requote 与 result.pricing 差 0）。断言仍为精确相等。
- assert.equal(r.result.cost,5);
+ // EC-1a 之后（采购口径扣聚落公粮，household-budget.mjs:378-379）：登记户口粮由公粮覆盖，各户 retained 归 0，供给升、需求降。静态推不出比值（market.mjs:219，
+ // 需求里玩家与未登记 NPC 的留存仍在），所以先用引擎读出的供给与需求核对：比值 ≤ 0.5 才夹到 0.5 地板，价才是旧值算式：面包 2 × .5 × 收购价差 .6 = 单价 0.6，
+ // 成交数量 = min(20, floor(6 ÷ 0.6)) = 10，总额 10 × 0.6 = 6（正好用尽林穗的 6 文）。比值若 > 0.5，则此处期望要按真实比值重推，不抄实际值。
+ assert.ok(supplyBefore.demand/Math.max(1,supplyBefore.supply)<=0.5,`precondition: demand ${supplyBefore.demand} / supply ${supplyBefore.supply} must be at most 0.5 to land on the floor`);
+ assert.equal(r.result.cost,6);
  assert.ok(r.lines[0].includes(`${r.result.quantity}份`),'界面只报实际成交数量');
- assert.equal(r.result.quantity,8); // floor(6÷0.740426)，见上；
+ assert.equal(r.result.quantity,10); // floor(6÷0.6)，见上；
  assert.ok(r.result.quantity>0&&r.result.quantity<20);const after=await ui.read();
  assert.equal(qty(after.state.inventory.item_bread),20-r.result.quantity);
  assert.equal(qty(after.state.npcs[LINSUI].inventory.item_bread)-qty(before.state.npcs[LINSUI].inventory.item_bread),r.result.quantity);
