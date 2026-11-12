@@ -1,0 +1,105 @@
+{
+  "requestId": "a3dfae2f-f393-4ce1-94f3-b267917c271b",
+  "card": "INITFOOD",
+  "label": "content-review-initfood-loc_bs_weiting-review0",
+  "request": {
+    "thinking": {
+      "type": "disabled"
+    },
+    "temperature": 0,
+    "max_tokens": 400,
+    "response_format": {
+      "type": "json_object"
+    },
+    "messages": [
+      {
+        "role": "system",
+        "content": "你是游戏内容事实审查员。逐句核对说明与骨架及引用事实，只返回 JSON {\"contradictions\":[{\"quote\":\"说明原句\",\"field\":\"骨架字段路径\",\"severity\":\"hard|soft|style\",\"reason\":\"具体原因\"}]}。hard 表示数值、材料、用途、能力、食性、归属、时间、取得途径等与骨架相反或新增没有依据的功能。正常且相容的感官细节不是新增功能。不推测骨架没有声明的规则。不因没有重述全部骨架字段报错。无矛盾则空数组。 另须逐句过下列六项，命中即列 hard，不得因为读起来合理而放过：(a)工序连贯：正文中被使用、移动、加工的每样材料、容器、半成品，前文必须交代它从哪里来、放在哪里；“已叠好”“已入锅”“已弯成”一类状态，前文要有对应步骤。反例：只写把核桃仁切碎，随后就写“碎仁均匀裹糊”，碎仁从未入锅；又如只写取黄油“置于锅旁”，随后却写与锅里的蒜末相混；又如框料从未弯折，却写“把悬片悬在框内”。(b)工具与材料只能来自骨架或引用事实，不得出现骨架以外的工具、材料或水量。反例：骨架工具只有框锯、凿、锉，正文却写“配木槌轻敲”；骨架只有一份水，正文却写“再以清水冲去残砂”。(c)不得自添用途、保存期、食用期限、禁忌、维修需求，骨架和引用事实里没有的一律不行。反例：“所得一份，须当日食用”；“锅壁破裂时需维修”；“不横切石料”“刨屑留作引火之用”（骨架并无此用途或限制）。(d)数量与单位须与骨架一致。反例：骨架材料是“干直芦管束”一束，正文写“取芦管束一根”。(e)语句须通顺，不得有错字、病句、不通的动宾搭配、残缺的数词或单位。反例：“待麦糊稠度稳定后段入锅中”“全程约八十份钟”“取炭入厚底煮锅小灶”“皂片全散后停火”（全文并未点火）。(f)工序类正文另须符合下列约束，违反者列 hard：收尾和辅助动作（清洗、加盖、画线、舀取、暂置、晾放等）不得引入骨架以外的器具、容器或水；骨架没有水就不写用水洗、冲、浸（骨架里的醋、蜜液等材料本身可用于浸），没有锅盖就不写加盖，没有量具或墨线就不写画线，没有容器就不写舀出暂置。物品说明里交代“容器须使用者另备、不随货提供”是如实说明，不算引入骨架外容器。用火必须交代火源，且火源只能来自骨架里的燃料；骨架没有燃料就不写点火、烧、烤、煮、熬、停火。副产品为空时，余料、废料弃置是允许的；但弃置不得引入骨架外的容器或去处。不写骨架和引用事实以外的用途、期限或禁忌。正文中的总时长句由系统按骨架 minutes 写入或保留，数值与骨架一致即不算错（“约N分钟”且 N 等于骨架也不算错）；与骨架不一致，或用“多、余、来、几”一类概数时列 hard。"
+      },
+      {
+        "role": "user",
+        "content": "{\"skeleton\":{\"id\":\"initfood-loc_bs_weiting\",\"target\":\"loc_bs_weiting\",\"file\":\"world/geo/settlements.json\",\"path\":[\"details\",\"economy\",\"publicStock\",\"food\"],\"field\":\"details.economy.publicStock.food\",\"before\":22000,\"after\":{\"$remove\":true},\"boundary\":\"只删这一个字段（村级公共仓期初粮食登记）；同一行的其余字段、种粮、公款与其它聚落一律不动。\"},\"publishedFacts\":{\"sourceFacts\":[\"MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。\",\"loc_bs_weiting：登记的 publicStock.food 22000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。\",\"公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。\"],\"referencedFacts\":{\"rule\":{\"law\":\"开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)\",\"source\":\"server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays\",\"readers\":[\"server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）\",\"tests/village-ledgers.test.mjs\",\"tests/catalog.test.mjs\"]},\"handwritten\":22000},\"supersedes\":[{\"receipt\":\"world/drafts/w1/village-ledgers/loc_bs_weiting.json#loc_bs_weiting\",\"field\":\"economy.publicStock.food\"},{\"receipt\":\"world/drafts/w1/village-ledgers/candidate.json#loc_bs_weiting\",\"field\":\"economy.publicStock.food\"}]},\"draft\":{\"id\":\"initfood-loc_bs_weiting\",\"target\":\"loc_bs_weiting\",\"field\":\"details.economy.publicStock.food\",\"value\":{\"$remove\":true}}}"
+      }
+    ]
+  },
+  "requestHash": "7a20de2ab61ce96d524197202bdd7448229e4fa7983e3281aa10f21ee65302c9",
+  "response": {
+    "id": "fbf155bc-842c-444f-a450-25f68ff4d5f4",
+    "object": "chat.completion",
+    "created": 1794466991,
+    "model": "deepseek-flash",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "{\"contradictions\":[]}"
+        },
+        "logprobs": null,
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 1294,
+      "completion_tokens": 7,
+      "total_tokens": 1301,
+      "prompt_tokens_details": {
+        "cached_tokens": 640
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 654
+    },
+    "system_fingerprint": "bc19ba97cbe016479903222bb1578db6",
+    "measurement": {
+      "label": "content-review-initfood-loc_bs_weiting-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1294,
+        "completion_tokens": 7,
+        "total_tokens": 1301,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 654
+      },
+      "costUpperYuan": 0.0013896,
+      "cumulativeUpperYuan": 0.0027792,
+      "latencyMs": 1067.2648,
+      "timestamp": "2026-11-12T07:03:13.535Z"
+    }
+  },
+  "responseHash": "c0f986a400416a97fd23f74f7cb73b9a82f45e9e23d15b1af99573d495d2ec1e",
+  "usage": {
+    "prompt_tokens": 1294,
+    "completion_tokens": 7,
+    "total_tokens": 1301,
+    "prompt_tokens_details": {
+      "cached_tokens": 640
+    },
+    "prompt_cache_hit_tokens": 640,
+    "prompt_cache_miss_tokens": 654
+  },
+  "measurement": {
+    "label": "content-review-initfood-loc_bs_weiting-review0",
+    "model": "deepseek-flash",
+    "thinking": "disabled",
+    "usage": {
+      "prompt_tokens": 1294,
+      "completion_tokens": 7,
+      "total_tokens": 1301,
+      "prompt_tokens_details": {
+        "cached_tokens": 640
+      },
+      "prompt_cache_hit_tokens": 640,
+      "prompt_cache_miss_tokens": 654
+    },
+    "costUpperYuan": 0.0013896,
+    "cumulativeUpperYuan": 0.0027792,
+    "latencyMs": 1067.2648,
+    "timestamp": "2026-11-12T07:03:13.535Z"
+  },
+  "costUpperYuan": 0.0013896,
+  "savedAt": "2026-11-12T07:03:13.540Z"
+}

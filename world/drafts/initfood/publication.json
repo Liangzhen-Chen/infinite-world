@@ -1,0 +1,87 @@
+{
+  "revision": "initfood-1",
+  "publishedAt": "2026-11-12T07:05:28.551Z",
+  "entries": [
+    {
+      "id": "initfood-loc_bs_yupo",
+      "target": "loc_bs_yupo",
+      "file": "world/geo/settlements.json",
+      "field": "details.economy.publicStock.food",
+      "before": 18000,
+      "after": {
+        "$remove": true
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_yupo.json#loc_bs_yupo",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_yupo",
+          "field": "economy.publicStock.food"
+        }
+      ]
+    },
+    {
+      "id": "initfood-loc_bs_weiting",
+      "target": "loc_bs_weiting",
+      "file": "world/geo/settlements.json",
+      "field": "details.economy.publicStock.food",
+      "before": 22000,
+      "after": {
+        "$remove": true
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_weiting.json#loc_bs_weiting",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_weiting",
+          "field": "economy.publicStock.food"
+        }
+      ]
+    },
+    {
+      "id": "initfood-loc_bs_liquan",
+      "target": "loc_bs_liquan",
+      "file": "world/geo/settlements.json",
+      "field": "details.economy.publicStock.food",
+      "before": 22000,
+      "after": {
+        "$remove": true
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_liquan.json#loc_bs_liquan",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_liquan",
+          "field": "economy.publicStock.food"
+        }
+      ]
+    },
+    {
+      "id": "initfood-loc_bs_sangban",
+      "target": "loc_bs_sangban",
+      "file": "world/geo/settlements.json",
+      "field": "details.economy.publicStock.food",
+      "before": 25000,
+      "after": {
+        "$remove": true
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_sangban.json#loc_bs_sangban",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_sangban",
+          "field": "economy.publicStock.food"
+        }
+      ]
+    }
+  ],
+  "receipt": "world/drafts/initfood/review"
+}

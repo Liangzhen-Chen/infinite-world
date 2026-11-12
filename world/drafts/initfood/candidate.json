@@ -1,0 +1,333 @@
+{
+  "revision": "initfood-1",
+  "entries": [
+    {
+      "id": "initfood-loc_bs_yupo",
+      "target": "loc_bs_yupo",
+      "file": "world/geo/settlements.json",
+      "path": [
+        "details",
+        "economy",
+        "publicStock",
+        "food"
+      ],
+      "field": "details.economy.publicStock.food",
+      "before": 18000,
+      "after": {
+        "$remove": true
+      },
+      "basis": [
+        "MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。",
+        "loc_bs_yupo：登记的 publicStock.food 18000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。",
+        "公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。"
+      ],
+      "facts": {
+        "rule": {
+          "law": "开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)",
+          "source": "server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays",
+          "readers": [
+            "server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）",
+            "tests/village-ledgers.test.mjs",
+            "tests/catalog.test.mjs"
+          ]
+        },
+        "handwritten": 18000
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_yupo.json#loc_bs_yupo",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_yupo",
+          "field": "economy.publicStock.food"
+        }
+      ],
+      "boundary": "只删这一个字段（村级公共仓期初粮食登记）；同一行的其余字段、种粮、公款与其它聚落一律不动。"
+    },
+    {
+      "id": "initfood-loc_bs_weiting",
+      "target": "loc_bs_weiting",
+      "file": "world/geo/settlements.json",
+      "path": [
+        "details",
+        "economy",
+        "publicStock",
+        "food"
+      ],
+      "field": "details.economy.publicStock.food",
+      "before": 22000,
+      "after": {
+        "$remove": true
+      },
+      "basis": [
+        "MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。",
+        "loc_bs_weiting：登记的 publicStock.food 22000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。",
+        "公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。"
+      ],
+      "facts": {
+        "rule": {
+          "law": "开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)",
+          "source": "server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays",
+          "readers": [
+            "server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）",
+            "tests/village-ledgers.test.mjs",
+            "tests/catalog.test.mjs"
+          ]
+        },
+        "handwritten": 22000
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_weiting.json#loc_bs_weiting",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_weiting",
+          "field": "economy.publicStock.food"
+        }
+      ],
+      "boundary": "只删这一个字段（村级公共仓期初粮食登记）；同一行的其余字段、种粮、公款与其它聚落一律不动。"
+    },
+    {
+      "id": "initfood-loc_bs_liquan",
+      "target": "loc_bs_liquan",
+      "file": "world/geo/settlements.json",
+      "path": [
+        "details",
+        "economy",
+        "publicStock",
+        "food"
+      ],
+      "field": "details.economy.publicStock.food",
+      "before": 22000,
+      "after": {
+        "$remove": true
+      },
+      "basis": [
+        "MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。",
+        "loc_bs_liquan：登记的 publicStock.food 22000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。",
+        "公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。"
+      ],
+      "facts": {
+        "rule": {
+          "law": "开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)",
+          "source": "server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays",
+          "readers": [
+            "server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）",
+            "tests/village-ledgers.test.mjs",
+            "tests/catalog.test.mjs"
+          ]
+        },
+        "handwritten": 22000
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_liquan.json#loc_bs_liquan",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_liquan",
+          "field": "economy.publicStock.food"
+        }
+      ],
+      "boundary": "只删这一个字段（村级公共仓期初粮食登记）；同一行的其余字段、种粮、公款与其它聚落一律不动。"
+    },
+    {
+      "id": "initfood-loc_bs_sangban",
+      "target": "loc_bs_sangban",
+      "file": "world/geo/settlements.json",
+      "path": [
+        "details",
+        "economy",
+        "publicStock",
+        "food"
+      ],
+      "field": "details.economy.publicStock.food",
+      "before": 25000,
+      "after": {
+        "$remove": true
+      },
+      "basis": [
+        "MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。",
+        "loc_bs_sangban：登记的 publicStock.food 25000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。",
+        "公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。"
+      ],
+      "facts": {
+        "rule": {
+          "law": "开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)",
+          "source": "server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays",
+          "readers": [
+            "server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）",
+            "tests/village-ledgers.test.mjs",
+            "tests/catalog.test.mjs"
+          ]
+        },
+        "handwritten": 25000
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_sangban.json#loc_bs_sangban",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_sangban",
+          "field": "economy.publicStock.food"
+        }
+      ],
+      "boundary": "只删这一个字段（村级公共仓期初粮食登记）；同一行的其余字段、种粮、公款与其它聚落一律不动。"
+    }
+  ],
+  "drafts": [
+    {
+      "id": "initfood-loc_bs_yupo",
+      "target": "loc_bs_yupo",
+      "field": "details.economy.publicStock.food",
+      "value": {
+        "$remove": true
+      }
+    },
+    {
+      "id": "initfood-loc_bs_weiting",
+      "target": "loc_bs_weiting",
+      "field": "details.economy.publicStock.food",
+      "value": {
+        "$remove": true
+      }
+    },
+    {
+      "id": "initfood-loc_bs_liquan",
+      "target": "loc_bs_liquan",
+      "field": "details.economy.publicStock.food",
+      "value": {
+        "$remove": true
+      }
+    },
+    {
+      "id": "initfood-loc_bs_sangban",
+      "target": "loc_bs_sangban",
+      "field": "details.economy.publicStock.food",
+      "value": {
+        "$remove": true
+      }
+    }
+  ],
+  "contexts": [
+    {
+      "sourceFacts": [
+        "MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。",
+        "loc_bs_yupo：登记的 publicStock.food 18000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。",
+        "公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。"
+      ],
+      "referencedFacts": {
+        "rule": {
+          "law": "开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)",
+          "source": "server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays",
+          "readers": [
+            "server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）",
+            "tests/village-ledgers.test.mjs",
+            "tests/catalog.test.mjs"
+          ]
+        },
+        "handwritten": 18000
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_yupo.json#loc_bs_yupo",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_yupo",
+          "field": "economy.publicStock.food"
+        }
+      ]
+    },
+    {
+      "sourceFacts": [
+        "MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。",
+        "loc_bs_weiting：登记的 publicStock.food 22000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。",
+        "公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。"
+      ],
+      "referencedFacts": {
+        "rule": {
+          "law": "开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)",
+          "source": "server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays",
+          "readers": [
+            "server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）",
+            "tests/village-ledgers.test.mjs",
+            "tests/catalog.test.mjs"
+          ]
+        },
+        "handwritten": 22000
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_weiting.json#loc_bs_weiting",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_weiting",
+          "field": "economy.publicStock.food"
+        }
+      ]
+    },
+    {
+      "sourceFacts": [
+        "MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。",
+        "loc_bs_liquan：登记的 publicStock.food 22000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。",
+        "公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。"
+      ],
+      "referencedFacts": {
+        "rule": {
+          "law": "开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)",
+          "source": "server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays",
+          "readers": [
+            "server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）",
+            "tests/village-ledgers.test.mjs",
+            "tests/catalog.test.mjs"
+          ]
+        },
+        "handwritten": 22000
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_liquan.json#loc_bs_liquan",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_liquan",
+          "field": "economy.publicStock.food"
+        }
+      ]
+    },
+    {
+      "sourceFacts": [
+        "MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)（server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays）。",
+        "loc_bs_sangban：登记的 publicStock.food 25000 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。",
+        "公开聚落资料原先直接读这个字段，现已改读同一条规律的推导值，所以删除不会让资料缺项。"
+      ],
+      "referencedFacts": {
+        "rule": {
+          "law": "开局存粮 = min(ceil(餐口 × (距下次收获天数 + reserveDays)), 粮仓容量 − 种粮)",
+          "source": "server-plugin/agriculture-migration.mjs openingFood、primitives-body.mjs farmTargetDays",
+          "readers": [
+            "server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）",
+            "tests/village-ledgers.test.mjs",
+            "tests/catalog.test.mjs"
+          ]
+        },
+        "handwritten": 25000
+      },
+      "supersedes": [
+        {
+          "receipt": "world/drafts/w1/village-ledgers/loc_bs_sangban.json#loc_bs_sangban",
+          "field": "economy.publicStock.food"
+        },
+        {
+          "receipt": "world/drafts/w1/village-ledgers/candidate.json#loc_bs_sangban",
+          "field": "economy.publicStock.food"
+        }
+      ]
+    }
+  ]
+}

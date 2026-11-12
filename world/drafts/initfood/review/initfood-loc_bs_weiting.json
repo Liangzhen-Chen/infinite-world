@@ -1,0 +1,56 @@
+{
+  "id": "initfood-loc_bs_weiting",
+  "fingerprint": "669c6d5eb6c33be7e42ecf212b2285e96612294094582ec2365853a4a35ad4a3",
+  "status": "passed",
+  "attempts": 0,
+  "draft": {
+    "id": "initfood-loc_bs_weiting",
+    "target": "loc_bs_weiting",
+    "field": "details.economy.publicStock.food",
+    "value": {
+      "$remove": true
+    }
+  },
+  "review": {
+    "contradictions": []
+  },
+  "errors": [],
+  "warnings": [],
+  "feedback": null,
+  "errorCode": null,
+  "frozenCandidate": {
+    "entryHash": "e6492186bdea999c3427d84351adcf1871b9de5cec4441a8d94f41ed11670b9b",
+    "draftHash": "6e37a5fb8cf770b70fc4e45ed7a9575d6539164e13820d96ebb5423d4324f526"
+  },
+  "responseEvidence": [
+    {
+      "phase": "review",
+      "attempt": 1,
+      "requestId": "a3dfae2f-f393-4ce1-94f3-b267917c271b",
+      "file": "budget-responses/a3dfae2f-f393-4ce1-94f3-b267917c271b.json",
+      "requestHash": "7a20de2ab61ce96d524197202bdd7448229e4fa7983e3281aa10f21ee65302c9",
+      "responseHash": "c0f986a400416a97fd23f74f7cb73b9a82f45e9e23d15b1af99573d495d2ec1e"
+    }
+  ],
+  "measurements": [
+    {
+      "label": "content-review-initfood-loc_bs_weiting-review0",
+      "model": "deepseek-flash",
+      "thinking": "disabled",
+      "usage": {
+        "prompt_tokens": 1294,
+        "completion_tokens": 7,
+        "total_tokens": 1301,
+        "prompt_tokens_details": {
+          "cached_tokens": 640
+        },
+        "prompt_cache_hit_tokens": 640,
+        "prompt_cache_miss_tokens": 654
+      },
+      "costUpperYuan": 0.0013896,
+      "cumulativeUpperYuan": 0.0027792,
+      "latencyMs": 1067.2648,
+      "timestamp": "2026-11-12T07:03:13.535Z"
+    }
+  ]
+}

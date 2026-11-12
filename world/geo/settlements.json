@@ -568,7 +568,6 @@
         ],
         "publicStock": {
           "openingDay": 0,
-          "food": 18000,
           "seed": 2160,
           "treasuryCopper": 1200,
           "wood": 60,
@@ -1526,7 +1525,6 @@
         ],
         "publicStock": {
           "openingDay": 0,
-          "food": 22000,
           "seed": 1920,
           "treasuryCopper": 1200,
           "wood": 60,
@@ -2459,7 +2457,6 @@
         ],
         "publicStock": {
           "openingDay": 0,
-          "food": 22000,
           "seed": 2520,
           "treasuryCopper": 1200,
           "wood": 60,
@@ -3438,7 +3435,6 @@
         ],
         "publicStock": {
           "openingDay": 0,
-          "food": 25000,
           "seed": 2880,
           "treasuryCopper": 1200,
           "wood": 60,
