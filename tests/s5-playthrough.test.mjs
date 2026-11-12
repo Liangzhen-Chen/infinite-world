@@ -15,6 +15,7 @@ import {characterUiSession,qty} from './helpers/ui-script.mjs';
 import {nextBankWindow} from './helpers/bank-window.mjs';
 import {conservation,reconcile} from './helpers/ledger-audit.mjs';
 import {handOatsScarcity,handFoodDepth} from './helpers/hand-targets.mjs';
+import {standing} from '../server-plugin/standing.mjs';
 
 const world=await loadWorld(),engine=new WorldEngine(world);
 const TRADER='npc_hw_yanzhe',GRAIN='item_wheat_grain',BANK='bank_hw_post';
@@ -79,9 +80,15 @@ test('S5 一局：集日买卖 → 租田种收并卖自产粮 → 存钱与具�
  assert.equal(qty(buy.before.state.npcs[TRADER].inventory[GRAIN])-qty(buy.after.state.npcs[TRADER].inventory[GRAIN]),4);
  const sale=await step('trade.sell_to',{item:GRAIN,quantity:4},{target:TRADER});
  // 价 = 基价 5 × 夹取(手推比值，卖前的状态) × 买价差 0.6（规则 marketRules.spread.buy）× 当日成交深度（含刚才那笔买入，手推）× 熟客关系因子 × 4 件，整笔取整一次。
- // 关系因子是既有的日内熟客规则（#s5-02 的 0.99895 同族），这里没有可独立手推的来源，取成交回执里的因子，并断言它存在且为正；其余全部手推。
- const post=sale.before.state,ratio2=handOatsScarcity(engine,post,post.settlements.loc_hw.food).ratio,depth2=handFoodDepth(engine,post,GRAIN).depth,relation=sale.result.pricing.relation;
- assert.ok(relation>0);
+ // 关系因子来自既有的熟客规则：relation = clamp(1 + (npc 是卖方 ? −1 : +1) × span × (keeper × 店主对顾客的好感 + settlement × 聚落对顾客的好感) ÷ 100, 规则 priceFactorLimits.relation)
+ // （shop.mjs:789-795；系数在 rules.economy.shops.relation：keeper 0.7、settlement 0.3、span 0.15）。好感 = standing：NPC 的好感 = 关系账的 trust；
+ // 同一天同一对买卖双方的交易记一笔 trust +1（npc-relations.mjs:88，每对每日一笔，与件数无关）。夹具开局关系账为空：买之前 trust = 0（前置断言读 standing 访问器），
+ // 刚才那笔买入后 = 1；聚落的好感没有来源变化，前置断言为 0。卖给商人时 npc 是买方，符号为 +：relation = 1 + 0.15 × 0.7 × 1 ÷ 100 = 1.00105。
+ const post=sale.before.state,ratio2=handOatsScarcity(engine,post,post.settlements.loc_hw.food).ratio,depth2=handFoodDepth(engine,post,GRAIN).depth;
+ const shopRel=engine.rules.economy.shops.relation,[relLo,relHi]=engine.rules.economy.priceFactorLimits.relation;
+ assert.equal(standing(engine,buy.before.state,TRADER,'player'),0,'前置：买之前商人对玩家的好感 = 0');
+ assert.equal(standing(engine,buy.before.state,'loc_hw','player'),0,'前置：聚落对玩家的好感 = 0');
+ const relation=Math.min(relHi,Math.max(relLo,1+shopRel.span*(shopRel.keeper*(0+1)+shopRel.settlement*0)/100));
  const handSale=Math.trunc(4*engine.byId.get(GRAIN).basePrice*Math.min(cap,Math.max(floor,ratio2))*engine.world.marketRules.spread.buy*depth2*relation);
  assert.equal(sale.result.cost,handSale);
  assert.equal(sale.after.state.player.coins-sale.before.state.player.coins,handSale);
