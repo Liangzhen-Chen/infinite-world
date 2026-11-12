@@ -19,6 +19,14 @@ export async function load(url,context,nextLoad){
   const target="const stock=saleableStock(d,engine,quote.seller,quote.item,{business:quote.side==='sell'});";
   if(text.includes(target))return {...result,source:text.replace(target,`${target}globalThis.__DIAG_STOCK__?.({d,engine,quote,stock});`)};
  }
+ // household-budget.mjs：扣前补足钩子（ledger.registerPreDebit 登记处）真的补了钱之后，记录回调 globalThis.__DIAG_POOL__（payer、amount、writer、eventId、minute、topped）。只记录，补足照常发生，返回值不变。
+ if(url.endsWith('/server-plugin/household-budget.mjs')&&result.source!=null){
+  const text=String(result.source),target='householdPoolTopUp(d,d.engine,a.owner,amount,`debit:${writer}:${eventId??\'none\'}:${a.owner}`);';
+  if(text.includes(target)){
+   const patched='{const __minute=look(\'state\',\'minute\'),__topped=householdPoolTopUp(d,d.engine,a.owner,amount,`debit:${writer}:${eventId??\'none\'}:${a.owner}`);globalThis.__DIAG_POOL__?.({payer:a.owner,amount,writer,eventId:eventId??null,minute:__minute,topped:__topped});}';
+   return {...result,source:text.replace(target,()=>patched)};
+  }
+ }
  // business.mjs：settleCustomerFlow 开头加回调 globalThis.__DIAG_FLOW__(d,engine,t)，文件末尾把 serve 用到的模块内函数登记到 globalThis.__DIAG_BIZ__
  // （逐名取，取不到的名字略过，不让加载失败）。探针只读它们，不改任何状态。
  if(url.endsWith('/server-plugin/business.mjs')&&result.source!=null){

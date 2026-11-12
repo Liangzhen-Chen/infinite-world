@@ -9,6 +9,10 @@
 //  migration          簇 3：重建 tests/npc-life-migration.test.mjs 的默认夹具（fixture()+hungry()，迁居者 npc_hw_xuling），输出窗口、交集与没有成交的原因
 //  sales-s5-w4-wood   簇 4：运行 tests/s5-w4-economy.test.mjs 原夹具，对关注物品（默认 item_wood）每次可售量检查输出 stock-check（见 woodStock 注释：各持有行 stock/retained/committed/upkeep/available 与扣成 0 的项）
 //  migration 另输出 migration-serve / migration-serve-shop：每个客流时刻对迁居者逐步重放 walkIns 与 serve（是否入顾客名单、wants、预算、钱、店里库存与可售量、逐数量报价、决策与拒绝原因；字段见 migrationServe 注释）
+//  trade-windows-7 / trade-windows-8   ec1b-trade-windows #7/#8：原测试文件整份运行，客流每个结算时刻对 A/D/E 逐步重放（tw7-serve / tw8-serve 与 -shop 行：选客条件、tripped、wants、预算、可售、逐数量报价、决策与拒绝原因）+ 账本转移 + pool-topup
+//  w2-s2-pre-buy      w2-s2：w2s2-mentor（导师蜂蜜/面包/木柴的物理库存、可售量各项、各持有行）、w2s2-buyer（买蜜的邻居：户、缺口、蜂蜜 wants）、sale（谁几点买几份）、pool-topup
+//  assert-<文件>      s5-04 m1 law s5-f-tender s3-finance finance-assets m3-acceptance m3-language s5-w4 food-habit npc-life-migration npc-life-t164 quest-sources household-labor：
+//                     assert-fail（fn、actual、expected、message、at、recentLedger、poolTopups、recentStock=持有/留存/承诺/报价摘要）与 assert-summary
 // 复用方式：簇 1、2 直接 import 对应测试文件（node:test 在普通进程里 import 后照常运行测试，测试自己的夹具原样使用，不复制）；
 // 簇 3 的夹具在测试文件内部没有导出，按 tests/npc-life-migration.test.mjs:21-59 与 :95-103 逐行重建（出处写在下面）。
 // 输出行都带 type：start / sale / ledger / finance-fail / finance-summary / migration-windows / migration-reasons / migration-buys / error。
@@ -127,10 +131,12 @@ async function migration(){
 // 再对同聚落每家店给 shops[].steps：tripped（本店当日已评估）、keeperHome（本户）、reach（往返步行 vs customerReachMinutes）、
 // 逐件货 items[]：shelf（是否在货架）、service（到店服务时刻与顾客段/店窗口是否装得下）、want（quantity、severity）、budget（cash、floor、cap、tripCost）、
 // available（店里可售量：stock、retained、committed、upkeep、available，物理库存 physical）、quotes（逐个数量：totalCoins、是否≤cap、option.feasible、深度拒绝）、decision（outcome、reason）、result（stop 的步骤）。
-function migrationServe(mover){
- return (d,engine,t)=>{
-  const day=Math.floor(t/DAY);if(day<10||day>11)return;
-  const B=globalThis.__DIAG_BIZ__??{},row={type:'migration-serve',t,day,minuteOfDay:t%DAY};
+// opts：days（含两端的日范围，默认 10–11）、actors（逐个重放的人物，默认只有 mover）、accept(d)（按草稿筛哪一次夹具才输出）、type（输出行类型，店行为 `${type}-shop`）。
+function migrationServe(mover,opts={}){
+ const {days=[10,11],actors=[mover],accept=()=>true,type='migration-serve'}=opts;
+ const one=(d,engine,t,mover)=>{
+  const day=Math.floor(t/DAY);
+  const B=globalThis.__DIAG_BIZ__??{},row={type,t,day,minuteOfDay:t%DAY,actor:mover};
   try{
    if(!B.openShops||!B.walkIns||!B.wants){out({...row,step:'hook-unavailable',have:Object.keys(B)});return;}
    const state=d.get('state'),npc=state.npcs[mover],seed=d.get('randomSeed');
@@ -157,7 +163,7 @@ function migrationServe(mover){
     const keeperHome=shop.kind==='resident'?new Set(B.personHousehold(engine,state,shop.keeper).value?.members??[]):null;
     const outbound=B.walkMinutes(engine,me.slot.location,shop.location,Math.max(t,0),seed,routes);
     sh.steps.push({keeperIsMover:shop.keeper===mover,tripped,keeperHome:Boolean(keeperHome?.has(mover)),sameSettlement:me.settlement===shop.settlement,outboundMinutes:outbound.minutes,reach});
-    if(shop.keeper===mover||tripped||keeperHome?.has(mover)||me.settlement!==shop.settlement||outbound.minutes>reach){sh.result='skipped-before-shelf';out({...row,type:'migration-serve-shop',...sh});continue;}
+    if(shop.keeper===mover||tripped||keeperHome?.has(mover)||me.settlement!==shop.settlement||outbound.minutes>reach){sh.result='skipped-before-shelf';out({...row,type:`${type}-shop`,...sh});continue;}
     const inbound=B.walkMinutes(engine,shop.location,me.slot.location,t+outbound.minutes,seed,routes),travelCoins=outbound.coins+inbound.coins;
     const shelf=B.shelfOf(d,engine,shop);sh.shelf=shelf;
     for(const item of shelf){
@@ -198,10 +204,94 @@ function migrationServe(mover){
      sh.items.push(it);if(decision.outcome==='defer')break;
     }
     sh.result=sh.items.some(i=>i.result==='would-buy')?'would-buy':'no-purchase';
-    out({...row,type:'migration-serve-shop',...sh});
+    out({...row,type:`${type}-shop`,...sh});
    }
   }catch(error){out({...row,type:'error',where:'migrationServe',message:String(error?.stack??error)});}
  };
+ return (d,engine,t)=>{
+  const day=Math.floor(t/DAY);if(day<days[0]||day>days[1]||!accept(d))return;
+  for(const a of actors)one(d,engine,t,a);
+ };
+}
+
+// 户池补足记录（只读回调，globalThis.__DIAG_POOL__ 由 ec1-diag-hooks 装在扣前补足钩子里）：每次钩子真的转了钱就输出 pool-topup（payer、amount、writer、eventId、minute、topped）。
+function installPool(){globalThis.__DIAG_POOL__=info=>{try{out({type:'pool-topup',...info});}catch(error){out({type:'error',where:'pool-hook',message:String(error?.message??error)});}};}
+
+// ec1b-trade-windows #7 / #8：原测试文件整份运行（夹具原样），客流每个结算时刻对顾客逐步重放（选客 walkIns 各条件、tripped、wants、预算、可售、逐数量报价、决策与拒绝原因，字段同 migration-serve）。
+// 用 accept 按夹具区分：#7 只有徐凌（D）一位晚起者（没有陈白 E）；#8 有 E 且 D 只有 1 铜。另输出这两个夹具里与 A/D/E/店主林穗有关的账本转移与 pool-topup。
+async function tradeWindows(label,accept){
+ const A='npc_hw_luowei',D='npc_hw_xuling',E='npc_hw_chenbai',seller='npc_hw_linsui';
+ installPool();globalThis.__LEDGER_TRACE__=tracer([A,D,E,seller]);
+ globalThis.__DIAG_FLOW__=migrationServe(null,{days:[0,0],actors:[A,D,E],accept:d=>accept(d,{A,D,E}),type:label});
+ await import(new URL('../tests/ec1b-trade-windows.test.mjs',import.meta.url));
+}
+
+// w2-s2 重放到购买之前：原测试文件整份运行。每个客流结算时刻，若导师（npc_bs_078_1）的店开着，输出 w2s2-mentor：导师蜂蜜/面包/木柴的 物理库存、可售量各项（stock、retained、committed、upkeep、available）、
+// 户内各持有行（household-budget.householdResources：stock/food/seed/committed/inUse/upkeep/retained/available）；再对同聚落每位有资格上门的居民输出 w2s2-buyer：
+// 户、procurementShortfall（饱腹/水分）、对蜂蜜的 wants（quantity、severity）。谁、几点买了几份蜜见同时输出的 sale 行（eventId 带店、分钟、买家、物品）。
+async function w2s2PreBuy(){
+ const hb=await import('../server-plugin/household-budget.mjs'),{personHousehold}=await import('../server-plugin/entity-view.mjs');
+ const mentor='npc_bs_078_1',items=['item_honey','item_bread','item_wood'];let last='';
+ installPool();globalThis.__LEDGER_TRACE__=tracer([mentor]);
+ globalThis.__DIAG_FLOW__=(d,engine,t)=>{
+  try{
+   const B=globalThis.__DIAG_BIZ__??{},state=d.get('state');
+   if(!B.openShops||!state.npcs?.[mentor])return;
+   const shops=B.openShops(d,engine,t).filter(s=>s.keeper===mentor);if(!shops.length)return;
+   const res=hb.householdResources(d,engine,mentor),rows=items.map(item=>{
+    const s=B.saleableStock(d,engine,mentor,item,{business:false});
+    return {item,physical:engine.quantity(d,mentor,item),saleable:{stock:s.stock,retained:s.retained,committed:s.committed,upkeep:s.upkeep,available:s.available},
+     holdings:res.rows.filter(r=>r.item===item).map(r=>({holder:r.holder,stock:r.stock,food:r.food,seed:r.seed,committed:r.committed,inUse:r.inUse,upkeep:r.upkeep??0,retained:r.retained,available:r.available}))};
+   });
+   const mine=JSON.stringify(rows);if(mine!==last){last=mine;out({type:'w2s2-mentor',t,day:Math.floor(t/DAY),minuteOfDay:t%DAY,household:personHousehold(engine,state,mentor).value?.id??null,members:res.members,rows});}
+   const gaps=new Map();
+   for(const r of B.walkIns(d,engine,t)){
+    if(r.id===mentor||r.settlement!==shops[0].settlement)continue;
+    const projected={...d.document,state:{...state,minute:t}},read={document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
+    const b=B.householdBudget(read,engine,r.id),w=B.wants(d,engine,r.id,'item_honey',gaps,t,shops[0],read);
+    out({type:'w2s2-buyer',t,buyer:r.id,household:personHousehold(engine,state,r.id).value?.id??null,coins:state.npcs[r.id]?.coins,
+     shortfall:{satiety:Number(b.resources.procurementShortfall.satiety),hydration:Number(b.resources.procurementShortfall.hydration)},honeyWant:{quantity:w.quantity,severity:w.severity}});
+   }
+  }catch(error){out({type:'error',where:'w2s2PreBuy',message:String(error?.stack??error)});}
+ };
+ await import(new URL('../tests/w2-s2.test.mjs',import.meta.url));
+}
+
+// 数值型失败断言取证（s5-04、m1、law、s5-f-tender、s3-finance、finance-assets、m3-*、s5-w4、food-habit、npc-life-*、quest-sources、household-labor）：
+// 原测试文件整份运行；把 node:assert/strict 的 equal/strictEqual/deepEqual/deepStrictEqual/notEqual/ok/match 在内存里包一层，失败时先输出 assert-fail 再原样抛出（不吞、不改结果）：
+//  fn、actual（实际值）、expected（期望值）、message、at（调用栈里的测试文件行）、
+//  recentLedger（失败前最近 40 笔账本转移：from、to、amount、writer、eventId）、poolTopups（失败前累计的户池补足笔数与最近 8 笔）、
+//  recentStock（失败前最近 6 次可售量检查：卖方、买家、物品、数量、可售量各项、该户各持有行 stock/retained/committed/upkeep/available、报价摘要——即持有、留存、承诺、价格因子的来源分解）。
+async function assertCapture(file){
+ const assertModule=(await import('node:assert/strict')).default,hb=await import('../server-plugin/household-budget.mjs');
+ const ledger=[],stocks=[],pool=[];let fails=0;
+ const clip=(v,n=900)=>{try{const s=JSON.stringify(v);return s&&s.length>n?`${s.slice(0,n)}…(${s.length})`:v;}catch{return String(v);}};
+ globalThis.__LEDGER_TRACE__={push(e){ledger.push({from:e.from,to:e.to,amount:e.amount,writer:e.writer,eventId:e.eventId});if(ledger.length>40)ledger.shift();}};
+ globalThis.__DIAG_POOL__=info=>{pool.push(info);};
+ globalThis.__DIAG_STOCK__=({d,engine,quote,stock})=>{
+  try{
+   const res=hb.householdResources(d,engine,quote.seller);
+   stocks.push({minute:d.get('state','minute'),seller:quote.seller,buyer:quote.buyer,item:quote.item,quantity:quote.quantity,side:quote.side,saleable:{stock:stock.stock,retained:stock.retained,committed:stock.committed,upkeep:stock.upkeep,available:stock.available},
+    holdings:res.rows.filter(r=>r.item===quote.item).map(r=>({holder:r.holder,stock:r.stock,retained:r.retained,committed:r.committed,upkeep:r.upkeep??0,available:r.available})),quote:clip(quote,700)});
+   if(stocks.length>6)stocks.shift();
+  }catch(error){stocks.push({error:String(error?.message??error)});}
+ };
+ for(const fn of ['equal','strictEqual','deepEqual','deepStrictEqual','notEqual','ok','match']){
+  const original=assertModule[fn];if(typeof original!=='function')continue;
+  assertModule[fn]=function(...args){
+   try{return original.apply(this,args);}
+   catch(error){
+    fails++;
+    const at=String(error?.stack??'').split('\n').filter(l=>l.includes('/tests/')).slice(0,3).map(l=>l.trim());
+    const [actual,expected,message]=fn==='ok'?[args[0],true,args[1]]:args;
+    out({type:'assert-fail',file,seq:fails,fn,actual:clip(actual),expected:clip(expected),message:typeof message==='string'?message:(message?.message??null),at,
+     recentLedger:ledger.slice(),poolTopups:{count:pool.length,last:pool.slice(-8)},recentStock:stocks.slice()});
+    throw error;
+   }
+  };
+ }
+ process.on('exit',()=>out({type:'assert-summary',file,failures:fails,poolTopups:pool.length}));
+ await import(new URL(`../tests/${file}`,import.meta.url));
 }
 
 // 簇 4：s5-w4 #1 在 market.mjs:355 报“对方库存不足：扣除自用和已承诺存量后不够出售”（木材）。钩子在可售量读出后回调（globalThis.__DIAG_STOCK__），
@@ -234,7 +324,24 @@ const cases={
  'sales-s5-w4':()=>runTests('s5-w4-economy.test.mjs',(watchArg??'npc_hw_linsui,npc_hw_taozhi,npc_hw_duanyan').split(',')),
  'finance-a3-domain':()=>financeHook('a3-domain-properties.test.mjs'),
  'finance-daily-b2':()=>financeHook('daily-b2-mechanisms.test.mjs'),
- 'migration':migration
+ 'migration':migration,
+ 'trade-windows-7':()=>tradeWindows('tw7-serve',(d,{D,E})=>Boolean(d.get('state','npcs',D))&&!d.get('state','npcs',E)&&d.get('state','npcs',D,'coins')>1),
+ 'trade-windows-8':()=>tradeWindows('tw8-serve',(d,{D,E})=>Boolean(d.get('state','npcs',E))&&d.get('state','npcs',D,'coins')===1),
+ 'w2-s2-pre-buy':w2s2PreBuy,
+ 'assert-s5-04':()=>assertCapture('s5-04.test.mjs'),
+ 'assert-m1':()=>assertCapture('m1-repair-learning-preconditions.test.mjs'),
+ 'assert-law':()=>assertCapture('law.test.mjs'),
+ 'assert-s5-f-tender':()=>assertCapture('s5-f-tender.test.mjs'),
+ 'assert-s3-finance':()=>assertCapture('s3-finance-scenarios.test.mjs'),
+ 'assert-finance-assets':()=>assertCapture('finance-assets.test.mjs'),
+ 'assert-m3-acceptance':()=>assertCapture('m3-acceptance.test.mjs'),
+ 'assert-m3-language':()=>assertCapture('m3-language.test.mjs'),
+ 'assert-s5-w4':()=>assertCapture('s5-w4-economy.test.mjs'),
+ 'assert-food-habit':()=>assertCapture('food-habit.test.mjs'),
+ 'assert-npc-life-migration':()=>assertCapture('npc-life-migration.test.mjs'),
+ 'assert-npc-life-t164':()=>assertCapture('npc-life-t164.test.mjs'),
+ 'assert-quest-sources':()=>assertCapture('quest-sources.test.mjs'),
+ 'assert-household-labor':()=>assertCapture('s5-law-household-labor.test.mjs')
 };
 out({type:'start',case:caseName,known:Object.keys(cases)});
 if(!cases[caseName]){out({type:'error',message:`未知情形 ${caseName}`});process.exitCode=1;}
