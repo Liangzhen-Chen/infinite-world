@@ -153,8 +153,9 @@ if(want('F')){
   const prepared=applyIntentSetup(engine,doc0,{facts:[{path:['state','npcs',host,'inventory','item_bread'],value:8}]}),doc=prepared.document;
   const mismatches=[];probePriceReads(r=>{if(r.open&&r.legacy!==r.ledger&&mismatches.length<40)mismatches.push({point:r.point,legacy:r.legacy,ledger:r.ledger});});
   const args={tool:'world_trade',args:{seller:host,item:'item_bread',quantity:3},eventId:'buy'};
-  const ledgerOut=await engine.reduce(doc,args);
-  setPriceReadMode('legacy');let legacyOut;try{legacyOut=await engine.reduce(doc,args);}finally{setPriceReadMode('ledger');}
+  // 每次运行用文档的独立副本：同一份文档连跑会因原地改动（如开账）互相影响，混淆读法差异与跨次差异。
+  const ledgerOut=await engine.reduce(structuredClone(doc),args);
+  setPriceReadMode('legacy');let legacyOut;try{legacyOut=await engine.reduce(structuredClone(doc),args);}finally{setPriceReadMode('ledger');}
   probePriceReads(null);
   out.setupUnmet=prepared.setupUnmet;out.mismatchedReads=mismatches;out.patchCounts={ledger:ledgerOut.patches.length,legacy:legacyOut.patches.length};
   const cut=x=>{const s=JSON.stringify(x);return s&&s.length>400?`${s.slice(0,400)}…`:s;};
@@ -165,8 +166,8 @@ if(want('F')){
   }
   out.resultEqual=JSON.stringify(ledgerOut.result)===JSON.stringify(legacyOut.result);
   // 同模式重跑：判断差异来自读法（账户 vs 旧字段）还是来自引擎内跨次运行的缓存/顺序（同一模式跑两次就不同 = 缓存泄漏）。
-  const ledgerAgain=await engine.reduce(doc,args);
-  setPriceReadMode('legacy');let legacyAgain;try{legacyAgain=await engine.reduce(doc,args);}finally{setPriceReadMode('ledger');}
+  const ledgerAgain=await engine.reduce(structuredClone(doc),args);
+  setPriceReadMode('legacy');let legacyAgain;try{legacyAgain=await engine.reduce(structuredClone(doc),args);}finally{setPriceReadMode('ledger');}
   const same=(a,b)=>JSON.stringify(a.patches)===JSON.stringify(b.patches);
   out.stability={ledgerTwiceSame:same(ledgerOut,ledgerAgain),legacyTwiceSame:same(legacyOut,legacyAgain),ledgerVsLegacyAgainSame:same(ledgerOut,legacyAgain),legacyFirstVsAgainSame:same(legacyOut,legacyAgain)};
   const taskIds=o=>o.patches.filter(p=>p.path?.[1]==='records'&&String(p.path[2]).startsWith('market_trip:labor:')).map(p=>p.path[2]);
