@@ -154,6 +154,8 @@ export async function runRevision(cfg,args=process.argv.slice(2)){
   const baseline=validateWorld(world),candidate=validateWorld(applyCandidate(world,entries));
   const added=candidate.errors.filter(e=>!baseline.errors.includes(e)),removed=baseline.errors.filter(e=>!candidate.errors.includes(e));
   assert.deepEqual(added,[],'候选新增 L1 错误');
+  // 可选的更严判定（批次卡片配置 requireCleanCandidate）：候选后的世界必须没有任何 L1 错误，不能只看“没有新增”。
+  if(cfg.requireCleanCandidate)assert.deepEqual(candidate.errors,[],'候选后的世界仍有 L1 错误');
   for(const file of new Set(entries.map(e=>e.file)))editJSONText(await fs.readFile(file,'utf8'),entries.filter(e=>e.file===file));
   await fs.mkdir(root,{recursive:true});
   const rates=approval?null:new DeepSeekClient().rates;

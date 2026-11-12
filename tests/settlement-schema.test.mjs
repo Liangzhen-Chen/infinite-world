@@ -16,7 +16,8 @@ test('完整经济形态：没有 food 合法；带 food（手填初粮已退役
   assert.equal(validate(row), true, JSON.stringify(validate.errors));
   row.details.economy.publicStock.food = 1;
   assert.equal(validate(row), false);
-  assert.ok(validate.errors.some(e => e.keyword === 'additionalProperties' && e.params.additionalProperty === 'food') || validate.errors.length > 0);
+  // 精确：有一条错误是 publicStock 不允许额外字段 food。
+  assert.ok(validate.errors.some(e => e.keyword === 'additionalProperties' && e.params.additionalProperty === 'food' && e.instancePath.endsWith('/economy/publicStock')), JSON.stringify(validate.errors));
   const noSeed = base();
   delete noSeed.details.economy.publicStock.seed;
   assert.equal(validate(noSeed), false);

@@ -45,7 +45,9 @@ export async function buildEntries(world){
 let frozen;
 try{frozen=JSON.parse(await fs.readFile(`${root}/candidate.json`,'utf8'));assert.equal(frozen.revision,revision);}catch(error){if(error.code!=='ENOENT')throw error;}
 export const frozenEntries=()=>frozen?.entries;
-export const run=(args=process.argv.slice(2))=>runRevision({revision,root,CARD,limitYuan:LIMIT_YUAN,maxRequests:MAX_REQUESTS,frozen,buildEntries,draftFor,contextFor,validateDraft,applyCandidate,isPublished,
+// requireCleanCandidate：L1 要求候选后的世界错误数为 0，不只是“没有新增”。原因：发布前基线世界仍登记着旧 food，而 schema 已不允许该字段，
+// 所以 baselineErrors 不为 0（旧 food 本来就报 schema 错）；只看 addedErrors=0 会放过候选里残留的同类错误，必须要求 candidateErrors=0。
+export const run=(args=process.argv.slice(2))=>runRevision({revision,root,CARD,limitYuan:LIMIT_YUAN,maxRequests:MAX_REQUESTS,requireCleanCandidate:true,frozen,buildEntries,draftFor,contextFor,validateDraft,applyCandidate,isPublished,
  note:'INITFOOD：村级公共仓旧初粮登记整条删除（读者改读运行时推导），单卡硬上限 0.3 元、40 次（李白批准；到上限自动停，不得续跑）。'},args);
 // 审批未齐（尚未 --prepare/--review/--publish，缺冻结候选或审批回执）时 --verify 以明确原因和退出码 2 结束（reportApprovalIncomplete），不以崩溃形式出现。
 const verifyOnly=args=>args.includes('--verify')&&!args.includes('--publish')&&!args.includes('--review')&&!args.includes('--prepare');
