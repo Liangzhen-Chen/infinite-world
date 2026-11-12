@@ -15,6 +15,7 @@ import {npcPlanFingerprint} from '../server-plugin/npc-autonomy.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
 import {handOatsScarcity,handSatiety,handFuelPrice} from './helpers/hand-targets.mjs';
+import {localSpare} from '../server-plugin/distribution.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const host='npc_hw_linsui',bread='item_bread',inn='bld_hw_qingdeng';
@@ -174,37 +175,41 @@ test('retention and signed procurement commitments are subtracted once; goods cl
  const business=saleableStock(f.read(),f.engine,host,bread,{business:true});
  // Authored household house_hw_01 has Lin Sui and A Yan. The unrelated
  // second bag is empty. Body light satiety 2.5/h *24h *1day *2 people
- // =120. K02: current cash funds50 after the real daily delivery1440;
- // physical70/30 rounds up to3. Twelve-3-(4-1)=6; one promise count.
- assert.equal(business.stock,12);assert.equal(business.retained,3);assert.equal(business.committed,3);assert.equal(business.available,6);
- // 待重推（持有量口径）：供给改计店主全部库存（不先扣自用留存），下面公开供给 6、卖 6 件被深度闸拒绝的期望随之变化（店主 available 6 → 12），未改值。
+ // =120。面包饱腹按配方推导（handSatiety，约 16，不再是 30），留存 = ceil(120 ÷ 饱腹)。
+ // 现金抵扣（K02）要有可指望的来源：店主自己的货架下一次本地补货要向本聚落其他户进货（shop.mjs:382 的 localSpare ≥ 1，distribution.mjs:56-58），
+ // 而别户每户的留存 ceil(60 ÷ 饱腹) = 4 份，手上只有 4 份，没有可出让的余量，来源为空，所以现金不抵扣（household-budget.mjs:334、411）。
+ // 留存 = ceil(120 ÷ 饱腹)；可售 = 12 − 留存 − 承诺 3（承诺 4 份已履行 1 份，未付 3 份）。
+ const satBread=handSatiety(f.engine,bread),retainedBread=Math.ceil(2*60/satBread);
+ assert.equal(localSpare(f.read(),f.engine,{settlement:'loc_hw',item:bread,buyer:host}),0,'前置：本聚落别户没有面包余量可出让，现金无来源可抵扣');
+ assert.equal(business.stock,12);assert.equal(business.retained,retainedBread);assert.equal(business.committed,3);assert.equal(business.available,12-retainedBread-3);
+ // 持有量口径：供给改计店主全部库存（不先扣自用留存），公开供给行里店主的可售存量 = 全部 12 件。
  const personal=saleableStock(f.read(),f.engine,host,bread);
- assert.equal(personal.retained,3);assert.equal(personal.available,6);
- const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===6));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available*r.unit,0));
+ assert.equal(personal.retained,retainedBread);assert.equal(personal.available,12-retainedBread-3);
+ const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===12));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available*r.unit,0));
  const before=structuredClone(f.document);
- // Public supply6 still has maxShare*.3 below retailFloor5; quantity6
- // is rejected by the existing depth gate before any physical transfer.
- await assert.rejects(f.act({seller:host,item:bread,quantity:6},'household-cannot-sell-promises'),/市场今天没有那么多可成交深度/);
+ // 可售量只有 12 − 留存 − 承诺，卖 6 件超过可售量，被库存闸拒绝，物理转移之前就回滚。
+ await assert.rejects(f.act({seller:host,item:bread,quantity:6},'household-cannot-sell-promises'),/库存不足/);
  assert.deepEqual(f.document,before,'retained or promised food cannot fund a partial transaction');
  // Split bags allocate the four-meal baseline once, not twice. It now sits
  // in A Yan's bag: Lin Sui's cash cannot release another holder's reserve
  // before an actual food/money transfer.
  const split=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','npcs',host,'inventory',bread],value:6},{path:['state','npcs','npc_hw_ayan','inventory'],value:{[bread]:6}}]});assert.deepEqual(split.setupUnmet,[]);f.replace(split.document);
  const pair=[host,'npc_hw_ayan'].map(id=>saleableStock(f.read(),f.engine,id,bread,{business:true}));
- assert.equal(pair.reduce((n,r)=>n+r.retained,0),4);assert.equal(pair.reduce((n,r)=>n+r.available,0),5);
+ assert.equal(pair.reduce((n,r)=>n+r.retained,0),retainedBread);assert.equal(pair.reduce((n,r)=>n+r.available,0),12-retainedBread-3);
  // 同一两人家户仍保留4份、承诺3份：分到无经营身份成员的行囊不进入市场供给，
  // 但家户的消费/承诺需求不能随分袋方式消失（15 §15.2，有效需求与可售存量分列）。
  const splitSupply=marketSupply(f.read(),f.engine,bread,inn);
  assert.ok(splitSupply.rows.every(r=>r.owner!=='npc_hw_ayan'));
  assert.equal(splitSupply.demand,supply.demand);
  // Registered body:drain multiplier2 doubles each member's 60/day need:
- // 2 people *120 /30 =8 in the physical-only baseline. A Yan holds6;
- // Lin Sui can fund his own2 at delivery, leaving6 physical and3 saleable.
+ // 留存 = ceil(2 人 × 120 ÷ 饱腹) = ceil(240 ÷ 16) = 15 份，超过两个行囊合计的 12 份：留存封顶于持有量 12（全部留作口粮），
+ // 可售 = max(0, 12 − 12 − 承诺 3) = 0；没有现金来源可抵扣（同上），物理基线与带现金口径相同。
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'household-needs',pack:'market',target:'body:drain',stage:'mul',value:2}]}};
  const corrected=new WorldEngine(w),adjusted=[host,'npc_hw_ayan'].map(id=>saleableStock(f.read(),corrected,id,bread));
- assert.equal(adjusted.reduce((n,r)=>n+r.retained,0),6);assert.equal(adjusted.reduce((n,r)=>n+r.available,0),3);
+ const doubled=Math.min(12,Math.ceil(2*120/satBread));
+ assert.equal(adjusted.reduce((n,r)=>n+r.retained,0),doubled);assert.equal(adjusted.reduce((n,r)=>n+r.available,0),Math.max(0,12-doubled-3));
  const physical=householdResources(f.read(),corrected,host,{marketSubstitution:false});
- assert.equal(physical.rows.reduce((n,r)=>n+r.retained,0),8);assert.equal(physical.rows.reduce((n,r)=>n+r.available,0),1);
+ assert.equal(physical.rows.reduce((n,r)=>n+r.retained,0),doubled);assert.equal(physical.rows.reduce((n,r)=>n+r.available,0),Math.max(0,12-doubled-3));
 });
 
 test('native NPC autonomous purchase pays the independent market anchor and records real depth without a quote cache',async()=>{
