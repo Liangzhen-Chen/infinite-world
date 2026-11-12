@@ -633,7 +633,10 @@ export const householdCash=(d,engine,owner)=>objectiveCash(d,engine,d.get('state
 // 户池也不够就什么都不动，由原行为拒绝。玩家、团体、组织、遗产、柜台等非 NPC 钱袋账户不补；户池补足自己的转账（writer household-pool）不再递归补。
 // 补足量只等于缺口，所以调用点已经 topUpNpc/payFromNpc 过的，这里缺口为 0，幂等。
 registerPreDebit((d,{from,fromAccount:a,amount,writer,eventId})=>{
- if(!d.engine||writer==='household-pool'||a.resource!==COIN||a.purpose!=='purse'||a.owner==='player'||!d.get('state','npcs',a.owner))return;
- if((d.get('ledger','accounts',from)??0)>=amount||householdCash(d,d.engine,a.owner)<amount)return;
+ if(!d.engine||writer==='household-pool'||a.resource!==COIN||a.purpose!=='purse'||a.owner==='player')return;
+ // 热路径（每笔 NPC 钱袋扣款）只读判断用 peek：d.get 会让草稿把 state/ledger 对象标为已暴露，后续写入被迫整块复制；只有真缺口才走下面的 get 读取与转账。
+ const look=(...p)=>typeof d.peek==='function'?d.peek(...p):d.get(...p);
+ if(!look('state','npcs',a.owner))return;
+ if((look('ledger','accounts',from)??0)>=amount||householdCash(d,d.engine,a.owner)<amount)return;
  householdPoolTopUp(d,d.engine,a.owner,amount,`debit:${writer}:${eventId??'none'}:${a.owner}`);
 });

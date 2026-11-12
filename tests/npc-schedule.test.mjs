@@ -8,6 +8,8 @@ import {WorldEngine}from'../server-plugin/engine.mjs';
 import {applyPatches,CampaignStorage}from'../server-plugin/storage.mjs';
 import {scheduleAt,nextNpcService,validateNpcSchedules}from'../server-plugin/npc-schedule.mjs';
 import {validateWorld}from'../tools/validate-world.mjs';
+import {personHousehold}from'../server-plugin/entity-view.mjs';
+import {householdCash}from'../server-plugin/household-budget.mjs';
 import {planWorldUpgrade}from'../server-plugin/world-upgrade.mjs';
 const legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const teacher='npc_hw_luqing',merchant='npc_hw_linsui';
@@ -102,7 +104,10 @@ test('路费在出发时只收一次；封路和缺钱不会瞬移',async()=>{
     const route=engine.route(school,home,'walk',1020,document.randomSeed);
     const arrived=await run(first.document,'world_time',{minutes:route.minutes});
     assert.equal(arrived.document.state.npcs[teacher].coins,coins-3);
+    // EC-1a 共用钱袋：路费不足按户池判（本人钱袋不够，同户成员钱袋够就由户池补足出发）。所以“缺钱”要整户都付不起：把同户其他成员的钱袋清零，再用前置断言确认户池合计低于路费。
+    for(const id of personHousehold(engine,document.state,teacher).value?.members??[])if(id!==teacher&&document.state.npcs[id])document.state.npcs[id].coins=0;
     document.state.npcs[teacher].coins=2;
+    assert.ok(householdCash(engine.primitiveDraft(document),engine,teacher)<world.routes[0].toll,'前置：户池合计也付不起路费，才是真正缺钱');
     const poor=await run(document,'world_time',{minutes:20});assert.equal(poor.document.state.npcs[teacher].location,school);
     assert.match(poor.document.state.npcs[teacher].activity,/路费不足/);
     world.routes[0].closedSeasons=[0];

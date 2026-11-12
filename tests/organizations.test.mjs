@@ -8,7 +8,7 @@ import {standing,transmitStanding,collectivesOf,TRANSMISSION}from'../server-plug
 import {organization,organizationsOf,advanceOrganizations,DUES_PERIOD,EXPEL_ARREARS}from'../server-plugin/organizations.mjs';
 import {advanceRegistry}from'../server-plugin/advance-registry.mjs';
 import {toolDefinitions,resolveToolCall}from'../extension/tools.mjs';
-import {escrow as escrowAccount}from'../server-plugin/money.mjs';
+import {escrow as escrowAccount,purse as purseAccount}from'../server-plugin/money.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const A='npc_hw_linsui',B='npc_hw_ayan';
@@ -58,9 +58,16 @@ test('玩家代付入会费和首期会费仍须NPC本人同意；通过入账�
     }
     // Real waiting reaches the existing proposal lapse; no synthetic close or refund.
     const lapseAt=Math.ceil((invited.state.minute+7*1440)/1440)*1440;
-    const lapsed=await s.run(invited,'world_time',{minutes:lapseAt-invited.state.minute},'funded-lapse');
+    // 七天真实推进里世界照常运转（A 是店主，客流成交会让他的钱袋有进出），所以 A 的钱不能再断言恒为 100：
+    // 改按账本流水精确核对——A 钱袋的净变动恰等于流水里进出 A 钱袋的合计，且退款（托管账户 → 钱袋）一分都没有进 A 的钱袋（退款归真实付款人玩家）。
+    const trace=globalThis.__LEDGER_TRACE__=[];let lapsed;
+    try{lapsed=await s.run(invited,'world_time',{minutes:lapseAt-invited.state.minute},'funded-lapse');}finally{delete globalThis.__LEDGER_TRACE__;}
+    const purseA=purseAccount(s.engine,A),net=trace.reduce((n,t)=>n+(t.to===purseA?t.amount:0)-(t.from===purseA?t.amount:0),0);
     assert.equal(lapsed.document.state.records[proposal].status,'搁置');
-    assert.equal(lapsed.document.state.player.coins,500);assert.equal(lapsed.document.state.npcs[A].coins,100);
+    assert.equal(trace.filter(t=>t.from===escrow&&t.to===purseA).length,0,'逾期退款不进 NPC 钱袋');
+    assert.ok(trace.some(t=>t.from===escrow&&t.to===purseAccount(s.engine,'player')&&t.amount===23),'23 的托管退给真实付款人玩家');
+    assert.equal(lapsed.document.state.npcs[A].coins,100+net,'A 的钱 = 100 + 账本流水里进出 A 钱袋的净额');
+    assert.equal(lapsed.document.state.player.coins,500);
     assert.equal(lapsed.document.ledger.accounts[escrow]??0,0);
 });
 
