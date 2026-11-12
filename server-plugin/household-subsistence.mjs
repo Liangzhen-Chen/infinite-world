@@ -108,6 +108,14 @@ function readUpkeepWants(e,state,owner,members,minute){
 // 本户成员的空闲工时共同限定，所以没有来源、没有空闲劳力的户得 0，全额走市场。只读：不写状态，结果按状态版本记忆。
 const upkeepSelfSupplyMemo=Symbol('household upkeep self supply');
 const noMeal={shortfall:{satiety:0},needs:{hydration:0}};
+// 规划读到的状态切片（不含物品/钱账本与价格：成交只动账本，不使自给失效）：人与户（npcs、family、created、player）、
+// 日程与雇佣与官职与节庆等记录、约定（obligations）、地点与路网（buildings、settlements、effects、remote）、
+// 采集来源（forest、site、household_forage 等记录）、时钟（minute，林木按钟点推演）。
+// npcs 只取位置、状态、日程/出行、成员标记、年龄成长等规划读到的字段，不含 inventory、coins（成交只改这两处）。
+const selfSupplyNpcFields=['location','status','caring','levy','cognitionTravel','scheduleTravel','materialized','routine','schedule','life','growth','residence','workplace','occupation','vocation','species','medical','activity','autonomy','zone','boss','incarnation','birth','born','age','home','attributes','skills','proficiencies','certifications','relationships','level'];
+const selfSupplyInputs=[...selfSupplyNpcFields.map(f=>['npcs','*',f]),['family'],['created'],['player'],['obligations'],['buildings'],['settlements'],['effects'],['remote'],['minute'],
+ {path:['records'],kinds:['workshop','asset_lease']},
+ {path:['records'],categories:['forest','forest_supply','household_forage','site','site_presence','site_discovery','site_observation','gather_session','authorization','water_cycle','physical_feature','facility_region','war_disruption','market_trip','service_appointment','service_ticket','project_assignment','transition','private_farm','governance_office','organization','housing_steward','legal_dismissal','festival','legal_detention','legal_custody','legal_case','legal_wanted','title','notable','office_salary','world_event']}];
 export function upkeepSelfSupply(e,state,owner){
  return stateMemo(state,e,[upkeepSelfSupplyMemo,owner,Math.floor(state.minute/DAY)],()=>{
   const plan=householdSubsistencePlan(e,state,owner,state.minute,state,noMeal,null,{
@@ -117,7 +125,7 @@ export function upkeepSelfSupply(e,state,owner){
   const out={};
   for(const trip of plan?.upkeepTrips??[])out[trip.cls]=(out[trip.cls]??0)+trip.units*trip.unitGrams;
   return out;
- });
+ },selfSupplyInputs);
 }
 registerUpkeepSelfSupply(upkeepSelfSupply);
 // The engine route resolver owns weather, closed roads, local rooms and tolls.
