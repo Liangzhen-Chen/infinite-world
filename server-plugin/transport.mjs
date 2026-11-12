@@ -28,7 +28,6 @@ import {publishTransitionEvent} from './world-events.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings,holdingsView,ensureHoldings,setLocation} from './holdings.mjs';
 import {derived} from './derived.mjs';
-import {selfSupplyDays} from './supply-interval.mjs';
 import {refundContractEscrow} from './contracts.mjs';
 import {marketQuote} from './market.mjs';
 import {partyDeterrence} from './deterrence.mjs';
@@ -221,30 +220,45 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='
 }
 // 一件货从产地运到某聚落的单位运费：产地 = 物品目录的 origin（建筑换算成所在聚落），按挑夫背货的运价（porterCharges 同一口径：
 // 路程 × 计费重量 × carrier:pack 费率）加沿途路线通行费；不含到岸关税（关税要按货值报价，会回到 marketQuote 形成循环）。
-// 无 origin、产地不在任何聚落、产地就在本聚落时记 0。路线开闭（封路）只影响货能不能到，由实际供给反映，不进运输因子：
-// 这里按一年里各月能走通的路线取最便宜的一条，即"路线开放时的正常成本"；一年里都走不通（地理不连通）就直接报错，不记 0、不给默认值（暴露数据问题）。
-// 结果与时刻无关，同一世界数据对象内按 (物品, 目的聚落) 记忆。
+// 无 origin、产地不在任何聚落、产地或能自产的聚落就是本聚落时记 0。路线开闭（封路）只影响货能不能到，由实际供给反映，不进运输因子：
+// 这里按一年里各月能走通的路线取最便宜的一条，即"路线开放时的正常成本"；供给源 = 产地 + 所有能自产的聚落，取可达源的最小值；
+// 没有任何可达供给源返回 null（该物品不能经陆路运入此聚落）。路线运费按 (物品, 源, 目的) 记忆，自产判断每次读活状态。
 const unitFreightMemo=new WeakMap();
 export function unitFreight(d,e,{item,to,minute=d.get('state','minute')}){
  const def=e.byId.get(item),origin=def?.origin;
  if(!origin||!to||!(def.weight>=0))return 0;
- // 自产粮聚落（不在农事表、按统计产粮 foodPerDay>0）的粮供给源就是它自己，不经任何路线从产地运来：与 supply-interval.selfSupplyDays 同一条
- // （"是否自产只看聚落自身，与有没有路无关"；市场 stockSupply 对它也只读本地粮仓）。这取决于活状态（foodPerDay），所以先于按世界记忆的运费判断。
- if(item===e.rules.economy?.shops?.stockItems?.food&&selfSupplyDays(e,d.get('state'),to)!==null)return 0;
- const memo=unitFreightMemo.get(e.world)??new Map();unitFreightMemo.set(e.world,memo);
- const key=`${item}|${to}`;if(memo.has(key))return memo.get(key);
  const s=d.get('state'),from=placeSettlement(e,s,origin).value;
- let cost=0;
- if(from&&from!==to){
-  const billableKg=Math.max(def.weight,(def.volumeM3??def.weight/250)*250,1),costs=[];
-  for(let month=0;month<12;month++){
-   let route=null;
-   try{route=e.route(from,to,'walk',month*30*1440,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
-   if(route)costs.push(route.edges.map(id=>e.world.routes.find(r=>r.id===id)).reduce((n,r)=>n+r.lengthKm*billableKg*specOf(e,'pack').rate,0)+(route.cost??0));
-  }
-  if(!costs.length)throw Error(`物品 ${item} 的产地 ${from} 到 ${to} 地理上不连通，无法推出运费`);
-  cost=Math.min(...costs);
+ // 供给源 = 产地聚落 + 所有能自产该物品的聚落（含目的聚落自己）；自产是活状态（日产量、农事档案），在 memo 之外判断。目的聚落自己能产或就是产地：0。
+ if(!from||from===to||producesItem(e,s,to,item))return 0;
+ const sources=new Set([from]);
+ for(const id of Object.keys(s.settlements??{}))if(id!==to&&producesItem(e,s,id,item))sources.add(id);
+ // 取所有可达供给源里最便宜的一条；一个可达源都没有 = 该物品不能经陆路运入此聚落：返回 null（不报错、不给默认值、不夹取）。
+ // 调用方（settlement-trade.regionalTradeBase）据此不计运输因子，价格由本地供需稀缺度决定（market.mjs 稀缺度 demand/max(1,supply) 按 priceFactorLimits.region 夹取）。
+ let best=null;
+ for(const src of sources){const c=sourceFreight(d,e,def,src,to);if(c!==null&&(best===null||c<best))best=c;}
+ return best;
+}
+// 某聚落能否自产某物品，从既有产出数据推：聚落库存货品（rules.economy.shops.stockItems：粮木石铁）的日产量
+// （粮 = 农事档案 rules.agriculture.settlements 或统计产粮 foodPerDay>0，同 supply-interval.selfSupplyDays 与 advance-registry.mjs:400；
+// 木石铁 = state.settlements.<id>.<库存名>PerDay>0，同 advance-registry.mjs:405 woodPerDay）。不按物品名、物品类别列名单；
+// 没有日产量记录的货（手艺品等）除目录产地外没有可推出的自产聚落。
+function producesItem(e,state,place,item){
+ const stock=Object.entries(e.rules.economy?.shops?.stockItems??{}).find(([,id])=>id===item)?.[0];
+ const s=state.settlements?.[place];if(!stock||!s)return false;
+ if(stock==='food'&&e.rules.agriculture?.settlements?.some(p=>p.settlement===place))return true;
+ return s[`${stock}PerDay`]>0;
+}
+// 单个供给源到目的聚落的单位运费（与活状态无关，只读路线与费率）：一年各月走得通的路线里最便宜的一条；一年里都走不通返回 null。同一世界数据对象内按 (物品, 源, 目的) 记忆。
+function sourceFreight(d,e,def,from,to){
+ const memo=unitFreightMemo.get(e.world)??new Map();unitFreightMemo.set(e.world,memo);
+ const key=`${def.id}|${from}|${to}`;if(memo.has(key))return memo.get(key);
+ const billableKg=Math.max(def.weight,(def.volumeM3??def.weight/250)*250,1),costs=[];
+ for(let month=0;month<12;month++){
+  let route=null;
+  try{route=e.route(from,to,'walk',month*30*1440,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
+  if(route)costs.push(route.edges.map(id=>e.world.routes.find(r=>r.id===id)).reduce((n,r)=>n+r.lengthKm*billableKg*specOf(e,'pack').rate,0)+(route.cost??0));
  }
+ const cost=costs.length?Math.min(...costs):null;
  memo.set(key,cost);return cost;
 }
 // F010：模拟范围外的来货（店铺外路补货）不再免费入库——按挑夫背货的运价（balance/transport.json carrier:pack）、沿途关口通行费与进口关税，

@@ -17,7 +17,9 @@ const settlements=[...new Set(engine.world.items.map(i=>originOf(i.id)).filter(B
 const minute=doc.state.minute;
 // 取一件非燕麦、有产地聚落、有重量的货，和一个与产地不同、本季走得通的聚落。
 const reach=(from,to)=>{try{return engine.route(from,to,'walk',minute,read.get('randomSeed'));}catch(error){if(error.message.startsWith('没有当前季节'))return null;throw error;}};
-const pick=engine.world.items.find(i=>i.id!=='item_oats'&&i.weight>=0&&originOf(i.id)&&settlements.some(s=>s!==originOf(i.id)&&reach(originOf(i.id),s)));
+// 前置：库存货品（粮木石铁，rules.economy.shops.stockItems）有聚落日产量，供给源不止产地（取可达源最小值）；本文件的手推只覆盖"唯一供给源 = 目录产地"的货。
+const stockGoods=new Set(Object.values(engine.rules.economy.shops.stockItems));
+const pick=engine.world.items.find(i=>!stockGoods.has(i.id)&&i.weight>=0&&originOf(i.id)&&settlements.some(s=>s!==originOf(i.id)&&reach(originOf(i.id),s)));
 const far=settlements.find(s=>s!==originOf(pick.id)&&reach(originOf(pick.id),s));
 
 test('产地聚落本地运费为 0；无 origin 的货运费为 0',()=>{
@@ -37,10 +39,26 @@ test('远方聚落单位运费 = Σ(路段公里 × 计费重量 × 挑夫费率
 });
 
 test('整类适用：不止燕麦，任一有产地的货对远方聚落都有运费，且规则里不再有 distanceFactorPerKm',()=>{
- const others=engine.world.items.filter(i=>i.id!=='item_oats'&&i.weight>=0&&originOf(i.id)&&originOf(i.id)!==far&&reach(originOf(i.id),far));
+ const others=engine.world.items.filter(i=>!stockGoods.has(i.id)&&i.weight>=0&&originOf(i.id)&&originOf(i.id)!==far&&reach(originOf(i.id),far));
  assert.ok(others.length>=2);
  for(const i of others)assert.ok(unitFreight(read,engine,{item:i.id,to:far})>0,i.id);
  assert.equal(engine.rules.settlementTrade.distanceFactorPerKm,undefined);
+});
+
+test('供给源 = 产地 + 能自产的聚落：目的聚落自产为 0；没有任何可达供给源返回 null（不报错、不夹取）',()=>{
+ // 夹具：一个没有路的孤立聚落（路网里没有它的路线），状态里给它一份聚落账；日产量为 0 时它不自产任何库存货。
+ const w=structuredClone(world);w.locations.push({id:'loc_iso_test',name:'孤村',parent:null,coordinates:[0,10],terrain:'平地'});
+ const e=new WorldEngine(w),iso=e.createCharacter(legacy,{},'unit-freight-iso'),r=documentReader(iso);
+ iso.state.settlements.loc_iso_test={name:'孤村',population:10,food:0,foodPerDay:0,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0};
+ assert.ok(!e.world.routes.some(x=>x.from==='loc_iso_test'||x.to==='loc_iso_test'),'前置：孤村没有路线');
+ const originIn=id=>{const o=e.byId.get(id).origin;return o?placeSettlement(e,iso.state,o).value:null;};
+ const stocks=Object.entries(e.rules.economy.shops.stockItems).filter(([,id])=>e.byId.get(id).weight>=0&&originIn(id)&&originIn(id)!=='loc_iso_test');
+ assert.ok(stocks.length>0,'前置：存在有产地的库存货');
+ const [stock,id]=stocks.find(([name])=>name!=='food')??stocks[0];
+ assert.equal(unitFreight(r,e,{item:id,to:'loc_iso_test'}),null,'孤村不自产、产地到不了：不能经陆路运入');
+ assert.equal(unitFreight(r,e,{item:pick.id,to:'loc_iso_test'}),null);
+ iso.state.settlements.loc_iso_test[`${stock}PerDay`]=5;
+ assert.equal(unitFreight(documentReader(iso),e,{item:id,to:'loc_iso_test'}),0,'孤村有该库存货的日产量：自产，运费 0');
 });
 
 test('封路季与通路季的运输因子相同：封路只影响货能不能到（供给），不进运费',()=>{

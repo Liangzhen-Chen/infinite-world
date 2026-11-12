@@ -92,7 +92,9 @@ export function regionalTradeBase(d,engine,item,location,minute=d.get('state','m
  const base=engine.byId.get(item).basePrice,place=placeSettlement(engine,d.get('state'),location).value;
  const environment=hazardPriceFactor(engine,d.get('state'),item,location,minute)*magicPriceFactor(engine,d.get('state'),item,location)*forestWaterPriceFactor(engine,d.get('state'),item,location,d);
  // 运输因子 = 1 + 产地到本聚落的单位运费 ÷ 目录基准价（transport.unitFreight，对所有物品、所有聚落同一口径），按 priceFactorLimits.transport 夹取。
- const transport=base>0?clamp(1+unitFreight(d,engine,{item,to:place,minute})/base,...engine.rules.economy.priceFactorLimits.transport):1;
+ // 不能经陆路运入此聚落（unitFreight 返回 null：没有任何可达供给源）时没有运费可计，因子取中性 1；价格由本地供需稀缺度定（market.mjs:391）。
+ const freight=unitFreight(d,engine,{item,to:place,minute});
+ const transport=base>0&&freight!==null?clamp(1+freight/base,...engine.rules.economy.priceFactorLimits.transport):1;
  return base*environment*transport;
 }
 function spareWorkers(state,engine,sid){
