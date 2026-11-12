@@ -27,7 +27,8 @@ const elapse=(f,to)=>f.act({minutes:to-f.doc.state.minute},`elapse_${to}`,'world
 const profit=f=>{const d=f.draft(),n=operatingProfit(d,f.e,host);d.done();return n;};
 
 test('抵押角色按整批清算估值，小额保留零售价值，私人持货不成为公共供给',()=>{
-    const f=fixture(),d=f.draft(),snapshot=JSON.stringify(f.doc);
+    // 本用例的手算锚点（需求 24 = 各户自家面包留存）只在没有聚落公粮时成立：有公粮，登记户的饱腹需求由公粮覆盖，留存为 0，需求只剩货架上限 14（EC-1a 已批准）。
+    const f=fixture({publicRation:false}),d=f.draft(),snapshot=JSON.stringify(f.doc);
     const asset={item:'item_bread',location:post,holder:'player'},supply=supplyApart(d,f.e,{...asset,owner:'player'});
     // R1（t-sat，饱腹改由推导：面包 30→16）后各户面包留存约翻倍：探针 tools/probe-rules-a.mjs fa 读到同类食物需求 24（旧 18）、供给 20，稀缺度 24/20=1.2。
     assert.deepEqual([supply.supply,supply.demand],[20,24]);

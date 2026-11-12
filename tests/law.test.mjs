@@ -24,7 +24,9 @@ async function setup(){
     const world=withLawRules(await loadWorld());
     // These procedure fixtures explicitly place the participants at interviews
     // and hearings. Their routine travel is tested separately below.
-    for(const npc of world.npcs)if([victim,guard,judge,'npc_hw_hezhou'].includes(npc.id)){delete npc.schedule;delete npc.tier;}
+    // 受理案件的案头官员 npc_bs_035_1 与上面几位一样是程序夹具里“被明确摆放”的参与者（filed 每次把他放回案头），他的日常作息同样不在本测试范围：
+    // EC-1b 起他的作息里清醒的空闲段会在店窗口起点（659）上门买奶酪（成交与 market_trip 在账本里可见），等待期间他合法地在路上，officeScene 的“在场且清醒”前置就读到在途。
+    for(const npc of world.npcs)if([victim,guard,judge,'npc_hw_hezhou','npc_bs_035_1'].includes(npc.id)){delete npc.schedule;delete npc.tier;}
     const engine=new WorldEngine(world);let document=engine.initialFromLegacy(seed,'law-test');
     document=officeScene(engine,document,{location:'bld_bs_watch',minute:600,present:['npc_bs_035_1']});
     document.state.location='bld_hw_qingdeng';document.state.npcs[victim].inventory.item_bread=4;

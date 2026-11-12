@@ -24,7 +24,10 @@
 //   migration-reasons：对每个流时刻或无流时刻的情形给出 noWindow / noMoney / noNeed / slotNotShopping 及依据（coins、status、slot、procurementShortfall）；migration-buys：推进到首夜后账本上迁居者的食物购买。
 import {register} from 'node:module';
 
-register('./ec1-diag-hooks.mjs',import.meta.url);
+// 关注人参数（第 4 个参数，逗号分隔）里的 only:<正则> 项 = 只运行名字匹配该正则的测试（竖线分隔多个片段），不进关注人列表；见 ec1-diag-hooks.mjs。
+const onlyArg=(process.argv[4]??'').split(',').find(x=>x.startsWith('only:'))?.slice(5)||null;
+const watchList=()=>(process.argv[4]??'').split(',').filter(x=>x&&!x.startsWith('only:'));
+register('./ec1-diag-hooks.mjs',import.meta.url,{data:{only:onlyArg,keepTrace:process.argv[2]==='migration-turnip'}});
 const [caseName,watchArg]=process.argv.slice(2);
 const out=o=>console.log(JSON.stringify(o));
 const DAY=1440;
@@ -324,11 +327,21 @@ async function breadDemandRows(){
  const {fixture,post}=await import('../tests/helpers/finance.mjs');
  const {marketSupply,supplyApart}=await import('../server-plugin/market.mjs');
  const {personHousehold}=await import('../server-plugin/entity-view.mjs');
- const f=fixture(),d=f.draft(),state=d.get('state');
- const apart=supplyApart(d,f.e,{item:'item_bread',location:post,holder:'player',owner:'player'}),ms=marketSupply(d,f.e,'item_bread',post);
- const owners=[...new Set((ms.rows??[]).map(r=>r.owner))];
- out({type:'bread-demand',apart:{supply:apart.supply,demand:apart.demand},market:ms,
-  households:Object.fromEntries(owners.map(o=>{const h=o==='player'?null:personHousehold(f.e,state,o).value;return [o,h?{id:h.id,members:h.members,shared:h.shared}:null];}))});
+ const hb=await import('../server-plugin/household-budget.mjs');
+ // 两次：公粮开着（夹具原样）与 loc_hw 的 granary=false（只影响配给）。每次输出供需与 loc_hw 每个持有人（玩家与居民）自己那一行的面包 stock/retained/upkeep/committed，
+ // 看哪几位的留存随公粮关闭回到旧值（旧：玩家3+申杜4+阿衍8+陈柏4+顾岑5=24）。
+ for(const granary of [true,false]){
+  const f=fixture();if(!granary)f.doc.state.settlements.loc_hw.granary=false;
+  const d=f.draft(),state=d.get('state');
+  const apart=supplyApart(d,f.e,{item:'item_bread',location:post,holder:'player',owner:'player'}),ms=marketSupply(d,f.e,'item_bread',post);
+  const owners=[...new Set((ms.rows??[]).map(r=>r.owner))];
+  const perHolder=Object.fromEntries(['player',...Object.keys(state.npcs)].map(id=>{
+   const res=hb.householdResources(d,f.e,id),row=res.rows.find(r=>r.holder===id&&r.item==='item_bread');
+   return [id,{household:id==='player'?null:personHousehold(f.e,state,id).value?.id??null,shortfall:{satiety:Number(res.procurementShortfall.satiety)},row:row?{stock:row.stock,food:row.food,retained:row.retained,upkeep:row.upkeep??0,committed:row.committed,available:row.available}:null}];
+  }));
+  out({type:'bread-demand',granary,apart:{supply:apart.supply,demand:apart.demand},market:ms,perHolder,
+   households:Object.fromEntries(owners.map(o=>{const h=o==='player'?null:personHousehold(f.e,state,o).value;return [o,h?{id:h.id,members:h.members,shared:h.shared}:null];}))});
+ }
 }
 
 // F048 木材转售报价（只读）：复演 s5-w4-economy F048 的三次收购（5、5、1，单价 2），每一步之后输出店主转售 5 份的引擎报价：
@@ -372,14 +385,41 @@ async function foodAudit(){
  out({type:'food-audit-summary',households:rows.length,withShortfall,withPurchases});
 }
 
+async function quoteTrace(file,items){
+ const {marketSupply}=await import('../server-plugin/market.mjs');
+ const watch=new Set(items);let n=0;
+ globalThis.__DIAG_STOCK__=({d,engine,quote,stock})=>{
+  try{
+   if(!watch.has(quote.item))return;
+   const e=quote.explanation??{},ms=marketSupply(d,engine,quote.item,quote.location);
+   out({type:'quote',seq:++n,minute:d.get('state','minute'),seller:quote.seller,buyer:quote.buyer,item:quote.item,quantity:quote.quantity,side:quote.side,location:quote.location,
+    listPrice:quote.listPrice,totalCoins:quote.totalCoins,supply:quote.supply,spotSupply:quote.spotSupply,demand:quote.demand,opening:quote.opening,retail:quote.retail,
+    explain:{scarcity:e.scarcity,depth:e.depth,spread:e.spread,relation:e.relation,base:e.base},saleable:{stock:stock.stock,retained:stock.retained,upkeep:stock.upkeep,committed:stock.committed,available:stock.available},
+    market:{supply:ms.supply,spotSupply:ms.spotSupply,demand:ms.demand,rows:ms.rows}});
+  }catch(error){out({type:'error',where:'quoteTrace',message:String(error?.stack??error)});}
+ };
+ process.on('exit',()=>out({type:'quote-summary',file,quotes:n,note:n?'':'没有捕获到报价检查：钩子未装上（market.mjs 该行已变）或本次未触发'}));
+ await import(new URL(`../tests/${file}`,import.meta.url));
+}
+
 const cases={
  'wood-quote':woodQuote,
  'food-habit-audit':foodAudit,
  // 任意测试文件的客流成交流水：第二个参数 = tests 下文件名，第三个参数 = 逗号分隔的关注人（账本行含其一即输出 ledger 行）。输出全部 customer 成交（sale：时刻、店、买卖双方、户、物品、金额、writer）。
  // 用于 npc-autonomy #1、npc-life-t164 #7、quest-sources #5、s5-09 #10/#11、s5-04 #16、law #5（关注 npc_bs_035_1：看其路费/户池垫付）等“钱/人/记录与期望不同或缺失”的项。
- 'sales-of':()=>runTests(watchArg,(process.argv[4]??'').split(',').filter(Boolean)),
+ 'sales-of':()=>runTests(watchArg,watchList()),
+ // 市场报价取证：第二个参数 = tests 下文件名，第三个参数 = 逗号分隔的物品编号（默认 item_bread），可含 only:<正则>。每次对这些物品的可售量/深度检查输出 quote 行：
+ // 时刻、卖方、买方、物品、数量、买卖方向、地点、listPrice、totalCoins、supply、spotSupply、demand、opening、retail、scarcity/depth/spread/relation/base（报价解释），以及该地点的 marketSupply（supply、demand、各行 owner/stock/retained/upkeep/committed/available）。
+ // 用于“价格/成交额差 1、深度上限变了”类失败：m3-acceptance（面包）、s5-f-tender、s5-w4 F026 等，用来按供需比手算期望。
+ 'quotes-of':()=>quoteTrace(watchArg,watchList().length?watchList():['item_bread']),
  // npc-life-migration #3：迁居者出发后到抵达时 item_turnip 从库存消失；输出该人与 item_turnip 的全部账本行（writer、sink、eventId、时刻由 eventId 读出），看是户内共灶的饭（household-meal）还是别的去向。
  'migration-inventory':()=>runTests('npc-life-migration.test.mjs',(watchArg??'npc_hw_xuling,item_turnip').split(',')),
+ // npc-life-migration #3（出发快照里的 item_turnip 到抵达时没了）：全程账本（含出发后到抵达），关注 xuling 与 item_turnip；ledger 行的 minute 由 eventId 读不出时看 seq 顺序与 eventId（household-meal:<日>:<户> 等）。
+ 'migration-turnip':async()=>{
+  const full=globalThis.__EC1_FULL_TRACE__=[],base=tracer(watchList().length?watchList():['npc_hw_xuling','item_turnip']);
+  globalThis.__LEDGER_TRACE__={push(entry){full.push(entry);base.push(entry);}};
+  await import(new URL('../tests/npc-life-migration.test.mjs',import.meta.url));
+ },
  'bread-demand-rows':breadDemandRows,
  'sales-s5-w4-wood':()=>woodStock('s5-w4-economy.test.mjs',(watchArg??'item_wood').split(',')),
  'sales-a1-lt':()=>runTests('a1-lt-scenarios.test.mjs',(watchArg??'npc_hw_duanyan').split(',')),

@@ -32,6 +32,8 @@ function tenderWorld(){
 function fixture(){
  const engine=new WorldEngine(tenderWorld()),initial=engine.createCharacter(seed,{},'s5f-tender');
  const prepared=applyIntentSetup(engine,initial,{minute:600,location:post,coins:3000,inventory:{}});assert.deepEqual(prepared.setupUnmet,[]);
+ // 本文件检验计价单位与冻结，不检验公粮：夹具聚落不设公共粮库（granary:false，引擎既有开关，只影响配给）。有公粮时登记户的饱腹由公粮覆盖（EC-1a 已批准），卖家自家面包留存为 0，可售量与单笔深度上限变大。
+ prepared.document.state.settlements.loc_hw.granary=false;
  const f={engine,document:prepared.document,
   async act(tool,args,id){const out=await engine.reduce(f.document,{tool,args,eventId:id});f.document=applyPatches(f.document,out.patches);return out.result;},
   trade:(args,id)=>f.act('world_trade',{seller:host,...args},id),

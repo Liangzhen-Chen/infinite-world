@@ -87,6 +87,10 @@ test('household purchase planning with habit is deterministic',()=>{
 });
 
 test('regression guard: poor households spend at most the rule-table share of their purchases on luxury sources (real seed world)',()=>{
- const e=new WorldEngine(world),doc=e.createCharacter(legacy,{},'food-habit-audit'),r=poorLuxuryShare(e,doc);
+ const e=new WorldEngine(world),doc=e.createCharacter(legacy,{},'food-habit-audit');
+ // 本守护检验的是“要自己掏钱买粮的贫户别把钱花在奢侈来源上”。EC-1a（已批准）起登记户先领聚落公粮、共用户内口粮池，真实种子世界 205 户里只有 3 户还有购买（其余饱腹缺口为 0），
+ // 守护因 total=0 成了空转。公粮由聚落 granary 开关控制（引擎既有开关，只影响配给）：这里关掉公粮，让采购缺口回到“全靠自家与市场”的口径，守护的规则与阈值不变。
+ for(const settlement of Object.values(doc.state.settlements))settlement.granary=false;
+ const r=poorLuxuryShare(e,doc);
  assert.ok(r.poor>0&&r.total>0&&r.ok,`luxury share ${r.share} of ${r.total} copper must be <= ${r.max}: ${JSON.stringify(r.byItem)}`);
 });

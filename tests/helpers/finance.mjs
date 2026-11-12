@@ -15,14 +15,16 @@ export function grantLoanConsent(engine,document,{lender,principal,days,eventId}
 }
 // separate：EC-1a 户内共用钱袋与口粮池、聚落公粮都进了预算采购口径；借款、赊账类用例假定“这个人自己没钱没粮”，
 // 所以要把 worker 从 host 的户里分出去（各自一户，钱与粮不再互通），并让聚落没有公共粮库（granary:false，引擎既有开关，只影响配给）。
-export function fixture({at=post,coins=3000,separate=false}={}){
+// publicRation:false 即聚落没有公共粮库（granary:false，引擎既有开关，只影响配给）。检验各户自家存粮留存、供需比与估值的用例用它：
+// 有公粮时登记户的饱腹需求由公粮覆盖（household-budget.mjs publicSatiety，EC-1a 已批准），自家面包留存为 0，同类食物需求只剩货架上限。
+export function fixture({at=post,coins=3000,separate=false,publicRation=true}={}){
     const w=structuredClone(world);
     if(separate){
         const home=w.households.find(h=>h.members.includes(worker));
         w.households=[...w.households.map(h=>({...h,members:h.members.filter(id=>id!==worker)})).filter(h=>h.members.length),{id:'house_fixture_worker',members:[worker],settlement:home?.settlement,homeLocation:home?.homeLocation,tenure:'独立家计'}];
     }
     const e=new WorldEngine(w);let doc=e.initialFromLegacy(seed,'finance');
-    if(separate)doc.state.settlements.loc_hw.granary=false;
+    if(separate||!publicRation)doc.state.settlements.loc_hw.granary=false;
     doc.state.minute=600;doc.state.location=at;doc.state.player.coins=coins;
     doc.state.inventory={item_bread:{quantity:100},item_wood:{quantity:100},item_oats:{quantity:100}};
     const people=[clerk,host,worker,'npc_hw_chenbai','npc_hw_gucen'];

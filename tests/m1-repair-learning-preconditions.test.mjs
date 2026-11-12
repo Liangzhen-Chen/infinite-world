@@ -167,7 +167,10 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     const lawful={
         customer_flow:(id,row)=>id===`customer_flow:${row.shop}:${row.day}:${row.minute-row.day*1440}`&&inWindow(row.minute),
         market_trip:(id,row)=>id.startsWith('market_trip:')&&id.endsWith(`:${row.actor}`)&&inWindow(row.departAt),
-        finance_profit:(id,row)=>id===`finance_profit:${row.issuer}`&&(row.entries??[]).every(entry=>inWindow(entry.minute))
+        finance_profit:(id,row)=>id===`finance_profit:${row.issuer}`&&(row.entries??[]).every(entry=>inWindow(entry.minute)),
+        // 同一笔零售成交（market-seller.settleSale）还写这两类：成交记录 market-trade:<成交事件>（market.mjs recordMarketDeal，minute=成交时刻）与商税记录 trade_tax:<成交事件>:commercial（finance-tax.mjs assessTradeTax，卖方应税时才有）。事件号都是客流的 customer:<店>:<时刻>:<买家>:<物品>，时刻落在等待区间内。
+        market_trade:(id,row)=>id===`market-trade:${row.eventId}`&&row.eventId.startsWith('customer:')&&inWindow(row.minute),
+        trade_tax:(id,row)=>id===`trade_tax:${row.sourceEvent}:commercial`&&row.sourceEvent.startsWith('customer:')&&inWindow(row.minute)
     };
     const beforeIds=Object.keys(waited.before.state.records).filter(id=>!schooling(id)),afterRecords=waited.after.state.records;
     const added=Object.keys(afterRecords).filter(id=>!schooling(id)&&!(id in waited.before.state.records));

@@ -28,7 +28,8 @@ test('E12-2: 一年十二期仅在真实期点尝试；远方不扣款，失败�
 });
 
 test('E18/E3: 规范工资债与旧投影只减一次股值，到期债权先于股东分红',async()=>{
-    const f=fixture();
+    // 下面的手算锚点（需求 24、48 = 各户自家面包留存）只在没有聚落公粮时成立；有公粮时需求只剩货架上限 14（EC-1a 已批准，见 finance-assets 同名前提）。
+    const f=fixture({publicRation:false});
     const equity=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'equity');
     f.doc.state.records[`finance_profit:${host}`]={category:'finance_profit',issuer:host,net:1000};
     const at=f.doc.state.records[equity.contract].nextDividend;

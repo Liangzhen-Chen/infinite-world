@@ -227,8 +227,9 @@ test('保留工资的身份种子固定，决定噪声可重放；更高外部�
 });
 
 test('求职预算不窥读家属钱袋、雇主私库；包食承诺与实际履行分开',()=>{
- // 本人无粮：家属暗藏10000份仍缺食；包食2份按承诺计值，实库存留待结算检查。
- const f=setup({duties:false,commute:0}),house=f.w.households.find(h=>h.members.includes(worker));house.members=[worker,clerk];
+ // 本人无粮：别户的人（clerk 另有自己的户）与雇主（host）暗藏10000份仍缺食；包食2份按承诺计值，实库存留待结算检查。
+ // EC-1a（已批准）起同一登记户共灶、共用钱袋与口粮池，同户成员的包裹与钱袋本来就并入这一户的预算（下一条专测），所以“不窥读”只对别户成立：worker 自成一户。
+ const f=setup({duties:false,commute:0}),house=f.w.households.find(h=>h.members.includes(worker));house.members=[worker];
  f.doc.state.npcs[worker].inventory={};f.doc.state.npcs[clerk].inventory={};
  const args={wage:80,outsideWage:100,meals:[{item:'item_ration',quantity:2}],employer:host};
  const before=householdLaborBudget(f.draft(),f.e,worker,args);
@@ -236,6 +237,18 @@ test('求职预算不窥读家属钱袋、雇主私库；包食承诺与实际�
  f.doc.state.npcs[host].inventory={item_ration:{quantity:10000}};
  const after=householdLaborBudget(f.draft(),f.e,worker,args);
  assert.equal(before.foodMissing,true);assert.deepEqual(after,before);assert.equal(after.food[0].quantity,2);
+});
+
+test('同户共灶成员的包裹并入求职预算：同户成员有粮则不缺食，包食承诺不再按缺口计值',()=>{
+ // EC-1a：同一登记户（worker 与 clerk）共用口粮池。clerk 的 10000 份口粮属于这一户，worker 的采购缺口为 0，
+ // 包食计值的份数 = min(承诺份数, ceil(缺口 ÷ 单份营养))，缺口为 0 即 0 份（householdLaborBudget 的 food 只按缺口分配）。
+ const f=setup({duties:false,commute:0}),house=f.w.households.find(h=>h.members.includes(worker));house.members=[worker,clerk];
+ f.doc.state.npcs[worker].inventory={};f.doc.state.npcs[clerk].inventory={};
+ const args={wage:80,outsideWage:100,meals:[{item:'item_ration',quantity:2}],employer:host};
+ const before=householdLaborBudget(f.draft(),f.e,worker,args);
+ f.doc.state.npcs[clerk].inventory={item_ration:{quantity:10000}};
+ const after=householdLaborBudget(f.draft(),f.e,worker,args);
+ assert.equal(before.foodMissing,true);assert.equal(after.foodMissing,false);assert.deepEqual(after.food,[]);assert.equal(after.foodValue,0);
 });
 
 test('mine commute: 已实做的采矿不能因返家后才结算而丢失工资与产出',()=>{
