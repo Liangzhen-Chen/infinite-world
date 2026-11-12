@@ -14,7 +14,7 @@ import {netAssets} from '../server-plugin/finance-assets.mjs';
 import {npcPlanFingerprint} from '../server-plugin/npc-autonomy.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
-import {handOatsScarcity} from './helpers/hand-targets.mjs';
+import {handOatsScarcity,handSatiety} from './helpers/hand-targets.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const host='npc_hw_linsui',bread='item_bread',inn='bld_hw_qingdeng';
@@ -54,9 +54,11 @@ test('current stock net assets share market value and S5-01 corrections, not his
  assert.ok(ratio>floor&&ratio<cap,'前置：稀缺度在夹取区间内，价随供需连续变化');
  const near=(a,b)=>Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(b));
  assert.ok(near(netAssets(f.read(),f.engine,host),200+10*price));
- // Registered correction still changes current value: price + 1.
+ // Registered correction still changes current value: price + 1. 登记修正走定点算术（rx.mjs 的 FIXED_SCALE = 10000，单价精度 1e-4，向下取整），
+ // 所以带修正的单价 = floor((价 + 1) × 10000) ÷ 10000；10 份面包 = 10 × 该单价。
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'asset-value',pack:'market',target:'economy:value',stage:'add',value:1}]}};
- assert.ok(near(netAssets(f.read(),new WorldEngine(w),host),200+10*(price+1)));
+ const fixedUnit=Math.floor((price+1)*Number(FIXED_SCALE))/Number(FIXED_SCALE);
+ assert.ok(near(netAssets(f.read(),new WorldEngine(w),host),200+10*fixedUnit));
 });
 
 test('independent bulk anchor integrates the actual neutral supply curve',async()=>{
@@ -135,9 +137,19 @@ test('independent copper anchors: neutral, second/third purchase, next day, qual
 
 test('same-day purchases raise depth and conserve money and goods; no quote truth is saved',async()=>{
  const f=fixture(),before=structuredClone(f.document),first=quote(f);
+ // 食物池价按农事目标持有手推（见 #2）：价 = 基价 2 × 夹取(手推比值) × 深度 × 价差 1 × 关系。
+ // 第一笔前：无成交，深度 1，关系 1，价 = 2 × 夹取(比值)。第一笔后：深度 = 1 + 深度影响 × 净成交 ÷ 开盘存量，净成交 = 今日已卖 1 个面包 = 1（面包件数），
+ // 开盘存量 = max(1, 现供给 + 净成交)，现供给 = 手推持有（燕麦件数）折成面包件数；关系 = 既有的日内熟客因子 0.99895（#4 同一规则）。
+ // 大池里深度的增量（约 5e-6）远小于关系因子的降幅（约 1e-3），所以第二张报价的价比第一张略低，不是更高；深度本身严格上升。
+ const [floor,cap]=f.engine.rules.economy.priceFactorLimits.region,clampR=r=>Math.min(cap,Math.max(floor,r)),near=(a,b)=>Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(b));
+ const hand=state=>handOatsScarcity(f.engine,state,state.settlements.loc_hw.food),satBread=handSatiety(f.engine,bread),sat=handSatiety(f.engine,'item_oats');
+ assert.ok(near(first.listPrice,2*clampR(hand(f.document.state).ratio)),'第一张报价 = 2 × 夹取(手推比值)');
  const one=await f.act({seller:host,item:bread,quantity:1},'s502-first');
  assert.equal(one.result.ok,true);
- const second=quote(f);assert.ok(second.explanation.depth>first.explanation.depth);assert.ok(second.listPrice>first.listPrice);
+ const second=quote(f),h2=hand(f.document.state),S2=h2.held*sat/satBread;
+ assert.ok(second.explanation.depth>first.explanation.depth);
+ assert.ok(near(second.explanation.depth,1+f.engine.world.marketRules.depthImpact*1/Math.max(1,S2+1)),'深度 = 1 + 影响 × 净成交 1 ÷ 开盘存量');
+ assert.ok(near(second.listPrice,2*clampR(h2.ratio)*(1+f.engine.world.marketRules.depthImpact*1/Math.max(1,S2+1))*0.99895),'第二张报价 = 2 × 夹取(比值) × 深度 × 关系 0.99895');
  const two=await f.act({seller:host,item:bread,quantity:1},'s502-second');assert.equal(two.result.ok,true);
  assert.equal(f.document.state.player.coins,before.state.player.coins-one.result.cost-two.result.cost);
  const stock=document=>{const v=document.state.npcs[host].inventory[bread];return typeof v==='number'?v:v.quantity;};
@@ -253,7 +265,15 @@ test('explanation reproduces quote; native storage roundtrip rederives; next day
  await store.create({id:'market',worldVersion:world.version??'market',document:f.document});
  const saved=await new CampaignStorage(root,{reducer:reduce}).read('market');f.replace(saved.document);assert.deepEqual(quote(f),q);
  const next=await f.engine.reduce(f.document,{tool:'world_time',args:{minutes:1440},eventId:'s502-next-day'});f.replace(applyPatches(f.document,next.patches));
- assert.equal(quote(f).explanation.depth,1);assert.ok(quote(f).listPrice<q.listPrice);
+ // 次日只清掉昨日的成交压力（昨天那笔 day 不同，不再计入）；新的一天自己的成交（居民自主采买等，记在 market_trade 记录里）照常计入深度：
+ // depth = max(0, 1 + 深度影响 × 净成交 ÷ 开盘存量)，净成交 = Σ今日同池成交（卖 +、买 −）× 各自饱腹 ÷ 报价货饱腹，开盘存量 = max(1, 现供给 + 净成交)（面包件数）；
+ // 现供给折成面包件数 = 手推的持有（handOatsScarcity.held，燕麦件数）× 燕麦饱腹 ÷ 面包饱腹。全部读记录与规则数据手推。
+ const nowState=f.document.state,today=Math.floor(nowState.minute/1440),deals=Object.values(nowState.records).filter(r=>r.category==='market_trade'&&r.day===today&&r.place==='loc_hw'&&r.goods==='goods:food');
+ assert.ok(!deals.some(r=>r.day===today-1),'昨天的成交不计入今天');
+ const satBread=handSatiety(f.engine,bread),net=deals.reduce((n,r)=>n+(r.side==='sell'?r.quantity:-r.quantity)*handSatiety(f.engine,r.item)/satBread,0);
+ const heldBread=handOatsScarcity(f.engine,nowState,nowState.settlements.loc_hw.food).held*handSatiety(f.engine,'item_oats')/satBread;
+ const depthExpected=Math.max(0,1+f.engine.world.marketRules.depthImpact*net/Math.max(1,heldBread+net));
+ assert.ok(Math.abs(quote(f).explanation.depth-depthExpected)<=1e-9,`次日深度 ${quote(f).explanation.depth} = 手推 ${depthExpected}（今日净成交 ${net}）`);assert.ok(quote(f).listPrice<q.listPrice);
  const power=purchasingPower(f.read(),f.engine,inn,100);assert.ok(power.ppi>0);assert.equal(power.realValue,100/power.ppi);
 });
 
