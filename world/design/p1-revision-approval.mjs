@@ -8,6 +8,7 @@
 // edited. After publication this batch's review records are the receipt of
 // record for these fields.
 import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -169,18 +170,29 @@ export async function runRevision(cfg,args=process.argv.slice(2)){
  const entries=frozen?.entries??await cfg.buildEntries(world);
  if(args.includes('--prepare')){
   assert.ok(!frozen,'候选已冻结');
+  // 删除型条目记下被删键在原对象里紧跟其后的兄弟键（followedBy）：回执还原时键回到原位，指纹按键序序列化才对得上。
+  // 回执型批（receiptOnly）的条目自带 followedBy（取自被取代事实原来所在的数据），不在此推。
+  if(!cfg.receiptOnly)for(const e of entries){
+   if(!isRemove(e.after)||e.followedBy!==undefined)continue;
+   const parent=getPath(rowOf(world,e.file,e.target),e.path.slice(0,-1)),key=e.path.at(-1);
+   if(parent&&typeof parent==='object'&&Object.hasOwn(parent,key)){const keys=Object.keys(parent);e.followedBy=keys[keys.indexOf(key)+1]??null;}
+  }
+  let baseline={errors:[]},candidate={errors:[]},added=[],removed=[];
+  // receiptOnly：本批只登记“回执当时的上下文事实被取代”，不改任何正式文件（正式文件的改动已由被引用的修订批发布），没有正式世界的 L1 可比。
+  if(!cfg.receiptOnly){
   const {validateWorld}=await import('../../tools/validate-world.mjs');
-  const baseline=validateWorld(world),candidate=validateWorld(applyCandidate(world,entries));
-  const added=candidate.errors.filter(e=>!baseline.errors.includes(e)),removed=baseline.errors.filter(e=>!candidate.errors.includes(e));
+  baseline=validateWorld(world);candidate=validateWorld(applyCandidate(world,entries));
+  added=candidate.errors.filter(e=>!baseline.errors.includes(e));removed=baseline.errors.filter(e=>!candidate.errors.includes(e));
   assert.deepEqual(added,[],'候选新增 L1 错误');
   // 可选的更严判定（批次卡片配置 requireCleanCandidate）：候选后的世界必须没有任何 L1 错误，不能只看“没有新增”。
   if(cfg.requireCleanCandidate)assert.deepEqual(candidate.errors,[],'候选后的世界仍有 L1 错误');
   for(const file of new Set(entries.map(e=>e.file)))editJSONText(await fs.readFile(file,'utf8'),entries.filter(e=>e.file===file));
+  }
   await fs.mkdir(root,{recursive:true});
   const rates=approval?null:new DeepSeekClient().rates;
   const ceilings=approval?[]:entries.map(e=>{const r=reviewRequest(e,draftFor(e),contextFor(e));return (Buffer.byteLength(JSON.stringify({model:'deepseek-flash',stream:false,...r}))*rates.miss+r.max_tokens*rates.output)/1e6;});
   await fs.writeFile(`${root}/candidate.json`,JSON.stringify({revision,...(approval?{approval:{via:approval.via}}:{}),entries,drafts:entries.map(draftFor),contexts:entries.map(contextFor)},null,2)+'\n');
-  await fs.writeFile(`${root}/l1.json`,JSON.stringify({revision,entries:entries.length,addedErrors:added,removedErrors:removed,baselineErrors:baseline.errors.length,candidateErrors:candidate.errors.length,textEditsVerified:true,modelCalls:0,published:false},null,2)+'\n');
+  await fs.writeFile(`${root}/l1.json`,JSON.stringify({revision,entries:entries.length,addedErrors:added,removedErrors:removed,baselineErrors:baseline.errors.length,candidateErrors:candidate.errors.length,textEditsVerified:!cfg.receiptOnly,modelCalls:0,published:false},null,2)+'\n');
   if(!approval){
   await fs.writeFile(`${root}/cost-estimate.json`,JSON.stringify({rates,requests:entries.length,perRequestCeilingYuan:ceilings,firstPassCeilingYuan:ceilings.reduce((a,b)=>a+b,0),cardLimitYuan:cfg.limitYuan,modelCalls:0},null,2)+'\n');
   const budgetFile=`${root}/budget.json`;
@@ -203,12 +215,18 @@ export async function runRevision(cfg,args=process.argv.slice(2)){
   const approved=approval?(await approval.verify(entries,world),entries):await readApprovedContent(`${root}/review`,entries,{revision,contextFor});
   assert.equal(approved.length,entries.length);
   if(!approval)for(const e of entries)assert.deepEqual(approved.find(d=>d.id===e.id),draftFor(e));
+  if(cfg.receiptOnly){
+   // 只写回执：前提是被引用的正式改动已发布（isPublished 为真）；回执已存在则幂等返回，不覆盖。
+   assert.ok(isPublished(world,entries),'被引用的正式改动尚未发布，不能登记回执');
+   if(existsSync(`${root}/publication.json`)){console.log(JSON.stringify({published:true,verified:approved.length,modelCalls:0}));return;}
+  }else{
   if(isPublished(world,entries)){console.log(JSON.stringify({published:true,verified:approved.length,modelCalls:0}));return;}
   // Check every target before writing any file.
   const out=new Map();
   for(const file of new Set(entries.map(e=>e.file)))out.set(file,editJSONText(await fs.readFile(file,'utf8'),entries.filter(e=>e.file===file)));
   for(const [file,text] of out)await fs.writeFile(file,text);
-  await fs.writeFile(`${root}/publication.json`,JSON.stringify({revision,publishedAt:new Date().toISOString(),entries:entries.map(e=>({id:e.id,target:e.target,file:e.file,field:e.field,before:e.before,after:e.after,supersedes:e.supersedes})),receipt:approval?approval.receipt:`${root}/review`},null,2)+'\n');
+  }
+  await fs.writeFile(`${root}/publication.json`,JSON.stringify({revision,publishedAt:new Date().toISOString(),entries:entries.map(e=>({id:e.id,target:e.target,file:e.file,field:e.field,before:e.before,after:e.after,supersedes:e.supersedes,...(e.followedBy!==undefined?{followedBy:e.followedBy}:{})})),receipt:approval?approval.receipt:`${root}/review`},null,2)+'\n');
   console.log(JSON.stringify({published:approved.length}));
  }
  if(args.includes('--verify')){

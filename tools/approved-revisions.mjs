@@ -36,8 +36,15 @@ export function parsePublication(pub){
    if(m[2]!==e.target)bad(`取代声明的条目与修订目标不同：${s.receipt} / ${e.target}`);
    // 回执里的行形状可以比正式文件的行浅（如草稿回执没有 details 前缀）：取代声明的字段按回执自己的路径写，须是修订字段的整段后缀（或相同）。
    // parts 是回执一侧的路径（applySupersedes 在设计源/回执行上用），formalParts 是正式文件一侧的路径（revertSuperseded 在正式行上用）；各读者不必自己映射。
-   if(!(s.field===e.field||e.field.endsWith(`.${s.field}`)))bad(`取代声明的字段与修订字段不同：${s.field} / ${e.field}`);
-   out.push({revision:pub.revision,entryId:e.id,file:e.file,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),formalParts:parseFieldPath(e.field),before:e.before,after:e.after});
+   // scope:'context'：取代的是回执当时审查所用上下文（contextFor 的输出）里的事实，字段路径从上下文根起写，不是条目行的后缀；
+   // 这类声明只给“还原审批当时的上下文”用（readApprovedContextSupersedes / revertReceiptContext），不参与条目行的还原与应用。
+   if(s.scope!==undefined&&s.scope!=='entry'&&s.scope!=='context')bad(`取代声明的 scope 只能是 entry 或 context：${s.scope}`);
+   const scope=s.scope==='context'?'context':'entry';
+   if(scope==='entry'&&!(s.field===e.field||e.field.endsWith(`.${s.field}`)))bad(`取代声明的字段与修订字段不同：${s.field} / ${e.field}`);
+   // followedBy：被删键在审批当时的对象里紧跟其后的兄弟键名（null = 原是最后一个键）。还原时键回到原位，指纹按键序序列化才对得上；不写则追加在末尾。
+   const followedBy=s.followedBy!==undefined?s.followedBy:e.followedBy;
+   if(followedBy!==undefined&&followedBy!==null&&typeof followedBy!=='string')bad(`followedBy 须为键名或 null：${e.id}`);
+   out.push({revision:pub.revision,entryId:e.id,file:e.file,receiptFile:m[1],targetId:m[2],label:s.field,parts:parseFieldPath(s.field),formalParts:parseFieldPath(e.field),before:'before'in s?s.before:e.before,after:'after'in s?s.after:e.after,...(scope==='context'?{scope}:{}),...(followedBy!==undefined?{followedBy}:{})});
   }
  }
  return out;
@@ -66,6 +73,7 @@ export const APPROVAL_SOURCES={
  'w3-journey-text':()=>import('../world/design/w3-journey-text-revision.mjs'),
  'w3-trades-text':()=>import('../world/design/w3-trades-text-revision.mjs'),
  'w3-household-text':()=>import('../world/design/w3-household-text-revision.mjs'),
+ 'initfood-1':()=>import('../world/design/mktw-initialfood-approval.mjs'),
 };
 // 读取并核验已审批的修订回执。审批状态不是一个字段，而是回执目录的 L1/L2/L4 记录：
 // 用冻结候选逐条核对指纹、L2 无 hard、L4 已批，再核对 publication.json 与冻结候选逐字段相同。逐批核验，全部通过才返回。
@@ -88,21 +96,25 @@ export async function readApprovedBatch({root,pub}){
   assert.equal(approved.length,frozen.length,`修订回执未全批通过审批：${pub.revision}`);
   for(const e of frozen)assert.deepEqual(approved.find(d=>d.id===e.id),draftOf(e),`已审批正文与候选不符：${e.id}`);
  }
- const key=e=>hashContent({id:e.id,target:e.target,file:e.file,field:e.field,before:e.before,after:e.after,supersedes:e.supersedes});
+ const key=e=>hashContent({id:e.id,target:e.target,file:e.file,field:e.field,before:e.before,after:e.after,supersedes:e.supersedes,followedBy:e.followedBy});
  assert.deepEqual(pub.entries.map(key),frozen.map(key),`publication.json 与已审批候选不一致：${pub.revision}`);
  return supersedes;
 }
-export async function readApprovedSupersedes(draftsRoot=DRAFTS_ROOT){
+async function readAllApproved(draftsRoot){
  const batches=await listRevisionBatches(draftsRoot),out=[];
  for(const b of batches)out.push(...await readApprovedBatch(b));
  return out;
 }
+// 条目行一侧的取代声明（不含 scope:'context'）：现有读者（applySupersedes、revertSuperseded、classifySupersedes……）只看这些。
+export async function readApprovedSupersedes(draftsRoot=DRAFTS_ROOT){return (await readAllApproved(draftsRoot)).filter(s=>s.scope!=='context');}
+// 上下文一侧的取代声明：审批时审查所用上下文里的事实后来被已审批修订取代；读者用 revertReceiptContext 还原审批当时的上下文再比指纹。
+export async function readApprovedContextSupersedes(draftsRoot=DRAFTS_ROOT){return (await readAllApproved(draftsRoot)).filter(s=>s.scope==='context');}
 // 把设计源行（按 id 找）上被取代的值更新为已审批的修订值。rows 由调用者先克隆；返回实际更新的条目（供审计与语料哈希回退）。
 // 设计源值既不是回执的 before 也不是 after，说明设计源与回执对不上，报错而不是放过。
 export function applySupersedes(rows,receiptFile,supersedes){
  const applied=[];
  for(const s of supersedes){
-  if(s.receiptFile!==receiptFile)continue;
+  if(s.receiptFile!==receiptFile||s.scope==='context')continue;
   const row=rows.find(r=>r.id===s.targetId);if(!row)continue;
   const cur=getPath(row,s.parts);
   if(sameValue(cur,s.before)){setPath(row,s.parts,s.after);applied.push({id:s.targetId,field:s.label,parts:s.parts,before:s.before,after:s.after,receiptFile,revision:s.revision});}
@@ -121,10 +133,10 @@ export function applySupersedes(rows,receiptFile,supersedes){
 export function revertSuperseded(rows,file,supersedes){
  const out=structuredClone(rows),byId=new Map(out.map(r=>[r.id,r]));
  for(const s of supersedes){
-  if(s.file!==file)continue;
+  if(s.file!==file||s.scope==='context')continue;
   const row=byId.get(s.targetId);if(!row)continue;
   const parts=s.formalParts??s.parts;
-  if(sameValue(getPath(row,parts),s.after))setPath(row,parts,s.before);
+  if(sameValue(getPath(row,parts),s.after))restoreValue(row,parts,s.before,s.followedBy);
  }
  return out;
 }
@@ -134,7 +146,7 @@ export function revertSuperseded(rows,file,supersedes){
 export function classifySupersedes(supersedes,receiptPattern){
  const removed=[],changed=[];
  for(const s of supersedes){
-  const m=receiptPattern.exec(s.receiptFile);if(!m)continue;
+  const m=receiptPattern.exec(s.receiptFile);if(!m||s.scope==='context')continue;
   (isRemove(s.after)?removed:changed).push({id:m[1],s});
  }
  return {removed,changed};
@@ -153,12 +165,34 @@ export function alignKeyOrder(row,template){
 export function revertReceiptRow(row,receiptFile,supersedes,template=null){
  const out=structuredClone(row);
  for(const s of supersedes){
-  if(s.receiptFile!==receiptFile||s.targetId!==row.id)continue;
-  if(sameValue(getPath(out,s.parts),s.after))setPath(out,s.parts,s.before);
+  if(s.receiptFile!==receiptFile||s.targetId!==row.id||s.scope==='context')continue;
+  if(sameValue(getPath(out,s.parts),s.after))restoreValue(out,s.parts,s.before,s.followedBy);
  }
  return template?alignKeyOrder(out,template):out;
 }
 export async function revertedRows(rows,file,draftsRoot){return revertSuperseded(rows,file,await readApprovedSupersedes(draftsRoot));}
+// 回执审查所用的上下文（contextFor 的输出）还原到审批当时的样子：只还原“现值恰等于回执 after”的字段（删除型：键不存在），其余改动保持原样让指纹照常报错。
+// supersedes 必须来自 readApprovedContextSupersedes（已核验审批）；不改入参，返回克隆。
+export function revertReceiptContext(context,receiptFile,targetId,supersedes){
+ const out=structuredClone(context);
+ for(const s of supersedes){
+  if(s.scope!=='context'||s.receiptFile!==receiptFile||s.targetId!==targetId)continue;
+  if(sameValue(getPath(out,s.parts),s.after))restoreValue(out,s.parts,s.before,s.followedBy);
+ }
+ return out;
+}
+// 把 value 写回 parts 处；followedBy 是字符串时，键插回该兄弟键之前，null 时放在最后，未给则追加在末尾（键序即 JSON 序列化序，指纹依赖它）。
+export function restoreValue(row,parts,value,followedBy){
+ setPath(row,parts,value);
+ if(typeof followedBy!=='string'&&followedBy!==null)return;
+ const parent=getPath(row,parts.slice(0,-1)),key=parts.at(-1);
+ if(isRemove(value)||!Object.hasOwn(parent,key))return;
+ const rest=Object.entries(parent).filter(([k])=>k!==key),at=followedBy===null?rest.length:rest.findIndex(([k])=>k===followedBy);
+ if(at<0)return;
+ rest.splice(at,0,[key,parent[key]]);
+ for(const k of Object.keys(parent))delete parent[k];
+ for(const [k,v] of rest)parent[k]=v;
+}
 
 // ---------------------------------------------------------------- 已审叠加层登记表
 // 设计源（骨架）发布之后，后续已审批的层会给正式条目叠加字段（用途标签、容量……）。

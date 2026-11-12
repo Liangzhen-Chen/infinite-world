@@ -4,7 +4,7 @@ import {loadWorld} from './load-world.mjs';
 import {DeepSeekClient} from './deepseek-client.mjs';
 import {runContentPipeline,defaultReviewRequest,readApprovedContent,hashContent} from './content-pipeline.mjs';
 import {villageProfileCandidates,villageLedgerRules,villageLawCodes,validateVillageLedger,ledgerRevision} from '../world/design/w1-village-profiles.mjs';
-import {readApprovedSupersedes,revertReceiptRow,applySupersedes} from './approved-revisions.mjs';
+import {readApprovedSupersedes,readApprovedContextSupersedes,revertReceiptRow,revertReceiptContext,applySupersedes} from './approved-revisions.mjs';
 import {w1VillagesFoundation} from '../world/design/w1-villages.mjs';
 import {localFacts as wildlifeFacts} from '../world/design/t155-village-wildlife.mjs';
 
@@ -85,7 +85,9 @@ export async function approvedProfiles({world,root=path.resolve('world/drafts/w1
  // 还原后的行须与审批当时的行逐字节相同（指纹按键序序列化）：以记录自己存的 draft 为键序模板。
  const recorded=new Map();
  for(const e of villageProfileCandidates(world)){try{recorded.set(e.id,JSON.parse(await fs.readFile(path.join(root,`${e.id}.json`),'utf8')).draft);}catch(error){if(error.code!=='ENOENT')throw error;}}
- const entries=villageProfileCandidates(world).map(e=>revertReceiptRow(e,receiptOf(e.id),supersedes,recorded.get(e.id))),rows=await readApprovedContent(root,entries,{contextFor:e=>contextFor(e,world),revision});
+ // 审批时审查所用的上下文里的事实同样可被已审批修订取代（scope:'context' 的回执）：上下文也按回执还原到审批当时的形状再比指纹。
+ const contextSupersedes=(await readApprovedContextSupersedes()).filter(s=>s.receiptFile.startsWith('world/drafts/w1/village-ledgers/'));
+ const entries=villageProfileCandidates(world).map(e=>revertReceiptRow(e,receiptOf(e.id),supersedes,recorded.get(e.id))),rows=await readApprovedContent(root,entries,{contextFor:e=>revertReceiptContext(contextFor(e,world),receiptOf(e.id),e.id,contextSupersedes),revision});
  if(rows.length!==4)throw Error('四村档案尚未全部通过审核');
  for(const row of rows){const v=validateDraft(row,entries.find(e=>e.id===row.id),world);if(v.errors.length)throw Error(v.errors.join('；'));}
  return rows.map(row=>{const current=structuredClone(row);applySupersedes([current],receiptOf(row.id),supersedes);return current;});
