@@ -275,6 +275,8 @@ export class WorldEngine {
         if (kind && !id.startsWith(kind + '_')) reject('E-ACTION-PRECONDITION',`需要${kind}类型编号`);
         return !kind?actorId(this.world,id):id;
     }
+    // 用途：createCharacter 的底稿（character.mjs，之后叠角色与现行开局：农事、账本、R1）与 schema_migration 的存档迁移（campaign-reducer.mjs）。
+    // 不是对外创建战役的入口：直接用它得到旧存档形状（公仓粮 420、批次 180 日到期），与现行开局规律（存粮 = 开局日目标持有）不一致。新战役一律 createCharacter。
     initialFromLegacy(legacy, randomSeed = 'default-campaign', {prepare=true}={}) {
         if(this.compat)return this.compat.initialFromLegacy(legacy,randomSeed);
         const old = legacy.state, npcs = {}, inventory = {}, skills = {}, spells = {};

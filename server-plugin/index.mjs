@@ -102,8 +102,10 @@ export async function init(router,{ world=null, baseRoot=null, newCampaignSeed=r
     await registerUIRoutes(router,{handle,getStore});
     router.post('/create',handle(async req=>{
         const legacy={state:seed.state,memories:seed.memories},randomSeed=newCampaignSeed();
-        const document=req.body.character===undefined?engine.initialFromLegacy(legacy,randomSeed):engine.createCharacter(legacy,req.body.character,randomSeed);
-        if(req.body.character===undefined&&req.body.name)document.state.player.name=String(req.body.name).slice(0,60);
+        // 创建战役一律走现行开局（createCharacter：各村存粮 = 开局日目标持有）。不带 character 时按默认角色（{}，可带 name），
+        // 不再回落到旧存档形状（initialFromLegacy 的公仓粮 420 对 17110 的目标，开局即饥荒村）。接口形状不变。
+        const options=req.body.character??(req.body.name?{name:String(req.body.name).slice(0,60)}:{});
+        const document=engine.createCharacter(legacy,options,randomSeed);
         const store=getStore(req),registry=registries.get(baseRoot??req.user.directories.root);
         document.worldHash=await registry.put(world);
         return store.create({worldVersion:world.version,document});
