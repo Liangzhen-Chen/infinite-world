@@ -103,6 +103,8 @@ function accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now}){
 // 主观视图里某持有人的物品与账：观察者本人读 view.self，同户成员读 view.household（subjective-view.mjs，只含物品、钱袋余额与现金字段）。
 const viewSide=(view,holder)=>holder===view.observer?view.self:view.household?.people?.[holder]??{inventory:{},accounts:{},coins:0,obligations:[]};
 // 同户钱袋合计：本人 + 同一登记户其他成员；成员账缺失时退回其现金字段，同本人口径。
+// 与 owner 同桌的判定（owner 的位置只查一次）；pooledCash 与主观户成员筛选共用。
+const sameTable=(engine,state,owner)=>{const place=hearthPlace(engine,state,owner);return id=>id===owner||hearthPlace(engine,state,id)===place;};
 const pooledCash=(engine,owner,view,keep=()=>true)=>Object.entries(view.household?.people??{}).filter(([id])=>keep(id)).reduce((n,[id,p])=>n+(p.accounts?.[purse(engine,id)]?.balance??p.coins??0),view.self.accounts?.[purse(engine,owner)]?.balance??view.self.coins);
 // 客观读（kernel 与 market 的 householdResources）的户池现金：同一登记户共灶成员（本人必入，其余须在世有效、非濒死昏迷）的钱袋合计，与主观读 pooledCash 同一口径（EC-1b U7）。
 // 一人户与不共灶者就是本人钱袋。读取不写任何东西；付款人钱袋不够时由 householdPoolTopUp 落账。
@@ -332,7 +334,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  // bags. Subjective needs use known derived facts, with the public body base
  // when another member's private modifiers are unknown.
  // 主观视图下同户成员的背包与钱袋并入这一户的预算，与客观读（f.holders）同一口径；
- const pool=subjective?Object.keys(view.household?.people??{}).filter(id=>id===owner||hearthPlace(engine,state,id)===hearthPlace(engine,state,owner)):[];
+ const pool=subjective?Object.keys(view.household?.people??{}).filter(sameTable(engine,state,owner)):[];
  const holders=subjective?[owner,...pool]:f.holders,members=f.shared?f.hearth:[owner];
  const seeds=subjective?new Map():stateMemo(state,engine,[seedRecords,JSON.stringify(holders)],()=>seedNeeds(engine,state,holders),seedInputs);
  const promises=subjective?view.self.obligations??[]:[...obligationRows(state),...recordsMemo(state.records,promisedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='procurement'||r.category==='agreed_quote'))];
@@ -362,7 +364,7 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  // A quote is future access, never current food or cash. Earmark only this
  // person's cash, net of known payments before acquisition; no family purse.
  // 主观读一律按户算一次：本人加同户成员的钱袋合计（同户共灶，李白 11-11）；执行购买时钱不够的部分先在户内钱袋间转账（household-budget.mjs householdPoolTopUp）。
- const cash=view?pooledCash(engine,owner,view,id=>id===owner||hearthPlace(engine,state,id)===hearthPlace(engine,state,owner)):objectiveCash(d,engine,state,owner);
+ const cash=view?pooledCash(engine,owner,view,sameTable(engine,state,owner)):objectiveCash(d,engine,state,owner);
  const payments=futureSources(d,engine,owner,view).payments;
  const sources=marketSubstitution&&cash>0&&commonRisk<1?accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now:state.minute}):[];
  const nextFood=sources.length?Math.min(...sources.map(r=>r.at)):null;
@@ -547,7 +549,7 @@ export function householdBudget(d,engine,owner,{kernel=false,view=null,risk=0,co
  const state=d.get('state'),document=d.document??{state};
  if(!kernel)view??=subjectiveView(engine,document,owner);
  if(view&&view.observer!==owner)throw Error('Household budget observer mismatch');
- const cash=view?pooledCash(engine,owner,view,id=>id===owner||hearthPlace(engine,state,id)===hearthPlace(engine,state,owner)):objectiveCash(d,engine,state,owner);
+ const cash=view?pooledCash(engine,owner,view,sameTable(engine,state,owner)):objectiveCash(d,engine,state,owner);
  const {future,payments}=futureSources(d,engine,owner,view),reliable=future.find(r=>r.reliable),next=reliable??future.find(r=>r.source==='harvest'),until=next?.at??state.minute+engine.world.marketRules.personalReserveDays*DAY;
  const incomeRisk=future.length?future.filter(r=>!r.reliable).length/future.length:0;
  const purchasable=cash>0&&commonRisk<1?accessibleSources(d,engine,owner,{view,cash,commonRisk,payments,now:state.minute}):[];
