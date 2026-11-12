@@ -93,7 +93,9 @@ export function goodsUse(engine,item){return goodsEntry(engine,item).use;}
 const householdsMemo=Symbol('settlement households');
 let householdsDeps=null;
 const householdsInputs=()=>householdsDeps??=[...householdViewInputs,...householdIdentityInputs,...lifecycleInputs,['settlements'],['created'],['family','households']];
-export const settlementHouseholds=(engine,state,place)=>stateMemo(state,engine,[householdsMemo,place],()=>settlementPopulation(engine,state,place).householdCount.value,householdsInputs());
+// 记忆的是整份聚落人口普查（settlementPopulation 的返回对象：人口、户数、居民），户数只是其中一项。
+export const settlementCensus=(engine,state,place)=>stateMemo(state,engine,[householdsMemo,place],()=>settlementPopulation(engine,state,place),householdsInputs());
+export const settlementHouseholds=(engine,state,place)=>settlementCensus(engine,state,place).householdCount.value;
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs?.[id]?.location??state.creatures?.[id]?.location;
 const settlementOf=(engine,state,location)=>placeSettlement(engine,state,location).value??location;
 const inventoryOf=(state,id)=>{

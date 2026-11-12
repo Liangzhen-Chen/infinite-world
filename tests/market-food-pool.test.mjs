@@ -590,7 +590,8 @@ test('非食物货的户用经市场的部分：补给间隔 ×（日用度 − 
  assert.ok(Math.abs(read(big,pick.id)-expected)<=1e-6*expected,'按户的类不随人口变');
  const salt=engine.world.items.find(i=>isItemClass(engine,i.id,'salt')&&!(foodSatiety(engine,i.id)>0)&&usageItemGrams(engine,i.id,'salt')>0);
  assert.ok(salt,'盐类至少有一件');
- const saltBase=marketUseAt(engine,state,seed,salt.id,'loc_hw',self);assert.ok(saltBase>0);
+ // 盐没有可自采的公共来源（用度类的采集来源只有林地与无主资源点里属于该类的货），任何户的盐自给都是 0：手推不带自给（self 参数是燃料的自给，不能套到盐上）。
+ const saltBase=marketUseAt(engine,state,seed,salt.id,'loc_hw');assert.ok(saltBase>0);
  assert.ok(Math.abs(read(structuredClone(doc),salt.id)-saltBase)<=1e-6*saltBase);
  assert.ok(Math.abs(read(big,salt.id)-2*saltBase)<=1e-6*saltBase,'按人的类随人口翻倍');
  // 整类一次：换报价的另一件燃料，消耗 × 该件基准克 = 同一个类总克数（不是每件各报一份）。
