@@ -256,6 +256,26 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 06:27Z 实采，李白 07:2x 巡查】**（腾讯云 tc_admin 只读直采；服务器时钟 +08:00，已换算）
+    - **water1d-4 全量**：runjob（`runjob.sh full water1d-4 f5719dc7…`）已跑 2:42:33，运行中。/work/water1d-4.full 1494 字节，mtime 06:26:54Z，完成 **19/586**（04:35Z 为 1，06:00Z 为 13），其中超时 8 个（基线同期的慢文件，batch-1111c 全量共 8 个超时）。
+      - 正在跑 10 个测试：wildlife（42:32）、s5-03-w1（14:38）、a3-r9-effects、npc-life-health、a3-score-self、m3-language、npc-autonomy、npc-life-migration、npc-life-t164、s5-law-tenancy-sharing。
+      - 同机另有 ec1-9 的 35 文件定向（`runjob.sh full ec1-9 … 4`，已 1:03，属定向，不是全量）。
+      - 负载 9.93 / 7.69 / 7.81，内存可用 109G，磁盘余 7.0G（86%），dmesg 无 OOM。
+      - 没有卡死，是慢测试排在前面；ec1-7 同样在前 4 小时只完成 50 余个，之后集中跑完。
+      - **重估 ETA**：ec1-7 从开跑到结束约 5h40m（与另一套全量同机）。water1d-4 03:44Z 开跑、现在只与定向同机，预计 **09:00–10:00Z**。
+      - 排队：ec1-9 的 9 个超时文件单独重跑，排在 water1d-4 全量结束之后（同机一次只跑一套全量）。
+    - **v8 的 58 情形（mktw-11）：实际完成 0/58**。
+      - 06:00Z 重启后，第一个情形 winter-without-1.5 在 06:01:35Z 加载即崩：stock.mjs:151 "ReferenceError: Cannot access 'enumerators' before initialization"（经 goods-escrow.mjs:11）。这是本卡新增导入形成的循环导入（TDZ），所有加载 stock.mjs 的代码都会失败。
+      - 两轮门禁只做静态审查，node --check 查不出循环导入，所以漏过。已停循环，派执行者按原语层打断这个环（不准用动态 import 或靠加载顺序碰运气）。修好后重新两轮审，**先跑定向测试（market-food-pool、unit-freight 等）确认能加载，再跑 58 情形**。
+      - **循环脚本两处缺陷都已修**：
+        ① 首次运行时完成标记文件不存在，脚本却一直等它——已改为"文件不存在即视为空闲"，此错误不会再出现；
+        ② 情形在打印 start 行之前就崩时，原脚本会空等 66 分钟——已改为"FINISHED 且无 start 行"也算结束，并且整轮中止（exit 3），把原文落盘，不再连崩 58 次。
+      - **教训**：探针或全量之前必须先在云上跑本卡的定向测试，以确认能加载。
+    - **待修订批（12 份旧世界记录的初粮）报价**：
+      - 依据 md-7 实测约 0.0036 元/次；12 条，每条约 1 次，含重试估 20 次，**预计约 0.07 元；上限 40 次 / 0.3 元，到额自动停**（用 WATER-1D 新增的批次级 limitYuan / maxRequests）。
+      - 等李白批准后才开跑。照 WATER-1D 的例外方式在本机只跑核对脚本，还是另定，请李白一并定。
+    - ec1-9 两轮门禁已过（r1 …062515Z-3493959、r2 …062558Z-3494696），35 文件定向在跑；结果出来后推 GitHub。
+    - 门禁第二期继续暂缓，未动任何钥匙、账号、权限。
   - **【11-12 05:1xZ】EC-1 全量 ec1-7 跑完（586/586）**
     - 对照 master 基线 batch-1111c：
       - **35 个文件变差**（清单 F:/dnd-tmp/ec1/fail7.txt，TAP 在 tap7/），重的几项：food-habit 7/0→3/4、meal-cap 15/0→9/6、s5-law-seasonal-credit 21/0→13/8、s5-w4-economy 11/2→8/7（tests-rederive 已列）、food-sources-memo 2/0→0/2、household-food-sources-traders 3/0→1/2、w2-s2 7/0→4/3、s5-f-tender 6/2→4/4；其余约 20 个文件各多 1 败（readonly-entries、actions-catalog、system-map 疑为新工具、动作、原语未登记）。
