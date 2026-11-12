@@ -14,7 +14,8 @@ export function grantLoanConsent(engine,document,{lender,principal,days,eventId}
     return applyPatches(document,d.patches);
 }
 export function fixture({at=post,coins=3000}={}){
-    const w=structuredClone(world),e=new WorldEngine(w);let doc=e.initialFromLegacy(seed,'finance');
+    // 现行开局（createCharacter：各村存粮 = 开局日目标持有，与 shop-restock 夹具同一形状），不再停在旧存档形状（旧形状公仓粮 420 对 17110 的目标，等于造出一个饥荒村，价格被夹到上限）。
+    const w=structuredClone(world),e=new WorldEngine(w);let doc=e.createCharacter(seed,{},'finance');
     doc.state.minute=600;doc.state.location=at;doc.state.player.coins=coins;
     doc.state.inventory={item_bread:{quantity:100},item_wood:{quantity:100},item_oats:{quantity:100}};
     const people=[clerk,host,worker,'npc_hw_chenbai','npc_hw_gucen'];

@@ -87,14 +87,14 @@ test('F048 租金：房客与业主不在同处时不转账，形成应付且不
 // ---------------------------------------------------------------- F007 / F058
 test('F007 典当按整批清算估值而非目录基价，预支率 50%',async()=>{
     const f=fixture();await f.act({operation:'deposit',seller:clerk,coins:10},'dep');
-    // 本夹具是旧存档形状：公仓粮只有 420（不是开局日的目标持有），而农事目标持有按规律是 17110（handTarget：餐口 × (距收获天数 + 保留天数)，被容量封顶），
-    // 食物池比值 = 需求 ÷ 供给 远大于区域夹取上限 3：手推比值（handOatsScarcity，供给再加上押进来的 10 个面包折成燕麦件数）仍 ≥ 上限，
-    // 所以清算曲线整段都钉在上限：清算值 = 基价 2 × 上限 3 × 10 件 × 品质 1 = 60（不是积分曲线，也不是目录价 20）；预支 floor(60 × 0.5) = 30。
-    const [,cap]=f.e.rules.economy.priceFactorLimits.region,hand=handOatsScarcity(f.e,f.doc.state,f.doc.state.settlements.loc_hw.food),satB=handSatiety(f.e,'item_bread'),satO=handSatiety(f.e,'item_oats');
-    assert.ok(hand.target/(hand.held+10*satB/satO)>=cap,`前置：押入 10 个面包后比值仍不小于上限 ${cap}`);
+    // 夹具是现行开局（公仓粮 = 开局日目标持有）：食物池比值由农事目标持有规律手推（handOatsScarcity：需求 = 货架目标 + 公仓目标持有，供给 = 公仓存粮 + 经营者行囊里的食物，折成燕麦件数）。
+    // 10 个面包 ≤ 零售阈值 max(retailFloor 5, 供给面包件数 × retailShare 0.05)（供给约四万件，阈值远大于 10），整批按零售估值：值 = 10 × 基价 2 × 夹取(比值) × 品质 1，取整；预支 = floor(值 × 0.5)。
+    const [floor,cap]=f.e.rules.economy.priceFactorLimits.region,mr=f.e.world.marketRules,st=f.doc.state,hand=handOatsScarcity(f.e,st,st.settlements.loc_hw.food),satB=handSatiety(f.e,'item_bread'),satO=handSatiety(f.e,'item_oats');
+    assert.ok(10<=Math.max(mr.retailFloor,hand.held*satO/satB*mr.retailShare),'前置：10 个面包在零售阈值内');
+    assert.ok(hand.ratio>=floor&&hand.ratio<cap,'前置：比值在夹取区间内部');
     const p=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,days:1},'pawn');
     assert.equal(f.e.rules.economy.credit.pawn.advanceRatio,0.5);
-    const pledge=2*cap*10;assert.equal(f.e.byId.get('item_bread').basePrice,2);
+    const pledge=Math.floor(10*2*Math.min(cap,Math.max(floor,hand.ratio)));assert.equal(f.e.byId.get('item_bread').basePrice,2);
     assert.equal(p.principal,Math.floor(pledge*0.5));
     assert.equal(f.doc.state.records[p.contract].pledgeRecord&&f.doc.state.records[f.doc.state.records[p.contract].pledgeRecord].value,pledge,'押品值 = 清算估值');
 });
