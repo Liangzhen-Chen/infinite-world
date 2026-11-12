@@ -75,7 +75,7 @@ test('L3 同一天再买同一件东西，成交深度真实上升且总额一�
 });
 
 // 指南11.3 L4 指定镐；保留原刀场景全部断言，并对正式矿镐逐项执行同一验收。
-for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐']])test(`L4 库存有限：铁匠铺的${label}卖完后买不到，菜单说明下次进货的日子，到货后能再买`,async t=>{
+for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐']])test(`L4 库存有限：铁匠铺的${label}卖完后买不到，菜单说明下次进货的日子，到货后能再买（或被别户居民先买走）`,async t=>{
  const ui=await uiSession(t,{mutate:at(FORGE,10*60,s=>{s.player.coins=2000;})});
  const stock=qty((await ui.read()).state.npcs[SMITH].inventory[item]);assert.ok(stock>0);
  const all=await ui.choose('trade.buy',{item,quantity:stock},{target:SMITH});assert.ok(all.ok,all.error);
@@ -85,8 +85,18 @@ for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐
  assert.ok(note&&note.nextMinute>(await ui.read()).state.minute,'告诉玩家何时到货');assert.match(note.next,/年/);
  assert.ok(!menu.actions.find(a=>a.id==='core:trade.buy').slots.find(s=>s.name==='item').options.some(o=>o.value===item),'卖完的货不再出现在可选项');
  const now=(await ui.read()).state.minute;await ui.choose('time',{minutes:note.nextMinute+10*60-now});
+ // EC-1b 按客流时刻重推：客流时刻 = 店营业窗口与顾客清醒窗的最早交集（铁匠铺窗口起点，早于玩家到店的 10:00），居民每店每日一趟、不买本户。
+ // 到货后到玩家到店之前，别户居民可能已先买走新货，所以“到货后能再买”改为核对同一条因果：到货了；货架上还有就买得到，
+ // 货架空了就必须是被别户居民在这段时间的客流里买走（客流记录为证），不是没到货。
+ const stateNow=(await ui.read()).state,smith=stateNow.npcs[SMITH];
+ const others=Object.values(stateNow.records).filter(r=>r.category==='customer_flow'&&r.shop==='shop_hw_forge'&&r.minute>=now).flatMap(r=>r.visits??[]).filter(v=>v.outcome==='bought'&&v.item===item);
+ const boughtByOthers=others.reduce((n,v)=>n+v.quantity,0),onShelf=qty(smith.inventory[item]);
+ assert.ok(onShelf+boughtByOthers>0,`前提：到货了（玩家买空之后货架上有货，或到货被别户买走）：${item} 货架 ${onShelf}，别户买走 ${boughtByOthers}`);
+ const smithHouse=engine.world.households.find(h=>h.members.includes(SMITH));
+ assert.ok(others.every(v=>!smithHouse?.members.includes(v.npc)),'居民不买本户店主的货');
  const again=await ui.choose('trade.buy',{item,quantity:1},{target:SMITH});
- assert.ok(again.ok,`${again.error} | customer_flow: ${JSON.stringify(Object.values((await ui.read()).state.records).filter(r=>r.category==='customer_flow').map(r=>[r.shop,r.day,r.minute,(r.visits??[]).map(v=>[v.npc,v.outcome,v.item])]))}`);
+ if(onShelf>0)assert.ok(again.ok,`货架上还有 ${onShelf}，玩家应买得到：${again.error}`);
+ else{assert.equal(again.ok,false,'到货已被别户居民在玩家到店前买走');assert.match(again.error,/只剩0/);}
 });
 
 test('L5 卖给钱不够的 NPC：不凭空付款，整笔拒绝且钱物不动',async t=>{
