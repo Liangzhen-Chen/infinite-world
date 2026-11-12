@@ -18,14 +18,13 @@ function roundTripDays(engine,seed,from,to){
 }
 // 粮的补给间隔（非农事聚落）：最近的别的农事聚落的往返天数；供粮聚落不含本聚落自己。没有任何可达的供粮聚落：报错列出聚落，不编造天数。
 // 自产粮聚落（不在农事表、按统计产粮：state.settlements[place].foodPerDay > 0，同 advance-registry.mjs:400 统计产粮分支、water-cycle.mjs:213）：
-// 统计产粮每天入仓、没有集中的收获日，供粮源就是它自己：储备视野 = max(生产间隔, 一个交易周期 economy.tradeCycleDays)，
-// 与 itemResupplyDays 对"产地就在本聚落"的口径一致；生产间隔 = 统计产粮的入仓节拍 = 1 天（advance-registry 的每日分支）。是否自产只看聚落自身，与有没有路无关。
-const STATISTICAL_PRODUCTION_INTERVAL_DAYS=1;
+// 统计产粮每天入仓（advance-registry 每日分支）、没有集中的收获日，供粮源就是它自己：储备视野 = max(生产间隔, 一个交易周期)，与 itemResupplyDays 对"产地就在本聚落"的口径一致；
+// 生产间隔（逐日入仓，不足一天）恒小于交易周期（economy.tradeCycleDays，规则要求 ≥ 1 天），所以视野 = tradeCycleDays，不另设常数。是否自产只看聚落自身，与有没有路无关。
 export function selfSupplyDays(engine,state,place){
  if(engine.rules.agriculture?.settlements?.some(p=>p.settlement===place))return null;
  if(!state?.settlements)throw Error('推补给间隔需要聚落状态（state），以判断聚落是否自产粮');
  if(!(state.settlements[place]?.foodPerDay>0))return null;
- return Math.max(STATISTICAL_PRODUCTION_INTERVAL_DAYS,engine.rules.economy.tradeCycleDays);
+ return engine.rules.economy.tradeCycleDays;
 }
 export function resupplyDays(engine,seed,place,state){
  const own=selfSupplyDays(engine,state,place);if(own!==null)return own;

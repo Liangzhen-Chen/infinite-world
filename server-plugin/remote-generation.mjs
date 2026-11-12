@@ -353,9 +353,10 @@ function remoteHazards(county,seat,settlements,routes,profiles){
             {id:'ease',name:'粮价回落',probability:0.5,condition:{kind:'always'},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:1,minutes:1,reason:'新粮将下，粮价回落'}]}]});
         // Public ledger on the core village scale: about 12 copper, 0.6 wood and
         // 0.12 iron per head; daily supply just above need in farming counties,
-        // exactly need elsewhere (grain comes in by trade). No opening grain here: the skeleton
-        // has no route graph to the supplying villages, so unfoldRemoteAt opens the store at
-        // mouths x resupplyDays (the same law the market's target holding reads: normal = target).
+        // exactly need elsewhere. Every generated settlement is a statistical self-producer (foodPerDay > 0,
+        // accrued daily by the daily advance with weather/hazard yield factors; no grain trade is simulated for it).
+        // No opening grain here: unfoldRemoteAt opens the store at mouths x resupplyDays, which for a self-producer
+        // is the trade cycle (supply-interval.selfSupplyDays; the same law the market's target holding reads: normal = target).
         ledgers[sid]={name:s.name,population:P,treasury:12*P,wood:Math.round(0.6*P),iron:Math.round(0.12*P),foodPerDay:h.farm?Math.ceil(P*1.02):P,
             woodPerDay:(county.biomes??[]).some(b=>b==='forest'||b==='plant')?4:2,starvation:0};
     }
