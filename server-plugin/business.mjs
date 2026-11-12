@@ -782,9 +782,12 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     const tripped=new Set(recordsWhere(state.records,'category','customer_flow').filter(r=>r.day===day&&r.shop===shop.id).flatMap(r=>r.visits).map(v=>v.npc));
     const visits=[],keeperHome=shop.kind==='resident'?new Set(personHousehold(engine,state,shop.keeper).value?.members??[]):null;// 居民卖方不向自己同户的人卖（同一灶，不是买卖）
     for(const {id,slot,settlement} of residents){
+        // 与路程无关的纯条件先判：它们只读 id、店、当日记录与聚落，不依赖 walkMinutes 的结果；walkMinutes 只填同一次结算内的路线缓存（键 from|to|t），
+        // 不写状态、不改 customer-free/shop-free 键，所以先短路与原先“先算路程再判”得到同样的 continue。原先不同聚落时 settlement!==shop.settlement 为真，无论路程多少都 continue。
+        if(id===shop.keeper||tripped.has(id)||keeperHome?.has(id)||settlement!==shop.settlement)continue;
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
         const outbound=walkMinutes(engine,slot.location,shop.location,departAt,seed,routes);
-        if(id===shop.keeper||tripped.has(id)||keeperHome?.has(id)||settlement!==shop.settlement||outbound.minutes>reach)continue;
+        if(outbound.minutes>reach)continue;
         const inbound=walkMinutes(engine,shop.location,slot.location,departAt+outbound.minutes,seed,routes);
         const travelCoins=outbound.coins+inbound.coins;
         let travelled=false,atShop=departAt+outbound.minutes,tripRecord=null,evaluated=false;
@@ -895,6 +898,8 @@ function daySegments(engine,state,id,day,keep,sched=state,arrivalSeed=null){
 // 复用条件 = 与 npc-schedule cachedSchedule、advance-registry buildScheduleHeap 同一套已声明的输入：本人作息输入未变（sameNpcScheduleInputs）、
 // 其余分区与排程相关记录未变（sameScheduleInputs，npcs 分区交给逐人比较）、课程派生未变（educationCourses）。判定与精度不变：任一输入变了就重算。
 // 只在读取作用域内当前草稿的最新状态上用缓存（scheduleReadCache.draft.cursor.root.state === state），其余调用与原来一样直接重算。
+// 课程派生本身按读取纪元记忆，同一份结果在版本之间多是同一个对象：先比元素同一性，不同一再深比（结果同 canonicalEqual）。
+const sameCoursePair=(a,b)=>a===b||a[0]===b[0]&&a[1]===b[1]||canonicalEqual(a,b);
 const coursesOfDay=(cache,engine,state,day)=>{
     const byState=cache.flowCourses??=new WeakMap();let byDay=byState.get(state);if(!byDay)byState.set(state,byDay=new Map());
     if(!byDay.has(day))byDay.set(day,[educationCourses(engine,state,day*DAY),educationCourses(engine,state)]);
@@ -911,7 +916,7 @@ function cachedDaySegments(engine,state,id,day,kind,keep,sched,arrivalSeed){
     const compute=()=>daySegments(engine,state,id,day,keep,sched,arrivalSeed),cache=engine.scheduleReadCache;
     if(!cache?.draft?.cursor?.root||cache.draft.cursor.root.state!==state)return compute();
     const store=cache.flowSegments??=new Map(),key=`${kind}|${sched===state?'state':'base'}|${id}|${day}|${arrivalSeed}`,prev=store.get(key),actor=state.npcs?.[id],courses=coursesOfDay(cache,engine,state,day);
-    if(prev&&(prev.state===state||sameNpcScheduleInputs(prev.actor,actor)&&sameGlobalInputs(cache,prev.sched,sched)&&canonicalEqual(prev.courses,courses))){
+    if(prev&&(prev.state===state||sameNpcScheduleInputs(prev.actor,actor)&&sameGlobalInputs(cache,prev.sched,sched)&&sameCoursePair(prev.courses,courses))){
         if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(prev.segments,compute()))throw Error(`flow segments cache mismatch: ${id} day ${day}`);
         return prev.segments;
     }
@@ -986,7 +991,11 @@ export function settleCustomerFlow(d,engine,t){
     const shops=openShops(d,engine,t).sort((a,b)=>order('shop-order',a.id)-order('shop-order',b.id)||a.id.localeCompare(b.id));
     if(!shops.length)return;
     const residents=walkIns(d,engine,t).sort((a,b)=>order('customer-order',a.id)-order('customer-order',b.id)||a.id.localeCompare(b.id)),gaps=new Map(),routes=new Map();
-    for(const shop of shops)serve(d,engine,shop,t,residents,gaps,routes);
+    // 居民按聚落分组：serve 里“settlement!==shop.settlement 就跳过”用的正是 walkIns 给每位居民算的 settlement（placeSettlement(slot.location)；在途者 walkIns 已排除），
+    // 所以每家店只遍历本聚落的居民就是原先遍历全体后跳过其余的同一结果，且保持 customer-order 排序后的相对次序。
+    const bySettlement=new Map();
+    for(const r of residents){const rows=bySettlement.get(r.settlement);if(rows)rows.push(r);else bySettlement.set(r.settlement,[r]);}
+    for(const shop of shops)serve(d,engine,shop,t,bySettlement.get(shop.settlement)??[],gaps,routes);
 }
 // Settle consumers at every trade-window time in (before, after]; the registry splits the clock at these times (shop.mjs nextShopMinute).
 export function advanceCustomerFlow(d,engine,before,after){
