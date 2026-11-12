@@ -273,4 +273,36 @@ if(want('I')){
  }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
  results.push(out);
 }
+// K：w2-s2 的引火包（item_s2_tinder）价：导师所在的白石镇学堂，引火包并入燃料池后的供需明细（ASCII 标签）。
+if(want('K')){
+ const out={label:'K tinder at bs school'};
+ try{
+  const engine=new WorldEngine(structuredClone(world)),doc=engine.createCharacter(seed,{},'w2-s2-probe');doc.state.minute=600;
+  for(const [place,item] of [['bld_bs_school','item_s2_tinder'],['bld_bs_school','item_wood'],['bld_bs_school','item_charcoal']]){
+   const m=attempt(()=>marketSupply(read(doc),engine,item,place));
+   out[item]={supply:m.supply,demand:m.demand,consumption:m.consumption,shelf:m.shelf,rows:m.rows?.map(r=>({owner:r.owner,item:r.item,stock:r.stock,available:r.available,unit:r.unit})),price:attempt(()=>regionalTradePrice(read(doc),engine,item,place)),error:m.error};
+  }
+  out.bsSettlement=doc.state.settlements?.loc_bs?{population:doc.state.settlements.loc_bs.population,wood:doc.state.settlements.loc_bs.wood,food:doc.state.settlements.loc_bs.food}:null;
+  out.householdCount=engine.world.settlementProfiles?.find(p=>p.id==='loc_bs')?.householdCount;
+ }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
+ results.push(out);
+}
+// L：daily-b2 D01 场景（春季三月初五，面包 4 文，酒馆）：跳日后与推进 1 分钟后的公仓粮账户、批次与面包供需；以及推进后 doc 是否带账本（几条测试报 ledger 未定义）。
+if(want('L')){
+ const out={label:'L daily-b2 D01 scene'};
+ try{
+  const w=dbVariant(x=>{setPrice(x,'item_bread',4);});
+  const engine=new WorldEngine(w);let doc=engine.createCharacter(seed,{},DB_SEED);
+  dbScene('bld_hw_qingdeng',monthDayMinute(3,5,7,30),s=>{s.player.coins=100;})(doc.state,doc);
+  const snap=(label,d)=>{const m=attempt(()=>marketSupply(read(d),engine,'item_bread','bld_hw_qingdeng')),farm=d.state.records?.['agriculture:loc_hw'];
+   return {label,minute:d.state.minute,day:Math.floor(d.state.minute/1440),hasLedger:Boolean(d.ledger),settlementFood:d.state.settlements?.loc_hw?.food,
+    batches:(farm?.batches??[]).map(b=>({amount:b.amount,expiresDay:b.expiresDay,kind:b.kind})),seedBank:farm?.field?.seedBank,
+    ledgerGranary:Object.entries(d.ledger?.accounts??{}).filter(([k])=>k.includes('granary')),ledgerLots:Object.entries(d.ledger?.lots??{}).filter(([k])=>k.includes('granary')).map(([k,v])=>[k,JSON.stringify(v).slice(0,400)]),
+    supply:m.supply,demand:m.demand,rows:m.rows?.slice(-3).map(r=>({owner:r.owner,item:r.item,stock:r.stock,target:r.target,available:r.available,unit:r.unit})),hand:attempt(()=>handOatsScarcity(engine,d.state,d.state.settlements.loc_hw.food))};};
+  out.afterScene=snap('after scene',doc);
+  const r=await engine.reduce(doc,{tool:'world_time',args:{minutes:1},eventId:'probe-1min'});doc=applyPatches(doc,r.patches);
+  out.afterMinute=snap('after 1 minute',doc);
+ }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
+ results.push(out);
+}
 console.log(JSON.stringify(results,null,1));
