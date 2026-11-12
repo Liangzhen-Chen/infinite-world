@@ -8,6 +8,7 @@ import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {validateShopRules,qualityAllowed,originSettlement,tradeQuote} from '../server-plugin/shop.mjs';
 import {regionalTradePrice,regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {porterCharges} from '../server-plugin/transport.mjs';
+import {handOatsScarcity,handTarget} from './helpers/hand-targets.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,inn='bld_hw_qingdeng',forge='bld_hw_forge',town='loc_bs';
@@ -17,7 +18,8 @@ const rules=world.rules.economy.shops,store=id=>rules.stores.find(s=>s.id===id);
 function fixture({at=inn,coins=500,withTown=true,edit=null}={}){
     const w=structuredClone(world);edit?.(w);
     const engine=new WorldEngine(w);
-    let doc=engine.initialFromLegacy(seed,'shop-restock');
+    // 现行开局（createCharacter：新战役的农事开局，公仓存粮 = 开局日的目标持有）；旧存档形状（initialFromLegacy，存粮 420、种粮 0）不再是夹具——不做旧存档兼容。
+    let doc=engine.createCharacter(seed,{},'shop-restock');
     doc.state.minute=600;doc.state.location=at;doc.state.player.coins=coins;
     for(const [id,loc]of Object.entries(placeOf))doc.state.npcs[id]={...doc.state.npcs[id],coins:200,location:loc,activity:'营业',status:'正常',goals:{},memoryStream:[]};
     // These tests examine restocking, quoting and sources, not walk-in customers (F026, covered in s5-w4-economy): every other resident is
@@ -32,6 +34,16 @@ const qty=(doc,npc,item)=>{const v=doc.state.npcs[npc].inventory[item];return ty
 const ledger=(doc,id)=>doc.state.records[`shop:${id}`];
 // S5-02 / 15 §15.2: inspect the current read-only projection, never a saved quote.
 const projected=(f,seller,item,quantity=1)=>{const d={document:f.doc,get:(...p)=>p.reduce((v,k)=>v?.[k],f.doc)};return tradeQuote(d,f.engine,{buyer:'player',seller,item,quantity,location:f.doc.state.location,base:()=>regionalTradeBase(d,f.engine,item,f.doc.state.location)});};
+// 食物池稀缺度手推（hand-targets.mjs 的 handOatsScarcity：需求 = 货架目标 + 公仓目标持有，供给 = 公仓存粮 + 店主行囊里的食物，都折成燕麦件数）。
+// 夹具是现行开局：公仓存粮 = 开局日的目标持有（前置断言），所以供给 = 目标 + 店里食物 > 需求 = 目标 + 货架，稀缺度略小于 1（不夹取）。
+// 面包、羊肉等所有食物同属一池，同一个稀缺度；价 = 目录基价 × 稀缺度 × 其余因子（立场、深度、加成）。
+const foodScarcity=f=>{
+    const st=f.doc.state,profile=f.engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw');
+    assert.equal(st.settlements.loc_hw.food,handTarget(f.engine,st,profile,st.minute),'前置：开局公仓存粮 = 开局日目标持有');
+    const {ratio}=handOatsScarcity(f.engine,st,st.settlements.loc_hw.food),[lo,hi]=world.rules.economy.priceFactorLimits.region;
+    assert.ok(ratio>=lo&&ratio<=hi,`前置：稀缺度 ${ratio} 在夹取区间内`);
+    return ratio;
+};
 // Shop-side cash includes quest escrow funded by these keepers or settlement accounts.
 const cash=doc=>doc.state.player.coins+Object.keys(placeOf).reduce((n,id)=>n+doc.state.npcs[id].coins,0)+Object.values(doc.state.settlements).reduce((n,s)=>n+s.treasury,0)
     +Object.values(doc.state.quests).filter(q=>doc.state.settlements[q.fundedBy?.treasury]||q.personal&&q.publisher in placeOf).reduce((n,q)=>n+(q.escrow??0),0);
@@ -50,12 +62,13 @@ test('发布规则自洽；面包基准进入市场投影',async()=>{
     const misplaced=structuredClone(world);misplaced.rules.economy.shops.additionalRestock.shop_hw_forge[0].after='missing';
     assert.match(validateShopRules(misplaced).join(),/商店增补货架无效：shop_hw_forge/);
     const f=fixture();
-    const expected=projected(f,host,'item_bread');
+    const expected=projected(f,host,'item_bread'),scarcity=foodScarcity(f);// 成交前的状态
     const r=await f.act('world_trade',{seller:host,item:'item_bread',quantity:1},'bread');
     // S5-02: the authored 2 copper remains a baseline, not a fixed retail truth.
-    // D=14, S>28 after household retention → .5 lower bound;
-    // 2 × .5 × remaining factors 1 = 1.
-    assert.equal(r.cost,1);
+    // 现行规律：需求 = 货架目标 + 公仓目标，供给 = 公仓存粮 + 店里食物（见 foodScarcity），稀缺度略小于 1；
+    // 2 × 稀缺度 × 其余因子 1，整张账单取整（截断）；稀缺度小于 1，所以 1。
+    assert.ok(scarcity<1,'前置：稀缺度小于 1');
+    assert.equal(r.cost,Math.trunc(2*scarcity));
     assert.equal(expected.explanation.baseline,2);assert.equal(r.cost,expected.totalCoins);
 });
 
@@ -170,16 +183,16 @@ test('关系与声望、店家加成进入实时投影；议价只在规则区�
     const price=async regard=>{
         const f=fixture();
         for(const holder of [host,'loc_hw'])f.doc.state.records[`standing:${holder}:player`]={category:'standing',holder,target:'player',value:regard,history:[]};
-        const quote=projected(f,host,'item_mutton',2);
+        const quote=projected(f,host,'item_mutton',2),scarcity=foodScarcity(f);// 成交前的状态
         // Two portions preserve the strict paid-price relation assertion
         // under the designed truncation rule (one cheap portion can tie).
         const r=await f.act('world_trade',{seller:host,item:'item_mutton',quantity:2},'mutton');
-        return {cost:r.cost,quote};
+        return {cost:r.cost,quote,scarcity,regard};
     };
     const friend=await price(100),neutral=await price(0),foe=await price(-100);
-    // 12 baseline × .5 scarcity × (1-.15*regard/100) × 2;
-    // other factors 1: 10.2 / 12 / 13.8, truncate only each full bill.
-    assert.equal(friend.cost,10);assert.equal(neutral.cost,12);assert.equal(foe.cost,13);
+    // 12 基价 × 稀缺度（食物池同一个，见 foodScarcity）× (1 − .15 × 立场 ÷ 100) × 2 份；其余因子 1；整张账单取整（截断）。手推，不调用报价函数。
+    const bill=x=>Math.trunc(12*x.scarcity*(1-0.15*x.regard/100)*2);
+    assert.equal(friend.cost,bill(friend));assert.equal(neutral.cost,bill(neutral));assert.equal(foe.cost,bill(foe));
     assert.ok(friend.cost<neutral.cost&&neutral.cost<foe.cost,`${friend.cost}<${neutral.cost}<${foe.cost}`);
     const [low,high]=world.rules.economy.priceFactorLimits.relation;
     assert.ok(friend.quote.explanation.relation>=low&&foe.quote.explanation.relation<=high);
@@ -194,14 +207,14 @@ test('关系与声望、店家加成进入实时投影；议价只在规则区�
     assert.equal(cup.cost,Math.trunc(q.explanation.value.value*q.explanation.depth*1.2*q.explanation.relation));
 
     const g=fixture();
-    const row=projected(g,host,'item_mutton'),[lo,hi]=world.rules.economy.priceFactorLimits.bargain;
+    const row=projected(g,host,'item_mutton'),[lo,hi]=world.rules.economy.priceFactorLimits.bargain,scarcity=foodScarcity(g);
     // S5-02: retain both range rejection and exact negotiated payment; derive
     // the offered amount from today's market instead of an obsolete anchor.
     await assert.rejects(g.act('world_trade',{seller:host,item:'item_mutton',quantity:1,unitPrice:Math.ceil(row.listPrice*lo)-1},'lowball'),/单价/);
     const offer=Math.ceil(row.listPrice*hi),deal=await g.act('world_trade',{seller:host,item:'item_mutton',quantity:1,unitPrice:offer},'haggle');
     const settled=Object.values(g.doc.state.records).find(x=>x.category==='market_trade');
-    // Neutral mutton 12*.5=6, upper bargain bound ceil(6*1.1)=7.
-    assert.equal(deal.cost,7);
+    // 中立立场的羊肉：12 基价 × 稀缺度（见 foodScarcity）= 挂牌价；议价上限 = 挂牌价 × 议价区间上界，向上取整（手推，不调用报价函数）。
+    assert.equal(deal.cost,Math.ceil(12*scarcity*hi));
     assert.equal(deal.cost,offer);assert.equal(settled.totalCoins,offer);assert.equal(settled.quantity,1);
 });
 
@@ -210,9 +223,9 @@ test('同日按新立场与成交深度重报，次日重新派生',async()=>{
     // strict paid-copper regard assertions survive total truncation;
     // with baseline 12 both neutral 6 and hostile 6.9 truncate to 6.
     const f=fixture({edit:w=>{w.items.find(i=>i.id==='item_mutton').basePrice=120;}});
-    const first=await f.act('world_trade',{seller:host,item:'item_mutton',quantity:1},'m1');
-    // Neutral opening: 120 baseline × .5 scarcity × remaining factors 1.
-    assert.equal(first.cost,60);
+    const scarcity=foodScarcity(f),first=await f.act('world_trade',{seller:host,item:'item_mutton',quantity:1},'m1');
+    // 中立开价：120 基价 × 稀缺度（见 foodScarcity，成交前的状态）× 其余因子 1，整张账单截断；稀缺度略小于 1，所以比 120 少一点。
+    assert.equal(first.cost,Math.trunc(120*scarcity));
     f.doc.state.records[`standing:${host}:player`]={category:'standing',holder:host,target:'player',value:-100,history:[]};
     f.doc.state.records['standing:loc_hw:player']={category:'standing',holder:'loc_hw',target:'player',value:-100,history:[]};
     const second=await f.act('world_trade',{seller:host,item:'item_mutton',quantity:1},'m2');
