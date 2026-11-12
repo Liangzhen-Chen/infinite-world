@@ -22,6 +22,14 @@ function roundTripDays(engine,seed,from,to){
 // 每季期望倍数 E_s = Σ(seasonalWeights[s][i] × states[kinds[i]].crop) ÷ Σ seasonalWeights[s]：天气逐日按"持续概率×昨日 + (1−持续概率)×季节权重"抽取（weather.mjs:69-74），
 // 其稳态边缘分布就是季节权重，所以期望取权重加权平均（权重列顺序 = weather.mjs:58 的 kinds = rules.weather.states 的键序；数据出处 world/meta/rules.json:4836 states、:4911 seasonalWeights、:4945 cropSeasonFactors）。
 // 期望季节倍数 g_s = cropSeasonFactors[s] × E_s；名义产量 × g_s 就是该季日均入仓。
+// 农事规则的结转储备天数：所有农事档案（rules.agriculture.settlements[].reserveDays）取值必须一致，返回该值；
+// 没有档案或取值不一致直接报错并列出各档案的取值，不按数组位置挑一个。
+export function agricultureReserveDays(engine){
+ const rows=engine.rules.agriculture?.settlements??[];
+ if(!rows.length)throw Error('没有农事档案，推不出结转储备天数 reserveDays');
+ if(new Set(rows.map(p=>p.reserveDays)).size!==1||!(rows[0].reserveDays>=0))throw Error(`农事档案的 reserveDays 不一致或无效，无法定义统一的结转储备：${rows.map(p=>`${p.settlement}=${p.reserveDays}`).join('、')}`);
+ return rows[0].reserveDays;
+}
 export function seasonYieldFactors(rules){
  const w=rules.weather,kinds=Object.keys(w.states);
  return w.cropSeasonFactors.map((factor,s)=>{
@@ -32,14 +40,14 @@ export function seasonYieldFactors(rules){
 }
 // 没有集中的收获日，供粮源就是它自己。储备视野 = 季节储备 + 结转储备，与农事村"距下次收获 + reserveDays"同一规律：
 //  · 季节储备：从现在起往后一整年（360 日、每季 90 日）逐日累计 (需求 − 期望入仓) ÷ 需求（以天计）的最大累计亏空——先撑过入仓最少的一段（农事村是撑到下次收获，统计产粮按季节分摊）；
-//  · 结转储备 = 农事规则现有的 reserveDays（rules.agriculture.settlements[0].reserveDays，现为 90，与 food-stock.shortThresholdDays 的参照值同一个）。
+//  · 结转储备 = 农事规则现有的 reserveDays（agricultureReserveDays：所有农事档案取值一致才有定义，现为 90，与 food-stock.shortThresholdDays 的参照值同一个）。
 // 需求按人口计（统计产粮的名义产量是按人头标定的）。是否自产只看聚落自身，与有没有路无关；需要 state.minute 才知道现在是哪一季，缺失直接报错。
 export function selfSupplyDays(engine,state,place){
  if(engine.rules.agriculture?.settlements?.some(p=>p.settlement===place))return null;
  if(!state?.settlements)throw Error('推补给间隔需要聚落状态（state），以判断聚落是否自产粮');
  const s=state.settlements[place];if(!(s?.foodPerDay>0))return null;
  if(!Number.isFinite(state.minute))throw Error('自产粮聚落推补给间隔需要当前时刻（state.minute），不给默认值');
- const carry=engine.rules.agriculture.settlements[0].reserveDays,g=seasonYieldFactors(engine.rules),day0=Math.floor(state.minute/1440),need=s.population;
+ const carry=agricultureReserveDays(engine),g=seasonYieldFactors(engine.rules),day0=Math.floor(state.minute/1440),need=s.population;
  if(!(need>0))return carry;
  let cumulative=0,worst=0;
  for(let k=0;k<360;k++){

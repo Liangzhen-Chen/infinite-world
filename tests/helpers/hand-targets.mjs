@@ -26,8 +26,14 @@ export function handSelfReserve(engine,minute,foodPerDay,population){
     if(done>0)blocks.push([season,done]);
     let cum=0,worst=0;
     for(const [s,len] of blocks){cum+=len*(population-foodPerDay*f[s])/population;worst=Math.max(worst,cum);}
-    // 加结转储备：农事规则的 reserveDays（rules.agriculture.settlements[0]，现为 90）。
-    return worst+engine.rules.agriculture.settlements[0].reserveDays;
+    // 加结转储备：农事规则的 reserveDays（各档案一致，现为 90；手推，不调被测的 agricultureReserveDays）。
+    return worst+handReserveDays(engine.rules);
+}
+// 结转储备天数手推：所有农事档案 reserveDays 逐个收集，前置断言全部一致后取该值。
+export function handReserveDays(rules){
+    const values=[...new Set(rules.agriculture.settlements.map(p=>p.reserveDays))];
+    assert.equal(values.length,1,'前置：农事档案 reserveDays 一致');
+    return values[0];
 }
 // 每季期望产量倍数手推：g_s = cropSeasonFactors[s] × E_s，E_s = Σ(季节权重 × 该天气的 crop) ÷ Σ权重；天气顺序写死为规则数据的列序（晴、阴、雨、暴雨、雪、雾，world/meta/rules.json seasonalWeights 列）。
 export function handSeasonYield(rules){

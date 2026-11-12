@@ -16,8 +16,9 @@ import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {recordCraft} from '../server-plugin/craft-record.mjs';
 import {WORK_RULES} from '../server-plugin/works.mjs';
-import {craftUseWindowDays} from '../server-plugin/supply-interval.mjs';
-import {handSelfReserve,handSeasonYield} from './helpers/hand-targets.mjs';
+import {craftUseWindowDays,agricultureReserveDays,selfSupplyDays} from '../server-plugin/supply-interval.mjs';
+import {shortThresholdDays} from '../server-plugin/food-stock.mjs';
+import {handSelfReserve,handSeasonYield,handReserveDays} from './helpers/hand-targets.mjs';
 import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -370,9 +371,26 @@ test('远方生成聚落统计产粮带季节系数：全年收支不为负，�
  w.set(['state','minute'],3*90*1440);assert.ok(unfoldRemoteAt(w,engine,'loc_far_duanqi'));
  const overlay=remoteEngine(engine,w.document,x=>new WorldEngine(x)),ws=w.get('state'),sid=Object.values(ws.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id))[0],cond={kind:'granary_short',days:45};
  const H=handSelfReserve(overlay,ws.minute,ws.settlements[sid].foodPerDay,ws.settlements[sid].population);
- assert.ok(H>overlay.rules.agriculture.settlements[0].reserveDays,'前置：冬季开局的季节储备大于结转储备（有季节缺口）');
+ assert.ok(H>handReserveDays(overlay.rules),'前置：冬季开局的季节储备大于结转储备（有季节缺口）');
  const dd=overlay.primitiveDraft(w.document),res=conditionMet(dd,overlay,{settlement:sid},cond,dd.get('state','minute'));
  assert.ok(Math.abs(res.threshold-0.5*H)<=1e-9*H);assert.equal(res.met,false);
+});
+
+test('结转储备天数：各农事档案一致才有定义；不一致或没有档案时报错并列出各档案取值，不按位置挑一个',()=>{
+ // 推导：一致时返回手推的统一值；把第二个档案的 reserveDays 改掉 → 不一致，目标（selfSupplyDays）与阈值（shortThresholdDays）都必须报错；清空档案 → 报错。
+ const {engine,doc}=setup('market-food-pool-reserve-consistency');
+ assert.equal(agricultureReserveDays(engine),handReserveDays(engine.rules));
+ // 只读规则的原语，用只带 rules 的替身引擎，不必构造整个世界。
+ const withProfiles=settlements=>({rules:{...engine.rules,agriculture:{...engine.rules.agriculture,settlements}}});
+ const base=structuredClone(engine.rules.agriculture.settlements);assert.ok(base.length>=2,'前置：至少两个农事档案');
+ base[1].reserveDays=base[0].reserveDays+1;
+ const odd=withProfiles(base);
+ assert.throws(()=>agricultureReserveDays(odd),new RegExp(`${base[1].settlement}=${base[1].reserveDays}`));
+ const state=structuredClone(doc.state),far='loc_probe_self';state.settlements[far]={population:100,foodPerDay:100,food:0};
+ assert.throws(()=>selfSupplyDays(odd,state,far),/不一致/);
+ assert.throws(()=>shortThresholdDays(engine.primitiveDraft(doc),odd,'loc_hw',45),/不一致/);
+ const none=withProfiles([]);
+ assert.throws(()=>agricultureReserveDays(none),/没有农事档案/);
 });
 
 test('没有日产粮的非农事聚落（觉醒部族骨架账）没有粮仓目标：不计该行，价格因子中性',()=>{
