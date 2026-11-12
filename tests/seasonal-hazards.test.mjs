@@ -8,6 +8,7 @@ import {applyEffects} from '../server-plugin/effects.mjs';
 import {advanceHazardClocks,assertHazardRules,validateHazardRules} from '../server-plugin/seasonal-hazards.mjs';
 import {pureHazardFires,hazardRouteClosure,hazardPriceFactor,famineAt} from '../server-plugin/hazard-calendar.mjs';
 import {thinGranaries} from './helpers/granary-fixture.mjs';
+import transportTable from '../world/rules/tables/balance/transport.json' with {type:'json'};
 import {goodsClass,goodsWeight} from '../server-plugin/market.mjs';
 import {farmTargetFood} from '../server-plugin/agriculture-migration.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
@@ -140,8 +141,12 @@ test('冬荒：存粮不足时粮价上涨，出现迁居与偷盗动机',async(
  const linsui=st.npcs.npc_hw_linsui,shelfRows=engine.rules.economy.shops.stores.filter(x=>x.keeper==='npc_hw_linsui').flatMap(x=>x.restock??[]).filter(r=>food(r.item));
  const held=Object.entries(linsui.inventory??{}).filter(([i])=>food(i)).reduce((n,[i,q])=>n+(q.quantity??q)*unit(i),0)+st.settlements.loc_hw.food*unit('item_oats');
  const target=shelfRows.reduce((n,r)=>n+(r.maximum+(r.reserve??0))*unit(r.item),0)+farmTargetFood(engine,st,engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw'),st.minute)*unit('item_oats');
- assert.ok(target/held>=0.5&&target/held<=3);
- assert.ok(Math.abs(regionalTradePrice(d,engine,'item_ration','loc_hw')-3.48*target/held)<=1e-9);
+ const [lo,hi]=engine.rules.economy.priceFactorLimits.region;assert.ok(target/held>=lo&&target/held<=hi);
+ // 前置：运输因子 1.16 的各项规则值（基价 3、24 公里、驮畜费率 0.02）先断言，规则变了在这里先报。
+ assert.equal(engine.byId.get('item_ration').basePrice,3);assert.equal(engine.world.routes.find(r=>r.id==='route_hw_bs').lengthKm,24);
+ assert.equal(transportTable.rows.find(r=>r.key==='carrier:pack').rate,0.02);
+ const base=3*(1+24*1*0.02/3);assert.ok(Math.abs(base-3.48)<1e-12);
+ assert.ok(Math.abs(regionalTradePrice(d,engine,'item_ration','loc_hw')-base*target/held)<=1e-9);
  // Not short of food: the condition holds the clock at phase 0.
  const fed=setup('hazard-famine',w=>{spring(w);w.rules.hazardClock.clocks.find(r=>r.kind==='famine').stages[0].condition.days=1;});
  assert.equal(rec(await fed.wait(fed.doc,3*DAY),'hazard-clock:famine:loc_hw'),undefined);

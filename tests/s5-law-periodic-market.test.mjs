@@ -331,9 +331,12 @@ test('顾客按十份口粮缺口采购，保留已知付款，不按钱袋固�
  // 单价 = 区域基准 × 稀缺度：基准 = 目录基价 3 × 运输因子 1.16（口粮产地 loc_bs 到 loc_hw 一条 24 公里路，单位运费 24×1×0.02 = 0.48，1 + 0.48÷3 = 1.16）= 3.48；
  // 稀缺度 = 需求 ÷ 供给 = 货架目标 20（restock maximum）÷ 100 = 0.2，低于下限 0.5，取 0.5（priceFactorLimits.region）；单价 3.48×0.5 = 1.74；
  // 总额 trunc(30×1.74) = trunc(52.2) = 52。
- const price=(3*(1+24*1*0.02/3))*0.5;assert.equal(marketTable.maxShare,0.3);
+ // 前置：每个手推用到的规则数值都先断言出来，规则若变，这里先报出是哪一项不符，而不是让价格悄悄偏掉。
+ const scarcityFloor=f.e.rules.economy.priceFactorLimits.region[0],shelfTarget=20,held=100,price=(3*(1+24*1*0.02/3))*scarcityFloor;
+ assert.equal(marketTable.maxShare,0.3);assert.equal(scarcityFloor,0.5);assert.ok(shelfTarget/held<scarcityFloor);
+ assert.ok(f.shop.restock.some(r=>r.item===item&&r.maximum===shelfTarget));
  assert.equal(f.e.byId.get(item).basePrice,3);assert.equal(f.e.world.routes.find(r=>r.id==='route_hw_bs').lengthKm,24);
- assert.deepEqual(bought.map(r=>[r.quantity,r.paid]),[[Math.floor(100*0.3),Math.trunc(Math.floor(100*0.3)*price)]]);
+ assert.ok(Math.abs(price-1.74)<1e-12);
  assert.deepEqual(bought.map(r=>[r.quantity,r.paid]),[[30,52]]);
  assert.ok(d.get('state','npcs',buyer,'coins')>=8);
  assert.ok(f.e.quantity(d,buyer,item)<=55);assert.ok(f.e.quantity(d,buyer,item)>0);

@@ -9,6 +9,8 @@ import {waterBasins,waterConnections,advanceWaterCycle,farmWaterFactor,waterExpo
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {advanceHazardClocks} from '../server-plugin/seasonal-hazards.mjs';
 import {advanceAgriculture} from '../server-plugin/agriculture.mjs';
+import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {resupplyDays} from '../server-plugin/supply-interval.mjs';
 import {woodcut} from '../server-plugin/sites.mjs';
 import {siteAction} from '../server-plugin/sites.mjs';
 import {environmentCatalog} from '../server-plugin/environment.mjs';
@@ -261,8 +263,13 @@ test('P3统计粮食产出也扣灌溉水，无详细农田的远方聚落遇旱
    Object.assign(w.rules.forestWater.water,{capacityMl:1000000,evaporationShare:0,drinkingMlPerPerson:0});
    for(const kind of Object.keys(w.rules.forestWater.water.rainShare))w.rules.forestWater.water.rainShare[kind]=rain;
   });
-  // 夹具存粮 = 100 口 × 240 天（周贸易规则的 targetDays 已删，改为农事聚落按 farmTargetFood 推导；这里只是个固定的夹具数量）；非农事聚落的目标持有现为餐口 × 补给间隔，价格相关期望待重推，未改值。
-  x.d.set(['state','settlements','loc_rw_statfarm'],{name:'统计田地',population:100,food:100*240,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
+  // 夹具意图：统计田地（不在农事表）开局存粮正好等于它的目标持有，使粮价稀缺度落在夹取区间内，旱年少产的粮才会显现在价格上。
+  // 目标持有 = 餐口 × 补给间隔天数（resupplyDays，与 market.mjs 非农事聚落的粮仓目标同一口径），这里直接读同一原语，不写死天数。
+  const farmId='loc_rw_statfarm',pop=100;
+  x.d.set(['state','settlements',farmId],{name:'统计田地',population:pop,food:0,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
+  const heldTarget=Math.ceil(mealMouthsOf(x.engine,x.d.get('state'),farmId,pop)*resupplyDays(x.engine,x.d.get('randomSeed'),farmId));
+  assert.ok(heldTarget>0);
+  x.d.set(['state','settlements',farmId,'food'],heldTarget);
   const day=Math.floor(x.d.get('state','minute')/DAY);x.d.set(['state','minute'],(day+1)*DAY);
   advanceRegistry.find(r=>r.id==='daily').advance(x.engine,x.d,{before:day*DAY,after:(day+1)*DAY});return x;
  };
