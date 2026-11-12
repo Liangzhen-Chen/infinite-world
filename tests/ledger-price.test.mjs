@@ -59,6 +59,7 @@ const SURVEY={
     // S5-01 / 15 §15.2: this is the primitive baseline/correction slot,
     // not another inventory-priced consumer. Market callers read the books.
     'derived.mjs':'economy:value 缺省基准取主体 basePrice 事实；只计算上下文基准与修正项，不自行读取库存或现款，供需由市场调用方经已登记账户读取',
+    'distribution.mjs':'basePrice>0 只判定“是不是有定价的可交易物品”（目录事实），不计价、不读存量；进货报价经 market 的报价（marketQuote）取得',
     // W8-A：dialogue / festival / primitives-runtime 的礼物、奖品、同意成本估值已改走估值角色（valuation.mjs 的 goods 市场估值投影），
     // 不再含价格字样，按本测试的规则从归类表删除。
     'manufacturing.mjs':'配方投入重置成本经 regionalTradePrice 统一估值，不自行读取库存',
