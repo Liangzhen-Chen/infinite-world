@@ -108,7 +108,10 @@ if(want('C')){
  };
  const run=async(s,minutes,id)=>{const out=await s.engine.reduce(s.d.document,{tool:'world_time',args:{minutes},eventId:id});for(const p of out.patches){if(p.op==='delete')s.d.remove(p.path);else s.d.set(p.path,p.value);}};
  const snap=s=>{const st=s.d.get('state'),n=st.npcs[who],b=st.buildings?.[s.forge];
-  return {minute:st.minute,smith:{location:n.location,activity:n.activity},forge:b?{burning:b.burning,fireSince:b.fireSince,fireTick:b.fireTick,condition:b.condition}:null,
+  // 铁匠为什么没有在 620 离开：他名下的自主任务、行程记录、日程占用（scheduleTravel/cognitionTravel）、约定。
+  const tasks=Object.values(st.npcAutonomy?.tasks??{}).filter(t=>t.npc===who).map(t=>({id:t.id,action:t.action?{kind:t.action.kind,labor:t.action.labor,item:t.action.item,quantity:t.action.quantity,source:t.action.source}:null,status:t.status,from:t.start??t.startAt,to:t.end??t.endAt}));
+  const trips=Object.values(st.records??{}).filter(r=>r.category==='market_trip'&&(r.actor===who||r.keeper===who)).map(r=>({id:r.id,departAt:r.departAt,returnAt:r.returnAt,from:r.from,to:r.to}));
+  return {minute:st.minute,smith:{location:n.location,activity:n.activity,scheduleTravel:n.scheduleTravel,cognitionTravel:n.cognitionTravel,status:n.status,tasks,trips},forge:b?{burning:b.burning,fireSince:b.fireSince,fireTick:b.fireTick,condition:b.condition}:null,
    hearthBurning:st.records?.[`physical_feature:${s.featureId}`]?.state?.thermal?.burning,
    unattended:Object.keys(st.records??{}).filter(k=>k.startsWith('unattended_furnace')),food:st.settlements.loc_hw.food,
    charcoalPrice:attempt(()=>regionalTradePrice(read(s.d.document),s.engine,'item_charcoal','loc_hw')),woodPrice:attempt(()=>regionalTradePrice(read(s.d.document),s.engine,'item_wood','loc_hw'))};};
