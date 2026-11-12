@@ -1,8 +1,8 @@
 {
  "version": 1,
- "commit": "910c08d3c2ddb409bb2f077d3e735bdeff76f170",
- "campaignId": "campaign_2a9cb764-afb3-4f46-aaa7-71b00df6fbf4",
- "contentHash": "02cbd3c567bebf53d0f9ea2b22688d1b4764ead9d3e1a9be8ee19a6456f02393",
+ "commit": "fb5816455f7af43a270d9e023eebb746bcba321e",
+ "campaignId": "campaign_7e4671a4-d30a-4f12-bb63-7f57f32f73f9",
+ "contentHash": "2b3d275bede669dd0bf3a068bd022c4e5e1ec5d99c6427a12c14c7606612b833",
  "model": "replay-record-stub",
  "seed": "playtest-fixed-seed-v1",
  "create": {},
@@ -49,7 +49,7 @@
    }
   }
  ],
- "initialStateHash": "5ca87ad7abd67c526217057df3f93df81c078104a68870351393bd39a3a35c1b",
- "ruleStateDigest": "54d5e945eb2523e39227c537f688c4da9575e6af3b8db00de8644866b865f21f",
+ "initialStateHash": "08fdb68a855f231f6b27d9f3e53337bfa5ca04d28d9073bdec9ff131383617dd",
+ "ruleStateDigest": "3ddce437be9a4edcb851ab00f99ee77fe2d7f610f25b36e585ede701a7b3f0ee",
  "textDigest": "d3643cbf56e70d90709ccf6bd2e2cb804caa89ab2ce1f32cb6aacb7455bf9556"
 }
