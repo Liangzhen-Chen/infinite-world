@@ -8,7 +8,7 @@ import {tradeQuote,shopStores,derivedShops} from '../server-plugin/shop.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {upkeepDemand} from '../server-plugin/market.mjs';
 import {isItemClass} from '../server-plugin/item-class.mjs';
-import {placeSettlement,personBusinesses} from '../server-plugin/entity-view.mjs';
+import {placeSettlement,personBusinesses,settlementPopulation} from '../server-plugin/entity-view.mjs';
 import {usageItemGrams,upkeepSelfSupplyOf} from '../server-plugin/household-budget.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
@@ -57,7 +57,9 @@ function handQuote(doc){
  for(const id of owners){const npc=state.npcs[id];if(!npc||placeSettlement(engine,state,npc.location).value!=='loc_hw')continue;for(const it of pool)heldGrams+=q(npc.inventory?.[it.id])*weight(it.id);}
  const shelfGrams=stores.filter(s=>s.settlement==='loc_hw').flatMap(s=>s.restock??[]).filter(r=>pool.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight(r.item),0);
  const fuel=world.balance.crafting.params.find(p=>p.id==='household.fuelKgPerDay').value,N=(fuel.cooking+(fuel.heating[engine.calendar(state.minute).season]??0))*1000;
- const houses=engine.world.settlementProfiles.find(p=>p.id==='loc_hw').householdCount,owed=keys.reduce((n,k)=>n+(state.family?.upkeep?.[k]?.fuelDebtG??0),0);
+ const houses=engine.world.settlementProfiles.find(p=>p.id==='loc_hw').householdCount;
+ assert.equal(settlementPopulation(engine,state,'loc_hw').householdCount.value,houses,'前置：动态户数 = 档案户数（户都在世、都有人；缺柴只写欠量，不改户口）');
+ const owed=keys.reduce((n,k)=>n+(state.family?.upkeep?.[k]?.fuelDebtG??0),0);
  const supply=heldGrams/unit,demand=Math.max((shelfGrams+cycle*N*houses+owed)/unit,1);
  const [floor,cap]=engine.rules.economy.priceFactorLimits.region,scarcity=Math.min(cap,Math.max(floor,demand/Math.max(1,supply)));
  return {supply,demand,scarcity,price:engine.byId.get(item).basePrice*scarcity,N,keys};

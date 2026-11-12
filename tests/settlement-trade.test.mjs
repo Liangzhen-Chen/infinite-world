@@ -12,10 +12,10 @@ import {createTransportAsset} from '../server-plugin/transport.mjs';
 import {bag} from '../server-plugin/stock.mjs';
 import transportTable from '../world/rules/tables/balance/transport.json' with {type:'json'};
 import {handTarget} from './helpers/hand-targets.mjs';
-import {marketSupply} from '../server-plugin/market.mjs';
-import {usageItemGrams} from '../server-plugin/household-budget.mjs';
+import {usageItemGrams,upkeepSelfSupplyOf} from '../server-plugin/household-budget.mjs';
 import {isItemClass} from '../server-plugin/item-class.mjs';
-import {personBusinesses,placeSettlement} from '../server-plugin/entity-view.mjs';
+import {personBusinesses,placeSettlement,settlementPopulation} from '../server-plugin/entity-view.mjs';
+import {shopStores,derivedShops} from '../server-plugin/shop.mjs';
 import {thinGranaries} from './helpers/granary-fixture.mjs';
 import {granaryCapacity} from '../server-plugin/facility-state.mjs';
 
@@ -263,21 +263,37 @@ test('公共报价只读且随真实供给重派生，距离与运输风险进�
     // Changed stock is a non-examined premise; synchronize the existing books.
     setGrain(d.document,lane.buyer,100);resyncBooks(engine,d.document);assert.ok(regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+1)>first);
     const next=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+DAY);assert.ok(next>first);
-    // 河湾木料：目录基价 4，产地就在本聚落（运输因子 1，不计运费）。木料与木炭同属燃料用度池（按基准克计量）：
-    // 供给 = 公仓木料存量（开局 28）+ 本聚落各经营者行囊里的燃料类货折成木料件数（一件木炭顶 usageItemGrams(炭) ÷ usageItemGrams(木) 件木料；权重由 market-food-pool 另行手推）。
-    // 本条只断言供给与"只读"：需求要加户用 × 补给间隔 × 户数、货架与制造耗料，其手推在 market-food-pool 与 ke-upkeep-demand 里，这里不再用被测的需求算价；
-    // 价只断言落在规则的区域夹取区间内（基价 × [下限, 上限]）。
-    const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc),timber=marketSupply(outside,engine,'item_wood','loc_hw');
-    // 前置：本聚落的经营者（店主、带 trade 服务的人、按人物派生的营业者）里，只有铁匠铺主持有燃料类货（木炭），别人行囊里没有。
-    const fuelPool=engine.world.items.filter(i=>isItemClass(engine,i.id,'fuel')&&!(i.nutrition?.satiety>0)&&usageItemGrams(engine,i.id,'fuel')>0),held=v=>typeof v==='number'?v:v?.quantity??0;
-    const keepers=new Set([...engine.rules.economy.shops.stores.map(s=>s.keeper),...engine.world.npcs.filter(n=>n.shopType||(n.services??[]).includes('trade')).map(n=>n.id)]);
-    for(const [id,business] of personBusinesses(engine,doc.state))if(business?.open.value&&business.shopType.value)assert.ok(keepers.has(id),`前置：派生的营业者 ${id} 已在经营者集合里`);
-    for(const id of keepers){const npc=doc.state.npcs[id];if(!npc||placeSettlement(engine,doc.state,npc.location).value!=='loc_hw')continue;
-     for(const it of fuelPool)if(held(npc.inventory?.[it.id])>0)assert.ok(id==='npc_hw_duanyan'&&it.id==='item_charcoal',`前置：${id} 不该持有燃料 ${it.id}`);}
-    const charcoalHeld=held(doc.state.npcs.npc_hw_duanyan.inventory.item_charcoal),[floor,cap]=engine.rules.economy.priceFactorLimits.region;
-    const heldSupply=doc.state.settlements.loc_hw.wood+charcoalHeld*usageItemGrams(engine,'item_charcoal','fuel')/usageItemGrams(engine,'item_wood','fuel');
-    assert.equal(engine.byId.get('item_wood').basePrice,4);assert.ok(Math.abs(timber.supply-heldSupply)<=1e-9*heldSupply);
-    const price=regionalTradePrice(outside,engine,'item_wood','loc_hw');assert.ok(price>=4*floor-1e-9&&price<=4*cap+1e-9);assert.deepEqual(outside.document,unchanged);
+    // 河湾木料：目录基价 4，产地就在本聚落（运输因子 1，不计运费）；价 = 4 × 夹取(需求 ÷ 供给)。木料与木炭同属燃料用度池，供需都按基准克折成木料件数（unit = usageItemGrams(木)）。
+    // 需求与供给用另一份夹具手推：每日出行上限压到 1 分钟，没有户够得到公共来源（前置逐户断言自给 0），经市场的户用就是全额；手推同 ke-upkeep-demand 的 handQuote：
+    //  · 供给 = (公仓木料 × 木基准克 + 本聚落各经营者行囊里的燃料 × 各自基准克) ÷ unit；
+    //  · 需求 = max((货架目标 + 补给间隔 H × 日用度 N × 聚落户数 + Σ名册户欠量) ÷ unit, 1)；货架目标 = shopStores 里本聚落各店燃料类行的 (maximum+reserve) × 基准克；
+    //    N = (炊事 + 当季取暖公斤) × 1000（规则 household.fuelKgPerDay）；H = 交易周期（木料产自本聚落、生产周期不超过交易周期，各货间隔都不小于交易周期）；制造耗料为 0（前置断言）。
+    const fw=structuredClone(world);fw.rules.householdSubsistence.maximumJourneyMinutes=1;
+    const fx=setup({source:fw}),fe=fx.engine,fd=draft(fx.doc),funchanged=structuredClone(fx.doc),fs_=fx.doc.state,cycle=fe.rules.economy.tradeCycleDays;
+    const fuelPool=fe.world.items.filter(i=>isItemClass(fe,i.id,'fuel')&&!(i.nutrition?.satiety>0)&&usageItemGrams(fe,i.id,'fuel')>0),weight=id=>usageItemGrams(fe,id,'fuel'),unit=weight('item_wood'),held=v=>typeof v==='number'?v:v?.quantity??0;
+    assert.equal(fe.byId.get('item_wood').basePrice,4);assert.equal(placeSettlement(fe,fs_,fe.byId.get('item_wood').origin).value,'loc_hw');
+    assert.ok(fe.world.recipes.filter(r=>r.output?.item==='item_wood').every(r=>r.minutes<=cycle*DAY),'前置：本地生产周期不超过交易周期');
+    assert.equal(fs_.records?.['craft-use:loc_hw'],undefined,'前置：没有制造耗料记录');
+    assert.deepEqual(derivedShops(fe.world),[],'前置：没有按人物派生的店铺');
+    const stores=shopStores(fe.world),keepers=new Set([...stores.map(s=>s.keeper),...fe.world.npcs.filter(n=>n.shopType||(n.services??[]).includes('trade')).map(n=>n.id)]);
+    for(const [id,business] of personBusinesses(fe,fs_))if(business?.open.value&&business.shopType.value)assert.ok(keepers.has(id),`前置：派生的营业者 ${id} 已在经营者集合里`);
+    const roster=Object.keys(fs_.npcs).filter(id=>placeSettlement(fe,fs_,fs_.npcs[id].location).value==='loc_hw'),keyOf=id=>fe.world.households.find(h=>h.members.includes(id))?.id??id,keys=[...new Set(roster.map(keyOf))];
+    for(const id of roster)assert.equal(upkeepSelfSupplyOf(fe,fs_,id).fuel??0,0,`前置：${id} 没有可达的公共来源，自给 0`);
+    // 前置：开局只有铁匠铺主持有燃料类货（木炭），别的经营者行囊里没有。
+    let heldGrams=fs_.settlements.loc_hw.wood*weight('item_wood');
+    for(const id of keepers){const npc=fs_.npcs[id];if(!npc||placeSettlement(fe,fs_,npc.location).value!=='loc_hw')continue;
+     for(const it of fuelPool){const n=held(npc.inventory?.[it.id]);if(n>0)assert.ok(id==='npc_hw_duanyan'&&it.id==='item_charcoal',`前置：${id} 不该持有燃料 ${it.id}`);heldGrams+=n*weight(it.id);}}
+    const profileHouses=fe.world.settlementProfiles.find(p=>p.id==='loc_hw').householdCount;
+    assert.equal(settlementPopulation(fe,fs_,'loc_hw').householdCount.value,profileHouses,'前置：动态户数 = 档案户数（户都在世、都有人）');
+    const fuel=fw.balance.crafting.params.find(p=>p.id==='household.fuelKgPerDay').value,N=(fuel.cooking+(fuel.heating[fe.calendar(fs_.minute).season]??0))*1000;
+    const owed=keys.reduce((n,k)=>n+(fs_.family?.upkeep?.[k]?.fuelDebtG??0),0);
+    const shelfGrams=stores.filter(s=>s.settlement==='loc_hw').flatMap(s=>s.restock??[]).filter(r=>fuelPool.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight(r.item),0);
+    const supply=heldGrams/unit,demand=Math.max((shelfGrams+cycle*N*profileHouses+owed)/unit,1);
+    const [floor,cap]=fe.rules.economy.priceFactorLimits.region,ratio=demand/Math.max(1,supply),scarcity=Math.min(cap,Math.max(floor,ratio));
+    const price=regionalTradePrice(fd,fe,'item_wood','loc_hw');
+    assert.ok(Math.abs(price-4*scarcity)<=1e-9*Math.max(1,4*scarcity),`木料价 ${price} = 4 × 夹取(手推需求 ${demand} ÷ 手推供给 ${supply}) = ${4*scarcity}`);
+    if(ratio>=cap)assert.ok(Math.abs(price-4*cap)<=1e-9);
+    assert.deepEqual(fd.document,funchanged,'报价只读');
 });
 test('玩家world_trade消费实时区域价并扣真实商人库存；同日深度与次日复位',async()=>{
     const {engine,doc}=setup(),sid=lanes[0].seller,seller='npc_hw_ayan';
