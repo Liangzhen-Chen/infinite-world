@@ -51,6 +51,10 @@ test('current stock net assets share market value and S5-01 corrections, not his
  // D14, S10-3=7, price2*14/7=4; cost history remains irrelevant.
  // EC-1a 之后：采购口径扣聚落公粮（household-budget.mjs:378-379），白石村有粮库，店主一家口粮由公粮覆盖，面包不必自留：
  // D14, S10-0=10, price2*14/10=2.8; cost history remains irrelevant. 净资产 200+10*2.8=228。
+ // 前置（从引擎读）：相关留存为 0（面包没有被自留），供给与需求正是手算的 10 与 14。
+ const ration=saleableStock(f.read(),f.engine,host,bread),supplyNow=marketSupply(f.read(),f.engine,bread,inn);
+ assert.equal(ration.retained,0,'precondition: the public ration covers the household, no bread is retained');
+ assert.equal(supplyNow.supply,10);assert.equal(supplyNow.demand,14);
  assert.equal(netAssets(f.read(),f.engine,host),200+10*2.8);
  // Registered correction still changes current value:2.8+1=3.8.
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'asset-value',pack:'market',target:'economy:value',stage:'add',value:1}]}};

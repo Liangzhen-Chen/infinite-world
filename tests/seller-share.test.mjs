@@ -144,7 +144,8 @@ test('a multi-person household takes one share, not one per member with cash',()
  assert.deepEqual(parts(both),parts(one),'a second moneyed member does not change any household part');
  // EC-1a 一户一份预算：户的份额只有一个名额（上面各户份额之和仍受存货限制），户里每位成员读自家预算时读到的就是这同一份，而不是各取一份或只有一人读得到。
  assert.equal(credited(both,'npc_hw_taozhi'),credited(both,'npc_hw_chenbai'),'the housemate reads the same single household share');
- assert.ok(sum(parts(both))<=sellable(both));
+ // 一户只算一次：各户份额之和（每户取一名成员读数，卖方一户除外）不超过可售量；同户成员读到的是同一份，不能逐人相加。
+ assert.ok(sum(groups.slice(1).map(g=>credited(both,g[0])))<=sellable(both));
  // The stock must really bind, or both readings would equal the household's own demand and prove nothing:
  // the buyer gets strictly more when the other households hold no cash (it is then the only buyer).
  const solo=make(0,{npc_hw_xuling:0,npc_hw_wushuo:0});

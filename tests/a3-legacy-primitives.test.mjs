@@ -9,6 +9,7 @@ import {withLedger,accountKey,auditLedger,transfer,declareLedgerWriter} from '..
 import {openHoldings,openHolding,closeHolding,declareHoldingWriter,updateEntity} from '../server-plugin/holdings.mjs';
 import {loadActionRegistry} from '../server-plugin/action-registry.mjs';
 import {executeOpenSequence} from '../server-plugin/open-actions.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
 import {readBodyState} from '../server-plugin/primitives-body.mjs';
 import {legacyLedgerEffects,adaptLegacyExecution} from '../server-plugin/legacy-primitives.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
@@ -52,6 +53,8 @@ function postings(before,after,receipt){
 
 test('A3 legacy receipt: buy preview/commit/reload use actual two-sided postings, with no second payment',async()=>{
  const {engine,document}=fixture(),input=call('core:trade.buy',{seller:SELLER,item:BREAD,quantity:2},'legacy-buy'),before=structuredClone(document);
+ // 前置（从引擎读，购买前同一状态）：同类食物的供给与需求；价格的稀缺度 = 需求/供给，夹在区域下限之内。
+ const supplyBefore=marketSupply({document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)},engine,BREAD,document.state.npcs[SELLER].location);
  const preview=await engine.previewAction(document,input);assert.deepEqual(document,before);
  const out=await engine.reduce(document,input),after=applyPatches(document,out.patches),r=out.result.receipt;
  assert.deepEqual(preview.receipt.applied,r.applied);assert.equal(r.status,'committed');
@@ -65,8 +68,9 @@ test('A3 legacy receipt: buy preview/commit/reload use actual two-sided postings
  // 即 meiling 12→18、店主 linsui 10→7、玩家 1→2（货架上限 14 与 upkeep 0 不变，不是需求来源）。
  // 这些变动来自 st-5 之后已批准的两类规则改动：R1（t-sat：饱腹改由推导，item-class.mjs satietyFactor；燕麦饼 30→12，户内口粮件数与单餐额度据此重算）
  // 与同批 t-avail（household-budget.mjs accessibleSources：市场替代只算买得起的来源，影响户内留存）；st-5..HEAD 的服务端改动只有这两类（food-habit/household-budget/item-class/npc-autonomy/shop）。
- // EC-1a 之后（采购口径扣聚落公粮，household-budget.mjs:378-379；白石村有粮库，登记户口粮由公粮覆盖）：各户 retained 归 0，需求只剩货架上限等非留存部分，
- // 供给变成全部可售存量（卖方行留存 0），需求/供给 ≤ 0.5，稀缺度回到 0.5 地板：8 × 0.5 × 两件 = 8，精确 8（旧口径“8 × 0.5 × 2 = 8”即地板的同一算式）。
+ // EC-1a 之后（采购口径扣聚落公粮，household-budget.mjs:378-379）：登记户口粮由公粮覆盖，各户 retained 归 0，供给升、需求降。
+ // 静态推不出比值（需求里玩家与未登记 NPC 的留存仍在，market.mjs:219），所以用引擎读出的供给与需求核对：比值 ≤ 0.5 才会被夹到 0.5 地板，价才是 8 × 0.5 × 两件 = 8（旧口径同一算式）。
+ assert.ok(supplyBefore.demand/Math.max(1,supplyBefore.supply)<=0.5,`precondition: demand ${supplyBefore.demand} / supply ${supplyBefore.supply} must be at most 0.5 to land on the floor`);
  assert.equal(money.from,accountKey('player','coin_river','purse'));assert.equal(money.to,accountKey(SELLER,'coin_river','purse'));assert.equal(money.qty,8);
  assert.equal(goods.from,accountKey(SELLER,BREAD,'inventory'));assert.equal(goods.to,accountKey('player',BREAD,'inventory'));assert.equal(goods.qty,2);
  r.applied.forEach((e,index)=>{assert.equal(e.index,index);assert.deepEqual(e.source,{kind:'catalog',id:'core:trade.buy'});assert.equal(e.role,'outcome');});

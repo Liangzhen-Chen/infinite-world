@@ -8,6 +8,7 @@ import {applyEffects} from '../server-plugin/effects.mjs';
 import {advanceHazardClocks,assertHazardRules,validateHazardRules} from '../server-plugin/seasonal-hazards.mjs';
 import {pureHazardFires,hazardRouteClosure,hazardPriceFactor,famineAt} from '../server-plugin/hazard-calendar.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
 import {advanceNpcLife,npcLifeLines} from '../server-plugin/npc-life.mjs';
 import {advanceNpcNeeds} from '../server-plugin/npc-intelligence.mjs';
 import {traitsOf} from '../server-plugin/traits.mjs';
@@ -127,9 +128,12 @@ test('冬荒：存粮不足时粮价上涨，出现迁居与偷盗动机',async(
  // 供给47 = 林穗店面包等同类食物可售行相加（库存−留存−承诺）；需求29 = 林穗自留存7 + 同聚落非商家持有人留存22。
  // 对应设计变化：面包饱腹改推导（饱腹 30→16，各户留存份数升，c0a7ea22，PLAN.md:584、591③）与卖家份额分摊（f8e4a13b，PLAN.md:316③、563②）；
  // 李白 11-11 选 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md。断言仍为精确相等。
- // EC-1a 之后（采购口径扣聚落公粮，household-budget.mjs:378-379；loc_hw 有粮库，登记户口粮由公粮覆盖，各户 retained 归 0）：需求/供给 ≤ 0.5，供需比回到 0.5 下限，
- // 价 = 3×1.6×0.5（即上面“旧值 2.4=3×1.6×0.5 是被钳住的结果”的同一算式）。断言仍为精确相等。
- const d=draft(c);assert.equal(regionalTradePrice(d,engine,'item_ration','loc_hw'),3*1.6*0.5);
+ // EC-1a 之后（采购口径扣聚落公粮，household-budget.mjs:378-379；loc_hw 有粮库，登记户口粮由公粮覆盖，各户 retained 归 0）：供给升、需求降。
+ // 静态推不出比值（玩家与未登记 NPC 的留存仍在需求里，market.mjs:219），所以用引擎读出的供给与需求核对：比值 ≤ 0.5 才回到 0.5 下限，
+ // 价才是 3×1.6×0.5（即上面“旧值 2.4=3×1.6×0.5 是被钳住的结果”的同一算式）。断言仍为精确相等。
+ const d=draft(c),supplyNow=marketSupply(d,engine,'item_ration','loc_hw');
+ assert.ok(supplyNow.demand/Math.max(1,supplyNow.supply)<=0.5,`precondition: demand ${supplyNow.demand} / supply ${supplyNow.supply} must be at most 0.5 to land on the floor`);
+ assert.equal(regionalTradePrice(d,engine,'item_ration','loc_hw'),3*1.6*0.5);
  // Not short of food: the condition holds the clock at phase 0.
  const fed=setup('hazard-famine',w=>{spring(w);w.rules.hazardClock.clocks.find(r=>r.kind==='famine').stages[0].condition.days=1;});
  assert.equal(rec(await fed.wait(fed.doc,3*DAY),'hazard-clock:famine:loc_hw'),undefined);

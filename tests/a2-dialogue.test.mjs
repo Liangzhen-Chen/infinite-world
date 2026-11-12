@@ -1,5 +1,6 @@
 import {relationView} from '../server-plugin/npc-state.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 import bargainingTable from '../world/rules/tables/bargaining.json' with {type:'json'};
 // A3 causal2: compare the same trust changes through the single read model.
@@ -73,6 +74,8 @@ test('N13 急事结束谈话并登记待办；未成年人和同意不能由玩�
 test('还价按轮数与让步表，确认后实际成交；只改成交价格，钱物仍守恒',async t=>{
  let patched;
  const ui=await setup(t,s=>{s.player.coins=5000;},w=>{w.items.find(i=>i.id==='item_bread').basePrice=100;patched=w;});await primed(ui);
+ // 前置（从引擎读，购买前同一状态）：同类食物的供给与需求。
+ const pre=await ui.read(),supplyBefore=marketSupply({document:pre,get:(...p)=>p.reduce((v,k)=>v?.[k],pre)},new WorldEngine(patched),'item_bread',INN);
  const first=await ui.choose('trade.buy',{seller:NPC,item:'item_bread',quantity:1},{target:NPC});assert.ok(first.ok,first.error);
  // Setup trust 20 gives relation 1-.15*.7*.2=.979. 稀缺度 = 需求/供给（market.mjs stockSupply:219、marketQuote:303），
  // 不再被夹在 0.5 地板：探针 tools/probe-rules-a.mjs a2（uiSession 同一入口）读到同类食物供给 47、需求 28，28/47=0.5957 > 0.5。
@@ -81,8 +84,10 @@ test('还价按轮数与让步表，确认后实际成交；只改成交价格�
  //  · t-alloc f8e4a13b（R5：同一卖家可售存量按需求在买方间分摊，口粮替代 shop.mjs foodSources）：需求 14→24、供给 46，稀缺度 .522，价 51；
  //  · st-5（105d2730，同属 R5 及 t-foodsrc/t-staple 单餐额度）：供给 44、需求 24，.545，价 53；
  //  · 现状（R1 t-sat 饱腹改由推导 + t-avail 买得起的来源）：供给 47、需求 28，.596，价 58（同类食物各户 retained 之和 36→40）。
- // EC-1a 之后（采购口径扣聚落公粮，household-budget.mjs:378-379）：登记户口粮由公粮覆盖，各户 retained 归 0，需求/供给 ≤ 0.5，稀缺度回到 0.5 地板：
- // 100 × 0.5 × 0.979 × 1 = 48.95，截断一次 = 48（即上面“旧期望 48”的同一算式）。
+ // EC-1a 之后（采购口径扣聚落公粮，household-budget.mjs:378-379）：登记户口粮由公粮覆盖，各户 retained 归 0，供给升、需求降。
+ // 静态推不出比值（玩家与未登记 NPC 的留存仍在需求里，market.mjs:219），所以用引擎读出的供给与需求核对：比值 ≤ 0.5 才夹到 0.5 地板，
+ // 价才是 100 × 0.5 × 0.979 × 1 = 48.95，截断一次 = 48（即上面“旧期望 48”的同一算式）。
+ assert.ok(supplyBefore.demand/Math.max(1,supplyBefore.supply)<=0.5,`precondition: demand ${supplyBefore.demand} / supply ${supplyBefore.supply} must be at most 0.5 to land on the floor`);
  assert.equal(first.result.cost,48);
  // S5-02 / 15 §15.2: a real purchase receipt is the observed price; the
  // conversation recomputes its own current projection instead of reading cache.
