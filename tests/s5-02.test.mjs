@@ -187,7 +187,8 @@ test('retention and signed procurement commitments are subtracted once; goods cl
  assert.equal(personal.retained,retainedBread);assert.equal(personal.available,12-retainedBread-3);
  const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===12));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available*r.unit,0));
  const before=structuredClone(f.document);
- // 可售量只有 12 − 留存 − 承诺，卖 6 件超过可售量，被库存闸拒绝，物理转移之前就回滚。
+ // 可售量只有 12 − 留存 − 承诺，卖 6 件超过可售量，被库存闸拒绝，物理转移之前就回滚。深度闸（market.mjs:464）先检查：零售阈值 max(retailFloor, 供给 × retailShare) 远大于 6，
+ // 6 件仍按零售、不触发深度闸，所以随后到 market.mjs:470 的“对方库存不足”才是实际拒绝原因。
  await assert.rejects(f.act({seller:host,item:bread,quantity:6},'household-cannot-sell-promises'),/库存不足/);
  assert.deepEqual(f.document,before,'retained or promised food cannot fund a partial transaction');
  // Split bags allocate the four-meal baseline once, not twice. It now sits
@@ -202,14 +203,16 @@ test('retention and signed procurement commitments are subtracted once; goods cl
  assert.ok(splitSupply.rows.every(r=>r.owner!=='npc_hw_ayan'));
  assert.equal(splitSupply.demand,supply.demand);
  // Registered body:drain multiplier2 doubles each member's 60/day need:
- // 留存 = ceil(2 人 × 120 ÷ 饱腹) = ceil(240 ÷ 16) = 15 份，超过两个行囊合计的 12 份：留存封顶于持有量 12（全部留作口粮），
- // 可售 = max(0, 12 − 12 − 承诺 3) = 0；没有现金来源可抵扣（同上），物理基线与带现金口径相同。
+ // 留存 = ceil(2 人 × 120 ÷ 饱腹) = ceil(240 ÷ 16) = 15 份，超过能留的上限：每个行囊能留的是 持有 − 记在该持有人名下的承诺（allocateMeals：free = stock − committed − seed − food，
+ // household-budget.mjs:227）；承诺 4 份已履行 1 份、未付 3 份，记在店主名下（commitmentAllocation 取 procurement 的 parties[1]，household-budget.mjs:144），
+ // 所以店主能留 6 − 3 = 3，阿彦能留 6，合计上限 = 两个行囊持有 − 未付承诺（由夹具数据推出，不写死）；可售 = 持有 − 留存 − 承诺。没有现金来源可抵扣（同上）。
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'household-needs',pack:'market',target:'body:drain',stage:'mul',value:2}]}};
  const corrected=new WorldEngine(w),adjusted=[host,'npc_hw_ayan'].map(id=>saleableStock(f.read(),corrected,id,bread));
- const doubled=Math.min(12,Math.ceil(2*120/satBread));
- assert.equal(adjusted.reduce((n,r)=>n+r.retained,0),doubled);assert.equal(adjusted.reduce((n,r)=>n+r.available,0),Math.max(0,12-doubled-3));
+ const stocks={[host]:6,npc_hw_ayan:6},unpaid=4-1;// 夹具：两个行囊各 6 份；承诺合同 quantity 4、fulfilled 1，未付 3 份记在店主名下
+ const retainCap=Math.max(0,stocks[host]-unpaid)+stocks.npc_hw_ayan,doubled=Math.min(retainCap,Math.ceil(2*120/satBread));
+ assert.equal(adjusted.reduce((n,r)=>n+r.retained,0),doubled);assert.equal(adjusted.reduce((n,r)=>n+r.available,0),Math.max(0,12-doubled-unpaid));
  const physical=householdResources(f.read(),corrected,host,{marketSubstitution:false});
- assert.equal(physical.rows.reduce((n,r)=>n+r.retained,0),doubled);assert.equal(physical.rows.reduce((n,r)=>n+r.available,0),Math.max(0,12-doubled-3));
+ assert.equal(physical.rows.reduce((n,r)=>n+r.retained,0),doubled);assert.equal(physical.rows.reduce((n,r)=>n+r.available,0),Math.max(0,12-doubled-unpaid));
 });
 
 test('native NPC autonomous purchase pays the independent market anchor and records real depth without a quote cache',async()=>{
