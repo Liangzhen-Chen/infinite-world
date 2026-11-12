@@ -606,8 +606,8 @@ export function hearthPlace(engine,state,id){
     return stateMemo(state,engine,[hearthMemo,id],()=>readHearthPlace(engine,state,id),hearthInputs);
 }
 export const awayFromHearth=(engine,state,id)=>hearthPlace(engine,state,id)!==null;
-// 与 owner 同一桌的成员（list 先由调用方按在世、非征役等筛过）：owner 在灶边则是同在灶边者，owner 在外则是同在那处的同户成员。owner 恒在自己桌上。单人桌不查位置。
-export const hearthMates=(engine,state,owner,list)=>{if(list.length<2)return list;const place=hearthPlace(engine,state,owner);return list.filter(id=>id===owner||hearthPlace(engine,state,id)===place);};
+// 与 owner 同一桌的成员（list 先由调用方按在世、非征役等筛过）：owner 在灶边则是同在灶边者，owner 在外则是同在那处的同户成员。owner 恒在自己桌上。空表与只有 owner 一人的表不查位置（owner 可能已被调用方剔出列表，单个非 owner 成员仍要过滤）。
+export const hearthMates=(engine,state,owner,list)=>{if(list.length===0||list.length===1&&list[0]===owner)return list;const place=hearthPlace(engine,state,owner);return list.filter(id=>id===owner||hearthPlace(engine,state,id)===place);};
 // 同户共灶的“可动用资金成员”：在世有效、不是玩家、没有死亡/濒死/昏迷。预算（客观读 objectiveCash、主观视图 household）与户内转账（householdPoolTopUp）共用这一个谓词，防口径分叉（EC-1b U7）。
 export function poolMember(engine,state,id){
     return id!=='player'&&Boolean(state.npcs?.[id])&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status);
