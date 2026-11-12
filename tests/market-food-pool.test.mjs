@@ -497,44 +497,50 @@ function itemDaysAt(engine,state,seed,item,place){
 
 // 手推：家户用度类（柴、燃料→fuel，盐→salt）的池 = 该类全部非食物货，按"顶多少基准克"（usageItemGrams）计量；类需求整类只算一次。
 // 聚落对报价货的户用消耗（报价货件数）= 人均 × 聚落人口 ÷ 报价货基准克；人均 = 名册户（personHousehold 编号去重，居民按所在聚落取）的
-// Σ[(日用度 − min(日用度, 户内自给)) × 补给间隔 + 已欠量 DebtG] ÷ 名册人数；名册为空取单人户日用度 × 补给间隔（无自给无欠量）。
+// Σ[(日用度 − min(日用度, 户内自给)) × 补给间隔] ÷ 名册人数（速率，可外推）；聚落户用 = 人均 × 聚落人口 + Σ已欠量 DebtG（欠量是名册户实际欠的，不放大）；
+// 名册为空取单人户日用度 × 补给间隔 × 人口（无自给无欠量）。
 // 补给间隔 = 类里各货补给间隔（itemDaysAt 手推）的最小值。日用度读规则定义（householdUsage 只给每日克数），自给由调用方给（self(户编号)，基准克/日）。
 function useClassOf(engine,state,item){return householdUsage(engine,state,[null]).map(u=>u.cls).find(c=>isItemClass(engine,item,c)&&!(foodSatiety(engine,item)>0));}
 function marketUseAt(engine,state,seed,item,place,self=()=>0){
  const cls=useClassOf(engine,state,item),pool=engine.world.items.filter(i=>isItemClass(engine,i.id,cls)&&!(foodSatiety(engine,i.id)>0)&&usageItemGrams(engine,i.id,cls)>0);
  const horizon=Math.min(...pool.map(i=>itemDaysAt(engine,state,seed,i.id,place))),seen=new Set(),gramsPerDay=ms=>householdUsage(engine,state,ms).find(u=>u.cls===cls).gramsPerDay;
- let via=0,persons=0;
+ let via=0,persons=0,owed=0;
  for(const id of Object.keys(state.npcs)){
   if(placeSettlement(engine,state,state.npcs[id].location).value!==place)continue;
   const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
   const members=(h?.members??[id]).filter(m=>state.npcs?.[m]),need=gramsPerDay(members);persons+=members.length;
-  via+=(need-Math.min(need,self(id)))*horizon+(state.family?.upkeep?.[key]?.[`${cls}DebtG`]??0);
+  via+=(need-Math.min(need,self(id)))*horizon;owed+=state.family?.upkeep?.[key]?.[`${cls}DebtG`]??0;
  }
  if(!(persons>0)){via=gramsPerDay([null])*horizon;persons=1;}
- return via/persons*state.settlements[place].population/usageItemGrams(engine,item,cls);
+ return (via/persons*state.settlements[place].population+owed)/usageItemGrams(engine,item,cls);
 }
 // 户内自给夹具：真实规划（household-subsistence.householdSubsistencePlan）算自给，不替换任何注册点。
 // 夹具世界：在真实世界上加三处测试地点——公共林 loc_mk_grove（北林边的克隆，面积 2 km²）、A 户住处 loc_mk_home_a（只有一条 2 km 步行路通到这片林）、
-// B 户住处 loc_mk_home_b（没有任何路）。A、B 是从真实户口里按条件挑出的两个单人成年户（有工时、没有雇佣/官职/行动限制）；
-// 其余居民的位置全部迁出 loc_hw，聚落名册只剩这两户。规划只沿步行路找来源，所以 A 户只够得到这片林，B 户没有任何来源。
+// B 户住处 loc_mk_home_b（没有任何路）。A、B 是夹具在世界数据层新建的两个单人成年户（新建居民 + 新建户，不依赖现成居民有没有空）：
+// 居民模板取聚落里一位家务型成年居民的记录（无雇佣、无官职），改 id、改年龄为规则里的最低采集年龄 + 10（householdSubsistence.minimumAge）、清掉人际引用、住处与位置放到上面的住处；
+// 前置用与规划同一口径检查两人确有空闲工时（年龄、无行动限制、无雇佣、无官职）。其余居民的位置全部迁出 loc_hw，聚落名册只剩这两户。
+// 规划只沿步行路找来源，所以 A 户只够得到这片林，B 户没有任何来源。
 function selfFixture(seed,{debt=0,singleFarm=false}={}){
- const base=setup(seed),s0=base.doc.state,day0=Math.floor(s0.minute/1440),be=base.engine;
- const free=id=>{
-  const n=s0.npcs[id];if(!n||placeSettlement(be,s0,n.location).value!=='loc_hw'||['患病','濒死','昏迷'].includes(n.status))return false;
-  const job=personEmployment(be,s0,id,day0*1440+480)?.value;
-  return (personAge(be,s0,id).value??0)>=be.rules.householdSubsistence.minimumAge&&!personConstraint(be,s0,id,day0*1440+480)
-   &&!['有效','要求加薪'].includes(job?.status)&&!npcServicePosts(be,s0).some(o=>o.holder===id)
-   &&!(be.rules.law?.codes??[]).some(code=>lawAuthorities(be,s0,code).includes(id));
- };
- const picks=(be.world.households??[]).filter(h=>h.settlement==='loc_hw'&&h.members.length===1&&free(h.members[0])).map(h=>h.members[0]);
- assert.ok(picks.length>=2,'前置：loc_hw 里要有两个单人成年户，成员有空闲工时、没有雇佣与官职');
- const [A,B]=picks;
  const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
  const north=w.locations.find(l=>l.id==='loc_hw_northwood'),spot=id=>({id,name:id,parent:'loc_hw',scope:'loc_hw',coordinates:[0,0],terrain:'平地',openHours:[0,1440],owner:null});
  w.locations.push({...structuredClone(north),id:'loc_mk_grove',name:'测试林',areaKm2:2},spot('loc_mk_home_a'),spot('loc_mk_home_b'));
  w.routes.push({id:'route_mk_grove',from:'loc_mk_home_a',to:'loc_mk_grove',modes:['walk'],lengthKm:2,closedSeasons:[]});
- for(const h of w.households)if(h.members.length===1&&h.members[0]===A)h.homeLocation='loc_mk_home_a';else if(h.members.length===1&&h.members[0]===B)h.homeLocation='loc_mk_home_b';
- const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},seed),state=doc.state;
+ const adultAge=w.rules.householdSubsistence.minimumAge+10;
+ const template=w.npcs.find(n=>n.settlement==='loc_hw'&&/家务/.test(n.occupation??'')&&n.age>=adultAge);
+ assert.ok(template,'前置：聚落里有一位家务型成年居民可作新建居民的模板');
+ const made=(id,home)=>{
+  const n=structuredClone(template);
+  Object.assign(n,{id,name:id,aliases:[],age:adultAge,householdId:`house_${id}`,household:[],home:{location:home,access:'夹具新建'},location:home});
+  delete n.socialProfile;
+  w.npcs.push(n);w.households.push({id:`house_${id}`,settlement:'loc_hw',homeLocation:home,members:[id],tenure:'夹具新建'});return id;
+ };
+ const A=made('npc_mk_a','loc_mk_home_a'),B=made('npc_mk_b','loc_mk_home_b');
+ const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},seed),state=doc.state,day0=Math.floor(state.minute/1440);
+ for(const id of [A,B]){
+  const job=personEmployment(engine,state,id,day0*1440+480)?.value;
+  assert.ok(placeSettlement(engine,state,state.npcs[id].location).value==='loc_hw'&&(personAge(engine,state,id).value??0)>=engine.rules.householdSubsistence.minimumAge&&!personConstraint(engine,state,id,day0*1440+480)
+   &&!['有效','要求加薪'].includes(job?.status)&&!npcServicePosts(engine,state).some(o=>o.holder===id)&&!(engine.rules.law?.codes??[]).some(code=>lawAuthorities(engine,state,code).includes(id)),`前置：新建居民 ${id} 在 loc_hw、成年、有空闲工时、无雇佣与官职`);
+ }
  if(singleFarm)engine.rules.agriculture.settlements=engine.rules.agriculture.settlements.filter(p=>p.settlement==='loc_hw');
  for(const [id,n] of Object.entries(state.npcs))if(id!==A&&id!==B&&placeSettlement(engine,state,n.location).value==='loc_hw')n.location='loc_bs';
  if(debt){const key=personHousehold(engine,state,A).value.id;state.family={...state.family,upkeep:{...state.family?.upkeep,[key]:{...state.family?.upkeep?.[key],fuelDebtG:debt}}};}
@@ -578,14 +584,14 @@ test('非食物货的户用经市场的部分：补给间隔 ×（日用度 − 
 
 test('户里缺燃料（已欠量）推高需求，且与自给扣除不重复计数',()=>{
  // 手推：A 户日用度 N、自采 s ≥ N（封顶后抵光新用度）、补给间隔 H、已欠 D 克；经市场 = (N − min(N, s)) × H + D = D。
- // 自给只抵"新用度"里自己采回的部分；欠量是前几日没满足的量，另算一份，所以有欠量的聚落户用 − 无欠量的 = D ÷ 名册人数（2）× 聚落人口 ÷ 报价货基准克，与自给无关。
+ // 自给只抵"新用度"里自己采回的部分；欠量是前几日没满足的量，另算一份，所以有欠量的聚落户用 − 无欠量的 = D ÷ 报价货基准克（欠量只在名册户账上，实际多少就是多少，不乘人口 ÷ 名册人数），与自给无关。
  const D=3000,inn='bld_hw_qingdeng',item='item_wood',a=selfFixture('market-food-pool-debt'),b=selfFixture('market-food-pool-debt',{debt:D});
  const seed=documentReader(a.doc).get('randomSeed'),hand=handSelfSupply(a.engine,a.doc.state,seed),self=id=>id===a.A?hand.self:0;
  assert.equal(b.A,a.A);
  const read=f=>marketSupply(documentReader(f.doc),f.engine,item,inn).consumption,base=read(a),debt=read(b);
  assert.ok(Math.abs(base-marketUseAt(a.engine,a.doc.state,seed,item,'loc_hw',self))<=1e-6*base);
  assert.ok(Math.abs(debt-marketUseAt(b.engine,b.doc.state,seed,item,'loc_hw',self))<=1e-6*debt);
- const gap=D/2*a.doc.state.settlements.loc_hw.population/usageItemGrams(a.engine,item,'fuel');
+ const gap=D/usageItemGrams(a.engine,item,'fuel');
  assert.ok(Math.abs((debt-base)-gap)<=1e-6*gap,'欠量恰好多一份 D：不因自给多算或少算');
 });
 
