@@ -7,7 +7,7 @@ import {existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
-import {getPath,setPath} from '../world/design/p1-revision-approval.mjs';
+import {getPath,setPath,sameValue} from '../world/design/p1-revision-approval.mjs';
 
 // 字段路径文本 -> 路径：`site.resources[id=adit_ore].item` -> ['site','resources',{id:'adit_ore'},'item']
 export function parseFieldPath(label){
@@ -103,8 +103,8 @@ export function applySupersedes(rows,receiptFile,supersedes){
   if(s.receiptFile!==receiptFile)continue;
   const row=rows.find(r=>r.id===s.targetId);if(!row)continue;
   const cur=getPath(row,s.parts);
-  if(hashContent(cur??null)===hashContent(s.before)){setPath(row,s.parts,s.after);applied.push({id:s.targetId,field:s.label,parts:s.parts,before:s.before,after:s.after,receiptFile,revision:s.revision});}
-  else if(hashContent(cur??null)!==hashContent(s.after))throw new Error(`设计源值与修订回执不符：${receiptFile}#${s.targetId} ${s.label} 现值 ${JSON.stringify(cur)}，回执 before ${JSON.stringify(s.before)} after ${JSON.stringify(s.after)}`);
+  if(sameValue(cur,s.before)){setPath(row,s.parts,s.after);applied.push({id:s.targetId,field:s.label,parts:s.parts,before:s.before,after:s.after,receiptFile,revision:s.revision});}
+  else if(!sameValue(cur,s.after))throw new Error(`设计源值与修订回执不符：${receiptFile}#${s.targetId} ${s.label} 现值 ${JSON.stringify(cur)}，回执 before ${JSON.stringify(s.before)} after ${JSON.stringify(s.after)}`);
  }
  return applied;
 }
@@ -118,7 +118,7 @@ export function revertSuperseded(rows,file,supersedes){
  for(const s of supersedes){
   if(s.file!==file)continue;
   const row=byId.get(s.targetId);if(!row)continue;
-  if(hashContent(getPath(row,s.parts)??null)===hashContent(s.after??null))setPath(row,s.parts,s.before);
+  if(sameValue(getPath(row,s.parts),s.after))setPath(row,s.parts,s.before);
  }
  return out;
 }
