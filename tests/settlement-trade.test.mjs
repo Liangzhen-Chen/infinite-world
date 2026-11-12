@@ -238,18 +238,25 @@ test('公共报价只读且随真实供给重派生，距离与运输风险进�
     const {engine,doc}=setup(),lane=lanes[0],d=draft(doc),minute=DEPART;
     const before=structuredClone(d.document),first=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute);
     assert.deepEqual(d.document,before,'15.2/15.4: quotes are projections, not saved truth');
-    // 区域基准的运输因子（R5③）按物品产地整类推导，与周贸易班线无关：运输因子 = 1 + 单位运费 ÷ 目录基价 3，
-    // 单位运费 = 产地聚落（燕麦产地 loc_hw_fields 在 loc_hw）到买方聚落按一年各月能走通的路线里最便宜的一条：Σ 路段公里 × 计费重量 × 驮畜费率；
-    // 计费重量 = max(0.5 公斤, 体积 × 250, 1 公斤) = 1 公斤，驮畜费率 0.02 铜/公里·公斤。此处独立地用路网与费率手算，不调用任何定价函数。
+    // 区域基准的运输因子（R5③、8c5a266c）按物品整类推导，与周贸易班线无关：运输因子 = 1 + 单位运费 ÷ 目录基价 3。
+    // 单位运费取"供给源"到目的聚落的最小值：供给源 = 产地聚落（燕麦产地 loc_hw_fields 在 loc_hw）+ 所有自产燕麦的聚落（农事档案聚落，或统计产粮 foodPerDay>0 的聚落）；
+    // 目的聚落自己就是供给源（自产）时没有路程，运费 0、因子 1；否则按一年各月能走通的路线里最便宜的一条：Σ 路段公里 × 计费重量 × 驮畜费率；
+    // 计费重量 = max(0.5 公斤, 体积 × 250, 1 公斤) = 1 公斤，驮畜费率 0.02 铜/公里·公斤。此处独立地用路网与费率、聚落数据手算，不调用任何定价函数。
     const rate=transportTable.rows.find(r=>r.key==='carrier:pack').rate,oats=engine.byId.get('item_oats');
     assert.equal(rate,0.02);assert.equal(oats.basePrice,3);assert.ok(Math.max(oats.weight,(oats.volumeM3??oats.weight/250)*250,1)===1);
+    const grows=id=>engine.rules.agriculture.settlements.some(p=>p.settlement===id)||doc.state.settlements[id]?.foodPerDay>0;
+    // 买方村是农事档案聚落：自产燕麦，运费 0，因子 1，基准就是目录基价 3（环境因子本夹具为 1）。
+    assert.ok(grows(lane.buyer));assert.equal(regionalTradeBase(d,engine,'item_oats',lane.buyer,minute),3);
+    // 距离仍进入基准：白石镇是只开公款账的聚落（granary:false，无日产粮），自己不产燕麦，运费取各供给源里最便宜的一条。
+    const dest='loc_bs';assert.ok(!grows(dest));
+    const sources=Object.keys(doc.state.settlements).filter(id=>id!==dest&&grows(id));assert.ok(sources.includes('loc_hw'));
     const costs=[];
-    for(let month=0;month<12;month++){
-        let r=null;try{r=engine.route('loc_hw',lane.buyer,'walk',month*30*DAY,doc.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
+    for(const src of sources)for(let month=0;month<12;month++){
+        let r=null;try{r=engine.route(src,dest,'walk',month*30*DAY,doc.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
         if(r)costs.push(r.edges.reduce((n,id)=>n+engine.world.routes.find(x=>x.id===id).lengthKm*1*rate,0)+(r.cost??0));
     }
     const limits=engine.rules.economy.priceFactorLimits.transport,transport=Math.max(limits[0],Math.min(limits[1],1+Math.min(...costs)/3));
-    assert.ok(transport>1);assert.equal(regionalTradeBase(d,engine,'item_oats',lane.buyer,minute),3*transport);
+    assert.ok(costs.length>0&&transport>1);assert.equal(regionalTradeBase(d,engine,'item_oats',dest,minute),3*transport);
     // Changed stock is a non-examined premise; synchronize the existing books.
     setGrain(d.document,lane.buyer,100);resyncBooks(engine,d.document);assert.ok(regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+1)>first);
     const next=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+DAY);assert.ok(next>first);
@@ -270,14 +277,15 @@ test('玩家world_trade消费实时区域价并扣真实商人库存；同日深
     const first=await run(doc,'local-buy');let c=first.doc;
     const day=Math.floor(doc.state.minute/DAY);
     // 手推（R5③ 之后）：价 = 目录基价 3 × 运输因子 × 稀缺度（品质、立场、深度、修正均为 1）。
-    //  · 运输因子 = 1 + 单位运费 ÷ 3；燕麦产地在 loc_hw（loc_hw_fields），到 loc_bs_yupo 的步行路程取实际路网最短路的公里数，计费重量 = max(0.5 公斤, 体积 × 250, 1 公斤) = 1 公斤，驮畜费率 0.02 铜/公里·公斤；
+    //  · 运输因子 = 1 + 单位运费 ÷ 3；单位运费取供给源（产地聚落 + 所有自产燕麦的聚落）到目的聚落的最小值（8c5a266c）。目的聚落 loc_bs_yupo 是农事档案聚落、自产燕麦，
+    //    它自己就是供给源，没有路程：运费 0，因子 1（距离进入基准的情形见上一条测试里的白石镇）；
     //  · 稀缺度 = 目标持有 ÷ 实际持有 = farmTargetFood ÷ 粮仓实存（夹具把实存压到目标的 80%，故约 1.25；周贸易夹具的前置断言见 granary-fixture），落在 [0.5, 3] 内不夹取；
     //  · 成交按整单一次截断：trunc(价)。
-    const origin=engine.world.locations.find(x=>x.id===engine.byId.get('item_oats').origin),legKm=engine.route('loc_hw',sid,'walk',doc.state.minute,doc.randomSeed).edges.reduce((n,id)=>n+engine.world.routes.find(r=>r.id===id).lengthKm,0);
-    assert.ok(origin&&engine.byId.get('item_oats').weight<1);assert.equal(transportTable.rows.find(r=>r.key==='carrier:pack').rate,0.02);
+    const origin=engine.world.locations.find(x=>x.id===engine.byId.get('item_oats').origin);
+    assert.ok(origin&&engine.byId.get('item_oats').weight<1);assert.ok(engine.rules.agriculture.settlements.some(p=>p.settlement===sid),'前置：目的聚落自产燕麦');
     const profile=engine.rules.agriculture.settlements.find(p=>p.settlement===sid),scarcity=handTarget(engine,doc.state,profile,doc.state.minute)/doc.state.settlements[sid].food;
     assert.ok(scarcity>=0.5&&scarcity<=3);
-    const exact=3*(1+legKm*1*0.02/3)*scarcity,price=Math.trunc(exact);assert.ok(price>=1);
+    const exact=3*scarcity,price=Math.trunc(exact);assert.ok(price>=1);
     assert.equal(first.out.result.cost,price);assert.ok(Math.abs(first.out.result.pricing.listPrice-exact)<=1e-9*exact);assert.equal(first.out.result.pricing.depth,1);
     assert.equal(c.state.player.coins,wallet-price);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-1);assert.equal(snapshotCash(c),cash);
     setGrain(c,sid,500);resyncBooks(engine,c);const second=await run(c,'same-day-buy');c=second.doc;
