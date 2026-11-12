@@ -1,6 +1,7 @@
 import {purse,treasury as treasuryAccount,source,moveCoins} from './money.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
-import {resupplyDays,seasonYieldFactors} from './supply-interval.mjs';
+import {resupplyDays} from './supply-interval.mjs';
+import {seasonYieldFactors} from './crop-yield.mjs';
 import {declareLedgerWriter,parseAccount,accountKey,ledgerActive} from './ledger.mjs';
 import {genesisSettlement,bag,itemResource,stockSource,moveStock,registerLegacyStock,moveFishPopulation} from './stock.mjs';
 // S1b: 远方生成的聚落库存与人物行囊同样从 src:genesis 入账。
@@ -326,7 +327,7 @@ export function remoteHazardProfile(county){
     const farm=(county.industry??[]).some(t=>/燕麦|豌豆|粮|麦|豆|果园|奶|放牧|羊|牧|海草|轮作/.test(t));
     return {wet,cold,rainy,farm};
 }
-function remoteHazards(county,seat,settlements,routes,profiles,expectedYield){
+function remoteHazards(county,seat,settlements,routes,profiles,rules){
     const h=remoteHazardProfile(county),DAY=1440,hazards=[],ledgers={};
     for(const s of settlements){
         const sid=s.id,P=profiles.find(p=>p.id===sid).population;
@@ -353,12 +354,13 @@ function remoteHazards(county,seat,settlements,routes,profiles,expectedYield){
             {id:'ease',name:'粮价回落',probability:0.5,condition:{kind:'always'},effects:[{kind:'price_shift',settlement:sid,items:GRAIN,factor:1,minutes:1,reason:'新粮将下，粮价回落'}]}]});
         // Public ledger on the core village scale: about 12 copper, 0.6 wood and
         // 0.12 iron per head. Every generated settlement is a statistical self-producer (foodPerDay > 0,
-        // accrued daily by the daily advance, scaled by weather.cropSeasonFactors; no grain trade is simulated for it).
-        // Nominal foodPerDay = need / mean(expected seasonal yield g_s = cropSeasonFactors[s] x expected weather crop multiplier E_s,
-        // supply-interval.seasonYieldFactors) so the expected yearly balance is not negative (just above need, x1.02, in farming counties).
+        // accrued daily by the daily advance, scaled by crop-yield.cropYieldFactor; no grain trade is simulated for it).
+        // Nominal foodPerDay = need / mean(g_s) (crop-yield.seasonYieldFactors, the same function the engine's cropProduction uses):
+        // a generated place has no weather region (see above), so g_s = 1 and the nominal equals need (x1.02 in farming counties);
+        // if it ever sits in a weather region the expected seasonal/weather multipliers are divided out instead.
         // No opening grain here: unfoldRemoteAt opens the store at mouths x resupplyDays = the seasonal reserve of a self-producer
         // (supply-interval.selfSupplyDays; the same law the market's target holding reads: normal = target).
-        const meanFactor=expectedYield.reduce((a,b)=>a+b,0)/expectedYield.length;
+        const yieldFactors=seasonYieldFactors(rules,sid),meanFactor=yieldFactors.reduce((a,b)=>a+b,0)/yieldFactors.length;
         ledgers[sid]={name:s.name,population:P,treasury:12*P,wood:Math.round(0.6*P),iron:Math.round(0.12*P),foodPerDay:Math.ceil(P*(h.farm?1.02:1)/meanFactor),
             woodPerDay:(county.biomes??[]).some(b=>b==='forest'||b==='plant')?4:2,starvation:0};
     }
@@ -604,7 +606,7 @@ export function generateCounty(world,countyId,campaignSeed){
     }
     jurisdiction[countyId]={level:'郡',superior:province.id};
     const rostered=profiles.reduce((n,p)=>n+p.population,0);
-    const {hazards,ledgers}=remoteHazards(county,seat,settlements,routes,profiles,seasonYieldFactors(world.rules));
+    const {hazards,ledgers}=remoteHazards(county,seat,settlements,routes,profiles,world.rules);
     const skeleton={version:REMOTE_VERSION,county:countyId,name:county.name,province:province.id,kind,culture,seat:seat.id,seatExisting:seat.existing,
         census:{outline:county.population,outlineNumber:census,rostered,note:'纲要人口只是概数；名册配额按种子登记，未展开的人数不算完整档。'},
         settlements,locations,routes,people,households,profiles,offices,rumors,jurisdiction,

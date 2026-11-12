@@ -4,6 +4,7 @@ import { canonical } from './storage.mjs';
 import { hazardRouteClosed, hazardRouteHasClosures } from './hazard-calendar.mjs';
 import {obligationCalendar,obligationDate,DAY} from './obligation-calendar.mjs';
 import {sin,acos,tan} from './det-math.mjs';
+import {cropYieldFactor} from './crop-yield.mjs';
 
 // Old campaigns retain their published 30-day display calendar. Explicit
 // campaign dates name a native calendar; no season/daylight override is stored.
@@ -210,7 +211,8 @@ export function weatherEdge(engine, seed, edge, mode, departure, elapsedBefore, 
 }
 export function cropProduction(engine, seed, settlement, minute, nominal) {
     const row = weatherAt(engine,seed,settlement,minute);
-    return row ? Math.max(0,nominal*engine.rules.weather.cropSeasonFactors[row.season]*row.cropMultiplier) : nominal;
+    // 倍数由 crop-yield.cropYieldFactor 给出（储备模型 supply-interval.selfSupplyDays 调同一个函数）：有天气行 → 季节系数 × 当日天气倍数；没有 → 1（= 名义值）。
+    return row ? Math.max(0,nominal*cropYieldFactor(engine.rules,settlement,row.season,row.cropMultiplier)) : nominal;
 }
 export function validateWeatherRules(world) {
     const errors = [], r = world.rules.weather; if (!r) return errors;

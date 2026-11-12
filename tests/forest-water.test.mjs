@@ -270,9 +270,10 @@ test('P3统计粮食产出也扣灌溉水，无详细农田的远方聚落遇旱
   //  目标持有 = ceil(餐口 × 视野)；餐口 = 人口（夹具无异族）。目标随季节变，期望按旱湿推进后的日期重算。
   const farmId='loc_rw_statfarm',pop=100;
   x.d.set(['state','settlements',farmId],{name:'统计田地',population:pop,food:0,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
-  const selfTarget=minute=>Math.ceil(pop*handSelfReserve(x.engine,minute,120,pop));
+  const selfTarget=minute=>Math.ceil(pop*handSelfReserve(x.engine,minute,120,pop,farmId));
   assert.ok(!x.engine.rules.agriculture.settlements.some(p=>p.settlement===farmId),'前置：统计田地不在农事表');
-  assert.ok(Math.abs(resupplyDays(x.engine,x.d.get('randomSeed'),farmId,x.d.get('state'))-handSelfReserve(x.engine,x.d.get('state','minute'),120,pop))<=1e-9);
+  assert.ok(Math.abs(resupplyDays(x.engine,x.d.get('randomSeed'),farmId,x.d.get('state'))-handSelfReserve(x.engine,x.d.get('state','minute'),120,pop,farmId))<=1e-9);
+  assert.ok(x.engine.rules.weather.regions.some(r=>r.locations.includes(farmId)),'前置：统计田地在气候区里，引擎按季节系数×天气倍数缩放它的产量（有天气行的情形）');
   assert.throws(()=>resupplyDays(x.engine,x.d.get('randomSeed'),farmId),/需要聚落状态/,'没有聚落状态就无法判断自产，直接报错而不是给错值');
   assert.equal(mealMouthsOf(x.engine,x.d.get('state'),farmId,pop),pop,'前置：餐口 = 人口');
   const heldTarget=selfTarget(x.d.get('state','minute'));

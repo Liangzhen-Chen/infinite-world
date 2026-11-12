@@ -20,8 +20,8 @@ export function handTarget(engine,state,profile,minute){
 //  当日期望产量 = 名义 foodPerDay × g_s（g_s = cropSeasonFactors[s] × 该季天气倍数期望，见 handSeasonYield；一季 90 日，一年 360 日），需求 = 人口；以"天"计的当日亏空 = (需求 − 产量) ÷ 需求。
 //  从 minute 起往后一年，分成五段（本季剩余、其后三季各 90、本季已过的部分），每段内亏空率不变，所以累计亏空的最大值落在某段末尾；
 //  储备天数 = 最大累计亏空（季节储备） + 结转储备 reserveDays。
-export function handSelfReserve(engine,minute,foodPerDay,population){
-    const f=handSeasonYield(engine.rules),doy=Math.floor(minute/1440)%360,season=Math.floor(doy/90),done=doy%90;
+export function handSelfReserve(engine,minute,foodPerDay,population,place){
+    const f=handSeasonYield(engine.rules,place),doy=Math.floor(minute/1440)%360,season=Math.floor(doy/90),done=doy%90;
     const blocks=[[season,90-done],[(season+1)%4,90],[(season+2)%4,90],[(season+3)%4,90]];
     if(done>0)blocks.push([season,done]);
     let cum=0,worst=0;
@@ -36,8 +36,10 @@ export function handReserveDays(rules){
     return values[0];
 }
 // 每季期望产量倍数手推：g_s = cropSeasonFactors[s] × E_s，E_s = Σ(季节权重 × 该天气的 crop) ÷ Σ权重；天气顺序写死为规则数据的列序（晴、阴、雨、暴雨、雪、雾，world/meta/rules.json seasonalWeights 列）。
-export function handSeasonYield(rules){
+// 聚落不在任何气候区（rules.weather.regions[].locations 都不含它，如生成的远方聚落）→ 没有天气行，引擎不缩放产量，g_s = 1。
+export function handSeasonYield(rules,place){
     const order=['clear','cloudy','rain','storm','snow','fog'],w=rules.weather;
+    if(!w.regions.some(r=>r.locations.includes(place)))return [1,1,1,1];
     assert.deepEqual(Object.keys(w.states),order,'前置：天气状态键序 = 权重列序');
     return w.cropSeasonFactors.map((factor,s)=>{
         let num=0,den=0;order.forEach((k,i)=>{num+=w.seasonalWeights[s][i]*w.states[k].crop;den+=w.seasonalWeights[s][i];});
