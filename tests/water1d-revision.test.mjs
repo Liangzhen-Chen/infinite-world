@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {REMOVE,isRemove,sameValue,getPath,setPath,editJSONText,isPublished,runRevision} from '../world/design/p1-revision-approval.mjs';
-import {parsePublication,revertSuperseded,applySupersedes} from '../tools/approved-revisions.mjs';
+import {parsePublication,revertSuperseded,applySupersedes,classifySupersedes} from '../tools/approved-revisions.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import * as water1d from '../world/design/water1d-approval.mjs';
 
@@ -81,4 +81,26 @@ test('批次预算上限由各批自定：本批 0.5 元/60 次；不给 maxRequ
     const run=(await fs.readFile(new URL(`../${f}`,import.meta.url),'utf8')).split('\n').filter(l=>l.includes('runRevision({')).join('\n');
     assert.match(run,/limitYuan:0\.02\b/,f);assert.doesNotMatch(run,/maxRequests/,f);
   }
+});
+
+// ---- 取代声明按 after 分类：删除型减行数，修改型不减（对任何修订批同一规律）
+const own = /^dir\/([^/]+)\.json$/;
+const fixture = after => parsePublication({revision: 'f', receipt: 'dir/r', entries: [
+  {id: 'x-n', target: 'x', file: 'f.json', field: 'n', before: 1, after, supersedes: [{receipt: 'dir/row_x.json#x', field: 'n'}]},
+  // 指向别的回执目录的取代声明不属于本批。
+  {id: 'y-n', target: 'y', file: 'f.json', field: 'n', before: 1, after: 2, supersedes: [{receipt: 'other/row_y.json#y', field: 'n'}]},
+]});
+test('分类：修改型取代（after 为新值）该行仍是现存条目，现存行数不变', () => {
+  // 手推：本批 3 行（row_x、row_a、row_b）；x 的字段 1→5 只是改值，3 − 0 = 3 行。
+  const {removed, changed} = classifySupersedes(fixture(5), own);
+  assert.deepEqual(removed, []);
+  assert.deepEqual(changed.map(c => c.id), ['row_x']);
+  assert.equal(3 - new Set(removed.map(c => c.id)).size, 3);
+});
+test('分类：删除型取代（after 为 REMOVE）该行已移除，现存行数减一', () => {
+  // 手推：本批 3 行；x 的字段被删，3 − 1 = 2 行。
+  const {removed, changed} = classifySupersedes(fixture(REMOVE), own);
+  assert.deepEqual(removed.map(c => c.id), ['row_x']);
+  assert.deepEqual(changed, []);
+  assert.equal(3 - new Set(removed.map(c => c.id)).size, 2);
 });

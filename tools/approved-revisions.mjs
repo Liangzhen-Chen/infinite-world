@@ -7,7 +7,7 @@ import {existsSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import {readApprovedContent,hashContent} from './content-pipeline.mjs';
-import {getPath,setPath,sameValue} from '../world/design/p1-revision-approval.mjs';
+import {getPath,setPath,sameValue,isRemove} from '../world/design/p1-revision-approval.mjs';
 
 // 字段路径文本 -> 路径：`site.resources[id=adit_ore].item` -> ['site','resources',{id:'adit_ore'},'item']
 export function parseFieldPath(label){
@@ -121,6 +121,17 @@ export function revertSuperseded(rows,file,supersedes){
   if(sameValue(getPath(row,s.parts),s.after))setPath(row,s.parts,s.before);
  }
  return out;
+}
+// 把指向某批回执（receiptPattern 的第 1 个捕获组是回执条目 id）的取代声明按 after 分两类：
+//   after 是 REMOVE：该行已被移除，不再是现存条目（removed）；after 是新值：该行仍是现存条目，只是字段改成新值（changed，须按新值核对正式文件）。
+// 对任何修订批同一规律；现存条目数 = 该批发布时的行数 − removed 的行数。
+export function classifySupersedes(supersedes,receiptPattern){
+ const removed=[],changed=[];
+ for(const s of supersedes){
+  const m=receiptPattern.exec(s.receiptFile);if(!m)continue;
+  (isRemove(s.after)?removed:changed).push({id:m[1],s});
+ }
+ return {removed,changed};
 }
 export async function revertedRows(rows,file,draftsRoot){return revertSuperseded(rows,file,await readApprovedSupersedes(draftsRoot));}
 
