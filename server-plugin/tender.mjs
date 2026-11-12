@@ -15,6 +15,7 @@ import {holdingSet,declareHoldingWriter} from './holdings.mjs';
 // W8-B: a counting house's vault record (bank goods) is written here on the paying caller's behalf.
 declareHoldingWriter('tender',{kinds:[]});
 import {partyAccount,moveCoins,mirrorPartyCoins} from './money.mjs';
+import {topUpNpc} from './npc-payment.mjs';
 
 export const REFERENCE='coin_river';
 const F=decimalFraction,ONE=fraction(1n,1n);
@@ -65,6 +66,7 @@ export function paymentPlan(d,e,{resource,copper,location=d.get('state','locatio
 export function payInKind(d,e,{payer,payee,plan,eventId,writer='contracts'}){
  if(plan.resource===REFERENCE){
   const s=d.get('state'),from=partyAccount(e,s,payer),to=partyAccount(e,s,payee);
+  topUpNpc(d,e,payer,plan.amount,eventId);// EC-1a 共用钱袋：NPC 付款人本人钱袋不够先从户池补足
   if((d.get('ledger','accounts',from)??0)<plan.amount)throw preconditionFailure('现钱不足');
   moveCoins(d,{from,to,amount:plan.amount,writer,eventId});mirrorPartyCoins(d,e,payer,-plan.amount,eventId,writer);mirrorPartyCoins(d,e,payee,plan.amount,eventId,writer);
  }else{

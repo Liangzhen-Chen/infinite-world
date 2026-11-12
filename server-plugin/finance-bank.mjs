@@ -30,7 +30,8 @@ import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {canAct} from './action-capacity.mjs';
 import {consent as nativeConsent,agreedLoan,requestContractConsent} from './action-consent.mjs';
 import {authority} from './action-authority.mjs';
-import {householdBudget,householdPoolTopUp} from './household-budget.mjs';
+import {householdBudget} from './household-budget.mjs';
+import {topUpNpc} from './npc-payment.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {subjectiveMarketQuote} from './market.mjs';
 import {rollDice} from './scheduler.mjs';
@@ -56,7 +57,7 @@ function poolTopUpFor(d,e,id,need,sourceEvent){
     if(id==='player'||groupAccountView(e,d.get('state'),id))return;
     if(d.get(...financePath(`organization:${id}`))?.category==='organization'||d.get('state','records',`protocol_assets:${id}`))return;
     if(!d.get(...e.actorPath(id)))return;
-    householdPoolTopUp(d,e,id,need,`${sourceEvent??'finance'}:${id}`);
+    topUpNpc(d,e,id,need,sourceEvent??'finance');
 }
 // S1a: books = 账本对方账户（money.bookSide），成对的另一边已记账时传 BOOKED。
 export function financeChange(d,e,id,delta,sourceEvent,books){
@@ -492,7 +493,7 @@ export function bankTrade(d,e,args,id,{remittanceFee}={}){
         const debt=d.get(...financePath(args.contract));if(debt?.kind!=='pawn'||debt.bank!==b.id||debt.status!=='流当')throw preconditionFailure('当物尚不可拍卖');
         if(debt.auction||d.get(...financePath(debt.pledgeRecord),'status')!=='质押中')throw preconditionFailure('当物已经拍卖处置，不能再次出售或交付；余欠请按普通还款清偿');
         const p=d.get(...financePath(debt.pledgeRecord)),price=financeInt(args.coins,p.value,Math.max(p.value,1e9),'拍卖价');
-        const buyer=counterpart(d,e,args.buyer,{consent:args.consent});if(financeBalance(d,e,buyer)<price)throw preconditionFailure('买方资金不足');
+        const buyer=counterpart(d,e,args.buyer,{consent:args.consent});topUpNpc(d,e,buyer,price,id);if(financeBalance(d,e,buyer)<price)throw preconditionFailure('买方资金不足');
         // A ticket frozen in a tender unit is sold off against its value in reference copper today; the units the price covers are cleared (rounded down, so the shop is never short-changed).
         const unitDebt=debt.resource&&debt.resource!=='coin_river',left=debt.amount-debt.paid,owed=unitDebt?claimCopper(d,e,{resource:debt.resource,amount:left,paid:0}):left;
         const toBank=Math.min(price,owed),surplus=Math.max(0,price-owed),state=d.get('state');

@@ -3,6 +3,7 @@ import {holdingSet} from './holding-sources.mjs';
 import {declareHoldingWriter} from './holdings.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {moveCoins,purse,fund,dedicatedCoinKey,dedicatedCoinAccount} from './money.mjs';
+import {topUpNpc} from './npc-payment.mjs';
 import {relationView} from './npc-state.mjs';
 import {worldEvent} from './world-events.mjs';
 import {filingKnowledge} from './legal-reactions.mjs';
@@ -126,6 +127,7 @@ function transferFine(d,e,row,amount,eventId,authority=null){
  }
  const id=`legal_treasury:${row.law}`,old=d.get(...path(id))??{id,category:'legal_treasury',law:row.law,coins:0};
  const body=row.offender==='player'?['state','player','coins']:['state','npcs',row.offender,'coins'];
+ if(amount>0)topUpNpc(d,e,row.offender,amount,eventId);// EC-1a 共用钱袋：NPC 当事人本人钱袋不够先从户池补足
  const balance=d.get(...body);
  if(amount>0&&balance<amount||amount<0&&old.coins< -amount)fail('实际账户余额不足，未执行转移');
  moveCoins(d,{from:amount>0?purse(e,row.offender):fund(id),to:amount>0?fund(id):purse(e,row.offender),amount:Math.abs(amount),writer:'legal-appeal',eventId});

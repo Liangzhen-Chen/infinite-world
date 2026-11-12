@@ -350,7 +350,10 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null,a
                 if(route&&npc.coins<route.cost&&!npcCanPay(d,engine,npcId,route.cost,npc.coins)){route=null;activity('路费不足，暂留原处');}
                 if(route){
                     facilityRuntime().recordFurnaceDeparture(d,engine,npcId,npc.location,cursor);
-                    npc.coins+=payFromNpc(d,engine,{payer:npcId,to:sink('export','travel'),amount:route.cost,writer:'npc-schedule',eventId:null})-route.cost;
+                    // 户池补足已改了草稿里的钱袋字段；末尾只写与 original（陈旧快照）不同的字段，补足额正好等于路费时副本会等于 original 而漏写。
+                    // 所以付款后立刻按草稿最新值扣路费写入，副本取同值，不对陈旧快照做补算。
+                    payFromNpc(d,engine,{payer:npcId,to:sink('export','travel'),amount:route.cost,writer:'npc-schedule',eventId:null});
+                    npc.coins=d.get('state','npcs',npcId,'coins')-route.cost;d.set([...path,'coins'],npc.coins);
                     npc.scheduleTravel={from:npc.location,to:slot.location,depart:cursor,arrive:cursor+route.minutes,edges:route.edges,...(cursor<subsistenceResume?{subsistence:true,subsistenceUntil:subsistenceResume}: {})};
                     npc.location=null;activity('赶路');continue;
                 }

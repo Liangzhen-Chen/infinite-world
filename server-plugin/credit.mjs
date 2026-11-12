@@ -145,7 +145,7 @@ export function loanTerms(d,engine,{lender,bank,principal,days,collateralValue,b
         if(regard<c.loan.collateralBelow&&collateralValue<principal)throw preconditionFailure(`${nameOf(engine,lender)}与你交情不足，须有足值抵押才肯借`);
         rate=Math.round((high-(high-low)*Math.max(0,Math.min(100,regard))/100)*10000)/10000;
         maximumDays=c.loan.maximumDays;
-        const cash=engine.actor(d,lender).coins,until=d.get('state','minute')+days*1440;
+        const cash=Math.max(engine.actor(d,lender).coins,householdCash(d,engine,lender)),until=d.get('state','minute')+days*1440;
         const reserved=obligationRows(d.get('state')).filter(o=>o.debtor===lender&&o.deadline<=until&&!obligationView(d.get('state'),o).closed)
             .reduce((n,o)=>n+claimCopper(d,engine,{...o,amount:obligationView(d.get('state'),o).owed,paid:0}),0);
         limit=Math.min(Math.floor(cash*c.loan.lenderCashShare),Math.max(0,cash-reserved));
@@ -194,7 +194,9 @@ export function openLoan(d,engine,{lender,bank=null,keeper=null,principal,days,c
             }else transferItems(d,engine,lender,debtor,item,principal,null,{eventId});
         }
     }else{
-    moveCoins(d,{from:bank?vault(bank.id):purse(engine,lender),to:toPlayer?partyAccount(engine,d.get('state'),debtor):escrowTo,amount:principal,writer:'credit',eventId});
+    const principalTo=toPlayer?partyAccount(engine,d.get('state'),debtor):escrowTo;
+    if(bank)moveCoins(d,{from:vault(bank.id),to:principalTo,amount:principal,writer:'credit',eventId});
+    else payFromNpc(d,engine,{payer:lender,to:principalTo,amount:principal,writer:'credit',eventId});// NPC 放贷人：本人钱袋不够先从户池补足
     if(bank){const row=bankRow(d,bank);row.coins-=principal;holdingSet(d,engine,rec(bank.id),row,'credit');}
     else d.set([...engine.actorPath(lender),'coins'],engine.actor(d,lender).coins-principal);
     }
