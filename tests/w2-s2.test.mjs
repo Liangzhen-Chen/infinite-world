@@ -77,22 +77,28 @@ async function routeSession(route){
   assert.equal(doc.state.player.coins,coins-s.learnFee);assert.equal(doc.state.npcs[teacher].coins,teacherCoins+s.learnFee);
  }
  const buy=async(item,quantity)=>{
-  // EC-1b 前置核对：导师是居民卖方（market-seller），客流时刻起缺粮的别户邻居会买走他可售的余货（面包、蜂蜜）。
-  // 货架上不够本次要买的量时，只有一种成立的解释：别户居民已在客流里买走（客流记录为证）；证据不成立就是别的缺陷，照实报告，不当作新规律。
-  // 证据成立而货架仍不够，是夹具标定问题（导师持有量按旧规律“余货不外卖”标定），需按该聚落当日缺粮户的真实需求重新标定持有量，不在此处凑数。
+  // EC-1b 规律（云上探针 diag2/w2-s2-pre-buy.out 实测）：导师是居民卖方（market-seller），客流时刻起缺粮的别户邻居（饱腹缺口 101–240、对蜂蜜想买 9–20 份）
+  // 在第一次客流（第 0 天 1128）就把他可售的 3 份蜂蜜买空。这是真实的涌现结果，不是夹具问题，持有量不调。
+  // 所以货架上不够本次要买的量时：先用客流记录核对“确是别户居民买走”（谁、几份、几点、付了款、且在玩家买之前），
+  // 守恒（货架剩余 + 被买走 ≤ 世界表里的初始持有量），然后断言玩家的购买因无货被引擎拒绝（理由取引擎读数），返回 false 表示没买到。
   const held=doc.state.npcs[teacher].inventory[item],onShelf=held?.quantity??held??0;
   if(onShelf<quantity){
-   const sold=Object.values(doc.state.records).filter(r=>r.category==='customer_flow'&&r.keeper===teacher).flatMap(r=>r.visits??[]).filter(v=>v.outcome==='bought'&&v.item===item);
+   const name=world.items.find(i=>i.id===item).name,initial=world.npcs.find(n=>n.id===teacher).inventory[item],start=initial?.quantity??initial??0;
+   const sold=Object.values(doc.state.records).filter(r=>r.category==='customer_flow'&&r.keeper===teacher).flatMap(r=>(r.visits??[]).filter(v=>v.outcome==='bought'&&v.item===item).map(v=>({...v,minute:r.minute})));
    const house=world.households.find(h=>h.members.includes(teacher));
    assert.ok(sold.length>0,`${item} 货架只剩 ${onShelf} 而客流记录里没有别户买走：不是客流，需另查`);
    assert.ok(sold.every(v=>v.npc!==teacher&&!house?.members.includes(v.npc)),'居民不卖给本户');
-   assert.fail(`${item} 货架 ${onShelf} < 要买 ${quantity}：已被别户居民在客流里买走 ${sold.reduce((n,v)=>n+v.quantity,0)} 份，夹具需按新规律重新标定导师持有量`);
+   assert.ok(sold.every(v=>v.paid>0&&v.minute<doc.state.minute),'成交都付了款，且发生在玩家来买之前');
+   const total=sold.reduce((n,v)=>n+v.quantity,0);
+   assert.ok(onShelf+total<=start,`守恒：剩 ${onShelf} + 被买走 ${total}（${sold.map(v=>`${v.npc}@${v.minute}×${v.quantity}`).join(',')}）不超过初始 ${start}`);
+   await assert.rejects(run(doc,'world_trade',{seller:teacher,item,quantity}),new RegExp(`库存不足：${name}只剩${onShelf}`));
+   return false;
   }
   const t=await run(doc,'world_trade',{seller:teacher,item,quantity});
   // E6后导师私有火绒不算公开供给：S0、D1，稀缺因子1；先前真实采购使立场因子.99895。
   // 两份的零售额trunc(1×1×1×.99895×2)=1铜，其他采购仍须付款，材料消耗断言保持。
   if(item==='item_s2_tinder')assert.equal(t.result.cost,1,item);else assert.ok(t.result.cost>0,item);
-  doc=t.doc;
+  doc=t.doc;return true;
  };
  if(route==='道'){
   doc=await attend(doc,teacher,place,800);
@@ -105,7 +111,11 @@ async function routeSession(route){
  if(route==='丹'){
   doc=await attend(doc,teacher,place,800);doc=(await success(doc,'world_learn',{kind:'spell',entity:'spell_s1_tinder',source:teacher})).doc;
   doc=await attend(doc,teacher,place,800);doc=(await success(doc,'world_learn',{kind:'recipe',entity:'recipe_s2_pill',source:teacher})).doc;
-  for(const [item,q] of [['item_s2_huangjing',2],['item_s2_fuling',2],['item_s2_gancao',1],['item_honey',1],['item_s2_tinder',2],['item_charcoal',6]])await buy(item,q);
+  const bought={};
+  for(const [item,q] of [['item_s2_huangjing',2],['item_s2_fuling',2],['item_s2_gancao',1],['item_honey',1],['item_s2_tinder',2],['item_charcoal',6]])bought[item]=await buy(item,q);
+  // 蜂蜜被邻居买空（真实结果，见 buy 里的核对），导师处买不到；蜜丸配方要 1 份蜜，本测试后面的炉火与烘制用例要它。
+  // 前提设定（与上面“已累积的熟练度”同法，经 applyIntentSetup）：玩家的蜜是别处得来的，只设 1 份即配方用量，不改导师持有量。
+  if(!bought.item_honey){const staged=applyIntentSetup(engine,doc,{inventory:{item_honey:1}});assert.deepEqual(staged.setupUnmet,[]);doc=staged.document;}
  }
  doc=await attend(doc,teacher,place,540);assert.equal(doc.state.npcs[teacher].location,place);
  // Casting branches below start rested with a deep mana pool; costs are still asserted.
