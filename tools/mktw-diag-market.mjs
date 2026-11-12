@@ -25,7 +25,7 @@ import {handOatsScarcity} from '../tests/helpers/hand-targets.mjs';
 import {variant as dbVariant,scene as dbScene,setPrice,monthDayMinute,SEED as DB_SEED} from '../tests/helpers/daily-b2.mjs';
 import {farmTargetFood,openingStockFood} from '../server-plugin/farm-target.mjs';
 import {itemResupplyDays} from '../server-plugin/supply-interval.mjs';
-import {householdDailyUse,householdUsage,usageItemGrams,upkeepSelfSupplyOf,upkeepSelfTripsOf} from '../server-plugin/household-budget.mjs';
+import {householdDailyUse,householdUsage,usageItemGrams,upkeepSelfSupplyOf,upkeepSelfTripsOf,householdBufferTarget,householdResources,reserveShortfall} from '../server-plugin/household-budget.mjs';
 import {isItemClass} from '../server-plugin/item-class.mjs';
 import {placeSettlement,personHousehold} from '../server-plugin/entity-view.mjs';
 import {regionalTradePrice,regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
@@ -233,6 +233,12 @@ if(want('J')){
   doc=mk({facts:[{path:['state','npcs',host,'inventory'],value:{[bread]:{quantity:12,quality:engine.byId.get(bread).quality}}},{path:['state','npcs','npc_hw_ayan','inventory'],value:{}},
    {path:['state','records'],value:{...mk().state.records,contract_market_reserve:{id:'contract_market_reserve',category:'contract',kind:'procurement',parties:['player',host],subject:bread,quantity:4,fulfilled:1,status:'pending'}}}]});
   out.six={business:attempt(()=>saleableStock(read(doc),engine,host,bread,{business:true})),personal:attempt(()=>saleableStock(read(doc),engine,host,bread)),food:food(doc)};
+  // 储备档位（按种子抽取）与各项：retained 8 来自哪一档、哪些天数、现金覆盖多少。
+  out.six.buffer=attempt(()=>householdBufferTarget(read(doc),engine,host,{incomeDays:1}));
+  out.six.bufferDays=attempt(()=>[0,1,2,3].map(incomeDays=>({incomeDays,target:householdBufferTarget(read(doc),engine,host,{incomeDays})})));
+  out.six.resources=attempt(()=>{const r=householdResources(read(doc),engine,host);return {rows:r.rows?.filter(x=>x.item===bread).map(x=>({holder:x.holder,item:x.item,stock:x.stock,retained:x.retained,committed:x.committed,available:x.available,food:x.food,seed:x.seed})),keys:Object.keys(r)};});
+  out.six.shortfall=attempt(()=>reserveShortfall(read(doc),engine,host));
+  out.six.marketRules={personalReserveDays:engine.world.marketRules.personalReserveDays,householdBuffer:engine.world.marketRules.householdBuffer};
   // #2
   doc=mk({facts:[{path:['state','npcs',host,'inventory'],value:{[bread]:{quantity:10,quality:engine.byId.get(bread).quality}}},{path:['state','npcs',host,'coins'],value:200}]});
   const w2={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'asset-value',pack:'market',target:'economy:value',stage:'add',value:1}]}};
