@@ -10,6 +10,7 @@ import {planAgricultureMigration} from '../server-plugin/agriculture-migration.m
 import {planWorldUpgrade,compatibleWorld} from '../server-plugin/world-upgrade.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
 import {toolDefinitions,modelToolCall} from '../extension/tools.mjs';
+import {expectedOpeningFood} from './helpers/opening-food.mjs';
 const world=await loadWorld(),profiles=await approvedProfiles({world}),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json'));
 const configs=world.rules.agriculture.settlements.filter(p=>p.opening);
 function setup(){
@@ -96,7 +97,7 @@ test('严格schema和L1拒绝null账、无期末来源、错单位、错税率�
  for(const mutate of [p=>p.economy.production=null,p=>p.economy.publicStock.closing={food:99999},p=>p.economy.production[0].unitKg=1,p=>p.economy.tax.rateBps=9999,p=>p.governance.head=p.governance.coordinators[1]]){
   const bad=structuredClone(world);mutate(bad.settlementProfiles.find(p=>p.details).details);assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
  }
- // 待重推（MKTW ①b）：initialFood 已删，这里改动一个已不存在的字段；该负例应改为改动 initialSeed 或登记粮约，未改值。
- const bad=structuredClone(world);bad.rules.agriculture.settlements.find(p=>p.opening).initialFood++;assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
+ // initialFood 已删（开局存粮由规律推出）；负例改为把开局种粮压到不够播已登记田地（agriculture.mjs:340 拒绝）。
+ const bad=structuredClone(world);bad.rules.agriculture.settlements.find(p=>p.opening).initialSeed=1;assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
  const tools=toolDefinitions();assert.equal(tools.length,27);assert.equal(modelToolCall('world_farm',{operation:'settle_trade'}).args.operation,'farm_settle_trade');
 });

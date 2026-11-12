@@ -24,6 +24,21 @@ function setup(seed='agriculture-test'){
     const run=async(doc,tool,args,id)=>{const out=await engine.reduce(doc,{tool,args,eventId:id});return {document:applyPatches(doc,out.patches),result:out.result};};
     return{world,engine,c,run};
 }
+// 开局存粮的期望值，按现行规律在测试里独立手算（不调 openingFood/farmTargetFood）：
+//   开局存粮 = min(餐口 × (距收获天数 + reserveDays), 仓容 − 种粮)
+//   距收获天数 = 收获日 − 开局日 = (sowDays[1] + growthDays) − 0；餐口 = 人口（前置：本聚落居民无非 1 的饱食代谢，故不加权）；
+//   仓容 = granaryCapacity（前置：开局无已建公共粮仓设施，故无追加）；种粮 = initialSeed。
+// 以 agriculture-foundation 的 loc_hw 参数手算：距收获 205 天 + 储备 90 天 = 295 天；58 口 × 295 = 17110；仓容余量 20000 − 1680 = 18320；取小者。
+function expectedOpeningFood(engine,c){
+    const rules=engine.rules.agriculture,p=rules.settlements.find(s=>s.settlement==='loc_hw'),profile=engine.world.settlementProfiles.find(s=>s.id==='loc_hw');
+    for(const id of profile.residentIds??[]){const sp=engine.byId.get(engine.byId.get(id)?.species),m=sp?.nature?.metabolism?.satiety;assert.ok(m===undefined||m===1,`前置：${id} 饱食代谢非 1，餐口不等于人口`);}
+    assert.equal(profile.pendingSpeciesStructure,undefined,'前置：无待定混种结构');
+    assert.ok(!Object.values(c.state.created??{}).some(b=>b.builtProject&&b.facilityType==='granary'),'前置：开局无已建粮仓设施');
+    assert.equal(Math.floor(c.state.minute/1440),0,'前置：开局日为第 0 日');
+    const mouths=c.state.settlements.loc_hw.population,toHarvest=rules.crop.sowDays[1]+rules.crop.growthDays,days=toHarvest+p.reserveDays;
+    assert.equal(days,295,'前置：手算天数 205+90');assert.equal(mouths,58,'前置：开局人口 58');
+    return Math.min(mouths*days,p.granaryCapacity-p.initialSeed);
+}
 function conservation(c){
     const r=record(c),s=c.state.settlements.loc_hw,l=r.ledger;
     assert.equal(r.batches.reduce((a,b)=>a+b.amount,0),s.food);
@@ -43,7 +58,7 @@ test('农业引用、种粮、仓容及保存条件校验，不把任意食物�
     }
 });
 test('新战役按源建粮账；旧存档迁移保留财物和记忆，幂等且拒绝编号冲突',()=>{
-    const{engine,c}=setup();assert.equal(c.state.settlements.loc_hw.food,8000);assert.equal(record(c).field.seedBank,1680);conservation(c);
+    const{engine,c}=setup();assert.equal(c.state.settlements.loc_hw.food,expectedOpeningFood(engine,c));assert.equal(record(c).field.seedBank,1680);conservation(c);
     assert.throws(()=>initializeAgriculture(engine,c),/重复/);
     const old=engine.initialFromLegacy(legacy,'import',{prepare:false}),before=structuredClone(old),patches=planAgricultureMigration(old,engine.rules);
     const migrated=applyPatches(old,patches);assert.deepEqual(old,before);assert.deepEqual(migrated.state.player,old.state.player);
@@ -54,12 +69,12 @@ test('新战役按源建粮账；旧存档迁移保留财物和记忆，幂等�
     const late=structuredClone(old);late.state.minute=1440;assert.throws(()=>initializeAgriculture(engine,late),/第一日/);
 });
 test('实际春播消耗种粮；未成熟不产谷物，换年不补种子',async()=>{
-    const{c,run}=setup();let doc=(await run(c,'world_time',{minutes:30*1440},'spring')).document;
+    const{engine,c,run}=setup(),opening=expectedOpeningFood(engine,c);let doc=(await run(c,'world_time',{minutes:30*1440},'spring')).document;
     assert.equal(record(doc).field.seedBank,0);assert.equal(record(doc).ledger.seedSpent,1680);
     assert.equal(record(doc).ledger.harvested,0);assert.equal(record(doc).field.sownUnits,1400);conservation(doc);
     doc.state.location='loc_hw_fields';await assert.rejects(run(doc,'world_farm',{operation:'harvest'},'early'),/尚未成熟/);
     for(let i=0;i<12;i++)doc=(await run(doc,'world_time',{minutes:30*1440},`later_${i}`)).document;
-    assert.ok(record(doc).ledger.harvested>0);assert.equal(record(doc).ledger.openingFood,8000);assert.equal(record(doc).ledger.openingSeed,1680);conservation(doc);
+    assert.ok(record(doc).ledger.harvested>0);assert.equal(record(doc).ledger.openingFood,opening);assert.equal(record(doc).ledger.openingSeed,1680);conservation(doc);
 });
 test('跨季长等待与每日结算的库存、粮种和全部农业账一致',async()=>{
     const{c,run}=setup();let long=c,split=c;
@@ -154,11 +169,11 @@ test('志愿播种按实际检定与耗时执行，无私人赠粮，失败和�
 });
 test('三年实际日结守恒；20个独立天气种子不饥荒，源开局资产仅记一次',async()=>{
     for(let n=0;n<20;n++){
-        const{c,run}=setup(`agriculture-year-${n}`);let doc=c;
+        const{engine,c,run}=setup(`agriculture-year-${n}`),opening=expectedOpeningFood(engine,c);let doc=c;
         for(let month=0;month<36;month++){doc=(await run(doc,'world_time',{minutes:30*1440},`m${month}`)).document;conservation(doc);
             // T131/T132的自然死亡、出生、迁居记账改变人口；只容许这些登记变化，饥荒减员仍判失败。
             assert.equal(doc.state.settlements.loc_hw.population,58+recordedLifeChange(doc.state,'loc_hw'),`seed ${n}, month ${month}`);assert.equal(doc.state.settlements.loc_hw.unmetMeals??0,0);}
-        assert.equal(record(doc).ledger.openingFood,8000);assert.equal(record(doc).ledger.openingSeed,1680);
+        assert.equal(record(doc).ledger.openingFood,opening);assert.equal(record(doc).ledger.openingSeed,1680);
     }
 });
 test('农事库存随服务器重启、导出导入和删消息回滚保存，不再次发开局粮',async t=>{

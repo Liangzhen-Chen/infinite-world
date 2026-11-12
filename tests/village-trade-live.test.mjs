@@ -8,6 +8,7 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches, CampaignStorage, digest} from '../server-plugin/storage.mjs';
 import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
 import {modelToolCall} from '../extension/tools.mjs';
+import {expectedOpeningFood} from './helpers/opening-food.mjs';
 
 const world = await loadWorld();
 const legacy = JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json', import.meta.url), 'utf8'));
@@ -107,8 +108,8 @@ test('四份粮约从默认出生点保留全部正式作息，实际提运交�
             for (const config of configs) {
                 assert.ok(engine.byId.get(config.manager).schedule);
                 assert.equal(engine.byId.get(config.manager).tier, 'full');
-                // 待重推（MKTW ①b）：开局存粮改为开局日目标持有（餐口 × (距下次收获天数 + reserveDays)），不再等于 config.initialFood（已删）；未改值。
-                assert.equal(document.state.settlements[config.settlement].food, config.initialFood);
+                // 开局存粮 = 开局日目标持有，期望值由 helpers/opening-food.mjs 按规律独立手算。
+                assert.equal(document.state.settlements[config.settlement].food, expectedOpeningFood(engine, document.state, config));
             }
 
             const history = [];

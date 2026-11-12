@@ -16,7 +16,6 @@ import {purse,workshopFund,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,bagStock} from './stock.mjs';
 import {recordCraft} from './craft-record.mjs';
-import {settlementAt} from './reputation.mjs';
 // S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
 declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {facilityView,facilityRuntime} from './facility-state.mjs';
@@ -34,7 +33,7 @@ import {prepareNpcFurnace,prepareThermalWorkstation} from './magic-object.mjs';
 import {kilnWorkResult,craftStanding,craftOutcome,materialFloor,toolFactor,materialFloors,returnMaterials} from './manufacturing.mjs';
 import {npcProficiency,npcWorkGrowth,switchVocation,npcVocationOptions} from './npc-growth.mjs';
 import {intelligenceOf,goalsWithinHorizon,INTELLIGENCE_LEVELS} from './npc-intelligence.mjs';
-import {personSimulation,personConstraint}from'./entity-view.mjs';
+import {personSimulation,personConstraint,placeSettlement}from'./entity-view.mjs';
 import {subjectiveView,subjectiveFact,conversationLanguage} from './subjective-view.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {autonomyCandidates,candidateAction,planFromCandidate,autonomyKind,autonomyRelevant} from './autonomy-candidates.mjs';
@@ -204,7 +203,7 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   }
   if(!outcome.success)crafted.failure=result.failure??'ruin';
   // 行为人 = 这位 NPC，发生地 = 他开工的地点（location）所在聚落。
-  recordCraft(d,{...crafted,engine,actor:id,place:settlementAt(engine,location)});
+  recordCraft(d,{...crafted,engine,actor:id,place:placeSettlement(engine,d.get('state'),location).value});
   const gained=npcWorkGrowth(d,engine,id,r.skill,outcome.success,start);if(gained)outcome.growth={skill:r.skill,gained};
   summary=`尝试${r.name}，耗时${minutes}分钟，${outcome.success?`制成${engine.byId.get(r.output.item).name}${produced[0].amount}份`:produced.length?`失败，只做出${produced[0].amount}份${outcome.workmanship}的${engine.byId.get(r.output.item).name}（部分用途不具备）`:'没有得到成品'}，工坊费${fee}铜${gained?`，手艺熟练度提高${gained}`:''}。`;
  return {outcome,spent,produced,summary};

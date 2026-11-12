@@ -6,7 +6,7 @@ import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput} from './stock.mjs';
 import {recordCraft} from './craft-record.mjs';
-import {settlementAt} from './reputation.mjs';
+import {placeSettlement} from './entity-view.mjs';
 // S1b: 制作是 src:craft 制造守恒对：配方投入进 sink:consume|<物品>|craft，成品、副产品与失败回收的残料来自 src:craft。
 declareLedgerWriter('manufacturing',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});
 import {effectiveProficiency}from'./professions.mjs';
@@ -285,7 +285,7 @@ export function manufacture(d,args,eventId){
         degree:outcome.degree,workmanship,...(grade!==null?{grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),instances:ids,byproducts:outcome.success?recipe.byproducts??[]:[],salvage};
     d.set(['state','crafted',receipt.id],receipt);
     // 行为人 = 玩家（receipt.maker），发生地 = 玩家所在地的聚落。
-    recordCraft(d,{engine:this,actor:'player',place:settlementAt(this,d.get('state','location')),recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):partial.length?partial:salvage).map(row=>[row.item,row.amount])),...(!outcome.success?{failure:result.failure??'ruin'}:{}),writer:'manufacturing',eventId});
+    recordCraft(d,{engine:this,actor:'player',place:placeSettlement(this,d.get('state'),d.get('state','location')).value,recipe:recipe.id,batches:1,inputs:Object.fromEntries(materials),outputs:Object.fromEntries((outcome.success?products.filter(row=>row.amount):partial.length?partial:salvage).map(row=>[row.item,row.amount])),...(!outcome.success?{failure:result.failure??'ruin'}:{}),writer:'manufacturing',eventId});
     return{recipe:recipe.id,...outcome,...(cost?{cost}:{}),receipt:receipt.id,instances:ids,workmanship,...(grade!==null?{grade}:{}),...(result.failure?{failure:result.failure}:{}),...(standing!=='skilled'?{standing}:{}),...(work?{work}:{}),salvage,...(thermal?{thermal}:{}),
         spent:{feePaid:station?.fee??0,minutes:workMinutes,materials:[...materials].map(([item,quantity])=>({item,name:this.byId.get(item).name,quantity})),toolWear},
         healthDelta:d.get('state','player','hp')-hpBefore,produced:(outcome.success?products.filter(row=>row.amount):partial).map(row=>({...row,name:this.byId.get(row.item).name})),
