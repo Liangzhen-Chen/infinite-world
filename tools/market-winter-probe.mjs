@@ -35,7 +35,7 @@ import {weatherAt} from '../server-plugin/weather.mjs';
 import transportBalance from '../world/rules/tables/balance/transport.json' with {type:'json'};
 import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
-import {tradeQuote} from '../server-plugin/shop.mjs';
+import {tradeQuote,shopOfKeeper} from '../server-plugin/shop.mjs';
 import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
 import {factionClockRules} from '../server-plugin/faction-clock.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/agriculture.mjs';
@@ -180,6 +180,15 @@ function setPoolHold(engine,doc,sid,satiety){
  return {set,cleared,granarySatiety:satiety};
 }
 const num=v=>typeof v==='number'?v:0;
+// 与引擎同一方向与公式（market.mjs:359、367）：积分区间按报价 side 选——卖出侧 (supply−count, supply)，买入侧 (supply, supply+count)。
+const curveInterval=(q,limits,count)=>q.side==='sell'?scarcityIntegral(q,limits,Math.max(0,q.supply-count),q.supply):scarcityIntegral(q,limits,q.supply,q.supply+count);
+// 价差的目录/规则派生值：无 business 为 1；有 business 卖出侧 = clamp(店 markup, shop 限位)；其余 = rules 的 spread.buy。
+function spreadExpectedOf(engine,state,q){
+ if(!q.business)return 1;
+ if(q.side!=='sell')return engine.world.marketRules.spread.buy;
+ const lim=engine.rules.economy.priceFactorLimits.shop,m=shopOfKeeper(engine,q.business,state)?.markup;
+ return Math.min(Math.max(m,lim[0]),lim[1]);
+}
 function transportInputs(engine,doc,d,item,sid){
  const def=engine.byId.get(item),limits=engine.rules.economy.priceFactorLimits.transport,rate=transportBalance.rows.find(r=>r.key==='carrier:pack').rate;
  const origin=def.origin??null,from=origin?placeSettlement(engine,doc.state,origin).value:null,seed=d.get('randomSeed');
@@ -203,7 +212,7 @@ function itemView(engine,doc,item,location){
   // 持有量取自同一次报价的返回（q.supply、q.demand），换算成饱腹单位（× 池内权重）；不由探针重算。
   const holdTarget=q.demand*w,holdActual=q.supply*w,divZeroCapped=!(q.supply>0),ratio=q.demand/Math.max(1,q.supply);
   // 与引擎同一公式（含分母保护 max(1,supply)，market.mjs 的比值计算）；供给为 0 按 scarcityCap；无保护的纯比值另列。
-  const scarcityRaw=divZeroCapped?limits[1]:q.demand/Math.max(1,q.supply),scarcityRawUnprotected=divZeroCapped?null:holdTarget/holdActual,integral=scarcityIntegral(q,limits,q.supply,q.supply+1),ratioClamped=Math.min(Math.max(ratio,limits[0]),limits[1]);
+  const scarcityRaw=divZeroCapped?limits[1]:q.demand/Math.max(1,q.supply),scarcityRawUnprotected=divZeroCapped?null:holdTarget/holdActual,integral=curveInterval(q,limits,1),ratioClamped=Math.min(Math.max(ratio,limits[0]),limits[1]);
   const catalogBase=engine.byId.get(item).basePrice,hazardFactor=hazardPriceFactor(engine,doc.state,item,location),magicFactor=magicPriceFactor(engine,doc.state,item,location),forestWaterFactor=forestWaterPriceFactor(engine,doc.state,item,location,d);
   const environmentFactors=hazardFactor*magicFactor*forestWaterFactor,tin=transportInputs(engine,doc,d,item,location);
   const contributions={value:x.value?.contributions??[],price:x.price?.contributions??[]},additiveSum=[...contributions.value,...contributions.price].filter(c=>c.stage==='add').reduce((n,c)=>n+num(c.value),0);
@@ -214,7 +223,7 @@ function itemView(engine,doc,item,location){
    scarcity:x.scarcity,listPrice:q.listPrice,relPrice:q.listPrice/base,relation:x.relation,
    explanationParts:{baseline:x.baseline,environment:x.environment,scarcity:x.scarcity,quality:x.quality,depth:x.depth,spread:x.spread,relation:x.relation,curve:x.curve,count:q.quantity,rounding:x.rounding,contributionsEmpty:{value:!contributions.value.length,price:!contributions.price.length}},
    contributions,additiveSum,
-   qualityExpected:marketGrade(engine,d.document??{state:doc.state},item,{seller:null,quantity:1}),spreadExpected:rm.spread.sell,depthExpected:Math.max(0,1+rm.depthImpact*depthNet/Math.max(1,q.opening)),
+   qualityExpected:marketGrade(engine,d.document??{state:doc.state},item,{seller:null,quantity:1}),spreadExpected:spreadExpectedOf(engine,d.get('state'),q),depthExpected:Math.max(0,1+rm.depthImpact*depthNet/Math.max(1,q.opening)),
    hazardFactor,magicFactor,forestWaterFactor,regionalTradePrice:regionalTradePrice(d,engine,item,location)};
  }catch(e){return {item,error:errorOf(e)};}
 }
@@ -286,8 +295,8 @@ async function buyRun(name,level){
     const contributions={value:x.value?.contributions??[],price:x.price?.contributions??[]},additiveSum=[...contributions.value,...contributions.price].filter(c=>c.stage==='add').reduce((n,c)=>n+num(c.value),0);
     const depthNet=q.opening>1?q.opening-Math.max(1,q.spotSupply??q.supply):0;
     return {supply:s.supply,spotSupply:s.spotSupply,demand:s.demand,ratio,ratioClamped:clampR(ratio),atFloor:ratio<=limits[0],atTop:ratio>=limits[1],opening:q.opening,depth:x.depth,scarcity:x.scarcity,
-     holdTarget,holdActual,poolCoverage:holdTarget>0?holdActual/holdTarget:null,scarcityRaw:divZeroCapped?limits[1]:q.demand/Math.max(1,q.supply),scarcityRawUnprotected:divZeroCapped?null:holdTarget/holdActual,scarcityIntegralOne:scarcityIntegral(q,limits,q.supply,q.supply+1),scarcityIntegralCount:scarcityIntegral(q,limits,q.supply,q.supply+q.quantity),divZeroCapped,net:depthNet,poolWeight:w0,
-     qualityExpected:marketGrade(engine,d.document??{state:ctx.doc.state},item,{seller:null,quantity:1}),spreadExpected:rm.spread.sell,depthExpected:Math.max(0,1+rm.depthImpact*depthNet/Math.max(1,q.opening)),
+     holdTarget,holdActual,poolCoverage:holdTarget>0?holdActual/holdTarget:null,scarcityRaw:divZeroCapped?limits[1]:q.demand/Math.max(1,q.supply),scarcityRawUnprotected:divZeroCapped?null:holdTarget/holdActual,scarcityIntegralOne:curveInterval(q,limits,1),scarcityIntegralCount:curveInterval(q,limits,q.quantity),side:q.side,divZeroCapped,net:depthNet,poolWeight:w0,
+     qualityExpected:marketGrade(engine,d.document??{state:ctx.doc.state},item,{seller:null,quantity:1}),spreadExpected:spreadExpectedOf(engine,d.get('state'),q),depthExpected:Math.max(0,1+rm.depthImpact*depthNet/Math.max(1,q.opening)),
      quotedListPrice:q.listPrice,quotedExactTotal:q.exactTotal,count:q.quantity,curve:x.curve,curveAvgScarcity:x.curve/q.quantity,pointScarcity:x.scarcity,
      // 价格公式里 value、price 两个槽的加法型修正（explainDerived 的 contributions）与各槽输入输出；additiveSum 为 stage=add 项数值之和。
      valueSlot:x.value?{base:x.value.base,value:x.value.value,contributions:x.value.contributions}:null,priceSlot:x.price?{base:x.price.base,value:x.price.value,contributions:x.price.contributions}:null,contributions,additiveSum,
