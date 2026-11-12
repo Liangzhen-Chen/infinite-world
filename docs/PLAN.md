@@ -256,6 +256,26 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 04:2xZ】review-submit.sh 被判 Undermining Oversight：调查（李白要求，原文存 docs/审查记录/门禁提交流程调查.md）**
+    - **李白决定**：不放行、不绕过、不由任何人代交；mktw-8 两轮审查作废（内容将变），本次不提交。
+    - **拒绝原文**：Permission for this action was denied by the Claude Code auto mode classifier. Reason: [Undermining Oversight]. If you have other tasks that don't depend on this action, continue working on those. ……（其余为通用说明：可用正当方式完成；不得恶意绕过；必要时停下由用户决定；用户可加权限规则）。
+    - **被拒的调用**：同一次 Bash 中先 cd，再用两个 heredoc 写 scope、find 结论文件，再跑 `review-submit.sh 2 F:/dnd-wt/MKTW mktw-8 approve … | tail -5`。整体被拒，没有任何部分执行。同一审查者此前（mktw-5 r2 等）先单独写文件、再单独跑脚本，都成功。
+    - **脚本实际做的事**：
+      - review-submit.sh 先用 tc_dnd 取服务器目录哈希，与本地 manifest 哈希比对；
+      - 再用 tc_review 钥匙以 reviewer 账号连接，强制执行 review-put.sh，把结论 JSON 经管道送入（本地 python 用 heredoc 读 stdin，违反项目红线；manifest.sh、deploy.sh 还有两处同类用法）；
+      - 远端写 /work/.reviews/<hash>/r<轮>-<时间>-<审查者>.json（只追加、444），这就是批准记录；
+      - gate.sh 的 approved() 只认这些记录：要求两轮、审查者不同、审查者不在实施者中、无 changes。
+    - **弱点**：reviewer 与 implementers 都是自报；所有审查者共享一把钥匙，任何持有者都能替任意 id 提交。
+    - **最可能的被拒原因**（推测，没有用实际运行去验证）：同一调用内刚写完结论就立刻 approve 提交，形同自写自批；再叠加"用特权钥匙写会解锁门禁的批准记录"这一性质。
+    - **调查受限**：调查员第二条远端只读 ssh（列 authorized_keys、ls ~/gate）被分类器以 [Unauthorized Access] 拒绝，没有绕过。远端 review-put.sh 的具体内容依据本机 deploy.sh、review-put.sh、gate.sh 推断，未在服务器核实。
+    - **重设方案（待李白定，涉及钥匙属扩权）**：
+      - 审查者只把结论写到本地 verdicts/<hash>/r<轮>-<审查者>.json（含内容哈希、r1 文件的 sha256），写文件与提交分开；
+      - 由协调者的独立发布步骤经无批准权的 inbox 通道上传；
+      - 门禁在 run 时自己按内容重算哈希，核对两轮、审查者互异；implementers 改由服务器登记，不接受自报；
+      - 审查者身份由钥匙指纹或令牌绑定；
+      - 去掉全部 python stdin。
+    - **需改的文件**：本地 gate/review-submit.sh、manifest.sh、manifest.py、deploy.sh、README、VERIFY-PLAN、review-user；远端 ~/gate/gate.sh、review-put.sh、两个账号的 authorized_keys、/work/.reviews 权限，新增 inbox 与实施者登记。改提交脚本本身要两轮审；改后若仍被拦，停下报亮圳。
+    - **影响**：新流程上线前，所有云测试（含 EC-1、WATER-1D、市场后续）的门禁都卡在提交这一步。已经跑着的 ec1-7、water1d-4 全量不受影响（已在跑）。
   - **【11-12 04:1xZ】市场 mktw-8 门禁与两条新缺口**
     - **代码与探针**：t-mktw d5628095 = 持有量口径 8e64feae + 缺口 TODO f7b0a2b4 + 运输 f17226f8/3dbfece8 + 探针 v8 3602a52a + N1–N4 修 eb40dd24 + 探针积分方向与 spread 修 d5628095。
     - **门禁 r1**：mktw-6 r1 approve 后修 N 项 → mktw-7 r1 …035758Z-3339795 → 修 F1–F3 → mktw-8 r1 …040257Z-3350525（hash 187c4082…）。
