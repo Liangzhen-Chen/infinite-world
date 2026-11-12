@@ -78,10 +78,12 @@ test('手写饱腹视为按热量的基值，同样乘系数；手写只给部�
     const it=engine.byId.get(a.id),b=a.nutrition.satiety;
     assert.equal(it.nutrition.satiety,Math.floor(b*satietyFactor(engine.world,it,b)),a.id);
   }
-  // 只手写了 hydration 的物品：hydration 用手写，satiety 由类别推导（牛奶）
+  // 牛奶不再手写任何营养：hydration 与 satiety 都由规则推导。
+  // hydration = 重量 0.5kg × 含水率 0.881 × 参照水系数 100/kg（25÷(0.25×1)）= 44.05 → 44。
   const milkRaw=world.items.find(i=>i.id==='item_milk'),milk=engine.byId.get('item_milk'),mp=materialProps(engine,milk.id);
-  assert.equal(milkRaw.nutrition.satiety,undefined);
-  assert.equal(milk.nutrition.hydration,milkRaw.nutrition.hydration);
+  assert.equal(milkRaw.nutrition,undefined);
+  assert.equal(milk.nutrition.hydration,Math.floor(milk.weight*mp.moisture.value*100));
+  assert.equal(milk.nutrition.hydration,44);
   const base=milk.weight*mp.energyDensity.value*(1-mp.moisture.value);
   assert.equal(milk.nutrition.satiety,Math.floor(base*satietyFactor(engine.world,milk,base)));
   assert.ok(milk.nutrition.satiety>0);
