@@ -256,6 +256,15 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 07:2xZ】EC-1 ec1-9 定向重跑（35 个变差文件，两轮门禁 r1 …062515Z-3493959、r2 …062558Z-3494696）**
+    - 已恢复到基线或更好的 13 个：meal-cap 15/0、seasonal-credit 21/0、food-sources-memo 2/0、household-food-sources-traders 3/0、readonly-entries 7/0、system-map 9/0、a2-dialogue 8/0、a3-legacy 12/0、remote-generation 5/0、s5-09 16/2（好转）、npc-autonomy 10/1（好转）、s5-02 与 seasonal-hazards 与基线持平。
+    - 仍变差 24 个（清单 F:/dnd-tmp/ec1/fail9.txt）。主会话归出三簇：
+      ① "扣除自用和已承诺存量后不够出售"、切刀/滤蜜罐只剩 0——疑似户内口粮储备误扣到店铺存货或非食物货；
+      ② "当事人资金不足"——付款路径未覆盖户池补足；
+      ③ 迁居者不再买粮。
+      已派原执行者分诊。actions-catalog 待在云上重新生成 docs/actions.json。
+    - 9 个超时文件排在 water1d-4 全量之后单独重跑，遵守同机只跑一套全量。
+    - 市场 v8 的 58 情形：07:16Z 跑到第 44 个 buys-1.0 时，因我的名称映射正则过宽（把 buys-1.0 也映射成 buys-1）中止。已改为按探针实际情形表查名，只在表里没有时才映射；58 个名称已全部预检可解析。已完成的 43 个保留，脚本自动跳过，从断点续跑。
   - **【11-12 07:1xZ】旧初粮修订批（李白批准，只在本机跑这一个核对脚本，上限 40 次 / 0.3 元，到额自动停；不把 DeepSeek 密钥放上腾讯，不动云端钥匙权限）**
     - **范围**：world/geo/settlements.json 中 4 个村（榆坡 loc_bs_yupo、尉亭 loc_bs_weiting、柳泉 loc_bs_liquan、桑畔 loc_bs_sangban）的 publicStock.food 全部 REMOVE，并取代对应的两处已批回执（分件与 candidate.json），共 12 处，合为 4 条。不写死推导值，运行时由 openingStockFood 在开局日按世界定义推导：期初存量分别为 23600、29500、28320、32450。
     - **配套改动**：
