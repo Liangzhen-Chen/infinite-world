@@ -17,7 +17,7 @@ import {openLedger} from '../server-plugin/ledger.mjs';
 import {recordCraft} from '../server-plugin/craft-record.mjs';
 import {WORK_RULES} from '../server-plugin/works.mjs';
 import {craftUseWindowDays} from '../server-plugin/supply-interval.mjs';
-import {handSelfReserve} from './helpers/hand-targets.mjs';
+import {handSelfReserve,handSeasonYield} from './helpers/hand-targets.mjs';
 import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -347,21 +347,22 @@ test('远方生成聚落开局存粮 = 餐口 × 补给间隔：粮仓开局 cov
 });
 
 test('远方生成聚落统计产粮带季节系数：全年收支不为负，任一季开局按季节储备开仓都不断粮；冬季开局不立刻触发冬荒',()=>{
- // 推导（全部按规则数据手推，不调用被测的储备函数）：当日产量 = 名义 foodPerDay × cropSeasonFactors[季]（一季 90 日）；需求 = 人口；
- // 名义产量 = 需求 ÷ 季节系数均值（农事郡再乘 1.02），所以一年产量 = 名义 × 90 × Σ系数 = 360 × 需求 × (1 或 1.02) 不少于一年的需求。
- // 逐日模拟：开局存粮 = ceil(人口 × 季节储备)，逐日 存粮 += 产量 − 需求，最低点不低于 0。四季各取季初开局。
+ // 推导（全部按规则数据手推，不调用被测的储备函数）：当日产量 = 名义 foodPerDay × g_s，g_s = cropSeasonFactors[s] × E_s（E_s = 该季天气 crop 倍数按季节权重的期望，handSeasonYield 手推；一季 90 日）；需求 = 人口；
+ // 名义产量 = 需求 ÷ mean(g_s)（农事郡再乘 1.02），所以期望一年产量 = 名义 × 90 × Σg_s = 360 × 需求 × (1 或 1.02) 不少于一年的需求。
+ // 逐日模拟（按天气期望）：开局存粮 = ceil(人口 × 季节储备)，逐日 存粮 += 名义 × g − 需求，连续三年，最低点不低于 0，三年末不低于开局存粮（年收支不为负）。四季各取季初开局。
  const {engine,doc}=setup('market-food-pool-season'),d=engine.primitiveDraft(doc);
  assert.ok(unfoldRemoteAt(d,engine,'loc_far_duanqi'));
- const state=d.get('state'),f=engine.rules.weather.cropSeasonFactors,sids=Object.values(state.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id));
+ const state=d.get('state'),f=handSeasonYield(engine.rules),sids=Object.values(state.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id));
  assert.ok(sids.length>0);assert.equal(f.length,4);
  for(const sid of sids){
   const row=state.settlements[sid],pop=row.population,fpd=row.foodPerDay;
   assert.ok(fpd>0&&pop>0,`${sid} 统计产粮`);
-  assert.ok(90*fpd*f.reduce((a,b)=>a+b,0)>=360*pop-1e-9,`${sid} 全年产量不少于全年需求`);
+  assert.ok(90*fpd*f.reduce((a,b)=>a+b,0)>=360*pop-1e-9,`${sid} 全年期望产量不少于全年需求`);
   for(let season=0;season<4;season++){
-   const start=season*90*1440;let stock=Math.ceil(pop*handSelfReserve(engine,start,fpd,pop)),low=stock;
-   for(let k=0;k<360;k++){stock+=fpd*f[Math.floor(((season*90+k)%360)/90)]-pop;low=Math.min(low,stock);}
-   assert.ok(low>=-1e-6,`${sid} 季${season}开局：存粮最低点 ${low} 不低于 0`);
+   const start=season*90*1440,start0=Math.ceil(pop*handSelfReserve(engine,start,fpd,pop));let stock=start0,low=stock;
+   for(let k=0;k<3*360;k++){stock+=fpd*f[Math.floor(((season*90+k)%360)/90)]-pop;low=Math.min(low,stock);}
+   assert.ok(low>=-1e-6,`${sid} 季${season}开局：三年内存粮最低点 ${low} 不低于 0`);
+   assert.ok(stock>=start0-1e-6,`${sid} 季${season}开局：三年末存粮不低于开局存粮`);
   }
  }
  // 冬季（season 3）开局：存粮 = ceil(人口 × 季节储备)，池持有天数 = 季节储备 H ≥ 阈值 0.5 × H，不触发冬荒。
@@ -369,7 +370,7 @@ test('远方生成聚落统计产粮带季节系数：全年收支不为负，�
  w.set(['state','minute'],3*90*1440);assert.ok(unfoldRemoteAt(w,engine,'loc_far_duanqi'));
  const overlay=remoteEngine(engine,w.document,x=>new WorldEngine(x)),ws=w.get('state'),sid=Object.values(ws.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id))[0],cond={kind:'granary_short',days:45};
  const H=handSelfReserve(overlay,ws.minute,ws.settlements[sid].foodPerDay,ws.settlements[sid].population);
- assert.ok(H>overlay.rules.economy.tradeCycleDays,'前置：冬季开局的季节储备大于交易周期下限');
+ assert.ok(H>overlay.rules.agriculture.settlements[0].reserveDays,'前置：冬季开局的季节储备大于结转储备（有季节缺口）');
  const dd=overlay.primitiveDraft(w.document),res=conditionMet(dd,overlay,{settlement:sid},cond,dd.get('state','minute'));
  assert.ok(Math.abs(res.threshold-0.5*H)<=1e-9*H);assert.equal(res.met,false);
 });

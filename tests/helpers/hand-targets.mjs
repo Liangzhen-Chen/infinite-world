@@ -17,16 +17,26 @@ export function handTarget(engine,state,profile,minute){
     return Math.min(Math.ceil(s.population*days),Math.max(0,rec.granary.capacity-rec.field.seedBank));
 }
 // 自产粮（统计产粮）聚落的季节储备天数，手推（不调用 selfSupplyDays）：
-//  当日产量 = 名义 foodPerDay × cropSeasonFactors[季]（一季 90 日，一年 360 日），需求 = 人口；以"天"计的当日亏空 = (需求 − 产量) ÷ 需求。
+//  当日期望产量 = 名义 foodPerDay × g_s（g_s = cropSeasonFactors[s] × 该季天气倍数期望，见 handSeasonYield；一季 90 日，一年 360 日），需求 = 人口；以"天"计的当日亏空 = (需求 − 产量) ÷ 需求。
 //  从 minute 起往后一年，分成五段（本季剩余、其后三季各 90、本季已过的部分），每段内亏空率不变，所以累计亏空的最大值落在某段末尾；
-//  储备天数 = max(最大累计亏空, 交易周期 economy.tradeCycleDays)。
+//  储备天数 = 最大累计亏空（季节储备） + 结转储备 reserveDays。
 export function handSelfReserve(engine,minute,foodPerDay,population){
-    const f=engine.rules.weather.cropSeasonFactors,doy=Math.floor(minute/1440)%360,season=Math.floor(doy/90),done=doy%90;
+    const f=handSeasonYield(engine.rules),doy=Math.floor(minute/1440)%360,season=Math.floor(doy/90),done=doy%90;
     const blocks=[[season,90-done],[(season+1)%4,90],[(season+2)%4,90],[(season+3)%4,90]];
     if(done>0)blocks.push([season,done]);
     let cum=0,worst=0;
     for(const [s,len] of blocks){cum+=len*(population-foodPerDay*f[s])/population;worst=Math.max(worst,cum);}
-    return Math.max(worst,engine.rules.economy.tradeCycleDays);
+    // 加结转储备：农事规则的 reserveDays（rules.agriculture.settlements[0]，现为 90）。
+    return worst+engine.rules.agriculture.settlements[0].reserveDays;
+}
+// 每季期望产量倍数手推：g_s = cropSeasonFactors[s] × E_s，E_s = Σ(季节权重 × 该天气的 crop) ÷ Σ权重；天气顺序写死为规则数据的列序（晴、阴、雨、暴雨、雪、雾，world/meta/rules.json seasonalWeights 列）。
+export function handSeasonYield(rules){
+    const order=['clear','cloudy','rain','storm','snow','fog'],w=rules.weather;
+    assert.deepEqual(Object.keys(w.states),order,'前置：天气状态键序 = 权重列序');
+    return w.cropSeasonFactors.map((factor,s)=>{
+        let num=0,den=0;order.forEach((k,i)=>{num+=w.seasonalWeights[s][i]*w.states[k].crop;den+=w.seasonalWeights[s][i];});
+        return factor*num/den;
+    });
 }
 // 一件食物折成"口粮件数"的比例 = 该物饱腹值 ÷ 口粮饱腹值。物品行自带饱腹值的直接读行数据；
 // 燕麦等没有自带值、要沿配方推的，唯一保留对 foodSatiety 的依赖（它的推导由 market-food-pool.test 单独手推验证），这里只用于换算单位，不参与目标持有与价格的期望。
