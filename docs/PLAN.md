@@ -256,6 +256,14 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 15:1xZ】两卡进展**
+    - **EC-1 第四任交回**（四项分别提交，无违规，未被自动审查拦截）：
+      - f94ab940（A 类）：business.mjs:870-886 新增 arrivalStart，顾客可用窗改为从"到达"起算，迁居者 15488 到达后即在店窗内；food-habit #7、F026 查实不同根；
+      - 620de7fd：w2-s2 按客流记录核对蜜被饥饿邻居买走，玩家购买被拒；后续炼丹步给玩家 1 份蜜作前提，主会话认可，理由是该步测的是炼丹；
+      - b945c635：s5-w4 F048 的 upkeep = ceil(0.78×7) = 6，据此重推；
+      - 12eb4a7b：m1 键集合扩入三类新记录，并注明出处。
+      ec1-17（hash 4056f8ca…）一审进行中。还待探针读数的有 9 项：finance-assets、s3-finance、s5-f-tender、m3、s5-04、t164、quest-sources、household-labor、law。
+    - **市场**：7856da4c 修了分层（5 个新模块归 L1，farm-target 拆出），但 mktw-25 一审又阻断：manufacturing / npc-autonomy / wildlife-society 自 mktw-9 起新增了 3 条依赖 reputation（L3）的向上导入，前任"新增 0"的核对不实。另有 agriculture.test:62、161 仍断言旧值 8000。前任已做约 10 轮，按规矩换第三任执行者处理。
   - **【11-12 14:5xZ】EC-1 按诊断修复，第四任执行者接手**
     - 第三任交回 be5af47e：19 个诊断情形里户池补足记录 0 条，所以剩余失败都不是付款原语造成的。trade-windows #7/#8 已改为按（人，店）计数，属 B 类。该任中途写了 `python3 -c 1`（被拦截，未执行），按"违反一次即换人"已换。它对 m1 的一处改动被自动审查拦下（疑似放宽），没有绕过，做法正确。
     - **主会话决定**：
