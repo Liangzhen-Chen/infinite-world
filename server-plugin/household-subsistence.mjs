@@ -258,6 +258,7 @@ function forageStock(e,state,source,day){
 function mealDeficit(e,state,owner,settlement,members){
  const s=state.settlements?.[settlement],h=personHousehold(e,state,owner).value;
  const resident=Boolean(h||state.npcs?.[owner]?.materialized?.settlement);
+ // 公粮份额读公仓库存（s.food）而不是可食池持有（foodStockDays）：公粮配给是从聚落公仓里发的，只能读公仓；冬荒钟判"缺粮程度"才读池。
  const publicShare=resident&&s&&s.granary!==false?Math.min(1,Math.max(0,s.food??0)/Math.max(1,Math.ceil(mealMouthsOf(e,state,settlement,s.population??0)))):0;
  // A guaranteed complete public ration already covers native daily satiety.
  // No private unit, seed or promise can increase a zero food deficit. Keep

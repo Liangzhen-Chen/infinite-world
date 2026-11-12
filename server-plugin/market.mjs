@@ -209,9 +209,9 @@ export function upkeepDemand(state,engine,id,item){
 function cheapestOfClass(state,engine,place,cls){
  const memo=cheapestMemo.get(state)??new Map();cheapestMemo.set(state,memo);
  const key=`${place}|${cls}`;if(memo.has(key))return memo.get(key);
- const items=classItems(engine,cls),shelved=new Set((shopShelves(engine,place)??[]).map(r=>r.item).filter(item=>items.includes(item))),held=new Set();
- if(!shelved.size)for(const [id,n]of Object.entries(state.npcs??{})){if(settlementOf(engine,state,n.location)!==place)continue;for(const item of items)if(quantity(n.inventory?.[item])>0)held.add(item);}
- const pool=shelved.size?[...shelved]:held.size?[...held]:items,best=pool.sort((a,b)=>usageCost(engine,a)-usageCost(engine,b)||a.localeCompare(b))[0]??null;
+ // I12：只读公开的货架与目录，不读居民私户背包——有货架取货架上最便宜的；没有货架就取目录里同类最便宜的（usageCost = 目录基价 ÷ 顶多少基准克）。
+ const items=classItems(engine,cls),shelved=new Set((shopShelves(engine,place)??[]).map(r=>r.item).filter(item=>items.includes(item)));
+ const pool=shelved.size?[...shelved]:items,best=pool.sort((a,b)=>usageCost(engine,a)-usageCost(engine,b)||a.localeCompare(b))[0]??null;
  memo.set(key,best);return best;
 }
 const cheapestMemo=new WeakMap();

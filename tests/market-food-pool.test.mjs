@@ -9,8 +9,9 @@ import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {documentReader} from '../server-plugin/read-scope.mjs';
 import {householdResources,householdDailyUse} from '../server-plugin/household-budget.mjs';
 import {personBusinesses,placeSettlement,personHousehold} from '../server-plugin/entity-view.mjs';
-import {marketSupply,goodsClass,goodsWeight,foodSatiety} from '../server-plugin/market.mjs';
-import {stageReached} from '../server-plugin/seasonal-hazards.mjs';
+import {marketSupply,goodsClass,goodsWeight,foodSatiety,upkeepDemand} from '../server-plugin/market.mjs';
+import {isItemClass} from '../server-plugin/item-class.mjs';
+import {stageReached,conditionMet} from '../server-plugin/seasonal-hazards.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {recordCraft} from '../server-plugin/craft-record.mjs';
@@ -216,6 +217,42 @@ test('农事聚落目标持有随季节：收获后撑到下次收获，收获�
   const row=marketSupply(documentReader(doc),engine,'item_oats',p.settlement).rows.find(r=>r.owner===p.settlement);
   assert.ok(row,p.settlement);assert.equal(row.target,expected);assert.equal(row.stock,expected);
  }
+});
+
+test('冬荒钟 granary_short 按可食池走：公仓空但池里有存粮不触发；池里也不足才触发',()=>{
+ // 推导：存粮可撑天数 = 池实际持有 ÷ 餐口；人口 30 → 餐口 30（mealMouthsOf），阈值 days = 45（规则里的 granary_short 天数）→ 阈值 1350 份。
+ // a) 公仓 0、经营者（客栈掌柜）手里 2000 燕麦：池 2000 ÷ 30 ≈ 66.7 天 ≥ 45 → 不触发（只看公仓会得 0 < 45 → 触发）；
+ // b) 公仓 1000、掌柜 0：池 1000 ÷ 30 ≈ 33.3 天 < 45 → 触发；c) 公仓 3000、掌柜 0：池 100 天 → 不触发（公仓满，池也满）。
+ // （"公仓满但池空"在口径上不可能：池 = 公仓 + 卖方存货，公仓满则池不空。）
+ const make=(food,keeperOats)=>{
+  const f=granaryFixture({food,population:30});
+  if(keeperOats){f.doc.state.npcs.npc_hw_linsui.inventory={item_oats:keeperOats};f.doc.ledger=openLedger(f.engine,f.doc);}
+  const d=f.engine.primitiveDraft(f.doc),mouths=mealMouthsOf(f.engine,f.doc.state,'loc_hw',30);
+  const r=conditionMet(d,f.engine,{settlement:'loc_hw'},{kind:'granary_short',days:45},d.get('state','minute'));
+  return {r,mouths};
+ };
+ const a=make(0,2000),b=make(1000,0),c=make(3000,0);
+ assert.equal(a.r.met,false);assert.ok(Math.abs(a.r.value-2000/a.mouths)<=1e-9);
+ assert.equal(b.r.met,true);assert.ok(Math.abs(b.r.value-1000/b.mouths)<=1e-9);
+ assert.equal(c.r.met,false);assert.ok(Math.abs(c.r.value-3000/c.mouths)<=1e-9);
+});
+
+test('I12：最便宜品种的选取不读私户背包，居民背包里有什么都不改变户用缺口补买的品种',()=>{
+ // 推导：cheapestOfClass 只读货架与目录（有货架取货架上最便宜的，没有取目录里同类最便宜的），所以户里缺燃料 3 天时，各燃料品种的 upkeepDemand
+ // 在"居民背包空"与"每位居民背包里都有每种燃料 5 件"两种状态下逐品种相同；且至少有一个品种 > 0（选中了最便宜的那种）。
+ const {engine,doc}=setup('market-food-pool-cheapest'),state=doc.state,fuel=engine.world.items.filter(i=>isItemClass(engine,i.id,'fuel')).map(i=>i.id);
+ assert.ok(fuel.length>1,'燃料类至少两种，选取才有意义');
+ const id=Object.keys(state.npcs).find(n=>{
+  if(placeSettlement(engine,state,state.npcs[n].location).value!=='loc_hw')return false;
+  const h=personHousehold(engine,state,n).value,ms=(h?.members??[n]).filter(m=>state.npcs?.[m]).sort();return ms[0]===n;
+ });
+ assert.ok(id);
+ const h=personHousehold(engine,state,id).value;state.family={...state.family,upkeep:{...state.family?.upkeep,[h?.id??id]:{fuelShortDays:3}}};
+ for(const n of Object.values(state.npcs))n.inventory={};
+ const demand=s=>fuel.map(i=>upkeepDemand(s,engine,id,i)),before=demand(state);
+ assert.ok(before.some(n=>n>0));
+ const other=structuredClone(state);for(const n of Object.values(other.npcs))n.inventory=Object.fromEntries(fuel.map(i=>[i,5]));
+ assert.deepEqual(demand(other),before);
 });
 
 test('私户背包变化不影响报价（I12）：非经营者多持多少货，供给与需求都不变',()=>{
