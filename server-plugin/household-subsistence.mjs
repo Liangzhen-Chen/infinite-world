@@ -3,7 +3,6 @@ import {personHousehold,personAge,personConstraint,personRoutine,personEmploymen
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts,householdIdentityInputs} from './npc-state.mjs';
 import {lifecycleInputs} from './holdings.mjs';
 import {employmentInputs} from './employment-state.mjs';
-import {commonsLiveInputs} from './sites.mjs';
 import {scheduleRecordDependencies} from './education-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
@@ -131,7 +130,7 @@ let selfSupplyDeps=null;
 // 组合原则：被调用方已声明依赖的，直接组合它们的声明（户口视图与身份、所在聚落、生命周期、雇佣、设施路网、资源点读数、取水与路线记忆、日程记录），不重新手写；
 // 手写的只剩没有声明可组合的部分：日程读的 npcs 字段（日程判等 sameNpcScheduleInputs 是逐项比较的函数，没有路径式清单）与规划自己直接读的顶层切片。
 const selfSupplyInputs=()=>selfSupplyDeps??=[
- ...householdViewInputs,...householdIdentityInputs,...placeSettlementInputs,...lifecycleInputs,...employmentInputs,...routeStateInputs,...commonsLiveInputs,
+ ...householdViewInputs,...householdIdentityInputs,...placeSettlementInputs,...lifecycleInputs,...employmentInputs,...routeStateInputs,...(ecology.commonsLiveInputs??[]),
  ...waterJourneyInputs,...routePairInputs,...waterSignatureInputs,
  ...selfSupplyNpcFields.map(f=>['npcs','*',f]),['family'],['player'],['obligations'],['effects'],['remote'],['projects'],['scheduler'],['minute'],
  {path:['records'],kinds:scheduleRecordDependencies.kinds},

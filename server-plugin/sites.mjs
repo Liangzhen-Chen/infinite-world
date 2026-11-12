@@ -417,7 +417,8 @@ export function commonsLive(engine,state,siteId,resourceId){
         return {remaining:ledger(d,place,engine).remaining[r.id]??0,minutesPerUnit:unitMinutes(engine,state,r)};
     },commonsLiveInputs);
 }
-registerSubsistenceResources({commonsResources,commonsLive,siteTake});
+// 读取函数与它的记忆依赖声明走同一个注册点（household-subsistence 的自给记忆组合这份声明，不直接导入本模块：L1 不依赖 L2）。
+registerSubsistenceResources({commonsResources,commonsLive,commonsLiveInputs,siteTake});
 export function siteResources(engine,state,{holder,settlement=null}){
     const document={state},d={document,get:(...p)=>p.reduce((v,k)=>v?.[k],document)};
     return engine.world.locations.filter(p=>p.site?.resources?.length).flatMap(place=>{

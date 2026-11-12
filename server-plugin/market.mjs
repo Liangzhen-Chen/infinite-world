@@ -93,9 +93,7 @@ export function goodsUse(engine,item){return goodsEntry(engine,item).use;}
 const householdsMemo=Symbol('settlement households');
 let householdsDeps=null;
 const householdsInputs=()=>householdsDeps??=[...householdViewInputs,...householdIdentityInputs,...lifecycleInputs,['settlements'],['created'],['family','households']];
-// 记忆值包一层对象，便于测试用对象身份判断“记忆是否被作废重算”（原始数字看不出来）。
-export const settlementHouseholdsRead=(engine,state,place)=>stateMemo(state,engine,[householdsMemo,place],()=>({count:settlementPopulation(engine,state,place).householdCount.value}),householdsInputs());
-const settlementHouseholds=(engine,state,place)=>settlementHouseholdsRead(engine,state,place).count;
+export const settlementHouseholds=(engine,state,place)=>stateMemo(state,engine,[householdsMemo,place],()=>settlementPopulation(engine,state,place).householdCount.value,householdsInputs());
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs?.[id]?.location??state.creatures?.[id]?.location;
 const settlementOf=(engine,state,location)=>placeSettlement(engine,state,location).value??location;
 const inventoryOf=(state,id)=>{
