@@ -192,4 +192,28 @@ if(want('H')){
  }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
  results.push(out);
 }
+// I：ke-upkeep-demand 夹具（initialFromLegacy，村里柴清空，铁匠铺架上 40 炭）：开局 / 缺柴三日后 / 补柴两日后三个时点的炭报价与供需明细，看"缺柴时柴价上升"的前提是否成立。
+if(want('I')){
+ const out={label:'I ke-upkeep-demand：缺柴三日前后的炭价与供需',points:[]};
+ try{
+  const smith='npc_hw_duanyan',forge='bld_hw_forge',item='item_charcoal',DAY=1440;
+  const w=structuredClone(world);{const n=w.npcs.find(x=>x.id===smith);delete n.tier;n.schedule={default:[{start:0,end:1440,location:forge,activity:'营业',services:['trade']}]};}
+  const engine=new WorldEngine(w);
+  const wait=async(doc,minutes,eventId)=>applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes},eventId})).patches);
+  const villagers=doc=>Object.keys(doc.state.npcs).filter(id=>placeSettlement(engine,doc.state,doc.state.npcs[id].location).value==='loc_hw');
+  const point=(label,doc)=>{
+   const d=read(doc),m=attempt(()=>marketSupply(d,engine,item,forge));
+   out.points.push({label,minute:doc.state.minute,supply:m.supply,demand:m.demand,consumption:m.consumption,scarcity:Math.min(limits[1],Math.max(limits[0],m.demand/Math.max(1,m.supply))),rows:m.rows?.map(r=>({owner:r.owner,item:r.item,stock:r.stock,committed:r.committed,available:r.available,unit:r.unit})),
+    base:attempt(()=>regionalTradeBase(d,engine,item,forge)),limits,
+    upkeep:Object.entries(doc.state.family?.upkeep??{}).map(([k,r])=>({key:k,fuelShortDays:r.fuelShortDays,fuelDebtG:r.fuelDebtG})).filter(r=>r.fuelShortDays||r.fuelDebtG),
+    households:attempt(()=>{const seen=new Set(),rows=[];for(const id of villagers(doc)){const h=personHousehold(engine,doc.state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);rows.push({key,self:attempt(()=>upkeepSelfSupplyOf(engine,doc.state,id).fuel??0)});}return rows;})});
+  };
+  let doc=engine.initialFromLegacy(seed,'ke-upkeep');doc.state.minute=600;
+  for(const id of villagers(doc))for(const it of Object.keys(doc.state.npcs[id].inventory??{}))if(isItemClass(engine,it,'fuel')&&!(id===smith&&it===item))delete doc.state.npcs[id].inventory[it];
+  doc.state.npcs[smith].inventory[item]={quantity:40,quality:'木',durability:100,weight:engine.byId.get(item).weight};
+  doc=await wait(doc,1,'open');point('开局（开张一分钟后）',doc);
+  doc=await wait(doc,3*DAY,'cold');point('缺柴三日后',doc);
+ }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
+ results.push(out);
+}
 console.log(JSON.stringify(results,null,1));

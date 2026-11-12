@@ -55,14 +55,14 @@ test('不可食但带 food 标签的货不进可食池，可食池的供需计�
  const {engine,doc}=setup(),read=documentReader(doc),inn='bld_hw_qingdeng',pool='goods:food';
  // 推导：item_salt 原始标签 mineral、food；加载期由机制标注（world/meta/mechanics/items.json:14-18，经 runtime-world.mjs materializeRuntimeWorld，engine.mjs:251 调用）并入 salt 标签。
  // 没有饱腹，也无配方可加工成可食品（盐不供能）→ 不可食 → 不进 goods:food。
- // 退类规则依次：自身其他 goods: 标签（无）→ goodsTags 表中非 food 的映射 → 物品 id。盐带 salt 标签，goodsTags 表（world/rules/tables/market.json:51）把 salt 映射到 salt，
- // 所以退到第二步，类 = goods:salt（不是退到物品 id）；权重按件 1。
+ // 不可食的货不进 goods:food。盐是家户用度类（item-class.householdUsage 的 salt 行：每人每日克数），同一用度类的货并成一个池 use:salt，池内按"顶多少基准克"计量；
+ // salt 行不带热值需求，所以一件盐顶它自己的重量克数：权重 = max(1, round(重量 kg × 1000))。（无用度类的不可食货仍按旧退类规则：自身 goods: 标签 → goodsTags 表非 food 映射 → 物品 id，权重 1。）
  assert.ok(engine.byId.get('item_salt').tags.includes('food'));
  assert.ok(engine.byId.get('item_salt').tags.includes('salt'),'加载期机制标注给盐加了 salt 标签');
  assert.ok(!engine.byId.get('item_salt').tags.some(t=>t.startsWith('goods:')),'没有自带 goods: 标签，所以走表映射这一步');
  assert.ok(!(engine.byId.get('item_salt').nutrition?.satiety>0));
  assert.equal(engine.world.marketRules.goodsTags.salt,'salt');
- assert.equal(goodsClass(engine,'item_salt'),'goods:salt');assert.equal(goodsWeight(engine,'item_salt'),1);
+ assert.equal(goodsClass(engine,'item_salt'),'use:salt');assert.equal(goodsWeight(engine,'item_salt'),Math.max(1,Math.round(engine.byId.get('item_salt').weight*1000)));
  // 池内的货都可食；因此可食池的供需只含饱腹单位，盐的库存与持有不会进来：面包报价的 rows 里没有盐。
  const s=marketSupply(read,engine,'item_bread',inn);
  assert.equal(s.goods,pool);assert.ok(s.rows.every(r=>r.item!=='item_salt'));
@@ -535,12 +535,14 @@ function selfFixture(seed,{debt=0,singleFarm=false,shared=false,noHouseholdCount
  if(shared)w.routes.push({id:'route_mk_grove_b',from:'loc_mk_home_b',to:'loc_mk_grove',modes:['walk'],lengthKm:2,closedSeasons:[]});
  if(noHouseholdCount)delete w.settlementProfiles.find(p=>p.id==='loc_hw').householdCount;
  const adultAge=w.rules.householdSubsistence.minimumAge+10;
- const template=w.npcs.find(n=>n.settlement==='loc_hw'&&/家务/.test(n.occupation??'')&&n.age>=adultAge);
- assert.ok(template,'前置：聚落里有一位家务型成年居民可作新建居民的模板');
+ // 状态里的居民只来自 world.npcs（基线人物，字段 scope 标所在聚落；residents.json 的居民不进 state.npcs）。模板取本聚落一位不开店、不提供服务的成年基线人物，
+ // 新建居民只借它的数据形状：去掉职业、店铺类型、服务、作息与笔记，不继承任何雇佣或官职。
+ const template=w.npcs.find(n=>n.scope==='loc_hw'&&n.age>=adultAge&&!n.shopType&&!(n.services??[]).length);
+ assert.ok(template,'前置：聚落里有一位不开店、不提供服务的成年基线人物可作新建居民的模板');
  const made=(id,home)=>{
   const n=structuredClone(template);
-  Object.assign(n,{id,name:id,aliases:[],age:adultAge,householdId:`house_${id}`,household:[],home:{location:home,access:'夹具新建'},location:home});
-  delete n.socialProfile;
+  Object.assign(n,{id,name:id,aliases:[],age:adultAge,householdId:`house_${id}`,household:[],home:{location:home,access:'夹具新建'},location:home,inventory:{},coins:0});
+  for(const k of ['occupation','shopType','services','schedule','tier','notes','socialProfile'])delete n[k];
   w.npcs.push(n);w.households.push({id:`house_${id}`,settlement:'loc_hw',homeLocation:home,members:[id],tenure:'夹具新建'});return id;
  };
  const A=made('npc_mk_a','loc_mk_home_a'),B=made('npc_mk_b','loc_mk_home_b');
