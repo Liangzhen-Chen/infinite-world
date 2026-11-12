@@ -261,8 +261,8 @@ test('P3统计粮食产出也扣灌溉水，无详细农田的远方聚落遇旱
    Object.assign(w.rules.forestWater.water,{capacityMl:1000000,evaporationShare:0,drinkingMlPerPerson:0});
    for(const kind of Object.keys(w.rules.forestWater.water.rainShare))w.rules.forestWater.water.rainShare[kind]=rain;
   });
-  // 待重推（MKTW）：开局存粮按旧口径取 settlementTrade.targetDays（240 天）；非农事聚落的目标持有现为餐口 × 补给间隔，价格相关期望待重推，未改值。
-  x.d.set(['state','settlements','loc_rw_statfarm'],{name:'统计田地',population:100,food:100*x.engine.rules.settlementTrade.targetDays,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
+  // 夹具存粮 = 100 口 × 240 天（周贸易规则的 targetDays 已删，改为农事聚落按 farmTargetFood 推导；这里只是个固定的夹具数量）；非农事聚落的目标持有现为餐口 × 补给间隔，价格相关期望待重推，未改值。
+  x.d.set(['state','settlements','loc_rw_statfarm'],{name:'统计田地',population:100,food:100*240,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
   const day=Math.floor(x.d.get('state','minute')/DAY);x.d.set(['state','minute'],(day+1)*DAY);
   advanceRegistry.find(r=>r.id==='daily').advance(x.engine,x.d,{before:day*DAY,after:(day+1)*DAY});return x;
  };

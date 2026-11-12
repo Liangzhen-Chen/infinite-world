@@ -7,6 +7,9 @@ import {applyPatches} from '../server-plugin/storage.mjs';
 import {applyEffects} from '../server-plugin/effects.mjs';
 import {advanceHazardClocks,assertHazardRules,validateHazardRules} from '../server-plugin/seasonal-hazards.mjs';
 import {pureHazardFires,hazardRouteClosure,hazardPriceFactor,famineAt} from '../server-plugin/hazard-calendar.mjs';
+import {thinGranaries} from './helpers/granary-fixture.mjs';
+import {goodsClass,goodsWeight} from '../server-plugin/market.mjs';
+import {farmTargetFood} from '../server-plugin/agriculture-migration.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {advanceNpcLife,npcLifeLines} from '../server-plugin/npc-life.mjs';
 import {advanceNpcNeeds} from '../server-plugin/npc-intelligence.mjs';
@@ -127,13 +130,18 @@ test('冬荒：存粮不足时粮价上涨，出现迁居与偷盗动机',async(
  assert.equal(hazardPriceFactor(engine,c.state,'item_oats','loc_hw'),1);
  assert.equal(hazardPriceFactor(engine,c.state,'item_oats','bld_hw_qingdeng'),1);
  assert.equal(hazardPriceFactor(engine,c.state,'item_staff','loc_hw'),1);
- // 【待云上实跑重推】以下锚点值是删除灾荒倍数（原 1.6）与并池、改需求口径之前的旧值，期望必须按新公式独立手算后替换，不得用被测函数算。
- // S5-02 §15.2：基准3×灾荒1.6×供需比；首笔深度、品质、立场和修正均为1。
- // 旧值 2.9617021276595747 = 3×1.6×(29/47)：供需比 需求29÷供给47=0.617021（>0.5，已离开供需下限，不再被钳在 0.5；旧值 2.4=3×1.6×0.5 是被钳住的结果）。
- // 供给47 = 林穗店面包等同类食物可售行相加（库存−留存−承诺）；需求29 = 林穗自留存7 + 同聚落非商家持有人留存22。
- // 对应设计变化：面包饱腹改推导（饱腹 30→16，各户留存份数升，c0a7ea22，PLAN.md:584、591③）与卖家份额分摊（f8e4a13b，PLAN.md:316③、563②）；
- // 李白 11-11 选 (a)（PLAN.md:540）。证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md。断言仍为精确相等。
- const d=draft(c);assert.equal(regionalTradePrice(d,engine,'item_ration','loc_hw'),2.9617021276595747);
+ // 价 = 区域基准 × 稀缺度（首笔深度、品质、立场和修正均为 1，冬荒期事件价格因子为 1，上面已断言）。按现行定价手推（不复制被测函数）：
+ //  · 区域基准 = 目录基价 3 × 运输因子 1.16（产地 loc_bs 到 loc_hw 一条 24 公里路，单位运费 24×1×0.02 = 0.48，1 + 0.48÷3）= 3.48；
+ //  · 稀缺度 = 目标持有 ÷ 实际持有，两边都折成口粮件数（每件货 × 饱腹权重 ÷ 口粮权重）：
+ //    实际持有 = 林穗店里的食物类存货（公开在售）+ 公仓燕麦存量；其他居民的私户背包不计（I12）；
+ //    目标持有 = 林穗货架目标（各行 maximum + reserve）+ 公仓粮食目标（农事聚落 = min(餐口 × (距收获天数 + reserveDays)，容量 − 种粮)，即 farmTargetFood）；
+ //  · 稀缺度落在 [0.5, 3] 之内，不夹取。
+ const d=draft(c),st=d.get('state'),unit=i=>goodsWeight(engine,i)/goodsWeight(engine,'item_ration'),food=i=>goodsClass(engine,i)==='goods:food';
+ const linsui=st.npcs.npc_hw_linsui,shelfRows=engine.rules.economy.shops.stores.filter(x=>x.keeper==='npc_hw_linsui').flatMap(x=>x.restock??[]).filter(r=>food(r.item));
+ const held=Object.entries(linsui.inventory??{}).filter(([i])=>food(i)).reduce((n,[i,q])=>n+(q.quantity??q)*unit(i),0)+st.settlements.loc_hw.food*unit('item_oats');
+ const target=shelfRows.reduce((n,r)=>n+(r.maximum+(r.reserve??0))*unit(r.item),0)+farmTargetFood(engine,st,engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw'),st.minute)*unit('item_oats');
+ assert.ok(target/held>=0.5&&target/held<=3);
+ assert.ok(Math.abs(regionalTradePrice(d,engine,'item_ration','loc_hw')-3.48*target/held)<=1e-9);
  // Not short of food: the condition holds the clock at phase 0.
  const fed=setup('hazard-famine',w=>{spring(w);w.rules.hazardClock.clocks.find(r=>r.kind==='famine').stages[0].condition.days=1;});
  assert.equal(rec(await fed.wait(fed.doc,3*DAY),'hazard-clock:famine:loc_hw'),undefined);
@@ -252,11 +260,14 @@ test('疫病接 npc-life 病症：按病名发病、可致死，医师治疗降�
 test('既有四个粮食复核时钟结果不变：灾害另表、另记账',async()=>{
  const strip=w=>{delete w.rules.hazardClock;};
  const a=setup('clock-test'),b=setup('clock-test',strip);
+ // 开局各村存粮 = 目标持有，买方没有需求、周贸易不发货，粮食复核时钟的"交割已核对"阶段无从到达；两边同样压低买方实存（前置条件在夹具里断言）。
+ thinGranaries(a.engine,a.doc);thinGranaries(b.engine,b.doc);
  const grain=doc=>Object.values(doc.state.records).filter(r=>r.category==='world_clock');
  const x=await a.wait(a.doc,14*DAY-a.doc.state.minute),y=await b.wait(b.doc,14*DAY-b.doc.state.minute);
  assert.deepEqual(grain(x),grain(y));assert.equal(grain(x).length,4);assert.ok(grain(x).every(r=>r.phase===2));
  // Even with every hazard forced into spring the grain clocks pass the same stages.
- const f=setup('clock-test',spring),z=await f.wait(f.doc,14*DAY-f.doc.state.minute);
+ const f=setup('clock-test',spring);thinGranaries(f.engine,f.doc);
+ const z=await f.wait(f.doc,14*DAY-f.doc.state.minute);
  const shape=rows=>rows.map(r=>({id:r.id,phase:r.phase,history:r.history.map(h=>({minute:h.minute,name:h.name,trigger:h.trigger.met,roll:h.roll}))}));
  assert.deepEqual(shape(grain(z)),shape(grain(y)));
  assert.ok(!Object.values(z.state.records).some(r=>r.category==='world_clock'&&r.id.includes(':loc_hw')));

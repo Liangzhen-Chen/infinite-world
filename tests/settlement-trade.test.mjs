@@ -1,4 +1,4 @@
-// 待重推（MKTW R5③）：区域基准价的运输因子改由物品 origin 整类推导（transport.unitFreight），依赖旧燕麦 lane 运输加价（distanceFactorPerKm）的价格期望待重推，未改值。
+// 区域基准价的运输因子由物品 origin 整类推导（transport.unitFreight，R5③）：本文件的价格期望已按该规律独立手推（公里数 × 计费重量 × 驮畜费率）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -10,6 +10,10 @@ import {regionalTradePrice,regionalTradeBase,validateSettlementTradeRules} from 
 import {settlementTradeRules} from '../world/design/m5-trade-rules.mjs';
 import {createTransportAsset} from '../server-plugin/transport.mjs';
 import {bag} from '../server-plugin/stock.mjs';
+import transportTable from '../world/rules/tables/balance/transport.json' with {type:'json'};
+import {farmTargetFood} from '../server-plugin/agriculture-migration.mjs';
+import {marketSupply} from '../server-plugin/market.mjs';
+import {thinGranaries} from './helpers/granary-fixture.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const DAY=1440,DEPART=7*DAY+540,lanes=world.rules.settlementTrade.lanes;
@@ -26,6 +30,8 @@ function setup({source=world,realNpcs=false}={}){
         for(const place of w.locations)place.minerals=[];
     }
     const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'trade-test');
+    // 开局各村存粮 = 目标持有，买方本无需求；夹具把四村实存压到目标的 80%（见 helpers/granary-fixture.mjs，前置条件在那里断言）。
+    thinGranaries(engine,doc);
     return {world:w,engine,doc};
 }
 async function wait(engine,doc,end,eventId='wait'){
@@ -193,7 +199,8 @@ test('足额粮不足、现金不足、仓容不足和空余劳力为零分别�
         const cash=snapshotCash(prepared),c=(await wait(engine,prepared,DEPART)).doc,o=c.state.records[key(lane)];
         assert.equal(snapshotCash(c),cash);conservation(c);
         if(scenario==='partial'){assert.equal(o.status,'in-transit');assert.equal(o.quantity,Math.floor(11/o.unitPriceCopper));assert.ok(o.quantity<40);}
-        else {assert.equal(o.status,'refused');assert.match(o.reason,{grain:/余粮/,cash:/现金/,capacity:/仓容/,labour:/劳力/}[scenario]);}
+        // 仓容：买方目标持有 = min(餐口 × 目标日数，容量 − 种粮)（farmTargetFood），仓装满时目标 = 实存，需求 = 目标 − 实存 = 0，所以按"无登记目标内的实际需求"拒发（先于仓容检查）。
+        else {assert.equal(o.status,'refused');assert.match(o.reason,{grain:/余粮/,cash:/现金/,capacity:/需求/,labour:/劳力/}[scenario]);}
     }
 });
 test('到货前粮批过期逐批记损失、退款，不重置保质期；有效批仍交割并按实际货价记税',async()=>{
@@ -219,18 +226,27 @@ test('公共报价只读且随真实供给重派生，距离与运输风险进�
     const {engine,doc}=setup(),lane=lanes[0],d=draft(doc),minute=DEPART;
     const before=structuredClone(d.document),first=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute);
     assert.deepEqual(d.document,before,'15.2/15.4: quotes are projections, not saved truth');
-    // Independent environmental calculation from authored road distances,
-    // actual travel time; no hand-written season coefficient exists any more. No market price computes this oracle.
-    const distance=world.routes.filter(e=>lane.routes.includes(e.id)).reduce((n,e)=>n+e.lengthKm,0);
-    const route=engine.route(world.rules.agriculture.settlements.find(p=>p.settlement===lane.seller).counter,world.rules.agriculture.settlements.find(p=>p.settlement===lane.buyer).counter,lane.mode,minute,doc.randomSeed);
-    const risk=Math.max(1,route.movingMinutes/(distance/engine.rules.travel.walkKmh*60));
-    const limits=engine.rules.economy.priceFactorLimits.transport,transport=Math.max(limits[0],Math.min(limits[1],(1+distance*.01)*risk));
+    // 区域基准的运输因子（R5③）按物品产地整类推导，与周贸易班线无关：运输因子 = 1 + 单位运费 ÷ 目录基价 3，
+    // 单位运费 = 产地聚落（燕麦产地 loc_hw_fields 在 loc_hw）到买方聚落按一年各月能走通的路线里最便宜的一条：Σ 路段公里 × 计费重量 × 驮畜费率；
+    // 计费重量 = max(0.5 公斤, 体积 × 250, 1 公斤) = 1 公斤，驮畜费率 0.02 铜/公里·公斤。此处独立地用路网与费率手算，不调用任何定价函数。
+    const rate=transportTable.rows.find(r=>r.key==='carrier:pack').rate,oats=engine.byId.get('item_oats');
+    assert.equal(rate,0.02);assert.equal(oats.basePrice,3);assert.ok(Math.max(oats.weight,(oats.volumeM3??oats.weight/250)*250,1)===1);
+    const costs=[];
+    for(let month=0;month<12;month++){
+        let r=null;try{r=engine.route('loc_hw',lane.buyer,'walk',month*30*DAY,doc.randomSeed);}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
+        if(r)costs.push(r.edges.reduce((n,id)=>n+engine.world.routes.find(x=>x.id===id).lengthKm*1*rate,0)+(r.cost??0));
+    }
+    const limits=engine.rules.economy.priceFactorLimits.transport,transport=Math.max(limits[0],Math.min(limits[1],1+Math.min(...costs)/3));
     assert.ok(transport>1);assert.equal(regionalTradeBase(d,engine,'item_oats',lane.buyer,minute),3*transport);
     // Changed stock is a non-examined premise; synchronize the existing books.
     setGrain(d.document,lane.buyer,100);resyncBooks(engine,d.document);assert.ok(regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+1)>first);
     const next=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+DAY);assert.ok(next>first);
-    // Riverbay timber: baseline4 * scarcity floor .5 * other factors1 =2.
-    const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc);assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),2);assert.deepEqual(outside.document,unchanged);
+    // 河湾木料：目录基价 4，产地就在本聚落（运输因子 1，不计运费）；价 = 4 × 稀缺度，稀缺度 = 目标持有 ÷ 实际持有，夹取在 [0.5, 3]。
+    // 实际持有 = 公仓木料存量（开局 28，与上面一致的公账）；目标持有取供给原语 marketSupply 的需求（户用日耗 × 补给间隔等，已在 market-food-pool 另行手推）。
+    // 需求远大于 3 × 存量，稀缺度被钳在上限 3：价 = 4 × 3 = 12。
+    const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc),timber=marketSupply(outside,engine,'item_wood','loc_hw');
+    assert.equal(engine.byId.get('item_wood').basePrice,4);assert.equal(timber.supply,doc.state.settlements.loc_hw.wood);assert.ok(timber.demand>=engine.rules.economy.priceFactorLimits.region[1]*timber.supply);
+    assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),4*engine.rules.economy.priceFactorLimits.region[1]);assert.deepEqual(outside.document,unchanged);
 });
 test('玩家world_trade消费实时区域价并扣真实商人库存；同日深度与次日复位',async()=>{
     const {engine,doc}=setup(),sid=lanes[0].seller,seller='npc_hw_ayan';
@@ -240,11 +256,17 @@ test('玩家world_trade消费实时区域价并扣真实商人库存；同日深
     const cash=snapshotCash(doc),initial=engine.quantity(draft(doc),seller,'item_oats'),wallet=doc.state.player.coins;
     const run=async(c,id)=>{const out=await engine.reduce(c,{tool:'world_trade',args:{seller,item:'item_oats',quantity:1},eventId:id});return{doc:applyPatches(c,out.patches),out};};
     const first=await run(doc,'local-buy');let c=first.doc;
-    const day=Math.floor(doc.state.minute/DAY),price=2;
-    // Oats3 * plentiful-supply floor .5 * incoming distance24.142km
-    // factor1.241421... * terrain1.2 * spring.9 =2.01110... ->2.
-    // Neutral regard/grade/spread/depth and corrections are all1.
-    assert.equal(first.out.result.cost,price);assert.equal(first.out.result.pricing.depth,1);
+    const day=Math.floor(doc.state.minute/DAY);
+    // 手推（R5③ 之后）：价 = 目录基价 3 × 运输因子 × 稀缺度（品质、立场、深度、修正均为 1）。
+    //  · 运输因子 = 1 + 单位运费 ÷ 3；燕麦产地在 loc_hw（loc_hw_fields），到 loc_bs_yupo 的步行路程取实际路网最短路的公里数，计费重量 = max(0.5 公斤, 体积 × 250, 1 公斤) = 1 公斤，驮畜费率 0.02 铜/公里·公斤；
+    //  · 稀缺度 = 目标持有 ÷ 实际持有 = farmTargetFood ÷ 粮仓实存（夹具把实存压到目标的 80%，故约 1.25；周贸易夹具的前置断言见 granary-fixture），落在 [0.5, 3] 内不夹取；
+    //  · 成交按整单一次截断：trunc(价)。
+    const origin=engine.world.locations.find(x=>x.id===engine.byId.get('item_oats').origin),legKm=engine.route('loc_hw',sid,'walk',doc.state.minute,doc.randomSeed).edges.reduce((n,id)=>n+engine.world.routes.find(r=>r.id===id).lengthKm,0);
+    assert.ok(origin&&engine.byId.get('item_oats').weight<1);assert.equal(transportTable.rows.find(r=>r.key==='carrier:pack').rate,0.02);
+    const profile=engine.rules.agriculture.settlements.find(p=>p.settlement===sid),scarcity=farmTargetFood(engine,doc.state,profile,doc.state.minute)/doc.state.settlements[sid].food;
+    assert.ok(scarcity>=0.5&&scarcity<=3);
+    const exact=3*(1+legKm*1*0.02/3)*scarcity,price=Math.trunc(exact);assert.ok(price>=1);
+    assert.equal(first.out.result.cost,price);assert.ok(Math.abs(first.out.result.pricing.listPrice-exact)<=1e-9*exact);assert.equal(first.out.result.pricing.depth,1);
     assert.equal(c.state.player.coins,wallet-price);assert.equal(engine.quantity(draft(c),seller,'item_oats'),initial-1);assert.equal(snapshotCash(c),cash);
     setGrain(c,sid,500);resyncBooks(engine,c);const second=await run(c,'same-day-buy');c=second.doc;
     // 15.2/15.4 intentionally replace same-day lock-in with current supply.

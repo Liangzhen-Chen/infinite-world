@@ -13,6 +13,8 @@ import {marketTimeWindows,householdWorkTime} from '../server-plugin/npc-state.mj
 import {moveCoins,purse,mirrorPartyCoins,depositCounter,dedicatedCoinAccount} from '../server-plugin/money.mjs';
 import {transferItems} from '../server-plugin/items.mjs';
 import {bookTransport,advanceTransport,nextTransportMinute} from '../server-plugin/transport.mjs';
+import marketTable from '../world/rules/tables/market.json' with {type:'json'};
+import transportTable from '../world/rules/tables/balance/transport.json' with {type:'json'};
 import {fixture as transportFixture,asset,DRIVER} from './helpers/transport.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -150,13 +152,18 @@ test('shopping replaces the overlapping own-farm production minutes, not just th
  f.doc.state.minute=720;f.doc.state.npcs[buyer].coins=100;f.doc.state.npcs[buyer].location=home;
  f.doc.state.npcs[owner].inventory={[item]:100};
  f.w.npcs.find(n=>n.id===buyer).schedule.default[0]={start:0,end:1440,location:home,activity:'arbitrary activity label',services:[]};
+ // 夹具要的是"田地到集市只有这一条 2 公里路"：世界里田地另有一条经 loc_hw 的真实短路（1 公里 + 0 公里），最短路会绕走它，行程变成 19 分钟、吃不到午休之外，
+ // 所以此处去掉田地的其它连线（集市仍经 route_bld_hw_qingdeng 连着村子，口粮产地到集市的路不受影响），并断言来回确是 30 分钟的这一条。
+ f.w.routes=f.w.routes.filter(r=>![r.from,r.to].includes(home));
  tripRoute(f.w,{id:'farm-market-trip',from:home,to:place,modes:['walk'],lengthKm:2,terrainMultiplier:1,toll:2,closedSeasons:[]});
- const d=f.sync(),minutes=(time,activity)=>time.reserved.filter(r=>r.activity===activity).reduce((n,r)=>n+r.end-r.start,0);
+ const d=f.sync();const seed=d.get('randomSeed'),path=f.e.route(home,place,'walk',720,seed);assert.deepEqual(path.edges,['farm-market-trip']);const leg=path.minutes;assert.equal(leg,30);
+ const minutes=(time,activity)=>time.reserved.filter(r=>r.activity===activity).reduce((n,r)=>n+r.end-r.start,0);
  assert.equal(minutes(householdWorkTime(f.e,d.get('state'),buyer,720),'农事'),480);
  advanceCustomerFlow(d,f.e,719,720);
  const time=householdWorkTime(f.e,d.get('state'),buyer,720);
- // Two30-minute routes and service5 occupy the lunch hour plus five farm minutes.
- assert.equal(minutes(time,'农事'),475);assert.equal(minutes(time,'集市行程'),5);
+ // 来回两段路（各 leg 分钟，取自这条路的实际路程）加服务 5 分钟占用午休一小时，超出午休的部分顶掉等量的农事分钟：超出 = 2×leg + 5 − 60。
+ const over=2*leg+5-60;assert.ok(over>0);
+ assert.equal(minutes(time,'农事'),480-over);assert.equal(minutes(time,'集市行程'),over);
  assert.equal(time.reservedMinutes,480);assert.equal(time.workMinutes,0);
 });
 
@@ -270,8 +277,15 @@ test('on-site restock spends existing counter capital even with an empty owner p
  assert.equal(d.get('state','npcs',seller,'coins'),3);
  assert.equal(f.e.quantity(d,owner,item),2);assert.equal(f.e.quantity(d,seller,item),5);
  const row=d.get('state','records',`shop:${f.shop.id}`).entries[0];
- // 待重推（MKTW 持有量口径）：referenceCopper 6 是按旧供需口径（供给先扣自用储备、需求含目标留存）算出的参考价；新口径下供给 = 卖方全部库存，参考价变为 7，未改值。
- assert.deepEqual([row.paidCopper,row.referenceCopper,row.cost],[3,6,{goods:3,freight:0,duties:0}]);
+ // 参考价 = round(区域基准 × 份数)；区域基准 = 目录基价 × 运输因子，运输因子 = 1 + 产地到本聚落的单位运费 ÷ 目录基价（R5③，不再有写死的距离加价）。
+ // 手推：口粮目录基价 3、产地 loc_bs；到 loc_hw 只有一条 24 公里的路（route_hw_bs）；挑夫背货计费重量 = max(重量, 体积×250, 1 公斤)，口粮重 0.2 公斤不足 1，按 1；
+ // 驮畜费率 0.02 铜/公里·公斤 -> 单位运费 24×1×0.02 = 0.48；运输因子 1 + 0.48÷3 = 1.16（在夹取范围 [1,3] 内）；基准 3×1.16 = 3.48；两份 round(6.96) = 7。
+ const def=f.e.byId.get(item),leg=f.e.world.routes.find(r=>r.id==='route_hw_bs'),rate=transportTable.rows.find(r=>r.key==='carrier:pack').rate;
+ assert.equal(def.origin,'loc_bs');assert.equal(def.basePrice,3);assert.equal(leg.lengthKm,24);assert.ok(def.weight<1&&(def.volumeM3??def.weight/250)*250<1);assert.equal(rate,0.02);
+ assert.deepEqual(f.e.route('loc_bs','loc_hw','walk',0,d.get('randomSeed')).edges,['route_hw_bs']);
+ const unitFreightCopper=leg.lengthKm*1*rate,expectedReference=Math.round(2*def.basePrice*(1+unitFreightCopper/def.basePrice));
+ assert.equal(expectedReference,7);
+ assert.deepEqual([row.paidCopper,row.referenceCopper,row.cost],[3,expectedReference,{goods:3,freight:0,duties:0}]);
 });
 
 test('现金1可买有理单价3/2的一份，不因买不起原定两份而整批拒绝',()=>{
@@ -313,9 +327,14 @@ test('顾客按十份口粮缺口采购，保留已知付款，不按钱袋固�
  // 手算：可靠收入距正午5.5日 -> 55份，不是按100*1/4=25铜硬花；
  // 实际量还受现货和深度约束，现金至少留下已知租款8。
  assert.ok(bought.length,JSON.stringify(visits(d)));assert.ok(bought.every(r=>r.budget.maximum===92));
- // 待重推（MKTW 持有量口径）：下一行期望按旧口径"现货 100 − 储备 10 = 90"推深度；新口径下卖方公开持有 = 全部 100（不先扣自用储备），单笔深度 100*0.3 = 30，总额随单价变，未改值。
- // 现货100-储备10=90，单笔深度90*0.3=27；单价3*0.5=1.5，总额截断40。
- assert.deepEqual(bought.map(r=>[r.quantity,r.paid]),[[27,40]]);
+ // 手算：单笔深度 = 卖方公开持有 100（全部库存，不先扣自用储备）× maxShare 0.3 = 30 份；
+ // 单价 = 区域基准 × 稀缺度：基准 = 目录基价 3 × 运输因子 1.16（口粮产地 loc_bs 到 loc_hw 一条 24 公里路，单位运费 24×1×0.02 = 0.48，1 + 0.48÷3 = 1.16）= 3.48；
+ // 稀缺度 = 需求 ÷ 供给 = 货架目标 20（restock maximum）÷ 100 = 0.2，低于下限 0.5，取 0.5（priceFactorLimits.region）；单价 3.48×0.5 = 1.74；
+ // 总额 trunc(30×1.74) = trunc(52.2) = 52。
+ const price=(3*(1+24*1*0.02/3))*0.5;assert.equal(marketTable.maxShare,0.3);
+ assert.equal(f.e.byId.get(item).basePrice,3);assert.equal(f.e.world.routes.find(r=>r.id==='route_hw_bs').lengthKm,24);
+ assert.deepEqual(bought.map(r=>[r.quantity,r.paid]),[[Math.floor(100*0.3),Math.trunc(Math.floor(100*0.3)*price)]]);
+ assert.deepEqual(bought.map(r=>[r.quantity,r.paid]),[[30,52]]);
  assert.ok(d.get('state','npcs',buyer,'coins')>=8);
  assert.ok(f.e.quantity(d,buyer,item)<=55);assert.ok(f.e.quantity(d,buyer,item)>0);
  const before=JSON.stringify(d.document);advanceCustomerFlow(d,f.e,0,DAY);assert.equal(JSON.stringify(d.document),before);

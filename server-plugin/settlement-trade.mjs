@@ -6,6 +6,7 @@ import {granary as granaryAccount,cargo as cargoAccount,moveStock} from './stock
 // S1b: 周贸易在途粮记在 settlement-trade:<id>|item_oats|cargo（带原粮批次）；途中过期进 sink:decay，仓容不足拒收的进 sink:destroy。
 declareLedgerWriter('settlement-trade',{sinks:['sink:decay','sink:destroy']});
 import {granaryCapacity} from './facility-state.mjs';
+import {farmTargetFood} from './agriculture-migration.mjs';
 import {drawGranary,forestWaterPriceFactor} from './agriculture.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
 import {hazardPriceFactor} from './hazard-calendar.mjs';
@@ -30,12 +31,12 @@ const integer=(v,min=0)=>Number.isSafeInteger(v)&&v>=min;
 export function validateSettlementTradeRules(world){
     const r=world.rules.settlementTrade;if(!r)return[];
     const errors=[],ps=world.rules.agriculture?.settlements??[],ids=new Set();
-    if(r.version!==1||!r.source||!integer(r.cycleDays,1)||!integer(r.firstDay,1)||!integer(r.dispatchMinute)||r.dispatchMinute>=DAY||!integer(r.targetDays,1)||!integer(r.workersMaximum,1)||!(r.unitKg>0)||!(r.carryKgPerWorker>0)||!Array.isArray(r.lanes))errors.push('周贸易周期、运力或价格规则无效');
+    if(r.version!==1||!r.source||!integer(r.cycleDays,1)||!integer(r.firstDay,1)||!integer(r.dispatchMinute)||r.dispatchMinute>=DAY||!integer(r.workersMaximum,1)||!(r.unitKg>0)||!(r.carryKgPerWorker>0)||!Array.isArray(r.lanes))errors.push('周贸易周期、运力或价格规则无效');
     const item=world.items.find(i=>i.id===r.item);
     if(!hasTrait(itemTraits(item),'grain')||item.weight!==r.unitKg)errors.push('周贸易标的与实际谷物重量不符');
     for(const l of r.lanes??[]){
         const seller=ps.find(p=>p.settlement===l.seller),buyer=ps.find(p=>p.settlement===l.buyer);
-        if(!l.id||ids.has(l.id)||l.id===seller?.tradeContract?.id||!seller?.opening||!buyer?.opening||l.seller===l.buyer||r.targetDays<=seller.reserveDays||!integer(l.maximumQuantity,1)||!integer(l.taxBps)||l.taxBps!==seller?.tradeContract?.taxBps||l.mode!=='walk'||!l.routes?.length||l.routes.some(id=>!world.routes.some(e=>e.id===id)))errors.push(`周贸易来源、两端或税章无效：${l.id}`);
+        if(!l.id||ids.has(l.id)||l.id===seller?.tradeContract?.id||!seller?.opening||!buyer?.opening||l.seller===l.buyer||!integer(l.maximumQuantity,1)||!integer(l.taxBps)||l.taxBps!==seller?.tradeContract?.taxBps||l.mode!=='walk'||!l.routes?.length||l.routes.some(id=>!world.routes.some(e=>e.id===id)))errors.push(`周贸易来源、两端或税章无效：${l.id}`);
         ids.add(l.id);
     }
     return errors;
@@ -201,7 +202,7 @@ function dispatch(d,engine,lane,minute){
     if(route.cost)return reject('路线收费没有登记的实际收款账');
     if(lane.routes.some(id=>!route.edges.includes(id)))return reject('实际路线偏离登记贸易道路');
     const reserve=mealMouthsOf(engine,d.get('state'),lane.seller,a.s.population)*profile(engine,lane.seller).reserveDays,surplus=Math.max(0,Math.floor(grain(a,day)-reserve));// floor: the exporter never ships into its reserve; whole units only
-    const pending=reserved(d.get('state'),lane.buyer),demand=Math.max(0,Math.floor(mealMouthsOf(engine,d.get('state'),lane.buyer,b.s.population)*r.targetDays-grain(b,day)-pending));// floor: never ship more than the whole units still wanted
+    const pending=reserved(d.get('state'),lane.buyer),demand=Math.max(0,Math.floor(farmTargetFood(engine,d.get('state'),profile(engine,lane.buyer),minute)-grain(b,day)-pending));// floor: never ship more than the whole units still wanted
     const space=Math.max(0,b.r.granary.capacity-b.s.food-b.r.field.seedBank-pending);
     if(!surplus)return reject('无实际可出口余粮');if(!demand)return reject('无登记目标内的实际需求');if(!space)return reject('收货仓容已满或已预留');
     // This is a signed unit-price contract: freeze an integer unit before

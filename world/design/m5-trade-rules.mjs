@@ -8,7 +8,6 @@ export const settlementTradeRules = {
     dispatchMinute: 540,
     item: 'item_oats',
     unitKg: 0.5,
-    targetDays: 240,
     workersMaximum: 2,
     carryKgPerWorker: 10,
     lanes: [

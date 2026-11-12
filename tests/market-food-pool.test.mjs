@@ -505,8 +505,10 @@ test('柴：平时存量 = 目标持有（货架目标 + 承诺 + 户用日耗 �
  const s0=marketSupply(read,engine,wood,inn);
  assert.ok(Math.abs(s0.consumption-expected)<=1e-6*expected);
  const D=s0.demand;assert.ok(D>=expected);
- const full=structuredClone(doc);full.state.settlements.loc_hw.wood=D;full.ledger=openLedger(engine,full);
+ // 账本里的存量按整数件记账（非整数的存量写不进账，会读成 0），所以存量取不小于 D 的最小整数 S = ceil(D)：与 D 相差不到 1 件，
+ // 供给 = S 精确，需求仍 = D（目标与存量无关），稀缺度 D ÷ S 与 1 的差不超过 1 ÷ S。
+ const S=Math.ceil(D),full=structuredClone(doc);full.state.settlements.loc_hw.wood=S;full.ledger=openLedger(engine,full);
  const s1=marketSupply(documentReader(full),engine,wood,inn);
- assert.ok(Math.abs(s1.supply-D)<=1e-9*D);assert.ok(Math.abs(s1.demand-D)<=1e-9*D);
- assert.ok(Math.abs(s1.demand/s1.supply-1)<=1e-9);
+ assert.equal(s1.supply,S);assert.ok(S-D<1);assert.ok(Math.abs(s1.demand-D)<=1e-9*D);
+ assert.ok(Math.abs(s1.demand/s1.supply-1)<=1/S);
 });
