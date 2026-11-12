@@ -8,7 +8,7 @@ import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {validateShopRules,qualityAllowed,originSettlement,tradeQuote} from '../server-plugin/shop.mjs';
 import {regionalTradePrice,regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {porterCharges} from '../server-plugin/transport.mjs';
-import {handOatsScarcity,handTarget} from './helpers/hand-targets.mjs';
+import {handOatsScarcity,handTarget,handFoodDepth} from './helpers/hand-targets.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const DAY=1440,inn='bld_hw_qingdeng',forge='bld_hw_forge',town='loc_bs';
@@ -236,7 +236,10 @@ test('同日按新立场与成交深度重报，次日重新派生',async()=>{
     const expected=projected(f,host,'item_mutton');
     const third=await f.act('world_trade',{seller:host,item:'item_mutton',quantity:1},'m3');
     assert.ok(third.cost>first.cost,'次日报价反映新的敌意');
-    assert.equal(expected.totalCoins,third.cost);assert.equal(expected.explanation.depth,1);
+    // 次日只清掉昨日的成交压力；新一天自己的成交（居民自主采买等）仍计入深度，按今日成交记录手推（handFoodDepth）。
+    assert.equal(expected.totalCoins,third.cost);
+    const handDepth=handFoodDepth(f.engine,f.doc.state,'item_mutton');
+    assert.ok(Math.abs(expected.explanation.depth-handDepth.depth)<=1e-9,`次日深度 ${expected.explanation.depth} = 手推 ${handDepth.depth}（今日净成交 ${handDepth.net}）`);
 });
 
 test('K10：有交易服务并登记店铺类型的人物自动成为店铺；现有三家店不变',async()=>{

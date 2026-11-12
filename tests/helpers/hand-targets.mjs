@@ -71,3 +71,14 @@ export function handOatsScarcity(engine,state,food,place='loc_hw'){
     const target=shelf+handTarget(engine,state,profile,state.minute)*unit('item_oats');
     return {held,target,ratio:target/held};
 }
+// 食物池某件货当前的成交深度因子手推：depth = max(0, 1 + 深度影响 × 净成交 ÷ 开盘存量)。
+//  · 净成交 = 今日（state.minute 所在日）本聚落食物池的成交记录（market_trade：卖 +、买 −）× 各自饱腹 ÷ 报价货饱腹（报价货件数）；
+//  · 开盘存量 = max(1, 现供给 + 净成交)，现供给 = handOatsScarcity 的持有（燕麦件数）折成报价货件数 = 持有 × 燕麦饱腹 ÷ 报价货饱腹。
+// 只读记录与规则数据，不调用被测的 marketSupply / goodsWeight。
+export function handFoodDepth(engine,state,item,place='loc_hw'){
+    const sat=i=>handSatiety(engine,i),today=Math.floor(state.minute/1440);
+    const deals=Object.values(state.records??{}).filter(r=>r.category==='market_trade'&&r.day===today&&r.place===place&&r.goods==='goods:food');
+    const net=deals.reduce((n,r)=>n+(r.side==='sell'?r.quantity:-r.quantity)*sat(r.item)/sat(item),0);
+    const held=handOatsScarcity(engine,state,state.settlements[place].food,place).held*sat('item_oats')/sat(item);
+    return {net,depth:Math.max(0,1+engine.world.marketRules.depthImpact*net/Math.max(1,held+net))};
+}
