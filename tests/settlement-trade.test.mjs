@@ -13,6 +13,7 @@ import {bag} from '../server-plugin/stock.mjs';
 import transportTable from '../world/rules/tables/balance/transport.json' with {type:'json'};
 import {handTarget} from './helpers/hand-targets.mjs';
 import {marketSupply} from '../server-plugin/market.mjs';
+import {usageItemGrams} from '../server-plugin/household-budget.mjs';
 import {thinGranaries} from './helpers/granary-fixture.mjs';
 import {granaryCapacity} from '../server-plugin/facility-state.mjs';
 
@@ -262,10 +263,14 @@ test('公共报价只读且随真实供给重派生，距离与运输风险进�
     const next=regionalTradePrice(d,engine,'item_oats',lane.buyer,minute+DAY);assert.ok(next>first);
     // 河湾木料：目录基价 4，产地就在本聚落（运输因子 1，不计运费）；价 = 4 × 稀缺度，稀缺度 = 目标持有 ÷ 实际持有，夹取在 [0.5, 3]。
     // 实际持有 = 公仓木料存量（开局 28，与上面一致的公账）；目标持有取供给原语 marketSupply 的需求（户用日耗 × 补给间隔等，已在 market-food-pool 另行手推）。
-    // 需求远大于 3 × 存量，稀缺度被钳在上限 3：价 = 4 × 3 = 12。
+    // 木料与木炭同属燃料用度池（按基准克计量）：供给 = 公仓木料 28 + 卖方持有的其他燃料折成木料件数；开局只有铁匠铺主持有木炭，
+    // 一件木炭顶 usageItemGrams(炭) ÷ usageItemGrams(木) 件木料（池内权重的比；该权重由 market-food-pool 另行手推）。
+    // 经市场的户用扣掉户内自给后，需求不再远大于存量：稀缺度 = 夹取(需求 ÷ 供给)，价 = 4 × 稀缺度（不再钉在上限 3）。
     const outside=draft(structuredClone(doc)),unchanged=structuredClone(doc),timber=marketSupply(outside,engine,'item_wood','loc_hw');
-    assert.equal(engine.byId.get('item_wood').basePrice,4);assert.equal(timber.supply,doc.state.settlements.loc_hw.wood);assert.ok(timber.demand>=engine.rules.economy.priceFactorLimits.region[1]*timber.supply);
-    assert.equal(regionalTradePrice(outside,engine,'item_wood','loc_hw'),4*engine.rules.economy.priceFactorLimits.region[1]);assert.deepEqual(outside.document,unchanged);
+    const charcoal=doc.state.npcs.npc_hw_duanyan.inventory.item_charcoal,charcoalHeld=typeof charcoal==='number'?charcoal:charcoal?.quantity??0;
+    const [floor,cap]=engine.rules.economy.priceFactorLimits.region,heldSupply=doc.state.settlements.loc_hw.wood+charcoalHeld*usageItemGrams(engine,'item_charcoal','fuel')/usageItemGrams(engine,'item_wood','fuel');
+    assert.equal(engine.byId.get('item_wood').basePrice,4);assert.ok(Math.abs(timber.supply-heldSupply)<=1e-9*heldSupply);
+    assert.ok(Math.abs(regionalTradePrice(outside,engine,'item_wood','loc_hw')-4*Math.min(cap,Math.max(floor,timber.demand/Math.max(1,heldSupply))))<=1e-9);assert.deepEqual(outside.document,unchanged);
 });
 test('玩家world_trade消费实时区域价并扣真实商人库存；同日深度与次日复位',async()=>{
     const {engine,doc}=setup(),sid=lanes[0].seller,seller='npc_hw_ayan';
