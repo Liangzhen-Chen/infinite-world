@@ -1,20 +1,40 @@
-// 只读诊断：目标持有规律（farmTargetFood）改后，几个冒烟失败夹具里各聚落、各食物池/货类的 supply / demand / target。只向 stdout 打印 JSON；不写文件、不调模型。
-// 用法：node tools/mktw-diag-market.mjs
-// 场景：A = shop-restock / ke-upkeep 夹具口径（legacy 存档开局，minute 改 600，原样存粮）；B = s2c-fire 的 fireScene（loc_hw 粮存写死 8000）。
-// 每个场景按 (地点, 物品) 打印：
+// 只读诊断：目标持有规律（farmTargetFood）与非食物货消耗项之后，几个冒烟失败夹具里各聚落、各食物池/货类的 supply / demand / target / 报价。只向 stdout 打印 JSON；不写文件、不调模型、不起服务。
+// 用法：node tools/mktw-diag-market.mjs [A0|A1|B|C|D|E|F ...]（缺省全跑）；场景之间互不依赖，一个抛错只在该场景里报 error。
+// 场景：
+//   A0 = 旧存档形状（initialFromLegacy，存粮 420、种粮 0）的 loc_hw，minute→600；对照用，不再是夹具；
+//   A1 = 现行开局（createCharacter，存粮 = 开局日目标持有）的 loc_hw，minute→600；shop-restock / ke-upkeep-demand 改后的夹具形状；
+//   B  = s2c-fire 的 fireScene（loc_hw 粮存写死 8000）；
+//   C  = s2c-fire E06-6「world_time 调用链」夹具：一次推 240 分钟，与每 20 分钟一推，各时点打印铁匠位置/活动、铁匠铺建筑行、炉膛 thermal、起火记录、木炭与木料价（查 fireSince 为什么没有）；
+//   D  = s5-w4-economy 的 finance 夹具（F048 木料、F007 面包典当；legacy 形状）：loc_hw 的面包/木料/燕麦读数；
+//   E  = s5-playthrough 开局：createCharacter 后逐日推到第 5 日 11 点，打印小麦（GRAIN）在 loc_hw 的读数与商人存货（进程内推，不起 HTTP 服务；与 characterUiSession 同为 createCharacter + world_time，种子 's5-playthrough'）；
+//   F  = ledger-price 的 campaignMoney 第一笔 world_trade：读账户与读旧字段各归约一遍，打印新旧读数不等的价格输入点与第一处补丁差异。
+// 每个 (地点, 物品) 打印：
 //   settlement：state.settlements[place] 的 food、population；farm：农事记录的仓容、种粮；
 //   target.farmTargetFood（被测原语，仅作对照）与 target.hand（按规则数据手推：餐口 × (距收获天数 + reserveDays)，上限 容量 − 种粮）、openingStockFood（日 0）；
-//   market：marketSupply 的 supply、demand、scarcity=min(3,max(0.5,demand/max(1,supply)))，以及 rows（owner、item、stock、target、committed、available、unit）。
+//   market：marketSupply 的 supply、demand、scarcity=min(3,max(0.5,demand/max(1,supply)))、shelf、consumption，以及 rows（owner、item、stock、target、committed、available、unit）；
+//   price：regionalTradePrice（目录基价 × 环境/运输因子 × 稀缺度）；base：regionalTradeBase；
+//   parts（非食物货）：拆 demand = 货架 + 户用消耗 + 制造耗料 + 各行目标——itemWeight、origin、itemResupplyDays（补给间隔天数）、单人户日耗 householdDailyUse（件/日）、
+//     householdUsage（每户日耗克数，燃料按户、盐按人）、population、demandMinusConsumption（= 货架 + 各行目标与承诺）、craftUse（滚动日桶）。
 import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {marketSupply} from '../server-plugin/market.mjs';
 import {farmTargetFood,openingStockFood} from '../server-plugin/farm-target.mjs';
+import {itemResupplyDays} from '../server-plugin/supply-interval.mjs';
+import {householdDailyUse,householdUsage} from '../server-plugin/household-budget.mjs';
+import {regionalTradePrice,regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
+import {applyPatches} from '../server-plugin/storage.mjs';
+import {probePriceReads,setPriceReadMode} from '../server-plugin/stock.mjs';
+import {initialThermalState} from '../server-plugin/magic-object.mjs';
+import {applyIntentSetup} from './a3-score.mjs';
 import {fireScene} from '../tests/probes/run-001/e06.mjs';
+import {fixture as financeFixture} from '../tests/helpers/finance.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const read=doc=>({document:doc,get:(...p)=>p.reduce((v,k)=>v?.[k],doc)});
 const limits=world.rules.economy.priceFactorLimits.region;
+const only=process.argv.slice(2),want=name=>!only.length||only.includes(name);
+const attempt=fn=>{try{return fn();}catch(error){return {error:error.message};}};
 function report(engine,doc,label,pairs){
  const state=doc.state,out={label,minute:state.minute,items:[]};
  const crop=engine.rules.agriculture.crop,harvest=crop.sowDays[1]+crop.growthDays,doy=Math.floor(state.minute/1440)%360;
@@ -26,21 +46,104 @@ function report(engine,doc,label,pairs){
    row.farm={capacity:rec?.granary?.capacity,seedBank:rec?.field?.seedBank,profileCapacity:profile.granaryCapacity,initialSeed:profile.initialSeed,reserveDays:profile.reserveDays};
    row.target={farmTargetFood:farmTargetFood(engine,state,profile,state.minute),targetDays:days,hand:Math.min(Math.ceil((s?.population??0)*days),Math.max(0,(rec?.granary?.capacity??profile.granaryCapacity)-(rec?.field?.seedBank??profile.initialSeed))),openingStockFood:openingStockFood(engine,profile,0)};
   }
-  try{const m=marketSupply(read(doc),engine,item,place);row.market={supply:m.supply,demand:m.demand,scarcity:Math.min(limits[1],Math.max(limits[0],m.demand/Math.max(1,m.supply))),shelf:m.shelf,consumption:m.consumption,rows:m.rows.map(r=>({owner:r.owner,item:r.item,stock:r.stock,target:r.target,committed:r.committed,available:r.available,unit:r.unit}))};}
-  catch(error){row.market={error:error.message};}
+  try{
+   const m=marketSupply(read(doc),engine,item,place);
+   row.market={supply:m.supply,demand:m.demand,scarcity:Math.min(limits[1],Math.max(limits[0],m.demand/Math.max(1,m.supply))),shelf:m.shelf,consumption:m.consumption,rows:m.rows.map(r=>({owner:r.owner,item:r.item,stock:r.stock,target:r.target,committed:r.committed,available:r.available,unit:r.unit}))};
+   if(m.consumption>0){
+    const it=engine.byId.get(item);
+    row.parts=attempt(()=>({itemWeight:it?.weight,origin:it?.origin,itemResupplyDays:itemResupplyDays(engine,state,doc.randomSeed,item,place),
+     singleHouseholdDailyUse:householdDailyUse(engine,state,[null],item),householdUsage:householdUsage(engine,state,[null]).map(u=>({cls:u.cls,gramsPerDay:u.gramsPerDay})),population:s?.population,
+     demandMinusConsumption:m.demand-m.consumption,craftUse:state.records?.[`craft-use:${place}`]?.days??null}));
+   }
+  }catch(error){row.market={error:error.message};}
+  row.price=attempt(()=>regionalTradePrice(read(doc),engine,item,place));row.base=attempt(()=>regionalTradeBase(read(doc),engine,item,place));
   out.items.push(row);
  }
  return out;
 }
+const HW_PAIRS=[['loc_hw','item_oats'],['loc_hw','item_bread'],['loc_hw','item_mutton'],['loc_hw','item_charcoal'],['loc_hw','item_wood'],['loc_hw','item_salt']];
 const results=[];
-{
- const w=structuredClone(world),engine=new WorldEngine(w),doc=engine.initialFromLegacy(seed,'diag-market'),openingMinute=doc.state.minute;
+if(want('A0')){
+ const engine=new WorldEngine(structuredClone(world)),doc=engine.initialFromLegacy(seed,'diag-market'),openingMinute=doc.state.minute;
  doc.state.minute=600;doc.state.location='bld_hw_qingdeng';
- const r=report(engine,doc,'A shop-restock/ke-upkeep（legacy 开局，minute→600）',[['loc_hw','item_oats'],['loc_hw','item_bread'],['loc_hw','item_mutton'],['loc_hw','item_charcoal'],['loc_hw','item_wood'],['loc_bs_yupo','item_oats'],['loc_bs','item_bread']]);
+ const r=report(engine,doc,'A0 旧存档形状（initialFromLegacy，minute→600；对照）',[...HW_PAIRS,['loc_bs_yupo','item_oats'],['loc_bs','item_bread']]);
  r.legacyOpeningMinute=openingMinute;results.push(r);
 }
-{
+if(want('A1')){
+ const engine=new WorldEngine(structuredClone(world)),doc=engine.createCharacter(seed,{},'diag-market');
+ doc.state.minute=600;doc.state.location='bld_hw_qingdeng';
+ results.push(report(engine,doc,'A1 现行开局（createCharacter，minute→600）',HW_PAIRS));
+}
+if(want('B')){
  const S=fireScene();
- results.push(report(S.engine,S.d.document,'B s2c-fire（fireScene，loc_hw 粮存=8000）',[['loc_hw','item_oats'],['loc_hw','item_bread']]));
+ results.push(report(S.engine,S.d.document,'B s2c-fire（fireScene，loc_hw 粮存=8000）',[['loc_hw','item_oats'],['loc_hw','item_bread'],['loc_hw','item_charcoal'],['loc_hw','item_wood']]));
+}
+if(want('C')){
+ const who='npc_hw_duanyan';
+ const make=()=>{
+  const s=fireScene(),f=s.engine.world.locations.find(b=>b.id===s.forge).features.find(x=>x.id==='feature_hw_forge_hearth');
+  const thermal=initialThermalState({fuelMg:4000},f.thermalModel,600);thermal.burning=true;
+  s.d.set(['state','records',`physical_feature:${f.id}`],{id:f.id,category:'physical_feature',location:s.forge,state:{thermal}});
+  for(const [id,n] of Object.entries(s.d.get('state','npcs')))if(id!==who&&n.location===s.forge)s.d.set(['state','npcs',id,'location'],'loc_hw');
+  s.engine.byId.get(who).schedule={default:[{start:0,end:620,location:s.forge,activity:'打铁',services:['craft']},{start:620,end:1440,location:'loc_hw',activity:'休息',services:[]}]};
+  s.d.set(['state','npcs',who,'location'],s.forge);s.d.set(['state','location'],'loc_hw');s.featureId=f.id;return s;
+ };
+ const run=async(s,minutes,id)=>{const out=await s.engine.reduce(s.d.document,{tool:'world_time',args:{minutes},eventId:id});for(const p of out.patches){if(p.op==='delete')s.d.remove(p.path);else s.d.set(p.path,p.value);}};
+ const snap=s=>{const st=s.d.get('state'),n=st.npcs[who],b=st.buildings?.[s.forge];
+  return {minute:st.minute,smith:{location:n.location,activity:n.activity},forge:b?{burning:b.burning,fireSince:b.fireSince,fireTick:b.fireTick,condition:b.condition}:null,
+   hearthBurning:st.records?.[`physical_feature:${s.featureId}`]?.state?.thermal?.burning,
+   unattended:Object.keys(st.records??{}).filter(k=>k.startsWith('unattended_furnace')),food:st.settlements.loc_hw.food,
+   charcoalPrice:attempt(()=>regionalTradePrice(read(s.d.document),s.engine,'item_charcoal','loc_hw')),woodPrice:attempt(()=>regionalTradePrice(read(s.d.document),s.engine,'item_wood','loc_hw'))};};
+ const out={label:'C s2c-fire E06-6 world_time 调用链：整推 240 与每 20 分钟一推',whole:null,sliced:[]};
+ try{
+  const a=make();out.start=snap(a);await run(a,240,'whole');out.whole=snap(a);
+  const b=make();for(let k=0;k<12;k++){await run(b,20,`slice-${k}`);out.sliced.push(snap(b));}
+ }catch(error){out.error=error.message;}
+ results.push(out);
+}
+if(want('D')){
+ const f=financeFixture();
+ results.push(report(f.e,f.doc,'D s5-w4-economy finance 夹具（legacy 形状，minute 600）',[['loc_hw','item_bread'],['loc_hw','item_wood'],['loc_hw','item_oats'],['loc_hw','item_mutton']]));
+}
+if(want('E')){
+ const out={label:'E s5-playthrough 开局逐日推到第 5 日 11 点（createCharacter + world_time；进程内）'};
+ try{
+  const engine=new WorldEngine(structuredClone(world));let doc=engine.createCharacter(seed,{},'s5-playthrough');
+  const GRAIN='item_wheat_grain',TRADER='npc_hw_yanzhe',start=doc.state.minute,target=Math.floor(start/1440)*1440+4*1440+11*60;
+  out.start={minute:start,target};
+  for(let day=0;doc.state.minute<target&&day<8;day++){
+   const minutes=Math.min(1440,target-doc.state.minute),r=await engine.reduce(doc,{tool:'world_time',args:{minutes},eventId:`diag-day-${day}`});doc=applyPatches(doc,r.patches);
+  }
+  out.readings=report(engine,doc,'GRAIN 与食物池读数',[['loc_hw',GRAIN],['loc_hw','item_oats'],['loc_hw','item_bread']]);
+  const t=doc.state.npcs[TRADER];out.trader={location:t?.location,coins:t?.coins,grain:t?.inventory?.[GRAIN]};
+ }catch(error){out.error=error.message;}
+ results.push(out);
+}
+if(want('F')){
+ const out={label:'F ledger-price campaignMoney 第一笔 world_trade：读账户 vs 读旧字段'};
+ try{
+  const inn='bld_hw_qingdeng',post='bld_hw_post',host='npc_hw_linsui',worker='npc_hw_ayan',clerk='npc_hw_shendu',placeOf={[host]:inn,[worker]:inn,[clerk]:post};
+  const w=structuredClone(world);
+  for(const npc of w.npcs.filter(n=>placeOf[n.id]))npc.schedule={default:[{start:0,end:1440,location:placeOf[npc.id],activity:'营业',services:npc.id===host?['trade']:[]}]};
+  const engine=new WorldEngine(w),doc0=engine.createCharacter(seed,{},'ledger-price-money');
+  doc0.state.minute=600;doc0.state.location=inn;doc0.state.player.coins=600;
+  for(const [id,location] of [[host,inn],[worker,inn],[clerk,post]])Object.assign(doc0.state.npcs[id],{location,activity:'营业',status:'正常'});
+  doc0.state.npcs[host].inventory.item_ration=40;
+  const prepared=applyIntentSetup(engine,doc0,{facts:[{path:['state','npcs',host,'inventory','item_bread'],value:8}]}),doc=prepared.document;
+  const mismatches=[];probePriceReads(r=>{if(r.open&&r.legacy!==r.ledger&&mismatches.length<40)mismatches.push({point:r.point,legacy:r.legacy,ledger:r.ledger});});
+  const args={tool:'world_trade',args:{seller:host,item:'item_bread',quantity:3},eventId:'buy'};
+  const ledgerOut=await engine.reduce(doc,args);
+  setPriceReadMode('legacy');let legacyOut;try{legacyOut=await engine.reduce(doc,args);}finally{setPriceReadMode('ledger');}
+  probePriceReads(null);
+  out.setupUnmet=prepared.setupUnmet;out.mismatchedReads=mismatches;out.patchCounts={ledger:ledgerOut.patches.length,legacy:legacyOut.patches.length};
+  const cut=x=>{const s=JSON.stringify(x);return s&&s.length>400?`${s.slice(0,400)}…`:s;};
+  out.patchDiffs=[];
+  for(let i=0;i<Math.max(ledgerOut.patches.length,legacyOut.patches.length)&&out.patchDiffs.length<6;i++){
+   const a=ledgerOut.patches[i],b=legacyOut.patches[i];
+   if(JSON.stringify(a)!==JSON.stringify(b))out.patchDiffs.push({index:i,path:(a??b)?.path,ledger:cut(a?.value),legacy:cut(b?.value)});
+  }
+  out.resultEqual=JSON.stringify(ledgerOut.result)===JSON.stringify(legacyOut.result);
+ }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
+ results.push(out);
 }
 console.log(JSON.stringify(results,null,1));
