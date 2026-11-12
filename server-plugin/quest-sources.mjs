@@ -1,6 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins} from './money.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {bag,settlementStock,armyRations,store,moveStock,stockItem,BOOKED as BOOKED_STOCK} from './stock.mjs';
 // S1b: 委托交付的实物原样转入受领方：交付物与受领账户的物品相同就入那个账户（王都木料入聚落木料库存、军粮入军粮账），
@@ -146,7 +147,7 @@ function boardOf(engine,place,boards){
 const generated=state=>Object.values(state.quests??{}).filter(q=>q.boardVersion===1&&q.source);
 // 托管：人物从自己钱里出，势力从势力公库出，聚落从公账出（不得动用留底）。
 function escrow(d,engine,funding,reward,quest){
- if(funding.npc){const account=funding.npc==='player'?['state','player']:['state','npcs',funding.npc],coins=d.get(...account,'coins')??0;if(coins<reward)return false;moveCoins(d,{from:purse(engine,funding.npc),to:escrowAccount(quest),amount:reward,writer:'quest-sources',eventId:quest});d.set([...account,'coins'],coins-reward);return true;}
+ if(funding.npc){const account=funding.npc==='player'?['state','player']:['state','npcs',funding.npc],coins=d.get(...account,'coins')??0;if(!npcCanPay(d,engine,funding.npc,reward,coins))return false;payFromNpc(d,engine,{payer:funding.npc,to:escrowAccount(quest),amount:reward,writer:'quest-sources',eventId:quest});d.set([...account,'coins'],d.get(...account,'coins')-reward);return true;}
  if(funding.faction)return spendFactionAssets(d,engine,funding.faction,{coins:reward},{sourceEvent:quest,minute:d.get('state','minute'),kind:'quest_escrow'},{account:escrowAccount(quest),writer:'quest-sources',eventId:quest});
  if(funding.treasury){
   const treasury=d.get('state','settlements',funding.treasury,'treasury'),reserve=authorityOf(engine)?.treasury?.reserveCopper??0;

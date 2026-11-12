@@ -6,6 +6,7 @@ import {claimUnit} from './claim-unit.mjs';
 import {relationView} from './npc-state.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,partyAccount,mirrorPartyCoins,dedicatedCoinAccount} from './money.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {declareLedgerWriter,parseAccount,accountKey} from './ledger.mjs';
 declareLedgerWriter('contracts');
 import {advanceRituals}from'./magic-ritual.mjs';
@@ -126,7 +127,7 @@ export function validateTradeCharge(d,engine,{buyer,seller,cost,payment='cash',c
         // S5-F2: a bill frozen in the place's tender unit is paid in kind (see chargeTrade), not from the copper purse.
         if(terms)return {payment:'cash'};
         const source=engine.actor(d,buyer),target=engine.actor(d,seller);
-        if(source.coins<cost)throw preconditionFailure('买方余额不足');
+        if(!npcCanPay(d,engine,buyer,cost,source.coins))throw preconditionFailure('买方余额不足');
         return {payment:'cash'};
     }
     if(payment!=='credit'||buyer!=='player')throw preconditionFailure('只支持玩家按商家的赊账规则购买');
@@ -152,9 +153,9 @@ export function chargeTrade(d,engine,args,eventId){
     }
     if(payment==='cash'){
         const source=engine.actor(d,buyer),target=engine.actor(d,seller);
-        moveCoins(d,{from:purse(engine,buyer),to:purse(engine,seller),amount:cost,writer:'contracts',eventId});
-        d.set([...engine.actorPath(buyer),'coins'],source.coins-cost);
-        d.set([...engine.actorPath(seller),'coins'],target.coins+cost);
+        payFromNpc(d,engine,{payer:buyer,to:purse(engine,seller),amount:cost,writer:'contracts',eventId});
+        d.set([...engine.actorPath(buyer),'coins'],d.get(...engine.actorPath(buyer),'coins')-cost);
+        d.set([...engine.actorPath(seller),'coins'],d.get(...engine.actorPath(seller),'coins')+cost);
         return{};
     }
     const id=`debt_${eventId}`;if(d.get('state','records',id))throw preconditionFailure('欠款编号已存在');

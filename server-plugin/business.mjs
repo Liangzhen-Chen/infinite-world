@@ -1,4 +1,5 @@
 import {preconditionFailure} from './precondition.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {contractTerms} from './contract-state.mjs';
 import {obligationRows,obligationView} from './obligation-state.mjs';
 import {purse,escrow as escrowAccount,moveCoins,coinRead,dedicatedCoinAccount,dedicatedCoinKey,spendCounterCoins,mirrorPartyCoins,sink} from './money.mjs';
@@ -607,7 +608,7 @@ export function businessAction(d,args,eventId){
         const buyer=party(d,this,args.member,{consent:true,minutes:5});
         if(d.get('state','buildings',shop.location)?.owner!==buyer)throw preconditionFailure('本次转让须由铺面产权人接手；其他买方须先另行取得合法场地');
         const cost=int(args.coins,1,1e9,'转让价款');
-        if(this.actor(d,buyer).coins<cost)throw preconditionFailure('买方现钱不足，资产估值不能自动变现');
+        if(!npcCanPay(d,this,buyer,cost,this.actor(d,buyer).coins))throw preconditionFailure('买方现钱不足，资产估值不能自动变现');
         const stock=quantities(d.get('state','inventory'));
         let value=0;for(const [item,quantity]of Object.entries(stock)){
             const q=valuation(d,this,{role:'goods',holder:'player',location:shop.location,item,quantity});
@@ -620,7 +621,7 @@ export function businessAction(d,args,eventId){
         const nextId=`business_${eventId}`;
         if(d.get(...path(nextId)))throw preconditionFailure('接手经营编号已存在');
         endShop(d,this,shop,'已转让',eventId,'店主转让经营');
-        moveCoins(d,{from:purse(this,buyer),to:purse(this,'player'),amount:cost,writer:'business',eventId});
+        payFromNpc(d,this,{payer:buyer,to:purse(this,'player'),amount:cost,writer:'business',eventId});
         mirrorPartyCoins(d,this,buyer,-cost,eventId,'business');mirrorPartyCoins(d,this,'player',cost,eventId,'business');
         for(const [item,quantity]of Object.entries(stock))if(quantity>0)transferItems(d,this,'player',buyer,item,quantity);
         holdingSet(d,null,path(nextId),{id:nextId,category:'business',owner:buyer,location:shop.location,status:'营业',openedAt:d.get('state','minute'),createdAt:d.get('state','minute'),source:eventId,predecessor:shop.id,opening:{coins:0,goods:stock}},'business',eventId);

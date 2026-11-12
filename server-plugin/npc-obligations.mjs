@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
-import {purse,sink,moveCoins} from './money.mjs';
+import {sink} from './money.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {snapshotObligationTerms} from './obligation-kinds.mjs';
 import {openObligation,closeObligation} from './obligation-runtime.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -91,7 +92,7 @@ export function createNpcObligation(d,engine,args,eventId){
   const from=locationOf(state,actor);if(!from)throw preconditionFailure('当事人没有可用的出发地点');
   const route=from===location?{minutes:0,cost:0}:engine.route(from,location,'walk',now,d.get('randomSeed'));
   if(now+route.minutes>start)throw preconditionFailure('剩余时间不足以按真实路线赴约');
-  if(row.coins<route.cost)throw preconditionFailure('赴约路费不足');
+  if(!npcCanPay(d,engine,actor,route.cost,row.coins))throw preconditionFailure('赴约路费不足');
   departures[actor]=start-route.minutes;
   for(const o of Object.values(state.obligations??{})){
    if(['待履行','进行中'].includes(o.status)&&o.type==='带路'&&parties(o).includes(actor))throw preconditionFailure('已有带路承诺，不能另占会面时段');
@@ -129,7 +130,7 @@ function createNpcDelivery(d,engine,args,eventId){
   if(!(weight>=0)||quantity*weight>capacity)throw preconditionFailure('送货数量超过送货者实际步行载重，须另约运具或分批');
  }
  if(start+route.minutes>deadline)throw preconditionFailure('剩余时间不足以按真实路线送货');
- if(engine.actor(d,promisor).coins<route.cost)throw preconditionFailure('送货路费不足');
+ if(!npcCanPay(d,engine,promisor,route.cost,engine.actor(d,promisor).coins))throw preconditionFailure('送货路费不足');
  assertCourierRouteAccess(engine,promisor,from,location,route);
  assertNpcObligationAction(d,engine,[promisor],{start,minutes:deadline-start,kind:'delivery'});
  engine.assertNpcAutonomyAction?.(state,[promisor],{start,minutes:deadline-start});
@@ -188,8 +189,8 @@ function simulateNpc(d,engine,id,before,after,bookings,beforeState){
   if(npc.location!==slot.location){
    if(active?.deliveryVersion===1&&t>=active.deadline){npc.activity='未能按时送达';break;}
    let route;try{route=engine.route(npc.location,slot.location,'walk',t,d.get('randomSeed'));if(active?.deliveryVersion===1)assertCourierRouteAccess(engine,id,npc.location,slot.location,route);}catch{route=null;npc.activity='行程受阻';}
-   if(route&&npc.coins<route.cost){route=null;npc.activity='路费不足，暂留原处';}
-   if(route){moveCoins(d,{from:purse(null,id),to:sink('export','travel'),amount:route.cost,writer:'npc-obligations',eventId:null});npc.coins-=route.cost;npc.scheduleTravel={from:npc.location,to:slot.location,depart:t,arrive:t+route.minutes,edges:route.edges};npc.location=null;npc.activity='赶路';continue;}
+   if(route&&npc.coins<route.cost&&!npcCanPay(d,engine,id,route.cost,npc.coins)){route=null;npc.activity='路费不足，暂留原处';}
+   if(route){npc.coins+=payFromNpc(d,engine,{payer:id,to:sink('export','travel'),amount:route.cost,writer:'npc-obligations',eventId:null})-route.cost;npc.scheduleTravel={from:npc.location,to:slot.location,depart:t,arrive:t+route.minutes,edges:route.edges};npc.location=null;npc.activity='赶路';continue;}
    if(end<=t)break;add(end,false);
   }else{npc.activity=slot.activity;if(end<=t)break;add(end,!/(睡眠|熟睡|睡觉)/.test(npc.activity));}
  }

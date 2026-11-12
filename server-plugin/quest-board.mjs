@@ -2,6 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {actionCostRule,assertActionTime,beginActionActivity,finishActionActivity} from './action-costs.mjs';
 import {purse,escrow as escrowAccount,moveCoins} from './money.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {ledgerActive} from './ledger.mjs';
 import {registerEarnedClaim,settleClaim} from './obligation-claims.mjs';
@@ -143,7 +144,7 @@ export function questBoardAction(d,engine,args,eventId){
   if(!personal&&rights.usedD+engine.rules.quests.quotaUnits[grade]>rights.limitD)throw preconditionFailure(`身份或本月任务发布额度不足（本月已用${rights.usedD}，额度${rights.limitD}，本单需${engine.rules.quests.quotaUnits[grade]}）${grade==='D'?'；若以本人钱款发布私人D级委托，请显式传 personal:true，仍须通过在场、同意、报酬托管和目标校验':''}`);
   if(personal&&grade!=='D')throw preconditionFailure('未登记官职的私人任务只能发布D级，身份额度不足');
   const reward=integer(args.reward,20,1e6,'报酬'),publicFund=publisher==='player'&&!personal&&args.settlement!==undefined;
-  if(!publicFund&&actor.coins<reward)throw preconditionFailure('发布者无法托管报酬');
+  if(!publicFund&&!npcCanPay(d,engine,publisher,reward,actor.coins))throw preconditionFailure('发布者无法托管报酬');
   const verified=objective(engine,d,args,publisher),content=text(args.content),location=d.get('state','location');
   if(publisher==='player'&&engine.byId.get(location)?.access?.mode==='private')throw preconditionFailure('私人发单须在合法公共地点张贴');
   const deadline=integer(args.deadline??now+10*DAY,now+1,now+30*DAY,'期限'),quest=args.escrow??`quest_${eventId}`;
@@ -154,7 +155,7 @@ export function questBoardAction(d,engine,args,eventId){
   }
   let fundedBy=null;
   if(publicFund){const settlement=engine.resolve(args.settlement,'loc'),spend=spendPublic(d,engine,{settlement,copper:reward,power:'quest_publish',purpose:`委托托管 ${quest}`,sourceEvent:quest,books:{account:escrowAccount(quest),writer:'quest-board',eventId:quest}});fundedBy={settlement,month:spend.month,spend:spend.id};}
-  else{moveCoins(d,{from:purse(engine,publisher),to:escrowAccount(quest),amount:reward,writer:'quest-board',eventId:quest});d.set([...actorPath(publisher),'coins'],actor.coins-reward);}
+  else{payFromNpc(d,engine,{payer:publisher,to:escrowAccount(quest),amount:reward,writer:'quest-board',eventId:quest});d.set([...actorPath(publisher),'coins'],d.get(...actorPath(publisher),'coins')-reward);}
   const row={id:quest,boardVersion:1,publisher,personal,grade,reward,escrow:reward,objective:verified,content,location,deadline,createdAt:now,status:'公开',taker:null,...(fundedBy?{fundedBy}:{}),...(args.cultural===true?{cultural:true}:{})};
   d.set(['state','quests',quest],row);
   if(!personal)d.set(['state','questQuota',`${rights.month}_${publisher}`],rights.usedD+engine.rules.quests.quotaUnits[grade]);

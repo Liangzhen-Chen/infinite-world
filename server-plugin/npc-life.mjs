@@ -1,5 +1,6 @@
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {purse,sink,moveCoins} from './money.mjs';
+import {sink} from './money.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-life',{sinks:['sink:export','sink:consume']});
 import {npcAgeAt,npcHousehold,householdMembers} from './npc-state.mjs';
@@ -830,12 +831,12 @@ function depart(d,engine,m,at){
  if(!alive(state,m.host)||npcHousehold(engine,state,m.host)?.id!==m.to.household){holdingSet(d,null,['state','family','migrations',m.id],{...m,status:'中止',reason:'投奔的人家已不在原处',endedAt:at},'npc-life');return;}
  if(!settled(state,m.person)||incapacitated(state,m.person)||npc.caring||engine.npcAutonomyBusy?.(state,m.person,at)){postpone(d,engine,m,'动身时不得空');return;}
  let route;try{route=engine.route(npc.location,m.to.home,'walk',at,d.get('randomSeed'));}catch{postpone(d,engine,m,'路线暂不可通行');return;}
- if((npc.coins??0)<route.cost){postpone(d,engine,m,'路费不足');return;}
+ if(!npcCanPay(d,engine,m.person,route.cost,npc.coins??0)){postpone(d,engine,m,'路费不足');return;}
  const arriveAt=at+route.minutes,{schedule,changed}=residenceSchedule(engine,state,m);
  const early=endObligations(d,engine,m.person,o=>(o.start??o.due??0)<arriveAt,`${name}迁居途中，无法赴约`,m.id,at);
  const shops=businessSnapshot(engine,d.get('state'));
  holdingSet(d,null,['state','npcs',m.person,'residence'],{household:m.to.household,settlement:m.to.settlement,home:m.to.home,since:at,migration:m.id,schedule,workChanged:changed},'npc-life');
- moveCoins(d,{from:purse(null,m.person),to:sink('export','travel'),amount:route.cost,writer:'npc-life',eventId:m.id});holdingSet(d,null,['state','npcs',m.person,'coins'],(npc.coins??0)-route.cost,'npc-life');
+ payFromNpc(d,engine,{payer:m.person,to:sink('export','travel'),amount:route.cost,writer:'npc-life',eventId:m.id});holdingSet(d,null,['state','npcs',m.person,'coins'],d.get('state','npcs',m.person,'coins')-route.cost,'npc-life');
  holdingSet(d,null,['state','npcs',m.person,'scheduleTravel'],{from:npc.location,to:m.to.home,depart:at,arrive:arriveAt,edges:route.edges,migration:m.id},'npc-life');
  holdingSet(d,null,['state','npcs',m.person,'location'],null,'npc-life');holdingSet(d,null,['state','npcs',m.person,'activity'],'迁居赶路','npc-life');
  const content=`${name}${reasonText(m)}，${engine.calendar(at).text.slice(0,-6)}从${placeName(engine,npc.location)}动身，迁往${placeName(engine,m.to.settlement)}${nameOf(engine,state,m.host)}家。`;

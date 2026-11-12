@@ -20,7 +20,8 @@ import {currentEmployment,projectAssignment} from './employment-state.mjs';
 import {npcHousehold,npcAgeAt,householdWorkTime} from './npc-state.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {subjectiveView} from './subjective-view.mjs';
-import {householdBudget,householdCash,householdPoolTopUp} from './household-budget.mjs';
+import {householdBudget} from './household-budget.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {transferItems} from './items.mjs';
 import {npcProficiency} from './checks.mjs';
@@ -294,13 +295,13 @@ registerAutonomyKind('procure_inputs',{
   e.assertNpcObligationAction(read,[a.supplier],{start:a.arriveAt,minutes:a.finishAt-a.arriveAt,location:a.to,kind:'trade'});
   for(let cursor=a.arriveAt;cursor<a.finishAt;){const s=scheduleAt(e,a.supplier,cursor,read.get('state'));if(!s||s.location!==a.to||!s.services?.includes('trade'))throw preconditionFailure('卖家没有实际接待窗口');cursor=s.until;}
   if(!isEffective(e,state,a.supplier)||['死亡','濒死','昏迷','患病'].includes(state.npcs[a.supplier]?.status))throw preconditionFailure('卖家不能接待');
-  if(!ignoreTask&&a.travelCoins>householdCash(d,e,who))throw preconditionFailure('筹料路费不足');
+  if(!ignoreTask&&!npcCanPay(d,e,who,a.travelCoins))throw preconditionFailure('筹料路费不足');
  },
  start(d,e,who,a,{actionId}){
   const id=tripKey(actionId);
   d.set(['state','records',id],{id,category:'market_trip',actor:who,keeper:a.supplier,from:a.from,to:a.to,departAt:a.departAt,arriveAt:a.arriveAt,finishAt:a.finishAt,returnAt:a.returnAt,
    outboundEdges:a.outboundEdges,inboundEdges:a.inboundEdges,serviceWindows:[{start:a.arriveAt,end:a.finishAt}],paid:a.travelCoins,sourceEvent:actionId,purpose:a.purpose,knownFrom:a.knownFrom});
-  if(a.travelCoins){householdPoolTopUp(d,e,who,a.travelCoins,actionId);moveCoins(d,{from:purse(e,who),to:sink('export','travel'),amount:a.travelCoins,writer,eventId:actionId});mirrorPartyCoins(d,e,who,-a.travelCoins,actionId,writer);}
+  if(a.travelCoins){payFromNpc(d,e,{payer:who,to:sink('export','travel'),amount:a.travelCoins,writer,eventId:actionId});mirrorPartyCoins(d,e,who,-a.travelCoins,actionId,writer);}
  },
  contest(d,e,who,a){
   const quotes=a.inputs.map(r=>facilityRuntime().currentTradeQuote(e,d.document,{...r,buyer:who,seller:a.supplier,location:a.to}));
@@ -318,17 +319,16 @@ registerAutonomyKind('procure_inputs',{
    assertMarketDepth(d,e,quote,{agreed:quote.agreed});return quote;
   });
   const total=quotes.reduce((n,q)=>n+q.totalCoins,0),view=subjectiveView(e,d.document,who);
-  if(total>householdCash(d,e,who)||total+a.travelCoins>a.maximum||total>spendable(e,d.document,who,view))throw preconditionFailure('筹料真实付款超出家户可用预算');
+  if(!npcCanPay(d,e,who,total)||total+a.travelCoins>a.maximum||total>spendable(e,d.document,who,view))throw preconditionFailure('筹料真实付款超出家户可用预算');
   const {benefit,otherCost,delayPermille,noisePermille}=a.basis,cost=otherCost+total+a.travelCoins;
   if(benefit-cost-Math.floor(cost*delayPermille/1000)+Math.trunc(benefit*noisePermille/1000)<=0)throw preconditionFailure('实际报价下筹料已不划算');
   if(carriedKg(read,e,who)+a.inputs.reduce((n,r)=>n+r.quantity*packItemKg(read,e,a.supplier,r.item),0)>safeCarryKg(read,e,who))throw preconditionFailure('筹料超过实际负重');
   const sellerView=subjectiveView(e,d.document,a.supplier);
   if(npcDecision(sellerView,{kind:'sell',from:who,cost:{value:total},reward:total}).outcome!=='agree')throw preconditionFailure('卖家不同意本次筹料交易');
-  householdPoolTopUp(d,e,who,total,`${actionId}:inputs`);// 本人钱袋不够时先从户池补足
   for(let i=0;i<a.inputs.length;i++){
    const r=a.inputs[i],q=quotes[i],eventId=`${actionId}:${r.item}`;
    transferItems(d,e,a.supplier,who,r.item,r.quantity);
-   moveCoins(d,{from:purse(e,who),to:purse(e,a.supplier),amount:q.totalCoins,writer,eventId});
+   payFromNpc(d,e,{payer:who,to:purse(e,a.supplier),amount:q.totalCoins,writer,eventId});
    mirrorPartyCoins(d,e,who,-q.totalCoins,eventId,writer);mirrorPartyCoins(d,e,a.supplier,q.totalCoins,eventId,writer);
    recordMarketDeal(d,q,q.totalCoins,r.quantity,eventId);
   }

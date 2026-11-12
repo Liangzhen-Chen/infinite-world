@@ -12,8 +12,8 @@ import {preconditionFailure} from './precondition.mjs';
 import {relationView} from './npc-relations.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {currentWorkstationRecipes,stationLicence} from './workstation-services.mjs';
-import {purse,workshopFund,moveCoins} from './money.mjs';
-import {householdCash,householdPoolTopUp} from './household-budget.mjs';
+import {purse,workshopFund} from './money.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
 // S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
@@ -103,7 +103,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   // lent or may pay for, and do not take over someone else's.
   const station=facilityView(engine,state,actor.location)?.workstations.find(s=>s.kind===recipe.workstation),licence=station&&stationLicence(engine,d,station,id);
   if(recipe.workstation&&(!station||!licence))throw preconditionFailure('没有可用且获准的工作台');
-  const fee=licence?.basis==='paid'?station.fee??0:0;if(!safe(fee)||householdCash(d,engine,id)<fee)throw preconditionFailure('工坊费用不足');
+  const fee=licence?.basis==='paid'?station.fee??0:0;if(!safe(fee)||!npcCanPay(d,engine,id,fee))throw preconditionFailure('工坊费用不足');
   if(fee&&station.owner?.startsWith('npc_')&&(!state.npcs[station.owner]||isPhysicallyDead(engine,state,station.owner)||state.npcs[station.owner].status==='濒死'))throw preconditionFailure('工坊收费人无法履约');
   npcToolBonus(d,engine,id,recipe);
   if(station?.thermalRequirement&&!ignoreTask){
@@ -117,7 +117,7 @@ function validateAction(d,engine,id,action,{at=d.get('state','minute'),presence=
   const seller=presence.npcs[action.seller],sellerBase=engine.byId.get(action.seller),item=engine.byId.get(action.item);
   if(action.seller===id||!awake(engine,presence,action.seller,seller)||personConstraint(engine,state,action.seller,at)||seller.location!==actor.location||!sellerBase?.serviceCatalog?.some(s=>s.kind==='trade'&&s.price.mode==='engineQuote'))throw preconditionFailure('没有同地且愿意出售现有库存的卖家');
   if(!safe(action.quantity)||action.quantity<1||action.quantity>20||!item?.id.startsWith('item_'))throw preconditionFailure('交易品种或数量未登记');
-  if(bagStock(d,engine,{point:'npc.stock',id:action.seller,item:action.item,legacy:()=>engine.quantity(d,action.seller,action.item)})<action.quantity||householdCash(d,engine,id)<tradeQuote(d,engine,id,action,actor.location).cost)throw preconditionFailure('真实钱款或库存不足');
+  if(bagStock(d,engine,{point:'npc.stock',id:action.seller,item:action.item,legacy:()=>engine.quantity(d,action.seller,action.item)})<action.quantity||!npcCanPay(d,engine,id,tradeQuote(d,engine,id,action,actor.location).cost))throw preconditionFailure('真实钱款或库存不足');
   for(let cursor=at;cursor<at+minutes;){const s=scheduleAt(engine,action.seller,cursor,state);if(!s||s.location!==actor.location||!s.services.includes('trade'))throw preconditionFailure('交易没有完整接待窗口');cursor=s.until;}
  }else if(autonomyKind(action.kind))autonomyKind(action.kind).validate(d,engine,id,action,{at,presence,actor});
  else throw preconditionFailure('自主行动类型未实现');
@@ -183,7 +183,7 @@ export function npcCraft(d,engine,id,recipeId,{start,at,actionId,location,furnac
   outcome={die,modifier,total,degree,difficulty:r.difficulty,success:['勉强成功','成功','大成功'].includes(degree)};
   const thermal=kilnWorkResult(d,furnace?.plan,outcome,r.output.quantity,actionId,{endStress:furnace?.endStress});if(thermal)outcome.thermal=thermal;
   const station=facilityView(engine,d.get('state'),location)?.workstations.find(s=>s.kind===r.workstation),fee=station&&stationLicence(engine,d,station,id)?.basis==='paid'?station.fee??0:0;
-  if(fee){householdPoolTopUp(d,engine,id,fee,actionId);moveCoins(d,{from:purse(null,id),to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
+  if(fee){payFromNpc(d,engine,{payer:id,to:station.owner?.startsWith('npc_')?purse(null,station.owner):workshopFund(station.id),amount:fee,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-fee);if(station.owner?.startsWith('npc_'))d.set(['state','npcs',station.owner,'coins'],d.get('state','npcs',station.owner,'coins')+fee);else d.set(['state','workshopFunds',station.id],(d.get('state','workshopFunds',station.id)??0)+fee);}
   const materials=resolveMaterials(d,engine,id,r.materials).map(({item,amount})=>({item,amount}));
   // 卡 Q：品质链输入（扣料、磨损前读）与技能状况，和玩家制作同一组函数。
   const raw=d.get('state','npcs',id,'skills',r.skill)??base.skills?.[r.skill]??base.proficiencies?.[r.skill],standing=craftStanding(raw!==undefined&&raw!==null,skill,r.minimumProficiency,knowsRecipe(engine,d.get('state'),id,r));
@@ -218,8 +218,7 @@ function executeAction(target,engine,id,action,{at,presence,actionId,start,ignor
  }else if(action.kind==='trade'){
   const quote=tradeQuote(d,engine,id,action,checked.location),{cost}=quote;
   assertMarketDepth(d,engine,quote,{agreed:quote.agreed});transferItems(d,engine,action.seller,id,action.item,action.quantity);
-  householdPoolTopUp(d,engine,id,cost,actionId);
-  moveCoins(d,{from:purse(null,id),to:purse(null,action.seller),amount:cost,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-cost);d.set(['state','npcs',action.seller,'coins'],d.get('state','npcs',action.seller,'coins')+cost);spent.coins=cost;
+  payFromNpc(d,engine,{payer:id,to:purse(null,action.seller),amount:cost,writer:'npc-autonomy',eventId:actionId});d.set(['state','npcs',id,'coins'],d.get('state','npcs',id,'coins')-cost);d.set(['state','npcs',action.seller,'coins'],d.get('state','npcs',action.seller,'coins')+cost);spent.coins=cost;
   recordMarketDeal(d,quote,cost,action.quantity,actionId);
   summary=`向${engine.byId.get(action.seller).name}支付${cost}铜，购得${engine.byId.get(action.item).name}${action.quantity}份。`;
  }else if(autonomyKind(action.kind)){

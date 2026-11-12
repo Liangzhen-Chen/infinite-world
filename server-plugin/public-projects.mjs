@@ -1,4 +1,5 @@
 import {recordsWhere} from './storage.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {preconditionFailure} from './precondition.mjs';
 import {isEffective} from './lifecycle-state.mjs';
 import {purse,escrow as escrowAccount,treasury as treasuryAccount,moveCoins,coinRead} from './money.mjs';
@@ -282,8 +283,8 @@ export function fileHousingApplication(d,engine,args,eventId,settlement,a){
 }
 const permits=(state,plot)=>Object.values(state.records??{}).filter(r=>r.category==='housing_permit'&&r.plot===plot&&r.status!=='已收回');
 const coinsOf=(state,who)=>who==='player'?state.player.coins:state.npcs[who]?.coins??0;
-function pay(d,who,settlement,copper){
-    moveCoins(d,{from:purse(null,who),to:treasuryAccount(settlement),amount:copper,writer:'public-projects'});
+function pay(d,engine,who,settlement,copper){
+    payFromNpc(d,engine,{payer:who,to:treasuryAccount(settlement),amount:copper,writer:'public-projects'});
     const p=who==='player'?['state','player','coins']:['state','npcs',who,'coins'];
     d.set(p,d.get(...p)-copper);d.set(['state','settlements',settlement,'treasury'],d.get('state','settlements',settlement,'treasury')+copper);
 }
@@ -304,8 +305,8 @@ function handle(d,engine,r,at){
     const slot=permits(state,r.plot).length;
     if(slot>=plot.slots)return returned('地块已无空余宅基');
     const fee=a.rules.fees[r.plot];
-    if(coinsOf(state,r.applicant)<fee)return returned('申请人当场交不出宅基费');
-    pay(d,r.applicant,r.settlement,fee);
+    if(!npcCanPay(d,engine,r.applicant,fee,coinsOf(state,r.applicant)))return returned('申请人当场交不出宅基费');
+    pay(d,engine,r.applicant,r.settlement,fee);
     const permit=`housing_permit:${r.id.slice('housing_application:'.length)}`;
     holdingSet(d,null,rec(permit),{category:'housing_permit',id:permit,settlement:r.settlement,plot:r.plot,location:plot.location,slot:slot+1,holder:r.applicant,steward:r.steward,
         feePaid:fee,annualRentCopper:plot.annualRentCopper,rentDue:at+YEAR,arrears:0,materials:plot.materials,buildDays:plot.buildDays,status:'已批准',approvedAt:at,application:r.id},'public-projects');
@@ -315,10 +316,10 @@ function handle(d,engine,r,at){
 export function processEmployedHousing(d,engine,contract,at){
  for(const r of Object.values(d.get('state','records')??{}))if(r.category==='housing_application'&&r.status==='待管事办理'&&r.filedAt<=at&&d.get('state','records',r.authorization)?.employment===contract.id)handle(d,engine,r,at);
 }
-function collectRent(d,p,at){
+function collectRent(d,engine,p,at){
     const state=d.get('state'),due=p.annualRentCopper+p.arrears;
-    if(coinsOf(state,p.holder)>=due){
-        pay(d,p.holder,p.settlement,due);
+    if(npcCanPay(d,engine,p.holder,due,coinsOf(state,p.holder))){
+        pay(d,engine,p.holder,p.settlement,due);
         holdingSet(d,null,rec(`housing_fee:${p.id}:${p.rentDue}`),{category:'housing_fee',settlement:p.settlement,payer:p.holder,copper:due,kind:'地租',minute:at,permit:p.id,sourceEvent:p.id},'public-projects');
         holdingSet(d,null,rec(p.id),{...p,arrears:0,rentDue:p.rentDue+YEAR},'public-projects');
     }else holdingSet(d,null,rec(p.id),{...p,arrears:due,rentDue:p.rentDue+YEAR,lastUnpaid:at},'public-projects');
@@ -333,7 +334,7 @@ export function advanceHousing(d,engine,{after}){
             .sort((a,b)=>(a.due??a.rentDue)-(b.due??b.rentDue)||a.id.localeCompare(b.id));
         if(!rows.length)return;
         const r=rows[0];
-        if(r.category==='housing_application')handle(d,engine,r,r.due);else collectRent(d,r,r.rentDue);
+        if(r.category==='housing_application')handle(d,engine,r,r.due);else collectRent(d,engine,r,r.rentDue);
     }
 }
 // Construction is the holder's own: their materials, the plot's build days.

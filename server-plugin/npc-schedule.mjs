@@ -1,6 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {reject} from './action-rejection.mjs';
-import {purse,sink,moveCoins} from './money.mjs';
+import {sink} from './money.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-schedule',{sinks:['sink:export']});
 import {educationSlot,educationCourses,personCourses,courseWindow,sameScheduleInputs,sameScheduleRecordInputs,isScheduleRecord,isScheduleEvent} from './education-state.mjs';
@@ -346,11 +347,10 @@ function settleSchedules(d,engine,before,after,{promote=false,beforeState=null,a
                     if(!route){route=engine.route(npc.location,slot.location,'walk',cursor,d.get('randomSeed'),weatherCache,graphCache);routes.set(key,route);}
                 }
                 catch{activity('行程受阻');}
-                if(route&&npc.coins<route.cost){route=null;activity('路费不足，暂留原处');}
+                if(route&&npc.coins<route.cost&&!npcCanPay(d,engine,npcId,route.cost,npc.coins)){route=null;activity('路费不足，暂留原处');}
                 if(route){
                     facilityRuntime().recordFurnaceDeparture(d,engine,npcId,npc.location,cursor);
-                    moveCoins(d,{from:purse(null,npcId),to:sink('export','travel'),amount:route.cost,writer:'npc-schedule',eventId:null});
-                    npc.coins-=route.cost;
+                    npc.coins+=payFromNpc(d,engine,{payer:npcId,to:sink('export','travel'),amount:route.cost,writer:'npc-schedule',eventId:null})-route.cost;
                     npc.scheduleTravel={from:npc.location,to:slot.location,depart:cursor,arrive:cursor+route.minutes,edges:route.edges,...(cursor<subsistenceResume?{subsistence:true,subsistenceUntil:subsistenceResume}: {})};
                     npc.location=null;activity('赶路');continue;
                 }

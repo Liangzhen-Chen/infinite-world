@@ -25,6 +25,7 @@ import {pledged} from './stock.mjs';
 import {consent as nativeConsent} from './action-consent.mjs';
 import {advanceHook,registerAdvanceHook} from './advance-hooks.mjs';
 import {contractSigningFacts,contractTerms,receiveLeaseGrain} from './contract-state.mjs';
+import {topUpNpc} from './npc-payment.mjs';
 
 registerAdvanceHook('obligationSigningFacts',(before,after)=>Object.fromEntries(Object.entries(after.state.obligations??{})
     .filter(([id])=>!before.state.obligations?.[id]).map(([id,row])=>[id,contractSigningFacts(row.terms??{})])));
@@ -383,6 +384,7 @@ export function settleObligation(d,e,args,eventId,{authorize=null}={}){
         if(e.obligationClaimEnforceable&&!e.obligationClaimEnforceable(d,row,s.minute))throw Error('Claim is not enforceable under current procedure');
         const from=funding?.from??(escrow?escrowAccount(args.escrowContract):partyAccount(e,s,payer)),to=deposit?fundAccount(deposit):collection?.account??partyAccount(e,s,creditor);
         if(from===to)throw Error('Settlement accounts must differ');
+        if(!funding&&!escrow)topUpNpc(d,e,payer,amount,eventId);// EC-1a 共用钱袋：NPC 债务人本人钱袋不够先从户池补足（来源是本人钱袋时才补；托管与质押资金不是户内钱袋）
         if((read(d,'ledger','accounts',from)??0)<amount)throw Error('Settlement source has insufficient booked cash');
         const transferred=moveCoins(d,{from,to,amount,writer:W,eventId});
         if(transferred!==amount)throw Error('Settlement must book the exact receipt amount');

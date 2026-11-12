@@ -17,6 +17,8 @@ import {consent as nativeConsent} from './action-consent.mjs';
 // the code where it was signed, and a `breach` world event reaches standing.
 import {changeItems,transferItems}from'./items.mjs';
 import {purse,vault,partyAccount,mirrorPartyCoins,escrow as escrowAccount,moveCoins}from'./money.mjs';
+import {npcCanPay,payFromNpc}from'./npc-payment.mjs';
+import {householdCash}from'./household-budget.mjs';
 import {declareLedgerWriter}from'./ledger.mjs';
 import {bag,store,pledged,vaultGoods,moveStock,BOOKED as STOCK_BOOKED} from './stock.mjs';
 declareLedgerWriter('credit');
@@ -494,12 +496,12 @@ export async function creditTrade(d,args,eventId,terms){
         const minutes=int(args.minutes??240,30,480,'工时'),employer=counterpart(d,engine,args.seller,{consent:args.consent,minutes});
         const [low,high]=engine.rules.economy.wageCopperPerHalfDay,min=Math.max(1,Math.ceil(low*minutes/240)),max=Math.max(1,Math.ceil(high*minutes/240));
         const wage=int(args.coins??min,min,max,'工钱'),boss=engine.actor(d,employer),fz=contractFreeze(d,engine,{location:d.get('state','location'),coppers:{wage}});
-        if(!fz&&boss.coins<wage)throw preconditionFailure('雇主现钱不足以支付工钱');
+        if(!fz&&!npcCanPay(d,engine,employer,wage,boss.coins))throw preconditionFailure('雇主现钱不足以支付工钱');
         const skills=engine.byId.get(employer)?.skills,skill=(Array.isArray(skills)?skills:Object.keys(skills??{})).find(s=>String(s).startsWith('skill_'))??null;
         const id=`contract_work_${eventId}`,location=d.get('state','location');if(d.get(...rec(id)))throw preconditionFailure('雇佣契约编号已存在');
         // W8-B: in a tender-unit place the wage is frozen as whole units of that resource, held in kind in the contract's goods escrow.
         if(fz)holdGoods(d,engine,{contract:id,payer:employer,resource:fz.resource,amount:fz.amounts.wage,writer:'credit',eventId});
-        else{moveCoins(d,{from:purse(engine,employer),to:escrowAccount(id),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],boss.coins-wage);}
+        else{payFromNpc(d,engine,{payer:employer,to:escrowAccount(id),amount:wage,writer:'credit',eventId});d.set([...engine.actorPath(employer),'coins'],d.get(...engine.actorPath(employer),'coins')-wage);}
         const pay=fz?fz.amounts.wage:wage,unit=fz?fz.resourceName:'铜',terms={parties:['player',employer],minutes,wage:pay,skill,location,...(fz?{resource:fz.resource,resourceName:fz.resourceName,referenceCopper:{wage}}:{})};
         holdingSet(d,engine,rec(id),{category:'contract',kind:'employment',name:`受雇于${nameOf(engine,employer)}`,...terms,escrow:pay,status:'履行中',createdAt:d.get('state','minute'),source:eventId,signedTerms:structuredClone(terms)},'credit');
         advanceWithNpcParticipants(d,engine,minutes,eventId,[employer]);
@@ -527,12 +529,12 @@ export async function creditTrade(d,args,eventId,terms){
         if(shop.location!==d.get('state','location'))throw preconditionFailure('须在铺面当面订立合伙');
         const partner=counterpart(d,engine,args.seller,{consent:args.consent,minutes:5}),p=rules(engine).partnership;
         const fz=Number.isSafeInteger(args.coins)&&args.coins>=1&&args.coins<=1e7?contractFreeze(d,engine,{location:shop.location,coppers:{stake:args.coins}}):null;
-        const stake=fz?fz.amounts.stake:int(args.coins,1,engine.actor(d,partner).coins,'合伙出资'),share=int(args.quantity,p.minimumShare,p.maximumShare,'分成百分比'),days=int(args.days??30,1,p.maximumDays,'合伙天数');
+        const stake=fz?fz.amounts.stake:int(args.coins,1,Math.max(engine.actor(d,partner).coins,householdCash(d,engine,partner)),'合伙出资'),share=int(args.quantity,p.minimumShare,p.maximumShare,'分成百分比'),days=int(args.days??30,1,p.maximumDays,'合伙天数');
         const id=`contract_partner_${eventId}`;if(d.get(...rec(id)))throw preconditionFailure('合伙契约编号已存在');
         const now=d.get('state','minute'),baselineNet=businessReport(d,engine,shop).profit.net;
         // W8-B: in a tender-unit place the partner hands over the frozen units from his own bag.
         if(fz)transferItems(d,engine,partner,'player',resourceItem(engine,fz.resource),stake,null,{eventId});
-        else{moveCoins(d,{from:purse(engine,partner),to:purse(engine,'player'),amount:stake,writer:'credit',eventId});d.set([...engine.actorPath(partner),'coins'],engine.actor(d,partner).coins-stake);d.set(['state','player','coins'],d.get('state','player','coins')+stake);}
+        else{payFromNpc(d,engine,{payer:partner,to:purse(engine,'player'),amount:stake,writer:'credit',eventId});d.set([...engine.actorPath(partner),'coins'],engine.actor(d,partner).coins-stake);d.set(['state','player','coins'],d.get('state','player','coins')+stake);}
         const terms={parties:['player',partner],partner,business:shop.id,stake,share,deadline:now+days*1440,...(fz?{resource:fz.resource,resourceName:fz.resourceName,referenceCopper:{stake:args.coins}}:{})};
         holdingSet(d,engine,rec(id),{category:'contract',kind:'partnership',version:2,name:`与${nameOf(engine,partner)}合伙经营`,...terms,baselineNet,location:shop.location,status:'有效',createdAt:now,source:eventId,signedTerms:structuredClone(terms)},'credit');
         engine.advance(d,5,eventId);d.say(`${nameOf(engine,partner)}出资${stake}${fz?fz.resourceName:'铜'}入伙，期满按${share}%分成并退股`);

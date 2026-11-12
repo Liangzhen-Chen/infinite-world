@@ -1,6 +1,7 @@
 import {preconditionFailure} from './precondition.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
-import {purse,sink,moveCoins} from './money.mjs';
+import {sink} from './money.mjs';
+import {npcCanPay,payFromNpc} from './npc-payment.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-cognition',{sinks:['sink:export']});
 import {advanceMagicMessages,nextMagicMessageMinute}from'./magic-message.mjs';
@@ -95,10 +96,10 @@ export function shareNpcMemory(d,engine,{from,to,memoryId,channel='conversation'
  const messages=state.npcCognition?.messages??{};if(messages[messageId])return {duplicate:true,messageId};
  const route=engine.route(a.location,b.location,'walk',at,d.get('randomSeed'));
  assertNpcObligationAction(d,engine,[from],{start:at,minutes:route.minutes,location:b.location,kind:'move'});
- if(a.coins<route.cost)throw preconditionFailure('携信者路费不足');
+ if(!npcCanPay(d,engine,from,route.cost,a.coins))throw preconditionFailure('携信者路费不足');
  if(occupied(state,from,at,at+route.minutes+1))throw preconditionFailure('携信路线与既有义务冲突');
  const trip={from:a.location,to:b.location,depart:at,arrive:at+route.minutes,edges:route.edges,messageId};
- moveCoins(d,{from:purse(null,from),to:sink('export','travel'),amount:route.cost,writer:'npc-cognition',eventId:eventId});d.set(['state','npcs',from,'coins'],a.coins-route.cost);d.set(['state','npcs',from,'cognitionTravel'],trip);d.set(['state','npcs',from,'location'],null);d.set(['state','npcs',from,'activity'],'携信赶路');
+ payFromNpc(d,engine,{payer:from,to:sink('export','travel'),amount:route.cost,writer:'npc-cognition',eventId:eventId});d.set(['state','npcs',from,'coins'],d.get('state','npcs',from,'coins')-route.cost);d.set(['state','npcs',from,'cognitionTravel'],trip);d.set(['state','npcs',from,'location'],null);d.set(['state','npcs',from,'activity'],'携信赶路');
  d.set(['state','npcCognition','messages',messageId],{id:messageId,from,to,memoryId,rootMemoryId:originalId(memory),channel,depart:at,arrive:trip.arrive,destination:b.location,status:'在途',sourceEvent:eventId,routeCost:route.cost,
   memory:clone(memory),version:retell(engine,state,from,memory),routeEdges:clone(route.edges),origin:a.location});
  return {messageId,delivered:false,arrive:trip.arrive,routeCost:route.cost};
