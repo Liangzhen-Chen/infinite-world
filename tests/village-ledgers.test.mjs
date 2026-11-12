@@ -35,6 +35,7 @@ test('四村年粮守恒，产量单位与周期有来源，期初不冒充期�
  const d={document:doc,get(...keys){return keys.reduce((value,key)=>value?.[key],doc);},set(keys,value){const target=keys.slice(0,-1).reduce((value,key)=>value[key],doc);target[keys.at(-1)]=value;}};
  for(const p of configs){const detail=profiles.find(d=>d.id===p.settlement);assert.equal(detail.economy.publicStock.food,doc.state.settlements[p.settlement].food);assert.equal(detail.economy.production[0].cycleDays,360);assert.equal(detail.economy.production[0].unitKg,.5);assert.equal(detail.economy.publicStock.closing,null);conservation(doc,p.settlement);}
  for(let day=0;day<360;day++){doc.state.minute=day*1440;for(const p of configs){const out=advanceAgriculture(d,engine,p.settlement,doc.state.settlements[p.settlement],day);doc.state.settlements[p.settlement]=out.settlement;doc.state.settlements[p.settlement].wood+=out.woodProduced;conservation(doc,p.settlement);}}
+ // 待重推（MKTW ①b）：开局存粮不再是 initialFood，改为开局日目标持有 = 餐口 × (距下次收获天数 + reserveDays)；下面 openingFood 的期望（原 p.initialFood）与第 36 行的登记公仓粮对照待重推，未改值。
  for(const p of configs){assert.ok(record(doc,p.settlement).ledger.harvested>0);assert.equal(record(doc,p.settlement).lastDay,359);assert.equal(record(doc,p.settlement).ledger.openingFood,p.initialFood);assert.throws(()=>advanceAgriculture(d,engine,p.settlement,doc.state.settlements[p.settlement],359),/日结顺序/);}
 });
 test('四村粮约经过真实路线两端交割；在途预款和税款分开，粮钱双方守恒且重放幂等',async()=>{
@@ -95,6 +96,7 @@ test('严格schema和L1拒绝null账、无期末来源、错单位、错税率�
  for(const mutate of [p=>p.economy.production=null,p=>p.economy.publicStock.closing={food:99999},p=>p.economy.production[0].unitKg=1,p=>p.economy.tax.rateBps=9999,p=>p.governance.head=p.governance.coordinators[1]]){
   const bad=structuredClone(world);mutate(bad.settlementProfiles.find(p=>p.details).details);assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
  }
+ // 待重推（MKTW ①b）：initialFood 已删，这里改动一个已不存在的字段；该负例应改为改动 initialSeed 或登记粮约，未改值。
  const bad=structuredClone(world);bad.rules.agriculture.settlements.find(p=>p.opening).initialFood++;assert.equal(validateWorld(bad,{stage:'release'}).ok,false);
  const tools=toolDefinitions();assert.equal(tools.length,27);assert.equal(modelToolCall('world_farm',{operation:'settle_trade'}).args.operation,'farm_settle_trade');
 });

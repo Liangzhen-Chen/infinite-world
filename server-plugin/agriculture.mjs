@@ -318,7 +318,7 @@ export function validateAgricultureRules(world){
         for(const id of [p.settlement,p.counter,p.manager,p.fieldLocation])if(!ids.has(id))errors.push(`农事引用不存在：${id}`);
         if(!p.counter.startsWith('bld_')||!p.manager.startsWith('npc_')||!p.fieldLocation.startsWith('loc_'))errors.push('柜台、管理人或农田类型不符');
         if((ids.get(p.manager)?.age??0)<18)errors.push('粮仓管理人必须成年');
-        if(p.initialFood+p.initialSeed>p.granaryCapacity)errors.push('源开局粮食和种粮超过粮仓容量');
+        if(p.initialSeed>p.granaryCapacity)errors.push('源开局种粮超过粮仓容量');
         if(p.initialSeed<Math.ceil(p.areaUnits*r.crop.seedPerHa/r.crop.areaUnitsPerHa))errors.push('源种粮不够播已登记田地');
         if(p.initialHarvestDay+p.protectedStorageDays<=0)errors.push('源开局储粮已过期');
         if(p.normalStorageDays!==180||p.protectedStorageDays!==p.normalStorageDays*2)errors.push('当前保存条件只支持登记180天与受控二倍，不能任意延寿');

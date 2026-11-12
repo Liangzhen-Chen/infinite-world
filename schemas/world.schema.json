@@ -1578,11 +1578,6 @@
                     "minimum": 1,
                     "maximum": 100000
                   },
-                  "initialFood": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 100000
-                  },
                   "initialSeed": {
                     "type": "integer",
                     "minimum": 1,
@@ -1674,7 +1669,6 @@
                   "freshFoodPerDay",
                   "granaryCapacity",
                   "toolCapacity",
-                  "initialFood",
                   "initialSeed",
                   "protectedStorageDays",
                   "normalStorageDays",

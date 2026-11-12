@@ -1,11 +1,16 @@
 const key=id=>`agriculture:${id}`;
-export function agricultureState(profile,day,{fresh=false}={}){
+import {mealMouthsOf,farmTargetDays} from './primitives-body.mjs';
+// 开局存粮 = 开局日的目标持有 = 餐口 × 农事聚落目标日数（farmTargetDays）：常态 = 目标，不再有写死的开局存量。
+export function openingFood(engine,state,profile,day){
+    return Math.ceil(mealMouthsOf(engine,state,profile.settlement,state.settlements[profile.settlement].population)*farmTargetDays(engine,day*1440,profile));
+}
+export function agricultureState(profile,day,{fresh=false,food=0}={}){
     return{category:'agriculture',format:1,mode:fresh?'managed':'legacy',settlement:profile.settlement,initializedDay:day,lastDay:day-1,
         granary:{capacity:profile.granaryCapacity,condition:profile.granaryCondition},tools:{capacity:profile.toolCapacity,condition:profile.toolCondition},
         field:{id:profile.fieldId,areaUnits:profile.areaUnits,sownYear:Math.floor(day/360),sownUnits:0,seedBank:fresh?profile.initialSeed:0,
             seedBatches:fresh?[{amount:profile.initialSeed,harvestDay:profile.initialHarvestDay,expiresDay:profile.initialHarvestDay+profile.protectedStorageDays}]:[],cohorts:[]},
-        batches:fresh?[{id:'source_opening',amount:profile.initialFood,harvestDay:profile.initialHarvestDay,expiresDay:profile.initialHarvestDay+profile.protectedStorageDays,source:'源开局仓储',kind:'grain'}]:[],
-        ledger:{openingFood:fresh?profile.initialFood:0,openingSeed:fresh?profile.initialSeed:0,freshProduced:0,harvested:0,eaten:0,spoiled:0,overflow:0,
+        batches:fresh?[{id:'source_opening',amount:food,harvestDay:profile.initialHarvestDay,expiresDay:profile.initialHarvestDay+profile.protectedStorageDays,source:'源开局仓储',kind:'grain'}]:[],
+        ledger:{openingFood:fresh?food:0,openingSeed:fresh?profile.initialSeed:0,freshProduced:0,harvested:0,eaten:0,spoiled:0,overflow:0,
             seedSpent:0,sold:0,donated:0,seedDonated:0},lastReport:null};
 }
 export function initializeAgriculture(engine,document){
@@ -15,8 +20,9 @@ export function initializeAgriculture(engine,document){
     for(const p of engine.rules.agriculture.settlements){
         if(!doc.state.settlements[p.settlement]){if(!p.opening||!engine.byId.has(p.settlement)||!engine.byId.has(p.manager))continue;doc.state.settlements[p.settlement]={...structuredClone(p.opening),food:0,starvation:0};}
         if(doc.state.records[key(p.settlement)])throw new Error('新战役农业记录已存在，拒绝重复初始化补粮');
-        doc.state.records[key(p.settlement)]=agricultureState(p,day,{fresh:true});
-        doc.state.settlements[p.settlement].food=p.initialFood;
+        const food=openingFood(engine,doc.state,p,day);
+        doc.state.records[key(p.settlement)]=agricultureState(p,day,{fresh:true,food});
+        doc.state.settlements[p.settlement].food=food;
     }
     return doc;
 }

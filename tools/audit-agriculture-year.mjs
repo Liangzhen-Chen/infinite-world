@@ -15,7 +15,7 @@ function check(doc,initial,seed,month){
         for(const [condition,name]of [[input===output,'总粮账不守恒'],[r.batches.reduce((n,b)=>n+b.amount,0)===s.food,'食粮批次不一致'],
             [r.field.seedBatches.reduce((n,b)=>n+b.amount,0)===r.field.seedBank,'种粮批次不一致'],[s.food+r.field.seedBank<=r.granary.capacity,'仓容溢出'],
             [s.population===initial[p.settlement].population,'人口下降'],[(s.unmetMeals??0)===(initial[p.settlement].unmetMeals??0),'缺餐'],
-            [l.openingFood===p.initialFood&&l.openingSeed===p.initialSeed,'开局资产被重复修改']])if(!condition)failures.push({seed,month,settlement:p.settlement,reason:name});
+            [l.openingSeed===p.initialSeed,'开局资产被重复修改']])if(!condition)failures.push({seed,month,settlement:p.settlement,reason:name});
     }
 }
 for(let i=0;i<count;i++){

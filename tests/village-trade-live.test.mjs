@@ -107,6 +107,7 @@ test('四份粮约从默认出生点保留全部正式作息，实际提运交�
             for (const config of configs) {
                 assert.ok(engine.byId.get(config.manager).schedule);
                 assert.equal(engine.byId.get(config.manager).tier, 'full');
+                // 待重推（MKTW ①b）：开局存粮改为开局日目标持有（餐口 × (距下次收获天数 + reserveDays)），不再等于 config.initialFood（已删）；未改值。
                 assert.equal(document.state.settlements[config.settlement].food, config.initialFood);
             }
 

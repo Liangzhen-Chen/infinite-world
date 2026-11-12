@@ -12,7 +12,7 @@ import {recordsMemo,withReadIndex} from './storage.mjs';
 import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
-import {mealMouthsOf,resupplyDays} from './primitives-body.mjs';
+import {mealMouthsOf,resupplyDays,farmTargetDays} from './primitives-body.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
 // （商店成交、书籍出版的读者、店铺客流共用；不在代码里写字面）。
@@ -252,10 +252,11 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   const stock=stockName==='food'
    ?priceRead(d,{point:'region.grain',account:granary(engine,place),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0})
    :priceRead(d,{point:'region.material',account:settlementStock(engine,place,stockName),legacy:()=>settlement[stockName]??0});
-  // 粮仓实际持有 = 全部库存；储备目标 = 餐口 × reserveDays（与口粮池、公粮扣采购同一份储备口径）。
-  // 不在农事表里的聚落没有 reserveDays：粮靠外来补给，目标日数 = 实际补给间隔（resupplyDays：最近供粮聚落的往返路程天数）。
+  // 粮仓实际持有 = 全部库存；目标持有 = 餐口 × 目标日数。
+  // 农事聚落：目标日数 = 距下次收获天数 + reserveDays（farmTargetDays：刚收完要撑到下次收获，再留结转储备，随季节变）。
+  // 不在农事表里的聚落：粮靠外来补给，目标日数 = 实际补给间隔（resupplyDays：最近供粮聚落的往返路程天数）。
   const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0;
-  const target=stockName==='food'?Math.ceil(mouths*(profile?profile.reserveDays:resupplyDays(engine,d.get('randomSeed'),place))):0;
+  const target=stockName==='food'?Math.ceil(mouths*(profile?farmTargetDays(engine,state.minute,profile):resupplyDays(engine,d.get('randomSeed'),place))):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,target,committed,available:stock,unit:weight.get(it.id)/unit});
  }
  const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);

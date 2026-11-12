@@ -91,6 +91,13 @@ export function settlementMealRatio(engine,state,sid,need='satiety'){
  const population=state?.settlements?.[sid]?.population??0;
  return population>0?settlementMouths(engine,state,sid,population,need)/population:1;
 }
+// 农事聚落的目标持有天数(t) = 距下次收获天数(t) + reserveDays：刚收完要撑到下次收获，再留一段结转储备。
+// 收获日（年内第几日）= 作物最后一批成熟日 = crop.sowDays[1] + crop.growthDays（rules.agriculture.crop；agriculture.mjs:194 播种窗、:204 成熟条件 grownDays >= growthDays，
+// 之后收获完成）；一年 360 日（engine.calendar 的 floor(日/360)）。当日就是收获日则距下次收获 0 天，收获日之后的次日起为 359 天。
+export function farmTargetDays(engine,minute,profile){
+ const crop=engine.rules.agriculture.crop,harvest=crop.sowDays[1]+crop.growthDays,dayOfYear=Math.floor(minute/1440)%360;
+ return ((harvest-dayOfYear)%360+360)%360+profile.reserveDays;
+}
 // 非农事聚落的补给间隔（天）：粮从农事聚落（agriculture.settlements，唯一有粮食生产的聚落类）运来，间隔 = 最近供粮聚落的 walk 往返路程天数
 // （路线按季节开闭，取一年各月里最快的一条＝路开着时的正常路程；route.minutes 已含每日歇息）。周贸易班线两端都是农事聚落，不覆盖非农事聚落，所以不是这里的来源。
 // 一年里到不了任何供粮聚落：直接报错列出聚落，不编造天数。同一世界数据对象内按聚落记忆。市场的目标持有与远方聚落的开局存粮共用这一条规律（常态 = 目标）。

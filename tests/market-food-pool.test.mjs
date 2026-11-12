@@ -148,28 +148,32 @@ function granaryFixture({food,population}){
 }
 
 test('稀缺度 = 目标持有 ÷ 实际持有，随覆盖率连续单调',()=>{
- const inn='bld_hw_qingdeng',oats='item_oats',S=27000;
- // 推导：覆盖率 c = 粮仓实际持有 ÷ 粮仓储备目标，目标 = 餐口 × reserveDays（loc_hw 在农事表里，reserveDays=90）。
- // 取存粮 S=27000 = 90×300，使各点人口为整数：c=1.5 → 餐口 200（目标 18000）；c=1.0 → 300（27000）；c=0.5 → 600（54000）；c=0.2 → 1500（135000）；c=0 → 存粮 0、人口 300。
- // 居民背包全清空，卖方存货为 0，所以 实际持有 = S（c=0 时为 0）；需求 = 目标 + K，K = 货架目标 + 合同承诺，与覆盖率无关（各点 demand−target 应相等）。
+ const inn='bld_hw_qingdeng',oats='item_oats',population=300;
+ // 推导：覆盖率 c = 粮仓实际持有 ÷ 粮仓目标持有。农事聚落目标 = 餐口 × (距下次收获天数 + reserveDays)；
+ // 收获日 = crop.sowDays[1] + crop.growthDays（年内第几日），一年 360 日，距下次收获 = (收获日 − 年内当日) mod 360。
+ // 人口固定 300（餐口 300），目标 T = 300 × (距收获 + reserveDays)；存粮取 c × T：c=1.5、1.0、0.5、0.2、0 各一点（c=0 存粮 0）。
+ // 居民背包全清空，卖方存货为 0，所以 实际持有 = 存粮；需求 = T + K，K = 货架目标 + 合同承诺，与覆盖率无关（各点 demand−T 应相等）。
  // 稀缺度 = 夹取(需求 ÷ max(1, 供给)，priceFactorLimits.region)：
- //   c=1.5 → (18000+K)/27000 ≈ 0.667；c=1.0 → (27000+K)/27000 ≈ 1；c=0.5 → (54000+K)/27000 ≈ 2；c=0.2 → (135000+K)/27000 ≈ 5 → 顶 3；c=0 → 供给 0，分母取 1，→ 顶 3。
+ //   c=1.5 → (T+K)/(1.5T) ≈ 0.667；c=1.0 → (T+K)/T ≈ 1；c=0.5 → (T+K)/(0.5T) ≈ 2；c=0.2 → (T+K)/(0.2T) ≈ 5 → 顶 3；c=0 → 供给 0，分母取 1，→ 顶 3。
  // 夹取上限取规则 limits[1]（=3）；下方断言按各点推得的比值再夹取，不读被测函数的稀缺度。
- const points=[[1.5,27000,200],[1.0,27000,300],[0.5,27000,600],[0.2,27000,1500],[0,0,300]];
- const result=points.map(([c,food,population])=>{
+ const crop0=world.rules.agriculture.crop,reserve0=world.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').reserveDays;
+ const minute0=granaryFixture({food:0,population}).doc.state.minute;
+ const T=population*((((crop0.sowDays[1]+crop0.growthDays-Math.floor(minute0/1440)%360)%360)+360)%360+reserve0);
+ const points=[[1.5,Math.round(1.5*T)],[1.0,Math.round(T)],[0.5,Math.round(0.5*T)],[0.2,Math.round(0.2*T)],[0,0]];
+ const result=points.map(([c,food])=>{
   const {engine,doc}=granaryFixture({food,population}),limits=engine.rules.economy.priceFactorLimits.region;
-  const mouths=mealMouthsOf(engine,doc.state,'loc_hw',population),reserveDays=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').reserveDays;
-  const target=Math.ceil(mouths*reserveDays),s=marketSupply(documentReader(doc),engine,oats,inn);
+  const mouths=mealMouthsOf(engine,doc.state,'loc_hw',population);
+  const target=Math.ceil(mouths*(((crop0.sowDays[1]+crop0.growthDays-Math.floor(doc.state.minute/1440)%360)%360+360)%360+reserve0)),s=marketSupply(documentReader(doc),engine,oats,inn);
   assert.equal(s.spotSupply,food,`c=${c} 实际持有 = 粮仓全部库存（不先扣储备）`);
   return {c,limits,target,supply:s.spotSupply,demand:s.demand,K:s.demand-target};
  });
- // 目标与覆盖率的关系：S ÷ 目标 = c。
- for(const r of result.slice(0,4))assert.ok(Math.abs(27000/r.target-r.c)<=1e-9,`覆盖率 ${r.c}`);
+ // 目标与覆盖率的关系：存粮 ÷ 目标 = c（取整误差内）。
+ for(const [i,r] of result.slice(0,4).entries())assert.ok(Math.abs(points[i][1]/r.target-r.c)<=1e-6,`覆盖率 ${r.c}`);
  // K 与覆盖率无关：五点相同。
  for(const r of result)assert.ok(Math.abs(r.K-result[0].K)<=1e-9*Math.max(1,r.target),`K 常数 ${r.c}`);
  assert.ok(result[0].K>=0);
  const scarcity=r=>Math.min(r.limits[1],Math.max(r.limits[0],r.demand/Math.max(1,r.supply)));
- const K=result[0].K,expected=[(18000+K)/27000,(27000+K)/27000,(54000+K)/27000,Math.min(3,(135000+K)/27000),3];
+ const K=result[0].K,expected=[(T+K)/points[0][1],(T+K)/points[1][1],(T+K)/points[2][1],Math.min(3,(T+K)/points[3][1]),3];
  result.forEach((r,i)=>assert.ok(Math.abs(scarcity(r)-Math.min(r.limits[1],expected[i]))<=1e-9,`c=${r.c} 稀缺度`));
  // 连续单调：覆盖率越低稀缺度越高；恰在目标时（c=1，K 相对 27000 极小）约为 1，c=1.5 约 0.67，c=0.5 约 2，c≤0.33 顶 3。
  const values=result.map(scarcity);
@@ -178,6 +182,27 @@ test('稀缺度 = 目标持有 ÷ 实际持有，随覆盖率连续单调',()=>{
  assert.equal(values[3],result[3].limits[1]);assert.equal(values[4],result[4].limits[1]);
  // 0 供给时不除零：分母取 1，结果有限且被上限夹住。
  assert.ok(Number.isFinite(values[4]));
+});
+
+test('农事聚落目标持有随季节：收获后撑到下次收获，收获前只剩结转储备；开局存粮 = 开局日目标，开局 cov = 1',()=>{
+ // 推导：目标 = 餐口 × (距下次收获天数 + reserveDays)；收获日 H = crop.sowDays[1] + crop.growthDays（年内日），距下次收获 = (H − 年内当日) mod 360。
+ // 取收获后一日（年内 H+1 日 → 距 359 天）与收获前 30 日（年内 H−30 日 → 距 30 天）；人口 300 → 目标 = 300 × (359 + R) 与 300 × (30 + R)，R = reserveDays。
+ const {engine}=setup('market-food-pool-farm'),crop=engine.rules.agriculture.crop,H=crop.sowDays[1]+crop.growthDays,R=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').reserveDays;
+ const targetAt=day=>{
+  const f=granaryFixture({food:1000,population:300});f.doc.state.minute=day*1440;
+  return marketSupply(documentReader(f.doc),f.engine,'item_oats','bld_hw_qingdeng').rows.find(r=>r.owner==='loc_hw').target;
+ };
+ assert.equal(targetAt(360+H+1),300*(359+R));
+ assert.equal(targetAt(360+H-30),300*(30+R));
+ // 开局：每个农事聚落开账存粮 = ceil(餐口 × (距收获 + R))（第 0 日），粮仓行存量恰等于目标（cov = 1）。
+ const {doc}=setup('market-food-pool-farm-open');
+ for(const p of engine.rules.agriculture.settlements){
+  const s=doc.state.settlements[p.settlement];if(!s)continue;
+  const expected=Math.ceil(mealMouthsOf(engine,doc.state,p.settlement,s.population)*((H%360)+p.reserveDays));
+  assert.equal(s.food,expected,p.settlement);
+  const row=marketSupply(documentReader(doc),engine,'item_oats',p.settlement).rows.find(r=>r.owner===p.settlement);
+  assert.ok(row,p.settlement);assert.equal(row.target,expected);assert.equal(row.stock,expected);
+ }
 });
 
 test('私户背包变化不影响报价（I12）：非经营者多持多少货，供给与需求都不变',()=>{

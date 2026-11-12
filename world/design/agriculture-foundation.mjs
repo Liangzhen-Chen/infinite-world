@@ -6,7 +6,7 @@ export const agricultureFoundation={
         areaUnits:1400,farmWorkers:8,freshWorkers:8,processingWorkers:2,processingPerWorker:30,workerFraction:0.55,
         areaPerWorkerDay:20,freshFoodPerDay:20,freshSeasonFactors:[1,1.3,1.1,0.25],
         granaryCapacity:20000,granaryCondition:85,toolCondition:90,toolCapacity:8,
-        initialFood:8000,initialHarvestDay:-150,initialSeed:1680,protectedStorageDays:360,
+        initialHarvestDay:-150,initialSeed:1680,protectedStorageDays:360,
         normalStorageDays:180,spoilagePerMonth:0.002,reserveDays:90,
         repairWood:2,repairIron:1,repairCondition:20,toolWearPerArea:0.0005}],
 };
