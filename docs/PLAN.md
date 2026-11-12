@@ -256,6 +256,22 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 19:2xZ】李白 20:1x 巡查答复（实采数字）**
+    - GitHub：t-mktw 从 1061df21 推到 8670f96f（17:37 到 19:10 之间的 9 个提交此前没推，已补推）；t-ec1 已推。主仓 PLAN 上一次是 be790433，本条为新推。
+    - ① EC-1 诊断（ec1-18，5597110e…），腾讯云 19:16Z 实采：
+      - 已完成 13/15。第一批 4 个：food-habit-audit 207 行、migration-inventory 254 行、wood-quote 5 行、bread-demand-rows 2 行。sales-of 用例 9/11 已完成。
+      - 第一轮 sales-of 因我传参多带了 tests/ 前缀，11 个全部秒退（ERR_MODULE_NOT_FOUND）。已改路径重跑，旧的不重跑。
+      - 正在跑第 10 个 sales-of m3-acceptance：进程 pid 612557，已跑 1 分 18 秒，CPU 累计 1 分 36 秒（122%），常驻 1.7GB。结果文件 /work/ec1-18.script.out 41076 字节、94 行，19:16:07Z 仍在写。
+      - 机器：内存 126GB 中可用 122GB，无 OOM（dmesg 0 条），磁盘 90%（余 4.9GB）。没有慢盘、锁或 SSH 问题。
+      - 剩下 1 个：s5-law-household-labor。
+      - 耗时差异来自用例本身：每个 sales-of 都把整份测试文件跑一遍，最长 npc-life-t164 约 37 分钟，结果文件 515KB。
+    - ② 非食物需求：第 6 任执行者 17:28Z 已交设计（F:/dnd-tmp/mktw/nonfood-design.md，3166 字节）。巡查页面看到的“1h50m 未交”是旧状态。
+      - 设计是整类规律：经市场的户用 = 补给间隔 ×（日用度 − 户内自给，由家户采集规划推出）+ 名册户实际欠量；同一用度类合池，燃料按材料热值折算；恢复户缺口。不给柴、盐、木炭设特例。
+      - 我当时直接批了设计，实现随后在 mktw-32 两轮通过；mktw-33 r1 抓到记忆依赖漏 projects，退回；mktw-34 已修，r1 通过，r2 在审。
+      - 设计本身按李白要求补做两轮独立设计审（A：整类与特例；B：现实合理性），进行中，结果报李白。
+      - 读数（改前 diag-market30 → 改后 diag-market32，开局 loc_hw）：柴 scarcity 3 → 0.5，木炭 3 → 0.5，盐仍为 3（另开“开局库存统一由目标持有推出”卡）。
+      - 未解：改后柴和木炭钉在下限是否现实，交设计审判断。
+    - 执行者红线：第 3 到第 8 任里，6 人中有 5 人各有一次被拦下的 node -e、python3 或 heredoc，均未执行。已请李白定：被拦未执行的是否仍须换人。
   - **【11-12 17:3xZ】回执发布后指纹对照（李白要求）与非食物需求缺口**
     - mktw-30（94ce1b93…，r1 …171804Z-454123、r2 …172059Z-456036）上在腾讯云跑 tools/mktw-diag-context.mjs loc_bs_yupo，两边数值：
       - 模拟（mktw-29，未发布）：recordedFingerprint 1c6f8d647d3348c0ed12024bcfd47544afe85d66ea1db0adeffec598eede143e，simulated:true，matches:true，matchesWithoutContextRevert:false，charter 哈希 acb66280…dbc4184。
