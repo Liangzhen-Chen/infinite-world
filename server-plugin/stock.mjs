@@ -235,7 +235,7 @@ export function settleWorks(d,engine,p,{returned={},to,writer,eventId=null}){
 export const CRAFT_PURPOSE='craft';
 export const craftInput=(writer,eventId)=>({flow:'sink:consume',purpose:CRAFT_PURPOSE,writer,eventId});
 export const craftOutput=(writer,eventId)=>({flow:'src:craft',purpose:CRAFT_PURPOSE,writer,eventId});
-// 行为人 actor（可空：野生社会的群体没有单个行为人时按所属群体/空）与发生地聚落 place 由各调用方传入；place 非空时耗料同时记入按（聚落，物品）的滚动日桶（accrueCraftUse）。
+// 行为人 actor（可空：野生社会的群体没有单个行为人时按所属群体/空）与发生地聚落 place 由各调用方传入；place 非空时耗料同时记入按（聚落，物品）的滚动日桶（accrueCraftUse）。place 只给"投入被实际消耗、转化成产物"的工序；转移、捐赠、存取这类不改变物料总量的记录不传 place（只留守恒对凭据）。
 export function recordCraft(d,{engine,actor=null,place=null,recipe,batches=1,inputs={},outputs={},failure=null,writer,eventId=null}){
     if(recipe&&place)accrueCraftUse(d,engine,place,inputs,outputs,failure);
     if(!ledgerActive(d))return;

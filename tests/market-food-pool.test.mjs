@@ -315,6 +315,17 @@ test('生产耗料经 recordCraft 按（聚落，物品）记日桶：不同写�
  assert.ok(Math.abs((b.consumption-later.consumption)-2)<=1e-9);
 });
 
+test('捐粮是转移不是消耗：捐粮的守恒对凭据不带 place，不改变受粮聚落的耗料与需求',()=>{
+ // 推导：agriculture.mjs 捐粮折算入仓时写一条 recipe:granary:intake 的守恒对（投入被捐的粮、产出折成粮仓计量份数），物料总量不变，所以不传 place，
+ // 不进 craft-use 日桶：记录前后 loc_hw 的燕麦消耗与需求都不变，也没有 craft-use 记录。
+ const {engine,doc}=setup('market-food-pool-donate'),inn='bld_hw_qingdeng',d=engine.primitiveDraft(doc);
+ const before=marketSupply(d,engine,'item_oats',inn);
+ recordCraft(d,{engine,actor:'player',recipe:'granary:intake',inputs:{item_oat_flour:10},outputs:{item_oats:9},writer:'agriculture',eventId:'probe-donate'});
+ const after=marketSupply(d,engine,'item_oats',inn);
+ assert.equal(d.get('state','records','craft-use:loc_hw'),undefined);
+ assert.equal(after.demand,before.demand);assert.equal(after.supply,before.supply);
+});
+
 test('非食物货的户用日耗进目标持有：聚落各户日耗 × 补给间隔天数',()=>{
  // 推导：consumption = Σ 各户 householdDailyUse(该户成员, 该货) × 补给间隔天数 × 池权重 ÷ 报价货权重；
  // 补给间隔 = 2 × 最近的别的农事聚落的 walk 路程分钟 ÷ 1440（一年各月最快）；户按 personHousehold 的编号去重，居民按所在聚落取。
