@@ -106,7 +106,9 @@ export function resupplyDays(engine,seed,place){
  const memo=resupplyMemo.get(engine.world)??new Map();resupplyMemo.set(engine.world,memo);
  if(memo.has(place))return memo.get(place);
  let best=null;
+ // 供粮聚落不含本聚落自己（农事聚落的非粮补给来自最近的别的农事聚落；本聚落到本聚落路程为 0 不是补给）。
  for(const p of engine.rules.agriculture?.settlements??[])for(let month=0;month<12;month++){
+  if(p.settlement===place)break;
   try{const r=engine.route(p.settlement,place,'walk',month*30*1440,seed);if(best===null||r.minutes<best)best=r.minutes;}
   catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
  }

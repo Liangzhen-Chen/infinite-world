@@ -214,11 +214,11 @@ function cheapestOfClass(state,engine,place,cls){
  memo.set(key,best);return best;
 }
 const cheapestMemo=new WeakMap();
-// TODO（合入前必做，待 EC-1 合入 master、t-mktw 变基后）：需求加一项缺口信号 = 本聚落近一个交易周期内 EC-1b customer_flow 访问记录里 outcome 非 bought 的未满足量（店主亲见，公开可知）；现在不计。
+// TODO（合入前必做，待 EC-1 合入 master、t-mktw 变基后）：需求加一项缺口信号 = 本聚落近一个交易周期内 EC-1b customer_flow 访问记录里 outcome 非 bought 的未满足量（店主亲见，公开可知），全品类（食物与非食物货）一律接入；现在不计。
 // 稀缺度 = 目标持有 ÷ 实际持有，两边同一口径（持有量，存量对存量），随覆盖率连续单调（存量恰在目标时为 1）。
 // 这是世界客观的价格输入，不是某个 NPC 的主观视图；按 02-不变量 I12，只计定价方能公开知道的量：
 //  实际持有（供给）= 聚落粮仓/仓库公账的全部库存 + 经营者与居民卖方的存货（店铺货架、公开在售）；
-//  目标持有（需求）= 粮仓储备目标（餐口 × reserveDays；不在农事表里的聚落 = 餐口 × 补给间隔天数 resupplyDays）+ 货架目标（maximum+reserve）+ 合同承诺。
+//  目标持有（需求）= 粮仓储备目标（农事聚落 = min(餐口 × (距下次收获 + reserveDays)，容量 − 种粮)；不在农事表里的聚落 = 餐口 × 补给间隔天数 resupplyDays）+ 货架目标（maximum+reserve）+ 合同承诺 + 非食物货一个补给间隔内的实际消耗（户用日耗与自主制造耗料记录）。
 // 非经营者私户的背包（实际持有、目标留存、柴盐缺口、饱腹缺口）两边都不计：他人背包的客观余量不是定价方知道的事，也没有公开的求购/下单记录可读。
 // 供给近 0 时由调用方的分母保护（max(1,supply)）与 priceFactorLimits.region 夹取封顶，不会除零。
 // 非农事聚落的补给间隔 resupplyDays 见 primitives-body.mjs（与远方聚落开局存粮共用）。
@@ -264,8 +264,28 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);
  // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店。货架目标 = 各店各货 maximum+reserve。
  const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight.get(r.item),0)/unit;
- const demand=Math.max(shelf+rows.reduce((n,r)=>n+((r.target??0)+r.committed)*r.unit,0),1);
- return {place,goods,supply,demand,rows};
+ // 非食物货的目标持有还含"一个补给间隔内聚落对这件货的实际消耗"（行为显露的需求，聚落里公开可见的活动，符合 I12）：
+ //  户用 = 聚落各户的日耗（householdDailyUse，household-budget.mjs；柴、盐等）× 补给间隔天数（resupplyDays，同粮的补给间隔口径）；
+ //  生产投入 = 近一个补给间隔内聚落里 NPC 自主制造记录（state.npcAutonomy.actions，npc-autonomy.mjs:231 写入：kind=craft，spent.materials 耗料、spent.returned 失败退回，location、minute）里这件货的净耗料。
+ // 食物货另有粮仓目标，不在此叠加。没有任何消耗记录的货，目标持有就是货架目标加承诺，仍为 0 时按下限 1。
+ let consumption=0;
+ if(place&&settlement&&!items.some(i=>goodsEdible(engine,i.id))){
+  const days=resupplyDays(engine,d.get('randomSeed'),place),seen=new Set(),since=state.minute-days*DAY;
+  for(const id of Object.keys(state.npcs??{})){
+   if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
+   const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
+   const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);
+   for(const it of items)consumption+=householdDailyUse(engine,state,members,it.id)*days*weight.get(it.id);
+  }
+  for(const a of Object.values(state.npcAutonomy?.actions??{})){
+   if(a.kind!=='craft'||!(a.minute>since)||settlementOf(engine,state,a.location)!==place)continue;
+   for(const m of a.spent?.materials??[])if(weight.has(m.item))consumption+=m.amount*weight.get(m.item);
+   for(const m of a.spent?.returned??[])if(weight.has(m.item))consumption-=m.amount*weight.get(m.item);
+  }
+  consumption=Math.max(0,consumption)/unit;
+ }
+ const demand=Math.max(shelf+consumption+rows.reduce((n,r)=>n+((r.target??0)+r.committed)*r.unit,0),1);
+ return {place,goods,supply,demand,consumption,rows};
 }
 // 同一状态版本内（游标 revision / 只读作用域内同一状态对象，任何状态与账本写入即换版本）marketSupply 是 (item, location, businessOwners)
 // 的纯函数：它只读 state、账本、引擎规则，不写任何东西、不抽随机数，且所读的 householdResources 本来就按同一版本记忆。

@@ -7,8 +7,8 @@ import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyIntentSetup} from '../tools/a3-score.mjs';
 import {documentReader} from '../server-plugin/read-scope.mjs';
-import {householdResources} from '../server-plugin/household-budget.mjs';
-import {personBusinesses,placeSettlement} from '../server-plugin/entity-view.mjs';
+import {householdResources,householdDailyUse} from '../server-plugin/household-budget.mjs';
+import {personBusinesses,placeSettlement,personHousehold} from '../server-plugin/entity-view.mjs';
 import {marketSupply,goodsClass,goodsWeight,foodSatiety} from '../server-plugin/market.mjs';
 import {stageReached} from '../server-plugin/seasonal-hazards.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
@@ -288,4 +288,38 @@ test('没有日产粮的非农事聚落（觉醒部族骨架账）没有粮仓�
  // 推导：原 forest-water 分支对 foodPerDay 缺失或 0 的非农事聚落直接返回因子 1；现在对应为不计粮仓行（存量与目标都不进供需）。
  const f=nonFarmFixture({population:100,food:0,foodPerDay:undefined}),s=marketSupply(documentReader(f.doc),f.engine,'item_oats',f.P);
  assert.ok(s.rows.every(r=>r.owner!==f.P),'没有粮仓行');
+});
+
+test('非食物货的目标持有含一个补给间隔内的实际消耗：自主制造耗铁记录抬高铁的需求，无记录不抬',()=>{
+ // 推导：目标持有 += 近一个补给间隔内聚落里 NPC 自主制造记录（state.npcAutonomy.actions，kind=craft，spent.materials）里这件货的净耗料。
+ // 给 loc_hw 一条耗铁 5 的记录（时间在窗内）：铁的池权重 1、报价货就是铁，需求恰好 +5；记录里没有的货（燕麦以外的别的非食物货）不变。
+ const {engine,doc}=setup('market-food-pool-consume'),inn='bld_hw_qingdeng',iron='item_iron',other='item_water';
+ const read0=documentReader(doc),base=marketSupply(read0,engine,iron,inn),baseOther=marketSupply(read0,engine,other,inn);
+ const rec=structuredClone(doc);
+ rec.state.npcAutonomy={...rec.state.npcAutonomy,actions:{...rec.state.npcAutonomy?.actions,probe_a1:{id:'probe_a1',npc:Object.keys(doc.state.npcs)[0],kind:'craft',minute:doc.state.minute,location:inn,spent:{materials:[{item:iron,amount:5}]}}}};
+ const withRec=marketSupply(documentReader(rec),engine,iron,inn),otherRec=marketSupply(documentReader(rec),engine,other,inn);
+ assert.ok(Math.abs((withRec.consumption-base.consumption)-5*goodsWeight(engine,iron)/goodsWeight(engine,iron))<=1e-9);
+ assert.ok(Math.abs((withRec.demand-base.demand)-5)<=1e-9);
+ assert.equal(otherRec.demand,baseOther.demand);
+});
+
+test('非食物货的户用日耗进目标持有：聚落各户日耗 × 补给间隔天数',()=>{
+ // 推导：consumption = Σ 各户 householdDailyUse(该户成员, 该货) × 补给间隔天数 × 池权重 ÷ 报价货权重；
+ // 补给间隔 = 2 × 最近的别的农事聚落的 walk 路程分钟 ÷ 1440（一年各月最快）；户按 personHousehold 的编号去重，居民按所在聚落取。
+ const {engine,doc}=setup('market-food-pool-upkeep'),inn='bld_hw_qingdeng',state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
+ let best=null;
+ for(const p of engine.rules.agriculture.settlements){if(p.settlement==='loc_hw')continue;for(let m=0;m<12;m++){let r=null;try{r=engine.route(p.settlement,'loc_hw','walk',m*30*1440,seed);}catch(e){if(!e.message.startsWith('没有当前季节'))throw e;}if(r&&(best===null||r.minutes<best))best=r.minutes;}}
+ assert.ok(best>0);
+ const days=2*best/1440,households=new Map();
+ for(const id of Object.keys(state.npcs)){
+  if(placeSettlement(engine,state,state.npcs[id].location).value!=='loc_hw')continue;
+  const h=personHousehold(engine,state,id).value,key=h?.id??id;
+  if(!households.has(key))households.set(key,(h?.members??[id]).filter(m=>state.npcs?.[m]));
+ }
+ const pick=engine.world.items.find(i=>!(foodSatiety(engine,i.id)>0)&&[...households.values()].some(ms=>householdDailyUse(engine,state,ms,i.id)>0));
+ assert.ok(pick,'聚落里有户用耗用的非食物货（柴、盐等）');
+ const expected=[...households.values()].reduce((n,ms)=>n+householdDailyUse(engine,state,ms,pick.id),0)*days*goodsWeight(engine,pick.id)/goodsWeight(engine,pick.id);
+ assert.ok(expected>0);
+ const s=marketSupply(read,engine,pick.id,inn);
+ assert.ok(Math.abs(s.consumption-expected)<=1e-6*expected);
 });
