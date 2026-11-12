@@ -499,20 +499,24 @@ function itemDaysAt(engine,state,seed,item,place){
 // 聚落对报价货的户用消耗（报价货件数）= 人均 × 聚落人口 ÷ 报价货基准克；人均 = 名册户（personHousehold 编号去重，居民按所在聚落取）的
 // Σ[(日用度 − min(日用度, 户内自给)) × 补给间隔] ÷ 名册人数（速率，可外推）；聚落户用 = 人均 × 聚落人口 + Σ已欠量 DebtG（欠量是名册户实际欠的，不放大）；
 // 名册为空取单人户日用度 × 补给间隔 × 人口（无自给无欠量）。
-// 补给间隔 = 类里各货补给间隔（itemDaysAt 手推）的最小值。日用度读规则定义（householdUsage 只给每日克数），自给由调用方给（self(户编号)，基准克/日）。
+// 放大单位按用度定义的 per：按户的类（柴）× 聚落户数 ÷ 名册户数，按人的类（盐）× 人口 ÷ 名册人数；欠量均不放大。
+// 补给间隔 = max(一个交易周期 economy.tradeCycleDays, 类里各货补给间隔（itemDaysAt 手推）的最小值)。日用度读规则定义（householdUsage 只给每日克数），自给由调用方给（self(户编号)，基准克/日）。
 function useClassOf(engine,state,item){return householdUsage(engine,state,[null]).map(u=>u.cls).find(c=>isItemClass(engine,item,c)&&!(foodSatiety(engine,item)>0));}
 function marketUseAt(engine,state,seed,item,place,self=()=>0){
  const cls=useClassOf(engine,state,item),pool=engine.world.items.filter(i=>isItemClass(engine,i.id,cls)&&!(foodSatiety(engine,i.id)>0)&&usageItemGrams(engine,i.id,cls)>0);
- const horizon=Math.min(...pool.map(i=>itemDaysAt(engine,state,seed,i.id,place))),seen=new Set(),gramsPerDay=ms=>householdUsage(engine,state,ms).find(u=>u.cls===cls).gramsPerDay;
- let via=0,persons=0,owed=0;
+ const horizon=Math.max(engine.rules.economy.tradeCycleDays,Math.min(...pool.map(i=>itemDaysAt(engine,state,seed,i.id,place)))),seen=new Set(),usage=ms=>householdUsage(engine,state,ms).find(u=>u.cls===cls),gramsPerDay=ms=>usage(ms).gramsPerDay;
+ let via=0,persons=0,houses=0,owed=0;
  for(const id of Object.keys(state.npcs)){
   if(placeSettlement(engine,state,state.npcs[id].location).value!==place)continue;
   const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
-  const members=(h?.members??[id]).filter(m=>state.npcs?.[m]),need=gramsPerDay(members);persons+=members.length;
+  const members=(h?.members??[id]).filter(m=>state.npcs?.[m]),need=gramsPerDay(members);persons+=members.length;houses++;
   via+=(need-Math.min(need,self(id)))*horizon;owed+=state.family?.upkeep?.[key]?.[`${cls}DebtG`]??0;
  }
- if(!(persons>0)){via=gramsPerDay([null])*horizon;persons=1;}
- return (via/persons*state.settlements[place].population+owed)/usageItemGrams(engine,item,cls);
+ // 放大单位由用度定义决定：按户的类乘 聚落户数（聚落档案 householdCount）÷ 名册户数；按人的类乘 人口 ÷ 名册人数。
+ const per=usage([null]).per,settlementHouses=engine.world.settlementProfiles.find(p=>p.id===place).householdCount;
+ const scaled=!(persons>0)?gramsPerDay([null])*horizon*(per==='household'?settlementHouses:state.settlements[place].population)
+  :per==='household'?via/houses*settlementHouses+owed:via/persons*state.settlements[place].population+owed;
+ return scaled/usageItemGrams(engine,item,cls);
 }
 // 户内自给夹具：真实规划（household-subsistence.householdSubsistencePlan）算自给，不替换任何注册点。
 // 夹具世界：在真实世界上加三处测试地点——公共林 loc_mk_grove（北林边的克隆，面积 2 km²）、A 户住处 loc_mk_home_a（只有一条 2 km 步行路通到这片林）、
@@ -574,9 +578,14 @@ test('非食物货的户用经市场的部分：补给间隔 ×（日用度 − 
  const expected=marketUseAt(engine,state,seed,pick.id,'loc_hw',self),none=marketUseAt(engine,state,seed,pick.id,'loc_hw');
  assert.ok(expected>0);assert.ok(Math.abs(expected-none/2)<=1e-9*none,'A 户自给抵光，剩 B 户一半的人均率');
  assert.ok(Math.abs(read(structuredClone(doc),pick.id)-expected)<=1e-6*expected);
- // 人口翻倍，户用消耗翻倍（名册户只给人均率）。
+ // 放大单位由用度定义决定：柴按户烧，人口翻倍而户数不变，消耗不变；盐按人吃，人口翻倍则消耗翻倍。
  const big=structuredClone(doc);big.state.settlements.loc_hw.population*=2;
- assert.ok(Math.abs(read(big,pick.id)-2*expected)<=1e-6*expected,'人口翻倍则户用消耗翻倍');
+ assert.ok(Math.abs(read(big,pick.id)-expected)<=1e-6*expected,'按户的类不随人口变');
+ const salt=engine.world.items.find(i=>isItemClass(engine,i.id,'salt')&&!(foodSatiety(engine,i.id)>0)&&usageItemGrams(engine,i.id,'salt')>0);
+ assert.ok(salt,'盐类至少有一件');
+ const saltBase=marketUseAt(engine,state,seed,salt.id,'loc_hw',self);assert.ok(saltBase>0);
+ assert.ok(Math.abs(read(structuredClone(doc),salt.id)-saltBase)<=1e-6*saltBase);
+ assert.ok(Math.abs(read(big,salt.id)-2*saltBase)<=1e-6*saltBase,'按人的类随人口翻倍');
  // 整类一次：换报价的另一件燃料，消耗 × 该件基准克 = 同一个类总克数（不是每件各报一份）。
  const grams=item=>read(structuredClone(doc),item)*usageItemGrams(engine,item,'fuel');
  for(const it of fuel)assert.ok(Math.abs(grams(it.id)-grams(pick.id))<=1e-6*grams(pick.id),`${it.id}：整类同一个需求`);

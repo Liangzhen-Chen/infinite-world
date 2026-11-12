@@ -120,8 +120,10 @@ export function householdUsage(engine,minute,members){
  const fuelKg=fuel.cooking+(fuel.heating[season]??0),ref=fuelReferenceHeat(engine);
  // 燃料需求本质是热量：现行“每日公斤”是按参照燃料类（fuelReferenceClass）的有效热值算的，demandMJ = 公斤 × 基准热值；
  // 具体一件燃料顶多少，见 usageGrams（有效热值 ÷ 基准）。没有任何燃料知道热值时不带 demandMJ，一切同现行。
- return [{cls:'fuel',purpose:'fuel',gramsPerDay:fuelKg*1000,...(ref?{demandMJ:fuelKg*ref}:{})},
-  {cls:'salt',purpose:'seasoning',gramsPerDay:craftingParam(engine,'household.saltGramsPerPersonDay')*members.length}];
+ // per = gramsPerDay 的计量单位：'household' 按户（柴按户烧）、'person' 按人（盐按人吃），聚落层按这个单位放大；
+ // refHeat（有则该类按热值需求折算，见 usageGrams）= 基准有效热值 MJ/kg。
+ return [{cls:'fuel',purpose:'fuel',per:'household',gramsPerDay:fuelKg*1000,...(ref?{demandMJ:fuelKg*ref,refHeat:ref}:{})},
+  {cls:'salt',purpose:'seasoning',per:'person',gramsPerDay:craftingParam(engine,'household.saltGramsPerPersonDay')*members.length}];
 }
 
 // D12 卡 B：燃料有效热值（MJ/件重 kg）= 热值 ×（1 − 含水率）− 水分汽化潜热 × 含水率。热值与含水率按材料属性（materialProps）；
@@ -143,12 +145,17 @@ export function fuelReferenceHeat(engine){
  return h>0?h:null;
 }
 // 一件用度类物品顶多少“基准克”：燃料按有效热值 ÷ 基准热值折算其重量（含水多的柴要烧更多公斤，同热量需求不变）；
-// 其余类、或属性未知，原样返回重量克数。有效热值不为正的燃料返回 0（烧不出净热）。
+// 数据驱动：该类的用度定义带热值需求（行上有 refHeat）才按热值折算；这时热值或含水率未知的货没有可折算的依据，顶 0 基准克
+// （不入该类的池、不当燃料烧），不按重量冒充基准燃料；有效热值不为正的货也是 0（烧不出净热）。
+// 用度定义没有热值需求的类（盐等），或全世界都没有参照热值时，按重量克数。
 export function usageGrams(engine,item,cls,grams){
- if(cls!=='fuel')return grams;
- const ref=fuelReferenceHeat(engine),heat=ref?fuelEffectiveHeat(engine,item):null;
- return heat===null?grams:grams*Math.max(0,heat)/ref;
+ const row=householdUsage(engine,0,[]).find(u=>u.cls===cls);
+ if(!(row?.refHeat>0))return grams;
+ const heat=fuelEffectiveHeat(engine,item);
+ return heat===null?0:grams*Math.max(0,heat)/row.refHeat;
 }
+// 该类是否按热值需求折算（用度定义带 refHeat）。
+export const usageByHeat=(engine,cls)=>householdUsage(engine,0,[]).find(u=>u.cls===cls)?.refHeat>0;
 
 // 饱腹系数 = Π 各因子（饱腹不等于热量：同样的热量，低能量密度的食物更饱，高能量密度的更不饱）。
 // 参数在 crafting.json nutrition.satietyFactor：energyDensity 因子 =（成品能量密度 ÷ ref）^k 夹在 [min,max]；

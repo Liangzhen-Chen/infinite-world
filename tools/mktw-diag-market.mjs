@@ -22,7 +22,7 @@ import {marketSupply,marketQuote} from '../server-plugin/market.mjs';
 import {variant as dbVariant,scene as dbScene,setPrice,monthDayMinute,SEED as DB_SEED} from '../tests/helpers/daily-b2.mjs';
 import {farmTargetFood,openingStockFood} from '../server-plugin/farm-target.mjs';
 import {itemResupplyDays} from '../server-plugin/supply-interval.mjs';
-import {householdDailyUse,householdUsage,usageItemGrams,upkeepSelfSupplyOf} from '../server-plugin/household-budget.mjs';
+import {householdDailyUse,householdUsage,usageItemGrams,upkeepSelfSupplyOf,upkeepSelfTripsOf} from '../server-plugin/household-budget.mjs';
 import {isItemClass} from '../server-plugin/item-class.mjs';
 import {placeSettlement,personHousehold} from '../server-plugin/entity-view.mjs';
 import {regionalTradePrice,regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
@@ -65,9 +65,9 @@ function report(engine,doc,label,pairs){
        if(placeSettlement(engine,state,state.npcs[id].location).value!==place)continue;
        const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
        const members=(h?.members??[id]).filter(x=>state.npcs?.[x]);
-       households.push({key,members:members.length,need:householdUsage(engine,state,members).find(u=>u.cls===cls).gramsPerDay,self:attempt(()=>upkeepSelfSupplyOf(engine,state,id)[cls]??0),debt:state.family?.upkeep?.[key]?.[`${cls}DebtG`]??0});
+       households.push({key,members:members.length,need:householdUsage(engine,state,members).find(u=>u.cls===cls).gramsPerDay,self:attempt(()=>upkeepSelfSupplyOf(engine,state,id)[cls]??0),trips:attempt(()=>upkeepSelfTripsOf(engine,state,id).filter(t=>t.cls===cls)),debt:state.family?.upkeep?.[key]?.[`${cls}DebtG`]??0});
       }
-      return {cls,members:engine.world.items.filter(i=>isItemClass(engine,i.id,cls)).map(i=>({id:i.id,grams:usageItemGrams(engine,i.id,cls),days:attempt(()=>itemResupplyDays(engine,state,doc.randomSeed,i.id,place))})),households};
+      return {cls,per:householdUsage(engine,state,[null]).find(u=>u.cls===cls).per,settlementHouseholdCount:engine.world.settlementProfiles?.find(p=>p.id===place)?.householdCount,tradeCycleDays:engine.rules.economy.tradeCycleDays,members:engine.world.items.filter(i=>isItemClass(engine,i.id,cls)).map(i=>({id:i.id,grams:usageItemGrams(engine,i.id,cls),days:attempt(()=>itemResupplyDays(engine,state,doc.randomSeed,i.id,place))})),households};
      })}));
    }
   }catch(error){row.market={error:error.message};}

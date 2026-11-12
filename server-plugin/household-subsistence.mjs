@@ -116,24 +116,36 @@ const noMeal={shortfall:{satiety:0},needs:{hydration:0}};
 // 日程所读的记录类别与种类直接取 education-state.scheduleRecordDependencies（日程判等同一份声明：日程多读一类记录，这里自动跟上）；
 // 另加采集来源的记录（林木、资源点、觅食库存）。顶层切片补 projects（公共工程施工中开关，employment-state.mjs:79 经 baseNpcSchedule 读）、scheduler。
 // 依赖数组按身份分组记忆，所以只建一次（延迟到首次读取，避开模块循环引用）。
-const selfSupplyNpcFields=['diedAt','teachingBusy','practicing','activeDemonstration','location','status','caring','levy','cognitionTravel','scheduleTravel','materialized','routine','schedule','life','growth','residence','workplace','occupation','vocation','species','medical','activity','autonomy','zone','boss','incarnation','birth','born','age','home','attributes','skills','proficiencies','certifications','relationships','level'];
+// 时钟：规划自己只在整日粒度读时间（notBefore 由 override 给 0；日程、雇佣、路线都按 day*DAY+480 取），但来源余量读 state.minute 本身——
+// 林木按钟点推演再生（forest-water.mjs:91 forestView）、资源点账本的当日读数按分钟记忆（sites.mjs:412 commonsLive），而余量进入价格（market 按来源分摊的上限），
+// 所以 minute 依赖保留：整日粒度会在日内返回过期的余量，打开记忆校验时还会报“过期”。成交不改 minute，同一分钟内的反复报价仍命中记忆。
+// npcs 字段：规划读到的才列——location、status、activity（睡眠判断 entity-view.mjs:183）、scheduleTravel/cognitionTravel（household-subsistence.mjs 的出行占用）、
+// caring、levy、materialized（成员筛选）、diedAt、teachingBusy、activeDemonstration、routine、schedule、life、residence、workplace、occupation、vocation、species、boss、incarnation、age、home，
+// 以及服务角色读的 skills、proficiencies、certifications、relationships。growth、autonomy、zone、medical、level、attributes、practicing、birth、born 规划不读，不列。
+const selfSupplyNpcFields=['diedAt','teachingBusy','activeDemonstration','location','status','caring','levy','cognitionTravel','scheduleTravel','materialized','routine','schedule','life','residence','workplace','occupation','vocation','species','activity','boss','incarnation','age','home','skills','proficiencies','certifications','relationships'];
 const sourceRecordCategories=['forest','forest_supply','household_forage','site','site_presence','site_discovery','site_observation','gather_session','authorization','service_ticket','legal_wanted','office_salary','world_event'];
 let selfSupplyDeps=null;
 const selfSupplyInputs=()=>selfSupplyDeps??=[...selfSupplyNpcFields.map(f=>['npcs','*',f]),['family'],['created'],['player'],['obligations'],['buildings'],['settlements'],['effects'],['remote'],['projects'],['scheduler'],['minute'],
  {path:['records'],kinds:scheduleRecordDependencies.kinds},
  {path:['records'],categories:[...new Set([...scheduleRecordDependencies.categories,...sourceRecordCategories])]}];
-export function upkeepSelfSupply(e,state,owner){
+// 自给行程（按户）：每趟 {cls, source（来源编号）, remaining（规划时该来源的可采余量，件）, units, unitGrams}。聚落层把各户的行程按来源累计，
+// 同一来源的余量由各户分摊（不能每户各读一份满余量重复计入）。
+export function upkeepSelfTrips(e,state,owner){
  return stateMemo(state,e,[upkeepSelfSupplyMemo,owner,Math.floor(state.minute/DAY)],()=>{
   const plan=householdSubsistencePlan(e,state,owner,state.minute,state,noMeal,null,{
    notBefore:0,
    wants:members=>householdUsage(e,state.minute,members).filter(u=>u.gramsPerDay>0&&sources(e,state).upkeep.get(u.cls)?.length).map(u=>({cls:u.cls,grams:Math.ceil(u.gramsPerDay)}))
   });
-  const out={};
-  for(const trip of plan?.upkeepTrips??[])out[trip.cls]=(out[trip.cls]??0)+trip.units*trip.unitGrams;
-  return out;
+  return (plan?.upkeepTrips??[]).map(t=>({cls:t.cls,source:t.id,remaining:t.remaining,units:t.units,unitGrams:t.unitGrams}));
  },selfSupplyInputs());
 }
-registerUpkeepSelfSupply(upkeepSelfSupply);
+// 单户自给（不计别户分摊）：按用度类累计基准克。
+export function upkeepSelfSupply(e,state,owner){
+ const out={};
+ for(const t of upkeepSelfTrips(e,state,owner))out[t.cls]=(out[t.cls]??0)+t.units*t.unitGrams;
+ return out;
+}
+registerUpkeepSelfSupply(upkeepSelfSupply,upkeepSelfTrips);
 // The engine route resolver owns weather, closed roads, local rooms and tolls.
 // Only the bounded candidate ordering is retained across reads; live route
 // validation is repeated at the day's first use, not for every person/tick.

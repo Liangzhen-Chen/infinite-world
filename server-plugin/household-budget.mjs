@@ -77,10 +77,15 @@ const freeWater=(...a)=>{
 };
 // 户内自给量（household-subsistence.upkeepSelfSupply，模块体内注册）：本户每天靠自己（采集、砍柴）能采回多少，按用度类给基准克；价格读它扣掉不经市场的那部分用度。
 // 未注册就是装配错误，直接抛错，不回退为 0（否则会静默退回“全额买”）。
-export function registerUpkeepSelfSupply(fn){registerUpkeepSelfSupply.fn=fn;}
+export function registerUpkeepSelfSupply(fn,trips){registerUpkeepSelfSupply.fn=fn;registerUpkeepSelfSupply.trips=trips;}
 export function upkeepSelfSupplyOf(...a){
  if(!registerUpkeepSelfSupply.fn)throw Error('upkeep self supply not registered: household-subsistence.mjs must call registerUpkeepSelfSupply');
  return registerUpkeepSelfSupply.fn(...a);
+}
+// 单户自给行程（来源、余量、件数），聚落层据此在各户间分摊同一来源的余量。
+export function upkeepSelfTripsOf(...a){
+ if(!registerUpkeepSelfSupply.trips)throw Error('upkeep self trips not registered: household-subsistence.mjs must call registerUpkeepSelfSupply');
+ return registerUpkeepSelfSupply.trips(...a);
 }
 // 本户当日水分缺口（与预算同一口径：成员日耗水 × 24，含个人修正），交给注册函数折成当日可免费取到的水分 {hydration,source}。
 // 免费水在 readHouseholdResources 内计算（budgetRead 的 build 里）：缓存命中的预算读不再重算。缓存本身的范围不变：游标读按草稿 revision（任何写入、含水体与日期变化即换键），
@@ -424,7 +429,11 @@ export const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(ite
 // 这件货顶多少基准克（燃料按有效热值折算，见 item-class.usageGrams；其余等于 itemGrams）。
 export const usageItemGrams=(engine,item,cls)=>usageGrams(engine,item,cls,itemGrams(engine,item));
 // 家户用度先用同类里最便宜的：价格 ÷ 顶多少基准克。燃料按有效热值折算（热值与含水率已知，见 item-class.usageGrams），其余与未知时按 价格 ÷ 克。
-export function usageCost(engine,item){const it=engine.byId.get(item);return (it?.basePrice??0)/(isItemClass(engine,item,'fuel')?usageItemGrams(engine,item,'fuel'):itemGrams(engine,item));}
+// 折算由用度定义的数据决定：这件货所属的类带热值需求（refHeat）才按基准克，否则按克；热值未知的顶 0 基准克，单价无穷大、排在最后。
+export function usageCost(engine,item){
+ const it=engine.byId.get(item),heatClass=usageDefinition(engine,0,[]).find(u=>u.refHeat>0&&isItemClass(engine,item,u.cls));
+ return (it?.basePrice??0)/(heatClass?usageItemGrams(engine,item,heatClass.cls):itemGrams(engine,item));
+}
 // 一户一日用掉这件货多少件（不属于消耗类的为 0）。
 export function householdDailyUse(engine,state,members,item){
  return householdUsage(engine,state,members).filter(u=>isItemClass(engine,item,u.cls)).reduce((n,u)=>{const g=usageItemGrams(engine,item,u.cls);return g>0?n+u.gramsPerDay/g:n;},0);

@@ -9,7 +9,7 @@ import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from '
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
 import {recordsMemo,withReadIndex} from './storage.mjs';
-import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost,usageItemGrams,upkeepSelfSupplyOf} from './household-budget.mjs';
+import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost,usageItemGrams,upkeepSelfTripsOf} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
@@ -290,23 +290,35 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
    // 不可达的成员（产地与本聚落不通，itemResupplyDays 抛 E-SUPPLY-UNREACHABLE）不是补货渠道，跳过；全不可达就走既有路径（按本件取，照常报错）。
    const reachable=[];
    for(const it of items)try{reachable.push(daysOf(it.id));}catch(error){if(!isUnreachableSupply(error))throw error;}
-   const horizon=reachable.length?Math.min(...reachable):daysOf(item),seen=new Set();let rosterPersons=0,viaMarket=0,owed=0;
+   // 补给不会比一个交易周期更勤：类的间隔 = max(类内最短往返, 一个交易周期 economy.tradeCycleDays)（本地产的货本来就以交易周期为下限，进口货同一口径；
+   // 否则近处进口的几克引火包会把整类间隔压到半天，柴的户用被低估一个量级）。
+   const horizon=Math.max(engine.rules.economy.tradeCycleDays,reachable.length?Math.min(...reachable):daysOf(item)),seen=new Set(),drawn=new Map();
+   const perOf=usageDefinition(engine,0,[]).find(u=>u.cls===use)?.per;
+   let rosterPersons=0,rosterHouses=0,viaMarket=0,owed=0;
    for(const id of Object.keys(state.npcs??{})){
     if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
     const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
-    const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);rosterPersons+=members.length;
-    const need=householdUsage(engine,state,members).find(u=>u.cls===use)?.gramsPerDay??0,self=Math.min(need,upkeepSelfSupplyOf(engine,state,id)[use]??0);
-    viaMarket+=(need-self)*horizon;owed+=state.family?.upkeep?.[key]?.[`${use}DebtG`]??0;
+    const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);rosterPersons+=members.length;rosterHouses++;
+    const need=householdUsage(engine,state,members).find(u=>u.cls===use)?.gramsPerDay??0;
+    // 自给：本户规划的各趟采集，按来源累计分摊余量——同一片林、同一处资源点的可采量是各户共用的一份，先到的户先采，后面的户只能采剩下的。
+    let got=0;
+    for(const t of upkeepSelfTripsOf(engine,state,id))if(t.cls===use){
+     const take=Math.max(0,Math.min(t.units,t.remaining-(drawn.get(t.source)??0)));drawn.set(t.source,(drawn.get(t.source)??0)+take);got+=take*t.unitGrams;
+    }
+    viaMarket+=(need-Math.min(need,got))*horizon;owed+=state.family?.upkeep?.[key]?.[`${use}DebtG`]??0;
    }
-   if(!(rosterPersons>0)){viaMarket=(householdUsage(engine,state,[null]).find(u=>u.cls===use)?.gramsPerDay??0)*horizon;rosterPersons=1;}
-   // 日用度与自给是速率，名册户人均可外推到聚落人口；欠量是名册户账上实际欠着的，只计实际量，不乘人口÷名册人数。
-   consumption+=viaMarket/rosterPersons*(settlement.population??0)+owed;
+   // 日用度与自给是速率，名册户的均值可外推到聚落；外推的单位由用度定义决定（usage.per）：按户的类（柴）按 聚落户数 ÷ 名册户数，按人的类（盐）按 人口 ÷ 名册人数。
+   // 聚落户数读聚落档案的 householdCount（entity-view.settlementPopulation 的同一来源；这里不整套重算，免得每次报价扫全体居民），没有档案时不外推（按名册户数）。欠量是名册户账上实际欠着的，只计实际量，不放大。
+   const people=settlement.population??0,houses=engine.world.settlementProfiles?.find(p=>p.id===place)?.householdCount||rosterHouses;
+   if(rosterPersons>0)consumption+=(perOf==='household'?viaMarket/rosterHouses*houses:viaMarket/rosterPersons*people)+owed;
+   else consumption+=(usageDefinition(engine,state.minute,[null]).find(u=>u.cls===use)?.gramsPerDay??0)*horizon*(perOf==='household'?houses:people);
   }
   // 生产耗料读 recordCraft 的滚动日桶（state.records['craft-use:<聚落>']，stock.mjs accrueCraftUse）：所有制造写入方统一经它记账，这里不再读各写入方自己的记录。
   // 窗口按整数天取（ceil(补给间隔) 个日桶，含当天），跨午夜保持连续，不按当天截断。
-  const today=Math.floor(state.minute/DAY);
+  // 替代只单向合池：燃料用度（户用）才合入燃料池；制造耗料（建材、配方投入）只进该物品自己的需求，不跨货推高同池的别件（木料做建材不抬木炭的价）。
+  const today=Math.floor(state.minute/DAY),quoted=item;
   for(const [k,bucket] of Object.entries(state.records?.[`craft-use:${place}`]?.days??{}))
-   for(const [item,amount] of Object.entries(bucket))if(weight.has(item)&&Number(k)>today-Math.ceil(daysOf(item)))consumption+=amount*weight.get(item);
+   for(const [made,amount] of Object.entries(bucket))if(weight.has(made)&&(!use||made===quoted)&&Number(k)>today-Math.ceil(daysOf(made)))consumption+=amount*weight.get(made);
   consumption=Math.max(0,consumption)/unit;
  }
  const demand=Math.max(shelf+consumption+rows.reduce((n,r)=>n+((r.target??0)+r.committed)*r.unit,0),1);
