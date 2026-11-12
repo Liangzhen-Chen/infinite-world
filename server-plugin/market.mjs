@@ -252,7 +252,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // 粮仓实际持有 = 全部库存；储备目标 = 餐口 × reserveDays（与口粮池、公粮扣采购同一份储备口径）。
   // 不在农事表里的聚落没有 reserveDays，其目标日数取周贸易规则的 targetDays（原 forest-water 的燕麦缺口因子：餐口 × targetDays ÷ 存粮，已并入这里）。
   const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0;
-  const target=stockName==='food'?Math.ceil(mouths*(profile?profile.reserveDays:engine.rules.settlementTrade.targetDays)):0;
+  const target=stockName==='food'?Math.ceil(mouths*(profile?profile.reserveDays:engine.rules.settlementTrade?.targetDays??(engine.rules.economy?.tradeCycleDays??1))):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,target,committed,available:stock,unit:weight.get(it.id)/unit});
  }
  const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);
@@ -319,7 +319,7 @@ export function supplyApart(d,engine,{item,location,owner}){
  return {...all,supply:all.supply-own,spotSupply:(all.spotSupply??all.supply)-own,rows:all.rows.filter(r=>r.owner!==owner)};
 }
 // Integrate the same clamped demand/supply curve for a trade or a liquidation.
-function scarcityIntegral(supply,limits,a,b){
+export function scarcityIntegral(supply,limits,a,b){
  if(b<=a)return 0;const D=supply.demand,low=D/limits[1],high=D/limits[0];let sum=0;
  const left=Math.min(b,low);if(left>a)sum+=(left-a)*limits[1];
  const x=Math.max(a,low),y=Math.min(b,high);if(y>x)sum+=D*ln(y/x);

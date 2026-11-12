@@ -162,6 +162,7 @@ test('retention and signed procurement commitments are subtracted once; goods cl
  // =120. K02: current cash funds50 after the real daily delivery1440;
  // physical70/30 rounds up to3. Twelve-3-(4-1)=6; one promise count.
  assert.equal(business.stock,12);assert.equal(business.retained,3);assert.equal(business.committed,3);assert.equal(business.available,6);
+ // 待重推（持有量口径）：供给改计店主全部库存（不先扣自用留存），下面公开供给 6、卖 6 件被深度闸拒绝的期望随之变化（店主 available 6 → 12），未改值。
  const personal=saleableStock(f.read(),f.engine,host,bread);
  assert.equal(personal.retained,3);assert.equal(personal.available,6);
  const supply=marketSupply(f.read(),f.engine,bread,inn);assert.ok(supply.rows.some(r=>r.owner===host&&r.available===6));assert.equal(supply.supply,supply.rows.reduce((n,r)=>n+r.available*r.unit,0));

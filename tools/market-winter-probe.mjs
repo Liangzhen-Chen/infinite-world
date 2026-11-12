@@ -26,7 +26,7 @@ import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {marketSupply,marketQuote,marketGrade,goodsClass,goodsWeight} from '../server-plugin/market.mjs';
+import {marketSupply,marketQuote,marketGrade,scarcityIntegral,goodsClass,goodsWeight} from '../server-plugin/market.mjs';
 import {regionalTradeBase,regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {hazardPriceFactor,famineAt,pureHazardFires} from '../server-plugin/hazard-calendar.mjs';
 import {unitFreight} from '../server-plugin/transport.mjs';
@@ -202,18 +202,19 @@ function itemView(engine,doc,item,location){
   const base=regionalTradeBase(d,engine,item,location),q=quoteOf(d,engine,item,location),x=q.explanation??{};
   // 持有量取自同一次报价的返回（q.supply、q.demand），换算成饱腹单位（× 池内权重）；不由探针重算。
   const holdTarget=q.demand*w,holdActual=q.supply*w,divZeroCapped=!(q.supply>0),ratio=q.demand/Math.max(1,q.supply);
-  const scarcityRaw=divZeroCapped?limits[1]:holdTarget/holdActual,ratioClamped=Math.min(Math.max(ratio,limits[0]),limits[1]);
+  // 与引擎同一公式（含分母保护 max(1,supply)，market.mjs 的比值计算）；供给为 0 按 scarcityCap；无保护的纯比值另列。
+  const scarcityRaw=divZeroCapped?limits[1]:q.demand/Math.max(1,q.supply),scarcityRawUnprotected=divZeroCapped?null:holdTarget/holdActual,integral=scarcityIntegral(q,limits,q.supply,q.supply+1),ratioClamped=Math.min(Math.max(ratio,limits[0]),limits[1]);
   const catalogBase=engine.byId.get(item).basePrice,hazardFactor=hazardPriceFactor(engine,doc.state,item,location),magicFactor=magicPriceFactor(engine,doc.state,item,location),forestWaterFactor=forestWaterPriceFactor(engine,doc.state,item,location,d);
   const environmentFactors=hazardFactor*magicFactor*forestWaterFactor,tin=transportInputs(engine,doc,d,item,location);
   const contributions={value:x.value?.contributions??[],price:x.price?.contributions??[]},additiveSum=[...contributions.value,...contributions.price].filter(c=>c.stage==='add').reduce((n,c)=>n+num(c.value),0);
   const rm=engine.world.marketRules,depthNet=q.opening>1?q.opening-Math.max(1,q.spotSupply??q.supply):0;
   return {item,goods:goodsClass(engine,item),poolWeight:w,supply:q.supply,spotSupply:q.spotSupply,demand:q.demand,ratio,ratioClamped,
-   holdTarget,holdActual,holdActualSpot:(q.spotSupply??q.supply)*w,scarcityRaw,divZeroCapped,atTop:ratio>=limits[1],atFloor:ratio<=limits[0],
+   holdTarget,holdActual,holdActualSpot:(q.spotSupply??q.supply)*w,scarcityRaw,scarcityRawUnprotected,scarcityIntegralOne:integral,divZeroCapped,atTop:ratio>=limits[1],atFloor:ratio<=limits[0],
    catalogBase,environment:x.environment,environmentFactors,regionalBase:base,transport:base/(catalogBase*(environmentFactors||1)),transportInputs:tin,
    scarcity:x.scarcity,listPrice:q.listPrice,relPrice:q.listPrice/base,relation:x.relation,
    explanationParts:{baseline:x.baseline,environment:x.environment,scarcity:x.scarcity,quality:x.quality,depth:x.depth,spread:x.spread,relation:x.relation,curve:x.curve,count:q.quantity,rounding:x.rounding,contributionsEmpty:{value:!contributions.value.length,price:!contributions.price.length}},
    contributions,additiveSum,
-   qualityExpected:marketGrade(engine,d.document??{state:doc.state},item,{seller:null,quantity:1}),spreadExpected:1,depthExpected:Math.max(0,1+rm.depthImpact*depthNet/Math.max(1,q.opening)),
+   qualityExpected:marketGrade(engine,d.document??{state:doc.state},item,{seller:null,quantity:1}),spreadExpected:rm.spread.sell,depthExpected:Math.max(0,1+rm.depthImpact*depthNet/Math.max(1,q.opening)),
    hazardFactor,magicFactor,forestWaterFactor,regionalTradePrice:regionalTradePrice(d,engine,item,location)};
  }catch(e){return {item,error:errorOf(e)};}
 }
@@ -285,8 +286,8 @@ async function buyRun(name,level){
     const contributions={value:x.value?.contributions??[],price:x.price?.contributions??[]},additiveSum=[...contributions.value,...contributions.price].filter(c=>c.stage==='add').reduce((n,c)=>n+num(c.value),0);
     const depthNet=q.opening>1?q.opening-Math.max(1,q.spotSupply??q.supply):0;
     return {supply:s.supply,spotSupply:s.spotSupply,demand:s.demand,ratio,ratioClamped:clampR(ratio),atFloor:ratio<=limits[0],atTop:ratio>=limits[1],opening:q.opening,depth:x.depth,scarcity:x.scarcity,
-     holdTarget,holdActual,poolCoverage:holdTarget>0?holdActual/holdTarget:null,scarcityRaw:divZeroCapped?limits[1]:holdTarget/holdActual,divZeroCapped,net:depthNet,poolWeight:w0,
-     qualityExpected:marketGrade(engine,d.document??{state:ctx.doc.state},item,{seller:null,quantity:1}),spreadExpected:1,depthExpected:Math.max(0,1+rm.depthImpact*depthNet/Math.max(1,q.opening)),
+     holdTarget,holdActual,poolCoverage:holdTarget>0?holdActual/holdTarget:null,scarcityRaw:divZeroCapped?limits[1]:q.demand/Math.max(1,q.supply),scarcityRawUnprotected:divZeroCapped?null:holdTarget/holdActual,scarcityIntegralOne:scarcityIntegral(q,limits,q.supply,q.supply+1),scarcityIntegralCount:scarcityIntegral(q,limits,q.supply,q.supply+q.quantity),divZeroCapped,net:depthNet,poolWeight:w0,
+     qualityExpected:marketGrade(engine,d.document??{state:ctx.doc.state},item,{seller:null,quantity:1}),spreadExpected:rm.spread.sell,depthExpected:Math.max(0,1+rm.depthImpact*depthNet/Math.max(1,q.opening)),
      quotedListPrice:q.listPrice,quotedExactTotal:q.exactTotal,count:q.quantity,curve:x.curve,curveAvgScarcity:x.curve/q.quantity,pointScarcity:x.scarcity,
      // 价格公式里 value、price 两个槽的加法型修正（explainDerived 的 contributions）与各槽输入输出；additiveSum 为 stage=add 项数值之和。
      valueSlot:x.value?{base:x.value.base,value:x.value.value,contributions:x.value.contributions}:null,priceSlot:x.price?{base:x.price.base,value:x.price.value,contributions:x.price.contributions}:null,contributions,additiveSum,
@@ -372,6 +373,9 @@ async function caseRun(name,withShift,spec,days,control=false){
  snap(0);
  const total=spec.days??(spec.keepConditions?Math.max(days,20):days);
  for(let d=1;d<=total;d++){const adv=await attempt(ctx,'world_time',{minutes:DAY},`probe-case-${d}`);const s=snap(d);if(!adv.ok){s.advanceError=adv.error;emit({kind:'error',case:name,mode,day:d,error:adv.error});break;}}
+ // starvation 非零天数（R9 ④ 报告用）：本聚落与额外聚落逐日 starvation > 0 的天数。
+ const starving=pick=>series.filter(s=>pick(s)>0).length;
+ emit({kind:'meta',case:name,mode,starvationNonzeroDays:{[spec.settlement]:starving(s=>s.granary?.starvation??0),...Object.fromEntries((spec.extraSettlements??[]).map(x=>[x,starving(s=>s.extraGranary?.find(g=>g.settlement===x)?.starvation??0)]))}});
  return series;
 }
 // 旱情（R4，C3 灾害年与正常年）：drought-without = 灾害年（钟 price:loc_bs_liquan 保留），drought-noclock = 正常年（该钟及 hazard_phase 闭包整段移除）；
