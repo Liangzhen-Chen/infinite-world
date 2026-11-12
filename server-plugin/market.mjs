@@ -272,16 +272,24 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  if(place&&settlement&&!items.some(i=>goodsEdible(engine,i.id))){
   // 补给间隔按货物区分（itemResupplyDays：往返该货产地的天数；产地就在本聚落取本地生产周期）。
   const dayMemo=new Map(),daysOf=item=>{if(!dayMemo.has(item))dayMemo.set(item,itemResupplyDays(engine,state,d.get('randomSeed'),item,place));return dayMemo.get(item);};
-  const seen=new Set();
+  // 户用 = 规则人均日耗 × 聚落人口（公开量，与粮的餐口同一来源 settlement.population）：人均日耗取名册户的合计日耗 ÷ 名册人数（柴按户、盐按人，名册户给出人均）；
+  // 名册里一个人也没有时取单人户的规则日耗（householdDailyUse 对一人户）。名册户只用来给出人均率，不再逐户加总（没上名册的人口也要烧柴吃盐，逐户加总会偏小）。
+  const seen=new Set(),rosterTotal=new Map(items.map(it=>[it.id,0]));let rosterPersons=0;
   for(const id of Object.keys(state.npcs??{})){
    if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
    const h=personHousehold(engine,state,id).value,key=h?.id??id;if(seen.has(key))continue;seen.add(key);
-   const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);
-   for(const it of items){const daily=householdDailyUse(engine,state,members,it.id);if(daily>0)consumption+=daily*daysOf(it.id)*weight.get(it.id);}
+   const members=(h?.members??[id]).filter(m=>state.npcs?.[m]);rosterPersons+=members.length;
+   for(const it of items)rosterTotal.set(it.id,rosterTotal.get(it.id)+householdDailyUse(engine,state,members,it.id));
+  }
+  for(const it of items){
+   const perCapita=rosterPersons>0?rosterTotal.get(it.id)/rosterPersons:householdDailyUse(engine,state,[null],it.id);
+   if(perCapita>0)consumption+=perCapita*(settlement.population??0)*daysOf(it.id)*weight.get(it.id);
   }
   // 生产耗料读 recordCraft 的滚动日桶（state.records['craft-use:<聚落>']，stock.mjs accrueCraftUse）：所有制造写入方统一经它记账，这里不再读各写入方自己的记录。
+  // 窗口按整数天取（ceil(补给间隔) 个日桶，含当天），跨午夜保持连续，不按当天截断。
+  const today=Math.floor(state.minute/DAY);
   for(const [k,bucket] of Object.entries(state.records?.[`craft-use:${place}`]?.days??{}))
-   for(const [item,amount] of Object.entries(bucket))if(weight.has(item)&&Number(k)>=Math.floor((state.minute-daysOf(item)*DAY)/DAY))consumption+=amount*weight.get(item);
+   for(const [item,amount] of Object.entries(bucket))if(weight.has(item)&&Number(k)>today-Math.ceil(daysOf(item)))consumption+=amount*weight.get(item);
   consumption=Math.max(0,consumption)/unit;
  }
  const demand=Math.max(shelf+consumption+rows.reduce((n,r)=>n+((r.target??0)+r.committed)*r.unit,0),1);

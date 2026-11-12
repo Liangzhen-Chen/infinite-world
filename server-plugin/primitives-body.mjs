@@ -132,8 +132,9 @@ export function itemResupplyDays(engine,state,seed,item,place){
  const origin=engine.byId.get(item)?.origin??null,from=origin?placeSettlement(engine,state,origin).value:null,cycle=engine.rules.economy.tradeCycleDays;
  if(!from)return cycle;
  if(from===place){
+  // 本地产地：间隔 = max(最短配方天数, 一个交易周期)——配方工时只有几分钟到几小时，货不会按那么短的节拍补；取交易周期（与家户留存 reserveUpkeep 同一个周期 economy.tradeCycleDays）为下限。
   const minutes=Math.min(...engine.world.recipes.filter(r=>r.output?.item===item).map(r=>r.minutes));
-  return Number.isFinite(minutes)?minutes/1440:cycle;
+  return Number.isFinite(minutes)?Math.max(minutes/1440,cycle):cycle;
  }
  const t=roundTripDays(engine,seed,from,place);
  if(t===null)throw Error(`聚落 ${place} 到不了 ${item} 的产地聚落 ${from}，推不出补给间隔`);
