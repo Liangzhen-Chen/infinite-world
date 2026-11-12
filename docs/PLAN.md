@@ -274,7 +274,7 @@ B 节补充：
     - **12 份处理结果**：4 处正式数据 food 删除；8 处旧回执被取代（不改动，由新回执 supersedes）；没有未处理项。
     - **结果位置**：t-initfood daef0280（含 world/drafts/initfood/ 全部回执），已推 GitHub。
     - **合入要求**：schema、数据、回执、测试必须作为同一合入单元，与市场卡一起进入（发布前约 55 处 validateWorld 断言会红）。
-    - **当前**：发布结果的两轮审查进行中。
+    - **发布结果两轮审查均 approve**（docs/审查记录/initfood/ 下的发布审查A.md、发布审查B.md；脚本审查A/B 同目录）。A：读者都从推导取值；手算核对 295 天 × 餐口 = 23600/29500/28320/32450，仓容不封顶；取代计数自洽；只删 4 键。B：只删 4 键；回执链完整；4 次调用、0.0055584 元；无 key；L4（07:04:44Z）早于发布（07:05:28Z）。小瑕疵记录待改：candidate.json 会被计入条目 id；reviewedAt 是整秒手填。
   - **【11-12 06:27Z 实采，李白 07:2x 巡查】**（腾讯云 tc_admin 只读直采；服务器时钟 +08:00，已换算）
     - **water1d-4 全量**：runjob（`runjob.sh full water1d-4 f5719dc7…`）已跑 2:42:33，运行中。/work/water1d-4.full 1494 字节，mtime 06:26:54Z，完成 **19/586**（04:35Z 为 1，06:00Z 为 13），其中超时 8 个（基线同期的慢文件，batch-1111c 全量共 8 个超时）。
       - 正在跑 10 个测试：wildlife（42:32）、s5-03-w1（14:38）、a3-r9-effects、npc-life-health、a3-score-self、m3-language、npc-autonomy、npc-life-migration、npc-life-t164、s5-law-tenancy-sharing。
