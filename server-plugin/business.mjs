@@ -778,7 +778,12 @@ function serve(d,engine,shop,t,residents,gaps,routes){
     // 每位顾客每天对每家店至多一趟（到店评估即算一趟，买没买都算）：本店今天的客流记录里已有这位顾客的访问（任何结局）就不再评估。
     // 按“日”字段的记录索引取当日已有的本店客流记录（不依赖当前时刻集合反推键：玩家离铺再到铺、店停业等使时刻集合变化时，已写的访问照样查得到；索引每日有界，不全表扫）。
     const tripped=new Set(recordsWhere(state.records,'category','customer_flow').filter(r=>r.day===day&&r.shop===shop.id).flatMap(r=>r.visits).map(v=>v.npc));
-    const visits=[],keeperHome=shop.kind==='resident'?new Set(personHousehold(engine,state,shop.keeper).value?.members??[]):null;// 居民卖方不向自己同户的人卖（同一灶，不是买卖）
+    const visits=[],keeperHome=shop.kind==='resident'?new Set(personHousehold(engine,state,shop.keeper).value?.members??[]):null;
+    // 居民卖方不向自己同户的人卖（同一灶，不是买卖）。这条是防御，不是日常生效的过滤（EC-1a 共用口粮池后的结论，已逐项核对）：
+    // 居民货架只含有营养的货（market-seller.residentSellers 的 goods 过滤），柴、盐、工具等非食物货根本不上居民货架，所以非食物货在这里天然不可达；
+    // 食物货在共用池下，同户成员的包裹并入同一份户预算，“同户卖方有可售余量（available>=1）而整户仍有采购缺口”只有在单餐额度池卡住某件货
+    // （能吃的吃不下、缺口却在别处）时才可能同时出现，现有世界与测试夹具造不出这种局面，没有直接测试。分居两地不改变结论（户池按成员并入，与所在地无关）；
+    // 玩家与同伴不进 walkIns，玩家店不是居民卖方（keeperHome 为 null）；店主雇员不是居民卖方。规则保留：万一出现这种局面，同灶内部不当买卖。
     for(const {id,slot,settlement} of residents){
         const departAt=Math.max(t,routes.get(`customer-free:${id}`)??t);
         const outbound=walkMinutes(engine,slot.location,shop.location,departAt,seed,routes);
