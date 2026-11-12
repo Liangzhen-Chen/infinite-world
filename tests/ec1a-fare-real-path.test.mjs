@@ -3,7 +3,7 @@
 // 经 world_time 真实推进跨过 600：A 起程付路费，户池（B）全额垫付。
 // 期望（手推）：fare = engine.route(X,Y).cost > 0；A 本人钱 0 + 补足 fare − 付出 fare = 0；B = 100 − fare；A、B 的旧字段都与账本钱袋一致；账本无差错。
 // 旧缺陷：补足额恰等于路费时，克隆副本等于 original，末尾不写回，草稿字段 = fare 而账本 = 0。
-// npc-obligations.simulateNpc 的同类修法目前没有真实路径测试（需要构造带约会的预订并推进，未能在不运行的前提下写稳），只有源码结构检查（ec1a-payment-paths）。
+// npc-obligations.simulateNpc 的真实路径测试在 ec1a-payment-paths.test.mjs 第四节（createNpcObligation + advanceNpcObligations，按账本流水精确断言）。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';

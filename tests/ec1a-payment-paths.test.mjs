@@ -138,6 +138,24 @@ test('invariant: a finance primitive payment (wage) from a short NPC purse is pa
  assert.throws(()=>financeTransfer(g.d,g.e,A,D,40,'pay-wage-short'),/当事人资金不足/);
 });
 
+// 字段同步不变量：原语只动账本（旧字段由调用点 mirrorPartyCoins 或 d.set 跟上）；户池补足自己的两侧字段由 householdPoolTopUp 同步。
+// 所以原语返回后：捐出方 B 的字段已等于账本；付款人 A 的字段 = 账本 + 本次扣款额（恰是调用点要扣的）；调用点跟上后全部相等。
+// 调用点必须在扣款之后再读字段（不能用扣款前读到的值回写，否则盖掉补足）。
+for(const direct of [false,true])for(const own of [100,10,0]){
+ test(`field sync invariant (${direct?'direct transfer':'moveCoins'}, own ${own}, need 30): fields equal the ledger after the call-site mirror`,()=>{
+  const f=fixture({[A]:own,[B]:100,[C]:500}),amount=30,dest=sink('export','travel');
+  if(direct)transfer(f.d,{from:purse(f.e,A),to:dest,amount,writer:'npc-schedule',eventId:'sync-1'});
+  else moveCoins(f.d,{from:purse(f.e,A),to:dest,amount,writer:'npc-schedule',eventId:'sync-1'});
+  assert.equal(coin(f,B),bal(f,purse(f.e,B)),'捐出方字段与账本一致');
+  assert.equal(coin(f,A)-bal(f,purse(f.e,A)),amount,'付款人字段比账本多出本次扣款额，等调用点扣');
+  assert.equal(coin(f,C),bal(f,purse(f.e,C)));
+  mirrorPartyCoins(f.d,f.e,A,-amount,'sync-1','npc-schedule');
+  const topped=Math.max(0,amount-own);
+  agree(f);assert.equal(coin(f,A),own+topped-amount);assert.equal(coin(f,B),100-topped);
+  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
+ });
+}
+
 // ---------------------------------------------------------------- 四、npc-obligations 真实结算入口
 test('npc-obligations real path: payer 0 coins, housemate 100, fare read from the engine route -> trip happens, fare paid from the pool, field == ledger, books conserved', () => {
  const f=fixture({[A]:0,[B]:100,[C]:500},{toll:2}),dest='bld_hw_mill',minute=f.d.get('state','minute');
@@ -147,10 +165,19 @@ test('npc-obligations real path: payer 0 coins, housemate 100, fare read from th
  assert.ok(made?.obligation,'本人 0 币、户池够付路费时可登记赴约（npcCanPay 看户池）');
  const key=sink('export','travel'),flow=()=>f.d.get('ledger','flows',key)??0,flow0=flow(),before=purses(f),end=minute+151;
  f.d.set(['state','minute'],end);f.e.npcObligationAction={tool:'time',args:{}};
- advanceNpcObligations(f.d,f.e,minute,end,'ec1-advance');
- assert.ok(flow()-flow0>=route.cost,'付款人至少付过一次路费（本人 0 币，只能来自户池）');
- assert.ok(coin(f,A)>=0&&coin(f,B)>=0);
- assert.ok(coin(f,A)+coin(f,B)<=100-route.cost,'路费由本户出');
+ // 账本流水按付款账户过滤：A 的出行次数 k 从记录里数出来，其他 NPC 的出行不计入 A。
+ const trace=globalThis.__LEDGER_TRACE__=[];
+ try{advanceNpcObligations(f.d,f.e,minute,end,'ec1-advance');}finally{delete globalThis.__LEDGER_TRACE__;}
+ const out=id=>trace.filter(t=>t.from===purse(f.e,id)),pooled=out(B).filter(t=>t.writer==='household-pool'&&t.to===purse(f.e,A));
+ const fares=out(A).filter(t=>t.to===key),k=fares.length,T=fares.reduce((n,t)=>n+t.amount,0);
+ assert.ok(k>=1,'A 出行了（本人 0 币，路费只能来自户池）');
+ assert.equal(T,k*route.cost,'A 付出的路费总额 = 出行次数 × 引擎路费');
+ assert.equal(out(A).length,k,'A 的钱袋只付过路费');
+ assert.equal(pooled.reduce((n,t)=>n+t.amount,0),T,'A 的路费全部由户池（B）补足，补足额恰为路费总额');
+ assert.equal(coin(f,A),0);assert.equal(bal(f,purse(f.e,A)),0);
+ const bPaid=out(B).reduce((n,t)=>n+t.amount,0);
+ assert.equal(coin(f,B),100-bPaid,'B = 100 − B 钱袋的全部流出');assert.equal(bPaid,T+out(B).filter(t=>t.writer!=='household-pool').reduce((n,t)=>n+t.amount,0));
+ assert.equal(bal(f,purse(f.e,B)),coin(f,B));
  agree(f);assert.equal(purses(f)+(flow()-flow0),before,'钱袋合计的减少恰等于流入路费汇的部分');
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
 });
