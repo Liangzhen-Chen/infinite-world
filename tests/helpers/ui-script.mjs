@@ -6,7 +6,9 @@ import {digest} from '../../server-plugin/storage.mjs';
 // Optional mutate(state, world) prepares the scene (time, place, purse) on a copy of a freshly created campaign.
 export async function uiSession(t,{mutate=null,world,seed}={}){
  const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed,consistencyEnabled:false,...(world?{world}:{})});t.after(()=>server.close());
- let {reference}=await server.api('create',{});
+ // 现行开局：带 character 创建（createCharacter，公仓粮 = 开局日目标持有）。不带 character 的创建走旧存档形状（initialFromLegacy，公仓粮 420、批次 180 日到期），
+ // 对上 17110 的目标等于造出一个饥荒村（D01 读到面包 12 文 = 基价 4 × 上限 3 的根因）；旧存档形状不是现行玩法，夹具不该停在那里。
+ let {reference}=await server.api('create',{character:{}});
  if(mutate){
   const bundle=await server.api('export',{campaignId:reference.campaignId}),initial=structuredClone(bundle.initial);
   // Seed fixture: the scene a scenario needs, written before the first event (the campaign starts here).
