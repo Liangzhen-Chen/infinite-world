@@ -11,6 +11,7 @@ import {advanceHazardClocks} from '../server-plugin/seasonal-hazards.mjs';
 import {advanceAgriculture} from '../server-plugin/agriculture.mjs';
 import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 import {resupplyDays} from '../server-plugin/supply-interval.mjs';
+import {handSelfReserve} from './helpers/hand-targets.mjs';
 import {woodcut} from '../server-plugin/sites.mjs';
 import {siteAction} from '../server-plugin/sites.mjs';
 import {environmentCatalog} from '../server-plugin/environment.mjs';
@@ -265,13 +266,13 @@ test('P3统计粮食产出也扣灌溉水，无详细农田的远方聚落遇旱
   });
   // 夹具意图：统计田地（不在农事表）开局存粮正好等于它的目标持有，使粮价稀缺度落在夹取区间内，旱年少产的粮才会显现在价格上。
   // 统计田地自己产粮（foodPerDay>0）：供粮源就是它自己，目标持有按自产口径手推（期望不调用被测的 resupplyDays / 目标原语）：
-  //  统计产粮每天入仓、没有收获日，储备视野 = max(生产间隔 1 天, 一个交易周期 economy.tradeCycleDays)（与 itemResupplyDays 本地产地同口径）；
-  //  目标持有 = ceil(餐口 × 视野)；餐口 = 人口（夹具无异族）。目标与日期无关。
+  //  统计产粮每天入仓、没有收获日，储备视野 = 季节储备（handSelfReserve：从当前季起一年内按 foodPerDay × cropSeasonFactors 与需求逐段累计的最大亏空天数，不低于交易周期）；
+  //  目标持有 = ceil(餐口 × 视野)；餐口 = 人口（夹具无异族）。目标随季节变，期望按旱湿推进后的日期重算。
   const farmId='loc_rw_statfarm',pop=100;
   x.d.set(['state','settlements',farmId],{name:'统计田地',population:pop,food:0,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
-  const selfTarget=()=>Math.ceil(pop*Math.max(1,x.engine.rules.economy.tradeCycleDays));
+  const selfTarget=minute=>Math.ceil(pop*handSelfReserve(x.engine,minute,120,pop));
   assert.ok(!x.engine.rules.agriculture.settlements.some(p=>p.settlement===farmId),'前置：统计田地不在农事表');
-  assert.equal(resupplyDays(x.engine,x.d.get('randomSeed'),farmId,x.d.get('state')),Math.max(1,x.engine.rules.economy.tradeCycleDays));
+  assert.ok(Math.abs(resupplyDays(x.engine,x.d.get('randomSeed'),farmId,x.d.get('state'))-handSelfReserve(x.engine,x.d.get('state','minute'),120,pop))<=1e-9);
   assert.throws(()=>resupplyDays(x.engine,x.d.get('randomSeed'),farmId),/需要聚落状态/,'没有聚落状态就无法判断自产，直接报错而不是给错值');
   assert.equal(mealMouthsOf(x.engine,x.d.get('state'),farmId,pop),pop,'前置：餐口 = 人口');
   const heldTarget=selfTarget(x.d.get('state','minute'));

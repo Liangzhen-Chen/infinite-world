@@ -18,13 +18,22 @@ function roundTripDays(engine,seed,from,to){
 }
 // 粮的补给间隔（非农事聚落）：最近的别的农事聚落的往返天数；供粮聚落不含本聚落自己。没有任何可达的供粮聚落：报错列出聚落，不编造天数。
 // 自产粮聚落（不在农事表、按统计产粮：state.settlements[place].foodPerDay > 0，同 advance-registry.mjs:400 统计产粮分支、water-cycle.mjs:213）：
-// 统计产粮每天入仓（advance-registry 每日分支）、没有集中的收获日，供粮源就是它自己：储备视野 = max(生产间隔, 一个交易周期)，与 itemResupplyDays 对"产地就在本聚落"的口径一致；
-// 生产间隔（逐日入仓，不足一天）恒小于交易周期（economy.tradeCycleDays，规则要求 ≥ 1 天），所以视野 = tradeCycleDays，不另设常数。是否自产只看聚落自身，与有没有路无关。
+// 统计产粮每天入仓（advance-registry 每日分支）：当日产量 = foodPerDay × weather.cropSeasonFactors[季]（weather.mjs cropProduction，另乘随机天气倍数，这里取其季节均值 1），
+// 没有集中的收获日，供粮源就是它自己。储备视野 = 季节储备：从现在起往后一整年（360 日、每季 90 日）逐日累计 (需求 − 产量) ÷ 需求（以天计）的最大累计亏空，且不低于一个交易周期（economy.tradeCycleDays，
+// 与 itemResupplyDays 对"产地就在本聚落"的口径一致）。与农事村"距下次收获 + reserveDays"同一规律：先撑过入仓最少的一段，再留结转储备；区别只是农事村的入仓集中在收获日，统计产粮按季节分摊。
+// 需求按人口计（统计产粮的名义产量是按人头标定的）。是否自产只看聚落自身，与有没有路无关；需要 state.minute 才知道现在是哪一季。
 export function selfSupplyDays(engine,state,place){
  if(engine.rules.agriculture?.settlements?.some(p=>p.settlement===place))return null;
  if(!state?.settlements)throw Error('推补给间隔需要聚落状态（state），以判断聚落是否自产粮');
- if(!(state.settlements[place]?.foodPerDay>0))return null;
- return engine.rules.economy.tradeCycleDays;
+ const s=state.settlements[place];if(!(s?.foodPerDay>0))return null;
+ const factors=engine.rules.weather.cropSeasonFactors,day0=Math.floor(state.minute/1440),need=s.population;
+ if(!(need>0))return engine.rules.economy.tradeCycleDays;
+ let cumulative=0,worst=0;
+ for(let k=0;k<360;k++){
+  const season=Math.floor((((day0+k)%360)+360)%360/90);
+  cumulative+=(need-s.foodPerDay*factors[season])/need;worst=Math.max(worst,cumulative);
+ }
+ return Math.max(worst,engine.rules.economy.tradeCycleDays);
 }
 export function resupplyDays(engine,seed,place,state){
  const own=selfSupplyDays(engine,state,place);if(own!==null)return own;

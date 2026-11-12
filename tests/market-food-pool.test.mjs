@@ -17,6 +17,7 @@ import {openLedger} from '../server-plugin/ledger.mjs';
 import {recordCraft} from '../server-plugin/craft-record.mjs';
 import {WORK_RULES} from '../server-plugin/works.mjs';
 import {craftUseWindowDays} from '../server-plugin/supply-interval.mjs';
+import {handSelfReserve} from './helpers/hand-targets.mjs';
 import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
@@ -220,7 +221,7 @@ test('农事聚落目标持有随季节：收获后撑到下次收获，收获�
 });
 
 test('冬荒钟阈值 = 系数 × 自己的储备视野：远方非农事聚落常态不触发、池跌到补给间隔一半以下才触发；农事村仍是 45 天',()=>{
- // 推导：系数 = 规则阈值天数 ÷ reserveDays = 45 ÷ 90 = 0.5；远方生成聚落是统计产粮的自产粮聚落，储备视野 = 补给间隔 H = 交易周期 economy.tradeCycleDays，阈值 = 0.5 × H；
+ // 推导：系数 = 规则阈值天数 ÷ reserveDays = 45 ÷ 90 = 0.5；远方生成聚落是统计产粮的自产粮聚落，储备视野 = 补给间隔 H = 季节储备（handSelfReserve，当前季起一年内最大累计亏空天数，不低于交易周期），阈值 = 0.5 × H；
  // 开局存粮 = ceil(餐口 × H)，所以常态池持有天数 ≈ H ≥ 0.5 × H → 不触发；居民背包清空、公仓降到开局存粮的 40% 后天数 ≈ 0.4 × H < 0.5 × H → 触发（进入 famine 阶段）。
  // 农事村 loc_hw：储备视野 = 自己的 reserveDays = 90，阈值 = 45 ÷ 90 × 90 = 45 天，与此前一致。
  const {engine,doc}=setup('market-food-pool-famine-threshold'),d=engine.primitiveDraft(doc),cond={kind:'granary_short',days:45};
@@ -228,7 +229,7 @@ test('冬荒钟阈值 = 系数 × 自己的储备视野：远方非农事聚落�
  const overlay=remoteEngine(engine,d.document,w=>new WorldEngine(w)),state=d.get('state');
  const sid=Object.values(state.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id))[0];
  assert.ok(state.settlements[sid].foodPerDay>0);assert.ok(!overlay.rules.agriculture.settlements.some(p=>p.settlement===sid),'前置：统计产粮、不在农事表');
- const H=overlay.rules.economy.tradeCycleDays,check=document=>{const dd=overlay.primitiveDraft(document);return conditionMet(dd,overlay,{settlement:sid},cond,dd.get('state','minute'));};
+ const H=handSelfReserve(overlay,state.minute,state.settlements[sid].foodPerDay,state.settlements[sid].population),check=document=>{const dd=overlay.primitiveDraft(document);return conditionMet(dd,overlay,{settlement:sid},cond,dd.get('state','minute'));};
  const normal=check(d.document);
  assert.ok(Math.abs(normal.threshold-0.5*H)<=1e-9*H);assert.equal(normal.met,false);
  const low=structuredClone(d.document);
@@ -304,15 +305,15 @@ function nonFarmFixture({population,food,foodPerDay}){
  return {engine,doc,P};
 }
 
-test('自产粮（统计产粮）非农事聚落的目标持有 = 餐口 × 交易周期天数；存量等于目标时稀缺度约为 1',()=>{
+test('自产粮（统计产粮）非农事聚落的目标持有 = 餐口 × 季节储备天数；存量等于目标时稀缺度约为 1',()=>{
  // 推导：不在农事表、foodPerDay>0 的聚落是统计产粮的自产粮聚落（每天入仓，无收获日），供粮源就是它自己，
- // 补给间隔 = max(逐日入仓 < 1 天, 交易周期) = economy.tradeCycleDays，与路程无关。目标 = ceil(餐口 × 间隔天数)。
+ // 补给间隔 = 季节储备 = max(一年内最大累计亏空天数, 交易周期)（handSelfReserve 手推），与路程无关。目标 = ceil(餐口 × 间隔天数)。
  // （foodPerDay=0 的非农事聚落没有可定价的粮仓目标，market.mjs 直接跳过，不在本用例范围。）
  // 同一聚落、同一存粮，只改人口：货架目标与合同承诺（K）不随人口变，所以 需求之差 = 目标之差，不必知道 K。
  const oats='item_oats',run=population=>{
   const f=nonFarmFixture({population,food:0,foodPerDay:100}),read=documentReader(f.doc);
   assert.ok(f.doc.state.settlements[f.P].foodPerDay>0);assert.ok(!f.engine.rules.agriculture.settlements.some(p=>p.settlement===f.P),'前置：不在农事表');
-  const days=f.engine.rules.economy.tradeCycleDays,target=Math.ceil(mealMouthsOf(f.engine,f.doc.state,f.P,population)*days);
+  const days=handSelfReserve(f.engine,f.doc.state.minute,100,population),target=Math.ceil(mealMouthsOf(f.engine,f.doc.state,f.P,population)*days);
   return {f,read,days,target,s:marketSupply(read,f.engine,oats,f.P)};
  };
  const a=run(100),b=run(200);
@@ -328,7 +329,7 @@ test('自产粮（统计产粮）非农事聚落的目标持有 = 餐口 × 交�
 });
 
 test('远方生成聚落开局存粮 = 餐口 × 补给间隔：粮仓开局 cov = 1，稀缺度由持有量之比给出',()=>{
- // 推导：远方郡展开时每个生成聚落开账存粮 = ceil(餐口 × 补给间隔天数)，自产粮聚落的补给间隔 = 交易周期（见下）；
+ // 推导：远方郡展开时每个生成聚落开账存粮 = ceil(餐口 × 补给间隔天数)，自产粮聚落的补给间隔 = 季节储备（见 helpers/hand-targets.mjs handSelfReserve）；
  // 市场的目标持有按同一条规律，所以粮仓行的存量恰等于目标（cov = 1），不再是写死的 80/150 天。
  const {engine,doc}=setup('market-food-pool-remote'),d=engine.primitiveDraft(doc);
  assert.ok(unfoldRemoteAt(d,engine,'loc_far_duanqi'));
@@ -336,13 +337,41 @@ test('远方生成聚落开局存粮 = 餐口 × 补给间隔：粮仓开局 cov
  const sids=Object.values(state.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id));
  assert.ok(sids.length>0);
  for(const sid of sids){
-  // 新规律：生成聚落都是统计产粮（foodPerDay>0）、不在农事表，自产粮：补给间隔 = max(逐日入仓 < 1 天, 交易周期) = economy.tradeCycleDays，与路程无关。
+  // 新规律：生成聚落都是统计产粮（foodPerDay>0）、不在农事表，自产粮：补给间隔 = 季节储备（handSelfReserve：一年内最大累计亏空天数，不低于交易周期），与路程无关。
   assert.ok(state.settlements[sid].foodPerDay>0,`${sid} 统计产粮`);assert.ok(!overlay.rules.agriculture.settlements.some(p=>p.settlement===sid));
-  const row=state.settlements[sid],target=Math.ceil(mealMouthsOf(overlay,state,sid,row.population)*overlay.rules.economy.tradeCycleDays);
+  const row=state.settlements[sid],target=Math.ceil(mealMouthsOf(overlay,state,sid,row.population)*handSelfReserve(overlay,state.minute,row.foodPerDay,row.population));
   assert.equal(row.food,target,sid);
   const granaryRow=marketSupply(d,overlay,'item_oats',sid).rows.find(r=>r.owner===sid);
   assert.ok(granaryRow,`${sid} 有粮仓行`);assert.equal(granaryRow.target,target);
  }
+});
+
+test('远方生成聚落统计产粮带季节系数：全年收支不为负，任一季开局按季节储备开仓都不断粮；冬季开局不立刻触发冬荒',()=>{
+ // 推导（全部按规则数据手推，不调用被测的储备函数）：当日产量 = 名义 foodPerDay × cropSeasonFactors[季]（一季 90 日）；需求 = 人口；
+ // 名义产量 = 需求 ÷ 季节系数均值（农事郡再乘 1.02），所以一年产量 = 名义 × 90 × Σ系数 = 360 × 需求 × (1 或 1.02) 不少于一年的需求。
+ // 逐日模拟：开局存粮 = ceil(人口 × 季节储备)，逐日 存粮 += 产量 − 需求，最低点不低于 0。四季各取季初开局。
+ const {engine,doc}=setup('market-food-pool-season'),d=engine.primitiveDraft(doc);
+ assert.ok(unfoldRemoteAt(d,engine,'loc_far_duanqi'));
+ const state=d.get('state'),f=engine.rules.weather.cropSeasonFactors,sids=Object.values(state.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id));
+ assert.ok(sids.length>0);assert.equal(f.length,4);
+ for(const sid of sids){
+  const row=state.settlements[sid],pop=row.population,fpd=row.foodPerDay;
+  assert.ok(fpd>0&&pop>0,`${sid} 统计产粮`);
+  assert.ok(90*fpd*f.reduce((a,b)=>a+b,0)>=360*pop-1e-9,`${sid} 全年产量不少于全年需求`);
+  for(let season=0;season<4;season++){
+   const start=season*90*1440;let stock=Math.ceil(pop*handSelfReserve(engine,start,fpd,pop)),low=stock;
+   for(let k=0;k<360;k++){stock+=fpd*f[Math.floor(((season*90+k)%360)/90)]-pop;low=Math.min(low,stock);}
+   assert.ok(low>=-1e-6,`${sid} 季${season}开局：存粮最低点 ${low} 不低于 0`);
+  }
+ }
+ // 冬季（season 3）开局：存粮 = ceil(人口 × 季节储备)，池持有天数 = 季节储备 H ≥ 阈值 0.5 × H，不触发冬荒。
+ const w=engine.primitiveDraft(engine.createCharacter(legacy,{},'market-food-pool-season-winter'));
+ w.set(['state','minute'],3*90*1440);assert.ok(unfoldRemoteAt(w,engine,'loc_far_duanqi'));
+ const overlay=remoteEngine(engine,w.document,x=>new WorldEngine(x)),ws=w.get('state'),sid=Object.values(ws.remote).flatMap(r=>r.skeleton.settlements.map(s=>s.id))[0],cond={kind:'granary_short',days:45};
+ const H=handSelfReserve(overlay,ws.minute,ws.settlements[sid].foodPerDay,ws.settlements[sid].population);
+ assert.ok(H>overlay.rules.economy.tradeCycleDays,'前置：冬季开局的季节储备大于交易周期下限');
+ const dd=overlay.primitiveDraft(w.document),res=conditionMet(dd,overlay,{settlement:sid},cond,dd.get('state','minute'));
+ assert.ok(Math.abs(res.threshold-0.5*H)<=1e-9*H);assert.equal(res.met,false);
 });
 
 test('没有日产粮的非农事聚落（觉醒部族骨架账）没有粮仓目标：不计该行，价格因子中性',()=>{
