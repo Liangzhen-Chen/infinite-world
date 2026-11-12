@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import os from 'node:os';
+import {makeTempDir} from '../tools/tmp-root.mjs';
 import path from 'node:path';
 import {REMOVE,isRemove,sameValue,getPath,setPath,editJSONText,isPublished,runRevision} from '../world/design/p1-revision-approval.mjs';
 import {parsePublication,revertSuperseded,applySupersedes,classifySupersedes} from '../tools/approved-revisions.mjs';
@@ -64,7 +64,7 @@ test('批次预算上限由各批自定：本批 0.5 元/60 次；不给 maxRequ
   assert.equal(water1d.LIMIT_YUAN,0.5);assert.equal(water1d.MAX_REQUESTS,60);
   const world=await loadWorld(),item=world.items[0];
   const mk=async(extra)=>{
-    const dir=await fs.mkdtemp(path.join(os.tmpdir(),'rev-budget-'));
+    const dir=makeTempDir('rev-budget-');
     // 无改动条目（after 等于现值）：只验证 --prepare 写出的预算账，不改任何正式文件，不调模型。
     const entry={id:`${item.id}-basePrice`,target:item.id,file:'world/meta/items.json',path:['basePrice'],field:'basePrice',before:item.basePrice,after:item.basePrice,basis:['t'],facts:{},supersedes:[{receipt:`x.json#${item.id}`,field:'basePrice'}],boundary:'b'};
     const cfg={revision:'t-1',root:dir,CARD:'T',limitYuan:0.02,buildEntries:()=>[entry],draftFor:e=>({id:e.id,target:e.target,field:e.field,value:e.after}),contextFor:e=>({sourceFacts:e.basis,referencedFacts:e.facts,supersedes:e.supersedes}),

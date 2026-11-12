@@ -39,8 +39,9 @@ export function tmpRoot() {
     runDir = fs.mkdtempSync(path.join(base, `p${process.pid}-`));
     process.on('exit', () => {
         if (process.env.FIELDS_TMP_KEEP === '1') return;
+        // 只删本进程自己的子目录。临时基目录由各并行进程共用（也可能就是 TMPDIR/os.tmpdir()），空了也不能删：
+        // 先结束的进程删掉它，别的进程随后 mkdtemp 就 ENOENT（并行测试文件互相踩）。
         try { remove(runDir); } catch { /* 被占用时留给下次 cleanupStale */ }
-        try { fs.rmdirSync(base); } catch { /* 非空或不存在 */ }
     });
     return runDir;
 }

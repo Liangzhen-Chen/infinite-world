@@ -28,6 +28,7 @@ import {publishTransitionEvent} from './world-events.mjs';
 import {openingTransportAssets} from '../world/design/transport-rules.mjs';
 import {declareHoldingWriter,holdingSet,aliveHoldings,holdingsView,ensureHoldings,setLocation} from './holdings.mjs';
 import {derived} from './derived.mjs';
+import {selfSupplyDays} from './supply-interval.mjs';
 import {refundContractEscrow} from './contracts.mjs';
 import {marketQuote} from './market.mjs';
 import {partyDeterrence} from './deterrence.mjs';
@@ -227,6 +228,9 @@ const unitFreightMemo=new WeakMap();
 export function unitFreight(d,e,{item,to,minute=d.get('state','minute')}){
  const def=e.byId.get(item),origin=def?.origin;
  if(!origin||!to||!(def.weight>=0))return 0;
+ // 自产粮聚落（不在农事表、按统计产粮 foodPerDay>0）的粮供给源就是它自己，不经任何路线从产地运来：与 supply-interval.selfSupplyDays 同一条
+ // （"是否自产只看聚落自身，与有没有路无关"；市场 stockSupply 对它也只读本地粮仓）。这取决于活状态（foodPerDay），所以先于按世界记忆的运费判断。
+ if(item===e.rules.economy?.shops?.stockItems?.food&&selfSupplyDays(e,d.get('state'),to)!==null)return 0;
  const memo=unitFreightMemo.get(e.world)??new Map();unitFreightMemo.set(e.world,memo);
  const key=`${item}|${to}`;if(memo.has(key))return memo.get(key);
  const s=d.get('state'),from=placeSettlement(e,s,origin).value;
