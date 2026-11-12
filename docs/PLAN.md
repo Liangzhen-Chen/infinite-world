@@ -256,6 +256,25 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 07:1xZ】旧初粮修订批（李白批准，只在本机跑这一个核对脚本，上限 40 次 / 0.3 元，到额自动停；不把 DeepSeek 密钥放上腾讯，不动云端钥匙权限）**
+    - **范围**：world/geo/settlements.json 中 4 个村（榆坡 loc_bs_yupo、尉亭 loc_bs_weiting、柳泉 loc_bs_liquan、桑畔 loc_bs_sangban）的 publicStock.food 全部 REMOVE，并取代对应的两处已批回执（分件与 candidate.json），共 12 处，合为 4 条。不写死推导值，运行时由 openingStockFood 在开局日按世界定义推导：期初存量分别为 23600、29500、28320、32450。
+    - **配套改动**：
+      - settlement-profile 改用推导值；
+      - 生成器 w1-village-profiles 不再产出 food；
+      - world.schema.json 删去 publicStock.food，手填会被 additionalProperties 拒绝；
+      - 修订机制增加 supersedes 路径后缀映射、requireCleanCandidate、preflightEntries；
+      - 新增模块 settlement-mouths.mjs 和 world-entities.mjs，用 awk 机械遍历导入闭包，确认无环。
+    - **脚本两轮独立审**：docs 外存档 F:/dnd-tmp/review/initfood-审查A.md、-B.md。首审两人均 changes → 复审均 approve；之后有两次运行期失败，各补一次复审：二次复审（schema）、三次复审（条目 id）均 approve。
+    - **运行**：
+      - 第 1 次 --prepare 报 L1 schema 错（publicStock.food 在 schema 中为必填），0 调用；
+      - 第 2 次 --review 报条目编号格式不安全，0 调用；
+      - 复盘：两次都是运行期才暴露的静态不一致，审查只核了逻辑和花费，没核管线的格式断言。已补 preflightEntries 及测试，不调模型即可发现这类问题。
+      - 修好后：--prepare（4 条，addedErrors 0，removedErrors 48）→ --review 通过 4 条 → L4 独立阅读（sonnet-initfood-L4，07:04:44Z，审查者本人手写）→ --publish 4 条 → --verify 4 条。
+    - **实际调用 4 次，实际花费 0.0055584 元。**
+    - **12 份处理结果**：4 处正式数据 food 删除；8 处旧回执被取代（不改动，由新回执 supersedes）；没有未处理项。
+    - **结果位置**：t-initfood daef0280（含 world/drafts/initfood/ 全部回执），已推 GitHub。
+    - **合入要求**：schema、数据、回执、测试必须作为同一合入单元，与市场卡一起进入（发布前约 55 处 validateWorld 断言会红）。
+    - **当前**：发布结果的两轮审查进行中。
   - **【11-12 06:27Z 实采，李白 07:2x 巡查】**（腾讯云 tc_admin 只读直采；服务器时钟 +08:00，已换算）
     - **water1d-4 全量**：runjob（`runjob.sh full water1d-4 f5719dc7…`）已跑 2:42:33，运行中。/work/water1d-4.full 1494 字节，mtime 06:26:54Z，完成 **19/586**（04:35Z 为 1，06:00Z 为 13），其中超时 8 个（基线同期的慢文件，batch-1111c 全量共 8 个超时）。
       - 正在跑 10 个测试：wildlife（42:32）、s5-03-w1（14:38）、a3-r9-effects、npc-life-health、a3-score-self、m3-language、npc-autonomy、npc-life-migration、npc-life-t164、s5-law-tenancy-sharing。
