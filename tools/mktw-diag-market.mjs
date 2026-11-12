@@ -18,7 +18,10 @@
 import fs from 'node:fs/promises';
 import {loadWorld} from './load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
-import {marketSupply,marketQuote} from '../server-plugin/market.mjs';
+import {marketSupply,marketQuote,saleableStock} from '../server-plugin/market.mjs';
+import {tradeQuote} from '../server-plugin/shop.mjs';
+import {netAssets} from '../server-plugin/finance-assets.mjs';
+import {handOatsScarcity} from '../tests/helpers/hand-targets.mjs';
 import {variant as dbVariant,scene as dbScene,setPrice,monthDayMinute,SEED as DB_SEED} from '../tests/helpers/daily-b2.mjs';
 import {farmTargetFood,openingStockFood} from '../server-plugin/farm-target.mjs';
 import {itemResupplyDays} from '../server-plugin/supply-interval.mjs';
@@ -189,6 +192,42 @@ if(want('H')){
   out.flatbreadQuote=quoteOf(engine,doc,{seller:'npc_hw_linsui',item:'item_oat_flatbread',buyer:'player',quantity:1,location:'bld_hw_qingdeng'});
   out.muttonQuote=quoteOf(engine,doc,{seller:'npc_hw_linsui',item:'item_mutton',buyer:'player',quantity:1,location:'bld_hw_qingdeng'});
   out.limits=world.rules.economy.priceFactorLimits.region;
+  // 公仓粮账户与批次（到期日）：判断 D05 的公仓粮是不是因 scene 跳日而到期，导致供给只剩商人持有。
+  const day=Math.floor(doc.state.minute/1440),farm=doc.state.records?.['agriculture:loc_hw'];
+  out.granary={day,settlementFood:doc.state.settlements?.loc_hw?.food,
+   farmBatches:(farm?.batches??[]).map(b=>({kind:b.kind,amount:b.amount,expiresDay:b.expiresDay})).slice(0,40),
+   ledgerOpen:Boolean(doc.ledger),
+   ledgerGranaryAccounts:Object.entries(doc.ledger?.accounts??{}).filter(([k])=>k.includes('granary')),
+   ledgerGranaryLots:Object.entries(doc.ledger?.lots??{}).filter(([k])=>k.includes('granary')).map(([k,v])=>[k,JSON.stringify(v).slice(0,600)])};
+ }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
+ results.push(out);
+}
+// J：s5-02 失败测试的前提读数（标签均为 ASCII）：#5 同日两次报价、#10 买一件后与次日的报价解释（含 depth 全部分量）、#6 可售存量、#2 净资产与手推比值。
+if(want('J')){
+ const out={label:'J s5-02 probes'};
+ try{
+  const engine=new WorldEngine(structuredClone(world)),inn='bld_hw_qingdeng',host='npc_hw_linsui',bread='item_bread';
+  const mk=(setup={})=>applyIntentSetup(engine,engine.createCharacter(seed,{},'s502-market'),{minute:600,location:inn,coins:10000,...setup}).document;
+  const quote=doc=>tradeQuote(read(doc),engine,{buyer:'player',seller:host,item:bread,quantity:1,location:inn,base:()=>engine.byId.get(bread).basePrice});
+  const brief=q=>({listPrice:q.listPrice,totalCoins:q.totalCoins,exactTotal:q.exactTotal,explanation:JSON.parse(JSON.stringify(q.explanation))});
+  const buy=async(doc,id)=>applyPatches(doc,(await engine.reduce(doc,{tool:'world_trade',args:{seller:host,item:bread,quantity:1},eventId:id})).patches);
+  const food=doc=>{const m=marketSupply(read(doc),engine,bread,inn);return {supply:m.supply,demand:m.demand,rows:m.rows.map(r=>({owner:r.owner,item:r.item,stock:r.stock,target:r.target,committed:r.committed,available:r.available,unit:r.unit}))};};
+  // #5
+  let doc=mk();out.five={first:brief(quote(doc)),foodBefore:food(doc)};
+  doc=await buy(doc,'probe-1');out.five.second=brief(quote(doc));out.five.foodAfter=food(doc);
+  // #10：noCustomers（除店主外居民钱袋清零）
+  const poor=Object.keys(engine.createCharacter(seed,{},'s502-market').state.npcs).filter(id=>id!==host).map(id=>({path:['state','npcs',id,'coins'],value:0}));
+  doc=mk({facts:poor});doc=await buy(doc,'probe-rt');out.ten={afterBuy:brief(quote(doc)),foodAfterBuy:food(doc)};
+  doc=applyPatches(doc,(await engine.reduce(doc,{tool:'world_time',args:{minutes:1440},eventId:'probe-next-day'})).patches);
+  out.ten.nextDay=brief(quote(doc));out.ten.foodNextDay=food(doc);
+  // #6
+  doc=mk({facts:[{path:['state','npcs',host,'inventory'],value:{[bread]:{quantity:12,quality:engine.byId.get(bread).quality}}},{path:['state','npcs','npc_hw_ayan','inventory'],value:{}},
+   {path:['state','records'],value:{...mk().state.records,contract_market_reserve:{id:'contract_market_reserve',category:'contract',kind:'procurement',parties:['player',host],subject:bread,quantity:4,fulfilled:1,status:'pending'}}}]});
+  out.six={business:attempt(()=>saleableStock(read(doc),engine,host,bread,{business:true})),personal:attempt(()=>saleableStock(read(doc),engine,host,bread)),food:food(doc)};
+  // #2
+  doc=mk({facts:[{path:['state','npcs',host,'inventory'],value:{[bread]:{quantity:10,quality:engine.byId.get(bread).quality}}},{path:['state','npcs',host,'coins'],value:200}]});
+  const w2={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'asset-value',pack:'market',target:'economy:value',stage:'add',value:1}]}};
+  out.two={netAssets:attempt(()=>netAssets(read(doc),engine,host)),netAssetsWithModifier:attempt(()=>netAssets(read(doc),new WorldEngine(w2),host)),handRatio:attempt(()=>handOatsScarcity(engine,doc.state,doc.state.settlements.loc_hw.food)),food:food(doc)};
  }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
  results.push(out);
 }

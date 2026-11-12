@@ -31,11 +31,14 @@ test('short of firewood: the fuel quote rises and residents buy; once supplied t
  for(const id of villagers(doc))for(const it of Object.keys(doc.state.npcs[id].inventory??{}))if(isItemClass(engine,it,'fuel')&&!(id===smith&&it===item))delete doc.state.npcs[id].inventory[it];
  doc.state.npcs[smith].inventory[item]={quantity:40,quality:'木',durability:100,weight:engine.byId.get(item).weight};// the forge's shelf charcoal
  doc=await wait(doc,1,'open');resyncBooks(engine,doc);
- const before=quote(doc).totalCoins,boughtBefore=Object.keys(doc.state.records).length;
+ // 判据用未取整的报价（listPrice）：炭基价 3，价 = 3 × 夹取后的稀缺度，取整到文再比会把 1.35 倍与 1.45 倍都截成 4，看不出涨跌。
+ // 手推：稀缺度 = 需求 ÷ 供给。缺柴三日里各户没烧到柴，欠量 DebtG 记在户账上，经市场的户用 = 补给间隔 ×（日用度 − 自给）+ Σ欠量，欠量只增不减需求；
+ // 供给（炭 40 件 + 村里剩余的柴按基准克折算）在这三日里最多略有消耗，所以比值上升，价严格上升。
+ const before=quote(doc).listPrice,boughtBefore=Object.keys(doc.state.records).length;
  doc=await wait(doc,3*DAY,'cold');
  assert.ok(Object.values(doc.state.family?.upkeep??{}).some(r=>r.fuelShortDays>0),'households went without fuel');
  assert.ok(shortWant(doc)>0,'the shortage is a want to buy fuel');
- const cold=quote(doc).totalCoins;assert.ok(cold>before,`fuel dearer while short: ${before} -> ${cold}`);
+ const cold=quote(doc).listPrice;assert.ok(cold>before,`fuel dearer while short: ${before} -> ${cold}`);
  const bought=Object.entries(doc.state.records).filter(([,r])=>r.category==='market_trade'&&r.item===item&&r.seller===smith&&r.buyer!=='player');
  assert.ok(bought.length>0,'residents came to buy charcoal');
  // Supplied again: everyone (also villagers out on a trip at this moment) gets firewood; once the short days end nobody wants fuel any more,
@@ -44,6 +47,7 @@ test('short of firewood: the fuel quote rises and residents buy; once supplied t
  resyncBooks(engine,doc);doc=await wait(doc,2*DAY,'warm');
  assert.equal(shortWant(doc),0,'no village household is short any more');
  doc.state.npcs[smith].inventory[item]={quantity:40,quality:'木',durability:100,weight:engine.byId.get(item).weight};resyncBooks(engine,doc);
- const warm=quote(doc).totalCoins;assert.ok(warm<cold,`fuel cheaper once supplied: ${cold} -> ${warm}`);assert.equal(warm,before);
+ // 补给后各户都有柴、欠量清零，需求回到只剩补给间隔内的新用度，价回落：严格低于缺柴时的价。（不再断言回到缺柴前的价：补给后全村的柴都在持有，供给比开局大，价可以更低。）
+ const warm=quote(doc).listPrice;assert.ok(warm<cold,`fuel cheaper once supplied: ${cold} -> ${warm}`);
  assert.deepEqual(reconcile(engine,doc).mismatches,[]);
 });
