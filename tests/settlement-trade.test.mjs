@@ -285,7 +285,7 @@ test('公共报价只读且随真实供给重派生，距离与运输风险进�
      for(const it of fuelPool){const n=held(npc.inventory?.[it.id]);if(n>0)assert.ok(id==='npc_hw_duanyan'&&it.id==='item_charcoal',`前置：${id} 不该持有燃料 ${it.id}`);heldGrams+=n*weight(it.id);}}
     const profileHouses=fe.world.settlementProfiles.find(p=>p.id==='loc_hw').householdCount;
     assert.equal(settlementPopulation(fe,fs_,'loc_hw').householdCount.value,profileHouses,'前置：动态户数 = 档案户数（户都在世、都有人）');
-    const fuel=fw.balance.crafting.params.find(p=>p.id==='household.fuelKgPerDay').value,N=(fuel.cooking+(fuel.heating[fe.calendar(fs_.minute).season]??0))*1000;
+    const fuel=world.balance.crafting.params.find(p=>p.id==='household.fuelKgPerDay').value,N=(fuel.cooking+(fuel.heating[fe.calendar(fs_.minute).season]??0))*1000;
     const owed=keys.reduce((n,k)=>n+(fs_.family?.upkeep?.[k]?.fuelDebtG??0),0);
     const shelfGrams=stores.filter(s=>s.settlement==='loc_hw').flatMap(s=>s.restock??[]).filter(r=>fuelPool.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight(r.item),0);
     const supply=heldGrams/unit,demand=Math.max((shelfGrams+cycle*N*profileHouses+owed)/unit,1);

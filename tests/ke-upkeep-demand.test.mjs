@@ -62,7 +62,7 @@ function handQuote(doc){
  const owed=keys.reduce((n,k)=>n+(state.family?.upkeep?.[k]?.fuelDebtG??0),0);
  const supply=heldGrams/unit,demand=Math.max((shelfGrams+cycle*N*houses+owed)/unit,1);
  const [floor,cap]=engine.rules.economy.priceFactorLimits.region,scarcity=Math.min(cap,Math.max(floor,demand/Math.max(1,supply)));
- return {supply,demand,scarcity,price:engine.byId.get(item).basePrice*scarcity,N,keys};
+ return {supply,demand,scarcity,ratio:demand/Math.max(1,supply),floor,cap,price:engine.byId.get(item).basePrice*scarcity,N,keys,heldGrams,wWood:weight('item_wood'),targetGrams:shelfGrams+cycle*N*houses};
 }
 const near=(a,b)=>Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(b));
 
@@ -74,12 +74,20 @@ test('short of firewood: the fuel quote rises and residents buy; once supplied t
  doc=await wait(doc,1,'open');resyncBooks(engine,doc);
  // 价格的三步期望（见上 handQuote）在三份构造的状态上核对：开局（无欠量）、缺柴（每户欠 3 天的日用度）、补柴（欠量清零、每人持柴 40、铁匠铺炭回到 40）。
  // 构造状态与 npc-life 记录缺柴的方式相同：state.family.upkeep[户].fuelDebtG；不经时间推进，所以没有居民成交带来的深度与库存变化，期望可以精确手推。
- const opening=structuredClone(doc),h0=handQuote(opening);
+ // 开局要处于夹取区间内部，才表达得出"缺柴推高价"：自给为 0 时，需求 = 货架目标 + 一个补给间隔的全村日用度 = 目标持有；村里的柴都被清空时，供给（铁匠铺炭 40 + 公仓柴 28）远小于目标，
+ // 开局比值就已超过上限 3，缺柴前后价都钉在 3 × 基价。所以价格步骤的开局状态把公仓木料补到"存量 = 目标持有"（供给折算后恰覆盖需求，向上取整到整件，比值略小于 1），
+ // 这与"开局库存由目标持有推出"同一规律；目标持有由手推给出（probe.targetGrams），公仓木料 = ceil((目标克数 − 其他持有克数) ÷ 木基准克）。
+ // 缺柴一步每户欠 3N，需求多出 Σ欠量 ÷ unit，比值升到约 1.4，仍低于上限；补柴一步供给再增加。
+ const opening=structuredClone(doc),probe=handQuote(opening);
+ opening.state.settlements.loc_hw.wood=Math.ceil((probe.targetGrams-(probe.heldGrams-opening.state.settlements.loc_hw.wood*probe.wWood))/probe.wWood);
+ resyncBooks(engine,opening);const h0=handQuote(opening);
+ assert.ok(h0.ratio>=h0.floor&&h0.ratio<h0.cap,`前置：开局比值 ${h0.ratio} 在夹取区间 [${h0.floor}, ${h0.cap}) 内部`);
  assert.ok(near(quote(opening).listPrice,h0.price),`开局：报价 ${quote(opening).listPrice} = 手推 ${h0.price}（稀缺度 ${h0.scarcity}）`);
  const cold=structuredClone(opening);cold.state.family={...cold.state.family,upkeep:{...cold.state.family?.upkeep}};
  for(const k of h0.keys)cold.state.family.upkeep[k]={...cold.state.family.upkeep[k],fuelDebtG:3*h0.N,fuelShortDays:3};
  resyncBooks(engine,cold);const hc=handQuote(cold);
  assert.ok(near(quote(cold).listPrice,hc.price),`缺柴：报价 ${quote(cold).listPrice} = 手推 ${hc.price}`);
+ assert.ok(hc.ratio<hc.cap,`前置：缺柴比值 ${hc.ratio} 仍低于上限，价能继续上升`);
  assert.ok(hc.demand>h0.demand&&hc.price>h0.price,'欠量推高需求，价严格上升（附加断言）');
  const warm=structuredClone(cold);
  for(const k of h0.keys)warm.state.family.upkeep[k]={...warm.state.family.upkeep[k],fuelDebtG:0,fuelShortDays:0};

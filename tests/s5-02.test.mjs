@@ -61,20 +61,20 @@ test('current stock net assets share market value and S5-01 corrections, not his
 
 test('independent bulk anchor integrates the actual neutral supply curve',async()=>{
  const f=fixture({location:'bld_hw_forge'}),seller='npc_hw_duanyan',item='item_steel_arming_sword';
- // 供给按持有量口径：卖方的全部库存 40 件都是供给（承诺不从供给里扣，只进需求）。需求 = 货架上限 2 + 合同承诺 38 = 40，中性（D/S = 1）。
- // （此前的口径是供给 = 持有 − 承诺；持有量口径下承诺只抬需求，所以承诺取 38 才恰好中性。）
+ // 供给按持有量口径：卖方的全部库存 40 件都是供给 S=40（承诺不从供给里扣，只进需求）。需求 D = 货架上限 2 + 合同承诺 20 = 22。
+ // 可售量 = 持有 40 − 承诺 20 = 20 ≥ 6，成交不被库存闸拒绝。稀缺度 D/S = 22/40 = 0.55，在 [.5,3] 内。
  const setup=applyIntentSetup(f.engine,f.document,{facts:[
   {path:['state','npcs',seller,'inventory',item],value:40},
-  {path:['state','records'],value:{...f.document.state.records,'bulk-procurement':{id:'bulk-procurement',category:'contract',kind:'procurement',parties:['player',seller],subject:item,quantity:38,fulfilled:0,status:'待履约'}}}
+  {path:['state','records'],value:{...f.document.state.records,'bulk-procurement':{id:'bulk-procurement',category:'contract',kind:'procurement',parties:['player',seller],subject:item,quantity:20,fulfilled:0,status:'待履约'}}}
  ]});assert.deepEqual(setup.setupUnmet,[]);f.replace(setup.document);
  // q6 exceeds retail max(5,40*.05=2)=5 and is within maxShare .3*40=12.
- // All other factors 1; D/(S-x) = 40/(40-x) stays inside [.5,3]. Hence
- // integral_0^6 230*40/(40-x) dx = 9200*ln(40/34) = 1495.17 → 1495 copper, versus flat retail 1380.
+ // All other factors 1; D/(S-x) = 22/(40-x) runs 0.55 → 0.647, inside [.5,3]. Hence
+ // integral_0^6 230*22/(40-x) dx = 5060*ln(40/34) = 822.34 → 822 copper, versus flat retail 230 × 0.55 × 6 = 759.
  // 15 §15.2 explicitly gives peer trade the retail value in both directions:
- // base230 * neutral scarcity/depth/quality/corrections1 * 6 = 1380.
- assert.equal(marketQuote(f.read(),f.engine,{seller,item,buyer:'npc_hw_ayan',quantity:6,location:'bld_hw_forge'}).totalCoins,1380);
+ // base230 * scarcity .55 * neutral depth/quality/corrections1 * 6 = 759.
+ assert.equal(marketQuote(f.read(),f.engine,{seller,item,buyer:'npc_hw_ayan',quantity:6,location:'bld_hw_forge'}).totalCoins,759);
  const out=await f.act({seller,item,quantity:6},'anchor-bulk');
- assert.equal(out.result.pricing.retail,false);assert.equal(out.result.cost,Math.trunc(9200*Math.log(40/34)));assert.equal(out.result.cost,1495);
+ assert.equal(out.result.pricing.retail,false);assert.equal(out.result.cost,Math.trunc(5060*Math.log(40/34)));assert.equal(out.result.cost,822);
 });
 
 test('independent copper anchors: neutral, second/third purchase, next day, quality, correction and total truncation',async()=>{
@@ -82,55 +82,55 @@ test('independent copper anchors: neutral, second/third purchase, next day, qual
  const f=fixture({location:forge});
  // Non-examined opening inventory/contract premises use native setup. The
  // published sword costs 230; its shelf ceiling is 2. 供给按持有量口径：六把都是供给 S=6（承诺不从供给里扣）；
- // 需求 = 货架上限 2 + 合同承诺 4 = 6，中性。No other
+ // 需求 D = 货架上限 2 + 合同承诺 3 = 5，开局稀缺度 D/S = 5/6。可售量 = 6 − 3 = 3，恰够下面连买三把。No other
  // local holder initially owns this template; weapons have no food reserve.
  const setup=applyIntentSetup(f.engine,f.document,{facts:[
   {path:['state','npcs',smith,'inventory',item],value:6},
-  {path:['state','records'],value:{...f.document.state.records,'anchor-procurement':{id:'anchor-procurement',category:'contract',kind:'procurement',parties:['player',smith],subject:item,quantity:4,fulfilled:0,status:'待履约'}}}
+  {path:['state','records'],value:{...f.document.state.records,'anchor-procurement':{id:'anchor-procurement',category:'contract',kind:'procurement',parties:['player',smith],subject:item,quantity:3,fulfilled:0,status:'待履约'}}}
  ]});assert.deepEqual(setup.setupUnmet,[]);f.replace(setup.document);
  const opening=structuredClone(f.document);
- // Baseline 230 × D/S 1 × depth 1 × grade 1 × spread 1 ×
- // neutral regard 1 × corrections 1 = 230; truncate the full bill once.
- const one=await f.act({seller:smith,item,quantity:1},'anchor-first');assert.equal(one.result.cost,230);
- // 15 §15.2：买走的剑在个人行囊中，不再是市场供给。第二笔 S=5、D=6、net=1、opening=6；
- // trunc(230×(6/5)×(1+.2×1/6)×既有关系因子.99895)=trunc(284.90)=284。
- const two=await f.act({seller:smith,item,quantity:1},'anchor-second');assert.equal(two.result.cost,284);
+ // Baseline 230 × D/S (5/6) × depth 1 × grade 1 × spread 1 ×
+ // neutral regard 1 × corrections 1 = 191.67; truncate the full bill once → 191.
+ const one=await f.act({seller:smith,item,quantity:1},'anchor-first');assert.equal(one.result.cost,191);
+ // 15 §15.2：买走的剑在个人行囊中，不再是市场供给。第二笔 S=5、D=5、net=1、opening=6；
+ // trunc(230×(5/5)×(1+.2×1/6)×既有关系因子.99895)=trunc(237.42)=237。
+ const two=await f.act({seller:smith,item,quantity:1},'anchor-second');assert.equal(two.result.cost,237);
  assert.equal(two.result.pricing.relation,.99895);
- // 第三笔 S=4、D=6、net=2、opening=6；既有日内关系快照仍为.99895，
- // trunc(230×(6/4)×(1+.2×2/6)×.99895)=trunc(367.61)=367（本卡不改变关系规则）。
- const three=await f.act({seller:smith,item,quantity:1},'anchor-third');assert.equal(three.result.cost,367);
+ // 第三笔 S=4、D=5、net=2、opening=6；既有日内关系快照仍为.99895，
+ // trunc(230×(5/4)×(1+.2×2/6)×.99895)=trunc(306.34)=306（本卡不改变关系规则）。
+ const three=await f.act({seller:smith,item,quantity:1},'anchor-third');assert.equal(three.result.cost,306);
  assert.equal(three.result.pricing.relation,.99895);
  const next=await f.engine.reduce(f.document,{tool:'world_time',args:{minutes:1440},eventId:'anchor-tomorrow'});f.replace(applyPatches(f.document,next.patches));
- // 新日只清除 net，不把已买走的剑放回市场：S=6−3=3、D=6，稀缺 6/3=2（在 [.5,3] 内）→ 230×2=460。
- const plain=marketQuote(f.read(),f.engine,{seller:smith,buyer:'player',item,location:forge});assert.equal(plain.totalCoins,460);
- // 以下独立检验品质、修正和整笔取整，复用本例起始中性市场，避免混入已发生的去库存。
+ // 新日只清除 net，不把已买走的剑放回市场：S=6−3=3、D=5，稀缺 5/3（在 [.5,3] 内）→ 230×5/3=383.33 → 383。
+ const plain=marketQuote(f.read(),f.engine,{seller:smith,buyer:'player',item,location:forge});assert.equal(plain.totalCoins,383);
+ // 以下独立检验品质、修正和整笔取整，复用本例起始市场（S=6、D=5），避免混入已发生的去库存。
  f.replace(opening);
  // Published qualityStep=1.25. Native silver baseline → silver 230;
- // next authored tier gives 230 × 1.25 = 287.5 → 287.
+ // next authored tier gives 230 × 5/6 × 1.25 = 239.58 → 239.
  const tiers=world.rules.equipment.qualities,index=tiers.indexOf(f.engine.byId.get(item).quality);
  const fine=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','itemInstances'],value:{...f.document.state.itemInstances,'anchor-fine':{id:'anchor-fine',item,owner:smith,status:'持有',quality:tiers[index+1]}}}]});assert.deepEqual(fine.setupUnmet,[]);f.replace(fine.document);
- assert.equal(marketQuote(f.read(),f.engine,{seller:smith,buyer:'player',item,location:forge,instances:['anchor-fine']}).totalCoins,287);
+ assert.equal(marketQuote(f.read(),f.engine,{seller:smith,buyer:'player',item,location:forge,instances:['anchor-fine']}).totalCoins,239);
  // S5-01 production author declaration: add 1 copper after the ordinary
- // price factors, so neutral 230 + 1 = 231; no quote computes the oracle.
+ // price factors, so 230 × 5/6 + 1 = 192.67 → 192; no quote computes the oracle.
  const w={...world,derived:{...world.derived,modifiers:[...world.derived.modifiers,{id:'anchor-handling',pack:'market',target:'economy:price',stage:'add',value:1}]}},corrected=new WorldEngine(w);
- assert.equal(marketQuote(f.read(),corrected,{seller:smith,buyer:'player',item,location:forge}).totalCoins,231);
- // Three silver swords, shop markup 1.373 (within published bounds):
- // 230 ? 1 ? 1 ? 1 ? 1.373 ? 1 ? 1 ? 3 = 947.37 ? 947;
- // truncating each 315.79 unit instead would wrongly charge 945.
- const retail=marketQuote(f.read(),f.engine,{seller:smith,buyer:'player',item,location:forge,quantity:3,business:{keeper:smith,markup:1.373}});
- assert.equal(retail.totalCoins,947);assert.equal(Math.trunc(retail.listPrice)*3,945);
- const retailWorld=structuredClone(world);retailWorld.rules.economy.shops.stores.find(s=>s.keeper===smith).markup=1.373;
+ assert.equal(marketQuote(f.read(),corrected,{seller:smith,buyer:'player',item,location:forge}).totalCoins,192);
+ // Three silver swords, shop markup 1.375 (within published bounds):
+ // 230 × 5/6 × 1 × 1 × 1 × 1.375 × 1 × 1 × 3 = 790.63 → 790;
+ // truncating each 263.54 unit instead would wrongly charge 789.
+ const retail=marketQuote(f.read(),f.engine,{seller:smith,buyer:'player',item,location:forge,quantity:3,business:{keeper:smith,markup:1.375}});
+ assert.equal(retail.totalCoins,790);assert.equal(Math.trunc(retail.listPrice)*3,789);
+ const retailWorld=structuredClone(world);retailWorld.rules.economy.shops.stores.find(s=>s.keeper===smith).markup=1.375;
  const native=fixture({location:forge},retailWorld);native.replace(opening);
  const receipt=await native.act({seller:smith,item,quantity:3},'anchor-three-retail');
- assert.equal(receipt.result.cost,947);assert.equal(opening.state.player.coins-native.document.state.player.coins,947);
- // A permitted authored markup 1.001 yields 230.23. The negotiated
- // integer offer 254 is within ceil(230.23*.9)..ceil(230.23*1.1).
- // Three originals cost exactly 254*3=762; converting through a floating
- // discount ratio must not turn 761.9999999999999 into a 761-copper bill.
+ assert.equal(receipt.result.cost,790);assert.equal(opening.state.player.coins-native.document.state.player.coins,790);
+ // A permitted authored markup 1.001 yields 230 × 5/6 × 1.001 = 191.86. The negotiated
+ // integer offer 190 is within ceil(191.86*.9)=173..ceil(191.86*1.1)=211.
+ // Three originals cost exactly 190*3=570; converting through a floating
+ // discount ratio must not turn 569.9999999999999 into a 569-copper bill.
  const negotiatedWorld=structuredClone(world);negotiatedWorld.rules.economy.shops.stores.find(s=>s.keeper===smith).markup=1.001;
  const negotiated=fixture({location:forge},negotiatedWorld);negotiated.replace(opening);
- const paid=await negotiated.act({seller:smith,item,quantity:3,unitPrice:254},'anchor-three-negotiated');
- assert.equal(paid.result.cost,762);assert.equal(paid.result.pricing.unroundedTotal,762);
+ const paid=await negotiated.act({seller:smith,item,quantity:3,unitPrice:190},'anchor-three-negotiated');
+ assert.equal(paid.result.cost,570);assert.equal(paid.result.pricing.unroundedTotal,570);
 });
 
 test('same-day purchases raise depth and conserve money and goods; no quote truth is saved',async()=>{
