@@ -317,7 +317,22 @@ async function woodStock(file,watch){
  await import(new URL(`../tests/${file}`,import.meta.url));
 }
 
+// finance-assets #1 与 s3-finance #2 的共同量：同聚落面包需求 14（期望 24）。tests/helpers/finance.mjs 的 fixture() 原样，读 supplyApart 与 marketSupply 的供给/需求，
+// 输出 bread-demand：supply、demand、marketSupply 全部字段（含 rows：owner、item、stock、retained、committed、available——需求 = 非商家持有人留存之和的各项来源），
+// 以及每个 rows 持有人的户编号与户成员，用来看哪一位的留存从旧值变小（旧：玩家3+申杜4+阿衍8+陈柏4+顾岑5）。
+async function breadDemandRows(){
+ const {fixture,post}=await import('../tests/helpers/finance.mjs');
+ const {marketSupply,supplyApart}=await import('../server-plugin/market.mjs');
+ const {personHousehold}=await import('../server-plugin/entity-view.mjs');
+ const f=fixture(),d=f.draft(),state=d.get('state');
+ const apart=supplyApart(d,f.e,{item:'item_bread',location:post,holder:'player',owner:'player'}),ms=marketSupply(d,f.e,'item_bread',post);
+ const owners=[...new Set((ms.rows??[]).map(r=>r.owner))];
+ out({type:'bread-demand',apart:{supply:apart.supply,demand:apart.demand},market:ms,
+  households:Object.fromEntries(owners.map(o=>{const h=o==='player'?null:personHousehold(f.e,state,o).value;return [o,h?{id:h.id,members:h.members,shared:h.shared}:null];}))});
+}
+
 const cases={
+ 'bread-demand-rows':breadDemandRows,
  'sales-s5-w4-wood':()=>woodStock('s5-w4-economy.test.mjs',(watchArg??'item_wood').split(',')),
  'sales-a1-lt':()=>runTests('a1-lt-scenarios.test.mjs',(watchArg??'npc_hw_duanyan').split(',')),
  'sales-w2-s2':()=>runTests('w2-s2.test.mjs',(watchArg??'npc_bs_077_1,npc_bs_078_1,npc_bs_079_1').split(',')),

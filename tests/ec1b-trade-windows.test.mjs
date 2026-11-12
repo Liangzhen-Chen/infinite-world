@@ -135,10 +135,14 @@ test('each customer makes at most one trip per shop per day, even when later cus
  assert.deepEqual(flowTimesOfDay(f.e,state,0),[480,800]);
  advanceCustomerFlow(f.d,f.e,-1,DAY);
  const shopId=currentShops(f.e,f.d.get('state')).find(s=>s.keeper===seller).id;
- const trips=actor=>Object.values(f.d.get('state','records')).filter(r=>r.category==='market_trip'&&r.actor===actor&&r.id.startsWith(`market_trip:${shopId}:`));
+ const allTrips=actor=>Object.values(f.d.get('state','records')).filter(r=>r.category==='market_trip'&&r.actor===actor);
+ const trips=actor=>allTrips(actor).filter(r=>r.id.startsWith(`market_trip:${shopId}:`));
  assert.equal(trips(A).length,1,'the early customer came once');
- assert.equal(trips(D).length,1,'the late customer came once, at his own flow time');
- assert.equal(trips(D)[0].departAt>=800,true);
+ // 800 时除登记店外还有第二家店开着：洛薇上午买了 8 个面包、户留存只有 3 个，余量成了居民卖方（诊断 trade-windows-7：openShops 含 trader_npc_hw_luowei）。
+ // 徐凌的一次需求（4 个面包）在先服务的那家店一次买清，所以他当天只来一趟，可能是登记店也可能是居民卖方；“每人每店每天至多一趟”按（人，店）对核对。
+ assert.equal(allTrips(D).length,1,'the late customer came once in total (one purchase meets his need), at his own flow time');
+ assert.equal(allTrips(D)[0].departAt>=800,true);
+ for(const actor of [A,D]){const perShop={};for(const r of allTrips(actor))perShop[r.id.split(':')[1]]=(perShop[r.id.split(':')[1]]??0)+1;for(const [s,n] of Object.entries(perShop))assert.equal(n,1,`${actor} at most one trip to ${s}`);}
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
 });
 
@@ -152,9 +156,14 @@ test('a customer who looked and bought nothing is not evaluated again the same d
  assert.ok(marketQuote(f.d,f.e,{item,location:home,seller,buyer:D,quantity:1,business:{keeper:seller,markup:1},minute:800}).totalCoins>1,'precondition: one bread costs more than D can pay');
  assert.deepEqual(flowTimesOfDay(f.e,state,0),[480,800,1000]);
  advanceCustomerFlow(f.d,f.e,-1,DAY);
- const visitsOfD=flowRecords(f).filter(r=>r.day===0).flatMap(r=>r.visits.filter(v=>v.npc===D));
- assert.deepEqual(visitsOfD,[{npc:D,outcome:'looked'}],'D is evaluated exactly once that day, looked and bought nothing');
- const at1000=flowRecords(f).find(r=>r.minute===1000);
+ // 800 时洛薇（上午买了 8 个面包，留存只有 5 个）的居民卖方店也开着（诊断 trade-windows-8：openShops 含 trader_npc_hw_luowei），D 在两家店各看一次；
+ // “同店同日不再评估”按（人，店）对核对：登记店恰一条 looked，每家店至多一条。
+ const shopId=currentShops(f.e,f.d.get('state')).find(s=>s.keeper===seller).id;
+ const visitsAt=(s,actor)=>flowRecords(f).filter(r=>r.day===0&&r.shop===s).flatMap(r=>r.visits.filter(v=>v.npc===actor));
+ assert.deepEqual(visitsAt(shopId,D),[{npc:D,outcome:'looked'}],'D is evaluated exactly once that day at the registered shop, looked and bought nothing');
+ for(const s of new Set(flowRecords(f).map(r=>r.shop)))assert.ok(visitsAt(s,D).length<=1,`D is evaluated at most once at ${s}`);
+ assert.equal(flowRecords(f).flatMap(r=>r.visits).filter(v=>v.npc===D&&v.outcome==='bought').length,0,'D bought nothing anywhere');
+ const at1000=flowRecords(f).find(r=>r.minute===1000&&r.shop===shopId);
  assert.ok(at1000&&at1000.visits.some(v=>v.npc===E&&v.outcome==='bought'),'the third customer is served at 1000');
  assert.ok(!at1000.visits.some(v=>v.npc===D),'D is awake at 1000 but has already been evaluated today');
  assert.deepEqual(auditLedger(f.d.get('ledger')),[]);
