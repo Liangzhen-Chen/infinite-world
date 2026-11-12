@@ -4,6 +4,7 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {recordsWhere,recordEntriesWhere} from './storage.mjs';
 // U7 needs choose a bounded offscreen act. All acts use the ordinary legal case ledger.
 import {purse,fund as fundAccount,moveCoins,sink} from './money.mjs';
+import {householdCash,householdPoolTopUp} from './household-budget.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('npc-crime',{sinks:['sink:export']});
 import {npcNeedGoals,intelligenceOf} from './npc-intelligence.mjs';
@@ -78,8 +79,8 @@ export function commitNpcCrime(d,e,plan,minute){
  const destinations=plan.destination?[plan.destination]:plan.embezzlement?(e.rules.law.codes??[]).filter(c=>c.id!==code.id).map(c=>c.court).filter(Boolean).sort():[];
  for(const destination of destinations){
   try{const route=e.route(location,destination,'walk',minute,d.get('randomSeed')),coins=d.get('state','npcs',actor,'coins');
-   if(route.minutes>0&&Number.isFinite(route.minutes)&&(route.cost??0)<=coins){
-    const cost=route.cost??0;if(cost){moveCoins(d,{from:purse(null,actor),to:sink('export','travel'),amount:cost,writer:'npc-crime',eventId:id});d.set(['state','npcs',actor,'coins'],coins-cost);}
+   if(route.minutes>0&&Number.isFinite(route.minutes)&&(route.cost??0)<=householdCash(d,e,actor)){
+    const cost=route.cost??0;if(cost){householdPoolTopUp(d,e,actor,cost,id);moveCoins(d,{from:purse(null,actor),to:sink('export','travel'),amount:cost,writer:'npc-crime',eventId:id});d.set(['state','npcs',actor,'coins'],d.get('state','npcs',actor,'coins')-cost);}
     flight={from:location,to:destination,depart:minute,arrive:minute+route.minutes,edges:route.edges,cost};
     d.set(['state','npcs',actor,'scheduleTravel'],flight);d.set(['state','npcs',actor,'location'],null);d.set(['state','npcs',actor,'activity'],'携款逃亡');
    }if(flight)break;
@@ -96,9 +97,10 @@ function settleNpcSentence(d,e,row,code,minute){
  const n=d.get('state','npcs',row.offender);if(!alive(e,d.get('state'),row.offender,n)||n.location!==code.court)return;
  const loss=row.victim?caseLoss(d,e,row):null;
  const fine=row.fineDischarged?0:Math.max(0,row.judgment.fine-(row.finePaid??0)),compensation=row.compensationPaid?0:Math.min(row.judgment.compensation,loss?.remaining??row.judgment.compensation);
- if((n.coins??0)>=fine+compensation){
+ if(householdCash(d,e,row.offender)>=fine+compensation){
+  householdPoolTopUp(d,e,row.offender,fine+compensation,`${row.id}:sentence`);
   moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_treasury:${row.law}`),amount:fine,writer:'npc-crime',eventId:row.id});moveCoins(d,{from:purse(null,row.offender),to:fundAccount(`legal_deposit:${row.id}`),amount:compensation,writer:'npc-crime',eventId:row.id});
-  d.set(['state','npcs',row.offender,'coins'],n.coins-fine-compensation);
+  d.set(['state','npcs',row.offender,'coins'],d.get('state','npcs',row.offender,'coins')-fine-compensation);
   const treasury=`legal_treasury:${row.law}`,fund=d.get(...path(treasury))??{category:'legal_treasury',law:row.law,coins:0};if(fund.category!=='legal_treasury')throw Error('法律资金登记键冲突');holdingSet(d,null,path(treasury),{...fund,coins:fund.coins+fine},'npc-crime');
   if(compensation){const key=`legal_deposit:${row.id}`,escrow=d.get(...path(key));if(escrow?.category&&escrow.category!=='legal_deposit')throw Error('法律资金登记键冲突');holdingSet(d,null,path(key),{category:'legal_deposit',case:row.id,beneficiary:row.victim,coins:(escrow?.coins??0)+compensation,units:[]},'npc-crime');}
   if(compensation&&loss)recoverLoss(d,e,{id:loss.id,amount:compensation,payer:row.offender,kind:'deposit'},`${row.id}:sentence`);

@@ -1,5 +1,6 @@
 import {preconditionFailure} from './precondition.mjs';
 import {purse,moveCoins} from './money.mjs';
+import {householdCash,householdPoolTopUp} from './household-budget.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('family-law');
 import {actorPath} from './npc-state.mjs';
@@ -61,8 +62,8 @@ export function recoverFamilyCompensation(d,e,row,eventId){
  row=d.get(...rec(row.id))??row;
  if(!row.judgment)throw preconditionFailure('须先由有权法庭审理');
  const s=d.get('state'),loss=familyLoss(d,e,row),remaining=Math.min(loss.remaining,Math.max(0,row.judgment.compensation-(row.recovered??0)));
- const offenderPath=actorPath(e.world,row.offender),victimPath=actorPath(e.world,row.victim),available=d.get(...offenderPath,'coins')??0,amount=Math.min(remaining,available);
- if(amount)recoverLoss(d,e,{id:loss.id,amount,payer:row.offender},eventId,()=>{moveCoins(d,{from:purse(e,row.offender),to:purse(e,row.victim),amount,writer:'family-law',eventId:row.id});d.set([...offenderPath,'coins'],available-amount);d.set([...victimPath,'coins'],(d.get(...victimPath,'coins')??0)+amount);});
+ const offenderPath=actorPath(e.world,row.offender),victimPath=actorPath(e.world,row.victim),available=householdCash(d,e,row.offender),amount=Math.min(remaining,available);
+ if(amount)recoverLoss(d,e,{id:loss.id,amount,payer:row.offender},eventId,()=>{householdPoolTopUp(d,e,row.offender,amount,`${row.id}:compensation`);moveCoins(d,{from:purse(e,row.offender),to:purse(e,row.victim),amount,writer:'family-law',eventId:row.id});d.set([...offenderPath,'coins'],d.get(...offenderPath,'coins')-amount);d.set([...victimPath,'coins'],(d.get(...victimPath,'coins')??0)+amount);});
  const recovered=(row.recovered??0)+amount,closed=lossView(d.get('state'),loss.id).remaining===0;
  holdingSet(d,null,rec(row.id),{...row,recovered,status:closed?'已结案':'待赔偿',compensationPaid:closed},'family-law');
  if(closed){const guard=d.get(...rec(row.familyCivil.guardianship));if(guard)holdingSet(d,null,rec(guard.id),{...guard,ledger:guard.ledger.map(r=>r.kind==='侵吞'?{...r,recoveredBy:row.id}:r)},'family-law');}

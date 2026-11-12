@@ -25,6 +25,7 @@ import {siteResources,siteTake,siteUnlock} from './sites.mjs';
 import {shopOfKeeper} from './shop.mjs';
 import {safeCarryKg,carriedKg,packItemKg} from './carry.mjs';
 import {purse,sink,moveCoins,mirrorPartyCoins} from './money.mjs';
+import {householdCash,householdPoolTopUp} from './household-budget.mjs';
 import {npcDecision} from './npc-decision.mjs';
 import {subjectiveView} from './subjective-view.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
@@ -568,7 +569,7 @@ function validateTrip(d,e,who,a,{at,ignoreTask=false,taskId}={}){
   if(!(forgone(e,d.document,who,a,a.kind==='labor_sale'?{[a.item]:a.quantity}:{})<=(a.forgone??0)))throw preconditionFailure('这段时间本人要接待或当差，不值得出门劳动');
   e.assertNpcAutonomyAction(state,[who],{start:a.departAt,minutes:a.returnAt-a.departAt});
   e.assertNpcObligationAction(d,[who],{start:a.departAt,minutes:a.returnAt-a.departAt,location:a.from,kind:'autonomy'});
-  if(a.travelCoins+(a.coins??0)+(a.fee??0)>(n.coins??0))throw preconditionFailure('路费与本钱不足');
+  if(a.travelCoins+(a.coins??0)+(a.fee??0)>householdCash(d,e,who))throw preconditionFailure('路费与本钱不足');
  }else if(!trip||trip.actor!==who)throw preconditionFailure('劳动行程已不存在');
 }
 const validGoods=(e,a)=>Number.isSafeInteger(a.quantity)&&a.quantity>=1&&Boolean(e.byId.get(a.item));
@@ -577,7 +578,7 @@ function startTrip(d,e,who,a,{actionId}){
  d.set(['state','records',id],{id,category:'market_trip',actor:who,from:a.from,to:a.to,departAt:a.departAt,arriveAt:a.arriveAt,finishAt:a.finishAt,returnAt:a.returnAt,
   outboundEdges:a.outboundEdges,inboundEdges:a.inboundEdges,paid:a.travelCoins,sourceEvent:actionId,purpose:`labor:${a.labor}`,labor:a.labor,activity,travelActivity:'劳动途中',
   segments:a.segments.map(s=>s.work?{...s,activity:STOP_ACTIVITY[a.stops[s.stop]?.acts?.[0]?.kind]??activity}:s),action:clone(a)});
- if(a.travelCoins){moveCoins(d,{from:purse(e,who),to:sink('export','travel'),amount:a.travelCoins,writer,eventId:actionId});mirrorPartyCoins(d,e,who,-a.travelCoins,actionId,writer);}
+ if(a.travelCoins){householdPoolTopUp(d,e,who,a.travelCoins,actionId);moveCoins(d,{from:purse(e,who),to:sink('export','travel'),amount:a.travelCoins,writer,eventId:actionId});mirrorPartyCoins(d,e,who,-a.travelCoins,actionId,writer);}
 }
 // 劳动记录：谁、做了哪类劳动、在哪、产出或卖出了什么、卖给谁、得了多少钱。
 function laborRecord(d,actionId,row,part=''){holdingSet(d,null,['state','records',`labor:${actionId}${part}`],{category:'labor',sourceEvent:actionId,...row},writer,actionId);}
@@ -658,10 +659,11 @@ function settleSale(d,e,who,a,id,at){
  const read=reader(d.document),quantity=Math.min(a.quantity,saleableStock(read,e,who,a.item).available);
  if(quantity<1)return fail('可售存货已经没有了');
  const quote=keeperQuote(e,d.document,{seller:who,keeper:a.keeper,location:a.to,item:a.item,quantity});
- if(!(quote.totalCoins>0)||quote.totalCoins>(keeper.coins??0))return fail('收货人付不起货款');
+ if(!(quote.totalCoins>0)||quote.totalCoins>householdCash(d,e,a.keeper))return fail('收货人付不起货款');
  const resale=goodsWorth(read,e,{item:a.item,quantity,holder:a.keeper,location:a.to});
  if(npcDecision(subjectiveView(e,d.document,a.keeper),{kind:'buy',from:who,cost:{coins:quote.totalCoins},reward:resale??0}).outcome!=='agree')return fail('收货人不愿按这个价收');
  transferItems(d,e,who,a.keeper,a.item,quantity);
+ householdPoolTopUp(d,e,a.keeper,quote.totalCoins,id);// 付款人本人钱袋不够时先从户池补足（EC-1a 共用钱袋）
  moveCoins(d,{from:purse(e,a.keeper),to:purse(e,who),amount:quote.totalCoins,writer,eventId:id});
  mirrorPartyCoins(d,e,a.keeper,-quote.totalCoins,id,writer);mirrorPartyCoins(d,e,who,quote.totalCoins,id,writer);
  recordMarketDeal(d,quote,quote.totalCoins,quantity,id);
@@ -677,8 +679,9 @@ function settleBuy(d,e,who,a,stop,id,at,part){
  if(!rows.length)return fail('卖家可售的货已经没有了');
  const quotes=rows.map(r=>freshSupplierQuote(e,d.document,{buyer:who,keeper,location:stop.location,item:r.item,quantity:r.quantity})),total=quotes.reduce((n,q)=>n+q.totalCoins,0);
  if(total>stop.acts.reduce((n,act)=>n+act.coins,0))return fail('实价高过这趟计划的本钱');
- if(total>(state.npcs[who].coins??0))return fail('本钱不足以付货款');
+ if(total>householdCash(d,e,who))return fail('本钱不足以付货款');
  if(npcDecision(subjectiveView(e,d.document,keeper),{kind:'sell',from:who,cost:{value:total},reward:total}).outcome!=='agree')return fail('卖家不愿按这个价卖');
+ householdPoolTopUp(d,e,who,total,`${id}${part}`);// 本人钱袋不够时先从户池补足
  rows.forEach((r,i)=>{
   const q=quotes[i],eventId=`${id}${part}:${r.item}`;
   transferItems(d,e,keeper,who,r.item,r.quantity);

@@ -2,6 +2,7 @@ import {preconditionFailure} from './precondition.mjs';
 import {goodsWorth} from './valuation.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,moveCoins} from './money.mjs';
+import {householdCash,householdPoolTopUp} from './household-budget.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 declareLedgerWriter('festival',{sinks:['sink:consume']});
 import {digest,recordsWhere} from './storage.mjs';
@@ -369,7 +370,7 @@ export function advanceFestivals(d,engine,at){
    participants=row.enrolled.filter(id=>id!==row.host&&id!==row.supplier&&enrollment(d,row,id)&&available(engine,state,id,row.location,at)&&
     (!row.formal||!obligationOverlaps(state,id,at,at+f.runtime.durationMinutes)&&(!scheduledAt(engine,id,at)||scheduledAt(engine,id,at).location===row.location)));
    if(participants.length<(f.runtime?.minimumParticipants??1)){status='no-attendance';reason='没有足够已同意且实际到场的参加者';}
-   else if(!safe(state.npcs[row.host]?.coins)||state.npcs[row.host].coins<row.cost){status='insufficient-funds';reason='组织者自有现金不足，不动公共粮钱或补造库存';}
+   else if(!safe(state.npcs[row.host]?.coins)||householdCash(d,engine,row.host)<row.cost){status='insufficient-funds';reason='组织者自有现金不足，不动公共粮钱或补造库存';}
    else if(row.cost&&!safe(state.npcs[row.supplier]?.coins)){status='unavailable';reason='收费者现金账未知';}
    else if(row.formal){
     const totals=new Map();for(const n of row.resources){const key=`${n.owner}:${n.item}`;totals.set(key,{...n,quantity:(totals.get(key)?.quantity??0)+n.quantity});}
@@ -393,9 +394,10 @@ export function advanceFestivals(d,engine,at){
    done.effects=receipt.applied?receipt.effects:[];if(!receipt.applied)done.effectsBlocked=receipt.reason??'效果条件未满足';
   }
   if(done.paidCopper){
+   householdPoolTopUp(d,engine,row.host,row.cost,`festival-result:${id}`);// 主办人本人钱袋不够时先从户池补足
    moveCoins(d,{from:purse(null,row.host),to:purse(null,row.supplier),amount:row.cost,writer:'festival',eventId:null});
-   d.set(['state','npcs',row.host,'coins'],state.npcs[row.host].coins-row.cost);
-   d.set(['state','npcs',row.supplier,'coins'],state.npcs[row.supplier].coins+row.cost);
+   d.set(['state','npcs',row.host,'coins'],d.get('state','npcs',row.host,'coins')-row.cost);
+   d.set(['state','npcs',row.supplier,'coins'],d.get('state','npcs',row.supplier,'coins')+row.cost);
   }
   d.set(path(id),done);
   if(status==='held'){
