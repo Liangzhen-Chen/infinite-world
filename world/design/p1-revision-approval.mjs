@@ -139,6 +139,25 @@ export const isPublished=(world,entries)=>entries.every(e=>{try{const cur=getPat
 export const skeletonOf=({basis,facts,supersedes,...core})=>core;
 export const reviewRequest=(e,d,c)=>({...defaultReviewRequest(skeletonOf(e),d,c),max_tokens:400});
 
+// 不调模型的静态预检：对修订批的条目跑 --review 之前流水线会断言的同一批格式检查，让“跑到 --review 才暴露”的静态不一致在测试阶段暴露。
+// 检查：条目编号唯一且符合流水线的安全格式（content-pipeline.mjs runContentPipeline：^[a-z][a-z0-9_-]+$，同时是审查记录的文件名）；
+// 每条的固定草稿 L1（validateDraft + 通用数字规则 pipelineL1）无错误；复核请求能构造、可序列化、max_tokens 为正整数。
+// 返回问题列表（空 = 通过）。cfg 可覆盖 draftFor/contextFor/validateDraft（级联批等有自己的实现时）。
+export async function preflightEntries(entries,cfg={}){
+ const df=cfg.draftFor??draftFor,cf=cfg.contextFor??contextFor,vd=cfg.validateDraft??validateDraft,problems=[];
+ if(!Array.isArray(entries)||!entries.length)return ['条目为空'];
+ if(new Set(entries.map(e=>e.id)).size!==entries.length)problems.push('条目编号重复或缺失');
+ for(const e of entries){
+  if(!/^[a-z][a-z0-9_-]+$/i.test(e.id??''))problems.push(`条目编号不安全：${e.id}`);
+  const {pipelineL1}=await import('../../tools/content-pipeline.mjs');
+  const result=await pipelineL1(vd)(df(e),e,cf(e)),errors=Array.isArray(result)?result:result?.errors??[];
+  for(const m of errors)problems.push(`${e.id}：草稿 L1：${m}`);
+  try{const r=reviewRequest(e,df(e),cf(e));JSON.stringify(r);if(!Number.isInteger(r.max_tokens)||r.max_tokens<1)problems.push(`${e.id}：复核请求 max_tokens 无效`);}
+  catch(error){problems.push(`${e.id}：复核请求无法构造：${error.message}`);}
+ }
+ return problems;
+}
+
 // 修订批的通用流水线（--prepare 冻结候选并跑 L1，--review L2，--publish，--verify）。P1 与级联批共用，各自的差别全在 cfg：
 // cfg={revision,root,CARD,limitYuan,frozen,buildEntries(world),draftFor,contextFor,validateDraft,applyCandidate,isPublished,note}
 // 可选 cfg.approval={via,receipt,verify(entries,world)}：本批不自带 L2/L4，审批证据来自别处已审批的记录（如 w3-journey 的 L1/L2/L4）。

@@ -31,7 +31,8 @@ export async function buildEntries(world){
   readers:['server-plugin/settlement-profile.mjs（公开聚落资料，登记里没有 food 时按 openingFood 推导）','tests/village-ledgers.test.mjs','tests/catalog.test.mjs']};
  return rows.map(r=>{
   const before=rowOf(world,FILE,r.id).details.economy.publicStock.food;
-  return {id:`${r.id}-${FIELD}`,target:r.id,file:FILE,path:PATH,field:FIELD,before,after:REMOVE,
+  // 条目编号须符合流水线的安全格式 ^[a-z][a-z0-9_-]+$（也是审查记录的文件名）：由聚落 id 机械推出，不含点、冒号、斜杠。
+  return {id:`initfood-${r.id}`,target:r.id,file:FILE,path:PATH,field:FIELD,before,after:REMOVE,
    basis:[
     `MKTW ①b 之后运行时开局存粮由目标持有规律推导，不再有登记的初粮：${rule.law}（${rule.source}）。`,
     `${r.id}：登记的 publicStock.food ${before} 没有出处，与运行时推导值不一致；派生优先，整条删除该字段，不把推导值抄回数据。`,

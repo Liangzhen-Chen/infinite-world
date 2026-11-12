@@ -1,0 +1,17 @@
+{
+  "rates": {
+    "hit": 0.04,
+    "miss": 2,
+    "output": 8
+  },
+  "requests": 4,
+  "perRequestCeilingYuan": [
+    0.013796,
+    0.013844,
+    0.013828,
+    0.013844
+  ],
+  "firstPassCeilingYuan": 0.055312,
+  "cardLimitYuan": 0.3,
+  "modelCalls": 0
+}

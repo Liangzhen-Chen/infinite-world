@@ -3,7 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {REMOVE,editJSONText,rowOf,getPath,isPublished} from '../world/design/p1-revision-approval.mjs';
+import {REMOVE,editJSONText,rowOf,getPath,isPublished,preflightEntries} from '../world/design/p1-revision-approval.mjs';
 import {parsePublication,classifySupersedes,applySupersedes,revertSuperseded,revertReceiptRow} from '../tools/approved-revisions.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import * as initfood from '../world/design/initfood-approval.mjs';
@@ -13,6 +13,18 @@ const entries = initfood.frozenEntries() ?? await initfood.buildEntries(world);
 const published = isPublished(world, entries);
 const toPub = list => parsePublication({revision: 'initfood-1', receipt: 'dir/r', entries: list.map(e => ({id: e.id, target: e.target, file: e.file, field: e.field, before: e.before, after: e.after, supersedes: e.supersedes}))});
 const own = /^world\/drafts\/w1\/village-ledgers\/([^/]+)\.json$/;
+
+test('静态预检（不调模型）：条目编号符合流水线安全格式，固定草稿 L1 无错，复核请求可构造；不安全编号会被预检抓到', async () => {
+  assert.deepEqual(await preflightEntries(entries), []);
+  // 编号由聚落 id 机械推出（initfood-<聚落 id>），不含点、冒号、斜杠。
+  for (const e of entries) assert.equal(e.id, `initfood-${e.target}`);
+  // 反例：旧编号（含点）、含斜杠、数字开头、重复，预检都报问题（这正是 --review 才抛“条目编号不安全”的那类错误）。
+  for (const bad of [`${entries[0].target}-${initfood.FIELD}`, 'a/b', '1abc', 'a:b']) {
+    const problems = await preflightEntries([{...entries[0], id: bad}]);
+    assert.ok(problems.some(p => p.includes('条目编号不安全')), bad);
+  }
+  assert.ok((await preflightEntries([entries[0], entries[0]])).some(p => p.includes('重复')));
+});
 
 test('批次上限：0.3 元 / 40 次（硬上限由批次自定）', () => {
   assert.equal(initfood.LIMIT_YUAN, 0.3);assert.equal(initfood.MAX_REQUESTS, 40);
