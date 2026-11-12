@@ -15,10 +15,10 @@
 // 跳后粮仓由 setGranary 设定，灾害时钟记录从空开始，之后的逐日推进全部是真实的 world_time。冬格也 skipTo 到第二年冬第 630 日（旧版误用种子后 2 天，那是雨月 3 日）。
 // 长跳的取舍已在汇报中说明：它改变了"农事自然演化"，但本探针每个情形都自己设定粮仓并只看紧接着的几天，不依赖跳过的那段农事。
 //
-// 冻结规则 v8（F:/dnd-tmp/mktw/冻结规则.md）+ 情形清单 cases-v8.txt（58 个情形，参数名 = 情形名，各自单独运行）：
+// 冻结规则 v9（F:/dnd-tmp/mktw/冻结规则.md）+ 情形清单 cases-v9.txt（58 个情形，参数名 = 情形名，逐字一致，各自单独运行）：
 //   [yupo-]<winter|autumn>-without-<level>：level ∈ 1.5,1.0,0.75,0.6,0.4,0.2,0.05（C1，同世界不同池 cov）；skipTo 到冬第 630 日 / 秋第 545 日 + 真实推进 8 天
-//   [yupo-]winter-noclock-<level>：level ∈ 1.0,0.6,0.2（C2，该聚落冬荒钟及 hazard_phase 传递闭包整段移除）
-//   drought-without、drought-noclock：C3，旱情钟有/无；第 364 日 600 分钟开局，观测期读钟复位或收割、上限第 719 日
+//   [yupo-]winter-noclock-<1.0|Lg>、[yupo-]winter-without-Lg：Lg = level_g（冬荒钟夹具，由实测 D₁ 按比例推出，见 setLevelG）；noclock = C2，该聚落冬荒钟及 hazard_phase 传递闭包整段移除
+//   drought-without、drought-noclock：C3，旱情钟有/无；第 4 日 600 分钟开局（(sowDays[0]−1)×1440+600），检查日 sowDays[1]+1 = 26，观测期读钟复位或收割、上限第 359 日
 //   flood-with、flood-without、flood、flood-control；spring[-bs]-with/-without/本名；epidemic-with/-without/本名：同 v7
 //   season-without；buys-1.0、buys-0.75；famine-hw-without；bs-tight、bs-tight-noloc_bs；zero-hold-hw、tiny-hold-hw；transport-coverage
 // 单个情形耗时的估计见 start 行 estimate；drought 两个与 bs-tight 两个预计超过 8 分钟（见汇报）。
@@ -34,6 +34,7 @@ import {placeSettlement} from '../server-plugin/entity-view.mjs';
 import {weatherAt} from '../server-plugin/weather.mjs';
 import transportBalance from '../world/rules/tables/balance/transport.json' with {type:'json'};
 import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
+import {foodStockDays} from '../server-plugin/food-stock.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
 import {tradeQuote,shopOfKeeper} from '../server-plugin/shop.mjs';
 import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
@@ -43,7 +44,8 @@ import {magicPriceFactor} from '../server-plugin/magic-economy.mjs';
 
 const DAY=1440,INN='bld_hw_qingdeng',KEEPER='npc_hw_linsui',HW='loc_hw',YP='loc_bs_yupo';
 const ITEMS=['item_ration','item_oat_flatbread','item_bread','item_oats'];
-const LEVELS=[1.5,1.0,0.75,0.6,0.4,0.2,0.05],NOCLOCK_LEVELS=[1.0,0.6,0.2],ADVANCE=8,BUYS=10,CASEDAYS=6;
+// 档位以 cases-v9.txt 里的写法（字符串）登记情形名，"1.0"不是"1"；用到数值时 Number(L)，'Lg' 保持字符串（level_g）。
+const LEVELS=['1.5','1.0','0.75','0.6','0.4','0.2','0.05'],NOCLOCK_LEVELS=['1.0','Lg'],ADVANCE=8,BUYS=10,CASEDAYS=6;
 // v8：默认世界不再剥任何类（价格倍数与季节系数已从实现里删除）；只有待替换项与洪水对照显式传类。
 const STRIP_DEFAULT=[];
 // C2 写定的闭包清单（冻结规则名词 C2）：探针运行时按 hazard_phase 传递闭包重算并与这里核对，不一致输出 closureMatches:false（探针缺陷）。
@@ -170,6 +172,24 @@ function setPoolCoverage(engine,doc,sid,level){
  const {target,held}=poolNumbers(engine,doc,sid),granarySatiety=Math.max(0,level*target-held);
  return {set:setGranary(engine,doc,sid,Math.round(granarySatiety/w)),granarySatiety,otherHold:held,target};
 }
+// 冬荒钟夹具 level_g（v9 冻结规则"档位与参数"，R9 与 winter-*-Lg、famine-hw）：冬荒钟读 foodStockDays（D，food-stock.mjs）；D(level) ≈ level × D₁，
+// D₁ = 同一世界、同一日、level 1.0 夹具后实测的 D；D目标 = 0.6 × famine 阈值天数（规则里 granary_short 的 45）= 27 天；level_g = D目标 ÷ D₁；
+// 夹具后第 0 天闸门：再测 D_g，须在 D目标 的 ±25% 内且低于 famine 阈值，level_g < 1，否则记"夹具不足（foodStockDays 偏离公式预期或未低于阈值）"。输出规则要求的全部读数。
+const granaryShortDays=stage=>{let out=null;const walk=c=>{if(c?.kind==='all')c.conditions.forEach(walk);else if(c?.kind==='granary_short'&&out===null)out=c.days;};walk(stage.condition);return out;};
+function famineThresholds(engine,sid){
+ const clock=(engine.rules.hazardClock?.clocks??[]).find(r=>r.id===`famine:${sid}`),by={};
+ for(const s of clock?.stages??[])by[s.id]=granaryShortDays(s);
+ return {tight:by.tight??null,famine:by.famine??null};
+}
+const foodDaysOf=(engine,doc,sid)=>foodStockDays(draftOf(engine,doc),engine,sid);
+function setLevelG(engine,doc,sid){
+ const th=famineThresholds(engine,sid),first=setPoolCoverage(engine,doc,sid,1.0),D1=foodDaysOf(engine,doc,sid);
+ const target=0.6*th.famine,levelG=target/D1,fixture=setPoolCoverage(engine,doc,sid,levelG),Dg=foodDaysOf(engine,doc,sid);
+ const w=goodsWeight(engine,GRAIN(engine)),mouths=mealMouthsOf(engine,doc.state,sid,doc.state.settlements[sid].population),n=poolNumbers(engine,doc,sid);
+ const gate=Number.isFinite(levelG)&&levelG<1&&Number.isFinite(Dg)&&Math.abs(Dg-target)<=0.25*target&&Dg<th.famine;
+ return {...fixture,levelG,D1,Dg,Dtarget:target,thresholds:th,mouths,poolWeight:w,spotSupply:n.heldSpot,targetDays:n.target/w/mouths,fixedHoldings:first.otherHold,gate,
+  verdict:gate?null:'夹具不足（foodStockDays 偏离公式预期或未低于阈值）'};
+}
 // 空持有夹具（R10）：本聚落全部可知持有清零——居民（含经营者、玩家）背包里的池内货物清零，粮仓设 satiety 个饱腹单位（0 或 1）。
 function setPoolHold(engine,doc,sid,satiety){
  const ids=new Set(poolItemsOf(engine).map(i=>i.id)),here=loc=>placeSettlement(engine,doc.state,loc).value===sid;
@@ -219,6 +239,10 @@ function itemView(engine,doc,item,location){
   const rm=engine.world.marketRules,depthNet=q.opening>1?q.opening-Math.max(1,q.spotSupply??q.supply):0;
   return {item,goods:goodsClass(engine,item),poolWeight:w,supply:q.supply,spotSupply:q.spotSupply,demand:q.demand,ratio,ratioClamped,
    holdTarget,holdActual,holdActualSpot:(q.spotSupply??q.supply)*w,scarcityRaw,scarcityRawUnprotected,scarcityIntegralOne:integral,divZeroCapped,atTop:ratio>=limits[1],atFloor:ratio<=limits[0],
+   // v9 分母保护登记：引擎稀缺度分母 = max(1 件, 供给)（market.mjs:391 等），饱腹单位上 = max(holdActual, poolWeight)；holdActual < poolWeight 时保护起作用。
+   scarcityDenominator:Math.max(holdActual,w),guardActive:holdActual<w,
+   // v9 R5⑤：只对内部输出（不在顶也不在地板）判定，比较 relPrice × (holdActual ÷ holdTarget)；这里给出内部标记与该乘积。
+   isInternal:!(ratio>=limits[1])&&!(ratio<=limits[0]),relPriceTimesHoldRatio:holdTarget>0?(q.listPrice/base)*(holdActual/holdTarget):null,
    catalogBase,environment:x.environment,environmentFactors,regionalBase:base,transport:base/(catalogBase*(environmentFactors||1)),transportInputs:tin,
    scarcity:x.scarcity,listPrice:q.listPrice,relPrice:q.listPrice/base,relation:x.relation,
    explanationParts:{baseline:x.baseline,environment:x.environment,scarcity:x.scarcity,quality:x.quality,depth:x.depth,spread:x.spread,relation:x.relation,curve:x.curve,count:q.quantity,rounding:x.rounding,contributionsEmpty:{value:!contributions.value.length,price:!contributions.price.length}},
@@ -259,18 +283,19 @@ async function cellRun(name,mode,season,level,sid,opts={}){
  // 日历季节 = floor(月序/3)：0 春、1 夏、2 秋、3 冬（冬荒钟 seasons:[3] = 霜月起）。种子在元年雨月 1 日，旧"冬"格（种子后 2 天）其实是雨月 3 日（春），冬荒钟从不运行；
  // 现改为第二年冬第 630 日（霜月 1 日）；其 00:00 的首个 tick 被 skipTo 越过，之后 637 日有 tick。秋 = 第 545 日（穗月）。
  const reached=await advanceTo(ctx,(season==='winter'?630*DAY:545*DAY)+600,season);
- const fixture=opts.fixture==='zero'?setPoolHold(engine,ctx.doc,sid,0):opts.fixture==='tiny'?setPoolHold(engine,ctx.doc,sid,1):setPoolCoverage(engine,ctx.doc,sid,level);
- const set=fixture.set;
+ // level 'Lg' = level_g（冬荒钟夹具，setLevelG 由实测 D₁ 按比例推出并做第 0 天闸门）。
+ const fixture=opts.fixture==='zero'?setPoolHold(engine,ctx.doc,sid,0):opts.fixture==='tiny'?setPoolHold(engine,ctx.doc,sid,1):level==='Lg'?setLevelG(engine,ctx.doc,sid):setPoolCoverage(engine,ctx.doc,sid,level);
+ const set=fixture.set,gateVerdict=fixture.verdict??null;
  const head={kind:'cell',case:name,mode,control:mode==='noclock'?'C2':'C1',settlement:sid,season,level:opts.fixture?(opts.fixture==='zero'?0:null):level,fixture:opts.fixture??'coverage',pairKey:`${sid}|${season}|${level}`,strippedClasses:[],stripped:0,stagesDeleted:[],
   seasonFactorsRemoved:b.seasonFactorsRemoved,priceShiftEffectsInWorld:b.shiftCount,clocksRemoved,closure,closureMatches,granarySet:set,fixtureDetail:fixture,jumped:ctx.jumped??false};
  const rows=[];
  const out=row=>{rows.push(row);emit(row);};
  const snap=extra=>{const items=ITEMS.map(i=>itemView(engine,ctx.doc,i,sid));return {...head,...extra,seasonIndex:engine.calendar(ctx.doc.state.minute).season,calendar:engine.calendar(ctx.doc.state.minute).text,minute:ctx.doc.state.minute,
-  poolCoverage:poolCoverageOf(items),granary:granaryView(engine,ctx.doc,sid),famineStages:{[clockId]:clockStages(ctx.doc,clockId)},items};};
- out(snap({phase:'before-advance',fixtureUntrusted:ctx.fixtureUntrusted??(reached?null:{error:'未推进到目标日'})}));
+  poolCoverage:poolCoverageOf(items),foodStockDays:foodDaysOf(engine,ctx.doc,sid),famineThresholds:famineThresholds(engine,sid),granary:granaryView(engine,ctx.doc,sid),famineStages:{[clockId]:clockStages(ctx.doc,clockId)},items};};
+ out(snap({phase:'before-advance',fixtureUntrusted:ctx.fixtureUntrusted??(reached?(gateVerdict?{error:gateVerdict}:null):{error:'未推进到目标日'})}));
  if(opts.fixture)return rows;
  const adv=await attempt(ctx,'world_time',{minutes:ADVANCE*DAY},'probe-advance');
- out(snap({phase:'after-advance',fixtureUntrusted:ctx.fixtureUntrusted??(reached?null:{error:'未推进到目标日'}),advance:{days:ADVANCE,ok:adv.ok,error:adv.error}}));
+ out(snap({phase:'after-advance',fixtureUntrusted:ctx.fixtureUntrusted??(reached?(gateVerdict?{error:gateVerdict}:null):{error:'未推进到目标日'}),advance:{days:ADVANCE,ok:adv.ok,error:adv.error}}));
  return rows;
 }
 // R5② 的 without/noclock 配对由离线按（聚落、level、phase、物品）完成（两个情形各自单独输出，行里带 mode 与 famineStages）。
@@ -300,6 +325,9 @@ async function buyRun(name,level){
      quotedListPrice:q.listPrice,quotedExactTotal:q.exactTotal,count:q.quantity,curve:x.curve,curveAvgScarcity:x.curve/q.quantity,pointScarcity:x.scarcity,
      // 价格公式里 value、price 两个槽的加法型修正（explainDerived 的 contributions）与各槽输入输出；additiveSum 为 stage=add 项数值之和。
      valueSlot:x.value?{base:x.value.base,value:x.value.value,contributions:x.value.contributions}:null,priceSlot:x.price?{base:x.price.base,value:x.price.value,contributions:x.price.contributions}:null,contributions,additiveSum,
+     scarcityDenominator:Math.max(holdActual,w0),guardActive:holdActual<w0,
+     // v9 R6：relation 的来源——买家对掌柜与聚落的 standing（tradeQuote 返回的 keeperRegard、settlementRegard），逐件前后记录。
+     relation:x.relation,standing:{keeper:q.keeperRegard??null,settlement:q.settlementRegard??null},
      explanationParts:{baseline:x.baseline,environment:x.environment,scarcity:x.scarcity,quality:x.quality,depth:x.depth,spread:x.spread,relation:x.relation,curve:x.curve,count:q.quantity,rounding:x.rounding}};}catch(e){return {error:errorOf(e)};}};
   let prev=null,last=null,carry=null;
   for(let k=1;k<=BUYS;k++){
@@ -311,6 +339,11 @@ async function buyRun(name,level){
    const expectedRise=last&&last.ratioClamped>0&&last.depth>0&&pre.ratioClamped!==undefined&&pre.depth!==undefined?(pre.ratioClamped/last.ratioClamped)*(pre.depth/last.depth)-1:null;
    emit({kind:'buy',case:name,mode:'without',level,fixtureDetail:fixture,holdBefore:{holdTarget:pre.holdTarget,holdActual:pre.holdActual,poolCoverage:pre.poolCoverage},holdAfter:{holdTarget:post.holdTarget,holdActual:post.holdActual,poolCoverage:post.poolCoverage},poolCoverage:pre.poolCoverage,item,k,ok:buy.ok,error:buy.error,granarySet:set,jumped:ctx.jumped??false,fixtureUntrusted:ctx.fixtureUntrusted??(reached?null:{error:'未推进到目标日'}),
     unitPrice:unit,listPrice:list,cost:buy.result?.cost,pre,unitRiseVsPrev:prev!==null&&unit!==null&&prev>0?unit/prev-1:null,quotedRiseVsPrev:quotedRise,expectedRise,
+    // v9 R6 ①：只核对 c_k（稀缺度 × 深度分量的逐件涨幅，取 explanationParts）与 expectedRise（只含稀缺度与深度）；consistencyError（含 relation）只记录。
+    ck:last&&last.scarcity>0&&last.depth>0&&pre.scarcity!==undefined&&pre.depth!==undefined?(pre.scarcity*pre.depth)/(last.scarcity*last.depth)-1:null,
+    ckMinusExpected:last&&last.scarcity>0&&last.depth>0&&expectedRise!==null&&pre.scarcity!==undefined?(pre.scarcity*pre.depth)/(last.scarcity*last.depth)-1-expectedRise:null,
+    // relation 逐件值、相对上一件的步长与买家 standing 前后（relation 方向约束：每件 relation_k ≤ relation_{k−1}）。
+    relation:pre.relation,relationVsPrev:last&&last.relation>0&&pre.relation!==undefined?pre.relation/last.relation-1:null,standingBefore:pre.standing,standingAfter:post.standing,
     consistencyError:quotedRise!==null&&expectedRise!==null?Math.abs(quotedRise-expectedRise):null,
     supplyDelta:last&&pre.supply!==undefined?pre.supply-last.supply:null,demandDelta:last&&pre.demand!==undefined?pre.demand-last.demand:null,depthDelta:last&&pre.depth!==undefined?pre.depth-last.depth:null});
    if(unit!==null)prev=unit;
@@ -326,15 +359,15 @@ async function buyRun(name,level){
 const CASES={
  spring:{label:'春季青黄不接粮价钟（河湾 loc_hw：rise/peak/ease，待替换项）',settlement:'loc_hw',clocks:['price:loc_hw'],season:1,items:ITEMS,level:1.0,strip:['spring']},
  'spring-bs':{label:'春季青黄不接粮价钟（镇 loc_bs，待替换项）',settlement:'loc_bs',clocks:['price:loc_bs'],season:1,items:ITEMS,strip:['spring']},
- // 旱情（C3）：保持原条件（整季触发表由 pureHazardFires 确定），第 364 日 600 分钟开局，池 cov 1.0；见 droughtRun。
+ // 旱情（C3）：保持原条件（整季触发表由 pureHazardFires 确定），第 4 日 600 分钟开局（(sowDays[0]−1)×1440+600），池 cov 1.0；见 droughtRun。
  drought:{label:'久晴旱情（泉村 loc_bs_liquan：灾害年与正常年对照 C3）',settlement:'loc_bs_liquan',clocks:['price:loc_bs_liquan'],season:1,items:ITEMS,level:1.0,keepConditions:true,strip:[]},
  flood:{label:'洪水断路（镇 loc_bs：route_closure 与 price 同阶段）',settlement:'loc_bs',clocks:['flood:loc_bs'],season:1,items:ITEMS,strip:['flood']},
  epidemic:{label:'疫病药草（河湾 loc_hw：cases、spread 条件整体强制成立；待替换项）',settlement:'loc_hw',clocks:['epidemic:loc_hw'],season:1,items:['item_herb','item_ration'],forceCases:true,strip:['epidemic']},
- // R7 famine 阶段日：河湾 famine:loc_hw 保持原条件，缺口 0.4（36 天口粮：小于 90 天为 tight，小于 45 天为 famine），冬第 630 日 tick（tight）、637 日 tick（famine），推进 10 天。
- 'famine-hw':{label:'冬荒阶段日（河湾 loc_hw，保持原条件；with 的 hazardFactor 应为 tight、famine 阶段配置值）',settlement:'loc_hw',clocks:['famine:loc_hw'],season:3,items:ITEMS,keepConditions:true,level:0.4,days:10,strip:[]},
- 'bs-tight':{label:'镇 loc_bs 删除 tight 阶段后缺粮回退检查（famine:loc_bs 与其依赖的 sangban、tanjie 钟，保持原条件；sangban level 0.4）',settlement:'loc_bs',clocks:['famine:loc_bs','famine:loc_bs_sangban','famine:loc_ms_tanjie'],season:3,items:ITEMS,keepConditions:true,sangbanLevel:0.4,strip:[],extraSettlements:['loc_bs_sangban','loc_ms_tanjie']},
+ // R7 famine 阶段日：河湾 famine:loc_hw 保持原条件，夹具 level_g（实测 D₁ 按比例推出，D目标 = 0.6 × 45 = 27 天，低于 tight 90、famine 45 阈值），冬第 630 日 tick（tight）、637 日 tick（famine），推进 10 天。
+ 'famine-hw':{label:'冬荒阶段日（河湾 loc_hw，保持原条件；with 的 hazardFactor 应为 tight、famine 阶段配置值）',settlement:'loc_hw',clocks:['famine:loc_hw'],season:3,items:ITEMS,keepConditions:true,level:'Lg',days:10,strip:[]},
+ 'bs-tight':{label:'镇 loc_bs 删除 tight 阶段后缺粮回退检查（famine:loc_bs 与其依赖的 sangban、tanjie 钟，保持原条件；sangban level_g）',settlement:'loc_bs',clocks:['famine:loc_bs','famine:loc_bs_sangban','famine:loc_ms_tanjie'],season:3,items:ITEMS,keepConditions:true,sangbanLevel:'Lg',strip:[],extraSettlements:['loc_bs_sangban','loc_ms_tanjie']},
  // R9 ④ 的 C2 特例：同上，但 famine:loc_bs 及其 hazard_phase 闭包（famine:loc_ms_tanjie）整段移除。
- 'bs-tight-noloc_bs':{label:'镇 loc_bs 冬荒钟及闭包整段移除（C2 特例，R9 ④）',settlement:'loc_bs',clocks:['famine:loc_bs','famine:loc_bs_sangban','famine:loc_ms_tanjie'],season:3,items:ITEMS,keepConditions:true,sangbanLevel:0.4,strip:[],extraSettlements:['loc_bs_sangban','loc_ms_tanjie'],removeClock:'famine:loc_bs'},
+ 'bs-tight-noloc_bs':{label:'镇 loc_bs 冬荒钟及闭包整段移除（C2 特例，R9 ④）',settlement:'loc_bs',clocks:['famine:loc_bs','famine:loc_bs_sangban','famine:loc_ms_tanjie'],season:3,items:ITEMS,keepConditions:true,sangbanLevel:'Lg',strip:[],extraSettlements:['loc_bs_sangban','loc_ms_tanjie'],removeClock:'famine:loc_bs'},
 };
 const FLOOD_CONTROL_STRIP=['flood','closure'];
 function forceClocks(w,spec){
@@ -364,14 +397,18 @@ async function caseRun(name,withShift,spec,days,control=false){
  const target=spec.startMinute??(360+spec.season*90-1)*DAY+600;
  const reached=await advanceTo(ctx,target,'case');
  const fixtures={};
- if(spec.level!==undefined)fixtures[spec.settlement]=setPoolCoverage(engine,ctx.doc,spec.settlement,spec.level);
- if(spec.sangbanLevel!==undefined)fixtures.loc_bs_sangban=setPoolCoverage(engine,ctx.doc,'loc_bs_sangban',spec.sangbanLevel);
+ // level 'Lg' = level_g（setLevelG：实测 D₁、按比例推 level_g、第 0 天闸门；输出规则要求的 D、餐口、阈值、D₁、level_g、D_g、poolWeight、spotSupply、targetDays、fixedHoldings）。
+ const place=(sid,level)=>level==='Lg'?setLevelG(engine,ctx.doc,sid):setPoolCoverage(engine,ctx.doc,sid,level);
+ if(spec.level!==undefined)fixtures[spec.settlement]=place(spec.settlement,spec.level);
+ if(spec.sangbanLevel!==undefined)fixtures.loc_bs_sangban=place('loc_bs_sangban',spec.sangbanLevel);
+ const gateVerdicts=Object.entries(fixtures).filter(([,v])=>v.verdict).map(([k,v])=>({settlement:k,verdict:v.verdict}));
  const granarySet=Object.keys(fixtures).length?Object.fromEntries(Object.entries(fixtures).map(([k,v])=>[k,v.set])):null;
  emit({kind:'meta',case:name,mode,label:spec.label,settlement:spec.settlement,clocks:spec.clocks,strippedClasses:b.strippedClasses,stripped:b.removed,stagesDeleted:b.stagesDeleted,priceShiftEffectsInWorld:b.shiftCount,seasonFactorsRemoved:b.seasonFactorsRemoved,
-  clocksRemoved:closure,closure:spec.removeClock?closure:undefined,closureMatches,granarySet,fixtureDetail:fixtures,jumped:ctx.jumped??false,fixtureUntrusted:ctx.fixtureUntrusted??(reached?null:{error:'未推进到目标日'})});
+  clocksRemoved:closure,closure:spec.removeClock?closure:undefined,closureMatches,granarySet,fixtureDetail:fixtures,jumped:ctx.jumped??false,fixtureUntrusted:ctx.fixtureUntrusted??(reached?(gateVerdicts.length?{error:'夹具不足（foodStockDays 偏离公式预期或未低于阈值）',detail:gateVerdicts}:null):{error:'未推进到目标日'})});
  const series=[];
  const snap=day=>{const items=spec.items.map(i=>itemView(engine,ctx.doc,i,spec.settlement));const s={kind:'day',case:name,mode,day,calendar:engine.calendar(ctx.doc.state.minute).text,granary:granaryView(engine,ctx.doc,spec.settlement),
-  poolCoverage:poolCoverageOf(items),
+  poolCoverage:poolCoverageOf(items),foodStockDays:foodDaysOf(engine,ctx.doc,spec.settlement),
+  extraFoodStockDays:Object.fromEntries((spec.extraSettlements??[]).map(x=>[x,foodDaysOf(engine,ctx.doc,x)])),
   extraGranary:(spec.extraSettlements??[]).map(x=>({settlement:x,...granaryView(engine,ctx.doc,x)})),
   extraItems:Object.fromEntries((spec.extraSettlements??[]).map(x=>[x,ITEMS.map(i=>itemView(engine,ctx.doc,i,x))])),
   clocks:Object.fromEntries(spec.clocks.map(id=>[id,clockStages(ctx.doc,id)])),
@@ -405,6 +442,8 @@ async function droughtRun(name,noclock){
  const fixture=setPoolCoverage(engine,ctx.doc,sid,spec.level),seed=draftOf(engine,ctx.doc).get('randomSeed'),year=Math.floor(startMinute/DAY/360);
  let fires=null,firesError=null;try{fires=pureHazardFires(engine,seed,ruleSource,year).map(f=>({day:Math.floor(f.minute/DAY),minute:f.minute,phase:f.phase,stage:f.stage}));}catch(e){firesError=errorOf(e);}
  emit({kind:'meta',case:name,mode,control:'C3',label:spec.label,settlement:sid,clocks:noclock?[]:spec.clocks,clocksRemoved:noclock?closure:[],stripped:0,stagesDeleted:[],priceShiftEffectsInWorld:b.shiftCount,seasonFactorsRemoved:b.seasonFactorsRemoved,
+  // v9：开局第 (sowDays[0]−1) 日、检查日 sowDays[1]+1、上限 359；开局种粮批次 expiresDay 读自农事档案；触发表为空单独标出（"不可判（时钟未走到）"，与"夹具不足（无在田批次）"分开）。
+  seedBatchExpiresDay:(ctx.doc.state.records?.[`agriculture:${sid}`]?.field?.seedBatches??[]).map(b=>b.expiresDay),sowDays:crop.sowDays,sowCheckDay,capDay,firesEmpty:!(fires?.length),
   startDay:Math.floor(startMinute/DAY),startMinute,year,firesYear:fires,firesError,D2:fires?.length?fires.at(-1).day:null,intervalDays:ruleSource.intervalDays,affectingMinutes:43200,
   granarySet:fixture.set,fixtureDetail:fixture,jumped:ctx.jumped??false,fixtureUntrusted:ctx.fixtureUntrusted??(reached?null:{error:'未推进到目标日'})});
  const cohortsOf=()=>(ctx.doc.state.records?.[`agriculture:${sid}`]?.field?.cohorts??[]).map(c=>({id:c.id,sownDay:c.sownDay,readyDay:c.sownDay+crop.growthDays,areaUnits:c.areaUnits,harvestedUnits:c.harvestedUnits,ready:c.ready,grownDays:c.grownDays}));
@@ -466,9 +505,12 @@ const add=(name,estimate,run,startExtra=null)=>{REG[name]={estimate,run,startExt
 // noclock 与 bs-tight-noloc_bs 的 start 行带闭包报告（只读 rules.json）：闭包内每钟每阶段的 effect 种类与对象。
 const closureStart=(clockId)=>{const ids=closureOf(world0,clockId);return {clocksRemoved:ids,closureMatches:EXPECTED_CLOSURE[clockId]?sameSet(ids,EXPECTED_CLOSURE[clockId]):null,closureReport:closureReport(world0,ids)};};
 for(const [tag,sid] of [['',HW],['yupo-',YP]])for(const season of ['winter','autumn'])for(const L of LEVELS)
- add(`${tag}${season}-without-${L}`,season==='winter'?'skipTo 到冬第 630 日 + 真实推进 8 天，约 5-10 分钟':'skipTo 到秋第 545 日 + 真实推进 8 天，约 5-10 分钟',name=>cellRun(name,'without',season==='winter'?'winter':'normal',L,sid));
+ add(`${tag}${season}-without-${L}`,season==='winter'?'skipTo 到冬第 630 日 + 真实推进 8 天，约 5-10 分钟':'skipTo 到秋第 545 日 + 真实推进 8 天，约 5-10 分钟',name=>cellRun(name,'without',season==='winter'?'winter':'normal',Number(L),sid));
+// winter-without-Lg：与 winter-noclock-Lg 配对的基线（level_g 夹具，不进 R1、R2、R3 的组，只用于 R5②）。
+for(const [tag,sid] of [['',HW],['yupo-',YP]])
+ add(`${tag}winter-without-Lg`,'level_g 夹具：skipTo 到冬第 630 日 + 实测 D₁、level_g、第 0 天闸门 + 真实推进 8 天，约 5-10 分钟',name=>cellRun(name,'without','winter','Lg',sid));
 for(const [tag,sid] of [['',HW],['yupo-',YP]])for(const L of NOCLOCK_LEVELS)
- add(`${tag}winter-noclock-${L}`,'C2：钟及闭包整段移除；skipTo 到冬第 630 日 + 真实推进 8 天，约 5-10 分钟',name=>cellRun(name,'noclock','winter',L,sid),()=>closureStart(`famine:${sid}`));
+ add(`${tag}winter-noclock-${L}`,'C2：钟及闭包整段移除；skipTo 到冬第 630 日 + 真实推进 8 天，约 5-10 分钟',name=>cellRun(name,'noclock','winter',L==='Lg'?'Lg':Number(L),sid),()=>closureStart(`famine:${sid}`));
 add('drought-without','C3 灾害年：开局年播种窗前一日起真实推进至收割窗末，约 10-20 分钟（超过 8 分钟）',name=>droughtRun(name,false));
 add('drought-noclock','C3 正常年：钟整段移除，其余同上，约 10-20 分钟（超过 8 分钟）',name=>droughtRun(name,true),()=>closureStart(CASES.drought.clocks[0]));
 add('famine-hw-without','skipTo 到冬前一天 + 真实推进 10 天，约 5-10 分钟',name=>caseRun(name,false,CASES['famine-hw'],CASEDAYS));
