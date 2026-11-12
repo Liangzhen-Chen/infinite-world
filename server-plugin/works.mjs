@@ -51,11 +51,11 @@ function learned(d,engine,name,label){
 function literate(d,engine){
     if((d.get('state','skills',WORK_RULES.literacySkill,'proficiency')??0)<engine.rules.books.minimumLiteracy)throw preconditionFailure('识字熟练度不足');
 }
-function spend(d,engine,rows,eventId,recipe){
+function spend(d,engine,rows,eventId,recipe,outputs={}){
     for(const[item,amount]of rows)if(engine.quantity(d,'player',item)<amount)throw preconditionFailure(`缺少${engine.byId.get(item)?.name??item}`);
     for(const[item,amount]of rows)engine.itemDelta(d,'player',item,-amount,craftInput('works',eventId));
-    // 行为人 = 玩家（出书耗纸墨），发生地 = 玩家所在地的聚落。
-    recordCraft(d,{engine,actor:'player',place:placeOf(d,engine).settlement,recipe,batches:1,inputs:Object.fromEntries(rows),outputs:{},writer:'works',eventId});
+    // 行为人 = 玩家，发生地 = 玩家所在地的聚落。只有产出物品（印成册的书）的工序带 place 记耗料；撰写、抄录、勘绘的产物是文书记录不是物品，没有物品产物，不计入耗料日桶。
+    recordCraft(d,{engine,actor:'player',...(Object.keys(outputs).length?{place:placeOf(d,engine).settlement}:{}),recipe,batches:1,inputs:Object.fromEntries(rows),outputs,writer:'works',eventId});
 }
 // 成品入账并补全本次制造凭据的产出。
 function crafted(d,engine,item,quantity,{eventId,workmanship}){
@@ -140,7 +140,7 @@ function publish(d,engine,args,id){
         if(decision.outcome==='agree')buyers.push(npc);
     }
     const sold=buyers.length,income=sold*price;
-    if(printed)spend(d,engine,materials,id,'works:publish');
+    if(printed)spend(d,engine,materials,id,'works:publish',{[WORK_RULES.book]:printed});
     const kept=printed-sold,instances=printed?crafted(d,engine,WORK_RULES.book,printed,{eventId:id,workmanship:work.quality}):[];
     const sales=[];
     for(const [index,npc] of buyers.entries()){

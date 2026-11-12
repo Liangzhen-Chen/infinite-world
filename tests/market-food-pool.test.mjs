@@ -298,8 +298,8 @@ test('生产耗料经 recordCraft 按（聚落，物品）记日桶：不同写�
  // 过 W + 1 天后再记 2：旧日桶被丢掉（桶数有上界），窗内消耗 = 2，需求比无记录时 +2。记录里没有的货（水）需求不变。
  const {engine,doc}=setup('market-food-pool-consume'),inn='bld_hw_qingdeng',iron='item_iron',other='item_water',d=engine.primitiveDraft(doc);
  const base=marketSupply(d,engine,iron,inn),baseOther=marketSupply(d,engine,other,inn),day0=Math.floor(d.get('state','minute')/1440);
- recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'probe_recipe_a',inputs:{[iron]:5},outputs:{},writer:'works',eventId:'probe-a'});
- recordCraft(d,{engine,actor:Object.keys(doc.state.npcs)[0],place:'loc_hw',recipe:'probe_recipe_b',inputs:{[iron]:3},outputs:{},writer:'npc-autonomy',eventId:'probe-b'});
+ recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'probe_recipe_a',inputs:{[iron]:5},outputs:{item_iron_nail:5},writer:'works',eventId:'probe-a'});
+ recordCraft(d,{engine,actor:Object.keys(doc.state.npcs)[0],place:'loc_hw',recipe:'probe_recipe_b',inputs:{[iron]:3},outputs:{item_iron_nail:3},writer:'npc-autonomy',eventId:'probe-b'});
  assert.equal(d.get('state','records','craft-use:loc_hw','days',String(day0),iron),8);
  const a=marketSupply(d,engine,iron,inn);
  assert.ok(Math.abs((a.consumption-base.consumption)-8)<=1e-9);assert.ok(Math.abs((a.demand-base.demand)-8)<=1e-9);
@@ -307,12 +307,22 @@ test('生产耗料经 recordCraft 按（聚落，物品）记日桶：不同写�
  const W=craftUseWindowDays(engine,d.get('randomSeed'),Object.keys(d.get('state','settlements')));
  d.set(['state','minute'],d.get('state','minute')+(W+1)*1440);
  const later=marketSupply(d,engine,iron,inn);
- recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'probe_recipe_a',inputs:{[iron]:2},outputs:{},writer:'works',eventId:'probe-c'});
+ recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'probe_recipe_a',inputs:{[iron]:2},outputs:{item_iron_nail:2},writer:'works',eventId:'probe-c'});
  const days=d.get('state','records','craft-use:loc_hw','days');
  assert.equal(days[String(day0)],undefined,'窗口外的日桶已过期');
  assert.ok(Object.keys(days).length<=W);
  const b=marketSupply(d,engine,iron,inn);
  assert.ok(Math.abs((b.consumption-later.consumption)-2)<=1e-9);
+});
+
+test('recordCraft 不变量：带 place 的记录没有产物或产物与投入完全相同即抛错（转移不得计入耗料）；有不同产物则正常记账',()=>{
+ // 推导：带 place = 声明"投入被消耗、转化成产物"。无产物、或产物与投入同物同量，都是转移，必须抛错且不留日桶；投入 5 铁、产出 5 铁钉是真转化，记 5。
+ const {engine,doc}=setup('market-food-pool-invariant'),d=engine.primitiveDraft(doc),iron='item_iron',base={engine,actor:'player',place:'loc_hw',recipe:'probe_recipe',inputs:{[iron]:5},writer:'probe',eventId:'probe-inv'};
+ assert.throws(()=>recordCraft(d,{...base,outputs:{}}),/转移不得计入耗料/);
+ assert.throws(()=>recordCraft(d,{...base,outputs:{[iron]:5}}),/转移不得计入耗料/);
+ assert.equal(d.get('state','records','craft-use:loc_hw'),undefined);
+ recordCraft(d,{...base,outputs:{item_iron_nail:5}});
+ assert.equal(d.get('state','records','craft-use:loc_hw','days',String(Math.floor(d.get('state','minute')/1440)),iron),5);
 });
 
 test('捐粮是转移不是消耗：捐粮的守恒对凭据不带 place，不改变受粮聚落的耗料与需求',()=>{
