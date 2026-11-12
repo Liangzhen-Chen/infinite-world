@@ -267,6 +267,7 @@ test('on-site restock spends existing counter capital even with an empty owner p
  assert.equal(d.get('state','npcs',seller,'coins'),3);
  assert.equal(f.e.quantity(d,owner,item),2);assert.equal(f.e.quantity(d,seller,item),5);
  const row=d.get('state','records',`shop:${f.shop.id}`).entries[0];
+ // 待重推（MKTW 持有量口径）：referenceCopper 6 是按旧供需口径（供给先扣自用储备、需求含目标留存）算出的参考价；新口径下供给 = 卖方全部库存，参考价变为 7，未改值。
  assert.deepEqual([row.paidCopper,row.referenceCopper,row.cost],[3,6,{goods:3,freight:0,duties:0}]);
 });
 
@@ -309,6 +310,7 @@ test('顾客按十份口粮缺口采购，保留已知付款，不按钱袋固�
  // 手算：可靠收入距正午5.5日 -> 55份，不是按100*1/4=25铜硬花；
  // 实际量还受现货和深度约束，现金至少留下已知租款8。
  assert.ok(bought.length,JSON.stringify(visits(d)));assert.ok(bought.every(r=>r.budget.maximum===92));
+ // 待重推（MKTW 持有量口径）：下一行期望按旧口径"现货 100 − 储备 10 = 90"推深度；新口径下卖方公开持有 = 全部 100（不先扣自用储备），单笔深度 100*0.3 = 30，总额随单价变，未改值。
  // 现货100-储备10=90，单笔深度90*0.3=27；单价3*0.5=1.5，总额截断40。
  assert.deepEqual(bought.map(r=>[r.quantity,r.paid]),[[27,40]]);
  assert.ok(d.get('state','npcs',buyer,'coins')>=8);

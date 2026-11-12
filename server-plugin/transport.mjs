@@ -221,7 +221,8 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='
 // 一件货从产地运到某聚落的单位运费：产地 = 物品目录的 origin（建筑换算成所在聚落），按挑夫背货的运价（porterCharges 同一口径：
 // 路程 × 计费重量 × carrier:pack 费率）加沿途路线通行费；不含到岸关税（关税要按货值报价，会回到 marketQuote 形成循环）。
 // 无 origin、产地不在任何聚落、产地就在本聚落时记 0。路线开闭（封路）只影响货能不能到，由实际供给反映，不进运输因子：
-// 这里按一年里各月能走通的路线取最便宜的一条，即"路线开放时的正常成本"；一年里都走不通（地理不连通）就直接报错，不记 0。
+// 这里按一年里各月能走通的路线取最便宜的一条，即"路线开放时的正常成本"；一年里都走不通（地理不连通，如只登记了局部路线的世界片段）返回 null：
+// 无从推出运费，调用方不加运输价（不是 0 运费，也不让报价崩溃；真实世界里不应出现，探针的 transport 列会列出这类点）。
 // 结果与时刻无关，同一世界数据对象内按 (物品, 目的聚落) 记忆。
 const unitFreightMemo=new WeakMap();
 export function unitFreight(d,e,{item,to,minute=d.get('state','minute')}){
@@ -238,8 +239,7 @@ export function unitFreight(d,e,{item,to,minute=d.get('state','minute')}){
    try{route=e.route(from,to,'walk',month*30*1440,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
    if(route)costs.push(route.edges.map(id=>e.world.routes.find(r=>r.id===id)).reduce((n,r)=>n+r.lengthKm*billableKg*specOf(e,'pack').rate,0)+(route.cost??0));
   }
-  if(!costs.length)throw Error(`物品 ${item} 的产地 ${from} 到 ${to} 地理上不连通，无法推出运费`);
-  cost=Math.min(...costs);
+  cost=costs.length?Math.min(...costs):null;
  }
  memo.set(key,cost);return cost;
 }

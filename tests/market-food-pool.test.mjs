@@ -85,7 +85,8 @@ test('需求 = 目标留存 + 缺口 + 承诺：非经营者买下一件货后�
   return b.members?.length&&[...b.members].sort()[0]===id&&b.procurementShortfall.satiety>2*w0;
  });
  assert.ok(pick,'聚落里需要一位有未满足饱腹缺口的非经营者');
- const given=applyIntentSetup(engine,doc,{facts:[{path:['state','npcs',pick,'inventory',bread],value:1}]});assert.deepEqual(given.setupUnmet,[]);
+ // 给这位非经营者多一件面包：直接改他的行囊（facts 路径不认还不存在的 inventory 键），账本按该状态重开。
+ const given={document:structuredClone(doc),setupUnmet:[]};given.document.state.npcs[pick].inventory={...given.document.state.npcs[pick].inventory,[bread]:1};given.document.ledger=openLedger(engine,given.document);
  const before=householdResources(read(doc),engine,pick),after=householdResources(read(given.document),engine,pick);
  // 推导（前提）：多持一件面包，该户先按需要吃掉它，留存 1 件；缺口减少恰好一件面包的饱腹 w0。
  const row=after.rows.find(r=>r.holder===pick&&r.item===bread);
@@ -143,7 +144,8 @@ test('被测代码无新增按聚落、季节、物品 id 的分支（R5④ 扫�
 function granaryFixture({food,population}){
  const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
  const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'market-food-pool-coverage');
- delete doc.state.records['agriculture:loc_hw'];
+ // 粮仓读账户的 grain 批次（market 读 priceRead region.grain，只认 kind=grain 的未过期批次）：保留托管农事记录，只把粮仓批次换成一批 food。
+ const farm=doc.state.records['agriculture:loc_hw'];farm.batches=food?[{id:'probe_stock',kind:'grain',amount:food,harvestDay:-30,expiresDay:400,source:'test'}]:[];if(farm.ledger)farm.ledger.openingFood=food;
  for(const n of Object.values(doc.state.npcs))n.inventory={};
  doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population,granary:true,food,foodPerDay:0,woodPerDay:0}};
  doc.ledger=openLedger(engine,doc);
@@ -219,7 +221,7 @@ test('私户背包变化不影响报价（I12）：非经营者多持多少货�
  const pick=Object.keys(state.npcs).find(id=>!owners.has(id)&&placeSettlement(engine,state,state.npcs[id].location).value==='loc_hw');
  assert.ok(pick,'聚落里需要一位非经营者');
  // 推导：非经营者的背包不是定价方知道的量（I12），实际持有、目标留存、缺口都不进供需；给他 500 件燕麦与 500 件面包，报价的供给、需求恒等。
- const given=applyIntentSetup(engine,doc,{facts:[{path:['state','npcs',pick,'inventory','item_oats'],value:500},{path:['state','npcs',pick,'inventory','item_bread'],value:500}]});assert.deepEqual(given.setupUnmet,[]);
+ const given={document:structuredClone(doc),setupUnmet:[]};given.document.state.npcs[pick].inventory={...given.document.state.npcs[pick].inventory,item_oats:500,item_bread:500};given.document.ledger=openLedger(engine,given.document);
  for(const item of ['item_oats','item_bread']){
   const a=marketSupply(documentReader(doc),engine,item,inn),b=marketSupply(documentReader(given.document),engine,item,inn);
   assert.equal(b.supply,a.supply,item);assert.equal(b.demand,a.demand,item);assert.deepEqual(b.rows,a.rows,item);
@@ -231,7 +233,8 @@ function nonFarmFixture({population,food,foodPerDay}){
  const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
  const engine=new WorldEngine(w),P='loc_bs_weiting',doc=engine.createCharacter(legacy,{},'market-food-pool-nonfarm');
  engine.rules.agriculture.settlements=engine.rules.agriculture.settlements.filter(p=>p.settlement!==P);
- delete doc.state.records[`agriculture:${P}`];
+ // 保留托管农事记录（粮仓读 grain 批次），只把粮仓批次换成一批 food。
+ const farm=doc.state.records[`agriculture:${P}`];farm.batches=food?[{id:'probe_stock',kind:'grain',amount:food,harvestDay:-30,expiresDay:400,source:'test'}]:[];if(farm.ledger)farm.ledger.openingFood=food;
  for(const n of Object.values(doc.state.npcs))n.inventory={};
  doc.state.settlements[P]={...doc.state.settlements[P],population,granary:true,food,foodPerDay,woodPerDay:0};
  doc.ledger=openLedger(engine,doc);
@@ -255,13 +258,13 @@ test('非农事聚落的目标持有 = 餐口 × 补给间隔天数（最近供�
  };
  const a=run(100),b=run(200);
  assert.ok(a.target>0&&b.target>a.target);
- const w=goodsWeight(a.f.engine,oats);
- assert.ok(Math.abs((b.s.demand-a.s.demand)*w-(b.target-a.target))<=1e-6*b.target,'需求之差 = 目标之差（饱腹单位）');
- // 平时存量约等于目标：粮仓存粮 = 目标（燕麦件数 = 目标 ÷ 权重），稀缺度 = 需求 ÷ 供给 ≥ 1，且 = 1 + K ÷ 目标（K = 货架目标 + 承诺，与存粮无关）。
- const c=nonFarmFixture({population:100,food:Math.round(a.target/w),foodPerDay:100}),sc=marketSupply(documentReader(c.doc),c.engine,oats,c.P);
- const K=a.s.demand*w-a.target;
+ // 单位：粮仓存量与目标都按燕麦件数（报价货就是燕麦，行权重比 = 1），需求与目标同单位，不再乘权重。
+ assert.ok(Math.abs((b.s.demand-a.s.demand)-(b.target-a.target))<=1e-6*b.target,'需求之差 = 目标之差（燕麦件数）');
+ // 平时存量约等于目标：粮仓存粮 = 目标，稀缺度 = 需求 ÷ 供给 ≥ 1，且 = (目标 + K) ÷ 目标（K = 货架目标 + 承诺，与存粮无关）。
+ const c=nonFarmFixture({population:100,food:a.target,foodPerDay:100}),sc=marketSupply(documentReader(c.doc),c.engine,oats,c.P);
+ const K=a.s.demand-a.target;
  assert.ok(K>=-1e-6);
- assert.ok(Math.abs(sc.demand/sc.supply-(a.target+K)/(sc.supply*w))<=1e-6);
+ assert.ok(Math.abs(sc.demand/sc.supply-(a.target+K)/a.target)<=1e-6);
  assert.ok(sc.demand/sc.supply>=1-1e-6);
 });
 
@@ -326,13 +329,14 @@ test('recordCraft 不变量：带 place 的记录没有产物或产物与投入�
 });
 
 test('抄录耗纸墨计入该聚落的纸墨需求：产物是文书（无物品产物）也是真实耗料',()=>{
- // 推导：works:copy 消耗纸 3、墨 1，产物是作品记录不是物品（outputs 为空），带 place 记入 loc_hw 的日桶；纸、墨的池权重 1，报价货就是它们，需求各恰好 +3、+1。
+ // 推导：works:copy 消耗纸 3、墨 1，产物是作品记录不是物品（outputs 为空），带 place 记入 loc_hw 的日桶；纸、墨各自成池（权重 1），报价货就是它们，
+ // 消耗量（consumption）各恰好 +3、+1。比较的是消耗量而不是需求：需求有 max(…,1) 的下限（无货架目标时基线需求被抬到 1），差值会少 1。
  const {engine,doc}=setup('market-food-pool-copy'),inn='bld_hw_qingdeng',d=engine.primitiveDraft(doc),paper=WORK_RULES.paper,ink=WORK_RULES.ink;
  const p0=marketSupply(d,engine,paper,inn),i0=marketSupply(d,engine,ink,inn);
  recordCraft(d,{engine,actor:'player',place:'loc_hw',recipe:'works:copy',inputs:{[paper]:3,[ink]:1},outputs:{},writer:'works',eventId:'probe-copy'});
  const p1=marketSupply(d,engine,paper,inn),i1=marketSupply(d,engine,ink,inn);
- assert.ok(Math.abs((p1.demand-p0.demand)-3*goodsWeight(engine,paper)/goodsWeight(engine,paper))<=1e-9);
- assert.ok(Math.abs((i1.demand-i0.demand)-1)<=1e-9);
+ assert.ok(Math.abs((p1.consumption-p0.consumption)-3)<=1e-9);
+ assert.ok(Math.abs((i1.consumption-i0.consumption)-1)<=1e-9);
 });
 
 test('捐粮是转移不是消耗：捐粮的守恒对凭据不带 place，不改变受粮聚落的耗料与需求',()=>{
@@ -367,6 +371,16 @@ function upkeepDailyAt(engine,state,item,place){
  }
  return (persons>0?total/persons:householdDailyUse(engine,state,[null],item))*state.settlements[place].population;
 }
+// 手推：报价货所在池（同一 goods 类）的户用消耗 = Σ 池内各货 户用日耗 × 该货补给间隔 × 池权重 ÷ 报价货权重（池内同类货共用一个需求，柴池含各种木料燃料）。
+function poolConsumptionAt(engine,state,seed,item,place){
+ const cls=goodsClass(engine,item);let n=0;
+ for(const it of engine.world.items){
+  if(goodsClass(engine,it.id)!==cls)continue;
+  const daily=upkeepDailyAt(engine,state,it.id,place);
+  if(daily>0)n+=daily*itemDaysAt(engine,state,seed,it.id,place)*goodsWeight(engine,it.id);
+ }
+ return n/goodsWeight(engine,item);
+}
 
 test('非食物货的户用日耗进目标持有：规则人均日耗 × 聚落人口 × 补给间隔天数（未上名册的人口也计）',()=>{
  // 推导：consumption = upkeepDailyAt（人均 × 聚落人口）× 该货补给间隔天数（itemDaysAt 手推）；名册户只给出人均率，不逐户加总。
@@ -374,7 +388,7 @@ test('非食物货的户用日耗进目标持有：规则人均日耗 × 聚落�
  const pick=engine.world.items.find(i=>!(foodSatiety(engine,i.id)>0)&&upkeepDailyAt(engine,state,i.id,'loc_hw')>0);
  assert.ok(pick,'聚落里有户用耗用的非食物货（柴、盐等）');
  // 聚落人口大于名册人数时（未上名册的人口），需求按人口算，不按名册户逐户加总：人口翻倍，户用消耗翻倍。
- const expected=upkeepDailyAt(engine,state,pick.id,'loc_hw')*itemDaysAt(engine,state,seed,pick.id,'loc_hw');
+ const expected=poolConsumptionAt(engine,state,seed,pick.id,'loc_hw');
  assert.ok(expected>0);
  const big=structuredClone(doc);big.state.settlements.loc_hw.population*=2;
  assert.ok(Math.abs(marketSupply(documentReader(big),engine,pick.id,inn).consumption-2*expected)<=1e-6*expected,'人口翻倍则户用消耗翻倍');
@@ -387,10 +401,10 @@ test('单农事聚落的世界：给柴报价不崩溃，消耗 = 户用日耗 �
  const wood='item_wood',inn='bld_hw_qingdeng',{engine,doc}=setup('market-food-pool-single-farm');
  engine.rules.agriculture.settlements=engine.rules.agriculture.settlements.filter(p=>p.settlement==='loc_hw');
  const state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
- const daily=upkeepDailyAt(engine,state,wood,'loc_hw'),days=itemDaysAt(engine,state,seed,wood,'loc_hw');
- assert.ok(daily>0);
+ const expected=poolConsumptionAt(engine,state,seed,wood,'loc_hw');
+ assert.ok(upkeepDailyAt(engine,state,wood,'loc_hw')>0&&expected>0);
  let s=null;assert.doesNotThrow(()=>{s=marketSupply(read,engine,wood,inn);});
- assert.ok(Math.abs(s.consumption-daily*days)<=1e-6*daily*days);
+ assert.ok(Math.abs(s.consumption-expected)<=1e-6*expected);
 });
 
 test('本地产铁：平时存量 = 目标持有（含铁钉作坊的耗铁）时 cov = 1，稀缺度为 1；本地产地补给间隔不小于一个交易周期',()=>{
@@ -418,11 +432,11 @@ test('柴：平时存量 = 目标持有（货架目标 + 承诺 + 户用日耗 �
  for(const n of Object.values(doc.state.npcs))n.inventory={};
  doc.ledger=openLedger(engine,doc);
  const state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
- const days=itemDaysAt(engine,state,seed,wood,'loc_hw'),daily=upkeepDailyAt(engine,state,wood,'loc_hw');
- assert.ok(daily>0,'聚落里有户用耗柴');
+ const expected=poolConsumptionAt(engine,state,seed,wood,'loc_hw');
+ assert.ok(upkeepDailyAt(engine,state,wood,'loc_hw')>0&&expected>0,'聚落里有户用耗柴');
  const s0=marketSupply(read,engine,wood,inn);
- assert.ok(Math.abs(s0.consumption-daily*days)<=1e-6*daily*days);
- const D=s0.demand;assert.ok(D>=daily*days);
+ assert.ok(Math.abs(s0.consumption-expected)<=1e-6*expected);
+ const D=s0.demand;assert.ok(D>=expected);
  const full=structuredClone(doc);full.state.settlements.loc_hw.wood=D;full.ledger=openLedger(engine,full);
  const s1=marketSupply(documentReader(full),engine,wood,inn);
  assert.ok(Math.abs(s1.supply-D)<=1e-9*D);assert.ok(Math.abs(s1.demand-D)<=1e-9*D);

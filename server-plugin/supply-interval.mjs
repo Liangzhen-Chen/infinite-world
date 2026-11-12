@@ -39,8 +39,8 @@ export function itemResupplyDays(engine,state,seed,item,place){
   return Number.isFinite(minutes)?Math.max(minutes/1440,cycle):cycle;
  }
  const t=roundTripDays(engine,seed,from,place);
- if(t===null)throw Error(`聚落 ${place} 到不了 ${item} 的产地聚落 ${from}，推不出补给间隔`);
- return t;
+ // 地理不连通（如只登记了局部路线的世界片段）：没有往返路程可推，同无产地处理，取一个交易周期；不让报价崩溃（真实世界里不应出现）。
+ return t===null?cycle:t;
 }
 // 滚动耗料累计的窗口（天）= 各聚落、各货补给间隔的上限（向上取整，至少一个交易周期）：粮的补给间隔（非农事聚落）、非食物货往返各产地聚落的天数；推不出的（不连通）不参与取上限，读它的需求时自会报错。
 export function craftUseWindowDays(engine,state,seed,places){
