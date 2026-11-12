@@ -1,3 +1,4 @@
+// 待重推（MKTW R5③）：区域基准价的运输因子改由物品 origin 整类推导（transport.unitFreight），依赖旧燕麦 lane 运输加价（distanceFactorPerKm）的价格期望待重推，未改值。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';

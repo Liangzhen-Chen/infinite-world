@@ -6267,7 +6267,6 @@
     "targetDays": 240,
     "workersMaximum": 2,
     "carryKgPerWorker": 10,
-    "distanceFactorPerKm": 0.01,
     "lanes": [
       {
         "id": "weekly_yp_wt",

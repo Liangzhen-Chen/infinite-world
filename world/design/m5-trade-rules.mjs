@@ -11,7 +11,6 @@ export const settlementTradeRules = {
     targetDays: 240,
     workersMaximum: 2,
     carryKgPerWorker: 10,
-    distanceFactorPerKm: 0.01,
     lanes: [
         {id:'weekly_yp_wt',seller:'loc_bs_yupo',buyer:'loc_bs_weiting',mode:'walk',maximumQuantity:40,taxBps:500,routes:['route_bs_yp','route_bs_wt']},
         {id:'weekly_wt_lq',seller:'loc_bs_weiting',buyer:'loc_bs_liquan',mode:'walk',maximumQuantity:40,taxBps:500,routes:['route_bs_wt','route_bs_lq']},

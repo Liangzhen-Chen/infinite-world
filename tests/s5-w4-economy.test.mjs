@@ -1,3 +1,4 @@
+// 待重推（MKTW R5③）：区域基准价的运输因子改由物品 origin 整类推导（transport.unitFreight），依赖旧燕麦 lane 运输加价（distanceFactorPerKm）的价格期望待重推，未改值。
 // S5 收口 W4：经济守恒接线。每项一条手算锚点；测试前提用真实游戏动作产生（移动、投资、典当、出租、营业、等待）。
 import test from 'node:test';
 import assert from 'node:assert/strict';

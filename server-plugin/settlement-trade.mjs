@@ -12,7 +12,8 @@ import {hazardPriceFactor} from './hazard-calendar.mjs';
 import {tradeTax} from './finance-tax.mjs';
 import {magicPriceFactor} from './magic-economy.mjs';
 import {transportSegment} from './transport-route.mjs';
-import {transportServices,quoteTransport,bookTransport,settleWreckedShipment} from './transport.mjs';
+import {transportServices,quoteTransport,bookTransport,settleWreckedShipment,unitFreight} from './transport.mjs';
+import {placeSettlement} from './entity-view.mjs';
 import {registerLoss,registerEarnedClaim} from './obligation-claims.mjs';
 import {declareHoldingWriter,holdingSet} from './holdings.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
@@ -29,7 +30,7 @@ const integer=(v,min=0)=>Number.isSafeInteger(v)&&v>=min;
 export function validateSettlementTradeRules(world){
     const r=world.rules.settlementTrade;if(!r)return[];
     const errors=[],ps=world.rules.agriculture?.settlements??[],ids=new Set();
-    if(r.version!==1||!r.source||!integer(r.cycleDays,1)||!integer(r.firstDay,1)||!integer(r.dispatchMinute)||r.dispatchMinute>=DAY||!integer(r.targetDays,1)||!integer(r.workersMaximum,1)||!(r.unitKg>0)||!(r.carryKgPerWorker>0)||!(r.distanceFactorPerKm>=0)||!Array.isArray(r.lanes))errors.push('周贸易周期、运力或价格规则无效');
+    if(r.version!==1||!r.source||!integer(r.cycleDays,1)||!integer(r.firstDay,1)||!integer(r.dispatchMinute)||r.dispatchMinute>=DAY||!integer(r.targetDays,1)||!integer(r.workersMaximum,1)||!(r.unitKg>0)||!(r.carryKgPerWorker>0)||!Array.isArray(r.lanes))errors.push('周贸易周期、运力或价格规则无效');
     const item=world.items.find(i=>i.id===r.item);
     if(!hasTrait(itemTraits(item),'grain')||item.weight!==r.unitKg)errors.push('周贸易标的与实际谷物重量不符');
     for(const l of r.lanes??[]){
@@ -87,14 +88,11 @@ export function regionalTradePrice(d,engine,item,location,minute=d.get('state','
 // magic and water conditions. Supply/demand is calculated once by market.mjs.
 export function regionalTradeBase(d,engine,item,location,minute=d.get('state','minute')){
  // 区域价公式的输入：目录基准价是规则定义的起点，乘环境/运输后才成为区域基准（现价由 marketQuote 再乘供需）。
- const base=engine.byId.get(item).basePrice,r=engine.rules.settlementTrade,sid=region(engine,location);
+ const base=engine.byId.get(item).basePrice,place=placeSettlement(engine,d.get('state'),location).value;
  const environment=hazardPriceFactor(engine,d.get('state'),item,location,minute)*magicPriceFactor(engine,d.get('state'),item,location)*forestWaterPriceFactor(engine,d.get('state'),item,location,d);
- if(!r||item!==r.item||!sid)return base*environment;
- const lane=r.lanes.find(l=>l.buyer===sid),distanceKm=(lane?.routes??[]).reduce((n,id)=>n+engine.world.routes.find(e=>e.id===id).lengthKm,0);
- let route=null,closed=false;
- if(lane)try{route=engine.route(profile(engine,lane.seller).counter,profile(engine,sid).counter,lane.mode,minute,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;closed=true;}
- const risk=closed?3:Math.max(1,(route?.movingMinutes??0)/Math.max(1,distanceKm/engine.rules.travel.walkKmh*60));
- return base*environment*clamp((1+distanceKm*r.distanceFactorPerKm)*risk,...engine.rules.economy.priceFactorLimits.transport);
+ // 运输因子 = 1 + 产地到本聚落的单位运费 ÷ 目录基准价（transport.unitFreight，对所有物品、所有聚落同一口径），按 priceFactorLimits.transport 夹取。
+ const transport=base>0?clamp(1+unitFreight(d,engine,{item,to:place,minute})/base,...engine.rules.economy.priceFactorLimits.transport):1;
+ return base*environment*transport;
 }
 function spareWorkers(state,engine,sid){
     const p=profile(engine,sid),s=state.settlements[sid],r=engine.rules.settlementTrade;
