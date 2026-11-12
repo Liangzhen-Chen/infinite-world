@@ -256,6 +256,21 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 17:0xZ】回执批特例、mktw-29、ec1-18 定向结果**
+    - 李白定①（仅此一次）：mktw-initialfood-1 回执批在本机跑 --prepare/--publish，零模型调用，只写 world/drafts/mktw-initialfood/。结果：prepare 4 条、0 调用、approvalVia initfood-1；publish 4 条。提交 1061df21，已推 t-mktw。以后同类情况走②（经两轮审查、不带短横参数的入口），不再开例外；门禁规则不改。
+      - 指纹对照：云上模拟（mktw-29，回执未发布，simulated:true），loc_bs_yupo 记录指纹 1c6f8d64…143e，matches=true，不还原 context 则不匹配。发布后的真实对照待下一版上传、两轮审查后在云上跑同一诊断，两边数值届时补在这里。
+    - 根因：a1b94858（MKTW 本卡）删了农事规则行 initialFood，已批 village-ledgers 内容审批时的 context 引用了它。修法是回执也能覆盖 context 事实（scope:'context'，含 followedBy 键位），不改指纹算法、不改已批记录（7aa99fbd、4a219fe9），两轮审查均已通过（mktw-29）。
+    - 运费规律（8c5a266c，mktw-28 两轮通过）：供给源 = 产地 + 所有自产聚落，取可达的最小值；无可达则返回 null，价格由本地稀缺度决定。前一版只对粮开口子（cbf185c8），已打回。
+    - mktw-29 定向测试：17 个文件中 13 个通过。
+      - village-ledgers、w1-village-profiles 失败：回执当时未发布，预期内。
+      - readonly-entries #4 失败：分组耗时超出预算。
+      - ledger-price 失败：模块归类逐个冒出，改为一次静态扫完。
+    - mktw-28 冒烟失败 shop-restock、ke-upkeep、s5-w4、s2c-fire：二分确认 mktw-27 上同样失败，与运费无关。读数显示开局日目标存粮约等于仓容（loc_hw：58×(205+90)=17110），所以开局日不会出现“粮多”。
+      - 判断：这是现实的季节规律（收获前粮贵、收获后粮贱），不是缺规律。夹具改到收获后表达“充足”，期望手推。
+      - ke-upkeep 木炭基线已钉在上限，待查是否误伤非食物货。
+    - 执行者：市场第 3 任违规 node -e、第 4 任违规 python3 -（均被拦或挂起，未执行），先后换人，现在是第 5 任。
+    - ec1-18：两轮审查通过；定向 18 个文件中 npc-schedule、trade-windows 已修好，其余 16 个各有少量失败；正在云上逐个跑诊断用例。
+    - 既有超时：agriculture.test 在 water1d-4 全量与 mktw-27 都跑满 3600 秒，另开卡。
   - **【11-12 16:0xZ】mktw-27 冒烟结果与 EC-1 进展**
     - mktw-27 冒烟：15 个文件全过；失败 4 类 + replay：
       - forest-water #13：unitFreight 在产地不连通时抛错（transport.mjs:241），属规律缺口——不可达产地不能供货，交执行者按规律修；
