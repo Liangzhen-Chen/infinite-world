@@ -45,8 +45,7 @@ import {advancePets,petView,preparePetTravel,movePets,mountNpcPet}from'./pets.mj
 import {advanceSummons,summonView}from'./summons.mjs';
 import {enforceLegalRestriction,advanceLaw,lawView,settleCreditCase,registerStolenPurchase,releasePrimitiveCustody,commitOffenses}from'./law.mjs';
 import {localWeather,weatherEdge,calendarDateAt}from'./weather.mjs';
-import {initializeAgriculture}from'./agriculture-migration.mjs';
-import {agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
+import {initializeAgriculture,agricultureView,settleAgricultureExpiry}from'./agriculture.mjs';
 import {advanceSettlementTrade,regionalTradeBase}from'./settlement-trade.mjs';
 import {transportAction,transportScene} from './transport.mjs';
 import {postAction} from './post.mjs';

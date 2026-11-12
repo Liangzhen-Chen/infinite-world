@@ -61,6 +61,10 @@ put(['carry'],'L1');
 // Time-slot resolution and request programs belong to the shared action ontology.
 put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','primitive-accounts','legacy-primitives','faith-catalog','weather','hazard-calendar','environment-state','map-state','rx-library','action-authority-sources','action-router','action-limits','open-actions','action-rite','mark-actions','mark-reactions','action-costs','action-time','routing-programs','body-needs'],'L1');
 
+// MKTW：补给间隔与自产粮储备模型（supply-interval：只读 entity-view、crop-yield；craft-record：只读 stock、supply-interval；food-stock：读 market、primitives-body、supply-interval）、
+// 统计产粮倍数（crop-yield：无任何导入的纯规则函数，引擎与储备模型共用）、农事目标持有（farm-target：读 primitives-body、facility-state，原在 L0 的 agriculture-migration）。导入全在 L1 内，无向上依赖。
+put(['crop-yield','supply-interval','craft-record','food-stock','farm-target'],'L1');
+
 // {layer, pack} for a repository-relative file, or null when unassigned.
 export function layerOf(file){
  if(TABLE.has(file))return TABLE.get(file);

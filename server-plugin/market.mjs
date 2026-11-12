@@ -14,7 +14,7 @@ import economyBalance from '../world/rules/tables/balance/economy.json' with {ty
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
 import {resupplyDays,itemResupplyDays} from './supply-interval.mjs';
-import {farmTargetFood} from './agriculture-migration.mjs';
+import {farmTargetFood} from './farm-target.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
 // （商店成交、书籍出版的读者、店铺客流共用；不在代码里写字面）。

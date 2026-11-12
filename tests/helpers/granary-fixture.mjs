@@ -2,7 +2,7 @@
 // 要测"买方缺粮时的运输与结算"，就把四村实存压到各自目标的一个比例（默认 80%）：需求约为目标的 20%（须大于每班上限，下面断言）。
 // 两条前置条件写成断言：买方缺口大于每班上限、卖方实存高于 90 日储备（目标 = 餐口 × (距收获天数 + reserveDays) ≥ 餐口 × reserveDays，按 80% 仍在储备之上）。
 import assert from 'node:assert/strict';
-import {farmTargetFood} from '../../server-plugin/agriculture-migration.mjs';
+import {farmTargetFood} from '../../server-plugin/farm-target.mjs';
 import {mealMouthsOf} from '../../server-plugin/primitives-body.mjs';
 import {resyncBooks} from './ledger-sync.mjs';
 

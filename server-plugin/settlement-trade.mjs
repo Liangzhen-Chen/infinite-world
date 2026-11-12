@@ -6,7 +6,7 @@ import {granary as granaryAccount,cargo as cargoAccount,moveStock} from './stock
 // S1b: 周贸易在途粮记在 settlement-trade:<id>|item_oats|cargo（带原粮批次）；途中过期进 sink:decay，仓容不足拒收的进 sink:destroy。
 declareLedgerWriter('settlement-trade',{sinks:['sink:decay','sink:destroy']});
 import {granaryCapacity} from './facility-state.mjs';
-import {farmTargetFood} from './agriculture-migration.mjs';
+import {farmTargetFood} from './farm-target.mjs';
 import {drawGranary,forestWaterPriceFactor} from './agriculture.mjs';
 import {itemTraits,hasTrait} from './traits.mjs';
 import {hazardPriceFactor} from './hazard-calendar.mjs';
