@@ -161,6 +161,15 @@ if(want('F')){
    if(JSON.stringify(a)!==JSON.stringify(b))out.patchDiffs.push({index:i,path:(a??b)?.path,ledger:cut(a?.value),legacy:cut(b?.value)});
   }
   out.resultEqual=JSON.stringify(ledgerOut.result)===JSON.stringify(legacyOut.result);
+  // 同模式重跑：判断差异来自读法（账户 vs 旧字段）还是来自引擎内跨次运行的缓存/顺序（同一模式跑两次就不同 = 缓存泄漏）。
+  const ledgerAgain=await engine.reduce(doc,args);
+  setPriceReadMode('legacy');let legacyAgain;try{legacyAgain=await engine.reduce(doc,args);}finally{setPriceReadMode('ledger');}
+  const same=(a,b)=>JSON.stringify(a.patches)===JSON.stringify(b.patches);
+  out.stability={ledgerTwiceSame:same(ledgerOut,ledgerAgain),legacyTwiceSame:same(legacyOut,legacyAgain),ledgerVsLegacyAgainSame:same(ledgerOut,legacyAgain),legacyFirstVsAgainSame:same(legacyOut,legacyAgain)};
+  const taskIds=o=>o.patches.filter(p=>p.path?.[1]==='records'&&String(p.path[2]).startsWith('market_trip:labor:')).map(p=>p.path[2]);
+  out.laborTrips={ledger:taskIds(ledgerOut),ledgerAgain:taskIds(ledgerAgain),legacy:taskIds(legacyOut),legacyAgain:taskIds(legacyAgain)};
+  const woodPrice=mode=>{setPriceReadMode(mode);try{return attempt(()=>regionalTradePrice(read(doc),engine,'item_wood','loc_hw'));}finally{setPriceReadMode('ledger');}};
+  out.woodPrice={ledger:woodPrice('ledger'),legacy:woodPrice('legacy')};
  }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
  results.push(out);
 }
