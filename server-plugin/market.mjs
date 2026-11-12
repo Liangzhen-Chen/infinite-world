@@ -213,6 +213,7 @@ function cheapestOfClass(state,engine,place,cls){
  memo.set(key,best);return best;
 }
 const cheapestMemo=new WeakMap();
+// TODO（合入前必做，待 EC-1 合入 master、t-mktw 变基后）：需求加一项缺口信号 = 本聚落近一个交易周期内 EC-1b customer_flow 访问记录里 outcome 非 bought 的未满足量（店主亲见，公开可知）；现在不计。
 // 稀缺度 = 目标持有 ÷ 实际持有，两边同一口径（持有量，存量对存量），随覆盖率连续单调（存量恰在目标时为 1）。
 // 这是世界客观的价格输入，不是某个 NPC 的主观视图；按 02-不变量 I12，只计定价方能公开知道的量：
 //  实际持有（供给）= 聚落粮仓/仓库公账的全部库存 + 经营者与居民卖方的存货（店铺货架、公开在售）；
