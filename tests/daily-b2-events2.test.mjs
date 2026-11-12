@@ -143,11 +143,15 @@ test('D37 交税过关卡 ①②④⑤：10 匹粗布（货值 500）按 5% 抽�
  const before=await primed(ui),treasury=s=>s.state.settlements.loc_bs?.treasury??0;
  const r=await ui.choose('move',{destination:'loc_bs'},{target:'loc_bs'});assert.ok(r.ok,r.error);const after=await ui.read();
  const pass=Object.values(after.state.records).find(x=>x.category==='tariff_passage');
- assert.equal(pass.value,500,'货值 = 10 匹 × 50，只有货物计税');assert.equal(pass.bps,500);assert.equal(pass.amount,25,'①税额 500 × 5% = 25');
+ // 货值 = 入境地（白石镇）的市场估值：布产自河湾村织坊，运到白石镇的运输因子 = 1 + 24 km × 1 kg（计费重量 max(重量, 体积折算, 1)）× 驮运费率 0.02 ÷ 50，
+ // 10 匹 = 10 × 50 × 1.0096 = 504.8，估值取整 504；税 = floor(504 × 500 ÷ 10000) = 25（与 w8a-price-migration 同一手推）。
+ const packRate=baseWorld.balance.transport.rows.find(r=>r.key==='carrier:pack').rate,landed=Math.floor(10*(50+world.routes.find(r=>r.id==='route_hw_bs').lengthKm*1*packRate));
+ assert.equal(landed,504);
+ assert.equal(pass.value,landed,'货值 = 10 匹 × 50 × 运输因子，只有货物计税');assert.equal(pass.bps,500);assert.equal(pass.amount,Math.floor(landed*500/10000),'①税额 504 × 5% = 25');
  assert.equal(before.state.player.coins,100);assert.equal(after.state.player.coins,75,'①100→75');
  assert.equal(treasury(after)-treasury(before),25,'②关卡所在聚落公库 +25');
  assert.equal(held(after.state.inventory,'item_linen_cloth'),10,'④10 匹粗布全部保留');assert.equal(after.state.location,'loc_bs','④通过关卡');
- assert.equal(held(after.state.inventory,'item_clothes'),held(before.state.inventory,'item_clothes'),'⑤衣物还在、没被计税');assert.equal(pass.value,10*50,'⑤铜钱与衣物不进货值');
+ assert.equal(held(after.state.inventory,'item_clothes'),held(before.state.inventory,'item_clothes'),'⑤衣物还在、没被计税');assert.equal(pass.value,landed,'⑤铜钱与衣物不进货值');
  conserved(before,after,'D37',new WorldEngine(world));
 });
 test.todo('D37 ③玩家获得完税凭据——引擎只在账上记 tariff_passage 与 trade_tax 记录，玩家手里没有凭据物品：缺“征管流程出具文书物品”（S3 票据 = 义务 + 代表物品；S4 税表 assessed 流程）');
