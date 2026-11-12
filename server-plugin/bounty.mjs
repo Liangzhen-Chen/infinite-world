@@ -109,7 +109,7 @@ export function issueWanted(d,engine,row,reason,minute){
     const fund=treasury(d,code.id),free=Math.max(0,fund.row.coins-(fund.row.reserved??0));
     const victim=row.victim&&row.victim!=='player'?d.get('state','npcs',row.victim):null;let pledge=0;
     if(free<declared&&victim&&!dead(victim,d.get('state'),row.victim))pledge=Math.max(0,Math.min(declared-free,Math.floor((victim.coins??0)*(b.victimPledgeShare??0.5))));
-    if(pledge){moveCoins(d,{from:purse(null,row.victim),to:fundAccount(fund.key),amount:pledge,writer:'bounty',eventId:row.id});d.set(['state','npcs',row.victim,'coins'],victim.coins-pledge);}
+    if(pledge){moveCoins(d,{from:purse(null,row.victim),to:fundAccount(fund.key),amount:pledge,writer:'bounty',eventId:row.id,noHouseholdTopUp:'悬赏认捐：受害人自愿按自己钱袋的比例出，上限是本人钱袋，不是付款义务'});d.set(['state','npcs',row.victim,'coins'],victim.coins-pledge);}
     const bounty=Math.min(declared,free+pledge);
     if(bounty||pledge)holdingSet(d,null,rec(fund.key),{...fund.row,coins:fund.row.coins+pledge,reserved:(fund.row.reserved??0)+bounty},'bounty');
     const state=d.get('state'),who=nameOf(engine,state,row.offender);

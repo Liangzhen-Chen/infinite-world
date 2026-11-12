@@ -34,6 +34,11 @@ let transferProjection=null;
 export function registerTransferProjection(fn){transferProjection=fn;}
 const transferObservers=new Map();
 export function registerTransferObserver(id,fn){transferObservers.set(id,fn);}
+// EC-1a 共用钱袋：扣款原语在读付方余额之前调用已登记的“扣前补足”函数（household-budget 登记：付方是 NPC 钱袋、余额不足时按缺口从同户户池补足）。
+// transfer 是所有扣款（moveCoins、直接 transfer、primitives 的 transfer 效果）的共同最底层，补足做在这里才不会漏调用点。
+// noHouseholdTopUp: '<理由>' 是调用处的显式豁免（理由必须写明，空串无效）。
+let preDebit=null;
+export function registerPreDebit(fn){preDebit=fn;}
 
 // ---- 源汇登记（写入权与每日预算） -------------------------------------------
 // 源汇词条（id 与含义）登记在 world/ontology/resources.json 的 sourcesAndSinks；
@@ -156,8 +161,9 @@ export function balance(d,key){return read(d,'ledger','accounts',key)??0;}
 // from / to: account keys. A source or sink side is `src:<kind>|<resource>|<purpose>`.
 // Returns the amount moved (0 when the document has no ledger: forecasts and
 // bare unit-test drafts are not campaigns and carry no books).
-export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=null}){
+export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=null,noHouseholdTopUp=null}){
     if(amount===0)return 0;
+    if(noHouseholdTopUp!==null&&(typeof noHouseholdTopUp!=='string'||!noHouseholdTopUp.trim()))throw Error('noHouseholdTopUp 必须写明理由');
     if(!Number.isSafeInteger(amount)||amount<0)throw Error(`转移数量无效：${amount}`);
     const a=parseAccount(from),b=parseAccount(to);
     if(a.resource!==b.resource)throw Error(`转移两端资源不同：${from} → ${to}`);
@@ -179,6 +185,7 @@ export function transfer(d,{from,to,amount,writer,eventId=null,lot=null,pick=nul
         d.set(['ledger','budget'],{day,used});
         d.set(['ledger','flows',from],(read(d,'ledger','flows',from)??0)+amount);
     }else{
+        if(!noHouseholdTopUp)preDebit?.(d,{from,fromAccount:a,amount,writer,eventId});
         const have=balance(d,from);
         // 双写期旧字段仍是权威：新账余额不足说明某个旧写入点漏了双写（或外部直接改了旧字段）。
         // 不以新账拒绝旧结算，而是把差额记为漂移（经内部源 src:drift 补足，守恒照旧成立）；

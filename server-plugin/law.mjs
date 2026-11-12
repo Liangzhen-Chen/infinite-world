@@ -513,7 +513,7 @@ import {purse,fund as fundAccount,vault,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {placed as placedStock} from './stock.mjs';
 declareLedgerWriter('law');
-const books=(d,from,to,amount,eventId)=>moveCoins(d,{from,to,amount,writer:'law',eventId});
+const books=(d,from,to,amount,eventId,extra={})=>moveCoins(d,{from,to,amount,writer:'law',eventId,...extra});
 export function registerCreditDefault(d,engine,{debt,row,value,minute}){
     if(!claimLimitation(d.get('state'),debt,minute).enforceable)return null;
     const code=codeFor(engine,row.location,d.get('state'));if(!code)return null;
@@ -589,7 +589,7 @@ export function crimeAction(d,args,eventId){
             holdingSet(d,null,['state','itemInstances',unit,'legalClaims'],[...record.legalClaims??[],{case:key,victim,minute:d.get('state','minute')}],'law');
             stolen={item,quantity:1,unit};
         }else{
-            books(d,purse(this,victim),purse(this,'player'),amount,eventId);d.set(['state','npcs',victim,'coins'],latest.coins-amount);d.set(['state','player','coins'],d.get('state','player','coins')+amount);stolen={coins:amount};
+            books(d,purse(this,victim),purse(this,'player'),amount,eventId,{noHouseholdTopUp:'盗窃：被偷者只损失身上的钱，不连累同户其他人的钱袋'});d.set(['state','npcs',victim,'coins'],latest.coins-amount);d.set(['state','player','coins'],d.get('state','player','coins')+amount);stolen={coins:amount};
         }
     }
     const incident=registerIncident(d,this,{victim,offense:success?'theft':'theft_attempt',value:success?value:0,stolen,witnesses,eventId,perception,optional:true});
@@ -719,7 +719,7 @@ export function recordExposedCorruption(d,engine,{target,law,offer,witnesses,eve
     for(const witness of witnesses)knowledge(d,witness,corruption,now);
     // The bribe is seized for the public purse; the exposed taker is dismissed and flees.
     const fund=safeFund(d,`legal_treasury:${law}`,'legal_treasury',{law}),seized=Math.min(offer,d.get('state','npcs',target,'coins'));
-    books(d,purse(engine,target),fundAccount(`legal_treasury:${law}`),seized,null);d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')-seized);holdingSet(d,null,path(`legal_treasury:${law}`),{...fund,coins:fund.coins+seized},'law');
+    books(d,purse(engine,target),fundAccount(`legal_treasury:${law}`),seized,null,{noHouseholdTopUp:'受贿没收：只没收受贿者本人现钱，不动同户其他人的钱袋'});d.set(['state','npcs',target,'coins'],d.get('state','npcs',target,'coins')-seized);holdingSet(d,null,path(`legal_treasury:${law}`),{...fund,coins:fund.coins+seized},'law');
     holdingSet(d,null,path(`legal_dismissal:${target}`),{category:'legal_dismissal',npc:target,law,case:corruption,minute:now,sourceEvent:eventId},'law');
     entityTransition(d,engine,{id:`${corruption}:dismiss`,verb:'dismiss',actor:law,target,minute:now,location,witnesses,summary:`${personName(engine,d.get('state'),target).value??target}因受贿被撤职`});
     wanted=issueWanted(d,engine,d.get(...path(corruption)),WANTED_REASONS.flight,now);

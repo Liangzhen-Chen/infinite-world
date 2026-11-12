@@ -1,7 +1,7 @@
 // Household budgets: reads never write, with one exception — householdPoolTopUp, the only transfer here, which moves coins between purses of one registered household (writer household-pool) just before a payer pays. A target is a preference, never a transfer. One rule for cash: the household's pooled purses (effective members only) in both the subjective read (view.household) and the objective/kernel read (objectiveCash); a payer whose own purse is short tops up from the pool at payment time.
 import {bagStock,bag,priceRead,itemResource,crop as cropAccount} from './stock.mjs';
 import {coinRead,purse,COIN,moveCoins,mirrorPartyCoins} from './money.mjs';
-import {declareLedgerWriter} from './ledger.mjs';
+import {declareLedgerWriter,registerPreDebit} from './ledger.mjs';
 import {personHousehold,poolMember} from './entity-view.mjs';
 import {obligationRows,obligationClosed} from './obligation-state.mjs';
 import {bodyDrain} from './primitives-body.mjs';
@@ -629,3 +629,11 @@ export function householdLaborBudget(d,engine,owner,{minute=d.get('state','minut
 
 // 本户可动用现金（同户共灶成员钱袋合计，客观读口径）：持货人进货等“买得起几件”的二分用它，付款时钱袋不够再 householdPoolTopUp 落账。
 export const householdCash=(d,engine,owner)=>objectiveCash(d,engine,d.get('state'),owner);
+// EC-1a：扣款最底层原语（ledger.transfer）的扣前补足。付方是登记户成员 NPC 的钱袋、余额不足、户池够付时，先按缺口补足（同 householdPoolTopUp）；
+// 户池也不够就什么都不动，由原行为拒绝。玩家、团体、组织、遗产、柜台等非 NPC 钱袋账户不补；户池补足自己的转账（writer household-pool）不再递归补。
+// 补足量只等于缺口，所以调用点已经 topUpNpc/payFromNpc 过的，这里缺口为 0，幂等。
+registerPreDebit((d,{from,fromAccount:a,amount,writer,eventId})=>{
+ if(!d.engine||writer==='household-pool'||a.resource!==COIN||a.purpose!=='purse'||a.owner==='player'||!d.get('state','npcs',a.owner))return;
+ if((d.get('ledger','accounts',from)??0)>=amount||householdCash(d,d.engine,a.owner)<amount)return;
+ householdPoolTopUp(d,d.engine,a.owner,amount,`debit:${writer}:${eventId??'none'}:${a.owner}`);
+});

@@ -78,9 +78,10 @@ export function mirrorPartyCoins(d,engine,id,delta,eventId,writer){
 }
 
 // 唯一的双写入口：旧写入点在改旧字段的同一处调用它。
-export function moveCoins(d,{from,to,amount,writer,eventId=null}){
+// 付方是 NPC 钱袋且余额不足时，transfer 先按户池补足（见 ledger.registerPreDebit）；不该补的调用处传 noHouseholdTopUp: '<理由>'。
+export function moveCoins(d,{from,to,amount,writer,eventId=null,noHouseholdTopUp=null}){
     if(!amount||from===to)return 0;
-    return transfer(d,{from,to,amount,writer,eventId});
+    return transfer(d,{from,to,amount,writer,eventId,noHouseholdTopUp});
 }
 export const booksOpen=ledgerActive;
 
@@ -146,8 +147,9 @@ export function bookSide(d,account,delta,books){
         if(ledgerActive(d)){d.set(['ledger','drift'],[...(d.get('ledger','drift')??[]),{account,unbooked:delta,minute:d.get('state','minute')??null}].slice(-50));tallyDrift(d,'unbooked');}
         return 0;
     }
-    return delta>0?moveCoins(d,{from:books.account,to:account,amount:delta,writer:books.writer,eventId:books.eventId??null})
-        :moveCoins(d,{from:account,to:books.account,amount:-delta,writer:books.writer,eventId:books.eventId??null});
+    const noHouseholdTopUp=books.noHouseholdTopUp??null;
+    return delta>0?moveCoins(d,{from:books.account,to:account,amount:delta,writer:books.writer,eventId:books.eventId??null,noHouseholdTopUp})
+        :moveCoins(d,{from:account,to:books.account,amount:-delta,writer:books.writer,eventId:books.eventId??null,noHouseholdTopUp});
 }
 
 // ---- S1c 价格输入读账户：货币量（现款、公库）经账户余额读取，旧字段只作过渡期对照 ----------

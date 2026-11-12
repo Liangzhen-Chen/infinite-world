@@ -1,10 +1,9 @@
-// EC-1a 共用钱袋：NPC 付款的唯一入口。凡是从 NPC 钱袋出钱（付货款、工钱、路费、罚金、赔偿、报酬托管、信用还款与合伙出资）都经这里：
-//   npcCanPay  先判“够不够”：本人钱袋够，或同一登记户的户池（household-budget.householdCash，与预算同一口径）够；
-//   payFromNpc 不够就先按户池补足（household-budget.householdPoolTopUp，唯一的户内转账原语，只在同一登记户成员钱袋间转，币总量不变），再扣款（money.moveCoins）。
-// 返回户池补进付款人钱袋的数额（调用方若持有该 NPC 的钱袋工作副本，须把它加回副本，否则回写会盖掉补足）。
-// 不走本入口的付款（各自的理由）由 tests/ec1a-payment-paths.test.mjs 的例外清单逐条登记并扫描：玩家付款、柜台/基金/金库/托管账户出钱、
-// 被盗受害人（被抢不是付款）、悬赏认捐（受害人自愿按自己钱袋比例）、监护代管（被监护人的继承财产）、金融原语（finance-bank 自带补足）、
-// 店铺零售成交（shop/distribution/business 在成交前已补足）、户池补足本身。
+// EC-1a 共用钱袋。补足已做在最底层扣款原语里（ledger.transfer 的扣前补足，household-budget 登记）：任何从 NPC 钱袋扣款的路径余额不足时都先按缺口从同户户池补足，
+// 不豁免的调用不必再做什么；确实不该补的调用处传 noHouseholdTopUp: '<理由>'（tests/ec1a-payment-paths.test.mjs 核对清单与理由）。
+// 本文件的入口保留作“显式意图”与付款前的判断：
+//   npcCanPay  先判“够不够”：本人钱袋够，或同一登记户的户池（household-budget.householdCash，与预算同一口径）够（调用方的付款前检查要用它，原语只管扣款那一刻）；
+//   topUpNpc / payFromNpc 提前按缺口补足（household-budget.householdPoolTopUp）；补足量只等于缺口，原语再补时缺口为 0，幂等。
+// payFromNpc 返回户池补进付款人钱袋的数额（调用方若持有该 NPC 的钱袋工作副本，须把它加回副本，否则回写会盖掉补足）。
 import {purse,moveCoins} from './money.mjs';
 import {householdCash,householdPoolTopUp} from './household-budget.mjs';
 

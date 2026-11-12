@@ -62,7 +62,7 @@ export function commitNpcCrime(d,e,plan,minute){
  const location=n.location,witnesses=presentWitnesses(state,location,[actor]);let value=0,stolen=null,harm=0;
  if(offense==='theft'||offense==='fraud'){
   value=Math.min(v.coins??0,e.rules.law.npcCrime.maximumCoins);if(value<1)return null;
-  moveCoins(d,{from:purse(null,victim),to:purse(null,actor),amount:value,writer:'npc-crime',eventId:caseId});d.set(['state','npcs',victim,'coins'],v.coins-value);d.set(['state','npcs',actor,'coins'],(n.coins??0)+value);stolen={coins:value};
+  moveCoins(d,{from:purse(null,victim),to:purse(null,actor),amount:value,writer:'npc-crime',eventId:caseId,noHouseholdTopUp:'盗窃：被偷者只损失身上的钱，不连累同户其他人的钱袋'});d.set(['state','npcs',victim,'coins'],v.coins-value);d.set(['state','npcs',actor,'coins'],(n.coins??0)+value);stolen={coins:value};
  }else if(offense==='assault'){
   if(!awake(e,state,victim,v))return null;const maxHp=v.maxHp??monsterStats({level:v.level??e.byId.get(victim)?.level??1,template:2},e.rules).maxHp,hp=v.hp??maxHp;
   harm=Math.min(e.rules.law.npcCrime.assaultDamage,Math.max(0,hp-1));if(!harm)return null;

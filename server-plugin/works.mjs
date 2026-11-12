@@ -209,7 +209,7 @@ function perform(d,engine,args,id){
     if(outcome.success)for(const npc of audience){
         const purse=d.get('state','npcs',npc,'coins')??0,tip=Math.min(purse,WORK_RULES.performanceTip[outcome.degree]??0);
         if(!tip)continue;
-        moveCoins(d,{from:purseAccount(engine,npc),to:purseAccount(engine,'player'),amount:tip,writer:'works',eventId:id});d.set(['state','npcs',npc,'coins'],purse-tip);income+=tip;tips.push({npc,coins:tip});
+        moveCoins(d,{from:purseAccount(engine,npc),to:purseAccount(engine,'player'),amount:tip,writer:'works',eventId:id,noHouseholdTopUp:'听众小费：自愿，取 min(本人钱袋, 档位)，以本人钱袋为上限'});d.set(['state','npcs',npc,'coins'],purse-tip);income+=tip;tips.push({npc,coins:tip});
     }
     if(income)d.set(['state','player','coins'],d.get('state','player','coins')+income);
     const masterpiece=quality==='杰作',counted=outcome.success&&audience.length>=WORK_RULES.minimumAudience;
