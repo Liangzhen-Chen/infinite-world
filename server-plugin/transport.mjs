@@ -220,22 +220,26 @@ export function quoteTransport(d,e,{asset,from,to,cargo=[],passengers=[],owner='
 }
 // 一件货从产地运到某聚落的单位运费：产地 = 物品目录的 origin（建筑换算成所在聚落），按挑夫背货的运价（porterCharges 同一口径：
 // 路程 × 计费重量 × carrier:pack 费率）加沿途路线通行费；不含到岸关税（关税要按货值报价，会回到 marketQuote 形成循环）。
-// 无 origin、产地就在本聚落、本季没有可通行路线时记 0。同一世界数据对象内按 (物品, 目的聚落, 日) 记忆（路线按季节开闭，日是最细的输入）。
+// 无 origin、产地不在任何聚落、产地就在本聚落时记 0。路线开闭（封路）只影响货能不能到，由实际供给反映，不进运输因子：
+// 这里按一年里各月能走通的路线取最便宜的一条，即"路线开放时的正常成本"；一年里都走不通（地理不连通）就直接报错，不记 0。
+// 结果与时刻无关，同一世界数据对象内按 (物品, 目的聚落) 记忆。
 const unitFreightMemo=new WeakMap();
 export function unitFreight(d,e,{item,to,minute=d.get('state','minute')}){
  const def=e.byId.get(item),origin=def?.origin;
  if(!origin||!to||!(def.weight>=0))return 0;
  const memo=unitFreightMemo.get(e.world)??new Map();unitFreightMemo.set(e.world,memo);
- const key=`${item}|${to}|${Math.floor(minute/1440)}`;if(memo.has(key))return memo.get(key);
+ const key=`${item}|${to}`;if(memo.has(key))return memo.get(key);
  const s=d.get('state'),from=placeSettlement(e,s,origin).value;
  let cost=0;
  if(from&&from!==to){
-  let route=null;
-  try{route=e.route(from,to,'walk',minute,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
-  if(route){
-   const billableKg=Math.max(def.weight,(def.volumeM3??def.weight/250)*250,1),edges=route.edges.map(id=>e.world.routes.find(r=>r.id===id));
-   cost=edges.reduce((n,r)=>n+r.lengthKm*billableKg*specOf(e,'pack').rate,0)+(route.cost??0);
+  const billableKg=Math.max(def.weight,(def.volumeM3??def.weight/250)*250,1),costs=[];
+  for(let month=0;month<12;month++){
+   let route=null;
+   try{route=e.route(from,to,'walk',month*30*1440,d.get('randomSeed'));}catch(error){if(!error.message.startsWith('没有当前季节'))throw error;}
+   if(route)costs.push(route.edges.map(id=>e.world.routes.find(r=>r.id===id)).reduce((n,r)=>n+r.lengthKm*billableKg*specOf(e,'pack').rate,0)+(route.cost??0));
   }
+  if(!costs.length)throw Error(`物品 ${item} 的产地 ${from} 到 ${to} 地理上不连通，无法推出运费`);
+  cost=Math.min(...costs);
  }
  memo.set(key,cost);return cost;
 }

@@ -42,3 +42,16 @@ test('整类适用：不止燕麦，任一有产地的货对远方聚落都有�
  for(const i of others)assert.ok(unitFreight(read,engine,{item:i.id,to:far})>0,i.id);
  assert.equal(engine.rules.settlementTrade.distanceFactorPerKm,undefined);
 });
+
+test('封路季与通路季的运输因子相同：封路只影响货能不能到（供给），不进运费',()=>{
+ // 推导：把该条路线上所有路段在季节 0 封闭（closedSeasons=[0]），另一世界不封。运费取一年里各月走得通的最便宜路线，
+ // 封路世界在季节 0 的值 = 通路世界在季节 2 的值（季节 0 之外各月路线相同，最便宜者不变）。默认历法一季 3 个月、每月 30 天。
+ const from=originOf(pick.id),open=reach(from,far),ids=new Set(open.edges);
+ const w=structuredClone(world);for(const r of w.routes??[])if(ids.has(r.id))r.closedSeasons=[0];
+ const closedEngine=new WorldEngine(w),closedDoc=closedEngine.createCharacter(legacy,{},'unit-freight-closed');
+ closedDoc.state.minute=5*1440;
+ const openDoc=engine.createCharacter(legacy,{},'unit-freight-open');openDoc.state.minute=6*30*1440+5*1440;
+ const a=unitFreight(documentReader(closedDoc),closedEngine,{item:pick.id,to:far,minute:closedDoc.state.minute});
+ const b=unitFreight(documentReader(openDoc),engine,{item:pick.id,to:far,minute:openDoc.state.minute});
+ assert.ok(a>0);assert.ok(Math.abs(a-b)<=1e-9*b);
+});
