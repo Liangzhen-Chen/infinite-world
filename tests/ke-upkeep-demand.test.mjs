@@ -4,11 +4,11 @@ import fs from 'node:fs/promises';
 import {loadWorld} from '../tools/load-world.mjs';
 import {WorldEngine} from '../server-plugin/engine.mjs';
 import {applyPatches} from '../server-plugin/storage.mjs';
-import {tradeQuote} from '../server-plugin/shop.mjs';
+import {tradeQuote,shopStores,derivedShops} from '../server-plugin/shop.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {upkeepDemand} from '../server-plugin/market.mjs';
 import {isItemClass} from '../server-plugin/item-class.mjs';
-import {placeSettlement} from '../server-plugin/entity-view.mjs';
+import {placeSettlement,personBusinesses} from '../server-plugin/entity-view.mjs';
 import {usageItemGrams,upkeepSelfSupplyOf} from '../server-plugin/household-budget.mjs';
 import {resyncBooks} from './helpers/ledger-sync.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
@@ -48,10 +48,14 @@ function handQuote(doc){
  assert.equal(state.records?.['craft-use:loc_hw'],undefined);
  const roster=villagers(doc),keyOf=id=>engine.world.households.find(h=>h.members.includes(id))?.id??id,keys=[...new Set(roster.map(keyOf))];
  for(const id of roster)assert.equal(upkeepSelfSupplyOf(engine,state,id).fuel??0,0,`前置：${id} 没有可达的公共来源，自给 0`);
- const owners=new Set([...engine.rules.economy.shops.stores.map(s=>s.keeper),...engine.world.npcs.filter(n=>n.shopType||(n.services??[]).includes('trade')).map(n=>n.id)]);
+ // 前置：夹具里没有按人物派生的店铺或营业者（derivedShops 为空；personBusinesses 里开着店的都已在下面的手推集合里），所以经营者与货架只按登记的店铺手推。
+ assert.deepEqual(derivedShops(engine.world),[],'前置：没有按人物派生的店铺');
+ const stores=shopStores(engine.world);
+ const owners=new Set([...stores.map(s=>s.keeper),...engine.world.npcs.filter(n=>n.shopType||(n.services??[]).includes('trade')).map(n=>n.id)]);
+ for(const [id,business] of personBusinesses(engine,state))if(business?.open.value&&business.shopType.value)assert.ok(owners.has(id),`前置：派生的营业者 ${id} 已在手推的经营者集合里`);
  let heldGrams=state.settlements.loc_hw.wood*weight('item_wood');
  for(const id of owners){const npc=state.npcs[id];if(!npc||placeSettlement(engine,state,npc.location).value!=='loc_hw')continue;for(const it of pool)heldGrams+=q(npc.inventory?.[it.id])*weight(it.id);}
- const shelfGrams=engine.rules.economy.shops.stores.filter(s=>s.settlement==='loc_hw').flatMap(s=>s.restock??[]).filter(r=>pool.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight(r.item),0);
+ const shelfGrams=stores.filter(s=>s.settlement==='loc_hw').flatMap(s=>s.restock??[]).filter(r=>pool.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight(r.item),0);
  const fuel=world.balance.crafting.params.find(p=>p.id==='household.fuelKgPerDay').value,N=(fuel.cooking+(fuel.heating[engine.calendar(state.minute).season]??0))*1000;
  const houses=engine.world.settlementProfiles.find(p=>p.id==='loc_hw').householdCount,owed=keys.reduce((n,k)=>n+(state.family?.upkeep?.[k]?.fuelDebtG??0),0);
  const supply=heldGrams/unit,demand=Math.max((shelfGrams+cycle*N*houses+owed)/unit,1);
