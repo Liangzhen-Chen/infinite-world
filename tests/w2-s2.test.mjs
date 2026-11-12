@@ -77,6 +77,17 @@ async function routeSession(route){
   assert.equal(doc.state.player.coins,coins-s.learnFee);assert.equal(doc.state.npcs[teacher].coins,teacherCoins+s.learnFee);
  }
  const buy=async(item,quantity)=>{
+  // EC-1b 前置核对：导师是居民卖方（market-seller），客流时刻起缺粮的别户邻居会买走他可售的余货（面包、蜂蜜）。
+  // 货架上不够本次要买的量时，只有一种成立的解释：别户居民已在客流里买走（客流记录为证）；证据不成立就是别的缺陷，照实报告，不当作新规律。
+  // 证据成立而货架仍不够，是夹具标定问题（导师持有量按旧规律“余货不外卖”标定），需按该聚落当日缺粮户的真实需求重新标定持有量，不在此处凑数。
+  const held=doc.state.npcs[teacher].inventory[item],onShelf=held?.quantity??held??0;
+  if(onShelf<quantity){
+   const sold=Object.values(doc.state.records).filter(r=>r.category==='customer_flow'&&r.keeper===teacher).flatMap(r=>r.visits??[]).filter(v=>v.outcome==='bought'&&v.item===item);
+   const house=world.households.find(h=>h.members.includes(teacher));
+   assert.ok(sold.length>0,`${item} 货架只剩 ${onShelf} 而客流记录里没有别户买走：不是客流，需另查`);
+   assert.ok(sold.every(v=>v.npc!==teacher&&!house?.members.includes(v.npc)),'居民不卖给本户');
+   assert.fail(`${item} 货架 ${onShelf} < 要买 ${quantity}：已被别户居民在客流里买走 ${sold.reduce((n,v)=>n+v.quantity,0)} 份，夹具需按新规律重新标定导师持有量`);
+  }
   const t=await run(doc,'world_trade',{seller:teacher,item,quantity});
   // E6后导师私有火绒不算公开供给：S0、D1，稀缺因子1；先前真实采购使立场因子.99895。
   // 两份的零售额trunc(1×1×1×.99895×2)=1铜，其他采购仍须付款，材料消耗断言保持。
