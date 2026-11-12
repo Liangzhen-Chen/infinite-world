@@ -305,4 +305,25 @@ if(want('L')){
  }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
  results.push(out);
 }
+// M：daily-b2 D01 的真实读价路径：uiSession（服务端 create → export → 夹具改初始文档 → import → 事件），与测试完全相同的场景与店铺改动；
+// 打印推进 1 分钟后的文档是否带账本、公仓粮账户与批次、面包供需，以及买 3 个面包的实付与报价解释。
+if(want('M')){
+ const out={label:'M daily-b2 D01 via uiSession'};const cleanups=[];
+ try{
+  const {uiSession}=await import('../tests/helpers/ui-script.mjs'),{primed,stack,openShop}=await import('../tests/helpers/daily-b2.mjs');
+  const HOUR=60,INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui';
+  const w=dbVariant(x=>{setPrice(x,'item_bread',4);openShop(x,LINSUI,INN,7*HOUR,19*HOUR);});
+  const ui=await uiSession({after:fn=>cleanups.push(fn)},{world:w,mutate:dbScene(INN,monthDayMinute(3,5,7,30),s=>{s.player.coins=100;s.npcs[LINSUI].inventory.item_bread=stack(8);s.inventory={...s.inventory};delete s.inventory.item_bread;})});
+  const before=await primed(ui),engine=new WorldEngine(w);
+  const farm=before.state.records?.['agriculture:loc_hw'],m=attempt(()=>marketSupply(read(before),engine,'item_bread',INN));
+  out.before={minute:before.state.minute,hasLedger:Boolean(before.ledger),settlementFood:before.state.settlements?.loc_hw?.food,batches:(farm?.batches??[]).map(b=>({amount:b.amount,expiresDay:b.expiresDay,kind:b.kind})),
+   ledgerGranary:Object.entries(before.ledger?.accounts??{}).filter(([k])=>k.includes('granary')),ledgerLots:Object.entries(before.ledger?.lots??{}).filter(([k])=>k.includes('granary')).map(([k,v])=>[k,JSON.stringify(v).slice(0,400)]),
+   supply:m.supply,demand:m.demand,rows:m.rows?.map(r=>({owner:r.owner,item:r.item,stock:r.stock,target:r.target,committed:r.committed,available:r.available,unit:r.unit})),hand:attempt(()=>handOatsScarcity(engine,before.state,before.state.settlements.loc_hw.food)),
+   quote:quoteOf(engine,before,{seller:LINSUI,item:'item_bread',buyer:'player',quantity:3,location:INN})};
+  const r=await ui.choose('trade.buy',{item:'item_bread',quantity:3},{target:LINSUI});
+  out.buy={ok:r.ok,error:r.error,cost:r.result?.cost,pricing:r.result?.pricing?JSON.parse(JSON.stringify(r.result.pricing)):null};
+ }catch(error){out.error=error.stack?.split('\n').slice(0,4).join(' | ')??error.message;}
+ for(const fn of cleanups)try{await fn();}catch{}
+ results.push(out);
+}
 console.log(JSON.stringify(results,null,1));

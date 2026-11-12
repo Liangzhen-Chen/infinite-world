@@ -145,8 +145,10 @@ test('D37 交税过关卡 ①②④⑤：10 匹粗布（货值 500）按 5% 抽�
  const pass=Object.values(after.state.records).find(x=>x.category==='tariff_passage');
  // 货值 = 入境地（白石镇）的市场估值：布产自河湾村织坊，运到白石镇的运输因子 = 1 + 24 km × 1 kg（计费重量 max(重量, 体积折算, 1)）× 驮运费率 0.02 ÷ 50，
  // 10 匹 = 10 × 50 × 1.0096 = 504.8，估值取整 504；税 = floor(504 × 500 ÷ 10000) = 25（与 w8a-price-migration 同一手推）。
- const packRate=baseWorld.balance.transport.rows.find(r=>r.key==='carrier:pack').rate,landed=Math.floor(10*(50+world.routes.find(r=>r.id==='route_hw_bs').lengthKm*1*packRate));
- assert.equal(landed,504);
+ // 基价与计费重量读自物品数据（目录里的粗布行：基价由本例夹具设为 50，重量/体积为目录值），不写死 50 与 1。
+ const cloth=item(world,'item_linen_cloth'),billableKg=Math.max(cloth.weight,(cloth.volumeM3??cloth.weight/250)*250,1);
+ const packRate=baseWorld.balance.transport.rows.find(r=>r.key==='carrier:pack').rate,landed=Math.floor(10*(cloth.basePrice+world.routes.find(r=>r.id==='route_hw_bs').lengthKm*billableKg*packRate));
+ assert.equal(cloth.origin,'bld_hw_weaving','前置：产地在河湾村织坊');assert.equal(landed,504);
  assert.equal(pass.value,landed,'货值 = 10 匹 × 50 × 运输因子，只有货物计税');assert.equal(pass.bps,500);assert.equal(pass.amount,Math.floor(landed*500/10000),'①税额 504 × 5% = 25');
  assert.equal(before.state.player.coins,100);assert.equal(after.state.player.coins,75,'①100→75');
  assert.equal(treasury(after)-treasury(before),25,'②关卡所在聚落公库 +25');

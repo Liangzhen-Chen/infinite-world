@@ -93,6 +93,8 @@ export function handFuelPrice(engine,state,item,place='loc_hw'){
     const cycle=engine.rules.economy.tradeCycleDays,cls='fuel',weight=id=>usageItemGrams(engine,id,cls),unit=weight(item),q=v=>typeof v==='number'?v:v?.quantity??0;
     const pool=engine.world.items.filter(i=>isItemClass(engine,i.id,cls)&&!(i.nutrition?.satiety>0)&&weight(i.id)>0);
     assert.ok(engine.world.recipes.filter(r=>r.output?.item==='item_wood').every(r=>r.minutes<=cycle*1440),'前置：木料本地生产周期不超过交易周期');
+    // 前置：报价货与木料的产地都在本聚落（运输因子 = 1，价里不含运费）。
+    for(const id of [item,'item_wood'])assert.equal(placeSettlement(engine,state,engine.byId.get(id).origin).value,place,`前置：${id} 产地在 ${place}，运输因子 1`);
     assert.equal(state.records?.[`craft-use:${place}`],undefined,'前置：没有制造耗料记录');
     assert.deepEqual(derivedShops(engine.world),[],'前置：没有按人物派生的店铺');
     const stores=shopStores(engine.world),owners=new Set([...stores.map(s=>s.keeper),...engine.world.npcs.filter(n=>n.shopType||(n.services??[]).includes('trade')).map(n=>n.id)]);
