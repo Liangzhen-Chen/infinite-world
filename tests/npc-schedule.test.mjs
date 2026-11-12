@@ -103,7 +103,11 @@ test('路费在出发时只收一次；封路和缺钱不会瞬移',async()=>{
     assert.equal(first.document.state.npcs[teacher].coins,coins-3);
     const route=engine.route(school,home,'walk',1020,document.randomSeed);
     const arrived=await run(first.document,'world_time',{minutes:route.minutes});
-    assert.equal(arrived.document.state.npcs[teacher].coins,coins-3);
+    // EC-1b：顾客可用窗从到达起算（business.mjs arrivalStart），老师 1020 出发、到家那一刻起就是顾客，窗内店营业时会在当天唯一的一次客流里买东西。
+    // 所以到家时钱袋 = 起始 − 路费 3（只收一次）− 这趟客流里他自己的成交（货款 paid 与客流路费 travel.paid，均读自客流记录，且都在出发之后）。
+    const bought=Object.values(arrived.document.state.records).filter(r=>r.category==='customer_flow'&&r.minute>1019).flatMap(r=>r.visits??[]).filter(v=>v.npc===teacher&&v.outcome==='bought');
+    const spent=bought.reduce((n,v)=>n+v.paid+(v.travel?.paid??0),0);
+    assert.equal(arrived.document.state.npcs[teacher].coins,coins-3-spent,`toll once (3) plus own flow purchases ${JSON.stringify(bought.map(v=>[v.item,v.paid]))}`);
     // EC-1a 共用钱袋：路费不足按户池判（本人钱袋不够，同户成员钱袋够就由户池补足出发）。所以“缺钱”要整户都付不起：把同户其他成员的钱袋清零，再用前置断言确认户池合计低于路费。
     for(const id of personHousehold(engine,document.state,teacher).value?.members??[])if(id!==teacher&&document.state.npcs[id])document.state.npcs[id].coins=0;
     document.state.npcs[teacher].coins=2;

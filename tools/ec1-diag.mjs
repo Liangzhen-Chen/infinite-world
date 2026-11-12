@@ -331,7 +331,55 @@ async function breadDemandRows(){
   households:Object.fromEntries(owners.map(o=>{const h=o==='player'?null:personHousehold(f.e,state,o).value;return [o,h?{id:h.id,members:h.members,shared:h.shared}:null];}))});
 }
 
+// F048 木材转售报价（只读）：复演 s5-w4-economy F048 的三次收购（5、5、1，单价 2），每一步之后输出店主转售 5 份的引擎报价：
+// listPrice、totalCoins、retail、opening、supply/spotSupply/demand、scarcity/depth/spread/relation/base、议价带 [ceil(.9×list), ceil(1.1×list)]、
+// 当日木材成交净量（deals）与店主可售量。用来看“多收购使深度更低、上界掉到 2”的各项分量（深度的 opening 取公共供给还是含店主存量）。
+async function woodQuote(){
+ const {fixture,host}=await import('../tests/helpers/finance.mjs');
+ const {applyIntentSetup}=await import('./a3-score.mjs');
+ const {tradeQuote}=await import('../server-plugin/shop.mjs');
+ const {regionalTradeBase}=await import('../server-plugin/settlement-trade.mjs'),{wildlifePriceFactor}=await import('../server-plugin/wildlife.mjs');
+ const {saleableStock}=await import('../server-plugin/market.mjs');
+ const f=fixture();f.doc=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','inventory'],value:{item_wood:{quantity:13}}}]}).document;
+ const item='item_wood',report=label=>{
+  const d=f.draft(),loc=f.doc.state.location,[low,high]=f.e.rules.economy.priceFactorLimits.bargain;
+  const q=tradeQuote(d,f.e,{buyer:'player',seller:host,item,quantity:5,location:loc,base:()=>regionalTradeBase(d,f.e,item,loc)*wildlifePriceFactor(f.e,d.document,item,loc)});
+  const s=saleableStock(d,f.e,host,item,{business:true}),e=q.explanation??{};
+  out({type:'wood-quote',label,minute:f.doc.state.minute,listPrice:q.listPrice,totalCoins:q.totalCoins,retail:q.retail,opening:q.opening,supply:q.supply,spotSupply:q.spotSupply,demand:q.demand,
+   scarcity:e.scarcity,depth:e.depth,spread:e.spread,relation:e.relation,base:e.base,band:[Math.ceil(q.listPrice*low),Math.ceil(q.listPrice*high)],
+   deals:Object.values(f.doc.state.records).filter(r=>r.category==='market_trade'&&r.item===item).map(r=>({side:r.side,quantity:r.quantity,totalCoins:r.totalCoins,business:r.business})),
+   saleable:{stock:s.stock,upkeep:s.upkeep,available:s.available}});
+ };
+ report('start');
+ await f.act({buyer:host,seller:'player',item,quantity:5,unitPrice:2},'stock');report('after-5');
+ await f.act({buyer:host,seller:'player',item,quantity:5,unitPrice:2},'stock-2');report('after-10');
+ await f.act({buyer:host,seller:'player',item,quantity:1,unitPrice:2},'stock-3');report('after-11');
+}
+
+// food-habit #7（奢侈份额 0/0）：对 tools/audit-food-habit.mjs 同一批户，输出每个贫户的现金、聚落、公粮扣减后的采购缺口（procurementShortfall）、
+// market 各字段（purchases 条数、spent、公粮/户池相关键）与成员数，看是不是整个种子世界里没有任何户有采购缺口（公粮扣减 + 户池后缺口为 0，护栏成了空转）。
+async function foodAudit(){
+ const {householdResources}=await import('../server-plugin/household-budget.mjs'),{localHouseholds}=await import('../server-plugin/food-habit.mjs');
+ const {WorldEngine}=await import('../server-plugin/engine.mjs');
+ const fs=await import('node:fs/promises'),legacy=JSON.parse(await fs.readFile(new URL('../tests/fixtures/legacy/seed.json',import.meta.url),'utf8'));
+ const e=new WorldEngine(world),doc=e.createCharacter(legacy,{},'food-habit-audit'),d=e.primitiveDraft(doc),rows=localHouseholds(d,e);
+ let withShortfall=0,withPurchases=0;
+ for(const r of rows){
+  const res=householdResources(d,e,r.owner),market=res.market??{},short=res.procurementShortfall??market.procurementShortfall??null;
+  const purchases=market.purchases??[];if(purchases.length)withPurchases++;if(short&&(Number(short.satiety)>0||Number(short.hydration)>0))withShortfall++;
+  out({type:'food-audit-row',owner:r.owner,place:r.place,cash:r.cash,members:res.members?.length??null,shortfall:short,purchases:purchases.length,spent:market.spent??null,marketKeys:Object.keys(market),resourceKeys:Object.keys(res).filter(k=>k!=='rows')});
+ }
+ out({type:'food-audit-summary',households:rows.length,withShortfall,withPurchases});
+}
+
 const cases={
+ 'wood-quote':woodQuote,
+ 'food-habit-audit':foodAudit,
+ // 任意测试文件的客流成交流水：第二个参数 = tests 下文件名，第三个参数 = 逗号分隔的关注人（账本行含其一即输出 ledger 行）。输出全部 customer 成交（sale：时刻、店、买卖双方、户、物品、金额、writer）。
+ // 用于 npc-autonomy #1、npc-life-t164 #7、quest-sources #5、s5-09 #10/#11、s5-04 #16、law #5（关注 npc_bs_035_1：看其路费/户池垫付）等“钱/人/记录与期望不同或缺失”的项。
+ 'sales-of':()=>runTests(watchArg,(process.argv[4]??'').split(',').filter(Boolean)),
+ // npc-life-migration #3：迁居者出发后到抵达时 item_turnip 从库存消失；输出该人与 item_turnip 的全部账本行（writer、sink、eventId、时刻由 eventId 读出），看是户内共灶的饭（household-meal）还是别的去向。
+ 'migration-inventory':()=>runTests('npc-life-migration.test.mjs',(watchArg??'npc_hw_xuling,item_turnip').split(',')),
  'bread-demand-rows':breadDemandRows,
  'sales-s5-w4-wood':()=>woodStock('s5-w4-economy.test.mjs',(watchArg??'item_wood').split(',')),
  'sales-a1-lt':()=>runTests('a1-lt-scenarios.test.mjs',(watchArg??'npc_hw_duanyan').split(',')),

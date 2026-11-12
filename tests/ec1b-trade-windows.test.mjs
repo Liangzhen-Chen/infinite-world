@@ -191,6 +191,10 @@ test('a customer who comes off a post elsewhere is available from the minute he 
  assert.ok(m>0&&leave+m<720,'precondition (engine): the walk home is a real trip and he is home before the shop window closes');
  assert.deepEqual(customerWindows(f.e,state,0).get(D).map(s=>s.start),[leave+m],'his customer window opens on arrival');
  assert.deepEqual(flowTimesOfDay(f.e,state,0),[480,leave+m]);
+ // 先走完他出发之前的时刻 480（洛薇等按需买过，当日对本店已来过一趟）：否则下面 600 的结算会让洛薇成交，占住店主的柜台时间，
+ // 他到店那一刻（600+m）店主还在服务洛薇，serve 里的店主义务检查（assertNpcObligationAction）会合法地拒掉他，测不出“到达后可被评估”本身。
+ f.d.set(['state','minute'],480);advanceCustomerFlow(f.d,f.e,-1,leave-1);
+ assert.ok(flowRecords(f).some(r=>r.minute===480&&r.visits.some(v=>v.npc===A)),'precondition: the early customer was already seen at 480');
  // 在路上不能被评估：600 他刚出发（scheduleTravel，位置空），结算后没有他的访问记录。
  f.d.set(['state','minute'],leave);
  f.d.set(['state','npcs',D],{...f.d.get('state','npcs',D),location:null,activity:'赶路',scheduleTravel:{from:post,to:home,depart:leave,arrive:leave+m,edges:[]}});

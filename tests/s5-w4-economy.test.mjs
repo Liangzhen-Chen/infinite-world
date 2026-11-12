@@ -17,7 +17,7 @@ import {householdBudget,householdDailyUse} from '../server-plugin/household-budg
 import {personHousehold} from '../server-plugin/entity-view.mjs';
 import {npcDecision} from '../server-plugin/npc-decision.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
-import {currentShops} from '../server-plugin/shop.mjs';
+import {currentShops,tradeQuote} from '../server-plugin/shop.mjs';
 import {regionalTradeBase} from '../server-plugin/settlement-trade.mjs';
 import {wildlifePriceFactor} from '../server-plugin/wildlife.mjs';
 import {scheduleAt} from '../server-plugin/npc-schedule.mjs';
@@ -52,12 +52,15 @@ test('F048 分红：收付双方不在场时不凭空转账，形成到期应付
     const third=await f.act({buyer:host,seller:'player',item:'item_wood',quantity:reserve-5,unitPrice:2},'stock-3');assert.equal(third.cost,2*(reserve-5));
     assert.deepEqual([stockOf().stock,stockOf().upkeep,stockOf().available],[reserve+5,reserve,5],'precondition: reserve+5 in stock, reserve kept, exactly 5 saleable');
     const own=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'invest');
-    // 收购 reserve+5=11 份后S39、net=-11、opening28，深度1−.2×11/28≈.9214；报价4×.5×.9214×.99895≈1.841，整数上界ceil(报价×1.1)=ceil(2.03)=3。
-    // 按合法单价3零售最早的5份，实收15铜；日成交 11+5=16≤开市28。
-    const sale=await f.act({seller:host,item:'item_wood',quantity:5,unitPrice:3},'sale');assert.equal(sale.cost,15);
+    // 转售单价：合法议价带 [ceil(报价×.9), ceil(报价×1.1)]（engine.mjs:705），取上界；报价与引擎 trade 同一入口读出（shop.mjs tradeQuote，参数同 engine.mjs:702）。
+    // 上一版按“公共供给 33/28 的深度”手推上界为3，被云上驳回（引擎报区间 2 到 2）：多收购使深度更低、上界掉到 2。这里不再手推深度，由引擎报价决定上界；
+    // 若上界使转售无利润，分红 due 为 0，下面 due>=1 的断言会如实失败，交给诊断 sales-s5-w4-wood-quote 查深度各项。
+    const qd=f.draft(),loc=f.doc.state.location,listPrice=tradeQuote(qd,f.e,{buyer:'player',seller:host,item:'item_wood',quantity:5,location:loc,base:()=>regionalTradeBase(qd,f.e,'item_wood',loc)*wildlifePriceFactor(f.e,qd.document,'item_wood',loc)}).listPrice;
+    const top=Math.ceil(listPrice*f.e.rules.economy.priceFactorLimits.bargain[1]);
+    const sale=await f.act({seller:host,item:'item_wood',quantity:5,unitPrice:top},'sale');assert.equal(sale.cost,5*top);
     const tax=f.doc.state.records['trade_tax:sale:commercial']?.amount??0;
-    // 收入15、FIFO成本10，减实际商税；分红floor((15−10−税)×20%)。
-    const due=Math.floor((15-10-tax)*20/100);assert.ok(due>=1);
+    // 收入 5×上界、FIFO成本10，减实际商税；分红floor((收入−10−税)×20%)。
+    const due=Math.floor((5*top-10-tax)*20/100);assert.ok(due>=1,`resale revenue ${5*top} leaves a dividend (list ${listPrice}, top ${top})`);
     await move(f,mill,'away');
     const playerBefore=f.doc.state.player.coins,hostBefore=f.doc.state.npcs[host].coins;
     f.tick(f.doc.state.records[own.contract].nextDividend);
