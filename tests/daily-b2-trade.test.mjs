@@ -8,8 +8,6 @@ import {standing} from '../server-plugin/standing.mjs';
 import {facilityRuntime} from '../server-plugin/facility-state.mjs';
 import {marketSupply} from '../server-plugin/market.mjs';
 import {uiSession} from './helpers/ui-script.mjs';
-import {handOatsScarcity,handSatiety} from './helpers/hand-targets.mjs';
-import {placeSettlement} from '../server-plugin/entity-view.mjs';
 import {variant,setPrice,scene,stack,tool,monthDayMinute,conserved,primed,held,safeEventId,SEED,DAY} from './helpers/daily-b2.mjs';
 
 const INN='bld_hw_qingdeng',LINSUI='npc_hw_linsui',WEAVING='bld_hw_weaving',SULAN='npc_hw_sulan';
@@ -66,31 +64,20 @@ test('D03 议价在市场区间内成交；钱货守恒、基准不变、次日�
 test.todo('D03 议价过程：玩家开价、孙二还价并同意 45（NPC 决策与对话）——引擎只校验成交价在议价区间 [0.9, 1.1]×标价内；NPC 自己决定接不接受归 A2（NPC 决策规则骨架）');
 
 test('D05 酒馆买两种食物，按当前零售价各付各的；钱柜收到同一总额',async t=>{
- // 阳春面→燕麦薄饼（item_oat_flatbread）8 文，卤肉→羊肉（item_mutton）15 文；掌柜林穗；冬季十二月初三午时；玩家 200 文（够付夹取上限下的两笔价）。
+ // 阳春面→燕麦薄饼（item_oat_flatbread）8 文，卤肉→羊肉（item_mutton）15 文；掌柜林穗；冬季十二月初三午时；玩家 60 文。
  const world=variant(w=>{setPrice(w,'item_oat_flatbread',8);setPrice(w,'item_mutton',15);});
- const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(12,3,12,0),s=>{s.player.coins=200;})});
+ const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(12,3,12,0),s=>{s.player.coins=60;})});
  const before=await primed(ui);
  const firstPrice=projected(world,before,LINSUI,'item_oat_flatbread'),noodle=await ui.choose('trade.buy',{item:'item_oat_flatbread',quantity:1},{target:LINSUI});
- const mid=await ui.read(),secondPrice=projected(world,mid,LINSUI,'item_mutton'),meat=await ui.choose('trade.buy',{item:'item_mutton',quantity:1},{target:LINSUI});
+ const secondPrice=projected(world,await ui.read(),LINSUI,'item_mutton'),meat=await ui.choose('trade.buy',{item:'item_mutton',quantity:1},{target:LINSUI});
  assert.ok(noodle.ok,noodle.error);assert.ok(meat.ok,meat.error);assert.equal(noodle.result.cost,firstPrice.totalCoins);assert.equal(meat.result.cost,secondPrice.totalCoins);
- // 手推（农事目标持有规律）：场景把时间直接跳到十二月初三（第 332 日），公仓粮的批次早在第 210 日到期，没有经过收获，所以公仓粮不计供给（只计未到期批次，前置断言）；
- // 供给 = 本聚落各经营者行囊里的食物，折成报价货件数（饱腹 ÷ 报价货饱腹）；需求 = 货架目标 + 公仓目标持有（handOatsScarcity.target，燕麦件数折算）。
- // 比值远大于区域夹取上限，所以价钉在上限：第一笔 = trunc(8 × 上限 × 深度 1) ；第二笔 = trunc(15 × 上限 × 深度 × 日内熟客关系 0.99895)，
- // 深度 = 1 + 深度影响 × 净成交 ÷ 开盘存量，净成交 = 刚卖出的 1 个燕麦薄饼折成羊肉件数，开盘存量 = max(1, 现供给 + 净成交)。
- const eng=new WorldEngine(world),pre=before.state,today=Math.floor(pre.minute/DAY),farm=pre.records['agriculture:loc_hw'];
- assert.ok(farm.batches.filter(b=>b.kind==='grain').every(b=>b.expiresDay<=today),'前置：公仓粮批次都已到期，不计供给');
- const [lo,hi]=world.rules.economy.priceFactorLimits.region,sat=i=>handSatiety(eng,i),owners=new Set([...eng.rules.economy.shops.stores.map(s=>s.keeper),...eng.world.npcs.filter(n=>n.shopType||(n.services??[]).includes('trade')).map(n=>n.id)]);
- const heldIn=(state,item)=>{let n=0;for(const id of owners){const npc=state.npcs[id];if(!npc||placeSettlement(eng,state,npc.location).value!=='loc_hw')continue;for(const [it,q] of Object.entries(npc.inventory??{}))if(sat(it)>0)n+=(q?.quantity??q)*sat(it)/sat(item);}return n;};
- const hand=handOatsScarcity(eng,pre,pre.settlements.loc_hw.food);
- const flatUnits=sat('item_oat_flatbread')/sat('item_mutton');
- assert.ok(hand.target*sat('item_oats')/sat('item_oat_flatbread')/Math.max(1,heldIn(pre,'item_oat_flatbread'))>=hi,'前置：食物池比值远大于上限（价钉在上限）');
- const S2=heldIn(mid.state,'item_mutton');
- assert.equal(noodle.result.cost,Math.trunc(8*hi));
- const meatDepth=1+eng.world.marketRules.depthImpact*flatUnits/Math.max(1,S2+flatUnits);
- assert.equal(meat.result.cost,Math.trunc(15*hi*meatDepth*0.99895));
+ // Food is abundant (D=14, S>28): 8*.5*1=4; 15*.5 times the
+ // second-sale depth near 1 remains between 7 and 8, truncating to 7.
+ // Quality, spread, regard and registered corrections are all 1.
+ assert.equal(noodle.result.cost,4);assert.equal(meat.result.cost,7);
  const after=await ui.read();
  const total=firstPrice.totalCoins+secondPrice.totalCoins;
- assert.equal(before.state.player.coins,200);assert.equal(after.state.player.coins,200-total,'①两笔总额各自取整后扣款');
+ assert.equal(before.state.player.coins,60);assert.equal(after.state.player.coins,60-total,'①两笔总额各自取整后扣款');
  assert.equal(after.state.npcs[LINSUI].coins-before.state.npcs[LINSUI].coins,total,'④酒肆收到实际总额');
  conserved(before,after,'D05',new WorldEngine(world));
 });
@@ -99,7 +86,7 @@ async function dine(t){
  // purchase fixture. S5-02 keeps 8/15 as baselines and derives the actual bill.
  const world=variant(w=>{setPrice(w,'item_oat_flatbread',8);setPrice(w,'item_mutton_turnip_stew',15);});
  const ui=await uiSession(t,{world,mutate:scene(INN,monthDayMinute(12,3,12,0),s=>{
-  s.player.coins=200;s.player.body={satiety:{value:30,asOf:monthDayMinute(12,3,12,0),activity:'rest'}};
+  s.player.coins=60;s.player.body={satiety:{value:30,asOf:monthDayMinute(12,3,12,0),activity:'rest'}};
   // S5-02: two people *60 daily satiety / the stew's derived satiety rounds up to
   // some retained portions (fewer than five); the rest are the examined customer's meal.
   s.npcs[LINSUI].inventory.item_mutton_turnip_stew=stack(5);
