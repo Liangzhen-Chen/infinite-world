@@ -589,9 +589,16 @@ export function itemView(engine,state,id){
     return view;
 }
 
-// 迁居途中的人不在灶边：他随身带着自己的包裹，户里留守的人不能吃他的口粮、也不替他做饭（与已排除的征役者同类）。午夜户内口粮（household-budget householdMealPlan、household-subsistence mealMember）共用这一个谓词。
-// 只认迁居（scheduleTravel.migration）：日常作息的几分钟步行不算离灶。
-export const awayFromHearth=(state,id)=>Boolean(state.npcs?.[id]?.scheduleTravel?.migration);
+// 不在灶边的成员：开饭这一刻，此人所在（在途则看去向）的聚落不是本户住处所在的聚落。随身物品跟人走，户里留守的人不能吃他的口粮、也不替他做饭；
+// 出远门、迁居、在外过夜、在别处被押都是同一条（与已排除的征役者同类）。住处取聚落一级：同一聚落内日间上工、赶集、串门是日常，晚上仍回灶边，不算离灶。
+// 午夜户内口粮（household-budget householdMealPlan 与预算 family 的 hearth、household-subsistence mealMember）共用这一个谓词，防口径分叉。
+export function awayFromHearth(engine,state,id){
+    const npc=state.npcs?.[id];if(!npc)return false;
+    const home=personHousehold(engine,state,id).value?.settlement;if(!home)return false;
+    const where=npc.location??npc.scheduleTravel?.to;if(!where)return false;
+    const at=placeSettlement(engine,state,where).value;
+    return Boolean(at)&&at!==home;
+}
 // 同户共灶的“可动用资金成员”：在世有效、不是玩家、没有死亡/濒死/昏迷。预算（客观读 objectiveCash、主观视图 household）与户内转账（householdPoolTopUp）共用这一个谓词，防口径分叉（EC-1b U7）。
 export function poolMember(engine,state,id){
     return id!=='player'&&Boolean(state.npcs?.[id])&&isEffective(engine,state,id)&&!['死亡','濒死','昏迷'].includes(state.npcs[id].status);

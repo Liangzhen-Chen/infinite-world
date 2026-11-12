@@ -87,7 +87,7 @@ const publicShareOf=(...a)=>{
 // 免费水在 readHouseholdResources 内计算（budgetRead 的 build 里）：缓存命中的预算读不再重算。缓存本身的范围不变：游标读按草稿 revision（任何写入、含水体与日期变化即换键），
 // 非游标读按 d.memo（只读作用域/状态读取器，按 state 对象身份）；没有 memo 的朴素读取器与整份预算一样每次重算（这是等价测试用的对照旁路，不是新增开销）。主观读不缓存。
 function freeWaterToday(d,engine,owner,view){
- const state=d.get('state'),f=family(d,engine,owner),members=f.shared?f.members:[owner];
+ const state=d.get('state'),f=family(d,engine,owner),members=f.shared?f.hearth:[owner];
  const hydrationNeed=members.reduce((n,id)=>n+explainDerived(engine,d.document??{state},'body:drain',id,{base:bodyDrain(engine,state,id,'hydration')*24,...(view?{observer:owner,view}:{})}).value,0);
  return freeWater(d,engine,owner,{view,hydrationNeed});
 }
@@ -204,7 +204,10 @@ function family(d,engine,owner){
  // registered households share meals; separate households at one address do
  // not become one budget merely by co-residence or kinship.
  const members=h?.members??[owner],shared=members.length>1;
- return {household:h?.id??null,members,holders:members,shared};
+ // hearth：此刻在灶边的成员（本人恒在）。口粮的需求与背包只算 hearth，与午夜 householdMealPlan 同一谓词（entity-view awayFromHearth）：不在家的人不吃户里的饭，他的随身包裹也不进户内口粮池；
+ // 钱袋口径另按 members（objectiveCash/householdPoolTopUp，钱是个人随身的，补足由付款人主动发起），这里不动。
+ const hearth=members.filter(id=>id===owner||!awayFromHearth(engine,s,id));
+ return {household:h?.id??null,members,hearth,holders:hearth,shared};
 }
 
 function seedNeeds(engine,state,holders){
@@ -280,7 +283,7 @@ function nextMealCapState(rows,saved){
 // need, never the nutrition in that same ration. Private food fills the gap.
 export function householdMealPlan(d,engine,owner,{publicShare=0,sourceNutrition={}}={}){
  const state=d.get('state'),f=family(d,engine,owner);
- const members=f.members.filter(id=>id!=='player'&&!isPhysicallyDead(engine,state,id)&&!state.npcs?.[id]?.levy&&!awayFromHearth(state,id)&&!state.npcs?.[id]?.materialized?.folded);
+ const members=f.members.filter(id=>id!=='player'&&!isPhysicallyDead(engine,state,id)&&!state.npcs?.[id]?.levy&&!awayFromHearth(engine,state,id)&&!state.npcs?.[id]?.materialized?.folded);
  const needs=Object.fromEntries(['satiety','hydration'].map(need=>[need,members.reduce((sum,id)=>sum+explainDerived(engine,d.document,'body:drain',id,{base:bodyDrain(engine,state,id,need)*24}).value,0)]));
  const publicNutrition={satiety:members.reduce((n,id)=>n+bodyDrain(engine,state,id,'satiety')*24,0)*Math.max(0,Math.min(1,publicShare)),hydration:0};
  const seeds=stateMemo(state,engine,[seedRecords,JSON.stringify(members)],()=>seedNeeds(engine,state,members),seedInputs);
@@ -328,8 +331,8 @@ function readHouseholdResources(d,engine,owner,{days,view,risk,commonRisk,market
  // bags. Subjective needs use known derived facts, with the public body base
  // when another member's private modifiers are unknown.
  // 主观视图下同户成员的背包与钱袋并入这一户的预算，与客观读（f.holders）同一口径；
- const pool=subjective?Object.keys(view.household?.people??{}):[];
- const holders=subjective?[owner,...pool]:f.holders,members=f.shared?f.members:[owner];
+ const pool=subjective?Object.keys(view.household?.people??{}).filter(id=>id===owner||!awayFromHearth(engine,state,id)):[];
+ const holders=subjective?[owner,...pool]:f.holders,members=f.shared?f.hearth:[owner];
  const seeds=subjective?new Map():stateMemo(state,engine,[seedRecords,JSON.stringify(holders)],()=>seedNeeds(engine,state,holders),seedInputs);
  const promises=subjective?view.self.obligations??[]:[...obligationRows(state),...recordsMemo(state.records,promisedRecords,()=>Object.values(state.records??{}).filter(r=>r.kind==='procurement'||r.category==='agreed_quote'))];
  const saved=savedMealCap(d,f.household??owner);

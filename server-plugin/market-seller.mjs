@@ -16,7 +16,7 @@ const quantityOf=v=>typeof v==='number'?v:v?.quantity??0;
 // 居民此刻能不能做买卖：清醒、没有在路上、所在时段没有别的服务岗位（接待交易的岗位除外）。店铺的营业窗口仍按作息里的 trade 服务（openShops），
 // 居民卖方沿用同一份作息：有 trade 服务的时段当然能卖，没有任何服务岗位的空闲时段也能卖，值守别的服务（教学、办公……）的时段不能。
 export function sellingWindow(npc,slot){
-  return Boolean(slot)&&!slot.committed&&!SLEEPING.test(slot.activity??'')&&!npc.scheduleTravel&&!npc.cognitionTravel&&!(slot.services??[]).some(service=>service!=='trade');
+  return Boolean(slot)&&!SLEEPING.test(slot.activity??'')&&!npc.scheduleTravel&&!npc.cognitionTravel&&!(slot.services??[]).some(service=>service!=='trade');
 }
 
 // t 时刻愿意把自己吃不完的食物卖出的居民：可售余量（saleableStock.available，已扣自用与承诺）至少一整件的食物，且此刻在卖方窗口内。
