@@ -76,9 +76,7 @@ test('L3 同一天再买同一件东西，成交深度真实上升且总额一�
 
 // 指南11.3 L4 指定镐；保留原刀场景全部断言，并对正式矿镐逐项执行同一验收。
 for(const [item,label] of [['item_kitchen_knife','刀'],['item_mining_pick','镐']])test(`L4 库存有限：铁匠铺的${label}卖完后买不到，菜单说明下次进货的日子，到货后能再买`,async t=>{
- // EC-1b：客流按营业窗口起点结算，补货后在玩家 10:00 到场之前，上门的居民就会买走到货（原来客流在正午，晚于 10:00）；
- // 本用例检验的是库存有限、卖完后菜单说明下次进货日、到货后能再买，不是居民客流，所以与 shop-restock 夹具同法：其他居民没钱就不上门（walkIns 要求有钱）。
- const ui=await uiSession(t,{mutate:at(FORGE,10*60,s=>{s.player.coins=2000;for(const [id,n] of Object.entries(s.npcs))if(id!==SMITH)n.coins=0;})});
+ const ui=await uiSession(t,{mutate:at(FORGE,10*60,s=>{s.player.coins=2000;})});
  const stock=qty((await ui.read()).state.npcs[SMITH].inventory[item]);assert.ok(stock>0);
  const all=await ui.choose('trade.buy',{item,quantity:stock},{target:SMITH});assert.ok(all.ok,all.error);
  const none=await ui.choose('trade.buy',{item,quantity:1},{search:true,target:SMITH});

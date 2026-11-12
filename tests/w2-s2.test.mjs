@@ -32,10 +32,7 @@ const before=withoutS2(formal,{keepOwnGenerated:true}),world=mergeS2Publication(
 //  · 购买之后本测试不再向这位导师买东西（学成缓存的存档只用于施法与炼丹），所以“购买后还要用的量”为 0，只需撑到购买那一刻。
 //  · 临界：BREAD=84 时面包刚好吃完，蜂蜜 3 份留 2、可售 1，勉强买得到；BREAD=96（8 天×12，即 7 天消耗 84 再留 1 天口粮 12）时蜂蜜留 0、可售 3，
 //    六样购买全部成交（火绒 2 份仍 1 铜）。取 96：最小需求 84 + 一天的口粮余量。
-// EC-1b：居民卖方（有可售余量的居民，market-seller.residentSellers）按营业窗口向上门的居民出让余货；导师的蜂蜜与引火包正是这类余货，
-// 白石镇上缺粮的邻居会在玩家购买之前把它们买走（物理库存先到 0，“只剩0”）。本用例检验的是学成后向导师买材料，不是居民客流，
-// 所以与 shop-restock 夹具同法：除三位导师外的居民没钱就不上门（客流 walkIns 要求有钱）。
-const mentorHome=w=>{const n=w.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:96,item_wood:60};for(const m of w.npcs)if(!['npc_bs_077_1','npc_bs_078_1','npc_bs_079_1'].includes(m.id))m.coins=0;return w;};mentorHome(world);
+const mentorHome=w=>{const n=w.npcs.find(x=>x.id==='npc_bs_078_1');n.inventory={...n.inventory,item_bread:96,item_wood:60};return w;};mentorHome(world);
 const engine=new WorldEngine(world);
 const published=formal.spells.some(s=>ids.spells.has(s.id));
 const seed=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
