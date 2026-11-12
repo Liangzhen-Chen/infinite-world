@@ -374,6 +374,9 @@ export function auditHoldings(d){
 // Queries return only scalar facts. Borrow the cursor's current tree without
 // exposing an immutable checkpoint and forcing copies on the next write.
 const documentOf=source=>typeof source?.peek==='function'?source.peek():source?.document??source;
+// lifecycleState（state-only 读）读到的状态切片：居民的 status/diedAt/incarnation、creatures、created、family.people、转场记录 records['transition:<id>']（category transition）。
+// 依赖它的记忆（户数、自给等）组合这份声明，不再各自手写；这里多读一处，就在这里补一处。
+export const lifecycleInputs=[['npcs','*','status'],['npcs','*','diedAt'],['npcs','*','incarnation'],['creatures'],['created'],['family','people'],{path:['records'],categories:['transition']}];
 export function lifecycleState(engine,source,id,query=null){
  const doc=documentOf(source),state=doc?.state??doc??{};
  const actor=id==='player'?state.player:state.npcs?.[id]??state.creatures?.[id]??state.created?.[id]??state.family?.people?.[id]??engine?.byId?.get(id);

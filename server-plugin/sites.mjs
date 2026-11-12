@@ -407,7 +407,8 @@ export function commonsResources(engine,state,accept=()=>true,publicPlace=()=>tr
 }
 // Today's live figures of one commons resource: the site's own ledger only (never the whole world). Keyed by the exact
 // minute and the site records, so a draw by any household invalidates it.
-const commonsLiveMemo=Symbol('commons live'),commonsLiveInputs=[{path:['records'],categories:['site']}];
+const commonsLiveMemo=Symbol('commons live');
+export const commonsLiveInputs=[{path:['records'],categories:['site']}];
 export function commonsLive(engine,state,siteId,resourceId){
     return stateMemo(state,engine,[commonsLiveMemo,siteId,resourceId,state.minute],()=>{
         const place=engine.byId.get(siteId),r=place?.site?.resources?.find(x=>x.id===resourceId);

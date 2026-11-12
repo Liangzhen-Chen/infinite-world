@@ -5,7 +5,7 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {obligationView} from './obligation-state.mjs';
 // Contracts are facts. Current employment and occupied time are read-only views.
 export const employmentActive=(r,state=null)=>r?.kind==='workshop'&&r.endedAt===undefined&&r.resolvedAt===undefined&&(!r.serviceObligation||!state||obligationView(state,r.serviceObligation)?.closed===false)&&(!!r.clauses||['有效','要求加薪','罢工'].includes(r.status));
-const employmentInputs=[{path:['records'],kinds:['workshop']},['minute']];
+export const employmentInputs=[{path:['records'],kinds:['workshop']},['minute']];
 export function currentEmployment(state,id,minute=state?.minute??0){
     // The state scope survives unrelated cursor writes. Keep the records-only
     // view too: several projected states at one minute share the same records.

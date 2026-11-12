@@ -415,7 +415,7 @@ export function householdDefinition(engine,state,houseId){
  return {id:houseId,settlement:people[0].settlement,homeLocation:people[0].home?.location??people[0].home?.district,members:people.map(p=>p.id)};
 }
 const householdIdentityMemo=Symbol('household identity'),householdMembersMemo=Symbol('household members');
-const householdIdentityInputs=[['family','households'],['created']];
+export const householdIdentityInputs=[['family','households'],['created']];
 export function npcHousehold(engine,state,id,constraints=null){
  const rental=activeRental(state,id,undefined,constraints);if(rental?.use==='home')return {id:rental.id,settlement:rental.settlement,homeLocation:rental.subject,members:[id]};
  return stateMemo(state,engine,[householdIdentityMemo,id],()=>readNpcHousehold(engine,state,id),householdIdentityInputs);

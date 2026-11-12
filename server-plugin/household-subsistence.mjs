@@ -1,6 +1,9 @@
 // Daily self-provisioning: bounded journeys, shared work time, finite stocks.
-import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities} from './entity-view.mjs';
-import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
+import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities,householdViewInputs,placeSettlementInputs} from './entity-view.mjs';
+import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts,householdIdentityInputs} from './npc-state.mjs';
+import {lifecycleInputs} from './holdings.mjs';
+import {employmentInputs} from './employment-state.mjs';
+import {commonsLiveInputs} from './sites.mjs';
 import {scheduleRecordDependencies} from './education-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
@@ -9,7 +12,7 @@ import {compileRX,evaluateRX} from './rx.mjs';
 import {householdMealPlan,usageItemGrams,registerHouseholdFreeWater,registerUpkeepSelfSupply} from './household-budget.mjs';
 import {householdUsage,isItemClass,heldOfClass} from './item-class.mjs';
 import {warClosedRoutes} from './hazard-calendar.mjs';
-import {facilityRouteStates} from './facility-state.mjs';
+import {facilityRouteStates,routeStateInputs} from './facility-state.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 import {reserve,moveStock,registerLegacyStock,accrueStock,bag,bookedBy} from './stock.mjs';
 import {registerAdvanceHook,advanceHook} from './advance-hooks.mjs';
@@ -125,7 +128,12 @@ const noMeal={shortfall:{satiety:0},needs:{hydration:0}};
 const selfSupplyNpcFields=['diedAt','teachingBusy','activeDemonstration','location','status','caring','levy','cognitionTravel','scheduleTravel','materialized','routine','schedule','life','residence','workplace','occupation','vocation','species','activity','boss','incarnation','age','home','skills','proficiencies','certifications','relationships'];
 const sourceRecordCategories=['forest','forest_supply','household_forage','site','site_presence','site_discovery','site_observation','gather_session','authorization','service_ticket','legal_wanted','office_salary','world_event'];
 let selfSupplyDeps=null;
-const selfSupplyInputs=()=>selfSupplyDeps??=[...selfSupplyNpcFields.map(f=>['npcs','*',f]),['family'],['created'],['player'],['obligations'],['buildings'],['settlements'],['effects'],['remote'],['projects'],['scheduler'],['minute'],
+// 组合原则：被调用方已声明依赖的，直接组合它们的声明（户口视图与身份、所在聚落、生命周期、雇佣、设施路网、资源点读数、取水与路线记忆、日程记录），不重新手写；
+// 手写的只剩没有声明可组合的部分：日程读的 npcs 字段（日程判等 sameNpcScheduleInputs 是逐项比较的函数，没有路径式清单）与规划自己直接读的顶层切片。
+const selfSupplyInputs=()=>selfSupplyDeps??=[
+ ...householdViewInputs,...householdIdentityInputs,...placeSettlementInputs,...lifecycleInputs,...employmentInputs,...routeStateInputs,...commonsLiveInputs,
+ ...waterJourneyInputs,...routePairInputs,...waterSignatureInputs,
+ ...selfSupplyNpcFields.map(f=>['npcs','*',f]),['family'],['player'],['obligations'],['effects'],['remote'],['projects'],['scheduler'],['minute'],
  {path:['records'],kinds:scheduleRecordDependencies.kinds},
  {path:['records'],categories:[...new Set([...scheduleRecordDependencies.categories,...sourceRecordCategories])]}];
 // 自给行程（按户）：每趟 {cls, source（来源编号）, remaining（规划时该来源的可采余量，件）, units, unitGrams}。聚落层把各户的行程按来源累计，

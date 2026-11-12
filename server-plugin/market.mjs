@@ -1,12 +1,13 @@
 // Read-only market projections. Only completed trades are persisted, never quotes.
 import {bagStock,priceRead,settlementStock,granary,pledged,freight,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
-import {placeSettlement,personBusinesses,personHousehold,settlementPopulation} from './entity-view.mjs';
+import {placeSettlement,personBusinesses,personHousehold,settlementPopulation,householdViewInputs} from './entity-view.mjs';
 import {isItemClass,classItems,workmanshipTier,householdUsage as usageDefinition} from './item-class.mjs';
 import {householdUpkeepGap} from './household-budget.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
-import {aliveHoldings,holdingsView} from './holdings.mjs';
+import {aliveHoldings,holdingsView,lifecycleInputs} from './holdings.mjs';
+import {householdIdentityInputs} from './npc-state.mjs';
 import {reject} from './action-rejection.mjs';
 import {recordsMemo,withReadIndex,stateMemo} from './storage.mjs';
 import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost,usageItemGrams,upkeepSelfTripsOf} from './household-budget.mjs';
@@ -86,9 +87,15 @@ export function goodsClass(engine,item){return goodsEntry(engine,item).value;}
 export function goodsWeight(engine,item){return goodsEntry(engine,item).weight;}
 function goodsEdible(engine,item){return goodsEntry(engine,item).edible;}
 export function goodsUse(engine,item){return goodsEntry(engine,item).use;}
-// 聚落当前户数（entity-view.settlementPopulation，动态）。该函数扫全体居民的户口，每次报价都算太贵：按状态记忆，依赖户口、新建人物、聚落账、居民在世与否。
-const householdsMemo=Symbol('settlement households'),householdsInputs=[['family'],['created'],['settlements'],['npcs','*','status'],['npcs','*','diedAt'],['npcs','*','materialized']];
-const settlementHouseholds=(engine,state,place)=>stateMemo(state,engine,[householdsMemo,place],()=>settlementPopulation(engine,state,place).householdCount.value,householdsInputs);
+// 聚落当前户数（entity-view.settlementPopulation，动态）。该函数扫全体居民的户口，每次报价都算太贵：按状态记忆。
+// 记忆依赖由被调用方已声明的依赖组合而成，不手写：户口视图（entity-view.householdViewInputs：户口、新建人物、租约、时钟）、户口身份（npc-state.householdIdentityInputs）、
+// 生命周期（holdings.lifecycleInputs：在世与否）；再加它自己直接读的键：聚落账人口、新建人物、户口表。被调用方多读一处，改它们自己的声明即可。
+const householdsMemo=Symbol('settlement households');
+let householdsDeps=null;
+const householdsInputs=()=>householdsDeps??=[...householdViewInputs,...householdIdentityInputs,...lifecycleInputs,['settlements'],['created'],['family','households']];
+// 记忆值包一层对象，便于测试用对象身份判断“记忆是否被作废重算”（原始数字看不出来）。
+export const settlementHouseholdsRead=(engine,state,place)=>stateMemo(state,engine,[householdsMemo,place],()=>({count:settlementPopulation(engine,state,place).householdCount.value}),householdsInputs());
+const settlementHouseholds=(engine,state,place)=>settlementHouseholdsRead(engine,state,place).count;
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs?.[id]?.location??state.creatures?.[id]?.location;
 const settlementOf=(engine,state,location)=>placeSettlement(engine,state,location).value??location;
 const inventoryOf=(state,id)=>{

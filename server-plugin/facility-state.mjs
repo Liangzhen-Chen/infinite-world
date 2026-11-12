@@ -116,7 +116,7 @@ export function within(engine,state,id,location){
 // binds its physical condition/capacity to that edge, including all planners.
 // Route factor/capacity read physical condition only. Fees, bookings and the
 // current minute affect workstation quotes, not these two route quantities.
-const routeStateInputs=[['buildings'],['created'],{path:['records'],categories:['facility_region']}];
+export const routeStateInputs=[['buildings'],['created'],{path:['records'],categories:['facility_region']}];
 export function facilityRouteStates(engine,state){
  return stateMemo(state,engine,[facilityRouteStates],()=>readFacilityRouteStates(engine,state),routeStateInputs);
 }

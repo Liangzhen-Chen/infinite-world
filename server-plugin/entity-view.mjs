@@ -278,7 +278,7 @@ export function personRelationships(engine,state,id){
 }
 
 const householdViewMemo=Symbol('household view');
-const householdViewInputs=[['family','households'],['created'],['minute'],{path:['records'],kinds:['asset_lease']}];
+export const householdViewInputs=[['family','households'],['created'],['minute'],{path:['records'],kinds:['asset_lease']}];
 function householdView(engine,state,id){
     return stateMemo(state,engine,[householdViewMemo,id],()=>readHouseholdView(engine,state,id),householdViewInputs);
 }
@@ -453,7 +453,7 @@ export function personBody(engine,state,requested){
         boss:fact(boss,`catalog.${boss?.id}`),status:fact(actor?.status,`${path.join('.')}.status`,Boolean(actor))};
 }
 const placeSettlementMemo=Symbol('place settlement'),personBusinessMemo=Symbol('person business');
-const placeSettlementInputs=[['created'],['settlements']];
+export const placeSettlementInputs=[['created'],['settlements']];
 export function placeSettlement(engine,state,location){
     return stateMemo(state,engine,[placeSettlementMemo,location],()=>readPlaceSettlement(engine,state,location),placeSettlementInputs);
 }
