@@ -116,6 +116,10 @@ export const FILE_FLAG_OVERRIDES = {
   'tools/manual-rewrite.mjs --kind': {kind: 'write', note: '写审核记录目录下的 <id>.json、所属 batch-*.json、summary.json（人工改写，不调模型、不联网）'},
   'tools/rg-mutate.mjs --check': {kind: 'nonflag', note: '传给 node 的语法检查参数（node --check 变异后的文件），脚本本身没有这个开关'},
   'tools/s0-metrics.mjs --check': {kind: 'nonflag', note: '传给子脚本 export-actions 的参数；该子脚本的 --check 已登记实跑'},
+  'tools/replay-record.mjs --model': {kind: 'opt', type: 'id', note: '录制夹具 manifest 记录的模型 id（AI-21；录制只写命令行给定的输出目录）'},
+  'tools/replay.mjs --model': {kind: 'opt', type: 'id', note: '回放时比对 manifest 的模型 id（AI-21；不调模型、不联网）'},
+  'tools/replay.mjs --tier': {kind: 'opt', type: 'enum:T0|T2', note: '回放档位（AI-21，只有 T0 与 T2）'},
+  'tools/replay.mjs --trace': {kind: 'write', note: '把回放轨迹写到给定文件（AI-21，ptai 轨迹格式最小子集）'},
 };
 
 // 扫描用：脚本源码里出现的所有 --xxx 形态字样（前面不是字母数字、下划线或连字符）。

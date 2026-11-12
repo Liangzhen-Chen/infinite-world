@@ -239,7 +239,7 @@ test('present NPC summary updates without disclosing private mental state or rel
 });
 
 test('existing HTTP actions/propose/execute transport carries the entity card through to a committed receipt',async t=>{
- const server=await createPlaytestServer({world});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world});t.after(()=>server.close());
  const created=await server.api('create',{}),campaignId=created.reference.campaignId;
  const initial=await server.api('read',{campaignId}),query=await server.api('actions',{campaignId,target:'player'});
  const speech=query.target.primitives.find(row=>row.effect.op==='emit'&&row.effect.verb==='tell');assert.ok(speech);

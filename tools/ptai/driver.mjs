@@ -294,11 +294,12 @@ export function applyCliLimits(config,args){
   if(args[flag]!==undefined)config[key]=Math.min(config[key],Number(args[flag]));
  return config;
 }
-export function httpApi(origin,{fetchImpl=globalThis.fetch,allowedHosts=[]}={}){
+export function httpApi(origin,{fetchImpl=globalThis.fetch,allowedHosts=[],aiProfile}={}){
+ need(['T0','T1','T2','T3'].includes(aiProfile),'httpApi 须显式给 aiProfile（T0-T3），不静默降档');
  const base=assertOrigin(origin,allowedHosts);
  return async(endpoint,body={})=>{
   need(ALLOWED_ENDPOINTS.includes(endpoint),`非回合接口: ${endpoint}`);
-  const response=await fetchImpl(`${base}/${endpoint}`,{method:'POST',redirect:'error',headers:{'Content-Type':'application/json','Connection':'close'},body:JSON.stringify(body)});
+  const response=await fetchImpl(`${base}/${endpoint}`,{method:'POST',redirect:'error',headers:{'Content-Type':'application/json','Connection':'close','X-AI-Profile':aiProfile},body:JSON.stringify(body)});
   need(!(response.status>=300&&response.status<400),`拒绝重定向 ${response.status}`);
   const data=await response.json();
   if(!response.ok||data.ok===false)throw new Error(data.error??`HTTP ${response.status}`);
@@ -312,6 +313,7 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
  if(args.model!==undefined)config.model=args.model;
  if(args.out!==undefined)config.outDir=args.out;
  need(args.origin&&args['run-id'],'须给 --origin 与 --run-id');
- const result=await runPlayer({config,api:httpApi(args.origin,{allowedHosts:config.testHosts??[]}),runId:args['run-id'],seed:args.seed??null,manifestHash:args['manifest-hash']??null});
+ need(['T0','T1','T2','T3'].includes(config.aiProfile),'试玩配置须显式写 aiProfile（T0-T3），不静默降档');
+ const result=await runPlayer({config,api:httpApi(args.origin,{allowedHosts:config.testHosts??[],aiProfile:config.aiProfile}),runId:args['run-id'],seed:args.seed??null,manifestHash:args['manifest-hash']??null});
  console.log(JSON.stringify({stop:result.stop,turns:result.turns,sessionUsd:result.sessionUsd,monthTotal:result.monthTotal,trace:result.tracePath}));
 }

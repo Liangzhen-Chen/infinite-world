@@ -54,7 +54,8 @@ test('E2/E19 浏览器：失败对账阻止出站生成，编辑撤销刷新玩�
             setExtensionPrompt:(_key,prompt)=>{window.scenePrompt=prompt;},registerFunctionTool:tool=>tools.set(tool.name,tool),
             stopGeneration:()=>{window.stopped=true;},eventTypes:new Proxy({},{get:(_,key)=>key}),eventSource:{on:(key,callback)=>handlers.set(key,callback)}};
     },created.reference);
-    await page.evaluate(async()=>{await import('/runtime.js');await window.infiniteFieldsV2.refresh();});
+    // AI-01: this scenario needs the model path (tool calls / reviewed replies), so it opts into T3; the default is T0 (no AI).
+    await page.evaluate(async()=>{await import('/runtime.js');(await import('/ui-settings.mjs')).updateSettings({aiProfile:'T3'});await window.infiniteFieldsV2.refresh();});
     const read=await page.evaluate(async()=>{
         const tool=window.fixtureTools.get('world_read');
         return{inventory:JSON.parse(await tool.action({section:'行囊'})),player:JSON.parse(await tool.action({section:'玩家'})),invalid:JSON.parse(await tool.action({section:'不认识的栏目'}))};

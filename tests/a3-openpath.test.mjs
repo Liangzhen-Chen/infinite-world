@@ -136,7 +136,7 @@ test('服务端零调用回合直接退 pending 模板，不进入付费改写�
   if(label.startsWith('consistency-rewrite:')){rewrites++;return {choices:[{finish_reason:'stop',message:{content:draft}}]};}
   return reviewResponse(body);
  }};
- const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());
  const created=await server.api('create',{}),campaignId=created.reference.campaignId;
  const before=await server.api('read',{campaignId});
  const begun=await server.api('review/begin',{campaignId,anchor:'openpath-no-calls',playerText:'我想在墙上刻字，请林穗决定是否同意。',expectedSequence:before.reference.sequence});
@@ -159,7 +159,7 @@ test('试玩容器前提来自现有存货与真实交易，开局钱够且网�
  // real mark record. Metrics must use the gateway's recorded tool names.
  assert.equal(builderToolCall('open:leave_mark',{intent:'刻痕'}).tool,'world_act');
  assert.deepEqual(scenario.turns.find(row=>row.input.startsWith('我把这道记号')).expectedTools,['world_act','world_propose']);
- const server=await createPlaytestServer();t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/});t.after(()=>server.close());
  const created=await server.api('create',{}),campaignId=created.reference.campaignId;
  let view=await server.api('read',{campaignId}),sequence=view.reference.sequence;
  const before=view.document,calls=[];

@@ -65,7 +65,7 @@ test('赊货实际转移库存；不接受赊账的商家拒绝，欠款与过�
     assert.equal(out.document.state.inventory.item_bread.quantity,1);assert.equal(out.document.state.player.coins,before.state.player.coins);assert.equal(money(out.document),money(before));
     const forge=(await execute(before,'world_move',{destination:'铁匠铺'},'forge')).document;
     await assert.rejects(execute(forge,'world_trade',{seller:'段岩',item:'铁铰链',quantity:1,payment:'credit'},'forge_credit'),/尚未接受赊账/);
-    const server=await createPlaytestServer({seed:'contracts-http'});t.after(()=>server.close());
+    const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,seed:'contracts-http'});t.after(()=>server.close());
     const view=await server.api('create',{}),campaignId=view.reference.campaignId;
     const request={campaignId,tool:'world_trade',args:{seller:'林穗',service:'住宿',payment:'credit',creditMinutes:60},eventId:'credit',anchor:'credit'};
     await server.api('execute',request);assert.equal((await server.api('execute',request)).duplicate,true);

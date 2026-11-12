@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {defaultReviewRequest,readApprovedContent,runContentPipeline} from '../../tools/content-pipeline.mjs';
+import {defaultReviewRequest,readApprovedContent,runContentPipeline,hashContent} from '../../tools/content-pipeline.mjs';
 import {DeepSeekClient} from '../../tools/deepseek-client.mjs';
 
 export const revision='p1-revision-1',root='world/drafts/p1-revision',CARD='P1';
@@ -20,7 +20,12 @@ const read=async file=>JSON.parse(await fs.readFile(file,'utf8'));
 // A field path is a list of object keys and {id} selectors into arrays.
 const step=(value,part)=>typeof part==='string'?value?.[part]:value?.find?.(r=>r?.id===part.id);
 export const getPath=(row,parts)=>parts.reduce(step,row);
-export function setPath(row,parts,value){const parent=getPath(row,parts.slice(0,-1));assert.ok(parent&&typeof parts.at(-1)==='string','修订路径无效');parent[parts.at(-1)]=structuredClone(value);}
+// 删除标记：修订条目的 after 取 REMOVE 表示“删除该键”（规则层通用，不限字段）。它是纯 JSON，可写进冻结候选与回执。
+// 键不存在与 REMOVE 等价：sameValue(现值, 回执值) 对 REMOVE 要求现值为 undefined（键不存在），其余照旧按内容哈希比。
+export const REMOVE=Object.freeze({$remove:true});
+export const isRemove=v=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).length===1&&v.$remove===true;
+export const sameValue=(cur,value)=>isRemove(value)?cur===undefined:hashContent(cur??null)===hashContent(value??null);
+export function setPath(row,parts,value){const parent=getPath(row,parts.slice(0,-1));assert.ok(parent&&typeof parts.at(-1)==='string','修订路径无效');if(isRemove(value))delete parent[parts.at(-1)];else parent[parts.at(-1)]=structuredClone(value);}
 const pathLabel=parts=>parts.map(p=>typeof p==='string'?p:`[id=${p.id}]`).join('.').replaceAll('.[','[');
 export const rowOf=(world,file,id)=>(file.endsWith('items.json')?world.items:file.endsWith('recipes.json')?world.recipes:world.locations).find(r=>r.id===id);
 
@@ -32,7 +37,7 @@ function scan(text){
  function value(){
   ws();const start=i,c=text[i];
   if(c==='{'){i++;const keys=new Map();ws();if(text[i]==='}'){i++;return{start,end:i,keys};}
-   for(;;){ws();const k=value();ws();assert.equal(text[i],':');i++;keys.set(JSON.parse(text.slice(k.start,k.end)),value());ws();if(text[i]===','){i++;continue;}assert.equal(text[i],'}');i++;return{start,end:i,keys};}}
+   for(;;){ws();const k=value();ws();assert.equal(text[i],':');i++;const v=value();v.keyStart=k.start;keys.set(JSON.parse(text.slice(k.start,k.end)),v);ws();if(text[i]===','){i++;continue;}assert.equal(text[i],'}');i++;return{start,end:i,keys};}}
   if(c==='['){i++;const items=[];ws();if(text[i]===']'){i++;return{start,end:i,items};}
    for(;;){items.push(value());ws();if(text[i]===','){i++;continue;}assert.equal(text[i],']');i++;return{start,end:i,items};}}
   if(c==='"'){i++;while(text[i]!=='"')i+=text[i]==='\\'?2:1;i++;return{start,end:i};}
@@ -48,13 +53,24 @@ function spanOf(text,node,parts){
  }
  return node;
 }
+// 删除一个键值对的文本区间：有后随逗号时连同逗号与其后空白一并删；是最后一个键则连同前面的逗号删。其余字节不动。
+function removalSpan(text,node){
+ assert.ok(node.keyStart!==undefined,'只能删除对象里的键');
+ let j=node.end;while(/\s/.test(text[j]))j++;
+ if(text[j]===','){j++;while(/\s/.test(text[j]))j++;return{start:node.keyStart,end:j,text:''};}
+ let k=node.keyStart-1;while(/\s/.test(text[k]))k--;
+ if(text[k]==='{')return{start:node.keyStart,end:node.end,text:''};
+ assert.equal(text[k],',','删除位置前应为逗号');
+ return{start:k,end:node.end,text:''};
+}
 export function editJSONText(text,edits){
  const tree=scan(text),expected=JSON.parse(text),spans=[];
  for(const {target,path:parts,before,after} of edits){
   const row=expected.find(r=>r.id===target);assert.ok(row,`正式文件缺少 ${target}`);
   assert.deepEqual(getPath(row,parts),before,`${target}.${pathLabel(parts)}: 发布前事实已改变`);
   setPath(row,parts,after);
-  spans.push({...spanOf(text,tree,[{id:target},...parts]),text:JSON.stringify(after)});
+  const node=spanOf(text,tree,[{id:target},...parts]);
+  spans.push(isRemove(after)?removalSpan(text,node):{start:node.start,end:node.end,text:JSON.stringify(after)});
  }
  spans.sort((a,b)=>b.start-a.start);
  let out=text;for(const s of spans)out=out.slice(0,s.start)+s.text+out.slice(s.end);
@@ -115,7 +131,7 @@ export function applyCandidate(world,entries){
 export function validateDraft(d,e){
  try{assert.deepEqual(d,draftFor(e));assert.ok(e.basis.length&&e.boundary&&e.supersedes.length);return [];}catch(error){return [error.message];}
 }
-export const isPublished=(world,entries)=>entries.every(e=>{try{assert.deepEqual(getPath(rowOf(world,e.file,e.target),e.path),e.after);return true;}catch{return false;}});
+export const isPublished=(world,entries)=>entries.every(e=>{try{const cur=getPath(rowOf(world,e.file,e.target),e.path);if(isRemove(e.after)){assert.equal(cur,undefined);}else assert.deepEqual(cur,e.after);return true;}catch{return false;}});
 // The verdict is a few tokens; a smaller ceiling keeps each reservation inside the card limit.
 // The skeleton carries only the change; basis and facts travel once, as context.
 export const skeletonOf=({basis,facts,supersedes,...core})=>core;
@@ -145,7 +161,7 @@ export async function runRevision(cfg,args=process.argv.slice(2)){
   if(!approval){
   await fs.writeFile(`${root}/cost-estimate.json`,JSON.stringify({rates,requests:entries.length,perRequestCeilingYuan:ceilings,firstPassCeilingYuan:ceilings.reduce((a,b)=>a+b,0),cardLimitYuan:cfg.limitYuan,modelCalls:0},null,2)+'\n');
   const budgetFile=`${root}/budget.json`;
-  try{await fs.access(budgetFile);}catch{await fs.writeFile(budgetFile,JSON.stringify({spentYuan:0,reservedYuan:0,waveLimitYuan:cfg.limitYuan,note:cfg.note,cards:{[CARD]:{limitYuan:cfg.limitYuan,spentYuan:0,reservedYuan:0,maxRequests:entries.length}},requests:{}},null,2)+'\n');}
+  try{await fs.access(budgetFile);}catch{await fs.writeFile(budgetFile,JSON.stringify({spentYuan:0,reservedYuan:0,waveLimitYuan:cfg.limitYuan,note:cfg.note,cards:{[CARD]:{limitYuan:cfg.limitYuan,spentYuan:0,reservedYuan:0,maxRequests:cfg.maxRequests??entries.length}},requests:{}},null,2)+'\n');}
   }
   console.log(JSON.stringify({entries:entries.length,addedErrors:added.length,removedErrors:removed.length,ceilingYuan:ceilings.reduce((a,b)=>a+b,0),modelCalls:0,...(approval?{approvalVia:approval.via}:{})}));
  }
@@ -153,7 +169,7 @@ export async function runRevision(cfg,args=process.argv.slice(2)){
   assert.ok(!approval,'本批不单独 L2：审批证据来自 '+approval?.via+' 的已审批记录');
   assert.ok(frozen,'先 --prepare 冻结候选');
   const budget=await read(`${root}/budget.json`),card=budget.cards?.[CARD];
-  assert.ok(Number.isFinite(card?.limitYuan)&&card.limitYuan>0&&card.limitYuan<=cfg.limitYuan,`缺少 ${CARD} 预算账或超过 ${cfg.limitYuan} 元`);
+  assert.ok(Number.isFinite(card?.limitYuan)&&card.limitYuan>0&&card.limitYuan<=cfg.limitYuan&&(cfg.maxRequests===undefined||card.maxRequests<=cfg.maxRequests),`缺少 ${CARD} 预算账或超过 ${cfg.limitYuan} 元/${cfg.maxRequests??"条目数"} 次`);
   const {summary}=await runContentPipeline({entries,root:`${root}/review`,budgetRoot:root,revision,contextFor,validateDraft,reviewDraftFor:async e=>draftFor(e),reuseFrozenDrafts:true,
    buildDraftRequest:()=>{throw Error('Frozen candidate');},buildReviewRequest:reviewRequest,client:new DeepSeekClient({budgetYuan:card.limitYuan,logFile:`${root}/usage.jsonl`}),cardId:CARD,
    allocation:{cardId:CARD,incrementLimitYuan:card.limitYuan,maxRequests:card.maxRequests,waveLimitYuan:20,startingSpentYuan:0,startingReservedYuan:0},concurrency:1,batchSize:entries.length});

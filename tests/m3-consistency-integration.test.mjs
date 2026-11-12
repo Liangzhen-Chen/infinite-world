@@ -34,7 +34,7 @@ async function acted(server){
 }
 
 test('HTTP：真实交易先保存，矛盾正文只改一次，复审后唯一尾注且重试不重扣款',async t=>{
- const client=clientFixture(),server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+ const client=clientFixture(),server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());
  const row=await acted(server),review=await server.api('review/reply',row.reviewRequest);
  assert.equal(review.status,'verified');assert.equal(review.rewritten,true);assert.equal(review.attempts,1);assert.equal(client.calls.length,3);
  assert.equal(review.text,corrected);assert.equal(review.original,draft);
@@ -55,7 +55,7 @@ test('HTTP：真实交易先保存，矛盾正文只改一次，复审后唯一�
 });
 
 test('唯一改写仍有严重问题时明确阻止尾注，原文和已支付交易均保留',async t=>{
- const client=clientFixture({badRewrite:true}),server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+ const client=clientFixture({badRewrite:true}),server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());
  const row=await acted(server),review=await server.api('review/reply',row.reviewRequest);
  // Failed drafts are diagnostic originals; the public text is now the safe
  // replay-derived template. The action and refusal guarantees are unchanged.
@@ -66,16 +66,16 @@ test('唯一改写仍有严重问题时明确阻止尾注，原文和已支付�
 });
 
 test('缺少模型服务或关闭审查均不伪装通过，审查只采用服务端真实回执',async t=>{
- const server=await createPlaytestServer({consistencyClient:null});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});t.after(()=>server.close());
  const row=await acted(server),review=await server.api('review/reply',{...row.reviewRequest,draft:corrected,receipts:[{result:{coins:999}}]});
  assert.equal(review.status,'unverified');assert.equal(review.verified,false);assert.equal(review.canCommit,true);assert.match(review.feedback,/未完成/);
- const other=await createPlaytestServer({consistencyEnabled:false});t.after(()=>other.close());
+ const other=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,consistencyEnabled:false});t.after(()=>other.close());
  const disabled=await acted(other),result=await other.api('review/reply',disabled.reviewRequest);
  assert.equal(result.status,'disabled');assert.equal(result.verified,false);
 });
 
 test('试玩沿正式提示和 HTTP 审查改写，再只提交一次尾注',async t=>{
- const reviewClient=clientFixture(),server=await createPlaytestServer({consistencyClient:reviewClient});t.after(()=>server.close());
+ const reviewClient=clientFixture(),server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:reviewClient});t.after(()=>server.close());
  let requests=0;
  const narrator={async generate({messages,tools}){
   assert.ok(messages[0].content.includes('无限原野'));assert.ok(tools.length>10);requests++;
@@ -90,7 +90,7 @@ test('试玩沿正式提示和 HTTP 审查改写，再只提交一次尾注',asy
 test('警告保留为 issues，已完成审查与可提交分别报告且重读不触发改写',async t=>{
  const warning={category:'fact',severity:'warning',quote:'面包给你。',reason:'这句话的隐含背景仍需叙述复核',evidence:[{id:'player',quote:'我付钱买一个面包'}]};
  let calls=0;const client={async generate(body,label){calls++;assert.ok(label.startsWith('consistency:'));return issuesResponse([warning], body);}};
- const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());
  const row=await acted(server),request={...row.reviewRequest,draft:corrected};
  const review=await server.api('review/reply',request);
  assert.equal(review.status,'issues');assert.equal(review.verified,true);assert.equal(review.canCommit,true);
@@ -125,7 +125,7 @@ test('T97 回放private失败移动：唯一改写保留失败，伪造成功的
    if(reviews===1)return issuesResponse([{category:'agency',severity:'error',quote:'脚还没跨出门槛就停住了',reason:'替玩家决定停住',evidence:[{id:'player',quote:original.input}]}], body);
    return issuesResponse([], body);
   }};
-  const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+  const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());
   let view=await server.api('create',{});const campaignId=view.reference.campaignId;
   async function act(tool,args,id){const result=await server.api('execute',{campaignId,anchor:id,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return result;}
   await act('world_move',{destination:'bld_hw_qingdeng'},'tavern');
@@ -174,7 +174,7 @@ test('N17 服务端实际十天结算只允许一次文字改写，不重做、�
   // The UUID default can yield all successes (s507d-recall-547). A fixed seed
   // keeps both rewrite branches on identical native work, dice and payments;
   // no outcome is injected and every failure/fee/privacy assertion remains.
-  const server=await createPlaytestServer({consistencyClient:client,seed:'s507d-recall-0'});t.after(()=>server.close());
+  const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client,seed:'s507d-recall-0'});t.after(()=>server.close());
   let view=await server.api('create',{});const campaignId=view.reference.campaignId;
   async function act(tool,args,id){await server.api('execute',{campaignId,anchor:id,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});}
   await act('world_move',{destination:'旧磨坊'},'mill');await act('world_move',{destination:'白石镇'},'leave');
@@ -200,7 +200,7 @@ test('无关说话人泄漏私密委托自动删除，改写提示无全局私�
   if(label.startsWith('consistency-rewrite:')){attempts++;const payload=JSON.parse(body.messages.at(-1).content);for(const row of payload.evidence.filter(row=>['before','after'].includes(row.id)))assert.equal(JSON.parse(row.text).quests,undefined);assert.ok(!payload.evidence.some(row=>row.id.startsWith('knowledge:')));return {choices:[{finish_reason:'stop',message:{content:'<q who="npc_hw_wushuo">我没听说，不知道。</q><回合 额外="5分" 地点="loc_hw_northwood" 在场="npc_hw_wushuo"/>'}}]};}
   return issuesResponse([], body);
  }};
- const server=await createPlaytestServer({consistencyClient:client});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client});t.after(()=>server.close());
  let view=await server.api('create',{});const campaignId=view.reference.campaignId;
  async function act(tool,args,id){const r=await server.api('execute',{campaignId,anchor:id,eventId:id,tool,args,expectedSequence:view.reference.sequence});view=await server.api('read',{campaignId});return r;}
  const published=await act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}},'publish');await act('world_quest',{operation:'accept',quest:published.result.quest},'accept');await act('world_move',{destination:'北林边'},'woods');

@@ -31,7 +31,7 @@ const PACKS={
 };
 const L3=['scene-card','prompt-scope','chronicle','state-notices','return-summary','consistency-review','consistency-service','consistency-evidence','consistency-outcome',
  'standing','reputation','reputation-registry','reputation-catalog','public-opinion','ui-affairs','ui-history','ui-map','ui-messages','ui-overview','ui-personal',
- 'applied-effects','action-text','action-affordances'/* A1 已应用效果、事件流模板、可做之事 */];
+ 'applied-effects','action-text','action-affordances'/* A1 已应用效果、事件流模板、可做之事 */,'ai-profile'/* AI-01 服务端档位门 */];
 const L4=['index','ui-routes','action-gateway'/* A1 world_act 翻译 */];
 
 const TABLE=new Map();
@@ -58,6 +58,8 @@ put(['household-tools'],'L1');
 put(['distribution','livestock-sale'],'L2','economy');put(['npc-labor'],'L2','npc');
 // W8C: body-derived safe carry load (attr.carry), read by item transfers.
 put(['carry'],'L1');
+// AI-18: sideband audit rows and the rule-state digest scope read only storage (L0); seed-keys is a leaf static check.
+put(['sideband','digest-exclude','seed-keys'],'L0');
 // Time-slot resolution and request programs belong to the shared action ontology.
 put(['primitives-runtime','primitives-effects','primitives-body','primitives-movement','primitives-checks','primitives-learning','primitive-accounts','legacy-primitives','faith-catalog','weather','hazard-calendar','environment-state','map-state','rx-library','action-authority-sources','action-router','action-limits','open-actions','action-rite','mark-actions','mark-reactions','action-costs','action-time','routing-programs','body-needs'],'L1');
 

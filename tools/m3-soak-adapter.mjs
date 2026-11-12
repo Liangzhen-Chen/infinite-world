@@ -35,7 +35,7 @@ export async function soakClient(directory,{client,budgetYuan}={}){
 export async function createSoakAdapter({directory,client,budgetYuan=50,bundle,processMessages,countTokens,historyWindow,world,afterHttp,createBody=null}={}){
  directory=path.resolve(directory);await fs.mkdir(path.join(directory,'tasks'),{recursive:true});
  const shared=await soakClient(directory,{client,budgetYuan});bundle??=await loadPromptBundle();
- const server=await createPlaytestServer({world,directory:path.join(directory,'server'),seed:'m3-continuous-soak',plannerClient:shared,consistencyClient:shared});
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,world,directory:path.join(directory,'server'),seed:'m3-continuous-soak',plannerClient:shared,consistencyClient:shared});
  async function initialSession(persona){
   const file=path.join(directory,`initial-${persona}.json`),existing=await optional(file,null);if(existing)return existing;
   const created=await server.api('create',createBody??{character:{name:persona==='merchant'?'商旅':'营造者'}});

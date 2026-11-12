@@ -12,7 +12,7 @@ import {loadPromptBundle} from './build-card.mjs';
 import {estimateModelActionTokens} from '../extension/tools.mjs';
 
 async function main(){
- const server=await createPlaytestServer({consistencyClient:null});
+ const server=await createPlaytestServer({aiProfile:'T2'/*review/narration records needed, consistencyClient stays null: no model call*/,consistencyClient:null});
  try{
   const initial=await server.api('create',{character:{name:'试玩者'}}),campaignId=initial.reference.campaignId;
   console.log(JSON.stringify({seed:PLAYTEST_SEED,randomSeed:initial.document.randomSeed,startLocation:initial.document.state.location,startMinute:initial.document.state.minute}));

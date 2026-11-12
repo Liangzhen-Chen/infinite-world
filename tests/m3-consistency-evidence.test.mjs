@@ -44,7 +44,7 @@ test('HTTP 审稿区分玩家的真实委托与不在场吴朔的知情范围',a
  const world=await loadWorld(),wushuo=world.npcs.find(n=>n.id==='npc_hw_wushuo');
  wushuo.schedule={default:[{start:0,end:1440,location:'loc_hw_northwood',activity:'守林',services:[]}]};
  let payload;const client={async generate(body){payload=JSON.parse(body.messages[1].content);return response([], body);}};
- const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());const run=await campaign(server);
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,world,consistencyClient:client});t.after(()=>server.close());const run=await campaign(server);
  const published=await run.act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}}),quest=published.result.quest;
  await run.act('world_quest',{operation:'accept',quest});
  // Turn contract: retain semantic knowledge checks after a real action in
@@ -100,7 +100,7 @@ test('T97 五条保存原文：库存矛盾归事实，空约定、普通否认�
 });
 
 test('T97 未承接委托的登记及托管可核账，原始聊天和历史工具回执只进入场外审稿',async t=>{
- let payload;const server=await createPlaytestServer({consistencyClient:{async generate(body){payload=JSON.parse(body.messages[1].content);return response([], body);}}});t.after(()=>server.close());
+ let payload;const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:{async generate(body){payload=JSON.parse(body.messages[1].content);return response([], body);}}});t.after(()=>server.close());
  const run=await campaign(server),published=await run.act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}});
  const answer='<q who="npc_hw_wushuo">不知道，我没听说。</q>';
  await server.api('sync-index',{campaignId:run.campaignId,start:0,total:1,messages:[{is_user:false,mes:answer}]});
@@ -133,7 +133,7 @@ test('T97 knowledge响应必须指出原句私密内容和对应无渠道人物�
 });
 
 test('历史私宅许可进入 before/after 摘要，审稿无需本轮重签或重放授权',async t=>{
- let payload;const server=await createPlaytestServer({consistencyClient:{async generate(body){payload=JSON.parse(body.messages[1].content);return response([], body);}}});t.after(()=>server.close());
+ let payload;const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:{async generate(body){payload=JSON.parse(body.messages[1].content);return response([], body);}}});t.after(()=>server.close());
  const run=await campaign(server,{character:{name:'拜访者'}});await run.act('world_move',{destination:'loc_hw_fields'});await run.act('world_time',{minutes:30});
  const granted=await run.act('world_promise',{operation:'grant_access',promisor:'npc_hw_miaozhen',location:'bld_hw_home_15',minutes:60,content:'进屋查看旧筛架'}),authorization=granted.result.authorization;
  const before=await run.read(),playerText='我刚才得到的拜访许可还有效吗？',draft='<q who="npc_hw_miaozhen">刚才准你看筛架的许可还有效。</q><回合 额外="5分" 地点="loc_hw_fields" 在场="npc_hw_miaozhen"/>';
@@ -156,7 +156,7 @@ test('审稿专用人物知识不进入纯文字改写提示，已有严重问�
   if(label.startsWith('consistency-rewrite:')){rewritten++;const payload=JSON.parse(body.messages.at(-1).content);assert.ok(!JSON.stringify(body).includes(secret));assert.ok(!payload.evidence.some(e=>e.id.startsWith('knowledge:')));return {choices:[{finish_reason:'stop',message:{content:'<q who="npc_hw_linsui">你先坐。</q><回合 额外="5分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>'}}]};}
   reviewed++;const payload=JSON.parse(body.messages[1].content);assert.ok(payload.evidence.some(e=>e.id==='knowledge:npc_hw_wushuo'&&e.text.includes(secret)));return response([], body);
  }};
- const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());const run=await campaign(server);
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,world,consistencyClient:client});t.after(()=>server.close());const run=await campaign(server);
  // Keep the rewrite/privacy assertions on the adjudicated branch.
  await run.begin('我问林穗能不能坐下。');await run.act('world_time',{minutes:1});
  const result=await run.review('我问林穗能不能坐下。','<q who="npc_unregistered">你先坐。</q><q who="npc_hw_wushuo">稍等。</q><回合 额外="5分" 地点="bld_hw_qingdeng" 在场="npc_hw_linsui"/>');
@@ -668,7 +668,7 @@ test('HTTP 同一私密委托中，普通感知与否认不授予知识，确定
    subject:id,privateContent:'林穗让你送十份燕麦',
    reason:'未记录获知渠道的确定委托内容',evidence:[{id:evidence.id,quote:'"awareness":"no-recorded-channel"'}]}]:[],body);
  }};
- const server=await createPlaytestServer({world,consistencyClient:client});t.after(()=>server.close());
+ const server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,world,consistencyClient:client});t.after(()=>server.close());
  const run=await campaign(server);
  const published=await run.act('world_quest',{operation:'publish',publisher:'npc_hw_linsui',grade:'D',personal:true,reward:20,content:'替酒馆备齐燕麦',objective:{type:'deliver',item:'item_oats',quantity:10}});
  await run.act('world_quest',{operation:'accept',quest:published.result.quest});

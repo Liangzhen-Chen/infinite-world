@@ -12,7 +12,7 @@ export async function runConsistencyStackSmoke({client,outputDir='logs/m3-consis
  let prior;try{prior=JSON.parse(await fs.readFile(file,'utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
  if(prior?.complete&&(!retryFailed||prior.pass||prior.previousAttempts?.length))return prior;
  client??=new DeepSeekClient({budgetYuan:20,logFile:path.join(outputDir,'usage.jsonl')});client.spent=Math.max(client.spent??0,prior?.costUpperYuan??0);
- const host=await loadHostPromptProcessor(),bundle=await loadPromptBundle(),server=await createPlaytestServer({consistencyClient:client,seed:'m3-stack-paid-bread'});
+ const host=await loadHostPromptProcessor(),bundle=await loadPromptBundle(),server=await createPlaytestServer({aiProfile:'T3'/*this scenario supplies a model client*/,consistencyClient:client,seed:'m3-stack-paid-bread'});
  const report={date:new Date().toISOString(),complete:false,budgetYuan:20,costUpperYuan:client.spent,method:'真实静态提示、酒馆 DeepSeek 转换、HTTP 交易；保留原模型草稿后可控插入一条与付款相矛盾的句子，用真实审查与文字改写验证。不是自然错误率测量。',providerProcessing:host.identity};
  if(prior?.complete)report.previousAttempts=[prior];
  const narrator={async generate(body,label){

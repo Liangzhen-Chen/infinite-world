@@ -48,3 +48,44 @@ test('内容包清单 format 1 草案：示例包通过，保留字 id 被拒',a
  assert.equal(validate({...manifest,id:'core'}),false);
  assert.equal(validate({...manifest,prompt:{staticTokens:5}}),false);
 });
+
+// WD-02 词汇一次登记：goods 食物子树、material:、super:/form:/anchor:/drive:/power:/bound:/ward:/bane:/motif:/habitat: 十族、family: 技艺族。
+// has() 对"族:*"整族登记的前缀一律放行，不能发现上位词悬空，所以这里直接读 tags.json 逐条核对。
+test('WD-02 新词：有 family、id 前缀与族一致、无重复、上位词已显式登记且链走到"族:*"根',async()=>{
+ const fs=await import('node:fs');
+ const {entries}=JSON.parse(fs.readFileSync('world/ontology/tags.json','utf8'));
+ const byId=new Map();
+ for(const e of entries){assert.ok(!byId.has(e.id),`重复 ${e.id}`);byId.set(e.id,e);}
+ const FAMILIES=['goods','material','super','form','anchor','drive','power','bound','ward','bane','motif','family'];
+ for(const fam of FAMILIES)assert.ok(byId.get(`${fam}:*`)?.pattern,`${fam}:* 族根未登记`);
+ const wd02=entries.filter(e=>FAMILIES.includes(e.id.slice(0,e.id.indexOf(':'))));
+ for(const e of wd02){
+  assert.equal(e.family,e.id.slice(0,e.id.indexOf(':')),`${e.id} family 与前缀不符`);
+  if(e.pattern)continue;
+  assert.ok(e.broader,`${e.id} 缺上位词`);
+  let cur=e,hops=0;
+  while(!cur.pattern){
+   assert.ok(cur.broader,`${cur.id} 链中断`);
+   const up=byId.get(cur.broader);
+   assert.ok(up,`${cur.id} 的上位词 ${cur.broader} 未显式登记`);
+   cur=up;assert.ok(++hops<8,`${e.id} 上位链过深或成环`);
+  }
+  if(e.family!=='material')assert.equal(cur.id,`${e.family}:*`,`${e.id} 链根应为 ${e.family}:*`);
+ }
+ for(const fam of FAMILIES)assert.ok(wd02.some(e=>e.family===fam&&!e.pattern),`${fam} 族没有成员`);
+});
+
+test('WD-02：goods 食物树的组节点、02 的 7 个新物品 tag、材料链经 goods 子词',async()=>{
+ const fs=await import('node:fs');
+ const byId=new Map(JSON.parse(fs.readFileSync('world/ontology/tags.json','utf8')).entries.map(e=>[e.id,e]));
+ const groups=['grain','legume','root','vegetable','fruit','nut','fungus','aquatic','meat','dairy','egg','fat','seasoning','drink','alcohol'];
+ for(const g of groups)assert.equal(byId.get(`goods:${g}`)?.broader,'goods:food',`goods:${g} 应挂 goods:food`);
+ assert.equal(byId.get('goods:food').broader,'goods:*');
+ assert.equal(byId.get('goods:salt').broader,'goods:seasoning');
+ assert.equal(byId.get('goods:fish').broader,'goods:aquatic');
+ for(const t of['tea','alcohol','seaweed','insect','dairy_fermented','oilseed','fungus_log'])assert.ok(byId.get(t)?.family,`02 新 tag ${t}`);
+ for(const id of byId.keys())if(id.startsWith('material:')&&id!=='material:*'&&byId.get(id).broader.startsWith('goods:'))assert.ok(byId.get(byId.get(id).broader),`${id} 的 goods 母词`);
+ assert.equal(byId.get('material:timber').broader,'goods:timber');
+ assert.equal(byId.get('family:blade/footwork').broader,'family:blade');
+ assert.equal(byId.get('family:blade').broader,'family:melee');
+});

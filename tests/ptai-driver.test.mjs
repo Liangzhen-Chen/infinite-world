@@ -79,7 +79,7 @@ test('轨迹字段齐全；只打 Anthropic 固定端点；密钥不入轨迹', 
 
 test('非白名单回合端点被拒（httpApi 不放行）', async()=>{
  let hits=0;
- const api=httpApi('http://127.0.0.1:1',{fetchImpl:async()=>{hits++;return {ok:true,json:async()=>({})};}});
+ const api=httpApi('http://127.0.0.1:1',{aiProfile:'T0',fetchImpl:async()=>{hits++;return {ok:true,json:async()=>({})};}});
  await assert.rejects(api('shell',{}),/非回合接口/);
  await assert.rejects(api('export',{}),/非回合接口/);
  await assert.rejects(api('review/begin',{}),/非回合接口/);
@@ -109,11 +109,11 @@ test('apiUrl 与 origin 白名单', async()=>{
  const cwd=await tmp(),f=fakeFetch([toolTurn('t1')]);
  await assert.rejects(run({config:baseConfig({apiUrl:'https://evil.example/v1/messages'}),api:fakeWorld().api,fetchImpl:f.impl,cwd,runId:'evil'}),/apiUrl/);
  assert.equal(f.requests.length,0);
- for(const ok of ['http://localhost:3000','http://127.0.0.1:8080','http://[::1]:8080'])assert.doesNotThrow(()=>httpApi(ok),ok);
- for(const bad of ['https://evil.example','http://evil.example','http://127.0.0.1.evil.com','http://localhost@evil.example'])assert.throws(()=>httpApi(bad),/origin/,bad);
- assert.throws(()=>httpApi('https://test.example'),/origin/);
- assert.doesNotThrow(()=>httpApi('https://test.example',{allowedHosts:['test.example']}));
- assert.throws(()=>httpApi('http://test.example',{allowedHosts:['test.example']}),/origin/);
+ for(const ok of ['http://localhost:3000','http://127.0.0.1:8080','http://[::1]:8080'])assert.doesNotThrow(()=>httpApi(ok,{aiProfile:'T0'}),ok);
+ for(const bad of ['https://evil.example','http://evil.example','http://127.0.0.1.evil.com','http://localhost@evil.example'])assert.throws(()=>httpApi(bad,{aiProfile:'T0'}),/origin/,bad);
+ assert.throws(()=>httpApi('https://test.example',{aiProfile:'T0'}),/origin/);
+ assert.doesNotThrow(()=>httpApi('https://test.example',{allowedHosts:['test.example'],aiProfile:'T0'}));
+ assert.throws(()=>httpApi('http://test.example',{allowedHosts:['test.example'],aiProfile:'T0'}),/origin/);
 });
 
 test('模型注入的额外参数被丢弃（search/catalog/execute 只转发 schema 声明的字段）', async()=>{
@@ -230,7 +230,7 @@ test('fetch 带 redirect:error；遇 3xx 报错不跟随（Anthropic 与回合�
  await assert.rejects(run({api:fakeWorld().api,fetchImpl:f.impl,cwd:await tmp(),runId:'redir'}),/307/);
  assert.equal(f.requests.length,1);assert.equal(f.requests[0].init.redirect,'error');
  const seen=[];
- const api=httpApi('http://127.0.0.1:1',{fetchImpl:async(url,init)=>{seen.push(init);return {ok:false,status:307,json:async()=>({})};}});
+ const api=httpApi('http://127.0.0.1:1',{aiProfile:'T0',fetchImpl:async(url,init)=>{seen.push(init);return {ok:false,status:307,json:async()=>({})};}});
  await assert.rejects(api('read',{}),/重定向/);
  assert.equal(seen[0].redirect,'error');
 });

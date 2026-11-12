@@ -9,6 +9,9 @@ import {reconcileHoldings, reconciled} from '../server-plugin/holding-sources.mj
 import {readFiles, contentEntries, checkEntry, previewWorld, priorEditions, verifyPublished as verifyOriginalPublished} from '../world/design/a3-world-approval.mjs';
 import {sources as useTagSources, verifyPublished as verifyUseTagsPublished} from '../world/design/a3w-props-approval.mjs';
 import * as G from '../world/design/a3-world-governance.mjs';
+import {readApprovedSupersedes,classifySupersedes} from '../tools/approved-revisions.mjs';
+import {getPath,sameValue} from '../world/design/p1-revision-approval.mjs';
+import {hashContent} from '../tools/content-pipeline.mjs';
 
 // Gate for the Baishi grassroots judicial/security offices (report, fine collection, custody, case handling,
 // arrest, appeal, claim, town head) and for the catalogue entries (items, recipes, nutrition, rules rows) that
@@ -37,8 +40,23 @@ const entry = id => contentEntries(files).find(e => e.id === id);
 test('fix3-world 条目：每一行都有 L1/L2/L4 回执且与正式文件逐字相同', async () => {
   const result = await verifyPublished(world, files);
   assert.equal(result.entries, contentEntries(files).length);
-  // 34 条减去面包、烙饼、鱼汤、炖菜四条已不再手写的营养条目
-  assert.equal(result.entries, 30);
+  // 本批发布时共 30 行有回执（34 条减去面包、烙饼、鱼汤、炖菜四条已不再手写的营养条目）。
+  // 之后已审批、已发布的修订批取代本批回执（supersedes）时按 after 分两类（classifySupersedes）：
+  //   after 为删除标记：该行已移除，现存条目数减一；after 为新值：该行仍是现存条目，按新值核对正式文件，不减计数。
+  const own = /^world\/drafts\/a3-world-approval\/([^/]+)\.json$/;
+  const {removed, changed} = classifySupersedes(await readApprovedSupersedes(), own);
+  const removedIds = new Set(removed.map(x => x.id)), live = new Set(contentEntries(files).map(e => e.id));
+  assert.equal(result.entries, 30 - removedIds.size);
+  for (const {id, s} of [...removed, ...changed]) {
+    const receipt = JSON.parse(await fs.readFile(s.receiptFile, 'utf8'));
+    assert.equal(receipt.status, 'passed', id);
+    // 本批回执里的原值与修订回执的 before 逐字相同；正式文件现状等于修订回执的 after（已发布）。
+    assert.equal(hashContent(receipt.draft.row[s.label] ?? null), hashContent(s.before), `${id}：回执原值与修订回执 before 不同`);
+    assert.ok(sameValue(getPath(files.items.find(i => i.id === s.targetId), s.parts), s.after), `${id}：正式文件与修订回执 after 不同`);
+  }
+  for (const id of removedIds) assert.ok(!live.has(id), `${id} 已被修订批移除，不应仍是现存条目`);
+  for (const {id} of changed) assert.ok(live.has(id), `${id} 只是改值，仍应是现存条目`);
+  assert.ok(removedIds.has('nutrition_item_milk'), '牛乳手写水分的回执应已被 water1d 修订批移除');
 });
 
 test('手改已审批的行会使回执失效：职位职权、目录价、营养值、拘禁室、人物归属', async () => {

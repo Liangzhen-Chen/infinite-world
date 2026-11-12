@@ -31,8 +31,8 @@ const RECIPE_SOURCES = {
     boundary: '传授人林穗是酒馆老板，其技能须不低于配方技能；产出数量与耗时为日常题所定。'},
 };
 // 仍手写营养的物品（已审批行）。面包、烙饼、鱼汤、炖菜的手写营养已删，改由配方或出处推导（饱腹不等于热量），不再属于此目录。
-// 牛乳的手写水分 25 暂保留（已审批回执 a3w-props、a3-world-approval 含该整行）：改派生须走修订批，待 WATER-1D。
-export const NUTRITION_IDS = ['item_ration', 'item_water', 'item_milk'];
+// 牛乳的手写水分 25 已删（WATER-1D：水分由含水率×重量×参照水系数派生，item_milk 不再属于此目录）；其整行回执仍在 a3w-props，须经修订批更新。
+export const NUTRITION_IDS = ['item_ration', 'item_water'];
 const RULE_SOURCES = {
   repair_clothes_seam: {path: 'world/meta/rules.json#repairs；A3V2-028题面', detail: '裁缝基础手艺用细捻麻线和缝针补缝普通衣服，织作台二十分钟，每次修复20点，不够百点。',
     boundary: '修理方案参数沿repair_tool_handle_trim等既有修理方案（20分钟、20点）；耗材为一团麻线。'},

@@ -31,7 +31,7 @@ CampaignStorage.prototype.prepare=function(state,payload){
 };
 
 async function tempDir(t){const dir=await fs.mkdtemp(path.join(tmpRoot(),'r25-roundtrip-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
-async function open(t,directory){const server=await createPlaytestServer({world,seed:SEED,consistencyEnabled:false,directory});let closed=false;const close=async()=>{if(!closed){closed=true;await server.close();}};t.after(close);return {...server,close};}
+async function open(t,directory){const server=await createPlaytestServer({aiProfile:'T0'/*no model client: local rules only*/,world,seed:SEED,consistencyEnabled:false,directory});let closed=false;const close=async()=>{if(!closed){closed=true;await server.close();}};t.after(close);return {...server,close};}
 function session(server,campaignId){
  const read=async()=>(await server.api('read',{campaignId})).document;
  const execute=async(tool,args,eventId)=>{const view=await server.api('read',{campaignId});try{return (await server.api('execute',{campaignId,tool,args,eventId,anchor:null,expectedSequence:view.reference.sequence})).result;}catch(error){error.message=`${eventId}（第${view.document.state.minute}分）：${error.message}`;throw error;}};

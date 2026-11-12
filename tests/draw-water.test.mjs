@@ -133,7 +133,7 @@ test('私人水源仍需真实授权，不能把同处一地当成许可',async(
 test('容器里的干净原水可饮用、取出并真实出售，污水仍不能伪装成可饮用清水',async()=>{
  const f=fixture(),raw={...pool.state,turbidity:0,pathogenRisk:0,toxinUg:0,odor:'无明显气味'};
  // S5-02: the examined decanted original is not the actor's last drinking
- // reserve. Three native milk portions *25 cover body3/h *24h =72.
+ // reserve. Three native milk portions *44 (derived) cover body3/h *24h =72.
  // Keep all original source-water, pollution and single-unit assertions.
  const prepared=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','inventory'],value:{...f.document.state.inventory,item_milk:{quantity:3}}}]});assert.deepEqual(prepared.setupUnmet,[]);f.document=prepared.document;
  f.document.state.records['physical_feature:feature_hw_pool']={id:'feature_hw_pool',category:'physical_feature',location:'loc_hw_dock',state:raw};

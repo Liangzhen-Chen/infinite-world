@@ -127,9 +127,9 @@ test('validateDrinkable：未物化的世界明确报错；羊乳、兽乳水分
     const raw=await loadWorld();
     assert.ok(raw.mechanics,'loadWorld 返回未物化的世界');
     assert.throws(()=>validateDrinkable(raw),/已物化/);
-    // 派生：羊乳 0.3kg×含水0.87×(参照水 25÷0.25÷含水1=100/kg)=26.1→26，兽乳 0.3×0.876×100→26；水与牛乳手写值不变。
+    // 派生：羊乳 0.3kg×含水0.87×(参照水 25÷0.25÷含水1=100/kg)=26.1→26，兽乳 0.3×0.876×100→26，牛乳 0.5×0.881×100=44.05→44；水是手写的参照水，保持 25。
     const {loadRuntimeWorld}=await import('../tools/load-world.mjs');
     const w=await loadRuntimeWorld(),h=id=>w.items.find(i=>i.id===id).nutrition.hydration;
-    assert.deepEqual([h('item_goat_milk'),h('item_animal_milk'),h('item_water'),h('item_milk')],[26,26,25,25]);
+    assert.deepEqual([h('item_goat_milk'),h('item_animal_milk'),h('item_water'),h('item_milk')],[26,26,25,44]);
     assert.deepEqual(validateDrinkable(w),[]);
 });
