@@ -264,11 +264,16 @@ test('P3统计粮食产出也扣灌溉水，无详细农田的远方聚落遇旱
    for(const kind of Object.keys(w.rules.forestWater.water.rainShare))w.rules.forestWater.water.rainShare[kind]=rain;
   });
   // 夹具意图：统计田地（不在农事表）开局存粮正好等于它的目标持有，使粮价稀缺度落在夹取区间内，旱年少产的粮才会显现在价格上。
-  // 目标持有 = 餐口 × 补给间隔天数（resupplyDays，与 market.mjs 非农事聚落的粮仓目标同一口径），这里直接读同一原语，不写死天数。
+  // 统计田地自己产粮（foodPerDay>0）却连不到任何农事聚落：它的供粮源就是它自己，目标持有按自产口径手推（不调用被测的 resupplyDays / 目标原语）：
+  //  目标持有 = ceil(餐口 × 目标日数)，目标日数 = 距下次收获天数 + 一个交易周期（economy.tradeCycleDays）；
+  //  收获日（年内第几日）= crop.sowDays[1] + crop.growthDays，一年 360 日；餐口 = 人口（夹具无异族）。
   const farmId='loc_rw_statfarm',pop=100;
   x.d.set(['state','settlements',farmId],{name:'统计田地',population:pop,food:0,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
-  const heldTarget=Math.ceil(mealMouthsOf(x.engine,x.d.get('state'),farmId,pop)*resupplyDays(x.engine,x.d.get('randomSeed'),farmId));
-  assert.ok(heldTarget>0);
+  const selfTarget=minute=>{const c=x.engine.rules.agriculture.crop,harvest=c.sowDays[1]+c.growthDays,doy=Math.floor(minute/DAY)%360;return Math.ceil(pop*(((harvest-doy)%360+360)%360+x.engine.rules.economy.tradeCycleDays));};
+  assert.throws(()=>resupplyDays(x.engine,x.d.get('randomSeed'),farmId),/到不了任何供粮/,'前置：统计田地确实连不到农事聚落（不给自产信息时无补给间隔）');
+  assert.equal(mealMouthsOf(x.engine,x.d.get('state'),farmId,pop),pop,'前置：餐口 = 人口');
+  const heldTarget=selfTarget(x.d.get('state','minute'));
+  assert.ok(heldTarget>0);x.selfTarget=selfTarget;
   x.d.set(['state','settlements',farmId,'food'],heldTarget);x.heldTarget=heldTarget;
   assert.equal(x.d.get('state','settlements',farmId,'food'),heldTarget,'前置：夹具存粮 = 目标持有');
   const day=Math.floor(x.d.get('state','minute')/DAY);x.d.set(['state','minute'],(day+1)*DAY);
@@ -279,7 +284,7 @@ test('P3统计粮食产出也扣灌溉水，无详细农田的远方聚落遇旱
  assert.ok(dry.d.get('state','settlements','loc_rw_statfarm','food')<wet.d.get('state','settlements','loc_rw_statfarm','food'));
  // 前置：旱湿两边推进一日后的存粮，相对目标持有的稀缺度（目标 ÷ 实存）都落在规则的夹取区间内，价格差才来自产量而不是被夹到同一端。
  const [lo,hi]=dry.engine.rules.economy.priceFactorLimits.region;
- for(const x of [dry,wet]){const s=x.heldTarget/x.d.get('state','settlements','loc_rw_statfarm','food');assert.ok(s>lo&&s<hi,`稀缺度 ${s} 须在 (${lo}, ${hi}) 内`);}
+ for(const x of [dry,wet]){const s=x.selfTarget(x.d.get('state','minute'))/x.d.get('state','settlements','loc_rw_statfarm','food');assert.ok(s>lo&&s<hi,`稀缺度 ${s} 须在 (${lo}, ${hi}) 内`);}
  const item=dry.engine.rules.settlementTrade.item;
  assert.ok(regionalTradePrice(dry.d,dry.engine,item,'loc_rw_statfarm')>regionalTradePrice(wet.d,wet.engine,item,'loc_rw_statfarm'));
  assertWaterLedger(dry.d);assertWaterLedger(wet.d);

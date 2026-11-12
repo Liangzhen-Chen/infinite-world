@@ -17,12 +17,22 @@ function roundTripDays(engine,seed,from,to){
  const days=best===null?null:2*best/1440;memo.set(key,days);return days;
 }
 // 粮的补给间隔（非农事聚落）：最近的别的农事聚落的往返天数；供粮聚落不含本聚落自己。没有任何可达的供粮聚落：报错列出聚落，不编造天数。
-export function resupplyDays(engine,seed,place){
+// 自产粮聚落（无详细农田、按统计产粮：state.settlements[place].foodPerDay > 0，同 advance-registry.mjs:400 统计产粮分支、water-cycle.mjs:213）：
+// 一年里到不了任何供粮聚落时，它的供粮源就是它自己——储备视野 = 距下次收获天数（收获日 = crop.sowDays[1] + crop.growthDays，一年 360 日，同 primitives-body.farmTargetDays）
+// + 一个交易周期 economy.tradeCycleDays（结转储备，与 itemResupplyDays 对"产地就在本聚落"的口径一致）。需调用方给出当前分钟（minute）和聚落状态（state）。
+export function selfSupplyDays(engine,minute,state,place){
+ const crop=engine.rules.agriculture?.crop,cycle=engine.rules.economy?.tradeCycleDays;
+ if(!crop||!(cycle>0)||!(state?.settlements?.[place]?.foodPerDay>0)||!Number.isFinite(minute))return null;
+ const harvest=crop.sowDays[1]+crop.growthDays,dayOfYear=Math.floor(minute/1440)%360;
+ return ((harvest-dayOfYear)%360+360)%360+cycle;
+}
+export function resupplyDays(engine,seed,place,self={}){
  let best=null;
  for(const p of engine.rules.agriculture?.settlements??[]){
   if(p.settlement===place)continue;
   const t=roundTripDays(engine,seed,p.settlement,place);if(t!==null&&(best===null||t<best))best=t;
  }
+ if(best===null){const own=selfSupplyDays(engine,self.minute,self.state,place);if(own!==null)return own;}
  if(best===null)throw Error(`聚落 ${place} 到不了任何供粮（农事）聚落，推不出补给间隔`);
  return best;
 }

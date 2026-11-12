@@ -772,7 +772,7 @@ export function unfoldRemoteAt(d,engine,location){
     // 开局存粮 = 餐口 × 补给间隔（resupplyDays，与市场目标持有同一条规律）：在含本郡路线的覆盖引擎上推，使开局平时 cov 约等于 1。
     const stocked=remoteEngine(engine,d.document,world=>new engine.constructor(world));
     for(const [sid,row] of Object.entries(skeleton.ledgers??{}))if(!d.get('state','settlements',sid)){
-        const ledger={...row,food:Math.ceil(mealMouthsOf(stocked,d.get('state'),sid,row.population)*resupplyDays(stocked,d.get('randomSeed')??'default-campaign',sid))};
+        const ledger={...row,food:Math.ceil(mealMouthsOf(stocked,d.get('state'),sid,row.population)*resupplyDays(stocked,d.get('randomSeed')??'default-campaign',sid,{minute:d.get('state','minute'),state:{settlements:{[sid]:row}}}))};
         moveCoins(d,{from:source('genesis','remote'),to:treasuryAccount(sid),amount:ledger.treasury??0,writer:'remote-generation',eventId:`remote:${county}`});genesisSettlement(d,engine,sid,ledger,{writer:'remote-generation',eventId:`remote:${county}`});d.set(['state','settlements',sid],structuredClone(ledger));}
     // Shopkeepers, officials (notice board) and festival hosts act from the day
     // they are registered; others act after a full profile.
