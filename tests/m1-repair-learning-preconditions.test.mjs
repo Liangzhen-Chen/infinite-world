@@ -158,8 +158,26 @@ test('制造真实磨损小刀；实际交锋磨损正式木杖后经公共repai
     const nonPerishable=records=>Object.fromEntries(Object.entries(records).filter(([id])=>!id.startsWith('physical_feature:')&&!schooling(id)).map(([id,row])=>[
         id,id===miningContractId?Object.fromEntries(Object.entries(row).filter(([key])=>!['attendance','attendanceThrough','clauses','expires','initialStatus'].includes(key))):row
     ]));
-    assert.deepEqual(Object.keys(waited.after.state.records).filter(id=>!schooling(id)).sort(),Object.keys(waited.before.state.records).filter(id=>!schooling(id)).sort());
-    assert.deepEqual(nonPerishable(waited.after.state.records),nonPerishable(waited.before.state.records));
+    // EC-1b 起等待期间世界按店窗口做客流（不再只在正午），推进到 2010 会跨过第 1 天的店窗口（如 shop_hw_forge 480），于是合法新增三类记录。
+    // 期望键集合 = 等待前的键 ∪ 这三类规律各自产生的新键；仍要求无多余（新增键必须属于下表某类并通过该类的形态与时间核对）、无遗漏（等待前的键一个都不能少）：
+    //  · customer_flow：business.mjs:855 settleCustomerFlow→serve 对每家营业店、每个客流时刻写一条访问记录；键 customer_flow:<店>:<日>:<日内分钟>（business.mjs:657 flowKey），minute 落在本次等待区间 (前,后] 内。
+    //  · market_trip：business.mjs:846/852 serve 里顾客成交时写的出行记录；键 market_trip:<店>:<时刻>:<顾客>（以顾客编号结尾），出发时刻落在等待区间内。
+    //  · finance_profit：finance-assets.mjs:374/380/385 recordFinanceSale（business.mjs sell→settleSale 调用）按买方、卖方各记一份经营利润账；键 finance_profit:<人>，分录时刻落在等待区间内。
+    const from=waited.before.state.minute,until=waited.after.state.minute,inWindow=minute=>minute>from&&minute<=until;
+    const lawful={
+        customer_flow:(id,row)=>id===`customer_flow:${row.shop}:${row.day}:${row.minute-row.day*1440}`&&inWindow(row.minute),
+        market_trip:(id,row)=>id.startsWith('market_trip:')&&id.endsWith(`:${row.actor}`)&&inWindow(row.departAt),
+        finance_profit:(id,row)=>id===`finance_profit:${row.issuer}`&&(row.entries??[]).every(entry=>inWindow(entry.minute))
+    };
+    const beforeIds=Object.keys(waited.before.state.records).filter(id=>!schooling(id)),afterRecords=waited.after.state.records;
+    const added=Object.keys(afterRecords).filter(id=>!schooling(id)&&!(id in waited.before.state.records));
+    for(const id of added)assert.ok(lawful[afterRecords[id].category]?.(id,afterRecords[id]),`新增记录 ${id}（${afterRecords[id].category}）不属于等待期间任何已知规律的产物`);
+    assert.deepEqual(Object.keys(afterRecords).filter(id=>!schooling(id)).sort(),[...beforeIds,...added].sort());
+    // 既有记录不变；唯一例外是 finance_profit 账本（同一个人当日又成交时只在 entries 末尾追加分录，既有分录原样保留）。
+    const growsOnly=id=>waited.before.state.records[id]?.category==='finance_profit';
+    const stable=(records,only)=>Object.fromEntries(Object.entries(nonPerishable(records)).filter(([id])=>only.includes(id)&&!growsOnly(id)));
+    assert.deepEqual(stable(afterRecords,beforeIds),stable(waited.before.state.records,beforeIds));
+    for(const id of beforeIds.filter(growsOnly)){const old=waited.before.state.records[id].entries??[];assert.deepEqual((afterRecords[id].entries??[]).slice(0,old.length),old,`${id} 既有分录不得改动`);}
     const oldFruit=waited.before.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0],newFruit=waited.after.state.records['physical_feature:feature_s1_fruit'].state.foodLots[0];
     assert.ok(Math.abs(oldFruit.amountGrams+oldFruit.spoiledGrams-newFruit.amountGrams-newFruit.spoiledGrams)<1e-8);
     assert.ok(newFruit.spoiledGrams>oldFruit.spoiledGrams);
