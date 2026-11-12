@@ -1,3 +1,5 @@
+// 注意（合入顺序）：公共仓期初粮食那条断言（读运行时推导，登记里已无 food）是“INITFOOD 修订批发布后才成立”的状态；
+// 发布前（settlements.json 仍登记旧值）会红是预期的。它与发布提交一起进入 master，不改断言。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';

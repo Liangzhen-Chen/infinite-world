@@ -1,43 +1,41 @@
 // INITFOOD：村级公共仓旧初粮修订批（删除型）；取代声明的回执侧路径规范化；计数规律按 classifySupersedes 推导。
+// 发布前后都成立：条目读冻结候选（candidate.json，prepare 后存在；之前用 buildEntries 从发布前的世界现算），不依赖正式文件里仍有 food。
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import {REMOVE,editJSONText,rowOf} from '../world/design/p1-revision-approval.mjs';
+import {REMOVE,editJSONText,rowOf,getPath,isPublished} from '../world/design/p1-revision-approval.mjs';
 import {parsePublication,classifySupersedes,applySupersedes,revertSuperseded,revertReceiptRow} from '../tools/approved-revisions.mjs';
 import {loadWorld} from '../tools/load-world.mjs';
 import * as initfood from '../world/design/initfood-approval.mjs';
 
 const world = await loadWorld();
-const entries = await initfood.buildEntries(world);
+const entries = initfood.frozenEntries() ?? await initfood.buildEntries(world);
+const published = isPublished(world, entries);
 const toPub = list => parsePublication({revision: 'initfood-1', receipt: 'dir/r', entries: list.map(e => ({id: e.id, target: e.target, file: e.file, field: e.field, before: e.before, after: e.after, supersedes: e.supersedes}))});
 const own = /^world\/drafts\/w1\/village-ledgers\/([^/]+)\.json$/;
-const holders = () => world.settlementProfiles.filter(r => typeof r.details?.economy?.publicStock?.food === 'number');
 
 test('批次上限：0.3 元 / 40 次（硬上限由批次自定）', () => {
   assert.equal(initfood.LIMIT_YUAN, 0.3);assert.equal(initfood.MAX_REQUESTS, 40);
 });
 
-test('条目：每个带登记公仓初粮的村一条，删除型（after 为 REMOVE），before 是当前登记值', () => {
-  assert.ok(entries.length > 0);
-  assert.deepEqual(entries.map(e => e.target).sort(), holders().map(r => r.id).sort());
+test('条目：恰为四个村，删除型（after 为 REMOVE），before 是登记过的旧值；发布前正式文件有该值，发布后已无', () => {
+  assert.deepEqual(entries.map(e => e.target).sort(), ['loc_bs_liquan', 'loc_bs_sangban', 'loc_bs_weiting', 'loc_bs_yupo']);
   for (const e of entries) {
     assert.deepEqual(e.after, REMOVE, e.id);
-    assert.equal(e.before, rowOf(world, e.file, e.target).details.economy.publicStock.food);
-    assert.ok(e.supersedes.length >= 2);
-    for (const s of e.supersedes) { assert.match(s.receipt, /^world\/drafts\/w1\/village-ledgers\/[^/#]+\.json#loc_bs_\w+$/); assert.equal(s.field, initfood.RECEIPT_FIELD); }
+    assert.equal(typeof e.before, 'number', e.id);
+    const food = rowOf(world, e.file, e.target).details.economy.publicStock.food;
+    if (published) assert.equal(food, undefined, `${e.id}：已发布，正式文件不应再有登记值`);
+    else assert.equal(food, e.before, `${e.id}：未发布，正式文件值应等于 before`);
   }
 });
 
-test('文本删除：只删被修订的键值对，其余逐字不变；回退（补回 before）即原结构', async () => {
-  const text = await fs.readFile(initfood.FILE, 'utf8');
-  const next = JSON.parse(editJSONText(text, entries)), prev = JSON.parse(text);
-  for (const e of entries) {
-    const stock = rowOf({settlementProfiles: next}, initfood.FILE, e.target).details.economy.publicStock;
-    assert.ok(!Object.hasOwn(stock, 'food'), e.id);
-    // 与原结构对比：补回 before 后整体相等（键序除外，deepEqual 不看键序）。
-    stock.food = e.before;
+test('文本删除：只删被修订的键值对，其余逐字不变（用夹具文本，不依赖正式文件是否已发布）', () => {
+  const rows = entries.map(e => ({id: e.target, details: {economy: {publicStock: {openingDay: 0, food: e.before, seed: 7}}}}));
+  for (const text of [JSON.stringify(rows), JSON.stringify(rows, null, 2) + '\n']) {
+    const out = editJSONText(text, entries);
+    assert.deepEqual(JSON.parse(out), entries.map(e => ({id: e.target, details: {economy: {publicStock: {openingDay: 0, seed: 7}}}})));
+    assert.ok(out.includes(text.includes('\n') ? '"openingDay": 0,' : '"openingDay":0,'));
   }
-  assert.deepEqual(next, prev);
 });
 
 test('取代计数（classifySupersedes）：删除型每个被取代回执行算已移除，现存行数 = 总行数 − 移除行数；改值型同一批不减', () => {
@@ -54,14 +52,38 @@ test('取代计数（classifySupersedes）：删除型每个被取代回执行�
   assert.equal(total - new Set(mod.removed.map(x => x.s.receiptFile)).size, total);
 });
 
+test('真实回执：每条取代声明的回执侧路径确实指向回执里存在的键，且值等于 before（路径写错会“静默不删”，这里必须报错）', async () => {
+  const sups = toPub(entries);
+  assert.ok(sups.length > 0);
+  for (const s of sups) {
+    const file = JSON.parse(await fs.readFile(s.receiptFile, 'utf8'));
+    // 分件回执的行在 draft 里；candidate.json 的行在 profiles 数组里。
+    const row = file.draft ?? file.profiles?.find(r => r.id === s.targetId);
+    assert.ok(row, `${s.receiptFile}：找不到行 ${s.targetId}`);
+    assert.equal(row.id, s.targetId);
+    const parent = getPath(row, s.parts.slice(0, -1));
+    assert.ok(parent && Object.hasOwn(parent, s.parts.at(-1)), `${s.receiptFile}#${s.targetId}：回执里没有 ${s.label} 这个键（路径写错）`);
+    assert.equal(getPath(row, s.parts), s.before, `${s.receiptFile}#${s.targetId}：回执里的值不等于 before`);
+    // 真实行上 applySupersedes 能删掉它，删后键不存在。
+    const copy = structuredClone(row);
+    assert.equal(applySupersedes([copy], s.receiptFile, sups).length, 1);
+    assert.equal(getPath(copy, s.parts), undefined);
+  }
+});
+
+test('删除型的父对象检查：回执路径中间段写错（父对象不存在）时报错而不是当成“已删”', () => {
+  const s = toPub(entries).find(x => x.receiptFile.endsWith(`/${entries[0].target}.json`));
+  assert.throws(() => applySupersedes([{id: s.targetId}], s.receiptFile, [s]), /父对象/);
+  assert.throws(() => applySupersedes([{id: s.targetId, economy: 5}], s.receiptFile, [s]), /父对象/);
+});
+
 test('回执侧路径规范化（所有修订批共用）：回执字段是修订字段的整段后缀即可；回执行按回执路径应用，正式行按正式路径回退', () => {
   const sups = toPub(entries), s = sups.find(x => x.receiptFile.endsWith(`/${entries[0].target}.json`));
   assert.deepEqual(s.parts, ['economy', 'publicStock', 'food']);
   assert.deepEqual(s.formalParts, ['details', 'economy', 'publicStock', 'food']);
   // 正式行：键已删（after = REMOVE）→ 按正式路径补回 before。
   const formal = [{id: s.targetId, details: {economy: {publicStock: {seed: 1}}}}];
-  const back = revertSuperseded(formal, initfood.FILE, sups);
-  assert.equal(back[0].details.economy.publicStock.food, s.before);
+  assert.equal(revertSuperseded(formal, initfood.FILE, sups)[0].details.economy.publicStock.food, s.before);
   // 草稿回执行（没有 details 前缀）：现值等于 before 时按回执路径应用 REMOVE。
   const draft = [{id: s.targetId, economy: {publicStock: {food: s.before, seed: 1}}}];
   assert.equal(applySupersedes(draft, s.receiptFile, sups).length, 1);

@@ -107,6 +107,9 @@ export function applySupersedes(rows,receiptFile,supersedes){
   const cur=getPath(row,s.parts);
   if(sameValue(cur,s.before)){setPath(row,s.parts,s.after);applied.push({id:s.targetId,field:s.label,parts:s.parts,before:s.before,after:s.after,receiptFile,revision:s.revision});}
   else if(!sameValue(cur,s.after))throw new Error(`设计源值与修订回执不符：${receiptFile}#${s.targetId} ${s.label} 现值 ${JSON.stringify(cur)}，回执 before ${JSON.stringify(s.before)} after ${JSON.stringify(s.after)}`);
+  // 删除型：键不存在等同“已删除”，但回执路径的父对象必须存在；路径中间段写错（父对象也不存在）不能被当成“已删”而静默放过。
+  // （末段拼错、父对象存在的情形由对真实回执行的检查兜住：发布前 getPath(行, parts) 必须等于 before，见 tests/initfood-revision.test.mjs。）
+  else if(isRemove(s.after)&&(getPath(row,s.parts.slice(0,-1))===null||typeof getPath(row,s.parts.slice(0,-1))!=='object'))throw new Error(`回执路径的父对象不存在：${receiptFile}#${s.targetId} ${s.label}`);
  }
  return applied;
 }

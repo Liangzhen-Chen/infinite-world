@@ -6,6 +6,22 @@ import {WorldEngine} from '../server-plugin/engine.mjs';
 import {worldEntityRows} from '../server-plugin/world-entities.mjs';
 import {settlementMouths,mealMouthsOf,farmTargetDays} from '../server-plugin/settlement-mouths.mjs';
 import {settlementMouths as viaBody} from '../server-plugin/primitives-body.mjs';
+import {openingStockFood,farmTargetFood} from '../server-plugin/agriculture-migration.mjs';
+
+test('期初库存（公开资料）：只按世界定义算，不读存档状态；缺登记行按 0；受容量 − 种粮封顶', () => {
+  // 手推：开局日距收获 25 + 180 = 205，reserveDays 90 → 295 天。80 人 × 295 = 23600，容量 50000 − 种粮 2160 = 47840 未受限。
+  const rules = {agriculture: {crop: {sowDays: [10, 25], growthDays: 180}}};
+  const profile = {settlement: 'v', reserveDays: 90, granaryCapacity: 50000, initialSeed: 2160};
+  const engine = pop => ({world: {settlementProfiles: pop === undefined ? [] : [{id: 'v', population: pop}], monsters: []}, rules, byId: new Map()});
+  assert.equal(openingStockFood(engine(80), profile, 0), 23600);
+  // 人口 200 → 200 × 295 = 59000 > 47840：封顶在容量 − 种粮。
+  assert.equal(openingStockFood(engine(200), profile, 0), 47840);
+  // 缺登记行：人口按 0，期初 0，不抛错。
+  assert.equal(openingStockFood(engine(undefined), profile, 0), 0);
+  // 缺存档记录时活状态版本也不抛 TypeError：该聚落没有账，人口按 0。
+  assert.equal(farmTargetFood(engine(80), {settlements: {}, records: {}}, profile, 0), 0);
+  assert.equal(farmTargetFood(engine(80), undefined, profile, 0), 0);
+});
 
 test('实体表：worldEntityRows 与 WorldEngine.byId 是同一份（物种表不残缺）', async () => {
   const engine = new WorldEngine(structuredClone(await loadWorld()));

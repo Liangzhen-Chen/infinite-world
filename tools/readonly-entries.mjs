@@ -28,7 +28,6 @@ export const READONLY_ENTRIES = [
   ['world/design/p1-revision-approval.mjs', '--verify'],
   ['world/design/p1-cascade-approval.mjs', '--verify'],
   ['world/design/water1d-approval.mjs', '--verify'],
-  ['world/design/initfood-approval.mjs', '--verify'],
   ['world/design/s4-law-bindings.mjs', '--verify'],
   ['world/design/s4-law-content-approval.mjs', '--verify'],
   ['world/design/s4-offices-approval.mjs', '--verify'],
@@ -101,4 +100,6 @@ export const READONLY_ENTRIES = [
   ['world/design/w3-journey-text-revision.mjs', '--verify'],
   ['world/design/w3-trades-text-revision.mjs', '--verify'],
   ['world/design/w3-household-text-revision.mjs', '--verify'],
+  // INITFOOD 发布前审批未齐：--verify 以退出码 2 和明确原因结束（reportApprovalIncomplete），发布后通过。
+  ['world/design/initfood-approval.mjs', '--verify'],
 ];

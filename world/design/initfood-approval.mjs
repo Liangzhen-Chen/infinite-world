@@ -13,6 +13,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {approvalIncomplete,reportApprovalIncomplete} from '../../tools/content-pipeline.mjs';
 import {REMOVE,rowOf,runRevision,draftFor,contextFor,validateDraft,applyCandidate,isPublished} from './p1-revision-approval.mjs';
 
 export const revision='initfood-1',root='world/drafts/initfood',CARD='INITFOOD';
@@ -46,4 +47,14 @@ try{frozen=JSON.parse(await fs.readFile(`${root}/candidate.json`,'utf8'));assert
 export const frozenEntries=()=>frozen?.entries;
 export const run=(args=process.argv.slice(2))=>runRevision({revision,root,CARD,limitYuan:LIMIT_YUAN,maxRequests:MAX_REQUESTS,frozen,buildEntries,draftFor,contextFor,validateDraft,applyCandidate,isPublished,
  note:'INITFOOD：村级公共仓旧初粮登记整条删除（读者改读运行时推导），单卡硬上限 0.3 元、40 次（李白批准；到上限自动停，不得续跑）。'},args);
-if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)await run();
+// 审批未齐（尚未 --prepare/--review/--publish，缺冻结候选或审批回执）时 --verify 以明确原因和退出码 2 结束（reportApprovalIncomplete），不以崩溃形式出现。
+const verifyOnly=args=>args.includes('--verify')&&!args.includes('--publish')&&!args.includes('--review')&&!args.includes('--prepare');
+if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href){
+ await reportApprovalIncomplete(async()=>{
+  try{return await run();}
+  catch(error){
+   if(error?.code==='ENOENT'&&verifyOnly(process.argv.slice(2)))throw approvalIncomplete('本批尚未发布：缺少冻结候选或审批回执（先 --prepare、--review、L4、--publish）');
+   throw error;
+  }
+ });
+}
