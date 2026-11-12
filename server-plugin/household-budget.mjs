@@ -428,7 +428,7 @@ export function householdUsage(engine,state,members){return usageDefinition(engi
 export const itemGrams=(engine,item)=>Math.max(1,Math.round((engine.byId.get(item)?.weight??0)*1000));
 // 这件货顶多少基准克（燃料按有效热值折算，见 item-class.usageGrams；其余等于 itemGrams）。
 export const usageItemGrams=(engine,item,cls)=>usageGrams(engine,item,cls,itemGrams(engine,item));
-// 家户用度先用同类里最便宜的：价格 ÷ 顶多少基准克。燃料按有效热值折算（热值与含水率已知，见 item-class.usageGrams），其余与未知时按 价格 ÷ 克。
+// 家户用度先用同类里最便宜的：价格 ÷ 顶多少基准克。用度定义带热值需求（refHeat）的类按有效热值折算（见 item-class.usageGrams），热值或含水率未知的货顶 0 基准克（单价无穷大，排最后，不被烧）；不带热值需求的类（盐等）按 价格 ÷ 克。
 // 折算由用度定义的数据决定：这件货所属的类带热值需求（refHeat）才按基准克，否则按克；热值未知的顶 0 基准克，单价无穷大、排在最后。
 export function usageCost(engine,item){
  const it=engine.byId.get(item),heatClass=usageDefinition(engine,0,[]).find(u=>u.refHeat>0&&isItemClass(engine,item,u.cls));

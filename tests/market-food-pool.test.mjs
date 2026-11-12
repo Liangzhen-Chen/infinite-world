@@ -492,7 +492,7 @@ function itemDaysAt(engine,state,seed,item,place){
  let best=null;
  for(let m=0;m<12;m++){let r=null;try{r=engine.route(from,place,'walk',m*30*1440,seed);}catch(e){if(!e.message.startsWith('没有当前季节'))throw e;}if(r&&(best===null||r.minutes<best))best=r.minutes;}
  assert.ok(best>0,`${item} 产地聚落到得了 ${place}`);
- return 2*best/1440;
+ return Math.max(2*best/1440,cycle);// 进口货同一口径：补货不比一个交易周期更勤
 }
 
 // 手推：家户用度类（柴、燃料→fuel，盐→salt）的池 = 该类全部非食物货，按"顶多少基准克"（usageItemGrams）计量；类需求整类只算一次。
@@ -500,11 +500,11 @@ function itemDaysAt(engine,state,seed,item,place){
 // Σ[(日用度 − min(日用度, 户内自给)) × 补给间隔] ÷ 名册人数（速率，可外推）；聚落户用 = 人均 × 聚落人口 + Σ已欠量 DebtG（欠量是名册户实际欠的，不放大）；
 // 名册为空取单人户日用度 × 补给间隔 × 人口（无自给无欠量）。
 // 放大单位按用度定义的 per：按户的类（柴）× 聚落户数 ÷ 名册户数，按人的类（盐）× 人口 ÷ 名册人数；欠量均不放大。
-// 补给间隔 = max(一个交易周期 economy.tradeCycleDays, 类里各货补给间隔（itemDaysAt 手推）的最小值)。日用度读规则定义（householdUsage 只给每日克数），自给由调用方给（self(户编号)，基准克/日）。
+// 补给间隔 = 类里各货补给间隔（itemDaysAt 手推，进口与本地都不小于一个交易周期 economy.tradeCycleDays）的最小值。日用度读规则定义（householdUsage 只给每日克数），自给由调用方给（self(户编号)，基准克/日）。
 function useClassOf(engine,state,item){return householdUsage(engine,state,[null]).map(u=>u.cls).find(c=>isItemClass(engine,item,c)&&!(foodSatiety(engine,item)>0));}
 function marketUseAt(engine,state,seed,item,place,self=()=>0){
  const cls=useClassOf(engine,state,item),pool=engine.world.items.filter(i=>isItemClass(engine,i.id,cls)&&!(foodSatiety(engine,i.id)>0)&&usageItemGrams(engine,i.id,cls)>0);
- const horizon=Math.max(engine.rules.economy.tradeCycleDays,Math.min(...pool.map(i=>itemDaysAt(engine,state,seed,i.id,place)))),seen=new Set(),usage=ms=>householdUsage(engine,state,ms).find(u=>u.cls===cls),gramsPerDay=ms=>usage(ms).gramsPerDay;
+ const horizon=Math.min(...pool.map(i=>itemDaysAt(engine,state,seed,i.id,place))),seen=new Set(),usage=ms=>householdUsage(engine,state,ms).find(u=>u.cls===cls),gramsPerDay=ms=>usage(ms).gramsPerDay;
  let via=0,persons=0,houses=0,owed=0;
  for(const id of Object.keys(state.npcs)){
   if(placeSettlement(engine,state,state.npcs[id].location).value!==place)continue;
@@ -513,7 +513,8 @@ function marketUseAt(engine,state,seed,item,place,self=()=>0){
   via+=(need-Math.min(need,self(id)))*horizon;owed+=state.family?.upkeep?.[key]?.[`${cls}DebtG`]??0;
  }
  // 放大单位由用度定义决定：按户的类乘 聚落户数（聚落档案 householdCount）÷ 名册户数；按人的类乘 人口 ÷ 名册人数。
- const per=usage([null]).per,settlementHouses=engine.world.settlementProfiles.find(p=>p.id===place).householdCount;
+ // 聚落户数手推（entity-view 口径：档案 householdCount + 现有户 − 初始户；本夹具户全在世、都有人，现有户 = 初始户，所以 = 档案值）；档案没写时 = 世界户口里该聚落的户数。
+ const per=usage([null]).per,profileHouses=engine.world.settlementProfiles.find(p=>p.id===place).householdCount,settlementHouses=profileHouses??engine.world.households.filter(h=>h.settlement===place).length;
  const scaled=!(persons>0)?gramsPerDay([null])*horizon*(per==='household'?settlementHouses:state.settlements[place].population)
   :per==='household'?via/houses*settlementHouses+owed:via/persons*state.settlements[place].population+owed;
  return scaled/usageItemGrams(engine,item,cls);
@@ -524,11 +525,15 @@ function marketUseAt(engine,state,seed,item,place,self=()=>0){
 // 居民模板取聚落里一位家务型成年居民的记录（无雇佣、无官职），改 id、改年龄为规则里的最低采集年龄 + 10（householdSubsistence.minimumAge）、清掉人际引用、住处与位置放到上面的住处；
 // 前置用与规划同一口径检查两人确有空闲工时（年龄、无行动限制、无雇佣、无官职）。其余居民的位置全部迁出 loc_hw，聚落名册只剩这两户。
 // 规划只沿步行路找来源，所以 A 户只够得到这片林，B 户没有任何来源。
-function selfFixture(seed,{debt=0,singleFarm=false}={}){
+// shared：B 户也有一条 2 km 路通到同一片林，且林只剩一件可采量（面积 = 1.5 ÷ 每平方公里蓄积），两户抢同一份余量；
+// noHouseholdCount：聚落档案不写 householdCount，户数只能由现有户口推（entity-view.settlementPopulation）。
+function selfFixture(seed,{debt=0,singleFarm=false,shared=false,noHouseholdCount=false}={}){
  const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
  const north=w.locations.find(l=>l.id==='loc_hw_northwood'),spot=id=>({id,name:id,parent:'loc_hw',scope:'loc_hw',coordinates:[0,0],terrain:'平地',openHours:[0,1440],owner:null});
- w.locations.push({...structuredClone(north),id:'loc_mk_grove',name:'测试林',areaKm2:2},spot('loc_mk_home_a'),spot('loc_mk_home_b'));
+ w.locations.push({...structuredClone(north),id:'loc_mk_grove',name:'测试林',areaKm2:shared?1.5/w.rules.forestWater.forest.stockPerKm2:2},spot('loc_mk_home_a'),spot('loc_mk_home_b'));
  w.routes.push({id:'route_mk_grove',from:'loc_mk_home_a',to:'loc_mk_grove',modes:['walk'],lengthKm:2,closedSeasons:[]});
+ if(shared)w.routes.push({id:'route_mk_grove_b',from:'loc_mk_home_b',to:'loc_mk_grove',modes:['walk'],lengthKm:2,closedSeasons:[]});
+ if(noHouseholdCount)delete w.settlementProfiles.find(p=>p.id==='loc_hw').householdCount;
  const adultAge=w.rules.householdSubsistence.minimumAge+10;
  const template=w.npcs.find(n=>n.settlement==='loc_hw'&&/家务/.test(n.occupation??'')&&n.age>=adultAge);
  assert.ok(template,'前置：聚落里有一位家务型成年居民可作新建居民的模板');
@@ -611,6 +616,31 @@ test('单农事聚落的世界：给柴报价不崩溃，消耗 = 经市场的�
  const expected=marketUseAt(engine,state,seed,wood,'loc_hw',id=>id===A?hand.self:0);assert.ok(expected>0);
  let s=null;assert.doesNotThrow(()=>{s=marketSupply(read,engine,wood,inn);});
  assert.ok(Math.abs(s.consumption-expected)<=1e-6*expected);
+});
+
+test('两户共用一片来源：可采量按户分摊，先到的户采走，后面的户只能采剩下的（不各读一份满余量）',()=>{
+ // 手推：林只剩 floor(1.5 ÷ 蓄积 × 蓄积) = 1 件可采量；A、B 两户各 1 人、各有 2 km 步行路通到这片林，各自规划都要 ceil(日需 ÷ 一件基准克) = 1 件。
+ // 聚落层按名册顺序累计来源：A 先采走这 1 件（顶一件基准克 ≥ 日需，封顶后抵光），B 无余量，自给 0 → 全额走市场。
+ // 若各读一份满余量重复计入，两户都自给，经市场的户用为 0；分摊后 = B 户一份 = 无自给时的一半。
+ const wood='item_wood',inn='bld_hw_qingdeng',{engine,doc,A,B}=selfFixture('market-food-pool-shared',{shared:true}),state=doc.state,read=documentReader(doc),seed=read.get('randomSeed');
+ const unit=usageItemGrams(engine,wood,'fuel'),N=householdUsage(engine,state,[null]).find(u=>u.cls==='fuel').gramsPerDay;
+ assert.ok(unit>=N&&Math.ceil(Math.ceil(N)/unit)===1,'前置：一件即可抵光一户的日需');
+ assert.ok(Object.keys(state.npcs).indexOf(A)<Object.keys(state.npcs).indexOf(B),'前置：名册顺序 A 在 B 前');
+ const expected=marketUseAt(engine,state,seed,wood,'loc_hw',id=>id===A?unit:0),none=marketUseAt(engine,state,seed,wood,'loc_hw');
+ assert.ok(expected>0&&Math.abs(expected-none/2)<=1e-9*none,'手推：只有 A 户抵光，剩 B 户一半');
+ const s=marketSupply(read,engine,wood,inn);
+ assert.ok(Math.abs(s.consumption-expected)<=1e-6*expected);
+});
+
+test('档案没写户数的聚落：户数由现有户口推（与人口同源），按户的类用它放大',()=>{
+ // 手推：聚落档案不写 householdCount，entity-view 口径 = 初始户（世界户口里该聚落的户）+ 现有户 − 初始户 = 现有户；本夹具户都在世、都有人，所以 = 世界户口里 loc_hw 的户数（含夹具新建的两户）。
+ // 柴按户放大：消耗 = Σ名册户 (日需 − 自给) × 间隔 ÷ 名册户数 × 聚落户数；盐按人放大不受户数影响，与有档案时相同。
+ const wood='item_wood',inn='bld_hw_qingdeng',f=selfFixture('market-food-pool-no-count',{noHouseholdCount:true}),state=f.doc.state,read=documentReader(f.doc),seed=read.get('randomSeed');
+ const hand=handSelfSupply(f.engine,state,seed),houses=f.engine.world.households.filter(h=>h.settlement==='loc_hw').length;
+ assert.equal(f.engine.world.settlementProfiles.find(p=>p.id==='loc_hw').householdCount,undefined);
+ const expected=marketUseAt(f.engine,state,seed,wood,'loc_hw',id=>id===f.A?hand.self:0);assert.ok(expected>0);
+ assert.ok(Math.abs(marketSupply(read,f.engine,wood,inn).consumption-expected)<=1e-6*expected);
+ assert.ok(houses>0,'前置：世界户口里该聚落有户');
 });
 
 

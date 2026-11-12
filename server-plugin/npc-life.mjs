@@ -88,7 +88,7 @@ export function advanceDurableWear(d,engine,day){
 function consumeByWeight(d,engine,holders,cls,needG,debtG,eventId,purpose){
  let debt=debtG+needG,short=false;
  const state=d.get('state'),stock=new Map(holders.map(h=>[h,merchandise(engine,state,h)]));
- // 先用户里同类中最便宜的（household-budget.usageCost：价格 ÷ 热值，无热值按 价格 ÷ 克），不按物品编号；家用的先于店主货架上的货。
+ // 先用户里同类中最便宜的（household-budget.usageCost：价格 ÷ 顶多少基准克；带热值需求的类按热值折算，热值未知的货顶 0 基准克、不被烧、单价记无穷大排最后；不带热值需求的类按 价格 ÷ 克），不按物品编号；家用的先于店主货架上的货。
  const cheapest=rows=>rows.sort((a,b)=>usageCost(engine,a.item)-usageCost(engine,b.item)||a.item.localeCompare(b.item)||a.h.localeCompare(b.h))[0]??null;
  const held=merchandiseToo=>holders.flatMap(h=>heldOfClass(d,engine,h,cls).filter(r=>usageGrams(engine,r.item,cls,grams(engine,r.item))>0&&(merchandiseToo||!stock.get(h).has(r.item))).map(r=>({h,item:r.item})));
  for(;;){

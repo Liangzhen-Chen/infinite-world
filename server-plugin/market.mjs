@@ -1,14 +1,14 @@
 // Read-only market projections. Only completed trades are persisted, never quotes.
 import {bagStock,priceRead,settlementStock,granary,pledged,freight,crop as cropAccount} from './stock.mjs';
 import {privateCropYieldBase} from './domain-rules.mjs';
-import {placeSettlement,personBusinesses,personHousehold} from './entity-view.mjs';
+import {placeSettlement,personBusinesses,personHousehold,settlementPopulation} from './entity-view.mjs';
 import {isItemClass,classItems,workmanshipTier,householdUsage as usageDefinition} from './item-class.mjs';
 import {householdUpkeepGap} from './household-budget.mjs';
 import {explainDerived} from './derived.mjs';
 import {obligationRows,obligationClosed,currentGrace,institutionOriginal} from './obligation-state.mjs';
 import {aliveHoldings,holdingsView} from './holdings.mjs';
 import {reject} from './action-rejection.mjs';
-import {recordsMemo,withReadIndex} from './storage.mjs';
+import {recordsMemo,withReadIndex,stateMemo} from './storage.mjs';
 import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost,usageItemGrams,upkeepSelfTripsOf} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
@@ -86,6 +86,9 @@ export function goodsClass(engine,item){return goodsEntry(engine,item).value;}
 export function goodsWeight(engine,item){return goodsEntry(engine,item).weight;}
 function goodsEdible(engine,item){return goodsEntry(engine,item).edible;}
 export function goodsUse(engine,item){return goodsEntry(engine,item).use;}
+// 聚落当前户数（entity-view.settlementPopulation，动态）。该函数扫全体居民的户口，每次报价都算太贵：按状态记忆，依赖户口、新建人物、聚落账、居民在世与否。
+const householdsMemo=Symbol('settlement households'),householdsInputs=[['family'],['created'],['settlements'],['npcs','*','status'],['npcs','*','diedAt'],['npcs','*','materialized']];
+const settlementHouseholds=(engine,state,place)=>stateMemo(state,engine,[householdsMemo,place],()=>settlementPopulation(engine,state,place).householdCount.value,householdsInputs);
 const locationOf=(state,id)=>id==='player'?state.location:state.npcs?.[id]?.location??state.creatures?.[id]?.location;
 const settlementOf=(engine,state,location)=>placeSettlement(engine,state,location).value??location;
 const inventoryOf=(state,id)=>{
@@ -283,16 +286,15 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   //  · 日用度：household-budget.householdUsage（与 npc-life 每日扣用同一定义）；
   //  · 户内自给：household-subsistence 既有采集规划能采回的量（upkeepSelfSupplyOf：公共林地与无主资源点的可采量、往返、本户空闲工时；没有来源或没有空闲劳力的户得 0，全额走市场），封顶于日用度；
   //  · 已欠量：npc-life 记在 state.family.upkeep 的 `${cls}DebtG`（前几日缺的，仍要买），与"补给间隔内的新用度"是不同时段，不重复；缺着的户因此推高需求。
-  // 补给间隔：整类取各成员货补给间隔里最短的（类里最快能补上的那条渠道），不随报价的是哪一件而变。
+  // 补给间隔：整类取各成员货补给间隔（含交易周期下限）里最短的（类里最快能补上的那条渠道），不随报价的是哪一件而变。
   // 率按名册户给出人均（名册户只给比例，没上名册的人口也要烧柴吃盐），乘聚落人口（公开量，与粮的餐口同一来源 settlement.population）。
   const use=goodsUse(engine,item);
   if(use){
    // 不可达的成员（产地与本聚落不通，itemResupplyDays 抛 E-SUPPLY-UNREACHABLE）不是补货渠道，跳过；全不可达就走既有路径（按本件取，照常报错）。
    const reachable=[];
    for(const it of items)try{reachable.push(daysOf(it.id));}catch(error){if(!isUnreachableSupply(error))throw error;}
-   // 补给不会比一个交易周期更勤：类的间隔 = max(类内最短往返, 一个交易周期 economy.tradeCycleDays)（本地产的货本来就以交易周期为下限，进口货同一口径；
-   // 否则近处进口的几克引火包会把整类间隔压到半天，柴的户用被低估一个量级）。
-   const horizon=Math.max(engine.rules.economy.tradeCycleDays,reachable.length?Math.min(...reachable):daysOf(item)),seen=new Set(),drawn=new Map();
+   // 各货的补给间隔已含一个交易周期的下限（itemResupplyDays：本地与进口同一口径），类间隔取其最小。
+   const horizon=reachable.length?Math.min(...reachable):daysOf(item),seen=new Set(),drawn=new Map();
    const perOf=usageDefinition(engine,0,[]).find(u=>u.cls===use)?.per;
    let rosterPersons=0,rosterHouses=0,viaMarket=0,owed=0;
    for(const id of Object.keys(state.npcs??{})){
@@ -308,8 +310,9 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
     viaMarket+=(need-Math.min(need,got))*horizon;owed+=state.family?.upkeep?.[key]?.[`${use}DebtG`]??0;
    }
    // 日用度与自给是速率，名册户的均值可外推到聚落；外推的单位由用度定义决定（usage.per）：按户的类（柴）按 聚落户数 ÷ 名册户数，按人的类（盐）按 人口 ÷ 名册人数。
-   // 聚落户数读聚落档案的 householdCount（entity-view.settlementPopulation 的同一来源；这里不整套重算，免得每次报价扫全体居民），没有档案时不外推（按名册户数）。欠量是名册户账上实际欠着的，只计实际量，不放大。
-   const people=settlement.population??0,houses=engine.world.settlementProfiles?.find(p=>p.id===place)?.householdCount||rosterHouses;
+   // 聚落户数与人口同源同口径：entity-view.settlementPopulation 的动态值（档案值 + 现有户 − 初始户；人口读 state.settlements）。它要扫全体居民，所以按状态记忆（settlementHouseholds）。
+   // 无数据（户数为 0 / 没有人口）时按户、按人两类同一条回退：不外推，取名册实际数。欠量是名册户账上实际欠着的，只计实际量，不放大。
+   const people=settlement.population||rosterPersons,houses=settlementHouseholds(engine,state,place)||rosterHouses;
    if(rosterPersons>0)consumption+=(perOf==='household'?viaMarket/rosterHouses*houses:viaMarket/rosterPersons*people)+owed;
    else consumption+=(usageDefinition(engine,state.minute,[null]).find(u=>u.cls===use)?.gramsPerDay??0)*horizon*(perOf==='household'?houses:people);
   }

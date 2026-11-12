@@ -62,7 +62,7 @@ export function resupplyDays(engine,seed,place,state){
  return best;
 }
 // 某货在某聚落的补给间隔（天，非食物货）= 往返该货产地的天数；产地 = 物品目录的 origin（建筑换算成所在聚落，与 transport.unitFreight 同一来源）：
-//  · 产地在别的聚落：往返路程天数（真不连通才报错）；
+//  · 产地在别的聚落：max(往返路程天数, 一个交易周期)（真不连通才报错）；
 //  · 产地就是本聚落：本地生产周期 = max(生产这件货的配方里最短的工时 ÷ 1440, 一个交易周期 economy.tradeCycleDays)；没有配方产出这件货，退回一个交易周期；
 //  · 没有 origin 或产地不在任何聚落：没有往返路程可推，同样退回一个交易周期。
 export function itemResupplyDays(engine,state,seed,item,place){
@@ -75,7 +75,8 @@ export function itemResupplyDays(engine,state,seed,item,place){
  }
  const t=roundTripDays(engine,seed,from,place);
  if(t===null)throw unreachableSupply(`聚落 ${place} 到不了 ${item} 的产地聚落 ${from}，推不出补给间隔`);
- return t;
+ // 进口货同一口径：补货不比一个交易周期更勤（近处进口的货往返只有半天，也要按交易周期成批到）；与本地分支、craftUseWindowDays 的下限一致。
+ return Math.max(t,cycle);
 }
 // 滚动耗料累计的窗口（天）= 各聚落、各货补给间隔的上限（向上取整，至少一个交易周期）：粮的补给间隔（非农事聚落）、非食物货往返各产地聚落的天数；推不出的（不连通）不参与取上限，读它的需求时自会报错。
 export function craftUseWindowDays(engine,state,seed,places){
