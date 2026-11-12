@@ -7,6 +7,8 @@
 //  finance-a3-domain  簇 2：运行 tests/a3-domain-properties.test.mjs 原夹具，financeChange 抛“当事人资金不足”前记被扣方、金额、该方与其户池现金
 //  finance-daily-b2   簇 2：运行 tests/daily-b2-mechanisms.test.mjs 原夹具（含 #6 farm.private_harvest 与 #9），同上
 //  migration          簇 3：重建 tests/npc-life-migration.test.mjs 的默认夹具（fixture()+hungry()，迁居者 npc_hw_xuling），输出窗口、交集与没有成交的原因
+//  sales-s5-w4-wood   簇 4：运行 tests/s5-w4-economy.test.mjs 原夹具，对关注物品（默认 item_wood）每次可售量检查输出 stock-check（见 woodStock 注释：各持有行 stock/retained/committed/upkeep/available 与扣成 0 的项）
+//  migration 另输出 migration-serve / migration-serve-shop：每个客流时刻对迁居者逐步重放 walkIns 与 serve（是否入顾客名单、wants、预算、钱、店里库存与可售量、逐数量报价、决策与拒绝原因；字段见 migrationServe 注释）
 // 复用方式：簇 1、2 直接 import 对应测试文件（node:test 在普通进程里 import 后照常运行测试，测试自己的夹具原样使用，不复制）；
 // 簇 3 的夹具在测试文件内部没有导出，按 tests/npc-life-migration.test.mjs:21-59 与 :95-103 逐行重建（出处写在下面）。
 // 输出行都带 type：start / sale / ledger / finance-fail / finance-summary / migration-windows / migration-reasons / migration-buys / error。
@@ -112,14 +114,121 @@ async function migration(){
  // 推进到首夜，按测试的方法在账本上找迁居者的食物购买
  const foodIds=new Set(w.items.filter(i=>i.tags?.includes('food')).map(i=>i.id)),trace=[];
  globalThis.__LEDGER_TRACE__={push:e=>trace.push(e)};
+ globalThis.__DIAG_FLOW__=migrationServe(mover);
  const res=await engine.reduce(doc,{tool:'world_time',args:{minutes:firstNight+1-doc.state.minute},eventId:`a-${doc.state.minute}`});
- doc=applyPatches(doc,res.patches);delete globalThis.__LEDGER_TRACE__;
+ doc=applyPatches(doc,res.patches);delete globalThis.__LEDGER_TRACE__;delete globalThis.__DIAG_FLOW__;
  const buys=trace.filter(t=>t.writer==='shop'&&String(t.from).startsWith(`${mover}|coin_river|`)&&t.amount>0&&foodIds.has(String(t.eventId).split(':').at(-1)));
  const customerEvents=trace.filter(t=>String(t.eventId).startsWith('customer:')).map(t=>t.eventId);
  out({type:'migration-buys',count:buys.length,buys,customerEventsAll:[...new Set(customerEvents)].slice(0,40)});
 }
 
+// 迁居者在每个客流结算时刻（第 10、11 天）的 serve 判定逐步重放（只读；与 business.mjs walkIns/serve 同一顺序，用钩子登记的模块内函数 globalThis.__DIAG_BIZ__）。
+// 输出 migration-serve：t、openShops、walkInFailures（walkIns 各条件逐条，空即进入顾客名单）、inWalkIns，
+// 再对同聚落每家店给 shops[].steps：tripped（本店当日已评估）、keeperHome（本户）、reach（往返步行 vs customerReachMinutes）、
+// 逐件货 items[]：shelf（是否在货架）、service（到店服务时刻与顾客段/店窗口是否装得下）、want（quantity、severity）、budget（cash、floor、cap、tripCost）、
+// available（店里可售量：stock、retained、committed、upkeep、available，物理库存 physical）、quotes（逐个数量：totalCoins、是否≤cap、option.feasible、深度拒绝）、decision（outcome、reason）、result（stop 的步骤）。
+function migrationServe(mover){
+ return (d,engine,t)=>{
+  const day=Math.floor(t/DAY);if(day<10||day>11)return;
+  const B=globalThis.__DIAG_BIZ__??{},row={type:'migration-serve',t,day,minuteOfDay:t%DAY};
+  try{
+   if(!B.openShops||!B.walkIns||!B.wants){out({...row,step:'hook-unavailable',have:Object.keys(B)});return;}
+   const state=d.get('state'),npc=state.npcs[mover],seed=d.get('randomSeed');
+   const slot=B.scheduleAt(engine,mover,t,state),fails=[];
+   if(!npc)fails.push('noNpc');else{
+    if(!B.personSimulation(engine,{},mover).value)fails.push('notFullPerson');
+    if((npc.coins??0)<1)fails.push(`noMoney(coins=${npc.coins})`);
+    if(['死亡','濒死','昏迷','患病'].includes(npc.status))fails.push(`status(${npc.status})`);
+    if(state.player.companions?.includes(mover))fails.push('companion');
+    if((engine.byId.get(mover)?.age??engine.rules.npcLife.adultAge)<engine.rules.npcLife.adultAge)fails.push('minor');
+    for(const k of ['scheduleTravel','cognitionTravel','caring','levy'])if(npc[k])fails.push(`${k}(${JSON.stringify(npc[k]).slice(0,120)})`);
+    if(B.householdWorkTime(engine,state,mover,t).unattended)fails.push('householdUnattended');
+    if(!B.shoppingSlot(slot))fails.push(`slotNotShopping(${slot?.activity},${JSON.stringify(slot?.services)})`);
+    if(B.personConstraint(engine,state,mover,t))fails.push(`personConstraint(${JSON.stringify(B.personConstraint(engine,state,mover,t)).slice(0,120)})`);
+    if(engine.npcObligationAt(state,mover,t))fails.push('obligation');
+   }
+   const shops=B.openShops(d,engine,t),residents=B.walkIns(d,engine,t),me=residents.find(r=>r.id===mover);
+   out({...row,step:'selection',slot:slot&&{location:slot.location,activity:slot.activity,until:slot.until,services:slot.services},coins:npc?.coins,openShops:shops.map(s=>({id:s.id,keeper:s.keeper,kind:s.kind,settlement:s.settlement,until:s.until})),walkInFailures:fails,inWalkIns:Boolean(me),residentsCount:residents.length});
+   if(!me)return;
+   const routes=new Map(),reach=B.customerReachMinutes(engine),serviceMinutes=B.actionCostRule(engine,'trade.retail').timeMin,gaps=new Map();
+   for(const shop of shops){
+    const sh={shop:shop.id,keeper:shop.keeper,steps:[],items:[]};
+    const tripped=B.recordsWhere(state.records,'category','customer_flow').filter(r=>r.day===day&&r.shop===shop.id).flatMap(r=>r.visits).some(v=>v.npc===mover);
+    const keeperHome=shop.kind==='resident'?new Set(B.personHousehold(engine,state,shop.keeper).value?.members??[]):null;
+    const outbound=B.walkMinutes(engine,me.slot.location,shop.location,Math.max(t,0),seed,routes);
+    sh.steps.push({keeperIsMover:shop.keeper===mover,tripped,keeperHome:Boolean(keeperHome?.has(mover)),sameSettlement:me.settlement===shop.settlement,outboundMinutes:outbound.minutes,reach});
+    if(shop.keeper===mover||tripped||keeperHome?.has(mover)||me.settlement!==shop.settlement||outbound.minutes>reach){sh.result='skipped-before-shelf';out({...row,type:'migration-serve-shop',...sh});continue;}
+    const inbound=B.walkMinutes(engine,shop.location,me.slot.location,t+outbound.minutes,seed,routes),travelCoins=outbound.coins+inbound.coins;
+    const shelf=B.shelfOf(d,engine,shop);sh.shelf=shelf;
+    for(const item of shelf){
+     const it={item},atShop=t+outbound.minutes,serviceAt=Math.max(atShop,t),finishAt=serviceAt+serviceMinutes,returnAt=finishAt+inbound.minutes;
+     it.service={serviceAt,finishAt,returnAt,customerSegmentUntil:me.slot.until??(day+1)*DAY,shopUntil:shop.until??(day+1)*DAY};
+     if(returnAt>(me.slot.until??(day+1)*DAY)||finishAt>(shop.until??(day+1)*DAY)){it.result='noTime(往返或服务超出顾客段/店窗口)';sh.items.push(it);break;}
+     try{
+      engine.assertNpcAutonomyAction(state,[mover,shop.keeper],{start:t,minutes:returnAt-t});
+      engine.assertNpcObligationAction(d,[mover],{start:t,minutes:returnAt-t,location:me.slot.location,kind:'trade'});
+      engine.assertNpcObligationAction(d,[shop.keeper],{start:serviceAt,minutes:serviceMinutes,location:shop.location,kind:'trade'});
+     }catch(error){it.result=`conflict(${error.code}: ${error.message})`;sh.items.push(it);continue;}
+     const projected={...d.document,state:{...state,minute:t,npcs:{...state.npcs,[mover]:{...npc,location:me.slot.location,activity:me.slot.activity}}}};
+     const read={document:projected,get:(...p)=>p.reduce((v,k)=>v?.[k],projected)};
+     const want=B.wants(d,engine,mover,item,gaps,t,shop,read);it.want=want;
+     if(!want.quantity){it.result='noWant(wants 对这件货为 0)';sh.items.push(it);continue;}
+     const view=B.subjectiveView(engine,projected,mover),budget=B.householdBudget(read,engine,mover,{view});
+     const floor=Math.min(budget.cash,...budget.timeline.map(r=>r.balance)),tripCost=travelCoins,cap=Math.max(0,floor-tripCost-(engine.byId.get(item)?.nutrition?0:budget.resources.market.spent));
+     it.budget={cash:budget.cash,floor,tripCost,cap,marketSpent:budget.resources.market.spent,until:budget.until};
+     const stock=B.saleableStock(d,engine,shop.keeper,item,{business:shop.kind!=='resident'});
+     it.available={stock:stock.stock,retained:stock.retained,committed:stock.committed,upkeep:stock.upkeep,available:stock.available,physical:engine.quantity(d,shop.keeper,item)};
+     if(cap<1){it.result='noCap(cap<1)';sh.items.push(it);break;}
+     let quantity=Math.min(want.quantity,stock.available),quote=null;it.quotes=[];
+     const business={keeper:shop.keeper,markup:shop.markup};let supply=null,baseValue=null;
+     for(;quantity>0;quantity--){
+      supply??=B.quoteSupply(d,engine,{item,location:shop.location,business});
+      baseValue??=B.regionalTradeBase(d,engine,item,shop.location,t)*B.wildlifePriceFactor(engine,d.document,item,shop.location);
+      const q=B.marketQuote(d,engine,{seller:shop.keeper,buyer:mover,item,quantity,location:shop.location,minute:t,base:baseValue,business,supply});
+      const option=B.householdOptions(budget,{item,quantity,totalCoins:q.totalCoins+tripCost}).find(o=>o.operation==='buy'),entry={quantity,totalCoins:q.totalCoins,withinCap:q.totalCoins>=1&&q.totalCoins<=cap,feasible:option?.feasible};
+      if(entry.withinCap&&entry.feasible){try{B.assertMarketDepth(d,engine,q);quote=q;entry.depth='ok';}catch(error){entry.depth=`reject(${error.message})`;}}
+      it.quotes.push(entry);if(quote)break;
+     }
+     if(!quote){it.result=stock.available<1?'noStock(可售量 0)':'noAffordableQuote(买不起任何一个数量)';sh.items.push(it);continue;}
+     const estimate=B.subjectiveMarketQuote(engine,projected,view,{item,seller:shop.keeper,buyer:mover,quantity,});
+     const noise=engine.world.marketRules.customerChoice?.noisePermille??0,draw=B.rollDice(seed,'market:purchase',`${mover}:${shop.id}:${item}`,t,0,2*noise+1)-1-noise;
+     const decisionView={...view,self:{...view.self,coins:Math.max(view.self.coins,budget.cash),obligations:view.self.obligations.filter(o=>o.resource!==B.REFERENCE||o.start!==undefined||o.terms?.service)}};
+     const decision=B.npcDecision(decisionView,{kind:'purchase',from:shop.keeper,cost:{coins:quote.totalCoins+tripCost,minutes:returnAt-t},reward:Math.floor(estimate.explanation.value.value*quantity),needSatisfaction:Math.trunc(want.severity*(1000+draw)/1000)});
+     it.decision={outcome:decision.outcome,reason:decision.reason,quantity,totalCoins:quote.totalCoins};it.result=decision.outcome==='agree'?'would-buy':`declined(${decision.outcome})`;
+     sh.items.push(it);if(decision.outcome==='defer')break;
+    }
+    sh.result=sh.items.some(i=>i.result==='would-buy')?'would-buy':'no-purchase';
+    out({...row,type:'migration-serve-shop',...sh});
+   }
+  }catch(error){out({...row,type:'error',where:'migrationServe',message:String(error?.stack??error)});}
+ };
+}
+
+// 簇 4：s5-w4 #1 在 market.mjs:355 报“对方库存不足：扣除自用和已承诺存量后不够出售”（木材）。钩子在可售量读出后回调（globalThis.__DIAG_STOCK__），
+// 对关注的物品（默认 item_wood，可用第二个参数换，逗号分隔）输出 stock-check：卖方、数量、可售量各项，以及该户每个持有行的
+// stock / food / seed / seedTarget / committed / inUse / upkeep / retained / available（retained=max(inUse,food+seed)+upkeep；available=max(0,stock−retained−committed)），
+// 用来找出是哪一项把可售量扣成 0；另给成员、户日用量 householdDailyUse、用度类 householdUsage、承诺记录 householdCommitments。failing=true 表示本次将被拒（数量 > 可售量，卖方非玩家）。
+async function woodStock(file,watch){
+ const hb=await import('../server-plugin/household-budget.mjs'),{personHousehold}=await import('../server-plugin/entity-view.mjs');
+ const items=new Set(watch);let n=0;
+ globalThis.__DIAG_STOCK__=({d,engine,quote,stock})=>{
+  try{
+   if(!items.has(quote.item))return;
+   const state=d.get('state'),res=hb.householdResources(d,engine,quote.seller),members=res.members;
+   const rows=res.rows.filter(r=>r.item===quote.item).map(r=>({holder:r.holder,stock:r.stock,food:r.food,seed:r.seed,seedTarget:r.seedTarget,committed:r.committed,inUse:r.inUse,upkeep:r.upkeep??0,retained:r.retained,available:r.available}));
+   out({type:'stock-check',seq:++n,minute:state.minute,seller:quote.seller,buyer:quote.buyer,item:quote.item,quantity:quote.quantity,side:quote.side,business:quote.business??null,
+    failing:quote.seller!=='player'&&quote.quantity>stock.available,saleable:{stock:stock.stock,retained:stock.retained,committed:stock.committed,upkeep:stock.upkeep,available:stock.available},
+    household:personHousehold(engine,state,quote.seller).value?.id??null,members,sharedMeals:res.sharedMeals,rows,
+    dailyUse:hb.householdDailyUse(engine,state,members,quote.item),usage:hb.householdUsage(engine,state,members),commitments:hb.householdCommitments(state,quote.seller,quote.item),
+    inventories:Object.fromEntries(members.map(m=>[m,state.npcs?.[m]?.inventory?.[quote.item]??null]))});
+  }catch(error){out({type:'error',where:'woodStock',message:String(error?.stack??error)});}
+ };
+ process.on('exit',()=>out({type:'stock-summary',file,checks:n,note:n?'':'没有捕获到可售量检查：钩子未装上（market.mjs 该行已变）或本次未触发'}));
+ await import(new URL(`../tests/${file}`,import.meta.url));
+}
+
 const cases={
+ 'sales-s5-w4-wood':()=>woodStock('s5-w4-economy.test.mjs',(watchArg??'item_wood').split(',')),
  'sales-a1-lt':()=>runTests('a1-lt-scenarios.test.mjs',(watchArg??'npc_hw_duanyan').split(',')),
  'sales-w2-s2':()=>runTests('w2-s2.test.mjs',(watchArg??'npc_bs_077_1,npc_bs_078_1,npc_bs_079_1').split(',')),
  'sales-s5-w4':()=>runTests('s5-w4-economy.test.mjs',(watchArg??'npc_hw_linsui,npc_hw_taozhi,npc_hw_duanyan').split(',')),
