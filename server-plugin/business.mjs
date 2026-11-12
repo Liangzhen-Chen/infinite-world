@@ -14,7 +14,8 @@ import {subjectiveView} from './subjective-view.mjs';
 import {residentSellers,settleSale,SALE_ORDER} from './market-seller.mjs';
 import {openLoan} from './credit.mjs';
 import {transferItems} from './items.mjs';
-import {assertNpcService,scheduleAt,baseScheduleAt,advanceWithNpcParticipants} from './npc-schedule.mjs';
+import {assertNpcService,scheduleAt,baseScheduleAt,advanceWithNpcParticipants,sameNpcScheduleInputs} from './npc-schedule.mjs';
+import {sameScheduleInputs,educationCourses} from './education-state.mjs';
 import {regionalTradeBase} from './settlement-trade.mjs';
 import {wildlifePriceFactor} from './wildlife.mjs';
 import {assessTradeTax,tradeTax,taxableSale} from './finance-tax.mjs';
@@ -33,7 +34,7 @@ import {rollDice} from './scheduler.mjs';
 import {actionCostRule} from './action-costs.mjs';
 import {householdWorkTime} from './npc-state.mjs';
 import {registerAutonomyProvider,registerAutonomyKind} from './autonomy-candidates.mjs';
-import {recordsWhere,recordsMemo,stateMemo} from './storage.mjs';
+import {recordsWhere,recordsMemo,stateMemo,canonicalEqual} from './storage.mjs';
 import {toRational,fromRational} from './det-math.mjs';
 declareHoldingWriter('business',{kinds:['operates','leases','employed_by']});
 
@@ -890,6 +891,30 @@ function daySegments(engine,state,id,day,keep,sched=state,arrivalSeed=null){
     }
     return out;
 }
+// 某人某天的作息分段跨状态版本复用（推进内每个时间步都要重读两天的客流时刻表，全员重算是 EC-1b 起的主要耗时）。
+// 复用条件 = 与 npc-schedule cachedSchedule、advance-registry buildScheduleHeap 同一套已声明的输入：本人作息输入未变（sameNpcScheduleInputs）、
+// 其余分区与排程相关记录未变（sameScheduleInputs，npcs 分区交给逐人比较）、课程派生未变（educationCourses）。判定与精度不变：任一输入变了就重算。
+// 只在读取作用域内当前草稿的最新状态上用缓存（scheduleReadCache.draft.cursor.root.state === state），其余调用与原来一样直接重算。
+const coursesOfDay=(cache,engine,state,day)=>{
+    const byState=cache.flowCourses??=new WeakMap();let byDay=byState.get(state);if(!byDay)byState.set(state,byDay=new Map());
+    if(!byDay.has(day))byDay.set(day,[educationCourses(engine,state,day*DAY),educationCourses(engine,state)]);
+    return byDay.get(day);
+};
+const sameGlobalInputs=(cache,prev,state)=>{
+    const byPrev=cache.flowGlobal??=new WeakMap();let byNext=byPrev.get(prev);if(!byNext)byPrev.set(prev,byNext=new WeakMap());
+    let same=byNext.get(state);if(same===undefined){same=sameScheduleInputs({...prev,npcs:state.npcs},state);byNext.set(state,same);}
+    return same;
+};
+function cachedDaySegments(engine,state,id,day,kind,keep,sched,arrivalSeed){
+    const compute=()=>daySegments(engine,state,id,day,keep,sched,arrivalSeed),cache=engine.scheduleReadCache;
+    if(!cache?.draft?.cursor?.root||cache.draft.cursor.root.state!==state)return compute();
+    const store=cache.flowSegments??=new Map(),key=`${kind}|${sched===state?'state':'base'}|${id}|${day}|${arrivalSeed}`,prev=store.get(key),actor=state.npcs?.[id],courses=coursesOfDay(cache,engine,state,day);
+    if(prev&&(prev.state===state||sameNpcScheduleInputs(prev.actor,actor)&&sameGlobalInputs(cache,prev.state,state)&&canonicalEqual(prev.courses,courses))){
+        if(process.env.FIELDS_INDEX_CHECK==='1'&&!canonicalEqual(prev.segments,compute()))throw Error(`flow segments cache mismatch: ${id} day ${day}`);
+        return prev.segments;
+    }
+    const segments=compute();store.set(key,{state,actor,courses,segments});return segments;
+}
 export function shopWindows(engine,state,day,sched=state){
     const shops=new Map();// 店主编号（玩家店用记录编号）→ {keeper,windows}
     const add=(key,keeper,w)=>{const row=shops.get(key)??{keeper,windows:[]};row.windows.push(w);shops.set(key,row);};
@@ -901,7 +926,7 @@ export function shopWindows(engine,state,day,sched=state){
             if(start<end)add(r.id,'player',{start,end,settlement:placeSettlement(engine,state,r.location).value,presence:true});
         }
     }
-    for(const id of [...keepers].sort())for(const w of daySegments(engine,state,id,day,slot=>slot.services?.includes('trade'),sched))add(id,id,w);
+    for(const id of [...keepers].sort())for(const w of cachedDaySegments(engine,state,id,day,'shop',slot=>slot.services?.includes('trade'),sched,null))add(id,id,w);
     return shops;
 }
 // 可用窗从到达所在地起算（daySegments arrivalSeed）：迁居者下班后在路上的那几分钟不算顾客可用，到家才算。
@@ -910,7 +935,7 @@ export function customerWindows(engine,state,day,sched=state,seed=seedOf(engine)
     const out=new Map();
     for(const id of Object.keys(state.npcs??{}).sort()){
         if(!personSimulation(engine,{},id).value||(engine.byId.get(id)?.age??engine.rules.npcLife.adultAge)<engine.rules.npcLife.adultAge)continue;
-        const segments=daySegments(engine,state,id,day,shoppingSlot,sched,seed);
+        const segments=cachedDaySegments(engine,state,id,day,'customer',shoppingSlot,sched,seed);
         if(segments.length)out.set(id,segments);
     }
     return out;

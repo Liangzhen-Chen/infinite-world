@@ -598,9 +598,10 @@ const hearthInputs=[...householdViewInputs,...placeSettlementInputs,['npcs','*',
 function readHearthPlace(engine,state,id){
     const npc=state.npcs?.[id];if(!npc)return null;
     const where=npc.location??npc.scheduleTravel?.to;if(!where)return null;
-    const home=personHousehold(engine,state,id).value?.settlement;if(!home)return null;
+    const h=personHousehold(engine,state,id).value,home=h?.settlement;if(!home)return null;
     const at=placeSettlement(engine,state,where).value;
-    return at&&at!==home?at:null;
+    // 住处所在聚落 = 户登记的聚落，或户的住处地点（homeLocation）本身所属的聚落（野外住处的户登记聚落与其地点祖先不一定同名）。
+    return at&&at!==home&&at!==(h.homeLocation?placeSettlement(engine,state,h.homeLocation).value:null)?at:null;
 }
 export function hearthPlace(engine,state,id){
     return stateMemo(state,engine,[hearthMemo,id],()=>readHearthPlace(engine,state,id),hearthInputs);
