@@ -82,7 +82,10 @@ export async function approvedProfiles({world,root=path.resolve('world/drafts/w1
  // 返回的档案则按修订回执取代（删除或改值），即当前有效的内容。
  const supersedes=(await readApprovedSupersedes()).filter(s=>s.receiptFile.startsWith('world/drafts/w1/village-ledgers/'));
  const receiptOf=id=>`world/drafts/w1/village-ledgers/${id}.json`;
- const entries=villageProfileCandidates(world).map(e=>revertReceiptRow(e,receiptOf(e.id),supersedes)),rows=await readApprovedContent(root,entries,{contextFor:e=>contextFor(e,world),revision});
+ // 还原后的行须与审批当时的行逐字节相同（指纹按键序序列化）：以记录自己存的 draft 为键序模板。
+ const recorded=new Map();
+ for(const e of villageProfileCandidates(world)){try{recorded.set(e.id,JSON.parse(await fs.readFile(path.join(root,`${e.id}.json`),'utf8')).draft);}catch(error){if(error.code!=='ENOENT')throw error;}}
+ const entries=villageProfileCandidates(world).map(e=>revertReceiptRow(e,receiptOf(e.id),supersedes,recorded.get(e.id))),rows=await readApprovedContent(root,entries,{contextFor:e=>contextFor(e,world),revision});
  if(rows.length!==4)throw Error('四村档案尚未全部通过审核');
  for(const row of rows){const v=validateDraft(row,entries.find(e=>e.id===row.id),world);if(v.errors.length)throw Error(v.errors.join('；'));}
  return rows.map(row=>{const current=structuredClone(row);applySupersedes([current],receiptOf(row.id),supersedes);return current;});

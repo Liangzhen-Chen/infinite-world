@@ -32,12 +32,12 @@ const world=await loadWorld();
 const record=JSON.parse(await fs.readFile(path.join(root,`${id}.json`),'utf8'));
 const supersedes=(await readApprovedSupersedes()).filter(s=>s.receiptFile.startsWith('world/drafts/w1/village-ledgers/'));
 const generated=villageProfileCandidates(world).find(e=>e.id===id);
-const reverted=revertReceiptRow(generated,`world/drafts/w1/village-ledgers/${id}.json`,supersedes);
+const reverted=revertReceiptRow(generated,`world/drafts/w1/village-ledgers/${id}.json`,supersedes,record.draft);
 const context=contextFor(generated,world);
 const projected=projectEntryForRecord(reverted,record);
 console.log(JSON.stringify({
  id,revision,recordedFingerprint:record.fingerprint,skeletonFields:record.skeletonFields??null,
- supersedesApplied:supersedes.filter(s=>s.targetId===id).map(s=>({revision:s.revision,label:s.label,before:s.before,after:s.after})),
+ supersedesApplied:supersedes.filter(s=>s.targetId===id&&s.receiptFile===`world/drafts/w1/village-ledgers/${id}.json`).map(s=>({revision:s.revision,label:s.label,before:s.before,after:s.after})),
  entryDiffGeneratedVsRecordDraft:diff(record.draft,generated),
  entryDiffRevertedVsRecordDraft:diff(record.draft,projected),
  contextKeyHashes:Object.fromEntries(Object.entries(context).map(([k,v])=>[k,hashContent(v)])),

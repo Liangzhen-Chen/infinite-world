@@ -141,13 +141,22 @@ export function classifySupersedes(supersedes,receiptPattern){
 }
 // 回执一侧的行（行形状与某个已批回执一致，按回执路径 parts 寻址）回退到被取代前的样子：只回退“现值等于回执 after”的字段。
 // 生成器等“重新生成骨架再与旧回执比对”的读者用它，把新生成的行还原成审批当时的行再比指纹；不改入参。
-export function revertReceiptRow(row,receiptFile,supersedes){
+// 删除型回执回退时，被删的键只能追加在对象末尾，而指纹按 JSON 序列化的键序算：内容相同、键序不同就失配。
+// 审批当时的行（即回执自己存的 draft，作为 template 传入）的键序才是原位置：回退后把键序对齐到 template（只调序，不增减键、不改值）。
+export function alignKeyOrder(row,template){
+ const plain=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ if(Array.isArray(row))return row.map((v,i)=>Array.isArray(template)?alignKeyOrder(v,template[i]):v);
+ if(!plain(row))return row;
+ const t=plain(template)?template:{},keys=[...Object.keys(t).filter(k=>Object.hasOwn(row,k)),...Object.keys(row).filter(k=>!Object.hasOwn(t,k))];
+ return Object.fromEntries(keys.map(k=>[k,alignKeyOrder(row[k],t[k])]));
+}
+export function revertReceiptRow(row,receiptFile,supersedes,template=null){
  const out=structuredClone(row);
  for(const s of supersedes){
   if(s.receiptFile!==receiptFile||s.targetId!==row.id)continue;
   if(sameValue(getPath(out,s.parts),s.after))setPath(out,s.parts,s.before);
  }
- return out;
+ return template?alignKeyOrder(out,template):out;
 }
 export async function revertedRows(rows,file,draftsRoot){return revertSuperseded(rows,file,await readApprovedSupersedes(draftsRoot));}
 
