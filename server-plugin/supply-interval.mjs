@@ -6,6 +6,10 @@ import {seasonYieldFactors} from './crop-yield.mjs';
 // （路线按季节开闭，取一年各月里最快的一条＝路开着时的正常路程；route.minutes 已含每日歇息）。周贸易班线两端都是农事聚落，不覆盖非农事聚落，所以不是这里的来源。
 // 一年里到不了任何供粮聚落：直接报错列出聚落，不编造天数。同一世界数据对象内按聚落记忆。市场的目标持有与远方聚落的开局存粮共用这一条规律（常态 = 目标）。
 const roundTripMemo=new WeakMap();
+// 到不了供给源（地理不连通）的结构化错误：调用方按 code 判定，不匹配错误文本。
+export const UNREACHABLE_SUPPLY='E-SUPPLY-UNREACHABLE';
+const unreachableSupply=message=>Object.assign(Error(message),{code:UNREACHABLE_SUPPLY});
+export const isUnreachableSupply=error=>error?.code===UNREACHABLE_SUPPLY;
 // 两聚落间的往返天数：一年各月里最快的一条 walk 路线，2 × route.minutes ÷ 1440；一年里都走不通（地理不连通）返回 null。
 function roundTripDays(engine,seed,from,to){
  const memo=roundTripMemo.get(engine.world)??new Map();roundTripMemo.set(engine.world,memo);
@@ -54,7 +58,7 @@ export function resupplyDays(engine,seed,place,state){
   if(p.settlement===place)continue;
   const t=roundTripDays(engine,seed,p.settlement,place);if(t!==null&&(best===null||t<best))best=t;
  }
- if(best===null)throw Error(`聚落 ${place} 到不了任何供粮（农事）聚落，推不出补给间隔`);
+ if(best===null)throw unreachableSupply(`聚落 ${place} 到不了任何供粮（农事）聚落，推不出补给间隔`);
  return best;
 }
 // 某货在某聚落的补给间隔（天，非食物货）= 往返该货产地的天数；产地 = 物品目录的 origin（建筑换算成所在聚落，与 transport.unitFreight 同一来源）：
@@ -70,7 +74,7 @@ export function itemResupplyDays(engine,state,seed,item,place){
   return Number.isFinite(minutes)?Math.max(minutes/1440,cycle):cycle;
  }
  const t=roundTripDays(engine,seed,from,place);
- if(t===null)throw Error(`聚落 ${place} 到不了 ${item} 的产地聚落 ${from}，推不出补给间隔`);
+ if(t===null)throw unreachableSupply(`聚落 ${place} 到不了 ${item} 的产地聚落 ${from}，推不出补给间隔`);
  return t;
 }
 // 滚动耗料累计的窗口（天）= 各聚落、各货补给间隔的上限（向上取整，至少一个交易周期）：粮的补给间隔（非农事聚落）、非食物货往返各产地聚落的天数；推不出的（不连通）不参与取上限，读它的需求时自会报错。
@@ -79,7 +83,7 @@ export function craftUseWindowDays(engine,state,seed,places){
  const origins=new Set();
  for(const it of engine.world.items){const o=it.origin?placeSettlement(engine,state,it.origin).value:null;if(o)origins.add(o);}
  for(const place of places){
-  try{window=Math.max(window,resupplyDays(engine,seed,place,state));}catch(error){if(!error.message.startsWith('聚落 '))throw error;}
+  try{window=Math.max(window,resupplyDays(engine,seed,place,state));}catch(error){if(!isUnreachableSupply(error))throw error;}
   for(const o of origins){if(o===place)continue;const t=roundTripDays(engine,seed,o,place);if(t!==null)window=Math.max(window,t);}
  }
  return Math.ceil(window);

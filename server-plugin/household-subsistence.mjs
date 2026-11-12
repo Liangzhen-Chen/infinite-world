@@ -1,6 +1,7 @@
 // Daily self-provisioning: bounded journeys, shared work time, finite stocks.
 import {personHousehold,personAge,personConstraint,personRoutine,personEmployment,placeSettlement,lawAuthorities} from './entity-view.mjs';
 import {registerSubsistenceDuties,householdWorkTime,npcSchedule,lifeRoutine,npcServicePosts} from './npc-state.mjs';
+import {scheduleRecordDependencies} from './education-state.mjs';
 import {isEffective,isPhysicallyDead} from './lifecycle-state.mjs';
 import {bodyRule,bodyDrain,metabolismFactor,settlementMouths,mealMouthsOf} from './primitives-body.mjs';
 import {recordsWhere,recordsMemo,canonicalEqual,stateMemo,setRecordRow} from './storage.mjs';
@@ -112,10 +113,15 @@ const noMeal={shortfall:{satiety:0},needs:{hydration:0}};
 // 日程与雇佣与官职与节庆等记录、约定（obligations）、地点与路网（buildings、settlements、effects、remote）、
 // 采集来源（forest、site、household_forage 等记录）、时钟（minute，林木按钟点推演）。
 // npcs 只取位置、状态、日程/出行、成员标记、年龄成长等规划读到的字段，不含 inventory、coins（成交只改这两处）。
-const selfSupplyNpcFields=['location','status','caring','levy','cognitionTravel','scheduleTravel','materialized','routine','schedule','life','growth','residence','workplace','occupation','vocation','species','medical','activity','autonomy','zone','boss','incarnation','birth','born','age','home','attributes','skills','proficiencies','certifications','relationships','level'];
-const selfSupplyInputs=[...selfSupplyNpcFields.map(f=>['npcs','*',f]),['family'],['created'],['player'],['obligations'],['buildings'],['settlements'],['effects'],['remote'],['minute'],
- {path:['records'],kinds:['workshop','asset_lease']},
- {path:['records'],categories:['forest','forest_supply','household_forage','site','site_presence','site_discovery','site_observation','gather_session','authorization','water_cycle','physical_feature','facility_region','war_disruption','market_trip','service_appointment','service_ticket','project_assignment','transition','private_farm','governance_office','organization','housing_steward','legal_dismissal','festival','legal_detention','legal_custody','legal_case','legal_wanted','title','notable','office_salary','world_event']}];
+// 日程所读的记录类别与种类直接取 education-state.scheduleRecordDependencies（日程判等同一份声明：日程多读一类记录，这里自动跟上）；
+// 另加采集来源的记录（林木、资源点、觅食库存）。顶层切片补 projects（公共工程施工中开关，employment-state.mjs:79 经 baseNpcSchedule 读）、scheduler。
+// 依赖数组按身份分组记忆，所以只建一次（延迟到首次读取，避开模块循环引用）。
+const selfSupplyNpcFields=['diedAt','teachingBusy','practicing','activeDemonstration','location','status','caring','levy','cognitionTravel','scheduleTravel','materialized','routine','schedule','life','growth','residence','workplace','occupation','vocation','species','medical','activity','autonomy','zone','boss','incarnation','birth','born','age','home','attributes','skills','proficiencies','certifications','relationships','level'];
+const sourceRecordCategories=['forest','forest_supply','household_forage','site','site_presence','site_discovery','site_observation','gather_session','authorization','service_ticket','legal_wanted','office_salary','world_event'];
+let selfSupplyDeps=null;
+const selfSupplyInputs=()=>selfSupplyDeps??=[...selfSupplyNpcFields.map(f=>['npcs','*',f]),['family'],['created'],['player'],['obligations'],['buildings'],['settlements'],['effects'],['remote'],['projects'],['scheduler'],['minute'],
+ {path:['records'],kinds:scheduleRecordDependencies.kinds},
+ {path:['records'],categories:[...new Set([...scheduleRecordDependencies.categories,...sourceRecordCategories])]}];
 export function upkeepSelfSupply(e,state,owner){
  return stateMemo(state,e,[upkeepSelfSupplyMemo,owner,Math.floor(state.minute/DAY)],()=>{
   const plan=householdSubsistencePlan(e,state,owner,state.minute,state,noMeal,null,{
@@ -125,7 +131,7 @@ export function upkeepSelfSupply(e,state,owner){
   const out={};
   for(const trip of plan?.upkeepTrips??[])out[trip.cls]=(out[trip.cls]??0)+trip.units*trip.unitGrams;
   return out;
- },selfSupplyInputs);
+ },selfSupplyInputs());
 }
 registerUpkeepSelfSupply(upkeepSelfSupply);
 // The engine route resolver owns weather, closed roads, local rooms and tolls.

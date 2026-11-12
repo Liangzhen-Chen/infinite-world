@@ -13,7 +13,7 @@ import {budgetRead,householdResources,householdCommitments,householdUsage,househ
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
 import {mealMouthsOf} from './primitives-body.mjs';
-import {resupplyDays,itemResupplyDays} from './supply-interval.mjs';
+import {resupplyDays,itemResupplyDays,isUnreachableSupply} from './supply-interval.mjs';
 import {farmTargetFood} from './farm-target.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
@@ -287,9 +287,9 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // 率按名册户给出人均（名册户只给比例，没上名册的人口也要烧柴吃盐），乘聚落人口（公开量，与粮的餐口同一来源 settlement.population）。
   const use=goodsUse(engine,item);
   if(use){
-   // 不可达的成员（产地与本聚落不通，itemResupplyDays 报“聚落 …”）不是补货渠道，跳过；全不可达就走既有路径（按本件取，照常报错）。
+   // 不可达的成员（产地与本聚落不通，itemResupplyDays 抛 E-SUPPLY-UNREACHABLE）不是补货渠道，跳过；全不可达就走既有路径（按本件取，照常报错）。
    const reachable=[];
-   for(const it of items)try{reachable.push(daysOf(it.id));}catch(error){if(!String(error.message).startsWith('聚落 '))throw error;}
+   for(const it of items)try{reachable.push(daysOf(it.id));}catch(error){if(!isUnreachableSupply(error))throw error;}
    const horizon=reachable.length?Math.min(...reachable):daysOf(item),seen=new Set();let rosterPersons=0,viaMarket=0,owed=0;
    for(const id of Object.keys(state.npcs??{})){
     if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
