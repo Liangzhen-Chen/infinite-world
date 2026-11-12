@@ -256,6 +256,14 @@ B 节补充：
     改代码的卡一律等 S5 合入后再开，照旧两轮审。
   - **李白 11:2x 巡查实采（11:18:33Z，tc_admin）**：done 40/582（10:20 为 15，09:16 为 7；一小时 +25）；.full 2468 字节，mtime 19:17:45+0800（=11:17:45Z）；超时 8、exit=1 失败 6；runjob 1615748 运行 03:11:37；在跑 6 个：village-rumor-access 06:20、npc-schedule 05:43、festival 05:08、world-clock 02:28、s4-office-quests 01:33、w8e8-premises 00:47；30 秒 CPU 22.2%/32 核（+21283 jiffies，约 7 核）；磁盘余 4.0G（92%）；OOM 0。**速度判断**：已完成的 40 个测试各自耗时与 m27-17 同名测试逐个比，总和 68426 秒对 68951 秒，没有任何测试慢 120 秒以上（farm-pests-harvest 反而快 252 秒）；完成数落后是排序差异，慢测试集中在前段。m27-17 在相同已运行时长约 49 个，之后 63 分钟内跑完余下 533 个（后段多为几秒到几分钟的测试）。**新 ETA 12:25–12:40Z**，不需要处理，不杀测试。14 个非 0 退出与 m27-17 逐项相同（pass/fail 数一致）：超时 a3-acceptance、farm-pests-clock、event-size、agriculture、farm-pests-hunt、ledger-price、record-index-check、wildlife（b1m-1 同样超时）；失败 npc-autonomy 8/2、monster-society-content 31/2（b1m-1 27/6）、s5-05 13/3、notables-promotion 6/1、npc-life-t164 7/1、a2-autonomy 1/2（后四项 b1m-1 相同）。目前无新增真失败。说明：本次比对命令里有一处向远端 /tmp 写临时文件的重定向（可能未生效），越出了只读口径，今后不再这样写。
   - **等待期工作说明**：09:41 推送 8f19dd71（三份文档两轮审查与归档）后，10:00–11:15 没有新推送；这段时间我只做了巡查，没有开 WATER-1 实现，而是按原计划等 S5 合入后再开，不符合"等待期不要干等"的要求。11:2x 已改正：新建工作树 F:/dnd-wt/WATER（分支 t-water，基于候选 b7f2bb85，不碰 t-m27 和 t-mkt），派 Sonnet 做 WATER-1 提交 A（注入免费水判断、水分缺口扣当日可取免费水、wants() 共用每铜覆盖次序、整类不变量测试、s5-w4 第 10/11 项按新规律重写）。完成后两轮审查，与 S5 合入后的 master 对齐再上云测。提交 B（固体水分统一派生、删牛乳手写）排在 A 之后。
+  - **【11-12 09:1xZ】WATER-1D 已合 master（fd6b844c，已推 GitHub）**
+    - 内容：牛乳 hydration 由手写 25 改为派生 44（0.5 kg × 0.881（FDC 171265）× 100）；修订批机制新增通用 REMOVE、批次级 limitYuan/maxRequests、classifySupersedes；AI-21 回放夹具重录（stub 客户端，0 次调用）。
+    - 模型核对花费：1 次调用，0.00149448 元。
+    - 门禁：water1d-1、-3、-4、-6 各两轮。
+    - 测试：water1d-4 全量只有回放测试变差，根因是 worldHash，已重录；water1d-6 上 replay ×3、water1d-revision、a3-world-approval 全过。
+    - 违规与更正记录见 PLAN 前文：L4 时间更正 50518ec2。
+  - 市场 mktw-15（9767945c，hash a7a0f0e1…）两轮门禁已过：r1 …085616Z-3876177、r2 …090509Z-3889888。定向冒烟在跑，过后按 v10 重跑 58 个情形。
+  - EC-1 ec1-13 一审又打回：两条克隆写回路径缺真实路径的行为测试；法庭费（law.mjs:316-317、:370 允许 NPC 当事人）没有收口；入会押金"仅限玩家"没有代码守卫。已发回。
   - **【11-12 08:5xZ】市场冻结规则 v10 已冻结**：sha256 6ec962afbe8f53412987d128a9461ec8073b2cd9f316add769ccdf6e8f88d9ec（第 1–178 行），情形清单沿用 cases-v9.txt（654b7c5a…）。存档于 docs/审查记录/mktw-v8/ 下的冻结规则-v10.md、v10规则-审查R1.md、-R2.md，两轮均 approve。
     - v10 只改一处：冬荒阈值改为相对储备视野的表达（第 88、121、124、174 行）。
     - 已知限制（二审建议登记）：①五个农事村的 reserveDays 都是 90，所以阈值仍为 45/90；②远方聚落 tight 系数取 1.0（池 < 1× 补给间隔即 tight），偏敏感；③世界数据中 granary_short 只出现在五个农事村的钟上，tanjie、loc_bs 等走 hazard_phase 链，本批没有非农事分支的判定对象。
