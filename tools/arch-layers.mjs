@@ -49,6 +49,8 @@ put(['deterrence'],'L1');
 // S5-F/F2 legal-tender pricing and goods escrow sit beside currency and money; W5 deterministic math and the claim-unit label are leaves every layer may read.
 put(['tender','goods-escrow'],'L1');
 put(['det-math','claim-unit'],'L0');
+// INITFOOD: world-entities builds the entity rows from the world definition and has no imports (leaf), so it sits in the kernel.
+put(['world-entities'],'L0');
 // SL / K-line modules. Leaves read by the composition root and every layer: the breach-noting transaction hook, the species-trait
 // derivation (husbandry products from physiology, no per-species list) and the runtime-world assembler that applies it.
 put(['offense-notes','husbandry-traits','runtime-world','item-class','advance-registration'],'L0');
