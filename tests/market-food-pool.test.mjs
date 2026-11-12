@@ -12,6 +12,8 @@ import {personBusinesses,placeSettlement} from '../server-plugin/entity-view.mjs
 import {marketSupply,goodsClass,goodsWeight,foodSatiety} from '../server-plugin/market.mjs';
 import {stageReached} from '../server-plugin/seasonal-hazards.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
+import {openLedger} from '../server-plugin/ledger.mjs';
+import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));
 const quantity=v=>typeof v==='number'?v:v?.quantity??0;
@@ -66,6 +68,7 @@ test('同一可食池内，公仓粮与干粮读同一份供需：各食物报�
  if(a.demand>1&&b.demand>1)assert.ok(close(a.demand*wa,b.demand*wb),'需求按饱腹折算后应相同');
 });
 
+// 待重推：此用例的前提（需求含目标留存与缺口）已随持有口径作废——私户持有与缺口不再进供需；断言仍成立（供需都不变），保留不改值。
 test('需求 = 目标留存 + 缺口 + 承诺：非经营者买下一件货后，留存 +1、缺口 −1，需求不变，供给也不变',()=>{
  const {engine,doc}=setup(),read=document=>documentReader(document),inn='bld_hw_qingdeng',bread='item_bread',w0=goodsWeight(engine,bread),state=doc.state;
  const owners=new Set();
@@ -131,4 +134,63 @@ test('被测代码无新增按聚落、季节、物品 id 的分支（R5④ 扫�
  assert.equal(rules.settlementTrade.seasonFactors,undefined);
  // 本卡范围内的手写价格倍数已删：冬荒钟（全部）与砾泉旱情钟里没有 price_shift。
  for(const r of rules.hazardClock.clocks.filter(r=>r.kind==='famine'||r.id==='price:loc_bs_liquan'))for(const s of r.stages)assert.equal(s.effects.some(e=>e.kind==='price_shift'),false,`${r.id}:${s.id}`);
+});
+
+// 粮仓覆盖率夹具：只留 loc_hw 一个聚落，居民背包清空（卖方存货为 0），粮仓存粮 S、人口 p 可调；账本按该状态重开。
+function granaryFixture({food,population}){
+ const w=structuredClone(world);for(const n of w.npcs){delete n.schedule;delete n.tier;}
+ const engine=new WorldEngine(w),doc=engine.createCharacter(legacy,{},'market-food-pool-coverage');
+ delete doc.state.records['agriculture:loc_hw'];
+ for(const n of Object.values(doc.state.npcs))n.inventory={};
+ doc.state.settlements={loc_hw:{...doc.state.settlements.loc_hw,population,granary:true,food,foodPerDay:0,woodPerDay:0}};
+ doc.ledger=openLedger(engine,doc);
+ return {engine,doc};
+}
+
+test('稀缺度 = 目标持有 ÷ 实际持有，随覆盖率连续单调',()=>{
+ const inn='bld_hw_qingdeng',oats='item_oats',S=27000;
+ // 推导：覆盖率 c = 粮仓实际持有 ÷ 粮仓储备目标，目标 = 餐口 × reserveDays（loc_hw 在农事表里，reserveDays=90）。
+ // 取存粮 S=27000 = 90×300，使各点人口为整数：c=1.5 → 餐口 200（目标 18000）；c=1.0 → 300（27000）；c=0.5 → 600（54000）；c=0.2 → 1500（135000）；c=0 → 存粮 0、人口 300。
+ // 居民背包全清空，卖方存货为 0，所以 实际持有 = S（c=0 时为 0）；需求 = 目标 + K，K = 货架目标 + 合同承诺，与覆盖率无关（各点 demand−target 应相等）。
+ // 稀缺度 = 夹取(需求 ÷ max(1, 供给)，priceFactorLimits.region)：
+ //   c=1.5 → (18000+K)/27000 ≈ 0.667；c=1.0 → (27000+K)/27000 ≈ 1；c=0.5 → (54000+K)/27000 ≈ 2；c=0.2 → (135000+K)/27000 ≈ 5 → 顶 3；c=0 → 供给 0，分母取 1，→ 顶 3。
+ // 夹取上限取规则 limits[1]（=3）；下方断言按各点推得的比值再夹取，不读被测函数的稀缺度。
+ const points=[[1.5,27000,200],[1.0,27000,300],[0.5,27000,600],[0.2,27000,1500],[0,0,300]];
+ const result=points.map(([c,food,population])=>{
+  const {engine,doc}=granaryFixture({food,population}),limits=engine.rules.economy.priceFactorLimits.region;
+  const mouths=mealMouthsOf(engine,doc.state,'loc_hw',population),reserveDays=engine.rules.agriculture.settlements.find(p=>p.settlement==='loc_hw').reserveDays;
+  const target=Math.ceil(mouths*reserveDays),s=marketSupply(documentReader(doc),engine,oats,inn);
+  assert.equal(s.spotSupply,food,`c=${c} 实际持有 = 粮仓全部库存（不先扣储备）`);
+  return {c,limits,target,supply:s.spotSupply,demand:s.demand,K:s.demand-target};
+ });
+ // 目标与覆盖率的关系：S ÷ 目标 = c。
+ for(const r of result.slice(0,4))assert.ok(Math.abs(27000/r.target-r.c)<=1e-9,`覆盖率 ${r.c}`);
+ // K 与覆盖率无关：五点相同。
+ for(const r of result)assert.ok(Math.abs(r.K-result[0].K)<=1e-9*Math.max(1,r.target),`K 常数 ${r.c}`);
+ assert.ok(result[0].K>=0);
+ const scarcity=r=>Math.min(r.limits[1],Math.max(r.limits[0],r.demand/Math.max(1,r.supply)));
+ const K=result[0].K,expected=[(18000+K)/27000,(27000+K)/27000,(54000+K)/27000,Math.min(3,(135000+K)/27000),3];
+ result.forEach((r,i)=>assert.ok(Math.abs(scarcity(r)-Math.min(r.limits[1],expected[i]))<=1e-9,`c=${r.c} 稀缺度`));
+ // 连续单调：覆盖率越低稀缺度越高；恰在目标时（c=1，K 相对 27000 极小）约为 1，c=1.5 约 0.67，c=0.5 约 2，c≤0.33 顶 3。
+ const values=result.map(scarcity);
+ for(let i=1;i<values.length;i++)assert.ok(values[i]>=values[i-1],`单调 ${i}`);
+ assert.ok(values[0]<values[1]&&values[1]<values[2]&&values[2]<values[3],'中间点严格递增，没有二值悬崖');
+ assert.equal(values[3],result[3].limits[1]);assert.equal(values[4],result[4].limits[1]);
+ // 0 供给时不除零：分母取 1，结果有限且被上限夹住。
+ assert.ok(Number.isFinite(values[4]));
+});
+
+test('私户背包变化不影响报价（I12）：非经营者多持多少货，供给与需求都不变',()=>{
+ const {engine,doc}=setup(),inn='bld_hw_qingdeng',state=doc.state,owners=new Set();
+ for(const store of engine.rules.economy?.shops?.stores??[])owners.add(store.keeper);
+ for(const npc of engine.world.npcs)if(npc.shopType||(npc.services??[]).includes('trade'))owners.add(npc.id);
+ for(const [id,business]of personBusinesses(engine,state))if(business?.open.value&&business.shopType.value)owners.add(id);
+ const pick=Object.keys(state.npcs).find(id=>!owners.has(id)&&placeSettlement(engine,state,state.npcs[id].location).value==='loc_hw');
+ assert.ok(pick,'聚落里需要一位非经营者');
+ // 推导：非经营者的背包不是定价方知道的量（I12），实际持有、目标留存、缺口都不进供需；给他 500 件燕麦与 500 件面包，报价的供给、需求恒等。
+ const given=applyIntentSetup(engine,doc,{facts:[{path:['state','npcs',pick,'inventory','item_oats'],value:500},{path:['state','npcs',pick,'inventory','item_bread'],value:500}]});assert.deepEqual(given.setupUnmet,[]);
+ for(const item of ['item_oats','item_bread']){
+  const a=marketSupply(documentReader(doc),engine,item,inn),b=marketSupply(documentReader(given.document),engine,item,inn);
+  assert.equal(b.supply,a.supply,item);assert.equal(b.demand,a.demand,item);assert.deepEqual(b.rows,a.rows,item);
+ }
 });

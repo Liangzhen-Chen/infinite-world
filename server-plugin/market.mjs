@@ -213,13 +213,17 @@ function cheapestOfClass(state,engine,place,cls){
  memo.set(key,best);return best;
 }
 const cheapestMemo=new WeakMap();
+// 稀缺度 = 目标持有 ÷ 实际持有，两边同一口径（持有量，存量对存量），随覆盖率连续单调（存量恰在目标时为 1）。
+// 这是世界客观的价格输入，不是某个 NPC 的主观视图；按 02-不变量 I12，只计定价方能公开知道的量：
+//  实际持有（供给）= 聚落粮仓/仓库公账的全部库存 + 经营者与居民卖方的存货（店铺货架、公开在售）；
+//  目标持有（需求）= 粮仓储备目标（餐口 × reserveDays；不在农事表里的聚落沿用周贸易规则的 targetDays）+ 货架目标（maximum+reserve）+ 合同承诺。
+// 非经营者私户的背包（实际持有、目标留存、柴盐缺口、饱腹缺口）两边都不计：他人背包的客观余量不是定价方知道的事，也没有公开的求购/下单记录可读。
+// 供给近 0 时由调用方的分母保护（max(1,supply)）与 priceFactorLimits.region 夹取封顶，不会除零。
 function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  const state=stateOf(d),place=settlementOf(engine,state,location),goods=goodsClass(engine,item),rows=[];
  // 供给与需求都按报价这件货的件数表达：池内每件货按权重（可食物资 = 饱腹）折算后再除以报价货的权重。
  // 非可食池权重全为 1，等于按件数，与此前一致。
  const unit=goodsWeight(engine,item),items=engine.world.items.filter(i=>goodsClass(engine,i.id)===goods),weight=new Map(items.map(i=>[i.id,goodsWeight(engine,i.id)]));
- const edible=items.some(i=>goodsEdible(engine,i.id));
- let personalDemand=0; // 池内单位（可食池为饱腹）
  const owners=new Set(businessOwners);
  for(const store of engine.rules.economy?.shops?.stores??[])owners.add(store.keeper);
  for(const npc of engine.world.npcs)if(npc.shopType||(npc.services??[]).includes('trade'))owners.add(npc.id);
@@ -228,20 +232,11 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
  // 通用 serviceCatalog.trade 只允许人对人交易，不等于开店；经营类型才是营业身份。
  for(const [id,business]of personBusinesses(engine,state))if(business?.open.value&&business.shopType.value)owners.add(id);
  for(const id of ['player',...Object.keys(state.npcs??{}),...Object.keys(state.creatures??{})]){
-  if(settlementOf(engine,state,locationOf(state,id))!==place)continue;
-  // One read-only household allocation serves all items in this quote. No
-  // writes occur in the loop; repeated allocation cannot change the budget.
+  if(!owners.has(id)||settlementOf(engine,state,locationOf(state,id))!==place)continue;
+  // One read-only household allocation serves all items in this quote. No writes occur in the loop.
   const budget=householdResources(d,engine,id);
-  // 同一户的柴（盐）缺口按被报价的这件货折件数计一次，不按同类每种货重复计。
-  personalDemand+=upkeepDemand(state,engine,id,item)*unit;
-  // 需求 = 目标留存 + 未满足缺口 + 承诺（与货在谁手里无关）：缺口取预算的 procurementShortfall（饱腹单位），一户只记一次（记在户里编号最小的成员名下）。
-  // 买下一件货使持有的留存 +1、缺口 −1，需求不变，价格只随供给减少而动。
-  if(edible&&budget.members?.length&&[...budget.members].sort()[0]===id)personalDemand+=budget.procurementShortfall?.satiety??0;
-  for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;
-   if(owners.has(id))rows.push({...row,unit:weight.get(it.id)/unit});
-   // 日用留存（row.upkeep）的需要已由上面的 upkeepDemand 表达（一户一次）；持有量不再叠加成需求，否则自给越多柴价越高。
-   else personalDemand+=(row.retained-row.upkeep+row.committed)*weight.get(it.id); // 只排除私人供给，保留原有消费与承诺需求。
-  }
+  // 卖方存货按全部持有计（不先扣自用留存：留存是私人目标，不公开）。
+  for(const it of items){const row=budgetStock(budget,id,it.id);if(!row.stock)continue;rows.push({...row,available:row.stock,unit:weight.get(it.id)/unit});}
  }
  const profile=engine.rules.agriculture?.settlements.find(p=>p.settlement===place),settlement=state.settlements?.[place];
  for(const it of items){
@@ -253,20 +248,16 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   const stock=stockName==='food'
    ?priceRead(d,{point:'region.grain',account:granary(engine,place),lots:{kind:'grain',after:day},legacy:()=>farm?.batches?.filter(b=>b.kind==='grain'&&b.expiresDay>day).reduce((n,b)=>n+b.amount,0)??settlement.food??0})
    :priceRead(d,{point:'region.material',account:settlementStock(engine,place,stockName),legacy:()=>settlement[stockName]??0});
-  // 公仓可售份额 = 库存 − 口粮储备（餐口 × reserveDays）− 承诺；需求里计入的公仓储备目标 = 餐口 × 一个交易周期（economy.tradeCycleDays），
-  // 不是 90 天整份储备（储备已在供给里扣过一次，不能再整份算进需求）。不在农事表里的聚落没有 reserveDays，其目标日数取周贸易规则的 targetDays
-  // （原 forest-water 的燕麦缺口因子：餐口 × targetDays ÷ 存粮，现并入这里，不再单独乘）。
-  const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0,cycle=engine.rules.economy?.tradeCycleDays??1;
-  const retained=stockName==='food'?Math.ceil(mouths*(profile?.reserveDays??1)):0;
-  const target=stockName==='food'?Math.ceil(mouths*(profile?cycle:engine.rules.settlementTrade?.targetDays??cycle)):undefined;
-  const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,retained,target,committed,available:Math.max(0,stock-retained-committed),unit:weight.get(it.id)/unit});
+  // 粮仓实际持有 = 全部库存；储备目标 = 餐口 × reserveDays（与口粮池、公粮扣采购同一份储备口径）。
+  // 不在农事表里的聚落没有 reserveDays，其目标日数取周贸易规则的 targetDays（原 forest-water 的燕麦缺口因子：餐口 × targetDays ÷ 存粮，已并入这里）。
+  const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0;
+  const target=stockName==='food'?Math.ceil(mouths*(profile?profile.reserveDays:engine.rules.settlementTrade.targetDays)):0;
+  const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,target,committed,available:stock,unit:weight.get(it.id)/unit});
  }
  const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);
- // Shelf ceilings and household retention are actual demand inputs.
- // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店；居民口粮需求是每位持有人（含户内成员）的储备目标，
- // 已在上面 rows.retained 与 personalDemand 中逐户计入，聚落粮仓另计全村储备——这里不再重复计入口粮需求。
+ // F026：货架读全部商铺（含按人物派生的），不再只读登记的几家静态店。货架目标 = 各店各货 maximum+reserve。
  const shelf=(shopShelves(engine,place)??(engine.rules.economy?.shops?.stores??[]).filter(s=>s.settlement===place).flatMap(s=>s.restock??[])).filter(r=>items.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight.get(r.item),0)/unit;
- const demand=Math.max(shelf,personalDemand/unit+rows.reduce((n,r)=>n+((r.target??r.retained-(r.upkeep??0))+r.committed)*r.unit,0),1);
+ const demand=Math.max(shelf+rows.reduce((n,r)=>n+((r.target??0)+r.committed)*r.unit,0),1);
  return {place,goods,supply,demand,rows};
 }
 // 同一状态版本内（游标 revision / 只读作用域内同一状态对象，任何状态与账本写入即换版本）marketSupply 是 (item, location, businessOwners)
