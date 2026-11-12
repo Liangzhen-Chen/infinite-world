@@ -13,7 +13,8 @@ import {settleFinancialClaim} from '../server-plugin/finance-bank.mjs';
 import {transfer,declareLedgerWriter,emptyLedger} from '../server-plugin/ledger.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
 import {customerPurseShare,marketQuote,quoteSupply,customerReachMinutes,saleableStock} from '../server-plugin/market.mjs';
-import {householdBudget} from '../server-plugin/household-budget.mjs';
+import {householdBudget,householdDailyUse} from '../server-plugin/household-budget.mjs';
+import {personHousehold} from '../server-plugin/entity-view.mjs';
 import {npcDecision} from '../server-plugin/npc-decision.mjs';
 import {subjectiveView} from '../server-plugin/subjective-view.mjs';
 import {currentShops} from '../server-plugin/shop.mjs';
@@ -35,9 +36,24 @@ test('F048 分红：收付双方不在场时不凭空转账，形成到期应付
     f.doc=applyIntentSetup(f.e,f.doc,{facts:[{path:['state','inventory'],value:{item_wood:{quantity:13}}}]}).document;
     // 公共木料S28、D1，稀缺下限.5；报价4×.5×.6=1.2，议价带[.9,1.1]的整数边界均ceil为2，5份实付10铜。
     const acquired=await f.act({buyer:host,seller:'player',item:'item_wood',quantity:5,unitPrice:2},'stock');assert.equal(acquired.cost,10);
+    // EC-1a 共灶后规律（market.mjs saleableStock → household-budget.mjs reserveUpkeep）：店主户（林穗+阿燕共灶）的家用燃料按“日用量×交易周期（economy.tradeCycleDays=7）”留在家里，
+    // 留存件数 = min(存量, ceil(日用件数×周期))，从可售量里扣除。刚收购的 5 份全落在留存里：存量5、upkeep5、可售0，转售会被拒（这是规律本身，不是缺陷）。
+    // 前置核对（全部从引擎读出）：户员、日用量、留存目标 reserve=ceil(日用×周期)；收购 5 份后可售量为 0。
+    const stockOf=()=>saleableStock(f.e.primitiveDraft(f.doc),f.e,host,'item_wood',{business:true});
+    const members=personHousehold(f.e,f.doc.state,host).value.members.filter(m=>f.doc.state.npcs[m]);
+    const reserve=Math.ceil(householdDailyUse(f.e,f.doc.state,members,'item_wood')*f.e.rules.economy.tradeCycleDays);
+    assert.ok(members.includes(worker)&&reserve>5,'precondition: the keeper household cooks together and its fuel reserve exceeds the 5 just bought');
+    assert.deepEqual([stockOf().stock,stockOf().upkeep,stockOf().available],[5,5,0],'precondition: after buying 5 the saleable quantity is 0 (all of it is the household fuel reserve)');
+    // 要转售 5 份，店主得先有 reserve+5 份：再收购 reserve 份（按 5 份一批、余数一批，各 ≤5 即零售口径）。
+    // 第 2 批：S33、net=-5、opening28，深度1−.2×5/28；报价4×.5×.9643×.6≈1.157，整数边界 ceil(.9×1.157)=ceil(1.04)=2、ceil(1.1×1.157)=2，5份实付10铜。
+    // 第 3 批（余数 reserve−5 份）：net=-10、深度1−.2×10/28，报价≈1.114；.9×1.114≈1.003、1.1×1.114≈1.23，整数边界为 [1或2, 2]，单价2必合法，每份2铜。
+    // 三批合计 5+5+(reserve−5)=reserve+5 份，成本批次按先进先出：最早一批 5 份成本 10。
+    const second=await f.act({buyer:host,seller:'player',item:'item_wood',quantity:5,unitPrice:2},'stock-2');assert.equal(second.cost,10);
+    const third=await f.act({buyer:host,seller:'player',item:'item_wood',quantity:reserve-5,unitPrice:2},'stock-3');assert.equal(third.cost,2*(reserve-5));
+    assert.deepEqual([stockOf().stock,stockOf().upkeep,stockOf().available],[reserve+5,reserve,5],'precondition: reserve+5 in stock, reserve kept, exactly 5 saleable');
     const own=await f.act({operation:'invest',seller:host,quantity:20,consent:true},'invest');
-    // 收购后S33、net=-5、opening28，深度1−.2×5/28；报价4×.5×深度×.99895≈1.9265，整数上界ceil(报价×1.1)=3。
-    // 按合法单价3零售原来的5份，实收15铜；日成交10≤开市28。
+    // 收购 reserve+5=11 份后S39、net=-11、opening28，深度1−.2×11/28≈.9214；报价4×.5×.9214×.99895≈1.841，整数上界ceil(报价×1.1)=ceil(2.03)=3。
+    // 按合法单价3零售最早的5份，实收15铜；日成交 11+5=16≤开市28。
     const sale=await f.act({seller:host,item:'item_wood',quantity:5,unitPrice:3},'sale');assert.equal(sale.cost,15);
     const tax=f.doc.state.records['trade_tax:sale:commercial']?.amount??0;
     // 收入15、FIFO成本10，减实际商税；分红floor((15−10−税)×20%)。
