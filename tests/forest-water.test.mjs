@@ -264,13 +264,15 @@ test('P3统计粮食产出也扣灌溉水，无详细农田的远方聚落遇旱
    for(const kind of Object.keys(w.rules.forestWater.water.rainShare))w.rules.forestWater.water.rainShare[kind]=rain;
   });
   // 夹具意图：统计田地（不在农事表）开局存粮正好等于它的目标持有，使粮价稀缺度落在夹取区间内，旱年少产的粮才会显现在价格上。
-  // 统计田地自己产粮（foodPerDay>0）却连不到任何农事聚落：它的供粮源就是它自己，目标持有按自产口径手推（不调用被测的 resupplyDays / 目标原语）：
-  //  目标持有 = ceil(餐口 × 目标日数)，目标日数 = 距下次收获天数 + 一个交易周期（economy.tradeCycleDays）；
-  //  收获日（年内第几日）= crop.sowDays[1] + crop.growthDays，一年 360 日；餐口 = 人口（夹具无异族）。
+  // 统计田地自己产粮（foodPerDay>0）：供粮源就是它自己，目标持有按自产口径手推（期望不调用被测的 resupplyDays / 目标原语）：
+  //  统计产粮每天入仓、没有收获日，储备视野 = max(生产间隔 1 天, 一个交易周期 economy.tradeCycleDays)（与 itemResupplyDays 本地产地同口径）；
+  //  目标持有 = ceil(餐口 × 视野)；餐口 = 人口（夹具无异族）。目标与日期无关。
   const farmId='loc_rw_statfarm',pop=100;
   x.d.set(['state','settlements',farmId],{name:'统计田地',population:pop,food:0,foodPerDay:120,wood:0,woodPerDay:0,stone:0,iron:0,treasury:0});
-  const selfTarget=minute=>{const c=x.engine.rules.agriculture.crop,harvest=c.sowDays[1]+c.growthDays,doy=Math.floor(minute/DAY)%360;return Math.ceil(pop*(((harvest-doy)%360+360)%360+x.engine.rules.economy.tradeCycleDays));};
-  assert.throws(()=>resupplyDays(x.engine,x.d.get('randomSeed'),farmId),/到不了任何供粮/,'前置：统计田地确实连不到农事聚落（不给自产信息时无补给间隔）');
+  const selfTarget=()=>Math.ceil(pop*Math.max(1,x.engine.rules.economy.tradeCycleDays));
+  assert.ok(!x.engine.rules.agriculture.settlements.some(p=>p.settlement===farmId),'前置：统计田地不在农事表');
+  assert.equal(resupplyDays(x.engine,x.d.get('randomSeed'),farmId,x.d.get('state')),Math.max(1,x.engine.rules.economy.tradeCycleDays));
+  assert.throws(()=>resupplyDays(x.engine,x.d.get('randomSeed'),farmId),/需要聚落状态/,'没有聚落状态就无法判断自产，直接报错而不是给错值');
   assert.equal(mealMouthsOf(x.engine,x.d.get('state'),farmId,pop),pop,'前置：餐口 = 人口');
   const heldTarget=selfTarget(x.d.get('state','minute'));
   assert.ok(heldTarget>0);x.selfTarget=selfTarget;

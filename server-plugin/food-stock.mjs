@@ -23,5 +23,5 @@ export function foodStockDays(d,engine,place){
 export function shortThresholdDays(d,engine,place,days){
  const farm=engine.rules.agriculture?.settlements??[],own=farm.find(p=>p.settlement===place),reference=farm[0]?.reserveDays;
  if(own)return days/reference*own.reserveDays;
- return days/reference*resupplyDays(engine,d.get('randomSeed'),place,{minute:d.get('state','minute'),state:d.get('state')});
+ return days/reference*resupplyDays(engine,d.get('randomSeed'),place,d.get('state'));
 }

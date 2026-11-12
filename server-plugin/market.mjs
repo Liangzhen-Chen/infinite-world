@@ -259,7 +259,7 @@ function stockSupply(d,engine,item,location,{businessOwners=[]}={}){
   // 不在农事表里的聚落：粮靠外来补给，目标日数 = 实际补给间隔（resupplyDays：最近供粮聚落的往返路程天数）。
   const mouths=stockName==='food'?mealMouthsOf(engine,state,place,settlement.population??0):0;
   // 农事聚落的目标还受粮仓容量限制（farmTargetFood：min(餐口 × 目标日数, 容量 − 种粮)），所有农事聚落一律适用。
-  const target=stockName==='food'?(profile?farmTargetFood(engine,state,profile,state.minute):Math.ceil(mouths*resupplyDays(engine,d.get('randomSeed'),place,{minute:state.minute,state}))):0;
+  const target=stockName==='food'?(profile?farmTargetFood(engine,state,profile,state.minute):Math.ceil(mouths*resupplyDays(engine,d.get('randomSeed'),place,state))):0;
   const committed=commitments(state,place,it.id);rows.push({owner:place,item:it.id,stock,target,committed,available:stock,unit:weight.get(it.id)/unit});
  }
  const supply=rows.reduce((n,r)=>n+r.available*r.unit,0);
