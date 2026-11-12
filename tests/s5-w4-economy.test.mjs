@@ -13,6 +13,7 @@ import {borrowerTerms} from '../server-plugin/finance-bank.mjs';
 import {settleFinancialClaim} from '../server-plugin/finance-bank.mjs';
 import {transfer,declareLedgerWriter,emptyLedger} from '../server-plugin/ledger.mjs';
 import {reconcile} from './helpers/ledger-audit.mjs';
+import {handOatsScarcity,handSatiety} from './helpers/hand-targets.mjs';
 import {customerPurseShare,marketQuote,quoteSupply,customerReachMinutes,saleableStock} from '../server-plugin/market.mjs';
 import {householdBudget} from '../server-plugin/household-budget.mjs';
 import {npcDecision} from '../server-plugin/npc-decision.mjs';
@@ -86,15 +87,16 @@ test('F048 租金：房客与业主不在同处时不转账，形成应付且不
 // ---------------------------------------------------------------- F007 / F058
 test('F007 典当按整批清算估值而非目录基价，预支率 50%',async()=>{
     const f=fixture();await f.act({operation:'deposit',seller:clerk,coins:10},'dep');
+    // 本夹具是旧存档形状：公仓粮只有 420（不是开局日的目标持有），而农事目标持有按规律是 17110（handTarget：餐口 × (距收获天数 + 保留天数)，被容量封顶），
+    // 食物池比值 = 需求 ÷ 供给 远大于区域夹取上限 3：手推比值（handOatsScarcity，供给再加上押进来的 10 个面包折成燕麦件数）仍 ≥ 上限，
+    // 所以清算曲线整段都钉在上限：清算值 = 基价 2 × 上限 3 × 10 件 × 品质 1 = 60（不是积分曲线，也不是目录价 20）；预支 floor(60 × 0.5) = 30。
+    const [,cap]=f.e.rules.economy.priceFactorLimits.region,hand=handOatsScarcity(f.e,f.doc.state,f.doc.state.settlements.loc_hw.food),satB=handSatiety(f.e,'item_bread'),satO=handSatiety(f.e,'item_oats');
+    assert.ok(hand.target/(hand.held+10*satB/satO)>=cap,`前置：押入 10 个面包后比值仍不小于上限 ${cap}`);
     const p=await f.act({operation:'pawn',seller:clerk,item:'item_bread',quantity:10,days:1},'pawn');
-    // S=20、D=24，10>零售阈值5：清算值floor(2×24×ln(30/20))=floor(19.46)=19；预支floor(19×.5)=9。
-    // （目录基价口径会得到 2 × 10 × 0.5 = 10 铜。旧锚点 D=18 → 14 → 7。）
-    // 新 D=24：同聚落非商家持有人的留存之和 玩家3+申杜4+阿衍8+陈柏4+顾岑5；变化来自面包饱腹改推导（30→16，每口留存 ceil(60/16)=4 份，c0a7ea22，PLAN.md:584、591③）。
-    // 供给 S=20（supplyApart 去掉持有人自己那批后，林穗店面包）不变。李白 11-11 (a)（PLAN.md:540）。
-    // 证据：F:/dnd/docs/审查记录/市场价格-探针输出-mkt-5.txt，复算 市场价格-独立复算-A.md、-B.md（s5-w4-economy-3：principal 9、pledgeValue 19）。断言仍为精确相等。
     assert.equal(f.e.rules.economy.credit.pawn.advanceRatio,0.5);
-    assert.equal(p.principal,9);
-    assert.equal(f.doc.state.records[p.contract].pledgeRecord&&f.doc.state.records[f.doc.state.records[p.contract].pledgeRecord].value,19,'押品值 = 清算估值');
+    const pledge=2*cap*10;assert.equal(f.e.byId.get('item_bread').basePrice,2);
+    assert.equal(p.principal,Math.floor(pledge*0.5));
+    assert.equal(f.doc.state.records[p.contract].pledgeRecord&&f.doc.state.records[f.doc.state.records[p.contract].pledgeRecord].value,pledge,'押品值 = 清算估值');
 });
 
 // ---------------------------------------------------------------- F085
