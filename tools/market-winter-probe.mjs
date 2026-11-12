@@ -176,8 +176,9 @@ function setPoolCoverage(engine,doc,sid,level){
 // D₁ = 同一世界、同一日、level 1.0 夹具后实测的 D；D目标 = 0.6 × famine 阈值天数（规则里 granary_short 的 45）= 27 天；level_g = D目标 ÷ D₁；
 // 夹具后第 0 天闸门：再测 D_g，须在 D目标 的 ±25% 内且低于 famine 阈值，level_g < 1，否则记"夹具不足（foodStockDays 偏离公式预期或未低于阈值）"。输出规则要求的全部读数。
 const granaryShortDays=stage=>{let out=null;const walk=c=>{if(c?.kind==='all')c.conditions.forEach(walk);else if(c?.kind==='granary_short'&&out===null)out=c.days;};walk(stage.condition);return out;};
+// 阈值一律从完整世界（world0）读：noclock 运行把钟清掉后引擎里没有冬荒钟，读不到阈值；两侧必须用同一份阈值，唯一的区别只能是有没有钟。
 function famineThresholds(engine,sid){
- const clock=(engine.rules.hazardClock?.clocks??[]).find(r=>r.id===`famine:${sid}`),by={};
+ const clock=(world0.rules.hazardClock?.clocks??[]).find(r=>r.id===`famine:${sid}`),by={};
  for(const s of clock?.stages??[])by[s.id]=granaryShortDays(s);
  return {tight:by.tight??null,famine:by.famine??null};
 }
@@ -286,8 +287,17 @@ async function cellRun(name,mode,season,level,sid,opts={}){
  // level 'Lg' = level_g（冬荒钟夹具，setLevelG 由实测 D₁ 按比例推出并做第 0 天闸门）。
  const fixture=opts.fixture==='zero'?setPoolHold(engine,ctx.doc,sid,0):opts.fixture==='tiny'?setPoolHold(engine,ctx.doc,sid,1):level==='Lg'?setLevelG(engine,ctx.doc,sid):setPoolCoverage(engine,ctx.doc,sid,level);
  const set=fixture.set,gateVerdict=fixture.verdict??null;
+ // C2 核对：noclock 侧的 level_g 夹具必须与有钟一侧（winter-without-Lg 的同一世界，只差有没有钟）完全相同——这里在同日重建有钟一侧做一次同样的夹具，逐项比较。
+ let c2FixtureCheck=null;
+ if(level==='Lg'&&mode==='noclock'){
+  const rb=buildWorld(true),rw=rb.w;rw.rules.hazardClock.clocks=rw.rules.hazardClock.clocks.filter(r=>keep.has(r.id));
+  const refEngine=new WorldEngine(rw),refCtx={engine:refEngine,doc:refEngine.createCharacter(legacy,{},'mktw-winter-probe')};
+  await advanceTo(refCtx,(season==='winter'?630*DAY:545*DAY)+600,season);
+  const ref=setLevelG(refEngine,refCtx.doc,sid);
+  c2FixtureCheck={levelGEqual:ref.levelG===fixture.levelG,D1Equal:ref.D1===fixture.D1,DgEqual:ref.Dg===fixture.Dg,withClockSide:{levelG:ref.levelG,D1:ref.D1,Dg:ref.Dg},noclockSide:{levelG:fixture.levelG,D1:fixture.D1,Dg:fixture.Dg}};
+ }
  const head={kind:'cell',case:name,mode,control:mode==='noclock'?'C2':'C1',settlement:sid,season,level:opts.fixture?(opts.fixture==='zero'?0:null):level,fixture:opts.fixture??'coverage',pairKey:`${sid}|${season}|${level}`,strippedClasses:[],stripped:0,stagesDeleted:[],
-  seasonFactorsRemoved:b.seasonFactorsRemoved,priceShiftEffectsInWorld:b.shiftCount,clocksRemoved,closure,closureMatches,granarySet:set,fixtureDetail:fixture,jumped:ctx.jumped??false};
+  seasonFactorsRemoved:b.seasonFactorsRemoved,priceShiftEffectsInWorld:b.shiftCount,clocksRemoved,closure,closureMatches,granarySet:set,fixtureDetail:fixture,c2FixtureCheck,jumped:ctx.jumped??false};
  const rows=[];
  const out=row=>{rows.push(row);emit(row);};
  const snap=extra=>{const items=ITEMS.map(i=>itemView(engine,ctx.doc,i,sid));return {...head,...extra,seasonIndex:engine.calendar(ctx.doc.state.minute).season,calendar:engine.calendar(ctx.doc.state.minute).text,minute:ctx.doc.state.minute,
