@@ -3,7 +3,10 @@ import assert from 'node:assert/strict';
 import {mealMouthsOf} from '../../server-plugin/primitives-body.mjs';
 import {foodSatiety} from '../../server-plugin/market.mjs';
 import {granaryCapacity} from '../../server-plugin/facility-state.mjs';
-import {placeSettlement} from '../../server-plugin/entity-view.mjs';
+import {placeSettlement,personBusinesses,settlementPopulation} from '../../server-plugin/entity-view.mjs';
+import {isItemClass,craftingParam} from '../../server-plugin/item-class.mjs';
+import {usageItemGrams,upkeepSelfSupplyOf} from '../../server-plugin/household-budget.mjs';
+import {shopStores,derivedShops} from '../../server-plugin/shop.mjs';
 
 // 农事聚落粮食目标持有 = min(ceil(餐口 × 目标日数), 粮仓容量 − 种粮)：
 //  · 目标日数 = 距下次收获天数 + reserveDays；收获日（年内第几日）= crop.sowDays[1] + crop.growthDays，一年 360 日，当日是收获日则距收获 0 天；
@@ -81,4 +84,29 @@ export function handFoodDepth(engine,state,item,place='loc_hw'){
     const net=deals.reduce((n,r)=>n+(r.side==='sell'?r.quantity:-r.quantity)*sat(r.item)/sat(item),0);
     const held=handOatsScarcity(engine,state,state.settlements[place].food,place).held*sat('item_oats')/sat(item);
     return {net,depth:Math.max(0,1+engine.world.marketRules.depthImpact*net/Math.max(1,held+net))};
+}
+// 燃料用度池某件货的区域价手推（不读 marketSupply 与报价解释）：价 = 目录基价 × 夹取(需求 ÷ max(1,供给))（环境、运输因子 1：产地在本聚落，调用方断言）。
+// 前置（本函数内断言）：夹具里每户自给为 0（调用方把 householdSubsistence.maximumJourneyMinutes 压到 1）、没有派生店铺、没有制造耗料记录、补给间隔 = 交易周期。
+//  · 供给 = (公仓木料 × 木基准克 + 本聚落各经营者行囊里的燃料类货 × 各自基准克) ÷ 报价货基准克；
+//  · 需求 = max((货架燃料行 (maximum+reserve) × 基准克 + 补给间隔 × 日用度 × 聚落户数 + Σ名册户欠量) ÷ 报价货基准克, 1)；日用度 = (炊事 + 当季取暖公斤) × 1000。
+export function handFuelPrice(engine,state,item,place='loc_hw'){
+    const cycle=engine.rules.economy.tradeCycleDays,cls='fuel',weight=id=>usageItemGrams(engine,id,cls),unit=weight(item),q=v=>typeof v==='number'?v:v?.quantity??0;
+    const pool=engine.world.items.filter(i=>isItemClass(engine,i.id,cls)&&!(i.nutrition?.satiety>0)&&weight(i.id)>0);
+    assert.ok(engine.world.recipes.filter(r=>r.output?.item==='item_wood').every(r=>r.minutes<=cycle*1440),'前置：木料本地生产周期不超过交易周期');
+    assert.equal(state.records?.[`craft-use:${place}`],undefined,'前置：没有制造耗料记录');
+    assert.deepEqual(derivedShops(engine.world),[],'前置：没有按人物派生的店铺');
+    const stores=shopStores(engine.world),owners=new Set([...stores.map(s=>s.keeper),...engine.world.npcs.filter(n=>n.shopType||(n.services??[]).includes('trade')).map(n=>n.id)]);
+    for(const [id,business] of personBusinesses(engine,state))if(business?.open.value&&business.shopType.value)assert.ok(owners.has(id),`前置：派生的营业者 ${id} 已在经营者集合里`);
+    const roster=Object.keys(state.npcs).filter(id=>placeSettlement(engine,state,state.npcs[id].location).value===place),keyOf=id=>engine.world.households.find(h=>h.members.includes(id))?.id??id,keys=[...new Set(roster.map(keyOf))];
+    for(const id of roster)assert.equal(upkeepSelfSupplyOf(engine,state,id).fuel??0,0,`前置：${id} 没有可达的公共来源，自给 0`);
+    let heldGrams=state.settlements[place].wood*weight('item_wood');
+    for(const id of owners){const npc=state.npcs[id];if(!npc||placeSettlement(engine,state,npc.location).value!==place)continue;for(const it of pool)heldGrams+=q(npc.inventory?.[it.id])*weight(it.id);}
+    const shelfGrams=stores.filter(s=>s.settlement===place).flatMap(s=>s.restock??[]).filter(r=>pool.some(i=>i.id===r.item)).reduce((n,r)=>n+(r.maximum+(r.reserve??0))*weight(r.item),0);
+    const fuel=craftingParam(engine,'household.fuelKgPerDay'),N=(fuel.cooking+(fuel.heating[engine.calendar(state.minute).season]??0))*1000;
+    const houses=engine.world.settlementProfiles.find(p=>p.id===place).householdCount;
+    assert.equal(settlementPopulation(engine,state,place).householdCount.value,houses,'前置：动态户数 = 档案户数');
+    const owed=keys.reduce((n,k)=>n+(state.family?.upkeep?.[k]?.fuelDebtG??0),0);
+    const supply=heldGrams/unit,demand=Math.max((shelfGrams+cycle*N*houses+owed)/unit,1);
+    const [floor,cap]=engine.rules.economy.priceFactorLimits.region,ratio=demand/Math.max(1,supply);
+    return {supply,demand,ratio,price:engine.byId.get(item).basePrice*Math.min(cap,Math.max(floor,ratio))};
 }

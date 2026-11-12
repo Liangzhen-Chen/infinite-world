@@ -14,7 +14,7 @@ import {netAssets} from '../server-plugin/finance-assets.mjs';
 import {npcPlanFingerprint} from '../server-plugin/npc-autonomy.mjs';
 import {regionalTradePrice} from '../server-plugin/settlement-trade.mjs';
 import {householdResources} from '../server-plugin/household-budget.mjs';
-import {handOatsScarcity,handSatiety} from './helpers/hand-targets.mjs';
+import {handOatsScarcity,handSatiety,handFuelPrice} from './helpers/hand-targets.mjs';
 
 const world=await loadWorld(),seed=JSON.parse(await fs.readFile(new URL('./fixtures/legacy/seed.json',import.meta.url),'utf8'));
 const host='npc_hw_linsui',bread='item_bread',inn='bld_hw_qingdeng';
@@ -211,6 +211,8 @@ test('native NPC autonomous purchase pays the independent market anchor and reco
  // A Yan is Lin Sui's brother (authored trust80), so use the existing smith
  // for this neutral-customer price anchor rather than erasing that relation.
  const buyer='npc_hw_duanyan',w=structuredClone(world);
+ // 木料价要手推需求：把每日出行上限压到 1 分钟，没有户够得到公共来源（handFuelPrice 前置逐户断言自给 0），户用全额走市场。
+ w.rules.householdSubsistence.maximumJourneyMinutes=1;
  for(const id of [host,buyer])w.npcs.find(n=>n.id===id).schedule={default:[{start:0,end:1440,location:inn,activity:'日常活动',services:id===host?['trade']:[]}]};
  const f=fixture({facts:[{path:['state','npcs',buyer,'location'],value:inn}]},w);
  const neutral=applyIntentSetup(f.engine,f.document,{facts:[{path:['state','records'],value:{...f.document.state.records,[`standing:${host}:${buyer}`]:{category:'standing',holder:host,target:buyer,value:0,history:[]}}}]});assert.deepEqual(neutral.setupUnmet,[]);f.replace(neutral.document);
@@ -224,8 +226,9 @@ test('native NPC autonomous purchase pays the independent market anchor and reco
  assert.equal(f.document.state.npcs[host].coins-before.state.npcs[host].coins,1);
  const deal=Object.values(f.document.state.records).find(r=>r.category==='market_trade'&&r.buyer===buyer&&r.seller===host);assert.ok(deal);assert.equal(deal.totalCoins,1);assert.equal(deal.quantity,1);
  assert.equal(Object.keys(f.document.state.quotes).length,0);
- // The regional wrapper is also a read-only projection: timber4*.5=2.
- const unchanged=structuredClone(f.document);assert.equal(regionalTradePrice(f.read(),f.engine,'item_wood','loc_hw'),2);assert.deepEqual(f.document,unchanged);
+ // The regional wrapper is also a read-only projection: 木料价 = 4 × 夹取(手推需求 ÷ 手推供给)（燃料池：木料与木炭同池，见 hand-targets.handFuelPrice 的推导）。
+ const unchanged=structuredClone(f.document),woodHand=handFuelPrice(f.engine,f.document.state,'item_wood');
+ assert.ok(Math.abs(regionalTradePrice(f.read(),f.engine,'item_wood','loc_hw')-woodHand.price)<=1e-9*woodHand.price);assert.deepEqual(f.document,unchanged);
 });
 
 test('quality and actual liquid composition price the selected original unit',()=>{
