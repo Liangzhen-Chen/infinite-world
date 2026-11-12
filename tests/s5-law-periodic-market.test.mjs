@@ -42,6 +42,9 @@ function fixture({food=false}={}){
  return {w,e,doc,sync,shop};
 }
 const visits=d=>Object.values(d.get('state','records')).filter(r=>r.category==='customer_flow').flatMap(r=>r.visits);
+// 夹具刻意只改 home↔place 这一段路（定它的里程与过路费来控制往返时间与路费）；去掉世界里原有的这一段（同两端的路），其余真实路网原样保留，
+// 所以口粮产地 loc_bs 到本聚落仍然连通（运输因子要从产地到本聚落找路）；裁剪后 place 只经这条路与 home 相连，网络仍连通。
+const tripRoute=(w,route)=>{w.routes=[...w.routes.filter(r=>!((r.from===route.from&&r.to===route.to)||(r.from===route.to&&r.to===route.from))),route];};
 
 test('native noon boundary settles before afternoon income and stock; a daytime keeper can sleep elsewhere at midnight',()=>{
  for(const late of [false,'cash','stock']){
@@ -77,7 +80,7 @@ test('a real purchase reserves round-trip and service time, moves the actor and 
  f.doc.state.minute=720;f.doc.state.npcs[buyer].coins=100;
  f.doc.state.npcs[owner].inventory={[item]:100};f.doc.state.npcs[buyer].location=home;
  f.w.npcs.find(n=>n.id===buyer).schedule.default[0].location=home;
- f.w.routes=[{id:'market-roundtrip',from:home,to:place,modes:['walk'],lengthKm:0.1,terrainMultiplier:1,toll:2,closedSeasons:[]}];
+ tripRoute(f.w,{id:'market-roundtrip',from:home,to:place,modes:['walk'],lengthKm:0.1,terrainMultiplier:1,toll:2,closedSeasons:[]});
  const d=f.sync();advanceCustomerFlow(d,f.e,719,720);
  const v=visits(d).find(v=>v.npc===buyer&&v.outcome==='bought'),trip=v.travel;
  // Two actual routes, five service minutes; time is shared with production,
@@ -105,7 +108,7 @@ test('K04 work windows subtract only the actual market overlap, never charge the
  f.doc.state.minute=720;f.doc.state.npcs[buyer].coins=100;
  f.doc.state.npcs[owner].inventory={[item]:100};f.doc.state.npcs[buyer].location=home;
  f.w.npcs.find(n=>n.id===buyer).schedule.default[0].location=home;
- f.w.routes=[{id:'market-long-trip',from:home,to:place,modes:['walk'],lengthKm:2,terrainMultiplier:1,toll:2,closedSeasons:[]}];
+ tripRoute(f.w,{id:'market-long-trip',from:home,to:place,modes:['walk'],lengthKm:2,terrainMultiplier:1,toll:2,closedSeasons:[]});
  const d=f.sync(),before=householdWorkTime(f.e,d.get('state'),buyer,720);assert.equal(before.workMinutes,480);
  advanceCustomerFlow(d,f.e,719,720);
  const trip=visits(d).find(v=>v.npc===buyer&&v.outcome==='bought').travel;
@@ -147,7 +150,7 @@ test('shopping replaces the overlapping own-farm production minutes, not just th
  f.doc.state.minute=720;f.doc.state.npcs[buyer].coins=100;f.doc.state.npcs[buyer].location=home;
  f.doc.state.npcs[owner].inventory={[item]:100};
  f.w.npcs.find(n=>n.id===buyer).schedule.default[0]={start:0,end:1440,location:home,activity:'arbitrary activity label',services:[]};
- f.w.routes=[{id:'farm-market-trip',from:home,to:place,modes:['walk'],lengthKm:2,terrainMultiplier:1,toll:2,closedSeasons:[]}];
+ tripRoute(f.w,{id:'farm-market-trip',from:home,to:place,modes:['walk'],lengthKm:2,terrainMultiplier:1,toll:2,closedSeasons:[]});
  const d=f.sync(),minutes=(time,activity)=>time.reserved.filter(r=>r.activity===activity).reduce((n,r)=>n+r.end-r.start,0);
  assert.equal(minutes(householdWorkTime(f.e,d.get('state'),buyer,720),'农事'),480);
  advanceCustomerFlow(d,f.e,719,720);
@@ -165,7 +168,7 @@ test('one visit can fill food and water needs with two goods and pays its real r
  const row={item:drink,source:'local',amount:2,maximum:100};
  f.shop.restock.push(row);f.w.npcs.find(n=>n.id===owner).shopRestock.push(row);
  f.doc.state.npcs[owner].inventory={[item]:100,[drink]:100};
- f.w.routes=[{id:'basket-trip',from:home,to:place,modes:['walk'],lengthKm:0.1,terrainMultiplier:1,toll:2,closedSeasons:[]}];
+ tripRoute(f.w,{id:'basket-trip',from:home,to:place,modes:['walk'],lengthKm:0.1,terrainMultiplier:1,toll:2,closedSeasons:[]});
  const d=f.sync();advanceCustomerFlow(d,f.e,719,720);
  const bought=visits(d).filter(v=>v.npc===buyer&&v.outcome==='bought');
  assert.deepEqual(new Set(bought.map(v=>v.item)),new Set([item,drink]));assert.equal(bought.length,2);
@@ -344,7 +347,7 @@ test('真实往返路费进入账本和顾客预算；不足五分钟不能占�
  const f=fixture({food:true}),home='bld_hw_forge';
  f.doc.state.npcs[buyer].coins=100;f.doc.state.npcs[buyer].location=home;f.doc.state.npcs[owner].inventory={[item]:100};
  f.w.npcs.find(n=>n.id===buyer).schedule.default[0].location=home;
- f.w.routes=[{id:'market-walk',from:home,to:place,modes:['walk'],lengthKm:0.1,terrainMultiplier:1,toll:2,closedSeasons:[]}];
+ tripRoute(f.w,{id:'market-walk',from:home,to:place,modes:['walk'],lengthKm:0.1,terrainMultiplier:1,toll:2,closedSeasons:[]});
  const d=f.sync();advanceCustomerFlow(d,f.e,0,DAY);
  const v=visits(d).find(v=>v.npc===buyer&&v.outcome==='bought');
  // 手算：往返各2铜，服务5分钟；钱袋100-商品款-4，路费不伪装成商家销售收入。

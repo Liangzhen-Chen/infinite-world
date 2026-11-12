@@ -48,10 +48,12 @@ test('可食物资并池：自身有饱腹的货与可经配方加工成可食�
 test('不可食但带 food 标签的货不进可食池，可食池的供需计量不受它影响',()=>{
  const {engine,doc}=setup(),read=documentReader(doc),inn='bld_hw_qingdeng',pool='goods:food';
  // 推导：item_salt 标签 mineral、food，没有饱腹，也无配方可加工成可食品（盐不供能）→ 不可食 → 不进 goods:food，
- // 退回表中非 food 的映射（无）→ 以物品自己为类，权重按件 1。
+ // 退类规则依次：自身其他 goods: 标签（无）→ goodsTags 表中非 food 的映射 → 物品 id。盐带 salt 标签，goodsTags 表（world/rules/tables/market.json:51）把 salt 映射到 salt，
+ // 所以退到第二步，类 = goods:salt（不是退到物品 id）；权重按件 1。
  assert.ok(engine.byId.get('item_salt').tags.includes('food'));
  assert.ok(!(engine.byId.get('item_salt').nutrition?.satiety>0));
- assert.equal(goodsClass(engine,'item_salt'),'goods:item_salt');assert.equal(goodsWeight(engine,'item_salt'),1);
+ assert.equal(engine.world.marketRules.goodsTags.salt,'salt');
+ assert.equal(goodsClass(engine,'item_salt'),'goods:salt');assert.equal(goodsWeight(engine,'item_salt'),1);
  // 池内的货都可食；因此可食池的供需只含饱腹单位，盐的库存与持有不会进来：面包报价的 rows 里没有盐。
  const s=marketSupply(read,engine,'item_bread',inn);
  assert.equal(s.goods,pool);assert.ok(s.rows.every(r=>r.item!=='item_salt'));
