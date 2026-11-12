@@ -1,7 +1,8 @@
 import {preconditionFailure} from './precondition.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {craftInput,craftOutput,recordCraft} from './stock.mjs';
+import {craftInput,craftOutput} from './stock.mjs';
+import {recordCraft} from './craft-record.mjs';
 import {settlementAt} from './reputation.mjs';
 // S1b: 灵物制作是 src:craft 制造守恒对；借形取用与施用的物品进 sink:consume。
 declareLedgerWriter('wildlife-society',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});

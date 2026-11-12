@@ -4,7 +4,8 @@ import {reject} from './action-rejection.mjs';
 import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {purse,workshopFund,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {craftInput,craftOutput,recordCraft} from './stock.mjs';
+import {craftInput,craftOutput} from './stock.mjs';
+import {recordCraft} from './craft-record.mjs';
 import {settlementAt} from './reputation.mjs';
 // S1b: 制作是 src:craft 制造守恒对：配方投入进 sink:consume|<物品>|craft，成品、副产品与失败回收的残料来自 src:craft。
 declareLedgerWriter('manufacturing',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});

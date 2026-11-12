@@ -8,7 +8,8 @@ import {preconditionFailure} from './precondition.mjs';
 // becomes breakthrough evidence through career-metrics, never a second path.
 import {purse,purse as purseAccount,source,sink,moveCoins} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {craftInput,craftOutput,recordCraft} from './stock.mjs';
+import {craftInput,craftOutput} from './stock.mjs';
+import {recordCraft} from './craft-record.mjs';
 // S1b: 写作、抄书、测绘按作品规则（WORK_RULES，等同配方 works:<操作>）是 src:craft 制造守恒对：纸墨进 sink:consume，
 // 成品来自 src:craft；出版印书同样按册耗纸墨、成书来自 src:craft（印刷费付印工手工，进 sink:export）。
 declareLedgerWriter('works',{sources:{'src:import':{coin_river:200000},'src:craft':{'*':10000}},sinks:['sink:export','sink:consume']});

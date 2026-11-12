@@ -13,9 +13,9 @@ import {marketSupply,goodsClass,goodsWeight,foodSatiety} from '../server-plugin/
 import {stageReached} from '../server-plugin/seasonal-hazards.mjs';
 import {forestWaterPriceFactor} from '../server-plugin/forest-water.mjs';
 import {openLedger} from '../server-plugin/ledger.mjs';
-import {recordCraft} from '../server-plugin/stock.mjs';
+import {recordCraft} from '../server-plugin/craft-record.mjs';
 import {WORK_RULES} from '../server-plugin/works.mjs';
-import {craftUseWindowDays} from '../server-plugin/primitives-body.mjs';
+import {craftUseWindowDays} from '../server-plugin/supply-interval.mjs';
 import {unfoldRemoteAt,remoteEngine} from '../server-plugin/remote-generation.mjs';import {mealMouthsOf} from '../server-plugin/primitives-body.mjs';
 
 const world=await loadWorld(),legacy=JSON.parse(await fs.readFile('tests/fixtures/legacy/seed.json','utf8'));

@@ -1,5 +1,6 @@
 import {purse,treasury as treasuryAccount,source,moveCoins} from './money.mjs';
-import {mealMouthsOf,resupplyDays} from './primitives-body.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
+import {resupplyDays} from './supply-interval.mjs';
 import {declareLedgerWriter,parseAccount,accountKey,ledgerActive} from './ledger.mjs';
 import {genesisSettlement,bag,itemResource,stockSource,moveStock,registerLegacyStock,moveFishPopulation} from './stock.mjs';
 // S1b: 远方生成的聚落库存与人物行囊同样从 src:genesis 入账。

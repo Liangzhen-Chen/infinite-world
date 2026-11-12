@@ -25,7 +25,6 @@ import {isResourceKey,accountKey,parseAccount,transfer,registerLedgerOpening,reg
 import {actorId} from './npc-state.mjs';
 import {groupAccountView} from './group-account.mjs';
 import {exp} from './det-math.mjs';
-import {craftUseWindowDays} from './primitives-body.mjs';
 
 export const LOT_PURPOSES=Object.freeze(new Set(['granary','seed','cargo','crop']));
 registerLotPolicy(({purpose})=>LOT_PURPOSES.has(purpose));
@@ -235,30 +234,12 @@ export function settleWorks(d,engine,p,{returned={},to,writer,eventId=null}){
 export const CRAFT_PURPOSE='craft';
 export const craftInput=(writer,eventId)=>({flow:'sink:consume',purpose:CRAFT_PURPOSE,writer,eventId});
 export const craftOutput=(writer,eventId)=>({flow:'src:craft',purpose:CRAFT_PURPOSE,writer,eventId});
-// 行为人 actor（可空：野生社会的群体没有单个行为人时按所属群体/空）与发生地聚落 place 由各调用方传入；place 非空时耗料同时记入按（聚落，物品）的滚动日桶（accrueCraftUse）。place 只给"投入被实际消耗、转化成产物"的工序；转移、捐赠、存取这类不改变物料总量的记录不传 place（只留守恒对凭据）。
-export function recordCraft(d,{engine,actor=null,place=null,recipe,batches=1,inputs={},outputs={},failure=null,writer,eventId=null}){
-    // 不变量兜底：带 place 的记录是"投入被消耗"的工序；产物与投入同物同量是转移，不得计入耗料，抛错。
-    // 产物为空（投入被消耗、产出的是非物品成果，如撰写、抄录、勘绘的文书）照常计入。
-    // 失败的工序（failure 非空）可以全额回收（产物 = 投入），照常按净耗料记账，不受此限。
-    if(recipe&&place&&!failure){
-        const made=Object.entries(outputs).filter(([,n])=>n>0),sameAsInputs=made.length>0&&made.length===Object.keys(inputs).length&&made.every(([item,n])=>inputs[item]===n);
-        if(sameAsInputs)throw Error(`转移不得计入耗料：${recipe} 带 place 但产物与投入同物同量（转移、捐赠、存取不传 place）`);
-    }
-    if(recipe&&place)accrueCraftUse(d,engine,place,inputs,outputs,failure);
+// 制造凭据（守恒对审计用，只保留最后 50 条）。调用方不直接调用，统一经 craft-record.mjs 的 recordCraft（它再加按（聚落，物品）的滚动耗料累计）——
+// 耗料累计需要补给间隔（路线、entity-view），不能放在本文件：stock.mjs 不得依赖会回到 stock.mjs 的模块（stock → … → goods-escrow → stock 的导入环）。
+export function recordCraftLedger(d,{actor=null,place=null,recipe,batches=1,inputs={},outputs={},failure=null,writer,eventId=null}){
     if(!ledgerActive(d))return;
     if(!recipe)throw Error('制造产出必须指明配方（src:craft 守恒对）');
     d.set(['ledger','crafts'],[...(d.get('ledger','crafts')??[]),{recipe,batches,actor,place,inputs,outputs,...(failure?{failure}:{}),writer,eventId,minute:d.get('state','minute')??null}].slice(-50));
-}
-// 滚动耗料累计：state.records['craft-use:<聚落>'] = {days:{<日>:{<物品>:耗用量}}}，按日分桶；窗口 = 最长补给间隔天数（craftUseWindowDays，由 resupplyDays 的上限推出，不新增常数），
-// 写入时丢掉窗口外的日桶，所以每个聚落至多 窗口天数 个桶。耗用量按投入计；失败时回收的同一种料（outputs 里的同名物品）不算耗用。
-// 所有制造写入方（works、manufacturing、wildlife-society、finance-assets、npc-autonomy、agriculture）都经 recordCraft 写入，不各自累计。
-function accrueCraftUse(d,engine,place,inputs,outputs,failure){
-    const day=Math.floor((d.get('state','minute')??0)/1440),key=`craft-use:${place}`,old=d.get('state','records',key),keep=craftUseWindowDays(engine,d.get('state'),d.get('randomSeed'),Object.keys(d.get('state','settlements')??{}));
-    const days={};for(const [k,v] of Object.entries(old?.days??{}))if(Number(k)>day-keep)days[k]=v;
-    const row={...(days[day]??{})};
-    for(const [item,amount] of Object.entries(inputs)){const net=amount-(failure?Math.min(amount,outputs[item]??0):0);if(net>0)row[item]=(row[item]??0)+net;}
-    days[day]=row;
-    d.set(['state','records',key],{category:'craft_use',place,days});
 }
 
 // ---- S1c 价格输入读账户（15 §15.2：价格是账户的投影） --------------------------------

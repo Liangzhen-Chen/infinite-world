@@ -29,7 +29,8 @@ import {regionalTradeBase} from './settlement-trade.mjs';
 import {laborTrade,withAbsenceBreach} from './labor-market.mjs';
 import {standing} from './standing.mjs';
 import {changeItems,produceItems,heldUnit,wearItem,changePremisesItems,producePremisesItems,transferPremisesItems,transferItems} from './items.mjs';
-import {store,bag,bookStock,craftInput,craftOutput,recordCraft,priceRead,bagStock,premisesInventory} from './stock.mjs';
+import {store,bag,bookStock,craftInput,craftOutput,priceRead,bagStock,premisesInventory} from './stock.mjs';
+import {recordCraft} from './craft-record.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
 // S1b: 受雇制作（组织或个人库存）是 src:craft 制造守恒对：配方投入进 sink:consume，产出来自 src:craft。
 declareLedgerWriter('finance-assets',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});

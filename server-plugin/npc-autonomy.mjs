@@ -14,7 +14,8 @@ import {isPhysicallyDead} from './lifecycle-state.mjs';
 import {currentWorkstationRecipes,stationLicence} from './workstation-services.mjs';
 import {purse,workshopFund,moveCoins,coinRead} from './money.mjs';
 import {declareLedgerWriter} from './ledger.mjs';
-import {craftInput,craftOutput,recordCraft,bagStock} from './stock.mjs';
+import {craftInput,craftOutput,bagStock} from './stock.mjs';
+import {recordCraft} from './craft-record.mjs';
 import {settlementAt} from './reputation.mjs';
 // S1b: 人物自治制作是 src:craft 制造守恒对；交易经 items.transferItems 记行囊之间的转移。
 declareLedgerWriter('npc-autonomy',{sources:{'src:craft':{'*':100000}},sinks:['sink:consume']});

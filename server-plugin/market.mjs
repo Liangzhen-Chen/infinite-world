@@ -12,7 +12,8 @@ import {recordsMemo,withReadIndex} from './storage.mjs';
 import {budgetRead,householdResources,householdCommitments,householdUsage,householdDailyUse,usageCost} from './household-budget.mjs';
 import economyBalance from '../world/rules/tables/balance/economy.json' with {type:'json'};
 import {ln,pow,fromRational,toRational} from './det-math.mjs';
-import {mealMouthsOf,resupplyDays,itemResupplyDays} from './primitives-body.mjs';
+import {mealMouthsOf} from './primitives-body.mjs';
+import {resupplyDays,itemResupplyDays} from './supply-interval.mjs';
 import {farmTargetFood} from './agriculture-migration.mjs';
 
 // 顾客一天在商家花费的上限占其钱袋的比例、居民步行上门的最长分钟：数值参数表 balance/economy 的登记值
