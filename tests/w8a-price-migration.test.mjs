@@ -58,21 +58,27 @@ async function tariffTrip(t,{from,to}){
  const after=await ui.read();
  return Object.values(after.state.records).find(x=>x.category==='tariff_passage');
 }
-test('关税税基按公开市场估值：私人行囊不压低入境货值，两地无公开布货时税基均500',async t=>{
- // 白石镇（loc_bs）：本聚落没有布的可售存量，供给 0（运来的这批货不计入），需求 1 → 稀缺 = clamp(1/max(1,0)) = 1 → 10 × 50 × 1 = 500；
- // 税 = 500 × 5% = 25。（旧口径恒为 10 × 目录价 50 = 500，数值相同，但不再是“恒等于目录价”。）
+// 运输因子手推（transport.unitFreight / settlement-trade.regionalTradeBase）：因子 = 1 + 单位运费 ÷ 目录基价；单位运费 = 产地聚落到本聚落的路程 km × 计费重量 kg × 驮运费率。
+// 计费重量 = max(重量, 体积折算, 1) kg，这里的货（0.2–0.4 kg）都取 1；费率读 balance/transport 的 carrier:pack 行；路程读 route_hw_bs（河湾村—白石镇，唯一一条）。
+// 产地就在本聚落（布产自河湾村织坊，在河湾村）运费为 0；产地在对方聚落则按这段路收运费，所以同一件货在两地的估值差一个运费。
+const packRate=world.balance.transport.rows.find(r=>r.key==='carrier:pack').rate,hwBsKm=world.routes.find(r=>r.id==='route_hw_bs').lengthKm,hwBsFreight=hwBsKm*1*packRate;
+test('关税税基按公开市场估值：私人行囊不压低入境货值，两地无公开布货时只差运费',async t=>{
+ // 白石镇（loc_bs）：本聚落没有布的可售存量，供给 0（运来的这批货不计入），需求 1 → 稀缺 = clamp(1/max(1,0)) = 1；
+ // 布产自河湾村，运到白石镇的运输因子 = 1 + 24 km × 1 kg × 0.02 ÷ 50 = 1.0096 → 价 50.48，10 匹 = 504.8，估值取整 504；税 = floor(504 × 500 / 10000) = 25。
+ const cloth=50,landed=Math.floor(10*cloth*(1+hwBsFreight/cloth));
+ assert.equal(landed,504,'手推前置：24 km × 0.02 = 0.48 文运费');
  const trip=await tariffTrip(t,{from:'loc_hw',to:'loc_bs'});
- assert.equal(trip.value,500);assert.equal(trip.amount,25);
- // 对照河湾村：原来的7匹在非经营者行囊，不是公开供给；S=0、D=1，10×50×1也为500。
+ assert.equal(trip.value,landed);assert.equal(trip.amount,Math.floor(landed*500/10000));
+ // 对照河湾村：原来的7匹在非经营者行囊，不是公开供给；S=0、D=1，产地就在河湾村，无运费，10×50×1 = 500；白石镇同上 504。
  const w=variant(x=>{worldItem(x,'item_linen_cloth').basePrice=50;});
  const engine=new WorldEngine(w),document=engine.createCharacter(seed,{},'w8a-tariff-base');
  document.state.location='loc_bs';document.state.inventory.item_linen_cloth=stack(10,{weight:0.4});
  const d=reader(document);
  assert.equal(goodsWorth(d,engine,{item:'item_linen_cloth',quantity:10,location:'loc_hw',holder:'player',apart:true}),500);
- assert.equal(goodsWorth(d,engine,{item:'item_linen_cloth',quantity:10,location:'loc_bs',holder:'player',apart:true}),500);
+ assert.equal(goodsWorth(d,engine,{item:'item_linen_cloth',quantity:10,location:'loc_bs',holder:'player',apart:true}),landed);
  // 15 §15.2 的有效存量是本地可售存量；玩家行囊不构成市场供给。
- // 默认估值也须排除自带货：白石镇供给仍 0，10 × 50 × 1 = 500，不能靠不传 apart 压低税基。
- assert.equal(goodsWorth(d,engine,{item:'item_linen_cloth',quantity:10,location:'loc_bs',holder:'player'}),500);
+ // 默认估值也须排除自带货：白石镇供给仍 0，估值仍是 504，不能靠不传 apart 压低税基。
+ assert.equal(goodsWorth(d,engine,{item:'item_linen_cloth',quantity:10,location:'loc_bs',holder:'player'}),landed);
 });
 
 // ---- 走私货值 ----
@@ -98,14 +104,16 @@ test('走私被查获的案值 = 查验地对这批货的市场估值',async()=>
  const incident=Object.values(doc.state.records).find(r=>r.category==='legal_case'&&r.offense==='smuggling');
  assert.ok(incident);
  // 15 §15.2：非经营者及被估者行囊不是公开供给。该查验地无其他在售核心，
- // 需求1 / max(1,供给0) = 1；2份 = 2×12×1 = 24。数值恰与目录相同不能证明派生失效。
+ // 需求1 / max(1,供给0) = 1；余烬核产自白石镇废窑（loc_bs），运到河湾村（查验地）的运输因子 = 1 + 24 km × 1 kg × 0.02 ÷ 12 = 1.04，
+ // 2份 = 2×12×1.04 = 24.96，估值取整 24（与目录总值相同不能证明派生失效，下面叠加修正再看）。
  assert.equal(engine.byId.get('item_ember_core').basePrice,12);
- assert.equal(incident.value,24);
+ const factor=1+hwBsFreight/12;
+ assert.equal(incident.value,Math.floor(2*12*factor));assert.equal(incident.value,24);
  // 保留原断言“案值确实使用派生而非目录”的意图：同一真实查获流程叠加 economy:value ×2，
- // 案值 = 2份×12×稀缺1×修正2 = 48，明确不同于目录总值24。
+ // 案值 = 2份×12×运输1.04×稀缺1×修正2 = 49.92，取整 49，明确不同于目录总值24（与 2×24 = 48 也不同：运费也随修正翻倍）。
  const changed=await seizure({edit:w=>w.derived.modifiers.push({id:'w8a-seized-value',pack:'core',target:'economy:value',stage:'mul',value:2,when:"subject == 'item_ember_core'"})});
  const corrected=Object.values(changed.doc.state.records).find(r=>r.category==='legal_case'&&r.offense==='smuggling');
- assert.equal(corrected.value,48);assert.notEqual(corrected.value,12*2);
+ assert.equal(corrected.value,Math.floor(2*12*factor*2));assert.equal(corrected.value,49);assert.notEqual(corrected.value,12*2);
 });
 
 // ---- 节庆开销：主办人是否愿意办，看奖品按当地市场值多少钱 ----
